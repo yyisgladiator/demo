@@ -1,0 +1,272 @@
+section {* Prelude *}
+
+theory Prelude
+imports HOLCF
+begin
+
+default_sort type
+
+text {* Helpful lemmas to work with HOL and HOLCF's definitions.*}
+
+text {* Convert a relation to a map (function with @{text "option"}al result).*}
+definition rel2map ::   "('c * 'm) set \<Rightarrow> ('c \<rightharpoonup> 'm)"
+where rel2map_def: "rel2map r \<equiv> \<lambda>x. (if x \<in> Domain r then Some (SOME a. (x,a) \<in> r) else None)"
+
+text {* Domain of rel2map.*}
+lemma [simp]: "Map.dom (rel2map r) = Domain r"
+by (simp add: rel2map_def Map.dom_def)
+
+text {* Unwrapping an @{text "'a option"} value. Result for @{text "None"} is undefined.*}
+definition unsome :: "'a option \<Rightarrow> 'a" where
+"unsome x = (case x of Some y \<Rightarrow> y | None \<Rightarrow> undefined)"
+
+text {* Unsome is the inverse of Some.*}
+lemma [simp]: "unsome (Some x) = x"
+by (simp add: unsome_def)
+
+text {* For natural numbers j and k with @{term "j \<le> k"}, @{term "k - j"} is natural as well *}
+lemma natl1: "(j::nat) \<le> k \<Longrightarrow> \<exists>i. j + i = k"
+apply (simp add: atomize_imp)
+apply (rule_tac x="j" in spec)
+apply (induct_tac k, auto)
+by (case_tac "x", auto)
+
+text {* Commutation on natural numbers *}
+lemma natl2: "(i::nat) + k = k + i"
+by auto
+
+text {* Removing successive duplicates from a list:*}
+primrec lrcdups :: "'a list \<Rightarrow> 'a list"
+where
+  "lrcdups [] = []" |
+  "lrcdups (x#xs) = 
+     (if xs = [] 
+        then [x] 
+        else 
+          (if x = List.hd xs 
+             then lrcdups xs 
+             else (x#(lrcdups xs))))"
+
+
+(* ----------------------------------------------------------------------- *)
+section {* Some auxiliary HOLCF lemmas *}
+(* ----------------------------------------------------------------------- *)
+
+text {* Introduction of continuity of @{text "f"} using monotonicity and lub on chains:*}
+lemma contI2:
+  "\<lbrakk>monofun (f::'a::cpo \<Rightarrow> 'b::cpo); 
+        (\<forall>Y. chain Y \<longrightarrow> f (\<Squnion>i. Y i) \<sqsubseteq> (\<Squnion>i. f (Y i)))\<rbrakk> \<Longrightarrow> cont f"
+apply (rule contI)
+apply (rule is_lubI)
+apply (rule ub_rangeI)
+apply (rule monofunE [of f], assumption)
+apply (rule is_ub_thelub, assumption)
+apply (erule_tac x="Y" in allE, drule mp, assumption)
+apply (rule_tac y="\<Squnion>i. f (Y i)" in below_trans, assumption)
+apply (rule is_lub_thelub)
+by (rule ch2ch_monofun [of f], assumption+)
+
+text {* The higher-order function, which takes as input f and yields the result of 
+the application of on x, is a continous function. *}
+lemma [simp]: "cont (\<lambda> f. f x)"
+apply (rule contI)
+apply (subst lub_fun, assumption)
+apply (rule thelubE)
+apply (rule ch2ch_fun, assumption)
+by (rule refl)
+
+text {* In a chain, every two elements are comparable *}
+lemma chain_tord: "chain S \<Longrightarrow> S k \<sqsubseteq> S j \<or> S j \<sqsubseteq> S k"
+apply (insert linear [of "j" "k"])
+apply (erule disjE)
+apply (rule disjI2)
+apply (rule chain_mono,simp+)
+apply (rule disjI1)
+by (rule chain_mono,simp+)
+
+text {* Every non-empty set contains an element *}
+lemma neq_emptyD: "s \<noteq> {} \<Longrightarrow> \<exists>x. x \<in> s"
+by auto
+
+(* ----------------------------------------------------------------------- *)
+section {* More functions *}
+(* ----------------------------------------------------------------------- *)
+
+text {* This section introduces some more functions to work with lists.*}
+
+text {* Range shifting on least upper bound of chains. *}
+lemma less_lubl1: 
+  "\<lbrakk>chain (Y::nat \<Rightarrow> 'a::cpo); X \<sqsubseteq> (\<Squnion>k. Y (k + j))\<rbrakk> \<Longrightarrow> X \<sqsubseteq> (\<Squnion>k. Y k)"
+by (subst lub_range_shift [THEN sym, of "Y" "j"], simp+)
+
+text {* Another lemma on range shifting on least upper bound of chains. *}
+lemma less_lubl2:
+"\<lbrakk>chain (Y::nat \<Rightarrow> 'a::cpo); chain f; \<And>x. (\<Squnion>k. f k\<cdot>x) = x; \<And>n. f n\<cdot>x \<sqsubseteq> (f n\<cdot>(Lub Y))\<rbrakk> \<Longrightarrow> x \<sqsubseteq> Lub Y"
+by (insert lub_mono [of "\<lambda>n. f n\<cdot>x" "\<lambda>n. f n\<cdot>(Lub Y)"], simp)
+
+text {* Using the constructur Suc, show that n + 1 = 1 + n. *}
+lemma Suc2plus: "Suc n = Suc 0 + n"
+by simp
+
+text {* Similar lemma as above, using the constructur Suc. *}
+lemma Suc_def2: "Suc i = i + Suc 0"
+by simp
+
+text {* If a chain contains its least upper bound as an element, this element is the
+  maximum of the chain *}
+lemma max_in_chainI3: "\<lbrakk>chain (Y::nat\<Rightarrow>'a::cpo); Y i = Lub Y\<rbrakk> \<Longrightarrow> max_in_chain i Y"
+apply (simp add: max_in_chain_def)
+apply (rule allI, rule impI)
+apply (rule po_eq_conv [THEN iffD2])
+apply (rule conjI)
+apply (drule sym, simp)
+apply (rule chain_mono, assumption+)
+by (rule is_ub_thelub)
+
+text {* A chain which contains its maximum is finite *}
+lemma finite_chainI: "\<lbrakk>chain Y; max_in_chain i Y\<rbrakk> \<Longrightarrow> finite_chain Y"
+by (auto simp add: finite_chain_def)
+
+text {* 'zipping' two chains together also zips their least upper bounds *}
+lemma lub_prod2: "\<lbrakk>chain (X::nat \<Rightarrow> 'a::cpo); chain (Y::nat \<Rightarrow> 'b::cpo)\<rbrakk> \<Longrightarrow>
+                        (\<Squnion>k. (X k,Y k)) = (Lub X, Lub Y)"
+by (subst lub_prod, simp+)
+
+text {* Creating a list from iteration a function @{text "f"} 
+  @{text "n"}-times on a start value @{text s}.*}
+primrec literate :: "nat \<Rightarrow> ('a \<Rightarrow> 'a) \<Rightarrow> 'a \<Rightarrow> 'a list"
+where
+  literate_0:  "literate 0 f s = []" |
+  literate_Suc:"literate (Suc n) f s = s#(literate n f (f s))"
+
+text {* Iterative conversion of @{term literate} result to a set *}
+lemma literate_Suc2:
+  "set (literate (Suc n) f s) = {s} \<union> set (literate n f (f s))"
+by auto
+
+text {* A set of successive natural numbers can be split into the smallest
+  number and the rest *}
+lemma natl3: "{i. x \<le> i \<and> i < Suc n + x} = {x} \<union> {i. Suc x \<le> i \<and> i < Suc n + x}"
+by auto
+
+text {* Create set of natural numbers from k to n+k-1 by @{term literate} *}
+lemma literatel1 [simp]: 
+  "set (literate n Suc k) = {i. k \<le> i \<and> i < (n + k)}"
+apply (rule_tac x="k" in spec)
+apply (induct_tac n, simp)
+apply (subst literate_Suc2)
+apply (rule allI)
+apply (erule_tac x="Suc x" in allE)
+by (subst natl3, simp)
+
+text {* A list of length @{term n} contains at most @{term n} different elements *}
+lemma card_set_list_le_length: "card (set x) \<le> length x"
+apply (induct_tac x, simp+)
+by (simp add: card_insert_if)
+
+text {* @{term "literate n"} creates lists with length @{term n} *}
+lemma [simp]: "length (literate n f k) = n"
+apply (rule_tac x="k" in spec)
+by (induct_tac n, simp+)
+
+text {* Zipping and unzipping on lists *}
+lemma [simp]: "map snd (map (Pair k) a) = a"
+by (induct_tac a, simp+)
+
+text {* For a list @{term x}, each element in @{term "set x"} appears at some position in
+  @{term x} *}
+lemma from_set_to_nth: "xa \<in> set x \<Longrightarrow> \<exists>k. x!k = xa \<and> k < length x"
+apply (simp add: atomize_imp)
+apply (induct_tac x, simp+) 
+apply (rule conjI, rule impI)
+apply (rule_tac x="0" in exI, simp)
+apply (rule impI, simp)
+apply (erule exE)
+by (rule_tac x="Suc k" in exI, simp)
+
+text {* Replacing a filter on lists by a stronger filter *}
+lemma filterl4: "\<lbrakk>\<And>x. Q x \<Longrightarrow> P x; filter P x = []\<rbrakk> \<Longrightarrow> filter Q x = []"
+by (simp add: atomize_imp, induct_tac x, auto)
+
+text {* Induction on lists from the right *}
+lemma list_rinduct_lemma: "\<forall>y. length y = k \<and> (P [] \<and> (\<forall>x xs. P xs \<longrightarrow> P (xs @ [x]))) \<longrightarrow> P y"
+apply (induct_tac k, simp)
+apply (rule allI)
+apply (rule impI)
+apply (erule conjE)+
+apply (erule_tac x="butlast y" in allE, auto)
+apply (erule_tac x="last y" in allE)
+apply (erule_tac x="butlast y" in allE, auto)
+by (case_tac "y = []", auto)
+
+
+(* ----------------------------------------------------------------------- *)
+section {* Some more lemmas about sets *}
+(* ----------------------------------------------------------------------- *)
+
+text {* All subsets of a finite set are finite themselves *}
+lemma finite_subset1: "finite Y \<Longrightarrow> (\<forall>X. X \<subseteq> Y \<longrightarrow> finite X)"
+apply (rule_tac F="Y" in finite_induct,simp+)
+apply (rule allI, rule impI)
+apply (simp only: subset_insert_iff split: split_if_asm)
+by (erule_tac x="X - {x}" in allE, simp+)
+
+text {* Given an infinite and a finite set, the infinite one contains an element
+  which is not in the finite one *}
+lemma ex_new_if_finitel1:
+  "\<lbrakk>finite Y; \<not> finite X\<rbrakk> \<Longrightarrow> \<exists>a. a \<in> X \<and> a \<notin> Y"
+apply (rule ccontr, auto)
+apply (subgoal_tac "X \<subseteq> Y")
+by (frule_tac Y="Y" in finite_subset1, auto)
+
+text {* Create a finite set with @{text "n"} distinct continuously 
+  numbered entries from set @{text "A"}.*}
+primrec
+  getinj:: "'a set \<Rightarrow> nat \<Rightarrow> (nat \<times> 'a) set"
+where
+  "getinj A 0 = {(0,SOME x. x \<in> A)}" |
+  "getinj A (Suc n) = {(Suc n, SOME x. x \<in> A \<and> x \<notin> (snd ` (getinj A n)))} \<union> getinj A n"
+
+text {* The result of @{term "getinj A n"} and its projections on the first or
+  second attribute are finite *}
+
+lemma finite_getinjs[simp]: "finite (getinj A n)"
+by (induct_tac n, simp+)
+
+lemma finite_snd_getinjs[simp]: "finite (snd ` (getinj A n))"
+by (induct_tac n, simp+)
+
+lemma finite_fst_getinjs[simp]: "finite (fst ` (getinj A n))"
+by (induct_tac n, simp+)
+
+text {* @{term "getinj A n"} only contains entries for numbers up to @{term n} *}
+lemma getinjs_l1: "\<forall>k. n < k \<longrightarrow> (k, x) \<notin> getinj A n"
+by (induct_tac n, simp+)
+
+text {* ...especially, it contains no entry for @{term "n+1"} *}
+lemma [simp]: "(Suc n,x) \<notin> getinj A n"
+by (insert getinjs_l1 [of n x A], auto)
+
+text {* Projecting to the second component is an injective function on results
+  of @{term getinj} *}
+lemma card_getinj_lemma[simp]: "\<not> finite A \<Longrightarrow> card (snd ` (getinj A n)) = card (getinj A n)"
+apply (induct_tac n, simp+)
+apply (rule someI2_ex)
+apply (rule ex_new_if_finitel1)
+by (rule finite_snd_getinjs, simp+)
+
+lemma inj_on_getinj: "\<not> finite A \<Longrightarrow> inj_on snd (getinj A n)"
+by (rule eq_card_imp_inj_on, simp+)
+
+text {* @{term "getinj X n"} maps @{term n} to something *}
+lemma getinj_ex[simp]: "\<exists>a. (n,a) \<in> getinj X n"
+by (induct_tac n, simp+)
+
+text {* For a fixed set @{term "A"}, @{term "getinj A i"} is a chain *}
+lemma getinj_chain:
+  "\<lbrakk>\<not> finite A; (j, x) \<in> getinj A j; j \<le> k\<rbrakk> \<Longrightarrow> (j, x) \<in> getinj A k"
+apply (simp add: atomize_imp)
+apply (induct_tac k, auto)
+by (case_tac "j = Suc n", auto)
+
+end
