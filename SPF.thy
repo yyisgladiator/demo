@@ -145,7 +145,7 @@ translations
 
 
 
-
+(*
 definition spfCompAll :: "'m SPF \<Rightarrow> 'm SPF \<Rightarrow> channel set" where
 "spfCompAll f1 f2 = spfDom\<cdot>f1 \<union> spfDom\<cdot>f2 \<union> spfRan\<cdot>f1 \<union> spfRan\<cdot>f2"
 
@@ -175,10 +175,27 @@ definition spfCompHelp :: "'m SPF \<Rightarrow> 'm SPF \<Rightarrow> 'm SB \<Rig
 "spfCompHelp f1 f2 x \<equiv> \<Lambda> last. x  \<uplus> ((Rep_CSPF f1)\<rightharpoonup>(last \<bar> spfDom\<cdot>f1))
                                    \<uplus> ((Rep_CSPF f2)\<rightharpoonup>(last \<bar> spfDom\<cdot>f2))"
 
+
+(* Meine Version *)
+(* assumes O1 \<inter> O2 = {}, otherwise arbitrary behaviour *)
+(* Do i know that (I1 \<inter> O1) = {} ? ? ? *)
+  (* because otherwise "(z \<bar> O1) = the (Rep_CSPF f1 (z \<bar> I1))" .... is strange/wrong/not useful  *)
 definition spfComp :: "'m SPF \<Rightarrow> 'm SPF \<Rightarrow> 'm SPF"  (infixl "\<otimes>" 40) where
 "spfComp f1 f2 \<equiv> Abs_CSPF (\<lambda> x. (sbDom\<cdot>x = spfCompIn f1 f2) \<leadsto> 
     (\<Squnion>i. iterate i\<cdot>(spfCompHelp f1 f2 x)\<cdot>(sbLeast (spfCompAll f1 f2))) \<bar> spfCompOut f1 f2)"
 
+(* equality lemmas *)
+lemma spfcompC_eq : "spfCompAll f1 f2 = C f1 f2"
+by (simp add: Cc_def spfCompAll_def)
+
+lemma spfcompI_eq : "(spfCompIn f1 f2) = I f1 f2"
+oops (* lemma specification incorrect! *)
+
+lemma spfcompL_eq : "(spfCompInternal f1 f2) = L f1 f2"
+oops (* lemma specification incorrect! *)
+
+lemma spfcompOc_eq : "(spfCompOut f1 f2) = Oc f1 f2"
+oops (* lemma specification incorrect! *)
 
 (* Orginale Version *)
 text {* composition operator *}
@@ -195,18 +212,35 @@ in (Abs_CSPF (\<lambda> b . ((sbDom\<cdot>b = In) \<leadsto>  (THE y . y\<in>{ z
       (z \<bar> In) = b
     \<and> (z \<bar> O1) = the (Rep_CSPF f1 (z \<bar> I1))
     \<and> (z \<bar> O2) = the (Rep_CSPF f2 (z \<bar> I2))}))))"
+*)
+
+(* redefined composition channel sets *)
+definition I :: "'m SPF \<Rightarrow> 'm SPF \<Rightarrow> channel set" where
+"I f1 f2 \<equiv> (spfDom\<cdot>f1 \<union> spfDom\<cdot>f2) - (spfRan\<cdot>f1 \<union> spfRan\<cdot>f2)"
+
+definition Oc :: "'m SPF \<Rightarrow> 'm SPF \<Rightarrow> channel set" where
+"Oc f1 f2 \<equiv> (spfRan\<cdot>f1 \<union> spfRan\<cdot>f2) - (spfDom\<cdot>f1 \<union> spfDom\<cdot>f2)"
+
+definition L :: "'m SPF \<Rightarrow> 'm SPF \<Rightarrow> channel set" where
+"L f1 f2 \<equiv> (spfDom\<cdot>f1 \<union> spfDom\<cdot>f2) \<inter> (spfRan\<cdot>f1 \<union> spfRan\<cdot>f2)"
+
+definition C :: "'m SPF \<Rightarrow> 'm SPF \<Rightarrow> channel set" where
+"C f1 f2 \<equiv> spfDom\<cdot>f1 \<union> spfDom\<cdot>f2 \<union> spfRan\<cdot>f1 \<union> spfRan\<cdot>f2"
+
+
+definition spfComp_well:: "'m SPF \<Rightarrow> 'm SPF \<Rightarrow> bool" where
+"spfComp_well f1 f2 \<equiv> spfDom\<cdot>f2 \<inter>spfRan\<cdot>f2 = {}
+                \<and>  spfDom\<cdot>f1 \<inter>spfRan\<cdot>f1 = {} 
+                \<and> spfRan\<cdot>f1 \<inter> spfRan\<cdot>f2 = {}"
+
+(* (f1 \<otimes> f2) x = [fix\<cdot>(\<Lambda> z. x \<uplus> f1(z\<bar>I1) \<uplus> f2(z\<bar>I2))]\<bar>O  *)
+definition spfComp2 :: "'m SPF \<Rightarrow> 'm SPF \<Rightarrow> 'm SPF"  (infixl "\<otimes>" 40) where
+"spfComp2 f1 f2 \<equiv> Abs_CSPF (\<lambda> x. (sbDom\<cdot>x = I f1 f2) \<leadsto> 
+    (\<Squnion>i. iterate i\<cdot>(\<Lambda> z. x \<uplus> ((Rep_CSPF f1)\<rightharpoonup>(z \<bar> spfDom\<cdot>f1)) \<uplus> ((Rep_CSPF f2)\<rightharpoonup>(z \<bar> spfDom\<cdot>f2)))
+                   \<cdot>(sbLeast (C f1 f2))) \<bar> Oc f1 f2)"
 
 
 
-(* Meine Version *)
-(* assumes O1 \<inter> O2 = {}, otherwise arbitrary behaviour *)
-(* Do i know that (I1 \<inter> O1) = {} ? ? ? *)
-  (* because otherwise "(z \<bar> O1) = the (Rep_CSPF f1 (z \<bar> I1))" .... is strange/wrong/not useful  *)
-
-
-
-
- 
 
 text {* "spflift" takes a "simple stream processing function" and two channel names where the streams flow, and lifts it to a stream bundle processing function.*}
 definition spfLift :: "('m stream \<rightarrow> 'm stream) => channel => channel => 'm SPF" where
@@ -215,11 +249,6 @@ definition spfLift :: "('m stream \<rightarrow> 'm stream) => channel => channel
 (* takes a fully defined 'm SPF-function and changes it to an 'm SPF with given In & Out channels *)
 definition spfSbLift:: "('m SB \<rightarrow> 'm SB) \<Rightarrow> channel set \<Rightarrow> channel set \<Rightarrow> 'm SPF" where
 "spfSbLift f In Out \<equiv> Abs_CSPF (\<lambda>b. (sbDom\<cdot>b = In)\<leadsto> (\<up>f\<cdot>b) \<bar> Out)"
-
-
-
-
-
 
 
 
@@ -556,6 +585,7 @@ proof -
   thus ?thesis by (metis domIff option.collapse spfran2sbdom) 
 qed
 
+(*
 thm spfCompHelp_def
 lemma tsconc_assoc: "sb1 \<uplus> (sb2 \<uplus> sb3) = (sb1 \<uplus> sb2) \<uplus> sb3"
 by(simp add: sbunion_insert)
@@ -688,6 +718,12 @@ qed
 
 thm spfComp_def
 
+
+(* legacy Comp and Comp2 equality *)
+lemma comp12_eq: "spfComp f1 f2 = spfComp2 f1 f2"
+apply (simp add: spfComp_def spfComp2_def)
+by (metis (no_types) spfCompHelp_def)
+*)
 
 
 
@@ -825,7 +861,7 @@ qed
 
 
 
-
+(*
 thm spfComp_parallel
 
 lemma spfComp_parallel_max: assumes "spfCompInternal f1 f2 = {}"
@@ -836,6 +872,7 @@ apply(rule max_in_chainI)
 apply(simp only: numerals(2))
 apply(subst spfComp_parallel, simp_all add: assms)
 by (metis Suc_le_D Suc_le_lessD assms(1) assms(2) assms(3) less_Suc_eq_le spfComp_parallel)
+*)
 
 
 lemma sbIterate_chain: "sbDom\<cdot>(f\<cdot>(sbLeast cs)) = cs \<Longrightarrow>chain (\<lambda>i. iterate i\<cdot>f\<cdot>(sbLeast cs))"
@@ -844,6 +881,7 @@ apply(subst iterate_Suc2)
 apply(rule Cfun.monofun_cfun_arg)
 by simp
 
+(*
 lemma spfComp_parallel_chain: assumes "spfCompInternal f1 f2 = {}"
           and "sbDom\<cdot>x = spfCompIn f1 f2"
           and "spfComp_well f1 f2"
@@ -898,7 +936,7 @@ lemma spfComp_parallel1: assumes "spfCompInternal f1 f2 = {}"
 apply(simp add: spfComp_def Rep_CSPF_def Abs_CSPF_def)
 oops
 
-
+*)
 
 
 
