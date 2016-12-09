@@ -240,6 +240,17 @@ definition spfComp2 :: "'m SPF \<Rightarrow> 'm SPF \<Rightarrow> 'm SPF"  (infi
                    \<cdot>(sbLeast (C f1 f2))) \<bar> Oc f1 f2)"
 
 
+definition spfcomp :: "'m SPF => 'm SPF => 'm SPF"  where
+"spfcomp f1 f2 \<equiv> 
+let I1 = spfDom\<cdot>f1;
+    I2 = spfDom\<cdot>f2;
+    O1 = spfRan\<cdot>f1; 
+    O2 = spfRan\<cdot>f2; 
+    I  = spfDom\<cdot>f1 \<union> spfDom\<cdot>f2 - (spfRan\<cdot>f1 \<union> spfRan\<cdot>f2);
+    Oc = spfRan\<cdot>f1 \<union> spfRan\<cdot>f2 - (spfDom\<cdot>f1 \<union> spfDom\<cdot>f2);
+    C  = spfDom\<cdot>f1 \<union> spfDom\<cdot>f2 \<union> spfRan\<cdot>f1 \<union> spfRan\<cdot>f2    
+in Abs_CSPF (\<lambda> x. (sbDom\<cdot>x = I) \<leadsto> \<Squnion>i. iterate i\<cdot>
+   (\<Lambda> z. x \<uplus> ((Rep_CSPF f1)\<rightharpoonup>(z \<bar> I1)) \<uplus> ((Rep_CSPF f2)\<rightharpoonup>(z \<bar> I2)))\<cdot>(sbLeast C) \<bar> Oc)"
 
 
 text {* "spflift" takes a "simple stream processing function" and two channel names where the streams flow, and lifts it to a stream bundle processing function.*}
