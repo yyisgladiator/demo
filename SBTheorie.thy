@@ -401,13 +401,16 @@ using cont2cont_LAM cont2cont_fun sbgetch_cont2 channel_cont by force
 lemma sbgetch_insert: "b. c = the (Rep_SB b c)"
 by (simp add: sbGetCh_def)
 
-lemma sbgetch_rep_eq: "sb_well b \<Longrightarrow> Abs_SB b . c = b \<rightharpoonup> c"
+lemma sbgetch_rep_eq: "sb_well b \<Longrightarrow> (Abs_SB b . c) = (b \<rightharpoonup> c)"
 by (simp add: sbGetCh_def)
 
 lemma sbgetchE: assumes "(c\<in>sbDom\<cdot>b)"
   shows "Some (b .c) =  (Rep_SB b) c"
 apply (simp add: domIff sbdom_insert sbgetch_insert)
 using assms domIff sbdom_insert by force
+
+lemma sbgetch_lub: "chain Y \<Longrightarrow> ((\<Squnion>i. Y i) . c) =  (\<Squnion>i. (Y i) . c)"
+  by (metis (mono_tags, lifting) lub_eq lub_eval sbgetch_insert)
 
 
 
