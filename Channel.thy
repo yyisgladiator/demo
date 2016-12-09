@@ -1,5 +1,5 @@
 theory Channel
-imports HOLCF
+imports "~~/src/HOL/HOLCF/HOLCF"
 
 begin
 

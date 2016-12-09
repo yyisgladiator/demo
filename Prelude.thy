@@ -1,7 +1,7 @@
 section {* Prelude *}
 
 theory Prelude
-imports HOLCF
+imports "~~/src/HOL/HOLCF/HOLCF"
 begin
 
 default_sort type

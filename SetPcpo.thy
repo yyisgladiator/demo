@@ -1,7 +1,7 @@
 chapter {* Set and bool as a pointed cpo. *}
 
 theory SetPcpo
-imports Adm 
+imports "~~/src/HOL/HOLCF/Adm"
 begin
 
 text {*PCPO on sets and bools. The @{text "\<sqsubseteq>"} operator of the order is defined as the @{text "\<subseteq>"} operator on sets
