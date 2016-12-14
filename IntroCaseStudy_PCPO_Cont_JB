@@ -1,0 +1,19 @@
+theory IntroCaseStudy_PCPO_Cont_JB
+imports "~~/src/HOL/HOLCF/HOLCF" Streams StreamTheorie
+begin
+
+pcpodef ('a,'b) contfun ="{f::('a::cpo => 'b::pcpo). cont f}"
+using bottom_cfun cfun_def apply auto[1]
+by (metis adm_cfun cfun_def)
+
+lemma smap_consts: "smap f\<cdot>\<up>x\<infinity> = (\<up>(f x)\<infinity>)"
+by simp
+
+lemma one: "smap Suc\<cdot>\<up>2\<infinity> = (\<up>3)\<infinity>"
+by (simp add: smap_consts)
+
+lemma two: assumes "cont f"
+  shows "monofun f"
+by (simp add: assms cont2mono)
+
+end
