@@ -254,3 +254,4 @@ by(auto simp add: spf_well_def domIff2 sbdom_rep_eq)
 lemma ctype_simp [simp]: "ctype c = range Nat"
 using ctype.elims by blast *)
 
+end
