@@ -173,7 +173,9 @@ text {* @{term sinftimes}: Concatenate a stream infinitely often to itself. *}
 definition sinftimes  :: "'a stream \<Rightarrow> 'a stream" ("_\<infinity>") where
  "sinftimes \<equiv> fix\<cdot>(\<Lambda> h. (\<lambda>s. 
                         if s = \<epsilon> then \<epsilon> else (s \<bullet> (h s))))" 
-
+                      
+                        
+                        
 text {* @{term smap}: Apply a function to all elements of the stream. *}
 definition smap       :: "('a \<Rightarrow> 'b) \<Rightarrow> ('a,'b) spf" where
 "smap f \<equiv> fix\<cdot>(\<Lambda> h s. slookahd\<cdot>s\<cdot>(\<lambda> a. 
@@ -310,6 +312,10 @@ text {* A typical procedure is to define a primary recursive function
 primrec sntimes :: "nat \<Rightarrow> 'a stream \<Rightarrow> 'a stream" where
   "sntimes 0 s = \<epsilon>" |
   "sntimes (Suc n) s = (sconc s)\<cdot>(sntimes n s)"
+  
+(* Abbreviation for sntimes *)
+abbreviation sntimes_abbr :: "nat \<Rightarrow> 'a stream \<Rightarrow> 'a stream" ("_\<star>_" [60,80] 90)
+where "(n \<star> s)  == (sntimes n s)"
 
 text {* In most cases, stream-processing functions or operators
   on streams are defined using the continuous fixed point operator. *}

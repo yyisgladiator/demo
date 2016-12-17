@@ -132,6 +132,34 @@ lemma lub_prod2: "\<lbrakk>chain (X::nat \<Rightarrow> 'a::cpo); chain (Y::nat \
                         (\<Squnion>k. (X k,Y k)) = (Lub X, Lub Y)"
 by (subst lub_prod, simp+)
 
+text {* The least upper bound of a chainelement in a chain
+is the least upper bound of the chainelement plus another element*}
+lemma lub_range_shift2: "chain Y \<Longrightarrow> (\<Squnion>i. Y i) = (\<Squnion>i. Y (i+j))"
+  apply(simp add: lub_def)
+  using is_lub_range_shift lub_def by fastforce
+  
+
+text{* The least upper bound of any finite chain is a member of the chain *}
+lemma l42: "chain S \<Longrightarrow> finite_chain S \<Longrightarrow> \<exists>t. (\<Squnion> j. S j) = S t"
+using lub_eqI lub_finch2 by auto
+
+text{* The least upper bound of a monotone function applied on a finite chain is the
+function applied to the least upper bound of the finite chain *}
+lemma finite_chain_lub: fixes Y :: "nat \<Rightarrow> 'a ::cpo"
+  assumes "finite_chain Y" and "chain Y" and "monofun f"
+  shows "f (\<Squnion>i. Y i) = (\<Squnion>i. f (Y i))"
+proof -
+  obtain nn :: "(nat \<Rightarrow> 'a) \<Rightarrow> nat" where
+    f1: "Lub Y = Y (nn Y)"
+    by (meson assms(1) assms(2) l42)
+  then have "\<forall>n. f (Y n) \<sqsubseteq> f (Y (nn Y))"
+    by (metis (no_types) assms(2) assms(3) is_ub_thelub monofun_def)
+  then show ?thesis
+    using f1 by (simp add: lub_chain_maxelem)
+qed 
+
+
+
 text {* Creating a list from iteration a function @{text "f"} 
   @{text "n"}-times on a start value @{text s}.*}
 primrec literate :: "nat \<Rightarrow> ('a \<Rightarrow> 'a) \<Rightarrow> 'a \<Rightarrow> 'a list"

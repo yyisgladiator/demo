@@ -21,39 +21,6 @@ default_sort countable
 (* deletes the Rule "1 = Suc 0" *)
  declare One_nat_def[simp del] 
 
-
-(* Abbreviation for sntimes *)
-abbreviation sntimes_abbr :: "nat \<Rightarrow> 'a stream \<Rightarrow> 'a stream" ("_\<star>_" [60,80] 90)
-where "(n \<star> s)  == (sntimes n s)"
-
-
-(* Für Prelude *)
-lemma lub_range_shift2: "chain Y \<Longrightarrow> (\<Squnion>i. Y i) = (\<Squnion>i. Y (i+j))"
-  apply(simp add: lub_def)
-  using is_lub_range_shift lub_def by fastforce
-
-
-(* the lub of any finite chain is a member of the chain *)
-lemma l42: "chain S \<Longrightarrow> finite_chain S \<Longrightarrow> \<exists>t. (\<Squnion> j. S j) = S t"
-using lub_eqI lub_finch2 by auto
-
-lemma finite_chain_lub: fixes Y :: "nat \<Rightarrow> 'a ::cpo"
-  assumes "finite_chain Y" and "chain Y" and "monofun f"
-  shows "f (\<Squnion>i. Y i) = (\<Squnion>i. f (Y i))"
-proof -
-  obtain nn :: "(nat \<Rightarrow> 'a) \<Rightarrow> nat" where
-    f1: "Lub Y = Y (nn Y)"
-    by (meson assms(1) assms(2) l42)
-  then have "\<forall>n. f (Y n) \<sqsubseteq> f (Y (nn Y))"
-    by (metis (no_types) assms(2) assms(3) is_ub_thelub monofun_def)
-  then show ?thesis
-    using f1 by (simp add: lub_chain_maxelem)
-qed 
-
-
-
-
-
 (* ----------------------------------------------------------------------- *)
 section {* Lemmas about Lnat *}
   (* später in Lnat.thy reinkopieren...  *)
@@ -104,14 +71,10 @@ lemma [simp]: fixes ln :: lnat
 by (simp add: min_def)
 
 
-
-
-
 (* ----------------------------------------------------------------------- *)
 section {* Lemmas about sinftimes and sntimes *}
   (* und allgemeine Lemmas über conc, shd, sdrop, stake ... *)
 (* ----------------------------------------------------------------------- *)
-
 
 
 (* prepending an element a to a stream and extracting it with lshd is equivalent to imposing the
