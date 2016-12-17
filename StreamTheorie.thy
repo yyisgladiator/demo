@@ -15,60 +15,8 @@ begin
 (* stream is defined on countables, hence the default type is set to countable *)
 default_sort countable
 
-
-
-
 (* deletes the Rule "1 = Suc 0" *)
  declare One_nat_def[simp del] 
-
-(* ----------------------------------------------------------------------- *)
-section {* Lemmas about Lnat *}
-  (* später in Lnat.thy reinkopieren...  *)
-(* ----------------------------------------------------------------------- *)
-
-
-(* instanciate lnat as linorder *)
-  (* now min/max can be used with lnat *)
-instantiation lnat :: linorder
-begin
-  instance
-  apply(intro_classes)
-  using lnat_po_eq_conv lnle_def lnless_def apply blast
-  apply simp
-  using trans_lnle apply blast
-  using lnat_po_eq_conv apply blast
-  by (metis inf_ub less2nat linear ninf2Fin)
-end
-
-(* any lazy natural number ln is smaller than its successor *)
-lemma ln_less[simp]: assumes "ln<\<infinity>"
-  shows "ln < lnsuc\<cdot>ln"
-proof -
-  have "ln \<le> lnsuc\<cdot>ln" by simp
-  obtain n where "Fin n = ln" by (metis assms dual_order.strict_implies_not_eq infI)
-  have "Fin n < Fin (Suc n)" by force
-  thus ?thesis using \<open>Fin n = ln\<close> by auto 
-qed
-
-(* a few lemmas simplifying min *)
-
-(* \<infinity> is greater than or equal to any lazy natural number ln *)
-lemma [simp]: fixes ln :: lnat
-  shows "min \<infinity> ln = ln"
-by (simp add: min_def)
-
-lemma [simp]: fixes ln :: lnat
-  shows "min ln \<infinity> = ln"
-by (simp add: min_def)
-
-(* 0 is less than or equal to any lazy natural number ln *) 
-lemma [simp]: fixes ln :: lnat
-  shows "min ln 0 = 0"
-by (simp add: min_def)
-
-lemma [simp]: fixes ln :: lnat
-  shows "min 0 ln = 0"
-by (simp add: min_def)
 
 
 (* ----------------------------------------------------------------------- *)
@@ -77,23 +25,7 @@ section {* Lemmas about sinftimes and sntimes *}
 (* ----------------------------------------------------------------------- *)
 
 
-(* prepending an element a to a stream and extracting it with lshd is equivalent to imposing the
-   discrete order on a *)
-lemma lshd_updis [simp]: "lshd\<cdot>(\<up>a \<bullet> s) = updis a"
-by (metis lscons_conv stream.sel_rews(4))
 
-(* converting the element x to a singleton stream, repeating the singleton and re-extracting x with
-   lshd is equivalent to imposing the discrete order on x *)
-lemma lshd_sinf [simp]: "lshd\<cdot>\<up>x\<infinity> = updis x"
-by (metis lshd_updis sinftimes_unfold)
-
-(* the infinite repetition of the stream x has the same head as x *)
-lemma shd_sinf[simp]: "shd x\<infinity> = shd x"
-by (metis assoc_sconc shd1 sinftimes_unfold strict_icycle surj_scons)
-
-(* srt has no effect on an infinite constant stream of x *)
-lemma srt_sinf [simp]: "srt\<cdot>(\<up>x\<infinity>) = \<up>x\<infinity>"
-by (metis lscons_conv sinftimes_unfold stream.sel_rews(5) up_defined)
 
 (* dropping k+x elements is equivalent to dropping x elements first and then k elements *) 
 lemma sdrop_plus: "sdrop (k+x)\<cdot>xs = sdrop k\<cdot>(sdrop x\<cdot>xs)"

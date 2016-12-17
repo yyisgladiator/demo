@@ -436,6 +436,11 @@ by (rule_tac x=x in scases, simp+)
 lemma shd1[simp]: "shd (\<up>a \<bullet> s) = a"
 by (simp add: sconc_scons' shd_def sup'_def)
 
+(* prepending an element a to a stream and extracting it with lshd is equivalent to imposing the
+   discrete order on a *)
+lemma lshd_updis [simp]: "lshd\<cdot>(\<up>a \<bullet> s) = updis a"
+by (metis lscons_conv stream.sel_rews(4))
+
 (* srt is the inverse of appending to a singleton *)
 lemma [simp]: "srt\<cdot>(\<up>a\<bullet>as) = as"
 by (simp add: sconc_scons' sup'_def)
@@ -1059,6 +1064,19 @@ by (insert slen_sconc_all_finite
 
 lemma [simp]: "#(sinftimes (\<up>a)) = \<infinity>" 
 by (simp add: slen_sinftimes)
+
+(* converting the element x to a singleton stream, repeating the singleton and re-extracting x with
+   lshd is equivalent to imposing the discrete order on x *)
+lemma lshd_sinf [simp]: "lshd\<cdot>\<up>x\<infinity> = updis x"
+by (metis lshd_updis sinftimes_unfold)
+
+(* the infinite repetition of the stream x has the same head as x *)
+lemma shd_sinf[simp]: "shd (x\<infinity>) = shd x"
+by (metis assoc_sconc shd1 sinftimes_unfold strict_icycle surj_scons)
+
+(* srt has no effect on an infinite constant stream of x *)
+lemma srt_sinf [simp]: "srt\<cdot>\<up>x\<infinity> = (\<up>x\<infinity>)"
+by (metis lscons_conv sinftimes_unfold stream.sel_rews(5) up_defined)
 
 (* ----------------------------------------------------------------------- *)
 subsection {* @{term smap} *}
@@ -1869,10 +1887,10 @@ apply (erule_tac x="a" in allE)
 by (erule_tac x="0" in allE, auto)
 
 (* the infinite repetition of a only has a in its domain *)
+(*with new lemmata not necessary: apply (subst sinftimes_unfold, simp)*)
 lemma [simp]: "sdom\<cdot>(sinftimes (\<up>a)) = {a}"
 apply (auto simp add: sdom_def2)
 apply (induct_tac n, auto)
-apply (subst sinftimes_unfold, simp)
 apply (subst sinftimes_unfold, simp)
 apply (rule_tac x="0" in exI)
 by (subst sinftimes_unfold, simp)

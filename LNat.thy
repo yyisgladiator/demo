@@ -559,6 +559,50 @@ text {*(Fin k) < y \<Longrightarrow> Fin (Suc k) \<le> y*}
 lemma less2lnleD: "(Fin k) < y \<Longrightarrow> Fin (Suc k) \<le> y"
 by (rule_tac x="y" in lncases, simp+)
 
+(* ----------------------------------------------------------------------- *)
+subsection {*Basic lemmas on @{term lmin}  *}
+(* ----------------------------------------------------------------------- *)
+
+text{* Instanciate lnat as a linorder to use min/max*}
+instantiation lnat :: linorder
+begin
+  instance
+  apply(intro_classes)
+  using lnat_po_eq_conv lnle_def lnless_def apply blast
+  apply simp
+  using trans_lnle apply blast
+  using lnat_po_eq_conv apply blast
+  by (metis inf_ub less2nat linear ninf2Fin)
+end
+
+text{*A lazy natural number is smaller than its successor *}
+lemma ln_less[simp]: assumes "ln<\<infinity>"
+  shows "ln < lnsuc\<cdot>ln"
+proof -
+  have "ln \<le> lnsuc\<cdot>ln" by simp
+  obtain n where "Fin n = ln" by (metis assms dual_order.strict_implies_not_eq infI)
+  have "Fin n < Fin (Suc n)" by force
+  thus ?thesis using \<open>Fin n = ln\<close> by auto 
+qed
+
+(*few lemmas to simp min*)
+text{*\<infinity> is greater than or equal to any lazy natural number*}
+lemma [simp]: fixes ln :: lnat
+  shows "min \<infinity> ln = ln"
+by (simp add: min_def)
+
+lemma [simp]: fixes ln :: lnat
+  shows "min ln \<infinity> = ln"
+by (simp add: min_def)
+
+text{*0 is less than or equal to any lazy natural number*} 
+lemma [simp]: fixes ln :: lnat
+  shows "min ln 0 = 0"
+by (simp add: min_def)
+
+lemma [simp]: fixes ln :: lnat
+  shows "min 0 ln = 0"
+by (simp add: min_def)
 
 end
 
