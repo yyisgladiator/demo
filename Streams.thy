@@ -348,6 +348,16 @@ apply (rule_tac y=x in scases', simp)
 apply (subst lub_range_shift [where j="Suc 0", THEN sym],simp+)
 by (subst contlub_cfun_arg [THEN sym], auto)
 
+(* if two streams xs and ys are identical for any prefix that is a multiple of y long, then the two
+   streams are identical for any prefix *)
+lemma gstake2stake: assumes "\<forall>i. stake (i*y)\<cdot>xs = stake (i*y)\<cdot>ys" and "y\<noteq>0"
+  shows "\<forall>i. stake i\<cdot>xs = stake i\<cdot>ys"
+proof 
+  fix i
+  obtain k where "\<exists>l. k = y*l" and "k\<ge>i" by (metis One_nat_def Suc_le_eq assms(2) gr0I mult.commute mult_le_mono2 nat_mult_1_right)
+  thus "stake i\<cdot>xs = stake i\<cdot>ys" by (metis assms(1) min_def mult.commute stream.take_take) 
+qed
+
 (* ----------------------------------------------------------------------- *)
 subsection {* The continuity of concatenation *}
 (* ----------------------------------------------------------------------- *)
@@ -615,8 +625,6 @@ sledgehammer
 *)
 
 
-
-
 text {* For infinite streams, @{text "stake n"} returns @{text "n"} elements *}
 lemma slen_stake_fst_inf[rule_format]: 
   "\<forall>x. #x = \<infinity> \<longrightarrow> #(stake n\<cdot>x) = Fin n"
@@ -747,6 +755,10 @@ lemma sdrop_stakel1: "\<forall>s. sdrop n\<cdot>s = \<epsilon> \<longrightarrow>
 apply (induct_tac n, auto)
 by (rule_tac x=s in scases, auto)
 
+(* dropping k+x elements is equivalent to dropping x elements first and then k elements *) 
+lemma sdrop_plus: "sdrop (k+x)\<cdot>xs = sdrop k\<cdot>(sdrop x\<cdot>xs)"
+by (simp add: iterate_iterate sdrop_def)
+
 text {* Dropping from infinite streams still returns infinite streams *}
 lemma fair_sdrop[rule_format]: 
   "\<forall>x. #x = \<infinity> \<longrightarrow> #(sdrop n\<cdot>x) = \<infinity>"
@@ -827,6 +839,12 @@ lemma snths_eq:
 apply (rule stream.take_lemma)
 by (rule snths_eq_lemma, auto)
 
+(* easy to use rule to show equality on infinite streams *)
+(* if two finite streams x, s are identical at every position then x and s are identical *) 
+lemma sinf_snt2eq: assumes "#s=\<infinity>" and "#x=\<infinity>" and "\<And>i. (snth i s = snth i x)"
+  shows "s=x"
+by (simp add: assms snths_eq)
+
 (* ----------------------------------------------------------------------- *)
 section {* Further lemmas *}
 (* ----------------------------------------------------------------------- *)
@@ -835,6 +853,27 @@ section {* Further lemmas *}
 lemma assoc_sconc[simp]: "(s1\<bullet>s2)\<bullet>s3 = s1\<bullet>s2\<bullet>s3"
 apply (rule_tac x="#s1" in lncases, auto)
 by (rule finind [of "s1"], auto)
+
+(* 2 very specific lemmas, used in \<open>stake_add\<close> *)
+  lemma stake_conc: "stake i\<cdot>s \<bullet> x = stake (Suc i)\<cdot>s \<Longrightarrow> x = stake 1\<cdot>(sdrop i\<cdot>s)"
+  apply (induction i arbitrary: s)
+  apply (simp add: One_nat_def)
+  by (smt assoc_sconc inject_scons sdrop_forw_rt stake_Suc stream.take_strict strict_sdrop surj_scons) 
+  
+  
+  lemma stake_concat:"stake i\<cdot>s \<bullet> stake (Suc j)\<cdot>(sdrop i\<cdot>s) = stake (Suc i)\<cdot>s \<bullet> stake j\<cdot>(sdrop (Suc i)\<cdot>s)"
+  proof -
+    obtain x where x_def: "stake i\<cdot>s \<bullet> x = stake (Suc i)\<cdot>s" 
+      by (metis (no_types, hide_lams) Suc_n_not_le_n linear min_def split_streaml1 stream.take_take)  
+    thus ?thesis
+      by (smt One_nat_def Rep_cfun_strict1 assoc_sconc sconc_snd_empty sdrop_back_rt stake_Suc stake_conc stream.take_0 stream.take_strict strict_sdrop surj_scons)
+  qed
+
+(* for arbitrary natural numbers i, j and any streams s the following lemma holds: *)
+lemma stake_add: "stake (i+j)\<cdot>s = (stake i\<cdot>s) \<bullet> (stake j\<cdot>(sdrop i\<cdot>s))"
+apply (induction i arbitrary: j)
+apply simp
+by (metis add_Suc_shift stake_concat)
 
 text {* Finite, equal streams agree on all postfixes *}
 lemma inject_sconc: "\<lbrakk>#x = Fin k; x \<bullet> y = x \<bullet> z\<rbrakk> \<Longrightarrow> y = z"
@@ -1045,6 +1084,11 @@ text {* basic properties of @{term sntimes} and @{term sinftimes} *}
 lemma sntimes_eps[simp]: "sntimes n \<epsilon> = \<epsilon>"
 by (induct_tac n, simp+)
 
+(* after repeating the stream \<up>s n-times the head is s *)
+  (* n>0 otherwise \<open>0 \<star> \<up>s = \<epsilon>\<close> *)
+lemma shd_sntime [simp]: assumes "n>0" shows "shd (n \<star> \<up>s) = s"
+by (metis assms gr0_implies_Suc shd1 sntimes.simps(2))
+
 (* infinitely cycling the empty stream produces the empty stream again *)
 lemma strict_icycle[simp]: "sinftimes \<epsilon> = \<epsilon>"
 by (subst sinftimes_def [THEN fix_eq2], auto)
@@ -1078,6 +1122,165 @@ by (metis assoc_sconc shd1 sinftimes_unfold strict_icycle surj_scons)
 lemma srt_sinf [simp]: "srt\<cdot>\<up>x\<infinity> = (\<up>x\<infinity>)"
 by (metis lscons_conv sinftimes_unfold stream.sel_rews(5) up_defined)
 
+(* if the stream x contains y elements then the first y elements of the infinite repetition of x will
+   be x again *)
+lemma stake_y [simp]: assumes "#x = Fin y"
+    shows "stake y\<cdot>(sinftimes x) = x"
+by (metis approxl1 assms minimal monofun_cfun_arg sconc_snd_empty sinftimes_unfold)
+
+(* the infinite repetitions of the singleton stream \<up>s consists only of the element s *)
+lemma snth_sinftimes[simp]: "snth i (\<up>s\<infinity>) = s"
+apply (induction i)
+apply (simp) 
+by (simp add: snth_rt)
+
+(* dropping any finite number of elements from an infinite constant stream doesn't affect the stream *)
+lemma sdrops_sinf[simp]: "sdrop i\<cdot>\<up>x\<infinity> = \<up>x\<infinity>"
+apply (induction i)
+apply(simp)
+by (simp add: sdrop_forw_rt)
+
+(* For a finite natural number "i", following relation between sntimes and stake holds:  *)
+lemma sntimes_stake: "i \<star> \<up>x = stake i\<cdot>\<up>x\<infinity>"
+apply(induction i)
+apply simp
+by (metis sinftimes_unfold sntimes.simps(2) stake_Suc) 
+
+(* For every finite number "i" is sntimes \<noteq> sinftimes. *)
+lemma snNEqSinf [simp]: "i \<star> \<up>x \<noteq> \<up>x\<infinity>"
+by (metis lshd_sinf sdropostake sdrops_sinf sntimes_stake stream.sel_rews(3) up_defined)
+
+(* for every natural number i, dropping the first (i*y) elements results in the same infinite stream *)
+  (* the first i "blocks" of x are dropped *)
+lemma sdrop_sinf[simp]: assumes "Fin y = #x"
+  shows "sdrop (i * y)\<cdot>(sinftimes x) = x\<infinity>"
+apply(induction i)
+apply(simp)
+by (metis assms mult_Suc sdrop_plus sdropl6 sinftimes_unfold) 
+
+(* repeating the empty stream again produces the empty stream *)
+lemma sinf_notEps[simp]: assumes "xs \<noteq> \<epsilon>" shows "(sinftimes xs) \<noteq> \<epsilon>"
+using assms slen_sinftimes by fastforce
+
+(* sinftimes has no effect on streams that are already infinite *)
+(*removed simp because of lemma stakewhile_sinftimes_lemma*)
+lemma sinf_inf: assumes "#s = \<infinity>" 
+  shows "s\<infinity> = s"
+by (metis assms sconc_fst_inf sinftimes_unfold)
+
+(* sinftimes is idempotent *)
+lemma sinf_dupE [simp]: "(sinftimes s) \<infinity> = (s\<infinity>)"
+using sinf_inf slen_sinftimes by force
+
+(* alternative unfold rule for sntimes, new element is appended on the end *)
+lemma sntimes_Suc2: "(Suc i) \<star> s = (i\<star>s) \<bullet> s"
+apply (induction i)
+apply simp
+by (metis assoc_sconc sntimes.simps(2))
+
+(* Blockwise stake from sinftimes to sntimes. *)
+lemma sinf2sntimes: assumes "Fin y = #x"
+  shows "stake (i*y)\<cdot>(x\<infinity>) = i\<star>x"
+apply(induction i)
+apply simp
+by (metis assms mult_Suc sdrop_plus sdrop_sinf sntimes.simps(2) stake_add stake_y) 
+
+(* for any natural number i, sntimes is a prefix of sinftimes *)
+lemma snT_le_sinfT [simp]: "i\<star>s \<sqsubseteq> s\<infinity>"
+by (metis minimal monofun_cfun_arg ninf2Fin sconc_fst_inf sconc_snd_empty sinf2sntimes sinf_inf sntimes.simps(2) sntimes_Suc2 ub_stake)
+
+(* repeating the stream s i times produces a prefix of repeating s i+1 times *)
+lemma sntimes_leq: "i\<star>s \<sqsubseteq> (Suc i)\<star>s"
+by (metis minimal monofun_cfun_arg sconc_snd_empty sntimes_Suc2)
+
+(* the repetitions of a stream constitute a chain *)
+lemma sntimes_chain: "chain (\<lambda>i. i\<star>s)"
+by (meson po_class.chainI sntimes_leq)
+
+(* xs is an infinite repetition of the finite stream x. Then dropping any fixed number i of repetitions
+   of x leaves xs unchanged. *)
+lemma sdrop_sinf2: assumes "xs = x\<bullet>xs" and "#x = Fin y"
+  shows "sdrop (y*i)\<cdot>xs = xs"
+apply (induction i)
+apply simp 
+by (metis assms mult_Suc_right sdrop_plus sdropl6) 
+
+(* the recursive definition for a stream (xs = x\<bullet>xs) is identical to the infinite repetition of x at
+   every multiple of the length of x *)
+lemma stake_eq_sinf: assumes "xs = x\<bullet>xs" and "#x = Fin y" 
+  shows "stake (i*y)\<cdot>xs = stake (i*y)\<cdot>(sinftimes x)"
+proof (induction i)
+  case 0 thus ?case by simp
+next
+  case (Suc i) 
+  have drop_xs:"sdrop (i*y)\<cdot>xs = xs" by (metis assms mult.commute sdrop_sinf2) 
+
+  have "stake (Suc i * y)\<cdot>xs  =  stake (i*y)\<cdot>xs \<bullet> stake y\<cdot>(sdrop (i*y)\<cdot>xs)" by (metis add.commute mult_Suc stake_add) 
+  hence eq1:"stake (Suc i * y)\<cdot>xs =  stake (i*y)\<cdot>xs \<bullet> x"  by (metis approxl1 assms drop_xs minimal monofun_cfun_arg sconc_snd_empty)
+  
+  have "stake (Suc i * y)\<cdot>(sinftimes x) = stake (i*y)\<cdot>(sinftimes x) \<bullet> stake y\<cdot>(sdrop (i*y)\<cdot>(sinftimes x))"  
+    by (metis add.commute mult_Suc stake_add)
+  hence eq2:"stake (Suc i * y)\<cdot>(sinftimes x) =  stake (i*y)\<cdot>(sinftimes x) \<bullet> x" by (simp add: assms(2)) 
+
+  thus ?case using Suc.IH eq1 by auto 
+qed
+
+(* when repeating a stream s a different number of times, one of the repetitions will be a prefix of
+   the other *)
+lemma stake_sntimes2sntimes: assumes "j\<le>k" and "#s = Fin y"
+  shows "stake (j*y)\<cdot>(k\<star>s) = j\<star>s"
+by (smt assms(1) assms(2) min_def mult_le_mono1 sinf2sntimes stakeostake)
+
+(* For a stream s, a natural y and an arbitrary natural j, apply blockwise stake sntimes. *)
+lemma lubStake2sn: assumes "#s = Fin y"
+  shows "(\<Squnion> i. stake (y*j)\<cdot>(i\<star>s)) = j\<star>s" (is "(\<Squnion>i. ?c i) = _")
+proof -
+  have "max_in_chain j (\<lambda>i. ?c i)" by (simp add: assms max_in_chainI mult.commute stake_sntimes2sntimes) 
+  thus ?thesis by (simp add: assms maxinch_is_thelub mult.commute sntimes_chain stake_sntimes2sntimes)  
+qed
+
+(* building block of the lemma sntimesLub_Fin *)
+lemma sntimesChain: assumes "#s = Fin y" and "y \<noteq> 0"
+  shows "\<forall>j. stake (y*j)\<cdot>(\<Squnion> i. i\<star>s) = stake (y*j)\<cdot> (s\<infinity>)"
+by (metis assms(1) contlub_cfun_arg lubStake2sn mult.commute sinf2sntimes sntimes_chain)
+
+lemma sntimesLub_Fin: assumes "#s = Fin y" and "y \<noteq> 0"
+  shows "(\<Squnion> i. i\<star>s) = s\<infinity>"
+proof - 
+  have  "\<forall>j. stake (j*y)\<cdot>(\<Squnion> i. i\<star>s) = stake (j*y)\<cdot> (s\<infinity>)" by (metis assms(1) assms(2) mult.commute sntimesChain) 
+  hence "\<forall>j. stake j\<cdot>(\<Squnion> i. i\<star>s) = stake j\<cdot> (s\<infinity>)" using assms by (metis gstake2stake)
+  thus ?thesis by (simp add:  stream.take_lemma)
+qed
+
+(* for any stream s the LUB of sntimes is sinftimes *)
+lemma sntimesLub[simp]:"(\<Squnion> i. i\<star>s) = s\<infinity>"
+apply(cases "#s = \<infinity>")
+apply (metis inf2max sconc_fst_inf sinf_inf sntimes.simps(2) sntimes_chain)
+by (metis Fin_0 lncases lub_eq_bottom_iff slen_empty_eq sntimesLub_Fin sntimes_chain sntimes_eps strict_icycle)
+
+(* shows that any recursive definition with the following form is equal to sinftimes *)
+lemma rek2sinftimes: assumes "xs = x \<bullet> xs" and "x\<noteq>\<epsilon>"
+  shows "xs = sinftimes x"
+proof (cases "#x = \<infinity>")
+  case True thus ?thesis by (metis assms(1) sconc_fst_inf sinftimes_unfold)
+next
+  case False 
+  obtain y where y_def: "Fin y = #x \<and> y\<noteq>0"  by (metis False Fin_02bot assms(2) infI lnzero_def slen_empty_eq)
+  hence "\<forall>i. stake (i*y)\<cdot>xs = stake (i*y)\<cdot>(x\<infinity>)" using assms(1) stake_eq_sinf by fastforce  
+  hence "\<forall>i. stake i\<cdot>xs = stake i\<cdot>(x\<infinity>)" using gstake2stake y_def by blast 
+  thus ?thesis by (simp add: stream.take_lemma)
+qed
+
+(* specializes the result from rek2sinftimes to singleton streams *)
+lemma s2sinftimes: assumes "xs = \<up>x \<bullet> xs"
+  shows "xs = \<up>x\<infinity>"
+using assms rek2sinftimes by fastforce
+
+(* shows that the infinite repetition of a stream x is the least fixed point of iterating (\<Lambda> s. x \<bullet> s),
+   which maps streams to streams *)
+lemma fix2sinf[simp]: "fix\<cdot>(\<Lambda> s. x \<bullet> s) = x\<infinity>"
+by (metis eta_cfun fix_eq fix_strict rek2sinftimes sconc_snd_empty strict_icycle)
+
 (* ----------------------------------------------------------------------- *)
 subsection {* @{term smap} *}
 (* ----------------------------------------------------------------------- *)
@@ -1088,6 +1291,12 @@ by (subst smap_def [THEN fix_eq2], simp)
 (* smap distributes over concatenation *)
 lemma smap_scons[simp]: "smap f\<cdot>(\<up>a \<bullet> s) = \<up>(f a) \<bullet> smap f\<cdot>s"
 by (subst smap_def [THEN fix_eq2], simp)
+
+lemma rek2smap: assumes "\<And>a as. f\<cdot>(\<up>a \<bullet> as) = \<up>(g a) \<bullet> f\<cdot>as"
+  and "f\<cdot>\<bottom> = \<bottom>"
+  shows "f\<cdot>s = smap g\<cdot>s"
+apply(rule ind [of _s])
+by(simp_all add: assms)
 
 (* mapping f over a singleton stream is equivalent to applying f to the only element in the stream *) 
 lemma [simp]: "smap f\<cdot>(\<up>a) = \<up>(f a)"
@@ -1118,6 +1327,10 @@ proof (rule lncases [of "#a"], simp)
   fix k assume "#a = Fin k"
   thus ?thesis by (rule Streams.finind [of "a"], simp_all)
 qed
+
+(* smap distributes over infinite repetition *)
+lemma smap2sinf[simp]: "smap f\<cdot>(x\<infinity>)= (smap f\<cdot>x)\<infinity>"
+by (metis (no_types) rek2sinftimes sinftimes_unfold slen_empty_eq slen_smap smap_split strict_icycle)
 
 (* ----------------------------------------------------------------------- *)
 subsection {* @{term sprojfst} and @{term sprojsnd} *}
@@ -1889,11 +2102,11 @@ by (erule_tac x="0" in allE, auto)
 (* the infinite repetition of a only has a in its domain *)
 (*with new lemmata not necessary: apply (subst sinftimes_unfold, simp)*)
 lemma [simp]: "sdom\<cdot>(sinftimes (\<up>a)) = {a}"
-apply (auto simp add: sdom_def2)
-apply (induct_tac n, auto)
+by (auto simp add: sdom_def2)
+(*apply (induct_tac n, auto)
 apply (subst sinftimes_unfold, simp)
 apply (rule_tac x="0" in exI)
-by (subst sinftimes_unfold, simp)
+by (subst sinftimes_unfold, simp)*)
 
 (* any singleton stream of z only has z in its domain *)
 lemma [simp]: "sdom\<cdot>(\<up>z) = {z}"
@@ -2100,6 +2313,21 @@ by (induct_tac l, simp+)
 (* ----------------------------------------------------------------------- *)
 subsection {* List- and stream-processing functions *}
 (* ----------------------------------------------------------------------- *)
+
+(* concatenating streams corresponds to concatenating lists *)
+lemma listConcat: "<l1> \<bullet> <l2> = <(l1 @ l2)>"
+apply(induction l1)
+by auto
+
+(* smap for streams is equivalent to map for lists *)
+lemma smap2map: "smap g\<cdot>(<ls>) = <(map g ls)>"
+apply(induction ls)
+by auto
+
+(* the notion of length is the same for streams as for lists *)
+lemma list2streamFin: "#(<ls>) = Fin (length ls)"
+apply(induction ls)
+by auto
 
 text {* Monotone list-processing functions induce monotone stream-processing functions
   by applying them to the stream's k-element prefix *}
