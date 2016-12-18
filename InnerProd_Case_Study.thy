@@ -130,16 +130,136 @@ lemma spfmult_cont[simp]: "cont
 (* As we now proved that the add and mult component is continuous we can define some components *)
 lift_definition mult1 :: "nat SPF" is
 "\<Lambda> sb. (sbDom\<cdot>sb = {c1, c2}) \<leadsto> ([c5\<mapsto>mult\<cdot>(sb . c1)\<cdot>(sb . c2)]\<Omega>)"
-  by(auto simp add: spf_well_def domIff2 sbdom_rep_eq)
+  by (auto simp add: spf_well_def domIff2 sbdom_rep_eq)
 
 lift_definition mult2 :: "nat SPF" is
 "\<Lambda> sb. (sbDom\<cdot>sb = {c3, c4}) \<leadsto> ([c6\<mapsto>mult\<cdot>(sb . c3)\<cdot>(sb . c4)]\<Omega>)"
-  by(auto simp add: spf_well_def domIff2 sbdom_rep_eq)
+  by (auto simp add: spf_well_def domIff2 sbdom_rep_eq)
 
 lift_definition addC :: "nat SPF" is
 "\<Lambda> sb. (sbDom\<cdot>sb = {c5, c6}) \<leadsto> ([c7\<mapsto>mult\<cdot>(sb . c5)\<cdot>(sb . c6)]\<Omega>)"
-  by(auto simp add: spf_well_def domIff2 sbdom_rep_eq)
+  by (auto simp add: spf_well_def domIff2 sbdom_rep_eq)
+
+(* rep equalities, useful for simp *)
+lemma mult1_rep_eqC: "Rep_CSPF mult1 = (\<lambda> sb. (sbDom\<cdot>sb = {c1, c2}) \<leadsto> ([c5 \<mapsto> mult\<cdot>(sb . c1)\<cdot>(sb . c2)]\<Omega>))"
+  by (simp add: mult1.rep_eq Rep_CSPF_def)
+
+lemma mult2_rep_eqC: "Rep_CSPF mult2 = (\<lambda> sb. (sbDom\<cdot>sb = {c3, c4}) \<leadsto> ([c6 \<mapsto> mult\<cdot>(sb . c3)\<cdot>(sb . c4)]\<Omega>))"
+  by (simp add: mult2.rep_eq Rep_CSPF_def)
+
+lemma addC_rep_eqC: "Rep_CSPF addC = (\<lambda> sb. (sbDom\<cdot>sb = {c5, c6}) \<leadsto> ([c7 \<mapsto> mult\<cdot>(sb . c5)\<cdot>(sb . c6)]\<Omega>))"
+  by (simp add: addC.rep_eq Rep_CSPF_def)
+
 
 (* COMPONENT PROPERTIES *)
+(* mult1 *)
+lemma [simp]: "spfDom\<cdot>mult1 = {c1,c2}"
+  apply(simp add: spfdom_insert mult1.rep_eq Rep_CSPF_def domIff2)
+  by (meson sbleast_sbdom someI_ex)
+
+lemma [simp]: "spfRan\<cdot>mult1 = {c5}"
+  apply (simp add: spfran_least mult1_rep_eqC)
+  by (simp add: sbdom_insert)
+
+(* mult2 *)
+lemma [simp]: "spfDom\<cdot>mult2 = {c3,c4}"
+  apply(simp add: spfdom_insert mult2.rep_eq Rep_CSPF_def domIff2)
+  by (meson sbleast_sbdom someI_ex)
+
+lemma [simp]: "spfRan\<cdot>mult2 = {c6}"
+  apply (simp add: spfran_least mult2_rep_eqC)
+  by (simp add: sbdom_insert)
+
+(* addC *)
+lemma [simp]: "spfDom\<cdot>addC = {c5,c6}"
+  apply(simp add: spfdom_insert addC.rep_eq Rep_CSPF_def domIff2)
+  by (meson sbleast_sbdom someI_ex)
+
+lemma [simp]: "spfRan\<cdot>addC = {c7}"
+  apply (simp add: spfran_least addC_rep_eqC)
+  by (simp add: sbdom_insert)
+
+
+
+(* PARALLEL COMPOSITION OF MULTS PREREQUIREMENTS *)
+lemma [simp]: "spfComp_well mult1 mult2"
+  by (simp add: spfComp_well_def)
+
+lemma [simp]: "C mult1 mult2 = {c1,c2,c3,c4,c5,c6}"
+  by (auto simp add: C_def)
+
+lemma [simp]: "L mult1 mult2 = {}"
+  by (auto simp add: L_def)
+
+lemma [simp]: "Oc mult1 mult2 = {c5,c6}"
+  by (auto simp add: Oc_def)
+
+lemma [simp]: "I mult1 mult2 = {c1,c2,c3,c4}"
+  by (auto simp add: I_def)
+
+
+(* Remove this ASAP *)
+lemma spfCompParallelGetch1: assumes "L f1 f2 = {}"
+                                and "sbDom\<cdot>sb = I f1 f2"
+                                and "spfComp_well f1 f2"
+                                and "c \<in> spfRan\<cdot>f1" 
+  shows "(Rep_CSPF(spfcomp f1 f2) \<rightharpoonup> sb) . c = (Rep_CSPF(f1) \<rightharpoonup> (sb\<bar>spfDom\<cdot>f1)) . c"
+sorry
+
+lemma spfCompParallelGetch2: assumes "L f1 f2 = {}"
+                                and "sbDom\<cdot>sb = I f1 f2"
+                                and "spfComp_well f1 f2"
+                                and "c \<in> spfRan\<cdot>f2" 
+  shows "(Rep_CSPF(spfcomp f1 f2) \<rightharpoonup> sb) . c = (Rep_CSPF(f2) \<rightharpoonup> (sb\<bar>spfDom\<cdot>f2)) . c"
+sorry
+(* added because of message instantiation clash *)
+
+lemma mult_comp1: assumes "sbDom\<cdot>sb = I mult1 mult2"
+  shows "((Rep_CSPF (spfcomp mult1 mult2)) \<rightharpoonup> sb) . c5 = ((Rep_CSPF(mult1)) \<rightharpoonup> (sb\<bar>spfDom\<cdot>mult1)) . c5"
+  by (subst spfCompParallelGetch1, simp_all add: assms)
+
+lemma mult_comp2: assumes "sbDom\<cdot>sb = I mult1 mult2"
+  shows "((Rep_CSPF (spfcomp mult1 mult2)) \<rightharpoonup> sb) . c6 = ((Rep_CSPF(mult2)) \<rightharpoonup> (sb\<bar>spfDom\<cdot>mult2)) . c6"
+  by (subst spfCompParallelGetch2, simp_all add: assms)
+
+lemma mults_comp: assumes "sbDom\<cdot>sb = I mult1 mult2"
+  shows "((Rep_CSPF (spfcomp mult1 mult2)) \<rightharpoonup> sb)  = ((Rep_CSPF(mult1)) \<rightharpoonup> (sb\<bar>spfDom\<cdot>mult1)) \<uplus> ((Rep_CSPF(mult2)) \<rightharpoonup> (sb\<bar>spfDom\<cdot>mult2))"
+ apply(simp add: mult_comp1 mult_comp2)
+ apply(subst sb_eq, simp_all add: assms mult_comp1 mult_comp2 spfComp_getch_outofrange)
+ sorry  (* In order to proof this ticket:8 has to be resolved first *) 
+
+(* SERIAL COMPOSITION OF MULTS and addC PREREQUIREMENTS *)
+(* for the following lemmas there should be a lemma see ticket:8 *)
+lemma spfComp_ran_Oc: "spfRan\<cdot>(spfcomp f1 f2) = Oc f1 f2"
+  sorry 
+
+lemma spfComp_dom_I: "spfDom\<cdot>(spfcomp f1 f2) = I f1 f2"
+  sorry 
+
+lemma [simp]: "spfComp_well (spfcomp mult1 mult2) addC"
+  sorry
+
+lemma [simp]: "C (spfcomp mult1 mult2) addC = {c1,c2,c3,c4,c5,c6,c7}"
+  sorry
+
+lemma [simp]: "L (spfcomp mult1 mult2) addC = {c5,c6}"
+  sorry
+
+lemma [simp]: "pL (spfcomp mult1 mult2) addC = {}"
+  sorry
+
+lemma [simp]: "Oc (spfcomp mult1 mult2) addC = {c7}"
+  sorry
+
+lemma [simp]: "I (spfcomp mult1 mult2) addC  = {c1,c2,c3,c4}"
+  sorry
+
+lemma innerprod_serComp: assumes "sbDom\<cdot>sb = I (spfcomp mult1 mult2) addC"
+  shows "((Rep_CSPF (spfcomp (spfcomp mult1 mult2) addC))  \<rightharpoonup> sb) . c7 = 
+            ((Rep_CSPF addC)\<rightharpoonup>((Rep_CSPF (spfcomp mult1 mult2)) 
+              \<rightharpoonup> (sb\<bar>(spfDom\<cdot>(spfcomp mult1 mult2))))) . c7"
+  by (subst spfCompSeriellGetch, simp_all add: assms spfComp_ran_Oc)
+
+(* insert result lemma here *)
 
 end
