@@ -9,7 +9,7 @@ chapter {* Timed Streams *}
 
 theory TStreamTheorie
 
-imports (* Streams *) StreamTheorie
+imports  Streams
 begin
 default_sort countable
 
@@ -355,6 +355,10 @@ lemma tsconc_assoc [simp]:  fixes a:: "'a tstream"
   shows "a \<bullet> (x \<bullet> y) = (a \<bullet> x) \<bullet> y"
 by(simp add: tsconc_insert)
 
+lemma ts_tsconc_prefix [simp]: "(x::'a tstream) \<sqsubseteq> (x \<bullet> y)"
+by (metis Rep_tstream_inverse Rep_tstream_strict minimal monofun_cfun_arg sconc_snd_empty tsconc_insert)
+
+
 
 
 
@@ -525,9 +529,6 @@ by (metis monofun_cfun_arg set_cpo_simps(1) tstakefirst_prefix)
 
 
 
-
-
-
 (* tsDropFirst *)
 thm tsDropFirst_def
 
@@ -627,7 +628,9 @@ by(simp add: tsNth_def)
 lemma tsNth_Suc: "tsNth (Suc i)\<cdot>ts = tsNth i\<cdot>(tsDropFirst\<cdot>ts)"
 by (simp add: tsNth_def)
 
-
+(* The first element of a stream is equal to the element on the zeroth position *)
+lemma tsnth_shd[simp]: "tsNth 0\<cdot>s = tsTakeFirst\<cdot>s"
+by (simp add: tsNth_def)
 
 
 
@@ -668,6 +671,9 @@ lemma tsInfTicks:
   shows "#\<surd> ts = \<infinity> \<longleftrightarrow>#(Rep_tstream ts) = \<infinity>"
 by (metis finititeTicks lnle_def lnless_def sfilterl4 slen_sfilterl1 tstickcount_insert)
 
+(* Prepending to infinite streams produces infinite streams again *)
+lemma slen_tsconc_snd_inf: "(#\<surd> y)=\<infinity> \<Longrightarrow> (#\<surd>(x \<bullet> y)) = \<infinity>"
+by (metis Rep_tstream_inverse Rep_tstream_strict sconc_snd_empty slen_sconc_snd_inf tsInfTicks ts_well_conc tsconc_rep_eq)
 
 lemma stickcount_conc [simp]: assumes "#\<surd> ts1 = Fin n1" and "#\<surd> ts2 = Fin n2"
   shows "#\<surd> (ts1 \<bullet> ts2) = Fin (n1 + n2)"
@@ -688,6 +694,12 @@ proof -
   thus ?thesis
     by (metis (mono_tags) Rep_tstream Rep_tstream_bottom_iff Rep_tstream_cases Rep_tstream_inverse \<open>Rep_tstream ts1 \<sqsubseteq> Rep_tstream ts2\<close> eq_less_and_fst_inf lncases mem_Collect_eq sconc_snd_empty sdropl6 ts_well_drop tsconc_insert) 
 qed
+
+(* Each prefix of a stream can be expanded to the original stream *)
+(* TODO: check if duplicate *)
+lemma ts_approxl3: "(s1::'a tstream) \<sqsubseteq> s2 \<Longrightarrow> \<exists>t. s1\<bullet>t = s2"
+using ts_approxl by blast
+
 
 lemma ts_infinite_chain: assumes "chain Y" 
   shows "\<not>finite_chain Y \<longleftrightarrow> \<not>finite_chain (\<lambda>i. Rep_tstream (Y i))"
@@ -722,6 +734,10 @@ lemma ts_infinite_fin: assumes "chain Y" and "\<not>finite_chain Y"
   shows "#\<surd> (Y i) < \<infinity>"
 by (metis Fin_neq_inf assms(1) assms(2) inf_chainl1 inf_ub lnle_def lnless_def rep_tstream_chain tsInfTicks ts_infinite_chain)
 
+(* In infinite chains, all streams are finite *)
+lemma ts_inf_chainl1: "\<lbrakk>chain Y; \<not>finite_chain Y\<rbrakk> \<Longrightarrow> \<exists>k. (#\<surd>(Y i)) = Fin k"
+by (metis infI less_irrefl ts_infinite_fin)
+
 lemma ts_0ticks: "#\<surd> ts = 0 \<Longrightarrow> ts = \<bottom>"
 by (metis Inf'_neq_0 Rep_tstream Rep_tstream_bottom_iff eq_bottom_iff inf_ub less_le lnless_def lnzero_def mem_Collect_eq sconc_fst_inf sfilter_conc singletonI ts_well_def tstickcount_insert)
 
@@ -739,7 +755,20 @@ apply(rule ccontr)
 apply auto
 by (metis (no_types, lifting) adm_def adm_fin_below2 assms(1) assms(2) inf_ub ts_infinite_lub)
 
-
+(* In infinite chains, there is an element which is a true prefix of another one *)
+lemma ts_inf_chainl2: "\<lbrakk>chain Y; \<not> finite_chain Y\<rbrakk> \<Longrightarrow> \<exists>j. Y k \<sqsubseteq> Y j \<and> (#\<surd>(Y k)) < #\<surd>(Y j)"
+proof -
+  assume a1: "chain Y"
+  assume a2: "\<not> finite_chain Y"
+  moreover
+  { assume "\<infinity> \<noteq> #\<surd> Y k"
+    then have "\<exists>n. \<not> #\<surd> Y n \<le> #\<surd> Y k"
+      using a2 a1 by (metis (no_types) exist_tslen inf_belowI lnle_def trans_lnle)
+    then have ?thesis
+      using a1 by (meson chain_tord lnle_def monofun_cfun_arg not_less) }
+  ultimately show ?thesis
+    using a1 by (metis (no_types) chain_tord ts_infinite_fin)
+qed
 
 
 
@@ -985,7 +1014,6 @@ lemma tsdropfirst_conc: "ts \<noteq> \<bottom> \<Longrightarrow> tsDropFirst \<c
 apply(simp add: tsdropfirst_insert tsconc_insert)
 by (simp add: Rep_tstream_bottom_iff srtdw_conc)
 
-
 lemma [simp]: "ts \<noteq>\<bottom> \<Longrightarrow> tsDropFirst\<cdot>((tsTakeFirst\<cdot>ts) \<bullet> as ) = as"
   apply(simp add: tstakefirst_insert tsconc_rep_eq tsdropfirst_insert)
   by (smt Abs_tstream_bottom_iff Rep_tstream_inject Rep_tstream_strict mem_Collect_eq sconc_fst_empty srtdw_stwbl stwbl_eps tsconc_rep_eq tsdropfirst_conc tsdropfirst_insert tsdropfirst_rep_eq tstakefirst_well1)
@@ -1007,6 +1035,19 @@ lemma tsTake2take [simp]: "ts \<down> n \<down> n = ts \<down> n"
   apply (auto simp add: tsTake.simps)
   by (metis below_bottom_iff tsTake_prefix)
 
+(* Each chain becomes finite by mapping @{term "stake n"} to every element *)
+lemma ts_finite_chain_stake: "chain Y \<Longrightarrow> finite_chain (\<lambda>i. tsTake n\<cdot>(Y i))"
+proof -
+  assume a1: "chain Y"
+  have f2: "\<And>n t. max_in_chain n (tsTake_abbrv (t::'a tstream)) \<or> t \<noteq> t \<down> n"
+    by (simp add: maxinch_is_thelub)
+  have f3: "\<And>f n. finite_chain f \<or> \<not> max_in_chain n (tsTake_abbrv (Lub f::'a tstream)) \<or> \<not> chain f"
+    using ts_infinite_lub tstake_infinite_chain by blast
+  have "\<And>n t. max_in_chain n (tsTake_abbrv t::'a tstream \<down> n )"
+    using f2 by (metis tsTake2take)
+  then show ?thesis
+    using f3 a1 by (metis chain_monofun contlub_cfun_arg)
+qed
 
 lemma tsDropTake: "(tsDropFirst\<cdot>(ts \<down> (Suc n))) \<down> n = (tsDropFirst\<cdot>ts) \<down>  n"
 by(auto simp add: tsTake.simps)
@@ -1017,7 +1058,6 @@ apply(induction n arbitrary: ts1 ts2)
 apply simp
 by (metis tsDropTake tsTake_def2 tstakefirst_eq2)
 
-
 lemma ts_take_eq: assumes "\<And>n. ts1 \<down>n = ts2 \<down> n"
   shows "ts1 = ts2"
 proof -
@@ -1025,13 +1065,11 @@ proof -
   thus ?thesis by simp
 qed
 
-
 lemma tsnth2tstake_eq: assumes "\<And>n. n<i \<Longrightarrow> tsNth n\<cdot>ts1 = tsNth n\<cdot>ts2"
   shows "ts1 \<down> i = ts2 \<down> i"
 using assms apply (induction i)
 apply simp
 by(simp add: tstake_tsnth)
-
 
 lemma tstake_tick [simp] :"(Abs_tstream (\<up>\<surd>) \<bullet> ts) \<down> (Suc n)= Abs_tstream (\<up>\<surd>) \<bullet> (ts \<down> n)"
 apply(simp add: tsTake_def2 tstakefirst_insert tsconc_rep_eq)
@@ -1072,6 +1110,10 @@ by (smt Abs_tstream_inverse Rep_tstream_inject Rep_tstream_strict mem_Collect_eq
 lemma tsDropFirstConc: "#\<surd>ts = Fin 1 \<Longrightarrow> tsDropFirst\<cdot>(ts \<bullet> xs) = xs"
 by (metis Fin_02bot Fin_Suc One_nat_def Rep_tstream_inverse Rep_tstream_strict cfcomp2 lnat.con_rews lnat.sel_rews(2) lnzero_def sconc_fst_empty strict_sfilter strict_slen ts_0ticks tsconc_insert tsdropfirst_conc tsdropfirst_len tstickcount_insert)
 
+lemma snth_tscons[simp]: assumes "tsTickCount\<cdot>a = Fin 1 "
+  shows "tsNth (Suc k)\<cdot>(a \<bullet> s) = tsNth k\<cdot>s"
+by (simp add: assms tsDropFirstConc tsNth_Suc)
+
 lemma tsTakeFirst_first[simp]: "#\<surd>ts = Fin 1  \<Longrightarrow> tsTakeFirst\<cdot>ts = ts"
 by (metis (mono_tags, lifting) Fin_02bot Fin_Suc One_nat_def Rep_tstream_inverse Rep_tstream_strict bottomI lnat.sel_rews(2) lnzero_def sconc_snd_empty tsTakeDropFirst ts_0ticks tsconc_rep_eq tsdropfirst_len tstakefirst_insert tstakefirst_prefix tstakefirst_well1)
 
@@ -1086,8 +1128,6 @@ lemma tsnth_len [simp]: "#\<surd> tsNth n\<cdot>ts \<le> Fin 1"
 apply(simp add: tsNth_def)
 by (metis bottomI min.bounded_iff order_refl tsTake_prefix tstakeFirst_len tstake_len tstakefirst2first)
 
-
-
 lemma tstake_conc [simp]: assumes "#\<surd>ts = Fin n"
   shows "(ts \<bullet> ts2) \<down> n = ts"
 using assms apply(induction n arbitrary: ts)
@@ -1098,6 +1138,14 @@ apply auto[1]
 apply(subst tstakefirst_conc)
 apply auto[1]
 by (metis Fin_Suc Rep_tstream_strict inject_lnsuc lnat.con_rews lnzero_def strict_sfilter strict_slen tsTakeDropFirst tsdropfirst_len tstickcount_insert)
+
+(* A finite prefix of length @{term "k"} is created by @{term "stake k"} *)
+lemma ts_approxl1: "\<forall>s1 s2. s1 \<sqsubseteq> s2 \<and> (#\<surd> s1) = Fin k \<longrightarrow> tsTake k\<cdot>s2 = s1"
+using ts_approxl tstake_conc by blast
+
+(* A prefix of a stream is equal to the original one or a finite prefix *)
+lemma ts_approxl2: "s1 \<sqsubseteq> s2 \<Longrightarrow> (s1 = s2) \<or> (\<exists>n. tsTake n\<cdot>s2 = s1 \<and> Fin n = #\<surd>s1)"
+by (metis ts_approxl1 ninf2Fin ts_below_eq)
 
 lemma tsconc_eq: "#\<surd>ts1 = #\<surd>ts2 \<Longrightarrow> (ts1 \<bullet> a1) = (ts2 \<bullet> a2) \<Longrightarrow> ts1 = ts2"
 by (metis lncases tsconc_id tstake_conc)
@@ -1137,10 +1185,25 @@ lemma tstake_less_below: assumes "x\<sqsubseteq>y" and "Fin i\<le>#\<surd> x"
   shows "x\<down>i = y\<down>i"
 by (smt assms(1) assms(2) min.absorb2 tsTakeDrop ts_approxl tsconc_assoc tstake_conc tstake_len)
 
+(* every finite prefix of the lub is also prefix of some element in the chain *)
+lemma ts_lub_approx: "chain Y \<Longrightarrow> \<exists>k. tsTake n\<cdot>(lub (range Y)) = tsTake n\<cdot>(Y k)"
+by (metis exist_tslen finite_chain_def is_ub_thelub maxinch_is_thelub tstake_less_below)
 
 lemma tstake_below_eq: assumes "x\<sqsubseteq>y" and "#\<surd> x = #\<surd>y"
   shows "x = y"
 by (metis assms(1) assms(2) below_refl ts_approxl tsconc_eq)
+
+(* If two timed streams of same length agree on every element, all their finite prefixes are equal *)
+lemma tsnths_eq_lemma [rule_format]: 
+  "\<forall>x y. (#\<surd>x) = (#\<surd>y) \<and> (\<forall>n. Fin n < (#\<surd>x) \<longrightarrow> tsNth n\<cdot>x = tsNth n\<cdot>y) 
+           \<longrightarrow>tsTake  k\<cdot>x = tsTake k\<cdot>y"
+by (smt less2nat_lemma less_SucI min.commute min_def not_less trans_lnle 
+    tsDropNth tsDropTake1 tsTakeDrop tsTake_prefix tsnth2tstake_eq tsnth_len 
+    tstake_below_eq tstake_len)
+
+(* If two timed streams of same length agree on every element, they are equal *)
+lemma tsnths_eq: "\<lbrakk>(#\<surd>x) = (#\<surd>y); \<forall>n. Fin n < (#\<surd>x) \<longrightarrow> tsNth n\<cdot>x = tsNth n\<cdot>y\<rbrakk> \<Longrightarrow> x = y"
+using ts_take_eq tsnths_eq_lemma by blast
 
 lemma ts_below: assumes "\<And>i. Fin i \<le>#\<surd>x \<Longrightarrow> x\<down>i = y\<down>i"
   shows "x\<sqsubseteq>y"
