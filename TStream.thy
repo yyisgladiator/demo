@@ -187,7 +187,7 @@ lemma tstdrop_tstrt: "tstdrop 1 b = tstrt b"
 apply (simp add: tstdrop_def)
 apply (simp add: tstrt_def)
 apply (simp add: espf2tspf_def)
-done
+by (simp add: One_nat_def)
 
 text {* Case study with s3 = [1, 2, \<surd>, 3, 4, \<surd>, \<surd>, ... ,\<surd> , ...] *}
 lemma casestudy3: "tstdrop 1 s3 = Abs_tstream (\<up>(Msg 3) \<bullet> \<up>(Msg 4) \<bullet> sinftimes(\<up>\<surd>))"
@@ -346,7 +346,6 @@ apply (simp only: list2s_0)
 apply (simp only: sconc_fst_empty)
 apply (simp only: Rep_tstream)
 apply simp
-apply (metis sfilter_in sfilter_nin slen_sconc_snd_inf)
 done
 
 text {* The concatenation of an empty list with a timed streams returns the timed stream itself. *}
@@ -559,14 +558,6 @@ apply (simp add: tsnth_def)
 apply (subst Abs_tstream_inverse)
 apply simp
 apply (simp add: snth_def)
-apply (simp add: sdrop_def)
-apply (rule allI)
-apply (rule allI)
-apply (induct_tac k)
-apply simp
-apply (simp add: sinftimes_def)
-apply (smt event.distinct(1) inject_scons sinftimes_def sinftimes_unfold slen_empty_eq slen_scons surj_scons)
-apply (metis sdrop_def sdrop_scons sinftimes_unfold)
 done
 
 text {* Taking at least one block from the concatenation of an 1-message list with a stream is the
@@ -839,10 +830,6 @@ text {* Taking the first elements of a stream means returning a prefix of the st
 lemma [simp]: "stakewhile p\<cdot>s \<sqsubseteq> s"
 apply (rule_tac x="s" in ind)
 apply auto
-apply (case_tac "p a")
-apply auto
-apply (rule monofun_cfun_arg)
-apply auto
 done
 
 text {*For a timed stream which has at least a tick: if the function sdropwhile is used to drop
@@ -916,13 +903,6 @@ lemma stakewhile_sdropwhile[simp]:"stakewhile p\<cdot>x \<bullet> sdropwhile p\<
 apply (rule stream.take_lemma)
 apply (rule_tac x="x" in spec)
 apply (induct_tac n)
-apply simp
-apply simp
-apply (rule allI)
-apply (rule_tac x="x" in scases)
-apply simp
-apply simp
-apply (case_tac "p a")
 apply simp
 apply simp
 done
