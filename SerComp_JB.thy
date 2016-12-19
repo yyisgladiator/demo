@@ -377,6 +377,7 @@ lemma spfComp_serial_itconst2 [simp]: assumes "spfRan\<cdot>f1 = spfDom\<cdot>f2
 
 
 
+
 (* NOW BRING IT ALL TOGETHER *)
 
 (* Use the lub equality to simplify the inner expression and show that the composition is a 
@@ -386,17 +387,6 @@ lemma spfcomp_tospfH2: "(spfcomp f1 f2)
                       (\<Squnion>i. iterate i\<cdot>(spfCompHelp2 f1 f2 x)\<cdot>(sbLeast (C f1 f2))) \<bar> Oc f1 f2)"
   apply (subst spfcomp_def, subst spfCompHelp2_def, subst C_def, subst I_def, subst Oc_def)
   by (simp)
-
-
-
-
-
-
-
-
-
-
-
 
 
 (* TODO: SHOW COMPPOSITION IS SPF AND CONTINUOUS *)
@@ -433,50 +423,12 @@ proof -
   then show "dom (Rep_SB ((\<Squnion>n. iterate n\<cdot>(spfCompHelp2 f1 f2 b1)\<cdot> (sbLeast (C f1 f2)))\<bar>Oc f1 f2)) = dom (Rep_SB ((\<Squnion>n. iterate n\<cdot>(spfCompHelp2 f1 f2 b2)\<cdot> (sbLeast (C f1 f2)))\<bar>Oc f1 f2))"
     by presburger
 qed
+(* end of TODO *)
 
 
-lemma test11[simp]: assumes "c \<in> Oc f1 f2" shows "c \<in> C f1 f2"
+lemma spfComp_Oc_sub_C: assumes "c \<in> Oc f1 f2" shows "c \<in> C f1 f2"
   apply(simp add: Oc_def C_def)
   using Oc_def assms by auto
-
-lemma test10: "sbDom\<cdot>(\<Squnion>i. iterate i\<cdot>(spfCompHelp2 f1 f2 x)\<cdot>(sbLeast (C f1 f2))) = C f1 f2"
-sorry
-
-lemma spfComp_mono[simp]: assumes "spfComp_well f1 f2"
-shows "monofun (\<lambda>x. (sbDom\<cdot>x = I f1 f2)\<leadsto>(\<Squnion>i. iterate i\<cdot>(spfCompHelp2 f1 f2 x)\<cdot>(sbLeast (C f1 f2)))\<bar>Oc f1 f2)"
-  apply (rule spf_mono2monofun)
-  apply(rule spf_monoI)
-  apply(simp add: domIff2)
-  apply(rule sb_below)
-  apply(simp add: sbdom_insert)
-  apply(rule test9, simp_all)
-  apply (simp add: sbdom_rep_eq sbgetch_rep_eq spfCompHelp2_def)
-  defer
-  apply rule
-  apply(simp add: domIff2)
-  sorry
-
-  
-  
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 lemma spfComp_getC_Oc[simp]:  assumes "spfRan\<cdot>f1 = spfDom\<cdot>f2" 
                               and "spfComp_well f1 f2"
@@ -486,24 +438,90 @@ lemma spfComp_getC_Oc[simp]:  assumes "spfRan\<cdot>f1 = spfDom\<cdot>f2"
   using Oc_def assms(3) assms(4) pL_def by fastforce
 
 
-lemma spfComp_cont [simp]: assumes "spfComp_well f1 f2"
-shows "cont (\<lambda>x. (sbDom\<cdot>x = I f1 f2)\<leadsto>(\<Squnion>i. iterate i\<cdot>(spfCompHelp2 f1 f2 x)\<cdot>(sbLeast (C f1 f2)))\<bar>Oc f1 f2)"
+(* show that spfcomp can be simplified to SPF without iterate if the assumtion hold *)
+lemma spfComp_iterconst_eq[simp]: assumes "spfComp_well f1 f2" 
+                                  and "spfRan\<cdot>f1 = spfDom\<cdot>f2" 
+                                  and "pL f1 f2 = {}"  shows
+ "(\<lambda>x. (sbDom\<cdot>x = I f1 f2)\<leadsto>(\<Squnion>i. iterate i\<cdot>(spfCompHelp2 f1 f2 x)\<cdot>(sbLeast (C f1 f2)))\<bar>Oc f1 f2)
+            = (\<lambda>x. (sbDom\<cdot>x = I f1 f2)\<leadsto>(x \<uplus> ((Rep_CSPF f1) \<rightharpoonup> (x \<bar>spfDom\<cdot>f1)) \<uplus> ((Rep_CSPF f2)\<rightharpoonup>((Rep_CSPF f1) \<rightharpoonup> (x\<bar>spfDom\<cdot>f1))))\<bar>Oc f1 f2)"
+proof -
+  have "\<forall>s. (sbDom\<cdot>s \<noteq> I f1 f2  \<or> (Some ((\<Squnion>n. iterate n\<cdot>(spfCompHelp2 f1 f2 s)\<cdot> (sbLeast (C f1 f2)))\<bar>Oc f1 f2) = Some (s \<uplus> (Rep_CSPF f1\<rightharpoonup>(s\<bar>spfDom\<cdot>f1)) \<uplus> (Rep_CSPF f2\<rightharpoonup>(Rep_CSPF f1\<rightharpoonup>(s\<bar>spfDom\<cdot> f1)))\<bar>Oc f1 f2)))"
+    by (metis assms(1) assms(2) assms(3) spfComp_serial_itconst2)
+  then show ?thesis
+    by meson
+qed
+
+
+
+abbreviation iconst :: "'a SB \<rightarrow> 'a SPF \<rightarrow> 'a SPF \<rightarrow> 'a SB" where
+"iconst \<equiv> \<Lambda> x f1 f2 . (x \<uplus> ((Rep_CSPF f1) \<rightharpoonup> (x \<bar>spfDom\<cdot>f1)) 
+                                    \<uplus> ((Rep_CSPF f2)\<rightharpoonup>((Rep_CSPF f1) \<rightharpoonup> (x\<bar>spfDom\<cdot>f1))))\<bar>Oc f1 f2"
+
+lemma foo3[simp]: assumes "sbDom\<cdot>x = I f1 f2"
+shows "sbDom\<cdot>((x \<uplus> ((Rep_CSPF f1) \<rightharpoonup> (x \<bar>spfDom\<cdot>f1)) \<uplus> ((Rep_CSPF f2)\<rightharpoonup>((Rep_CSPF f1) \<rightharpoonup> (x\<bar>spfDom\<cdot>f1))))\<bar>Oc f1 f2)
+        = C f1 f2"
+sorry
+
+lemma iterconst_mono1[simp]: assumes "spfRan\<cdot>f1 = spfDom\<cdot>f2"
+                                  and "spfComp_well f1 f2"
+                                  and "pL f1 f2 = {}"
+shows "monofun (\<lambda>x. (sbDom\<cdot>x = I f1 f2)\<leadsto>(x \<uplus> ((Rep_CSPF f1) \<rightharpoonup> (x \<bar>spfDom\<cdot>f1)) 
+                                    \<uplus> ((Rep_CSPF f2)\<rightharpoonup>((Rep_CSPF f1) \<rightharpoonup> (x\<bar>spfDom\<cdot>f1))))\<bar>Oc f1 f2)"
+apply (rule spf_mono2monofun)
+  apply(rule spf_monoI)
+  apply(simp add: domIff2)
+  apply(rule sb_below)
+   apply (metis (no_types, lifting) assms(1) assms(2) assms(3) sbdom_insert spfComp_serial_itconst2 test9)
+  defer
+  apply (rule, simp add: domIff2)
+  apply(simp add: assms)
+sorry
+
+
+
+lemma iterconst_cont[simp]:       assumes "spfRan\<cdot>f1 = spfDom\<cdot>f2"
+                                  and "spfComp_well f1 f2"
+                                  and "pL f1 f2 = {}"
+shows "cont (\<lambda>x. (sbDom\<cdot>x = I f1 f2)\<leadsto>(x \<uplus> ((Rep_CSPF f1) \<rightharpoonup> (x \<bar>spfDom\<cdot>f1)) 
+                                    \<uplus> ((Rep_CSPF f2)\<rightharpoonup>((Rep_CSPF f1) \<rightharpoonup> (x\<bar>spfDom\<cdot>f1))))\<bar>Oc f1 f2)"
 apply(rule spf_cont2cont)
  apply(rule spf_contlubI)
- defer
-  using assms monofun2spf_mono spfComp_mono apply blast
-  apply(simp add: domIff2, rule+)
-  sorry
+  apply(simp add: domIff2 sbChain_dom_eq2)
+  defer
+  using assms(1) assms(2) assms(3) iterconst_mono1 monofun2spf_mono apply blast
+  apply(simp add: domIff2, rule+ )
+  apply(rule sb_below)
+   apply (simp add: sbdom_rep_eq)
+sorry
 
-lemma spfComp_well2 [simp]: assumes "spfComp_well f1 f2"
-shows "spf_well (Abs_cfun (\<lambda>x. (sbDom\<cdot>x = I f1 f2)\<leadsto>(\<Squnion>i. iterate i\<cdot>
-                               (spfCompHelp2 f1 f2 x)\<cdot>(sbLeast (C f1 f2)))\<bar>Oc f1 f2))"
-  by(auto simp add: spf_well_def domIff2 sbdom_rep_eq test10 assms)
 
-lemma foo[simp]: assumes "spfComp_well f1 f2" shows
- "Rep_CSPF (Abs_CSPF (\<lambda>x. (sbDom\<cdot>x = I f1 f2)\<leadsto>(\<Squnion>i. iterate i\<cdot>(spfCompHelp2 f1 f2 x)\<cdot>(sbLeast (C f1 f2)))\<bar>Oc f1 f2))
-            = (\<lambda>x. (sbDom\<cdot>x = I f1 f2)\<leadsto>(\<Squnion>i. iterate i\<cdot>(spfCompHelp2 f1 f2 x)\<cdot>(sbLeast (C f1 f2)))\<bar>Oc f1 f2)"
-  by (simp add: assms)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+lemma iterconst_well[simp]:       assumes "spfRan\<cdot>f1 = spfDom\<cdot>f2"
+                                  and "spfComp_well f1 f2"
+                                  and "pL f1 f2 = {}"
+shows "spf_well (Abs_cfun (\<lambda>x. (sbDom\<cdot>x = I f1 f2)\<leadsto>(x \<uplus> ((Rep_CSPF f1) \<rightharpoonup> (x \<bar>spfDom\<cdot>f1)) 
+                            \<uplus> ((Rep_CSPF f2)\<rightharpoonup>((Rep_CSPF f1) \<rightharpoonup> (x\<bar>spfDom\<cdot>f1))))\<bar>Oc f1 f2))"
+ apply (simp add: spf_well_def domIff2 sbdom_rep_eq assms)
+ by (smt assms(1) assms(2) assms(3) sbunionDom spfComp_itCompH2_dom spfComp_serial_itconst1 
+         spfComp_serial_itconst2)
+
+
+
 
 (* FINAL LEMMA *)
 lemma spfCompSeriellGetch: assumes "spfRan\<cdot>f1 = spfDom\<cdot>f2"
@@ -513,9 +531,7 @@ lemma spfCompSeriellGetch: assumes "spfRan\<cdot>f1 = spfDom\<cdot>f2"
                            and "pL f1 f2 = {}"
   shows "(Rep_CSPF(spfcomp f1 f2) \<rightharpoonup> sb) . c = ((Rep_CSPF f2)\<rightharpoonup>((Rep_CSPF f1) \<rightharpoonup> (sb\<bar>spfDom\<cdot>f1))) .c"
   apply (simp add: spfcomp_tospfH2)
-  apply(simp only: foo assms, simp_all)
-  apply (simp only: spfComp_serial_itconst2 assms)
-  apply(simp_all add: assms)
+  apply (subst spfComp_iterconst_eq, simp_all add: assms)
   apply (subst sbunion_getchR, simp_all add: assms)
   by (smt assms(1) assms(2) assms(3) assms(4) assms(5) domIff option.exhaust_sel sbleast_sbdom 
           spfLeastIDom spf_sbdom2dom spfran2sbdom spfComp_domranf1)
@@ -531,3 +547,37 @@ lemma spfSerComp_spfID : "(((Rep_CSPF (spfcomp ID1 ID2)) \<rightharpoonup> ([c1 
   by (simp add: id_apply1 id_apply2)
 
 end
+
+(* fragments for spfcomp is cont *)
+(* 
+
+lemma test10: "sbDom\<cdot>(\<Squnion>i. iterate i\<cdot>(spfCompHelp2 f1 f2 x)\<cdot>(sbLeast (C f1 f2))) = C f1 f2"
+sorry
+lemma spfComp_cont [simp]: assumes "spfComp_well f1 f2"
+shows "cont (\<lambda>x. (sbDom\<cdot>x = I f1 f2)\<leadsto>(\<Squnion>i. iterate i\<cdot>(spfCompHelp2 f1 f2 x)\<cdot>(sbLeast (C f1 f2)))\<bar>Oc f1 f2)"
+apply(rule spf_cont2cont)
+ apply(rule spf_contlubI)
+ defer
+  using assms monofun2spf_mono spfComp_mono apply blast
+  apply(simp add: domIff2, rule+)
+  oops
+
+lemma spfComp_well2 [simp]: assumes "spfComp_well f1 f2"
+shows "spf_well (Abs_cfun (\<lambda>x. (sbDom\<cdot>x = I f1 f2)\<leadsto>(\<Squnion>i. iterate i\<cdot>
+                               (spfCompHelp2 f1 f2 x)\<cdot>(sbLeast (C f1 f2)))\<bar>Oc f1 f2))"
+  by(auto simp add: spf_well_def domIff2 sbdom_rep_eq test10 assms)
+
+lemma spfComp_mono[simp]: assumes "spfComp_well f1 f2"
+shows "monofun (\<lambda>x. (sbDom\<cdot>x = I f1 f2)\<leadsto>(\<Squnion>i. iterate i\<cdot>(spfCompHelp2 f1 f2 x)\<cdot>(sbLeast (C f1 f2)))\<bar>Oc f1 f2)"
+  apply (rule spf_mono2monofun)
+  apply(rule spf_monoI)
+  apply(simp add: domIff2)
+  apply(rule sb_below)
+  apply(simp add: sbdom_insert)
+  apply(rule test9, simp_all)
+  apply (simp add: sbdom_rep_eq sbgetch_rep_eq spfCompHelp2_def)
+  defer
+  apply rule
+  apply(simp add: domIff2)
+  sorry
+*)
