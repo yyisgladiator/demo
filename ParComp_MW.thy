@@ -231,7 +231,7 @@ lemma spfComp_domranf1: assumes "L f1 f2 = {}"
                         and "sbDom\<cdot>sb = I f1 f2" 
                         and "spfComp_well f1 f2" 
   shows "(sbDom\<cdot>Rep_CSPF f1\<rightharpoonup>(sb\<bar>spfDom\<cdot>f1)) = spfRan\<cdot>f1"
-by(simp add: assms)
+by (simp add: assms(1) assms(2))
 
 (* Iterate *)
 
@@ -250,16 +250,25 @@ lemma spfComp_getChI: assumes "sbDom\<cdot>x = I f1 f2"
    by (simp)
 
 lemma spfComp_resI: assumes "sbDom\<cdot>x = I f1 f2" 
-                    and "spfComp_well f1 f2"
+                        and "spfComp_well f1 f2"
   shows "(iterate (Suc i)\<cdot>(spfCompHelp2 f1 f2 x)\<cdot>(sbLeast (C f1 f2))) \<bar> (I f1 f2) = x"
   apply (rule sb_eq)
    apply (simp add: assms(1) inf_sup_aci(1) inf_sup_aci(6))
    using assms(1) assms(2) spfComp_getChI by fastforce
 
+lemma spfComp_resI2: assumes "sbDom\<cdot>x = I f1 f2" 
+                         and "spfComp_well f1 f2"
+                         and "L f1 f2 = {}"
+  shows "(iterate (Suc i)\<cdot>(spfCompHelp2 f1 f2 x)\<cdot>(sbLeast (C f1 f2))) \<bar> spfDom\<cdot>f2 = x \<bar>spfDom\<cdot>f2"
+apply(rule sb_eq)
+apply(simp_all add: spfComp_dom assms)
+apply blast
+by (metis UnCI assms(1) assms(2) assms(3) iterate_Suc spfComp_I_domf1f2_eq spfComp_getChI)
+
 lemma spfComp_parallelf1 : assumes" L f1 f2 = {}"
-                       and "sbDom\<cdot>x = I f1 f2" 
-                       and "spfComp_well f1 f2"
-                       and "c \<in> spfRan\<cdot>f1" 
+                              and "sbDom\<cdot>x = I f1 f2" 
+                              and "spfComp_well f1 f2"
+                              and "c \<in> spfRan\<cdot>f1" 
   shows "(iterate (Suc (Suc i))\<cdot>(spfCompHelp2 f1 f2 x)\<cdot>(sbLeast (C f1 f2))) . c
                   = (x \<uplus> ((Rep_CSPF f1) \<rightharpoonup> (x \<bar>spfDom\<cdot>f1)) \<uplus> ((Rep_CSPF f2) \<rightharpoonup> (x\<bar>spfDom\<cdot>f2))) . c"
 apply(subst iterate_Suc)
@@ -275,9 +284,9 @@ using assms(1) assms(2) assms(3) assms(4) spfComp_domranf1 apply blast
 by (smt Int_absorb1 Un_assoc Un_upper1 assms(1) assms(2) assms(3) iterate_Suc sb_eq sbrestrict2sbgetch sbrestrict_sbdom set_mp spfCompH2_dom spfComp_I_domf1f2_eq spfComp_itCompH2_dom spfComp_resI)
 
 lemma spfComp_parallelf2 : assumes" L f1 f2 = {}"
-                       and "sbDom\<cdot>x = I f1 f2" 
-                       and "spfComp_well f1 f2"
-                       and "c \<in> spfRan\<cdot>f2" 
+                              and "sbDom\<cdot>x = I f1 f2" 
+                              and "spfComp_well f1 f2"
+                              and "c \<in> spfRan\<cdot>f2" 
   shows "(iterate (Suc (Suc i))\<cdot>(spfCompHelp2 f1 f2 x)\<cdot>(sbLeast (C f1 f2))) . c
                   = (x \<uplus> ((Rep_CSPF f1) \<rightharpoonup> (x \<bar>spfDom\<cdot>f1)) \<uplus> ((Rep_CSPF f2) \<rightharpoonup> (x\<bar>spfDom\<cdot>f2))) . c"
 apply(subst iterate_Suc)
@@ -286,14 +295,14 @@ apply(subst sbunion_getchR)
 apply(smt Un_commute assms(1) assms(2) assms(4) inf_sup_aci(6) spfCompH2_dom spfComp_I_domf1f2_eq spfComp_itCompH2_dom spfRanRestrict sup_ge1)
 apply(subst sbunion_getchR)
 apply(simp add: assms(1) assms(2) assms(4))
-sorry
+by (metis assms(1) assms(2) assms(3) iterate_Suc spfComp_resI2)
 
 lemma spfComp_parallel : assumes" L f1 f2 = {}"
-                       and "sbDom\<cdot>x = I f1 f2" 
-                       and "spfComp_well f1 f2"
+                            and "sbDom\<cdot>x = I f1 f2" 
+                            and "spfComp_well f1 f2"
   shows "(iterate (Suc (Suc i))\<cdot>(spfCompHelp2 f1 f2 x)\<cdot>(sbLeast (C f1 f2)))
                   = x \<uplus> ((Rep_CSPF f1) \<rightharpoonup> (x \<bar>spfDom\<cdot>f1)) \<uplus> ((Rep_CSPF f2) \<rightharpoonup> (x\<bar>spfDom\<cdot>f2))" (is "?L = ?R")
-  apply(rule sb_eq)
+apply(rule sb_eq)
 apply (metis C_def assms(1) assms(2) assms(3) inf_sup_ord(4) sbunionDom spfComp_I_domf1f2_eq spfComp_domranf1 spfComp_itCompH2_dom spfRanRestrict spfdom_insert)
 by (metis (no_types, lifting) UnE assms(1) assms(2) assms(3) iterate_Suc sbunionDom sbunion_getchL spfCompH2_dom spfComp_I_domf1f2_eq spfComp_domranf1 spfComp_getChI spfComp_itCompH2_dom spfComp_parallelf1 spfComp_parallelf2 spfRanRestrict sup_ge2)
 
@@ -301,32 +310,32 @@ by (metis (no_types, lifting) UnE assms(1) assms(2) assms(3) iterate_Suc sbunion
 (* LUB *)
 
 lemma spfComp_parallelnf_chain: assumes "L f1 f2 = {}"
-                              and "sbDom\<cdot>x = I f1 f2"
-                              and "spfComp_well f1 f2"
+                                    and "sbDom\<cdot>x = I f1 f2"
+                                    and "spfComp_well f1 f2"
   shows "chain (\<lambda>i. iterate i\<cdot>(spfCompHelp2 f1 f2 x)\<cdot>(sbLeast (C f1 f2)))"
 apply(rule sbIterate_chain)
 apply (simp add: assms C_def I_def)
 by blast
 
 lemma spfComp_parallel_max: assumes "L f1 f2 = {}" 
-                          and "sbDom\<cdot>x = I f1 f2" 
-                          and "spfComp_well f1 f2"
+                                and "sbDom\<cdot>x = I f1 f2" 
+                                and "spfComp_well f1 f2"
   shows "max_in_chain 2 (\<lambda>i. iterate i\<cdot>(spfCompHelp2 f1 f2 x)\<cdot>(sbLeast (C f1 f2)))"
 apply(rule max_in_chainI, subst Num.numeral_2_eq_2)
 apply(subst spfComp_parallel, simp_all add: assms)
 by (smt One_nat_def Suc_1 Suc_le_D Suc_le_lessD assms(1) assms(2) assms(3) le_simps(2) spfComp_parallel)
 
 lemma spfComp_parallel_itconst1 [simp]: assumes "L f1 f2 = {}"
-                                      and "sbDom\<cdot>x = I f1 f2" 
-                                      and "spfComp_well f1 f2"
+                                            and "sbDom\<cdot>x = I f1 f2" 
+                                            and "spfComp_well f1 f2"
   shows "(\<Squnion>i. iterate i\<cdot>(spfCompHelp2 f1 f2 x)\<cdot>(sbLeast (C f1 f2)))
                = iterate 2\<cdot>(spfCompHelp2 f1 f2 x)\<cdot>(sbLeast (C f1 f2))"
 using assms(1) assms(2) assms(3) 
     maxinch_is_thelub spfComp_parallel_max spfComp_parallelnf_chain by blast
 
 lemma spfComp_parallel_itconst2: assumes "L f1 f2 = {}" 
-                                    and "sbDom\<cdot>x = I f1 f2" 
-                                    and "spfComp_well f1 f2"
+                                     and "sbDom\<cdot>x = I f1 f2" 
+                                     and "spfComp_well f1 f2"
   shows "(\<Squnion>i. iterate i\<cdot>(spfCompHelp2 f1 f2 x)\<cdot>(sbLeast (C f1 f2)))
             = x \<uplus> ((Rep_CSPF f1) \<rightharpoonup> (x \<bar>spfDom\<cdot>f1)) \<uplus> ((Rep_CSPF f2) \<rightharpoonup> (x\<bar>spfDom\<cdot>f2))"
 by (metis One_nat_def Suc_1 assms(1) assms(2) assms(3) 
