@@ -161,7 +161,14 @@ definition tsTickCount :: "'a tstream \<rightarrow> lnat" where
 abbreviation tsTickCount_abbr :: "'a tstream \<Rightarrow>lnat" ( "#\<surd> _" 65)
 where "#\<surd>ts \<equiv> tsTickCount\<cdot>ts"
 
+(*@{term tsntimes}  concatenates a timed stream n times with itself *)
+primrec tsntimes:: " nat \<Rightarrow> 'a tstream \<Rightarrow> 'a tstream" where
+"tsntimes 0 ts =\<bottom> " |
+"tsntimes (Suc n) ts = tsConc ts\<cdot>(tsntimes n ts)"
 
+(*@{term tsinftimes}  concatenates a timed stream infinitely often with itself *)
+definition tsinftimes:: "'a tstream \<Rightarrow> 'a tstream" where
+"tsinftimes \<equiv> fix\<cdot>(\<Lambda> h. (\<lambda>ts. if ts = \<bottom> then \<bottom> else (tsConc ts \<cdot> (h ts))))"
 
 
 
@@ -1226,6 +1233,64 @@ lemma tstakeBot: "y \<down> i  = \<bottom> \<Longrightarrow> y \<noteq> \<bottom
 apply(cases "i=0")
 apply simp
 by (metis list_decode.cases tstake_bot)
+
+(*tsntimes tsinftimes*)
+
+(*1 times a timed stream is the timed stream itself*)
+lemma tsntimes_id[simp]: "tsntimes (Suc 0) ts = ts"
+by simp
+
+(*times a timed stream is \<bottom>*)
+lemma ts0tmsSubTs1tms: "tsntimes 0 ts1 \<sqsubseteq> ts2"
+by simp
+
+(*Concatenation to @{term tsntimes} is commutative*)
+lemma tsConc_eqts_comm: "ts \<bullet> (tsntimes n ts) =(tsntimes n ts) \<bullet> ts"
+apply (induct_tac n)
+apply simp
+by simp
+
+(*Concatenation of a timed stream to @{term tsntimes} of the same timed stream is Suc n times the timed stream *)
+lemma tsntmsSubTsSucntms: "tsntimes (Suc n) ts = (tsntimes n ts) \<bullet> ts"
+using tsConc_eqts_comm
+using tsntimes.simps(2) by auto
+
+(*n times a timed stream is prefix of Suc n times a stream*)
+lemma tsSucntmsSubTsinftms: "tsntimes n ts \<sqsubseteq> tsntimes (Suc n) ts"
+using ts_tsconc_prefix tsntmsSubTsSucntms
+by metis
+
+(*If a timed stream is not \<bottom>, then it contains some \<surd>*)
+lemma lenmin: assumes "ts \<noteq>\<bottom> "
+ shows "(#\<surd>(ts)) > 0"
+using assms lnless_def ts_0ticks by fastforce
+
+
+(*ntimes a finite timed stream is still a finite timed stream*)
+lemma fintsntms2fin:assumes "#\<surd>ts < \<infinity>"
+ shows "#\<surd>(tsntimes n ts) < \<infinity>"
+using assms tsntmsSubTsSucntms
+apply(induct_tac n)
+apply(simp add: tsntimes_def)
+apply (smt fold_inf)
+proof -
+  fix na :: nat
+  assume a1: "#\<surd> tsntimes na ts < \<infinity>"
+  assume a2: "#\<surd> ts < \<infinity>"
+  { assume "#\<surd> tsntimes na ts \<noteq> \<infinity>"
+    moreover
+    { assume "tsntimes na ts \<noteq> tsntimes (Suc na) ts"
+      then have "tsntimes na ts \<noteq> ts \<bullet> tsntimes na ts"
+        by (metis tsntimes.simps(2))
+      then have "#\<surd> ts \<bullet> tsntimes na ts \<noteq> \<infinity>"
+        using a2 by (metis (full_types) tsConc_eqts_comm tsConc_notEq tsconc_id tsntimes.simps(2))
+      then have "#\<surd> tsntimes (Suc na) ts \<noteq> \<infinity>"
+        by (metis tsntimes.simps(2)) }
+    ultimately have "#\<surd> tsntimes (Suc na) ts \<noteq> \<infinity>"
+      by force }
+  then show "#\<surd> tsntimes (Suc na) ts < \<infinity>"
+    using a1 by (metis (no_types) inf_less_eq leI)
+qed
 
 
 end
