@@ -251,6 +251,10 @@ lemma [simp]: assumes "Rep_tstream (Abs_tstream t) = ts"
   shows "ts_well ts"
 using Rep_tstream assms by blast
 
+lemma  assumes "Rep_tstream (Abs_tstream t) = t"
+  shows "ts_well t"
+using assms by auto
+
 lemma [simp]: assumes "Rep_tstream ts \<noteq> \<bottom>"
   shows "ts \<noteq> \<bottom>"
 using Rep_tstream_strict assms by blast
@@ -260,8 +264,6 @@ by (simp add: Rep_tstream_inverse)
 
 lemma [simp]:"ts_well (Rep_tstream ts)"
 using Rep_tstream by blast
-
-
 
 
 
@@ -365,10 +367,11 @@ by(simp add: tsconc_insert)
 lemma ts_tsconc_prefix [simp]: "(x::'a tstream) \<sqsubseteq> (x \<bullet> y)"
 by (metis Rep_tstream_inverse Rep_tstream_strict minimal monofun_cfun_arg sconc_snd_empty tsconc_insert)
 
-
-
-
-
+text {* By appending an event on the left side, a timed stream remains a timed stream. *}
+lemma tstream_scons_eq[simp]: "((\<up>e \<bullet> rs) \<in> {t::'a event stream. #t \<noteq> \<infinity> \<or> #({\<surd>} \<ominus> t) = \<infinity>}) 
+                      \<longleftrightarrow> (rs \<in> {t. #t \<noteq> \<infinity> \<or> #({\<surd>} \<ominus> t) = \<infinity>})"
+apply (smt fold_inf lnat.injects mem_Collect_eq sfilter_in sfilter_nin slen_scons)
+done
 
 
 
@@ -407,9 +410,61 @@ done
 
 
 
+(* tsRep *)
+
+text {* Abs_Rep *}
+lemma Abs_Rep: "Abs_tstream (Rep_tstream t) = t"
+apply simp
+done
+
+text {* typedef tstream unfold. *}
+lemma tstreaml1[simp]: "#(Rep_tstream x) \<noteq> \<infinity> \<or> #(sfilter {\<surd>}\<cdot>(Rep_tstream x)) = \<infinity>"
+apply (insert Rep_tstream [of x])
+apply (simp add: ts_well_def)
+by auto
+
+
+text {* Rep_Abs *}
+lemma Rep_Abs: "ts_well t  \<Longrightarrow> Rep_tstream (Abs_tstream t) = t"
+using Abs_tstream_inverse by blast
+
+(*Rep_tstream is ts_well*)
+lemma ts_well_Rep: "ts_well (Rep_tstream s)"
+by simp
+
+(*sConc of an finite eventstream and an Rep_tstream has only finitely many \<surd> \<Longrightarrow> Conc is finite*)
+lemma sConc_Rep_fin_fin: "(#({\<surd>} \<ominus> \<up>e \<bullet> Rep_tstream s) \<noteq> \<infinity>) \<Longrightarrow> ((#((\<up>e \<bullet> Rep_tstream s)) < \<infinity>))"
+using leI tstreaml1 by fastforce
+
+(*If an well defined stream is not empty, then there is an stream concatenated with \<surd>
+equal to the well defined stream *)
+lemma ts_fin_well: "ts_well ts \<and> ts\<noteq>\<epsilon> \<Longrightarrow>\<exists> ts2. ts = ts2 \<bullet> (\<up>\<surd>)"
+apply(simp add: ts_well_def)
+by (metis sconc_fst_inf sfilterl4)
+
+
+(*An Rep_tstream of an not empty stream is well defined if there is an event appended*)
+lemma sConc_fin_well: "s\<noteq>\<bottom> \<Longrightarrow> ts_well (\<up>e \<bullet> Rep_tstream s)"
+apply(simp add: ts_well_def)
+apply auto
+using sConc_Rep_fin_fin apply auto[1]
+by (metis ts_well_Rep Rep_tstream_bottom_iff assoc_sconc ts_fin_well)
+
+text {* Another useful variant of this identity: *}
+lemma [simp]: " s\<noteq>\<bottom> \<Longrightarrow>( Rep_tstream (Abs_tstream ( \<up>e \<bullet> Rep_tstream s)) = (\<up>e \<bullet> Rep_tstream s))"
+using Abs_tstream_inverse Rep_tstream tstream_scons_eq ts_well_def
+using Rep_Abs sConc_fin_well by blast
+
+text {* The following implication follows from the type definition of timed streams. *}
+lemma Rep_tstreamD1: "(Rep_tstream ts = s) \<Longrightarrow> (s \<in> {t::'a event stream. #t \<noteq> \<infinity> \<or> #({\<surd>} \<ominus> t) = \<infinity>})"
+using Rep_tstream 
+using tstreaml1 by auto
+
 
 
 (* tsTakeFirst *)
+
+
 
 (* the first tick comes after finitely many messages *)
 lemma stakewhileFromTS[simp]: assumes "ts_well ts"

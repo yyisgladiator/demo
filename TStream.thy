@@ -307,6 +307,12 @@ using Rep_tstream
 apply blast
 done
 
+
+
+(*Todo:*)
+
+
+
 text {* If a timed stream is non-empty, then, using the list-tstream concatenation
 tsconc :: "'m event list \<Rightarrow> 'm tstream \<Rightarrow> 'm tstream" (infixr "\<bullet>+")
 we can write the stream as a concatenation of the head and its rest. *}
