@@ -200,7 +200,10 @@ text {* "Unzipping" of timed streams: project to the second element of tuple. *}
 definition tstprojsnd :: "('a \<times> 'b) tstream \<rightarrow> 'b tstream" where
 "tstprojsnd = tstmap snd"
 
-
+text {* Fairness predicate on timed stream processing function. An espf is considered fair
+  if all inputs with infinitely many ticks are mapped to outputs with infinitely many ticks. *}
+definition tspfair :: "('a tstream \<rightarrow> 'b tstream ) \<Rightarrow> bool" where
+"tspfair f \<equiv> \<forall>ts. tsTickCount\<cdot> ts = \<infinity> \<longrightarrow> tsTickCount \<cdot> (f\<cdot> ts) = \<infinity>"
 
 
 
@@ -264,8 +267,6 @@ by (simp add: Rep_tstream_inverse)
 
 lemma [simp]:"ts_well (Rep_tstream ts)"
 using Rep_tstream by blast
-
-
 
 
 
@@ -460,7 +461,12 @@ lemma Rep_tstreamD1: "(Rep_tstream ts = s) \<Longrightarrow> (s \<in> {t::'a eve
 using Rep_tstream 
 using tstreaml1 by auto
 
-
+text {* If for every stream, which has either infinite many ticks, or is finite, a property P holds,
+then the property P holds for any timed stream. *}
+lemma PAbs_tstreamI: "\<lbrakk>\<And>x. #\<surd>x = \<infinity> \<or> #\<surd>x \<noteq> \<infinity>  \<Longrightarrow> P x\<rbrakk> \<Longrightarrow> P (Abs_tstream y)"
+using tstreaml1 
+apply blast
+done
 
 (* tsTakeFirst *)
 
@@ -498,6 +504,11 @@ qed
 lemma ts_finite_sfoot [simp]: assumes "ts \<noteq> \<epsilon>" and "#ts<\<infinity>" and "ts_well ts" 
   shows "sfoot ts = \<surd>"
 by (metis assms(1) assms(2) assms(3) lnless_def sfilterl4 sfoot1 ts_well_def)
+
+(*event stream with one element just contain \<surd>, or are not ts_well*)
+lemma tsOneTick: "(\<up>e) \<noteq> (\<up>\<surd>) \<Longrightarrow> \<not> ts_well (\<up>e)"
+apply (simp add: ts_well_def)
+by (metis (mono_tags, lifting) Inf'_def Inf'_neq_0 bot_is_0 fix_strict lscons_conv sfoot_one slen_scons stakewhileFromTS2 strict_slen stwbl_f sup'_def tick_msg ts_finite_sfoot ts_well_def)
 
 
 lemma ts_tick_exists: assumes "ts1 \<noteq> \<epsilon>" and "ts_well ts1"
@@ -654,6 +665,9 @@ lemma tsdropfirst_rep_eq: assumes "ts_well ts"
   shows "tsDropFirst\<cdot>(Abs_tstream ts) = Abs_tstream (srtdw (\<lambda>a. a \<noteq> \<surd>)\<cdot>ts)"
 by(simp add: tsDropFirst_def assms)
 
+lemma [simp]: "tsDropFirst\<cdot>(tsTakeFirst\<cdot> ts) = \<bottom>"
+apply (simp add: tsDropFirst_def tsTakeFirst_def)
+done
 
 
 lemma [simp]: "tsDropFirst\<cdot>\<bottom> = \<bottom>"
@@ -665,7 +679,6 @@ by (metis (no_types, lifting) Abs_tstream_inverse Rep_tstream Rep_tstream_invers
 
 
 
-
 (* tsDrop *)
 thm tsDrop_def
 
@@ -673,6 +686,10 @@ lemma [simp]: "tsDrop i\<cdot>\<bottom> = \<bottom>"
 apply(induction i)
 apply(simp)
 by(simp add: tsDrop_def)
+
+(*To drop n+1 timeslots is the same as dropping n timeslots and then one *)
+lemma tsDrop_tsDropFirst: "tsDrop (Suc n)\<cdot> x = tsDrop n\<cdot> (tsDropFirst\<cdot> x)"
+by simp
 
 lemma tsDropNth: "tsDrop n\<cdot>ts = (tsNth n\<cdot>ts) \<bullet> tsDrop (Suc n)\<cdot>ts"
 apply(induction n arbitrary: ts)
@@ -1346,6 +1363,94 @@ proof -
   then show "#\<surd> tsntimes (Suc na) ts < \<infinity>"
     using a1 by (metis (no_types) inf_less_eq leI)
 qed
+
+(* tsTake*)
+
+text {* We prove that taking the first 1,2,...,n,... timeslots of an timed stream with tsTake forms a chain. 
+Thus, we have to show that for all i: tsTake i \<sqsubseteq> tsTake (Suc i) *}
+lemma chain_tsTake[simp]: "chain tsTake"
+by (simp add: cfun_belowI po_class.chainI)
+
+
+lemma esttake_tsTake[simp]: "tsTake k\<cdot>(tsTake n\<cdot>s) = tsTake (min k n)\<cdot>s"
+by (simp add: min.commute)
+
+lemma esttake_infD: "#\<surd>(tsTake k\<cdot>x) = \<infinity> \<Longrightarrow> tsTake k\<cdot>x = x"
+by (simp add: ts_below_eq)
+
+
+
+
+
+(* tspfair*)
+
+text {* *If for all streams, all inputs with infinitely many ticks are mapped apply a function to outputs with
+ infinitely many ticks, then the function is fair. *}
+lemma tspfairI: "(\<And>s. tsTickCount \<cdot>s = \<infinity> \<Longrightarrow> tsTickCount \<cdot>(f\<cdot>s) = \<infinity>) \<Longrightarrow> tspfair f"
+apply (simp add: tspfair_def)
+done
+
+text {* If a function is fair and an input stream has many ticks, then the output stream of f also has 
+infinitely many ticks. *}
+lemma estfairD: "\<lbrakk>tspfair f;#\<surd>s = \<infinity>\<rbrakk> \<Longrightarrow> #\<surd>(f\<cdot>s) = \<infinity>"
+apply (simp add: tspfair_def)
+done
+
+
+
+(*TODO*)
+
+(*To drop n+1 timeslots is the same as dropping one timeslot and then n *)
+lemma tsdrop_back_tsrt:"tsDrop (Suc n)\<cdot> x = tsDropFirst \<cdot> (tsDrop n\<cdot> x)"
+apply (simp add: tsDrop_def tsDropFirst_def)
+sorry
+
+
+(*The domain of every timeslot is in the domain of all timeslots*)
+lemma tsNth_tsDom1: "tsDom\<cdot> (tsNth n\<cdot> ts)\<subseteq> tsDom\<cdot> ts"
+apply(simp add: tsNth_def)
+apply auto
+sorry
+
+
+text {* If the domain of a stream is a subset of a set M, then the domain of the remainder
+of the stream after removing the head element, is also a subset of the set M. *}
+lemma tsDom_tsDropI: "tsDom\<cdot> x \<subseteq> M \<Longrightarrow> tsDom\<cdot> (tsDropFirst\<cdot> x) \<subseteq> M"
+apply (simp add: tsDom_def)
+apply (simp add: tsDropFirst_def)
+sorry
+
+
+text {* If the domain of a stream is a subset of a set M, then the domain of the remainder
+of the stream after removing n elements, is also a subset of the set M. *}
+lemma tsdom_tsdropI: "tsDom\<cdot> s \<subseteq> M \<Longrightarrow> tsDom\<cdot> (tsDrop n\<cdot> s) \<subseteq> M"
+sorry
+
+
+lemma[simp]: "tsDom\<cdot> (Abs_tstream(\<up>\<surd>)) = {}"
+apply(simp add: tsDom_def)
+sorry
+
+lemma tsDom_tsConc[simp]: "tsDom\<cdot> (tsConc ts\<cdot> ts)= tsDom\<cdot> ts"
+apply(simp add: tsConc_def tsDom_def sdom_def)
+sorry
+
+lemma tsDom_tsntimes_eq: "tsDom\<cdot>(tsntimes n ts) = tsDom\<cdot>ts"
+apply(simp add:tsntimes_def)
+apply simp
+using tsDom_tsConc
+sorry
+
+lemma tsDom_tsinftimes_empty: "tsDom\<cdot>( tsinftimes ts) = tsDom\<cdot> ts"
+apply(simp add: tsinftimes_def)
+using tsDom_tsntimes_eq
+sorry
+
+
+text {* The domain of the infinite stream consisting only of ticks is empty. *}
+lemma tsDom_infTick_empty: "ts= tsinftimes(Abs_tstream(\<up>\<surd>)) \<Longrightarrow> tsDom\<cdot> ts = {}"
+apply (simp add: tsDom_def tsinftimes_def)
+sorry
 
 
 end
