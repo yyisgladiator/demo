@@ -18,6 +18,19 @@ begin
 instance ..
 end
 
+(* TODO: backport this to SPF *)
+(* harpoon and Rep operation all in one for simpler SPF on SB applications *)
+abbreviation theRep_abbrv :: "'a SPF \<Rightarrow> 'a SB \<Rightarrow> 'a SB " ("_\<rightleftharpoons>_") where
+"(f \<rightleftharpoons> s) \<equiv> the ((Rep_CSPF f) s)"
+
+(* special operator for serial composition, domain of f2 must be range of f1  *)
+definition sercomp :: "'m SPF => 'm SPF => 'm SPF"  where
+"sercomp f1 f2 \<equiv>
+let I = spfDom\<cdot>f1
+in Abs_CSPF (\<lambda> x. (sbDom\<cdot>x = I ) \<leadsto> ((Rep_CSPF f2)\<rightharpoonup>((Rep_CSPF f1) \<rightharpoonup> x)))"
+
+
+
 lemma [simp]: "cs \<subseteq> ((ctype c) :: nat set)"
   apply(simp add: ctype_nat_def)
   by(metis subset_UNIV subset_image_iff transfer_int_nat_set_return_embed)
@@ -286,7 +299,7 @@ lemma spfComp_serialf1: assumes "spfRan\<cdot>f1 = spfDom\<cdot>f2"
                        and "c \<in> spfRan\<cdot>f1" 
                        and "pL f1 f2 = {}"
 shows "(iterate (Suc (Suc i))\<cdot>(spfCompHelp2 f1 f2 x)\<cdot>(sbLeast (C f1 f2))) . c
-                   = ((Rep_CSPF f1) \<rightharpoonup> (x\<bar>spfDom\<cdot>f1)) . c"
+                   = (f1 \<rightleftharpoons> (x\<bar>spfDom\<cdot>f1)) . c"
   apply (subst iterate_Suc)
   apply(subst spfCompHelp2_def, simp)
   apply (subst sbunion_getchL)
