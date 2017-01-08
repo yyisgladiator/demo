@@ -849,7 +849,10 @@ proof -
     using a1 by (metis (no_types) chain_tord ts_infinite_fin)
 qed
 
-
+text {* In infinite chains, the length of the streams is unbounded *}
+lemma inf_chainl3:
+  "chain Y \<and> \<not>finite_chain Y \<longrightarrow> (\<exists>k. Fin n \<le> #\<surd>(Y k))"
+by (simp add: exist_tslen)
 
 
 
