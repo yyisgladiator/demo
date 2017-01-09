@@ -1,11 +1,14 @@
 (*  Title:        TSPFTheorie.thy
-    Author:       Sebastian Stüber
+    Author:       Sebastian Stüber, Jens Bürger
     e-mail:       sebastian.stueber@rwth-aachen.de
+                  jens.buerger@rwth-aachen.de
 
-    Description:  
+    Description: 
 *)
 
-
+(* WARNING: THIS IS NOT A PRODUCTION THEORY, DO NOT IMPORT *)
+(* Changes: weak causality is the new standard for TSPF *)
+(* Checked compability with TSPS *)
 
 theory TSPFTheorie_JB
 imports TSBTheorie
@@ -62,6 +65,13 @@ default_sort message
 
   lemma tspf_weakc_exists: "tspf_weakCausality [(Abs_TSB_inf empty) \<mapsto> (Abs_TSB_inf empty)]"
   by(simp add: tspf_weakCausality_def)
+
+  lemma tspfs_well_exists: "tspfs_well [Abs_TSB_inf Map.empty \<mapsto> Abs_TSB_inf Map.empty]"
+  apply(simp add: tspfs_well_def tsbdom_insert dom_def tsb_well_def)
+  apply(rule+)
+  apply (simp add: tspf_strongc_exists)
+  apply(simp add: tspf_type_def)
+  by (metis dom_empty empty_iff tsb_inf_exists tsbi_eq tsbidom_rep_eq)
 
 
   lemma tspfw_well_exists: "tspfw_well [Abs_TSB_inf Map.empty \<mapsto> Abs_TSB_inf Map.empty]"
@@ -191,7 +201,7 @@ lemma tspf_StrongImpWeak[simp]: assumes "tspf_strongCausality  f"
   shows "tspf_weakCausality f"
 by (metis assms tsbiSucTake tspf_strongCausality_def tspf_weakCausality_def)
 
-lemma rep_tspfs_well [simp]: "tspfw_well (Rep_TSPF F)"
+lemma rep_tspfw_well [simp]: "tspfw_well (Rep_TSPF F)"
 using Rep_TSPF by blast
 
 lemma [simp]: assumes "tspfw_well F" shows "Rep_TSPF (Abs_TSPF F) = F"
@@ -208,7 +218,7 @@ lemma map_not_tspf [simp]: "\<not>(tspfs_well empty)"
 (* Used in "Some" proofs, for example in "spfDom" *)
 lemma spf_dom_not_empty [simp]: 
   shows "\<exists>x. x\<in>dom (Rep_TSPF F)"
-by (metis dom_empty ex_in_conv map_not_tspf part_eq rep_tspfs_well)
+by (meson rep_tspfw_well tsbi_dom_ex tspf_type_def tspfw_well_def)
 
 (* the "rand" of an SPF is never empty *) 
 (* Used in "Some" proofs, for example in "spfRan" *)
@@ -219,12 +229,12 @@ by (meson domIff not_None_eq ranI spf_dom_not_empty)
 (* only StBundles with the same domain are in an SPF *)
 lemma tspf_tsbdom2dom: assumes "tsbiDom\<cdot>x = tsbiDom\<cdot>y" 
   shows "x\<in>dom (Rep_TSPF f) \<longleftrightarrow>y\<in>dom (Rep_TSPF f)"
-by (metis assms rep_tspfs_well tspf_type_def tspfs_well_def)
+by (metis assms rep_tspfw_well tspf_type_def tspfw_well_def)
 
 (* only StBundles with the same domain are in an SPF *)
 lemma tspf_dom2tsbdom: assumes "x\<in>dom (Rep_TSPF f)" and "y\<in>dom (Rep_TSPF f)" 
   shows "tsbiDom\<cdot>x = tsbiDom\<cdot>y"
-by (metis assms(1) assms(2) rep_tspfs_well tspf_type_def tspfs_well_def)
+by (metis assms(1) assms(2) rep_tspfw_well tspf_type_def tspfw_well_def)
 
 (* helper function for "spf_ran2sbdom". Somehow it doesn't work without *)
 lemma ran2exists[simp]: assumes "x\<in>(ran f)"
@@ -234,7 +244,7 @@ using assms by (simp add: ran_def)
 (* only StBundles with the same domain are in an SPF *)
 lemma tspf_ran2tsbdom: assumes "x\<in>ran (Rep_TSPF f)" and "y\<in>ran (Rep_TSPF f)" 
   shows "tsbiDom\<cdot>x = tsbiDom\<cdot>y"
-by (metis assms(1) assms(2) rep_tspfs_well tspf_type_def tspfs_well_def)
+by (metis assms(1) assms(2) rep_tspfw_well tspf_type_def tspfw_well_def)
 
 
 (* if 2 SPF's are in a below-relation their Input-Channels are equal *)
@@ -250,7 +260,7 @@ proof -
   obtain sy where sy_def: "((Rep_TSPF a) sy) =  (Some y)" using assms ran2exists by fastforce
 
   have "dom (Rep_TSPF a) = dom (Rep_TSPF b) " by (metis assms(1) below_TSPF_def part_dom_eq) 
- thus ?thesis by (metis assms(2) assms(3) tsbi_option_below assms(1) below_TSPF_def rep_tspfs_well tspfs_well_def tspf_type_def)
+ thus ?thesis by (metis assms(2) assms(3) tsbi_option_below assms(1) below_TSPF_def rep_tspfw_well tspfw_well_def tspf_type_def)
 qed
 
 lemma tspf_typeI: assumes "\<And>b. b\<in>dom f \<Longrightarrow> tsbiDom\<cdot>b = In"
@@ -402,9 +412,9 @@ lemma tsbdom_2 [simp]: assumes "tspfDom\<cdot>f1 \<subseteq> tsbDom\<cdot>tb"
 proof -
   have "tsbiDom\<cdot>(tsb2tsbInf (tb \<bar> tspfDom\<cdot>f1)) = tspfDom\<cdot>f1" using assms tsb2tsbInf_dom tsresrict_dom2 by blast
   hence "(tsb2tsbInf (tb \<bar> tspfDom\<cdot>f1)) \<in> (dom (Rep_TSPF f1))"
-    by (metis rep_tspfs_well someI spf_dom_not_empty tspf_type_def tspfs_well_def tspfdom_insert)
+    by (metis rep_tspfw_well someI spf_dom_not_empty tspf_type_def tspfw_well_def tspfdom_insert)
   thus ?thesis
-    by (metis (no_types, lifting) domD option.sel ranI rep_tspfs_well someI_ex tspf_the_tsb_def tspf_type_def tspfs_well_def tspfran_insert) 
+    by (metis (no_types, lifting) domD option.sel ranI rep_tspfw_well someI_ex tspf_the_tsb_def tspf_type_def tspfw_well_def tspfran_insert) 
 qed
 
 lemma tsbidom_2 [simp]: assumes "tspfDom\<cdot>f1 \<subseteq> tsbDom\<cdot>tb"
@@ -690,6 +700,8 @@ lemma tspfCompParallelGetch2: assumes "tspfCompInternal f1 f2 = {}"
         shows "(f1\<otimes>f2) \<rightharpoonup> tb . c = f2 \<rightharpoonup> (tb\<bar>tspfDom\<cdot>f2) . c"
 by (metis assms(1) assms(2) assms(3) assms(4) comp_in_commu comp_internal_commu comp_well_commu tspfCompCommu tspfCompParallelGetch)
 
+
+
 (* Teste die Composition *)
 (* variante 1: Keine internen channels *)
 lemma tspfCompParallel: assumes "tspfCompInternal f1 f2 = {}"
@@ -718,7 +730,7 @@ qed
 
 
 lift_definition tspfEmpty :: "'m TSPF" is "[Abs_TSB_inf Map.empty \<mapsto> Abs_TSB_inf Map.empty]"
-by (simp add: tspfs_well_exists)
+by (simp add: tspfw_well_exists)
 
 lemma [simp]: "tspfDom\<cdot>tspfEmpty = {}"
 apply(simp add: tspfdom_insert tspfEmpty.rep_eq)
@@ -951,13 +963,11 @@ oops
 
 *)
 
+  cpodef 'm TSPFs = "{F :: 'm TSB_inf \<rightharpoonup> 'm TSB_inf. tspfs_well F}"
+  using tspfs_well_exists apply blast
+  using tsbi_option_adm by blast
 
-
-  cpodef 'm TSPFw = "{F :: 'm TSB_inf \<rightharpoonup> 'm TSB_inf. tspfw_well F}"
-    apply (metis Rep_TSPF mem_Collect_eq tspf_StrongImpWeak tspfs_well_def tspfw_well_def)
-  by simp
-
- setup_lifting type_definition_TSPFw
+ setup_lifting type_definition_TSPFs
 
 
 
