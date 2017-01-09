@@ -17,6 +17,14 @@ lemma [simp]: "cs \<subseteq> ((ctype c) :: nat set)"
 apply(simp add: ctype_nat_def)
 by(metis subset_UNIV subset_image_iff transfer_int_nat_set_return_embed)
 
+(* operator for parallel composition *)
+
+definition parcomp :: "'m SPF \<Rightarrow> 'm SPF \<Rightarrow> 'm SPF"  where
+"parcomp f1 f2 \<equiv>
+let I = spfDom\<cdot>f1 \<union> spfDom\<cdot>f2
+in Abs_CSPF (\<lambda> x. (sbDom\<cdot>x = I ) \<leadsto> (((Rep_CSPF f1) \<rightharpoonup> (x \<bar>spfDom\<cdot>f1)) \<uplus> ((Rep_CSPF f2) \<rightharpoonup> (x\<bar>spfDom\<cdot>f2))))"
+
+
 (* Definition of ID SPFs *)
 
 definition id :: "nat stream \<rightarrow> nat stream" where
