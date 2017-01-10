@@ -1,10 +1,11 @@
 theory ParComp_MW
-imports SPF SBTheorie
+imports SPF SBTheorie SerComp_JB
 
 begin
 
 (* Instantiation nat message *)
 
+(* already in sercomp_jb
 instantiation nat :: message
 begin
   definition ctype_nat :: "channel \<Rightarrow> nat set" where
@@ -16,6 +17,7 @@ end
 lemma [simp]: "cs \<subseteq> ((ctype c) :: nat set)"
 apply(simp add: ctype_nat_def)
 by(metis subset_UNIV subset_image_iff transfer_int_nat_set_return_embed)
+*)
 
 (* operator for parallel composition *)
 
@@ -113,12 +115,14 @@ apply(simp add: spfran_least ID2_rep_eqC)
 by(simp add: sbdom_insert)
 
 lemma id_apply1: "((Rep_CSPF ID1) \<rightharpoonup> ([c1 \<mapsto> s]\<Omega>)) = ([c2 \<mapsto> (s:: nat stream)]\<Omega>)"
-apply(simp add: id_def  Rep_CSPF_def ID1.rep_eq sbdom_rep_eq)
-by(simp add: sbgetch_insert)
+by(simp add: id_def  Rep_CSPF_def ID1.rep_eq sbdom_rep_eq)
+(*apply(simp add: id_def  Rep_CSPF_def ID1.rep_eq sbdom_rep_eq)
+by(simp add: sbgetch_insert)*)
 
 lemma id_apply2: "((Rep_CSPF ID2) \<rightharpoonup> ([c3 \<mapsto> s]\<Omega>)) = ([c4 \<mapsto> (s:: nat stream)]\<Omega>)"
-apply(simp add: id_def Rep_CSPF_def ID2.rep_eq sbdom_rep_eq)
-by(simp add: sbgetch_insert)
+by(simp add: id_def  Rep_CSPF_def ID2.rep_eq sbdom_rep_eq)
+(*apply(simp add: id_def Rep_CSPF_def ID2.rep_eq sbdom_rep_eq)
+by(simp add: sbgetch_insert)*)
 
 lemma [simp]: "spfComp_well ID1 ID2"
 by (simp add: spfComp_well_def)
@@ -381,7 +385,7 @@ by (meson assms(3) assms(4) disjoint_iff_not_equal spfComp_well_def)
 
 lemma spfParCompID: "(Rep_CSPF (spfcomp ID1 ID2)) \<rightharpoonup> ([c1 \<mapsto> s, c3 \<mapsto> s2]\<Omega>) . c2 = s"
 apply(simp add: spfCompParallelGetch)
-apply(simp add: id_apply1 sb_rest)
-by(simp add: sbGetCh_def)
+by(simp add: id_apply1 sb_rest)
+(*by(simp add: sbGetCh_def)*)
 
 end
