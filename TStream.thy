@@ -1,14 +1,23 @@
+(*  Title:        TStreamTheorie.thy
+    Author:       Sebastian Stüber
+    e-mail:       sebastian.stueber@rwth-aachen.de
+
+    Description:  Definition of "Timed Streams"
+*)
+
 chapter {* Timed Streams *} 
 
 theory TStream
-imports Streams
-begin
 
-text {* Timed Streams*}
+imports  Streams
+begin
+default_sort countable
+
 
 (* ----------------------------------------------------------------------- *)
 section {* Type definition *}
 (* ----------------------------------------------------------------------- *)
+
 
 text {* Definition of  datatype  @{text "'m event"}; extends @{text "'m"} with a @{term "Tick"}. *}
 datatype 'm event = Msg 'm | Tick
@@ -16,8 +25,9 @@ datatype 'm event = Msg 'm | Tick
 text {* Prove that datatype event is countable. Needed, since the domain-constructor defined
  to work for countable types.*}
 instance event :: (countable) countable
-apply countable_datatype
-done
+by countable_datatype
+
+
 
 text {* Introduce symbol for ticks (@{text "\<surd>"}), marks the end of each time slot. *}
 syntax
@@ -28,266 +38,335 @@ translations
 
 
 
-text {*A timed stream is either finite (contains finitely many elements from M\<union>{\<surd>}),   
-or it is infinite (contains infinitely many ticks). *}
-typedef 'm tstream = "{t::'m event stream. #t \<noteq> \<infinity> \<or> #(sfilter {\<surd>}\<cdot>t) = \<infinity>}"
-by (rule_tac x= "\<up>\<surd>" in exI, simp)
+(* Lemmas used for PCPO-definition *)
 
 
-text {* Lifting setup, used to avoid Rep and Abs functions in typedef. 
-Also forces user to prove correctness instantiation. *}
+(* Every infinite chain Y in which every element ends with "\<surd>" (and is finite)
+      has a Lub with infinitly many \<surd>'s   *)
+lemma tstream_well_fin_adm: assumes "chain Y" and "\<not> finite_chain Y"
+    and "\<forall>i. (#(Y i)<\<infinity> \<and> (\<exists>x. (Y i) = x\<bullet>\<up>\<surd>))"
+  shows " #(sfilter {\<surd>}\<cdot>(\<Squnion>i. Y i)) = \<infinity>" 
+proof -
+  have f1:"\<forall>i. #(Y i) < \<infinity>" using LNat.inf_chainl2 assms(1) assms(2) eq_less_and_fst_inf lnless_def by auto
+  hence f2: "#(\<Squnion>i. Y i) = \<infinity>"
+    by (simp add: assms(1) assms(2) inf_chainl4)
+  have "\<And>i j. i\<le>j \<Longrightarrow> Y i\<noteq> Y j \<Longrightarrow> #(sfilter {\<surd>}\<cdot>(Y i)) < #(sfilter {\<surd>}\<cdot>(Y j))" 
+  proof -
+    fix i j
+    assume "i\<le>j" and "Y i \<noteq> Y j"
+    hence "Y i\<sqsubseteq> Y j" by (simp add: assms(1) po_class.chain_mono)
+    obtain n where "Fin n = # (Y j)" by (metis f1 lncases lnless_def) 
+    have "#(Y i) < #(Y j)"
+      using \<open>Y i \<noteq> Y j\<close> \<open>Y i \<sqsubseteq> Y j\<close> eq_slen_eq_and_less lnless_def monofun_cfun_arg by blast
+    obtain s where s_def: "Y j =  s \<bullet> \<up>\<surd>" by (metis \<open>Y i \<noteq> Y j\<close> \<open>Y i \<sqsubseteq> Y j\<close> assms(3) bottomI sfoot2)
+    hence "Y i\<sqsubseteq>s" using \<open>Y i \<noteq> Y j\<close> \<open>Y i \<sqsubseteq> Y j\<close> below_conc by auto
+    hence "#({\<surd>} \<ominus> Y i) \<le> #({\<surd>} \<ominus> s)" by (simp add: mono_slen monofun_cfun_arg)
+    have f1:"#({\<surd>} \<ominus> s) \<le> #({\<surd>} \<ominus> (Y j))" by (simp add: mono_slen monofun_cfun_arg s_def) 
+    thus "#({\<surd>} \<ominus> Y i) < #({\<surd>} \<ominus> Y j)"
+      by (smt Fin_neq_inf \<open>#({\<surd>} \<ominus> Y i) \<le> #({\<surd>} \<ominus> s)\<close> \<open>Fin n = #(Y j)\<close> inf_ub less2eq lnle_conv lnless_def s_def sconc_fst_inf sfilter_conc singletonI trans_lnle)
+  qed
+  thus ?thesis
+    by (smt f1 f2 assms(1) ch2ch_Rep_cfunR contlub_cfun_arg inf_chainl4 lnless_def lub_eqI lub_finch2 max_in_chainI max_in_chain_def maxinch_is_thelub) 
+qed
+
+lemma tstream_well_adm1 [simp]: "adm (\<lambda>s. #(sfilter {\<surd>}\<cdot>s) = \<infinity> \<or> ( #s<\<infinity> \<and> (\<exists>x. s = x\<bullet>\<up>\<surd>)))"
+apply(rule admI)
+by (metis inf2max lub_eqI lub_finch2 sfilterl4 tstream_well_fin_adm)
+
+(* wellformed definition for timed Streams *)
+definition ts_well :: "'a event stream \<Rightarrow> bool" where
+"ts_well  \<equiv> \<lambda>s.     s = \<epsilon>   (* stream is the empty stream *)
+                  \<or> #({\<surd>} \<ominus> s) = \<infinity> (* or has infinitly many ticks *)
+                  \<or>(#s < \<infinity> \<and> (\<exists>x. s = x\<bullet>\<up>\<surd>))"  (* or is finite and ends with \<surd> *)
+
+lemma tstream_well_adm [simp]: "adm ts_well"
+proof -
+  have "adm (\<lambda>s. s=\<epsilon>)" by simp
+  hence "adm (\<lambda>s. (s=\<epsilon>) \<or> (#(sfilter {\<surd>}\<cdot>s) = \<infinity> \<or> (#s<\<infinity> \<and> (\<exists>x. s = x\<bullet>\<up>\<surd>))))"  
+    using tstream_well_adm1 Adm.adm_disj by blast
+  thus ?thesis by (simp add: ts_well_def)
+qed
+
+
+
+(* Finally, the definition of tstream *)
+pcpodef 'a tstream = "{t :: 'a event stream. ts_well t}"
+apply (simp add: ts_well_def)
+by auto
 
 setup_lifting type_definition_tstream
 
-text {* Example definition, empty stream. *}
-lift_definition s1 :: "'m tstream" is "\<epsilon>"
-by simp
 
-text {* Example definition, stream with only one tick. *}
-lift_definition s2 :: "'m tstream" is "\<up>\<surd>"
-by simp
-
-text {* The timed stream without any messages (only ticks) *}
-lift_definition justtime :: "'m tstream" is "sinftimes (\<up>\<surd>)"
-by simp
-
-text {* Abbreviation *}
-type_synonym ('im, 'om) tspf  = "'im tstream \<Rightarrow> 'om tstream" 
-
-text {* Abbreviation *}
-type_synonym 'im tspfo = "'im tstream \<Rightarrow> 'im tstream" 
-
-text {* Convert a timed stream to an event list. *}
-definition ts2list :: "'a tstream \<Rightarrow> 'a event list" where
-"ts2list s \<equiv> if #(Rep_tstream s) \<noteq> \<infinity> then SOME l. list2s l = (Rep_tstream s) else undefined"
-
-text {* Case study for ts2list. *}
-lift_definition li1 :: "nat tstream" is "list2s [Msg 1, \<surd>]"
-by simp
-
-text {* Show that this is the stream we wanted. *}
-lemma "li1 = Abs_tstream (\<up>(Msg 1) \<bullet> \<up>\<surd>)"
-by (metis li1_def lscons_conv list2s_0 list2s_Suc sup'_def)
-
-text {*Transform the timed stream back and get the initial list. *}
-lemma "ts2list li1 = [Msg 1, \<surd>]"
-apply (simp add: li1_def ts2list_def Abs_tstream_inverse)
-by (metis (mono_tags, lifting) One_nat_def lscons_conv sconc_snd_empty list2s_0 list2s_Suc list2s_inj some_equality)
 
 
 
 (* ----------------------------------------------------------------------- *)
-section {* Definition of common functions *}
+  subsection \<open>Definitions on tstream\<close>
 (* ----------------------------------------------------------------------- *)
 
 
-text {* The functions on timed streams split into two groups:
- -Functions in the first group (prefix "ts") treat timed streams as ordinary streams. 
- -Functions in the second group (prefix "tst") work on blocks of messages.
-*}
+(* returns the set with all Msg in t. No ticks *)
+definition tsDom :: "'a tstream \<rightarrow> 'a set" where
+"tsDom \<equiv> \<Lambda> ts . {a | a. (Msg a) \<in> sdom\<cdot>(Rep_tstream ts)}"
+
+
+(* concatenation of tstreams *)
+definition tsConc :: "'a tstream \<Rightarrow> 'a tstream \<rightarrow> 'a tstream" where
+"tsConc ts1 \<equiv> \<Lambda> ts2. Abs_tstream ((Rep_tstream ts1) \<bullet> (Rep_tstream ts2))"
+
+abbreviation sbConc_abbr :: "'a tstream \<Rightarrow> 'a tstream \<Rightarrow> 'a tstream" (infixl "\<bullet>" 65)
+where "ts1 \<bullet> ts2 \<equiv> tsConc ts1\<cdot>ts2"
+
+
+
+(* filters all ticks and returns the corrosponding 'a stream *)
+definition tsAbs:: "'a tstream \<rightarrow> 'a stream" where
+"tsAbs \<equiv> \<Lambda> ts.  smap (\<lambda>e. case e of Msg m \<Rightarrow> m | \<surd> \<Rightarrow> undefined)\<cdot>(sfilter {e. e \<noteq> \<surd>}\<cdot>(Rep_tstream ts))"
+
+
+(* returns the first time slot *)
+definition tsTakeFirst :: "'a tstream \<rightarrow> 'a tstream" where
+"tsTakeFirst \<equiv> \<Lambda> ts. Abs_tstream (stwbl (\<lambda>a. a\<noteq>\<surd>)\<cdot>(Rep_tstream ts))"
+
+(* deletes the first time slot *)
+definition tsDropFirst :: "'a tstream \<rightarrow> 'a tstream" where
+"tsDropFirst \<equiv> \<Lambda> ts. Abs_tstream (srtdw(\<lambda>a. a\<noteq>\<surd>)\<cdot>(Rep_tstream ts))"
+
+
+(* drops the first n time slots*)
+primrec tsDrop :: "nat \<Rightarrow> 'a tstream \<rightarrow> 'a tstream" where
+"tsDrop 0 = ID" | (* drop nothing, Identitiy function *)
+"tsDrop (Suc n) = (\<Lambda> ts. tsDrop n\<cdot>(tsDropFirst\<cdot>ts))"
+
+
+(* returns the n-th time slot, counting from 0 *)
+definition tsNth:: "nat \<Rightarrow> 'a tstream \<rightarrow> 'a tstream" where
+"tsNth n \<equiv> \<Lambda> ts. tsTakeFirst\<cdot>(tsDrop n\<cdot>ts)"
+
+
+(* take the first n time slots. *)
+primrec tsTake :: "nat \<Rightarrow> 'a tstream \<rightarrow> 'a tstream" where
+"tsTake 0 = \<bottom>" |  (* take 0 timeslots. empty stream *)
+"tsTake (Suc n) = (\<Lambda> ts. if ts=\<bottom> then \<bottom> else tsTakeFirst\<cdot>ts \<bullet> tsTake n\<cdot>(tsDropFirst\<cdot>ts))"
+
+declare tsTake.simps [simp del]
+
+abbreviation tsTake_abbrv:: "'m tstream \<Rightarrow> nat \<Rightarrow> 'm tstream" ("_ \<down> _ ") where
+"ts \<down> n \<equiv> tsTake n\<cdot>ts"
+
+
+definition tsTickCount :: "'a tstream \<rightarrow> lnat" where
+"tsTickCount \<equiv> \<Lambda> ts. #( {\<surd>} \<ominus> (Rep_tstream ts))"
+
+abbreviation tsTickCount_abbr :: "'a tstream \<Rightarrow>lnat" ( "#\<surd> _" 65)
+where "#\<surd>ts \<equiv> tsTickCount\<cdot>ts"
+
+(*@{term tsntimes}  concatenates a timed stream n times with itself *)
+primrec tsntimes:: " nat \<Rightarrow> 'a tstream \<Rightarrow> 'a tstream" where
+"tsntimes 0 ts =\<bottom> " |
+"tsntimes (Suc n) ts = tsConc ts\<cdot>(tsntimes n ts)"
+
+(*@{term tsinftimes}  concatenates a timed stream infinitely often with itself *)
+definition tsinftimes:: "'a tstream \<Rightarrow> 'a tstream" where
+"tsinftimes \<equiv> fix\<cdot>(\<Lambda> h. (\<lambda>ts. if ts = \<bottom> then \<bottom> else (tsConc ts \<cdot> (h ts))))"
+
+
+
+
+(* Definitionen aus TStream *)
 
 text {* Convert an event-spf to a timed-spf. Just a restriction of the function domain. *}
 definition espf2tspf :: "('a event,'b event) spf \<Rightarrow> 'a tstream \<Rightarrow> 'b tstream" where
 "espf2tspf f x = Abs_tstream (f\<cdot>(Rep_tstream x))"
 
-text {* Retrieve the first element of a stream. *}
-definition tshd  :: "'m tstream \<Rightarrow> 'm event" where
-"tshd ts = shd (Rep_tstream ts)"
-
-text {* Cut away the first element of a stream. *}
-definition tsrt :: "'m tstream \<Rightarrow> 'm tstream" where
-"tsrt = espf2tspf srt"
-
-text {* Retrieve the first @{text "n"} elements of a stream. *}
-definition tstake :: "nat \<Rightarrow> 'm tstream \<Rightarrow> 'm tstream" where
-"tstake n ts = Abs_tstream (stake n\<cdot>(Rep_tstream ts))"
-
-text {* Define the concatenation of a (finite) list of events with a timed stream. *}
-definition tsconc :: "'m event list \<Rightarrow> 'm tstream \<Rightarrow> 'm tstream" (infixr "\<bullet>+" 65) where
-"tsconc l = espf2tspf (\<Lambda> s. (list2s l) \<bullet> s)"
-
-text {* Remove the first @{text "n"} elements of the stream. *}
-definition tsdrop :: "nat \<Rightarrow> 'm tstream \<Rightarrow> 'm tstream" where
-"tsdrop n = espf2tspf (sdrop n)"
-
-text {* Get the n-th element of the stream, where n=0 returns the head of the stream.*}
-definition tsnth :: "nat \<Rightarrow> 'm tstream \<Rightarrow> 'm event" where
-"tsnth n ts = snth n (Rep_tstream ts)"
-
-text {* Convert a timed stream to an untimed one (discarding timing information) *}
-definition tsabs :: "'m tstream \<Rightarrow> 'm stream" where
-"tsabs ts = smap (\<lambda>e. case e of Msg m \<Rightarrow> m | \<surd> \<Rightarrow> undefined)\<cdot>(sfilter {e. e \<noteq> \<surd>}\<cdot>(Rep_tstream ts))"
-
-text {* Stream definition for case study. *}
-lift_definition s3 :: "nat tstream" is "\<up>(Msg 1) \<bullet> \<up>(Msg 2) \<bullet> \<up>\<surd> \<bullet> \<up>(Msg 3) \<bullet> \<up>(Msg 4) \<bullet> sinftimes(\<up>\<surd>)"
-by simp
-
-text {* Case study for tsabs. *}
-lemma "tsabs s3 = list2s [1, 2, 3, 4]"
-by (simp add: s3_def tsabs_def Abs_tstream_inverse sfilter_sinftimes_nin)
-
-text {* Retrieve the set of messages of a stream (not including the Tick). *}
-definition tsdom :: "'m tstream \<Rightarrow> 'm set" where
-"tsdom ts = {m. \<exists>k. tsnth k ts = Msg m}"
-
-text {* Retrieve the first block of messages. *}
-definition tsthd :: "'m tstream \<Rightarrow> 'm list" where
-"tsthd ts = s2list (smap (\<lambda>e. case e of Msg m \<Rightarrow> m | \<surd> \<Rightarrow> undefined )
-                         \<cdot>(stakewhile (\<lambda>x. x \<noteq> \<surd>)\<cdot>(Rep_tstream ts)))"
-
-text {* Test tsthd. Proof uses s2list2lcons: "#s \<noteq> \<infinity> \<Longrightarrow> s2list (\<up>a \<bullet> s) = a # (s2list s)" *}
-lemma casestudy1: "tsthd s3 = [1, 2]"
-apply (simp add: tsthd_def)
-apply (simp add: s3_def)
-apply (simp add: Abs_tstream_inverse)
-apply (simp add: s2list2lcons)
-done
-
-text {* Lemma needed to test tsthd on an infinite timed stream. *}
-lemma l4: "\<up>(Msg 3) \<bullet> \<up>(Msg 4) \<bullet> \<up>\<surd> \<bullet> sinftimes (\<up>\<surd>) = \<up>(Msg 3) \<bullet> \<up>(Msg 4) \<bullet> sinftimes (\<up>\<surd>)"
-by (metis sinftimes_unfold)
-
-text {* Case study for tsthd. *}
-lemma casestudy2: "tsthd (Abs_tstream (\<up>(Msg 3) \<bullet> \<up>(Msg 4) \<bullet> sinftimes (\<up>\<surd>))) = [3, 4]"
-apply (subgoal_tac "tsthd (Abs_tstream (\<up>(Msg 3) \<bullet> \<up>(Msg 4) \<bullet> \<up>\<surd> \<bullet> sinftimes (\<up>\<surd>))) = [3, 4]")
-apply (simp add: l4)
-by (simp add: tsthd_def Abs_tstream_inverse s2list2lcons)
-
-text {* Cut away the first block of the stream *}
-definition tstrt :: "'m tstream \<Rightarrow> 'm tstream" where
-"tstrt = espf2tspf (srtdw (\<lambda>x. x \<noteq> \<surd>))"
-
-text {* Case study to test tstrt. *}
-lemma rt_s3: "tstrt s3 = Abs_tstream (\<up>(Msg 3) \<bullet> \<up>(Msg 4) \<bullet> sinftimes (\<up>\<surd>))"
-apply (simp add: s3_def tstrt_def espf2tspf_def)
-using s3.abs_eq s3.rep_eq by auto
-
-text {* Take the first n blocks of an event stream (including ticks). *}
-primrec esttake :: "nat \<Rightarrow> 'm event stream \<rightarrow> 'm event stream" where    
-esttake_0:   "esttake 0 = \<bottom>" |
-esttake_Suc: "esttake (Suc n) = fix\<cdot>(\<Lambda> h s. slookahd\<cdot>s\<cdot>(\<lambda>a. if a = \<surd> then \<up>\<surd> \<bullet> esttake n\<cdot>(srt\<cdot>s) 
-                                                           else \<up>a \<bullet> h\<cdot>(srt\<cdot>s)))"
-
-text {* Timed truncation operator: Returns an event stream consisting of the first n blocks of a
- timed stream (including ticks). *}
-definition tsttake :: "nat \<Rightarrow> 'm tstream \<Rightarrow> 'm event stream" where
-"tsttake n ts = esttake n\<cdot>(Rep_tstream ts)"
-
-text {* Timed truncation operator: Returns a timed stream consisting of the first n blocks of a 
-timed stream (including ticks). *}
-definition tsttake2 :: "nat \<Rightarrow> 'm tstream \<Rightarrow> 'm tstream" where
-"tsttake2 n ts = Abs_tstream (esttake n\<cdot>(Rep_tstream ts))"
-
-text {* Remove the first @{text "n"} blocks of the given stream *}
-definition tstdrop :: "nat \<Rightarrow> 'm tstream \<Rightarrow> 'm tstream" where
-"tstdrop n = espf2tspf (Fix.iterate n\<cdot>(srtdw (\<lambda>x. x \<noteq> \<surd>)))"
-
-text {* Droping the n-th block for n=1 is the same as having the stream without the first block. *}
-lemma tstdrop_tstrt: "tstdrop 1 b = tstrt b"
-apply (simp add: tstdrop_def)
-apply (simp add: tstrt_def)
-apply (simp add: espf2tspf_def)
-by (simp add: One_nat_def)
-
-text {* Case study with s3 = [1, 2, \<surd>, 3, 4, \<surd>, \<surd>, ... ,\<surd> , ...] *}
-lemma casestudy3: "tstdrop 1 s3 = Abs_tstream (\<up>(Msg 3) \<bullet> \<up>(Msg 4) \<bullet> sinftimes(\<up>\<surd>))"
-by (simp only: tstdrop_tstrt, simp add: rt_s3)
-
-text {* Retrieve the @{text "n"}th block of the stream, where n=0 returns the first block of the 
-stream. *}
-definition tstnth :: "nat \<Rightarrow> 'm tstream \<Rightarrow> 'm list" where
-"tstnth n ts = tsthd (tstdrop n ts)"
-
-text {* Case study for tstnth. *}
-lemma casestudy4: "tstnth 1 s3 = [3, 4]"
-by (simp only: tstnth_def tstdrop_tstrt rt_s3 casestudy2)
-
 text {* Apply a function to all messages of a stream. Ticks are mapped to ticks. *}
-definition tstmap :: "('a \<Rightarrow> 'b) \<Rightarrow> 'a tstream \<Rightarrow> 'b tstream" where
-"tstmap f = espf2tspf (smap (\<lambda>x. case x of Msg m \<Rightarrow> Msg (f m) | \<surd> \<Rightarrow> \<surd>))"
+definition tstmap :: "('a \<Rightarrow> 'b) \<Rightarrow> 'a tstream \<rightarrow> 'b tstream" where
+"tstmap f \<equiv> \<Lambda> s.  espf2tspf (smap (\<lambda>x. case x of Msg m \<Rightarrow> Msg (f m) | \<surd> \<Rightarrow> \<surd>)) s"
+
+
+definition tsrcDups_helper :: "'m event stream \<rightarrow> 'm event stream" where
+"tsrcDups_helper \<equiv> \<mu> h. (\<Lambda> s . if s = \<epsilon> then \<epsilon> else sconc (\<up>(shd s))\<cdot>( h\<cdot>(sdropwhile (\<lambda>x. x = shd s)\<cdot>s)))"
+  
+  (* remove successive duplicates on tstreams *)
+definition tsrcdups :: "'m tstream \<Rightarrow> 'm tstream" where
+"tsrcdups = espf2tspf tsrcDups_helper"
+
 
 text {* "Unzipping" of timed streams: project to the first element of a tuple of streams. *}
-definition tstprojfst :: "(('a \<times> 'b), 'a) tspf" where
+definition tstprojfst :: "('a \<times> 'b) tstream \<rightarrow> 'a tstream" where
 "tstprojfst = tstmap fst"
 
 text {* "Unzipping" of timed streams: project to the second element of tuple. *}
-definition tstprojsnd :: "(('a \<times> 'b),'b) tspf" where
+definition tstprojsnd :: "('a \<times> 'b) tstream \<rightarrow> 'b tstream" where
 "tstprojsnd = tstmap snd"
 
-text {* Remove all messages from the stream which are not included in the given set. *}
-definition tstfilter :: "'m set \<Rightarrow> 'm tstream \<Rightarrow> 'm tstream" where
-"tstfilter M = espf2tspf (sfilter (Msg ` M \<union> {\<surd>}))"
-
-text {*A helper function (event-spf) for the following function tsttakewhile (timed-spf).
-      Take the first elements of a stream as long as the given function evaluates to @{text "true"}.
- Ticks are always preserved. *}
-definition esttakewhile :: "('m \<Rightarrow> bool) \<Rightarrow> 'm event stream \<rightarrow> 'm event stream" where
-"esttakewhile f = fix\<cdot>(\<Lambda> h s. slookahd\<cdot>s\<cdot>(\<lambda> e. if e = \<surd> then \<up>\<surd> \<bullet> h\<cdot>(srt\<cdot>s) 
-                                              else (if f (THE m. e = Msg m) then \<up>e \<bullet> h\<cdot>(srt\<cdot>s) 
-                                                    else sfilter {\<surd>}\<cdot>(srt\<cdot>s))))" 
-
-text {* The function tsttakewhile (timed-spf). *}
-definition tsttakewhile :: "('m \<Rightarrow> bool) \<Rightarrow> 'm tstream \<Rightarrow> 'm tstream" where
-"tsttakewhile f = espf2tspf (esttakewhile f)"
-
-text {* A helper function (event-spf) for the following function tstdropwhile (timed-spf). 
-  Drop the first elements of a stream, as long as a given function evaluates to @{text "true"}. 
-Ticks are always preserved. *}
-definition estdropwhile :: "('m \<Rightarrow> bool) \<Rightarrow> 'm event stream \<rightarrow> 'm event stream" where
-"estdropwhile f = fix\<cdot>(\<Lambda> h s. slookahd\<cdot>s\<cdot>(\<lambda> e. if e = \<surd> then \<up>\<surd> \<bullet> h\<cdot>(srt\<cdot>s) 
-                                              else (if f (THE m. e = Msg m) then h\<cdot>(srt\<cdot>s) else s)))"
-text {* The function tstdropwhile (timed-spf). *}
-definition tstdropwhile :: "('m \<Rightarrow> bool) \<Rightarrow> 'm tstream \<Rightarrow> 'm tstream" where
-"tstdropwhile f = espf2tspf (estdropwhile f)"
-
-text {* A helper function. Behaves like the following function tstscanl,
-but only processes the first "n" elements of the given event stream. *}
-primrec estscanl_pr :: "nat \<Rightarrow> ('o \<Rightarrow> 'i \<Rightarrow> 'o) \<Rightarrow> 'o \<Rightarrow> 'i event stream \<Rightarrow> 'o event stream" where
-"estscanl_pr 0 f q s = \<epsilon>" |
-"estscanl_pr (Suc n) f q s = (if s=\<epsilon> then \<epsilon> 
-                              else (if (shd s = \<surd>) then (\<up>\<surd> \<bullet> estscanl_pr n f q (srt\<cdot>s)) 
-                                    else \<up>(Msg (f q (THE m. Msg m = shd s))) 
-                                        \<bullet> (estscanl_pr n f (f q (THE m. Msg m = shd s)) (srt\<cdot>s))))"
-
-text {* Apply a function elementwise to the input stream. Like @{text "map"}, 
-but also takes the previously generated output element as additional input to the function. 
-For the first computation, an initial value is provided. *}
-definition tstscanl :: "('o \<Rightarrow> 'i \<Rightarrow> 'o) \<Rightarrow> 'o \<Rightarrow> ('i, 'o) tspf" where
-"tstscanl f q = espf2tspf (\<Lambda> s. \<Squnion>i. estscanl_pr i f q s)"
-
-text {* Check whether a given tspfo is type-invariant. A tspfo is considered type-invariant, if for
-all input streams, the domain of the output stream is a subset of the domain of the input stream. *}
-definition tstypeinv :: "'m tspfo \<Rightarrow> bool" where
-"tstypeinv f \<equiv> \<forall>M s. tsdom s \<subseteq> M \<longrightarrow> tsdom (f s) \<subseteq> M"
-
-text {* Fairness predicate on event stream processing function. An espf is considered fair
+text {* Fairness predicate on timed stream processing function. An espf is considered fair
   if all inputs with infinitely many ticks are mapped to outputs with infinitely many ticks. *}
-definition estfair :: "('i event,'o event) spf \<Rightarrow> bool" where
-"estfair f \<equiv> \<forall>s. #(sfilter {\<surd>}\<cdot>s) = \<infinity> \<longrightarrow> #(sfilter {\<surd>}\<cdot>(f\<cdot>s)) = \<infinity>" 
+definition tspfair :: "('a tstream \<rightarrow> 'b tstream ) \<Rightarrow> bool" where
+"tspfair f \<equiv> \<forall>ts. tsTickCount\<cdot> ts = \<infinity> \<longrightarrow> tsTickCount \<cdot> (f\<cdot> ts) = \<infinity>"
 
-text {* Add to simplificator to make proofs easier for the user. *}
-declare Rep_tstream [simp add]
-declare Rep_tstream_inverse [simp add]
+
+
 
 (* ----------------------------------------------------------------------- *)
-section {* Lemmas *}
+  subsection \<open>Lemmas on tstream\<close>
 (* ----------------------------------------------------------------------- *)
 
-text {* Abs_Rep *}
-lemma Abs_Rep: "Abs_tstream (Rep_tstream t) = t"
-apply simp
-done
 
-text {* Rep_Abs *}
-lemma Rep_Abs: "#t \<noteq> \<infinity> \<or> #(sfilter {\<surd>}\<cdot>t) = \<infinity> \<Longrightarrow> Rep_tstream (Abs_tstream t) = t"
-apply (simp add: Abs_tstream_inverse)
-done
+(* Allgemeine Lemma *)
 
-text {* typedef tstream unfold. *}
-lemma tstreaml1[simp]: "#(Rep_tstream x) \<noteq> \<infinity> \<or> #(sfilter {\<surd>}\<cdot>(Rep_tstream x)) = \<infinity>"
-apply (insert Rep_tstream [of x])
-apply simp
-done
+
+lemma rep_tstream_cont [simp]: "cont Rep_tstream"
+apply(rule contI2)
+apply (meson below_tstream_def monofunI)
+by (metis (mono_tags, lifting) Abs_tstream_inverse Rep_tstream adm_def below_tstream_def lub_tstream mem_Collect_eq po_class.chain_def po_eq_conv tstream_well_adm)
+
+lemma rep_tstream_chain [simp]: assumes "chain Y"
+  shows "chain (\<lambda>i. Rep_tstream (Y i))"
+by (meson assms below_tstream_def po_class.chain_def)
+
+(* i want this in the simplifier *)
+lemma [simp]: assumes "cont g" and "\<forall>x. ts_well (g x)"
+  shows "cont (\<lambda>x. Abs_tstream (g x))"
+by (simp add: assms(1) assms(2) cont_Abs_tstream)
+
+lemma [simp]:assumes "ts_well t"
+  shows "Rep_tstream (Abs_tstream t) = t"
+by (simp add: Abs_tstream_inverse assms)
+
+lemma tick_msg [simp]: "ts_well (\<up>\<surd>)"
+by(simp add: ts_well_def)
+
+lemma [simp]: "ts_well \<epsilon>"
+by(simp add: ts_well_def)
+
+lemma [simp]: "Rep_tstream \<bottom> = \<epsilon>"
+by (simp add: Rep_tstream_strict)
+
+lemma [simp]: "Abs_tstream \<bottom> = \<bottom>"
+by (simp add: Abs_tstream_strict)
+
+lemma [simp]: assumes "ts_well s" and "s\<noteq>\<bottom>"
+  shows "Abs_tstream s \<noteq> \<bottom>"
+using Abs_tstream_inverse assms(1) assms(2) by fastforce
+
+lemma [simp]: assumes "Rep_tstream (Abs_tstream t) = ts"
+  shows "ts_well ts"
+using Rep_tstream assms by blast
+
+lemma  assumes "Rep_tstream (Abs_tstream t) = t"
+  shows "ts_well t"
+using assms by auto
+
+lemma [simp]: assumes "Rep_tstream ts \<noteq> \<bottom>"
+  shows "ts \<noteq> \<bottom>"
+using Rep_tstream_strict assms by blast
+
+lemma [simp]: "Abs_tstream (Rep_tstream ts) = ts"
+by (simp add: Rep_tstream_inverse)
+
+lemma [simp]:"ts_well (Rep_tstream ts)"
+using Rep_tstream by blast
+
+
+
+
+(* tsDom *)
+thm tsDom_def
+
+lemma tsdom_monofun [simp]: "monofun (\<lambda>t. {a | a. (Msg a) \<in> sdom\<cdot>(Rep_tstream t)})"
+by (smt below_tstream_def contra_subsetD mem_Collect_eq monofunI monofun_cfun_arg set_cpo_simps(1) subsetI) 
+
+(* for any chain Y of tstreams the domain of the lub is contained in the lub of domains of the chain *)
+lemma tsdom_contlub [simp]: assumes "chain Y" 
+  shows "{a | a. (Msg a) \<in> sdom\<cdot>(Rep_tstream (\<Squnion>i. Y i))} \<subseteq> (\<Squnion>i. {a | a. (Msg a) \<in> sdom\<cdot>(Rep_tstream (Y i))})"
+    (is "?F (\<Squnion>i. Y i) \<subseteq> _ ")
+proof 
+  fix a
+  assume "a\<in>?F (\<Squnion>i. Y i)"
+  hence "Msg a \<in> sdom\<cdot>(Rep_tstream (\<Squnion>i. Y i))" by (simp add: tsDom_def)
+  hence "Msg a \<in> (\<Squnion>i. sdom\<cdot>(Rep_tstream (Y i)))"
+    by (smt Abs_tstream_inverse Rep_tstream adm_def assms below_tstream_def contlub_cfun_arg lub_eq lub_tstream mem_Collect_eq po_class.chain_def tstream_well_adm) 
+  hence "Msg a \<in> (\<Union>i. sdom\<cdot>(Rep_tstream (Y i)))" by (metis SUP_def set_cpo_simps(2))
+  hence "(a \<in> (\<Squnion>i. {u. Msg u \<in> sdom\<cdot>(Rep_tstream (Y i))}))"
+    by (metis (no_types, lifting) SUP_def UN_iff mem_Collect_eq set_cpo_simps(2))
+  thus "a\<in>(\<Squnion>i. ?F (Y i))" by (metis (mono_tags, lifting) Collect_cong lub_eq tsDom_def)
+qed
+
+lemma tsdom_cont [simp]:"cont (\<lambda>t. {a | a. (Msg a) \<in> sdom\<cdot>(Rep_tstream t)})"
+apply(rule contI2)
+using tsdom_monofun apply blast
+by (metis SetPcpo.less_set_def tsdom_contlub)
+
+lemma tsdom_insert: "tsDom\<cdot>t = {a | a. (Msg a) \<in> sdom\<cdot>(Rep_tstream t)}"
+by (metis (mono_tags, lifting) Abs_cfun_inverse2 tsDom_def tsdom_cont)
+
+lemma tsdom_rep_eq: assumes "ts_well ts"
+  shows "tsDom\<cdot>(Abs_tstream ts) = {a | a. (Msg a) \<in> sdom\<cdot>ts}"
+by(simp add: tsdom_insert assms)
+
+
+lemma [simp]: "tsDom\<cdot>\<bottom> = {}"
+by(simp add: tsdom_insert)
+
+
+
+
+
+
+
+
+(* tsConc *)
+thm tsConc_def
+
+
+(* the concatination of 2 tStreams is wellformed *)
+lemma ts_well_conc1 [simp]: assumes "ts_well ts1" and "ts_well ts2"
+  shows "ts_well (ts1 \<bullet> ts2)"
+proof(cases "ts1=\<epsilon>\<or>ts2=\<epsilon>")
+  case True thus ?thesis using assms(1) assms(2) sconc_fst_empty sconc_snd_empty by auto
+next
+  case False thus ?thesis
+  proof (cases "#ts1=\<infinity> \<or> #ts2=\<infinity>")
+    case True thus ?thesis
+      by (metis False assms(1) assms(2) lnless_def sconc_fst_inf sfilter_conc2 sfilterl4 ts_well_def)
+  next
+    case False 
+    hence "#(ts1\<bullet>ts2) < \<infinity>" by (metis fair_sdrop inf_ub lnle_def lnless_def ninf2Fin sdropl6)
+    thus ?thesis
+      by (metis (no_types, lifting) False assms(1) assms(2) assoc_sconc sconc_snd_empty sfilterl4 ts_well_def)
+   qed
+qed
+
+lemma ts_well_conc [simp]: "ts_well ((Rep_tstream ts1) \<bullet> (Rep_tstream ts2))"
+using Rep_tstream ts_well_conc1 by auto
+
+lemma tsconc_insert: "ts1 \<bullet> ts2 = Abs_tstream ((Rep_tstream ts1) \<bullet> (Rep_tstream ts2))"
+by (simp add: tsConc_def)
+
+lemma tsconc_rep_eq: assumes "ts_well s"
+  shows "Rep_tstream ((Abs_tstream s) \<bullet> ts) = s \<bullet> Rep_tstream ts"
+  by(simp add: tsconc_insert assms)
+
+lemma tsconc_rep_eq1: assumes "ts_well s" and "ts_well ts"
+  shows "Rep_tstream ((Abs_tstream s) \<bullet> (Abs_tstream ts)) = s \<bullet> ts"
+  by(simp add: tsconc_insert assms)
+
+
+lemma [simp]: fixes ts1::"'a tstream"
+  shows "ts1 \<bullet> \<bottom> = ts1"
+by(simp add: tsConc_def)
+
+lemma [simp]: fixes ts1::"'a tstream"
+  shows "\<bottom> \<bullet> ts1 = ts1"
+by(simp add: tsConc_def)
+
+lemma tsconc_assoc [simp]:  fixes a:: "'a tstream"
+  shows "a \<bullet> (x \<bullet> y) = (a \<bullet> x) \<bullet> y"
+by(simp add: tsconc_insert)
+
+lemma ts_tsconc_prefix [simp]: "(x::'a tstream) \<sqsubseteq> (x \<bullet> y)"
+by (metis Rep_tstream_inverse Rep_tstream_strict minimal monofun_cfun_arg sconc_snd_empty tsconc_insert)
 
 text {* By appending an event on the left side, a timed stream remains a timed stream. *}
 lemma tstream_scons_eq[simp]: "((\<up>e \<bullet> rs) \<in> {t::'a event stream. #t \<noteq> \<infinity> \<or> #({\<surd>} \<ominus> t) = \<infinity>}) 
@@ -295,95 +374,1093 @@ lemma tstream_scons_eq[simp]: "((\<up>e \<bullet> rs) \<in> {t::'a event stream.
 apply (smt fold_inf lnat.injects mem_Collect_eq sfilter_in sfilter_nin slen_scons)
 done
 
-text {* Another useful variant of this identity: *}
-lemma [simp]: "Rep_tstream (Abs_tstream (\<up>e \<bullet> Rep_tstream s)) = (\<up>e \<bullet> Rep_tstream s)"
-using Abs_tstream_inverse Rep_tstream tstream_scons_eq 
-apply blast
-done
-
-text {* The following implication follows from the type definition of timed streams. *}
-lemma Rep_tstreamD1: "(Rep_tstream s = ts) \<Longrightarrow> (ts \<in> {t::'a event stream. #t \<noteq> \<infinity> \<or> #({\<surd>} \<ominus> t) = \<infinity>})"
-using Rep_tstream 
-apply blast
-done
 
 
 
+(* tsAbs *)
+thm tsAbs_def
+
+
+lemma tsabs_insert: "tsAbs\<cdot>ts = smap (\<lambda>e. case e of Msg m \<Rightarrow> m | \<surd> \<Rightarrow> undefined)\<cdot>
+                                                    (sfilter {e. e \<noteq> \<surd>}\<cdot>(Rep_tstream ts))"
+by (simp add: tsAbs_def)
+
+lemma tsabs_rep_eq: assumes "ts_well ts"
+  shows "tsAbs\<cdot>(Abs_tstream ts) = smap (\<lambda>e. case e of Msg m \<Rightarrow> m | \<surd> \<Rightarrow> undefined)\<cdot>
+                                                    (sfilter {e. e \<noteq> \<surd>}\<cdot>ts)"
+by(simp add: tsabs_insert assms)
+
+
+lemma tsabs_tick [simp]: "tsAbs\<cdot>((Abs_tstream (\<up>\<surd>)) \<bullet> ts) = tsAbs\<cdot>ts"
+by(simp add: tsabs_insert tsconc_rep_eq)
+
+lemma tsabs_conc: assumes "#(Rep_tstream ts1)<\<infinity>"
+  shows "tsAbs\<cdot>(ts1 \<bullet> ts2) = tsAbs\<cdot>ts1 \<bullet> tsAbs\<cdot>ts2"
+apply(simp add: tsabs_insert tsconc_insert)
+using add_sfilter assms infI lnless_def smap_split by fastforce
+
+lemma tsabs_tsdom [simp]: "sdom\<cdot>(tsAbs\<cdot>ts) = tsDom\<cdot>ts"
+  apply(simp add: tsdom_insert tsabs_insert smap_sdom)
+  apply rule
+   apply rule
+   apply (smt IntE event.case(1) event.exhaust imageE mem_Collect_eq)
+  apply rule
+  apply (metis (mono_tags, lifting) Int_iff event.distinct(1) event.simps(4) image_iff mem_Collect_eq)
+done 
 
 
 
-text {* If a timed stream is non-empty, then, using the list-tstream concatenation
-tsconc :: "'m event list \<Rightarrow> 'm tstream \<Rightarrow> 'm tstream" (infixr "\<bullet>+")
-we can write the stream as a concatenation of the head and its rest. *}
-lemma tstream_exhaust: "ts \<noteq> Abs_tstream \<epsilon> \<Longrightarrow>  \<exists>hd rs. ts = [hd] \<bullet>+ rs"
-apply (rule_tac x="Rep_tstream ts" in scases)
-apply (frule Rep_tstreamD1)
-apply (drule_tac f="Abs_tstream" in arg_cong)
+
+(* tsRep *)
+
+text {* Abs_Rep *}
+lemma Abs_Rep: "Abs_tstream (Rep_tstream t) = t"
 apply simp
-apply (rule_tac x="a" in exI)
-apply (rule_tac x="Abs_tstream s" in exI)
-apply (rule Rep_tstream_inject [THEN iffD1])
-apply (simp add: tsconc_def espf2tspf_def)
-apply (smt Abs_tstream_inverse Rep_tstream tstream_scons_eq)
 done
 
-text {*If P holds for empty and non-empty timed streams, it holds for all timed streams. *}
-lemma tscases1: "\<And>x P. \<lbrakk>x = Abs_tstream \<epsilon> \<Longrightarrow> P; \<And>e s. x = [e] \<bullet>+ s \<Longrightarrow> P\<rbrakk> \<Longrightarrow> P"
-apply (insert tstream_exhaust)
-apply blast
-done
+text {* typedef tstream unfold. *}
+lemma tstreaml1[simp]: "#(Rep_tstream x) \<noteq> \<infinity> \<or> #(sfilter {\<surd>}\<cdot>(Rep_tstream x)) = \<infinity>"
+apply (insert Rep_tstream [of x])
+apply (simp add: ts_well_def)
+by auto
 
-text {*  Similiarly, if P holds for empty streams, and for non-empty ones which might begin with 
-a message or a tick, it holds for all timed streams. *}
-lemma tscases: "\<And>x P. \<lbrakk>x = Abs_tstream \<epsilon> \<Longrightarrow> P; \<And>m s. x = [Msg m] \<bullet>+ s \<Longrightarrow> P; \<And>s. x = [\<surd>] \<bullet>+ s \<Longrightarrow> P\<rbrakk> \<Longrightarrow> P"
-apply (metis event.exhaust tscases1)
-done
 
-text {* If a stream is infinite, then it has infinitely many ticks.*}
-lemma a: "#(Rep_tstream rs) = \<infinity> \<longrightarrow> #({\<surd>} \<ominus> Rep_tstream rs) = \<infinity>"
-using tstreaml1
+text {* Rep_Abs *}
+lemma Rep_Abs: "ts_well t  \<Longrightarrow> Rep_tstream (Abs_tstream t) = t"
+using Abs_tstream_inverse by blast
+
+(*Rep_tstream is ts_well*)
+lemma ts_well_Rep: "ts_well (Rep_tstream s)"
 by simp
 
-text {* If transform list to stream and append it on a timed stream, result also a timed stream. *}
-lemma list_conc_tstream [simp]: "list2s es \<bullet> Rep_tstream rs \<in> {t::'a event stream. #t \<noteq> \<infinity> \<or> #({\<surd>} \<ominus> t) = \<infinity>}"
-apply (induct es)
-apply (simp only: list2s_0)
-apply (simp only: sconc_fst_empty)
-apply (simp only: Rep_tstream)
+(*sConc of an finite eventstream and an Rep_tstream has only finitely many \<surd> \<Longrightarrow> Conc is finite*)
+lemma sConc_Rep_fin_fin: "(#({\<surd>} \<ominus> \<up>e \<bullet> Rep_tstream s) \<noteq> \<infinity>) \<Longrightarrow> ((#((\<up>e \<bullet> Rep_tstream s)) < \<infinity>))"
+using leI tstreaml1 by fastforce
+
+(*If an well defined stream is not empty, then there is an stream concatenated with \<surd>
+equal to the well defined stream *)
+lemma ts_fin_well: "ts_well ts \<and> ts\<noteq>\<epsilon> \<Longrightarrow>\<exists> ts2. ts = ts2 \<bullet> (\<up>\<surd>)"
+apply(simp add: ts_well_def)
+by (metis sconc_fst_inf sfilterl4)
+
+
+(*An Rep_tstream of an not empty stream is well defined if there is an event appended*)
+lemma sConc_fin_well: "s\<noteq>\<bottom> \<Longrightarrow> ts_well (\<up>e \<bullet> Rep_tstream s)"
+apply(simp add: ts_well_def)
+apply auto
+using sConc_Rep_fin_fin apply auto[1]
+by (metis ts_well_Rep Rep_tstream_bottom_iff assoc_sconc ts_fin_well)
+
+text {* Another useful variant of this identity: *}
+lemma [simp]: " s\<noteq>\<bottom> \<Longrightarrow>( Rep_tstream (Abs_tstream ( \<up>e \<bullet> Rep_tstream s)) = (\<up>e \<bullet> Rep_tstream s))"
+using Abs_tstream_inverse Rep_tstream tstream_scons_eq ts_well_def
+using Rep_Abs sConc_fin_well by blast
+
+text {* The following implication follows from the type definition of timed streams. *}
+lemma Rep_tstreamD1: "(Rep_tstream ts = s) \<Longrightarrow> (s \<in> {t::'a event stream. #t \<noteq> \<infinity> \<or> #({\<surd>} \<ominus> t) = \<infinity>})"
+using Rep_tstream 
+using tstreaml1 by auto
+
+text {* If for every stream, which has either infinite many ticks, or is finite, a property P holds,
+then the property P holds for any timed stream. *}
+lemma PAbs_tstreamI: "\<lbrakk>\<And>x. #\<surd>x = \<infinity> \<or> #\<surd>x \<noteq> \<infinity>  \<Longrightarrow> P x\<rbrakk> \<Longrightarrow> P (Abs_tstream y)"
+using tstreaml1 
+apply blast
+done
+
+(* tsTakeFirst *)
+
+
+
+(* the first tick comes after finitely many messages *)
+lemma stakewhileFromTS[simp]: assumes "ts_well ts"
+  shows "#(stakewhile (\<lambda>a. a\<noteq>\<surd>)\<cdot>ts) < \<infinity>"
+by (metis (mono_tags, lifting) Inf'_neq_0 assms ex_snth_in_sfilter_nempty inf_ub lnle_conv lnless_def po_eq_conv singletonD slen_empty_eq stakewhile_less stakewhile_slen ts_well_def)
+
+lemma stakewhileFromTS2[simp]: assumes "ts_well ts"
+  shows "#(stwbl (\<lambda>a. a\<noteq>\<surd>)\<cdot>ts) < \<infinity>"
+by (metis assms inf_ub lnle_def lnless_def notinfI3 sconc_slen stakewhileFromTS stwbl_stakewhile ub_slen_stake)
+
+lemma stakewhile2stake: assumes "ts_well ts"
+  shows "\<exists>n. stakewhile (\<lambda>a. a\<noteq>\<surd>)\<cdot>ts = stake n\<cdot>ts"
+by (metis approxl2 assms fin2stake lncases lnless_def stakewhileFromTS stakewhile_below)
+
+lemma stakewhile2stake2: assumes "ts_well ts"
+  shows "\<exists>n. stwbl (\<lambda>a. a\<noteq>\<surd>)\<cdot>ts = stake n\<cdot>ts"
+by (metis approxl2 assms fin2stake lncases lnless_def stakewhileFromTS2 stwbl_below)
+
+(* tsTakeFirst produces a wellformed stream *)
+lemma ts_well_stakewhile[simp]: assumes "ts_well ts"
+  shows "ts_well (stakewhile (\<lambda>a. a\<noteq>\<surd>)\<cdot>ts\<bullet> \<up>\<surd>)"
+proof -
+  have "\<forall>s. \<not> ts_well s \<or> #(stakewhile (\<lambda>e. (e::'a event) \<noteq> \<surd>)\<cdot>s) < \<infinity>"
+    using stakewhileFromTS by blast
+  then have "#(stakewhile (\<lambda>e. e \<noteq> \<surd>)\<cdot> ts \<bullet> \<up>\<surd>) < \<infinity>"
+    by (simp add: assms lnless_def slen_lnsuc)
+  then show ?thesis
+    by (meson ts_well_def)
+qed
+
+lemma ts_finite_sfoot [simp]: assumes "ts \<noteq> \<epsilon>" and "#ts<\<infinity>" and "ts_well ts" 
+  shows "sfoot ts = \<surd>"
+by (metis assms(1) assms(2) assms(3) lnless_def sfilterl4 sfoot1 ts_well_def)
+
+(*event stream with one element just contain \<surd>, or are not ts_well*)
+lemma tsOneTick: "(\<up>e) \<noteq> (\<up>\<surd>) \<Longrightarrow> \<not> ts_well (\<up>e)"
+apply (simp add: ts_well_def)
+by (metis (mono_tags, lifting) Inf'_def Inf'_neq_0 bot_is_0 fix_strict lscons_conv sfoot_one slen_scons stakewhileFromTS2 strict_slen stwbl_f sup'_def tick_msg ts_finite_sfoot ts_well_def)
+
+
+lemma ts_tick_exists: assumes "ts1 \<noteq> \<epsilon>" and "ts_well ts1"
+  shows "\<exists>n. snth n ts1 = \<surd> \<and> Fin n <#ts1"
+proof(cases "#ts1=\<infinity>")
+  case True thus ?thesis by(metis assms(1) assms(2) ex_snth_in_sfilter_nempty lnless_def singletonD slen_empty_eq ts_well_def)
+next
+  case False
+  hence "#ts1<\<infinity>" by (meson assms(1) assms(2) sfilterl4 ts_well_def)
+  hence "sfoot ts1 = \<surd>" using assms(1) assms(2) ts_finite_sfoot by blast
+  obtain n' where "Fin (Suc n') = #ts1" by (metis False Suc_le_D assms(1) less2nat lncases neq02Suclnle slen_empty_eq)
+  hence "Fin n' < #ts1"
+    by (metis Fin_def inject_Fin lnat.chain_take lnless_def monofun_cfun_fun n_not_Suc_n po_class.chainE)
+  hence "snth n' ts1 = \<surd>" by (simp add: \<open>Fin (Suc n') = #ts1\<close> \<open>sfoot ts1 = \<surd>\<close> sfoot_exists2) 
+  thus ?thesis using \<open>Fin n' < #ts1\<close> by blast 
+qed
+
+
+(* if 2 tstreams are in a below relation, and they have a first timeSlot (\<noteq>\<bottom>) thos are equal *)
+lemma stakewhile_tsb_eq:  assumes "ts1\<sqsubseteq>ts2" and "ts1 \<noteq> \<bottom>"
+  shows "stakewhile (\<lambda>a. a\<noteq>\<surd>)\<cdot>(Rep_tstream ts1) = stakewhile (\<lambda>a. a\<noteq>\<surd>)\<cdot>(Rep_tstream ts2)"
+proof (cases "#(Rep_tstream ts1) = \<infinity>")
+  case True thus ?thesis by (metis assms(1) below_tstream_def eq_less_and_fst_inf) 
+next
+  case False 
+  obtain n where "snth n (Rep_tstream ts1) = \<surd>" using Rep_tstream_bottom_iff assms(2) ts_tick_exists by fastforce
+  have "(Rep_tstream ts1) \<noteq> \<epsilon>" using Rep_tstream_inject assms(2) by fastforce
+  have "sfoot (Rep_tstream ts1) = \<surd>" by (simp add: False \<open>Rep_tstream ts1 \<noteq> \<epsilon>\<close> lnless_def)
+  have "sdom\<cdot>(stakewhile (\<lambda>a. a\<noteq>\<surd>)\<cdot>(Rep_tstream ts1)) \<noteq> sdom\<cdot>(Rep_tstream ts1)"
+    by (metis (mono_tags, lifting) Rep_tstream_strict \<open>Rep_tstream ts1 \<noteq> \<epsilon>\<close> sconc_snd_empty snth2sdom stakewhile_dom ts_tick_exists ts_well_conc)
+  hence "stakewhile (\<lambda>a. a\<noteq>\<surd>)\<cdot>(Rep_tstream ts1) \<noteq> (Rep_tstream ts1)" by auto
+  thus ?thesis by (meson assms(1) below_tstream_def stakewhile_finite_below) 
+qed
+
+lemma stwbl_tsb_eq:  assumes "ts1\<sqsubseteq>ts2" and "ts1 \<noteq> \<bottom>"
+  shows "stwbl (\<lambda>a. a\<noteq>\<surd>)\<cdot>(Rep_tstream ts1) = stwbl (\<lambda>a. a\<noteq>\<surd>)\<cdot>(Rep_tstream ts2)"
+by (smt Rep_tstream Rep_tstream_bottom_iff assms(1) assms(2) below_tstream_def mem_Collect_eq po_eq_conv sfoot12 snth2sdom stakewhileFromTS stakewhile_below stakewhile_tsb_eq strict_stakewhile stwbl2stakewhile stwbl_sfoot ts_tick_exists)
+
+
+lemma tickInDom [simp]: assumes "ts_well s" and "s\<noteq>\<epsilon>"
+  shows "\<surd> \<in>sdom\<cdot>s"
+using assms(1) assms(2) snth2sdom ts_tick_exists by force
+
+
+lemma tstakefirst_well [simp]: assumes "ts_well ts"
+  shows "ts_well (stwbl (\<lambda>a. a \<noteq> \<surd>)\<cdot>ts)"
+proof(cases "ts=\<epsilon>")
+  case True thus ?thesis by simp
+next
+  case False 
+  hence "\<surd>\<in>sdom\<cdot>ts" using assms tickInDom by blast
+  hence "sfoot (stwbl (\<lambda>a. a \<noteq> \<surd>)\<cdot>ts) = \<surd>"
+    by (metis (mono_tags, lifting) stwbl_sfoot)
+  thus ?thesis by (metis assms sfoot2 stakewhileFromTS2 ts_well_def) 
+qed
+
+lemma tstakefirst_well1 [simp]: "ts_well (stwbl (\<lambda>a. a \<noteq> \<surd>)\<cdot>(Rep_tstream ts))"
+by simp
+
+lemma tstakefirst_insert: "tsTakeFirst\<cdot>ts = Abs_tstream (stwbl (\<lambda>a. a \<noteq> \<surd>)\<cdot>(Rep_tstream ts))"
+by(simp add: tsTakeFirst_def)
+
+lemma tstakefirst_insert_rep_eq: assumes "ts_well ts"
+  shows "tsTakeFirst\<cdot>(Abs_tstream ts) = Abs_tstream (stwbl (\<lambda>a. a \<noteq> \<surd>)\<cdot>ts)"
+by(simp add: tstakefirst_insert assms)
+
+
+lemma tstakefirst_prefix[simp]: "tsTakeFirst\<cdot>ts \<sqsubseteq> ts"
+apply(simp add: below_tstream_def)
+by(simp add: tstakefirst_insert)
+
+
+lemma [simp]: "tsTakeFirst\<cdot>\<bottom> = \<bottom>"
+by(simp add: tsTakeFirst_def)
+
+lemma tstakefirst_bot: "tsTakeFirst\<cdot>x = \<bottom> \<Longrightarrow> x=\<bottom>"
+apply(simp add: tstakefirst_insert)
+by (metis Abs_tstream_bottom_iff Abs_tstream_cases Abs_tstream_inverse mem_Collect_eq stwbl_notEps tstakefirst_well)
+
+lemma tstakefirst_eq: assumes "ts1\<noteq>\<bottom>" and "ts1 \<sqsubseteq> ts2"
+  shows "tsTakeFirst\<cdot>ts1 = tsTakeFirst\<cdot>ts2"
+apply(simp add: tstakefirst_insert)
+using assms(1) assms(2) stwbl_tsb_eq by fastforce
+
+lemma tstakefirst2first[simp]: "tsTakeFirst\<cdot>(tsTakeFirst\<cdot>ts) = tsTakeFirst\<cdot>ts"
+by(simp add: tsTakeFirst_def)
+
+lemma tstakefirst_dom [simp]: "tsDom\<cdot>(tsTakeFirst\<cdot>ts) \<subseteq> tsDom\<cdot>ts"
+by (metis monofun_cfun_arg set_cpo_simps(1) tstakefirst_prefix)
+
+
+
+
+(* tsDropFirst *)
+thm tsDropFirst_def
+
+
+lemma dropwhile2drop: assumes "ts_well ts"
+  shows "\<exists>n. sdropwhile (\<lambda>a. a\<noteq>\<surd>)\<cdot>ts = sdrop n\<cdot>ts"
+by (metis assms infI lnless_def stakewhileFromTS stakewhile_sdropwhilel1)
+
+lemma srtdw2drop: assumes "ts_well ts"
+  shows "\<exists>n. srtdw (\<lambda>a. a\<noteq>\<surd>)\<cdot>ts = sdrop n\<cdot>ts"
+apply(simp add: srtdw_def)
+by (metis assms dropwhile2drop sdrop_back_rt)
+
+lemma ts_well_drop11 [simp]: assumes "ts_well s" and "#s<\<infinity>" and "Fin 1<#s"
+  shows "ts_well (srt\<cdot>s)"
+proof -
+  have "s\<noteq>\<epsilon>" by (metis assms(3) bottomI lnless_def lnzero_def strict_slen)
+  hence "sfoot s = \<surd>" using assms(1) assms(2) ts_finite_sfoot by blast 
+  hence "sfoot (srt\<cdot>s) = \<surd>" using assms(2) assms(3) sfoot_sdrop by fastforce
+  thus ?thesis
+    by (metis \<open>s \<noteq> \<epsilon>\<close> assms(2) fold_inf inf_ub lnle_def lnless_def sfoot2 slen_scons surj_scons ts_well_def)
+qed
+
+
+lemma ts_well_dropinf [simp]: assumes "ts_well s" and "#s = \<infinity>"
+  shows "ts_well (srt\<cdot>s)"
+proof -
+  have "#({\<surd>} \<ominus> s) = \<infinity>" by (metis Inf'_neq_0 assms(1) assms(2) lnless_def strict_slen ts_well_def)
+  hence "#({\<surd>} \<ominus> (srt\<cdot>s)) = \<infinity>" by (smt Inf'_neq_0 assms(2) inf_scase inject_scons sfilter_in sfilter_nin slen_empty_eq surj_scons) 
+  thus ?thesis by (meson ts_well_def)  
+qed
+
+(* if you drop the first Element the resulting stream is still wellformed *)
+lemma ts_well_drop1 [simp]: assumes "ts_well s"
+  shows "ts_well (srt\<cdot>s)"
+apply(cases "#s=\<infinity>")
+apply(simp add: assms)
+apply(cases "#s\<le>Fin 1")
+apply (metis Fin_02bot One_nat_def bottomI lnle_def lnzero_def slen_empty_eq slen_rt_ile_eq ts_well_def)
+by (metis assms One_nat_def lnat_po_eq_conv lnle_def lnless_def neq02Suclnle sfilterl4 slen_empty_eq stream.sel_rews(2) ts_well_drop11 ts_well_def)
+
+(* if you drop the arbitrary many Elements, the resulting stream is still welformed *)
+lemma ts_well_drop [simp]: 
+  shows "ts_well s \<Longrightarrow>ts_well (sdrop n\<cdot>s)"
+apply(induction n arbitrary: s)
+apply (simp add: assms)
+by (metis One_nat_def sdrop_0 sdrop_forw_rt ts_well_drop1)
+
+lemma tsdropfirst_well1 [simp]:  
+  shows "ts_well (srt\<cdot>(sdropwhile (\<lambda>a. a\<noteq>\<surd>)\<cdot>(Rep_tstream ts)))"
+by (metis Rep_tstream dropwhile2drop mem_Collect_eq sdrop_back_rt ts_well_drop)
+
+lemma tsdropfirst_well [simp]: 
+  shows "ts_well (srtdw (\<lambda>a. a \<noteq> \<surd>)\<cdot>(Rep_tstream ts))"
+by (metis Rep_tstream mem_Collect_eq srtdw2drop ts_well_drop)
+
+lemma tsdropfirst_insert: "tsDropFirst\<cdot>ts = Abs_tstream (srtdw (\<lambda>a. a \<noteq> \<surd>)\<cdot>(Rep_tstream ts))"
+by(simp add: tsDropFirst_def)
+
+lemma tsdropfirst_rep_eq: assumes "ts_well ts"
+  shows "tsDropFirst\<cdot>(Abs_tstream ts) = Abs_tstream (srtdw (\<lambda>a. a \<noteq> \<surd>)\<cdot>ts)"
+by(simp add: tsDropFirst_def assms)
+
+lemma [simp]: "tsDropFirst\<cdot>(tsTakeFirst\<cdot> ts) = \<bottom>"
+apply (simp add: tsDropFirst_def tsTakeFirst_def)
+done
+
+
+lemma [simp]: "tsDropFirst\<cdot>\<bottom> = \<bottom>"
+by(simp add: tsdropfirst_insert)
+
+
+lemma tsTakeDropFirst [simp]: "tsTakeFirst\<cdot>ts \<bullet> tsDropFirst\<cdot>ts = ts"
+by (metis (no_types, lifting) Abs_tstream_inverse Rep_tstream Rep_tstream_inverse mem_Collect_eq stwbl_srtdw tsconc_insert tsdropfirst_insert tsdropfirst_well tstakefirst_insert tstakefirst_well)
+
+
+
+(* tsDrop *)
+thm tsDrop_def
+
+lemma [simp]: "tsDrop i\<cdot>\<bottom> = \<bottom>"
+apply(induction i)
+apply(simp)
+by(simp add: tsDrop_def)
+
+(*To drop n+1 timeslots is the same as dropping n timeslots and then one *)
+lemma tsDrop_tsDropFirst: "tsDrop (Suc n)\<cdot> x = tsDrop n\<cdot> (tsDropFirst\<cdot> x)"
+by simp
+
+lemma tsDropNth: "tsDrop n\<cdot>ts = (tsNth n\<cdot>ts) \<bullet> tsDrop (Suc n)\<cdot>ts"
+apply(induction n arbitrary: ts)
+apply (simp add: tsNth_def)
+by (simp add: tsNth_def)
+
+lemma tsdrop_tick [simp] :"tsDrop (Suc n)\<cdot>(Abs_tstream (\<up>\<surd>) \<bullet> ts) = tsDrop n\<cdot>ts"
+by(simp add: tsDrop.simps tsdropfirst_insert tsconc_rep_eq)
+
+
+(* tsNth *)
+lemma [simp]: "tsNth i\<cdot>\<bottom> = \<bottom>"
+by(simp add: tsNth_def)
+
+lemma tsNth_Suc: "tsNth (Suc i)\<cdot>ts = tsNth i\<cdot>(tsDropFirst\<cdot>ts)"
+by (simp add: tsNth_def)
+
+(* The first element of a stream is equal to the element on the zeroth position *)
+lemma tsnth_shd[simp]: "tsNth 0\<cdot>s = tsTakeFirst\<cdot>s"
+by (simp add: tsNth_def)
+
+
+
+
+
+
+(* tsTickCount *)
+lemma [simp]: "#\<surd> \<bottom> = 0"
+by(simp add: tsTickCount_def)
+
+lemma tstickcount_insert:  "#\<surd> ts =  #({\<surd>} \<ominus> Rep_tstream ts)"
+by(simp add: tsTickCount_def)
+
+
+lemma tstickcount_rep_eq: assumes "ts_well ts"
+  shows  "#\<surd> (Abs_tstream ts) =  #({\<surd>} \<ominus> ts)"
+by(simp add: tsTickCount_def assms)
+
+lemma finititeTicks[simp]: assumes "#\<surd> ts < \<infinity>"
+  shows "#(Rep_tstream ts) < \<infinity>"
+proof(rule ccontr)
+  assume "\<not> #(Rep_tstream ts) < \<infinity>"
+  hence "#(Rep_tstream ts) = \<infinity>" using inf_ub lnle_def lnless_def by blast 
+  hence "#({\<surd>} \<ominus> (Rep_tstream ts)) = \<infinity>"
+    by (metis Inf'_neq_0 \<open>\<not> #(Rep_tstream ts) < \<infinity>\<close> sconc_fst_inf slen_empty_eq ts_well_conc ts_well_def)
+  hence "#\<surd> ts = \<infinity>" by(simp add: tstickcount_insert)
+  thus False using assms by auto 
+qed
+
+lemma finiteTicks [simp]: assumes "#\<surd> ts1 = Fin n1"
+  shows "\<exists> k. #(Rep_tstream ts1) = Fin k"
+proof -
+  have " #(Rep_tstream ts1) < \<infinity>" using assms by auto
+  thus ?thesis using infI lnless_def by blast 
+qed
+
+lemma tsInfTicks:  
+  shows "#\<surd> ts = \<infinity> \<longleftrightarrow>#(Rep_tstream ts) = \<infinity>"
+by (metis finititeTicks lnle_def lnless_def sfilterl4 slen_sfilterl1 tstickcount_insert)
+
+(* Prepending to infinite streams produces infinite streams again *)
+lemma slen_tsconc_snd_inf: "(#\<surd> y)=\<infinity> \<Longrightarrow> (#\<surd>(x \<bullet> y)) = \<infinity>"
+by (metis Rep_tstream_inverse Rep_tstream_strict sconc_snd_empty slen_sconc_snd_inf tsInfTicks ts_well_conc tsconc_rep_eq)
+
+lemma stickcount_conc [simp]: assumes "#\<surd> ts1 = Fin n1" and "#\<surd> ts2 = Fin n2"
+  shows "#\<surd> (ts1 \<bullet> ts2) = Fin (n1 + n2)"
+apply(simp add: tsTickCount_def tsConc_def)
+apply(subst add_sfilter2)
+apply(simp add: assms)
+by (metis assms(1) assms(2) slen_sconc_all_finite tstickcount_insert)
+
+lemma tsconc_id [simp]: assumes "#\<surd>ts1 = \<infinity>"
+  shows "tsConc ts1\<cdot>ts2 = ts1"
+by (metis Rep_tstream_inverse assms sconc_fst_inf tsInfTicks tsconc_insert)
+
+lemma ts_approxl [simp]: assumes "ts1 \<sqsubseteq> ts2"
+  shows "\<exists> ts. (ts2 = tsConc ts1\<cdot>ts)"
+proof -
+  have "(Rep_tstream ts1) \<sqsubseteq> (Rep_tstream ts2)" by (meson assms below_tstream_def)
+  hence "\<exists> s. ((Rep_tstream ts2) = (Rep_tstream ts1) \<bullet> s)" by (metis approxl3) 
+  thus ?thesis
+    by (metis (mono_tags) Rep_tstream Rep_tstream_bottom_iff Rep_tstream_cases Rep_tstream_inverse \<open>Rep_tstream ts1 \<sqsubseteq> Rep_tstream ts2\<close> eq_less_and_fst_inf lncases mem_Collect_eq sconc_snd_empty sdropl6 ts_well_drop tsconc_insert) 
+qed
+
+(* Each prefix of a stream can be expanded to the original stream *)
+(* TODO: check if duplicate *)
+lemma ts_approxl3: "(s1::'a tstream) \<sqsubseteq> s2 \<Longrightarrow> \<exists>t. s1\<bullet>t = s2"
+using ts_approxl by blast
+
+
+lemma ts_infinite_chain: assumes "chain Y" 
+  shows "\<not>finite_chain Y \<longleftrightarrow> \<not>finite_chain (\<lambda>i. Rep_tstream (Y i))"
+proof -
+  have f1: "\<And>f. finite_chain (\<lambda>n. Rep_tstream (f n::'a tstream)) \<or> \<not> finite_chain f"
+    using cont_finch2finch rep_tstream_cont by blast
+  obtain nn :: "(nat \<Rightarrow> 'a event stream) \<Rightarrow> nat" where
+    "\<And>f. Lub f = f (nn f) \<or> \<not> finite_chain f"
+    by (metis (no_types) finite_chain_def maxinch_is_thelub)
+  then show ?thesis
+    using f1 by (metis (no_types) Rep_tstream_inverse assms finite_chain_def lub_tstream maxinch_is_thelub)
+qed
+
+lemma ts_finite_chain:  
+  shows "finite_chain Y \<longleftrightarrow> finite_chain (\<lambda>i. Rep_tstream (Y i))"
+by (metis below_tstream_def finite_chain_def po_class.chain_def ts_infinite_chain)
+
+lemma ts_infinite_lub[simp]: assumes "chain Y" and "\<not>finite_chain Y"
+  shows "#\<surd> (\<Squnion>i. Y i) = \<infinity>"
+proof -
+  have f1: "Rep_tstream (Lub Y) = (\<Squnion>n. Abs_cfun Rep_tstream\<cdot>(Y n))"
+    by (metis (no_types) Abs_cfun_inverse2 assms(1) contlub_cfun_arg rep_tstream_cont)
+  have f2: "ts_well (\<Squnion>n. Abs_cfun Rep_tstream\<cdot>(Y n))"
+    by (metis (no_types) Abs_cfun_inverse2 Rep_tstream assms(1) contlub_cfun_arg mem_Collect_eq rep_tstream_cont)
+  have "\<not> finite_chain (\<lambda>n. Abs_cfun Rep_tstream\<cdot>(Y n))"
+    using assms(2) ts_finite_chain by auto
+  then show ?thesis
+    using f2 f1 by (metis (no_types) Inf'_neq_0 assms(1) ch2ch_Rep_cfunR inf_chainl4 lnless_def slen_empty_eq ts_well_def tstickcount_insert)
+qed
+
+lemma ts_infinite_fin: assumes "chain Y" and "\<not>finite_chain Y"
+  shows "#\<surd> (Y i) < \<infinity>"
+by (metis Fin_neq_inf assms(1) assms(2) inf_chainl1 inf_ub lnle_def lnless_def rep_tstream_chain tsInfTicks ts_infinite_chain)
+
+(* In infinite chains, all streams are finite *)
+lemma ts_inf_chainl1: "\<lbrakk>chain Y; \<not>finite_chain Y\<rbrakk> \<Longrightarrow> \<exists>k. (#\<surd>(Y i)) = Fin k"
+by (metis infI less_irrefl ts_infinite_fin)
+
+lemma ts_0ticks: "#\<surd> ts = 0 \<Longrightarrow> ts = \<bottom>"
+by (metis Inf'_neq_0 Rep_tstream Rep_tstream_bottom_iff eq_bottom_iff inf_ub less_le lnless_def lnzero_def mem_Collect_eq sconc_fst_inf sfilter_conc singletonI ts_well_def tstickcount_insert)
+
+lemma adm_fin_below: "adm (\<lambda>x . \<not> Fin n \<sqsubseteq> #\<surd> x)"
+  apply(rule admI)
+  apply auto
+  by (metis (no_types) LNat.inf_chainl3 ch2ch_Rep_cfunR contlub_cfun_arg finite_chainE lnle_def maxinch_is_thelub)
+
+lemma adm_fin_below2: "adm (\<lambda>x . \<not> Fin n \<le> #\<surd> x)"
+by(simp only: lnle_def adm_fin_below)
+
+lemma exist_tslen: assumes "chain Y" and "\<not>finite_chain Y"
+  shows "\<exists>i. Fin n \<le> #\<surd>(Y i)"
+apply(rule ccontr)
+apply auto
+by (metis (no_types, lifting) adm_def adm_fin_below2 assms(1) assms(2) inf_ub ts_infinite_lub)
+
+(* In infinite chains, there is an element which is a true prefix of another one *)
+lemma ts_inf_chainl2: "\<lbrakk>chain Y; \<not> finite_chain Y\<rbrakk> \<Longrightarrow> \<exists>j. Y k \<sqsubseteq> Y j \<and> (#\<surd>(Y k)) < #\<surd>(Y j)"
+proof -
+  assume a1: "chain Y"
+  assume a2: "\<not> finite_chain Y"
+  moreover
+  { assume "\<infinity> \<noteq> #\<surd> Y k"
+    then have "\<exists>n. \<not> #\<surd> Y n \<le> #\<surd> Y k"
+      using a2 a1 by (metis (no_types) exist_tslen inf_belowI lnle_def trans_lnle)
+    then have ?thesis
+      using a1 by (meson chain_tord lnle_def monofun_cfun_arg not_less) }
+  ultimately show ?thesis
+    using a1 by (metis (no_types) chain_tord ts_infinite_fin)
+qed
+
+text {* In infinite chains, the length of the streams is unbounded *}
+lemma inf_chainl3:
+  "chain Y \<and> \<not>finite_chain Y \<longrightarrow> (\<exists>k. Fin n \<le> #\<surd>(Y k))"
+by (simp add: exist_tslen)
+
+
+
+lemma tsdom_conc[simp]:"tsDom\<cdot>ts1 \<subseteq> tsDom\<cdot>(ts1 \<bullet> ts2)"
+by (metis eq_iff finititeTicks inf_ub less_le sdom_sconc tsabs_conc tsabs_tsdom tsconc_id)
+
+lemma tsdom_tsconc: assumes "#\<surd>ts1 < \<infinity>"
+  shows "tsDom\<cdot>(ts1 \<bullet> ts2) = tsDom\<cdot>ts1 \<union> tsDom\<cdot>ts2"
+apply rule
+apply (metis assms finititeTicks sconc_sdom tsabs_conc tsabs_tsdom)
+proof -
+  have "#(Rep_tstream ts1) < \<infinity>" using assms by simp
+  hence "sdom\<cdot>((Rep_tstream ts1) \<bullet> (Rep_tstream ts2)) = sdom\<cdot>(Rep_tstream ts1) \<union>  sdom\<cdot>(Rep_tstream ts2)"
+    using infI lnless_def sdom_sconc2un by blast
+  thus "tsDom\<cdot>ts1 \<union> tsDom\<cdot>ts2 \<subseteq> tsDom\<cdot>(ts1 \<bullet> ts2)"
+  by (smt Abs_tstream_inverse UnCI UnE mem_Collect_eq subsetI ts_well_conc tsconc_insert tsdom_insert) 
+qed
+
+lemma tsinftickDrop[simp]: assumes "#\<surd>ts = \<infinity>"
+  shows "#\<surd>(tsDropFirst\<cdot>ts) = \<infinity>"
+apply(simp add: tsdropfirst_insert tstickcount_insert)
+by (metis assms slen_sfilter_sdrop srtdw2drop ts_well_def tstickcount_insert)
+
+
+lemma tsinf_nth [simp]: "#\<surd>ts = \<infinity> \<Longrightarrow> tsNth n\<cdot>ts \<noteq> \<bottom>"
+apply(induction n arbitrary: ts)
+apply(simp add: tsNth_def)
+using tstakefirst_bot apply force
+by (simp add: tsNth_Suc)
+
+
+
+
+
+(* tsTake *)
+thm tsTake_def
+
+
+(* transforming the rest of a timed stream using a continuous function na is a continuous function *)
+lemma tstake_cont [simp]:"cont (\<lambda> ts. if ts=\<bottom> then \<bottom> else tsTakeFirst\<cdot>ts \<bullet> na\<cdot>(tsDropFirst\<cdot>ts))" (is "cont (?F)")
+apply(rule contI2)
+apply (smt eq_bottom_iff minimal monofunI monofun_cfun_arg tstakefirst_eq)
+apply rule+
+proof -
+   fix Y :: "nat \<Rightarrow> 'a tstream"
+   assume y_chain: "chain Y"
+   thus "?F (\<Squnion>i. Y i) \<sqsubseteq> (\<Squnion>i. ?F (Y i))" 
+   proof (cases "\<bottom> = (\<Squnion>i. Y i) ")
+    case True thus ?thesis by (simp add: minimal) 
+   next
+    case False 
+    obtain j where "Y j \<noteq> \<bottom>" by (metis False lub_chain_maxelem minimal) 
+    have "\<And>i. ?F (Y i) \<sqsubseteq> ?F (Y (Suc i))" by (smt below_bottom_iff minimal monofun_cfun_arg po_class.chainE tstakefirst_eq y_chain)
+    hence f_chain: "chain (\<lambda>i. ?F (Y i))" by (simp add: po_class.chainI) 
+
+    have d_chain: "chain (\<lambda>i. Y (i+j))" (is "chain ?D") by (simp add: chain_shift y_chain) 
+    have d_notBot: "\<And>i. ?D i \<noteq> \<bottom>"
+      by (metis \<open>(Y::nat \<Rightarrow> 'a tstream) (j::nat) \<noteq> \<bottom>\<close> eq_bottom_iff le_add2 po_class.chain_mono y_chain)
+    hence "tsTakeFirst\<cdot> (\<Squnion>i. ?D i) \<bullet> na\<cdot>(tsDropFirst\<cdot> (\<Squnion>i. ?D i)) = (\<Squnion>i. tsTakeFirst\<cdot> (?D i) \<bullet> na\<cdot>(tsDropFirst\<cdot> (?D i)))"
+      by (smt d_chain contlub_cfun_arg is_ub_thelub lub_eq monofun_cfun_arg po_class.chainE po_class.chainI tstakefirst_eq)
+    hence eq: "?F (\<Squnion>i. ?D i) = (\<Squnion>i. ?F (?D i))" using d_notBot d_chain is_ub_thelub by fastforce
+    have "(\<Squnion>i. ?F (?D i)) = (\<Squnion>i. ?F (Y i))" using lub_range_shift f_chain by fastforce
+    thus ?thesis using eq lub_range_shift y_chain by fastforce 
+  qed
+qed
+
+lemma [simp]: "ts \<down> 0 = \<bottom>"
+by(simp add: tsTake.simps)
+
+lemma [simp]: "\<bottom> \<down> n = \<bottom>"
+by(induction n, auto simp add: tsTake.simps)
+
+
+lemma tsTake_def2:  "ts \<down> (Suc n) = (tsTakeFirst\<cdot>ts) \<bullet> ((tsDropFirst\<cdot>ts) \<down> n)"
+by(simp add: tsTake.simps)
+
+lemma tstake_tsnth: "ts \<down> (Suc i) = (ts \<down> i) \<bullet> tsNth i\<cdot>ts"
+proof(induction i arbitrary: ts)
+  case 0 thus ?case by(simp add: tsNth_def tsTake.simps)
+next
+  case (Suc i)
+  fix i  :: nat
+  fix ts :: "'a tstream"
+  assume "(\<And>ts :: 'a tstream. ts \<down> Suc i  = ts \<down> i  \<bullet> tsNth i\<cdot>ts)"
+  hence eq1: "(tsDropFirst\<cdot>ts) \<down> (Suc i) = ((tsDropFirst\<cdot>ts) \<down> i)  \<bullet> tsNth (Suc i)\<cdot>(ts)" by (simp only: tsNth_Suc) 
+  hence "ts \<down> (Suc (Suc i)) = (tsTakeFirst\<cdot>ts) \<bullet> ((tsDropFirst\<cdot>ts) \<down> (Suc i))" by(simp add: tsTake.simps)
+  hence "ts \<down> (Suc (Suc i)) = tsTakeFirst\<cdot>ts \<bullet> ((tsDropFirst\<cdot>ts) \<down> i)  \<bullet> tsNth (Suc i)\<cdot>(ts)" using eq1 tsconc_assoc by simp
+  thus "ts \<down> (Suc (Suc i))  = ts \<down> (Suc i)  \<bullet> tsNth (Suc i)\<cdot>ts" by(simp add: tsTake.simps)
+qed
+
+
+lemma tstake_below [simp]: "ts \<down> i  \<sqsubseteq> ts \<down> Suc i"
+by (metis Rep_tstream_inverse Rep_tstream_strict minimal monofun_cfun_arg sconc_snd_empty tsconc_insert tstake_tsnth)
+
+lemma tstake_chain [simp]: "chain (\<lambda>i. ts \<down> i)"
+by (simp add: po_class.chainI)
+
+
+lemma tsConc_notEq: 
+  fixes ts1 ts2 :: "'a tstream"
+  assumes "ts1 \<noteq> ts2" and "#\<surd>a < \<infinity>"
+  shows "a \<bullet> ts1 \<noteq> a \<bullet> ts2"
+proof -
+  have "#(Rep_tstream a) < \<infinity>" by (simp add: assms(2))
+  hence "(Rep_tstream a) \<bullet> (Rep_tstream ts1) \<noteq> (Rep_tstream a) \<bullet> (Rep_tstream ts2)"
+    by (metis Rep_tstream_inverse assms(1) sconc_neq)
+  thus ?thesis
+    by (metis Rep_tstream Rep_tstream_inverse mem_Collect_eq tsconc_rep_eq) 
+qed
+
+lemma tstakefirst_len [simp]: "#\<surd> tsTakeFirst\<cdot>ts < \<infinity>"
+apply(simp add: tstakefirst_insert tstickcount_insert)
+by (metis inf_ub less_le sfilterl4 stakewhileFromTS2 stwbl2stbl tstakefirst_well1)
+
+
+lemma tstake_noteq: "ts \<down> i \<noteq> ts \<Longrightarrow> ts \<down> i \<noteq> ts \<down> Suc i"
+apply(induction i arbitrary: ts)
+apply (metis Rep_cfun_strict1 Rep_tstream_inverse Rep_tstream_strict sconc_snd_empty tsTake.simps(1) tsTake_def2 tsconc_insert tstakefirst_bot)
+by (metis tsConc_notEq tsTakeDropFirst tsTake_def2 tstakefirst_len)
+
+
+
+lemma tsTakeDrop [simp]: "(ts \<down> i) \<bullet> (tsDrop i\<cdot>ts) = ts"
+apply(induction i arbitrary: ts)
 apply simp
-done
+by (metis tsDropNth tsconc_assoc tstake_tsnth)
 
-text {* The concatenation of an empty list with a timed streams returns the timed stream itself. *}
-lemma [simp]: "([] \<bullet>+ rs) = rs"
-apply (simp add: tsconc_def)
-apply (simp add: espf2tspf_def)
-done
 
-text {* Head of concatenation of an 1-element list with a timed stream is the element of the list.*}
-lemma [simp]: "tshd ([e] \<bullet>+ rs) = e"
-apply (simp add: tshd_def)
-apply (simp add: tsconc_def)
-apply (simp add: espf2tspf_def)
-done
-
-text {* The head of the concatenation of a list with a timed stream is the head of the list. *}
-lemma [simp]: "tshd ((e#es) \<bullet>+ rs) = e"
-apply (simp add: tshd_def)
-apply (simp add: tsconc_def)
-apply (simp add: espf2tspf_def)
-apply (subst tstream_scons_eq Abs_tstream_inverse)
-apply (subst tstream_scons_eq)
-apply (subst list_conc_tstream)
+lemma tsTake_prefix [simp]:"ts \<down> i \<sqsubseteq> ts"
+apply(induction i arbitrary: ts)
 apply simp
+by (metis cfcomp1 cfcomp2 monofun_cfun_arg tsNth_def tsTakeDrop tstake_tsnth tstakefirst_prefix)
+
+
+
+lemma tstakeFirst_len [simp]: "ts \<noteq> \<bottom> \<Longrightarrow> #\<surd> tsTakeFirst\<cdot>ts = Fin 1"
+apply(simp add: tstakefirst_insert tstickcount_insert)
+by (metis Abs_tstream_cases Abs_tstream_inverse Rep_tstream_strict sconc_fst_empty stwbl_filterlen tickInDom ts_well_conc)
+
+lemma tsfirstConclen [simp]: assumes "ts\<noteq>\<bottom>" shows "#\<surd>tsTakeFirst\<cdot>ts \<bullet> ts2 = lnsuc\<cdot>(#\<surd>ts2)"
+proof -
+  have "#({\<surd>} \<ominus> (Rep_tstream (tsTakeFirst\<cdot>ts))) = Fin 1"
+    by (metis assms tstakeFirst_len tstickcount_insert)
+  hence "({\<surd>} \<ominus> (Rep_tstream (tsTakeFirst\<cdot>ts))) = \<up>\<surd>"
+    by (smt Fin_02bot Fin_Suc One_nat_def inject_lnsuc lnzero_def lscons_conv sfilter_ne_resup singletonD slen_empty_eq slen_scons sup'_def surj_scons)
+  hence "{\<surd>} \<ominus> ((Rep_tstream (tsTakeFirst\<cdot>ts)) \<bullet> Rep_tstream ts2) = \<up>\<surd> \<bullet> {\<surd>} \<ominus> Rep_tstream ts2"
+    by (simp add: add_sfilter2)
+  thus ?thesis by (simp add: tsconc_insert tstickcount_insert) 
+qed
+
+lemma tstake_len[simp]: "#\<surd> (ts \<down> i) = min (#\<surd> ts) (Fin i)"
+  apply(induction i arbitrary: ts)
+   apply (simp)
+  apply(auto simp add: tsTake.simps)
+  by (metis Fin_Suc lnsuc_lnle_emb min_def tsTakeDropFirst tsfirstConclen)
+
+
+
+lemma tsdropfirst_len: "ts \<noteq> \<bottom> \<Longrightarrow> lnsuc\<cdot>(#\<surd> (tsDropFirst\<cdot>ts)) = #\<surd> ts"
+  apply(simp add: tsdropfirst_insert tstickcount_insert)
+  apply(subst strdw_filter)
+   apply (simp add: Rep_tstream_bottom_iff)
+  by simp
+
+
+lemma tstake_fin: "Fin n = #\<surd>ts \<Longrightarrow> ts \<down> n = ts"
+  apply(induction n arbitrary: ts)
+   apply simp
+   using ts_0ticks apply blast
+  apply (auto simp add: tsTake.simps)
+  by (metis Fin_Suc lnat.injects tsTakeDropFirst tsdropfirst_len)
+
+lemma tstake_fin2: "ts\<down>i = ts \<Longrightarrow> ts \<down> (Suc i) = ts"
+  apply(induction i arbitrary: ts)
+   apply simp
+  by (metis tsConc_notEq tsTakeDropFirst tsTake_def2 tstakefirst_len)
+
+lemma tstake_fin3: "ts\<down>i = ts \<Longrightarrow> i\<le>j \<Longrightarrow> ts \<down> j = ts"
+  apply(induction j)
+   apply simp
+  apply simp
+  using le_Suc_eq tstake_fin2 by blast
+
+lemma tstake_maxinch: "Fin n = #\<surd>ts \<Longrightarrow> max_in_chain n (\<lambda>i. ts\<down>i)"
+apply(rule max_in_chainI)
+using tstake_fin tstake_fin3 by fastforce
+
+lemma tstake_finite: assumes "#\<surd>ts < \<infinity>" shows "finite_chain (\<lambda>i. ts\<down>i)"
+apply(simp add: finite_chain_def)
+by (metis (full_types) assms infI less_irrefl tstake_maxinch)
+
+lemma tstake_infinite_chain: assumes "#\<surd>ts = \<infinity>" shows "\<not> max_in_chain n (\<lambda>i. ts \<down> i)"
+by (metis Suc_n_not_le_n assms cfcomp2 fold_inf inject_Fin le_cases max_in_chain_def min_def n_not_Suc_n notinfI3 tsTakeDropFirst tstake_len)
+
+lemma tstake_infinite_lub: assumes "#\<surd>ts = \<infinity>" shows "#\<surd>(\<Squnion>i. (ts \<down> i)) = \<infinity>"
+by (simp add: assms finite_chain_def tstake_infinite_chain)
+
+lemma ts_below_eq: assumes "#\<surd> ts1 = \<infinity>" and "ts1 \<sqsubseteq> ts2"
+  shows "ts1 = ts2"
+using assms(1) assms(2) ts_approxl by fastforce
+
+lemma tstake_inf_lub: assumes "#\<surd> ts = \<infinity>" shows "(\<Squnion>i. (ts \<down> i ) )= ts"
+proof -
+  have f1: "(\<Squnion>i. (ts \<down> i ) ) \<sqsubseteq> ts" by (simp add: lub_below)
+  have "#\<surd>(\<Squnion>i. (ts \<down> i ) ) = \<infinity>" using assms tstake_infinite_lub by blast
+  thus ?thesis using local.f1 ts_below_eq by blast 
+qed
+
+lemma tstake_lub [simp]: "(\<Squnion>i. (ts \<down> i ) )= ts"
+  apply(cases "#\<surd>ts < \<infinity>")
+   apply (metis (mono_tags) finite_chain_def infI less_irrefl maxinch_is_thelub tstake_fin tstake_finite tstake_maxinch)
+  by (simp add: less_le tstake_inf_lub)
+
+
+lemma tsttake_dom [simp]: "tsDom\<cdot>(ts \<down> n) \<subseteq> tsDom\<cdot>ts"
+by (metis tsTakeDrop tsdom_conc)
+
+
+lemma tstake2tsnth_eq: "ts1 \<down> n  = ts2 \<down> n \<Longrightarrow> i<n \<Longrightarrow> tsNth i\<cdot>ts1 = tsNth i\<cdot>ts2"
+  apply(induction i arbitrary: n ts1 ts2)
+   apply (simp add: tsNth_def)
+   apply (metis Suc_pred below_bottom_iff tsTake_prefix tstake_below tstake_noteq tstakefirst_eq)
+  apply(simp add: tsNth_Suc)
+  by (smt Suc_lessE strictI tsConc_notEq tsTake_def2 tsTake_prefix tstakefirst_eq tstakefirst_len)
+
+
+lemma tstake_bot: "ts1 \<down> (Suc n) = \<bottom> \<Longrightarrow> ts1 = \<bottom>"
+by (metis Fin_02bot Rep_cfun_strict1 Zero_not_Suc bottomI inject_Fin lnle_def lnzero_def min_def tsTake.simps(1) ts_0ticks tstake_len)
+
+lemma tstakefirst_eq2: assumes "ts1 \<down> (Suc n) = ts2 \<down> (Suc n)" shows " tsTakeFirst\<cdot>ts1 = tsTakeFirst\<cdot>ts2"
+by (metis assms tsTake_prefix tstake_bot tstakefirst_eq)
+
+
+lemma [simp]: "ts \<noteq> \<bottom> \<Longrightarrow> tsDropFirst\<cdot>(tsTakeFirst\<cdot>ts) = \<bottom>"
+by(simp add: tstakefirst_insert tsdropfirst_insert)
+
+
+
+
+lemma tsdropfirst_conc: "ts \<noteq> \<bottom> \<Longrightarrow> tsDropFirst \<cdot>(ts \<bullet> as) = (tsDropFirst\<cdot>ts) \<bullet> as"
+apply(simp add: tsdropfirst_insert tsconc_insert)
+by (simp add: Rep_tstream_bottom_iff srtdw_conc)
+
+lemma [simp]: "ts \<noteq>\<bottom> \<Longrightarrow> tsDropFirst\<cdot>((tsTakeFirst\<cdot>ts) \<bullet> as ) = as"
+  apply(simp add: tstakefirst_insert tsconc_rep_eq tsdropfirst_insert)
+  by (smt Abs_tstream_bottom_iff Rep_tstream_inject Rep_tstream_strict mem_Collect_eq sconc_fst_empty srtdw_stwbl stwbl_eps tsconc_rep_eq tsdropfirst_conc tsdropfirst_insert tsdropfirst_rep_eq tstakefirst_well1)
+
+lemma tstakefirst_conc: "ts\<noteq>\<bottom> \<Longrightarrow> tsTakeFirst\<cdot>(ts \<bullet> as ) =  tsTakeFirst\<cdot>ts"
+by (metis Rep_tstream_inverse Rep_tstream_strict minimal monofun_cfun_arg sconc_snd_empty tsconc_insert tstakefirst_eq)
+
+
+lemma [simp]:  "ts \<noteq>\<bottom> \<Longrightarrow> tsTakeFirst\<cdot>((tsTakeFirst\<cdot>ts) \<bullet> xs ) = tsTakeFirst\<cdot>ts"
+  apply(simp add: tstakefirst_insert tsconc_insert)
+  by (simp add: Rep_tstream_bottom_iff stwbl_conc)
+
+
+lemma tsTake2take [simp]: "ts \<down> n \<down> n = ts \<down> n"
+  apply(cases "ts=\<bottom>")
+   apply simp
+  apply(induction n arbitrary:ts)
+   apply simp
+  apply (auto simp add: tsTake.simps)
+  by (metis below_bottom_iff tsTake_prefix)
+
+(* Each chain becomes finite by mapping @{term "stake n"} to every element *)
+lemma ts_finite_chain_stake: "chain Y \<Longrightarrow> finite_chain (\<lambda>i. tsTake n\<cdot>(Y i))"
+proof -
+  assume a1: "chain Y"
+  have f2: "\<And>n t. max_in_chain n (tsTake_abbrv (t::'a tstream)) \<or> t \<noteq> t \<down> n"
+    by (simp add: maxinch_is_thelub)
+  have f3: "\<And>f n. finite_chain f \<or> \<not> max_in_chain n (tsTake_abbrv (Lub f::'a tstream)) \<or> \<not> chain f"
+    using ts_infinite_lub tstake_infinite_chain by blast
+  have "\<And>n t. max_in_chain n (tsTake_abbrv t::'a tstream \<down> n )"
+    using f2 by (metis tsTake2take)
+  then show ?thesis
+    using f3 a1 by (metis chain_monofun contlub_cfun_arg)
+qed
+
+lemma tsDropTake: "(tsDropFirst\<cdot>(ts \<down> (Suc n))) \<down> n = (tsDropFirst\<cdot>ts) \<down>  n"
+by(auto simp add: tsTake.simps)
+
+lemma tsSucTake: 
+  shows "ts1 \<down> (Suc n) = ts2 \<down> (Suc n) \<Longrightarrow> ts1 \<down> n = ts2 \<down> n"
+apply(induction n arbitrary: ts1 ts2)
 apply simp
+by (metis tsDropTake tsTake_def2 tstakefirst_eq2)
+
+lemma ts_take_eq: assumes "\<And>n. ts1 \<down>n = ts2 \<down> n"
+  shows "ts1 = ts2"
+proof -
+  have "(\<Squnion>i. (ts1 \<down> i)) = (\<Squnion>i. (ts2 \<down> i))" by (simp add: assms)
+  thus ?thesis by simp
+qed
+
+lemma tsnth2tstake_eq: assumes "\<And>n. n<i \<Longrightarrow> tsNth n\<cdot>ts1 = tsNth n\<cdot>ts2"
+  shows "ts1 \<down> i = ts2 \<down> i"
+using assms apply (induction i)
+apply simp
+by(simp add: tstake_tsnth)
+
+lemma tstake_tick [simp] :"(Abs_tstream (\<up>\<surd>) \<bullet> ts) \<down> (Suc n)= Abs_tstream (\<up>\<surd>) \<bullet> (ts \<down> n)"
+apply(simp add: tsTake_def2 tstakefirst_insert tsconc_rep_eq)
+by (metis (mono_tags, lifting) stwbl_f tick_msg tsConc_notEq tsTakeDropFirst tsconc_rep_eq tstakefirst_insert tstakefirst_len)
+
+
+lemma ts_tsnth_eq: assumes "\<And>n. tsNth n\<cdot>ts1 = tsNth n\<cdot>ts2"
+  shows "ts1 = ts2"
+using assms ts_take_eq tsnth2tstake_eq by blast
+
+
+lemma "tsNth n\<cdot>(ts \<down> (Suc n)) = tsNth n \<cdot> ts"
+using tsTake2take tstake2tsnth_eq by blast
+
+lemma tstake_less: assumes "ts1 \<down> n = ts2 \<down> n" and "i \<le> n"
+  shows "ts1 \<down> i = ts2 \<down> i"
+by (meson assms(1) assms(2) less_le_trans tsnth2tstake_eq tstake2tsnth_eq)
+
+lemma tsDropTake1 [simp]: "tsDrop n\<cdot>(ts \<down> n) = \<bottom>"
+  apply(induction n arbitrary: ts)
+   apply simp
+  apply(auto simp add: tstake_tsnth)
+  by (metis tsConc_notEq tsTake2take tsTakeDropFirst tsTake_def2 tstake_tsnth tstakefirst_len)
+
+lemma tsDropBot:  "tsDrop n\<cdot>ts = \<bottom> \<Longrightarrow> n\<le>i \<Longrightarrow> tsDrop i\<cdot>ts = \<bottom>"
+by (metis tsDropTake1 tsTake2take tsTakeDrop tstake_fin3)
+
+lemma tstake2 [simp]: "ts \<down> n \<down> m = ts \<down> min n m"
+by (metis min.cobounded1 min_def tsTake2take tstake_fin3 tstake_less)
+
+
+
+lemma tsDropTakeFirstConc: "ts \<noteq> \<bottom> \<Longrightarrow> (tsDropFirst\<cdot>(tsTakeFirst\<cdot>ts \<bullet> xs )) = xs"
+apply(simp add: tsdropfirst_insert tstakefirst_insert)
+by (smt Abs_tstream_inverse Rep_tstream_inject Rep_tstream_strict mem_Collect_eq sconc_fst_empty srtdw_stwbl strict_stwbl stwbl_notEps tsconc_rep_eq tsdropfirst_conc tsdropfirst_insert tsdropfirst_rep_eq tsdropfirst_well tstakefirst_well1)
+
+
+lemma tsDropFirstConc: "#\<surd>ts = Fin 1 \<Longrightarrow> tsDropFirst\<cdot>(ts \<bullet> xs) = xs"
+by (metis Fin_02bot Fin_Suc One_nat_def Rep_tstream_inverse Rep_tstream_strict cfcomp2 lnat.con_rews lnat.sel_rews(2) lnzero_def sconc_fst_empty strict_sfilter strict_slen ts_0ticks tsconc_insert tsdropfirst_conc tsdropfirst_len tstickcount_insert)
+
+lemma snth_tscons[simp]: assumes "tsTickCount\<cdot>a = Fin 1 "
+  shows "tsNth (Suc k)\<cdot>(a \<bullet> s) = tsNth k\<cdot>s"
+by (simp add: assms tsDropFirstConc tsNth_Suc)
+
+lemma tsTakeFirst_first[simp]: "#\<surd>ts = Fin 1  \<Longrightarrow> tsTakeFirst\<cdot>ts = ts"
+by (metis (mono_tags, lifting) Fin_02bot Fin_Suc One_nat_def Rep_tstream_inverse Rep_tstream_strict bottomI lnat.sel_rews(2) lnzero_def sconc_snd_empty tsTakeDropFirst ts_0ticks tsconc_rep_eq tsdropfirst_len tstakefirst_insert tstakefirst_prefix tstakefirst_well1)
+
+
+lemma tsTakeFirstConc: "#\<surd>ts = Fin 1 \<Longrightarrow> tsTakeFirst\<cdot>(ts \<bullet> xs) = ts"
+by (metis (mono_tags, hide_lams) Fin_Suc One_nat_def Rep_tstream_inverse Rep_tstream_strict lnat.con_rews lnzero_def minimal monofun_cfun_arg sconc_snd_empty strict_sfilter strict_slen tsTakeFirst_first tsconc_insert tstakefirst_eq tstickcount_insert)
+
+
+
+
+lemma tsnth_len [simp]: "#\<surd> tsNth n\<cdot>ts \<le> Fin 1"
+apply(simp add: tsNth_def)
+by (metis bottomI min.bounded_iff order_refl tsTake_prefix tstakeFirst_len tstake_len tstakefirst2first)
+
+lemma tstake_conc [simp]: assumes "#\<surd>ts = Fin n"
+  shows "(ts \<bullet> ts2) \<down> n = ts"
+using assms apply(induction n arbitrary: ts)
+apply (simp add: ts_0ticks)
+apply (auto simp add: tsTake_def2)
+apply(subst tsdropfirst_conc)
+apply auto[1]
+apply(subst tstakefirst_conc)
+apply auto[1]
+by (metis Fin_Suc Rep_tstream_strict inject_lnsuc lnat.con_rews lnzero_def strict_sfilter strict_slen tsTakeDropFirst tsdropfirst_len tstickcount_insert)
+
+(* A finite prefix of length @{term "k"} is created by @{term "stake k"} *)
+lemma ts_approxl1: "\<forall>s1 s2. s1 \<sqsubseteq> s2 \<and> (#\<surd> s1) = Fin k \<longrightarrow> tsTake k\<cdot>s2 = s1"
+using ts_approxl tstake_conc by blast
+
+(* A prefix of a stream is equal to the original one or a finite prefix *)
+lemma ts_approxl2: "s1 \<sqsubseteq> s2 \<Longrightarrow> (s1 = s2) \<or> (\<exists>n. tsTake n\<cdot>s2 = s1 \<and> Fin n = #\<surd>s1)"
+by (metis ts_approxl1 ninf2Fin ts_below_eq)
+
+lemma tsconc_eq: "#\<surd>ts1 = #\<surd>ts2 \<Longrightarrow> (ts1 \<bullet> a1) = (ts2 \<bullet> a2) \<Longrightarrow> ts1 = ts2"
+by (metis lncases tsconc_id tstake_conc)
+
+lemma tsnth_more: assumes "#\<surd>ts = Fin n" and "n\<le>i"  shows "tsNth i\<cdot>ts = \<bottom>"
+  using assms apply(induction i arbitrary: ts n)
+   apply simp
+   using ts_0ticks apply fastforce
+proof -
+  fix ia :: nat and tsa :: "'a tstream" and na :: nat
+  assume a1: "#\<surd> tsa = Fin na"
+  assume "na \<le> Suc ia"
+  then have "tsDrop (Suc ia)\<cdot>tsa = \<bottom>"
+    using a1 by (metis tsDropBot tsDropTake1 tstake_fin)
+  then show "tsNth (Suc ia)\<cdot>tsa = \<bottom>"
+    by (simp add: tsNth_def)
+qed
+
+lemma tsnth_less: "tsNth i\<cdot>ts = \<bottom> \<Longrightarrow> #\<surd>ts \<le> Fin i"
+  apply(induction i arbitrary: ts)
+   apply (simp add: tsNth_def)
+   using tstakefirst_bot apply fastforce
+  apply(simp add: tsNth_Suc)
+  by (metis Fin_Suc Rep_tstream_strict lnle_def lnsuc_lnle_emb lnzero_def minimal strict_sfilter strict_slen tsdropfirst_len tstickcount_insert)
+
+
+
+lemma ts_take_below: assumes "(\<And>i. x\<down>i \<sqsubseteq> y \<down>i)"
+  shows "x\<sqsubseteq>y"
+proof -
+  have "(\<Squnion>i. (x\<down>i)) \<sqsubseteq> (\<Squnion>i. (y \<down> i))" using assms lub_mono tstake_chain by blast
+  thus ?thesis by simp
+qed
+
+
+lemma tstake_less_below: assumes "x\<sqsubseteq>y" and "Fin i\<le>#\<surd> x"
+  shows "x\<down>i = y\<down>i"
+by (smt assms(1) assms(2) min.absorb2 tsTakeDrop ts_approxl tsconc_assoc tstake_conc tstake_len)
+
+(* every finite prefix of the lub is also prefix of some element in the chain *)
+lemma ts_lub_approx: "chain Y \<Longrightarrow> \<exists>k. tsTake n\<cdot>(lub (range Y)) = tsTake n\<cdot>(Y k)"
+by (metis exist_tslen finite_chain_def is_ub_thelub maxinch_is_thelub tstake_less_below)
+
+lemma tstake_below_eq: assumes "x\<sqsubseteq>y" and "#\<surd> x = #\<surd>y"
+  shows "x = y"
+by (metis assms(1) assms(2) below_refl ts_approxl tsconc_eq)
+
+(* If two timed streams of same length agree on every element, all their finite prefixes are equal *)
+lemma tsnths_eq_lemma [rule_format]: 
+  "\<forall>x y. (#\<surd>x) = (#\<surd>y) \<and> (\<forall>n. Fin n < (#\<surd>x) \<longrightarrow> tsNth n\<cdot>x = tsNth n\<cdot>y) 
+           \<longrightarrow>tsTake  k\<cdot>x = tsTake k\<cdot>y"
+by (smt less2nat_lemma less_SucI min.commute min_def not_less trans_lnle 
+    tsDropNth tsDropTake1 tsTakeDrop tsTake_prefix tsnth2tstake_eq tsnth_len 
+    tstake_below_eq tstake_len)
+
+(* If two timed streams of same length agree on every element, they are equal *)
+lemma tsnths_eq: "\<lbrakk>(#\<surd>x) = (#\<surd>y); \<forall>n. Fin n < (#\<surd>x) \<longrightarrow> tsNth n\<cdot>x = tsNth n\<cdot>y\<rbrakk> \<Longrightarrow> x = y"
+using ts_take_eq tsnths_eq_lemma by blast
+
+lemma ts_below: assumes "\<And>i. Fin i \<le>#\<surd>x \<Longrightarrow> x\<down>i = y\<down>i"
+  shows "x\<sqsubseteq>y"
+  apply(rule ts_take_below, rename_tac i)
+  apply(induct_tac i)
+   apply simp
+  apply simp
+  apply(case_tac "Fin (Suc n)\<le>#\<surd>x")
+   apply (simp add: assms)
+  by (smt box_below leI le_cases less2lnleD min_def tstake_below tstake_below_eq tstake_len)
+
+  
+lemma ts_existsNBot[simp]: "\<exists>ts :: 'a tstream. ts\<noteq>\<bottom>"
+proof -
+  have "Abs_tstream (\<up>\<surd>) \<noteq> \<bottom>" by simp
+  thus ?thesis by blast 
+qed
+
+lemma tstakeBot: "y \<down> i  = \<bottom> \<Longrightarrow> y \<noteq> \<bottom> \<Longrightarrow> x \<down> i  = \<bottom>"
+apply(cases "i=0")
+apply simp
+by (metis list_decode.cases tstake_bot)
+
+(*tsntimes tsinftimes*)
+
+(*1 times a timed stream is the timed stream itself*)
+lemma tsntimes_id[simp]: "tsntimes (Suc 0) ts = ts"
+by simp
+
+(*times a timed stream is \<bottom>*)
+lemma ts0tmsSubTs1tms: "tsntimes 0 ts1 \<sqsubseteq> ts2"
+by simp
+
+(*Concatenation to @{term tsntimes} is commutative*)
+lemma tsConc_eqts_comm: "ts \<bullet> (tsntimes n ts) =(tsntimes n ts) \<bullet> ts"
+apply (induct_tac n)
+apply simp
+by simp
+
+(*Concatenation of a timed stream to @{term tsntimes} of the same timed stream is Suc n times the timed stream *)
+lemma tsntmsSubTsSucntms: "tsntimes (Suc n) ts = (tsntimes n ts) \<bullet> ts"
+using tsConc_eqts_comm
+using tsntimes.simps(2) by auto
+
+(*n times a timed stream is prefix of Suc n times a stream*)
+lemma tsSucntmsSubTsinftms: "tsntimes n ts \<sqsubseteq> tsntimes (Suc n) ts"
+using ts_tsconc_prefix tsntmsSubTsSucntms
+by metis
+
+(*If a timed stream is not \<bottom>, then it contains some \<surd>*)
+lemma lenmin: assumes "ts \<noteq>\<bottom> "
+ shows "(#\<surd>(ts)) > 0"
+using assms lnless_def ts_0ticks by fastforce
+
+
+(*ntimes a finite timed stream is still a finite timed stream*)
+lemma fintsntms2fin:assumes "#\<surd>ts < \<infinity>"
+ shows "#\<surd>(tsntimes n ts) < \<infinity>"
+using assms tsntmsSubTsSucntms
+apply(induct_tac n)
+apply(simp add: tsntimes_def)
+apply (smt fold_inf)
+proof -
+  fix na :: nat
+  assume a1: "#\<surd> tsntimes na ts < \<infinity>"
+  assume a2: "#\<surd> ts < \<infinity>"
+  { assume "#\<surd> tsntimes na ts \<noteq> \<infinity>"
+    moreover
+    { assume "tsntimes na ts \<noteq> tsntimes (Suc na) ts"
+      then have "tsntimes na ts \<noteq> ts \<bullet> tsntimes na ts"
+        by (metis tsntimes.simps(2))
+      then have "#\<surd> ts \<bullet> tsntimes na ts \<noteq> \<infinity>"
+        using a2 by (metis (full_types) tsConc_eqts_comm tsConc_notEq tsconc_id tsntimes.simps(2))
+      then have "#\<surd> tsntimes (Suc na) ts \<noteq> \<infinity>"
+        by (metis tsntimes.simps(2)) }
+    ultimately have "#\<surd> tsntimes (Suc na) ts \<noteq> \<infinity>"
+      by force }
+  then show "#\<surd> tsntimes (Suc na) ts < \<infinity>"
+    using a1 by (metis (no_types) inf_less_eq leI)
+qed
+
+(* tsTake*)
+
+text {* We prove that taking the first 1,2,...,n,... timeslots of an timed stream with tsTake forms a chain. 
+Thus, we have to show that for all i: tsTake i \<sqsubseteq> tsTake (Suc i) *}
+lemma chain_tsTake[simp]: "chain tsTake"
+by (simp add: cfun_belowI po_class.chainI)
+
+
+lemma esttake_tsTake[simp]: "tsTake k\<cdot>(tsTake n\<cdot>s) = tsTake (min k n)\<cdot>s"
+by (simp add: min.commute)
+
+lemma esttake_infD: "#\<surd>(tsTake k\<cdot>x) = \<infinity> \<Longrightarrow> tsTake k\<cdot>x = x"
+by (simp add: ts_below_eq)
+
+
+
+
+
+(* tspfair*)
+
+text {* *If for all streams, all inputs with infinitely many ticks are mapped apply a function to outputs with
+ infinitely many ticks, then the function is fair. *}
+lemma tspfairI: "(\<And>s. tsTickCount \<cdot>s = \<infinity> \<Longrightarrow> tsTickCount \<cdot>(f\<cdot>s) = \<infinity>) \<Longrightarrow> tspfair f"
+apply (simp add: tspfair_def)
 done
 
-text {* Remainder of the concat of an 1-element list with a timed stream is the stream itself.*}
-lemma [simp]: "tsrt ([e] \<bullet>+ rs) = rs"
-apply (simp add: tsrt_def)
-apply (simp add: tsconc_def)
-apply (simp add: espf2tspf_def)
+text {* If a function is fair and an input stream has many ticks, then the output stream of f also has 
+infinitely many ticks. *}
+lemma tspfairD: "\<lbrakk>tspfair f;#\<surd>s = \<infinity>\<rbrakk> \<Longrightarrow> #\<surd>(f\<cdot>s) = \<infinity>"
+apply (simp add: tspfair_def)
 done
+
+
+
+(*TODO
+
+(*-----------------------------*)
+     old TStream.thy (now TStream_old.thy)
+     some lemmas may be not necessary because of pcpodef
+(*-----------------------------*)
+
+
+
+(*To drop n+1 timeslots is the same as dropping one timeslot and then n *)
+lemma tsdrop_back_tsrt:"tsDrop (Suc n)\<cdot> x = tsDropFirst \<cdot> (tsDrop n\<cdot> x)"
+apply (simp add: tsDrop_def tsDropFirst_def)
+sorry
+
+
+(*The domain of every timeslot is in the domain of all timeslots*)
+lemma tsNth_tsDom1: "tsDom\<cdot> (tsNth n\<cdot> ts)\<subseteq> tsDom\<cdot> ts"
+apply(simp add: tsNth_def)
+apply auto
+sorry
+
+
+text {* If the domain of a stream is a subset of a set M, then the domain of the remainder
+of the stream after removing the head element, is also a subset of the set M. *}
+lemma tsDom_tsDropI: "tsDom\<cdot> x \<subseteq> M \<Longrightarrow> tsDom\<cdot> (tsDropFirst\<cdot> x) \<subseteq> M"
+apply (simp add: tsDom_def)
+apply (simp add: tsDropFirst_def)
+sorry
+
+
+text {* If the domain of a stream is a subset of a set M, then the domain of the remainder
+of the stream after removing n elements, is also a subset of the set M. *}
+lemma tsdom_tsdropI: "tsDom\<cdot> s \<subseteq> M \<Longrightarrow> tsDom\<cdot> (tsDrop n\<cdot> s) \<subseteq> M"
+sorry
+
+
+lemma[simp]: "tsDom\<cdot> (Abs_tstream(\<up>\<surd>)) = {}"
+apply(simp add: tsDom_def)
+sorry
+
+lemma tsDom_tsConc[simp]: "tsDom\<cdot> (tsConc ts\<cdot> ts)= tsDom\<cdot> ts"
+apply(simp add: tsConc_def tsDom_def sdom_def)
+sorry
+
+lemma tsDom_tsntimes_eq: "tsDom\<cdot>(tsntimes n ts) = tsDom\<cdot>ts"
+apply(simp add:tsntimes_def)
+apply simp
+using tsDom_tsConc
+sorry
+
+lemma tsDom_tsinftimes_empty: "tsDom\<cdot>( tsinftimes ts) = tsDom\<cdot> ts"
+apply(simp add: tsinftimes_def)
+using tsDom_tsntimes_eq
+sorry
+
+
+text {* The domain of the infinite stream consisting only of ticks is empty. *}
+lemma tsDom_infTick_empty: "ts= tsinftimes(Abs_tstream(\<up>\<surd>)) \<Longrightarrow> tsDom\<cdot> ts = {}"
+apply (simp add: tsDom_def tsinftimes_def)
+sorry
 
 text {* The remainder of the concatenation of a list with a timed stream is the same as
 the concatenation of the remainder of the list with the timed stream. **}
@@ -398,10 +1475,6 @@ apply simp
 apply simp
 done
 
-text {* Retrieving the first 0 elements of a stream returns the empty stream. *}
-lemma [simp]: "tstake 0 x = Abs_tstream \<epsilon>"
-apply (simp add: tstake_def)
-done
 
 text {* Taking n+1 elements from the concatenation of a 1-element list with a timed stream
 is like appending the element of the list to the n-prefix of the timed stream.*}
@@ -420,29 +1493,6 @@ apply (simp add: tstake_def)
 apply (smt tstake_def Abs_tstream_inverse Rep_Abs Rep_tstream sconc_fst_inf split_streaml1)
 done
 
-text {* *If for all streams, all inputs with infinitely many ticks are mapped apply a function to outputs with
- infinitely many ticks, then the function is fair. *}
-lemma estfairI: "(\<And>s. #(sfilter {\<surd>}\<cdot>s) = \<infinity> \<Longrightarrow> #(sfilter {\<surd>}\<cdot>(f\<cdot>s)) = \<infinity>) \<Longrightarrow> estfair f"
-apply (simp add: estfair_def)
-done
-
-text {* If a function is fair and an input stream has many ticks, then the output stream of f also has 
-infinitely many ticks. *}
-lemma estfairD: "\<lbrakk>estfair f;#(sfilter {\<surd>}\<cdot>s) = \<infinity>\<rbrakk> \<Longrightarrow> #(sfilter {\<surd>}\<cdot>(f\<cdot>s)) = \<infinity>"
-apply (simp add: estfair_def)
-done
-
-text {* A timed stream without its head element is still a timed stream. *}
-lemma srt_tstream[simp]: "srt\<cdot>(Rep_tstream x) \<in> {t::'a event stream. #t \<noteq> \<infinity> \<or> #({\<surd>} \<ominus> t) = \<infinity>}"
-apply (smt Rep_tstream inf_scase inject_scons mem_Collect_eq sfilter_in sfilter_nin slen_scons 
-stream.sel_rews(2) surj_scons)
-done
-
-text {*  Removing the first 0 elements of a stream returns the stream itself. *}
-lemma [simp]: "tsdrop 0 x = x"
-apply (simp add: tsdrop_def)
-apply (simp add: espf2tspf_def)
-done
 
 text {* After dropping n elements, a timed stream remains a timed stream. *}
 lemma Rep_Abs_sdrop[simp]: 
@@ -591,10 +1641,7 @@ using tstreaml1
 apply blast
 done
 
-text {* Retrieving the first 0 elements of a stream returns the empty stream *}
-lemma [simp]: "tsttake 0 x = \<epsilon>"
-apply (simp add: tsttake_def)
-done
+
 
 text {* Take the first n+1 blocks of an event stream, where the stream has no messages in the first block,
  is the same as taking the first tick and n blocks. *}
@@ -621,14 +1668,6 @@ done
 text {* To prove the following lemmas, it is easier to remove e esttake_Suc from simplifier: *}
 declare esttake_Suc [simp del]
 
-text {* Now we test the esttake_ep lemma: *}
-definition just1 :: "nat event stream" where
-"just1 = \<up>(Msg 1)"
-
-text {* We test the esttake function by taking more elements than the length of the stream.
-As expected, we get the stream back: *}
-lemma "esttake 3\<cdot>just1 = \<up>(Msg 1)"
-by (metis just1_def esttake_Msg esttake_ep numeral_3_eq_3 sconc_snd_empty)
 
 text {* We prove that taking the first 1,2,...,n,... blocks of an event stream with esttake forms a chain. 
 Thus, we have to show that for all i: esttake i \<sqsubseteq> esttake (Suc i) *}
@@ -646,16 +1685,6 @@ apply (rule monofun_cfun_arg)
 apply auto
 apply (rule monofun_cfun_arg)
 apply auto
-done
-
-text {* The limit of the prefixes of a stream, which are produced apply esttake, is the stream itself.
- As we we are in a CPO, upper bounds of chains always exist. *}
-lemma reach_stream: "(\<Squnion>i. stake i\<cdot>s) = s"
-apply (rule stream.take_lemma [OF spec [where x=s]])
-apply (induct_tac n, simp, rule allI)
-apply (rule_tac y=x in scases', simp)
-apply (subst lub_range_shift [where j="Suc 0", THEN sym],simp+)
-apply (subst contlub_cfun_arg [THEN sym], auto) 
 done
 
 text {* Same for esttake. *}
@@ -690,7 +1719,6 @@ apply auto
 apply (subst contlub_cfun_arg [THEN sym])
 apply auto
 done
-
 
 text {* esttake of esttake.*}
 lemma esttake_esttake[simp]: "esttake k\<cdot>(esttake n\<cdot>s) = esttake (min k n)\<cdot>s"
@@ -746,34 +1774,6 @@ apply simp
 apply simp
 done
 
-text {* We prove that taking the first 1,2,...,n,... blocks of a stream with tsttake forms a chain. 
-Thus, we have to show that for all i: tsttake i \<sqsubseteq> tsttake (Suc i) *}
-lemma chain_tsttake[simp]: "chain tsttake"
-apply (rule chainI)
-apply (rule fun_belowI)
-apply (simp add: tsttake_def)
-apply (rule chainE)
-apply (rule ch2ch_fun)
-apply (rule ch2ch_monofun)
-apply simp
-apply (simp add: monofun_Rep_cfun)
-apply simp
-done
-
-text {* The limit of the prefixes of a stream, which are blocks produced apply tsttake, 
-is the stream itself. *}
-lemma tsttake_lub: "(\<Squnion>k. tsttake k x) = Rep_tstream x"
-apply (simp add: tsttake_def)
-apply (rule reach_estream)
-done
-
-text {* If all block prefixes of two timed streams are equal, then the two streams are equal. *}
-lemma tsttake_lemma: "(\<And>n. tsttake n x = tsttake n y) \<Longrightarrow> x = y"
-apply (rule Rep_tstream_inject [THEN iffD1])
-apply (rule esttake_lemma)
-apply (simp add: tsttake_def)
-done
-
 text {* If the number of elements from a set X in a stream s is infinite, then it remains infinite
 even after we drop from the stream all elements not in X. *}
 lemma srtdw_tstream[simp]: "srtdw (\<lambda>x. x \<noteq> \<surd>)\<cdot>(Rep_tstream x) \<in> {t::'a event stream. #t \<noteq> \<infinity> \<or> #({\<surd>} \<ominus> t) = \<infinity>}"
@@ -801,40 +1801,6 @@ apply (rule allI)
 using tstreaml1 
 apply blast
 apply (smt Abs_tstream_inverse iterate_Suc2 srtdw_tstream)
-done
-
-text {* Dropping n+1 blocks from a timed stream is the same as dropping the first block of the 
-stream apply applying tstrt and then dropping the remaining n blocks. *}
-lemma tstdrop_Suc_forw: "tstdrop (Suc n) x = tstdrop n (tstrt x)"
-apply (simp add: tstdrop_def)
-apply (simp add: tstrt_def)
-apply (simp add: espf2tspf_def del: iterate_Suc)
-apply (subst iterate_Suc2)
-apply simp
-done
-
-text {* Taking the (n+1)-th block of a stream is the same as removing the first block from it
-and afterwards taking the n-th block of the remainder. *}
-lemma tstnth_Suc [simp]: "tstnth (Suc n) x = tstnth n (tstrt x)"
-apply (simp add: tstnth_def)
-apply (simp add: tstdrop_Suc_forw)
-done
-
-text {* Removing the first 0 blocks of a stream returns the stream itself. *}
-lemma [simp]: "tstdrop 0 b = b"
-apply (simp add: tstdrop_def)
-apply (simp add: espf2tspf_def)
-done
-
-text {* Taking block 0 is the same as taking the head block of the timed stream. *}
-lemma [simp]: "tstnth 0 b = tsthd b"
-apply (simp add: tstnth_def)
-done
-
-text {* Taking the first elements of a stream means returning a prefix of the stream. *}
-lemma [simp]: "stakewhile p\<cdot>s \<sqsubseteq> s"
-apply (rule_tac x="s" in ind)
-apply auto
 done
 
 text {*For a timed stream which has at least a tick: if the function sdropwhile is used to drop
@@ -927,7 +1893,1361 @@ apply (subst esttake_sdropwhilel1)
 apply simp
 done
 
+(*-----------------------------------------------------------------------*)
 
+
+
+
+
+    Lemmas to lift from streams to tstreams:
+    some may be equivalent to another lemma in TStream_old.thy (above)
+
+
+
+
+
+(*-----------------------------------------------------------------------*)
+
+(*-----------------------------*)
+smap
+(*-----------------------------*)
+
+lemma rek2smap: assumes "\<And>a as. f\<cdot>(\<up>a \<bullet> as) = \<up>(g a) \<bullet> f\<cdot>as"
+  and "f\<cdot>\<bottom> = \<bottom>"
+  shows "f\<cdot>s = smap g\<cdot>s"
+
+(* smap for streams is equivalent to map for lists *)
+lemma smap2map: "smap g\<cdot>(<ls>) = <(map g ls)>"
+
+(* the notion of length is the same for streams as for lists *)
+lemma list2streamFin: "#(<ls>) = Fin (length ls)"
+
+(*-----------------------------*)
+siterate
+(*-----------------------------*)
+
+  lemma niterate_Suc2: "niterate (Suc n) F x = niterate n F (F x)"
+
+  (* Kopieren in Prelude. *)
+  lemma niter2iter: "iterate g\<cdot>h\<cdot>x = niterate g (Rep_cfun h) x"
+  
+  (* Prelude *)
+  lemma iterate_eps [simp]: assumes "g \<epsilon> = \<epsilon>"
+    shows "(iterate i\<cdot>(\<Lambda> h. (\<lambda>s. s \<bullet> h (g s)))\<cdot>\<bottom>) \<epsilon> = \<epsilon>" 
+  
+  (* prelude *)
+  lemma fix_eps [simp]: assumes "g \<epsilon> = \<epsilon>"
+    shows "(\<mu> h. (\<lambda>s. s \<bullet> h (g s))) \<epsilon> = \<epsilon>"
+  
+(* beginning the iteration of the function h with the element (h x) is equivalent to beginning the
+   iteration with x and dropping the head of the iteration *)
+lemma siterate_sdrop: "siterate h (h x) = sdrop 1\<cdot>(siterate h x)"
+
+(* iterating the function h infinitely often after having already iterated i times is equivalent to
+   beginning the iteration with x and then dropping i elements from the resulting stream *)
+lemma siterate_drop2iter: "siterate h (niterate i h x) = sdrop i\<cdot>(siterate h x)" 
+
+(* the head of iterating the function g on x doesn't have any applications of g *)
+lemma shd_siter[simp]: "shd (siterate g x) = x"
+
+(* dropping i elements from the infinite iteration of the function g on x and then extracting the head
+   is equivalent to computing the i'th iteration via niterate *)
+lemma shd_siters: "shd (sdrop i\<cdot>(siterate g x)) = niterate i g x"          
+
+(* the i'th element of the infinite stream of iterating the function g on x can alternatively be found
+   with (niterate i g x) *)
+lemma snth_siter: "snth i (siterate g x) = niterate i g x"
+
+(* dropping j elements from the stream x and then extracting the i'th element is equivalent to extracting
+   the i+j'th element directly *)
+lemma snth_sdrop: "snth i (sdrop j\<cdot>x) = snth (i+j) x"
+
+(* extracting the i+1'st element from the stream of iterating the function g on x is equivalent to extracting
+   the i'th element and then applying g one more time *)
+lemma snth_snth_siter: "snth (Suc i) (siterate g x) = g (snth i (siterate g x))"
+
+(* dropping the first element from the chain of iterates is equivalent to shifting the chain by applying g *)
+lemma sdrop_siter:  "sdrop 1\<cdot>(siterate g x) = smap g\<cdot>(siterate g x)"
+
+(* if the functions g and h commute then g also commutes with any number of iterations of h *)
+lemma iterate_insert: assumes "\<forall>z. h (g z) = g (h z)"
+  shows "niterate i h (g x) = g (niterate i h x)"
+
+(* lifts iterate_insert from particular iterations to streams of iterations *)
+lemma siterate_smap:  assumes "\<forall>z. g (h z) = h (g z)"
+  shows "smap g\<cdot>(siterate h x) = siterate h (g x)"
+
+(* shows the equivalence of an alternative recursive definition of iteration *)
+lemma rek2niter: assumes "xs = \<up>x \<bullet> (smap g\<cdot>xs)"
+  shows "snth i xs = niterate i g x"
+
+(* wichtig *)
+(* recursively mapping the function g over the rest of xs is equivalent to the stream of iterations of g on x *)
+lemma rek2siter: assumes "xs = \<up>x \<bullet> (smap g\<cdot>xs)"
+  shows "xs = siterate g x" 
+
+(* shows that siterate produces the least fixed point of the alternative recursive definition *)
+lemma fixrek2siter: "fix\<cdot>(\<Lambda> s . (\<up>x \<bullet> smap g\<cdot>s)) =  siterate g x"
+
+(* dropping elements from a stream of iterations is equivalent to adding iterations to every element *)
+lemma sdrop2smap: "sdrop i\<cdot>(siterate g x) = smap (niterate i g)\<cdot>(siterate g x)"
+
+(* doing smap in two passes, applying h in the first pass and g in the second is equivalent to applying
+   g \<circ> h in a single pass *)
+lemma smaps2smap: "smap g\<cdot>(smap h\<cdot>xs) =  smap (\<lambda> x. g (h x))\<cdot>xs"
+
+(* iterating the function g on x is equivalent to the stream produced by concatenating \<up>x and the 
+   iteration of g on x shifted by another application of g *)
+lemma siterate_unfold: "siterate g x = \<up>x \<bullet> smap g\<cdot>(siterate g x)"
+
+(* iterating the identity function produces an infinite constant stream of the element x *)
+lemma siter2sinf: "siterate id x = sinftimes (\<up>x)"
+
+(* if g acts as the identity for the element x then iterating g on x produces an infinite constant
+   stream of x *)
+lemma siter2sinf2: assumes "g x = x"
+  shows "siterate g x = sinftimes (\<up>x)"
+
+(*-----------------------------*)
+siterateBlock
+(*-----------------------------*)
+
+(* block-iterating the function f on the stream x is equivalent to the stream produced by concatenating x
+   and the iteration of f on x shifted by another application of f *)
+lemma siterateBlock_unfold: "siterateBlock f x = x \<bullet> siterateBlock f (f x)"
+
+(* if g doesn't change the length of the input, then iterating g doesn't either *)
+lemma niterate_len[simp]: assumes "\<forall>z. #z = #(g z)" 
+  shows "#((niterate i g) x) = #x"
+
+(* dropping i blocks from siterateBlock g x is equivalent to beginning siterateBlock after i iterations
+   of g have already been applied *)
+lemma siterateBlock_sdrop2: assumes "#x = Fin y" and "\<forall>z. #z = #(g z)" 
+  shows "sdrop (y*i)\<cdot>(siterateBlock g x) = siterateBlock g ((niterate i g) x)"
+
+(* the y*i'th element of siterateBlock is the same as the head of the i'th iteration *)
+lemma siterateBlock_snth: assumes "#x = Fin y" and "\<forall>z. #z = #(g z)" and "#x > Fin 0" 
+  shows "snth (y*i) (siterateBlock g x) = shd ((niterate i g) x)"
+
+(* dropping a single block from siterateBlock is equivalent to beginning the iteration with (g x) *)
+lemma siterateBlock_sdrop: assumes "#x = Fin y"
+  shows "sdrop y\<cdot>(siterateBlock g x) = siterateBlock g (g x)"
+
+(* block-iterating the function g on the empty stream produces the empty stream again *)
+lemma siterateBlock_eps[simp]: assumes "g \<epsilon> = \<epsilon>"
+  shows "siterateBlock g \<epsilon> = \<epsilon>" 
+
+(* block-iterating the identity on the element x is equivalent to infinitely repeating x *)
+lemma siterateBlock2sinf: "siterateBlock id x = sinftimes x"
+
+(* siterateBlock doesn't affect infinite streams *)
+lemma siterBlock_inf [simp]: assumes "#s = \<infinity>"
+  shows "siterateBlock f s = s"
+
+(* the first element of siterateBlock doesn't have any applications of g *)
+lemma siterateBlock_shd [simp]: "shd (siterateBlock g (\<up>x)) = x"
+
+(* helper lemma for siterateBlock2siter *)
+lemma siterateBlock2niter: "snth i (siterateBlock (\<lambda>s. (smap g\<cdot>s)) (\<up>x)) = niterate i g x" (is "snth i (?B) = ?N i")
+
+(* siterateBlock creates an infinitely long stream *)
+lemma siterateBlock_len [simp]: "#(siterateBlock (\<lambda>s. (smap g\<cdot>s)) (\<up>x)) = \<infinity>"
+
+(* iterating the identity function commutes with any function f *)
+lemma siterateBlock_smap: "siterateBlock id (smap f\<cdot>x) =  smap f\<cdot>(siterateBlock id x)"
+
+(* converting x to a singleton stream and applying siterateBlock using smap g is equivalent to
+   iterating using g directly on x *)
+lemma siterateBlock2siter [simp]: "siterateBlock (\<lambda>s. (smap g\<cdot>s)) (\<up>x) = siterate g x" 
+
+(*-----------------------------*)
+szip
+(*-----------------------------*)
+(* zipping the infinite constant streams \<up>x\<infinity> and \<up>y\<infinity> is equivalent to infinitely repeating the tuple
+   \<up>(x, y) *)
+lemma szip2sinftimes[simp]: "szip\<cdot>\<up>x\<infinity>\<cdot>\<up>y\<infinity> = \<up>(x, y)\<infinity> "
+
+lemma szip_len [simp]: "#(szip\<cdot>as\<cdot>bs) = min (#as) (#bs)"
+
+lemma stake_mono[simp]: assumes "i\<le>j"
+  shows "stake i\<cdot>s \<sqsubseteq> stake j\<cdot>s"
+
+lemma sconc_sdom: "sdom\<cdot>(s1\<bullet>s2) \<subseteq> sdom\<cdot>s1 \<union> sdom\<cdot>s2"
+
+lemma sntimes_sdom1[simp]: "sdom\<cdot>(sntimes n s) \<subseteq> sdom\<cdot>s"
+
+(*-----------------------------*)
+adm
+(*-----------------------------*)
+
+(* for functions g and h producing sets the following predicate is admissible *)
+lemma adm_subsetEq [simp]: "adm (\<lambda>s. g\<cdot>s \<subseteq> h\<cdot>s)"
+
+(* for a function g producing sets and a set cs the following predicate is admissible *)
+lemma adm_subsetEq_rc [simp]: "adm (\<lambda>s. g\<cdot>s \<subseteq> cs)"
+
+(* for a function h producing sets and a set cs the following predicate is admissible *)
+lemma adm_subsetEq_lc [simp]: "adm (\<lambda>s. cs \<subseteq> h\<cdot>s)"
+
+(* for a set cs and a function g producing sets, the following predicate is admissible *)
+lemma adm_subsetNEq_rc [simp]: "adm (\<lambda>s. \<not> g\<cdot>s \<subseteq> cs)"
+
+(* for a function g over streams, the admissiblity of the following predicate over streams holds *)
+lemma sdom_adm2[simp]: "adm (\<lambda>a. sdom\<cdot>(g\<cdot>a) \<subseteq> sdom\<cdot>a)"
+
+lemma adm_finstream [simp]: "adm (\<lambda>s. #s<\<infinity> \<longrightarrow> P s)"
+
+lemma adm_fin_below: "adm (\<lambda>x . \<not> Fin n \<sqsubseteq> # x)"
+
+lemma adm_fin_below2: "adm (\<lambda>x . \<not> Fin n \<le> # x)"
+
+(*-----------------------------*)
+sdom
+(*-----------------------------*)
+(* appending another stream xs can't shrink the domain of a stream x *)
+lemma sdom_sconc[simp]: "sdom\<cdot>x \<subseteq> sdom\<cdot>(x \<bullet> xs)"
+
+(* repeating a stream doesn't add elements to the domain *)
+lemma sinftimes_sdom[simp]: "sdom\<cdot>(sinftimes s) \<subseteq> sdom\<cdot>s"
+
+(* repeating a stream doesn't remove elements from the domain either *)
+lemma sinf_sdom [simp]: "sdom\<cdot>(s\<infinity>) = sdom\<cdot>s"
+
+(* sfilter doesn't add elements to the domain *)
+lemma sbfilter_sbdom[simp]: "sdom\<cdot>(sfilter A\<cdot>s) \<subseteq> sdom\<cdot>s"
+
+(* smap can only produce elements in the range of the mapped function f *)
+lemma smap_sdom_range [simp]: "sdom\<cdot>(smap f\<cdot>s) \<subseteq> range f"
+
+(* every element produced by (smap f) is in the image of the function f *)
+lemma smap_sdom: "sdom\<cdot>(smap f\<cdot>s) =  f ` sdom\<cdot>s"
+
+(* Lemmas für SB *)
+(* if the stream a is a prefix of the stream b then a's domain is a subset of b's *)
+lemma f1 [simp]: "a \<sqsubseteq> b \<Longrightarrow> sdom\<cdot>a \<subseteq> sdom\<cdot>b"
+
+(* the lub of a chain of streams contains any elements contained in any stream in the chain *)
+lemma l4: "chain S \<Longrightarrow> sdom\<cdot>(S i) \<subseteq> sdom\<cdot>(\<Squnion> j. S j)"
+
+lemma l402: "chain S \<Longrightarrow> S i \<noteq> \<up>8 \<Longrightarrow> \<forall>i. S i \<sqsubseteq> s \<Longrightarrow> (\<Squnion> j. S j) \<sqsubseteq> s"
+
+lemma l403: "chain S \<Longrightarrow> \<forall>i. S i \<sqsubseteq> s \<Longrightarrow> \<forall>i. sdom\<cdot>(S i) \<subseteq> sdom\<cdot>s"
+
+lemma l404: "chain S \<Longrightarrow>  \<forall>i. S i \<sqsubseteq> s \<Longrightarrow> sdom\<cdot>(\<Squnion> j. S j) \<subseteq> sdom\<cdot>s"
+
+(* streams appearing later in the chain S contain the elements of preceding streams *)
+lemma l405: "chain S \<Longrightarrow> i \<le> j \<Longrightarrow> sdom\<cdot>(S i) \<subseteq> sdom\<cdot>(S j)"
+
+lemma l43: "chain S \<Longrightarrow> finite_chain S \<Longrightarrow> sdom\<cdot>(\<Squnion> j. S j) \<subseteq> (\<Union>i. sdom\<cdot>(S i))"
+
+(*wichtig*)
+(* the lub doesn't have any elements that don't appear somewhere in the chain *)
+lemma sdom_lub: "chain S \<Longrightarrow> sdom\<cdot>(\<Squnion> j. S j) = (\<Union>i. sdom\<cdot>(S i))"
+
+text {*Sei i in N ein index der Kette S von Strömen und B eine Menge von Nachrichten. *}
+lemma l44: assumes "chain S" and "\<forall>i. sdom\<cdot>(S i) \<subseteq> B"
+  shows "sdom\<cdot>(\<Squnion> j. S j) \<subseteq> B"
+
+lemma l6: "chain S \<Longrightarrow> \<forall>i. sdom\<cdot>(S i) \<subseteq> B \<Longrightarrow> sdom\<cdot>(\<Squnion> j. S (j + (SOME k. A))) \<subseteq> B"
+
+(* dropping elements can't increase the domain *)
+lemma sdrop_sdom[simp]: "sdom\<cdot>(sdrop n\<cdot>s)\<subseteq>sdom\<cdot>s"
+
+(*-----------------------------*)
+sfoot
+(*-----------------------------*)
+
+(* returns the last element of a stream *)
+(* the stream must not be empty or infinitely long *)
+definition sfoot :: "'a stream \<Rightarrow> 'a" where
+"sfoot s = snth (THE a. lnsuc\<cdot>(Fin a) = #s) s"
+
+(* appending the singleton stream \<up>a to a finite stream s causes sfoot to extract a again *)
+lemma sfoot1[simp]: assumes "xs = s\<bullet>(\<up>a)" and "#xs < \<infinity>"
+   shows "sfoot xs = a"
+
+(* sfoot extracts the element a from any finite stream ending with \<up>a *)
+lemma sfoot12 [simp]: assumes "#s<\<infinity>"
+  shows "sfoot (s\<bullet>\<up>a) = a"
+
+(* sfoot extracts a from the singleton stream \<up>a *)
+lemma sfoot_one [simp]: "sfoot (\<up>a) = a"
+
+
+
+(* if the foot of a non-empty stream xs is a, then xs consists of another stream s (possibly empty)
+   concatenated with \<up>a *)
+lemma sfoot2 [simp]: assumes "sfoot xs = a" and "xs\<noteq>\<epsilon>"
+  shows "\<exists>s. xs = s \<bullet> \<up>a"
+
+(* when sfoot is applied to the concatenation of two finite streams s and xs, and xs is not empty,
+   then sfoot will produce the foot of xs *)
+lemma sfoot_conc [simp]: assumes "#s<\<infinity>" and "#xs<\<infinity>" and "xs\<noteq>\<epsilon>"
+  shows "sfoot (s\<bullet>xs) = sfoot xs"
+
+(* if the finite stream s contains more than one element then the foot of s will be the foot of the
+   rest of s *)
+lemma sfoot_sdrop: assumes "Fin 1<#s" and "#s<\<infinity>"
+  shows "sfoot (srt\<cdot>s) = sfoot s"
+
+lemma [simp]: assumes "#xs < \<infinity>"
+  shows "sfoot (\<up>a \<bullet> \<up>b \<bullet> xs) = sfoot (\<up>b \<bullet> xs)"
+
+(* the foot of any stream s is the nth element of s for some natural number n *)
+lemma sfoot_exists [simp]:"\<exists>n. snth n s = sfoot s"
+
+(* if the stream s contains n+1 elements then the foot of s will be found at index n *)
+lemma  sfoot_exists2: 
+  shows "Fin (Suc n) = #s \<Longrightarrow> snth n s = sfoot s"
+
+(*-----------------------------*)
+sfilter
+(*-----------------------------*)
+
+(* if filtering the stream s2 with the set A produces infinitely many elements then prepending any
+   finite stream s1 to s2 will still produce infinitely many elements *)
+lemma sfilter_conc2[simp]: assumes "#(sfilter A\<cdot>s2) = \<infinity>" and "#s1 < \<infinity>"
+  shows "#(sfilter A\<cdot>(s1\<bullet>s2)) = \<infinity>"
+
+(* if the stream z is a prefix of another non-empty stream (y\<bullet>\<up>a) but isn't equal to it, then z is
+   also a prefix of y *)
+lemma below_conc: assumes "z \<sqsubseteq> (y\<bullet>\<up>a)" and "z\<noteq>(y\<bullet>\<up>a)"
+  shows "z\<sqsubseteq>y"
+
+(* for any set A and singleton stream \<up>a the following predicate over streams is admissible *)
+lemma sfilter_conc_adm: "adm (\<lambda>b. #b<\<infinity> \<longrightarrow> #(A \<ominus> b) < #(A \<ominus> b \<bullet> \<up>a))" (is "adm ?F")
+
+(* the element a is kept when filtering with A, so (x \<bullet> \<up>a) produces a larger result than just x,
+   provided that x is finite *)
+lemma sfilter_conc: assumes "a\<in>A" 
+  shows "#x<\<infinity> \<Longrightarrow> #(A \<ominus> x) < #(A \<ominus> (x \<bullet> \<up>a))" (is "_ \<Longrightarrow> ?F x")
+
+(* for any finite stream s and set A, if filtering s with A doesn't produce the empty stream, then
+   filtering and infinite repetition are associative *)
+lemma sfilter_sinf [simp]: assumes "#s<\<infinity>" and "(A \<ominus> s) \<noteq> \<epsilon>"
+  shows "A \<ominus> (s\<infinity>) = (A \<ominus> s)\<infinity>"
+
+(* if filtering the stream s with the set A produces infinitely many elements, then filtering the 
+   rest of s with A also produces infinitely many elements *)
+lemma sfilter_srt_sinf [simp]: assumes "#(A \<ominus> s) = \<infinity>" 
+  shows  "#(A \<ominus> (srt\<cdot>s)) = \<infinity>"
+
+text {* Streams can be split for filtering *}
+lemma add_sfilter2: assumes "#x < \<infinity>" 
+  shows "sfilter A\<cdot>(x \<bullet> y) = sfilter A\<cdot>x \<bullet> sfilter A\<cdot>y"
+
+(* if none of the elements in the domain of the stream s are in the set A, then filtering s with A
+   produces the empty stream *)
+lemma sfilter_sdom_eps: "sdom\<cdot>s \<inter> A = {} \<Longrightarrow> (A \<ominus> s) = \<epsilon>"
+
+(*-----------------------------*)
+stakewhile
+(*-----------------------------*)
+(* stakewhile can't increase the length of a stream *)
+lemma stakewhile_less [simp]: "#(stakewhile f\<cdot>s)\<le>#s"
+
+(* stakewhile doesn't take elements past an element that fails the predicate f *)
+lemma stakewhile_slen[simp]: "\<not>f (snth n s) \<Longrightarrow> #(stakewhile f\<cdot>s)\<le>Fin n"
+
+(* the prefix of the constant stream of x's whose elements aren't equal to x is empty *)
+lemma [simp]: "stakewhile (\<lambda>a. a \<noteq> x)\<cdot>\<up>x\<infinity> = \<epsilon>"
+
+(* stakewhile produces a prefix of the input *)
+lemma stakewhile_below[simp]: "stakewhile f\<cdot>s \<sqsubseteq> s"
+
+(* stwbl produces a prefix of the input *)
+lemma stwbl_below [simp]: "stwbl f\<cdot>s \<sqsubseteq> s"
+
+(* stakewhile doesn't include the element a that failed the predicate f in the result *)
+lemma stakewhile_dom[simp]:assumes "\<not>f a"
+  shows "a\<notin>sdom\<cdot>(stakewhile f\<cdot>s)"
+
+(* if stakewhile leaves a stream s unchanged, then every element must pass the predicate f *) 
+lemma stakewhile_id_snth: assumes "stakewhile f\<cdot>s = s" and "Fin n < #s"
+  shows "f (snth n s)"
+
+(* if stakewhile produces a result of length n or greater, then the nth element in s must pass f *)
+lemma stakewhile_snth[simp]: assumes  "Fin n < #(stakewhile f\<cdot>s)"
+  shows "f (snth n s)"
+
+(* if stakewhile changes the stream s, then there must be an element in s that fails the predicate f *)
+lemma stakewhile_notin [simp]: 
+  shows "stakewhile f\<cdot>s \<noteq> s \<Longrightarrow> #(stakewhile f\<cdot>s) = Fin n \<Longrightarrow> \<not> f (snth n s)"
+
+(* if stakewhile changes the stream s, which is a prefix of the stream s', then stakewhile of s and s'
+   produce the same result *)
+lemma stakewhile_finite_below: 
+  shows "stakewhile f\<cdot>s \<noteq> s \<Longrightarrow> s\<sqsubseteq>s' \<Longrightarrow> stakewhile f\<cdot>s = stakewhile f\<cdot>s'"
+
+(* if there is an element in the stream s that fails the predicate f, then stakewhile will change s *)
+lemma stakewhile_noteq[simp]: assumes "\<not>f (snth n s)" and "Fin n < #s"
+  shows "stakewhile f\<cdot>s \<noteq> s"
+
+(* if there's an element a in the domain of s which fails the predicate f, then stwbl will produce a
+   finite result *)
+lemma stwbl_fin [simp]: assumes "a\<in>sdom\<cdot>s" and "\<not> f a"
+  shows "#(stwbl f\<cdot>s) < \<infinity>"
+
+(* stwbl keeps at least all the elements that stakewhile keeps *)
+lemma stakewhile_stwbl [simp]: "stakewhile f\<cdot>(stwbl f\<cdot>s) = stakewhile f\<cdot>s"
+
+(*-----------------------------*)
+sscanl
+(*-----------------------------*)
+
+(* dropping the first element of the result of sscanl is equivalent to beginning the scan with 
+   (f a (shd s)) as the initial element and proceeding with the rest of the input *)
+lemma sscanl_srt: "srt\<cdot>(sscanl f a\<cdot>s) = sscanl f (f a (shd s)) \<cdot>(srt\<cdot>s) "
+
+(* the n + 1'st element produced by sscanl is the result of mering the n + 1'st item of s with the n'th
+   element produced by sscanl *)
+lemma sscanl_snth:  "Fin (Suc n) < #s \<Longrightarrow> snth (Suc n) (sscanl f a\<cdot>s) = f (snth n (sscanl f a\<cdot>s)) (snth (Suc n) s)"
+
+(* the result of sscanl has the same length as the input stream x *)
+lemma fair_sscanl[simp]: "#(sscanl f a\<cdot>x) = #x"
+apply (rule spec [where x = a])
+
+lemma sdom_sfilter1: assumes "x\<in>sdom\<cdot>(A\<ominus>s)" 
+  shows "x\<in>A"
+
+lemma sdom_subset: assumes "u\<noteq>\<bottom>"
+  shows "sdom\<cdot>s\<subseteq>sdom\<cdot>(u && s)"
+
+lemma sdom_sfilter_subset: assumes "u\<noteq>\<bottom>"
+  shows "sdom\<cdot>(A\<ominus>s)\<subseteq>sdom\<cdot>(A \<ominus> (u && s))"
+
+lemma sdom_sfilter2: assumes  "x\<in>A"
+  shows "x\<in>sdom\<cdot>s \<Longrightarrow> x\<in>(sdom\<cdot>(A \<ominus> s))"
+
+lemma sdom_sfilter[simp]: "sdom\<cdot>(A\<ominus>s) = sdom\<cdot>s \<inter> A"
+
+lemma stwbl_id_help:
+  shows "(\<forall>a\<in>sdom\<cdot>s. f a) \<longrightarrow> stwbl f\<cdot>s = s"
+
+lemma stwbl_id [simp]: "(\<And> a. a\<in>sdom\<cdot>s \<Longrightarrow> f a) \<Longrightarrow> stwbl f\<cdot>s = s"
+
+lemma stwbl_notEps: "s\<noteq>\<epsilon> \<Longrightarrow> (stwbl f\<cdot>s)\<noteq>\<epsilon>"
+
+lemma stwbl2stakewhile: assumes "a\<in>sdom\<cdot>s" and "\<not>f a"
+  shows "\<exists>x. (stwbl f\<cdot>s) = stakewhile f\<cdot>s \<bullet> \<up>x" 
+
+lemma stwbl_sfoot: assumes "a\<in>sdom\<cdot>s" and "\<not>f a"
+  shows "\<not> f (sfoot (stwbl f\<cdot>s))" 
+
+lemma stwbl2stbl[simp]: "stwbl f\<cdot>(stwbl f\<cdot>s) = stwbl f\<cdot>s"
+
+lemma stakewhileDropwhile[simp]: "stakewhile f\<cdot>s \<bullet> (sdropwhile f\<cdot>s) = s "
+
+lemma stwbl_eps: "stwbl f\<cdot>s = \<epsilon> \<longleftrightarrow> s=\<epsilon>"
+
+lemma srtdw_stwbl [simp]: "srtdw f\<cdot> (stwbl f\<cdot>s) = \<epsilon>" (is "?F s")
+
+lemma sconc_neq_h: assumes "s1 \<noteq> s2"
+  shows "#a < \<infinity> \<longrightarrow> a \<bullet> s1 \<noteq> a \<bullet> s2"
+
+lemma sconc_neq: assumes "s1 \<noteq> s2" and "#a < \<infinity>"
+  shows "a \<bullet> s1 \<noteq> a \<bullet> s2"
+
+lemma adm_nsdom [simp]:  "adm (\<lambda>x. b \<notin> sdom\<cdot>x)"
+
+lemma strdw_filter_h: "b\<in>sdom\<cdot>s \<longrightarrow> lnsuc\<cdot>(#({b} \<ominus> srtdw (\<lambda>a. a \<noteq> b)\<cdot>s)) = #({b} \<ominus> s)"
+
+lemma strdw_filter: "b\<in>sdom\<cdot>s \<Longrightarrow> lnsuc\<cdot>(#({b} \<ominus> srtdw (\<lambda>a. a \<noteq> b)\<cdot>s)) = #({b} \<ominus> s)"
+
+lemma stwbl_filterlen[simp]: "b\<in>sdom\<cdot>ts \<longrightarrow> #({b} \<ominus> stwbl (\<lambda>a. a \<noteq> b)\<cdot>ts) = Fin 1"
+
+lemma srtdw_conc: "b\<in>sdom\<cdot>ts  \<Longrightarrow> (srtdw (\<lambda>a. a \<noteq> b)\<cdot>(ts \<bullet> as)) = srtdw (\<lambda>a. a \<noteq> b)\<cdot>(ts) \<bullet> as"
+
+lemma stwbl_conc[simp]: "b\<in>sdom\<cdot>ts \<Longrightarrow>
+    (stwbl (\<lambda>a. a \<noteq> b)\<cdot>(stwbl (\<lambda>a. a \<noteq> b)\<cdot>ts \<bullet> xs)) =
+    (stwbl (\<lambda>a. a \<noteq> b)\<cdot>(ts))"
+
+(*-----------------------------*)
+merge
+(*-----------------------------*)
+
+definition merge:: "('a  \<Rightarrow> 'b \<Rightarrow> 'c) \<Rightarrow> 'a stream \<rightarrow> 'b stream \<rightarrow> 'c stream" where
+"merge f \<equiv> \<Lambda> s1 s2 . smap (\<lambda> s3. f (fst s3) (snd s3))\<cdot>(szip\<cdot>s1\<cdot>s2)"
+
+lemma merge_unfold: "merge f\<cdot>(\<up>x \<bullet> xs)\<cdot>(\<up>y\<bullet> ys) = \<up>(f x y) \<bullet> merge f\<cdot>xs\<cdot>ys"
+
+lemma merge_snth[simp]: "Fin n <#xs \<Longrightarrow>Fin n < #ys \<Longrightarrow> snth n (merge f\<cdot>xs\<cdot>ys) = f (snth n xs) (snth n ys)"
+
+lemma merge_eps1[simp]: "merge f\<cdot>\<epsilon>\<cdot>ys = \<epsilon>"
+
+lemma merge_eps2[simp]: "merge f\<cdot>xs\<cdot>\<epsilon> = \<epsilon>"
+
+lemma [simp]: "srt\<cdot>(merge f\<cdot>(\<up>a \<bullet> as)\<cdot>(\<up>b \<bullet> bs)) = merge f\<cdot>as\<cdot>bs"
+
+lemma merge_len [simp]: "#(merge f\<cdot>as\<cdot>bs) = min (#as) (#bs)"
+
+lemma merge_commutative: assumes "\<And> a b. f a b = f b a"
+
+(*-----------------------------*)
+sconc
+(*-----------------------------*)
+
+
+
+(* the lazy stream constructor and concatenation are associative *) 
+lemma sconc_scons': "(updis a && as) \<bullet> s = updis a && (as \<bullet> s)"
+
+(* the lazy stream constructor is equivalent to concatenation with a singleton stream *)
+lemma lscons_conv: "updis a && s = \<up>a \<bullet> s"
+
+(* concatenation with respect to singleton streams is associative *)
+lemma sconc_scons[simp]: "(\<up>a \<bullet> as) \<bullet> s = \<up>a \<bullet> (as \<bullet> s)"
+
+lemma scases: "\<And>x P. \<lbrakk>x = \<epsilon> \<Longrightarrow> P; \<And>a s. x = \<up>a \<bullet> s \<Longrightarrow> P\<rbrakk> \<Longrightarrow> P"
+
+(* Single element streams commute with the stake operation. *)
+lemma stake_Suc[simp]: "stake (Suc n)\<cdot>(\<up>a \<bullet> as) = \<up>a \<bullet> stake n\<cdot>as"
+
+(* shd is the inverse of prepending a singleton *)
+lemma shd1[simp]: "shd (\<up>a \<bullet> s) = a"
+
+(* srt is the inverse of appending to a singleton *)
+lemma [simp]: "srt\<cdot>(\<up>a\<bullet>as) = as"
+
+(* appending to a singleton is monotone *)
+lemma [simp]: "\<up>a \<sqsubseteq> \<up>a \<bullet> s"
+apply (subst sconc_snd_empty [of "\<up>a", THEN sym])
+
+(* updis is a bijection *)
+lemma updis_eq: "(updis a = updis b) = (a = b)"
+
+(* the discrete order only considers equal elements to be ordered *)
+lemma updis_eq2: "(updis a \<sqsubseteq> updis b) = (a = b)"
+
+text {* Mapping a stream to head and rest is injective *}
+lemma inject_scons: "\<up>a \<bullet> s1 = \<up>b \<bullet> s2 \<Longrightarrow> a = b \<and> s1 = s2"
+
+
+
+(* appending a stream x to a singleton stream and producing another singleton stream implies that 
+   the two singleton streams are equal and x was empty *)
+lemma [simp]: "(\<up>a \<bullet> x = \<up>c) = (a = c \<and> x = \<epsilon>)"
+
+lemma [simp]: "(\<up>c = \<up>a \<bullet> x) = (a = c \<and> x = \<epsilon>)"
+
+lemma [simp]: "(\<up>a \<bullet> x \<sqsubseteq> \<up>b) = (a = b \<and> x = \<epsilon>)" 
+
+(* if a singleton stream is the prefix of another stream then the heads of the two streams must match *)
+lemma [simp]: "(\<up>a \<sqsubseteq> \<up>b \<bullet> x) = (a = b)" 
+
+(* if x isn't empty then concatenating head and rest leaves the stream unchanged *)
+lemma surj_scons: "x\<noteq>\<epsilon> \<Longrightarrow> \<up>(shd x) \<bullet> (srt\<cdot>x) = x"
+
+(* any nonempty prefix of a stream y is still a prefix when ignoring the first element *)
+lemma less_fst_sconsD: "\<up>a \<bullet> as \<sqsubseteq> y \<Longrightarrow> \<exists>ry. y = \<up>a \<bullet> ry \<and> as \<sqsubseteq> ry"
+
+(* the prefix of any non-empty stream is either empty or shares the same first element *)
+lemma less_snd_sconsD: 
+  "x \<sqsubseteq> \<up>a\<bullet>as \<Longrightarrow> (x = \<epsilon>) \<or> (\<exists>rx. x = \<up>a\<bullet>rx \<and> rx \<sqsubseteq> as)"
+
+(* semantically equivalent to less_fst_sconsD *)
+lemma lessD: 
+  "x \<sqsubseteq> y \<Longrightarrow> (x = \<epsilon>) \<or> (\<exists>a q w. x = \<up>a\<bullet>q \<and> y = \<up>a\<bullet>w \<and> q \<sqsubseteq> w)"
+
+(*-----------------------------*)
+slen
+(*-----------------------------*)
+
+
+text {* For finite streams, their lengths are added on concatenation *}
+lemma slen_sconc_all_finite: 
+  "\<forall>x y n. #x = Fin k \<and> #y = Fin n \<longrightarrow> #(x\<bullet>y) = Fin (k+n)" 
+
+text {* Streams with infinite prefixes are infinite *}
+lemma mono_fst_infD: "\<lbrakk>#x = \<infinity>; x \<sqsubseteq> y\<rbrakk> \<Longrightarrow> #y = \<infinity> "
+
+text {* For @{term "s \<sqsubseteq> t"} with @{term s} and @{term t} of
+  equal length, all finite prefixes are identical *}
+lemma stake_eq_slen_eq_and_less: 
+  "\<forall>s t. #s = #t \<and> s \<sqsubseteq> t \<longrightarrow> stake n\<cdot>s = stake n\<cdot>t"
+
+text {* For @{term "s \<sqsubseteq> t"} with @{term s} and @{term t} of
+  equal length, @{term s} and @{term t} are identical *}
+lemma eq_slen_eq_and_less: "\<lbrakk>#s = #t; s \<sqsubseteq> t\<rbrakk> \<Longrightarrow> s = t"
+
+text {* Infinite prefixes are equal to the original stream *}
+lemma eq_less_and_fst_inf: "\<lbrakk>s1 \<sqsubseteq> s2; #s1 = \<infinity>\<rbrakk> \<Longrightarrow> s1 = s2"
+
+text {* For infinite streams, @{text "stake n"} returns @{text "n"} elements *}
+lemma slen_stake_fst_inf[rule_format]: 
+  "\<forall>x. #x = \<infinity> \<longrightarrow> #(stake n\<cdot>x) = Fin n"
+
+(* mapping a stream to its length is a monotone function *)
+lemma mono_slen: "x \<sqsubseteq> y \<Longrightarrow> #x \<le> #y"
+
+text {* A stream is shorter than @{text "n+1"} iff its rest is shorter than @{text "n"} *}
+lemma slen_rt_ile_eq: "(#x \<le> Fin (Suc n)) = (#(srt\<cdot>x) \<le> Fin n)"  
+
+text {* If @{text "#x < #y"}, this also applies to the streams' rests (for nonempty, finite x) *}
+lemma smono_slen_rt_lemma: 
+  "#x = Fin k \<and> x \<noteq> \<epsilon> \<and> #x < #y \<longrightarrow> #(srt\<cdot>x) < #(srt\<cdot>y)"
+
+text {* If @{text "#x < #y"}, this also applies to the streams' rests (for finite x) *}
+lemma smono_slen_rt: "\<lbrakk>x \<noteq> \<epsilon>; #x < #y\<rbrakk> \<Longrightarrow> #(srt\<cdot>x) < #(srt\<cdot>y)"
+
+text {* Infinite elements of a stream chain are equal to the LUB *}
+lemma inf2max: "\<lbrakk>chain Y; #(Y k) = \<infinity>\<rbrakk> \<Longrightarrow> Y k = (\<Squnion>i. Y i)"
+
+text {* @{text "stake n"} returns at most @{text "n"} elements *}
+lemma ub_slen_stake[simp]: "#(stake n\<cdot>x) \<le> Fin n"
+
+text {* @{text "stake"} always returns finite streams *}
+lemma [simp]: "#(stake n\<cdot>x) \<noteq> \<infinity>"
+
+text {* @{text "stake"}ing at least @{text "#x"} elements returns @{text "x"} again *}
+lemma fin2stake_lemma: "\<forall>x k. #x = Fin k \<and> k\<le>i \<longrightarrow> stake i\<cdot>x = x"
+
+text {* @{text "stake"}ing @{text "#x"} elements returns @{text "x"} again *}
+lemma fin2stake:"#x = Fin n \<Longrightarrow> stake n\<cdot>x = x"
+
+(*-----------------------------*)
+induction
+(*-----------------------------*)
+
+lemma stakeind: 
+  "\<forall>x. (P \<epsilon> \<and> (\<forall>a s. P s \<longrightarrow> P (\<up>a \<bullet> s))) \<longrightarrow> P (stake n\<cdot>x)"
+
+text {* induction for finite streams *}
+lemma finind:
+  "\<lbrakk>#x = Fin n; P \<epsilon>; \<And>a s. P s \<Longrightarrow> P (\<up>a \<bullet> s)\<rbrakk> \<Longrightarrow> P x"
+
+text {* induction for infinite streams and admissable predicates *}
+lemma ind: 
+  "\<lbrakk>adm P; P \<epsilon>; \<And>a s. P s  \<Longrightarrow> P (\<up>a \<bullet> s)\<rbrakk> \<Longrightarrow> P x"
+
+(*-----------------------------*)
+sdrop
+(*-----------------------------*)
+
+lemma sdrop_0[simp]: "sdrop 0\<cdot>s = s"
+
+(* dropping an additional element is equivalent to calling srt *)
+lemma sdrop_back_rt: "sdrop (Suc n)\<cdot>s = srt\<cdot>(sdrop n\<cdot>s)"
+
+lemma sdrop_forw_rt: "sdrop (Suc n)\<cdot>s = sdrop n\<cdot>(srt\<cdot>s)"
+
+(* dropping n + 1 elements from a non-empty stream is equivalent to dropping n items from the rest *)
+lemma sdrop_scons[simp]: "sdrop (Suc n)\<cdot>(\<up>a \<bullet> as) = sdrop n\<cdot>as"
+
+(* if dropping n items produces the empty stream then the stream contains n elements or less *)
+lemma sdrop_stakel1: "\<forall>s. sdrop n\<cdot>s = \<epsilon> \<longrightarrow> stake n\<cdot>s = s"
+
+text {* Dropping from infinite streams still returns infinite streams *}
+lemma fair_sdrop[rule_format]: 
+  "\<forall>x. #x = \<infinity> \<longrightarrow> #(sdrop n\<cdot>x) = \<infinity>"
+
+text {* streams can be split by @{term stake} and @{term sdrop} *}
+lemma split_streaml1[simp]: 
+  "stake n\<cdot>s \<bullet> sdrop n\<cdot>s = s"
+
+text {* @{term sdrop} may only create infinite outputs for infinite inputs *}
+lemma fair_sdrop_rev:
+  "#(sdrop k\<cdot>x) = \<infinity> \<Longrightarrow> #x = \<infinity>"
+
+text {* construct @{term "sdrop j"} from @{term "sdrop k"} (with @{term "j \<le> k"}) *}
+lemma sdropl5:
+  "j \<le> k \<Longrightarrow> sdrop j\<cdot>(stake k\<cdot>x) \<bullet> sdrop k\<cdot>x = sdrop j\<cdot>x"
+
+text {* Dropping as inverse of prepending a finite stream *}
+lemma sdropl6:
+  "#x = Fin k \<Longrightarrow> sdrop k\<cdot>(x \<bullet> y) = y"
+
+(*-----------------------------*)
+snth
+(*-----------------------------*)
+
+(* semantically equivalent to snth_rt *)
+lemma snth_scons[simp]: "snth (Suc k) (\<up>a \<bullet> s) = snth k s"
+
+
+(*-----------------------------*)
+lemmas
+(*-----------------------------*)
+
+
+(*-----------------------------*)
+approx, chains, cont
+(*-----------------------------*)
+
+
+
+text {* If @{term f} is monotone and for each @{term x} there is a finite prefix
+  @{term y} such that @{term "f x = f y"}, @{term f} is continuous *}
+lemma pr_contI: 
+  "\<lbrakk>monofun f; \<forall>x.\<exists>n. (f x) = f (stake n\<cdot>x)\<rbrakk> \<Longrightarrow> cont f"
+
+text {* For continuous functions, each finite prefix of @{term "f\<cdot>x"} only
+  depends on a finite prefix of @{term "x"} *}
+lemma fun_approxl1: 
+  "\<exists>j. stake k\<cdot>(f\<cdot>x) = stake k\<cdot>(f\<cdot>(stake j\<cdot>x))"
+
+text {* For continuous functions, any finite output for stream @{term "x"} can also be
+  obtained by some finite prefix of @{term "x"} *}
+lemma fun_approxl2: "#(f\<cdot>x) = Fin k \<Longrightarrow> \<exists>j. f\<cdot>x = f\<cdot>(stake j\<cdot>x)" 
+
+(*-----------------------------*)
+slookahd
+(*-----------------------------*)
+
+text {* @{term slookahd} is continuous *}
+lemma cont_slookahd[simp]: "cont (\<lambda> s. if s=\<epsilon> then \<bottom> else eq (shd s))"
+
+(* slookahd applied to the empty stream results in the bottom element for any function eq *)
+lemma strict_slookahd[simp]: "slookahd\<cdot>\<epsilon>\<cdot>eq = \<bottom>"
+
+(* if s isn't the empty stream, the function eq will be applied to the head of s *)
+lemma slookahd_scons[simp]: "s\<noteq>\<epsilon> \<Longrightarrow> slookahd\<cdot>s\<cdot>eq = eq (shd s)"
+
+(* the constant function that always returns the empty stream unifies the two cases of slookahd *)
+lemma strict2_slookahd[simp]: "slookahd\<cdot>xs\<cdot>(\<lambda>y. \<epsilon>) = \<epsilon>"
+
+(*-----------------------------*)
+sinftimes
+(*-----------------------------*)
+
+
+
+(* repeating a stream infinitely often is equivalent to repeating it once and then infinitely often *)
+lemma sinftimes_unfold: "sinftimes s = s \<bullet> sinftimes s"
+
+text {* For nonempty @{term s}, @{term "sinftimes s"} is infinite *}
+lemma slen_sinftimes: "s \<noteq> \<epsilon> \<Longrightarrow> #(sinftimes s) = \<infinity>"
+
+lemma [simp]: "#(sinftimes (\<up>a)) = \<infinity>" 
+
+(*-----------------------------*)
+smap
+(*-----------------------------*)
+
+lemma strict_smap[simp]: "smap f\<cdot>\<epsilon> = \<epsilon>"
+
+(* smap distributes over concatenation *)
+lemma smap_scons[simp]: "smap f\<cdot>(\<up>a \<bullet> s) = \<up>(f a) \<bullet> smap f\<cdot>s"
+
+(* mapping f over a singleton stream is equivalent to applying f to the only element in the stream *) 
+lemma [simp]: "smap f\<cdot>(\<up>a) = \<up>(f a)"
+
+(* smap leaves the length of a stream unchanged *)
+lemma slen_smap[simp]: "#(smap f\<cdot>x) = #x"
+
+text {* @{term smap} maps each element @{term x} to @{term "f(x)"} *}
+lemma smap_snth_lemma:
+  "Fin n < #s \<Longrightarrow> snth n (smap f\<cdot>s) = f (snth n s)"
+
+text {* @{term sdrop} after @{term smap} is like @{term smap} after @{term sdrop} *}
+lemma sdrop_smap[simp]: "sdrop k\<cdot>(smap f\<cdot>s) = smap f\<cdot>(sdrop k\<cdot>s)"
+
+text {* @{term "smap f"} is a homomorphism on streams with respect to concatenation *}
+lemma smap_split: "smap f\<cdot>(a \<bullet> b) = (smap f\<cdot>a) \<bullet> (smap f\<cdot>b)"
+
+(*-----------------------------*)
+sprojfst
+(*-----------------------------*)
+
+(* sprojfst extracts the first element of the first tuple in any non-empty stream of tuples *)
+lemma sprojfst_scons[simp]: "sprojfst\<cdot>(\<up>(x, y) \<bullet> s) = \<up>x \<bullet> sprojfst\<cdot>s"
+
+(* the empty stream is a fixed point of sprojfst *)
+lemma strict_sprojfst[simp]: "sprojfst\<cdot>\<epsilon> = \<epsilon>"
+
+(* sprojfst extracts the first element of any singleton tuple-stream *)
+lemma [simp]: "sprojfst\<cdot>(\<up>(a,b)) = \<up>a"
+
+(* sprojsnd extracts the second element of the first tuple in any non-empty stream of tuples *)
+lemma sprojsnd_scons[simp]: "sprojsnd\<cdot>(\<up>(x,y) \<bullet> s) = \<up>y \<bullet> sprojsnd\<cdot>s"
+
+(* the empty stream is a fixed point of sprojsnd *)
+lemma strict_sprojsnd[simp]: "sprojsnd\<cdot>\<epsilon> = \<epsilon>"
+
+(* sprojsnd extracts the second element of any singleton tuple-stream *)
+lemma [simp]: "sprojsnd\<cdot>(\<up>(a,b)) = \<up>b"
+
+
+lemma rt_Sproj_2_eq: "sprojsnd\<cdot>(srt\<cdot>x) = srt\<cdot>(sprojsnd\<cdot>x)"
+
+lemma rt_Sproj_1_eq: "sprojfst\<cdot>(srt\<cdot>x) = srt\<cdot>(sprojfst\<cdot>x)"
+
+text {* length of projections and the empty stream *}
+
+lemma slen_sprojs_eq: "#(sprojsnd\<cdot>x) = #(sprojfst\<cdot>x)"
+
+lemma strict_rev_sprojfst: "sprojfst\<cdot>x = \<epsilon> \<Longrightarrow> x = \<epsilon>"
+
+lemma strict_rev_sprojsnd: "sprojsnd\<cdot>x = \<epsilon> \<Longrightarrow> x = \<epsilon>"
+
+lemma slen_sprojfst: "#(sprojfst\<cdot>x) = #x"
+
+lemma slen_sprojsnd: "#(sprojsnd\<cdot>x) = #x"
+
+(*-----------------------------*)
+sfilter
+(*-----------------------------*)
+
+lemma strict_sfilter[simp]: "sfilter M\<cdot>\<epsilon> = \<epsilon>"
+
+(* if the head of a stream is in M, then sfilter will keep the head *)
+lemma sfilter_in[simp]: 
+  "a \<in> M \<Longrightarrow> sfilter M\<cdot>(\<up>a \<bullet> s) = \<up>a \<bullet> sfilter M\<cdot>s" 
+
+(* if the head of a stream isn't in M, then sfilter will discard the head *)
+lemma sfilter_nin[simp]: 
+  "a \<notin> M \<Longrightarrow> sfilter M\<cdot>(\<up>a \<bullet> s) = sfilter M\<cdot>s" 
+
+(* if the sole element in a singleton stream is in M then sfilter is a no-op *)
+lemma [simp]: "a \<in> M \<Longrightarrow> sfilter M\<cdot>(\<up>a) = \<up>a"
+
+(* if the sole element in a singleton stream is not in M then sfilter produces the empty stream *)
+lemma [simp]: "a \<notin> M \<Longrightarrow> sfilter M\<cdot>(\<up>a) = \<epsilon>"
+
+(* filtering all elements that aren't in {a} from a stream consisting only of the element a has no effect *)
+lemma sfilter_sinftimes_in[simp]: 
+  "sfilter {a}\<cdot>(sinftimes (\<up>a)) = sinftimes (\<up>a)"
+ (subst sinftimes_unfold, simp)
+
+(* if the element a isn't in the set F then filtering a stream of infinitely many a's using F will
+   produce the empty stream *)
+lemma sfilter_sinftimes_nin:
+  "a \<notin> F \<Longrightarrow> (F \<ominus> (sinftimes (\<up>a))) = \<epsilon>"
+
+text {* Filtering a postfix is at most as long as filtering the whole stream *}
+lemma slen_sfilter_sdrop_ile: 
+  "#(sfilter X\<cdot>(sdrop n\<cdot>p)) \<le> #(sfilter X\<cdot>p)"
+
+text {* If the filtered stream is infinite, each filtered postfix is infinite *}
+lemma slen_sfilter_sdrop: 
+  "\<forall>p X. #(sfilter X\<cdot>p) = \<infinity> \<longrightarrow> #(sfilter X\<cdot>(sdrop n\<cdot>p)) = \<infinity>" 
+
+text {* @{term sfilter} on @{term "stake n"} returns @{text "\<epsilon>"} if none of the first
+  @{term n} elements is included in the filter *}
+lemma sfilter_empty_snths_nin_lemma: 
+  "\<forall>p. (\<forall>n. Fin n < #p \<longrightarrow> snth n p \<notin> X) \<longrightarrow> sfilter X\<cdot>(stake k\<cdot>p) = \<epsilon>"
+
+text {* @{term sfilter} returns @{text "\<epsilon>"} if no element is included in the filter *}
+lemma ex_snth_in_sfilter_nempty:
+  "(\<forall>n. Fin n < #p \<longrightarrow> snth n p \<notin> X) \<Longrightarrow> sfilter X\<cdot>p = \<epsilon>"
+
+text {* The filtered stream is at most as long as the original one *}
+lemma slen_sfilterl1: "#(sfilter S\<cdot>x) \<le> #x"
+
+text {* If the filtered stream is infinite, the original one is infinite as well *}
+lemma sfilterl4:
+  "#(sfilter X\<cdot>x) = \<infinity> \<Longrightarrow> #x = \<infinity>"
+
+text {* Prepending to the original stream never shortens the filtered result *}
+lemma sfilterl2: 
+  "\<forall>z. #(sfilter X\<cdot>s) \<le> #(sfilter X\<cdot>((stake n\<cdot>z) \<bullet> s))"
+
+text {* The filtered result is not changed by concatenating streams which are
+  filtered to @{text "\<epsilon>"} *}
+lemma sfilterl3:
+  "\<forall>s. #s = Fin k \<and> sfilter S\<cdot>s = \<epsilon> \<longrightarrow> 
+       sfilter S\<cdot>(s\<bullet>Z) = sfilter S\<cdot>Z" 
+
+text {* A stream can be split by @{term stake} and @{term sdrop} for filtering *}
+lemma split_sfilter: "sfilter X\<cdot>x = sfilter X\<cdot>(stake n\<cdot>x) \<bullet> sfilter X\<cdot>(sdrop n\<cdot>x)"
+
+text {* double filtering *}
+lemma int_sfilterl1[simp]: "sfilter S\<cdot>(sfilter M\<cdot>s) = sfilter (S \<inter> M)\<cdot>s"
+
+text {* Streams can be split for filtering *}
+lemma add_sfilter:
+  "#x = Fin k \<Longrightarrow> sfilter t\<cdot>(x \<bullet> y) = sfilter t\<cdot>x \<bullet> sfilter t\<cdot>y"
+
+text {* After applying @{term "smap f"}, all elements are in the range of @{term f} *}
+lemma sfilter_smap_nrange: 
+  "m \<notin> range f \<Longrightarrow> sfilter {m}\<cdot>(smap f\<cdot>x) = \<epsilon>"
+
+(*-----------------------------*)
+stakewhile
+(*-----------------------------*)
+
+lemma strict_stakewhile[simp]: "stakewhile f\<cdot>\<epsilon> = \<epsilon>"
+
+(* if the head a passes the predicate f, then the result of stakewhile will start with \<up>a *)
+lemma stakewhile_t[simp]: "f a \<Longrightarrow> stakewhile f\<cdot>(\<up>a \<bullet> s) = \<up>a \<bullet> stakewhile f\<cdot>s"
+
+(* if the head a fails the predicate f, then stakewhile will produce the empty stream *)
+lemma stakewhile_f[simp]: "\<not>f a \<Longrightarrow> stakewhile f\<cdot>(\<up>a \<bullet> s) = \<epsilon>"
+
+(* if the element a passes the predicate f, then stakewhile applied to \<up>a is a no-op *)
+lemma [simp]: "f a \<Longrightarrow> stakewhile f\<cdot>(\<up>a) = \<up>a"
+
+(* if the element a fails the predicate f, then stakewhile applied to \<up>a will produce the empty stream *)
+lemma [simp]: "\<not>f a \<Longrightarrow> stakewhile f\<cdot>(\<up>a) = \<epsilon>"
+
+lemma strict_stwbl[simp]: "stwbl f\<cdot>\<epsilon> = \<epsilon>"
+
+(* if the head a passes the predicate f, then the result of stwbl will start with \<up>a *)
+lemma stwbl_t[simp]: "f a \<Longrightarrow> stwbl f\<cdot>(\<up>a \<bullet> s) = \<up>a \<bullet> stwbl f\<cdot>s"
+
+(* if the head a fails the predicate f, then stwbl will produce only \<up>a *)
+lemma stwbl_f[simp]: "\<not> f a \<Longrightarrow> stwbl f\<cdot>(\<up>a \<bullet> s) = \<up>a"
+
+text {* @{term sfilter} after @{term stakewhile}: produce the empty stream *}
+lemma sfilter_twl1[simp]: 
+  "sfilter X\<cdot>(stakewhile (\<lambda>x. x\<notin>X)\<cdot>p) = \<epsilon>"
+
+text {* @{term sfilter} after @{term stakewhile}: redundant filtering *}
+lemma sfilter_twl2[simp]: 
+  "sfilter X\<cdot>(stakewhile (\<lambda>x. x\<in>X)\<cdot>p) = stakewhile (\<lambda>x. x\<in>X)\<cdot>p"
+
+text {* If @{term "stakewhile (\<lambda>p. p = t)"} returns an infinite stream, all prefixes
+  of the original stream only consist of "@{term t}"s *}
+lemma stakewhile_sinftimes_lemma: 
+  "\<forall>z. #(stakewhile (\<lambda>p. p = t)\<cdot>z) = \<infinity> \<longrightarrow> stake n\<cdot>z = stake n\<cdot>(sinftimes (\<up>t))"
+
+text {* If @{term "stakewhile (\<lambda>p. p = t)"} returns an infinite stream, the original stream
+  is an infinite "@{term t}"-stream *}
+lemma stakewhile_sinftimesup: 
+  "#(stakewhile (\<lambda>p. p = t)\<cdot>z) = \<infinity> \<Longrightarrow> z = sinftimes (\<up>t)"
+
+
+(*-----------------------------*)
+sdropwhile
+(*-----------------------------*)
+
+lemma strict_sdropwhile[simp]: "sdropwhile f\<cdot>\<epsilon> = \<epsilon>"
+
+(* if the head a passes the predicate f, then the result of sdropwhile will drop the head *)
+lemma sdropwhile_t[simp]: "f a \<Longrightarrow> sdropwhile f\<cdot>(\<up>a \<bullet> s) = sdropwhile f\<cdot>s"
+
+(* if the head a fails the predicate f, then the result of sdropwhile will start with \<up>a *)
+lemma sdropwhile_f[simp]: "\<not>f a \<Longrightarrow> sdropwhile f\<cdot>(\<up>a \<bullet> s) = \<up>a \<bullet> s"
+
+(* if the only element in a singleton stream passes the predicate f, then sdropwhile will produce
+   the empty stream *)
+lemma [simp]: "f a \<Longrightarrow> sdropwhile f\<cdot>(\<up>a) = \<epsilon>"
+
+(* if the only element in a singleton stream fails the predicate f, then sdropwhile will be a no-op *)
+lemma [simp]: "\<not>f a \<Longrightarrow> sdropwhile f\<cdot>(\<up>a) = \<up>a"
+
+(* the elements removed by sdropwhile are a subset of the elements removed by sfilter *)
+lemma sfilter_dwl1[simp]: 
+  "sfilter X\<cdot>(sdropwhile (\<lambda>x. x\<notin>X)\<cdot>p) = sfilter X\<cdot>p"
+
+(* the elements kept by sfilter are a subset of the elements kept by sdropwhile *)
+lemma sfilter_dwl2:
+  "sfilter T\<cdot>s \<noteq> \<epsilon> \<Longrightarrow> sdropwhile (\<lambda>a. a \<notin> T)\<cdot>s \<noteq> \<epsilon>"
+
+text {* Construct @{term stwbl} from @{term stakewhile}, @{term stake} and @{term sdropwhile} *}
+lemma stwbl_stakewhile: "stwbl f\<cdot>s = stakewhile f\<cdot>s \<bullet> (stake (Suc 0)\<cdot>(sdropwhile f\<cdot>s))"
+
+text {* Constructing @{term sdropwhile} from @{term stakewhile} and @{term sdrop} *}
+lemma stakewhile_sdropwhilel1:
+  "\<forall>x. #(stakewhile f\<cdot>x) = Fin n \<longrightarrow> sdropwhile f\<cdot>x = sdrop n\<cdot>x"  
+
+text {* @{term sdropwhile} is idempotent *}
+lemma sdropwhile_idem: "sdropwhile f\<cdot>(sdropwhile f\<cdot>x) = sdropwhile f\<cdot>x"
+
+text {* @{term stakewhile} after @{term sdropwhile} gives the empty stream *}
+lemma tdw[simp]: "stakewhile f\<cdot>(sdropwhile f\<cdot>s) = \<epsilon>"
+
+text {* For the head of @{term "sdropwhile f\<cdot>x"}, @{term f} does not hold *}
+lemma sdropwhile_resup: "sdropwhile f\<cdot>x = \<up>a \<bullet> s \<Longrightarrow> \<not> f a"
+
+text {* elimination rule for @{term sfilter} after @{term sdropwhile} *}
+lemma sfilter_srtdwl3[simp]: 
+  "sfilter X\<cdot>(srt\<cdot>(sdropwhile (\<lambda>x. x\<notin>X)\<cdot>p)) = srt\<cdot>(sfilter X\<cdot>p)"
+
+text {* After filtering by filter @{term T}, the head of the result is in @{term T}
+  (for non-empty results) *}
+lemma sfilter_ne_resup: "sfilter T\<cdot>s \<noteq> \<epsilon> \<Longrightarrow> shd (sfilter T\<cdot>s) \<in> T"
+
+text {* same result for @{term sconc} syntax *}
+lemma sfilter_resl2:
+  "sfilter T\<cdot>s = \<up>a \<bullet> as \<Longrightarrow> a \<in> T"
+
+text {* After filtering with filter @{term T}, each element is in @{term T} *}
+lemma sfilterl7:
+  "\<lbrakk>Fin n < #x; sfilter T\<cdot>s = x\<rbrakk> \<Longrightarrow> snth n x \<in> T"
+
+(*-----------------------------*)
+srtdw
+(*-----------------------------*)
+
+lemma [simp]: "srtdw f\<cdot>\<epsilon> = \<epsilon>"
+
+(* the rest of any singleton stream is the empty stream, regardless of whether the only element in
+   the stream was dropped *)
+lemma [simp]: "srtdw f\<cdot>(\<up>a) = \<epsilon>"
+
+(* if the head a passes the predicate f, srtdw will drop the head *)
+lemma [simp]: "f a \<Longrightarrow> srtdw f\<cdot>(\<up>a\<bullet>as) = srtdw f\<cdot>as"
+
+(* if the head a fails the predicate f, srtdw will produce the rest of the stream *)
+lemma [simp]: "\<not> f a \<Longrightarrow> srtdw f\<cdot>(\<up>a\<bullet>as) = as"
+
+text {* @{term "sfilter M"} after @{term "srtdw (\<lambda>x. x \<notin> M)"} almost behaves
+  like @{term "sfilter M"} alone *}
+lemma sfilterl8:
+  "sfilter M\<cdot>x \<noteq> \<epsilon> \<Longrightarrow>
+    #(sfilter M\<cdot>x) = lnsuc\<cdot>(#(sfilter M\<cdot>(srtdw (\<lambda>x. x \<notin> M)\<cdot>x)))"
+
+text {* similar result for infinite streams *}
+lemma sfilter_srtdwl2:
+  "#(sfilter X\<cdot>s) = \<infinity> \<Longrightarrow> #(sfilter X\<cdot>(srtdw (\<lambda>a. a \<notin> X)\<cdot>s)) = \<infinity>"
+
+text {* streams can be split by @{term stwbl} and @{term srtdw} *}
+lemma stwbl_srtdw: "stwbl f\<cdot>s \<bullet> srtdw f\<cdot>s = s"
+
+lemma slen_srtdw: "#(srtdw f\<cdot>x) \<le> #x"
+
+(*-----------------------------*)
+srcdups
+(*-----------------------------*)
+
+lemma strict_srcdups[simp]: "srcdups\<cdot>\<epsilon> = \<epsilon>" 
+
+(* a singleton stream can't possibly contain duplicates *)
+lemma [simp]: "srcdups\<cdot>(\<up>a) = \<up>a"
+
+(* if the head a of a stream is followed by a duplicate, only one of the two elements will be kept by srcdups *)
+lemma srcdups_eq[simp]: "srcdups\<cdot>(\<up>a\<bullet>\<up>a\<bullet>s) = srcdups\<cdot>(\<up>a\<bullet>s)" 
+
+(* if the head a of a stream is followed by a distinct element, both elements will be keypt by srcdups *)
+lemma srcdups_neq[simp]: 
+  "a\<noteq>b \<Longrightarrow> srcdups\<cdot>(\<up>a \<bullet> \<up>b \<bullet> s) = \<up>a \<bullet>  srcdups\<cdot>(\<up>b \<bullet> s)" 
+
+(*-----------------------------*)
+sscanl
+(*-----------------------------*)
+
+lemma SSCANL_empty[simp]: "SSCANL n f q \<epsilon> = \<epsilon>"
+
+text {* monotonicity of SSCANL *}
+lemma mono_SSCANL: 
+  "\<forall> x y q. x \<sqsubseteq> y \<longrightarrow> SSCANL n f q x \<sqsubseteq> SSCANL n f q y"
+
+text {* result of @{term "SSCANL n"} only depends on first @{term n}
+  elements of input stream *}
+lemma contlub_SSCANL:
+  "\<forall>f q s. SSCANL n f q s = SSCANL n f q (stake n\<cdot>s)"
+
+text {* @{term SSCANL} is a chain. This means that, for all fixed inputs,
+  @{term "SSCANL i"} returns a prefix of @{term "SSCANL (Suc i)"} *}
+lemma chain_SSCANL: "chain SSCANL"
+
+text {* @{term sscanl} is a continuous function *}
+lemma cont_lub_SSCANL: "cont (\<lambda>s. \<Squnion>i. SSCANL i f q s)" 
+
+lemma sscanl_empty[simp]: "sscanl f q\<cdot>\<epsilon> = \<epsilon>"
+
+(* scanning \<up>a\<bullet>s using q as the initial element is equivalent to computing \<up>(f q a) and appending the
+   result of scanning s with (f q a) as the initial element *)
+lemma sscanl_scons[simp]: 
+  "sscanl f q\<cdot>(\<up>a\<bullet>s) = \<up>(f q a) \<bullet> sscanl f (f q a)\<cdot>s"  
+
+(* scanning a singleton stream is equivalent to computing \<up>(f a b) *)
+lemma [simp]: "sscanl f a\<cdot>(\<up>b) = \<up>(f a b)"
+
+text {* applying @{term sscanl} never shortens the stream *}
+lemma fair_sscanl: "#x \<le> #(sscanl f a\<cdot>x)"
+
+(*-----------------------------*)
+szip
+(*-----------------------------*)
+
+lemma strict_szip_fst[simp]: "szip\<cdot>\<epsilon>\<cdot>s = \<epsilon>"
+
+lemma strict_szip_snd[simp]: "szip\<cdot>s\<cdot>\<epsilon> = \<epsilon>"
+
+lemma szip_scons[simp]: "szip\<cdot>(\<up>a\<bullet>s1)\<cdot>(\<up>b\<bullet>s2) = \<up>(a,b) \<bullet> (szip\<cdot>s1\<cdot>s2)"
+
+lemma [simp]: "szip\<cdot>(\<up>a)\<cdot>(\<up>b \<bullet> y) = \<up>(a,b)"
+
+lemma [simp]: "szip\<cdot>(\<up>a \<bullet> x)\<cdot>(\<up>b) = \<up>(a,b)"
+
+lemma [simp]: "szip\<cdot>(\<up>a)\<cdot>(\<up>b) = \<up>(a,b)"
+
+text {* If @{term szip} returns an empty stream, an input stream was empty *}
+lemma strict_rev_szip: "szip\<cdot>x\<cdot>y = \<epsilon> \<Longrightarrow> x = \<epsilon> \<or> y = \<epsilon>"
+
+lemma sprojfst_szipl1[rule_format]: 
+  "\<forall>x. #x = \<infinity> \<longrightarrow> sprojfst\<cdot>(szip\<cdot>i\<cdot>x) = i"
+
+lemma sprojsnd_szipl1[rule_format]: 
+  "\<forall>x. #x = \<infinity> \<longrightarrow> sprojsnd\<cdot>(szip\<cdot>x\<cdot>i) = i"
+
+(*-----------------------------*)
+siterate
+(*-----------------------------*)
+
+text {* @{term siterate} is defined by running @{term sscanl} on an arbitrary
+  infinite stream. Only the stream length is relevant for the result *}
+lemma siterate_inv_lemma:
+  "\<forall>x z a. #z = #x 
+     \<longrightarrow> stake n\<cdot>(sscanl (\<lambda>a b. f a) a\<cdot>x) = 
+        stake n\<cdot>(sscanl (\<lambda>a b. f a) a\<cdot>z)"
+
+text {* @{term siterate} is well-defined (because it is independent of
+  the infinite stream on which @{term sscanl} is applied) *}
+lemma siterate_def2:
+  "#x = \<infinity> \<Longrightarrow> siterate f a = \<up>a \<bullet> sscanl (\<lambda>a b. f a) a\<cdot>x"
+
+text {* unfolding of @{term siterate} definition *}
+lemma siterate_scons: "siterate f a = \<up>a \<bullet> siterate f (f a)"
+
+lemma snth_siterate_Suc: "snth k (siterate Suc j) = k + j"
+
+lemma snth_siterate_Suc_0[simp]: "snth k (siterate Suc 0) = k"
+
+lemma sdrop_siterate:
+  "sdrop k\<cdot>(siterate Suc j) = siterate Suc (j + k)"
+
+text {* @{term siterate} only creates infinite outputs *}
+lemma [simp]: "#(siterate f k) = \<infinity>"
+
+(*-----------------------------*)
+sdom
+(*-----------------------------*)
+
+text {* A stream and its prefix agree on their first elements *}
+lemma snth_less: "\<lbrakk>Fin n < #x; x \<sqsubseteq> y\<rbrakk> \<Longrightarrow> snth n x = snth n y"
+
+text {* monotonicity of @{term sdom} *}
+lemma sdom_mono: "monofun (\<lambda>x. {z. \<exists>n. Fin n < #x \<and> z = snth n x})"
+
+text {* In infinite chains, the length of the streams is unbounded *}
+lemma inf_chainl3rf:
+  "\<lbrakk>chain Y; \<not>finite_chain Y\<rbrakk> \<Longrightarrow> \<exists>k. Fin n \<le> #(Y k)"
+
+text {* @{term sdom} is a continuous function *}
+lemma sdom_cont: "cont (\<lambda>s. {z. \<exists>n. Fin n < #s \<and> z = snth n s})"
+
+text {* @{term sdom} is a continuous function *}
+lemma sdom_def2: "sdom\<cdot>s = {z. \<exists>n. Fin n < #s \<and> z = snth n s}"
+
+lemma sdom_cont2: "\<forall>Y. chain Y \<longrightarrow> sdom\<cdot>(\<Squnion> i. Y i) = (\<Squnion> i. sdom\<cdot>(Y i))"
+
+
+(* the head of any stream is always an element of the domain *)
+lemma sdom2un[simp]: "sdom\<cdot>(\<up>z \<bullet> s) = {z} \<union> sdom\<cdot>s"
+
+(* only the empty stream has no elements in its domain *)
+lemma strict_sdom_rev: "sdom\<cdot>s = {} \<Longrightarrow> s = \<epsilon>"
+
+(* the infinite repetition of a only has a in its domain *)
+lemma [simp]: "sdom\<cdot>(sinftimes (\<up>a)) = {a}"
+
+(* any singleton stream of z only has z in its domain *)
+lemma [simp]: "sdom\<cdot>(\<up>z) = {z}"
+
+(* if an element z is in the domain of a stream s, then z is the n'th element of s for some n *)
+lemma sdom2snth: "z \<in> sdom\<cdot>s \<Longrightarrow> \<exists>n. snth n s = z"
+
+(* if the natural number n is less than the length of the stream s, then snth n s is in the domain of s *)
+lemma snth2sdom: "Fin n < #s \<Longrightarrow> snth n s \<in> sdom\<cdot>s"
+
+(* checking if the domain of a stream x isn't a subset of another set M is an admissible predicate *)
+lemma [simp]: "adm (\<lambda>x. \<not> sdom\<cdot>x \<subseteq> M)"
+
+text {* filtering with a superset of the stream's domain does not change the stream *}
+lemma sfilter_sdoml3:
+  "sdom\<cdot>s \<subseteq> X \<longrightarrow> sfilter X\<cdot>s = s"
+
+text {* filtering with the stream's domain does not change the stream *}
+lemma sfilter_sdoml4 [simp]:
+  "sfilter (sdom\<cdot>s)\<cdot>s = s"
+
+text {* The domain of a concatenated stream is the union of the single domains *}
+lemma sdom_sconc2un:
+  "#x = Fin k \<Longrightarrow> sdom\<cdot>(x \<bullet> y) = sdom\<cdot>x \<union> sdom\<cdot>y"
+
+(* if filtering everything except z from the stream x doesn't produce the empty stream, then z must
+   be an element of the domain of x *)
+lemma sfilter2dom:
+  "sfilter {z}\<cdot>x \<noteq> \<epsilon> \<Longrightarrow> z \<in> sdom\<cdot>x"
+
+text {* For injective functions @{term f} with @{term "f(y) = x"}, @{term x} can only
+  be contained in @{term "smap f\<cdot>s"} if the original stream contained @{term y} *}
+lemma sdom_smapl1: "\<lbrakk>x \<in> sdom\<cdot>(smap f\<cdot>s); inj f; f y = x\<rbrakk> \<Longrightarrow> y \<in> sdom\<cdot>s" 
+
+(*-----------------------------*)
+silivespfI
+(*-----------------------------*)
+
+lemma sislivespfI:
+  "(\<And>x. #(f\<cdot>x) = \<infinity> \<Longrightarrow> #x = \<infinity>) \<Longrightarrow> sislivespf f"
+
+lemma sislivespfI2:
+  "(\<And>k. \<forall>x. #x = Fin k \<longrightarrow> #(f\<cdot>x) \<noteq> \<infinity>) \<Longrightarrow> sislivespf f"
+
+lemma sislivespfD1:
+  "\<lbrakk>sislivespf f; #x = Fin k\<rbrakk> \<Longrightarrow> #(f\<cdot>x) \<noteq> \<infinity>"
+
+lemma sislivespfD2:
+  "\<lbrakk>sislivespf f; #(f\<cdot>x) = \<infinity>\<rbrakk> \<Longrightarrow> #x = \<infinity>"
+
+(*-----------------------------*)
+list2s
+(*-----------------------------*)
+
+(* consing onto a list is equivalent to prepending an element to a stream *)
+lemma [simp]: "list2s (a#as) = \<up>a \<bullet> list2s as"
+
+(* infinite lists don't exist *)
+lemma [simp]: "#(list2s x) \<noteq> \<infinity>"
+
+text {* Every finite stream can be converted to a list *}
+lemma s2list_ex: 
+  "#s = Fin k \<Longrightarrow> \<exists>l. list2s l = s"
+
+(* the empty stream corresponds to the empty list *)
+lemma [simp]: "s2list \<epsilon> = []"
+
+(* the singleton stream corresponds to the singleton list *)
+lemma [simp]: "s2list (\<up>a) = [a]"
+
+(* the empty list is the bottom element for lists *)
+lemma [simp]: "[] \<sqsubseteq> l"
+
+text {* The prefix relation translates from lists to streams *}
+lemma list2s_emb: "\<lbrakk>#s \<noteq> \<infinity>; #s' \<noteq> \<infinity>\<rbrakk> \<Longrightarrow> (s2list s \<sqsubseteq> s2list s') = (s \<sqsubseteq> s')"
+
+text {* @{term list2s} is monotone *}
+lemma list2s_mono: "l \<sqsubseteq> l' \<Longrightarrow> list2s l \<sqsubseteq> list2s l'"
+
+text {* Prepending a fixed element to a list is a monotone function *}
+lemma monofun_lcons: "monofun (\<lambda>l. a # l)"
+
+text {* Head and rest on streams translate to head and rest on lists *}
+lemma s2list2lcons: "#s \<noteq> \<infinity> \<Longrightarrow> s2list (\<up>a \<bullet> s) = a # (s2list s)"
+
+text {* @{term s2list} is left-inverse to @{term list2s} *}
+lemma [simp]: "s2list (list2s l) = l"
+
+text {* Evaluation of @{term list2s} from right to left *}
+lemma slistl5[simp]: "list2s (l @ [m]) = list2s l \<bullet> \<up>m"
+
+(*-----------------------------*)
+functions
+(*-----------------------------*)
+text {* Monotone list-processing functions induce monotone stream-processing functions
+  by applying them to the stream's k-element prefix *}
+lemma mono_slpf2spf:
+  "monofun f \<Longrightarrow> monofun (\<lambda>s. list2s (f (s2list (stake k\<cdot>s))))"
+
+text {* Applying a monotone list-processing function to the @{term k}-element prefix of a stream
+  is monotone with respect to @{term k} *}
+lemma chain_slpf2spf:
+  "monofun f \<Longrightarrow> list2s (f (s2list (stake i\<cdot>x))) \<sqsubseteq> list2s (f (s2list (stake (Suc i)\<cdot>x)))"
+
+text {* Now, a list-processing function is converted to a stream-processing one by building
+  the LUB of applying the function to all prefixes of the stream *}
+lemma slpf2spfl_contl:
+  "monofun f \<Longrightarrow> 
+  cont (\<lambda>s. (\<Squnion>k. list2s (f (s2list (stake k\<cdot>s)))))"
+
+text {* The output function of @{term slpf2spf} is continuous *}
+lemma slpf2spf_cont:
+  "monofun f \<Longrightarrow> 
+     (\<Lambda> s. (\<Squnion>k. list2s (f (s2list (stake k\<cdot>s)))))\<cdot>s = (\<Squnion>k. list2s (f (s2list (stake k\<cdot>s))))"
+
+text {* Applying @{term "slpf2spf f"} to an element @{term x} *}
+lemma slpf2spf_def2:
+  "monofun f \<Longrightarrow> slpf2spf f\<cdot>x = (\<Squnion>k. list2s (f (s2list (stake k\<cdot>x))))"
+
+text {* The output of @{term slpf2spf} is live *}
+lemma sislivespf_slpf2spf:
+  "monofun f \<Longrightarrow> sislivespf (slpf2spf f)"
+
+text {* Any live stream-processing function can be converted to a monotone
+  list-processing function *}
+lemma sspf2lpf_mono: 
+  "sislivespf f \<Longrightarrow> monofun (sspf2lpf f)"
+
+text {* The result of applying continuous functions to infinite inputs
+  does not change on even longer inputs *}
+lemma monofun_spf_ubl[simp]:
+  "#(f\<cdot>x) = \<infinity> \<Longrightarrow> f\<cdot>(x \<bullet> y) = f\<cdot>x"
+
+text {* Some special results about @{term smap} and injective functions
+  on streams of natural successors *}
+
+lemma inj_sfilter_smap_siteratel1:
+  "inj f \<Longrightarrow> sfilter {f j}\<cdot>(smap f\<cdot>(siterate Suc (Suc (k + j)))) = \<epsilon>"
+
+(* an element m can't appear infinitely often in a stream produced by mapping an injective function f
+   over the natural numbers *)
+lemma inj_sfilter_smap_siteratel2[simp]:
+  "inj f \<Longrightarrow> #(sfilter {m}\<cdot>(smap f\<cdot>(siterate Suc j))) \<noteq> \<infinity>"
+
+
+
+*)
+
+
+
+
+(*      Dennis ToDo:
+        most of these lemmas have to be lifted to tstreams, slen(#) \<longrightarrow> tsTickCount (#\<surd>) etc.
+
+
+
+text {* Retrieving the first 0 elements of a stream returns the empty stream. *}
+lemma [simp]: "tsTake 0\<cdot> x =  \<bottom>"
+
+lemma [simp]: "tsDrop 0\<cdot> x = x"
+
+(* concatenating finite streams produces another finite stream *)
+lemma sconc_slen [simp]: assumes "#s<\<infinity>" and "#xs<\<infinity>"
+  shows "#(s\<bullet>xs) < \<infinity>"
+
+lemma strict_slen[simp]:"#\<epsilon> = 0"
+
+(* prepending a singleton stream increases the length by 1 *)
+lemma slen_scons[simp]: "#(\<up>a\<bullet>as) = lnsuc\<cdot>(#as)" 
+
+(* the singleton stream has length 1 *)
+lemma [simp]: "#(\<up>a) = Fin (Suc 0)"
+
+text {* The rest of infinite streams is infinite as well *}
+lemma inf_scase:"#s = \<infinity> \<Longrightarrow> \<exists>a as. s = \<up>a \<bullet> as \<and> #as = \<infinity>"
+
+(* only the empty stream has length 0 *)
+lemma slen_empty_eq[simp]: "(#x = 0) = (x = \<epsilon>)"
+
+text {* Appending to an inifite stream does not change its @{text "n"}th element *}
+lemma sconc_fst_inf_lemma: "\<forall>x. #x=\<infinity> \<longrightarrow> stake n\<cdot>(x\<bullet>y) = stake n\<cdot>x"
+
+text {* Appending to an infinite stream does not change the stream *}
+lemma sconc_fst_inf[simp]: "#x=\<infinity> \<Longrightarrow> x\<bullet>y = x"
+
+lemma sntimes_eps[simp]: "sntimes n \<epsilon> = \<epsilon>"
+
+(* infinitely cycling the empty stream produces the empty stream again *)
+lemma strict_icycle[simp]: "sinftimes \<epsilon> = \<epsilon>"
+
+
+(* smap distributes over infinite repetition *)
+lemma smap2sinf[simp]: "smap f\<cdot>(x\<infinity>)= (smap f\<cdot>x)\<infinity>"
+
+lemma [simp]: "shd (\<up>a) = a"
+
+(* the singleton stream is never equal to the empty stream *)
+lemma [simp]: "\<up>a \<noteq> \<epsilon>"
+
+(* the rest of the singleton stream is empty *)
+lemma [simp]: "srt\<cdot>(\<up>a) = \<epsilon>"
+
+(* appending to a singleton stream can never yield the empty stream *)
+lemma [simp]: "\<epsilon> \<noteq> \<up>a \<bullet> as"
+
+lemma [simp]: "\<up>a \<bullet> as \<noteq> \<epsilon>"
+
+(* singleton streams are only in an ordered relation if the two elements are equal *)
+lemma [simp]: "(\<up>a \<sqsubseteq> \<up>b) = (a = b)"
+
+(* uparrow is a bijection *)
+lemma [simp]: "(\<up>a = \<up>b) = (a = b)"
+
+
+*)
 end
 
 
