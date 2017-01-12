@@ -21,10 +21,18 @@ by(metis subset_UNIV subset_image_iff transfer_int_nat_set_return_embed)
 
 (* operator for parallel composition *)
 
-definition parcomp :: "'m SPF \<Rightarrow> 'm SPF \<Rightarrow> 'm SPF"  where
+definition parcomp :: "'m SPF \<Rightarrow> 'm SPF \<Rightarrow> 'm SPF" ("_\<parallel>_") where
 "parcomp f1 f2 \<equiv>
 let I = spfDom\<cdot>f1 \<union> spfDom\<cdot>f2
 in Abs_CSPF (\<lambda> x. (sbDom\<cdot>x = I ) \<leadsto> (((Rep_CSPF f1) \<rightharpoonup> (x \<bar>spfDom\<cdot>f1)) \<uplus> ((Rep_CSPF f2) \<rightharpoonup> (x\<bar>spfDom\<cdot>f2))))"
+
+lemma parcompDom: "spfDom\<cdot>(f1 \<parallel> f2) = I f1 f2"
+apply(simp add: parcomp_def I_def)
+sorry
+
+lemma parcompRan: "spfRan\<cdot>(f1 \<parallel> f2) = Oc f1 f2"
+sorry
+
 
 
 (* Definition of ID SPFs *)

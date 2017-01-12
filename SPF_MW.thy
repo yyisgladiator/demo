@@ -55,31 +55,31 @@ lemma LtopL: "L f1 f2 = {} \<Longrightarrow> pL f1 f2 = {}"
 apply(simp add: L_def pL_def)
 by (simp add: Int_Un_distrib inf_sup_distrib2)
 
-lemma spfComp_parallel : assumes" L f1 f2 = {}"
-                            and "sbDom\<cdot>x = I f1 f2" 
-                            and "spfComp_well f1 f2"
-  shows "(iterate (Suc (Suc i))\<cdot>(spfCompHelp2 f1 f2 x)\<cdot>(sbLeast (C f1 f2)))
-                  = x \<uplus> ((Rep_CSPF f1) \<rightharpoonup> (x \<bar>spfDom\<cdot>f1)) \<uplus> ((Rep_CSPF f2) \<rightharpoonup> (x\<bar>spfDom\<cdot>f2))" (is "?L = ?R")
-apply(rule sb_eq)
-apply (metis C_def assms(1) assms(2) assms(3) inf_sup_ord(4) sbunionDom spfComp_I_domf1f2_eq spfComp_domranf1 spfComp_itCompH2_dom spfRanRestrict spfdom_insert)
-by (metis (no_types, lifting) UnE assms(1) assms(2) assms(3) iterate_Suc sbunionDom sbunion_getchL spfCompH2_dom spfComp_I_domf1f2_eq spfComp_domranf1 spfComp_getChI spfComp_itCompH2_dom spfComp_parallelf1 spfComp_parallelf2 spfRanRestrict sup_ge2)
+lemma spfComp_parallel_noFix: assumes "L f1 f2 = {}"
+                                         and "sbDom\<cdot>x = I f1 f2" 
+                                         and "spfComp_well f1 f2"
+  shows "(\<Squnion>i. iterate i\<cdot>(spfCompHelp2 f1 f2 x)\<cdot>(sbLeast (C f1 f2)))
+               = x \<uplus> ((Rep_CSPF f1) \<rightharpoonup> (x \<bar>spfDom\<cdot>f1)) \<uplus> ((Rep_CSPF f2) \<rightharpoonup> (x\<bar>spfDom\<cdot>f2))"
+by (metis (mono_tags, lifting) assms(1) assms(2) assms(3) lub_eq spfComp_parallel_itconst2)
 
+lemma spfComp_serial_noFix: assumes "spfRan\<cdot>f1 = spfDom\<cdot>f2" 
+                                and "sbDom\<cdot>x = I f1 f2" 
+                                and "spfComp_well f1 f2"
+                                and "pL f1 f2 = {}"
+  shows "(\<Squnion>i. iterate i\<cdot>(spfCompHelp2 f1 f2 x)\<cdot>(sbLeast (C f1 f2)))
+            = x \<uplus> ((Rep_CSPF f1) \<rightharpoonup> (x \<bar>spfDom\<cdot>f1)) \<uplus> ((Rep_CSPF f2)\<rightharpoonup>((Rep_CSPF f1) \<rightharpoonup> (x\<bar>spfDom\<cdot>f1)))"
+by (metis (no_types, lifting) ParComp_MW.spfCompHelp2_def SerComp_JB.spfCompHelp2_def SerComp_JB.spfComp_serial_itconst2 assms(1) assms(2) assms(3) assms(4) lub_eq)
 
-lemma spfComp_serial : assumes "spfRan\<cdot>f1 = spfDom\<cdot>f2" 
-                       and "sbDom\<cdot>x = I f1 f2" 
-                       and "spfComp_well f1 f2"
-                       and "pL f1 f2 = {}"
-  shows "(iterate (Suc (Suc (Suc i)))\<cdot>(spfCompHelp2 f1 f2 x)\<cdot>(sbLeast (C f1 f2)))
-                  = x \<uplus> ((Rep_CSPF f1) \<rightharpoonup> (x \<bar>spfDom\<cdot>f1)) 
-                      \<uplus> ((Rep_CSPF f2)\<rightharpoonup>((Rep_CSPF f1) \<rightharpoonup> (x\<bar>spfDom\<cdot>f1)))" (is "?L = ?R")
-  apply(rule sb_eq)
-  apply (smt C_def assms(1) assms(2) assms(3) assms(4) inf_sup_ord(4) sbunionDom sbunion_restrict 
-             spfComp_I_domf1_eq spfComp_domranf1 spfCompH2_itDom spfRanRestrict sup.right_idem)
-  by (smt assms(1) assms(2) assms(3) assms(4) inf_sup_ord(4) iterate_Suc sbunionDom 
-          sbunion_getchL sbunion_getchR sbunion_restrict spfComp_domranf1 spfCompH2_getch_outofrange 
-          spfCompH2_itDom spfComp_serialf1 spfComp_serialf2 spfRanRestrict)
+lemma parallelOperatorEq: assumes "L f1 f2 = {}"
+                              and "sbDom\<cdot>sb = I f1 f2"
+                            shows "(f1 \<otimes> f2)\<rightleftharpoons>sb = (f1 \<parallel> f2)\<rightleftharpoons>sb"
+sorry
 
-
-
+lemma serialOperatorEq: assumes "pL f1 f2 = {}"
+                            and "sbDom\<cdot>sb = I f1 f2"
+                            and "c \<in> spfRan\<cdot>f2"
+  shows "(spfComp2 f1 f2)\<rightleftharpoons>sb . c  = (sercomp f1 f2)\<rightleftharpoons>sb . c"
+apply(simp add: sercomp_def)
+sorry
 
 end
