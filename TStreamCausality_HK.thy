@@ -6,7 +6,7 @@
 *)
 
 theory TStreamCausality_HK
-imports TStreamTheorie
+imports TStream StreamCase_Study
 begin
 
 
@@ -50,6 +50,41 @@ by blast
 lemma tspf_strongCau_down: "tspf_strongCausality f \<and> (ts1\<down>n) = (ts2\<down>n) \<and> x\<le>(Suc n) \<Longrightarrow> ((f ts1)\<down>x) = ((f ts2)\<down>x)"
 using tspf_strongCausality_def tstake_less tspf_strng_weak
 by blast
+
+
+(* ----------------------------------------------------------------------- *)
+  section \<open>"sum4 test"\<close>
+(* ----------------------------------------------------------------------- *)
+
+definition testSum4:: "nat stream" where
+"testSum4 = sum4\<cdot> (<[1,4,3]>)"
+
+lemma sum4_three_unfold [simp]: "sum4\<cdot>(\<up>a \<bullet> \<up>b \<bullet> \<up>c) = sum4\<cdot>(\<up>a \<bullet> \<up>b) \<bullet> sum4\<cdot>(\<up>(a+b+c))"
+using sum4_unfold
+by (smt Groups.add_ac(1) Groups.add_ac(2) add_eps1 add_unfold assoc_sconc lscons_conv sum4_one sup'_def)
+
+lemma sum4_three: "sum4\<cdot>(\<up>a \<bullet> \<up>b \<bullet> \<up>c) = \<up>a \<bullet> \<up>(a+b) \<bullet> \<up>(a+b+c)"
+using sum4_three_unfold sum4_two
+by auto
+
+lemma testSum4_eq: "testSum4 = <[1,5,8]>"
+by (simp add: testSum4_def)
+
+
+
+
+(* ----------------------------------------------------------------------- *)
+  section \<open>"Stream tests"\<close>
+(* ----------------------------------------------------------------------- *)
+
+
+definition twoPowerStream_1 :: "nat stream" where  (* also  = <1 2 4 8 \<dots>> *)
+"twoPowerStream_1 \<equiv> fix\<cdot> (\<Lambda> y. \<up>1 \<bullet> smap (\<lambda>x. x*2)\<cdot>y)"
+
+definition twoPowerStream_2 :: "nat stream" where  
+"twoPowerStream_2 = siterate (\<lambda>x. x*2) 1"
+
+
 
 
 end

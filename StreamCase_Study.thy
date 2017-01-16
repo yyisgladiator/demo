@@ -10,7 +10,7 @@
 theory StreamCase_Study
 
 
-imports Streams StreamTheorie
+imports Streams
 begin
 
 
