@@ -699,6 +699,8 @@ by (simp add: tsNth_def)
 lemma tsdrop_tick [simp] :"tsDrop (Suc n)\<cdot>(Abs_tstream (\<up>\<surd>) \<bullet> ts) = tsDrop n\<cdot>ts"
 by(simp add: tsDrop.simps tsdropfirst_insert tsconc_rep_eq)
 
+lemma [simp]: "tsDrop 0\<cdot> x = x"
+by (simp add: tsDrop_def)
 
 (* tsNth *)
 lemma [simp]: "tsNth i\<cdot>\<bottom> = \<bottom>"
@@ -1381,9 +1383,9 @@ by (simp add: min.commute)
 lemma esttake_infD: "#\<surd>(tsTake k\<cdot>x) = \<infinity> \<Longrightarrow> tsTake k\<cdot>x = x"
 by (simp add: ts_below_eq)
 
-
-
-
+text {* Retrieving the first 0 elements of a stream returns the empty stream. *}
+lemma [simp]: "tsTake 0\<cdot> x =  \<bottom>"
+by (simp)
 
 (* tspfair*)
 
@@ -3189,10 +3191,10 @@ lemma inj_sfilter_smap_siteratel2[simp]:
 
 
 
-text {* Retrieving the first 0 elements of a stream returns the empty stream. *}
+FERTIG text {* Retrieving the first 0 elements of a stream returns the empty stream. *}
 lemma [simp]: "tsTake 0\<cdot> x =  \<bottom>"
 
-lemma [simp]: "tsDrop 0\<cdot> x = x"
+FERTIG lemma [simp]: "tsDrop 0\<cdot> x = x"
 
 (* concatenating finite streams produces another finite stream *)
 lemma sconc_slen [simp]: assumes "#s<\<infinity>" and "#xs<\<infinity>"
