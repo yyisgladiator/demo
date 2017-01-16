@@ -1010,7 +1010,37 @@ lemma assumes "ln = lnsuc\<cdot>ln"
   shows "ln = \<infinity>"
 using assms ninf2Fin by force
 
+(*Für HK*)
+(*
 
+--Untimed sum in haskell--
+sum :: nat stream => nat stream
+sum x = h2 x 0
+
+h2 :: nat stream => nat => nat stream
+h2 \<euro> y = \<euro>
+h2 x:xs y = (x+y) : h2 xs (x+y)
+
+--Untimed sum in isabelle (zu zeigen: äquivalent mit sum3/sum4)--Typen müssen angepasst
+primrec h :: "nat \<Rightarrow> 'i stream \<Rightarrow> nat \<Rightarrow> 'o stream" where
+"h 0 s y = e" | (*maximal one non-variable argument required, so \<epsilon>-case must be encoded in the line below.*)
+"h (Suc n) s y = (if s=\<epsilon> then \<epsilon> else \<up>(shd s + y) · h n (srt·s) (shd s + y))"
+    
+definition h2 :: "nat \<Rightarrow> ('i, 'o) spf" where  //siehe sscanl
+"h2 s y = \<Squnion>i. h i s y"
+
+definition sum5 :: "nat stream \<rightarrow> nat stream" where
+"sum5 = \<Lambda> x. h2 x 0"
+
+--TIMED: analog (try evtl. auch mit sscanl / gibts eine function timed-sscanl? wenn nicht dann definieren)
+
+sum x = sum4 x 0
+
+sum4 \<euro> y = \<euro>
+sum4 T:xs y = T : sum4 xs y
+sum4 x:xs y = (x+y) : sum4 xs (x+y)
+
+*)
 
 
 end
