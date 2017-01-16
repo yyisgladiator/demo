@@ -1010,7 +1010,6 @@ lemma assumes "ln = lnsuc\<cdot>ln"
   shows "ln = \<infinity>"
 using assms ninf2Fin by force
 
-(*Für HK*)
 (*
 
 --Untimed sum in haskell--
@@ -1022,16 +1021,43 @@ h2 \<euro> y = \<euro>
 h2 x:xs y = (x+y) : h2 xs (x+y)
 
 --Untimed sum in isabelle (zu zeigen: äquivalent mit sum3/sum4)--Typen müssen angepasst
-primrec h :: "nat \<Rightarrow> 'i stream \<Rightarrow> nat \<Rightarrow> 'o stream" where
-"h 0 s y = e" | (*maximal one non-variable argument required, so \<epsilon>-case must be encoded in the line below.*)
-"h (Suc n) s y = (if s=\<epsilon> then \<epsilon> else \<up>(shd s + y) · h n (srt·s) (shd s + y))"
+
+*)
+
+primrec h :: "nat \<Rightarrow> nat stream \<Rightarrow> nat \<Rightarrow> nat stream" where
+"h 0 s y = \<epsilon>" | (*maximal one non-variable argument required, so \<epsilon>-case must be encoded in the line below.*)
+"h (Suc n) s y = (if s=\<epsilon> then \<epsilon> else \<up>(shd s + y) \<bullet> (h n (srt\<cdot> s) ((shd s) + y)))"
     
-definition h2 :: "nat \<Rightarrow> ('i, 'o) spf" where  //siehe sscanl
-"h2 s y = \<Squnion>i. h i s y"
+definition h2 :: "nat stream \<Rightarrow> nat \<Rightarrow> nat stream" where  
+"h2 s y \<equiv> \<Squnion>i. h i s y"
 
 definition sum5 :: "nat stream \<rightarrow> nat stream" where
-"sum5 = \<Lambda> x. h2 x 0"
+"sum5  \<equiv> \<Lambda> x.  h2 x 0"
 
+
+lemma sum5_slen: "#(sum5\<cdot> x) = #x"
+using add_slen min_rek slen_scons
+sorry
+
+lemma sum5_snth_eq: "\<forall>n. Fin n < #(sum5\<cdot> as) \<longrightarrow> snth n (sum5\<cdot> as) = snth n (sum3\<cdot>as)"
+sorry
+
+lemma sum5_sum3: "sum5\<cdot> as = sum3\<cdot>as"
+  apply(rule Streams.snths_eq)
+   apply simp
+using sum5_slen sum5_snth_eq
+by auto
+
+lemma sum52sum3: "sum5 = sum3"
+  by (simp add: cfun_eqI sum5_sum3)
+
+
+
+
+
+
+(*Für HK*)
+(*
 --TIMED: analog (try evtl. auch mit sscanl / gibts eine function timed-sscanl? wenn nicht dann definieren)
 
 sum x = sum4 x 0
