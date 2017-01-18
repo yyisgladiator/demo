@@ -2,6 +2,11 @@ theory SPF_MW
 imports SPF SerComp_JB ParComp_MW InnerProd_Case_Study(*TSPFTheorie*)
 begin
 
+(* operator for parallel composition *)
+
+definition parcomp :: "'m SPF \<Rightarrow> 'm SPF \<Rightarrow> 'm SPF" ("_\<parallel>_") where
+"parcomp f1 f2 \<equiv> Abs_CSPF (\<lambda> x. (sbDom\<cdot>x = spfDom\<cdot>f1 \<union> spfDom\<cdot>f2 ) \<leadsto> ((f1 \<rightleftharpoons> (x \<bar>spfDom\<cdot>f1)) \<uplus> (f2 \<rightleftharpoons> (x\<bar>spfDom\<cdot>f2))))"
+
 (* hide *)
 
 definition hide :: "'m SPF \<Rightarrow>  channel set \<Rightarrow> 'm SPF" where
@@ -30,76 +35,56 @@ let I1 = spfDom\<cdot>f1;
     Oc = spfRan\<cdot>f1 \<union> spfRan\<cdot>f2;
     C  = spfDom\<cdot>f1 \<union> spfDom\<cdot>f2 \<union> spfRan\<cdot>f1 \<union> spfRan\<cdot>f2    
 in Abs_CSPF (\<lambda> x. (sbDom\<cdot>x = I) \<leadsto> (\<Squnion>i. iterate i\<cdot>
-   (\<Lambda> z. x \<uplus> ((Rep_CSPF f1)\<rightharpoonup>(z \<bar> I1)) \<uplus> ((Rep_CSPF f2)\<rightharpoonup>(z \<bar> I2)))\<cdot>(sbLeast C)) \<bar> Oc)"
+   (\<Lambda> z. x \<uplus> (f1\<rightleftharpoons>(z \<bar> I1)) \<uplus> (f2\<rightleftharpoons>(z \<bar> I2)))\<cdot>(sbLeast C)) \<bar> Oc)"
 
 (* inner prod *)
 
 definition innerProd :: "nat SPF" where
-"innerProd \<equiv> hide (addC \<otimes> (mult1 \<parallel> mult2)) {c5, c6}"
+"innerProd \<equiv> hide ((mult1 \<parallel> mult2) \<otimes> addC) {c5, c6}"
 
-(* feedback stüber *)
-
-definition add :: "nat stream \<rightarrow> nat stream \<rightarrow> nat stream" where
-"add \<equiv> \<Lambda> s1 s2. smap (\<lambda> s3. (fst s3) + (snd s3)) \<cdot> (szip \<cdot>s1\<cdot>s2)"
-
-definition sum4 :: "nat stream \<rightarrow> nat stream" where
-"sum4 \<equiv> \<Lambda> x. (fix\<cdot>(\<Lambda> z. add\<cdot>x\<cdot>(\<up>0 \<bullet> (z))))"
-
-(*
-primrec tspfMu_helper :: "nat \<Rightarrow> 'm TSPF \<Rightarrow> 'm TSB_inf \<Rightarrow> 'm TSB" where
-"tspfMu_helper 0 f1 tb = tsbLeast (tspfDom\<cdot>f1 \<union> tspfRan\<cdot>f1) " |
-"tspfMu_helper (Suc n) f1 tb =( let last = tspfMu_helper n f1 tb in
- (tb \<uplus> (f1 \<rightharpoondown> (last \<bar> tspfDom\<cdot>f1)) \<down> (Suc n) ))"
-
-definition tspfMu :: "'m TSPF \<Rightarrow> 'm TSPF"  where
-"tspfMu f1 \<equiv> Abs_TSPF (\<lambda> tb. (tsbiDom\<cdot>tb=(tspfDom\<cdot>f1 - tspfRan\<cdot>f1)) \<leadsto>
- (tsb2tsbInf (\<Squnion> i. tspfMu_helper i f1 tb ) \<bar> (tspfRan\<cdot>f1 - tspfDom\<cdot>f1)) )"
-*)
 (* lemmas about composition *)
 
 lemma LtopL: "L f1 f2 = {} \<Longrightarrow> pL f1 f2 = {}"
 apply(simp add: L_def pL_def)
 by (simp add: Int_Un_distrib inf_sup_distrib2)
 
-lemma spfComp_parallel_noFix: assumes "L f1 f2 = {}"
-                                         and "sbDom\<cdot>x = I f1 f2" 
-                                         and "spfComp_well f1 f2"
-  shows "(\<Squnion>i. iterate i\<cdot>(spfCompHelp2 f1 f2 x)\<cdot>(sbLeast (C f1 f2)))
-               = x \<uplus> ((Rep_CSPF f1) \<rightharpoonup> (x \<bar>spfDom\<cdot>f1)) \<uplus> ((Rep_CSPF f2) \<rightharpoonup> (x\<bar>spfDom\<cdot>f2))"
-by (metis (mono_tags, lifting) assms(1) assms(2) assms(3) lub_eq spfComp_parallel_itconst2)
+lemma unionRestrictCh: assumes "sbDom\<cdot>sb1 \<inter> cs = {}"
+                           and "sbDom\<cdot>sb2 \<union> sbDom\<cdot>sb3 = cs"
+                           and "c \<in> cs"
+   shows "(sb1 \<uplus> sb2 \<uplus> sb3 \<bar> cs) . c = (sb2 \<uplus> sb3) . c"
+by (metis (no_types, lifting) Un_upper2 assms(1) assms(2) inf_sup_distrib1 inf_sup_ord(3) sbrestrict_id sbunion_commutative sbunion_restrict2 sbunion_restrict3 sup_eq_bot_iff)
 
-lemma spfCompParallelGetch: assumes "L f1 f2 = {}"
-                                and "sbDom\<cdot>sb = I f1 f2"
-                                and "spfComp_well f1 f2"
-                                and "c \<in> spfRan\<cdot>f1" 
-  shows "(Rep_CSPF(spfcomp f1 f2) \<rightharpoonup> sb) . c = (Rep_CSPF(f1) \<rightharpoonup> (sb\<bar>spfDom\<cdot>f1)) . c"
-apply(simp add: spfcomp_tospfH2)
-apply(simp only: spfcomp_repAbs assms, simp_all)
-apply(simp only: spfComp_parallel_itconst2 assms)
-apply(simp_all add: spfComp_cInOc assms)
-apply(subst sbunion_getchM, simp_all)
+lemma unionRestrict: assumes "sbDom\<cdot>sb1 \<inter> cs = {}"
+                         and "sbDom\<cdot>sb2 \<union> sbDom\<cdot>sb3 = cs"
+   shows "sb1 \<uplus> sb2 \<uplus> sb3 \<bar> cs = sb2 \<uplus> sb3"
+apply(rule sb_eq)
 apply(simp_all add: assms)
-apply(metis L_def UnCI assms(1) assms(4) disjoint_iff_not_equal)
-by (meson assms(3) assms(4) disjoint_iff_not_equal spfComp_well_def)
+apply (simp add: Int_absorb1 assms(2) sup_assoc)
+by (metis Un_iff assms(2) sbunion_getchL sbunion_getchR)
 
-lemma spfComp_serial_noFix: assumes "spfRan\<cdot>f1 = spfDom\<cdot>f2" 
-                                and "sbDom\<cdot>x = I f1 f2" 
-                                and "spfComp_well f1 f2"
-                                and "pL f1 f2 = {}"
-  shows "(\<Squnion>i. iterate i\<cdot>(spfCompHelp2 f1 f2 x)\<cdot>(sbLeast (C f1 f2)))
-            = x \<uplus> ((Rep_CSPF f1) \<rightharpoonup> (x \<bar>spfDom\<cdot>f1)) \<uplus> ((Rep_CSPF f2)\<rightharpoonup>((Rep_CSPF f1) \<rightharpoonup> (x\<bar>spfDom\<cdot>f1)))"
-by (metis (no_types, lifting) ParComp_MW.spfCompHelp2_def SerComp_JB.spfCompHelp2_def SerComp_JB.spfComp_serial_itconst2 assms(1) assms(2) assms(3) assms(4) lub_eq)
+lemma parCompHelp2Eq: assumes "L f1 f2 = {}"
+                          and "spfComp_well f1 f2"
+                          and "sbDom\<cdot>x = spfDom\<cdot>f1 \<union> spfDom\<cdot>f2"    
+   shows "(\<Squnion>i. iterate i\<cdot>(ParComp_MW.spfCompHelp2 f1 f2 x)\<cdot>(sbLeast (C f1 f2)))\<bar>Oc f1 f2 = (f1\<rightleftharpoons>(x\<bar>spfDom\<cdot>f1)) \<uplus> (f2\<rightleftharpoons>(x\<bar>spfDom\<cdot>f2))" 
+apply(subst spfComp_parallel_itconst2, simp_all add: assms)
+apply(simp add: Oc_def)
+apply(subst unionRestrict)
+apply(simp_all add: assms)
+by (metis Diff_triv L_def assms(1) inf_commute)
+
+lemma parCompHelp2Eq2: assumes "L f1 f2 = {}"
+                           and "spfComp_well f1 f2" 
+   shows " (sbDom\<cdot>x = spfDom\<cdot>f1 \<union> spfDom\<cdot>f2) \<leadsto> ((\<Squnion>i. iterate i\<cdot>(ParComp_MW.spfCompHelp2 f1 f2 x)\<cdot>(sbLeast (C f1 f2)))\<bar>Oc f1 f2)
+         = (sbDom\<cdot>x = spfDom\<cdot>f1 \<union> spfDom\<cdot>f2) \<leadsto> ((f1\<rightleftharpoons>(x\<bar>spfDom\<cdot>f1)) \<uplus> (f2\<rightleftharpoons>(x\<bar>spfDom\<cdot>f2)))"
+using assms(1) assms(2) parCompHelp2Eq by fastforce
+
 
 lemma parallelOperatorEq: assumes "L f1 f2 = {}"
-                              and "sbDom\<cdot>sb = I f1 f2"
-                            shows "(f1 \<otimes> f2)\<rightleftharpoons>sb = (f1 \<parallel> f2)\<rightleftharpoons>sb"
-sorry
-
-lemma serialOperatorEq: assumes "pL f1 f2 = {}"
-                            and "sbDom\<cdot>sb = I f1 f2"
-                            and "c \<in> spfRan\<cdot>f2"
-  shows "(spfComp2 f1 f2)\<rightleftharpoons>sb . c  = (sercomp f1 f2)\<rightleftharpoons>sb . c"
-apply(simp add: sercomp_def)
-sorry
+                              and "spfComp_well f1 f2"  
+   shows "(spfcomp f1 f2) = (f1 \<parallel> f2)"
+apply(simp add: parcomp_def spfcomp_tospfH2)
+apply(subst spfComp_I_domf1f2_eq, simp_all add: assms)
+apply(subst parCompHelp2Eq2)
+by(simp_all add: assms)
 
 end
