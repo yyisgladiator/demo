@@ -10,12 +10,23 @@ definition parcomp :: "'m SPF \<Rightarrow> 'm SPF \<Rightarrow> 'm SPF" ("_\<pa
 (* hide *)
 
 definition hide :: "'m SPF \<Rightarrow>  channel set \<Rightarrow> 'm SPF" where
-"hide f cs \<equiv>
-let newO = spfRan\<cdot>f - cs
-in Abs_CSPF (\<lambda> x. (sbDom\<cdot>x = spfDom\<cdot>f ) \<leadsto> (((Rep_CSPF f) \<rightharpoonup> x)\<bar>newO))"
+"hide f cs \<equiv> Abs_CSPF (\<lambda> x. (sbDom\<cdot>x = spfDom\<cdot>f ) \<leadsto> ((f \<rightleftharpoons> x)\<bar>(spfRan\<cdot>f - cs)))"
+
+lemma spfDomHide: "spfDom\<cdot>(hide f cs) = spfDom\<cdot>f"
+sorry
+
+lemma hideSbRestrict: assumes "sbDom\<cdot>sb = spfDom\<cdot>f" 
+   shows "(hide f cs)\<rightleftharpoons>sb = (f\<rightleftharpoons>sb)\<bar>(spfRan\<cdot>f - cs)"
+apply(simp add: hide_def)
+sorry
 
 lemma hideSpfRan: "spfRan\<cdot>(hide f cs) = spfRan\<cdot>f - cs"
-sorry
+apply(subst spfran_least)
+apply(simp add: spfDomHide)
+apply(subst hideSbRestrict)
+apply (simp add:assms)
+apply(subst sbrestrict_sbdom)
+by (simp add: Diff_subset Int_absorb1 spfran_least)
 
 lemma hideSubset: "spfRan\<cdot>(hide f cs) \<subseteq> spfRan\<cdot>f"
 using hideSpfRan by auto
@@ -77,7 +88,6 @@ lemma parCompHelp2Eq2: assumes "L f1 f2 = {}"
    shows " (sbDom\<cdot>x = spfDom\<cdot>f1 \<union> spfDom\<cdot>f2) \<leadsto> ((\<Squnion>i. iterate i\<cdot>(ParComp_MW.spfCompHelp2 f1 f2 x)\<cdot>(sbLeast (C f1 f2)))\<bar>Oc f1 f2)
          = (sbDom\<cdot>x = spfDom\<cdot>f1 \<union> spfDom\<cdot>f2) \<leadsto> ((f1\<rightleftharpoons>(x\<bar>spfDom\<cdot>f1)) \<uplus> (f2\<rightleftharpoons>(x\<bar>spfDom\<cdot>f2)))"
 using assms(1) assms(2) parCompHelp2Eq by fastforce
-
 
 lemma parallelOperatorEq: assumes "L f1 f2 = {}"
                               and "spfComp_well f1 f2"  
