@@ -1,5 +1,5 @@
 theory SPF_MW
-imports SPF SerComp_JB ParComp_MW TSPFTheorie
+imports SPF SerComp_JB ParComp_MW InnerProd_Case_Study(*TSPFTheorie*)
 begin
 
 (* hide *)
@@ -32,6 +32,11 @@ let I1 = spfDom\<cdot>f1;
 in Abs_CSPF (\<lambda> x. (sbDom\<cdot>x = I) \<leadsto> (\<Squnion>i. iterate i\<cdot>
    (\<Lambda> z. x \<uplus> ((Rep_CSPF f1)\<rightharpoonup>(z \<bar> I1)) \<uplus> ((Rep_CSPF f2)\<rightharpoonup>(z \<bar> I2)))\<cdot>(sbLeast C)) \<bar> Oc)"
 
+(* inner prod *)
+
+definition innerProd :: "nat SPF" where
+"innerProd \<equiv> hide (addC \<otimes> (mult1 \<parallel> mult2)) {c5, c6}"
+
 (* feedback stüber *)
 
 definition add :: "nat stream \<rightarrow> nat stream \<rightarrow> nat stream" where
@@ -40,6 +45,7 @@ definition add :: "nat stream \<rightarrow> nat stream \<rightarrow> nat stream"
 definition sum4 :: "nat stream \<rightarrow> nat stream" where
 "sum4 \<equiv> \<Lambda> x. (fix\<cdot>(\<Lambda> z. add\<cdot>x\<cdot>(\<up>0 \<bullet> (z))))"
 
+(*
 primrec tspfMu_helper :: "nat \<Rightarrow> 'm TSPF \<Rightarrow> 'm TSB_inf \<Rightarrow> 'm TSB" where
 "tspfMu_helper 0 f1 tb = tsbLeast (tspfDom\<cdot>f1 \<union> tspfRan\<cdot>f1) " |
 "tspfMu_helper (Suc n) f1 tb =( let last = tspfMu_helper n f1 tb in
@@ -48,7 +54,7 @@ primrec tspfMu_helper :: "nat \<Rightarrow> 'm TSPF \<Rightarrow> 'm TSB_inf \<R
 definition tspfMu :: "'m TSPF \<Rightarrow> 'm TSPF"  where
 "tspfMu f1 \<equiv> Abs_TSPF (\<lambda> tb. (tsbiDom\<cdot>tb=(tspfDom\<cdot>f1 - tspfRan\<cdot>f1)) \<leadsto>
  (tsb2tsbInf (\<Squnion> i. tspfMu_helper i f1 tb ) \<bar> (tspfRan\<cdot>f1 - tspfDom\<cdot>f1)) )"
-
+*)
 (* lemmas about composition *)
 
 lemma LtopL: "L f1 f2 = {} \<Longrightarrow> pL f1 f2 = {}"
@@ -61,6 +67,20 @@ lemma spfComp_parallel_noFix: assumes "L f1 f2 = {}"
   shows "(\<Squnion>i. iterate i\<cdot>(spfCompHelp2 f1 f2 x)\<cdot>(sbLeast (C f1 f2)))
                = x \<uplus> ((Rep_CSPF f1) \<rightharpoonup> (x \<bar>spfDom\<cdot>f1)) \<uplus> ((Rep_CSPF f2) \<rightharpoonup> (x\<bar>spfDom\<cdot>f2))"
 by (metis (mono_tags, lifting) assms(1) assms(2) assms(3) lub_eq spfComp_parallel_itconst2)
+
+lemma spfCompParallelGetch: assumes "L f1 f2 = {}"
+                                and "sbDom\<cdot>sb = I f1 f2"
+                                and "spfComp_well f1 f2"
+                                and "c \<in> spfRan\<cdot>f1" 
+  shows "(Rep_CSPF(spfcomp f1 f2) \<rightharpoonup> sb) . c = (Rep_CSPF(f1) \<rightharpoonup> (sb\<bar>spfDom\<cdot>f1)) . c"
+apply(simp add: spfcomp_tospfH2)
+apply(simp only: spfcomp_repAbs assms, simp_all)
+apply(simp only: spfComp_parallel_itconst2 assms)
+apply(simp_all add: spfComp_cInOc assms)
+apply(subst sbunion_getchM, simp_all)
+apply(simp_all add: assms)
+apply(metis L_def UnCI assms(1) assms(4) disjoint_iff_not_equal)
+by (meson assms(3) assms(4) disjoint_iff_not_equal spfComp_well_def)
 
 lemma spfComp_serial_noFix: assumes "spfRan\<cdot>f1 = spfDom\<cdot>f2" 
                                 and "sbDom\<cdot>x = I f1 f2" 
