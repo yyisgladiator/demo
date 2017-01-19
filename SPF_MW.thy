@@ -15,10 +15,17 @@ definition hide :: "'m SPF \<Rightarrow>  channel set \<Rightarrow> 'm SPF" wher
 lemma spfDomHide: "spfDom\<cdot>(hide f cs) = spfDom\<cdot>f"
 sorry
 
+lemma[simp]: "cont (\<lambda> x. (sbDom\<cdot>x = spfDom\<cdot>f ) \<leadsto> ((f \<rightleftharpoons> x)\<bar>(spfRan\<cdot>f - cs)))"
+sorry
+
+lemma[simp]: "spf_well (\<Lambda> x. (sbDom\<cdot>x = spfDom\<cdot>f ) \<leadsto> ((f \<rightleftharpoons> x)\<bar>(spfRan\<cdot>f - cs)))"
+apply(auto simp add: spf_well_def domIff2 sbdom_rep_eq)
+sorry
+
 lemma hideSbRestrict: assumes "sbDom\<cdot>sb = spfDom\<cdot>f" 
    shows "(hide f cs)\<rightleftharpoons>sb = (f\<rightleftharpoons>sb)\<bar>(spfRan\<cdot>f - cs)"
 apply(simp add: hide_def)
-sorry
+using assms by blast
 
 lemma hideSpfRan: "spfRan\<cdot>(hide f cs) = spfRan\<cdot>f - cs"
 apply(subst spfran_least)

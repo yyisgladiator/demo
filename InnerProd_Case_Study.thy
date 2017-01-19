@@ -197,7 +197,6 @@ lemma [simp]: "Oc mult1 mult2 = {c5,c6}"
 lemma [simp]: "I mult1 mult2 = {c1,c2,c3,c4}"
   by (auto simp add: I_def)
 
-
 (* Remove this ASAP *)
 lemma spfCompParallelGetch1: assumes "L f1 f2 = {}"
                                 and "sbDom\<cdot>sb = I f1 f2"
@@ -236,23 +235,29 @@ lemma spfComp_ran_Oc: "spfRan\<cdot>(spfcomp f1 f2) = Oc f1 f2"
 lemma spfComp_dom_I: "spfDom\<cdot>(spfcomp f1 f2) = I f1 f2"
   sorry 
 
+lemma [simp]: "spfDom\<cdot>(spfcomp mult1 mult2) = {c1, c2, c3, c4}"
+by(simp add: spfComp_dom_I)
+
+lemma [simp]: "spfRan\<cdot>(spfcomp mult1 mult2) = {c5, c6}"
+by(simp add: spfComp_ran_Oc)
+
 lemma [simp]: "spfComp_well (spfcomp mult1 mult2) addC"
-  sorry
+by(simp add: spfComp_well_def)
 
 lemma [simp]: "C (spfcomp mult1 mult2) addC = {c1,c2,c3,c4,c5,c6,c7}"
-  sorry
+by(auto simp add: C_def)
 
 lemma [simp]: "L (spfcomp mult1 mult2) addC = {c5,c6}"
-  sorry
+by(auto simp add: L_def)
 
 lemma [simp]: "pL (spfcomp mult1 mult2) addC = {}"
-  sorry
+by(auto simp add: pL_def)
 
 lemma [simp]: "Oc (spfcomp mult1 mult2) addC = {c7}"
-  sorry
+by(auto simp add: Oc_def)
 
 lemma [simp]: "I (spfcomp mult1 mult2) addC  = {c1,c2,c3,c4}"
-  sorry
+by(auto simp add: I_def)
 
 lemma innerprod_serComp: assumes "sbDom\<cdot>sb = I (spfcomp mult1 mult2) addC"
   shows "((Rep_CSPF (spfcomp (spfcomp mult1 mult2) addC))  \<rightharpoonup> sb) . c7 = 
