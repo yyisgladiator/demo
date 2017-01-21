@@ -1026,31 +1026,210 @@ h2 x:xs y = (x+y) : h2 xs (x+y)
 
 primrec h :: "nat \<Rightarrow> nat stream \<Rightarrow> nat \<Rightarrow> nat stream" where
 "h 0 s y = \<epsilon>" | (*maximal one non-variable argument required, so \<epsilon>-case must be encoded in the line below.*)
-"h (Suc n) s y = (if s=\<epsilon> then \<epsilon> else \<up>(shd s + y) \<bullet> (h n (srt\<cdot> s) ((shd s) + y)))"
-    
+"h (Suc n) s y = (if s=\<epsilon> then \<epsilon> else \<up>((shd s)+ y )\<bullet> (h n (srt\<cdot> s) ((shd s)+ y)))"
+
 definition h2 :: "nat stream \<Rightarrow> nat \<Rightarrow> nat stream" where  
 "h2 s y \<equiv> \<Squnion>i. h i s y"
 
 definition sum5 :: "nat stream \<rightarrow> nat stream" where
-"sum5  \<equiv> \<Lambda> x.  h2 x 0"
+"sum5 \<equiv> \<Lambda> x. h2 x 0"
+
+definition sum5_test :: "nat stream" where
+"sum5_test= sum5\<cdot> (\<up>1)"
 
 
-lemma sum5_slen: "#(sum5\<cdot> x) = #x"
-using add_slen min_rek slen_scons
-sorry
+lemma h_eps: "h n \<epsilon> y = \<epsilon>"
+by(induct_tac n,auto)
 
-lemma sum5_snth_eq: "\<forall>n. Fin n < #(sum5\<cdot> as) \<longrightarrow> snth n (sum5\<cdot> as) = snth n (sum3\<cdot>as)"
-sorry
 
-lemma sum5_sum3: "sum5\<cdot> as = sum3\<cdot>as"
-  apply(rule Streams.snths_eq)
-   apply simp
-using sum5_slen sum5_snth_eq
+lemma h2_eps[]: "h2 \<epsilon> y = \<epsilon>"
+by(simp add: h2_def h_eps)
+
+lemma contlub_h:
+  "\<forall>s y. h n s y = h n (stake n\<cdot>s) y"
+apply (induct_tac n, auto)
+apply (rule_tac x=s in scases)
+apply auto
+apply (rule_tac x=s in scases)
 by auto
 
-lemma sum52sum3: "sum5 = sum3"
-  by (simp add: cfun_eqI sum5_sum3)
 
+lemma chain_h: "chain h"
+apply (rule chainI)
+apply (subst fun_below_iff)+
+apply (induct_tac i, auto)
+apply (erule_tac x="x" in allE)
+apply (simp add: h_eps)
+by (smt monofun_cfun_arg)
+
+(* monotonicity of h *)
+lemma mono_h: 
+  "\<forall> x y q. x \<sqsubseteq> y \<longrightarrow> h n x q \<sqsubseteq> h n y q"
+apply (induct_tac n, auto)
+apply (drule lessD, erule disjE, simp)
+apply (erule exE)+
+apply (erule conjE)+
+by (simp, rule monofun_cfun_arg, simp)
+
+lemma cont_lub_h2_helper2:
+  "\<forall>s y. h n s y = stake n\<cdot> (h n s y)"
+using contlub_h
+by(induct_tac n,auto)
+
+
+lemma sum5_snth_stake_min:
+  "snth n (stake m\<cdot> (h m s y)) = snth (min n m) (h m s y)"
+using contlub_h
+apply (induct_tac n,auto)
+using cont_lub_h2_helper2 apply auto[1]
+by (metis cont_lub_h2_helper2 min_def sdropostake snth_def stakeostake)
+
+
+
+lemma cont_lub_h2_helper: "\<And>i. cont (\<lambda>s. h i s y)"
+apply(induct_tac i,simp_all)
+apply (simp add: h_def, auto)
+sorry
+
+(* h2 is a continuous function *)
+lemma cont_lub_h2: "cont (\<lambda> s. \<Squnion>i. h i s y)" 
+apply (rule cont2cont_lub)
+apply (rule ch2ch_fun)
+apply (rule chainI)
+apply (rule fun_belowD [of _ _ "y"])
+apply (rule chainE)
+apply (metis (no_types, lifting) chain_h fun_below_iff po_class.chainE po_class.chainI)
+by (simp add: cont_lub_h2_helper)
+
+lemma sum5_scons:"sum5\<cdot>(\<up>a\<bullet>s) = \<up>(a) \<bullet> (h2 s a)"  
+apply (simp add: sum5_def h2_def)
+apply (subst beta_cfun, rule cont_lub_h2)+
+apply (subst contlub_cfun_arg)
+apply (rule ch2ch_fun, rule ch2ch_fun)
+apply (rule chainI)
+apply (rule fun_belowD [of _ _ "f"])
+apply (smt chain_h fun_belowI po_class.chain_def)
+apply (subst lub_range_shift [where j="Suc 0", THEN sym])
+apply (rule ch2ch_fun, rule ch2ch_fun)
+apply (rule chainI)
+apply (rule fun_belowD [of _ _ "f"])
+apply (smt chain_h fun_belowI po_class.chain_def)
+by  simp
+
+
+
+lemma sum5_unfold_h: "sum5\<cdot> input = h2 input 0"
+apply (simp add:sum5_def h2_def)
+by (simp add: cont_lub_h2)
+
+lemma sum5_unfold_h2: "h2 input 0 = (\<Squnion>i. h i input 0)"
+by (simp add:h2_def)
+
+
+
+
+lemma sum5_empty[simp]: "sum5\<cdot> \<epsilon> = \<epsilon>"
+by (simp add: h2_eps sum5_unfold_h)
+
+lemma sum5_shd [simp]: "shd (sum5\<cdot>(\<up>a \<bullet> as)) = a"
+by (simp add: sum5_scons)
+
+lemma [simp]: "shd (sum5\<cdot> xs) = shd xs"
+using sum5_shd 
+by (metis sum5_empty surj_scons)
+
+lemma sum5_snth0[simp]: "snth 0 (sum5\<cdot> xs) = snth 0 xs"
+by simp
+
+lemma sum52sum3_helper_helper: "snth 0 (sum5\<cdot> as) = snth 0 (sum4\<cdot> as)"
+by simp
+
+lemma sum5_one [simp]: "sum5\<cdot>(\<up>a) = \<up>a"
+by (metis h2_eps lscons_conv sum5_scons sup'_def)
+
+lemma sum5_unfold2_h[simp]: "h2 (\<up>a1 \<bullet>  as) 0 = \<up>a1 \<bullet> (h2 as a1)"
+using sum5_scons sum5_unfold_h by auto
+
+
+
+lemma sum5_unfold_sum5[simp]: "sum5\<cdot>(\<up>0 \<bullet>as) =\<up>0 \<bullet> sum5\<cdot>(as)"
+by (simp add: sum5_unfold_h)
+
+lemma sum5_unfoldh2h: "h2 (\<up>a1 \<bullet>  as) 0 = \<up>a1 \<bullet> (\<Squnion>i. h i as a1)"
+using sum5_scons sum5_unfold_h sum5_unfold_h2
+by (simp add: h2_def)
+
+lemma snth_zero_h[simp]: "snth 0 (\<up>a1 \<bullet> (h2 (\<up>a2 \<bullet>as) a1)) = a1"
+by simp
+
+lemma h2_unfold_ite[rule_format]: "as\<noteq>\<epsilon> \<longrightarrow> h2 as a1= \<up>(shd as + a1)\<bullet> h2 (srt\<cdot>as) (shd as + a1)"
+apply(induct_tac a1, simp_all)
+apply (metis sum5_scons sum5_unfold_h surj_scons)
+sorry
+
+lemma snth_one_h[simp]: "snth 1 (\<up>a1 \<bullet> (h2 (\<up>a2 \<bullet>as) a1)) = a2+a1"
+apply (simp add: sum5_scons One_nat_def)
+using h2_unfold_ite by auto
+
+
+lemma h2_one_unfold[simp]: "h2 (\<up>a1) n= \<up>(a1+n)"
+by (metis h2_unfold_ite lscons_conv shd1 stream.con_rews(2) stream.sel_rews(5) sum5_one sum5_scons sup'_def up_defined)
+
+lemma sum5_two [simp]: "sum5\<cdot>(\<up>a1\<bullet> \<up>a2) = \<up>a1 \<bullet> \<up>(a1+a2)"
+apply(simp add: sum5_unfold_h)
+by (simp add: add.commute)
+
+lemma sum5_noteps[simp]: "s\<noteq>\<epsilon> \<Longrightarrow> sum5\<cdot>s = \<up>(shd s)\<bullet> h2 (srt \<cdot>s) (shd s)"
+using assms
+by (metis sum5_unfold2_h sum5_unfold_h surj_scons)
+
+lemma sum5_slen [simp]:" #(sum5\<cdot>as) = #as"
+  (*by (metis add_slen min_rek slen_scons sum5_noteps h2_unfold2_h2)*)
+sorry
+
+lemma sum5_snth_1_helper: "Fin 0 < #as \<Longrightarrow> snth (Suc 0) (sum5\<cdot>(\<up>a1 \<bullet>\<up>a2 \<bullet>as)) = a2+a1"
+using One_nat_def snth_one_h sum5_scons by presburger
+
+
+lemma sum5_snth_1: "as\<noteq>\<epsilon> \<Longrightarrow> snth (Suc 0) (sum5\<cdot>(\<up>a1\<bullet>as)) = snth (Suc 0) (\<up>a1\<bullet>as) + a1"
+by (metis One_nat_def add.commute scases shd1 snth_one_h snth_scons snth_shd sum5_scons)
+
+
+
+lemma test2_sum5[rule_format]: "Fin n<#as \<longrightarrow> snth n (sum5\<cdot>as) = snth n as + snth n (sum5\<cdot>(\<up>0 \<bullet>as))"
+ using add.left_neutral add_less_cancel_right lessI less_nat_zero_code slen_smap
+apply(induction n,simp_all)
+sorry
+
+lemma sum5_snth1: assumes "Fin 1<#xs"
+  shows "snth 1 (sum5\<cdot>xs) = snth 1 xs + snth 0 xs"
+by (metis One_nat_def assms snth_scons snth_shd sum5_snth0 sum5_unfold2_h sum5_unfold_h test2_sum5)
+
+
+lemma sum5_snth_helper[rule_format]: "Fin n < #as \<longrightarrow> snth n (h2 as a) = snth n (h2 as 0) + a"
+apply (induction n, simp_all)
+apply (metis Nat.add_0_right h2_unfold_ite lnsuc_neq_0_rev shd1 slen_empty_eq)
+apply (simp add: h2_def)
+sorry
+
+lemma sum5_snth: "Fin n < #as \<Longrightarrow> snth (Suc n) (sum5\<cdot>(\<up>a \<bullet> as)) = snth n (sum5\<cdot>as) + a"
+by (metis snth_scons sum5_scons sum5_snth_helper sum5_unfold_h)
+
+
+lemma sum52sum4_helper: "Fin n < #(sum5\<cdot>as) \<Longrightarrow> snth n (sum5\<cdot>as) = snth n (sum4\<cdot>as)"
+  apply(induction n)
+   apply(simp)
+using sum4_snth sum5_snth
+by (smt Fin_leq_Suc_leq Suc_n_not_le_n less2nat_lemma less_le snth_scons sum5_scons sum5_slen sum5_unfold_h test2 test2_sum5)
+
+lemma sum5_sum3: "sum5\<cdot> as = sum4\<cdot>as"
+  apply(rule Streams.snths_eq)
+   apply simp
+using sum5_slen sum52sum4_helper
+by auto
+
+lemma sum52sum3: "sum5 = sum4"
+  by (simp add: cfun_eqI sum5_sum3)
 
 
 
