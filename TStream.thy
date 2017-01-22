@@ -903,8 +903,9 @@ apply(simp add: tsNth_def)
 using tstakefirst_bot apply force
 by (simp add: tsNth_Suc)
 
-
-
+text {* Appending to an inifite tstream does not change its @{text "n"}th element *}
+lemma tsconc_fst_inf_lemma: "\<forall>x. #\<surd>x=\<infinity> \<longrightarrow> tstake n\<cdot>(x\<bullet>y) = tstake n\<cdot>x"
+by simp
 
 
 (* tsTake *)
@@ -3246,11 +3247,15 @@ lemma inf_scase:"#s = \<infinity> \<Longrightarrow> \<exists>a as. s = \<up>a \<
 (* only the empty stream has length 0 *)
 lemma slen_empty_eq[simp]: "(#x = 0) = (x = \<epsilon>)"
 
-text {* Appending to an inifite stream does not change its @{text "n"}th element *}
+DONE text {* Appending to an inifite stream does not change its @{text "n"}th element *}
 lemma sconc_fst_inf_lemma: "\<forall>x. #x=\<infinity> \<longrightarrow> stake n\<cdot>(x\<bullet>y) = stake n\<cdot>x"
+WITH text {* Appending to an inifite tstream does not change its @{text "n"}th element *}
+lemma tsconc_fst_inf_lemma: "\<forall>x. #\<surd>x=\<infinity> \<longrightarrow> tstake n\<cdot>(x\<bullet>y) = tstake n\<cdot>x"
 
-text {* Appending to an infinite stream does not change the stream *}
+ALREADY DONE text {* Appending to an infinite stream does not change the stream *}
 lemma sconc_fst_inf[simp]: "#x=\<infinity> \<Longrightarrow> x\<bullet>y = x"
+WITH lemma tsconc_id [simp]: assumes "#\<surd>ts1 = \<infinity>"
+  shows "tsConc ts1\<cdot>ts2 = ts1"
 
 DONE lemma sntimes_eps[simp]: "sntimes n \<epsilon> = \<epsilon>"
 WITH lemma tsntimes_eps[simp]: "tsntimes n \<bottom> = \<bottom>"
@@ -3259,7 +3264,6 @@ DONE (* infinitely cycling the empty stream produces the empty stream again *)
 lemma strict_icycle[simp]: "sinftimes \<epsilon> = \<epsilon>"
 WITH (* infinitely cycling the empty tstream produces the empty tstream again *)
 lemma tsinftimes_eps[simp]: "tsinftimes \<bottom> = \<bottom>"
-by (subst tsinftimes_def [THEN fix_eq2], simp)
 
 (* smap distributes over infinite repetition *)
 lemma smap2sinf[simp]: "smap f\<cdot>(x\<infinity>)= (smap f\<cdot>x)\<infinity>"
