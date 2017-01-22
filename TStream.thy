@@ -374,26 +374,6 @@ lemma tstream_scons_eq[simp]: "((\<up>e \<bullet> rs) \<in> {t::'a event stream.
 apply (smt fold_inf lnat.injects mem_Collect_eq sfilter_in sfilter_nin slen_scons)
 done
 
-(* ToDo Dennis
-text {* If a predicate P holds for empty and non-empty tstreams, it holds for all tstreams *}
-lemma tscases: "\<And>(x::'a tstream) P. \<lbrakk>x = \<bottom> \<Longrightarrow> P; \<And>(s). x = s \<bullet> Abs_tstream(\<up>\<surd>) \<Longrightarrow> P\<rbrakk> \<Longrightarrow> P"
-apply (rule_tac y=x in scases', simp+)
-apply (rule_tac p=u in upE, simp+)
-apply (case_tac "xa")
-by (auto simp add: sup'_def sconc_scons')
-
-text {* For finite streams, their lengths are added on concatenation *}
-lemma tstickcount_tsconc_all_finite: 
-  "\<forall>x y n. (#\<surd>x) = Fin k \<and> (#\<surd>y) = Fin n \<longrightarrow> #\<surd>(x\<bullet>y) = Fin (k+n)" 
-apply (induct_tac k, auto)
-by (rule_tac x=x in tscases, auto)
-
-(* concatenating finite tstreams produces another finite tstream *)
-lemma tsconc_tstickcount[simp]: assumes "(#\<surd>s)<\<infinity>" and "(#\<surd>xs)<\<infinity>"
-  shows "(#\<surd>(s\<bullet>xs))<\<infinity>"
-by (metis Fin_neq_inf assms(1) assms(2) infI inf_ub lnle_def lnless_def tstickcount_tsconc_all_finite)
-*)
-
 
 (* tsAbs *)
 thm tsAbs_def
@@ -732,10 +712,6 @@ lemma tsnth_shd[simp]: "tsNth 0\<cdot>s = tsTakeFirst\<cdot>s"
 by (simp add: tsNth_def)
 
 
-
-
-
-
 (* tsTickCount *)
 lemma [simp]: "#\<surd> \<bottom> = 0"
 by(simp add: tsTickCount_def)
@@ -907,6 +883,14 @@ text {* Appending to an inifite tstream does not change its @{text "n"}th elemen
 lemma tsconc_fst_inf_lemma: "\<forall>x. #\<surd>x=\<infinity> \<longrightarrow> tstake n\<cdot>(x\<bullet>y) = tstake n\<cdot>x"
 by simp
 
+(* concatenating finite tstreams produces another finite tstream *)
+lemma tsconc_tstickcount[simp]: assumes "(#\<surd>s)<\<infinity>" and "(#\<surd>xs)<\<infinity>"
+  shows "(#\<surd>(s\<bullet>xs))<\<infinity>"
+by (metis Fin_neq_inf assms(1) assms(2) infI inf_ub lnle_def lnless_def stickcount_conc)
+
+(* prepending a singleton tstream increases the length by 1 *)
+lemma stickcount_tscons[simp]: "#\<surd>(Abs_tstream(\<up>\<surd>)\<bullet>as) = lnsuc\<cdot>(#\<surd>as)"
+by (simp add: tstickcount_insert tsconc_rep_eq)
 
 (* tsTake *)
 thm tsTake_def
@@ -2426,6 +2410,8 @@ lemma lscons_conv: "updis a && s = \<up>a \<bullet> s"
 (* concatenation with respect to singleton streams is associative *)
 lemma sconc_scons[simp]: "(\<up>a \<bullet> as) \<bullet> s = \<up>a \<bullet> (as \<bullet> s)"
 
+lemma scases: "\<And>x P. \<lbrakk>x = \<epsilon> \<Longrightarrow> P; \<And>a s. x = \<up>a \<bullet> s \<Longrightarrow> P\<rbrakk> \<Longrightarrow> P"
+
 (* Single element streams commute with the stake operation. *)
 lemma stake_Suc[simp]: "stake (Suc n)\<cdot>(\<up>a \<bullet> as) = \<up>a \<bullet> stake n\<cdot>as"
 
@@ -3210,7 +3196,6 @@ lemma inj_sfilter_smap_siteratel2[simp]:
         most of these lemmas have to be lifted to tstreams, slen(#) \<longrightarrow> tsTickCount (#\<surd>) etc.
 
 
-
 DONE text {* Retrieving the first 0 elements of a stream returns the empty stream. *}
 lemma [simp]: "tsTake 0\<cdot> x =  \<bottom>"
 
@@ -3223,20 +3208,19 @@ WITH (* concatenating finite tstreams produces another finite tstream *)
 lemma tsconc_tstickcount[simp]: assumes "(#\<surd>s)<\<infinity>" and "(#\<surd>xs)<\<infinity>"
   shows "(#\<surd>(s\<bullet>xs))<\<infinity>"
 
-ADDITIONAL TASK text {* For finite streams, their lengths are added on concatenation *}
+ADDITIONAL ALREADY DONE text {* For finite streams, their lengths are added on concatenation *}
 lemma slen_sconc_all_finite: 
   "\<forall>x y n. #x = Fin k \<and> #y = Fin n \<longrightarrow> #(x\<bullet>y) = Fin (k+n)" 
-WITH text {* For finite streams, their lengths are added on concatenation *}
-lemma tstickcount_tsconc_all_finite: 
-  "\<forall>x y n. (#\<surd>x) = Fin k \<and> (#\<surd>y) = Fin n \<longrightarrow> #\<surd>(x\<bullet>y) = Fin (k+n)"
-
-ADDITIONAL TASK lemma scases: "\<And>x P. \<lbrakk>x = \<epsilon> \<Longrightarrow> P; \<And>a s. x = \<up>a \<bullet> s \<Longrightarrow> P\<rbrakk> \<Longrightarrow> P"
+WITH lemma stickcount_conc [simp]: assumes "#\<surd> ts1 = Fin n1" and "#\<surd> ts2 = Fin n2"
+  shows "#\<surd> (ts1 \<bullet> ts2) = Fin (n1 + n2)"
 
 ALREADY DONE lemma strict_slen[simp]:"#\<epsilon> = 0"
 WITH lemma [simp]: "#\<surd> \<bottom> = 0"
 
-(* prepending a singleton stream increases the length by 1 *)
+DONE (* prepending a singleton stream increases the length by 1 *)
 lemma slen_scons[simp]: "#(\<up>a\<bullet>as) = lnsuc\<cdot>(#as)"
+WITH (* prepending a singleton tstream increases the length by 1 *)
+lemma stickcount_tscons[simp]: "#\<surd>(Abs_tstream(\<up>\<surd>)\<bullet>as) = lnsuc\<cdot>(#\<surd>as)"
 
 (* the singleton stream has length 1 *)
 lemma [simp]: "#(\<up>a) = Fin (Suc 0)"
@@ -3286,7 +3270,6 @@ lemma [simp]: "(\<up>a \<sqsubseteq> \<up>b) = (a = b)"
 
 (* uparrow is a bijection *)
 lemma [simp]: "(\<up>a = \<up>b) = (a = b)"
-
 
 *)
 end
