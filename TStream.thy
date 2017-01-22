@@ -374,7 +374,25 @@ lemma tstream_scons_eq[simp]: "((\<up>e \<bullet> rs) \<in> {t::'a event stream.
 apply (smt fold_inf lnat.injects mem_Collect_eq sfilter_in sfilter_nin slen_scons)
 done
 
+(* ToDo Dennis
+text {* If a predicate P holds for empty and non-empty tstreams, it holds for all tstreams *}
+lemma tscases: "\<And>(x::'a tstream) P. \<lbrakk>x = \<bottom> \<Longrightarrow> P; \<And>(s). x = s \<bullet> Abs_tstream(\<up>\<surd>) \<Longrightarrow> P\<rbrakk> \<Longrightarrow> P"
+apply (rule_tac y=x in scases', simp+)
+apply (rule_tac p=u in upE, simp+)
+apply (case_tac "xa")
+by (auto simp add: sup'_def sconc_scons')
 
+text {* For finite streams, their lengths are added on concatenation *}
+lemma tstickcount_tsconc_all_finite: 
+  "\<forall>x y n. (#\<surd>x) = Fin k \<and> (#\<surd>y) = Fin n \<longrightarrow> #\<surd>(x\<bullet>y) = Fin (k+n)" 
+apply (induct_tac k, auto)
+by (rule_tac x=x in tscases, auto)
+
+(* concatenating finite tstreams produces another finite tstream *)
+lemma tsconc_tstickcount[simp]: assumes "(#\<surd>s)<\<infinity>" and "(#\<surd>xs)<\<infinity>"
+  shows "(#\<surd>(s\<bullet>xs))<\<infinity>"
+by (metis Fin_neq_inf assms(1) assms(2) infI inf_ub lnle_def lnless_def tstickcount_tsconc_all_finite)
+*)
 
 
 (* tsAbs *)
@@ -1368,6 +1386,13 @@ proof -
   then show "#\<surd> tsntimes (Suc na) ts < \<infinity>"
     using a1 by (metis (no_types) inf_less_eq leI)
 qed
+
+lemma tsntimes_eps[simp]: "tsntimes n \<bottom> = \<bottom>"
+by (induct n, simp+)
+
+(* infinitely cycling the empty tstream produces the empty tstream again *)
+lemma tsinftimes_eps[simp]: "tsinftimes \<bottom> = \<bottom>"
+by (subst tsinftimes_def [THEN fix_eq2], simp)
 
 (* tsTake*)
 
@@ -2400,8 +2425,6 @@ lemma lscons_conv: "updis a && s = \<up>a \<bullet> s"
 (* concatenation with respect to singleton streams is associative *)
 lemma sconc_scons[simp]: "(\<up>a \<bullet> as) \<bullet> s = \<up>a \<bullet> (as \<bullet> s)"
 
-lemma scases: "\<And>x P. \<lbrakk>x = \<epsilon> \<Longrightarrow> P; \<And>a s. x = \<up>a \<bullet> s \<Longrightarrow> P\<rbrakk> \<Longrightarrow> P"
-
 (* Single element streams commute with the stake operation. *)
 lemma stake_Suc[simp]: "stake (Suc n)\<cdot>(\<up>a \<bullet> as) = \<up>a \<bullet> stake n\<cdot>as"
 
@@ -2455,10 +2478,6 @@ lemma lessD:
 slen
 (*-----------------------------*)
 
-
-text {* For finite streams, their lengths are added on concatenation *}
-lemma slen_sconc_all_finite: 
-  "\<forall>x y n. #x = Fin k \<and> #y = Fin n \<longrightarrow> #(x\<bullet>y) = Fin (k+n)" 
 
 text {* Streams with infinite prefixes are infinite *}
 lemma mono_fst_infD: "\<lbrakk>#x = \<infinity>; x \<sqsubseteq> y\<rbrakk> \<Longrightarrow> #y = \<infinity> "
@@ -3191,19 +3210,32 @@ lemma inj_sfilter_smap_siteratel2[simp]:
 
 
 
-FERTIG text {* Retrieving the first 0 elements of a stream returns the empty stream. *}
+DONE text {* Retrieving the first 0 elements of a stream returns the empty stream. *}
 lemma [simp]: "tsTake 0\<cdot> x =  \<bottom>"
 
-FERTIG lemma [simp]: "tsDrop 0\<cdot> x = x"
+DONE lemma [simp]: "tsDrop 0\<cdot> x = x"
 
-(* concatenating finite streams produces another finite stream *)
+DONE (* concatenating finite streams produces another finite stream *)
 lemma sconc_slen [simp]: assumes "#s<\<infinity>" and "#xs<\<infinity>"
   shows "#(s\<bullet>xs) < \<infinity>"
+WITH (* concatenating finite tstreams produces another finite tstream *)
+lemma tsconc_tstickcount[simp]: assumes "(#\<surd>s)<\<infinity>" and "(#\<surd>xs)<\<infinity>"
+  shows "(#\<surd>(s\<bullet>xs))<\<infinity>"
 
-lemma strict_slen[simp]:"#\<epsilon> = 0"
+ADDITIONAL TASK text {* For finite streams, their lengths are added on concatenation *}
+lemma slen_sconc_all_finite: 
+  "\<forall>x y n. #x = Fin k \<and> #y = Fin n \<longrightarrow> #(x\<bullet>y) = Fin (k+n)" 
+WITH text {* For finite streams, their lengths are added on concatenation *}
+lemma tstickcount_tsconc_all_finite: 
+  "\<forall>x y n. (#\<surd>x) = Fin k \<and> (#\<surd>y) = Fin n \<longrightarrow> #\<surd>(x\<bullet>y) = Fin (k+n)"
+
+ADDITIONAL TASK lemma scases: "\<And>x P. \<lbrakk>x = \<epsilon> \<Longrightarrow> P; \<And>a s. x = \<up>a \<bullet> s \<Longrightarrow> P\<rbrakk> \<Longrightarrow> P"
+
+ALREADY DONE lemma strict_slen[simp]:"#\<epsilon> = 0"
+WITH lemma [simp]: "#\<surd> \<bottom> = 0"
 
 (* prepending a singleton stream increases the length by 1 *)
-lemma slen_scons[simp]: "#(\<up>a\<bullet>as) = lnsuc\<cdot>(#as)" 
+lemma slen_scons[simp]: "#(\<up>a\<bullet>as) = lnsuc\<cdot>(#as)"
 
 (* the singleton stream has length 1 *)
 lemma [simp]: "#(\<up>a) = Fin (Suc 0)"
@@ -3220,11 +3252,14 @@ lemma sconc_fst_inf_lemma: "\<forall>x. #x=\<infinity> \<longrightarrow> stake n
 text {* Appending to an infinite stream does not change the stream *}
 lemma sconc_fst_inf[simp]: "#x=\<infinity> \<Longrightarrow> x\<bullet>y = x"
 
-lemma sntimes_eps[simp]: "sntimes n \<epsilon> = \<epsilon>"
+DONE lemma sntimes_eps[simp]: "sntimes n \<epsilon> = \<epsilon>"
+WITH lemma tsntimes_eps[simp]: "tsntimes n \<bottom> = \<bottom>"
 
-(* infinitely cycling the empty stream produces the empty stream again *)
+DONE (* infinitely cycling the empty stream produces the empty stream again *)
 lemma strict_icycle[simp]: "sinftimes \<epsilon> = \<epsilon>"
-
+WITH (* infinitely cycling the empty tstream produces the empty tstream again *)
+lemma tsinftimes_eps[simp]: "tsinftimes \<bottom> = \<bottom>"
+by (subst tsinftimes_def [THEN fix_eq2], simp)
 
 (* smap distributes over infinite repetition *)
 lemma smap2sinf[simp]: "smap f\<cdot>(x\<infinity>)= (smap f\<cdot>x)\<infinity>"
