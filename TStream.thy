@@ -892,6 +892,11 @@ by (metis Fin_neq_inf assms(1) assms(2) infI inf_ub lnle_def lnless_def stickcou
 lemma stickcount_tscons[simp]: "#\<surd>(Abs_tstream(\<up>\<surd>)\<bullet>as) = lnsuc\<cdot>(#\<surd>as)"
 by (simp add: tstickcount_insert tsconc_rep_eq)
 
+(* the singleton tstream has length 1 *)
+lemma [simp]: "#\<surd>Abs_tstream(\<up>\<surd>) = Fin (Suc 0)"
+by (simp add: tstickcount_rep_eq)
+
+
 (* tsTake *)
 thm tsTake_def
 
@@ -3222,14 +3227,20 @@ lemma slen_scons[simp]: "#(\<up>a\<bullet>as) = lnsuc\<cdot>(#as)"
 WITH (* prepending a singleton tstream increases the length by 1 *)
 lemma stickcount_tscons[simp]: "#\<surd>(Abs_tstream(\<up>\<surd>)\<bullet>as) = lnsuc\<cdot>(#\<surd>as)"
 
-(* the singleton stream has length 1 *)
+DONE (* the singleton stream has length 1 *)
 lemma [simp]: "#(\<up>a) = Fin (Suc 0)"
+WITH (* the singleton tstream has length 1 *)
+lemma [simp]: "#\<surd>Abs_tstream(\<up>\<surd>) = Fin (Suc 0)"
 
-text {* The rest of infinite streams is infinite as well *}
+TASK text {* The rest of infinite streams is infinite as well *}
 lemma inf_scase:"#s = \<infinity> \<Longrightarrow> \<exists>a as. s = \<up>a \<bullet> as \<and> #as = \<infinity>"
+WITH text {* The rest of infinite tstreams is infinite as well *}
+lemma inf_tscase:"#\<surd>s = \<infinity> \<Longrightarrow> \<exists> as. s = Abs_tstream(\<up>\<surd>) \<bullet> as \<and> (#\<surd>as) = \<infinity>"
 
-(* only the empty stream has length 0 *)
+TASK (* only the empty stream has length 0 *)
 lemma slen_empty_eq[simp]: "(#x = 0) = (x = \<epsilon>)"
+WITH (* only the empty tstream has length 0 *)
+lemma slen_empty_eq[simp]: "(#\<surd>x = 0) = (x = \<bottom>)"
 
 DONE text {* Appending to an inifite stream does not change its @{text "n"}th element *}
 lemma sconc_fst_inf_lemma: "\<forall>x. #x=\<infinity> \<longrightarrow> stake n\<cdot>(x\<bullet>y) = stake n\<cdot>x"
