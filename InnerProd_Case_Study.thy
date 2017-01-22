@@ -6,7 +6,7 @@
 *)
 
 theory InnerProd_Case_Study
-imports SPF Streams SerComp_JB StreamCase_Study
+imports SPF Streams SerComp_JB StreamCase_Study SPF_MW
 
 begin
 
@@ -223,8 +223,8 @@ lemma mult_comp2: assumes "sbDom\<cdot>sb = I mult1 mult2"
 
 lemma mults_comp: assumes "sbDom\<cdot>sb = I mult1 mult2"
   shows "((Rep_CSPF (spfcomp mult1 mult2)) \<rightharpoonup> sb)  = ((Rep_CSPF(mult1)) \<rightharpoonup> (sb\<bar>spfDom\<cdot>mult1)) \<uplus> ((Rep_CSPF(mult2)) \<rightharpoonup> (sb\<bar>spfDom\<cdot>mult2))"
- apply(simp add: mult_comp1 mult_comp2)
- apply(subst sb_eq, simp_all add: assms mult_comp1 mult_comp2 spfComp_getch_outofrange)
+  apply(subst parallelOperatorEq)
+  apply(simp_all add: parcomp_def) 
  sorry  (* In order to proof this ticket:8 has to be resolved first *) 
 
 (* SERIAL COMPOSITION OF MULTS and addC PREREQUIREMENTS *)
@@ -233,6 +233,7 @@ lemma spfComp_ran_Oc: "spfRan\<cdot>(spfcomp f1 f2) = Oc f1 f2"
   sorry 
 
 lemma spfComp_dom_I: "spfDom\<cdot>(spfcomp f1 f2) = I f1 f2"
+apply(simp add: spfcomp_def spfDom_def)
   sorry 
 
 lemma [simp]: "spfDom\<cdot>(spfcomp mult1 mult2) = {c1, c2, c3, c4}"
@@ -253,7 +254,7 @@ by(auto simp add: L_def)
 lemma [simp]: "pL (spfcomp mult1 mult2) addC = {}"
 by(auto simp add: pL_def)
 
-lemma [simp]: "Oc (spfcomp mult1 mult2) addC = {c7}"
+lemma [simp]: "Oc (spfcomp mult1 mult2) addC = {c5, c6, c7}"
 by(auto simp add: Oc_def)
 
 lemma [simp]: "I (spfcomp mult1 mult2) addC  = {c1,c2,c3,c4}"

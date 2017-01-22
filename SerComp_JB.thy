@@ -159,7 +159,7 @@ lemma [simp]: "C ID1 ID2 = {c1,c2,c3}"
 lemma [simp]: "L ID1 ID2 = {c2}"
   by (auto simp add: L_def)
 
-lemma [simp]: "Oc ID1 ID2 = {c3}"
+lemma [simp]: "Oc ID1 ID2 = {c2,c3}"
   by (auto simp add: Oc_def)
 
 lemma [simp]: "I ID1 ID2 = {c1}"
@@ -399,7 +399,7 @@ lemma spfcomp_tospfH2: "(spfcomp f1 f2)
                    = Abs_CSPF (\<lambda> x. (sbDom\<cdot>x = I f1 f2) \<leadsto> 
                       (\<Squnion>i. iterate i\<cdot>(spfCompHelp2 f1 f2 x)\<cdot>(sbLeast (C f1 f2))) \<bar> Oc f1 f2)"
   apply (subst spfcomp_def, subst spfCompHelp2_def, subst C_def, subst I_def, subst Oc_def)
-  by (simp)
+  by (metis (no_types) C_def I_def Oc_def)
 
 
 (* TODO: SHOW COMPPOSITION IS SPF AND CONTINUOUS *)

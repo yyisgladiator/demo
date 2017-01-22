@@ -219,7 +219,7 @@ definition I :: "'m SPF \<Rightarrow> 'm SPF \<Rightarrow> channel set" where
 "I f1 f2 \<equiv> (spfDom\<cdot>f1 \<union> spfDom\<cdot>f2) - (spfRan\<cdot>f1 \<union> spfRan\<cdot>f2)"
 
 definition Oc :: "'m SPF \<Rightarrow> 'm SPF \<Rightarrow> channel set" where
-"Oc f1 f2 \<equiv> (spfRan\<cdot>f1 \<union> spfRan\<cdot>f2) - (spfDom\<cdot>f1 \<union> spfDom\<cdot>f2)"
+"Oc f1 f2 \<equiv> (spfRan\<cdot>f1 \<union> spfRan\<cdot>f2)"   (* old: (spfRan\<cdot>f1 \<union> spfRan\<cdot>f2) - (spfDom\<cdot>f1 \<union> spfDom\<cdot>f2)"*)
 
 definition L :: "'m SPF \<Rightarrow> 'm SPF \<Rightarrow> channel set" where
 "L f1 f2 \<equiv> (spfDom\<cdot>f1 \<union> spfDom\<cdot>f2) \<inter> (spfRan\<cdot>f1 \<union> spfRan\<cdot>f2)"
@@ -233,7 +233,19 @@ definition spfComp_well:: "'m SPF \<Rightarrow> 'm SPF \<Rightarrow> bool" where
                 \<and>  spfDom\<cdot>f1 \<inter>spfRan\<cdot>f1 = {} 
                 \<and> spfRan\<cdot>f1 \<inter> spfRan\<cdot>f2 = {}"
 
-(* (f1 \<otimes> f2) x = [fix\<cdot>(\<Lambda> z. x \<uplus> f1(z\<bar>I1) \<uplus> f2(z\<bar>I2))]\<bar>O  *)
+definition spfcomp :: "'m SPF \<Rightarrow> 'm SPF \<Rightarrow> 'm SPF"  (infixl "\<otimes>" 40) where
+"spfcomp f1 f2 \<equiv> 
+let I1 = spfDom\<cdot>f1;
+    I2 = spfDom\<cdot>f2;
+    O1 = spfRan\<cdot>f1; 
+    O2 = spfRan\<cdot>f2; 
+    I  = I f1 f2;
+    Oc = Oc f1 f2;
+    C  = C f1 f2   
+in Abs_CSPF (\<lambda> x. (sbDom\<cdot>x = I) \<leadsto> (\<Squnion>i. iterate i\<cdot>
+   (\<Lambda> z. x \<uplus> ((Rep_CSPF f1)\<rightharpoonup>(z \<bar> I1)) \<uplus> ((Rep_CSPF f2)\<rightharpoonup>(z \<bar> I2)))\<cdot>(sbLeast C)) \<bar> Oc)"
+
+(*(* (f1 \<otimes> f2) x = [fix\<cdot>(\<Lambda> z. x \<uplus> f1(z\<bar>I1) \<uplus> f2(z\<bar>I2))]\<bar>O  *)
 definition spfComp2 :: "'m SPF \<Rightarrow> 'm SPF \<Rightarrow> 'm SPF"  (infixl "\<otimes>" 40) where
 "spfComp2 f1 f2 \<equiv> Abs_CSPF (\<lambda> x. (sbDom\<cdot>x = I f1 f2) \<leadsto> 
     ((\<Squnion>i. iterate i\<cdot>(\<Lambda> z. x \<uplus> ((Rep_CSPF f1)\<rightharpoonup>(z \<bar> spfDom\<cdot>f1)) \<uplus> ((Rep_CSPF f2)\<rightharpoonup>(z \<bar> spfDom\<cdot>f2))))
@@ -251,7 +263,7 @@ let I1 = spfDom\<cdot>f1;
     C  = spfDom\<cdot>f1 \<union> spfDom\<cdot>f2 \<union> spfRan\<cdot>f1 \<union> spfRan\<cdot>f2    
 in Abs_CSPF (\<lambda> x. (sbDom\<cdot>x = I) \<leadsto> (\<Squnion>i. iterate i\<cdot>
    (\<Lambda> z. x \<uplus> ((Rep_CSPF f1)\<rightharpoonup>(z \<bar> I1)) \<uplus> ((Rep_CSPF f2)\<rightharpoonup>(z \<bar> I2)))\<cdot>(sbLeast C)) \<bar> Oc)"
-
+*)
 
 text {* "spflift" takes a "simple stream processing function" and two channel names where the streams flow, and lifts it to a stream bundle processing function.*}
 definition spfLift :: "('m stream \<rightarrow> 'm stream) => channel => channel => 'm SPF" where
@@ -628,7 +640,7 @@ lemma spfcomp_tospfH2: "(spfcomp f1 f2)
                    = Abs_CSPF (\<lambda> x. (sbDom\<cdot>x = I f1 f2) \<leadsto> 
                       (\<Squnion>i. iterate i\<cdot>(spfCompHelp2 f1 f2 x)\<cdot>(sbLeast (C f1 f2))) \<bar> Oc f1 f2)"
   apply (subst spfcomp_def, subst spfCompHelp2_def, subst C_def, subst I_def, subst Oc_def)
-  by (simp)
+  by (metis (no_types) C_def I_def Oc_def)
 
 lemma spfCompH2_getch_outofrange: assumes "c \<notin> spfRan\<cdot>f1" 
                                 and "c \<notin> spfRan\<cdot>f2" 
