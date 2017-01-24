@@ -227,11 +227,14 @@ definition L :: "'m SPF \<Rightarrow> 'm SPF \<Rightarrow> channel set" where
 definition C :: "'m SPF \<Rightarrow> 'm SPF \<Rightarrow> channel set" where
 "C f1 f2 \<equiv> spfDom\<cdot>f1 \<union> spfDom\<cdot>f2 \<union> spfRan\<cdot>f1 \<union> spfRan\<cdot>f2"
 
-
 definition spfComp_well:: "'m SPF \<Rightarrow> 'm SPF \<Rightarrow> bool" where
 "spfComp_well f1 f2 \<equiv> spfDom\<cdot>f2 \<inter>spfRan\<cdot>f2 = {}
-                \<and>  spfDom\<cdot>f1 \<inter>spfRan\<cdot>f1 = {} 
+                \<and> spfDom\<cdot>f1 \<inter> spfRan\<cdot>f1 = {} 
                 \<and> spfRan\<cdot>f1 \<inter> spfRan\<cdot>f2 = {}"
+
+definition no_selfloops:: "'m SPF \<Rightarrow> 'm SPF \<Rightarrow> bool" where
+"no_selfloops f1 f2 \<equiv> spfDom\<cdot>f2 \<inter> spfRan\<cdot>f2 = {}
+                    \<and> spfDom\<cdot>f1 \<inter> spfRan\<cdot>f1 = {}"
 
 definition spfcomp :: "'m SPF \<Rightarrow> 'm SPF \<Rightarrow> 'm SPF"  (infixl "\<otimes>" 40) where
 "spfcomp f1 f2 \<equiv> 

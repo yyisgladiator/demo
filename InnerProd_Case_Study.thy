@@ -137,7 +137,7 @@ lift_definition mult2 :: "nat SPF" is
   by (auto simp add: spf_well_def domIff2 sbdom_rep_eq)
 
 lift_definition addC :: "nat SPF" is
-"\<Lambda> sb. (sbDom\<cdot>sb = {c5, c6}) \<leadsto> ([c7\<mapsto>mult\<cdot>(sb . c5)\<cdot>(sb . c6)]\<Omega>)"
+"\<Lambda> sb. (sbDom\<cdot>sb = {c5, c6}) \<leadsto> ([c7\<mapsto>add\<cdot>(sb . c5)\<cdot>(sb . c6)]\<Omega>)"
   by (auto simp add: spf_well_def domIff2 sbdom_rep_eq)
 
 (* rep equalities, useful for simp *)
@@ -147,7 +147,7 @@ lemma mult1_rep_eqC: "Rep_CSPF mult1 = (\<lambda> sb. (sbDom\<cdot>sb = {c1, c2}
 lemma mult2_rep_eqC: "Rep_CSPF mult2 = (\<lambda> sb. (sbDom\<cdot>sb = {c3, c4}) \<leadsto> ([c6 \<mapsto> mult\<cdot>(sb . c3)\<cdot>(sb . c4)]\<Omega>))"
   by (simp add: mult2.rep_eq Rep_CSPF_def)
 
-lemma addC_rep_eqC: "Rep_CSPF addC = (\<lambda> sb. (sbDom\<cdot>sb = {c5, c6}) \<leadsto> ([c7 \<mapsto> mult\<cdot>(sb . c5)\<cdot>(sb . c6)]\<Omega>))"
+lemma addC_rep_eqC: "Rep_CSPF addC = (\<lambda> sb. (sbDom\<cdot>sb = {c5, c6}) \<leadsto> ([c7 \<mapsto> add\<cdot>(sb . c5)\<cdot>(sb . c6)]\<Omega>))"
   by (simp add: addC.rep_eq Rep_CSPF_def)
 
 
@@ -180,7 +180,6 @@ lemma [simp]: "spfRan\<cdot>addC = {c7}"
   by (simp add: sbdom_insert)
 
 
-
 (* PARALLEL COMPOSITION OF MULTS PREREQUIREMENTS *)
 lemma [simp]: "spfComp_well mult1 mult2"
   by (simp add: spfComp_well_def)
@@ -195,7 +194,7 @@ lemma [simp]: "Oc mult1 mult2 = {c5,c6}"
   by (auto simp add: Oc_def)
 
 lemma [simp]: "I mult1 mult2 = {c1,c2,c3,c4}"
-  by (auto simp add: I_def)
+by auto
 
 (* Remove this ASAP *)
 lemma spfCompParallelGetch1: assumes "L f1 f2 = {}"
@@ -211,6 +210,7 @@ lemma spfCompParallelGetch2: assumes "L f1 f2 = {}"
                                 and "c \<in> spfRan\<cdot>f2" 
   shows "(Rep_CSPF(spfcomp f1 f2) \<rightharpoonup> sb) . c = (Rep_CSPF(f2) \<rightharpoonup> (sb\<bar>spfDom\<cdot>f2)) . c"
 sorry
+
 (* added because of message instantiation clash *)
 
 lemma mult_comp1: assumes "sbDom\<cdot>sb = I mult1 mult2"
@@ -221,20 +221,15 @@ lemma mult_comp2: assumes "sbDom\<cdot>sb = I mult1 mult2"
   shows "((Rep_CSPF (spfcomp mult1 mult2)) \<rightharpoonup> sb) . c6 = ((Rep_CSPF(mult2)) \<rightharpoonup> (sb\<bar>spfDom\<cdot>mult2)) . c6"
   by (subst spfCompParallelGetch2, simp_all add: assms)
 
+
 lemma mults_comp: assumes "sbDom\<cdot>sb = I mult1 mult2"
   shows "((Rep_CSPF (spfcomp mult1 mult2)) \<rightharpoonup> sb)  = ((Rep_CSPF(mult1)) \<rightharpoonup> (sb\<bar>spfDom\<cdot>mult1)) \<uplus> ((Rep_CSPF(mult2)) \<rightharpoonup> (sb\<bar>spfDom\<cdot>mult2))"
   apply(subst parallelOperatorEq)
-  apply(simp_all add: parcomp_def) 
+  apply(simp_all add: parcomp_def)
  sorry  (* In order to proof this ticket:8 has to be resolved first *) 
 
-(* SERIAL COMPOSITION OF MULTS and addC PREREQUIREMENTS *)
-(* for the following lemmas there should be a lemma see ticket:8 *)
-lemma spfComp_ran_Oc: "spfRan\<cdot>(spfcomp f1 f2) = Oc f1 f2"
-  sorry 
 
-lemma spfComp_dom_I: "spfDom\<cdot>(spfcomp f1 f2) = I f1 f2"
-apply(simp add: spfcomp_def spfDom_def)
-  sorry 
+(* SERIAL COMPOSITION OF MULTS and addC PREREQUIREMENTS *)
 
 lemma [simp]: "spfDom\<cdot>(spfcomp mult1 mult2) = {c1, c2, c3, c4}"
 by(simp add: spfComp_dom_I)
@@ -261,11 +256,17 @@ lemma [simp]: "I (spfcomp mult1 mult2) addC  = {c1,c2,c3,c4}"
 by(auto simp add: I_def)
 
 lemma innerprod_serComp: assumes "sbDom\<cdot>sb = I (spfcomp mult1 mult2) addC"
-  shows "((Rep_CSPF (spfcomp (spfcomp mult1 mult2) addC))  \<rightharpoonup> sb) . c7 = 
-            ((Rep_CSPF addC)\<rightharpoonup>((Rep_CSPF (spfcomp mult1 mult2)) 
-              \<rightharpoonup> (sb\<bar>(spfDom\<cdot>(spfcomp mult1 mult2))))) . c7"
+  shows "((spfcomp (spfcomp mult1 mult2) addC)  \<rightleftharpoons> sb) . c7 = 
+         (addC \<rightleftharpoons> ((spfcomp mult1 mult2) \<rightleftharpoons> (sb\<bar>(spfDom\<cdot>(spfcomp mult1 mult2))))) . c7"
   by (subst spfCompSeriellGetch, simp_all add: assms spfComp_ran_Oc)
 
 (* insert result lemma here *)
+
+lemma innerprod: assumes "sbDom\<cdot>sb = I (spfcomp mult1 mult2) addC"
+  shows "((spfcomp (spfcomp mult1 mult2) addC)  \<rightleftharpoons> sb) . c7 = add\<cdot>(mult\<cdot>(sb . c1)\<cdot>(sb . c2))\<cdot>(mult\<cdot>(sb . c3)\<cdot>(sb . c4))"
+  apply(subst innerprod_serComp, simp_all add: assms)
+  apply(subst mults_comp, simp_all add: assms)
+  apply(simp add: mult1_def mult2_def addC_def)
+  sorry
 
 end

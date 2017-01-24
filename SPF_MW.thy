@@ -7,20 +7,52 @@ begin
 definition parcomp :: "'m SPF \<Rightarrow> 'm SPF \<Rightarrow> 'm SPF" ("_\<parallel>_") where
 "parcomp f1 f2 \<equiv> Abs_CSPF (\<lambda> x. (sbDom\<cdot>x = spfDom\<cdot>f1 \<union> spfDom\<cdot>f2 ) \<leadsto> ((f1 \<rightleftharpoons> (x \<bar>spfDom\<cdot>f1)) \<uplus> (f2 \<rightleftharpoons> (x\<bar>spfDom\<cdot>f2))))"
 
+(* spfDom *)
+
+lemma spfDomAbs: "spfDom\<cdot>(Abs_CSPF (\<lambda> x. (sbDom\<cdot>x = cs ) \<leadsto> f(x))) = cs" 
+apply(simp add: spfDom_def dom_def)
+sorry
+
+lemma sbDomIterate: "sbDom\<cdot>(\<Squnion>i. iterate i\<cdot>F\<cdot>sb)  = sbDom\<cdot>(F\<cdot>sb)"
+sorry
+
+lemma spfDomHelp: assumes "spfDom\<cdot>f1 \<subseteq> sbDom\<cdot>sb" shows "sbDom\<cdot>f1\<rightleftharpoons>sb\<bar>spfDom\<cdot>f1 = spfRan\<cdot>f1"
+by (simp add: assms)
+
+lemma sbDomH2: assumes "spfDom\<cdot>f1 \<union> spfDom\<cdot>f2 \<subseteq> sbDom\<cdot>sb2" shows "sbDom\<cdot>((spfCompHelp2 f1 f2 sb1)\<cdot>sb2) = sbDom\<cdot>sb1 \<union> spfRan\<cdot>f1 \<union> spfRan\<cdot>f2"
+apply(simp add: spfCompHelp2_def)
+apply(subst spfDomHelp)
+using assms apply auto[1]
+apply(subst spfDomHelp)
+using assms apply auto[1]
+by simp
+
+lemma spfComp_ran_Oc: assumes "spfComp_well f1 f2" shows "spfRan\<cdot>(spfcomp f1 f2) = Oc f1 f2"
+apply(simp add: spfcomp_tospfH2 spfran_least spfDomAbs)
+apply(subst spfcomp_repAbs, simp_all add: assms)
+apply(subst sbDomIterate)
+apply(subst sbDomH2, simp)
+using C_def apply blast
+using Oc_def by auto
+
+lemma spfComp_dom_I: "spfDom\<cdot>(spfcomp f1 f2) = I f1 f2"
+by(simp add: spfcomp_def spfDomAbs ) 
+
 (* hide *)
 
 definition hide :: "'m SPF \<Rightarrow>  channel set \<Rightarrow> 'm SPF" where
 "hide f cs \<equiv> Abs_CSPF (\<lambda> x. (sbDom\<cdot>x = spfDom\<cdot>f ) \<leadsto> ((f \<rightleftharpoons> x)\<bar>(spfRan\<cdot>f - cs)))"
 
-lemma spfDomHide: "spfDom\<cdot>(hide f cs) = spfDom\<cdot>f"
-sorry
-
-lemma[simp]: "cont (\<lambda> x. (sbDom\<cdot>x = spfDom\<cdot>f ) \<leadsto> ((f \<rightleftharpoons> x)\<bar>(spfRan\<cdot>f - cs)))"
+lemma[simp]: assumes "cont (Rep_CSPF(f))" shows "cont (\<lambda> x. (sbDom\<cdot>x = spfDom\<cdot>f ) \<leadsto> ((f \<rightleftharpoons> x)\<bar>(spfRan\<cdot>f - cs)))"
 sorry
 
 lemma[simp]: "spf_well (\<Lambda> x. (sbDom\<cdot>x = spfDom\<cdot>f ) \<leadsto> ((f \<rightleftharpoons> x)\<bar>(spfRan\<cdot>f - cs)))"
 apply(auto simp add: spf_well_def domIff2 sbdom_rep_eq)
 sorry
+
+lemma spfDomHide: "spfDom\<cdot>(hide f cs) = spfDom\<cdot>f"
+apply(simp add: hide_def)
+by(simp add: spfDomAbs)
 
 lemma hideSbRestrict: assumes "sbDom\<cdot>sb = spfDom\<cdot>f" 
    shows "(hide f cs)\<rightleftharpoons>sb = (f\<rightleftharpoons>sb)\<bar>(spfRan\<cdot>f - cs)"
@@ -43,7 +75,8 @@ using hideSpfRan by auto
 (*definition innerProd :: "nat SPF" where
 "innerProd \<equiv> hide ((mult1 \<parallel> mult2) \<otimes> addC) {c5, c6}"
 *)
-(* lemmas about composition *)
+
+(* lemmas about parallel composition *)
 
 lemma LtopL: "L f1 f2 = {} \<Longrightarrow> pL f1 f2 = {}"
 apply(simp add: L_def pL_def)
