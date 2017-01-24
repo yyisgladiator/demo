@@ -59,6 +59,11 @@ lemma hideSbRestrict: assumes "sbDom\<cdot>sb = spfDom\<cdot>f"
 apply(simp add: hide_def)
 using assms by blast
 
+lemma hideSbRestrictCh: assumes "sbDom\<cdot>sb = spfDom\<cdot>f" and "c \<notin> cs"
+   shows "(hide f cs)\<rightleftharpoons>sb . c = (f\<rightleftharpoons>sb) . c"
+apply(simp add: hide_def)
+by (metis (no_types, lifting) DiffI Int_commute Un_Diff_Int assms(1) assms(2) domIff inf_sup_absorb option.collapse sbdom_insert sbgetch_insert sbleast_sbdom sbrestrict2sbgetch sbrestrict_sbdom spfLeastIDom spf_sbdom2dom spfran2sbdom)
+
 lemma hideSpfRan: "spfRan\<cdot>(hide f cs) = spfRan\<cdot>f - cs"
 apply(subst spfran_least)
 apply(simp add: spfDomHide)
@@ -119,5 +124,13 @@ apply(simp add: parcomp_def spfcomp_tospfH2)
 apply(subst spfComp_I_domf1f2_eq, simp_all add: assms)
 apply(subst parCompHelp2Eq2)
 by(simp_all add: assms)
+
+lemma parCompDom: assumes "L f1 f2 = {}"
+                  and "spfComp_well f1 f2" shows "spfDom\<cdot>(f1 \<parallel> f2) = spfDom\<cdot>(spfcomp f1 f2)"
+by(simp add: parallelOperatorEq assms)
+
+lemma parCompRan: assumes "L f1 f2 = {}"
+                  and "spfComp_well f1 f2" shows "spfRan\<cdot>(f1 \<parallel> f2) = spfRan\<cdot>(spfcomp f1 f2)"
+by(simp add: parallelOperatorEq assms)
 
 end

@@ -262,11 +262,25 @@ lemma innerprod_serComp: assumes "sbDom\<cdot>sb = I (spfcomp mult1 mult2) addC"
 
 (* insert result lemma here *)
 
+definition innerProd :: "nat SPF" where
+"innerProd \<equiv> hide ((mult1 \<parallel> mult2) \<otimes> addC) {c5, c6}"
+
+lemma [simp]: "spfDom\<cdot>( spfcomp (parcomp mult1 mult2) addC) = {c1, c2, c3, c4}"
+apply(simp add: spfComp_dom_I I_def parCompDom parCompRan)
+by auto
+
+lemma innerProdEqCh: assumes "sbDom\<cdot>sb = I (spfcomp mult1 mult2) addC" 
+    shows "(innerProd  \<rightleftharpoons> sb) . c7 = (spfcomp (spfcomp mult1 mult2) addC) \<rightleftharpoons> sb . c7"
+apply(simp add: innerProd_def parallelOperatorEq)
+apply(subst hideSbRestrictCh)
+by(simp_all add: assms)
+
 lemma innerprod: assumes "sbDom\<cdot>sb = I (spfcomp mult1 mult2) addC"
-  shows "((spfcomp (spfcomp mult1 mult2) addC)  \<rightleftharpoons> sb) . c7 = add\<cdot>(mult\<cdot>(sb . c1)\<cdot>(sb . c2))\<cdot>(mult\<cdot>(sb . c3)\<cdot>(sb . c4))"
+  shows "(innerProd  \<rightleftharpoons> sb) . c7 = add\<cdot>(mult\<cdot>(sb . c1)\<cdot>(sb . c2))\<cdot>(mult\<cdot>(sb . c3)\<cdot>(sb . c4))"
+  apply(subst innerProdEqCh)
+  apply(simp add: assms)
   apply(subst innerprod_serComp, simp_all add: assms)
   apply(subst mults_comp, simp_all add: assms)
-  apply(simp add: mult1_def mult2_def addC_def)
   sorry
 
 end
