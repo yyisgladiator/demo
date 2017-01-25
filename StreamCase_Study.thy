@@ -1072,7 +1072,7 @@ apply (erule conjE)+
 by (simp, rule monofun_cfun_arg, simp)
 
 lemma cont_lub_h2_helper2:
-  "\<forall>s y. h n s y = stake n\<cdot> (h n s y)"
+  "\<forall>s y. stake n\<cdot> (h n s y) = h n s y "
 using contlub_h
 by(induct_tac n,auto)
 
@@ -1084,11 +1084,11 @@ apply (induct_tac n,auto)
 using cont_lub_h2_helper2 apply auto[1]
 by (metis cont_lub_h2_helper2 min_def sdropostake snth_def stakeostake)
 
-
+(*lemma helperhelper: "\<Squnion>i. h i s y = h i (\<Squnion>i. s ) y"*)
 
 lemma cont_lub_h2_helper: "\<And>i. cont (\<lambda>s. h i s y)"
-apply(induct_tac i,simp_all)
-apply (simp add: h_def, auto)
+apply (simp add: cont_def)
+
 sorry
 
 (* h2 is a continuous function *)
@@ -1194,6 +1194,9 @@ using One_nat_def snth_one_h sum5_scons by presburger
 lemma sum5_snth_1: "as\<noteq>\<epsilon> \<Longrightarrow> snth (Suc 0) (sum5\<cdot>(\<up>a1\<bullet>as)) = snth (Suc 0) (\<up>a1\<bullet>as) + a1"
 by (metis One_nat_def add.commute scases shd1 snth_one_h snth_scons snth_shd sum5_scons)
 
+lemma test[rule_format]: "Fin (Suc n) < #as \<longrightarrow> snth (Suc n) (h2 as a) =snth n (h2 as a) + snth (Suc n) as"
+sorry
+
 
 
 lemma test2_sum5[rule_format]: "Fin n<#as \<longrightarrow> snth n (sum5\<cdot>as) = snth n as + snth n (sum5\<cdot>(\<up>0 \<bullet>as))"
@@ -1206,11 +1209,12 @@ lemma sum5_snth1: assumes "Fin 1<#xs"
 by (metis One_nat_def assms snth_scons snth_shd sum5_snth0 sum5_unfold2_h sum5_unfold_h test2_sum5)
 
 
+
 lemma sum5_snth_helper[rule_format]: "Fin n < #as \<longrightarrow> snth n (h2 as a) = snth n (h2 as 0) + a"
 apply (induction n, simp_all)
 apply (metis Nat.add_0_right h2_unfold_ite lnsuc_neq_0_rev shd1 slen_empty_eq)
-apply (simp add: h2_def)
-sorry
+apply (simp add: test)
+by (metis Fin_leq_Suc_leq linorder_not_less order_less_le)
 
 lemma sum5_snth: "Fin n < #as \<Longrightarrow> snth (Suc n) (sum5\<cdot>(\<up>a \<bullet> as)) = snth n (sum5\<cdot>as) + a"
 by (metis snth_scons sum5_scons sum5_snth_helper sum5_unfold_h)
