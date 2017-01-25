@@ -7,11 +7,21 @@ begin
 definition parcomp :: "'m SPF \<Rightarrow> 'm SPF \<Rightarrow> 'm SPF" ("_\<parallel>_") where
 "parcomp f1 f2 \<equiv> Abs_CSPF (\<lambda> x. (sbDom\<cdot>x = spfDom\<cdot>f1 \<union> spfDom\<cdot>f2 ) \<leadsto> ((f1 \<rightleftharpoons> (x \<bar>spfDom\<cdot>f1)) \<uplus> (f2 \<rightleftharpoons> (x\<bar>spfDom\<cdot>f2))))"
 
-(* spfDom *)
+(* spfDom spfcomp *)
+
+lemma spfRepAbs:  "Rep_CSPF(Abs_CSPF (\<lambda> x. (sbDom\<cdot>x = cs ) \<leadsto> f(x))) = (\<lambda> x. (sbDom\<cdot>x = cs ) \<leadsto> f(x))"
+apply(simp add: Rep_CSPF_def Abs_CSPF_def)
+sorry
 
 lemma spfDomAbs: "spfDom\<cdot>(Abs_CSPF (\<lambda> x. (sbDom\<cdot>x = cs ) \<leadsto> f(x))) = cs" 
-apply(simp add: spfDom_def dom_def)
-sorry
+apply(simp add: spfDom_def)
+apply(simp add: spfRepAbs)
+by (smt domIff option.discI sbleast_sbdom someI_ex)
+
+lemma spfComp_dom_I: "spfDom\<cdot>(spfcomp f1 f2) = I f1 f2"
+by(simp add: spfcomp_def spfDomAbs ) 
+
+(* spfRan spfcomp *)
 
 lemma sbDomIterate: "sbDom\<cdot>(\<Squnion>i. iterate i\<cdot>F\<cdot>sb)  = sbDom\<cdot>(F\<cdot>sb)"
 sorry
@@ -35,9 +45,6 @@ apply(subst sbDomH2, simp)
 using C_def apply blast
 using Oc_def by auto
 
-lemma spfComp_dom_I: "spfDom\<cdot>(spfcomp f1 f2) = I f1 f2"
-by(simp add: spfcomp_def spfDomAbs ) 
-
 (* hide *)
 
 definition hide :: "'m SPF \<Rightarrow>  channel set \<Rightarrow> 'm SPF" where
@@ -46,7 +53,7 @@ definition hide :: "'m SPF \<Rightarrow>  channel set \<Rightarrow> 'm SPF" wher
 lemma[simp]: assumes "cont (Rep_CSPF(f))" shows "cont (\<lambda> x. (sbDom\<cdot>x = spfDom\<cdot>f ) \<leadsto> ((f \<rightleftharpoons> x)\<bar>(spfRan\<cdot>f - cs)))"
 sorry
 
-lemma[simp]: "spf_well (\<Lambda> x. (sbDom\<cdot>x = spfDom\<cdot>f ) \<leadsto> ((f \<rightleftharpoons> x)\<bar>(spfRan\<cdot>f - cs)))"
+lemma[simp]: "spf_well (Abs_cfun (\<lambda> x. (sbDom\<cdot>x = spfDom\<cdot>f ) \<leadsto> ((f \<rightleftharpoons> x)\<bar>(spfRan\<cdot>f - cs))))"
 apply(auto simp add: spf_well_def domIff2 sbdom_rep_eq)
 sorry
 

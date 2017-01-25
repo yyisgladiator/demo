@@ -150,7 +150,6 @@ lemma mult2_rep_eqC: "Rep_CSPF mult2 = (\<lambda> sb. (sbDom\<cdot>sb = {c3, c4}
 lemma addC_rep_eqC: "Rep_CSPF addC = (\<lambda> sb. (sbDom\<cdot>sb = {c5, c6}) \<leadsto> ([c7 \<mapsto> add\<cdot>(sb . c5)\<cdot>(sb . c6)]\<Omega>))"
   by (simp add: addC.rep_eq Rep_CSPF_def)
 
-
 (* COMPONENT PROPERTIES *)
 (* mult1 *)
 lemma [simp]: "spfDom\<cdot>mult1 = {c1,c2}"
@@ -171,6 +170,7 @@ lemma [simp]: "spfRan\<cdot>mult2 = {c6}"
   by (simp add: sbdom_insert)
 
 (* addC *)
+
 lemma [simp]: "spfDom\<cdot>addC = {c5,c6}"
   apply(simp add: spfdom_insert addC.rep_eq Rep_CSPF_def domIff2)
   by (meson sbleast_sbdom someI_ex)
@@ -178,7 +178,6 @@ lemma [simp]: "spfDom\<cdot>addC = {c5,c6}"
 lemma [simp]: "spfRan\<cdot>addC = {c7}"
   apply (simp add: spfran_least addC_rep_eqC)
   by (simp add: sbdom_insert)
-
 
 (* PARALLEL COMPOSITION OF MULTS PREREQUIREMENTS *)
 lemma [simp]: "spfComp_well mult1 mult2"
@@ -221,13 +220,18 @@ lemma mult_comp2: assumes "sbDom\<cdot>sb = I mult1 mult2"
   shows "((Rep_CSPF (spfcomp mult1 mult2)) \<rightharpoonup> sb) . c6 = ((Rep_CSPF(mult2)) \<rightharpoonup> (sb\<bar>spfDom\<cdot>mult2)) . c6"
   by (subst spfCompParallelGetch2, simp_all add: assms)
 
+lemma multcomp_cont: "cont (\<lambda>x. (sbDom\<cdot>x = {c3, c4, c1, c2})\<leadsto>((mult1\<rightleftharpoons>(x\<bar>spfDom\<cdot>mult1)) \<uplus> (mult2\<rightleftharpoons>(x\<bar>spfDom\<cdot>mult2))))"
+sorry
+                                   
+lemma multcomp_spfwell: "spf_well (\<Lambda> x. (sbDom\<cdot>x = {c3, c4, c1, c2})\<leadsto>((mult1\<rightleftharpoons>(x\<bar>spfDom\<cdot>mult1)) \<uplus> (mult2\<rightleftharpoons>(x\<bar>spfDom\<cdot>mult2))))"
+sorry
 
 lemma mults_comp: assumes "sbDom\<cdot>sb = I mult1 mult2"
   shows "((Rep_CSPF (spfcomp mult1 mult2)) \<rightharpoonup> sb)  = ((Rep_CSPF(mult1)) \<rightharpoonup> (sb\<bar>spfDom\<cdot>mult1)) \<uplus> ((Rep_CSPF(mult2)) \<rightharpoonup> (sb\<bar>spfDom\<cdot>mult2))"
   apply(subst parallelOperatorEq)
   apply(simp_all add: parcomp_def)
- sorry  (* In order to proof this ticket:8 has to be resolved first *) 
-
+  apply(subst rep_abs_cspf, simp_all add: assms, auto)
+  by(simp_all add: multcomp_cont multcomp_spfwell)
 
 (* SERIAL COMPOSITION OF MULTS and addC PREREQUIREMENTS *)
 
@@ -260,7 +264,7 @@ lemma innerprod_serComp: assumes "sbDom\<cdot>sb = I (spfcomp mult1 mult2) addC"
          (addC \<rightleftharpoons> ((spfcomp mult1 mult2) \<rightleftharpoons> (sb\<bar>(spfDom\<cdot>(spfcomp mult1 mult2))))) . c7"
   by (subst spfCompSeriellGetch, simp_all add: assms spfComp_ran_Oc)
 
-(* insert result lemma here *)
+(* inner Prod *)
 
 definition innerProd :: "nat SPF" where
 "innerProd \<equiv> hide ((mult1 \<parallel> mult2) \<otimes> addC) {c5, c6}"
@@ -275,12 +279,67 @@ apply(simp add: innerProd_def parallelOperatorEq)
 apply(subst hideSbRestrictCh)
 by(simp_all add: assms)
 
+(* requirements *)
+
+lemma domMult1: assumes "sbDom\<cdot>sb = {c1, c2}" shows "sbDom\<cdot>(mult1\<rightleftharpoons>sb) = {c5}"
+apply(simp add: mult1_rep_eqC)
+apply(simp add: assms)
+by(simp add: sbDom_def)
+
+lemma domMult2: assumes "sbDom\<cdot>sb = {c3, c4}" shows "sbDom\<cdot>(mult2\<rightleftharpoons>sb) = {c6}"
+apply(simp add: mult2_rep_eqC)
+apply(simp add: assms)
+by(simp add: sbDom_def)
+
+lemma domMult1Restrict: assumes "{c1, c2} \<subseteq> sbDom\<cdot>sb" shows "sbDom\<cdot>(mult1\<rightleftharpoons>(sb\<bar>{c1, c2})) = {c5}"
+apply(simp add: mult1_rep_eqC)
+proof -
+  have f1: "sbDom\<cdot>sb \<inter> {c1, c2} = {c1, c2}"
+    using assms by blast
+  then have "sbDom\<cdot>mult1\<rightleftharpoons>sb\<bar>{c2, c1} = {c5}"
+    by (simp add: domMult1 insert_commute)
+  then show "(sbDom\<cdot>sb \<inter> {c1, c2} = {c1, c2} \<longrightarrow> sbDom\<cdot>([c5 \<mapsto> mult\<cdot>(sb . c1)\<cdot>(sb . c2)]\<Omega>) = {c5}) \<and> (sbDom\<cdot>sb \<inter> {c1, c2} \<noteq> {c1, c2} \<longrightarrow> sbDom\<cdot>(the None::nat SB) = {c5})"
+    using f1 by (simp add: insert_commute mult1_rep_eqC)
+qed
+
+lemma domMult2Restrict: assumes "{c3, c4} \<subseteq> sbDom\<cdot>sb" shows "sbDom\<cdot>(mult2\<rightleftharpoons>(sb\<bar>{c3, c4})) = {c6}"
+apply(simp add: mult2_rep_eqC)
+proof -
+  have f1: "sbDom\<cdot>sb \<inter> {c3, c4} = {c3, c4}"
+    using assms by blast
+  then have "sbDom\<cdot>mult2\<rightleftharpoons>sb\<bar>{c3, c4} = {c6}"
+    by (simp add: domMult2 insert_commute)
+  then show "(sbDom\<cdot>sb \<inter> {c3, c4} = {c3, c4} \<longrightarrow> sbDom\<cdot>([c6 \<mapsto> mult\<cdot>(sb . c3)\<cdot>(sb . c4)]\<Omega>) = {c6}) \<and> (sbDom\<cdot>sb \<inter> {c3, c4} \<noteq> {c3, c4} \<longrightarrow> sbDom\<cdot>(the None::nat SB) = {c6})"
+    using f1 by (simp add: insert_commute mult2_rep_eqC)
+qed
+
+lemma mult1Eq: assumes "sbDom\<cdot>sb = {c1, c2}" shows "mult1 \<rightleftharpoons> sb . c5 = mult\<cdot>(sb . c1)\<cdot>(sb . c2)"
+apply(simp add: mult1_rep_eqC)
+by(auto simp add: assms)
+
+lemma mult2Eq: assumes "sbDom\<cdot>sb = {c3, c4}" shows "mult2 \<rightleftharpoons> sb . c6 = mult\<cdot>(sb . c3)\<cdot>(sb . c4)"
+apply(simp add: mult2_rep_eqC)
+by(auto simp add: assms)
+
+lemma addCEq: assumes "sbDom\<cdot>sb = {c5, c6}" shows "addC \<rightleftharpoons> sb . c7 = add\<cdot>(sb . c5)\<cdot>(sb . c6)"
+apply(simp add: addC_rep_eqC)
+by(auto simp add: assms)
+
+(* final lemma *)
+
 lemma innerprod: assumes "sbDom\<cdot>sb = I (spfcomp mult1 mult2) addC"
   shows "(innerProd  \<rightleftharpoons> sb) . c7 = add\<cdot>(mult\<cdot>(sb . c1)\<cdot>(sb . c2))\<cdot>(mult\<cdot>(sb . c3)\<cdot>(sb . c4))"
   apply(subst innerProdEqCh)
-  apply(simp add: assms)
+    apply(simp add: assms)
   apply(subst innerprod_serComp, simp_all add: assms)
   apply(subst mults_comp, simp_all add: assms)
-  sorry
+  apply(subst addCEq, simp)
+    apply(subst domMult1Restrict, simp add: assms)
+    apply(subst domMult2Restrict, auto simp add: assms)
+  apply(subst sbunion_getchL, subst domMult2, simp_all add: assms)
+  apply(subst sbunion_getchR, subst domMult2, simp_all add: assms)
+  apply(subst mult1Eq, simp add: assms)
+  apply(subst mult2Eq, simp add: assms)
+  by simp
 
 end
