@@ -9,21 +9,19 @@ definition parcomp :: "'m SPF \<Rightarrow> 'm SPF \<Rightarrow> 'm SPF" ("_\<pa
 
 (* spfDom spfcomp *)
 
-lemma spfRepAbs:  "Rep_CSPF(Abs_CSPF (\<lambda> x. (sbDom\<cdot>x = cs ) \<leadsto> f(x))) = (\<lambda> x. (sbDom\<cdot>x = cs ) \<leadsto> f(x))"
-apply(simp add: Rep_CSPF_def Abs_CSPF_def)
-sorry
-
-lemma spfDomAbs: "spfDom\<cdot>(Abs_CSPF (\<lambda> x. (sbDom\<cdot>x = cs ) \<leadsto> f(x))) = cs" 
+lemma spfDomAbs: assumes "cont (\<lambda> x. (sbDom\<cdot>x = cs ) \<leadsto> f(x))" and "spf_well (Abs_cfun (\<lambda> x. (sbDom\<cdot>x = cs ) \<leadsto> f(x)))"
+    shows "spfDom\<cdot>(Abs_CSPF (\<lambda> x. (sbDom\<cdot>x = cs ) \<leadsto> f(x))) = cs" 
 apply(simp add: spfDom_def)
-apply(simp add: spfRepAbs)
+apply(simp_all add: assms)
 by (smt domIff option.discI sbleast_sbdom someI_ex)
 
-lemma spfComp_dom_I: "spfDom\<cdot>(spfcomp f1 f2) = I f1 f2"
-by(simp add: spfcomp_def spfDomAbs ) 
+lemma spfComp_dom_I: assumes "spfComp_well f1 f2" shows "spfDom\<cdot>(spfcomp f1 f2) = I f1 f2"
+apply(simp add: spfcomp_tospfH2, subst spfDomAbs)
+by(simp_all add: assms)
 
 (* spfRan spfcomp *)
 
-lemma sbDomIterate: "sbDom\<cdot>(\<Squnion>i. iterate i\<cdot>F\<cdot>sb)  = sbDom\<cdot>(F\<cdot>sb)"
+lemma sbDomIterate: "sbDom\<cdot>(\<Squnion>i. iterate i\<cdot>(spfCompHelp2 f1 f2 (sbLeast (I f1 f2)))\<cdot>sb)  = sbDom\<cdot>((spfCompHelp2 f1 f2 (sbLeast (I f1 f2)))\<cdot>sb)"
 sorry
 
 lemma spfDomHelp: assumes "spfDom\<cdot>f1 \<subseteq> sbDom\<cdot>sb" shows "sbDom\<cdot>f1\<rightleftharpoons>sb\<bar>spfDom\<cdot>f1 = spfRan\<cdot>f1"
@@ -38,8 +36,9 @@ using assms apply auto[1]
 by simp
 
 lemma spfComp_ran_Oc: assumes "spfComp_well f1 f2" shows "spfRan\<cdot>(spfcomp f1 f2) = Oc f1 f2"
-apply(simp add: spfcomp_tospfH2 spfran_least spfDomAbs)
-apply(subst spfcomp_repAbs, simp_all add: assms)
+apply(simp add: spfcomp_tospfH2)
+apply(simp add:  spfran_least)
+apply(subst spfDomAbs, simp_all add: assms)
 apply(subst sbDomIterate)
 apply(subst sbDomH2, simp)
 using C_def apply blast
@@ -51,9 +50,10 @@ definition hide :: "'m SPF \<Rightarrow>  channel set \<Rightarrow> 'm SPF" wher
 "hide f cs \<equiv> Abs_CSPF (\<lambda> x. (sbDom\<cdot>x = spfDom\<cdot>f ) \<leadsto> ((f \<rightleftharpoons> x)\<bar>(spfRan\<cdot>f - cs)))"
 
 lemma[simp]: assumes "cont (Rep_CSPF(f))" shows "cont (\<lambda> x. (sbDom\<cdot>x = spfDom\<cdot>f ) \<leadsto> ((f \<rightleftharpoons> x)\<bar>(spfRan\<cdot>f - cs)))"
-sorry
+apply(subst if_then_cont, simp_all)
+by (simp add: cont_compose)
 
-lemma[simp]: "spf_well (Abs_cfun (\<lambda> x. (sbDom\<cdot>x = spfDom\<cdot>f ) \<leadsto> ((f \<rightleftharpoons> x)\<bar>(spfRan\<cdot>f - cs))))"
+lemma[simp]: assumes "spf_well (Abs_cfun (Rep_CSPF(f)))" shows "spf_well (Abs_cfun (\<lambda> x. (sbDom\<cdot>x = spfDom\<cdot>f ) \<leadsto> ((f \<rightleftharpoons> x)\<bar>(spfRan\<cdot>f - cs))))"
 apply(auto simp add: spf_well_def domIff2 sbdom_rep_eq)
 sorry
 
@@ -81,12 +81,6 @@ by (simp add: Diff_subset Int_absorb1 spfran_least)
 
 lemma hideSubset: "spfRan\<cdot>(hide f cs) \<subseteq> spfRan\<cdot>f"
 using hideSpfRan by auto
-
-(* inner prod *)
-
-(*definition innerProd :: "nat SPF" where
-"innerProd \<equiv> hide ((mult1 \<parallel> mult2) \<otimes> addC) {c5, c6}"
-*)
 
 (* lemmas about parallel composition *)
 

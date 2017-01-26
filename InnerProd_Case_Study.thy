@@ -220,10 +220,22 @@ lemma mult_comp2: assumes "sbDom\<cdot>sb = I mult1 mult2"
   shows "((Rep_CSPF (spfcomp mult1 mult2)) \<rightharpoonup> sb) . c6 = ((Rep_CSPF(mult2)) \<rightharpoonup> (sb\<bar>spfDom\<cdot>mult2)) . c6"
   by (subst spfCompParallelGetch2, simp_all add: assms)
 
-lemma multcomp_cont: "cont (\<lambda>x. (sbDom\<cdot>x = {c3, c4, c1, c2})\<leadsto>((mult1\<rightleftharpoons>(x\<bar>spfDom\<cdot>mult1)) \<uplus> (mult2\<rightleftharpoons>(x\<bar>spfDom\<cdot>mult2))))"
+lemma contMult1: "cont (\<lambda>x. (mult1\<rightleftharpoons>(x\<bar>{c1, c2})))"
 sorry
+
+lemma contMult1Union: "cont (\<lambda>x. sbUnion\<cdot>(mult1\<rightleftharpoons>(x\<bar>{c1, c2})))"
+by(simp add: contMult1)
+
+lemma contMult2: "cont (\<lambda>x. (mult2\<rightleftharpoons>(x\<bar>{c3, c4})))"
+sorry
+
+lemma multcomp_cont: "cont (\<lambda>x. (sbDom\<cdot>x = {c3, c4, c1, c2})\<leadsto>((mult1\<rightleftharpoons>(x\<bar>spfDom\<cdot>mult1)) \<uplus> (mult2\<rightleftharpoons>(x\<bar>spfDom\<cdot>mult2))))"
+apply(subst if_then_cont, simp_all)
+apply(subst cont2cont_APP)
+by(simp_all add: contMult1Union contMult2)
                                    
 lemma multcomp_spfwell: "spf_well (\<Lambda> x. (sbDom\<cdot>x = {c3, c4, c1, c2})\<leadsto>((mult1\<rightleftharpoons>(x\<bar>spfDom\<cdot>mult1)) \<uplus> (mult2\<rightleftharpoons>(x\<bar>spfDom\<cdot>mult2))))"
+apply(simp add: spf_well_def)
 sorry
 
 lemma mults_comp: assumes "sbDom\<cdot>sb = I mult1 mult2"
@@ -270,8 +282,10 @@ definition innerProd :: "nat SPF" where
 "innerProd \<equiv> hide ((mult1 \<parallel> mult2) \<otimes> addC) {c5, c6}"
 
 lemma [simp]: "spfDom\<cdot>( spfcomp (parcomp mult1 mult2) addC) = {c1, c2, c3, c4}"
-apply(simp add: spfComp_dom_I I_def parCompDom parCompRan)
-by auto
+apply(subst spfComp_dom_I)
+apply(simp_all add: I_def parCompDom parCompRan)
+apply(simp add: spfComp_well_def)
+by(simp add: parCompDom parCompRan)
 
 lemma innerProdEqCh: assumes "sbDom\<cdot>sb = I (spfcomp mult1 mult2) addC" 
     shows "(innerProd  \<rightleftharpoons> sb) . c7 = (spfcomp (spfcomp mult1 mult2) addC) \<rightleftharpoons> sb . c7"
