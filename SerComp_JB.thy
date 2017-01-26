@@ -75,10 +75,17 @@ lemma spfCompH2_cont[simp]: "cont (\<lambda> z. x \<uplus> ((Rep_CSPF f1)\<right
                                           \<uplus> ((Rep_CSPF f2)\<rightharpoonup>(z \<bar> spfDom\<cdot>f2)))"
   using spfCompHelp_cont by blast
 
-lemma test_cont: shows "cont (\<lambda> x. (spfCompHelp2 f1 f2 x))"
-apply(simp add: spfCompHelp2_def)
-sorry
+lemma helpermonoinX: shows "monofun (\<lambda> x. spfCompHelp2 f1 f2 x)"
+by(simp add: spfCompHelp2_def)
 
+lemma helpercontinX: shows "cont (\<lambda> x. spfCompHelp2 f1 f2 x)"
+apply(simp add: spfCompHelp2_def)
+proof -
+   have "\<forall>x. cont (\<lambda> z. x \<uplus> (f1 \<rightleftharpoons> (z \<bar> spfDom\<cdot>f1))  \<uplus> (f2 \<rightleftharpoons>(z \<bar> spfDom\<cdot>f2)))"
+   by simp
+   thus "cont (\<lambda>x. \<Lambda> z. x \<uplus> (f1 \<rightleftharpoons> (z \<bar> spfDom\<cdot>f1))  \<uplus> (f2 \<rightleftharpoons> (z \<bar> spfDom\<cdot>f2)))"
+   by (simp add: cont2cont_LAM)
+qed
 (*
 lemma spfCompHelp_cont2 [simp]: "cont (\<lambda> last. (b \<uplus> ((Rep_CSPF f1)\<rightharpoonup>(last \<bar> spfDom\<cdot>f1))
                                    \<uplus> ((Rep_CSPF f2)\<rightharpoonup>(last \<bar> spfDom\<cdot>f2))))"
@@ -93,17 +100,29 @@ proof -
 qed
 *)
 
+lemma test15: assumes "spfComp_well f1 f2"
+shows "\<exists>i. ((\<lambda> x. (\<Squnion>i. iterate i\<cdot>(spfCompHelp2 f1 f2 x)\<cdot>(sbLeast (C f1 f2)))) = (\<lambda> x. iterate i\<cdot>(spfCompHelp2 f1 f2 x)\<cdot>(sbLeast (C f1 f2))))"
+sorry (* Beweis Idee: verwende fall unterscheidung für die Kanäle von x, entweder fließen diese nur durch eine Komponente \<Rightarrow> parComp verwenden, 
+oder durch beide lemmas von serComp verwenden jeweils die iterate to constant *)
+
+
 lemma test14: assumes "spfComp_well f1 f2"
 shows "cont (\<lambda> x. (\<Squnion>i. iterate i\<cdot>(spfCompHelp2 f1 f2 x)\<cdot>(sbLeast (C f1 f2))) \<bar> Oc f1 f2)"
 proof -
   have "cont (\<lambda> x. (spfCompHelp2 f1 f2 x))"
-    sorry 
-  then have "cont (\<lambda> x. iterate i\<cdot>(spfCompHelp2 f1 f2 x))"
+    by (simp add: helpercontinX)
+  then have "\<forall> i. cont (\<lambda> x. iterate i\<cdot>(spfCompHelp2 f1 f2 x))"
     using cont_Rep_cfun2 cont_compose by blast
-  then have "cont (\<lambda> x. \<Squnion>i. iterate i\<cdot>(spfCompHelp2 f1 f2 x))" (* i was unbounded previously, may needs rewrite *)
-    sorry (* show that lub is cont first *)
+  then have "\<forall> i. cont (\<lambda> x. iterate i\<cdot>(spfCompHelp2 f1 f2 x)\<cdot>(sbLeast (C f1 f2)))" 
+     by (simp)  (* why didn't sledgi find this, needs further investigation *)
+  
+(* Beweis Idee für lub, 1. zeige das sofern feedback frei ein j existiert sodass lub i f(x,i) = f(j,i), dafür wird feedback freiheit benötigt ansonsten existiert lub nicht*)
+(* 2. sage das dadurch das ein solches j existiert mit II unmittelbar folgt das auch lub stetig ist *)
   then have "cont (\<lambda> x. (\<Squnion>i. iterate i\<cdot>(spfCompHelp2 f1 f2 x)\<cdot>(sbLeast (C f1 f2))))"
-    sorry
+     using test15 assms \<open>\<forall>i. cont (\<lambda>x. iterate i\<cdot>(SerComp_JB.spfCompHelp2 f1 f2 x)\<cdot> (sbLeast (C f1 f2)))\<close> by fastforce
+(* PROBLEM DES BEWEISES: feedback schleifen, vll lösbar mit direktem beweis über stetigkeit von lub, range etc. lösen *)
+
+
   thus ?thesis using cont_Rep_cfun2 cont_compose by blast
 qed
 
