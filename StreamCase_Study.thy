@@ -1084,13 +1084,6 @@ apply (induct_tac n,auto)
 using cont_lub_h2_helper2 apply auto[1]
 by (metis cont_lub_h2_helper2 min_def sdropostake snth_def stakeostake)
 
-(*lemma helperhelper: "\<Squnion>i. h i s y = h i (\<Squnion>i. s ) y"*)
-
-lemma cont_lub_h2_helper: "\<And>i. cont (\<lambda>s. h i s y)"
-apply (simp add: cont_def)
-
-sorry
-
 (* h2 is a continuous function *)
 lemma cont_lub_h2: "cont (\<lambda> s. \<Squnion>i. h i s y)" 
 apply (rule cont2cont_lub)
@@ -1099,7 +1092,12 @@ apply (rule chainI)
 apply (rule fun_belowD [of _ _ "y"])
 apply (rule chainE)
 apply (metis (no_types, lifting) chain_h fun_below_iff po_class.chainE po_class.chainI)
-by (simp add: cont_lub_h2_helper)
+apply (rule pr_contI)
+apply (rule monofunI)
+apply (rule mono_h [rule_format], assumption)
+apply (rule allI)
+apply (rule_tac x="i" in exI)
+by (rule contlub_h [rule_format])
 
 lemma sum5_scons:"sum5\<cdot>(\<up>a\<bullet>s) = \<up>(a) \<bullet> (h2 s a)"  
 apply (simp add: sum5_def h2_def)
@@ -1155,6 +1153,9 @@ using sum5_scons sum5_unfold_h by auto
 lemma sum5_unfold_sum5[simp]: "sum5\<cdot>(\<up>0 \<bullet>as) =\<up>0 \<bullet> sum5\<cdot>(as)"
 by (simp add: sum5_unfold_h)
 
+lemma test2_sum5_help: "Fin n < #as \<longrightarrow> snth (Suc n) (sum5\<cdot>(\<up>0 \<bullet>as)) = snth n (sum5\<cdot>as)"
+by(induction n,simp+)
+
 lemma sum5_unfoldh2h: "h2 (\<up>a1 \<bullet>  as) 0 = \<up>a1 \<bullet> (\<Squnion>i. h i as a1)"
 using sum5_scons sum5_unfold_h sum5_unfold_h2
 by (simp add: h2_def)
@@ -1183,6 +1184,14 @@ lemma sum5_noteps[simp]: "s\<noteq>\<epsilon> \<Longrightarrow> sum5\<cdot>s = \
 using assms
 by (metis sum5_unfold2_h sum5_unfold_h surj_scons)
 
+
+
+lemma h2_len_i: "Fin n = #as \<and> #as<\<infinity> \<longrightarrow> (\<Squnion>i. h i as 0) = h n as 0"
+apply(induction as)
+using adm_def inf_chainl4 l42 apply fastforce
+apply (simp add: h_eps)
+sorry
+
 lemma sum5_slen [simp]:" #(sum5\<cdot>as) = #as"
   (*by (metis add_slen min_rek slen_scons sum5_noteps h2_unfold2_h2)*)
 sorry
@@ -1194,15 +1203,51 @@ using One_nat_def snth_one_h sum5_scons by presburger
 lemma sum5_snth_1: "as\<noteq>\<epsilon> \<Longrightarrow> snth (Suc 0) (sum5\<cdot>(\<up>a1\<bullet>as)) = snth (Suc 0) (\<up>a1\<bullet>as) + a1"
 by (metis One_nat_def add.commute scases shd1 snth_one_h snth_scons snth_shd sum5_scons)
 
-lemma test[rule_format]: "Fin (Suc n) < #as \<longrightarrow> snth (Suc n) (h2 as a) =snth n (h2 as a) + snth (Suc n) as"
+
+lemma test_help: "shd (h2 (\<up>a\<bullet>as) n) = a + n"
+by (metis One_nat_def snth_one_h snth_scons snth_shd)
+
+
+lemma test_help2: "Fin n < #as \<longrightarrow> shd (h2 as a) = shd as + a"
+by (metis Fin_02bot bot_is_0 h2_unfold_ite less_le lnle_Fin_0 shd1 strict_slen)
+
+lemma sum5_input_drop[simp]:"Fin n < #as \<longrightarrow> shd (h2 (sdrop n\<cdot> as) 0) =snth n as"
+apply (simp add: snth_def)
+using sum5_snth0 sum5_unfold_h by auto
+
+lemma sdrop_exist: "Fin n < #as \<Longrightarrow> \<exists>a as2. sdrop n\<cdot>as = \<up>a \<bullet> as2"
+apply(induction n , simp+)
+apply auto
+apply (metis bot_is_0 lnat.con_rews scases strict_slen)
+apply (rule_tac x=as in scases)
+apply simp
+apply simp
 sorry
+
+lemma h2_input_drop[simp]:"Fin n < #as \<longrightarrow> shd (h2 (sdrop n\<cdot> as) a) =snth n as + a"
+apply(simp add: snth_def)
+using test_help2 sdrop_exist
+by (metis shd1 test_help)
+
+lemma test[rule_format]: "Fin (Suc n) < #as \<longrightarrow> snth (Suc n) (h2 as a) =snth n (h2 as a) + snth (Suc n) as"
+apply(induction n,simp+)
+using test_help2
+apply (smt Fin_02bot Fin_Suc add.commute h2_unfold_ite less_lnsuc lnzero_def not_less sconc_snd_empty slen_scons smono_slen_rt_lemma snth_rt snth_scons snth_shd stream.con_rews(2) stream.sel_rews(5) strict_slen sup'_def up_defined)
+apply auto
+apply (meson Suc_n_not_le_n leI less2nat less_le order_trans)
+apply (rule_tac x=as in scases)
+apply simp
+apply auto[1]
+sorry
+
+
 
 
 
 lemma test2_sum5[rule_format]: "Fin n<#as \<longrightarrow> snth n (sum5\<cdot>as) = snth n as + snth n (sum5\<cdot>(\<up>0 \<bullet>as))"
- using add.left_neutral add_less_cancel_right lessI less_nat_zero_code slen_smap
 apply(induction n,simp_all)
-sorry
+using sum5_unfold_h test by auto
+
 
 lemma sum5_snth1: assumes "Fin 1<#xs"
   shows "snth 1 (sum5\<cdot>xs) = snth 1 xs + snth 0 xs"
@@ -1211,7 +1256,7 @@ by (metis One_nat_def assms snth_scons snth_shd sum5_snth0 sum5_unfold2_h sum5_u
 
 
 lemma sum5_snth_helper[rule_format]: "Fin n < #as \<longrightarrow> snth n (h2 as a) = snth n (h2 as 0) + a"
-apply (induction n, simp_all)
+apply (induction n, simp+)
 apply (metis Nat.add_0_right h2_unfold_ite lnsuc_neq_0_rev shd1 slen_empty_eq)
 apply (simp add: test)
 by (metis Fin_leq_Suc_leq linorder_not_less order_less_le)
