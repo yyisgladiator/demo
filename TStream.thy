@@ -395,13 +395,9 @@ apply (simp add: below_tstream_def ts_well_sing_conc)
 apply (metis less_all_sconsD)
 by simp
 
-(* TODO 1 Dennis
 (* uparrow is a bijection *)
-lemma [simp]: "(Abs_tstream(\<up>a\<bullet>\<up>\<surd>)) = (Abs_tstream((\<up>b\<bullet>\<up>\<surd>))) = (a = b)"
-apply (rule iffI)
+lemma "\<up>(Msg a)= \<up>(Msg b) = (a=b)"
 by simp
-*)
-
 
 (* tsAbs *)
 thm tsAbs_def
@@ -1456,12 +1452,12 @@ done
 
 (* tstmap *)
 
-(* TODO 2 Dennis
+(* TODO Dennis
 (* tstmap distributes over infinite repetition *)
 lemma tstmap2tsinf[simp]: "tstmap f\<cdot>(tsinftimes x)= tsinftimes (tstmap f\<cdot>x)"
+apply (subst tstmap_def)
 apply (subst tsinftimes_def [THEN fix_eq2])
 by simp
-IDEAS  tsinftimes_eps, tsinftimes_unfold
 *)
 
 (*TODO
@@ -3279,7 +3275,7 @@ WITH lemma tsinftickDrop[simp]: assumes "#\<surd>ts = \<infinity>"
   shows "#\<surd>(tsDropFirst\<cdot>ts) = \<infinity>"
 
 DONE (* only the empty stream has length 0 *)
-lemma tstickcount_empty_eq[simp]: "(#x = 0) = (x = \<epsilon>)"
+lemma slen_empty_eq[simp]: "(#x = 0) = (x = \<epsilon>)"
 WITH (* only the empty tstream has length 0 *)
 lemma tstickcount_empty_eq[simp]: "(#\<surd>x = 0) = (x = \<bottom>)"
 
@@ -3307,7 +3303,7 @@ WITH (* repeating a tstream infinitely often is equivalent to repeating it once 
 lemma tsinftimes_unfold: "tsinftimes s = s \<bullet> tsinftimes s"
 by (subst tsinftimes_def [THEN fix_eq2], simp)
 
-TODO 2
+TODO
 (* smap distributes over infinite repetition *)
 lemma smap2sinf[simp]: "smap f\<cdot>(x\<infinity>)= (smap f\<cdot>x)\<infinity>"
 
@@ -3338,9 +3334,10 @@ lemma [simp]: "(\<up>a \<sqsubseteq> \<up>b) = (a = b)"
 WITH (* singleton in first time slot are only in an ordered relation if the two elements are equal *)
 lemma [simp]: "(Abs_tstream(\<up>a\<bullet>\<up>\<surd>) \<sqsubseteq> Abs_tstream((\<up>b\<bullet>\<up>\<surd>))) = (a = b)"
 
-TODO 1
-(* uparrow is a bijection *)
+DONE (* uparrow is a bijection *)
 lemma [simp]: "(\<up>a = \<up>b) = (a = b)"
+WITH (* uparrow is a bijection *)
+lemma "\<up>(Msg a)= \<up>(Msg b) = (a=b)"
 
 *)
 end
