@@ -381,16 +381,25 @@ by (simp add: tsconc_insert)
 lemma [simp]: "Abs_tstream(\<up>\<surd>) \<bullet> as \<noteq> \<bottom>"
 by (simp add: tsconc_insert)
 
-(* TODO 2 Dennis
-(* singleton streams are only in an ordered relation if the two elements are equal *)
-lemma [simp]: "(Abs_tstream(\<up>a\<bullet>\<up>\<surd>) \<sqsubseteq> Abs_tstream((\<up>b\<bullet>\<up>\<surd>))) = (a = b)"
+(* the singleton tstream is never equal to the empty stream *)
+lemma [simp]: "Abs_tstream(\<up>\<surd>) \<noteq> \<bottom>"
 by simp
-IDEAS below_tstream_def, rule iffI
 
-(* uparrow is a bijection *)
-lemma [simp]: "(Abs_tstream(\<up>a) = Abs_tstream(\<up>b)) = (a = b)"
+lemma ts_well_sing_conc: "ts_well (\<up>a\<bullet>\<up>\<surd>)"
+by (simp add: ts_well_def)
+
+(* singleton in first time slot are only in an ordered relation if the two elements are equal *)
+lemma [simp]: "(Abs_tstream(\<up>a\<bullet>\<up>\<surd>) \<sqsubseteq> Abs_tstream((\<up>b\<bullet>\<up>\<surd>))) = (a = b)"
+apply (rule iffI)
+apply (simp add: below_tstream_def ts_well_sing_conc)
+apply (metis less_all_sconsD)
 by simp
-IDEAS iffI
+
+(* TODO 1 Dennis
+(* uparrow is a bijection *)
+lemma [simp]: "(Abs_tstream(\<up>a\<bullet>\<up>\<surd>)) = (Abs_tstream((\<up>b\<bullet>\<up>\<surd>))) = (a = b)"
+apply (rule iffI)
+by simp
 *)
 
 
@@ -424,17 +433,6 @@ lemma tsabs_tsdom [simp]: "sdom\<cdot>(tsAbs\<cdot>ts) = tsDom\<cdot>ts"
   apply rule
   apply (metis (mono_tags, lifting) Int_iff event.distinct(1) event.simps(4) image_iff mem_Collect_eq)
 done 
-
-(* TODO 3 Dennis 
-lemma [simp]: "shd (\<up>a) = a"
-
-(* the rest of the singleton stream is empty *)
-lemma [simp]: "srt\<cdot>(\<up>a) = \<epsilon>"
-*)
-
-(* the singleton tstream is never equal to the empty stream *)
-lemma [simp]: "Abs_tstream(\<up>\<surd>) \<noteq> \<bottom>"
-by simp
 
 
 (* tsRep *)
@@ -625,8 +623,10 @@ by(simp add: tsTakeFirst_def)
 lemma tstakefirst_dom [simp]: "tsDom\<cdot>(tsTakeFirst\<cdot>ts) \<subseteq> tsDom\<cdot>ts"
 by (metis monofun_cfun_arg set_cpo_simps(1) tstakefirst_prefix)
 
-
-
+lemma [simp]: "tsTakeFirst\<cdot>(Abs_tstream(\<up>\<surd>)) = Abs_tstream(\<up>\<surd>)"
+apply (simp add: tstakefirst_insert)
+apply (subst stwbl_def [THEN fix_eq2])
+by (simp)
 
 (* tsDropFirst *)
 thm tsDropFirst_def
@@ -703,7 +703,9 @@ by(simp add: tsdropfirst_insert)
 lemma tsTakeDropFirst [simp]: "tsTakeFirst\<cdot>ts \<bullet> tsDropFirst\<cdot>ts = ts"
 by (metis (no_types, lifting) Abs_tstream_inverse Rep_tstream Rep_tstream_inverse mem_Collect_eq stwbl_srtdw tsconc_insert tsdropfirst_insert tsdropfirst_well tstakefirst_insert tstakefirst_well)
 
-
+(* the rest of the singleton tstream is empty *)
+lemma [simp]: "tsDropFirst\<cdot>(Abs_tstream(\<up>\<surd>)) = \<bottom>"
+by (simp add: tsdropfirst_insert)
 
 (* tsDrop *)
 thm tsDrop_def
@@ -923,17 +925,6 @@ by (simp add: tstickcount_insert tsconc_rep_eq)
 (* the singleton tstream has length 1 *)
 lemma [simp]: "#\<surd>Abs_tstream(\<up>\<surd>) = Fin (Suc 0)"
 by (simp add: tstickcount_rep_eq)
-
-(* TODO 1 Dennis 
-text {* The rest of infinite tstreams is infinite as well *}
-lemma inf_tscase:"#\<surd>s = \<infinity> \<Longrightarrow> \<exists>e ts. s = Event e \<bullet> ts \<and> (#\<surd>ts) = \<infinity>"
-by simp
-
-IDEAS
-lemma tsconc_id [simp]: assumes "#\<surd>ts1 = \<infinity>"
-  shows "tsConc ts1\<cdot>ts2 = ts1"
-lemma slen_tsconc_snd_inf: "(#\<surd> y)=\<infinity> \<Longrightarrow> (#\<surd>(x \<bullet> y)) = \<infinity>"
-*)
 
 (* only the empty tstream has length 0 *)
 lemma tstickcount_empty_eq[simp]: "(#\<surd>x = 0) = (x = \<bottom>)"
@@ -1465,7 +1456,7 @@ done
 
 (* tstmap *)
 
-(* TODO 4 Dennis
+(* TODO 2 Dennis
 (* tstmap distributes over infinite repetition *)
 lemma tstmap2tsinf[simp]: "tstmap f\<cdot>(tsinftimes x)= tsinftimes (tstmap f\<cdot>x)"
 apply (subst tsinftimes_def [THEN fix_eq2])
@@ -3282,11 +3273,10 @@ lemma [simp]: "#(\<up>a) = Fin (Suc 0)"
 WITH (* the singleton tstream has length 1 *)
 lemma [simp]: "#\<surd>Abs_tstream(\<up>\<surd>) = Fin (Suc 0)"
 
-TODO 1
-TASK text {* The rest of infinite streams is infinite as well *}
+ALREADY DONE text {* The rest of infinite streams is infinite as well *}
 lemma inf_scase:"#s = \<infinity> \<Longrightarrow> \<exists>a as. s = \<up>a \<bullet> as \<and> #as = \<infinity>"
-WITH text {* The rest of infinite tstreams is infinite as well *}
-lemma inf_tscase:"#\<surd>s = \<infinity> \<Longrightarrow> \<exists>e ts. s = Event e \<bullet> ts \<and> (#\<surd>ts) = \<infinity>"
+WITH lemma tsinftickDrop[simp]: assumes "#\<surd>ts = \<infinity>"
+  shows "#\<surd>(tsDropFirst\<cdot>ts) = \<infinity>"
 
 DONE (* only the empty stream has length 0 *)
 lemma tstickcount_empty_eq[simp]: "(#x = 0) = (x = \<epsilon>)"
@@ -3317,12 +3307,12 @@ WITH (* repeating a tstream infinitely often is equivalent to repeating it once 
 lemma tsinftimes_unfold: "tsinftimes s = s \<bullet> tsinftimes s"
 by (subst tsinftimes_def [THEN fix_eq2], simp)
 
-TODO 4
+TODO 2
 (* smap distributes over infinite repetition *)
 lemma smap2sinf[simp]: "smap f\<cdot>(x\<infinity>)= (smap f\<cdot>x)\<infinity>"
 
-TODO 3
-lemma [simp]: "shd (\<up>a) = a"
+DONE lemma [simp]: "shd (\<up>a) = a"
+WITH lemma [simp]: "tsTakeFirst\<cdot>(Abs_tstream(\<up>\<surd>)) = Abs_tstream(\<up>\<surd>)"
 
 DONE (* the singleton stream is never equal to the empty stream *)
 lemma [simp]: "\<up>a \<noteq> \<epsilon>"
@@ -3330,9 +3320,10 @@ WITH (* the singleton tstream is never equal to the empty stream *)
 lemma [simp]: "Abs_tstream(\<up>\<surd>) \<noteq> \<bottom>"
 by simp
 
-TODO 3
-(* the rest of the singleton stream is empty *)
+DONE (* the rest of the singleton stream is empty *)
 lemma [simp]: "srt\<cdot>(\<up>a) = \<epsilon>"
+WITH (* the rest of the singleton tstream is empty *)
+lemma [simp]: "tsDropFirst\<cdot>(Abs_tstream(\<up>\<surd>)) = \<bottom>"
 
 DONE (* appending to a singleton stream can never yield the empty stream *)
 lemma [simp]: "\<epsilon> \<noteq> \<up>a \<bullet> as"
@@ -3342,11 +3333,12 @@ lemma [simp]: "\<bottom> \<noteq> Abs_tstream(\<up>\<surd>) \<bullet> as"
 DONE lemma [simp]: "\<up>a \<bullet> as \<noteq> \<epsilon>"
 WITH lemma [simp]: "Abs_tstream(\<up>\<surd>) \<bullet> as \<noteq> \<bottom>"
 
-TODO 2
-(* singleton streams are only in an ordered relation if the two elements are equal *)
+DONE (* singleton streams are only in an ordered relation if the two elements are equal *)
 lemma [simp]: "(\<up>a \<sqsubseteq> \<up>b) = (a = b)"
+WITH (* singleton in first time slot are only in an ordered relation if the two elements are equal *)
+lemma [simp]: "(Abs_tstream(\<up>a\<bullet>\<up>\<surd>) \<sqsubseteq> Abs_tstream((\<up>b\<bullet>\<up>\<surd>))) = (a = b)"
 
-TODO 2
+TODO 1
 (* uparrow is a bijection *)
 lemma [simp]: "(\<up>a = \<up>b) = (a = b)"
 
