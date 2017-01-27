@@ -374,6 +374,25 @@ lemma tstream_scons_eq[simp]: "((\<up>e \<bullet> rs) \<in> {t::'a event stream.
 apply (smt fold_inf lnat.injects mem_Collect_eq sfilter_in sfilter_nin slen_scons)
 done
 
+(* appending to a singleton tstream can never yield the empty stream *)
+lemma [simp]: "\<bottom> \<noteq> Abs_tstream(\<up>\<surd>) \<bullet> as"
+by (simp add: tsconc_insert)
+
+lemma [simp]: "Abs_tstream(\<up>\<surd>) \<bullet> as \<noteq> \<bottom>"
+by (simp add: tsconc_insert)
+
+(* TODO 2 Dennis
+(* singleton streams are only in an ordered relation if the two elements are equal *)
+lemma [simp]: "(Abs_tstream(\<up>a\<bullet>\<up>\<surd>) \<sqsubseteq> Abs_tstream((\<up>b\<bullet>\<up>\<surd>))) = (a = b)"
+by simp
+IDEAS below_tstream_def, rule iffI
+
+(* uparrow is a bijection *)
+lemma [simp]: "(Abs_tstream(\<up>a) = Abs_tstream(\<up>b)) = (a = b)"
+by simp
+IDEAS iffI
+*)
+
 
 (* tsAbs *)
 thm tsAbs_def
@@ -406,7 +425,16 @@ lemma tsabs_tsdom [simp]: "sdom\<cdot>(tsAbs\<cdot>ts) = tsDom\<cdot>ts"
   apply (metis (mono_tags, lifting) Int_iff event.distinct(1) event.simps(4) image_iff mem_Collect_eq)
 done 
 
+(* TODO 3 Dennis 
+lemma [simp]: "shd (\<up>a) = a"
 
+(* the rest of the singleton stream is empty *)
+lemma [simp]: "srt\<cdot>(\<up>a) = \<epsilon>"
+*)
+
+(* the singleton tstream is never equal to the empty stream *)
+lemma [simp]: "Abs_tstream(\<up>\<surd>) \<noteq> \<bottom>"
+by simp
 
 
 (* tsRep *)
@@ -713,7 +741,7 @@ by (simp add: tsNth_def)
 
 
 (* tsTickCount *)
-lemma [simp]: "#\<surd> \<bottom> = 0"
+lemma strict_tstickcount[simp]: "#\<surd> \<bottom> = 0"
 by(simp add: tsTickCount_def)
 
 lemma tstickcount_insert:  "#\<surd> ts =  #({\<surd>} \<ominus> Rep_tstream ts)"
@@ -889,12 +917,29 @@ lemma tsconc_tstickcount[simp]: assumes "(#\<surd>s)<\<infinity>" and "(#\<surd>
 by (metis Fin_neq_inf assms(1) assms(2) infI inf_ub lnle_def lnless_def stickcount_conc)
 
 (* prepending a singleton tstream increases the length by 1 *)
-lemma stickcount_tscons[simp]: "#\<surd>(Abs_tstream(\<up>\<surd>)\<bullet>as) = lnsuc\<cdot>(#\<surd>as)"
+lemma tstickcount_tscons[simp]: "#\<surd>(Abs_tstream(\<up>\<surd>)\<bullet>as) = lnsuc\<cdot>(#\<surd>as)"
 by (simp add: tstickcount_insert tsconc_rep_eq)
 
 (* the singleton tstream has length 1 *)
 lemma [simp]: "#\<surd>Abs_tstream(\<up>\<surd>) = Fin (Suc 0)"
 by (simp add: tstickcount_rep_eq)
+
+(* TODO 1 Dennis 
+text {* The rest of infinite tstreams is infinite as well *}
+lemma inf_tscase:"#\<surd>s = \<infinity> \<Longrightarrow> \<exists>e ts. s = Event e \<bullet> ts \<and> (#\<surd>ts) = \<infinity>"
+by simp
+
+IDEAS
+lemma tsconc_id [simp]: assumes "#\<surd>ts1 = \<infinity>"
+  shows "tsConc ts1\<cdot>ts2 = ts1"
+lemma slen_tsconc_snd_inf: "(#\<surd> y)=\<infinity> \<Longrightarrow> (#\<surd>(x \<bullet> y)) = \<infinity>"
+*)
+
+(* only the empty tstream has length 0 *)
+lemma tstickcount_empty_eq[simp]: "(#\<surd>x = 0) = (x = \<bottom>)"
+apply (rule iffI)
+apply (simp add: ts_0ticks) 
+by simp
 
 
 (* tsTake *)
@@ -1031,7 +1076,6 @@ lemma tsdropfirst_len: "ts \<noteq> \<bottom> \<Longrightarrow> lnsuc\<cdot>(#\<
 lemma tstake_fin: "Fin n = #\<surd>ts \<Longrightarrow> ts \<down> n = ts"
   apply(induction n arbitrary: ts)
    apply simp
-   using ts_0ticks apply blast
   apply (auto simp add: tsTake.simps)
   by (metis Fin_Suc lnat.injects tsTakeDropFirst tsdropfirst_len)
 
@@ -1245,7 +1289,6 @@ by (metis lncases tsconc_id tstake_conc)
 lemma tsnth_more: assumes "#\<surd>ts = Fin n" and "n\<le>i"  shows "tsNth i\<cdot>ts = \<bottom>"
   using assms apply(induction i arbitrary: ts n)
    apply simp
-   using ts_0ticks apply fastforce
 proof -
   fix ia :: nat and tsa :: "'a tstream" and na :: nat
   assume a1: "#\<surd> tsa = Fin na"
@@ -1384,6 +1427,10 @@ by (induct n, simp+)
 lemma tsinftimes_eps[simp]: "tsinftimes \<bottom> = \<bottom>"
 by (subst tsinftimes_def [THEN fix_eq2], simp)
 
+(* repeating a tstream infinitely often is equivalent to repeating it once and then infinitely often *)
+lemma tsinftimes_unfold: "tsinftimes s = s \<bullet> tsinftimes s"
+by (subst tsinftimes_def [THEN fix_eq2], simp)
+
 (* tsTake*)
 
 text {* We prove that taking the first 1,2,...,n,... timeslots of an timed stream with tsTake forms a chain. 
@@ -1416,7 +1463,15 @@ lemma tspfairD: "\<lbrakk>tspfair f;#\<surd>s = \<infinity>\<rbrakk> \<Longright
 apply (simp add: tspfair_def)
 done
 
+(* tstmap *)
 
+(* TODO 4 Dennis
+(* tstmap distributes over infinite repetition *)
+lemma tstmap2tsinf[simp]: "tstmap f\<cdot>(tsinftimes x)= tsinftimes (tstmap f\<cdot>x)"
+apply (subst tsinftimes_def [THEN fix_eq2])
+by simp
+IDEAS  tsinftimes_eps, tsinftimes_unfold
+*)
 
 (*TODO
 
@@ -2623,11 +2678,6 @@ lemma strict2_slookahd[simp]: "slookahd\<cdot>xs\<cdot>(\<lambda>y. \<epsilon>) 
 sinftimes
 (*-----------------------------*)
 
-
-
-(* repeating a stream infinitely often is equivalent to repeating it once and then infinitely often *)
-lemma sinftimes_unfold: "sinftimes s = s \<bullet> sinftimes s"
-
 text {* For nonempty @{term s}, @{term "sinftimes s"} is infinite *}
 lemma slen_sinftimes: "s \<noteq> \<epsilon> \<Longrightarrow> #(sinftimes s) = \<infinity>"
 
@@ -3220,27 +3270,28 @@ WITH lemma stickcount_conc [simp]: assumes "#\<surd> ts1 = Fin n1" and "#\<surd>
   shows "#\<surd> (ts1 \<bullet> ts2) = Fin (n1 + n2)"
 
 ALREADY DONE lemma strict_slen[simp]:"#\<epsilon> = 0"
-WITH lemma [simp]: "#\<surd> \<bottom> = 0"
+WITH lemma strict_tstickcount[simp]: "#\<surd> \<bottom> = 0"
 
 DONE (* prepending a singleton stream increases the length by 1 *)
 lemma slen_scons[simp]: "#(\<up>a\<bullet>as) = lnsuc\<cdot>(#as)"
 WITH (* prepending a singleton tstream increases the length by 1 *)
-lemma stickcount_tscons[simp]: "#\<surd>(Abs_tstream(\<up>\<surd>)\<bullet>as) = lnsuc\<cdot>(#\<surd>as)"
+lemma tstickcount_tscons[simp]: "#\<surd>(Abs_tstream(\<up>\<surd>)\<bullet>as) = lnsuc\<cdot>(#\<surd>as)"
 
 DONE (* the singleton stream has length 1 *)
 lemma [simp]: "#(\<up>a) = Fin (Suc 0)"
 WITH (* the singleton tstream has length 1 *)
 lemma [simp]: "#\<surd>Abs_tstream(\<up>\<surd>) = Fin (Suc 0)"
 
+TODO 1
 TASK text {* The rest of infinite streams is infinite as well *}
 lemma inf_scase:"#s = \<infinity> \<Longrightarrow> \<exists>a as. s = \<up>a \<bullet> as \<and> #as = \<infinity>"
 WITH text {* The rest of infinite tstreams is infinite as well *}
-lemma inf_tscase:"#\<surd>s = \<infinity> \<Longrightarrow> \<exists> as. s = Abs_tstream(\<up>\<surd>) \<bullet> as \<and> (#\<surd>as) = \<infinity>"
+lemma inf_tscase:"#\<surd>s = \<infinity> \<Longrightarrow> \<exists>e ts. s = Event e \<bullet> ts \<and> (#\<surd>ts) = \<infinity>"
 
-TASK (* only the empty stream has length 0 *)
-lemma slen_empty_eq[simp]: "(#x = 0) = (x = \<epsilon>)"
+DONE (* only the empty stream has length 0 *)
+lemma tstickcount_empty_eq[simp]: "(#x = 0) = (x = \<epsilon>)"
 WITH (* only the empty tstream has length 0 *)
-lemma slen_empty_eq[simp]: "(#\<surd>x = 0) = (x = \<bottom>)"
+lemma tstickcount_empty_eq[simp]: "(#\<surd>x = 0) = (x = \<bottom>)"
 
 DONE text {* Appending to an inifite stream does not change its @{text "n"}th element *}
 lemma sconc_fst_inf_lemma: "\<forall>x. #x=\<infinity> \<longrightarrow> stake n\<cdot>(x\<bullet>y) = stake n\<cdot>x"
@@ -3260,32 +3311,44 @@ lemma strict_icycle[simp]: "sinftimes \<epsilon> = \<epsilon>"
 WITH (* infinitely cycling the empty tstream produces the empty tstream again *)
 lemma tsinftimes_eps[simp]: "tsinftimes \<bottom> = \<bottom>"
 
+ADDITIONAL DONE (* repeating a stream infinitely often is equivalent to repeating it once and then infinitely often *)
+lemma sinftimes_unfold: "sinftimes s = s \<bullet> sinftimes s"
+WITH (* repeating a tstream infinitely often is equivalent to repeating it once and then infinitely often *)
+lemma tsinftimes_unfold: "tsinftimes s = s \<bullet> tsinftimes s"
+by (subst tsinftimes_def [THEN fix_eq2], simp)
+
+TODO 4
 (* smap distributes over infinite repetition *)
 lemma smap2sinf[simp]: "smap f\<cdot>(x\<infinity>)= (smap f\<cdot>x)\<infinity>"
 
+TODO 3
 lemma [simp]: "shd (\<up>a) = a"
 
-(* the singleton stream is never equal to the empty stream *)
+DONE (* the singleton stream is never equal to the empty stream *)
 lemma [simp]: "\<up>a \<noteq> \<epsilon>"
+WITH (* the singleton tstream is never equal to the empty stream *)
+lemma [simp]: "Abs_tstream(\<up>\<surd>) \<noteq> \<bottom>"
+by simp
 
+TODO 3
 (* the rest of the singleton stream is empty *)
 lemma [simp]: "srt\<cdot>(\<up>a) = \<epsilon>"
 
-(* appending to a singleton stream can never yield the empty stream *)
+DONE (* appending to a singleton stream can never yield the empty stream *)
 lemma [simp]: "\<epsilon> \<noteq> \<up>a \<bullet> as"
+WITH (* appending to a singleton tstream can never yield the empty stream *)
+lemma [simp]: "\<bottom> \<noteq> Abs_tstream(\<up>\<surd>) \<bullet> as"
 
-lemma [simp]: "\<up>a \<bullet> as \<noteq> \<epsilon>"
+DONE lemma [simp]: "\<up>a \<bullet> as \<noteq> \<epsilon>"
+WITH lemma [simp]: "Abs_tstream(\<up>\<surd>) \<bullet> as \<noteq> \<bottom>"
 
+TODO 2
 (* singleton streams are only in an ordered relation if the two elements are equal *)
 lemma [simp]: "(\<up>a \<sqsubseteq> \<up>b) = (a = b)"
 
+TODO 2
 (* uparrow is a bijection *)
 lemma [simp]: "(\<up>a = \<up>b) = (a = b)"
 
 *)
 end
-
-
-
-
-
