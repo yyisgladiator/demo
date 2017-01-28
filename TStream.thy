@@ -1453,11 +1453,35 @@ done
 (* tstmap *)
 
 (* TODO Dennis
+
+(* smap distributes over infinite repetition *)
+lemma smap2sinf[simp]: "smap f\<cdot>(x\<infinity>)= (smap f\<cdot>x)\<infinity>"
+
+lemma tstmap_insert: "tstmap f\<cdot>x=Abs_tstream (smap (case_event (\<lambda>m. Msg (f m)) \<surd>)\<cdot>(Rep_tstream x))"
+apply (simp add: tstmap_def espf2tspf_def)
+apply (subst beta_cfun)
+by simp
+
+(* IDEAS
+apply (rule contI2)
+apply (rule monofunI)
+apply (simp add: below_tstream_def)
+apply (subst Abs_tstream_inverse)
+
+apply (rule contI)
+apply (simp add: cont2contlubE)
+
+apply (simp add: rep_tstream_cont)
+*)
+
+lemma strict_tstmap[simp]: "tstmap f\<cdot>\<bottom> = \<bottom>"
+by (simp add: tstmap_insert)
+
 (* tstmap distributes over infinite repetition *)
 lemma tstmap2tsinf[simp]: "tstmap f\<cdot>(tsinftimes x)= tsinftimes (tstmap f\<cdot>x)"
-apply (subst tstmap_def)
-apply (subst tsinftimes_def [THEN fix_eq2])
+apply (simp add: tstmap_insert)
 by simp
+(* IDEAS apply(subst tsinftimes_def [THEN fix_eq2]) *)
 *)
 
 (*TODO
@@ -3227,117 +3251,6 @@ lemma inj_sfilter_smap_siteratel1:
 lemma inj_sfilter_smap_siteratel2[simp]:
   "inj f \<Longrightarrow> #(sfilter {m}\<cdot>(smap f\<cdot>(siterate Suc j))) \<noteq> \<infinity>"
 
-
-
-*)
-
-
-
-
-(*      Dennis ToDo:
-        most of these lemmas have to be lifted to tstreams, slen(#) \<longrightarrow> tsTickCount (#\<surd>) etc.
-
-
-DONE text {* Retrieving the first 0 elements of a stream returns the empty stream. *}
-lemma [simp]: "tsTake 0\<cdot> x =  \<bottom>"
-
-DONE lemma [simp]: "tsDrop 0\<cdot> x = x"
-
-DONE (* concatenating finite streams produces another finite stream *)
-lemma sconc_slen [simp]: assumes "#s<\<infinity>" and "#xs<\<infinity>"
-  shows "#(s\<bullet>xs) < \<infinity>"
-WITH (* concatenating finite tstreams produces another finite tstream *)
-lemma tsconc_tstickcount[simp]: assumes "(#\<surd>s)<\<infinity>" and "(#\<surd>xs)<\<infinity>"
-  shows "(#\<surd>(s\<bullet>xs))<\<infinity>"
-
-ADDITIONAL ALREADY DONE text {* For finite streams, their lengths are added on concatenation *}
-lemma slen_sconc_all_finite: 
-  "\<forall>x y n. #x = Fin k \<and> #y = Fin n \<longrightarrow> #(x\<bullet>y) = Fin (k+n)" 
-WITH lemma stickcount_conc [simp]: assumes "#\<surd> ts1 = Fin n1" and "#\<surd> ts2 = Fin n2"
-  shows "#\<surd> (ts1 \<bullet> ts2) = Fin (n1 + n2)"
-
-ALREADY DONE lemma strict_slen[simp]:"#\<epsilon> = 0"
-WITH lemma strict_tstickcount[simp]: "#\<surd> \<bottom> = 0"
-
-DONE (* prepending a singleton stream increases the length by 1 *)
-lemma slen_scons[simp]: "#(\<up>a\<bullet>as) = lnsuc\<cdot>(#as)"
-WITH (* prepending a singleton tstream increases the length by 1 *)
-lemma tstickcount_tscons[simp]: "#\<surd>(Abs_tstream(\<up>\<surd>)\<bullet>as) = lnsuc\<cdot>(#\<surd>as)"
-
-DONE (* the singleton stream has length 1 *)
-lemma [simp]: "#(\<up>a) = Fin (Suc 0)"
-WITH (* the singleton tstream has length 1 *)
-lemma [simp]: "#\<surd>Abs_tstream(\<up>\<surd>) = Fin (Suc 0)"
-
-ALREADY DONE text {* The rest of infinite streams is infinite as well *}
-lemma inf_scase:"#s = \<infinity> \<Longrightarrow> \<exists>a as. s = \<up>a \<bullet> as \<and> #as = \<infinity>"
-WITH lemma tsinftickDrop[simp]: assumes "#\<surd>ts = \<infinity>"
-  shows "#\<surd>(tsDropFirst\<cdot>ts) = \<infinity>"
-
-DONE (* only the empty stream has length 0 *)
-lemma slen_empty_eq[simp]: "(#x = 0) = (x = \<epsilon>)"
-WITH (* only the empty tstream has length 0 *)
-lemma tstickcount_empty_eq[simp]: "(#\<surd>x = 0) = (x = \<bottom>)"
-
-DONE text {* Appending to an inifite stream does not change its @{text "n"}th element *}
-lemma sconc_fst_inf_lemma: "\<forall>x. #x=\<infinity> \<longrightarrow> stake n\<cdot>(x\<bullet>y) = stake n\<cdot>x"
-WITH text {* Appending to an inifite tstream does not change its @{text "n"}th element *}
-lemma tsconc_fst_inf_lemma: "\<forall>x. #\<surd>x=\<infinity> \<longrightarrow> tstake n\<cdot>(x\<bullet>y) = tstake n\<cdot>x"
-
-ALREADY DONE text {* Appending to an infinite stream does not change the stream *}
-lemma sconc_fst_inf[simp]: "#x=\<infinity> \<Longrightarrow> x\<bullet>y = x"
-WITH lemma tsconc_id [simp]: assumes "#\<surd>ts1 = \<infinity>"
-  shows "tsConc ts1\<cdot>ts2 = ts1"
-
-DONE lemma sntimes_eps[simp]: "sntimes n \<epsilon> = \<epsilon>"
-WITH lemma tsntimes_eps[simp]: "tsntimes n \<bottom> = \<bottom>"
-
-DONE (* infinitely cycling the empty stream produces the empty stream again *)
-lemma strict_icycle[simp]: "sinftimes \<epsilon> = \<epsilon>"
-WITH (* infinitely cycling the empty tstream produces the empty tstream again *)
-lemma tsinftimes_eps[simp]: "tsinftimes \<bottom> = \<bottom>"
-
-ADDITIONAL DONE (* repeating a stream infinitely often is equivalent to repeating it once and then infinitely often *)
-lemma sinftimes_unfold: "sinftimes s = s \<bullet> sinftimes s"
-WITH (* repeating a tstream infinitely often is equivalent to repeating it once and then infinitely often *)
-lemma tsinftimes_unfold: "tsinftimes s = s \<bullet> tsinftimes s"
-by (subst tsinftimes_def [THEN fix_eq2], simp)
-
-TODO
-(* smap distributes over infinite repetition *)
-lemma smap2sinf[simp]: "smap f\<cdot>(x\<infinity>)= (smap f\<cdot>x)\<infinity>"
-
-DONE lemma [simp]: "shd (\<up>a) = a"
-WITH lemma [simp]: "tsTakeFirst\<cdot>(Abs_tstream(\<up>\<surd>)) = Abs_tstream(\<up>\<surd>)"
-
-DONE (* the singleton stream is never equal to the empty stream *)
-lemma [simp]: "\<up>a \<noteq> \<epsilon>"
-WITH (* the singleton tstream is never equal to the empty stream *)
-lemma [simp]: "Abs_tstream(\<up>\<surd>) \<noteq> \<bottom>"
-by simp
-
-DONE (* the rest of the singleton stream is empty *)
-lemma [simp]: "srt\<cdot>(\<up>a) = \<epsilon>"
-WITH (* the rest of the singleton tstream is empty *)
-lemma [simp]: "tsDropFirst\<cdot>(Abs_tstream(\<up>\<surd>)) = \<bottom>"
-
-DONE (* appending to a singleton stream can never yield the empty stream *)
-lemma [simp]: "\<epsilon> \<noteq> \<up>a \<bullet> as"
-WITH (* appending to a singleton tstream can never yield the empty stream *)
-lemma [simp]: "\<bottom> \<noteq> Abs_tstream(\<up>\<surd>) \<bullet> as"
-
-DONE lemma [simp]: "\<up>a \<bullet> as \<noteq> \<epsilon>"
-WITH lemma [simp]: "Abs_tstream(\<up>\<surd>) \<bullet> as \<noteq> \<bottom>"
-
-DONE (* singleton streams are only in an ordered relation if the two elements are equal *)
-lemma [simp]: "(\<up>a \<sqsubseteq> \<up>b) = (a = b)"
-WITH (* singleton in first time slot are only in an ordered relation if the two elements are equal *)
-lemma [simp]: "(Abs_tstream(\<up>a\<bullet>\<up>\<surd>) \<sqsubseteq> Abs_tstream((\<up>b\<bullet>\<up>\<surd>))) = (a = b)"
-
-DONE (* uparrow is a bijection *)
-lemma [simp]: "(\<up>a = \<up>b) = (a = b)"
-WITH (* uparrow is a bijection *)
-lemma "\<up>(Msg a)= \<up>(Msg b) = (a=b)"
 
 *)
 end
