@@ -85,6 +85,61 @@ definition twoPowerStream_2 :: "nat stream" where
 "twoPowerStream_2 = siterate (\<lambda>x. x*2) 1"
 
 
+(* ----------------------------------------------------------------------- *)
+  section \<open>"sum5 TStream_def"\<close>
+(* ----------------------------------------------------------------------- *)
+(*
+definition tshd:: "'a tstream \<Rightarrow> 'a" where
+"tshd ts \<equiv> THE a. shd (tsAbs\<cdot>ts) = a"
+*)
+definition stwbl      :: "('a \<Rightarrow> bool) \<Rightarrow> 'a spfo" where
+"stwbl f \<equiv> fix\<cdot>(\<Lambda> h s. slookahd\<cdot>s\<cdot>(\<lambda> a. 
+                          if (f a) then \<up>a \<bullet>  h\<cdot>(srt\<cdot>s) else \<up>a))"
 
+definition shddw      :: "('a \<Rightarrow> bool) \<Rightarrow> 'a stream \<Rightarrow> 'a" where
+"shddw f x \<equiv> shd (sdropwhile f\<cdot>x)"
+
+
+(* drops \<surd> and takes first Msg of the tstream *)
+definition tshd :: "'a tstream \<Rightarrow> 'a" where
+"tshd ts \<equiv> THE x. Msg x = shddw (\<lambda>a. a=\<surd>) (Rep_tstream ts)"
+
+(* drops \<surd> and first Msg of the tstream *)
+definition tsrt :: "'a tstream \<rightarrow> 'a tstream" where
+"tsrt \<equiv> \<Lambda> ts. Abs_tstream (srtdw(\<lambda>a. a=\<surd>)\<cdot>(Rep_tstream ts))"
+
+
+definition stwdroprt :: "('a \<Rightarrow> bool) \<Rightarrow> 'a spfo" where
+"stwdroprt f \<equiv> fix\<cdot>(\<Lambda> h s. slookahd\<cdot>s\<cdot>(\<lambda> a. 
+                          if (f a) then \<up>a \<bullet>  h\<cdot>(srt\<cdot>s) else \<bottom>))"
+
+
+(* takes first \<surd>s and drops rest of the tstream *)
+definition tsTickrt :: "'a tstream \<rightarrow> 'a tstream" where
+"tsTickrt \<equiv> \<Lambda> ts. Abs_tstream (stwdroprt (\<lambda>a. a=\<surd>)\<cdot>(Rep_tstream ts))"
+
+
+primrec tsrtdrop:: "nat \<Rightarrow> 'a tstream \<rightarrow> 'a tstream" where
+"tsrtdrop 0 = ID"|
+"tsrtdrop (Suc n) = (\<Lambda> ts. tsrtdrop n\<cdot>(tsrt\<cdot> ts))"
+
+
+primrec tsh :: "nat \<Rightarrow> nat tstream \<Rightarrow> nat \<Rightarrow> nat tstream" where
+"tsh 0 ts y = \<bottom>" | (*maximal one non-variable argument required, so \<epsilon>-case must be encoded in the line below.*)
+"tsh (Suc n) ts y = (if tsAbs\<cdot>ts=\<epsilon> then \<bottom> else  (tsTickrt\<cdot>ts) \<bullet> (Abs_tstream(\<up>(Msg(tshd ts + y )))) \<bullet> (tsh n (tsrt\<cdot> ts) (shd (tsAbs\<cdot>ts)+ y)))"
+
+
+definition tssum5_helper :: " nat \<Rightarrow> nat tstream \<rightarrow> nat tstream" where
+"tssum5_helper n \<equiv> \<Lambda> x. \<Squnion>i. tsh i x n"
+
+
+definition tssum5:: "nat tstream \<rightarrow> nat tstream" where
+"tssum5 \<equiv> \<Lambda> x. tssum5_helper 0\<cdot>x"
+
+lemma tsAbs_bot[simp]: "tsAbs\<cdot>\<bottom> = \<epsilon>"
+by(simp add: tsAbs_def)
+
+lemma tsh_bot: "tsh n \<bottom> y = \<bottom>"
+by(induct_tac n,auto)
 
 end

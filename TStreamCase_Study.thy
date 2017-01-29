@@ -10,7 +10,7 @@ chapter {* Timed Streams *}
 
 theory TStreamCase_Study
 
-imports (* Streams *) TStreamTheorie
+imports (* Streams *) TStream
 begin
 default_sort countable
 
@@ -184,10 +184,8 @@ by (simp add: assms cont2mono tsMono2Weak2)
 
 
 lemma tsTick1_take [simp]:"Abs_tstream (\<up>\<surd>) \<down> 1 = Abs_tstream (\<up>\<surd>)"
-  apply(simp add: tsTake_def2 One_nat_def)
-  apply(subst tstakefirst_insert_rep_eq)
-   apply(simp)
-  by (metis sconc_snd_empty stwbl_f)
+  by(simp add: tsTake_def2 One_nat_def)
+
 
 lemma tsTick1_take2 [simp]:"Abs_tstream (\<up>\<surd>) \<down> 2 = Abs_tstream (\<up>\<surd>)"
 using tsTick1_take tstake_fin2 by fastforce
@@ -205,9 +203,8 @@ lemma tsTick2_take2 [simp]: "Abs_tstream (<[\<surd>, \<surd>]>) \<down> 2 = Abs_
   by (metis Rep_tstream_inverse Suc_1 tick_msg tsTick1_take tsconc_rep_eq1 tstake_tick)
 
 lemma tsTick1_takeSuc [simp]: "Abs_tstream (\<up>\<surd>) \<down> Suc i  \<noteq> \<bottom>"
-apply(simp add: tsTake_def2)
-apply(simp add: tstakefirst_insert_rep_eq tsdropfirst_rep_eq)
-by (metis (full_types) Abs_tstream_bottom_iff lscons_conv mem_Collect_eq stream.con_rews(2) stwbl_f sup'_def tick_msg up_defined)
+by(simp add: tsTake_def2)
+
 
 
 
@@ -308,8 +305,7 @@ lemma delayFun_dom [simp]: "tsDom\<cdot>(delayFun\<cdot>ts) = tsDom\<cdot>ts"
 by(simp add: delayFun_def tsdom_insert tsconc_rep_eq)
 
 lemma delay_infTick [simp]: "#\<surd>ts = \<infinity> \<Longrightarrow> #\<surd> (delayFun\<cdot>ts) = \<infinity>"
-apply(simp add: delayFun_def)
-by (metis Abs_tstream_inverse mem_Collect_eq slen_sconc_snd_inf tsInfTicks ts_well_conc tsconc_insert)
+by(simp add: delayFun_def)
 
 lemma [simp]: "delayFun\<cdot>tsInfTick = tsInfTick"
 apply(simp add: delayFun_def tsInfTick_def)
