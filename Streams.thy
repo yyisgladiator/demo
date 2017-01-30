@@ -520,6 +520,9 @@ lemma [simp]: "(\<up>a \<sqsubseteq> \<up>b) = (a = b)"
 apply (rule iffI)
 by (insert less_all_sconsD [of a \<epsilon> b \<epsilon>], simp+)
 
+lemma [simp]: "#as \<sqsubseteq> #(as \<bullet> ys)"
+  by (metis minimal monofun_cfun_arg sconc_snd_empty)
+
 (* uparrow is a bijection *)
 lemma [simp]: "(\<up>a = \<up>b) = (a = b)"
 apply (rule iffI)
@@ -645,6 +648,8 @@ apply (simp add: s1, simp)
 sledgehammer
 *)
 
+lemma [simp]: "Fin n < #as \<Longrightarrow> Fin n < lnsuc\<cdot>(#as)"
+  by (smt below_antisym below_trans less_lnsuc lnle_def lnless_def)
 
 text {* For infinite streams, @{text "stake n"} returns @{text "n"} elements *}
 lemma slen_stake_fst_inf[rule_format]: 
@@ -746,6 +751,10 @@ by (case_tac "x", simp+)
 (* stake always returns a prefix of the input stream *)
 lemma ub_stake[simp]: "stake n\<cdot>x \<sqsubseteq> x"
 by (rule stream.take_below)
+
+lemma stake_suc: "stake (Suc n)\<cdot>s = (stake 1\<cdot>s) \<bullet> stake n\<cdot>(srt\<cdot>s)"
+by (metis (no_types, lifting) One_nat_def Rep_cfun_strict1 sconc_snd_empty stake_Suc stream.sel_rews(2) stream.take_0 stream.take_strict surj_scons)
+
 
 (* ----------------------------------------------------------------------- *)
 subsection {* @{term sdrop} *}
@@ -919,6 +928,18 @@ lemma sdropostake: "sdrop n\<cdot>(stake n\<cdot>s) = \<epsilon>"
 apply (rule spec [where x = n])
 apply (rule ind [of _ s], auto)
 by (case_tac x, auto)
+
+lemma stakeind2: 
+  "\<forall>x. (P \<epsilon> \<and> (\<forall>a s. P s \<longrightarrow> P (s \<bullet> \<up>a))) \<longrightarrow> P (stake n\<cdot>x)"
+  apply(induction n)
+   apply simp
+  apply auto
+  apply (subst stake_suc)
+  by (metis (no_types, lifting) sconc_snd_empty sdrop_back_rt sdropostake split_streaml1 stake_suc surj_scons)
+
+lemma ind2: assumes "adm P" and "P \<epsilon>"  and "\<And>a s. P s  \<Longrightarrow> P (s \<bullet> \<up>a)"
+  shows "P x"
+by (metis assms(1) assms(2) assms(3) stakeind2 stream.take_induct)
 
 (* ----------------------------------------------------------------------- *)
 section {* Additional lemmas for approximation, chains and continuity *} 
@@ -1372,6 +1393,8 @@ qed
 lemma smap2sinf[simp]: "smap f\<cdot>(x\<infinity>)= (smap f\<cdot>x)\<infinity>"
 by (metis (no_types) rek2sinftimes sinftimes_unfold slen_empty_eq slen_smap smap_split strict_icycle)
 
+lemma l5: "smap g\<cdot>\<up>x\<infinity> = \<up>(g x)\<infinity>"
+  by simp
 (* ----------------------------------------------------------------------- *)
 subsection {* @{term sprojfst} and @{term sprojsnd} *}
 (* ----------------------------------------------------------------------- *)
@@ -2289,6 +2312,9 @@ by (metis siterate_scons siterate_smap)
 lemma siter2sinf: "siterate id x = sinftimes (\<up>x)"
 by (metis id_apply s2sinftimes siterate_scons)
 
+lemma "sdrop i\<cdot>(siterate id x) = siterate id x"
+  by (smt sdrops_sinf siter2sinf)
+
 (* if g acts as the identity for the element x then iterating g on x produces an infinite constant
    stream of x *)
 lemma siter2sinf2: assumes "g x = x"
@@ -2532,6 +2558,16 @@ lemma add_sfilter2: assumes "#x < \<infinity>"
   shows "sfilter A\<cdot>(x \<bullet> y) = sfilter A\<cdot>x \<bullet> sfilter A\<cdot>y"
 by (metis (no_types) add_sfilter assms lncases lnless_def)
 
+lemma sfood_id: assumes"#s = Fin (Suc n)"
+  shows "(stake n\<cdot>s) \<bullet> \<up>(sfoot s) = s"
+  using assms apply(induction n arbitrary: s)
+   apply simp
+   apply (metis Fin_02bot Fin_Suc lnat.sel_rews(2) lnsuc_neq_0_rev lnzero_def lscons_conv sfoot_exists2 slen_scons snth_shd strict_slen sup'_def surj_scons)
+  apply (subst stake_suc)
+  apply simp
+  by (smt Fin_02bot Fin_Suc One_nat_def Rep_cfun_strict1 Zero_not_Suc leI lnat.sel_rews(2) lnle_Fin_0 lnzero_def notinfI3 sconc_snd_empty sfoot_sdrop slen_rt_ile_eq slen_scons stake_Suc stream.take_0 strict_slen surj_scons)
+
+
 (* ----------------------------------------------------------------------- *)
 subsection {* @{term sdom} *}
 (* ----------------------------------------------------------------------- *)
@@ -2681,6 +2717,10 @@ by (rule_tac x="x" in scases, simp+)
 
 lemma sconc_sdom: "sdom\<cdot>(s1\<bullet>s2) \<subseteq> sdom\<cdot>s1 \<union> sdom\<cdot>s2"
 by (metis SetPcpo.less_set_def below_refl lncases sconc_fst_inf sdom_sconc2un sup.coboundedI1)
+
+lemma sfoot_dom: assumes "#s = Fin (Suc n)" and "sdom\<cdot>s\<subseteq>A"
+  shows "sfoot s\<in>A"
+by (metis Suc_n_not_le_n assms(1) assms(2) contra_subsetD leI less2nat_lemma sfoot_exists2 snth2sdom)
 
 (* stakewhile doesn't include the element a that failed the predicate f in the result *)
 lemma stakewhile_dom[simp]:assumes "\<not>f a"
@@ -2854,6 +2894,16 @@ apply rule
 apply (meson IntI sbfilter_sbdom sdom_sfilter1 subset_iff)
 apply rule
 by (meson IntD1 IntD2 sdom_sfilter2)
+
+lemma sfilterEq2sdom_h: "sfilter A\<cdot>s = s \<longrightarrow> sdom\<cdot>s \<subseteq> A"
+  apply(rule ind [of _s])
+    apply (smt admI inf.orderI sdom_sfilter)
+   apply(simp)
+  apply(rule)
+  by (smt mem_Collect_eq sdom_def2 sfilterl7 subsetI)
+
+lemma sfilterEq2sdom: "sfilter A\<cdot>s = s \<Longrightarrow> sdom\<cdot>s \<subseteq> A"
+  by (simp add: sfilterEq2sdom_h)
 
 lemma stwbl_id_help:
   shows "(\<forall>a\<in>sdom\<cdot>s. f a) \<longrightarrow> stwbl f\<cdot>s = s"
@@ -3364,6 +3414,49 @@ apply (drule_tac n="Suc x" in slen_sfilter_sdrop [rule_format], simp)
 apply (simp add: sdrop_siterate)
 apply (simp add: inj_sfilter_smap_siteratel1)
 by (simp add: sfilter_smap_nrange)
+
+
+
+
+(* ----------------------------------------------------------------------- *)
+subsection {* compact lemmas *}
+(* ----------------------------------------------------------------------- *)
+
+
+lemma finChainapprox: assumes "chain Y" and "# (\<Squnion>i. Y i) =Fin  k" 
+  shows "\<exists>i. Y i = (\<Squnion>i. Y i)"
+  using assms(1) assms(2) inf_chainl4 lub_eqI lub_finch2 by fastforce
+
+lemma finCompact: assumes "#s = Fin k"
+  shows "compact s"
+  proof (rule compactI2)
+  fix Y assume as1: "chain Y" and as2: "s \<sqsubseteq> (\<Squnion>i. Y i)"
+  show "\<exists>i. s \<sqsubseteq> Y i" by (metis approxl2 as1 as2 assms finChainapprox lub_approx stream.take_below)
+qed
+
+lemma "compact \<epsilon>"
+  by simp
+
+lemma "compact (\<up>x)"
+  by (simp add: sup'_def)
+
+(* nicht so compactes Zeug *)
+lemma nCompact: assumes "chain Y" and "\<forall>i. (Y i \<sqsubseteq> x)" and "\<forall>i.  (Y i \<noteq> x)" and "x \<sqsubseteq> (\<Squnion>i. Y i)"
+  shows "\<not>(compact x)"
+  by (meson assms below_antisym compactD2)
+
+lemma infNCompact: assumes "#s = \<infinity>"
+  shows"\<not> (compact s)"
+  proof (rule nCompact)
+     show "chain (\<lambda>i. stake i\<cdot>s)" by simp
+    show "\<forall>i. stake i\<cdot>s \<sqsubseteq> s" by simp
+   show "\<forall>i. stake i\<cdot>s \<noteq> s" by (metis Inf'_neq_0 assms fair_sdrop sdropostake strict_slen)
+  show "s \<sqsubseteq> (\<Squnion> i. stake i\<cdot>s)" by (simp add: reach_stream)
+qed
+
+lemma "\<not> (compact (sinftimes (\<up>x)))"
+  by (simp add: infNCompact slen_sinftimes)
+
 
 
 end

@@ -304,6 +304,10 @@ text {* Every non-infinite number is finite *}
 lemma ninf2Fin: "x \<noteq> \<infinity> \<Longrightarrow> \<exists>k. x = Fin k"
 by (rule_tac x=x in lncases, auto)
 
+lemma assumes "ln = lnsuc\<cdot>ln"
+  shows "ln = \<infinity>"
+using assms ninf2Fin by force
+
 text {* Every non-finite number is infinite *}
 lemma infI: "\<forall>k. x \<noteq> Fin k \<Longrightarrow> x = \<infinity>"
 by (rule lncases [of x], auto)
@@ -603,6 +607,13 @@ by (simp add: min_def)
 lemma [simp]: fixes ln :: lnat
   shows "min 0 ln = 0"
 by (simp add: min_def)
+
+lemma min_rek: assumes  "z = min x (lnsuc\<cdot>z)"
+  shows "z = x"
+  apply(rule ccontr, cases "x < z")
+   apply (metis assms dual_order.irrefl min_less_iff_conj)
+  by (metis assms inf_ub ln_less lnle_def lnless_def min_def)
+
 
 end
 
