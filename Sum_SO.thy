@@ -1,5 +1,5 @@
 theory Sum_SO
-imports Main TStreamTheorie StreamCase_Study
+imports Main TStream StreamCase_Study
 begin
 
 declare [[show_types]]
