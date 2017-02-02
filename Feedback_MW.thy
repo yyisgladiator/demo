@@ -130,7 +130,7 @@ by (simp add: Abs_CSPF_def)
 (* component properties *)
 
 lemma add_rep_eqC: "Rep_CSPF addC = (\<lambda> sb. (sbDom\<cdot>sb = {c1, c2}) \<leadsto> ([c3\<mapsto>add\<cdot>(sb . c1)\<cdot>(sb . c2)]\<Omega>))"
-by(simp add: addC_def addSPF_rep_eqC)
+by(auto simp add: addC_def addSPF_rep_eqC)
 
 lemma append0_rep_eqC: "Rep_CSPF append0C = (\<lambda> sb. (sbDom\<cdot>sb = {c3}) \<leadsto> ([c2\<mapsto>append0\<cdot>(sb . c3)]\<Omega>))"
   by (simp add: append0C.rep_eq Rep_CSPF_def)

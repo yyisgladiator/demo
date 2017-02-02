@@ -183,6 +183,9 @@ lemma [simp]: "spfRan\<cdot>addC = {c7}"
 lemma [simp]: "spfComp_well mult1 mult2"
   by (simp add: spfComp_well_def)
 
+lemma [simp]: "no_selfloops mult1 mult2"
+  by(simp add: no_selfloops_def)
+
 lemma [simp]: "C mult1 mult2 = {c1,c2,c3,c4,c5,c6}"
   by (auto simp add: C_def)
 
@@ -235,7 +238,7 @@ apply(subst cont2cont_APP)
 by(simp_all add: contMult1Union contMult2)
                                    
 lemma multcomp_spfwell: "spf_well (\<Lambda> x. (sbDom\<cdot>x = {c3, c4, c1, c2})\<leadsto>((mult1\<rightleftharpoons>(x\<bar>spfDom\<cdot>mult1)) \<uplus> (mult2\<rightleftharpoons>(x\<bar>spfDom\<cdot>mult2))))"
-apply(simp add: spf_well_def)
+apply(auto simp add: spf_well_def domIff2 sbdom_rep_eq)
 sorry
 
 lemma mults_comp: assumes "sbDom\<cdot>sb = I mult1 mult2"
@@ -255,6 +258,9 @@ by(simp add: spfComp_ran_Oc)
 
 lemma [simp]: "spfComp_well (spfcomp mult1 mult2) addC"
 by(simp add: spfComp_well_def)
+
+lemma [simp]: "no_selfloops (spfcomp mult1 mult2) addC"
+by(simp add: no_selfloops_def)
 
 lemma [simp]: "C (spfcomp mult1 mult2) addC = {c1,c2,c3,c4,c5,c6,c7}"
 by(auto simp add: C_def)
@@ -279,7 +285,7 @@ lemma innerprod_serComp: assumes "sbDom\<cdot>sb = I (spfcomp mult1 mult2) addC"
 (* inner Prod *)
 
 definition innerProd :: "nat SPF" where
-"innerProd \<equiv> hide ((mult1 \<otimes> mult2) \<otimes> addC) {c5, c6}"
+"innerProd \<equiv> ((mult1 \<otimes> mult2) \<otimes> addC) \<h> {c5, c6}"
 
 lemma [simp]: "spfDom\<cdot>( spfcomp (spfcomp mult1 mult2) addC) = {c1, c2, c3, c4}"
 apply(subst spfComp_dom_I)
@@ -355,7 +361,7 @@ lemma innerprod: assumes "sbDom\<cdot>sb = I (spfcomp mult1 mult2) addC"
 (* inner Prod 2 *)
 
 definition innerProd2 :: "nat SPF" where
-"innerProd2 \<equiv> hide ((mult1 \<parallel> mult2) \<otimes> addC) {c5, c6}"
+"innerProd2 \<equiv> ((mult1 \<parallel> mult2) \<otimes> addC) \<h> {c5, c6}"
 
 lemma innerProdEq2: "innerProd \<equiv> innerProd2"
 apply(simp add: innerProd_def innerProd2_def)

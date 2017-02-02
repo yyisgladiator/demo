@@ -119,6 +119,9 @@ by(simp add: sbgetch_insert)*)
 lemma [simp]: "spfComp_well ID1 ID2"
 by (simp add: spfComp_well_def)
 
+lemma [simp]: "no_selfloops ID1 ID2"
+by(simp add: no_selfloops_def)
+
 lemma [simp]: "C ID1 ID2 = {c1,c2,c3,c4}"
 by (auto simp add: C_def)
 
