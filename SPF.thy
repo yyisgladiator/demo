@@ -142,8 +142,9 @@ translations
 
 (*?*)
 
-
-
+(* harpoon and Rep operation all in one for simpler SPF on SB applications *)
+abbreviation theRep_abbrv :: "'a SPF \<Rightarrow> 'a SB \<Rightarrow> 'a SB " ("_\<rightleftharpoons>_") where
+"(f \<rightleftharpoons> s) \<equiv> the ((Rep_CSPF f) s)"
 
 (*
 definition spfCompAll :: "'m SPF \<Rightarrow> 'm SPF \<Rightarrow> channel set" where
@@ -246,7 +247,7 @@ let I1 = spfDom\<cdot>f1;
     Oc = Oc f1 f2;
     C  = C f1 f2   
 in Abs_CSPF (\<lambda> x. (sbDom\<cdot>x = I) \<leadsto> (\<Squnion>i. iterate i\<cdot>
-   (\<Lambda> z. x \<uplus> ((Rep_CSPF f1)\<rightharpoonup>(z \<bar> I1)) \<uplus> ((Rep_CSPF f2)\<rightharpoonup>(z \<bar> I2)))\<cdot>(sbLeast C)) \<bar> Oc)"
+   (\<Lambda> z. x \<uplus> (f1\<rightleftharpoons>(z \<bar> I1)) \<uplus> (f2\<rightleftharpoons>(z \<bar> I2)))\<cdot>(sbLeast C)) \<bar> Oc)"
 
 (*(* (f1 \<otimes> f2) x = [fix\<cdot>(\<Lambda> z. x \<uplus> f1(z\<bar>I1) \<uplus> f2(z\<bar>I2))]\<bar>O  *)
 definition spfComp2 :: "'m SPF \<Rightarrow> 'm SPF \<Rightarrow> 'm SPF"  (infixl "\<otimes>" 40) where
@@ -1261,11 +1262,5 @@ definition spsDom :: "'m SPS \<Rightarrow> channel set" where
 definition spsRan :: "'m SPS \<Rightarrow> channel set" where
 "spsRan S = spfRan\<cdot>(SOME f. f\<in> Rep_SPS S)"
 
-(* add SPF 
-
-definition addSPF :: "(channel \<times> channel \<times> channel) \<Rightarrow> nat SPF" where
-"addSPF (c1, c2, c3) \<equiv> Abs_CSPF (\<lambda> sb. (sbDom\<cdot>sb = {c1, c2, c3}) \<leadsto> ([c3\<mapsto>add\<cdot>(sb . c1)\<cdot>(sb . c2)]\<Omega>))"
-
-*)
 
 end

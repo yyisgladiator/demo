@@ -18,11 +18,6 @@ begin
 instance ..
 end
 
-(* TODO: backport this to SPF *)
-(* harpoon and Rep operation all in one for simpler SPF on SB applications *)
-abbreviation theRep_abbrv :: "'a SPF \<Rightarrow> 'a SB \<Rightarrow> 'a SB " ("_\<rightleftharpoons>_") where
-"(f \<rightleftharpoons> s) \<equiv> the ((Rep_CSPF f) s)"
-
 (* special operator for serial composition, domain of f2 must be range of f1  *)
 definition sercomp :: "'m SPF => 'm SPF => 'm SPF"  where
 "sercomp f1 f2 \<equiv>
@@ -542,7 +537,7 @@ lemma spfComp_serial_itconst2 [simp]: assumes "spfRan\<cdot>f1 = spfDom\<cdot>f2
 
 lemma spfComp_mono[simp]: assumes "spfComp_well f1 f2"
 shows "monofun (\<lambda>x. (sbDom\<cdot>x = I f1 f2)\<leadsto>(\<Squnion>i. iterate i\<cdot>(spfCompHelp2 f1 f2 x)\<cdot>(sbLeast (C f1 f2)))\<bar>Oc f1 f2)"
-
+sorry
 
 
 lemma spfComp_Oc_sub_C: assumes "c \<in> Oc f1 f2" shows "c \<in> C f1 f2"
@@ -585,7 +580,7 @@ lemma iterconst_mono1[simp]: assumes "spfRan\<cdot>f1 = spfDom\<cdot>f2"
                                   and "pL f1 f2 = {}"
 shows "monofun (\<lambda>x. (sbDom\<cdot>x = I f1 f2)\<leadsto>(x \<uplus> ((Rep_CSPF f1) \<rightharpoonup> (x \<bar>spfDom\<cdot>f1)) 
                                     \<uplus> ((Rep_CSPF f2)\<rightharpoonup>((Rep_CSPF f1) \<rightharpoonup> (x\<bar>spfDom\<cdot>f1))))\<bar>Oc f1 f2)"
-apply (rule spf_mono2monofun)
+(*apply (rule spf_mono2monofun)
   apply(rule spf_monoI)
   apply(simp add: domIff2)
   apply(rule sb_below)
@@ -593,8 +588,8 @@ apply (rule spf_mono2monofun)
   defer
   apply (rule, simp add: domIff2)
   apply(simp add: assms)
+sorry*)
 sorry
-
 
 
 lemma iterconst_cont[simp]:       assumes "spfRan\<cdot>f1 = spfDom\<cdot>f2"

@@ -134,4 +134,17 @@ lemma parCompRan: assumes "L f1 f2 = {}"
                   and "spfComp_well f1 f2" shows "spfRan\<cdot>(f1 \<parallel> f2) = spfRan\<cdot>(spfcomp f1 f2)"
 by(simp add: parallelOperatorEq assms)
 
+
+(* Add component *)
+
+definition addSPF :: "(channel \<times> channel \<times> channel) \<Rightarrow> nat SPF" where
+"addSPF cs \<equiv> 
+let c1 = (fst cs);
+    c2 = (fst (snd cs));
+    c3 = (snd (snd cs))
+in Abs_CSPF (\<lambda> sb. (sbDom\<cdot>sb = {c1, c2}) \<leadsto> ([c3\<mapsto>add\<cdot>(sb . c1)\<cdot>(sb . c2)]\<Omega>))"
+
+lemma addSPF_rep_eqC: "Rep_CSPF (addSPF cs) = (\<lambda> sb. (sbDom\<cdot>sb = {c1, c2}) \<leadsto> ([c3\<mapsto>add\<cdot>(sb . c1)\<cdot>(sb . c2)]\<Omega>))"
+sorry
+
 end
