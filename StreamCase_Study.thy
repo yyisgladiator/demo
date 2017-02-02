@@ -343,97 +343,12 @@ by(simp add: sum3_def)
 
 
 
-  (* sSum takes 2 nat-streams and adds them component-wise *)
-definition add:: "nat stream \<rightarrow> nat stream \<rightarrow> nat stream" where
-"add \<equiv> \<Lambda> s1 s2 . smap (\<lambda> s3. (fst s3) + (snd s3))\<cdot>(szip\<cdot>s1\<cdot>s2)"
-
-lemma "add = merge plus"
-by(simp add: add_def merge_def)
-
-
-lemma add_unfold: "add\<cdot>(\<up>x \<bullet> xs)\<cdot>(\<up>y\<bullet> ys) = \<up>(x+y) \<bullet> add\<cdot>xs\<cdot>ys"
-  by(simp add: add_def)
-
-lemma add_snth: "Fin n <#xs \<Longrightarrow>Fin n < #ys \<Longrightarrow> snth n (add\<cdot>xs\<cdot>ys) = snth n xs + snth n ys"
-  apply(induction n arbitrary: xs ys)
-   apply (metis Fin_02bot add_unfold lnless_def lnzero_def shd1 slen_empty_eq snth_shd surj_scons)
-  by (smt Fin_Suc Fin_leq_Suc_leq Suc_eq_plus1_left add_unfold inject_lnsuc less2eq less2lnleD lnle_conv lnless_def lnsuc_lnle_emb sconc_snd_empty sdropostake shd1 slen_scons snth_rt snth_scons split_streaml1 stream.take_strict surj_scons ub_slen_stake)
-
-lemma add_eps1[simp]: "add\<cdot>\<epsilon>\<cdot>ys = \<epsilon>"
-  by(simp add: add_def)
-
-lemma add_eps2[simp]: "add\<cdot>xs\<cdot>\<epsilon> = \<epsilon>"
-  by(simp add: add_def)
-
-lemma [simp]: "srt\<cdot>(add\<cdot>(\<up>a \<bullet> as)\<cdot>(\<up>b \<bullet> bs)) = add\<cdot>as\<cdot>bs"
-  by (simp add: add_unfold)
-
-
-lemma add_commu_helper: assumes "\<And>y. add\<cdot>x\<cdot>y = add\<cdot>y\<cdot>x"
-  shows "add\<cdot>(\<up>a \<bullet> x)\<cdot>y = add\<cdot>y\<cdot>(\<up>a \<bullet> x)"
-  apply(cases "y = \<epsilon>")
-   apply auto[1]
-  by (metis (no_types, lifting) Groups.add_ac(2) assms add_unfold surj_scons)
-
-lemma add_commutative: "add\<cdot>x\<cdot>y = add\<cdot>y\<cdot>x"
-  apply(induction x arbitrary: y)
-    apply(simp_all)
-  by (metis add_commu_helper stream.con_rews(2) stream.sel_rews(5) surj_scons)
-
-
-lemma add_len: assumes "xs\<noteq>\<bottom>" and "u\<noteq>\<bottom>"
-  shows "#(add\<cdot>xs\<cdot>(u && ys)) = lnsuc\<cdot>(#(add\<cdot>(srt\<cdot>xs)\<cdot>ys))"
-  by (metis (no_types, lifting) add_unfold assms(1) assms(2) slen_scons stream.con_rews(2) stream.sel_rews(5) surj_scons)
-
-lemma add_slen_help [simp]: "#xs \<sqsubseteq> #ys \<Longrightarrow> #(add\<cdot>xs\<cdot>ys) = #xs"
-  apply(induction xs arbitrary: ys)
-    apply(rule admI)
-    apply rule+
-    apply (smt ch2ch_Rep_cfunL ch2ch_Rep_cfunR contlub_cfun_arg contlub_cfun_fun lub_below_iff lub_eq)
-   apply(simp)
-  proof -
-  fix u
-  fix xs ys :: "nat stream"
-  assume as1: "u \<noteq> \<bottom>" and as2: "(\<And>ys. #xs \<sqsubseteq> #ys \<Longrightarrow> #(add\<cdot>xs\<cdot>ys) = #xs)" and as3: " #(u && xs) \<sqsubseteq> #ys"
-  obtain a where a_def: "updis a = u" by (metis as1 discr.exhaust upE)
-  show "#(add\<cdot>(u && xs)\<cdot>ys) = #(u && xs)"
-  proof (cases "ys = \<epsilon>")
-   case True thus ?thesis using add_eps2 as3 bot_is_0 bottomI strict_slen by auto
-  next
-  case False
-  hence "#(add\<cdot>xs\<cdot>(srt\<cdot>ys)) = #xs" by (metis a_def as2 as3 lnat.inverts lscons_conv slen_scons surj_scons)
-  thus ?thesis by (metis False \<open>updis a = u\<close> add_unfold lscons_conv slen_scons surj_scons)
-  qed
-qed
-
-
-
-
-lemma add_slen [simp]: "#(add\<cdot>x\<cdot>y) = min (#x) (#y)"
-  apply(cases "#x\<le>#y")
-   apply (metis add_slen_help lnle_def min.commute min_absorb2)
-  by (metis add_commutative add_slen_help linear lnle_def min.absorb2)
-
-lemma add_slen_sinf [simp]: 
-  shows " #xs = \<infinity> \<Longrightarrow> #(add\<cdot>xs\<cdot>ys) =(#ys)"
-  by (simp add: min.absorb2)
-
-lemma snth_add: "Fin n < #ys \<Longrightarrow> snth n (add\<cdot>\<up>x\<infinity>\<cdot>ys) = snth n (smap (\<lambda>z. z + x)\<cdot>ys)"
-  apply(induction n arbitrary: ys)
-   apply (smt Fin_02bot add.commute add_unfold lnless_def lnzero_def shd1 sinftimes_unfold slen_empty_eq smap_snth_lemma snth_shd surj_scons)
-  by (smt Fin_Suc add_slen_sinf add_unfold lnle_conv lnless_def lnsuc_lnle_emb sinftimes_unfold slen_empty_eq slen_scons slen_sinftimes slen_smap smap_snth_lemma snth_scons strict_icycle surj_scons)
-
-lemma add2smap: "add\<cdot>(\<up>x\<infinity>)\<cdot>ys = smap (\<lambda>z. z+x)\<cdot>ys"
-  apply(rule snths_eq)
-   apply auto[1]
-  by (metis add_slen_sinf lnat.con_rews lnzero_def lscons_conv slen_empty_eq slen_scons slen_sinftimes snth_add sup'_def)
+  (* add takes 2 nat-streams and adds them component-wise *)
 
 lemma add_zero [simp]: "add\<cdot>(sum3\<cdot>s)\<cdot>\<up>0\<infinity> = sum3\<cdot>s"
   apply(rule snths_eq)
    apply simp
   by (auto simp add: add_snth)
-
-
 
 
 definition zed :: "nat stream" where

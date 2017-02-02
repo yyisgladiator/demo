@@ -279,19 +279,15 @@ lemma innerprod_serComp: assumes "sbDom\<cdot>sb = I (spfcomp mult1 mult2) addC"
 (* inner Prod *)
 
 definition innerProd :: "nat SPF" where
-"innerProd \<equiv> hide ((mult1 \<parallel> mult2) \<otimes> addC) {c5, c6}"
+"innerProd \<equiv> hide ((mult1 \<otimes> mult2) \<otimes> addC) {c5, c6}"
 
-lemma [simp]: "spfDom\<cdot>( spfcomp (parcomp mult1 mult2) addC) = {c1, c2, c3, c4}"
+lemma [simp]: "spfDom\<cdot>( spfcomp (spfcomp mult1 mult2) addC) = {c1, c2, c3, c4}"
 apply(subst spfComp_dom_I)
-apply(simp_all add: I_def parCompDom parCompRan)
-apply(simp add: spfComp_well_def)
-by(simp add: parCompDom parCompRan)
+by(simp_all add: I_def parCompDom parCompRan)
 
 lemma innerProdEqCh: assumes "sbDom\<cdot>sb = I (spfcomp mult1 mult2) addC" 
     shows "(innerProd  \<rightleftharpoons> sb) . c7 = (spfcomp (spfcomp mult1 mult2) addC) \<rightleftharpoons> sb . c7"
-apply(simp add: innerProd_def parallelOperatorEq)
-apply(subst hideSbRestrictCh)
-by(simp_all add: assms)
+by (metis (no_types, lifting) channel.distinct(111) channel.distinct(131) hideSbRestrictCh innerProd_def insertE option.collapse sbgetch_insert singletonD spfDomHide spfdom2sbdom)
 
 (* requirements *)
 
@@ -355,5 +351,15 @@ lemma innerprod: assumes "sbDom\<cdot>sb = I (spfcomp mult1 mult2) addC"
   apply(subst mult1Eq, simp add: assms)
   apply(subst mult2Eq, simp add: assms)
   by simp
+
+(* inner Prod 2 *)
+
+definition innerProd2 :: "nat SPF" where
+"innerProd2 \<equiv> hide ((mult1 \<parallel> mult2) \<otimes> addC) {c5, c6}"
+
+lemma innerProdEq2: "innerProd \<equiv> innerProd2"
+apply(simp add: innerProd_def innerProd2_def)
+apply(subst parallelOperatorEq)
+by(simp_all)
 
 end

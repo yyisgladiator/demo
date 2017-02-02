@@ -46,7 +46,7 @@ using Oc_def by auto
 
 (* hide *)
 
-definition hide :: "'m SPF \<Rightarrow>  channel set \<Rightarrow> 'm SPF" where
+definition hide :: "'m SPF \<Rightarrow>  channel set \<Rightarrow> 'm SPF" (infix "\<hh>" 50) where
 "hide f cs \<equiv> Abs_CSPF (\<lambda> x. (sbDom\<cdot>x = spfDom\<cdot>f ) \<leadsto> ((f \<rightleftharpoons> x)\<bar>(spfRan\<cdot>f - cs)))"
 
 lemma[simp]: assumes "cont (Rep_CSPF(f))" shows "cont (\<lambda> x. (sbDom\<cdot>x = spfDom\<cdot>f ) \<leadsto> ((f \<rightleftharpoons> x)\<bar>(spfRan\<cdot>f - cs)))"
@@ -57,7 +57,7 @@ lemma[simp]: assumes "spf_well (Abs_cfun (Rep_CSPF(f)))" shows "spf_well (Abs_cf
 apply(auto simp add: spf_well_def domIff2 sbdom_rep_eq)
 sorry
 
-lemma spfDomHide: "spfDom\<cdot>(hide f cs) = spfDom\<cdot>f"
+lemma spfDomHide: "spfDom\<cdot>(f \<hh> cs) = spfDom\<cdot>f"
 apply(simp add: hide_def)
 by(simp add: spfDomAbs)
 

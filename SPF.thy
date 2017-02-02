@@ -233,8 +233,8 @@ definition spfComp_well:: "'m SPF \<Rightarrow> 'm SPF \<Rightarrow> bool" where
                 \<and> spfRan\<cdot>f1 \<inter> spfRan\<cdot>f2 = {}"
 
 definition no_selfloops:: "'m SPF \<Rightarrow> 'm SPF \<Rightarrow> bool" where
-"no_selfloops f1 f2 \<equiv> spfDom\<cdot>f2 \<inter> spfRan\<cdot>f2 = {}
-                    \<and> spfDom\<cdot>f1 \<inter> spfRan\<cdot>f1 = {}"
+"no_selfloops f1 f2 \<equiv> spfDom\<cdot>f1 \<inter> spfRan\<cdot>f1 = {}
+                    \<and> spfDom\<cdot>f2 \<inter> spfRan\<cdot>f2 = {}"
 
 definition spfcomp :: "'m SPF \<Rightarrow> 'm SPF \<Rightarrow> 'm SPF"  (infixl "\<otimes>" 40) where
 "spfcomp f1 f2 \<equiv> 
@@ -1261,6 +1261,11 @@ definition spsDom :: "'m SPS \<Rightarrow> channel set" where
 definition spsRan :: "'m SPS \<Rightarrow> channel set" where
 "spsRan S = spfRan\<cdot>(SOME f. f\<in> Rep_SPS S)"
 
+(* add SPF 
 
+definition addSPF :: "(channel \<times> channel \<times> channel) \<Rightarrow> nat SPF" where
+"addSPF (c1, c2, c3) \<equiv> Abs_CSPF (\<lambda> sb. (sbDom\<cdot>sb = {c1, c2, c3}) \<leadsto> ([c3\<mapsto>add\<cdot>(sb . c1)\<cdot>(sb . c2)]\<Omega>))"
+
+*)
 
 end
