@@ -11,6 +11,18 @@ imports SBTheorie
 begin
   default_sort message 
 
+(* instatiate our message space*)
+instantiation nat :: message
+begin
+  definition ctype_nat :: "channel \<Rightarrow> nat set" where
+  "ctype c = range nat"
+
+instance ..
+end
+
+lemma [simp]: "cs \<subseteq> ((ctype c) :: nat set)"
+  apply(simp add: ctype_nat_def)
+  by(metis subset_UNIV subset_image_iff transfer_int_nat_set_return_embed)
 
 
 (* ----------------------------------------------------------------------- *)
@@ -1269,5 +1281,76 @@ definition spsDom :: "'m SPS \<Rightarrow> channel set" where
 definition spsRan :: "'m SPS \<Rightarrow> channel set" where
 "spsRan S = spfRan\<cdot>(SOME f. f\<in> Rep_SPS S)"
 
+
+
+definition addSPF :: "(channel \<times> channel \<times> channel) \<Rightarrow> nat SPF" where
+"addSPF cs \<equiv> Abs_CSPF (\<lambda> (sb::nat SB). (sbDom\<cdot>sb = {(fst cs), (fst (snd cs))}) \<leadsto> ([(snd (snd cs))\<mapsto>add\<cdot>(sb . (fst cs))\<cdot>(sb . (fst (snd cs)))]\<Omega>))"
+
+
+lemma addSPF_mono: "monofun (\<lambda> sb. (sbDom\<cdot>sb = {(fst cs), (fst (snd cs))}) \<leadsto> ([(snd (snd cs))\<mapsto>add\<cdot>(sb . (fst cs))\<cdot>(sb . (fst (snd cs)))]\<Omega>))"
+  apply (rule spf_mono2monofun)
+   apply (rule spf_monoI)
+   apply (simp add: domIff2)
+   apply (rule sb_below)
+    apply (simp add: sbdom_insert)
+    apply (simp add: sbdom_rep_eq sbgetch_rep_eq)
+   apply (meson monofun_cfun monofun_cfun_arg monofun_cfun_fun)
+   by (rule, simp add: domIff2)
+
+lemma add_chain[simp]: "chain Y \<Longrightarrow> sbDom\<cdot>(Y 0) = {(fst cs), (fst (snd cs))} 
+                        \<Longrightarrow> chain (\<lambda> i. [(snd (snd cs))\<mapsto>add\<cdot>((Y i) . (fst cs))\<cdot>((Y i) . (fst (snd cs)))]\<Omega>)"
+  apply (rule chainI)
+  apply (rule sb_below)
+   apply (simp add: sbdom_rep_eq)
+   apply (simp add: sbdom_rep_eq sbgetch_rep_eq)
+   by (simp add: monofun_cfun po_class.chainE)
+
+lemma addSPF_chain_lub[simp]: "chain Y \<Longrightarrow> sbDom\<cdot>(Lub Y) = {(fst cs), (fst (snd cs))} 
+                        \<Longrightarrow> chain (\<lambda> i. [(snd (snd cs))\<mapsto>add\<cdot>((Y i) . (fst cs))\<cdot>((Y i) . (fst (snd cs)))]\<Omega>)"
+  by (simp add: sbChain_dom_eq2)
+
+lemma addSPF_Lub[simp]: "chain Y \<Longrightarrow> sbDom\<cdot>(Lub Y) = {(fst cs), (fst (snd cs))} \<Longrightarrow> 
+  (\<Squnion>i. add\<cdot>(Y i . (fst cs))\<cdot>(Y i . (fst (snd cs)))) = add\<cdot>((Lub Y) . (fst cs))\<cdot>((Lub Y). (fst (snd cs)))"
+  by (simp add: lub_distribs(1) lub_eval)
+
+lemma addSPF_chain[simp]: "chain Y \<Longrightarrow>
+      chain (\<lambda> i. (sbDom\<cdot>(Y i) = {(fst cs), (fst (snd cs))}) \<leadsto> ([(snd (snd cs))\<mapsto>add\<cdot>((Y i) . (fst cs))\<cdot>((Y i) . (fst (snd cs)))]\<Omega>))"
+  apply (rule chainI)
+  apply (simp add: sbChain_dom_eq2)
+  apply (rule impI, rule some_below, rule sb_below)
+   apply (simp add: sbdom_rep_eq)
+  apply (simp add: sbdom_rep_eq sbgetch_rep_eq)
+  by (simp add: monofun_cfun po_class.chainE)
+
+lemma addSPF_cont: "cont (\<lambda> sb. (sbDom\<cdot>sb = {(fst cs), (fst (snd cs))}) \<leadsto> ([(snd (snd cs))\<mapsto>add\<cdot>(sb . (fst cs))\<cdot>(sb . (fst (snd cs)))]\<Omega>))"
+  apply (rule spf_cont2cont)
+    apply (rule spf_contlubI)
+    apply (simp add: domIff2 sbChain_dom_eq2)
+    apply (rule sb_below)
+     apply (simp add: sbdom_rep_eq )
+     apply (simp only: Cfun.contlub_cfun_arg addSPF_chain_lub)
+     apply (simp add: sbdom_rep_eq sbgetch_rep_eq)
+    apply (simp add: sbdom_rep_eq sbgetch_rep_eq sbgetch_lub)
+proof -
+  have "monofun (\<lambda>s. (sbDom\<cdot>s = {fst cs, fst (snd cs)})\<leadsto>[snd (snd cs) \<mapsto> add\<cdot>(s . fst cs)\<cdot> (s . fst (snd cs))]\<Omega>)"
+    using addSPF_mono by presburger
+  then show "spf_mono (\<lambda>s. (sbDom\<cdot>s = {fst cs, fst (snd cs)})\<leadsto>[snd (snd cs) \<mapsto> add\<cdot>(s . fst cs)\<cdot> (s . fst (snd cs))]\<Omega>)"
+    using monofun2spf_mono by blast
+next
+   show "\<forall>b. (b \<in> dom (\<lambda>sb. (sbDom\<cdot>sb = {fst cs, fst (snd cs)})\<leadsto>[snd (snd cs) \<mapsto> add\<cdot>(sb . fst cs)\<cdot>(sb . fst (snd cs))]\<Omega>)) 
+                = (sbDom\<cdot>b = {fst cs, fst (snd cs)})" 
+     by (simp add: domIff)
+qed
+
+lemma addSPF_well: "spf_well (\<Lambda> sb. (sbDom\<cdot>sb = {(fst cs), (fst (snd cs))}) \<leadsto> 
+  ([(snd (snd cs))\<mapsto>add\<cdot>(sb . (fst cs))\<cdot>(sb . (fst (snd cs)))]\<Omega>))"
+apply(auto simp add: spf_well_def domIff2 sbdom_rep_eq)
+sorry
+
+lemma addSPF_rep_eqC: "Rep_CSPF (addSPF cs) = 
+  (\<lambda> sb. (sbDom\<cdot>sb = {(fst cs), (fst (snd cs))}) \<leadsto> ([(snd (snd cs))\<mapsto>add\<cdot>(sb . (fst cs))\<cdot>(sb . (fst (snd cs)))]\<Omega>))"
+apply(simp add: addSPF_def)
+apply(subst rep_abs_cspf)
+by(simp_all add: addSPF_cont addSPF_well)
 
 end

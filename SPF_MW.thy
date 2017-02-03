@@ -54,7 +54,8 @@ lemma[simp]: assumes "cont (Rep_CSPF(f))" shows "cont (\<lambda> x. (sbDom\<cdot
 apply(subst if_then_cont, simp_all)
 by (simp add: cont_compose)
 
-lemma[simp]: assumes "spf_well (Abs_cfun (Rep_CSPF(f)))" shows "spf_well (Abs_cfun (\<lambda> x. (sbDom\<cdot>x = spfDom\<cdot>f ) \<leadsto> ((f \<rightleftharpoons> x)\<bar>(spfRan\<cdot>f - cs))))"
+lemma[simp]: assumes "spf_well (Abs_cfun (Rep_CSPF(f)))" 
+  shows "spf_well (Abs_cfun (\<lambda> x. (sbDom\<cdot>x = spfDom\<cdot>f ) \<leadsto> ((f \<rightleftharpoons> x)\<bar>(spfRan\<cdot>f - cs))))"
 apply(auto simp add: spf_well_def domIff2 sbdom_rep_eq)
 sorry
 
@@ -204,9 +205,9 @@ next
      by (simp add: domIff)
 qed
 
-
 lemma addSPF_well: "spf_well (\<Lambda> sb. (sbDom\<cdot>sb = {(fst cs), (fst (snd cs))}) \<leadsto> 
   ([(snd (snd cs))\<mapsto>add\<cdot>(sb . (fst cs))\<cdot>(sb . (fst (snd cs)))]\<Omega>))"
+apply(auto simp add: spf_well_def domIff2 sbdom_rep_eq)
 sorry
 
 lemma addSPF_rep_eqC: "Rep_CSPF (addSPF cs) = 

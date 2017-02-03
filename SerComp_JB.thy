@@ -9,26 +9,12 @@ theory SerComp_JB
 imports SPF SBTheorie
 begin
 
-(* instatiate our message space*)
-instantiation nat :: message
-begin
-  definition ctype_nat :: "channel \<Rightarrow> nat set" where
-  "ctype c = range nat"
-
-instance ..
-end
-
 (* special operator for serial composition, domain of f2 must be range of f1  *)
 definition sercomp :: "'m SPF => 'm SPF => 'm SPF"  where
 "sercomp f1 f2 \<equiv>
 let I = spfDom\<cdot>f1
 in Abs_CSPF (\<lambda> x. (sbDom\<cdot>x = I ) \<leadsto> ((Rep_CSPF f2)\<rightharpoonup>((Rep_CSPF f1) \<rightharpoonup> x)))"
 
-
-
-lemma [simp]: "cs \<subseteq> ((ctype c) :: nat set)"
-  apply(simp add: ctype_nat_def)
-  by(metis subset_UNIV subset_image_iff transfer_int_nat_set_return_embed)
 
 (* FUNCTION DEFINITIONS *)
 (* id function defintion, change name ASAP but for now ensures readability *)

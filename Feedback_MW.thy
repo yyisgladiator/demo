@@ -192,6 +192,6 @@ sorry
 lemma test: "sum1\<rightleftharpoons>([c1\<mapsto><[1,2,3]>]\<Omega>).c3 = <[1,3,6]>"
 apply(simp add: sum1EqCh)
 apply(simp add: spfcomp_def)
-sledgehammer
+sorry
 
 end

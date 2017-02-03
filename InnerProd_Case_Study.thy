@@ -183,7 +183,7 @@ apply(subst if_then_cont, simp_all)
 apply(subst cont2cont_APP)
 by(simp_all add: contMult1Union contMult2)
                                    
-lemma multcomp_spfwell: "spf_well (\<Lambda> x. (sbDom\<cdot>x = {c3, c4, c1, c2})\<leadsto>((mult1\<rightleftharpoons>(x\<bar>spfDom\<cdot>mult1)) \<uplus> (mult2\<rightleftharpoons>(x\<bar>spfDom\<cdot>mult2))))"
+lemma multcomp_spfwell: "spf_well (Abs_cfun (\<lambda>x. (sbDom\<cdot>x = {c3, c4, c1, c2})\<leadsto>((mult1\<rightleftharpoons>(x\<bar>spfDom\<cdot>mult1)) \<uplus> (mult2\<rightleftharpoons>(x\<bar>spfDom\<cdot>mult2)))))"
 apply(auto simp add: spf_well_def domIff2 sbdom_rep_eq)
 sorry
 
