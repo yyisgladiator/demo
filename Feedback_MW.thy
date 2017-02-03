@@ -189,4 +189,9 @@ lemma sumEq: assumes "sbDom\<cdot>sb = I addC append0C" shows "(sum1 \<rightleft
 apply(subst sum1EqCh, simp add: assms)
 sorry
 
+lemma test: "sum1\<rightleftharpoons>([c1\<mapsto><[1,2,3]>]\<Omega>).c3 = <[1,3,6]>"
+apply(simp add: sum1EqCh)
+apply(simp add: spfcomp_def)
+sledgehammer
+
 end

@@ -18,59 +18,6 @@ begin
 definition mult:: "nat stream \<rightarrow> nat stream \<rightarrow> nat stream" where
 "mult \<equiv> \<Lambda> s1 s2 . smap (\<lambda> s3. (fst s3) * (snd s3))\<cdot>(szip\<cdot>s1\<cdot>s2)"
 
-(* Add component (use definition form StreamCase_Study) *)
-
-(* SHOW THAT MULT/ADD COMPONENT IS CONTINUOUS *)
-lemma spfadd_mono[simp] : "monofun 
-                           (\<lambda> sb. (sbDom\<cdot>sb = {ch1, ch2}) \<leadsto> ([ch3 \<mapsto> add\<cdot>(sb . ch1)\<cdot>(sb . ch2)]\<Omega>))"
-  apply (rule spf_mono2monofun)
-   apply (rule spf_monoI)
-   apply (simp add: domIff2)
-   apply (rule sb_below)
-    apply (simp add: sbdom_insert)
-    apply (simp add: sbdom_rep_eq sbgetch_rep_eq)
-   apply (meson monofun_cfun monofun_cfun_arg monofun_cfun_fun)
-   by (rule, simp add: domIff2)
-
-lemma add_chain[simp]: "chain Y \<Longrightarrow> sbDom\<cdot>(Y 0) = {ch1,ch2} 
-                        \<Longrightarrow> chain (\<lambda> i. [ch3\<mapsto>add\<cdot>((Y i) . ch1)\<cdot>((Y i) . ch2)]\<Omega>)"
-  apply (rule chainI)
-  apply (rule sb_below)
-   apply (simp add: sbdom_rep_eq)
-   apply (simp add: sbdom_rep_eq sbgetch_rep_eq)
-   by (simp add: monofun_cfun po_class.chainE)
-
-lemma add_chain_lub[simp]: "chain Y \<Longrightarrow> sbDom\<cdot>(Lub Y) = {ch1,ch2} 
-                                \<Longrightarrow> chain (\<lambda> i. [ch3\<mapsto>add\<cdot>((Y i) . ch1)\<cdot>((Y i) . ch2)]\<Omega>)"
-  by (simp add: sbChain_dom_eq2)
-
-lemma sAdd_Lub[simp]: "chain Y \<Longrightarrow> sbDom\<cdot>(Lub Y) = {ch1,ch2} \<Longrightarrow> 
-  (\<Squnion>i. add\<cdot>(Y i . ch1)\<cdot>(Y i . ch2)) = add\<cdot>((Lub Y) . ch1)\<cdot>((Lub Y). ch2)"
-  by (simp add: lub_distribs(1) lub_eval)
-
-lemma spfadd_chain [simp]: "chain Y \<Longrightarrow>
-      chain (\<lambda> i. (sbDom\<cdot>(Y i) = {ch1, ch2}) \<leadsto> ([ch3\<mapsto>add\<cdot>((Y i) . ch1)\<cdot>((Y i) . ch2)]\<Omega>))"
-  apply (rule chainI)
-  apply (simp add: sbChain_dom_eq2)
-  apply (rule impI, rule some_below, rule sb_below)
-   apply (simp add: sbdom_rep_eq)
-  apply (simp add: sbdom_rep_eq sbgetch_rep_eq)
-  by (simp add: monofun_cfun po_class.chainE)
-
-lemma spfadd_cont[simp]: "cont (\<lambda> sb. (sbDom\<cdot>sb = {ch1, ch2}) 
-                                \<leadsto> ([ch3\<mapsto>add\<cdot>(sb . ch1)\<cdot>(sb . ch2)]\<Omega>))" (is "cont ?F")
-  apply (rule spf_cont2cont)
-    apply (rule spf_contlubI)
-    apply (simp add: domIff2 sbChain_dom_eq2)
-    apply (rule sb_below)
-     apply (simp add: sbdom_rep_eq )
-     apply (simp only: Cfun.contlub_cfun_arg add_chain_lub)
-     apply (simp add: sbdom_rep_eq sbgetch_rep_eq)
-    apply (simp add: sbdom_rep_eq sbgetch_rep_eq sbgetch_lub)
-   apply (simp add: monofun2spf_mono)
-  by(simp add: domIff2, rule+)
-
-
 (* multiplication component *)
 lemma spfmult_mono[simp] : "monofun 
                            (\<lambda> sb. (sbDom\<cdot>sb = {ch1, ch2}) \<leadsto> ([ch3 \<mapsto> mult\<cdot>(sb . ch1)\<cdot>(sb . ch2)]\<Omega>))"
@@ -136,9 +83,8 @@ lift_definition mult2 :: "nat SPF" is
 "\<Lambda> sb. (sbDom\<cdot>sb = {c3, c4}) \<leadsto> ([c6\<mapsto>mult\<cdot>(sb . c3)\<cdot>(sb . c4)]\<Omega>)"
   by (auto simp add: spf_well_def domIff2 sbdom_rep_eq)
 
-lift_definition addC :: "nat SPF" is
-"\<Lambda> sb. (sbDom\<cdot>sb = {c5, c6}) \<leadsto> ([c7\<mapsto>add\<cdot>(sb . c5)\<cdot>(sb . c6)]\<Omega>)"
-  by (auto simp add: spf_well_def domIff2 sbdom_rep_eq)
+definition addC :: "nat SPF" where
+"addC \<equiv> addSPF (c5, c6, c7)" 
 
 (* rep equalities, useful for simp *)
 lemma mult1_rep_eqC: "Rep_CSPF mult1 = (\<lambda> sb. (sbDom\<cdot>sb = {c1, c2}) \<leadsto> ([c5 \<mapsto> mult\<cdot>(sb . c1)\<cdot>(sb . c2)]\<Omega>))"
@@ -148,7 +94,7 @@ lemma mult2_rep_eqC: "Rep_CSPF mult2 = (\<lambda> sb. (sbDom\<cdot>sb = {c3, c4}
   by (simp add: mult2.rep_eq Rep_CSPF_def)
 
 lemma addC_rep_eqC: "Rep_CSPF addC = (\<lambda> sb. (sbDom\<cdot>sb = {c5, c6}) \<leadsto> ([c7 \<mapsto> add\<cdot>(sb . c5)\<cdot>(sb . c6)]\<Omega>))"
-  by (simp add: addC.rep_eq Rep_CSPF_def)
+  by (auto simp add: addC_def addSPF_rep_eqC)
 
 (* COMPONENT PROPERTIES *)
 (* mult1 *)
@@ -172,8 +118,7 @@ lemma [simp]: "spfRan\<cdot>mult2 = {c6}"
 (* addC *)
 
 lemma [simp]: "spfDom\<cdot>addC = {c5,c6}"
-  apply(simp add: spfdom_insert addC.rep_eq Rep_CSPF_def domIff2)
-  by (meson sbleast_sbdom someI_ex)
+by (metis addC_rep_eqC sbgetch_insert sbleast_sbdom spfdom2sbdom)
 
 lemma [simp]: "spfRan\<cdot>addC = {c7}"
   apply (simp add: spfran_least addC_rep_eqC)
@@ -230,6 +175,7 @@ lemma contMult1Union: "cont (\<lambda>x. sbUnion\<cdot>(mult1\<rightleftharpoons
 by(simp add: contMult1)
 
 lemma contMult2: "cont (\<lambda>x. (mult2\<rightleftharpoons>(x\<bar>{c3, c4})))"
+apply(simp add: cont_def)
 sorry
 
 lemma multcomp_cont: "cont (\<lambda>x. (sbDom\<cdot>x = {c3, c4, c1, c2})\<leadsto>((mult1\<rightleftharpoons>(x\<bar>spfDom\<cdot>mult1)) \<uplus> (mult2\<rightleftharpoons>(x\<bar>spfDom\<cdot>mult2))))"
