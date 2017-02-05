@@ -1452,27 +1452,40 @@ done
 
 (* tstmap *)
 
-(* TODO Dennis
+(* TODO Dennis 
 
 (* smap distributes over infinite repetition *)
-lemma smap2sinf[simp]: "smap f\<cdot>(x\<infinity>)= (smap f\<cdot>x)\<infinity>"
+(* lemma smap2sinf[simp]: "smap f\<cdot>(x\<infinity>)= (smap f\<cdot>x)\<infinity>" *)
+
+lemma rep_tstream_smap: "Rep_tstream x = \<epsilon> \<or> #({\<surd>} \<ominus> Rep_tstream x) = \<infinity> \<or> #(Rep_tstream x) < \<infinity> \<and> (\<exists>xa. Rep_tstream x = xa \<bullet> \<up>\<surd>) \<Longrightarrow>
+    smap (case_event (\<lambda>m. Msg (f m)) \<surd>)\<cdot>(Rep_tstream x) = \<epsilon> \<or>
+    #({\<surd>} \<ominus> smap (case_event (\<lambda>m. Msg (f m)) \<surd>)\<cdot>(Rep_tstream x)) = \<infinity> \<or>
+    #(Rep_tstream x) < \<infinity> \<and> (\<exists>xa. smap (case_event (\<lambda>m. Msg (f m)) \<surd>)\<cdot>(Rep_tstream x) = xa \<bullet> \<up>\<surd>)"
+proof(cases "(Rep_tstream x)=\<epsilon>")
+  case True thus ?thesis by simp
+next
+  case False thus ?thesis
+  proof (cases "#(Rep_tstream x)=\<infinity>")
+    case True thus ?thesis
+      by simp
+(* by (metis False lnless_def sconc_fst_inf sfilter_conc2 sfilterl4 ts_well_def) *)
+  next
+    case False 
+    hence "#(Rep_tstream x) < \<infinity>" by (metis inf_ub lnle_def lnless_def)
+    thus ?thesis
+      by simp
+(* by (metis (no_types, lifting) False assoc_sconc sconc_snd_empty sfilterl4 ts_well_def) *)
+   qed
+qed
+
+(* smap on Rep_tstream is wellformed *)
+lemma ts_well_smap [simp]: "ts_well (smap (\<lambda>x. case x of Msg m \<Rightarrow> Msg (f m) | \<surd> \<Rightarrow> \<surd>)\<cdot>(Rep_tstream x))"
+apply (insert Rep_tstream [of x])
+apply (simp add: ts_well_def)
+by (simp add: rep_tstream_smap)
 
 lemma tstmap_insert: "tstmap f\<cdot>x=Abs_tstream (smap (case_event (\<lambda>m. Msg (f m)) \<surd>)\<cdot>(Rep_tstream x))"
-apply (simp add: tstmap_def espf2tspf_def)
-apply (subst beta_cfun)
-by simp
-
-(* IDEAS
-apply (rule contI2)
-apply (rule monofunI)
-apply (simp add: below_tstream_def)
-apply (subst Abs_tstream_inverse)
-
-apply (rule contI)
-apply (simp add: cont2contlubE)
-
-apply (simp add: rep_tstream_cont)
-*)
+by (simp add: tstmap_def espf2tspf_def)
 
 lemma strict_tstmap[simp]: "tstmap f\<cdot>\<bottom> = \<bottom>"
 by (simp add: tstmap_insert)
@@ -1482,7 +1495,8 @@ lemma tstmap2tsinf[simp]: "tstmap f\<cdot>(tsinftimes x)= tsinftimes (tstmap f\<
 apply (simp add: tstmap_insert)
 by simp
 (* IDEAS apply(subst tsinftimes_def [THEN fix_eq2]) *)
-*)
+
+ ToDo Dennis *)
 
 (*TODO
 
