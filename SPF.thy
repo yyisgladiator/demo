@@ -636,6 +636,20 @@ lemma spfCompH2_mono[simp]: "monofun (\<lambda> z. x \<uplus> ((Rep_CSPF f1)\<ri
 lemma spfCompH2_cont[simp]: "cont (\<lambda> z. x \<uplus> ((Rep_CSPF f1)\<rightharpoonup>(z \<bar> spfDom\<cdot>f1)) 
                                           \<uplus> ((Rep_CSPF f2)\<rightharpoonup>(z \<bar> spfDom\<cdot>f2)))"
   using spfCompHelp_cont by blast
+    
+lemma spfCompH2_commutative: assumes "spfRan\<cdot>f1 \<inter> spfRan\<cdot>f2 = {}" 
+            and "sbDom\<cdot>sb = C f1 f2"
+          shows "(spfCompHelp2 f1 f2 x)\<cdot>sb = (spfCompHelp2 f2 f1 x)\<cdot>sb"
+  proof -
+    have "sbDom\<cdot>(f1 \<rightleftharpoons> (sb \<bar>spfDom\<cdot>f1)) \<inter> sbDom\<cdot>(f2 \<rightleftharpoons> (sb \<bar>spfDom\<cdot>f2)) = {}"
+      by (metis C_def assms(1) assms(2) inf.absorb_iff1 inf_sup_absorb inf_sup_ord(4) le_supI1 spfRanRestrict)
+    hence "(f1 \<rightleftharpoons> (sb \<bar>spfDom\<cdot>f1)) \<uplus> (f2 \<rightleftharpoons> (sb \<bar>spfDom\<cdot>f2)) =
+              (f2 \<rightleftharpoons> (sb \<bar>spfDom\<cdot>f2)) \<uplus> (f1 \<rightleftharpoons> (sb \<bar>spfDom\<cdot>f1))"
+      using sbunion_commutative by blast
+   thus ?thesis 
+     by (metis (no_types, lifting) Abs_cfun_inverse2 spfCompH2_cont spfCompHelp2_def sbunion_associative)
+ qed
+   
 
 (* channel set lemmata *)
 lemma spfI_sub_C[simp]: "I f1 f2 \<subseteq> C f1 f2"
@@ -859,6 +873,24 @@ proof -
   then show ?thesis
     by meson
 qed
+  
+
+    
+lemma spfComp_commutative: assumes "spfRan\<cdot>f1 \<inter> spfRan\<cdot>f2 = {}"
+  shows "spfcomp f1 f2 = spfcomp f2 f1"
+proof -
+  have "sbDom\<cdot>(sbLeast (C f1 f2)) = C f1 f2"
+    by simp
+  hence "\<forall> x. (spfCompHelp2 f1 f2 x)\<cdot>(sbLeast (C f1 f2)) = (spfCompHelp2 f2 f1 x)\<cdot>(sbLeast (C f2 f1))"
+    by (subst spfCompH2_commutative, simp_all add: assms  C_def Un_commute Un_left_commute)
+  hence "\<forall> x. \<Squnion>i. iterate i\<cdot>(spfCompHelp2 f1 f2 x)\<cdot>(sbLeast (C f1 f2)) = (\<Squnion>i. iterate i\<cdot>(spfCompHelp2 f2 f1 x)\<cdot>(sbLeast (C f2 f1)))"
+    sorry (* PROBLEM: spfCompHelp2_commu is not strong enough
+              lemma needed which says  spfCompHelp2 f1 f2 x = spfCompHelp2 f2 f1 x *)
+
+
+    
+
+    
 
 (*
 thm spfCompHelp_def
@@ -1344,7 +1376,7 @@ qed
 
 lemma addSPF_well: "spf_well (\<Lambda> sb. (sbDom\<cdot>sb = {(fst cs), (fst (snd cs))}) \<leadsto> 
   ([(snd (snd cs))\<mapsto>add\<cdot>(sb . (fst cs))\<cdot>(sb . (fst (snd cs)))]\<Omega>))"
-apply(auto simp add: spf_well_def domIff2 sbdom_rep_eq)
+apply(simp add: spf_well_def domIff2 sbdom_rep_eq)
 sorry
 
 lemma addSPF_rep_eqC: "Rep_CSPF (addSPF cs) = 

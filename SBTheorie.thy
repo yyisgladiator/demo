@@ -527,8 +527,10 @@ by(simp add: sbunion_insert sbLeast_def)
 lemma sbunion_commutative: assumes "sbDom\<cdot>b1 \<inter> sbDom\<cdot>b2 = {}"
   shows "b1\<uplus>b2 = b2\<uplus>b1"
 using assms apply(simp add: sbunion_insert)
-apply(simp add: sbdom_insert)
-using map_add_comm by fastforce
+  by (metis map_add_comm sbdom_insert)
+    
+lemma sbunion_associative: "sb1 \<uplus> (sb2 \<uplus> sb3) = (sb1 \<uplus> sb2) \<uplus> sb3"
+  by(simp add: sbunion_insert)
 
 (* the second argument has priority in sbUnion *)
 lemma sbunion_getchR [simp]: assumes "c\<in>sbDom\<cdot>b2"
@@ -543,7 +545,6 @@ by (metis assms map_add_dom_app_simps(3) sbdom_insert)
 
 lemma sbunionDom [simp] : "sbDom\<cdot>(b1 \<uplus> b2) = sbDom\<cdot>b1 \<union> sbDom\<cdot>b2"
 by(auto simp add: sbdom_insert sbunion_insert)
-
 
 
 (* ----------------------------------------------------------------------- *)
