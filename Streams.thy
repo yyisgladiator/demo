@@ -3463,7 +3463,7 @@ definition add:: "nat stream \<rightarrow> nat stream \<rightarrow> nat stream" 
 "add \<equiv> \<Lambda> s1 s2 . smap (\<lambda> s3. (fst s3) + (snd s3))\<cdot>(szip\<cdot>s1\<cdot>s2)"
 
 lemma "cont (\<lambda> s1 s2 . smap (\<lambda> s3. (fst s3) + (snd s3))\<cdot>(szip\<cdot>s1\<cdot>s2))"
-sorry
+by simp
 
 lemma "add = merge plus"
 by(simp add: add_def merge_def)

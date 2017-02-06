@@ -1281,7 +1281,7 @@ definition spsDom :: "'m SPS \<Rightarrow> channel set" where
 definition spsRan :: "'m SPS \<Rightarrow> channel set" where
 "spsRan S = spfRan\<cdot>(SOME f. f\<in> Rep_SPS S)"
 
-
+(* add SPF *)
 
 definition addSPF :: "(channel \<times> channel \<times> channel) \<Rightarrow> nat SPF" where
 "addSPF cs \<equiv> Abs_CSPF (\<lambda> (sb::nat SB). (sbDom\<cdot>sb = {(fst cs), (fst (snd cs))}) \<leadsto> ([(snd (snd cs))\<mapsto>add\<cdot>(sb . (fst cs))\<cdot>(sb . (fst (snd cs)))]\<Omega>))"

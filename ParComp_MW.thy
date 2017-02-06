@@ -142,7 +142,7 @@ by(auto simp add: sbdom_rep_eq)
 lemma sb_rest: "([c1 \<mapsto> s, c3 \<mapsto> s2]\<Omega>)\<bar>{c1} = [c1 \<mapsto> (s::nat stream)]\<Omega>"
 by(simp add: sbrestrict_insert)
 
-(* Helper Function  *)
+(* Helper Function *)
 
 definition spfCompHelp2 :: "'m SPF \<Rightarrow> 'm SPF \<Rightarrow> 'm SB \<Rightarrow> 'm SB  \<rightarrow> 'm SB" where
 "spfCompHelp2 f1 f2 x \<equiv> (\<Lambda> z. x \<uplus> ((Rep_CSPF f1)\<rightharpoonup>(z \<bar> spfDom\<cdot>f1)) 

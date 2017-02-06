@@ -7,6 +7,11 @@ begin
 definition parcomp :: "'m SPF \<Rightarrow> 'm SPF \<Rightarrow> 'm SPF" ("_\<parallel>_") where
 "parcomp f1 f2 \<equiv> Abs_CSPF (\<lambda> x. (sbDom\<cdot>x = spfDom\<cdot>f1 \<union> spfDom\<cdot>f2 ) \<leadsto> ((f1 \<rightleftharpoons> (x \<bar>spfDom\<cdot>f1)) \<uplus> (f2 \<rightleftharpoons> (x\<bar>spfDom\<cdot>f2))))"
 
+(* operator for serial composition *)
+
+definition sercomp :: "'m SPF => 'm SPF => 'm SPF"  ("_\<circ>_") where
+"sercomp f1 f2 \<equiv> Abs_CSPF (\<lambda> x. (sbDom\<cdot>x =  spfDom\<cdot>f1) \<leadsto> ((f1 \<rightleftharpoons> x) \<uplus> (f2 \<rightleftharpoons> (f1 \<rightleftharpoons> x))))"
+
 (* spfDom spfcomp *)
 
 lemma spfDomAbs: assumes "cont (\<lambda> x. (sbDom\<cdot>x = cs ) \<leadsto> f(x))" and "spf_well (Abs_cfun (\<lambda> x. (sbDom\<cdot>x = cs ) \<leadsto> f(x)))"
@@ -122,7 +127,7 @@ using assms(1) assms(2) parCompHelp2Eq by fastforce
 
 lemma parallelOperatorEq: assumes "L f1 f2 = {}"
                               and "spfComp_well f1 f2"  
-   shows "(spfcomp f1 f2) = (f1 \<parallel> f2)"
+   shows "(f1 \<otimes> f2) = (f1 \<parallel> f2)"
 apply(simp add: parcomp_def spfcomp_tospfH2)
 apply(subst spfComp_I_domf1f2_eq, simp_all add: assms)
 apply(subst parCompHelp2Eq2)
@@ -136,87 +141,45 @@ lemma parCompRan: assumes "L f1 f2 = {}"
                   and "spfComp_well f1 f2" shows "spfRan\<cdot>(f1 \<parallel> f2) = spfRan\<cdot>(spfcomp f1 f2)"
 by(simp add: parallelOperatorEq assms)
 
+(* lemmas about serial composition *)
 
-(* Add component *)
-(*
-definition addSPF :: "(channel \<times> channel \<times> channel) \<Rightarrow> nat SPF" where
-"addSPF cs \<equiv> 
-let c1 = (fst cs);
-    c2 = (fst (snd cs));
-    c3 = (snd (snd cs))
-in Abs_CSPF (\<lambda> sb. (sbDom\<cdot>sb = {c1, c2}) \<leadsto> ([c3\<mapsto>add\<cdot>(sb . c1)\<cdot>(sb . c2)]\<Omega>))"
-*)
+lemma spfComp_I_domf1_eq: assumes "pL f1 f2 = {}"
+                              and "spfRan\<cdot>f1 = spfDom\<cdot>f2"
+                              and "spfComp_well f1 f2"
+                              and "no_selfloops f1 f2"
+   shows "I f1 f2 = spfDom\<cdot>f1"
+by (meson SerComp_JB.spfComp_I_domf1_eq assms(1) assms(2) assms(3) assms(4) sbleast_sbdom)
 
-definition addSPF :: "(channel \<times> channel \<times> channel) \<Rightarrow> nat SPF" where
-"addSPF cs \<equiv> Abs_CSPF (\<lambda> sb. (sbDom\<cdot>sb = {(fst cs), (fst (snd cs))}) \<leadsto> ([(snd (snd cs))\<mapsto>add\<cdot>(sb . (fst cs))\<cdot>(sb . (fst (snd cs)))]\<Omega>))"
+lemma serCompHelp2Eq: assumes "pL f1 f2 = {}"
+                          and "spfRan\<cdot>f1 = spfDom\<cdot>f2"
+                          and "spfComp_well f1 f2"
+                          and "no_selfloops f1 f2" 
+                          and "sbDom\<cdot>x = spfDom\<cdot>f1" 
+   shows "(\<Squnion>i. iterate i\<cdot>(SerComp_JB.spfCompHelp2 f1 f2 x)\<cdot>(sbLeast (C f1 f2)))\<bar>Oc f1 f2 = ((f1 \<rightleftharpoons> x)) \<uplus> (f2 \<rightleftharpoons> (f1 \<rightleftharpoons> x))" 
+apply(subst spfComp_serial_itconst2, simp_all add: assms spfComp_I_domf1_eq)
+apply(simp add: Oc_def)
+apply(subst unionRestrict, simp_all add: assms)
+using SerComp_JB.pL_def assms(1) assms(2) apply blast
+by (metis (no_types, lifting) assms(2) assms(5) domIff option.collapse sbleast_sbdom spfLeastIDom spf_sbdom2dom spfran2sbdom)
 
-lemma addSPF_mono: "monofun (\<lambda> sb. (sbDom\<cdot>sb = {(fst cs), (fst (snd cs))}) \<leadsto> ([(snd (snd cs))\<mapsto>add\<cdot>(sb . (fst cs))\<cdot>(sb . (fst (snd cs)))]\<Omega>))"
-  apply (rule spf_mono2monofun)
-   apply (rule spf_monoI)
-   apply (simp add: domIff2)
-   apply (rule sb_below)
-    apply (simp add: sbdom_insert)
-    apply (simp add: sbdom_rep_eq sbgetch_rep_eq)
-   apply (meson monofun_cfun monofun_cfun_arg monofun_cfun_fun)
-   by (rule, simp add: domIff2)
+lemma serCompHelp2Eq2: assumes "pL f1 f2 = {}"
+                           and "spfRan\<cdot>f1 = spfDom\<cdot>f2"
+                           and "spfComp_well f1 f2"
+                           and "no_selfloops f1 f2"
+   shows " (sbDom\<cdot>x = spfDom\<cdot>f1) \<leadsto> ((\<Squnion>i. iterate i\<cdot>(SerComp_JB.spfCompHelp2 f1 f2 x)\<cdot>(sbLeast (C f1 f2)))\<bar>Oc f1 f2)
+         = (sbDom\<cdot>x = spfDom\<cdot>f1) \<leadsto> ((f1 \<rightleftharpoons> x) \<uplus> (f2 \<rightleftharpoons> (f1 \<rightleftharpoons> x)))"
+by (simp add: assms(1) assms(2) assms(3) assms(4) serCompHelp2Eq)
 
-lemma add_chain[simp]: "chain Y \<Longrightarrow> sbDom\<cdot>(Y 0) = {(fst cs), (fst (snd cs))} 
-                        \<Longrightarrow> chain (\<lambda> i. [(snd (snd cs))\<mapsto>add\<cdot>((Y i) . (fst cs))\<cdot>((Y i) . (fst (snd cs)))]\<Omega>)"
-  apply (rule chainI)
-  apply (rule sb_below)
-   apply (simp add: sbdom_rep_eq)
-   apply (simp add: sbdom_rep_eq sbgetch_rep_eq)
-   by (simp add: monofun_cfun po_class.chainE)
-
-lemma addSPF_chain_lub[simp]: "chain Y \<Longrightarrow> sbDom\<cdot>(Lub Y) = {(fst cs), (fst (snd cs))} 
-                        \<Longrightarrow> chain (\<lambda> i. [(snd (snd cs))\<mapsto>add\<cdot>((Y i) . (fst cs))\<cdot>((Y i) . (fst (snd cs)))]\<Omega>)"
-  by (simp add: sbChain_dom_eq2)
-
-lemma addSPF_Lub[simp]: "chain Y \<Longrightarrow> sbDom\<cdot>(Lub Y) = {(fst cs), (fst (snd cs))} \<Longrightarrow> 
-  (\<Squnion>i. add\<cdot>(Y i . (fst cs))\<cdot>(Y i . (fst (snd cs)))) = add\<cdot>((Lub Y) . (fst cs))\<cdot>((Lub Y). (fst (snd cs)))"
-  by (simp add: lub_distribs(1) lub_eval)
-
-lemma addSPF_chain[simp]: "chain Y \<Longrightarrow>
-      chain (\<lambda> i. (sbDom\<cdot>(Y i) = {(fst cs), (fst (snd cs))}) \<leadsto> ([(snd (snd cs))\<mapsto>add\<cdot>((Y i) . (fst cs))\<cdot>((Y i) . (fst (snd cs)))]\<Omega>))"
-  apply (rule chainI)
-  apply (simp add: sbChain_dom_eq2)
-  apply (rule impI, rule some_below, rule sb_below)
-   apply (simp add: sbdom_rep_eq)
-  apply (simp add: sbdom_rep_eq sbgetch_rep_eq)
-  by (simp add: monofun_cfun po_class.chainE)
-
-lemma addSPF_cont: "cont (\<lambda> sb. (sbDom\<cdot>sb = {(fst cs), (fst (snd cs))}) \<leadsto> ([(snd (snd cs))\<mapsto>add\<cdot>(sb . (fst cs))\<cdot>(sb . (fst (snd cs)))]\<Omega>))"
-  apply (rule spf_cont2cont)
-    apply (rule spf_contlubI)
-    apply (simp add: domIff2 sbChain_dom_eq2)
-    apply (rule sb_below)
-     apply (simp add: sbdom_rep_eq )
-     apply (simp only: Cfun.contlub_cfun_arg addSPF_chain_lub)
-     apply (simp add: sbdom_rep_eq sbgetch_rep_eq)
-    apply (simp add: sbdom_rep_eq sbgetch_rep_eq sbgetch_lub)
-proof -
-  have "monofun (\<lambda>s. (sbDom\<cdot>s = {fst cs, fst (snd cs)})\<leadsto>[snd (snd cs) \<mapsto> add\<cdot>(s . fst cs)\<cdot> (s . fst (snd cs))]\<Omega>)"
-    using addSPF_mono by presburger
-  then show "spf_mono (\<lambda>s. (sbDom\<cdot>s = {fst cs, fst (snd cs)})\<leadsto>[snd (snd cs) \<mapsto> add\<cdot>(s . fst cs)\<cdot> (s . fst (snd cs))]\<Omega>)"
-    using monofun2spf_mono by blast
-next
-   show "\<forall>b. (b \<in> dom (\<lambda>sb. (sbDom\<cdot>sb = {fst cs, fst (snd cs)})\<leadsto>[snd (snd cs) \<mapsto> add\<cdot>(sb . fst cs)\<cdot>(sb . fst (snd cs))]\<Omega>)) 
-                = (sbDom\<cdot>b = {fst cs, fst (snd cs)})" 
-     by (simp add: domIff)
-qed
-
-lemma addSPF_well: "spf_well (\<Lambda> sb. (sbDom\<cdot>sb = {(fst cs), (fst (snd cs))}) \<leadsto> 
-  ([(snd (snd cs))\<mapsto>add\<cdot>(sb . (fst cs))\<cdot>(sb . (fst (snd cs)))]\<Omega>))"
-apply(auto simp add: spf_well_def domIff2 sbdom_rep_eq)
-sorry
-
-lemma addSPF_rep_eqC: "Rep_CSPF (addSPF cs) = 
-  (\<lambda> sb. (sbDom\<cdot>sb = {(fst cs), (fst (snd cs))}) \<leadsto> ([(snd (snd cs))\<mapsto>add\<cdot>(sb . (fst cs))\<cdot>(sb . (fst (snd cs)))]\<Omega>))"
-apply(simp add: addSPF_def)
-apply(subst rep_abs_cspf)
-by(simp_all add: addSPF_cont addSPF_well)
+lemma serialOperatorEq: assumes "pL f1 f2 = {}"
+                            and "spfComp_well f1 f2"
+                            and "no_selfloops f1 f2"
+                            and "spfRan\<cdot>f1 = spfDom\<cdot>f2"
+   shows "(f1 \<otimes> f2) = (f1 \<circ> f2)"
+apply(simp add: sercomp_def SerComp_JB.spfcomp_tospfH2)
+apply(subst spfComp_I_domf1_eq, simp_all add: assms)
+apply(subst serCompHelp2Eq2)
+by(simp_all add: assms)
 
 (* general lemmas for spf_well *)
-(* Abs_CSPF (\<lambda> x. (sbDom\<cdot>x = cs ) \<leadsto> f(x)))  *)
 
 end

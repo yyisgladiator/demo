@@ -307,11 +307,22 @@ lemma innerprod: assumes "sbDom\<cdot>sb = I (spfcomp mult1 mult2) addC"
 (* inner Prod 2 *)
 
 definition innerProd2 :: "nat SPF" where
-"innerProd2 \<equiv> ((mult1 \<parallel> mult2) \<otimes> addC) \<h> {c5, c6}"
+"innerProd2 \<equiv> ((mult1 \<parallel> mult2) \<circ> addC) \<h> {c5, c6}"
+
+lemma spfcomp_well_parallelOp: "spfComp_well (mult1\<parallel>mult2) addC"
+apply(simp add: spfComp_well_def parallelOperatorEq)
+by(simp add: parCompRan)
+
+lemma no_selfloops_parallelOp: "no_selfloops (mult1\<parallel>mult2) addC"
+apply(simp add: no_selfloops_def)
+by(simp add: parCompDom parCompRan)
 
 lemma innerProdEq2: "innerProd \<equiv> innerProd2"
-apply(simp add: innerProd_def innerProd2_def)
-apply(subst parallelOperatorEq)
-by(simp_all)
+apply(simp add: innerProd_def innerProd2_def parallelOperatorEq)
+apply(subst serialOperatorEq)
+apply(simp add: pL_def parCompDom parCompRan)
+apply(simp add: spfcomp_well_parallelOp, simp_all)
+apply(simp add: no_selfloops_parallelOp)
+by(simp add: parCompRan)
 
 end
