@@ -874,18 +874,67 @@ proof -
     by meson
 qed
   
-
+lemma spfCompHelp2_dom: assumes "sbDom\<cdot>x = I f1 f2" 
+                        and  "spfRan\<cdot>f1 \<inter> spfRan\<cdot>f2 = {}" 
+                        and "sbDom\<cdot>sb = C f1 f2"
+shows "sbDom\<cdot>((spfCompHelp2 f1 f2 x)\<cdot>sb) = C f1 f2" 
+proof -
+  have "sbDom\<cdot>(f1 \<rightleftharpoons> (sb \<bar>spfDom\<cdot>f1)) \<union> sbDom\<cdot>(f2 \<rightleftharpoons> (sb \<bar>spfDom\<cdot>f2)) = spfRan\<cdot>f1 \<union> spfRan\<cdot>f2"
+    by (simp add: C_def assms(3) le_supI1)
+  thus ?thesis  by (simp add: C_def I_def assms(1) assms(3) inf_sup_aci(6))     
+qed
+    
+lemma spfCompHelp2_iter_dom: assumes "sbDom\<cdot>x = I f1 f2" 
+                             and  "spfRan\<cdot>f1 \<inter> spfRan\<cdot>f2 = {}" 
+shows "\<forall>n .sbDom\<cdot>(iterate n\<cdot>(spfCompHelp2 f2 f1 x)\<cdot>(sbLeast (C f2 f1))) = C f2 f1"
+proof -
+  { fix nn :: nat
+    have ff1: "\<And>s sa. spfDom\<cdot>(s::'a SPF) \<union> (spfRan\<cdot>sa \<union> (spfRan\<cdot>s \<union> spfDom\<cdot>sa)) = C s sa"
+      using C_def by blast
+    have "\<And>s sa. spfDom\<cdot>(s::'a SPF) \<union> (spfRan\<cdot>s \<union> (spfDom\<cdot>sa \<union> spfRan\<cdot>sa)) = C sa s"
+      using C_def by blast
+    then have "sbDom\<cdot> (iterate nn\<cdot>(spfCompHelp2 f2 f1 x)\<cdot>(sbLeast (C f2 f1))) = C f2 f1"
+      by (metis (no_types) I_def Un_commute assms(1) spfCompH2_itDom) }
+  then show ?thesis
+    by metis
+qed
+  
+lemma testdom: assumes "sb1 \<sqsubseteq> sb2"  (* < = this is just a reminder *)
+  shows "sbDom\<cdot>sb1 = sbDom\<cdot>sb2"
+    using assms sbdom_eq by auto
+  
+lemma spfCompHelp2_iter_lub_dom: assumes "sbDom\<cdot>x = I f1 f2" 
+                             and  "spfRan\<cdot>f1 \<inter> spfRan\<cdot>f2 = {}" 
+                           shows "sbDom\<cdot>(\<Squnion>n. iterate n\<cdot>(spfCompHelp2 f1 f2 x)\<cdot>(sbLeast (C f1 f2))) = C f1 f2"
+proof -
+  have "\<forall>n .sbDom\<cdot>(iterate n\<cdot>(spfCompHelp2 f1 f2 x)\<cdot>(sbLeast (C f1 f2))) = C f1 f2" 
+    by (simp add: assms(1) assms(2) spfCompHelp2_iter_dom)
+  hence "sb \<in> range (\<lambda>n .iterate n\<cdot>(spfCompHelp2 f2 f1 x)\<cdot>(sbLeast (C f2 f1))) \<Longrightarrow> sbDom\<cdot>sb = C f1 f2" (* for alle expression needed here *)
+    sorry
+  thus ?thesis apply(simp add: lub_def)
+     oops
+  
+lemma spfComp_dom: assumes "spfRan\<cdot>f1 \<inter> spfRan\<cdot>f2 = {}" 
+  shows "spfRan\<cdot>(spfcomp f1 f2) = C f1 f2"
+    oops
     
 lemma spfComp_commutative: assumes "spfRan\<cdot>f1 \<inter> spfRan\<cdot>f2 = {}"
   shows "spfcomp f1 f2 = spfcomp f2 f1"
-proof -
+proof cases           (* a case distincition x = I f1 f2  is needed here*)
   have "sbDom\<cdot>(sbLeast (C f1 f2)) = C f1 f2"
     by simp
   hence "\<forall> x. (spfCompHelp2 f1 f2 x)\<cdot>(sbLeast (C f1 f2)) = (spfCompHelp2 f2 f1 x)\<cdot>(sbLeast (C f2 f1))"
     by (subst spfCompH2_commutative, simp_all add: assms  C_def Un_commute Un_left_commute)
-  hence "\<forall> x. \<Squnion>i. iterate i\<cdot>(spfCompHelp2 f1 f2 x)\<cdot>(sbLeast (C f1 f2)) = (\<Squnion>i. iterate i\<cdot>(spfCompHelp2 f2 f1 x)\<cdot>(sbLeast (C f2 f1)))"
-    sorry (* PROBLEM: spfCompHelp2_commu is not strong enough
-              lemma needed which says  spfCompHelp2 f1 f2 x = spfCompHelp2 f2 f1 x *)
+  hence "\<forall>n .sbDom\<cdot>(iterate n\<cdot>(spfCompHelp2 f2 f1 x)\<cdot>(sbLeast (C f2 f1))) = C f1 f2"
+    sorry
+ (* hence "\<forall> x.  iterate i\<cdot>(spfCompHelp2 f1 f2 x)\<cdot>(sbLeast (C f1 f2)) = iterate i\<cdot>(spfCompHelp2 f2 f1 x)\<cdot>(sbLeast (C f2 f1))"
+    apply(induct_tac i)
+     apply (metis \<open>\<forall>x. spfCompHelp2 f1 f2 x\<cdot>(sbLeast (C f1 f2)) = spfCompHelp2 f2 f1 x\<cdot>(sbLeast (C f2 f1))\<close> iterate_0 test)
+    apply(simp)
+      using assms spfCompH2_commutative test2 by blast
+    sorry*)
+      
+      thus ?thesis oops
 
 
     
