@@ -3,13 +3,13 @@ imports SPF StreamTheorie StreamCase_Study
 
 begin
 
-instantiation nat :: message
+(*instantiation nat :: message
 begin
   definition ctype_nat :: "channel \<Rightarrow> nat set" where
   "ctype c = range nat"
 
 instance ..
-end
+end*)
 
 
 lemma [simp]: "cs \<subseteq> ((ctype c) :: nat set)"

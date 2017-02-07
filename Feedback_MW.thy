@@ -173,9 +173,7 @@ by(simp add: spfComp_dom_I)
 lemma [simp]: "spfRan\<cdot>(spfcomp addC append0C) = {c2, c3}"
 by(simp add: spfComp_ran_Oc)
 
-(* prerequirements for final lemma *)
-
-(* final lemma *)
+(* sum1 definition *)
 
 definition sum1 :: "nat SPF" where
 "sum1 \<equiv> hide (addC \<otimes>  append0C) {c2}"
@@ -185,13 +183,69 @@ apply(simp add: sum1_def)
 apply(subst hideSbRestrictCh)
 by(simp_all add: assms)
 
-lemma sumEq: assumes "sbDom\<cdot>sb = I addC append0C" shows "(sum1 \<rightleftharpoons> sb) . c3 = sum4\<cdot>(sb . c1)"
-apply(subst sum1EqCh, simp add: assms)
+(* prerequirements test lemma *)
+
+definition teststream :: "nat stream" where
+"teststream \<equiv> ((\<up>1) \<bullet> (\<up>2) \<bullet> (\<up>3))"
+
+lemma [simp]: "4 = Suc (Suc (Suc (Suc 0)))"
+by simp
+
+lemma [simp]: "5 = Suc (Suc (Suc (Suc (Suc 0))))"
+by simp
+
+lemma [simp]: "6 = Suc (Suc (Suc (Suc (Suc (Suc 0)))))"
+by simp
+
+(* test lemma *)
+(*
+lemma addSbLeastDom: "sbDom\<cdot>(sbLeast {c1, c2, c3}) \<inter> {c1, c2} = {c1, c2}"
+by simp
+
+lemma addSbLeast: "([c3 \<mapsto> add\<cdot>(((sbLeast {c1, c2, c3})\<bar>{c1, c2}) . c1)\<cdot>(((sbLeast {c1, c2, c3})\<bar>{c1, c2}) . c2)]\<Omega>) = ([c3 \<mapsto> \<epsilon>]\<Omega>)"
+by simp*)
+(*
+lemma [simp]: "cont (\<Lambda> z. ([c1 \<mapsto> ((\<up>1) \<bullet> (\<up>2) \<bullet> (\<up>3))]\<Omega>) \<uplus> (addC\<rightleftharpoons>z\<bar>{c1, c2}) \<uplus> (append0C\<rightleftharpoons>z\<bar>{c3}))"
+sorry*)
+
+lemma [simp]: "cont (Rep_cfun (\<Lambda> z. ([c1 \<mapsto> teststream]\<Omega>) \<uplus> (addC\<rightleftharpoons>(z\<bar>{c1, c2})) \<uplus> (append0C\<rightleftharpoons>(z\<bar>{c3}))))"
 sorry
+
+lemma Iterate0_H2_test: "((iterate (Suc 0)\<cdot>(ParComp_MW.spfCompHelp2 addC append0C ([c1 \<mapsto> ((\<up>1) \<bullet> (\<up>2) \<bullet> (\<up>3))]\<Omega>)))
+                         \<cdot>(sbLeast {c1, c2, c3})) = ([c1 \<mapsto> ((\<up>1) \<bullet> (\<up>2) \<bullet> (\<up>3))]\<Omega>) \<uplus> ([c2 \<mapsto> (\<up>0)]\<Omega>) \<uplus> ([c3 \<mapsto> \<epsilon>]\<Omega>)"
+apply(simp add: spfCompHelp2_def)
+apply(simp add: add_rep_eqC append0_rep_eqC)
+sorry
+
+lemma Iterate1_H2_test: "((iterate (Suc (Suc 0))\<cdot>(ParComp_MW.spfCompHelp2 addC append0C ([c1 \<mapsto> ((\<up>1) \<bullet> (\<up>2) \<bullet> (\<up>3))]\<Omega>)))
+                         \<cdot>(sbLeast {c1, c2, c3})) = ([c1 \<mapsto> ((\<up>1) \<bullet> (\<up>2) \<bullet> (\<up>3))]\<Omega>) \<uplus> ([c2 \<mapsto> \<epsilon>]\<Omega>) \<uplus> ([c3 \<mapsto> \<epsilon>]\<Omega>)"
+apply(subst iterate_Suc)
+apply(subst Iterate0_H2_test)
+apply(simp add: spfCompHelp2_def)
+apply(simp add: add_rep_eqC append0_rep_eqC)
+sorry
+
+(*
+lemma lub_H2_test: "(\<Squnion>i. (iterate i\<cdot>(ParComp_MW.spfCompHelp2 addC append0C ([c1 \<mapsto> ((\<up>1) \<bullet> (\<up>2) \<bullet> (\<up>3))]\<Omega>)))\<cdot>(sbLeast {c1, c2, c3}))
+                  = (([c1 \<mapsto> ((\<up>1) \<bullet> (\<up>2) \<bullet> (\<up>3))]\<Omega>) \<uplus> ([c2 \<mapsto> ((\<up>0) \<bullet> (\<up>1) \<bullet> (\<up>3) \<bullet> (\<up>6))]\<Omega>) \<uplus> ([c3 \<mapsto> ((\<up>1) \<bullet> (\<up>3) \<bullet> (\<up>6))]\<Omega>)) "
+sorry
+*)
 
 lemma test: "sum1\<rightleftharpoons>([c1\<mapsto><[1,2,3]>]\<Omega>).c3 = <[1,3,6]>"
 apply(simp add: sum1EqCh)
-apply(simp add: spfcomp_def)
+apply(subst ParComp_MW.spfcomp_tospfH2)
+apply(subst spfcomp_repAbs, simp_all)
+sorry
+(* by(simp add: lub_H2_test) *)
+
+(* prerequirements for final lemma *)
+
+
+
+(* final lemma *)
+
+lemma sumEq: assumes "sbDom\<cdot>sb = I addC append0C" shows "(sum1 \<rightleftharpoons> sb) . c3 = sum4\<cdot>(sb . c1)"
+apply(subst sum1EqCh, simp add: assms)
 sorry
 
 end
