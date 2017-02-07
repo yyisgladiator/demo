@@ -89,57 +89,85 @@ definition twoPowerStream_2 :: "nat stream" where
   section \<open>"sum5 TStream_def"\<close>
 (* ----------------------------------------------------------------------- *)
 (*
+tsum s = help s 0
+
+help p \<euro> = \<euro>
+help p T:xs = T : help p xs
+help p x:xs = (p+x) : help (p+x) xs
+
+
+primrec tsumhelper:: "nat \<Rightarrow> nat tstream \<Rightarrow> nat tstream" where
+"tsumhelper p \<bottom> = \<bottom>" |
+"tsumhelper p (tsConc((Abs_tstream(\<up>\<surd>))\<cdot>ts)) = tsConc (Abs_tstream (\<up>\<surd>)) \<cdot>(tsumhelper p ts)" |
+"tsumhelper (Suc p) ts = (Suc p + t)"
+
+
+definition tsum :: "nat tstream \<Rightarrow> nat tstream" where
+"tsum ts = tsumhelper 0 ts"
+*)
+
+
+(*
 definition tshd:: "'a tstream \<Rightarrow> 'a" where
 "tshd ts \<equiv> THE a. shd (tsAbs\<cdot>ts) = a"
 *)
+(*
 definition stwbl      :: "('a \<Rightarrow> bool) \<Rightarrow> 'a spfo" where
 "stwbl f \<equiv> fix\<cdot>(\<Lambda> h s. slookahd\<cdot>s\<cdot>(\<lambda> a. 
                           if (f a) then \<up>a \<bullet>  h\<cdot>(srt\<cdot>s) else \<up>a))"
 
 definition shddw      :: "('a \<Rightarrow> bool) \<Rightarrow> 'a stream \<Rightarrow> 'a" where
 "shddw f x \<equiv> shd (sdropwhile f\<cdot>x)"
-
-
+*)
+(*
 (* drops \<surd> and takes first Msg of the tstream *)
 definition tshd :: "'a tstream \<Rightarrow> 'a" where
 "tshd ts \<equiv> THE x. Msg x = shddw (\<lambda>a. a=\<surd>) (Rep_tstream ts)"
 
-(* drops \<surd> and first Msg of the tstream *)
-definition tsrt :: "'a tstream \<rightarrow> 'a tstream" where
-"tsrt \<equiv> \<Lambda> ts. Abs_tstream (srtdw(\<lambda>a. a=\<surd>)\<cdot>(Rep_tstream ts))"
 
+(* drops \<surd> and first Msg of the event stream *)
+definition esrt :: "'a event stream \<rightarrow> 'a event stream" where
+"esrt \<equiv> \<Lambda> ts. (srtdw(\<lambda>a. a=\<surd>)\<cdot>(ts))"
 
+(* takes as long as f holds, drops the rest*)
 definition stwdroprt :: "('a \<Rightarrow> bool) \<Rightarrow> 'a spfo" where
 "stwdroprt f \<equiv> fix\<cdot>(\<Lambda> h s. slookahd\<cdot>s\<cdot>(\<lambda> a. 
                           if (f a) then \<up>a \<bullet>  h\<cdot>(srt\<cdot>s) else \<bottom>))"
 
 
-(* takes first \<surd>s and drops rest of the tstream *)
-definition tsTickrt :: "'a tstream \<rightarrow> 'a tstream" where
-"tsTickrt \<equiv> \<Lambda> ts. Abs_tstream (stwdroprt (\<lambda>a. a=\<surd>)\<cdot>(Rep_tstream ts))"
-
-
+(* takes first \<surd>s and drops rest of the event stream *)
+definition esTickrt :: "'a event stream \<rightarrow> 'a event stream" where
+"esTickrt \<equiv> \<Lambda> ts. (stwdroprt (\<lambda>a. a=\<surd>)\<cdot>(ts))"
+*)
+(*
 primrec tsrtdrop:: "nat \<Rightarrow> 'a tstream \<rightarrow> 'a tstream" where
 "tsrtdrop 0 = ID"|
 "tsrtdrop (Suc n) = (\<Lambda> ts. tsrtdrop n\<cdot>(tsrt\<cdot> ts))"
 
+"sum4 \<equiv>  \<Lambda> x. (fix\<cdot>(\<Lambda> z. add\<cdot>x\<cdot>(\<up>0\<bullet>(z))))"*)
 
-primrec tsh :: "nat \<Rightarrow> nat tstream \<Rightarrow> nat \<Rightarrow> nat tstream" where
-"tsh 0 ts y = \<bottom>" | (*maximal one non-variable argument required, so \<epsilon>-case must be encoded in the line below.*)
-"tsh (Suc n) ts y = (if tsAbs\<cdot>ts=\<epsilon> then \<bottom> else  (tsTickrt\<cdot>ts) \<bullet> (Abs_tstream(\<up>(Msg(tshd ts + y )))) \<bullet> (tsh n (tsrt\<cdot> ts) (shd (tsAbs\<cdot>ts)+ y)))"
+primrec tsh :: "nat \<Rightarrow> nat \<Rightarrow> nat event stream \<Rightarrow> nat event stream" where
+"tsh 0 p ts  = \<epsilon>" | (*maximal one non-variable argument required, so \<epsilon>-case must be encoded in the line below.*)
+"tsh (Suc n) p ts = (if tsAbs\<cdot>(Abs_tstream ts) = \<epsilon> then ts 
+                     else (stakewhile (\<lambda>a. a=\<surd>)\<cdot> ts) \<bullet>(\<up>(Msg (p + shd (tsAbs\<cdot>(Abs_tstream ts))))) \<bullet>
+                     tsh n (p + shd (tsAbs\<cdot>(Abs_tstream ts))) (srt\<cdot>(sdropwhile (\<lambda>a. a=\<surd>)\<cdot> ts)))"
 
 
 definition tssum5_helper :: " nat \<Rightarrow> nat tstream \<rightarrow> nat tstream" where
-"tssum5_helper n \<equiv> \<Lambda> x. \<Squnion>i. tsh i x n"
+"tssum5_helper p \<equiv> \<Lambda> ts. (Abs_tstream (\<Squnion>i. tsh i p (Rep_tstream ts)))"
 
 
 definition tssum5:: "nat tstream \<rightarrow> nat tstream" where
-"tssum5 \<equiv> \<Lambda> x. tssum5_helper 0\<cdot>x"
+"tssum5 \<equiv> \<Lambda> ts. tssum5_helper 0\<cdot>ts"
 
 lemma tsAbs_bot[simp]: "tsAbs\<cdot>\<bottom> = \<epsilon>"
 by(simp add: tsAbs_def)
 
-lemma tsh_bot: "tsh n \<bottom> y = \<bottom>"
+lemma tsh_bot: "tsh n p \<epsilon> = \<epsilon>"
 by(induct_tac n,auto)
+
+lemma tsh_tick: "tsh (Suc n) p ((\<up>\<surd>)\<bullet>as) = (\<up>\<surd>)\<bullet> tsh (Suc n) p as"
+apply auto
+sorry
 
 end
