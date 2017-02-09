@@ -180,6 +180,23 @@ apply(subst spfComp_I_domf1_eq, simp_all add: assms)
 apply(subst serCompHelp2Eq2)
 by(simp_all add: assms)
 
-(* general lemmas for spf_well *)
+(* general lemmas for cont and spf_well *)
+
+lemma spfmult_mono: assumes "monofun f" shows "monofun (\<lambda> sb. (sbDom\<cdot>sb = cs) \<leadsto> f(sb))"
+by (simp add: assms)
+
+lemma spfmult_cont: assumes "cont f" shows "cont (\<lambda> sb. (sbDom\<cdot>sb = cs) \<leadsto> f(sb))"
+by (simp add: assms)
+
+lemma sb_cont: assumes "cont f" shows "cont (\<lambda>sb.  [sb2 \<mapsto> f(sb)]\<Omega>)"
+apply(simp add: cont_def)
+sorry
+
+(* proof of cont addSPF gets reduced to this *)
+lemma addSPF_cont_test: "cont (\<lambda> sb. (sbDom\<cdot>sb = {(fst cs), (fst (snd cs))}) \<leadsto> ([(snd (snd cs))\<mapsto>add\<cdot>(sb . (fst cs))\<cdot>(sb . (fst (snd cs)))]\<Omega>))"
+apply(subst spfmult_cont)
+apply(simp_all)
+apply(subst sb_cont)
+by simp_all
 
 end

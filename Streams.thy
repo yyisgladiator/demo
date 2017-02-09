@@ -3540,6 +3540,8 @@ lemma add2smap: "add\<cdot>(\<up>x\<infinity>)\<cdot>ys = smap (\<lambda>z. z+x)
    apply auto[1]
   by (metis add_slen_sinf lnat.con_rews lnzero_def lscons_conv slen_empty_eq slen_scons slen_sinftimes snth_add sup'_def)
 
+lemma addtest: "add\<cdot>(\<up>1\<infinity>)\<cdot>(\<up>2\<infinity>) = (\<up>3\<infinity>)"
+by (metis Suc_eq_plus1_left add_unfold numeral_2_eq_2 numeral_3_eq_3 s2sinftimes sinftimes_unfold)
 
 end
 

@@ -60,7 +60,7 @@ proof -
     by force
 qed
 
-lemma spfmult_cont[simp]: "cont 
+lemma spfmult_cont: "cont 
                            (\<lambda> sb. (sbDom\<cdot>sb = {ch1, ch2}) \<leadsto> ([ch3 \<mapsto> mult\<cdot>(sb . ch1)\<cdot>(sb . ch2)]\<Omega>))"
   apply (rule spf_cont2cont)
     apply (rule spf_contlubI)
@@ -73,15 +73,20 @@ lemma spfmult_cont[simp]: "cont
    apply (simp add: monofun2spf_mono)
   by(simp add: domIff2, rule+)
 
+(* proof of cont mult gets reduced to *)
+lemma spfmult_cont2[simp]: "cont 
+                           (\<lambda> sb. (sbDom\<cdot>sb = {ch1, ch2}) \<leadsto> ([ch3 \<mapsto> mult\<cdot>(sb . ch1)\<cdot>(sb . ch2)]\<Omega>))"
+apply(subst spfmult_cont)
+by(simp)
 
 (* As we now proved that the add and mult component is continuous we can define some components *)
 lift_definition mult1 :: "nat SPF" is
 "\<Lambda> sb. (sbDom\<cdot>sb = {c1, c2}) \<leadsto> ([c5\<mapsto>mult\<cdot>(sb . c1)\<cdot>(sb . c2)]\<Omega>)"
-  by (auto simp add: spf_well_def domIff2 sbdom_rep_eq)
+  by (auto simp add: spf_well_def domIff2 sbdom_rep_eq spfmult_cont)
 
 lift_definition mult2 :: "nat SPF" is
 "\<Lambda> sb. (sbDom\<cdot>sb = {c3, c4}) \<leadsto> ([c6\<mapsto>mult\<cdot>(sb . c3)\<cdot>(sb . c4)]\<Omega>)"
-  by (auto simp add: spf_well_def domIff2 sbdom_rep_eq)
+  by (auto simp add: spf_well_def domIff2 sbdom_rep_eq spfmult_cont)
 
 definition addC :: "nat SPF" where
 "addC \<equiv> addSPF (c5, c6, c7)" 

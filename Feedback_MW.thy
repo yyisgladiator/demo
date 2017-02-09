@@ -185,7 +185,7 @@ by(simp_all add: assms)
 
 (* prerequirements test lemma *)
 
-(*
+
 definition teststream :: "nat stream" where
 "teststream \<equiv> ((\<up>1) \<bullet> (\<up>2) \<bullet> (\<up>3))"
 
@@ -197,7 +197,9 @@ by simp
 
 lemma [simp]: "6 = Suc (Suc (Suc (Suc (Suc (Suc 0)))))"
 by simp
-*)
+
+lemma numeral_7_eq_7[simp]: "7 = Suc (Suc (Suc (Suc (Suc (Suc (Suc 0))))))"
+by simp
 
 (* test lemma *)
 
@@ -214,6 +216,7 @@ apply(rule sb_eq)
 by(simp_all add: assms)
 
 lemma contAddC: "cont (\<lambda> z. (addC\<rightleftharpoons>(z\<bar>{c1, c2})))"
+apply(subst add_rep_eqC)
 sorry
 
 lemma spfappend0_cont2: "cont (\<lambda> sb. (sbDom\<cdot>(sb\<bar>{ch3}) = {ch3}) 
@@ -222,23 +225,21 @@ sorry
 
 lemma contAppend0: "cont (\<lambda> z. (append0C\<rightleftharpoons>(z\<bar>{c3})))"
 apply(subst append0_rep_eqC)
-apply(rule spfappend0_cont2)
-apply(simp add: spfappend0_cont)
 sorry
 
 lemma contAddCAppend0CUnion: "cont (\<lambda> z. sb2 \<uplus> (addC\<rightleftharpoons>(z\<bar>{c1, c2})) \<uplus> (append0C\<rightleftharpoons>(z\<bar>{c3})))"
 apply(subst cont2cont_APP)
 by(simp_all add: contAddC contAppend0)
 
-lemma Iterate1_H2_test: "((iterate (Suc 0)\<cdot>(SPF.spfCompHelp2 addC append0C ([c1 \<mapsto> ((\<up>1) \<bullet> (\<up>2) \<bullet> (\<up>3))]\<Omega>)))
-                         \<cdot>(sbLeast {c1, c2, c3})) = ([c1 \<mapsto> ((\<up>1) \<bullet> (\<up>2) \<bullet> (\<up>3))]\<Omega>) \<uplus> ([c2 \<mapsto> (\<up>0)]\<Omega>) \<uplus> ([c3 \<mapsto> \<epsilon>]\<Omega>)"
+lemma Iterate1_H2_test: "((iterate (Suc 0)\<cdot>(SPF.spfCompHelp2 addC append0C ([c1 \<mapsto> <[1,2,3]>]\<Omega>)))
+                         \<cdot>(sbLeast {c1, c2, c3})) = ([c1 \<mapsto> <[1,2,3]>]\<Omega>) \<uplus> ([c2 \<mapsto> <[0]>]\<Omega>) \<uplus> ([c3 \<mapsto> \<epsilon>]\<Omega>)"
 apply(simp add: SPF.spfCompHelp2_def contAddCAppend0CUnion)
 apply(simp add: add_rep_eqC append0_rep_eqC append0_def)
 apply(subst sbunion_commutative2)
 by(auto simp add: sbdom_rep_eq)
 
-lemma Iterate2_H2_test: "((iterate (Suc (Suc 0))\<cdot>(SPF.spfCompHelp2 addC append0C ([c1 \<mapsto> ((\<up>1) \<bullet> (\<up>2) \<bullet> (\<up>3))]\<Omega>)))
-                         \<cdot>(sbLeast {c1, c2, c3})) = ([c1 \<mapsto> ((\<up>1) \<bullet> (\<up>2) \<bullet> (\<up>3))]\<Omega>) \<uplus> ([c2 \<mapsto> (\<up>0)]\<Omega>) \<uplus> ([c3 \<mapsto> (\<up>1)]\<Omega>)"
+lemma Iterate2_H2_test: "((iterate (Suc (Suc 0))\<cdot>(SPF.spfCompHelp2 addC append0C ([c1 \<mapsto> <[1,2,3]>]\<Omega>)))
+                         \<cdot>(sbLeast {c1, c2, c3})) = ([c1 \<mapsto> <[1,2,3]>]\<Omega>) \<uplus> ([c2 \<mapsto> <[0]>]\<Omega>) \<uplus> ([c3 \<mapsto> <[1]>]\<Omega>)"
 apply(subst iterate_Suc)
 apply(subst Iterate1_H2_test)
 apply(simp add: SPF.spfCompHelp2_def contAddCAppend0CUnion)
@@ -249,8 +250,8 @@ apply(simp add: add_def)
 apply(subst sbunion_commutative2)
 by(auto simp add: sbdom_rep_eq)
 
-lemma Iterate3_H2_test: "((iterate (Suc (Suc (Suc 0)))\<cdot>(SPF.spfCompHelp2 addC append0C ([c1 \<mapsto> ((\<up>1) \<bullet> (\<up>2) \<bullet> (\<up>3))]\<Omega>)))
-                         \<cdot>(sbLeast {c1, c2, c3})) = ([c1 \<mapsto> ((\<up>1) \<bullet> (\<up>2) \<bullet> (\<up>3))]\<Omega>) \<uplus> ([c2 \<mapsto> ((\<up>0) \<bullet> (\<up>1))]\<Omega>) \<uplus> ([c3 \<mapsto> (\<up>1)]\<Omega>)"
+lemma Iterate3_H2_test: "((iterate (Suc (Suc (Suc 0)))\<cdot>(SPF.spfCompHelp2 addC append0C ([c1 \<mapsto> <[1,2,3]>]\<Omega>)))
+                         \<cdot>(sbLeast {c1, c2, c3})) = ([c1 \<mapsto> <[1,2,3]>]\<Omega>) \<uplus> ([c2 \<mapsto> <[0,1]>]\<Omega>) \<uplus> ([c3 \<mapsto> <[1]>]\<Omega>)"
 apply(subst iterate_Suc)
 apply(subst Iterate2_H2_test)
 apply(simp add: SPF.spfCompHelp2_def contAddCAppend0CUnion)
@@ -261,8 +262,8 @@ apply(simp add: add_def)
 apply(subst sbunion_commutative2)
 by(auto simp add: sbdom_rep_eq)
 
-lemma Iterate4_H2_test: "((iterate (Suc (Suc (Suc (Suc 0))))\<cdot>(SPF.spfCompHelp2 addC append0C ([c1 \<mapsto> ((\<up>1) \<bullet> (\<up>2) \<bullet> (\<up>3))]\<Omega>)))
-                         \<cdot>(sbLeast {c1, c2, c3})) = ([c1 \<mapsto> ((\<up>1) \<bullet> (\<up>2) \<bullet> (\<up>3))]\<Omega>) \<uplus> ([c2 \<mapsto> ((\<up>0) \<bullet> (\<up>1))]\<Omega>) \<uplus> ([c3 \<mapsto> ((\<up>1) \<bullet> (\<up>3))]\<Omega>)"
+lemma Iterate4_H2_test: "((iterate (Suc (Suc (Suc (Suc 0))))\<cdot>(SPF.spfCompHelp2 addC append0C ([c1 \<mapsto> <[1,2,3]>]\<Omega>)))
+                         \<cdot>(sbLeast {c1, c2, c3})) = ([c1 \<mapsto> <[1,2,3]>]\<Omega>) \<uplus> ([c2 \<mapsto> <[0,1]>]\<Omega>) \<uplus> ([c3 \<mapsto> <[1,3]>]\<Omega>)"
 apply(subst iterate_Suc)
 apply(subst Iterate3_H2_test)
 apply(simp add: SPF.spfCompHelp2_def contAddCAppend0CUnion)
@@ -273,18 +274,92 @@ apply(simp add: add_def)
 apply(subst sbunion_commutative2)
 by(auto simp add: sbdom_rep_eq)
 
-(*
-lemma lub_H2_test: "(\<Squnion>i. (iterate i\<cdot>(ParComp_MW.spfCompHelp2 addC append0C ([c1 \<mapsto> ((\<up>1) \<bullet> (\<up>2) \<bullet> (\<up>3))]\<Omega>)))\<cdot>(sbLeast {c1, c2, c3}))
-                  = (([c1 \<mapsto> ((\<up>1) \<bullet> (\<up>2) \<bullet> (\<up>3))]\<Omega>) \<uplus> ([c2 \<mapsto> ((\<up>0) \<bullet> (\<up>1) \<bullet> (\<up>3) \<bullet> (\<up>6))]\<Omega>) \<uplus> ([c3 \<mapsto> ((\<up>1) \<bullet> (\<up>3) \<bullet> (\<up>6))]\<Omega>)) "
+lemma Iterate5_H2_test: "((iterate (Suc (Suc (Suc (Suc (Suc 0)))))\<cdot>(SPF.spfCompHelp2 addC append0C ([c1 \<mapsto> <[1,2,3]>]\<Omega>)))
+                         \<cdot>(sbLeast {c1, c2, c3})) = ([c1 \<mapsto> <[1,2,3]>]\<Omega>) \<uplus> ([c2 \<mapsto> <[0,1,3]>]\<Omega>) \<uplus> ([c3 \<mapsto> <[1,3]>]\<Omega>)"
+apply(subst iterate_Suc)
+apply(subst Iterate4_H2_test)
+apply(simp add: SPF.spfCompHelp2_def contAddCAppend0CUnion)
+apply(subst unionRestrict2, auto simp add: sbdom_rep_eq)
+apply(simp add: add_rep_eqC append0_rep_eqC append0_def)
+apply(auto simp add: sbdom_rep_eq)
+apply(simp add: add_def)
+apply(subst sbunion_commutative2)
+by(auto simp add: sbdom_rep_eq)
+
+lemma Iterate6_H2_test: "((iterate (Suc (Suc (Suc (Suc (Suc (Suc 0))))))\<cdot>(SPF.spfCompHelp2 addC append0C ([c1 \<mapsto> <[1,2,3]>]\<Omega>)))
+                         \<cdot>(sbLeast {c1, c2, c3})) = ([c1 \<mapsto> <[1,2,3]>]\<Omega>) \<uplus> ([c2 \<mapsto> <[0,1,3]>]\<Omega>) \<uplus> ([c3 \<mapsto> <[1,3,6]>]\<Omega>)"
+apply(subst iterate_Suc)
+apply(subst Iterate5_H2_test)
+apply(simp add: SPF.spfCompHelp2_def contAddCAppend0CUnion)
+apply(subst unionRestrict2, auto simp add: sbdom_rep_eq)
+apply(simp add: add_rep_eqC append0_rep_eqC append0_def)
+apply(auto simp add: sbdom_rep_eq)
+apply(simp add: add_def)
+apply(subst sbunion_commutative2)
+by(auto simp add: sbdom_rep_eq)
+
+lemma Iterate7_H2_test: "((iterate (Suc (Suc (Suc (Suc (Suc (Suc (Suc 0)))))))\<cdot>(SPF.spfCompHelp2 addC append0C ([c1 \<mapsto> <[1,2,3]>]\<Omega>)))
+                         \<cdot>(sbLeast {c1, c2, c3})) = ([c1 \<mapsto> <[1,2,3]>]\<Omega>) \<uplus> ([c2 \<mapsto> <[0,1,3,6]>]\<Omega>) \<uplus> ([c3 \<mapsto> <[1,3,6]>]\<Omega>)"
+apply(subst iterate_Suc)
+apply(subst Iterate6_H2_test)
+apply(simp add: SPF.spfCompHelp2_def contAddCAppend0CUnion)
+apply(subst unionRestrict2, auto simp add: sbdom_rep_eq)
+apply(simp add: add_rep_eqC append0_rep_eqC append0_def)
+apply(auto simp add: sbdom_rep_eq)
+apply(simp add: add_def)
+apply(subst sbunion_commutative2)
+by(auto simp add: sbdom_rep_eq)
+
+lemma Iterate_H2_test_max: "(SPF.spfCompHelp2 addC append0C ([c1 \<mapsto> <[1,2,3]>]\<Omega>))\<cdot>(([c1 \<mapsto> <[1,2,3]>]\<Omega>) \<uplus> ([c2 \<mapsto> <[0,1,3,6]>]\<Omega>) \<uplus> ([c3 \<mapsto> <[1,3,6]>]\<Omega>))
+                      = ([c1 \<mapsto> <[1,2,3]>]\<Omega>) \<uplus> ([c2 \<mapsto> <[0,1,3,6]>]\<Omega>) \<uplus> ([c3 \<mapsto> <[1,3,6]>]\<Omega>)"
+apply(simp add: SPF.spfCompHelp2_def contAddCAppend0CUnion)
+apply(subst unionRestrict2, auto simp add: sbdom_rep_eq)
+apply(simp add: add_rep_eqC append0_rep_eqC append0_def)
+apply(auto simp add: sbdom_rep_eq)
+apply(simp add: add_def)
+apply(subst sbunion_commutative2)
+by(auto simp add: sbdom_rep_eq)
+
+lemma addAppend_H2_chain:  "chain (\<lambda>i. iterate i\<cdot>(SPF.spfCompHelp2 addC append0C ([c1 \<mapsto> <[1,2,3]>]\<Omega>))\<cdot>(sbLeast {c1, c2, c3}))"
+apply(rule sbIterate_chain)
+by (auto)
+
+lemma Iterate_max_H2_test: "max_in_chain 7 (\<lambda>i. iterate i\<cdot>(SPF.spfCompHelp2 addC append0C ([c1 \<mapsto> <[1,2,3]>]\<Omega>))
+                         \<cdot>(sbLeast {c1, c2, c3}))"
+apply(rule max_in_chainI, subst numeral_7_eq_7)
+apply(subst Iterate7_H2_test)
+apply(simp add: Iterate7_H2_test Iterate_H2_test_max)
 sorry
-*)
+
+lemma lub_H2_test1: "(\<Squnion>i. (iterate i\<cdot>(SPF.spfCompHelp2 addC append0C ([c1 \<mapsto> <[1,2,3]>]\<Omega>)))\<cdot>(sbLeast {c1, c2, c3}))
+                  = ((iterate (Suc (Suc (Suc (Suc (Suc (Suc (Suc 0)))))))\<cdot>(SPF.spfCompHelp2 addC append0C ([c1 \<mapsto> <[1,2,3]>]\<Omega>)))\<cdot>(sbLeast {c1, c2, c3})) "
+using Iterate_max_H2_test addAppend_H2_chain maxinch_is_thelub by fastforce
+
+lemma lub_H2_test2: "(\<Squnion>i. (iterate i\<cdot>(SPF.spfCompHelp2 addC append0C ([c1 \<mapsto> <[1,2,3]>]\<Omega>)))\<cdot>(sbLeast {c1, c2, c3}))
+                  = (([c1 \<mapsto> <[1,2,3]>]\<Omega>) \<uplus> ([c2 \<mapsto> <[0,1,3,6]>]\<Omega>) \<uplus> ([c3 \<mapsto> <[1,3,6]>]\<Omega>)) "
+using Iterate7_H2_test lub_H2_test1 by auto
+
+lemma lub_H2_test_getCh: "(\<Squnion>i. iterate i\<cdot>(SPF.spfCompHelp2 addC append0C ([c1 \<mapsto> <[1,2,3]>]\<Omega>))\<cdot>(sbLeast {c1, c2, c3})) . c3
+                  = <[1,3,6]>"
+apply(subst lub_H2_test2)
+apply(subst sbunion_getchR)
+by(auto simp add: sbdom_rep_eq)
+
+(* needs cont and spf_well of spfcomp *)
+lemma spfcomp_RepAbs: assumes "spfComp_well f1 f2" shows
+ "Rep_CSPF (Abs_CSPF (\<lambda>x. (sbDom\<cdot>x = I f1 f2)\<leadsto>(\<Squnion>i. iterate i\<cdot>(SPF.spfCompHelp2 f1 f2 x)\<cdot>(sbLeast (C f1 f2)))\<bar>Oc f1 f2))
+            = (\<lambda>x. (sbDom\<cdot>x = I f1 f2)\<leadsto>(\<Squnion>i. iterate i\<cdot>(SPF.spfCompHelp2 f1 f2 x)\<cdot>(sbLeast (C f1 f2)))\<bar>Oc f1 f2)"
+sorry
+
+lemma sfa: "\<up>(Suc 0) \<bullet> \<up>2 \<bullet> \<up>(Suc (Suc (Suc 0))) = <[1,2,3]>"
+by auto
 
 lemma test: "sum1\<rightleftharpoons>([c1\<mapsto><[1,2,3]>]\<Omega>).c3 = <[1,3,6]>"
 apply(simp add: sum1EqCh)
-apply(subst ParComp_MW.spfcomp_tospfH2)
-apply(subst spfcomp_repAbs, simp_all)
-sorry
-(* by(simp add: lub_H2_test) *)
+apply(subst SPF.spfcomp_tospfH2)
+apply(subst spfcomp_RepAbs, simp_all)
+apply(subst sfa, subst lub_H2_test_getCh)
+by auto
 
 (* prerequirements for final lemma *)
 
