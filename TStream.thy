@@ -1499,20 +1499,22 @@ by simp
 
 *)
 
-(* ToDo Dennis sscanl
+(* ToDo Dennis sscanl 
 
 (* Takes a nat indicating the number of elements to scan, a reducing function, an initial initial element,
    and an input event stream. Returns a event  stream consisting of the partial reductions of the input event  stream. *)
-primrec TSSCANL :: "nat \<Rightarrow> ('o event  \<Rightarrow> 'i event \<Rightarrow> 'o event) \<Rightarrow> 'o event \<Rightarrow> 'i event  stream \<rightarrow> 'o event stream" where
-  TSSCANL_zero_def: "(TSSCANL 0 f q)\<cdot>s = \<epsilon>" |
-  "(TSSCANL (Suc n) f q)\<cdot>s = (if s=\<epsilon> then \<epsilon> 
-                           else \<up>(f q (shd s)) \<bullet> ((TSSCANL n f (f q (shd s)))\<cdot>(srt\<cdot>s) )     )"
+primrec TSSCANL :: "nat \<Rightarrow> ('o \<Rightarrow> 'i  \<Rightarrow> 'o) \<Rightarrow> 'o \<Rightarrow> 'i event  stream \<rightarrow> 'o event stream" where
+"(TSSCANL 0 f q)\<cdot>s = \<epsilon>" |
+"(TSSCANL (Suc n) f q)\<cdot>s = (if s=\<epsilon> then \<epsilon> 
+                           else (if (shd s = \<surd>) then (\<up>\<surd> \<bullet> (TSSCANL n f q)\<cdot>(srt\<cdot>s)) 
+                                 else \<up>(Msg (f q (THE m. Msg m = shd s))) 
+                                      \<bullet> ((TSSCANL n f (f q (THE m. Msg m = shd s)))\<cdot>(srt\<cdot>s))))"
 
 text {* @{term sscanl}: Apply a function elementwise to the input tstream.
   Behaves like @{text "map"}, but also takes the previously generated
   output element as additional input to the function.
   For the first computation, an initial value is provided. *}
-definition tsscanl     :: "('o event \<Rightarrow> 'i event  \<Rightarrow> 'o event) \<Rightarrow> 'o event \<Rightarrow> 'i tstream \<rightarrow> 'o tstream" where
+definition tsscanl     :: "('o  \<Rightarrow> 'i   \<Rightarrow> 'o ) \<Rightarrow> 'o  \<Rightarrow> 'i tstream \<rightarrow> 'o tstream" where
 "tsscanl f q \<equiv> \<Lambda> s. espf2tspf (\<Squnion>i. TSSCANL i f q) s"
 
 *)
