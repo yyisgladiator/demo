@@ -182,6 +182,32 @@ by(simp_all add: assms)
 
 (* general lemmas for cont and spf_well *)
 
+lemma conthelper: assumes "cont (Rep_CSPF f)" and "spfDom\<cdot>f = cs" shows "cont (\<lambda> z. (f\<rightleftharpoons>(z\<bar>cs)))"
+by (metis Rep_CSPF_def cont_Rep_cfun2 cont_compose op_the_cont)
+
+lemma conthelper2: assumes "cs = spfDom\<cdot>f1 \<union> spfDom\<cdot>f2"
+                       and "cont (Rep_CSPF f1)" 
+                       and "cont (Rep_CSPF f2)"
+  shows "cont (\<lambda> x. (sbDom\<cdot>x = cs)\<leadsto>((f1\<rightleftharpoons>(x\<bar>spfDom\<cdot>f1)) \<uplus> (f2\<rightleftharpoons>(x\<bar>spfDom\<cdot>f2))))"
+apply(subst if_then_cont, simp_all)
+apply(subst cont2cont_APP)
+apply (metis Rep_CSPF_def cont_Rep_cfun2 cont_compose conthelper)
+using conthelper apply auto[1]
+by auto
+
+lemma spfwellhelper: assumes "cs = spfDom\<cdot>f1 \<union> spfDom\<cdot>f2" 
+                         and "cont (Rep_CSPF f1)" 
+                         and "cont (Rep_CSPF f2)"
+  shows "spf_well (\<Lambda> x. (sbDom\<cdot>x = cs)\<leadsto>((f1\<rightleftharpoons>(x\<bar>spfDom\<cdot>f1)) \<uplus> (f2\<rightleftharpoons>(x\<bar>spfDom\<cdot>f2))))"
+apply(simp add: spf_well_def domIff2 sbdom_rep_eq)
+apply(subst Abs_cfun_inverse2)
+apply(subst conthelper2, simp_all add: assms)
+apply(subst Abs_cfun_inverse2)
+apply(subst conthelper2, simp_all add: assms)
+apply(subst Abs_cfun_inverse2)
+apply(subst conthelper2, simp_all add: assms)
+sorry
+
 lemma spfmult_mono: assumes "monofun f" shows "monofun (\<lambda> sb. (sbDom\<cdot>sb = cs) \<leadsto> f(sb))"
 by (simp add: assms)
 

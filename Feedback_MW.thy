@@ -136,7 +136,7 @@ lemma append0_rep_eqC: "Rep_CSPF append0C = (\<lambda> sb. (sbDom\<cdot>sb = {c3
   by (simp add: append0C.rep_eq Rep_CSPF_def)
 
 lemma [simp]: "spfDom\<cdot>addC = {c1,c2}"
-by (metis add_rep_eqC sbgetch_insert sbleast_sbdom spfdom2sbdom)
+  by (metis add_rep_eqC sbleast_sbdom spfdom2sbdom)
 
 lemma [simp]: "spfRan\<cdot>addC = {c3}"
   apply (simp add: spfran_least add_rep_eqC)
@@ -185,10 +185,6 @@ by(simp_all add: assms)
 
 (* prerequirements test lemma *)
 
-
-definition teststream :: "nat stream" where
-"teststream \<equiv> ((\<up>1) \<bullet> (\<up>2) \<bullet> (\<up>3))"
-
 lemma [simp]: "4 = Suc (Suc (Suc (Suc 0)))"
 by simp
 
@@ -216,16 +212,10 @@ apply(rule sb_eq)
 by(simp_all add: assms)
 
 lemma contAddC: "cont (\<lambda> z. (addC\<rightleftharpoons>(z\<bar>{c1, c2})))"
-apply(subst add_rep_eqC)
-sorry
-
-lemma spfappend0_cont2: "cont (\<lambda> sb. (sbDom\<cdot>(sb\<bar>{ch3}) = {ch3}) 
-                                \<leadsto> ([ch2\<mapsto>append0\<cdot>((sb\<bar>{ch3}) . ch3)]\<Omega>))" (is "cont ?F")
-sorry
+by(subst conthelper, simp_all)
 
 lemma contAppend0: "cont (\<lambda> z. (append0C\<rightleftharpoons>(z\<bar>{c3})))"
-apply(subst append0_rep_eqC)
-sorry
+by(subst conthelper, simp_all)
 
 lemma contAddCAppend0CUnion: "cont (\<lambda> z. sb2 \<uplus> (addC\<rightleftharpoons>(z\<bar>{c1, c2})) \<uplus> (append0C\<rightleftharpoons>(z\<bar>{c3})))"
 apply(subst cont2cont_APP)
