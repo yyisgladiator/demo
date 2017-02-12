@@ -963,7 +963,6 @@ apply auto
 apply (rule_tac x=s in scases)
 by auto
 
-
 lemma chain_h: "chain h"
 apply (rule chainI)
 apply (subst fun_below_iff)+
@@ -983,13 +982,11 @@ by (simp, rule monofun_cfun_arg, simp)
 
 lemma cont_lub_sum5_helper2:
   "\<forall>s y. stake n\<cdot> (h n y s) = h n y s "
-using contlub_h
 by(induct_tac n,auto)
 
 
 lemma sum5_helper_snth_stake_min:
   "snth n (stake m\<cdot> (h m p s)) = snth (min n m) (h m p s)"
-using contlub_h
 apply (induct_tac n,auto)
 using cont_lub_sum5_helper2 apply auto[1]
 by (metis cont_lub_sum5_helper2 min_def sdropostake snth_def stakeostake)
@@ -1134,8 +1131,12 @@ using sum3_snth
 by (metis Fin_leq_Suc_leq less_le not_less sscanl_snth sum3_def sum_nth_nth)
 
 
+(*sum4 cont
 
-
+lemma "cont (\<lambda>x. (fix\<cdot>(\<Lambda> z. add\<cdot>x\<cdot>(\<up>0\<bullet>(z)))))"
+using sum4_def sum52sum4 cont_lub_sum5_helper
+oops
+*)
 (*Für HK*)
 (*
 --TIMED: analog (try evtl. auch mit sscanl / gibts eine function timed-sscanl? wenn nicht dann definieren)
