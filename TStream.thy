@@ -5,7 +5,7 @@
     Description:  Definition of "Timed Streams"
 *)
 
-chapter {* Timed Streams *} 
+chapter {* Timed Streams *}                                                              
 
 theory TStream
 
@@ -1450,9 +1450,9 @@ lemma tspfairD: "\<lbrakk>tspfair f;#\<surd>s = \<infinity>\<rbrakk> \<Longright
 apply (simp add: tspfair_def)
 done
 
-(* tstmap *)
+(* ToDo Dennis smap 
 
-(* TODO Dennis 
+(* tstmap *)
 
 (* smap distributes over infinite repetition *)
 (* lemma smap2sinf[simp]: "smap f\<cdot>(x\<infinity>)= (smap f\<cdot>x)\<infinity>" *)
@@ -1467,6 +1467,7 @@ next
   case False thus ?thesis
   proof (cases "#(Rep_tstream x)=\<infinity>")
     case True thus ?thesis
+apply (simp add:)
       by simp
 (* by (metis False lnless_def sconc_fst_inf sfilter_conc2 sfilterl4 ts_well_def) *)
   next
@@ -1496,7 +1497,25 @@ apply (simp add: tstmap_insert)
 by simp
 (* IDEAS apply(subst tsinftimes_def [THEN fix_eq2]) *)
 
- ToDo Dennis *)
+*)
+
+(* ToDo Dennis sscanl
+
+(* Takes a nat indicating the number of elements to scan, a reducing function, an initial initial element,
+   and an input event stream. Returns a event  stream consisting of the partial reductions of the input event  stream. *)
+primrec TSSCANL :: "nat \<Rightarrow> ('o event  \<Rightarrow> 'i event \<Rightarrow> 'o event) \<Rightarrow> 'o event \<Rightarrow> 'i event  stream \<rightarrow> 'o event stream" where
+  TSSCANL_zero_def: "(TSSCANL 0 f q)\<cdot>s = \<epsilon>" |
+  "(TSSCANL (Suc n) f q)\<cdot>s = (if s=\<epsilon> then \<epsilon> 
+                           else \<up>(f q (shd s)) \<bullet> ((TSSCANL n f (f q (shd s)))\<cdot>(srt\<cdot>s) )     )"
+
+text {* @{term sscanl}: Apply a function elementwise to the input tstream.
+  Behaves like @{text "map"}, but also takes the previously generated
+  output element as additional input to the function.
+  For the first computation, an initial value is provided. *}
+definition tsscanl     :: "('o event \<Rightarrow> 'i event  \<Rightarrow> 'o event) \<Rightarrow> 'o event \<Rightarrow> 'i tstream \<rightarrow> 'o tstream" where
+"tsscanl f q \<equiv> \<Lambda> s. espf2tspf (\<Squnion>i. TSSCANL i f q) s"
+
+*)
 
 (*TODO
 
