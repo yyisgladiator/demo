@@ -147,18 +147,22 @@ primrec tsrtdrop:: "nat \<Rightarrow> 'a tstream \<rightarrow> 'a tstream" where
 "sum4 \<equiv>  \<Lambda> x. (fix\<cdot>(\<Lambda> z. add\<cdot>x\<cdot>(\<up>0\<bullet>(z))))"*)
 
 primrec tsh :: "nat \<Rightarrow> nat \<Rightarrow> nat event stream \<Rightarrow> nat event stream" where
-"tsh 0 p ts  = \<epsilon>" | (*maximal one non-variable argument required, so \<epsilon>-case must be encoded in the line below.*)
-"tsh (Suc n) p ts = (if tsAbs\<cdot>(Abs_tstream ts) = \<epsilon> then ts 
-                     else (stakewhile (\<lambda>a. a=\<surd>)\<cdot> ts) \<bullet>(\<up>(Msg (p + shd (tsAbs\<cdot>(Abs_tstream ts))))) \<bullet>
-                     tsh n (p + shd (tsAbs\<cdot>(Abs_tstream ts))) (srt\<cdot>(sdropwhile (\<lambda>a. a=\<surd>)\<cdot> ts)))"
+"tsh 0 p ts =  \<epsilon>" | (*maximal one non-variable argument required, so \<epsilon>-case must be encoded in the line below.*)
+"tsh (Suc n) p ts = (if ts = \<epsilon> then \<epsilon> 
+                        else(if shd ts= \<surd> then (\<up>\<surd> \<bullet> (tsh n p (srt\<cdot>ts)))
+                                else (\<up>(Msg (p + (THE m. Msg m = shd ts)))) \<bullet> (tsh n (p +(THE m. Msg m = shd ts)) (srt\<cdot> ts))))"
 
 
 definition tssum5_helper :: " nat \<Rightarrow> nat tstream \<rightarrow> nat tstream" where
-"tssum5_helper p \<equiv> \<Lambda> ts. (Abs_tstream (\<Squnion>i. tsh i p (Rep_tstream ts)))"
+"tssum5_helper p \<equiv> \<Lambda> ts. Abs_tstream (\<Squnion>i. tsh i p (Rep_tstream ts))"
 
 
 definition tssum5:: "nat tstream \<rightarrow> nat tstream" where
 "tssum5 \<equiv> \<Lambda> ts. tssum5_helper 0\<cdot>ts"
+
+
+
+(*Testing tssum5_def*)
 
 lemma tsAbs_bot[simp]: "tsAbs\<cdot>\<bottom> = \<epsilon>"
 by(simp add: tsAbs_def)
@@ -166,8 +170,107 @@ by(simp add: tsAbs_def)
 lemma tsh_bot: "tsh n p \<epsilon> = \<epsilon>"
 by(induct_tac n,auto)
 
-lemma tsh_tick: "tsh (Suc n) p ((\<up>\<surd>)\<bullet>as) = (\<up>\<surd>)\<bullet> tsh (Suc n) p as"
+lemma tswell2tswell: "Fin n < #ts \<and> ts_well ts \<Longrightarrow> ts_well (sdrop n\<cdot> ts)"
+by simp
+
+lemma AbsStsAbs_tick[simp]: "ts_well as \<Longrightarrow> tsAbs\<cdot> (Abs_tstream (\<up>(\<surd>)\<bullet>as)) = tsAbs\<cdot>(Abs_tstream as)"
+by(simp add: tsabs_insert)
+
+
+lemma tsh_tick[simp]: "ts_well as \<Longrightarrow> tsh (Suc n) p ((\<up>\<surd>)\<bullet>as) = (\<up>\<surd>)\<bullet> tsh n p as"
+by(simp add: tsh_def)
+
+lemma tsabs_abs_tick[simp]:"tsAbs\<cdot>(Abs_tstream (\<up>\<surd>)) = \<epsilon>"
+by(simp add: tsAbs_def)
+
+lemma tswellinftick: "ts_well ((\<up>\<surd>)\<infinity>)"
+by (simp add: ts_well_def)
+
+
+lemma tssum5_helpersinf[simp]: "tsh (Suc n) p (sinftimes(\<up>\<surd>)) = (\<up>\<surd>) \<bullet> tsh n p (sinftimes (\<up>\<surd>))"
+by auto
+
+lemma contlub_tsh:
+  "\<forall>s p. tsh i p s = tsh i p (stake i\<cdot>s)"
+apply (induct_tac i, auto)
+apply (rule_tac x=s in scases)
+apply auto
+apply (metis (no_types, lifting) inject_scons stake_Suc surj_scons)
+apply (metis shd1 stake_Suc surj_scons)
+apply (metis shd1 stake_Suc surj_scons)
+apply (metis shd1 stake_Suc surj_scons)
+apply (metis shd1 stake_Suc surj_scons)
+apply (metis lshd_updis stake_Suc stream.sel_rews(3) surj_scons)
+apply (rule_tac x=s in scases)
+by auto
+
+(*
+lemma chain_tsh: "chain tsh"
+apply (rule chainI)
+apply (subst fun_below_iff)+
+apply (induct_tac i, auto)
+apply (erule_tac x="x" in allE)
+apply (simp add: tsh_bot)
+by (smt monofun_cfun_arg)
+
+lemma tsum5_helper2sinf2[simp]: "(\<Squnion>i. tsh i p (\<up>\<surd>)) = \<up>\<surd>"
+apply(subst lub_def)
+sorry
+
+lemma tssum5_helper2sinf : "Abs_tstream (\<Squnion>i. tsh i p (sinftimes(\<up>\<surd>))) = Abs_tstream(sinftimes(\<up>\<surd>))"
+using tswellinftick
+sorry
+
+lemma tswell_test: "ts_well ((<[Msg 1,\<surd>,Msg 2,\<surd>,\<surd>,Msg 4]>) \<bullet> (sinftimes(\<up>\<surd>)))"
+by(simp add: ts_well_def)
+
+lemma tssum5_test:"tssum5\<cdot> (Abs_tstream ((<[Msg 1,\<surd>,Msg 2,\<surd>,\<surd>,Msg 4]>) \<bullet> (sinftimes(\<up>\<surd>))))
+ =(Abs_tstream ((<[Msg 1,\<surd>,Msg 3,\<surd>,\<surd>,Msg 7]>) \<bullet> (sinftimes(\<up>\<surd>))))"
+apply simp+
+sorry
+
+
+lemma chain_tsh: "chain tsh"
+apply (rule chainI)
+apply (subst fun_below_iff)+
+apply (induct_tac i, auto)
+apply (erule_tac x="x" in allE)
+sorry
+
+(* monotonicity of h *)
+lemma mono_tsh: 
+  "\<forall> x y q. x \<sqsubseteq> y \<longrightarrow> tsh n q x \<sqsubseteq> tsh n q y"
+apply (induct_tac n, auto)
+apply (drule lessD, erule disjE, simp)
+apply (erule exE)+
+apply (erule conjE)+
 apply auto
 sorry
 
+(* tssum5 is cont*)
+lemma cont_lub_tssum5_helper: "cont (\<lambda> ts. Abs_tstream (\<Squnion>i. tsh i p (Rep_tstream ts)))"
+sorry
+
+lemma [simp]: "tssum5_helper p\<cdot>\<bottom> = \<bottom>"
+apply (simp add: tssum5_helper_def)
+apply (subst beta_cfun, rule cont_lub_tssum5_helper)
+using tsh_bot by simp
+
+lemma tssum5_helper_scons:"a\<noteq>\<surd> \<and> ts_well ((\<up>a) \<bullet> s) \<Longrightarrow> tssum5_helper n \<cdot>(Abs_tstream((\<up>a) \<bullet> s)) =
+ Abs_tstream(\<up>(Msg (shd (tsAbs\<cdot>(Abs_tstream (\<up>a)))+n))) \<bullet> (tssum5_helper ((shd (tsAbs\<cdot>(Abs_tstream (\<up>a))))+n)\<cdot>(Abs_tstream s))"  
+apply (simp add: tssum5_helper_def)
+apply (subst beta_cfun, rule cont_lub_tssum5_helper)+
+apply (subst lub_range_shift [where j="Suc 0", THEN sym])
+apply (rule ch2ch_fun, rule ch2ch_fun)
+apply (rule chainI)
+apply (rule fun_belowD [of _ _ "f"])
+apply (smt chain_tsh fun_belowI po_class.chain_def)
+sorry
+
+lemma tssum5_one: "tssum5\<cdot> (Abs_tstream(\<up>a)) = Abs_tstream(\<up>a)"
+apply (simp add: tssum5_def tssum5_helper_def)
+using tsh_def
+apply (cases "a=\<surd>")
+sorry
+*)
 end
