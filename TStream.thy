@@ -1467,8 +1467,8 @@ next
   case False thus ?thesis
   proof (cases "#(Rep_tstream x)=\<infinity>")
     case True thus ?thesis
-apply (simp add:)
       by simp
+(* IDEAS tstreaml1 slen_smap) *)
 (* by (metis False lnless_def sconc_fst_inf sfilter_conc2 sfilterl4 ts_well_def) *)
   next
     case False 
@@ -1503,19 +1503,133 @@ by simp
 
 (* Takes a nat indicating the number of elements to scan, a reducing function, an initial initial element,
    and an input event stream. Returns a event  stream consisting of the partial reductions of the input event  stream. *)
-primrec TSSCANL :: "nat \<Rightarrow> ('o \<Rightarrow> 'i  \<Rightarrow> 'o) \<Rightarrow> 'o \<Rightarrow> 'i event  stream \<rightarrow> 'o event stream" where
-"(TSSCANL 0 f q)\<cdot>s = \<epsilon>" |
-"(TSSCANL (Suc n) f q)\<cdot>s = (if s=\<epsilon> then \<epsilon> 
-                           else (if (shd s = \<surd>) then (\<up>\<surd> \<bullet> (TSSCANL n f q)\<cdot>(srt\<cdot>s)) 
+primrec TSSCANL :: "nat \<Rightarrow> ('o \<Rightarrow> 'i  \<Rightarrow> 'o) \<Rightarrow> 'o \<Rightarrow> 'i event  stream \<Rightarrow> 'o event stream" where
+"TSSCANL 0 f q s = \<epsilon>" |
+"TSSCANL (Suc n) f q s = (if s=\<epsilon> then \<epsilon> 
+                           else (if (shd s = \<surd>) then (\<up>\<surd> \<bullet> TSSCANL n f q (srt\<cdot>s)) 
                                  else \<up>(Msg (f q (THE m. Msg m = shd s))) 
-                                      \<bullet> ((TSSCANL n f (f q (THE m. Msg m = shd s)))\<cdot>(srt\<cdot>s))))"
+                                      \<bullet> (TSSCANL n f (f q (THE m. Msg m = shd s)) (srt\<cdot>s))))"
 
 text {* @{term sscanl}: Apply a function elementwise to the input tstream.
   Behaves like @{text "map"}, but also takes the previously generated
   output element as additional input to the function.
   For the first computation, an initial value is provided. *}
 definition tsscanl     :: "('o  \<Rightarrow> 'i   \<Rightarrow> 'o ) \<Rightarrow> 'o  \<Rightarrow> 'i tstream \<rightarrow> 'o tstream" where
-"tsscanl f q \<equiv> \<Lambda> s. espf2tspf (\<Squnion>i. TSSCANL i f q) s"
+"tsscanl f q \<equiv> \<Lambda> s. Abs_tstream (\<Squnion>i. TSSCANL i f q (Rep_tstream s))"
+
+lemma TSSCANL_empty[simp]: "TSSCANL n f q \<epsilon> = \<epsilon>"
+by (induct_tac n, auto)
+
+text {* monotonicity of TSSCANL *}
+lemma mono_TSSCANL: 
+  "\<forall> x y q. x \<sqsubseteq> y \<longrightarrow> TSSCANL n f q x \<sqsubseteq> TSSCANL n f q y"
+by simp
+(*
+apply (induct_tac n, auto)
+apply (drule lessD, erule disjE, simp)
+apply (erule exE)+
+apply (erule conjE)+
+by (simp, rule monofun_cfun_arg, simp)
+*)
+
+text {* result of @{term "TSSCANL n"} only depends on first @{term n}
+  elements of input stream *}
+lemma contlub_TSSCANL:
+  "\<forall>f q s. TSSCANL n f q s = TSSCANL n f q (stake n\<cdot>s)"
+by simp
+(*
+apply (induct_tac n, auto)
+apply (rule_tac x=s in scases)
+apply auto
+apply (rule_tac x=s in scases)
+by auto
+*)
+
+text {* @{term TSSCANL} is a chain. This means that, for all fixed inputs,
+  @{term "TSSCANL i"} returns a prefix of @{term "TSSCANL (Suc i)"} *}
+lemma chain_TSSCANL: "chain TSSCANL"
+by simp
+(*
+apply (rule chainI)
+apply (subst fun_below_iff)+
+apply (induct_tac i, auto)
+apply (rule monofun_cfun_arg)
+apply (erule_tac x="x" in allE)
+apply (erule_tac x="x xa (shd xb)" in allE)
+by (erule_tac x="srt\<cdot>xb" in allE, auto)
+*)
+
+text {* @{term tsscanl} is a continuous function *}
+lemma cont_lub_TSSCANL: "cont (\<lambda>s. \<Squnion>i. TSSCANL i f q s)"
+apply (rule cont2cont_lub)
+apply (rule ch2ch_fun)
+apply (rule chainI)
+apply (rule fun_belowD [of _ _ "q"])
+apply (rule fun_belowD [of _ _ "f"])
+apply (rule chainE)
+apply (rule chain_TSSCANL)
+apply (rule pr_contI)
+apply (rule monofunI)
+apply (rule mono_TSSCANL [rule_format], assumption)
+apply (rule allI)
+apply (rule_tac x="i" in exI)
+by (rule contlub_TSSCANL [rule_format])
+
+lemma tsscanl_empty[simp]: "tsscanl f q\<cdot>\<bottom> = \<bottom>"
+by simp
+(*
+apply (simp add: tsscanl_def)
+apply (subst beta_cfun, rule cont_lub_TSSCANL)
+by (subst is_lub_const 
+  [THEN lub_eqI, of "\<epsilon>", THEN sym], simp)
+*)
+
+(* scanning \<up>a\<bullet>s using q as the initial element is equivalent to computing \<up>(f q a) and appending the
+   result of scanning s with (f q a) as the initial element *)
+(*
+lemma tsscanl_tscons[simp]: 
+  "tsscanl f q\<cdot>(\<up>a\<bullet>s) = \<up>(f q a) \<bullet> tsscanl f (f q a)\<cdot>s"  
+apply (simp add: tsscanl_def)
+apply (subst beta_cfun, rule cont_lub_TSSCANL)+
+apply (subst contlub_cfun_arg)
+apply (rule ch2ch_fun, rule ch2ch_fun)
+apply (rule chainI)
+apply (rule fun_belowD [of _ _ "f"])
+apply (rule chain_TSSCANL [THEN chainE])
+apply (subst lub_range_shift [where j="Suc 0", THEN sym])
+apply (rule ch2ch_fun, rule ch2ch_fun)
+apply (rule chainI)
+apply (rule fun_belowD [of _ _ "f"])
+by (rule chain_TSSCANL [THEN chainE], simp)
+*)
+
+(* scanning a singleton tstream is equivalent to computing \<up>(f a b) *)
+(*
+lemma [simp]: "tsscanl f a\<cdot>(\<up>b) = \<up>(f a b)"
+by (insert tsscanl_tscons [of f a b \<epsilon>], auto)
+*)
+
+(*
+text {* applying @{term tsscanl} never shortens the stream *}
+lemma fair_tsscanl: "#x \<le> #(tsscanl f a\<cdot>x)"
+apply (rule spec [where x = a])
+apply (rule ind [of _ x], auto)
+by (subst lnle_def, simp del: lnle_conv)
+*)
+
+(*
+(* dropping the first element of the result of sscanl is equivalent to beginning the scan with 
+   (f a (shd s)) as the initial element and proceeding with the rest of the input *)
+lemma sscanl_srt: "srt\<cdot>(sscanl f a\<cdot>s) = sscanl f (f a (shd s)) \<cdot>(srt\<cdot>s) "
+
+(* the n + 1'st element produced by sscanl is the result of mering the n + 1'st item of s with the n'th
+   element produced by sscanl *)
+lemma sscanl_snth:  "Fin (Suc n) < #s \<Longrightarrow> snth (Suc n) (sscanl f a\<cdot>s) = f (snth n (sscanl f a\<cdot>s)) (snth (Suc n) s)"
+
+(* the result of sscanl has the same length as the input stream x *)
+lemma fair_sscanl[simp]: "#(sscanl f a\<cdot>x) = #x"
+apply (rule spec [where x = a])
+*)
 
 *)
 
