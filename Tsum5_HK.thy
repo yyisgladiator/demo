@@ -169,12 +169,12 @@ apply (subst beta_cfun, rule cont_lub_tsum5_helper)+
 apply (subst contlub_cfun_arg)
 apply (rule ch2ch_fun, rule ch2ch_fun)
 apply (rule chainI)
-apply (rule fun_belowD [of _ _ "f"])
+apply (rule fun_belowD [of _ _ "a"])
 apply (smt chain_tsh fun_belowI po_class.chain_def)
 apply (subst lub_range_shift [where j="Suc 0", THEN sym])
 apply (rule ch2ch_fun, rule ch2ch_fun)
 apply (rule chainI)
-apply (rule fun_belowD [of _ _ "f"])
+apply (rule fun_belowD [of _ _ "a"])
 apply (smt chain_tsh fun_belowI po_class.chain_def)
 by (simp add: chain_tsh_helper)
 
@@ -184,12 +184,12 @@ apply (subst beta_cfun, rule cont_lub_tsum5_helper)+
 apply (subst contlub_cfun_arg)
 apply (rule ch2ch_fun, rule ch2ch_fun)
 apply (rule chainI)
-apply (rule fun_belowD [of _ _ "f"])
+apply (rule fun_belowD [of _ _ "n"])
 apply (smt chain_tsh fun_belowI po_class.chain_def)
 apply (subst lub_range_shift [where j="Suc 0", THEN sym])
 apply (rule ch2ch_fun, rule ch2ch_fun)
 apply (rule chainI)
-apply (rule fun_belowD [of _ _ "f"])
+apply (rule fun_belowD [of _ _ "n"])
 apply (smt chain_tsh fun_belowI po_class.chain_def)
 by (simp add: chain_tsh_helper)
 
@@ -206,27 +206,18 @@ by auto
 lemma tsum5_helper_shd [simp]: "a\<noteq>\<surd> \<Longrightarrow> shd (tsum5_helper n \<cdot>(\<up>a \<bullet> as)) = Msg ((THE n. Msg n = a)+n)"
 by simp
 
-
+lemma tsum5_unfold: "tsum5 ts = Abs_tstream (tsum5_helper 0\<cdot> (Rep_tstream ts))"
+by(simp add: tsum5_def)
 
 lemma tsum5_tswell:"ts_well s \<Longrightarrow> ts_well (tsum5_helper n\<cdot>s)"
 sorry
 
-lemma[simp]: "ts_well as \<Longrightarrow> tsAbs\<cdot>(Abs_tstream(tsum5_helper n \<cdot>(\<up>\<surd>\<bullet>as))) = tsAbs\<cdot>(Abs_tstream(tsum5_helper n\<cdot>as))"
+lemma tsabs_tsum5_helper_tick[simp]: "ts_well as \<Longrightarrow> tsAbs\<cdot>(Abs_tstream(tsum5_helper n \<cdot>(\<up>\<surd>\<bullet>as))) = tsAbs\<cdot>(Abs_tstream(tsum5_helper n\<cdot>as))"
 apply(simp)
 using AbsStsAbs_tick tsum5_tswell by blast
 
 lemma tsabstsum5_insert:"ts_well as \<Longrightarrow> (tsAbs\<cdot>(Abs_tstream(tsum5_helper n \<cdot>as))) =smap (\<lambda>e. case e of Msg m \<Rightarrow> m)\<cdot>({e. e \<noteq> \<surd>} \<ominus> (tsum5_helper n \<cdot>as))"
 by(simp add: tsabs_insert tsum5_tswell)
-
-
-
-(*
-lemma tsum5_helper_shd_tsAbs [simp]: "as\<noteq>\<epsilon> \<and> ts_well as\<Longrightarrow> shd (tsAbs\<cdot>(Abs_tstream(tsum5_helper n \<cdot>as))) = (shd (tsAbs\<cdot>(Abs_tstream as))+n)"
-apply(simp add: tsabstsum5_insert)
-apply(cases "shd as \<noteq> \<surd>")
-          
-sorry
-*)
       
 lemma [simp]: "a\<noteq>\<surd> \<Longrightarrow> tsum5_helper n\<cdot>(\<up>a) = (\<up>(Msg(n+(THE n. Msg n = a))))"
 by (metis lscons_conv sup'_def tsum5_empty tsum5_helper_scons)
@@ -262,6 +253,11 @@ apply (rule ind [of _ x], auto)
 using tsum5_helper_scons
 by (metis slen_scons tsum5_helper_scons_tick)
 
+
+
+
+
+
 lemma tsum5_helper_test_helper1: "tsum5_helper 0\<cdot>(<[Msg 1,\<surd>,Msg 2,\<surd>,\<surd>,Msg 4]>) =(<[Msg 1,\<surd>,Msg 3,\<surd>,\<surd>,Msg 7]>)"
 by simp
 
@@ -276,6 +272,18 @@ lemma tswell_test: "ts_well ((<[Msg 1,\<surd>,Msg 2,\<surd>,\<surd>,Msg 4]>) \<b
 by(simp add: ts_well_def)
 
 
+lemma tssum5_test:"tsum5 (Abs_tstream ((<[Msg 1,\<surd>,Msg 2,\<surd>,\<surd>,Msg 4]>) \<bullet> (sinftimes(\<up>\<surd>))))
+ =(Abs_tstream ((<[Msg 1,\<surd>,Msg 3,\<surd>,\<surd>,Msg 7]>) \<bullet> (sinftimes(\<up>\<surd>))))"
+apply(simp add: tsum5_unfold)
+apply (subst Rep_Abs)
+using tswell_test apply auto
+using tsum5_helper_test_helper2 by auto
+
+
+
+
+
+
 lemma slen_tsum5sum5[simp]:"ts_well s \<Longrightarrow> #(tsAbs\<cdot>(Abs_tstream (tsum5_helper 0\<cdot>s))) = #(tsAbs\<cdot>(Abs_tstream s))"
 apply(simp add: tsabs_insert)
 apply(subst Rep_Abs)
@@ -283,10 +291,64 @@ using tsum5_tswell apply blast
 using fair_tsum5_helper
 sorry
 
-lemma tsum5_sum5snth:"(Fin n < #(tsAbs\<cdot>(Abs_tstream s)) \<and> ts_well s) \<longrightarrow> snth n (tsAbs\<cdot>(Abs_tstream (tsum5_helper 0\<cdot>s))) = snth n (sum5 \<cdot>(tsAbs\<cdot>(Abs_tstream s)))"
-apply(induction n arbitrary: s)
-apply(simp add: tsabs_insert)
+lemma tsAbs_sconc[simp]:"\<forall> a::nat event. a\<noteq>\<surd> \<and>ts_well as \<Longrightarrow> tsAbs\<cdot>(Abs_tstream((\<up>(Msg ((THE n. Msg n = a) + n)))\<bullet>as))
+                                                               = \<up>((THE n. Msg n = a) + n)\<bullet> tsAbs\<cdot>(Abs_tstream as)"
+by auto
+
+lemma tsAbs_tick[simp]: "shd (tsAbs\<cdot>((Abs_tstream(\<up>\<surd>))\<bullet>ts)) = shd (tsAbs\<cdot>ts)"
+by auto
+
+lemma tsum5_shd: "ts\<noteq>\<epsilon> \<and>ts_well ts \<Longrightarrow> shd (tsAbs\<cdot>(Abs_tstream(tsum5_helper 0\<cdot> ts))) = shd (tsAbs\<cdot>(Abs_tstream ts))"
+(*proof -
+  assume a1: "ts \<noteq> \<epsilon>"
+  assume a2: "ts_well ts"
+  {
+  assume a3: "ts \<noteq> (\<up>\<surd>)\<bullet>(srt\<cdot>ts)"
+  have f3: "(tsAbs\<cdot>(Abs_tstream(tsum5_helper 0\<cdot> ts))) = tsAbs\<cdot>(Abs_tstream(tsum5_helper 0 \<cdot> (srt\<cdot>ts)))"
+     apply(simp add: tsabs_insert)
+     apply(subst Rep_Abs)
+     using a2 tsum5_tswell apply blast
+    using a3 tsum5_helper_scons_tick sorry
+  }
+  {
+  assume a4: "shd ts\<noteq>\<surd>"
+  have f4: "(tsAbs\<cdot>(Abs_tstream(tsum5_helper 0\<cdot> ts))) = (\<up>(THE n. Msg n = shd ts))\<bullet>(tsAbs\<cdot>(Abs_tstream(tsum5_helper (THE n. Msg n = shd ts)\<cdot> (srt\<cdot>ts))))"
+  sorry
+  }*)
 sorry
+
+(*
+lemma tsabs_helper:"shd s=\<surd> \<and> ts_well s \<Longrightarrow>(tsAbs\<cdot>(Abs_tstream(tsum5_helper n \<cdot>s))) =(tsAbs\<cdot>(Abs_tstream(tsum5_helper n \<cdot>(srt\<cdot>s))))"
+by (metis stream.sel_rews(2) surj_scons ts_well_drop1 tsabs_tsum5_helper_tick)
+
+lemma tsabs_helper2:"shd s\<noteq>\<surd> \<and> ts_well s \<Longrightarrow>(tsAbs\<cdot>(Abs_tstream(tsum5_helper n \<cdot>s))) =\<up>(n+(THE n. Msg n = shd s))\<bullet>(tsAbs\<cdot>(Abs_tstream(tsum5_helper (n+(THE n. Msg n = shd s)) \<cdot>s)))"
+using tsum5_helper_scons
+sorry
+
+lemma tsabs_tsum5_helper_srt_tick: "shd s=\<surd> \<and> ts_well s\<Longrightarrow>srt\<cdot>(tsAbs\<cdot>(Abs_tstream(tsum5_helper n \<cdot>s))) = srt\<cdot>(tsAbs\<cdot>(Abs_tstream(tsum5_helper n\<cdot> (srt\<cdot>s))))"
+by (simp add: tsabs_helper)
+
+lemma tsabs_tsum5_helper_srt_notick: "shd s\<noteq>\<surd> \<and> ts_well s\<Longrightarrow>srt\<cdot>(tsAbs\<cdot>(Abs_tstream(tsum5_helper n \<cdot>s))) = (tsAbs\<cdot>(Abs_tstream(tsum5_helper ((THE n. Msg n = shd s) + n)\<cdot> (srt\<cdot>s))))"
+sorry
+*)
+lemma test2_tsum5_helper_helper: "Fin (Suc n)< #(tsAbs\<cdot>(Abs_tstream as)) \<Longrightarrow>
+                                    snth (Suc n) (tsAbs\<cdot>(Abs_tstream (tsum5_helper x \<cdot>as)))
+                                  = snth (Suc n) (tsAbs\<cdot>(Abs_tstream as)) + snth n (tsAbs\<cdot>(Abs_tstream (tsum5_helper x \<cdot>as)))"
+apply(induction n arbitrary: x as)
+sorry
+
+
+lemma tsum5_helper_snth:"Fin (Suc n) < #(tsAbs\<cdot>as) \<Longrightarrow> snth (Suc n) (tsAbs\<cdot>(tsum5 as)) = snth (Suc n) (tsAbs\<cdot>as) + snth n (tsAbs\<cdot>(tsum5 as))"
+apply(simp add: tsum5_unfold)
+using test2_tsum5_helper_helper
+using Abs_Rep by auto
+
+lemma tsum5_helper_sum5snth:"(Fin n < #(tsAbs\<cdot>(Abs_tstream s)) \<and> ts_well s) \<longrightarrow> snth n (tsAbs\<cdot>(Abs_tstream (tsum5_helper 0\<cdot>s))) = snth n (sum5 \<cdot>(tsAbs\<cdot>(Abs_tstream s)))"
+apply(induction n arbitrary: s)
+apply simp
+using test2_sum5_helper test2_tsum5_helper_helper tsum5_helper_snth
+apply (metis snth_shd sum4_snth0 sum52sum4 tsum5_empty tsum5_shd)
+by (metis Fin_leq_Suc_leq Suc_n_not_le_n less2nat_lemma less_le test2_sum5_helper test2_tsum5_helper_helper)
 
 
 lemma tsum5_helper2sum5: "ts_well s \<Longrightarrow> tsAbs\<cdot>(Abs_tstream (tsum5_helper 0\<cdot>s)) = sum5 \<cdot>(tsAbs\<cdot>(Abs_tstream s))"
@@ -294,32 +356,19 @@ apply(simp add: tsabs_insert)
 apply(simp add: tsum5_tswell)
 apply(rule snths_eq)
 apply (metis slen_tsum5sum5 sum5_slen tsabs_rep_eq tsum5_tswell)
-using tsum5_sum5snth
+using tsum5_helper_sum5snth
 by (metis slen_tsum5sum5 tsabs_rep_eq tsum5_tswell)
 
-(*
-lemma tsum5_helper_tick: "#as1<\<infinity> \<Longrightarrow> \<exists>x. tsum5_helper n \<cdot>(as1\<bullet> (\<up>\<surd>)\<bullet>as2) = (tsum5_helper n\<cdot>as1)\<bullet>(\<up>\<surd>)\<bullet>(tsum5_helper x\<cdot>as2)"
-*)
 
 thm tsum5_def
-
-
-lemma tsum5_unfold: "tsum5 ts = Abs_tstream (tsum5_helper 0\<cdot> (Rep_tstream ts))"
-by(simp add: tsum5_def)
 
 lemma tsum52sum5:"tsAbs\<cdot>(tsum5 ts) = sum5\<cdot>(tsAbs\<cdot> ts)"
 apply(simp add: tsum5_unfold)
 using tsum5_helper2sum5
 by (simp add: ts_well_Rep)
 
-(*
-lemma tssum5_test:"tsum5\<cdot> (Abs_tstream ((<[Msg 1,\<surd>,Msg 2,\<surd>,\<surd>,Msg 4]>) \<bullet> (sinftimes(\<up>\<surd>))))
- =(Abs_tstream ((<[Msg 1,\<surd>,Msg 3,\<surd>,\<surd>,Msg 7]>) \<bullet> (sinftimes(\<up>\<surd>))))"
-apply(simp add: tsum5_unfold)
-apply (subst Rep_Abs)
-using tswell_test apply auto
-using tsum5_helper_test_helper2 by auto
 
+(*
 lemma tsum5_foot_tick[simp]: "#as < \<infinity> \<Longrightarrow>tsum5_helper n \<cdot>(as\<bullet> (\<up>\<surd>)) = (tsum5_helper n\<cdot> as) \<bullet> (\<up>\<surd>)"
 sorry
 
