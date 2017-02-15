@@ -1450,7 +1450,7 @@ lemma tspfairD: "\<lbrakk>tspfair f;#\<surd>s = \<infinity>\<rbrakk> \<Longright
 apply (simp add: tspfair_def)
 done
 
-(* ToDo Dennis smap 
+(* ToDo Dennis smap
 
 (* tstmap *)
 
@@ -1496,7 +1496,6 @@ lemma tstmap2tsinf[simp]: "tstmap f\<cdot>(tsinftimes x)= tsinftimes (tstmap f\<
 apply (simp add: tstmap_insert)
 by simp
 (* IDEAS apply(subst tsinftimes_def [THEN fix_eq2]) *)
-
 *)
 
 (* ToDo Dennis sscanl 
@@ -1510,54 +1509,110 @@ primrec TSSCANL :: "nat \<Rightarrow> ('o \<Rightarrow> 'i  \<Rightarrow> 'o) \<
                                  else \<up>(Msg (f q (THE m. Msg m = shd s))) 
                                       \<bullet> (TSSCANL n f (f q (THE m. Msg m = shd s)) (srt\<cdot>s))))"
 
+definition tsscanl_h :: "('o \<Rightarrow> 'i \<Rightarrow> 'o) \<Rightarrow> 'o \<Rightarrow> 'i event  stream \<rightarrow> 'o event stream" where
+"tsscanl_h f q \<equiv> \<Lambda> s. \<Squnion>i. TSSCANL i f q s"
+
 text {* @{term sscanl}: Apply a function elementwise to the input tstream.
   Behaves like @{text "map"}, but also takes the previously generated
   output element as additional input to the function.
   For the first computation, an initial value is provided. *}
-definition tsscanl     :: "('o  \<Rightarrow> 'i   \<Rightarrow> 'o ) \<Rightarrow> 'o  \<Rightarrow> 'i tstream \<rightarrow> 'o tstream" where
-"tsscanl f q \<equiv> \<Lambda> s. Abs_tstream (\<Squnion>i. TSSCANL i f q (Rep_tstream s))"
+definition tsscanl     :: "('o  \<Rightarrow> 'i   \<Rightarrow> 'o ) \<Rightarrow> 'o  \<Rightarrow> 'i tstream \<Rightarrow> 'o tstream" where
+"tsscanl f q s \<equiv> Abs_tstream (tsscanl_h f q\<cdot>(Rep_tstream s))"
 
 lemma TSSCANL_empty[simp]: "TSSCANL n f q \<epsilon> = \<epsilon>"
 by (induct_tac n, auto)
 
+lemma mono_TSSCANL_h1: "x \<sqsubseteq> y \<and> x \<noteq> \<epsilon> \<Longrightarrow> shd x = shd y"
+using lessD by (fastforce)
+
 text {* monotonicity of TSSCANL *}
 lemma mono_TSSCANL: 
   "\<forall> x y q. x \<sqsubseteq> y \<longrightarrow> TSSCANL n f q x \<sqsubseteq> TSSCANL n f q y"
-by simp
-(*
 apply (induct_tac n, auto)
 apply (drule lessD, erule disjE, simp)
 apply (erule exE)+
 apply (erule conjE)+
-by (simp, rule monofun_cfun_arg, simp)
-*)
+apply (simp, rule monofun_cfun_arg, simp)
+using lessD apply (fastforce)
+using lessD apply (fastforce)
+proof -
+  fix n :: nat and f :: "('o \<Rightarrow> 'i  \<Rightarrow> 'o)" and q :: "'o" and x :: "'i event  stream" and  y :: "'i event  stream"
+  assume a1: "x \<sqsubseteq> y"
+  assume a2: "x \<noteq> \<epsilon>"
+  assume a3: "\<forall>x y. x \<sqsubseteq> y \<longrightarrow> (\<forall>q. TSSCANL n f q x \<sqsubseteq> TSSCANL n f q y)"
+  then show "\<up>(Msg (f q (THE m. Msg m = shd x))) \<bullet> TSSCANL n f (f q (THE m. Msg m = shd x)) (srt\<cdot>x) \<sqsubseteq>
+       \<up>(Msg (f q (THE m. Msg m = shd y))) \<bullet> TSSCANL n f (f q (THE m. Msg m = shd y)) (srt\<cdot>y)"
+    using a1 a2 by (simp add: mono_TSSCANL_h1 monofun_cfun)
+qed
 
 text {* result of @{term "TSSCANL n"} only depends on first @{term n}
   elements of input stream *}
 lemma contlub_TSSCANL:
   "\<forall>f q s. TSSCANL n f q s = TSSCANL n f q (stake n\<cdot>s)"
-by simp
-(*
 apply (induct_tac n, auto)
 apply (rule_tac x=s in scases)
-apply auto
+apply (auto)
+apply (metis (no_types, lifting) inject_scons stake_Suc surj_scons)
+apply (metis shd1 stake_Suc surj_scons)
+apply (metis shd1 stake_Suc surj_scons)
+apply (metis shd1 stake_Suc surj_scons)
+apply (metis shd1 stake_Suc surj_scons)
+apply (metis lshd_updis stake_Suc stream.sel_rews(3) surj_scons)
 apply (rule_tac x=s in scases)
-by auto
-*)
+by (auto)
+
+lemma chain_TSSCANL_h1: "s\<noteq>\<epsilon> \<and> shd s \<noteq> \<surd> \<Longrightarrow> TSSCANL (Suc n) f q s = \<up>(Msg (f q (THE m. Msg m = shd s))) \<bullet> (TSSCANL n f (f q (THE m. Msg m = shd s)) (srt\<cdot>s))"
+by (simp)
 
 text {* @{term TSSCANL} is a chain. This means that, for all fixed inputs,
   @{term "TSSCANL i"} returns a prefix of @{term "TSSCANL (Suc i)"} *}
 lemma chain_TSSCANL: "chain TSSCANL"
-by simp
-(*
 apply (rule chainI)
 apply (subst fun_below_iff)+
 apply (induct_tac i, auto)
-apply (rule monofun_cfun_arg)
 apply (erule_tac x="x" in allE)
-apply (erule_tac x="x xa (shd xb)" in allE)
-by (erule_tac x="srt\<cdot>xb" in allE, auto)
-*)
+apply (smt monofun_cfun_arg)
+apply (smt monofun_cfun_arg)
+proof -
+  fix n :: nat and x :: "('o \<Rightarrow> 'i  \<Rightarrow> 'o)" and xa :: "'o"and xb :: "'i event  stream"
+  assume a1: "shd (srt\<cdot>xb) \<noteq> \<surd>"
+  assume a2: "srt\<cdot>xb \<noteq> \<epsilon>"
+  assume a3: "shd xb = \<surd>"
+  assume a4: "xb \<noteq> \<epsilon>"
+  assume a5: "\<forall>x xa xb. TSSCANL n x xa xb \<sqsubseteq>
+                 (if xb = \<epsilon> then \<epsilon>
+                  else if shd xb = \<surd> then \<up>\<surd> \<bullet> TSSCANL n x xa (srt\<cdot>xb)
+                       else \<up>(Msg (x xa (THE m. Msg m = shd xb))) \<bullet> TSSCANL n x (x xa (THE m. Msg m = shd xb)) (srt\<cdot>xb))"
+  then have "TSSCANL n x xa xb \<sqsubseteq> TSSCANL (Suc n) x xa xb"
+  apply (simp add: a3 a4 a5)
+  by (simp)
+  then show "\<up>\<surd> \<bullet> TSSCANL n x xa (srt\<cdot>xb) \<sqsubseteq>
+       \<up>\<surd> \<bullet> \<up>(Msg (x xa (THE m. Msg m = shd (srt\<cdot>xb)))) \<bullet> TSSCANL n x (x xa (THE m. Msg m = shd (srt\<cdot>xb))) (srt\<cdot>(srt\<cdot>xb))"
+apply (simp add: mono_TSSCANL)
+  by simp
+(*  by (smt a1 a2 calculation chain_TSSCANL_h1 monofun_cfun_arg rev_below_trans)*)
+next
+  fix n :: nat and x :: "('o \<Rightarrow> 'i  \<Rightarrow> 'o)" and xa :: "'o"and xb :: "'i event  stream"
+  assume a1: "shd (srt\<cdot>xb) \<noteq> \<surd>"
+  assume a2: "srt\<cdot>xb \<noteq> \<epsilon>"
+  assume a3: "shd xb \<noteq> \<surd>"
+  assume a4: "\<forall>x xa xb. TSSCANL n x xa xb \<sqsubseteq>
+                 (if xb = \<epsilon> then \<epsilon>
+                  else if shd xb = \<surd> then \<up>\<surd> \<bullet> TSSCANL n x xa (srt\<cdot>xb)
+                       else \<up>(Msg (x xa (THE m. Msg m = shd xb))) \<bullet> TSSCANL n x (x xa (THE m. Msg m = shd xb)) (srt\<cdot>xb))"
+  then have "TSSCANL (Suc n) x xa (srt\<cdot>xb) \<sqsubseteq> \<up>(Msg (x xa (THE m. Msg m = shd (srt\<cdot>xb)))) 
+                                        \<bullet> TSSCANL n x (x xa (THE m. Msg m = shd (srt\<cdot>xb))) (srt\<cdot>(srt\<cdot>xb))"
+  by(simp add: chain_TSSCANL_h1 a1)
+  then show "\<up>(Msg (x xa (THE m. Msg m = shd xb))) \<bullet> TSSCANL n x (x xa (THE m. Msg m = shd xb)) (srt\<cdot>xb) \<sqsubseteq>
+       \<up>(Msg (x xa (THE m. Msg m =
+                           shd xb))) \<bullet> \<up>(Msg (x (x xa (THE m. Msg m = shd xb))
+                                               (THE m. Msg m =
+                                                       shd (srt\<cdot>xb)))) \<bullet> TSSCANL n x
+(x (x xa (THE m. Msg m = shd xb)) (THE m. Msg m = shd (srt\<cdot>xb))) (srt\<cdot>(srt\<cdot>xb))"
+  (*  using a1 a2 a3 *)
+  by (simp add: a1 a2)
+(*  by (smt a4 add_left_imp_eq event.inject less_all_sconsD monofun_cfun_arg TSSCANL.simps(2)) *)
+qed
 
 text {* @{term tsscanl} is a continuous function *}
 lemma cont_lub_TSSCANL: "cont (\<lambda>s. \<Squnion>i. TSSCANL i f q s)"
@@ -1575,14 +1630,10 @@ apply (rule allI)
 apply (rule_tac x="i" in exI)
 by (rule contlub_TSSCANL [rule_format])
 
-lemma tsscanl_empty[simp]: "tsscanl f q\<cdot>\<bottom> = \<bottom>"
-by simp
-(*
-apply (simp add: tsscanl_def)
+lemma tsscanl_empty[simp]: "tsscanl f q \<bottom> = \<bottom>"
+apply (simp add: tsscanl_def tsscanl_h_def) 
 apply (subst beta_cfun, rule cont_lub_TSSCANL)
-by (subst is_lub_const 
-  [THEN lub_eqI, of "\<epsilon>", THEN sym], simp)
-*)
+by (simp)
 
 (* scanning \<up>a\<bullet>s using q as the initial element is equivalent to computing \<up>(f q a) and appending the
    result of scanning s with (f q a) as the initial element *)
@@ -1611,10 +1662,11 @@ by (insert tsscanl_tscons [of f a b \<epsilon>], auto)
 
 (*
 text {* applying @{term tsscanl} never shortens the stream *}
-lemma fair_tsscanl: "#x \<le> #(tsscanl f a\<cdot>x)"
+lemma fair_tsscanl_h: "#x \<le> #(tsscanl_h f a\<cdot>x)"
 apply (rule spec [where x = a])
 apply (rule ind [of _ x], auto)
-by (subst lnle_def, simp del: lnle_conv)
+apply (subst lnle_def, simp del: lnle_conv)
+by simp
 *)
 
 (*
@@ -2523,22 +2575,6 @@ lemma stwbl_fin [simp]: assumes "a\<in>sdom\<cdot>s" and "\<not> f a"
 (* stwbl keeps at least all the elements that stakewhile keeps *)
 lemma stakewhile_stwbl [simp]: "stakewhile f\<cdot>(stwbl f\<cdot>s) = stakewhile f\<cdot>s"
 
-(*-----------------------------*)
-sscanl
-(*-----------------------------*)
-
-(* dropping the first element of the result of sscanl is equivalent to beginning the scan with 
-   (f a (shd s)) as the initial element and proceeding with the rest of the input *)
-lemma sscanl_srt: "srt\<cdot>(sscanl f a\<cdot>s) = sscanl f (f a (shd s)) \<cdot>(srt\<cdot>s) "
-
-(* the n + 1'st element produced by sscanl is the result of mering the n + 1'st item of s with the n'th
-   element produced by sscanl *)
-lemma sscanl_snth:  "Fin (Suc n) < #s \<Longrightarrow> snth (Suc n) (sscanl f a\<cdot>s) = f (snth n (sscanl f a\<cdot>s)) (snth (Suc n) s)"
-
-(* the result of sscanl has the same length as the input stream x *)
-lemma fair_sscanl[simp]: "#(sscanl f a\<cdot>x) = #x"
-apply (rule spec [where x = a])
-
 lemma sdom_sfilter1: assumes "x\<in>sdom\<cdot>(A\<ominus>s)" 
   shows "x\<in>A"
 
@@ -3135,41 +3171,6 @@ lemma srcdups_eq[simp]: "srcdups\<cdot>(\<up>a\<bullet>\<up>a\<bullet>s) = srcdu
 (* if the head a of a stream is followed by a distinct element, both elements will be keypt by srcdups *)
 lemma srcdups_neq[simp]: 
   "a\<noteq>b \<Longrightarrow> srcdups\<cdot>(\<up>a \<bullet> \<up>b \<bullet> s) = \<up>a \<bullet>  srcdups\<cdot>(\<up>b \<bullet> s)" 
-
-(*-----------------------------*)
-sscanl
-(*-----------------------------*)
-
-lemma SSCANL_empty[simp]: "SSCANL n f q \<epsilon> = \<epsilon>"
-
-text {* monotonicity of SSCANL *}
-lemma mono_SSCANL: 
-  "\<forall> x y q. x \<sqsubseteq> y \<longrightarrow> SSCANL n f q x \<sqsubseteq> SSCANL n f q y"
-
-text {* result of @{term "SSCANL n"} only depends on first @{term n}
-  elements of input stream *}
-lemma contlub_SSCANL:
-  "\<forall>f q s. SSCANL n f q s = SSCANL n f q (stake n\<cdot>s)"
-
-text {* @{term SSCANL} is a chain. This means that, for all fixed inputs,
-  @{term "SSCANL i"} returns a prefix of @{term "SSCANL (Suc i)"} *}
-lemma chain_SSCANL: "chain SSCANL"
-
-text {* @{term sscanl} is a continuous function *}
-lemma cont_lub_SSCANL: "cont (\<lambda>s. \<Squnion>i. SSCANL i f q s)" 
-
-lemma sscanl_empty[simp]: "sscanl f q\<cdot>\<epsilon> = \<epsilon>"
-
-(* scanning \<up>a\<bullet>s using q as the initial element is equivalent to computing \<up>(f q a) and appending the
-   result of scanning s with (f q a) as the initial element *)
-lemma sscanl_scons[simp]: 
-  "sscanl f q\<cdot>(\<up>a\<bullet>s) = \<up>(f q a) \<bullet> sscanl f (f q a)\<cdot>s"  
-
-(* scanning a singleton stream is equivalent to computing \<up>(f a b) *)
-lemma [simp]: "sscanl f a\<cdot>(\<up>b) = \<up>(f a b)"
-
-text {* applying @{term sscanl} never shortens the stream *}
-lemma fair_sscanl: "#x \<le> #(sscanl f a\<cdot>x)"
 
 (*-----------------------------*)
 szip
