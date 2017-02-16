@@ -939,22 +939,24 @@ h2 x:xs y = (x+y) : h2 xs (x+y)
 
 *)
 
+(*Takes two nats and a nat stream to build recursive the sums of the elements of the stream +p*)
 primrec h :: "nat \<Rightarrow> nat \<Rightarrow> nat stream \<Rightarrow> nat stream" where
 "h 0 p s  = \<epsilon>" | (*maximal one non-variable argument required, so \<epsilon>-case must be encoded in the line below.*)
 "h (Suc i) p s = (if s=\<epsilon> then \<epsilon> else \<up>(p + (shd s)) \<bullet> (h i (p + (shd s)) (srt\<cdot> s)))"
 
-
+(*Defines the Lub of h*)
 definition sum5_helper :: " nat \<Rightarrow> nat stream \<rightarrow> nat stream" where
 "sum5_helper p \<equiv> \<Lambda> s. \<Squnion>i. h i p s"
 
-
+(* definition of sum3 because of the initialization of sum5_helper with 0*)
 definition sum5:: "nat stream \<rightarrow> nat stream" where
 "sum5 \<equiv> \<Lambda> s. sum5_helper 0\<cdot>s"
 
-
+(*h with an empty stream is an empty stream*)
 lemma h_eps: "h i p \<epsilon> = \<epsilon>"
 by(induct_tac i,auto)
 
+(*h with iterate value i only needs a max of i elements of the input stream to produce the output*)
 lemma contlub_h:
   "\<forall>s p. h i p s = h i p (stake i\<cdot>s)"
 apply (induct_tac i, auto)
@@ -963,6 +965,7 @@ apply auto
 apply (rule_tac x=s in scases)
 by auto
 
+(*h i \<sqsubseteq> h (Suc i)*)
 lemma chain_h: "chain h"
 apply (rule chainI)
 apply (subst fun_below_iff)+
@@ -973,25 +976,27 @@ by (smt monofun_cfun_arg)
 
 (* monotonicity of h *)
 lemma mono_h: 
-  "\<forall> x y q. x \<sqsubseteq> y \<longrightarrow> h n q x \<sqsubseteq> h n q y"
-apply (induct_tac n, auto)
+  "\<forall> x y p. x \<sqsubseteq> y \<longrightarrow> h i p x \<sqsubseteq> h i p y"
+apply (induct_tac i, auto)
 apply (drule lessD, erule disjE, simp)
 apply (erule exE)+
 apply (erule conjE)+
 by (simp, rule monofun_cfun_arg, simp)
 
+(*#(h i p s) = min(#s, i)*)
 lemma cont_lub_sum5_helper2:
-  "\<forall>s y. stake n\<cdot> (h n y s) = h n y s "
-by(induct_tac n,auto)
+  "\<forall>s p. stake i\<cdot> (h i p s) = h i p s "
+by(induct_tac i,auto)
 
-
+(*
 lemma sum5_helper_snth_stake_min:
   "snth n (stake m\<cdot> (h m p s)) = snth (min n m) (h m p s)"
 apply (induct_tac n,auto)
 using cont_lub_sum5_helper2 apply auto[1]
 by (metis cont_lub_sum5_helper2 min_def sdropostake snth_def stakeostake)
+*)
 
-(* h2 is a continuous function *)
+(* sum5_helper is a continuous function *)
 lemma cont_lub_sum5_helper: "cont (\<lambda> s. \<Squnion>i. h i p s)" 
 apply (rule cont2cont_lub)
 apply (rule ch2ch_fun)
@@ -1006,13 +1011,13 @@ apply (rule allI)
 apply (rule_tac x="i" in exI)
 by (rule contlub_h [rule_format])
 
-
+(* sum5_helper of an empty stream is the empty stream*)
 lemma sum5_empty[simp]: "sum5_helper p\<cdot>\<epsilon> = \<epsilon>"
 apply (simp add: sum5_helper_def)
 apply (subst beta_cfun, rule cont_lub_sum5_helper)
 using h_eps by simp
 
-
+(*sum5_helper is equivalent to the first element of the computed stream concatenated to sum5_helper (first element) (rest of the stream)*)
 lemma sum5_helper_scons:"sum5_helper n \<cdot>(\<up>a\<bullet>s) = \<up>(a+n) \<bullet> (sum5_helper (a+n)\<cdot>s)"  
 apply (simp add: sum5_helper_def)
 apply (subst beta_cfun, rule cont_lub_sum5_helper)+
@@ -1028,115 +1033,157 @@ apply (rule fun_belowD [of _ _ "f"])
 apply (smt chain_h fun_belowI po_class.chain_def)
 by (smt Nat.add_0_right add.commute add_Suc_right h.simps(2) lscons_conv lub_eq shd1 stream.con_rews(2) stream.sel_rews(5) up_defined)
 
-
+(*unfolding sum5_helper with the definition of sum5_helper*)
 lemma sum5_helper_unfold_h: "sum5_helper n \<cdot>input = (\<Squnion>i. h i n input)"
 apply (simp add:sum5_helper_def)
 by (simp add: cont_lub_sum5_helper)
 
+(*Lub i of h i 0 (s) is equivalent to the first element of the computed stream concatenated to Lubi of h i (first element) (rest s)*)
 lemma h_scons: "(\<Squnion>i. h i 0 (\<up>a\<bullet>s)) = \<up>a \<bullet> (\<Squnion>i. h i a s)"
 using sum5_helper_unfold_h sum5_helper_scons by auto
 
-lemma sum5_helper_shd [simp]: "shd (sum5_helper n \<cdot>(\<up>a \<bullet> as)) = a+n"
+(*shd of sum5_helper n s is equvalent to n plus the head of s*)
+lemma sum5_helper_shd [simp]: "shd (sum5_helper n \<cdot>(\<up>a \<bullet> s)) = a+n"
 by (simp add: sum5_helper_scons)
 
-lemma [simp]: "shd (sum5_helper 0 \<cdot> xs) = shd xs"
+(*the head of sum5_helper with initialization 0 is the head of the input stream*)
+lemma [simp]: "shd (sum5_helper 0 \<cdot> s) = shd s"
 using sum5_helper_shd
 by (metis Nat.add_0_right sum5_empty surj_scons)
 
-lemma sum5_helper_snth0[simp]: "snth 0 (sum5_helper 0 \<cdot> xs) = snth 0 xs"
+(*Same as above but with snth 0 instead of the head*)
+lemma sum5_helper_snth0[simp]: "snth 0 (sum5_helper 0 \<cdot> s) = snth 0 s"
 by simp
 
-lemma sum5_helper2sum4_helper_helper: "snth 0 (sum5_helper 0 \<cdot> as) = snth 0 (sum4\<cdot> as)"
+(*The head of sum5 is the same as the head of sum4*)
+lemma sum5_helper2sum4_helper_helper: "snth 0 (sum5_helper 0 \<cdot> s) = snth 0 (sum4\<cdot> s)"
 by simp
 
+(*sum5_helper of an one element stream is a one element stream with the head of the input stream + initialization*)
 lemma sum5_helper_one [simp]: "sum5_helper n \<cdot>(\<up>a) = \<up>(a+n)"
 by (insert sum5_helper_scons [of n a \<epsilon>], auto)
 
-lemma sum5_unfold_sum5[simp]: "sum5_helper n\<cdot>(\<up>0 \<bullet>as) =\<up>(0+n) \<bullet> sum5_helper n \<cdot>(as)"
+(*sum5_helper unfolding when the head of the stream is 0 is the parameter concatenated to sum5_helper with the rest of the stream*)
+lemma sum5_unfold_sum5[simp]: "sum5_helper n\<cdot>(\<up>0 \<bullet>s) =\<up>(0+n) \<bullet> sum5_helper n \<cdot>(s)"
 using sum5_helper_scons sum5_helper_unfold_h by auto
 
-lemma test2_sum5_helper_help: "Fin n < #as \<longrightarrow> snth (Suc n) (sum5_helper n \<cdot>(\<up>0 \<bullet>as)) = snth n (sum5_helper n \<cdot>as)"
+(*the (Suc nth) element of sum5_helper when the head of the stream is 0 is the nth element of sum5_helper with the rest stream*)
+lemma test2_sum5_helper_help: "Fin n < #s \<longrightarrow> snth (Suc n) (sum5_helper m \<cdot>(\<up>0 \<bullet>s)) = snth n (sum5_helper m \<cdot>s)"
 by(induction n,simp+)
 
-lemma fair2_sum5_helper: "#x \<le> #(sum5_helper n\<cdot>x)"
+(*used for #(sum5 s)= #s*)
+lemma sum5_helper_slen_helper: "#s \<le> #(sum5_helper n\<cdot>s)"
 apply (rule spec [where x = n])
-apply (rule ind [of _ x],auto)
+apply (rule ind [of _ s],auto)
 apply(subst lnle_def, simp del: lnle_conv)
 by (simp add: sum5_helper_scons)
 
+(*rest of sum5_helper can be applied to the input stream, if the parameter gets adjusted be the head of the input stream*)
 lemma sum5_helper_srt: "srt\<cdot>(sum5_helper n \<cdot>s) = sum5_helper (n + shd s)\<cdot> (srt\<cdot>s)"
 by (smt inject_scons lshd_updis natl2 stream.sel_rews(2) stream.sel_rews(3) sum5_empty sum5_helper_scons surj_scons)
 
-lemma test2_sum5_helper_helper: "Fin (Suc n)<#as \<Longrightarrow> snth (Suc n) (sum5_helper x \<cdot>as) = snth (Suc n) as + snth n (sum5_helper x \<cdot>as)"
-apply(induction n arbitrary: x as)
+(*the Suc nth element of sum5_helper is the nth element of sum5_helper plus the Suc nth element of the input stream*)
+lemma test2_sum5_helper_helper: "Fin (Suc n)<#s \<Longrightarrow> snth (Suc n) (sum5_helper m \<cdot>s) = snth (Suc n) s + snth n (sum5_helper m \<cdot>s)"
+apply(induction n arbitrary: m s)
 apply (smt Fin_02bot Fin_leq_Suc_leq less2lnleD less_lnsuc lnat_po_eq_conv lnless_def lnzero_def shd1 slen_empty_eq slen_rt_ile_eq snth_scons snth_shd sum5_helper_scons surj_scons)
 by (smt Fin_Suc lnat_po_eq_conv lnle_def lnless_def lnsuc_lnle_emb lnzero_def minimal slen_scons snth_scons sum5_helper_scons strict_slen surj_scons)
 
-lemma fair_sum5_helper[simp]: "#(sum5_helper n\<cdot>x) = #x"
+(*#(sum5_helper n s) = #s*)
+lemma sum5_helper_slen[simp]: "#(sum5_helper n\<cdot>s) = #s"
 apply (rule spec [where x = n])
-apply (rule ind [of _ x], auto)
+apply (rule ind [of _ s], auto)
 by (simp add: sum5_helper_scons)
 
-lemma test2_sum5_helper: "Fin (Suc n)<#as \<Longrightarrow> snth (Suc n) (sum5\<cdot>as) = snth (Suc n) as + snth n (sum5\<cdot>as)"
+(*the Suc nth element of sum5 is the nth element of sum5 plus the Suc nth element of the input stream*)
+lemma test2_sum5_helper: "Fin (Suc n)<#s \<Longrightarrow> snth (Suc n) (sum5\<cdot>s) = snth (Suc n) s + snth n (sum5\<cdot>s)"
 using sum5_def test2_sum5_helper_helper
 by (metis eta_cfun)
 
-lemma sum5_slen[simp]:"#(sum5\<cdot>x) = #x"
+(*#(sum5 s) = #s*)
+lemma sum5_slen[simp]:"#(sum5\<cdot>s) = #s"
 by (simp add: sum5_def)
 
-lemma test2_sum5[rule_format]: "Fin n<#as \<longrightarrow> snth n (sum5 \<cdot> as) = snth n as + snth n (sum5\<cdot>(\<up>0 \<bullet>as))"
+(*the nth element of sum5 s is the nth element of sum5 (0\<bullet>s) plus the nth element of the input stream*)
+lemma test2_sum5[rule_format]: "Fin n<#s \<longrightarrow> snth n (sum5 \<cdot> s) = snth n s + snth n (sum5\<cdot>(\<up>0 \<bullet>s))"
 apply(induction n,simp_all)
 using test2_sum5_helper
 apply (simp add: sum5_def)
 by (simp add: sum5_def test2_sum5_helper_helper)
 
-lemma sum52sum4_helper: "Fin n < #(sum5\<cdot>as) \<Longrightarrow> snth n (sum5\<cdot>as) = snth n (sum4\<cdot>as)"
+(*The nth element of sum5 is the snth element of sum4*)
+lemma sum52sum4_helper: "Fin n < #(sum5\<cdot>s) \<Longrightarrow> snth n (sum5\<cdot>s) = snth n (sum4\<cdot>s)"
   apply(induction n)
    apply(simp)
 using sum4_snth
 apply (simp add: sum5_def)
 by (metis Fin_leq_Suc_leq less_le not_less snth_scons sum5_slen test2 test2_sum5_helper)
 
-lemma sum5_2_sum4: "sum5\<cdot> as = sum4\<cdot>as"
+(*sum5 applied to a stream is equal to sum4 applied to the same stream*)
+lemma sum5_2_sum4: "sum5\<cdot>s = sum4\<cdot>s"
   apply(rule Streams.snths_eq)
    apply simp
 using sum5_slen sum52sum4_helper by blast
 
+(*sum5 = sum4*)
 lemma sum52sum4: "sum5 = sum4"
   by (simp add: cfun_eqI sum5_2_sum4)
 
+(*sum5 = sum3*)
 lemma sum52sum3: "sum5 = sum3"
 using sum42sum3 sum52sum4
 by (simp add: cfun_eqI)
 
 
-
+(*Calculates the value of all elements of a nat stream until the nth element*)
 primrec sum_nth:: "nat \<Rightarrow> nat stream \<Rightarrow> nat" where
 "sum_nth 0 s = shd s" | (*maybe better with (if s =\<epsilon> then 0 else shd s) because it would be defined?*)
-"sum_nth (Suc p) s = (if s =\<epsilon> then 0 else shd s + sum_nth p (srt\<cdot>s))"
+"sum_nth (Suc i) s = (if s =\<epsilon> then 0 else shd s + sum_nth i (srt\<cdot>s))"
 
+
+(*The sum of the elements is the first element plus the sum of the rest of the elements*)
 lemma sum_nth_scons:"sum_nth (Suc n) (\<up>a\<bullet>s) = a + (sum_nth n s)" 
 by (simp add: sum_nth_def)
 
+(*The sum of the first Suc n elements is the sum of the first n elements plus the Suc nth element of the input stream*)
 lemma sum_nth_nth: "Fin (Suc n) <#s \<longrightarrow> sum_nth (Suc n) s = sum_nth n s + snth (Suc n) s"
 apply(induction n arbitrary: s)
 apply (metis Fin_02bot Fin_Suc less_lnsuc lnzero_def not_less snth_rt snth_shd strict_slen sum_nth.simps(1) sum_nth.simps(2))
 using Fin_Suc lnat_po_eq_conv lnle_def lnless_def lnsuc_lnle_emb lnzero_def minimal slen_scons snth_scons strict_slen surj_scons
 by (smt add.assoc lnle_Fin_0 nat.distinct(1) not_less sum_nth.simps(2))
 
+(*the nth element of (sum3 s) is equal to (sum_nth n s)*)
 lemma sum32sum_nth: "Fin n <#s \<longrightarrow> snth n (sum3\<cdot> s)  = sum_nth n s"
   apply(induction n)
    apply(simp)
 using sum3_snth
 by (metis Fin_leq_Suc_leq less_le not_less sscanl_snth sum3_def sum_nth_nth)
 
+(*Definition sum3 with sum_nth*)
 
-(*sum4 cont
+(*
+monotonicity of sum4 
+lemma mono_sum4: 
+  "\<forall> x y q. x \<sqsubseteq> y \<longrightarrow> (\<mu> z. add\<cdot>x\<cdot>(\<up>0 \<bullet> z)) \<sqsubseteq> (\<mu> z. add\<cdot>y\<cdot>(\<up>0 \<bullet> z))"
+sorry
+
+lemma contlub_sum4:
+  "\<forall>x. (\<mu> z. add\<cdot>x\<cdot>(\<up>0 \<bullet> z)) = (\<mu> z. add\<cdot>(stake i\<cdot>x)\<cdot>(\<up>0 \<bullet> z))"
+apply (induct_tac i, auto)
+apply (rule_tac x=x in scases)
+apply auto
+apply (rule_tac x=x in scases)
+sorry
+
 
 lemma "cont (\<lambda>x. (fix\<cdot>(\<Lambda> z. add\<cdot>x\<cdot>(\<up>0\<bullet>(z)))))"
-using sum4_def sum52sum4 cont_lub_sum5_helper
-oops
+apply (rule pr_contI)
+apply (rule monofunI)
+apply (rule mono_sum4 [rule_format], assumption)
+apply (rule allI)
+apply (rule_tac x="n" in exI)
+by (rule contlub_sum4 [rule_format])
 *)
+
 (*Für HK*)
 (*
 --TIMED: analog (try evtl. auch mit sscanl / gibts eine function timed-sscanl? wenn nicht dann definieren)
