@@ -1460,7 +1460,7 @@ sorry
 
 *)
 
-(* ToDo Dennis sscanl 
+(* ToDo Dennis sscanl
 
 (* Takes a nat indicating the number of elements to scan, a reducing function, an initial initial element,
    and an input event stream. Returns a event stream consisting of the partial reductions of the input event stream. *)
@@ -1645,14 +1645,20 @@ apply (rule ind [of _ x], auto)
 apply (subst lnle_def, simp del: lnle_conv)
 by (smt lnsuc_lnle_emb slen_scons tsscanl_h_scons tsscanl_h_scons_tick)
 
+(* tsscanl_h of an empty stream is an empty stream *)
+lemma tsscanl_h_empty[simp]: "tsscanl_h f a\<cdot>\<epsilon> = \<epsilon>"
+by (simp add: cont_lub_TSSCANL tsscanl_h_def)
+
 (* dropping the first element of the result of tsscanl is equivalent to beginning the scan with 
    (f a (shd s)) as the initial element and proceeding with the rest of the input *)
-lemma tsscanl_h_srt: "srt\<cdot>(tsscanl_h f a\<cdot>s) = tsscanl_h f (f a (THE m. Msg m = shd s))\<cdot>(srt\<cdot>s)"
+lemma tsscanl_h_srt_tick: "shd s=\<surd> \<Longrightarrow> srt\<cdot>(tsscanl_h f a\<cdot>s) = tsscanl_h f a\<cdot>(srt\<cdot>s)"
 sorry
 (*
 by (metis (no_types, lifting) sconc_fst_empty sconc_scons' tsscanl_empty tsscanl_h_scons tsscanl_h_scons_tick stream.sel_rews(2) stream.sel_rews(5) sup'_def surj_scons up_defined)
 *)
 
+lemma tsscanl_h_srt: "shd s\<noteq>\<surd> \<Longrightarrow> srt\<cdot>(tsscanl_h f a\<cdot>s) = tsscanl_h f (f a (THE m. Msg m = shd s))\<cdot>(srt\<cdot>s)"
+sorry
 
 (* the n+1st element produced by tsscanl is the result of merging the n+1st item of s with the nth
    element produced by tsscanl *)
@@ -1663,10 +1669,6 @@ apply(induction n arbitrary:  a s)
 apply (smt Fin_02bot Fin_leq_Suc_leq less2lnleD less_lnsuc lnat_po_eq_conv lnless_def lnzero_def shd1 slen_empty_eq slen_rt_ile_eq snth_scons snth_shd tsscanl_h_scons surj_scons)
 by (smt Fin_Suc lnat_po_eq_conv lnle_def lnless_def lnsuc_lnle_emb lnzero_def minimal slen_scons snth_scons sscanl_scons strict_slen surj_scons)
 *)
-
-(* tsscanl_h of an empty stream is an empty stream *)
-lemma tsscanl_h_empty[simp]: "tsscanl_h f a\<cdot>\<epsilon> = \<epsilon>"
-by (simp add: cont_lub_TSSCANL tsscanl_h_def)
 
 (* the result of tsscanl_h has the same length as the input tstream x *)
 lemma fair_tsscanl[simp]: "#(tsscanl_h f a\<cdot>x) = #x"
