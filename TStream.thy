@@ -1625,17 +1625,13 @@ apply (subst beta_cfun, rule cont_lub_TSSCANL)+
 apply (subst contlub_cfun_arg)
 apply (rule ch2ch_fun, rule ch2ch_fun)
 apply (rule chainI)
-apply (rule fun_belowD [of _ _ "n"])
-sorry
-(*
-apply (smt chain_TSSCANL fun_belowI po_class.chain_def)
+apply (rule fun_belowD [of _ _ "f"])
+apply (rule chain_TSSCANL [THEN chainE])
 apply (subst lub_range_shift [where j="Suc 0", THEN sym])
 apply (rule ch2ch_fun, rule ch2ch_fun)
 apply (rule chainI)
-apply (rule fun_belowD [of _ _ "n"])
-apply (smt chain_TSSCANL fun_belowI po_class.chain_def)
-by (simp add: chain_TSSCANL_h1)
-*)
+apply (rule fun_belowD [of _ _ "f"])
+by (rule chain_TSSCANL [THEN chainE], simp)
 
 (* scanning a singleton event stream is equivalent to computing \<up>(f a b) *)
 lemma [simp]: "tsscanl_h f (THE m. Msg m = a)\<cdot>(\<up>\<surd>) = \<up>(Msg(f (THE m. Msg m = a) \<surd>))"
@@ -1676,8 +1672,7 @@ by (simp add: cont_lub_TSSCANL tsscanl_h_def)
 lemma fair_tsscanl[simp]: "#(tsscanl_h f a\<cdot>x) = #x"
 apply (rule spec [where x = a])
 apply (rule ind [of _ x], auto)
-sorry
-(* slen_scons tsscanl_h_scons *)
+by (metis slen_scons tsscanl_h_scons tsscanl_h_scons_tick)
 
 *)
 
