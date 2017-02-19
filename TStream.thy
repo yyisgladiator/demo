@@ -1610,7 +1610,7 @@ by (simp)
 (* scanning \<up>a\<bullet>s using q as the initial element is equivalent to computing \<up>(f q a) and appending the
    result of scanning s with (f q a) as the initial element *)
 lemma tsscanl_h_scons[simp]: 
-  "a\<noteq>\<surd> \<Longrightarrow> tsscanl_h f q\<cdot>(\<up>a\<bullet>s) = \<up>(Msg( f q (THE m. Msg m = a))) \<bullet> tsscanl_h f (f q (THE m. Msg m = a))\<cdot>s" 
+  "a\<noteq>\<surd> \<Longrightarrow> tsscanl_h f q\<cdot>(\<up>a\<bullet>s) = \<up>(Msg(f q (THE m. Msg m = a))) \<bullet> tsscanl_h f (f q (THE m. Msg m = a))\<cdot>s" 
 apply (simp add: tsscanl_h_def)
 apply (subst beta_cfun, rule cont_lub_TSSCANL)+
 apply (subst contlub_cfun_arg)
@@ -1653,6 +1653,9 @@ by (smt lnsuc_lnle_emb slen_scons tsscanl_h_scons tsscanl_h_scons_tick)
 (* tsscanl_h of an empty stream is an empty stream *)
 lemma tsscanl_h_empty[simp]: "tsscanl_h f a\<cdot>\<epsilon> = \<epsilon>"
 by (simp add: cont_lub_TSSCANL tsscanl_h_def)
+
+lemma tsscanl_h_shd [simp]: "a\<noteq>\<surd> \<Longrightarrow> shd (tsscanl_h f q\<cdot>(\<up>a\<bullet>s)) = (Msg( f q (THE m. Msg m = a)))"
+by (simp)
 
 (* dropping the first element of the result of tsscanl is equivalent to beginning the scan with 
    (f a (shd s)) as the initial element and proceeding with the rest of the input *)
