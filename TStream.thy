@@ -22,6 +22,11 @@ section {* Type definition *}
 text {* Definition of  datatype  @{text "'m event"}; extends @{text "'m"} with a @{term "Tick"}. *}
 datatype 'm event = Msg 'm ( "\<M> _" 65)| Tick
 
+text {* Inverse of Msg.*}
+abbreviation
+  inversMsg ::  "'a event \<Rightarrow> 'a"  ("\<M>\<down> _")
+    where "inversMsg m \<equiv> (THE n. (\<M> n) = m)"
+
 text {* Prove that datatype event is countable. Needed, since the domain-constructor defined
  to work for countable types.*}
 instance event :: (countable) countable
