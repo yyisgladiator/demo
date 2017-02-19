@@ -20,7 +20,7 @@ section {* Type definition *}
 
 
 text {* Definition of  datatype  @{text "'m event"}; extends @{text "'m"} with a @{term "Tick"}. *}
-datatype 'm event = Msg 'm | Tick
+datatype 'm event = Msg 'm ( "\<M> _" 65)| Tick
 
 text {* Prove that datatype event is countable. Needed, since the domain-constructor defined
  to work for countable types.*}

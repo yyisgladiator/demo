@@ -1158,36 +1158,6 @@ lemma sum32sum_nth: "Fin n <#s \<longrightarrow> snth n (sum3\<cdot> s)  = sum_n
 using sum3_snth
 by (metis Fin_leq_Suc_leq less_le not_less sscanl_snth sum3_def sum_nth_nth)
 
-(*Definition sum3 with sum_nth not perfect like this*)
-
-definition sum3_alter_helper::"nat \<Rightarrow> nat stream \<Rightarrow> nat stream" where
-"sum3_alter_helper  \<equiv> fix\<cdot> (\<Lambda> h. ((\<lambda>n. \<lambda> s. \<up>(sum_nth n s) \<bullet> h (Suc n) s))) "
-
-
-
-definition sum3_alter::"nat stream \<Rightarrow> nat stream" where
-"sum3_alter s= (if s=\<epsilon> then \<epsilon> else sum3_alter_helper 0 s)"
-
-
-(* infinitely cycling the empty stream produces the empty stream again *)
-lemma sum3_alter_eps[simp]: "sum3_alter \<epsilon> = \<epsilon>"
-by(simp add: sum3_alter_def)
-
-lemma sum3_alter_helper_unfold:"sum3_alter_helper n s = \<up>(sum_nth n s) \<bullet> sum3_alter_helper (Suc n) s"
-apply (subst sum3_alter_helper_def)
-sorry
-
-lemma sum3_alter_shd[simp]:"shd (sum3_alter_helper 0 s) = sum_nth 0 s"
-apply(subst sum3_alter_helper_unfold)
-using shd1 by blast
-
-
-lemma "Fin n < #s \<longrightarrow> snth n (sum3_alter s) = sum_nth n s"
-apply(induction n arbitrary: s)
-apply(subst sum3_alter_def)
-apply simp
-sorry
-
 
 (*
 monotonicity of sum4 
