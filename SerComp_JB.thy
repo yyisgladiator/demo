@@ -81,6 +81,7 @@ proof -
 qed
 *)
 
+(* MOVE ME
 lemma test15: assumes "spfComp_well f1 f2"
 shows "\<exists>i. ((\<lambda> x. (\<Squnion>i. iterate i\<cdot>(spfCompHelp2 f1 f2 x)\<cdot>(sbLeast (C f1 f2)))) = (\<lambda> x. iterate i\<cdot>(spfCompHelp2 f1 f2 x)\<cdot>(sbLeast (C f1 f2))))"
 sorry (* Beweis Idee: verwende fall unterscheidung für die Kanäle von x, entweder fließen diese nur durch eine Komponente \<Rightarrow> parComp verwenden, 
@@ -110,6 +111,8 @@ qed
 lemma mySPFCOMPISCONT: assumes "spfComp_well f1 f2"
 shows "cont (\<lambda> sb. (sbDom\<cdot>sb = I f1 f2) \<leadsto> ((\<Squnion>i. iterate i\<cdot>(spfCompHelp2 f1 f2 sb)\<cdot>(sbLeast (C f1 f2))) \<bar> Oc f1 f2))"
 using assms if_then_cont test14 by blast
+
+*)
 
 lemma spfcomp_tospfH2: "(spfcomp f1 f2) 
                    = Abs_CSPF (\<lambda> x. (sbDom\<cdot>x = I f1 f2) \<leadsto> 
@@ -531,11 +534,11 @@ lemma spfComp_serial_itconst2 [simp]: assumes "spfRan\<cdot>f1 = spfDom\<cdot>f2
 (* TODO: SHOW COMPPOSITION IS SPF AND CONTINUOUS *)
 
 (* end of TODO *)
-
+(* MOVE ME
 lemma spfComp_mono[simp]: assumes "spfComp_well f1 f2"
 shows "monofun (\<lambda>x. (sbDom\<cdot>x = I f1 f2)\<leadsto>(\<Squnion>i. iterate i\<cdot>(spfCompHelp2 f1 f2 x)\<cdot>(sbLeast (C f1 f2)))\<bar>Oc f1 f2)"
 sorry
-
+*)
 
 lemma spfComp_Oc_sub_C: assumes "c \<in> Oc f1 f2" shows "c \<in> C f1 f2"
   by (meson assms set_mp spfOc_sub_C)
@@ -570,9 +573,10 @@ abbreviation iconst :: "'a SB \<rightarrow> 'a SPF \<rightarrow> 'a SPF \<righta
 
 lemma foo3[simp]: assumes "sbDom\<cdot>x = I f1 f2"
 shows "sbDom\<cdot>((x \<uplus> ((Rep_CSPF f1) \<rightharpoonup> (x \<bar>spfDom\<cdot>f1)) \<uplus> ((Rep_CSPF f2)\<rightharpoonup>((Rep_CSPF f1) \<rightharpoonup> (x\<bar>spfDom\<cdot>f1))))\<bar>Oc f1 f2)
-        = C f1 f2"
-sorry
+        = Oc f1 f2"
+oops
 
+  (*
 lemma iterconst_mono1[simp]: assumes "spfRan\<cdot>f1 = spfDom\<cdot>f2"
                                   and "spfComp_well f1 f2"
                                   and "pL f1 f2 = {}"
@@ -588,39 +592,46 @@ shows "monofun (\<lambda>x. (sbDom\<cdot>x = I f1 f2)\<leadsto>(x \<uplus> ((Rep
   apply(simp add: assms)
 sorry*)
 sorry
+*)
 
 
 lemma iterconst_cont[simp]:       assumes "spfRan\<cdot>f1 = spfDom\<cdot>f2"
                                   and "spfComp_well f1 f2"
                                   and "pL f1 f2 = {}"
-shows "cont (\<lambda>x. (sbDom\<cdot>x = I f1 f2)\<leadsto>(x \<uplus> ((Rep_CSPF f1) \<rightharpoonup> (x \<bar>spfDom\<cdot>f1)) 
-                                    \<uplus> ((Rep_CSPF f2)\<rightharpoonup>((Rep_CSPF f1) \<rightharpoonup> (x\<bar>spfDom\<cdot>f1))))\<bar>Oc f1 f2)"
-apply(rule spf_cont2cont)
- apply(rule spf_contlubI)
-  apply(simp add: domIff2 sbChain_dom_eq2)
-  defer
-  using assms(1) assms(2) assms(3) iterconst_mono1 monofun2spf_mono apply blast
-  apply(simp add: domIff2, rule+ )
-  apply(rule sb_below)
-   apply (simp add: sbdom_rep_eq)
-sorry
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+shows "cont (\<lambda>x. (sbDom\<cdot>x = I f1 f2)\<leadsto>(x \<uplus> (f1 \<rightleftharpoons> (x \<bar>spfDom\<cdot>f1)) 
+                                    \<uplus> (f2 \<rightleftharpoons> (f1 \<rightleftharpoons> (x\<bar>spfDom\<cdot>f1))))\<bar>Oc f1 f2)"
+proof -
+  
+   (* show f2 (f1 (x)) is cont *) 
+   have "cont (\<lambda>s. (Rep_cfun (Rep_SPF f1))\<rightharpoonup>(s\<bar>spfDom\<cdot>f1))"
+     by (metis (no_types) cont_Rep_cfun2 cont_compose op_the_cont)
+   moreover
+     have "cont (\<lambda>s. (Rep_cfun (Rep_SPF f2))\<rightharpoonup>(s))"
+       by (metis (no_types) cont_Rep_cfun2 cont_compose op_the_cont)
+   ultimately
+     have "cont (\<lambda>s. (Rep_cfun (Rep_SPF f2))\<rightharpoonup>(((Rep_cfun (Rep_SPF f1))\<rightharpoonup>(s\<bar>spfDom\<cdot>f1))))"
+       using cont2cont_APP cont_compose op_the_cont by blast
+         
+   (* show that sbUnion is cont *)      
+   have "cont (\<lambda>s. (Rep_cfun (Rep_SPF f1))\<rightharpoonup>(s\<bar>spfDom\<cdot>f1))"
+     by (metis (no_types) cont_Rep_cfun2 cont_compose op_the_cont)
+   hence "cont (\<lambda>s. sbUnion\<cdot> (s  \<uplus>  ((Rep_cfun (Rep_SPF f1))\<rightharpoonup>(s\<bar>spfDom\<cdot>f1))))"
+     by simp
+   hence "cont (\<lambda>s. s  \<uplus>  ((Rep_cfun (Rep_SPF f1))\<rightharpoonup>(s\<bar>spfDom\<cdot>f1)) \<uplus> ((Rep_cfun (Rep_SPF f2))\<rightharpoonup>(((Rep_cfun (Rep_SPF f1))\<rightharpoonup>(s\<bar>spfDom\<cdot>f1)))))"
+     using \<open>cont (\<lambda>s. (Rep_cfun (Rep_SPF f2))\<rightharpoonup>(((Rep_cfun (Rep_SPF f1))\<rightharpoonup>(s\<bar>spfDom\<cdot>f1))))\<close> cont2cont_APP cont_compose op_the_cont by blast
+       
+   (* show thesis *)    
+   thus ?thesis
+      by(simp add: Rep_CSPF_def)
+  qed
+    
+lemma iterconst_monofun[simp]:    assumes "spfRan\<cdot>f1 = spfDom\<cdot>f2"
+                                  and "spfComp_well f1 f2"
+                                  and "pL f1 f2 = {}"
+shows "monofun (\<lambda>x. (sbDom\<cdot>x = I f1 f2)\<leadsto>(x \<uplus> (f1 \<rightleftharpoons> (x \<bar>spfDom\<cdot>f1)) 
+                                    \<uplus> (f2 \<rightleftharpoons> (f1 \<rightleftharpoons> (x\<bar>spfDom\<cdot>f1))))\<bar>Oc f1 f2)"
+ using cont2mono iterconst_cont assms by blast
+   
 
 lemma iterconst_well[simp]:       assumes "spfRan\<cdot>f1 = spfDom\<cdot>f2"
                                   and "spfComp_well f1 f2"
@@ -661,6 +672,10 @@ lemma spfSerComp_spfID : "(((Rep_CSPF (spfcomp ID1 ID2)) \<rightharpoonup> ([c1 
 
 end
 
+  
+  
+  
+  
 (* fragments for spfcomp is cont *)
 (* 
 
