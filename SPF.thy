@@ -897,31 +897,25 @@ proof -
   then show ?thesis
     by metis
 qed
-  
-lemma testdom: assumes "sb1 \<sqsubseteq> sb2"  (* < = this is just a reminder *)
-  shows "sbDom\<cdot>sb1 = sbDom\<cdot>sb2"
-  using assms sbdom_eq by auto
-    
 
- (* 
 lemma spfCompHelp2_iter_lub_dom: assumes "sbDom\<cdot>x = I f1 f2" 
                              and  "spfRan\<cdot>f1 \<inter> spfRan\<cdot>f2 = {}" 
                            shows "sbDom\<cdot>(\<Squnion>n. iterate n\<cdot>(spfCompHelp2 f1 f2 x)\<cdot>(sbLeast (C f1 f2))) = C f1 f2"
 proof -
   have "\<forall>n .sbDom\<cdot>(iterate n\<cdot>(spfCompHelp2 f1 f2 x)\<cdot>(sbLeast (C f1 f2))) = C f1 f2" 
     by (simp add: assms(1) assms(2) spfCompHelp2_iter_dom)
-  hence "sb \<in> range (\<lambda>n .iterate n\<cdot>(spfCompHelp2 f2 f1 x)\<cdot>(sbLeast (C f2 f1))) \<Longrightarrow> sbDom\<cdot>sb = C f1 f2" (* for alle expression needed here *)
-    sorry
-  thus ?thesis apply(simp add: lub_def)
-    sorry
-      qed
+  hence "\<forall>n. \<forall>sb. (iterate n\<cdot>(spfCompHelp2 f1 f2 x)\<cdot>(sbLeast (C f1 f2))) \<sqsubseteq> sb \<longrightarrow> sbDom\<cdot>sb = C f1 f2"
+    using sbdom_eq by blast
+  thus ?thesis 
+    by (smt \<open>\<forall>n. sbDom\<cdot> (iterate n\<cdot>(spfCompHelp2 f1 f2 x)\<cdot>(sbLeast (C f1 f2))) = C f1 f2\<close> iterate_0 iterate_Suc2 monofun_cfun_arg po_class.chainI sbChain_dom_eq2 sbleast_least)
+qed
   
 lemma spfComp_ran: assumes "spfRan\<cdot>f1 \<inter> spfRan\<cdot>f2 = {}" 
-  shows "spfRan\<cdot>(spfcomp f1 f2) = I f1 f2"
-    apply(simp add: spfran_least)
-      apply(simp add: spfdom_insert  Rep_CSPF_def)
-oops
-*)
+  shows "spfRan\<cdot>(spfcomp f1 f2) = Oc f1 f2"
+    apply(simp add: spfcomp_def spfRan_def)
+    
+    
+
     
 
 lemma oc_commu: "Oc f1 f2 = Oc f2 f1"
