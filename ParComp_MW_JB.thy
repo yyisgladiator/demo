@@ -259,3 +259,5 @@ lemma spfCompParallelGetch2: assumes "L f1 f2 = {}"
   apply(simp add: spfcomp_tospfH2)
   apply (subst  spfComp_parallel_iterconst_eq1,  simp_all add: assms)
   by(simp_all add: spfComp_cInOc2 assms)
+    
+end
