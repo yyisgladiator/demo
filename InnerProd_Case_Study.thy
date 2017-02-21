@@ -6,7 +6,7 @@
 *)
 
 theory InnerProd_Case_Study
-imports SPF Streams SerComp_JB StreamCase_Study SPF_MW
+imports SPF Streams SerComp_JB StreamCase_Study SPF_MW ParComp_MW_JB
 
 begin
 
@@ -15,69 +15,22 @@ begin
 (* DEFINITION ADD/MULT *)
 (* Before we can build up the inner component we have to define the add and mult component first *)
 (* multiplies 2 nat - streams component-wise *)
-definition mult:: "nat stream \<rightarrow> nat stream \<rightarrow> nat stream" where
-"mult \<equiv> \<Lambda> s1 s2 . smap (\<lambda> s3. (fst s3) * (snd s3))\<cdot>(szip\<cdot>s1\<cdot>s2)"
+(* moved previous part to SPF_templates *)
 
-(* multiplication component *)
-lemma spfmult_mono[simp] : "monofun 
-                           (\<lambda> sb. (sbDom\<cdot>sb = {ch1, ch2}) \<leadsto> ([ch3 \<mapsto> mult\<cdot>(sb . ch1)\<cdot>(sb . ch2)]\<Omega>))"
-  apply (rule spf_mono2monofun)
-   apply (rule spf_monoI)
-   apply (simp add: domIff2)
-   apply (rule sb_below)
-    apply (simp add: sbdom_insert)
-    apply (simp add: sbdom_rep_eq sbgetch_rep_eq)
-   apply (meson monofun_cfun monofun_cfun_arg monofun_cfun_fun)
-   by (rule, simp add: domIff2)
 
-lemma mult_chain[simp]: "chain Y \<Longrightarrow> sbDom\<cdot>(Y 0) = {ch1,ch2} 
-                        \<Longrightarrow> chain (\<lambda> i. [ch3\<mapsto>mult\<cdot>((Y i) . ch1)\<cdot>((Y i) . ch2)]\<Omega>)"
-  apply (rule chainI)
-  apply (rule sb_below)
-   apply (simp add: sbdom_rep_eq)
-   apply (simp add: sbdom_rep_eq sbgetch_rep_eq)
-   by (simp add: monofun_cfun po_class.chainE)
-
-lemma mult_chain_lub[simp]: "chain Y \<Longrightarrow> sbDom\<cdot>(Lub Y) = {ch1,ch2} 
-                                \<Longrightarrow> chain (\<lambda> i. [ch3\<mapsto>mult\<cdot>((Y i) . ch1)\<cdot>((Y i) . ch2)]\<Omega>)"
-  by (simp add: sbChain_dom_eq2)
-
-lemma mult_Lub[simp]: "chain Y \<Longrightarrow> sbDom\<cdot>(Lub Y) = {ch1,ch2} \<Longrightarrow> 
-  (\<Squnion>i. mult\<cdot>(Y i . ch1)\<cdot>(Y i . ch2)) = mult\<cdot>((Lub Y) . ch1)\<cdot>((Lub Y). ch2)"
-proof -
-  assume a1: "chain Y"
-  have f2: "\<forall>f fa. (\<not> chain f \<or> \<not> chain fa) \<or> (\<Squnion>n. (f n\<cdot>(fa n::nat stream)::nat stream)) = Lub f\<cdot>(Lub fa)"
-    using lub_APP by blast
-  have f3: "\<forall>f c. \<not> chain f \<or> (c\<cdot>(Lub f::nat stream)::nat stream \<rightarrow> nat stream) = (\<Squnion>n. c\<cdot>(f n))"
-    using contlub_cfun_arg by blast
-  have f4: "\<forall>f c. \<not> chain f \<or> (c\<cdot>(Lub f::nat SB)::channel \<rightarrow> nat stream) = (\<Squnion>n. c\<cdot>(f n))"
-    using contlub_cfun_arg by blast
-  have "\<forall>f c. \<not> chain f \<or> (Lub f\<cdot>(c::channel)::nat stream) = (\<Squnion>n. f n\<cdot>c)"
-    using contlub_cfun_fun by blast
-  then have "(\<Squnion>n. mult\<cdot>(Y n . ch1)\<cdot>(Y n . ch2)) = mult\<cdot>(Lub Y . ch1)\<cdot>(Lub Y . ch2)"
-    using f4 f3 f2 a1 by simp
-  then show ?thesis
-    by force
-qed
+(* ----------------------------------------------------------------------- *)
+section \<open>Component instantiation\<close>
+(* ----------------------------------------------------------------------- *)   
 
 lemma spfmult_cont: "cont 
                            (\<lambda> sb. (sbDom\<cdot>sb = {ch1, ch2}) \<leadsto> ([ch3 \<mapsto> mult\<cdot>(sb . ch1)\<cdot>(sb . ch2)]\<Omega>))"
-  apply (rule spf_cont2cont)
-    apply (rule spf_contlubI)
-    apply (simp add: domIff2 sbChain_dom_eq2)
-    apply (rule sb_below)
-     apply (simp add: sbdom_rep_eq )
-     apply (simp only: Cfun.contlub_cfun_arg mult_chain_lub)
-     apply (simp add: sbdom_rep_eq sbgetch_rep_eq)
-    apply (simp add: sbdom_rep_eq sbgetch_rep_eq sbgetch_lub)
-   apply (simp add: monofun2spf_mono)
-  by(simp add: domIff2, rule+)
+  by (simp add: SPF_Templates.spfmult_cont)
 
 (* proof of cont mult gets reduced to *)
+    (* @Marc: Is this obsolete? *)
 lemma spfmult_cont2[simp]: "cont 
                            (\<lambda> sb. (sbDom\<cdot>sb = {ch1, ch2}) \<leadsto> ([ch3 \<mapsto> mult\<cdot>(sb . ch1)\<cdot>(sb . ch2)]\<Omega>))"
-apply(subst spfmult_cont)
-by(simp)
+   by (simp add: SPF_Templates.spfmult_cont)
 
 (* As we now proved that the add and mult component is continuous we can define some components *)
 lift_definition mult1 :: "nat SPF" is
@@ -101,7 +54,9 @@ lemma mult2_rep_eqC: "Rep_CSPF mult2 = (\<lambda> sb. (sbDom\<cdot>sb = {c3, c4}
 lemma addC_rep_eqC: "Rep_CSPF addC = (\<lambda> sb. (sbDom\<cdot>sb = {c5, c6}) \<leadsto> ([c7 \<mapsto> add\<cdot>(sb . c5)\<cdot>(sb . c6)]\<Omega>))"
   by (auto simp add: addC_def addSPF_rep_eqC)
 
-(* COMPONENT PROPERTIES *)
+
+subsection \<open>Channel sets\<close>
+(* ----------------------------------------------------------------------- *) 
 (* mult1 *)
 lemma [simp]: "spfDom\<cdot>mult1 = {c1,c2}"
   apply(simp add: spfdom_insert mult1.rep_eq Rep_CSPF_def domIff2)
@@ -148,21 +103,29 @@ lemma [simp]: "Oc mult1 mult2 = {c5,c6}"
 lemma [simp]: "I mult1 mult2 = {c1,c2,c3,c4}"
 by auto
 
+(* ----------------------------------------------------------------------- *)
+section \<open>Temporary_REMOVETHIS\<close>
+(* ----------------------------------------------------------------------- *)     
+  
 (* Remove this ASAP *)
 lemma spfCompParallelGetch1: assumes "L f1 f2 = {}"
                                 and "sbDom\<cdot>sb = I f1 f2"
                                 and "spfComp_well f1 f2"
                                 and "c \<in> spfRan\<cdot>f1" 
   shows "(Rep_CSPF(spfcomp f1 f2) \<rightharpoonup> sb) . c = (Rep_CSPF(f1) \<rightharpoonup> (sb\<bar>spfDom\<cdot>f1)) . c"
-sorry
+ by (simp add: ParComp_MW_JB.spfCompParallelGetch1 assms)
 
 lemma spfCompParallelGetch2: assumes "L f1 f2 = {}"
                                 and "sbDom\<cdot>sb = I f1 f2"
                                 and "spfComp_well f1 f2"
                                 and "c \<in> spfRan\<cdot>f2" 
   shows "(Rep_CSPF(spfcomp f1 f2) \<rightharpoonup> sb) . c = (Rep_CSPF(f2) \<rightharpoonup> (sb\<bar>spfDom\<cdot>f2)) . c"
-sorry
+ by (simp add: ParComp_MW_JB.spfCompParallelGetch2 assms)
 
+   
+(* ----------------------------------------------------------------------- *)
+section \<open>Composition prerequirements\<close>
+(* ----------------------------------------------------------------------- *)   
 (* added because of message instantiation clash *)
 
 lemma mult_comp1: assumes "sbDom\<cdot>sb = I mult1 mult2"
@@ -198,8 +161,10 @@ lemma mults_comp: assumes "sbDom\<cdot>sb = I mult1 mult2"
   apply(subst rep_abs_cspf, simp_all add: assms, auto)
   by(simp_all add: multcomp_cont multcomp_spfwell)
 
-(* SERIAL COMPOSITION OF MULTS and addC PREREQUIREMENTS *)
 
+subsection \<open>Channel sets\<close>
+(* ----------------------------------------------------------------------- *) 
+  
 lemma [simp]: "spfDom\<cdot>(spfcomp mult1 mult2) = {c1, c2, c3, c4}"
 by(simp add: spfComp_dom_I)
 
@@ -233,6 +198,9 @@ lemma innerprod_serComp: assumes "sbDom\<cdot>sb = I (spfcomp mult1 mult2) addC"
   by (subst spfCompSeriellGetch, simp_all add: assms spfComp_ran_Oc)
 
 (* inner Prod *)
+(* ----------------------------------------------------------------------- *)
+section \<open>InnerProd\<close>
+(* ----------------------------------------------------------------------- *)   
 
 definition innerProd :: "nat SPF" where
 "innerProd \<equiv> ((mult1 \<otimes> mult2) \<otimes> addC) \<h> {c5, c6}"
