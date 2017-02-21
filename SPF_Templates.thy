@@ -66,6 +66,39 @@ apply(rule spf_cont2cont)
   apply(simp add: domIff2)
   by rule+ 
 
+lemma spf_sb_id_well[simp] : "spf_well (Abs_cfun (\<lambda>sb. (sbDom\<cdot>sb = {ch1}) 
+                                                  \<leadsto> ([ch2 \<mapsto> sb_id\<cdot>(sb . ch1)]\<Omega>)))"  
+  by(auto simp add: spf_well_def domIff2 sbdom_rep_eq)
+    
+lemma test2: "snd (ch1, ch2) = ch2"
+  by simp
+    
+subsection \<open>idSPF lemmata\<close>
+
+lemma idSPF_rep_eq_C: "Rep_CSPF (idSPF (ch1, ch2)) 
+                                = (\<lambda> (sb::nat SB). (sbDom\<cdot>sb = {(fst (ch1,ch2))}) 
+                                        \<leadsto> ([(snd (ch1,ch2)) \<mapsto> sb_id\<cdot>(sb . (fst (ch1,ch2)))]\<Omega>))"
+  apply(simp add: idSPF_def)
+  apply(subst Product_Type.snd_conv, subst Product_Type.fst_conv)
+  apply(subst Product_Type.snd_conv, subst Product_Type.fst_conv)
+  by simp
+      
+lemma idSPF_dom[simp]: "spfDom\<cdot>(idSPF (ch1, ch2)) = {ch1}"
+  apply(simp add: idSPF_def, subst Product_Type.snd_conv, subst Product_Type.fst_conv)
+  apply(simp add: spfdom_insert idSPF_rep_eq_C)
+  apply(simp add: domIff2)
+  by (meson sbleast_sbdom someI)
+    
+lemma idSPF_ran[simp]: "spfRan\<cdot>(idSPF (ch1, ch2)) = {ch2}"
+  apply(simp add: spfran_least)
+  apply(simp add: idSPF_def, subst Product_Type.snd_conv, subst Product_Type.fst_conv, simp)
+  by(simp add: spfran_least sbdom_insert)
+    
+lemma idSPF_apply: "(idSPF (ch1, ch2)) \<rightleftharpoons> ([ch1 \<mapsto> s]\<Omega>) = ([ch2 \<mapsto> (s:: nat stream)]\<Omega>)"
+  apply(simp add: idSPF_rep_eq_C  sb_id_def  sbgetch_insert)
+  by(simp add: sbdom_rep_eq)
+
+
     
 (* For further lemmas see SerComp or ParComp *) 
     
@@ -127,7 +160,7 @@ proof -
     by force
 qed
 
-lemma spfmult_cont: "cont 
+lemma spfmult_cont[simp]: "cont 
                            (\<lambda> sb. (sbDom\<cdot>sb = {ch1, ch2}) \<leadsto> ([ch3 \<mapsto> mult\<cdot>(sb . ch1)\<cdot>(sb . ch2)]\<Omega>))"
   apply (rule spf_cont2cont)
     apply (rule spf_contlubI)
@@ -139,5 +172,40 @@ lemma spfmult_cont: "cont
     apply (simp add: sbdom_rep_eq sbgetch_rep_eq sbgetch_lub)
    apply (simp add: monofun2spf_mono)
   by(simp add: domIff2, rule+)
+    
+
+lemma spfmult_well[simp] : "spf_well (Abs_cfun (\<lambda> sb. (sbDom\<cdot>sb = {ch1, ch2}) \<leadsto> ([ch3 \<mapsto> mult\<cdot>(sb . ch1)\<cdot>(sb . ch2)]\<Omega>)))"  
+    apply(simp_all add: spf_well_def domIff2 sbdom_rep_eq )
+    oops
+    
+    
+subsection \<open>multSPF lemmata\<close>
+(* LEMMAS below work if spfmult_well is proven *)
+  
+  (*
+lemma multSPF_rep_eq_C: "Rep_CSPF (multSPF (ch1, ch2, ch3)) 
+                                = (\<lambda> (sb::nat SB). (sbDom\<cdot>sb = {(fst (ch1, ch2, ch3)), (fst (snd (ch1, ch2, ch3)))}) \<leadsto> ([(snd (snd (ch1, ch2, ch3)))\<mapsto>mult\<cdot>(sb . (fst (ch1, ch2, ch3)))\<cdot>(sb . (fst (snd (ch1, ch2, ch3))))]\<Omega>))"
+  apply(simp add: multSPF_def)
+  apply(subst Product_Type.snd_conv, subst Product_Type.fst_conv)
+  apply(subst Product_Type.snd_conv, subst Product_Type.fst_conv)
+  apply(subst Product_Type.snd_conv, subst Product_Type.fst_conv, subst Product_Type.snd_conv, subst Product_Type.fst_conv, subst Product_Type.snd_conv, subst Product_Type.snd_conv)
+  by simp
+      
+lemma multSPF_dom[simp]: "spfDom\<cdot>(multSPF (ch1, ch2, ch3)) = {ch1, ch2}"
+  apply(simp add: multSPF_def, subst Product_Type.snd_conv, subst Product_Type.fst_conv, subst Product_Type.snd_conv, subst Product_Type.fst_conv, subst Product_Type.snd_conv)
+  apply(simp add: spfdom_insert idSPF_rep_eq_C)
+  apply(simp add: domIff2)
+  by (meson sbleast_sbdom someI)
+    
+lemma multSPF_ran[simp]: "spfRan\<cdot>(multSPF (ch1, ch2, ch3)) = {ch3}"
+  apply(simp add: spfran_least)
+  apply(simp add: multSPF_def, subst Product_Type.snd_conv, subst Product_Type.fst_conv, subst Product_Type.snd_conv, subst Product_Type.fst_conv, subst Product_Type.snd_conv, simp)
+  by(simp add: spfran_least sbdom_insert)
+    
+lemma multSPF_apply: "(multSPF (ch1, ch2, ch3)) \<rightleftharpoons> ([ch1 \<mapsto> (s1:: nat stream), ch2  \<mapsto> (s2:: nat stream)]\<Omega>) = ([ch3 \<mapsto> (mult\<cdot>s1\<cdot>s2)]\<Omega>)"
+  apply(simp add: multSPF_rep_eq_C sb_id_def sbgetch_insert)
+  apply(simp add: sbdom_rep_eq)
+  oops
+    *)
 
 end
