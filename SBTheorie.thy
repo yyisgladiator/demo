@@ -608,6 +608,21 @@ lemma sbrestrict_below [simp]:  assumes "chain Y" and "cont h"
       shows "(h (\<Squnion>i. Y i) \<bar> g (sbDom\<cdot>(\<Squnion>i. Y i))) \<sqsubseteq> (\<Squnion>i. (h (Y i) \<bar> g (sbDom\<cdot>(Y i)) ))"
 by (smt assms(1) assms(2) ch2ch_cont cont2contlubE contlub_cfun_arg lub_eq po_eq_conv sbChain_dom_eq2)
 
+lemma sbunion_restrict [simp]: assumes "sbDom\<cdot>b2 = cs"
+  shows "(b1 \<uplus> b2) \<bar> cs = b2"
+apply(simp add: sbunion_insert sbrestrict_insert )
+by (metis (no_types) Rep_SB_inverse assms map_union_restrict2 sbdom_insert)
+
+lemma sbunion_restrict2 [simp]: assumes "sbDom\<cdot>b2 \<inter> cs = {}"
+  shows "(b1 \<uplus> b2) \<bar> cs = b1 \<bar> cs" 
+  apply(rule sb_eq)
+   apply (simp add: Int_Un_distrib2 assms)
+  using assms sbunion_getchL by fastforce
+
+lemma sbunion_restrict3: "(b1 \<uplus> b2) \<bar> cs = (b1 \<bar> cs) \<uplus> (b2 \<bar> cs)"
+apply(simp add: sbrestrict_insert sbunion_insert)
+by (metis (full_types) mapadd2if_then restrict_map_def)  
+  
 
 (* ----------------------------------------------------------------------- *)
   subsection \<open>sbRemCh\<close>
