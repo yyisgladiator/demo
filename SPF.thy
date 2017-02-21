@@ -912,7 +912,7 @@ qed
   
 lemma spfComp_ran: assumes "spfRan\<cdot>f1 \<inter> spfRan\<cdot>f2 = {}" 
   shows "spfRan\<cdot>(spfcomp f1 f2) = Oc f1 f2"
-    apply(simp add: spfcomp_def spfRan_def)
+   oops
     
     
 

@@ -6,7 +6,7 @@
 *)
 
 theory SerComp_JB
-imports SPF SBTheorie
+imports SPF SBTheorie SPF_Templates
 begin
 
 (* special operator for serial composition, domain of f2 must be range of f1  *)
@@ -15,21 +15,6 @@ definition sercomp :: "'m SPF => 'm SPF => 'm SPF"  where
 let I = spfDom\<cdot>f1
 in Abs_CSPF (\<lambda> x. (sbDom\<cdot>x = I ) \<leadsto> ((Rep_CSPF f2)\<rightharpoonup>((Rep_CSPF f1) \<rightharpoonup> x)))"
 
-
-(* FUNCTION DEFINITIONS *)
-(* id function defintion, change name ASAP but for now ensures readability *)
-definition bla :: "nat stream \<rightarrow> nat stream" where
-"bla \<equiv> \<Lambda> x . x"
-
-(* PORTED *)
-(* feedback channels between to SPFs*)
-definition pL :: "'m SPF \<Rightarrow> 'm SPF \<Rightarrow> channel set" where
-"pL f1 f2 \<equiv> (spfDom\<cdot>f1 \<inter> spfRan\<cdot>f1) \<union> (spfDom\<cdot>f1 \<inter> spfRan\<cdot>f2) \<union> (spfDom\<cdot>f2 \<inter> spfRan\<cdot>f2)"
-
-(* TODO: this should be ported to SPF.thy in order to make spfcomp proofs more readable *)
-definition spfCompHelp2 :: "'m SPF \<Rightarrow> 'm SPF \<Rightarrow> 'm SB \<Rightarrow> 'm SB  \<rightarrow> 'm SB" where
-"spfCompHelp2 f1 f2 x \<equiv> (\<Lambda> z. x \<uplus> ((Rep_CSPF f1)\<rightharpoonup>(z \<bar> spfDom\<cdot>f1)) 
-                                 \<uplus> ((Rep_CSPF f2)\<rightharpoonup>(z \<bar> spfDom\<cdot>f2)))"
 
 (* NEW CONT PROOFS *)
 (* (\<Squnion>i. iterate i\<cdot>(spfCompHelp2 f1 f2 x)\<cdot>(sbLeast (C f1 f2))) \<bar> Oc f1 f2 *)
@@ -178,75 +163,19 @@ using beta_cfun test14 assms by blast
 (* END OF NEW THINGS *)
 
 
-
-
-
-(* We start the CaseStudy by defining the ID function for SPFs *)
-(* Show ID is monotone *)
-lemma spfID_mono[simp] : "monofun (\<lambda> sb. (sbDom\<cdot>sb = {ch1}) \<leadsto> ([ch2 \<mapsto> bla\<cdot>(sb . ch1)]\<Omega>))"
-  apply (rule spf_mono2monofun)
-  apply(rule spf_monoI)
-  apply(simp add: domIff2)
-  apply(rule sb_below)
-  apply(simp add: sbdom_insert)
-  apply(simp add: sbdom_rep_eq sbgetch_rep_eq)
-  apply(meson monofun_cfun monofun_cfun_arg monofun_cfun_fun)
-  apply rule
-  by(simp add: domIff2)
-
-(* Show ID is continuous *)
-lemma ID_chain[simp]: "chain Y \<Longrightarrow> sbDom\<cdot>(Y 0) = {ch1} \<Longrightarrow> chain (\<lambda> i. [ch2 \<mapsto> bla\<cdot>(Y i . ch1)]\<Omega>)"
-  apply(rule chainI)
-  apply(rule sb_below)
-   apply (simp add: sbdom_rep_eq)
-   apply(simp add: sbdom_rep_eq sbgetch_rep_eq)
-   by (simp add: monofun_cfun po_class.chainE)
-
-lemma ID_chain_lub[simp]: "chain Y \<Longrightarrow> sbDom\<cdot>(Lub Y) = {ch1} 
-                                      \<Longrightarrow> chain (\<lambda> i. [ch2 \<mapsto> bla\<cdot>((Y i) . ch1)]\<Omega>)"
-  by (simp  add: sbChain_dom_eq2)
-
-lemma spfID_chain[simp]: "chain Y \<Longrightarrow> 
-                                  chain(\<lambda> i. (sbDom\<cdot>(Y i) = {ch1}) \<leadsto> ([ch2\<mapsto>bla\<cdot>((Y i) . ch1)]\<Omega>))"
-  apply(rule chainI)
-  apply (simp add: sbChain_dom_eq2)
-  apply(rule impI, rule some_below, rule sb_below)
-   apply (simp add: sbdom_insert)
-  apply(simp add: sbdom_rep_eq sbgetch_rep_eq)
-  by (simp add: monofun_cfun po_class.chainE)
-
-lemma sID_Lub[simp]: "chain Y \<Longrightarrow> sbDom\<cdot>(Lub Y) = {ch1} 
-                                  \<Longrightarrow> (\<Squnion>i. bla\<cdot>(Y i . c1)) = bla\<cdot>((Lub Y) . c1)"
-  by (simp add: contlub_cfun_arg contlub_cfun_fun)
-
-lemma spfID_cont[simp] : "cont (\<lambda> sb. (sbDom\<cdot>sb = {ch1}) \<leadsto> ([ch2 \<mapsto> bla\<cdot>(sb . ch1)]\<Omega>))"
-apply(rule spf_cont2cont)
- apply(rule spf_contlubI)
-  apply(simp add: domIff2 sbChain_dom_eq2)
-  apply(rule sb_below)
-   apply (simp add: sbdom_rep_eq)
-   apply(simp only: Cfun.contlub_cfun_arg ID_chain_lub)
-   apply(simp add: sbdom_rep_eq sbgetch_rep_eq)
-   apply(simp add: sbdom_rep_eq sbgetch_rep_eq sbgetch_lub)
-    apply(simp add: contlub_cfun_arg)
-   apply (simp add: monofun2spf_mono)
-  apply(simp add: domIff2)
-  by rule+ 
-  
-
 (* ID function definitions *)
-lift_definition ID1 :: "nat SPF" is "(\<Lambda> sb. (sbDom\<cdot>sb = {c1}) \<leadsto> ([c2 \<mapsto> bla\<cdot>(sb . c1)]\<Omega>))"
+lift_definition ID1 :: "nat SPF" is "(\<Lambda> sb. (sbDom\<cdot>sb = {c1}) \<leadsto> ([c2 \<mapsto> sb_id\<cdot>(sb . c1)]\<Omega>))"
   by(auto simp add: spf_well_def domIff2 sbdom_rep_eq)
 
-lift_definition ID2 :: "nat SPF" is "(\<Lambda> sb. (sbDom\<cdot>sb = {c2}) \<leadsto> ([c3 \<mapsto> bla\<cdot>(sb . c2)]\<Omega>))"
+lift_definition ID2 :: "nat SPF" is "(\<Lambda> sb. (sbDom\<cdot>sb = {c2}) \<leadsto> ([c3 \<mapsto> sb_id\<cdot>(sb . c2)]\<Omega>))"
   by(auto simp add: spf_well_def domIff2 sbdom_rep_eq)
 
 
 (* ID rep equalities, useful for simp *)
-lemma ID1_rep_eqC: "Rep_CSPF ID1 = (\<lambda> sb. (sbDom\<cdot>sb = {c1}) \<leadsto> ([c2 \<mapsto> bla\<cdot>(sb . c1)]\<Omega>))"
+lemma ID1_rep_eqC: "Rep_CSPF ID1 = (\<lambda> sb. (sbDom\<cdot>sb = {c1}) \<leadsto> ([c2 \<mapsto> sb_id\<cdot>(sb . c1)]\<Omega>))"
   by(simp add: ID1.rep_eq Rep_CSPF_def)
 
-lemma ID2_rep_eqC: "Rep_CSPF ID2 = (\<lambda> sb. (sbDom\<cdot>sb = {c2}) \<leadsto> ([c3 \<mapsto> bla\<cdot>(sb . c2)]\<Omega>))"
+lemma ID2_rep_eqC: "Rep_CSPF ID2 = (\<lambda> sb. (sbDom\<cdot>sb = {c2}) \<leadsto> ([c3 \<mapsto> sb_id\<cdot>(sb . c2)]\<Omega>))"
   by(simp add: ID2.rep_eq Rep_CSPF_def)
 
 
@@ -272,11 +201,11 @@ lemma [simp]: "spfRan\<cdot>ID2 = {c3}"
   by(simp add: sbdom_insert)
 
 lemma id_apply1: "((Rep_CSPF ID1) \<rightharpoonup> ([c1 \<mapsto> s]\<Omega>)) = ([c2 \<mapsto> (s:: nat stream)]\<Omega>)"
-  apply(simp add: bla_def Rep_CSPF_def ID1.rep_eq sbdom_rep_eq)
+  apply(simp add: sb_id_def Rep_CSPF_def ID1.rep_eq sbdom_rep_eq)
   by(simp add: sbgetch_insert)
 
 lemma id_apply2: "((Rep_CSPF ID2) \<rightharpoonup> ([c2 \<mapsto> s]\<Omega>)) = ([c3 \<mapsto> (s:: nat stream)]\<Omega>)"
-  apply(simp add: bla_def Rep_CSPF_def ID2.rep_eq sbdom_rep_eq)
+  apply(simp add: sb_id_def Rep_CSPF_def ID2.rep_eq sbdom_rep_eq)
   by(simp add: sbgetch_insert)
 
 lemma [simp]: "spfComp_well ID1 ID2"
@@ -396,7 +325,7 @@ lemma spfComp_I_domf1_eq: assumes "spfRan\<cdot>f1 = spfDom\<cdot>f2"
                           and "pL f1 f2 = {}"
   shows "I f1 f2 = spfDom\<cdot>f1"
   apply(simp add: I_def, subst assms(1))
-by (metis I_def SPF.pL_def SerComp_JB.pL_def assms(1) assms(2) assms(3) assms(4) assms(5) spfComp_I_domf1_eq)
+by (metis I_def pL_def assms(1) assms(2) assms(3) assms(4) assms(5) spfComp_I_domf1_eq)
 
 (* for simp usage when the resut is input for f2 *)
 lemma spfComp_domranf1: assumes "spfRan\<cdot>f1 = spfDom\<cdot>f2" 
@@ -595,7 +524,7 @@ sorry
 *)
 
 
-lemma iterconst_cont[simp]:       assumes "spfRan\<cdot>f1 = spfDom\<cdot>f2"
+lemma serial_iterconst_cont[simp]:       assumes "spfRan\<cdot>f1 = spfDom\<cdot>f2"
                                   and "spfComp_well f1 f2"
                                   and "pL f1 f2 = {}"
 shows "cont (\<lambda>x. (sbDom\<cdot>x = I f1 f2)\<leadsto>(x \<uplus> (f1 \<rightleftharpoons> (x \<bar>spfDom\<cdot>f1)) 
@@ -625,15 +554,15 @@ proof -
       by(simp add: Rep_CSPF_def)
   qed
     
-lemma iterconst_monofun[simp]:    assumes "spfRan\<cdot>f1 = spfDom\<cdot>f2"
+lemma serial_iterconst_monofun[simp]:    assumes "spfRan\<cdot>f1 = spfDom\<cdot>f2"
                                   and "spfComp_well f1 f2"
                                   and "pL f1 f2 = {}"
 shows "monofun (\<lambda>x. (sbDom\<cdot>x = I f1 f2)\<leadsto>(x \<uplus> (f1 \<rightleftharpoons> (x \<bar>spfDom\<cdot>f1)) 
                                     \<uplus> (f2 \<rightleftharpoons> (f1 \<rightleftharpoons> (x\<bar>spfDom\<cdot>f1))))\<bar>Oc f1 f2)"
- using cont2mono iterconst_cont assms by blast
+ using cont2mono serial_iterconst_cont assms by blast
    
 
-lemma iterconst_well[simp]:       assumes "spfRan\<cdot>f1 = spfDom\<cdot>f2"
+lemma serial_iterconst_well[simp]:       assumes "spfRan\<cdot>f1 = spfDom\<cdot>f2"
                                   and "spfComp_well f1 f2"
                                   and "no_selfloops f1 f2"
                                   and "pL f1 f2 = {}"
