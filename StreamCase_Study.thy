@@ -306,7 +306,7 @@ lemma sum3_shd [simp]: "shd (sum3\<cdot>as) = shd as"
 lemma sum3_snth: "Fin n < #as \<Longrightarrow> snth (Suc n) (sum3\<cdot>(\<up>a \<bullet> as)) = snth n (sum3\<cdot>as) + a"
   apply(induction n arbitrary: as a)
    apply(simp add: sum3_def sscanl_srt snth_rt)
-   apply (metis add.commute add.left_neutral add.right_neutral lnsuc_neq_0_rev shd1 slen_empty_eq sscanl_scons surj_scons)
+   apply (metis add.commute add.left_neutral lnsuc_neq_0_rev shd1 slen_empty_eq sscanl_scons surj_scons)
   by (smt Fin_Suc HOLCF_trans_rules(1) HOLCF_trans_rules(2) add.commute less_lnsuc lnat.sel_rews(2) lnle_def lnless_def lscons_conv monofun_cfun_arg semiring_normalization_rules(25) slen_scons snth_rt sscanl_snth stream.sel_rews(5) sum3_def up_defined)
 
 lemma sum3_snth_inf[simp]: "snth n (sum3\<cdot>(\<up>x\<infinity>)) = (Suc n) * x"
@@ -1151,10 +1151,19 @@ apply (metis Fin_02bot Fin_Suc less_lnsuc lnzero_def not_less snth_rt snth_shd s
 using Fin_Suc lnat_po_eq_conv lnle_def lnless_def lnsuc_lnle_emb lnzero_def minimal slen_scons snth_scons strict_slen surj_scons
 by (smt add.assoc lnle_Fin_0 nat.distinct(1) not_less sum_nth.simps(2))
 
-(*the nth element of (sum3 s) is equal to (sum_nth n s)*)
+(*For infinite streams the nth element of (sum3 s) is equal to (sum_nth n s)*)
+lemma sum32sum_nth_inf: "#s=\<infinity> \<Longrightarrow> snth n (sum3\<cdot> s)  = sum_nth n s"
+apply(induction n)
+apply simp
+apply(subst sum_nth_nth)
+apply auto
+using sum3_snth
+by (metis leI notinfI3 sscanl_snth sum3_def)
+
+(*the nth existing element of (sum3 s) is equal to (sum_nth n s)*)
 lemma sum32sum_nth: "Fin n <#s \<longrightarrow> snth n (sum3\<cdot> s)  = sum_nth n s"
-  apply(induction n)
-   apply(simp)
+apply(induction n)
+apply(simp)
 using sum3_snth
 by (metis Fin_leq_Suc_leq less_le not_less sscanl_snth sum3_def sum_nth_nth)
 
