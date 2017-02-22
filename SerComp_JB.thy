@@ -411,8 +411,7 @@ lemma spfComp_serial : assumes "spfRan\<cdot>f1 = spfDom\<cdot>f2"
    circumstance, we now use the lemmas from before to show that the lub can be simplified to a 
    static expression *)
 (* show that lub can be described by constant if no feedback channels exist *)
-lemma spfComp_serialnf_chain: assumes "pL f1 f2 = {}"
-                              and "sbDom\<cdot>x = I f1 f2"
+lemma spfComp_serialnf_chain: assumes "sbDom\<cdot>x = I f1 f2"
                               and "spfComp_well f1 f2"
   shows "chain (\<lambda>i. iterate i\<cdot>(spfCompHelp2 f1 f2 x)\<cdot>(sbLeast (C f1 f2)))"
   apply(rule sbIterate_chain)

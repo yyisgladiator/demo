@@ -719,19 +719,7 @@ lemma I_commu: "I f1 f2 = I f2 f1"
   by (simp add: I_def Un_commute)
     
 lemma C_commu: "C f1 f2 = C f2 f1"
-proof -
-  have "spfDom\<cdot>f1 \<union> spfDom\<cdot>f2 = spfDom\<cdot>f2 \<union> spfDom\<cdot>f1"
-    by (simp add: Un_commute)
-  hence "\<forall>a. (spfDom\<cdot>f1 \<union> spfDom\<cdot>f2) \<union> a = (spfDom\<cdot>f2 \<union> spfDom\<cdot>f1) \<union> a"
-    by simp
-  moreover
-  have "spfRan\<cdot>f1 \<union> spfRan\<cdot>f2 = spfRan\<cdot>f2 \<union> spfRan\<cdot>f1"
-    by (simp add: Un_commute)
-  ultimately
-  have "(spfDom\<cdot>f1 \<union> spfDom\<cdot>f2) \<union> (spfRan\<cdot>f1 \<union> spfRan\<cdot>f2) = (spfDom\<cdot>f2 \<union> spfDom\<cdot>f1) \<union> (spfRan\<cdot>f2 \<union> spfRan\<cdot>f1)"
-    by blast
-  thus ?thesis by (simp add: C_def  Un_assoc)
-qed
+  using C_def by blast
 
 
   subsubsection \<open>spfcomp_commutative\<close>
