@@ -13,7 +13,7 @@ begin
 section \<open>spfCompHelp2\<close>
 (* ----------------------------------------------------------------------- *) 
   
-lemma sbdom_le_eq:  assumes "x \<sqsubseteq> y" and  "sbDom\<cdot>x = I f1 f2"
+lemma sbdom_le_eq:  assumes "x \<sqsubseteq> y"
   shows "sbDom\<cdot>x = sbDom\<cdot>y"
       by (metis assms(1) sbdom_eq)
   
@@ -74,7 +74,10 @@ lemma iter_spfcompH2_chain: assumes "sbDom\<cdot>x = I f1 f2"
 section \<open>lub_iter_spfCompHelp2\<close>
 (* ----------------------------------------------------------------------- *) 
   
-lemma lub_iter_spfCompHelp2_mono[simp]: assumes "x \<sqsubseteq> y" and  "sbDom\<cdot>x = I f1 f2"
+subsection \<open>mono\<close>  
+
+
+lemma lub_iter_spfCompHelp2_mono: assumes "x \<sqsubseteq> y" and  "sbDom\<cdot>x = I f1 f2"
   shows "(\<Squnion>i.(iter_spfcompH2 f1 f2 i) x) \<sqsubseteq> (\<Squnion>i.(iter_spfcompH2 f1 f2 i) y)"
 proof-
   have  "\<forall>i. ((iter_spfcompH2 f1 f2 i) x) \<sqsubseteq> ((iter_spfcompH2 f1 f2 i) y)"
@@ -87,15 +90,47 @@ proof-
      by (simp add: assms(2) iter_spfcompH2_chain lub_mono)
  qed
    
+lemma if_lub_iter_spfCompHelp2_mono: assumes "x \<sqsubseteq> y" 
+  shows "((\<lambda> x. (sbDom\<cdot>x = I f1 f2) \<leadsto> (\<Squnion>i.(iter_spfcompH2 f1 f2 i) x)) x) 
+              \<sqsubseteq> ((\<lambda> x. (sbDom\<cdot>x = I f1 f2) \<leadsto> (\<Squnion>i.(iter_spfcompH2 f1 f2 i) x)) y)"
+proof (cases "sbDom\<cdot>x = I f1 f2")
+  case True
+    have  "\<forall>i. ((iter_spfcompH2 f1 f2 i) x) \<sqsubseteq> ((iter_spfcompH2 f1 f2 i) y)"
+      using assms monofun_def by fastforce
+    moreover
+    have f1: "sbDom\<cdot>y = sbDom\<cdot>x"
+      by (metis assms(1) sbdom_eq)
+    ultimately
+    have "(\<Squnion>i.(iter_spfcompH2 f1 f2 i) x) \<sqsubseteq> (\<Squnion>i.(iter_spfcompH2 f1 f2 i) y)"
+        by (simp add: assms True iter_spfcompH2_chain lub_mono)
+    thus ?thesis
+      by (simp add: f1 some_below)
+next
+  case False
+   have "sbDom\<cdot>y = sbDom\<cdot>x"
+      by (metis assms(1) sbdom_eq)
+   thus ?thesis     
+      by (simp add: False some_below)
+  qed
+    
+subsection \<open>cont\<close>  
+   
 
   
 (* ----------------------------------------------------------------------- *)
 section \<open>spfComp\<close>
 (* ----------------------------------------------------------------------- *) 
   
-  
-lemma spf_comp_mono: "monofun (\<lambda> x. (sbDom\<cdot>x = I f1 f2) \<leadsto> (\<Squnion>i.(iter_spfcompH2 f1 f2 i) x) \<bar> Oc f1 f2)"
-(* Proof concept (sbDom\<cdot>x = I f1 f2) \<Rightarrow> monofun ... *)
+subsection \<open>mono\<close>  
 
+lemma spf_comp_mono[simp]: "monofun (\<lambda> x. (sbDom\<cdot>x = I f1 f2) 
+                                          \<leadsto> (\<Squnion>i.(iter_spfcompH2 f1 f2 i) x)  \<bar> Oc f1 f2 )" 
+proof -
+  have "monofun (\<lambda> x. (sbDom\<cdot>x = I f1 f2) \<leadsto> (\<Squnion>i.(iter_spfcompH2 f1 f2 i) x) )"
+    by (metis (no_types, lifting) lub_eq monofun_def if_lub_iter_spfCompHelp2_mono)
+  thus ?thesis
+    by (smt monofun_cfun_arg monofun_def sbdom_eq some_below some_below2)
+qed
   
+    
 end
