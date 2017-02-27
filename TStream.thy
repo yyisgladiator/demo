@@ -1648,10 +1648,10 @@ by (metis (no_types, lifting) inject_scons stream.sel_rews(2) strictI surj_scons
 
 (* the n+1st element produced by tsscanl is the result of merging the n+1st item of s with the nth
    element produced by tsscanl *)
-lemma tsscanl_snth:  "Fin (Suc n) < #s \<Longrightarrow> snth (Suc n) (tsscanl_h f (THE m. Msg m = a)\<cdot>s) = Msg(f (THE m. Msg m = (snth n (tsscanl_h f (THE m. Msg m = a)\<cdot>s))) (THE m. Msg m=(snth (Suc n) s)))"
+lemma tsscanl_h_snth:  "Fin (Suc n) < #s \<Longrightarrow> snth (Suc n) (tsscanl_h f (\<M>\<down> a)\<cdot>s) =(\<M> f (\<M>\<down> (snth n (tsscanl_h f (\<M>\<down> a)\<cdot>s))) (\<M>\<down> (snth (Suc n) s)))"
 oops
 (*
-apply(induction n arbitrary:  a s)
+apply (induction n arbitrary:  a s)
 apply (smt Fin_02bot Fin_leq_Suc_leq less2lnleD less_lnsuc lnat_po_eq_conv lnless_def lnzero_def shd1 slen_empty_eq slen_rt_ile_eq snth_scons snth_shd tsscanl_h_scons surj_scons)
 by (smt Fin_Suc lnat_po_eq_conv lnle_def lnless_def lnsuc_lnle_emb lnzero_def minimal slen_scons snth_scons sscanl_scons strict_slen surj_scons)
 *)
