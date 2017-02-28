@@ -463,5 +463,4 @@ qed
 lemma domIff2: "b\<in>dom (\<lambda>b2. ((P b2) \<leadsto> h b2)) \<longleftrightarrow> P b"
   using domIff by force
 
-
 end

@@ -3462,6 +3462,9 @@ lemma "\<not> (compact (sinftimes (\<up>x)))"
 definition add:: "nat stream \<rightarrow> nat stream \<rightarrow> nat stream" where
 "add \<equiv> \<Lambda> s1 s2 . smap (\<lambda> s3. (fst s3) + (snd s3))\<cdot>(szip\<cdot>s1\<cdot>s2)"
 
+definition add2:: "nat stream \<Rightarrow> nat stream \<Rightarrow> nat stream" ("_+_") where
+"add2 s1 s2 \<equiv> add\<cdot>s1\<cdot>s2"
+
 lemma "cont (\<lambda> s1 s2 . smap (\<lambda> s3. (fst s3) + (snd s3))\<cdot>(szip\<cdot>s1\<cdot>s2))"
 by simp
 
@@ -3542,6 +3545,9 @@ lemma add2smap: "add\<cdot>(\<up>x\<infinity>)\<cdot>ys = smap (\<lambda>z. z+x)
 
 lemma addtest: "add\<cdot>(\<up>1\<infinity>)\<cdot>(\<up>2\<infinity>) = (\<up>3\<infinity>)"
 by (metis Suc_eq_plus1_left add_unfold numeral_2_eq_2 numeral_3_eq_3 s2sinftimes sinftimes_unfold)
+
+lemma add2test: "(\<up>1\<infinity>)+(\<up>2\<infinity>) = (\<up>3\<infinity>)"
+by (simp add: add2_def addtest)
 
 end
 

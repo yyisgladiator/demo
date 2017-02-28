@@ -68,8 +68,12 @@ apply(rule spf_cont2cont)
 
 lemma spf_sb_id_well[simp] : "spf_well (Abs_cfun (\<lambda>sb. (sbDom\<cdot>sb = {ch1}) 
                                                   \<leadsto> ([ch2 \<mapsto> sb_id\<cdot>(sb . ch1)]\<Omega>)))"  
-  by(auto simp add: spf_well_def domIff2 sbdom_rep_eq)
-    
+  apply(simp add: spf_well_def)
+  apply(simp only: domIff2)
+  apply(simp add: sbdom_rep_eq)
+  by(auto)    
+
+
 lemma test2: "snd (ch1, ch2) = ch2"
   by simp
     
@@ -174,8 +178,8 @@ lemma spfmult_cont[simp]: "cont
   by(simp add: domIff2, rule+)
     
 
-lemma spfmult_well[simp] : "spf_well (Abs_cfun (\<lambda> sb. (sbDom\<cdot>sb = {ch1, ch2}) \<leadsto> ([ch3 \<mapsto> mult\<cdot>(sb . ch1)\<cdot>(sb . ch2)]\<Omega>)))"  
-    apply(simp_all add: spf_well_def domIff2 sbdom_rep_eq )
+lemma spfmult_well[simp] : "spf_well (Abs_cfun (\<lambda> sb. (sbDom\<cdot>sb = {ch1, ch2}) \<leadsto> ([ch3 \<mapsto> mult\<cdot>(sb . ch1)\<cdot>(y)]\<Omega>)))"  
+    apply(simp_all add: spf_well_def)
     oops
     
     

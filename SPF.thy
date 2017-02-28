@@ -1386,7 +1386,6 @@ pcpodef 'm SPS = "{S :: 'm SPF set. sps_well S }"
 
 setup_lifting type_definition_SPS
 
-
   (* composite operator on SPS *)
   definition spsComp :: "'m SPS \<Rightarrow>'m  SPS \<Rightarrow> 'm SPS" (infixl "\<Otimes>" 50) where
 "spsComp S1 S2 \<equiv> Abs_SPS {f1 \<otimes> f2 | f1 f2. f1\<in>(Rep_SPS S1) \<and> f2\<in>(Rep_SPS S2)}"
@@ -1401,7 +1400,6 @@ definition spsRan :: "'m SPS \<Rightarrow> channel set" where
 
 definition addSPF :: "(channel \<times> channel \<times> channel) \<Rightarrow> nat SPF" where
 "addSPF cs \<equiv> Abs_CSPF (\<lambda> (sb::nat SB). (sbDom\<cdot>sb = {(fst cs), (fst (snd cs))}) \<leadsto> ([(snd (snd cs))\<mapsto>add\<cdot>(sb . (fst cs))\<cdot>(sb . (fst (snd cs)))]\<Omega>))"
-
 
 lemma addSPF_mono: "monofun (\<lambda> sb. (sbDom\<cdot>sb = {(fst cs), (fst (snd cs))}) \<leadsto> ([(snd (snd cs))\<mapsto>add\<cdot>(sb . (fst cs))\<cdot>(sb . (fst (snd cs)))]\<Omega>))"
   apply (rule spf_mono2monofun)
@@ -1465,7 +1463,7 @@ sorry
 
 lemma addSPF_rep_eqC: "Rep_CSPF (addSPF cs) = 
   (\<lambda> sb. (sbDom\<cdot>sb = {(fst cs), (fst (snd cs))}) \<leadsto> ([(snd (snd cs))\<mapsto>add\<cdot>(sb . (fst cs))\<cdot>(sb . (fst (snd cs)))]\<Omega>))"
-apply(simp add: addSPF_def)
+apply(simp add: addSPF_def add2_def)
 apply(subst rep_abs_cspf)
 by(simp_all add: addSPF_cont addSPF_well)
 

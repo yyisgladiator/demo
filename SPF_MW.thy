@@ -28,6 +28,7 @@ by(simp_all add: assms)
 
 lemma sbDomIterate: "sbDom\<cdot>(\<Squnion>i. iterate i\<cdot>(spfCompHelp2 f1 f2 (sbLeast (I f1 f2)))\<cdot>sb)  = sbDom\<cdot>((spfCompHelp2 f1 f2 (sbLeast (I f1 f2)))\<cdot>sb)"
 apply(simp add: sbDom_def spfCompHelp2_def)
+(* in SPF *)
 sorry
 
 lemma spfDomHelp: assumes "spfDom\<cdot>f1 \<subseteq> sbDom\<cdot>sb" shows "sbDom\<cdot>f1\<rightleftharpoons>sb\<bar>spfDom\<cdot>f1 = spfRan\<cdot>f1"
@@ -82,7 +83,7 @@ lemma hideSpfRan: "spfRan\<cdot>(hide f cs) = spfRan\<cdot>f - cs"
 apply(subst spfran_least)
 apply(simp add: spfDomHide)
 apply(subst hideSbRestrict)
-apply (simp add:assms)
+apply(simp)
 apply(subst sbrestrict_sbdom)
 by (simp add: Diff_subset Int_absorb1 spfran_least)
 
@@ -155,18 +156,18 @@ lemma serCompHelp2Eq: assumes "pL f1 f2 = {}"
                           and "spfComp_well f1 f2"
                           and "no_selfloops f1 f2" 
                           and "sbDom\<cdot>x = spfDom\<cdot>f1" 
-   shows "(\<Squnion>i. iterate i\<cdot>(SerComp_JB.spfCompHelp2 f1 f2 x)\<cdot>(sbLeast (C f1 f2)))\<bar>Oc f1 f2 = ((f1 \<rightleftharpoons> x)) \<uplus> (f2 \<rightleftharpoons> (f1 \<rightleftharpoons> x))" 
+   shows "(\<Squnion>i. iterate i\<cdot>(SPF.spfCompHelp2 f1 f2 x)\<cdot>(sbLeast (C f1 f2)))\<bar>Oc f1 f2 = ((f1 \<rightleftharpoons> x)) \<uplus> (f2 \<rightleftharpoons> (f1 \<rightleftharpoons> x))" 
 apply(subst spfComp_serial_itconst2, simp_all add: assms spfComp_I_domf1_eq)
 apply(simp add: Oc_def)
 apply(subst unionRestrict, simp_all add: assms)
-using SerComp_JB.pL_def assms(1) assms(2) apply blast
+using pL_def assms(1) assms(2) apply blast
 by (metis (no_types, lifting) assms(2) assms(5) domIff option.collapse sbleast_sbdom spfLeastIDom spf_sbdom2dom spfran2sbdom)
 
 lemma serCompHelp2Eq2: assumes "pL f1 f2 = {}"
                            and "spfRan\<cdot>f1 = spfDom\<cdot>f2"
                            and "spfComp_well f1 f2"
                            and "no_selfloops f1 f2"
-   shows " (sbDom\<cdot>x = spfDom\<cdot>f1) \<leadsto> ((\<Squnion>i. iterate i\<cdot>(SerComp_JB.spfCompHelp2 f1 f2 x)\<cdot>(sbLeast (C f1 f2)))\<bar>Oc f1 f2)
+   shows " (sbDom\<cdot>x = spfDom\<cdot>f1) \<leadsto> ((\<Squnion>i. iterate i\<cdot>(SPF.spfCompHelp2 f1 f2 x)\<cdot>(sbLeast (C f1 f2)))\<bar>Oc f1 f2)
          = (sbDom\<cdot>x = spfDom\<cdot>f1) \<leadsto> ((f1 \<rightleftharpoons> x) \<uplus> (f2 \<rightleftharpoons> (f1 \<rightleftharpoons> x)))"
 by (simp add: assms(1) assms(2) assms(3) assms(4) serCompHelp2Eq)
 
@@ -208,21 +209,15 @@ apply(subst Abs_cfun_inverse2)
 apply(subst conthelper2, simp_all add: assms)
 sorry
 
-lemma spfmult_mono: assumes "monofun f" shows "monofun (\<lambda> sb. (sbDom\<cdot>sb = cs) \<leadsto> f(sb))"
-by (simp add: assms)
+(* append Element *)
 
-lemma spfmult_cont: assumes "cont f" shows "cont (\<lambda> sb. (sbDom\<cdot>sb = cs) \<leadsto> f(sb))"
-by (simp add: assms)
+definition appendElem:: "'a \<Rightarrow> 'a stream \<Rightarrow> 'a stream" where
+"appendElem a s \<equiv> \<up>a \<bullet> s" 
 
-lemma sb_cont: assumes "cont f" shows "cont (\<lambda>sb.  [sb2 \<mapsto> f(sb)]\<Omega>)"
-apply(simp add: cont_def)
+definition appendSPF :: "(channel \<times> channel) \<Rightarrow> 'a \<Rightarrow> 'a SPF" where
+"appendSPF cs a \<equiv> Abs_CSPF (\<lambda> sb. (sbDom\<cdot>sb = {(fst cs)}) \<leadsto> ([(snd cs)\<mapsto>(appendElem a (sb.(fst cs)))]\<Omega>))"
+
+lemma appendSPF_cont: "cont (\<lambda> sb. (sbDom\<cdot>sb = {(fst cs)}) \<leadsto> ([(snd cs)\<mapsto>(appendElem a (sb.(fst cs)))]\<Omega>))"
 sorry
-
-(* proof of cont addSPF gets reduced to this *)
-lemma addSPF_cont_test: "cont (\<lambda> sb. (sbDom\<cdot>sb = {(fst cs), (fst (snd cs))}) \<leadsto> ([(snd (snd cs))\<mapsto>add\<cdot>(sb . (fst cs))\<cdot>(sb . (fst (snd cs)))]\<Omega>))"
-apply(subst spfmult_cont)
-apply(simp_all)
-apply(subst sb_cont)
-by simp_all
 
 end
