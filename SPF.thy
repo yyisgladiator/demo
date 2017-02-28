@@ -1411,7 +1411,7 @@ lemma addSPF_mono: "monofun (\<lambda> sb. (sbDom\<cdot>sb = {(fst cs), (fst (sn
    apply (meson monofun_cfun monofun_cfun_arg monofun_cfun_fun)
    by (rule, simp add: domIff2)
 
-lemma add_chain[simp]: "chain Y \<Longrightarrow> sbDom\<cdot>(Y 0) = {(fst cs), (fst (snd cs))} 
+lemma add_chain: "chain Y \<Longrightarrow> sbDom\<cdot>(Y 0) = {(fst cs), (fst (snd cs))} 
                         \<Longrightarrow> chain (\<lambda> i. [(snd (snd cs))\<mapsto>add\<cdot>((Y i) . (fst cs))\<cdot>((Y i) . (fst (snd cs)))]\<Omega>)"
   apply (rule chainI)
   apply (rule sb_below)
@@ -1419,15 +1419,16 @@ lemma add_chain[simp]: "chain Y \<Longrightarrow> sbDom\<cdot>(Y 0) = {(fst cs),
    apply (simp add: sbdom_rep_eq sbgetch_rep_eq)
    by (simp add: monofun_cfun po_class.chainE)
 
-lemma addSPF_chain_lub[simp]: "chain Y \<Longrightarrow> sbDom\<cdot>(Lub Y) = {(fst cs), (fst (snd cs))} 
+lemma addSPF_chain_lub: "chain Y \<Longrightarrow> sbDom\<cdot>(Lub Y) = {(fst cs), (fst (snd cs))} 
                         \<Longrightarrow> chain (\<lambda> i. [(snd (snd cs))\<mapsto>add\<cdot>((Y i) . (fst cs))\<cdot>((Y i) . (fst (snd cs)))]\<Omega>)"
-  by (simp add: sbChain_dom_eq2)
+  by (simp add: sbChain_dom_eq2 add_chain)
 
-lemma addSPF_Lub[simp]: "chain Y \<Longrightarrow> sbDom\<cdot>(Lub Y) = {(fst cs), (fst (snd cs))} \<Longrightarrow> 
+lemma addSPF_Lub: "chain Y \<Longrightarrow> sbDom\<cdot>(Lub Y) = {(fst cs), (fst (snd cs))} \<Longrightarrow> 
   (\<Squnion>i. add\<cdot>(Y i . (fst cs))\<cdot>(Y i . (fst (snd cs)))) = add\<cdot>((Lub Y) . (fst cs))\<cdot>((Lub Y). (fst (snd cs)))"
   by (simp add: lub_distribs(1) lub_eval)
 
-lemma addSPF_chain[simp]: "chain Y \<Longrightarrow>
+(*
+lemma addSPF_chain: "chain Y \<Longrightarrow>
       chain (\<lambda> i. (sbDom\<cdot>(Y i) = {(fst cs), (fst (snd cs))}) \<leadsto> ([(snd (snd cs))\<mapsto>add\<cdot>((Y i) . (fst cs))\<cdot>((Y i) . (fst (snd cs)))]\<Omega>))"
   apply (rule chainI)
   apply (simp add: sbChain_dom_eq2)
@@ -1435,6 +1436,7 @@ lemma addSPF_chain[simp]: "chain Y \<Longrightarrow>
    apply (simp add: sbdom_rep_eq)
   apply (simp add: sbdom_rep_eq sbgetch_rep_eq)
   by (simp add: monofun_cfun po_class.chainE)
+*)
 
 lemma addSPF_cont: "cont (\<lambda> sb. (sbDom\<cdot>sb = {(fst cs), (fst (snd cs))}) \<leadsto> ([(snd (snd cs))\<mapsto>add\<cdot>(sb . (fst cs))\<cdot>(sb . (fst (snd cs)))]\<Omega>))"
   apply (rule spf_cont2cont)
@@ -1444,7 +1446,7 @@ lemma addSPF_cont: "cont (\<lambda> sb. (sbDom\<cdot>sb = {(fst cs), (fst (snd c
      apply (simp add: sbdom_rep_eq )
      apply (simp only: Cfun.contlub_cfun_arg addSPF_chain_lub)
      apply (simp add: sbdom_rep_eq sbgetch_rep_eq)
-    apply (simp add: sbdom_rep_eq sbgetch_rep_eq sbgetch_lub)
+    apply (simp add: sbdom_rep_eq sbgetch_rep_eq sbgetch_lub addSPF_chain_lub addSPF_Lub)
 proof -
   have "monofun (\<lambda>s. (sbDom\<cdot>s = {fst cs, fst (snd cs)})\<leadsto>[snd (snd cs) \<mapsto> add\<cdot>(s . fst cs)\<cdot> (s . fst (snd cs))]\<Omega>)"
     using addSPF_mono by presburger

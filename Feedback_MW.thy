@@ -104,37 +104,37 @@ lemma [simp]: "Oc addC append0C = {c2, c3}"
   by (auto simp add: Oc_def)
 
 lemma [simp]: "I addC append0C = {c1}"
-by(auto simp add: I_def)
+  by(auto simp add: I_def)
 
 lemma [simp]: "spfDom\<cdot>(spfcomp addC append0C) = {c1}"
-by(simp add: spfComp_dom_I)
+  by(simp add: spfComp_dom_I)
 
 lemma [simp]: "spfRan\<cdot>(spfcomp addC append0C) = {c2, c3}"
-by(simp add: spfComp_ran_Oc)
+  by(simp add: spfComp_ran_Oc)
 
 (* sum1 definition *)
 
-definition sum1 :: "nat SPF" where
-"sum1 \<equiv> hide (addC \<otimes>  append0C) {c2}"
+definition sum1SPF :: "nat SPF" where
+"sum1SPF \<equiv> hide (addC \<otimes>  append0C) {c2}"
 
-lemma sum1EqCh: assumes "sbDom\<cdot>sb = I addC append0C" shows "(sum1 \<rightleftharpoons> sb) . c3 = ((addC \<otimes> append0C) \<rightleftharpoons> sb) . c3"
-apply(simp add: sum1_def)
+lemma sum1EqCh: assumes "sbDom\<cdot>sb = I addC append0C" shows "(sum1SPF \<rightleftharpoons> sb) . c3 = ((addC \<otimes> append0C) \<rightleftharpoons> sb) . c3"
+apply(simp add: sum1SPF_def)
 apply(subst hideSbRestrictCh)
 by(simp_all add: assms)
 
 (* prerequirements test lemma *)
 
 lemma [simp]: "4 = Suc (Suc (Suc (Suc 0)))"
-by simp
+  by simp
 
 lemma [simp]: "5 = Suc (Suc (Suc (Suc (Suc 0))))"
-by simp
+  by simp
 
 lemma [simp]: "6 = Suc (Suc (Suc (Suc (Suc (Suc 0)))))"
-by simp
+  by simp
 
 lemma numeral_7_eq_7[simp]: "7 = Suc (Suc (Suc (Suc (Suc (Suc (Suc 0))))))"
-by simp
+  by simp
 
 (* test lemma *)
 
@@ -249,6 +249,12 @@ apply(simp add: add_def)
 apply(subst sbunion_commutative2)
 by(auto simp add: sbdom_rep_eq)
 
+lemma Iterate_H2_max: assumes" j \<ge> 7"
+  shows "((iterate j\<cdot>(SPF.spfCompHelp2 addC append0C ([c1 \<mapsto> <[1,2,3]>]\<Omega>)))\<cdot>(sbLeast {c1, c2, c3})) 
+           = ((iterate 7\<cdot>(SPF.spfCompHelp2 addC append0C ([c1 \<mapsto> <[1,2,3]>]\<Omega>)))\<cdot>(sbLeast {c1, c2, c3}))"
+  apply(subst numeral_7_eq_7, subst Iterate7_H2_test)
+sorry  
+    
 lemma addAppend_H2_chain:  "chain (\<lambda>i. iterate i\<cdot>(SPF.spfCompHelp2 addC append0C ([c1 \<mapsto> <[1,2,3]>]\<Omega>))\<cdot>(sbLeast {c1, c2, c3}))"
 apply(rule sbIterate_chain)
 by (auto)
@@ -256,9 +262,10 @@ by (auto)
 lemma Iterate_max_H2_test: "max_in_chain 7 (\<lambda>i. iterate i\<cdot>(SPF.spfCompHelp2 addC append0C ([c1 \<mapsto> <[1,2,3]>]\<Omega>))
                          \<cdot>(sbLeast {c1, c2, c3}))"
 apply(rule max_in_chainI, subst numeral_7_eq_7)
-apply(subst Iterate7_H2_test)
-apply(simp add: Iterate7_H2_test Iterate_H2_test_max)
-sorry
+  apply(subst Iterate7_H2_test)
+    apply(subst Iterate_H2_max, simp)
+  apply(subst numeral_7_eq_7, subst Iterate7_H2_test)
+    by auto
 
 lemma lub_H2_test1: "(\<Squnion>i. (iterate i\<cdot>(SPF.spfCompHelp2 addC append0C ([c1 \<mapsto> <[1,2,3]>]\<Omega>)))\<cdot>(sbLeast {c1, c2, c3}))
                   = ((iterate (Suc (Suc (Suc (Suc (Suc (Suc (Suc 0)))))))\<cdot>(SPF.spfCompHelp2 addC append0C ([c1 \<mapsto> <[1,2,3]>]\<Omega>)))\<cdot>(sbLeast {c1, c2, c3})) "
@@ -283,20 +290,36 @@ sorry
 lemma sfa: "\<up>(Suc 0) \<bullet> \<up>2 \<bullet> \<up>(Suc (Suc (Suc 0))) = <[1,2,3]>"
 by auto
 
-lemma test: "sum1\<rightleftharpoons>([c1\<mapsto><[1,2,3]>]\<Omega>).c3 = <[1,3,6]>"
+lemma test: "sum1SPF \<rightleftharpoons>([c1\<mapsto><[1,2,3]>]\<Omega>).c3 = <[1,3,6]>"
 apply(simp add: sum1EqCh)
 apply(subst SPF.spfcomp_tospfH2)
 apply(subst spfcomp_RepAbs, simp_all)
 apply(subst sfa, subst lub_H2_test_getCh)
 by auto
 
+(* Broy Operator  
+
+definition sum4:: "nat SPF" *)
+
+primrec spfFeedbackHelper :: "nat \<Rightarrow> 'a SPF \<Rightarrow> 'a SB \<Rightarrow> 'a SB" where
+"spfFeedbackHelper 0 f sb = sbLeast (spfDom\<cdot>f \<union> spfRan\<cdot>f)" |
+"spfFeedbackHelper (Suc i) f sb = 
+   (let last = spfFeedbackHelper i f sb in
+   (sb \<uplus> (f \<rightleftharpoons> (last \<bar> spfDom\<cdot>f))))"
+  
+
+definition spfFeedbackOperator :: "'a SPF \<Rightarrow> 'a SPF"  ("\<mu>_" 50) where
+"spfFeedbackOperator f \<equiv> Abs_CSPF (\<lambda> sb. (sbDom\<cdot>sb = spfDom\<cdot>f - spfRan\<cdot>f) \<leadsto> 
+   ((\<Squnion>i. spfFeedbackHelper i f sb  ) \<bar> (spfRan\<cdot>f - spfDom\<cdot>f)))"
+  
+  
 (* prerequirements for final lemma *)
 
 
 
 (* final lemma *)
 
-lemma sumEq: assumes "sbDom\<cdot>sb = I addC append0C" shows "(sum1 \<rightleftharpoons> sb) . c3 = sum4\<cdot>(sb . c1)"
+lemma sumEq: assumes "sbDom\<cdot>sb = I addC append0C" shows "(sum1SPF \<rightleftharpoons> sb) . c3 = sum4\<cdot>(sb . c1)"
 apply(subst sum1EqCh, simp add: assms)
 sorry
 

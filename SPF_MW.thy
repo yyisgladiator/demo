@@ -56,39 +56,41 @@ using Oc_def by auto
 definition hide :: "'m SPF \<Rightarrow>  channel set \<Rightarrow> 'm SPF" ("_\<h>_") where
 "hide f cs \<equiv> Abs_CSPF (\<lambda> x. (sbDom\<cdot>x = spfDom\<cdot>f ) \<leadsto> ((f \<rightleftharpoons> x)\<bar>(spfRan\<cdot>f - cs)))"
 
-lemma[simp]: assumes "cont (Rep_CSPF(f))" shows "cont (\<lambda> x. (sbDom\<cdot>x = spfDom\<cdot>f ) \<leadsto> ((f \<rightleftharpoons> x)\<bar>(spfRan\<cdot>f - cs)))"
+lemma hidecont_helper: assumes "cont (Rep_CSPF(f))" shows "cont (\<lambda> x. (sbDom\<cdot>x = spfDom\<cdot>f ) \<leadsto> ((f \<rightleftharpoons> x)\<bar>(spfRan\<cdot>f - cs)))"
 apply(subst if_then_cont, simp_all)
 by (simp add: cont_compose)
 
-lemma[simp]: assumes "spf_well (Abs_cfun (Rep_CSPF(f)))" 
+lemma hidespfwell_helper: assumes "spf_well (Abs_cfun (Rep_CSPF(f)))" 
   shows "spf_well (Abs_cfun (\<lambda> x. (sbDom\<cdot>x = spfDom\<cdot>f ) \<leadsto> ((f \<rightleftharpoons> x)\<bar>(spfRan\<cdot>f - cs))))"
 apply(auto simp add: spf_well_def domIff2 sbdom_rep_eq)
 sorry
 
 lemma spfDomHide: "spfDom\<cdot>(f \<h> cs) = spfDom\<cdot>f"
-apply(simp add: hide_def)
-by(simp add: spfDomAbs)
+  apply(simp add: hide_def)
+    by(simp add: spfDomAbs hidecont_helper hidespfwell_helper)
 
 lemma hideSbRestrict: assumes "sbDom\<cdot>sb = spfDom\<cdot>f" 
    shows "(hide f cs)\<rightleftharpoons>sb = (f\<rightleftharpoons>sb)\<bar>(spfRan\<cdot>f - cs)"
-apply(simp add: hide_def)
-using assms by blast
+  apply(simp add: hide_def)
+  apply(simp add: hidecont_helper hidespfwell_helper)
+    by (simp add: assms)
 
 lemma hideSbRestrictCh: assumes "sbDom\<cdot>sb = spfDom\<cdot>f" and "c \<notin> cs"
    shows "(hide f cs)\<rightleftharpoons>sb . c = (f\<rightleftharpoons>sb) . c"
-apply(simp add: hide_def)
-by (metis (no_types, lifting) DiffI Int_commute Un_Diff_Int assms(1) assms(2) domIff inf_sup_absorb option.collapse sbdom_insert sbgetch_insert sbleast_sbdom sbrestrict2sbgetch sbrestrict_sbdom spfLeastIDom spf_sbdom2dom spfran2sbdom)
-
+  apply(simp add: hide_def)
+  apply(simp add: hidecont_helper hidespfwell_helper assms)
+  by (smt DiffI Diff_subset Int_absorb1 assms(1) assms(2) domIff option.exhaust_sel sbleast_sbdom sbrestrict2sbgetch sbrestrict_sbdom sbunion_getchL sbunion_idL spfLeastIDom spf_sbdom2dom spfran2sbdom)
+    
 lemma hideSpfRan: "spfRan\<cdot>(hide f cs) = spfRan\<cdot>f - cs"
-apply(subst spfran_least)
-apply(simp add: spfDomHide)
-apply(subst hideSbRestrict)
-apply(simp)
-apply(subst sbrestrict_sbdom)
-by (simp add: Diff_subset Int_absorb1 spfran_least)
+  apply(subst spfran_least)
+  apply(simp add: spfDomHide)
+  apply(subst hideSbRestrict)
+  apply(simp)
+  apply(subst sbrestrict_sbdom)
+  by (simp add: Diff_subset Int_absorb1 spfran_least)
 
 lemma hideSubset: "spfRan\<cdot>(hide f cs) \<subseteq> spfRan\<cdot>f"
-using hideSpfRan by auto
+  using hideSpfRan by auto
 
 (* lemmas about parallel composition *)
 
@@ -136,44 +138,49 @@ by(simp_all add: assms)
 
 lemma parCompDom: assumes "L f1 f2 = {}"
                   and "spfComp_well f1 f2" shows "spfDom\<cdot>(f1 \<parallel> f2) = spfDom\<cdot>(spfcomp f1 f2)"
-by(simp add: parallelOperatorEq assms)
+  by (simp add: assms(1) assms(2) parallelOperatorEq)
 
 lemma parCompRan: assumes "L f1 f2 = {}"
                   and "spfComp_well f1 f2" shows "spfRan\<cdot>(f1 \<parallel> f2) = spfRan\<cdot>(spfcomp f1 f2)"
-by(simp add: parallelOperatorEq assms)
+  by (simp add: assms(1) assms(2) parallelOperatorEq)
 
 (* lemmas about serial composition *)
 
+lemma pLEmptyNoSelfloops: assumes "pL f1 f2 = {}"
+  shows "no_selfloops f1 f2"
+  apply(simp add: no_selfloops_def)
+  using assms pL_def by auto
+    
 lemma spfComp_I_domf1_eq: assumes "pL f1 f2 = {}"
                               and "spfRan\<cdot>f1 = spfDom\<cdot>f2"
                               and "spfComp_well f1 f2"
-                              and "no_selfloops f1 f2"
    shows "I f1 f2 = spfDom\<cdot>f1"
-by (meson SerComp_JB.spfComp_I_domf1_eq assms(1) assms(2) assms(3) assms(4) sbleast_sbdom)
+  using SerComp_JB.spfComp_I_domf1_eq assms(1) assms(2) assms(3) pLEmptyNoSelfloops spfComp_dom_I spfdom_insert by blast
 
+     
 lemma serCompHelp2Eq: assumes "pL f1 f2 = {}"
                           and "spfRan\<cdot>f1 = spfDom\<cdot>f2"
                           and "spfComp_well f1 f2"
-                          and "no_selfloops f1 f2" 
                           and "sbDom\<cdot>x = spfDom\<cdot>f1" 
    shows "(\<Squnion>i. iterate i\<cdot>(SPF.spfCompHelp2 f1 f2 x)\<cdot>(sbLeast (C f1 f2)))\<bar>Oc f1 f2 = ((f1 \<rightleftharpoons> x)) \<uplus> (f2 \<rightleftharpoons> (f1 \<rightleftharpoons> x))" 
-apply(subst spfComp_serial_itconst2, simp_all add: assms spfComp_I_domf1_eq)
-apply(simp add: Oc_def)
-apply(subst unionRestrict, simp_all add: assms)
-using pL_def assms(1) assms(2) apply blast
-by (metis (no_types, lifting) assms(2) assms(5) domIff option.collapse sbleast_sbdom spfLeastIDom spf_sbdom2dom spfran2sbdom)
+  apply(subst spfComp_serial_itconst2)
+       apply(simp_all add: assms)
+    apply(subst spfComp_I_domf1_eq, simp_all add: assms)
+    apply(simp add: pLEmptyNoSelfloops assms)
+  apply(simp add: Oc_def)
+   apply(subst unionRestrict, simp_all add: assms)
+   using pL_def assms(1) assms(2) apply blast
+   by (metis (no_types, lifting) assms(2) assms(4) domIff option.collapse sbleast_sbdom spfLeastIDom spf_sbdom2dom spfran2sbdom)
 
 lemma serCompHelp2Eq2: assumes "pL f1 f2 = {}"
-                           and "spfRan\<cdot>f1 = spfDom\<cdot>f2"
                            and "spfComp_well f1 f2"
-                           and "no_selfloops f1 f2"
+                           and "spfRan\<cdot>f1 = spfDom\<cdot>f2"
    shows " (sbDom\<cdot>x = spfDom\<cdot>f1) \<leadsto> ((\<Squnion>i. iterate i\<cdot>(SPF.spfCompHelp2 f1 f2 x)\<cdot>(sbLeast (C f1 f2)))\<bar>Oc f1 f2)
          = (sbDom\<cdot>x = spfDom\<cdot>f1) \<leadsto> ((f1 \<rightleftharpoons> x) \<uplus> (f2 \<rightleftharpoons> (f1 \<rightleftharpoons> x)))"
-by (simp add: assms(1) assms(2) assms(3) assms(4) serCompHelp2Eq)
+  by (metis (mono_tags, lifting) assms(1) assms(2) assms(3) lub_eq serCompHelp2Eq)
 
 lemma serialOperatorEq: assumes "pL f1 f2 = {}"
                             and "spfComp_well f1 f2"
-                            and "no_selfloops f1 f2"
                             and "spfRan\<cdot>f1 = spfDom\<cdot>f2"
    shows "(f1 \<otimes> f2) = (f1 \<circ> f2)"
 apply(simp add: sercomp_def SerComp_JB.spfcomp_tospfH2)
@@ -206,16 +213,45 @@ apply(subst conthelper2, simp_all add: assms)
 apply(subst Abs_cfun_inverse2)
 apply(subst conthelper2, simp_all add: assms)
 apply(subst Abs_cfun_inverse2)
-apply(subst conthelper2, simp_all add: assms)
+   apply(subst conthelper2, simp_all add: assms)
 sorry
 
 (* append Element *)
 
 definition appendElem:: "'a \<Rightarrow> 'a stream \<Rightarrow> 'a stream" where
 "appendElem a s \<equiv> \<up>a \<bullet> s" 
+ 
+lemma "cont (appendElem a)"
+  apply(simp add: cont_def)
+  by (metis (mono_tags, lifting) appendElem_def ch2ch_Rep_cfunR contlub_cfun_arg cpo_lubI image_cong)
 
 definition appendSPF :: "(channel \<times> channel) \<Rightarrow> 'a \<Rightarrow> 'a SPF" where
 "appendSPF cs a \<equiv> Abs_CSPF (\<lambda> sb. (sbDom\<cdot>sb = {(fst cs)}) \<leadsto> ([(snd cs)\<mapsto>(appendElem a (sb.(fst cs)))]\<Omega>))"
+
+lemma appendSPF_mono: "monofun (\<lambda> sb. (sbDom\<cdot>sb = {(fst cs)}) \<leadsto> ([(snd cs)\<mapsto>(appendElem a (sb.(fst cs)))]\<Omega>))"
+    apply (rule spf_mono2monofun)
+   apply (rule spf_monoI)
+   apply (simp add: domIff2)
+   apply (rule sb_below)
+sorry
+
+lemma append_chain: "chain Y \<Longrightarrow> sbDom\<cdot>(Y 0) = {(fst cs), (snd cs)} 
+                        \<Longrightarrow> chain (\<lambda> i. [(snd cs)\<mapsto>(appendElem a ((Y i).(fst cs)))]\<Omega>)"
+sorry
+
+lemma appendSPF_chain_lub: "chain Y \<Longrightarrow> sbDom\<cdot>(Lub Y) = {(fst cs), (snd cs)} 
+                        \<Longrightarrow> chain (\<lambda> i. [(snd cs)\<mapsto>(appendElem a ((Y i).(fst cs)))]\<Omega>)"
+sorry
+
+lemma appendSPF_Lub: "chain Y \<Longrightarrow> sbDom\<cdot>(Lub Y) = {(fst cs), (snd cs)} 
+                        \<Longrightarrow> (\<Squnion>i.(appendElem a ((Y i).(fst cs)))) = appendElem a ((Lub Y).(fst cs))"
+sorry
+
+(*    
+lemma appendSPF_chain: "chain Y \<Longrightarrow>
+                        chain (\<lambda> i. (sbDom\<cdot>(Y i) = {(fst cs),(snd cs)}) \<leadsto> ([(snd cs)\<mapsto>(appendElem a ((Y i).(fst cs)))]\<Omega>))"
+sorry
+*)
 
 lemma appendSPF_cont: "cont (\<lambda> sb. (sbDom\<cdot>sb = {(fst cs)}) \<leadsto> ([(snd cs)\<mapsto>(appendElem a (sb.(fst cs)))]\<Omega>))"
 sorry

@@ -294,7 +294,6 @@ apply(simp add: innerProd_def innerProd2_def parallelOperatorEq)
 apply(subst serialOperatorEq)
 apply(simp add: pL_def parCompDom parCompRan)
 apply(simp add: spfcomp_well_parallelOp, simp_all)
-apply(simp add: no_selfloops_parallelOp)
 by(simp add: parCompRan)
 
 end
