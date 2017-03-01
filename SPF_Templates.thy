@@ -110,21 +110,47 @@ lemma idSPF_apply: "(idSPF (ch1, ch2)) \<rightleftharpoons> ([ch1 \<mapsto> s]\<
 section \<open>add_componentwise\<close>
 (* ----------------------------------------------------------------------- *) 
 
-(* add SPF *)
-
+(* testing general lemmas *)
+lemma monotest: assumes "\<And>b1 b2. sbDom\<cdot>b1 = cs \<Longrightarrow> sbDom\<cdot>b2 = cs \<Longrightarrow> b1 \<sqsubseteq> b2 \<Longrightarrow> sbDom\<cdot>(f(b1)) = sbDom\<cdot>(f(b2))"
+                    and "\<And>b1 b2 c. sbDom\<cdot>b1 = cs \<Longrightarrow> sbDom\<cdot>b2 = cs \<Longrightarrow> b1 \<sqsubseteq> b2 \<Longrightarrow> c \<in> sbDom\<cdot>(f(b1)) \<Longrightarrow> f(b1) . c \<sqsubseteq> f(b2) . c"
+                    and " \<forall>b. (b \<in> dom (\<lambda> sb. (sbDom\<cdot>sb = cs) \<leadsto> f(sb))) = (sbDom\<cdot>b = In)"
+                  shows "monofun (\<lambda> sb. (sbDom\<cdot>sb = cs) \<leadsto> f(sb))"
+  sorry
+    
+(*   apply (rule spf_mono2monofun)
+   apply (rule spf_monoI)
+   apply (simp add: domIff2)
+   apply (rule sb_below) *) 
+    
+lemma conttest: assumes "monofun (\<lambda> sb. (sbDom\<cdot>sb = cs) \<leadsto> f(sb))"
+                    and "chain Y \<Longrightarrow> sbDom\<cdot>(Y 0) = cs 
+                        \<Longrightarrow> chain (\<lambda> i. f(Y i))"
+                    and "chain Y \<Longrightarrow> sbDom\<cdot>(Lub Y) = cs 
+                        \<Longrightarrow> chain (\<lambda> i. f(Y i))"
+                  shows "cont (\<lambda> sb. (sbDom\<cdot>sb = cs) \<leadsto> f(sb))"
+  sorry
+    
+    
 definition addSPF :: "(channel \<times> channel \<times> channel) \<Rightarrow> nat SPF" where
 "addSPF cs \<equiv> Abs_CSPF (\<lambda> (sb::nat SB). (sbDom\<cdot>sb = {(fst cs), (fst (snd cs))}) \<leadsto> ([(snd (snd cs))\<mapsto>add\<cdot>(sb . (fst cs))\<cdot>(sb . (fst (snd cs)))]\<Omega>))"
 
 lemma addSPF_mono: "monofun (\<lambda> sb. (sbDom\<cdot>sb = {(fst cs), (fst (snd cs))}) \<leadsto> ([(snd (snd cs))\<mapsto>add\<cdot>(sb . (fst cs))\<cdot>(sb . (fst (snd cs)))]\<Omega>))"
-  apply (rule spf_mono2monofun)
-   apply (rule spf_monoI)
-   apply (simp add: domIff2)
-   apply (rule sb_below)
+  apply(rule monotest)
     apply (simp add: sbdom_insert)
     apply (simp add: sbdom_rep_eq sbgetch_rep_eq)
    apply (meson monofun_cfun monofun_cfun_arg monofun_cfun_fun)
    by (rule, simp add: domIff2)
-
+(*
+apply (rule spf_mono2monofun)
+   apply (rule spf_monoI)
+   apply (simp add: domIff2)
+   apply (rule sb_below)
+   apply (simp add: sbdom_insert)
+   apply (simp add: sbdom_rep_eq sbgetch_rep_eq)
+   apply (meson monofun_cfun monofun_cfun_arg monofun_cfun_fun)
+   by (rule, simp add: domIff2)
+*) 
+     
 lemma add_chain: "chain Y \<Longrightarrow> sbDom\<cdot>(Y 0) = {(fst cs), (fst (snd cs))} 
                         \<Longrightarrow> chain (\<lambda> i. [(snd (snd cs))\<mapsto>add\<cdot>((Y i) . (fst cs))\<cdot>((Y i) . (fst (snd cs)))]\<Omega>)"
   apply (rule chainI)
@@ -194,6 +220,7 @@ definition mult:: "nat stream \<rightarrow> nat stream \<rightarrow> nat stream"
 
 definition multSPF :: "(channel \<times> channel \<times> channel) \<Rightarrow> nat SPF" where
 "multSPF cs \<equiv> Abs_CSPF (\<lambda> (sb::nat SB). (sbDom\<cdot>sb = {(fst cs), (fst (snd cs))}) \<leadsto> ([(snd (snd cs))\<mapsto>mult\<cdot>(sb . (fst cs))\<cdot>(sb . (fst (snd cs)))]\<Omega>))"
+  
 
 (* multiplication component *)
 lemma spfmult_mono[simp] : "monofun 
@@ -261,7 +288,7 @@ lemma spfmult_well[simp] : "spf_well (\<Lambda> sb. (sbDom\<cdot>sb = {ch1, ch2}
 subsection \<open>multSPF lemmata\<close>
 (* LEMMAS below work if spfmult_well is proven *)
   
-  (*
+  
 lemma multSPF_rep_eq_C: "Rep_CSPF (multSPF (ch1, ch2, ch3)) 
                                 = (\<lambda> (sb::nat SB). (sbDom\<cdot>sb = {(fst (ch1, ch2, ch3)), (fst (snd (ch1, ch2, ch3)))}) \<leadsto> ([(snd (snd (ch1, ch2, ch3)))\<mapsto>mult\<cdot>(sb . (fst (ch1, ch2, ch3)))\<cdot>(sb . (fst (snd (ch1, ch2, ch3))))]\<Omega>))"
   apply(simp add: multSPF_def)
@@ -285,6 +312,6 @@ lemma multSPF_apply: "(multSPF (ch1, ch2, ch3)) \<rightleftharpoons> ([ch1 \<map
   apply(simp add: multSPF_rep_eq_C sb_id_def sbgetch_insert)
   apply(simp add: sbdom_rep_eq)
   oops
-    *)
+    
 
 end

@@ -259,11 +259,14 @@ apply(simp add: add_def)
 apply(subst sbunion_commutative2)
 by(auto simp add: sbdom_rep_eq)
 
-lemma Iterate_H2_max: assumes" j \<ge> 7"
-  shows "((iterate j\<cdot>(SPF.spfCompHelp2 addC append0C ([c1 \<mapsto> <[1,2,3]>]\<Omega>)))\<cdot>(sbLeast {c1, c2, c3})) 
+lemma Iterate_H2_max:
+  "((iterate (Suc (Suc (Suc (Suc (Suc (Suc (Suc i)))))))\<cdot>(SPF.spfCompHelp2 addC append0C ([c1 \<mapsto> <[1,2,3]>]\<Omega>)))\<cdot>(sbLeast {c1, c2, c3})) 
            = ((iterate 7\<cdot>(SPF.spfCompHelp2 addC append0C ([c1 \<mapsto> <[1,2,3]>]\<Omega>)))\<cdot>(sbLeast {c1, c2, c3}))"
-  apply(subst numeral_7_eq_7, subst Iterate7_H2_test)
-sorry  
+  apply(subst numeral_7_eq_7,subst Iterate7_H2_test)
+  apply(induction i)
+  using Iterate7_H2_test apply blast
+  by (metis (no_types, lifting) Iterate_H2_test_max iterate_Suc)
+
     
 lemma addAppend_H2_chain:  "chain (\<lambda>i. iterate i\<cdot>(SPF.spfCompHelp2 addC append0C ([c1 \<mapsto> <[1,2,3]>]\<Omega>))\<cdot>(sbLeast {c1, c2, c3}))"
 apply(rule sbIterate_chain)
@@ -273,9 +276,12 @@ lemma Iterate_max_H2_test: "max_in_chain 7 (\<lambda>i. iterate i\<cdot>(SPF.spf
                          \<cdot>(sbLeast {c1, c2, c3}))"
 apply(rule max_in_chainI, subst numeral_7_eq_7)
   apply(subst Iterate7_H2_test)
+  sorry
+(*
     apply(subst Iterate_H2_max, simp)
   apply(subst numeral_7_eq_7, subst Iterate7_H2_test)
     by auto
+*)
 
 lemma lub_H2_test1: "(\<Squnion>i. (iterate i\<cdot>(SPF.spfCompHelp2 addC append0C ([c1 \<mapsto> <[1,2,3]>]\<Omega>)))\<cdot>(sbLeast {c1, c2, c3}))
                   = ((iterate (Suc (Suc (Suc (Suc (Suc (Suc (Suc 0)))))))\<cdot>(SPF.spfCompHelp2 addC append0C ([c1 \<mapsto> <[1,2,3]>]\<Omega>)))\<cdot>(sbLeast {c1, c2, c3})) "
@@ -318,7 +324,7 @@ primrec spfFeedbackHelper :: "nat \<Rightarrow> 'a SPF \<Rightarrow> 'a SB \<Rig
   
 definition spfFeedbackOperator :: "'a SPF \<Rightarrow> 'a SPF"  ("\<mu>_" 50) where
 "spfFeedbackOperator f \<equiv> Abs_CSPF (\<lambda> sb. (sbDom\<cdot>sb = spfDom\<cdot>f - spfRan\<cdot>f) \<leadsto> 
-   ((\<Squnion>i. spfFeedbackHelper i f sb  ) \<bar> (spfRan\<cdot>f - spfDom\<cdot>f)))"
+   ((\<Squnion>i. spfFeedbackHelper i f sb  ) \<bar> (spfRan\<cdot>f)))"  (* (spfRan\<cdot>f - spfDom\<cdot>f) *)
 
 (* sum4 SPF  *)
 subsection sum4
@@ -349,22 +355,43 @@ by (auto simp add: L_def)
 lemma [simp]: "spfComp_well idC append0C"
 by (simp add: spfComp_well_def)
 
-lemma domIdAppend: "spfDom\<cdot>(idC \<parallel> append0C) = {c5, c3}"
+lemma domIdAppend: "spfDom\<cdot>(idC \<parallel> append0C) = {c3, c5}"
 apply(subst parCompDom, simp_all)
-sorry
+apply(subst spfComp_dom_I)
+by simp_all
 
 lemma ranIdAppend: "spfRan\<cdot>(idC \<parallel> append0C) = {c1, c2}"
 apply(subst parCompRan, simp_all)
-sorry
+apply(subst spfComp_ran_Oc)
+by simp_all
 
-lemma domIdAppendAdd: "spfDom\<cdot>((idC \<parallel> append0C) \<circ> addC) = {c5, c3}"
+lemma domIdAppendAdd: "spfDom\<cdot>((idC \<parallel> append0C) \<circ> addC) = {c3, c5}"
 sorry
 
 lemma ranIdAppendAdd: "spfRan\<cdot>((idC \<parallel> append0C) \<circ> addC) = {c3}"
 sorry
 
+lemma contFeedback: "cont (\<lambda>x. (sbDom\<cdot>x = {c5})\<leadsto>(\<Squnion>i. spfFeedbackHelper i ((idC\<parallel>append0C)\<circ>addC) x)\<bar>(spfRan\<cdot>((idC\<parallel>append0C)\<circ>addC)))"
+sorry
 
+lemma spfwellFeedback: "spf_well (\<Lambda> x. (sbDom\<cdot>x = {c5})\<leadsto>(\<Squnion>i. spfFeedbackHelper i ((idC\<parallel>append0C)\<circ>addC) x)\<bar>(spfRan\<cdot>((idC\<parallel>append0C)\<circ>addC)))"
+sorry
 
+lemma domFeedback: "spfDom\<cdot>(sum4SPF) = {c5}"
+apply(simp add: sum4SPF_def spfFeedbackOperator_def)
+apply(subst spfDomAbs)
+apply(simp_all add: domIdAppendAdd ranIdAppendAdd)
+by(simp_all add: contFeedback spfwellFeedback)
+
+lemma ranFeedback: "spfRan\<cdot>(sum4SPF) = {c3}"
+apply(simp add: sum4SPF_def spfFeedbackOperator_def)
+sorry
+
+lemma sum4Eq: assumes "sbDom\<cdot>sb = {c5}" shows "(sum4SPF \<rightleftharpoons> sb) . c3 = sum4\<cdot>(sb . c5)"
+apply(simp add: sum4SPF_def sum4_def)
+apply(simp add: spfFeedbackOperator_def domIdAppendAdd ranIdAppendAdd)
+apply(simp add: contFeedback spfwellFeedback)
+sorry
 
 section Final_Lemma
 (* prerequirements for final lemma *)
