@@ -1,9 +1,10 @@
 theory Feedback_MW
-imports SPF Streams SBTheorie ParComp_MW StreamCase_Study SPF_MW SerComp_JB 
+imports SPF Streams SBTheorie ParComp_MW StreamCase_Study SPF_MW SerComp_JB SPF_Templates
 
 begin
 
-(* Delay component *)
+(* append component *)
+section Append
 
 definition append0:: "nat stream  \<rightarrow> nat stream" where
 "append0 \<equiv> \<Lambda> s . \<up>0 \<bullet> s"
@@ -58,15 +59,19 @@ lemma spfappend0_cont[simp]: "cont (\<lambda> sb. (sbDom\<cdot>sb = {ch3})
 
 
 (* SPF Definition *)
+section SPFs
 
 definition addC :: "nat SPF" where
 "addC \<equiv> addSPF (c1, c2, c3)" 
-
+  
 lift_definition append0C :: "nat SPF" is
 "\<Lambda> sb. (sbDom\<cdot>sb = {c3}) \<leadsto> ([c2\<mapsto>append0\<cdot>(sb . c3)]\<Omega>)"
-  by (auto simp add: spf_well_def domIff2 sbdom_rep_eq)
+  apply(simp add: spf_well_def)
+  apply(simp add:  domIff2)
+  by (auto simp add: sbdom_rep_eq)
 
 (* component properties *)
+subsection Properties
 
 lemma add_rep_eqC: "Rep_CSPF addC = (\<lambda> sb. (sbDom\<cdot>sb = {c1, c2}) \<leadsto> ([c3\<mapsto>add\<cdot>(sb . c1)\<cdot>(sb . c2)]\<Omega>))"
 by(auto simp add: addC_def addSPF_rep_eqC)
@@ -90,6 +95,7 @@ lemma [simp]: "spfRan\<cdot>append0C = {c2}"
   by (simp add: sbdom_insert)
 
 (* composition prerequirements *)
+subsection Composition_prerequirements
 
 lemma [simp]: "spfComp_well addC append0C"
   by (simp add: spfComp_well_def)
@@ -113,6 +119,7 @@ lemma [simp]: "spfRan\<cdot>(spfcomp addC append0C) = {c2, c3}"
   by(simp add: spfComp_ran_Oc)
 
 (* sum1 definition *)
+section sum1
 
 definition sum1SPF :: "nat SPF" where
 "sum1SPF \<equiv> hide (addC \<otimes>  append0C) {c2}"
@@ -123,6 +130,8 @@ apply(subst hideSbRestrictCh)
 by(simp_all add: assms)
 
 (* prerequirements test lemma *)
+section Test
+subsection Prerequirements
 
 lemma [simp]: "4 = Suc (Suc (Suc (Suc 0)))"
   by simp
@@ -137,6 +146,7 @@ lemma numeral_7_eq_7[simp]: "7 = Suc (Suc (Suc (Suc (Suc (Suc (Suc 0))))))"
   by simp
 
 (* test lemma *)
+subsection Lemma
 
 lemma sbunion_commutative2: assumes "sbDom\<cdot>b1 \<inter> sbDom\<cdot>b2 = {}"
                                 and "sbDom\<cdot>b1 \<inter> sbDom\<cdot>b3 = {}"
@@ -297,9 +307,8 @@ apply(subst spfcomp_RepAbs, simp_all)
 apply(subst sfa, subst lub_H2_test_getCh)
 by auto
 
-(* Broy Operator  
-
-definition sum4:: "nat SPF" *)
+(* Broy Operator *)
+section Broy
 
 primrec spfFeedbackHelper :: "nat \<Rightarrow> 'a SPF \<Rightarrow> 'a SB \<Rightarrow> 'a SB" where
 "spfFeedbackHelper 0 f sb = sbLeast (spfDom\<cdot>f \<union> spfRan\<cdot>f)" |
@@ -307,14 +316,59 @@ primrec spfFeedbackHelper :: "nat \<Rightarrow> 'a SPF \<Rightarrow> 'a SB \<Rig
    (let last = spfFeedbackHelper i f sb in
    (sb \<uplus> (f \<rightleftharpoons> (last \<bar> spfDom\<cdot>f))))"
   
-
 definition spfFeedbackOperator :: "'a SPF \<Rightarrow> 'a SPF"  ("\<mu>_" 50) where
 "spfFeedbackOperator f \<equiv> Abs_CSPF (\<lambda> sb. (sbDom\<cdot>sb = spfDom\<cdot>f - spfRan\<cdot>f) \<leadsto> 
    ((\<Squnion>i. spfFeedbackHelper i f sb  ) \<bar> (spfRan\<cdot>f - spfDom\<cdot>f)))"
-  
-  
-(* prerequirements for final lemma *)
 
+(* sum4 SPF  *)
+subsection sum4
+
+definition idC :: "nat SPF" where
+"idC \<equiv> idSPF (c5, c1)"
+
+lemma [simp]: "spfDom\<cdot>idC = {c5}"
+by (simp add: idC_def)  
+
+lemma [simp]: "spfRan\<cdot>idC = {c1}"
+by (simp add: idC_def)
+
+definition sum4SPF :: "nat SPF" where
+"sum4SPF \<equiv> \<mu>((idC \<parallel> append0C) \<circ> addC)"
+
+subsubsection Properties
+
+lemma [simp]: "I idC append0C = {c3, c5}"
+by (simp add: I_def)
+
+lemma [simp]: "Oc idC append0C = {c1, c2}"
+by (auto simp add: Oc_def)
+
+lemma [simp]: "L idC append0C = {}"
+by (auto simp add: L_def)
+
+lemma [simp]: "spfComp_well idC append0C"
+by (simp add: spfComp_well_def)
+
+lemma domIdAppend: "spfDom\<cdot>(idC \<parallel> append0C) = {c5, c3}"
+apply(subst parCompDom, simp_all)
+sorry
+
+lemma ranIdAppend: "spfRan\<cdot>(idC \<parallel> append0C) = {c1, c2}"
+apply(subst parCompRan, simp_all)
+sorry
+
+lemma domIdAppendAdd: "spfDom\<cdot>((idC \<parallel> append0C) \<circ> addC) = {c5, c3}"
+sorry
+
+lemma ranIdAppendAdd: "spfRan\<cdot>((idC \<parallel> append0C) \<circ> addC) = {c3}"
+sorry
+
+
+
+
+section Final_Lemma
+(* prerequirements for final lemma *)
+subsection Prerequirements
 
 
 (* final lemma *)

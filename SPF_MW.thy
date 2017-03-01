@@ -62,7 +62,7 @@ by (simp add: cont_compose)
 
 lemma hidespfwell_helper: assumes "spf_well (Abs_cfun (Rep_CSPF(f)))" 
   shows "spf_well (Abs_cfun (\<lambda> x. (sbDom\<cdot>x = spfDom\<cdot>f ) \<leadsto> ((f \<rightleftharpoons> x)\<bar>(spfRan\<cdot>f - cs))))"
-apply(auto simp add: spf_well_def domIff2 sbdom_rep_eq)
+  apply(auto simp add: spf_well_def domIff2 sbdom_rep_eq)
 sorry
 
 lemma spfDomHide: "spfDom\<cdot>(f \<h> cs) = spfDom\<cdot>f"
@@ -219,12 +219,11 @@ sorry
 (* append Element *)
 
 definition appendElem:: "'a \<Rightarrow> 'a stream \<Rightarrow> 'a stream" where
-"appendElem a s \<equiv> \<up>a \<bullet> s" 
+"appendElem a s = \<up>a \<bullet> s" 
+  
+definition appendElem2:: "'a \<Rightarrow> 'a stream \<rightarrow> 'a stream" where
+"appendElem2 a \<equiv> \<Lambda> s. \<up>a \<bullet> s" 
  
-lemma "cont (appendElem a)"
-  apply(simp add: cont_def)
-  by (metis (mono_tags, lifting) appendElem_def ch2ch_Rep_cfunR contlub_cfun_arg cpo_lubI image_cong)
-
 definition appendSPF :: "(channel \<times> channel) \<Rightarrow> 'a \<Rightarrow> 'a SPF" where
 "appendSPF cs a \<equiv> Abs_CSPF (\<lambda> sb. (sbDom\<cdot>sb = {(fst cs)}) \<leadsto> ([(snd cs)\<mapsto>(appendElem a (sb.(fst cs)))]\<Omega>))"
 
@@ -233,6 +232,7 @@ lemma appendSPF_mono: "monofun (\<lambda> sb. (sbDom\<cdot>sb = {(fst cs)}) \<le
    apply (rule spf_monoI)
    apply (simp add: domIff2)
    apply (rule sb_below)
+    apply (simp add: sbdom_insert)
 sorry
 
 lemma append_chain: "chain Y \<Longrightarrow> sbDom\<cdot>(Y 0) = {(fst cs), (snd cs)} 
