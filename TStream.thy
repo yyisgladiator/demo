@@ -1605,6 +1605,9 @@ by (metis (no_types, lifting) lnle_def monofun_cfun_arg slen_scons tsscanl_h_sco
 lemma tsscanl_h_shd [simp]: "a\<noteq>\<surd> \<Longrightarrow> shd (tsscanl_h f q\<cdot>(\<up>a\<bullet>s)) = (\<M>(f q (\<M>\<down> a)))"
 by (simp add: tsscanl_h_scons)
 
+lemma tsscanl_h_shd1: "shd s\<noteq>\<surd> \<and> s=\<up>(shd s)\<bullet>srt\<cdot>s \<Longrightarrow> shd (tsscanl_h f q\<cdot>s) = \<M>(f q \<M>\<down> shd s)"
+by (metis tsscanl_h_shd)
+
 lemma tsscanl_h_shd_tick [simp]: "shd (tsscanl_h f q\<cdot>(\<up>\<surd>\<bullet>s)) = \<surd>"
 by (simp add: tsscanl_h_scons_tick)
 
@@ -1616,7 +1619,6 @@ by (insert tsscanl_h_scons [of a f q s], auto)
 lemma tsscanl_h_srt_tick: "a=\<surd> \<Longrightarrow> srt\<cdot>(tsscanl_h f q\<cdot>(\<up>a\<bullet>s)) = tsscanl_h f q\<cdot>s"
 by (insert tsscanl_h_scons_tick [of f q s], auto)
 
-(*  *)
 lemma tsscanl_h_unfold: 
   "s=\<up>(shd s)\<bullet>srt\<cdot>s \<and> shd s\<noteq>\<surd> \<Longrightarrow> tsscanl_h f q\<cdot>s = \<up>(\<M>(f q (\<M>\<down> (shd s)))) \<bullet> tsscanl_h f (f q \<M>\<down> shd s)\<cdot>(srt\<cdot>s)"
 by (insert tsscanl_h_scons [of "shd s" f q "srt\<cdot>s"], auto)
