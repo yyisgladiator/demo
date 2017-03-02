@@ -1467,7 +1467,7 @@ sorry
 
 (* ToDo Dennis sscanl *)
 
-(* Takes a nat indicating the number of elements to scan, a reducing function, an initial initial element,
+(* Takes a nat indicating the number of elements to scan, a reducing function, an initial element,
    and an input event stream. Returns a event stream consisting of the partial reductions of the input event stream. *)
 primrec TSSCANL :: "nat \<Rightarrow> ('o \<Rightarrow> 'i  \<Rightarrow> 'o) \<Rightarrow> 'o \<Rightarrow> 'i event  stream \<Rightarrow> 'o event stream" where
 "TSSCANL 0 f q s = \<epsilon>" |
@@ -1479,10 +1479,10 @@ primrec TSSCANL :: "nat \<Rightarrow> ('o \<Rightarrow> 'i  \<Rightarrow> 'o) \<
 definition tsscanl_h :: "('o \<Rightarrow> 'i \<Rightarrow> 'o) \<Rightarrow> 'o \<Rightarrow> 'i event  stream \<rightarrow> 'o event stream" where
 "tsscanl_h f q \<equiv> \<Lambda> s. \<Squnion>i. TSSCANL i f q s"
 
-text {* @{term sscanl}: Apply a function elementwise to the input tstream.
-  Behaves like @{text "map"}, but also takes the previously generated
-  output element as additional input to the function.
-  For the first computation, an initial value is provided. *}
+(* tsscanl: Apply a function elementwise to the input tstream.
+   Behaves like map, but also takes the previously generated
+   output element as additional input to the function.
+   For the first computation, an initial value is provided. *)
 definition tsscanl     :: "('o  \<Rightarrow> 'i   \<Rightarrow> 'o ) \<Rightarrow> 'o  \<Rightarrow> 'i tstream \<Rightarrow> 'o tstream" where
 "tsscanl f q s \<equiv> Abs_tstream (tsscanl_h f q\<cdot>(Rep_tstream s))"
 
@@ -1492,7 +1492,7 @@ by (induct_tac n, auto)
 lemma below_shd: "x \<sqsubseteq> y \<and> x \<noteq> \<epsilon> \<Longrightarrow> shd x = shd y"
 by (metis below_bottom_iff less_all_sconsD surj_scons)
 
-text {* monotonicity of TSSCANL *}
+(* monotonicity of TSSCANL *)
 lemma mono_TSSCANL: 
   "\<forall> x y q. x \<sqsubseteq> y \<longrightarrow> TSSCANL n f q x \<sqsubseteq> TSSCANL n f q y"
 apply (induct_tac n, auto)
@@ -1504,8 +1504,7 @@ apply (simp add: below_shd)
 apply (simp add: below_shd)
 by (simp add: below_shd monofun_cfun_arg)
 
-text {* result of @{term "TSSCANL n"} only depends on first @{term n}
-  elements of input stream *}
+(* result of TSSCANL n only depends on first n elements of input stream *)
 lemma contlub_TSSCANL:
   "\<forall>f q s. TSSCANL n f q s = TSSCANL n f q (stake n\<cdot>s)"
 apply (induct_tac n, auto)
@@ -1520,8 +1519,8 @@ apply (metis Fin_0 Fin_Suc bot_is_0 nat.simps(3) slen_scons stake_Suc strictI st
 apply (rule_tac x=s in scases)
 by (auto)
 
-text {* @{term TSSCANL} is a chain. This means that, for all fixed inputs,
-  @{term "TSSCANL i"} returns a prefix of @{term "TSSCANL (Suc i)"} *}
+(* TSSCANL is a chain. This means that, for all fixed inputs,
+   TSSCANL i returns a prefix of TSSCANL (Suc i) *)
 lemma chain_TSSCANL: "chain TSSCANL"
 apply (rule chainI)
 apply (subst fun_below_iff)+
@@ -1533,7 +1532,7 @@ apply (smt monofun_cfun_arg)
 apply (smt monofun_cfun_arg)
 by (smt monofun_cfun_arg)
 
-text {* @{term tsscanl} is a continuous function *}
+(* tsscanl is a continuous function *)
 lemma cont_lub_TSSCANL: "cont (\<lambda>s. \<Squnion>i. TSSCANL i f q s)"
 apply (rule cont2cont_lub)
 apply (rule ch2ch_fun)
@@ -1549,7 +1548,7 @@ apply (rule allI)
 apply (rule_tac x="i" in exI)
 by (rule contlub_TSSCANL [rule_format])
 
-(* tsscanl_h of an empty stream is an empty stream *)
+(* tsscanl_h of an empty event stream is an empty event stream *)
 lemma tsscanl_h_empty[simp]: "tsscanl_h f a\<cdot>\<epsilon> = \<epsilon>"
 by (simp add: cont_lub_TSSCANL tsscanl_h_def)
 
@@ -1589,14 +1588,14 @@ apply (rule chainI)
 apply (rule fun_belowD [of _ _ "f"])
 by (rule chain_TSSCANL [THEN chainE], simp)
 
-(* scanning a singleton event stream is equivalent to computing \<up>(f a b) *)
+(* scanning a singleton event stream is equivalent to computing \<up>(f q a) *)
 lemma [simp]: "a\<noteq>\<surd> \<Longrightarrow> tsscanl_h f q\<cdot>(\<up>a) = \<up>(\<M>(f q (\<M>\<down> a)))"
 by (insert tsscanl_h_scons [of a f q \<epsilon>], auto)
 
 lemma [simp]: "tsscanl_h f q\<cdot>(\<up>\<surd>) = \<up>\<surd>"
 by (insert tsscanl_h_scons_tick [of f q \<epsilon>], auto)
 
-text {* applying @{term tsscanl} never shortens the tstream *}
+(* applying tsscanl_h never shortens the event stream *)
 lemma fair_tsscanl_h: "#x \<le> #(tsscanl_h f q\<cdot>x)"
 apply (rule spec [where x = q])
 apply (rule ind [of _ x], auto)
@@ -1609,37 +1608,28 @@ by (simp add: tsscanl_h_scons)
 lemma tsscanl_h_shd_tick [simp]: "shd (tsscanl_h f q\<cdot>(\<up>\<surd>\<bullet>s)) = \<surd>"
 by (simp add: tsscanl_h_scons_tick)
 
-(* dropping the first element of the result of tsscanl is equivalent to beginning the scan with 
-   (f a (shd s)) as the initial element and proceeding with the rest of the input *)
+(* dropping the first element of the result of tsscanl_h is equivalent to using 
+   (f q (shd s)) as initial element and proceeding with the rest of the input *)
 lemma tsscanl_h_srt: "a\<noteq>\<surd> \<Longrightarrow> srt\<cdot>(tsscanl_h f q\<cdot>(\<up>a\<bullet>s)) = tsscanl_h f (f q (\<M>\<down> a))\<cdot>s"
 by (insert tsscanl_h_scons [of a f q s], auto)
 
 lemma tsscanl_h_srt_tick: "a=\<surd> \<Longrightarrow> srt\<cdot>(tsscanl_h f q\<cdot>(\<up>a\<bullet>s)) = tsscanl_h f q\<cdot>s"
 by (insert tsscanl_h_scons_tick [of f q s], auto)
 
-(*
+(*  *)
+lemma tsscanl_h_unfold: 
+  "s=\<up>(shd s)\<bullet>srt\<cdot>s \<and> shd s\<noteq>\<surd> \<Longrightarrow> tsscanl_h f q\<cdot>s = \<up>(\<M>(f q (\<M>\<down> (shd s)))) \<bullet> tsscanl_h f (f q \<M>\<down> shd s)\<cdot>(srt\<cdot>s)"
+by (insert tsscanl_h_scons [of "shd s" f q "srt\<cdot>s"], auto)
+
 lemma tsscanl_h_unfold_tick: "s=\<up>\<surd>\<bullet>srt\<cdot>s \<Longrightarrow> tsscanl_h f q\<cdot>s = \<up>\<surd> \<bullet> tsscanl_h f q\<cdot>(srt\<cdot>s)"
 by (insert tsscanl_h_scons_tick [of f q "srt\<cdot>s"], auto)
 
-lemma tsscanl_h_snth_tick: 
-  "Fin (Suc n) < #s \<and> shd s=\<surd> \<Longrightarrow> snth (Suc n) (tsscanl_h f (\<M>\<down> q)\<cdot>s) =(\<M> f (\<M>\<down> (snth n (tsscanl_h f (\<M>\<down> q)\<cdot>s))) (\<M>\<down> (snth (Suc n) s)))"
-apply (induction n)
-apply (subst tsscanl_h_unfold_tick)
-apply (metis less_le lnle_Fin_0 n_not_Suc_n strict_slen surj_scons)
-by simp
-
-lemma tsscanl_h_unfold: "shd s\<noteq>\<surd> \<Longrightarrow> tsscanl_h f q\<cdot>s = \<up>(\<M>(f q (\<M>\<down> (shd s)))) \<bullet> tsscanl_h f (f q (\<M>\<down> (shd s)))\<cdot>(srt\<cdot>s)"
-apply (insert tsscanl_h_scons [of "shd s" f q "srt\<cdot>s"], auto)
-by simp
-*)
-
-(* the n+1st element produced by tsscanl is the result of merging the n+1st item of s with the nth
-   element produced by tsscanl *)
+(* the n+1st element of the result of tsscanl_h is the result of merging the n+1st item of s with the nth element *)
 lemma tsscanl_h_snth:  
   "Fin (Suc n) < #s \<Longrightarrow> snth (Suc n) (tsscanl_h f q\<cdot>s) =(\<M> f (\<M>\<down> (snth n (tsscanl_h f q\<cdot>s))) (\<M>\<down> (snth (Suc n) s)))"
 oops
 
-(* the result of tsscanl_h has the same length as the input tstream x *)
+(* the result of tsscanl_h has the same length as the input event stream *)
 lemma fair_tsscanl[simp]: "#(tsscanl_h f a\<cdot>x) = #x"
 apply (rule spec [where x = a])
 apply (rule ind [of _ x], auto)
