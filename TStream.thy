@@ -1489,8 +1489,8 @@ definition tsscanl     :: "('o  \<Rightarrow> 'i   \<Rightarrow> 'o ) \<Rightarr
 lemma TSSCANL_empty[simp]: "TSSCANL n f q \<epsilon> = \<epsilon>"
 by (induct_tac n, auto)
 
-lemma mono_TSSCANL_h1: "x \<sqsubseteq> y \<and> x \<noteq> \<epsilon> \<Longrightarrow> shd x = shd y"
-using lessD by (fastforce)
+lemma below_shd: "x \<sqsubseteq> y \<and> x \<noteq> \<epsilon> \<Longrightarrow> shd x = shd y"
+by (metis below_bottom_iff less_all_sconsD surj_scons)
 
 text {* monotonicity of TSSCANL *}
 lemma mono_TSSCANL: 
@@ -1500,17 +1500,9 @@ apply (drule lessD, erule disjE, simp)
 apply (erule exE)+
 apply (erule conjE)+
 apply (simp, rule monofun_cfun_arg, simp)
-using lessD apply (fastforce)
-using lessD apply (fastforce)
-proof -
-  fix n :: nat and f :: "('o \<Rightarrow> 'i  \<Rightarrow> 'o)" and q :: "'o" and x :: "'i event  stream" and  y :: "'i event  stream"
-  assume a1: "x \<sqsubseteq> y"
-  assume a2: "x \<noteq> \<epsilon>"
-  assume a3: "\<forall>x y. x \<sqsubseteq> y \<longrightarrow> (\<forall>q. TSSCANL n f q x \<sqsubseteq> TSSCANL n f q y)"
-  then show "\<up>(Msg (f q (\<M>\<down> shd x))) \<bullet> TSSCANL n f (f q (\<M>\<down> shd x)) (srt\<cdot>x) \<sqsubseteq>
-       \<up>(Msg (f q (\<M>\<down> shd y))) \<bullet> TSSCANL n f (f q (\<M>\<down> shd y)) (srt\<cdot>y)"
-    using a1 a2 by (simp add: mono_TSSCANL_h1 monofun_cfun)
-qed
+apply (simp add: below_shd)
+apply (simp add: below_shd)
+by (simp add: below_shd monofun_cfun_arg)
 
 text {* result of @{term "TSSCANL n"} only depends on first @{term n}
   elements of input stream *}
@@ -1521,10 +1513,10 @@ apply (rule_tac x=s in scases)
 apply (auto)
 apply (metis (no_types, lifting) inject_scons stake_Suc surj_scons)
 apply (metis shd1 stake_Suc surj_scons)
+apply (metis inject_scons stake_Suc surj_scons)
 apply (metis shd1 stake_Suc surj_scons)
 apply (metis shd1 stake_Suc surj_scons)
-apply (metis shd1 stake_Suc surj_scons)
-apply (metis lshd_updis stake_Suc stream.sel_rews(3) surj_scons)
+apply (metis Fin_0 Fin_Suc bot_is_0 nat.simps(3) slen_scons stake_Suc strictI strict_slen surj_scons)
 apply (rule_tac x=s in scases)
 by (auto)
 
@@ -1534,31 +1526,12 @@ lemma chain_TSSCANL: "chain TSSCANL"
 apply (rule chainI)
 apply (subst fun_below_iff)+
 apply (induct_tac i, auto)
-apply (smt below_refl sconc_fst_empty sconc_scons' stream.con_rews(2) stream.inverts sup'_def)
-apply (smt below_refl lscons_conv stream.con_rews(2) stream.inverts)
-proof -
-  fix n :: nat and x :: "('o \<Rightarrow> 'i  \<Rightarrow> 'o)" and xa :: "'o"and xb :: "'i event  stream"
-  assume a1: "\<forall>x xa xb. TSSCANL n x xa xb \<sqsubseteq>
-                 (if xb = \<epsilon> then \<epsilon>
-                  else if shd xb = \<surd> then \<up>\<surd> \<bullet> TSSCANL n x xa (srt\<cdot>xb) else \<up>(\<M> x xa \<M>\<down> shd xb) \<bullet> TSSCANL n x (x xa \<M>\<down> shd xb) (srt\<cdot>xb))"
-  assume a2: "shd (srt\<cdot>xb) \<noteq> \<surd>"
-  assume a3: "srt\<cdot>xb \<noteq> \<epsilon>"
-  assume a4: "shd xb = \<surd>"
-  then show "\<up>\<surd> \<bullet> TSSCANL n x xa (srt\<cdot>xb) \<sqsubseteq> \<up>\<surd> \<bullet> \<up>(\<M> x xa \<M>\<down> shd (srt\<cdot>xb)) \<bullet> TSSCANL n x (x xa \<M>\<down> shd (srt\<cdot>xb)) (srt\<cdot>(srt\<cdot>xb))"
-sorry
-next
-  fix n :: nat and x :: "('o \<Rightarrow> 'i  \<Rightarrow> 'o)" and xa :: "'o"and xb :: "'i event  stream"
-  assume a1: "\<forall>x xa xb. TSSCANL n x xa xb \<sqsubseteq>
-                 (if xb = \<epsilon> then \<epsilon>
-                  else if shd xb = \<surd> then \<up>\<surd> \<bullet> TSSCANL n x xa (srt\<cdot>xb) else \<up>(\<M> x xa \<M>\<down> shd xb) \<bullet> TSSCANL n x (x xa \<M>\<down> shd xb) (srt\<cdot>xb))"
-  assume a1: "shd (srt\<cdot>xb) \<noteq> \<surd>"
-  assume a2: "srt\<cdot>xb \<noteq> \<epsilon>"
-  assume a3: "shd xb \<noteq> \<surd>"
-  assume a4: "xb \<noteq> \<epsilon>"
-  then show "\<up>(\<M> x xa \<M>\<down> shd xb) \<bullet> TSSCANL n x (x xa \<M>\<down> shd xb) (srt\<cdot>xb) \<sqsubseteq>
-       \<up>(\<M> x xa \<M>\<down> shd xb) \<bullet> \<up>(\<M> x (x xa \<M>\<down> shd xb) \<M>\<down> shd (srt\<cdot>xb)) \<bullet> TSSCANL n x (x (x xa \<M>\<down> shd xb) \<M>\<down> shd (srt\<cdot>xb)) (srt\<cdot>(srt\<cdot>xb))"
-sorry
-qed
+apply (rule monofun_cfun_arg)
+apply (erule_tac x="x" in allE)
+apply presburger
+apply (smt monofun_cfun_arg)
+apply (smt monofun_cfun_arg)
+by (smt monofun_cfun_arg)
 
 text {* @{term tsscanl} is a continuous function *}
 lemma cont_lub_TSSCANL: "cont (\<lambda>s. \<Squnion>i. TSSCANL i f q s)"
@@ -1602,7 +1575,7 @@ apply (rule chainI)
 apply (rule fun_belowD [of _ _ "f"])
 by (rule chain_TSSCANL [THEN chainE], simp)
 
-lemma tsscanl_h_scons_tick:"tsscanl_h f a\<cdot>(\<up>\<surd>\<bullet>s) = \<up>\<surd> \<bullet> (tsscanl_h f a\<cdot>s)"
+lemma tsscanl_h_scons_tick: "tsscanl_h f a\<cdot>(\<up>\<surd>\<bullet>s) = \<up>\<surd> \<bullet> (tsscanl_h f a\<cdot>s)"
 apply (simp add: tsscanl_h_def)
 apply (subst beta_cfun, rule cont_lub_TSSCANL)+
 apply (subst contlub_cfun_arg)
@@ -1628,7 +1601,7 @@ lemma fair_tsscanl_h: "#x \<le> #(tsscanl_h f a\<cdot>x)"
 apply (rule spec [where x = a])
 apply (rule ind [of _ x], auto)
 apply (subst lnle_def, simp del: lnle_conv)
-by (smt lnsuc_lnle_emb slen_scons tsscanl_h_scons tsscanl_h_scons_tick)
+by (metis (no_types, lifting) lnle_def monofun_cfun_arg slen_scons tsscanl_h_scons tsscanl_h_scons_tick)
 
 lemma tsscanl_h_shd [simp]: "a\<noteq>\<surd> \<Longrightarrow> shd (tsscanl_h f q\<cdot>(\<up>a\<bullet>s)) = (Msg( f q (\<M>\<down> a)))"
 by (simp add: tsscanl_h_scons)
@@ -1638,13 +1611,11 @@ by (simp add: tsscanl_h_scons_tick)
 
 (* dropping the first element of the result of tsscanl is equivalent to beginning the scan with 
    (f a (shd s)) as the initial element and proceeding with the rest of the input *)
-lemma tsscanl_h_srt: "shd s\<noteq>\<surd> \<Longrightarrow> srt\<cdot>(tsscanl_h f a\<cdot>s) = tsscanl_h f (f a (\<M>\<down> shd s))\<cdot>(srt\<cdot>s)"
-apply (insert tsscanl_h_scons [of "(shd s)" f a s], auto)
-by (smt event.inject inject_scons stream.sel_rews(2) strictI surj_scons tsscanl_h_empty tsscanl_h_scons)
+lemma tsscanl_h_srt: "a\<noteq>\<surd> \<Longrightarrow> srt\<cdot>(tsscanl_h f q\<cdot>(\<up>a\<bullet>s)) = tsscanl_h f (f q (\<M>\<down> a))\<cdot>s"
+by (insert tsscanl_h_scons [of a f q s], auto)
 
-lemma tsscanl_h_srt_tick: "shd s=\<surd> \<Longrightarrow> srt\<cdot>(tsscanl_h f a\<cdot>s) = tsscanl_h f a\<cdot>(srt\<cdot>s)"
-apply (insert tsscanl_h_scons_tick [of f a s])
-by (metis (no_types, lifting) inject_scons stream.sel_rews(2) strictI surj_scons tsscanl_h_empty tsscanl_h_scons_tick)
+lemma tsscanl_h_srt_tick: "a=\<surd> \<Longrightarrow> srt\<cdot>(tsscanl_h f q\<cdot>(\<up>a\<bullet>s)) = tsscanl_h f q\<cdot>s"
+by (insert tsscanl_h_scons_tick [of f q s], auto)
 
 (* the n+1st element produced by tsscanl is the result of merging the n+1st item of s with the nth
    element produced by tsscanl *)
@@ -1652,7 +1623,7 @@ lemma tsscanl_h_snth:  "Fin (Suc n) < #s \<Longrightarrow> snth (Suc n) (tsscanl
 oops
 (*
 apply (induction n arbitrary:  a s)
-apply (smt Fin_02bot Fin_leq_Suc_leq less2lnleD less_lnsuc lnat_po_eq_conv lnless_def lnzero_def shd1 slen_empty_eq slen_rt_ile_eq snth_scons snth_shd tsscanl_h_scons surj_scons)
+apply (smt Fin_02bot Fin_leq_Suc_leq less2lnleD less_lnsuc lnat_po_eq_conv lnless_def lnzero_def shd1 slen_empty_eq slen_rt_ile_eq snth_scons snth_shd sscanl_scons surj_scons)
 by (smt Fin_Suc lnat_po_eq_conv lnle_def lnless_def lnsuc_lnle_emb lnzero_def minimal slen_scons snth_scons sscanl_scons strict_slen surj_scons)
 *)
 
