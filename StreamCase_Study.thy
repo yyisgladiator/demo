@@ -1167,40 +1167,31 @@ apply(simp)
 using sum3_snth
 by (metis Fin_leq_Suc_leq less_le not_less sscanl_snth sum3_def sum_nth_nth)
 
-
 (*
-monotonicity of sum4 
-lemma mono_sum4: 
-  "\<forall> x y q. x \<sqsubseteq> y \<longrightarrow> (\<mu> z. add\<cdot>x\<cdot>(\<up>0 \<bullet> z)) \<sqsubseteq> (\<mu> z. add\<cdot>y\<cdot>(\<up>0 \<bullet> z))"
-sorry
+definition sum_stream ::"nat stream \<Rightarrow> nat" where
+"sum_stream \<equiv> fix\<cdot>(\<Lambda> h. (\<lambda>s. if s = \<epsilon> then 0 else ((shd s) + (h (srt\<cdot>s)))))"
 
-lemma contlub_sum4:
-  "\<forall>x. (\<mu> z. add\<cdot>x\<cdot>(\<up>0 \<bullet> z)) = (\<mu> z. add\<cdot>(stake i\<cdot>x)\<cdot>(\<up>0 \<bullet> z))"
-apply (induct_tac i, auto)
-apply (rule_tac x=x in scases)
-apply auto
-apply (rule_tac x=x in scases)
-sorry
-
-
-lemma "cont (\<lambda>x. (fix\<cdot>(\<Lambda> z. add\<cdot>x\<cdot>(\<up>0\<bullet>(z)))))"
-apply (rule pr_contI)
-apply (rule monofunI)
-apply (rule mono_sum4 [rule_format], assumption)
-apply (rule allI)
-apply (rule_tac x="n" in exI)
-by (rule contlub_sum4 [rule_format])
+lemma "Fin n<#s \<Longrightarrow> snth n (sum5\<cdot>s) = sum_stream(stake n\<cdot> s)"
 *)
+
+(*cont sum4*)
+lemma "cont (\<lambda>x. \<mu> z. add\<cdot>x\<cdot>(\<up>0 \<bullet> z))"
+by simp
+
+lemma "sum4\<cdot>s= (fix\<cdot>(\<Lambda> z. add\<cdot>s\<cdot>(\<up>0\<bullet>(z))))"
+apply(subst sum4_def)
+by(subst beta_cfun, simp+)
+
 
 (*Für HK*)
 (*
 --TIMED: analog (try evtl. auch mit sscanl / gibts eine function timed-sscanl? wenn nicht dann definieren)
 
-sum x = sum4 x 0
+tsum x = tsum5 x 0
 
-sum4 \<euro> y = \<euro>
-sum4 T:xs y = T : sum4 xs y
-sum4 x:xs y = (x+y) : sum4 xs (x+y)
+tsum5 \<epsilon> y = \<euro>
+tsum5 \<surd>:xs y = \<surd> : tsum5 xs y
+tsum5 x:xs y = (x+y) : tsum5 xs (x+y)
 
 *)
 
