@@ -324,7 +324,7 @@ primrec spfFeedbackHelper :: "nat \<Rightarrow> 'a SPF \<Rightarrow> 'a SB \<Rig
   
 definition spfFeedbackOperator :: "'a SPF \<Rightarrow> 'a SPF"  ("\<mu>_" 50) where
 "spfFeedbackOperator f \<equiv> Abs_CSPF (\<lambda> sb. (sbDom\<cdot>sb = spfDom\<cdot>f - spfRan\<cdot>f) \<leadsto> 
-   ((\<Squnion>i. spfFeedbackHelper i f sb  ) \<bar> (spfRan\<cdot>f)))"  (* (spfRan\<cdot>f - spfDom\<cdot>f) *)
+   ((\<Squnion>i. spfFeedbackHelper i f sb  ) \<bar> (spfRan\<cdot>f)))"
 
 (* sum4 SPF  *)
 subsection sum4
@@ -400,8 +400,16 @@ subsection Prerequirements
 
 (* final lemma *)
 
+lemma spfCompFixEq: assumes "sbDom\<cdot>sb = I addC append0C"
+  shows "(\<Squnion>i. iterate i\<cdot>(SPF.spfCompHelp2 addC append0C sb)\<cdot>(sbLeast {c1, c2, c3})) . c3 = (\<mu> z. add\<cdot>(sb . c1)\<cdot>(\<up>0 \<bullet> z))" 
+  sorry
+    
 lemma sumEq: assumes "sbDom\<cdot>sb = I addC append0C" shows "(sum1SPF \<rightleftharpoons> sb) . c3 = sum4\<cdot>(sb . c1)"
-apply(subst sum1EqCh, simp add: assms)
-sorry
+  apply(subst sum1EqCh, simp add: assms)
+  apply(simp only: SPF.spfcomp_tospfH2 sum4_def)
+  apply(subst  spfcomp_RepAbs)
+   apply(simp_all add: assms)
+  apply(subst spfCompFixEq)
+    by(auto simp add: assms)
 
 end
