@@ -24,7 +24,7 @@ datatype 'm event = Msg 'm ( "\<M> _" 65)| Tick
 
 text {* Inverse of Msg.*}
 abbreviation
-  inversMsg ::  "'a event \<Rightarrow> 'a"  ("\<M>\<down> _")
+  inversMsg ::  "'a event \<Rightarrow> 'a"  ("\<M>\<inverse> _")
     where "inversMsg e \<equiv> ( case e of \<M> m \<Rightarrow> m)"
 
 text {* Prove that datatype event is countable. Needed, since the domain-constructor defined
@@ -1473,8 +1473,8 @@ primrec TSSCANL :: "nat \<Rightarrow> ('o \<Rightarrow> 'i  \<Rightarrow> 'o) \<
 "TSSCANL 0 f q s = \<epsilon>" |
 "TSSCANL (Suc n) f q s = (if s=\<epsilon> then \<epsilon> 
                            else (if (shd s = \<surd>) then (\<up>\<surd> \<bullet> TSSCANL n f q (srt\<cdot>s)) 
-                                 else \<up>(\<M> (f q \<M>\<down> shd s)) 
-                                      \<bullet> (TSSCANL n f (f q (\<M>\<down> shd s)) (srt\<cdot>s))))"
+                                 else \<up>(\<M> (f q \<M>\<inverse> shd s)) 
+                                      \<bullet> (TSSCANL n f (f q (\<M>\<inverse> shd s)) (srt\<cdot>s))))"
 
 definition tsscanl_h :: "('o \<Rightarrow> 'i \<Rightarrow> 'o) \<Rightarrow> 'o \<Rightarrow> 'i event  stream \<rightarrow> 'o event stream" where
 "tsscanl_h f q \<equiv> \<Lambda> s. \<Squnion>i. TSSCANL i f q s"
@@ -1560,7 +1560,7 @@ by (simp)
 (* scanning \<up>a\<bullet>s using q as the initial element is equivalent to computing \<up>(f q a) and appending the
    result of scanning s with (f q a) as the initial element *)
 lemma tsscanl_h_scons:
-  "a\<noteq>\<surd> \<Longrightarrow> tsscanl_h f q\<cdot>(\<up>a\<bullet>s) = \<up>(\<M>(f q (\<M>\<down> a))) \<bullet> tsscanl_h f (f q (\<M>\<down> a))\<cdot>s" 
+  "a\<noteq>\<surd> \<Longrightarrow> tsscanl_h f q\<cdot>(\<up>a\<bullet>s) = \<up>(\<M>(f q (\<M>\<inverse> a))) \<bullet> tsscanl_h f (f q (\<M>\<inverse> a))\<cdot>s" 
 apply (simp add: tsscanl_h_def)
 apply (subst beta_cfun, rule cont_lub_TSSCANL)+
 apply (subst contlub_cfun_arg)
@@ -1589,7 +1589,7 @@ apply (rule fun_belowD [of _ _ "f"])
 by (rule chain_TSSCANL [THEN chainE], simp)
 
 (* scanning a singleton event stream is equivalent to computing \<up>(f q a) *)
-lemma [simp]: "a\<noteq>\<surd> \<Longrightarrow> tsscanl_h f q\<cdot>(\<up>a) = \<up>(\<M>(f q (\<M>\<down> a)))"
+lemma [simp]: "a\<noteq>\<surd> \<Longrightarrow> tsscanl_h f q\<cdot>(\<up>a) = \<up>(\<M>(f q (\<M>\<inverse> a)))"
 by (insert tsscanl_h_scons [of a f q \<epsilon>], auto)
 
 lemma [simp]: "tsscanl_h f q\<cdot>(\<up>\<surd>) = \<up>\<surd>"
@@ -1602,10 +1602,10 @@ apply (rule ind [of _ x], auto)
 apply (subst lnle_def, simp del: lnle_conv)
 by (metis (no_types, lifting) lnle_def monofun_cfun_arg slen_scons tsscanl_h_scons tsscanl_h_scons_tick)
 
-lemma tsscanl_h_shd [simp]: "a\<noteq>\<surd> \<Longrightarrow> shd (tsscanl_h f q\<cdot>(\<up>a\<bullet>s)) = (\<M>(f q (\<M>\<down> a)))"
+lemma tsscanl_h_shd [simp]: "a\<noteq>\<surd> \<Longrightarrow> shd (tsscanl_h f q\<cdot>(\<up>a\<bullet>s)) = (\<M>(f q (\<M>\<inverse> a)))"
 by (simp add: tsscanl_h_scons)
 
-lemma tsscanl_h_shd1: "shd s\<noteq>\<surd> \<and> s=\<up>(shd s)\<bullet>srt\<cdot>s \<Longrightarrow> shd (tsscanl_h f q\<cdot>s) = \<M>(f q \<M>\<down> shd s)"
+lemma tsscanl_h_shd1: "shd s\<noteq>\<surd> \<and> s=\<up>(shd s)\<bullet>srt\<cdot>s \<Longrightarrow> shd (tsscanl_h f q\<cdot>s) = \<M>(f q \<M>\<inverse> shd s)"
 by (metis tsscanl_h_shd)
 
 lemma tsscanl_h_shd_tick [simp]: "shd (tsscanl_h f q\<cdot>(\<up>\<surd>\<bullet>s)) = \<surd>"
@@ -1613,14 +1613,14 @@ by (simp add: tsscanl_h_scons_tick)
 
 (* dropping the first element of the result of tsscanl_h is equivalent to using 
    (f q (shd s)) as initial element and proceeding with the rest of the input *)
-lemma tsscanl_h_srt: "a\<noteq>\<surd> \<Longrightarrow> srt\<cdot>(tsscanl_h f q\<cdot>(\<up>a\<bullet>s)) = tsscanl_h f (f q (\<M>\<down> a))\<cdot>s"
+lemma tsscanl_h_srt: "a\<noteq>\<surd> \<Longrightarrow> srt\<cdot>(tsscanl_h f q\<cdot>(\<up>a\<bullet>s)) = tsscanl_h f (f q (\<M>\<inverse> a))\<cdot>s"
 by (insert tsscanl_h_scons [of a f q s], auto)
 
 lemma tsscanl_h_srt_tick: "a=\<surd> \<Longrightarrow> srt\<cdot>(tsscanl_h f q\<cdot>(\<up>a\<bullet>s)) = tsscanl_h f q\<cdot>s"
 by (insert tsscanl_h_scons_tick [of f q s], auto)
 
 lemma tsscanl_h_unfold: 
-  "s=\<up>(shd s)\<bullet>srt\<cdot>s \<and> shd s\<noteq>\<surd> \<Longrightarrow> tsscanl_h f q\<cdot>s = \<up>(\<M>(f q (\<M>\<down> (shd s)))) \<bullet> tsscanl_h f (f q \<M>\<down> shd s)\<cdot>(srt\<cdot>s)"
+  "s=\<up>(shd s)\<bullet>srt\<cdot>s \<and> shd s\<noteq>\<surd> \<Longrightarrow> tsscanl_h f q\<cdot>s = \<up>(\<M>(f q (\<M>\<inverse> (shd s)))) \<bullet> tsscanl_h f (f q \<M>\<inverse> shd s)\<cdot>(srt\<cdot>s)"
 by (insert tsscanl_h_scons [of "shd s" f q "srt\<cdot>s"], auto)
 
 lemma tsscanl_h_unfold_tick: "s=\<up>\<surd>\<bullet>srt\<cdot>s \<Longrightarrow> tsscanl_h f q\<cdot>s = \<up>\<surd> \<bullet> tsscanl_h f q\<cdot>(srt\<cdot>s)"
@@ -1628,7 +1628,7 @@ by (insert tsscanl_h_scons_tick [of f q "srt\<cdot>s"], auto)
 
 (* the n+1st element of the result of tsscanl_h is the result of merging the n+1st item of s with the nth element *)
 lemma tsscanl_h_snth:  
-  "Fin (Suc n) < #s \<Longrightarrow> snth (Suc n) (tsscanl_h f q\<cdot>s) =(\<M> f (\<M>\<down> (snth n (tsscanl_h f q\<cdot>s))) (\<M>\<down> (snth (Suc n) s)))"
+  "Fin (Suc n) < #s \<Longrightarrow> snth (Suc n) (tsscanl_h f q\<cdot>s) =(\<M> f (\<M>\<inverse> (snth n (tsscanl_h f q\<cdot>s))) (\<M>\<inverse> (snth (Suc n) s)))"
 oops
 
 (* the result of tsscanl_h has the same length as the input event stream *)
