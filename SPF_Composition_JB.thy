@@ -149,10 +149,45 @@ proof -
   then show ?thesis
     by force
 qed
-  
 
+(* bix thx to Deni for the hint *)
+lemma deni: fixes Y :: "nat \<Rightarrow> 'a::cpo"
+            assumes "chain Y"
+            shows " Some (\<Squnion> i. Y i) = (\<Squnion> i. Some (Y i))"
+using assms cont2contlubE some_cont by blast
 
-lemma test14: assumes "(sbDom\<cdot>(\<Squnion>i. Y i) = I f1 f2)"
+    
+lemma deni2: fixes Y:: "nat \<Rightarrow> 'a::cpo"
+             fixes f:: "'a \<Rightarrow> 'b::cpo"
+               assumes "chain Y"
+               assumes "chain (\<lambda>i. f (Y i))"
+             shows " Some (\<Squnion> i. f (Y i)) = (\<Squnion> i. Some (f (Y i)))"
+using assms(2) deni by blast
+
+ 
+lemma chain_lub_iter_spfcompH2: assumes  "chain Y"  "(sbDom\<cdot>(\<Squnion>i. Y i) = I f1 f2)"
+shows "chain (\<lambda>i. \<Squnion>ia. iter_spfcompH2 f1 f2 ia (Y i))"   
+
+proof -
+  have f1: "\<forall>i. (Y i) \<sqsubseteq> (Y (Suc i))"
+    using assms po_class.chain_def by blast
+  have f2: "\<forall>ia. sbDom\<cdot>(Y ia) = I f1 f2"
+     proof -
+            have "\<forall>i. ( Y i) \<sqsubseteq> (\<Squnion>i. Y i)" 
+              by (simp add: is_ub_thelub assms(1))
+            have "\<forall>i. (sbDom\<cdot>(Y i)) = (sbDom\<cdot>(\<Squnion>i. Y i))"
+             by (simp add: sbChain_dom_eq2 assms(1))
+           thus ?thesis
+             by (simp add: assms(2))
+         qed
+  thus ?thesis
+    apply (subst chainI, simp_all)
+    using f2 local.f1 lub_iter_spfCompHelp2_mono by blast
+qed
+   
+ 
+
+lemma chain_if_lub_iter_spfcompH2_domI: assumes "(sbDom\<cdot>(\<Squnion>i. Y i) = I f1 f2)"
         shows "chain Y \<longrightarrow> (sbDom\<cdot>(\<Squnion>i. Y i) = I f1 f2)\<leadsto>(\<Squnion>i. iter_spfcompH2 f1 f2 i (\<Squnion>i. Y i))  \<bar> Oc f1 f2 \<sqsubseteq>
         (\<Squnion>i. (sbDom\<cdot>(Y i) = I f1 f2)\<leadsto>(\<Squnion>ia. iter_spfcompH2 f1 f2 ia (Y i))  \<bar> Oc f1 f2)"
 proof -
@@ -183,10 +218,10 @@ proof -
         have f211: "chain Y \<longrightarrow> (\<Squnion>i. (sbDom\<cdot>(Y i) = I f1 f2)\<leadsto>(\<Squnion>ia. iter_spfcompH2 f1 f2 ia (Y i)) \<bar> Oc f1 f2)
                      = (\<Squnion>i. Some ((\<Squnion>ia. iter_spfcompH2 f1 f2 ia (Y i))\<bar> Oc f1 f2))"
           by (simp add: f3 assms)
-        have f212: "(\<Squnion>i. Some ((\<Squnion>ia. iter_spfcompH2 f1 f2 ia (Y i))\<bar> Oc f1 f2))
+        have f212: "chain Y \<longrightarrow> (\<Squnion>i. Some ((\<Squnion>ia. iter_spfcompH2 f1 f2 ia (Y i))\<bar> Oc f1 f2))
                       =  Some( (\<Squnion>i ia. iter_spfcompH2 f1 f2 ia (Y i)) \<bar> Oc f1 f2)"
-         sorry
-        thus ?thesis
+           by (simp add: contlub_cfun_arg deni chain_lub_iter_spfcompH2 assms)
+            thus ?thesis
         using f211 by auto
       qed
       
@@ -194,7 +229,7 @@ proof -
       by (simp add: f2 f20 f5 some_below)
 qed
 
-lemma test20: "chain Y \<longrightarrow>
+lemma chain_if_lub_iter_spfcompH2: "chain Y \<longrightarrow>
         (sbDom\<cdot>(\<Squnion>i. Y i) = I f1 f2)\<leadsto>(\<Squnion>i. iter_spfcompH2 f1 f2 i (\<Squnion>i. Y i))  \<bar> Oc f1 f2  \<sqsubseteq>
         (\<Squnion>i. (sbDom\<cdot>(Y i) = I f1 f2)\<leadsto>(\<Squnion>ia. iter_spfcompH2 f1 f2 ia (Y i))  \<bar> Oc f1 f2)"   
 proof -
@@ -206,19 +241,26 @@ proof -
        have f2: "chain Y \<longrightarrow> (sbDom\<cdot>(\<Squnion>i. Y i) = I f1 f2) \<longrightarrow>
         (sbDom\<cdot>(\<Squnion>i. Y i) = I f1 f2)\<leadsto>(\<Squnion>i. iter_spfcompH2 f1 f2 i (\<Squnion>i. Y i))  \<bar> Oc f1 f2 \<sqsubseteq>
         (\<Squnion>i. (sbDom\<cdot>(Y i) = I f1 f2)\<leadsto>(\<Squnion>ia. iter_spfcompH2 f1 f2 ia (Y i))  \<bar> Oc f1 f2)"
-         using test14 by blast
+         using chain_if_lub_iter_spfcompH2_domI by blast
        thus ?thesis 
          using f1 f2 by blast
 qed
- 
+
+(* I cannot believe I finally proved this :) *)
 lemma spf_comp_cont[simp]:
   "cont (\<lambda> x. (sbDom\<cdot>x = I f1 f2) \<leadsto> (\<Squnion>i.(iter_spfcompH2 f1 f2 i) x) \<bar> Oc f1 f2)"
   apply (rule contI2)
-  apply(simp)
-    using test20 by blast
+  apply(simp add: if_then_cont)
+    using chain_if_lub_iter_spfcompH2 by blast
 
+      
+(* spf_well of spfcopmp, to be continued ... ;) *)
 
-
+      
+      
+      
+      
+      
 (*
 BACKUPS 
 
