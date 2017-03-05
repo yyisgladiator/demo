@@ -1552,17 +1552,6 @@ by (rule contlub_TSSCANL [rule_format])
 lemma tsscanl_h_empty[simp]: "tsscanl_h f a\<cdot>\<epsilon> = \<epsilon>"
 by (simp add: cont_lub_TSSCANL tsscanl_h_def)
 
-lemma ts_well_tsscanl_h:"ts_well s \<Longrightarrow> ts_well (tsscanl_h f q\<cdot>s)"
-apply(cases "#s=\<infinity>")
-apply(simp add: ts_well_def, auto)
-sorry
-
-lemma tsscanl_unfold: "tsscanl f q\<cdot>s = Abs_tstream (tsscanl_h f q\<cdot>(Rep_tstream s))"
-by (simp add: tsscanl_def ts_well_tsscanl_h) 
-
-lemma tsscanl_empty[simp]: "tsscanl f q\<cdot>\<bottom> = \<bottom>"
-by (simp add: tsscanl_unfold)
-
 (* scanning \<up>a\<bullet>s using q as the initial element is equivalent to computing \<up>(f q a) and appending the
    result of scanning s with (f q a) as the initial element *)
 lemma tsscanl_h_scons:
@@ -1634,7 +1623,12 @@ by (insert tsscanl_h_scons_tick [of f q "srt\<cdot>s"], auto)
 
 (* the n+1st element of the result of tsscanl_h is the result of merging the n+1st item of s with the nth element *)
 lemma tsscanl_h_snth:  
-  "Fin (Suc n) < #s \<Longrightarrow> snth (Suc n) (tsscanl_h f q\<cdot>s) =(\<M> f (\<M>\<inverse> (snth n (tsscanl_h f q\<cdot>s))) (\<M>\<inverse> (snth (Suc n) s)))"
+  "Fin (Suc n) < #s \<and> snth n (tsscanl_h f q\<cdot>s)\<noteq>\<surd> \<and> snth (Suc n) (tsscanl_h f q\<cdot>s)\<noteq>\<surd> \<Longrightarrow> 
+   snth (Suc n) (tsscanl_h f q\<cdot>s) = (\<M> f (\<M>\<inverse> (snth n (tsscanl_h f q\<cdot>s))) (\<M>\<inverse> (snth (Suc n) s)))"
+apply (induction n)
+apply (simp add: snth_rt)
+apply (smt Fin_02bot Suc_neq_Zero bot_is_0 event.simps(4) less_le lnle_Fin_0 not_less slen_rt_ile_eq strict_slen surj_scons tsscanl_h_shd1 tsscanl_h_shd_tick tsscanl_h_srt)
+apply (simp add: snth_rt)
 oops
 
 (* the result of tsscanl_h has the same length as the input event stream *)
@@ -1642,6 +1636,17 @@ lemma fair_tsscanl[simp]: "#(tsscanl_h f a\<cdot>x) = #x"
 apply (rule spec [where x = a])
 apply (rule ind [of _ x], auto)
 by (metis slen_scons tsscanl_h_scons tsscanl_h_scons_tick)
+
+lemma ts_well_tsscanl_h:"ts_well s \<Longrightarrow> ts_well (tsscanl_h f q\<cdot>s)"
+apply(cases "#s=\<infinity>")
+apply(simp add: ts_well_def, auto)
+sorry
+
+lemma tsscanl_unfold: "tsscanl f q\<cdot>s = Abs_tstream (tsscanl_h f q\<cdot>(Rep_tstream s))"
+by (simp add: tsscanl_def ts_well_tsscanl_h) 
+
+lemma tsscanl_empty[simp]: "tsscanl f q\<cdot>\<bottom> = \<bottom>"
+by (simp add: tsscanl_unfold)
 
 (*TODO
 
