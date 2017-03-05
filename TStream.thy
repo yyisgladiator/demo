@@ -1483,8 +1483,8 @@ definition tsscanl_h :: "('o \<Rightarrow> 'i \<Rightarrow> 'o) \<Rightarrow> 'o
    Behaves like map, but also takes the previously generated
    output element as additional input to the function.
    For the first computation, an initial value is provided. *)
-definition tsscanl     :: "('o  \<Rightarrow> 'i   \<Rightarrow> 'o ) \<Rightarrow> 'o  \<Rightarrow> 'i tstream \<Rightarrow> 'o tstream" where
-"tsscanl f q s \<equiv> Abs_tstream (tsscanl_h f q\<cdot>(Rep_tstream s))"
+definition tsscanl     :: "('o  \<Rightarrow> 'i   \<Rightarrow> 'o ) \<Rightarrow> 'o  \<Rightarrow> 'i tstream \<rightarrow> 'o tstream" where
+"tsscanl f q \<equiv> (\<Lambda> s. Abs_tstream (tsscanl_h f q\<cdot>(Rep_tstream s)))"
 
 lemma TSSCANL_empty[simp]: "TSSCANL n f q \<epsilon> = \<epsilon>"
 by (induct_tac n, auto)
@@ -1552,10 +1552,16 @@ by (rule contlub_TSSCANL [rule_format])
 lemma tsscanl_h_empty[simp]: "tsscanl_h f a\<cdot>\<epsilon> = \<epsilon>"
 by (simp add: cont_lub_TSSCANL tsscanl_h_def)
 
-lemma tsscanl_empty[simp]: "tsscanl f q \<bottom> = \<bottom>"
-apply (simp add: tsscanl_def tsscanl_h_def) 
-apply (subst beta_cfun, rule cont_lub_TSSCANL)
-by (simp)
+lemma ts_well_tsscanl_h:"ts_well s \<Longrightarrow> ts_well (tsscanl_h f q\<cdot>s)"
+apply(cases "#s=\<infinity>")
+apply(simp add: ts_well_def, auto)
+sorry
+
+lemma tsscanl_unfold: "tsscanl f q\<cdot>s = Abs_tstream (tsscanl_h f q\<cdot>(Rep_tstream s))"
+by (simp add: tsscanl_def ts_well_tsscanl_h) 
+
+lemma tsscanl_empty[simp]: "tsscanl f q\<cdot>\<bottom> = \<bottom>"
+by (simp add: tsscanl_unfold)
 
 (* scanning \<up>a\<bullet>s using q as the initial element is equivalent to computing \<up>(f q a) and appending the
    result of scanning s with (f q a) as the initial element *)
