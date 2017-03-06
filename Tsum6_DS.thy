@@ -14,7 +14,7 @@ definition tsum6 :: "nat tstream \<rightarrow> nat tstream" where
 
 lemma tsum6_h2tsum5_h: "Fin n < #(tsscanl_h op + 0\<cdot>s) \<longrightarrow> snth n (tsscanl_h op + 0\<cdot>s) = snth n (tsum5_helper 0\<cdot>s)"
 apply (induction n arbitrary: s)
-apply (smt Fin_02bot bot_is_0 fair_tsscanl lnless_def shd1 slen_empty_eq snth_shd surj_scons tsscanl_h_scons tsscanl_h_scons_tick tsum5_helper_scons_2 tsum5_helper_scons_tick)
+apply (smt shd1 snth_shd surj_scons tsscanl_h_empty tsscanl_h_scons_tick tsscanl_h_shd tsum5_helper_shd_2 tsum5_shd)
 sorry
 
 lemma tsum62tsum5: "tsscanl_h plus 0\<cdot>s = tsum5_helper 0\<cdot>s"

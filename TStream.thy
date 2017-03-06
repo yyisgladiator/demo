@@ -1465,7 +1465,7 @@ sorry
 
 *)
 
-(* ToDo Dennis sscanl *)
+(* tsscanl *)
 
 (* Takes a nat indicating the number of elements to scan, a reducing function, an initial element,
    and an input event stream. Returns a event stream consisting of the partial reductions of the input event stream. *)
@@ -1598,7 +1598,7 @@ lemma [simp]: "tsscanl_h f q\<cdot>(\<up>\<surd>) = \<up>\<surd>"
 by (insert tsscanl_h_scons_tick [of f q \<epsilon>], auto)
 
 (* applying tsscanl_h never shortens the event stream *)
-lemma fair_tsscanl_h: "#x \<le> #(tsscanl_h f q\<cdot>x)"
+lemma fair_tsscanl_h1: "#x \<le> #(tsscanl_h f q\<cdot>x)"
 apply (rule spec [where x = q])
 apply (rule ind [of _ x], auto)
 apply (subst lnle_def, simp del: lnle_conv)
@@ -1622,7 +1622,7 @@ by (metis tsscanl_h_shd_tick)
 lemma tsscanl_h_srt: "a\<noteq>\<surd> \<Longrightarrow> srt\<cdot>(tsscanl_h f q\<cdot>(\<up>a\<bullet>s)) = tsscanl_h f (f q (\<M>\<inverse> a))\<cdot>s"
 by (insert tsscanl_h_scons [of a f q s], auto)
 
-lemma tsscanl_h_srt_tick: "a=\<surd> \<Longrightarrow> srt\<cdot>(tsscanl_h f q\<cdot>(\<up>a\<bullet>s)) = tsscanl_h f q\<cdot>s"
+lemma tsscanl_h_srt_tick: "srt\<cdot>(tsscanl_h f q\<cdot>(\<up>\<surd>\<bullet>s)) = tsscanl_h f q\<cdot>s"
 by (insert tsscanl_h_scons_tick [of f q s], auto)
 
 lemma tsscanl_h_snth:"Fin n < #s \<and> shd s\<noteq>\<surd> \<and> s\<noteq>\<epsilon> \<Longrightarrow> snth (Suc n) (tsscanl_h f q\<cdot>s) = snth n (tsscanl_h f (f q \<M>\<inverse> (shd s))\<cdot>(srt\<cdot>s))"
@@ -1640,15 +1640,30 @@ apply (smt Fin_02bot Fin_Suc Suc_neq_Zero event.simps(4) lnle_Fin_0 lnle_def lnl
 by (smt Fin_Suc ln_less lnle_Fin_0 neq_iff not_less notinfI3 slen_rt_ile_eq snth_rt strict_slen trans_lnless tsscanl_h_snth tsscanl_h_snth_tick)
 
 (* the result of tsscanl_h has the same length as the input event stream *)
-lemma fair_tsscanl[simp]: "#(tsscanl_h f a\<cdot>x) = #x"
+lemma fair_tsscanl_h[simp]: "#(tsscanl_h f a\<cdot>x) = #x"
 apply (rule spec [where x = a])
 apply (rule ind [of _ x], auto)
 by (metis slen_scons tsscanl_h_scons tsscanl_h_scons_tick)
 
-lemma ts_well_tsscanl_h:"ts_well s \<Longrightarrow> ts_well (tsscanl_h f q\<cdot>s)"
-apply (simp add: ts_well_def)
-apply (cases "s=\<epsilon>", simp)
+(* lemma for ts_well_tsscanl_h *)
+
+lemma fair_tsscanl_h_tick[simp]: "#({\<surd>} \<ominus> tsscanl_h f q\<cdot>s) = #({\<surd>} \<ominus> s)"
+apply (rule spec [where x = q])
+apply (rule ind [of _ s], auto)
+by (smt event.distinct(1) inject_scons sfilter_in sfilter_nin singletonD singletonI slen_scons strictI surj_scons tsscanl_h_scons tsscanl_h_unfold_tick)
+
+lemma tsscanl_h_snth_tick2tick: "snth n s=\<surd> \<Longrightarrow> snth n (tsscanl_h f q\<cdot>s) = \<surd>"
+apply (simp add: snth_def)
 sorry
+
+lemma tsscanl_h_sfoot: "#s<\<infinity> \<Longrightarrow> sfoot (tsscanl_h f q\<cdot>(s \<bullet> \<up>\<surd>)) = \<surd>"
+apply (simp add: sfoot_def)
+apply (subst tsscanl_h_snth_tick2tick, auto)
+by (insert sfoot12[of s \<surd>], simp add: sfoot_def)
+
+lemma ts_well_tsscanl_h:"ts_well s \<Longrightarrow> ts_well (tsscanl_h f q\<cdot>s)"
+apply (simp add: ts_well_def, auto)
+by (metis (no_types, lifting) fold_inf lnsuc_lnle_emb not_less sfoot2 slen_lnsuc tsscanl_h_sfoot)
 
 lemma tsscanl_unfold: "tsscanl f q\<cdot>s = Abs_tstream (tsscanl_h f q\<cdot>(Rep_tstream s))"
 by (simp add: tsscanl_def ts_well_tsscanl_h) 
