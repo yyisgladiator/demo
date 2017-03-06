@@ -1583,6 +1583,13 @@ apply (rule chainI)
 apply (rule fun_belowD [of _ _ "f"])
 by (rule chain_TSSCANL [THEN chainE], simp)
 
+(* variants for tsscanl_h_scons *)
+lemma tsscanl_h_scons1: "shd s\<noteq>\<surd> \<and> s\<noteq>\<epsilon> \<Longrightarrow> tsscanl_h f q\<cdot>s = \<up>(\<M>(f q (\<M>\<inverse> shd s))) \<bullet> tsscanl_h f (f q (\<M>\<inverse> shd s))\<cdot>(srt\<cdot>s)"
+by (metis surj_scons tsscanl_h_scons)
+
+lemma tsscanl_h_scons1_tick: "s=\<up>\<surd>\<bullet>srt\<cdot>s \<Longrightarrow> tsscanl_h f q\<cdot>s = \<up>\<surd> \<bullet> tsscanl_h f q\<cdot>(srt\<cdot>s)"
+by (metis tsscanl_h_scons_tick)
+
 (* scanning a singleton event stream is equivalent to computing \<up>(f q a) *)
 lemma [simp]: "a\<noteq>\<surd> \<Longrightarrow> tsscanl_h f q\<cdot>(\<up>a) = \<up>(\<M>(f q (\<M>\<inverse> a)))"
 by (insert tsscanl_h_scons [of a f q \<epsilon>], auto)
@@ -1600,11 +1607,15 @@ by (metis (no_types, lifting) lnle_def monofun_cfun_arg slen_scons tsscanl_h_sco
 lemma tsscanl_h_shd [simp]: "a\<noteq>\<surd> \<Longrightarrow> shd (tsscanl_h f q\<cdot>(\<up>a\<bullet>s)) = (\<M>(f q (\<M>\<inverse> a)))"
 by (simp add: tsscanl_h_scons)
 
+lemma tsscanl_h_shd_tick [simp]: "shd (tsscanl_h f q\<cdot>(\<up>\<surd>\<bullet>s)) = \<surd>"
+by (simp add: tsscanl_h_scons_tick)
+
+(* variants for tsscanl_h_scons *)
 lemma tsscanl_h_shd1: "shd s\<noteq>\<surd> \<and> s=\<up>(shd s)\<bullet>srt\<cdot>s \<Longrightarrow> shd (tsscanl_h f q\<cdot>s) = \<M>(f q \<M>\<inverse> shd s)"
 by (metis tsscanl_h_shd)
 
-lemma tsscanl_h_shd_tick [simp]: "shd (tsscanl_h f q\<cdot>(\<up>\<surd>\<bullet>s)) = \<surd>"
-by (simp add: tsscanl_h_scons_tick)
+lemma tsscanl_h_shd1_tick: "s=\<up>\<surd>\<bullet>srt\<cdot>s \<Longrightarrow> shd (tsscanl_h f q\<cdot>s) = \<surd>"
+by (metis tsscanl_h_shd_tick)
 
 (* dropping the first element of the result of tsscanl_h is equivalent to using 
    (f q (shd s)) as initial element and proceeding with the rest of the input *)
@@ -1643,8 +1654,8 @@ apply (rule ind [of _ x], auto)
 by (metis slen_scons tsscanl_h_scons tsscanl_h_scons_tick)
 
 lemma ts_well_tsscanl_h:"ts_well s \<Longrightarrow> ts_well (tsscanl_h f q\<cdot>s)"
-apply(cases "#s=\<infinity>")
-apply(simp add: ts_well_def, auto)
+apply (simp add: ts_well_def)
+apply (cases "s=\<epsilon>", simp)
 sorry
 
 lemma tsscanl_unfold: "tsscanl f q\<cdot>s = Abs_tstream (tsscanl_h f q\<cdot>(Rep_tstream s))"
