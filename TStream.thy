@@ -1621,15 +1621,20 @@ by (insert tsscanl_h_scons [of "shd s" f q "srt\<cdot>s"], auto)
 lemma tsscanl_h_unfold_tick: "s=\<up>\<surd>\<bullet>srt\<cdot>s \<Longrightarrow> tsscanl_h f q\<cdot>s = \<up>\<surd> \<bullet> tsscanl_h f q\<cdot>(srt\<cdot>s)"
 by (insert tsscanl_h_scons_tick [of f q "srt\<cdot>s"], auto)
 
+lemma tsscanl_h_snth:"Fin n < #s \<and> shd s\<noteq>\<surd> \<and> s\<noteq>\<epsilon> \<Longrightarrow> snth (Suc n) (tsscanl_h f q\<cdot>s) = snth n (tsscanl_h f (f q \<M>\<inverse> (shd s))\<cdot>(srt\<cdot>s))"
+by (metis snth_rt surj_scons tsscanl_h_srt)
+
+lemma tsscanl_h_snth_tick:"Fin n < #s \<and> shd s=\<surd> \<Longrightarrow> snth (Suc n) (tsscanl_h f q\<cdot>s) = snth n (tsscanl_h f q\<cdot>(srt\<cdot>s))"
+by (metis Fin_02bot bot_is_0 less_le lnle_Fin_0 neq_iff snth_rt strict_slen surj_scons tsscanl_h_srt_tick)
+
 (* the n+1st element of the result of tsscanl_h is the result of merging the n+1st item of s with the nth element *)
-lemma tsscanl_h_snth:  
+lemma tsscanl_h_snth1:  
   "Fin (Suc n) < #s \<and> snth n (tsscanl_h f q\<cdot>s)\<noteq>\<surd> \<and> snth (Suc n) (tsscanl_h f q\<cdot>s)\<noteq>\<surd> \<Longrightarrow> 
    snth (Suc n) (tsscanl_h f q\<cdot>s) = (\<M> f (\<M>\<inverse> (snth n (tsscanl_h f q\<cdot>s))) (\<M>\<inverse> (snth (Suc n) s)))"
-apply (induction n)
+apply (induction n arbitrary: q s)
 apply (simp add: snth_rt)
-apply (smt Fin_02bot Suc_neq_Zero bot_is_0 event.simps(4) less_le lnle_Fin_0 not_less slen_rt_ile_eq strict_slen surj_scons tsscanl_h_shd1 tsscanl_h_shd_tick tsscanl_h_srt)
-apply (simp add: snth_rt)
-oops
+apply (smt Fin_02bot event.simps(4) less_le lnle_Fin_0 lnzero_def not_less slen_rt_ile_eq strict_slen surj_scons tsscanl_h_shd1 tsscanl_h_shd_tick tsscanl_h_srt)
+by (smt Suc_n_not_le_n less2nat_lemma lnle_Fin_0 neq_iff not_less slen_empty_eq slen_rt_ile_eq snth_rt trans_lnless tsscanl_h_snth tsscanl_h_snth_tick)
 
 (* the result of tsscanl_h has the same length as the input event stream *)
 lemma fair_tsscanl[simp]: "#(tsscanl_h f a\<cdot>x) = #x"
