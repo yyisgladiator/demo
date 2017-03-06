@@ -2131,7 +2131,7 @@ qed
 
 
 (* ----------------------------------------------------------------------- *)
-subsection {* @{term szip} *}
+subsection {* @{term merge} *}
 (* ----------------------------------------------------------------------- *)
 
 lemma merge_unfold: "merge f\<cdot>(\<up>x \<bullet> xs)\<cdot>(\<up>y\<bullet> ys) = \<up>(f x y) \<bullet> merge f\<cdot>xs\<cdot>ys"
@@ -3545,9 +3545,6 @@ lemma add2smap: "add\<cdot>(\<up>x\<infinity>)\<cdot>ys = smap (\<lambda>z. z+x)
 
 lemma addtest: "add\<cdot>(\<up>1\<infinity>)\<cdot>(\<up>2\<infinity>) = (\<up>3\<infinity>)"
 by (metis Suc_eq_plus1_left add_unfold numeral_2_eq_2 numeral_3_eq_3 s2sinftimes sinftimes_unfold)
-
-lemma add2test: "(\<up>1\<infinity>)+(\<up>2\<infinity>) = (\<up>3\<infinity>)"
-by (simp add: add2_def addtest)
 
 end
 

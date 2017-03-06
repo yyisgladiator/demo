@@ -77,7 +77,8 @@ lemma "smap Suc\<cdot>(<[1,2,3]>) = (<[2,3,4]>)"
 lemma "(map Suc [1, 2, 3, 6, 7, 8]) = [2,3,4,7,8,9]"
   by simp
 
-
+lemma add2test: "(\<up>1\<infinity>)+(\<up>2\<infinity>) = (\<up>3\<infinity>)"
+by (simp add: add2_def addtest)
 
 lemma helperlein: "(map (\<lambda>x. x* 3) [1::nat, 2, 3, 4, 5]) = [3,6,9,12,15]"
   by simp
