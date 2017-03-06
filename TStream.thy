@@ -1652,9 +1652,19 @@ apply (rule spec [where x = q])
 apply (rule ind [of _ s], auto)
 by (smt event.distinct(1) inject_scons sfilter_in sfilter_nin singletonD singletonI slen_scons strictI surj_scons tsscanl_h_scons tsscanl_h_unfold_tick)
 
-lemma tsscanl_h_snth_tick2tick: "snth n s=\<surd> \<Longrightarrow> snth n (tsscanl_h f q\<cdot>s) = \<surd>"
-apply (simp add: snth_def)
+lemma stream_unfold: "s\<noteq>\<epsilon> \<Longrightarrow> s = \<up>(shd s) \<bullet> srt\<cdot>s"
+by (simp add: surj_scons)
+
+lemma stream_unfold_tick: "shd s = \<surd> \<Longrightarrow> s = \<up>\<surd> \<bullet> srt\<cdot>s"
+apply (cases "srt\<cdot>s=\<epsilon>")
+apply (subst stream_unfold [of s])
 sorry
+
+lemma tsscanl_h_snth_tick2tick: "snth n s=\<surd> \<Longrightarrow> snth n (tsscanl_h f q\<cdot>s) = \<surd>"
+apply (induction n arbitrary: q s)
+apply (simp add: snth_def)
+apply (subst tsscanl_h_unfold_shd_tick, auto, simp add: stream_unfold_tick)
+by (smt snth_rt stream.sel_rews(2) surj_scons tsscanl_h_empty tsscanl_h_srt tsscanl_h_srt_tick)
 
 lemma tsscanl_h_sfoot: "#s<\<infinity> \<Longrightarrow> sfoot (tsscanl_h f q\<cdot>(s \<bullet> \<up>\<surd>)) = \<surd>"
 apply (simp add: sfoot_def)
@@ -1670,10 +1680,6 @@ by (simp add: tsscanl_def ts_well_tsscanl_h)
 
 lemma tsscanl_empty[simp]: "tsscanl f q\<cdot>\<bottom> = \<bottom>"
 by (simp add: tsscanl_unfold)
-
-
-
-
 
 
 
