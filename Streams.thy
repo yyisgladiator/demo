@@ -2785,10 +2785,12 @@ by (insert ex_snth_in_sfilter_nempty [of x "{z}"], auto)
 text {* For injective functions @{term f} with @{term "f(y) = x"}, @{term x} can only
   be contained in @{term "smap f\<cdot>s"} if the original stream contained @{term y} *}
 lemma sdom_smapl1: "\<lbrakk>x \<in> sdom\<cdot>(smap f\<cdot>s); inj f; f y = x\<rbrakk> \<Longrightarrow> y \<in> sdom\<cdot>s" 
+  by (smt mem_Collect_eq sdom_def2 slen_smap smap_snth_lemma the_inv_f_f)
+    (*
 apply (auto simp add: sdom_def2)
 apply (rule_tac x="n" in exI, simp)
 apply (simp add: smap_snth_lemma)
-by (simp add: inj_on_def)
+by (simp add: inj_on_def) *)
 
 (* appending another stream xs can't shrink the domain of a stream x *)
 lemma sdom_sconc[simp]: "sdom\<cdot>x \<subseteq> sdom\<cdot>(x \<bullet> xs)"
@@ -2885,7 +2887,7 @@ shows "x\<in>sdom\<cdot>s \<Longrightarrow> x\<in>(sdom\<cdot>(A \<ominus> s))"
 apply(induction s)
 apply(rule admI)
 apply rule
-apply (smt SUP_def UN_E ch2ch_Rep_cfunR contlub_cfun_arg contra_subsetD l4 set_cpo_simps(2))
+apply (smt UN_E ch2ch_Rep_cfunR contlub_cfun_arg contra_subsetD l4 set_cpo_simps(2))
 apply simp
 by (smt UnE assms empty_iff insert_iff sconc_sdom sdom2un sdom_sconc sdom_sfilter_subset sfilter_in stream.con_rews(2) stream.sel_rews(5) subsetCE surj_scons)
 
@@ -2893,14 +2895,14 @@ lemma sdom_sfilter[simp]: "sdom\<cdot>(A\<ominus>s) = sdom\<cdot>s \<inter> A"
 apply rule
 apply (meson IntI sbfilter_sbdom sdom_sfilter1 subset_iff)
 apply rule
-by (meson IntD1 IntD2 sdom_sfilter2)
+  by (simp add: sdom_sfilter2)
 
 lemma sfilterEq2sdom_h: "sfilter A\<cdot>s = s \<longrightarrow> sdom\<cdot>s \<subseteq> A"
   apply(rule ind [of _s])
     apply (smt admI inf.orderI sdom_sfilter)
    apply(simp)
   apply(rule)
-  by (smt mem_Collect_eq sdom_def2 sfilterl7 subsetI)
+  by (metis inf.orderI sdom_sfilter)
 
 lemma sfilterEq2sdom: "sfilter A\<cdot>s = s \<Longrightarrow> sdom\<cdot>s \<subseteq> A"
   by (simp add: sfilterEq2sdom_h)
