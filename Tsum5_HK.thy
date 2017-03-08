@@ -535,9 +535,41 @@ primrec tsum_nth:: "nat \<Rightarrow> nat event stream \<Rightarrow> nat" where
 "tsum_nth 0 s = (if shd s=\<surd> then 0 else \<M>\<inverse> shd s)" |
 "tsum_nth (Suc n) s = (if shd s=\<surd> then 0 + tsum_nth n (srt\<cdot>s) else (\<M>\<inverse>(shd s)) + tsum_nth n (srt\<cdot>s))"
 
+
+
+(*if the nth element of the output is a \<surd> so is the nth element of the input*)
+lemma tsum5_snthtick2input:" snth n (tsum5_helper 0\<cdot>s) =\<surd> \<Longrightarrow> snth n s =\<surd>"
+by (metis event.distinct(1) shd1 snth_def surj_scons tsum5_empty tsum5_helper_scons tsum5_sdrop2input)
+
+
+lemma tsum_nth_suc_tick: "shd s=\<surd> \<Longrightarrow> tsum_nth (Suc n) s = tsum_nth n (srt\<cdot>s)"
+by(simp add: tsum_nth_def)
+
+lemma tsum_nth_suc: "shd s\<noteq>\<surd> \<Longrightarrow> tsum_nth (Suc n) s = \<M>\<inverse> shd s + tsum_nth n (srt\<cdot>s)"
+by(simp add: tsum_nth_def)
+
+lemma[simp]: "x\<noteq>\<surd> \<Longrightarrow> \<M> \<M>\<inverse>x=x"
+by (metis event.exhaust event.simps(4))
+
+lemma tsum5_helper_extract_state:"Fin n < #s \<and>  snth n s \<noteq> \<surd> \<and> s\<noteq>\<epsilon> \<Longrightarrow> snth n (tsum5_helper m\<cdot>s) = \<M> \<M>\<inverse> snth n (tsum5_helper 0\<cdot>s) + m"
+apply(induction n arbitrary: m s, auto)
+apply(simp add: snth_rt)
+by (smt add.commute add.left_commute add.left_neutral event.distinct(1) event.inject inject_scons less2lnleD lnle_Fin_0 msg_plus0 nat.distinct(1) not_less slen_empty_eq slen_rt_ile_eq surj_scons tsum5_helper_scons tsum5_helper_slen tsum5_helper_srt_tick)
+
 (*if the nth element of the input is not \<surd>, then the nth element of the output is equal to tsum_nth n input*)
 lemma tsum5_helper2tsum_nth_helper:"Fin n < #s \<Longrightarrow> snth n s \<noteq> \<surd> \<Longrightarrow> snth n (tsum5_helper 0\<cdot>s) = \<M> tsum_nth n s"
-sorry
+apply(cases "s=\<epsilon>")
+apply(simp add: lnless_def)
+apply(induction n arbitrary: s,auto)
+apply(subst tsum5_suc_snth_tick)
+apply(metis Fin_leq_Suc_leq less_le not_le)
+apply (metis less2lnleD lnle_Fin_0 nat.distinct(1) not_le slen_rt_ile_eq snth_rt strict_slen)
+apply(subst tsum5_helper_scons_2,simp+)
+apply(subst tsum5_helper_extract_state)
+apply (metis less2lnleD lnle_Fin_0 nat.simps(3) not_le slen_rt_ile_eq snth_rt strict_slen)
+apply auto
+by (metis event.simps(4) less2lnleD lnle_Fin_0 not_le old.nat.distinct(2) slen_empty_eq slen_rt_ile_eq snth_rt)
+
 
 (*helper for tsum52tsum_nth*)
 lemma tsum5_helper2tsum_nth:"Fin n< #s \<Longrightarrow> snth n (tsum5_helper 0\<cdot> s) = (case (snth n s) of Msg a \<Rightarrow> \<M> tsum_nth n s | \<surd> \<Rightarrow> \<surd>)"
