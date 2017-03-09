@@ -20,6 +20,9 @@ begin
 definition K :: "nat \<Rightarrow> nat stream" where (* {\<up>8, \<up>8\<bullet>\<up>8,..} *)
 "K = (\<lambda>i. sntimes i (\<up>8))" 
 
+lemma addtest: "add\<cdot>(\<up>1\<infinity>)\<cdot>(\<up>2\<infinity>) = (\<up>3\<infinity>)"
+by (metis Suc_eq_plus1_left add_unfold numeral_2_eq_2 numeral_3_eq_3 s2sinftimes sinftimes_unfold)
+
 lemma v0: "sntimes i (\<up>8) \<sqsubseteq> \<up>8 \<bullet> sntimes i (\<up>8)"
   apply (induct_tac i)
    apply simp
@@ -1169,8 +1172,10 @@ using sum3_snth
 by (metis Fin_leq_Suc_leq less_le not_less sscanl_snth sum3_def sum_nth_nth)
 
 (*
-definition sum_stream ::"nat stream \<Rightarrow> nat" where
-"sum_stream \<equiv> fix\<cdot>(\<Lambda> h. (\<lambda>s. if s = \<epsilon> then 0 else ((shd s) + (h (srt\<cdot>s)))))"
+definition sum_stream ::"nat stream \<rightarrow> lnat" where
+"sum_stream \<equiv> Fin (fix\<cdot>(\<Lambda> h. ((\<Lambda> s. plus (shd s) (h\<cdot>(srt\<cdot>s))))))"
+
+
 
 lemma "Fin n<#s \<Longrightarrow> snth n (sum5\<cdot>s) = sum_stream(stake n\<cdot> s)"
 *)
@@ -1196,5 +1201,26 @@ tsum5 x:xs y = (x+y) : tsum5 xs (x+y)
 
 *)
 
+
+(*Fork definition
+
+fct fork = (a: Stream A) (Stream B \<times> Stream C)
+if first(a) 2 B then (hfirst(a)i, hi) bfork(rest(a))
+else (hi, hfirst(a)i) bfork(rest(a))
+fi
+
+
+definition sconc_streams:: "('a stream\<times> 'a stream) \<Rightarrow> ('a stream \<times> 'a stream) \<Rightarrow> ('a stream \<times> 'a stream)" where
+"sconc_streams \<equiv> fix\<cdot>(\<Lambda> h. (\<lambda> s1. \<Lambda> s2. 
+                      if s1 = (\<epsilon>,a) then s2 else  (lshd\<cdot>s1) && (h (srt\<cdot>s1)\<cdot>s2)))"
+
+
+
+definition fork_helper::"bool \<Rightarrow> 'a stream \<Rightarrow> ('a stream \<times> 'a stream)" where
+"fork_helper \<equiv> (\<lambda>b s. (if b=True then (\<up>(shd s),\<epsilon>) else (\<epsilon>, \<up>(shd s))))"
+
+definition fork::"bool stream \<Rightarrow> 'a stream \<Rightarrow> ('a discr\<^sub>\<bottom> \<times> 'a discr\<^sub>\<bottom>) stream" where
+"fork \<equiv> \<Lambda> h. (\<lambda>bs s. (if bs=\<epsilon> \<or> s=\<epsilon> then \<up>(\<bottom>,\<bottom>) else (fork_helper (shd bs) s) \<bullet>  h(srt\<cdot>bs) (srt\<cdot>s)))"
+*)
 
 end

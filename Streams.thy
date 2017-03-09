@@ -2887,7 +2887,7 @@ shows "x\<in>sdom\<cdot>s \<Longrightarrow> x\<in>(sdom\<cdot>(A \<ominus> s))"
 apply(induction s)
 apply(rule admI)
 apply rule
-apply (smt UN_E ch2ch_Rep_cfunR contlub_cfun_arg contra_subsetD l4 set_cpo_simps(2))
+apply (smt SUP_def UN_E ch2ch_Rep_cfunR contlub_cfun_arg contra_subsetD l4 set_cpo_simps(2))
 apply simp
 by (smt UnE assms empty_iff insert_iff sconc_sdom sdom2un sdom_sconc sdom_sfilter_subset sfilter_in stream.con_rews(2) stream.sel_rews(5) subsetCE surj_scons)
 
@@ -3545,8 +3545,11 @@ lemma add2smap: "add\<cdot>(\<up>x\<infinity>)\<cdot>ys = smap (\<lambda>z. z+x)
    apply auto[1]
   by (metis add_slen_sinf lnat.con_rews lnzero_def lscons_conv slen_empty_eq slen_scons slen_sinftimes snth_add sup'_def)
 
-lemma addtest: "add\<cdot>(\<up>1\<infinity>)\<cdot>(\<up>2\<infinity>) = (\<up>3\<infinity>)"
-by (metis Suc_eq_plus1_left add_unfold numeral_2_eq_2 numeral_3_eq_3 s2sinftimes sinftimes_unfold)
+lemma add2smapsuc_helper:" Suc = (\<lambda>z. z+1)"
+by auto
+
+lemma add2smapsuc:"add\<cdot>\<up>1\<infinity>\<cdot>s=smap (Suc)\<cdot>s"
+by(simp add: add2smapsuc_helper add2smap)
 
 end
 
