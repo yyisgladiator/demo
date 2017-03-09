@@ -1655,16 +1655,19 @@ by (smt event.distinct(1) inject_scons sfilter_in sfilter_nin singletonD singlet
 lemma stream_unfold: "s\<noteq>\<epsilon> \<Longrightarrow> s = \<up>(shd s) \<bullet> srt\<cdot>s"
 by (simp add: surj_scons)
 
-lemma stream_unfold_tick: "lshd\<cdot>s=updis \<surd> \<Longrightarrow> s = \<up>\<surd> \<bullet> srt\<cdot>s"
-apply (subst stream_unfold, auto)
-by (simp add: shd_def)
+lemma stream_unfold_tick: "shd s=\<surd> \<Longrightarrow> lshd\<cdot>s = updis \<surd> \<Longrightarrow> s = \<up>\<surd> \<bullet> srt\<cdot>s"
+by (subst stream_unfold, auto)
 
-lemma tsscanl_h_snth_tick2tick: "snth n s=\<surd> \<Longrightarrow> snth n (tsscanl_h f q\<cdot>s) = \<surd>"
-apply (induction n)
-apply (simp add: snth_def)
-apply (subst tsscanl_h_unfold_shd_tick, subst stream_unfold_tick, auto)
+lemma remains_to_be_proved: "shd s = \<surd> \<Longrightarrow> lshd\<cdot>s = updis \<surd>"
 apply (simp add: shd_def)
 sorry
+
+lemma tsscanl_h_snth_tick2tick: "snth n s=\<surd> \<Longrightarrow> snth n (tsscanl_h f q\<cdot>s) = \<surd>"
+apply (induction n arbitrary: q s)
+apply (simp add: snth_def)
+apply (subst tsscanl_h_unfold_shd_tick, subst stream_unfold_tick, auto)
+apply (simp add: remains_to_be_proved)
+by (smt snth_rt stream.sel_rews(2) surj_scons tsscanl_h_empty tsscanl_h_srt tsscanl_h_srt_tick)
 
 lemma tsscanl_h_sfoot: "#s<\<infinity> \<Longrightarrow> sfoot (tsscanl_h f q\<cdot>(s \<bullet> \<up>\<surd>)) = \<surd>"
 apply (simp add: sfoot_def)
@@ -1680,6 +1683,13 @@ by (simp add: tsscanl_def ts_well_tsscanl_h)
 
 lemma tsscanl_empty[simp]: "tsscanl f q\<cdot>\<bottom> = \<bottom>"
 by (simp add: tsscanl_unfold)
+
+lemma tsscanl_eq_sscanl_h: "smap (\<lambda>e. \<M>\<inverse> e)\<cdot>({e. e \<noteq> \<surd>} \<ominus> Rep_tstream (tsscanl f q\<cdot>s)) = sscanl f q\<cdot>(smap (\<lambda>e. \<M>\<inverse> e)\<cdot>({e. e \<noteq> \<surd>} \<ominus> Rep_tstream s))"
+apply(simp add: tsscanl_unfold ts_well_Rep ts_well_tsscanl_h)
+sorry
+
+lemma tsscanl_eq_sscanl_tsAbs:"tsAbs\<cdot>(tsscanl f q\<cdot>s) = sscanl f q\<cdot>(tsAbs\<cdot>s)"
+by (simp add: tsabs_insert tsscanl_eq_sscanl_h)
 
 
 
