@@ -529,6 +529,13 @@ lemma tsum52sum3:"tsAbs\<cdot>(tsum5\<cdot> ts) = sum3\<cdot>(tsAbs\<cdot>ts)"
 apply(simp add: tsabs_insert)
 by(rule tsum52sum3_helper)
 
+(*shows that tsum5 is a weak causal*)
+lemma"tsWeakCausal (\<lambda> ts. Abs_tstream (tsum5_helper 0\<cdot>(Rep_tstream ts)))"
+apply(subst tsWeak2cont2)
+apply(simp add: tsTickCount_def)
+apply(subst Rep_Abs, auto)
+by(simp add: tswell_tsum5)+
+
 
 (*definition tsum_nth like sum_nth*)
 primrec tsum_nth:: "nat \<Rightarrow> nat event stream \<Rightarrow> nat" where
@@ -541,20 +548,37 @@ primrec tsum_nth:: "nat \<Rightarrow> nat event stream \<Rightarrow> nat" where
 lemma tsum5_snthtick2input:" snth n (tsum5_helper 0\<cdot>s) =\<surd> \<Longrightarrow> snth n s =\<surd>"
 by (metis event.distinct(1) shd1 snth_def surj_scons tsum5_empty tsum5_helper_scons tsum5_sdrop2input)
 
-
+(*if the shd s is \<surd> the sum of s is the sum of the rest of s*)
 lemma tsum_nth_suc_tick: "shd s=\<surd> \<Longrightarrow> tsum_nth (Suc n) s = tsum_nth n (srt\<cdot>s)"
 by(simp add: tsum_nth_def)
 
+(*if the shd s is not \<surd> the sum of s is the sum of the rest of s plus shd s*)
 lemma tsum_nth_suc: "shd s\<noteq>\<surd> \<Longrightarrow> tsum_nth (Suc n) s = \<M>\<inverse> shd s + tsum_nth n (srt\<cdot>s)"
 by(simp add: tsum_nth_def)
 
+(*simps \<M> and \<M>\<inverse>*)
 lemma[simp]: "x\<noteq>\<surd> \<Longrightarrow> \<M> \<M>\<inverse>x=x"
 by (metis event.exhaust event.simps(4))
 
+(*helper for tsum5_helper_2tsum_tnh_helper*)
 lemma tsum5_helper_extract_state:"Fin n < #s \<and>  snth n s \<noteq> \<surd> \<and> s\<noteq>\<epsilon> \<Longrightarrow> snth n (tsum5_helper m\<cdot>s) = \<M> \<M>\<inverse> snth n (tsum5_helper 0\<cdot>s) + m"
 apply(induction n arbitrary: m s, auto)
 apply(simp add: snth_rt)
-by (smt add.commute add.left_commute add.left_neutral event.distinct(1) event.inject inject_scons less2lnleD lnle_Fin_0 msg_plus0 nat.distinct(1) not_less slen_empty_eq slen_rt_ile_eq surj_scons tsum5_helper_scons tsum5_helper_slen tsum5_helper_srt_tick)
+proof -
+  fix s :: "nat event stream" and n:: nat and m:: nat
+  assume a1: "(\<And>m s. Fin n < #s \<and> snth n s \<noteq> \<surd> \<and> s \<noteq> \<epsilon> \<Longrightarrow> snth n (tsum5_helper m\<cdot>s) = \<M> \<M>\<inverse> snth n (tsum5_helper 0\<cdot>s) + m)"
+  assume a2: "Fin (Suc n) < #s"
+  assume a3: " snth n (srt\<cdot>s) \<noteq> \<surd>"
+  assume a4: "s \<noteq> \<epsilon>"
+  then show "snth n (srt\<cdot>(tsum5_helper m\<cdot>s)) = \<M> \<M>\<inverse> snth n (srt\<cdot>(tsum5_helper 0\<cdot>s)) + m"
+  apply(cases "shd s=\<surd>")
+  apply(simp add: tsum5_helper_srt_tick)
+  apply(insert a1 a2 a3)
+  apply(metis less2lnleD lnle_Fin_0 nat.distinct(1) not_less slen_rt_ile_eq strict_slen)
+  apply(simp add: tsum5_helper_srt)
+  by (smt a2 add.left_commute add.right_neutral event.inject event.simps(4) less2lnleD lnle_Fin_0 not_le old.nat.distinct(2) slen_empty_eq slen_rt_ile_eq)
+qed
+
 
 (*if the nth element of the input is not \<surd>, then the nth element of the output is equal to tsum_nth n input*)
 lemma tsum5_helper2tsum_nth_helper:"Fin n < #s \<Longrightarrow> snth n s \<noteq> \<surd> \<Longrightarrow> snth n (tsum5_helper 0\<cdot>s) = \<M> tsum_nth n s"
@@ -586,5 +610,7 @@ apply(subst Rep_Abs)
 using tswell_tsum5 apply simp
 by(subst tsum5_helper2tsum_nth, simp+)
 
-
+(*
+lemma "snth n (Rep_tstream(tsum5\<cdot> ts)) = (case (snth n (Rep_tstream ts)) of Msg a \<Rightarrow> \<M> sum_stream (stake n\<cdot>(Rep_tstream ts)) | \<surd> \<Rightarrow> \<surd>)"
+*)
 end
