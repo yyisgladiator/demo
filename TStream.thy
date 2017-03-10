@@ -1587,8 +1587,8 @@ by (rule chain_TSSCANL [THEN chainE], simp)
 lemma tsscanl_h_unfold: "shd s\<noteq>\<surd> \<and> s\<noteq>\<epsilon> \<Longrightarrow> tsscanl_h f q\<cdot>s = \<up>(\<M>(f q (\<M>\<inverse> shd s))) \<bullet> tsscanl_h f (f q (\<M>\<inverse> shd s))\<cdot>(srt\<cdot>s)"
 by (metis surj_scons tsscanl_h_scons)
 
-lemma tsscanl_h_unfold_tick: "s=\<up>\<surd>\<bullet>srt\<cdot>s \<Longrightarrow> tsscanl_h f q\<cdot>s = \<up>\<surd> \<bullet> tsscanl_h f q\<cdot>(srt\<cdot>s)"
-by (metis tsscanl_h_scons_tick)
+lemma tsscanl_h_unfold_tick: "shd s=\<surd> \<and> s\<noteq>\<epsilon> \<Longrightarrow> tsscanl_h f q\<cdot>s = \<up>\<surd> \<bullet> tsscanl_h f q\<cdot>(srt\<cdot>s)"
+by (metis surj_scons tsscanl_h_scons_tick)
 
 (* scanning a singleton event stream is equivalent to computing \<up>(f q a) *)
 lemma [simp]: "a\<noteq>\<surd> \<Longrightarrow> tsscanl_h f q\<cdot>(\<up>a) = \<up>(\<M>(f q (\<M>\<inverse> a)))"
@@ -1612,10 +1612,10 @@ by (simp add: tsscanl_h_scons_tick)
 
 (* variants for tsscanl_h_shd *)
 lemma tsscanl_h_unfold_shd: "shd s\<noteq>\<surd> \<and> s\<noteq>\<epsilon> \<Longrightarrow> shd (tsscanl_h f q\<cdot>s) = \<M>(f q \<M>\<inverse> shd s)"
-by (metis surj_scons tsscanl_h_shd)
+by (simp add: tsscanl_h_unfold)
 
-lemma tsscanl_h_unfold_shd_tick: "s=\<up>\<surd>\<bullet>srt\<cdot>s \<Longrightarrow> shd (tsscanl_h f q\<cdot>s) = \<surd>"
-by (metis tsscanl_h_shd_tick)
+lemma tsscanl_h_unfold_shd_tick: "shd s=\<surd> \<and> s\<noteq>\<epsilon> \<Longrightarrow> shd (tsscanl_h f q\<cdot>s) = \<surd>"
+by (simp add: tsscanl_h_unfold_tick)
 
 (* dropping the first element of the result of tsscanl_h is equivalent to using 
    (f q (shd s)) as initial element and proceeding with the rest of the input *)
@@ -1625,6 +1625,13 @@ by (insert tsscanl_h_scons [of a f q s], auto)
 lemma tsscanl_h_srt_tick: "srt\<cdot>(tsscanl_h f q\<cdot>(\<up>\<surd>\<bullet>s)) = tsscanl_h f q\<cdot>s"
 by (insert tsscanl_h_scons_tick [of f q s], auto)
 
+(* variants for tsscanl_h_srt *)
+lemma tsscanl_h_unfold_srt: "shd s\<noteq>\<surd> \<Longrightarrow> srt\<cdot>(tsscanl_h f q\<cdot>s) = tsscanl_h f (f q (\<M>\<inverse> shd s))\<cdot>(srt\<cdot>s)"
+by (metis stream.sel_rews(2) surj_scons tsscanl_h_empty tsscanl_h_srt)
+
+lemma tsscanl_h_unfold_srt_tick: "shd s=\<surd> \<Longrightarrow> srt\<cdot>(tsscanl_h f q\<cdot>s) = tsscanl_h f q\<cdot>(srt\<cdot>s)"
+by (metis stream.sel_rews(2) surj_scons tsscanl_h_empty tsscanl_h_srt_tick)
+
 lemma tsscanl_h_snth:"Fin n < #s \<and> shd s\<noteq>\<surd> \<and> s\<noteq>\<epsilon> \<Longrightarrow> snth (Suc n) (tsscanl_h f q\<cdot>s) = snth n (tsscanl_h f (f q \<M>\<inverse> (shd s))\<cdot>(srt\<cdot>s))"
 by (metis snth_rt surj_scons tsscanl_h_srt)
 
@@ -1633,7 +1640,7 @@ by (metis Fin_02bot bot_is_0 less_le lnle_Fin_0 neq_iff snth_rt strict_slen surj
 
 (* the n+1st element of the result of tsscanl_h is the result of merging the n+1st item of s with the nth element *)
 lemma tsscanl_h_snth1:  
-  "Fin (Suc n) < #s \<and> snth n (tsscanl_h f q\<cdot>s)\<noteq>\<surd> \<and> snth (Suc n) (tsscanl_h f q\<cdot>s)\<noteq>\<surd> \<Longrightarrow> 
+  "Fin (Suc n) < #s \<and> snth n s\<noteq>\<surd> \<and> snth (Suc n) s\<noteq>\<surd> \<Longrightarrow> 
    snth (Suc n) (tsscanl_h f q\<cdot>s) = (\<M> f (\<M>\<inverse> (snth n (tsscanl_h f q\<cdot>s))) (\<M>\<inverse> (snth (Suc n) s)))"
 apply (induction n arbitrary: q s)
 apply (smt Fin_02bot Fin_Suc Suc_neq_Zero event.simps(4) lnle_Fin_0 lnle_def lnless_def lnzero_def lscons_conv neq_iff slen_empty_eq slen_scons snth_rt snth_rt snth_shd snth_shd strict_slen strict_slen surj_scons tsscanl_h_shd_tick tsscanl_h_srt tsscanl_h_unfold_shd)
@@ -1650,24 +1657,16 @@ by (metis slen_scons tsscanl_h_scons tsscanl_h_scons_tick)
 lemma fair_tsscanl_h_tick[simp]: "#({\<surd>} \<ominus> tsscanl_h f q\<cdot>s) = #({\<surd>} \<ominus> s)"
 apply (rule spec [where x = q])
 apply (rule ind [of _ s], auto)
-by (smt event.distinct(1) inject_scons sfilter_in sfilter_nin singletonD singletonI slen_scons strictI surj_scons tsscanl_h_scons tsscanl_h_unfold_tick)
+by (smt assoc_sconc event.distinct(1) inject_scons sconc_fst_empty sconc_snd_empty sfilter_in sfilter_in sfilter_nin sfilter_nin shd1 singletonD singletonD singletonI singletonI slen_scons slen_scons strict_sfilter strict_sfilter strict_slen strict_slen surj_scons tsscanl_h_empty tsscanl_h_scons tsscanl_h_scons_tick)
 
-lemma stream_unfold: "s\<noteq>\<epsilon> \<Longrightarrow> s = \<up>(shd s) \<bullet> srt\<cdot>s"
-by (simp add: surj_scons)
-
-lemma stream_unfold_tick: "shd s=\<surd> \<Longrightarrow> lshd\<cdot>s = updis \<surd> \<Longrightarrow> s = \<up>\<surd> \<bullet> srt\<cdot>s"
-by (subst stream_unfold, auto)
-
-lemma remains_to_be_proved: "shd s = \<surd> \<Longrightarrow> lshd\<cdot>s = updis \<surd>"
-apply (simp add: shd_def)
+lemma remains_to_be_proved: "shd s=\<surd> \<Longrightarrow> s\<noteq>\<epsilon>"
 sorry
 
 lemma tsscanl_h_snth_tick2tick: "snth n s=\<surd> \<Longrightarrow> snth n (tsscanl_h f q\<cdot>s) = \<surd>"
 apply (induction n arbitrary: q s)
-apply (simp add: snth_def)
-apply (subst tsscanl_h_unfold_shd_tick, subst stream_unfold_tick, auto)
-apply (simp add: remains_to_be_proved)
-by (smt snth_rt stream.sel_rews(2) surj_scons tsscanl_h_empty tsscanl_h_srt tsscanl_h_srt_tick)
+apply (simp add: snth_def tsscanl_h_unfold_shd_tick)
+apply (subst tsscanl_h_unfold_shd_tick, simp add: remains_to_be_proved, auto)
+by (metis snth_rt tsscanl_h_unfold_srt tsscanl_h_unfold_srt_tick)
 
 lemma tsscanl_h_sfoot: "#s<\<infinity> \<Longrightarrow> sfoot (tsscanl_h f q\<cdot>(s \<bullet> \<up>\<surd>)) = \<surd>"
 apply (simp add: sfoot_def)
