@@ -1354,6 +1354,227 @@ apply(cases "i=0")
 apply simp
 by (metis list_decode.cases tstake_bot)
 
+
+
+(* tsWeak- and tsStrongCasuality*)
+
+definition tsWeakCausal:: "('m tstream \<Rightarrow> 'm tstream) \<Rightarrow> bool" where
+"tsWeakCausal \<equiv> \<lambda>f .  \<forall>i ts1 ts2. (ts1 \<down>i = ts2 \<down> i) \<longrightarrow> (f ts1) \<down> i = (f ts2) \<down> i"
+
+definition tsStrongCausal:: "('m tstream \<Rightarrow> 'm tstream) \<Rightarrow> bool" where
+"tsStrongCausal \<equiv> \<lambda>f .  \<forall>i ts1 ts2. (ts1 \<down>i = ts2 \<down> i) \<longrightarrow> (f ts1) \<down> (Suc i) = (f ts2) \<down> (Suc i)"
+
+
+
+lemma tsWeakCausalI: fixes f::"('m tstream \<Rightarrow> 'm tstream)"
+  assumes "\<And>i ts1 ts2. (ts1 \<down>i = ts2 \<down> i) \<Longrightarrow> (f ts1) \<down>  i = (f ts2) \<down> i"
+  shows "tsWeakCausal f"
+by (metis assms tsWeakCausal_def)
+
+lemma tsStrongCausalI: fixes f::"('m tstream \<Rightarrow> 'm tstream)"
+  assumes "\<And>i ts1 ts2. (ts1 \<down>i = ts2 \<down> i) \<Longrightarrow> (f ts1) \<down> (Suc i) = (f ts2) \<down> (Suc i)"
+  shows "tsStrongCausal f"
+by (meson assms tsStrongCausal_def)
+
+
+
+
+lemma tsStrong2Weak: "tsStrongCausal f \<Longrightarrow> tsWeakCausal f"
+by (meson tsStrongCausal_def tsWeakCausalI tsSucTake)
+
+
+lemma tsWeak_eq: assumes "tsWeakCausal f" and "x\<down>i = y\<down>i"
+  shows "(f x)\<down>i = (f y) \<down>i"
+by (meson assms(1) assms(2) tsWeakCausal_def)
+
+lemma tsWeak2Mono: assumes "tsWeakCausal f" and "\<And>x. #\<surd>f x \<le> #\<surd> x"
+  shows "monofun f"
+  apply(rule monofunI)
+  apply(rule ts_below)
+  using assms(1) assms(2) tsWeak_eq trans_lnle tstake_less_below by blast
+
+lemma tsMono2Weak: assumes "monofun f" and "\<And>x. #\<surd> x \<le> #\<surd> f x"
+  shows "x \<down> i  = y \<down> i  \<Longrightarrow> (f x) \<down> i  = (f y) \<down> i"
+  apply(induction i arbitrary: x y)
+   apply simp
+  apply(subst tstake_tsnth)
+  apply(subst tstake_tsnth)
+  by (smt assms(1) assms(2) min_def monofun_def tsTake_prefix tstake_below_eq tstake_len tstake_less_below tstake_tsnth)
+
+lemma tsMono2Weak2: assumes "monofun f" and "\<And>x. #\<surd> x \<le> #\<surd> f x"
+  shows "tsWeakCausal f"
+using assms(1) assms(2) tsMono2Weak tsWeakCausalI by blast
+
+
+lemma tsMonoEqWeak: "(\<And>x. #\<surd> x = #\<surd> f x) \<Longrightarrow> monofun f \<longleftrightarrow> tsWeakCausal f"
+by (metis (mono_tags, lifting) order_refl tsMono2Weak tsWeak2Mono tsWeakCausal_def)
+
+
+lemma [simp]: "tsWeakCausal f \<Longrightarrow> (\<And>x. #\<surd>f x \<le> #\<surd> x) \<Longrightarrow> chain Y \<Longrightarrow> chain (\<lambda>i. f (Y i))"
+using ch2ch_monofun tsWeak2Mono by blast
+
+lemma tsWeak_lub: assumes "tsWeakCausal f" and "\<And>x. #\<surd>f x = #\<surd> x" and "chain Y"
+  shows "f (\<Squnion>i. Y i) = (\<Squnion>i. f (Y i))"
+proof (cases "finite_chain Y")
+  case True 
+  have "\<And>x. #\<surd>f x \<le> #\<surd> x" by (simp add: assms(2)) 
+  thus ?thesis by (metis assms(1) assms(2) assms(3) finite_chain_lub tsWeak2Mono True)  
+next
+  case False
+  hence "#\<surd>(\<Squnion>i. Y i) = \<infinity>" using assms(3) ts_infinite_lub by blast
+  have assms2: "\<And>x. #\<surd>f x \<le> #\<surd> x" by (simp add: assms(2)) 
+  show ?thesis
+  proof (rule ts_take_eq)
+    fix n
+    obtain i where "Fin n < #\<surd>Y i" by (meson False Suc_n_not_le_n assms(3) exist_tslen less2nat less_le_trans not_less)
+    hence eq1: "(f (\<Squnion>i. Y i)) \<down> n = (f (Y i)) \<down> n"
+      by (metis assms(1) assms(3) is_ub_thelub less_le tsWeak_eq tstake_less_below)
+    have eq2: "(\<Squnion>i. f (Y i)) \<down> n =  (f (Y i)) \<down> n"
+      by (metis \<open>Fin n < #\<surd> Y i\<close> assms(1) assms2 assms(2) assms(3) is_ub_thelub less_le monofun_def po_class.chain_def tsWeak2Mono tstake_less_below)
+    show "(f (\<Squnion>i. Y i)) \<down> n  = (\<Squnion>i. f (Y i)) \<down> n " by (simp add: eq1 eq2) 
+  qed
+qed
+
+lemma tsWeak2cont:assumes "tsWeakCausal f" and "\<And>x. #\<surd>f x = #\<surd> x"
+  shows "cont f"
+apply(rule contI2)
+apply (simp add: assms(1) assms(2) tsWeak2Mono)
+by (simp add: assms(1) assms(2) tsWeak_lub)
+
+lemma tsWeak2cont2:assumes "\<And>x. #\<surd>f x = #\<surd> x"
+  shows "tsWeakCausal f \<longleftrightarrow> cont f"
+apply rule
+using assms tsWeak2cont apply blast
+by (simp add: assms cont2mono tsMono2Weak2)
+
+lemma tsMono2weak2cont: fixes f::"'a tstream \<Rightarrow> 'a tstream" assumes "\<And>x. #\<surd>f x = #\<surd> x"
+shows"monofun f \<longleftrightarrow> cont f"
+apply(subst tsMonoEqWeak)
+using assms apply simp
+apply(subst tsWeak2cont2, auto)
+using assms by simp
+
+(*Definition of inftimes \<surd>*)
+
+(* the tStream with just time *)
+lift_definition tsInfTick :: "'m tstream" is "\<up>\<surd> \<infinity>"
+by(simp add: ts_well_def)
+
+
+lemma [simp]: "tsInfTick \<noteq> \<bottom>"
+by(simp add: tsInfTick.rep_eq)
+
+lemma [simp]: "tsAbs\<cdot>tsInfTick = \<epsilon>"
+by(simp add: tsabs_insert tsInfTick.rep_eq sfilter_sdom_eps)
+
+(* no message is transmitted *)
+lemma [simp]: "tsDom\<cdot>tsInfTick = {}"
+by(simp add: tsdom_insert tsInfTick.rep_eq)
+
+lemma [simp]:  "tsDom\<cdot>(ts \<bullet> tsInfTick) = tsDom\<cdot>ts"
+apply(cases "#\<surd>ts = \<infinity>")
+apply simp
+by(simp add: tsdom_tsconc less_le)
+
+lemma [simp]: "#\<surd>tsInfTick = \<infinity>"
+by(simp add: tstickcount_insert tsInfTick.rep_eq)
+
+lemma [simp]: "#\<surd> (ts \<bullet> tsInfTick) = \<infinity>"
+  apply(simp add: tstickcount_insert)
+  apply(simp add: tsconc_insert)
+  apply(cases "#\<surd> ts = \<infinity>")
+   apply (simp add: tstickcount_insert)
+  by (metis Abs_tstream_inverse mem_Collect_eq slen_sconc_snd_inf slen_sinftimes stream.con_rews(2) sup'_def tsInfTick.rep_eq tsInfTicks ts_well_conc tstickcount_insert up_defined)
+
+lemma "tsInfTick \<down> 1 = (Abs_tstream ((\<up>\<surd>)))"
+  apply (simp add: tsTake_def One_nat_def)
+  apply(simp add: tstakefirst_insert tsInfTick.rep_eq)
+  apply(subst sinftimes_unfold)
+  by simp
+
+lemma [simp]: "tsTakeFirst\<cdot>tsInfTick = Abs_tstream ((\<up>\<surd>))"
+  apply(simp add: tstakefirst_insert tsInfTick.rep_eq)
+  apply(subst sinftimes_unfold)
+  by simp
+
+lemma [simp]: "tsDropFirst\<cdot>tsInfTick = tsInfTick"
+  apply(simp add: tsDropFirst_def "tsInfTick.rep_eq")
+  apply(subst sinftimes_unfold)
+  by (metis eq_onp_same_args sdrops_sinf sinftimes_unfold srtdw2drop tsInfTick.rsp tsInfTick_def)
+
+lemma [simp]:"ts_well (n\<star>\<up>\<surd>)"
+  by(induction n, simp_all)
+
+lemma tsInfTick_take: "tsInfTick \<down> n = (Abs_tstream ((sntimes n (\<up>\<surd>))))"
+  apply(induction n)
+   apply simp
+  by (simp add: tsConc_def tsTake.simps)
+
+lemma tsInfTick_tsNth:  "tsNth n\<cdot>tsInfTick = Abs_tstream (\<up>\<surd>)"
+  apply(induction n)
+   apply (simp add: tsNth_def)
+  by(simp add: tsNth_Suc)
+
+
+
+
+(* ID Funktion*)
+
+(* the identity function is monotonic & weak causal, but not strong Causal *)
+
+definition tsId ::"'a tstream \<Rightarrow> 'a tstream" where
+"tsId \<equiv> (\<lambda>ts :: 'a tstream. ts)"
+
+lemma "monofun (tsId)"
+apply(subst tsId_def)
+apply(rule monofunI)
+by simp
+
+lemma "tsWeakCausal (tsId)"
+by (simp add: tsId_def tsWeakCausalI)
+
+lemma "\<not>tsStrongCausal (tsId)"
+apply(auto simp add: tsId_def tsStrongCausal_def)
+by (metis Rep_cfun_strict1 tsTake.simps(1) ts_existsNBot tstake_bot tstake_fin2)
+
+(* eine stark Causale, stetige function appends a \<surd> to a timed stream *)
+setup_lifting type_definition_cfun
+lift_definition delayFun :: "'m tstream \<rightarrow> 'm tstream" is
+"\<lambda>ts . (Abs_tstream (\<up>\<surd>)) \<bullet> ts"
+  by (simp add: Cfun.cfun.Rep_cfun)
+
+lemma delayFun_dropFirst[simp]: "tsDropFirst\<cdot>(delayFun\<cdot>ts) = ts"
+  apply(simp add: tsdropfirst_insert "delayFun.rep_eq")
+  by(subst tsconc_rep_eq, auto)
+
+lemma delayFun_takeFirst [simp]: "tsTakeFirst\<cdot>(delayFun\<cdot>ts) = Abs_tstream (\<up>\<surd>)"
+  by (simp add: delayFun.abs_eq tsconc_rep_eq tstakefirst_insert)
+
+lemma delayFun_takeN: "(delayFun\<cdot>ts1) \<down> (Suc n) = delayFun\<cdot>(ts1 \<down> n)"
+  apply(subst tsTake.simps,auto)
+    apply (metis below_bottom_iff delayFun_dropFirst strictI tsTake_prefix)
+  by(simp add: delayFun_def)
+
+lemma delayFun_sCausal: "(ts1 \<down> n) = (ts2 \<down> n) \<Longrightarrow> (delayFun\<cdot>ts1) \<down> (Suc n) = (delayFun\<cdot>ts2) \<down> (Suc n)"
+by (simp add: delayFun_takeN)
+
+lemma "tsStrongCausal (Rep_cfun delayFun)"
+apply(rule tsStrongCausalI)
+using delayFun_sCausal by blast
+
+
+lemma delayFun_dom [simp]: "tsDom\<cdot>(delayFun\<cdot>ts) = tsDom\<cdot>ts"
+by(simp add: delayFun_def tsdom_insert tsconc_rep_eq)
+
+lemma delay_infTick [simp]: "#\<surd>ts = \<infinity> \<Longrightarrow> #\<surd> (delayFun\<cdot>ts) = \<infinity>"
+by(simp add: delayFun_def)
+
+lemma [simp]: "delayFun\<cdot>tsInfTick = tsInfTick"
+apply(simp add: delayFun_def tsInfTick_def)
+by (metis (no_types) Abs_tstream_inverse mem_Collect_eq sinftimes_unfold tick_msg tsInfTick.abs_eq tsInfTick.rep_eq tsconc_insert)
+
+
+
 (*tsntimes tsinftimes*)
 
 (*1 times a timed stream is the timed stream itself*)
@@ -1689,6 +1910,11 @@ lemma ts_well_tsscanl_h: "ts_well s \<Longrightarrow> ts_well (tsscanl_h f q\<cd
 apply (simp add: ts_well_def, auto)
 by (simp add: tsscanl_h_sfoot)
 
+lemma tsscanl_tsWeak:"tsWeakCausal (\<lambda> ts. tsscanl f q \<cdot>ts)"
+apply(subst tsWeak2cont2, auto)
+apply(subst tsscanl_def, subst beta_cfun)
+by(simp add: ts_well_tsscanl_h tsTickCount_def)+
+
 lemma tsscanl_unfold: "tsscanl f q\<cdot>s = Abs_tstream (tsscanl_h f q\<cdot>(Rep_tstream s))"
 by (simp add: tsscanl_def ts_well_tsscanl_h) 
 
@@ -1741,213 +1967,6 @@ by (simp add: tsabs_insert tsscanl_unfold ts_well_Rep ts_well_tsscanl_h tsscanl_
 
 
 
-(* tsWeak- and tsStrongCasuality*)
-
-definition tsWeakCausal:: "('m tstream \<Rightarrow> 'm tstream) \<Rightarrow> bool" where
-"tsWeakCausal \<equiv> \<lambda>f .  \<forall>i ts1 ts2. (ts1 \<down>i = ts2 \<down> i) \<longrightarrow> (f ts1) \<down> i = (f ts2) \<down> i"
-
-definition tsStrongCausal:: "('m tstream \<Rightarrow> 'm tstream) \<Rightarrow> bool" where
-"tsStrongCausal \<equiv> \<lambda>f .  \<forall>i ts1 ts2. (ts1 \<down>i = ts2 \<down> i) \<longrightarrow> (f ts1) \<down> (Suc i) = (f ts2) \<down> (Suc i)"
-
-
-
-lemma tsWeakCausalI: fixes f::"('m tstream \<Rightarrow> 'm tstream)"
-  assumes "\<And>i ts1 ts2. (ts1 \<down>i = ts2 \<down> i) \<Longrightarrow> (f ts1) \<down>  i = (f ts2) \<down> i"
-  shows "tsWeakCausal f"
-by (metis assms tsWeakCausal_def)
-
-lemma tsStrongCausalI: fixes f::"('m tstream \<Rightarrow> 'm tstream)"
-  assumes "\<And>i ts1 ts2. (ts1 \<down>i = ts2 \<down> i) \<Longrightarrow> (f ts1) \<down> (Suc i) = (f ts2) \<down> (Suc i)"
-  shows "tsStrongCausal f"
-by (meson assms tsStrongCausal_def)
-
-
-
-
-lemma tsStrong2Weak: "tsStrongCausal f \<Longrightarrow> tsWeakCausal f"
-by (meson tsStrongCausal_def tsWeakCausalI tsSucTake)
-
-
-lemma tsWeak_eq: assumes "tsWeakCausal f" and "x\<down>i = y\<down>i"
-  shows "(f x)\<down>i = (f y) \<down>i"
-by (meson assms(1) assms(2) tsWeakCausal_def)
-
-lemma tsWeak2Mono: assumes "tsWeakCausal f" and "\<And>x. #\<surd>f x \<le> #\<surd> x"
-  shows "monofun f"
-  apply(rule monofunI)
-  apply(rule ts_below)
-  using assms(1) assms(2) tsWeak_eq trans_lnle tstake_less_below by blast
-
-lemma tsMono2Weak: assumes "monofun f" and "\<And>x. #\<surd> x \<le> #\<surd> f x"
-  shows "x \<down> i  = y \<down> i  \<Longrightarrow> (f x) \<down> i  = (f y) \<down> i"
-  apply(induction i arbitrary: x y)
-   apply simp
-  apply(subst tstake_tsnth)
-  apply(subst tstake_tsnth)
-  by (smt assms(1) assms(2) min_def monofun_def tsTake_prefix tstake_below_eq tstake_len tstake_less_below tstake_tsnth)
-
-lemma tsMono2Weak2: assumes "monofun f" and "\<And>x. #\<surd> x \<le> #\<surd> f x"
-  shows "tsWeakCausal f"
-using assms(1) assms(2) tsMono2Weak tsWeakCausalI by blast
-
-
-lemma tsMonoEqWeak: "(\<And>x. #\<surd> x = #\<surd> f x) \<Longrightarrow> monofun f \<longleftrightarrow> tsWeakCausal f"
-by (metis (mono_tags, lifting) order_refl tsMono2Weak tsWeak2Mono tsWeakCausal_def)
-
-
-lemma [simp]: "tsWeakCausal f \<Longrightarrow> (\<And>x. #\<surd>f x \<le> #\<surd> x) \<Longrightarrow> chain Y \<Longrightarrow> chain (\<lambda>i. f (Y i))"
-using ch2ch_monofun tsWeak2Mono by blast
-
-lemma tsWeak_lub: assumes "tsWeakCausal f" and "\<And>x. #\<surd>f x = #\<surd> x" and "chain Y"
-  shows "f (\<Squnion>i. Y i) = (\<Squnion>i. f (Y i))"
-proof (cases "finite_chain Y")
-  case True 
-  have "\<And>x. #\<surd>f x \<le> #\<surd> x" by (simp add: assms(2)) 
-  thus ?thesis by (metis assms(1) assms(2) assms(3) finite_chain_lub tsWeak2Mono True)  
-next
-  case False
-  hence "#\<surd>(\<Squnion>i. Y i) = \<infinity>" using assms(3) ts_infinite_lub by blast
-  have assms2: "\<And>x. #\<surd>f x \<le> #\<surd> x" by (simp add: assms(2)) 
-  show ?thesis
-  proof (rule ts_take_eq)
-    fix n
-    obtain i where "Fin n < #\<surd>Y i" by (meson False Suc_n_not_le_n assms(3) exist_tslen less2nat less_le_trans not_less)
-    hence eq1: "(f (\<Squnion>i. Y i)) \<down> n = (f (Y i)) \<down> n"
-      by (metis assms(1) assms(3) is_ub_thelub less_le tsWeak_eq tstake_less_below)
-    have eq2: "(\<Squnion>i. f (Y i)) \<down> n =  (f (Y i)) \<down> n"
-      by (metis \<open>Fin n < #\<surd> Y i\<close> assms(1) assms2 assms(2) assms(3) is_ub_thelub less_le monofun_def po_class.chain_def tsWeak2Mono tstake_less_below)
-    show "(f (\<Squnion>i. Y i)) \<down> n  = (\<Squnion>i. f (Y i)) \<down> n " by (simp add: eq1 eq2) 
-  qed
-qed
-
-lemma tsWeak2cont:assumes "tsWeakCausal f" and "\<And>x. #\<surd>f x = #\<surd> x"
-  shows "cont f"
-apply(rule contI2)
-apply (simp add: assms(1) assms(2) tsWeak2Mono)
-by (simp add: assms(1) assms(2) tsWeak_lub)
-
-lemma tsWeak2cont2:assumes "\<And>x. #\<surd>f x = #\<surd> x"
-  shows "tsWeakCausal f \<longleftrightarrow> cont f"
-apply rule
-using assms tsWeak2cont apply blast
-by (simp add: assms cont2mono tsMono2Weak2)
-
-
-
-(*Definition of inftimes \<surd>*)
-
-(* the tStream with just time *)
-lift_definition tsInfTick :: "'m tstream" is "\<up>\<surd> \<infinity>"
-by(simp add: ts_well_def)
-
-
-lemma [simp]: "tsInfTick \<noteq> \<bottom>"
-by(simp add: tsInfTick.rep_eq)
-
-lemma [simp]: "tsAbs\<cdot>tsInfTick = \<epsilon>"
-by(simp add: tsabs_insert tsInfTick.rep_eq sfilter_sdom_eps)
-
-(* no message is transmitted *)
-lemma [simp]: "tsDom\<cdot>tsInfTick = {}"
-by(simp add: tsdom_insert tsInfTick.rep_eq)
-
-lemma [simp]:  "tsDom\<cdot>(ts \<bullet> tsInfTick) = tsDom\<cdot>ts"
-apply(cases "#\<surd>ts = \<infinity>")
-apply simp
-by(simp add: tsdom_tsconc less_le)
-
-lemma [simp]: "#\<surd>tsInfTick = \<infinity>"
-by(simp add: tstickcount_insert tsInfTick.rep_eq)
-
-lemma [simp]: "#\<surd> (ts \<bullet> tsInfTick) = \<infinity>"
-  apply(simp add: tstickcount_insert)
-  apply(simp add: tsconc_insert)
-  apply(cases "#\<surd> ts = \<infinity>")
-   apply (simp add: tstickcount_insert)
-  by (metis Abs_tstream_inverse mem_Collect_eq slen_sconc_snd_inf slen_sinftimes stream.con_rews(2) sup'_def tsInfTick.rep_eq tsInfTicks ts_well_conc tstickcount_insert up_defined)
-
-lemma "tsInfTick \<down> 1 = (Abs_tstream ((\<up>\<surd>)))"
-  apply (simp add: tsTake_def One_nat_def)
-  apply(simp add: tstakefirst_insert tsInfTick.rep_eq)
-  apply(subst sinftimes_unfold)
-  by simp
-
-lemma [simp]: "tsTakeFirst\<cdot>tsInfTick = Abs_tstream ((\<up>\<surd>))"
-  apply(simp add: tstakefirst_insert tsInfTick.rep_eq)
-  apply(subst sinftimes_unfold)
-  by simp
-
-lemma [simp]: "tsDropFirst\<cdot>tsInfTick = tsInfTick"
-  apply(simp add: tsDropFirst_def "tsInfTick.rep_eq")
-  apply(subst sinftimes_unfold)
-  by (metis eq_onp_same_args sdrops_sinf sinftimes_unfold srtdw2drop tsInfTick.rsp tsInfTick_def)
-
-lemma [simp]:"ts_well (n\<star>\<up>\<surd>)"
-  by(induction n, simp_all)
-
-lemma tsInfTick_take: "tsInfTick \<down> n = (Abs_tstream ((sntimes n (\<up>\<surd>))))"
-  apply(induction n)
-   apply simp
-  by (simp add: tsConc_def tsTake.simps)
-
-lemma tsInfTick_tsNth:  "tsNth n\<cdot>tsInfTick = Abs_tstream (\<up>\<surd>)"
-  apply(induction n)
-   apply (simp add: tsNth_def)
-  by(simp add: tsNth_Suc)
-
-
-
-
-(* ID Funktion*)
-
-(* the identity function is monotonic & weak causal, but not strong Causal *)
-
-lemma "monofun (\<lambda>ts :: 'a tstream. ts)"
-apply(rule monofunI)
-by simp
-
-lemma "tsWeakCausal (\<lambda>ts :: 'a tstream. ts)"
-by (simp add: tsWeakCausalI)
-
-lemma "\<not>tsStrongCausal (\<lambda>ts :: 'a tstream. ts)"
-apply(auto simp add: tsStrongCausal_def)
-by (metis Rep_cfun_strict1 tsTake.simps(1) ts_existsNBot tstake_bot tstake_fin2)
-
-(* eine stark Causale, stetige function appends a \<surd> to a timed stream *)
-setup_lifting type_definition_cfun
-lift_definition delayFun :: "'m tstream \<rightarrow> 'm tstream" is
-"\<lambda>ts . (Abs_tstream (\<up>\<surd>)) \<bullet> ts"
-  by (simp add: Cfun.cfun.Rep_cfun)
-
-lemma delayFun_dropFirst[simp]: "tsDropFirst\<cdot>(delayFun\<cdot>ts) = ts"
-  apply(simp add: tsdropfirst_insert "delayFun.rep_eq")
-  by(subst tsconc_rep_eq, auto)
-
-lemma delayFun_takeFirst [simp]: "tsTakeFirst\<cdot>(delayFun\<cdot>ts) = Abs_tstream (\<up>\<surd>)"
-  by (simp add: delayFun.abs_eq tsconc_rep_eq tstakefirst_insert)
-
-lemma delayFun_takeN: "(delayFun\<cdot>ts1) \<down> (Suc n) = delayFun\<cdot>(ts1 \<down> n)"
-  apply(subst tsTake.simps,auto)
-    apply (metis below_bottom_iff delayFun_dropFirst strictI tsTake_prefix)
-  by(simp add: delayFun_def)
-
-lemma delayFun_sCausal: "(ts1 \<down> n) = (ts2 \<down> n) \<Longrightarrow> (delayFun\<cdot>ts1) \<down> (Suc n) = (delayFun\<cdot>ts2) \<down> (Suc n)"
-by (simp add: delayFun_takeN)
-
-lemma "tsStrongCausal (Rep_cfun delayFun)"
-apply(rule tsStrongCausalI)
-using delayFun_sCausal by blast
-
-
-lemma delayFun_dom [simp]: "tsDom\<cdot>(delayFun\<cdot>ts) = tsDom\<cdot>ts"
-by(simp add: delayFun_def tsdom_insert tsconc_rep_eq)
-
-lemma delay_infTick [simp]: "#\<surd>ts = \<infinity> \<Longrightarrow> #\<surd> (delayFun\<cdot>ts) = \<infinity>"
-by(simp add: delayFun_def)
-
-lemma [simp]: "delayFun\<cdot>tsInfTick = tsInfTick"
-apply(simp add: delayFun_def tsInfTick_def)
-by (metis (no_types) Abs_tstream_inverse mem_Collect_eq sinftimes_unfold tick_msg tsInfTick.abs_eq tsInfTick.rep_eq tsconc_insert)
 
 (*TODO
 
