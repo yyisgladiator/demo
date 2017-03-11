@@ -645,7 +645,6 @@ apply (simp add: finite_chain_def max_in_chain_def )
 apply (subgoal_tac "chain S \<Longrightarrow> \<not> finite_chain S \<Longrightarrow> \<forall>i. \<exists>j\<ge>i. S i \<sqsubseteq> S j")
 prefer 2
 apply (simp add: s1, simp)
-sledgehammer
 *)
 
 lemma [simp]: "Fin n < #as \<Longrightarrow> Fin n < lnsuc\<cdot>(#as)"
@@ -2821,27 +2820,27 @@ by (smt image_subset_iff mem_Collect_eq sdom_def2 slen_smap smap_snth_lemma)
 
 (* Lemmas für SB *)
 (* if the stream a is a prefix of the stream b then a's domain is a subset of b's *)
-lemma f1 [simp]: "a \<sqsubseteq> b \<Longrightarrow> sdom\<cdot>a \<subseteq> sdom\<cdot>b"
+lemma sdom_prefix [simp]: "a \<sqsubseteq> b \<Longrightarrow> sdom\<cdot>a \<subseteq> sdom\<cdot>b"
 by (metis SetPcpo.less_set_def monofun_cfun_arg)
 
 (* the lub of a chain of streams contains any elements contained in any stream in the chain *)
-lemma l4: "chain S \<Longrightarrow> sdom\<cdot>(S i) \<subseteq> sdom\<cdot>(\<Squnion> j. S j)"
-using f1 is_ub_thelub by auto
+lemma sdom_chain2lub: "chain S \<Longrightarrow> sdom\<cdot>(S i) \<subseteq> sdom\<cdot>(\<Squnion> j. S j)"
+using sdom_prefix is_ub_thelub by auto
 
-lemma l402: "chain S \<Longrightarrow> S i \<noteq> \<up>8 \<Longrightarrow> \<forall>i. S i \<sqsubseteq> s \<Longrightarrow> (\<Squnion> j. S j) \<sqsubseteq> s"
+lemma lubChainpre: "chain S \<Longrightarrow> S i  \<Longrightarrow> \<forall>i. S i \<sqsubseteq> s \<Longrightarrow> (\<Squnion> j. S j) \<sqsubseteq> s"
 by (simp add: lub_below)
 
-lemma l403: "chain S \<Longrightarrow> \<forall>i. S i \<sqsubseteq> s \<Longrightarrow> \<forall>i. sdom\<cdot>(S i) \<subseteq> sdom\<cdot>s"
-by (simp add: f1)
+lemma sdom_chainprefix: "chain S \<Longrightarrow> \<forall>i. S i \<sqsubseteq> s \<Longrightarrow> \<forall>i. sdom\<cdot>(S i) \<subseteq> sdom\<cdot>s"
+by simp
 
-lemma l404: "chain S \<Longrightarrow>  \<forall>i. S i \<sqsubseteq> s \<Longrightarrow> sdom\<cdot>(\<Squnion> j. S j) \<subseteq> sdom\<cdot>s"
-using f1 lub_below by blast
+lemma sdom_chainlub: "chain S \<Longrightarrow>  \<forall>i. S i \<sqsubseteq> s \<Longrightarrow> sdom\<cdot>(\<Squnion> j. S j) \<subseteq> sdom\<cdot>s"
+using sdom_prefix lub_below by blast
 
 (* streams appearing later in the chain S contain the elements of preceding streams *)
-lemma l405: "chain S \<Longrightarrow> i \<le> j \<Longrightarrow> sdom\<cdot>(S i) \<subseteq> sdom\<cdot>(S j)"
-by (simp add: f1 po_class.chain_mono)
+lemma sdom_chain_below: "chain S \<Longrightarrow> i \<le> j \<Longrightarrow> sdom\<cdot>(S i) \<subseteq> sdom\<cdot>(S j)"
+by (simp add: po_class.chain_mono)
 
-lemma l43: "chain S \<Longrightarrow> finite_chain S \<Longrightarrow> sdom\<cdot>(\<Squnion> j. S j) \<subseteq> (\<Union>i. sdom\<cdot>(S i))"
+lemma sdom_lub2union: "chain S \<Longrightarrow> finite_chain S \<Longrightarrow> sdom\<cdot>(\<Squnion> j. S j) \<subseteq> (\<Union>i. sdom\<cdot>(S i))"
 using l42 by fastforce
 
 
@@ -2862,7 +2861,7 @@ by (simp add: l44 lub_range_shift)
 
 (* dropping elements can't increase the domain *)
 lemma sdrop_sdom[simp]: "sdom\<cdot>(sdrop n\<cdot>s)\<subseteq>sdom\<cdot>s"
-by (metis Un_upper2 approxl2 f1 sdom_sconc2un sdrop_0 sdropostake split_streaml1 stream.take_below)
+by (metis Un_upper2 approxl2 sdom_prefix sdom_sconc2un sdrop_0 sdropostake split_streaml1 stream.take_below)
 
 
 (* if none of the elements in the domain of the stream s are in the set A, then filtering s with A
@@ -2887,7 +2886,7 @@ shows "x\<in>sdom\<cdot>s \<Longrightarrow> x\<in>(sdom\<cdot>(A \<ominus> s))"
 apply(induction s)
 apply(rule admI)
 apply rule
-apply (smt SUP_def UN_E ch2ch_Rep_cfunR contlub_cfun_arg contra_subsetD l4 set_cpo_simps(2))
+apply (smt SUP_def UN_E ch2ch_Rep_cfunR contlub_cfun_arg contra_subsetD sdom_chain2lub set_cpo_simps(2))
 apply simp
 by (smt UnE assms empty_iff insert_iff sconc_sdom sdom2un sdom_sconc sdom_sfilter_subset sfilter_in stream.con_rews(2) stream.sel_rews(5) subsetCE surj_scons)
 
@@ -2912,7 +2911,7 @@ lemma stwbl_id_help:
   apply (rule ind [of _s])
     apply(rule adm_imp)
      apply(rule admI, rule+)
-     using l4 apply blast
+     using sdom_chain2lub apply blast
     apply(rule admI)
     apply (metis cont2contlubE cont_Rep_cfun2 lub_eq)
    using strict_stwbl apply blast

@@ -12,12 +12,12 @@ begin
 definition tsum6 :: "nat tstream \<rightarrow> nat tstream" where
 "tsum6 \<equiv> tsscanl plus 0"
 
-lemma tsum6_h2tsum5_h: "Fin n < #(tsscanl_h op + 0\<cdot>s) \<longrightarrow> snth n (tsscanl_h op + 0\<cdot>s) = snth n (tsum5_helper 0\<cdot>s)"
+lemma tsum6_h2tsum5_h: "Fin n < #(tsscanl_h op + 0\<cdot>s) \<longrightarrow> snth n (tsscanl_h op + 0\<cdot>s) = snth n (tsum5_h 0\<cdot>s)"
 apply (induction n arbitrary: s)
-apply (smt shd1 snth_shd surj_scons tsscanl_h_empty tsscanl_h_scons_tick tsscanl_h_shd tsum5_helper_shd_2 tsum5_shd)
+apply (smt shd1 snth_shd surj_scons tsscanl_h_empty tsscanl_h_scons_tick tsscanl_h_shd tsum5_h_shd_2 tsum5_shd)
 sorry
 
-lemma tsum62tsum5: "tsscanl_h plus 0\<cdot>s = tsum5_helper 0\<cdot>s"
+lemma tsum62tsum5: "tsscanl_h plus 0\<cdot>s = tsum5_h 0\<cdot>s"
 apply (rule snths_eq)
 apply (simp)
 by (simp add: tsum6_h2tsum5_h)
