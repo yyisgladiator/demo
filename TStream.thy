@@ -1897,15 +1897,29 @@ by (metis (mono_tags, lifting) Fin_leq_Suc_leq less_le not_less slen_rt_ile_eq s
     tsscanl_h_snth tsscanl_h_snth_tick)
 
 (* For every finite event stream with tick as last element ends the result of tsscanl_h with tick *)
-lemma tsscanl_h_sfoot: "#s<\<infinity> \<and> sfoot s=\<surd> \<Longrightarrow> sfoot (tsscanl_h f q\<cdot>s) = \<surd>"
+lemma tsscanl_h_sfoot: "#s<\<infinity> \<Longrightarrow> sfoot (tsscanl_h f q\<cdot>(s\<bullet>\<up>\<surd>)) = \<surd>"
 apply (simp add: sfoot_def)
 apply (subst tsscanl_h_snth_tick2tick, auto)
-sorry
+proof -
+  assume "#s<\<infinity>"
+  hence a1: "#(s\<bullet>\<up>\<surd>)<\<infinity>"
+    by auto
+  hence h1: "s\<bullet>\<up>\<surd>\<noteq>\<epsilon>"
+    by (metis lnsuc_neq_0_rev slen_lnsuc strict_slen)
+  obtain n where h2: "#(s\<bullet>\<up>\<surd>) = Fin n"   
+    by (metis a1 less_imp_not_eq2 lncases)
+  hence h3: "(THE a. Fin (Suc a) = #(s \<bullet> \<up>\<surd>)) = n-1"
+    by (smt Fin_02bot Fin_Suc Suc_diff_1 h1 bot_is_0 inject_Fin inject_lnsuc neq0_conv slen_empty_eq the_equality)
+  thus "#s < \<infinity> \<Longrightarrow> Fin (THE a. Fin (Suc a) = #(s \<bullet> \<up>\<surd>)) < #(s \<bullet> \<up>\<surd>)"
+    by (metis (no_types, lifting) Fin_0 Fin_Suc Suc_diff_1 h1 h2 inject_lnsuc ln_less neq0_conv slen_empty_eq slen_lnsuc)
+  thus "#s < \<infinity> \<Longrightarrow> snth (THE a. Fin (Suc a) = #(s \<bullet> \<up>\<surd>)) (s \<bullet> \<up>\<surd>) = \<surd>"
+    by (metis Fin_02bot Suc_diff_1 bot_is_0 h1 h2 h3 leI less2nat lnle_Fin_0 sfoot12 sfoot_exists2 slen_empty_eq)
+qed
 
 (* tsscanl_h is ts_well *)
 lemma ts_well_tsscanl_h: "ts_well s \<Longrightarrow> ts_well (tsscanl_h f q\<cdot>s)"
 apply (simp add: ts_well_def, auto)
-by (simp add: tsscanl_h_sfoot)
+by (metis (no_types, lifting) fold_inf lnsuc_lnle_emb not_less sfoot2 slen_lnsuc tsscanl_h_sfoot)
 
 (* tsscanl is weak causal *)
 lemma tsscanl_tsweak:"tsWeakCausal (\<lambda> ts. tsscanl f q \<cdot>ts)"
