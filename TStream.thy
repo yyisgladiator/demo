@@ -1853,6 +1853,18 @@ lemma tsscanl_h_snth_tick:"Fin n<#s \<and> shd s=\<surd>
   \<Longrightarrow> snth (Suc n) (tsscanl_h f q\<cdot>s) = snth n (tsscanl_h f q\<cdot>(srt\<cdot>s))"
 by (simp add: snth_rt tsscanl_h_unfold_srt_tick)
 
+(* The n+1st element produced by tsscanl_h is the result of merging the n+1st item of s with the nth
+   element produced by tsscanl *)
+lemma tsscanl_h_snth1: "Fin (Suc n) < #s \<and> snth (Suc n) s\<noteq>\<surd> 
+  \<Longrightarrow> snth (Suc n) (tsscanl_h f q\<cdot>s) = 
+  (case (snth n s) of \<surd> \<Rightarrow> \<M> f (\<M>\<inverse> (snth (THE m. Suc m=n) (tsscanl_h f q\<cdot>s))) \<M>\<inverse> (snth (Suc n) s) 
+                | Msg a \<Rightarrow> \<M> f (\<M>\<inverse> (snth n (tsscanl_h f q\<cdot>s))) \<M>\<inverse> (snth (Suc n) s))"
+apply (cases "snth n s=\<M> a", auto)
+apply (induction n arbitrary: f q s)
+apply (smt Fin_02bot Fin_Suc event.distinct(1) event.simps(4) lnle_Fin_0 lnzero_def not_less slen_rt_ile_eq snth_def snth_rt snth_shd strict_slen trans_lnless tsscanl_h_unfold_shd tsscanl_h_unfold_srt)
+apply (smt not_less slen_rt_ile_eq snth_rt tsscanl_h_unfold_srt tsscanl_h_unfold_srt_tick)
+oops
+
 (* Applying tsscanl_h never shortens the event stream *)
 lemma fair_tsscanl_h1: "#s \<le> #(tsscanl_h f q\<cdot>s)"
 apply (rule spec [where x = q])
@@ -1897,8 +1909,8 @@ by (simp add: tsscanl_h_sfoot)
 
 (* tsscanl is weak causal *)
 lemma tsscanl_tsweak:"tsWeakCausal (\<lambda> ts. tsscanl f q \<cdot>ts)"
-apply(subst tsWeak2cont2, auto)
-by(simp add: tsscanl_def ts_well_tsscanl_h tsTickCount_def)
+apply (subst tsWeak2cont2, auto)
+by (simp add: tsscanl_def ts_well_tsscanl_h tsTickCount_def)
 
 lemma tsscanl_unfold: "tsscanl f q\<cdot>ts = Abs_tstream (tsscanl_h f q\<cdot>(Rep_tstream ts))"
 by (simp add: tsscanl_def ts_well_tsscanl_h) 
@@ -1964,11 +1976,10 @@ primrec tsscanl_nth :: "nat \<Rightarrow> ('a \<Rightarrow> 'a  \<Rightarrow> 'a
 "tsscanl_nth 0 f q s = (if shd s=\<surd> then q else f q (\<M>\<inverse> (shd s)))" |
 "tsscanl_nth (Suc n) f q s = (if shd s=\<surd> then tsscanl_nth n f q (srt\<cdot>s) else f (\<M>\<inverse> (shd s)) (tsscanl_nth n f q (srt\<cdot>s)))"
 
-lemma tsscanl_nth_suc_tick: "shd s=\<surd> \<Longrightarrow> tsscanl_nth (Suc n) f q s = tsscanl_nth n f q (srt\<cdot>s)"
+lemma tsscanl_nth_suc: "shd s\<noteq>\<surd> \<Longrightarrow> tsscanl_nth (Suc n) f q s = f (\<M>\<inverse> (shd s)) (tsscanl_nth n f q (srt\<cdot>s))"
 by (simp add: tsscanl_nth_def)
 
-lemma tsscanl_nth_suc: 
-  "shd s\<noteq>\<surd> \<Longrightarrow> tsscanl_nth (Suc n) f q s = f (\<M>\<inverse> (shd s)) (tsscanl_nth n f q (srt\<cdot>s))"
+lemma tsscanl_nth_suc_tick: "shd s=\<surd> \<Longrightarrow> tsscanl_nth (Suc n) f q s = tsscanl_nth n f q (srt\<cdot>s)"
 by (simp add: tsscanl_nth_def)
 
 lemma tsscanl_h2tsscanl_nth_h: 
@@ -1977,8 +1988,6 @@ apply (induction n arbitrary: f q s)
 apply (simp add: less_le tsscanl_h_unfold_shd)
 apply (auto)
 apply (metis not_less slen_rt_ile_eq snth_rt tsscanl_h_unfold_srt_tick)
-apply (subst tsscanl_h_snth)
-apply (metis Fin_leq_Suc_leq less_le not_less)
 sorry
 
 lemma tsscanl_h2tsscanl_nth: 
