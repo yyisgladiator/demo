@@ -1958,6 +1958,39 @@ lemma tsscanl2sscanl_tsAbs: "tsAbs\<cdot>(tsscanl f q\<cdot>ts) = sscanl f q\<cd
 by (simp add: tsabs_insert tsscanl_unfold ts_well_Rep ts_well_tsscanl_h tsscanl_h_sfilter_msg
     tsscanl2sscanl_sfilter_msg)
 
+(* Verification of tsscanl with tsscanl_nth *)
+
+primrec tsscanl_nth :: "nat \<Rightarrow> ('a \<Rightarrow> 'a  \<Rightarrow> 'a) \<Rightarrow> 'a  \<Rightarrow> 'a event stream \<Rightarrow> 'a" where
+"tsscanl_nth 0 f q s = (if shd s=\<surd> then q else f q (\<M>\<inverse> (shd s)))" |
+"tsscanl_nth (Suc n) f q s = (if shd s=\<surd> then tsscanl_nth n f q (srt\<cdot>s) else f (\<M>\<inverse> (shd s)) (tsscanl_nth n f q (srt\<cdot>s)))"
+
+lemma tsscanl_nth_suc_tick: "shd s=\<surd> \<Longrightarrow> tsscanl_nth (Suc n) f q s = tsscanl_nth n f q (srt\<cdot>s)"
+by (simp add: tsscanl_nth_def)
+
+lemma tsscanl_nth_suc: 
+  "shd s\<noteq>\<surd> \<Longrightarrow> tsscanl_nth (Suc n) f q s = f (\<M>\<inverse> (shd s)) (tsscanl_nth n f q (srt\<cdot>s))"
+by (simp add: tsscanl_nth_def)
+
+lemma tsscanl_h2tsscanl_nth_h: 
+  "Fin n<#s \<Longrightarrow> snth n s\<noteq>\<surd> \<Longrightarrow> snth n (tsscanl_h f q\<cdot>s) = \<M> tsscanl_nth n f q s"
+apply (induction n arbitrary: f q s)
+apply (simp add: less_le tsscanl_h_unfold_shd)
+apply (auto)
+apply (metis not_less slen_rt_ile_eq snth_rt tsscanl_h_unfold_srt_tick)
+apply (subst tsscanl_h_snth)
+apply (metis Fin_leq_Suc_leq less_le not_less)
+sorry
+
+lemma tsscanl_h2tsscanl_nth: 
+  "Fin n<#s \<Longrightarrow> snth n (tsscanl_h f q\<cdot>s) = (case (snth n s) of Msg a \<Rightarrow> \<M> tsscanl_nth n f q s | \<surd> \<Rightarrow> \<surd>)"
+apply (cases "snth n s =\<surd>", simp add: tsscanl_h_snth_tick2tick)
+by (metis event.exhaust event.simps(4) tsscanl_h2tsscanl_nth_h)
+
+lemma tsscanl2tsscanl_nth: 
+  "Fin n<#(Rep_tstream ts) \<Longrightarrow> snth n (Rep_tstream (tsscanl f q\<cdot>ts)) =
+      (case (snth n (Rep_tstream ts)) of Msg a \<Rightarrow> \<M> tsscanl_nth n f q (Rep_tstream ts) | \<surd> \<Rightarrow> \<surd>) "
+by (simp add: tsscanl_unfold ts_well_tsscanl_h tsscanl_h2tsscanl_nth)
+
 
 
 (*TODO
