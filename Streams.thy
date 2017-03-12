@@ -2043,6 +2043,10 @@ apply (rule spec [where x = a])
 apply (rule ind [of _ x], auto)
 by (subst lnle_def, simp del: lnle_conv)
 
+(* The first element of the result of sscanl_h is (f q (shd s)) *)
+lemma sscanl_shd: "s\<noteq>\<epsilon> \<Longrightarrow> shd (sscanl f q\<cdot>s) = (f q (shd s))"
+by (metis shd1 sscanl_scons surj_scons)
+
 (* dropping the first element of the result of sscanl is equivalent to beginning the scan with 
    (f a (shd s)) as the initial element and proceeding with the rest of the input *)
 lemma sscanl_srt: "srt\<cdot>(sscanl f a\<cdot>s) = sscanl f (f a (shd s)) \<cdot>(srt\<cdot>s) "
