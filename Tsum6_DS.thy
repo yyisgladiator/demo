@@ -15,7 +15,8 @@ definition tsum6 :: "nat tstream \<rightarrow> nat tstream" where
 lemma tsum5_h_unfold_tick: "shd s=\<surd> \<and> s\<noteq>\<epsilon> \<Longrightarrow> tsum5_h q\<cdot>s = \<up>\<surd> \<bullet> tsum5_h q\<cdot>(srt\<cdot>s)"
 by (metis surj_scons tsum5_h_scons_tick)
 
-lemma tsum6_h2tsum5_h: "Fin n < #(tsscanl_h op + q\<cdot>s) \<longrightarrow> snth n (tsscanl_h op + q\<cdot>s) = snth n (tsum5_h q\<cdot>s)"
+lemma tsum6_h2tsum5_h: 
+  "Fin n < #(tsscanl_h op + q\<cdot>s) \<longrightarrow> snth n (tsscanl_h op + q\<cdot>s) = snth n (tsum5_h q\<cdot>s)"
 apply (induction n arbitrary: q s, auto)
 proof -
   fix  n :: "nat" and q :: "nat" and s :: "nat event stream" and k :: "lnat"

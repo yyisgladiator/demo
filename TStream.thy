@@ -1995,11 +1995,24 @@ by (simp add: tsscanl_nth_def)
 
 lemma tsscanl_h2tsscanl_nth_h: 
   "Fin n<#s \<Longrightarrow> snth n s\<noteq>\<surd> \<Longrightarrow> snth n (tsscanl_h f q\<cdot>s) = \<M> tsscanl_nth n f q s"
-apply (induction n arbitrary: f q s)
-apply (simp add: less_le tsscanl_h_unfold_shd)
-apply (auto)
-apply (metis not_less slen_rt_ile_eq snth_rt tsscanl_h_unfold_srt_tick)
-sorry
+apply (induction n arbitrary: q s)
+proof -
+  fix  q :: "'a" and s :: "'a event stream"
+  assume a1: "Fin 0 < #s"
+  assume a2: "snth 0 s \<noteq> \<surd>"
+  thus "snth 0 (tsscanl_h f q\<cdot>s) = \<M> tsscanl_nth 0 f q s"
+    using Fin_02bot a1 less_imp_not_eq2 lnzero_def slen_empty_eq snth_shd tsscanl_h_unfold_shd tsscanl_nth.simps(1) by fastforce
+next  
+  fix n :: "nat" and  q :: "'a" and s :: "'a event stream"
+  assume a3: "(\<And>q s. Fin n < #s \<Longrightarrow> snth n s \<noteq> \<surd> \<Longrightarrow> snth n (tsscanl_h f q\<cdot>s) = \<M> tsscanl_nth n f q s)"
+  assume a4: "Fin (Suc n) < #s"
+  assume a5: "snth (Suc n) s \<noteq> \<surd>"
+  thus "snth (Suc n) (tsscanl_h f q\<cdot>s) = \<M> tsscanl_nth (Suc n) f q s"
+    apply (cases "shd s=\<surd>")
+    apply (metis a3 a4 not_less slen_rt_ile_eq snth_rt tsscanl_h_unfold_srt_tick tsscanl_nth_suc_tick)
+    apply (simp add: snth_rt tsscanl_h_unfold_srt)
+    sorry
+qed
 
 lemma tsscanl_h2tsscanl_nth: 
   "Fin n<#s \<Longrightarrow> snth n (tsscanl_h f q\<cdot>s) = (case (snth n s) of Msg a \<Rightarrow> \<M> tsscanl_nth n f q s | \<surd> \<Rightarrow> \<surd>)"
