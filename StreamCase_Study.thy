@@ -80,7 +80,7 @@ lemma "smap Suc\<cdot>(<[1,2,3]>) = (<[2,3,4]>)"
 lemma "(map Suc [1, 2, 3, 6, 7, 8]) = [2,3,4,7,8,9]"
   by simp
 
-lemma add2test: "(\<up>1\<infinity>)+(\<up>2\<infinity>) = (\<up>3\<infinity>)"
+lemma add2test: "add2 (\<up>1\<infinity>) (\<up>2\<infinity>) = (\<up>3\<infinity>)"
 by (simp add: add2_def addtest)
 
 lemma helperlein: "(map (\<lambda>x. x* 3) [1::nat, 2, 3, 4, 5]) = [3,6,9,12,15]"
@@ -1158,12 +1158,15 @@ by (simp add: cfun_eqI)
 
 (*Calculates the value of all elements of a nat stream until the nth element*)
 primrec sum_nth:: "nat \<Rightarrow> nat stream \<Rightarrow> nat" where
-"sum_nth 0 s = shd s" | (*maybe better with (if s =\<epsilon> then 0 else shd s) because it would be defined?*)
+"sum_nth 0 s = shd s" |
 "sum_nth (Suc i) s = (if s =\<epsilon> then 0 else shd s + sum_nth i (srt\<cdot>s))"
 
 
 (*The sum of the elements is the first element plus the sum of the rest of the elements*)
 lemma sum_nth_scons:"sum_nth (Suc n) (\<up>a\<bullet>s) = a + (sum_nth n s)" 
+by (simp add: sum_nth_def)
+
+lemma sum_nth_scons_2:"s\<noteq>\<epsilon> \<Longrightarrow> sum_nth (Suc n) (s) = shd s + (sum_nth n (srt\<cdot>s))" 
 by (simp add: sum_nth_def)
 
 (*The sum of the first Suc n elements is the sum of the first n elements plus the Suc nth element of the input stream*)
@@ -1188,6 +1191,39 @@ apply(induction n)
 apply(simp)
 using sum3_snth
 by (metis Fin_leq_Suc_leq less_le not_less sscanl_snth sum3_def sum_nth_nth)
+
+primrec sum_snth:: "nat \<Rightarrow> nat stream \<Rightarrow> nat" where
+"sum_snth 0 s = shd s" |
+"sum_snth (Suc i) s = (if s =\<epsilon> then 0 else snth (Suc i) s + sum_nth i s)"
+
+
+(*
+definition sum_stream_2::"nat stream \<rightarrow> nat" where
+"sum_stream_2 \<equiv> (\<lambda>s::nat stream. \<Squnion>i::nat. snth (i::nat) (s::nat stream))"
+*)
+
+
+lemma sum_snth2sum_nth:"Fin n <#s \<Longrightarrow>sum_snth n s= sum_nth n s"
+apply(induction n arbitrary: s,simp)
+by(subst sum_nth_nth, auto)
+
+definition sum_stream:: "nat stream \<Rightarrow> nat" where
+"sum_stream =  (\<lambda> s.  sum_snth (THE a. lnsuc\<cdot>(Fin a) = #s) s)"
+
+
+lemma sum_snth2sum_stream:"lnsuc\<cdot>(Fin n) = #s \<Longrightarrow> sum_snth n s = sum_stream s"
+apply(simp add: sum_stream_def)
+using the_equality by fastforce
+
+lemma sum_stream2sum_nth:"lnsuc\<cdot>(Fin n) = #s \<Longrightarrow> sum_stream s = sum_nth n s"
+using sum_snth2sum_nth sum_snth2sum_stream
+by (metis ln_less not_less notinfI3)
+
+
+lemma sum32sum_snth: "Fin n <#s \<longrightarrow> snth n (sum3\<cdot> s)  = sum_snth n s"
+apply(auto, subst sum_snth2sum_nth, simp)
+by(subst sum32sum_nth, simp+)
+
 
 
 (*Definition of some streams*)

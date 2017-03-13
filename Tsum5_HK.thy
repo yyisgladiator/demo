@@ -622,18 +622,71 @@ using sfilter_ne_resup by auto
 lemma filtereps2tsAbseps:"ts_well s \<and> {e. e \<noteq> \<surd>} \<ominus> s = \<epsilon> \<Longrightarrow> tsAbs\<cdot>(Abs_tstream s) = \<epsilon>"
 by(subst tsabs_insert, simp)
 
-(*
-lemma tsum_nth2sum_nth:"({e. e\<noteq>\<surd>}\<ominus> s) \<noteq> \<epsilon> \<Longrightarrow>ts_well s \<Longrightarrow> tsum_nth n ({e. e\<noteq>\<surd>}\<ominus> s) = sum_nth n (tsAbs\<cdot>(Abs_tstream s))"
+
+lemma tsum_nth2sum_nth_helper:" {e. e \<noteq> \<surd>} \<ominus> s \<noteq> \<epsilon> \<Longrightarrow> shd ({e. e \<noteq> \<surd>} \<ominus> s) \<noteq> \<surd>"
+using sfilter_ne_resup by auto
+
+lemma srtSmap:"srt\<cdot>(smap f\<cdot>s) = smap f\<cdot>(srt\<cdot>s)"
+by (metis sdrop_0 sdrop_forw_rt sdrop_smap)
+
+lemma tsum_nth_nth: "Fin (Suc n) <#({e. e\<noteq>\<surd>}\<ominus> s) \<longrightarrow> tsum_nth (Suc n) ({e. e\<noteq>\<surd>}\<ominus> s) = tsum_nth n ({e. e\<noteq>\<surd>}\<ominus> s) + \<M>\<inverse>snth (Suc n) ({e. e\<noteq>\<surd>}\<ominus> s)"
 apply(induction n arbitrary: s)
+apply (metis (mono_tags, lifting) mem_Collect_eq sfilterl7 snth_rt snth_shd tsum_nth.simps(1) tsum_nth.simps(2))
+using Fin_Suc lnat_po_eq_conv lnle_def lnless_def lnsuc_lnle_emb lnzero_def minimal slen_scons snth_scons strict_slen surj_scons
+by (smt add.assoc not_less sfilter_srtdwl3 tsum_nth.simps(2))
+
+lemma tsum_nth2sum_nth:"Fin  n <#({e. e\<noteq>\<surd>}\<ominus> s)\<and>({e. e\<noteq>\<surd>}\<ominus> s) \<noteq> \<epsilon> \<Longrightarrow>ts_well s \<Longrightarrow> tsum_nth n ({e. e\<noteq>\<surd>}\<ominus> s) = sum_nth n (tsAbs\<cdot>(Abs_tstream s))"
+apply(induction n)
 apply(subst tsum_nth_shd)
 using sfilter_ne_resup mem_Collect_eq apply blast
 apply(subst sum_nth.simps)
 apply(simp add: tsabs_rep_eq)
-apply(subst tsum_nth_suc)
+apply(subst tsum_nth_nth, simp)
+apply(subst sum_nth_nth, simp)
+apply(simp add: tsabs_insert)
+apply(simp add: snth_rt)
+apply(subst srtSmap)
+by (smt Suc_n_not_le_n less2nat_lemma not_le slen_rt_ile_eq smap_snth_lemma trans_lnless)
 
+lemma sdrop_eps:"Fin  n \<ge> #s \<Longrightarrow> sdrop n\<cdot>s=\<epsilon>"
+apply (induction n arbitrary: s, auto)
+by (simp add: sdrop_forw_rt slen_rt_ile_eq)
+
+lemma snth_eps:"Fin  n \<ge> #s \<Longrightarrow> snth n s= shd \<epsilon>"
+apply(simp add: snth_def)
+by(subst sdrop_eps, auto)
+
+lemma tsum_nth2sum_nth_inf:"#({e. e\<noteq>\<surd>}\<ominus> s) =\<infinity> \<Longrightarrow>ts_well s \<Longrightarrow> tsum_nth n ({e. e\<noteq>\<surd>}\<ominus> s) = sum_nth n (tsAbs\<cdot>(Abs_tstream s))"
+by (metis Inf'_neq_0_rev leI notinfI3 slen_empty_eq tsum_nth2sum_nth)
+
+
+(*
+(*if the nth element of the input is not \<surd>, then the nth element of the output is equal to tsum_nth n input*)
+lemma tsum5_h2sum_stream_helper:"Fin n < #s \<Longrightarrow> snth n s \<noteq> \<surd> \<Longrightarrow> snth n (tsum5_h 0\<cdot>s) = \<M> sum_stream (smap inversMsg\<cdot>({e. e \<noteq> \<surd>} \<ominus> stake (Suc n)\<cdot>s))"
+apply(cases "s=\<epsilon>")
+using lnless_def apply auto[1]
+apply(induction n arbitrary: s, auto)
+apply(simp add: sum_stream_def)
+apply(subst tsum5_h_scons_2)
+apply auto
 sorry
 
-lemma "snth n (Rep_tstream(tsum5\<cdot> ts)) = (case (snth n (Rep_tstream ts)) of Msg a \<Rightarrow> \<M> sum_stream (stake n\<cdot>(Rep_tstream ts)) | \<surd> \<Rightarrow> \<surd>)"
+
+(*helper for tsum52tsum_nth*)
+lemma tsum5_h2sum_stream:"Fin n< #s \<Longrightarrow> snth n (tsum5_h 0\<cdot> s) = (case (snth n s) of Msg a \<Rightarrow> \<M> sum_stream (smap inversMsg\<cdot>({e. e \<noteq> \<surd>} \<ominus> stake (Suc n)\<cdot> s)) | \<surd> \<Rightarrow> \<surd>)"
+apply(cases "snth n s =\<surd>")
+apply(induction n arbitrary: s, simp add: tsum5_shd)
+apply(subst tsum5_snthtick2output, auto)
+by (metis tsum5_h2sum_stream_helper tsum5_h2tsum_nth tsum5_h2tsum_nth_helper)
+
+
+
+
+lemma "Fin n< #(Rep_tstream ts) \<Longrightarrow>  snth n (Rep_tstream (tsum5\<cdot>ts)) = (case snth n (Rep_tstream ts) of \<M> a \<Rightarrow> \<M> sum_stream (smap inversMsg\<cdot>({e. e \<noteq> \<surd>} \<ominus> stake (Suc n)\<cdot>(Rep_tstream ts))) | \<surd> \<Rightarrow> \<surd>)"
+apply(simp add: tsum5_unfold)
+apply(subst Rep_Abs)
+using tswell_tsum5 apply simp
+by(subst tsum5_h2sum_stream, auto)
 *)
 
 end
