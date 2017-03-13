@@ -15,7 +15,16 @@ definition tsum6 :: "nat tstream \<rightarrow> nat tstream" where
 lemma tsum6_h2tsum5_h: "Fin n < #(tsscanl_h op + 0\<cdot>s) \<longrightarrow> snth n (tsscanl_h op + 0\<cdot>s) = snth n (tsum5_h 0\<cdot>s)"
 apply (induction n arbitrary: s)
 apply (smt shd1 snth_shd surj_scons tsscanl_h_empty tsscanl_h_scons_tick tsscanl_h_shd tsum5_h_shd_2 tsum5_shd)
-sorry
+proof -
+  fix  n :: "nat" and s :: "nat event stream"
+  assume a1: "\<And>s. Fin n < #(tsscanl_h op + 0\<cdot>s) \<longrightarrow> snth n (tsscanl_h op + 0\<cdot>s) = snth n (tsum5_h 0\<cdot>s)"
+  thus "Fin (Suc n) < #(tsscanl_h op + 0\<cdot>s) \<longrightarrow> snth (Suc n) (tsscanl_h op + 0\<cdot>s) = snth (Suc n) (tsum5_h 0\<cdot>s)"
+    apply (cases "shd s=\<surd>")
+    apply (metis (no_types, lifting) not_less slen_rt_ile_eq snth_rt tsscanl_h_unfold_srt_tick tsum5_h_srt_tick)
+    apply (simp add: snth_rt tsscanl_h_unfold_srt tsum5_h_srt)
+    sorry
+qed
+
 
 lemma tsum62tsum5: "tsscanl_h plus 0\<cdot>s = tsum5_h 0\<cdot>s"
 apply (rule snths_eq)

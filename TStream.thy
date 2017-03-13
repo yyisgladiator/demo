@@ -1897,23 +1897,21 @@ by (metis (mono_tags, lifting) Fin_leq_Suc_leq less_le not_less slen_rt_ile_eq s
     tsscanl_h_snth tsscanl_h_snth_tick)
 
 (* For every finite event stream with tick as last element ends the result of tsscanl_h with tick *)
-lemma tsscanl_h_sfoot: "#s<\<infinity> \<Longrightarrow> sfoot (tsscanl_h f q\<cdot>(s\<bullet>\<up>\<surd>)) = \<surd>"
-apply (simp add: sfoot_def)
-apply (subst tsscanl_h_snth_tick2tick, auto)
+lemma tsscanl_h_sfoot: assumes "#s<\<infinity>" 
+  shows "sfoot (tsscanl_h f q\<cdot>(s \<bullet> \<up>\<surd>)) = \<surd>"
 proof -
-  assume "#s<\<infinity>"
-  hence a1: "#(s\<bullet>\<up>\<surd>)<\<infinity>"
-    by auto
-  hence h1: "s\<bullet>\<up>\<surd>\<noteq>\<epsilon>"
-    by (metis lnsuc_neq_0_rev slen_lnsuc strict_slen)
-  obtain n where h2: "#(s\<bullet>\<up>\<surd>) = Fin n"   
-    by (metis a1 less_imp_not_eq2 lncases)
-  hence h3: "(THE a. Fin (Suc a) = #(s \<bullet> \<up>\<surd>)) = n-1"
-    by (smt Fin_02bot Fin_Suc Suc_diff_1 h1 bot_is_0 inject_Fin inject_lnsuc neq0_conv slen_empty_eq the_equality)
-  thus "#s < \<infinity> \<Longrightarrow> Fin (THE a. Fin (Suc a) = #(s \<bullet> \<up>\<surd>)) < #(s \<bullet> \<up>\<surd>)"
-    by (metis (no_types, lifting) Fin_0 Fin_Suc Suc_diff_1 h1 h2 inject_lnsuc ln_less neq0_conv slen_empty_eq slen_lnsuc)
-  thus "#s < \<infinity> \<Longrightarrow> snth (THE a. Fin (Suc a) = #(s \<bullet> \<up>\<surd>)) (s \<bullet> \<up>\<surd>) = \<surd>"
-    by (metis Fin_02bot Suc_diff_1 bot_is_0 h1 h2 h3 leI less2nat lnle_Fin_0 sfoot12 sfoot_exists2 slen_empty_eq)
+  obtain h1: "#(s\<bullet>\<up>\<surd>)<\<infinity>"
+    using assms by auto
+  obtain h2: "s\<bullet>\<up>\<surd>\<noteq>\<epsilon>"
+    by (metis bot_is_0 lnat.con_rews slen_lnsuc strict_slen)
+  obtain n where h3: "#(s\<bullet>\<up>\<surd>) = Fin n"
+    by (metis Fin_Suc assms lncases neq_iff slen_lnsuc)   
+  hence h4: "(THE a. Fin (Suc a)=#(s\<bullet>\<up>\<surd>)) = n-1"
+    by (smt Fin_02bot Fin_Suc Suc_diff_1 h2 bot_is_0 inject_Fin inject_lnsuc neq0_conv slen_empty_eq the_equality)
+  thus "sfoot (tsscanl_h f q\<cdot>(s \<bullet> \<up>\<surd>)) = \<surd>"
+    apply (simp add: sfoot_def)
+    by (metis Fin_0 Fin_Suc Suc_diff_1 assms diff_le_self h1 h2 h3 less2nat less_le ln_less 
+        neq0_conv sfoot12 sfoot_exists2 slen_empty_eq tsscanl_h_snth_tick2tick)
 qed
 
 (* tsscanl_h is ts_well *)
@@ -1936,8 +1934,7 @@ by (simp add: tsscanl_unfold)
 
 (* Filter out tick in the input or the output does not matter for tsscanl_h *)
 lemma tsscanl_h_sfilter_msg: "{e. e \<noteq> \<surd>} \<ominus> tsscanl_h f q\<cdot>s = tsscanl_h f q\<cdot>({e. e \<noteq> \<surd>} \<ominus> s)"
-apply (induction s arbitrary: q)
-apply (auto)
+apply (induction s arbitrary: q, auto)
 proof -
   fix  u :: "'b event discr\<^sub>\<bottom>" and q :: "'a" and s :: "'b event stream"
   assume a1: "u\<noteq>\<bottom>"
@@ -1946,7 +1943,7 @@ proof -
     by (metis (full_types) Exh_Up a1 discr.exhaust)
   hence h1: "u && s = \<up>ua \<bullet> s"
     by (metis sconc_fst_empty sconc_scons' sup'_def)
-  then show "{e. e \<noteq> \<surd>} \<ominus> tsscanl_h f q\<cdot>(u && s) = tsscanl_h f q\<cdot>({e. e \<noteq> \<surd>} \<ominus> u && s)"
+  thus "{e. e \<noteq> \<surd>} \<ominus> tsscanl_h f q\<cdot>(u && s) = tsscanl_h f q\<cdot>({e. e \<noteq> \<surd>} \<ominus> u && s)"
     by (smt h1 a1 a2 event.distinct(1) mem_Collect_eq sfilter_in sfilter_nin shd1 stream.con_rews(2) 
         stream.sel_rews(5) tsscanl_h_scons tsscanl_h_unfold_tick)
 qed
