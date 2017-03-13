@@ -1855,15 +1855,21 @@ by (simp add: snth_rt tsscanl_h_unfold_srt_tick)
 
 (* The n+1st element produced by tsscanl_h is the result of merging the n+1st item of s with the nth
    element produced by tsscanl *)
-lemma tsscanl_h_snth1: "Fin (Suc n) < #s \<and> snth (Suc n) s\<noteq>\<surd> 
-  \<Longrightarrow> snth (Suc n) (tsscanl_h f q\<cdot>s) = 
-  (case (snth n s) of \<surd> \<Rightarrow> \<M> f (\<M>\<inverse> (snth (THE m. Suc m=n) (tsscanl_h f q\<cdot>s))) \<M>\<inverse> (snth (Suc n) s) 
-                | Msg a \<Rightarrow> \<M> f (\<M>\<inverse> (snth n (tsscanl_h f q\<cdot>s))) \<M>\<inverse> (snth (Suc n) s))"
-apply (cases "snth n s=\<M> a", auto)
+lemma tsscanl_h_snth1: "Fin (Suc n) < #s \<and> snth (Suc n) s\<noteq>\<surd> \<and> snth n s\<noteq>\<surd>
+  \<Longrightarrow> snth (Suc n) (tsscanl_h f q\<cdot>s) = \<M> f (\<M>\<inverse> (snth n (tsscanl_h f q\<cdot>s))) \<M>\<inverse> (snth (Suc n) s)"
 apply (induction n arbitrary: f q s)
-apply (smt Fin_02bot Fin_Suc event.distinct(1) event.simps(4) lnle_Fin_0 lnzero_def not_less slen_rt_ile_eq snth_def snth_rt snth_shd strict_slen trans_lnless tsscanl_h_unfold_shd tsscanl_h_unfold_srt)
-apply (smt not_less slen_rt_ile_eq snth_rt tsscanl_h_unfold_srt tsscanl_h_unfold_srt_tick)
-oops
+apply (smt Fin_02bot event.simps(4) lnle_Fin_0 lnzero_def not_less slen_rt_ile_eq snth_rt snth_shd strict_slen trans_lnless tsscanl_h_unfold_shd tsscanl_h_unfold_srt)
+by (smt not_less slen_rt_ile_eq snth_rt tsscanl_h_unfold_srt tsscanl_h_unfold_srt_tick)
+
+lemma tsscanl_h_snth2: "Fin (Suc n) < #s \<and> snth (Suc n) s\<noteq>\<surd> \<and> snth n s=\<surd> \<and> (\<forall>m. m<n  \<and> snth m s=\<surd>)
+  \<Longrightarrow> snth (Suc n) (tsscanl_h f q\<cdot>s) = \<M> f q \<M>\<inverse> (snth (Suc n) s)"
+by (auto)
+
+lemma tsscanl_h_snth3: "Fin (Suc n) < #s \<and> snth (Suc n) s\<noteq>\<surd> \<and> snth n s=\<surd> \<and> \<not>(\<forall>m. m<n  \<and> snth m s=\<surd>)
+  \<Longrightarrow> \<exists>m.  snth (Suc n) (tsscanl_h f q\<cdot>s) = \<M> f m \<M>\<inverse> (snth (Suc n) s)"
+apply (induction n arbitrary: f q s)
+apply (metis (mono_tags, lifting) Fin_0 lnle_Fin_0 not_less slen_empty_eq slen_rt_ile_eq snth_rt snth_shd tsscanl_h_unfold_shd tsscanl_h_unfold_srt_tick)
+oops     
 
 (* Applying tsscanl_h never shortens the event stream *)
 lemma fair_tsscanl_h1: "#s \<le> #(tsscanl_h f q\<cdot>s)"
