@@ -707,6 +707,14 @@ text {* @{text "stake"}ing @{text "#x"} elements returns @{text "x"} again *}
 lemma fin2stake:"#x = Fin n \<Longrightarrow> stake n\<cdot>x = x"
 by (rule fin2stake_lemma [rule_format, of "x" "n" "n"], simp)
 
+lemma srt_decrements_length : "s \<noteq> \<epsilon> \<Longrightarrow> #s = lnsuc\<cdot>(#(srt\<cdot>s))" by (metis slen_scons surj_scons)
+
+lemma empty_is_shortest : "Fin n < #s \<Longrightarrow> s \<noteq> \<epsilon>" by (metis Fin_0 less_le lnle_Fin_0 strict_slen)
+
+lemma convert_inductive_asm : "Fin (Suc n) < #s \<Longrightarrow> Fin n < #s" by (metis Fin_leq_Suc_leq less_le not_le)
+
+lemma only_empty_has_length_0 : "#s \<noteq> 0 \<Longrightarrow> s \<noteq> \<epsilon>" by simp
+
 (* ----------------------------------------------------------------------- *)
 section {* Basic induction rules *}
 (* ----------------------------------------------------------------------- *)
@@ -829,6 +837,17 @@ apply (rule_tac x="x" in spec)
 apply (rule_tac x="y" in spec)
 apply (induct_tac k, auto)
 by (rule_tac x="xa" in scases, auto)
+
+lemma srt_drop : "srt\<cdot>(sdrop n\<cdot>s) = sdrop (Suc n)\<cdot>s" by (simp add: sdrop_back_rt)
+
+lemma drop_not_all : "Fin n < #s \<Longrightarrow> sdrop n\<cdot>s \<noteq> \<epsilon>"
+proof (induct n)
+  show "Fin 0 < #s \<Longrightarrow> sdrop 0\<cdot>s \<noteq> \<epsilon>" by auto
+  
+  have "\<And> n. Fin n < #s \<Longrightarrow> #(sdrop n\<cdot>s) = lnsuc\<cdot>(#(srt\<cdot>(sdrop n\<cdot>s)))" by (metis not_le sdrop_stakel1 srt_decrements_length ub_slen_stake)
+  hence "\<And> n. Fin n < #s \<Longrightarrow> sdrop n\<cdot>s \<noteq> \<epsilon>" using only_empty_has_length_0 by fastforce
+  thus "\<And> n. (Fin n < #s \<Longrightarrow> sdrop n\<cdot>s \<noteq> \<epsilon>) \<Longrightarrow> Fin (Suc n) < #s \<Longrightarrow> sdrop (Suc n)\<cdot>s \<noteq> \<epsilon>" by simp
+qed
 
 (* ----------------------------------------------------------------------- *)
 subsection {* @{term snth} *}
@@ -1394,6 +1413,9 @@ by (metis (no_types) rek2sinftimes sinftimes_unfold slen_empty_eq slen_smap smap
 
 lemma l5: "smap g\<cdot>\<up>x\<infinity> = \<up>(g x)\<infinity>"
   by simp
+
+lemma smap_hd_rst : "s \<noteq> \<epsilon> \<Longrightarrow> smap f\<cdot>s = \<up>(f (shd s)) \<bullet> smap f\<cdot>(srt\<cdot>s)" by (metis smap_scons surj_scons)
+
 (* ----------------------------------------------------------------------- *)
 subsection {* @{term sprojfst} and @{term sprojsnd} *}
 (* ----------------------------------------------------------------------- *)
