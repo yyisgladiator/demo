@@ -315,24 +315,35 @@ by auto
 
 (* Broy Operator *)
 section Broy
-
   
-  
-subsection Stueber
+subsection Stueber_Version
   
 primrec spfFeedbackHelper :: "nat \<Rightarrow> 'a SPF \<Rightarrow> 'a SB \<Rightarrow> 'a SB" where
-"spfFeedbackHelper 0 f sb = sbLeast (spfDom\<cdot>f \<union> spfRan\<cdot>f)" |
-"spfFeedbackHelper (Suc i) f sb = 
-   (let last = spfFeedbackHelper i f sb in
-   (sb \<uplus> (f \<rightleftharpoons> (last \<bar> spfDom\<cdot>f))))"
+  "spfFeedbackHelper 0 f sb = sbLeast (spfDom\<cdot>f \<union> spfRan\<cdot>f)" |
+  "spfFeedbackHelper (Suc i) f sb = 
+    (let last = spfFeedbackHelper i f sb in
+    (sb \<uplus> (f \<rightleftharpoons> (last \<bar> spfDom\<cdot>f))))"
   
-definition spfFeedbackOperator :: "'a SPF \<Rightarrow> 'a SPF"  ("\<mu>_" 50) where
-"spfFeedbackOperator f \<equiv> Abs_CSPF (\<lambda> sb. (sbDom\<cdot>sb = spfDom\<cdot>f - spfRan\<cdot>f) \<leadsto> 
-   ((\<Squnion>i. spfFeedbackHelper i f sb  ) \<bar> (spfRan\<cdot>f)))"
+definition spfFeedbackOperatorStueber :: "'a SPF \<Rightarrow> 'a SPF"  where (* ("\<mu>_" 50) *)
+  "spfFeedbackOperatorStueber f \<equiv> Abs_CSPF (\<lambda> sb. (sbDom\<cdot>sb = spfDom\<cdot>f - spfRan\<cdot>f) \<leadsto> 
+    ((\<Squnion>i. spfFeedbackHelper i f sb  ) \<bar> (spfRan\<cdot>f)))"
 
-(* sum4 SPF  *)
+subsection Broy_Version
+
+definition spfFeedbackOperator :: "'a SPF \<Rightarrow> 'a SPF" ("\<mu>_" 50) where
+  "spfFeedbackOperator f \<equiv> Abs_CSPF (\<lambda> sb. (sbDom\<cdot>sb = spfDom\<cdot>f - spfRan\<cdot>f) \<leadsto>
+    (\<Squnion>i. iterate i\<cdot>(\<Lambda> z. (f\<rightleftharpoons>((sb \<uplus> z)\<bar>(spfDom\<cdot>f))))\<cdot>(sbLeast (spfRan\<cdot>f))))" 
+
+  (* \<Lambda> x. fix\<cdot>(\<Lambda> (z,y). f(x,y)) *)
+  
+  (* v1: (\<Squnion>i. iterate i\<cdot>(\<Lambda> z. sb \<uplus> (f\<rightleftharpoons>z))\<cdot>(sbLeast (spfDom\<cdot>f))) *)
+  (* v2: (\<Squnion>i. iterate i\<cdot>(\<Lambda> z. (f\<rightleftharpoons>z))\<cdot>(sb \<uplus> sbLeast (spfDom\<cdot>f \<inter> spfRan\<cdot>f)))  Problem: sbDom((f\<rightleftharpoons>z)) = {c3}*)
+  (* v3: (\<Squnion>i. iterate i\<cdot>(\<Lambda> z. (f\<rightleftharpoons>(sb \<uplus> z)))\<cdot>(sbLeast (spfDom\<cdot>f \<inter> spfRan\<cdot>f))) *)
+  (* v4: (\<Squnion>i. iterate i\<cdot>(\<Lambda> z. (f\<rightleftharpoons>((sb \<uplus> z)\<bar>(spfDom\<cdot>f))))\<cdot>(sbLeast (spfRan\<cdot>f)))) *)
+  
+(* sum4 SPF *) 
 subsection sum4
-
+(*
 definition idC :: "nat SPF" where
 "idC \<equiv> idSPF (c5, c1)"
 
@@ -396,7 +407,7 @@ apply(simp add: sum4SPF_def sum4_def)
 apply(simp add: spfFeedbackOperator_def domIdAppendAdd ranIdAppendAdd)
 apply(simp add: contFeedback spfwellFeedback)
 sorry
-
+*)
 section Final_Lemma
 (* prerequirements for final lemma *)
 subsection Prerequirements

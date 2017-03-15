@@ -128,11 +128,15 @@ lemma conttest: assumes "monofun (\<lambda> sb. (sbDom\<cdot>sb = cs) \<leadsto>
                     and "chain Y \<Longrightarrow> sbDom\<cdot>(Lub Y) = cs 
                         \<Longrightarrow> chain (\<lambda> i. f(Y i))"
                   shows "cont (\<lambda> sb. (sbDom\<cdot>sb = cs) \<leadsto> f(sb))"
-  sorry
+  sorry (* siehe SPF_CaseStudy contSPF *)
     
     
 definition addSPF :: "(channel \<times> channel \<times> channel) \<Rightarrow> nat SPF" where
 "addSPF cs \<equiv> Abs_CSPF (\<lambda> (sb::nat SB). (sbDom\<cdot>sb = {(fst cs), (fst (snd cs))}) \<leadsto> ([(snd (snd cs))\<mapsto>add\<cdot>(sb . (fst cs))\<cdot>(sb . (fst (snd cs)))]\<Omega>))"
+
+(*lift_definition addSPF2 :: "nat SPF" is
+"(\<lambda> cs. (\<lambda> (sb::nat SB). (sbDom\<cdot>sb = {(fst cs), (fst (snd cs))}) \<leadsto> ([(snd (snd cs))\<mapsto>add\<cdot>(sb . (fst cs))\<cdot>(sb . (fst (snd cs)))]\<Omega>))) (ch1,ch2,ch3)"
+sorry*)
 
 lemma addSPF_mono: "monofun (\<lambda> sb. (sbDom\<cdot>sb = {(fst cs), (fst (snd cs))}) \<leadsto> ([(snd (snd cs))\<mapsto>add\<cdot>(sb . (fst cs))\<cdot>(sb . (fst (snd cs)))]\<Omega>))"
   apply(rule monotest)
