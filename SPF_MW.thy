@@ -215,10 +215,10 @@ apply(subst conthelper2, simp_all add: assms)
 apply(subst Abs_cfun_inverse2)
    apply(subst conthelper2, simp_all add: assms)
 sorry
-apply (rule spf_mono2monofun)
+(* apply (rule spf_mono2monofun)
    apply (rule spf_monoI)
    apply (simp add: domIff2)
-   apply (rule sb_below)
+   apply (rule sb_below)*)
 (* append Element *)
 
 definition appendElem:: "'a \<Rightarrow> 'a stream \<Rightarrow> 'a stream" where

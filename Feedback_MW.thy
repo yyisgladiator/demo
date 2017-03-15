@@ -316,6 +316,10 @@ by auto
 (* Broy Operator *)
 section Broy
 
+  
+  
+subsection Stueber
+  
 primrec spfFeedbackHelper :: "nat \<Rightarrow> 'a SPF \<Rightarrow> 'a SB \<Rightarrow> 'a SB" where
 "spfFeedbackHelper 0 f sb = sbLeast (spfDom\<cdot>f \<union> spfRan\<cdot>f)" |
 "spfFeedbackHelper (Suc i) f sb = 
