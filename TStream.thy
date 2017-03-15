@@ -1866,9 +1866,8 @@ lemma tsscanl_h_snth2: "Fin (Suc n) < #s \<and> snth (Suc n) s\<noteq>\<surd> \<
 by (auto)
 
 lemma tsscanl_h_snth3: "Fin (Suc n) < #s \<and> snth (Suc n) s\<noteq>\<surd> \<and> snth n s=\<surd> \<and> \<not>(\<forall>m. m<n  \<and> snth m s=\<surd>)
-  \<Longrightarrow> \<exists>m.  snth (Suc n) (tsscanl_h f q\<cdot>s) = \<M> f m \<M>\<inverse> (snth (Suc n) s)"
+  \<Longrightarrow> snth (Suc n) (tsscanl_h f q\<cdot>s) = \<M> f (snth (THE m. Fin m=#({e. e\<noteq>\<surd>} \<ominus> stake (Suc n)\<cdot>s)) s) \<M>\<inverse> (snth (Suc n) s)"
 apply (induction n arbitrary: f q s)
-apply (metis (mono_tags, lifting) Fin_0 lnle_Fin_0 not_less slen_empty_eq slen_rt_ile_eq snth_rt snth_shd tsscanl_h_unfold_shd tsscanl_h_unfold_srt_tick)
 oops     
 
 (* Applying tsscanl_h never shortens the event stream *)
@@ -1942,7 +1941,7 @@ by (simp add: tsscanl_unfold)
 lemma tsscanl_h_sfilter_msg: "{e. e \<noteq> \<surd>} \<ominus> tsscanl_h f q\<cdot>s = tsscanl_h f q\<cdot>({e. e \<noteq> \<surd>} \<ominus> s)"
 apply (induction s arbitrary: q, auto)
 proof -
-  fix  u :: "'b event discr\<^sub>\<bottom>" and q :: "'a" and s :: "'b event stream"
+  fix u :: "'b event discr\<^sub>\<bottom>" and q :: "'a" and s :: "'b event stream"
   assume a1: "u\<noteq>\<bottom>"
   assume a2: "\<And>q. {e. e \<noteq> \<surd>} \<ominus> tsscanl_h f q\<cdot>s = tsscanl_h f q\<cdot>({e. e \<noteq> \<surd>} \<ominus> s)"
   obtain ua where "(updis ua) = u"
@@ -2003,7 +2002,7 @@ lemma tsscanl_h2tsscanl_nth_h:
   "Fin n<#s \<Longrightarrow> snth n s\<noteq>\<surd> \<Longrightarrow> snth n (tsscanl_h f q\<cdot>s) = \<M> tsscanl_nth n f q s"
 apply (induction n arbitrary: q s)
 proof -
-  fix  q :: "'a" and s :: "'a event stream"
+  fix q :: "'a" and s :: "'a event stream"
   assume a1: "Fin 0 < #s"
   assume a2: "snth 0 s \<noteq> \<surd>"
   thus "snth 0 (tsscanl_h f q\<cdot>s) = \<M> tsscanl_nth 0 f q s"
@@ -2029,6 +2028,49 @@ lemma tsscanl2tsscanl_nth:
   "Fin n<#(Rep_tstream ts) \<Longrightarrow> snth n (Rep_tstream (tsscanl f q\<cdot>ts)) =
       (case (snth n (Rep_tstream ts)) of Msg a \<Rightarrow> \<M> tsscanl_nth n f q (Rep_tstream ts) | \<surd> \<Rightarrow> \<surd>) "
 by (simp add: tsscanl_unfold ts_well_tsscanl_h tsscanl_h2tsscanl_nth)
+
+(* Verification of tsscanl with sscanl *)
+
+lemma tsscanl_h2sscanl_h: 
+  "Fin n<#(Rep_tstream ts) \<Longrightarrow> snth n (Rep_tstream ts)\<noteq>\<surd> \<Longrightarrow>
+    snth n (tsscanl_h f q\<cdot>(Rep_tstream ts)) = \<M> snth (THE m. Fin m = #({e. e \<noteq> \<surd>} \<ominus> stake n\<cdot>(Rep_tstream ts))) (sscanl f q\<cdot>(smap (\<lambda>e. \<M>\<inverse> e)\<cdot>({e. e\<noteq>\<surd>} \<ominus> (Rep_tstream ts))))"
+apply (induction n arbitrary: q ts)
+proof -
+  fix q :: "'b" and ts :: "'a tstream"
+  assume a1: "Fin 0 < #(Rep_tstream ts)"
+  assume a2: "snth 0 (Rep_tstream ts) \<noteq> \<surd>"
+  obtain s where "(Rep_tstream ts)=s"
+    by simp
+  thus "snth 0 (tsscanl_h f q\<cdot>(Rep_tstream ts)) =
+            \<M> snth (THE m. Fin m = #({e. e \<noteq> \<surd>} \<ominus> stake 0\<cdot>(Rep_tstream ts))) 
+            (sscanl f q\<cdot>(smap inversMsg\<cdot>({e. e \<noteq> \<surd>} \<ominus> Rep_tstream ts)))"
+    apply (simp)
+    by (smt Fin_02bot a1 a2 less_imp_not_eq2 lnzero_def mem_Collect_eq sfilter_in shd1 slen_empty_eq smap_scons snth_shd sscanl_scons surj_scons tsscanl_h_unfold_shd)
+next
+  fix n :: "nat" and q :: "'b" and ts :: "'a tstream"
+  assume a3: "\<And>q ts. Fin n < #(Rep_tstream ts) \<Longrightarrow>
+                      snth n (Rep_tstream ts) \<noteq> \<surd> \<Longrightarrow>
+                      snth n (tsscanl_h f q\<cdot>(Rep_tstream ts)) =
+                      \<M> snth (THE m. Fin m = #({e. e \<noteq> \<surd>} \<ominus> stake n\<cdot>(Rep_tstream ts)))
+                           (sscanl f q\<cdot>(smap inversMsg\<cdot>({e. e \<noteq> \<surd>} \<ominus> Rep_tstream ts)))"
+  assume a4: "Fin (Suc n) < #(Rep_tstream ts)"
+  assume a5: "snth (Suc n) (Rep_tstream ts) \<noteq> \<surd>"
+  obtain s where "(Rep_tstream ts)=s"
+    by simp
+  thus "snth (Suc n) (tsscanl_h f q\<cdot>(Rep_tstream ts)) =
+              \<M> snth (THE m. Fin m = #({e. e \<noteq> \<surd>} \<ominus> stake (Suc n)\<cdot>(Rep_tstream ts))) (sscanl f q\<cdot>(smap inversMsg\<cdot>({e. e \<noteq> \<surd>} \<ominus> Rep_tstream ts)))"
+  apply (simp add: snth_rt)
+  sorry
+qed
+
+lemma tsscanl2sscanl:
+  "Fin n<#(Rep_tstream ts) \<Longrightarrow> snth n (Rep_tstream (tsscanl f q\<cdot>ts)) =
+      (case (snth n (Rep_tstream ts)) of Msg a \<Rightarrow> 
+        \<M> snth (THE m. Fin m=#({e. e\<noteq>\<surd>} \<ominus> stake n\<cdot>(Rep_tstream ts))) (sscanl f q\<cdot>(smap (\<lambda>e. \<M>\<inverse> e)\<cdot>({e. e\<noteq>\<surd>} \<ominus> (Rep_tstream ts)))) | \<surd> \<Rightarrow> \<surd>)"
+apply (simp add: tsscanl_unfold ts_well_tsscanl_h)
+apply (cases "snth n (Rep_tstream ts)=\<surd>", simp add: tsscanl_h_snth_tick2tick)
+apply (simp add: tsscanl_h2sscanl_h)
+by (metis (no_types, lifting) event.exhaust event.simps(4))
 
 
 

@@ -9,13 +9,15 @@ theory Tsum6_DS
 imports TStream StreamCase_Study Tsum5_HK
 begin
 
+(* Compute sum of previous inputs and emit it *)
 definition tsum6 :: "nat tstream \<rightarrow> nat tstream" where
 "tsum6 \<equiv> tsscanl plus 0"
 
 lemma tsum5_h_unfold_tick: "shd s=\<surd> \<and> s\<noteq>\<epsilon> \<Longrightarrow> tsum5_h q\<cdot>s = \<up>\<surd> \<bullet> tsum5_h q\<cdot>(srt\<cdot>s)"
 by (metis surj_scons tsum5_h_scons_tick)
 
-lemma tsum6_h2tsum5_h: 
+(* Nth element of tsum6 and tsum5 are equal *)
+lemma tsum6_h2tsum5_h_snth: 
   "Fin n < #(tsscanl_h op + q\<cdot>s) \<longrightarrow> snth n (tsscanl_h op + q\<cdot>s) = snth n (tsum5_h q\<cdot>s)"
 apply (induction n arbitrary: q s, auto)
 proof -
@@ -37,12 +39,14 @@ next
       tsum5_suc_snth tsum5_suc_snth_tick)
 qed
 
-lemma tsum62tsum5: "tsscanl_h plus 0\<cdot>s = tsum5_h 0\<cdot>s"
+(* tsum6 equals tsum5 on event streams *)
+lemma tsum6_h2tsum5_h: "tsscanl_h plus 0\<cdot>s = tsum5_h 0\<cdot>s"
 apply (rule snths_eq)
 apply (simp)
-by (simp add: tsum6_h2tsum5_h)
+by (simp add: tsum6_h2tsum5_h_snth)
 
-lemma "tsum6=tsum5"
-by (simp add: tsscanl_def tsum5_def tsum6_def tsum62tsum5)
+(* tsum6 equals tsum5 *)
+lemma tsum62tsum5: "tsum6=tsum5"
+by (simp add: tsscanl_def tsum5_def tsum6_def tsum6_h2tsum5_h)
 
 end
