@@ -1266,28 +1266,86 @@ tsum5 x:xs y = (x+y) : tsum5 xs (x+y)
 *)
 
 definition fork_fst::"bool stream \<Rightarrow> 'a stream \<Rightarrow> 'a stream" where
-"fork_fst \<equiv> fix\<cdot>(\<Lambda> h. (\<lambda> b s. 
-                        if shd b=True then (h (srt\<cdot>b) (srt\<cdot>s)) else (if s = \<epsilon> then \<epsilon> else (\<up>(shd s) \<bullet> (h (srt\<cdot>b) (srt\<cdot>s))))))"
+"fork_fst \<equiv> fix\<cdot>(\<Lambda> h. (\<lambda> bs as. if (as = \<epsilon> \<or> bs=\<epsilon>) then \<epsilon> else
+                        (if shd bs=True then (h (srt\<cdot>bs) (srt\<cdot>as)) else (\<up>(shd as) \<bullet> (h (srt\<cdot>bs) (srt\<cdot>as))))))"
 
 definition fork_snd::"bool stream \<Rightarrow> 'a stream \<Rightarrow> 'a stream" where
-"fork_snd \<equiv> fix\<cdot>(\<Lambda> h. (\<lambda> b s. 
-                        if shd b=False then (h (srt\<cdot>b) (srt\<cdot>s)) else (if s = \<epsilon> then \<epsilon> else (\<up>(shd s) \<bullet> (h (srt\<cdot>b) (srt\<cdot>s))))))"
+"fork_snd \<equiv> fix\<cdot>(\<Lambda> h. (\<lambda> bs as. if (as = \<epsilon> \<or> bs =\<epsilon>) then \<epsilon> else
+                        (if shd bs=False then (h (srt\<cdot>bs) (srt\<cdot>as)) else (\<up>(shd as) \<bullet> (h (srt\<cdot>bs) (srt\<cdot>as))))))"
 
 definition fork::"bool stream \<Rightarrow> 'a stream \<Rightarrow> 'a stream\<times> 'a stream" where
-"fork \<equiv> \<lambda> b s. (fork_fst b s, fork_snd b s)"
+"fork \<equiv> \<lambda> bs as. (fork_fst bs as, fork_snd bs as)"
 
-(*
-lemma fork_fst_test:"fork_fst (\<up>True \<bullet> \<up>False \<bullet> \<up>False \<bullet> \<up>True \<bullet> \<up>True) (\<up>1 \<bullet> \<up>2 \<bullet> \<up>3 \<bullet> \<up>5 \<bullet> \<up>7) = \<up>1 \<bullet> \<up>5 \<bullet> \<up>7"
-
+lemma cont_fork_fst:"cont (\<lambda>h bs as. if as = \<epsilon> \<or> bs = \<epsilon> then \<epsilon> else if shd bs = True then h (srt\<cdot>bs) (srt\<cdot>as) else \<up>(shd as) \<bullet> h (srt\<cdot>bs) (srt\<cdot>as))"
+apply(rule contI2,auto)
 sorry
 
-
-lemma fork_snd_test:"fork_snd (\<up>True \<bullet> \<up>False \<bullet> \<up>False \<bullet> \<up>True \<bullet> \<up>True) (\<up>1 \<bullet> \<up>2 \<bullet> \<up>3 \<bullet> \<up>5 \<bullet> \<up>7) = \<up>2 \<bullet> \<up>3"
+lemma cont_fork_snd:"cont (\<lambda>h bs as. if as = \<epsilon> \<or> bs = \<epsilon> then \<epsilon> else if shd bs = False then h (srt\<cdot>bs) (srt\<cdot>as) else \<up>(shd as) \<bullet> h (srt\<cdot>bs) (srt\<cdot>as))"
 sorry
 
-lemma fork_test: "fork (<[True, False, False, True, True]>) (<[1,2,3,5,7]>) = (<[1,5,7]>, <[2,3]>)"
-by(simp add: fork_def fork_fst_test fork_snd_test)
-*)
+lemma [simp]:"fork_fst bs \<epsilon> = \<epsilon>"
+apply(subst fork_fst_def [THEN fix_eq2])
+by (simp add: beta_cfun cont_fork_fst)
+
+lemma [simp]:"fork_fst \<epsilon> as = \<epsilon>"
+apply(subst fork_fst_def [THEN fix_eq2])
+by (simp add: beta_cfun cont_fork_fst)
+
+lemma [simp]:"fork_snd bs \<epsilon> = \<epsilon>"
+apply(subst fork_snd_def [THEN fix_eq2])
+by(simp add: beta_cfun cont_fork_snd)
+
+lemma [simp]:"fork_snd \<epsilon> bs = \<epsilon>"
+apply(subst fork_snd_def [THEN fix_eq2])
+by(simp add: beta_cfun cont_fork_snd)
+
+lemma[simp]:"fork bs \<epsilon> = (\<epsilon>,\<epsilon>)"
+by (simp add: fork_def)
+
+lemma[simp]:"fork \<epsilon> bs = (\<epsilon>,\<epsilon>)"
+by (simp add: fork_def)
+
+lemma[simp]:"fork \<epsilon> \<epsilon> = (\<epsilon>,\<epsilon>)"
+by simp
+
+lemma fork_fst_hd_true[simp]:"fork_fst (\<up>True) (\<up>a) = \<epsilon>"
+apply (subst fork_fst_def [THEN fix_eq2])
+by(subst beta_cfun, simp add: cont_fork_fst, auto)
+
+lemma fork_fst_hd_false[simp]:"fork_fst (\<up>False) (\<up>a) = \<up>a"
+apply (subst fork_fst_def [THEN fix_eq2])
+by(subst beta_cfun, simp add: cont_fork_fst, auto)
+
+lemma fork_snd_hd_true[simp]:"fork_snd (\<up>True) (\<up>a) = \<up>a"
+apply (subst fork_snd_def [THEN fix_eq2])
+by(subst beta_cfun, simp add: cont_fork_snd, auto)
+
+lemma fork_snd_hd_false[simp]:"fork_snd (\<up>False) (\<up>a) = \<epsilon>"
+apply (subst fork_snd_def [THEN fix_eq2])
+by(subst beta_cfun, simp add: cont_fork_snd, auto)
+
+lemma fork_fst_unfold_true: "fork_fst (\<up>True\<bullet>bs) (\<up>a\<bullet>as) = fork_fst bs as"
+apply (subst fork_fst_def [THEN fix_eq2])
+by(subst beta_cfun, simp add: cont_fork_fst, auto)
+
+lemma fork_fst_unfold_false: "fork_fst (\<up>False\<bullet>bs) (\<up>a\<bullet>as) = \<up>a \<bullet> fork_fst bs as"
+apply (subst fork_fst_def [THEN fix_eq2])
+by(subst beta_cfun, simp add: cont_fork_fst, auto)
+
+lemma fork_snd_unfold_true: "fork_snd (\<up>True\<bullet>bs) (\<up>a\<bullet>as) = \<up>a \<bullet> fork_snd bs as"
+apply (subst fork_snd_def [THEN fix_eq2])
+by(subst beta_cfun, simp add: cont_fork_snd, auto)
+
+lemma fork_snd_unfold_false: "fork_snd (\<up>False\<bullet>bs) (\<up>a\<bullet>as) = fork_snd bs as"
+apply (subst fork_snd_def [THEN fix_eq2])
+by(subst beta_cfun, simp add: cont_fork_snd, auto)
+
+lemma fork_test: "fork (<[True, False, False, True, True]>) (<[1,2,3,5,7]>) = (<[2,3]>,<[1,5,7]>)"
+apply(simp add: fork_def, auto)
+apply(simp add: fork_fst_unfold_false fork_fst_unfold_true)
+by(simp add: fork_snd_unfold_false fork_snd_unfold_true)
+
+
 
 (*Fork definition
 
