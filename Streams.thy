@@ -3576,5 +3576,33 @@ by auto
 lemma add2smapsuc:"add\<cdot>\<up>1\<infinity>\<cdot>s=smap (Suc)\<cdot>s"
 by(simp add: add2smapsuc_helper add2smap)
 
+lemma add2smap_f: "add\<cdot>(\<up>x\<infinity>) = smap (\<lambda>z. z+x)"
+by(rule cfun_eqI, simp add: add2smap)
+
+lemma shd_updis:"shd (u && s) = (THE a. updis a= u)"
+by(simp add: shd_def the_equality, metis)
+
+lemma smap_id:"smap (id)\<cdot>s = s"
+apply(induction s, auto)
+apply(simp add: smap_hd_rst)
+using stream.con_rews(2) surj_scons by fastforce
+
+lemma smapid2ID_h:"smap id\<cdot> s = ID\<cdot> s"
+apply(simp add: ID_def)
+by(rule snths_eq, auto, simp add: smap_id)
+
+lemma smapid2ID:"smap id= ID"
+by(rule cfun_eqI, simp add: smapid2ID_h)
+
+lemma add2ID_h:"add\<cdot>\<up>0\<infinity>\<cdot>s=ID\<cdot>s"
+apply(simp add: add2smap)
+apply(insert smap_id[of s])
+by(simp add: id_def)
+
+lemma add2ID:"add\<cdot>\<up>0\<infinity> = ID"
+by (simp add: add2ID_h cfun_eqI)
+
+
+
 end
 

@@ -1265,6 +1265,29 @@ tsum5 x:xs y = (x+y) : tsum5 xs (x+y)
 
 *)
 
+definition fork_fst::"bool stream \<Rightarrow> 'a stream \<Rightarrow> 'a stream" where
+"fork_fst \<equiv> fix\<cdot>(\<Lambda> h. (\<lambda> b s. 
+                        if shd b=True then (h (srt\<cdot>b) (srt\<cdot>s)) else (if s = \<epsilon> then \<epsilon> else (\<up>(shd s) \<bullet> (h (srt\<cdot>b) (srt\<cdot>s))))))"
+
+definition fork_snd::"bool stream \<Rightarrow> 'a stream \<Rightarrow> 'a stream" where
+"fork_snd \<equiv> fix\<cdot>(\<Lambda> h. (\<lambda> b s. 
+                        if shd b=False then (h (srt\<cdot>b) (srt\<cdot>s)) else (if s = \<epsilon> then \<epsilon> else (\<up>(shd s) \<bullet> (h (srt\<cdot>b) (srt\<cdot>s))))))"
+
+definition fork::"bool stream \<Rightarrow> 'a stream \<Rightarrow> 'a stream\<times> 'a stream" where
+"fork \<equiv> \<lambda> b s. (fork_fst b s, fork_snd b s)"
+
+(*
+lemma fork_fst_test:"fork_fst (\<up>True \<bullet> \<up>False \<bullet> \<up>False \<bullet> \<up>True \<bullet> \<up>True) (\<up>1 \<bullet> \<up>2 \<bullet> \<up>3 \<bullet> \<up>5 \<bullet> \<up>7) = \<up>1 \<bullet> \<up>5 \<bullet> \<up>7"
+
+sorry
+
+
+lemma fork_snd_test:"fork_snd (\<up>True \<bullet> \<up>False \<bullet> \<up>False \<bullet> \<up>True \<bullet> \<up>True) (\<up>1 \<bullet> \<up>2 \<bullet> \<up>3 \<bullet> \<up>5 \<bullet> \<up>7) = \<up>2 \<bullet> \<up>3"
+sorry
+
+lemma fork_test: "fork (<[True, False, False, True, True]>) (<[1,2,3,5,7]>) = (<[1,5,7]>, <[2,3]>)"
+by(simp add: fork_def fork_fst_test fork_snd_test)
+*)
 
 (*Fork definition
 
