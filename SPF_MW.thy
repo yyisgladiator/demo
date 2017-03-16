@@ -221,34 +221,47 @@ sorry
    apply (rule sb_below)*)
 (* append Element *)
 
-definition appendElem:: "'a \<Rightarrow> 'a stream \<Rightarrow> 'a stream" where
-"appendElem a s = \<up>a \<bullet> s" 
-  
+definition appendElem:: "nat \<Rightarrow> nat stream \<Rightarrow> nat stream" where
+"appendElem a s = \<up>a \<bullet> s"
+
+lemma [simp]: "cont (appendElem a)"
+  sorry
+
 definition appendElem2:: "'a \<Rightarrow> 'a stream \<rightarrow> 'a stream" where
 "appendElem2 a \<equiv> \<Lambda> s. \<up>a \<bullet> s" 
  
-definition appendSPF :: "(channel \<times> channel) \<Rightarrow> 'a \<Rightarrow> 'a SPF" where
+definition appendSPF :: "(channel \<times> channel) \<Rightarrow> nat \<Rightarrow> nat SPF" where
 "appendSPF cs a \<equiv> Abs_CSPF (\<lambda> sb. (sbDom\<cdot>sb = {(fst cs)}) \<leadsto> ([(snd cs)\<mapsto>(appendElem a (sb.(fst cs)))]\<Omega>))"
 
 lemma appendSPF_mono: "monofun (\<lambda> sb. (sbDom\<cdot>sb = {(fst cs)}) \<leadsto> ([(snd cs)\<mapsto>(appendElem a (sb.(fst cs)))]\<Omega>))"
-    apply (rule spf_mono2monofun)
+  apply(simp only: appendElem_def)
+  apply (rule spf_mono2monofun)
    apply (rule spf_monoI)
    apply (simp add: domIff2)
    apply (rule sb_below)
     apply (simp add: sbdom_insert)
-sorry
+    apply (simp add: sbdom_rep_eq sbgetch_rep_eq)
+   apply (meson monofun_cfun monofun_cfun_arg monofun_cfun_fun)
+   by (rule, simp add: domIff2)
 
 lemma append_chain: "chain Y \<Longrightarrow> sbDom\<cdot>(Y 0) = {(fst cs), (snd cs)} 
                         \<Longrightarrow> chain (\<lambda> i. [(snd cs)\<mapsto>(appendElem a ((Y i).(fst cs)))]\<Omega>)"
-sorry
+  apply(simp only: appendElem_def)
+  apply (rule chainI)
+  apply (rule sb_below)
+   apply (simp add: sbdom_rep_eq)
+   apply (simp add: sbdom_rep_eq sbgetch_rep_eq)
+   by (simp add: monofun_cfun po_class.chainE)
 
 lemma appendSPF_chain_lub: "chain Y \<Longrightarrow> sbDom\<cdot>(Lub Y) = {(fst cs), (snd cs)} 
                         \<Longrightarrow> chain (\<lambda> i. [(snd cs)\<mapsto>(appendElem a ((Y i).(fst cs)))]\<Omega>)"
-sorry
+  sorry     
+ 
 
 lemma appendSPF_Lub: "chain Y \<Longrightarrow> sbDom\<cdot>(Lub Y) = {(fst cs), (snd cs)} 
                         \<Longrightarrow> (\<Squnion>i.(appendElem a ((Y i).(fst cs)))) = appendElem a ((Lub Y).(fst cs))"
-sorry
+  apply(simp only: appendElem_def)    
+  by (simp add: lub_distribs(1) lub_eval)
 
 (*    
 lemma appendSPF_chain: "chain Y \<Longrightarrow>
@@ -257,6 +270,12 @@ sorry
 *)
 
 lemma appendSPF_cont: "cont (\<lambda> sb. (sbDom\<cdot>sb = {(fst cs)}) \<leadsto> ([(snd cs)\<mapsto>(appendElem a (sb.(fst cs)))]\<Omega>))"
+  apply (rule spf_cont2cont)
+    apply (rule spf_contlubI)
+    apply (simp add: domIff2 sbChain_dom_eq2)
+    apply (rule sb_below)
+     apply (simp add: sbdom_rep_eq )
+     apply (simp only: Cfun.contlub_cfun_arg appendSPF_chain_lub)
 sorry
 
 (* spfLift *)  
