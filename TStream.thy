@@ -1358,20 +1358,20 @@ by (metis list_decode.cases tstake_bot)
 
 (* tsWeak- and tsStrongCasuality*)
 
-definition tsWeakCausal:: "('m tstream \<Rightarrow> 'm tstream) \<Rightarrow> bool" where
+definition tsWeakCausal:: "('a tstream \<Rightarrow> 'b tstream) \<Rightarrow> bool" where
 "tsWeakCausal \<equiv> \<lambda>f .  \<forall>i ts1 ts2. (ts1 \<down>i = ts2 \<down> i) \<longrightarrow> (f ts1) \<down> i = (f ts2) \<down> i"
 
-definition tsStrongCausal:: "('m tstream \<Rightarrow> 'm tstream) \<Rightarrow> bool" where
+definition tsStrongCausal:: "('a tstream \<Rightarrow> 'b tstream) \<Rightarrow> bool" where
 "tsStrongCausal \<equiv> \<lambda>f .  \<forall>i ts1 ts2. (ts1 \<down>i = ts2 \<down> i) \<longrightarrow> (f ts1) \<down> (Suc i) = (f ts2) \<down> (Suc i)"
 
 
 
-lemma tsWeakCausalI: fixes f::"('m tstream \<Rightarrow> 'm tstream)"
+lemma tsWeakCausalI: fixes f::"('a tstream \<Rightarrow> 'b tstream)"
   assumes "\<And>i ts1 ts2. (ts1 \<down>i = ts2 \<down> i) \<Longrightarrow> (f ts1) \<down>  i = (f ts2) \<down> i"
   shows "tsWeakCausal f"
 by (metis assms tsWeakCausal_def)
 
-lemma tsStrongCausalI: fixes f::"('m tstream \<Rightarrow> 'm tstream)"
+lemma tsStrongCausalI: fixes f::"('a tstream \<Rightarrow> 'b tstream)"
   assumes "\<And>i ts1 ts2. (ts1 \<down>i = ts2 \<down> i) \<Longrightarrow> (f ts1) \<down> (Suc i) = (f ts2) \<down> (Suc i)"
   shows "tsStrongCausal f"
 by (meson assms tsStrongCausal_def)
@@ -1447,7 +1447,7 @@ apply rule
 using assms tsWeak2cont apply blast
 by (simp add: assms cont2mono tsMono2Weak2)
 
-lemma tsMono2weak2cont: fixes f::"'a tstream \<Rightarrow> 'a tstream" assumes "\<And>x. #\<surd>f x = #\<surd> x"
+lemma tsMono2weak2cont:assumes "\<And>x. #\<surd>f x = #\<surd> x"
 shows"monofun f \<longleftrightarrow> cont f"
 apply(subst tsMonoEqWeak)
 using assms apply simp
