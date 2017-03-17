@@ -2,17 +2,11 @@ theory SPS_CaseStudy_MW
 imports Feedback_MW SPF_MW SPF_Templates
   
 begin
-
-lemma [simp]: "spfDom\<cdot>(addSPF (c1,c2,c3)) = {c1, c2}"
-  using addC_def by auto
-
-lemma [simp]: "spfRan\<cdot>(addSPF (c1,c2,c3)) = {c3}"
-  using addC_def by auto
-  
+    
 lift_definition arianeComp1 :: "nat SPS" is
-  "{addSPF (c1,c2,c3)}"
+  "{idSPF (c1,c2)}"
   by(simp add: sps_well_def)
-
+  
 lemma [simp]: "spfDom\<cdot>(appendSPF (c3,c2) 0) = {c3}"
   sorry
 
@@ -20,28 +14,38 @@ lemma [simp]: "spfRan\<cdot>(appendSPF (c3,c2) 0) = {c2}"
   sorry
     
 lift_definition arianeComp2 :: "nat SPS" is
-  "{appendSPF (c3,c2) 0}"
+  "{appendSPF (c4,c3) 0}"
   by(simp add: sps_well_def)
 
+lemma [simp]: "spfDom\<cdot>(addSPF (c1,c2,c3)) = {c1, c2}"
+  using addC_def by auto
+
+lemma [simp]: "spfRan\<cdot>(addSPF (c1,c2,c3)) = {c3}"
+  using addC_def by auto
+  
 lift_definition arianeComp3 :: "nat SPS" is
-  "{addSPF (c3,c4,c5)}"
+  "{addSPF (c2,c3,c4)}"
   by(simp add: sps_well_def)
-    
-lemma [simp]: "\<forall>f. (\<exists>s. f = Abs_CSPF (\<lambda> sb. (sbDom\<cdot>sb = {c5}) \<leadsto> ([c4\<mapsto>s :: nat stream]\<Omega>)) \<and> #s = \<infinity>) \<longrightarrow> spfDom\<cdot>(f) = {c5}"
+
+lemma [simp]: "\<forall>f. (\<exists>s. f = Abs_CSPF (\<lambda> sb. (sbDom\<cdot>sb = {}) \<leadsto> ([c5\<mapsto>s :: nat stream]\<Omega>)) \<and> #s = \<infinity>) \<longrightarrow> spfDom\<cdot>(f) = {}"
   sorry
 
-lemma [simp]: "\<forall>f. (\<exists>s. f = Abs_CSPF (\<lambda> sb. (sbDom\<cdot>sb = {c5}) \<leadsto> ([c4\<mapsto>s :: nat stream]\<Omega>)) \<and> #s = \<infinity>) \<longrightarrow> spfRan\<cdot>(f) = {c4}"
+lemma [simp]: "\<forall>f. (\<exists>s. f = Abs_CSPF (\<lambda> sb. (sbDom\<cdot>sb = {}) \<leadsto> ([c5\<mapsto>s :: nat stream]\<Omega>)) \<and> #s = \<infinity>) \<longrightarrow> spfRan\<cdot>(f) = {c5}"
   sorry
     
 lift_definition arianeComp4 :: "nat SPS" is
-  "{ Abs_CSPF (\<lambda> sb. (sbDom\<cdot>sb = {c5}) \<leadsto> ([c4\<mapsto>s]\<Omega>)) | s :: nat stream. #s = \<infinity>}"
+  "{ Abs_CSPF (\<lambda> sb. (sbDom\<cdot>sb = {}) \<leadsto> ([c5\<mapsto>s]\<Omega>)) | s :: nat stream. #s = \<infinity>}"
+  by(simp add: sps_well_def)  
+    
+lift_definition arianeComp5 :: "nat SPS" is
+  "{addSPF (c4,c5,c6)}"
   by(simp add: sps_well_def)
    
-lift_definition ariane :: "nat SPS" is "arianeComp1 \<Otimes> arianeComp2 \<Otimes> arianeComp3 \<Otimes> arianeComp4"
+lift_definition ariane :: "nat SPS" is "arianeComp1 \<Otimes> arianeComp2 \<Otimes> arianeComp3 \<Otimes> arianeComp4 \<Otimes> arianeComp5"
   sorry  
 
 lemma final: assumes "f \<in> Rep_SPS ariane" and "sbDom\<cdot>sb = spsDom ariane"
-  shows "snth n ((f\<rightleftharpoons>sb).c4) \<ge> sum_snth n (sb . c1)"
+  shows "snth n ((f\<rightleftharpoons>sb).c6) \<ge> sum_snth n (sb . c1)"
   sorry
   
   
