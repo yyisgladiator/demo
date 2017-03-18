@@ -49,11 +49,20 @@ by (simp add: tsum6_h2tsum5_h_snth)
 lemma tsum62tsum5: "tsum6=tsum5"
 by (simp add: tsscanl_def tsum5_def tsum6_def tsum6_h2tsum5_h)
 
+(* Definition of ttimes1 and ttimes_nth *)
+definition ttimes1 :: "nat tstream \<rightarrow> nat tstream" where
+"ttimes1 \<equiv> tsscanl times 1"
+
+primrec ttimes_nth:: "nat \<Rightarrow> nat event stream \<Rightarrow> nat" where
+"ttimes_nth 0 s = (if shd s=\<surd> then 1 else \<M>\<inverse> shd s)" |
+"ttimes_nth (Suc n) s = (if shd s=\<surd> then 1 * ttimes_nth n (srt\<cdot>s) 
+                         else (\<M>\<inverse>(shd s)) * ttimes_nth n (srt\<cdot>s))"
+
 (* Definition of tsscanl_nth and unfold lemmata *)
 
 primrec tsscanl_nth :: "nat \<Rightarrow> ('a \<Rightarrow> 'a  \<Rightarrow> 'a) \<Rightarrow> 'a  \<Rightarrow> 'a event stream \<Rightarrow> 'a" where
 "tsscanl_nth 0 f q s = (if shd s=\<surd> then q else f q (\<M>\<inverse> (shd s)))" |
-"tsscanl_nth (Suc n) f q s = (if shd s=\<surd> then tsscanl_nth n f q (srt\<cdot>s) 
+"tsscanl_nth (Suc n) f q s = (if shd s=\<surd> then tsscanl_nth n f q (srt\<cdot>s)
                               else f (\<M>\<inverse> (shd s)) (tsscanl_nth n f q (srt\<cdot>s)))"
 
 lemma tsscanl_nth_suc: 
@@ -91,7 +100,24 @@ next
     by (metis (no_types, lifting) not_less slen_rt_ile_eq snth_rt tsscanl_nth_unfold 
         tsscanl_h_unfold_srt tsscanl_h_unfold_srt_tick tsscanl_nth_suc_tick)
 qed
-*)
+
+
+
+lemma neutral_tsscanl_h_unfold: "Fin n<#s \<and> snth n s\<noteq>\<surd> \<and> (\<forall>a. f q a=a) 
+  \<Longrightarrow> snth n (tsscanl_h f p\<cdot>s) =\<M> f (\<M>\<inverse> snth n (tsscanl_h f q\<cdot>s)) p"
+apply (induction n arbitrary: p q s, auto)
+proof -
+  fix p :: "'a" and q :: "'a" and s :: "'a event stream" and k :: "lnat"
+  assume a1: "#s = lnsuc\<cdot>k"
+  hence h1: "s\<noteq>\<epsilon>"
+    using lnsuc_neq_0_rev strict_slen by auto
+  assume a2: "shd s \<noteq> \<surd>"
+  assume a3: "\<forall>a. f q a = a"
+  thus "shd (tsscanl_h f p\<cdot>s) = \<M> f \<M>\<inverse> shd (tsscanl_h f q\<cdot>s) p"
+    apply (simp add: a2 h1 tsscanl_h_unfold_shd)
+    sorry
+next
+*)  
 
 lemma tsscanl_h2tsscanl_nth_h: 
   "Fin n<#s \<and> snth n s\<noteq>\<surd> \<Longrightarrow> snth n (tsscanl_h f q\<cdot>s) = \<M> tsscanl_nth n f q s"
@@ -157,7 +183,6 @@ next
     apply (simp add: snth_rt)
     apply (cases "shd s=\<surd>")
     apply (simp add: tsscanl_h_unfold_srt_tick)
-    apply (subst tsscanl_h_unfold_srt [of "{e. e \<noteq> \<surd>} \<ominus> s" f q])
 oops
 
 lemma tsscanl_h2sscanl: 
