@@ -1854,27 +1854,6 @@ lemma tsscanl_h_snth_tick:"Fin n<#s \<and> shd s=\<surd>
   \<Longrightarrow> snth (Suc n) (tsscanl_h f q\<cdot>s) = snth n (tsscanl_h f q\<cdot>(srt\<cdot>s))"
 by (simp add: snth_rt tsscanl_h_unfold_srt_tick)
 
-(* The n+1st element produced by tsscanl_h is the result of merging the n+1st item of s with the nth
-   element produced by tsscanl *)
-lemma tsscanl_h_snth1: "Fin (Suc n) < #s \<and> snth (Suc n) s\<noteq>\<surd> \<and> snth n s\<noteq>\<surd>
-  \<Longrightarrow> snth (Suc n) (tsscanl_h f q\<cdot>s) = \<M> f (\<M>\<inverse> (snth n (tsscanl_h f q\<cdot>s))) \<M>\<inverse> (snth (Suc n) s)"
-apply (induction n arbitrary: f q s)
-apply (smt Fin_02bot event.simps(4) lnle_Fin_0 lnzero_def not_less slen_rt_ile_eq snth_rt snth_shd 
-       strict_slen trans_lnless tsscanl_h_unfold_shd tsscanl_h_unfold_srt)
-by (smt not_less slen_rt_ile_eq snth_rt tsscanl_h_unfold_srt tsscanl_h_unfold_srt_tick)
-
-lemma tsscanl_h_snth1_tick_first: 
-  "Fin (Suc n) < #s \<and> snth (Suc n) s\<noteq>\<surd> \<and> snth n s=\<surd> \<and> (\<forall>m. m<n  \<and> snth m s=\<surd>)
-    \<Longrightarrow> snth (Suc n) (tsscanl_h f q\<cdot>s) = \<M> f q \<M>\<inverse> (snth (Suc n) s)"
-by (auto)
-
-lemma tsscanl_h_snth1_tick_last: 
-  "Fin (Suc n)<#s \<and> snth (Suc n)s\<noteq>\<surd> \<and> snth n s=\<surd> \<and> \<not>(\<forall>m. m<n  \<and> snth m s=\<surd>)
-    \<Longrightarrow> snth (Suc n) (tsscanl_h f q\<cdot>s) = 
-        \<M> f (snth (THE m. Fin m=#({e. e\<noteq>\<surd>} \<ominus> stake (Suc n)\<cdot>s)) s) \<M>\<inverse> (snth (Suc n) s)"
-apply (induction n arbitrary: q s, auto)
-oops     
-
 (* Applying tsscanl_h never shortens the event stream *)
 lemma fair_tsscanl_h1: "#s \<le> #(tsscanl_h f q\<cdot>s)"
 apply (rule spec [where x = q])
@@ -1946,8 +1925,7 @@ by (simp add: tsscanl_unfold)
 
 (* Filter out tick in the input or the output does not matter for tsscanl_h *)
 lemma tsscanl_h_sfilter_msg: "{e. e \<noteq> \<surd>} \<ominus> tsscanl_h f q\<cdot>s = tsscanl_h f q\<cdot>({e. e \<noteq> \<surd>} \<ominus> s)"
-apply (induction s arbitrary: q, auto)
-proof -
+proof (induction s arbitrary: q, auto)
   fix u :: "'b event discr\<^sub>\<bottom>" and q :: "'a" and s :: "'b event stream"
   assume a1: "u\<noteq>\<bottom>"
   assume a2: "\<And>q. {e. e \<noteq> \<surd>} \<ominus> tsscanl_h f q\<cdot>s = tsscanl_h f q\<cdot>({e. e \<noteq> \<surd>} \<ominus> s)"
