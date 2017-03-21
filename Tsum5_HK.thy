@@ -11,10 +11,10 @@ begin
 
 (*Helper like h for sum5 but over nat event streams*)
 primrec tsh :: "nat \<Rightarrow> nat \<Rightarrow> nat event stream \<Rightarrow> nat event stream" where
-"tsh 0 p ts =  \<epsilon>" | (*maximal one non-variable argument required, so \<epsilon>-case must be encoded in the line below.*)
+"tsh 0 p ts =  \<epsilon>" |
 "tsh (Suc n) p ts = (if ts = \<epsilon> then \<epsilon> 
                         else(if shd ts= \<surd> then (\<up>\<surd> \<bullet> (tsh n p (srt\<cdot>ts)))
-                                else (\<up>(Msg (p + (\<M>\<inverse> (shd ts))))) \<bullet> (tsh n (p +(\<M>\<inverse> (shd ts))) (srt\<cdot> ts))))"
+                                else (\<up>(\<M> (p + (\<M>\<inverse> (shd ts))))) \<bullet> (tsh n (p +(\<M>\<inverse> (shd ts))) (srt\<cdot> ts))))"
 
 (*Helper for tsum5 like sum5_h for sum5 but over nat event streams*)
 definition tsum5_h :: " nat \<Rightarrow> nat event stream \<rightarrow> nat event stream" where
@@ -464,8 +464,7 @@ apply simp
 apply(subst tsum5_sfilter_snth)
 apply linarith
 apply(subst sum3_snth_2)
-apply simp
-apply simp
+apply simp+
 by (smt inject_scons less2lnleD lnle_Fin_0 nat.distinct(1) not_less sfilter_srtdwl3 slen_rt_ile_eq slen_smap smap1 smap_split strict_slen surj_scons)
 
 (*helper for tsum52sum4_helper*)
@@ -549,6 +548,9 @@ primrec tsum_nth:: "nat \<Rightarrow> nat event stream \<Rightarrow> nat" where
 (*if the nth element of the output is a \<surd> so is the nth element of the input*)
 lemma tsum5_snthtick2input:" snth n (tsum5_h 0\<cdot>s) =\<surd> \<Longrightarrow> snth n s =\<surd>"
 by (metis event.distinct(1) shd1 snth_def surj_scons tsum5_empty tsum5_h_scons tsum5_sdrop2input)
+
+lemma tsum5_snthtick2input_equiv:" snth n (tsum5_h 0\<cdot>s) =\<surd> \<longleftrightarrow> snth n s =\<surd>"
+by(insert tsum5_snthtick2input[of n s] tsum5_snthtick2output[of n s], auto)
 
 (*if the shd s is \<surd> the sum of s is the sum of the rest of s*)
 lemma tsum_nth_suc_tick: "shd s=\<surd> \<Longrightarrow> tsum_nth (Suc n) s = tsum_nth n (srt\<cdot>s)"
