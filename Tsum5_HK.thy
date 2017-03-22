@@ -691,4 +691,19 @@ using tswell_tsum5 apply simp
 by(subst tsum5_h2sum_stream, auto)
 *)
 
+
+
+(*Spezifikation tsfork*)
+
+definition tsfork_fst::"bool event stream \<Rightarrow> 'a event stream \<Rightarrow> 'a event stream" where
+"tsfork_fst \<equiv> fix\<cdot>(\<Lambda> h. (\<lambda> bs as. if (as = \<epsilon> \<or> bs=\<epsilon>) then \<epsilon> else ( if shd bs=\<surd> then (\<up>\<surd>) \<bullet> (h(srt\<cdot>bs)(srt\<cdot>as)) else
+                        (if shd bs=\<M> True then (h (srt\<cdot>bs) (srt\<cdot>as)) else (\<up>(shd as) \<bullet> (h (srt\<cdot>bs) (srt\<cdot>as)))))))"
+
+definition tsfork_snd::"bool event stream \<Rightarrow> 'a event stream \<Rightarrow> 'a event stream" where
+"tsfork_snd \<equiv> fix\<cdot>(\<Lambda> h. (\<lambda> bs as. if (as = \<epsilon> \<or> bs =\<epsilon>) then \<epsilon> else( if shd bs=\<surd> then (\<up>\<surd>) \<bullet> (h(srt\<cdot>bs)(srt\<cdot>as)) else
+                        (if shd bs=\<M> False then (h (srt\<cdot>bs) (srt\<cdot>as)) else (\<up>(shd as) \<bullet> (h (srt\<cdot>bs) (srt\<cdot>as)))))))"
+
+definition tsfork::"bool tstream \<Rightarrow> 'a tstream \<Rightarrow> 'a tstream \<times> 'a tstream" where
+"tsfork \<equiv> \<lambda> tbs tas. (Abs_tstream (tsfork_fst (Rep_tstream tbs)(Rep_tstream tas)),Abs_tstream(tsfork_snd (Rep_tstream tbs)(Rep_tstream tas)))"
+
 end
