@@ -962,52 +962,52 @@ h2 x:xs y = (x+y) : h2 xs (x+y)
 *)
 
 (*Takes two nats and a nat stream to build recursive the sums of the elements of the stream +p*)
-primrec h :: "nat \<Rightarrow> nat \<Rightarrow> nat stream \<Rightarrow> nat stream" where
-"h 0 p s  = \<epsilon>" | (*maximal one non-variable argument required, so \<epsilon>-case must be encoded in the line below.*)
-"h (Suc i) p s = (if s=\<epsilon> then \<epsilon> else \<up>(p + (shd s)) \<bullet> (h i (p + (shd s)) (srt\<cdot> s)))"
+primrec sh :: "nat \<Rightarrow> nat \<Rightarrow> nat stream \<Rightarrow> nat stream" where
+"sh 0 p s  = \<epsilon>" | (*maximal one non-variable argument required, so \<epsilon>-case must be encoded in the line below.*)
+"sh (Suc i) p s = (if s=\<epsilon> then \<epsilon> else \<up>(p + (shd s)) \<bullet> (sh i (p + (shd s)) (srt\<cdot> s)))"
 
-(*Defines the Lub of h*)
+(*Defines the Lub of sh*)
 definition sum5_h :: " nat \<Rightarrow> nat stream \<rightarrow> nat stream" where
-"sum5_h p \<equiv> \<Lambda> s. \<Squnion>i. h i p s"
+"sum5_h p \<equiv> \<Lambda> s. \<Squnion>i. sh i p s"
 
 (* definition of sum3 because of the initialization of sum5_h with 0*)
 definition sum5:: "nat stream \<rightarrow> nat stream" where
 "sum5 \<equiv> \<Lambda> s. sum5_h 0\<cdot>s"
 
-(*h with an empty stream is an empty stream*)
-lemma h_eps: "h i p \<epsilon> = \<epsilon>"
+(*sh with an empty stream is an empty stream*)
+lemma sh_eps: "sh i p \<epsilon> = \<epsilon>"
 by(induct_tac i,auto)
 
-(*h with iterate value i only needs a max of i elements of the input stream to produce the output*)
-lemma contlub_h:
-  "\<forall>s p. h i p s = h i p (stake i\<cdot>s)"
+(*sh with iterate value i only needs a max of i elements of the input stream to produce the output*)
+lemma contlub_sh:
+  "\<forall>s p. sh i p s = sh i p (stake i\<cdot>s)"
 apply (induct_tac i, auto)
 apply (rule_tac x=s in scases)
 apply auto
 apply (rule_tac x=s in scases)
 by auto
 
-(*h i \<sqsubseteq> h (Suc i)*)
-lemma chain_h: "chain h"
+(*sh i \<sqsubseteq> h (Suc i)*)
+lemma chain_sh: "chain sh"
 apply (rule chainI)
 apply (subst fun_below_iff)+
 apply (induct_tac i, auto)
 apply (erule_tac x="x" in allE)
-apply (simp add: h_eps)
+apply (simp add: sh_eps)
 by (smt monofun_cfun_arg)
 
-(* monotonicity of h *)
+(* monotonicity of sh *)
 lemma mono_h: 
-  "\<forall> x y p. x \<sqsubseteq> y \<longrightarrow> h i p x \<sqsubseteq> h i p y"
+  "\<forall> x y p. x \<sqsubseteq> y \<longrightarrow> sh i p x \<sqsubseteq> sh i p y"
 apply (induct_tac i, auto)
 apply (drule lessD, erule disjE, simp)
 apply (erule exE)+
 apply (erule conjE)+
 by (simp, rule monofun_cfun_arg, simp)
 
-(*#(h i p s) = min(#s, i)*)
-lemma cont_lub_sum5_h2:
-  "\<forall>s p. stake i\<cdot> (h i p s) = h i p s "
+(*#(sh i p s) = min(#s, i)*)
+lemma cont_lub_sum5_sh2:
+  "\<forall>s p. stake i\<cdot> (sh i p s) = sh i p s "
 by(induct_tac i,auto)
 
 (*
@@ -1019,25 +1019,25 @@ by (metis cont_lub_sum5_h2 min_def sdropostake snth_def stakeostake)
 *)
 
 (* sum5_h is a continuous function *)
-lemma cont_lub_sum5_h: "cont (\<lambda> s. \<Squnion>i. h i p s)" 
+lemma cont_lub_sum5_h: "cont (\<lambda> s. \<Squnion>i. sh i p s)" 
 apply (rule cont2cont_lub)
 apply (rule ch2ch_fun)
 apply (rule chainI)
 apply (rule fun_belowD [of _ _ "p"])
 apply (rule chainE)
-apply (metis (no_types, lifting) chain_h)
+apply (metis (no_types, lifting) chain_sh)
 apply (rule pr_contI)
 apply (rule monofunI)
 apply (rule mono_h [rule_format], assumption)
 apply (rule allI)
 apply (rule_tac x="i" in exI)
-by (rule contlub_h [rule_format])
+by (rule contlub_sh [rule_format])
 
 (* sum5_h of an empty stream is the empty stream*)
 lemma sum5_empty[simp]: "sum5_h p\<cdot>\<epsilon> = \<epsilon>"
 apply (simp add: sum5_h_def)
 apply (subst beta_cfun, rule cont_lub_sum5_h)
-using h_eps by simp
+using sh_eps by simp
 
 (*sum5_h is equivalent to the first element of the computed stream concatenated to sum5_h (first element) (rest of the stream)*)
 lemma sum5_h_scons:"sum5_h n \<cdot>(\<up>a\<bullet>s) = \<up>(a+n) \<bullet> (sum5_h (a+n)\<cdot>s)"  
@@ -1047,21 +1047,21 @@ apply (subst contlub_cfun_arg)
 apply (rule ch2ch_fun, rule ch2ch_fun)
 apply (rule chainI)
 apply (rule fun_belowD [of _ _ "f"])
-apply (smt chain_h fun_belowI po_class.chain_def)
+apply (smt chain_sh fun_belowI po_class.chain_def)
 apply (subst lub_range_shift [where j="Suc 0", THEN sym])
 apply (rule ch2ch_fun, rule ch2ch_fun)
 apply (rule chainI)
 apply (rule fun_belowD [of _ _ "f"])
-apply (smt chain_h fun_belowI po_class.chain_def)
-by (smt Nat.add_0_right add.commute add_Suc_right h.simps(2) lscons_conv lub_eq shd1 stream.con_rews(2) stream.sel_rews(5) up_defined)
+apply (smt chain_sh fun_belowI po_class.chain_def)
+by (smt Nat.add_0_right add.commute add_Suc_right sh.simps(2) lscons_conv lub_eq shd1 stream.con_rews(2) stream.sel_rews(5) up_defined)
 
 (*unfolding sum5_h with the definition of sum5_h*)
-lemma sum5_h_unfold_h: "sum5_h n \<cdot>input = (\<Squnion>i. h i n input)"
+lemma sum5_h_unfold_h: "sum5_h n \<cdot>input = (\<Squnion>i. sh i n input)"
 apply (simp add:sum5_h_def)
 by (simp add: cont_lub_sum5_h)
 
 (*Lub i of h i 0 (s) is equivalent to the first element of the computed stream concatenated to Lubi of h i (first element) (rest s)*)
-lemma h_scons: "(\<Squnion>i. h i 0 (\<up>a\<bullet>s)) = \<up>a \<bullet> (\<Squnion>i. h i a s)"
+lemma sh_scons: "(\<Squnion>i. sh i 0 (\<up>a\<bullet>s)) = \<up>a \<bullet> (\<Squnion>i. sh i a s)"
 using sum5_h_unfold_h sum5_h_scons by auto
 
 (*shd of sum5_h n s is equvalent to n plus the head of s*)
