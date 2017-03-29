@@ -997,7 +997,7 @@ apply (simp add: sh_eps)
 by (smt monofun_cfun_arg)
 
 (* monotonicity of sh *)
-lemma mono_h: 
+lemma mono_sh: 
   "\<forall> x y p. x \<sqsubseteq> y \<longrightarrow> sh i p x \<sqsubseteq> sh i p y"
 apply (induct_tac i, auto)
 apply (drule lessD, erule disjE, simp)
@@ -1028,10 +1028,14 @@ apply (rule chainE)
 apply (metis (no_types, lifting) chain_sh)
 apply (rule pr_contI)
 apply (rule monofunI)
-apply (rule mono_h [rule_format], assumption)
+apply (rule mono_sh [rule_format], assumption)
 apply (rule allI)
 apply (rule_tac x="i" in exI)
 by (rule contlub_sh [rule_format])
+
+(* sum5 is a continuous function *)
+lemma cont_lub_sum5: "cont (\<lambda> s. \<Squnion>i. sh i 0 s)"
+by(simp add: cont_lub_sum5_h)
 
 (* sum5_h of an empty stream is the empty stream*)
 lemma sum5_empty[simp]: "sum5_h p\<cdot>\<epsilon> = \<epsilon>"
@@ -1046,12 +1050,12 @@ apply (subst beta_cfun, rule cont_lub_sum5_h)+
 apply (subst contlub_cfun_arg)
 apply (rule ch2ch_fun, rule ch2ch_fun)
 apply (rule chainI)
-apply (rule fun_belowD [of _ _ "f"])
+apply (rule fun_belowD [of _ _ "n"])
 apply (smt chain_sh fun_belowI po_class.chain_def)
 apply (subst lub_range_shift [where j="Suc 0", THEN sym])
 apply (rule ch2ch_fun, rule ch2ch_fun)
 apply (rule chainI)
-apply (rule fun_belowD [of _ _ "f"])
+apply (rule fun_belowD [of _ _ "n"])
 apply (smt chain_sh fun_belowI po_class.chain_def)
 by (smt Nat.add_0_right add.commute add_Suc_right sh.simps(2) lscons_conv lub_eq shd1 stream.con_rews(2) stream.sel_rews(5) up_defined)
 
