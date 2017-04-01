@@ -169,7 +169,7 @@ definition sfoot      :: "'a stream \<Rightarrow> 'a" where
 
 text {* @{term sdom}: Retrieve the set of all values in a stream. *}
 definition sdom       :: "'a stream \<rightarrow> 'a set" where
-"sdom \<equiv> \<Lambda> s. {z. \<exists>n. Fin n < #s \<and> z = snth n s}" 
+"sdom \<equiv> \<Lambda> s. {snth n s | n. Fin n < #s}" 
 
 text {* @{term sntimes}: Repeat the given stream @{text "n"} times. *}
 text {* (Only listed as a constant below for reference;
@@ -2597,6 +2597,12 @@ lemma sfood_id: assumes"#s = Fin (Suc n)"
 subsection {* @{term sdom} *}
 (* ----------------------------------------------------------------------- *)
 
+lemma sdom_eq: "{z. \<exists>n. Fin n < #s \<and> z = snth n s} = {snth n s |n. Fin n < #s}"
+by auto
+
+lemma sdom_eq2: "{snth n s |n. Fin n < #s} = {z. \<exists>n. Fin n < #s \<and> z = snth n s}"
+by auto
+
 text {* A stream and its prefix agree on their first elements *}
 lemma snth_less: "\<lbrakk>Fin n < #x; x \<sqsubseteq> y\<rbrakk> \<Longrightarrow> snth n x = snth n y"
 apply (simp add: atomize_imp)
@@ -2607,7 +2613,8 @@ by (drule lessD, auto)+
 
 
 text {* monotonicity of @{term sdom} *}
-lemma sdom_mono: "monofun (\<lambda>x. {z. \<exists>n. Fin n < #x \<and> z = snth n x})"
+lemma sdom_mono: "monofun (\<lambda>s. {snth n s |n. Fin n < #s})"
+apply (simp add: sdom_eq2)
 apply (rule monofunI)
 apply (rule_tac x="#x" in lncases)
 apply (drule eq_less_and_fst_inf, simp+)
@@ -2626,15 +2633,17 @@ apply (rule_tac x="Suc nat" in exI, auto)
 apply (rule_tac x="#w" in lncases, auto)
 by (rule snth_less, auto)
 
+
 text {* In infinite chains, the length of the streams is unbounded *}
 lemma inf_chainl3rf:
   "\<lbrakk>chain Y; \<not>finite_chain Y\<rbrakk> \<Longrightarrow> \<exists>k. Fin n \<le> #(Y k)"
 by (rule inf_chainl3 [rule_format], auto)
 
 text {* @{term sdom} is a continuous function *}
-lemma sdom_cont: "cont (\<lambda>s. {z. \<exists>n. Fin n < #s \<and> z = snth n s})"
+lemma sdom_cont: "cont (\<lambda>s. {snth n s | n. Fin n < #s})"
 apply (rule contI2)
 apply (rule sdom_mono)
+apply (simp add: sdom_eq2)
 apply (rule allI, rule impI)
 apply (simp add: less_set_def)
 apply (auto simp add: lub_eq_Union) 
@@ -2655,7 +2664,7 @@ apply (rule_tac x="#(Y k)" in lncases, simp+)
 by (rule is_ub_thelub)
 
 text {* @{term sdom} is a continuous function *}
-lemma sdom_def2: "sdom\<cdot>s = {z. \<exists>n. Fin n < #s \<and> z = snth n s}"
+lemma sdom_def2: "sdom\<cdot>s = {snth n s | n. Fin n < #s}"
 apply (subst sdom_def)
 apply (subst beta_cfun)
 by (rule sdom_cont, simp)
@@ -2679,8 +2688,7 @@ by (rule_tac x="Suc n" in exI, auto)
 lemma strict_sdom_rev: "sdom\<cdot>s = {} \<Longrightarrow> s = \<epsilon>"
 apply (auto simp add: sdom_def2)
 apply (rule_tac x="s" in scases, auto)
-apply (erule_tac x="a" in allE)
-by (erule_tac x="0" in allE, auto)
+by (metis Fin_02bot gr_0 lnzero_def)
 
 (* the infinite repetition of a only has a in its domain *)
 (*with new lemmata not necessary:

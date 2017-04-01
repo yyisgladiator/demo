@@ -311,7 +311,8 @@ lemma sum3_snth: "Fin n < #as \<Longrightarrow> snth (Suc n) (sum3\<cdot>(\<up>a
   apply(induction n arbitrary: as a)
    apply(simp add: sum3_def sscanl_srt snth_rt)
    apply (metis add.commute add.left_neutral lnsuc_neq_0_rev shd1 slen_empty_eq sscanl_scons surj_scons)
-  by (smt Fin_Suc HOLCF_trans_rules(1) HOLCF_trans_rules(2) add.commute less_lnsuc lnat.sel_rews(2) lnle_def lnless_def lscons_conv monofun_cfun_arg semiring_normalization_rules(25) slen_scons snth_rt sscanl_snth stream.sel_rews(5) sum3_def up_defined)
+by (smt ab_semigroup_add_class.add_ac(1) add.commute convert_inductive_asm snth_scons sscanl_scons sscanl_snth sum3_def)
+
 
 lemma sum3_snth_inf[simp]: "snth n (sum3\<cdot>(\<up>x\<infinity>)) = (Suc n) * x"
   apply(induction n)
