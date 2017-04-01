@@ -91,14 +91,14 @@ proof (induction n arbitrary: s, auto)
   fix s :: "nat event stream" and k :: "lnat"
   assume a1: "shd s \<noteq> \<surd>"
   assume a2: "#s = lnsuc\<cdot>k"
-  hence h1: "s\<noteq>\<epsilon>"
+  hence h1: "s \<noteq> \<epsilon>"
     using bot_is_0 lnat.con_rews strict_slen by auto
   thus "shd (tsscanl_h op * 1\<cdot>s) = \<M> \<M>\<inverse> shd s"
     by (simp add: a1 h1 tsscanl_h_unfold_shd)
 next  
   fix n :: "nat" and s :: "nat event stream"
   assume a3: "\<And>s. Fin n < #s \<and> snth n s \<noteq> \<surd> \<Longrightarrow> snth n (tsscanl_h op * 1\<cdot>s) = \<M> ttimes_nth n s"
-  assume a4: " Fin (Suc n) < #s"
+  assume a4: "Fin (Suc n) < #s"
   assume a5: "snth (Suc n) s \<noteq> \<surd>"
   thus "shd s = \<surd> \<Longrightarrow> snth (Suc n) (tsscanl_h op * 1\<cdot>s) = \<M> ttimes_nth n (srt\<cdot>s)"
     by (metis a3 a4 not_less slen_rt_ile_eq snth_rt tsscanl_h_unfold_srt_tick)
@@ -136,7 +136,37 @@ by (simp add: tsscanl_nth_nq_def)
 
 (* Verification of tsscanl with tsscanl_nth_nq *)
 
-lemma tsscanl_h_nq_switch_initial: "Fin n<#s \<and> snth n s\<noteq>\<surd> \<and> (\<forall>a. f q a=a) 
+lemma test1: "Fin (Suc n) < #s \<Longrightarrow> snth (Suc n) s \<noteq> \<surd> \<and> shd s \<noteq> \<surd> \<and> (\<forall>a. f q a=a) \<and> (\<forall>a b c. f (f a b) c= f a (f b c))
+  \<Longrightarrow> \<M> f p \<M>\<inverse> snth (Suc n) (tsscanl_h f \<M>\<inverse> shd s\<cdot>s) = \<M> f (f p \<M>\<inverse> shd s) \<M>\<inverse> snth (Suc n) (tsscanl_h f q\<cdot>s)"
+proof (induction n arbitrary: p q s, auto)
+  fix p :: "'a" and q :: "'a" and s :: "'a event stream"
+  assume a1: "Fin (Suc 0) < #s"
+  hence h1: "srt\<cdot>s \<noteq> \<epsilon>"
+    using Fin_02bot lnle_Fin_0 lnzero_def not_less slen_rt_ile_eq strict_slen by fastforce
+  assume a2: "snth (Suc 0) s \<noteq> \<surd>"
+  hence h2: "shd (srt\<cdot>s) \<noteq> \<surd>"
+    by (simp add: snth_rt)
+  assume a3: "\<forall>a. f q a = a"
+  assume a4: "\<forall>a b c. f (f a b) c = f a (f b c)"
+  thus "f p \<M>\<inverse> snth (Suc 0) (tsscanl_h f \<M>\<inverse> shd s\<cdot>s) = f p (f \<M>\<inverse> shd s \<M>\<inverse> snth (Suc 0) (tsscanl_h f q\<cdot>s))"
+    by (smt event.exhaust a3 event.simps(4) h1 h2 snth_rt snth_shd tsscanl_h_unfold_shd tsscanl_h_unfold_srt tsscanl_h_unfold_srt_tick)
+next
+  fix n :: "nat" and p :: "'a" and q :: "'a" and s :: "'a event stream"
+  assume a5: "\<And>p q s. Fin (Suc n) < #s \<Longrightarrow>
+                 snth (Suc n) s \<noteq> \<surd> \<and> shd s \<noteq> \<surd> \<and> (\<forall>a. f q a = a) \<Longrightarrow>
+                 f p \<M>\<inverse> snth (Suc n) (tsscanl_h f \<M>\<inverse> shd s\<cdot>s) = f p (f \<M>\<inverse> shd s \<M>\<inverse> snth (Suc n) (tsscanl_h f q\<cdot>s))"
+  assume a6: "Fin (Suc (Suc n)) < #s"
+  assume a7: "snth (Suc (Suc n)) s \<noteq> \<surd>"
+  assume a8: "shd s \<noteq> \<surd>"
+  assume a9: "\<forall>a. f q a = a"
+  assume a10: "\<forall>a b c. f (f a b) c = f a (f b c)"
+  thus "f p \<M>\<inverse> snth (Suc (Suc n)) (tsscanl_h f \<M>\<inverse> shd s\<cdot>s) = f p (f \<M>\<inverse> shd s \<M>\<inverse> snth (Suc (Suc n)) (tsscanl_h f q\<cdot>s))"
+    apply (simp add: snth_rt)
+    apply (simp add: a8 tsscanl_h_unfold_srt)    
+    sorry
+qed
+
+lemma tsscanl_h_nq_switch_initial: "Fin n<#s \<and> snth n s\<noteq>\<surd> \<and> (\<forall>a. f q a=a)
   \<Longrightarrow> snth n (tsscanl_h f p\<cdot>s) = \<M> f p (\<M>\<inverse> snth n (tsscanl_h f q\<cdot>s))"
 proof (induction n arbitrary: p q s, auto)
   fix p :: "'a" and q :: "'a" and s :: "'a event stream" and k :: "lnat"
@@ -150,14 +180,13 @@ proof (induction n arbitrary: p q s, auto)
 next
   fix n :: "nat" and p :: "'a" and q :: "'a" and s :: "'a event stream"
   assume a4: "\<And>p q s. Fin n < #s \<and> snth n s \<noteq> \<surd> \<and> (\<forall>a. f q a = a) 
-                \<Longrightarrow> snth n (tsscanl_h f p\<cdot>s) = \<M> f p \<M>\<inverse> snth n (tsscanl_h f q\<cdot>s)"
+              \<Longrightarrow> snth n (tsscanl_h f p\<cdot>s) = \<M> f p \<M>\<inverse> snth n (tsscanl_h f q\<cdot>s)"
   assume a5: "Fin (Suc n) < #s"
   assume a6: "snth (Suc n) s \<noteq> \<surd>"
   assume a7: "\<forall>a. f q a = a"
   thus "snth (Suc n) (tsscanl_h f p\<cdot>s) = \<M> f p \<M>\<inverse> snth (Suc n) (tsscanl_h f q\<cdot>s)"
     apply (cases "shd s=\<surd>")
-    apply (metis a4 a5 a6 convert_inductive_asm not_less slen_rt_ile_eq snth_rt tsscanl_h_snth_tick)
-    apply (simp add: a5 convert_inductive_asm tsscanl_h_snth)
+    apply (smt a4 a5 a6 convert_inductive_asm not_less slen_rt_ile_eq snth_rt tsscanl_h_snth_tick)
     sorry
 qed
 
@@ -200,7 +229,7 @@ by (simp add: ttimes_def tsscanl_unfold ts_well_tsscanl_h tsscanl_h2tsscanl_nth_
 lemma tsscanl_h_snth_merge_tick: 
   "Fin (Suc n)<#s \<and> snth (Suc n) s\<noteq>\<surd> \<and> (\<forall>m<(Suc n). snth m s=\<surd>)
     \<Longrightarrow> snth (Suc n) (tsscanl_h f q\<cdot>s) = \<M> f q \<M>\<inverse> (snth (Suc n) s)"
-apply (induction n arbitrary: f q s, auto)
+apply (induction n arbitrary: q s, auto)
 apply (metis (mono_tags, lifting) Fin_02bot lnle_Fin_0 lnzero_def not_less slen_rt_ile_eq snth_rt 
        snth_shd strict_slen tsscanl_h_unfold_shd tsscanl_h_unfold_srt_tick)
 oops
