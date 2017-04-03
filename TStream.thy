@@ -1354,20 +1354,16 @@ apply(cases "i=0")
 apply simp
 by (metis list_decode.cases tstake_bot)
 
-
-
 (* tsWeak- and tsStrongCasuality*)
 
 definition tsWeakCausal:: "('a tstream \<Rightarrow> 'b tstream) \<Rightarrow> bool" where
-"tsWeakCausal \<equiv> \<lambda>f .  \<forall>i ts1 ts2. (ts1 \<down>i = ts2 \<down> i) \<longrightarrow> (f ts1) \<down> i = (f ts2) \<down> i"
+"tsWeakCausal \<equiv> \<lambda>f. \<forall>i ts1 ts2. (ts1 \<down> i = ts2 \<down> i) \<longrightarrow> (f ts1) \<down> i = (f ts2) \<down> i"
 
 definition tsStrongCausal:: "('a tstream \<Rightarrow> 'b tstream) \<Rightarrow> bool" where
-"tsStrongCausal \<equiv> \<lambda>f .  \<forall>i ts1 ts2. (ts1 \<down>i = ts2 \<down> i) \<longrightarrow> (f ts1) \<down> (Suc i) = (f ts2) \<down> (Suc i)"
-
-
+"tsStrongCausal \<equiv> \<lambda>f. \<forall>i ts1 ts2. (ts1 \<down> i = ts2 \<down> i) \<longrightarrow> (f ts1) \<down> (Suc i) = (f ts2) \<down> (Suc i)"
 
 lemma tsWeakCausalI: fixes f::"('a tstream \<Rightarrow> 'b tstream)"
-  assumes "\<And>i ts1 ts2. (ts1 \<down>i = ts2 \<down> i) \<Longrightarrow> (f ts1) \<down>  i = (f ts2) \<down> i"
+  assumes "\<And>i ts1 ts2. (ts1 \<down> i = ts2 \<down> i) \<Longrightarrow> (f ts1) \<down>  i = (f ts2) \<down> i"
   shows "tsWeakCausal f"
 by (metis assms tsWeakCausal_def)
 
@@ -1376,12 +1372,8 @@ lemma tsStrongCausalI: fixes f::"('a tstream \<Rightarrow> 'b tstream)"
   shows "tsStrongCausal f"
 by (meson assms tsStrongCausal_def)
 
-
-
-
 lemma tsStrong2Weak: "tsStrongCausal f \<Longrightarrow> tsWeakCausal f"
 by (meson tsStrongCausal_def tsWeakCausalI tsSucTake)
-
 
 lemma tsWeak_eq: assumes "tsWeakCausal f" and "x\<down>i = y\<down>i"
   shows "(f x)\<down>i = (f y) \<down>i"
@@ -1389,26 +1381,24 @@ by (meson assms(1) assms(2) tsWeakCausal_def)
 
 lemma tsWeak2Mono: assumes "tsWeakCausal f" and "\<And>x. #\<surd>f x \<le> #\<surd> x"
   shows "monofun f"
-  apply(rule monofunI)
-  apply(rule ts_below)
-  using assms(1) assms(2) tsWeak_eq trans_lnle tstake_less_below by blast
+apply (rule monofunI)
+apply (rule ts_below)
+using assms(1) assms(2) tsWeak_eq trans_lnle tstake_less_below by blast
 
 lemma tsMono2Weak: assumes "monofun f" and "\<And>x. #\<surd> x \<le> #\<surd> f x"
   shows "x \<down> i  = y \<down> i  \<Longrightarrow> (f x) \<down> i  = (f y) \<down> i"
-  apply(induction i arbitrary: x y)
-   apply simp
-  apply(subst tstake_tsnth)
-  apply(subst tstake_tsnth)
-  by (smt assms(1) assms(2) min_def monofun_def tsTake_prefix tstake_below_eq tstake_len tstake_less_below tstake_tsnth)
+apply (induction i arbitrary: x y, auto)
+apply (subst tstake_tsnth)
+apply (subst tstake_tsnth)
+by (smt assms(1) assms(2) min_def monofun_def tsTake_prefix tstake_below_eq tstake_len
+    tstake_less_below tstake_tsnth)
 
 lemma tsMono2Weak2: assumes "monofun f" and "\<And>x. #\<surd> x \<le> #\<surd> f x"
   shows "tsWeakCausal f"
 using assms(1) assms(2) tsMono2Weak tsWeakCausalI by blast
 
-
 lemma tsMonoEqWeak: "(\<And>x. #\<surd> x = #\<surd> f x) \<Longrightarrow> monofun f \<longleftrightarrow> tsWeakCausal f"
 by (metis (mono_tags, lifting) order_refl tsMono2Weak tsWeak2Mono tsWeakCausal_def)
-
 
 lemma [simp]: "tsWeakCausal f \<Longrightarrow> (\<And>x. #\<surd>f x \<le> #\<surd> x) \<Longrightarrow> chain Y \<Longrightarrow> chain (\<lambda>i. f (Y i))"
 using ch2ch_monofun tsWeak2Mono by blast
@@ -1435,23 +1425,23 @@ next
   qed
 qed
 
-lemma tsWeak2cont:assumes "tsWeakCausal f" and "\<And>x. #\<surd>f x = #\<surd> x"
+lemma tsWeak2cont: assumes "tsWeakCausal f" and "\<And>x. #\<surd>f x = #\<surd> x"
   shows "cont f"
-apply(rule contI2)
+apply (rule contI2)
 apply (simp add: assms(1) assms(2) tsWeak2Mono)
 by (simp add: assms(1) assms(2) tsWeak_lub)
 
-lemma tsWeak2cont2:assumes "\<And>x. #\<surd>f x = #\<surd> x"
+lemma tsWeak2cont2: assumes "\<And>x. #\<surd>f x = #\<surd> x"
   shows "tsWeakCausal f \<longleftrightarrow> cont f"
 apply rule
 using assms tsWeak2cont apply blast
 by (simp add: assms cont2mono tsMono2Weak2)
 
-lemma tsMono2weak2cont:assumes "\<And>x. #\<surd>f x = #\<surd> x"
-shows"monofun f \<longleftrightarrow> cont f"
-apply(subst tsMonoEqWeak)
+lemma tsMono2weak2cont: assumes "\<And>x. #\<surd>f x = #\<surd> x"
+  shows"monofun f \<longleftrightarrow> cont f"
+apply (subst tsMonoEqWeak)
 using assms apply simp
-apply(subst tsWeak2cont2, auto)
+apply (subst tsWeak2cont2, auto)
 using assms by simp
 
 (*Definition of inftimes \<surd>*)
@@ -1911,7 +1901,7 @@ apply (simp add: ts_well_def, auto)
 by (metis (no_types, lifting) fold_inf lnsuc_lnle_emb not_less sfoot2 slen_lnsuc tsscanl_h_sfoot)
 
 (* tsscanl is weak causal *)
-lemma tsscanl_tsweak:"tsWeakCausal (\<lambda> ts. tsscanl f q \<cdot>ts)"
+lemma tsscanl_tsweak:"tsWeakCausal (\<lambda>ts. tsscanl f q \<cdot>ts)"
 apply (subst tsWeak2cont2, auto)
 by (simp add: tsscanl_def ts_well_tsscanl_h tsTickCount_def)
 

@@ -22,8 +22,7 @@ by (metis surj_scons tsum5_h_scons_tick)
 (* Nth element of tsum6 and tsum5 are equal *)
 lemma tsum6_h2tsum5_h_snth: 
   "Fin n < #(tsscanl_h op + q\<cdot>s) \<longrightarrow> snth n (tsscanl_h op + q\<cdot>s) = snth n (tsum5_h q\<cdot>s)"
-apply (induction n arbitrary: q s, auto)
-proof -
+proof (induction n arbitrary: q s, auto)
   fix  n :: "nat" and q :: "nat" and s :: "nat event stream" and k :: "lnat"
   assume a1: "#s = lnsuc\<cdot>k"
   hence h1: "s \<noteq> \<epsilon>"
