@@ -239,4 +239,35 @@ lemma tsscanl2tsscanl_nth:
        (case (snth n (Rep_tstream ts)) of Msg a \<Rightarrow> \<M> tsscanl_nth n f q (Rep_tstream ts) | \<surd> \<Rightarrow> \<surd>)"
 by (simp add: tsscanl_unfold ts_well_tsscanl_h tsscanl_h2tsscanl_nth)
 
+(* Examples for weak causal functions *)
+
+(* Identity function on tstreams is monotone, continous and weak causal *)
+definition tsident :: "'a tstream \<Rightarrow> 'a tstream" where
+"tsident ts \<equiv> ts"
+
+lemma mono_tsident: "monofun tsident"
+by (simp add: monofunI tsident_def)
+
+lemma cont_tsident: "cont tsident"
+by (metis mono_tsident tsMono2weak2cont tsident_def)
+
+lemma tsweak_tsident:"tsWeakCausal tsident"
+by (simp add: tsident_def tsWeakCausalI)
+
+(* Constructed non monotone function on tstreams is not continous but weak causal *)
+definition tsbottick :: "'a tstream \<Rightarrow> 'a tstream" where
+"tsbottick ts \<equiv> if ts=\<bottom> then Abs_tstream (\<up>\<surd>) else \<bottom>"
+
+lemma non_mon_tsbottick: "\<not>monofun tsbottick"
+by (simp add: monofun_def tsbottick_def)
+
+lemma non_cont_tsbottick: "\<not>cont tsbottick"
+using cont2mono non_mon_tsbottick by auto
+
+lemma tsweak_tsbottick: "tsWeakCausal tsbottick"
+apply (rule tsWeakCausalI)
+apply (simp add: tsbottick_def, auto)
+using tstakeBot apply blast
+using tstakeBot by blast
+
 end
