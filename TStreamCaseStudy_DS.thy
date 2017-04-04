@@ -254,15 +254,27 @@ by (metis mono_tsident tsMono2weak2cont tsident_def)
 lemma tsweak_tsident:"tsWeakCausal tsident"
 by (simp add: tsident_def tsWeakCausalI)
 
+(* Dropfirst is a monotone and continous but not weak causal function on tstreams *)
+lemma mono_tsdropfirst: "monofun (\<lambda>ts. tsDropFirst\<cdot>ts)"
+by (simp add: monofun_Rep_cfun2)
+
+lemma cont_tsdropfirst: "cont (\<lambda>ts. tsDropFirst\<cdot>ts)"
+by (simp add: cont_Rep_cfun2)
+
+lemma non_tsweak_tsdropfirst: "\<not>tsWeakCausal (\<lambda>ts. tsDropFirst\<cdot>ts)"
+apply (simp add: tsWeakCausal_def)
+by (metis Rep_cfun_strict1 delayFun_dropFirst delayFun_sCausal tsTake.simps(1) ts_existsNBot
+    tstake_bot tstake_fin2)
+
 (* Constructed non monotone function on tstreams is not continous but weak causal *)
 definition tsbottick :: "'a tstream \<Rightarrow> 'a tstream" where
 "tsbottick ts \<equiv> if ts=\<bottom> then Abs_tstream (\<up>\<surd>) else \<bottom>"
 
-lemma non_mon_tsbottick: "\<not>monofun tsbottick"
+lemma non_mono_tsbottick: "\<not>monofun tsbottick"
 by (simp add: monofun_def tsbottick_def)
 
 lemma non_cont_tsbottick: "\<not>cont tsbottick"
-using cont2mono non_mon_tsbottick by auto
+using cont2mono non_mono_tsbottick by auto
 
 lemma tsweak_tsbottick: "tsWeakCausal tsbottick"
 apply (rule tsWeakCausalI)
