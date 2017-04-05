@@ -282,4 +282,11 @@ apply (simp add: tsbottick_def, auto)
 using tstakeBot apply blast
 using tstakeBot by blast
 
+(* Set of weak causal functions *)
+definition "spfw = {f ::'a tstream => 'b tstream. tsWeakCausal f}"
+
+pcpodef ('a, 'b) spfw ("(_ \<leadsto>w/ _)" [1, 0] 0) = "spfw :: ('a tstream => 'b tstream) set"
+apply (simp add: spfw_def tsWeakCausal_def)
+by (simp add: spfw_def tsWeakCausal_def)
+
 end
