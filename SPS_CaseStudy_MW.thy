@@ -3,10 +3,24 @@ imports Feedback_MW SPF_MW SPF_Templates
   
 begin
     
+(* Composition *)
+  
+definition spsCompPar :: "'m SPS \<Rightarrow>'m  SPS \<Rightarrow> 'm SPS" (infixl "\<parallel>" 50) where
+  "spsCompPar S1 S2 \<equiv> Abs_SPS {f1 \<parallel> f2 | f1 f2. f1\<in>(Rep_SPS S1) \<and> f2\<in>(Rep_SPS S2)}"  
+ 
+definition spsCompSer :: "'m SPS \<Rightarrow>'m  SPS \<Rightarrow> 'm SPS" (infixl "\<circle>" 50) where
+  "spsCompSer S1 S2 \<equiv> Abs_SPS {f1 \<circ> f2 | f1 f2. f1\<in>(Rep_SPS S1) \<and> f2\<in>(Rep_SPS S2)}" 
+(*
+definition spsCompFeedback :: "'m SPS  \<Rightarrow> 'm SPS" ("µ_" 50) where
+  "spsCompFeedback S \<equiv> Abs_SPS { µ(f1) | f1. f1\<in>(Rep_SPS S)}" 
+*) 
+  
+(* Ariane *)
+  
 lift_definition arianeComp1 :: "nat SPS" is
   "{idSPF (c1,c2)}"
   by(simp add: sps_well_def)
-  
+ 
 lemma [simp]: "spfDom\<cdot>(appendSPF (c3,c2) 0) = {c3}"
   sorry
 
@@ -60,7 +74,23 @@ lift_definition ariane2 :: "nat SPS" is
   "{ Abs_CSPF (\<lambda> sb. (sbDom\<cdot>sb = {c1}) \<leadsto> ([c5\<mapsto>add\<cdot>(sum3\<cdot>(sb . c1))\<cdot>s]\<Omega>)) | s :: nat stream. #s = \<infinity>}"
   by(simp add: sps_well_def)
 
+(* eq *)    
+
+    
+lemma lol[simp]: assumes "sps_well S" shows "Rep_SPS (Abs_SPS S) = S"
+  sorry
+
+lemma lol2[simp]: assumes "sps_well (Rep_SPS S1)" and "sps_well (Rep_SPS S2)"
+  shows "sps_well {f1 \<otimes> f2 | f1 f2. f1\<in>(Rep_SPS S1) \<and> f2\<in>(Rep_SPS S2)}"
+  sorry
+    
+(*lemma arianeDefEq: assumes "sbDom\<cdot>sb = {c1}" and "#s = \<infinity>"
+  shows "add\<cdot>(sum3\<cdot>(sb . c1))\<cdot>s"
+  sorry*)
+    
 lemma arianeEq: "ariane \<equiv> ariane2"
+  apply(simp add: ariane_def ariane2_def spsComp_def)
+  apply(auto simp add: arianeComp1_def arianeComp2_def arianeComp3_def arianeComp4_def arianeComp5_def)
   sorry
   
 (*

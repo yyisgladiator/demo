@@ -318,7 +318,7 @@ section Broy
   
 subsection Stueber_Version
   
-primrec spfFeedbackHelper :: "nat \<Rightarrow> 'a SPF \<Rightarrow> 'a SB \<Rightarrow> 'a SB" where
+(*primrec spfFeedbackHelper :: "nat \<Rightarrow> 'a SPF \<Rightarrow> 'a SB \<Rightarrow> 'a SB" where
   "spfFeedbackHelper 0 f sb = sbLeast (spfDom\<cdot>f \<union> spfRan\<cdot>f)" |
   "spfFeedbackHelper (Suc i) f sb = 
     (let last = spfFeedbackHelper i f sb in
@@ -326,20 +326,19 @@ primrec spfFeedbackHelper :: "nat \<Rightarrow> 'a SPF \<Rightarrow> 'a SB \<Rig
   
 definition spfFeedbackOperatorStueber :: "'a SPF \<Rightarrow> 'a SPF"  where (* ("\<mu>_" 50) *)
   "spfFeedbackOperatorStueber f \<equiv> Abs_CSPF (\<lambda> sb. (sbDom\<cdot>sb = spfDom\<cdot>f - spfRan\<cdot>f) \<leadsto> 
-    ((\<Squnion>i. spfFeedbackHelper i f sb  ) \<bar> (spfRan\<cdot>f)))"
+    ((\<Squnion>i. spfFeedbackHelper i f sb  ) \<bar> (spfRan\<cdot>f)))"*)
 
 subsection Broy_Version
 
 definition spfFeedbackOperator :: "'a SPF \<Rightarrow> 'a SPF" ("\<mu>_" 50) where
-  "spfFeedbackOperator f \<equiv> Abs_CSPF (\<lambda> sb. (sbDom\<cdot>sb = spfDom\<cdot>f - spfRan\<cdot>f) \<leadsto>
-    (\<Squnion>i. iterate i\<cdot>(\<Lambda> z. (f\<rightleftharpoons>((sb \<uplus> z)\<bar>(spfDom\<cdot>f))))\<cdot>(sbLeast (spfRan\<cdot>f))))" 
+"spfFeedbackOperator f \<equiv>
+let I  = spfDom\<cdot>f - spfRan\<cdot>f;
+    I1 = spfDom\<cdot>f;
+    C  = spfRan\<cdot>f
+in Abs_CSPF (\<lambda> sb. (sbDom\<cdot>sb = I) \<leadsto>
+    (\<Squnion>i. iterate i\<cdot>(\<Lambda> z. (f\<rightleftharpoons>((sb \<uplus> z)\<bar> I1)))\<cdot>(sbLeast C)))" 
 
   (* \<Lambda> x. fix\<cdot>(\<Lambda> (z,y). f(x,y)) *)
-  
-  (* v1: (\<Squnion>i. iterate i\<cdot>(\<Lambda> z. sb \<uplus> (f\<rightleftharpoons>z))\<cdot>(sbLeast (spfDom\<cdot>f))) *)
-  (* v2: (\<Squnion>i. iterate i\<cdot>(\<Lambda> z. (f\<rightleftharpoons>z))\<cdot>(sb \<uplus> sbLeast (spfDom\<cdot>f \<inter> spfRan\<cdot>f)))  Problem: sbDom((f\<rightleftharpoons>z)) = {c3}*)
-  (* v3: (\<Squnion>i. iterate i\<cdot>(\<Lambda> z. (f\<rightleftharpoons>(sb \<uplus> z)))\<cdot>(sbLeast (spfDom\<cdot>f \<inter> spfRan\<cdot>f))) *)
-  (* v4: (\<Squnion>i. iterate i\<cdot>(\<Lambda> z. (f\<rightleftharpoons>((sb \<uplus> z)\<bar>(spfDom\<cdot>f))))\<cdot>(sbLeast (spfRan\<cdot>f)))) *)
   
 (* sum4 SPF *) 
 subsection sum4
