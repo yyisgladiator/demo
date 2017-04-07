@@ -254,33 +254,105 @@ by (metis mono_tsident tsMono2weak2cont tsident_def)
 lemma tsweak_tsident:"tsWeakCausal tsident"
 by (simp add: tsident_def tsWeakCausalI)
 
-(* Dropfirst is a monotone and continous but not weak causal function on tstreams *)
-lemma mono_tsdropfirst: "monofun (\<lambda>ts. tsDropFirst\<cdot>ts)"
-by (simp add: monofun_Rep_cfun2)
+(* Dropfirst is a monotone and continous (remains to be proved) but not weak causal function on 
+   tstreams *)
 
-lemma cont_tsdropfirst: "cont (\<lambda>ts. tsDropFirst\<cdot>ts)"
-by (simp add: cont_Rep_cfun2)
+lemma tstake1of1_tick: "Abs_tstream (\<up>\<surd>) \<down> 1 = Abs_tstream (\<up>\<surd>)"
+by (simp add: tsTake_def2 One_nat_def)
 
+lemma tstake1of2_tick: "Abs_tstream (<[\<surd>, \<surd>]>) \<down> 1 = Abs_tstream (\<up>\<surd>)"
+by (simp add: tsTake_def2 One_nat_def tstakefirst_insert_rep_eq)
+
+(* <\<surd>, \<surd>> \<down> 1 = <\<surd>> \<down> 1 but <\<surd>> \<down> 1 \<noteq> \<bottom> \<down> 1 *)
 lemma non_tsweak_tsdropfirst: "\<not>tsWeakCausal (\<lambda>ts. tsDropFirst\<cdot>ts)"
-apply (simp add: tsWeakCausal_def)
-by (metis Rep_cfun_strict1 delayFun_dropFirst delayFun_sCausal tsTake.simps(1) ts_existsNBot
-    tstake_bot tstake_fin2)
+proof -
+  have h1: "tsDropFirst\<cdot>(Abs_tstream (<[\<surd>, \<surd>]>)) = Abs_tstream (\<up>\<surd>)"
+    by (metis Rep_Abs delayFun.rep_eq delayFun_dropFirst list2s.simps(2) list2s_0 lscons_conv 
+        sup'_def tick_msg tsconc_insert)
+  have h2: "tsDropFirst\<cdot>(Abs_tstream (\<up>\<surd>)) = \<bottom>"
+    by (auto)
+  have h3: "Abs_tstream (<[\<surd>, \<surd>]>) \<down> 1 = Abs_tstream (\<up>\<surd>) \<down> 1"
+    by (metis tstake1of1_tick tstake1of2_tick)
+  thus "\<not>tsWeakCausal (\<lambda>ts. tsDropFirst\<cdot>ts)"
+    apply (simp add: tsWeakCausal_def)
+    by (smt delayFun.rep_eq delayFun_takeFirst h1 h2 ln_less lnless_def strictI tsDropTake1
+        tsTakeDrop tstake1of1_tick tstake1of2_tick tstakefirst_len tstickcount_tscons)
+qed
 
 (* Constructed non monotone function on tstreams is not continous but weak causal *)
-definition tsbottick :: "'a tstream \<Rightarrow> 'a tstream" where
-"tsbottick ts \<equiv> if ts=\<bottom> then Abs_tstream (\<up>\<surd>) else \<bottom>"
+definition tsnonmono :: "'a tstream \<Rightarrow> 'a tstream" where
+"tsnonmono ts \<equiv> if ts=\<bottom> then Abs_tstream (\<up>\<surd>) else \<bottom>"
 
-lemma non_mono_tsbottick: "\<not>monofun tsbottick"
-by (simp add: monofun_def tsbottick_def)
+(* \<bottom> \<sqsubseteq> x but <\<surd>> \<sqsubseteq> \<bottom> is false *)
+lemma non_mono_tsnonmono: "\<not>monofun tsnonmono"
+by (simp add: monofun_def tsnonmono_def)
 
-lemma non_cont_tsbottick: "\<not>cont tsbottick"
-using cont2mono non_mono_tsbottick by auto
+lemma non_cont_tsnonmon: "\<not>cont tsnonmono"
+using cont2mono non_mono_tsnonmono by auto
 
-lemma tsweak_tsbottick: "tsWeakCausal tsbottick"
+lemma tsweak_tsnonmon: "tsWeakCausal tsnonmono"
 apply (rule tsWeakCausalI)
-apply (simp add: tsbottick_def, auto)
+apply (simp add: tsnonmono_def, auto)
 using tstakeBot apply blast
 using tstakeBot by blast
+
+(* Constructed non continous function on tstreams is not weak causal but monotone *)
+definition tsnoncont :: "'a tstream \<Rightarrow> 'a tstream" where
+"tsnoncont ts \<equiv> if #(Rep_tstream ts)<\<infinity> then Abs_tstream (\<up>\<surd>)
+                else Abs_tstream (<[\<surd>, \<surd>]>)"
+
+lemma tstake2of1_tick: "Abs_tstream (\<up>\<surd>) \<down> 2 = Abs_tstream (\<up>\<surd>)"
+using tstake1of1_tick tstake_fin2 by fastforce
+
+lemma tstake2of2_tick: "Abs_tstream (<[\<surd>, \<surd>]>) \<down> 2 = Abs_tstream (<[\<surd>, \<surd>]>)"
+by (smt One_nat_def Rep_Abs list2s.simps(2) list2s_0 lscons_conv numeral_2_eq_2 sup'_def tick_msg
+    tsconc_insert tstake1of1_tick tstake_tick)
+
+lemma tstake2ofinf_tick: "(tsinftimes (Abs_tstream (\<up>\<surd>))) \<down> 2 = Abs_tstream (<[\<surd>, \<surd>]>)"
+by (smt One_nat_def Rep_Abs Rep_cfun_strict1 Suc_1 list2s.simps(2) list2s_0 lscons_conv sup'_def 
+    tick_msg tsDropTake1 tsTake.simps(1) tsTakeDrop tsconc_assoc tsconc_insert tsinftimes_unfold
+    tstake2of2_tick tstake_tick)
+
+lemma mono_tsnoncont: "monofun tsnoncont"
+apply (rule monofunI)
+apply (simp add: tsnoncont_def below_tstream_def, auto)
+by (metis inf_ub lnle_def lnless_def mono_fst_infD)
+
+lemma cont_tsnoncont: "cont tsnoncont"
+apply (rule contI2)
+apply (simp add: mono_tsnoncont)
+apply (simp add: below_tstream_def)
+oops
+
+lemma non_cont_tsnoncont: "\<not>cont tsnoncont"
+proof -                
+  have h1: "chain (\<lambda>i. (tsinftimes (Abs_tstream (\<up>\<surd>))) \<down> i)"
+    by (simp)
+  have h2: "Lub (\<lambda>i. (tsinftimes (Abs_tstream (\<up>\<surd>))) \<down> i) = tsinftimes (Abs_tstream (\<up>\<surd>))"
+    by (simp)
+(* have "Lub (tsnoncont (\<lambda>i. (tsinftimes (Abs_tstream (\<up>\<surd>))) \<down> i)) = Abs_tstream (<[\<surd>, \<surd>]>)" *)
+  thus "\<not>cont tsnoncont"
+    apply (simp add: cont_def)
+    using h1 h2
+    sorry
+oops
+
+(* <\<surd>, \<surd>> \<down> 2 = <\<surd>, ...> \<down> 2 but <\<surd>> \<down> 2 \<noteq> <\<surd>, \<surd>> \<down> 2 *)
+lemma non_tsweak_tsnoncont: "\<not>tsWeakCausal tsnoncont"
+proof -
+  have h1: "tsnoncont (tsinftimes (Abs_tstream (\<up>\<surd>))) = Abs_tstream (<[\<surd>, \<surd>]>)"
+    by (metis (no_types, lifting) ln_less neq_iff slen_scons tick_msg tsconc_rep_eq
+        tsinftimes_unfold tsnoncont_def)
+  have h2: "tsnoncont (Abs_tstream (<[\<surd>, \<surd>]>)) = Abs_tstream (\<up>\<surd>)"
+    by (simp add: tsnoncont_def)
+  have h3: "(tsinftimes (Abs_tstream (\<up>\<surd>))) \<down> 2 = Abs_tstream (<[\<surd>, \<surd>]>) \<down> 2"
+    by (metis tstake2of2_tick tstake2ofinf_tick)
+  thus "\<not>tsWeakCausal tsnoncont"
+    apply (simp add: tsWeakCausal_def)
+    by (smt Rep_Abs Suc_1 h1 h2 h3 list.distinct(1) list.inject list2s.simps(2) list2s_0 list2s_inj
+        lscons_conv sup'_def tick_msg tsSucTake tsconc_rep_eq tsinftimes_unfold 
+        tstake1of1_tick tstake2of1_tick tstake_tick)
+qed
 
 (* Set of weak causal functions *)
 definition "spfw = {f ::'a tstream => 'b tstream. tsWeakCausal f}"
