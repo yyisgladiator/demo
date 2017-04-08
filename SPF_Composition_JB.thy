@@ -288,8 +288,16 @@ lemma spf_comp_cont[simp]:
   apply (simp)
     using chain_if_lub_iter_spfcompH2 by blast
 
-      
-(* spf_well of spfcopmp, to be continued ... ;) *)
+lemma iter_spfcompH2_ran[simp]: assumes "sbDom\<cdot>b = I f1 f2"
+  shows  "sbDom\<cdot>(\<Squnion>i. iter_spfcompH2 f1 f2 i b) = C f1 f2"
+  by (metis (mono_tags, lifting) I_commu assms iter_spfcompH2_chain lub_eq sbChain_dom_eq2 spfCompHelp2_iter_dom)
+ 
+lemma spf_comp_well[simp]: 
+  "spf_well (\<Lambda> x. (sbDom\<cdot>x = I f1 f2) \<leadsto> (\<Squnion>i.(iter_spfcompH2 f1 f2 i) x) \<bar> Oc f1 f2)"
+  apply(simp add: spf_well_def)
+  apply(simp only: domIff2)
+  apply(simp add: sbdom_rep_eq)
+      by(auto)  
 
                                 
 (* used abbreviations are equal to comp function *)
@@ -300,7 +308,9 @@ lemma spfcomp_abbrv_tospfH2: "(\<lambda> x. (sbDom\<cdot>x = I f1 f2)
                           \<leadsto> (\<Squnion>i. iterate i\<cdot>(spfCompHelp2 f1 f2 x)\<cdot>(sbLeast (C f1 f2))) \<bar> Oc f1 f2)"      
   by simp
       
-      
+lemma spfComp_ran: assumes "spfRan\<cdot>f1 \<inter> spfRan\<cdot>f2 = {}" 
+  shows "spfRan\<cdot>(spfcomp f1 f2) = Oc f1 f2"
+   apply(simp add: spfcomp_def)  
       
 (*
 BACKUPS 
