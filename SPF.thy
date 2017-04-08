@@ -930,19 +930,8 @@ proof -
 qed
     
 lemma spfCompHelp2_iter_dom: assumes "sbDom\<cdot>x = I f1 f2" 
-                             and  "spfRan\<cdot>f1 \<inter> spfRan\<cdot>f2 = {}" 
 shows "\<forall>n .sbDom\<cdot>(iterate n\<cdot>(spfCompHelp2 f2 f1 x)\<cdot>(sbLeast (C f2 f1))) = C f2 f1"
-proof -
-  { fix nn :: nat
-    have ff1: "\<And>s sa. spfDom\<cdot>(s::'a SPF) \<union> (spfRan\<cdot>sa \<union> (spfRan\<cdot>s \<union> spfDom\<cdot>sa)) = C s sa"
-      using C_def by blast
-    have "\<And>s sa. spfDom\<cdot>(s::'a SPF) \<union> (spfRan\<cdot>s \<union> (spfDom\<cdot>sa \<union> spfRan\<cdot>sa)) = C sa s"
-      using C_def by blast
-    then have "sbDom\<cdot> (iterate nn\<cdot>(spfCompHelp2 f2 f1 x)\<cdot>(sbLeast (C f2 f1))) = C f2 f1"
-      by (metis (no_types) I_def Un_commute assms(1) spfCompH2_itDom) }
-  then show ?thesis
-    by metis
-qed
+  by (simp add: I_commu assms(1))
 
 lemma spfCompHelp2_iter_lub_dom: assumes "sbDom\<cdot>x = I f1 f2" 
                              and  "spfRan\<cdot>f1 \<inter> spfRan\<cdot>f2 = {}" 
@@ -956,9 +945,7 @@ proof -
     by (smt \<open>\<forall>n. sbDom\<cdot> (iterate n\<cdot>(spfCompHelp2 f1 f2 x)\<cdot>(sbLeast (C f1 f2))) = C f1 f2\<close> iterate_0 iterate_Suc2 monofun_cfun_arg po_class.chainI sbChain_dom_eq2 sbleast_least)
 qed
   
-lemma spfComp_ran: assumes "spfRan\<cdot>f1 \<inter> spfRan\<cdot>f2 = {}" 
-  shows "spfRan\<cdot>(spfcomp f1 f2) = Oc f1 f2"
-   oops
+
     
     
 
