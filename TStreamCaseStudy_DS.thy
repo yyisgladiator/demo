@@ -272,8 +272,13 @@ using tstakeBot apply blast
 using tstakeBot by blast
 
 (* Constructed non weak causal function on tstreams is monotone and continous *)
-definition tsnontsweak :: "'a tstream \<Rightarrow> 'a tstream" where
-"tsnontsweak ts \<equiv> Abs_tstream (srt\<cdot>(Rep_tstream ts))"
+setup_lifting type_definition_cfun
+
+lift_definition tsnontsweak1 :: "'a tstream \<rightarrow> 'a tstream" is "\<lambda>ts. Abs_tstream (srt\<cdot>(Rep_tstream ts))"
+by (simp add: cfun_def)
+
+definition tsnontsweak2 :: "'a tstream \<Rightarrow> 'a tstream" where
+"tsnontsweak2 ts \<equiv> Abs_tstream (srt\<cdot>(Rep_tstream ts))"
 
 lemma tstake1of1_tick: "Abs_tstream (\<up>\<surd>) \<down> 1 = Abs_tstream (\<up>\<surd>)"
 by (simp add: tsTake_def2 One_nat_def)
@@ -281,27 +286,34 @@ by (simp add: tsTake_def2 One_nat_def)
 lemma tstake1of2_tick: "Abs_tstream (<[\<surd>, \<surd>]>) \<down> 1 = Abs_tstream (\<up>\<surd>)"
 by (simp add: tsTake_def2 One_nat_def tstakefirst_insert_rep_eq)
 
-lemma mono_tsnontsweak: "monofun tsnontsweak"
-by (simp add: monofun_def tsnontsweak_def below_tstream_def monofun_cfun_arg)
+lemma mono_tsnontsweak1: "monofun (Rep_cfun tsnontsweak1)"
+by (simp add: monofun_Rep_cfun2)
 
-lemma cont_tsnontsweak: "cont tsnontsweak"
+lemma mono_tsnontsweak2: "monofun tsnontsweak2"
+by (simp add: monofun_def tsnontsweak2_def below_tstream_def monofun_cfun_arg)
+
+lemma cont_tsnontsweak1: "cont (Rep_cfun tsnontsweak1)"
+by (simp add: cont_Rep_cfun2)
+
+lemma cont_tsnontsweak2: "cont tsnontsweak2"
 apply (rule contI2)
-apply (simp add: mono_tsnontsweak)
-apply (simp add: tsnontsweak_def below_tstream_def)
-sorry
+apply (simp add: mono_tsnontsweak2)
+apply (simp add: tsnontsweak2_def below_tstream_def)
+by (smt Rep_Abs Rep_tstream_inject contlub_cfun_arg eq_imp_below lub_eq ts_well_Rep ts_well_drop1
+    tsnontsweak1.rep_eq)
 
 (* <\<surd>, \<surd>> \<down> 1 = <\<surd>> \<down> 1 but <\<surd>> \<down> 1 \<noteq> \<bottom> \<down> 1 *)
-lemma non_tsweak_tsnontsweak: "\<not>tsWeakCausal tsnontsweak"
+lemma non_tsweak_tsnontsweak: "\<not>tsWeakCausal tsnontsweak2"
 proof -
-  have h1: "tsnontsweak (Abs_tstream (<[\<surd>, \<surd>]>)) = Abs_tstream (\<up>\<surd>)"
-    by (simp add: tsnontsweak_def)
-  have h2: "tsnontsweak (Abs_tstream (\<up>\<surd>)) = \<bottom>"
-    by (simp add: tsnontsweak_def)
-  hence h3: "((tsnontsweak (Abs_tstream (<[\<surd>, \<surd>]>))) \<down> 1) \<noteq> ((tsnontsweak (Abs_tstream (\<up>\<surd>))) \<down> 1)"
-    by (simp add: h1 tsnontsweak_def tstake1of1_tick)
+  have h1: "tsnontsweak2 (Abs_tstream (<[\<surd>, \<surd>]>)) = Abs_tstream (\<up>\<surd>)"
+    by (simp add: tsnontsweak2_def)
+  have h2: "tsnontsweak2 (Abs_tstream (\<up>\<surd>)) = \<bottom>"
+    by (simp add: tsnontsweak2_def)
+  hence h3: "((tsnontsweak2 (Abs_tstream (<[\<surd>, \<surd>]>))) \<down> 1) \<noteq> ((tsnontsweak2 (Abs_tstream (\<up>\<surd>))) \<down> 1)"
+    by (simp add: h1 tsnontsweak2_def tstake1of1_tick)
   have h4: "Abs_tstream (<[\<surd>, \<surd>]>) \<down> 1 = Abs_tstream (\<up>\<surd>) \<down> 1"
     by (metis tstake1of1_tick tstake1of2_tick)
-  thus "\<not>tsWeakCausal tsnontsweak"
+  thus "\<not>tsWeakCausal tsnontsweak2"
     apply (simp add: tsWeakCausal_def)
     using h3 by auto    
 qed
