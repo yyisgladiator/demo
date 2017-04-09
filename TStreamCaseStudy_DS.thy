@@ -287,10 +287,10 @@ definition tsnonmono :: "'a tstream \<Rightarrow> 'a tstream" where
 lemma non_mono_tsnonmono: "\<not>monofun tsnonmono"
 by (simp add: monofun_def tsnonmono_def)
 
-lemma non_cont_tsnonmon: "\<not>cont tsnonmono"
+lemma non_cont_tsnonmono: "\<not>cont tsnonmono"
 using cont2mono non_mono_tsnonmono by auto
 
-lemma tsweak_tsnonmon: "tsWeakCausal tsnonmono"
+lemma tsweak_tsnonmono: "tsWeakCausal tsnonmono"
 apply (rule tsWeakCausalI)
 apply (simp add: tsnonmono_def, auto)
 using tstakeBot apply blast
@@ -357,8 +357,55 @@ qed
 (* Set of weak causal functions *)
 definition "spfw = {f ::'a tstream => 'b tstream. tsWeakCausal f}"
 
-pcpodef ('a, 'b) spfw ("(_ \<leadsto>w/ _)" [1, 0] 0) = "spfw :: ('a tstream => 'b tstream) set"
-apply (simp add: spfw_def tsWeakCausal_def)
+lemma bottom_spfw: "\<bottom> \<in> spfw"
 by (simp add: spfw_def tsWeakCausal_def)
+
+(* adm P = (\<forall>Y. chain Y \<longrightarrow> (\<forall>i. P (Y i)) \<longrightarrow> P (\<Squnion>i. Y i)) *)
+lemma adm_spfw: "adm (\<lambda>x. x \<in> spfw)"
+by (simp add: spfw_def tsWeakCausal_def)
+
+pcpodef ('a, 'b) spfw ("(_ \<leadsto>w/ _)" [1, 0] 0) = "spfw :: ('a tstream => 'b tstream) set"
+apply (simp add: bottom_spfw)
+by (simp add: adm_spfw)
+
+lemmas Rep_spfw_strict =
+  typedef_Rep_strict [OF type_definition_spfw below_spfw_def bottom_spfw]
+
+lemmas Abs_spfw_strict =
+  typedef_Abs_strict [OF type_definition_spfw below_spfw_def bottom_spfw]
+
+lemma Abs_spfw_inverse2: "tsWeakCausal f \<Longrightarrow> Rep_spfw (Abs_spfw f) = f"
+by (simp add: Abs_spfw_inverse spfw_def)
+
+(* Examples for pcpodef spfw *)
+
+setup_lifting type_definition_spfw
+
+(* Abbreviated form for CONST Abs_spfw does not exist *)
+definition tsnonmono_tsweak1 :: "'a \<leadsto>w 'a" where
+"tsnonmono_tsweak1 \<equiv> CONST Abs_spfw (\<lambda>ts. if ts=\<bottom> then Abs_tstream (\<up>\<surd>) else \<bottom>)"
+
+lemma tsweak_tsnonmono_tsweak1: "tsWeakCausal (\<lambda>ts. if ts = \<bottom> then Abs_tstream (\<up>\<surd>) else \<bottom>)"
+apply (rule tsWeakCausalI)
+apply (simp add: tsnonmono_def, auto)
+using tstakeBot apply blast
+using tstakeBot by blast
+
+lemma non_mono_tsnonmono_tsweak1: "\<not>monofun (Rep_spfw (tsnonmono_tsweak1))"
+apply (simp add: monofun_def tsnonmono_tsweak1_def)
+by (simp add: Abs_spfw_inverse2 tsweak_tsnonmono_tsweak1)
+
+lift_definition tsnonmono_tsweak2 :: "'a \<leadsto>w 'a" is
+"\<lambda>ts. if ts=\<bottom> then Abs_tstream (\<up>\<surd>) else \<bottom>"
+apply (simp add: spfw_def)
+apply (rule tsWeakCausalI)
+apply (simp add: tsnonmono_def, auto)
+using tstakeBot apply blast
+using tstakeBot by blast
+
+(* Duplicated proof for tsWeakCausal required (definition, lemma) *)
+lemma non_mono_tsnonmono_tsweak2: "\<not>monofun (Rep_spfw (tsnonmono_tsweak2))"
+apply (simp add: monofun_def tsnonmono_tsweak2_def)
+by (simp add: Abs_spfw_inverse2 tsweak_tsnonmono_tsweak1)       
 
 end
