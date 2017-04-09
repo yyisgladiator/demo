@@ -254,31 +254,6 @@ by (metis mono_tsident tsMono2weak2cont tsident_def)
 lemma tsweak_tsident:"tsWeakCausal tsident"
 by (simp add: tsident_def tsWeakCausalI)
 
-(* Dropfirst is a monotone and continous (remains to be proved) but not weak causal function on 
-   tstreams *)
-
-lemma tstake1of1_tick: "Abs_tstream (\<up>\<surd>) \<down> 1 = Abs_tstream (\<up>\<surd>)"
-by (simp add: tsTake_def2 One_nat_def)
-
-lemma tstake1of2_tick: "Abs_tstream (<[\<surd>, \<surd>]>) \<down> 1 = Abs_tstream (\<up>\<surd>)"
-by (simp add: tsTake_def2 One_nat_def tstakefirst_insert_rep_eq)
-
-(* <\<surd>, \<surd>> \<down> 1 = <\<surd>> \<down> 1 but <\<surd>> \<down> 1 \<noteq> \<bottom> \<down> 1 *)
-lemma non_tsweak_tsdropfirst: "\<not>tsWeakCausal (\<lambda>ts. tsDropFirst\<cdot>ts)"
-proof -
-  have h1: "tsDropFirst\<cdot>(Abs_tstream (<[\<surd>, \<surd>]>)) = Abs_tstream (\<up>\<surd>)"
-    by (metis Rep_Abs delayFun.rep_eq delayFun_dropFirst list2s.simps(2) list2s_0 lscons_conv 
-        sup'_def tick_msg tsconc_insert)
-  have h2: "tsDropFirst\<cdot>(Abs_tstream (\<up>\<surd>)) = \<bottom>"
-    by (auto)
-  have h3: "Abs_tstream (<[\<surd>, \<surd>]>) \<down> 1 = Abs_tstream (\<up>\<surd>) \<down> 1"
-    by (metis tstake1of1_tick tstake1of2_tick)
-  thus "\<not>tsWeakCausal (\<lambda>ts. tsDropFirst\<cdot>ts)"
-    apply (simp add: tsWeakCausal_def)
-    by (smt delayFun.rep_eq delayFun_takeFirst h1 h2 ln_less lnless_def strictI tsDropTake1
-        tsTakeDrop tstake1of1_tick tstake1of2_tick tstakefirst_len tstickcount_tscons)
-qed
-
 (* Constructed non monotone function on tstreams is not continous but weak causal *)
 definition tsnonmono :: "'a tstream \<Rightarrow> 'a tstream" where
 "tsnonmono ts \<equiv> if ts=\<bottom> then Abs_tstream (\<up>\<surd>) else \<bottom>"
@@ -295,6 +270,41 @@ apply (rule tsWeakCausalI)
 apply (simp add: tsnonmono_def, auto)
 using tstakeBot apply blast
 using tstakeBot by blast
+
+(* Constructed non weak causal function on tstreams is monotone and continous *)
+definition tsnontsweak :: "'a tstream \<Rightarrow> 'a tstream" where
+"tsnontsweak ts \<equiv> Abs_tstream (srt\<cdot>(Rep_tstream ts))"
+
+lemma tstake1of1_tick: "Abs_tstream (\<up>\<surd>) \<down> 1 = Abs_tstream (\<up>\<surd>)"
+by (simp add: tsTake_def2 One_nat_def)
+
+lemma tstake1of2_tick: "Abs_tstream (<[\<surd>, \<surd>]>) \<down> 1 = Abs_tstream (\<up>\<surd>)"
+by (simp add: tsTake_def2 One_nat_def tstakefirst_insert_rep_eq)
+
+lemma mono_tsnontsweak: "monofun tsnontsweak"
+by (simp add: monofun_def tsnontsweak_def below_tstream_def monofun_cfun_arg)
+
+lemma cont_tsnontsweak: "cont tsnontsweak"
+apply (rule contI2)
+apply (simp add: mono_tsnontsweak)
+apply (simp add: tsnontsweak_def below_tstream_def)
+sorry
+
+(* <\<surd>, \<surd>> \<down> 1 = <\<surd>> \<down> 1 but <\<surd>> \<down> 1 \<noteq> \<bottom> \<down> 1 *)
+lemma non_tsweak_tsnontsweak: "\<not>tsWeakCausal tsnontsweak"
+proof -
+  have h1: "tsnontsweak (Abs_tstream (<[\<surd>, \<surd>]>)) = Abs_tstream (\<up>\<surd>)"
+    by (simp add: tsnontsweak_def)
+  have h2: "tsnontsweak (Abs_tstream (\<up>\<surd>)) = \<bottom>"
+    by (simp add: tsnontsweak_def)
+  hence h3: "((tsnontsweak (Abs_tstream (<[\<surd>, \<surd>]>))) \<down> 1) \<noteq> ((tsnontsweak (Abs_tstream (\<up>\<surd>))) \<down> 1)"
+    by (simp add: h1 tsnontsweak_def tstake1of1_tick)
+  have h4: "Abs_tstream (<[\<surd>, \<surd>]>) \<down> 1 = Abs_tstream (\<up>\<surd>) \<down> 1"
+    by (metis tstake1of1_tick tstake1of2_tick)
+  thus "\<not>tsWeakCausal tsnontsweak"
+    apply (simp add: tsWeakCausal_def)
+    using h3 by auto    
+qed
 
 (* Constructed non continous function on tstreams is not weak causal but monotone *)
 definition tsnoncont :: "'a tstream \<Rightarrow> 'a tstream" where
@@ -318,22 +328,20 @@ apply (rule monofunI)
 apply (simp add: tsnoncont_def below_tstream_def, auto)
 by (metis inf_ub lnle_def lnless_def mono_fst_infD)
 
-lemma cont_tsnoncont: "cont tsnoncont"
-apply (rule contI2)
-apply (simp add: mono_tsnoncont)
-apply (simp add: below_tstream_def)
-oops
-
 lemma non_cont_tsnoncont: "\<not>cont tsnoncont"
-proof -                
+proof -  
   have h1: "chain (\<lambda>i. (tsinftimes (Abs_tstream (\<up>\<surd>))) \<down> i)"
-    by (simp)
+    by (simp)              
   have h2: "Lub (\<lambda>i. (tsinftimes (Abs_tstream (\<up>\<surd>))) \<down> i) = tsinftimes (Abs_tstream (\<up>\<surd>))"
     by (simp)
-(* have "Lub (tsnoncont (\<lambda>i. (tsinftimes (Abs_tstream (\<up>\<surd>))) \<down> i)) = Abs_tstream (<[\<surd>, \<surd>]>)" *)
+  hence h3: "tsnoncont (Lub (\<lambda>i. (tsinftimes (Abs_tstream (\<up>\<surd>))) \<down> i)) = Abs_tstream (<[\<surd>, \<surd>]>)"
+    by (metis (mono_tags, lifting) ln_less order_less_irrefl slen_scons tick_msg tsconc_rep_eq
+        tsinftimes_unfold tsnoncont_def)
+  have h4: "\<Squnion>i. tsnoncont ((tsinftimes (Abs_tstream (\<up>\<surd>))) \<down> i) = Abs_tstream (\<up>\<surd>)"
+    apply (simp add: tsnoncont_def)
+    sorry
   thus "\<not>cont tsnoncont"
     apply (simp add: cont_def)
-    using h1 h2
     sorry
 oops
 
@@ -353,6 +361,8 @@ proof -
         lscons_conv sup'_def tick_msg tsSucTake tsconc_rep_eq tsinftimes_unfold 
         tstake1of1_tick tstake2of1_tick tstake_tick)
 qed
+
+(* spfw *)
 
 (* Set of weak causal functions *)
 definition "spfw = {f ::'a tstream => 'b tstream. tsWeakCausal f}"
