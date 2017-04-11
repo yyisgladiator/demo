@@ -76,9 +76,37 @@ lemma non_tsstrong_tsnonmono: "\<not>tsStrongCausal tsnonmono"
 apply(auto simp add: tsnonmono_def tsStrongCausal_def)
 apply (rule_tac x=0 in exI)
 apply (rule_tac x="Abs_tstream (\<up>\<surd>)" in exI)
-apply (auto)
-by (metis One_nat_def Rep_Abs Rep_tstream_strict list2s.simps(1) list2s.simps(2) list2s_inj
-    not_Cons_self2 sup'_def tick_msg tstake1of1tick)
+by (metis One_nat_def Rep_Abs Rep_cfun_strict1 Rep_tstream_bottom_iff stream.con_rews(2) sup'_def
+    tick_msg tsTake.simps(1) tstake1of1tick up_defined)
+
+(* Constructed non weak causal function on tstreams is monotone and continous *)
+definition tsnontsweak :: "'a tstream \<Rightarrow> 'a tstream" where
+"tsnontsweak ts \<equiv> Abs_tstream (srt\<cdot>(Rep_tstream ts))"
+
+lemma mono_tsnontsweak: "monofun tsnontsweak"
+by (simp add: monofun_def tsnontsweak_def below_tstream_def monofun_cfun_arg)
+
+(* cont g \<and> \<forall>x. ts_well (g x) \<Longrightarrow> cont (\<lambda>x. Abs_tstream (g x)) *)
+lemma cont_tsnontsweak: "cont tsnontsweak"
+apply (rule contI2)
+apply (simp add: mono_tsnontsweak)
+apply (simp add: tsnontsweak_def cont2contlubE)
+by (smt Rep_Abs below_tstream_def lub_eq lub_tstream monofun_cfun_arg not_below2not_eq
+    po_class.chain_def ts_well_Rep ts_well_drop1)
+
+(* <\<surd>, \<surd>> \<down> 1 = <\<surd>> \<down> 1 but <\<surd>> \<down> 1 \<noteq> \<bottom> \<down> 1 *)
+lemma non_tsweak_tsnontsweak: "\<not>tsWeakCausal tsnontsweak"
+apply (simp add: tsWeakCausal_def tsnontsweak_def)
+apply (rule_tac x=1 in exI)
+apply (rule_tac x="Abs_tstream (\<up>\<surd>)" in exI)
+apply (rule_tac x="Abs_tstream (<[\<surd>, \<surd>]>)" in exI)
+by (metis (no_types, lifting) Abs_tstream_strict Rep_Abs Rep_tstream_strict list.distinct(1)
+    list2s.simps(2) list2s_0 list2s_inj lscons_conv stream.con_rews(2) stream.sel_rews(5) strictI 
+    sup'_def tick_msg tsDropTake1 tsTakeDrop ts_well_sing_conc tstake1of1tick tstake1of2tick)
+
+(* Constructed non weak causal function on tstreams is not strong causal *)
+lemma non_tsstrong_tsnontsweak: "\<not>tsStrongCausal tsnontsweak"
+using non_tsweak_tsnontsweak tsStrong2Weak by auto
 
 (* Examples for weak causal function type *)
 
@@ -92,7 +120,7 @@ using tstakeBot by blast+
 
 lemma non_mono_f1_spfw: "\<not>monofun (Rep_spfw (f1_spfw))"
 apply (simp add: monofun_def f1_spfw_def)
-by (simp add: Abs_spfw_inverse2 tsweak_f1_spfw)
+by (simp add: abs_spfw_inverse2 tsweak_f1_spfw)
 
 setup_lifting type_definition_spfw
 

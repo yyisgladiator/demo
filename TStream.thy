@@ -1462,17 +1462,17 @@ by (simp add: adm_spfw)
 
 (* Syntax for weak causal lambda abstraction *)
 
-syntax "_sabs" :: "[logic, logic] \<Rightarrow> logic"
+syntax "_wabs" :: "[logic, logic] \<Rightarrow> logic"
 
 parse_translation \<open>
-(* Rewrite (_sabs x t) => (Abs_spfw (%x. t)) *)
-  [Syntax_Trans.mk_binder_tr (@{syntax_const "_sabs"}, @{const_syntax Abs_spfw})];
+(* Rewrite (_wabs x t) => (Abs_spfw (%x. t)) *)
+  [Syntax_Trans.mk_binder_tr (@{syntax_const "_wabs"}, @{const_syntax Abs_spfw})];
 \<close>
 
 print_translation \<open>
   [(@{const_syntax Abs_spfw}, fn _ => fn [Abs abs] =>
       let val (x, t) = Syntax_Trans.atomic_abs_tr' abs
-      in Syntax.const @{syntax_const "_sabs"} $ x $ t end)]
+      in Syntax.const @{syntax_const "_wabs"} $ x $ t end)]
 \<close>  \<comment> \<open>To avoid eta-contraction of body\<close>
 
 (* Syntax for nested abstractions *)
@@ -1484,28 +1484,28 @@ syntax
   "_L" :: "[cargs, logic] \<Rightarrow> logic" ("(3\<L> _./ _)" [1000, 10] 10)
 
 parse_ast_translation \<open>
-(* Rewrite (L x y z. t) => (_sabs x (_sabs y (_sabs z t))) *)
+(* Rewrite (L x y z. t) => (_wabs x (_wabs y (_wabs z t))) *)
 (* cf. Syntax.l_ast_tr from src/Pure/Syntax/syn_trans.ML *)
   let
     fun L_ast_tr [pats, body] =
-          Ast.fold_ast_p @{syntax_const "_sabs"}
+          Ast.fold_ast_p @{syntax_const "_wabs"}
             (Ast.unfold_ast @{syntax_const "_cargs"} (Ast.strip_positions pats), body)
       | L_ast_tr asts = raise Ast.AST ("L_ast_tr", asts);
   in [(@{syntax_const "_L"}, K L_ast_tr)] end;
 \<close>
 
 print_ast_translation \<open>
-(* rewrite (_sabs x (_sabs y (_sabs z t))) => (L x y z. t) *)
+(* rewrite (_wabs x (_wabs y (_wabs z t))) => (L x y z. t) *)
 (* cf. Syntax.abs_ast_tr' from src/Pure/Syntax/syn_trans.ML *)
   let
-    fun sabs_ast_tr' asts =
-      (case Ast.unfold_ast_p @{syntax_const "_sabs"}
-          (Ast.Appl (Ast.Constant @{syntax_const "_sabs"} :: asts)) of
-        ([], _) => raise Ast.AST ("sabs_ast_tr'", asts)
+    fun wabs_ast_tr' asts =
+      (case Ast.unfold_ast_p @{syntax_const "_wabs"}
+          (Ast.Appl (Ast.Constant @{syntax_const "_wabs"} :: asts)) of
+        ([], _) => raise Ast.AST ("wabs_ast_tr'", asts)
       | (xs, body) => Ast.Appl
           [Ast.Constant @{syntax_const "_L"},
            Ast.fold_ast @{syntax_const "_cargs"} xs, body]);
-  in [(@{syntax_const "_cabs"}, K sabs_ast_tr')] end
+  in [(@{syntax_const "_wabs"}, K wabs_ast_tr')] end
 \<close>
 
 (* Dummy patterns for weak causal abstraction *)
@@ -1517,36 +1517,37 @@ translations
 lemma rep_spfw_cont[simp]: "cont Rep_spfw"
 using cont_Rep_spfw cont_id by blast
 
-lemma rep_spfw_chain[simp]: "chain Y \<Longrightarrow> chain (\<lambda>i. Rep_spfw (Y i))"
+lemma rep_spfw_chain2chain[simp]: "chain Y \<Longrightarrow> chain (\<lambda>i. Rep_spfw (Y i))"
 by (simp add: ch2ch_cont)
 
 lemma abs_spfw_cont: "\<forall>x. tsWeakCausal (f x) \<Longrightarrow> cont f \<Longrightarrow> cont (\<lambda>x. Abs_spfw (f x))"
 using cont_Abs_spfw spfw_def by auto
 
 (* Beta equality for weak causal functions *)
-lemma Abs_spfw_inverse2: "tsWeakCausal f \<Longrightarrow> Rep_spfw (Abs_spfw f) = f"
+lemma abs_spfw_inverse2: "tsWeakCausal f \<Longrightarrow> Rep_spfw (Abs_spfw f) = f"
 by (simp add: Abs_spfw_inverse spfw_def)
 
+lemma rep_spwf_inverse[simp]: "Abs_spfw (Rep_spfw f) = f"
+by (simp add: Rep_spfw_inverse)
+
 lemma beta_spfw: "tsWeakCausal f \<Longrightarrow> Rep_spfw (\<L> x. f x) u = f u"
-by (simp add: Abs_spfw_inverse2)
+by (simp add: abs_spfw_inverse2)
 
-lemma [simp]: "tsWeakCausal \<bottom>"
-using bottom_spfw spfw_def by auto
-
-lemma [simp]: "Rep_spfw \<bottom> = \<bottom>"
+lemma rep_spwf_strict[simp]: "Rep_spfw \<bottom> = \<bottom>"
 by (simp add: Rep_spfw_strict)
 
-lemma [simp]: "Abs_spfw \<bottom> = \<bottom>"
+lemma abs_spwf_strict[simp]: "Abs_spfw \<bottom> = \<bottom>"
 by (simp add: Abs_spfw_strict)
 
+(* Function application is strict in its first argument *)
+lemma rep_spwf_strict1[simp]: "Rep_spfw \<bottom> x = \<bottom>"
+by (simp add: Rep_cfun_strict)
+
+lemma lam_strict[simp]: "(\<L> x. \<bottom>) = \<bottom>"
+by (simp add: lambda_strict)
+
 lemma [simp]: "tsWeakCausal f \<and> f\<noteq>\<bottom> \<Longrightarrow> Abs_spfw f \<noteq> \<bottom>"
-using Abs_spfw_inverse2 by fastforce
-
-lemma [simp]: "Rep_spfw (Abs_spfw f) = g \<Longrightarrow> tsWeakCausal g"
-using Rep_spfw spfw_def by auto
-
-lemma [simp]: "Rep_spfw (Abs_spfw f) = f \<Longrightarrow> tsWeakCausal f"
-using Rep_spfw spfw_def by auto
+using abs_spfw_inverse2 by fastforce
 
 lemma [simp]: "Rep_spfw f\<noteq>\<bottom> \<Longrightarrow> f \<noteq> \<bottom>"
 using Rep_spfw_strict by blast
@@ -1554,10 +1555,16 @@ using Rep_spfw_strict by blast
 lemma [simp]: "Abs_spfw f\<noteq>\<bottom> \<Longrightarrow> f \<noteq> \<bottom>"
 using Abs_spfw_strict by blast
 
-lemma [simp]: "Abs_spfw (Rep_spfw f) = f"
-by (simp add: Rep_spfw_inverse)
+lemma abs_spfw_inverse2tsweak[simp]: "Rep_spfw (Abs_spfw f) = g \<Longrightarrow> tsWeakCausal g"
+using Rep_spfw spfw_def by auto
 
-lemma [simp]:"tsWeakCausal (Rep_spfw ts)"
+lemma abs_spfw_inverse2tsweak2[simp]: "Rep_spfw (Abs_spfw f) = f \<Longrightarrow> tsWeakCausal f"
+using Rep_spfw spfw_def by auto
+
+lemma tsweak_bot[simp]: "tsWeakCausal \<bottom>"
+by (metis bottom_spfw mem_Collect_eq spfw_def)
+
+lemma tsweak_rep_spwf[simp]: "tsWeakCausal (Rep_spfw ts)"
 using Rep_spfw spfw_def by auto
 
 (*Definition of inftimes \<surd>*)

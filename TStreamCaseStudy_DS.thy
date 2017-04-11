@@ -129,84 +129,33 @@ by (simp add: tsscanl_unfold ts_well_tsscanl_h tsscanl_h2tsscanl_nth)
 
 (* Examples for weak causal functions *)
 
-(* Constructed non weak causal function on tstreams is monotone and continous *)
-setup_lifting type_definition_cfun
-
-lift_definition tsnontsweak1 :: "'a tstream \<rightarrow> 'a tstream" is "\<lambda>ts. Abs_tstream (srt\<cdot>(Rep_tstream ts))"
-by (simp add: cfun_def)
-
-definition tsnontsweak2 :: "'a tstream \<Rightarrow> 'a tstream" where
-"tsnontsweak2 ts \<equiv> Abs_tstream (srt\<cdot>(Rep_tstream ts))"
-
-lemma tstake1of1_tick: "Abs_tstream (\<up>\<surd>) \<down> 1 = Abs_tstream (\<up>\<surd>)"
+lemma tstake1of1tick: "Abs_tstream (\<up>\<surd>) \<down> 1 = Abs_tstream (\<up>\<surd>)"
 by (simp add: tsTake_def2 One_nat_def)
 
-lemma tstake1of2_tick: "Abs_tstream (<[\<surd>, \<surd>]>) \<down> 1 = Abs_tstream (\<up>\<surd>)"
+lemma tstake1of2tick: "Abs_tstream (<[\<surd>, \<surd>]>) \<down> 1 = Abs_tstream (\<up>\<surd>)"
 by (simp add: tsTake_def2 One_nat_def tstakefirst_insert_rep_eq)
 
-lemma mono_tsnontsweak1: "monofun (Rep_cfun tsnontsweak1)"
-by (simp add: monofun_Rep_cfun2)
+lemma tstake2of1tick: "Abs_tstream (\<up>\<surd>) \<down> 2 = Abs_tstream (\<up>\<surd>)"
+using tstake1of1tick tstake_fin2 by fastforce
 
-lemma mono_tsnontsweak2: "monofun tsnontsweak2"
-by (simp add: monofun_def tsnontsweak2_def below_tstream_def monofun_cfun_arg)
-
-lemma cont_tsnontsweak1: "cont (Rep_cfun tsnontsweak1)"
-by (simp add: cont_Rep_cfun2)
-
-lemma cont_tsnontsweak2: "cont tsnontsweak2"
-apply (rule contI2)
-apply (simp add: mono_tsnontsweak2)
-apply (simp add: tsnontsweak2_def below_tstream_def)
-by (smt Rep_Abs Rep_tstream_inject contlub_cfun_arg eq_imp_below lub_eq ts_well_Rep ts_well_drop1
-    tsnontsweak1.rep_eq)
-
-(* <\<surd>, \<surd>> \<down> 1 = <\<surd>> \<down> 1 but <\<surd>> \<down> 1 \<noteq> \<bottom> \<down> 1 *)
-lemma non_tsweak_tsnontsweak: "\<not>tsWeakCausal tsnontsweak2"
-proof -
-  have h1: "tsnontsweak2 (Abs_tstream (<[\<surd>, \<surd>]>)) = Abs_tstream (\<up>\<surd>)"
-    by (simp add: tsnontsweak2_def)
-  have h2: "tsnontsweak2 (Abs_tstream (\<up>\<surd>)) = \<bottom>"
-    by (simp add: tsnontsweak2_def)
-  hence h3: "((tsnontsweak2 (Abs_tstream (<[\<surd>, \<surd>]>))) \<down> 1) \<noteq> ((tsnontsweak2 (Abs_tstream (\<up>\<surd>))) \<down> 1)"
-    by (simp add: h1 tsnontsweak2_def tstake1of1_tick)
-  have h4: "Abs_tstream (<[\<surd>, \<surd>]>) \<down> 1 = Abs_tstream (\<up>\<surd>) \<down> 1"
-    by (metis tstake1of1_tick tstake1of2_tick)
-  thus "\<not>tsWeakCausal tsnontsweak2"
-    apply (simp add: tsWeakCausal_def)
-    using h3 by auto    
-qed
+lemma tstake2of2tick: "Abs_tstream (<[\<surd>, \<surd>]>) \<down> 2 = Abs_tstream (<[\<surd>, \<surd>]>)"
+by (smt One_nat_def Rep_Abs list2s.simps(2) list2s_0 lscons_conv numeral_2_eq_2 sup'_def tick_msg
+    tsconc_insert tstake1of1tick tstake_tick)
 
 (* Constructed non continous function on tstreams is not weak causal but monotone *)
 definition tsnoncont :: "'a tstream \<Rightarrow> 'a tstream" where
 "tsnoncont ts \<equiv> if #(Rep_tstream ts)<\<infinity> then Abs_tstream (\<up>\<surd>)
                 else Abs_tstream (<[\<surd>, \<surd>]>)"
 
-lemma tstake2of1tick: "Abs_tstream (\<up>\<surd>) \<down> 2 = Abs_tstream (\<up>\<surd>)"
-using tstake1of1_tick tstake_fin2 by fastforce
-
-lemma tstake2of2tick: "Abs_tstream (<[\<surd>, \<surd>]>) \<down> 2 = Abs_tstream (<[\<surd>, \<surd>]>)"
-by (smt One_nat_def Rep_Abs list2s.simps(2) list2s_0 lscons_conv numeral_2_eq_2 sup'_def tick_msg
-    tsconc_insert tstake1of1_tick tstake_tick)
-
 lemma tstake2ofinftick: "(tsinftimes (Abs_tstream (\<up>\<surd>))) \<down> 2 = Abs_tstream (<[\<surd>, \<surd>]>)"
 by (smt One_nat_def Rep_Abs Rep_cfun_strict1 Suc_1 list2s.simps(2) list2s_0 lscons_conv sup'_def 
     tick_msg tsDropTake1 tsTake.simps(1) tsTakeDrop tsconc_assoc tsconc_insert tsinftimes_unfold
     tstake2of2tick tstake_tick)
 
-lemma tsnoncont_2tick: "tsnoncont (Abs_tstream (<[\<surd>, \<surd>]>)) = Abs_tstream (\<up>\<surd>)"
-by (simp add: tsnoncont_def)
-
-lemma tsnoncont_inftick: "tsnoncont (tsinftimes (Abs_tstream (\<up>\<surd>))) = Abs_tstream (<[\<surd>, \<surd>]>)"
-by (metis (no_types, lifting) less_imp_not_eq2 ln_less slen_scons tick_msg tsconc_rep_eq
-    tsinftimes_unfold tsnoncont_def)
-
 lemma mono_tsnoncont: "monofun tsnoncont"
 apply (rule monofunI)
 apply (simp add: tsnoncont_def below_tstream_def, auto)
 by (metis inf_ub lnle_def lnless_def mono_fst_infD)
-
-lemma h3: "tsnoncont (Lub (\<lambda>i. (tsinftimes (Abs_tstream (\<up>\<surd>))) \<down> i)) = Abs_tstream (<[\<surd>, \<surd>]>)"
-by (simp add: tsnoncont_inftick)
 
 lemma non_cont_tsnoncont: "\<not>cont tsnoncont"
 apply (simp add: cont_def)
@@ -220,10 +169,8 @@ apply (simp add: tsWeakCausal_def)
 apply (rule_tac x=2 in exI)
 apply (rule_tac x="tsinftimes (Abs_tstream (\<up>\<surd>))" in exI)
 apply (rule_tac x="Abs_tstream (<[\<surd>, \<surd>]>)" in exI)
-apply (auto)
-apply (metis list2s.simps(1) list2s.simps(2) lscons_conv sup'_def tstake2of2tick tstake2ofinftick)
-by (metis (no_types, lifting) Rep_Abs list2s.simps(1) list2s.simps(2) list2s_inj lscons_conv 
-    not_Cons_self2 sup'_def tick_msg ts_well_conc1 tsnoncont_2tick tsnoncont_inftick tstake2of1tick
-    tstake2of2tick)
+by (smt Fin_02bot Fin_Suc Rep_Abs leI less_le list2s.simps(2) list2s_0 ln_less lnzero_def
+    lscons_conv notinfI3 slen_scons strict_slen sup'_def tick_msg ts_well_sing_conc tsconc_rep_eq
+    tsinftimes_unfold tsnoncont_def tstake2of1tick tstake2of2tick tstake2ofinftick)
 
 end
