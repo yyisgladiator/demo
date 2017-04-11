@@ -1697,9 +1697,6 @@ definition tsscanl     :: "('o  \<Rightarrow> 'i   \<Rightarrow> 'o) \<Rightarro
 lemma TSSCANL_empty[simp]: "TSSCANL n f q \<epsilon> = \<epsilon>"
 by (induct_tac n, auto)
 
-lemma below_shd: "x \<sqsubseteq> y \<and> x \<noteq> \<epsilon> \<Longrightarrow> shd x = shd y"
-by (metis below_bottom_iff less_all_sconsD surj_scons)
-
 (* Monotonicity of TSSCANL *)
 lemma mono_TSSCANL: 
   "\<forall> x y q. x \<sqsubseteq> y \<longrightarrow> TSSCANL n f q x \<sqsubseteq> TSSCANL n f q y"
@@ -1708,8 +1705,7 @@ apply (drule lessD, erule disjE, simp)
 apply (erule exE)+
 apply (erule conjE)+
 apply (simp, rule monofun_cfun_arg, simp)
-apply (simp add: below_shd)
-apply (simp add: below_shd)
+apply (simp add: below_shd)+
 by (simp add: below_shd monofun_cfun_arg)
 
 (* Result of TSSCANL n only depends on first n elements of input stream *)
@@ -1736,9 +1732,7 @@ apply (induct_tac i, auto)
 apply (rule monofun_cfun_arg)
 apply (erule_tac x="x" in allE)
 apply presburger
-apply (smt monofun_cfun_arg)
-apply (smt monofun_cfun_arg)
-by (smt monofun_cfun_arg)
+by (smt monofun_cfun_arg)+
 
 (* tsscanl is a continuous function *)
 lemma cont_lub_TSSCANL: "cont (\<lambda>s. \<Squnion>i. TSSCANL i f q s)"
@@ -1942,8 +1936,7 @@ by (smt not_less sfilter_srtdwl3 slen_rt_ile_eq snth_rt tsscanl_h_unfold_srt tss
 (* Without tick is the nth of tsscanl_h equal to the nth of sscanl  *)
 lemma tsscanl_h2sscanl_snth: "Fin n<#({e. e\<noteq>\<surd>} \<ominus> s) \<Longrightarrow>
  \<M>\<inverse> snth n (tsscanl_h f q\<cdot>({e. e\<noteq>\<surd>} \<ominus> s)) = snth n (sscanl f q\<cdot>(smap (\<lambda>e. \<M>\<inverse> e)\<cdot>({e. e\<noteq>\<surd>} \<ominus> s)))"
-apply (induction n arbitrary: f q s)
-apply (auto)
+apply (induction n arbitrary: f q s, auto)
 apply (subst tsscanl_h_unfold_shd, auto)
 using sfilter_ne_resup apply force
 apply (smt lnat.con_rews lnzero_def shd1 slen_empty_eq smap_scons sscanl_scons surj_scons)

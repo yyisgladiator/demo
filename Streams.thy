@@ -547,6 +547,10 @@ by (rule iffI, insert less_all_sconsD [of a \<epsilon> b x], simp+)
 lemma surj_scons: "x\<noteq>\<epsilon> \<Longrightarrow> \<up>(shd x) \<bullet> (srt\<cdot>x) = x"
 by (rule_tac x=x in scases, simp+)
 
+(* the head of ordered streams are equal *)
+lemma below_shd: "x \<sqsubseteq> y \<and> x \<noteq> \<epsilon> \<Longrightarrow> shd x = shd y"
+by (metis below_bottom_iff less_all_sconsD surj_scons)
+
 text {* Characterizations of @{text "\<sqsubseteq>"} with head and rest *}
 
 (* any nonempty prefix of a stream y is still a prefix when ignoring the first element *)
