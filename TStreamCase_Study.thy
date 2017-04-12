@@ -30,6 +30,11 @@ lemma tstake2of2tick: "Abs_tstream (<[\<surd>, \<surd>]>) \<down> 2 = Abs_tstrea
 by (smt One_nat_def Rep_Abs list2s.simps(2) list2s_0 lscons_conv numeral_2_eq_2 sup'_def tick_msg
     tsconc_insert tstake1of1tick tstake_tick)
 
+lemma tstake2ofinftick: "(tsinftimes (Abs_tstream (\<up>\<surd>))) \<down> 2 = Abs_tstream (<[\<surd>, \<surd>]>)"
+by (smt One_nat_def Rep_Abs Rep_cfun_strict1 Suc_1 list2s.simps(2) list2s_0 lscons_conv sup'_def 
+    tick_msg tsDropTake1 tsTake.simps(1) tsTakeDrop tsconc_assoc tsconc_insert tsinftimes_unfold
+    tstake2of2tick tstake_tick)
+
 (* Identity function on tstreams is monotone, continous and weak causal *)
 definition tsident :: "'a tstream \<Rightarrow> 'a tstream" where
 "tsident ts \<equiv> ts"
@@ -107,6 +112,52 @@ by (metis (no_types, lifting) Abs_tstream_strict Rep_Abs Rep_tstream_strict list
 (* Constructed non weak causal function on tstreams is not strong causal *)
 lemma non_tsstrong_tsnontsweak: "\<not>tsStrongCausal tsnontsweak"
 using non_tsweak_tsnontsweak tsStrong2Weak by auto
+
+(* Constructed non continous function on tstreams is not weak causal but monotone *)
+definition tsnoncont :: "'a tstream \<Rightarrow> 'a tstream" where
+"tsnoncont ts \<equiv> if #(Rep_tstream ts)<\<infinity> then Abs_tstream (\<up>\<surd>) else Abs_tstream (<[\<surd>, \<surd>]>)"
+
+lemma tsnoncont_inftick:
+  "tsnoncont (tsinftimes (Abs_tstream (\<up>\<surd>))) = Abs_tstream (<[\<surd>, \<surd>]>)"
+apply (simp add: tsnoncont_def)
+by (metis ln_less lnless_def slen_scons tick_msg tsconc_rep_eq tsinftimes_unfold)
+
+lemma not_below_2tick_tick: "Abs_tstream (\<up>\<surd> \<bullet> \<up>\<surd>) \<notsqsubseteq> Abs_tstream (\<up>\<surd>)"
+by (smt Rep_Abs Rep_tstream_inject list2s.simps(1) list2s.simps(2) list2s_inj lscons_conv 
+    not_Cons_self po_eq_conv sup'_def tick_msg ts_tsconc_prefix ts_well_conc1 tsconc_rep_eq1)
+
+lemma tsnoncont_tick_is_ub: "range (\<lambda>i. tsnoncont tsinftimes (Abs_tstream (\<up>\<surd>)) \<down> i ) <| Abs_tstream (\<up>\<surd>)"
+apply (simp add: is_ub_def tsnoncont_def, auto)
+by (metis below_bottom_iff inf_ub less_le tsDropNth tsDropTake1 ts_tsconc_prefix tsinf_nth 
+    tstickcount_insert tstreaml1)
+
+lemma mono_tsnoncont: "monofun tsnoncont"
+apply (rule monofunI)
+apply (simp add: tsnoncont_def below_tstream_def, auto)
+by (metis inf_ub lnle_def lnless_def mono_fst_infD)
+
+(* Y = Take i <\<surd>, ...>
+   \<Longrightarrow> range (\<lambda>i. tsnoncont (Y i)) <<| <\<surd>> \<noteq> tsnoncont (Lub Y = <\<surd>, ...>) =  <\<surd>, \<surd>> *)
+lemma non_cont_tsnoncont: "\<not>cont tsnoncont"
+apply (simp add: cont_def)
+apply (rule_tac x="(\<lambda>i. (tsinftimes (Abs_tstream (\<up>\<surd>))) \<down> i )" in exI)
+apply (simp add: tsnoncont_inftick is_lub_def, auto)
+apply (rule_tac x="Abs_tstream (\<up>\<surd>)" in exI)
+by (simp add: not_below_2tick_tick tsnoncont_tick_is_ub)
+
+(* <\<surd>, \<surd>> \<down> 2 = <\<surd>, ...> \<down> 2 but <\<surd>> \<down> 2 \<noteq> <\<surd>, \<surd>> \<down> 2 *)
+lemma non_tsweak_tsnoncont: "\<not>tsWeakCausal tsnoncont"
+apply (simp add: tsWeakCausal_def)
+apply (rule_tac x=2 in exI)
+apply (rule_tac x="tsinftimes (Abs_tstream (\<up>\<surd>))" in exI)
+apply (rule_tac x="Abs_tstream (<[\<surd>, \<surd>]>)" in exI)
+by (smt Fin_02bot Fin_Suc Rep_Abs leI less_le list2s.simps(2) list2s_0 ln_less lnzero_def
+    lscons_conv notinfI3 slen_scons strict_slen sup'_def tick_msg ts_well_sing_conc tsconc_rep_eq
+    tsinftimes_unfold tsnoncont_def tstake2of1tick tstake2of2tick tstake2ofinftick)
+
+(* Constructed non continous function on tstreams is not strong causal *)
+lemma non_tsstrong_tsnoncont: "\<not>tsStrongCausal tsnoncont"
+using non_tsweak_tsnoncont tsStrong2Weak by auto
 
 (* Examples for weak causal function type *)
 
