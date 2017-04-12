@@ -234,10 +234,7 @@ section {* Some more lemmas about sets *}
 
 text {* All subsets of a finite set are finite themselves *}
 lemma finite_subset1: "finite Y \<Longrightarrow> (\<forall>X. X \<subseteq> Y \<longrightarrow> finite X)"
-apply (rule_tac F="Y" in finite_induct,simp+)
-apply (rule allI, rule impI)
-apply (simp only: subset_insert_iff split: split_if_asm)
-by (erule_tac x="X - {x}" in allE, simp+)
+  by (simp add: finite_subset)
 
 text {* Given an infinite and a finite set, the infinite one contains an element
   which is not in the finite one *}

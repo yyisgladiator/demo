@@ -292,9 +292,8 @@ proof
   hence "Msg a \<in> sdom\<cdot>(Rep_tstream (\<Squnion>i. Y i))" by (simp add: tsDom_def)
   hence "Msg a \<in> (\<Squnion>i. sdom\<cdot>(Rep_tstream (Y i)))"
     by (smt Abs_tstream_inverse Rep_tstream adm_def assms below_tstream_def contlub_cfun_arg lub_eq lub_tstream mem_Collect_eq po_class.chain_def tstream_well_adm) 
-  hence "Msg a \<in> (\<Union>i. sdom\<cdot>(Rep_tstream (Y i)))" by (metis SUP_def set_cpo_simps(2))
-  hence "(a \<in> (\<Squnion>i. {u. Msg u \<in> sdom\<cdot>(Rep_tstream (Y i))}))"
-    by (metis (no_types, lifting) SUP_def UN_iff mem_Collect_eq set_cpo_simps(2))
+  hence "Msg a \<in> (\<Union>i. sdom\<cdot>(Rep_tstream (Y i)))" by (simp add: lub_eq_Union)
+  hence "(a \<in> (\<Squnion>i. {u. Msg u \<in> sdom\<cdot>(Rep_tstream (Y i))}))" by (simp add: lub_eq_Union)
   thus "a\<in>(\<Squnion>i. ?F (Y i))" by (metis (mono_tags, lifting) Collect_cong lub_eq tsDom_def)
 qed
 
@@ -674,8 +673,8 @@ by (metis assms One_nat_def lnat_po_eq_conv lnle_def lnless_def neq02Suclnle sfi
 lemma ts_well_drop [simp]: 
   shows "ts_well s \<Longrightarrow>ts_well (sdrop n\<cdot>s)"
 apply(induction n arbitrary: s)
-apply (simp add: assms)
-by (metis One_nat_def sdrop_0 sdrop_forw_rt ts_well_drop1)
+apply simp
+  by (simp add: sdrop_forw_rt)
 
 lemma tsdropfirst_well1 [simp]:  
   shows "ts_well (srt\<cdot>(sdropwhile (\<lambda>a. a\<noteq>\<surd>)\<cdot>(Rep_tstream ts)))"

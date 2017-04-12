@@ -2924,7 +2924,7 @@ shows "x\<in>sdom\<cdot>s \<Longrightarrow> x\<in>(sdom\<cdot>(A \<ominus> s))"
 apply(induction s)
 apply(rule admI)
 apply rule
-apply (smt SUP_def UN_E ch2ch_Rep_cfunR contlub_cfun_arg contra_subsetD sdom_chain2lub set_cpo_simps(2))
+  apply (metis (mono_tags, lifting) UN_iff ch2ch_Rep_cfunR contlub_cfun_arg sdom_lub)
 apply simp
 by (smt UnE assms empty_iff insert_iff sconc_sdom sdom2un sdom_sconc sdom_sfilter_subset sfilter_in stream.con_rews(2) stream.sel_rews(5) subsetCE surj_scons)
 
