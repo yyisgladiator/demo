@@ -126,7 +126,8 @@ lemma not_below_2tick_tick: "Abs_tstream (\<up>\<surd> \<bullet> \<up>\<surd>) \
 by (smt Rep_Abs Rep_tstream_inject list2s.simps(1) list2s.simps(2) list2s_inj lscons_conv 
     not_Cons_self po_eq_conv sup'_def tick_msg ts_tsconc_prefix ts_well_conc1 tsconc_rep_eq1)
 
-lemma tsnoncont_tick_is_ub: "range (\<lambda>i. tsnoncont tsinftimes (Abs_tstream (\<up>\<surd>)) \<down> i ) <| Abs_tstream (\<up>\<surd>)"
+lemma tsnoncont_tick_is_ub: 
+  "range (\<lambda>i. tsnoncont tsinftimes (Abs_tstream (\<up>\<surd>)) \<down> i ) <| Abs_tstream (\<up>\<surd>)"
 apply (simp add: is_ub_def tsnoncont_def, auto)
 by (metis below_bottom_iff inf_ub less_le tsDropNth tsDropTake1 ts_tsconc_prefix tsinf_nth 
     tstickcount_insert tstreaml1)
