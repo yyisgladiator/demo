@@ -10,10 +10,10 @@ definition spsCompPar :: "'m SPS \<Rightarrow>'m  SPS \<Rightarrow> 'm SPS" (inf
  
 definition spsCompSer :: "'m SPS \<Rightarrow>'m  SPS \<Rightarrow> 'm SPS" (infixl "\<circle>" 50) where
   "spsCompSer S1 S2 \<equiv> Abs_SPS {f1 \<circ> f2 | f1 f2. f1\<in>(Rep_SPS S1) \<and> f2\<in>(Rep_SPS S2)}" 
-(*
-definition spsCompFeedback :: "'m SPS  \<Rightarrow> 'm SPS" ("µ_" 50) where
-  "spsCompFeedback S \<equiv> Abs_SPS { µ(f1) | f1. f1\<in>(Rep_SPS S)}" 
-*) 
+
+definition spsCompFeedback :: "'m SPS  \<Rightarrow> 'm SPS" where
+  "spsCompFeedback S \<equiv> Abs_SPS { spfFeedbackOperator f1 | f1. f1\<in>(Rep_SPS S)}" 
+ 
   
 (* Ariane *)
   

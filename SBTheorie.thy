@@ -66,7 +66,7 @@ abbreviation sbGetch_abbr :: "'m SB \<Rightarrow> channel \<Rightarrow> 'm strea
 
 
 text {* For a given channel set, "sbLeast" is the smallest stream bundle with empty streams. *}
-definition sbLeast :: "channel set \<Rightarrow> 'm SB" where
+definition sbLeast :: "channel set \<Rightarrow> 'm SB" ("_^\<bottom>" [1000] 999) where
 "sbLeast cs \<equiv> (\<lambda>c. (c \<in> cs) \<leadsto> \<epsilon> )\<Omega>"
 
 

@@ -318,15 +318,15 @@ section Broy
   
 subsection Stueber_Version
   
-(*primrec spfFeedbackHelper :: "nat \<Rightarrow> 'a SPF \<Rightarrow> 'a SB \<Rightarrow> 'a SB" where
-  "spfFeedbackHelper 0 f sb = sbLeast (spfDom\<cdot>f \<union> spfRan\<cdot>f)" |
+primrec spfFeedbackHelper :: "nat \<Rightarrow> 'a SPF \<Rightarrow> 'a SB \<Rightarrow> 'a SB" where
+  "spfFeedbackHelper 0 f sb = (spfDom\<cdot>f \<union> spfRan\<cdot>f)^\<bottom>" |
   "spfFeedbackHelper (Suc i) f sb = 
     (let last = spfFeedbackHelper i f sb in
     (sb \<uplus> (f \<rightleftharpoons> (last \<bar> spfDom\<cdot>f))))"
   
 definition spfFeedbackOperatorStueber :: "'a SPF \<Rightarrow> 'a SPF"  where (* ("\<mu>_" 50) *)
   "spfFeedbackOperatorStueber f \<equiv> Abs_CSPF (\<lambda> sb. (sbDom\<cdot>sb = spfDom\<cdot>f - spfRan\<cdot>f) \<leadsto> 
-    ((\<Squnion>i. spfFeedbackHelper i f sb  ) \<bar> (spfRan\<cdot>f)))"*)
+    ((\<Squnion>i. spfFeedbackHelper i f sb  ) \<bar> (spfRan\<cdot>f)))"
 
 subsection Broy_Version
 
@@ -336,10 +336,30 @@ let I  = spfDom\<cdot>f - spfRan\<cdot>f;
     I1 = spfDom\<cdot>f;
     C  = spfRan\<cdot>f
 in Abs_CSPF (\<lambda> sb. (sbDom\<cdot>sb = I) \<leadsto>
-    (\<Squnion>i. iterate i\<cdot>(\<Lambda> z. (f\<rightleftharpoons>((sb \<uplus> z)\<bar> I1)))\<cdot>(sbLeast C)))" 
+    (\<Squnion>i. iterate i\<cdot>(\<Lambda> z. (f\<rightleftharpoons>((sb \<uplus> z)\<bar> I1)))\<cdot>(C^\<bottom>)))" 
 
-  (* \<Lambda> x. fix\<cdot>(\<Lambda> (z,y). f(x,y)) *)
+
+definition spfFeedbackOperator2 :: "'a SPF \<Rightarrow> 'a SPF" where
+"spfFeedbackOperator2 f \<equiv>
+let I  = spfDom\<cdot>f - spfRan\<cdot>f;
+    I1 = spfDom\<cdot>f;
+    C  = (spfDom\<cdot>f \<union> spfRan\<cdot>f)
+in Abs_CSPF (\<lambda> sb. (sbDom\<cdot>sb = I) \<leadsto>
+    (\<Squnion>i. iterate i\<cdot>(\<Lambda> z. sb \<uplus> (f\<rightleftharpoons>(z \<bar> I1)))\<cdot>(C^\<bottom>)) \<bar> (spfRan\<cdot>f))" 
+
+lemma [simp]: "cont (\<lambda> z. sb \<uplus> (f\<rightleftharpoons>(z\<bar>spfDom\<cdot>f)))" sorry
+
+lemma feedbackHelpFunctionEq: "iterate i\<cdot>(\<Lambda> z. (sb \<uplus> f\<rightleftharpoons>(z\<bar>spfDom\<cdot>f)))\<cdot>((spfDom\<cdot>f \<union> spfRan\<cdot>f)^\<bottom>) = spfFeedbackHelper i f sb"
+  apply(induct_tac i)
+   apply simp
+  apply(unfold iterate_Suc)
+    by simp
   
+lemma spfFeedbackOperatorEq: "spfFeedbackOperator2 f = spfFeedbackOperatorStueber f"
+  apply(simp add: spfFeedbackOperator2_def spfFeedbackOperatorStueber_def)
+  apply(subst feedbackHelpFunctionEq)
+    by auto
+
 (* sum4 SPF *) 
 subsection sum4
 (*
