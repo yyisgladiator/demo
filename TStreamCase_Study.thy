@@ -35,6 +35,11 @@ by (smt One_nat_def Rep_Abs Rep_cfun_strict1 Suc_1 list2s.simps(2) list2s_0 lsco
     tick_msg tsDropTake1 tsTake.simps(1) tsTakeDrop tsconc_assoc tsconc_insert tsinftimes_unfold
     tstake2of2tick tstake_tick)
 
+lemma tstakenofinftick: "#(Rep_tstream tsinftimes (Abs_tstream (\<up>\<surd>)) \<down> n) < \<infinity>"
+by (metis Abs_Rep Inf'_neq_0 Rep_tstream_strict inf_ub less_le sconc_fst_inf sconc_snd_empty
+    slen_empty_eq tsDropNth tsDropTake1 ts_well_Rep ts_well_def tsconc_insert tsinf_nth
+    tstake_tsnth tstickcount_insert)
+
 (* Identity function on tstreams is monotone, continous and weak causal *)
 definition tsident :: "'a tstream \<Rightarrow> 'a tstream" where
 "tsident ts \<equiv> ts"
@@ -128,9 +133,7 @@ by (smt Rep_Abs Rep_tstream_inject list2s.simps(1) list2s.simps(2) list2s_inj ls
 
 lemma tsnoncont_tick_is_ub: 
   "range (\<lambda>i. tsnoncont tsinftimes (Abs_tstream (\<up>\<surd>)) \<down> i ) <| Abs_tstream (\<up>\<surd>)"
-apply (simp add: is_ub_def tsnoncont_def, auto)
-by (metis below_bottom_iff inf_ub less_le tsDropNth tsDropTake1 ts_tsconc_prefix tsinf_nth 
-    tstickcount_insert tstreaml1)
+by (simp add: is_ub_def tsnoncont_def tstakenofinftick)
 
 lemma mono_tsnoncont: "monofun tsnoncont"
 apply (rule monofunI)
