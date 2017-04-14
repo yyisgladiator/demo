@@ -2090,6 +2090,29 @@ lemma fair_sscanl[simp]: "#(sscanl f a\<cdot>x) = #x"
 apply (rule spec [where x = a])
 by (rule ind [of _ x], auto)
 
+(* Verification of sscanl with sscanl_nth *)
+
+primrec sscanl_nth :: "nat \<Rightarrow> ('a \<Rightarrow> 'a  \<Rightarrow> 'a) \<Rightarrow> 'a  \<Rightarrow> 'a stream \<Rightarrow> 'a" where
+"sscanl_nth 0 f q s =  f q (shd s)" |
+"sscanl_nth (Suc n) f q s = sscanl_nth n f (f q (shd s)) (srt\<cdot>s)"
+
+(* Nth element of sscanl is equal to sscanl_nth *)
+lemma sscanl2sscanl_nth:
+  "Fin n<#s \<Longrightarrow> snth n (sscanl f q\<cdot>s) = sscanl_nth n f q s"
+proof (induction n arbitrary: q s, auto)
+  fix q :: "'a" and s :: "'a stream" and k :: "lnat"
+  assume a1: "#s = lnsuc\<cdot>k"
+  hence h1: "s \<noteq> \<epsilon>"
+    using lnsuc_neq_0_rev strict_slen by auto
+  thus "shd (sscanl f q\<cdot>s) = f q (shd s)"
+    by (simp add: sscanl_shd)
+next
+  fix n :: "nat" and  q :: "'a" and s :: "'a stream"
+  assume a2: "\<And>q s. Fin n < #s \<Longrightarrow> snth n (sscanl f q\<cdot>s) = sscanl_nth n f q s"
+  assume a3: "Fin (Suc n) < #s"
+  thus "snth (Suc n) (sscanl f q\<cdot>s) = sscanl_nth n f (f q (shd s)) (srt\<cdot>s)"
+    by (metis a2 a3 leI not_less slen_rt_ile_eq snth_rt sscanl_srt)
+qed
 
 (* ----------------------------------------------------------------------- *)
 subsection {* @{term szip} *}

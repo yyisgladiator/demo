@@ -10,63 +10,6 @@ theory TStreamCaseStudy_DS
 imports TStream
 begin
 
-(* tsTake is cont, tsTake is chain *)
-lemma adm_spfw: "adm (\<lambda>x. x \<in> spfw)"
-apply (simp only: spfw_def tsWeakCausal_def adm_def mem_Collect_eq)
-by (metis (mono_tags, lifting) ch2ch_fun contlub_cfun_arg lub_eq lub_fun)
-
-(* Verification of sscanl with sscanl_nth *)
-primrec sscanl_nth :: "nat \<Rightarrow> ('a \<Rightarrow> 'a  \<Rightarrow> 'a) \<Rightarrow> 'a  \<Rightarrow> 'a stream \<Rightarrow> 'a" where
-"sscanl_nth 0 f q s =  f q (shd s)" |
-"sscanl_nth (Suc n) f q s = f (shd s) (sscanl_nth n f q (srt\<cdot>s))"
-
-lemma sscanl_snth2: "Fin n<#s \<Longrightarrow> snth (Suc n) (sscanl f q\<cdot>(\<up>a\<bullet>s)) = f a (snth n (sscanl f q\<cdot>s))"
-proof (induction n arbitrary: q a s, auto)
-  fix q :: "'a" and a :: "'a" and s :: "'a stream" and k :: "lnat"
-  assume a1: "#s = lnsuc\<cdot>k"
-  hence h1: "s \<noteq> \<epsilon>"
-    using lnsuc_neq_0 strict_slen by auto
-  thus "shd (sscanl f (f q a)\<cdot>s) = f a (shd (sscanl f q\<cdot>s))"
-    apply (simp add: sscanl_shd)
-    sorry
-next
-  fix n :: "nat" and q :: "'a" and a :: "'a" and s :: "'a stream"
-  assume a2: "\<And>q a s. Fin n < #s \<Longrightarrow> snth n (sscanl f (f q a)\<cdot>s) = f a (snth n (sscanl f q\<cdot>s))"
-  assume a3: "Fin (Suc n) < #s"
-  hence h2: "Fin n < #s"
-    using convert_inductive_asm by auto
-  thus "snth (Suc n) (sscanl f (f q a)\<cdot>s) = f a (snth (Suc n) (sscanl f q\<cdot>s))"
-    apply (simp add: a2 a3 sscanl_snth)
-    sorry
-qed
-
-(* Nth element of sscanl is equal to sscanl_nth *)
-lemma sscanl2sscanl_nth:
-  "Fin n<#s \<Longrightarrow> snth n (sscanl f q\<cdot>s) = sscanl_nth n f q s"
-proof (induction n arbitrary: q s, auto)
-  fix q :: "'a" and s :: "'a stream" and k :: "lnat"
-  assume a1: "#s = lnsuc\<cdot>k"
-  hence h1: "s \<noteq> \<epsilon>"
-    using lnsuc_neq_0_rev strict_slen by auto
-  thus "shd (sscanl f q\<cdot>s) = f q (shd s)"
-    by (simp add: sscanl_shd)
-next
-  fix n :: "nat" and  q :: "'a" and s :: "'a stream"
-  assume a2: "\<And>q s. Fin n < #s \<Longrightarrow> snth n (sscanl f q\<cdot>s) = sscanl_nth n f q s"
-  assume a3: "Fin (Suc n) < #s"
-  thus "snth (Suc n) (sscanl f q\<cdot>s) = f (shd s) (sscanl_nth n f q (srt\<cdot>s))"
-    by (metis Suc_neq_Zero a2 less_le lnle_Fin_0 not_less slen_rt_ile_eq sscanl_snth2 strict_slen
-        surj_scons)
-qed
-
-(* Verification of tsscanl with tsscanl_nth *)
-
-(* Calculates like scanl the event stream elements until the nth element *)
-primrec tsscanl_nth :: "nat \<Rightarrow> ('a \<Rightarrow> 'a  \<Rightarrow> 'a) \<Rightarrow> 'a  \<Rightarrow> 'a event stream \<Rightarrow> 'a" where
-"tsscanl_nth 0 f q s = (if shd s=\<surd> then q else f q (\<M>\<inverse> shd s))" |
-"tsscanl_nth (Suc n) f q s = (if shd s=\<surd> then tsscanl_nth n f q (srt\<cdot>s)
-                              else f (\<M>\<inverse> shd s) (tsscanl_nth n f q (srt\<cdot>s)))"
-
 (* Examples for weak causal functions *)
 
 lemma tstake1of1tick: "Abs_tstream (\<up>\<surd>) \<down> 1 = Abs_tstream (\<up>\<surd>)"

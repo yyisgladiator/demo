@@ -1452,8 +1452,10 @@ definition "spfw = {f ::'a tstream => 'b tstream. tsWeakCausal f}"
 lemma bottom_spfw: "\<bottom> \<in> spfw"
 by (simp add: spfw_def tsWeakCausal_def)
 
+(* tsTake is cont, tsTake is chain *)
 lemma adm_spfw: "adm (\<lambda>x. x \<in> spfw)"
-by (simp add: spfw_def tsWeakCausal_def)
+apply (simp only: spfw_def tsWeakCausal_def adm_def mem_Collect_eq)
+by (metis (mono_tags, lifting) ch2ch_fun contlub_cfun_arg lub_eq lub_fun)
 
 pcpodef ('a, 'b) spfw ("(_ \<leadsto>w/ _)" [1, 0] 0) = "spfw :: ('a tstream => 'b tstream) set"
 apply (simp add: bottom_spfw)
@@ -2076,7 +2078,48 @@ lemma tsscanl2sscanl_tsAbs: "tsAbs\<cdot>(tsscanl f q\<cdot>ts) = sscanl f q\<cd
 by (simp add: tsabs_insert tsscanl_unfold ts_well_Rep ts_well_tsscanl_h tsscanl_h_sfilter_msg
     tsscanl_h2sscanl_sfilter_msg)
 
+(* Verification of tsscanl with tsscanl_nth *)
 
+(* Calculates like scanl the event stream elements until the nth element *)
+primrec tsscanl_nth :: "nat \<Rightarrow> ('a \<Rightarrow> 'a  \<Rightarrow> 'a) \<Rightarrow> 'a  \<Rightarrow> 'a event stream \<Rightarrow> 'a" where
+"tsscanl_nth 0 f q s = (if shd s=\<surd> then q else f q (\<M>\<inverse> shd s))" |
+"tsscanl_nth (Suc n) f q s = (if shd s=\<surd> then tsscanl_nth n f q (srt\<cdot>s)
+                              else tsscanl_nth n f (f q (\<M>\<inverse> shd s)) (srt\<cdot>s))"
+
+(* Nth element of tsscanl_h is equal to tsscanl_nth *)
+lemma tsscanl_h2tsscanl_nth_snth: 
+  "Fin n<#s \<and> snth n s\<noteq>\<surd> \<Longrightarrow> snth n (tsscanl_h f q\<cdot>s) = \<M> tsscanl_nth n f q s"
+proof (induction n arbitrary: q s, auto)
+  fix q :: "'a" and s :: "'a event stream" and k :: "lnat"
+  assume a1: "#s = lnsuc\<cdot>k"
+  assume a2: "shd s \<noteq> \<surd>"
+  thus "shd (tsscanl_h f q\<cdot>s) = \<M> f q \<M>\<inverse> shd s"
+    using a1 lnat.con_rews lnzero_def strict_slen tsscanl_h_unfold_shd by fastforce
+next  
+  fix n :: "nat" and  q :: "'a" and s :: "'a event stream"
+  assume a4: "\<And>q s. Fin n < #s \<and> snth n s \<noteq> \<surd> 
+                \<Longrightarrow> snth n (tsscanl_h f q\<cdot>s) = \<M> tsscanl_nth n f q s"
+  assume a5: "Fin (Suc n) < #s"
+  assume a6: "snth (Suc n) s \<noteq> \<surd>"
+  thus "shd s = \<surd> \<Longrightarrow> snth (Suc n) (tsscanl_h f q\<cdot>s) = \<M> tsscanl_nth n f q (srt\<cdot>s)"
+    by (metis (no_types, lifting) a4 a5 convert_inductive_asm not_less slen_rt_ile_eq snth_rt
+        tsscanl_h_snth_tick)
+  thus "shd s \<noteq> \<surd> \<Longrightarrow> snth (Suc n) (tsscanl_h f q\<cdot>s) = \<M> tsscanl_nth n f (f q \<M>\<inverse> shd s) (srt\<cdot>s)"
+    by (smt a4 a5 a6 not_less sdrop_forw_rt slen_rt_ile_eq snth_def tsscanl_h_unfold_srt)
+qed
+
+(* Nth element of tsscanl_h is equal to tsscanl_nth otherwise tick *)
+lemma tsscanl_h2tsscanl_nth: 
+  "Fin n<#s
+     \<Longrightarrow> snth n (tsscanl_h f q\<cdot>s) = (case (snth n s) of Msg a \<Rightarrow> \<M> tsscanl_nth n f q s | \<surd> \<Rightarrow> \<surd>)"
+apply (cases "snth n s=\<surd>", simp add: tsscanl_h_snth_tick2tick)
+by (metis event.exhaust event.simps(4) tsscanl_h2tsscanl_nth_snth)
+
+(* Nth element of tsscanl is equal to tsscanl_nth otherwise tick *)
+lemma tsscanl2tsscanl_nth:
+  "Fin n<#(Rep_tstream ts) \<Longrightarrow> snth n (Rep_tstream (tsscanl f q\<cdot>ts)) =
+   (case (snth n (Rep_tstream ts)) of Msg a \<Rightarrow> \<M> tsscanl_nth n f q (Rep_tstream ts) | \<surd> \<Rightarrow> \<surd>)"
+by (simp add: tsscanl_unfold ts_well_tsscanl_h tsscanl_h2tsscanl_nth)
 
 (*TODO
 
