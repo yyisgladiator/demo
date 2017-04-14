@@ -170,7 +170,7 @@ by (metis (no_types, lifting) Rep_Abs Suc_1 list2s_0 list2s_Suc list2s_inj lscon
     tstake2of1tick tstake2of2tick)
 
 (* Constructed function on tstreams is monotone, continous, weak and strong causal *)
-definition tsf5_mcws :: "'m tstream \<Rightarrow> 'm tstream" where
+definition tsf5_mcws :: "'a tstream \<Rightarrow> 'a tstream" where
 "tsf5_mcws ts = Abs_tstream (\<up>\<surd>) \<bullet> ts"
 
 lemma mono_tsf5_mcws: "monofun tsf5_mcws"

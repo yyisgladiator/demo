@@ -46,35 +46,36 @@ lemma not_below_2tick_tick: "Abs_tstream (\<up>\<surd> \<bullet> \<up>\<surd>) \
 by (smt Rep_Abs Rep_tstream_inject list2s.simps(1) list2s.simps(2) list2s_inj lscons_conv 
     not_Cons_self po_eq_conv sup'_def tick_msg ts_tsconc_prefix ts_well_conc1 tsconc_rep_eq1)
 
+(* Constructed function on tstreams is monotone and weak causal but not continous? *)
+definition f1 :: "nat tstream \<Rightarrow> nat tstream" where
+"f1 ts \<equiv> if #(Rep_tstream ts)<\<infinity> then ts \<bullet> Abs_tstream (\<up>\<surd>) else ts \<bullet> Abs_tstream (<[\<surd>, \<surd>]>)"
 
-
-(* Constructed non continous function on tstreams is monotone and weak causal *)
-definition tsmonoweak :: "'a tstream \<Rightarrow> 'a tstream" where
-"tsmonoweak ts \<equiv> if #(Rep_tstream ts)<\<infinity> then ts else ts \<bullet> Abs_tstream (\<up>\<surd>)"
-
-lemma mono_tsmonoweak: "monofun tsmonoweak"
+lemma mono_f1: "monofun f1"
 apply (rule monofunI)
-apply (simp add: tsmonoweak_def, auto)
-by (metis inf_less_eq leI tsInfTicks tsconc_id)+
+apply (simp add: f1_def, auto)
+sorry
 
-lemma tsweak_tsmonoweak: "tsWeakCausal tsmonoweak"
-by (simp add: tsMono2Weak2 mono_tsmonoweak not_less tsInfTicks tsmonoweak_def)
+lemma weak_f1: "tsWeakCausal f1"
+apply (rule tsMono2Weak2)
+apply (simp add: mono_f1)
+apply (simp add: f1_def)
+using lnle_def monofun_cfun_arg ts_tsconc_prefix by blast
 
-lemma tsmonoweak_inftick:
-  "tsmonoweak (tsinftimes (Abs_tstream (\<up>\<surd>))) = tsinftimes (Abs_tstream (\<up>\<surd>)) \<bullet> Abs_tstream (\<up>\<surd>) "
-apply (simp add: tsmonoweak_def)
-by (metis ln_less neq_iff slen_scons tick_msg tsconc_rep_eq tsinftimes_unfold)
+lemma f1_inftick:
+  "f1 (tsinftimes (Abs_tstream (\<up>\<surd>))) = tsinftimes (Abs_tstream (\<up>\<surd>)) \<bullet> Abs_tstream (<[\<surd>, \<surd>]>)"
+by (simp add: f1_def slen_inftick)
 
-lemma tsmonoweak_inftick_is_ub:
-  "range (\<lambda>i. tsmonoweak tsinftimes (Abs_tstream (\<up>\<surd>)) \<down> i ) <| tsinftimes (Abs_tstream (\<up>\<surd>))"
-by (simp add: is_ub_def tsmonoweak_def slen_tstakenofinftick)
+lemma f1_inftick_is_ub:
+  "range (\<lambda>i. f1 tsinftimes (Abs_tstream (\<up>\<surd>)) \<down> i ) <| tsinftimes (Abs_tstream (\<up>\<surd>))"
+apply (simp add: is_ub_def f1_def slen_tstakenofinftick)
+sorry
 
-lemma non_cont_tsmonoweak: "\<not>cont tsmonoweak"
+lemma cont_f1: "\<not>cont f1"
 apply (simp add: cont_def)
 apply (rule_tac x="(\<lambda>i. (tsinftimes (Abs_tstream (\<up>\<surd>))) \<down> i )" in exI)
-apply (simp add: tsmonoweak_inftick is_lub_def, auto)
+apply (simp add: f1_inftick is_lub_def, auto)
 apply (rule_tac x="tsinftimes (Abs_tstream (\<up>\<surd>))" in exI)
-apply (simp add: tsmonoweak_inftick_is_ub)
+apply (simp add: f1_inftick_is_ub)
 sorry
 
 end
