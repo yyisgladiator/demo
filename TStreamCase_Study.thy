@@ -94,9 +94,8 @@ lemma tsf2_m_tick_is_ub:
 by (simp add: is_ub_def tsf2_m_def slen_tstakenofinftick)
 
 lemma mono_tsf2_m: "monofun tsf2_m"
-apply (rule monofunI)
-apply (simp add: tsf2_m_def below_tstream_def, auto)
-by (metis inf_ub lnle_def lnless_def mono_fst_infD)
+apply (simp add: monofun_def tsf2_m_def below_tstream_def)
+using leI mono_fst_infD by fastforce
 
 (* Y = Take i <\<surd>, ...> \<Longrightarrow> range (\<lambda>i. tsf2_m (Y i)) <<| <\<surd>> \<noteq> tsf2_m (Lub Y = <\<surd>, ...>) =  <\<surd>, \<surd>> *)
 lemma cont_tsf2_m: "\<not>cont tsf2_m"
@@ -152,7 +151,7 @@ definition tsf4_mcw :: "'a tstream \<Rightarrow> 'a tstream" where
 "tsf4_mcw ts \<equiv> ts"
 
 lemma mono_tsf4_mcw: "monofun tsf4_mcw"
-by (simp add: monofunI tsf4_mcw_def)
+by (simp add: monofun_def tsf4_mcw_def)
 
 lemma cont_tsf4_mcw: "cont tsf4_mcw"
 by (metis mono_tsf4_mcw tsMono2weak2cont tsf4_mcw_def)
@@ -169,6 +168,24 @@ apply (rule_tac x="Abs_tstream (<[\<surd>, \<surd>]>)" in exI)
 by (metis (no_types, lifting) Rep_Abs Suc_1 list2s_0 list2s_Suc list2s_inj lscons_conv
     not_Cons_self2 sup'_def tick_msg ts_well_sing_conc tstake1of1tick tstake1of2tick
     tstake2of1tick tstake2of2tick)
+
+(* Constructed function on tstreams is monotone, continous, weak and strong causal *)
+definition tsf5_mcws :: "'m tstream \<Rightarrow> 'm tstream" where
+"tsf5_mcws ts = Abs_tstream (\<up>\<surd>) \<bullet> ts"
+
+lemma mono_tsf5_mcws: "monofun tsf5_mcws"
+by (simp add: monofun_def tsf5_mcws_def below_tstream_def tsconc_rep_eq monofun_cfun_arg)
+
+lemma cont_tsf5_mcws: "cont tsf5_mcws"
+apply (rule contI2)
+apply (simp add: mono_tsf5_mcws)
+by (simp add: tsf5_mcws_def cont2contlubE)
+
+lemma weak_tsf5_mcws: "tsWeakCausal tsf5_mcws"
+by (simp add: mono_tsf5_mcws tsMono2Weak2 tsf5_mcws_def)
+
+lemma strong_tsf5_mcws: "tsStrongCausal tsf5_mcws"
+by (simp add: tsStrongCausal_def tsf5_mcws_def)
 
 (* Examples for weak causal function type *)
 
