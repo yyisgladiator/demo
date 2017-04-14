@@ -48,33 +48,6 @@ by (smt Rep_Abs Rep_tstream_inject list2s.simps(1) list2s.simps(2) list2s_inj ls
 
 
 
-(* Constructed non monotone function on tstreams is not continous but weak causal *)
-definition tsnonmono :: "'a tstream \<Rightarrow> 'a tstream" where
-"tsnonmono ts \<equiv> if ts=\<bottom> then Abs_tstream (\<up>\<surd>) else \<bottom>"
-
-(* \<bottom> \<sqsubseteq> x but <\<surd>> \<sqsubseteq> \<bottom> is false *)
-lemma non_mono_tsnonmono: "\<not>monofun tsnonmono"
-by (simp add: monofun_def tsnonmono_def)
-
-lemma non_cont_tsnonmono: "\<not>cont tsnonmono"
-using cont2mono non_mono_tsnonmono by auto
-
-lemma tsweak_tsnonmono: "tsWeakCausal tsnonmono"
-apply (rule tsWeakCausalI)
-apply (simp add: tsnonmono_def, auto)
-using tstakeBot by blast+
-
-(* Constructed non monotone function on tstreams is not strong causal
-   \<bottom> \<down> 0 = <\<surd>> \<down> 0 but \<bottom> \<down> 1 \<noteq> <\<surd>> \<down> 1 *)
-lemma non_tsstrong_tsnonmono: "\<not>tsStrongCausal tsnonmono"
-apply(auto simp add: tsnonmono_def tsStrongCausal_def)
-apply (rule_tac x=0 in exI)
-apply (rule_tac x="Abs_tstream (\<up>\<surd>)" in exI)
-by (metis One_nat_def Rep_Abs Rep_cfun_strict1 Rep_tstream_bottom_iff stream.con_rews(2) sup'_def
-    tick_msg tsTake.simps(1) tstake1of1tick up_defined)
-
-
-
 (* Constructed non continous function on tstreams is monotone and weak causal *)
 definition tsmonoweak :: "'a tstream \<Rightarrow> 'a tstream" where
 "tsmonoweak ts \<equiv> if #(Rep_tstream ts)<\<infinity> then ts else ts \<bullet> Abs_tstream (\<up>\<surd>)"

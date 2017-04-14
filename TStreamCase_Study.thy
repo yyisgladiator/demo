@@ -187,6 +187,52 @@ by (simp add: mono_tsf5_mcws tsMono2Weak2 tsf5_mcws_def)
 lemma strong_tsf5_mcws: "tsStrongCausal tsf5_mcws"
 by (simp add: tsStrongCausal_def tsf5_mcws_def)
 
+(* Constructed function on tstreams is weak and strong causal but not monotone and continous *)
+definition tsf7_ws :: "'a tstream \<Rightarrow> 'a tstream" where
+"tsf7_ws ts \<equiv> if ts=\<bottom> then Abs_tstream (<[\<surd>, \<surd>]>) else Abs_tstream (\<up>\<surd>)"
+
+(* \<bottom> \<sqsubseteq> x but <\<surd>, \<surd>> \<sqsubseteq> <\<surd>> is false *)
+lemma mono_tsf7_ws: "\<not>monofun tsf7_ws"
+by (simp add: monofun_def tsf7_ws_def not_below_2tick_tick)
+
+lemma cont_tsf7_ws: "\<not>cont tsf7_ws"
+using cont2mono mono_tsf7_ws by auto
+
+lemma weak_tsf7_ws: "tsWeakCausal tsf7_ws"
+apply (rule tsWeakCausalI)
+apply (simp add: tsf7_ws_def, auto)
+by (metis tstakeBot)+
+
+lemma strong_tsf7_ws: "tsStrongCausal tsf7_ws"
+apply (rule tsStrongCausalI)
+apply (simp add: tsf7_ws_def, auto)
+by (smt One_nat_def Rep_tstream_inverse tick_msg tsconc_rep_eq1 tsinftimes_unfold tstake1ofinftick
+    tstakeBot tstake_tick)+
+
+(* Constructed function on tstreams is weak causal but not monotone, continous and strong causal *)
+definition tsf8_w :: "'a tstream \<Rightarrow> 'a tstream" where
+"tsf8_w ts \<equiv> if ts=\<bottom> then Abs_tstream (\<up>\<surd>) else \<bottom>"
+
+(* \<bottom> \<sqsubseteq> x but <\<surd>> \<sqsubseteq> \<bottom> is false *)
+lemma mono_tsf8_w: "\<not>monofun tsf8_w"
+by (simp add: monofun_def tsf8_w_def)
+
+lemma cont_tsf8_w: "\<not>cont tsf8_w"
+using cont2mono mono_tsf8_w by auto
+
+lemma weak_tsf8_w: "tsWeakCausal tsf8_w"
+apply (rule tsWeakCausalI)
+apply (simp add: tsf8_w_def, auto)
+using tstakeBot by blast+
+
+(* \<bottom> \<down> 0 = <\<surd>> \<down> 0 but \<bottom> \<down> 1 \<noteq> <\<surd>> \<down> 1 *)
+lemma strong_tsf8_w: "\<not>tsStrongCausal tsf8_w"
+apply(auto simp add: tsf8_w_def tsStrongCausal_def)
+apply (rule_tac x=0 in exI)
+apply (rule_tac x="Abs_tstream (\<up>\<surd>)" in exI)
+by (metis One_nat_def Rep_Abs Rep_cfun_strict1 Rep_tstream_bottom_iff stream.con_rews(2) sup'_def
+    tick_msg tsTake.simps(1) tstake1of1tick up_defined)
+
 (* Examples for weak causal function type *)
 
 definition f1_spfw :: "'a \<leadsto>w 'a" where
