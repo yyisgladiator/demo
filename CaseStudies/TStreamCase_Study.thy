@@ -10,7 +10,7 @@ chapter {* Timed Streams *}
 
 theory TStreamCase_Study
 
-imports TStream Tsum5_HK
+imports "../TStream" Tsum5_HK
 begin
 default_sort countable
 

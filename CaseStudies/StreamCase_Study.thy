@@ -10,7 +10,7 @@
 theory StreamCase_Study
 
 
-imports Streams
+imports "../Streams"
 begin
 
 

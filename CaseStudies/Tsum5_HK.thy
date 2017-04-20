@@ -6,7 +6,7 @@
 *)
 
 theory Tsum5_HK
-imports TStream StreamCase_Study
+imports "../TStream" StreamCase_Study
 begin
 
 (*Helper like h for sum5 but over nat event streams*)
