@@ -1443,6 +1443,21 @@ using assms apply simp
 apply (subst tsWeak2cont2, auto)
 using assms by simp
 
+lemma monoweak_lub_below: assumes "monofun f" and "tsWeakCausal f" and "chain Y"
+  shows "f (\<Squnion>i. Y i) \<sqsubseteq> (\<Squnion>i. f (Y i))"
+proof -
+  have h1: "\<forall>n. (f (Y n)) \<sqsubseteq> (\<Squnion>i. f (Y i))"
+    using assms(1) assms(3) ch2ch_monofun is_ub_thelub by blast
+  hence h2: "\<forall>n. (f (\<Squnion>i. Y i)) \<down> n \<sqsubseteq> (\<Squnion>i. f (Y i)) \<down> n"
+    by (metis assms(2) assms(3) monofun_cfun_arg tsWeak_eq ts_lub_approx)
+  thus "f (\<Squnion>i. Y i) \<sqsubseteq> (\<Squnion>i. f (Y i))"
+    using ts_take_below by blast
+qed
+
+lemma monoweak2cont: assumes "monofun f" and "tsWeakCausal f"
+  shows "cont f"
+by (simp add: contI2 assms(1) assms(2) monoweak_lub_below)
+
 (* The type of weak causal functions *)
 
 (* Definition of weak causal function type *)
