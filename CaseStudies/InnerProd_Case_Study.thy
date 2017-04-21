@@ -6,7 +6,7 @@
 *)
 
 theory InnerProd_Case_Study
-imports SPF Streams SerComp_JB StreamCase_Study SPF_MW ParComp_MW_JB
+imports "../SPF" "../Streams" "../SerComp_JB"  "../CaseStudies/StreamCase_Study" "../SPF_MW" "../ParComp_MW_JB"
 
 begin
 

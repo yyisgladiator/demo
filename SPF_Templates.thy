@@ -8,7 +8,7 @@
 *)
 
 theory SPF_Templates
-  imports SPF SBTheorie
+  imports SPF SB
     
 begin
   

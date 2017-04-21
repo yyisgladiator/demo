@@ -6,7 +6,7 @@
 *)
 
 theory SerComp_JB
-imports SPF SBTheorie SPF_Templates
+imports SPF SB SPF_Templates
 begin
 
 (* ----------------------------------------------------------------------- *)

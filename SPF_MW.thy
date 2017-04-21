@@ -1,5 +1,5 @@
 theory SPF_MW
-imports SPF SerComp_JB ParComp_MW (*InnerProd_Case_StudyTSPFTheorie*)
+imports SPF SerComp_JB ParComp_MW_JB
 begin
 
 (* operator for parallel composition *)

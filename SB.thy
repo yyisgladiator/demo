@@ -5,8 +5,8 @@
     Description:  Defines "Stream Bundles" 
 *)
 
-theory SBTheorie
-imports Channel OptionCpo StreamTheorie
+theory SB
+imports Channel OptionCpo Streams
 
 begin
 default_sort message
