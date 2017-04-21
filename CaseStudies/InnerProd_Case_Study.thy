@@ -33,56 +33,49 @@ lemma spfmult_cont2[simp]: "cont
    by (simp)
 
 (* As we now proved that the add and mult component is continuous we can define some components *)
-lift_definition mult1 :: "nat SPF" is
-"\<Lambda> sb. (sbDom\<cdot>sb = {c1, c2}) \<leadsto> ([c5\<mapsto>mult\<cdot>(sb . c1)\<cdot>(sb . c2)]\<Omega>)"
-  by (simp)
+definition mult1 :: "nat SPF" where
+"mult1 \<equiv> SPF2x1 mult (c1,c2,c5)"
 
-lift_definition mult2 :: "nat SPF" is
-"\<Lambda> sb. (sbDom\<cdot>sb = {c3, c4}) \<leadsto> ([c6\<mapsto>mult\<cdot>(sb . c3)\<cdot>(sb . c4)]\<Omega>)"
-  by (simp)
+definition mult2 :: "nat SPF" where
+"mult2 \<equiv> SPF2x1 mult (c3,c4,c6)"
 
 definition addC :: "nat SPF" where
-"addC \<equiv> addSPF (c5, c6, c7)" 
+"addC \<equiv> SPF2x1 add (c5,c6,c7)"
 
 (* rep equalities, useful for simp *)
 lemma mult1_rep_eqC: "Rep_CSPF mult1 = (\<lambda> sb. (sbDom\<cdot>sb = {c1, c2}) \<leadsto> ([c5 \<mapsto> mult\<cdot>(sb . c1)\<cdot>(sb . c2)]\<Omega>))"
-  by (simp add: mult1.rep_eq Rep_CSPF_def)
+  by (auto simp add: SPF2x1_rep_eq mult1_def)
 
 lemma mult2_rep_eqC: "Rep_CSPF mult2 = (\<lambda> sb. (sbDom\<cdot>sb = {c3, c4}) \<leadsto> ([c6 \<mapsto> mult\<cdot>(sb . c3)\<cdot>(sb . c4)]\<Omega>))"
-  by (simp add: mult2.rep_eq Rep_CSPF_def)
+  by (auto simp add: SPF2x1_rep_eq mult2_def)
 
 lemma addC_rep_eqC: "Rep_CSPF addC = (\<lambda> sb. (sbDom\<cdot>sb = {c5, c6}) \<leadsto> ([c7 \<mapsto> add\<cdot>(sb . c5)\<cdot>(sb . c6)]\<Omega>))"
-  by (auto simp add: addC_def addSPF_rep_eqC)
+  by (auto simp add: SPF2x1_rep_eq addC_def)
 
 
 subsection \<open>Channel sets\<close>
 (* ----------------------------------------------------------------------- *) 
 (* mult1 *)
 lemma [simp]: "spfDom\<cdot>mult1 = {c1,c2}"
-  apply(simp add: spfdom_insert mult1.rep_eq Rep_CSPF_def domIff2)
-  by (meson sbleast_sbdom someI_ex)
+  by(simp add: mult1_def)
 
 lemma [simp]: "spfRan\<cdot>mult1 = {c5}"
-  apply (simp add: spfran_least mult1_rep_eqC)
-  by (simp add: sbdom_insert)
+  by(simp add: mult1_def)
 
 (* mult2 *)
 lemma [simp]: "spfDom\<cdot>mult2 = {c3,c4}"
-  apply(simp add: spfdom_insert mult2.rep_eq Rep_CSPF_def domIff2)
-  by (meson sbleast_sbdom someI_ex)
+  by(simp add: mult2_def)
 
 lemma [simp]: "spfRan\<cdot>mult2 = {c6}"
-  apply (simp add: spfran_least mult2_rep_eqC)
-  by (simp add: sbdom_insert)
+  by(simp add: mult2_def)
 
 (* addC *)
 
 lemma [simp]: "spfDom\<cdot>addC = {c5,c6}"
-by (metis addC_rep_eqC sbgetch_insert sbleast_sbdom spfdom2sbdom)
+  by(simp add: addC_def)
 
 lemma [simp]: "spfRan\<cdot>addC = {c7}"
-  apply (simp add: spfran_least addC_rep_eqC)
-  by (simp add: sbdom_insert)
+  by(simp add: addC_def)
 
 (* PARALLEL COMPOSITION OF MULTS PREREQUIREMENTS *)
 lemma [simp]: "spfComp_well mult1 mult2"
@@ -185,10 +178,12 @@ lemma multcomp_cont: "cont (\<lambda>x. (sbDom\<cdot>x = {c3, c4, c1, c2})\<lead
 apply(subst if_then_cont, simp_all)
 apply(subst cont2cont_APP)
 by(simp_all add: contMult1Union contMult2)
-                                   
+
+  (*
 lemma multcomp_spfwell: "spf_well (\<Lambda> x. (sbDom\<cdot>x = {c3, c4, c1, c2})\<leadsto>((mult1\<rightleftharpoons>(x\<bar>spfDom\<cdot>mult1)) \<uplus> (mult2\<rightleftharpoons>(x\<bar>spfDom\<cdot>mult2))))"
 apply(subst spfwellhelper)
   oops
+*)
     
 lemma mults_comp1: assumes "sbDom\<cdot>sb = I mult1 mult2"
    and "c \<in> spfRan\<cdot>mult1" 
@@ -212,18 +207,48 @@ proof -
     by (auto simp add: assms)
 qed
 
-  lemma[simp]:"sbDom\<cdot>((Rep_CSPF (spfcomp mult1 mult2)) \<rightharpoonup> sb) = {c5,c6}"
     
 lemma mults_comp: assumes "sbDom\<cdot>sb = I mult1 mult2"
-  shows "((Rep_CSPF (spfcomp mult1 mult2)) \<rightharpoonup> sb)  = ((Rep_CSPF(mult1)) \<rightharpoonup> (sb\<bar>spfDom\<cdot>mult1)) \<uplus> ((Rep_CSPF(mult2)) \<rightharpoonup> (sb\<bar>spfDom\<cdot>mult2))"
+  shows "((spfcomp mult1 mult2) \<rightleftharpoons> sb)  
+            = ((mult1) \<rightleftharpoons> (sb\<bar>spfDom\<cdot>mult1)) \<uplus> ((mult2) \<rightleftharpoons> (sb\<bar>spfDom\<cdot>mult2))"
 proof -
-  have f1: "sbDom\<cdot>((Rep_CSPF(mult1)) \<rightharpoonup> (sb\<bar>spfDom\<cdot>mult1)) = {c5}"
-    sledgehammer
-  apply(rule sb_eq)
-    sledgehammer
-proof -
-  have "sbDom\<cdot>((Rep_CSPF (spfcomp mult1 mult2)) \<rightharpoonup> sb) = {c5,c6}"
-   sorry
+  have f1: "sbDom\<cdot>((mult1) \<rightleftharpoons> (sb\<bar>spfDom\<cdot>mult1)) = {c5}"
+    by(subst spfran2sbdom2, simp_all add: assms)
+  have f2: "sbDom\<cdot>((mult2) \<rightleftharpoons> (sb\<bar>spfDom\<cdot>mult2)) = {c6}"
+    by(subst spfran2sbdom2, simp_all add: assms)
+  have f3: "sbDom\<cdot>(((mult1) \<rightleftharpoons> (sb\<bar>spfDom\<cdot>mult1)) \<uplus> ((mult2) \<rightleftharpoons> (sb\<bar>spfDom\<cdot>mult2))) = {c5,c6}"
+    apply(subst  sbunionDom, simp only: f1 f2)
+    by auto
+      
+  (* lemmata for subgoal I of sb_eq rule *)   
+  have f4: "sbDom\<cdot>((spfcomp mult1 mult2) \<rightleftharpoons> sb) = {c5,c6}"
+    apply(subst spfran2sbdom2)
+    by(simp_all add: assms I_def, auto)
+    have f41: "sbDom\<cdot>((spfcomp mult1 mult2) \<rightleftharpoons> sb) = {c5,c6}"
+    apply(subst spfran2sbdom2)
+      by(simp_all add: assms I_def, auto)
+        
+  (* lemmata for subgoal II of sb_eq rule *)     
+  have f5: "((spfcomp mult1 mult2) \<rightleftharpoons> sb). c5  = 
+                          (((mult1) \<rightleftharpoons> (sb\<bar>spfDom\<cdot>mult1)) \<uplus> ((mult2) \<rightleftharpoons> (sb\<bar>spfDom\<cdot>mult2))) .c5"
+    apply(subst sbunion_getchL)
+     apply(auto simp only: f2)
+      by(simp add: mults_comp1 assms)
+  have f6: "((Rep_CSPF (spfcomp mult1 mult2)) \<rightharpoonup> sb). c6  = 
+            (((mult1) \<rightleftharpoons> (sb\<bar>spfDom\<cdot>mult1)) \<uplus> ((mult2) \<rightleftharpoons> (sb\<bar>spfDom\<cdot>mult2))) .c6"
+    apply(subst sbunion_getchR)
+     apply(auto simp only: f2)
+    by(simp add: mults_comp2 assms)
+  have f20: "\<And>c. c \<in> sbDom\<cdot>((spfcomp mult1 mult2) \<rightleftharpoons> sb) 
+              \<Longrightarrow> ((spfcomp mult1 mult2) \<rightleftharpoons> sb) . c 
+                    = (((mult1) \<rightleftharpoons> (sb\<bar>spfDom\<cdot>mult1)) \<uplus> ((mult2) \<rightleftharpoons> (sb\<bar>spfDom\<cdot>mult2))) . c"
+    apply(simp only: f4)
+    using f5 f6 by blast
+  show ?thesis
+    apply(rule sb_eq)
+     apply(simp only: f3 f4)
+    by(simp add: f20)
+qed
    
 
 

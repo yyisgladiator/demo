@@ -1,5 +1,5 @@
 theory SPF_MW
-imports SPF SerComp_JB ParComp_MW_JB SPF_Composition_JB
+imports SPF SerComp_JB ParComp_MW_JB SPF_Composition_JB SPF_Templates
 begin
 
 (* operator for parallel composition *)
@@ -54,13 +54,18 @@ lemma spfComp_ran_Oc: assumes "spfComp_well f1 f2" shows "spfRan\<cdot>(spfcomp 
 definition hide :: "'m SPF \<Rightarrow>  channel set \<Rightarrow> 'm SPF" ("_\<h>_") where
 "hide f cs \<equiv> Abs_CSPF (\<lambda> x. (sbDom\<cdot>x = spfDom\<cdot>f ) \<leadsto> ((f \<rightleftharpoons> x)\<bar>(spfRan\<cdot>f - cs)))"
 
-lemma hidecont_helper: assumes "cont (Rep_CSPF(f))" shows "cont (\<lambda> x. (sbDom\<cdot>x = spfDom\<cdot>f ) \<leadsto> ((f \<rightleftharpoons> x)\<bar>(spfRan\<cdot>f - cs)))"
+lemma hidecont_helper[simp]:  
+  shows "cont (\<lambda> x. (sbDom\<cdot>x = spfDom\<cdot>f ) \<leadsto> ((f \<rightleftharpoons> x)\<bar>(spfRan\<cdot>f - cs)))"
 apply(subst if_then_cont, simp_all)
 by (simp add: cont_compose)
 
-lemma hidespfwell_helper: assumes "spf_well (Abs_cfun (Rep_CSPF(f)))" 
-  shows "spf_well (Abs_cfun (\<lambda> x. (sbDom\<cdot>x = spfDom\<cdot>f ) \<leadsto> ((f \<rightleftharpoons> x)\<bar>(spfRan\<cdot>f - cs))))"
-  apply(auto simp add: spf_well_def domIff2 sbdom_rep_eq)
+  
+(* TODO  assumes "spf_well (Abs_cfun (Rep_CSPF(f)))"  *)  
+lemma hidespfwell_helper[simp]: assumes "spf_well (Abs_cfun (Rep_CSPF(f)))" 
+  shows "spf_well ((\<Lambda> x. (sbDom\<cdot>x = spfDom\<cdot>f ) \<leadsto> ((f \<rightleftharpoons> x)\<bar>(spfRan\<cdot>f - cs))))"
+  apply(simp add: spf_well_def)
+  apply(simp only: domIff2)
+  apply(auto simp add: sbdom_rep_eq)
 sorry
 
 lemma spfDomHide: "spfDom\<cdot>(f \<h> cs) = spfDom\<cdot>f"

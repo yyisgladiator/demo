@@ -504,7 +504,11 @@ lemma spfran_least: "spfRan\<cdot>f = sbDom\<cdot>((Rep_CSPF f) \<rightharpoonup
 apply(simp add: spfRan_def)
 by (metis (no_types, lifting) domIff option.exhaust_sel ranI someI_ex spfLeastIDom spf_ran2sbdom)
 
-
+lemma spfran2sbdom2: assumes "sbDom\<cdot>sb = spfDom\<cdot>f"
+  and "spfDom\<cdot>f \<noteq> {}"
+  shows "sbDom\<cdot>((Rep_CSPF f) \<rightharpoonup> sb) = spfRan\<cdot>f"
+  apply(simp add: spfran_insert)
+    by (smt assms(1) domIff mem_Collect_eq option.exhaust_sel ran_def sbleast_sbdom some_eq_ex spfLeastIDom spf_sbdom2dom spfran2sbdom)
 
 
   subsection \<open>spfType\<close>
