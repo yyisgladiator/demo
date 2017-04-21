@@ -6,7 +6,7 @@
 *)
 
 theory SPF_Composition_JB
-imports SPF SBTheorie SPF_Templates
+imports SPF SB SPF_Templates
 begin
 
 (* ----------------------------------------------------------------------- *)
@@ -307,11 +307,17 @@ lemma spfcomp_abbrv_tospfH2: "(\<lambda> x. (sbDom\<cdot>x = I f1 f2)
                        = (\<lambda> x. (sbDom\<cdot>x = I f1 f2) 
                           \<leadsto> (\<Squnion>i. iterate i\<cdot>(spfCompHelp2 f1 f2 x)\<cdot>(sbLeast (C f1 f2))) \<bar> Oc f1 f2)"      
   by simp
-      
+    
+lemma spfcomp_abbrv_tospfH22: "(spfcomp f1 f2)
+                       = Abs_CSPF (\<lambda> x. (sbDom\<cdot>x = I f1 f2) 
+                          \<leadsto> (\<Squnion>i. iterate i\<cdot>(spfCompHelp2 f1 f2 x)\<cdot>(sbLeast (C f1 f2))) \<bar> Oc f1 f2)"      
+  by (simp add: spfcomp_tospfH2)
+          
+    
 lemma spfComp_ran: assumes "spfRan\<cdot>f1 \<inter> spfRan\<cdot>f2 = {}" 
   shows "spfRan\<cdot>(spfcomp f1 f2) = Oc f1 f2"
    apply(simp add: spfcomp_def)  
-      
+   oops   
 (*
 BACKUPS 
 

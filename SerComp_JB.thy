@@ -15,11 +15,6 @@ section \<open>Definitions\<close>
   
 (* special operator for serial composition, domain of f2 must be range of f1  *)
   (* THIS IS OBSOLETE *)
-definition sercomp :: "'m SPF => 'm SPF => 'm SPF"  where
-"sercomp f1 f2 \<equiv>
-let I = spfDom\<cdot>f1
-in Abs_CSPF (\<lambda> x. (sbDom\<cdot>x = I ) \<leadsto> ((f2 \<rightleftharpoons> ( f1 \<rightleftharpoons> x))))"
-
 abbreviation iconst :: "'a SB \<rightarrow> 'a SPF \<rightarrow> 'a SPF \<rightarrow> 'a SB" where
 "iconst \<equiv> \<Lambda> x f1 f2 . (x \<uplus> (f1 \<rightleftharpoons> (x \<bar>spfDom\<cdot>f1)) 
                                     \<uplus> (f2 \<rightleftharpoons> (f1 \<rightleftharpoons> (x\<bar>spfDom\<cdot>f1))))\<bar>Oc f1 f2"

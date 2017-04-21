@@ -937,12 +937,12 @@ lemma spfCompHelp2_iter_lub_dom: assumes "sbDom\<cdot>x = I f1 f2"
                              and  "spfRan\<cdot>f1 \<inter> spfRan\<cdot>f2 = {}" 
                            shows "sbDom\<cdot>(\<Squnion>n. iterate n\<cdot>(spfCompHelp2 f1 f2 x)\<cdot>(sbLeast (C f1 f2))) = C f1 f2"
 proof -
-  have "\<forall>n .sbDom\<cdot>(iterate n\<cdot>(spfCompHelp2 f1 f2 x)\<cdot>(sbLeast (C f1 f2))) = C f1 f2" 
+  have f1: "\<forall>n .sbDom\<cdot>(iterate n\<cdot>(spfCompHelp2 f1 f2 x)\<cdot>(sbLeast (C f1 f2))) = C f1 f2" 
     by (simp add: assms(1) assms(2) spfCompHelp2_iter_dom)
   hence "\<forall>n. \<forall>sb. (iterate n\<cdot>(spfCompHelp2 f1 f2 x)\<cdot>(sbLeast (C f1 f2))) \<sqsubseteq> sb \<longrightarrow> sbDom\<cdot>sb = C f1 f2"
     using sbdom_eq by blast
   thus ?thesis 
-    by (smt \<open>\<forall>n. sbDom\<cdot> (iterate n\<cdot>(spfCompHelp2 f1 f2 x)\<cdot>(sbLeast (C f1 f2))) = C f1 f2\<close> iterate_0 iterate_Suc2 monofun_cfun_arg po_class.chainI sbChain_dom_eq2 sbleast_least)
+    by (smt f1 iterate_0 iterate_Suc2 monofun_cfun_arg po_class.chainI sbChain_dom_eq2 sbleast_least)
 qed
   
 

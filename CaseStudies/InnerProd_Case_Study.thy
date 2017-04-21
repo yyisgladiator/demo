@@ -6,7 +6,7 @@
 *)
 
 theory InnerProd_Case_Study
-imports "../SPF" "../Streams" "../SerComp_JB"  "../CaseStudies/StreamCase_Study" "../SPF_MW" "../ParComp_MW_JB"
+imports "../SPF"  "../SPF_Templates"  "../SPF_Composition_JB" "../Streams" "../SerComp_JB"  "../CaseStudies/StreamCase_Study" "../SPF_MW" "../ParComp_MW_JB"
 
 begin
 
@@ -24,22 +24,22 @@ section \<open>Component instantiation\<close>
 
 lemma spfmult_cont: "cont 
                            (\<lambda> sb. (sbDom\<cdot>sb = {ch1, ch2}) \<leadsto> ([ch3 \<mapsto> mult\<cdot>(sb . ch1)\<cdot>(sb . ch2)]\<Omega>))"
-  by (simp add: SPF_Templates.spfmult_cont)
+  by (simp)
 
 (* proof of cont mult gets reduced to *)
     (* @Marc: Is this obsolete? *)
 lemma spfmult_cont2[simp]: "cont 
                            (\<lambda> sb. (sbDom\<cdot>sb = {ch1, ch2}) \<leadsto> ([ch3 \<mapsto> mult\<cdot>(sb . ch1)\<cdot>(sb . ch2)]\<Omega>))"
-   by (simp add: SPF_Templates.spfmult_cont)
+   by (simp)
 
 (* As we now proved that the add and mult component is continuous we can define some components *)
 lift_definition mult1 :: "nat SPF" is
 "\<Lambda> sb. (sbDom\<cdot>sb = {c1, c2}) \<leadsto> ([c5\<mapsto>mult\<cdot>(sb . c1)\<cdot>(sb . c2)]\<Omega>)"
-  by (auto simp add: spf_well_def domIff2 sbdom_rep_eq spfmult_cont)
+  by (simp)
 
 lift_definition mult2 :: "nat SPF" is
 "\<Lambda> sb. (sbDom\<cdot>sb = {c3, c4}) \<leadsto> ([c6\<mapsto>mult\<cdot>(sb . c3)\<cdot>(sb . c4)]\<Omega>)"
-  by (auto simp add: spf_well_def domIff2 sbdom_rep_eq spfmult_cont)
+  by (simp)
 
 definition addC :: "nat SPF" where
 "addC \<equiv> addSPF (c5, c6, c7)" 
@@ -143,24 +143,8 @@ lemma contMult1Union: "cont (\<lambda>x. sbUnion\<cdot>(mult1\<rightleftharpoons
 by(simp add: contMult1)
 
 lemma contMult2: "cont (\<lambda>x. (mult2\<rightleftharpoons>(x\<bar>{c3, c4})))"
-by(subst conthelper, simp_all)
-
-lemma multcomp_cont: "cont (\<lambda>x. (sbDom\<cdot>x = {c3, c4, c1, c2})\<leadsto>((mult1\<rightleftharpoons>(x\<bar>spfDom\<cdot>mult1)) \<uplus> (mult2\<rightleftharpoons>(x\<bar>spfDom\<cdot>mult2))))"
-apply(subst if_then_cont, simp_all)
-apply(subst cont2cont_APP)
-by(simp_all add: contMult1Union contMult2)
-                                   
-lemma multcomp_spfwell: "spf_well (\<Lambda> x. (sbDom\<cdot>x = {c3, c4, c1, c2})\<leadsto>((mult1\<rightleftharpoons>(x\<bar>spfDom\<cdot>mult1)) \<uplus> (mult2\<rightleftharpoons>(x\<bar>spfDom\<cdot>mult2))))"
-apply(subst spfwellhelper)
-by(simp_all)
-
-lemma mults_comp: assumes "sbDom\<cdot>sb = I mult1 mult2"
-  shows "((Rep_CSPF (spfcomp mult1 mult2)) \<rightharpoonup> sb)  = ((Rep_CSPF(mult1)) \<rightharpoonup> (sb\<bar>spfDom\<cdot>mult1)) \<uplus> ((Rep_CSPF(mult2)) \<rightharpoonup> (sb\<bar>spfDom\<cdot>mult2))"
-  apply(subst parallelOperatorEq)
-  apply(simp_all add: parcomp_def)
-  apply(subst rep_abs_cspf, simp_all add: assms, auto)
-  by(simp_all add: multcomp_cont multcomp_spfwell)
-
+  by(subst conthelper, simp_all)
+    
 
 subsection \<open>Channel sets\<close>
 (* ----------------------------------------------------------------------- *) 
@@ -196,6 +180,53 @@ lemma innerprod_serComp: assumes "sbDom\<cdot>sb = I (spfcomp mult1 mult2) addC"
   shows "((spfcomp (spfcomp mult1 mult2) addC)  \<rightleftharpoons> sb) . c7 = 
          (addC \<rightleftharpoons> ((spfcomp mult1 mult2) \<rightleftharpoons> (sb\<bar>(spfDom\<cdot>(spfcomp mult1 mult2))))) . c7"
   by (subst spfCompSeriellGetch, simp_all add: assms spfComp_ran_Oc)
+
+lemma multcomp_cont: "cont (\<lambda>x. (sbDom\<cdot>x = {c3, c4, c1, c2})\<leadsto>((mult1\<rightleftharpoons>(x\<bar>spfDom\<cdot>mult1)) \<uplus> (mult2\<rightleftharpoons>(x\<bar>spfDom\<cdot>mult2))))"
+apply(subst if_then_cont, simp_all)
+apply(subst cont2cont_APP)
+by(simp_all add: contMult1Union contMult2)
+                                   
+lemma multcomp_spfwell: "spf_well (\<Lambda> x. (sbDom\<cdot>x = {c3, c4, c1, c2})\<leadsto>((mult1\<rightleftharpoons>(x\<bar>spfDom\<cdot>mult1)) \<uplus> (mult2\<rightleftharpoons>(x\<bar>spfDom\<cdot>mult2))))"
+apply(subst spfwellhelper)
+  oops
+    
+lemma mults_comp1: assumes "sbDom\<cdot>sb = I mult1 mult2"
+   and "c \<in> spfRan\<cdot>mult1" 
+shows "((Rep_CSPF (spfcomp mult1 mult2)) \<rightharpoonup> sb). c  = ((Rep_CSPF(mult1)) \<rightharpoonup> (sb\<bar>spfDom\<cdot>mult1)) .c"
+  apply(subst spfCompParallelGetch1, simp_all add: assms)
+proof -
+  have "c \<in> spfRan\<cdot>mult1"
+    using assms(2) by auto
+  thus "c = c5"
+    by (auto simp add: assms)
+qed
+  
+lemma mults_comp2: assumes "sbDom\<cdot>sb = I mult1 mult2"
+   and "c \<in> spfRan\<cdot>mult2" 
+shows "((Rep_CSPF (spfcomp mult1 mult2)) \<rightharpoonup> sb). c  = ((Rep_CSPF(mult2)) \<rightharpoonup> (sb\<bar>spfDom\<cdot>mult2)) .c"
+  apply(subst spfCompParallelGetch2, simp_all add: assms)
+proof -
+  have "c \<in> spfRan\<cdot>mult2"
+    using assms(2) by auto
+  thus "c = c6"
+    by (auto simp add: assms)
+qed
+
+  lemma[simp]:"sbDom\<cdot>((Rep_CSPF (spfcomp mult1 mult2)) \<rightharpoonup> sb) = {c5,c6}"
+    
+lemma mults_comp: assumes "sbDom\<cdot>sb = I mult1 mult2"
+  shows "((Rep_CSPF (spfcomp mult1 mult2)) \<rightharpoonup> sb)  = ((Rep_CSPF(mult1)) \<rightharpoonup> (sb\<bar>spfDom\<cdot>mult1)) \<uplus> ((Rep_CSPF(mult2)) \<rightharpoonup> (sb\<bar>spfDom\<cdot>mult2))"
+proof -
+  have f1: "sbDom\<cdot>((Rep_CSPF(mult1)) \<rightharpoonup> (sb\<bar>spfDom\<cdot>mult1)) = {c5}"
+    sledgehammer
+  apply(rule sb_eq)
+    sledgehammer
+proof -
+  have "sbDom\<cdot>((Rep_CSPF (spfcomp mult1 mult2)) \<rightharpoonup> sb) = {c5,c6}"
+   sorry
+   
+
+
 
 (* inner Prod *)
 (* ----------------------------------------------------------------------- *)
