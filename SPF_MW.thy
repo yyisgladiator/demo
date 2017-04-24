@@ -239,5 +239,6 @@ lift_definition testSPF_1x1_notcont :: "nat SPF" is
   (*apply(simp only: domIff2)
   apply(simp add: sbdom_rep_eq)
   by(auto)*)     
+
     
 end
