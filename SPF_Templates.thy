@@ -546,37 +546,6 @@ lemma multSPF_apply: assumes "ch1 \<noteq> ch2"
 shows "(multSPF (ch1, ch2, ch3)) \<rightleftharpoons> ([ch1 \<mapsto> (s1:: nat stream), ch2  \<mapsto> (s2:: nat stream)]\<Omega>) = ([ch3 \<mapsto> (mult\<cdot>s1\<cdot>s2)]\<Omega>)"
   by (simp add: multSPF_SPF2x1_eq  SPF2x1_apply assms)
 
-    
-(* lift_definition *)
-
-lift_definition appendElem3:: "nat stream \<rightarrow> nat stream" is
-"\<Lambda> s. \<up>0 \<bullet> s"
-sorry
-
-lemma append_cont: "cont (\<lambda> sb. (sbDom\<cdot>sb = {c1}) \<leadsto> ([c2 \<mapsto> (appendElem 0 (sb . c1))]\<Omega>))"
-proof -
-  have "\<And>c ca. (\<lambda>n s. (sbDom\<cdot>s = {c})\<leadsto>[ca \<mapsto> appendElem n (s . c)]\<Omega>) = (\<lambda>n s. (sbDom\<cdot>s = {fst (c, ca)})\<leadsto>[snd (c, ca) \<mapsto> appendElem n (s . fst (c, ca))]\<Omega>)"
-    by force
-  then show ?thesis
-    by (metis appendSPF_cont) (* > 1.0 s, timed out *)
-qed
-
-lift_definition appendSPF2 :: "nat SPF" is
-"(\<Lambda> sb. (sbDom\<cdot>sb = {c1}) \<leadsto> ([c2 \<mapsto> (appendElem 0 (sb . c1))]\<Omega>))"
-by(auto simp add: spf_well_def domIff2 sbdom_rep_eq append_cont)
-
-lift_definition appendSPF3 :: "nat SPF" is
-"SPF1x1 appendElem3 (c1, c2)"
-sorry
-    
-definition SPF1x1_2 :: "(nat stream \<rightarrow> nat stream) \<Rightarrow> (channel \<times> channel) \<Rightarrow> nat SB \<rightarrow> nat SB option" where
-"SPF1x1_2 f cs \<equiv> (\<Lambda> (sb::nat SB). (sbDom\<cdot>sb = {(fst cs)}) 
-                             \<leadsto> ([(snd cs) \<mapsto> f\<cdot>(sb . (fst cs))]\<Omega>))"       
-
-lift_definition appendSPF4 :: "nat SPF" is
-"SPF1x1_2 appendElem3 (c1, c2)"
-  using SPF1x1_2_def spf_1x1_general_well by presburger
-    
 end
  
 (*

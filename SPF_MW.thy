@@ -215,4 +215,29 @@ apply(subst Abs_cfun_inverse2)
    apply(subst conthelper2, simp_all add: assms)
 oops
 
+  
+(* Testing SPF Definition *)  
+  
+lift_definition testSPF_0x1 :: "nat SPF" is
+"\<Lambda> (sb::nat SB). ((sbDom\<cdot>sb = {}) \<leadsto> ([c1 \<mapsto> ((\<up>1)\<infinity>)]\<Omega>))"
+  apply(simp add: spf_well_def)
+  apply(simp only: domIff2)
+  apply(simp add: sbdom_rep_eq)
+  by(auto)  
+
+lift_definition testSPF_1x0 :: "nat SPF" is
+"\<Lambda> (sb::nat SB). ((sbDom\<cdot>sb = {c1}) \<leadsto> (Abs_SB empty))"
+  apply(simp add: spf_well_def)
+  apply(simp only: domIff2)
+  apply(simp add: sbdom_rep_eq)
+  by(auto)     
+
+lift_definition testSPF_1x1_notcont :: "nat SPF" is
+"\<Lambda> (sb::nat SB). ((sbDom\<cdot>sb = {c1}) \<leadsto> [c2 \<mapsto> (if #(sb . c1) = \<infinity> then ((\<up>1)\<infinity>) else ((\<up>2)\<infinity>))]\<Omega>)"
+  apply(simp add: spf_well_def)
+  oops
+  (*apply(simp only: domIff2)
+  apply(simp add: sbdom_rep_eq)
+  by(auto)*)     
+    
 end
