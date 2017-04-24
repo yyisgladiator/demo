@@ -7,7 +7,7 @@
 *)
 
 theory ParComp_MW_JB
-imports SPF SBTheorie SerComp_JB
+imports SPF SB SerComp_JB
 
 begin
 

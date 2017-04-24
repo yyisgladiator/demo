@@ -504,7 +504,11 @@ lemma spfran_least: "spfRan\<cdot>f = sbDom\<cdot>((Rep_CSPF f) \<rightharpoonup
 apply(simp add: spfRan_def)
 by (metis (no_types, lifting) domIff option.exhaust_sel ranI someI_ex spfLeastIDom spf_ran2sbdom)
 
-
+lemma spfran2sbdom2: assumes "sbDom\<cdot>sb = spfDom\<cdot>f"
+  and "spfDom\<cdot>f \<noteq> {}"
+  shows "sbDom\<cdot>((Rep_CSPF f) \<rightharpoonup> sb) = spfRan\<cdot>f"
+  apply(simp add: spfran_insert)
+    by (smt assms(1) domIff mem_Collect_eq option.exhaust_sel ran_def sbleast_sbdom some_eq_ex spfLeastIDom spf_sbdom2dom spfran2sbdom)
 
 
   subsection \<open>spfType\<close>
@@ -937,12 +941,12 @@ lemma spfCompHelp2_iter_lub_dom: assumes "sbDom\<cdot>x = I f1 f2"
                              and  "spfRan\<cdot>f1 \<inter> spfRan\<cdot>f2 = {}" 
                            shows "sbDom\<cdot>(\<Squnion>n. iterate n\<cdot>(spfCompHelp2 f1 f2 x)\<cdot>(sbLeast (C f1 f2))) = C f1 f2"
 proof -
-  have "\<forall>n .sbDom\<cdot>(iterate n\<cdot>(spfCompHelp2 f1 f2 x)\<cdot>(sbLeast (C f1 f2))) = C f1 f2" 
+  have f1: "\<forall>n .sbDom\<cdot>(iterate n\<cdot>(spfCompHelp2 f1 f2 x)\<cdot>(sbLeast (C f1 f2))) = C f1 f2" 
     by (simp add: assms(1) assms(2) spfCompHelp2_iter_dom)
   hence "\<forall>n. \<forall>sb. (iterate n\<cdot>(spfCompHelp2 f1 f2 x)\<cdot>(sbLeast (C f1 f2))) \<sqsubseteq> sb \<longrightarrow> sbDom\<cdot>sb = C f1 f2"
     using sbdom_eq by blast
   thus ?thesis 
-    by (smt \<open>\<forall>n. sbDom\<cdot> (iterate n\<cdot>(spfCompHelp2 f1 f2 x)\<cdot>(sbLeast (C f1 f2))) = C f1 f2\<close> iterate_0 iterate_Suc2 monofun_cfun_arg po_class.chainI sbChain_dom_eq2 sbleast_least)
+    by (smt f1 iterate_0 iterate_Suc2 monofun_cfun_arg po_class.chainI sbChain_dom_eq2 sbleast_least)
 qed
   
 

@@ -1,5 +1,5 @@
 theory SPF_MW
-imports SPF SerComp_JB ParComp_MW (*InnerProd_Case_StudyTSPFTheorie*)
+imports SPF SerComp_JB ParComp_MW_JB SPF_Composition_JB SPF_Templates
 begin
 
 (* operator for parallel composition *)
@@ -29,7 +29,8 @@ by(simp_all add: assms)
 lemma sbDomIterate: "sbDom\<cdot>(\<Squnion>i. iterate i\<cdot>(spfCompHelp2 f1 f2 (sbLeast (I f1 f2)))\<cdot>sb)  = sbDom\<cdot>((spfCompHelp2 f1 f2 (sbLeast (I f1 f2)))\<cdot>sb)"
 apply(simp add: sbDom_def spfCompHelp2_def)
 (* in SPF *)
-sorry
+  oops
+    
 
 lemma spfDomHelp: assumes "spfDom\<cdot>f1 \<subseteq> sbDom\<cdot>sb" shows "sbDom\<cdot>f1\<rightleftharpoons>sb\<bar>spfDom\<cdot>f1 = spfRan\<cdot>f1"
 by (simp add: assms)
@@ -43,26 +44,28 @@ using assms apply auto[1]
 by simp
 
 lemma spfComp_ran_Oc: assumes "spfComp_well f1 f2" shows "spfRan\<cdot>(spfcomp f1 f2) = Oc f1 f2"
-apply(simp add: spfcomp_tospfH2)
-apply(simp add:  spfran_least)
-apply(subst spfDomAbs, simp_all add: assms)
-apply(subst sbDomIterate)
-apply(subst sbDomH2, simp)
-using C_def apply blast
-using Oc_def by auto
+  apply(simp add: spfcomp_tospfH2)
+  apply(simp add:  spfran_least)
+  by(subst spfDomAbs, simp_all add: assms inf.absorb2)
+
 
 (* hide *)
 
 definition hide :: "'m SPF \<Rightarrow>  channel set \<Rightarrow> 'm SPF" ("_\<h>_") where
 "hide f cs \<equiv> Abs_CSPF (\<lambda> x. (sbDom\<cdot>x = spfDom\<cdot>f ) \<leadsto> ((f \<rightleftharpoons> x)\<bar>(spfRan\<cdot>f - cs)))"
 
-lemma hidecont_helper: assumes "cont (Rep_CSPF(f))" shows "cont (\<lambda> x. (sbDom\<cdot>x = spfDom\<cdot>f ) \<leadsto> ((f \<rightleftharpoons> x)\<bar>(spfRan\<cdot>f - cs)))"
+lemma hidecont_helper[simp]:  
+  shows "cont (\<lambda> x. (sbDom\<cdot>x = spfDom\<cdot>f ) \<leadsto> ((f \<rightleftharpoons> x)\<bar>(spfRan\<cdot>f - cs)))"
 apply(subst if_then_cont, simp_all)
 by (simp add: cont_compose)
 
-lemma hidespfwell_helper: assumes "spf_well (Abs_cfun (Rep_CSPF(f)))" 
-  shows "spf_well (Abs_cfun (\<lambda> x. (sbDom\<cdot>x = spfDom\<cdot>f ) \<leadsto> ((f \<rightleftharpoons> x)\<bar>(spfRan\<cdot>f - cs))))"
-  apply(auto simp add: spf_well_def domIff2 sbdom_rep_eq)
+  
+(* TODO  assumes "spf_well (Abs_cfun (Rep_CSPF(f)))"  *)  
+lemma hidespfwell_helper[simp]: assumes "spf_well (Abs_cfun (Rep_CSPF(f)))" 
+  shows "spf_well ((\<Lambda> x. (sbDom\<cdot>x = spfDom\<cdot>f ) \<leadsto> ((f \<rightleftharpoons> x)\<bar>(spfRan\<cdot>f - cs))))"
+  apply(simp add: spf_well_def)
+  apply(simp only: domIff2)
+  apply(auto simp add: sbdom_rep_eq)
 sorry
 
 lemma spfDomHide: "spfDom\<cdot>(f \<h> cs) = spfDom\<cdot>f"
@@ -95,8 +98,7 @@ lemma hideSubset: "spfRan\<cdot>(hide f cs) \<subseteq> spfRan\<cdot>f"
 (* lemmas about parallel composition *)
 
 lemma LtopL: "L f1 f2 = {} \<Longrightarrow> pL f1 f2 = {}"
-apply(simp add: L_def pL_def)
-by (simp add: Int_Un_distrib inf_sup_distrib2)
+  using spfpl_sub_L by blast
 
 lemma unionRestrictCh: assumes "sbDom\<cdot>sb1 \<inter> cs = {}"
                            and "sbDom\<cdot>sb2 \<union> sbDom\<cdot>sb3 = cs"
@@ -107,15 +109,12 @@ by (metis (no_types, lifting) Un_upper2 assms(1) assms(2) inf_sup_distrib1 inf_s
 lemma unionRestrict: assumes "sbDom\<cdot>sb1 \<inter> cs = {}"
                          and "sbDom\<cdot>sb2 \<union> sbDom\<cdot>sb3 = cs"
    shows "sb1 \<uplus> sb2 \<uplus> sb3 \<bar> cs = sb2 \<uplus> sb3"
-apply(rule sb_eq)
-apply(simp_all add: assms)
-apply (simp add: Int_absorb1 assms(2) sup_assoc)
-by (metis Un_iff assms(2) sbunion_getchL sbunion_getchR)
+  by (metis assms(2) sbunionDom sbunion_associative sbunion_restrict)
 
 lemma parCompHelp2Eq: assumes "L f1 f2 = {}"
                           and "spfComp_well f1 f2"
                           and "sbDom\<cdot>x = spfDom\<cdot>f1 \<union> spfDom\<cdot>f2"    
-   shows "(\<Squnion>i. iterate i\<cdot>(ParComp_MW.spfCompHelp2 f1 f2 x)\<cdot>(sbLeast (C f1 f2)))\<bar>Oc f1 f2 = (f1\<rightleftharpoons>(x\<bar>spfDom\<cdot>f1)) \<uplus> (f2\<rightleftharpoons>(x\<bar>spfDom\<cdot>f2))" 
+   shows "(\<Squnion>i. iterate i\<cdot>(spfCompHelp2 f1 f2 x)\<cdot>(sbLeast (C f1 f2)))\<bar>Oc f1 f2 = (f1\<rightleftharpoons>(x\<bar>spfDom\<cdot>f1)) \<uplus> (f2\<rightleftharpoons>(x\<bar>spfDom\<cdot>f2))" 
 apply(subst spfComp_parallel_itconst2, simp_all add: assms)
 apply(simp add: Oc_def)
 apply(subst unionRestrict)
@@ -124,7 +123,7 @@ by (metis Diff_triv L_def assms(1) inf_commute)
 
 lemma parCompHelp2Eq2: assumes "L f1 f2 = {}"
                            and "spfComp_well f1 f2" 
-   shows " (sbDom\<cdot>x = spfDom\<cdot>f1 \<union> spfDom\<cdot>f2) \<leadsto> ((\<Squnion>i. iterate i\<cdot>(ParComp_MW.spfCompHelp2 f1 f2 x)\<cdot>(sbLeast (C f1 f2)))\<bar>Oc f1 f2)
+   shows " (sbDom\<cdot>x = spfDom\<cdot>f1 \<union> spfDom\<cdot>f2) \<leadsto> ((\<Squnion>i. iterate i\<cdot>(spfCompHelp2 f1 f2 x)\<cdot>(sbLeast (C f1 f2)))\<bar>Oc f1 f2)
          = (sbDom\<cdot>x = spfDom\<cdot>f1 \<union> spfDom\<cdot>f2) \<leadsto> ((f1\<rightleftharpoons>(x\<bar>spfDom\<cdot>f1)) \<uplus> (f2\<rightleftharpoons>(x\<bar>spfDom\<cdot>f2)))"
 using assms(1) assms(2) parCompHelp2Eq by fastforce
 
@@ -214,14 +213,16 @@ apply(subst Abs_cfun_inverse2)
 apply(subst conthelper2, simp_all add: assms)
 apply(subst Abs_cfun_inverse2)
    apply(subst conthelper2, simp_all add: assms)
-sorry
+oops
 (* apply (rule spf_mono2monofun)
    apply (rule spf_monoI)
    apply (simp add: domIff2)
    apply (rule sb_below)*)
 
 (* spfLift *)  
-  
+
+(*  
+moved to SPF_Templates
 definition spfLift_1x1 :: "('m stream \<rightarrow> 'm stream) \<Rightarrow> channel \<Rightarrow> channel \<Rightarrow> 'm SPF" where
   "spfLift_1x1 f ch1 ch2  \<equiv> Abs_CSPF (\<lambda>b. ( (b\<in>{ch1}^\<Omega>) \<leadsto> ([ch2 \<mapsto> f\<cdot>(b . ch1)]\<Omega>)))"  
   
@@ -236,5 +237,5 @@ definition spfLift_1x3 :: "('m stream \<rightarrow> 'm stream) \<Rightarrow> ('m
 definition spfLift_2x1 :: "('m stream \<rightarrow> 'm stream \<rightarrow> 'm stream) \<Rightarrow> (channel \<times> channel) \<Rightarrow> channel \<Rightarrow> 'm SPF" where
   "spfLift_2x1 f cs ch1  \<equiv> Abs_CSPF (\<lambda>b. ( (b\<in>{fst cs, snd cs}^\<Omega>) \<leadsto> ([ch1 \<mapsto> f\<cdot>(b . (fst cs))\<cdot>(b . (snd cs))]\<Omega>)))"  
   
-  
+*)
 end
