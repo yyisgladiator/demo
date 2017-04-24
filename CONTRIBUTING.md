@@ -14,7 +14,7 @@ Small changes can be directly pushed to the [develop](https://git.rwth-aachen.de
 ## Bigger Changes/Case Studies
 The contribution process for **bigger** changes looks as follows:
 
-1.  Create a new branch from the master branch with an descriptive title for your work
+1.  Create a new branch from the development branch with an descriptive title for your work
   * avoid "/" in the branch title as the RWTH git server cannot properly deal with it
   * add a new Milestone to the project if your branch represents a Case Study and reference it!
 
