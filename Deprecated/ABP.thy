@@ -4,7 +4,7 @@
 *)
 
 theory ABP
-imports TSPSTheorie
+imports "../TSPS"
 
 begin
   default_sort message

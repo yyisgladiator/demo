@@ -7,8 +7,8 @@
 
 
 
-theory TSPFTheorie
-imports TSBTheorie
+theory TSPF
+imports TSB
 begin
 
 default_sort message
