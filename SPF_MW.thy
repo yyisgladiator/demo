@@ -214,28 +214,5 @@ apply(subst conthelper2, simp_all add: assms)
 apply(subst Abs_cfun_inverse2)
    apply(subst conthelper2, simp_all add: assms)
 oops
-(* apply (rule spf_mono2monofun)
-   apply (rule spf_monoI)
-   apply (simp add: domIff2)
-   apply (rule sb_below)*)
 
-(* spfLift *)  
-
-(*  
-moved to SPF_Templates
-definition spfLift_1x1 :: "('m stream \<rightarrow> 'm stream) \<Rightarrow> channel \<Rightarrow> channel \<Rightarrow> 'm SPF" where
-  "spfLift_1x1 f ch1 ch2  \<equiv> Abs_CSPF (\<lambda>b. ( (b\<in>{ch1}^\<Omega>) \<leadsto> ([ch2 \<mapsto> f\<cdot>(b . ch1)]\<Omega>)))"  
-  
-definition spfLift_1x2 :: "('m stream \<rightarrow> 'm stream) \<Rightarrow> ('m stream \<rightarrow> 'm stream) \<Rightarrow> channel \<Rightarrow> (channel \<times> channel) \<Rightarrow> 'm SPF" where
-  "spfLift_1x2 f1 f2 ch1 cs \<equiv> 
-   Abs_CSPF (\<lambda>b. ( (b\<in>{ch1}^\<Omega>) \<leadsto> ([(fst cs) \<mapsto> f1\<cdot>(b . ch1), (snd cs) \<mapsto> f2\<cdot>(b . ch1)]\<Omega>)))"  
- 
-definition spfLift_1x3 :: "('m stream \<rightarrow> 'm stream) \<Rightarrow> ('m stream \<rightarrow> 'm stream) \<Rightarrow> ('m stream \<rightarrow> 'm stream) \<Rightarrow> channel \<Rightarrow> (channel \<times> channel \<times> channel) \<Rightarrow> 'm SPF" where
-  "spfLift_1x3 f1 f2 f3 ch1 cs \<equiv> 
-   Abs_CSPF (\<lambda>b. ( (b\<in>{ch1}^\<Omega>) \<leadsto> ([(fst cs) \<mapsto> f1\<cdot>(b . ch1), (fst (snd cs)) \<mapsto> f2\<cdot>(b . ch1), (snd (snd cs)) \<mapsto> f3\<cdot>(b . ch1)]\<Omega> )))"  
-   
-definition spfLift_2x1 :: "('m stream \<rightarrow> 'm stream \<rightarrow> 'm stream) \<Rightarrow> (channel \<times> channel) \<Rightarrow> channel \<Rightarrow> 'm SPF" where
-  "spfLift_2x1 f cs ch1  \<equiv> Abs_CSPF (\<lambda>b. ( (b\<in>{fst cs, snd cs}^\<Omega>) \<leadsto> ([ch1 \<mapsto> f\<cdot>(b . (fst cs))\<cdot>(b . (snd cs))]\<Omega>)))"  
-  
-*)
 end

@@ -151,6 +151,13 @@ lemma spf_1x1_general_ran[simp]: "spfRan\<cdot>(Abs_CSPF(\<lambda> sb. (sbDom\<c
   apply(simp add: spfran_least)
   by(simp add: spfran_least sbdom_insert)
 
+    
+subsection \<open>1x1 SPF lift_definitions\<close>
+(* general 1x1 SPF constructor with one input and one output channel *)
+lift_definition SPF1x1_2 :: "(nat stream \<rightarrow> nat stream) \<Rightarrow> channel \<Rightarrow> channel \<Rightarrow> nat SPF" is
+"\<lambda> f ch1 ch2. (\<Lambda> (sb::nat SB). (sbDom\<cdot>sb = {ch1}) 
+                             \<leadsto> ([ch2 \<mapsto> f\<cdot>(sb . ch1)]\<Omega>))"
+by simp
       
  
 subsection \<open>SPF1x1 constructor lemmata\<close>
@@ -271,6 +278,13 @@ lemma spf_2x1_general_ran[simp]: "spfRan\<cdot>(Abs_CSPF(\<lambda> sb. (sbDom\<c
     \<leadsto> ([ch3 \<mapsto> (f::nat stream \<rightarrow> nat stream  \<rightarrow> nat stream)\<cdot>(sb . ch1)\<cdot>(sb . ch2)]\<Omega>))) = {ch3}"
   apply(simp add: spfran_least)
   by(simp add: spfran_least sbdom_insert)
+    
+    
+subsection \<open>2x1 SPF lift_definitions\<close>
+lift_definition SPF2x1_2 :: "(nat stream \<rightarrow> nat stream \<rightarrow> nat stream) \<Rightarrow> (channel \<times> channel) \<Rightarrow> channel \<Rightarrow> nat SPF" is
+"\<lambda> f cs ch3. (\<Lambda> (sb::nat SB). (sbDom\<cdot>sb = {(fst cs), (snd cs)}) 
+                          \<leadsto> ([ch3\<mapsto>f\<cdot>(sb . (fst cs))\<cdot>(sb . (snd cs))]\<Omega>))"
+by simp
     
     
 subsection \<open>SPF2x1 constructor lemmata\<close>
