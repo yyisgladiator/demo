@@ -23,8 +23,8 @@ definition sb_id :: "nat stream \<rightarrow> nat stream" where
 definition appendElem:: "nat \<Rightarrow> nat stream \<Rightarrow> nat stream" where
 "appendElem a s = \<up>a \<bullet> s"
 
-definition appendElem2:: "'a \<Rightarrow> 'a stream \<rightarrow> 'a stream" where
-"appendElem2 a \<equiv> \<Lambda> s. \<up>a \<bullet> s" 
+definition appendElem2:: "nat \<Rightarrow> nat stream \<rightarrow> nat stream" where
+"appendElem2 a \<equiv> \<Lambda> s. \<up>a \<bullet> s"
 
 (* multiplies 2 nat - streams component-wise *)
 definition mult:: "nat stream \<rightarrow> nat stream \<rightarrow> nat stream" where

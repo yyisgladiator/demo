@@ -1,74 +1,17 @@
 theory Feedback_MW
-imports SPF Streams SBTheorie ParComp_MW StreamCase_Study SPF_MW SerComp_JB SPF_Templates
+imports SPF Streams SB ParComp_MW_JB "CaseStudies/StreamCase_Study" SPF_MW SerComp_JB SPF_Templates
 
 begin
 
-(* append component *)
-section Append
 
-definition append0:: "nat stream  \<rightarrow> nat stream" where
-"append0 \<equiv> \<Lambda> s . \<up>0 \<bullet> s"
-
-lemma spfappend0_mono[simp] : "monofun (\<lambda> sb. (sbDom\<cdot>sb = {ch3}) \<leadsto> ([ch2\<mapsto>append0\<cdot>(sb . ch3)]\<Omega>))"
-  apply (rule spf_mono2monofun)
-   apply (rule spf_monoI)
-   apply (simp add: domIff2)
-   apply (rule sb_below)
-    apply (simp add: sbdom_insert)
-    apply (simp add: sbdom_rep_eq sbgetch_rep_eq)
-   apply (meson monofun_cfun monofun_cfun_arg monofun_cfun_fun)
-   by (rule, simp add: domIff2)
-
-lemma append0_chain[simp]: "chain Y \<Longrightarrow> sbDom\<cdot>(Y 0) = {ch3} 
-                        \<Longrightarrow> chain (\<lambda> i. [ch2\<mapsto>append0\<cdot>((Y i) . ch3)]\<Omega>)"
-  apply (rule chainI)
-  apply (rule sb_below)
-   apply (simp add: sbdom_rep_eq)
-   apply (simp add: sbdom_rep_eq sbgetch_rep_eq)
-   by (simp add: monofun_cfun po_class.chainE)
-
-lemma append0_chain_lub[simp]: "chain Y \<Longrightarrow> sbDom\<cdot>(Lub Y) = {ch3} 
-                                \<Longrightarrow> chain (\<lambda> i. [ch2\<mapsto>append0\<cdot>((Y i) . ch3)]\<Omega>)"
-  by (simp add: sbChain_dom_eq2)
-
-lemma append0_Lub[simp]: "chain Y \<Longrightarrow> sbDom\<cdot>(Lub Y) = {ch3} \<Longrightarrow> 
-  (\<Squnion>i. append0\<cdot>(Y i . ch3)) = append0\<cdot>((Lub Y). ch3)"
-  by (simp add: lub_distribs(1) lub_eval)
-
-lemma spfappend0_chain [simp]: "chain Y \<Longrightarrow>
-      chain (\<lambda> i. (sbDom\<cdot>(Y i) = {ch3}) \<leadsto> ([ch2\<mapsto>append0\<cdot>((Y i) . ch3)]\<Omega>))"
-  apply (rule chainI)
-  apply (simp add: sbChain_dom_eq2)
-  apply (rule impI, rule some_below, rule sb_below)
-   apply (simp add: sbdom_rep_eq)
-  apply (simp add: sbdom_rep_eq sbgetch_rep_eq)
-  by (simp add: monofun_cfun po_class.chainE)
-
-lemma spfappend0_cont[simp]: "cont (\<lambda> sb. (sbDom\<cdot>sb = {ch3}) 
-                                \<leadsto> ([ch2\<mapsto>append0\<cdot>(sb . ch3)]\<Omega>))" (is "cont ?F")
-  apply (rule spf_cont2cont)
-    apply (rule spf_contlubI)
-    apply (simp add: domIff2 sbChain_dom_eq2)
-    apply (rule sb_below)
-     apply (simp add: sbdom_rep_eq )
-     apply (simp only: Cfun.contlub_cfun_arg append0_chain_lub)
-     apply (simp add: sbdom_rep_eq sbgetch_rep_eq)
-    apply (simp add: sbdom_rep_eq sbgetch_rep_eq sbgetch_lub)
-   apply (simp add: monofun2spf_mono)
-  by(simp add: domIff2, rule+)
-
-
+section Definitions
 (* SPF Definition *)
-section SPFs
-
+    
 definition addC :: "nat SPF" where
 "addC \<equiv> addSPF (c1, c2, c3)" 
   
-lift_definition append0C :: "nat SPF" is
-"\<Lambda> sb. (sbDom\<cdot>sb = {c3}) \<leadsto> ([c2\<mapsto>append0\<cdot>(sb . c3)]\<Omega>)"
-  apply(simp add: spf_well_def)
-  apply(simp add:  domIff2)
-  by (auto simp add: sbdom_rep_eq)
+definition append0C :: "nat SPF" where
+"append0C \<equiv> SPF1x1 (appendElem2 0) (c3,c2)" (*appendSPF (c1, c2) 0"*)
 
 (* component properties *)
 subsection Properties
@@ -76,8 +19,9 @@ subsection Properties
 lemma add_rep_eqC: "Rep_CSPF addC = (\<lambda> sb. (sbDom\<cdot>sb = {c1, c2}) \<leadsto> ([c3\<mapsto>add\<cdot>(sb . c1)\<cdot>(sb . c2)]\<Omega>))"
 by(auto simp add: addC_def addSPF_rep_eqC)
 
-lemma append0_rep_eqC: "Rep_CSPF append0C = (\<lambda> sb. (sbDom\<cdot>sb = {c3}) \<leadsto> ([c2\<mapsto>append0\<cdot>(sb . c3)]\<Omega>))"
-  by (simp add: append0C.rep_eq Rep_CSPF_def)
+lemma append0_rep_eqC: "Rep_CSPF append0C = (\<lambda> sb. (sbDom\<cdot>sb = {c3}) \<leadsto> ([c2\<mapsto>((appendElem2 0)\<cdot>(sb . c3))]\<Omega>))"
+  apply(simp add: append0C_def)
+  by(auto simp add: SPF1x1_rep_eq)
 
 lemma [simp]: "spfDom\<cdot>addC = {c1,c2}"
   by (metis add_rep_eqC sbleast_sbdom spfdom2sbdom)
@@ -87,12 +31,10 @@ lemma [simp]: "spfRan\<cdot>addC = {c3}"
   by (simp add: sbdom_insert)
 
 lemma [simp]: "spfDom\<cdot>append0C = {c3}"
-  apply(simp add: spfdom_insert append0C.rep_eq Rep_CSPF_def domIff2)
-  by (meson sbleast_sbdom someI_ex)
+  by(auto simp add: append0C_def SPF1x1_dom)
 
 lemma [simp]: "spfRan\<cdot>append0C = {c2}"
-  apply (simp add: spfran_least append0_rep_eqC)
-  by (simp add: sbdom_insert)
+  by(auto simp add: append0C_def SPF1x1_ran)
 
 (* composition prerequirements *)
 subsection Composition_prerequirements
@@ -173,7 +115,7 @@ by(simp_all add: contAddC contAppend0)
 lemma Iterate1_H2_test: "((iterate (Suc 0)\<cdot>(SPF.spfCompHelp2 addC append0C ([c1 \<mapsto> <[1,2,3]>]\<Omega>)))
                          \<cdot>(sbLeast {c1, c2, c3})) = ([c1 \<mapsto> <[1,2,3]>]\<Omega>) \<uplus> ([c2 \<mapsto> <[0]>]\<Omega>) \<uplus> ([c3 \<mapsto> \<epsilon>]\<Omega>)"
 apply(simp add: SPF.spfCompHelp2_def contAddCAppend0CUnion)
-apply(simp add: add_rep_eqC append0_rep_eqC append0_def)
+apply(simp add: add_rep_eqC append0_rep_eqC appendElem2_def)
 apply(subst sbunion_commutative2)
 by(auto simp add: sbdom_rep_eq)
 
@@ -183,7 +125,7 @@ apply(subst iterate_Suc)
 apply(subst Iterate1_H2_test)
 apply(simp add: SPF.spfCompHelp2_def contAddCAppend0CUnion)
 apply(subst unionRestrict2, auto simp add: sbdom_rep_eq)
-apply(simp add: add_rep_eqC append0_rep_eqC append0_def)
+apply(simp add: add_rep_eqC append0_rep_eqC appendElem2_def)
 apply(auto simp add: sbdom_rep_eq)
 apply(simp add: add_def)
 apply(subst sbunion_commutative2)
@@ -195,7 +137,7 @@ apply(subst iterate_Suc)
 apply(subst Iterate2_H2_test)
 apply(simp add: SPF.spfCompHelp2_def contAddCAppend0CUnion)
 apply(subst unionRestrict2, auto simp add: sbdom_rep_eq)
-apply(simp add: add_rep_eqC append0_rep_eqC append0_def)
+apply(simp add: add_rep_eqC append0_rep_eqC appendElem2_def)
 apply(auto simp add: sbdom_rep_eq)
 apply(simp add: add_def)
 apply(subst sbunion_commutative2)
@@ -207,7 +149,7 @@ apply(subst iterate_Suc)
 apply(subst Iterate3_H2_test)
 apply(simp add: SPF.spfCompHelp2_def contAddCAppend0CUnion)
 apply(subst unionRestrict2, auto simp add: sbdom_rep_eq)
-apply(simp add: add_rep_eqC append0_rep_eqC append0_def)
+apply(simp add: add_rep_eqC append0_rep_eqC appendElem2_def)
 apply(auto simp add: sbdom_rep_eq)
 apply(simp add: add_def)
 apply(subst sbunion_commutative2)
@@ -219,7 +161,7 @@ apply(subst iterate_Suc)
 apply(subst Iterate4_H2_test)
 apply(simp add: SPF.spfCompHelp2_def contAddCAppend0CUnion)
 apply(subst unionRestrict2, auto simp add: sbdom_rep_eq)
-apply(simp add: add_rep_eqC append0_rep_eqC append0_def)
+apply(simp add: add_rep_eqC append0_rep_eqC appendElem2_def)
 apply(auto simp add: sbdom_rep_eq)
 apply(simp add: add_def)
 apply(subst sbunion_commutative2)
@@ -231,7 +173,7 @@ apply(subst iterate_Suc)
 apply(subst Iterate5_H2_test)
 apply(simp add: SPF.spfCompHelp2_def contAddCAppend0CUnion)
 apply(subst unionRestrict2, auto simp add: sbdom_rep_eq)
-apply(simp add: add_rep_eqC append0_rep_eqC append0_def)
+apply(simp add: add_rep_eqC append0_rep_eqC appendElem2_def)
 apply(auto simp add: sbdom_rep_eq)
 apply(simp add: add_def)
 apply(subst sbunion_commutative2)
@@ -243,7 +185,7 @@ apply(subst iterate_Suc)
 apply(subst Iterate6_H2_test)
 apply(simp add: SPF.spfCompHelp2_def contAddCAppend0CUnion)
 apply(subst unionRestrict2, auto simp add: sbdom_rep_eq)
-apply(simp add: add_rep_eqC append0_rep_eqC append0_def)
+apply(simp add: add_rep_eqC append0_rep_eqC appendElem2_def)
 apply(auto simp add: sbdom_rep_eq)
 apply(simp add: add_def)
 apply(subst sbunion_commutative2)
@@ -253,7 +195,7 @@ lemma Iterate_H2_test_max: "(SPF.spfCompHelp2 addC append0C ([c1 \<mapsto> <[1,2
                       = ([c1 \<mapsto> <[1,2,3]>]\<Omega>) \<uplus> ([c2 \<mapsto> <[0,1,3,6]>]\<Omega>) \<uplus> ([c3 \<mapsto> <[1,3,6]>]\<Omega>)"
 apply(simp add: SPF.spfCompHelp2_def contAddCAppend0CUnion)
 apply(subst unionRestrict2, auto simp add: sbdom_rep_eq)
-apply(simp add: add_rep_eqC append0_rep_eqC append0_def)
+apply(simp add: add_rep_eqC append0_rep_eqC appendElem2_def)
 apply(auto simp add: sbdom_rep_eq)
 apply(simp add: add_def)
 apply(subst sbunion_commutative2)
@@ -301,7 +243,7 @@ by(auto simp add: sbdom_rep_eq)
 lemma spfcomp_RepAbs: assumes "spfComp_well f1 f2" shows
  "Rep_CSPF (Abs_CSPF (\<lambda>x. (sbDom\<cdot>x = I f1 f2)\<leadsto>(\<Squnion>i. iterate i\<cdot>(SPF.spfCompHelp2 f1 f2 x)\<cdot>(sbLeast (C f1 f2)))\<bar>Oc f1 f2))
             = (\<lambda>x. (sbDom\<cdot>x = I f1 f2)\<leadsto>(\<Squnion>i. iterate i\<cdot>(SPF.spfCompHelp2 f1 f2 x)\<cdot>(sbLeast (C f1 f2)))\<bar>Oc f1 f2)"
-sorry
+  by simp
 
 lemma sfa: "\<up>(Suc 0) \<bullet> \<up>2 \<bullet> \<up>(Suc (Suc (Suc 0))) = <[1,2,3]>"
 by auto
