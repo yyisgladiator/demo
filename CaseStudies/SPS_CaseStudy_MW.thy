@@ -1,5 +1,5 @@
 theory SPS_CaseStudy_MW
-imports Feedback_MW SPF_MW SPF_Templates
+imports  "../Feedback_MW" "../SPF_MW" "../SPF_Templates"
   
 begin
     

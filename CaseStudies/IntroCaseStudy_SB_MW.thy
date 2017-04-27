@@ -1,5 +1,5 @@
 theory IntroCaseStudy_SB_MW
-imports SBTheorie TSBTheorie SPF StreamCase_Study SPF
+imports  "../SB"  "../TSB"  "../SPF" StreamCase_Study  "../SPF"
 begin
 
 datatype M = Nat nat ("\<N> _" )

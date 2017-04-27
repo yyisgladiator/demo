@@ -1,5 +1,5 @@
 theory IntroCaseStudy_LiftedTL_JB
-imports StreamTheorie Streams TStreamTheorie
+imports  "../Streams"  "../TStream"
 begin
 
 (* tsNth *)

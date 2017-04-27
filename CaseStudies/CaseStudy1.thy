@@ -6,7 +6,7 @@
 
 
 theory CaseStudy1
-imports TSBTheorie
+imports "../TSB"
 
 begin
 

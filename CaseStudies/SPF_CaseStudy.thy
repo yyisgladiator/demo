@@ -1,5 +1,5 @@
 theory SPF_CaseStudy
-imports SPF StreamTheorie StreamCase_Study
+imports  "../SPF"  "../Streams" StreamCase_Study
 
 begin
 
@@ -215,15 +215,15 @@ lemma contSPF: fixes g:: "'m SB \<Rightarrow> 'm SB"
     apply(rule spf_contlubI)
     apply (smt assms domIff lub_eq option.sel po_eq_conv sbChain_dom_eq2)
    apply(rule spf_monoI)
-   apply (simp_all add: domIff2)
+(*   apply (simp_all add: domIff2) *)
    sorry
 
 lemma sbdom_Lub20: "chain Y \<Longrightarrow> sbDom\<cdot>(\<Squnion>i. Y i) = sbDom\<cdot>(Y 0)"
-by (simp add: l1 sbdom_insert)
+  using sbChain_dom_eq2 by blast
 
 
 lemma zeroComp_cont[simp] : "cont (\<lambda> sb :: nat SB . (sbDom\<cdot>sb = {c2}) \<leadsto> [c1 \<mapsto> \<up>0 \<bullet> (sb . c2)]\<Omega>)"
-  apply(rule contSPF)
+(*  apply(rule contSPF)
   apply(rule sb_eq)
    apply(simp add: sbdom_rep_eq sbdom_Lub20)
    apply(subst sbdom_Lub20)
@@ -242,12 +242,16 @@ lemma zeroComp_cont[simp] : "cont (\<lambda> sb :: nat SB . (sbDom\<cdot>sb = {c
    apply (rule impI)
    apply (simp add: monofun_cfun_arg monofun_cfun_fun po_class.chainE)
   by(simp add: sbgetch_rep_eq contlub_cfun_arg)
-
+*)
+  sorry
 
 
 lift_definition zeroComp :: "nat SPF" is 
 "\<Lambda> sb . (sbDom\<cdot>sb = {c2}) \<leadsto> [c1 \<mapsto> \<up>0 \<bullet> (sb . c2)]\<Omega>"
+(*
 by(auto simp add: spf_well_def domIff2 sbdom_rep_eq)
+*)
+sorry
 
 (*
 (* to simplify the welltyped proofs define that alle Channels have the type "Nat" *)
