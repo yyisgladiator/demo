@@ -425,9 +425,15 @@ section \<open>sum1SPF eq sum4\<close>
 subsection prerequirements
 (* prerequirements for final lemma *)
 
+
+lemma spfCompHelpFix: assumes "sbDom\<cdot>sb = I addC append0C"
+  shows "(\<Squnion>i. iterate i\<cdot>(SPF.spfCompHelp2 addC append0C sb)\<cdot>(sbLeast {c1, c2, c3})) = 
+        [c1 \<mapsto> (sb . c1), c2 \<mapsto> (\<up>0 \<bullet>  (\<mu> z. add\<cdot>(sb . c1)\<cdot>(\<up>0 \<bullet> z))), c3 \<mapsto> (\<mu> z. add\<cdot>(sb . c1)\<cdot>(\<up>0 \<bullet> z))]\<Omega>"
+  sorry
   
 lemma spfCompFixEq: assumes "sbDom\<cdot>sb = I addC append0C"
   shows "(\<Squnion>i. iterate i\<cdot>(SPF.spfCompHelp2 addC append0C sb)\<cdot>(sbLeast {c1, c2, c3})) . c3 = (\<mu> z. add\<cdot>(sb . c1)\<cdot>(\<up>0 \<bullet> z))" 
+  apply(subst spfCompHelpFix, simp add: assms)
   sorry
   
   
