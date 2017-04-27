@@ -12,7 +12,7 @@
 
 theory StreamCase_Study2
 
-imports StreamTheorie2
+imports "../Deprecated/StreamTheorie2"
 begin
 
 

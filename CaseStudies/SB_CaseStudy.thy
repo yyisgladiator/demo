@@ -1,5 +1,5 @@
 theory SB_CaseStudy
-imports SBTheorie
+imports  "../SB"
 
 begin                               
 
