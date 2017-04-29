@@ -85,7 +85,9 @@ shows "sbDom\<cdot>((spfFeedH f x)\<cdot>sb) = (spfRan\<cdot>f)"
 (* ----------------------------------------------------------------------- *)
 section \<open>iter_spfFeedH\<close>
 (* ----------------------------------------------------------------------- *) 
-    
+ 
+subsection \<open>cont_mono\<close>
+  
 lemma iter_spfFeedH_cont[simp]: "cont (\<lambda>x. iter_spfFeedH f i x)"
   by simp
 
@@ -100,6 +102,14 @@ lemma iter_spfFeedH_chain[simp]: assumes "sbDom\<cdot>x =  spfDom\<cdot>f - spfR
   shows "chain (\<lambda>i. iter_spfFeedH f i x)"
   apply(rule sbIterate_chain)
   by(simp add: assms)
+    
+    
+subsection \<open>dom\<close>
+  
+lemma iter_spfFeedH_dom: assumes "sbDom\<cdot>x = spfDom\<cdot>f - spfRan\<cdot>f"
+  shows "\<forall>n. sbDom\<cdot>(iterate n\<cdot>(spfCompHelp2 f2 f1 x)\<cdot>((C f2 f1)^\<bottom>)) = (spfRan\<cdot>f)"
+  oops
+    
     
     
 (* ----------------------------------------------------------------------- *)
@@ -229,11 +239,24 @@ qed
     
 
   (* Yes :) *)
-lemma spf_feed_cont[simp]: "cont (\<lambda>x. (sbDom\<cdot>x = (spfDom\<cdot>f - spfRan\<cdot>f)) \<leadsto> (\<Squnion>i.(iter_spfFeedH f i) x))"
+lemma spf_feed_cont[simp]: "cont (\<lambda>x. (sbDom\<cdot>x = (spfDom\<cdot>f - spfRan\<cdot>f)) 
+                                                      \<leadsto> (\<Squnion>i.(iter_spfFeedH f i) x))"
   apply (rule contI2)
    apply (simp)
-    using chain_if_lub_iter_spfFeedH by blast
-  
+  using chain_if_lub_iter_spfFeedH by blast
+    
+lemma lub_iter_spfFeedH_ran[simp]: assumes "sbDom\<cdot>sb = (spfDom\<cdot>f - spfRan\<cdot>f)"
+  shows "sbDom\<cdot>(\<Squnion>i. iter_spfFeedH f i sb) = spfRan\<cdot>f"
+  oops
+    
+lemma spf_feed_well[simp]:
+  "spf_well (\<Lambda> x. (sbDom\<cdot>x = (spfDom\<cdot>f - spfRan\<cdot>f)) \<leadsto> (\<Squnion>i.(iter_spfFeedH f i) x))"
+  apply(simp add: spf_well_def)
+  apply(simp only: domIff2)
+  apply(simp add: sbdom_rep_eq)
+    by(auto)  
+
+ 
   
   
 end
