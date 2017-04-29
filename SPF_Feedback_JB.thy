@@ -159,9 +159,80 @@ proof -
     apply(subst chainI, simp_all add: assms)
     by (simp add: f1 lub_iter_spfFeedH_mono_req)
 qed
+
   
   
+(* ----------------------------------------------------------------------- *)
+section \<open>spfFeedbackOperator\<close>
+(* ----------------------------------------------------------------------- *)
   
+subsection \<open>mono\<close> 
+  
+lemma spf_feedback_mono[simp]: "monofun (\<lambda> x. (sbDom\<cdot>x = (spfDom\<cdot>f - spfRan\<cdot>f)) 
+                                                      \<leadsto> (\<Squnion>i.(iter_spfFeedH f i) x) )"
+  by (simp add: if_lub_iter_spfFeedH_mono_req monofun_def)
+  
+    
+subsection \<open>cont\<close>
+  
+lemma chain_if_lub_iter_spfFeedH_domI: assumes "chain Y"
+                                       and     "(sbDom\<cdot>(\<Squnion>i. Y i) = (spfDom\<cdot>f - spfRan\<cdot>f))"
+shows "(sbDom\<cdot>(\<Squnion>i. Y i) = (spfDom\<cdot>f - spfRan\<cdot>f)) \<leadsto>  (\<Squnion>i.(iter_spfFeedH f i) (\<Squnion>i. Y i))
+        \<sqsubseteq>  (\<Squnion>i. (sbDom\<cdot>(Y i) = (spfDom\<cdot>f - spfRan\<cdot>f)) \<leadsto>(\<Squnion>ia. (iter_spfFeedH f ia) (Y i)))"
+proof -
+  have f1: "\<And>i. cont (\<lambda>x. iter_spfFeedH f i x)"
+    by simp
+  hence f2: "(\<Squnion>i. iter_spfFeedH f i (\<Squnion>i. Y i)) = (\<Squnion> ia i.  iter_spfFeedH f ia (Y i))"
+    by (subst cont2lub_lub_eq, simp_all add: assms)
+  moreover
+  have f3: "\<forall>ia.  sbDom\<cdot>(Y ia) =  (spfDom\<cdot>f - spfRan\<cdot>f)"
+    by (simp add: assms(1) assms(2) sbChain_dom_eq2)
+  ultimately
+  have f4: "(\<Squnion>i ia. iter_spfFeedH f i (Y ia)) \<sqsubseteq> (\<Squnion>i ia.  iter_spfFeedH f ia (Y i))"
+    by(simp add: diag_lub ch2ch_cont f1 f2 f3 assms)
+      
+      
+  have f10: "(sbDom\<cdot>(\<Squnion>i. Y i) = (spfDom\<cdot>f - spfRan\<cdot>f)) \<leadsto> (\<Squnion>i. iter_spfFeedH f i (\<Squnion>i. Y i))
+              = Some (\<Squnion>i. iter_spfFeedH f i (\<Squnion>i. Y i))"
+    by (simp add: assms)
+  have f11: "(\<Squnion>i. (sbDom\<cdot>(Y i) = (spfDom\<cdot>f - spfRan\<cdot>f)) \<leadsto> \<Squnion>ia. iter_spfFeedH f ia (Y i)) 
+            = Some(\<Squnion>i ia. iter_spfFeedH f ia (Y i))"
+    proof -
+      have f111: "(\<Squnion>i. (sbDom\<cdot>(Y i) =  (spfDom\<cdot>f - spfRan\<cdot>f))
+                                               \<leadsto> \<Squnion>ia. iter_spfFeedH f ia (Y i))
+                         = (\<Squnion>i. Some(\<Squnion>ia. iter_spfFeedH f ia (Y i)))"
+        by (simp add: f3 assms)
+      have f112: "(\<Squnion>i. Some(\<Squnion>ia. iter_spfFeedH f ia (Y i)))
+                      = Some(\<Squnion>i ia. iter_spfFeedH f ia (Y i))"
+        by (simp add: contlub_cfun_arg some_lub_chain_eq chain_lub_iter_spfFeedH assms)
+      thus ?thesis
+        using f111 by auto
+     qed
+        
+       
+   thus ?thesis
+     by (simp add: f2 f10 f4 some_below)
+qed
+     
+  
+lemma chain_if_lub_iter_spfFeedH: assumes "chain Y"
+  shows "(sbDom\<cdot>(\<Squnion>i. Y i) = (spfDom\<cdot>f - spfRan\<cdot>f))\<leadsto>(\<Squnion>i. iter_spfFeedH f i (\<Squnion>i. Y i))  
+         \<sqsubseteq> (\<Squnion>i. (sbDom\<cdot>(Y i) = (spfDom\<cdot>f - spfRan\<cdot>f))\<leadsto>(\<Squnion>ia. iter_spfFeedH f ia (Y i)))" 
+proof (cases "sbDom\<cdot>(\<Squnion>i. Y i) = (spfDom\<cdot>f - spfRan\<cdot>f)")
+  case True
+  then show ?thesis   using  chain_if_lub_iter_spfFeedH_domI assms by blast
+next
+  case False
+  then show ?thesis 
+    by (simp add: assms sbChain_dom_eq2)
+qed
+    
+
+  (* Yes :) *)
+lemma spf_feed_cont[simp]: "cont (\<lambda>x. (sbDom\<cdot>x = (spfDom\<cdot>f - spfRan\<cdot>f)) \<leadsto> (\<Squnion>i.(iter_spfFeedH f i) x))"
+  apply (rule contI2)
+   apply (simp)
+    using chain_if_lub_iter_spfFeedH by blast
   
   
   
