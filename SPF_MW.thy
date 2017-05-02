@@ -66,7 +66,7 @@ lemma hidespfwell_helper[simp]: assumes "spf_well (Abs_cfun (Rep_CSPF(f)))"
   apply(simp add: spf_well_def)
   apply(simp only: domIff2)
   apply(auto simp add: sbdom_rep_eq)
-sorry
+  sorry
 
 lemma spfDomHide: "spfDom\<cdot>(f \<h> cs) = spfDom\<cdot>f"
   apply(simp add: hide_def)
@@ -75,8 +75,7 @@ lemma spfDomHide: "spfDom\<cdot>(f \<h> cs) = spfDom\<cdot>f"
 lemma hideSbRestrict: assumes "sbDom\<cdot>sb = spfDom\<cdot>f" 
    shows "(hide f cs)\<rightleftharpoons>sb = (f\<rightleftharpoons>sb)\<bar>(spfRan\<cdot>f - cs)"
   apply(simp add: hide_def)
-  apply(simp add: hidecont_helper hidespfwell_helper)
-    by (simp add: assms)
+  by (simp add: assms)
 
 lemma hideSbRestrictCh: assumes "sbDom\<cdot>sb = spfDom\<cdot>f" and "c \<notin> cs"
    shows "(hide f cs)\<rightleftharpoons>sb . c = (f\<rightleftharpoons>sb) . c"

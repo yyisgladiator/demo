@@ -300,36 +300,47 @@ in Abs_CSPF (\<lambda> sb. (sbDom\<cdot>sb = I) \<leadsto>
 subsection \<open>operator equality\<close>
 
 subsubsection prerequirements
-
   
-lemma [simp]: "cont (\<lambda> z. sb \<uplus> (f\<rightleftharpoons>(z\<bar>spfDom\<cdot>f)))" 
-sorry
-
-
-subsubsection \<open>spfFeedbackOperator2 eq spfFeedbackOperatorRec\<close>
   
+lemma [simp]: "cont (\<lambda> z. sb \<uplus> (f\<rightleftharpoons>(z\<bar>spfDom\<cdot>f)))"
+  by (simp add: conthelper)
   
 lemma feedbackHelpFunctionEq: "iterate i\<cdot>(\<Lambda> z. (sb \<uplus> f\<rightleftharpoons>(z\<bar>spfDom\<cdot>f)))\<cdot>((spfDom\<cdot>f \<union> spfRan\<cdot>f)^\<bottom>) = spfFeedbackHelper i f sb"
   apply(induct_tac i)
    apply simp
   apply(unfold iterate_Suc)
-    by simp
+  by simp
+    
+    
+subsubsection \<open>spfFeedbackOperatorRec eq spfFeedbackOperator2\<close>  
+
   
 lemma spfFeedbackOperatorEqRec: "spfFeedbackOperator2 f = spfFeedbackOperatorRec f"
   apply(simp add: spfFeedbackOperator2_def spfFeedbackOperatorRec_def)
   apply(subst feedbackHelpFunctionEq)
     by auto
 
+      
+subsubsection prerequirements
+
+lemma [simp]: "cont (\<lambda> z. (f\<rightleftharpoons>((sb \<uplus> z)\<bar> (spfDom\<cdot>f))))"
+  sorry
+  
 
 subsubsection \<open>spfFeedbackOperator eq spfFeedbackOperator2\<close>      
 
+lemma feedbackInductionStart: assumes "sbDom\<cdot>sb = spfDom\<cdot>f - spfRan\<cdot>f" 
+  shows "f\<rightleftharpoons>((sb \<uplus> ((spfRan\<cdot>f)^\<bottom>))\<bar>spfDom\<cdot>f) = f\<rightleftharpoons>(sb \<uplus> (f\<rightleftharpoons>(((spfDom\<cdot>f \<union> spfRan\<cdot>f)^\<bottom>)\<bar>spfDom\<cdot>f))\<bar>spfDom\<cdot>f)"  
+  sorry
   
-lemma feedbackIterateEq2: assumes "sbDom\<cdot>sb = spfDom\<cdot>f"
-                                 shows "iterate (Suc (Suc i))\<cdot>(\<Lambda> z. (f\<rightleftharpoons>((sb \<uplus> z)\<bar> (spfDom\<cdot>f))))\<cdot>((spfRan\<cdot>f)^\<bottom>) \<uplus> sb = 
-                                        iterate (Suc i)\<cdot>(\<Lambda> z. sb \<uplus> (f\<rightleftharpoons>(z \<bar> (spfDom\<cdot>f))))\<cdot>((spfDom\<cdot>f \<union> spfRan\<cdot>f)^\<bottom>)"                           
-sorry  
+lemma feedbackIterateEq2: assumes "sbDom\<cdot>sb = spfDom\<cdot>f - spfRan\<cdot>f"
+                                 shows "sb \<uplus> iterate (Suc i)\<cdot>(\<Lambda> z. (f\<rightleftharpoons>((sb \<uplus> z)\<bar> (spfDom\<cdot>f))))\<cdot>((spfRan\<cdot>f)^\<bottom>) = 
+                                             iterate (Suc (Suc i))\<cdot>(\<Lambda> z. sb \<uplus> (f\<rightleftharpoons>(z \<bar> (spfDom\<cdot>f))))\<cdot>((spfDom\<cdot>f \<union> spfRan\<cdot>f)^\<bottom>)"   
+  apply(induction i)
+   apply(simp add: assms feedbackInductionStart)
+  by(simp)  
   
-lemma feedbackIterateEq2Lub: assumes "sbDom\<cdot>sb = spfDom\<cdot>f"
+lemma feedbackIterateEq2Lub: assumes "sbDom\<cdot>sb = spfDom\<cdot>f - spfRan\<cdot>f"
                                  shows "(\<Squnion>i. iterate i\<cdot>(\<Lambda> z. (f\<rightleftharpoons>((sb \<uplus> z)\<bar> (spfDom\<cdot>f))))\<cdot>((spfRan\<cdot>f)^\<bottom>)) = 
                                         (\<Squnion>i. iterate i\<cdot>(\<Lambda> z. sb \<uplus> (f\<rightleftharpoons>(z \<bar> (spfDom\<cdot>f))))\<cdot>((spfDom\<cdot>f \<union> spfRan\<cdot>f)^\<bottom>)) \<bar> (spfRan\<cdot>f)"
 sorry
