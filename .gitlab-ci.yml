@@ -5,6 +5,7 @@ image: isabelle
 before_script:
   - mkdir cache || echo "cache exists"
   - find /home/isabelle/.isabelle
+  - mkdir /home/isabelle/.isabelle/ || echo ".isabelle exists"
   - mv cache/* /home/isabelle/.isabelle
   - find /home/isabelle/.isabelle
   
