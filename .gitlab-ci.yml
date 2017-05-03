@@ -3,15 +3,13 @@ image: isabelle
 
 
 before_script:
-  - mkdir cache || echo "cache exists"
   - find /home/isabelle/.isabelle
-  - mkdir /home/isabelle/.isabelle/ || echo ".isabelle exists"
-  - mv cache/* /home/isabelle/.isabelle
+  - if [ ! -z "$(ls -A test)" ]; then mv mv cache/* /home/isabelle/.isabelle; fi
   - find /home/isabelle/.isabelle
   
 after_script:
   - find /home/isabelle/.isabelle
-  - mv /home/isabelle/.isabelle/* cache/
+  - cp -r /home/isabelle/.isabelle/* cache/
   
 cache: 
   key: "$CI_COMMIT_REF_NAME"
