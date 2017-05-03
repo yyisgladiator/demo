@@ -1,9 +1,5 @@
 image: isabelle
 
-cache:
-  paths:
-  - isabelle_cache/
-  
 example_test:
   script:
     -isabelle build -D . -j 4 -v StBundle
