@@ -27,7 +27,7 @@ depends:
 sorry:
   stage: usingSorry
   script:
-    - isabelle build -d . -j4 -v -g sorry
+    - isabelle build -d . -j4 -v -b -g sorry
     
 
 
@@ -38,4 +38,4 @@ verified:
   stage: verified
   allow_failure: true   #for now, sorrys are allowed
   script:
-    - isabelle build -d . -j4 -v -g verified
+    - isabelle build -d . -j4 -v -b -g verified
