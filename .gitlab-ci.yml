@@ -18,24 +18,25 @@ stages:
 depends:
   stage: dependency
   script:
-    - isabelle build -D . -j4 -n -v || if [ $? -eq 1 ]; then exit 0; else exit $?; fi
+    - isabelle getenv ISABELLE_HOME_USER 
+#    - isabelle build -D . -j4 -n -v || if [ $? -eq 1 ]; then exit 0; else exit $?; fi
     
     
   # run everything in the group "sorry"
   # -d .      make sessions addable (but do not load them)
   # -g sorry  load all "sorry" sessions
-sorry:
-  stage: usingSorry
-  script:
-    - isabelle build -d . -j4 -v -b -g sorry
+#sorry:
+#  stage: usingSorry
+#  script:
+#    - isabelle build -d . -j4 -v -b -g sorry
     
 
 
   # run everything in the group "verified"
   # -d .          make sessions addable (but do not load them)
   # -g verified   load all "verified" sessions
-verified:
-  stage: verified
-  allow_failure: true   #for now, sorrys are allowed
-  script:
-    - isabelle build -d . -j4 -v -b -g verified
+#verified:
+#  stage: verified
+#  allow_failure: true   #for now, sorrys are allowed
+#  script:
+#    - isabelle build -d . -j4 -v -b -g verified
