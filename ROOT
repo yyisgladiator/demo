@@ -1,17 +1,33 @@
-session "StBundleSorry" (sorry) = "HOLCF" +
-  description {*
-    Introduction of Stream Bundles. 
-  *}
+session "StreamsSorry" (sorry) = "HOLCF" +
+  options [quick_and_dirty = true]
+  theories
+    Streams
+
+session "SPSSorry" (sorry) = "StreamsSorry" + 
   options [quick_and_dirty = true]
   theories
     SPS
-    TSPS
+
+session "TSPSSorry" (sorry) = "StreamsSorry" + 
+  options [quick_and_dirty = true]
+  theories
+    TSPS   
     
-session "StBundle" (verified) = "HOLCF" +
-  description {*
-    Introduction of Stream Bundles. 
-  *}
+
+
+session "Streams" (verified) = "HOLCF" +
+  options [quick_and_dirty = false]
+  theories
+    Streams
+
+session "SPS" (verified) = "StreamsSorry" + 
   options [quick_and_dirty = false]
   theories
     SPS
-    TSPS    
+
+session "TSPS" (verified) = "StreamsSorry" + 
+  options [quick_and_dirty = false]
+  theories
+    TSPS   
+    
+
