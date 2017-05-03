@@ -5,7 +5,7 @@
 
 
 theory TSPFCaseStudy
-imports TSPFTheorie
+imports  "../TSPF"
 begin
 
 

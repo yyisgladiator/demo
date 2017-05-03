@@ -1,5 +1,5 @@
 theory IntroCaseStudy_TSPS_JB
-imports TSPSTheorie TSPFCaseStudy IntroCaseStudy_TSPF_JB
+imports  "../TSPS"  "../TSPF" IntroCaseStudy_TSPF_JB
 
 begin
 

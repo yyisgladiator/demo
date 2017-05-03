@@ -1,5 +1,5 @@
 theory SPF_CleanCase
-imports SPF StreamTheorie
+imports  "../SPF"  "../Streams"
 
 begin
 

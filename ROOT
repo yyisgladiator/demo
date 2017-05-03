@@ -1,18 +1,33 @@
-session "StBundle" = "HOLCF" +
-  description {*
-    Introduction of Stream Bundles. 
-  *}
-  options [document = pdf, document_output = "StBundle", quick_and_dirty = true]
-  theories [document = false]
-    Prelude
-    SetPcpo
-    LNat
+session "StreamsSorry" (sorry) = "HOLCF" +
+  options [quick_and_dirty = true]
+  theories
     Streams
-    Channel
-  theories [document = true]
-    OptionCpo
+
+session "SPSSorry" (sorry) = "StreamsSorry" + 
+  options [quick_and_dirty = true]
+  theories
+    SPS
+
+session "TSPSSorry" (sorry) = "StreamsSorry" + 
+  options [quick_and_dirty = true]
+  theories
+    TSPS   
     
+
+
+session "Streams" (verified) = "HOLCF" +
+  options [quick_and_dirty = false]
+  theories
+    Streams
+
+session "SPS" (verified) = "Streams" + 
+  options [quick_and_dirty = false]
+  theories
+    SPS
+
+session "TSPS" (verified) = "Streams" + 
+  options [quick_and_dirty = false]
+  theories
+    TSPS   
     
-  document_files
-    "root.tex"
 

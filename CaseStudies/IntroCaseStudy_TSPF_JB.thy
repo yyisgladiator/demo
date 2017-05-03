@@ -1,5 +1,5 @@
 theory IntroCaseStudy_TSPF_JB
-imports TSPFTheorie SPF TSPFCaseStudy
+imports  "../TSPF"  "../SPF" TSPFCaseStudy
 begin
 
 lemma tsInfTick_tsbi_well[simp]:

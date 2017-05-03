@@ -812,7 +812,7 @@ proof (rule monofunI)
   have f3: "\<And>f. \<not> cont f \<or> (f x::'a SB) \<sqsubseteq> f y"
     using a1 by (metis (no_types) Abs_cfun_inverse2 monofun_cfun_arg)
   have "\<And>s. cont (\<lambda>sa. (\<lambda>c. Some ((\<up>s::'a SB . c) \<bullet> \<up>sa . c))\<Omega>)"
-    using SBTheorie.cont_Abs_SB sbconc_well sbconct_cont1 by blast
+    using SB.cont_Abs_SB sbconc_well sbconct_cont1 by blast
   then have "(\<lambda>c. Some ((\<up>b1 . c) \<bullet> \<up>x . c))\<Omega> \<sqsubseteq> (\<lambda>c. Some ((\<up>b1 . c) \<bullet> \<up>y . c))\<Omega>"
     using f3 by blast
   then show "((\<lambda>c. Some ((\<up>b1 . c) \<bullet> \<up>x . c))\<Omega>)\<bar>sbDom\<cdot>b1 \<union> sbDom\<cdot>x \<sqsubseteq> ((\<lambda>c. Some ((\<up>b1 . c) \<bullet> \<up>y . c))\<Omega>)\<bar>sbDom\<cdot>b1 \<union> sbDom\<cdot>y"
@@ -952,7 +952,7 @@ by (meson assms(1) assms(2) sbmapstream_cont subset_eq)
   subsection \<open>sbTake\<close>
 (* ----------------------------------------------------------------------- *)
 lemma sbtake_cont [simp]:"cont (\<lambda>b. sbMapStream (\<lambda>s. stake n\<cdot>s) b)"
-by (simp add: f1)
+by (simp)
 
 lemma sbtake_insert: "sbTake n\<cdot>b \<equiv>  sbMapStream (\<lambda>s. stake n\<cdot>s) b"
 by(simp add: sbTake_def)
@@ -961,11 +961,11 @@ lemma sbtake_zero: "sbTake 0\<cdot>In = sbLeast (sbDom\<cdot>In)"
 by(simp add: sbtake_insert sbMapStream_def sbLeast_def)
 
 lemma sbtake_sbdom[simp]: "sbDom\<cdot>(sbTake n\<cdot>b) = sbDom\<cdot>b"
-by(simp add: sbtake_insert f1)
+by(simp add: sbtake_insert)
 
 lemma sbtake_sbgetch [simp]: assumes "c\<in>sbDom\<cdot>b"
   shows "sbTake n\<cdot>b . c = stake n\<cdot>(b .c)"
-using assms by(simp add: sbtake_insert f1)
+using assms by(simp add: sbtake_insert)
 
 lemma sbtake_below [simp]: "sbTake n\<cdot>b \<sqsubseteq> sbTake (Suc n)\<cdot>b"
 by (metis eq_imp_le le_Suc_eq sbtake_sbdom sbtake_sbgetch stake_mono sb_below)
@@ -1009,11 +1009,11 @@ by(simp add: sbdrop_insert sbMapStream_def)
 
 
 lemma sbdrop_sbdom[simp]: "sbDom\<cdot>(sbDrop n\<cdot>b) = sbDom\<cdot>b"
-by(simp add: sbdrop_insert f1)
+by(simp add: sbdrop_insert)
 
 lemma sbdrop_sbgetch [simp]: assumes "c\<in>sbDom\<cdot>b"
   shows "sbDrop n\<cdot>b . c = sdrop n\<cdot>(b .c)"
-using assms by(simp add: sbdrop_insert f1)
+using assms by(simp add: sbdrop_insert)
 
 
 lemma sbtake_sbdrop [simp]: "sbTake n\<cdot>b \<bullet> sbDrop n\<cdot>b = b" (is "?L = b")
@@ -1137,7 +1137,7 @@ by (smt Abs_cfun_inverse2 cont_Rep_cfun2 sbFilter_def sbfilter_sbdom sbmapstream
 lemma sbfilter_sbgetch [simp]: assumes "c\<in>sbDom\<cdot>b"
   shows  "(sbFilter A\<cdot>b) . c = sfilter A\<cdot>(b .c)"
 apply(simp add: sbFilter_def assms)
-by (meson StreamTheorie.sbfilter_sbdom assms sbmapstream_sbgetch subsetCE subsetI)
+by (meson Streams.sbfilter_sbdom assms sbmapstream_sbgetch subsetCE subsetI)
 
 
 (* ----------------------------------------------------------------------- *)

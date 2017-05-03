@@ -11,8 +11,8 @@
 
 chapter {* Timed Streams *} 
 
-theory TSBTheorie
-imports Channel OptionCpo TStreamTheorie TStreamCase_Study
+theory TSB
+imports Channel OptionCpo TStream
 begin
 
 
@@ -739,7 +739,7 @@ lemma tsbiunion_idL:  "tsbiDom\<cdot>tb1\<subseteq>tsbiDom\<cdot>tb2 \<Longright
 (* if b1 and b2 have no common channels, sbUnion is commutative *)
 lemma tsbiunion_commutative: "tsbiDom\<cdot>b1 \<inter> tsbiDom\<cdot>b2 = {} \<Longrightarrow> b1\<uplus>b2 = b2\<uplus>b1"
   apply(simp add: tsbiunion_insert)
-  by (metis assms map_add_comm tsbidom_insert)
+  by (metis map_add_comm tsbidom_insert)
 
 
 (* the second argument has priority in sbUnion *)
@@ -750,7 +750,7 @@ lemma tsbiunion_getchR [simp]:
 
 lemma tsbiunion_getchL [simp]: "c\<notin>tsbiDom\<cdot>b2 \<Longrightarrow> b1\<uplus>b2  .  c = b1  .  c"
   apply(simp add: tsbiunion_insert tsbiGetCh_def)
-  by (metis assms map_add_dom_app_simps(3) tsbidom_insert)
+  by (metis map_add_dom_app_simps(3) tsbidom_insert)
 
 lemma tsbiunion_dom [simp]: "tsbiDom\<cdot>(tb1 \<uplus> tb2) = tsbiDom\<cdot>tb1 \<union> tsbiDom\<cdot>tb2"
   by(simp add: tsbidom_insert tsbiunion_insert Un_commute)
@@ -787,7 +787,7 @@ lemma [simp]: fixes tb :: "'m TSB_inf"
   by(simp add: tsbiRestrict_def)
 
 lemma tsbirestrict_dom2 [simp]: "tsbiDom\<cdot>(tb \<bar> cs) = cs \<Longrightarrow> cs \<subseteq> tsbiDom\<cdot>tb"
-  by(auto simp add: assms tsbidom_insert tsbiRestrict_def)
+  by(auto simp add: tsbidom_insert tsbiRestrict_def)
 
 lemma tsbiRestrict_getch [simp]:  "c \<in> cs \<Longrightarrow> tbi \<bar> cs . c   = tbi . c " 
 by (simp add: tsbirestrict_insert tsbiGetCh_def)
@@ -801,7 +801,7 @@ lemma tsbiunion_restrict2 [simp]:"(x\<uplus>y) \<bar> tsbiDom\<cdot>y = y"
   by(simp add: tsbiunion_insert tsbidom_insert tsbiRestrict_def)
 
 lemma tsbiunion_restrict [simp]:"(tsbiDom\<cdot>y)\<inter>cs2 = {} \<Longrightarrow> (x\<uplus>y) \<bar> cs2 = x \<bar> cs2"
-  using assms by(simp add: tsbiunion_insert tsbirestrict_insert tsbiDom_def)
+  by(simp add: tsbiunion_insert tsbirestrict_insert tsbiDom_def)
 
 
 

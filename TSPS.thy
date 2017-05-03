@@ -4,8 +4,8 @@
 
     Description:  
 *)
-theory TSPSTheorie
-imports TSPFTheorie
+theory TSPS
+imports TSPF
 
 begin
   default_sort message
@@ -69,16 +69,16 @@ proof(rule admI)
   assume as1: "chain Y" and as2: "\<forall>i. tsps_well (Y i)"
   hence "tsps_well (\<Union>i. Y i)"  
   proof (cases "(\<Union>i. Y i) = {}")
-    case True thus ?thesis using tsps_well_def by blast
+    case True thus ?thesis by simp
   next
     case False
     obtain k where k_def: "Y k\<noteq>{}" using False by auto
     hence chain_d: "chain (\<lambda>i. Y (i + k))" (is "chain ?D") by (simp add: as1 po_class.chainE po_class.chainI)
     have "\<And>i. ?D i \<noteq> {}" using as1 chain_notEmpty k_def le_add2 by blast
     hence "tsps_well (\<Union>i. ?D i)" using as2 chain_d tsps_well_adm1 by blast
-    thus ?thesis by (metis SUP_def as1 lub_range_shift set_cpo_simps(2)) 
+    thus ?thesis by (metis as1 lub_range_shift set_cpo_simps(2)) 
   qed
-  thus "tsps_well (\<Squnion>i. Y i)" by (metis SUP_def set_cpo_simps(2)) 
+  thus "tsps_well (\<Squnion>i. Y i)" by (metis set_cpo_simps(2)) 
 qed
 
 
