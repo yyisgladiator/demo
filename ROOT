@@ -20,12 +20,12 @@ session "Streams" (verified) = "HOLCF" +
   theories
     Streams
 
-session "SPS" (verified) = "StreamsSorry" + 
+session "SPS" (verified) = "Streams" + 
   options [quick_and_dirty = false]
   theories
     SPS
 
-session "TSPS" (verified) = "StreamsSorry" + 
+session "TSPS" (verified) = "Streams" + 
   options [quick_and_dirty = false]
   theories
     TSPS   
