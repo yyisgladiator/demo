@@ -2,4 +2,4 @@ image: isabelle
 
 example_test:
   script:
-    -isabelle build -D . -j 4 -v StBundle
+    -echo "hallo Welt"
