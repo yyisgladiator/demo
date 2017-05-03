@@ -2,4 +2,4 @@ image: isabelle
 
 example_test:
   script:
-    -echo "hallo Welt"
+    - echo "hallo Welt"
