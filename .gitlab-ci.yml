@@ -3,7 +3,7 @@ image: isabelle
 
 
 before_script:
-  - mkdir cache
+  - mkdir cache || echo "cache exists"
   - find /home/isabelle/.isabelle
   - cp -r cache/ /home/isabelle/.isabelle
   - find /home/isabelle/.isabelle
