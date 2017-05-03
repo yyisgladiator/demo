@@ -2,6 +2,12 @@
 image: isabelle
 
 
+before_script:
+  - find /home/isabelle/.isabelle
+
+after_script:
+  - find /home/isabelle/.isabelle
+  
 cache: 
   key: "$CI_COMMIT_REF_NAME"
   paths:
