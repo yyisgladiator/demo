@@ -9,7 +9,7 @@ before_script:
   
 after_script:
   - find /home/isabelle/.isabelle
-  - mv -r /home/isabelle/.isabelle/* cache/
+  - mv /home/isabelle/.isabelle/* cache/
   
 cache: 
   key: "$CI_COMMIT_REF_NAME"
