@@ -4,12 +4,12 @@ image: isabelle
 
 before_script:
   - find /home/isabelle/.isabelle
-  - if [ ! -z "$(ls -A test)" ]; then mv mv cache/* /home/isabelle/.isabelle; fi
+  - if [ ! -z "$(ls -A cache)" ]; then mv cache/* /home/isabelle/.isabelle; fi
   - find /home/isabelle/.isabelle
   
 after_script:
   - find /home/isabelle/.isabelle
-  - cp -r /home/isabelle/.isabelle/* cache/
+  - mv -r /home/isabelle/.isabelle/* cache/
   
 cache: 
   key: "$CI_COMMIT_REF_NAME"
