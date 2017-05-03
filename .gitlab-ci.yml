@@ -5,12 +5,12 @@ image: isabelle
 before_script:
   - mkdir cache || echo "cache exists"
   - find /home/isabelle/.isabelle
-  - cp -r cache/ /home/isabelle/.isabelle
+  - mv cache/* /home/isabelle/.isabelle
   - find /home/isabelle/.isabelle
   
 after_script:
   - find /home/isabelle/.isabelle
-  - cp -r /home/isabelle/.isabelle cache/
+  - mv /home/isabelle/.isabelle/* cache/
   
 cache: 
   key: "$CI_COMMIT_REF_NAME"
