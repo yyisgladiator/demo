@@ -1,5 +1,41 @@
+# load docker image with isabelle-support
 image: isabelle
 
-example_test:
+# stages are run one after another, it the previous stage is successful
+stages:
+  - dependency
+  - usingSorry
+  - verified
+  
+  
+
+# Look in the "ROOT" file to see the sessions and add files
+  
+
+  #check for ALL sessions in ROOT if the dependencies are working
+  # -D .  loads all sessions in directory
+  # -n    checks imports  
+depends:
+  stage: dependency
   script:
-    - isabelle build -D . -j 4 -v StBundle
+    - isabelle build -D . -j4 -n -v
+    
+    
+  # run everything in the group "sorry"
+  # -d .      make sessions addable (but do not load them)
+  # -g sorry  load all "sorry" sessions
+sorry:
+  stage: usingSorry
+  script:
+    - isabelle build -d . -j4 -v -g sorry
+    
+
+
+  # run everything in the group "verified"
+  # -d .          make sessions addable (but do not load them)
+  # -g verified   load all "verified" sessions
+verified:
+  stage: verified
+  allow_failure: true   #for now, sorrys are allowed
+  script:
+    - isabelle build -d . -j4 -v -g verified
