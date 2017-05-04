@@ -25,4 +25,9 @@ session "SPS" (verified) = "Streams" +
   theories
     SPS
 
+session "TSPS" (verified) = "Streams" + 
+  options [quick_and_dirty = false]
+  theories
+    TSPS   
+    
 
