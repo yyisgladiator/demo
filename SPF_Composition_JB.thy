@@ -6,7 +6,7 @@
 *)
 
 theory SPF_Composition_JB
-imports SPF SB SPF_Templates
+imports SPF SB SPF_Templates Pcpo
 begin
 
 (* ----------------------------------------------------------------------- *)
@@ -416,6 +416,43 @@ lemma iter_spfCompH3_chain[simp]: assumes "sbDom\<cdot>x = I f1 f2"
   apply (rule sbIterate_chain)
   by(simp add: assms)
     
+ 
+subsection \<open>old2new spfcomp eq\<close>
   
+lemma lub_range_shift2:
+  "chain Y \<Longrightarrow> (\<Squnion>i. Y (i + j)) = (\<Squnion>i. Y i)"
+     apply (simp add: lub_range_shift) (* Why is this not working *)
+ 
+lemma test11: "chain Y \<Longrightarrow> (\<Squnion>i. Y (Suc i)) = (\<Squnion>i. Y i)"
+ sorry
+  
+lemma test12: assumes "chain Y" and "chain Z" and "\<And> i. (Y (Suc i) = Z (Suc (Suc(i))))"
+  shows "(\<Squnion>i. (Y i)) = (\<Squnion>i. (Z i))"
+proof -
+  have f1: "(\<Squnion>i. (Y (Suc(i)))) = (\<Squnion>i. (Z i))"
+    apply(simp only: assms(3))
+    apply(subst test11)
+    using assms(2) po_class.chain_def apply blast
+    by(subst test11, simp_all add: assms)
+  have f2: "(\<Squnion>i. Y (Suc i)) = (\<Squnion>i. Y i)"
+    by (simp add: assms(1) test11)
+  thus ?thesis
+    by (simp add: f1)
+qed
+  
+      
+     
+    
+  
+  
+lemma iter_spfComp12_eq: assumes "sbDom\<cdot>x = I f1 f2"
+  shows "iter_spfCompH3 f1 f2 (Suc(i)) x = iter_spfcompH2 f1 f2 (Suc(Suc(i))) x"
+  apply(induction i)
+    apply(simp_all add: assms)
+  sorry
+    
+lemma lub_iter_spfComp12_eq: assumes "sbDom\<cdot>x = I f1 f2"
+  shows "(\<Squnion>i.(iter_spfCompH3 f1 f2 i) x)  = (\<Squnion>i.(iter_spfcompH2 f1 f2 i) x)"
+    oops
   
 end
