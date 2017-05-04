@@ -6,7 +6,7 @@
 *)
 
 theory SPF_Composition_JB
-imports SPF SB SPF_Templates Pcpo
+imports SPF SB SPF_Templates
 begin
 
 (* ----------------------------------------------------------------------- *)
@@ -418,27 +418,37 @@ lemma iter_spfCompH3_chain[simp]: assumes "sbDom\<cdot>x = I f1 f2"
     
  
 subsection \<open>old2new spfcomp eq\<close>
-  
+(*  
 declare [[show_types]]
-  thm lub_range_shift
-lemma lub_range_shift2:  fixes Y:: "nat \<Rightarrow> 'a::cpo" shows  "chain Y \<Longrightarrow> (\<Squnion>i. Y (i + j)) = (\<Squnion>i. Y i)"
-     by (simp add: lub_range_shift) (* Why is this not working *)
- 
-lemma test11: "chain Y \<Longrightarrow> (\<Squnion>i. Y (Suc i)) = (\<Squnion>i. Y i)"
- sorry
-  
-lemma test12: assumes "chain Y" and "chain Z" and "\<And> i. (Y (Suc i) = Z (Suc (Suc(i))))"
-  shows "(\<Squnion>i. (Y i)) = (\<Squnion>i. (Z i))"
-proof -
-  have f1: "(\<Squnion>i. (Y (Suc(i)))) = (\<Squnion>i. (Z i))"
-    apply(simp only: assms(3))
-    apply(subst test11)
-    using assms(2) po_class.chain_def apply blast
-    by(subst test11, simp_all add: assms)
-  have f2: "(\<Squnion>i. Y (Suc i)) = (\<Squnion>i. Y i)"
-    by (simp add: assms(1) test11)
+  thm lub_range_shift *)
+       
+lemma lub_suc_shift: fixes Y:: "nat \<Rightarrow> 'a::cpo" assumes "chain Y"
+  shows "(\<Squnion>i. Y (Suc i)) = (\<Squnion>i. Y i)"
+proof-
+  have f1: "(\<Squnion>i. Y (Suc i)) = (\<Squnion>i. Y (i + 1))"
+    by auto
   thus ?thesis
-    by (simp add: f1)
+    apply (subst f1)
+    by (subst lub_range_shift, simp_all add: assms)
+qed
+  
+      
+(* two chains are equal if one is the shifted by one version of the other *)
+lemma lub_suc_shift_eq: fixes Y:: "nat \<Rightarrow> 'a::cpo" fixes Z:: "nat \<Rightarrow> 'a::cpo" 
+              assumes "chain Y" and "chain Z" 
+              and "\<And> i. (Y (Suc i) = Z (Suc (Suc(i))))"
+shows "(\<Squnion>i. (Y i)) = (\<Squnion>i. (Z i))"
+proof -  
+  have f10: "(\<Squnion>i. (Y (Suc(i)))) = (\<Squnion>i. (Z i))"
+    apply(simp only: assms(3))
+    apply(subst lub_suc_shift)
+    using assms(2) po_class.chain_def apply blast
+    by(subst lub_suc_shift, simp_all add: assms)
+      
+  have f20: "(\<Squnion>i. Y (Suc i)) = (\<Squnion>i. Y i)"
+    by (simp add: assms(1) lub_suc_shift)
+  thus ?thesis
+    by (simp add: f10)
 qed
   
       
@@ -454,6 +464,7 @@ lemma iter_spfComp12_eq: assumes "sbDom\<cdot>x = I f1 f2"
     
 lemma lub_iter_spfComp12_eq: assumes "sbDom\<cdot>x = I f1 f2"
   shows "(\<Squnion>i.(iter_spfCompH3 f1 f2 i) x)  = (\<Squnion>i.(iter_spfcompH2 f1 f2 i) x)"
-    oops
+  apply(subst lub_suc_shift_eq, simp_all add: assms)
+    using assms iter_spfComp12_eq by fastforce
   
 end
