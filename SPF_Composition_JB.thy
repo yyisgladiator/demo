@@ -328,8 +328,8 @@ definition spfCompH3 :: "'m SPF \<Rightarrow> 'm SPF \<Rightarrow> 'm SB \<Right
 "spfCompH3 f1 f2 x \<equiv> (\<Lambda> z. (f1\<rightleftharpoons>((x \<uplus> z)  \<bar> spfDom\<cdot>f1)) \<uplus>  (f2\<rightleftharpoons>((x \<uplus> z)  \<bar> spfDom\<cdot>f2)))"
 
 
-abbreviation iter_spfcompH3 :: "'a SPF \<Rightarrow> 'a SPF \<Rightarrow> nat \<Rightarrow> 'a SB  \<Rightarrow> 'a SB" where
-"(iter_spfcompH3 f1 f2 i) \<equiv> (\<lambda> x. iterate i\<cdot>(spfCompH3 f1 f2 x)\<cdot>((spfRan\<cdot>f1 \<union> spfRan\<cdot>f2)^\<bottom>))" 
+abbreviation iter_spfCompH3 :: "'a SPF \<Rightarrow> 'a SPF \<Rightarrow> nat \<Rightarrow> 'a SB  \<Rightarrow> 'a SB" where
+"(iter_spfCompH3 f1 f2 i) \<equiv> (\<lambda> x. iterate i\<cdot>(spfCompH3 f1 f2 x)\<cdot>((spfRan\<cdot>f1 \<union> spfRan\<cdot>f2)^\<bottom>))" 
 
 
 subsection \<open>spfCompHelp3\<close>
@@ -398,6 +398,23 @@ proof -
     by(simp add: f1 f2 spfCompH3_def assms)
 qed
   
+
+subsection \<open>iter_spfCompH3\<close>
+  
+lemma iter_spfCompH3_cont[simp]: "cont (\<lambda>x. iter_spfCompH3 f1 f2 i x)"
+  by simp
+    
+lemma iter_spfCompH3_mono[simp]: "monofun (\<lambda>x. iter_spfCompH3 f1 f2 i x)"
+  by (simp add: cont2mono)
+    
+lemma iter_spfCompH3_monoo2:  assumes "x \<sqsubseteq> y"
+  shows "\<forall>i. ((iter_spfCompH3 f1 f2 i) x) \<sqsubseteq> ((iter_spfCompH3 f1 f2 i) y)"
+  using assms monofun_def by fastforce
+  
+lemma iter_spfCompH3_chain[simp]: assumes "sbDom\<cdot>x = I f1 f2"
+  shows "chain (\<lambda> i. iter_spfCompH3 f1 f2 i x)"
+  apply (rule sbIterate_chain)
+  by(simp add: assms)
     
   
   
