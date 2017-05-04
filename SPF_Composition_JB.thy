@@ -317,74 +317,88 @@ lemma spfcomp_abbrv_tospfH22: "(spfcomp f1 f2)
 lemma spfComp_ran: assumes "spfRan\<cdot>f1 \<inter> spfRan\<cdot>f2 = {}" 
   shows "spfRan\<cdot>(spfcomp f1 f2) = Oc f1 f2"
    apply(simp add: spfcomp_def)  
-   oops   
-(*
-BACKUPS 
+   oops
+
+     
+(* ----------------------------------------------------------------------- *)
+section \<open>spfcomp2\<close>
+(* ----------------------------------------------------------------------- *)
+
+definition spfCompH3 :: "'m SPF \<Rightarrow> 'm SPF \<Rightarrow> 'm SB \<Rightarrow> 'm SB  \<rightarrow> 'm SB" where
+"spfCompH3 f1 f2 x \<equiv> (\<Lambda> z. (f1\<rightleftharpoons>((x \<uplus> z)  \<bar> spfDom\<cdot>f1)) \<uplus>  (f2\<rightleftharpoons>((x \<uplus> z)  \<bar> spfDom\<cdot>f2)))"
 
 
-      
-lemma test35:
-  shows "chain Y \<longrightarrow> (\<Squnion>i. iter_spfcompH2 f1 f2 i (\<Squnion>i. Y i)) =  (\<Squnion>i ia.  iter_spfcompH2 f1 f2 i (Y ia))"
+abbreviation iter_spfcompH3 :: "'a SPF \<Rightarrow> 'a SPF \<Rightarrow> nat \<Rightarrow> 'a SB  \<Rightarrow> 'a SB" where
+"(iter_spfcompH3 f1 f2 i) \<equiv> (\<lambda> x. iterate i\<cdot>(spfCompH3 f1 f2 x)\<cdot>((spfRan\<cdot>f1 \<union> spfRan\<cdot>f2)^\<bottom>))" 
+
+
+subsection \<open>spfCompHelp3\<close>
+  
+subsubsection \<open>cont\<close>
+  
+lemma spfCompH3_cont[simp]: "cont (\<lambda> z. (f1\<rightleftharpoons>((x \<uplus> z)  \<bar> spfDom\<cdot>f1)) \<uplus>  (f2\<rightleftharpoons>((x \<uplus> z)  \<bar> spfDom\<cdot>f2)))"
 proof -
-  have f1:" \<And>i. cont (\<lambda>x. iter_spfcompH2 f1 f2 i x)"
-    by(simp add: cont2lub_lub_eq) 
+  have f1: "cont (\<lambda> z. (Rep_cfun (Rep_SPF f1)\<rightharpoonup>((x \<uplus> z)\<bar>spfDom\<cdot>f1)))"
+    by (metis (no_types) cont_Rep_cfun2 cont_compose op_the_cont)
+  moreover 
+  have f2: "cont (\<lambda> z. (Rep_cfun (Rep_SPF f2)\<rightharpoonup>((x \<uplus> z)\<bar>spfDom\<cdot>f2)))"
+    by (metis (no_types) cont_Rep_cfun2 cont_compose op_the_cont)
+  ultimately
+  have "cont (\<lambda>z. sbUnion\<cdot>(Rep_cfun (Rep_SPF f1)\<rightharpoonup>((x \<uplus> z)\<bar>spfDom\<cdot>f1))) \<and> cont (\<lambda>z. Rep_SPF f2\<cdot>((x \<uplus> z)\<bar>spfDom\<cdot>f2))"
+    by simp
+  hence "cont (\<lambda> z. (Rep_cfun (Rep_SPF f1)\<rightharpoonup>((x \<uplus> z)\<bar>spfDom\<cdot>f1)) \<uplus> (Rep_cfun (Rep_SPF f2)\<rightharpoonup>((x \<uplus> z)\<bar>spfDom\<cdot>f2)))"
+    using cont2cont_APP cont_compose op_the_cont by blast
   thus ?thesis
-    by(rule cont2lub_lub_eq)
+    by (simp add: Rep_CSPF_def)
 qed
-
-
-
-(\<Squnion>i. iter_spfcompH2 f1 f2 i (\<Squnion>i. Y i)) = (\<Squnion>i ia.  iter_spfcompH2 f1 f2 i (Y ia))
-
-have "chain Y \<longrightarrow> sbDom\<cdot>(\<Squnion>i. Y i) = I f1 f2 \<longrightarrow> 
-        ((\<Squnion>i. iter_spfcompH2 f1 f2 i (\<Squnion>i. Y i)) \<sqsubseteq>
-        (\<Squnion>i. \<Squnion>ia. iter_spfcompH2 f1 f2 ia (Y i)))"
-      apply (simp add: cont2contlubE)
-      apply (simp add: diag_lub)
-     apply (simp add: diag_lub ch2ch_cont)
-       
-
- \<forall>Y. chain Y \<longrightarrow>
-        (sbDom\<cdot>(\<Squnion>i. Y i) = I f1 f2)\<leadsto>\<Squnion>i. iter_spfcompH2 f1 f2 i (\<Squnion>i. Y i) \<sqsubseteq>
-        (\<Squnion>i. (sbDom\<cdot>(Y i) = I f1 f2)\<leadsto>\<Squnion>ia. iter_spfcompH2 f1 f2 ia (Y i)) 
-\<forall>Y. chain Y \<longrightarrow> (\<Squnion>i ia. F i (Y ia)) = (\<Squnion>i. F i (\<Squnion>i. Y i))
-
-lemma cont2cont_lub [simp]:
-  assumes chain: "\<And>x. chain (\<lambda>i. F i x)" and cont: "\<And>i. cont (\<lambda>x. F i x)"
-  shows "cont (\<lambda>x. \<Squnion>i. F i x)"
-apply (rule contI2)
-apply (simp add: monofunI cont2monofunE [OF cont] lub_mono chain)
-apply (simp add: cont2contlubE [OF cont])
-apply (simp add: diag_lub ch2ch_cont [OF cont] chain)
-done
-
-proof  -
-  fix Y
-  have "chain Y \<longrightarrow> (sbDom\<cdot>(\<Squnion>i. Y i) \<noteq> I f1 f2) \<longrightarrow>
-        (sbDom\<cdot>(\<Squnion>i. Y i) = I f1 f2)\<leadsto>\<Squnion>i. iter_spfcompH2 f1 f2 i (\<Squnion>i. Y i) \<sqsubseteq>
-        (\<Squnion>i. (sbDom\<cdot>(Y i) = I f1 f2)\<leadsto>\<Squnion>ia. iter_spfcompH2 f1 f2 ia (Y i))"
-    by (smt below_refl is_ub_thelub po_class.chain_def sbChain_dom_eq2)
-  have "chain Y \<longrightarrow> (sbDom\<cdot>(\<Squnion>i. Y i) = I f1 f2) \<longrightarrow>
-        (sbDom\<cdot>(\<Squnion>i. Y i) = I f1 f2)\<leadsto>\<Squnion>i. iter_spfcompH2 f1 f2 i (\<Squnion>i. Y i) \<sqsubseteq>
-        (\<Squnion>i. (sbDom\<cdot>(Y i) = I f1 f2)\<leadsto>\<Squnion>ia. iter_spfcompH2 f1 f2 ia (Y i))"
-  proof -
-    have f1: "chain Y \<longrightarrow> (sbDom\<cdot>(\<Squnion>i. Y i) = I f1 f2) \<longrightarrow> (sbDom\<cdot>(\<Squnion>i. Y i) = I f1 f2)\<leadsto>\<Squnion>i. iter_spfcompH2 f1 f2 i (\<Squnion>i. Y i)
-          = Some (\<Squnion>i. iter_spfcompH2 f1 f2 i (\<Squnion>i. Y i))"
-      by simp
-    have "chain Y \<longrightarrow> sbDom\<cdot>(\<Squnion>i. Y i) = I f1 f2 \<longrightarrow> 
-        ((\<Squnion>i. iter_spfcompH2 f1 f2 i (\<Squnion>i. Y i)) =
-        (\<Squnion>i ia. iter_spfcompH2 f1 f2 i (Y ia)))"
-     oops
-
-
-lemma test35:
-  shows "chain Y \<longrightarrow> (\<Squnion>i. iter_spfcompH2 f1 f2 i (\<Squnion>i. Y i)) =  (\<Squnion>i ia.  iter_spfcompH2 f1 f2 i (Y ia))"
+  
+lemma spfCompH3_cont2[simp]: "cont (\<lambda> x. (f1\<rightleftharpoons>((x \<uplus> z)  \<bar> spfDom\<cdot>f1)) \<uplus>  (f2\<rightleftharpoons>((x \<uplus> z)  \<bar> spfDom\<cdot>f2)))"
 proof -
-  have f1:" \<And>i. cont (\<lambda>x. iter_spfcompH2 f1 f2 i x)"
-    by(simp add: cont2lub_lub_eq) 
-  hence f2: ""
+  have f0: "cont (\<lambda>x. (x \<uplus> z))"
+    by simp
+      
+  have f1: "cont (\<lambda> x. (Rep_cfun (Rep_SPF f1)\<rightharpoonup>((x \<uplus> z)\<bar>spfDom\<cdot>f1)))"
+    by (metis (no_types) f0 cont_Rep_cfun2 cont_compose op_the_cont)
+  moreover
+  have f2: "cont (\<lambda> x. (Rep_cfun (Rep_SPF f2)\<rightharpoonup>((x \<uplus> z)\<bar>spfDom\<cdot>f2)))"
+    by (metis (no_types) f0 cont_Rep_cfun2 cont_compose op_the_cont)
+  ultimately
+  have "cont (\<lambda>x. sbUnion\<cdot>(Rep_cfun (Rep_SPF f1)\<rightharpoonup>((x \<uplus> z)\<bar>spfDom\<cdot>f1))) \<and> cont (\<lambda>x. Rep_SPF f2\<cdot>((x \<uplus> z)\<bar>spfDom\<cdot>f2))"
+    by simp
+  hence "cont (\<lambda> x. (Rep_cfun (Rep_SPF f1)\<rightharpoonup>((x \<uplus> z)\<bar>spfDom\<cdot>f1)) \<uplus> (Rep_cfun (Rep_SPF f2)\<rightharpoonup>((x \<uplus> z)\<bar>spfDom\<cdot>f2)))"
+    using cont2cont_APP cont_compose op_the_cont by blast
   thus ?thesis
-    by(rule cont2lub_lub_eq)
-
-*)
+    by(simp add: Rep_CSPF_def)
+qed
+  
+  
+lemma spfCompH3_continX[simp]: "cont (\<lambda> x. spfCompH3 f1 f2 x)"
+proof -
+  have "cont (\<lambda> x. \<Lambda> z. ((f1\<rightleftharpoons>((x \<uplus> z)  \<bar> spfDom\<cdot>f1)) \<uplus>  (f2\<rightleftharpoons>((x \<uplus> z)  \<bar> spfDom\<cdot>f2))))"
+    by(simp add: cont2cont_LAM)
+  thus ?thesis
+    by (simp add: spfCompH3_def)
+qed
+  
+      
+  
+subsubsection \<open>dom\<close>
+  
+lemma spfCompH3_dom [simp]: assumes "sbDom\<cdot>x = I f1 f2"
+                            and "sbDom\<cdot>sb = (spfRan\<cdot>f1 \<union> spfRan\<cdot>f2)"
+                          shows "sbDom\<cdot>((spfCompH3 f1 f2 x)\<cdot>sb) = (spfRan\<cdot>f1 \<union> spfRan\<cdot>f2)"
+proof -
+  have f1: "sbDom\<cdot>(f1 \<rightleftharpoons> ((x \<uplus> sb)  \<bar> spfDom\<cdot>f1)) = spfRan\<cdot>f1"
+    by (simp add: I_def assms(1) assms(2) inf_sup_aci(6))
+      moreover
+  have f2: "sbDom\<cdot>(f2 \<rightleftharpoons> ((x \<uplus> sb)  \<bar> spfDom\<cdot>f2)) = spfRan\<cdot>f2"
+    by (simp add: I_def assms(1) assms(2) sup.coboundedI1)
+      ultimately
+  show ?thesis
+    by(simp add: f1 f2 spfCompH3_def assms)
+qed
+  
+    
+  
+  
 end

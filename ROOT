@@ -3,15 +3,10 @@ session "StreamsSorry" (sorry) = "HOLCF" +
   theories
     Streams
 
-session "SPSSorry" (sorry) = "StreamsSorry" + 
+session "CompositionSorry" (sorry) = "StreamsSorry" + 
   options [quick_and_dirty = true]
   theories
-    SPS
-
-session "TSPSSorry" (sorry) = "StreamsSorry" + 
-  options [quick_and_dirty = true]
-  theories
-    TSPS   
+    SPF_Composition_JB   
     
 
 
@@ -20,14 +15,8 @@ session "Streams" (verified) = "HOLCF" +
   theories
     Streams
 
-session "SPS" (verified) = "Streams" + 
+session "Composition" (verified) = "Streams" + 
   options [quick_and_dirty = false]
   theories
-    SPS
-
-session "TSPS" (verified) = "Streams" + 
-  options [quick_and_dirty = false]
-  theories
-    TSPS   
-    
-
+    SPF_Composition_JB
+	
