@@ -419,9 +419,10 @@ lemma iter_spfCompH3_chain[simp]: assumes "sbDom\<cdot>x = I f1 f2"
  
 subsection \<open>old2new spfcomp eq\<close>
   
-lemma lub_range_shift2:
-  "chain Y \<Longrightarrow> (\<Squnion>i. Y (i + j)) = (\<Squnion>i. Y i)"
-     apply (simp add: lub_range_shift) (* Why is this not working *)
+declare [[show_types]]
+  thm lub_range_shift
+lemma lub_range_shift2:  fixes Y:: "nat \<Rightarrow> 'a::cpo" shows  "chain Y \<Longrightarrow> (\<Squnion>i. Y (i + j)) = (\<Squnion>i. Y i)"
+     by (simp add: lub_range_shift) (* Why is this not working *)
  
 lemma test11: "chain Y \<Longrightarrow> (\<Squnion>i. Y (Suc i)) = (\<Squnion>i. Y i)"
  sorry
