@@ -261,6 +261,22 @@ let I1 = spfDom\<cdot>f1;
 in Abs_CSPF (\<lambda> x. (sbDom\<cdot>x = I) \<leadsto> (\<Squnion>i. iterate i\<cdot>
    (\<Lambda> z. (f1\<rightleftharpoons>((x \<uplus> z) \<bar> I1)) \<uplus> (f2\<rightleftharpoons>((x \<uplus> z) \<bar> I2)))\<cdot>(C^\<bottom>)))"
 
+
+(* this function is not cont, because for 'strange' functions it is not cont *)
+(* strange = the domain changes from input to output *)
+definition sbFix :: "('m SB \<rightarrow> 'm SB) \<Rightarrow> channel set \<Rightarrow> 'm SB" where
+"sbFix F cs \<equiv>  (\<Squnion>i. iterate i\<cdot>F\<cdot>(cs^\<bottom>))"
+
+(* Another spfComp definition ... Yaaayy :D *)
+definition spfComp3 :: "'m SPF \<Rightarrow> 'm SPF \<Rightarrow> 'm SPF" where
+"spfComp3 f1 f2 \<equiv> 
+let I1 = spfDom\<cdot>f1;
+    I2 = spfDom\<cdot>f2;
+    I  = I f1 f2; (* SWS: Replace this directly with the definition ? *)
+    C  = (spfRan\<cdot>f1 \<union> spfRan\<cdot>f2)   (* SWS: Why name it C? O (or Out) would be a better name *)
+in Abs_CSPF (\<lambda> x. (sbDom\<cdot>x = I) \<leadsto> sbFix (\<Lambda> z. (f1\<rightleftharpoons>((x \<uplus> z) \<bar> I1)) \<uplus> (f2\<rightleftharpoons>((x \<uplus> z) \<bar> I2))) C)"
+
+
 (*(* (f1 \<otimes> f2) x = [fix\<cdot>(\<Lambda> z. x \<uplus> f1(z\<bar>I1) \<uplus> f2(z\<bar>I2))]\<bar>O  *)
 definition spfComp2 :: "'m SPF \<Rightarrow> 'm SPF \<Rightarrow> 'm SPF"  (infixl "\<otimes>" 40) where
 "spfComp2 f1 f2 \<equiv> Abs_CSPF (\<lambda> x. (sbDom\<cdot>x = I f1 f2) \<leadsto> 
