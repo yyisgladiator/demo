@@ -1,31 +1,28 @@
-session "StreamsSorry" (sorry) = "HOLCF" +
-  options [quick_and_dirty = true]
+session "Streams" (mustWork) = "HOLCF" +
+  options [quick_and_dirty = false]
   theories
     Streams
 
-session "SPSSorry" (sorry) = "StreamsSorry" + 
+
+session "SPSSorry" (mustWork) = "Streams" + 
   options [quick_and_dirty = true]
   theories
     SPS
 
-session "TSPSSorry" (sorry) = "StreamsSorry" + 
+session "TSPSSorry" (mustWork) = "Streams" + 
   options [quick_and_dirty = true]
   theories
     TSPS   
     
 
 
-session "Streams" (verified) = "HOLCF" +
-  options [quick_and_dirty = false]
-  theories
-    Streams
 
-session "SPS" (verified) = "Streams" + 
+session "SPS" (canFail) = "Streams" + 
   options [quick_and_dirty = false]
   theories
     SPS
 
-session "TSPS" (verified) = "Streams" + 
+session "TSPS" (canFail) = "Streams" + 
   options [quick_and_dirty = false]
   theories
     TSPS   

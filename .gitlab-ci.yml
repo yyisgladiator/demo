@@ -31,8 +31,8 @@ cache:
 # stages are run one after another, it the previous stage is successful
 stages:
   - dependency
-  - usingSorry
-  - verified
+  - mustWork
+  - canFail
   
   
 
@@ -48,30 +48,30 @@ stages:
   # check for ALL sessions in ROOT if the dependencies are working
   # -D .  loads all sessions in directory
   # -n    checks imports  
-depends:
+dependency:
   stage: dependency
   script:
     - isabelle build -D . -j4 -n -v || if [ $? -eq 1 ]; then exit 0; else exit $?; fi
     
     
     
-  # run everything in the group "sorry" (as defined in ROOT)
+  # run everything in the group "mustWork" (as defined in ROOT)
   # -d .      make sessions addable (but do not load them)
   # -g sorry  load all "sorry" sessions
   # -b        save heap files
-sorry:
-  stage: usingSorry
+mustWork:
+  stage: mustWork
   script:
-    - isabelle build -d . -j4 -v -b -g sorry
+    - isabelle build -d . -j4 -v -b -g mustWork
     
 
 
-  # run everything in the group "verified" (as defined in ROOT)
+  # run everything in the group "canFail" (as defined in ROOT)
   # -d .          make sessions addable (but do not load them)
   # -g verified   load all "verified" sessions
   # -b            save heap files
-verified:
-  stage: verified
+canFail:
+  stage: canFail
   allow_failure: true   #for now, sorrys are allowed
   script:
-    - isabelle build -d . -j4 -v -b -g verified
+    - isabelle build -d . -j4 -v -b -g canFail
