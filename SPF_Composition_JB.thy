@@ -433,22 +433,23 @@ proof-
 qed
   
       
-(* two chains are equal if one is the shifted by one version of the other *)
+(* two chain lubs are equal if one is the shifted by one version of the other *)
 lemma lub_suc_shift_eq: fixes Y:: "nat \<Rightarrow> 'a::cpo" fixes Z:: "nat \<Rightarrow> 'a::cpo" 
               assumes "chain Y" and "chain Z" 
               and "\<And> i. (Y (Suc i) = Z (Suc (Suc(i))))"
 shows "(\<Squnion>i. (Y i)) = (\<Squnion>i. (Z i))"
 proof -  
-  have f10: "(\<Squnion>i. (Y (Suc(i)))) = (\<Squnion>i. (Z i))"
+  have f1: "(\<Squnion>i. (Y (Suc(i)))) = (\<Squnion>i. (Z i))"
     apply(simp only: assms(3))
     apply(subst lub_suc_shift)
-    using assms(2) po_class.chain_def apply blast
+    using assms(2) po_class.chain_def 
+    apply blast
     by(subst lub_suc_shift, simp_all add: assms)
       
-  have f20: "(\<Squnion>i. Y (Suc i)) = (\<Squnion>i. Y i)"
+  have f2: "(\<Squnion>i. Y (Suc i)) = (\<Squnion>i. Y i)"
     by (simp add: assms(1) lub_suc_shift)
   thus ?thesis
-    by (simp add: f10)
+    by (simp add: f1)
 qed
   
       

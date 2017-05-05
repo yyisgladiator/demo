@@ -11,6 +11,20 @@ imports SB
 begin
   default_sort message 
 
+(* instatiate our message space*)
+instantiation nat :: message
+begin
+  definition ctype_nat :: "channel \<Rightarrow> nat set" where
+  "ctype c = range nat"
+
+instance ..
+end
+
+lemma [simp]: "cs \<subseteq> ((ctype c) :: nat set)"
+  apply(simp add: ctype_nat_def)
+  by(metis subset_UNIV subset_image_iff transfer_int_nat_set_return_embed)
+
+
 (* ----------------------------------------------------------------------- *)
 section \<open>Datatype Definition\<close>
 (* ----------------------------------------------------------------------- *)
@@ -250,14 +264,14 @@ let I1 = spfDom\<cdot>f1;
 in Abs_CSPF (\<lambda> x. (sbDom\<cdot>x = I) \<leadsto> (\<Squnion>i. iterate i\<cdot>
    (\<Lambda> z. x \<uplus> (f1\<rightleftharpoons>(z \<bar> I1)) \<uplus> (f2\<rightleftharpoons>(z \<bar> I2)))\<cdot>(sbLeast C)) \<bar> Oc)"
 
-(* SWS: rename to spfComp *)
-(* and by the way, the composition function itself should be cont, right? *)
+(* SWS: rename to spfComp *) 
+(* and by the way, the composition function itself should be cont, right? *) 
 definition spfcomp2 :: "'m SPF \<Rightarrow> 'm SPF \<Rightarrow> 'm SPF" where
 "spfcomp2 f1 f2 \<equiv> 
 let I1 = spfDom\<cdot>f1;
     I2 = spfDom\<cdot>f2;
     I  = I f1 f2; (* SWS: Replace this directly with the definition ? *)
-    C  = (spfRan\<cdot>f1 \<union> spfRan\<cdot>f2)   (* SWS: Why name it C? O (or Out) would be a better name *)
+    C  = (spfRan\<cdot>f1 \<union> spfRan\<cdot>f2)  (* SWS: Why name it C? O (or Out) would be a better name *)
 in Abs_CSPF (\<lambda> x. (sbDom\<cdot>x = I) \<leadsto> (\<Squnion>i. iterate i\<cdot>
    (\<Lambda> z. (f1\<rightleftharpoons>((x \<uplus> z) \<bar> I1)) \<uplus> (f2\<rightleftharpoons>((x \<uplus> z) \<bar> I2)))\<cdot>(C^\<bottom>)))"
 
