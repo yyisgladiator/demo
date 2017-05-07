@@ -196,6 +196,14 @@ text {* "Unzipping" of timed streams: project to the second element of tuple of 
 definition tsProjSnd :: "('a \<times> 'b) tstream \<rightarrow> 'b tstream" where
 "tsProjSnd = tsMap snd"
 
+definition tsZip_h :: "'a stream \<rightarrow> 'b event stream \<rightarrow> ('a \<times> 'b) event stream" where
+"tsZip_h \<equiv> fix\<cdot>(\<Lambda> h q s. if q = \<epsilon> \<or> s = \<epsilon> then \<epsilon> 
+                         else if shd s = \<surd> then (\<up>\<surd> \<bullet> h\<cdot>q\<cdot>(srt\<cdot>s))
+                         else (\<up>(\<M> (shd q, \<M>\<inverse> shd s)) \<bullet> h\<cdot>(srt\<cdot>q)\<cdot>(srt\<cdot>s)))"
+
+definition tsZip :: "'a stream \<rightarrow> 'b tstream \<rightarrow> ('a \<times> 'b) tstream" where
+"tsZip \<equiv> \<Lambda> s ts. Abs_tstream (tsZip_h\<cdot>s\<cdot>(Rep_tstream ts))"
+
 definition tsRemDups_h :: "'a event \<Rightarrow> 'a event stream \<rightarrow> 'a event stream" where
 "tsRemDups_h \<equiv> fix\<cdot>(\<Lambda> h. (\<lambda> q. (\<Lambda> s. if s = \<epsilon> then \<epsilon> 
                                      else if shd s = \<surd> then (\<up>\<surd> \<bullet> h q\<cdot>(srt\<cdot>s))
@@ -1847,9 +1855,6 @@ lemma tsprojfst_strict[simp]: "tsProjFst\<cdot>\<bottom> = \<bottom>"
 oops
 
 lemma tsprojsnd_strict[simp]: "tsProjSnd\<cdot>\<bottom> = \<bottom>"
-oops
-
-lemma tsprojs_tstickcount_eq: "#\<surd>(tsProjFst\<cdot>ts) = #\<surd>(tsProjSnd\<cdot>ts)"
 oops
 
 lemma tsprojfst_strict_rev: "tsProjFst\<cdot>ts = \<bottom> \<Longrightarrow> x = \<bottom>"
