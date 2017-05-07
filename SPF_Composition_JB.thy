@@ -452,20 +452,53 @@ proof -
     by (simp add: f1)
 qed
   
-      
-     
-    
+(* two interleaved chains have the same least upper bound *)
+lemma lub_interl_chain_eq:  fixes Y:: "nat \<Rightarrow> 'a::cpo" fixes Z:: "nat \<Rightarrow> 'a::cpo" 
+  assumes "\<And> i. Y i \<sqsubseteq> Z i" and "\<And> i. Z i \<sqsubseteq> Y (Suc i)"
+  shows "(\<Squnion>i. (Y i)) = (\<Squnion>i. (Z i))"
+proof -
+  have f1: "(\<Squnion>i. (Y i)) \<sqsubseteq> (\<Squnion>i. (Z i))"
+    by (meson assms(1) assms(2) below_trans lub_mono po_class.chain_def)
+  moreover 
+  have f2: "(\<Squnion>i. (Z i)) \<sqsubseteq> (\<Squnion>i. (Y i))"
+  proof (rule ccontr)
+    assume "\<not> ((\<Squnion>i. (Z i)) \<sqsubseteq> (\<Squnion>i. (Y i)))"
+    then show False
+      by (meson assms(1) assms(2) below_lub lub_below_iff po_class.chain_def rev_below_trans)
+  qed
+  ultimately    
+  show ?thesis
+    by (simp add: below_antisym)
+qed
+  
+  
+
+(* OBSOLETE:
+lemma iter_spfComp_eq_start: assumes "sbDom\<cdot>x = I f1 f2" and "spfComp_well f1 f2"
+  shows "x \<uplus> (spfCompH3 f1 f2 x\<cdot>((spfRan\<cdot>f1 \<union> spfRan\<cdot>f2)^\<bottom>)) = (spfCompHelp2 f1 f2 x\<cdot>(spfCompHelp2 f1 f2 x\<cdot>((C f1 f2)^\<bottom>)))"
+  apply(simp add: spfCompH3_def, subst spfCompHelp2_def)
+    apply(simp add: spfCompHelp2_def)
+proof -
+  have "(spfCompHelp2 f1 f2 x\<cdot>((C f1 f2)^\<bottom>)) \<bar> spfDom\<cdot>f1 = x \<uplus> (spfRan\<cdot>f1 \<union> spfRan\<cdot>f2)^\<bottom>"
+    apply(simp add: spfCompHelp2_def)
+  show ?thesis
+    sorry
+qed
+  
   
   
 lemma iter_spfComp12_eq: assumes "sbDom\<cdot>x = I f1 f2"
-  shows "iter_spfCompH3 f1 f2 (Suc(i)) x = iter_spfcompH2 f1 f2 (Suc(Suc(i))) x"
+  shows "x \<uplus> iter_spfCompH3 f1 f2 (Suc(i)) x = (iter_spfcompH2 f1 f2 (Suc(Suc(i))) x)"
   apply(induction i)
-    apply(simp_all add: assms)
-  sorry
+    apply(simp add: assms iter_spfComp_eq_start)
+ apply(subst spfCompH3_def, subst spfCompHelp2_def)
+   sorry
     
 lemma lub_iter_spfComp12_eq: assumes "sbDom\<cdot>x = I f1 f2"
-  shows "(\<Squnion>i.(iter_spfCompH3 f1 f2 i) x)  = (\<Squnion>i.(iter_spfcompH2 f1 f2 i) x)"
+  shows "(\<Squnion>i.(x \<uplus> (iter_spfCompH3 f1 f2 i) x))  = (\<Squnion>i.((iter_spfcompH2 f1 f2 i) x))"
   apply(subst lub_suc_shift_eq, simp_all add: assms)
-    using assms iter_spfComp12_eq by fastforce
+  using assms iter_spfComp12_eq by fastforce
+    
+    *)
   
 end
