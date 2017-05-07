@@ -185,32 +185,39 @@ definition espf2tspf :: "('a event,'b event) spf \<Rightarrow> 'a tstream \<Righ
 "espf2tspf f x = Abs_tstream (f\<cdot>(Rep_tstream x))"
 
 text {* Apply a function to all messages of a stream. Ticks are mapped to ticks. *}
-definition tstmap :: "('a \<Rightarrow> 'b) \<Rightarrow> 'a tstream \<rightarrow> 'b tstream" where
-"tstmap f \<equiv> \<Lambda> s.  espf2tspf (smap (\<lambda>x. case x of Msg m \<Rightarrow> Msg (f m) | \<surd> \<Rightarrow> \<surd>)) s"
+definition tsMap :: "('a \<Rightarrow> 'b) \<Rightarrow> 'a tstream \<rightarrow> 'b tstream" where
+"tsMap f \<equiv> \<Lambda> s. espf2tspf (smap (\<lambda>x. case x of Msg m \<Rightarrow> Msg (f m) | \<surd> \<Rightarrow> \<surd>)) s"
 
+text {* "Unzipping" of timed streams: project to the first element of a tuple of tstreams. *}
+definition tsProjFst :: "('a \<times> 'b) tstream \<rightarrow> 'a tstream" where
+"tsProjFst = tsMap fst"
+
+text {* "Unzipping" of timed streams: project to the second element of tuple of tstreams. *}
+definition tsProjSnd :: "('a \<times> 'b) tstream \<rightarrow> 'b tstream" where
+"tsProjSnd = tsMap snd"
+
+definition tsRemDups_h :: "'a event \<Rightarrow> 'a event stream \<rightarrow> 'a event stream" where
+"tsRemDups_h \<equiv> fix\<cdot>(\<Lambda> h. (\<lambda> q. (\<Lambda> s. if s = \<epsilon> then \<epsilon> 
+                                     else if shd s = \<surd> then (\<up>\<surd> \<bullet> h q\<cdot>(srt\<cdot>s))
+                                     else if shd s \<noteq> q then (\<up>(shd s) \<bullet> h (shd s)\<cdot>(srt\<cdot>s))
+                                     else h q\<cdot>(srt\<cdot>s))))"
 
 definition tsrcDups_helper :: "'m event stream \<rightarrow> 'm event stream" where
-"tsrcDups_helper \<equiv> \<mu> h. (\<Lambda> s . if s = \<epsilon> then \<epsilon> else sconc (\<up>(shd s))\<cdot>( h\<cdot>(sdropwhile (\<lambda>x. x = shd s)\<cdot>s)))"
-  
+"tsrcDups_helper \<equiv> \<mu> h. (\<Lambda> s . if s = \<epsilon> then \<epsilon> else sconc (\<up>(shd s))\<cdot>(h\<cdot>(sdropwhile (\<lambda>x. x = shd s)\<cdot>s)))"
+
   (* remove successive duplicates on tstreams *)
 definition tsrcdups :: "'m tstream \<Rightarrow> 'm tstream" where
 "tsrcdups = espf2tspf tsrcDups_helper"
-
-
-text {* "Unzipping" of timed streams: project to the first element of a tuple of streams. *}
-definition tstprojfst :: "('a \<times> 'b) tstream \<rightarrow> 'a tstream" where
-"tstprojfst = tstmap fst"
-
-text {* "Unzipping" of timed streams: project to the second element of tuple. *}
-definition tstprojsnd :: "('a \<times> 'b) tstream \<rightarrow> 'b tstream" where
-"tstprojsnd = tstmap snd"
 
 text {* Fairness predicate on timed stream processing function. An espf is considered fair
   if all inputs with infinitely many ticks are mapped to outputs with infinitely many ticks. *}
 definition tspfair :: "('a tstream \<rightarrow> 'b tstream ) \<Rightarrow> bool" where
 "tspfair f \<equiv> \<forall>ts. tsTickCount\<cdot> ts = \<infinity> \<longrightarrow> tsTickCount \<cdot> (f\<cdot> ts) = \<infinity>"
 
-
+text {* @{term tsFilter}: Remove all elements from the tstream which are
+  not included in the given set. *}
+definition tsFilter :: "'a event set \<Rightarrow> 'a tstream \<rightarrow> 'a tstream" where
+"tsFilter M \<equiv> \<Lambda> ts. Abs_tstream (sfilter (insert \<surd> M)\<cdot>(Rep_tstream ts))"
 
 
 (* ----------------------------------------------------------------------- *)
@@ -1805,10 +1812,80 @@ lemma tspfairD: "\<lbrakk>tspfair f;#\<surd>s = \<infinity>\<rbrakk> \<Longright
 apply (simp add: tspfair_def)
 done
 
-(* tstmap *)
+(* tsMap *)
+thm tsMap_def
 
-(* tstmap distributes over infinite repetition *)
-lemma tstmap2tsinf[simp]: "tstmap f\<cdot>(tsinftimes x)= tsinftimes (tstmap f\<cdot>x)"
+lemma tsmap_h_fair: "#({\<surd>} \<ominus> (smap (\<lambda>x. case x of \<M> m \<Rightarrow> \<M> f m | \<surd> \<Rightarrow> \<surd>)\<cdot>s)) = #({\<surd>} \<ominus> s)"
+oops
+
+lemma tsmap_h_sfoot: assumes "#s<\<infinity>" 
+  shows "sfoot (smap (\<lambda>x. case x of \<M> m \<Rightarrow> \<M> f m | \<surd> \<Rightarrow> \<surd>)\<cdot>(s \<bullet> \<up>\<surd>)) = \<surd>"
+oops
+
+lemma tsmap_h_well: assumes "ts_well s"
+  shows "ts_well (smap (\<lambda>x. case x of \<M> m \<Rightarrow> \<M> f m | \<surd> \<Rightarrow> \<surd>)\<cdot>s)"
+oops
+
+lemma tsmap_unfold:
+  "tsMap f\<cdot>ts = Abs_tstream (smap (\<lambda>x. case x of \<M> m \<Rightarrow> \<M> f m | \<surd> \<Rightarrow> \<surd>)\<cdot>(Rep_tstream ts))"
+oops
+
+lemma tsmap_weak:"tsWeakCausal (Rep_cfun (tsMap f))"
+oops
+
+lemma tsmap_strict[simp]: "tsMap f\<cdot>\<bottom> = \<bottom>"
+oops
+
+lemma tsmap_tstickcount[simp]: "#\<surd>(tsMap f\<cdot>ts) = #\<surd>ts"
+oops
+
+(* tsProjFst and tsProjSnd *)
+thm tsProjFst_def
+thm tsProjSnd_def
+
+lemma tsprojfst_strict[simp]: "tsProjFst\<cdot>\<bottom> = \<bottom>"
+oops
+
+lemma tsprojsnd_strict[simp]: "tsProjSnd\<cdot>\<bottom> = \<bottom>"
+oops
+
+lemma tsprojs_tstickcount_eq: "#\<surd>(tsProjFst\<cdot>ts) = #\<surd>(tsProjSnd\<cdot>ts)"
+oops
+
+lemma tsprojfst_strict_rev: "tsProjFst\<cdot>ts = \<bottom> \<Longrightarrow> x = \<bottom>"
+oops
+
+lemma tsprojsnd_strict_rev: "tsProjSnd\<cdot>ts = \<bottom> \<Longrightarrow> x = \<bottom>"
+oops
+
+lemma sprojfst_tstickcount: "#\<surd>(tsProjFst\<cdot>ts) = #\<surd>ts"
+oops
+
+lemma sprojsnd_tstickcount: "#\<surd>(tsProjSnd\<cdot>ts) = #\<surd>ts"
+oops
+
+(* tsFilter *)
+thm tsFilter_def
+
+lemma tsfilter_h_sfoot: assumes "#s<\<infinity>" 
+  shows "sfoot ((insert \<surd> M) \<ominus> (s \<bullet> \<up>\<surd>)) = \<surd>"
+oops
+
+lemma tsfilter_h_well: assumes "ts_well s"
+  shows "ts_well ((insert \<surd> M) \<ominus> s)"
+oops
+
+lemma tsfilter_unfold:
+  "tsFilter M\<cdot>ts = Abs_tstream ((insert \<surd> M) \<ominus> Rep_tstream ts)"
+oops
+
+lemma tsmap_weak:"tsWeakCausal (Rep_cfun (tsFilter M))"
+oops
+
+lemma tsfilter_strict[simp]: "tsFilter M\<cdot>\<bottom> = \<bottom>"
+oops
+
+lemma tsfilter_tstickcount: "#\<surd>(tsFilter M\<cdot>ts) = #\<surd>ts"
 oops
 
 (* tsscanl *)
@@ -2647,6 +2724,24 @@ done
 smap
 (*-----------------------------*)
 
+(* smap distributes over concatenation *)
+lemma smap_scons[simp]: "smap f\<cdot>(\<up>a \<bullet> s) = \<up>(f a) \<bullet> smap f\<cdot>s"
+
+(* mapping f over a singleton stream is equivalent to applying f to the only element in the stream *) 
+lemma [simp]: "smap f\<cdot>(\<up>a) = \<up>(f a)"
+
+text {* @{term smap} maps each element @{term x} to @{term "f(x)"} *}
+lemma smap_snth_lemma:
+  "Fin n < #s \<Longrightarrow> snth n (smap f\<cdot>s) = f (snth n s)"
+
+text {* @{term sdrop} after @{term smap} is like @{term smap} after @{term sdrop} *}
+lemma sdrop_smap[simp]: "sdrop k\<cdot>(smap f\<cdot>s) = smap f\<cdot>(sdrop k\<cdot>s)"
+
+text {* @{term "smap f"} is a homomorphism on streams with respect to concatenation *}
+lemma smap_split: "smap f\<cdot>(a \<bullet> b) = (smap f\<cdot>a) \<bullet> (smap f\<cdot>b)"
+
+lemma smap2sinf[simp]: "smap f\<cdot>(x\<infinity>)= (smap f\<cdot>x)\<infinity>"
+
 lemma rek2smap: assumes "\<And>a as. f\<cdot>(\<up>a \<bullet> as) = \<up>(g a) \<bullet> f\<cdot>as"
   and "f\<cdot>\<bottom> = \<bottom>"
   shows "f\<cdot>s = smap g\<cdot>s"
@@ -3331,39 +3426,11 @@ lemma slen_sinftimes: "s \<noteq> \<epsilon> \<Longrightarrow> #(sinftimes s) = 
 lemma [simp]: "#(sinftimes (\<up>a)) = \<infinity>" 
 
 (*-----------------------------*)
-smap
-(*-----------------------------*)
-
-lemma strict_smap[simp]: "smap f\<cdot>\<epsilon> = \<epsilon>"
-
-(* smap distributes over concatenation *)
-lemma smap_scons[simp]: "smap f\<cdot>(\<up>a \<bullet> s) = \<up>(f a) \<bullet> smap f\<cdot>s"
-
-(* mapping f over a singleton stream is equivalent to applying f to the only element in the stream *) 
-lemma [simp]: "smap f\<cdot>(\<up>a) = \<up>(f a)"
-
-(* smap leaves the length of a stream unchanged *)
-lemma slen_smap[simp]: "#(smap f\<cdot>x) = #x"
-
-text {* @{term smap} maps each element @{term x} to @{term "f(x)"} *}
-lemma smap_snth_lemma:
-  "Fin n < #s \<Longrightarrow> snth n (smap f\<cdot>s) = f (snth n s)"
-
-text {* @{term sdrop} after @{term smap} is like @{term smap} after @{term sdrop} *}
-lemma sdrop_smap[simp]: "sdrop k\<cdot>(smap f\<cdot>s) = smap f\<cdot>(sdrop k\<cdot>s)"
-
-text {* @{term "smap f"} is a homomorphism on streams with respect to concatenation *}
-lemma smap_split: "smap f\<cdot>(a \<bullet> b) = (smap f\<cdot>a) \<bullet> (smap f\<cdot>b)"
-
-(*-----------------------------*)
 sprojfst
 (*-----------------------------*)
 
 (* sprojfst extracts the first element of the first tuple in any non-empty stream of tuples *)
 lemma sprojfst_scons[simp]: "sprojfst\<cdot>(\<up>(x, y) \<bullet> s) = \<up>x \<bullet> sprojfst\<cdot>s"
-
-(* the empty stream is a fixed point of sprojfst *)
-lemma strict_sprojfst[simp]: "sprojfst\<cdot>\<epsilon> = \<epsilon>"
 
 (* sprojfst extracts the first element of any singleton tuple-stream *)
 lemma [simp]: "sprojfst\<cdot>(\<up>(a,b)) = \<up>a"
@@ -3371,12 +3438,8 @@ lemma [simp]: "sprojfst\<cdot>(\<up>(a,b)) = \<up>a"
 (* sprojsnd extracts the second element of the first tuple in any non-empty stream of tuples *)
 lemma sprojsnd_scons[simp]: "sprojsnd\<cdot>(\<up>(x,y) \<bullet> s) = \<up>y \<bullet> sprojsnd\<cdot>s"
 
-(* the empty stream is a fixed point of sprojsnd *)
-lemma strict_sprojsnd[simp]: "sprojsnd\<cdot>\<epsilon> = \<epsilon>"
-
 (* sprojsnd extracts the second element of any singleton tuple-stream *)
 lemma [simp]: "sprojsnd\<cdot>(\<up>(a,b)) = \<up>b"
-
 
 lemma rt_Sproj_2_eq: "sprojsnd\<cdot>(srt\<cdot>x) = srt\<cdot>(sprojsnd\<cdot>x)"
 
@@ -3384,21 +3447,9 @@ lemma rt_Sproj_1_eq: "sprojfst\<cdot>(srt\<cdot>x) = srt\<cdot>(sprojfst\<cdot>x
 
 text {* length of projections and the empty stream *}
 
-lemma slen_sprojs_eq: "#(sprojsnd\<cdot>x) = #(sprojfst\<cdot>x)"
-
-lemma strict_rev_sprojfst: "sprojfst\<cdot>x = \<epsilon> \<Longrightarrow> x = \<epsilon>"
-
-lemma strict_rev_sprojsnd: "sprojsnd\<cdot>x = \<epsilon> \<Longrightarrow> x = \<epsilon>"
-
-lemma slen_sprojfst: "#(sprojfst\<cdot>x) = #x"
-
-lemma slen_sprojsnd: "#(sprojsnd\<cdot>x) = #x"
-
 (*-----------------------------*)
 sfilter
 (*-----------------------------*)
-
-lemma strict_sfilter[simp]: "sfilter M\<cdot>\<epsilon> = \<epsilon>"
 
 (* if the head of a stream is in M, then sfilter will keep the head *)
 lemma sfilter_in[simp]: 
@@ -3440,13 +3491,6 @@ lemma sfilter_empty_snths_nin_lemma:
 text {* @{term sfilter} returns @{text "\<epsilon>"} if no element is included in the filter *}
 lemma ex_snth_in_sfilter_nempty:
   "(\<forall>n. Fin n < #p \<longrightarrow> snth n p \<notin> X) \<Longrightarrow> sfilter X\<cdot>p = \<epsilon>"
-
-text {* The filtered stream is at most as long as the original one *}
-lemma slen_sfilterl1: "#(sfilter S\<cdot>x) \<le> #x"
-
-text {* If the filtered stream is infinite, the original one is infinite as well *}
-lemma sfilterl4:
-  "#(sfilter X\<cdot>x) = \<infinity> \<Longrightarrow> #x = \<infinity>"
 
 text {* Prepending to the original stream never shortens the filtered result *}
 lemma sfilterl2: 
