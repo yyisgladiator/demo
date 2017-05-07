@@ -196,6 +196,21 @@ text {* "Unzipping" of timed streams: project to the second element of tuple of 
 definition tsProjSnd :: "('a \<times> 'b) tstream \<rightarrow> 'b tstream" where
 "tsProjSnd = tsMap snd"
 
+
+lemma [simp]: assumes "t\<noteq>\<bottom>" and "t=updis (Msg m)" shows "False"
+  oops
+    
+fixrec tsZip_helper :: "'a stream \<rightarrow> 'b event stream \<rightarrow>  ('a\<times>'b) event stream" where
+"tsZip_helper\<cdot>\<bottom>\<cdot>ts = \<bottom> "  |
+"tsZip_helper\<cdot>xs\<cdot>\<bottom> = \<bottom> "  |
+"x\<noteq>\<bottom> \<Longrightarrow> t = updis \<surd> \<Longrightarrow> tsZip_helper\<cdot>(lscons\<cdot>x\<cdot>xs)\<cdot>(lscons\<cdot>t\<cdot>ts) = \<up>\<surd> \<bullet> tsZip_helper\<cdot>xs\<cdot>ts" |
+(unchecked) "x\<noteq>\<bottom> \<Longrightarrow> t\<noteq>\<bottom> \<Longrightarrow> t \<noteq> updis \<surd> \<Longrightarrow> tsZip_helper\<cdot>(lscons\<cdot>x\<cdot>xs)\<cdot>(lscons\<cdot>t\<cdot>ts) = lscons\<cdot>(updis \<surd>)\<cdot>(tsZip_helper\<cdot>xs\<cdot>ts)" 
+
+lemma "tsZip_helper\<cdot>\<bottom>\<cdot>ts = \<bottom>"
+  by simp
+    
+    
+
 definition tsZip_h :: "'a stream \<rightarrow> 'b event stream \<rightarrow> ('a \<times> 'b) event stream" where
 "tsZip_h \<equiv> fix\<cdot>(\<Lambda> h q s. if q = \<epsilon> \<or> s = \<epsilon> then \<epsilon> 
                          else if shd s = \<surd> then (\<up>\<surd> \<bullet> h\<cdot>q\<cdot>(srt\<cdot>s))
@@ -507,7 +522,7 @@ using tstreaml1
 apply blast
 done
 
-(* tsTakeFirst *)
+(* tsTakdaneFirst *)
 
 
 
