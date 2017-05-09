@@ -237,10 +237,11 @@ text {* Fairness predicate on timed stream processing function. An espf is consi
 definition tspfair :: "('a tstream \<rightarrow> 'b tstream ) \<Rightarrow> bool" where
 "tspfair f \<equiv> \<forall>ts. tsTickCount\<cdot> ts = \<infinity> \<longrightarrow> tsTickCount \<cdot> (f\<cdot> ts) = \<infinity>"
 
+
 text {* @{term tsFilter}: Remove all elements from the tstream which are
   not included in the given set. *}
-definition tsFilter :: "'a event set \<Rightarrow> 'a tstream \<rightarrow> 'a tstream" where
-"tsFilter M \<equiv> \<Lambda> ts. Abs_tstream (sfilter (insert \<surd> M)\<cdot>(Rep_tstream ts))"
+definition tsFilter :: "'a set \<Rightarrow> 'a tstream \<rightarrow> 'a tstream" where
+"tsFilter M \<equiv> \<Lambda> ts. Abs_tstream (sfilter (insert \<surd> (Msg ` M))\<cdot>(Rep_tstream ts))"
 
 
 (* ----------------------------------------------------------------------- *)
@@ -1887,25 +1888,21 @@ oops
 (* tsFilter *)
 thm tsFilter_def
 
-lemma tsfilter_h_sfoot: assumes "#s<\<infinity>" 
-  shows "sfoot ((insert \<surd> M) \<ominus> (s \<bullet> \<up>\<surd>)) = \<surd>"
-oops
-
 lemma tsfilter_h_well: assumes "ts_well s"
-  shows "ts_well ((insert \<surd> M) \<ominus> s)"
+  shows "ts_well (insert \<surd> (Msg ` M) \<ominus> s)"
 oops
 
 lemma tsfilter_unfold:
-  "tsFilter M\<cdot>ts = Abs_tstream ((insert \<surd> M) \<ominus> Rep_tstream ts)"
-oops
-
-lemma tsmap_weak:"tsWeakCausal (Rep_cfun (tsFilter M))"
+  "tsFilter M\<cdot>ts = Abs_tstream (insert \<surd> (Msg ` M) \<ominus> Rep_tstream ts)"
 oops
 
 lemma tsfilter_strict[simp]: "tsFilter M\<cdot>\<bottom> = \<bottom>"
 oops
 
 lemma tsfilter_tstickcount: "#\<surd>(tsFilter M\<cdot>ts) = #\<surd>ts"
+oops
+                                                
+lemma tsmap_weak:"tsWeakCausal (Rep_cfun (tsFilter M))"
 oops
 
 (* tsscanl *)
