@@ -505,12 +505,7 @@ lemma test14: assumes "(a \<sqsubseteq> b)"
 lemma sbunion_assoc2: "(sb1 \<uplus> sb2) \<uplus> sb3 = sb1 \<uplus> (sb2 \<uplus> sb3)"
   by (simp add: sbunion_associative)
   
-lemma test15: "x \<uplus> iter_spfCompH3 f1 f2 (Suc i) xx \<sqsubseteq> x \<uplus> iter_spfCompH3 f1 f2 (Suc i) x"
-      apply (unfold iterate_Suc)
-  apply(subst spfCompHelp2_def, subst spfCompH3_def)
-  apply(simp)
-  apply(rule test14)
-    apply(simp)
+
   
 lemma lub_iter_spfCompH2_spfCompH3wX_eq_req_1: assumes "sbDom\<cdot>x = I f1 f2" 
   shows "(iter_spfcompH2 f1 f2 i x) \<sqsubseteq> (x \<uplus> (iter_spfCompH3 f1 f2 i x))"
@@ -525,7 +520,7 @@ next
     apply(subst spfCompHelp2_def, subst spfCompH3_def)
     apply(auto)
     apply(subst sbunion_assoc2, rule test14)
-      sorry
+    sorry
 qed
 
 
@@ -543,7 +538,7 @@ next
   case (Suc i)
   then show ?case
     apply (unfold iterate_Suc)
-    apply(subst spfCompHelp2_def)
+    apply(subst spfCompHelp2_def, subst spfCompH3_def)
     apply(auto)
     apply(subst sbunion_assoc2, rule test14)
       sorry
