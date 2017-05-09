@@ -1853,13 +1853,13 @@ lemma tsmap_unfold:
   "tsMap f\<cdot>ts = Abs_tstream (smap (\<lambda>x. case x of \<M> m \<Rightarrow> \<M> f m | \<surd> \<Rightarrow> \<surd>)\<cdot>(Rep_tstream ts))"
 oops
 
-lemma tsmap_weak:"tsWeakCausal (Rep_cfun (tsMap f))"
-oops
-
 lemma tsmap_strict[simp]: "tsMap f\<cdot>\<bottom> = \<bottom>"
 oops
 
 lemma tsmap_tstickcount[simp]: "#\<surd>(tsMap f\<cdot>ts) = #\<surd>ts"
+oops
+
+lemma tsmap_weak:"tsWeakCausal (Rep_cfun (tsMap f))"
 oops
 
 (* tsProjFst and tsProjSnd *)
