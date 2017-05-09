@@ -1,5 +1,5 @@
 theory IntroCaseStudy_SPF_MW
-imports SPF SPF_CaseStudy
+imports  "../SPF" SPF_CaseStudy
 begin
 
 lemma oneComp_cont[simp] : "cont (\<lambda> sb :: nat SB . (sbDom\<cdot>sb = {c2}) \<leadsto> [c1 \<mapsto> \<up>1 \<bullet> (sb . c2)]\<Omega>)"

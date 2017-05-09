@@ -1,5 +1,5 @@
 theory IntroCaseStudy_SB_JB
-imports SBTheorie TSBTheorie  StreamTheorie SPF StreamTheorie StreamCase_Study SPF_CaseStudy
+imports  "../SB"  "../TSB"   "../Streams"  "../SPF" StreamCase_Study SPF_CaseStudy
 begin
 
 
