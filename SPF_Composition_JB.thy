@@ -496,16 +496,24 @@ proof -
   thus ?thesis
     by(simp add: assms lub_iter_spfCompH3_dom Oc_def)
 qed
+ 
   
+lemma test14: assumes "(a \<sqsubseteq> b)"
+  shows "(x \<uplus> a \<sqsubseteq> x \<uplus> b)"
+     by (metis assms monofun_cfun_arg)
   
-lemma test14: assumes "sbDom\<cdot>a = sbDom\<cdot>b"
-  shows "(x \<uplus> a \<sqsubseteq> x \<uplus> b) = (a \<sqsubseteq> b)"
-     by (metis assms(1) monofun_cfun_arg sbunion_restrict)
+lemma sbunion_assoc2: "(sb1 \<uplus> sb2) \<uplus> sb3 = sb1 \<uplus> (sb2 \<uplus> sb3)"
+  by (simp add: sbunion_associative)
   
-  
+lemma test15: "x \<uplus> iter_spfCompH3 f1 f2 (Suc i) xx \<sqsubseteq> x \<uplus> iter_spfCompH3 f1 f2 (Suc i) x"
+      apply (unfold iterate_Suc)
+  apply(subst spfCompHelp2_def, subst spfCompH3_def)
+  apply(simp)
+  apply(rule test14)
+    apply(simp)
   
 lemma lub_iter_spfCompH2_spfCompH3wX_eq_req_1: assumes "sbDom\<cdot>x = I f1 f2" 
-  shows "iter_spfcompH2 f1 f2 i x \<sqsubseteq> x \<uplus> iter_spfCompH3 f1 f2 i x"
+  shows "(iter_spfcompH2 f1 f2 i x) \<sqsubseteq> (x \<uplus> (iter_spfCompH3 f1 f2 i x))"
 proof (induction i)
   case 0
   then show ?case
@@ -516,17 +524,21 @@ next
     apply (unfold iterate_Suc)
     apply(subst spfCompHelp2_def, subst spfCompH3_def)
     apply(auto)
+    apply(subst sbunion_assoc2, rule test14)
       sorry
 qed
 
 
 lemma lub_iter_spfCompH2_spfCompH3wX_eq_req_2: assumes "sbDom\<cdot>x = I f1 f2"  
-  shows "x \<uplus> iter_spfCompH3 f1 f2 i x \<sqsubseteq> iter_spfcompH2 f1 f2 (Suc i) x"
+  shows "(x \<uplus> iter_spfCompH3 f1 f2 i x) \<sqsubseteq> (iter_spfcompH2 f1 f2 (Suc i) x)"
 proof (induction i)
   case 0
   then show ?case
     apply(simp add: spfCompHelp2_def)
-    sorry
+    apply(subst sbunion_assoc2, subst test14)
+    apply(simp_all add: assms)
+    by (metis (no_types, lifting) C_def sbleast_least sbleast_sbdom sbunionDom spfRanRestrict sup.bounded_iff sup.cobounded1)
+    
 next
   case (Suc i)
   then show ?case sorry
