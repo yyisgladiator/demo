@@ -12,6 +12,7 @@ theory TStream
 imports  Streams
 begin
 default_sort countable
+setup_lifting type_definition_cfun
 
 
 (* ----------------------------------------------------------------------- *)
@@ -236,14 +237,14 @@ text {* Fairness predicate on timed stream processing function. An espf is consi
   if all inputs with infinitely many ticks are mapped to outputs with infinitely many ticks. *}
 definition tspfair :: "('a tstream \<rightarrow> 'b tstream ) \<Rightarrow> bool" where
 "tspfair f \<equiv> \<forall>ts. tsTickCount\<cdot> ts = \<infinity> \<longrightarrow> tsTickCount \<cdot> (f\<cdot> ts) = \<infinity>"
-
-
+  
 text {* @{term tsFilter}: Remove all elements from the tstream which are
   not included in the given set. *}
-definition tsFilter :: "'a set \<Rightarrow> 'a tstream \<rightarrow> 'a tstream" where
-"tsFilter M \<equiv> \<Lambda> ts. Abs_tstream (sfilter (insert \<surd> (Msg ` M))\<cdot>(Rep_tstream ts))"
-
-
+lift_definition tsFilter :: "'a set \<Rightarrow> 'a tstream \<rightarrow> 'a tstream" is
+"\<lambda> M  ts. Abs_tstream (((Msg ` M)\<union>{\<surd>}) \<ominus> Rep_tstream ts)"
+apply(simp add: cfun_def)
+oops    (* ToDo *)
+    
 (* ----------------------------------------------------------------------- *)
   subsection \<open>Lemmas on tstream\<close>
 (* ----------------------------------------------------------------------- *)
@@ -1698,7 +1699,6 @@ apply(auto simp add: tsId_def tsStrongCausal_def)
 by (metis Rep_cfun_strict1 tsTake.simps(1) ts_existsNBot tstake_bot tstake_fin2)
 
 (* eine stark Causale, stetige function appends a \<surd> to a timed stream *)
-setup_lifting type_definition_cfun
 lift_definition delayFun :: "'m tstream \<rightarrow> 'm tstream" is
 "\<lambda>ts . (Abs_tstream (\<up>\<surd>)) \<bullet> ts"
   by (simp add: Cfun.cfun.Rep_cfun)
