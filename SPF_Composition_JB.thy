@@ -407,7 +407,7 @@ lemma iter_spfCompH3_cont[simp]: "cont (\<lambda>x. iter_spfCompH3 f1 f2 i x)"
 lemma iter_spfCompH3_mono[simp]: "monofun (\<lambda>x. iter_spfCompH3 f1 f2 i x)"
   by (simp add: cont2mono)
     
-lemma iter_spfCompH3_monoo2:  assumes "x \<sqsubseteq> y"
+lemma iter_spfCompH3_mono2:  assumes "x \<sqsubseteq> y"
   shows "\<forall>i. ((iter_spfCompH3 f1 f2 i) x) \<sqsubseteq> ((iter_spfCompH3 f1 f2 i) y)"
   using assms monofun_def by fastforce
   
@@ -416,7 +416,20 @@ lemma iter_spfCompH3_chain[simp]: assumes "sbDom\<cdot>x = I f1 f2"
   apply (rule sbIterate_chain)
   by(simp add: assms)
     
- 
+lemma iter_spfCompH3_dom[simp]: assumes "sbDom\<cdot>x = I f1 f2" 
+  shows "sbDom\<cdot>(iter_spfCompH3 f1 f2 i x) = (spfRan\<cdot>f1 \<union> spfRan\<cdot>f2)"
+  apply(induct_tac i)
+   apply auto[1]
+  by(simp add: assms)
+    
+    
+subsection \<open>lub_iter_spfCompH3\<close>
+  
+lemma lub_iter_spfCompH3_dom[simp]: assumes "sbDom\<cdot>x = I f1 f2" 
+  shows "sbDom\<cdot>(\<Squnion>i. iter_spfCompH3 f1 f2 i x) = (spfRan\<cdot>f1 \<union> spfRan\<cdot>f2)"
+    by (metis (mono_tags, lifting) assms iter_spfCompH3_chain iter_spfCompH3_dom sbChain_dom_eq2)
+    
+    
 subsection \<open>old2new spfcomp eq\<close>
 (*  
 declare [[show_types]]
@@ -471,7 +484,69 @@ proof -
     by (simp add: below_antisym)
 qed
   
+lemma iter_spfCompH3_px_chain[simp]: assumes "sbDom\<cdot>x = I f1 f2"
+  shows "chain (\<lambda> i. x \<uplus> iter_spfCompH3 f1 f2 i x)"
+  by (simp add: assms)
+    
+lemma lub_iter_spfCompH3_eq: assumes "sbDom\<cdot>x = I f1 f2"
+  shows "((\<Squnion>i. ( x \<uplus> iter_spfCompH3 f1 f2 i x))\<bar> Oc f1 f2) = (\<Squnion>i. (iter_spfCompH3 f1 f2 i) x)"
+proof -
+  have f1: "(\<Squnion>i. ( x \<uplus> iter_spfCompH3 f1 f2 i x)) = x \<uplus> (\<Squnion>i. iter_spfCompH3 f1 f2 i x)"
+    by (simp add: assms contlub_cfun_arg)
+  thus ?thesis
+    by(simp add: assms lub_iter_spfCompH3_dom Oc_def)
+qed
   
+  
+lemma test14: assumes "sbDom\<cdot>a = sbDom\<cdot>b"
+  shows "(x \<uplus> a \<sqsubseteq> x \<uplus> b) = (a \<sqsubseteq> b)"
+     by (metis assms(1) monofun_cfun_arg sbunion_restrict)
+  
+  
+  
+lemma lub_iter_spfCompH2_spfCompH3wX_eq_req_1: assumes "sbDom\<cdot>x = I f1 f2" 
+  shows "iter_spfcompH2 f1 f2 i x \<sqsubseteq> x \<uplus> iter_spfCompH3 f1 f2 i x"
+proof (induction i)
+  case 0
+  then show ?case
+    by (simp add: C_def I_def assms sup.assoc)
+next
+  case (Suc i)
+  then show ?case 
+    apply (unfold iterate_Suc)
+    apply(subst spfCompHelp2_def, subst spfCompH3_def)
+    apply(auto)
+      sorry
+qed
+
+
+lemma lub_iter_spfCompH2_spfCompH3wX_eq_req_2: assumes "sbDom\<cdot>x = I f1 f2"  
+  shows "x \<uplus> iter_spfCompH3 f1 f2 i x \<sqsubseteq> iter_spfcompH2 f1 f2 (Suc i) x"
+proof (induction i)
+  case 0
+  then show ?case
+    apply(simp add: spfCompHelp2_def)
+    sorry
+next
+  case (Suc i)
+  then show ?case sorry
+qed
+
+  
+
+  
+lemma lub_iter_spfCompH2_spfCompH3wX_eq: assumes "sbDom\<cdot>x = I f1 f2" 
+  shows "(\<Squnion>i. (iter_spfcompH2 f1 f2 i x)) = (\<Squnion>i. ( x \<uplus> iter_spfCompH3 f1 f2 i x))"
+  by (meson assms lub_interl_chain_eq lub_iter_spfCompH2_spfCompH3wX_eq_req_1 
+      lub_iter_spfCompH2_spfCompH3wX_eq_req_2)
+
+    
+    
+lemma lub_iter_spfCompH2_spfCompH3_eq: assumes "sbDom\<cdot>x = I f1 f2" 
+  shows "(\<Squnion>i. (iter_spfCompH3 f1 f2 i) x)  = (\<Squnion>i. (iter_spfcompH2 f1 f2 i x))  \<bar> Oc f1 f2"
+  using assms lub_iter_spfCompH2_spfCompH3wX_eq lub_iter_spfCompH3_eq by fastforce
+    
+(* TODO: show that both definitions are equal based on the previous lemma *)
 
 (* OBSOLETE:
 lemma iter_spfComp_eq_start: assumes "sbDom\<cdot>x = I f1 f2" and "spfComp_well f1 f2"
