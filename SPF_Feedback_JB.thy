@@ -294,7 +294,8 @@ lemma spf_feed_dom[simp]: "spfDom\<cdot>(spfFeedbackOperator f) = spfDom\<cdot>f
 
 lemma spf_feed_ran[simp]: "spfRan\<cdot>(spfFeedbackOperator f) = spfRan\<cdot>f"
   apply(simp add: spfFeedbackOperator2_iter_spfFeedH)
-  apply(simp add: spfRan_def)
-  sorry
+  apply(subst spfran_least)
+  apply(subst spfDomAbs)
+  by(simp_all)
     
 end

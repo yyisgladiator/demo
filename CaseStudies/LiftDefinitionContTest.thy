@@ -16,15 +16,7 @@ lift_definition f2 :: "nat stream \<Rightarrow> nat stream \<rightarrow> nat str
 
     
 lift_definition f3 :: "nat stream \<rightarrow> nat stream \<rightarrow> nat stream" is "\<lambda> s1 s2. \<up>1" 
-proof - 
-  have f1: "\<forall>s1. cont (\<lambda> s1. \<up>1)"
-    by simp
-  have f2: "\<forall>s2. cont (\<lambda> s1. \<up>1)"
-    by simp
-  show ?thesis
-    using f1 f2 
-      sorry
-qed
+sorry
 
 
 end
