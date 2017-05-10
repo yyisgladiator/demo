@@ -504,6 +504,20 @@ lemma test14: assumes "(a \<sqsubseteq> b)"
   
 lemma sbunion_assoc2: "(sb1 \<uplus> sb2) \<uplus> sb3 = sb1 \<uplus> (sb2 \<uplus> sb3)"
   by (simp add: sbunion_associative)
+
+declare [[show_types]]
+    
+lemma spf_pref_eq: assumes "(a \<sqsubseteq> b)"
+  shows "f \<rightleftharpoons> a \<sqsubseteq> f \<rightleftharpoons> b"
+  by (metis Rep_CSPF_def assms cont2mono monofun_cfun_arg monofun_def op_the_cont)
+    
+lemma sbunion_pref_eq: assumes "(a \<sqsubseteq> b)" and "(c \<sqsubseteq> d)"
+  shows "(a \<uplus> c \<sqsubseteq> b \<uplus> d)"
+  by (simp add: assms(1) assms(2) monofun_cfun)
+    
+lemma sbres_pref_eq: assumes "(a \<sqsubseteq> b)"
+  shows "(a \<bar> cs) \<sqsubseteq> (b \<bar> cs)"
+     by (metis assms monofun_cfun_arg)
   
 
   
@@ -515,12 +529,14 @@ proof (induction i)
     by (simp add: C_def I_def assms sup.assoc)
 next
   case (Suc i)
-  then show ?case 
+  then show ?case     
     apply (unfold iterate_Suc)
     apply(subst spfCompHelp2_def, subst spfCompH3_def)
     apply(auto)
-    apply(subst sbunion_assoc2, rule test14)
-    sorry
+    apply(subst sbunion_assoc2, rule test14) (* remove x *)
+    apply(rule sbunion_pref_eq) (* split up sbunion *)
+     apply(rule spf_pref_eq, rule sbres_pref_eq, simp)
+     by (rule spf_pref_eq, rule sbres_pref_eq, simp)    
 qed
 
 
@@ -532,8 +548,8 @@ proof (induction i)
     apply(simp add: spfCompHelp2_def)
     apply(subst sbunion_assoc2, subst test14)
     apply(simp_all add: assms)
-    by (metis (no_types, lifting) C_def sbleast_least sbleast_sbdom sbunionDom spfRanRestrict sup.bounded_iff sup.cobounded1)
-    
+    by (metis (no_types, lifting) C_def sbleast_least sbleast_sbdom sbunionDom 
+               spfRanRestrict sup.bounded_iff sup.cobounded1)   
 next
   case (Suc i)
   then show ?case
@@ -541,7 +557,9 @@ next
     apply(subst spfCompHelp2_def, subst spfCompH3_def)
     apply(auto)
     apply(subst sbunion_assoc2, rule test14)
-      sorry
+    apply(rule sbunion_pref_eq)
+     apply(rule spf_pref_eq, rule sbres_pref_eq, simp)
+     by (rule spf_pref_eq, rule sbres_pref_eq, simp)
 qed
 
   
