@@ -30,6 +30,22 @@ definition spfFeedH:: "'m SPF \<Rightarrow> 'm SB \<Rightarrow> 'm SB  \<rightar
 abbreviation iter_spfFeedH:: "'m SPF \<Rightarrow> nat \<Rightarrow> 'm SB \<Rightarrow> 'm SB" where
 "iter_spfFeedH f i \<equiv> (\<lambda> x. iterate i\<cdot>(spfFeedH f x)\<cdot>((spfRan\<cdot>f)^\<bottom>))"
 
+(* obsolete feedback operator *)
+definition spfFeedbackOperator2 :: "'a SPF \<Rightarrow> 'a SPF" where
+"spfFeedbackOperator2 f \<equiv>
+let I  = spfDom\<cdot>f - spfRan\<cdot>f;
+    I1 = spfDom\<cdot>f;
+    C  = (spfDom\<cdot>f \<union> spfRan\<cdot>f)
+in Abs_CSPF (\<lambda> sb. (sbDom\<cdot>sb = I) \<leadsto>
+    (\<Squnion>i. iterate i\<cdot>(\<Lambda> z. sb \<uplus> (f\<rightleftharpoons>(z \<bar> I1)))\<cdot>(C^\<bottom>)) \<bar> (spfRan\<cdot>f))" 
+
+definition spfFeedH2:: "'m SPF \<Rightarrow> 'm SB \<Rightarrow> 'm SB  \<rightarrow> 'm SB" where
+"spfFeedH2 f x \<equiv> (\<Lambda> z. x \<uplus> (f\<rightleftharpoons>(z\<bar>(spfDom\<cdot>f))))"
+
+abbreviation iter_spfFeedH2:: "'m SPF \<Rightarrow> nat \<Rightarrow> 'm SB \<Rightarrow> 'm SB" where
+"iter_spfFeedH2 f i \<equiv> (\<lambda> x. iterate i\<cdot>(spfFeedH2 f x)\<cdot>((spfDom\<cdot>f \<union> spfRan\<cdot>f)^\<bottom>))"
+
+
     
 (* show that the version used from proofing is equal to the actual definition of the feedback
     operator *)
@@ -297,5 +313,167 @@ lemma spf_feed_ran[simp]: "spfRan\<cdot>(spfFeedbackOperator f) = spfRan\<cdot>f
   apply(subst spfran_least)
   apply(subst spfDomAbs)
   by(simp_all)
+    
+(* ----------------------------------------------------------------------- *)
+section \<open>spfFeed2-basic-prop\<close>
+(* ----------------------------------------------------------------------- *) 
+(* WARNING this section is covering a obsolete Operator ! ! ! *)
+  
+subsection \<open>spfFeedH2\<close>
+  
+  
+lemma spfFeedH2_cont[simp]: "cont (\<lambda> z. x \<uplus> (f\<rightleftharpoons>(z\<bar>(spfDom\<cdot>f))))"
+  by (metis Rep_CSPF_def cont_Rep_cfun2 cont_compose conthelper)
+    
+lemma spfFeedH2_continX[simp]: "cont (\<lambda> x. spfFeedH2 f x)"
+proof -
+  have "\<forall>x. cont(\<lambda>z. x \<uplus> (f\<rightleftharpoons>(z\<bar>(spfDom\<cdot>f))))"
+    by simp
+  thus ?thesis
+    apply (subst spfFeedH2_def)
+    by (simp add: cont2cont_LAM)
+qed
+  
+  
+lemma spfFeedH2_dom: assumes "sbDom\<cdot>x= spfDom\<cdot>f - spfRan\<cdot>f" 
+                     and "sbDom\<cdot>sb = (spfDom\<cdot>f \<union> spfRan\<cdot>f)"
+  shows "sbDom\<cdot>((spfFeedH2 f x )\<cdot>sb) = (spfDom\<cdot>f \<union> spfRan\<cdot>f)"
+    by (simp add: spfFeedH2_def assms(1) assms(2))
+
+      
+subsection \<open>iter_spfCompH3\<close>
+    
+lemma iter_spfFeedH2_cont[simp]: "cont (\<lambda> x. iter_spfFeedH2 f i x)"
+  by simp
+    
+lemma iter_spfFeedH2_mono[simp]: "monofun (\<lambda> x. iter_spfFeedH2 f i x)"
+  by (simp add: cont2mono)
+    
+lemma iter_spfFeedH2_mono2: assumes "x \<sqsubseteq> y"
+  shows "\<forall>i. ((iter_spfFeedH2 f i) x) \<sqsubseteq> ((iter_spfFeedH2 f i) y)"
+  using assms monofun_def by fastforce
+    
+lemma iter_spfFeedH2_chain[simp]: assumes "sbDom\<cdot>x = spfDom\<cdot>f - spfRan\<cdot>f"
+  shows "chain (\<lambda>i. iter_spfFeedH2 f i x)"
+  apply (rule sbIterate_chain)
+  by (simp add: assms spfFeedH2_dom)
+    
+lemma iter_spfFeedH2_dom[simp]: assumes "sbDom\<cdot>x = spfDom\<cdot>f - spfRan\<cdot>f"
+  shows "sbDom\<cdot>(iter_spfFeedH2 f i x) = (spfDom\<cdot>f \<union> spfRan\<cdot>f)"
+  apply (induct_tac i)
+   apply auto[1]
+  by (simp add: assms spfFeedH2_dom)
+    
+subsection \<open>lub_iter_spfCompH3\<close>
+  
+lemma lub_iter_spfFeedH2_dom[simp]: assumes "sbDom\<cdot>x = spfDom\<cdot>f - spfRan\<cdot>f"
+  shows "sbDom\<cdot>(\<Squnion>i. iter_spfFeedH2 f i x) = (spfDom\<cdot>f \<union> spfRan\<cdot>f)"
+    by (metis (mono_tags, lifting) assms iter_spfFeedH2_chain iter_spfFeedH2_dom 
+         sbChain_dom_eq2)
+  
+       
+       
+(* ----------------------------------------------------------------------- *)
+section \<open>old2new spfFeed eq\<close>
+(* ----------------------------------------------------------------------- *)   
+  
+  
+lemma iter_spfFeedH_px_chain[simp]: assumes "sbDom\<cdot>x = spfDom\<cdot>f - spfRan\<cdot>f"
+  shows "chain (\<lambda> i. x \<uplus> iter_spfFeedH f i x)"
+    by (simp add: assms)
+  
+lemma lub_iter_spfFeedH_eq: assumes "sbDom\<cdot>x = spfDom\<cdot>f - spfRan\<cdot>f"
+  shows "((\<Squnion>i. (x \<uplus> iter_spfFeedH f i x)) \<bar> (spfRan\<cdot>f)) = (\<Squnion>i. (iter_spfFeedH f i) x)"
+proof -
+  have "(\<Squnion>i. (x \<uplus> iter_spfFeedH f i x)) = x \<uplus> (\<Squnion>i. iter_spfFeedH f i x)"
+    by (simp add: assms contlub_cfun_arg)
+  thus ?thesis
+    using assms by auto
+qed
+  
+lemma lub_iter_spfFeedH2_spfFeedHwX_eq_req_1: assumes "sbDom\<cdot>x = spfDom\<cdot>f - spfRan\<cdot>f"
+  shows "(iter_spfFeedH2 f i x) \<sqsubseteq> (x \<uplus> (iter_spfFeedH f i x))"
+proof (induction i)
+  case 0
+  then show ?case
+    by (simp add: assms)
+next
+  case (Suc i)
+  then show ?case
+    apply (unfold iterate_Suc)
+    apply (subst spfFeedH2_def, subst spfFeedH_def)
+    apply (auto)
+    apply (rule sbunion_pref_eq2)
+    apply(rule spf_pref_eq, rule sbres_pref_eq)
+    by (simp)
+qed
+  
+lemma lub_iter_spfFeedH2_spfFeedHwX_eq_req_2: assumes "sbDom\<cdot>x = spfDom\<cdot>f - spfRan\<cdot>f"
+  shows "(x \<uplus> iter_spfFeedH f i x) \<sqsubseteq> (iter_spfFeedH2 f (Suc i) x)"
+proof (induction i)
+  case 0
+  then show ?case
+    apply (simp add: spfFeedH2_def)
+    apply (subst sbunion_pref_eq2)
+      by simp_all
+next
+  case (Suc i)
+  then show ?case
+    apply (unfold iterate_Suc)
+    apply (subst spfFeedH2_def, subst spfFeedH_def)
+    apply (auto)
+    apply (rule sbunion_pref_eq2)
+    apply (rule spf_pref_eq)
+      by (rule sbres_pref_eq, simp)
+qed
+  
+  
+lemma lub_iter_spfFeedHwX_spfFeedH2_eq: assumes "sbDom\<cdot>x = spfDom\<cdot>f - spfRan\<cdot>f"
+  shows "(\<Squnion>i. (iter_spfFeedH2 f i x)) = (\<Squnion>i. (x \<uplus> iter_spfFeedH f i x))"
+  by (meson assms lub_interl_chain_eq lub_iter_spfFeedH2_spfFeedHwX_eq_req_1 
+            lub_iter_spfFeedH2_spfFeedHwX_eq_req_2)
+          
+lemma lub_iter_spfFeedH2_spfFeedH_eq: assumes "sbDom\<cdot>x = spfDom\<cdot>f - spfRan\<cdot>f"
+  shows "(\<Squnion>i. (iter_spfFeedH f i) x) = (\<Squnion>i. (iter_spfFeedH2 f i x)) \<bar> (spfRan\<cdot>f)"
+    by (simp add: assms lub_iter_spfFeedHwX_spfFeedH2_eq lub_iter_spfFeedH_eq)
+
+
+lemma spfFeed_and_spfFeed2_eq_req: "(sbDom\<cdot>x = (spfDom\<cdot>f - spfRan\<cdot>f)) \<leadsto> ((\<Squnion>i. (iter_spfFeedH2 f i x))\<bar> (spfRan\<cdot>f))
+                 = (sbDom\<cdot>x = (spfDom\<cdot>f - spfRan\<cdot>f)) \<leadsto> (\<Squnion>i. (iter_spfFeedH f i) x)"
+proof (cases "sbDom\<cdot>x = (spfDom\<cdot>f - spfRan\<cdot>f)")
+  case True
+  then show ?thesis
+    by (simp add: lub_iter_spfFeedH2_spfFeedH_eq)
+next
+  case False
+  then show ?thesis 
+    by simp
+qed
+  
+  
+(* show that new definition is cont and spf_well based on the proof for the old one *)
+lemma spf_FeedH2_cont[simp]:
+  shows "cont (\<lambda> x. (sbDom\<cdot>x = (spfDom\<cdot>f - spfRan\<cdot>f)) \<leadsto> (\<Squnion>i. (iter_spfFeedH2 f i x))\<bar>(spfRan\<cdot>f))"
+  by (simp add: spfFeed_and_spfFeed2_eq_req)
+    
+lemma spf_FeedH2_well[simp]:
+  shows "spf_well (\<Lambda> x. (sbDom\<cdot>x =(spfDom\<cdot>f - spfRan\<cdot>f)) \<leadsto> (\<Squnion>i. (iter_spfFeedH2 f i x))\<bar>(spfRan\<cdot>f))"
+  by (simp add: spfFeed_and_spfFeed2_eq_req)
+    
+    
+(* used abbreviations are equal to spfcomp2 function *)   
+    (* Substitute with this lemma if you need cont properties for spfFeedH2 *)
+lemma spfFeedbackOperator2_to_FeedH2: "spfFeedbackOperator2 f
+  = Abs_CSPF(\<lambda> x. (sbDom\<cdot>x = (spfDom\<cdot>f - spfRan\<cdot>f)) \<leadsto> (\<Squnion>i. (iter_spfFeedH2 f i x))\<bar>(spfRan\<cdot>f))"
+  apply (simp add: spfFeedbackOperator2_def)
+  apply (subst spfFeedH2_def)
+  by simp
+    
+    
+(* both definitions deliver an equal result *)
+lemma spf_feed_operator_eq: "spfFeedbackOperator f = spfFeedbackOperator2 f"
+  apply (subst spfFeedbackOperator2_to_FeedH2)
+  apply (subst spfFeedbackOperator2_iter_spfFeedH)
+    by (simp add: spfFeed_and_spfFeed2_eq_req)
     
 end
