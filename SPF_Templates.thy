@@ -63,6 +63,14 @@ definition multSPF :: "(channel \<times> channel \<times> channel) \<Rightarrow>
                           \<leadsto> ([(snd (snd cs))\<mapsto>mult\<cdot>(sb . (fst cs))\<cdot>(sb . (fst (snd cs)))]\<Omega>))"
 
 
+(* general 2x2 SPF constructor with Ics as input and Ocs as output channel *)
+definition SPF2x2 :: "(nat stream \<rightarrow> nat stream \<rightarrow> nat stream) 
+                      \<Rightarrow> (nat stream \<rightarrow> nat stream \<rightarrow> nat stream) 
+                      \<Rightarrow>  (channel \<times> channel)  \<Rightarrow>  (channel  \<times> channel)  \<Rightarrow> nat SPF" where
+"SPF2x2 f1 f2 Ics Ocs \<equiv> Abs_CSPF (\<lambda> (sb::nat SB). (sbDom\<cdot>sb = {(fst Ics), (snd Ics)}) 
+                          \<leadsto> ([(fst Ocs)\<mapsto>f1\<cdot>(sb . (fst Ics))\<cdot>(sb . (snd Ics)),
+                               (snd Ocs)\<mapsto>f2\<cdot>(sb . (fst Ics))\<cdot>(sb . (snd Ics))]\<Omega>))"
+
 
 (* ----------------------------------------------------------------------- *)
 section \<open>1x1 SPF\<close>
@@ -320,7 +328,121 @@ lemma SPF2x1_apply: assumes "ch1 \<noteq> ch2"
   apply(simp add: SPF2x1_rep_eq sb_id_def sbgetch_insert)
   by(auto simp add: sbdom_rep_eq assms)
     
-(* For further lemmas see SerComp or ParComp *) 
+    
+
+(* ----------------------------------------------------------------------- *)
+section \<open>2x2 SPF\<close>
+(* ----------------------------------------------------------------------- *)
+
+  subsection \<open>SPF2x2 prerequirements\<close>
+(* anlogue to before we first show some prerequirements *)
+  
+lemma spf_2x2_general_mono[simp] : "monofun 
+                           (\<lambda> sb. (sbDom\<cdot>sb = {ch1, ch2}) \<leadsto> 
+ ([ch3 \<mapsto> (f1::nat stream \<rightarrow> nat stream  \<rightarrow> nat stream)\<cdot>(sb . ch1)\<cdot>(sb . ch2), 
+   ch4 \<mapsto> (f2::nat stream \<rightarrow> nat stream  \<rightarrow> nat stream)\<cdot>(sb . ch1)\<cdot>(sb . ch2) ]\<Omega>))"
+  apply (rule spf_mono2monofun)
+   apply (rule spf_monoI)
+   apply (simp add: domIff2)
+   apply (rule sb_below)
+    apply (simp add: sbdom_insert)
+    apply (simp add: sbdom_rep_eq sbgetch_rep_eq)
+   apply (meson monofun_cfun monofun_cfun_arg monofun_cfun_fun)
+  by (rule, simp add: domIff2)
+    
+lemma spf_2x2_general_chain[simp]: "chain Y \<Longrightarrow> sbDom\<cdot>(Y 0) = {ch1,ch2} 
+                        \<Longrightarrow> chain (\<lambda> i. [ch3\<mapsto> (f1::nat stream \<rightarrow> nat stream  \<rightarrow> nat stream)\<cdot>((Y i) . ch1)\<cdot>((Y i) . ch2),
+                  ch4\<mapsto> (f2::nat stream \<rightarrow> nat stream  \<rightarrow> nat stream)\<cdot>((Y i) . ch1)\<cdot>((Y i) . ch2)]\<Omega>)"
+  apply (rule chainI)
+  apply (rule sb_below)
+   apply (simp add: sbdom_rep_eq)
+   apply (simp add: sbdom_rep_eq sbgetch_rep_eq)
+   by (simp add: monofun_cfun po_class.chainE)
+
+lemma spf_2x2_general_chain_lub[simp]: "chain Y \<Longrightarrow> sbDom\<cdot>(Lub Y) = {ch1,ch2} 
+  \<Longrightarrow> chain (\<lambda> i. [ch3\<mapsto> (f1::nat stream \<rightarrow> nat stream  \<rightarrow> nat stream)\<cdot>((Y i) . ch1)\<cdot>((Y i) . ch2),
+                  ch4\<mapsto> (f2::nat stream \<rightarrow> nat stream  \<rightarrow> nat stream)\<cdot>((Y i) . ch1)\<cdot>((Y i) . ch2)]\<Omega>)"
+  by(auto simp add: sbChain_dom_eq2)
+
+    
+lemma spf_2x2_general_Lub[simp]: "chain Y \<Longrightarrow> sbDom\<cdot>(Lub Y) = {ch1,ch2} \<Longrightarrow> 
+  (\<Squnion>i. (f::nat stream \<rightarrow> nat stream  \<rightarrow> nat stream)\<cdot>(Y i . ch1)\<cdot>(Y i . ch2)) 
+  = f\<cdot>((Lub Y) . ch1)\<cdot>((Lub Y). ch2)"
+  by simp
+
+
+lemma spf_2x2_general_cont[simp]: "cont 
+                           (\<lambda> sb. (sbDom\<cdot>sb = {ch1, ch2}) \<leadsto> 
+  ([ch3 \<mapsto> (f1::nat stream \<rightarrow> nat stream  \<rightarrow> nat stream)\<cdot>(sb . ch1)\<cdot>(sb . ch2),
+    ch4 \<mapsto> (f2::nat stream \<rightarrow> nat stream  \<rightarrow> nat stream)\<cdot>(sb . ch1)\<cdot>(sb . ch2)]\<Omega>))"
+  apply (rule spf_cont2cont)
+    apply (rule spf_contlubI)
+    apply (simp add: domIff2 sbChain_dom_eq2)
+    apply (rule sb_below)
+     apply (simp add: sbdom_rep_eq )
+     apply (simp only: Cfun.contlub_cfun_arg  spf_2x2_general_chain_lub)
+     apply (simp add: sbdom_rep_eq sbgetch_rep_eq)
+    apply (simp add: sbdom_rep_eq sbgetch_rep_eq sbgetch_lub)
+   apply (simp add: monofun2spf_mono)
+  by(simp add: domIff2, rule+)
+    
+lemma  spf_2x2_general_well[simp] : "spf_well (\<Lambda> sb. (sbDom\<cdot>sb = {ch1, ch2}) \<leadsto> 
+  ([ch3 \<mapsto> (f1::nat stream \<rightarrow> nat stream  \<rightarrow> nat stream)\<cdot>(sb . ch1)\<cdot>(sb . ch2),
+    ch4 \<mapsto> (f2::nat stream \<rightarrow> nat stream  \<rightarrow> nat stream)\<cdot>(sb . ch1)\<cdot>(sb . ch2)]\<Omega>))"
+  apply(simp add: spf_well_def)
+  apply(simp add: domIff2)
+  by(auto simp add: sbdom_rep_eq)
+
+(* Now explicitly show the domain properties of the general 2x2 SPF *)
+lemma spf_2x2_general_dom[simp]: "spfDom\<cdot>(Abs_CSPF(\<lambda> sb. (sbDom\<cdot>sb = {ch1, ch2}) 
+    \<leadsto> ([ch3 \<mapsto> (f1::nat stream \<rightarrow> nat stream  \<rightarrow> nat stream)\<cdot>(sb . ch1)\<cdot>(sb . ch2),
+         ch4 \<mapsto> (f2::nat stream \<rightarrow> nat stream  \<rightarrow> nat stream)\<cdot>(sb . ch1)\<cdot>(sb . ch2)]\<Omega>))) 
+      = {ch1, ch2}"
+  apply(simp add: spfdom_insert)
+  apply(simp add: domIff2)
+  by (meson sbleast_sbdom someI)
+    
+lemma spf_2x2_general_ran[simp]: "spfRan\<cdot>(Abs_CSPF(\<lambda> sb. (sbDom\<cdot>sb = {ch1, ch2}) 
+    \<leadsto> ([ch3 \<mapsto> (f1::nat stream \<rightarrow> nat stream  \<rightarrow> nat stream)\<cdot>(sb . ch1)\<cdot>(sb . ch2),
+         ch4 \<mapsto> (f2::nat stream \<rightarrow> nat stream  \<rightarrow> nat stream)\<cdot>(sb . ch1)\<cdot>(sb . ch2)]\<Omega>))) = {ch3,ch4}"
+  apply(simp add: spfran_least)
+  by(auto simp add: spfran_least sbdom_insert)
+    
+
+subsection \<open>SPF2x2 constructor lemmata\<close>
+  
+lemma SPF2x2_dom[simp]: "spfDom\<cdot>(SPF2x2 f1 f2 (ch1, ch2) (ch3,ch4)) = {ch1, ch2}"
+  apply(simp add: SPF2x2_def)
+  apply(subst snd_conv, subst fst_conv, subst snd_conv, subst fst_conv, subst snd_conv,
+        subst fst_conv)
+  by simp 
+    
+    
+lemma SPF2x2_ran[simp]: "spfRan\<cdot>(SPF2x2 f1 f2 (ch1, ch2) (ch3,ch4)) = {ch3,ch4}"
+  apply(simp add: spfran_least)
+    (* the next step is very ugly, but effectively removes fst, snds *)
+  apply(simp add: SPF2x2_def, subst snd_conv, subst fst_conv, 
+      subst snd_conv, subst fst_conv, subst snd_conv, subst fst_conv)
+  by(simp, auto simp add: spfran_least sbdom_insert)
+    
+    
+lemma  SPF2x2_rep_eq: "Rep_CSPF (SPF2x2 f1 f2 (ch1, ch2) (ch3,ch4)) 
+    =  (\<lambda> (sb::nat SB). (sbDom\<cdot>sb = {(fst (ch1, ch2)), (snd (ch1, ch2))}) 
+          \<leadsto> ([(fst (ch3,ch4))\<mapsto>f1\<cdot>(sb . (fst (ch1,ch2)))\<cdot>(sb . (snd  (ch1,ch2))),
+               (snd (ch3,ch4))\<mapsto>f2\<cdot>(sb . (fst  (ch1,ch2)))\<cdot>(sb . (snd  (ch1,ch2)))]\<Omega>))"
+  apply(simp add: SPF2x2_def)
+  apply(subst snd_conv, subst fst_conv)
+  apply(subst snd_conv, subst fst_conv)
+  apply(subst snd_conv, subst fst_conv, subst snd_conv, subst fst_conv, subst snd_conv, 
+        subst snd_conv, subst fst_conv, subst fst_conv)
+  by simp
+    
+lemma SPF2x2_apply: assumes "ch1 \<noteq> ch2"
+  shows "(SPF2x2 f1 f2 (ch1, ch2) (ch3,ch4)) \<rightleftharpoons> ([ch1 \<mapsto> (s1:: nat stream), ch2  \<mapsto> (s2:: nat stream)]\<Omega>) 
+    = ([ch3 \<mapsto> (f1\<cdot>s1\<cdot>s2), ch4 \<mapsto> (f2\<cdot>s1\<cdot>s2)]\<Omega>)"
+  apply(simp add: SPF2x2_rep_eq sb_id_def sbgetch_insert)
+  by(auto simp add: sbdom_rep_eq assms)
+    
     
 (* ----------------------------------------------------------------------- *)
 section \<open>append_componentwise\<close>

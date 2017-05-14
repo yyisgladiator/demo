@@ -532,7 +532,17 @@ lemma "snth n (sum4\<cdot>(siterate Suc 1)) * 2 = ((Suc n)*((Suc n)+1))"
    apply(simp)
   by(simp add: test2 snth_siterate_Suc)
 
+    
+lemma reksum_len: "z=add\<cdot>i\<cdot>(\<up>0\<bullet>z) \<Longrightarrow> #z = #i"
+by (metis StreamCase_Study.min_rek add_slen slen_scons)
 
+lemma reksum_prefix [simp]: assumes "add\<cdot>i\<cdot>(\<up>0\<bullet>z) = z" 
+  shows "sum4\<cdot>i \<sqsubseteq> z" 
+by(simp add: sum4_def fix_least assms)    
+    
+lemma reksum_eq: assumes "add\<cdot>i\<cdot>(\<up>0\<bullet>z) = z" 
+  shows "z = sum4\<cdot>i"
+  by (metis assms eq_slen_eq_and_less reksum_len reksum_prefix sum4_unfold) 
 
 
 
