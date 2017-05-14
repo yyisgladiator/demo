@@ -66,7 +66,7 @@ lemma hidespfwell_helper[simp]: assumes "spf_well (Abs_cfun (Rep_CSPF(f)))"
   apply(simp add: spf_well_def)
   apply(simp only: domIff2)
   apply(auto simp add: sbdom_rep_eq)
-sorry
+  sorry
 
 lemma spfDomHide: "spfDom\<cdot>(f \<h> cs) = spfDom\<cdot>f"
   apply(simp add: hide_def)
@@ -75,8 +75,7 @@ lemma spfDomHide: "spfDom\<cdot>(f \<h> cs) = spfDom\<cdot>f"
 lemma hideSbRestrict: assumes "sbDom\<cdot>sb = spfDom\<cdot>f" 
    shows "(hide f cs)\<rightleftharpoons>sb = (f\<rightleftharpoons>sb)\<bar>(spfRan\<cdot>f - cs)"
   apply(simp add: hide_def)
-  apply(simp add: hidecont_helper hidespfwell_helper)
-    by (simp add: assms)
+  by (simp add: assms)
 
 lemma hideSbRestrictCh: assumes "sbDom\<cdot>sb = spfDom\<cdot>f" and "c \<notin> cs"
    shows "(hide f cs)\<rightleftharpoons>sb . c = (f\<rightleftharpoons>sb) . c"
@@ -214,28 +213,31 @@ apply(subst conthelper2, simp_all add: assms)
 apply(subst Abs_cfun_inverse2)
    apply(subst conthelper2, simp_all add: assms)
 oops
-(* apply (rule spf_mono2monofun)
-   apply (rule spf_monoI)
-   apply (simp add: domIff2)
-   apply (rule sb_below)*)
 
-(* spfLift *)  
+  
+(* Testing SPF Definition *)  
+  
+lift_definition testSPF_0x1 :: "nat SPF" is
+"\<Lambda> (sb::nat SB). ((sbDom\<cdot>sb = {}) \<leadsto> ([c1 \<mapsto> ((\<up>1)\<infinity>)]\<Omega>))"
+  apply(simp add: spf_well_def)
+  apply(simp only: domIff2)
+  apply(simp add: sbdom_rep_eq)
+  by(auto)  
 
-(*  
-moved to SPF_Templates
-definition spfLift_1x1 :: "('m stream \<rightarrow> 'm stream) \<Rightarrow> channel \<Rightarrow> channel \<Rightarrow> 'm SPF" where
-  "spfLift_1x1 f ch1 ch2  \<equiv> Abs_CSPF (\<lambda>b. ( (b\<in>{ch1}^\<Omega>) \<leadsto> ([ch2 \<mapsto> f\<cdot>(b . ch1)]\<Omega>)))"  
-  
-definition spfLift_1x2 :: "('m stream \<rightarrow> 'm stream) \<Rightarrow> ('m stream \<rightarrow> 'm stream) \<Rightarrow> channel \<Rightarrow> (channel \<times> channel) \<Rightarrow> 'm SPF" where
-  "spfLift_1x2 f1 f2 ch1 cs \<equiv> 
-   Abs_CSPF (\<lambda>b. ( (b\<in>{ch1}^\<Omega>) \<leadsto> ([(fst cs) \<mapsto> f1\<cdot>(b . ch1), (snd cs) \<mapsto> f2\<cdot>(b . ch1)]\<Omega>)))"  
- 
-definition spfLift_1x3 :: "('m stream \<rightarrow> 'm stream) \<Rightarrow> ('m stream \<rightarrow> 'm stream) \<Rightarrow> ('m stream \<rightarrow> 'm stream) \<Rightarrow> channel \<Rightarrow> (channel \<times> channel \<times> channel) \<Rightarrow> 'm SPF" where
-  "spfLift_1x3 f1 f2 f3 ch1 cs \<equiv> 
-   Abs_CSPF (\<lambda>b. ( (b\<in>{ch1}^\<Omega>) \<leadsto> ([(fst cs) \<mapsto> f1\<cdot>(b . ch1), (fst (snd cs)) \<mapsto> f2\<cdot>(b . ch1), (snd (snd cs)) \<mapsto> f3\<cdot>(b . ch1)]\<Omega> )))"  
-   
-definition spfLift_2x1 :: "('m stream \<rightarrow> 'm stream \<rightarrow> 'm stream) \<Rightarrow> (channel \<times> channel) \<Rightarrow> channel \<Rightarrow> 'm SPF" where
-  "spfLift_2x1 f cs ch1  \<equiv> Abs_CSPF (\<lambda>b. ( (b\<in>{fst cs, snd cs}^\<Omega>) \<leadsto> ([ch1 \<mapsto> f\<cdot>(b . (fst cs))\<cdot>(b . (snd cs))]\<Omega>)))"  
-  
-*)
+lift_definition testSPF_1x0 :: "nat SPF" is
+"\<Lambda> (sb::nat SB). ((sbDom\<cdot>sb = {c1}) \<leadsto> (Abs_SB empty))"
+  apply(simp add: spf_well_def)
+  apply(simp only: domIff2)
+  apply(simp add: sbdom_rep_eq)
+  by(auto)     
+
+lift_definition testSPF_1x1_notcont :: "nat SPF" is
+"\<Lambda> (sb::nat SB). ((sbDom\<cdot>sb = {c1}) \<leadsto> [c2 \<mapsto> (if #(sb . c1) = \<infinity> then ((\<up>1)\<infinity>) else ((\<up>2)\<infinity>))]\<Omega>)"
+  apply(simp add: spf_well_def)
+  oops
+  (*apply(simp only: domIff2)
+  apply(simp add: sbdom_rep_eq)
+  by(auto)*)     
+
+    
 end
