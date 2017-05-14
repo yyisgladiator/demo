@@ -436,17 +436,11 @@ section \<open>sum1SPF eq sum4\<close>
 subsection prerequirements
 (* prerequirements for final lemma *)
 
-
-lemma spfCompHelpFix: assumes "sbDom\<cdot>sb = I addC append0C"
-  shows "(\<Squnion>i. iterate i\<cdot>(SPF.spfCompHelp2 addC append0C sb)\<cdot>(sbLeast {c1, c2, c3})) = 
-        [c1 \<mapsto> (sb . c1), c2 \<mapsto> (\<up>0 \<bullet>  (\<mu> z. add\<cdot>(sb . c1)\<cdot>(\<up>0 \<bullet> z))), c3 \<mapsto> (\<mu> z. add\<cdot>(sb . c1)\<cdot>(\<up>0 \<bullet> z))]\<Omega>"
-  sorry
   
 lemma spfCompFixEq: assumes "sbDom\<cdot>sb = I addC append0C"
-  shows "(\<Squnion>i. iterate i\<cdot>(SPF.spfCompHelp2 addC append0C sb)\<cdot>(sbLeast {c1, c2, c3})) . c3 = (\<mu> z. add\<cdot>(sb . c1)\<cdot>(\<up>0 \<bullet> z))" 
-  apply(subst spfCompHelpFix, simp add: assms)
+  shows "(\<Squnion>i. iterate i\<cdot>(SPF.spfCompHelp2 addC append0C sb)\<cdot>(sbLeast {c1, c2, c3})) = sb \<uplus> ([c2 \<mapsto> \<up>0\<bullet>z]\<Omega>) \<uplus> ([c3 \<mapsto> z]\<Omega>) \<and>
+         z = add\<cdot>(sb . c1)\<cdot>(\<up>0\<bullet>z)"
   sorry
-  
   
 subsection \<open>lemma\<close> 
 (* final lemma *)
@@ -454,11 +448,11 @@ subsection \<open>lemma\<close>
     
 lemma sumEq: assumes "sbDom\<cdot>sb = I addC append0C" shows "(sum1SPF \<rightleftharpoons> sb) . c3 = sum4\<cdot>(sb . c1)"
   apply(subst sum1EqCh, simp add: assms)
-  apply(simp only: SPF.spfcomp_tospfH2 sum4_def)
+  apply(simp only: SPF.spfcomp_tospfH2)
   apply(subst  spfcomp_RepAbs)
    apply(simp_all add: assms)
   apply(subst spfCompFixEq)
-    by(auto simp add: assms)
+  apply(simp_all add: assms)
 
          
 end
