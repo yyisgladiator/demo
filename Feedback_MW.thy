@@ -410,16 +410,34 @@ section \<open>sum1SPF eq sum4\<close>
 subsection prerequirements
 (* prerequirements for final lemma *)
 
+lemma spfCompFeedback_iter_prefix: assumes "sbDom\<cdot>sb = I addC append0C" 
+                                       and "z = add\<cdot>(sb . c1)\<cdot>(\<up>0\<bullet>z)"
+                                     shows "(iter_spfCompH3 addC append0C i sb) \<sqsubseteq>  ([c2 \<mapsto> \<up>0\<bullet>z, c3 \<mapsto> z]\<Omega>)"
+ proof(induct i)
+   case 0
+   then show ?case
+     apply(subst less_SBI)
+       apply(simp_all add: sbLeast_def)
+       apply(simp add: dom_def)
+       by auto
+ next
+   case (Suc i)
+   then show ?case 
+     apply(subst less_SBI)
+       apply(simp)
+       sorry
+ qed
+  
 lemma spfCompFeedback_lub_iter_finiteInput: assumes "sbDom\<cdot>sb = I addC append0C" 
                                                 and "z = add\<cdot>(sb . c1)\<cdot>(\<up>0\<bullet>z)"
                                                 and "#(sb . c1) < \<infinity>"
-shows "(\<Squnion>i. (iter_spfCompH3 addC append0C i sb)) = ([c2 \<mapsto> \<up>0\<bullet>z]\<Omega>) \<uplus> ([c3 \<mapsto> z]\<Omega>)"  
+  shows "(\<Squnion>i. (iter_spfCompH3 addC append0C i sb)) = ([c2 \<mapsto> \<up>0\<bullet>z]\<Omega>) \<uplus> ([c3 \<mapsto> z]\<Omega>)"  
   sorry
 
 lemma spfCompFeedback_lub_iter_infiniteInput: assumes "sbDom\<cdot>sb = I addC append0C" 
                                                   and "z = add\<cdot>(sb . c1)\<cdot>(\<up>0\<bullet>z)"
                                                   and "#(sb . c1) = \<infinity>"
-shows "(\<Squnion>i. (iter_spfCompH3 addC append0C i sb)) = ([c2 \<mapsto> \<up>0\<bullet>z]\<Omega>) \<uplus> ([c3 \<mapsto> z]\<Omega>)"  
+  shows "(\<Squnion>i. (iter_spfCompH3 addC append0C i sb)) = ([c2 \<mapsto> \<up>0\<bullet>z]\<Omega>) \<uplus> ([c3 \<mapsto> z]\<Omega>)"  
   sorry    
     
 lemma spfCompFeedbackFixEq: assumes "sbDom\<cdot>sb = I addC append0C" and "z = add\<cdot>(sb . c1)\<cdot>(\<up>0\<bullet>z)"
