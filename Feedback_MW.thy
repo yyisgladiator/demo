@@ -402,7 +402,7 @@ subsection \<open>lemma\<close>
   
 lemma sum1SPFeqSum4SPF: assumes "sbDom\<cdot>sb = I addC append0C"
   shows "(sum1SPF \<rightleftharpoons> sb) . c3 = (sum4SPF \<rightleftharpoons> sb) . c3" 
-  sorry
+  oops
       
   
 section \<open>sum1SPF eq sum4\<close>
@@ -458,15 +458,23 @@ lemma spfCompFeedbackFixEqHelper: assumes "sbDom\<cdot>sb = I addC append0C" and
   shows "(\<Squnion>i. iterate i\<cdot>(spfCompH3 addC append0C sb)\<cdot>({c2, c3}^\<bottom>)) = ([c2 \<mapsto> \<up>0\<bullet>z]\<Omega>) \<uplus> ([c3 \<mapsto> z]\<Omega>)"
 proof - 
   have "(\<Squnion>i. iterate i\<cdot>(spfCompH3 addC append0C sb)\<cdot>({c2, c3}^\<bottom>)) = (\<Squnion>i. (iter_spfCompH3 addC append0C i sb))"
-    sorry
+    by simp
   then show ?thesis
     using assms(1) assms(2) spfCompFeedbackFixEq by presburger
 qed
 
-    (* should be possile to show with spfCompFeedbackFixEqHelper. I had some problems with the substitution *)
+
 lemma spfCompFeedbackFixEqCh: assumes "sbDom\<cdot>sb = I addC append0C" and "z = add\<cdot>(sb . c1)\<cdot>(\<up>0\<bullet>z)"
   shows "(\<Squnion>i. iterate i\<cdot>(spfCompH3 addC append0C sb)\<cdot>({c2, c3}^\<bottom>)) . c3 = z"
-    sorry
+proof -
+  have f1: "(\<Squnion>i. iterate i\<cdot>(spfCompH3 addC append0C sb)\<cdot>({c2, c3}^\<bottom>)) = ([c2 \<mapsto> \<up>0\<bullet>z]\<Omega>) \<uplus> ([c3 \<mapsto> z]\<Omega>)"
+    by (metis spfCompFeedbackFixEqHelper assms)
+  have f2: "([c2 \<mapsto> \<up>0 \<bullet> z]\<Omega>) \<uplus> ([c3 \<mapsto> z]\<Omega>) . c3 = z"
+    by (subst sbunion_getchR, simp_all add: sbdom_rep_eq)
+  thus ?thesis
+    by (simp add: f1)
+qed
+       
    
       
 subsubsection general      
