@@ -197,25 +197,35 @@ text {* "Unzipping" of timed streams: project to the second element of tuple of 
 definition tsProjSnd :: "('a \<times> 'b) tstream \<rightarrow> 'b tstream" where
 "tsProjSnd = tsMap snd"
 
+(* Notice that this version has overlapping patterns. The second equation
+cannot be proved as a theorem because it only applies when the first pattern
+fails.
+Usually fixrec tries to prove all equations as theorems. The ”unchecked”
+option overrides this behavior, so fixrec does not attempt to prove that
+particular equation.
+*)
 
-lemma [simp]: assumes "t\<noteq>\<bottom>" and "t=updis (Msg m)" shows "False"
-  oops
-    
-fixrec tsZip_helper :: "'a stream \<rightarrow> 'b event stream \<rightarrow>  ('a\<times>'b) event stream" where
+abbreviation
+  inversDiscr ::  "'a discr\<^sub>\<bottom> \<Rightarrow> 'a"
+    where "inversDiscr e \<equiv> undiscr (case e of Iup m \<Rightarrow> m)"
+
+(*
+fixrec tsZip_helper :: "'a stream \<rightarrow> 'b event stream \<rightarrow>  ('a \<times> 'b) event stream" where
 "tsZip_helper\<cdot>\<bottom>\<cdot>ts = \<bottom> "  |
 "tsZip_helper\<cdot>xs\<cdot>\<bottom> = \<bottom> "  |
-"x\<noteq>\<bottom> \<Longrightarrow> t = updis \<surd> \<Longrightarrow> tsZip_helper\<cdot>(lscons\<cdot>x\<cdot>xs)\<cdot>(lscons\<cdot>t\<cdot>ts) = \<up>\<surd> \<bullet> tsZip_helper\<cdot>xs\<cdot>ts" |
-(unchecked) "x\<noteq>\<bottom> \<Longrightarrow> t\<noteq>\<bottom> \<Longrightarrow> t \<noteq> updis \<surd> \<Longrightarrow> tsZip_helper\<cdot>(lscons\<cdot>x\<cdot>xs)\<cdot>(lscons\<cdot>t\<cdot>ts) = lscons\<cdot>(updis \<surd>)\<cdot>(tsZip_helper\<cdot>xs\<cdot>ts)" 
+"x\<noteq>\<bottom> \<Longrightarrow> t = updis \<surd> \<Longrightarrow> 
+  tsZip_helper\<cdot>(lscons\<cdot>x\<cdot>xs)\<cdot>(lscons\<cdot>t\<cdot>ts) = \<up>\<surd> \<bullet> tsZip_helper\<cdot>(lscons\<cdot>x\<cdot>xs)\<cdot>ts" |
+(unchecked) "x\<noteq>\<bottom> \<Longrightarrow> t\<noteq>\<bottom> \<Longrightarrow> t \<noteq> updis \<surd> \<Longrightarrow> 
+  tsZip_helper\<cdot>(lscons\<cdot>x\<cdot>xs)\<cdot>(lscons\<cdot>t\<cdot>ts) = \<up>(\<M> (inversDiscr x, \<M>\<inverse> (inversDiscr t))) \<bullet> (tsZip_helper\<cdot>xs\<cdot>ts)"
 
 lemma "tsZip_helper\<cdot>\<bottom>\<cdot>ts = \<bottom>"
   by simp
-    
-    
+*)
 
 definition tsZip_h :: "'a stream \<rightarrow> 'b event stream \<rightarrow> ('a \<times> 'b) event stream" where
 "tsZip_h \<equiv> fix\<cdot>(\<Lambda> h q s. if q = \<epsilon> \<or> s = \<epsilon> then \<epsilon> 
-                         else if shd s = \<surd> then (\<up>\<surd> \<bullet> h\<cdot>q\<cdot>(srt\<cdot>s))
-                         else (\<up>(\<M> (shd q, \<M>\<inverse> shd s)) \<bullet> h\<cdot>(srt\<cdot>q)\<cdot>(srt\<cdot>s)))"
+                         else if shd s = \<surd> then \<up>\<surd> \<bullet> h\<cdot>q\<cdot>(srt\<cdot>s)
+                         else \<up>(\<M> (shd q, \<M>\<inverse> (shd s))) \<bullet> h\<cdot>(srt\<cdot>q)\<cdot>(srt\<cdot>s))"
 
 definition tsZip :: "'a stream \<rightarrow> 'b tstream \<rightarrow> ('a \<times> 'b) tstream" where
 "tsZip \<equiv> \<Lambda> s ts. Abs_tstream (tsZip_h\<cdot>s\<cdot>(Rep_tstream ts))"
@@ -240,10 +250,8 @@ definition tspfair :: "('a tstream \<rightarrow> 'b tstream ) \<Rightarrow> bool
   
 text {* @{term tsFilter}: Remove all elements from the tstream which are
   not included in the given set. *}
-lift_definition tsFilter :: "'a set \<Rightarrow> 'a tstream \<rightarrow> 'a tstream" is
-"\<lambda> M  ts. Abs_tstream (((Msg ` M)\<union>{\<surd>}) \<ominus> Rep_tstream ts)"
-apply(simp add: cfun_def)
-oops    (* ToDo *)
+definition tsFilter :: "'a set \<Rightarrow> 'a tstream \<rightarrow> 'a tstream" where
+"tsFilter M \<equiv> \<Lambda> ts. Abs_tstream (insert \<surd> (Msg ` M) \<ominus> Rep_tstream ts)"
     
 (* ----------------------------------------------------------------------- *)
   subsection \<open>Lemmas on tstream\<close>
@@ -1890,14 +1898,17 @@ thm tsFilter_def
 
 lemma tsfilter_h_well: assumes "ts_well s"
   shows "ts_well (insert \<surd> (Msg ` M) \<ominus> s)"
-oops
+apply (simp add: ts_well_def, auto)
+apply (metis assms inf_ub less_le sfilterl4 strict_sfilter ts_well_def)
+by (metis (no_types, lifting) add_sfilter2 assms fold_inf insertI1 lnsuc_lnle_emb not_less
+    sconc_snd_empty sfilter_in slen_lnsuc strict_sfilter ts_well_def)
 
 lemma tsfilter_unfold:
   "tsFilter M\<cdot>ts = Abs_tstream (insert \<surd> (Msg ` M) \<ominus> Rep_tstream ts)"
-oops
+by (simp add: tsFilter_def tsfilter_h_well)
 
 lemma tsfilter_strict[simp]: "tsFilter M\<cdot>\<bottom> = \<bottom>"
-oops
+by (simp add: tsfilter_unfold)
 
 lemma tsfilter_tstickcount: "#\<surd>(tsFilter M\<cdot>ts) = #\<surd>ts"
 oops
