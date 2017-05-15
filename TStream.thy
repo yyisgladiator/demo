@@ -210,16 +210,19 @@ abbreviation
     where "inversDiscr e \<equiv> undiscr (case e of Iup m \<Rightarrow> m)"
 
 (*
+lemma [simp]: "cont (\<lambda>p. sconc (\<up>(\<M> (inversDiscr (snd (fst (fst (fst p)))), \<M>\<inverse> inversDiscr (snd (fst p))))))"
+sorry
+
 fixrec tsZip_helper :: "'a stream \<rightarrow> 'b event stream \<rightarrow>  ('a \<times> 'b) event stream" where
-"tsZip_helper\<cdot>\<bottom>\<cdot>ts = \<bottom> "  |
-"tsZip_helper\<cdot>xs\<cdot>\<bottom> = \<bottom> "  |
+"tsZip_helper\<cdot>\<bottom>\<cdot>ts = \<bottom>"  |
+"tsZip_helper\<cdot>xs\<cdot>\<bottom> = \<bottom>"  |
 "x\<noteq>\<bottom> \<Longrightarrow> t=updis \<surd> \<Longrightarrow> 
   tsZip_helper\<cdot>(lscons\<cdot>x\<cdot>xs)\<cdot>(lscons\<cdot>t\<cdot>ts) = \<up>\<surd> \<bullet> tsZip_helper\<cdot>(lscons\<cdot>x\<cdot>xs)\<cdot>ts" |
 (unchecked) "x\<noteq>\<bottom> \<Longrightarrow> t\<noteq>\<bottom> \<Longrightarrow> t \<noteq> updis \<surd> \<Longrightarrow> 
-  tsZip_helper\<cdot>(lscons\<cdot>x\<cdot>xs)\<cdot>(lscons\<cdot>t\<cdot>ts) = updis (\<M> (inversDiscr x, \<M>\<inverse> (inversDiscr t))) && (tsZip_helper\<cdot>xs\<cdot>ts)"
+  tsZip_helper\<cdot>(lscons\<cdot>x\<cdot>xs)\<cdot>(lscons\<cdot>t\<cdot>ts) = \<up>(\<M> (inversDiscr x, \<M>\<inverse> (inversDiscr t))) \<bullet> (tsZip_helper\<cdot>xs\<cdot>ts)"
 
 lemma "tsZip_helper\<cdot>\<bottom>\<cdot>ts = \<bottom>"
-  by simp
+by simp
 *)
 
 definition tsZip_h :: "'a stream \<rightarrow> 'b event stream \<rightarrow> ('a \<times> 'b) event stream" where
@@ -238,15 +241,14 @@ definition tsRemDups_h :: "'a option event \<Rightarrow> 'a option event stream 
 
 (*
 fixrec tsRemDups_helper :: "'a option event \<Rightarrow> 'a option event stream \<rightarrow> 'a option event stream" where
-"tsRemDups_helper (inversDiscr q)\<cdot>\<bottom> = \<bottom> "  |
+"tsRemDups_helper (inversDiscr q)\<cdot>\<bottom> = \<bottom>"  |
 "x=updis \<surd> \<Longrightarrow> 
-  tsRemDups_helper (inversDiscr q)\<cdot>(lscons\<cdot>x\<cdot>xs) = updis \<surd> && tsRemDups_helper (inversDiscr q)\<cdot>xs" |
+  tsRemDups_helper (inversDiscr q)\<cdot>(lscons\<cdot>x\<cdot>xs) = \<up>\<surd> \<bullet> tsRemDups_helper (inversDiscr q)\<cdot>xs" |
 "x\<noteq>updis \<surd> \<Longrightarrow> x\<noteq>q \<Longrightarrow>
-  tsRemDups_helper (inversDiscr q)\<cdot>(lscons\<cdot>x\<cdot>xs) = updis (inversDiscr x) && tsRemDups_helper (inversDiscr x)\<cdot>xs" |
+  tsRemDups_helper (inversDiscr q)\<cdot>(lscons\<cdot>x\<cdot>xs) = \<up>(inversDiscr x) \<bullet> tsRemDups_helper (inversDiscr x)\<cdot>xs" |
 (unchecked) "x\<noteq>updis \<surd> \<Longrightarrow> x=q \<Longrightarrow> 
   tsRemDups_helper (inversDiscr q)\<cdot>(lscons\<cdot>x\<cdot>xs) = tsRemDups_helper (inversDiscr q)\<cdot>xs"
 *)
-
 
 (* ToDo: Remove option \<Longrightarrow> 'a tstream \<rightarrow> 'a tstream *)
 definition tsRemDups :: "'a option tstream \<rightarrow> 'a option tstream" where
