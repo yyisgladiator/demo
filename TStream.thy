@@ -213,13 +213,14 @@ abbreviation
 fixrec tsZip_helper :: "'a stream \<rightarrow> 'b event stream \<rightarrow>  ('a \<times> 'b) event stream" where
 "tsZip_helper\<cdot>\<bottom>\<cdot>ts = \<bottom> "  |
 "tsZip_helper\<cdot>xs\<cdot>\<bottom> = \<bottom> "  |
-"x\<noteq>\<bottom> \<Longrightarrow> t = updis \<surd> \<Longrightarrow> 
+"x\<noteq>\<bottom> \<Longrightarrow> t=updis \<surd> \<Longrightarrow> 
   tsZip_helper\<cdot>(lscons\<cdot>x\<cdot>xs)\<cdot>(lscons\<cdot>t\<cdot>ts) = \<up>\<surd> \<bullet> tsZip_helper\<cdot>(lscons\<cdot>x\<cdot>xs)\<cdot>ts" |
 (unchecked) "x\<noteq>\<bottom> \<Longrightarrow> t\<noteq>\<bottom> \<Longrightarrow> t \<noteq> updis \<surd> \<Longrightarrow> 
   tsZip_helper\<cdot>(lscons\<cdot>x\<cdot>xs)\<cdot>(lscons\<cdot>t\<cdot>ts) = \<up>(\<M> (inversDiscr x, \<M>\<inverse> (inversDiscr t))) \<bullet> (tsZip_helper\<cdot>xs\<cdot>ts)"
 
 lemma "tsZip_helper\<cdot>\<bottom>\<cdot>ts = \<bottom>"
   by simp
+
 *)
 
 definition tsZip_h :: "'a stream \<rightarrow> 'b event stream \<rightarrow> ('a \<times> 'b) event stream" where
@@ -230,11 +231,26 @@ definition tsZip_h :: "'a stream \<rightarrow> 'b event stream \<rightarrow> ('a
 definition tsZip :: "'a stream \<rightarrow> 'b tstream \<rightarrow> ('a \<times> 'b) tstream" where
 "tsZip \<equiv> \<Lambda> s ts. Abs_tstream (tsZip_h\<cdot>s\<cdot>(Rep_tstream ts))"
 
-definition tsRemDups_h :: "'a event \<Rightarrow> 'a event stream \<rightarrow> 'a event stream" where
+definition tsRemDups_h :: "'a option event \<Rightarrow> 'a option event stream \<rightarrow> 'a option event stream" where
 "tsRemDups_h \<equiv> fix\<cdot>(\<Lambda> h. (\<lambda> q. (\<Lambda> s. if s = \<epsilon> then \<epsilon> 
                                      else if shd s = \<surd> then (\<up>\<surd> \<bullet> h q\<cdot>(srt\<cdot>s))
                                      else if shd s \<noteq> q then (\<up>(shd s) \<bullet> h (shd s)\<cdot>(srt\<cdot>s))
                                      else h q\<cdot>(srt\<cdot>s))))"
+
+(*
+fixrec tsRemDups_helper :: "'a option event \<Rightarrow> 'a option event stream \<rightarrow> 'a option event stream" where
+"tsRemDups_helper (inversDiscr q)\<cdot>\<bottom> = \<bottom> "  |
+"x=updis \<surd> \<Longrightarrow> 
+  tsRemDups_helper (inversDiscr q)\<cdot>(lscons\<cdot>x\<cdot>xs) = \<up>\<surd> \<bullet> tsRemDups_helper (inversDiscr q)\<cdot>xs" |
+(unchecked) "x\<noteq>updis \<surd> \<Longrightarrow> x\<noteq>q \<Longrightarrow> 
+  tsRemDups_helper (inversDiscr q)\<cdot>(lscons\<cdot>x\<cdot>xs) = tsRemDups_helper (inversDiscr q)\<cdot>xs" |
+(unchecked) "x\<noteq>updis \<surd> \<Longrightarrow> x=q \<Longrightarrow> 
+  tsRemDups_helper (inversDiscr q)\<cdot>(lscons\<cdot>x\<cdot>xs) = \<up>(inversDiscr x) \<bullet> tsRemDups_helper (inversDiscr q)\<cdot>xs"
+*)
+
+(* ToDo: Remove option \<Longrightarrow> 'a tstream \<rightarrow> 'a tstream *)
+definition tsRemDups :: "'a option tstream \<rightarrow> 'a option tstream" where
+"tsRemDups \<equiv> \<Lambda> ts. Abs_tstream (tsRemDups_h (\<M> None)\<cdot>(Rep_tstream ts))"
 
 definition tsrcDups_helper :: "'m event stream \<rightarrow> 'm event stream" where
 "tsrcDups_helper \<equiv> \<mu> h. (\<Lambda> s . if s = \<epsilon> then \<epsilon> else sconc (\<up>(shd s))\<cdot>(h\<cdot>(sdropwhile (\<lambda>x. x = shd s)\<cdot>s)))"
