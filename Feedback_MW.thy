@@ -410,6 +410,9 @@ section \<open>sum1SPF eq sum4\<close>
 subsection prerequirements
 (* prerequirements for final lemma *)
 
+lemma sbZ_eq:"([c2 \<mapsto> \<up>0\<bullet>z]\<Omega>) \<uplus> ([c3 \<mapsto> z]\<Omega>) = ([c2 \<mapsto> \<up>0\<bullet>z, c3 \<mapsto> z]\<Omega>)"
+sorry
+  
 lemma spfCompFeedback_iter_prefix: assumes "sbDom\<cdot>sb = I addC append0C" 
                                        and "z = add\<cdot>(sb . c1)\<cdot>(\<up>0\<bullet>z)"
                                      shows "(iter_spfCompH3 addC append0C i sb) \<sqsubseteq>  ([c2 \<mapsto> \<up>0\<bullet>z, c3 \<mapsto> z]\<Omega>)"
@@ -427,12 +430,57 @@ lemma spfCompFeedback_iter_prefix: assumes "sbDom\<cdot>sb = I addC append0C"
        apply(simp)
        sorry
  qed
-  
+
+lemma sum4_finiteInput: assumes "z = add\<cdot>x\<cdot>(\<up>0\<bullet>z)"
+                            and "#x < \<infinity>"
+                          shows "#z < \<infinity>"
+proof (rule ccontr)
+  have f1: "#z = \<infinity> \<Longrightarrow> #(add\<cdot>x\<cdot>(\<up>0\<bullet>z)) = \<infinity>"
+    using assms(1) by auto
+  then have f2: "#z = \<infinity> \<Longrightarrow> #x = \<infinity>"
+    by simp
+  assume "~ ?thesis"
+  then show False
+    using f2 assms(2) by (simp add: less_le)
+qed
+   
+lemma spfCompFeedback_iter_nthEq: assumes "sbDom\<cdot>sb = I addC append0C" 
+                                      and "z = add\<cdot>(sb . c1)\<cdot>(\<up>0\<bullet>z)"
+                                      and "#(sb . c1) < \<infinity>"
+  shows "stake i\<cdot>((iter_spfCompH3 addC append0C (2 * i) sb) . c3) = stake i\<cdot>z"
+  sorry
+    
+lemma spfCompFeedback_iter_nthEq2: assumes "sbDom\<cdot>sb = I addC append0C" 
+                                      and "z = add\<cdot>(sb . c1)\<cdot>(\<up>0\<bullet>z)"
+                                      and "#(sb . c1) < \<infinity>"
+  shows "stake i\<cdot>((iter_spfCompH3 addC append0C (2 * i) sb) . c3) = stake i\<cdot>(\<up>0\<bullet>z)"
+  sorry
+   
 lemma spfCompFeedback_lub_iter_finiteInput: assumes "sbDom\<cdot>sb = I addC append0C" 
                                                 and "z = add\<cdot>(sb . c1)\<cdot>(\<up>0\<bullet>z)"
                                                 and "#(sb . c1) < \<infinity>"
-  shows "(\<Squnion>i. (iter_spfCompH3 addC append0C i sb)) = ([c2 \<mapsto> \<up>0\<bullet>z]\<Omega>) \<uplus> ([c3 \<mapsto> z]\<Omega>)"  
-  sorry
+                                              shows "(\<Squnion>i. (iter_spfCompH3 addC append0C i sb)) = ([c2 \<mapsto> \<up>0\<bullet>z, c3 \<mapsto> z]\<Omega>)"
+proof - 
+  have f11: "sbDom\<cdot>(\<Squnion>i. (iter_spfCompH3 addC append0C i sb)) = {c2,c3}"
+    apply(subst lub_iter_spfCompH3_dom)
+    by(simp_all add: assms)
+  have f12: "sbDom\<cdot>([c2 \<mapsto> \<up>0\<bullet>z, c3 \<mapsto> z]\<Omega>) = {c2,c3}"
+    sorry
+  then have f13: "sbDom\<cdot>(\<Squnion>i. (iter_spfCompH3 addC append0C i sb)) = sbDom\<cdot>([c2 \<mapsto> \<up>0\<bullet>z, c3 \<mapsto> z]\<Omega>)"
+    using f11 f12 by auto
+  have f21: "(\<Squnion>i. (iter_spfCompH3 addC append0C i sb)) . c2 = \<up>0\<bullet>z"
+    sorry
+  then have f22: "(\<Squnion>i. (iter_spfCompH3 addC append0C i sb)) . c2 = ([c2 \<mapsto> \<up>0\<bullet>z, c3 \<mapsto> z]\<Omega>) . c2"
+    sorry
+  have f31: "(\<Squnion>i. (iter_spfCompH3 addC append0C i sb)) . c3 = z"
+    sorry
+  then have f32: "(\<Squnion>i. (iter_spfCompH3 addC append0C i sb)) . c3 = ([c2 \<mapsto> \<up>0\<bullet>z, c3 \<mapsto> z]\<Omega>) . c3"
+    sorry
+  show ?thesis
+    apply(subst sb_eq, simp_all)
+    using f13 apply auto[1]
+    sorry
+qed
 
 lemma spfCompFeedback_lub_iter_infiniteInput: assumes "sbDom\<cdot>sb = I addC append0C" 
                                                   and "z = add\<cdot>(sb . c1)\<cdot>(\<up>0\<bullet>z)"
@@ -445,6 +493,7 @@ lemma spfCompFeedbackFixEq: assumes "sbDom\<cdot>sb = I addC append0C" and "z = 
 proof(cases "#(sb . c1) < \<infinity>")
   case True
   then show ?thesis
+    apply(subst sbZ_eq)
     using assms(1) assms(2) spfCompFeedback_lub_iter_finiteInput by blast
 next
   case False
@@ -495,7 +544,8 @@ lemma sumEq: assumes "sbDom\<cdot>sb = I addC append0C" shows "(sum1SPF \<rightl
   apply(subst spfcomp_and_spfcomp2_eq)
   apply(subst spfcompH3_abbrv_tospfH32)
   apply(subst spfcomp2_RepAbs, simp_all add: assms)
-    using assms sum4_unfold spfCompFeedbackFixEqCh by auto
+  apply(subst spfCompFeedbackFixEqCh)
+    using assms sum4_unfold  by auto
 
          
 end
