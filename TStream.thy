@@ -201,10 +201,11 @@ abbreviation
   inversDiscr ::  "'a discr\<^sub>\<bottom> \<Rightarrow> 'a"
     where "inversDiscr e \<equiv> undiscr (case e of Iup m \<Rightarrow> m)"
 
-(* siehe Funktion upApply *)
-
 definition sTupify :: "'a discr\<^sub>\<bottom> \<rightarrow> 'b event discr\<^sub>\<bottom> \<rightarrow> ('a \<times> 'b) event discr\<^sub>\<bottom>" where
-"sTupify \<equiv> \<bottom>"
+"sTupify \<equiv> \<Lambda> x t. case t of Iup (Discr (Msg m)) \<Rightarrow> Iup (Discr (Msg (inversDiscr x, m)))"
+(*
+"sTupify \<equiv> \<Lambda> x t. if (inversDiscr t)\<noteq>\<surd> then Iup (Discr (Msg (inversDiscr x, \<M>\<inverse> (inversDiscr t)))) else (\<bottom> :: ('a \<times> 'b) event discr\<^sub>\<bottom>)"
+*)
 
 fixrec tsZip_helper :: "'a stream \<rightarrow> 'b event stream \<rightarrow>  ('a \<times> 'b) event stream" where
 "tsZip_helper\<cdot>\<bottom>\<cdot>ts = \<bottom>"  |
