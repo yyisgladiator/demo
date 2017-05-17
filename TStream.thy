@@ -197,33 +197,25 @@ text {* "Unzipping" of timed streams: project to the second element of tuple of 
 definition tsProjSnd :: "('a \<times> 'b) tstream \<rightarrow> 'b tstream" where
 "tsProjSnd = tsMap snd"
 
-(* Notice that this version has overlapping patterns. The second equation
-cannot be proved as a theorem because it only applies when the first pattern
-fails.
-Usually fixrec tries to prove all equations as theorems. The ”unchecked”
-option overrides this behavior, so fixrec does not attempt to prove that
-particular equation.
-*)
-
 abbreviation
   inversDiscr ::  "'a discr\<^sub>\<bottom> \<Rightarrow> 'a"
     where "inversDiscr e \<equiv> undiscr (case e of Iup m \<Rightarrow> m)"
 
-(*
-lemma [simp]: "cont (\<lambda>p. sconc (\<up>(\<M> (inversDiscr (snd (fst (fst (fst p)))), \<M>\<inverse> inversDiscr (snd (fst p))))))"
-sorry
+(* siehe Funktion upApply *)
+
+definition sTupify :: "'a discr\<^sub>\<bottom> \<rightarrow> 'b event discr\<^sub>\<bottom> \<rightarrow> ('a \<times> 'b) event discr\<^sub>\<bottom>" where
+"sTupify \<equiv> \<bottom>"
 
 fixrec tsZip_helper :: "'a stream \<rightarrow> 'b event stream \<rightarrow>  ('a \<times> 'b) event stream" where
 "tsZip_helper\<cdot>\<bottom>\<cdot>ts = \<bottom>"  |
 "tsZip_helper\<cdot>xs\<cdot>\<bottom> = \<bottom>"  |
 "x\<noteq>\<bottom> \<Longrightarrow> t=updis \<surd> \<Longrightarrow> 
-  tsZip_helper\<cdot>(lscons\<cdot>x\<cdot>xs)\<cdot>(lscons\<cdot>t\<cdot>ts) = \<up>\<surd> \<bullet> tsZip_helper\<cdot>(lscons\<cdot>x\<cdot>xs)\<cdot>ts" |
-(unchecked) "x\<noteq>\<bottom> \<Longrightarrow> t\<noteq>\<bottom> \<Longrightarrow> t \<noteq> updis \<surd> \<Longrightarrow> 
-  tsZip_helper\<cdot>(lscons\<cdot>x\<cdot>xs)\<cdot>(lscons\<cdot>t\<cdot>ts) = \<up>(\<M> (inversDiscr x, \<M>\<inverse> (inversDiscr t))) \<bullet> (tsZip_helper\<cdot>xs\<cdot>ts)"
+  tsZip_helper\<cdot>(lscons\<cdot>x\<cdot>xs)\<cdot>(lscons\<cdot>t\<cdot>ts) = updis \<surd> && tsZip_helper\<cdot>(lscons\<cdot>x\<cdot>xs)\<cdot>ts" |
+(unchecked) "x\<noteq>\<bottom> \<Longrightarrow> t\<noteq>\<bottom> \<Longrightarrow> t\<noteq>updis \<surd> \<Longrightarrow> 
+  tsZip_helper\<cdot>(lscons\<cdot>x\<cdot>xs)\<cdot>(lscons\<cdot>t\<cdot>ts) = (sTupify\<cdot>x\<cdot>t) && (tsZip_helper\<cdot>xs\<cdot>ts)"
 
 lemma "tsZip_helper\<cdot>\<bottom>\<cdot>ts = \<bottom>"
-by simp
-*)
+by (simp)
 
 definition tsZip_h :: "'a stream \<rightarrow> 'b event stream \<rightarrow> ('a \<times> 'b) event stream" where
 "tsZip_h \<equiv> fix\<cdot>(\<Lambda> h q s. if q = \<epsilon> \<or> s = \<epsilon> then \<epsilon> 
@@ -240,7 +232,7 @@ definition tsRemDups_h :: "'a option event \<Rightarrow> 'a option event stream 
                                      else h q\<cdot>(srt\<cdot>s))))"
 
 (*
-fixrec tsRemDups_helper :: "'a option event \<Rightarrow> 'a option event stream \<rightarrow> 'a option event stream" where
+fixrec tsRemDups_helper :: "'a event stream \<Rightarrow> 'a option  \<rightarrow> 'a event stream" where
 "tsRemDups_helper (inversDiscr q)\<cdot>\<bottom> = \<bottom>"  |
 "x=updis \<surd> \<Longrightarrow> 
   tsRemDups_helper (inversDiscr q)\<cdot>(lscons\<cdot>x\<cdot>xs) = \<up>\<surd> \<bullet> tsRemDups_helper (inversDiscr q)\<cdot>xs" |
@@ -1931,7 +1923,7 @@ by (simp add: tsfilter_unfold)
 lemma tsfilter_tstickcount: "#\<surd>(tsFilter M\<cdot>ts) = #\<surd>ts"
 oops
                                                 
-lemma tsmap_weak:"tsWeakCausal (Rep_cfun (tsFilter M))"
+lemma tfilter_weak: "tsWeakCausal (Rep_cfun (tsFilter M))"
 oops
 
 (* tsscanl *)
