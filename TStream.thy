@@ -197,15 +197,16 @@ text {* "Unzipping" of timed streams: project to the second element of tuple of 
 definition tsProjSnd :: "('a \<times> 'b) tstream \<rightarrow> 'b tstream" where
 "tsProjSnd = tsMap snd"
 
+(*
 abbreviation
   inversDiscr ::  "'a discr\<^sub>\<bottom> \<Rightarrow> 'a"
     where "inversDiscr e \<equiv> undiscr (case e of Iup m \<Rightarrow> m)"
-
-definition sTupify :: "'a discr\<^sub>\<bottom> \<rightarrow> 'b event discr\<^sub>\<bottom> \<rightarrow> ('a \<times> 'b) event discr\<^sub>\<bottom>" where
-"sTupify \<equiv> \<Lambda> x t. case t of Iup (Discr (Msg m)) \<Rightarrow> Iup (Discr (Msg (inversDiscr x, m)))"
-(*
-"sTupify \<equiv> \<Lambda> x t. if (inversDiscr t)\<noteq>\<surd> then Iup (Discr (Msg (inversDiscr x, \<M>\<inverse> (inversDiscr t)))) else (\<bottom> :: ('a \<times> 'b) event discr\<^sub>\<bottom>)"
 *)
+
+lift_definition sTupify :: "('a discr\<^sub>\<bottom> \<times> 'b event discr\<^sub>\<bottom>) \<rightarrow> ('a \<times> 'b) event discr\<^sub>\<bottom>" is
+"\<lambda> (x, t). case (x,t) of (Iup (Discr mx), Iup (Discr (Msg mt))) \<Rightarrow> Iup (Discr (Msg (mx, mt))) | _ \<Rightarrow> \<bottom>"
+apply (simp add: cfun_def)
+sorry
 
 fixrec tsZip_helper :: "'a stream \<rightarrow> 'b event stream \<rightarrow>  ('a \<times> 'b) event stream" where
 "tsZip_helper\<cdot>\<bottom>\<cdot>ts = \<bottom>"  |
@@ -213,7 +214,7 @@ fixrec tsZip_helper :: "'a stream \<rightarrow> 'b event stream \<rightarrow>  (
 "x\<noteq>\<bottom> \<Longrightarrow> t=updis \<surd> \<Longrightarrow> 
   tsZip_helper\<cdot>(lscons\<cdot>x\<cdot>xs)\<cdot>(lscons\<cdot>t\<cdot>ts) = updis \<surd> && tsZip_helper\<cdot>(lscons\<cdot>x\<cdot>xs)\<cdot>ts" |
 (unchecked) "x\<noteq>\<bottom> \<Longrightarrow> t\<noteq>\<bottom> \<Longrightarrow> t\<noteq>updis \<surd> \<Longrightarrow> 
-  tsZip_helper\<cdot>(lscons\<cdot>x\<cdot>xs)\<cdot>(lscons\<cdot>t\<cdot>ts) = (sTupify\<cdot>x\<cdot>t) && (tsZip_helper\<cdot>xs\<cdot>ts)"
+  tsZip_helper\<cdot>(lscons\<cdot>x\<cdot>xs)\<cdot>(lscons\<cdot>t\<cdot>ts) = (sTupify\<cdot>(x, t)) && (tsZip_helper\<cdot>xs\<cdot>ts)"
 
 lemma "tsZip_helper\<cdot>\<bottom>\<cdot>ts = \<bottom>"
 by (simp)
