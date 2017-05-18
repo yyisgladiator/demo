@@ -106,6 +106,40 @@ setup \<open>
 \<close>
 
   
+  
+  
+  (* Case Studies *)
+  definition upApply :: "('a \<Rightarrow> 'b) \<Rightarrow> 'a discr u \<rightarrow> 'b discr u" where
+"upApply f \<equiv> \<Lambda> a. (if a=\<bottom> then \<bottom> else updis (f (THE b. a = updis b)))"
+
+
+definition upApply2 :: "('a \<Rightarrow> 'b \<Rightarrow> 'c) \<Rightarrow> 'a discr\<^sub>\<bottom> \<rightarrow> 'b discr\<^sub>\<bottom> \<rightarrow> 'c discr\<^sub>\<bottom>" where 
+"upApply2 = \<bottom>"
+
+
+lemma upApply_mono[simp]:"monofun (\<lambda> a. (if a=\<bottom> then \<bottom> else updis (f (THE b. a = updis b))))"
+  apply(rule monofunI)
+  apply auto[1]
+  apply (metis (full_types, hide_lams) Exh_Up discrete_cpo up_below up_inject)
+done
+
+lemma upApply_lub: assumes "chain Y"
+  shows "((\<lambda> a. (if a=\<bottom> then \<bottom> else updis (f (THE b. a = updis b)))) (\<Squnion>i. Y i))
+=(\<Squnion>i. (\<lambda> a. (if a=\<bottom> then \<bottom> else updis (f (THE b. a = updis b)))) (Y i))"
+apply(rule finite_chain_lub)
+apply (simp_all add: assms chfin2finch)
+done
+ 
+lemma upApply_cont[simp]:"cont (\<lambda> a. (if a=\<bottom> then \<bottom> else updis (f (THE b. a = updis b))))"
+using chfindom_monofun2cont upApply_mono by blast
+
+lemma upApply_rep_eq [simp]: "upApply f\<cdot>(updis a) = updis (f a)"
+by(simp add: upApply_def)
+
+
+  
+  
+  
 fixrec teees:: "'a tstream \<rightarrow>'a tstream" where
 "teees\<cdot>(tsLscons\<cdot>t\<cdot>ts) = ts"  (* t is a 'event discr u', ts a tstream *)
 
@@ -119,13 +153,9 @@ fixrec tsAbsNew :: "'a tstream \<rightarrow> 'a stream" where
 
 
 
-lift_definition sTupify :: "('a discr\<^sub>\<bottom> \<times> 'b discr\<^sub>\<bottom>) \<rightarrow> ('a \<times> 'b) discr\<^sub>\<bottom>" is
-"\<lambda> (x, t). case (x,t) of (Iup (Discr mx), Iup (Discr  mt)) \<Rightarrow> Iup (Discr ((mx, mt))) | _ \<Rightarrow> \<bottom>"
-apply (simp add: cfun_def)
-  sorry
     
 fixrec tsZipNew:: "'a stream \<rightarrow> 'b tstream \<rightarrow> ('a\<times>'b) tstream" where
-"x\<noteq>\<bottom> \<Longrightarrow> tsZipNew\<cdot>(lscons\<cdot>x\<cdot>xs)\<cdot>(tsMLscons\<cdot>t\<cdot>ts) = (tsMLscons\<cdot>(sTupify\<cdot>(x,t))\<cdot>(tsZipNew\<cdot>xs\<cdot>ts))"  | (* zip if both first elements are defined *)
+"x\<noteq>\<bottom> \<Longrightarrow> tsZipNew\<cdot>(lscons\<cdot>x\<cdot>xs)\<cdot>(tsMLscons\<cdot>t\<cdot>ts) = (tsMLscons\<cdot>(upApply2 Pair\<cdot>x\<cdot>t)\<cdot>(tsZipNew\<cdot>xs\<cdot>ts))"  | (* zip if both first elements are defined *)
 "x\<noteq>\<bottom> \<Longrightarrow> tsZipNew\<cdot>(lscons\<cdot>x\<cdot>xs)\<cdot>(delayFun\<cdot>ts) = delayFun\<cdot>(tsZipNew\<cdot>xs\<cdot>ts)"  (* ignore ticks *)
 (* No other cases required, stuff that does not match will go to bottom *)
 
