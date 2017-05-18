@@ -25,31 +25,74 @@ begin
     
     
   subsection \<open>Necessary definitions\<close>
-    (* currently only dummy definitions *)
     
     
+  definition upApply :: "('a \<Rightarrow> 'b) \<Rightarrow> 'a discr u \<rightarrow> 'b discr u" where
+"upApply f \<equiv> \<Lambda> a. (if a=\<bottom> then \<bottom> else updis (f (THE b. a = updis b)))"
+
+
+definition upApply2 :: "('a \<Rightarrow> 'b \<Rightarrow> 'c) \<Rightarrow> 'a discr\<^sub>\<bottom> \<rightarrow> 'b discr\<^sub>\<bottom> \<rightarrow> 'c discr\<^sub>\<bottom>" where 
+"upApply2 = \<bottom>"
+
+
+lemma upApply_mono[simp]:"monofun (\<lambda> a. (if a=\<bottom> then \<bottom> else updis (f (THE b. a = updis b))))"
+  apply(rule monofunI)
+  apply auto[1]
+  by (metis (full_types, hide_lams) discrete_cpo upE up_below)
+
+lemma upApply_lub: assumes "chain Y"
+  shows "((\<lambda> a. (if a=\<bottom> then \<bottom> else updis (f (THE b. a = updis b)))) (\<Squnion>i. Y i))
+=(\<Squnion>i. (\<lambda> a. (if a=\<bottom> then \<bottom> else updis (f (THE b. a = updis b)))) (Y i))"
+apply(rule finite_chain_lub)
+apply (simp_all add: assms chfin2finch)
+done
+ 
+lemma upApply_cont[simp]:"cont (\<lambda> a. (if a=\<bottom> then \<bottom> else updis (f (THE b. a = updis b))))"
+using chfindom_monofun2cont upApply_mono by blast
+
+lemma upApply_rep_eq [simp]: "upApply f\<cdot>(updis a) = updis (f a)"
+by(simp add: upApply_def)
+
+
+  
+  
 (* get First Element of tStream *)
 thm lshd_def  (* similar to lshd *)  
-definition tsLshd :: "'a tstream \<rightarrow> 'a event discr u" where
-"tsLshd = \<bottom>"
+lift_definition tsLshd :: "'a tstream \<rightarrow> 'a event discr u" is
+"\<lambda> ts.  lshd\<cdot>(Rep_tstream ts)"
+by (simp add: cfun_def)
+
 
 (* get rest of tStream *)
 thm srt_def   (* similar to srt *)
-definition tsRt :: "'a tstream \<rightarrow> 'a tstream" where
-"tsRt = \<bottom>"
+lift_definition tsRt :: "'a tstream \<rightarrow> 'a tstream" is
+"\<lambda>ts. espf2tspf srt ts"
+by(simp add: espf2tspf_def cfun_def)
 
+  
 (* create new tStream by appending a new first Element *)
 thm lscons_def (* similar to lscons *)
 definition tsLscons :: "'a event discr u \<rightarrow> 'a tstream \<rightarrow> 'a tstream" where
-"tsLscons = \<bottom>"
+"tsLscons \<equiv> \<Lambda> t ts. if (ts=\<bottom>) then \<bottom> else espf2tspf (lscons\<cdot>t) ts"
 
+thm strictify_def
+lemma lsconc_well [simp]: assumes "ts_well ts" and "ts\<noteq>\<bottom>"
+  shows "ts_well (t&&ts)"
+apply(auto simp add: ts_well_def)
+  apply (metis Rep_Abs assms(1) sConc_Rep_fin_fin stream.con_rews(2) stream.sel_rews(5) surj_scons)
+  by (metis Rep_Abs Rep_tstream_bottom_iff assms(1) assms(2) sConc_fin_well stream.con_rews(2) stream.sel_rews(5) surj_scons ts_well_def)    
+
+lemma "cont (\<lambda>t ts. if (ts=\<bottom>) then \<bottom> else espf2tspf (lscons\<cdot>t) ts)"
+  apply(simp only: espf2tspf_def)
+  oops
+    
 (* Das darf man gerne schöner nennen *)
 definition tsMLscons :: "'a discr u \<rightarrow> 'a tstream \<rightarrow> 'a tstream" where
-"tsMLscons = \<bottom>"
+"tsMLscons \<equiv> \<Lambda> t ts. tsLscons\<cdot>(upApply Msg\<cdot>t)\<cdot>ts"
 
 (* remove the Msg layer. Return bottom on ticks *)
 definition unpackMsg::"'a event discr u \<rightarrow> 'a discr u" where
-  "unpackMsg = \<bottom>"
+  "unpackMsg = upApply (\<lambda>x. case x of Msg m \<Rightarrow> m )"
   
   
   
@@ -109,37 +152,9 @@ setup \<open>
   
   
   (* Case Studies *)
-  definition upApply :: "('a \<Rightarrow> 'b) \<Rightarrow> 'a discr u \<rightarrow> 'b discr u" where
-"upApply f \<equiv> \<Lambda> a. (if a=\<bottom> then \<bottom> else updis (f (THE b. a = updis b)))"
-
-
-definition upApply2 :: "('a \<Rightarrow> 'b \<Rightarrow> 'c) \<Rightarrow> 'a discr\<^sub>\<bottom> \<rightarrow> 'b discr\<^sub>\<bottom> \<rightarrow> 'c discr\<^sub>\<bottom>" where 
-"upApply2 = \<bottom>"
-
-
-lemma upApply_mono[simp]:"monofun (\<lambda> a. (if a=\<bottom> then \<bottom> else updis (f (THE b. a = updis b))))"
-  apply(rule monofunI)
-  apply auto[1]
-  apply (metis (full_types, hide_lams) Exh_Up discrete_cpo up_below up_inject)
-done
-
-lemma upApply_lub: assumes "chain Y"
-  shows "((\<lambda> a. (if a=\<bottom> then \<bottom> else updis (f (THE b. a = updis b)))) (\<Squnion>i. Y i))
-=(\<Squnion>i. (\<lambda> a. (if a=\<bottom> then \<bottom> else updis (f (THE b. a = updis b)))) (Y i))"
-apply(rule finite_chain_lub)
-apply (simp_all add: assms chfin2finch)
-done
- 
-lemma upApply_cont[simp]:"cont (\<lambda> a. (if a=\<bottom> then \<bottom> else updis (f (THE b. a = updis b))))"
-using chfindom_monofun2cont upApply_mono by blast
-
-lemma upApply_rep_eq [simp]: "upApply f\<cdot>(updis a) = updis (f a)"
-by(simp add: upApply_def)
-
 
   
-  
-  
+
 fixrec teees:: "'a tstream \<rightarrow>'a tstream" where
 "teees\<cdot>(tsLscons\<cdot>t\<cdot>ts) = ts"  (* t is a 'event discr u', ts a tstream *)
 
