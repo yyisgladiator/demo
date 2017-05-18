@@ -3,26 +3,27 @@ session "Streams" (mustWork) = "HOLCF" +
   theories
     Streams
 
-
-session "SPSSorry" (mustWork) = "Streams" + 
+session "TStreamSorry" (mustWork) = "Streams" + 
   options [quick_and_dirty = true]
   theories
-    SPS
-
-session "TSPSSorry" (mustWork) = "Streams" + 
+    TStream   
+    fixrec_tstream
+ 
+ 
+session "TSPSSorry" (mustWork) = "TStreamSorry" + 
   options [quick_and_dirty = true]
   theories
     TSPS   
     
 
 
-
-session "SPS" (canFail) = "Streams" + 
+session "TStream" (canFail) = "Streams" + 
   options [quick_and_dirty = false]
   theories
-    SPS
-
-session "TSPS" (canFail) = "Streams" + 
+    TStream   
+    fixrec_tstream
+ 
+session "TSPS" (canFail) = "TStream" + 
   options [quick_and_dirty = false]
   theories
     TSPS   
