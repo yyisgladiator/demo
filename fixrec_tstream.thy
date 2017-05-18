@@ -92,6 +92,7 @@ lemma match_delayfun_simps [simp]:
   sorry
     
 lemma match_message_simps [simp]:
+  "match_message\<cdot>\<bottom>\<cdot>k = Fixrec.fail"
   "match_message\<cdot>(tsMLscons\<cdot>t\<cdot>ts)\<cdot>k = k\<cdot>t\<cdot>ts"
   "match_message\<cdot>(delayFun\<cdot>ts)\<cdot>k = Fixrec.fail"
   sorry
@@ -117,4 +118,43 @@ fixrec tsAbsNew :: "'a tstream \<rightarrow> 'a stream" where
 "tsAbsNew\<cdot>(delayFun\<cdot>ts) = tsAbsNew\<cdot>ts"   (* ignore ticks *)  
 
 
-end
+
+lift_definition sTupify :: "('a discr\<^sub>\<bottom> \<times> 'b discr\<^sub>\<bottom>) \<rightarrow> ('a \<times> 'b) discr\<^sub>\<bottom>" is
+"\<lambda> (x, t). case (x,t) of (Iup (Discr mx), Iup (Discr  mt)) \<Rightarrow> Iup (Discr ((mx, mt))) | _ \<Rightarrow> \<bottom>"
+apply (simp add: cfun_def)
+  sorry
+    
+fixrec tsZipNew:: "'a stream \<rightarrow> 'b tstream \<rightarrow> ('a\<times>'b) tstream" where
+"x\<noteq>\<bottom> \<Longrightarrow> tsZipNew\<cdot>(lscons\<cdot>x\<cdot>xs)\<cdot>(tsMLscons\<cdot>t\<cdot>ts) = (tsMLscons\<cdot>(sTupify\<cdot>(x,t))\<cdot>(tsZipNew\<cdot>xs\<cdot>ts))"  | (* zip if both first elements are defined *)
+"x\<noteq>\<bottom> \<Longrightarrow> tsZipNew\<cdot>(lscons\<cdot>x\<cdot>xs)\<cdot>(delayFun\<cdot>ts) = delayFun\<cdot>(tsZipNew\<cdot>xs\<cdot>ts)"  (* ignore ticks *)
+(* No other cases required, stuff that does not match will go to bottom *)
+
+  
+
+
+
+thm match_Pair_def
+thm  match_up_def
+definition match_ibottom :: "('a::cpo) u \<rightarrow> ('c ::cpo) match \<rightarrow> 'c match" where
+  "match_ibottom = (\<Lambda> x k. case x of Ibottom \<Rightarrow> k | _ \<Rightarrow> Fixrec.fail)"
+
+setup \<open>
+  Fixrec.add_matchers
+    [ (@{const_name Ibottom}, @{const_name match_ibottom})]\<close>
+  
+lemma match_ibottom_simps [simp]:
+(*   "match_ibottom\<cdot>\<bottom>\<cdot>k = Fixrec.fail" *)
+  "match_ibottom\<cdot>(up\<cdot>a)\<cdot>k = Fixrec.fail"
+  "match_ibottom\<cdot>Ibottom\<cdot>k = k"
+  sorry
+  
+fixrec tsRemDupsNew :: "'a discr u \<rightarrow> 'a tstream \<rightarrow> 'a tstream" where
+(* No element found yet: *)
+"tsRemDupsNew\<cdot>Ibottom\<cdot>(tsMLscons\<cdot>t\<cdot>ts) = tsMLscons\<cdot>t\<cdot>(tsRemDupsNew\<cdot>t\<cdot>ts)" |     (* Element found, prepend it and save it *)
+"tsRemDupsNew\<cdot>Ibottom\<cdot>(delayFun\<cdot>ts) = delayFun\<cdot>(tsRemDupsNew\<cdot>Ibottom\<cdot>ts)"  |   (* Ignore Ticks *)
+"tsRemDupsNew\<cdot>(up\<cdot>a)\<cdot>(delayFun\<cdot>ts) = delayFun\<cdot>(tsRemDupsNew\<cdot>(up\<cdot>a)\<cdot>ts)"  |      (* Ignore Ticks *)
+"tsRemDupsNew\<cdot>(up\<cdot>a)\<cdot>(tsMLscons\<cdot>t\<cdot>ts) = \<bottom>" (* ToDo *)                         (* remove duplicate or save new element *)
+  
+  
+  
+end  
