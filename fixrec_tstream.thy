@@ -12,6 +12,19 @@ imports TStream
 begin
 
   
+
+
+(* demo that the old fixrec is not working *)
+  
+  (* this function is removing all ticks *)
+fixrec demo::"'a event stream \<rightarrow> 'a event stream" where
+"t \<noteq> \<bottom> \<Longrightarrow> t=updis \<surd> \<Longrightarrow> demo\<cdot>(lscons\<cdot>t\<cdot>ts) = ts" |
+(unchecked) "t \<noteq> \<bottom> \<Longrightarrow> t\<noteq>updis \<surd> \<Longrightarrow> demo\<cdot>(lscons\<cdot>t\<cdot>ts) = t&&ts"
+
+
+lemma "t \<noteq> \<bottom> \<Longrightarrow> t\<noteq>updis \<surd> \<Longrightarrow> demo\<cdot>(lscons\<cdot>t\<cdot>ts) = t&&ts"
+apply fixrec_simp
+oops (* good luck proving this :/ *)
   
 (***************************************************)      
   section \<open>Using tstream with fixrec\<close>
@@ -30,9 +43,9 @@ begin
   definition upApply :: "('a \<Rightarrow> 'b) \<Rightarrow> 'a discr u \<rightarrow> 'b discr u" where
 "upApply f \<equiv> \<Lambda> a. (if a=\<bottom> then \<bottom> else updis (f (THE b. a = updis b)))"
 
-
+(* ToDo. Definition & show cnot *)
 definition upApply2 :: "('a \<Rightarrow> 'b \<Rightarrow> 'c) \<Rightarrow> 'a discr\<^sub>\<bottom> \<rightarrow> 'b discr\<^sub>\<bottom> \<rightarrow> 'c discr\<^sub>\<bottom>" where 
-"upApply2 = \<bottom>"
+"upApply2 f \<equiv> \<bottom> " (* Is it possible to define upApply2 using upApply ? ? *)
 
 
 lemma upApply_mono[simp]:"monofun (\<lambda> a. (if a=\<bottom> then \<bottom> else updis (f (THE b. a = updis b))))"
@@ -71,20 +84,23 @@ by(simp add: espf2tspf_def cfun_def)
 
   
 (* create new tStream by appending a new first Element *)
+  (* sadly the function must be ts_well... 
+  .. hence for the input (updis Msg m) and the empty stream a special case must be made *)
 thm lscons_def (* similar to lscons *)
 definition tsLscons :: "'a event discr u \<rightarrow> 'a tstream \<rightarrow> 'a tstream" where
-"tsLscons \<equiv> \<Lambda> t ts. if (ts=\<bottom>) then \<bottom> else espf2tspf (lscons\<cdot>t) ts"
+"tsLscons \<equiv> \<Lambda> t ts. if (ts=\<bottom>) then (Abs_tstream (\<up>\<surd>)) else espf2tspf (lscons\<cdot>t) ts"
 
-thm strictify_def
 lemma lsconc_well [simp]: assumes "ts_well ts" and "ts\<noteq>\<bottom>"
   shows "ts_well (t&&ts)"
 apply(auto simp add: ts_well_def)
   apply (metis Rep_Abs assms(1) sConc_Rep_fin_fin stream.con_rews(2) stream.sel_rews(5) surj_scons)
   by (metis Rep_Abs Rep_tstream_bottom_iff assms(1) assms(2) sConc_fin_well stream.con_rews(2) stream.sel_rews(5) surj_scons ts_well_def)    
 
-lemma "cont (\<lambda>t ts. if (ts=\<bottom>) then \<bottom> else espf2tspf (lscons\<cdot>t) ts)"
+    
+    (* ToDo; important! *)
+lemma tslscons_cont [simp]: "cont (\<lambda>ts. if (ts=\<bottom>) then (Abs_tstream (\<up>\<surd>)) else espf2tspf (lscons\<cdot>t) ts)"
   apply(simp only: espf2tspf_def)
-  oops
+  sorry
     
 (* Das darf man gerne schöner nennen *)
 definition tsMLscons :: "'a discr u \<rightarrow> 'a tstream \<rightarrow> 'a tstream" where
@@ -117,12 +133,13 @@ definition match_message:: "'a tstream \<rightarrow> ('a discr u \<rightarrow> '
  
      subsection \<open>Lemmata for match definitions\<close>
 
-       
+       (* ToDo: cont-stuff for die match-sachen *)
+  (* maybe an extra condition is required... t\<noteq>\<bottom> and/or ts\<noteq>\<bottom> e.g. *)
 lemma match_tstream_simps [simp]:
   "match_tstream\<cdot>\<bottom>\<cdot>k = Fixrec.fail"
   "match_tstream\<cdot>(tsLscons\<cdot>t\<cdot>ts)\<cdot>k = k\<cdot>t\<cdot>ts" 
   sorry
-(* unfolding match_Cons_def by simp_all *)
+(* unfolding match_tstream_def apply simp_all *)
 
 lemma match_delayfun_simps [simp]:
   "match_delayfun\<cdot>\<bottom>\<cdot>k = Fixrec.fail"
@@ -178,6 +195,8 @@ fixrec tsZipNew:: "'a stream \<rightarrow> 'b tstream \<rightarrow> ('a\<times>'
 
 
 
+
+(* Gimmick *)
 thm match_Pair_def
 thm  match_up_def
 definition match_ibottom :: "('a::cpo) u \<rightarrow> ('c ::cpo) match \<rightarrow> 'c match" where
