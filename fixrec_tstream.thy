@@ -97,10 +97,28 @@ apply(auto simp add: ts_well_def)
   by (metis Rep_Abs Rep_tstream_bottom_iff assms(1) assms(2) sConc_fin_well stream.con_rews(2) stream.sel_rews(5) surj_scons ts_well_def)    
 
     
-    (* ToDo; important! *)
-lemma tslscons_cont [simp]: "cont (\<lambda>ts. if (ts=\<bottom>) then (Abs_tstream (\<up>\<surd>)) else espf2tspf (lscons\<cdot>t) ts)"
-  apply(simp only: espf2tspf_def)
+lemma "ts_well (\<up>\<surd>)"
+  by simp
+
+lemma lsconc_tick_well[simp]: "ts_well ts \<Longrightarrow> ts_well (updis \<surd> && ts)"
+  by (metis lsconc_well sup'_def tick_msg)
+    
+lemma tslscons_mono: "monofun (\<lambda>ts. if (ts=\<bottom> \<and>t=updis \<surd>) then (Abs_tstream (\<up>\<surd>)) else if ts=\<bottom> then \<bottom> else espf2tspf (lscons\<cdot>t) ts)"    
+  apply(rule monofunI)
+    apply (auto simp add: espf2tspf_def)
+  apply (metis (mono_tags) Abs_tstream_inverse Rep_tstream below_tstream_def lsconc_tick_well lscons_conv mem_Collect_eq minimal monofun_cfun_arg sconc_snd_empty tick_msg)
+  by (metis (no_types, lifting) Abs_tstream_inverse Rep_tstream Rep_tstream_bottom_iff below_tstream_def lsconc_well mem_Collect_eq monofun_cfun_arg)
+
+lemma "monofun (\<lambda> ts. (if ts = \<bottom> then Abs_tstream (\<up>\<surd>) else espf2tspf (lscons\<cdot>t) ts))"
+  apply(rule monofunI)
+  apply auto
+  oops
+    
+        (* ToDo; important! *)
+(* An tslscons definition anpassen :D *)
+lemma tslscons_cont [simp]: "cont (\<lambda>ts. if (ts=\<bottom> \<and>t=updis \<surd>) then (Abs_tstream (\<up>\<surd>)) else if ts=\<bottom> then \<bottom> else espf2tspf (lscons\<cdot>t) ts)"    (is "cont ?f")
   sorry
+
     
 (* Das darf man gerne schöner nennen *)
 definition tsMLscons :: "'a discr u \<rightarrow> 'a tstream \<rightarrow> 'a tstream" where
@@ -118,7 +136,8 @@ definition unpackMsg::"'a event discr u \<rightarrow> 'a discr u" where
   
 definition
   match_tstream :: "'a tstream \<rightarrow> ('a event discr u \<rightarrow> 'a tstream \<rightarrow> ('b ::cpo) match) \<rightarrow> 'b match" where
-  "match_tstream = (\<Lambda> xs k. if(xs=\<bottom>) then Fixrec.fail else k\<cdot>(tsLshd\<cdot>xs)\<cdot>(tsRt\<cdot>xs)) "
+  "match_tstream = (\<Lambda> xs k.  strictify\<cdot>(\<Lambda> xs. k\<cdot>(tsLshd\<cdot>xs)\<cdot>(tsRt\<cdot>xs))\<cdot>xs)" (*testing a different definition *)
+  (* if(xs=\<bottom>) then Fixrec.fail else k\<cdot>(tsLshd\<cdot>xs)\<cdot>(tsRt\<cdot>xs)) " *)
 
   (* match if first element is tick *)
 definition match_delayfun:: "'a tstream \<rightarrow> ('a tstream \<rightarrow> ('b ::cpo) match) \<rightarrow> 'b match" where
@@ -133,11 +152,17 @@ definition match_message:: "'a tstream \<rightarrow> ('a discr u \<rightarrow> '
  
      subsection \<open>Lemmata for match definitions\<close>
 
-       (* ToDo: cont-stuff for die match-sachen *)
+  (* ToDo: cont-stuff for die match-sachen *)
+lemma match_tstream_cont [simp]:  "monofun (\<lambda> xs . if(xs=\<bottom>) then Fixrec.fail else k\<cdot>(tsLshd\<cdot>xs)\<cdot>(tsRt\<cdot>xs))"
+  apply(rule monofunI)
+    apply auto
+oops  
+
   (* maybe an extra condition is required... t\<noteq>\<bottom> and/or ts\<noteq>\<bottom> e.g. *)
 lemma match_tstream_simps [simp]:
-  "match_tstream\<cdot>\<bottom>\<cdot>k = Fixrec.fail"
-  "match_tstream\<cdot>(tsLscons\<cdot>t\<cdot>ts)\<cdot>k = k\<cdot>t\<cdot>ts" 
+  "match_tstream\<cdot>\<bottom>\<cdot>k = \<bottom>"
+  "ts\<noteq>\<bottom> \<Longrightarrow> match_tstream\<cdot>(tsLscons\<cdot>t\<cdot>ts)\<cdot>k = k\<cdot>t\<cdot>ts" 
+  apply (simp_all add: match_tstream_def)
   sorry
 (* unfolding match_tstream_def apply simp_all *)
 
