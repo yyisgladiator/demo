@@ -229,22 +229,58 @@ lemma sum4_sb_in_out_pre1: assumes "sb = ([c1 \<mapsto> s]\<Omega>)"
 subsection \<open>step4\<close>  
   
 lemma cont2[simp]: "cont (\<lambda> z. ([c3 \<mapsto> add\<cdot>(x . c1)\<cdot>((appendElem2 0)\<cdot>(z . c3))]\<Omega>)  \<uplus> ([c2 \<mapsto> ((appendElem2 0)\<cdot>(z . c3))]\<Omega>))"
-  sorry
+  sorry (* left out as this is very similar to cont of comp helper *)
+        (* requires cont [c2 \<mapsto> ((appendElem2 0)\<cdot>(z . c3)) proof first *)
+    
+lemma step4_dom: 
+shows "sbDom\<cdot>((\<Lambda> z.([c3 \<mapsto> add\<cdot>(x . c1)\<cdot>((appendElem2 0)\<cdot>(z . c3))]\<Omega>)  \<uplus> ([c2 \<mapsto> ((appendElem2 0)\<cdot>(z . c3))]\<Omega>))\<cdot>({c2, c3}^\<bottom>)) = {c2, c3}"
+proof -
+  have "sbDom\<cdot>([c3 \<mapsto> add\<cdot>(x . c1)\<cdot>(appendElem2 0\<cdot>\<epsilon>)]\<Omega>) = {c3}"
+    by (simp add: sbdom_rep_eq)
+  moreover
+  have "sbDom\<cdot>([c2 \<mapsto> appendElem2 0\<cdot>\<epsilon>]\<Omega>) = {c2}"
+    by (simp add: sbdom_rep_eq)
+  ultimately
+  show ?thesis
+    by simp
+qed
   
+lemma step4_iter_eq: "iterate i\<cdot>(\<Lambda> z. [c3 \<mapsto> add\<cdot>(x . c1)\<cdot>(appendElem2 0\<cdot>(z . c3))]\<Omega>)\<cdot>({c3}^\<bottom>) . c3 =  iterate i\<cdot>(\<Lambda> z. ([c3 \<mapsto> add\<cdot>(x . c1)\<cdot>(appendElem2 0\<cdot>(z . c3))]\<Omega>) \<uplus> ([c2 \<mapsto> appendElem2 0\<cdot>(z . c3)]\<Omega>))\<cdot>({c2, c3}^\<bottom>) . c3"
+proof (induction i)
+  case 0
+  then show ?case
+    by simp
+next
+  case (Suc i)
+  then show ?case
+  proof -
+    have f1: "\<And> z. (([c3 \<mapsto> add\<cdot>(x . c1)\<cdot>((appendElem2 0)\<cdot>(z . c3))]\<Omega>)  \<uplus> ([c2 \<mapsto> ((appendElem2 0)\<cdot>(z . c3))]\<Omega>)) . c3 =  add\<cdot>(x . c1)\<cdot>((appendElem2 0)\<cdot>(z . c3))"
+      apply (subst sbunion_getchL)
+      by (simp_all add: sbdom_rep_eq)
+    thus ?thesis
+      apply (unfold iterate_Suc)
+      apply (simp add: f1)
+      using Suc.IH by presburger
+  qed 
+qed
+    
+  
+  
+    (* resulting lemma of step 4 *)
 lemma sum4_sb_in_out_pre2: assumes "sb = ([c1 \<mapsto> s]\<Omega>)"
   shows "sum4\<cdot>s = ((\<lambda> x. \<Squnion>i. iterate i\<cdot>(\<Lambda> z. ([c3 \<mapsto> add\<cdot>(x . c1)\<cdot>((appendElem2 0)\<cdot>(z . c3))]\<Omega>)  \<uplus> ([c2 \<mapsto> ((appendElem2 0)\<cdot>(z . c3))]\<Omega>))\<cdot>({c2, c3}^\<bottom>)) sb) .c3"
   apply (simp only: sum4_sb_in_out_pre1 assms)
   apply (subst sbgetch_lub)
    apply(rule sbIterate_chain, simp add: sbdom_rep_eq)
-  apply (subst sbgetch_lub)
-   apply(rule sbIterate_chain, simp add: sbdom_rep_eq)
-    (* show domain of the sbunion see spfCompH3_dom as an example in SPF_Composition_JB *)
-    (* show iterate .c3 equality with induction *)
-  sorry 
+   apply (subst sbgetch_lub)
+   apply(rule sbIterate_chain)
+    apply(simp only: step4_dom)
+    by (simp only: step4_iter_eq)
     
 
 subsection \<open>step5\<close>  
   
+  (* resulting lemma of step 5 *)
 lemma sum4_sb_in_out_eq: assumes "sb = ([c1 \<mapsto> s]\<Omega>)"
   shows "sum4\<cdot>s = ((\<lambda> x. \<Squnion>i. iterate i\<cdot>(\<Lambda> z. ([c3 \<mapsto> add\<cdot>(x . c1)\<cdot>(z . c2)]\<Omega>)  \<uplus> ([c2 \<mapsto> ((appendElem2 0)\<cdot>(z . c3))]\<Omega>))\<cdot>({c2,c3}^\<bottom>)) sb) .c3"
   sorry (* proof by induction or show via interleaved chains*)
@@ -252,6 +288,7 @@ lemma sum4_sb_in_out_eq: assumes "sb = ([c1 \<mapsto> s]\<Omega>)"
     
 subsection \<open>step6\<close> 
   
+  (* resulting lemma of step 6 *)
 lemma add_addSPF_eq: assumes "sbDom\<cdot>sb = {c1}"
   shows "(iter_spfCompH3 addC append0C i) sb
         = iterate i\<cdot>(\<Lambda> z. ([c3 \<mapsto> add\<cdot>(sb . c1)\<cdot>(z . c2)]\<Omega>)  \<uplus> ([c2 \<mapsto> ((appendElem2 0)\<cdot>(z . c3))]\<Omega>))\<cdot>({c2,c3}^\<bottom>)"
@@ -271,6 +308,7 @@ qed
       MAYBE requires another cont proof :/ of (\<Lambda> z. ([c3 \<mapsto> add\<cdot>(sb . c1)\<cdot>(z . c2)]\<Omega>)  \<uplus> ([c2 \<mapsto> ((appendElem2 0)\<cdot>(z . c3))]\<Omega>))\<cdot>({c2,c3}^\<bottom>)*)
     
   
+  (* FINAL lemma *)
 lemma sum4_sb_spf_eq: assumes "sb = ([c1 \<mapsto> s]\<Omega>)"
   shows "sum4\<cdot>s = (\<Squnion>i. (iter_spfCompH3 addC append0C i) sb) .c3"
   apply (subst add_addSPF_eq, simp add: assms)
