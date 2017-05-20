@@ -1,5 +1,5 @@
 theory Feedback_MW
-imports SPF Streams SB ParComp_MW_JB "CaseStudies/StreamCase_Study" SPF_MW SerComp_JB SPF_Templates SPF_Composition_JB
+imports SPF Streams SB ParComp_MW_JB "CaseStudies/StreamCase_Study" SPF_MW SerComp_JB SPF_Templates SPF_Composition_JB SPF_FeedComp_JB SPF_Feedback_JB
 
 begin
 
@@ -9,7 +9,7 @@ section \<open>SPF definitions\<close>
 
   
 definition addC :: "nat SPF" where
-"addC \<equiv> addSPF (c1, c2, c3)" 
+"addC \<equiv> SPF2x1 add (c1, c2, c3)" 
   
 definition append0C :: "nat SPF" where
 "append0C \<equiv> SPF1x1 (appendElem2 0) (c3,c2)"
@@ -18,7 +18,7 @@ definition append0C :: "nat SPF" where
 subsection \<open>SPF properties\<close>
 
 lemma add_rep_eqC: "Rep_CSPF addC = (\<lambda> sb. (sbDom\<cdot>sb = {c1, c2}) \<leadsto> ([c3\<mapsto>add\<cdot>(sb . c1)\<cdot>(sb . c2)]\<Omega>))"
-by(auto simp add: addC_def addSPF_rep_eqC)
+by(auto simp add: addC_def SPF2x1_rep_eq)
 
 lemma append0_rep_eqC: "Rep_CSPF append0C = (\<lambda> sb. (sbDom\<cdot>sb = {c3}) \<leadsto> ([c2\<mapsto>((appendElem2 0)\<cdot>(sb . c3))]\<Omega>))"
   apply(simp add: append0C_def)
@@ -336,8 +336,9 @@ by (simp add: idC_def)
 lemma [simp]: "spfRan\<cdot>idC = {c1}"
 by (simp add: idC_def)
 
+(* \<mu>((idC \<parallel> append0C) \<circ> addC) *)  
 definition sum4SPF :: "nat SPF" where
-"sum4SPF \<equiv> \<mu>((idC \<parallel> append0C) \<circ> addC)"
+"sum4SPF \<equiv> spfFeedbackOperator (SPF_MW.sercomp (idC \<parallel> append0C) addC)"
 
 subsubsection Properties
 
@@ -369,24 +370,6 @@ sorry
 lemma ranIdAppendAdd: "spfRan\<cdot>((idC \<parallel> append0C) \<circ> addC) = {c3}"
 sorry 
   
-lemma contFeedback: "cont (\<lambda>sb. (sbDom\<cdot>sb = {c5})\<leadsto>
-  (\<Squnion>i. iterate i\<cdot>(\<Lambda> z. (((idC\<parallel>append0C)\<circ>addC)\<rightleftharpoons>((sb \<uplus> z)\<bar> (spfDom\<cdot>((idC\<parallel>append0C)\<circ>addC)))))\<cdot>((spfRan\<cdot>((idC\<parallel>append0C)\<circ>addC))^\<bottom>)))"
-sorry
-
-lemma spfwellFeedback: "spf_well (\<Lambda> sb. (sbDom\<cdot>sb = {c5})\<leadsto>
-  (\<Squnion>i. iterate i\<cdot>(\<Lambda> z. (((idC\<parallel>append0C)\<circ>addC)\<rightleftharpoons>((sb \<uplus> z)\<bar> (spfDom\<cdot>((idC\<parallel>append0C)\<circ>addC)))))\<cdot>((spfRan\<cdot>((idC\<parallel>append0C)\<circ>addC))^\<bottom>)))"
-sorry  
-
-lemma domFeedback: "spfDom\<cdot>(sum4SPF) = {c5}"
-apply(simp add: sum4SPF_def spfFeedbackOperator_def)
-apply(subst spfDomAbs)
-apply(simp_all add: domIdAppendAdd ranIdAppendAdd)
-by(simp_all add: contFeedback spfwellFeedback)
-
-lemma ranFeedback: "spfRan\<cdot>(sum4SPF) = {c3}"
-apply(simp add: sum4SPF_def spfFeedbackOperator_def)
-sorry
-
   
 section \<open>sum1SPF eq sum4SPF\<close>
 
@@ -407,6 +390,8 @@ lemma sum1SPFeqSum4SPF: assumes "sbDom\<cdot>sb = I addC append0C"
   
 section \<open>sum1SPF eq sum4\<close>
 
+  
+  (* old proof structure
 subsection prerequirements
 (* prerequirements for final lemma *)
 
@@ -524,7 +509,7 @@ proof -
     by (simp add: f1)
 qed
        
-   
+*)   
       
 subsubsection general      
       
@@ -534,7 +519,12 @@ lemma spfcomp2_RepAbs: assumes "spfComp_well f1 f2" shows
             = (\<lambda>x. (sbDom\<cdot>x = I f1 f2)\<leadsto>(\<Squnion>i. iterate i\<cdot>(spfCompH3 f1 f2 x)\<cdot>((spfRan\<cdot>f1 \<union> spfRan\<cdot>f2)^\<bottom>)))"
   by simp   
   
-  
+lemma sbDomSB_eq: assumes "sbDom\<cdot>sb = {c1}" shows "sb = ([c1 \<mapsto> sb . c1]\<Omega>)"
+  apply(subst sb_eq, simp_all)
+   apply (metis Rep_SB_inverse assms dom_eq_singleton_conv fun_upd_same insertI1 sbdom_insert sbgetchE)
+    by (metis Rep_SB_inverse assms dom_eq_singleton_conv fun_upd_same sbdom_insert sbgetchE singletonD)
+    
+    
 subsection \<open>lemma\<close> 
 (* final lemma *)
 
@@ -544,8 +534,18 @@ lemma sumEq: assumes "sbDom\<cdot>sb = I addC append0C" shows "(sum1SPF \<rightl
   apply(subst spfcomp_and_spfcomp2_eq)
   apply(subst spfcompH3_abbrv_tospfH32)
   apply(subst spfcomp2_RepAbs, simp_all add: assms)
+  apply(simp add: sum4_sb_spf_eq)
+  apply(subst SPF_FeedComp_JB.addC_def, subst Feedback_MW.addC_def)
+  apply(subst SPF_FeedComp_JB.append0C_def, subst Feedback_MW.append0C_def)
+  apply(subst (2) sbDomSB_eq)
+  by(simp_all add: assms)
+  
+(*  apply(subst sum1EqCh, simp add: assms)
+  apply(subst spfcomp_and_spfcomp2_eq)
+  apply(subst spfcompH3_abbrv_tospfH32)
+  apply(subst spfcomp2_RepAbs, simp_all add: assms)
   apply(subst spfCompFeedbackFixEqCh)
     using assms sum4_unfold  by auto
-
+*)
          
 end
