@@ -11,6 +11,15 @@ theory SPF_FeedComp_JB
 begin
   
 (* ----------------------------------------------------------------------- *)
+section \<open>general-lemmas\<close>
+(* ----------------------------------------------------------------------- *)
+  
+(* This is a hack to get \<Longrightarrow> instead of \<longrightarrow> from contI2 *)
+lemma mycontI2: assumes "monofun (f::'a::cpo \<Rightarrow> 'b::cpo)" and "(\<And>Y. chain Y \<Longrightarrow> f (\<Squnion>i. Y i) \<sqsubseteq> (\<Squnion>i. f (Y i)))"
+  shows "cont f"
+  by (simp add: Cont.contI2 assms(1) assms(2))
+  
+(* ----------------------------------------------------------------------- *)
 section \<open>definitions\<close>
 (* ----------------------------------------------------------------------- *)
 
@@ -87,30 +96,30 @@ lemma spfRan_add_append[simp]: "spfRan\<cdot>(spfcomp addC append0C) = {c2, c3}"
     
     
 (* ----------------------------------------------------------------------- *)
-section \<open>sume equality\<close>
+section \<open>sum equality\<close>
 (* ----------------------------------------------------------------------- *)
   
 (* cont proofs can be lefft out as general cont of spfComp has been showed
   PROOF STRATEGY: equality chain *)
   
-lemma sum4_cont[simp]: "cont  (\<lambda>x. (fix\<cdot>(\<Lambda> z. add\<cdot>x\<cdot>(\<up>0\<bullet>(z)))))"
+lemma sum4_cont[simp]: "cont  (\<lambda>x. (fix\<cdot>(\<Lambda> z. add\<cdot>x\<cdot>((appendElem2 0)\<cdot>z  ))))"
  by (simp add: fix_def)
   
 subsection \<open>step1\<close>
   
-lemma sum4_lub_iter_eq: "sum4 = (\<Lambda> x. \<Squnion>i. iterate i\<cdot>(\<Lambda> z. add\<cdot>x\<cdot>(\<up>0\<bullet>(z)))\<cdot>\<bottom>)"
-  by (simp add: sum4_def fix_def)
+lemma sum4_lub_iter_eq: "sum4 = (\<Lambda> x. \<Squnion>i. iterate i\<cdot>(\<Lambda> z. add\<cdot>x\<cdot>((appendElem2 0)\<cdot>z ))\<cdot>\<bottom>)"
+  by (simp add: sum4_def fix_def appendElem2_def)
     
 subsection \<open>step2\<close>
 lemma sum4_sb_input_eq: assumes "sb = ([c1 \<mapsto> s]\<Omega>)"
-  shows "sum4\<cdot>s = (\<Lambda> x. \<Squnion>i. iterate i\<cdot>(\<Lambda> z. add\<cdot>(x . c1)\<cdot>(\<up>0\<bullet>(z)))\<cdot>(\<bottom>))\<cdot>sb"
+  shows "sum4\<cdot>s = (\<Lambda> x. \<Squnion>i. iterate i\<cdot>(\<Lambda> z. add\<cdot>(x . c1)\<cdot>((appendElem2 0)\<cdot>z))\<cdot>(\<bottom>))\<cdot>sb"
   apply(subst sum4_lub_iter_eq)
   by (simp add: assms)
     
 subsection \<open>step3\<close>
   
 lemma step3_inner_mono [simp]: fixes f1:: "nat stream \<rightarrow> nat stream  \<rightarrow> nat stream"
-  shows "monofun (\<lambda> z. [ch1 \<mapsto> f1\<cdot>x\<cdot>(\<up>0\<bullet>(z . ch2))]\<Omega> )"
+  shows "monofun (\<lambda> z. [ch1 \<mapsto> f1\<cdot>x\<cdot>((appendElem2 0)\<cdot>(z . ch2))]\<Omega> )"
   apply(rule monofunI)
    apply (rule sb_below)
     apply (simp add: sbdom_insert)
@@ -118,7 +127,7 @@ lemma step3_inner_mono [simp]: fixes f1:: "nat stream \<rightarrow> nat stream  
    by (meson monofun_cfun monofun_cfun_arg monofun_cfun_fun)
   
 lemma step3_inner_chain1 [simp]: fixes f:: "nat stream \<rightarrow> nat stream  \<rightarrow> nat stream"
-  shows "chain Y  \<Longrightarrow> chain (\<lambda> i. [ch3\<mapsto>  f\<cdot>(x)\<cdot>(\<up>0\<bullet> ((Y i) . ch2))]\<Omega>)"
+  shows "chain Y  \<Longrightarrow> chain (\<lambda> i. [ch3\<mapsto>  f\<cdot>(x)\<cdot>((appendElem2 0)\<cdot>((Y i) . ch2))]\<Omega>)"
     apply (rule chainI)
   apply (rule sb_below)
    apply (simp add: sbdom_rep_eq)
@@ -128,37 +137,56 @@ lemma step3_inner_chain1 [simp]: fixes f:: "nat stream \<rightarrow> nat stream 
 lemma [simp]: "cont (\<lambda>z. \<up>0 \<bullet> z)"
   by (simp add: appendElem_def)
     
-lemma step3_inner_lub [simp]: fixes f :: "nat stream \<rightarrow> nat stream  \<rightarrow> nat stream"
-  shows "chain Y \<Longrightarrow> (\<Squnion>i. f\<cdot>x\<cdot>(Y i . ch2)) = f\<cdot>x\<cdot>(\<up>0\<bullet> ((Lub Y). ch2))"
+
+lemma step3_inner_lub: fixes f :: "nat stream \<rightarrow> nat stream  \<rightarrow> nat stream"
+  shows "chain Y \<Longrightarrow> (\<Squnion>i. f\<cdot>x\<cdot>((appendElem2 0)\<cdot>(Y i . ch2))) = f\<cdot>x\<cdot>((appendElem2 0)\<cdot>((Lub Y). ch2))"
 proof -
-  assume "chain Y"
-  then have "(\<Squnion>n. f\<cdot>x\<cdot>(Y n . ch2)) = f\<cdot>x\<cdot>(\<up>0\<bullet> (Lub Y . ch2))"
-    sorry
+  assume a1: "chain Y"
+  then have "\<And>c. (\<Squnion>n. Y n . c) = Lub Y . c"
+    using sbgetch_lub by fastforce
   then show ?thesis
-    by metis
+    using a1 by (metis ch2ch_Rep_cfunL ch2ch_Rep_cfunR contlub_cfun_arg)
+qed
+(*
+lemma step3_inner_lub: fixes f :: "nat stream \<rightarrow> nat stream  \<rightarrow> nat stream"
+  shows "chain Y \<longrightarrow>  ((\<Squnion>i. f\<cdot>x\<cdot>((appendElem2 0)\<cdot>(Y i . ch2))) = f\<cdot>x\<cdot>((appendElem2 0)\<cdot>((Lub Y). ch2)))"
+proof -
+  have f1: "\<not> chain (\<lambda>n. Y n . ch2) \<or> f\<cdot>x\<cdot>(\<Squnion>n. appendElem2 0\<cdot>(Y n . ch2)) = (\<Squnion>n. f\<cdot>x\<cdot>(appendElem2 0\<cdot>(Y n . ch2)))"
+    using ch2ch_Rep_cfunR contlub_cfun_arg by blast
+  { assume "chain (\<lambda>n. Y n . ch2)"
+    have "(\<exists>c. \<not> chain (\<lambda>n. Y n . c)) \<or> (chain Y \<longrightarrow> (\<Squnion>n. f\<cdot>x\<cdot>(appendElem2 0\<cdot>(Y n . ch2))) = f\<cdot>x\<cdot>(appendElem2 0\<cdot>(Lub Y . ch2)))"
+      using f1 by (metis contlub_cfun_arg sbgetch_lub) }
+  then show ?thesis
+    using ch2ch_Rep_cfunL ch2ch_Rep_cfunR by blast
+qed
+  *)
+
+lemma step3_inner_lub_dom: fixes f :: "nat stream \<rightarrow> nat stream  \<rightarrow> nat stream" 
+shows "chain Y \<Longrightarrow> {ch1} = sbDom\<cdot>(\<Squnion>i. [ch1 \<mapsto> f\<cdot>x\<cdot>(appendElem2 0\<cdot>(Y i . ch2))]\<Omega>)"
+proof -
+  assume a1: "chain Y"
+  hence f1: "chain (\<lambda> i. [ch1 \<mapsto> f\<cdot>x\<cdot>(appendElem2 0\<cdot>((Y i) . ch2))]\<Omega>)"
+    by simp
+  hence f2: "\<forall> i.  sbDom\<cdot>([ch1 \<mapsto> f\<cdot>x\<cdot>(appendElem2 0\<cdot>((Y i) . ch2))]\<Omega>) = {ch1}"
+    by (simp add: sbdom_rep_eq sbgetch_rep_eq sbgetch_lub step3_inner_lub)
+  hence f3: "\<forall> i. ([ch1 \<mapsto> f\<cdot>x\<cdot>(appendElem2 0\<cdot>((Y i) . ch2))]\<Omega>)  \<sqsubseteq> (\<Squnion>i. [ch1 \<mapsto> f\<cdot>x\<cdot>(appendElem2 0\<cdot>(Y i . ch2))]\<Omega>)"
+    using f1 is_ub_thelub by blast
+  thus ?thesis
+    using f1 f2 sbChain_dom_eq2 by blast
 qed
   
+    
+  
 lemma step3_innter_cont [simp]: fixes f :: "nat stream \<rightarrow> nat stream  \<rightarrow> nat stream"
-  shows "cont (\<lambda> z. [ch1 \<mapsto> f\<cdot>x\<cdot>(\<up>0\<bullet>(z . ch2))]\<Omega> )"
-  apply (rule contI2, simp)
-     apply (subst sb_below)
-    apply (simp add: sbdom_rep_eq )
-    sorry
- 
+  shows "cont (\<lambda> z. [ch1 \<mapsto> f\<cdot>x\<cdot>((appendElem2 0)\<cdot>(z . ch2))]\<Omega> )"
+  apply (rule mycontI2, simp only: step3_inner_mono)
+  apply(rule sb_below) (* must work *)
+    apply (simp_all add: sbdom_rep_eq sbgetch_rep_eq sbgetch_lub step3_inner_lub)
+    by (simp add: step3_inner_lub_dom)
 
-     
-lemma test12a[simp] : "cont (\<lambda> z. [c3 \<mapsto> add\<cdot>x\<cdot>(\<up>0\<bullet>(z . c3))]\<Omega> )"
- by simp
     
-lemma test12b [simp]: "cont (\<lambda> x. \<Squnion>i. iterate i\<cdot>(\<Lambda> z. [c3 \<mapsto> add\<cdot>(x . c1)\<cdot>(\<up>0\<bullet>(z . c3))]\<Omega>)\<cdot>({c3}^\<bottom>))"
-  (* sbFix lemmata would be very handy here :D *)
-  (* otherwise this shold be provable manually using the same proof structure as in the feedback 
-     cont proof *)
-  sorry
-    
-
-lemma sb_in_out_iter_eq: "(iterate i\<cdot>(\<Lambda> z. [c3 \<mapsto> add\<cdot>(x)\<cdot>(\<up>0\<bullet>(z . c3))]\<Omega>)\<cdot>({c3}^\<bottom>)) .c3
-       = iterate i\<cdot>(\<Lambda> z. add\<cdot>(x)\<cdot>(\<up>0\<bullet>(z)))\<cdot>(\<bottom>)"
+lemma sb_in_out_iter_eq: "(iterate i\<cdot>(\<Lambda> z. [c3 \<mapsto> add\<cdot>(x)\<cdot>((appendElem2 0)\<cdot>(z . c3))]\<Omega>)\<cdot>({c3}^\<bottom>)) .c3
+       = iterate i\<cdot>(\<Lambda> z. add\<cdot>(x)\<cdot>((appendElem2 0)\<cdot>(z)))\<cdot>(\<bottom>)"
 proof (induction i)
   case 0
   then show ?case
@@ -167,8 +195,8 @@ next
   case (Suc i)
   then show ?case 
   proof -
-    have "\<forall> x. \<forall> sb. ((\<Lambda> z. [c3 \<mapsto> add\<cdot>(x)\<cdot>(\<up>0\<bullet>(z . c3))]\<Omega>)\<cdot>sb) . c3 = (\<Lambda> z. add\<cdot>(x)\<cdot>(\<up>0\<bullet>(z)))\<cdot>(sb . c3)"
-      by (simp add: test12a)
+    have "\<forall> x. \<forall> sb. ((\<Lambda> z. [c3 \<mapsto> add\<cdot>(x)\<cdot>((appendElem2 0)\<cdot>(z . c3))]\<Omega>)\<cdot>sb) . c3 = (\<Lambda> z. add\<cdot>(x)\<cdot>((appendElem2 0)\<cdot>(z)))\<cdot>(sb . c3)"
+      by (simp)
     thus ?case
       apply (unfold iterate_Suc)
       by (simp add: Suc.IH)
@@ -176,8 +204,8 @@ next
 qed
   
 
-lemma test17: "sbDom\<cdot>(iterate i\<cdot>(\<Lambda> z. [c3 \<mapsto> add\<cdot>(x . c1)\<cdot>(\<up>0\<bullet>(z . c3))]\<Omega>)\<cdot>({c3}^\<bottom>)) = {c3}"
-  sorry
+lemma test17: "sbDom\<cdot>(iterate i\<cdot>(\<Lambda> z. [c3 \<mapsto> add\<cdot>(x . c1)\<cdot>((appendElem2 0)\<cdot>(z . c3))]\<Omega>)\<cdot>({c3}^\<bottom>)) = {c3}"
+  oops
     
     (* insert lemma sb \<sqsubseteq> sb2 < = > sb . ch \<sqsubseteq> sb2 . ch JUST LIKE: sbres_pref_eq*)
     (*
@@ -186,21 +214,25 @@ lemma test16: assumes "sb = ([c1 \<mapsto> s]\<Omega>)"
         = ((\<Squnion>i. (iterate i\<cdot>(\<Lambda> z. [c3 \<mapsto> add\<cdot>(x . c1)\<cdot>(\<up>0\<bullet>(z . c3))]\<Omega>)\<cdot>({c3}^\<bottom>))) .c3)"
    sorry
 *)
-lemma test18: "(\<Squnion>i. iterate i\<cdot>(\<Lambda> z. [c3 \<mapsto> add\<cdot>s\<cdot>(\<up>0 \<bullet> z . c3)]\<Omega>)\<cdot>({c3}^\<bottom>)) . c3 = (\<Squnion>i. (iterate i\<cdot>(\<Lambda> z. [c3 \<mapsto> add\<cdot>s\<cdot>(\<up>0 \<bullet> z . c3)]\<Omega>)\<cdot>({c3}^\<bottom>)) .c3)"
+lemma test18: "(\<Squnion>i. iterate i\<cdot>(\<Lambda> z. [c3 \<mapsto> add\<cdot>s\<cdot>((appendElem2 0)\<cdot>(z . c3))]\<Omega>)\<cdot>({c3}^\<bottom>)) . c3 = (\<Squnion>i. (iterate i\<cdot>(\<Lambda> z. [c3 \<mapsto> add\<cdot>s\<cdot>((appendElem2 0)\<cdot>(z . c3))]\<Omega>)\<cdot>({c3}^\<bottom>)) .c3)"
   apply (rule sbgetch_lub)
   apply(rule sbIterate_chain)
   by (simp add: sbdom_rep_eq)
   
 
+    (* resulting lemma of step3 *)
 lemma sum4_sb_in_out_pre1: assumes "sb = ([c1 \<mapsto> s]\<Omega>)"
-  shows "sum4\<cdot>s = ((\<lambda> x. \<Squnion>i. iterate i\<cdot>(\<Lambda> z. [c3 \<mapsto> add\<cdot>(x . c1)\<cdot>(\<up>0\<bullet>(z . c3))]\<Omega>)\<cdot>({c3}^\<bottom>)) sb) .c3"
+  shows "sum4\<cdot>s = ((\<lambda> x. \<Squnion>i. iterate i\<cdot>(\<Lambda> z. [c3 \<mapsto> add\<cdot>(x . c1)\<cdot>((appendElem2 0)\<cdot>(z . c3))]\<Omega>)\<cdot>({c3}^\<bottom>)) sb) .c3"
   by (simp add: sum4_sb_input_eq assms test18 sb_in_out_iter_eq)
 
     
 subsection \<open>step4\<close>  
   
+lemma cont2[simp]: "cont (\<lambda> z. ([c3 \<mapsto> add\<cdot>(x . c1)\<cdot>((appendElem2 0)\<cdot>(z . c3))]\<Omega>)  \<uplus> ([c2 \<mapsto> ((appendElem2 0)\<cdot>(z . c3))]\<Omega>))"
+  sorry
+  
 lemma sum4_sb_in_out_pre2: assumes "sb = ([c1 \<mapsto> s]\<Omega>)"
-  shows "sum4\<cdot>s = ((\<lambda> x. \<Squnion>i. iterate i\<cdot>(\<Lambda> z. ([c3 \<mapsto> add\<cdot>(x . c1)\<cdot>(\<up>0\<bullet>(z . c3))]\<Omega>)  \<uplus> ([c2 \<mapsto> (\<up>0\<bullet>(z . c3))]\<Omega>))\<cdot>({c2, c3}^\<bottom>)) sb) .c3"
+  shows "sum4\<cdot>s = ((\<lambda> x. \<Squnion>i. iterate i\<cdot>(\<Lambda> z. ([c3 \<mapsto> add\<cdot>(x . c1)\<cdot>((appendElem2 0)\<cdot>(z . c3))]\<Omega>)  \<uplus> ([c2 \<mapsto> ((appendElem2 0)\<cdot>(z . c3))]\<Omega>))\<cdot>({c2, c3}^\<bottom>)) sb) .c3"
   apply (simp only: sum4_sb_in_out_pre1 assms)
   apply (subst sbgetch_lub)
    apply(rule sbIterate_chain, simp add: sbdom_rep_eq)
@@ -214,7 +246,7 @@ lemma sum4_sb_in_out_pre2: assumes "sb = ([c1 \<mapsto> s]\<Omega>)"
 subsection \<open>step5\<close>  
   
 lemma sum4_sb_in_out_eq: assumes "sb = ([c1 \<mapsto> s]\<Omega>)"
-  shows "sum4\<cdot>s = ((\<lambda> x. \<Squnion>i. iterate i\<cdot>(\<Lambda> z. ([c3 \<mapsto> add\<cdot>(x . c1)\<cdot>(z . c2)]\<Omega>)  \<uplus> ([c2 \<mapsto> (\<up>0\<bullet>(z . c3))]\<Omega>))\<cdot>({c2,c3}^\<bottom>)) sb) .c3"
+  shows "sum4\<cdot>s = ((\<lambda> x. \<Squnion>i. iterate i\<cdot>(\<Lambda> z. ([c3 \<mapsto> add\<cdot>(x . c1)\<cdot>(z . c2)]\<Omega>)  \<uplus> ([c2 \<mapsto> ((appendElem2 0)\<cdot>(z . c3))]\<Omega>))\<cdot>({c2,c3}^\<bottom>)) sb) .c3"
   sorry (* proof by induction or show via interleaved chains*)
     
     
@@ -222,11 +254,21 @@ subsection \<open>step6\<close>
   
 lemma add_addSPF_eq: assumes "sbDom\<cdot>sb = {c1}"
   shows "(iter_spfCompH3 addC append0C i) sb
-        = iterate i\<cdot>(\<Lambda> z. ([c3 \<mapsto> add\<cdot>(sb . c1)\<cdot>(z . c2)]\<Omega>)  \<uplus> ([c2 \<mapsto> (\<up>0\<bullet>(z . c3))]\<Omega>))\<cdot>({c2,c3}^\<bottom>)"
-  apply (simp add: spfCompH3_def addC_apply)
-    (* substitute with append0C_apply2 *)
-    (* Do rest with induction *)
+        = iterate i\<cdot>(\<Lambda> z. ([c3 \<mapsto> add\<cdot>(sb . c1)\<cdot>(z . c2)]\<Omega>)  \<uplus> ([c2 \<mapsto> ((appendElem2 0)\<cdot>(z . c3))]\<Omega>))\<cdot>({c2,c3}^\<bottom>)"
+    apply (simp add: spfCompH3_def addC_apply append0C_apply)
+proof (induction i)
+  case 0
+  then show ?case 
+    by simp
+next
+  case (Suc i)
+  then show ?case 
+    apply (unfold iterate_Suc)
     sorry
+qed
+    (* We know that sb has domain c1, the criticical point here is the domain of z, which is {c2,c3} 
+      after this is shown it should be rather easy to proof the lemma using the apply lemmata
+      MAYBE requires another cont proof :/ of (\<Lambda> z. ([c3 \<mapsto> add\<cdot>(sb . c1)\<cdot>(z . c2)]\<Omega>)  \<uplus> ([c2 \<mapsto> ((appendElem2 0)\<cdot>(z . c3))]\<Omega>))\<cdot>({c2,c3}^\<bottom>)*)
     
   
 lemma sum4_sb_spf_eq: assumes "sb = ([c1 \<mapsto> s]\<Omega>)"
