@@ -278,12 +278,55 @@ lemma sum4_sb_in_out_pre2: assumes "sb = ([c1 \<mapsto> s]\<Omega>)"
     by (simp only: step4_iter_eq)
     
 
-subsection \<open>step5\<close>  
+  subsection \<open>step5\<close>  
+    
+lemma cont5[simp]: "cont (\<lambda> z.  ([c3 \<mapsto> add\<cdot>(x . c1)\<cdot>(z . c2)]\<Omega>) \<uplus> ([c2 \<mapsto> appendElem2 0\<cdot>(z . c3)]\<Omega>))"
+  sorry (* left out as this is very similar to cont of comp helper *)
+        (* requires cont [c2 \<mapsto> ((appendElem2 0)\<cdot>(z . c3)) proof first *)
+    
+lemma sbleast_c2_c3: "{c2, c3}^\<bottom> = {c3}^\<bottom> \<uplus> {c2}^\<bottom>"
+  apply(rule sb_eq)
+   apply(simp)
+   by auto
   
+lemma step5_lub_iter_eq_req_1: "iterate i\<cdot>(\<Lambda> z. ([c3 \<mapsto> add\<cdot>(x . c1)\<cdot>(z . c2)]\<Omega>) \<uplus> ([c2 \<mapsto> appendElem2 0\<cdot>(z . c3)]\<Omega>))\<cdot>({c2, c3}^\<bottom>)
+                               \<sqsubseteq> iterate i\<cdot>(\<Lambda> z. ([c3 \<mapsto> add\<cdot>(x . c1)\<cdot>(appendElem2 0\<cdot>(z . c3))]\<Omega>) \<uplus> ([c2 \<mapsto> appendElem2 0\<cdot>(z . c3)]\<Omega>))\<cdot>({c2, c3}^\<bottom>) "
+proof (induction i)
+  case 0
+  then show ?case
+    by (simp only: iterate_0, simp)     
+next
+  case (Suc i)
+  then show ?case sorry
+qed
+    
+lemma step5_lub_iter_eq_req_2: "iterate i\<cdot>(\<Lambda> z. ([c3 \<mapsto> add\<cdot>(x . c1)\<cdot>(appendElem2 0\<cdot>(z . c3))]\<Omega>) \<uplus> ([c2 \<mapsto> appendElem2 0\<cdot>(z . c3)]\<Omega>))\<cdot>({c2, c3}^\<bottom>) 
+                               \<sqsubseteq> iterate (Suc i)\<cdot>(\<Lambda> z. ([c3 \<mapsto> add\<cdot>(x . c1)\<cdot>(z . c2)]\<Omega>) \<uplus> ([c2 \<mapsto> appendElem2 0\<cdot>(z . c3)]\<Omega>))\<cdot>({c2, c3}^\<bottom>)"
+proof (induction i)
+  case 0
+  then show ?case
+    apply (simp only: iterate_0, unfold iterate_Suc, simp)
+    apply (subst sbleast_c2_c3, subst sbunion_pref_eq)
+      apply (rule less_SBI, simp_all add: sbLeast_def)
+        using insert_dom apply fastforce
+      apply (rule less_SBI, simp_all add: sbLeast_def)
+        using insert_dom by fastforce      
+next
+  case (Suc i)
+  then show ?case sorry
+qed
+    
+lemma step5_lub_iter_eq: "(\<Squnion>i. iterate i\<cdot>(\<Lambda> z. ([c3 \<mapsto> add\<cdot>(x . c1)\<cdot>(z . c2)]\<Omega>) \<uplus> ([c2 \<mapsto> appendElem2 0\<cdot>(z . c3)]\<Omega>))\<cdot>({c2, c3}^\<bottom>)) = (\<Squnion>i. iterate i\<cdot>(\<Lambda> z. ([c3 \<mapsto> add\<cdot>(x . c1)\<cdot>(appendElem2 0\<cdot>(z . c3))]\<Omega>) \<uplus> ([c2 \<mapsto> appendElem2 0\<cdot>(z . c3)]\<Omega>))\<cdot>({c2, c3}^\<bottom>))"
+  apply (rule lub_interl_chain_eq)
+  using step5_lub_iter_eq_req_1 apply blast
+  using step5_lub_iter_eq_req_2 by blast
+
+    
   (* resulting lemma of step 5 *)
 lemma sum4_sb_in_out_eq: assumes "sb = ([c1 \<mapsto> s]\<Omega>)"
   shows "sum4\<cdot>s = ((\<lambda> x. \<Squnion>i. iterate i\<cdot>(\<Lambda> z. ([c3 \<mapsto> add\<cdot>(x . c1)\<cdot>(z . c2)]\<Omega>)  \<uplus> ([c2 \<mapsto> ((appendElem2 0)\<cdot>(z . c3))]\<Omega>))\<cdot>({c2,c3}^\<bottom>)) sb) .c3"
-  sorry (* proof by induction or show via interleaved chains*)
+  apply (simp only: sum4_sb_in_out_pre2 assms)
+    using step5_lub_iter_eq by presburger
     
     
 subsection \<open>step6\<close> 
