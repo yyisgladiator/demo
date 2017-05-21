@@ -288,7 +288,20 @@ lemma sbleast_c2_c3: "{c2, c3}^\<bottom> = {c3}^\<bottom> \<uplus> {c2}^\<bottom
   apply(rule sb_eq)
    apply(simp)
    by auto
-  
+ 
+lemma cont_pref_eq1: assumes "(a \<sqsubseteq> b)"
+  shows "f\<cdot>a \<sqsubseteq> f\<cdot>b"
+  by (simp add: assms monofun_cfun_arg)
+     
+lemma cont_pref_eq2:  assumes "(a \<sqsubseteq> b)"
+  shows "f\<cdot>x\<cdot>a \<sqsubseteq> f\<cdot>x\<cdot>b"
+  by (simp add: assms monofun_cfun_arg)
+    
+lemma sbunion_eq:  assumes "(a = b)" and "(c = d)"
+  shows "(a \<uplus> c = b \<uplus> d)"
+  by (simp add: assms(1) assms(2))
+    
+  (*
 lemma step5_lub_iter_eq_req_1: "iterate i\<cdot>(\<Lambda> z. ([c3 \<mapsto> add\<cdot>(x . c1)\<cdot>(z . c2)]\<Omega>) \<uplus> ([c2 \<mapsto> appendElem2 0\<cdot>(z . c3)]\<Omega>))\<cdot>({c2, c3}^\<bottom>)
                                \<sqsubseteq> iterate i\<cdot>(\<Lambda> z. ([c3 \<mapsto> add\<cdot>(x . c1)\<cdot>(appendElem2 0\<cdot>(z . c3))]\<Omega>) \<uplus> ([c2 \<mapsto> appendElem2 0\<cdot>(z . c3)]\<Omega>))\<cdot>({c2, c3}^\<bottom>) "
 proof (induction i)
@@ -297,7 +310,14 @@ proof (induction i)
     by (simp only: iterate_0, simp)     
 next
   case (Suc i)
-  then show ?case sorry
+  then show ?case
+    apply (unfold iterate_Suc)
+    apply simp
+    apply (rule sbunion_pref_eq)
+     apply(rule less_SBI, simp_all)
+     apply (rule cont_pref_eq2)
+      apply auto
+      apply(simp add: appendElem2_def)
 qed
     
 lemma step5_lub_iter_eq_req_2: "iterate i\<cdot>(\<Lambda> z. ([c3 \<mapsto> add\<cdot>(x . c1)\<cdot>(appendElem2 0\<cdot>(z . c3))]\<Omega>) \<uplus> ([c2 \<mapsto> appendElem2 0\<cdot>(z . c3)]\<Omega>))\<cdot>({c2, c3}^\<bottom>) 
@@ -315,11 +335,65 @@ next
   case (Suc i)
   then show ?case sorry
 qed
+*)
+    
+abbreviation iter_step5_old :: "nat SB \<Rightarrow> nat \<Rightarrow> nat SB" where
+"(iter_step5_old x i) \<equiv>  iterate (i)\<cdot>(\<Lambda> z. ([c3 \<mapsto> add\<cdot>(x . c1)\<cdot>(appendElem2 0\<cdot>(z . c3))]\<Omega>) \<uplus> ([c2 \<mapsto> appendElem2 0\<cdot>(z . c3)]\<Omega>))\<cdot>({c2, c3}^\<bottom>)"
+
+abbreviation iter_step5_new :: "nat SB \<Rightarrow> nat \<Rightarrow> nat SB" where
+"(iter_step5_new x i) \<equiv>  iterate (i)\<cdot>(\<Lambda> z. ([c3 \<mapsto> add\<cdot>(x . c1)\<cdot>(z . c2)]\<Omega>) \<uplus> ([c2 \<mapsto> appendElem2 0\<cdot>(z . c3)]\<Omega>))\<cdot>({c2, c3}^\<bottom>)"
+
+lemma test101: "iter_step5_old x (Suc i) = ([c3 \<mapsto> add\<cdot>(x . c1)\<cdot>(appendElem2 0\<cdot>((iter_step5_old x (i)) . c3))]\<Omega>) \<uplus> ([c2 \<mapsto> appendElem2 0\<cdot>((iter_step5_old x (i)) . c3)]\<Omega>)"
+  by simp
+    
+lemma test102: "iter_step5_new x (Suc i) = ([c3 \<mapsto> add\<cdot>(x . c1)\<cdot>((iter_step5_new x (i)) . c2)]\<Omega>) \<uplus> ([c2 \<mapsto> appendElem2 0\<cdot>((iter_step5_new x (i)) . c3)]\<Omega>)"
+  by simp
+  
+lemma test103: assumes "x = y"
+  shows "[ch \<mapsto> x]\<Omega> = [ch \<mapsto> y]\<Omega>"
+  by (simp add: assms)
+    
+lemma cont_my_eq2:  assumes "(a = b)"
+  shows "f\<cdot>x\<cdot>a = f\<cdot>x\<cdot>b"
+  by (simp add: assms)
+    
+
+(* you cannot use simp in this proof, I think this lemma is incorrect *)
+    (* just to show how a proof structure can look like *)
+lemma step5_lub_iter_eq_req_2: "iter_step5_old x (Suc i) = iter_step5_new x (Suc (Suc i))"
+proof (induction i)
+  case 0
+  then show ?case
+    apply (unfold iterate_Suc)
+    apply simp
+      apply(rule sbunion_eq, rule test103)
+      by (simp_all add: sbdom_rep_eq)
+next
+  case (Suc i)
+  then show ?case
+    apply (subst test101)
+    apply (subst test102)
+    apply(rule sbunion_eq, rule test103)
+     defer
+    apply(rule test103)
+apply (presburger)
+      apply(rule cont_my_eq2)
+      (* HELP WANTED: Is this lemma really true? *)
+      
+      
+      apply(subst cont_pref_eq1)
+    apply (simp add: sbdom_rep_eq) (* simp goes wild :D*)
+      apply(rule sbunion_eq) 
+   oops     
+qed
     
 lemma step5_lub_iter_eq: "(\<Squnion>i. iterate i\<cdot>(\<Lambda> z. ([c3 \<mapsto> add\<cdot>(x . c1)\<cdot>(z . c2)]\<Omega>) \<uplus> ([c2 \<mapsto> appendElem2 0\<cdot>(z . c3)]\<Omega>))\<cdot>({c2, c3}^\<bottom>)) = (\<Squnion>i. iterate i\<cdot>(\<Lambda> z. ([c3 \<mapsto> add\<cdot>(x . c1)\<cdot>(appendElem2 0\<cdot>(z . c3))]\<Omega>) \<uplus> ([c2 \<mapsto> appendElem2 0\<cdot>(z . c3)]\<Omega>))\<cdot>({c2, c3}^\<bottom>))"
-  apply (rule lub_interl_chain_eq)
+  apply (rule lub_suc_shift_eq)
+    sorry
+    (*
   using step5_lub_iter_eq_req_1 apply blast
   using step5_lub_iter_eq_req_2 by blast
+*)
 
     
   (* resulting lemma of step 5 *)
