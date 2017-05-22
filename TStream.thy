@@ -176,9 +176,6 @@ primrec tsntimes:: " nat \<Rightarrow> 'a tstream \<Rightarrow> 'a tstream" wher
 definition tsinftimes:: "'a tstream \<Rightarrow> 'a tstream" where
 "tsinftimes \<equiv> fix\<cdot>(\<Lambda> h. (\<lambda>ts. if ts = \<bottom> then \<bottom> else (tsConc ts \<cdot> (h ts))))"
 
-
-
-
 (* Definitionen aus TStream *)
 
 text {* Convert an event-spf to a timed-spf. Just a restriction of the function domain. *}
@@ -197,73 +194,35 @@ text {* "Unzipping" of timed streams: project to the second element of tuple of 
 definition tsProjSnd :: "('a \<times> 'b) tstream \<rightarrow> 'b tstream" where
 "tsProjSnd = tsMap snd"
 
-(*
-abbreviation
-  inversDiscr ::  "'a discr\<^sub>\<bottom> \<Rightarrow> 'a"
-    where "inversDiscr e \<equiv> undiscr (case e of Iup m \<Rightarrow> m)"
-*)
+text {* @{term tsFilter}: Remove all elements from the tstream which are
+  not included in the given set. *}
+definition tsFilter :: "'a set \<Rightarrow> 'a tstream \<rightarrow> 'a tstream" where
+"tsFilter M \<equiv> \<Lambda> ts. Abs_tstream (insert \<surd> (Msg ` M) \<ominus> Rep_tstream ts)"
 
-lift_definition sTupify :: "('a discr\<^sub>\<bottom> \<times> 'b event discr\<^sub>\<bottom>) \<rightarrow> ('a \<times> 'b) event discr\<^sub>\<bottom>" is
-"\<lambda> (x, t). case (x,t) of (Iup (Discr mx), Iup (Discr (Msg mt))) \<Rightarrow> Iup (Discr (Msg (mx, mt))) | _ \<Rightarrow> \<bottom>"
-apply (simp add: cfun_def)
-sorry
+(* ToDo: Replace with fixrec function *)
+definition tsZip_h :: "'a event stream \<rightarrow> 'b stream \<rightarrow> ('a \<times> 'b) event stream" where
+"tsZip_h \<equiv> fix\<cdot>(\<Lambda> h s q. if s = \<epsilon> \<or> q = \<epsilon> then \<epsilon> 
+                         else if shd s = \<surd> then \<up>\<surd> \<bullet> h\<cdot>(srt\<cdot>s)\<cdot>q
+                         else \<up>(\<M> (\<M>\<inverse> (shd s), shd q)) \<bullet> h\<cdot>(srt\<cdot>s)\<cdot>(srt\<cdot>q))"
 
-fixrec tsZip_helper :: "'a stream \<rightarrow> 'b event stream \<rightarrow>  ('a \<times> 'b) event stream" where
-"tsZip_helper\<cdot>\<bottom>\<cdot>ts = \<bottom>"  |
-"tsZip_helper\<cdot>xs\<cdot>\<bottom> = \<bottom>"  |
-"x\<noteq>\<bottom> \<Longrightarrow> t=updis \<surd> \<Longrightarrow> 
-  tsZip_helper\<cdot>(lscons\<cdot>x\<cdot>xs)\<cdot>(lscons\<cdot>t\<cdot>ts) = updis \<surd> && tsZip_helper\<cdot>(lscons\<cdot>x\<cdot>xs)\<cdot>ts" |
-(unchecked) "x\<noteq>\<bottom> \<Longrightarrow> t\<noteq>\<bottom> \<Longrightarrow> t\<noteq>updis \<surd> \<Longrightarrow> 
-  tsZip_helper\<cdot>(lscons\<cdot>x\<cdot>xs)\<cdot>(lscons\<cdot>t\<cdot>ts) = (sTupify\<cdot>(x, t)) && (tsZip_helper\<cdot>xs\<cdot>ts)"
+definition tsZip :: "'a tstream \<rightarrow> 'b stream \<rightarrow> ('a \<times> 'b) tstream" where
+"tsZip \<equiv> \<Lambda> ts s. Abs_tstream (tsZip_h\<cdot>(Rep_tstream ts)\<cdot>s)"
 
-lemma "tsZip_helper\<cdot>\<bottom>\<cdot>ts = \<bottom>"
-by (simp)
-
-definition tsZip_h :: "'a stream \<rightarrow> 'b event stream \<rightarrow> ('a \<times> 'b) event stream" where
-"tsZip_h \<equiv> fix\<cdot>(\<Lambda> h q s. if q = \<epsilon> \<or> s = \<epsilon> then \<epsilon> 
-                         else if shd s = \<surd> then \<up>\<surd> \<bullet> h\<cdot>q\<cdot>(srt\<cdot>s)
-                         else \<up>(\<M> (shd q, \<M>\<inverse> (shd s))) \<bullet> h\<cdot>(srt\<cdot>q)\<cdot>(srt\<cdot>s))"
-
-definition tsZip :: "'a stream \<rightarrow> 'b tstream \<rightarrow> ('a \<times> 'b) tstream" where
-"tsZip \<equiv> \<Lambda> s ts. Abs_tstream (tsZip_h\<cdot>s\<cdot>(Rep_tstream ts))"
-
+(* ToDo: Replace with fixrec function *)
 definition tsRemDups_h :: "'a option event \<Rightarrow> 'a option event stream \<rightarrow> 'a option event stream" where
 "tsRemDups_h \<equiv> fix\<cdot>(\<Lambda> h. (\<lambda> q. (\<Lambda> s. if s = \<epsilon> then \<epsilon> 
                                      else if shd s = \<surd> then (\<up>\<surd> \<bullet> h q\<cdot>(srt\<cdot>s))
                                      else if shd s \<noteq> q then (\<up>(shd s) \<bullet> h (shd s)\<cdot>(srt\<cdot>s))
                                      else h q\<cdot>(srt\<cdot>s))))"
 
-(*
-fixrec tsRemDups_helper :: "'a event stream \<Rightarrow> 'a option  \<rightarrow> 'a event stream" where
-"tsRemDups_helper (inversDiscr q)\<cdot>\<bottom> = \<bottom>"  |
-"x=updis \<surd> \<Longrightarrow> 
-  tsRemDups_helper (inversDiscr q)\<cdot>(lscons\<cdot>x\<cdot>xs) = \<up>\<surd> \<bullet> tsRemDups_helper (inversDiscr q)\<cdot>xs" |
-"x\<noteq>updis \<surd> \<Longrightarrow> x\<noteq>q \<Longrightarrow>
-  tsRemDups_helper (inversDiscr q)\<cdot>(lscons\<cdot>x\<cdot>xs) = \<up>(inversDiscr x) \<bullet> tsRemDups_helper (inversDiscr x)\<cdot>xs" |
-(unchecked) "x\<noteq>updis \<surd> \<Longrightarrow> x=q \<Longrightarrow> 
-  tsRemDups_helper (inversDiscr q)\<cdot>(lscons\<cdot>x\<cdot>xs) = tsRemDups_helper (inversDiscr q)\<cdot>xs"
-*)
-
-(* ToDo: Remove option \<Longrightarrow> 'a tstream \<rightarrow> 'a tstream *)
-definition tsRemDups :: "'a option tstream \<rightarrow> 'a option tstream" where
-"tsRemDups \<equiv> \<Lambda> ts. Abs_tstream (tsRemDups_h (\<M> None)\<cdot>(Rep_tstream ts))"
-
-definition tsrcDups_helper :: "'m event stream \<rightarrow> 'm event stream" where
-"tsrcDups_helper \<equiv> \<mu> h. (\<Lambda> s . if s = \<epsilon> then \<epsilon> else sconc (\<up>(shd s))\<cdot>(h\<cdot>(sdropwhile (\<lambda>x. x = shd s)\<cdot>s)))"
-
-  (* remove successive duplicates on tstreams *)
-definition tsrcdups :: "'m tstream \<Rightarrow> 'm tstream" where
-"tsrcdups = espf2tspf tsrcDups_helper"
+(* ToDo: Modify for fixrec tsRemDups_h *)
+definition tsRemDups :: "'a tstream \<rightarrow> 'a tstream" where
+"tsRemDups \<equiv> \<Lambda> ts. Abs_tstream (smap (\<lambda>x. case x of Msg (Some m) \<Rightarrow> (Msg m))\<cdot>(tsRemDups_h (\<M> None)\<cdot>(Rep_tstream (tsMap Some\<cdot>ts))))"
 
 text {* Fairness predicate on timed stream processing function. An espf is considered fair
   if all inputs with infinitely many ticks are mapped to outputs with infinitely many ticks. *}
 definition tspfair :: "('a tstream \<rightarrow> 'b tstream ) \<Rightarrow> bool" where
 "tspfair f \<equiv> \<forall>ts. tsTickCount\<cdot> ts = \<infinity> \<longrightarrow> tsTickCount \<cdot> (f\<cdot> ts) = \<infinity>"
-  
-text {* @{term tsFilter}: Remove all elements from the tstream which are
-  not included in the given set. *}
-definition tsFilter :: "'a set \<Rightarrow> 'a tstream \<rightarrow> 'a tstream" where
-"tsFilter M \<equiv> \<Lambda> ts. Abs_tstream (insert \<surd> (Msg ` M) \<ominus> Rep_tstream ts)"
     
 (* ----------------------------------------------------------------------- *)
   subsection \<open>Lemmas on tstream\<close>
