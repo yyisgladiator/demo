@@ -43,7 +43,7 @@ oops (* good luck proving this :/ *)
   definition upApply :: "('a \<Rightarrow> 'b) \<Rightarrow> 'a discr u \<rightarrow> 'b discr u" where
 "upApply f \<equiv> \<Lambda> a. (if a=\<bottom> then \<bottom> else updis (f (THE b. a = updis b)))"
 
-(* ToDo. Definition & show cnot *)
+(* ToDo. Definition & show cont *)
 definition upApply2 :: "('a \<Rightarrow> 'b \<Rightarrow> 'c) \<Rightarrow> 'a discr\<^sub>\<bottom> \<rightarrow> 'b discr\<^sub>\<bottom> \<rightarrow> 'c discr\<^sub>\<bottom>" where 
 "upApply2 f \<equiv> \<bottom> " (* Is it possible to define upApply2 using upApply ? ? *)
 
@@ -88,7 +88,7 @@ by(simp add: espf2tspf_def cfun_def)
   .. hence for the input (updis Msg m) and the empty stream a special case must be made *)
 thm lscons_def (* similar to lscons *)
 definition tsLscons :: "'a event discr u \<rightarrow> 'a tstream \<rightarrow> 'a tstream" where
-"tsLscons \<equiv> \<Lambda> t ts. if (ts=\<bottom>) then (Abs_tstream (\<up>\<surd>)) else espf2tspf (lscons\<cdot>t) ts"
+"tsLscons \<equiv> \<Lambda> t ts. if (ts=\<bottom> & t\<noteq>updis \<surd>) then \<bottom> else espf2tspf (lscons\<cdot>t) ts"
 
 lemma lsconc_well [simp]: assumes "ts_well ts" and "ts\<noteq>\<bottom>"
   shows "ts_well (t&&ts)"
@@ -96,37 +96,53 @@ apply(auto simp add: ts_well_def)
   apply (metis Rep_Abs assms(1) sConc_Rep_fin_fin stream.con_rews(2) stream.sel_rews(5) surj_scons)
   by (metis Rep_Abs Rep_tstream_bottom_iff assms(1) assms(2) sConc_fin_well stream.con_rews(2) stream.sel_rews(5) surj_scons ts_well_def)    
 
-    
-lemma "ts_well (\<up>\<surd>)"
-  by simp
-
+ lemma lsconc_well2 [simp]: assumes "ts\<noteq>\<bottom>"
+  shows "ts_well (t&&(Rep_tstream ts))"
+   using Rep_tstream_bottom_iff assms lsconc_well ts_well_Rep by blast
+     
 lemma lsconc_tick_well[simp]: "ts_well ts \<Longrightarrow> ts_well (updis \<surd> && ts)"
   by (metis lsconc_well sup'_def tick_msg)
-    
-lemma tslscons_mono: "monofun (\<lambda>ts. if (ts=\<bottom> \<and>t=updis \<surd>) then (Abs_tstream (\<up>\<surd>)) else if ts=\<bottom> then \<bottom> else espf2tspf (lscons\<cdot>t) ts)"    
-  apply(rule monofunI)
-    apply (auto simp add: espf2tspf_def)
-  apply (metis (mono_tags) Abs_tstream_inverse Rep_tstream below_tstream_def lsconc_tick_well lscons_conv mem_Collect_eq minimal monofun_cfun_arg sconc_snd_empty tick_msg)
-  by (metis (no_types, lifting) Abs_tstream_inverse Rep_tstream Rep_tstream_bottom_iff below_tstream_def lsconc_well mem_Collect_eq monofun_cfun_arg)
 
-lemma "monofun (\<lambda> ts. (if ts = \<bottom> then Abs_tstream (\<up>\<surd>) else espf2tspf (lscons\<cdot>t) ts))"
+lemma tslscons_mono [simp]: "monofun (\<lambda> ts. if (ts=\<bottom> & t\<noteq>updis \<surd>) then \<bottom> else espf2tspf (lscons\<cdot>t) ts)"    
   apply(rule monofunI)
-  apply auto
-  oops
-    
-        (* ToDo; important! *)
-(* An tslscons definition anpassen :D *)
-lemma tslscons_cont [simp]: "cont (\<lambda>ts. if (ts=\<bottom> \<and>t=updis \<surd>) then (Abs_tstream (\<up>\<surd>)) else if ts=\<bottom> then \<bottom> else espf2tspf (lscons\<cdot>t) ts)"    (is "cont ?f")
-  sorry
+    apply (auto simp add: espf2tspf_def below_tstream_def)
+  using Rep_tstream_bottom_iff apply blast
+  by (metis (mono_tags, hide_lams) Abs_tstream_inverse Rep_tstream Rep_tstream_bottom_iff lsconc_well mem_Collect_eq monofun_cfun_arg)
 
+ 
+lemma tslscons_mono2[simp]: "monofun (\<lambda> t ts. if (ts=\<bottom> & t\<noteq>updis \<surd>) then \<bottom> else espf2tspf (lscons\<cdot>t) ts)"    
+  apply(rule monofunI, rule fun_belowI)
+    apply (auto simp add: espf2tspf_def below_tstream_def)
+  using stream.inverts apply force
+  using stream.inverts apply force
+  by (metis Discr_undiscr Exh_Up not_up_less_UU updis_eq2)
+
+    
+lemma tslscons_cont: "cont (\<lambda> ts. if (ts=\<bottom> & t\<noteq>updis \<surd>) then \<bottom> else espf2tspf (lscons\<cdot>t) ts)"    
+  apply(rule contI2)
+   apply simp
+  apply(cases "t\<noteq>updis \<surd>")
+    apply rule+
+   apply (auto simp add: espf2tspf_def below_tstream_def)
+    sorry
+
+lemma tslscons_cont2[simp]: "cont (\<lambda> t . \<Lambda> ts. if (ts=\<bottom> & t\<noteq>updis \<surd>) then \<bottom> else espf2tspf (lscons\<cdot>t) ts)"    
+sorry      
+
+lemma tslscons_insert: "tsLscons\<cdot>t\<cdot>ts = (if (ts=\<bottom> & t\<noteq>updis \<surd>) then \<bottom> else espf2tspf (lscons\<cdot>t) ts)"
+  unfolding tsLscons_def
+  by (simp only: beta_cfun tslscons_cont2 tslscons_cont)
+    
+    
     
 (* Das darf man gerne schöner nennen *)
 definition tsMLscons :: "'a discr u \<rightarrow> 'a tstream \<rightarrow> 'a tstream" where
 "tsMLscons \<equiv> \<Lambda> t ts. tsLscons\<cdot>(upApply Msg\<cdot>t)\<cdot>ts"
 
 (* remove the Msg layer. Return bottom on ticks *)
-definition unpackMsg::"'a event discr u \<rightarrow> 'a discr u" where
-  "unpackMsg = upApply (\<lambda>x. case x of Msg m \<Rightarrow> m )"
+lift_definition unpackMsg::"'a event discr u \<rightarrow> 'a discr u" is
+  "\<lambda>t. upApply (\<lambda>x. case x of Msg m \<Rightarrow> m )\<cdot>t"
+  using Cfun.cfun.Rep_cfun by blast
   
   
   
@@ -196,10 +212,11 @@ setup \<open>
   (* Case Studies *)
 
   
-
+(*
 fixrec teees:: "'a tstream \<rightarrow>'a tstream" where
 "teees\<cdot>(tsLscons\<cdot>t\<cdot>ts) = ts"  (* t is a 'event discr u', ts a tstream *)
-
+*)
+  
 (* removes first tick (if there is a first tick *)
 fixrec tee :: "'a tstream \<rightarrow> 'a tstream" where
 "tee\<cdot>(delayFun\<cdot>ts) = ts"  (* this pattern is only called if the input stream starts with a tick *)
