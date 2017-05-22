@@ -1819,15 +1819,20 @@ done
 thm tsMap_def
 
 lemma tsmap_h_fair: "#({\<surd>} \<ominus> (smap (\<lambda>x. case x of \<M> m \<Rightarrow> \<M> f m | \<surd> \<Rightarrow> \<surd>)\<cdot>s)) = #({\<surd>} \<ominus> s)"
-oops
+  apply (rule ind [of _ s], auto)
+  by (case_tac "a", auto)
 
 lemma tsmap_h_sfoot: assumes "#s<\<infinity>" 
   shows "sfoot (smap (\<lambda>x. case x of \<M> m \<Rightarrow> \<M> f m | \<surd> \<Rightarrow> \<surd>)\<cdot>(s \<bullet> \<up>\<surd>)) = \<surd>"
-oops
+  by (simp add: smap_split assms)
 
 lemma tsmap_h_well: assumes "ts_well s"
   shows "ts_well (smap (\<lambda>x. case x of \<M> m \<Rightarrow> \<M> f m | \<surd> \<Rightarrow> \<surd>)\<cdot>s)"
-oops
+  apply (simp add: ts_well_def tsmap_h_fair tsmap_h_sfoot)
+  apply (cases "s = \<epsilon>", auto)
+  apply (meson assms ts_well_def)
+  by (metis (no_types, lifting)
+      assms event.simps(5) sconc_snd_empty smap_scons smap_split strict_smap ts_fin_well)
 
 lemma tsmap_unfold:
   "tsMap f\<cdot>ts = Abs_tstream (smap (\<lambda>x. case x of \<M> m \<Rightarrow> \<M> f m | \<surd> \<Rightarrow> \<surd>)\<cdot>(Rep_tstream ts))"
