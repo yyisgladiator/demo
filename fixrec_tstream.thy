@@ -13,9 +13,11 @@ begin
 
   
 
-
+thm match_lscons_def
+thm stream_case_def
+  thm stream_rep_def
 (* demo that the old fixrec is not working *)
-  
+
   (* this function is removing all ticks *)
 fixrec demo::"'a event stream \<rightarrow> 'a event stream" where
 "t \<noteq> \<bottom> \<Longrightarrow> t=updis \<surd> \<Longrightarrow> demo\<cdot>(lscons\<cdot>t\<cdot>ts) = ts" |
@@ -75,6 +77,13 @@ lift_definition tsLshd :: "'a tstream \<rightarrow> 'a event discr u" is
 "\<lambda> ts.  lshd\<cdot>(Rep_tstream ts)"
 by (simp add: cfun_def)
 
+lemma lshd_eq: "ts\<sqsubseteq>xs \<Longrightarrow> ts\<noteq>\<bottom> \<Longrightarrow> lshd\<cdot>ts = lshd\<cdot>xs"
+  using lessD by fastforce
+
+lemma tslshd_eq: "ts\<sqsubseteq>xs \<Longrightarrow> ts\<noteq>\<bottom> \<Longrightarrow> tsLshd\<cdot>ts = tsLshd\<cdot>xs"
+  apply(simp add: tsLshd_def lshd_eq)
+  by (simp add: Rep_tstream_bottom_iff below_tstream_def lshd_eq)
+
 
 (* get rest of tStream *)
 thm srt_def   (* similar to srt *)
@@ -132,9 +141,24 @@ sorry
 lemma tslscons_insert: "tsLscons\<cdot>t\<cdot>ts = (if (ts=\<bottom> & t\<noteq>updis \<surd>) then \<bottom> else espf2tspf (lscons\<cdot>t) ts)"
   unfolding tsLscons_def
   by (simp only: beta_cfun tslscons_cont2 tslscons_cont)
-    
-    
-    
+
+lemma tslscons_bot [simp]: "t\<noteq>\<bottom> \<Longrightarrow> ts\<noteq>\<bottom> \<Longrightarrow> tsLscons\<cdot>t\<cdot>ts \<noteq>\<bottom>"
+  unfolding tslscons_insert
+  by (simp add: espf2tspf_def)
+
+lemma tslscons_lshd [simp]: "ts\<noteq>\<bottom> \<Longrightarrow> tsLshd\<cdot>(tsLscons\<cdot>t\<cdot>ts) = t"
+by(auto simp add: tslscons_insert tsLshd_def espf2tspf_def)  
+
+lemma tslscons_lshd2 [simp]: "tsLshd\<cdot>(tsLscons\<cdot>(updis \<surd>)\<cdot>ts) = (updis \<surd>)"
+  by(auto simp add: tslscons_insert tsLshd_def espf2tspf_def)  
+
+lemma tslscons_srt [simp]: "t\<noteq>\<bottom> \<Longrightarrow> tsRt\<cdot>(tsLscons\<cdot>t\<cdot>ts) = ts"
+by(auto simp add: tslscons_insert tsRt_def espf2tspf_def)  
+
+lemma tslscons_srt2 [simp]: "tsRt\<cdot>(tsLscons\<cdot>(updis \<surd>)\<cdot>ts) = ts"
+by(auto simp add: tslscons_insert tsRt_def espf2tspf_def)  
+
+  
 (* Das darf man gerne schöner nennen *)
 definition tsMLscons :: "'a discr u \<rightarrow> 'a tstream \<rightarrow> 'a tstream" where
 "tsMLscons \<equiv> \<Lambda> t ts. tsLscons\<cdot>(upApply Msg\<cdot>t)\<cdot>ts"
@@ -157,7 +181,8 @@ definition
 
   (* match if first element is tick *)
 definition match_delayfun:: "'a tstream \<rightarrow> ('a tstream \<rightarrow> ('b ::cpo) match) \<rightarrow> 'b match" where
- "match_delayfun = (\<Lambda> ts k . if (tsLshd\<cdot>ts\<noteq>updis \<surd>) then Fixrec.fail else match_tstream\<cdot>ts\<cdot>(\<Lambda> a . k))" 
+ "match_delayfun = (\<Lambda> ts k. match_tstream\<cdot>ts\<cdot>(\<Lambda> a . k))"
+ (* (\<Lambda> ts k . if (tsLshd\<cdot>ts\<noteq>updis \<surd>) then Fixrec.fail else match_tstream\<cdot>ts\<cdot>(\<Lambda> a . k))"  *)
   
  (* match if first element is message *) 
 definition match_message:: "'a tstream \<rightarrow> ('a discr u \<rightarrow> 'a tstream \<rightarrow> ('b ::cpo) match) \<rightarrow> 'b match" where
@@ -172,17 +197,34 @@ definition match_message:: "'a tstream \<rightarrow> ('a discr u \<rightarrow> '
 lemma match_tstream_cont [simp]:  "monofun (\<lambda> xs . if(xs=\<bottom>) then Fixrec.fail else k\<cdot>(tsLshd\<cdot>xs)\<cdot>(tsRt\<cdot>xs))"
   apply(rule monofunI)
     apply auto
-oops  
+  oops  
+
 
   (* maybe an extra condition is required... t\<noteq>\<bottom> and/or ts\<noteq>\<bottom> e.g. *)
 lemma match_tstream_simps [simp]:
   "match_tstream\<cdot>\<bottom>\<cdot>k = \<bottom>"
-  "ts\<noteq>\<bottom> \<Longrightarrow> match_tstream\<cdot>(tsLscons\<cdot>t\<cdot>ts)\<cdot>k = k\<cdot>t\<cdot>ts" 
-  apply (simp_all add: match_tstream_def)
-  sorry
+  "ts\<noteq>\<bottom> \<Longrightarrow> t\<noteq>\<bottom> \<Longrightarrow> match_tstream\<cdot>(tsLscons\<cdot>t\<cdot>ts)\<cdot>k = k\<cdot>t\<cdot>ts" 
+   by (simp_all add: match_tstream_def)
 (* unfolding match_tstream_def apply simp_all *)
 
+     
+lemma "monofun (\<lambda>ts. if ts=\<bottom>then Fixrec.fail else match_tstream\<cdot>ts\<cdot>(\<Lambda> a . k))"
+  apply(rule monofunI)
+apply (auto simp add: match_tstream_def)
+  using monofun_cfun_arg sorry
+
 lemma match_delayfun_simps [simp]:
+  "match_delayfun\<cdot>\<bottom>\<cdot>k = \<bottom>"
+  "match_delayfun\<cdot>(tsLscons\<cdot>(updis (Msg m))\<cdot>ts)\<cdot>k = k\<cdot>ts"
+  "match_delayfun\<cdot>(tsLscons\<cdot>(updis \<surd>)\<cdot>ts)\<cdot>k = k\<cdot>ts" 
+  "tsLshd\<cdot>ts = updis \<surd> \<Longrightarrow> match_delayfun\<cdot>ts\<cdot>k = k\<cdot>ts"
+  "tsLshd\<cdot>ts = updis (Msg m) \<Longrightarrow> match_delayfun\<cdot>ts\<cdot>k = k\<cdot>ts" 
+  "match_delayfun\<cdot>(tsMLscons\<cdot>t\<cdot>ts)\<cdot>k = Fixrec.fail"
+  "match_delayfun\<cdot>(delayFun\<cdot>ts)\<cdot>k = k\<cdot>ts" (* important *)
+    unfolding match_delayfun_def
+          apply (auto simp add: match_tstream_def)
+      sorry
+(* lemma match_delayfun_simps [simp]:
   "match_delayfun\<cdot>\<bottom>\<cdot>k = Fixrec.fail"
   "match_delayfun\<cdot>(tsLscons\<cdot>(updis (Msg m))\<cdot>ts)\<cdot>k = Fixrec.fail"
   "match_delayfun\<cdot>(tsLscons\<cdot>(updis \<surd>)\<cdot>ts)\<cdot>k = k\<cdot>ts" 
@@ -190,12 +232,14 @@ lemma match_delayfun_simps [simp]:
   "tsLshd\<cdot>ts = updis (Msg m) \<Longrightarrow> match_delayfun\<cdot>ts\<cdot>k = Fixrec.fail" 
   "match_delayfun\<cdot>(tsMLscons\<cdot>t\<cdot>ts)\<cdot>k = Fixrec.fail"
   "match_delayfun\<cdot>(delayFun\<cdot>ts)\<cdot>k = k\<cdot>ts" (* important *)
-  sorry
+  unfolding match_delayfun_def
+  apply auto
+  sorry *)
     
 lemma match_message_simps [simp]:
-  "match_message\<cdot>\<bottom>\<cdot>k = Fixrec.fail"
+  "match_message\<cdot>\<bottom>\<cdot>k = \<bottom>" (* Fixrec.fail" *)
   "match_message\<cdot>(tsMLscons\<cdot>t\<cdot>ts)\<cdot>k = k\<cdot>t\<cdot>ts"
-  "match_message\<cdot>(delayFun\<cdot>ts)\<cdot>k = Fixrec.fail"
+  "match_message\<cdot>(delayFun\<cdot>ts)\<cdot>k = \<bottom>" (*  Fixrec.fail"*)
   sorry
     
 setup \<open>
@@ -212,11 +256,19 @@ setup \<open>
   (* Case Studies *)
 
   
-(*
+
 fixrec teees:: "'a tstream \<rightarrow>'a tstream" where
-"teees\<cdot>(tsLscons\<cdot>t\<cdot>ts) = ts"  (* t is a 'event discr u', ts a tstream *)
-*)
-  
+"t\<noteq>\<bottom> \<Longrightarrow> ts\<noteq>\<bottom> \<Longrightarrow> teees\<cdot>(tsLscons\<cdot>t\<cdot>ts) = ts"  (* t is a 'event discr u', ts a tstream *)
+
+lemma [simp]: "teees\<cdot>\<bottom> = \<bottom>"
+  by(fixrec_simp)
+    
+lemma "t\<noteq>\<bottom> \<Longrightarrow> ts\<noteq>\<bottom> \<Longrightarrow> teees\<cdot>(tsLscons\<cdot>t\<cdot>ts) = ts"
+  by simp
+(*
+lemma "ts=\<bottom> \<Longrightarrow> teees\<cdot>(tsLscons\<cdot>t\<cdot>ts) = ts"
+  by(fixrec_simp)
+    
 (* removes first tick (if there is a first tick *)
 fixrec tee :: "'a tstream \<rightarrow> 'a tstream" where
 "tee\<cdot>(delayFun\<cdot>ts) = ts"  (* this pattern is only called if the input stream starts with a tick *)
@@ -261,6 +313,6 @@ fixrec tsRemDupsNew :: "'a discr u \<rightarrow> 'a tstream \<rightarrow> 'a tst
 "tsRemDupsNew\<cdot>(up\<cdot>a)\<cdot>(delayFun\<cdot>ts) = delayFun\<cdot>(tsRemDupsNew\<cdot>(up\<cdot>a)\<cdot>ts)"  |      (* Ignore Ticks *)
 "tsRemDupsNew\<cdot>(up\<cdot>a)\<cdot>(tsMLscons\<cdot>t\<cdot>ts) = \<bottom>" (* ToDo *)                         (* remove duplicate or save new element *)
   
-  
+  *)
   
 end  
