@@ -19,6 +19,41 @@ lemma mycontI2: assumes "monofun (f::'a::cpo \<Rightarrow> 'b::cpo)" and "(\<And
   shows "cont f"
   by (simp add: Cont.contI2 assms(1) assms(2))
   
+    
+declare [[show_types]]    
+  
+        (*
+proof -
+      obtain nn :: "(nat \<Rightarrow> 'a) \<Rightarrow> nat" where
+        f1: "\<forall>f. (\<not> chain f \<or> (\<forall>n. f n \<sqsubseteq> f (Suc n))) \<and> (chain f \<or> f (nn f) \<notsqsubseteq> f (Suc (nn f)))"
+        using po_class.chain_def by moura
+      have "nn (\<lambda>n. Y (n * Suc (m))) * Suc (m) \<le> Suc (nn (\<lambda>n. Y (n * Suc (m)))) * Suc (m)"
+        by auto
+      then show ?thesis
+        using f1 by (meson assms po_class.chain_mono)
+    qed
+*)
+    
+lemma lub_range_mult:  fixes Y:: "nat \<Rightarrow> 'a::cpo" assumes "chain Y"
+  shows "(\<Squnion>i. Y (i)) = (\<Squnion>i. Y (i * Suc (m)))"
+proof -
+  have f1: "\<forall> (i::nat). i \<le> (i * Suc (m))"
+    by simp
+  have f2: "\<forall> i. Y (i) \<sqsubseteq> Y (i * Suc (m))"
+    by (simp add: chain_mono assms)
+  have f3: "chain (\<lambda>i::nat. Y (i * Suc (m)))"
+    by (metis (no_types, lifting) Suc_n_not_le_n assms mult.commute nat_le_linear 
+          nat_mult_le_cancel_disj po_class.chain_def po_class.chain_mono) 
+        
+  hence "(\<Squnion>i. Y (i * Suc (m))) \<sqsubseteq> (\<Squnion>i. Y (i))"
+    using assms lub_below_iff by blast    
+  thus ?thesis
+    by (simp only: assms below_antisym f2 f3 lub_mono)
+qed
+  
+    
+    
+    
 (* ----------------------------------------------------------------------- *)
 section \<open>definitions\<close>
 (* ----------------------------------------------------------------------- *)
