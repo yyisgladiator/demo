@@ -34,6 +34,7 @@ proof -
     qed
 *)
     
+ (* lubs are equal if chain index is multiplied *)
 lemma lub_range_mult:  fixes Y:: "nat \<Rightarrow> 'a::cpo" assumes "chain Y"
   shows "(\<Squnion>i. Y (i)) = (\<Squnion>i. Y (i * Suc (m)))"
 proof -
@@ -41,7 +42,7 @@ proof -
     by simp
   have f2: "\<forall> i. Y (i) \<sqsubseteq> Y (i * Suc (m))"
     by (simp add: chain_mono assms)
-  have f3: "chain (\<lambda>i::nat. Y (i * Suc (m)))"
+  have f3: "chain (\<lambda>i. Y (i * Suc (m)))"
     by (metis (no_types, lifting) Suc_n_not_le_n assms mult.commute nat_le_linear 
           nat_mult_le_cancel_disj po_class.chain_def po_class.chain_mono) 
         
@@ -51,7 +52,14 @@ proof -
     by (simp only: assms below_antisym f2 f3 lub_mono)
 qed
   
-    
+
+lemma lub_mult_shift_eq: fixes Y:: "nat \<Rightarrow> 'a::cpo" fixes Z:: "nat \<Rightarrow> 'a::cpo" 
+  assumes "chain Y" and "chain Z" 
+  and "\<And> i. Y (i) = Z (i * Suc (m))"
+shows "(\<Squnion>i. (Y i)) = (\<Squnion>i. (Z i))"
+  apply (simp only: assms(3))
+  using assms(2) lub_range_mult by fastforce
+  
     
     
 (* ----------------------------------------------------------------------- *)
