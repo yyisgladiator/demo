@@ -400,29 +400,32 @@ lemma test104: "([c2 \<mapsto> appendElem2 (0::nat)\<cdot>(iter_step5_new x ((2:
 lemma test114: "([c3 \<mapsto> add\<cdot>(x . c1)\<cdot>(iter_step5_new x ((2::nat) * Suc i) . c2)]\<Omega>) . c3 = add\<cdot>(x . c1)\<cdot>(iter_step5_new x ((2::nat) * Suc i) . c2)"
   by simp
     
-lemma iter_new_ch_eq: "iter_step5_new x ((2::nat) * Suc i) . c3 = add\<cdot>(x . c1)\<cdot>(iter_step5_new x ((2::nat) * Suc i) . c2)"
-  sorry
+lemma test125: "(2) * Suc (0) = Suc (Suc (0))"
+  by simp
+    
+lemma add_my_eq:  assumes "(a = b)"
+  shows "add\<cdot>a = add\<cdot>b"
+  by (simp add: assms)
+    
+lemma test126: assumes "((iter_step5_new x ((2::nat) * i) . c3)) = ((add\<cdot>(x . c1)\<cdot>(iter_step5_new x ((2::nat) * i) . c2))) "
+  shows "add\<cdot>(x . c1)\<cdot>(appendElem2 (0::nat)\<cdot>(iter_step5_new x ((2::nat) * i) . c3)) = add\<cdot>(x . c1)\<cdot>(appendElem2 (0::nat)\<cdot>(add\<cdot>(x . c1)\<cdot>(iter_step5_new x ((2::nat) * i) . c2)))"
+    by (simp add: assms)
+    
+lemma iter_new_ch_eq: "iter_step5_new x ((2::nat) * i) . c3 = add\<cdot>(x . c1)\<cdot>(iter_step5_new x ((2::nat) * i) . c2)"
+proof (induction i)
+  case 0
+  then show ?case
+    by (simp add: sbdom_rep_eq)
+next
+  case (Suc i)
+  hence "iter_step5_new (x::nat SB) ((2::nat) * (i::nat)) . c3 = add\<cdot>(x . c1)\<cdot>(iter_step5_new x ((2::nat) * i) . c2)"
+    by blast
+  then show ?case
+    apply(subst test108, subst test102)
+    by (simp add: sbdom_rep_eq)    
+qed
 
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
+
     
 (* this lemma is very hacky written because simp goes wild *)
 lemma step5_lub_iter_eq_req: "iter_step5_old x (Suc i) = iter_step5_new x (2 * (Suc i))"
