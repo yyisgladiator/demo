@@ -1871,7 +1871,7 @@ lemma tsmap_h_fair: "#({\<surd>} \<ominus> (smap (\<lambda>x. case x of \<M> m \
 sorry
 
 lemma tsmap_h_sfoot: assumes "#s<\<infinity>" 
-  shows "sfoot (smap (\<lambda>x. case x of \<M> m \<Rightarrow> \<M> f m | \<surd> \<Rightarrow> \<surd>)\<cdot>(s \<bullet> \<up>\<surd>)) = \<surd> True "
+  shows "sfoot (smap (\<lambda>x. case x of \<M> m \<Rightarrow> \<M> f m | \<surd> \<Rightarrow> \<surd>)\<cdot>(s \<bullet> \<up>\<surd>)) = \<surd>"
 sorry
 
 lemma tsmap_h_well: assumes "ts_well s"
@@ -1890,13 +1890,14 @@ lemma tsmap_strict[simp]: "tsMap f\<cdot>\<bottom> = \<bottom>"
     
     
 lemma tsmap_tstickcount[simp]:  "#\<surd>(tsMap f\<cdot>ts) = #\<surd>ts"
+  apply(simp add: tsTickCount_def)
+  
+  
 sorry
-  
-  
-
     
 lemma tsmap_weak:"tsWeakCausal (Rep_cfun (tsMap f))"
 apply (subst tsWeak2cont2, auto)  
+done
     
 
 (* tsProjFst and tsProjSnd *)
