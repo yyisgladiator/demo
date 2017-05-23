@@ -20,7 +20,7 @@ lemma mycontI2: assumes "monofun (f::'a::cpo \<Rightarrow> 'b::cpo)" and "(\<And
   by (simp add: Cont.contI2 assms(1) assms(2))
   
     
-declare [[show_types]]    
+
   
         (*
 proof -
@@ -190,19 +190,7 @@ proof -
   then show ?thesis
     using a1 by (metis ch2ch_Rep_cfunL ch2ch_Rep_cfunR contlub_cfun_arg)
 qed
-(*
-lemma step3_inner_lub: fixes f :: "nat stream \<rightarrow> nat stream  \<rightarrow> nat stream"
-  shows "chain Y \<longrightarrow>  ((\<Squnion>i. f\<cdot>x\<cdot>((appendElem2 0)\<cdot>(Y i . ch2))) = f\<cdot>x\<cdot>((appendElem2 0)\<cdot>((Lub Y). ch2)))"
-proof -
-  have f1: "\<not> chain (\<lambda>n. Y n . ch2) \<or> f\<cdot>x\<cdot>(\<Squnion>n. appendElem2 0\<cdot>(Y n . ch2)) = (\<Squnion>n. f\<cdot>x\<cdot>(appendElem2 0\<cdot>(Y n . ch2)))"
-    using ch2ch_Rep_cfunR contlub_cfun_arg by blast
-  { assume "chain (\<lambda>n. Y n . ch2)"
-    have "(\<exists>c. \<not> chain (\<lambda>n. Y n . c)) \<or> (chain Y \<longrightarrow> (\<Squnion>n. f\<cdot>x\<cdot>(appendElem2 0\<cdot>(Y n . ch2))) = f\<cdot>x\<cdot>(appendElem2 0\<cdot>(Lub Y . ch2)))"
-      using f1 by (metis contlub_cfun_arg sbgetch_lub) }
-  then show ?thesis
-    using ch2ch_Rep_cfunL ch2ch_Rep_cfunR by blast
-qed
-  *)
+
 
 lemma step3_inner_lub_dom: fixes f :: "nat stream \<rightarrow> nat stream  \<rightarrow> nat stream" 
 shows "chain Y \<Longrightarrow> {ch1} = sbDom\<cdot>(\<Squnion>i. [ch1 \<mapsto> f\<cdot>x\<cdot>(appendElem2 0\<cdot>(Y i . ch2))]\<Omega>)"
@@ -370,6 +358,10 @@ lemma cfun_my_eq:  assumes "(a = b)"
   shows "f\<cdot>a = f\<cdot>b"
   by (simp add: assms)
     
+lemma spf_my_eq:  assumes "(a = b)"
+  shows "f\<rightleftharpoons>a = f\<rightleftharpoons>b"
+  by (simp add: assms)
+    
 (* used for substitution *)
 lemma test106: "2 * (Suc 0) = Suc(Suc(0))"
   by simp
@@ -496,26 +488,83 @@ lemma sum4_sb_in_out_eq: assumes "sb = ([c1 \<mapsto> s]\<Omega>)"
     using step5_lub_iter_eq by presburger
     
     
-subsection \<open>step6\<close> 
+  subsection \<open>step6\<close> 
+    
+lemma test130: "iter_step5_new sb (Suc i) = ([c3 \<mapsto> add\<cdot>(sb . c1)\<cdot>((iter_step5_new sb i) . c2)]\<Omega>)  \<uplus> ([c2 \<mapsto> ((appendElem2 0)\<cdot>((iter_step5_new sb i) . c3))]\<Omega>)"
+  by simp
+    
+
+    
+lemma test131: "iter_spfCompH3 addC append0C (Suc i) sb =  ((addC \<rightleftharpoons>((sb \<uplus> (iter_spfCompH3 addC append0C i sb))  \<bar> spfDom\<cdot>addC)) \<uplus>  (append0C\<rightleftharpoons>((sb \<uplus> (iter_spfCompH3 addC append0C (i) sb))  \<bar> spfDom\<cdot>append0C)))"
+  apply (unfold iterate_Suc, subst spfCompH3_def)
+  apply (subst Abs_cfun_inverse2)
+   apply (simp only: spfCompH3_cont)
+   by simp
+
+lemma sbdom_iter_addc_append: assumes "sbDom\<cdot>sb = {c1}"
+  shows "sbDom\<cdot>(iter_spfCompH3 addC append0C i sb) = {c2,c3}"
+    by (metis Oc_def assms iter_spfCompH3_dom spf_I_add_append spf_Oc_add_append)
   
+  
+lemma nat_sb_repackage: assumes "ch \<in> sbDom\<cdot>sb"
+  shows "(sb::nat SB) \<bar> {ch} = [ch \<mapsto> sb . ch]\<Omega>"
+  apply (rule sb_eq)
+  by (simp_all add: assms sbdom_rep_eq)
+    
+lemma sbrest_test140: assumes "sbDom\<cdot>sb \<subseteq> cs"
+  shows "sb \<bar> cs = sb \<bar> (sbDom\<cdot>sb)"
+  by (simp add: assms)
+    
+lemma sbrest_test141: 
+  shows "sb \<bar> cs = sb \<bar> (cs \<inter> (sbDom\<cdot>sb))"
+  by (smt inf.right_idem inf_commute inf_sup_ord(1) sb_eq 
+          sbrestrict2sbgetch sbrestrict_sbdom set_mp)
+    
+    
+lemma iter_new_dom: "sbDom\<cdot>(iter_step5_new sb i) = {c2, c3}"
+proof (induction i)
+  case 0
+  then show ?case
+    by simp
+next
+  case (Suc i)
+  then show ?case
+    apply (subst test102)
+    by (simp add: sbdom_rep_eq)
+qed
+      
   (* resulting lemma of step 6 *)
 lemma add_addSPF_eq: assumes "sbDom\<cdot>sb = {c1}"
   shows "(iter_spfCompH3 addC append0C i) sb
         = iterate i\<cdot>(\<Lambda> z. ([c3 \<mapsto> add\<cdot>(sb . c1)\<cdot>(z . c2)]\<Omega>)  \<uplus> ([c2 \<mapsto> ((appendElem2 0)\<cdot>(z . c3))]\<Omega>))\<cdot>({c2,c3}^\<bottom>)"
-    apply (simp add: spfCompH3_def addC_apply append0C_apply)
 proof (induction i)
   case 0
   then show ?case 
     by simp
 next
   case (Suc i)
+  hence "iter_spfCompH3 addC append0C i sb = iter_step5_new sb i"
+    by blast
   then show ?case 
-    apply (unfold iterate_Suc)
-    sorry
+    apply (subst test130, subst test131) (* unroll iterate *)
+    apply(rule sbunion_eq)
+      
+      (* addC component *)
+      apply (subst addC_apply, rule spf_my_eq, simp)
+      apply(subst sbunion_restrict3)
+       (* left bundle prep *)
+       apply(subst sbrest_test140, simp add: assms)
+       apply(simp only: assms, subst nat_sb_repackage, simp add: assms)
+       (* right bundle prep *)
+       apply(subst sbrest_test141, simp add: iter_new_dom) (* reeduce restriction sect *)
+       apply(subst nat_sb_repackage, simp add: iter_new_dom, simp add: sbunion_insert) 
+      
+       (* append0C component *)
+       apply (subst append0C_apply2, rule spf_my_eq, simp)
+       apply(subst nat_sb_repackage)
+         apply(simp add: iter_new_dom)
+         by (rule test103, rule sbunion_getchR, simp add: iter_new_dom)   
 qed
-    (* We know that sb has domain c1, the criticical point here is the domain of z, which is {c2,c3} 
-      after this is shown it should be rather easy to proof the lemma using the apply lemmata
-      MAYBE requires another cont proof :/ of (\<Lambda> z. ([c3 \<mapsto> add\<cdot>(sb . c1)\<cdot>(z . c2)]\<Omega>)  \<uplus> ([c2 \<mapsto> ((appendElem2 0)\<cdot>(z . c3))]\<Omega>))\<cdot>({c2,c3}^\<bottom>)*)
     
   
   (* FINAL lemma *)
