@@ -1866,28 +1866,38 @@ done
 thm tsMap_def
 
 lemma tsmap_h_fair: "#({\<surd>} \<ominus> (smap (\<lambda>x. case x of \<M> m \<Rightarrow> \<M> f m | \<surd> \<Rightarrow> \<surd>)\<cdot>s)) = #({\<surd>} \<ominus> s)"
-oops
+  apply(simp add:smap_def)
+  
+sorry
 
 lemma tsmap_h_sfoot: assumes "#s<\<infinity>" 
-  shows "sfoot (smap (\<lambda>x. case x of \<M> m \<Rightarrow> \<M> f m | \<surd> \<Rightarrow> \<surd>)\<cdot>(s \<bullet> \<up>\<surd>)) = \<surd>"
-oops
+  shows "sfoot (smap (\<lambda>x. case x of \<M> m \<Rightarrow> \<M> f m | \<surd> \<Rightarrow> \<surd>)\<cdot>(s \<bullet> \<up>\<surd>)) = \<surd> True "
+sorry
 
 lemma tsmap_h_well: assumes "ts_well s"
   shows "ts_well (smap (\<lambda>x. case x of \<M> m \<Rightarrow> \<M> f m | \<surd> \<Rightarrow> \<surd>)\<cdot>s)"
-oops
+   sorry
 
 lemma tsmap_unfold:
   "tsMap f\<cdot>ts = Abs_tstream (smap (\<lambda>x. case x of \<M> m \<Rightarrow> \<M> f m | \<surd> \<Rightarrow> \<surd>)\<cdot>(Rep_tstream ts))"
-oops
+  apply (simp add:tsMap_def)
+  apply (simp add: espf2tspf_def)
+  by (simp add: tsmap_h_well)
+    
 
 lemma tsmap_strict[simp]: "tsMap f\<cdot>\<bottom> = \<bottom>"
-oops
+  by (simp add: tsmap_unfold)
+    
+    
+lemma tsmap_tstickcount[simp]:  "#\<surd>(tsMap f\<cdot>ts) = #\<surd>ts"
+sorry
+  
+  
 
-lemma tsmap_tstickcount[simp]: "#\<surd>(tsMap f\<cdot>ts) = #\<surd>ts"
-oops
-
+    
 lemma tsmap_weak:"tsWeakCausal (Rep_cfun (tsMap f))"
-oops
+apply (subst tsWeak2cont2, auto)  
+    
 
 (* tsProjFst and tsProjSnd *)
 thm tsProjFst_def
