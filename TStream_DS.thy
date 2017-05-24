@@ -10,19 +10,19 @@ theory TStream_DS
 imports TStream
 
 begin  
-  
+
+(*
+lemma "ts\<noteq>\<bottom> \<Longrightarrow> s\<noteq>\<epsilon> \<Longrightarrow> ts_well (\<up>(\<M> t)\<bullet>Rep_tstream ts) \<Longrightarrow> 
+  tsZip\<cdot>(Abs_tstream (\<up>(\<M> t))\<bullet>ts)\<cdot>(s\<bullet>xs) = Abs_tstream (\<up>(\<M> (t,s)) \<bullet> (Rep_tstream tsZip\<cdot>(Abs_tstream ts)\<cdot>xs))"
+sorry
+*)
+
+thm strictify_def  
 
 (* Wenn das 1. Element ein tick ist, dann bilde auf tick ab (und wende funktion auf rest an). Ansonsten wende funktion an *)
   (* Vermutlich muss man das strictify-en, damit es cont ist *)
 definition ticktify  :: "('a event stream \<rightarrow> 'b event stream) \<rightarrow> 'a event stream \<rightarrow> 'b event stream" where
 "ticktify \<equiv> \<Lambda> f ts. if(lshd\<cdot>ts = updis \<surd>) then updis \<surd> && f\<cdot>(srt\<cdot>ts) else f\<cdot>ts"
-
-thm tsZip_h_def
-
-(* Some ugliy shit over tsZip *)    
-lemma "t\<noteq>\<bottom> \<Longrightarrow> s\<noteq>\<bottom>\<Longrightarrow>ts_well ((Msg t)&&ts) \<Longrightarrow> 
-  tsZip\<cdot>(Abs_tstream ((Msg t)&&ts)\<cdot>(s&&xs)) = Abs_tstream (Msg (t,s) && (Rep_tstream tsZip\<cdot>(Abs_tstream ts)\<cdot>xs))"
-oops
 
 definition upApply :: "('a \<Rightarrow> 'b) \<Rightarrow> 'a discr u \<rightarrow> 'b discr u" where
 "upApply f \<equiv> \<Lambda> a. (if a=\<bottom> then \<bottom> else updis (f (THE b. a = updis b)))"
