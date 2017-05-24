@@ -1852,16 +1852,22 @@ oops
 lemma tsprojsnd_strict[simp]: "tsProjSnd\<cdot>\<bottom> = \<bottom>"
 oops
 
-lemma tsprojfst_strict_rev: "tsProjFst\<cdot>ts = \<bottom> \<Longrightarrow> x = \<bottom>"
+lemma tsprojfst_strict_rev: "tsProjFst\<cdot>ts = \<bottom> \<Longrightarrow> ts = \<bottom>"
 oops
 
-lemma tsprojsnd_strict_rev: "tsProjSnd\<cdot>ts = \<bottom> \<Longrightarrow> x = \<bottom>"
+lemma tsprojsnd_strict_rev: "tsProjSnd\<cdot>ts = \<bottom> \<Longrightarrow> ts = \<bottom>"
 oops
 
 lemma sprojfst_tstickcount: "#\<surd>(tsProjFst\<cdot>ts) = #\<surd>ts"
 oops
 
 lemma sprojsnd_tstickcount: "#\<surd>(tsProjSnd\<cdot>ts) = #\<surd>ts"
+  oops
+    
+lemma "#(tsAbs\<cdot>(tsProjFst\<cdot>ts)) = #(tsAbs\<cdot>ts)"
+oops
+     
+lemma "#(tsAbs\<cdot>(tsProjSnd\<cdot>ts)) = #(tsAbs\<cdot>ts)"
 oops
 
 (* tsFilter *)
