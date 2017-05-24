@@ -35,7 +35,7 @@ definition tsMed :: "'a tstream \<rightarrow> bool stream \<rightarrow> 'a tstre
 lemma tsmed_unfold: "tsMed\<cdot>msg\<cdot>ora = tsProjFst\<cdot>(tsFilter {x. snd x}\<cdot>(tsZip\<cdot>msg\<cdot>ora))"
 by (simp add: tsMed_def)
 
-lemma tsmed_slen_leq: assumes "#({True} \<ominus> ora)=\<infinity>"
+lemma tsmed_slen_leq:
   shows "#(Rep_tstream (tsMed\<cdot>msg\<cdot>ora)) \<le> #(Rep_tstream msg)"
 oops
 

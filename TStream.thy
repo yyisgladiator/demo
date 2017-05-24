@@ -199,7 +199,7 @@ text {* @{term tsFilter}: Remove all elements from the tstream which are
 definition tsFilter :: "'a set \<Rightarrow> 'a tstream \<rightarrow> 'a tstream" where
 "tsFilter M \<equiv> \<Lambda> ts. Abs_tstream (insert \<surd> (Msg ` M) \<ominus> Rep_tstream ts)"
 
-(* ToDo: Improve function (strictyfy, ticktify) *)
+(* ToDo: Improve function (strictify, ticktify) *)
 definition tsZip_h :: "'a event stream \<rightarrow> 'b stream \<rightarrow> ('a \<times> 'b) event stream" where
 "tsZip_h \<equiv> fix\<cdot>(\<Lambda> h s q. if s = \<epsilon> \<or> q = \<epsilon> then \<epsilon> 
                          else if shd s = \<surd> then \<up>\<surd> \<bullet> h\<cdot>(srt\<cdot>s)\<cdot>q
@@ -208,7 +208,7 @@ definition tsZip_h :: "'a event stream \<rightarrow> 'b stream \<rightarrow> ('a
 definition tsZip :: "'a tstream \<rightarrow> 'b stream \<rightarrow> ('a \<times> 'b) tstream" where
 "tsZip \<equiv> \<Lambda> ts s. Abs_tstream (tsZip_h\<cdot>(Rep_tstream ts)\<cdot>s)"
 
-(* ToDo: Improve function (strictyfy, ticktify) *)
+(* ToDo: Improve function (strictify, ticktify) *)
 definition tsRemDups_h :: "'a option event \<Rightarrow> 'a option event stream \<rightarrow> 'a option event stream" where
 "tsRemDups_h \<equiv> fix\<cdot>(\<Lambda> h. (\<lambda> q. (\<Lambda> s. if s = \<epsilon> then \<epsilon> 
                                      else if shd s = \<surd> then (\<up>\<surd> \<bullet> h q\<cdot>(srt\<cdot>s))
