@@ -625,5 +625,53 @@ lemma spfcomp_and_spfcomp2_eq: "(spfcomp f1 f2) = (spfcomp2 f1 f2)"
   apply (subst spfcompH3_abbrv_tospfH32)
   by (simp add: spfcomp_and_spfcomp2_eq_req)
     
+    
   
+(* ----------------------------------------------------------------------- *)
+section \<open>sbFix\<close>
+(* ----------------------------------------------------------------------- *) 
+  
+
+(* adds the input to the original definition *)
+definition sbFix2 :: "('m SB \<Rightarrow> 'm SB \<rightarrow> 'm SB) \<Rightarrow> 'm SB  \<Rightarrow> channel set \<Rightarrow> 'm SB" where
+"sbFix2 F x cs \<equiv>  (\<Squnion>i. iterate i\<cdot>(F x)\<cdot>(cs^\<bottom>))"
+
+abbreviation iter_sbfix:: "('m SB \<Rightarrow> 'm SB \<rightarrow> 'm SB) \<Rightarrow> nat \<Rightarrow> channel set \<Rightarrow> 'm SB \<Rightarrow> 'm SB" where
+"iter_sbfix F i cs \<equiv> (\<lambda> x. iterate i\<cdot>(F x)\<cdot>(cs^\<bottom>))"
+
+abbreviation sbfun_io_eq :: "('m SB \<rightarrow> 'm SB)  \<Rightarrow> channel set \<Rightarrow> bool" where
+"sbfun_io_eq f cs \<equiv> sbDom\<cdot>(f\<cdot>(cs^\<bottom>)) = cs"
+
+
+lemma sbfix2_iter_eq: "sbFix2 F x cs = (\<Squnion>i. iter_sbfix F i cs x)"
+  by (simp add: sbFix2_def)
+
+
+subsection \<open>iter_sbfix\<close>
+  
+lemma iter_sbfix_cont[simp]: assumes "cont F"
+ shows "cont (\<lambda> x. iter_sbfix F i cs x)"
+  by (simp add: assms)
+    
+lemma iter_sbfix_mono[simp]: assumes "cont F"
+ shows "monofun (\<lambda> x. iter_sbfix F i cs x)"
+  by (simp add: assms cont2mono)
+    
+    
+lemma iter_sbfix_mono2: assumes "cont F" and "x \<sqsubseteq> y"
+  shows "\<forall>i . (iter_sbfix F i cs x) \<sqsubseteq> (iter_sbfix F i cs y)"
+  by (simp add: assms(1) assms(2) cont2monofunE monofun_cfun_fun)
+    
+lemma iter_sbfix_chain: assumes "sbfun_io_eq (F x) cs"
+  shows "chain (\<lambda>i. iter_sbfix F i cs x)"
+    apply (rule sbIterate_chain)
+  by (simp add: assms)
+    
+lemma iter_sbfix_dom: assumes "sbfun_io_eq (F x) cs"
+  shows "sbDom\<cdot>(iter_sbfix F i cs x) =  sbDom\<cdot>((F x)\<cdot>(cs^\<bottom>))"
+  apply (induct_tac i)
+   apply (simp_all add: assms)
+  by (metis (no_types, lifting) assms cfcomp2 cfcomp2 monofun_cfun_arg rev_below_trans 
+            sbdom_eq sbleast_least sbleast_sbdom sbtake_zero)
+    
 end
