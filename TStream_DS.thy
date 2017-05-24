@@ -10,6 +10,12 @@ theory TStream_DS
 imports TStream
 
 begin  
+  
+(* Some ugliy shit over tsZip *)
+    
+lemma "t\<noteq>\<bottom> \<Longrightarrow> s\<noteq>\<bottom>\<Longrightarrow>ts_well ((Msg t)&&ts) \<Longrightarrow> 
+  tsZip\<cdot>(Abs_tstream ((Msg t)&&ts)\<cdot>(s&&xs)) = Abs_tstream (Msg (t,s) && (Rep_tstream tsZip\<cdot>(Abs_tstream ts)\<cdot>xs))"
+oops
 
 definition upApply :: "('a \<Rightarrow> 'b) \<Rightarrow> 'a discr u \<rightarrow> 'b discr u" where
 "upApply f \<equiv> \<Lambda> a. (if a=\<bottom> then \<bottom> else updis (f (THE b. a = updis b)))"
