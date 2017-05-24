@@ -310,10 +310,22 @@ definition match_delayfun:: "'a tstream \<rightarrow> ('a tstream \<rightarrow> 
  (* match if first element is message *) 
 definition match_message:: "'a tstream \<rightarrow> ('a discr u \<rightarrow> 'a tstream \<rightarrow> ('b ::cpo) match) \<rightarrow> 'b match" where
  "match_message = (\<Lambda> ts k . if (tsLshd\<cdot>ts=updis \<surd>) then Fixrec.fail else match_tstream\<cdot>ts\<cdot>(\<Lambda> a xs . k\<cdot>(unpackMsg\<cdot>a)\<cdot>xs))" 
-   
  
- 
- 
+ (* match if first element is message *) 
+definition match_tick:: "'a event discr \<rightarrow> ('b ::cpo) match \<rightarrow> 'b match" where
+ "match_tick = (\<Lambda> t k . if t=(Discr \<surd>) then k else Fixrec.fail)" 
+    
+definition DiscrTick :: "'a event discr" where
+  "DiscrTick = Discr \<surd>"
+  
+lemma match_tick_simps [simp]:
+  "a\<noteq>\<surd> \<Longrightarrow> match_tick\<cdot>(Discr a)\<cdot>k = Fixrec.fail"
+  "t\<noteq>DiscrTick \<Longrightarrow> match_tick\<cdot>t\<cdot>k = Fixrec.fail"
+  "match_tick\<cdot>(Discr \<surd>)\<cdot>k = k"
+  "match_tick\<cdot>DiscrTick\<cdot>k = k"
+  by (simp_all add: match_tick_def DiscrTick_def)
+
+  
      subsection \<open>Lemmata for match definitions\<close>
 
   (* ToDo: cont-stuff for die match-sachen *)
@@ -327,7 +339,10 @@ lemma match_tstream_cont [simp]:  "monofun (\<lambda> xs . if(xs=\<bottom>) then
 lemma match_tstream_simps [simp]:
   "match_tstream\<cdot>\<bottom>\<cdot>k = \<bottom>"
   "ts\<noteq>\<bottom> \<Longrightarrow> t\<noteq>\<bottom> \<Longrightarrow> match_tstream\<cdot>(tsLscons\<cdot>t\<cdot>ts)\<cdot>k = k\<cdot>t\<cdot>ts" 
-   by (simp_all add: match_tstream_def)
+  "match_tstream\<cdot>(tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>ts)\<cdot>k = k\<cdot>(up\<cdot>DiscrTick)\<cdot>ts"
+  "match_tstream\<cdot>(delayFun\<cdot>ts)\<cdot>k = k\<cdot>(up\<cdot>DiscrTick)\<cdot>ts"
+    apply (simp_all add: match_tstream_def DiscrTick_def)
+    sorry
 (* unfolding match_tstream_def apply simp_all *)
 
      
@@ -369,7 +384,8 @@ setup \<open>
   Fixrec.add_matchers
     [ (@{const_name tsLscons}, @{const_name match_tstream}) , 
       (@{const_name delayFun}, @{const_name match_delayfun}),
-      (@{const_name tsMLscons}, @{const_name match_message})
+      (@{const_name tsMLscons}, @{const_name match_message}),
+      (@{const_name DiscrTick}, @{const_name match_tick})
     ]
 \<close>
 
@@ -381,12 +397,18 @@ setup \<open>
   
 
 fixrec teees:: "'a tstream \<rightarrow>'a tstream" where
-"t\<noteq>\<bottom> \<Longrightarrow> ts\<noteq>\<bottom> \<Longrightarrow> teees\<cdot>(tsLscons\<cdot>t\<cdot>ts) = ts"  (* t is a 'event discr u', ts a tstream *)
+"ts\<noteq>\<bottom> \<Longrightarrow> teees\<cdot>(tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>ts) = tsInfTick" |  (* t is a 'event discr u', ts a tstream *)
+"t\<noteq>DiscrTick \<Longrightarrow> ts\<noteq>\<bottom> \<Longrightarrow> teees\<cdot>(tsLscons\<cdot>(up\<cdot>t)\<cdot>ts) = ts"
 
 lemma [simp]: "teees\<cdot>\<bottom> = \<bottom>"
   by(fixrec_simp)
+
+    (* First Element is a Tick *)
+lemma "teees\<cdot>(delayFun\<cdot>ts) = tsInfTick"
+  by fixrec_simp
     
-lemma "t\<noteq>\<bottom> \<Longrightarrow> ts\<noteq>\<bottom> \<Longrightarrow> teees\<cdot>(tsLscons\<cdot>t\<cdot>ts) = ts"
+    (* First Element is not a Tick *)
+lemma "t\<noteq>DiscrTick \<Longrightarrow> ts\<noteq>\<bottom> \<Longrightarrow> teees\<cdot>(tsLscons\<cdot>(up\<cdot>t)\<cdot>ts) = ts"
   by simp
 
 lemma "teees\<cdot>\<bottom>= \<bottom>"
