@@ -835,7 +835,21 @@ proof -
 qed
   
   
-       
+
       
+  
+  
+  
+  
+  
+  
 (* OUTLOOK/TODO: user has to provide the proof:  (sbDom\<cdot>x = condition) \<Longrightarrow> (sbfun_io_eq (F x) cs) to show cont (\<lambda> x. (P x) \<leadsto> (\<Squnion>i.(iter_sbfix F i cs) x) ) *)
+  
+ (* DEMO *)
+  
+lemma spf_compH3_mono2: 
+  shows "monofun (\<lambda> x. (sbDom\<cdot>x = I f1 f2) \<leadsto> (\<Squnion>i. (iter_spfCompH3 f1 f2 i) x))"
+  apply(rule sbfix_mono)
+    by (simp_all)
+  
 end
