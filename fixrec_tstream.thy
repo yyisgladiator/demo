@@ -256,6 +256,9 @@ lemma tslscons_nbot [simp]: "t\<noteq>\<bottom> \<Longrightarrow> ts\<noteq>\<bo
   unfolding tslscons_insert
   by (simp add: espf2tspf_def)
 
+lemma tslscons_nbot2[simp]: "tsLscons\<cdot>(updis \<surd>)\<cdot>ts\<noteq>\<bottom>"
+  by(auto simp add: tslscons_insert tsLshd_def espf2tspf_def)
+        
 lemma tslscons_lshd [simp]: "ts\<noteq>\<bottom> \<Longrightarrow> tsLshd\<cdot>(tsLscons\<cdot>t\<cdot>ts) = t"
 by(auto simp add: tslscons_insert tsLshd_def espf2tspf_def)  
 
@@ -267,8 +270,14 @@ by(auto simp add: tslscons_insert tsRt_def espf2tspf_def)
 
 lemma tslscons_srt2 [simp]: "tsRt\<cdot>(tsLscons\<cdot>(updis \<surd>)\<cdot>ts) = ts"
   by(auto simp add: tslscons_insert tsRt_def espf2tspf_def)  
+
     
+lemma tsrt_delayfun[simp]: "tsRt\<cdot>(delayFun\<cdot>ts) = ts"
+  by (simp add: delayFun_def tsRt_def espf2tspf_def tsconc_rep_eq)
     
+lemma tslshd_delayfun[simp]: "tsLshd\<cdot>(delayFun\<cdot>ts) = updis \<surd>"  
+    by (simp add: delayFun_def tsLshd_def espf2tspf_def tsconc_rep_eq)
+  
   
 (* Das darf man gerne schöner nennen *)
 definition tsMLscons :: "'a discr u \<rightarrow> 'a tstream \<rightarrow> 'a tstream" where
@@ -302,6 +311,7 @@ definition
   "match_tstream = (\<Lambda> xs k.  strictify\<cdot>(\<Lambda> xs. k\<cdot>(tsLshd\<cdot>xs)\<cdot>(tsRt\<cdot>xs))\<cdot>xs)" (*testing a different definition *)
   (* if(xs=\<bottom>) then Fixrec.fail else k\<cdot>(tsLshd\<cdot>xs)\<cdot>(tsRt\<cdot>xs)) " *)
 
+  (*
   (* match if first element is tick *)
 definition match_delayfun:: "'a tstream \<rightarrow> ('a tstream \<rightarrow> ('b ::cpo) match) \<rightarrow> 'b match" where
  "match_delayfun = (\<Lambda> ts k. match_tstream\<cdot>ts\<cdot>(\<Lambda> a . k))"
@@ -310,7 +320,8 @@ definition match_delayfun:: "'a tstream \<rightarrow> ('a tstream \<rightarrow> 
  (* match if first element is message *) 
 definition match_message:: "'a tstream \<rightarrow> ('a discr u \<rightarrow> 'a tstream \<rightarrow> ('b ::cpo) match) \<rightarrow> 'b match" where
  "match_message = (\<Lambda> ts k . if (tsLshd\<cdot>ts=updis \<surd>) then Fixrec.fail else match_tstream\<cdot>ts\<cdot>(\<Lambda> a xs . k\<cdot>(unpackMsg\<cdot>a)\<cdot>xs))" 
- 
+ *)
+  
  (* match if first element is message *) 
 definition match_tick:: "'a event discr \<rightarrow> ('b ::cpo) match \<rightarrow> 'b match" where
  "match_tick = (\<Lambda> t k . if t=(Discr \<surd>) then k else Fixrec.fail)" 
@@ -320,6 +331,7 @@ definition DiscrTick :: "'a event discr" where
   
 lemma match_tick_simps [simp]:
   "a\<noteq>\<surd> \<Longrightarrow> match_tick\<cdot>(Discr a)\<cdot>k = Fixrec.fail"
+  "b\<noteq>(Discr \<surd>) \<Longrightarrow> match_tick\<cdot>b\<cdot>k = Fixrec.fail"
   "t\<noteq>DiscrTick \<Longrightarrow> match_tick\<cdot>t\<cdot>k = Fixrec.fail"
   "match_tick\<cdot>(Discr \<surd>)\<cdot>k = k"
   "match_tick\<cdot>DiscrTick\<cdot>k = k"
@@ -335,17 +347,20 @@ lemma match_tstream_cont [simp]:  "monofun (\<lambda> xs . if(xs=\<bottom>) then
   oops  
 
 
+lemma delayfun_nbot[simp]: "delayFun\<cdot>ts \<noteq> \<bottom>"
+  by(simp add: delayFun_def)  
+    
   (* maybe an extra condition is required... t\<noteq>\<bottom> and/or ts\<noteq>\<bottom> e.g. *)
 lemma match_tstream_simps [simp]:
   "match_tstream\<cdot>\<bottom>\<cdot>k = \<bottom>"
   "ts\<noteq>\<bottom> \<Longrightarrow> t\<noteq>\<bottom> \<Longrightarrow> match_tstream\<cdot>(tsLscons\<cdot>t\<cdot>ts)\<cdot>k = k\<cdot>t\<cdot>ts" 
   "match_tstream\<cdot>(tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>ts)\<cdot>k = k\<cdot>(up\<cdot>DiscrTick)\<cdot>ts"
   "match_tstream\<cdot>(delayFun\<cdot>ts)\<cdot>k = k\<cdot>(up\<cdot>DiscrTick)\<cdot>ts"
-    apply (simp_all add: match_tstream_def DiscrTick_def)
-    sorry
+    by (simp_all add: match_tstream_def DiscrTick_def)
+
 (* unfolding match_tstream_def apply simp_all *)
 
-     
+     (*
 lemma "monofun (\<lambda>ts. if ts=\<bottom>then Fixrec.fail else match_tstream\<cdot>ts\<cdot>(\<Lambda> a . k))"
   apply(rule monofunI)
 apply (auto simp add: match_tstream_def)
@@ -379,12 +394,12 @@ lemma match_message_simps [simp]:
   "match_message\<cdot>(tsMLscons\<cdot>t\<cdot>ts)\<cdot>k = k\<cdot>t\<cdot>ts"
   "match_message\<cdot>(delayFun\<cdot>ts)\<cdot>k = \<bottom>" (*  Fixrec.fail"*)
   sorry
-    
+    *)
 setup \<open>
   Fixrec.add_matchers
     [ (@{const_name tsLscons}, @{const_name match_tstream}) , 
-      (@{const_name delayFun}, @{const_name match_delayfun}),
-      (@{const_name tsMLscons}, @{const_name match_message}),
+     (* (@{const_name delayFun}, @{const_name match_delayfun}),
+      (@{const_name tsMLscons}, @{const_name match_message}), *)
       (@{const_name DiscrTick}, @{const_name match_tick})
     ]
 \<close>
@@ -397,7 +412,7 @@ setup \<open>
   
 
 fixrec teees:: "'a tstream \<rightarrow>'a tstream" where
-"ts\<noteq>\<bottom> \<Longrightarrow> teees\<cdot>(tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>ts) = tsInfTick" |  (* t is a 'event discr u', ts a tstream *)
+"teees\<cdot>(tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>ts) = tsInfTick" |  (* t is a 'event discr u', ts a tstream *)
 "t\<noteq>DiscrTick \<Longrightarrow> ts\<noteq>\<bottom> \<Longrightarrow> teees\<cdot>(tsLscons\<cdot>(up\<cdot>t)\<cdot>ts) = ts"
 
 lemma [simp]: "teees\<cdot>\<bottom> = \<bottom>"
@@ -414,53 +429,28 @@ lemma "t\<noteq>DiscrTick \<Longrightarrow> ts\<noteq>\<bottom> \<Longrightarrow
 lemma "teees\<cdot>\<bottom>= \<bottom>"
   by simp
     
-lemma "ts=\<bottom> \<Longrightarrow> teees\<cdot>(tsLscons\<cdot>t\<cdot>ts) = ts"
-  by(fixrec_simp)
+
+ 
+    
     
 (* removes first tick (if there is a first tick *)
 fixrec tee :: "'a tstream \<rightarrow> 'a tstream" where
-"tee\<cdot>(delayFun\<cdot>ts) = ts"  (* this pattern is only called if the input stream starts with a tick *)
+"tee\<cdot>(tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>ts) = ts"  (* this pattern is only called if the input stream starts with a tick *)
 
 fixrec tsAbsNew :: "'a tstream \<rightarrow> 'a stream" where
-"tsAbsNew\<cdot>(tsMLscons\<cdot>t\<cdot>ts) = t && tsAbsNew\<cdot>ts" | (* prepend first message and go on *)  
-"tsAbsNew\<cdot>(delayFun\<cdot>ts) = tsAbsNew\<cdot>ts"   (* ignore ticks *)  
+"tsAbsNew\<cdot>(tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>ts) = tsAbsNew\<cdot>ts" |   (* ignore ticks *)  
+"t\<noteq>(Discr \<surd>) \<Longrightarrow> ts\<noteq>\<bottom> \<Longrightarrow> tsAbsNew\<cdot>(tsLscons\<cdot>(up\<cdot>t)\<cdot>ts) = tsAbsNew\<cdot>ts"  (* prepend first message and go on *)  
 
 
 
-    
+   (* only the general idea *)
 fixrec tsZipNew:: "'a stream \<rightarrow> 'b tstream \<rightarrow> ('a\<times>'b) tstream" where
-"x\<noteq>\<bottom> \<Longrightarrow> tsZipNew\<cdot>(lscons\<cdot>x\<cdot>xs)\<cdot>(tsMLscons\<cdot>t\<cdot>ts) = (tsMLscons\<cdot>(upApply2 Pair\<cdot>x\<cdot>t)\<cdot>(tsZipNew\<cdot>xs\<cdot>ts))"  | (* zip if both first elements are defined *)
-"x\<noteq>\<bottom> \<Longrightarrow> tsZipNew\<cdot>(lscons\<cdot>x\<cdot>xs)\<cdot>(delayFun\<cdot>ts) = delayFun\<cdot>(tsZipNew\<cdot>xs\<cdot>ts)"  (* ignore ticks *)
+"x\<noteq>\<bottom> \<Longrightarrow>t\<noteq>(Discr \<surd>) \<Longrightarrow> ts\<noteq>\<bottom> \<Longrightarrow> tsZipNew\<cdot>(lscons\<cdot>x\<cdot>xs)\<cdot>(tsLscons\<cdot>(up\<cdot>t)\<cdot>ts) 
+    = (tsMLscons\<cdot>(upApply2 Pair\<cdot>x\<cdot>(up\<cdot>t))\<cdot>(tsZipNew\<cdot>xs\<cdot>ts))"  | (* zip if both first elements are defined *)
+
+"x\<noteq>\<bottom> \<Longrightarrow> tsZipNew\<cdot>(lscons\<cdot>x\<cdot>xs)\<cdot>(tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>ts) 
+    = delayFun\<cdot>(tsZipNew\<cdot>xs\<cdot>ts)"  (* ignore ticks *)
 (* No other cases required, stuff that does not match will go to bottom *)
 
-  
-
-
-
-
-(* Gimmick *)
-thm match_Pair_def
-thm  match_up_def
-definition match_ibottom :: "('a::cpo) u \<rightarrow> ('c ::cpo) match \<rightarrow> 'c match" where
-  "match_ibottom = (\<Lambda> x k. case x of Ibottom \<Rightarrow> k | _ \<Rightarrow> Fixrec.fail)"
-
-setup \<open>
-  Fixrec.add_matchers
-    [ (@{const_name Ibottom}, @{const_name match_ibottom})]\<close>
-  
-lemma match_ibottom_simps [simp]:
-(*   "match_ibottom\<cdot>\<bottom>\<cdot>k = Fixrec.fail" *)
-  "match_ibottom\<cdot>(up\<cdot>a)\<cdot>k = Fixrec.fail"
-  "match_ibottom\<cdot>Ibottom\<cdot>k = k"
-  sorry
-  
-fixrec tsRemDupsNew :: "'a discr u \<rightarrow> 'a tstream \<rightarrow> 'a tstream" where
-(* No element found yet: *)
-"tsRemDupsNew\<cdot>Ibottom\<cdot>(tsMLscons\<cdot>t\<cdot>ts) = tsMLscons\<cdot>t\<cdot>(tsRemDupsNew\<cdot>t\<cdot>ts)" |     (* Element found, prepend it and save it *)
-"tsRemDupsNew\<cdot>Ibottom\<cdot>(delayFun\<cdot>ts) = delayFun\<cdot>(tsRemDupsNew\<cdot>Ibottom\<cdot>ts)"  |   (* Ignore Ticks *)
-"tsRemDupsNew\<cdot>(up\<cdot>a)\<cdot>(delayFun\<cdot>ts) = delayFun\<cdot>(tsRemDupsNew\<cdot>(up\<cdot>a)\<cdot>ts)"  |      (* Ignore Ticks *)
-"tsRemDupsNew\<cdot>(up\<cdot>a)\<cdot>(tsMLscons\<cdot>t\<cdot>ts) = \<bottom>" (* ToDo *)                         (* remove duplicate or save new element *)
-  
-  *)
-  
+    
 end  
