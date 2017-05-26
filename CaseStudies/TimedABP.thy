@@ -21,6 +21,14 @@ sorry
 lemma tszip_strict_snd[simp]: "tsZip\<cdot>ts\<cdot>\<epsilon> = \<bottom>"
 sorry
 
+(* ToDo: Vor der Verwendung durch sorry auf Korrektheit überprüfen *)
+lemma tszip_scons_tick: "tsZip\<cdot>(Abs_tstream (\<up>\<surd>)\<bullet>ts)\<cdot>xs = Abs_tstream(\<up>\<surd>) \<bullet> tsZip\<cdot>ts\<cdot>xs"
+oops
+
+lemma tszip_scons: "t\<noteq>\<surd> \<Longrightarrow> ts_well (\<up>(\<M> (\<M>\<inverse> t,x)) \<bullet> Rep_tstream (tsZip\<cdot>ts\<cdot>xs)) 
+  \<Longrightarrow> tsZip\<cdot>(Abs_tstream (\<up>t)\<bullet>ts)\<cdot>(\<up>x\<bullet>xs) = Abs_tstream(\<up>(\<M> (\<M>\<inverse> t,x)) \<bullet> Rep_tstream (tsZip\<cdot>ts\<cdot>xs))"
+oops
+
 (* ----------------------------------------------------------------------- *)
 section {* Medium *}
 (* ----------------------------------------------------------------------- *)
