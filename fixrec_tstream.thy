@@ -328,14 +328,10 @@ definition match_tick:: "'a event discr \<rightarrow> ('b ::cpo) match \<rightar
     
 definition DiscrTick :: "'a event discr" where
   "DiscrTick = Discr \<surd>"
-  
-lemma match_tick_simps [simp]:
-  "a\<noteq>\<surd> \<Longrightarrow> match_tick\<cdot>(Discr a)\<cdot>k = Fixrec.fail"
-  "b\<noteq>(Discr \<surd>) \<Longrightarrow> match_tick\<cdot>b\<cdot>k = Fixrec.fail"
-  "t\<noteq>DiscrTick \<Longrightarrow> match_tick\<cdot>t\<cdot>k = Fixrec.fail"
-  "match_tick\<cdot>(Discr \<surd>)\<cdot>k = k"
-  "match_tick\<cdot>DiscrTick\<cdot>k = k"
-  by (simp_all add: match_tick_def DiscrTick_def)
+
+
+
+
 
   
      subsection \<open>Lemmata for match definitions\<close>
@@ -358,6 +354,50 @@ lemma match_tstream_simps [simp]:
   "match_tstream\<cdot>(delayFun\<cdot>ts)\<cdot>k = k\<cdot>(up\<cdot>DiscrTick)\<cdot>ts"
     by (simp_all add: match_tstream_def DiscrTick_def)
 
+      
+definition uMsg :: "'a discr \<rightarrow> 'a event discr"   where
+"uMsg = (\<Lambda> t. case t of (Discr m) \<Rightarrow> (Discr (Msg m)))"
+
+definition match_umsg:: "'a event discr \<rightarrow> ('a discr \<rightarrow> 'b::cpo match) \<rightarrow> 'b match"  where
+"match_umsg = (\<Lambda> t k. case t of (Discr (Msg m)) \<Rightarrow> k\<cdot>(Discr m) | _\<Rightarrow>Fixrec.fail)"
+
+lemma match_umsg_mono: "monofun (\<lambda>k. case t of (Discr (Msg m)) \<Rightarrow> k\<cdot>(Discr m) | _\<Rightarrow>Fixrec.fail)"
+  apply(rule monofunI)
+  apply(cases "\<exists>m. t = Discr (Msg m)", auto)
+  apply (simp add: monofun_cfun_fun)
+  by (metis Discr_undiscr discr.case event.exhaust event.simps(5) po_eq_conv)
+
+lemma match_umsg_cont[simp]: "cont (\<lambda>k. case t of (Discr (Msg m)) \<Rightarrow> k\<cdot>(Discr m) | _\<Rightarrow>Fixrec.fail)"
+  apply(rule contI2)
+  apply(simp add: match_umsg_mono)
+  apply(cases "\<exists>m. t = Discr (Msg m)", auto)
+  using contlub_cfun_fun po_eq_conv apply blast
+  using Discr_undiscr discr.case event.exhaust event.simps(5) po_eq_conv by (smt below_lub po_class.chain_def)
+
+lemma match_umsg_insert: "match_umsg\<cdot>t\<cdot>k = (case t of (Discr (Msg m)) \<Rightarrow> k\<cdot>(Discr m) | _\<Rightarrow>Fixrec.fail)"
+by(simp add: match_umsg_def)  
+  
+   
+    
+lemma match_tick_simps [simp]:
+  "a\<noteq>\<surd> \<Longrightarrow> match_tick\<cdot>(Discr a)\<cdot>k = Fixrec.fail"
+  "b\<noteq>(Discr \<surd>) \<Longrightarrow> match_tick\<cdot>b\<cdot>k = Fixrec.fail"
+  "t\<noteq>DiscrTick \<Longrightarrow> match_tick\<cdot>t\<cdot>k = Fixrec.fail"
+  "match_tick\<cdot>(uMsg\<cdot>m)\<cdot>k = Fixrec.fail"
+  "match_tick\<cdot>(Discr \<surd>)\<cdot>k = k"
+  "match_tick\<cdot>DiscrTick\<cdot>k = k"
+  apply (auto simp add: match_tick_def DiscrTick_def uMsg_def)
+  by (metis Discr_undiscr discr.case event.distinct(1) undiscr_Discr)
+
+lemma match_umsg_simps [simp]:
+  "match_umsg\<cdot>(Discr \<surd>)\<cdot>k = Fixrec.fail"
+  "match_umsg\<cdot>DiscrTick\<cdot>k = Fixrec.fail"
+  "match_umsg\<cdot>(Discr (Msg m))\<cdot>k = k\<cdot>(Discr m)"
+  "match_umsg\<cdot>(uMsg\<cdot>m2)\<cdot>k = k\<cdot>m2"
+  unfolding match_umsg_insert
+  apply (auto simp add: DiscrTick_def)
+  by (metis (mono_tags, lifting) Abs_cfun_inverse2 Discr_undiscr cont_discrete_cpo discr.case event.case(1) uMsg_def)
+    
 (* unfolding match_tstream_def apply simp_all *)
 
      (*
@@ -400,7 +440,8 @@ setup \<open>
     [ (@{const_name tsLscons}, @{const_name match_tstream}) , 
      (* (@{const_name delayFun}, @{const_name match_delayfun}),
       (@{const_name tsMLscons}, @{const_name match_message}), *)
-      (@{const_name DiscrTick}, @{const_name match_tick})
+      (@{const_name DiscrTick}, @{const_name match_tick}),
+      (@{const_name uMsg}, @{const_name match_umsg})
     ]
 \<close>
 
@@ -445,8 +486,8 @@ fixrec tsAbsNew :: "'a tstream \<rightarrow> 'a stream" where
 
    (* only the general idea *)
 fixrec tsZipNew:: "'a stream \<rightarrow> 'b tstream \<rightarrow> ('a\<times>'b) tstream" where
-"x\<noteq>\<bottom> \<Longrightarrow>t\<noteq>(Discr \<surd>) \<Longrightarrow> ts\<noteq>\<bottom> \<Longrightarrow> tsZipNew\<cdot>(lscons\<cdot>x\<cdot>xs)\<cdot>(tsLscons\<cdot>(up\<cdot>t)\<cdot>ts) 
-    = (tsMLscons\<cdot>(upApply2 Pair\<cdot>x\<cdot>(up\<cdot>t))\<cdot>(tsZipNew\<cdot>xs\<cdot>ts))"  | (* zip if both first elements are defined *)
+"x\<noteq>\<bottom> \<Longrightarrow> ts\<noteq>\<bottom> \<Longrightarrow> tsZipNew\<cdot>(lscons\<cdot>x\<cdot>xs)\<cdot>(tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>t))\<cdot>ts) 
+    =tsMLscons\<cdot>(upApply2 Pair\<cdot>x\<cdot>(up\<cdot>t))\<cdot>(tsZipNew\<cdot>xs\<cdot>ts) " |  (* zip if both first elements are defined *)
 
 "x\<noteq>\<bottom> \<Longrightarrow> tsZipNew\<cdot>(lscons\<cdot>x\<cdot>xs)\<cdot>(tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>ts) 
     = delayFun\<cdot>(tsZipNew\<cdot>xs\<cdot>ts)"  (* ignore ticks *)
