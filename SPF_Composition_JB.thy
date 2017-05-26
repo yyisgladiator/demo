@@ -36,7 +36,12 @@ subsection \<open>Some\<close>
 lemma some_lub_chain_eq: fixes Y :: "nat \<Rightarrow> 'a::cpo"
             assumes "chain Y"
             shows " Some (\<Squnion> i. Y i) = (\<Squnion> i. Some (Y i))"
-using assms cont2contlubE some_cont by blast
+  using assms cont2contlubE some_cont by blast
+    
+lemma some_lub_chain_eq3: fixes Y :: "nat \<Rightarrow> 'a::cpo"
+            assumes "chain Y"
+            shows "(\<Squnion> i. Some (Y i)) = Some (\<Squnion> i. Y i)"
+ by (simp add: some_lub_chain_eq assms)
 
 (* Some can be pulled out when applied to a function which is applied to a chain *)   
 lemma some_lub_chain_eq2: fixes Y:: "nat \<Rightarrow> 'a::cpo"
@@ -625,5 +630,327 @@ lemma spfcomp_and_spfcomp2_eq: "(spfcomp f1 f2) = (spfcomp2 f1 f2)"
   apply (subst spfcompH3_abbrv_tospfH32)
   by (simp add: spfcomp_and_spfcomp2_eq_req)
     
+    
+  
+(* ----------------------------------------------------------------------- *)
+section \<open>sbFix\<close>
+(* ----------------------------------------------------------------------- *) 
+  
+(* the proof strategy is very similar to the one in SPF_Feedback_JB *)
+
+(* adds the input to the original sbFix definition *)
+  (* makes old sbfix obsolete *)
+definition sbFix2 :: "('m SB \<Rightarrow> 'm SB \<rightarrow> 'm SB) \<Rightarrow> 'm SB  \<Rightarrow> channel set \<Rightarrow> 'm SB" where
+"sbFix2 F x cs \<equiv>  (\<Squnion>i. iterate i\<cdot>(F x)\<cdot>(cs^\<bottom>))"
+
+abbreviation iter_sbfix:: "('m SB \<Rightarrow> 'm SB \<rightarrow> 'm SB) \<Rightarrow> nat \<Rightarrow> channel set \<Rightarrow> 'm SB \<Rightarrow> 'm SB" where
+"iter_sbfix F i cs \<equiv> (\<lambda> x. iterate i\<cdot>(F x)\<cdot>(cs^\<bottom>))"
+
+abbreviation sbfun_io_eq :: "('m SB \<rightarrow> 'm SB)  \<Rightarrow> channel set \<Rightarrow> bool" where
+"sbfun_io_eq f cs \<equiv> sbDom\<cdot>(f\<cdot>(cs^\<bottom>)) = cs"
+
+
+lemma sbfix2_iter_eq: "sbFix2 F x cs = (\<Squnion>i. iter_sbfix F i cs x)"
+  by (simp add: sbFix2_def)
+    
+
+    
+subsection \<open>iter_sbfix\<close>
+  
+lemma iter_sbfix_cont[simp]: assumes "cont F"
+ shows "cont (\<lambda> x. iter_sbfix F i cs x)"
+  by (simp add: assms)
+    
+lemma iter_sbfix_mono[simp]: assumes "cont F"
+ shows "monofun (\<lambda> x. iter_sbfix F i cs x)"
+  by (simp add: assms cont2mono)
+    
+    
+lemma iter_sbfix_mono2: assumes "cont F" and "x \<sqsubseteq> y"
+  shows "\<forall>i . (iter_sbfix F i cs x) \<sqsubseteq> (iter_sbfix F i cs y)"
+  by (simp add: assms(1) assms(2) cont2monofunE monofun_cfun_fun)
+    
+lemma iter_sbfix_chain: assumes "sbfun_io_eq (F x) cs"
+  shows "chain (\<lambda>i. iter_sbfix F i cs x)"
+    apply (rule sbIterate_chain)
+  by (simp add: assms)
+    
+lemma iter_sbfix_dom: assumes "sbfun_io_eq (F x) cs"
+  shows "sbDom\<cdot>(iter_sbfix F i cs x) =  sbDom\<cdot>((F x)\<cdot>(cs^\<bottom>))"
+  apply (induct_tac i)
+   apply (simp_all add: assms)
+  by (metis (no_types, lifting) assms cfcomp2 cfcomp2 monofun_cfun_arg rev_below_trans 
+            sbdom_eq sbleast_least sbleast_sbdom sbtake_zero)
+          
+ 
+subsection \<open>lub_iter_sbfix\<close>
+
+subsubsection \<open>mono\<close>
+  
+lemma lub_iter_sbfix_mono_req: assumes "x \<sqsubseteq> y" and "cont F" and "sbfun_io_eq (F x) cs"
+  shows "(\<Squnion>i. (iter_sbfix F i cs) x) \<sqsubseteq> (\<Squnion>i. (iter_sbfix F i cs) y)"
+proof -
+  have "\<forall>i. ((iter_sbfix F i cs) x) \<sqsubseteq> ((iter_sbfix F i cs) y)"
+    by (simp add: iter_sbfix_mono2 assms(1) assms(2))
+  moreover
+  have "sbDom\<cdot>x = sbDom\<cdot>y"
+    using assms(1) sbdom_eq by auto
+  moreover
+  have "sbfun_io_eq (F y) cs"
+    by (metis assms(1) assms(2) assms(3) cont2monofunE monofun_cfun_fun sbdom_eq)
+  ultimately
+  show ?thesis
+    by (simp add: lub_mono assms iter_sbfix_mono2 iter_sbfix_chain)
+qed
+  
+(* TODO: if lub mono lemmas *)
+  
+subsubsection \<open>cont\<close>
+  
+lemma chain_lub_iter_sbfix: assumes "chain Y" and "cont F" and "sbfun_io_eq (F (\<Squnion>i. Y i)) cs"
+  shows "chain (\<lambda>i. \<Squnion>ia. iter_sbfix F ia cs (Y i))"
+proof -
+  have f1: "\<forall>i. (Y i) \<sqsubseteq> (Y (Suc i))"
+    using assms(1) po_class.chain_def by blast
+  have f2: "\<forall>ia. sbfun_io_eq (F (Y ia)) cs"
+    proof -
+      have "(\<Squnion>n. F (Y n)\<cdot>(cs^\<bottom>)) = F (Lub Y)\<cdot>(cs^\<bottom>)"
+      by (metis (no_types) assms(1) assms(2) ch2ch_cont cont2contlubE contlub_cfun_fun)
+    thus ?thesis
+      by (metis (no_types) assms(1) assms(2) assms(3) ch2ch_Rep_cfunL ch2ch_cont sbChain_dom_eq2)
+  qed
+    
+  thus ?thesis
+    apply(subst chainI,  simp_all add: assms)
+    by (rule lub_iter_sbfix_mono_req, simp_all add: f1 assms)
+qed
+ 
+lemma chain_if_lub_iter_sbfix_req: assumes "chain Y" and "cont F" 
+                                   and "sbfun_io_eq (F (\<Squnion>i. Y i)) cs"
+  shows "(\<Squnion>i ia. iter_sbfix F i cs (Y ia)) \<sqsubseteq> (\<Squnion>i ia.  iter_sbfix F ia cs (Y i))"
+proof -
+  have f1: "\<And>i. cont (\<lambda>x. iter_sbfix F i cs x)"
+    by (simp add: assms(2))
+  moreover
+  have f2: "(\<Squnion>i. iter_sbfix F i cs (\<Squnion>i. Y i)) = (\<Squnion> ia i. iter_sbfix F ia cs (Y i))"
+    by (subst cont2lub_lub_eq, simp_all add: assms)
+  moreover
+  have f3: "\<forall>ia. sbfun_io_eq (F (Y ia)) cs"
+    proof -
+      have "(\<Squnion>n. F (Y n)\<cdot>(cs^\<bottom>)) = F (Lub Y)\<cdot>(cs^\<bottom>)"
+      by (metis (no_types) assms(1) assms(2) ch2ch_cont cont2contlubE contlub_cfun_fun)
+    thus ?thesis
+      by (metis (no_types) assms(1) assms(2) assms(3) ch2ch_Rep_cfunL ch2ch_cont sbChain_dom_eq2)
+    qed
+  ultimately
+  show ?thesis
+    by (simp add: diag_lub ch2ch_cont assms iter_sbfix_chain)
+qed
+  
+  
+subsubsection \<open>dom\<close>
+  
+lemma lub_iter_sbfix_dom: assumes "sbfun_io_eq (F x) cs"
+  shows "sbDom\<cdot>(\<Squnion>i. iter_sbfix F i cs x) =  sbDom\<cdot>((F x)\<cdot>(cs^\<bottom>))"
+  by (metis (mono_tags, lifting) assms iter_sbfix_chain iter_sbfix_dom 
+        lub_eq sbChain_dom_eq2)
+
+      
+subsection \<open>if_lub_iter_sbfix\<close>   
+  
+declare [[show_types]]
+subsubsection \<open>mono\<close> 
+  
+lemma if_lub_iter_sbfix_mono_req: assumes "x \<sqsubseteq> y" and "cont F" 
+                                  and "(P x) \<Longrightarrow> sbfun_io_eq (F x) cs" 
+                                  and "sbDom\<cdot>x = sbDom\<cdot>y \<Longrightarrow> P x = P y"
+  shows "((\<lambda> x. (P x) \<leadsto> (\<Squnion>i.(iter_sbfix F i cs) x)) x)
+         \<sqsubseteq> ((\<lambda> x. (P x)  \<leadsto> (\<Squnion>i.(iter_sbfix F i cs) x)) y)"
+proof (cases "(P x)")
+  case True
+  hence f1: "sbfun_io_eq (F x) cs"  
+    by (simp add: assms(3))
+  have "\<forall>i. ((iter_sbfix F i cs) x) \<sqsubseteq> ((iter_sbfix F i cs) y)"
+    by (simp add: assms(1) assms(2) iter_sbfix_mono2)
+  moreover
+  have f2: "sbDom\<cdot>x = sbDom\<cdot>y"
+    using assms(1) sbdom_eq by auto
+  ultimately
+  have "(\<Squnion>i.(iter_sbfix F i cs) x) \<sqsubseteq> (\<Squnion>i.(iter_sbfix F i cs) y)"
+    by (simp add: assms(1) assms(2) f1 lub_iter_sbfix_mono_req)
+  thus ?thesis
+    using f2 some_below assms by auto
+next
+  case False
+  have "sbDom\<cdot>y = sbDom\<cdot>x"
+    by (metis assms(1) sbdom_eq)
+  thus ?thesis     
+    using False assms(4) by auto
+qed
+  
+  
+lemma sbfix_monoI [simp]: assumes  "cont F"  and "\<And> x. (P x) \<Longrightarrow> sbfun_io_eq (F x) cs" 
+                          and "\<And> x y. sbDom\<cdot>x = sbDom\<cdot>y \<Longrightarrow> P x = P y"
+  shows "monofun (\<lambda> x. (P x) \<leadsto> (\<Squnion>i.(iter_sbfix F i cs) x) )"
+proof -
+  have "\<And> x. \<And> y. x \<sqsubseteq> y \<Longrightarrow> ((\<lambda> x. (P x) \<leadsto> (\<Squnion>i.(iter_sbfix F i cs) x)) x) 
+                              \<sqsubseteq> ((\<lambda> x. (P x)  \<leadsto> (\<Squnion>i.(iter_sbfix F i cs) x)) y)"
+    proof -
+      fix x :: "'a SB" and y :: "'a SB"
+      assume a1: "x \<sqsubseteq> y"
+      then have f2: "\<And>f p C. \<not> cont f \<or> \<not> p y \<or> \<not> p x \<or> sbDom\<cdot>(f x\<cdot>(C^\<bottom>)) \<noteq> C 
+                                  \<or> (p x)\<leadsto>\<Squnion>n. iter_sbfix f n C x \<sqsubseteq> (p y)\<leadsto>\<Squnion>n. iter_sbfix f n C y"
+      using if_lub_iter_sbfix_mono_req by blast
+    have f3: "\<And>f p C. \<not> cont f \<or> p x \<or> (p x)\<leadsto>\<Squnion>n. iter_sbfix f n C x 
+                                        \<sqsubseteq> (p y)\<leadsto>\<Squnion>n. iter_sbfix f n C y \<or> sbDom\<cdot>y = sbDom\<cdot>x"
+      using a1 by (metis if_lub_iter_sbfix_mono_req)
+    have f4: "\<And>p. (p x)\<leadsto>\<Squnion>n. iter_sbfix F n cs x \<sqsubseteq> (p y)\<leadsto>\<Squnion>n. iter_sbfix F n cs y \<or> p y \<or> p x"
+      using a1 assms(1) if_lub_iter_sbfix_mono_req by blast
+    have f5: "\<And>p. sbDom\<cdot>(F x\<cdot>(cs^\<bottom>)) \<noteq> cs \<or> 
+              (p x)\<leadsto>\<Squnion>n. iter_sbfix F n cs x \<sqsubseteq> (p y)\<leadsto>\<Squnion>n. iter_sbfix F n cs y \<or> sbDom\<cdot>y = sbDom\<cdot>x"
+      using a1 by (metis assms(1) if_lub_iter_sbfix_mono_req)
+      { assume "P x"
+        moreover
+        { assume "sbfun_io_eq (F x) cs 
+                            \<and> \<not>(Some (\<Squnion>n. iter_sbfix F n cs x) \<sqsubseteq> Some (\<Squnion>n. iter_sbfix F n cs y))"
+          moreover
+          { assume "P y \<and> P x \<and> sbfun_io_eq (F x) cs 
+                             \<and> \<not>(True\<leadsto>\<Squnion>n. iter_sbfix F n cs x \<sqsubseteq> Some (\<Squnion>n. iter_sbfix F n cs y))"
+            then have "\<not> P x"
+            using f2 assms(1) by auto }
+        ultimately have "\<not> P y \<or> \<not> P x"
+          by metis }
+      ultimately have "P x \<and> P y \<longrightarrow> (P x)\<leadsto>\<Squnion>n. iter_sbfix F n cs x 
+                                   \<sqsubseteq> (P y)\<leadsto>\<Squnion>n. iter_sbfix F n cs y"
+        using assms(2) by auto
+      then have "sbDom\<cdot>y = sbDom\<cdot>x \<and> P x \<longrightarrow> (P x)\<leadsto>\<Squnion>n. iter_sbfix F n cs x 
+                                          \<sqsubseteq> (P y)\<leadsto>\<Squnion>n. iter_sbfix F n cs y"
+        by (meson assms(3)) }
+    moreover
+    { assume "\<not> P x"
+      moreover
+      { assume "\<exists>s. P y \<and> sbDom\<cdot>x = sbDom\<cdot>s \<and> \<not> P s"
+        then have "sbDom\<cdot>y \<noteq> sbDom\<cdot>x"
+          by (metis assms(3)) }
+      ultimately have "sbDom\<cdot>y = sbDom\<cdot>x \<longrightarrow> (P x)\<leadsto>\<Squnion>n. iter_sbfix F n cs x 
+                                          \<sqsubseteq> (P y)\<leadsto>\<Squnion>n. iter_sbfix F n cs y"
+        using f4 by blast }
+    moreover
+    { assume "sbDom\<cdot>y \<noteq> sbDom\<cdot>x"
+      moreover
+      { assume "\<not> P x \<and> sbDom\<cdot>y \<noteq> sbDom\<cdot>x \<and> \<not> P x"
+        then have "(P x)\<leadsto>\<Squnion>n. iter_sbfix F n cs x \<sqsubseteq> (P y)\<leadsto>\<Squnion>n. iter_sbfix F n cs y"
+          using f3 assms(1) by blast }
+      ultimately have "(P x)\<leadsto>\<Squnion>n. iter_sbfix F n cs x \<sqsubseteq> (P y)\<leadsto>\<Squnion>n. iter_sbfix F n cs y"
+        using f5 assms(2) by blast }
+    ultimately show "(P x)\<leadsto>\<Squnion>n. iter_sbfix F n cs x \<sqsubseteq> (P y)\<leadsto>\<Squnion>n. iter_sbfix F n cs y"
+      by satx
+  qed (* :) *)
+  thus ?thesis
+    by (simp add: monofunI)
+qed
+
+
+subsubsection \<open>cont\<close>   
+  
+lemma chain_if_lub_iter_sbfix_case: assumes "chain Y" and "cont F" and "P (\<Squnion>i. Y i)"
+                                  and "\<And> x. (P x) \<Longrightarrow> sbfun_io_eq (F x) cs" 
+                                  and "\<And> x y. sbDom\<cdot>x = sbDom\<cdot>y \<Longrightarrow> P x = P y"
+  shows "(P (\<Squnion>i. Y i)) \<leadsto> (\<Squnion>i.(iter_sbfix F i cs) (\<Squnion>i. Y i)) 
+          \<sqsubseteq> (\<Squnion>i. (P (Y i)) \<leadsto> (\<Squnion>ia. (iter_sbfix F ia cs) (Y i)))"
+proof -
+  have f1: "sbfun_io_eq (F (\<Squnion>i. Y i)) cs"
+    by (simp add: assms(3) assms(4))
+  have f2: "(\<Squnion>i. iter_sbfix F i cs (\<Squnion>i. Y i)) = (\<Squnion> ia i. iter_sbfix F ia cs (Y i))"
+    by (subst cont2lub_lub_eq, simp_all add: assms)
+  have f3: "\<forall>ia. sbfun_io_eq (F (Y ia)) cs"
+    proof -
+      have "(\<Squnion>n. F (Y n)\<cdot>(cs^\<bottom>)) = F (Lub Y)\<cdot>(cs^\<bottom>)"
+        by (metis (no_types) assms(1) assms(2) ch2ch_cont cont2contlubE contlub_cfun_fun)
+      thus ?thesis
+        by (metis (no_types) assms(1) assms(2) f1 ch2ch_Rep_cfunL ch2ch_cont sbChain_dom_eq2)
+    qed
+  have f4: "(\<Squnion>i ia. iter_sbfix F i cs (Y ia)) \<sqsubseteq> (\<Squnion>i ia.  iter_sbfix F ia cs (Y i))"
+    by (rule chain_if_lub_iter_sbfix_req, simp_all add: assms)
+      
+      
+   (* PART II: show the equality for the packaging with some *)
+  have f10: "(P (\<Squnion>i. Y i)) \<leadsto> (\<Squnion>i. iter_sbfix F i cs (\<Squnion>i. Y i)) 
+              = Some (\<Squnion>i. iter_sbfix F i cs (\<Squnion>i. Y i))"
+    by (simp add: assms(3))
+  have f11: "(\<Squnion>i. (P (Y i)) \<leadsto>  \<Squnion>ia. iter_sbfix F ia cs (Y i)) 
+              = Some (\<Squnion>i ia. iter_sbfix F ia cs (Y i))"
+  proof -
+    have f111: "(\<Squnion>i. (P (Y i)) \<leadsto>   \<Squnion>ia. iter_sbfix F ia cs (Y i)) 
+                 = (\<Squnion>i. Some(\<Squnion>ia. iter_sbfix F ia cs (Y i)))"
+      by (meson assms(1) assms(3) assms(5) sbChain_dom_eq2)
+    have f112_chain: "chain (\<lambda>i. \<Squnion>ia. iter_sbfix F ia cs (Y i))"
+      by (simp add: assms(1) assms(2) chain_lub_iter_sbfix f1)
+    have f112: "(\<Squnion>i. Some(\<Squnion>ia. iter_sbfix F ia cs (Y i))) 
+                = Some (\<Squnion>i ia. iter_sbfix F ia cs (Y i))"
+      by (simp add: some_lub_chain_eq3 f112_chain)
+    thus ?thesis
+      using f111 by auto
+  qed
+    
+  show ?thesis
+    apply(subst f10, subst f11)
+    by (simp add: some_below f2 f4)
+qed
+  
+        
+lemma chain_if_lub_iter_sbfix: assumes "chain Y" and "cont F"
+                               and "\<And> x. (P x) \<Longrightarrow> sbfun_io_eq (F x) cs" 
+                               and "\<And> x y. sbDom\<cdot>x = sbDom\<cdot>y \<Longrightarrow> P x = P y" 
+  shows "(P (\<Squnion>i. Y i)) \<leadsto> (\<Squnion>i.(iter_sbfix F i cs) (\<Squnion>i. Y i)) 
+          \<sqsubseteq> (\<Squnion>i. (P (Y i)) \<leadsto> (\<Squnion>ia. (iter_sbfix F ia cs) (Y i)))"
+proof (cases "P (\<Squnion>i. Y i)")
+  case True
+  then show ?thesis
+    using  chain_if_lub_iter_sbfix_case assms by blast
+next
+  case False
+  hence f1: "(P (\<Squnion>i. Y i)) = False"
+    by simp
+  then show ?thesis
+  proof -
+    have f2: "\<forall>i. sbDom\<cdot>(Y i) = sbDom\<cdot>(\<Squnion>i. Y i)"
+      by (simp add: sbChain_dom_eq2 assms(1))
+    hence f3: "\<forall>i. (P (Y i)) = (P (\<Squnion>i. Y i))"
+      by (metis assms(4))
+    thus ?thesis
+      by (simp add: f3 f1)
+  qed
+qed
+  
+ 
+  
+
+
+(* Insertion lemma for cont sbfix *)
+lemma sbfix_contI [simp]: assumes  "cont F" and "\<And> x. (P x) \<Longrightarrow> sbfun_io_eq (F x) cs" 
+                          and "\<And> x y. sbDom\<cdot>x = sbDom\<cdot>y \<Longrightarrow> P x = P y"
+  shows "cont (\<lambda> x. (P x) \<leadsto> (\<Squnion>i.(iter_sbfix F i cs) x) )"
+  apply (rule contI2)
+   apply (rule sbfix_monoI, simp add: assms(1), simp add: assms(2), metis assms(3))
+  using chain_if_lub_iter_sbfix assms by blast
+    
+
+
+    
+  
+  
+    
+ (* DEMO: cont of spfcomp, now in two lines :) *)
+  
+lemma spf_compH3_mono2: 
+  shows "monofun (\<lambda> x. (sbDom\<cdot>x = I f1 f2) \<leadsto> (\<Squnion>i. (iter_spfCompH3 f1 f2 i) x))"
+  apply(rule sbfix_monoI)
+  by (simp_all)
+    
+lemma spf_compH3_cont2: 
+  shows "cont (\<lambda> x. (sbDom\<cdot>x = I f1 f2) \<leadsto> (\<Squnion>i. (iter_spfCompH3 f1 f2 i) x))"
+  apply(rule sbfix_contI)
+    by (simp_all)
   
 end
