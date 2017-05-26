@@ -258,10 +258,55 @@ lemma sum4_sb_in_out_pre1: assumes "sb = ([c1 \<mapsto> s]\<Omega>)"
 
     
 subsection \<open>step4\<close>  
+
+lemma contAppendSB_contHelp[simp]: "cont (\<lambda> z. ((appendElem2 0)\<cdot>(z . c3)))"
+  by(simp add: appendElem2_def)
+    
+lemma contAppendSB_monofun[simp]: "monofun (\<lambda> z. ([c2 \<mapsto> ((appendElem2 0)\<cdot>(z . c3))]\<Omega>))"
+    apply(rule monofunI)
+    apply (rule sb_below)
+     apply (simp add: sbdom_insert)
+      apply (simp add: sbdom_rep_eq sbgetch_rep_eq)
+  by (meson monofun_cfun monofun_cfun_arg monofun_cfun_fun)
+    
+lemma contAppendSB_chain[simp]: "chain Y \<Longrightarrow> chain (\<lambda> i. ([c2 \<mapsto> ((appendElem2 0)\<cdot>((Y i) . c3))]\<Omega>))"
+    apply (rule chainI)
+    apply (rule sb_below)
+     apply (simp add: sbdom_rep_eq)
+      apply (simp add: sbdom_rep_eq sbgetch_rep_eq)
+      by (simp add: monofun_cfun po_class.chainE)
+
+lemma contAppendSB_innerLub: "chain Y \<Longrightarrow> (\<Squnion> i. ((appendElem2 0)\<cdot>((Y i) . c3))) = (appendElem2 0)\<cdot>((Lub Y) . c3)"
+proof -
+  assume a1: "chain Y"
+  then have f1: "\<And>c. (\<Squnion>n. Y n . c) = Lub Y . c"
+    using sbgetch_lub by fastforce
+  then show ?thesis
+    using a1 by (metis ch2ch_Rep_cfunL ch2ch_Rep_cfunR contlub_cfun_arg)
+qed 
   
+lemma contAppendSB_innerLub_dom: "chain Y \<Longrightarrow> {c2} = sbDom\<cdot>(\<Squnion>i. ([c2 \<mapsto> ((appendElem2 0)\<cdot>((Y i) . c3))]\<Omega>))"
+proof -
+  assume a1: "chain Y"
+  hence f1: "chain (\<lambda> i.([c2 \<mapsto> ((appendElem2 0)\<cdot>((Y i) . c3))]\<Omega>))"
+    by simp
+  hence f2: "\<forall> i.  sbDom\<cdot>(([c2 \<mapsto> ((appendElem2 0)\<cdot>((Y i) . c3))]\<Omega>)) = {c2}"
+    by (simp add: sbdom_rep_eq sbgetch_rep_eq sbgetch_lub step3_inner_lub)
+  hence f3: "\<forall> i. (([c2 \<mapsto> ((appendElem2 0)\<cdot>((Y i) . c3))]\<Omega>))  \<sqsubseteq> (\<Squnion>i. ([c2 \<mapsto> ((appendElem2 0)\<cdot>((Y i) . c3))]\<Omega>))"
+    using f1 is_ub_thelub by blast
+  thus ?thesis
+    using f1 f2 sbChain_dom_eq2 by blast
+qed
+  
+lemma contAppendSB: "cont (\<lambda> z. ([c2 \<mapsto> ((appendElem2 0)\<cdot>(z . c3))]\<Omega>))"
+  apply (rule mycontI2, simp only: contAppendSB_monofun)
+  apply(rule sb_below)
+    apply (simp_all add: sbdom_rep_eq sbgetch_rep_eq sbgetch_lub contAppendSB_innerLub)
+  by (simp add: contAppendSB_innerLub_dom)
+    
+
 lemma cont2[simp]: "cont (\<lambda> z. ([c3 \<mapsto> add\<cdot>(x . c1)\<cdot>((appendElem2 0)\<cdot>(z . c3))]\<Omega>)  \<uplus> ([c2 \<mapsto> ((appendElem2 0)\<cdot>(z . c3))]\<Omega>))"
-  sorry (* left out as this is very similar to cont of comp helper *)
-        (* requires cont [c2 \<mapsto> ((appendElem2 0)\<cdot>(z . c3)) proof first *)
+by (simp add: contAppendSB Rep_CSPF_def)
     
 lemma step4_dom: 
 shows "sbDom\<cdot>((\<Lambda> z.([c3 \<mapsto> add\<cdot>(x . c1)\<cdot>((appendElem2 0)\<cdot>(z . c3))]\<Omega>)  \<uplus> ([c2 \<mapsto> ((appendElem2 0)\<cdot>(z . c3))]\<Omega>))\<cdot>({c2, c3}^\<bottom>)) = {c2, c3}"
@@ -311,9 +356,55 @@ lemma sum4_sb_in_out_pre2: assumes "sb = ([c1 \<mapsto> s]\<Omega>)"
 
   subsection \<open>step5\<close>  
     
-lemma cont5[simp]: "cont (\<lambda> z.  ([c3 \<mapsto> add\<cdot>(x . c1)\<cdot>(z . c2)]\<Omega>) \<uplus> ([c2 \<mapsto> appendElem2 0\<cdot>(z . c3)]\<Omega>))"
-  sorry (* left out as this is very similar to cont of comp helper *)
-        (* requires cont [c2 \<mapsto> ((appendElem2 0)\<cdot>(z . c3)) proof first *)
+    
+lemma contAddSB_contHelp[simp]: "cont (\<lambda> z.  add\<cdot>(x . c1)\<cdot>(z . c2))"
+  by(simp add: appendElem2_def)
+    
+lemma contAddSB_monofun[simp]: "monofun (\<lambda> z. ([c3 \<mapsto> add\<cdot>(x . c1)\<cdot>(z . c2)]\<Omega>))"
+    apply(rule monofunI)
+    apply (rule sb_below)
+     apply (simp add: sbdom_insert)
+      apply (simp add: sbdom_rep_eq sbgetch_rep_eq)
+  by (meson monofun_cfun monofun_cfun_arg monofun_cfun_fun)
+    
+lemma contAddSB_chain[simp]: "chain Y \<Longrightarrow> chain (\<lambda> i. ([c3 \<mapsto> add\<cdot>(x . c1)\<cdot>((Y i) . c2)]\<Omega>))"
+    apply (rule chainI)
+    apply (rule sb_below)
+     apply (simp add: sbdom_rep_eq)
+    apply(simp add: sbdom_rep_eq sbgetch_rep_eq)
+    by (simp add: monofun_cfun_arg monofun_cfun_fun po_class.chainE)
+
+lemma contAddSB_innerLub[simp]: "chain Y \<Longrightarrow> (\<Squnion> i.  add\<cdot>(x . c1)\<cdot>((Y i) . c2)) =  add\<cdot>(x . c1)\<cdot>((Lub Y) . c2)"
+proof -
+  assume a1: "chain Y"
+  then have f1: "\<And>c. (\<Squnion>n. Y n . c) = Lub Y . c"
+    using sbgetch_lub by fastforce
+  then show ?thesis
+    using a1 by (metis ch2ch_Rep_cfunL ch2ch_Rep_cfunR contlub_cfun_arg)
+qed 
+  
+lemma contAddSB_innerLub_dom: "chain Y \<Longrightarrow> {c3} = sbDom\<cdot>(\<Squnion>i. ([c3 \<mapsto> add\<cdot>(x . c1)\<cdot>((Y i) . c2)]\<Omega>))"
+proof -
+  assume a1: "chain Y"
+  hence f1: "chain (\<lambda> i. ([c3 \<mapsto> add\<cdot>(x . c1)\<cdot>((Y i) . c2)]\<Omega>))"
+    by simp
+  hence f2: "\<forall> i.  sbDom\<cdot>(([c3 \<mapsto> add\<cdot>(x . c1)\<cdot>((Y i) . c2)]\<Omega>)) = {c3}"
+    by (simp add: sbdom_rep_eq sbgetch_rep_eq sbgetch_lub step3_inner_lub)
+  hence f3: "\<forall> i. (([c3 \<mapsto> add\<cdot>(x . c1)\<cdot>((Y i) . c2)]\<Omega>))  \<sqsubseteq> (\<Squnion>i. ([c3 \<mapsto> add\<cdot>(x . c1)\<cdot>((Y i) . c2)]\<Omega>))"
+    using f1 is_ub_thelub by blast
+  thus ?thesis
+    using f1 f2 sbChain_dom_eq2 by blast
+qed
+  
+lemma contAddSB: "cont (\<lambda> z. ([c3 \<mapsto> add\<cdot>(x . c1)\<cdot>(z . c2)]\<Omega>))"
+  apply (rule mycontI2, simp only: contAddSB_monofun)
+  apply(rule sb_below)
+    apply (simp_all add: sbdom_rep_eq sbgetch_rep_eq sbgetch_lub contAddSB_innerLub)
+  by (simp add: contAddSB_innerLub_dom)
+
+lemma cont5[simp]: "cont (\<lambda> z.  ([c3 \<mapsto> add\<cdot>(x . c1)\<cdot>(z . c2)]\<Omega>) \<uplus> ([c2 \<mapsto> appendElem2 0\<cdot>(z . c3)]\<Omega>))"  
+by (simp add: contAddSB contAppendSB Rep_CSPF_def)
+
     
 lemma sbleast_c2_c3: "{c2, c3}^\<bottom> = {c3}^\<bottom> \<uplus> {c2}^\<bottom>"
   apply(rule sb_eq)
