@@ -70,6 +70,18 @@ using chfindom_monofun2cont upApply_mono by blast
 
 lemma upApply_rep_eq [simp]: "upApply f\<cdot>(updis a) = updis (f a)"
 by(simp add: upApply_def)
+
+lemma upapply_insert: "upApply f\<cdot>a = (if a=\<bottom> then \<bottom> else updis (f (THE b. a = updis b)))"  
+  by(simp add: upApply_def)
+    
+lemma upapply_bot [simp]: "upApply f\<cdot>\<bottom> = \<bottom>"
+  by(simp add: upApply_def)
+
+lemma upapply_nbot [simp]: "x\<noteq>\<bottom> \<Longrightarrow> upApply f\<cdot>x\<noteq>\<bottom>"
+  by(simp add: upApply_def)
+    
+lemma upapply_up[simp]: assumes "x\<noteq>\<bottom>" obtains a where "up\<cdot>a = upApply f\<cdot>x"
+  by(simp add: upApply_def assms)
   
 lemma chain_nBot: assumes "chain Y" and  "(\<Squnion>i. Y i) \<noteq>\<bottom>"
   obtains n::nat where "(\<And>i. ((Y (i+n)) \<noteq>\<bottom>))"
@@ -125,6 +137,10 @@ definition tsMLscons :: "'a discr u \<rightarrow> 'a tstream \<rightarrow> 'a ts
     
     
 subsection \<open>Lemma for definitinos\<close>    
+  
+lemma upapply2umsg [simp]: "upApply Msg\<cdot>(up\<cdot>x) = up\<cdot>(uMsg\<cdot>x)"  
+apply(simp add: upapply_insert uMsg_def)
+  by (metis (mono_tags) Discr_undiscr discr.case the_equality undiscr_def)  
 
 lemma lshd_eq: "ts\<sqsubseteq>xs \<Longrightarrow> ts\<noteq>\<bottom> \<Longrightarrow> lshd\<cdot>ts = lshd\<cdot>xs"
   using lessD by fastforce
@@ -347,14 +363,15 @@ definition DiscrTick :: "'a event discr" where
 
 lemma delayfun_nbot[simp]: "delayFun\<cdot>ts \<noteq> \<bottom>"
   by(simp add: delayFun_def)  
-    
+        
   (* maybe an extra condition is required... t\<noteq>\<bottom> and/or ts\<noteq>\<bottom> e.g. *)
 lemma match_tstream_simps [simp]:
   "match_tstream\<cdot>\<bottom>\<cdot>k = \<bottom>"
   "ts\<noteq>\<bottom> \<Longrightarrow> t\<noteq>\<bottom> \<Longrightarrow> match_tstream\<cdot>(tsLscons\<cdot>t\<cdot>ts)\<cdot>k = k\<cdot>t\<cdot>ts" 
   "match_tstream\<cdot>(tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>ts)\<cdot>k = k\<cdot>(up\<cdot>DiscrTick)\<cdot>ts"
   "match_tstream\<cdot>(delayFun\<cdot>ts)\<cdot>k = k\<cdot>(up\<cdot>DiscrTick)\<cdot>ts"
-    by (simp_all add: match_tstream_def DiscrTick_def)
+  "xs\<noteq>\<bottom>\<Longrightarrow> match_tstream\<cdot>(tsMLscons\<cdot>(up\<cdot>x)\<cdot>xs)\<cdot>k = k\<cdot>(up\<cdot>(uMsg\<cdot>x))\<cdot>xs"
+     by(simp_all add: match_tstream_def DiscrTick_def tsMLscons_def uMsg_def)
 
 definition match_umsg:: "'a event discr \<rightarrow> ('a discr \<rightarrow> 'b::cpo match) \<rightarrow> 'b match"  where
 "match_umsg = (\<Lambda> t k. case t of (Discr (Msg m)) \<Rightarrow> k\<cdot>(Discr m) | _\<Rightarrow>Fixrec.fail)"
@@ -404,9 +421,12 @@ setup \<open>
     ]
 \<close>
 
-  
-  
-  
+  (*
+lemma match_up_simps2 [simp]: 
+  "match_up\<cdot>(upApply f\<cdot>(up\<cdot>x))\<cdot>k = k\<cdot>(f x)"
+apply(simp add: match_up_def upapply_insert)  
+ *) 
+ 
   (* Case Studies *)
 
 fixrec teees:: "'a tstream \<rightarrow>'a tstream" where
@@ -437,10 +457,54 @@ fixrec tee :: "'a tstream \<rightarrow> 'a tstream" where
 
 fixrec tsAbsNew :: "'a tstream \<rightarrow> 'a stream" where
 "tsAbsNew\<cdot>(tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>ts) = tsAbsNew\<cdot>ts" |   (* ignore ticks *)  
-"t\<noteq>(Discr \<surd>) \<Longrightarrow> ts\<noteq>\<bottom> \<Longrightarrow> tsAbsNew\<cdot>(tsLscons\<cdot>(up\<cdot>t)\<cdot>ts) = tsAbsNew\<cdot>ts"  (* prepend first message and go on *)  
+"ts\<noteq>\<bottom> \<Longrightarrow> tsAbsNew\<cdot>(tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>t))\<cdot>ts) = up\<cdot>t && tsAbsNew\<cdot>ts"  (* prepend first message and go on *)  
+
+lemma [simp]: "tsAbsNew\<cdot>\<bottom>=\<bottom>"
+  by fixrec_simp
+
+lemma [simp]: "tsAbsNew\<cdot>(delayFun\<cdot>ts) = tsAbsNew\<cdot>ts"
+  by fixrec_simp
+
+lemma [simp]: "tsAbs\<cdot>(delayFun\<cdot>ts) = tsAbs\<cdot>ts"
+  by(simp add: delayFun_def)
+    
+lemma tsabs_new_msg [simp]: "xs\<noteq>\<bottom> \<Longrightarrow> tsAbsNew\<cdot>(tsMLscons\<cdot>(up\<cdot>x)\<cdot>xs) = up\<cdot>x && (tsAbsNew\<cdot>xs)"
+  by fixrec_simp+
+
+  
+lemma tsabs_SORRY: "xs\<noteq>\<bottom> \<Longrightarrow> tsAbs\<cdot>(tsMLscons\<cdot>(up\<cdot>x)\<cdot>xs) = up\<cdot>x && (tsAbs\<cdot>xs)"
+  apply(subst tsabs_insert)
+  oops    
+    
+
+lemma tstream_induct_tslscons [case_names Bot tsLscons, induct type: tstream]:
+  fixes ts
+  assumes "adm P" and "P \<bottom>" and "\<And>xs x. P xs\<Longrightarrow> x\<noteq>\<bottom>\<Longrightarrow>xs\<noteq>\<bottom>\<Longrightarrow> P (tsLscons\<cdot>x\<cdot>xs)"
+  shows "P ts"
+  apply(induction ts, rename_tac xs)
+  apply simp
+  apply(induct_tac xs)
+    apply(auto simp add: assms)
+   apply(rule admI)
+  oops
+
+lemma tstream_induct [case_names Bot tsLscons, induct type: tstream]:
+  fixes ts
+  assumes "P \<bottom>" and "\<And>xs. P xs \<Longrightarrow> P (delayFun\<cdot>xs)" and "\<And>xs x. P xs\<Longrightarrow> x\<noteq>\<bottom>\<Longrightarrow>xs\<noteq>\<bottom>\<Longrightarrow> P (tsMLscons\<cdot>x\<cdot>xs)"
+  shows "P ts"
+  apply(induction ts, rename_tac s)
+  oops
+    
+lemma "tsAbsNew\<cdot>ts = tsAbs\<cdot>ts"
+  oops
+    (*
+  apply(induct ts)
+    apply (simp_all add: tsabs_SORRY)
+  by (metis tsabs_SORRY tsabs_new_msg upE)
+*)
 
 
-
+(*    
    (* only the general idea *)
 fixrec tsZipNew:: "'a stream \<rightarrow> 'b tstream \<rightarrow> ('a\<times>'b) tstream" where
 "x\<noteq>\<bottom> \<Longrightarrow> ts\<noteq>\<bottom> \<Longrightarrow> tsZipNew\<cdot>(lscons\<cdot>x\<cdot>xs)\<cdot>(tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>t))\<cdot>ts) 
@@ -450,5 +514,5 @@ fixrec tsZipNew:: "'a stream \<rightarrow> 'b tstream \<rightarrow> ('a\<times>'
     = delayFun\<cdot>(tsZipNew\<cdot>xs\<cdot>ts)"  (* ignore ticks *)
 (* No other cases required, stuff that does not match will go to bottom *)
 
-    
+*)
 end  
