@@ -59,8 +59,66 @@ shows "(\<Squnion>i. (Y i)) = (\<Squnion>i. (Z i))"
   apply (simp only: assms(4))
   using assms(2) assms(3) lub_range_mult by fastforce
   
+lemma lub_mult2_shift_eq: fixes Y:: "nat \<Rightarrow> 'a::cpo" fixes Z:: "nat \<Rightarrow> 'a::cpo" 
+  assumes "chain Y" and "chain Z"
+  and "\<And> i. Y (i) = Z (2 * i)"
+shows "(\<Squnion>i. (Y i)) = (\<Squnion>i. (Z i))"
+  by (metis One_nat_def Suc_n_not_le_n assms(1) assms(2) assms(3) le_add_same_cancel1 
+        lub_mult_shift_eq mult_2 nat_le_linear nat_mult_1_right)
+    
+lemma cont_pref_eq1I: assumes "(a \<sqsubseteq> b)"
+  shows "f\<cdot>a \<sqsubseteq> f\<cdot>b"
+  by (simp add: assms monofun_cfun_arg)
+     
+lemma cont_pref_eq2I:  assumes "(a \<sqsubseteq> b)"
+  shows "f\<cdot>x\<cdot>a \<sqsubseteq> f\<cdot>x\<cdot>b"
+  by (simp add: assms monofun_cfun_arg)
+    
+    
+lemma cfun_arg_eqI:  assumes "(a = b)"
+  shows "f\<cdot>a = f\<cdot>b"
+  by (simp add: assms)
+    
+lemma spf_arg_eqI:  assumes "(a = b)"
+  shows "f\<rightleftharpoons>a = f\<rightleftharpoons>b"
+  by (simp add: assms)
+    
+lemma sbunion_eqI:  assumes "(a = b)" and "(c = d)"
+  shows "(a \<uplus> c = b \<uplus> d)"
+  by (simp add: assms(1) assms(2))
+    
+    
+lemma sb_one_ch_eqI: assumes "x = y"
+  shows "[ch \<mapsto> x]\<Omega> = [ch \<mapsto> y]\<Omega>"
+  by (simp add: assms)
+    
+lemma nat_sb_repackage: assumes "ch \<in> sbDom\<cdot>sb"
+  shows "(sb::nat SB) \<bar> {ch} = [ch \<mapsto> sb . ch]\<Omega>"
+  apply (rule sb_eq)
+  by (simp_all add: assms sbdom_rep_eq)
+    
+lemma sbres_sbdom_supset: assumes "sbDom\<cdot>sb \<subseteq> cs"
+  shows "sb \<bar> cs = sb \<bar> (sbDom\<cdot>sb)"
+  by (simp add: assms)
+    
+lemma sbres_sbdom_supset_inter: 
+  shows "sb \<bar> cs = sb \<bar> (cs \<inter> (sbDom\<cdot>sb))"
+  by (smt inf.right_idem inf_commute inf_sup_ord(1) sb_eq 
+          sbrestrict2sbgetch sbrestrict_sbdom set_mp)
+    
+    
 
+    
+(* used for substitution *)
+lemma two_times_one_insert: "2 * (Suc 0) = Suc(Suc(0))"
+  by simp
+    
+lemma two_times_suci_insert: "2 * (Suc i) = (2 + (2*i))"
+  by simp
 
+    
+lemma two_suc_suc_eq_insert: "2 = Suc(Suc(0))"
+  by simp
     
 (* ----------------------------------------------------------------------- *)
 section \<open>definitions\<close>
@@ -76,6 +134,14 @@ definition append0C :: "nat SPF" where
 (* sum1EqCh can be used later when hide is introduced *)
 definition s1SPF :: "nat SPF" where
 "s1SPF \<equiv> spfcomp2 addC append0C"
+
+
+
+abbreviation sum4_sb_inout2_iter :: "nat SB \<Rightarrow> nat \<Rightarrow> nat SB" where
+"(sum4_sb_inout2_iter x i) \<equiv>  iterate (i)\<cdot>(\<Lambda> z. ([c3 \<mapsto> add\<cdot>(x . c1)\<cdot>(appendElem2 0\<cdot>(z . c3))]\<Omega>) \<uplus> ([c2 \<mapsto> appendElem2 0\<cdot>(z . c3)]\<Omega>))\<cdot>({c2, c3}^\<bottom>)"
+
+abbreviation sum4_sb_inout3_iter :: "nat SB \<Rightarrow> nat \<Rightarrow> nat SB" where
+"(sum4_sb_inout3_iter x i) \<equiv>  iterate (i)\<cdot>(\<Lambda> z. ([c3 \<mapsto> add\<cdot>(x . c1)\<cdot>(z . c2)]\<Omega>) \<uplus> ([c2 \<mapsto> appendElem2 0\<cdot>(z . c3)]\<Omega>))\<cdot>({c2, c3}^\<bottom>)"
 
 
 subsection \<open>component properties\<close>
@@ -177,8 +243,7 @@ lemma sum4_sb_inout1_inner_chain1 [simp]: fixes f:: "nat stream \<rightarrow> na
    apply (simp add: sbdom_rep_eq sbgetch_rep_eq)
   by (simp add: monofun_cfun po_class.chainE)
     
-lemma [simp]: "cont (\<lambda>z. \<up>0 \<bullet> z)"
-  by (simp add: appendElem_def)
+
     
 
 lemma sum4_sb_inout1_inner_lub: fixes f :: "nat stream \<rightarrow> nat stream  \<rightarrow> nat stream"
@@ -404,26 +469,7 @@ by (simp add: contAddSB contAppendSB Rep_CSPF_def)
 
     
 
- 
-lemma cont_pref_eq1I: assumes "(a \<sqsubseteq> b)"
-  shows "f\<cdot>a \<sqsubseteq> f\<cdot>b"
-  by (simp add: assms monofun_cfun_arg)
-     
-lemma cont_pref_eq2I:  assumes "(a \<sqsubseteq> b)"
-  shows "f\<cdot>x\<cdot>a \<sqsubseteq> f\<cdot>x\<cdot>b"
-  by (simp add: assms monofun_cfun_arg)
-    
-lemma sbunion_eqI:  assumes "(a = b)" and "(c = d)"
-  shows "(a \<uplus> c = b \<uplus> d)"
-  by (simp add: assms(1) assms(2))
-    
- 
-    
-abbreviation sum4_sb_inout2_iter :: "nat SB \<Rightarrow> nat \<Rightarrow> nat SB" where
-"(sum4_sb_inout2_iter x i) \<equiv>  iterate (i)\<cdot>(\<Lambda> z. ([c3 \<mapsto> add\<cdot>(x . c1)\<cdot>(appendElem2 0\<cdot>(z . c3))]\<Omega>) \<uplus> ([c2 \<mapsto> appendElem2 0\<cdot>(z . c3)]\<Omega>))\<cdot>({c2, c3}^\<bottom>)"
 
-abbreviation sum4_sb_inout3_iter :: "nat SB \<Rightarrow> nat \<Rightarrow> nat SB" where
-"(sum4_sb_inout3_iter x i) \<equiv>  iterate (i)\<cdot>(\<Lambda> z. ([c3 \<mapsto> add\<cdot>(x . c1)\<cdot>(z . c2)]\<Omega>) \<uplus> ([c2 \<mapsto> appendElem2 0\<cdot>(z . c3)]\<Omega>))\<cdot>({c2, c3}^\<bottom>)"
 
 lemma sum4_sb_inout2_iter_suc_insert: "sum4_sb_inout2_iter x (Suc i) = ([c3 \<mapsto> add\<cdot>(x . c1)\<cdot>(appendElem2 0\<cdot>((sum4_sb_inout2_iter x (i)) . c3))]\<Omega>) \<uplus> ([c2 \<mapsto> appendElem2 0\<cdot>((sum4_sb_inout2_iter x (i)) . c3)]\<Omega>)"
   by simp
@@ -431,31 +477,12 @@ lemma sum4_sb_inout2_iter_suc_insert: "sum4_sb_inout2_iter x (Suc i) = ([c3 \<ma
 lemma sum4_sb_inout3_iter_suc_insert: "sum4_sb_inout3_iter x (Suc i) = ([c3 \<mapsto> add\<cdot>(x . c1)\<cdot>((sum4_sb_inout3_iter x (i)) . c2)]\<Omega>) \<uplus> ([c2 \<mapsto> appendElem2 0\<cdot>((sum4_sb_inout3_iter x (i)) . c3)]\<Omega>)"
   by simp
   
-lemma sb_one_ch_eqI: assumes "x = y"
-  shows "[ch \<mapsto> x]\<Omega> = [ch \<mapsto> y]\<Omega>"
-  by (simp add: assms)
-    
-    
-lemma cfun_arg_eqI:  assumes "(a = b)"
-  shows "f\<cdot>a = f\<cdot>b"
-  by (simp add: assms)
-    
-lemma spf_arg_eqI:  assumes "(a = b)"
-  shows "f\<rightleftharpoons>a = f\<rightleftharpoons>b"
-  by (simp add: assms)
-    
-(* used for substitution *)
-lemma two_times_one_insert: "2 * (Suc 0) = Suc(Suc(0))"
-  by simp
-    
-lemma two_times_suci_insert: "2 * (Suc i) = (2 + (2*i))"
-  by simp
+
     
 lemma sum4_sb_inout3_iter_two_suc_insert: "sum4_sb_inout3_iter x ((2::nat) *  (Suc i)) = (\<Lambda> z. ([c3 \<mapsto> add\<cdot>(x . c1)\<cdot>(z . c2)]\<Omega>) \<uplus> ([c2 \<mapsto> appendElem2 0\<cdot>(z . c3)]\<Omega>))\<cdot>(sum4_sb_inout3_iter x (Suc (2 * i)))"
   by simp
     
-lemma two_suc_suc_eq_insert: "2 = Suc(Suc(0))"
-  by simp
+
     
 
     
@@ -542,12 +569,7 @@ lemma step5_lub_iter_eq_req2: "sum4_sb_inout2_iter x (i) = sum4_sb_inout3_iter x
 qed
  
   
-lemma lub_mult2_shift_eq: fixes Y:: "nat \<Rightarrow> 'a::cpo" fixes Z:: "nat \<Rightarrow> 'a::cpo" 
-  assumes "chain Y" and "chain Z"
-  and "\<And> i. Y (i) = Z (2 * i)"
-shows "(\<Squnion>i. (Y i)) = (\<Squnion>i. (Z i))"
-  by (metis One_nat_def Suc_n_not_le_n assms(1) assms(2) assms(3) le_add_same_cancel1 
-        lub_mult_shift_eq mult_2 nat_le_linear nat_mult_1_right)
+
   
 lemma step5_lub_iter_eq: "(\<Squnion>i. iterate i\<cdot>(\<Lambda> z. ([c3 \<mapsto> add\<cdot>(x . c1)\<cdot>(appendElem2 0\<cdot>(z . c3))]\<Omega>) \<uplus> ([c2 \<mapsto> appendElem2 0\<cdot>(z . c3)]\<Omega>))\<cdot>({c2, c3}^\<bottom>)) = (\<Squnion>i. iterate i\<cdot>(\<Lambda> z. ([c3 \<mapsto> add\<cdot>(x . c1)\<cdot>(z . c2)]\<Omega>) \<uplus> ([c2 \<mapsto> appendElem2 0\<cdot>(z . c3)]\<Omega>))\<cdot>({c2, c3}^\<bottom>))"
   apply (rule lub_mult2_shift_eq)
@@ -581,20 +603,6 @@ lemma sbdom_iter_addc_append: assumes "sbDom\<cdot>sb = {c1}"
     by (metis Oc_def assms iter_spfCompH3_dom spf_I_add_append spf_Oc_add_append)
   
   
-lemma nat_sb_repackage: assumes "ch \<in> sbDom\<cdot>sb"
-  shows "(sb::nat SB) \<bar> {ch} = [ch \<mapsto> sb . ch]\<Omega>"
-  apply (rule sb_eq)
-  by (simp_all add: assms sbdom_rep_eq)
-    
-lemma sbres_sbdom_supset: assumes "sbDom\<cdot>sb \<subseteq> cs"
-  shows "sb \<bar> cs = sb \<bar> (sbDom\<cdot>sb)"
-  by (simp add: assms)
-    
-lemma sbres_sbdom_supset_inter: 
-  shows "sb \<bar> cs = sb \<bar> (cs \<inter> (sbDom\<cdot>sb))"
-  by (smt inf.right_idem inf_commute inf_sup_ord(1) sb_eq 
-          sbrestrict2sbgetch sbrestrict_sbdom set_mp)
-    
     
 lemma sum4_sb_inout3_iter_dom: "sbDom\<cdot>(sum4_sb_inout3_iter sb i) = {c2, c3}"
 proof (induction i)

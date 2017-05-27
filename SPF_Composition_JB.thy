@@ -136,6 +136,33 @@ lemma sbres_pref_eq: assumes "(a \<sqsubseteq> b)"
      by (metis assms monofun_cfun_arg)
   
        
+(* ----------------------------------------------------------------------- *)
+section \<open>definitions\<close>
+(* ----------------------------------------------------------------------- *)
+(* abbrv for the part behind  \<leadsto> in spfcomp but without the restriction to Oc *) 
+abbreviation iter_spfcompH2 :: "'a SPF \<Rightarrow> 'a SPF \<Rightarrow> nat \<Rightarrow> 'a SB  \<Rightarrow> 'a SB" where
+"(iter_spfcompH2 f1 f2 i) \<equiv> (\<lambda> x. iterate i\<cdot>(spfCompHelp2 f1 f2 x)\<cdot>(sbLeast (C f1 f2)))"  
+
+
+(* newer spfcopmp definition: input is not iterated *)
+definition spfCompH3 :: "'m SPF \<Rightarrow> 'm SPF \<Rightarrow> 'm SB \<Rightarrow> 'm SB  \<rightarrow> 'm SB" where
+"spfCompH3 f1 f2 x \<equiv> (\<Lambda> z. (f1\<rightleftharpoons>((x \<uplus> z)  \<bar> spfDom\<cdot>f1)) \<uplus>  (f2\<rightleftharpoons>((x \<uplus> z)  \<bar> spfDom\<cdot>f2)))"
+
+
+abbreviation iter_spfCompH3 :: "'a SPF \<Rightarrow> 'a SPF \<Rightarrow> nat \<Rightarrow> 'a SB  \<Rightarrow> 'a SB" where
+"(iter_spfCompH3 f1 f2 i) \<equiv> (\<lambda> x. iterate i\<cdot>(spfCompH3 f1 f2 x)\<cdot>((spfRan\<cdot>f1 \<union> spfRan\<cdot>f2)^\<bottom>))" 
+
+
+(* adds the input to the original sbFix definition *)
+  (* makes old sbfix obsolete *)
+definition sbFix2 :: "('m SB \<Rightarrow> 'm SB \<rightarrow> 'm SB) \<Rightarrow> 'm SB  \<Rightarrow> channel set \<Rightarrow> 'm SB" where
+"sbFix2 F x cs \<equiv>  (\<Squnion>i. iterate i\<cdot>(F x)\<cdot>(cs^\<bottom>))"
+
+abbreviation iter_sbfix:: "('m SB \<Rightarrow> 'm SB \<rightarrow> 'm SB) \<Rightarrow> nat \<Rightarrow> channel set \<Rightarrow> 'm SB \<Rightarrow> 'm SB" where
+"iter_sbfix F i cs \<equiv> (\<lambda> x. iterate i\<cdot>(F x)\<cdot>(cs^\<bottom>))"
+
+abbreviation sbfun_io_eq :: "('m SB \<rightarrow> 'm SB)  \<Rightarrow> channel set \<Rightarrow> bool" where
+"sbfun_io_eq f cs \<equiv> sbDom\<cdot>(f\<cdot>(cs^\<bottom>)) = cs"
        
 (* ----------------------------------------------------------------------- *)
 section \<open>spfCompHelp2\<close>
@@ -178,9 +205,7 @@ lemma helpercontinX[simp]: shows "cont (\<lambda> x. spfCompHelp2 f1 f2 x)"
 section \<open>iter_spfCompHelp2\<close>
 (* ----------------------------------------------------------------------- *) 
   
-(* abbrv for the part behind  \<leadsto> in spfcomp but without the restriction to Oc *) 
-abbreviation iter_spfcompH2 :: "'a SPF \<Rightarrow> 'a SPF \<Rightarrow> nat \<Rightarrow> 'a SB  \<Rightarrow> 'a SB" where
-"(iter_spfcompH2 f1 f2 i) \<equiv> (\<lambda> x. iterate i\<cdot>(spfCompHelp2 f1 f2 x)\<cdot>(sbLeast (C f1 f2)))"  
+
 
 
 (* for all i the i'th iteration on spfcomp is cont as application iterate is cont on cont fun *) 
@@ -403,12 +428,7 @@ lemma spfComp_ran: assumes "spfRan\<cdot>f1 \<inter> spfRan\<cdot>f2 = {}"
 section \<open>spfcomp2\<close>
 (* ----------------------------------------------------------------------- *)
 
-definition spfCompH3 :: "'m SPF \<Rightarrow> 'm SPF \<Rightarrow> 'm SB \<Rightarrow> 'm SB  \<rightarrow> 'm SB" where
-"spfCompH3 f1 f2 x \<equiv> (\<Lambda> z. (f1\<rightleftharpoons>((x \<uplus> z)  \<bar> spfDom\<cdot>f1)) \<uplus>  (f2\<rightleftharpoons>((x \<uplus> z)  \<bar> spfDom\<cdot>f2)))"
 
-
-abbreviation iter_spfCompH3 :: "'a SPF \<Rightarrow> 'a SPF \<Rightarrow> nat \<Rightarrow> 'a SB  \<Rightarrow> 'a SB" where
-"(iter_spfCompH3 f1 f2 i) \<equiv> (\<lambda> x. iterate i\<cdot>(spfCompH3 f1 f2 x)\<cdot>((spfRan\<cdot>f1 \<union> spfRan\<cdot>f2)^\<bottom>))" 
 
 
 subsection \<open>spfCompHelp3\<close>
@@ -638,16 +658,7 @@ section \<open>sbFix\<close>
   
 (* the proof strategy is very similar to the one in SPF_Feedback_JB *)
 
-(* adds the input to the original sbFix definition *)
-  (* makes old sbfix obsolete *)
-definition sbFix2 :: "('m SB \<Rightarrow> 'm SB \<rightarrow> 'm SB) \<Rightarrow> 'm SB  \<Rightarrow> channel set \<Rightarrow> 'm SB" where
-"sbFix2 F x cs \<equiv>  (\<Squnion>i. iterate i\<cdot>(F x)\<cdot>(cs^\<bottom>))"
 
-abbreviation iter_sbfix:: "('m SB \<Rightarrow> 'm SB \<rightarrow> 'm SB) \<Rightarrow> nat \<Rightarrow> channel set \<Rightarrow> 'm SB \<Rightarrow> 'm SB" where
-"iter_sbfix F i cs \<equiv> (\<lambda> x. iterate i\<cdot>(F x)\<cdot>(cs^\<bottom>))"
-
-abbreviation sbfun_io_eq :: "('m SB \<rightarrow> 'm SB)  \<Rightarrow> channel set \<Rightarrow> bool" where
-"sbfun_io_eq f cs \<equiv> sbDom\<cdot>(f\<cdot>(cs^\<bottom>)) = cs"
 
 
 lemma sbfix2_iter_eq: "sbFix2 F x cs = (\<Squnion>i. iter_sbfix F i cs x)"
@@ -758,7 +769,7 @@ lemma lub_iter_sbfix_dom: assumes "sbfun_io_eq (F x) cs"
       
 subsection \<open>if_lub_iter_sbfix\<close>   
   
-declare [[show_types]]
+
 subsubsection \<open>mono\<close> 
   
 lemma if_lub_iter_sbfix_mono_req: assumes "x \<sqsubseteq> y" and "cont F" 

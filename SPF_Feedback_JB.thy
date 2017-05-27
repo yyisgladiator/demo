@@ -132,9 +132,7 @@ subsection \<open>dom\<close>
   
 lemma iter_spfFeedH_dom: assumes "sbDom\<cdot>x = spfDom\<cdot>f - spfRan\<cdot>f"
   shows "sbDom\<cdot>(iter_spfFeedH f i x) = (spfRan\<cdot>f)"
-  apply(induct_tac i)
-   apply auto[1]
-    by (simp add: assms)
+  by (subst iter_sbfix_dom, simp add: assms)
     
     
     
@@ -148,40 +146,13 @@ subsection \<open>mono\<close>
   (* requires chain property, hence the input must have the right domain *)
 lemma lub_iter_spfFeedH_mono_req:  assumes "x \<sqsubseteq> y" and  "sbDom\<cdot>x =  (spfDom\<cdot>f - spfRan\<cdot>f)"
   shows "(\<Squnion>i.(iter_spfFeedH f i) x) \<sqsubseteq> (\<Squnion>i.(iter_spfFeedH f i) y)"
-proof -
-  have "\<forall>i. ((iter_spfFeedH f i) x) \<sqsubseteq> ((iter_spfFeedH f i) y)"
-    by (simp add: iter_spfFeedH_mono2 assms)
-  moreover
-  have "sbDom\<cdot>x = sbDom\<cdot>y"
-    using assms(1) sbdom_eq by auto
-  ultimately
-  show ?thesis
-    by(simp add: lub_mono  iter_spfFeedH_mono2 assms)
-qed
+  by (simp add: assms lub_iter_sbfix_mono_req)
   
   (* show that the lub over the iteration fulfills the requirements of a monotone function *)
 lemma if_lub_iter_spfFeedH_mono_req: assumes "x \<sqsubseteq> y"
   shows "((\<lambda> x. (sbDom\<cdot>x = (spfDom\<cdot>f - spfRan\<cdot>f)) \<leadsto> (\<Squnion>i.(iter_spfFeedH f i) x)) x)
          \<sqsubseteq> ((\<lambda> x. (sbDom\<cdot>x = (spfDom\<cdot>f - spfRan\<cdot>f)) \<leadsto> (\<Squnion>i.(iter_spfFeedH f i) x)) y)"
-proof (cases "sbDom\<cdot>x = (spfDom\<cdot>f - spfRan\<cdot>f)")
-  case True
-  have "\<forall>i. ((iter_spfFeedH f i) x) \<sqsubseteq> ((iter_spfFeedH f i) y)"
-    by (simp add: iter_spfFeedH_mono2 assms)
-  moreover
-  have f1: "sbDom\<cdot>x = sbDom\<cdot>y"
-    using assms(1) sbdom_eq by auto
-  ultimately
-  have "(\<Squnion>i.(iter_spfFeedH f i) x) \<sqsubseteq> (\<Squnion>i.(iter_spfFeedH f i) y)"
-    using True assms lub_iter_spfFeedH_mono_req by blast
-  thus ?thesis
-    using f1 some_below by auto
-next
-  case False
-  have "sbDom\<cdot>y = sbDom\<cdot>x"
-    by (metis assms(1) sbdom_eq)
-  thus ?thesis     
-    by (simp add: False some_below)
-qed
+  by (rule if_lub_iter_sbfix_mono_req, simp_all add: assms)
 
   
 subsection \<open>cont\<close>  
@@ -190,23 +161,14 @@ subsection \<open>cont\<close>
   (* this property follows from the monotonicity of lub_iter_spfFeedH *)
 lemma chain_lub_iter_spfFeedH: assumes "chain Y" and  "(sbDom\<cdot>(\<Squnion>i. Y i) =  (spfDom\<cdot>f - spfRan\<cdot>f))"
   shows "chain (\<lambda>i. \<Squnion>ia. iter_spfFeedH f ia (Y i))"
-proof -
-  have f1: "\<forall>i. (Y i) \<sqsubseteq> (Y (Suc i))"
-    using assms po_class.chain_def by blast
-  have f2: "\<forall>ia. sbDom\<cdot>(Y ia) = (spfDom\<cdot>f - spfRan\<cdot>f)"
-    by (simp add: assms(1) assms(2) sbChain_dom_eq2)
-  thus ?thesis
-    apply(subst chainI, simp_all add: assms)
-    by (simp add: f1 lub_iter_spfFeedH_mono_req)
-qed
+  by (simp add: assms chain_lub_iter_sbfix)
 
 subsection \<open>dom\<close>  
   (* the domain of the lub over the iteration is spfRan\<cdot>f *)
    (* this property is required for the spf_well proof *)
 lemma lub_iter_spfFeedH_dom[simp]: assumes "sbDom\<cdot>x = spfDom\<cdot>f - spfRan\<cdot>f"
   shows "sbDom\<cdot>(\<Squnion>i. iter_spfFeedH f i x) = (spfRan\<cdot>f)"
-  by (metis (mono_tags, lifting) assms iter_spfFeedH_chain iter_spfFeedH_dom 
-        lub_eq sbChain_dom_eq2)
+  by (simp add: lub_iter_sbfix_dom assms)
   
 (* ----------------------------------------------------------------------- *)
 section \<open>spfFeedbackOperator\<close>
@@ -231,55 +193,17 @@ lemma chain_if_lub_iter_spfFeedH_domI: assumes "chain Y"
                                        and     "(sbDom\<cdot>(\<Squnion>i. Y i) = (spfDom\<cdot>f - spfRan\<cdot>f))"
 shows "(sbDom\<cdot>(\<Squnion>i. Y i) = (spfDom\<cdot>f - spfRan\<cdot>f)) \<leadsto>  (\<Squnion>i.(iter_spfFeedH f i) (\<Squnion>i. Y i))
         \<sqsubseteq>  (\<Squnion>i. (sbDom\<cdot>(Y i) = (spfDom\<cdot>f - spfRan\<cdot>f)) \<leadsto>(\<Squnion>ia. (iter_spfFeedH f ia) (Y i)))"
-proof -
-  (* Part I: Show that part after \<leadsto> has 2nd property of compI *)
-  have f1: "\<And>i. cont (\<lambda>x. iter_spfFeedH f i x)"
-    by simp
-  hence f2: "(\<Squnion>i. iter_spfFeedH f i (\<Squnion>i. Y i)) = (\<Squnion> ia i.  iter_spfFeedH f ia (Y i))"
-    by (subst cont2lub_lub_eq, simp_all add: assms)
-  moreover
-  have f3: "\<forall>ia.  sbDom\<cdot>(Y ia) =  (spfDom\<cdot>f - spfRan\<cdot>f)"
-    by (simp add: assms(1) assms(2) sbChain_dom_eq2)
-  ultimately
-  have f4: "(\<Squnion>i ia. iter_spfFeedH f i (Y ia)) \<sqsubseteq> (\<Squnion>i ia.  iter_spfFeedH f ia (Y i))"
-    by(simp add: diag_lub ch2ch_cont f1 f2 f3 assms)
-      
-   (* Part II: show the equality for the packaging with some *)    
-  have f10: "(sbDom\<cdot>(\<Squnion>i. Y i) = (spfDom\<cdot>f - spfRan\<cdot>f)) \<leadsto> (\<Squnion>i. iter_spfFeedH f i (\<Squnion>i. Y i))
-              = Some (\<Squnion>i. iter_spfFeedH f i (\<Squnion>i. Y i))"
-    by (simp add: assms)
-  have f11: "(\<Squnion>i. (sbDom\<cdot>(Y i) = (spfDom\<cdot>f - spfRan\<cdot>f)) \<leadsto> \<Squnion>ia. iter_spfFeedH f ia (Y i)) 
-            = Some(\<Squnion>i ia. iter_spfFeedH f ia (Y i))"
-    proof -
-      have f111: "(\<Squnion>i. (sbDom\<cdot>(Y i) =  (spfDom\<cdot>f - spfRan\<cdot>f))
-                                               \<leadsto> \<Squnion>ia. iter_spfFeedH f ia (Y i))
-                         = (\<Squnion>i. Some(\<Squnion>ia. iter_spfFeedH f ia (Y i)))"
-        by (simp add: f3 assms)
-      have f112: "(\<Squnion>i. Some(\<Squnion>ia. iter_spfFeedH f ia (Y i)))
-                      = Some(\<Squnion>i ia. iter_spfFeedH f ia (Y i))"
-        by (simp add: contlub_cfun_arg some_lub_chain_eq chain_lub_iter_spfFeedH assms)
-      thus ?thesis
-        using f111 by auto
-     qed
-        
-    (* as the part I and II  has been proved the thesis can be proven as follows *)   
-   thus ?thesis
-     by (simp add: f2 f10 f4 some_below)
-qed
+  apply (rule chain_if_lub_iter_sbfix_case)
+    by (simp_all add: assms)
+
      
   (* based on the previous lemma show that the the 2nd goal from contI holds independently from 
       the input bundle domain *)
 lemma chain_if_lub_iter_spfFeedH: assumes "chain Y"
   shows "(sbDom\<cdot>(\<Squnion>i. Y i) = (spfDom\<cdot>f - spfRan\<cdot>f))\<leadsto>(\<Squnion>i. iter_spfFeedH f i (\<Squnion>i. Y i))  
          \<sqsubseteq> (\<Squnion>i. (sbDom\<cdot>(Y i) = (spfDom\<cdot>f - spfRan\<cdot>f))\<leadsto>(\<Squnion>ia. iter_spfFeedH f ia (Y i)))" 
-proof (cases "sbDom\<cdot>(\<Squnion>i. Y i) = (spfDom\<cdot>f - spfRan\<cdot>f)")
-  case True
-  then show ?thesis   using  chain_if_lub_iter_spfFeedH_domI assms by blast
-next
-  case False
-  then show ?thesis 
-    by (simp add: assms sbChain_dom_eq2)
-qed
+  apply (rule chain_if_lub_iter_sbfix)
+    by (simp_all add: assms)
     
 
 (* Based on all the previous lemmata it can now be proven that the feedback operator is 
@@ -288,9 +212,8 @@ qed
   (* Yes :) *)
 lemma spf_feed_cont[simp]: "cont (\<lambda>x. (sbDom\<cdot>x = (spfDom\<cdot>f - spfRan\<cdot>f)) 
                                                       \<leadsto> (\<Squnion>i.(iter_spfFeedH f i) x))"
-  apply (rule contI2)
-   apply (simp)
-  using chain_if_lub_iter_spfFeedH by blast
+  apply (rule sbfix_contI)
+    by simp_all
     
     
 lemma spf_feed_well[simp]:
@@ -368,9 +291,8 @@ subsection \<open>lub_iter_spfCompH3\<close>
   
 lemma lub_iter_spfFeedH2_dom[simp]: assumes "sbDom\<cdot>x = spfDom\<cdot>f - spfRan\<cdot>f"
   shows "sbDom\<cdot>(\<Squnion>i. iter_spfFeedH2 f i x) = (spfDom\<cdot>f \<union> spfRan\<cdot>f)"
-    by (metis (mono_tags, lifting) assms iter_spfFeedH2_chain iter_spfFeedH2_dom 
-         sbChain_dom_eq2)
-  
+  apply(subst lub_iter_sbfix_dom)
+    by (simp add: assms spfFeedH2_dom)
        
        
 (* ----------------------------------------------------------------------- *)
