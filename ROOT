@@ -8,6 +8,8 @@ session "TStreamSorry" (mustWork) = "Streams" +
   theories
     TStream   
     fixrec_tstream
+    "CaseStudies/TimedABP"
+    TStream_DS
  
  
 session "TSPSSorry" (mustWork) = "TStreamSorry" + 
