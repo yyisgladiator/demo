@@ -1872,6 +1872,11 @@ lemma tsmap_h_fair: "#({\<surd>} \<ominus> (smap (\<lambda>x. case x of \<M> m \
   apply (rule ind [of _ s], auto)
   by (case_tac "a", auto)
 
+lemma tsmap_h_fair2:
+  "#({e. e \<noteq> \<surd>} \<ominus> (smap (\<lambda>x. case x of \<M> m \<Rightarrow> \<M> f m | \<surd> \<Rightarrow> \<surd>)\<cdot>s)) = #({e. e \<noteq> \<surd>} \<ominus> s)"
+  apply (rule ind [of _ s], auto)
+  by (case_tac "a", auto)
+
 lemma tsmap_h_sfoot: assumes "#s<\<infinity>" 
   shows "sfoot (smap (\<lambda>x. case x of \<M> m \<Rightarrow> \<M> f m | \<surd> \<Rightarrow> \<surd>)\<cdot>(s \<bullet> \<up>\<surd>)) = \<surd>"
   by (simp add: smap_split assms)
@@ -1902,41 +1907,48 @@ lemma tsmap_tstickcount[simp]:  "#\<surd>(tsMap f\<cdot>ts) = #\<surd>ts"
   apply(simp add:tsmap_h_well)
   apply(simp add: tsmap_h_fair)
   done
-  
-  
-    
+
 lemma tsmap_weak:"tsWeakCausal (Rep_cfun (tsMap f))"
 apply (subst tsWeak2cont2, auto)  
 done
-    
 
 (* tsProjFst and tsProjSnd *)
 thm tsProjFst_def
 thm tsProjSnd_def
 
 lemma tsprojfst_strict[simp]: "tsProjFst\<cdot>\<bottom> = \<bottom>"
-oops
+  by (simp add: tsProjFst_def)
 
 lemma tsprojsnd_strict[simp]: "tsProjSnd\<cdot>\<bottom> = \<bottom>"
-oops
+  by (simp add: tsProjSnd_def)
 
 lemma tsprojfst_strict_rev: "tsProjFst\<cdot>ts = \<bottom> \<Longrightarrow> ts = \<bottom>"
-oops
+  apply (simp add: tsProjFst_def)
+  by (metis strict_tstickcount ts_0ticks tsmap_tstickcount)
 
 lemma tsprojsnd_strict_rev: "tsProjSnd\<cdot>ts = \<bottom> \<Longrightarrow> ts = \<bottom>"
-oops
+  apply (simp add: tsProjSnd_def)
+  by (metis strict_tstickcount ts_0ticks tsmap_tstickcount)
 
 lemma sprojfst_tstickcount: "#\<surd>(tsProjFst\<cdot>ts) = #\<surd>ts"
-oops
+  by (simp add: tsProjFst_def)
 
 lemma sprojsnd_tstickcount: "#\<surd>(tsProjSnd\<cdot>ts) = #\<surd>ts"
-  oops
-    
-lemma "#(tsAbs\<cdot>(tsProjFst\<cdot>ts)) = #(tsAbs\<cdot>ts)"
-oops
-     
-lemma "#(tsAbs\<cdot>(tsProjSnd\<cdot>ts)) = #(tsAbs\<cdot>ts)"
-oops
+  by (simp add: tsProjSnd_def)
+
+lemma tsabs_tsprojfst: "#(tsAbs\<cdot>(tsProjFst\<cdot>ts)) = #(tsAbs\<cdot>ts)"
+  apply (simp add: tsProjFst_def tsAbs_def tsmap_unfold)
+  apply (induct_tac ts, auto)
+  apply (simp add: tsmap_h_well Rep_Abs)
+  apply (rule ind [of _ y], auto)
+  by (simp add: tsmap_h_fair2)
+
+lemma tsabs_tsprojsnd: "#(tsAbs\<cdot>(tsProjSnd\<cdot>ts)) = #(tsAbs\<cdot>ts)"
+  apply (simp add: tsProjSnd_def tsAbs_def tsmap_unfold)
+  apply (induct_tac ts, auto)
+  apply (simp add: tsmap_h_well Rep_Abs)
+  apply (rule ind [of _ y], auto)
+  by (simp add: tsmap_h_fair2)
 
 (* tsFilter *)
 thm tsFilter_def
