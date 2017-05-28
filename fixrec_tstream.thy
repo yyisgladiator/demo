@@ -306,7 +306,13 @@ lemma tslscons_nbot [simp]: "t\<noteq>\<bottom> \<Longrightarrow> ts\<noteq>\<bo
 
 lemma tslscons_nbot2[simp]: "tsLscons\<cdot>(updis \<surd>)\<cdot>ts\<noteq>\<bottom>"
   by(auto simp add: tslscons_insert tsLshd_def espf2tspf_def)
-        
+
+lemma tslscons_lscons: "ts\<noteq>\<bottom> \<Longrightarrow> Rep_tstream (tsLscons\<cdot>t\<cdot>ts) = t && (Rep_tstream ts)"
+by(simp add: tslscons_insert espf2tspf_def)  
+    
+  
+  
+    
 lemma tslscons_lshd [simp]: "ts\<noteq>\<bottom> \<Longrightarrow> tsLshd\<cdot>(tsLscons\<cdot>t\<cdot>ts) = t"
 by(auto simp add: tslscons_insert tsLshd_def espf2tspf_def)  
 
@@ -477,42 +483,81 @@ lemma tsabs_SORRY: "xs\<noteq>\<bottom> \<Longrightarrow> tsAbs\<cdot>(tsMLscons
   oops    
     
 
-lemma tstream_induct_tslscons [case_names Bot tsLscons, induct type: tstream]:
-  fixes ts
-  assumes "adm P" and "P \<bottom>" and "\<And>xs x. P xs\<Longrightarrow> x\<noteq>\<bottom>\<Longrightarrow>xs\<noteq>\<bottom>\<Longrightarrow> P (tsLscons\<cdot>x\<cdot>xs)"
-  shows "P ts"
-  apply(induction ts, rename_tac xs)
-  apply simp
-  apply(induct_tac xs)
-    apply(auto simp add: assms)
-   apply(rule admI)
-  oops
+lemma tstream_adm: assumes "chain Y"  
+          and "\<And>i. ts_well (Y i) \<Longrightarrow> P (Abs_tstream (Y i))" 
+          and "ts_well (\<Squnion>i. Y i)"
+          and "adm P"
+        shows " P (Abs_tstream (\<Squnion>i. Y i))"
+proof -
+  obtain n where n_def: "ts_well (Y n)" sorry
+  obtain K where K_ch: "chain K" and K_lub: "(\<Squnion>i. Y i) = (\<Squnion>i. K i)" 
+                and K_p:  "\<And>i. P(Abs_tstream (K i))" and K_well: "\<And>i. ts_well (K i)" sorry
+  hence "chain (\<lambda>i. Abs_tstream (K i))"
+    by (simp add: below_tstream_def po_class.chain_def)
+  thus ?thesis
+    by (metis (mono_tags, lifting) K_lub K_p K_well Rep_Abs adm_def assms(4) lub_eq lub_tstream) 
+qed
 
-lemma tstream_induct [case_names Bot tsLscons, induct type: tstream]:
+lemma tsmlscons_obtain: assumes "t\<noteq>\<bottom>" and "xs\<noteq>\<bottom>"  
+  obtains x where "Rep_tstream (tsMLscons\<cdot>t\<cdot>xs) = x&&(Rep_tstream xs)" and "x\<noteq>\<bottom>"
+  sorry
+    
+lemma delayfun_abststream: "ts_well s\<Longrightarrow>delayFun\<cdot>(Abs_tstream s) = Abs_tstream (updis \<surd> && s)"
+  by (simp add: delayFun.rep_eq lscons_conv tsconc_insert)    
+
+lemma tstream_induct_h:
   fixes ts
-  assumes "P \<bottom>" and "\<And>xs. P xs \<Longrightarrow> P (delayFun\<cdot>xs)" and "\<And>xs x. P xs\<Longrightarrow> x\<noteq>\<bottom>\<Longrightarrow>xs\<noteq>\<bottom>\<Longrightarrow> P (tsMLscons\<cdot>x\<cdot>xs)"
+  assumes 
+        "P \<bottom>" 
+    and "\<And>xs. P xs \<Longrightarrow> P (delayFun\<cdot>xs)" and "\<And>xs x. P xs\<Longrightarrow> x\<noteq>\<bottom>\<Longrightarrow>xs\<noteq>\<bottom>\<Longrightarrow> P (tsMLscons\<cdot>x\<cdot>xs)"
+    and "adm P"
+  shows "ts_well s \<Longrightarrow> P (Abs_tstream s)"
+    proof (induction s)
+      case adm
+      then show ?case using adm_def assms(4) tstream_adm by blast
+    next
+      case bottom
+      then show ?case
+        by (simp add: assms(1)) 
+    next
+      case (lscons u s)
+      assume u_def: "u \<noteq> \<bottom>" and "(ts_well s \<Longrightarrow> P (Abs_tstream s))" and  "ts_well (u && s)"
+      have s_well: "ts_well s" using lscons.prems ts_well_drop1 u_def by fastforce
+      then show ?case
+                proof (cases "u=updis \<surd>")
+                  case True
+                    have "delayFun\<cdot>(Abs_tstream s) = Abs_tstream (u&&s)"
+                      by (simp add: True delayfun_abststream s_well)
+                  then show ?thesis
+                    using assms(2) lscons.IH s_well by force 
+                next
+                  case False
+                    obtain m where m_def: "u = up\<cdot>(Discr (Msg m))"
+                      by (metis (full_types) Exh_Up False discr.exhaust event.exhaust u_def)
+                    have "s\<noteq>\<bottom>" sorry
+                     hence "Abs_tstream (u&&s) = tsMLscons\<cdot>(updis m)\<cdot>(Abs_tstream s)" sorry
+                  then show ?thesis by (simp add: \<open>s \<noteq> \<epsilon>\<close> assms(3) lscons.IH s_well)
+                qed
+    qed
+
+    
+lemma tstream_induct [case_names Adm Bot tsLscons, induct type: tstream]:
+  fixes ts
+  assumes 
+        "adm P"
+    and "P \<bottom>"  
+    and "\<And>ts. P ts \<Longrightarrow> P (delayFun\<cdot>ts)" and "\<And>ts t. P ts\<Longrightarrow> t\<noteq>\<bottom>\<Longrightarrow>ts\<noteq>\<bottom>\<Longrightarrow> P (tsMLscons\<cdot>t\<cdot>ts)"
   shows "P ts"
-  apply(induction ts, rename_tac s)
+proof -
+  obtain s where s_def: "ts = Abs_tstream s \<and> ts_well s"  using Abs_tstream_cases by blast
+  thus ?thesis
+    by (simp add: s_def assms(1) assms(2) assms(3) assms(4) tstream_induct_h) 
+qed
+  
+  
+lemma "tsAbsNew\<cdot>ts= tsAbs\<cdot>ts"
+  apply(induction)
+     apply simp_all
   oops
     
-lemma "tsAbsNew\<cdot>ts = tsAbs\<cdot>ts"
-  oops
-    (*
-  apply(induct ts)
-    apply (simp_all add: tsabs_SORRY)
-  by (metis tsabs_SORRY tsabs_new_msg upE)
-*)
-
-
-(*    
-   (* only the general idea *)
-fixrec tsZipNew:: "'a stream \<rightarrow> 'b tstream \<rightarrow> ('a\<times>'b) tstream" where
-"x\<noteq>\<bottom> \<Longrightarrow> ts\<noteq>\<bottom> \<Longrightarrow> tsZipNew\<cdot>(lscons\<cdot>x\<cdot>xs)\<cdot>(tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>t))\<cdot>ts) 
-    =tsMLscons\<cdot>(upApply2 Pair\<cdot>x\<cdot>(up\<cdot>t))\<cdot>(tsZipNew\<cdot>xs\<cdot>ts) " |  (* zip if both first elements are defined *)
-
-"x\<noteq>\<bottom> \<Longrightarrow> tsZipNew\<cdot>(lscons\<cdot>x\<cdot>xs)\<cdot>(tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>ts) 
-    = delayFun\<cdot>(tsZipNew\<cdot>xs\<cdot>ts)"  (* ignore ticks *)
-(* No other cases required, stuff that does not match will go to bottom *)
-
-*)
 end  
