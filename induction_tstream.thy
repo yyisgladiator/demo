@@ -70,26 +70,18 @@ lemma [simp]: "tsAbs\<cdot>(delayFun\<cdot>ts) = tsAbs\<cdot>ts"
 lemma tsabs_new_msg [simp]: "xs\<noteq>\<bottom> \<Longrightarrow> tsAbsNew\<cdot>(tsMLscons\<cdot>(up\<cdot>x)\<cdot>xs) = up\<cdot>x && (tsAbsNew\<cdot>xs)"
   by fixrec_simp+
 
-  
-lemma tsabs_SORRY: "xs\<noteq>\<bottom> \<Longrightarrow> tsAbs\<cdot>(tsMLscons\<cdot>(up\<cdot>x)\<cdot>xs) = up\<cdot>x && (tsAbs\<cdot>xs)"
+lemma tsmlscons2tslscons: "xs\<noteq>\<bottom> \<Longrightarrow> (tsMLscons\<cdot>(up\<cdot>x)\<cdot>xs) = tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>x))\<cdot>xs"
+  by(simp add: tsMLscons_def)
+    
+lemma tsabs_tsmlscons: "xs\<noteq>\<bottom> \<Longrightarrow> tsAbs\<cdot>(tsMLscons\<cdot>(updis x)\<cdot>xs) = (updis x) && (tsAbs\<cdot>xs)"
+  apply(subst tsmlscons2tslscons, simp)
   apply(subst tsabs_insert)
-  oops    
+    apply(simp add: tslscons_lscons uMsg_def lscons_conv)
+  by (simp add: tsabs_insert)
 
-    
-    
-    
-
-
-    
-(* Define a "induction" lemma for tStreams *)
-
-
-
-  
-  
 lemma "tsAbsNew\<cdot>ts= tsAbs\<cdot>ts"
   apply(induction)
      apply simp_all
-  oops
+  using updis_exists tsabs_tsmlscons by fastforce
     
 end  

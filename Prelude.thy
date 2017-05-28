@@ -310,6 +310,15 @@ definition upApply :: "('a \<Rightarrow> 'b) \<Rightarrow> 'a discr u \<rightarr
 definition upApply2 :: "('a \<Rightarrow> 'b \<Rightarrow> 'c) \<Rightarrow> 'a discr\<^sub>\<bottom> \<rightarrow> 'b discr\<^sub>\<bottom> \<rightarrow> 'c discr\<^sub>\<bottom>" where 
 "upApply2 f \<equiv> \<Lambda> a b. (if a=\<bottom>\<or>b=\<bottom> then \<bottom> else updis (f (THE x. a = updis x) (THE x. b = updis x)))"
 
+
+(* updis lemma *)
+lemma updis_exists: assumes "x\<noteq>\<bottom>"
+  obtains n where "updis n = x"
+  by (metis Discr_undiscr Exh_Up assms)
+    
+    
+    
+(* upApply *)    
 lemma upapply_mono [simp]: "monofun (\<lambda> a. (if a=\<bottom> then \<bottom> else updis (f (THE b. a = updis b))))"
 apply (rule monofunI, auto)
 by (metis (full_types, hide_lams) discrete_cpo upE up_below)
