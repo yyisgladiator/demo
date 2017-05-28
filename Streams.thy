@@ -960,6 +960,13 @@ lemma ind2: assumes "adm P" and "P \<epsilon>"  and "\<And>a s. P s  \<Longright
   shows "P x"
 by (metis assms(1) assms(2) assms(3) stakeind2 stream.take_induct)
 
+lemma stream_fin_induct: assumes Bot: "P \<bottom>" and lscons: "(\<And>x xs. x\<noteq>\<bottom>\<Longrightarrow>P xs \<Longrightarrow> P (x&&xs))" and fin: "#xs<\<infinity>"
+  shows "P xs"
+  by (metis finind infI lnless_def sconc_fst_empty sconc_scons' sup'_def up_defined assms)
+  
+lemma stream_infs: "(\<And>s. #s<\<infinity> \<Longrightarrow> P s) \<Longrightarrow> adm P \<Longrightarrow> P s"
+  by (metis inf_less_eq leI notinfI3 slen_stake_fst_inf stream.take_induct)
+  
 (* ----------------------------------------------------------------------- *)
 section {* Additional lemmas for approximation, chains and continuity *} 
 (* ----------------------------------------------------------------------- *)
