@@ -311,7 +311,20 @@ lemma tslscons_lscons: "ts\<noteq>\<bottom> \<Longrightarrow> Rep_tstream (tsLsc
 by(simp add: tslscons_insert espf2tspf_def)  
     
   
-  
+lemma tsmlscons2tslscons: "ts\<noteq>\<bottom>\<Longrightarrow> tsMLscons\<cdot>(updis m)\<cdot>ts = tsLscons\<cdot>(updis (Msg m))\<cdot>ts"
+  by(simp add: tsMLscons_def)  
+
+lemma tsmlscons_bot[simp]: "tsMLscons\<cdot>\<bottom>\<cdot>ts = \<bottom>"    
+  by(simp add: tsMLscons_def)    
+
+lemma tsmlscons_bot2[simp]: "tsMLscons\<cdot>t\<cdot>\<bottom> = \<bottom>"    
+  apply(simp add: tsMLscons_def)    
+    by(auto simp add: tslscons_insert upapply_insert)
+    
+lemma tsmlscons_nbot[simp]: "t\<noteq>\<bottom>\<Longrightarrow>ts \<noteq>\<bottom> \<Longrightarrow> tsMLscons\<cdot>t\<cdot>ts \<noteq>\<bottom>"    
+  by(simp add: tsMLscons_def)    
+    
+    
     
 lemma tslscons_lshd [simp]: "ts\<noteq>\<bottom> \<Longrightarrow> tsLshd\<cdot>(tsLscons\<cdot>t\<cdot>ts) = t"
 by(auto simp add: tslscons_insert tsLshd_def espf2tspf_def)  
@@ -481,7 +494,6 @@ lemma tsabs_new_msg [simp]: "xs\<noteq>\<bottom> \<Longrightarrow> tsAbsNew\<cdo
 lemma tsabs_SORRY: "xs\<noteq>\<bottom> \<Longrightarrow> tsAbs\<cdot>(tsMLscons\<cdot>(up\<cdot>x)\<cdot>xs) = up\<cdot>x && (tsAbs\<cdot>xs)"
   apply(subst tsabs_insert)
   oops    
-    
 
 lemma tstream_adm: assumes "chain Y"  
           and "\<And>i. ts_well (Y i) \<Longrightarrow> P (Abs_tstream (Y i))" 
@@ -489,7 +501,7 @@ lemma tstream_adm: assumes "chain Y"
           and "adm P"
         shows " P (Abs_tstream (\<Squnion>i. Y i))"
 proof -
-  obtain n where n_def: "ts_well (Y n)" sorry
+  obtain n where n_def: "ts_well (Y n)" sorry (* gilt glaub ich nicht *)
   obtain K where K_ch: "chain K" and K_lub: "(\<Squnion>i. Y i) = (\<Squnion>i. K i)" 
                 and K_p:  "\<And>i. P(Abs_tstream (K i))" and K_well: "\<And>i. ts_well (K i)" sorry
   hence "chain (\<lambda>i. Abs_tstream (K i))"
@@ -500,11 +512,21 @@ qed
 
 lemma tsmlscons_obtain: assumes "t\<noteq>\<bottom>" and "xs\<noteq>\<bottom>"  
   obtains x where "Rep_tstream (tsMLscons\<cdot>t\<cdot>xs) = x&&(Rep_tstream xs)" and "x\<noteq>\<bottom>"
-  sorry
+proof -
+  obtain n where n_def: "t = updis n"
+    by (metis (full_types) assms(1) discr.exhaust upE) 
+  thus ?thesis
+    by (simp add: assms(2) that tslscons_lscons tsmlscons2tslscons)
+qed
+  
     
 lemma delayfun_abststream: "ts_well s\<Longrightarrow>delayFun\<cdot>(Abs_tstream s) = Abs_tstream (updis \<surd> && s)"
   by (simp add: delayFun.rep_eq lscons_conv tsconc_insert)    
 
+lemma tsmsg_notwell: "\<not>ts_well((updis (Msg m)) && \<bottom>)"
+  apply(simp add: ts_well_def)
+  by (metis Inf'_neq_0 event.distinct(1) fold_inf lnat.sel_rews(2) lscons_conv sfilterl4 sfoot1 sfoot_one slen_scons strict_slen sup'_def)
+    
 lemma tstream_induct_h:
   fixes ts
   assumes 
@@ -533,9 +555,11 @@ lemma tstream_induct_h:
                 next
                   case False
                     obtain m where m_def: "u = up\<cdot>(Discr (Msg m))"
-                      by (metis (full_types) Exh_Up False discr.exhaust event.exhaust u_def)
-                    have "s\<noteq>\<bottom>" sorry
-                     hence "Abs_tstream (u&&s) = tsMLscons\<cdot>(updis m)\<cdot>(Abs_tstream s)" sorry
+                      by (metis (full_types) Exh_Up False discr.exhaust event.exhaust u_def)                        
+                    have "s\<noteq>\<bottom>"
+                      using lscons.prems m_def tsmsg_notwell by blast
+                     hence "Abs_tstream (u&&s) = tsMLscons\<cdot>(updis m)\<cdot>(Abs_tstream s)"
+                       by (metis Abs_Rep Rep_Abs Rep_tstream_bottom_iff m_def s_well tslscons_lscons tsmlscons2tslscons)
                   then show ?thesis by (simp add: \<open>s \<noteq> \<epsilon>\<close> assms(3) lscons.IH s_well)
                 qed
     qed
