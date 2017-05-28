@@ -1380,6 +1380,17 @@ lemma spfcomp_and_spfcomp2_eq: "(spfcomp f1 f2) = (spfcomp2 f1 f2)"
   apply (subst spfcomp_abbrv_tospfH22)
   apply (subst spfcompH3_abbrv_tospfH32)
   by (simp add: spfcomp_and_spfcomp2_eq_req)
-  
+ 
+    
+    
+    
+    
+chapter \<open>general feed\<close>   
+  (* add feedback lemmata here when final definition is decided *)
+    
+    
+    
+    
+    
 end
   
