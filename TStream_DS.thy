@@ -7,7 +7,7 @@
 
 theory TStream_DS
  
-imports fixrec_tstream
+imports TStream
 
 begin  
     
