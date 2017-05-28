@@ -568,6 +568,9 @@ apply (rule_tac x="a" in exI)
 apply (rule_tac x="s" in exI, simp)
 by (drule less_fst_sconsD, simp)
 
+lemma lshd_eq: "ts\<sqsubseteq>xs \<Longrightarrow> ts\<noteq>\<bottom> \<Longrightarrow> lshd\<cdot>ts = lshd\<cdot>xs"
+  using lessD by fastforce
+  
 (* ----------------------------------------------------------------------- *)
 subsection {* @{term slen} *}
 (* ----------------------------------------------------------------------- *)
