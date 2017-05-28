@@ -49,5 +49,8 @@ lemma tszip_scons2:
   "tsZip\<cdot>(tsMLscons\<cdot>(updis t)\<cdot>ts)\<cdot>((updis x) && xs) = tsMLscons\<cdot>(updis ((t,x)))\<cdot>(tsZip\<cdot>ts\<cdot>xs)"
 oops
 
+lemma tszip_scons: 
+  "tsZip\<cdot>(tsMLscons\<cdot>(updis t)\<cdot>ts)\<cdot>((updis x) && xs) = tsMLscons\<cdot>(updis ((inversMsg t),x))\<cdot>(tsZip\<cdot>ts\<cdot>xs)"
+oops
 
 end  
