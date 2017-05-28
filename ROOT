@@ -23,7 +23,7 @@ session "TStream" (canFail) = "Streams" +
   options [quick_and_dirty = false]
   theories
     TStream   
-    fixrec_tstream
+    induction_tstream
  
 session "TSPS" (canFail) = "TStream" + 
   options [quick_and_dirty = false]
