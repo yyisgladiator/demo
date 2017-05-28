@@ -176,9 +176,6 @@ primrec tsntimes:: " nat \<Rightarrow> 'a tstream \<Rightarrow> 'a tstream" wher
 definition tsinftimes:: "'a tstream \<Rightarrow> 'a tstream" where
 "tsinftimes \<equiv> fix\<cdot>(\<Lambda> h. (\<lambda>ts. if ts = \<bottom> then \<bottom> else (tsConc ts \<cdot> (h ts))))"
 
-
-
-
 (* Definitionen aus TStream *)
 
 text {* Convert an event-spf to a timed-spf. Just a restriction of the function domain. *}
@@ -1866,17 +1863,20 @@ done
 thm tsMap_def
 
 lemma tsmap_h_fair: "#({\<surd>} \<ominus> (smap (\<lambda>x. case x of \<M> m \<Rightarrow> \<M> f m | \<surd> \<Rightarrow> \<surd>)\<cdot>s)) = #({\<surd>} \<ominus> s)"
-  apply(simp add:smap_def)
-  
-sorry
+  apply (rule ind [of _ s], auto)
+  by (case_tac "a", auto)
 
 lemma tsmap_h_sfoot: assumes "#s<\<infinity>" 
   shows "sfoot (smap (\<lambda>x. case x of \<M> m \<Rightarrow> \<M> f m | \<surd> \<Rightarrow> \<surd>)\<cdot>(s \<bullet> \<up>\<surd>)) = \<surd>"
-sorry
+  by (simp add: smap_split assms)
 
 lemma tsmap_h_well: assumes "ts_well s"
   shows "ts_well (smap (\<lambda>x. case x of \<M> m \<Rightarrow> \<M> f m | \<surd> \<Rightarrow> \<surd>)\<cdot>s)"
-   sorry
+  apply (simp add: ts_well_def tsmap_h_fair tsmap_h_sfoot)
+  apply (cases "s = \<epsilon>", auto)
+  apply (meson assms ts_well_def)
+  by (metis (no_types, lifting)
+      assms event.simps(5) sconc_snd_empty smap_scons smap_split strict_smap ts_fin_well)
 
 lemma tsmap_unfold:
   "tsMap f\<cdot>ts = Abs_tstream (smap (\<lambda>x. case x of \<M> m \<Rightarrow> \<M> f m | \<surd> \<Rightarrow> \<surd>)\<cdot>(Rep_tstream ts))"
@@ -1914,16 +1914,22 @@ oops
 lemma tsprojsnd_strict[simp]: "tsProjSnd\<cdot>\<bottom> = \<bottom>"
 oops
 
-lemma tsprojfst_strict_rev: "tsProjFst\<cdot>ts = \<bottom> \<Longrightarrow> x = \<bottom>"
+lemma tsprojfst_strict_rev: "tsProjFst\<cdot>ts = \<bottom> \<Longrightarrow> ts = \<bottom>"
 oops
 
-lemma tsprojsnd_strict_rev: "tsProjSnd\<cdot>ts = \<bottom> \<Longrightarrow> x = \<bottom>"
+lemma tsprojsnd_strict_rev: "tsProjSnd\<cdot>ts = \<bottom> \<Longrightarrow> ts = \<bottom>"
 oops
 
 lemma sprojfst_tstickcount: "#\<surd>(tsProjFst\<cdot>ts) = #\<surd>ts"
 oops
 
 lemma sprojsnd_tstickcount: "#\<surd>(tsProjSnd\<cdot>ts) = #\<surd>ts"
+  oops
+    
+lemma "#(tsAbs\<cdot>(tsProjFst\<cdot>ts)) = #(tsAbs\<cdot>ts)"
+oops
+     
+lemma "#(tsAbs\<cdot>(tsProjSnd\<cdot>ts)) = #(tsAbs\<cdot>ts)"
 oops
 
 (* tsFilter *)
