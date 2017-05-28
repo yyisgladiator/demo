@@ -7,7 +7,7 @@
 *)
 
 theory OptionCpo
-imports SetPcpo Prelude
+imports SetPcpo Prelude (* "~~/src/HOL/HOLCF/Library/Option_Cpo" *)
 
 begin
 
