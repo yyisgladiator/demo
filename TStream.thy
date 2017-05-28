@@ -1836,16 +1836,29 @@ lemma tsmap_h_well: assumes "ts_well s"
 
 lemma tsmap_unfold:
   "tsMap f\<cdot>ts = Abs_tstream (smap (\<lambda>x. case x of \<M> m \<Rightarrow> \<M> f m | \<surd> \<Rightarrow> \<surd>)\<cdot>(Rep_tstream ts))"
-oops
+  apply (simp add:tsMap_def)
+  apply (simp add: espf2tspf_def)
+  by (simp add: tsmap_h_well)
+    
 
 lemma tsmap_strict[simp]: "tsMap f\<cdot>\<bottom> = \<bottom>"
-oops
+  by (simp add: tsmap_unfold)
 
-lemma tsmap_tstickcount[simp]: "#\<surd>(tsMap f\<cdot>ts) = #\<surd>ts"
-oops
-
+ 
+lemma tsmap_tstickcount[simp]:  "#\<surd>(tsMap f\<cdot>ts) = #\<surd>ts"
+  apply(simp add: tsTickCount_def)
+  apply(simp only: tsmap_unfold)
+  apply(subst Abs_tstream_inverse)
+  apply(simp add:tsmap_h_well)
+  apply(simp add: tsmap_h_fair)
+  done
+  
+  
+    
 lemma tsmap_weak:"tsWeakCausal (Rep_cfun (tsMap f))"
-oops
+apply (subst tsWeak2cont2, auto)  
+done
+    
 
 (* tsProjFst and tsProjSnd *)
 thm tsProjFst_def
@@ -1890,13 +1903,27 @@ lemma tsfilter_unfold:
 by (simp add: tsFilter_def tsfilter_h_well)
 
 lemma tsfilter_strict[simp]: "tsFilter M\<cdot>\<bottom> = \<bottom>"
-by (simp add: tsfilter_unfold)
+  by (simp add: tsfilter_unfold)
 
+
+lemma sfilter_h_chain: assumes "M = X \<inter> Y " shows " #(X  \<ominus>  Y  \<ominus> s) = #(M \<ominus> s)"
+  apply (simp add: assms) 
+done    
+    
+
+  
 lemma tsfilter_tstickcount: "#\<surd>(tsFilter M\<cdot>ts) = #\<surd>ts"
-oops
+  apply(simp add: tsTickCount_def)
+  apply(simp only: tsfilter_unfold)
+  apply(subst Abs_tstream_inverse)
+   apply (simp add: tsfilter_h_well)
+  apply(simp add: sfilter_h_chain)
+  done
                                                 
-lemma tsfilter_weak: "tsWeakCausal (Rep_cfun (tsFilter M))"
-oops
+lemma tsfilter_weak:"tsWeakCausal (Rep_cfun (tsFilter M))"
+  apply (subst tsWeak2cont2, auto)  
+  apply (simp add: tsfilter_tstickcount)
+done
 
 (* tsscanl *)
 

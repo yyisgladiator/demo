@@ -32,66 +32,6 @@ oops (* good luck proving this :/ *)
 
 (* source: https://www.pdx.edu/computer-science/sites/www.pdx.edu.computer-science/files/Huffman.pdf *)
  
-    
-    
-    
-    
-    
-  subsection \<open>Necessary definitions\<close>
-
-
-
-
-
-(* Move this to prelude *)    
-    
-definition upApply :: "('a \<Rightarrow> 'b) \<Rightarrow> 'a discr u \<rightarrow> 'b discr u" where
-"upApply f \<equiv> \<Lambda> a. (if a=\<bottom> then \<bottom> else updis (f (THE b. a = updis b)))"
-
-(* ToDo. Definition & show cont *)
-definition upApply2 :: "('a \<Rightarrow> 'b \<Rightarrow> 'c) \<Rightarrow> 'a discr\<^sub>\<bottom> \<rightarrow> 'b discr\<^sub>\<bottom> \<rightarrow> 'c discr\<^sub>\<bottom>" where 
-"upApply2 f \<equiv> \<bottom> " (* Is it possible to define upApply2 using upApply ? ? *)
-
-
-lemma upApply_mono[simp]:"monofun (\<lambda> a. (if a=\<bottom> then \<bottom> else updis (f (THE b. a = updis b))))"
-  apply(rule monofunI)
-  apply auto[1]
-  by (metis (full_types, hide_lams) discrete_cpo upE up_below)
-
-lemma upApply_lub: assumes "chain Y"
-  shows "((\<lambda> a. (if a=\<bottom> then \<bottom> else updis (f (THE b. a = updis b)))) (\<Squnion>i. Y i))
-=(\<Squnion>i. (\<lambda> a. (if a=\<bottom> then \<bottom> else updis (f (THE b. a = updis b)))) (Y i))"
-apply(rule finite_chain_lub)
-apply (simp_all add: assms chfin2finch)
-done
- 
-lemma upApply_cont[simp]:"cont (\<lambda> a. (if a=\<bottom> then \<bottom> else updis (f (THE b. a = updis b))))"
-using chfindom_monofun2cont upApply_mono by blast
-
-lemma upApply_rep_eq [simp]: "upApply f\<cdot>(updis a) = updis (f a)"
-by(simp add: upApply_def)
-
-lemma upapply_insert: "upApply f\<cdot>a = (if a=\<bottom> then \<bottom> else updis (f (THE b. a = updis b)))"  
-  by(simp add: upApply_def)
-    
-lemma upapply_bot [simp]: "upApply f\<cdot>\<bottom> = \<bottom>"
-  by(simp add: upApply_def)
-
-lemma upapply_nbot [simp]: "x\<noteq>\<bottom> \<Longrightarrow> upApply f\<cdot>x\<noteq>\<bottom>"
-  by(simp add: upApply_def)
-    
-lemma upapply_up[simp]: assumes "x\<noteq>\<bottom>" obtains a where "up\<cdot>a = upApply f\<cdot>x"
-  by(simp add: upApply_def assms)
-  
-lemma chain_nBot: assumes "chain Y" and  "(\<Squnion>i. Y i) \<noteq>\<bottom>"
-  obtains n::nat where "(\<And>i. ((Y (i+n)) \<noteq>\<bottom>))"
-  by (metis assms(1) assms(2) bottomI le_add2 lub_eq_bottom_iff po_class.chain_mono)
-
-  
-  
-  
-  
-
 subsection \<open>Definitions\<close>  
   
         
@@ -258,7 +198,7 @@ lemma tslscons_cont_h2: assumes "t \<noteq> updis \<surd>" and "chain Y"
   next
     case False
     have f_chain: "chain (\<lambda>i. ?f (Y i))"  by (simp add: assms(2))
-    obtain n  where n_def: "(\<And>i. ((Y ( i+n)) \<noteq>\<bottom>))"  using False assms(2) chain_nBot False by blast
+    obtain n  where n_def: "(\<And>i. ((Y ( i+n)) \<noteq>\<bottom>))"  using False assms(2) chain_nbot False by blast
     have lub_eq: "(\<Squnion>i. Y(i+n)) = (\<Squnion>i. Y i)" by(simp add: lub_range_shift assms)
     hence "?f (\<Squnion>i. Y (i+n)) \<sqsubseteq> (\<Squnion>i. ?f (Y (i+n)))" using assms(1) assms(2) chain_shift n_def tslscons_cont_h3 by blast
     also have "?f (\<Squnion>i. Y (i+n)) = ?f (\<Squnion>i. Y i)" using assms(2) lub_range_shift2 by fastforce

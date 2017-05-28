@@ -74,7 +74,8 @@ text {* equivalence classes: empty tstream, finite tstream, infinite tstream *}
 
 lift_definition OneTwoThree :: "nat tstream" is
   "<[Msg 1, \<surd>, Msg 2, \<surd>, Msg 3, \<surd>]>"
-by(simp add: ts_well_def)
+by (metis (no_types, lifting) assoc_sconc list2s.simps(1) list2s.simps(2) lscons_conv sup'_def
+    ts_well_conc1 ts_well_sing_conc)
 
 lemma "tsMed\<cdot>OneTwoThree\<cdot>\<bottom> = \<bottom>"
 oops
@@ -82,7 +83,7 @@ oops
 lemma "tsMed\<cdot>OneTwoThree\<cdot>((\<up>True) \<infinity>) = OneTwoThree"
 oops
 
-lemma "tsMed\<cdot>OneTwoThree\<cdot>(<[True, False, True]>) = Abs_tstream (<[Msg 1, \<surd>, \<surd>, Msg 3, \<surd>]>)" 
+lemma "tsMed\<cdot>OneTwoThree\<cdot>(<[True, False]> \<infinity>) = Abs_tstream (<[Msg 1, \<surd>, \<surd>, Msg 3, \<surd>]>)" 
 oops
 
 lemma "tsMed\<cdot>(OneTwoThree \<bullet> tsInfTick)\<cdot>((\<up>True) \<infinity>) = (OneTwoThree \<bullet> tsInfTick)"
