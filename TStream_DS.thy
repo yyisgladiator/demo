@@ -45,10 +45,9 @@ apply (simp add: delayfun_simp)
 apply (subst delayfun_lscons)
 by (fixrec_simp)
 
-(*
-lemma tszip_scons: 
-  "t\<noteq>\<surd> \<Longrightarrow> tsZip\<cdot>(tsMLscons\<cdot>(updis t)\<cdot>ts)\<cdot>(updis x && xs) = tsMLscons\<cdot>(updis (\<M>\<inverse> t,x))\<cdot>(tsZip\<cdot>ts\<cdot>xs)"
+lemma tszip_scons2: 
+  "tsZip\<cdot>(tsMLscons\<cdot>(updis t)\<cdot>ts)\<cdot>((updis x) && xs) = tsMLscons\<cdot>(updis ((t,x)))\<cdot>(tsZip\<cdot>ts\<cdot>xs)"
 oops
-*)
+
 
 end  
