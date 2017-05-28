@@ -7,7 +7,7 @@
 *)
 
 theory SPF_Feedback_JB
-imports Streams SB SPF ParComp_MW_JB SerComp_JB SPF_Templates SPF_Composition_JB SPF_MW
+imports SPF_Comp SPF_MW
     
 begin
   
@@ -15,46 +15,11 @@ begin
 section \<open>definitions\<close>
 (* ----------------------------------------------------------------------- *)
   
-(* definition from Feedback_MW *)
-definition spfFeedbackOperator :: "'a SPF \<Rightarrow> 'a SPF" ("\<mu>_" 50) where
-"spfFeedbackOperator f \<equiv>
-let I  = spfDom\<cdot>f - spfRan\<cdot>f;
-    I1 = spfDom\<cdot>f;
-    C  = spfRan\<cdot>f
-in Abs_CSPF (\<lambda> sb. (sbDom\<cdot>sb = I) \<leadsto>
-    (\<Squnion>i. iterate i\<cdot>(\<Lambda> z. (f\<rightleftharpoons>((sb \<uplus> z)\<bar> I1)))\<cdot>(C^\<bottom>)))" 
-  
-definition spfFeedH:: "'m SPF \<Rightarrow> 'm SB \<Rightarrow> 'm SB  \<rightarrow> 'm SB" where
-"spfFeedH f x \<equiv> (\<Lambda> z. (f\<rightleftharpoons>((x \<uplus> z)\<bar> (spfDom\<cdot>f))))"
-
-abbreviation iter_spfFeedH:: "'m SPF \<Rightarrow> nat \<Rightarrow> 'm SB \<Rightarrow> 'm SB" where
-"iter_spfFeedH f i \<equiv> (\<lambda> x. iterate i\<cdot>(spfFeedH f x)\<cdot>((spfRan\<cdot>f)^\<bottom>))"
-
-(* obsolete feedback operator *)
-definition spfFeedbackOperator2 :: "'a SPF \<Rightarrow> 'a SPF" where
-"spfFeedbackOperator2 f \<equiv>
-let I  = spfDom\<cdot>f - spfRan\<cdot>f;
-    I1 = spfDom\<cdot>f;
-    C  = (spfDom\<cdot>f \<union> spfRan\<cdot>f)
-in Abs_CSPF (\<lambda> sb. (sbDom\<cdot>sb = I) \<leadsto>
-    (\<Squnion>i. iterate i\<cdot>(\<Lambda> z. sb \<uplus> (f\<rightleftharpoons>(z \<bar> I1)))\<cdot>(C^\<bottom>)) \<bar> (spfRan\<cdot>f))" 
-
-definition spfFeedH2:: "'m SPF \<Rightarrow> 'm SB \<Rightarrow> 'm SB  \<rightarrow> 'm SB" where
-"spfFeedH2 f x \<equiv> (\<Lambda> z. x \<uplus> (f\<rightleftharpoons>(z\<bar>(spfDom\<cdot>f))))"
-
-abbreviation iter_spfFeedH2:: "'m SPF \<Rightarrow> nat \<Rightarrow> 'm SB \<Rightarrow> 'm SB" where
-"iter_spfFeedH2 f i \<equiv> (\<lambda> x. iterate i\<cdot>(spfFeedH2 f x)\<cdot>((spfDom\<cdot>f \<union> spfRan\<cdot>f)^\<bottom>))"
+(* definitions see SPF_Comp.thy *)
 
 
     
-(* show that the version used from proofing is equal to the actual definition of the feedback
-    operator *)
-lemma spfFeedbackOperator2_iter_spfFeedH: 
-shows "(spfFeedbackOperator f) = Abs_CSPF (\<lambda> sb. (sbDom\<cdot>sb = (spfDom\<cdot>f - spfRan\<cdot>f)) \<leadsto>
-                                              (\<Squnion>i. (iter_spfFeedH f i) sb))"
-  apply (simp add: spfFeedbackOperator_def)
-  apply (subst spfFeedH_def)
-    by simp
+
 
 (* The general proof structure for cont and spf_well is again an inner to outer approach,
    I start with some lemmata about spfFeedH, then the iteration over the helper, 

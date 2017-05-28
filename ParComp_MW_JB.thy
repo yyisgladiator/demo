@@ -7,7 +7,7 @@
 *)
 
 theory ParComp_MW_JB
-imports SPF SB SerComp_JB
+imports SPF SB SPF_Comp
 
 begin
 
@@ -243,7 +243,7 @@ lemma spfCompParallelGetch1: assumes "L f1 f2 = {}"
                                 and "spfComp_well f1 f2"
                                 and "c \<in> spfRan\<cdot>f1" 
   shows "(Rep_CSPF(spfcomp f1 f2) \<rightharpoonup> sb) . c = (Rep_CSPF(f1) \<rightharpoonup> (sb\<bar>spfDom\<cdot>f1)) . c"
-  apply(simp add: spfcomp_tospfH2)
+  apply(simp only: spfcomp_tospfH2)
   apply (subst  spfComp_parallel_iterconst_eq1,  simp_all add: assms)
   apply(simp_all add: spfComp_cInOc1 assms)
   apply(subst sbunion_getchM, simp_all)
@@ -256,8 +256,8 @@ lemma spfCompParallelGetch2: assumes "L f1 f2 = {}"
                                 and "spfComp_well f1 f2"
                                 and "c \<in> spfRan\<cdot>f2" 
   shows "(Rep_CSPF(spfcomp f1 f2) \<rightharpoonup> sb) . c = (Rep_CSPF(f2) \<rightharpoonup> (sb\<bar>spfDom\<cdot>f2)) . c"
-  apply(simp add: spfcomp_tospfH2)
-  apply (subst  spfComp_parallel_iterconst_eq1,  simp_all add: assms)
-  by(simp_all add: spfComp_cInOc2 assms)
+  apply (simp only: spfcomp_tospfH2)
+  apply (subst  spfComp_parallel_iterconst_eq1)
+  by (simp_all add: assms)
     
 end

@@ -1,5 +1,5 @@
 theory SPF_MW
-imports SPF SerComp_JB ParComp_MW_JB SPF_Composition_JB SPF_Templates
+imports SPF  ParComp_MW_JB SPF_Comp
 begin
 
 (* operator for parallel composition *)
@@ -153,7 +153,7 @@ lemma spfComp_I_domf1_eq: assumes "pL f1 f2 = {}"
                               and "spfRan\<cdot>f1 = spfDom\<cdot>f2"
                               and "spfComp_well f1 f2"
    shows "I f1 f2 = spfDom\<cdot>f1"
-  using SerComp_JB.spfComp_I_domf1_eq assms(1) assms(2) assms(3) pLEmptyNoSelfloops spfComp_dom_I spfdom_insert by blast
+  using spfComp_I_domf1_eq assms(1) assms(2) assms(3) pLEmptyNoSelfloops spfComp_dom_I spfdom_insert by blast
 
      
 lemma serCompHelp2Eq: assumes "pL f1 f2 = {}"
@@ -181,7 +181,7 @@ lemma serialOperatorEq: assumes "pL f1 f2 = {}"
                             and "spfComp_well f1 f2"
                             and "spfRan\<cdot>f1 = spfDom\<cdot>f2"
    shows "(f1 \<otimes> f2) = (f1 \<circ> f2)"
-apply(simp add: sercomp_def SerComp_JB.spfcomp_tospfH2)
+apply(simp add: sercomp_def spfcomp_tospfH2)
 apply(subst spfComp_I_domf1_eq, simp_all add: assms)
 apply(subst serCompHelp2Eq2)
 by(simp_all add: assms)
