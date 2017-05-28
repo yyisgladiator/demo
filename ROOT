@@ -7,7 +7,7 @@ session "TStreamSorry" (mustWork) = "Streams" +
   options [quick_and_dirty = true]
   theories
     TStream   
-    fixrec_tstream
+    induction_tstream
     "CaseStudies/TimedABP"
     TStream_DS
  
