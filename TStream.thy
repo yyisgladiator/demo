@@ -1930,23 +1930,23 @@ lemma tsprojsnd_strict_rev: "tsProjSnd\<cdot>ts = \<bottom> \<Longrightarrow> ts
   apply (simp add: tsProjSnd_def)
   by (metis strict_tstickcount ts_0ticks tsmap_tstickcount)
 
-lemma sprojfst_tstickcount: "#\<surd>(tsProjFst\<cdot>ts) = #\<surd>ts"
+lemma sprojfst_tstickcount[simp]: "#\<surd>(tsProjFst\<cdot>ts) = #\<surd>ts"
   by (simp add: tsProjFst_def)
 
-lemma sprojsnd_tstickcount: "#\<surd>(tsProjSnd\<cdot>ts) = #\<surd>ts"
+lemma sprojsnd_tstickcount[simp]: "#\<surd>(tsProjSnd\<cdot>ts) = #\<surd>ts"
   by (simp add: tsProjSnd_def)
 
-lemma tsabs_tsprojfst: "#(tsAbs\<cdot>(tsProjFst\<cdot>ts)) = #(tsAbs\<cdot>ts)"
+lemma tsabs_tsprojfst[simp]: "#(tsAbs\<cdot>(tsProjFst\<cdot>ts)) = #(tsAbs\<cdot>ts)"
   apply (simp add: tsProjFst_def tsAbs_def tsmap_unfold)
   apply (induct_tac ts, auto)
-  apply (simp add: tsmap_h_well Rep_Abs)
+  apply (simp add: tsmap_h_well)
   apply (rule ind [of _ y], auto)
   by (simp add: tsmap_h_fair2)
 
-lemma tsabs_tsprojsnd: "#(tsAbs\<cdot>(tsProjSnd\<cdot>ts)) = #(tsAbs\<cdot>ts)"
+lemma tsabs_tsprojsnd [simp]: "#(tsAbs\<cdot>(tsProjSnd\<cdot>ts)) = #(tsAbs\<cdot>ts)"
   apply (simp add: tsProjSnd_def tsAbs_def tsmap_unfold)
   apply (induct_tac ts, auto)
-  apply (simp add: tsmap_h_well Rep_Abs)
+  apply (simp add: tsmap_h_well)
   apply (rule ind [of _ y], auto)
   by (simp add: tsmap_h_fair2)
 
@@ -1967,25 +1967,16 @@ by (simp add: tsFilter_def tsfilter_h_well)
 lemma tsfilter_strict[simp]: "tsFilter M\<cdot>\<bottom> = \<bottom>"
   by (simp add: tsfilter_unfold)
 
-
-lemma sfilter_h_chain: assumes "M = X \<inter> Y " shows " #(X  \<ominus>  Y  \<ominus> s) = #(M \<ominus> s)"
-  apply (simp add: assms) 
-done    
-    
-
   
-lemma tsfilter_tstickcount: "#\<surd>(tsFilter M\<cdot>ts) = #\<surd>ts"
+lemma tsfilter_tstickcount [simp]: "#\<surd>(tsFilter M\<cdot>ts) = #\<surd>ts"
   apply(simp add: tsTickCount_def)
   apply(simp only: tsfilter_unfold)
   apply(subst Abs_tstream_inverse)
    apply (simp add: tsfilter_h_well)
-  apply(simp add: sfilter_h_chain)
-  done
+   by simp
                                                 
 lemma tsfilter_weak:"tsWeakCausal (Rep_cfun (tsFilter M))"
-  apply (subst tsWeak2cont2, auto)  
-  apply (simp add: tsfilter_tstickcount)
-done
+  by (subst tsWeak2cont2, auto)  
 
 (* tsscanl *)
 
