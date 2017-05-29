@@ -37,20 +37,34 @@ by (fixrec_simp)
 lemma delayfun_simp: "(Abs_tstream (\<up>\<surd>)\<bullet>ts) = delayFun\<cdot>ts"  
 by (simp add: delayFun_def)
 
-lemma delayfun_lscons: "delayFun\<cdot>ts= tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>ts"
-by (simp add: delayFun_def tslscons_insert tsconc_insert DiscrTick_def espf2tspf_def lscons_conv)  
-    
+lemma delayfun_lscons: "delayFun\<cdot>ts = tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>ts"
+by (simp add: delayFun_def tslscons_insert tsconc_insert DiscrTick_def espf2tspf_def lscons_conv)
+
 lemma tszip_scons_tick: "xs\<noteq>\<epsilon> \<Longrightarrow> tsZip\<cdot>(Abs_tstream (\<up>\<surd>)\<bullet>ts)\<cdot>xs = Abs_tstream(\<up>\<surd>) \<bullet> tsZip\<cdot>ts\<cdot>xs"
 apply (simp add: delayfun_simp)
 apply (subst delayfun_lscons)
 by (fixrec_simp)
 
-lemma tszip_scons2: 
-  "tsZip\<cdot>(tsMLscons\<cdot>(updis t)\<cdot>ts)\<cdot>((updis x) && xs) = tsMLscons\<cdot>(updis ((t,x)))\<cdot>(tsZip\<cdot>ts\<cdot>xs)"
+lemma tick_eq_discrtick: "updis \<surd> = up\<cdot>DiscrTick"
+by (simp add: DiscrTick_def)
+
+lemma tslscons_lscons: "ts\<noteq>\<bottom> \<Longrightarrow> tsLscons\<cdot>t\<cdot>ts = espf2tspf (lscons\<cdot>t) ts"
+by (simp add: tslscons_insert)
+
+(* Was ist x?
+lemma msgscons_lscons: "Abs_tstream (\<up>t\<bullet>ts) = tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>x))\<cdot>(Abs_tstream ts)"
 oops
+
+lemma "updis (Msg x) = up\<cdot>(uMsg\<cdot>t)"
+oops
+*)
 
 lemma tszip_scons: 
   "tsZip\<cdot>(tsLscons\<cdot>(updis t)\<cdot>ts)\<cdot>((updis x) && xs) = tsMLscons\<cdot>(updis ((inversMsg t),x))\<cdot>(tsZip\<cdot>ts\<cdot>xs)"
+oops
+
+lemma tszip_scons2: 
+  "tsZip\<cdot>(tsMLscons\<cdot>(updis t)\<cdot>ts)\<cdot>((updis x) && xs) = tsMLscons\<cdot>(updis ((t,x)))\<cdot>(tsZip\<cdot>ts\<cdot>xs)"
 oops
 
 (*
