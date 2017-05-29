@@ -7,7 +7,7 @@ and "first element is Message" *)
    sebastian.stueber@rwth-aachen.de *)
   
   
-imports TStream
+imports TStream "~~/src/HOL/HOLCF/Library/Option_Cpo"
 
 begin
 
@@ -83,5 +83,31 @@ lemma "tsAbsNew\<cdot>ts= tsAbs\<cdot>ts"
   apply(induction)
      apply simp_all
   using updis_exists tsabs_tsmlscons by fastforce
+    
+    
+
+    
+    (* tsRemDups Prototyping *)
+    
+fixrec tsRemDups:: "'a tstream \<rightarrow> 'a discr option \<rightarrow> 'a tstream" where
+"tsRemDups\<cdot>(tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>ts)\<cdot>option = delayFun\<cdot>(tsRemDups\<cdot>ts\<cdot>option)"  | (* Ignore ticks *)
+"ts\<noteq>\<bottom> \<Longrightarrow> tsRemDups\<cdot>(tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>t))\<cdot>ts)\<cdot>None = tsMLscons\<cdot>(up\<cdot>t)\<cdot>(tsRemDups\<cdot>ts\<cdot>(Some t))" | (* Handle first Message *)
+"ts\<noteq>\<bottom> \<Longrightarrow> tsRemDups\<cdot>(tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>t))\<cdot>ts)\<cdot>(Some a) = (if t=a then (tsRemDups\<cdot>ts\<cdot>(Some t)) else tsMLscons\<cdot>(up\<cdot>t)\<cdot>(tsRemDups\<cdot>ts\<cdot>(Some t)))"   (* Handle duplicate Message *)
+
+
+(* Element ist gleich dem letzten Element \<Rightarrow> Löschen *)
+lemma "ts\<noteq>\<bottom>\<Longrightarrow> tsRemDups\<cdot>(tsMLscons\<cdot>(up\<cdot>t)\<cdot>ts)\<cdot>(Some t) = tsRemDups\<cdot>ts\<cdot>(Some t)"
+by(simp add: tsmlscons2tslscons)
+
+  (* Anderes Element. Speichern und ausgeben *)
+lemma "ts\<noteq>\<bottom>\<Longrightarrow> t\<noteq>a\<Longrightarrow>tsRemDups\<cdot>(tsMLscons\<cdot>(up\<cdot>t)\<cdot>ts)\<cdot>(Some  a) = tsMLscons\<cdot>(up\<cdot>t)\<cdot>(tsRemDups\<cdot>ts\<cdot>(Some t))"
+by(simp add: tsmlscons2tslscons)
+  
+  
+lift_definition tsExamp :: "nat tstream" is "<[Msg 1, Msg 2, \<surd>, Msg 2, \<surd>]>"  
+  by(simp add: ts_well_def)
+
+    (* ToDo ... run the example on tsRemDups *)
+    
     
 end  
