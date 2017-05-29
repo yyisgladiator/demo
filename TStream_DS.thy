@@ -51,21 +51,13 @@ by (simp add: DiscrTick_def)
 lemma tslscons_lscons: "ts\<noteq>\<bottom> \<Longrightarrow> tsLscons\<cdot>t\<cdot>ts = espf2tspf (lscons\<cdot>t) ts"
 by (simp add: tslscons_insert)
 
-(* Was ist x?
-lemma msgscons_lscons: "Abs_tstream (\<up>t\<bullet>ts) = tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>x))\<cdot>(Abs_tstream ts)"
-oops
-
-lemma "updis (Msg x) = up\<cdot>(uMsg\<cdot>t)"
-oops
-*)
-
 lemma tszip_scons: 
-  "tsZip\<cdot>(tsLscons\<cdot>(updis t)\<cdot>ts)\<cdot>((updis x) && xs) = tsMLscons\<cdot>(updis ((inversMsg t),x))\<cdot>(tsZip\<cdot>ts\<cdot>xs)"
-oops
+  "ts\<noteq>\<bottom> \<Longrightarrow> tsZip\<cdot>(tsMLscons\<cdot>(up\<cdot>t)\<cdot>ts)\<cdot>((updis x) && xs) = tsMLscons\<cdot>(updis (undiscr t,x))\<cdot>(tsZip\<cdot>ts\<cdot>xs)"
+by (metis (no_types, lifting) Discr_undiscr tsmlscons_lscons tszip_scons_fixrec up_defined upapply2_rep_eq)
 
 lemma tszip_scons2: 
-  "tsZip\<cdot>(tsMLscons\<cdot>(updis t)\<cdot>ts)\<cdot>((updis x) && xs) = tsMLscons\<cdot>(updis ((t,x)))\<cdot>(tsZip\<cdot>ts\<cdot>xs)"
-oops
+  "tsZip\<cdot>(tsMLscons\<cdot>(updis t)\<cdot>ts)\<cdot>((updis x) && xs) = tsMLscons\<cdot>(updis (t,x))\<cdot>(tsZip\<cdot>ts\<cdot>xs)"
+by (metis tsmlscons_bot2 tszip_scons tszip_strict(3) undiscr_Discr)
 
 (*
 definition tsZip_h :: "'a event stream \<rightarrow> 'b stream \<rightarrow> ('a \<times> 'b) event stream" where

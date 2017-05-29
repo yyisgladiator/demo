@@ -61,8 +61,8 @@ by (metis (no_types, lifting) assoc_sconc list2s.simps(1) list2s.simps(2) lscons
     ts_well_conc1 ts_well_sing_conc)
 
 lemma "tsMed\<cdot>OneTwoThree\<cdot>\<bottom> = \<bottom>"
-oops
-    
+by (simp add: tsmed_unfold)
+
 lemma "tsMed\<cdot>OneTwoThree\<cdot>((\<up>True) \<infinity>) = OneTwoThree"
 oops
 
