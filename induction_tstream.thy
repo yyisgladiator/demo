@@ -108,6 +108,19 @@ lift_definition tsExamp :: "nat tstream" is "<[Msg 1, Msg 2, \<surd>, Msg 2, \<s
   by(simp add: ts_well_def)
 
     (* ToDo ... run the example on tsRemDups *)
+
     
+    
+lemma [simp]: "(tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>i) \<noteq>\<bottom>"
+  sorry
+
+    
+    (* sender playground *)
+fixrec sender:: "'a tstream \<rightarrow> bool tstream \<rightarrow> tr \<rightarrow> ('a \<times> bool) tstream" where
+"sender\<cdot>\<bottom>\<cdot>acks\<cdot>bool = \<bottom>" |
+"sender\<cdot>i\<cdot>\<bottom>\<cdot>bool = \<bottom>" |
+"acks\<noteq>\<bottom>\<Longrightarrow>sender\<cdot>(tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>i)\<cdot>acks\<cdot>bool = sender\<cdot>i\<cdot>acks\<cdot>bool"  (* |*)
+(* "i\<noteq>\<bottom> \<Longrightarrow> tsLshd\<cdot>i\<noteq>(up\<cdot>DicrTick) \<Longrightarrow>sender\<cdot>i\<cdot>(tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>acks)\<cdot>bool = sender\<cdot>i\<cdot>acks\<cdot>bool"  *)
+
     
 end  
