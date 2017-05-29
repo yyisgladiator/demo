@@ -2497,7 +2497,7 @@ lemma tslscons_srt2 [simp]: "tsRt\<cdot>(tsLscons\<cdot>(updis \<surd>)\<cdot>ts
   subsection \<open>tsMLscons\<close>    
 (************************************************)
     
-lemma tsmlscons2tslscons: "ts\<noteq>\<bottom>\<Longrightarrow> tsMLscons\<cdot>(updis m)\<cdot>ts = tsLscons\<cdot>(updis (Msg m))\<cdot>ts"
+lemma tsmlscons2tslscons: "tsMLscons\<cdot>(updis m)\<cdot>ts = tsLscons\<cdot>(updis (Msg m))\<cdot>ts"
   by(simp add: tsMLscons_def)  
 
 lemma tsmlscons_bot[simp]: "tsMLscons\<cdot>\<bottom>\<cdot>ts = \<bottom>"    
@@ -2509,7 +2509,15 @@ lemma tsmlscons_bot2[simp]: "tsMLscons\<cdot>t\<cdot>\<bottom> = \<bottom>"
     
 lemma tsmlscons_nbot[simp]: "t\<noteq>\<bottom>\<Longrightarrow>ts \<noteq>\<bottom> \<Longrightarrow> tsMLscons\<cdot>t\<cdot>ts \<noteq>\<bottom>"    
   by(simp add: tsMLscons_def)    
-    
+
+lemma tsmlscons_lscons: "tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>t))\<cdot>ts = tsMLscons\<cdot>(up\<cdot>t)\<cdot>ts"
+  by(simp add: uMsg_def tsMLscons_def)
+
+lemma tsmlscons_lscons2: "tsLscons\<cdot>(updis (Msg t))\<cdot>ts = tsMLscons\<cdot>(updis t)\<cdot>ts"
+      by(simp add: tsMLscons_def)
+
+lemma tsmlscons_rep: "ts\<noteq>\<bottom> \<Longrightarrow> Rep_tstream (tsMLscons\<cdot>(updis t)\<cdot>ts) = (updis (Msg t)) && Rep_tstream ts"
+  by(simp add: tsMLscons_def tslscons_lscons)
     
 
     
