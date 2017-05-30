@@ -7,7 +7,7 @@
 
 theory SPF_FeedComp_JB
   (* check if StreamCase_Study is really necessary *)
-  imports Streams SB SPF SPF_Composition_JB  ParComp_MW_JB SerComp_JB SPF_Templates SPF_MW "CaseStudies/StreamCase_Study"
+  imports Streams SB SPF SPF_Composition_JB SPF_Comp SPF_Templates SPF_MW "CaseStudies/StreamCase_Study"
 begin
   
 (* ----------------------------------------------------------------------- *)
@@ -654,6 +654,7 @@ qed
 lemma sum4_sb_spf_eq: assumes "sb = ([c1 \<mapsto> s]\<Omega>)"
   shows "sum4\<cdot>s = (\<Squnion>i. (iter_spfCompH3 addC append0C i) sb) .c3"
   apply (subst add_addSPF_eq, simp add: assms)
+    apply(simp add: sbdom_rep_eq)
     by (simp add: sum4_sb_in_out_eq assms)
   
 end

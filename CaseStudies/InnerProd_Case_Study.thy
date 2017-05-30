@@ -7,7 +7,7 @@
 *)
 
 theory InnerProd_Case_Study
-  imports "../SPF"  "../SPF_Templates"  "../SPF_Composition_JB" "../Streams" "../SerComp_JB"  
+  imports "../SPF"  "../SPF_Templates"  "../SPF_Composition_JB" "../Streams" "../SPF_Comp"  
             "../CaseStudies/StreamCase_Study" "../SPF_MW" "../ParComp_MW_JB"
 
 begin

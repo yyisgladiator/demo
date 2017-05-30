@@ -1,5 +1,5 @@
 theory Feedback_MW
-imports SPF Streams SB ParComp_MW_JB "CaseStudies/StreamCase_Study" SPF_MW SerComp_JB SPF_Templates SPF_Composition_JB SPF_FeedComp_JB SPF_Feedback_JB
+imports SPF Streams SB ParComp_MW_JB "CaseStudies/StreamCase_Study" SPF_MW SPF_Comp SPF_Templates SPF_Composition_JB SPF_FeedComp_JB SPF_Feedback_JB
 
 begin
 
