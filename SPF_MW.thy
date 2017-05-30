@@ -1,5 +1,5 @@
 theory SPF_MW
-imports SPF  ParComp_MW_JB SPF_Comp
+imports SPF SPF_Comp
 begin
 
 (* operator for parallel composition *)
@@ -22,15 +22,7 @@ by (smt domIff option.discI sbleast_sbdom someI_ex)
 
 lemma spfComp_dom_I: assumes "spfComp_well f1 f2" shows "spfDom\<cdot>(spfcomp f1 f2) = I f1 f2"
 apply(simp add: spfcomp_tospfH2, subst spfDomAbs)
-by(simp_all add: assms)
-
-(* spfRan spfcomp *)
-
-lemma sbDomIterate: "sbDom\<cdot>(\<Squnion>i. iterate i\<cdot>(spfCompHelp2 f1 f2 (sbLeast (I f1 f2)))\<cdot>sb)  = sbDom\<cdot>((spfCompHelp2 f1 f2 (sbLeast (I f1 f2)))\<cdot>sb)"
-apply(simp add: sbDom_def spfCompHelp2_def)
-(* in SPF *)
-  oops
-    
+by(simp_all add: assms) 
 
 lemma spfDomHelp: assumes "spfDom\<cdot>f1 \<subseteq> sbDom\<cdot>sb" shows "sbDom\<cdot>f1\<rightleftharpoons>sb\<bar>spfDom\<cdot>f1 = spfRan\<cdot>f1"
 by (simp add: assms)
@@ -54,23 +46,24 @@ lemma spfComp_ran_Oc: assumes "spfComp_well f1 f2" shows "spfRan\<cdot>(spfcomp 
 definition hide :: "'m SPF \<Rightarrow>  channel set \<Rightarrow> 'm SPF" ("_\<h>_") where
 "hide f cs \<equiv> Abs_CSPF (\<lambda> x. (sbDom\<cdot>x = spfDom\<cdot>f ) \<leadsto> ((f \<rightleftharpoons> x)\<bar>(spfRan\<cdot>f - cs)))"
 
-lemma hidecont_helper[simp]:  
+lemma hide_cont[simp]:  
   shows "cont (\<lambda> x. (sbDom\<cdot>x = spfDom\<cdot>f ) \<leadsto> ((f \<rightleftharpoons> x)\<bar>(spfRan\<cdot>f - cs)))"
 apply(subst if_then_cont, simp_all)
 by (simp add: cont_compose)
 
+lemma hidespfwell_helper: assumes "sbDom\<cdot>b = spfDom\<cdot>f" shows "sbDom\<cdot>(f\<rightleftharpoons>b) = spfRan\<cdot>f"
+  by (metis assms domIff option.exhaust_sel sbleast_sbdom spfLeastIDom spf_sbdom2dom spfran2sbdom)
   
-(* TODO  assumes "spf_well (Abs_cfun (Rep_CSPF(f)))"  *)  
-lemma hidespfwell_helper[simp]: assumes "spf_well (Abs_cfun (Rep_CSPF(f)))" 
-  shows "spf_well ((\<Lambda> x. (sbDom\<cdot>x = spfDom\<cdot>f ) \<leadsto> ((f \<rightleftharpoons> x)\<bar>(spfRan\<cdot>f - cs))))"
+lemma hide_spfwell[simp]: "spf_well ((\<Lambda> x. (sbDom\<cdot>x = spfDom\<cdot>f ) \<leadsto> ((f \<rightleftharpoons> x)\<bar>(spfRan\<cdot>f - cs))))"
   apply(simp add: spf_well_def)
   apply(simp only: domIff2)
   apply(auto simp add: sbdom_rep_eq)
-  sorry
+  apply(simp add: hidespfwell_helper)
+  by auto  
 
 lemma spfDomHide: "spfDom\<cdot>(f \<h> cs) = spfDom\<cdot>f"
   apply(simp add: hide_def)
-    by(simp add: spfDomAbs hidecont_helper hidespfwell_helper)
+    by(simp add: spfDomAbs hide_cont hide_spfwell)
 
 lemma hideSbRestrict: assumes "sbDom\<cdot>sb = spfDom\<cdot>f" 
    shows "(hide f cs)\<rightleftharpoons>sb = (f\<rightleftharpoons>sb)\<bar>(spfRan\<cdot>f - cs)"
@@ -80,7 +73,7 @@ lemma hideSbRestrict: assumes "sbDom\<cdot>sb = spfDom\<cdot>f"
 lemma hideSbRestrictCh: assumes "sbDom\<cdot>sb = spfDom\<cdot>f" and "c \<notin> cs"
    shows "(hide f cs)\<rightleftharpoons>sb . c = (f\<rightleftharpoons>sb) . c"
   apply(simp add: hide_def)
-  apply(simp add: hidecont_helper hidespfwell_helper assms)
+  apply(simp add: hide_cont hide_spfwell assms)
   by (smt DiffI Diff_subset Int_absorb1 assms(1) assms(2) domIff option.exhaust_sel sbleast_sbdom sbrestrict2sbgetch sbrestrict_sbdom sbunion_getchL sbunion_idL spfLeastIDom spf_sbdom2dom spfran2sbdom)
     
 lemma hideSpfRan: "spfRan\<cdot>(hide f cs) = spfRan\<cdot>f - cs"
