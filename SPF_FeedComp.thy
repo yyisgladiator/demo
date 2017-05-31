@@ -14,6 +14,13 @@ begin
 section \<open>general-lemmas\<close>
 (* ----------------------------------------------------------------------- *)
 
+  
+lemma iter_spfcomph3_suc_insert: "iter_spfCompH3 f1 f2 (Suc i) sb 
+                        = ((f1 \<rightleftharpoons>((sb \<uplus> (iter_spfCompH3 f1 f2 i sb))  \<bar> spfDom\<cdot>f1)) \<uplus>  (f2 \<rightleftharpoons>((sb \<uplus> (iter_spfCompH3 f1 f2 (i) sb))  \<bar> spfDom\<cdot>f2)))"
+  apply (unfold iterate_Suc, subst spfCompH3_def)
+  apply (subst Abs_cfun_inverse2)
+   apply (simp only: spfCompH3_cont)
+   by simp
     
 lemma nat_sb_repackage: assumes "ch \<in> sbDom\<cdot>sb"
   shows "(sb::nat SB) \<bar> {ch} = [ch \<mapsto> sb . ch]\<Omega>"
@@ -430,6 +437,99 @@ proof -
     apply (subst f1)
     using spf_feed_step5_lub_iter_eq assms by presburger
 qed
+  
+  
+subsection \<open>step6\<close> 
+  
+ (* spf_feed_sb_inout3_iter_suc_insert
+
+
+   iter_spfcomph3_suc_insert: "iter_spfCompH3 f1 f2 (Suc i) sb 
+                        = ((f1 \<rightleftharpoons>((sb \<uplus> (iter_spfCompH3 f1 f2 i sb))  \<bar> spfDom\<cdot>f1)) \<uplus>  (f2 \<rightleftharpoons>((sb \<uplus> (iter_spfCompH3 f1 f2 (i) sb))  \<bar> spfDom\<cdot>f2)))"
+    *)
+  
+lemma spf_feed_sb_inout3_iter_dom: fixes f1 :: "nat stream \<rightarrow> nat stream  \<rightarrow> nat stream" fixes f2 :: "nat stream \<rightarrow> nat stream"
+  shows "sbDom\<cdot>(spf_feed_sb_inout3_iter f1 f2 ch1 ch2 ch3 sb i) = {ch2,ch3}"
+proof (induction i)
+  case 0
+  then show ?case
+    by simp
+next
+  case (Suc i)
+  then show ?case
+    apply (subst spf_feed_sb_inout3_iter_suc_insert)
+      by (simp add: sbdom_rep_eq)
+  qed
+  
+lemma SPF2x1_apply_rev: assumes "ch1 \<noteq> ch2"
+  shows "([ch3 \<mapsto> (f\<cdot>s1\<cdot>s2)]\<Omega>) = (SPF2x1 f (ch1, ch2, ch3)) \<rightleftharpoons> ([ch1 \<mapsto> (s1:: nat stream), ch2  \<mapsto> (s2:: nat stream)]\<Omega>) "
+  apply(simp add: SPF2x1_rep_eq sb_id_def sbgetch_insert)
+  by(auto simp add: sbdom_rep_eq assms)  
+    
+lemma spf_feed_SPF_eq:  fixes f1 :: "nat stream \<rightarrow> nat stream  \<rightarrow> nat stream" fixes f2 :: "nat stream \<rightarrow> nat stream"
+  assumes "sbDom\<cdot>sb = {ch1}" and "ch1 \<noteq> ch2" and "ch1 \<noteq> ch3" and "ch2 \<noteq> ch3"  and "\<forall>sb . f1\<cdot>(sb . ch1)\<cdot>\<epsilon> = \<epsilon>" 
+    and "spf1 = SPF2x1 f1 (ch1,ch2,ch3)" and "spf2 = SPF1x1 f2 (ch3,ch2)" 
+  shows "(iter_spfCompH3 spf1 spf2 i) sb = spf_feed_sb_inout3_iter f1 f2 ch1 ch2 ch3 sb i"
+proof (induction i)
+  case 0
+  then show ?case
+    by (simp add: assms)
+next
+  case (Suc i)
+  have spf2x1revapp:"\<And> f s1 s2. ([ch3 \<mapsto> (f\<cdot>s1\<cdot>s2)]\<Omega>) = (SPF2x1 f (ch1, ch2, ch3)) \<rightleftharpoons> ([ch1 \<mapsto> (s1:: nat stream), ch2  \<mapsto> (s2:: nat stream)]\<Omega>)"
+    by (simp add: SPF2x1_apply assms)
+  have spf1x1revapp: "\<And> f s.([ch2 \<mapsto> f\<cdot>(s:: nat stream)]\<Omega>) = (SPF1x1 f (ch3, ch2)) \<rightleftharpoons> ([ch3 \<mapsto> s]\<Omega>)"
+    by (simp add: SPF1x1_apply assms)
+  hence "iter_sbfix (spfCompH3 spf1 spf2) i (spfRan\<cdot>spf1 \<union> spfRan\<cdot>spf2) sb = spf_feed_sb_inout3_iter f1 f2 ch1 ch2 ch3 sb i"
+    using Suc.IH by blast
+  then show ?case
+    apply (subst spf_feed_sb_inout3_iter_suc_insert, subst iter_spfcomph3_suc_insert)
+    apply(rule sbunion_eqI)
+      
+     (* spf1 component *)
+     apply (subst assms(6),subst spf2x1revapp, rule spf_arg_eqI, simp)
+     apply(subst sbunion_restrict3)
+      (* left bundle prep *)
+       apply(subst sbres_sbdom_supset, simp add: assms)
+       apply(simp only: assms, subst nat_sb_repackage, simp add: assms)
+      (* right bundle prep *)
+      apply(simp only: SPF2x1_dom)
+      apply(subst sbres_sbdom_supset_inter, simp add: spf_feed_sb_inout3_iter_dom assms)
+      apply(subst nat_sb_repackage, simp add: spf_feed_sb_inout3_iter_dom, simp add: sbunion_insert)
+      
+      (* spf2 component *)
+      apply (subst assms(7), subst spf1x1revapp, rule spf_arg_eqI, simp add: assms)
+      apply (subst nat_sb_repackage)
+        apply (simp add: spf_feed_sb_inout3_iter_dom)
+        by (rule sb_one_ch_eqI, rule sbunion_getchR, simp add: spf_feed_sb_inout3_iter_dom) 
+qed                   
+  
+
+(* result of step 6 *)  
+lemma spf_feed_SPF_eq:  fixes f1 :: "nat stream \<rightarrow> nat stream  \<rightarrow> nat stream" fixes f2 :: "nat stream \<rightarrow> nat stream"
+  assumes "sb = ([ch1 \<mapsto> s]\<Omega>)" and "ch1 \<noteq> ch2" and "ch1 \<noteq> ch3" and "ch2 \<noteq> ch3"  and "\<forall>sb . f1\<cdot>(sb . ch1)\<cdot>\<epsilon> = \<epsilon>" 
+    and "spf1 = SPF2x1 f1 (ch1,ch2,ch3)" and "spf2 = SPF1x1 f2 (ch3,ch2)" 
+  shows "(gen_fix f1 f2)\<cdot>s = (\<Squnion>i. (iter_spfCompH3 spf1 spf2 i) sb) .ch3"
+proof -
+  have f1: "(gen_fix f1 f2)\<cdot>s = (\<lambda> x. (\<Squnion>i. spf_feed_sb_inout3_iter f1 f2 ch1 ch2 ch3 x i)) sb . ch3"
+    by (rule spf_feed_sb_in_out_eq, simp_all add: assms)
+  have f2: "(\<Squnion>i. iterate i\<cdot>(\<Lambda> z. f1\<cdot>s\<cdot>(f2\<cdot>z))\<cdot>\<epsilon>) = (gen_fix f1 f2)\<cdot>s"
+    by simp
+  show ?thesis
+  apply (subst spf_feed_SPF_eq, simp_all add: assms)
+   apply(simp add: sbdom_rep_eq)
+    by (subst f2, subst f1, simp add: assms(1))
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
   
 end
   
