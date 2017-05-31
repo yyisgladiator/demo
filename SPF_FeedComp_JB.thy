@@ -660,7 +660,6 @@ lemma sum4_sb_spf_eq: assumes "sb = ([c1 \<mapsto> s]\<Omega>)"
 (* ----------------------------------------------------------------------- *)
 chapter \<open>more general feedback\<close>
 (* ----------------------------------------------------------------------- *)
-    
   
 abbreviation gen_fix :: "(nat stream \<rightarrow> nat stream \<rightarrow> nat stream) \<Rightarrow> (nat stream \<rightarrow> nat stream) \<Rightarrow> (nat stream \<rightarrow> nat stream)" where
 "gen_fix f1 f2 \<equiv> (\<Lambda> x. \<Squnion>i. iterate i\<cdot>(\<Lambda> z. f1\<cdot>x\<cdot>(f2\<cdot>z ))\<cdot>\<bottom>)"
@@ -867,8 +866,17 @@ next
   qed 
 qed
 
+abbreviation spf_feed_sb_inout2_iter :: "(nat stream \<rightarrow> nat stream  \<rightarrow> nat stream) \<Rightarrow> (nat stream \<rightarrow> nat stream) \<Rightarrow> channel \<Rightarrow> channel \<Rightarrow> channel \<Rightarrow> nat SB \<Rightarrow> nat \<Rightarrow> nat SB" where
+"spf_feed_sb_inout2_iter f1 f2 ch1 ch2 ch3 x i \<equiv>  iterate (i)\<cdot>(\<Lambda> z. ([ch3 \<mapsto> f1\<cdot>(x . ch1)\<cdot>(f2\<cdot>(z . ch3))]\<Omega>) \<uplus> ([ch2 \<mapsto> f2\<cdot>(z . ch3)]\<Omega>))\<cdot>({ch2, ch3}^\<bottom>)"
+
+abbreviation spf_feed_sb_inout3_iter :: "(nat stream \<rightarrow> nat stream  \<rightarrow> nat stream) \<Rightarrow> (nat stream \<rightarrow> nat stream) \<Rightarrow> channel \<Rightarrow> channel \<Rightarrow> channel \<Rightarrow> nat SB \<Rightarrow> nat \<Rightarrow> nat SB" where
+"spf_feed_sb_inout3_iter f1 f2 ch1 ch2 ch3 x i \<equiv>  iterate (i)\<cdot>(\<Lambda> z. ([ch3 \<mapsto> f1\<cdot>(x . ch1)\<cdot>(z . ch2)]\<Omega>) \<uplus> ([ch2 \<mapsto> f2\<cdot>(z . ch3)]\<Omega>))\<cdot>({ch2, ch3}^\<bottom>)"
+    
+  
+  
 lemma gen_fix_insert: "(\<Lambda> x. \<Squnion>i. iterate i\<cdot>(\<Lambda> z. f1\<cdot>x\<cdot>(f2\<cdot>z))\<cdot>\<epsilon>)\<cdot>s = (\<Squnion>i. iterate i\<cdot>(\<Lambda> z. f1\<cdot>s\<cdot>(f2\<cdot>z))\<cdot>\<epsilon>)"
   by simp  
+
   
     
     (* resulting lemma of step 4 *)
@@ -895,12 +903,7 @@ lemma spf_feed_sb_inout3_iterable_cont[simp]: fixes f1 :: "nat stream \<rightarr
   shows "cont (\<lambda> z.  ([ch3 \<mapsto> f1\<cdot>(x . ch1)\<cdot>(z . ch2)]\<Omega>) \<uplus> ([ch2 \<mapsto> f2\<cdot>(z . ch3)]\<Omega>))"
   by simp
     
-abbreviation spf_feed_sb_inout2_iter :: "(nat stream \<rightarrow> nat stream  \<rightarrow> nat stream) \<Rightarrow> (nat stream \<rightarrow> nat stream) \<Rightarrow> channel \<Rightarrow> channel \<Rightarrow> channel \<Rightarrow> nat SB \<Rightarrow> nat \<Rightarrow> nat SB" where
-"spf_feed_sb_inout2_iter f1 f2 ch1 ch2 ch3 x i \<equiv>  iterate (i)\<cdot>(\<Lambda> z. ([ch3 \<mapsto> f1\<cdot>(x . ch1)\<cdot>(f2\<cdot>(z . ch3))]\<Omega>) \<uplus> ([ch2 \<mapsto> f2\<cdot>(z . ch3)]\<Omega>))\<cdot>({ch2, ch3}^\<bottom>)"
 
-abbreviation spf_feed_sb_inout3_iter :: "(nat stream \<rightarrow> nat stream  \<rightarrow> nat stream) \<Rightarrow> (nat stream \<rightarrow> nat stream) \<Rightarrow> channel \<Rightarrow> channel \<Rightarrow> channel \<Rightarrow> nat SB \<Rightarrow> nat \<Rightarrow> nat SB" where
-"spf_feed_sb_inout3_iter f1 f2 ch1 ch2 ch3 x i \<equiv>  iterate (i)\<cdot>(\<Lambda> z. ([ch3 \<mapsto> f1\<cdot>(x . ch1)\<cdot>(z . ch2)]\<Omega>) \<uplus> ([ch2 \<mapsto> f2\<cdot>(z . ch3)]\<Omega>))\<cdot>({ch2, ch3}^\<bottom>)"
-  
  
 
 
@@ -920,8 +923,128 @@ lemma spf_feed_sb_inout3_iter_two_suc_insert: "spf_feed_sb_inout3_iter f1 f2 ch1
 lemma spf_feed_sb_inout3_iter_2_suc_insert: "(\<Lambda> z. ([ch3 \<mapsto> f1\<cdot>(x . ch1)\<cdot>(z . ch2)]\<Omega>) \<uplus> ([ch2 \<mapsto> f2\<cdot>(z . ch3)]\<Omega>))\<cdot>(([ch3 \<mapsto> f1\<cdot>(x . ch1)\<cdot>((spf_feed_sb_inout3_iter f1 f2 ch1 ch2 ch3 x ((2::nat) * Suc i)) . ch2)]\<Omega>) \<uplus> ([ch2 \<mapsto> f2\<cdot>((spf_feed_sb_inout3_iter f1 f2 ch1 ch2 ch3 x ((2::nat) * Suc i)) . ch3)]\<Omega>))
         = (([ch3 \<mapsto> f1\<cdot>(x . ch1)\<cdot>((spf_feed_sb_inout3_iter f1 f2 ch1 ch2 ch3 x ((2::nat) *  (Suc i))) . ch2)]\<Omega>) \<uplus> ([ch2 \<mapsto> f2\<cdot>((spf_feed_sb_inout3_iter f1 f2 ch1 ch2 ch3 x ((2::nat) *  (Suc i))) . ch3)]\<Omega>))"
  *)
+lemma spf_feed_sb_inout3_iter_2_suc_insert: fixes f1 :: "nat stream \<rightarrow> nat stream  \<rightarrow> nat stream" fixes f2 :: "nat stream \<rightarrow> nat stream" 
+shows " (\<Lambda> z. ([ch3 \<mapsto> f1\<cdot>(x . ch1)\<cdot>(z . ch2)]\<Omega>) \<uplus> ([ch2 \<mapsto> f2\<cdot>(z . ch3)]\<Omega>))\<cdot>(([ch3 \<mapsto> f1\<cdot>(x . ch1)\<cdot>((spf_feed_sb_inout3_iter f1 f2 ch1 ch2 ch3 x ((2::nat) * Suc i)) . ch2)]\<Omega>) \<uplus> ([ch2 \<mapsto> f2\<cdot>((spf_feed_sb_inout3_iter f1 f2 ch1 ch2 ch3 x ((2::nat) * Suc i)) . ch3)]\<Omega>))
+                   =  (([ch3 \<mapsto> f1\<cdot>(x . ch1)\<cdot>((([ch3 \<mapsto> f1\<cdot>(x . ch1)\<cdot>((spf_feed_sb_inout3_iter f1 f2 ch1 ch2 ch3 x ((2::nat) * Suc i)) . ch2)]\<Omega>) \<uplus> ([ch2 \<mapsto> f2\<cdot>((spf_feed_sb_inout3_iter f1 f2 ch1 ch2 ch3 x ((2::nat) * Suc i)) . ch3)]\<Omega>)) . ch2)]\<Omega>)
+                       \<uplus> ([ch2 \<mapsto> f2\<cdot>((([ch3 \<mapsto> f1\<cdot>(x . ch1)\<cdot>((spf_feed_sb_inout3_iter f1 f2 ch1 ch2 ch3 x ((2::nat) * Suc i)) . ch2)]\<Omega>) \<uplus> ([ch2 \<mapsto> f2\<cdot>((spf_feed_sb_inout3_iter f1 f2 ch1 ch2 ch3 x ((2::nat) * Suc i)) . ch3)]\<Omega>)) . ch3)]\<Omega>))"
+  apply (subst beta_cfun, simp)
+    by blast
+    
 
 (* for the getch inserts use sb_onech_getch_insert *)
+      
+lemma spf_feed_sb_inout3_even_iter_ch_eq: fixes f1 :: "nat stream \<rightarrow> nat stream  \<rightarrow> nat stream" fixes f2 :: "nat stream \<rightarrow> nat stream"  
+ (* assumes "((sum4_sb_inout3_iter x ((2::nat) * i) . c3)) = ((add\<cdot>(x . c1)\<cdot>(sum4_sb_inout3_iter x ((2::nat) * i) . c2))) " and "ch2 \<noteq> ch3"
+  shows "add\<cdot>(x . c1)\<cdot>(appendElem2 (0::nat)\<cdot>(sum4_sb_inout3_iter x ((2::nat) * i) . c3)) = add\<cdot>(x . c1)\<cdot>(appendElem2 (0::nat)\<cdot>(add\<cdot>(x . c1)\<cdot>(sum4_sb_inout3_iter x ((2::nat) * i) . c2)))" *)
+  assumes "((spf_feed_sb_inout3_iter f1 f2 ch1 ch2 ch3 x ((2::nat) * i) . ch3)) = ((add\<cdot>(x . ch1)\<cdot>(spf_feed_sb_inout3_iter f1 f2 ch1 ch2 ch3 x ((2::nat) * i) . ch2)))" 
+  shows "f1\<cdot>(x . ch1)\<cdot>(appendElem2 (0::nat)\<cdot>(spf_feed_sb_inout3_iter f1 f2 ch1 ch2 ch3 x ((2::nat) * i) . ch3)) = f1\<cdot>(x . ch1)\<cdot>(appendElem2 (0::nat)\<cdot>(add\<cdot>(x . ch1)\<cdot>(spf_feed_sb_inout3_iter f1 f2 ch1 ch2 ch3 x ((2::nat) * i) . ch2)))"
+    by (simp add: assms)
+   
+ 
+lemma spf_feed_iter_new_ch_eq: fixes f1 :: "nat stream \<rightarrow> nat stream  \<rightarrow> nat stream" fixes f2 :: "nat stream \<rightarrow> nat stream"
+  assumes "ch2 \<noteq> ch3" and "\<forall>sb . f1\<cdot>(sb . ch1)\<cdot>\<epsilon> = \<epsilon>"
+  shows "spf_feed_sb_inout3_iter f1 f2 ch1 ch2 ch3 x ((2::nat) * i) . ch3 = f1\<cdot>(x . ch1)\<cdot>(spf_feed_sb_inout3_iter f1 f2 ch1 ch2 ch3 x ((2::nat) * i) . ch2)"
+  proof (induction i)
+    case 0
+    then show ?case 
+      apply (simp add: sbdom_rep_eq)
+      by (simp add: assms(2))
+  next
+    case (Suc i)
+    hence "spf_feed_sb_inout3_iter f1 f2 ch1 ch2 ch3 x (2 * i) . ch3 = f1\<cdot>(x . ch1)\<cdot>(spf_feed_sb_inout3_iter f1 f2 ch1 ch2 ch3 x (2 * i) . ch2)"
+      by blast
+    then show ?case
+      apply (subst spf_feed_sb_inout3_iter_two_suc_insert, subst spf_feed_sb_inout3_iter_suc_insert)
+      apply(simp add: sbgetch_rep_eq) 
+      apply (subst sbunion_getchR, simp add: sbdom_rep_eq)
+      apply(subst sbunion_getchL, simp add: sbdom_rep_eq)
+         using assms apply blast
+         apply(simp add: sbdom_rep_eq)
+       apply(subst sbunion_getchL, simp add: sbdom_rep_eq)
+         using assms apply blast
+         apply (simp)
+         apply(subst sbunion_getchL, simp add: sbdom_rep_eq)
+         using assms apply blast
+         by simp             
+     qed
+       
+(* this lemma is very hacky written because simp goes wild *)
+lemma spf_feed_step5_lub_iter_eq_req: fixes f1 :: "nat stream \<rightarrow> nat stream  \<rightarrow> nat stream" fixes f2 :: "nat stream \<rightarrow> nat stream"
+  assumes "ch2 \<noteq> ch3" and "\<forall>sb . f1\<cdot>(sb . ch1)\<cdot>\<epsilon> = \<epsilon>"
+  shows "spf_feed_sb_inout2_iter f1 f2 ch1 ch2 ch3 x (Suc i) = spf_feed_sb_inout3_iter f1 f2 ch1 ch2 ch3 x (2 * (Suc i))"
+proof (induction i)
+  case 0
+  then show ?case
+    apply(subst two_times_one_insert)
+    apply (unfold iterate_Suc)
+    apply auto
+    apply(rule sbunion_eqI, rule sb_one_ch_eqI)
+     apply (simp_all add: sbdom_rep_eq assms)
+    apply(subst sbunion_getchL, simp add: sbdom_rep_eq)
+      using assms apply blast
+      by simp
+next
+  case (Suc i)
+  hence "spf_feed_sb_inout2_iter f1 f2 ch1 ch2 ch3 x (Suc i) = spf_feed_sb_inout3_iter f1 f2 ch1 ch2 ch3 x (2 * Suc i)"
+    by blast
+  then show ?case
+    apply (subst spf_feed_sb_inout2_iter_suc_insert)
+    apply(subst spf_feed_sb_inout3_iter_two_suc_insert, subst spf_feed_sb_inout3_iter_suc_insert, subst spf_feed_sb_inout3_iter_2_suc_insert)
+    apply(rule sbunion_eqI)
+      (* channel ch3 *)
+     apply(rule sb_one_ch_eqI)
+     apply(rule cfun_arg_eqI)
+     apply(subst sbunion_getchR)
+      apply (simp add: sbdom_rep_eq)
+     apply (simp only: sb_onech_getch_insert)
+      (* channel ch2 *) 
+    apply(rule sb_one_ch_eqI)
+    apply(rule cfun_arg_eqI)
+    apply(subst sbunion_getchL, simp add: sbdom_rep_eq)
+    using assms apply blast
+    apply (simp only: sb_onech_getch_insert)
+      by (rule spf_feed_iter_new_ch_eq, simp_all add: assms)     
+  qed
+    
+lemma spf_feed_step5_lub_iter_eq_req2: fixes f1 :: "nat stream \<rightarrow> nat stream  \<rightarrow> nat stream" fixes f2 :: "nat stream \<rightarrow> nat stream"
+  assumes "ch2 \<noteq> ch3" and "\<forall>sb . f1\<cdot>(sb . ch1)\<cdot>\<epsilon> = \<epsilon>"
+  shows "spf_feed_sb_inout2_iter f1 f2 ch1 ch2 ch3 x i = spf_feed_sb_inout3_iter f1 f2 ch1 ch2 ch3 x (2 * i)"
+proof (cases "i = 0")
+  case True
+  then show ?thesis
+    by simp
+next
+  case False
+  hence "0 < i \<Longrightarrow> spf_feed_sb_inout2_iter f1 f2 ch1 ch2 ch3 x i = spf_feed_sb_inout3_iter f1 f2 ch1 ch2 ch3 x (2 * i)"
+    proof -
+    obtain j where "i = Suc(j)"
+      using False not0_implies_Suc by auto
+    thus ?thesis
+      using spf_feed_step5_lub_iter_eq_req assms by blast
+  qed
+  then show ?thesis
+    using False by blast      
+qed
+ 
+lemma spf_feed_step5_lub_iter_eq: fixes f1 :: "nat stream \<rightarrow> nat stream  \<rightarrow> nat stream" fixes f2 :: "nat stream \<rightarrow> nat stream"
+  assumes "ch2 \<noteq> ch3" and "\<forall>sb . f1\<cdot>(sb . ch1)\<cdot>\<epsilon> = \<epsilon>"
+  shows "(\<Squnion>i. spf_feed_sb_inout2_iter f1 f2 ch1 ch2 ch3 x i) = (\<Squnion>i. spf_feed_sb_inout3_iter f1 f2 ch1 ch2 ch3 x i)"
+  apply (rule lub_mult2_shift_eq)
+    apply (rule sbIterate_chain, simp add: sbdom_rep_eq)
+   apply (rule sbIterate_chain, simp add: sbdom_rep_eq)
+  using spf_feed_step5_lub_iter_eq_req2 assms by simp
+    
+  (** resulting lemma of step 5 *)
+lemma spf_feed_sb_in_out_eq: fixes f1 :: "nat stream \<rightarrow> nat stream  \<rightarrow> nat stream" fixes f2 :: "nat stream \<rightarrow> nat stream"
+  assumes "sb = ([ch1 \<mapsto> s]\<Omega>)" and "ch2 \<noteq> ch3" and "\<forall>sb . f1\<cdot>(sb . ch1)\<cdot>\<epsilon> = \<epsilon>"
+  shows "(gen_fix f1 f2)\<cdot>s = (\<lambda> x. (\<Squnion>i. spf_feed_sb_inout3_iter f1 f2 ch1 ch2 ch3 x i)) sb . ch3"
+proof -
+  have f1: "(gen_fix f1 f2)\<cdot>s = (\<Squnion>i. spf_feed_sb_inout2_iter f1 f2 ch1 ch2 ch3 sb i) . ch3"
+    by (rule spf_feed_sb_inout2_eq, simp_all add: assms)
+  show ?thesis
+    apply (subst f1)
+    using spf_feed_step5_lub_iter_eq assms by presburger
+qed
   
 end
   
