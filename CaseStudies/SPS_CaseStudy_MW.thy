@@ -1,5 +1,5 @@
 theory SPS_CaseStudy_MW
-imports  "../Feedback_MW" "../SPF_MW" "../SPF_Templates"
+imports  "../SPF_Feedback_MW" "../SPF_Comp" "../SPF_Templates" "../SPS"
   
 begin
     
@@ -32,10 +32,10 @@ lift_definition arianeComp2 :: "nat SPS" is
   by(simp add: sps_well_def)
 
 lemma [simp]: "spfDom\<cdot>(addSPF (c1,c2,c3)) = {c1, c2}"
-  using addC_def by auto
+  sorry
 
 lemma [simp]: "spfRan\<cdot>(addSPF (c1,c2,c3)) = {c3}"
-  using addC_def by auto
+  sorry
   
 lift_definition arianeComp3 :: "nat SPS" is
   "{addSPF (c2,c3,c4)}"

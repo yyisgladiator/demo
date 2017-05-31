@@ -653,14 +653,14 @@ qed
   (* FINAL lemma *)
 lemma sum4_sb_spf_eq: assumes "sb = ([c1 \<mapsto> s]\<Omega>)"
   shows "sum4\<cdot>s = (\<Squnion>i. (iter_spfCompH3 addC append0C i) sb) .c3"
-  apply (subst add_addSPF_eq, simp add: assms sbdom_rep_eq)
-  by (simp add: sum4_sb_in_out_eq assms)
-    
-    
+  apply (subst add_addSPF_eq, simp add: assms)
+    apply(simp add: sbdom_rep_eq)
+    by (simp add: sum4_sb_in_out_eq assms)
     
 (* ----------------------------------------------------------------------- *)
 chapter \<open>more general feedback\<close>
 (* ----------------------------------------------------------------------- *)
+    
   
 abbreviation gen_fix :: "(nat stream \<rightarrow> nat stream \<rightarrow> nat stream) \<Rightarrow> (nat stream \<rightarrow> nat stream) \<Rightarrow> (nat stream \<rightarrow> nat stream)" where
 "gen_fix f1 f2 \<equiv> (\<Lambda> x. \<Squnion>i. iterate i\<cdot>(\<Lambda> z. f1\<cdot>x\<cdot>(f2\<cdot>z ))\<cdot>\<bottom>)"

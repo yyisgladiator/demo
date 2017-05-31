@@ -1,5 +1,5 @@
-theory Feedback_MW
-imports SPF Streams SB ParComp_MW_JB "CaseStudies/StreamCase_Study" SPF_MW SerComp_JB SPF_Templates SPF_Composition_JB SPF_FeedComp_JB SPF_Feedback_JB
+theory SPF_Feedback_MW
+imports "CaseStudies/StreamCase_Study" SPF_MW SPF_Comp SPF_Templates SPF_Composition_JB SPF_FeedComp_JB SPF_Feedback_JB
 
 begin
 
@@ -131,7 +131,7 @@ apply(subst Iterate1_H2_test)
 apply(simp add: SPF.spfCompHelp2_def contAddCAppend0CUnion)
 apply(subst unionRestrict2, auto simp add: sbdom_rep_eq)
 apply(simp add: add_rep_eqC append0_rep_eqC appendElem2_def)
-apply(auto simp add: sbdom_rep_eq)
+apply(simp add: sbdom_rep_eq)
 apply(simp add: add_def)
 apply(subst sbunion_commutative2)
 by(auto simp add: sbdom_rep_eq)
@@ -143,7 +143,7 @@ apply(subst Iterate2_H2_test)
 apply(simp add: SPF.spfCompHelp2_def contAddCAppend0CUnion)
 apply(subst unionRestrict2, auto simp add: sbdom_rep_eq)
 apply(simp add: add_rep_eqC append0_rep_eqC appendElem2_def)
-apply(auto simp add: sbdom_rep_eq)
+apply(simp add: sbdom_rep_eq)
 apply(simp add: add_def)
 apply(subst sbunion_commutative2)
 by(auto simp add: sbdom_rep_eq)
@@ -155,7 +155,7 @@ apply(subst Iterate3_H2_test)
 apply(simp add: SPF.spfCompHelp2_def contAddCAppend0CUnion)
 apply(subst unionRestrict2, auto simp add: sbdom_rep_eq)
 apply(simp add: add_rep_eqC append0_rep_eqC appendElem2_def)
-apply(auto simp add: sbdom_rep_eq)
+apply(simp add: sbdom_rep_eq)
 apply(simp add: add_def)
 apply(subst sbunion_commutative2)
 by(auto simp add: sbdom_rep_eq)
@@ -167,7 +167,7 @@ apply(subst Iterate4_H2_test)
 apply(simp add: SPF.spfCompHelp2_def contAddCAppend0CUnion)
 apply(subst unionRestrict2, auto simp add: sbdom_rep_eq)
 apply(simp add: add_rep_eqC append0_rep_eqC appendElem2_def)
-apply(auto simp add: sbdom_rep_eq)
+apply(simp add: sbdom_rep_eq)
 apply(simp add: add_def)
 apply(subst sbunion_commutative2)
 by(auto simp add: sbdom_rep_eq)
@@ -179,7 +179,7 @@ apply(subst Iterate5_H2_test)
 apply(simp add: SPF.spfCompHelp2_def contAddCAppend0CUnion)
 apply(subst unionRestrict2, auto simp add: sbdom_rep_eq)
 apply(simp add: add_rep_eqC append0_rep_eqC appendElem2_def)
-apply(auto simp add: sbdom_rep_eq)
+apply(simp add: sbdom_rep_eq)
 apply(simp add: add_def)
 apply(subst sbunion_commutative2)
 by(auto simp add: sbdom_rep_eq)
@@ -191,7 +191,7 @@ apply(subst Iterate6_H2_test)
 apply(simp add: SPF.spfCompHelp2_def contAddCAppend0CUnion)
 apply(subst unionRestrict2, auto simp add: sbdom_rep_eq)
 apply(simp add: add_rep_eqC append0_rep_eqC appendElem2_def)
-apply(auto simp add: sbdom_rep_eq)
+apply(simp add: sbdom_rep_eq)
 apply(simp add: add_def)
 apply(subst sbunion_commutative2)
 by(auto simp add: sbdom_rep_eq)
@@ -201,7 +201,7 @@ lemma Iterate_H2_test_max: "(SPF.spfCompHelp2 addC append0C ([c1 \<mapsto> <[1,2
 apply(simp add: SPF.spfCompHelp2_def contAddCAppend0CUnion)
 apply(subst unionRestrict2, auto simp add: sbdom_rep_eq)
 apply(simp add: add_rep_eqC append0_rep_eqC appendElem2_def)
-apply(auto simp add: sbdom_rep_eq)
+apply(simp add: sbdom_rep_eq)
 apply(simp add: add_def)
 apply(subst sbunion_commutative2)
 by(auto simp add: sbdom_rep_eq)
@@ -216,9 +216,16 @@ lemma Iterate_H2_max:
 
     
 lemma addAppend_H2_chain:  "chain (\<lambda>i. iterate i\<cdot>(SPF.spfCompHelp2 addC append0C ([c1 \<mapsto> <[1,2,3]>]\<Omega>))\<cdot>(sbLeast {c1, c2, c3}))"
-apply(rule sbIterate_chain)
+proof - 
+  have f1: "C addC append0C = {c1, c2, c3}"
+    sorry
+  show ?thesis
+    sorry
+qed
+
+(*apply(rule sbIterate_chain)
 by (auto)
-  
+  *)
     
 lemma Iterate_max_H2_test: "max_in_chain 7 (\<lambda>i. iterate i\<cdot>(SPF.spfCompHelp2 addC append0C ([c1 \<mapsto> <[1,2,3]>]\<Omega>))
                          \<cdot>(sbLeast {c1, c2, c3}))"
@@ -254,11 +261,11 @@ lemma sfa: "\<up>(Suc 0) \<bullet> \<up>2 \<bullet> \<up>(Suc (Suc (Suc 0))) = <
 by auto
 
 lemma test: "sum1SPF \<rightleftharpoons>([c1\<mapsto><[1,2,3]>]\<Omega>).c3 = <[1,3,6]>"
-apply(simp add: sum1EqCh)
+apply(subst  sum1EqCh, simp add: sbdom_rep_eq)
 apply(subst SPF.spfcomp_tospfH2)
 apply(subst spfcomp_RepAbs, simp_all)
-apply(subst sfa, subst lub_H2_test_getCh)
-by auto
+  apply(subst sfa, subst lub_H2_test_getCh)
+by(simp add: sbdom_rep_eq)
 
 
 section \<open>feedback operator\<close>
@@ -535,8 +542,8 @@ lemma sumEq: assumes "sbDom\<cdot>sb = I addC append0C" shows "(sum1SPF \<rightl
   apply(subst spfcompH3_abbrv_tospfH32)
   apply(subst spfcomp2_RepAbs, simp_all add: assms)
   apply(simp add: sum4_sb_spf_eq)
-  apply(subst SPF_FeedComp_JB.addC_def, subst Feedback_MW.addC_def)
-  apply(subst SPF_FeedComp_JB.append0C_def, subst Feedback_MW.append0C_def)
+  apply(subst SPF_FeedComp_JB.addC_def, subst SPF_Feedback_MW.addC_def)
+  apply(subst SPF_FeedComp_JB.append0C_def, subst SPF_Feedback_MW.append0C_def)
   apply(subst (2) sbDomSB_eq)
   by(simp_all add: assms)
   
