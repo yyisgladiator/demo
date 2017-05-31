@@ -214,29 +214,34 @@ lemma Iterate_H2_max:
   using Iterate7_H2_test apply blast
   by (metis (no_types, lifting) Iterate_H2_test_max iterate_Suc)
 
+lemma Iterate_H2_max2:
+  "((iterate (Suc (Suc (Suc (Suc (Suc (Suc (Suc i)))))))\<cdot>(SPF.spfCompHelp2 addC append0C ([c1 \<mapsto> <[1,2,3]>]\<Omega>)))\<cdot>(sbLeast {c1, c2, c3})) 
+           = ([c1 \<mapsto> <[1,2,3]>]\<Omega>) \<uplus> ([c2 \<mapsto> <[0,1,3,6]>]\<Omega>) \<uplus> ([c3 \<mapsto> <[1,3,6]>]\<Omega>)"
+  apply(subst Iterate_H2_max)
+  apply(subst numeral_7_eq_7)
+  apply(subst Iterate7_H2_test)
+    by auto
     
 lemma addAppend_H2_chain:  "chain (\<lambda>i. iterate i\<cdot>(SPF.spfCompHelp2 addC append0C ([c1 \<mapsto> <[1,2,3]>]\<Omega>))\<cdot>(sbLeast {c1, c2, c3}))"
 proof - 
   have f1: "C addC append0C = {c1, c2, c3}"
-    sorry
+    apply(simp add: C_def)
+    by auto
+  then have f2: "(\<lambda>i. iterate i\<cdot>(SPF.spfCompHelp2 addC append0C ([c1 \<mapsto> <[1,2,3]>]\<Omega>))\<cdot>(sbLeast {c1, c2, c3}))
+                = (\<lambda>i. iterate i\<cdot>(SPF.spfCompHelp2 addC append0C ([c1 \<mapsto> <[1,2,3]>]\<Omega>))\<cdot>(sbLeast (C addC append0C)))"
+    by(simp)
   show ?thesis
-    sorry
+    apply(subst f2)
+    apply(rule spfComp_serialnf_chain, simp_all)
+    by(simp add: sbdom_rep_eq)
 qed
-
-(*apply(rule sbIterate_chain)
-by (auto)
-  *)
     
 lemma Iterate_max_H2_test: "max_in_chain 7 (\<lambda>i. iterate i\<cdot>(SPF.spfCompHelp2 addC append0C ([c1 \<mapsto> <[1,2,3]>]\<Omega>))
                          \<cdot>(sbLeast {c1, c2, c3}))"
-  apply(rule max_in_chainI, subst numeral_7_eq_7)
-  apply(subst Iterate7_H2_test)
-  sorry
-(*
-    apply(subst Iterate_H2_max, simp)
-  apply(subst numeral_7_eq_7, subst Iterate7_H2_test)
-    by auto
-*)
+  apply(rule max_in_chainI)
+  apply(subst numeral_7_eq_7)
+  apply(subst Iterate_H2_max2)
+  by (smt Iterate_H2_max2 Suc_le_D Suc_le_mono numeral_7_eq_7)
 
 lemma lub_H2_test1: "(\<Squnion>i. (iterate i\<cdot>(SPF.spfCompHelp2 addC append0C ([c1 \<mapsto> <[1,2,3]>]\<Omega>)))\<cdot>(sbLeast {c1, c2, c3}))
                   = ((iterate (Suc (Suc (Suc (Suc (Suc (Suc (Suc 0)))))))\<cdot>(SPF.spfCompHelp2 addC append0C ([c1 \<mapsto> <[1,2,3]>]\<Omega>)))\<cdot>(sbLeast {c1, c2, c3})) "
