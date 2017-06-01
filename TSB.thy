@@ -153,7 +153,16 @@ lemma rep_chain[simp]: assumes "chain S"
 text {* Equivalence of evaluation of StBundleLub based on lub of function values.*}
 lemma lub_eval: assumes "chain S" 
   shows "the (Rep_TSB (\<Squnion>i. S i) c) = (\<Squnion>j. the (Rep_TSB (S j) c))"
-  by (smt assms below_TSB_def ch2ch_monofun cont2contlubE lub_eq monofunI part_the_lub rep_tsb_cont)
+proof -
+  have f1: "Rep_TSB (Lub S) = (\<Squnion>n. Rep_TSB (S n))"
+    using assms cont2contlubE rep_tsb_cont by blast
+  have "\<forall>f. \<not> chain f \<or> chain (\<lambda>n. Rep_TSB (f n::'a TSB))"
+    by (metis rep_chain)
+  then have "chain (\<lambda>n. Rep_TSB (S n))"
+    by (metis assms)
+  then show ?thesis
+    using f1 by (metis (no_types) part_the_lub)
+qed
 
 lemma theRep_chain[simp]: assumes "chain S" 
   shows "chain (\<lambda>n. the (Rep_TSB (S n) c))"
@@ -285,7 +294,32 @@ lemma tsbrestrict_well[simp] : "tsb_well (Rep_TSB b |` cs)"
 
 
 lemma tsbrestrict_monofun[simp]: "monofun  (\<lambda>b. Rep_TSB b |` cs)"
-  by (smt below_TSB_def fun_below_iff monofunI not_below2not_eq restrict_map_def )
+proof -
+  have "\<forall>f. (\<exists>t ta. (t::'a TSB) \<sqsubseteq> ta \<and> (f t::channel \<Rightarrow> 'a tstream option) \<notsqsubseteq> f ta) \<or> monofun f"
+    using monofunI by blast
+  then obtain tt :: "('a TSB \<Rightarrow> channel \<Rightarrow> 'a tstream option) \<Rightarrow> 'a TSB" and tta :: "('a TSB \<Rightarrow> channel \<Rightarrow> 'a tstream option) \<Rightarrow> 'a TSB" where
+    f1: "\<forall>f. tt f \<sqsubseteq> tta f \<and> f (tt f) \<notsqsubseteq> f (tta f) \<or> monofun f"
+    by (metis (no_types))
+  obtain cc :: "(channel \<Rightarrow> 'a tstream option) \<Rightarrow> (channel \<Rightarrow> 'a tstream option) \<Rightarrow> channel" where
+        "\<forall>x0 x1. (\<exists>v2. x1 v2 \<notsqsubseteq> x0 v2) = (x1 (cc x0 x1) \<notsqsubseteq> x0 (cc x0 x1))"
+    by moura
+  then have f2: "\<forall>f fa. (f \<notsqsubseteq> fa \<or> (\<forall>c. f c \<sqsubseteq> fa c)) \<and> (f \<sqsubseteq> fa \<or> f (cc fa f) \<notsqsubseteq> fa (cc fa f))"
+    by (metis fun_below_iff)
+  then have f3: "(Rep_TSB (tt (\<lambda>t. Rep_TSB t |` cs)) |` cs \<notsqsubseteq> Rep_TSB (tta (\<lambda>t. Rep_TSB t |` cs)) |` cs \<or> (\<forall>c. (Rep_TSB (tt (\<lambda>t. Rep_TSB t |` cs)) |` cs) c \<sqsubseteq> (Rep_TSB (tta (\<lambda>t. Rep_TSB t |` cs)) |` cs) c)) \<and> (Rep_TSB (tt (\<lambda>t. Rep_TSB t |` cs)) |` cs \<sqsubseteq> Rep_TSB (tta (\<lambda>t. Rep_TSB t |` cs)) |` cs \<or> (Rep_TSB (tt (\<lambda>t. Rep_TSB t |` cs)) |` cs) (cc (Rep_TSB (tta (\<lambda>t. Rep_TSB t |` cs)) |` cs) (Rep_TSB (tt (\<lambda>t. Rep_TSB t |` cs)) |` cs)) \<notsqsubseteq> (Rep_TSB (tta (\<lambda>t. Rep_TSB t |` cs)) |` cs) (cc (Rep_TSB (tta (\<lambda>t. Rep_TSB t |` cs)) |` cs) (Rep_TSB (tt (\<lambda>t. Rep_TSB t |` cs)) |` cs)))"
+    by blast
+  { assume "Rep_TSB (tt (\<lambda>t. Rep_TSB t |` cs)) (cc (Rep_TSB (tta (\<lambda>t. Rep_TSB t |` cs)) |` cs) (Rep_TSB (tt (\<lambda>t. Rep_TSB t |` cs)) |` cs)) \<sqsubseteq> Rep_TSB (tta (\<lambda>t. Rep_TSB t |` cs)) (cc (Rep_TSB (tta (\<lambda>t. Rep_TSB t |` cs)) |` cs) (Rep_TSB (tt (\<lambda>t. Rep_TSB t |` cs)) |` cs))"
+    moreover
+    { assume "(Rep_TSB (tt (\<lambda>t. Rep_TSB t |` cs)) (cc (Rep_TSB (tta (\<lambda>t. Rep_TSB t |` cs)) |` cs) (Rep_TSB (tt (\<lambda>t. Rep_TSB t |` cs)) |` cs)) \<sqsubseteq> Rep_TSB (tta (\<lambda>t. Rep_TSB t |` cs)) (cc (Rep_TSB (tta (\<lambda>t. Rep_TSB t |` cs)) |` cs) (Rep_TSB (tt (\<lambda>t. Rep_TSB t |` cs)) |` cs))) \<noteq> ((Rep_TSB (tt (\<lambda>t. Rep_TSB t |` cs)) |` cs) (cc (Rep_TSB (tta (\<lambda>t. Rep_TSB t |` cs)) |` cs) (Rep_TSB (tt (\<lambda>t. Rep_TSB t |` cs)) |` cs)) \<sqsubseteq> (Rep_TSB (tta (\<lambda>t. Rep_TSB t |` cs)) |` cs) (cc (Rep_TSB (tta (\<lambda>t. Rep_TSB t |` cs)) |` cs) (Rep_TSB (tt (\<lambda>t. Rep_TSB t |` cs)) |` cs)))"
+      then have "cc (Rep_TSB (tta (\<lambda>t. Rep_TSB t |` cs)) |` cs) (Rep_TSB (tt (\<lambda>t. Rep_TSB t |` cs)) |` cs) \<notin> cs"
+        by force
+      then have "(Rep_TSB (tt (\<lambda>t. Rep_TSB t |` cs)) |` cs) (cc (Rep_TSB (tta (\<lambda>t. Rep_TSB t |` cs)) |` cs) (Rep_TSB (tt (\<lambda>t. Rep_TSB t |` cs)) |` cs)) \<sqsubseteq> (Rep_TSB (tta (\<lambda>t. Rep_TSB t |` cs)) |` cs) (cc (Rep_TSB (tta (\<lambda>t. Rep_TSB t |` cs)) |` cs) (Rep_TSB (tt (\<lambda>t. Rep_TSB t |` cs)) |` cs))"
+        by simp }
+    ultimately have ?thesis
+      using f3 f1 by meson }
+  then show ?thesis
+    using f2 f1 by (meson below_TSB_def)
+qed
+
 
 lemma tsbrestrict_cont1[simp]: "cont  (\<lambda>b. ((Rep_TSB b) |` cs))"
   apply(rule contI2)
@@ -501,8 +535,15 @@ lemma tsb_newMap_id[simp]: assumes "{c}=tsbDom\<cdot>b" shows "Abs_TSB [c \<maps
 
 lemma tsb_newMap_restrict [simp]: assumes "c\<in>tsbDom\<cdot>b"
   shows "Abs_TSB [c \<mapsto> b  .  c] = b \<bar> {c}"
-  by (smt Abs_TSB_inverse assms domIff dom_eq_empty_conv dom_eq_singleton_conv fun_upd_upd mem_Collect_eq option.collapse restrict_map_insert subset_singletonD tsbdom_insert tsbgetch_insert tsbrestrict_dom tsbrestrict_insert tsbrestrict_well)
-
+proof -
+  have f1: "Rep_TSB b c \<noteq> None"
+    by (metis assms domIff tsbdom_insert)
+  have "(Rep_TSB b)(c := Rep_TSB b c) |` {c} = (Rep_TSB b |` ({c} - {c})) (c := Rep_TSB b c)"
+    by force
+  then show ?thesis
+    using f1 by (simp add: tsbgetch_insert tsbrestrict_insert)
+qed
+ 
 
 
 
@@ -650,14 +691,27 @@ lemma tsbi_option_below [simp]:
   fixes x y :: "'a TSB_inf \<rightharpoonup> 'a TSB_inf"
   assumes "x\<sqsubseteq>y"
   shows "x = y"
-  by (smt assms below_antisym below_option_def fun_below_iff tsbi_blow_eq)
+  using assms below_option_def fun_below_iff by fastforce
+  
 
 lemma tsbi_option_chain_max_in [simp]: 
   fixes Y:: "nat \<Rightarrow> ('a TSB_inf \<rightharpoonup> 'b TSB_inf)"
   assumes "chain Y"
   shows "max_in_chain 0 Y"
   apply(rule max_in_chainI)
-  by (smt assms is_ub_thelub part_dom_lub part_eq part_the_chain tsbi_blow_eq)
+proof -
+  fix j :: nat
+  have f1: "\<forall>f t. (\<not> chain f) \<or> chain (\<lambda>n. f n\<rightharpoonup>(t::'a TSB_inf)::'b TSB_inf)"
+    by (metis (full_types) part_the_chain)
+  have f2: "\<forall>t ta. (t::'b TSB_inf) \<notsqsubseteq> ta \<or> t = ta"
+    by (metis tsbi_blow_eq)
+  obtain tt :: "('a TSB_inf \<Rightarrow> 'b TSB_inf option) \<Rightarrow> ('a TSB_inf \<Rightarrow> 'b TSB_inf option) \<Rightarrow> 'a TSB_inf" where
+    "\<forall>f fa. (dom f \<noteq> dom fa \<or> tt fa f \<in> dom f \<and> f\<rightharpoonup>tt fa f \<noteq> fa\<rightharpoonup>tt fa f) \<or> f = fa"
+    by (metis (no_types) part_eq)
+  then show "Y 0 = Y j"
+    using f2 f1 by (metis assms is_ub_thelub part_dom_eq1)
+qed
+  
 
 lemma tsbi_option_chain_finite [simp]: 
   fixes Y:: "nat \<Rightarrow> ('a TSB_inf \<rightharpoonup> 'b TSB_inf)"
