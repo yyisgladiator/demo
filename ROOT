@@ -22,8 +22,9 @@ session "SPS" (canFail) = "Streams" +
   theories
     SPS
 
-session "TSPS" (canFail) = "Streams" + 
+session "SPFComp" (canFail) = "Streams" + 
   options [quick_and_dirty = false]
   theories
-    SPF_Composition_JB
+    SPF_Comp
+    SPF_FeedComp
 	
