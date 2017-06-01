@@ -14,7 +14,7 @@ definition sercomp :: "'m SPF => 'm SPF => 'm SPF"  ("_\<circ>_") where
 
 (* spfDom spfcomp *)
 
-lemma spfDomAbs: assumes "cont (\<lambda> x. (sbDom\<cdot>x = cs ) \<leadsto> f(x))" and "spf_well (Abs_cfun (\<lambda> x. (sbDom\<cdot>x = cs ) \<leadsto> f(x)))"
+lemma spfDomAbs: assumes "cont (\<lambda> x. (sbDom\<cdot>x = cs ) \<leadsto> f(x))" and "spf_well (\<Lambda> x. (sbDom\<cdot>x = cs ) \<leadsto> f(x))"
     shows "spfDom\<cdot>(Abs_CSPF (\<lambda> x. (sbDom\<cdot>x = cs ) \<leadsto> f(x))) = cs" 
 apply(simp add: spfDom_def)
 apply(simp_all add: assms)
