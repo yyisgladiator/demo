@@ -589,7 +589,7 @@ qed
 
 
 (* USAGE: use gen_fix_iter_spfComp_eq to show the equality behind the \<leadsto> if domain is correct
-          otherwise the equality is trivial *)
+          otherwise the equality is trivial see SPF_FeedComp_JB, Feedback_MW as example *)
 
 
 

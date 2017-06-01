@@ -550,7 +550,7 @@ lemma sumEq: assumes "sbDom\<cdot>sb = I addC append0C" shows "(sum1SPF \<rightl
   apply(subst SPF_FeedComp_JB.addC_def, subst SPF_Feedback_MW.addC_def)
   apply(subst SPF_FeedComp_JB.append0C_def, subst SPF_Feedback_MW.append0C_def)
   apply(subst (2) sbDomSB_eq)
-  by(simp_all add: assms)
+  by(simp_all add: assms SPF_FeedComp_JB.addC_def SPF_FeedComp_JB.append0C_def)
   
 (*  apply(subst sum1EqCh, simp add: assms)
   apply(subst spfcomp_and_spfcomp2_eq)
