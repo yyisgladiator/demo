@@ -1054,9 +1054,7 @@ proof -
     by meson
 qed
   
-lemma serial_iterconst_cont[simp]:       assumes "spfRan\<cdot>f1 = spfDom\<cdot>f2"
-                                  and "spfComp_well f1 f2"
-                                  and "pL f1 f2 = {}"
+lemma serial_iterconst_cont[simp]:    
 shows "cont (\<lambda>x. (sbDom\<cdot>x = I f1 f2)\<leadsto>(x \<uplus> (f1 \<rightleftharpoons> (x \<bar>spfDom\<cdot>f1)) 
                                     \<uplus> (f2 \<rightleftharpoons> (f1 \<rightleftharpoons> (x\<bar>spfDom\<cdot>f1))))\<bar>Oc f1 f2)"
 proof -
@@ -1085,12 +1083,10 @@ proof -
       by(simp add: Rep_CSPF_def)
   qed
     
-lemma serial_iterconst_monofun[simp]:    assumes "spfRan\<cdot>f1 = spfDom\<cdot>f2"
-                                  and "spfComp_well f1 f2"
-                                  and "pL f1 f2 = {}"
+lemma serial_iterconst_monofun[simp]:
 shows "monofun (\<lambda>x. (sbDom\<cdot>x = I f1 f2)\<leadsto>(x \<uplus> (f1 \<rightleftharpoons> (x \<bar>spfDom\<cdot>f1)) 
                                     \<uplus> (f2 \<rightleftharpoons> (f1 \<rightleftharpoons> (x\<bar>spfDom\<cdot>f1))))\<bar>Oc f1 f2)"
- using cont2mono serial_iterconst_cont assms by blast
+ using cont2mono serial_iterconst_cont by blast
    
 
 lemma serial_iterconst_well[simp]:       assumes "spfRan\<cdot>f1 = spfDom\<cdot>f2"
@@ -1244,8 +1240,7 @@ proof -
     by meson
 qed  
   
-lemma parallel_iterconst_cont[simp]:     assumes "L f1 f2 = {}" 
-                                         and "spfComp_well f1 f2" 
+lemma parallel_iterconst_cont[simp]:
 shows "cont (\<lambda>x. (sbDom\<cdot>x = spfDom\<cdot>f1 \<union> spfDom\<cdot>f2)\<leadsto>(x \<uplus> (f1 \<rightleftharpoons> (x \<bar>spfDom\<cdot>f1)) 
                                     \<uplus> (f2 \<rightleftharpoons>(x\<bar>spfDom\<cdot>f2)) )\<bar>Oc f1 f2)"
 proof -
