@@ -1,5 +1,5 @@
 theory SPF_Feedback_MW
-imports "CaseStudies/StreamCase_Study" SPF_MW SPF_Comp SPF_Templates SPF_Composition_JB SPF_FeedComp_JB SPF_Feedback_JB
+imports "../CaseStudies/StreamCase_Study" "../SPF_MW" "../SPF_Comp" "../SPF_Templates" "../Deprecated/SPF_Composition_JB" "../SPF_FeedComp_JB" "../SPF_Feedback_JB"
 
 begin
 
