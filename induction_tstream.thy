@@ -54,9 +54,13 @@ lemma "teees\<cdot>\<bottom>= \<bottom>"
 fixrec tee :: "'a tstream \<rightarrow> 'a tstream" where
 "tee\<cdot>(tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>ts) = ts"  (* this pattern is only called if the input stream starts with a tick *)
 
+
+
 fixrec tsAbsNew :: "'a tstream \<rightarrow> 'a stream" where
 "tsAbsNew\<cdot>(tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>ts) = tsAbsNew\<cdot>ts" |   (* ignore ticks *)  
 "ts\<noteq>\<bottom> \<Longrightarrow> tsAbsNew\<cdot>(tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>t))\<cdot>ts) = up\<cdot>t && tsAbsNew\<cdot>ts"  (* prepend first message and go on *)  
+
+
 
 lemma [simp]: "tsAbsNew\<cdot>\<bottom>=\<bottom>"
   by fixrec_simp
@@ -111,16 +115,47 @@ lift_definition tsExamp :: "nat tstream" is "<[Msg 1, Msg 2, \<surd>, Msg 2, \<s
 
     
     
-lemma [simp]: "(tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>i) \<noteq>\<bottom>"
-  sorry
+lemma tslscons_discrtick [simp]: "(tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>i) \<noteq>\<bottom>"
+  apply(simp add: tslscons_insert)
+  by (metis DiscrTick_def tslscons_insert tslscons_nbot2)
+  
 
+lemma [simp]: "ts\<noteq>\<bottom>\<Longrightarrow>match_tstream\<cdot>ts\<cdot>k = k\<cdot>(tsLshd\<cdot>ts)\<cdot>(tsRt\<cdot>ts)"
+oops
+lemma [simp]: "ts\<noteq>\<bottom> \<Longrightarrow> tsLshd\<cdot>ts\<noteq>\<bottom>" 
+  oops
+    
+    
     
     (* sender playground *)
-fixrec sender:: "'a tstream \<rightarrow> bool tstream \<rightarrow> tr \<rightarrow> ('a \<times> bool) tstream" where
+    
+ (* first input "'a tstream":  input for the ABP sender from the user. *)
+ (* second input: "bool tstream" acks from the receiver. *)
+ (* third input: "bool discr" buffer for the next expected ack.*)
+
+(* output: "('a \<times> bool) tstream" output to receiver *)
+fixrec sender:: "'a tstream \<rightarrow> bool tstream \<rightarrow> bool discr \<rightarrow> ('a \<times> bool) tstream" where
+  (* Bottom fälle *)
 "sender\<cdot>\<bottom>\<cdot>acks\<cdot>bool = \<bottom>" |
 "sender\<cdot>i\<cdot>\<bottom>\<cdot>bool = \<bottom>" |
-"acks\<noteq>\<bottom>\<Longrightarrow>sender\<cdot>(tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>i)\<cdot>acks\<cdot>bool = sender\<cdot>i\<cdot>acks\<cdot>bool"  (* |*)
-(* "i\<noteq>\<bottom> \<Longrightarrow> tsLshd\<cdot>i\<noteq>(up\<cdot>DicrTick) \<Longrightarrow>sender\<cdot>i\<cdot>(tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>acks)\<cdot>bool = sender\<cdot>i\<cdot>acks\<cdot>bool"  *)
+
+  (* If an input is an Tick, return Tick *)
+"sender\<cdot>(tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>i)\<cdot>(tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>acks)\<cdot>bool = delayFun\<cdot>(sender\<cdot>i\<cdot>acks\<cdot>bool)"   |
+
+  (* i have an input and no Ack \<longrightarrow> send message*)
+ "is\<noteq>\<bottom> \<Longrightarrow>sender\<cdot>(tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>i))\<cdot>is)\<cdot>(tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>acks)\<cdot>bool = tsMLscons\<cdot>(upApply2 Pair\<cdot>(up\<cdot>i)\<cdot>(up\<cdot>bool))\<cdot>(sender\<cdot>(tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>i))\<cdot>is)\<cdot>acks\<cdot>bool)"  |
+
+ 
+ (* Some strange case... Not sure if we need this *)
+ "acks\<noteq>\<bottom> \<Longrightarrow>sender\<cdot>(tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>is)\<cdot>(tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>ack))\<cdot>acks)\<cdot>bool = sender\<cdot>is\<cdot>acks\<cdot>bool" | 
+
+ (* We have a return value from the receiver! *)
+"is\<noteq>\<bottom> \<Longrightarrow> acks\<noteq>\<bottom>\<Longrightarrow>sender\<cdot>(tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>i))\<cdot>is)\<cdot>(tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>ack))\<cdot>acks)\<cdot>bool = 
+  (if(ack = bool) (* correctly send the current input. Go to next input *)
+  then sender\<cdot>is\<cdot>acks\<cdot>(Discr (\<not>(undiscr bool)))
+    
+    (* Wrong Ack. (Perhaps From the previous input. Resend current tupel*)
+   else tsMLscons\<cdot>(upApply2 Pair\<cdot>(up\<cdot>i)\<cdot>(up\<cdot>bool))\<cdot>(sender\<cdot>(tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>i))\<cdot>is)\<cdot>acks\<cdot>bool))"
 
     
 end  
