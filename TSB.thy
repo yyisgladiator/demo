@@ -18,9 +18,10 @@ begin
 
 
 default_sort message
+  
 
 (* ----------------------------------------------------------------------- *)
-  section \<open>Timed Stream Bundle \<close>
+  section \<open>TSB\<close>
 (* ----------------------------------------------------------------------- *)
 
  (* Definition: Welltyped. "a \<rightharpoonup> b" means "a => b option" *)
@@ -82,7 +83,7 @@ cpodef 'm :: message TSB = "{b :: channel \<rightharpoonup> 'm tstream . tsb_wel
 setup_lifting type_definition_TSB
 
 
-(* ----------------------------------------------------------------------- *)
+
   subsection \<open>Definitions on TSB \<close>
 (* ----------------------------------------------------------------------- *)
 
@@ -203,7 +204,8 @@ lemma tsb_wellI:
 
 
 
-(* tsbDom *)
+subsubsection \<open>tsbDom\<close>
+  
 thm tsbDom_def
 
 
@@ -233,7 +235,8 @@ lemma [simp]: assumes "c\<in>tsbDom\<cdot>tsb"
 
 
 
-(* tsbGetCh *)
+subsubsection \<open>tsbGetCh\<close>
+  
 thm tsbGetCh_def
 
 lemma tsbgetch_cont1 [simp]: "cont (\<lambda>tb  c . ((Rep_TSB tb) \<rightharpoonup> c))"
@@ -271,7 +274,7 @@ lemma tsb_eq: assumes "tsbDom\<cdot>x = tsbDom\<cdot>y" and "\<And> c. c\<in>tsb
 
 
 
-(* tsRestrict *)
+subsubsection \<open>tsbRes\<close>
 thm tsbRestrict_def
 
 
@@ -321,7 +324,8 @@ lemma tsbgetch_restrict [simp]: assumes "c \<in>cs"
 
 
 
-(* tsbLeast *)
+subsubsection \<open>tsbLeast\<close>
+  
 lemma [simp]: "tsb_well (optionLeast cs)"
   by(simp add: tsb_well_def)
 
@@ -350,7 +354,7 @@ lemma [simp]: assumes "tb\<in>(TSB cs)" shows "tsbDom\<cdot>tb = cs"
 
 
 
-(* tsbTickCount *)
+subsubsection \<open>tsbTickCount\<close>
 
 (*Experimentell ... *)
 
@@ -369,11 +373,11 @@ oops
 
 
 
+subsubsection \<open>tsbUnion\<close>
 
-
-(* ----------------------------------------------------------------------- *)
+(* ----------------------------------------------------------------------- 
   subsection \<open>tsbUnion \<close>
-(* ----------------------------------------------------------------------- *)
+ ----------------------------------------------------------------------- *)
 
 (* tsbUnion wurde geschrieben bevor alle channels gleich viele ticks haben müssen. 
     Daher viel anpassen nötig *)
@@ -442,7 +446,9 @@ lemma tsbunion_dom [simp]: "tsbDom\<cdot>(tb1 \<uplus> tb2) = tsbDom\<cdot>tb1 \
 *)
 
 
-(* tsbTTake *)
+subsubsection \<open>tsbTTake\<close>
+  
+  
 thm tsbTTake_def
 lemma tsbttake_well[simp]: "tsb_well (\<lambda>c. (c \<in> tsbDom\<cdot>tb)\<leadsto> ((tb  .  c) \<down> n ))"
   apply(simp add: tsb_well_def)
@@ -501,6 +507,9 @@ lemma tsb_newMap_restrict [simp]: assumes "c\<in>tsbDom\<cdot>b"
 
 
 
+(* ----------------------------------------------------------------------- *)
+  section \<open>TSB-fin\<close>
+(* ----------------------------------------------------------------------- *)
 
 
 
@@ -519,8 +528,13 @@ typedef ('m :: message) TSB_fin = "{b :: channel \<rightharpoonup> 'm tstream . 
 
 
 
+(* ----------------------------------------------------------------------- *)
+  section \<open>TSB-inf\<close>
+(* ----------------------------------------------------------------------- *)
 
-
+    
+  subsection \<open>Definitions on TSB-inf \<close>
+(* ----------------------------------------------------------------------- *)
 
 definition tsb_inf_well :: "(channel \<rightharpoonup> 'm tstream) \<Rightarrow> bool" where
 "tsb_inf_well f \<equiv> (\<forall>c \<in> dom f. tsDom\<cdot>(f\<rightharpoonup>c) \<subseteq> ctype c) 
@@ -591,7 +605,9 @@ definition tsbInf2tsb :: "'m TSB_inf \<rightarrow> 'm TSB" where
 
 
 
-(* Allgemeine Lemmas *)
+  subsection \<open>lemmas on TSB-inf \<close>
+(* ----------------------------------------------------------------------- *)
+    
 lemma [simp]: "tsb_inf_well (Rep_TSB_inf x)"
   using Rep_TSB_inf by blast
 
@@ -659,7 +675,8 @@ lemma tsbi_option_adm [simp]:
 
 
 
-(* tsbiDom *)
+subsubsection \<open>tsbiDom\<close>
+  
 thm tsbiDom_def
 
 lemma tsbidom_insert: "tsbiDom\<cdot>x = dom (Rep_TSB_inf x)"
@@ -686,7 +703,8 @@ lemma tsbi_ex[simp]: "TSBi cs \<noteq> {}"
 by(simp add: TSBi_def)
 
 
-(* tsbiGetCh *)
+subsubsection \<open>tsbiGetCh\<close>
+
 thm tsbiGetCh_def
 
 lemma tsbigetch_insert: "tbi  .  c = (Rep_TSB_inf tbi) \<rightharpoonup> c"
@@ -716,7 +734,7 @@ by (metis below_TSB_inf_def part_below tsbidom_insert tsbigetch_insert)
 
 
 
-(* tsbiUnion *)
+subsubsection \<open>tsbiUnion\<close>
 
 (* tsbUnion produces a welltyped partial-function *)
 lemma tsbiunion_well[simp]: assumes "tsb_inf_well b1" and "tsb_inf_well b2"
@@ -764,7 +782,8 @@ by(simp add: tsbiunion_insert)
 
 
 
-(* tsbiRestrict *)
+subsubsection \<open>tsbiRes\<close>
+  
 lemma [simp]: "tsb_inf_well (Rep_TSB_inf b |` cs)"
   apply(simp add: tsb_inf_well_def)
   by (metis IntD1 Rep_TSB_inf mem_Collect_eq tsb_inf_well_def)
@@ -813,7 +832,8 @@ lemma tsbiunion_restrict [simp]:"(tsbiDom\<cdot>y)\<inter>cs2 = {} \<Longrightar
 
 
 
-(* tsbiTTake *)
+subsubsection \<open>tsbiTTake\<close>
+  
 thm tsbiTTake_def
 lemma tsbittake_well[simp]: "tsb_well (\<lambda>c. (c \<in> tsbiDom\<cdot>tbi)\<leadsto>tbi . c \<down> n )"
   apply(rule tsb_wellI)
@@ -849,7 +869,7 @@ lemma tsbiTtake_chain [simp]: fixes tbi :: "'a TSB_inf"
 
 
 
-(* tsb2tsbInf *)
+subsubsection \<open>tsb2tsbInf\<close>
 thm tsb2tsbInf_def
 
 lemma [simp]: "tsb_inf_well (\<lambda>c. (c\<in>tsbDom\<cdot>tb)\<leadsto>(tb  .  c) \<bullet> tsInfTick)"
