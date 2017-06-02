@@ -11,7 +11,36 @@ imports TStream "~~/src/HOL/HOLCF/Library/Option_Cpo"
 
 begin
 
-  
+lemma tstickcount_adm [simp]: "adm (\<lambda>a. #\<surd> a \<le> #\<surd> f\<cdot>a)"
+proof (rule admI)
+  fix Y :: "nat \<Rightarrow> 'a tstream"
+  assume a1: "chain Y"
+  assume a2: "\<forall>i. #\<surd> Y i \<le> #\<surd> f\<cdot>(Y i)"
+  obtain nn :: "(nat \<Rightarrow> 'a tstream) \<Rightarrow> nat \<Rightarrow> nat" where
+      "\<forall>f. \<not> chain f \<or> finite_chain f \<or> (\<forall>n. Fin n \<le> #\<surd> f (nn f n))"
+    by (meson exist_tslen)
+  then have f3: "\<And>n. Fin n \<le> #\<surd> f\<cdot>(Y (nn Y n)) \<or> finite_chain Y"
+    using a2 a1 trans_lnle by blast
+  have "\<And>l c ca f n. (l::lnat) \<le> c\<cdot>(ca\<cdot>(Lub f::'a tstream)::'b tstream) \<or> \<not> l \<le> c\<cdot>(ca\<cdot>(f n)) \<or> \<not> chain f"
+    by (meson is_ub_thelub lnle_def monofun_cfun_arg trans_lnle)
+  then show "#\<surd> \<Squnion>n. Y n \<le> #\<surd> f\<cdot>(\<Squnion>n. Y n)"
+    using f3 a2 a1 by (metis Suc_n_not_le_n l42 less2nat linorder_not_less lncases order_less_irrefl)
+qed
+
+lemma "t\<noteq>\<bottom>\<Longrightarrow>#\<surd> (tsMLscons\<cdot>t\<cdot>ts) = #\<surd>ts"
+  apply(cases "ts=\<bottom>")
+   apply simp
+  oops
+    
+lemma assumes "\<And>ts. f\<cdot>(delayFun\<cdot>ts) = delayFun\<cdot>(f\<cdot>ts)"
+  shows "#\<surd>ts \<le> #\<surd>(f\<cdot>ts)"
+  apply (induction ts) 
+apply simp_all
+  apply (metis assms delayFun.rep_eq lnsuc_lnle_emb tstickcount_tscons)
+  oops
+    
+    
+    
 (* demo that the old fixrec is not working *)
 
   (* this function is removing all ticks *)
@@ -93,7 +122,7 @@ lemma "tsAbsNew\<cdot>ts= tsAbs\<cdot>ts"
     
     (* tsRemDups Prototyping *)
     
-fixrec tsRemDups:: "'a tstream \<rightarrow> 'a discr option \<rightarrow> 'a tstream" where
+fixrec tsRemDups:: "('a::countable) tstream \<rightarrow> 'a discr option \<rightarrow> 'a tstream" where
 "tsRemDups\<cdot>(tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>ts)\<cdot>option = delayFun\<cdot>(tsRemDups\<cdot>ts\<cdot>option)"  | (* Ignore ticks *)
 "ts\<noteq>\<bottom> \<Longrightarrow> tsRemDups\<cdot>(tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>t))\<cdot>ts)\<cdot>None = tsMLscons\<cdot>(up\<cdot>t)\<cdot>(tsRemDups\<cdot>ts\<cdot>(Some t))" | (* Handle first Message *)
 "ts\<noteq>\<bottom> \<Longrightarrow> tsRemDups\<cdot>(tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>t))\<cdot>ts)\<cdot>(Some a) = (if t=a then (tsRemDups\<cdot>ts\<cdot>(Some t)) else tsMLscons\<cdot>(up\<cdot>t)\<cdot>(tsRemDups\<cdot>ts\<cdot>(Some t)))"   (* Handle duplicate Message *)
@@ -108,8 +137,45 @@ lemma "ts\<noteq>\<bottom>\<Longrightarrow> t\<noteq>a\<Longrightarrow>tsRemDups
 by(simp add: tsmlscons2tslscons)
   
   
-lift_definition tsExamp :: "nat tstream" is "<[Msg 1, Msg 2, \<surd>, Msg 2, \<surd>]>"  
+lift_definition tsExampIn :: "nat tstream" is "<[Msg 1, Msg 2, \<surd>, Msg 2, \<surd>]>"  
   by(simp add: ts_well_def)
+
+lift_definition tsExampResult :: "nat tstream" is "<[Msg 1, Msg 2, \<surd>,  \<surd>]>"  
+  by(simp add: ts_well_def)
+
+lemma tsmsg_notwell2 [simp]: "\<not>ts_well (\<up>(Msg m))"
+  apply(simp add: ts_well_def, auto)
+  by (metis Inf'_neq_0 event.distinct(1) fold_inf inf_ub inject_lnsuc less_le lscons_conv sfoot1 sfoot_one slen_scons strict_slen sup'_def)
+    
+      
+lemma tsmsg_notwell: "t\<noteq>updis \<surd> \<Longrightarrow> \<not>ts_well (t && \<bottom>)"
+  apply(simp add: ts_well_def)
+  sorry
+    
+  
+lemma tslscons2ts: "ts_well (t&&ts) \<Longrightarrow> Abs_tstream (t&&ts) = tsLscons\<cdot>t\<cdot>(Abs_tstream ts)"
+  apply(subst tslscons_insert, auto simp add: espf2tspf_def)
+  apply (metis tsmsg_notwell lscons_well stream.con_rews(1) up_defined)
+  apply (metis Rep_Abs stream.con_rews(2) stream.sel_rews(5) ts_well_drop1)
+  by (metis Rep_tstream_strict induction_tstream.tsmsg_notwell stream.con_rews(1) ts_well_Rep)  
+
+    thm delayfun_abststream
+lemma tsdelay2ts: "ts_well ts \<Longrightarrow> Abs_tstream ((updis \<surd>)&&ts) = delayFun\<cdot>(Abs_tstream ts)"
+  by (metis delayfun_abststream)
+
+lemma tsmessage2ts: "ts_well ((updis (Msg m)) && ts) \<Longrightarrow> Abs_tstream ((updis (Msg m))&&ts) = tsMLscons\<cdot>(updis m)\<cdot>(Abs_tstream ts)"
+  by(simp add: tsMLscons_def tslscons2ts)
+
+lemma tsmessage2ts2: "ts_well (\<up>(Msg m) \<bullet>  ts) \<Longrightarrow> Abs_tstream (\<up>(Msg m) \<bullet>  ts) = tsMLscons\<cdot>(updis m)\<cdot>(Abs_tstream ts)"
+  by (metis lscons_conv tsmessage2ts)
+  
+
+        thm lscons_conv
+lemma "tsRemDups\<cdot>tsExampIn\<cdot>None = tsExampResult"
+  apply(simp add: tsExampIn_def tsExampResult_def)
+  apply(simp add: tsmessage2ts2 ts_well_def tsmlscons2tslscons)
+  oops
+    
 
     (* ToDo ... run the example on tsRemDups *)
 
@@ -157,5 +223,27 @@ fixrec sender:: "'a tstream \<rightarrow> bool tstream \<rightarrow> bool discr 
     (* Wrong Ack. (Perhaps From the previous input. Resend current tupel*)
    else tsMLscons\<cdot>(upApply2 Pair\<cdot>(up\<cdot>i)\<cdot>(up\<cdot>bool))\<cdot>(sender\<cdot>(tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>i))\<cdot>is)\<cdot>acks\<cdot>bool))"
 
+
+(* Lemmate über Sender *)
+(* Genommen aus BS01, Seite 103 *)
+
+(*i = input 
+  as = acks 
+  ds = output *)
+
+
+(* fds \<sqsubseteq> i, where fds = map((\<alpha>.ds, \<Pi>1) *)
+(* only send input, and in the right order *)
+lemma "tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(sender\<cdot>i\<cdot>acks\<cdot>bool)\<cdot>None)) \<sqsubseteq> tsAbs\<cdot>i"
+  oops
+
+(* \<alpha>.fb = fb, where fb = map((\<alpha>.ds, \<Pi>2) *)
+(* Sent different bit for different messanges *)    
+lemma "tsRemDups\<cdot>(tsProjSnd\<cdot>(tsRemDups\<cdot>(sender\<cdot>i\<cdot>acks\<cdot>bool)\<cdot>None))\<cdot>None = tsProjSnd\<cdot>(tsRemDups\<cdot>(sender\<cdot>i\<cdot>acks\<cdot>bool)\<cdot>None)"
+  oops
+
+    
+(* 2 more are missing... *)
+    
     
 end  
