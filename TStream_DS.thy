@@ -32,13 +32,22 @@ by (simp add: delayFun_def tslscons_insert tsconc_insert DiscrTick_def espf2tspf
 
     
 fixrec tsZip :: "'a tstream \<rightarrow> 'b stream \<rightarrow> ('a \<times> 'b) tstream" where
-"tsZip\<cdot>ts\<cdot>\<bottom> = \<bottom>" |  
+  (* Bottom case *)
+"tsZip\<cdot>ts\<cdot>\<bottom> = \<bottom>" | 
+
+  (* One Message, then directly a Tick. Return Pair an Tick directly. 
+    (Neccessary, because if the 'stream' ends we would not return a Tick) *)
 "x\<noteq>\<bottom> \<Longrightarrow> ts\<noteq>\<bottom> \<Longrightarrow>               
-  tsZip\<cdot>(tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>t))\<cdot>ts)\<cdot>(lscons\<cdot>x\<cdot>xs) = tsMLscons\<cdot>(upApply2 Pair\<cdot>(up\<cdot>t)\<cdot>x)\<cdot>(tsZip\<cdot>ts\<cdot>xs)" | 
-  (* zip if both first elements are defined *)
+  tsZip\<cdot>(tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>t))\<cdot>(tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>ts))\<cdot>(x && xs) = tsMLscons\<cdot>(upApply2 Pair\<cdot>(up\<cdot>t)\<cdot>x)\<cdot>(delayFun\<cdot>(tsZip\<cdot>ts\<cdot>xs))" | 
+
+  (* two messages in tStream. Work on the first *)
+"x\<noteq>\<bottom>  \<Longrightarrow> ts\<noteq>\<bottom> \<Longrightarrow>               
+  tsZip\<cdot>(tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>t))\<cdot>(tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>t2))\<cdot>ts))\<cdot>(x && xs) = tsMLscons\<cdot>(upApply2 Pair\<cdot>(up\<cdot>t)\<cdot>x)\<cdot>(tsZip\<cdot>(tsMLscons\<cdot>(up\<cdot>t2)\<cdot>ts)\<cdot>xs)" | 
+
+  (* ignore ticks *)
 "xs\<noteq>\<bottom> \<Longrightarrow> 
   tsZip\<cdot>(tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>ts)\<cdot>xs = delayFun\<cdot>(tsZip\<cdot>ts\<cdot>xs)"  
-  (* ignore ticks *)
+  
 
 lemma tszip_strict [simp]: 
 "tsZip\<cdot>\<bottom>\<cdot>\<epsilon> = \<bottom>"
@@ -46,6 +55,7 @@ lemma tszip_strict [simp]:
 "tsZip\<cdot>\<bottom>\<cdot>s = \<bottom>"
 by (fixrec_simp)+
 
+  (* SWS: mit der annahme das "xs\<noteq>\<bottom>" this should hold *)
 lemma tszip_tslscons_fixrec: "x\<noteq>\<bottom> \<Longrightarrow> ts\<noteq>\<bottom> \<Longrightarrow>
   tsZip\<cdot>(tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>t))\<cdot>ts)\<cdot>(lscons\<cdot>x\<cdot>xs)  = tsMLscons\<cdot>(upApply2 Pair\<cdot>(up\<cdot>t)\<cdot>x)\<cdot>(tsZip\<cdot>ts\<cdot>xs)"
 by (fixrec_simp)
