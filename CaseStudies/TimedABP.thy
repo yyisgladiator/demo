@@ -23,7 +23,7 @@ definition tsMed :: "'a tstream \<rightarrow> bool stream \<rightarrow> 'a tstre
 
 (* ToDo: Description for lemmata *)
 
-lemma tsmed_unfold: "tsMed\<cdot>msg\<cdot>ora = tsProjFst\<cdot>(tsFilter {x. snd x}\<cdot>(tsZip\<cdot>msg\<cdot>ora))"
+lemma tsmed_insert: "tsMed\<cdot>msg\<cdot>ora = tsProjFst\<cdot>(tsFilter {x. snd x}\<cdot>(tsZip\<cdot>msg\<cdot>ora))"
 by (simp add: tsMed_def)
 
 lemma tsmed_slen_leq:
@@ -61,12 +61,28 @@ by (metis (no_types, lifting) assoc_sconc list2s.simps(1) list2s.simps(2) lscons
     ts_well_conc1 ts_well_sing_conc)
 
 lemma "tsMed\<cdot>\<bottom>\<cdot>((\<up>True) \<infinity>) = \<bottom>"
-by (simp add: tsmed_unfold)
+by (simp add: tsmed_insert)
+
+(* ToDo: Lemmata for Testing the medium. Proof sketch for first lemma.
+         Other lemmata analogously. Alternatively use tsMLscons representation *)
+
+lemma h1_f1: "tsZip\<cdot>(Abs_tstream (<[Msg 1, \<surd>, Msg 2, \<surd>, Msg 3, \<surd>]>))\<cdot>(\<up>True \<infinity>) 
+           = Abs_tstream (<[Msg (1, True), \<surd>, Msg (2, True), \<surd>, Msg (3, True), \<surd>]>)"
+oops
+
+lemma h2_f1: 
+  "tsFilter {x. snd x}\<cdot>(Abs_tstream (<[\<M> (1, True), \<surd>, \<M> (2, True), \<surd>, \<M> (3, True), \<surd>]>))
+                    = (Abs_tstream (<[\<M> (1, True), \<surd>, \<M> (2, True), \<surd>, \<M> (3, True), \<surd>]>))"
+oops
+
+lemma h3_f1: "tsProjFst\<cdot>(Abs_tstream (<[\<M> (1, True), \<surd>, \<M> (2, True), \<surd>, \<M> (3, True), \<surd>]>)) 
+                   = Abs_tstream (<[\<M> 1, \<surd>, \<M> 2, \<surd>, \<M> 3, \<surd>]>)"
+oops
 
 lemma "tsMed\<cdot>OneTwoThree\<cdot>((\<up>True) \<infinity>) = OneTwoThree"
 oops
 
-lemma "tsMed\<cdot>OneTwoThree\<cdot>(<[True, False]> \<infinity>) = Abs_tstream (<[Msg 1, \<surd>, \<surd>, Msg 3, \<surd>]>)" 
+lemma "tsMed\<cdot>OneTwoThree\<cdot>(<[True, False]> \<infinity>) = Abs_tstream (<[Msg 1, \<surd>, \<surd>, Msg 3, \<surd>]>)"
 oops
 
 lemma "tsMed\<cdot>(OneTwoThree \<bullet> tsInfTick)\<cdot>((\<up>True) \<infinity>) = (OneTwoThree \<bullet> tsInfTick)"

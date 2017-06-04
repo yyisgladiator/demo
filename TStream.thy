@@ -1910,10 +1910,10 @@ lemma tsprojsnd_strict_rev: "tsProjSnd\<cdot>ts = \<bottom> \<Longrightarrow> ts
   apply (simp add: tsProjSnd_def)
   by (metis strict_tstickcount ts_0ticks tsmap_tstickcount)
 
-lemma sprojfst_tstickcount[simp]: "#\<surd>(tsProjFst\<cdot>ts) = #\<surd>ts"
+lemma tsprojfst_tstickcount[simp]: "#\<surd>(tsProjFst\<cdot>ts) = #\<surd>ts"
   by (simp add: tsProjFst_def)
 
-lemma sprojsnd_tstickcount[simp]: "#\<surd>(tsProjSnd\<cdot>ts) = #\<surd>ts"
+lemma tsprojsnd_tstickcount[simp]: "#\<surd>(tsProjSnd\<cdot>ts) = #\<surd>ts"
   by (simp add: tsProjSnd_def)
 
 lemma tsabs_tsprojfst[simp]: "#(tsAbs\<cdot>(tsProjFst\<cdot>ts)) = #(tsAbs\<cdot>ts)"
@@ -1930,24 +1930,16 @@ lemma tsabs_tsprojsnd [simp]: "#(tsAbs\<cdot>(tsProjSnd\<cdot>ts)) = #(tsAbs\<cd
   apply (rule ind [of _ y], auto)
   by (simp add: tsmap_h_fair2)
 
-lemma ts_projfst_delayfun: "tsProjFst\<cdot>(delayFun\<cdot>ts) = delayFun\<cdot>(tsProjFst\<cdot>ts)"    
+lemma tsprojfst_delayfun: "tsProjFst\<cdot>(delayFun\<cdot>ts) = delayFun\<cdot>(tsProjFst\<cdot>ts)"    
   apply (simp add: delayFun_def delayfun_abststream tsProjFst_def tsmap_unfold tsconc_rep_eq)
   apply (induct_tac ts, auto)
   by (simp add: tsConc_def tsmap_h_well)
 
-lemma ts_projsnd_delayfun: "tsProjSnd\<cdot>(delayFun\<cdot>ts) = delayFun\<cdot>(tsProjSnd\<cdot>ts)"    
+lemma tsprojsnd_delayfun: "tsProjSnd\<cdot>(delayFun\<cdot>ts) = delayFun\<cdot>(tsProjSnd\<cdot>ts)"    
   apply (simp add: delayFun_def delayfun_abststream tsProjSnd_def tsmap_unfold tsconc_rep_eq)
   apply (induct_tac ts, auto)
   by (simp add: tsConc_def tsmap_h_well)
     
-lemma ts_projfst_mlscons:
-  "ts\<noteq>\<bottom> \<Longrightarrow> tsProjFst\<cdot>(tsMLscons\<cdot>(updis (a,b))\<cdot>ts) = tsMLscons\<cdot>(updis a)\<cdot>(tsProjFst\<cdot>ts)"
-  oops
-
-lemma ts_projsnd_mlscons:
-  "ts\<noteq>\<bottom> \<Longrightarrow> tsProjSnd\<cdot>(tsMLscons\<cdot>(updis (a,b))\<cdot>ts) = tsMLscons\<cdot>(updis a)\<cdot>(tsProjSnd\<cdot>ts)"
-  oops
-
 (* tsFilter *)
 thm tsFilter_def
 
@@ -1964,7 +1956,6 @@ by (simp add: tsFilter_def tsfilter_h_well)
 
 lemma tsfilter_strict[simp]: "tsFilter M\<cdot>\<bottom> = \<bottom>"
   by (simp add: tsfilter_unfold)
-
   
 lemma tsfilter_tstickcount [simp]: "#\<surd>(tsFilter M\<cdot>ts) = #\<surd>ts"
   apply(simp add: tsTickCount_def)
