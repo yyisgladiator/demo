@@ -60,7 +60,7 @@ lift_definition OneTwoThree :: "nat tstream" is
 by (metis (no_types, lifting) assoc_sconc list2s.simps(1) list2s.simps(2) lscons_conv sup'_def
     ts_well_conc1 ts_well_sing_conc)
 
-lemma "tsMed\<cdot>OneTwoThree\<cdot>\<bottom> = \<bottom>"
+lemma "tsMed\<cdot>\<bottom>\<cdot>((\<up>True) \<infinity>) = \<bottom>"
 by (simp add: tsmed_unfold)
 
 lemma "tsMed\<cdot>OneTwoThree\<cdot>((\<up>True) \<infinity>) = OneTwoThree"
