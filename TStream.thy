@@ -1946,7 +1946,7 @@ lemma tsprojsnd_delayfun: "tsProjSnd\<cdot>(delayFun\<cdot>ts) = delayFun\<cdot>
   apply (simp add: delayFun_def delayfun_abststream tsProjSnd_def tsmap_unfold tsconc_rep_eq)
   apply (induct_tac ts, auto)
   by (simp add: tsConc_def tsmap_h_well)
-    
+
 (* tsFilter *)
 thm tsFilter_def
 
@@ -2546,7 +2546,23 @@ lemma tsmlscons_lscons3: "ts\<noteq>\<bottom> \<Longrightarrow> Rep_tstream (tsM
     
 lemma tsmlscons_lscons4: 
   "ts\<noteq>\<bottom> \<Longrightarrow> tsMLscons\<cdot>(updis t)\<cdot>ts = Abs_tstream (updis (Msg t) && Rep_tstream ts)"
-by (simp add: tsMLscons_def tslscons2lscons)
+  by (simp add: tsMLscons_def tslscons2lscons)
+
+lemma tsprojfst_mlscons:
+  "ts\<noteq>\<bottom> \<Longrightarrow> tsProjFst\<cdot>(tsMLscons\<cdot>(updis (a,b))\<cdot>ts) = tsMLscons\<cdot>(updis a)\<cdot>(tsProjFst\<cdot>ts)"
+  apply (simp add: tsmlscons_lscons4 tsProjFst_def lscons_conv tsmap_unfold smap_split)
+  apply (simp add: tsmlscons2tslscons)
+  apply (subst tslscons2lscons)
+  apply (metis tsProjFst_def tsmap_unfold tsprojfst_strict_rev)
+  by (simp add: lscons_conv tsmap_h_well)
+
+lemma tsprojsnd_mlscons:
+  "ts\<noteq>\<bottom> \<Longrightarrow> tsProjSnd\<cdot>(tsMLscons\<cdot>(updis (a,b))\<cdot>ts) = tsMLscons\<cdot>(updis b)\<cdot>(tsProjSnd\<cdot>ts)"
+  apply (simp add: tsmlscons_lscons4 tsProjSnd_def lscons_conv tsmap_unfold smap_split)
+  apply (simp add: tsmlscons2tslscons)
+  apply (subst tslscons2lscons)
+  apply (metis tsProjSnd_def tsmap_unfold tsprojsnd_strict_rev)
+  by (simp add: lscons_conv tsmap_h_well)
 
 (* ----------------------------------------------------------------------- *)
 subsection {* delayFun  *}
