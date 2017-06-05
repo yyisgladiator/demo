@@ -10,12 +10,13 @@ theory TStream_DS
 imports TStream "~~/src/HOL/HOLCF/Library/Option_Cpo"
 
 begin  
+default_sort countable
 
 (* ----------------------------------------------------------------------- *)
 subsection {* tsRemDups *}
 (* ----------------------------------------------------------------------- *)   
 
-fixrec tsRemDups_h :: "('a::countable) tstream \<rightarrow> 'a discr option \<rightarrow> 'a tstream" where
+fixrec tsRemDups_h :: "'a tstream \<rightarrow> 'a discr option \<rightarrow> 'a tstream" where
   (* Ignore ticks *)
 "tsRemDups_h\<cdot>(tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>ts)\<cdot>option = delayFun\<cdot>(tsRemDups_h\<cdot>ts\<cdot>option)"  | 
 
@@ -125,14 +126,6 @@ oops
 lemma tsmap_delayfun: "tsMap f\<cdot>(delayFun\<cdot>ts) = delayFun\<cdot>(tsMap f\<cdot>ts)"
 oops
 
-lemma tsprojfst_mlscons:
-  "ts \<noteq> \<bottom> \<Longrightarrow> tsProjFst\<cdot>(tsMLscons\<cdot>(updis (a,b))\<cdot>ts) = tsMLscons\<cdot>(updis a)\<cdot>(tsProjFst\<cdot>ts)"
-oops
-
-lemma tsprojsnd_mlscons:
-  "ts \<noteq> \<bottom> \<Longrightarrow> tsProjSnd\<cdot>(tsMLscons\<cdot>(updis (a,b))\<cdot>ts) = tsMLscons\<cdot>(updis a)\<cdot>(tsProjSnd\<cdot>ts)"
-oops
-
 lemma tsfilter_mlscons:
   "ts \<noteq> \<bottom> \<Longrightarrow> tsFilter M\<cdot>(tsMLscons\<cdot>(updis t)\<cdot>ts) = tsMLscons\<cdot>(updis t)\<cdot>(tsFilter M\<cdot>ts)"
 oops
@@ -155,7 +148,6 @@ definition tsRemDups_h :: "'a option event \<Rightarrow> 'a option event stream 
                                      else if shd s \<noteq> q then (\<up>(shd s) \<bullet> h (shd s)\<cdot>(srt\<cdot>s))
                                      else h q\<cdot>(srt\<cdot>s))))"
 
-(* ToDo: New Version with fixrec *)
 definition tsRemDups :: "'a tstream \<rightarrow> 'a tstream" where
 "tsRemDups \<equiv> \<Lambda> ts. Abs_tstream (smap (\<lambda>x. case x of Msg (Some m) \<Rightarrow> (Msg m))\<cdot>(tsRemDups_h (\<M> None)\<cdot>(Rep_tstream (tsMap Some\<cdot>ts))))"
 *)

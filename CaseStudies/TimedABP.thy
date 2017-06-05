@@ -11,12 +11,13 @@ theory TimedABP
 imports "../TStream_DS"
 
 begin
+default_sort countable
 
 (* ----------------------------------------------------------------------- *)
 section {* Medium *}
 (* ----------------------------------------------------------------------- *)
 
-definition tsMed :: "('a::countable) tstream \<rightarrow> bool stream \<rightarrow> 'a tstream" where
+definition tsMed :: "'a tstream \<rightarrow> bool stream \<rightarrow> 'a tstream" where
 "tsMed \<equiv> \<Lambda> msg ora. tsProjFst\<cdot>(tsFilter {x. snd x}\<cdot>(tsZip\<cdot>msg\<cdot>ora))"
 
 (* Assumption for lemmata: #({True} \<ominus> ora)=\<infinity> *)
