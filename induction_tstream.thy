@@ -177,12 +177,12 @@ fixrec sender:: "'a tstream \<rightarrow> bool tstream \<rightarrow> bool discr 
 
 (* fds \<sqsubseteq> i, where fds = map((\<alpha>.ds, \<Pi>1) *)
 (* only send input, and in the right order *)
-lemma "tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(sender\<cdot>i\<cdot>acks\<cdot>bool)\<cdot>None)) \<sqsubseteq> tsAbs\<cdot>i"
+lemma "tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(sender\<cdot>i\<cdot>acks\<cdot>bool))) \<sqsubseteq> tsAbs\<cdot>i"
   oops
 
 (* \<alpha>.fb = fb, where fb = map((\<alpha>.ds, \<Pi>2) *)
 (* Sent different bit for different messanges *)    
-lemma "tsRemDups\<cdot>(tsProjSnd\<cdot>(tsRemDups\<cdot>(sender\<cdot>i\<cdot>acks\<cdot>bool)\<cdot>None))\<cdot>None = tsProjSnd\<cdot>(tsRemDups\<cdot>(sender\<cdot>i\<cdot>acks\<cdot>bool)\<cdot>None)"
+lemma "tsRemDups\<cdot>(tsProjSnd\<cdot>(tsRemDups\<cdot>(sender\<cdot>i\<cdot>acks\<cdot>bool))) = tsProjSnd\<cdot>(tsRemDups\<cdot>(sender\<cdot>i\<cdot>acks\<cdot>bool))"
   oops
 
     

@@ -8,7 +8,7 @@
 chapter {* Alternating Bit Protocol *}       
                                                             
 theory TimedABP
-imports "../TStream"
+imports "../TStream_DS"
 
 begin
 
@@ -16,7 +16,7 @@ begin
 section {* Medium *}
 (* ----------------------------------------------------------------------- *)
 
-definition tsMed :: "'a tstream \<rightarrow> bool stream \<rightarrow> 'a tstream" where
+definition tsMed :: "('a::countable) tstream \<rightarrow> bool stream \<rightarrow> 'a tstream" where
 "tsMed \<equiv> \<Lambda> msg ora. tsProjFst\<cdot>(tsFilter {x. snd x}\<cdot>(tsZip\<cdot>msg\<cdot>ora))"
 
 (* Assumption for lemmata: #({True} \<ominus> ora)=\<infinity> *)
@@ -41,10 +41,10 @@ oops
 (* ----------------------------------------------------------------------- *)
 section {* Receiver *}
 (* ----------------------------------------------------------------------- *)
-(*
+
 definition tsRec :: "('a \<times> 'b) tstream \<rightarrow> ('b tstream \<times> 'a tstream)" where
 "tsRec \<equiv> \<Lambda> dat. (tsProjSnd\<cdot>dat, tsProjFst\<cdot>(tsRemDups\<cdot>dat))"
-*)
+
 (* ----------------------------------------------------------------------- *)
 section {* Testing *}
 (* ----------------------------------------------------------------------- *)

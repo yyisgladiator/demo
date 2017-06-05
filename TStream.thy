@@ -2692,36 +2692,38 @@ fixrec tsZip :: "'a tstream \<rightarrow> 'b stream \<rightarrow> ('a \<times> '
 "xs\<noteq>\<bottom> \<Longrightarrow> 
   tsZip\<cdot>(tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>ts)\<cdot>xs = delayFun\<cdot>(tsZip\<cdot>ts\<cdot>xs)"
 
+declare tsZip.simps [simp del]
+
 lemma tszip_strict [simp]: 
 "tsZip\<cdot>\<bottom>\<cdot>\<epsilon> = \<bottom>"
 "tsZip\<cdot>ts\<cdot>\<epsilon> = \<bottom>"
 "tsZip\<cdot>\<bottom>\<cdot>s = \<bottom>"
 by (fixrec_simp)+
 
-lemma tszip_tslscons_fixrec: "x\<noteq>\<bottom>  \<Longrightarrow> ts\<noteq>\<bottom> \<Longrightarrow>               
+lemma tszip_tslscons_2msg [simp]: "x\<noteq>\<bottom>  \<Longrightarrow> ts\<noteq>\<bottom> \<Longrightarrow>               
   tsZip\<cdot>(tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>t))\<cdot>(tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>t2))\<cdot>ts))\<cdot>(x && xs) 
                             = tsMLscons\<cdot>(upApply2 Pair\<cdot>(up\<cdot>t)\<cdot>x)\<cdot>(tsZip\<cdot>(tsMLscons\<cdot>(up\<cdot>t2)\<cdot>ts)\<cdot>xs)"
 by (fixrec_simp)
 
-lemma tszip_tslscons_fixrec_tick: "x\<noteq>\<bottom> \<Longrightarrow>           
+lemma tszip_tslscons_msgtick [simp]: "x\<noteq>\<bottom> \<Longrightarrow>           
   tsZip\<cdot>(tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>t))\<cdot>(tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>ts))\<cdot>(lscons\<cdot>x\<cdot>xs)
                             = tsMLscons\<cdot>(upApply2 Pair\<cdot>(up\<cdot>t)\<cdot>x)\<cdot>(delayFun\<cdot>(tsZip\<cdot>ts\<cdot>xs))"
 by (fixrec_simp)
 
-lemma tszip_tslscons_tick_fixrec: "xs\<noteq>\<bottom> \<Longrightarrow> 
+lemma tszip_tslscons_tick [simp]: "xs\<noteq>\<bottom> \<Longrightarrow> 
   tsZip\<cdot>(tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>ts)\<cdot>xs = delayFun\<cdot>(tsZip\<cdot>ts\<cdot>xs)"
 by (fixrec_simp)
 
 lemma tszip_mlscons:
   "tsZip\<cdot>(tsMLscons\<cdot>(updis t)\<cdot>(tsMLscons\<cdot>(updis u)\<cdot>ts))\<cdot>((updis x) && xs)
                            = tsMLscons\<cdot>(updis (t,x))\<cdot>(tsZip\<cdot>(tsMLscons\<cdot>(updis u)\<cdot>ts)\<cdot>xs)"
-by (metis (no_types, lifting) tsmlscons_bot2 tsmlscons_lscons tszip_strict(3) tszip_tslscons_fixrec
+by (metis (no_types, lifting) tsmlscons_bot2 tsmlscons_lscons tszip_strict(3) tszip_tslscons_2msg
     up_defined upapply2_rep_eq)
 
 lemma tszip_mlscons_delayfun:
   "tsZip\<cdot>(tsMLscons\<cdot>(updis t)\<cdot>(delayFun\<cdot>ts))\<cdot>((updis x) && xs)
                            = tsMLscons\<cdot>(updis (t,x))\<cdot>(delayFun\<cdot>(tsZip\<cdot>ts\<cdot>xs))"
-by (metis (no_types, lifting) delayfun_tslscons tsmlscons_lscons tszip_tslscons_fixrec_tick 
+by (metis (no_types, lifting) delayfun_tslscons tsmlscons_lscons tszip_tslscons_msgtick 
     up_defined upapply2_rep_eq)
 
 lemma tszip_delayfun: "xs\<noteq>\<epsilon> \<Longrightarrow> tsZip\<cdot>(delayFun\<cdot>ts)\<cdot>xs = delayFun\<cdot>(tsZip\<cdot>ts\<cdot>xs)"
