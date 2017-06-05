@@ -27,6 +27,16 @@ definition tsMed :: "'a tstream \<rightarrow> bool stream \<rightarrow> 'a tstre
 lemma tsmed_insert: "tsMed\<cdot>msg\<cdot>ora = tsProjFst\<cdot>(tsFilter {x. snd x}\<cdot>(tsZip\<cdot>msg\<cdot>ora))"
 by (simp add: tsMed_def)
 
+lemma tsmed_delayfun: "ora \<noteq> \<bottom>\<Longrightarrow> tsMed\<cdot>(delayFun\<cdot>ts)\<cdot>ora = delayFun\<cdot>(tsMed\<cdot>ts\<cdot>ora)"
+  oops
+    
+    (* assumtions are missing. add them as needed. ts\<noteq>\<bottom> and ora\<noteq>\<bottom>*)
+lemma tsmed_mlscons_true: "tsMed\<cdot>(tsMLscons\<cdot>t\<cdot>ts)\<cdot>((updis True) && ora) = tsMLscons\<cdot>t\<cdot>(tsMed\<cdot>ts\<cdot>ora)"
+  oops
+    
+lemma tsmed_mlscons_false: "tsMed\<cdot>(tsMLscons\<cdot>t\<cdot>ts)\<cdot>((updis False) && ora) = tsMed\<cdot>ts\<cdot>ora"
+  oops
+    
 lemma tsmed_slen_leq:
   shows "#(Rep_tstream (tsMed\<cdot>msg\<cdot>ora)) \<le> #(Rep_tstream msg)"
 oops
