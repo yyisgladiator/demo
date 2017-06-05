@@ -305,8 +305,15 @@ by (simp add: Rep_tstream_inverse)
 lemma [simp]:"ts_well (Rep_tstream ts)"
 using Rep_tstream by blast
 
+lemma msg_nwell [simp]: "\<not>ts_well (\<up>(Msg m))"
+apply (simp add: ts_well_def, auto)
+by (metis Inf'_neq_0 event.distinct(1) fold_inf inf_ub inject_lnsuc less_le lscons_conv sfoot1
+    sfoot_one slen_scons strict_slen sup'_def)
 
-
+lemma msg_nwell2: "t\<noteq>\<bottom> \<Longrightarrow> t\<noteq>updis \<surd> \<Longrightarrow> \<not>ts_well (t && \<bottom>)"
+apply (simp add: ts_well_def, auto)
+using sfilter_srt_sinf apply fastforce
+by (metis sfoot1 sfoot_one sup'_def updis_exists)
 
 (* tsDom *)
 thm tsDom_def
@@ -2528,10 +2535,10 @@ lemma tsmlscons_bot2[simp]: "tsMLscons\<cdot>t\<cdot>\<bottom> = \<bottom>"
 lemma tsmlscons_nbot[simp]: "t\<noteq>\<bottom>\<Longrightarrow>ts \<noteq>\<bottom> \<Longrightarrow> tsMLscons\<cdot>t\<cdot>ts \<noteq>\<bottom>"    
   by(simp add: tsMLscons_def)    
 
-lemma tsmlscons_lscons: "tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>t))\<cdot>ts = tsMLscons\<cdot>(up\<cdot>t)\<cdot>ts"
+lemma tsmlscons_lscons: "tsMLscons\<cdot>(up\<cdot>t)\<cdot>ts = tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>t))\<cdot>ts"
   by(simp add: uMsg_def tsMLscons_def)
 
-lemma tsmlscons_lscons2: "tsLscons\<cdot>(updis (Msg t))\<cdot>ts = tsMLscons\<cdot>(updis t)\<cdot>ts"
+lemma tsmlscons_lscons2: "tsMLscons\<cdot>(updis t)\<cdot>ts = tsLscons\<cdot>(updis (Msg t))\<cdot>ts"
       by(simp add: tsMLscons_def)
 
 lemma tsmlscons_lscons3: "ts\<noteq>\<bottom> \<Longrightarrow> Rep_tstream (tsMLscons\<cdot>(updis t)\<cdot>ts) = (updis (Msg t)) && Rep_tstream ts"
@@ -2561,7 +2568,29 @@ lemma delayfun_tslscons: "delayFun\<cdot>ts = tsLscons\<cdot>(up\<cdot>DiscrTick
 by (simp add: delayFun_def tslscons_insert tsconc_insert DiscrTick_def espf2tspf_def lscons_conv)
 
 lemma delayfun_tslscons_bot: "delayFun\<cdot>\<bottom> = tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>\<bottom>"
-by (simp add: delayfun_tslscons tick_eq_discrtick)    
+by (simp add: delayfun_tslscons tick_eq_discrtick)  
+
+(* ----------------------------------------------------------------------- *)
+subsection {* Abs_tstream converter  *}
+(* ----------------------------------------------------------------------- *)
+
+lemma absts2tslscons: "ts_well (t&&ts) \<Longrightarrow> Abs_tstream (t&&ts) = tsLscons\<cdot>t\<cdot>(Abs_tstream ts)"
+apply (simp add: tslscons_insert, auto)
+apply (metis Abs_tstream_bottom_iff mem_Collect_eq stream.con_rews(2) stream.sel_rews(5)
+       ts_well_drop1 msg_nwell2)
+apply (metis Rep_Abs espf2tspf_def stream.con_rews(2) stream.sel_rews(5) ts_well_drop1)
+by (metis Rep_Abs espf2tspf_def stream.sel_rews(5) ts_well_drop1 up_defined)
+  
+lemma absts2tsmlscons_msg: "ts_well (updis (Msg m) && ts) \<Longrightarrow> 
+  Abs_tstream ((updis (Msg m))&&ts) = tsMLscons\<cdot>(updis m)\<cdot>(Abs_tstream ts)"
+by(simp add: tsMLscons_def absts2tslscons)
+
+lemma absts2tsmlscons_msg2: "ts_well (\<up>(Msg m) \<bullet>  ts) \<Longrightarrow> 
+  Abs_tstream (\<up>(Msg m) \<bullet>  ts) = tsMLscons\<cdot>(updis m)\<cdot>(Abs_tstream ts)"
+by (metis absts2tsmlscons_msg lscons_conv)
+
+lemma absts2delayfun: "ts_well ts \<Longrightarrow> Abs_tstream (updis \<surd>&&ts) = delayFun\<cdot>(Abs_tstream ts)"
+by (metis delayfun_abststream)
       
 (************************************************)
 (************************************************)      
@@ -2641,7 +2670,7 @@ setup \<open>
 \<close>
   
 (* ----------------------------------------------------------------------- *)
-subsection {* tsZip  *}
+subsection {* tsZip *}
 (* ----------------------------------------------------------------------- *)     
   
 fixrec tsZip :: "'a tstream \<rightarrow> 'b stream \<rightarrow> ('a \<times> 'b) tstream" where

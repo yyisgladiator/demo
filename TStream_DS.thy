@@ -7,9 +7,71 @@
 
 theory TStream_DS
  
-imports TStream
+imports TStream "~~/src/HOL/HOLCF/Library/Option_Cpo"
 
 begin  
+
+(* ----------------------------------------------------------------------- *)
+subsection {* tsRemDups *}
+(* ----------------------------------------------------------------------- *)   
+    
+fixrec tsRemDups :: "('a :: countable) tstream \<rightarrow> 'a discr option \<rightarrow> 'a tstream" where
+(* Ignore ticks *)
+"tsRemDups\<cdot>(tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>ts)\<cdot>option = delayFun\<cdot>(tsRemDups\<cdot>ts\<cdot>option)"  | 
+
+(* Handle first message *)
+"ts\<noteq>\<bottom> \<Longrightarrow> tsRemDups\<cdot>(tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>t))\<cdot>ts)\<cdot>None = tsMLscons\<cdot>(up\<cdot>t)\<cdot>(tsRemDups\<cdot>ts\<cdot>(Some t))" | 
+
+(* Handle duplicate message *)
+"ts\<noteq>\<bottom> \<Longrightarrow> tsRemDups\<cdot>(tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>t))\<cdot>ts)\<cdot>(Some a) = (if t=a then (tsRemDups\<cdot>ts\<cdot>(Some t)) else tsMLscons\<cdot>(up\<cdot>t)\<cdot>(tsRemDups\<cdot>ts\<cdot>(Some t)))"   
+
+lemma tsremdups_strict [simp]: 
+"tsRemDups\<cdot>\<bottom>\<cdot>a = \<bottom>"
+by (fixrec_simp)
+
+lemma tsremdups_tslscons_fixrec: 
+  "ts\<noteq>\<bottom> \<Longrightarrow> tsRemDups\<cdot>(tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>t))\<cdot>ts)\<cdot>None = tsMLscons\<cdot>(up\<cdot>t)\<cdot>(tsRemDups\<cdot>ts\<cdot>(Some t))"
+by (fixrec_simp)
+
+lemma tsremdups_tslscons_fixrec2: 
+  "ts\<noteq>\<bottom> \<Longrightarrow> tsRemDups\<cdot>(tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>t))\<cdot>ts)\<cdot>(Some a) 
+          = (if t=a then (tsRemDups\<cdot>ts\<cdot>(Some t)) else tsMLscons\<cdot>(up\<cdot>t)\<cdot>(tsRemDups\<cdot>ts\<cdot>(Some t)))"
+by (fixrec_simp)
+
+lemma tsremdups_tslscons_tick_fixrec: 
+  "tsRemDups\<cdot>(tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>ts)\<cdot>option = delayFun\<cdot>(tsRemDups\<cdot>ts\<cdot>option)"
+by (fixrec_simp)
+
+(* Handle first message *)
+lemma tsremdups_mlscons:
+"ts\<noteq>\<bottom> \<Longrightarrow> tsRemDups\<cdot>(tsMLscons\<cdot>(up\<cdot>t)\<cdot>ts)\<cdot>None = tsMLscons\<cdot>(up\<cdot>t)\<cdot>(tsRemDups\<cdot>ts\<cdot>(Some t))"
+by (simp add: tsmlscons_lscons)
+
+(* Handle duplicate message *)
+lemma tsremdups_mlscons_dup: "ts\<noteq>\<bottom> \<Longrightarrow> tsRemDups\<cdot>(tsMLscons\<cdot>(up\<cdot>t)\<cdot>ts)\<cdot>(Some t) = tsRemDups\<cdot>ts\<cdot>(Some t)"
+by (simp add: tsmlscons_lscons)
+
+(* Handle message *)
+lemma tsremdups_mlscons_ndup:
+"ts\<noteq>\<bottom> \<Longrightarrow> t\<noteq>a \<Longrightarrow> tsRemDups\<cdot>(tsMLscons\<cdot>(up\<cdot>t)\<cdot>ts)\<cdot>(Some  a) = tsMLscons\<cdot>(up\<cdot>t)\<cdot>(tsRemDups\<cdot>ts\<cdot>(Some t))"
+by (simp add: tsmlscons_lscons)
+
+lemma tsremdups_delayfun: "tsRemDups\<cdot>(delayFun\<cdot>ts)\<cdot>a = delayFun\<cdot>(tsRemDups\<cdot>ts\<cdot>a)"
+by (simp add: delayfun_tslscons)
+
+
+  
+lift_definition tsExampIn :: "nat tstream" is "<[Msg 1, Msg 2, \<surd>, Msg 2, \<surd>]>"
+by (simp add: ts_well_def)
+
+lift_definition tsExampResult :: "nat tstream" is "<[Msg 1, Msg 2, \<surd>,  \<surd>]>"  
+by (simp add: ts_well_def)
+
+lemma "tsRemDups\<cdot>tsExampIn\<cdot>None = tsExampResult"
+apply (simp only: tsExampIn_def tsExampResult_def)
+oops
+
+
 
 lemma 
   "tsZip\<cdot>(Abs_tstream (<[Msg 1, \<surd>, Msg 2, \<surd>]>))\<cdot>(<[True, False]>) = Abs_tstream (<[Msg (1, True), \<surd>, Msg (2, False), \<surd>]>)"
@@ -75,7 +137,6 @@ definition tsZip_h :: "'a event stream \<rightarrow> 'b stream \<rightarrow> ('a
 
 definition tsZip :: "'a tstream \<rightarrow> 'b stream \<rightarrow> ('a \<times> 'b) tstream" where
 "tsZip \<equiv> \<Lambda> ts s. Abs_tstream (tsZip_h\<cdot>(Rep_tstream ts)\<cdot>s)"
-*)
 
 definition tsRemDups_h :: "'a option event \<Rightarrow> 'a option event stream \<rightarrow> 'a option event stream" where
 "tsRemDups_h \<equiv> fix\<cdot>(\<Lambda> h. (\<lambda> q. (\<Lambda> s. if s = \<epsilon> then \<epsilon> 
@@ -86,5 +147,6 @@ definition tsRemDups_h :: "'a option event \<Rightarrow> 'a option event stream 
 (* ToDo: New Version with fixrec *)
 definition tsRemDups :: "'a tstream \<rightarrow> 'a tstream" where
 "tsRemDups \<equiv> \<Lambda> ts. Abs_tstream (smap (\<lambda>x. case x of Msg (Some m) \<Rightarrow> (Msg m))\<cdot>(tsRemDups_h (\<M> None)\<cdot>(Rep_tstream (tsMap Some\<cdot>ts))))"
+*)
 
 end  

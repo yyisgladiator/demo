@@ -7,7 +7,7 @@ and "first element is Message" *)
    sebastian.stueber@rwth-aachen.de *)
   
   
-imports TStream "~~/src/HOL/HOLCF/Library/Option_Cpo"
+imports TStream TStream_DS "~~/src/HOL/HOLCF/Library/Option_Cpo"
 
 begin
 
@@ -120,64 +120,7 @@ lemma "tsAbsNew\<cdot>ts= tsAbs\<cdot>ts"
     
 
     
-    (* tsRemDups Prototyping *)
-    
-fixrec tsRemDups:: "('a::countable) tstream \<rightarrow> 'a discr option \<rightarrow> 'a tstream" where
-"tsRemDups\<cdot>(tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>ts)\<cdot>option = delayFun\<cdot>(tsRemDups\<cdot>ts\<cdot>option)"  | (* Ignore ticks *)
-"ts\<noteq>\<bottom> \<Longrightarrow> tsRemDups\<cdot>(tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>t))\<cdot>ts)\<cdot>None = tsMLscons\<cdot>(up\<cdot>t)\<cdot>(tsRemDups\<cdot>ts\<cdot>(Some t))" | (* Handle first Message *)
-"ts\<noteq>\<bottom> \<Longrightarrow> tsRemDups\<cdot>(tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>t))\<cdot>ts)\<cdot>(Some a) = (if t=a then (tsRemDups\<cdot>ts\<cdot>(Some t)) else tsMLscons\<cdot>(up\<cdot>t)\<cdot>(tsRemDups\<cdot>ts\<cdot>(Some t)))"   (* Handle duplicate Message *)
 
-
-(* Element ist gleich dem letzten Element \<Rightarrow> Löschen *)
-lemma "ts\<noteq>\<bottom>\<Longrightarrow> tsRemDups\<cdot>(tsMLscons\<cdot>(up\<cdot>t)\<cdot>ts)\<cdot>(Some t) = tsRemDups\<cdot>ts\<cdot>(Some t)"
-by(simp add: tsmlscons2tslscons)
-
-  (* Anderes Element. Speichern und ausgeben *)
-lemma "ts\<noteq>\<bottom>\<Longrightarrow> t\<noteq>a\<Longrightarrow>tsRemDups\<cdot>(tsMLscons\<cdot>(up\<cdot>t)\<cdot>ts)\<cdot>(Some  a) = tsMLscons\<cdot>(up\<cdot>t)\<cdot>(tsRemDups\<cdot>ts\<cdot>(Some t))"
-by(simp add: tsmlscons2tslscons)
-  
-  
-lift_definition tsExampIn :: "nat tstream" is "<[Msg 1, Msg 2, \<surd>, Msg 2, \<surd>]>"  
-  by(simp add: ts_well_def)
-
-lift_definition tsExampResult :: "nat tstream" is "<[Msg 1, Msg 2, \<surd>,  \<surd>]>"  
-  by(simp add: ts_well_def)
-
-lemma tsmsg_notwell2 [simp]: "\<not>ts_well (\<up>(Msg m))"
-  apply(simp add: ts_well_def, auto)
-  by (metis Inf'_neq_0 event.distinct(1) fold_inf inf_ub inject_lnsuc less_le lscons_conv sfoot1 sfoot_one slen_scons strict_slen sup'_def)
-    
-      
-lemma tsmsg_notwell: "t\<noteq>updis \<surd> \<Longrightarrow> \<not>ts_well (t && \<bottom>)"
-  apply(simp add: ts_well_def)
-  sorry
-    
-  
-lemma tslscons2ts: "ts_well (t&&ts) \<Longrightarrow> Abs_tstream (t&&ts) = tsLscons\<cdot>t\<cdot>(Abs_tstream ts)"
-  apply(subst tslscons_insert, auto simp add: espf2tspf_def)
-  apply (metis tsmsg_notwell lscons_well stream.con_rews(1) up_defined)
-  apply (metis Rep_Abs stream.con_rews(2) stream.sel_rews(5) ts_well_drop1)
-  by (metis Rep_tstream_strict induction_tstream.tsmsg_notwell stream.con_rews(1) ts_well_Rep)  
-
-    thm delayfun_abststream
-lemma tsdelay2ts: "ts_well ts \<Longrightarrow> Abs_tstream ((updis \<surd>)&&ts) = delayFun\<cdot>(Abs_tstream ts)"
-  by (metis delayfun_abststream)
-
-lemma tsmessage2ts: "ts_well ((updis (Msg m)) && ts) \<Longrightarrow> Abs_tstream ((updis (Msg m))&&ts) = tsMLscons\<cdot>(updis m)\<cdot>(Abs_tstream ts)"
-  by(simp add: tsMLscons_def tslscons2ts)
-
-lemma tsmessage2ts2: "ts_well (\<up>(Msg m) \<bullet>  ts) \<Longrightarrow> Abs_tstream (\<up>(Msg m) \<bullet>  ts) = tsMLscons\<cdot>(updis m)\<cdot>(Abs_tstream ts)"
-  by (metis lscons_conv tsmessage2ts)
-  
-
-        thm lscons_conv
-lemma "tsRemDups\<cdot>tsExampIn\<cdot>None = tsExampResult"
-  apply(simp add: tsExampIn_def tsExampResult_def)
-  apply(simp add: tsmessage2ts2 ts_well_def tsmlscons2tslscons)
-  oops
-    
-
-    (* ToDo ... run the example on tsRemDups *)
 
     
     
