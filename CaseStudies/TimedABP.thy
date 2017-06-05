@@ -35,9 +35,26 @@ lemma tsmed_slen[simp]: assumes "#({True} \<ominus> ora)=\<infinity>" and "#(tsA
   shows "#(tsAbs\<cdot>(tsMed\<cdot>msg\<cdot>ora)) = \<infinity>"
 oops
 
-lemma "#s=\<infinity> \<Longrightarrow> tsMed\<cdot>tsInfTick\<cdot>s = tsInfTick"
+lemma tsmed_inftick [simp]: "#s=\<infinity> \<Longrightarrow> tsMed\<cdot>tsInfTick\<cdot>s = tsInfTick"
 oops
- 
+
+lemma tsmed_trues [simp]: "tsMed\<cdot>ts\<cdot>((\<up>True) \<infinity>) = ts"
+oops
+
+
+(* Some more complicated stuff, first show the testings below *)
+
+  (* You can reduce 2 mediums to one medium *)
+lemma tsmeds2med: obtains o3 where "tsMed\<cdot>(tsMed\<cdot>ts\<cdot>o1)\<cdot>o2= tsMed\<cdot>ts\<cdot>o3"
+  oops
+
+lemma tsmed2infmed: assumes "#({True} \<ominus> o1)=\<infinity>" and "#({True} \<ominus> o2)=\<infinity>" 
+    obtains o3 where "tsMed\<cdot>(tsMed\<cdot>ts\<cdot>o1)\<cdot>o2= tsMed\<cdot>ts\<cdot>o3" and "#({True} \<ominus> o3)=\<infinity>"
+  oops    
+
+lemma tsmed_map: "tsMed\<cdot>(tsMap f\<cdot>ts)\<cdot>oracle = tsMap f\<cdot>(tsMed\<cdot>ts\<cdot>oracle)"
+  oops
+    
 (* ----------------------------------------------------------------------- *)
 section {* Receiver *}
 (* ----------------------------------------------------------------------- *)
@@ -66,6 +83,7 @@ by (simp add: tsmed_insert)
 (* ToDo: Lemmata for Testing the medium. Proof sketch for first lemma.
          Other lemmata analogously. Alternatively use tsMLscons representation *)
 
+  (* SWS: these lemmata might be helpful to test the medium. Might...
 lemma h1_f1: "tsZip\<cdot>(Abs_tstream (<[Msg 1, \<surd>, Msg 2, \<surd>, Msg 3, \<surd>]>))\<cdot>(\<up>True \<infinity>) 
            = Abs_tstream (<[Msg (1, True), \<surd>, Msg (2, True), \<surd>, Msg (3, True), \<surd>]>)"
 oops
@@ -78,7 +96,7 @@ oops
 lemma h3_f1: "tsProjFst\<cdot>(Abs_tstream (<[\<M> (1, True), \<surd>, \<M> (2, True), \<surd>, \<M> (3, True), \<surd>]>)) 
                    = Abs_tstream (<[\<M> 1, \<surd>, \<M> 2, \<surd>, \<M> 3, \<surd>]>)"
 oops
-
+*)
 lemma "tsMed\<cdot>OneTwoThree\<cdot>((\<up>True) \<infinity>) = OneTwoThree"
 oops
 
