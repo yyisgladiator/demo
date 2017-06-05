@@ -118,21 +118,6 @@ proof -
     using f11 f10 f9 f8 f7 f6 f5 f4 by (metis (no_types) delayfun_insert list2s.simps(2) list2s_0 lscons_conv tsmlscons_lscons4 tszip_mlscons_delayfun tszip_strict(2))
 qed
 
-(* ToDo: useful for tsMLscons representation *)
-lemma tsmap_mlscons:
-  "ts \<noteq> \<bottom> \<Longrightarrow> tsMap f\<cdot>(tsMLscons\<cdot>(updis t)\<cdot>ts) = tsMLscons\<cdot>(updis (f t))\<cdot>(tsMap f\<cdot>ts)"
-oops
-
-lemma tsmap_delayfun: "tsMap f\<cdot>(delayFun\<cdot>ts) = delayFun\<cdot>(tsMap f\<cdot>ts)"
-oops
-
-lemma tsfilter_mlscons:
-  "ts \<noteq> \<bottom> \<Longrightarrow> tsFilter M\<cdot>(tsMLscons\<cdot>(updis t)\<cdot>ts) = tsMLscons\<cdot>(updis t)\<cdot>(tsFilter M\<cdot>ts)"
-oops
-
-lemma tsfilter_delayfun: "tsFilter M\<cdot>(delayFun\<cdot>ts) = delayFun\<cdot>(tsFilter M\<cdot>ts)"
-oops
-
 (*
 definition tsZip_h :: "'a event stream \<rightarrow> 'b stream \<rightarrow> ('a \<times> 'b) event stream" where
 "tsZip_h \<equiv> fix\<cdot>(\<Lambda> h s q. if s = \<epsilon> \<or> q = \<epsilon> then \<epsilon> 
