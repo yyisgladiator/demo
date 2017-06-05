@@ -68,10 +68,16 @@ lift_definition tsExampResult :: "nat tstream" is "<[Msg 1, Msg 2, \<surd>,  \<s
 by (simp add: ts_well_def)
 
 lemma "tsRemDups\<cdot>tsExampIn\<cdot>None = tsExampResult"
-apply (simp only: tsExampIn_def tsExampResult_def)
-oops
-
-
+apply (simp add: tsExampIn_def tsExampResult_def)
+apply (subst absts2tsmlscons_msg2)
+apply (metis One_nat_def eq_onp_same_args list2s.simps(1) list2s.simps(2) lscons_conv sup'_def 
+       tsExampIn.rsp)
+apply (subst absts2tsmlscons_msg2)
+apply (metis sconc_scons ts_well_conc1 ts_well_sing_conc)
+by (smt Abs_tstream_strict Rep_Abs Rep_tstream_strict absts2delayfun absts2tsmlscons_msg2
+    discr.inject lscons_conv lscons_well n_not_Suc_n numeral_2_eq_2 sinftimes_unfold strictI
+    strict_icycle sup'_def tick_msg ts_well_conc tslscons_bot2 tslscons_nbot2 tsmlscons_lscons
+    tsremdups_delayfun tsremdups_mlscons tsremdups_strict tsremdups_tslscons_fixrec2)
 
 lemma 
   "tsZip\<cdot>(Abs_tstream (<[Msg 1, \<surd>, Msg 2, \<surd>]>))\<cdot>(<[True, False]>) = Abs_tstream (<[Msg (1, True), \<surd>, Msg (2, False), \<surd>]>)"
