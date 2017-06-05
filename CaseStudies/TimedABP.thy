@@ -8,7 +8,7 @@
 chapter {* Alternating Bit Protocol *}       
                                                             
 theory TimedABP
-imports "../TStream" "../TStream_DS"
+imports "../TStream"
 
 begin
 
@@ -41,10 +41,10 @@ oops
 (* ----------------------------------------------------------------------- *)
 section {* Receiver *}
 (* ----------------------------------------------------------------------- *)
-
+(*
 definition tsRec :: "('a \<times> 'b) tstream \<rightarrow> ('b tstream \<times> 'a tstream)" where
 "tsRec \<equiv> \<Lambda> dat. (tsProjSnd\<cdot>dat, tsProjFst\<cdot>(tsRemDups\<cdot>dat))"
-
+*)
 (* ----------------------------------------------------------------------- *)
 section {* Testing *}
 (* ----------------------------------------------------------------------- *)
