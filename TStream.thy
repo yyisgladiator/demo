@@ -2558,7 +2558,13 @@ lemma delayfun_tslscons: "delayFun\<cdot>ts = tsLscons\<cdot>(up\<cdot>DiscrTick
 by (simp add: delayFun_def tslscons_insert tsconc_insert DiscrTick_def espf2tspf_def lscons_conv)
 
 lemma delayfun_tslscons_bot: "delayFun\<cdot>\<bottom> = tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>\<bottom>"
-by (simp add: delayfun_tslscons tick_eq_discrtick)  
+by (simp add: delayfun_tslscons tick_eq_discrtick)
+
+lemma delayfun2tsinftick: assumes "\<And>ts. f\<cdot>(delayFun\<cdot>ts) = delayFun\<cdot>(f\<cdot>ts)"
+  shows "f\<cdot>tsInfTick = tsInfTick"
+apply (simp add: tsInfTick_def)
+by (metis (no_types, lifting) Rep_Abs assms delayfun_insert s2sinftimes sinftimes_unfold tick_msg
+    tsInfTick.rep_eq tsconc_insert tsconc_rep_eq) 
 
 (* ----------------------------------------------------------------------- *)
 subsection {* Abs_tstream converter *}
