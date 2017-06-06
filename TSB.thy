@@ -218,7 +218,7 @@ subsubsection \<open>tsbDom\<close>
 thm tsbDom_def
 
 
-lemma [simp]: "cont (\<lambda> tb. dom (Rep_TSB tb))"
+lemma tsbdom_cont[simp]: "cont (\<lambda> tb. dom (Rep_TSB tb))"
   by (simp add: cont_compose)
 
 lemma tsbdom_insert: "tsbDom\<cdot>tb = dom (Rep_TSB tb)"
@@ -231,12 +231,16 @@ by(simp add: tsbdom_insert)
 lemma tsbdom_below: assumes "tb1 \<sqsubseteq> tb2"
   shows "tsbDom\<cdot>tb1 = tsbDom\<cdot>tb2"
   by (metis assms below_TSB_def part_dom_eq tsbdom_insert)
+    
+lemma tsbChain_dom_eq3: assumes "chain S"
+  shows "tsbDom\<cdot>(S i) = tsbDom\<cdot>(S j)"
+  using assms is_ub_thelub tsbdom_below by blast
 
 lemma tsbChain_dom_eq2[simp]: assumes "chain S"
   shows "tsbDom\<cdot>(S i) = tsbDom\<cdot>(\<Squnion>j. S j)"
   by (simp add: assms is_ub_thelub tsbdom_below)
 
-lemma [simp]: assumes "c\<in>tsbDom\<cdot>tsb"
+lemma tsdom_ctype_subset[simp]: assumes "c\<in>tsbDom\<cdot>tsb"
   shows "tsDom\<cdot>(Rep_TSB tsb)\<rightharpoonup>c \<subseteq> ctype c"
   using assms by(simp add: tsbdom_insert)
 
@@ -262,6 +266,15 @@ lemma tsbgetch_rep_eq: "tsb_well tb \<Longrightarrow> (Abs_TSB tb) . c = tb\<rig
 by(simp add: tsbgetch_insert)
 
 
+lemma tsbgetchE: assumes "c \<in> tsbDom\<cdot>tsb"
+  shows "Some (tsb . c) = (Rep_TSB tsb) c"
+  by (metis assms domD is_none_code(2) is_none_simps(1) option.collapse tsbdom_insert 
+            tsbgetch_insert)
+  
+
+          
+subsubsection \<open>eq/below\<close>  
+  
 lemma tsb_tick_eq2: assumes "c1\<in>tsbDom\<cdot>f" and "c2\<in>tsbDom\<cdot>f"
   shows "#\<surd> f . c1 = #\<surd> f . c2"
   using assms by(simp add: tsbdom_insert tsbgetch_insert tsb_tick_eq)
@@ -276,9 +289,52 @@ lemma tsb_eq: assumes "tsbDom\<cdot>x = tsbDom\<cdot>y" and "\<And> c. c\<in>tsb
   by (metis Rep_TSB_inject assms(1) assms(2) part_eq tsbdom_insert tsbgetch_insert)
 
 
+lemma tsbgetch_eq2: "b = Abs_TSB(\<lambda> c. (c \<in> tsbDom\<cdot>b) \<leadsto> b . c)"
+  apply (rule tsb_eq)
+   apply (subst tsbdom_rep_eq)
+    apply (smt Collect_cong Rep_TSB dom_def mem_Collect_eq option.collapse part_eq tsbdom_insert tsbgetch_insert)
+    apply (simp)
+    by (smt Collect_cong Rep_TSB_inverse dom_def mem_Collect_eq part_eq tsbdom_insert tsbgetchE)
+    
+
+subsubsection \<open>tsbLeast\<close>
+  
+lemma tsbleast_well [simp]: "tsb_well (optionLeast cs)"
+  by(simp add: tsb_well_def)
+
+lemma tsbleast_tsdom [simp]: "tsbDom\<cdot>(tsbLeast cs) = cs"
+  by(simp add: tsbLeast_def tsbDom_def)
+
+lemma tsbleast_getch[simp]:  assumes "c\<in>cs"
+  shows "tsbLeast cs  .  c = \<bottom>"
+  by(simp add: tsbLeast_def tsbgetch_insert assms)
+
+lemma tsbleast_below [simp]: assumes "cs = tsbDom\<cdot>b"
+  shows "tsbLeast cs \<sqsubseteq> b"
+proof -
+  have "\<And> c. c \<in> cs \<Longrightarrow> tsbLeast cs . c \<sqsubseteq> b . c"
+    by simp
+  thus ?thesis
+    apply (subst tsb_below)
+    by (simp_all add: assms)
+qed
+  
+lemma tsb_chain_allempty: assumes "chain Y" and "tsbLeast {} \<in> range Y"
+  shows "\<And>i. (Y i) = tsbLeast {}"
+    
+  
 
 
+subsubsection \<open>TSB\<close>
+    
+lemma tsb_tsbleast [simp]:  "tsbLeast cs \<in> TSB cs"
+  by (simp add: TSB_def)
 
+lemma tsb_exists [simp]: "\<exists>tb. tb\<in>(TSB cs)"
+  using tsb_tsbleast by blast
+
+lemma [simp]: assumes "tb\<in>(TSB cs)" shows "tsbDom\<cdot>tb = cs"
+  using TSB_def assms by auto
 
 
 
@@ -358,30 +414,6 @@ lemma tsbgetch_restrict [simp]: assumes "c \<in>cs"
 
 
 
-subsubsection \<open>tsbLeast\<close>
-  
-lemma [simp]: "tsb_well (optionLeast cs)"
-  by(simp add: tsb_well_def)
-
-lemma tsbleast_tsdom[simp]: "tsbDom\<cdot>(tsbLeast cs) = cs"
-  by(simp add: tsbLeast_def tsbDom_def)
-
-lemma [simp]:  assumes "c\<in>cs"
-  shows "tsbLeast cs  .  c = \<bottom>"
-  by(simp add: tsbLeast_def tsbgetch_insert assms)
-
-
-
-
-(* TSB *)
-lemma tsb_tsbleast [simp]:  "tsbLeast cs \<in> TSB cs"
-  by (simp add: TSB_def)
-
-lemma tsb_exists [simp]: "\<exists>tb. tb\<in>(TSB cs)"
-  using tsb_tsbleast by blast
-
-lemma [simp]: assumes "tb\<in>(TSB cs)" shows "tsbDom\<cdot>tb = cs"
-  using TSB_def assms by auto
 
 
 
