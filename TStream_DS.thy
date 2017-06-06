@@ -71,13 +71,13 @@ by (simp add: delayfun_tslscons)
 
   
 lift_definition tsExampIn :: "nat tstream" is "<[Msg 1, Msg 2, \<surd>, Msg 2, \<surd>]>"
-by (simp add: ts_well_def)
+by (subst ts_well_def, auto)
 
 lift_definition tsExampResult :: "nat tstream" is "<[Msg 1, Msg 2, \<surd>,  \<surd>]>"  
-by (simp add: ts_well_def)
+by (subst ts_well_def, auto)
 
 lemma "tsRemDups\<cdot>tsExampIn = tsExampResult"
-apply (simp add: tsExampIn_def tsExampResult_def tsRemDups_def)
+apply (simp add: tsExampIn_def tsExampResult_def tsRemDups_insert)
 apply (subst absts2tsmlscons_msg2)
 apply (metis One_nat_def eq_onp_same_args list2s.simps(1) list2s.simps(2) lscons_conv sup'_def 
        tsExampIn.rsp)

@@ -95,19 +95,18 @@ lemma tsmed_map: "tsMed\<cdot>(tsMap f\<cdot>msg)\<cdot>ora = tsMap f\<cdot>(tsM
 oops
 
 (* ----------------------------------------------------------------------- *)
-section {* Testing *}
+section {* testing *}
 (* ----------------------------------------------------------------------- *)
 
 text {* equivalence classes: empty tstream, finite tstream, infinite tstream *}
 
 (* ----------------------------------------------------------------------- *)
-subsection {* Medium *}
+subsection {* medium *}
 (* ----------------------------------------------------------------------- *)
 
 lift_definition OneTwoThree :: "nat tstream" is
   "<[Msg 1, \<surd>, Msg 2, \<surd>, Msg 3, \<surd>]>"
-by (metis (no_types, lifting) assoc_sconc list2s.simps(1) list2s.simps(2) lscons_conv sup'_def
-    ts_well_conc1 ts_well_sing_conc)
+by (subst ts_well_def, auto)
 
 lemma "tsMed\<cdot>\<bottom>\<cdot>((\<up>True) \<infinity>) = \<bottom>"
 by (simp add: tsmed_insert)
