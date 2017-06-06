@@ -37,26 +37,6 @@ by (simp add: tsRecSnd_def)
 lemma tsrecsnd_strict [simp]: "tsRecSnd\<cdot>\<bottom> = \<bottom>"
 oops
 
-lemma tsrecsnd_mlscons_dup:
-  "tsRecSnd\<cdot>(tsMLscons\<cdot>(updis (d1, d2))\<cdot>(tsMLscons\<cdot>(updis (d1, d4))\<cdot>dat))
-         = tsMLscons\<cdot>(updis d1)\<cdot>(tsRecSnd\<cdot>dat)"
-oops
-
-lemma tsrecsnd_mlscons_ndup: "d1\<noteq>d3 \<Longrightarrow>
-  tsRecSnd\<cdot>(tsMLscons\<cdot>(updis (d1, d2))\<cdot>(tsMLscons\<cdot>(updis (d3, d4))\<cdot>dat))
-         = tsMLscons\<cdot>(updis d1)\<cdot>(tsMLscons\<cdot>(updis d3)\<cdot>(tsRecSnd\<cdot>dat))"
-oops
-
-lemma tsrecsnd_mlscons_delayfun_dup: 
-  "tsRecSnd\<cdot>(tsMLscons\<cdot>(updis (d1, d2))\<cdot>(delayFun\<cdot>(tsMLscons\<cdot>(updis (d1, d4))\<cdot>dat)))
-          = tsMLscons\<cdot>(updis d1)\<cdot>(delayFun\<cdot>(tsRecSnd\<cdot>dat))"
-oops
-
-lemma tsrecsnd_mlscons_delayfun_ndup: "d1\<noteq>d3 \<Longrightarrow>
-  tsRecSnd\<cdot>(tsMLscons\<cdot>(updis (d1, d2))\<cdot>(delayFun\<cdot>(tsMLscons\<cdot>(updis (d3, d4))\<cdot>dat)))
-         = tsMLscons\<cdot>(updis d1)\<cdot>(delayFun\<cdot>(tsMLscons\<cdot>(updis d3)\<cdot>(tsRecSnd\<cdot>dat)))"
-oops
-
 lemma tsrecsnd_delayfun: "tsRecSnd\<cdot>(delayFun\<cdot>dat) = delayFun\<cdot>(tsRecSnd\<cdot>dat)"
 oops
 
