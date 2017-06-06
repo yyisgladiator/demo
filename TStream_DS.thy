@@ -28,8 +28,11 @@ fixrec tsRemDups_h :: "'a tstream \<rightarrow> 'a discr option \<rightarrow> 'a
 
 declare tsRemDups_h.simps [simp del]
 
-definition tsRemDups :: "('a::countable) tstream \<rightarrow> 'a tstream" where
+definition tsRemDups :: "'a tstream \<rightarrow> 'a tstream" where
 "tsRemDups \<equiv> \<Lambda> ts. tsRemDups_h\<cdot>ts\<cdot>None"
+
+lemma tsRemDups_insert: "tsRemDups\<cdot>ts = tsRemDups_h\<cdot>ts\<cdot>None"
+by (simp add: tsRemDups_def)
 
 lemma tsremdups_h_strict [simp]: 
 "tsRemDups_h\<cdot>\<bottom>\<cdot>a = \<bottom>"
