@@ -12,6 +12,7 @@ theory TStream
 imports  Streams
 begin
 default_sort countable
+setup_lifting type_definition_cfun
 
 
 (* ----------------------------------------------------------------------- *)
@@ -175,9 +176,6 @@ primrec tsntimes:: " nat \<Rightarrow> 'a tstream \<Rightarrow> 'a tstream" wher
 definition tsinftimes:: "'a tstream \<Rightarrow> 'a tstream" where
 "tsinftimes \<equiv> fix\<cdot>(\<Lambda> h. (\<lambda>ts. if ts = \<bottom> then \<bottom> else (tsConc ts \<cdot> (h ts))))"
 
-
-
-
 (* Definitionen aus TStream *)
 
 text {* Convert an event-spf to a timed-spf. Just a restriction of the function domain. *}
@@ -185,31 +183,65 @@ definition espf2tspf :: "('a event,'b event) spf \<Rightarrow> 'a tstream \<Righ
 "espf2tspf f x = Abs_tstream (f\<cdot>(Rep_tstream x))"
 
 text {* Apply a function to all messages of a stream. Ticks are mapped to ticks. *}
-definition tstmap :: "('a \<Rightarrow> 'b) \<Rightarrow> 'a tstream \<rightarrow> 'b tstream" where
-"tstmap f \<equiv> \<Lambda> s.  espf2tspf (smap (\<lambda>x. case x of Msg m \<Rightarrow> Msg (f m) | \<surd> \<Rightarrow> \<surd>)) s"
+definition tsMap :: "('a \<Rightarrow> 'b) \<Rightarrow> 'a tstream \<rightarrow> 'b tstream" where
+"tsMap f \<equiv> \<Lambda> s. espf2tspf (smap (\<lambda>x. case x of Msg m \<Rightarrow> Msg (f m) | \<surd> \<Rightarrow> \<surd>)) s"
 
+text {* "Unzipping" of timed streams: project to the first element of a tuple of tstreams. *}
+definition tsProjFst :: "('a \<times> 'b) tstream \<rightarrow> 'a tstream" where
+"tsProjFst = tsMap fst"
 
-definition tsrcDups_helper :: "'m event stream \<rightarrow> 'm event stream" where
-"tsrcDups_helper \<equiv> \<mu> h. (\<Lambda> s . if s = \<epsilon> then \<epsilon> else sconc (\<up>(shd s))\<cdot>( h\<cdot>(sdropwhile (\<lambda>x. x = shd s)\<cdot>s)))"
-  
-  (* remove successive duplicates on tstreams *)
-definition tsrcdups :: "'m tstream \<Rightarrow> 'm tstream" where
-"tsrcdups = espf2tspf tsrcDups_helper"
+text {* "Unzipping" of timed streams: project to the second element of tuple of tstreams. *}
+definition tsProjSnd :: "('a \<times> 'b) tstream \<rightarrow> 'b tstream" where
+"tsProjSnd = tsMap snd"
 
-
-text {* "Unzipping" of timed streams: project to the first element of a tuple of streams. *}
-definition tstprojfst :: "('a \<times> 'b) tstream \<rightarrow> 'a tstream" where
-"tstprojfst = tstmap fst"
-
-text {* "Unzipping" of timed streams: project to the second element of tuple. *}
-definition tstprojsnd :: "('a \<times> 'b) tstream \<rightarrow> 'b tstream" where
-"tstprojsnd = tstmap snd"
+text {* @{term tsFilter}: Remove all elements from the tstream which are
+  not included in the given set. *}
+definition tsFilter :: "'a set \<Rightarrow> 'a tstream \<rightarrow> 'a tstream" where
+"tsFilter M \<equiv> \<Lambda> ts. Abs_tstream (insert \<surd> (Msg ` M) \<ominus> Rep_tstream ts)"
 
 text {* Fairness predicate on timed stream processing function. An espf is considered fair
   if all inputs with infinitely many ticks are mapped to outputs with infinitely many ticks. *}
 definition tspfair :: "('a tstream \<rightarrow> 'b tstream ) \<Rightarrow> bool" where
 "tspfair f \<equiv> \<forall>ts. tsTickCount\<cdot> ts = \<infinity> \<longrightarrow> tsTickCount \<cdot> (f\<cdot> ts) = \<infinity>"
+    
 
+        
+lift_definition uMsg :: "'a discr \<rightarrow> 'a event discr" is
+"\<lambda> t. case t of (Discr m) \<Rightarrow> (Discr (Msg m))"
+  by(simp add: cfun_def)
+
+
+(* remove the Msg layer. Return bottom on ticks *)
+lift_definition unpackMsg::"'a event discr u \<rightarrow> 'a discr u" is
+  "\<lambda>t. upApply (\<lambda>x. case x of Msg m \<Rightarrow> m )\<cdot>t"
+  using Cfun.cfun.Rep_cfun by blast
+  
+    
+thm lshd_def  (* similar to lshd *)  
+(* get First Element of tStream *)
+definition tsLshd :: "'a tstream \<rightarrow> 'a event discr u" where
+"tsLshd \<equiv> \<Lambda> ts.  lshd\<cdot>(Rep_tstream ts)"
+
+  
+(* get rest of tStream *)
+thm srt_def   (* similar to srt *)
+definition tsRt :: "'a tstream \<rightarrow> 'a tstream" where
+"tsRt \<equiv> \<Lambda> ts. espf2tspf srt ts"
+  
+(* create new tStream by appending a new first Element *)
+  (* sadly the function must be ts_well... 
+  .. hence for the input (updis Msg m) and the empty stream a special case must be made *)
+thm lscons_def (* similar to lscons *)
+definition tsLscons :: "'a event discr u \<rightarrow> 'a tstream \<rightarrow> 'a tstream" where
+"tsLscons \<equiv> \<Lambda> t ts. if (ts=\<bottom> & t\<noteq>updis \<surd>) then \<bottom> else espf2tspf (lscons\<cdot>t) ts"
+
+(* append a Message as first element. 
+  Returns bot if the tstream is bot *)
+definition tsMLscons :: "'a discr u \<rightarrow> 'a tstream \<rightarrow> 'a tstream" where
+"tsMLscons \<equiv> \<Lambda> t ts. tsLscons\<cdot>(upApply Msg\<cdot>t)\<cdot>ts"
+
+definition DiscrTick :: "'a event discr" where
+  "DiscrTick = Discr \<surd>"
 
 
 
@@ -273,8 +305,15 @@ by (simp add: Rep_tstream_inverse)
 lemma [simp]:"ts_well (Rep_tstream ts)"
 using Rep_tstream by blast
 
+lemma msg_nwell [simp]: "\<not>ts_well (\<up>(Msg m))"
+apply (simp add: ts_well_def, auto)
+by (metis Inf'_neq_0 event.distinct(1) fold_inf inf_ub inject_lnsuc less_le lscons_conv sfoot1
+    sfoot_one slen_scons strict_slen sup'_def)
 
-
+lemma msg_nwell2: "t\<noteq>\<bottom> \<Longrightarrow> t\<noteq>updis \<surd> \<Longrightarrow> \<not>ts_well (t && \<bottom>)"
+apply (simp add: ts_well_def, auto)
+using sfilter_srt_sinf apply fastforce
+by (metis sfoot1 sfoot_one sup'_def updis_exists)
 
 (* tsDom *)
 thm tsDom_def
@@ -434,6 +473,9 @@ lemma tsabs_tsdom [simp]: "sdom\<cdot>(tsAbs\<cdot>ts) = tsDom\<cdot>ts"
   apply (metis (mono_tags, lifting) Int_iff event.distinct(1) event.simps(4) image_iff mem_Collect_eq)
 done 
 
+lemma tsabs_bot[simp]: "tsAbs\<cdot>\<bottom>=\<bottom>"
+  by(simp add: tsabs_insert)
+  
 
 (* tsRep *)
 
@@ -492,7 +534,7 @@ using tstreaml1
 apply blast
 done
 
-(* tsTakeFirst *)
+(* tsTakdaneFirst *)
 
 
 
@@ -1667,7 +1709,6 @@ apply(auto simp add: tsId_def tsStrongCausal_def)
 by (metis Rep_cfun_strict1 tsTake.simps(1) ts_existsNBot tstake_bot tstake_fin2)
 
 (* eine stark Causale, stetige function appends a \<surd> to a timed stream *)
-setup_lifting type_definition_cfun
 lift_definition delayFun :: "'m tstream \<rightarrow> 'm tstream" is
 "\<lambda>ts . (Abs_tstream (\<up>\<surd>)) \<bullet> ts"
   by (simp add: Cfun.cfun.Rep_cfun)
@@ -1701,6 +1742,12 @@ by(simp add: delayFun_def)
 lemma [simp]: "delayFun\<cdot>tsInfTick = tsInfTick"
 apply(simp add: delayFun_def tsInfTick_def)
 by (metis (no_types) Abs_tstream_inverse mem_Collect_eq sinftimes_unfold tick_msg tsInfTick.abs_eq tsInfTick.rep_eq tsconc_insert)
+
+lemma delayfun_nbot[simp]: "delayFun\<cdot>ts \<noteq> \<bottom>"
+  by(simp add: delayFun_def)  
+        
+lemma delayfun_abststream: "ts_well s\<Longrightarrow>delayFun\<cdot>(Abs_tstream s) = Abs_tstream (updis \<surd> && s)"
+  by (simp add: delayFun.rep_eq lscons_conv tsconc_insert)    
 
 
 
@@ -1805,11 +1852,117 @@ lemma tspfairD: "\<lbrakk>tspfair f;#\<surd>s = \<infinity>\<rbrakk> \<Longright
 apply (simp add: tspfair_def)
 done
 
-(* tstmap *)
+(* tsMap *)
+thm tsMap_def
 
-(* tstmap distributes over infinite repetition *)
-lemma tstmap2tsinf[simp]: "tstmap f\<cdot>(tsinftimes x)= tsinftimes (tstmap f\<cdot>x)"
-oops
+lemma tsmap_h_fair: "#({\<surd>} \<ominus> (smap (\<lambda>x. case x of \<M> m \<Rightarrow> \<M> f m | \<surd> \<Rightarrow> \<surd>)\<cdot>s)) = #({\<surd>} \<ominus> s)"
+  apply (rule ind [of _ s], auto)
+  by (case_tac "a", auto)
+
+lemma tsmap_h_fair2:
+  "#({e. e \<noteq> \<surd>} \<ominus> (smap (\<lambda>x. case x of \<M> m \<Rightarrow> \<M> f m | \<surd> \<Rightarrow> \<surd>)\<cdot>s)) = #({e. e \<noteq> \<surd>} \<ominus> s)"
+  apply (rule ind [of _ s], auto)
+  by (case_tac "a", auto)
+
+lemma tsmap_h_sfoot: assumes "#s<\<infinity>" 
+  shows "sfoot (smap (\<lambda>x. case x of \<M> m \<Rightarrow> \<M> f m | \<surd> \<Rightarrow> \<surd>)\<cdot>(s \<bullet> \<up>\<surd>)) = \<surd>"
+  by (simp add: smap_split assms)
+
+lemma tsmap_h_well: assumes "ts_well s"
+  shows "ts_well (smap (\<lambda>x. case x of \<M> m \<Rightarrow> \<M> f m | \<surd> \<Rightarrow> \<surd>)\<cdot>s)"
+  apply (simp add: ts_well_def tsmap_h_fair tsmap_h_sfoot)
+  apply (cases "s = \<epsilon>", auto)
+  apply (meson assms ts_well_def)
+  by (metis (no_types, lifting)
+      assms event.simps(5) sconc_snd_empty smap_scons smap_split strict_smap ts_fin_well)
+
+lemma tsmap_unfold:
+  "tsMap f\<cdot>ts = Abs_tstream (smap (\<lambda>x. case x of \<M> m \<Rightarrow> \<M> f m | \<surd> \<Rightarrow> \<surd>)\<cdot>(Rep_tstream ts))"
+  apply (simp add:tsMap_def)
+  apply (simp add: espf2tspf_def)
+  by (simp add: tsmap_h_well)
+    
+
+lemma tsmap_strict[simp]: "tsMap f\<cdot>\<bottom> = \<bottom>"
+  by (simp add: tsmap_unfold)
+
+ 
+lemma tsmap_tstickcount[simp]:  "#\<surd>(tsMap f\<cdot>ts) = #\<surd>ts"
+  apply(simp add: tsTickCount_def)
+  apply(simp only: tsmap_unfold)
+  apply(subst Abs_tstream_inverse)
+  apply(simp add:tsmap_h_well)
+  apply(simp add: tsmap_h_fair)
+  done
+
+lemma tsmap_weak:"tsWeakCausal (Rep_cfun (tsMap f))"
+apply (subst tsWeak2cont2, auto)  
+done
+
+(* tsProjFst and tsProjSnd *)
+thm tsProjFst_def
+thm tsProjSnd_def
+
+lemma tsprojfst_strict[simp]: "tsProjFst\<cdot>\<bottom> = \<bottom>"
+  by (simp add: tsProjFst_def)
+
+lemma tsprojsnd_strict[simp]: "tsProjSnd\<cdot>\<bottom> = \<bottom>"
+  by (simp add: tsProjSnd_def)
+
+lemma tsprojfst_strict_rev: "tsProjFst\<cdot>ts = \<bottom> \<Longrightarrow> ts = \<bottom>"
+  apply (simp add: tsProjFst_def)
+  by (metis strict_tstickcount ts_0ticks tsmap_tstickcount)
+
+lemma tsprojsnd_strict_rev: "tsProjSnd\<cdot>ts = \<bottom> \<Longrightarrow> ts = \<bottom>"
+  apply (simp add: tsProjSnd_def)
+  by (metis strict_tstickcount ts_0ticks tsmap_tstickcount)
+
+lemma tsprojfst_tstickcount[simp]: "#\<surd>(tsProjFst\<cdot>ts) = #\<surd>ts"
+  by (simp add: tsProjFst_def)
+
+lemma tsprojsnd_tstickcount[simp]: "#\<surd>(tsProjSnd\<cdot>ts) = #\<surd>ts"
+  by (simp add: tsProjSnd_def)
+
+lemma tsabs_tsprojfst[simp]: "#(tsAbs\<cdot>(tsProjFst\<cdot>ts)) = #(tsAbs\<cdot>ts)"
+  apply (simp add: tsProjFst_def tsAbs_def tsmap_unfold)
+  apply (induct_tac ts, auto)
+  apply (simp add: tsmap_h_well)
+  apply (rule ind [of _ y], auto)
+  by (simp add: tsmap_h_fair2)
+
+lemma tsabs_tsprojsnd [simp]: "#(tsAbs\<cdot>(tsProjSnd\<cdot>ts)) = #(tsAbs\<cdot>ts)"
+  apply (simp add: tsProjSnd_def tsAbs_def tsmap_unfold)
+  apply (induct_tac ts, auto)
+  apply (simp add: tsmap_h_well)
+  apply (rule ind [of _ y], auto)
+  by (simp add: tsmap_h_fair2)
+
+(* tsFilter *)
+thm tsFilter_def
+
+lemma tsfilter_h_well: assumes "ts_well s"
+  shows "ts_well (insert \<surd> (Msg ` M) \<ominus> s)"
+apply (simp add: ts_well_def, auto)
+apply (metis assms inf_ub less_le sfilterl4 strict_sfilter ts_well_def)
+by (metis (no_types, lifting) add_sfilter2 assms fold_inf insertI1 lnsuc_lnle_emb not_less
+    sconc_snd_empty sfilter_in slen_lnsuc strict_sfilter ts_well_def)
+
+lemma tsfilter_unfold:
+  "tsFilter M\<cdot>ts = Abs_tstream (insert \<surd> (Msg ` M) \<ominus> Rep_tstream ts)"
+by (simp add: tsFilter_def tsfilter_h_well)
+
+lemma tsfilter_strict[simp]: "tsFilter M\<cdot>\<bottom> = \<bottom>"
+  by (simp add: tsfilter_unfold)
+  
+lemma tsfilter_tstickcount [simp]: "#\<surd>(tsFilter M\<cdot>ts) = #\<surd>ts"
+  apply(simp add: tsTickCount_def)
+  apply(simp only: tsfilter_unfold)
+  apply(subst Abs_tstream_inverse)
+   apply (simp add: tsfilter_h_well)
+   by simp
+                                                
+lemma tsfilter_weak:"tsWeakCausal (Rep_cfun (tsFilter M))"
+  by (subst tsWeak2cont2, auto)  
 
 (* tsscanl *)
 
@@ -2136,6 +2289,562 @@ lemma tsscanl2tsscanl_nth:
    (case (snth n (Rep_tstream ts)) of Msg a \<Rightarrow> \<M> tsscanl_nth n f q (Rep_tstream ts) | \<surd> \<Rightarrow> \<surd>)"
 by (simp add: tsscanl_unfold ts_well_tsscanl_h tsscanl_h2tsscanl_nth)
 
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+section \<open>Lemmata required for fixrec\<close>
+(* Gespendet von Sebastian Stüber *)
+  
+
+
+
+(************************************************)
+  subsection \<open>uMsg\<close>    
+(************************************************)
+  
+lemma upapply2umsg [simp]: "upApply Msg\<cdot>(up\<cdot>x) = up\<cdot>(uMsg\<cdot>x)"  
+apply(simp add: upapply_insert uMsg_def)
+  by (metis (mono_tags) Discr_undiscr discr.case the_equality undiscr_def)  
+
+    
+(************************************************)
+  subsection \<open>tsLshd\<close>    
+(************************************************)
+    
+lemma tslshd_eq: "ts\<sqsubseteq>xs \<Longrightarrow> ts\<noteq>\<bottom> \<Longrightarrow> tsLshd\<cdot>ts = tsLshd\<cdot>xs"
+  apply(simp add: tsLshd_def)
+  by (simp add: Rep_tstream_bottom_iff below_tstream_def lshd_eq)
+
+    
+    
+(************************************************)
+  subsection \<open>tsLscons\<close>    
+(************************************************)
+        
+lemma lscons_well [simp]: assumes "ts_well ts" and "ts\<noteq>\<bottom>"
+  shows "ts_well (t&&ts)"
+apply(auto simp add: ts_well_def)
+  apply (metis Rep_Abs assms(1) sConc_Rep_fin_fin stream.con_rews(2) stream.sel_rews(5) surj_scons)
+  by (metis Rep_Abs Rep_tstream_bottom_iff assms(1) assms(2) sConc_fin_well stream.con_rews(2) stream.sel_rews(5) surj_scons ts_well_def)    
+
+ lemma lsconc_well2 [simp]: assumes "ts\<noteq>\<bottom>"
+  shows "ts_well (t&&(Rep_tstream ts))"
+   using Rep_tstream_bottom_iff assms lscons_well ts_well_Rep by blast
+     
+lemma lscons_tick_well[simp]: "ts_well ts \<Longrightarrow> ts_well (updis \<surd> && ts)"
+  by (metis lscons_well sup'_def tick_msg)
+
+lemma tslscons_mono [simp]: "monofun (\<lambda> ts. if (ts=\<bottom> & t\<noteq>updis \<surd>) then \<bottom> else espf2tspf (lscons\<cdot>t) ts)"    
+  apply(rule monofunI)
+    apply (auto simp add: espf2tspf_def below_tstream_def)
+  using Rep_tstream_bottom_iff apply blast
+  by (metis (mono_tags, hide_lams) Abs_tstream_inverse Rep_tstream Rep_tstream_bottom_iff lscons_well mem_Collect_eq monofun_cfun_arg)
+
+lemma tslscons_chain2 [simp]: assumes "chain Y" 
+  shows "chain (\<lambda>i. if ((Y i)=\<bottom> & t\<noteq>updis \<surd>) then \<bottom> else espf2tspf (lscons\<cdot>t) (Y i))" (is "chain (\<lambda>i. ?f (Y i))")
+proof -
+  have "monofun ?f" by simp
+  thus ?thesis by (meson assms monofun_def po_class.chain_def)
+qed
+ 
+lemma tslscons_mono2[simp]: "monofun (\<lambda> t ts. if (ts=\<bottom> & t\<noteq>updis \<surd>) then \<bottom> else espf2tspf (lscons\<cdot>t) ts)"    
+  apply(rule monofunI, rule fun_belowI)
+    apply (auto simp add: espf2tspf_def below_tstream_def)
+  using stream.inverts apply force
+  using stream.inverts apply force
+  by (metis Discr_undiscr Exh_Up not_up_less_UU updis_eq2)
+
+lemma tslscons_chain: "chain Y \<Longrightarrow> chain (\<lambda>i. espf2tspf (lscons\<cdot>(updis \<surd>)) (Y i))"
+  by (simp add: below_tstream_def po_class.chain_def espf2tspf_def)
+    
+lemma tslsconc_cont_h: assumes "chain Y" and "t=updis \<surd>"
+  shows "Abs_tstream (updis \<surd> && Rep_tstream (Lub Y)) \<sqsubseteq> (\<Squnion>i. Abs_tstream (updis \<surd> && Rep_tstream (Y i)))"
+proof -
+  have "\<And>i. ts_well (updis \<surd> && Rep_tstream (Y i))" by simp
+  hence "chain (\<lambda>i. Abs_tstream (updis \<surd> && Rep_tstream (Y i)))"
+    by (metis (no_types, lifting) Rep_Abs assms(1) below_tstream_def monofun_cfun_arg po_class.chain_def)
+  thus ?thesis
+    by (smt Abs_tstream_inverse Rep_tstream assms(1) below_tstream_def cont2contlubE contlub_cfun_arg lscons_tick_well lub_eq mem_Collect_eq po_class.chain_def po_eq_conv rep_tstream_cont)
+qed      
+
+lemma tslscons_cont_h3:"t \<noteq> updis \<surd> \<Longrightarrow>
+         chain Y \<Longrightarrow> (\<And>i. Y i \<noteq>\<bottom>) \<Longrightarrow>
+         (if (\<Squnion>i. Y i) = \<bottom> \<and> t \<noteq> updis \<surd> then \<bottom> else espf2tspf (lscons\<cdot>t) (\<Squnion>i. Y i)) \<sqsubseteq>
+         (\<Squnion>i. if Y i = \<bottom> \<and> t \<noteq> updis \<surd> then \<bottom> else espf2tspf (lscons\<cdot>t) (Y i))"
+proof -
+  assume a1: "chain Y"
+  assume a2: "\<And>i. Y i \<noteq> \<bottom>"
+  have f3: "\<forall>s. s \<notin> Collect ts_well \<or> Rep_tstream (Abs_tstream s::'a tstream) = s"
+    using Abs_tstream_inverse by blast
+  have f4: "\<forall>f fa. \<not> cont f \<or> \<not> chain fa \<or> (f (Lub fa::'a tstream)::'a event stream) = (\<Squnion>n. f (fa n))"
+    using cont2contlubE by blast
+  obtain nn :: "(nat \<Rightarrow> 'a tstream) \<Rightarrow> nat" where
+    f5: "\<forall>f. (\<not> chain f \<or> (\<forall>n. f n \<sqsubseteq> f (Suc n))) \<and> (chain f \<or> f (nn f) \<notsqsubseteq> f (Suc (nn f)))"
+    using po_class.chain_def by moura
+  then have f6: "\<forall>n. Y n \<sqsubseteq> Y (Suc n)"
+    using a1 by blast
+  then have f7: "(if Y (nn (\<lambda>n. if Y n = \<bottom> \<and> t \<noteq> updis \<surd> then \<bottom> else espf2tspf (lscons\<cdot>t) (Y n))) = \<bottom> \<and> t \<noteq> updis \<surd> then \<bottom> else espf2tspf (lscons\<cdot>t) (Y (nn (\<lambda>n. if Y n = \<bottom> \<and> t \<noteq> updis \<surd> then \<bottom> else espf2tspf (lscons\<cdot>t) (Y n))))) \<sqsubseteq> (if Y (Suc (nn (\<lambda>n. if Y n = \<bottom> \<and> t \<noteq> updis \<surd> then \<bottom> else espf2tspf (lscons\<cdot>t) (Y n)))) = \<bottom> \<and> t \<noteq> updis \<surd> then \<bottom> else espf2tspf (lscons\<cdot>t) (Y (Suc (nn (\<lambda>n. if Y n = \<bottom> \<and> t \<noteq> updis \<surd> then \<bottom> else espf2tspf (lscons\<cdot>t) (Y n))))))"
+    using a2 by (simp add: below_tstream_def espf2tspf_def monofun_cfun_arg)
+  obtain nna :: "(nat \<Rightarrow> 'a event stream) \<Rightarrow> (nat \<Rightarrow> 'a event stream) \<Rightarrow> nat" where
+    f8: "\<forall>f fa. f (nna fa f) \<noteq> fa (nna fa f) \<or> Lub f = Lub fa"
+    by (meson lub_eq)
+  have f9: "Rep_tstream (\<Squnion>n. if Y n = \<bottom> \<and> t \<noteq> updis \<surd> then \<bottom> else espf2tspf (lscons\<cdot>t) (Y n)) = (\<Squnion>n. Rep_tstream (if Y n = \<bottom> \<and> t \<noteq> updis \<surd> then \<bottom> else espf2tspf (lscons\<cdot>t) (Y n)))"
+    using f7 f5 f4 by (meson rep_tstream_cont)
+  have f10: "Rep_tstream (Abs_tstream (t && Rep_tstream (Y (nna (\<lambda>n. Rep_tstream (if Y n = \<bottom> \<and> t \<noteq> updis \<surd> then \<bottom> else espf2tspf (lscons\<cdot>t) (Y n))) (\<lambda>n. t && Rep_tstream (Y n)))))) = t && Rep_tstream (Y (nna (\<lambda>n. Rep_tstream (if Y n = \<bottom> \<and> t \<noteq> updis \<surd> then \<bottom> else espf2tspf (lscons\<cdot>t) (Y n))) (\<lambda>n. t && Rep_tstream (Y n))))"
+    using f3 a2 lsconc_well2 by blast
+  have "Abs_tstream (t && Rep_tstream (Y (nna (\<lambda>n. Rep_tstream (if Y n = \<bottom> \<and> t \<noteq> updis \<surd> then \<bottom> else espf2tspf (lscons\<cdot>t) (Y n))) (\<lambda>n. t && Rep_tstream (Y n))))) = espf2tspf (lscons\<cdot>t) (Y (nna (\<lambda>n. Rep_tstream (if Y n = \<bottom> \<and> t \<noteq> updis \<surd> then \<bottom> else espf2tspf (lscons\<cdot>t) (Y n))) (\<lambda>n. t && Rep_tstream (Y n))))"
+    by (simp add: espf2tspf_def)
+  then have "t && Rep_tstream (Y (nna (\<lambda>n. Rep_tstream (if Y n = \<bottom> \<and> t \<noteq> updis \<surd> then \<bottom> else espf2tspf (lscons\<cdot>t) (Y n))) (\<lambda>n. t && Rep_tstream (Y n)))) = Rep_tstream (if Y (nna (\<lambda>n. Rep_tstream (if Y n = \<bottom> \<and> t \<noteq> updis \<surd> then \<bottom> else espf2tspf (lscons\<cdot>t) (Y n))) (\<lambda>n. t && Rep_tstream (Y n))) = \<bottom> \<and> t \<noteq> updis \<surd> then \<bottom> else espf2tspf (lscons\<cdot>t) (Y (nna (\<lambda>n. Rep_tstream (if Y n = \<bottom> \<and> t \<noteq> updis \<surd> then \<bottom> else espf2tspf (lscons\<cdot>t) (Y n))) (\<lambda>n. t && Rep_tstream (Y n)))))"
+    using f10 a2 by fastforce
+  then have f11: "(\<Squnion>n. t && Rep_tstream (Y n)) = (\<Squnion>n. Rep_tstream (if Y n = \<bottom> \<and> t \<noteq> updis \<surd> then \<bottom> else espf2tspf (lscons\<cdot>t) (Y n)))"
+    using f8 by meson
+  obtain nnb :: "(nat \<Rightarrow> 'a event stream) \<Rightarrow> nat" where
+    f12: "\<forall>f. (\<not> chain f \<or> (\<forall>n. f n \<sqsubseteq> f (Suc n))) \<and> (chain f \<or> f (nnb f) \<notsqsubseteq> f (Suc (nnb f)))"
+    using po_class.chain_def by moura
+  { assume "Abs_tstream (Rep_tstream (if Lub Y \<noteq> \<bottom> \<or> t = updis \<surd> then espf2tspf (lscons\<cdot>t) (Lub Y) else \<bottom>)) = Abs_tstream (Rep_tstream (\<Squnion>n. if Y n = \<bottom> \<and> t \<noteq> updis \<surd> then \<bottom> else espf2tspf (lscons\<cdot>t) (Y n)))"
+    then have "(\<Squnion>n. if Y n = \<bottom> \<and> t \<noteq> updis \<surd> then \<bottom> else espf2tspf (lscons\<cdot>t) (Y n)) = (if Lub Y \<noteq> \<bottom> \<or> t = updis \<surd> then espf2tspf (lscons\<cdot>t) (Lub Y) else \<bottom>)"
+      by simp
+    then have "(if Lub Y \<noteq> \<bottom> \<or> t = updis \<surd> then espf2tspf (lscons\<cdot>t) (Lub Y) else \<bottom>) \<sqsubseteq> (\<Squnion>n. if Y n = \<bottom> \<and> t \<noteq> updis \<surd> then \<bottom> else espf2tspf (lscons\<cdot>t) (Y n))"
+      using po_eq_conv by blast }
+  moreover
+  { assume "Abs_tstream (Rep_tstream (if Lub Y \<noteq> \<bottom> \<or> t = updis \<surd> then espf2tspf (lscons\<cdot>t) (Lub Y) else \<bottom>)) \<noteq> Abs_tstream (Rep_tstream (\<Squnion>n. if Y n = \<bottom> \<and> t \<noteq> updis \<surd> then \<bottom> else espf2tspf (lscons\<cdot>t) (Y n)))"
+    then have "Abs_tstream (Rep_tstream (if Lub Y \<noteq> \<bottom> \<or> t = updis \<surd> then espf2tspf (lscons\<cdot>t) (Lub Y) else \<bottom>)) \<noteq> espf2tspf (lscons\<cdot>t) (Lub Y)"
+      using f12 f11 f9 f6 f4 a1 by (metis (no_types) below_tstream_def contlub_cfun_arg espf2tspf_def rep_tstream_cont)
+    then have "(if Lub Y \<noteq> \<bottom> \<or> t = updis \<surd> then espf2tspf (lscons\<cdot>t) (Lub Y) else \<bottom>) \<sqsubseteq> (\<Squnion>n. if Y n = \<bottom> \<and> t \<noteq> updis \<surd> then \<bottom> else espf2tspf (lscons\<cdot>t) (Y n))"
+      by fastforce }
+  ultimately have "(if Lub Y \<noteq> \<bottom> \<or> t = updis \<surd> then espf2tspf (lscons\<cdot>t) (Lub Y) else \<bottom>) \<sqsubseteq> (\<Squnion>n. if Y n = \<bottom> \<and> t \<noteq> updis \<surd> then \<bottom> else espf2tspf (lscons\<cdot>t) (Y n))"
+    by fastforce
+  then show ?thesis
+    by presburger
+qed
+
+lemma tslscons_cont_h2: assumes "t \<noteq> updis \<surd>" and "chain Y"
+    shows "(if (\<Squnion>i. Y i) = \<bottom> \<and> t \<noteq> updis \<surd> then \<bottom> else espf2tspf (lscons\<cdot>t) (\<Squnion>i. Y i)) \<sqsubseteq>
+         (\<Squnion>i. if Y i = \<bottom> \<and> t \<noteq> updis \<surd> then \<bottom> else espf2tspf (lscons\<cdot>t) (Y i))" (is "?f (\<Squnion>i. Y i) \<sqsubseteq> ?x")
+  proof(cases "(\<Squnion>i. Y i) = \<bottom>")
+    case True
+    then show ?thesis by (simp add: assms)
+  next
+    case False
+    have f_chain: "chain (\<lambda>i. ?f (Y i))"  by (simp add: assms(2))
+    obtain n  where n_def: "(\<And>i. ((Y ( i+n)) \<noteq>\<bottom>))"  using False assms(2) chain_nbot False by blast
+    have lub_eq: "(\<Squnion>i. Y(i+n)) = (\<Squnion>i. Y i)" by(simp add: lub_range_shift assms)
+    hence "?f (\<Squnion>i. Y (i+n)) \<sqsubseteq> (\<Squnion>i. ?f (Y (i+n)))" using assms(1) assms(2) chain_shift n_def tslscons_cont_h3 by blast
+    also have "?f (\<Squnion>i. Y (i+n)) = ?f (\<Squnion>i. Y i)" using assms(2) lub_range_shift2 by fastforce
+    also have "(\<Squnion>i. ?f (Y (i+n))) = (\<Squnion>i. ?f (Y i))" using f_chain lub_range_shift2 by fastforce
+    finally show ?thesis by simp
+  qed 
+    
+lemma tslscons_cont: "cont (\<lambda> ts. if (ts=\<bottom> & t\<noteq>updis \<surd>) then \<bottom> else espf2tspf (lscons\<cdot>t) ts)"    
+  apply(rule contI2)
+   apply simp
+  apply(cases "t\<noteq>updis \<surd>")
+  using tslscons_cont_h2 apply fastforce 
+   by (simp add: tslsconc_cont_h tslscons_cont_h2 espf2tspf_def)
+
+lemma tslscons_cont2[simp]: "cont (\<lambda> t . \<Lambda> ts. if (ts=\<bottom> & t\<noteq>updis \<surd>) then \<bottom> else espf2tspf (lscons\<cdot>t) ts)"    
+proof -
+  obtain uu :: "('a event discr\<^sub>\<bottom> \<Rightarrow> 'a tstream \<Rightarrow> 'a tstream) \<Rightarrow> 'a event discr\<^sub>\<bottom>" and tt :: "('a event discr\<^sub>\<bottom> \<Rightarrow> 'a tstream \<Rightarrow> 'a tstream) \<Rightarrow> 'a tstream" where
+    f1: "\<forall>f. \<not> cont (f (uu f)) \<or> \<not> cont (\<lambda>u. f u (tt f)) \<or> cont (\<lambda>u. Abs_cfun (f u))"
+    by (metis (no_types) cont2cont_LAM)
+  have "\<forall>t. monofun (\<lambda>u. if (t::'a tstream) = \<bottom> \<and> u \<noteq> updis \<surd> then \<bottom> else espf2tspf (lscons\<cdot>u) t)"
+    using mono2mono_fun tslscons_mono2 by fastforce
+  then have "cont (\<lambda>t. if t = \<bottom> \<and> uu (\<lambda>u t. if t = \<bottom> \<and> u \<noteq> updis \<surd> then \<bottom> else espf2tspf (lscons\<cdot>u) t) \<noteq> updis \<surd> then \<bottom> else espf2tspf (lscons\<cdot> (uu (\<lambda>u t. if t = \<bottom> \<and> u \<noteq> updis \<surd> then \<bottom> else espf2tspf (lscons\<cdot>u) t))) t) \<and> cont (\<lambda>u. if tt (\<lambda>u t. if t = \<bottom> \<and> u \<noteq> updis \<surd> then \<bottom> else espf2tspf (lscons\<cdot>u) t) = \<bottom> \<and> u \<noteq> updis \<surd> then \<bottom> else espf2tspf (lscons\<cdot>u) (tt (\<lambda>u t. if t = \<bottom> \<and> u \<noteq> updis \<surd> then \<bottom> else espf2tspf (lscons\<cdot>u) t)))"
+    using chfindom_monofun2cont tslscons_cont by blast
+  then show ?thesis
+    using f1 by presburger
+qed
+  
+  
+lemma tslscons_insert: "tsLscons\<cdot>t\<cdot>ts = (if (ts=\<bottom> & t\<noteq>updis \<surd>) then \<bottom> else espf2tspf (lscons\<cdot>t) ts)"
+  unfolding tsLscons_def
+  by (simp only: beta_cfun tslscons_cont2 tslscons_cont)
+
+lemma tslscons_bot [simp]: "tsLscons\<cdot>\<bottom>\<cdot>ts = \<bottom>"
+  by(auto simp add: tslscons_insert tsLshd_def espf2tspf_def)
+
+lemma tslscons_bot2 [simp]: "tsLscons\<cdot>(updis \<surd>)\<cdot>\<bottom>= Abs_tstream (updis \<surd> && \<bottom>)"
+  by(auto simp add: tslscons_insert tsLshd_def espf2tspf_def)
+    
+lemma tslscons_bot3 [simp]: "t\<noteq>(updis \<surd>) \<Longrightarrow> tsLscons\<cdot>t\<cdot>\<bottom>= \<bottom>"
+  by(auto simp add: tslscons_insert tsLshd_def espf2tspf_def)    
+    
+lemma tslscons_nbot [simp]: "t\<noteq>\<bottom> \<Longrightarrow> ts\<noteq>\<bottom> \<Longrightarrow> tsLscons\<cdot>t\<cdot>ts \<noteq>\<bottom>"
+  unfolding tslscons_insert
+  by (simp add: espf2tspf_def)
+
+lemma tslscons_nbot2 [simp]: "tsLscons\<cdot>(updis \<surd>)\<cdot>ts\<noteq>\<bottom>"
+  by(auto simp add: tslscons_insert tsLshd_def espf2tspf_def)
+
+lemma tslscons_nbot3 [simp]: "tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>ts\<noteq>\<bottom>"
+by (simp add: DiscrTick_def)
+
+lemma tslscons2lscons: "ts\<noteq>\<bottom> \<Longrightarrow> tsLscons\<cdot>t\<cdot>ts = Abs_tstream (lscons\<cdot>t\<cdot>(Rep_tstream ts))"
+by (simp add: tslscons_insert espf2tspf_def)
+
+lemma tslscons_lscons: "ts\<noteq>\<bottom> \<Longrightarrow> Rep_tstream (tsLscons\<cdot>t\<cdot>ts) = t && (Rep_tstream ts)"
+by(simp add: tslscons2lscons)  
+
+lemma tslscons_lscons2: "ts\<noteq>\<bottom> \<Longrightarrow> tsLscons\<cdot>(updis \<surd>)\<cdot>ts = Abs_tstream (updis \<surd> && (Rep_tstream ts))"
+by (simp add: tslscons2lscons)
+
+lemma tslscons_lshd [simp]: "ts\<noteq>\<bottom> \<Longrightarrow> tsLshd\<cdot>(tsLscons\<cdot>t\<cdot>ts) = t"
+by(auto simp add: tslscons_insert tsLshd_def espf2tspf_def)  
+
+lemma tslscons_lshd2 [simp]: "tsLshd\<cdot>(tsLscons\<cdot>(updis \<surd>)\<cdot>ts) = (updis \<surd>)"
+  by(auto simp add: tslscons_insert tsLshd_def espf2tspf_def)  
+
+lemma tslscons_srt [simp]: "t\<noteq>\<bottom> \<Longrightarrow> tsRt\<cdot>(tsLscons\<cdot>t\<cdot>ts) = ts"
+by(auto simp add: tslscons_insert tsRt_def espf2tspf_def)  
+
+lemma tslscons_srt2 [simp]: "tsRt\<cdot>(tsLscons\<cdot>(updis \<surd>)\<cdot>ts) = ts"
+  by(auto simp add: tslscons_insert tsRt_def espf2tspf_def) 
+  
+  
+(************************************************)
+  subsection \<open>tsMLscons\<close>    
+(************************************************)
+    
+lemma tsmlscons2tslscons: "tsMLscons\<cdot>(updis m)\<cdot>ts = tsLscons\<cdot>(updis (Msg m))\<cdot>ts"
+  by(simp add: tsMLscons_def)  
+
+lemma tsmlscons_bot[simp]: "tsMLscons\<cdot>\<bottom>\<cdot>ts = \<bottom>"    
+  by(simp add: tsMLscons_def)    
+
+lemma tsmlscons_bot2[simp]: "tsMLscons\<cdot>t\<cdot>\<bottom> = \<bottom>"    
+  apply(simp add: tsMLscons_def)    
+    by(auto simp add: tslscons_insert upapply_insert)
+    
+lemma tsmlscons_nbot[simp]: "t\<noteq>\<bottom>\<Longrightarrow>ts \<noteq>\<bottom> \<Longrightarrow> tsMLscons\<cdot>t\<cdot>ts \<noteq>\<bottom>"    
+  by(simp add: tsMLscons_def)    
+
+lemma tsmlscons_lscons: "tsMLscons\<cdot>(up\<cdot>t)\<cdot>ts = tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>t))\<cdot>ts"
+  by(simp add: uMsg_def tsMLscons_def)
+
+lemma tsmlscons_lscons2: "tsMLscons\<cdot>(updis t)\<cdot>ts = tsLscons\<cdot>(updis (Msg t))\<cdot>ts"
+      by(simp add: tsMLscons_def)
+
+lemma tsmlscons_lscons3: "ts\<noteq>\<bottom> \<Longrightarrow> Rep_tstream (tsMLscons\<cdot>(updis t)\<cdot>ts) = (updis (Msg t)) && Rep_tstream ts"
+  by(simp add: tsMLscons_def tslscons_lscons)
+    
+lemma tsmlscons_lscons4: 
+  "ts\<noteq>\<bottom> \<Longrightarrow> tsMLscons\<cdot>(updis t)\<cdot>ts = Abs_tstream (updis (Msg t) && Rep_tstream ts)"
+  by (simp add: tsMLscons_def tslscons2lscons)
+
+(* ----------------------------------------------------------------------- *)
+subsection {* delayFun *}
+(* ----------------------------------------------------------------------- *)
+
+lemma tick_eq_discrtick: "updis \<surd> = up\<cdot>DiscrTick"
+by (simp add: DiscrTick_def)
+
+lemma delayfun_insert: "delayFun\<cdot>ts = (Abs_tstream (\<up>\<surd>)\<bullet>ts)"  
+by (simp add: delayFun_def)
+
+lemma tsrt_delayfun [simp]: "tsRt\<cdot>(delayFun\<cdot>ts) = ts"
+  by (simp add: delayFun_def tsRt_def espf2tspf_def tsconc_rep_eq)
+    
+lemma tslshd_delayfun [simp]: "tsLshd\<cdot>(delayFun\<cdot>ts) = updis \<surd>"  
+    by (simp add: delayFun_def tsLshd_def espf2tspf_def tsconc_rep_eq)
+  
+lemma delayfun_tslscons: "delayFun\<cdot>ts = tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>ts"
+by (simp add: delayFun_def tslscons_insert tsconc_insert DiscrTick_def espf2tspf_def lscons_conv)
+
+lemma delayfun_tslscons_bot: "delayFun\<cdot>\<bottom> = tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>\<bottom>"
+by (simp add: delayfun_tslscons tick_eq_discrtick)  
+
+(* ----------------------------------------------------------------------- *)
+subsection {* Abs_tstream converter *}
+(* ----------------------------------------------------------------------- *)
+
+lemma absts2tslscons: "ts_well (t&&ts) \<Longrightarrow> Abs_tstream (t&&ts) = tsLscons\<cdot>t\<cdot>(Abs_tstream ts)"
+apply (simp add: tslscons_insert, auto)
+apply (metis Abs_tstream_bottom_iff mem_Collect_eq stream.con_rews(2) stream.sel_rews(5)
+       ts_well_drop1 msg_nwell2)
+apply (metis Rep_Abs espf2tspf_def stream.con_rews(2) stream.sel_rews(5) ts_well_drop1)
+by (metis Rep_Abs espf2tspf_def stream.sel_rews(5) ts_well_drop1 up_defined)
+  
+lemma absts2tsmlscons_msg: "ts_well (updis (Msg m) && ts) \<Longrightarrow> 
+  Abs_tstream ((updis (Msg m))&&ts) = tsMLscons\<cdot>(updis m)\<cdot>(Abs_tstream ts)"
+by(simp add: tsMLscons_def absts2tslscons)
+
+lemma absts2tsmlscons_msg2: "ts_well (\<up>(Msg m) \<bullet>  ts) \<Longrightarrow> 
+  Abs_tstream (\<up>(Msg m) \<bullet>  ts) = tsMLscons\<cdot>(updis m)\<cdot>(Abs_tstream ts)"
+by (metis absts2tsmlscons_msg lscons_conv)
+
+lemma absts2delayfun: "ts_well ts \<Longrightarrow> Abs_tstream (updis \<surd>&&ts) = delayFun\<cdot>(Abs_tstream ts)"
+by (metis delayfun_abststream)
+
+(* ----------------------------------------------------------------------- *)
+subsection {* tsMLscons representation *}
+(* ----------------------------------------------------------------------- *)
+
+(* ToDo: useful for tsMLscons representation *)
+lemma tsmap_mlscons:
+  "ts \<noteq> \<bottom> \<Longrightarrow> tsMap f\<cdot>(tsMLscons\<cdot>(updis t)\<cdot>ts) = tsMLscons\<cdot>(updis (f t))\<cdot>(tsMap f\<cdot>ts)"
+oops
+
+lemma tsmap_delayfun: "tsMap f\<cdot>(delayFun\<cdot>ts) = delayFun\<cdot>(tsMap f\<cdot>ts)"
+oops
+
+lemma tsprojfst_mlscons:
+  "ts\<noteq>\<bottom> \<Longrightarrow> tsProjFst\<cdot>(tsMLscons\<cdot>(updis (a,b))\<cdot>ts) = tsMLscons\<cdot>(updis a)\<cdot>(tsProjFst\<cdot>ts)"
+  apply (simp add: tsmlscons_lscons4 tsProjFst_def lscons_conv tsmap_unfold smap_split)
+  apply (simp add: tsmlscons2tslscons)
+  apply (subst tslscons2lscons)
+  apply (metis tsProjFst_def tsmap_unfold tsprojfst_strict_rev)
+  by (simp add: lscons_conv tsmap_h_well)
+
+lemma tsprojfst_delayfun: "tsProjFst\<cdot>(delayFun\<cdot>ts) = delayFun\<cdot>(tsProjFst\<cdot>ts)"    
+  apply (simp add: delayFun_def delayfun_abststream tsProjFst_def tsmap_unfold tsconc_rep_eq)
+  apply (induct_tac ts, auto)
+  by (simp add: tsConc_def tsmap_h_well)
+
+lemma tsprojsnd_mlscons:
+  "ts\<noteq>\<bottom> \<Longrightarrow> tsProjSnd\<cdot>(tsMLscons\<cdot>(updis (a,b))\<cdot>ts) = tsMLscons\<cdot>(updis b)\<cdot>(tsProjSnd\<cdot>ts)"
+  apply (simp add: tsmlscons_lscons4 tsProjSnd_def lscons_conv tsmap_unfold smap_split)
+  apply (simp add: tsmlscons2tslscons)
+  apply (subst tslscons2lscons)
+  apply (metis tsProjSnd_def tsmap_unfold tsprojsnd_strict_rev)
+  by (simp add: lscons_conv tsmap_h_well)
+
+lemma tsprojsnd_delayfun: "tsProjSnd\<cdot>(delayFun\<cdot>ts) = delayFun\<cdot>(tsProjSnd\<cdot>ts)"    
+  apply (simp add: delayFun_def delayfun_abststream tsProjSnd_def tsmap_unfold tsconc_rep_eq)
+  apply (induct_tac ts, auto)
+  by (simp add: tsConc_def tsmap_h_well)
+
+lemma tsfilter_mlscons:
+  "ts \<noteq> \<bottom> \<Longrightarrow> tsFilter M\<cdot>(tsMLscons\<cdot>(updis t)\<cdot>ts) = tsMLscons\<cdot>(updis t)\<cdot>(tsFilter M\<cdot>ts)"
+oops
+
+lemma tsfilter_delayfun: "tsFilter M\<cdot>(delayFun\<cdot>ts) = delayFun\<cdot>(tsFilter M\<cdot>ts)"
+oops
+      
+(************************************************)
+(************************************************)      
+    section \<open>Match definitions\<close>
+(************************************************)
+(************************************************)
+  
+definition
+  match_tstream :: "'a tstream \<rightarrow> ('a event discr u \<rightarrow> 'a tstream \<rightarrow> ('b ::cpo) match) \<rightarrow> 'b match" where
+  "match_tstream = (\<Lambda> xs k.  strictify\<cdot>(\<Lambda> xs. k\<cdot>(tsLshd\<cdot>xs)\<cdot>(tsRt\<cdot>xs))\<cdot>xs)"
+  
+ (* match if element is tick *) 
+definition match_tick:: "'a event discr \<rightarrow> ('b ::cpo) match \<rightarrow> 'b match" where
+ "match_tick = (\<Lambda> t k . if t=(Discr \<surd>) then k else Fixrec.fail)" 
+
+ (* match if element is message *)
+definition match_umsg:: "'a event discr \<rightarrow> ('a discr \<rightarrow> 'b::cpo match) \<rightarrow> 'b match"  where
+"match_umsg = (\<Lambda> t k. case t of (Discr (Msg m)) \<Rightarrow> k\<cdot>(Discr m) | _\<Rightarrow>Fixrec.fail)"
+  
+  
+
+(************************************************)      
+    subsection \<open>Match Lemmata\<close>
+(************************************************)
+      
+lemma match_umsg_mono: "monofun (\<lambda>k. case t of (Discr (Msg m)) \<Rightarrow> k\<cdot>(Discr m) | _\<Rightarrow>Fixrec.fail)"
+  apply(rule monofunI)
+  apply(cases "\<exists>m. t = Discr (Msg m)", auto)
+  apply (simp add: monofun_cfun_fun)
+  by (metis Discr_undiscr discr.case event.exhaust event.simps(5) po_eq_conv)
+
+lemma match_umsg_cont[simp]: "cont (\<lambda>k. case t of (Discr (Msg m)) \<Rightarrow> k\<cdot>(Discr m) | _\<Rightarrow>Fixrec.fail)"
+  apply(rule contI2)
+  apply(simp add: match_umsg_mono)
+  apply(cases "\<exists>m. t = Discr (Msg m)", auto)
+  using contlub_cfun_fun po_eq_conv apply blast
+  using Discr_undiscr discr.case event.exhaust event.simps(5) po_eq_conv by (smt below_lub po_class.chain_def)
+
+lemma match_umsg_insert: "match_umsg\<cdot>t\<cdot>k = (case t of (Discr (Msg m)) \<Rightarrow> k\<cdot>(Discr m) | _\<Rightarrow>Fixrec.fail)"
+by(simp add: match_umsg_def)  
+  
+   
+  
+lemma match_tstream_simps [simp]:
+  "match_tstream\<cdot>\<bottom>\<cdot>k = \<bottom>"
+  "ts\<noteq>\<bottom> \<Longrightarrow> t\<noteq>\<bottom> \<Longrightarrow> match_tstream\<cdot>(tsLscons\<cdot>t\<cdot>ts)\<cdot>k = k\<cdot>t\<cdot>ts" 
+  "match_tstream\<cdot>(tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>ts)\<cdot>k = k\<cdot>(up\<cdot>DiscrTick)\<cdot>ts"
+  "match_tstream\<cdot>(delayFun\<cdot>ts)\<cdot>k = k\<cdot>(up\<cdot>DiscrTick)\<cdot>ts"
+  "xs\<noteq>\<bottom>\<Longrightarrow> match_tstream\<cdot>(tsMLscons\<cdot>(up\<cdot>x)\<cdot>xs)\<cdot>k = k\<cdot>(up\<cdot>(uMsg\<cdot>x))\<cdot>xs"
+     by(simp_all add: match_tstream_def DiscrTick_def tsMLscons_def uMsg_def)
+    
+lemma match_tick_simps [simp]:
+  "a\<noteq>\<surd> \<Longrightarrow> match_tick\<cdot>(Discr a)\<cdot>k = Fixrec.fail"
+  "b\<noteq>(Discr \<surd>) \<Longrightarrow> match_tick\<cdot>b\<cdot>k = Fixrec.fail"
+  "t\<noteq>DiscrTick \<Longrightarrow> match_tick\<cdot>t\<cdot>k = Fixrec.fail"
+  "match_tick\<cdot>(uMsg\<cdot>m)\<cdot>k = Fixrec.fail"
+  "match_tick\<cdot>(Discr \<surd>)\<cdot>k = k"
+  "match_tick\<cdot>DiscrTick\<cdot>k = k"
+  apply (auto simp add: match_tick_def DiscrTick_def uMsg_def)
+  by (metis Discr_undiscr discr.case event.distinct(1) undiscr_Discr)
+
+lemma match_umsg_simps [simp]:
+  "match_umsg\<cdot>(Discr \<surd>)\<cdot>k = Fixrec.fail"
+  "match_umsg\<cdot>DiscrTick\<cdot>k = Fixrec.fail"
+  "match_umsg\<cdot>(Discr (Msg m))\<cdot>k = k\<cdot>(Discr m)"
+  "match_umsg\<cdot>(uMsg\<cdot>m2)\<cdot>k = k\<cdot>m2"
+  unfolding match_umsg_insert
+  apply (auto simp add: DiscrTick_def)
+  by (metis (mono_tags, lifting) Abs_cfun_inverse2 Discr_undiscr cont_discrete_cpo discr.case event.case(1) uMsg_def)
+   
+setup \<open>
+  Fixrec.add_matchers
+    [ (@{const_name tsLscons},  @{const_name match_tstream}) , 
+      (@{const_name DiscrTick}, @{const_name match_tick}),
+      (@{const_name uMsg},      @{const_name match_umsg})
+    ]
+\<close>
+  
+(* ----------------------------------------------------------------------- *)
+subsection {* tsZip *}
+(* ----------------------------------------------------------------------- *)     
+  
+fixrec tsZip :: "'a tstream \<rightarrow> 'b stream \<rightarrow> ('a \<times> 'b) tstream" where
+  (* Bottom case *)
+"tsZip\<cdot>ts\<cdot>\<bottom> = \<bottom>" | 
+
+  (* One Message, then directly a Tick. Return Pair an Tick directly. 
+    (Neccessary, because if the 'stream' ends we would not return a Tick) *)
+"x\<noteq>\<bottom> \<Longrightarrow>                
+  tsZip\<cdot>(tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>t))\<cdot>(tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>ts))\<cdot>(x && xs)
+                            = tsMLscons\<cdot>(upApply2 Pair\<cdot>(up\<cdot>t)\<cdot>x)\<cdot>(delayFun\<cdot>(tsZip\<cdot>ts\<cdot>xs))" | 
+
+  (* two messages in tStream. Work on the first *)
+"x\<noteq>\<bottom> \<Longrightarrow> ts\<noteq>\<bottom> \<Longrightarrow>              
+  tsZip\<cdot>(tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>t))\<cdot>(tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>t2))\<cdot>ts))\<cdot>(x && xs) 
+                            = tsMLscons\<cdot>(upApply2 Pair\<cdot>(up\<cdot>t)\<cdot>x)\<cdot>(tsZip\<cdot>(tsMLscons\<cdot>(up\<cdot>t2)\<cdot>ts)\<cdot>xs)" | 
+
+  (* ignore ticks *)
+"xs\<noteq>\<bottom> \<Longrightarrow> 
+  tsZip\<cdot>(tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>ts)\<cdot>xs = delayFun\<cdot>(tsZip\<cdot>ts\<cdot>xs)"
+
+declare tsZip.simps [simp del]
+
+lemma tszip_strict [simp]: 
+"tsZip\<cdot>\<bottom>\<cdot>\<epsilon> = \<bottom>"
+"tsZip\<cdot>ts\<cdot>\<epsilon> = \<bottom>"
+"tsZip\<cdot>\<bottom>\<cdot>s = \<bottom>"
+by (fixrec_simp)+
+
+lemma tszip_tslscons_2msg [simp]: "x\<noteq>\<bottom>  \<Longrightarrow> ts\<noteq>\<bottom> \<Longrightarrow>               
+  tsZip\<cdot>(tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>t))\<cdot>(tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>t2))\<cdot>ts))\<cdot>(x && xs) 
+                            = tsMLscons\<cdot>(upApply2 Pair\<cdot>(up\<cdot>t)\<cdot>x)\<cdot>(tsZip\<cdot>(tsMLscons\<cdot>(up\<cdot>t2)\<cdot>ts)\<cdot>xs)"
+by (fixrec_simp)
+
+lemma tszip_tslscons_msgtick [simp]: "x\<noteq>\<bottom> \<Longrightarrow>           
+  tsZip\<cdot>(tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>t))\<cdot>(tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>ts))\<cdot>(lscons\<cdot>x\<cdot>xs)
+                            = tsMLscons\<cdot>(upApply2 Pair\<cdot>(up\<cdot>t)\<cdot>x)\<cdot>(delayFun\<cdot>(tsZip\<cdot>ts\<cdot>xs))"
+by (fixrec_simp)
+
+lemma tszip_tslscons_tick [simp]: "xs\<noteq>\<bottom> \<Longrightarrow> 
+  tsZip\<cdot>(tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>ts)\<cdot>xs = delayFun\<cdot>(tsZip\<cdot>ts\<cdot>xs)"
+by (fixrec_simp)
+
+lemma tszip_mlscons:
+  "tsZip\<cdot>(tsMLscons\<cdot>(updis t)\<cdot>(tsMLscons\<cdot>(updis u)\<cdot>ts))\<cdot>((updis x) && xs)
+                           = tsMLscons\<cdot>(updis (t,x))\<cdot>(tsZip\<cdot>(tsMLscons\<cdot>(updis u)\<cdot>ts)\<cdot>xs)"
+by (metis (no_types, lifting) tsmlscons_bot2 tsmlscons_lscons tszip_strict(3) tszip_tslscons_2msg
+    up_defined upapply2_rep_eq)
+
+lemma tszip_mlscons_delayfun:
+  "tsZip\<cdot>(tsMLscons\<cdot>(updis t)\<cdot>(delayFun\<cdot>ts))\<cdot>((updis x) && xs)
+                           = tsMLscons\<cdot>(updis (t,x))\<cdot>(delayFun\<cdot>(tsZip\<cdot>ts\<cdot>xs))"
+by (metis (no_types, lifting) delayfun_tslscons tsmlscons_lscons tszip_tslscons_msgtick 
+    up_defined upapply2_rep_eq)
+
+lemma tszip_delayfun: "xs\<noteq>\<epsilon> \<Longrightarrow> tsZip\<cdot>(delayFun\<cdot>ts)\<cdot>xs = delayFun\<cdot>(tsZip\<cdot>ts\<cdot>xs)"
+by (simp add: delayfun_tslscons)
+
+(************************************************)      
+    section \<open>Induction Lemmata\<close>
+(************************************************)
+      
+lemma tstream_infs: "(\<And>s. #\<surd>s<\<infinity> \<Longrightarrow> P s) \<Longrightarrow> adm P \<Longrightarrow> P s"
+  by (metis (no_types, lifting) adm_def finite_chain_def inf_less_eq leI ts_infinite_fin tstake_chain tstake_inf_lub tstake_infinite_chain)
+        
+lemma tstream_adm_fin: "adm P \<Longrightarrow> (\<forall>ts. #\<surd>ts<\<infinity> \<longrightarrow> P ts) \<Longrightarrow>  adm (\<lambda>a. ts_well a \<longrightarrow> P (Abs_tstream a))"    
+  apply(rule admI)
+    apply auto
+  by (metis (no_types, lifting) adm_def finite_chain_def inf_less_eq leI ts_infinite_fin tstake_chain tstake_inf_lub tstake_infinite_chain)  
+
+lemma tsmsg_notwell: "\<not>ts_well((updis (Msg m)) && \<bottom>)"
+  apply(simp add: ts_well_def)
+  by (metis Inf'_neq_0 event.distinct(1) fold_inf lnat.sel_rews(2) lscons_conv sfilterl4 sfoot1 sfoot_one slen_scons strict_slen sup'_def)
+
+lemma tstream_fin_induct_h:
+  assumes 
+        "P \<bottom>" 
+    and "\<And>xs. P xs \<Longrightarrow> P (delayFun\<cdot>xs)" and "\<And>xs x. P xs\<Longrightarrow> x\<noteq>\<bottom>\<Longrightarrow>xs\<noteq>\<bottom>\<Longrightarrow> P (tsMLscons\<cdot>x\<cdot>xs)"
+    and "#s<\<infinity>"
+  shows "ts_well s \<Longrightarrow> P (Abs_tstream s)"
+proof (induction rule: stream_fin_induct)
+  case 1
+  then show ?case
+    by (simp add: assms(1)) 
+next
+  case (2 u s)
+   assume u_def: "u \<noteq> \<bottom>" and "(ts_well s \<Longrightarrow> P (Abs_tstream s))" and  "ts_well (u && s)"
+      have s_well: "ts_well s"  using "2.prems"(1) ts_well_drop1 u_def by fastforce
+      then show "P (Abs_tstream (u && s))"
+                proof (cases "u=updis \<surd>")
+                  case True
+                    have "delayFun\<cdot>(Abs_tstream s) = Abs_tstream (u&&s)"
+                      by (simp add: True delayfun_abststream s_well)
+                  then show ?thesis
+                    using \<open>ts_well s \<Longrightarrow> P (Abs_tstream s)\<close> assms(2) s_well by force
+                next
+                  case False
+                    obtain m where m_def: "u = up\<cdot>(Discr (Msg m))"
+                      by (metis (full_types) Exh_Up False discr.exhaust event.exhaust u_def)                        
+                    have "s\<noteq>\<bottom>"
+                      using "2.prems" m_def tsmsg_notwell by blast
+                     hence "Abs_tstream (u&&s) = tsMLscons\<cdot>(updis m)\<cdot>(Abs_tstream s)"
+                       by (metis Abs_Rep Rep_Abs Rep_tstream_bottom_iff m_def s_well tslscons_lscons tsmlscons2tslscons)
+                  then show ?thesis
+                    by (metis \<open>ts_well s \<Longrightarrow> P (Abs_tstream s)\<close> assms(3) s_well tsmlscons_bot2 up_defined)
+                qed   
+next
+  case 3
+  then show ?case by (simp add: assms(4))
+qed
+
+lemma tstream_fin_induct:
+  assumes 
+        Bot: "P \<bottom>" 
+    and delayFun: "\<And>xs. P xs \<Longrightarrow> P (delayFun\<cdot>xs)" 
+    and tsMLscons: "\<And>xs x. P xs\<Longrightarrow> x\<noteq>\<bottom>\<Longrightarrow>xs\<noteq>\<bottom>\<Longrightarrow> P (tsMLscons\<cdot>x\<cdot>xs)"
+    and fin: "#\<surd>ts<\<infinity>"
+  shows "P ts"
+proof -
+  obtain s where s_def: "Abs_tstream s = ts" and s_well: "ts_well s" using Abs_Rep ts_well_Rep by blast
+  hence "#s < \<infinity>" using assms(4) finititeTicks by force
+  hence "P (Abs_tstream s)"
+    by (simp add: assms(1) assms(2) assms(3) s_well tstream_fin_induct_h)
+  thus ?thesis by (simp add: s_def)    
+qed     
+  
+
+(* this term creates an induction rule for tstream *)  
+lemma tstream_induct [case_names Adm Bot delayFun tsMLscons, induct type: tstream]:
+  fixes ts
+  assumes 
+        "adm P"
+    and "P \<bottom>"  
+    and "\<And>ts. P ts \<Longrightarrow> P (delayFun\<cdot>ts)" and "\<And>ts t. P ts\<Longrightarrow> t\<noteq>\<bottom>\<Longrightarrow>ts\<noteq>\<bottom>\<Longrightarrow> P (tsMLscons\<cdot>t\<cdot>ts)"
+  shows "P ts"
+  by (metis assms(1) assms(2) assms(3) assms(4) tstream_fin_induct tstream_infs)
+
+    
+  
 (*TODO
 
 (*-----------------------------*)
@@ -2646,6 +3355,24 @@ done
 (*-----------------------------*)
 smap
 (*-----------------------------*)
+
+(* smap distributes over concatenation *)
+lemma smap_scons[simp]: "smap f\<cdot>(\<up>a \<bullet> s) = \<up>(f a) \<bullet> smap f\<cdot>s"
+
+(* mapping f over a singleton stream is equivalent to applying f to the only element in the stream *) 
+lemma [simp]: "smap f\<cdot>(\<up>a) = \<up>(f a)"
+
+text {* @{term smap} maps each element @{term x} to @{term "f(x)"} *}
+lemma smap_snth_lemma:
+  "Fin n < #s \<Longrightarrow> snth n (smap f\<cdot>s) = f (snth n s)"
+
+text {* @{term sdrop} after @{term smap} is like @{term smap} after @{term sdrop} *}
+lemma sdrop_smap[simp]: "sdrop k\<cdot>(smap f\<cdot>s) = smap f\<cdot>(sdrop k\<cdot>s)"
+
+text {* @{term "smap f"} is a homomorphism on streams with respect to concatenation *}
+lemma smap_split: "smap f\<cdot>(a \<bullet> b) = (smap f\<cdot>a) \<bullet> (smap f\<cdot>b)"
+
+lemma smap2sinf[simp]: "smap f\<cdot>(x\<infinity>)= (smap f\<cdot>x)\<infinity>"
 
 lemma rek2smap: assumes "\<And>a as. f\<cdot>(\<up>a \<bullet> as) = \<up>(g a) \<bullet> f\<cdot>as"
   and "f\<cdot>\<bottom> = \<bottom>"
@@ -3331,39 +4058,11 @@ lemma slen_sinftimes: "s \<noteq> \<epsilon> \<Longrightarrow> #(sinftimes s) = 
 lemma [simp]: "#(sinftimes (\<up>a)) = \<infinity>" 
 
 (*-----------------------------*)
-smap
-(*-----------------------------*)
-
-lemma strict_smap[simp]: "smap f\<cdot>\<epsilon> = \<epsilon>"
-
-(* smap distributes over concatenation *)
-lemma smap_scons[simp]: "smap f\<cdot>(\<up>a \<bullet> s) = \<up>(f a) \<bullet> smap f\<cdot>s"
-
-(* mapping f over a singleton stream is equivalent to applying f to the only element in the stream *) 
-lemma [simp]: "smap f\<cdot>(\<up>a) = \<up>(f a)"
-
-(* smap leaves the length of a stream unchanged *)
-lemma slen_smap[simp]: "#(smap f\<cdot>x) = #x"
-
-text {* @{term smap} maps each element @{term x} to @{term "f(x)"} *}
-lemma smap_snth_lemma:
-  "Fin n < #s \<Longrightarrow> snth n (smap f\<cdot>s) = f (snth n s)"
-
-text {* @{term sdrop} after @{term smap} is like @{term smap} after @{term sdrop} *}
-lemma sdrop_smap[simp]: "sdrop k\<cdot>(smap f\<cdot>s) = smap f\<cdot>(sdrop k\<cdot>s)"
-
-text {* @{term "smap f"} is a homomorphism on streams with respect to concatenation *}
-lemma smap_split: "smap f\<cdot>(a \<bullet> b) = (smap f\<cdot>a) \<bullet> (smap f\<cdot>b)"
-
-(*-----------------------------*)
 sprojfst
 (*-----------------------------*)
 
 (* sprojfst extracts the first element of the first tuple in any non-empty stream of tuples *)
 lemma sprojfst_scons[simp]: "sprojfst\<cdot>(\<up>(x, y) \<bullet> s) = \<up>x \<bullet> sprojfst\<cdot>s"
-
-(* the empty stream is a fixed point of sprojfst *)
-lemma strict_sprojfst[simp]: "sprojfst\<cdot>\<epsilon> = \<epsilon>"
 
 (* sprojfst extracts the first element of any singleton tuple-stream *)
 lemma [simp]: "sprojfst\<cdot>(\<up>(a,b)) = \<up>a"
@@ -3371,12 +4070,8 @@ lemma [simp]: "sprojfst\<cdot>(\<up>(a,b)) = \<up>a"
 (* sprojsnd extracts the second element of the first tuple in any non-empty stream of tuples *)
 lemma sprojsnd_scons[simp]: "sprojsnd\<cdot>(\<up>(x,y) \<bullet> s) = \<up>y \<bullet> sprojsnd\<cdot>s"
 
-(* the empty stream is a fixed point of sprojsnd *)
-lemma strict_sprojsnd[simp]: "sprojsnd\<cdot>\<epsilon> = \<epsilon>"
-
 (* sprojsnd extracts the second element of any singleton tuple-stream *)
 lemma [simp]: "sprojsnd\<cdot>(\<up>(a,b)) = \<up>b"
-
 
 lemma rt_Sproj_2_eq: "sprojsnd\<cdot>(srt\<cdot>x) = srt\<cdot>(sprojsnd\<cdot>x)"
 
@@ -3384,21 +4079,9 @@ lemma rt_Sproj_1_eq: "sprojfst\<cdot>(srt\<cdot>x) = srt\<cdot>(sprojfst\<cdot>x
 
 text {* length of projections and the empty stream *}
 
-lemma slen_sprojs_eq: "#(sprojsnd\<cdot>x) = #(sprojfst\<cdot>x)"
-
-lemma strict_rev_sprojfst: "sprojfst\<cdot>x = \<epsilon> \<Longrightarrow> x = \<epsilon>"
-
-lemma strict_rev_sprojsnd: "sprojsnd\<cdot>x = \<epsilon> \<Longrightarrow> x = \<epsilon>"
-
-lemma slen_sprojfst: "#(sprojfst\<cdot>x) = #x"
-
-lemma slen_sprojsnd: "#(sprojsnd\<cdot>x) = #x"
-
 (*-----------------------------*)
 sfilter
 (*-----------------------------*)
-
-lemma strict_sfilter[simp]: "sfilter M\<cdot>\<epsilon> = \<epsilon>"
 
 (* if the head of a stream is in M, then sfilter will keep the head *)
 lemma sfilter_in[simp]: 
@@ -3440,13 +4123,6 @@ lemma sfilter_empty_snths_nin_lemma:
 text {* @{term sfilter} returns @{text "\<epsilon>"} if no element is included in the filter *}
 lemma ex_snth_in_sfilter_nempty:
   "(\<forall>n. Fin n < #p \<longrightarrow> snth n p \<notin> X) \<Longrightarrow> sfilter X\<cdot>p = \<epsilon>"
-
-text {* The filtered stream is at most as long as the original one *}
-lemma slen_sfilterl1: "#(sfilter S\<cdot>x) \<le> #x"
-
-text {* If the filtered stream is infinite, the original one is infinite as well *}
-lemma sfilterl4:
-  "#(sfilter X\<cdot>x) = \<infinity> \<Longrightarrow> #x = \<infinity>"
 
 text {* Prepending to the original stream never shortens the filtered result *}
 lemma sfilterl2: 
