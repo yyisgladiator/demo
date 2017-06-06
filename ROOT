@@ -3,29 +3,26 @@ session "Streams" (mustWork) = "HOLCF" +
   theories
     Streams
 
-session "TStreamSorry" (mustWork) = "Streams" + 
+
+session "SPSSorry" (mustWork) = "Streams" + 
   options [quick_and_dirty = true]
   theories
-    TStream   
-    induction_tstream
-    "CaseStudies/TimedABP"
-    TStream_DS
- 
- 
-session "TSPSSorry" (mustWork) = "TStreamSorry" + 
+    SPS
+
+session "TSPSSorry" (mustWork) = "Streams" + 
   options [quick_and_dirty = true]
   theories
     TSPS   
     
 
 
-session "TStream" (canFail) = "Streams" + 
+
+session "SPS" (canFail) = "Streams" + 
   options [quick_and_dirty = false]
   theories
-    TStream   
-    induction_tstream
- 
-session "TSPS" (canFail) = "TStream" + 
+    SPS
+
+session "TSPS" (canFail) = "Streams" + 
   options [quick_and_dirty = false]
   theories
     SPF_Composition_JB
