@@ -2560,7 +2560,7 @@ by (simp add: delayFun_def tslscons_insert tsconc_insert DiscrTick_def espf2tspf
 lemma delayfun_tslscons_bot: "delayFun\<cdot>\<bottom> = tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>\<bottom>"
 by (simp add: delayfun_tslscons tick_eq_discrtick)
 
-lemma delayfun2tsinftick: assumes "\<And>ts. f\<cdot>(delayFun\<cdot>ts) = delayFun\<cdot>(f\<cdot>ts)"
+lemma delayfun2tsinftick [simp]: assumes "\<And>ts. f\<cdot>(delayFun\<cdot>ts) = delayFun\<cdot>(f\<cdot>ts)"
   shows "f\<cdot>tsInfTick = tsInfTick"
 apply (simp add: tsInfTick_def)
 by (metis (no_types, lifting) Rep_Abs assms delayfun_insert s2sinftimes sinftimes_unfold tick_msg
