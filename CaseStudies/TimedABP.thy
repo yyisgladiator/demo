@@ -47,7 +47,7 @@ lemma tsmed_strict [simp]:
   "tsMed\<cdot>\<bottom>\<cdot>ora = \<bottom>"
 oops
 
-(* Assumtions are missing. Add msg\<noteq>\<bottom> and ora\<noteq>\<bottom> as needed. *)
+(* Assumptions are missing. Add msg\<noteq>\<bottom> and ora\<noteq>\<bottom> as needed. *)
 lemma tsmed_mlscons_true: "tsMed\<cdot>(tsMLscons\<cdot>m\<cdot>msg)\<cdot>((updis True) && ora) = tsMLscons\<cdot>m\<cdot>(tsMed\<cdot>msg\<cdot>ora)"
 oops
     

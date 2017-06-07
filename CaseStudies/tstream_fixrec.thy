@@ -1,4 +1,4 @@
-theory induction_tstream
+theory tstream_fixrec
 (* This theory enables the use of tStreams with fixrec. Especially pattern-matching with the first 
 Element of the stream is supported. Hence it is possible to create seperate cases for "first Element is Tick"
 and "first element is Message" *)
@@ -7,7 +7,7 @@ and "first element is Message" *)
    sebastian.stueber@rwth-aachen.de *)
   
   
-imports TStream TStream_DS OptionCpo (* "~~/src/HOL/HOLCF/Library/Option_Cpo" *)
+imports "../TStream" "../TStream_DS" "../OptionCpo" (* "~~/src/HOL/HOLCF/Library/Option_Cpo" *)
 
 begin
 
