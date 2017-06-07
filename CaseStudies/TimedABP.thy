@@ -20,8 +20,11 @@ section {* components definition *}
 definition tsMed :: "'a tstream \<rightarrow> bool stream \<rightarrow> 'a tstream" where
 "tsMed \<equiv> \<Lambda> msg ora. tsProjFst\<cdot>(tsFilter {x. snd x}\<cdot>(tsZip\<cdot>msg\<cdot>ora))"
 
+definition tsRecSnd :: "('a \<times> 'b) tstream \<rightarrow> 'a tstream" where
+"tsRecSnd \<equiv> \<Lambda> dat. tsProjFst\<cdot>(tsRemDups\<cdot>dat)"
+
 definition tsRec :: "('a \<times> 'b) tstream \<rightarrow> ('b tstream \<times> 'a tstream)" where
-"tsRec \<equiv> \<Lambda> dat. (tsProjSnd\<cdot>dat, tsProjFst\<cdot>(tsRemDups\<cdot>dat))"
+"tsRec \<equiv> \<Lambda> dat. (tsProjSnd\<cdot>dat, tsRecSnd\<cdot>dat)"
 
 (* ----------------------------------------------------------------------- *)
 section {* basic properties *}
@@ -76,7 +79,38 @@ lemma tsmed_inftrue [simp]: "tsMed\<cdot>msg\<cdot>((\<up>True) \<infinity>) = m
 oops
 
 (* ----------------------------------------------------------------------- *)
+subsection {* receiver *}
+(* ----------------------------------------------------------------------- *)
+
+lemma tsrecsnd_insert: "tsRecSnd\<cdot>dat = tsProjFst\<cdot>(tsRemDups\<cdot>dat)"
+by (simp add: tsRecSnd_def)
+
+(* ToDo: basic properties lemmata for receiver *)
+
+lemma tsrecsnd_strict [simp]: "tsRecSnd\<cdot>\<bottom> = \<bottom>"
+oops
+
+lemma tsrecsnd_delayfun: "tsRecSnd\<cdot>(delayFun\<cdot>dat) = delayFun\<cdot>(tsRecSnd\<cdot>dat)"
+oops
+
+lemma tsrecsnd_tstickcount [simp]: "#\<surd>(tsRecSnd\<cdot>dat) = #\<surd>dat"
+oops
+
+lemma tsrec_insert: "tsRec\<cdot>dat = (tsProjSnd\<cdot>dat, tsRecSnd\<cdot>dat)"
+by (simp add: tsRec_def)
+
+lemma tsrec_strict [simp]: "tsRec\<cdot>\<bottom> = \<bottom>"
+oops
+
+lemma tsrec_delayfun: "tsRec\<cdot>(delayFun\<cdot>dat) = (delayFun\<cdot>(tsProjSnd\<cdot>dat), delayFun\<cdot>(tsRecSnd\<cdot>dat))"
+oops
+
+(* ----------------------------------------------------------------------- *)
 section {* additional properties *}
+(* ----------------------------------------------------------------------- *)
+
+(* ----------------------------------------------------------------------- *)
+subsection {* medium *}
 (* ----------------------------------------------------------------------- *)
 
 (* ToDo: additional properties lemmata for medium, first show testings below *)
@@ -120,6 +154,33 @@ lemma "tsMed\<cdot>OneTwoThree\<cdot>(<[True, False]> \<infinity>) = Abs_tstream
 oops
 
 lemma "tsMed\<cdot>(OneTwoThree \<bullet> tsInfTick)\<cdot>((\<up>True) \<infinity>) = (OneTwoThree \<bullet> tsInfTick)"
+oops
+
+(* ----------------------------------------------------------------------- *)
+subsection {* receiver *}
+(* ----------------------------------------------------------------------- *)
+
+lift_definition OneTrue3OneFalse :: "(nat \<times> bool) tstream" is
+  "<[Msg (1, True), Msg (1, True), \<surd>, Msg (1, True), \<surd>, Msg (1, False), \<surd>]>"
+by (subst ts_well_def, auto)
+
+lift_definition True3False :: "bool tstream" is
+  "<[Msg True, Msg True, \<surd>, Msg True, \<surd>, Msg False, \<surd>]>"
+by (subst ts_well_def, auto)
+
+lift_definition OneOne :: "nat tstream" is
+  "<[Msg 1, \<surd>, \<surd>, Msg 1, \<surd>]>"
+by (subst ts_well_def, auto)
+
+(* ToDo: testing lemmata for receiver *)
+
+lemma "tsRec\<cdot>\<bottom> = \<bottom>"
+oops
+
+lemma "tsRec\<cdot>OneTrue3OneFalse = (True3False, OneOne)"
+oops
+
+lemma "tsRec\<cdot>(OneTrue3OneFalse \<bullet> tsInfTick) = (True3False \<bullet> tsInfTick, OneOne \<bullet> tsInfTick)"
 oops
     
 end
