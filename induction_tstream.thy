@@ -7,7 +7,7 @@ and "first element is Message" *)
    sebastian.stueber@rwth-aachen.de *)
   
   
-imports TStream TStream_DS "~~/src/HOL/HOLCF/Library/Option_Cpo"
+imports TStream TStream_DS OptionCpo (* "~~/src/HOL/HOLCF/Library/Option_Cpo" *)
 
 begin
 
