@@ -8,7 +8,7 @@
 chapter {* Alternating Bit Protocol *}       
                                                             
 theory TimedABP
-imports "../TStream_DS"
+imports "../TStream"
 
 begin
 default_sort countable

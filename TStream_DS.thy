@@ -7,7 +7,7 @@
 
 theory TStream_DS
  
-imports TStream OptionCpo (* "~~/src/HOL/HOLCF/Library/Option_Cpo" *)
+imports TStream
 
 begin  
 default_sort countable
