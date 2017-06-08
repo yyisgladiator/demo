@@ -14,42 +14,28 @@ default_sort countable
 
 (* Here I just try a few things. *)
 
-lemma upapplymsg_ntick: "upApply Msg\<cdot>t \<noteq> updis \<surd>"
-by (metis event.distinct(1) up_defined upapply_rep_eq upapply_strict updis_eq updis_exists)
-
-lemma upapplymsg2updis: assumes "t\<noteq>\<bottom>"
-  obtains m where "upApply Msg\<cdot>t = updis m"
-by (metis assms up_defined upapply_up updis_exists)
-
-lemma delayfun2tstickcount [simp]: 
-assumes "\<And>ts. f\<cdot>(delayFun\<cdot>ts) = delayFun\<cdot>(f\<cdot>ts)" and "f\<cdot>\<bottom> = \<bottom>"
-shows "#\<surd>(f\<cdot>ts) = #\<surd>ts"
-apply (induction ts)
-apply (simp_all add: assms)
-apply (metis delayFun_dropFirst delayfun_nbot tsdropfirst_len)
-apply (simp add: tstickcount_mlscons)
-oops
-
-lemma tszip_mlscons:
-  "xs\<noteq>\<epsilon> \<Longrightarrow> tsZip\<cdot>(tsMLscons\<cdot>(updis t)\<cdot>ts)\<cdot>((updis x) && xs)
-                           = tsMLscons\<cdot>(updis (t, x))\<cdot>(tsZip\<cdot>ts\<cdot>xs)"
-oops
-
 lemma tszip_tstickcount [simp]: "xs\<noteq>\<epsilon> \<Longrightarrow> #\<surd>(tsZip\<cdot>ts\<cdot>xs) = #\<surd>ts"
 apply (induction ts)
 apply (simp_all)
-apply (case_tac "ts=\<bottom>", simp add: tszip_delayfun)
-apply (metis delayFun_dropFirst delayfun_nbot strict_tstickcount tsdropfirst_len)
-apply (metis delayFun_dropFirst delayfun_nbot tsdropfirst_len tszip_delayfun)
+apply (metis tszip_delayfun delayFun_dropFirst delayfun_nbot tsdropfirst_len)
+apply (simp add: tstickcount_mlscons)
 oops
 
-lemma tsabs_tszip_slen [simp]: "#xs=\<infinity> \<Longrightarrow> #(tsAbs\<cdot>(tsZip\<cdot>ts\<cdot>xs)) = #(tsAbs\<cdot>ts)"
+lemma tsabs_delayfun: "tsAbs\<cdot>(delayFun\<cdot>ts) = tsAbs\<cdot>ts"
+by(simp add: delayFun_def)
+
+lemma tsabs_mlscons: "ts\<noteq>\<bottom> \<Longrightarrow> tsAbs\<cdot>(tsMLscons\<cdot>(updis t)\<cdot>ts) = (updis t) && (tsAbs\<cdot>ts)"
+apply (simp add: tsmlscons2tslscons)
+apply (subst tsabs_insert)
+apply (simp add: tslscons_lscons uMsg_def lscons_conv)
+by (simp add: tsabs_insert)
+
+lemma tsabs_tszip_slen [simp]: "xs\<noteq>\<epsilon> \<Longrightarrow> #(tsAbs\<cdot>(tsZip\<cdot>ts\<cdot>(updis x && xs))) = #(tsAbs\<cdot>ts)"
 apply (induction ts)
 apply (simp_all)
-apply (simp add: tsabs_insert)
-apply (subst tszip_delayfun, auto)
-apply (simp add: delayfun_insert tsconc_rep_eq)
-apply (simp add: tsabs_insert)
+apply (simp add: tsabs_delayfun tszip_delayfun)
+apply (simp add: tszip_mlscons)
+apply (subst tsabs_mlscons)
 oops
 
 
@@ -102,7 +88,7 @@ proof -
   have "Abs_tstream (updis \<surd> && <[]>) \<bullet> Abs_tstream (updis (\<M> 2::'a) && <[\<surd>]>) \<noteq> \<bottom>"
     using f1 by auto
   then show ?thesis
-    using f11 f10 f9 f8 f7 f6 f5 f4 by (metis (no_types) delayfun_insert list2s.simps(2) list2s_0 lscons_conv tsmlscons_lscons3 tszip_mlscons_delayfun tszip_strict(2))
+    using f11 f10 f9 f8 f7 f6 f5 f4 by (metis (no_types) delayfun_insert list2s.simps(2) list2s_0 lscons_conv tsmlscons_lscons3 tszip_mlscons_msgdelayfun tszip_strict(2))
 qed
 
 (*

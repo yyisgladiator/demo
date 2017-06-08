@@ -2849,13 +2849,13 @@ lemma tszip_tslscons_tick [simp]: "xs\<noteq>\<bottom> \<Longrightarrow>
   tsZip\<cdot>(tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>ts)\<cdot>xs = delayFun\<cdot>(tsZip\<cdot>ts\<cdot>xs)"
 by (fixrec_simp)
 
-lemma tszip_mlscons:
+lemma tszip_mlscons_2msg:
   "tsZip\<cdot>(tsMLscons\<cdot>(updis t)\<cdot>(tsMLscons\<cdot>(updis u)\<cdot>ts))\<cdot>((updis x) && xs)
                            = tsMLscons\<cdot>(updis (t, x))\<cdot>(tsZip\<cdot>(tsMLscons\<cdot>(updis u)\<cdot>ts)\<cdot>xs)"
 by (metis (no_types, lifting) tsmlscons_bot2 tsmlscons_lscons tszip_strict(3) tszip_tslscons_2msg
     up_defined upapply2_rep_eq)
 
-lemma tszip_mlscons_delayfun:
+lemma tszip_mlscons_msgdelayfun:
   "tsZip\<cdot>(tsMLscons\<cdot>(updis t)\<cdot>(delayFun\<cdot>ts))\<cdot>((updis x) && xs)
                            = tsMLscons\<cdot>(updis (t, x))\<cdot>(delayFun\<cdot>(tsZip\<cdot>ts\<cdot>xs))"
 by (metis (no_types, lifting) delayfun_tslscons tsmlscons_lscons tszip_tslscons_msgtick 
@@ -2863,6 +2863,14 @@ by (metis (no_types, lifting) delayfun_tslscons tsmlscons_lscons tszip_tslscons_
 
 lemma tszip_delayfun: "xs\<noteq>\<epsilon> \<Longrightarrow> tsZip\<cdot>(delayFun\<cdot>ts)\<cdot>xs = delayFun\<cdot>(tsZip\<cdot>ts\<cdot>xs)"
 by (simp add: delayfun_tslscons)
+
+lemma tszip_mlscons:
+  "xs\<noteq>\<epsilon> \<Longrightarrow> tsZip\<cdot>(tsMLscons\<cdot>(updis t)\<cdot>ts)\<cdot>((updis x) && xs)
+                           = tsMLscons\<cdot>(updis (t, x))\<cdot>(tsZip\<cdot>ts\<cdot>xs)"
+apply (induction ts)
+apply (simp_all)
+apply (simp add: tszip_delayfun tszip_mlscons_msgdelayfun)
+by (simp add: tszip_mlscons_2msg)
 
 (* ----------------------------------------------------------------------- *)
 subsection {* tsRemDups *}
