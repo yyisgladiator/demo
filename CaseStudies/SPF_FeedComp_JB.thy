@@ -8,7 +8,7 @@
 
 theory SPF_FeedComp_JB
   (* check if StreamCase_Study is really necessary *)
-  imports "../SPF_FeedComp" "../SPF_MW" StreamCase_Study
+  imports "../SPF_FeedComp" StreamCase_Study
 begin
   
 

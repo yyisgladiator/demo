@@ -1,5 +1,5 @@
 theory SPF_Feedback_MW
-imports "../CaseStudies/StreamCase_Study" "../SPF_MW" "../SPF_Comp" "../SPF_Templates"  SPF_FeedComp_JB "../SPF_Feedback_JB"
+imports "../CaseStudies/StreamCase_Study" "../SPF_Comp" "../SPF_Templates"  SPF_FeedComp_JB "../SPF_Feedback_JB"
 
 begin
 
@@ -107,6 +107,9 @@ lemma unionRestrict2: assumes "sbDom\<cdot>sb3 \<inter> cs = {}"
 apply(rule sb_eq)
 by(simp_all add: assms)
 
+lemma conthelper: assumes "cont (Rep_CSPF f)" and "spfDom\<cdot>f = cs" shows "cont (\<lambda> z. (f\<rightleftharpoons>(z\<bar>cs)))"
+by (metis Rep_CSPF_def cont_Rep_cfun2 cont_compose op_the_cont)  
+  
 lemma contAddC: "cont (\<lambda> z. (addC\<rightleftharpoons>(z\<bar>{c1, c2})))"
 by(subst conthelper, simp_all)
 
@@ -350,7 +353,7 @@ by (simp add: idC_def)
 
 (* \<mu>((idC \<parallel> append0C) \<circ> addC) *)  
 definition sum4SPF :: "nat SPF" where
-"sum4SPF \<equiv> spfFeedbackOperator (SPF_MW.sercomp (idC \<parallel> append0C) addC)"
+"sum4SPF \<equiv> spfFeedbackOperator (sercomp (idC \<parallel> append0C) addC)"
 
 subsubsection Properties
 
@@ -384,16 +387,9 @@ sorry
   
   
 section \<open>sum1SPF eq sum4SPF\<close>
-
-subsection prerequirements
-(* prerequirements for final lemma *)
-
-  
-  
   
 subsection \<open>lemma\<close> 
 (* final lemma *)  
-  
   
 lemma sum1SPFeqSum4SPF: assumes "sbDom\<cdot>sb = I addC append0C"
   shows "(sum1SPF \<rightleftharpoons> sb) . c3 = (sum4SPF \<rightleftharpoons> sb) . c3" 
