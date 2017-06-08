@@ -54,7 +54,7 @@ oops
 lemma tsmed_mlscons_false: "tsMed\<cdot>(tsMLscons\<cdot>m\<cdot>msg)\<cdot>((updis False) && ora) = tsMed\<cdot>msg\<cdot>ora"
 oops
 
-lemma tsmed_delayfun: "ora \<noteq>\<bottom> \<Longrightarrow> tsMed\<cdot>(delayFun\<cdot>msg)\<cdot>ora = delayFun\<cdot>(tsMed\<cdot>msg\<cdot>ora)"
+lemma tsmed_delayfun: "ora\<noteq>\<bottom> \<Longrightarrow> tsMed\<cdot>(delayFun\<cdot>msg)\<cdot>ora = delayFun\<cdot>(tsMed\<cdot>msg\<cdot>ora)"
 oops
  
 text {* If infinite ticks will be sent infinite ticks will be transmitted. *}

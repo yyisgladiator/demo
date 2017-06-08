@@ -11,6 +11,60 @@ imports TStream
 
 begin  
 default_sort countable
+
+(* Here I just try a few things. *)
+
+lemma upapplymsg_ntick: "upApply Msg\<cdot>t \<noteq> updis \<surd>"
+by (metis event.distinct(1) up_defined upapply_rep_eq upapply_strict updis_eq updis_exists)
+
+lemma upapplymsg2updis: assumes "t\<noteq>\<bottom>"
+  obtains m where "upApply Msg\<cdot>t = updis m"
+by (metis assms up_defined upapply_up updis_exists)
+
+lemma delayfun2tstickcount [simp]: assumes "\<And>ts. f\<cdot>(delayFun\<cdot>ts) = delayFun\<cdot>(f\<cdot>ts)" and "f\<cdot>\<bottom> = \<bottom>"
+shows "#\<surd>(f\<cdot>ts) = #\<surd>ts"
+apply (induction ts)
+apply (simp_all add: assms)
+apply (metis delayFun_dropFirst delayfun_nbot tsdropfirst_len)
+apply (simp add: tsMLscons_def)
+apply (insert tsmlscons_lscons3)
+apply (simp only: tslscons_insert)
+apply (simp add: espf2tspf_def)
+oops
+
+lemma tszip_mlscons:
+  "xs\<noteq>\<epsilon> \<Longrightarrow> tsZip\<cdot>(tsMLscons\<cdot>(updis t)\<cdot>ts)\<cdot>((updis x) && xs)
+                           = tsMLscons\<cdot>(updis (t, x))\<cdot>(tsZip\<cdot>ts\<cdot>xs)"
+oops
+
+lemma tszip_tstickcount [simp]: "xs\<noteq>\<epsilon> \<Longrightarrow> #\<surd>(tsZip\<cdot>ts\<cdot>xs) = #\<surd>ts"
+apply (induction ts)
+apply (simp_all)
+apply (case_tac "ts=\<bottom>", simp add: tszip_delayfun)
+apply (metis delayFun_dropFirst delayfun_nbot strict_tstickcount tsdropfirst_len)
+apply (metis delayFun_dropFirst delayfun_nbot tsdropfirst_len tszip_delayfun)
+oops
+
+lemma tsremdups_tstickcount [simp]: "#\<surd>(tsRemDups\<cdot>ts) = #\<surd>ts"
+apply (simp add: tsRemDups_insert)
+apply (induction ts)
+apply (simp_all)
+apply (metis delayFun_dropFirst delayfun_nbot tsdropfirst_len tsremdups_h_delayfun)
+apply (simp add: tsMLscons_def)
+apply (simp only: tslscons_insert)
+apply (simp add: espf2tspf_def)
+oops
+
+lemma tsabs_tszip_slen [simp]: "#xs=\<infinity> \<Longrightarrow> #(tsAbs\<cdot>(tsZip\<cdot>ts\<cdot>xs)) = #(tsAbs\<cdot>ts)"
+apply (induction ts)
+apply (simp_all)
+apply (simp add: tsabs_insert)
+apply (subst tszip_delayfun, auto)
+apply (simp add: delayfun_insert tsconc_rep_eq)
+apply (simp add: tsabs_insert)
+oops
+
+
  
 lift_definition tsExampIn :: "nat tstream" is "<[Msg 1, Msg 2, \<surd>, Msg 2, \<surd>]>"
 by (subst ts_well_def, auto)
@@ -48,19 +102,19 @@ proof -
   have f7: "Rep_tstream (Abs_tstream (updis (\<surd>::('a \<times> bool) event) && <[]>) \<bullet> \<bottom>) = <[\<surd>]>"
     by (simp add: lscons_conv)
   have f8: "tsMLscons\<cdot>(updis (2::'a))\<cdot>(delayFun\<cdot>\<bottom>) = Abs_tstream (updis (\<M> 2) && <[\<surd>]>)"
-    by (simp add: delayfun_insert tsmlscons_lscons4)
+    by (simp add: delayfun_insert tsmlscons_lscons3)
   have f9: "Rep_tstream (Abs_tstream (updis \<surd> && <[]>) \<bullet> Abs_tstream (updis (\<M> (2::'a, False)) && <[\<surd>]>)) = (updis \<surd> && <[]>) \<bullet> updis (\<M> (2, False)) && <[\<surd>]>"
     by (simp add: tsconc_rep_eq1)
   have "Abs_tstream (updis \<surd> && <[]>) \<bullet> Abs_tstream (updis (\<M> (2::'a, False)) && <[\<surd>]>) \<noteq> \<bottom>"
     using f6 by force
   then have f10: "tsMLscons\<cdot>(updis (1::'a, True))\<cdot> (Abs_tstream (updis \<surd> && <[]>) \<bullet> Abs_tstream (updis (\<M> (2, False)) && <[\<surd>]>)) = Abs_tstream (updis (\<M> (1, True)) && Rep_tstream (Abs_tstream (updis \<surd> && <[]>) \<bullet> Abs_tstream (updis (\<M> (2, False)) && <[\<surd>]>)))"
-    using tsmlscons_lscons4 by blast
+    using tsmlscons_lscons3 by blast
   have f11: "tsMLscons\<cdot>(updis (2::'a, False))\<cdot> (Abs_tstream (updis \<surd> && <[]>) \<bullet> \<bottom>) = Abs_tstream (updis (\<M> (2, False)) && Rep_tstream (Abs_tstream (updis \<surd> && <[]>) \<bullet> \<bottom>))"
-    by (simp add: lscons_conv tsmlscons_lscons4)
+    by (simp add: lscons_conv tsmlscons_lscons3)
   have "Abs_tstream (updis \<surd> && <[]>) \<bullet> Abs_tstream (updis (\<M> 2::'a) && <[\<surd>]>) \<noteq> \<bottom>"
     using f1 by auto
   then show ?thesis
-    using f11 f10 f9 f8 f7 f6 f5 f4 by (metis (no_types) delayfun_insert list2s.simps(2) list2s_0 lscons_conv tsmlscons_lscons4 tszip_mlscons_delayfun tszip_strict(2))
+    using f11 f10 f9 f8 f7 f6 f5 f4 by (metis (no_types) delayfun_insert list2s.simps(2) list2s_0 lscons_conv tsmlscons_lscons3 tszip_mlscons_delayfun tszip_strict(2))
 qed
 
 (*
