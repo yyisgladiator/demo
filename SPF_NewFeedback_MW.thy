@@ -33,12 +33,14 @@ section \<open> Feedback Definitions \<close>
 definition MapIdFunct :: "(channel \<rightharpoonup> channel) \<Rightarrow> channel \<Rightarrow> channel" where
 "MapIdFunct m \<equiv> (\<lambda> c. case m c of None \<Rightarrow> c | Some y \<Rightarrow> y )" 
 
-(* TODO: write map_inverse *)
+definition the_inv_into :: "'a set \<Rightarrow> ('a \<Rightarrow> 'b) \<Rightarrow> ('b \<Rightarrow> 'a)"
+  where "the_inv_into A f = (\<lambda>x. THE y. y \<in> A \<and> f y = x)"
+    
 definition map_inverse :: "(channel \<rightharpoonup> channel) \<Rightarrow> (channel \<rightharpoonup> channel)" where
-"map_inverse m \<equiv> m"
-
+"map_inverse m \<equiv> (\<lambda>x. if (x \<in> (ran m)) then Some ((\<lambda> y. (THE z. m z = Some y)) x) else None)"
+    
 definition sbRenameChMap :: "'m SB \<Rightarrow> (channel \<rightharpoonup> channel) \<Rightarrow> 'm SB" where
-"sbRenameChMap sb m \<equiv> Abs_SB (\<lambda>c. Rep_SB(sb)((MapIdFunct m)(c)))"  
+"sbRenameChMap sb m \<equiv> Abs_SB (\<lambda>c. Rep_SB(sb)((MapIdFunct (map_inverse m))(c)))"  
   
 definition spfRename :: "'a SPF \<Rightarrow> (channel \<rightharpoonup> channel) \<Rightarrow> 'a SPF" where
 "spfRename f m \<equiv> Abs_CSPF (\<lambda> sb. (sbDom\<cdot>sb = (spfDom\<cdot>f - ran(m)) \<union> dom(m)) \<leadsto> (f \<rightleftharpoons> (sbRenameChMap sb m)))" 
@@ -70,12 +72,39 @@ subsection \<open>rename lemmas \<close>
   
 lemma sbRenameChMap_sbDom: "sbDom\<cdot>(sbRenameChMap sb m) = (sbDom\<cdot>sb - dom(m)) \<union> ran(m)" 
   sorry
-    
-lemma sbRenameChMap_getCh: assumes "(m ch1) = Some ch2" shows "(sbRenameChMap sb m) . ch2 = sb . ch1" 
+ 
+lemma t10: "sb_well (\<lambda>c. Rep_SB(sb)((MapIdFunct (map_inverse m))(c)))"    
   sorry
+  
+lemma sbRenameChMap_getCh: assumes "(m ch1) = Some ch2" and "\<not>(\<exists> ch3. ((m ch3) = Some ch2))" shows "(sbRenameChMap sb m) . ch2 = sb . ch1"
+proof - 
+  have f1: "ch2 \<in> ran m"
+    by (meson assms ranI)
+  have f2: " Rep_SB sb \<rightharpoonup> ch1 = sb . ch1"
+    by (simp add: sbGetCh_def)
+  have f3: "(THE z. (m z = Some ch2)) = ch1"
+    using assms(1) assms(2) by auto
+  show ?thesis  
+    apply(simp add: sbRenameChMap_def)
+    apply(subst sbGetCh_def, simp)
+    apply(subst rep_abs, simp add: t10)
+    apply(simp add: MapIdFunct_def map_inverse_def f1)
+    by(simp add: f3 f2)
+qed
     
-lemma sbRenameChMap_getCh2: assumes "(m ch1) = None" shows "(sbRenameChMap sb m) . ch1 = sb . ch1" 
-  sorry
+lemma sbRenameChMap_getCh2: assumes "\<not>(\<exists> ch2. ((m ch2) = Some ch1))"  shows "(sbRenameChMap sb m) . ch1 = sb . ch1" 
+proof - 
+  have f1: "ch1 \<notin> ran m"
+    by (meson assms ran2exists)
+  have f2: " Rep_SB sb \<rightharpoonup> ch1 = sb . ch1"
+    by (simp add: sbGetCh_def)
+  show ?thesis  
+    apply(simp add: sbRenameChMap_def)
+    apply(subst sbGetCh_def, simp)
+    apply(subst rep_abs, simp add: t10)
+    apply(simp add: MapIdFunct_def map_inverse_def f1)
+    by(simp add: f2)
+qed
     
 section \<open> SPF Definitions \<close>
   
@@ -220,7 +249,8 @@ proof -
   have f2: "(sbRenameChMap ((sb \<uplus> z)\<bar>{c1, c5}) [c5 \<mapsto> c2]) . c2 = z . c5"
     apply(simp add: assms)
     apply(subst sbRenameChMap_getCh)
-     apply(simp)
+      apply(simp)
+      apply (metis channel.distinct(61) ranInnerFeedbackSum4SPF ranInnerSum4SPF singleton_insert_inj_eq' spfRename_spfRan)
     by (simp add: assms(2))
   have f3: "sbDom\<cdot>(sbRenameChMap ((sb \<uplus> z)\<bar>{c1, c5}) [c5 \<mapsto> c2]) = I (idC\<parallel>append0C) addC"
     apply(simp add: assms)
