@@ -2637,6 +2637,11 @@ oops
 
 lemma tsfilter_delayfun: "tsFilter M\<cdot>(delayFun\<cdot>ts) = delayFun\<cdot>(tsFilter M\<cdot>ts)"
 oops
+
+lemma tstickcount_mlscons: "#\<surd> tsMLscons\<cdot>(updis t)\<cdot>ts = #\<surd> ts"
+apply (cases "ts=\<bottom>", simp)
+apply (simp add: tsmlscons_lscons3 tstickcount_insert)
+by (metis event.distinct(1) lscons_conv sfilter_nin singletonD)
       
 (************************************************)
 (************************************************)      
@@ -2715,6 +2720,90 @@ setup \<open>
     ]
 \<close>
   
+(************************************************)      
+    section \<open>Induction Lemmata\<close>
+(************************************************)
+      
+lemma tstream_infs: "(\<And>s. #\<surd>s<\<infinity> \<Longrightarrow> P s) \<Longrightarrow> adm P \<Longrightarrow> P s"
+  by (metis (no_types, lifting) adm_def finite_chain_def inf_less_eq leI ts_infinite_fin tstake_chain tstake_inf_lub tstake_infinite_chain)
+        
+lemma tstream_adm_fin: "adm P \<Longrightarrow> (\<forall>ts. #\<surd>ts<\<infinity> \<longrightarrow> P ts) \<Longrightarrow>  adm (\<lambda>a. ts_well a \<longrightarrow> P (Abs_tstream a))"    
+  apply(rule admI)
+    apply auto
+  by (metis (no_types, lifting) adm_def finite_chain_def inf_less_eq leI ts_infinite_fin tstake_chain tstake_inf_lub tstake_infinite_chain)  
+
+lemma tsmsg_notwell: "\<not>ts_well((updis (Msg m)) && \<bottom>)"
+  apply(simp add: ts_well_def)
+  by (metis Inf'_neq_0 event.distinct(1) fold_inf lnat.sel_rews(2) lscons_conv sfilterl4 sfoot1 sfoot_one slen_scons strict_slen sup'_def)
+
+lemma tstream_fin_induct_h:
+  assumes bottom: "P \<bottom>" 
+    and delayfun: "\<And>xs. P xs \<Longrightarrow> P (delayFun\<cdot>xs)"
+    and mlscons: "\<And>xs x. P xs \<Longrightarrow> xs\<noteq>\<bottom> \<Longrightarrow> P (tsMLscons\<cdot>(updis x)\<cdot>xs)"
+    and fin: "#s < \<infinity>"
+  shows "ts_well s \<Longrightarrow> P (Abs_tstream s)"
+proof (induction rule: stream_fin_induct)
+  show "ts_well \<epsilon> \<Longrightarrow> P (Abs_tstream \<epsilon>)"
+    by (simp add: bottom)
+next
+  fix x :: "'a event discr u" and xs :: "'a event stream"
+  assume x_nbot: "x \<noteq> \<bottom>"
+  assume xs_well_imp: "ts_well xs \<Longrightarrow> P (Abs_tstream xs)"
+  assume scons_well: "ts_well (x && xs)"
+  have xs_well: "ts_well xs"
+    by (metis scons_well stream.sel_rews(5) ts_well_drop1 x_nbot)
+  show "P (Abs_tstream (x && xs))"
+    proof (cases "x=updis \<surd>")
+      case True
+      have "delayFun\<cdot>(Abs_tstream xs) = Abs_tstream (x && xs)"
+        by (simp add: True delayfun_abststream xs_well)
+      thus "P (Abs_tstream (x && xs))"
+        using delayfun xs_well xs_well_imp by force
+    next
+      case False
+      obtain m where m_def: "x = up\<cdot>(Discr (Msg m))"
+        by (metis False event.exhaust updis_exists x_nbot)                        
+      have xs_nbot: "xs\<noteq>\<bottom>"
+        by (metis (no_types, lifting) False inject_lnsuc lscons_conv m_def scons_well
+            slen_empty_eq slen_lnsuc slen_scons stream.con_rews(2) stream.injects sup'_def 
+            tick_msg ts_fin_well)
+      hence "Abs_tstream (x && xs) = tsMLscons\<cdot>(updis m)\<cdot>(Abs_tstream xs)"
+        using absts2tsmlscons_msg m_def scons_well by blast
+      thus "P (Abs_tstream (x && xs))"
+        by (simp add: xs_nbot mlscons xs_well xs_well_imp)
+      qed   
+next
+  show "#s < \<infinity>"
+    by (simp add: fin)
+qed
+
+lemma tstream_fin_induct:
+  assumes bottom: "P \<bottom>" 
+    and delayfun: "\<And>xs. P xs \<Longrightarrow> P (delayFun\<cdot>xs)" 
+    and mlscons: "\<And>xs x. P xs \<Longrightarrow> xs\<noteq>\<bottom> \<Longrightarrow> P (tsMLscons\<cdot>(updis x)\<cdot>xs)"
+    and fin: "#\<surd>ts < \<infinity>"
+  shows "P ts"
+proof -
+  obtain s where s_def: "Abs_tstream s = ts" 
+    and s_well: "ts_well s" 
+      using Abs_Rep ts_well_Rep by blast
+  hence "#s < \<infinity>"
+    using Rep_Abs fin finititeTicks by fastforce
+  hence "P (Abs_tstream s)"
+    by (simp add: tstream_fin_induct_h bottom delayfun s_well mlscons)
+  thus "P ts" 
+    by (simp add: s_def)    
+qed     
+  
+(* this term creates an induction rule for tstream *)  
+lemma tstream_induct [case_names adm bottom delayfun mlscons, induct type: tstream]:
+fixes ts :: "'a tstream"
+assumes adm: "adm P" and bottom: "P \<bottom>"  
+  and delayfun: "\<And>ts. P ts \<Longrightarrow> P (delayFun\<cdot>ts)" 
+  and mlscons: "\<And>ts t. P ts\<Longrightarrow> ts\<noteq>\<bottom> \<Longrightarrow> P (tsMLscons\<cdot>(updis t)\<cdot>ts)"
+  shows "P ts"
+by (metis adm bottom delayfun mlscons tstream_fin_induct tstream_infs)
+
 (* ----------------------------------------------------------------------- *)
 subsection {* tsZip *}
 (* ----------------------------------------------------------------------- *)     
@@ -2834,87 +2923,21 @@ by (simp add: tsmlscons_lscons)
 lemma tsremdups_h_delayfun: "tsRemDups_h\<cdot>(delayFun\<cdot>ts)\<cdot>a = delayFun\<cdot>(tsRemDups_h\<cdot>ts\<cdot>a)"
 by (simp add: delayfun_tslscons)
 
-(************************************************)      
-    section \<open>Induction Lemmata\<close>
-(************************************************)
-      
-lemma tstream_infs: "(\<And>s. #\<surd>s<\<infinity> \<Longrightarrow> P s) \<Longrightarrow> adm P \<Longrightarrow> P s"
-  by (metis (no_types, lifting) adm_def finite_chain_def inf_less_eq leI ts_infinite_fin tstake_chain tstake_inf_lub tstake_infinite_chain)
-        
-lemma tstream_adm_fin: "adm P \<Longrightarrow> (\<forall>ts. #\<surd>ts<\<infinity> \<longrightarrow> P ts) \<Longrightarrow>  adm (\<lambda>a. ts_well a \<longrightarrow> P (Abs_tstream a))"    
-  apply(rule admI)
-    apply auto
-  by (metis (no_types, lifting) adm_def finite_chain_def inf_less_eq leI ts_infinite_fin tstake_chain tstake_inf_lub tstake_infinite_chain)  
+lemma tsremdups_h_tstickcount: "#\<surd>(tsRemDups_h\<cdot>ts\<cdot>(Some (Discr t))) = #\<surd>(tsRemDups_h\<cdot>ts\<cdot>None)"
+apply (induction ts arbitrary: t)
+apply (simp_all)
+apply (metis delayFun_dropFirst delayfun_nbot tsdropfirst_len tsremdups_h_delayfun)
+apply (case_tac "t\<noteq>ta", auto)
+apply (simp add: tsremdups_h_mlscons tsremdups_h_mlscons_ndup)
+by (simp add: tsremdups_h_mlscons tsremdups_h_mlscons_dup tstickcount_mlscons)
 
-lemma tsmsg_notwell: "\<not>ts_well((updis (Msg m)) && \<bottom>)"
-  apply(simp add: ts_well_def)
-  by (metis Inf'_neq_0 event.distinct(1) fold_inf lnat.sel_rews(2) lscons_conv sfilterl4 sfoot1 sfoot_one slen_scons strict_slen sup'_def)
+lemma tsremdups_tstickcount [simp]: "#\<surd>(tsRemDups\<cdot>ts) = #\<surd>ts"
+apply (simp add: tsRemDups_insert)
+apply (induction ts)
+apply (simp_all)
+apply (metis delayFun_dropFirst delayfun_nbot tsdropfirst_len tsremdups_h_delayfun)
+by (simp add: tsremdups_h_mlscons tstickcount_mlscons tsremdups_h_tstickcount)
 
-lemma tstream_fin_induct_h:
-  assumes 
-        "P \<bottom>" 
-    and "\<And>xs. P xs \<Longrightarrow> P (delayFun\<cdot>xs)" and "\<And>xs x. P xs\<Longrightarrow> x\<noteq>\<bottom>\<Longrightarrow>xs\<noteq>\<bottom>\<Longrightarrow> P (tsMLscons\<cdot>x\<cdot>xs)"
-    and "#s<\<infinity>"
-  shows "ts_well s \<Longrightarrow> P (Abs_tstream s)"
-proof (induction rule: stream_fin_induct)
-  case 1
-  then show ?case
-    by (simp add: assms(1)) 
-next
-  case (2 u s)
-   assume u_def: "u \<noteq> \<bottom>" and "(ts_well s \<Longrightarrow> P (Abs_tstream s))" and  "ts_well (u && s)"
-      have s_well: "ts_well s"  using "2.prems"(1) ts_well_drop1 u_def by fastforce
-      then show "P (Abs_tstream (u && s))"
-                proof (cases "u=updis \<surd>")
-                  case True
-                    have "delayFun\<cdot>(Abs_tstream s) = Abs_tstream (u&&s)"
-                      by (simp add: True delayfun_abststream s_well)
-                  then show ?thesis
-                    using \<open>ts_well s \<Longrightarrow> P (Abs_tstream s)\<close> assms(2) s_well by force
-                next
-                  case False
-                    obtain m where m_def: "u = up\<cdot>(Discr (Msg m))"
-                      by (metis (full_types) Exh_Up False discr.exhaust event.exhaust u_def)                        
-                    have "s\<noteq>\<bottom>"
-                      using "2.prems" m_def tsmsg_notwell by blast
-                     hence "Abs_tstream (u&&s) = tsMLscons\<cdot>(updis m)\<cdot>(Abs_tstream s)"
-                       by (metis Abs_Rep Rep_Abs Rep_tstream_bottom_iff m_def s_well tslscons_lscons tsmlscons2tslscons)
-                  then show ?thesis
-                    by (metis \<open>ts_well s \<Longrightarrow> P (Abs_tstream s)\<close> assms(3) s_well tsmlscons_bot2 up_defined)
-                qed   
-next
-  case 3
-  then show ?case by (simp add: assms(4))
-qed
-
-lemma tstream_fin_induct:
-  assumes 
-        Bot: "P \<bottom>" 
-    and delayFun: "\<And>xs. P xs \<Longrightarrow> P (delayFun\<cdot>xs)" 
-    and tsMLscons: "\<And>xs x. P xs\<Longrightarrow> x\<noteq>\<bottom>\<Longrightarrow>xs\<noteq>\<bottom>\<Longrightarrow> P (tsMLscons\<cdot>x\<cdot>xs)"
-    and fin: "#\<surd>ts<\<infinity>"
-  shows "P ts"
-proof -
-  obtain s where s_def: "Abs_tstream s = ts" and s_well: "ts_well s" using Abs_Rep ts_well_Rep by blast
-  hence "#s < \<infinity>" using assms(4) finititeTicks by force
-  hence "P (Abs_tstream s)"
-    by (simp add: assms(1) assms(2) assms(3) s_well tstream_fin_induct_h)
-  thus ?thesis by (simp add: s_def)    
-qed     
-  
-
-(* this term creates an induction rule for tstream *)  
-lemma tstream_induct [case_names Adm Bot delayFun tsMLscons, induct type: tstream]:
-  fixes ts
-  assumes 
-        "adm P"
-    and "P \<bottom>"  
-    and "\<And>ts. P ts \<Longrightarrow> P (delayFun\<cdot>ts)" and "\<And>ts t. P ts\<Longrightarrow> t\<noteq>\<bottom>\<Longrightarrow>ts\<noteq>\<bottom>\<Longrightarrow> P (tsMLscons\<cdot>t\<cdot>ts)"
-  shows "P ts"
-  by (metis assms(1) assms(2) assms(3) assms(4) tstream_fin_induct tstream_infs)
-
-    
-  
 (*TODO
 
 (*-----------------------------*)

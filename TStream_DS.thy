@@ -21,15 +21,13 @@ lemma upapplymsg2updis: assumes "t\<noteq>\<bottom>"
   obtains m where "upApply Msg\<cdot>t = updis m"
 by (metis assms up_defined upapply_up updis_exists)
 
-lemma delayfun2tstickcount [simp]: assumes "\<And>ts. f\<cdot>(delayFun\<cdot>ts) = delayFun\<cdot>(f\<cdot>ts)" and "f\<cdot>\<bottom> = \<bottom>"
+lemma delayfun2tstickcount [simp]: 
+assumes "\<And>ts. f\<cdot>(delayFun\<cdot>ts) = delayFun\<cdot>(f\<cdot>ts)" and "f\<cdot>\<bottom> = \<bottom>"
 shows "#\<surd>(f\<cdot>ts) = #\<surd>ts"
 apply (induction ts)
 apply (simp_all add: assms)
 apply (metis delayFun_dropFirst delayfun_nbot tsdropfirst_len)
-apply (simp add: tsMLscons_def)
-apply (insert tsmlscons_lscons3)
-apply (simp only: tslscons_insert)
-apply (simp add: espf2tspf_def)
+apply (simp add: tstickcount_mlscons)
 oops
 
 lemma tszip_mlscons:
@@ -43,16 +41,6 @@ apply (simp_all)
 apply (case_tac "ts=\<bottom>", simp add: tszip_delayfun)
 apply (metis delayFun_dropFirst delayfun_nbot strict_tstickcount tsdropfirst_len)
 apply (metis delayFun_dropFirst delayfun_nbot tsdropfirst_len tszip_delayfun)
-oops
-
-lemma tsremdups_tstickcount [simp]: "#\<surd>(tsRemDups\<cdot>ts) = #\<surd>ts"
-apply (simp add: tsRemDups_insert)
-apply (induction ts)
-apply (simp_all)
-apply (metis delayFun_dropFirst delayfun_nbot tsdropfirst_len tsremdups_h_delayfun)
-apply (simp add: tsMLscons_def)
-apply (simp only: tslscons_insert)
-apply (simp add: espf2tspf_def)
 oops
 
 lemma tsabs_tszip_slen [simp]: "#xs=\<infinity> \<Longrightarrow> #(tsAbs\<cdot>(tsZip\<cdot>ts\<cdot>xs)) = #(tsAbs\<cdot>ts)"
