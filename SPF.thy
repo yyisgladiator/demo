@@ -319,6 +319,9 @@ definition spfLift :: "('m stream \<rightarrow> 'm stream) => channel => channel
 definition spfSbLift:: "('m SB \<rightarrow> 'm SB) \<Rightarrow> channel set \<Rightarrow> channel set \<Rightarrow> 'm SPF" where
 "spfSbLift f In Out \<equiv> Abs_CSPF (\<lambda>b. (sbDom\<cdot>b = In)\<leadsto> (\<up>f\<cdot>b) \<bar> Out)"
 
+definition hide :: "'m SPF \<Rightarrow>  channel set \<Rightarrow> 'm SPF" ("_\<h>_") where
+"hide f cs \<equiv> Abs_CSPF (\<lambda> x. (sbDom\<cdot>x = spfDom\<cdot>f ) \<leadsto> ((f \<rightleftharpoons> x)\<bar>(spfRan\<cdot>f - cs)))"
+
 
 
 (* ----------------------------------------------------------------------- *)
@@ -486,7 +489,12 @@ proof -
     by (metis Rep_CSPF_def assms(2) below_SPF_def below_cfun_def domIff option.collapse part_below spfdom2sbdom) 
 qed
 
-
+lemma spfDomAbs: assumes "cont (\<lambda> x. (sbDom\<cdot>x = cs ) \<leadsto> f(x))" and "spf_well (\<Lambda> x. (sbDom\<cdot>x = cs ) \<leadsto> f(x))"
+    shows "spfDom\<cdot>(Abs_CSPF (\<lambda> x. (sbDom\<cdot>x = cs ) \<leadsto> f(x))) = cs" 
+apply(simp add: spfDom_def)
+apply(simp_all add: assms)
+  by (smt domIff option.discI sbleast_sbdom someI_ex)
+    
   subsection \<open>spfRan\<close>
 
 (* Shows that "spfRan" is "monofun". Used to show that spfRan is cont *)
@@ -973,7 +981,7 @@ proof -
   hence "\<forall>n. \<forall>sb. (iterate n\<cdot>(spfCompHelp2 f1 f2 x)\<cdot>(sbLeast (C f1 f2))) \<sqsubseteq> sb \<longrightarrow> sbDom\<cdot>sb = C f1 f2"
     using sbdom_eq by blast
   thus ?thesis 
-    by (smt f1 iterate_0 iterate_Suc2 monofun_cfun_arg po_class.chainI sbChain_dom_eq2 sbleast_least)
+    by (metis (no_types, lifting) f1 is_ub_thelub iterate_Suc iterate_Suc2 monofun_cfun_arg po_class.chainI sbleast_least sbleast_sbdom spfCompH2_dom)
 qed
   
 
@@ -1190,7 +1198,52 @@ lemma spfcomp_spfdom [simp]: "spfDom\<cdot>(Abs_CSPF (spfcompMyHelper S1 S2)) =
 
 *)
 
-  subsection \<open>Alternative definition of 'm SPF\<close>
+subsection \<open>hide\<close>  
+  
+lemma hide_cont[simp]:  
+  shows "cont (\<lambda> x. (sbDom\<cdot>x = spfDom\<cdot>f ) \<leadsto> ((f \<rightleftharpoons> x)\<bar>(spfRan\<cdot>f - cs)))"
+apply(subst if_then_cont, simp_all)
+by (simp add: cont_compose)
+
+lemma hidespfwell_helper: assumes "sbDom\<cdot>b = spfDom\<cdot>f" shows "sbDom\<cdot>(f\<rightleftharpoons>b) = spfRan\<cdot>f"
+  by (metis assms domIff option.exhaust_sel sbleast_sbdom spfLeastIDom spf_sbdom2dom spfran2sbdom)
+  
+lemma hide_spfwell[simp]: "spf_well ((\<Lambda> x. (sbDom\<cdot>x = spfDom\<cdot>f ) \<leadsto> ((f \<rightleftharpoons> x)\<bar>(spfRan\<cdot>f - cs))))"
+  apply(simp add: spf_well_def)
+  apply(simp only: domIff2)
+  apply(auto simp add: sbdom_rep_eq)
+  apply(simp add: hidespfwell_helper)
+  by auto  
+
+lemma spfDomHide: "spfDom\<cdot>(f \<h> cs) = spfDom\<cdot>f"
+  apply(simp add: hide_def)
+    by(simp add: spfDomAbs hide_cont hide_spfwell)
+
+lemma hideSbRestrict: assumes "sbDom\<cdot>sb = spfDom\<cdot>f" 
+   shows "(hide f cs)\<rightleftharpoons>sb = (f\<rightleftharpoons>sb)\<bar>(spfRan\<cdot>f - cs)"
+  apply(simp add: hide_def)
+  by (simp add: assms)
+
+lemma hideSbRestrictCh: assumes "sbDom\<cdot>sb = spfDom\<cdot>f" and "c \<notin> cs"
+   shows "(hide f cs)\<rightleftharpoons>sb . c = (f\<rightleftharpoons>sb) . c"
+  apply(simp add: hide_def)
+  apply(simp add: hide_cont hide_spfwell assms)
+  by (smt DiffI Diff_subset Int_absorb1 assms(1) assms(2) domIff option.exhaust_sel sbleast_sbdom sbrestrict2sbgetch sbrestrict_sbdom sbunion_getchL sbunion_idL spfLeastIDom spf_sbdom2dom spfran2sbdom)
+    
+lemma hideSpfRan: "spfRan\<cdot>(hide f cs) = spfRan\<cdot>f - cs"
+  apply(subst spfran_least)
+  apply(simp add: spfDomHide)
+  apply(subst hideSbRestrict)
+  apply(simp)
+  apply(subst sbrestrict_sbdom)
+  by (simp add: Diff_subset Int_absorb1 spfran_least)
+
+lemma hideSubset: "spfRan\<cdot>(hide f cs) \<subseteq> spfRan\<cdot>f"
+  using hideSpfRan by auto  
+  
+  
+
+subsection \<open>Alternative definition of 'm SPF\<close>
 
 
 

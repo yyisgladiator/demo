@@ -7,7 +7,7 @@
 *)
 
 theory SPF_Feedback_JB
-imports SPF_Comp SPF_MW
+imports SPF_Comp
     
 begin
   
@@ -211,7 +211,7 @@ subsection \<open>spfFeedH2\<close>
   
   
 lemma spfFeedH2_cont[simp]: "cont (\<lambda> z. x \<uplus> (f\<rightleftharpoons>(z\<bar>(spfDom\<cdot>f))))"
-  by (metis Rep_CSPF_def cont_Rep_cfun2 cont_compose conthelper)
+  by (metis Rep_CSPF_def cont_Rep_cfun2 cont_compose contSPFRestrict)
     
 lemma spfFeedH2_continX[simp]: "cont (\<lambda> x. spfFeedH2 f x)"
 proof -
