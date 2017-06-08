@@ -109,25 +109,43 @@ definition tsbRestrict:: "channel set \<Rightarrow> 'm TSB \<rightarrow> 'm TSB"
 abbreviation tsbRestrict_abbr :: "'m TSB \<Rightarrow> channel set \<Rightarrow> 'm TSB" (infix "\<bar>" 65)
 where "b\<bar>cs \<equiv> tsbRestrict cs\<cdot>b"
 
+  
+
+(* take the first n time slots. *)
+definition tsTakeL :: "lnat \<rightarrow> 'a tstream \<rightarrow> 'a tstream" where
+"tsTakeL \<equiv> (\<Lambda> l ts. if l = \<infinity> then ts else (ts \<down> (THE n. Fin n = l)))"
+  
+
+lemma conttsTakeL1[simp]: "cont (\<lambda> ts. if l = \<infinity> then ts else (ts \<down> (THE n. Fin n = l)))"
+  by simp
+    
+lemma conttsTakeL2[simp]: "cont (\<lambda> l. \<Lambda> ts. if l = \<infinity> then ts else (ts \<down> (THE n. Fin n = l)))"
+  sorry
+
 
 (* returns the first n blocks of the TSB *)
 definition tsbTTake :: "nat \<Rightarrow> 'm TSB \<Rightarrow> 'm TSB" where 
 "tsbTTake n tb = Abs_TSB (\<lambda>c. (c\<in>tsbDom\<cdot>tb) \<leadsto> (tsTake n\<cdot>(tb  .  c)))"
+                                                 
+
 
 abbreviation tsbTTake_abbrv :: "'m TSB \<Rightarrow> nat \<Rightarrow> 'm TSB" ("_ \<down> _ ")where
 "tb \<down> n \<equiv> tsbTTake n tb"
 
+(* defintion with lnat *)
+definition tsbTTakeL :: "lnat \<Rightarrow> 'm TSB \<Rightarrow> 'm TSB" where 
+"tsbTTakeL n tb = Abs_TSB (\<lambda>c. (c\<in>tsbDom\<cdot>tb) \<leadsto> (tsTakeL\<cdot>n\<cdot>(tb  .  c)))"
 
 definition tsbLeast :: "channel set \<Rightarrow> 'm TSB" where 
 "tsbLeast cs = Abs_TSB (optionLeast cs)"
 
-(*
-definition tsbUnion :: "'m TSB \<rightarrow> 'm TSB \<rightarrow> 'm TSB"  where 
-"tsbUnion \<equiv> \<Lambda> tb1 tb2 . Abs_TSB ((Rep_TSB tb1) ++ (Rep_TSB tb2))"
 
-abbreviation tsbUnion_abbrv :: "'m TSB \<Rightarrow> 'm TSB \<Rightarrow> 'm TSB" (infixl "\<uplus>" 100) where
-"tb1 \<uplus> tb2 \<equiv> tsbUnion\<cdot>tb1\<cdot>tb2"
-*)
+
+
+
+
+
+
 definition tsbTickCount :: "'m TSB \<rightarrow> lnat" where
 "tsbTickCount \<equiv>  \<Lambda> tb. #\<surd>(SOME ts. ts \<in> ran (Rep_TSB tb))"
 
@@ -135,6 +153,79 @@ abbreviation tsbTickCount_abbrv :: "'m TSB \<Rightarrow> lnat "  ("#\<surd>tsb _
 " #\<surd>tsb tsb \<equiv> tsbTickCount\<cdot>tsb"
 
 
+definition tsbMinTick :: "'m TSB \<Rightarrow> 'm TSB \<Rightarrow> lnat" where
+"tsbMinTick tb1 tb2 \<equiv> lnmin\<cdot>(#\<surd>tsb tb1)\<cdot>(#\<surd>tsb tb2)"
+
+
+definition tsbUnion :: "'m TSB \<rightarrow> 'm TSB \<rightarrow> 'm TSB"  where 
+"tsbUnion \<equiv> \<Lambda> tb1 tb2 . let l1 = #\<surd>tsb tb1; l2 = #\<surd>tsb tb2  in 
+            Abs_TSB ((Rep_TSB (tsbTTakeL l2 tb1)) ++ (Rep_TSB (tsbTTakeL l1 tb2)))"
+
+abbreviation tsbUnion_abbrv :: "'m TSB \<Rightarrow> 'm TSB \<Rightarrow> 'm TSB" (infixl "\<uplus>" 100) where
+"tb1 \<uplus> tb2 \<equiv> tsbUnion\<cdot>tb1\<cdot>tb2"
+
+definition tsbUnion2 :: "'m TSB \<rightarrow> 'm TSB \<rightarrow> 'm TSB"  where 
+"tsbUnion2 \<equiv> \<Lambda> tb1 tb2 . Abs_TSB ((Rep_TSB tb1) ++ (Rep_TSB tb2))"
+
+(* NEW *)
+
+text {* @{text "tsbsetch"} adds a channel or replaces its content *}
+definition tsbSetCh :: "'m TSB \<rightarrow> channel \<Rightarrow> 'm tstream \<Rightarrow> 'm TSB" where
+"tsbSetCh \<equiv> \<Lambda> b. (\<lambda> c s. b \<uplus> (Abs_TSB([c \<mapsto> s])))"
+
+
+text {* @{text "tsbRemCh"} removes a channel from a timed stream bundle *}
+abbreviation tsbRemCh :: "'m TSB \<rightarrow> channel \<rightarrow> 'm TSB" where
+"tsbRemCh \<equiv> \<Lambda> b c. b \<bar> -{c}"
+
+definition tsbRenameCh :: "'m TSB \<Rightarrow> channel \<Rightarrow> channel \<Rightarrow> 'm TSB" where
+ "tsbRenameCh b ch1 ch2 \<equiv> (tsbSetCh\<cdot>(tsbRemCh\<cdot>b\<cdot>ch1)) ch2 (b . ch1)"
+ 
+ 
+(* sbUp not yet ported *)
+ 
+ 
+text {* @{text "tsbeqch"} equality on specific channels *}
+definition tsbEqSelected:: " channel set \<Rightarrow> 'm TSB => 'm TSB => bool" where
+"tsbEqSelected cs b1 b2 \<equiv>  (b1\<bar>cs) = (b2\<bar>cs)"
+
+text {* @{text "tsbeq"} equality on common channels *}
+definition tsbEqCommon:: " 'm TSB => 'm TSB => bool" where
+"tsbEqCommon b1 b2\<equiv> tsbEqSelected (tsbDom\<cdot>b1 \<inter> tsbDom\<cdot>b2) b1 b2"
+
+
+text {* @{text " tsbPrefixSelected"} prefix relation on selected channels *}
+definition tsbPrefixSelected:: "channel set \<Rightarrow> 'm TSB \<Rightarrow> 'm TSB \<Rightarrow> bool" where
+"tsbPrefixSelected cs b1 b2 \<equiv> (b1\<bar>cs \<sqsubseteq> b2\<bar>cs)" 
+
+text {* @{text " tsbPrefixCommon"} prefix relation on common channels *}
+definition tsbPrefixCommon:: " 'm TSB \<Rightarrow> 'm TSB \<Rightarrow> bool" where
+"tsbPrefixCommon b1 b2 \<equiv> tsbPrefixSelected (tsbDom\<cdot>b1 \<inter> tsbDom\<cdot>b2) b1 b2" 
+
+
+(* sbConc not yet ported *)
+
+text {* @{text " tsbMapStream"} applies function to all streams *}
+definition tsbMapStream:: "('m tstream \<Rightarrow> 'm tstream) \<Rightarrow> 'm TSB \<Rightarrow> 'm TSB" where
+"tsbMapStream f tb =  Abs_TSB(\<lambda>c. (c\<in> tsbDom\<cdot>tb) \<leadsto> f (tb .c))"
+
+
+definition tsbHd :: "'m TSB \<Rightarrow> 'm TSB" where
+"tsbHd \<equiv> tsbTTake 1"
+
+  (* Deletes the first n Elements of each Stream *)
+definition tsbDrop:: "nat \<Rightarrow> 'm TSB \<Rightarrow> 'm TSB" where
+"tsbDrop n \<equiv> \<lambda> b. tsbMapStream (\<lambda>s. tsDrop n\<cdot>s) b"
+
+
+  (* Deletes the first Elements of each stream *)
+definition tsbRt:: " 'm TSB \<Rightarrow> 'm TSB" where
+"tsbRt \<equiv> tsbDrop 1"
+
+
+  (* Retrieves the n-th element of each Stream *)
+definition tsbNth:: "nat \<Rightarrow> 'm TSB \<Rightarrow> 'm TSB" where
+"tsbNth n \<equiv> \<lambda> tb.  tsbHd (tsbDrop n tb)"
 
 (* ----------------------------------------------------------------------- *)
   subsection \<open>Lemmas on TSB \<close>
@@ -319,9 +410,7 @@ proof -
     by (simp_all add: assms)
 qed
   
-lemma tsb_chain_allempty: assumes "chain Y" and "tsbLeast {} \<in> range Y"
-  shows "\<And>i. (Y i) = tsbLeast {}"
-    
+
   
 
 
@@ -437,7 +526,178 @@ apply(simp add:  tsbLeast_def, simp add: optionLeast_def)
 apply auto
 oops
 
+subsubsection \<open>tsbTTakeL\<close>
 
+thm tsbTTakeL_def
+  
+lemma [simp]: "tsTakeL\<cdot>0\<cdot>ts = \<bottom>"
+  by (simp add: tsTakeL_def)
+    
+lemma [simp]: "tsTakeL\<cdot>n\<cdot>\<bottom> = \<bottom>"
+  by (simp add: tsTakeL_def)
+    
+lemma [simp]: "Fin 2 = lnsuc\<cdot>(lnsuc\<cdot>(Fin 0))"
+  using Fin_Suc numeral_2_eq_2 by presburger
+    
+lemma nat_lnat_suc: assumes "Fin na = n"
+  shows "Fin (Suc na) = lnsuc\<cdot>n"
+  using assms by auto
+    
+lemma nat_lnat_suc2: assumes "Fin n1 = lnsuc\<cdot>n" and "Fin n2 = n"
+  shows "Suc (n2) = n1"
+  by (metis assms(1) assms(2) inject_Fin nat_lnat_suc)
+    
+lemma test10:
+shows "(THE na::nat. Fin na = lnsuc\<cdot>(Fin n)) = Suc (THE nb::nat. Fin nb = (Fin n))"
+  by simp
+  
+    
+lemma test11: assumes "n < \<infinity>"
+  shows "\<exists> na.  n = Fin na"
+  by (metis assms infI neq_iff)
+
+   
+    
+lemma tsTakeL_def2: assumes "n < \<infinity>"
+shows "tsTakeL\<cdot>(lnsuc\<cdot>n)\<cdot>ts = (tsTakeFirst\<cdot>ts) \<bullet> (tsTakeL\<cdot>n\<cdot>(tsDropFirst\<cdot>ts))"
+    proof -
+    obtain j where f1: "n = Fin j"
+      by (metis assms infI neq_iff)
+    hence "(THE na::nat. Fin na = lnsuc\<cdot>n) = Suc (THE na::nat. Fin na = n)"
+      by (simp)
+    thus ?thesis
+      by (simp add: tsTakeL_def f1, simp add: tsTake_def2)
+qed
+
+lemma tstakeL_below [simp]: "tsTakeL\<cdot>(n)\<cdot>ts \<sqsubseteq> tsTakeL\<cdot>(lnsuc\<cdot>n)\<cdot>ts"
+  using less_lnsuc lnle_def monofun_cfun_arg monofun_cfun_fun by blast
+    
+lemma tstakeL_inf_below [simp]: "tsTakeL\<cdot>(Fin i)\<cdot>ts \<sqsubseteq> tsTakeL\<cdot>(\<infinity>)\<cdot>ts"
+  by (simp add: monofun_cfun)
+    
+lemma tstakeL_chain [simp]: "chain (\<lambda>i. tsTakeL\<cdot>(Fin i)\<cdot>ts)"
+  by (metis (no_types, lifting) Fin_Suc po_class.chain_def tstakeL_below)
+    
+lemma tstake_noteq: "(tsTakeL\<cdot>(Fin i)\<cdot>ts) \<noteq> ts \<Longrightarrow> (tsTakeL\<cdot>(Fin i)\<cdot>ts) \<noteq> (tsTakeL\<cdot>(Fin (Suc i))\<cdot>ts)"
+  apply (induction i arbitrary: ts)
+   apply(simp add: tsTakeL_def)
+    using tstake_bot apply auto[1]
+    apply (simp add: tsTakeL_def)
+    by (simp add: tstake_noteq)
+      
+lemma tstakeL_drop [simp]: "tsTakeL\<cdot>(Fin i)\<cdot>ts \<bullet> (tsDrop i\<cdot>ts) = ts"
+  by (simp add: tsTakeL_def)
+    
+lemma tstakeL_prefix [simp]: "tsTakeL\<cdot>n\<cdot>ts \<sqsubseteq> ts"
+proof (cases "n \<noteq> \<infinity>")
+  case True
+    have f1: "n < \<infinity>" 
+      by (simp add: True less_le)
+    obtain j where f2: "n = Fin j"
+    by (metis f1 infI neq_iff)
+  then show ?thesis
+    by (metis ts_tsconc_prefix tstakeL_drop)
+next
+  case False
+  then show ?thesis
+    by (simp add: tsTakeL_def)
+qed
+  
+lemma tstakeL_len [simp]: "#\<surd> (tsTakeL\<cdot>n\<cdot>ts) = min (#\<surd> ts) (n)"
+proof (cases "n \<noteq> \<infinity>")
+  case True
+  have f1: "n < \<infinity>" 
+    by (simp add: True less_le)
+  obtain j where f2: "n = Fin j"
+    by (metis f1 infI neq_iff)
+  then show ?thesis
+    by (simp add: tsTakeL_def)
+next
+  case False
+  then show ?thesis
+    by (simp add: tsTakeL_def)
+qed
+  
+lemma tstakeL_fin: assumes "n = #\<surd>ts" 
+shows "(tsTakeL\<cdot>n\<cdot>ts) = ts"
+  by (simp add: assms tstake_below_eq)
+
+lemma tstakeL_fin2: assumes "(tsTakeL\<cdot>n\<cdot>ts) = ts"  
+  shows "(tsTakeL\<cdot>(lnsuc\<cdot>n)\<cdot>ts) = ts"
+proof (cases "n \<noteq> \<infinity>")
+  case True
+  then show ?thesis
+    by (metis tstakeL_len assms dual_order.trans less_lnsuc min_def tstakeL_prefix tstake_below_eq)
+next
+  case False
+  then show ?thesis
+    by (simp add: tsTakeL_def)
+qed
+  
+lemma tstakeL_fin3: assumes "(tsTakeL\<cdot>i\<cdot>ts) = ts"  and "i\<le>j"
+  shows "(tsTakeL\<cdot>(lnsuc\<cdot>j)\<cdot>ts) = ts"
+proof (cases "j \<noteq> \<infinity>")
+  case True
+  thus ?thesis
+    by (metis assms(1) assms(2) dual_order.trans less_lnsuc min_def tstakeL_len tstakeL_prefix 
+              tstake_below_eq)
+next
+  case False
+  thus ?thesis
+    by (simp add: False tsTakeL_def)
+qed
+  
+lemma tstakeL_inf [simp]: "(tsTakeL\<cdot>\<infinity>\<cdot>ts) = ts"
+  by (simp add: tstake_below_eq)
+  
+lemma tsTakeL_maxinchain: assumes "Fin n = #\<surd>ts"
+  shows "max_in_chain n (\<lambda>i. tsTakeL\<cdot>(Fin i)\<cdot>ts)"
+  by (metis (no_types, lifting) assms less2nat max_in_chainI min_def 
+            tstakeL_len tstakeL_prefix tstake_below_eq)
+    
+lemma tsbttakeL_well [simp]: "tsb_well (\<lambda>c. (c\<in>tsbDom\<cdot>tb) \<leadsto> (tsTakeL\<cdot>n\<cdot>(tb  .  c)))"  
+proof (cases "n \<noteq> \<infinity>")
+  case True
+  have f1: "n < \<infinity>" 
+    by (simp add: True less_le)
+  obtain j where f2: "n = Fin j"
+  by (metis f1 infI neq_iff)
+  thus ?thesis
+  apply (simp add: tsb_well_def tsTakeL_def)
+  apply rule
+    apply (metis (no_types, lifting) subset_trans tsbgetch_insert tsdom_ctype_subset tsttake_dom)
+    by (metis ts_ex_len tsbdom_insert tsbgetch_insert)
+next
+  case False
+  then show ?thesis
+    apply (simp add: tsb_well_def tsTakeL_def)
+    apply rule
+      apply (simp add: tsbgetch_insert)
+      by (metis ts_ex_len tsbdom_insert tsbgetch_insert)
+qed
+  
+
+lemma tsb_newMap_well[simp]: assumes "c\<in>tsbDom\<cdot>b"
+  shows "tsb_well [c \<mapsto> b  .  c]"
+  apply(simp add: tsbgetch_insert)
+  apply (rule tsb_wellI)
+   apply (metis (mono_tags) Rep_TSB assms dom_def fun_upd_apply mem_Collect_eq option.sel tsb_well_def tsbdom_insert)
+  by auto
+
+lemma tsb_newMap_id[simp]: assumes "{c}=tsbDom\<cdot>b" shows "Abs_TSB [c \<mapsto> b  .  c] = b"
+  by (metis Rep_TSB_inverse assms domIff dom_eq_singleton_conv fun_upd_same option.collapse tsbdom_insert tsbgetch_insert)
+
+lemma tsb_newMap_restrict [simp]: assumes "c\<in>tsbDom\<cdot>b"
+  shows "Abs_TSB [c \<mapsto> b  .  c] = b \<bar> {c}"
+proof -
+  have f1: "Rep_TSB b c \<noteq> None"
+    by (metis assms domIff tsbdom_insert)
+  have "(Rep_TSB b)(c := Rep_TSB b c) |` {c} = (Rep_TSB b |` ({c} - {c})) (c := Rep_TSB b c)"
+    by force
+  then show ?thesis
+    using f1 by (simp add: tsbgetch_insert tsbrestrict_insert)
+qed
+  
 
 subsubsection \<open>tsbUnion\<close>
 
@@ -448,27 +708,48 @@ subsubsection \<open>tsbUnion\<close>
 (* tsbUnion wurde geschrieben bevor alle channels gleich viele ticks haben müssen. 
     Daher viel anpassen nötig *)
 
+declare [[show_types]]
 (*
-(* tsbUnion produces a welltyped partial-function *)
-lemma tsbunion_well[simp]: assumes "tsb_well b1" and "tsb_well b2"
-  shows "tsb_well (b1 ++ b2)"
-  sorry
+
+lemma tsbunion_well1[simp]: assumes "tsb_well b1" and "tsb_well b2" 
+                           and "\<forall>c1 \<in> dom b1. \<forall> c2 \<in> dom b2.  #\<surd>(b1\<rightharpoonup>c1) = #\<surd>(b2\<rightharpoonup>c2)"
+  shows "tsb_well (b1 ++ b2)"        
+proof -
+  have "(\<forall>c\<in>dom b2 \<union> dom b1. tsDom\<cdot>b1 ++ b2\<rightharpoonup>c \<subseteq> ctype c)"
+    by (metis (full_types) Un_iff assms(1) assms(2) map_add_dom_app_simps(1) map_add_dom_app_simps(3) tsb_well_def)
+  moreover have "(\<exists>n::lnat. \<forall>c\<in>dom b2 \<union> dom b1. #\<surd> b1 ++ b2\<rightharpoonup>c = n)"
+    by (metis (no_types, lifting) UnE assms(1) assms(2) assms(3) map_add_dom_app_simps(1) map_add_dom_app_simps(3) tsb_well_def)
+  ultimately show ?thesis
+    using tsb_well_def by blast
+qed
+  
+lemma tsbunion_well2: "tsb_well ((Rep_TSB (tsbTTakeL (#\<surd>tsb tb2) tb1)) ++ (Rep_TSB (tsbTTakeL (#\<surd>tsb tb1) tb2)))"
+proof -
+  have "#\<surd>tsb (tsbTTakeL (#\<surd>tsb tb2) tb1) = #\<surd>tsb (tsbTTakeL (#\<surd>tsb tb1) tb2)"
+    sorry
 
 (* helper function for continuity proof *)
-lemma tsbunion_contL[simp]: "cont (\<lambda>b1. (Rep_TSB b1) ++ (Rep_TSB b2))"
+lemma tsbunion_contL[simp]: "\<And> b2. cont (\<lambda>b1. (Rep_TSB b1) ++ (Rep_TSB b2))"
   using cont_compose part_add_contL rep_tsb_cont by blast
 
 (* helper function for continuity proof *)
-lemma tsbunion_contR[simp]: "cont (\<lambda>b2. (Rep_TSB b1) ++ (Rep_TSB b2))"
+lemma tsbunion_contR[simp]: "\<And> b1. cont (\<lambda>b2. (Rep_TSB b1) ++ (Rep_TSB b2))"
   using cont_compose part_add_contR rep_tsb_cont by blast
 
 (* sbUnion is an coninuous function *)
-lemma tsbunion_cont[simp]: "cont (\<lambda> b1. \<Lambda> b2.(Abs_TSB (Rep_TSB b1 ++ Rep_TSB b2)))"
-  by(simp add: cont2cont_LAM cont_Abs_TSB)
+lemma tsbunion_cont[simp]: assumes "\<forall>c1 \<in> dom b1. \<forall> c2 \<in> dom b2.  #\<surd>(b1\<rightharpoonup>c1) = #\<surd>(b2\<rightharpoonup>c2)"
+  shows "cont (\<lambda> b1. \<Lambda> b2.(Abs_TSB (Rep_TSB b1 ++ Rep_TSB b2)))"
+  apply (rule cont2cont_LAM)
+    apply (subst cont_Abs_TSB, simp_all add: assms)
+    (* by(simp add: cont2cont_LAM cont_Abs_TSB) *)
+  oops
+    
 
 (* insert rule for sbUnion *)
-lemma tsbunion_insert: "(tb1 \<uplus> tb2) = (Abs_TSB (Rep_TSB tb1 ++ Rep_TSB tb2))"
-  by(simp add: tsbUnion_def)
+lemma tsbunion_insert: assumes "#\<surd>tsb tb1 = #\<surd>tsb tb2"
+shows "(tb1 \<uplus> tb2) = (Abs_TSB (Rep_TSB tb1 ++ Rep_TSB tb2))"
+  apply (simp add: tsbUnion_def)
+    oops
 
 (* if all channels in b1 are also in b2 the union produces b2 *)
 lemma tsbunion_idL [simp]: assumes "tsbDom\<cdot>tb1\<subseteq>tsbDom\<cdot>tb2" shows "tb1 \<uplus> tb2 = tb2"
@@ -525,7 +806,7 @@ lemma tsbttake_well[simp]: "tsb_well (\<lambda>c. (c \<in> tsbDom\<cdot>tb)\<lea
 lemma tsbttake_dom [simp]: "tsbDom\<cdot>(tb \<down> i) = tsbDom\<cdot>tb"
   by(simp add: tsbTTake_def tsbdom_rep_eq)
 
-lemma tsbttake2least: "tb \<down> 0 = tsbLeast (tsbDom\<cdot>tb)"
+lemma tsbttake2least: "(tb \<down> 0) = tsbLeast (tsbDom\<cdot>tb)"
   apply(rule tsb_eq)
    apply(simp)
   apply simp
@@ -535,7 +816,7 @@ lemma [simp]: assumes "c\<in>tsbDom\<cdot>tb"
   shows "tb \<down> 0  .  c = \<bottom>"
   by(simp add: tsbttake2least assms)
 
-lemma [simp]: "c\<in>tsbDom\<cdot>tb \<Longrightarrow> tb \<down> n  .  c = tb  .  c \<down>n"
+lemma [simp]: "c \<in> tsbDom\<cdot>tb \<Longrightarrow> ((tb \<down> n)  .  c) = ((tb  .  c) \<down>n)"
 by(simp add: tsbTTake_def tsbgetch_insert)
 
 lemma tsbttake_below [simp]: fixes tb:: "'m TSB"
@@ -551,30 +832,6 @@ lemma tsbttake_lub [simp] : fixes tb:: "'m TSB"
     
 
 
-
-
-
-
-lemma tsb_newMap_well[simp]: assumes "c\<in>tsbDom\<cdot>b"
-  shows "tsb_well [c \<mapsto> b  .  c]"
-  apply(simp add: tsbgetch_insert)
-  apply (rule tsb_wellI)
-   apply (metis (mono_tags) Rep_TSB assms dom_def fun_upd_apply mem_Collect_eq option.sel tsb_well_def tsbdom_insert)
-  by auto
-
-lemma tsb_newMap_id[simp]: assumes "{c}=tsbDom\<cdot>b" shows "Abs_TSB [c \<mapsto> b  .  c] = b"
-  by (metis Rep_TSB_inverse assms domIff dom_eq_singleton_conv fun_upd_same option.collapse tsbdom_insert tsbgetch_insert)
-
-lemma tsb_newMap_restrict [simp]: assumes "c\<in>tsbDom\<cdot>b"
-  shows "Abs_TSB [c \<mapsto> b  .  c] = b \<bar> {c}"
-proof -
-  have f1: "Rep_TSB b c \<noteq> None"
-    by (metis assms domIff tsbdom_insert)
-  have "(Rep_TSB b)(c := Rep_TSB b c) |` {c} = (Rep_TSB b |` ({c} - {c})) (c := Rep_TSB b c)"
-    by force
-  then show ?thesis
-    using f1 by (simp add: tsbgetch_insert tsbrestrict_insert)
-qed
  
 
 
