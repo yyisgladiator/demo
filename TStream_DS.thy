@@ -15,20 +15,11 @@ default_sort countable
 (* Here I just try a few things. *)
 
 lemma tszip_tstickcount [simp]: "xs\<noteq>\<epsilon> \<Longrightarrow> #\<surd>(tsZip\<cdot>ts\<cdot>xs) = #\<surd>ts"
-apply (induction ts)
+apply (induction ts arbitrary: xs)
 apply (simp_all)
-apply (metis tszip_delayfun delayFun_dropFirst delayfun_nbot tsdropfirst_len)
-apply (simp add: tstickcount_mlscons)
+apply (metis delayfun_insert tstickcount_tscons tszip_delayfun)
+apply (simp add: tszip_mlscons tszip_mlscons_2msg tstickcount_mlscons)
 oops
-
-lemma tsabs_delayfun: "tsAbs\<cdot>(delayFun\<cdot>ts) = tsAbs\<cdot>ts"
-by(simp add: delayFun_def)
-
-lemma tsabs_mlscons: "ts\<noteq>\<bottom> \<Longrightarrow> tsAbs\<cdot>(tsMLscons\<cdot>(updis t)\<cdot>ts) = (updis t) && (tsAbs\<cdot>ts)"
-apply (simp add: tsmlscons2tslscons)
-apply (subst tsabs_insert)
-apply (simp add: tslscons_lscons uMsg_def lscons_conv)
-by (simp add: tsabs_insert)
 
 lemma tsabs_tszip_slen [simp]: "xs\<noteq>\<epsilon> \<Longrightarrow> #(tsAbs\<cdot>(tsZip\<cdot>ts\<cdot>(updis x && xs))) = #(tsAbs\<cdot>ts)"
 apply (induction ts)

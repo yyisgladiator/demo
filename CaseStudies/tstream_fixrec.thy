@@ -7,7 +7,7 @@ and "first element is Message" *)
    sebastian.stueber@rwth-aachen.de *)
   
   
-imports "../TStream"  "../OptionCpo" (* "~~/src/HOL/HOLCF/Library/Option_Cpo" *)
+imports "../TStream"  (* "~~/src/HOL/HOLCF/Library/Option_Cpo" *)
 
 begin
 
@@ -96,26 +96,18 @@ lemma [simp]: "tsAbsNew\<cdot>\<bottom>=\<bottom>"
 
 lemma [simp]: "tsAbsNew\<cdot>(delayFun\<cdot>ts) = tsAbsNew\<cdot>ts"
   by fixrec_simp
-
-lemma [simp]: "tsAbs\<cdot>(delayFun\<cdot>ts) = tsAbs\<cdot>ts"
-  by(simp add: delayFun_def)
-    
+  
 lemma tsabs_new_msg [simp]: "xs\<noteq>\<bottom> \<Longrightarrow> tsAbsNew\<cdot>(tsMLscons\<cdot>(up\<cdot>x)\<cdot>xs) = up\<cdot>x && (tsAbsNew\<cdot>xs)"
   by fixrec_simp+
 
 lemma tsmlscons2tslscons: "xs\<noteq>\<bottom> \<Longrightarrow> (tsMLscons\<cdot>(up\<cdot>x)\<cdot>xs) = tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>x))\<cdot>xs"
   by(simp add: tsMLscons_def)
     
-lemma tsabs_tsmlscons: "xs\<noteq>\<bottom> \<Longrightarrow> tsAbs\<cdot>(tsMLscons\<cdot>(updis x)\<cdot>xs) = (updis x) && (tsAbs\<cdot>xs)"
-  apply(subst tsmlscons2tslscons, simp)
-  apply(subst tsabs_insert)
-    apply(simp add: tslscons_lscons uMsg_def lscons_conv)
-  by (simp add: tsabs_insert)
-
 lemma "tsAbsNew\<cdot>ts= tsAbs\<cdot>ts"
-  apply(induction)
-     apply simp_all
-  using updis_exists tsabs_tsmlscons by fastforce
+  apply (induction)
+  apply simp_all
+  apply (simp add: tsabs_delayfun)
+  using updis_exists tsabs_mlscons by fastforce
     
     
 

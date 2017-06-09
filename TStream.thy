@@ -1924,14 +1924,14 @@ lemma tsprojfst_tstickcount [simp]: "#\<surd>(tsProjFst\<cdot>ts) = #\<surd>ts"
 lemma tsprojsnd_tstickcount [simp]: "#\<surd>(tsProjSnd\<cdot>ts) = #\<surd>ts"
   by (simp add: tsProjSnd_def)
 
-lemma tsabs_tsprojfst_slen [simp]: "#(tsAbs\<cdot>(tsProjFst\<cdot>ts)) = #(tsAbs\<cdot>ts)"
+lemma tsprojfst_tsabs_slen [simp]: "#(tsAbs\<cdot>(tsProjFst\<cdot>ts)) = #(tsAbs\<cdot>ts)"
   apply (simp add: tsProjFst_def tsAbs_def tsmap_unfold)
   apply (induct_tac ts, auto)
   apply (simp add: tsmap_h_well)
   apply (rule ind [of _ y], auto)
   by (simp add: tsmap_h_fair2)
 
-lemma tsabs_tsprojsnd_slen [simp]: "#(tsAbs\<cdot>(tsProjSnd\<cdot>ts)) = #(tsAbs\<cdot>ts)"
+lemma tsprojsnd_tsabs_slen [simp]: "#(tsAbs\<cdot>(tsProjSnd\<cdot>ts)) = #(tsAbs\<cdot>ts)"
   apply (simp add: tsProjSnd_def tsAbs_def tsmap_unfold)
   apply (induct_tac ts, auto)
   apply (simp add: tsmap_h_well)
@@ -1952,8 +1952,12 @@ lemma tsfilter_unfold:
   "tsFilter M\<cdot>ts = Abs_tstream (insert \<surd> (Msg ` M) \<ominus> Rep_tstream ts)"
 by (simp add: tsFilter_def tsfilter_h_well)
 
-lemma tsfilter_strict[simp]: "tsFilter M\<cdot>\<bottom> = \<bottom>"
+lemma tsfilter_strict [simp]: "tsFilter M\<cdot>\<bottom> = \<bottom>"
   by (simp add: tsfilter_unfold)
+
+(* ToDo: lemma for tsfilter *)
+lemma tsfilter_nbot [simp]: "ts\<noteq>\<bottom> \<Longrightarrow> tsFilter M\<cdot>ts\<noteq>\<bottom>" 
+oops
   
 lemma tsfilter_tstickcount [simp]: "#\<surd>(tsFilter M\<cdot>ts) = #\<surd>ts"
   apply(simp add: tsTickCount_def)
@@ -1965,7 +1969,7 @@ lemma tsfilter_tstickcount [simp]: "#\<surd>(tsFilter M\<cdot>ts) = #\<surd>ts"
 lemma tsfilter_weak:"tsWeakCausal (Rep_cfun (tsFilter M))"
   by (subst tsWeak2cont2, auto)
 
-lemma tsabs_tsfilter_slen [simp]: "#(tsAbs\<cdot>(tsFilter M\<cdot>ts)) \<le> #(tsAbs\<cdot>ts)"
+lemma sfilter_tsabs_slen [simp]: "#(tsAbs\<cdot>(tsFilter M\<cdot>ts)) \<le> #(tsAbs\<cdot>ts)"
 apply (simp add: tsfilter_unfold tsAbs_def tsfilter_h_well)
 by (metis inf_commute int_sfilterl1 slen_sfilterl1)
 
@@ -2171,19 +2175,18 @@ by (metis (mono_tags, lifting) Fin_leq_Suc_leq less_le not_less slen_rt_ile_eq s
 lemma tsscanl_h_sfoot: assumes "#s<\<infinity>" 
   shows "sfoot (tsscanl_h f q\<cdot>(s \<bullet> \<up>\<surd>)) = \<surd>"
 proof -
-  obtain h1: "s\<bullet>\<up>\<surd>\<noteq>\<epsilon>"
-    by (metis bot_is_0 lnat.con_rews slen_lnsuc strict_slen)
+  have h1: "s\<bullet>\<up>\<surd>\<noteq>\<epsilon>"
+    by (metis lnat.con_rews lnzero_def slen_lnsuc strict_slen)
   obtain n where h2: "#(s\<bullet>\<up>\<surd>) = Fin n"
     by (metis Fin_Suc assms lncases neq_iff slen_lnsuc)   
   hence h3: "(THE a. Fin (Suc a)=#(s\<bullet>\<up>\<surd>)) = n-1"
     by (smt Fin_02bot Fin_Suc Suc_diff_1 h1 bot_is_0 inject_Fin inject_lnsuc neq0_conv slen_empty_eq
         the_equality)
   have h4: "Fin (n - Suc 0) < Fin n"
-    by (metis Fin_02bot \<open>\<And>thesis. (s \<bullet> \<up>\<surd> \<noteq> \<epsilon> \<Longrightarrow> thesis) \<Longrightarrow> thesis\<close> antisym_conv bot_is_0
-        diff_Suc_less diff_le_self h2 leI less2nat lnle_Fin_0 neq_iff slen_empty_eq)
+    by (metis Fin_0 One_nat_def diff_diff_cancel diff_le_self diff_self_eq_0 h1 h2 inject_Fin 
+        less2nat less_le slen_empty_eq zero_less_diff zero_neq_one)
   have h5: "snth (n - Suc 0) (s \<bullet> \<up>\<surd>) = \<surd>"
-    by (metis Fin_02bot Suc_pred \<open>\<And>thesis. (s \<bullet> \<up>\<surd> \<noteq> \<epsilon> \<Longrightarrow> thesis) \<Longrightarrow> thesis\<close> assms bot_is_0 h2
-        leI less2nat lnle_Fin_0 sfoot12 sfoot_exists2 slen_empty_eq)
+    by (metis Fin_02bot Suc_pred assms bot_is_0 gr0I h1 h2 sfoot12 sfoot_exists2 slen_empty_eq)
   thus "sfoot (tsscanl_h f q\<cdot>(s \<bullet> \<up>\<surd>)) = \<surd>"
     apply (simp add: sfoot_def)
     by (metis One_nat_def h2 h3 h4 tsscanl_h_snth_tick2tick)
@@ -2631,8 +2634,12 @@ lemma tsprojsnd_delayfun: "tsProjSnd\<cdot>(delayFun\<cdot>ts) = delayFun\<cdot>
   apply (induct_tac ts, auto)
   by (simp add: tsConc_def tsmap_h_well)
 
-lemma tsfilter_mlscons:
-  "ts \<noteq> \<bottom> \<Longrightarrow> tsFilter M\<cdot>(tsMLscons\<cdot>(updis t)\<cdot>ts) = tsMLscons\<cdot>(updis t)\<cdot>(tsFilter M\<cdot>ts)"
+lemma tsfilter_mlscons_in:
+  "ts\<noteq>\<bottom> \<Longrightarrow> t\<in>M \<Longrightarrow> tsFilter M\<cdot>(tsMLscons\<cdot>(updis t)\<cdot>ts) = tsMLscons\<cdot>(updis t)\<cdot>(tsFilter M\<cdot>ts)"
+oops
+
+lemma tsfilter_mlscons_nin:
+  "ts\<noteq>\<bottom> \<Longrightarrow> t\<notin>M \<Longrightarrow> tsFilter M\<cdot>(tsMLscons\<cdot>(updis t)\<cdot>ts) = tsFilter M\<cdot>ts"
 oops
 
 lemma tsfilter_delayfun: "tsFilter M\<cdot>(delayFun\<cdot>ts) = delayFun\<cdot>(tsFilter M\<cdot>ts)"
@@ -2642,6 +2649,15 @@ lemma tstickcount_mlscons: "#\<surd> tsMLscons\<cdot>(updis t)\<cdot>ts = #\<sur
 apply (cases "ts=\<bottom>", simp)
 apply (simp add: tsmlscons_lscons3 tstickcount_insert)
 by (metis event.distinct(1) lscons_conv sfilter_nin singletonD)
+
+lemma tsabs_mlscons: "ts\<noteq>\<bottom> \<Longrightarrow> tsAbs\<cdot>(tsMLscons\<cdot>(updis t)\<cdot>ts) = (updis t) && (tsAbs\<cdot>ts)"
+apply (simp add: tsmlscons2tslscons)
+apply (subst tsabs_insert)
+apply (simp add: tslscons_lscons uMsg_def lscons_conv)
+by (simp add: tsabs_insert)
+
+lemma tsabs_delayfun: "tsAbs\<cdot>(delayFun\<cdot>ts) = tsAbs\<cdot>ts"
+by(simp add: delayFun_def)
       
 (************************************************)
 (************************************************)      
@@ -2834,6 +2850,10 @@ lemma tszip_strict [simp]:
 "tsZip\<cdot>ts\<cdot>\<epsilon> = \<bottom>"
 "tsZip\<cdot>\<bottom>\<cdot>s = \<bottom>"
 by (fixrec_simp)+
+
+(* ToDo: lemma for tszip *)
+lemma tszip_nbot [simp]: "ts\<noteq>\<bottom> \<Longrightarrow> xs\<noteq>\<epsilon> \<Longrightarrow> (tsZip\<cdot>ts\<cdot>xs)\<noteq>\<bottom>"
+oops
 
 lemma tszip_tslscons_2msg [simp]: "x\<noteq>\<bottom>  \<Longrightarrow> ts\<noteq>\<bottom> \<Longrightarrow>               
   tsZip\<cdot>(tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>t))\<cdot>(tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>t2))\<cdot>ts))\<cdot>(x && xs) 

@@ -47,35 +47,37 @@ lemma tsmed_strict [simp]:
   "tsMed\<cdot>\<bottom>\<cdot>ora = \<bottom>"
 oops
 
-(* Assumptions are missing. Add msg\<noteq>\<bottom> and ora\<noteq>\<bottom> as needed. *)
-lemma tsmed_mlscons_true: "tsMed\<cdot>(tsMLscons\<cdot>m\<cdot>msg)\<cdot>((updis True) && ora) = tsMLscons\<cdot>m\<cdot>(tsMed\<cdot>msg\<cdot>ora)"
+lemma tsmed_mlscons_true: "msg\<noteq>\<bottom> \<Longrightarrow> ora\<noteq>\<epsilon> \<Longrightarrow> 
+  tsMed\<cdot>(tsMLscons\<cdot>(updis m)\<cdot>msg)\<cdot>((updis True) && ora) = tsMLscons\<cdot>(updis m)\<cdot>(tsMed\<cdot>msg\<cdot>ora)"
 oops
     
-lemma tsmed_mlscons_false: "tsMed\<cdot>(tsMLscons\<cdot>m\<cdot>msg)\<cdot>((updis False) && ora) = tsMed\<cdot>msg\<cdot>ora"
+lemma tsmed_mlscons_false: "msg\<noteq>\<bottom> \<Longrightarrow> ora\<noteq>\<epsilon> \<Longrightarrow> 
+  tsMed\<cdot>(tsMLscons\<cdot>(updis m)\<cdot>msg)\<cdot>((updis False) && ora) = tsMed\<cdot>msg\<cdot>ora"
 oops
 
-lemma tsmed_delayfun: "ora\<noteq>\<bottom> \<Longrightarrow> tsMed\<cdot>(delayFun\<cdot>msg)\<cdot>ora = delayFun\<cdot>(tsMed\<cdot>msg\<cdot>ora)"
+lemma tsmed_delayfun: "ora\<noteq>\<epsilon> \<Longrightarrow> tsMed\<cdot>(delayFun\<cdot>msg)\<cdot>ora = delayFun\<cdot>(tsMed\<cdot>msg\<cdot>ora)"
 oops
  
-text {* If infinite ticks will be sent infinite ticks will be transmitted. *}
-lemma tsmed_tstickcount [simp]: "#\<surd>(tsMed\<cdot>msg\<cdot>ora) = #\<surd>msg"
-oops
-
-text {* Not every message will be transmitted. *}    
-lemma tsmed_slen_leq: "#(tsAbs\<cdot>(tsMed\<cdot>msg\<cdot>ora)) \<le> #(tsAbs\<cdot>msg)"
-oops
-
-text {* If infinite messages will be sent infinite messages will be transmitted. *}
-lemma tsmed_slen [simp]: assumes "#({True} \<ominus> ora)=\<infinity>" and "#(tsAbs\<cdot>msg)=\<infinity>" 
-  shows "#(tsAbs\<cdot>(tsMed\<cdot>msg\<cdot>ora)) = \<infinity>"
-oops
-
 text {* If just infinite ticks will be sent just infinite ticks will be transmitted. *}
 lemma tsmed_inftick [simp]: "#ora=\<infinity> \<Longrightarrow> tsMed\<cdot>tsInfTick\<cdot>ora = tsInfTick"
 oops
 
 text {* Medium without oracle will transmit all messages and ticks. *}
 lemma tsmed_inftrue [simp]: "tsMed\<cdot>msg\<cdot>((\<up>True) \<infinity>) = msg"
+oops
+
+(* ToDo: lemmata for tsZip needed, first show testings below *)
+text {* If infinite ticks will be sent infinite ticks will be transmitted. *}
+lemma tsmed_tstickcount [simp]: "#\<surd>(tsMed\<cdot>msg\<cdot>ora) = #\<surd>msg"
+oops
+
+text {* Not every message will be transmitted. *}    
+lemma tsmed_tsabs_slen_leq: "#(tsAbs\<cdot>(tsMed\<cdot>msg\<cdot>ora)) \<le> #(tsAbs\<cdot>msg)"
+oops
+
+text {* If infinite messages will be sent infinite messages will be transmitted. *}
+lemma tsmed_tsabs_slen [simp]: assumes "#({True} \<ominus> ora)=\<infinity>" and "#(tsAbs\<cdot>msg)=\<infinity>" 
+  shows "#(tsAbs\<cdot>(tsMed\<cdot>msg\<cdot>ora)) = \<infinity>"
 oops
 
 (* ----------------------------------------------------------------------- *)
