@@ -1893,6 +1893,9 @@ lemma tsmap_tstickcount[simp]:  "#\<surd>(tsMap f\<cdot>ts) = #\<surd>ts"
   apply(simp add:tsmap_h_well)
   by(simp add: tsmap_h_fair)
 
+lemma tsmap_strict_rev: "tsMap f \<cdot> ts = \<bottom> \<Longrightarrow> ts = \<bottom>"
+  by (metis strict_tstickcount ts_0ticks tsmap_tstickcount)
+
 lemma tsmap_weak:"tsWeakCausal (Rep_cfun (tsMap f))"
 by (subst tsWeak2cont2, auto)
 
@@ -1911,12 +1914,10 @@ lemma tsprojsnd_strict[simp]: "tsProjSnd\<cdot>\<bottom> = \<bottom>"
   by (simp add: tsProjSnd_def)
 
 lemma tsprojfst_strict_rev: "tsProjFst\<cdot>ts = \<bottom> \<Longrightarrow> ts = \<bottom>"
-  apply (simp add: tsProjFst_def)
-  by (metis strict_tstickcount ts_0ticks tsmap_tstickcount)
+  by (simp add: tsProjFst_def tsmap_strict_rev)
 
 lemma tsprojsnd_strict_rev: "tsProjSnd\<cdot>ts = \<bottom> \<Longrightarrow> ts = \<bottom>"
-  apply (simp add: tsProjSnd_def)
-  by (metis strict_tstickcount ts_0ticks tsmap_tstickcount)
+  by (simp add: tsProjSnd_def tsmap_strict_rev)
 
 lemma tsprojfst_tstickcount [simp]: "#\<surd>(tsProjFst\<cdot>ts) = #\<surd>ts"
   by (simp add: tsProjFst_def)
@@ -2622,39 +2623,32 @@ by (simp add: DiscrTick_def delayfun_tslscons_bot sup'_def)
 subsection {* tsMLscons representation *}
 (* ----------------------------------------------------------------------- *)
 
-(* ToDo: useful for tsMLscons representation *)
 lemma tsmap_mlscons:
   "ts \<noteq> \<bottom> \<Longrightarrow> tsMap f\<cdot>(tsMLscons\<cdot>(updis t)\<cdot>ts) = tsMLscons\<cdot>(updis (f t))\<cdot>(tsMap f\<cdot>ts)"
-oops
+  apply (simp add: tsmlscons_lscons3 lscons_conv tsmap_unfold smap_split)
+  apply (simp add: tsmlscons2tslscons)
+  apply (subst tslscons2lscons)
+  apply (metis tsmap_unfold tsmap_strict_rev)
+  by (simp add: lscons_conv tsmap_h_well)
 
 lemma tsmap_delayfun: "tsMap f\<cdot>(delayFun\<cdot>ts) = delayFun\<cdot>(tsMap f\<cdot>ts)"
-oops
+  apply (simp add: delayFun_def delayfun_abststream tsmap_unfold tsconc_rep_eq)
+  apply (induct_tac ts, auto)
+  by (simp add: tsConc_def tsmap_h_well)
 
 lemma tsprojfst_mlscons:
   "ts\<noteq>\<bottom> \<Longrightarrow> tsProjFst\<cdot>(tsMLscons\<cdot>(updis (a,b))\<cdot>ts) = tsMLscons\<cdot>(updis a)\<cdot>(tsProjFst\<cdot>ts)"
-  apply (simp add: tsmlscons_lscons3 tsProjFst_def lscons_conv tsmap_unfold smap_split)
-  apply (simp add: tsmlscons2tslscons)
-  apply (subst tslscons2lscons)
-  apply (metis tsProjFst_def tsmap_unfold tsprojfst_strict_rev)
-  by (simp add: lscons_conv tsmap_h_well)
+  by (simp add: tsProjFst_def tsmap_mlscons)
 
-lemma tsprojfst_delayfun: "tsProjFst\<cdot>(delayFun\<cdot>ts) = delayFun\<cdot>(tsProjFst\<cdot>ts)"    
-  apply (simp add: delayFun_def delayfun_abststream tsProjFst_def tsmap_unfold tsconc_rep_eq)
-  apply (induct_tac ts, auto)
-  by (simp add: tsConc_def tsmap_h_well)
+lemma tsprojfst_delayfun: "tsProjFst\<cdot>(delayFun\<cdot>ts) = delayFun\<cdot>(tsProjFst\<cdot>ts)"
+  by (simp add: tsProjFst_def tsmap_delayfun)
 
 lemma tsprojsnd_mlscons:
   "ts\<noteq>\<bottom> \<Longrightarrow> tsProjSnd\<cdot>(tsMLscons\<cdot>(updis (a,b))\<cdot>ts) = tsMLscons\<cdot>(updis b)\<cdot>(tsProjSnd\<cdot>ts)"
-  apply (simp add: tsmlscons_lscons3 tsProjSnd_def lscons_conv tsmap_unfold smap_split)
-  apply (simp add: tsmlscons2tslscons)
-  apply (subst tslscons2lscons)
-  apply (metis tsProjSnd_def tsmap_unfold tsprojsnd_strict_rev)
-  by (simp add: lscons_conv tsmap_h_well)
+  by (simp add: tsProjSnd_def tsmap_mlscons)
 
-lemma tsprojsnd_delayfun: "tsProjSnd\<cdot>(delayFun\<cdot>ts) = delayFun\<cdot>(tsProjSnd\<cdot>ts)"    
-  apply (simp add: delayFun_def delayfun_abststream tsProjSnd_def tsmap_unfold tsconc_rep_eq)
-  apply (induct_tac ts, auto)
-  by (simp add: tsConc_def tsmap_h_well)
+lemma tsprojsnd_delayfun: "tsProjSnd\<cdot>(delayFun\<cdot>ts) = delayFun\<cdot>(tsProjSnd\<cdot>ts)"
+  by (simp add: tsProjSnd_def tsmap_delayfun)
 
 lemma tsfilter_mlscons_in:
   "ts\<noteq>\<bottom> \<Longrightarrow> t\<in>M \<Longrightarrow> tsFilter M\<cdot>(tsMLscons\<cdot>(updis t)\<cdot>ts) = tsMLscons\<cdot>(updis t)\<cdot>(tsFilter M\<cdot>ts)"
