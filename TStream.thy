@@ -1962,17 +1962,19 @@ by (simp add: tsFilter_def tsfilter_h_well)
 lemma tsfilter_strict [simp]: "tsFilter M\<cdot>\<bottom> = \<bottom>"
   by (simp add: tsfilter_unfold)
 
-(* ToDo: lemma for tsfilter *)
 lemma tsfilter_nbot [simp]: "ts\<noteq>\<bottom> \<Longrightarrow> tsFilter M\<cdot>ts\<noteq>\<bottom>" 
-oops
-  
+  apply (simp add: tsfilter_unfold ts_well_Rep tsfilter_h_well)
+  by (metis (no_types, lifting)
+      Rep_Abs Rep_tstream inf_bot_left insert_inter_insert int_sfilterl1 mem_Collect_eq
+      strict_tstickcount ts_0ticks tsfilter_h_well tstickcount_insert)
+
 lemma tsfilter_tstickcount [simp]: "#\<surd>(tsFilter M\<cdot>ts) = #\<surd>ts"
   apply(simp add: tsTickCount_def)
   apply(simp only: tsfilter_unfold)
   apply(subst Abs_tstream_inverse)
    apply (simp add: tsfilter_h_well)
    by simp
-                                            
+
 lemma tsfilter_weak:"tsWeakCausal (Rep_cfun (tsFilter M))"
   by (subst tsWeak2cont2, auto)
 
