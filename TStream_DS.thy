@@ -12,21 +12,61 @@ imports TStream
 begin  
 default_sort countable
 
-(* Here I just try a few things. *)
+lemma tscases_h:
+  assumes bottom: "xs=\<epsilon> \<Longrightarrow> P xs" 
+    and delayfun: "\<And>as. xs=updis \<surd> && as \<Longrightarrow> P xs"
+    and mlscons: "\<And>a as. xs=updis (\<M> a) && as \<Longrightarrow> P xs"
+  shows "P xs"
+apply (rule_tac y=xs in scases')
+using bottom apply blast
+by (metis bottom delayfun event.exhaust lscons_conv mlscons surj_scons)
 
-lemma tszip_tstickcount [simp]: "xs\<noteq>\<epsilon> \<Longrightarrow> #\<surd>(tsZip\<cdot>ts\<cdot>xs) = #\<surd>ts"
-apply (induction ts arbitrary: xs)
-apply (simp_all)
-apply (metis delayfun_insert tstickcount_tscons tszip_delayfun)
-apply (simp add: tszip_mlscons tszip_mlscons_2msg tstickcount_mlscons)
+lemma tscases:
+  assumes bottom: "ts=\<bottom> \<Longrightarrow> P ts" 
+    and delayfun: "\<And>as. ts=delayFun\<cdot>as \<Longrightarrow> P ts"
+    and mlscons: "\<And>a as. ts=tsMLscons\<cdot>(updis a)\<cdot>as \<Longrightarrow> P ts"
+  shows "P ts"
+apply (rule_tac xs="Rep_tstream ts" in tscases_h)
+using Rep_tstream_bottom_iff bottom apply blast
+apply (metis Rep_tstream_inverse absts2tslscons delayfun delayfun_tslscons tick_eq_discrtick
+       ts_well_Rep)
+by (metis Rep_tstream_inverse absts2tsmlscons_msg mlscons ts_well_Rep)
+
+(* here I just try a few things. *)
+
+lemma tszip_tstickcount_h: "xs\<noteq>\<epsilon> \<Longrightarrow> #\<surd> tsZip\<cdot>ts\<cdot>(updis x && xs) = #\<surd> tsZip\<cdot>ts\<cdot>xs"
 oops
 
-lemma tsabs_tszip_slen [simp]: "xs\<noteq>\<epsilon> \<Longrightarrow> #(tsAbs\<cdot>(tsZip\<cdot>ts\<cdot>(updis x && xs))) = #(tsAbs\<cdot>ts)"
+(* show lemma tszip_tstickcount_h *)
+(*
+lemma tszip_tstickcount [simp]: "xs\<noteq>\<epsilon> \<Longrightarrow> #\<surd>(tsZip\<cdot>ts\<cdot>(updis x && xs)) = #\<surd>ts"
 apply (induction ts)
 apply (simp_all)
-apply (simp add: tsabs_delayfun tszip_delayfun)
-apply (simp add: tszip_mlscons)
-apply (subst tsabs_mlscons)
+apply (simp add: tszip_delayfun)
+apply (metis delayFun_dropFirst delayfun_nbot tsdropfirst_len)
+by (simp add: tszip_mlscons tstickcount_mlscons tszip_tstickcount_h)
+*)
+
+(* use tstickcount *)
+lemma tszip_strict_rev: "tsZip\<cdot>ts\<cdot>xs = \<bottom> \<Longrightarrow> ts=\<bottom> \<or> xs=\<epsilon>"
+oops
+
+(* split in more than one lemmata? *)
+lemma tsremdups_h_nbot [simp]: "ts\<noteq>\<bottom> \<Longrightarrow> tsRemDups_h\<cdot>ts\<cdot>a \<noteq> \<bottom>"
+apply (induction ts)
+apply (simp_all)
+apply (simp add: tsremdups_h_delayfun)
+oops
+
+lemma tsremdups_tsabs_slen [simp]: "ts\<noteq>\<bottom> \<Longrightarrow> #(tsAbs\<cdot>(tsRemDups\<cdot>ts)) \<le> #(tsAbs\<cdot>ts)"
+apply (simp add: tsremdups_insert)
+oops
+
+(* see ToDo TStream *)
+lemma tszip_nbot [simp]: "ts\<noteq>\<bottom> \<Longrightarrow> xs\<noteq>\<epsilon> \<Longrightarrow> (tsZip\<cdot>ts\<cdot>xs)\<noteq>\<bottom>"
+oops
+
+lemma tszip_tsabs_slen [simp]: "xs\<noteq>\<epsilon> \<Longrightarrow> #(tsAbs\<cdot>(tsZip\<cdot>ts\<cdot>(updis x && xs))) = #(tsAbs\<cdot>ts)"
 oops
 
 
@@ -38,7 +78,7 @@ lift_definition tsExampResult :: "nat tstream" is "<[Msg 1, Msg 2, \<surd>,  \<s
 by (subst ts_well_def, auto)
 
 lemma "tsRemDups\<cdot>tsExampIn = tsExampResult"
-apply (simp add: tsExampIn_def tsExampResult_def tsRemDups_insert)
+apply (simp add: tsExampIn_def tsExampResult_def tsremdups_insert)
 apply (subst absts2tsmlscons_msg2)
 apply (metis One_nat_def eq_onp_same_args list2s.simps(1) list2s.simps(2) lscons_conv sup'_def 
        tsExampIn.rsp)

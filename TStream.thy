@@ -1969,7 +1969,7 @@ lemma tsfilter_tstickcount [simp]: "#\<surd>(tsFilter M\<cdot>ts) = #\<surd>ts"
 lemma tsfilter_weak:"tsWeakCausal (Rep_cfun (tsFilter M))"
   by (subst tsWeak2cont2, auto)
 
-lemma sfilter_tsabs_slen [simp]: "#(tsAbs\<cdot>(tsFilter M\<cdot>ts)) \<le> #(tsAbs\<cdot>ts)"
+lemma tsfilter_tsabs_slen [simp]: "#(tsAbs\<cdot>(tsFilter M\<cdot>ts)) \<le> #(tsAbs\<cdot>ts)"
 apply (simp add: tsfilter_unfold tsAbs_def tsfilter_h_well)
 by (metis inf_commute int_sfilterl1 slen_sfilterl1)
 
@@ -2533,7 +2533,7 @@ lemma tsmlscons_bot2 [simp]: "tsMLscons\<cdot>t\<cdot>\<bottom> = \<bottom>"
   apply(simp add: tsMLscons_def)    
     by(auto simp add: tslscons_insert upapply_insert)
     
-lemma tsmlscons_nbot [simp]: "t\<noteq>\<bottom>\<Longrightarrow>ts \<noteq>\<bottom> \<Longrightarrow> tsMLscons\<cdot>t\<cdot>ts \<noteq>\<bottom>"    
+lemma tsmlscons_nbot [simp]: "t\<noteq>\<bottom> \<Longrightarrow>ts \<noteq>\<bottom> \<Longrightarrow> tsMLscons\<cdot>t\<cdot>ts \<noteq>\<bottom>"    
   by(simp add: tsMLscons_def)    
 
 lemma tsmlscons_lscons: "tsMLscons\<cdot>(up\<cdot>t)\<cdot>ts = tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>t))\<cdot>ts"
@@ -2912,7 +2912,7 @@ declare tsRemDups_h.simps [simp del]
 definition tsRemDups :: "'a tstream \<rightarrow> 'a tstream" where
 "tsRemDups \<equiv> \<Lambda> ts. tsRemDups_h\<cdot>ts\<cdot>None"
 
-lemma tsRemDups_insert: "tsRemDups\<cdot>ts = tsRemDups_h\<cdot>ts\<cdot>None"
+lemma tsremdups_insert: "tsRemDups\<cdot>ts = tsRemDups_h\<cdot>ts\<cdot>None"
 by (simp add: tsRemDups_def)
 
 lemma tsremdups_h_strict [simp]: 
@@ -2960,7 +2960,7 @@ apply (simp add: tsremdups_h_mlscons tsremdups_h_mlscons_ndup)
 by (simp add: tsremdups_h_mlscons tsremdups_h_mlscons_dup tstickcount_mlscons)
 
 lemma tsremdups_tstickcount [simp]: "#\<surd>(tsRemDups\<cdot>ts) = #\<surd>ts"
-apply (simp add: tsRemDups_insert)
+apply (simp add: tsremdups_insert)
 apply (induction ts)
 apply (simp_all)
 apply (metis delayFun_dropFirst delayfun_nbot tsdropfirst_len tsremdups_h_delayfun)

@@ -67,6 +67,7 @@ lemma tsmed_inftrue [simp]: "tsMed\<cdot>msg\<cdot>((\<up>True) \<infinity>) = m
 oops
 
 (* ToDo: lemmata for tsZip needed, first show testings below *)
+
 text {* If infinite ticks will be sent infinite ticks will be transmitted. *}
 lemma tsmed_tstickcount [simp]: "#\<surd>(tsMed\<cdot>msg\<cdot>ora) = #\<surd>msg"
 oops
