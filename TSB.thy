@@ -518,7 +518,28 @@ thm tsbTickCount_def
 lemma [simp]: "cont ((\<lambda> tb. #\<surd> SOME ts. ts \<in> ran (Rep_TSB tb)))"
 apply(rule contI2)
 apply(rule monofunI)
-oops
+  sorry
+    
+lemma tsbtickcountch_eq1: "\<exists>n. \<forall> c \<in> tsbDom\<cdot>tb . n = #\<surd> (tb . c)"
+  by (metis ts_ex_len tsbdom_insert tsbgetch_insert)
+   
+lemma tstbtickcount_eq2: "\<exists>n. n = #\<surd> SOME ts. ts \<in> ran (Rep_TSB tb)"
+  by simp
+    
+lemma tsbtickcountgetch: assumes "c \<in> tsbDom\<cdot>tb"
+  shows "#\<surd>tsb tb = #\<surd> (tb . c)"
+proof -
+  have f1:"(Rep_TSB tb\<rightharpoonup>c) \<in> ran (Rep_TSB tb)"
+    by (metis assms domIff option.exhaust_sel ranI tsbdom_insert)
+  have f2: "\<forall> ts \<in> ran (Rep_TSB tb). \<exists> c \<in> tsbDom\<cdot>tb.  ts = (tb . c)"
+    by (smt Abs_cfun_inverse2 domI mem_Collect_eq option.sel ran_def tsbDom_def tsbdom_cont tsbgetch_insert)
+  hence f3: "\<exists>n. \<forall> ts \<in> ran (Rep_TSB tb). #\<surd> ts = n"
+    by (metis ts_ex_len tsbdom_insert tsbgetch_insert)
+  show ?thesis
+  apply (simp add: tsbTickCount_def tsbgetch_insert)
+    by (metis f1 f3 someI_ex)
+qed
+  
 
 lemma "cs \<noteq> {} \<Longrightarrow> #\<surd>tsb (tsbLeast cs) = Fin 0"
 apply(simp add: tsbTickCount_def)
@@ -654,27 +675,8 @@ lemma tsTakeL_maxinchain: assumes "Fin n = #\<surd>ts"
   shows "max_in_chain n (\<lambda>i. tsTakeL\<cdot>(Fin i)\<cdot>ts)"
   by (metis (no_types, lifting) assms less2nat max_in_chainI min_def 
             tstakeL_len tstakeL_prefix tstake_below_eq)
-    
-lemma tsbttakeL_well [simp]: "tsb_well (\<lambda>c. (c\<in>tsbDom\<cdot>tb) \<leadsto> (tsTakeL\<cdot>n\<cdot>(tb  .  c)))"  
-proof (cases "n \<noteq> \<infinity>")
-  case True
-  have f1: "n < \<infinity>" 
-    by (simp add: True less_le)
-  obtain j where f2: "n = Fin j"
-  by (metis f1 infI neq_iff)
-  thus ?thesis
-  apply (simp add: tsb_well_def tsTakeL_def)
-  apply rule
-    apply (metis (no_types, lifting) subset_trans tsbgetch_insert tsdom_ctype_subset tsttake_dom)
-    by (metis ts_ex_len tsbdom_insert tsbgetch_insert)
-next
-  case False
-  then show ?thesis
-    apply (simp add: tsb_well_def tsTakeL_def)
-    apply rule
-      apply (simp add: tsbgetch_insert)
-      by (metis ts_ex_len tsbdom_insert tsbgetch_insert)
-qed
+          
+
   
 
 lemma tsb_newMap_well[simp]: assumes "c\<in>tsbDom\<cdot>b"
@@ -698,6 +700,128 @@ proof -
     using f1 by (simp add: tsbgetch_insert tsbrestrict_insert)
 qed
   
+subsubsection \<open>tsbTTake\<close>
+  
+  
+thm tsbTTake_def
+lemma tsbttake_well[simp]: "tsb_well (\<lambda>c. (c \<in> tsbDom\<cdot>tb)\<leadsto> ((tb  .  c) \<down> n ))"
+  apply(simp add: tsb_well_def)
+  apply rule
+   apply (metis (full_types) Rep_TSB dual_order.trans mem_Collect_eq tsb_well_def tsbdom_insert tsbgetch_insert tsttake_dom)
+  by (metis Rep_TSB mem_Collect_eq tsb_well_def tsbdom_insert tsbgetch_insert)
+
+lemma tsbttake_dom [simp]: "tsbDom\<cdot>(tb \<down> i) = tsbDom\<cdot>tb"
+  by(simp add: tsbTTake_def tsbdom_rep_eq)
+
+lemma tsbttake2least: "(tb \<down> 0) = tsbLeast (tsbDom\<cdot>tb)"
+  apply(rule tsb_eq)
+   apply(simp)
+  apply simp
+  by(simp add: tsbTTake_def tsbgetch_insert)
+
+lemma [simp]: assumes "c\<in>tsbDom\<cdot>tb"
+  shows "tb \<down> 0  .  c = \<bottom>"
+  by(simp add: tsbttake2least assms)
+
+lemma [simp]: "c \<in> tsbDom\<cdot>tb \<Longrightarrow> ((tb \<down> n)  .  c) = ((tb  .  c) \<down>n)"
+by(simp add: tsbTTake_def tsbgetch_insert)
+
+lemma tsbttake_below [simp]: fixes tb:: "'m TSB"
+  shows "(tb \<down> i) \<sqsubseteq> tb"
+  by(rule tsb_below, auto)
+ 
+
+lemma tsbttake_lub [simp] : fixes tb:: "'m TSB"
+  shows "(\<Squnion>i. (tb \<down> i)) = tb"
+    apply(rule tsb_eq)
+    
+  oops
+    
+subsubsection \<open>tsbTTakeL\<close>    
+lemma tsbttakeL_well [simp]: "tsb_well (\<lambda>c. (c\<in>tsbDom\<cdot>tb) \<leadsto> (tsTakeL\<cdot>n\<cdot>(tb  .  c)))"  
+proof (cases "n \<noteq> \<infinity>")
+  case True
+  have f1: "n < \<infinity>" 
+    by (simp add: True less_le)
+  obtain j where f2: "n = Fin j"
+  by (metis f1 infI neq_iff)
+  thus ?thesis
+  apply (simp add: tsb_well_def tsTakeL_def)
+  apply rule
+    apply (metis (no_types, lifting) subset_trans tsbgetch_insert tsdom_ctype_subset tsttake_dom)
+    by (metis ts_ex_len tsbdom_insert tsbgetch_insert)
+next
+  case False
+  then show ?thesis
+    apply (simp add: tsb_well_def tsTakeL_def)
+    apply rule
+      apply (simp add: tsbgetch_insert)
+      by (metis ts_ex_len tsbdom_insert tsbgetch_insert)
+  qed
+    
+lemma tsbttakeL_dom [simp]: "tsbDom\<cdot>(tsbTTakeL i tb) = tsbDom\<cdot>tb"
+  by (simp add: tsbTTakeL_def tsbdom_rep_eq)
+    
+lemma tsbttakeL_least: "tsbTTakeL (Fin 0) tb = tsbLeast (tsbDom\<cdot>tb)"
+  apply (rule tsb_eq, simp_all)
+  by(simp add: tsbTTakeL_def tsbgetch_insert)
+    
+lemma tsbttakeL_inf [simp]: "(tsbTTakeL \<infinity> tb) = tb"
+  apply (simp add: tsbTTakeL_def)
+  apply (simp only: tstakeL_inf)
+    by (metis (no_types) tsbgetch_eq2)
+  
+lemma tsbttakeL_least_getch [simp]: assumes "c \<in> tsbDom\<cdot>tb"
+  shows "(tsbTTakeL (Fin 0) tb) . c = \<bottom>"
+  by (metis assms tsbleast_getch tsbttakeL_least)
+
+    
+lemma tsbttakeL_getch [simp]: assumes "c \<in> tsbDom\<cdot>tb"
+  shows "((tsbTTakeL n tb) . c) = tsTakeL\<cdot>n\<cdot>(tb . c)"
+proof (cases "n \<noteq> \<infinity>")
+  case True
+  have f1: "n < \<infinity>" 
+      by (simp add: True less_le)
+  obtain j where f2: "n = Fin j"
+  by (metis f1 infI neq_iff)
+  then show ?thesis
+    by (simp add: tsbTTakeL_def tsbgetch_insert assms)
+next
+  case False
+  have f1: "\<And>t. Abs_TSB (\<lambda>c. (c \<in> tsbDom\<cdot> (t::'a TSB))\<leadsto>tsTakeL\<cdot>\<infinity>\<cdot> (t . c)) = t"
+      by (metis (no_types) tsbTTakeL_def tsbttakeL_inf)
+  then show ?thesis
+    apply (simp add: tsbTTakeL_def)
+    using False by auto
+qed
+  
+lemma tsbttakeL_below [simp]: "(tsbTTakeL n tb) \<sqsubseteq> tb"
+  by (rule tsb_below, auto)
+    
+lemma tsbttakeL_len: assumes "tsbDom\<cdot>tb \<noteq> {}"
+ shows "#\<surd>tsb (tsbTTakeL (n) tb) = min (#\<surd>tsb tb) (n)"
+proof (cases "n \<noteq> \<infinity>")
+  case True
+  have f1: "n < \<infinity>" 
+    by (simp add: True less_le)
+  obtain j where f2: "n = Fin j"
+    by (metis f1 infI neq_iff)
+  obtain c where f3: "c \<in> tsbDom\<cdot>tb"
+    using assms by blast
+  have f4: "#\<surd>tsb (tsbTTakeL (n) tb) = #\<surd> (tsbTTakeL (n) tb) . c"
+    by (rule tsbtickcountgetch, simp add: f3)
+  have f5: "(tsbTTakeL (n) tb) . c = tsTakeL\<cdot>n\<cdot>(tb . c)"
+    by (simp add: f3)
+  have f6: "#\<surd> (tb . c) = #\<surd>tsb tb"
+    by (subst tsbtickcountgetch, simp_all add: f3)
+  then show ?thesis
+    by (simp add: f4 f5)
+next
+  case False
+  then show ?thesis
+    by simp
+qed
+  
 
 subsubsection \<open>tsbUnion\<close>
 
@@ -709,7 +833,7 @@ subsubsection \<open>tsbUnion\<close>
     Daher viel anpassen nötig *)
 
 declare [[show_types]]
-(*
+
 
 lemma tsbunion_well1[simp]: assumes "tsb_well b1" and "tsb_well b2" 
                            and "\<forall>c1 \<in> dom b1. \<forall> c2 \<in> dom b2.  #\<surd>(b1\<rightharpoonup>c1) = #\<surd>(b2\<rightharpoonup>c2)"
@@ -723,10 +847,23 @@ proof -
     using tsb_well_def by blast
 qed
   
-lemma tsbunion_well2: "tsb_well ((Rep_TSB (tsbTTakeL (#\<surd>tsb tb2) tb1)) ++ (Rep_TSB (tsbTTakeL (#\<surd>tsb tb1) tb2)))"
-proof -
-  have "#\<surd>tsb (tsbTTakeL (#\<surd>tsb tb2) tb1) = #\<surd>tsb (tsbTTakeL (#\<surd>tsb tb1) tb2)"
-    sorry
+lemma tsbunion_well2: assumes "tsbDom\<cdot>tb1 \<noteq> {}" and "tsbDom\<cdot>tb2 \<noteq> {}"
+  shows "tsb_well ((Rep_TSB (tsbTTakeL (#\<surd>tsb tb2) tb1)) ++ (Rep_TSB (tsbTTakeL (#\<surd>tsb tb1) tb2)))"
+proof (cases "(#\<surd>tsb tb2) < (#\<surd>tsb tb1)")
+  case True
+  hence "#\<surd>tsb (tsbTTakeL (#\<surd>tsb tb2) tb1) = (#\<surd>tsb tb2)"
+    by (simp add: assms(1) min_absorb2 tsbttakeL_len)
+  thus ?thesis
+    by (metis (no_types, lifting) Rep_TSB True assms(2) mem_Collect_eq min.strict_order_iff 
+        tsbdom_insert tsbgetch_insert tsbtickcountgetch tsbttakeL_len tsbunion_well1)
+next
+  case False
+  hence "#\<surd>tsb (tsbTTakeL (#\<surd>tsb tb1) tb2) = (#\<surd>tsb tb1)"
+    by (simp add: assms(2) min_absorb2 tsbttakeL_len)
+  then show ?thesis
+    by (metis (no_types, lifting) Rep_TSB assms(1) assms(2) mem_Collect_eq min.commute 
+              tsbdom_insert tsbgetch_insert tsbtickcountgetch tsbttakeL_len tsbunion_well1)  
+qed
 
 (* helper function for continuity proof *)
 lemma tsbunion_contL[simp]: "\<And> b2. cont (\<lambda>b1. (Rep_TSB b1) ++ (Rep_TSB b2))"
@@ -744,7 +881,7 @@ lemma tsbunion_cont[simp]: assumes "\<forall>c1 \<in> dom b1. \<forall> c2 \<in>
     (* by(simp add: cont2cont_LAM cont_Abs_TSB) *)
   oops
     
-
+(*
 (* insert rule for sbUnion *)
 lemma tsbunion_insert: assumes "#\<surd>tsb tb1 = #\<surd>tsb tb2"
 shows "(tb1 \<uplus> tb2) = (Abs_TSB (Rep_TSB tb1 ++ Rep_TSB tb2))"
@@ -793,42 +930,7 @@ lemma tsbunion_dom [simp]: "tsbDom\<cdot>(tb1 \<uplus> tb2) = tsbDom\<cdot>tb1 \
 *)
 
 
-subsubsection \<open>tsbTTake\<close>
-  
-  
-thm tsbTTake_def
-lemma tsbttake_well[simp]: "tsb_well (\<lambda>c. (c \<in> tsbDom\<cdot>tb)\<leadsto> ((tb  .  c) \<down> n ))"
-  apply(simp add: tsb_well_def)
-  apply rule
-   apply (metis (full_types) Rep_TSB dual_order.trans mem_Collect_eq tsb_well_def tsbdom_insert tsbgetch_insert tsttake_dom)
-  by (metis Rep_TSB mem_Collect_eq tsb_well_def tsbdom_insert tsbgetch_insert)
 
-lemma tsbttake_dom [simp]: "tsbDom\<cdot>(tb \<down> i) = tsbDom\<cdot>tb"
-  by(simp add: tsbTTake_def tsbdom_rep_eq)
-
-lemma tsbttake2least: "(tb \<down> 0) = tsbLeast (tsbDom\<cdot>tb)"
-  apply(rule tsb_eq)
-   apply(simp)
-  apply simp
-  by(simp add: tsbTTake_def tsbgetch_insert)
-
-lemma [simp]: assumes "c\<in>tsbDom\<cdot>tb"
-  shows "tb \<down> 0  .  c = \<bottom>"
-  by(simp add: tsbttake2least assms)
-
-lemma [simp]: "c \<in> tsbDom\<cdot>tb \<Longrightarrow> ((tb \<down> n)  .  c) = ((tb  .  c) \<down>n)"
-by(simp add: tsbTTake_def tsbgetch_insert)
-
-lemma tsbttake_below [simp]: fixes tb:: "'m TSB"
-  shows "(tb \<down> i) \<sqsubseteq> tb"
-  by(rule tsb_below, auto)
- 
-
-lemma tsbttake_lub [simp] : fixes tb:: "'m TSB"
-  shows "(\<Squnion>i. (tb \<down> i)) = tb"
-    apply(rule tsb_eq)
-    
-    oops
     
 
 
