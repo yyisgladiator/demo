@@ -12,61 +12,17 @@ imports TStream
 begin  
 default_sort countable
 
-lemma tscases_h:
-  assumes bottom: "xs=\<epsilon> \<Longrightarrow> P xs" 
-    and delayfun: "\<And>as. xs=updis \<surd> && as \<Longrightarrow> P xs"
-    and mlscons: "\<And>a as. xs=updis (\<M> a) && as \<Longrightarrow> P xs"
-  shows "P xs"
-apply (rule_tac y=xs in scases')
-using bottom apply blast
-by (metis bottom delayfun event.exhaust lscons_conv mlscons surj_scons)
-
-lemma tscases:
-  assumes bottom: "ts=\<bottom> \<Longrightarrow> P ts" 
-    and delayfun: "\<And>as. ts=delayFun\<cdot>as \<Longrightarrow> P ts"
-    and mlscons: "\<And>a as. ts=tsMLscons\<cdot>(updis a)\<cdot>as \<Longrightarrow> P ts"
-  shows "P ts"
-apply (rule_tac xs="Rep_tstream ts" in tscases_h)
-using Rep_tstream_bottom_iff bottom apply blast
-apply (metis Rep_tstream_inverse absts2tslscons delayfun delayfun_tslscons tick_eq_discrtick
-       ts_well_Rep)
-by (metis Rep_tstream_inverse absts2tsmlscons_msg mlscons ts_well_Rep)
-
 (* here I just try a few things. *)
 
-lemma tszip_tstickcount_h: "xs\<noteq>\<epsilon> \<Longrightarrow> #\<surd> tsZip\<cdot>ts\<cdot>(updis x && xs) = #\<surd> tsZip\<cdot>ts\<cdot>xs"
-oops
-
-(* show lemma tszip_tstickcount_h *)
-(*
-lemma tszip_tstickcount [simp]: "xs\<noteq>\<epsilon> \<Longrightarrow> #\<surd>(tsZip\<cdot>ts\<cdot>(updis x && xs)) = #\<surd>ts"
-apply (induction ts)
-apply (simp_all)
-apply (simp add: tszip_delayfun)
-apply (metis delayFun_dropFirst delayfun_nbot tsdropfirst_len)
-by (simp add: tszip_mlscons tstickcount_mlscons tszip_tstickcount_h)
-*)
-
-(* use tstickcount *)
-lemma tszip_strict_rev: "tsZip\<cdot>ts\<cdot>xs = \<bottom> \<Longrightarrow> ts=\<bottom> \<or> xs=\<epsilon>"
-oops
-
-(* split in more than one lemmata? *)
-lemma tsremdups_h_nbot [simp]: "ts\<noteq>\<bottom> \<Longrightarrow> tsRemDups_h\<cdot>ts\<cdot>a \<noteq> \<bottom>"
-apply (induction ts)
-apply (simp_all)
-apply (simp add: tsremdups_h_delayfun)
+lemma tszip_tsabs_slen [simp]: "xs\<noteq>\<epsilon> \<Longrightarrow> #(tsAbs\<cdot>(tsZip\<cdot>ts\<cdot>(updis x && xs))) = #(tsAbs\<cdot>ts)"
 oops
 
 lemma tsremdups_tsabs_slen [simp]: "ts\<noteq>\<bottom> \<Longrightarrow> #(tsAbs\<cdot>(tsRemDups\<cdot>ts)) \<le> #(tsAbs\<cdot>ts)"
 apply (simp add: tsremdups_insert)
 oops
 
-(* see ToDo TStream *)
-lemma tszip_nbot [simp]: "ts\<noteq>\<bottom> \<Longrightarrow> xs\<noteq>\<epsilon> \<Longrightarrow> (tsZip\<cdot>ts\<cdot>xs)\<noteq>\<bottom>"
-oops
-
-lemma tszip_tsabs_slen [simp]: "xs\<noteq>\<epsilon> \<Longrightarrow> #(tsAbs\<cdot>(tsZip\<cdot>ts\<cdot>(updis x && xs))) = #(tsAbs\<cdot>ts)"
+(* split in more than one lemmata? *)
+lemma tsremdups_h_nbot [simp]: "ts\<noteq>\<bottom> \<Longrightarrow> tsRemDups_h\<cdot>ts\<cdot>None \<noteq> \<bottom>"
 oops
 
 

@@ -47,11 +47,11 @@ lemma tsmed_strict [simp]:
   "tsMed\<cdot>\<bottom>\<cdot>ora = \<bottom>"
 oops
 
-lemma tsmed_mlscons_true: "msg\<noteq>\<bottom> \<Longrightarrow> ora\<noteq>\<epsilon> \<Longrightarrow> 
+lemma tsmed_mlscons_true: "msg\<noteq>\<bottom> \<Longrightarrow> #ora=\<infinity> \<Longrightarrow> 
   tsMed\<cdot>(tsMLscons\<cdot>(updis m)\<cdot>msg)\<cdot>((updis True) && ora) = tsMLscons\<cdot>(updis m)\<cdot>(tsMed\<cdot>msg\<cdot>ora)"
 oops
     
-lemma tsmed_mlscons_false: "msg\<noteq>\<bottom> \<Longrightarrow> ora\<noteq>\<epsilon> \<Longrightarrow> 
+lemma tsmed_mlscons_false: "msg\<noteq>\<bottom> \<Longrightarrow> #ora=\<infinity> \<Longrightarrow> 
   tsMed\<cdot>(tsMLscons\<cdot>(updis m)\<cdot>msg)\<cdot>((updis False) && ora) = tsMed\<cdot>msg\<cdot>ora"
 oops
 
@@ -66,11 +66,11 @@ text {* Medium without oracle will transmit all messages and ticks. *}
 lemma tsmed_inftrue [simp]: "tsMed\<cdot>msg\<cdot>((\<up>True) \<infinity>) = msg"
 oops
 
-(* ToDo: lemmata for tsZip needed, first show testings below *)
-
 text {* If infinite ticks will be sent infinite ticks will be transmitted. *}
-lemma tsmed_tstickcount [simp]: "#\<surd>(tsMed\<cdot>msg\<cdot>ora) = #\<surd>msg"
+lemma tsmed_tstickcount [simp]: "#ora=\<infinity> \<Longrightarrow> #\<surd>(tsMed\<cdot>msg\<cdot>ora) = #\<surd>msg"
 oops
+
+(* ToDo: lemmata for tsZip needed, first show testings below *)
 
 text {* Not every message will be transmitted. *}    
 lemma tsmed_tsabs_slen_leq: "#(tsAbs\<cdot>(tsMed\<cdot>msg\<cdot>ora)) \<le> #(tsAbs\<cdot>msg)"

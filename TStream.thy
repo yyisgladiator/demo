@@ -1882,23 +1882,23 @@ lemma tsmap_unfold:
   apply (simp add:tsMap_def)
   apply (simp add: espf2tspf_def)
   by (simp add: tsmap_h_well)
-    
 
 lemma tsmap_strict[simp]: "tsMap f\<cdot>\<bottom> = \<bottom>"
   by (simp add: tsmap_unfold)
 
- 
 lemma tsmap_tstickcount[simp]:  "#\<surd>(tsMap f\<cdot>ts) = #\<surd>ts"
   apply(simp add: tsTickCount_def)
   apply(simp only: tsmap_unfold)
   apply(subst Abs_tstream_inverse)
   apply(simp add:tsmap_h_well)
-  apply(simp add: tsmap_h_fair)
-  done
+  by(simp add: tsmap_h_fair)
 
 lemma tsmap_weak:"tsWeakCausal (Rep_cfun (tsMap f))"
-apply (subst tsWeak2cont2, auto)  
-done
+by (subst tsWeak2cont2, auto)
+
+(* ToDo: lemma for tsmap, modify less general lemmata *)
+lemma tsmap_tsabs_slen [simp]: "#(tsAbs\<cdot>(tsMap f\<cdot>ts)) = #(tsAbs\<cdot>ts)"
+oops
 
 (* tsProjFst and tsProjSnd *)
 thm tsProjFst_def
@@ -1937,6 +1937,13 @@ lemma tsprojsnd_tsabs_slen [simp]: "#(tsAbs\<cdot>(tsProjSnd\<cdot>ts)) = #(tsAb
   apply (simp add: tsmap_h_well)
   apply (rule ind [of _ y], auto)
   by (simp add: tsmap_h_fair2)
+
+(* ToDo: lemma for tsprojfst/snd *)
+lemma tsprojfst_nbot [simp]: "ts\<noteq>\<bottom> \<Longrightarrow> tsProjFst\<cdot>ts\<noteq>\<bottom>"
+oops
+
+lemma tsprojsnd_nbot [simp]: "ts\<noteq>\<bottom> \<Longrightarrow> tsProjSnd\<cdot>ts\<noteq>\<bottom>"
+oops
 
 (* tsFilter *)
 thm tsFilter_def
@@ -2821,6 +2828,33 @@ assumes adm: "adm P" and bottom: "P \<bottom>"
 by (metis adm bottom delayfun mlscons tstream_fin_induct tstream_infs)
 
 (* ----------------------------------------------------------------------- *)
+section {* tscases *}
+(* ----------------------------------------------------------------------- *)  
+
+text {* If a predicate P holds for empty and non-empty event streams, it holds for 
+        all event streams *}
+lemma tscases_h:
+  assumes bottom: "xs=\<epsilon> \<Longrightarrow> P xs"
+    and delayfun: "\<And>as. xs=updis \<surd> && as \<Longrightarrow> P xs"
+    and mlscons: "\<And>a as. xs=updis (\<M> a) && as \<Longrightarrow> P xs"
+  shows "P xs"
+apply (rule_tac y=xs in scases')
+using bottom apply blast
+by (metis bottom delayfun event.exhaust lscons_conv mlscons surj_scons)
+
+text {* If a predicate P holds for empty and non-empty tstreams, it holds for all tstreams *}
+lemma tscases:
+  assumes bottom: "ts=\<bottom> \<Longrightarrow> P ts" 
+    and delayfun: "\<And>as. ts=delayFun\<cdot>as \<Longrightarrow> P ts"
+    and mlscons: "\<And>a as. ts=tsMLscons\<cdot>(updis a)\<cdot>as \<Longrightarrow> P ts"
+  shows "P ts"
+apply (rule_tac xs="Rep_tstream ts" in tscases_h)
+using Rep_tstream_bottom_iff bottom apply blast
+apply (metis Rep_tstream_inverse absts2tslscons delayfun delayfun_tslscons tick_eq_discrtick
+       ts_well_Rep)
+by (metis Rep_tstream_inverse absts2tsmlscons_msg mlscons ts_well_Rep)
+
+(* ----------------------------------------------------------------------- *)
 subsection {* tsZip *}
 (* ----------------------------------------------------------------------- *)     
   
@@ -2851,11 +2885,7 @@ lemma tszip_strict [simp]:
 "tsZip\<cdot>\<bottom>\<cdot>s = \<bottom>"
 by (fixrec_simp)+
 
-(* ToDo: lemma for tszip *)
-lemma tszip_nbot [simp]: "ts\<noteq>\<bottom> \<Longrightarrow> xs\<noteq>\<epsilon> \<Longrightarrow> (tsZip\<cdot>ts\<cdot>xs)\<noteq>\<bottom>"
-oops
-
-lemma tszip_tslscons_2msg [simp]: "x\<noteq>\<bottom>  \<Longrightarrow> ts\<noteq>\<bottom> \<Longrightarrow>               
+lemma tszip_tslscons_2msg [simp]: "x\<noteq>\<bottom> \<Longrightarrow> ts\<noteq>\<bottom> \<Longrightarrow>               
   tsZip\<cdot>(tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>t))\<cdot>(tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>t2))\<cdot>ts))\<cdot>(x && xs) 
                             = tsMLscons\<cdot>(upApply2 Pair\<cdot>(up\<cdot>t)\<cdot>x)\<cdot>(tsZip\<cdot>(tsMLscons\<cdot>(up\<cdot>t2)\<cdot>ts)\<cdot>xs)"
 by (fixrec_simp)
@@ -2875,6 +2905,10 @@ lemma tszip_mlscons_2msg:
 by (metis (no_types, lifting) tsmlscons_bot2 tsmlscons_lscons tszip_strict(3) tszip_tslscons_2msg
     up_defined upapply2_rep_eq)
 
+lemma tszip_mlscons_2msg_bot:
+  "tsZip\<cdot>(tsMLscons\<cdot>(updis t)\<cdot>(tsMLscons\<cdot>(updis u)\<cdot>ts))\<cdot>(updis x && \<epsilon>) = \<bottom>"
+by (simp add: tszip_mlscons_2msg)
+
 lemma tszip_mlscons_msgdelayfun:
   "tsZip\<cdot>(tsMLscons\<cdot>(updis t)\<cdot>(delayFun\<cdot>ts))\<cdot>((updis x) && xs)
                            = tsMLscons\<cdot>(updis (t, x))\<cdot>(delayFun\<cdot>(tsZip\<cdot>ts\<cdot>xs))"
@@ -2891,6 +2925,19 @@ apply (induction ts)
 apply (simp_all)
 apply (simp add: tszip_delayfun tszip_mlscons_msgdelayfun)
 by (simp add: tszip_mlscons_2msg)
+
+lemma tszip_nbot [simp]: "ts\<noteq>\<bottom> \<Longrightarrow> #xs=\<infinity> \<Longrightarrow> (tsZip\<cdot>ts\<cdot>xs) \<noteq> \<bottom>"
+apply (induction ts arbitrary: xs)
+apply (simp_all)
+apply (metis Inf'_neq_0 delayfun_nbot slen_empty_eq tszip_delayfun)
+by (metis Inf'_neq_0 inf_scase lscons_conv strict_slen tsmlscons_nbot tszip_mlscons up_defined)
+
+lemma tszip_tstickcount [simp]: "#xs=\<infinity> \<Longrightarrow> #\<surd>(tsZip\<cdot>ts\<cdot>xs) = #\<surd>ts"
+apply (induction ts arbitrary: xs)
+apply (simp_all)
+apply (metis Inf'_neq_0 delayFun_dropFirst delayfun_nbot slen_empty_eq tsdropfirst_len
+       tszip_delayfun)
+by (metis Inf'_neq_0 inf_scase lscons_conv slen_empty_eq tstickcount_mlscons tszip_mlscons)
 
 (* ----------------------------------------------------------------------- *)
 subsection {* tsRemDups *}
