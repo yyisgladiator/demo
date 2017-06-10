@@ -2585,23 +2585,26 @@ by (metis (no_types, lifting) Rep_Abs assms delayfun_insert s2sinftimes sinftime
 subsection {* Abs_tstream converter *}
 (* ----------------------------------------------------------------------- *)
 
-lemma absts2tslscons: "ts_well (t&&ts) \<Longrightarrow> Abs_tstream (t&&ts) = tsLscons\<cdot>t\<cdot>(Abs_tstream ts)"
+lemma absts2tslscons: "ts_well (t && ts) \<Longrightarrow> Abs_tstream (t && ts) = tsLscons\<cdot>t\<cdot>(Abs_tstream ts)"
 apply (simp add: tslscons_insert, auto)
 apply (metis Abs_tstream_bottom_iff mem_Collect_eq stream.con_rews(2) stream.sel_rews(5)
        ts_well_drop1 msg_nwell2)
 apply (metis Rep_Abs espf2tspf_def stream.con_rews(2) stream.sel_rews(5) ts_well_drop1)
 by (metis Rep_Abs espf2tspf_def stream.sel_rews(5) ts_well_drop1 up_defined)
   
-lemma absts2tsmlscons_msg: "ts_well (updis (Msg m) && ts) \<Longrightarrow> 
-  Abs_tstream ((updis (Msg m))&&ts) = tsMLscons\<cdot>(updis m)\<cdot>(Abs_tstream ts)"
-by(simp add: tsMLscons_def absts2tslscons)
+lemma absts2tsmlscons: "ts_well (updis (Msg m) && ts) \<Longrightarrow> 
+  Abs_tstream (updis (Msg m) && ts) = tsMLscons\<cdot>(updis m)\<cdot>(Abs_tstream ts)"
+by(simp add: tsmlscons2tslscons absts2tslscons)
 
-lemma absts2tsmlscons_msg2: "ts_well (\<up>(Msg m) \<bullet>  ts) \<Longrightarrow> 
+lemma absts2tsmlscons2: "ts_well (\<up>(Msg m) \<bullet>  ts) \<Longrightarrow> 
   Abs_tstream (\<up>(Msg m) \<bullet>  ts) = tsMLscons\<cdot>(updis m)\<cdot>(Abs_tstream ts)"
-by (metis absts2tsmlscons_msg lscons_conv)
+by (metis absts2tsmlscons lscons_conv)
 
-lemma absts2delayfun: "ts_well ts \<Longrightarrow> Abs_tstream (updis \<surd>&&ts) = delayFun\<cdot>(Abs_tstream ts)"
+lemma absts2delayfun: "ts_well ts \<Longrightarrow> Abs_tstream (updis \<surd> && ts) = delayFun\<cdot>(Abs_tstream ts)"
 by (metis delayfun_abststream)
+
+lemma absts2delayfun2: "ts_well ts \<Longrightarrow> Abs_tstream (\<up>\<surd> \<bullet> ts) = delayFun\<cdot>(Abs_tstream ts)"
+by (metis absts2delayfun lscons_conv)
 
 (* ----------------------------------------------------------------------- *)
 subsection {* tsMLscons representation *}
@@ -2791,7 +2794,7 @@ next
             slen_empty_eq slen_lnsuc slen_scons stream.con_rews(2) stream.injects sup'_def 
             tick_msg ts_fin_well)
       hence "Abs_tstream (x && xs) = tsMLscons\<cdot>(updis m)\<cdot>(Abs_tstream xs)"
-        using absts2tsmlscons_msg m_def scons_well by blast
+        using absts2tsmlscons m_def scons_well by blast
       thus "P (Abs_tstream (x && xs))"
         by (simp add: xs_nbot mlscons xs_well xs_well_imp)
       qed   
@@ -2852,7 +2855,7 @@ apply (rule_tac xs="Rep_tstream ts" in tscases_h)
 using Rep_tstream_bottom_iff bottom apply blast
 apply (metis Rep_tstream_inverse absts2tslscons delayfun delayfun_tslscons tick_eq_discrtick
        ts_well_Rep)
-by (metis Rep_tstream_inverse absts2tsmlscons_msg mlscons ts_well_Rep)
+by (metis Rep_tstream_inverse absts2tsmlscons mlscons ts_well_Rep)
 
 (* ----------------------------------------------------------------------- *)
 subsection {* tsZip *}

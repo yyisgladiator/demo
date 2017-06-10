@@ -98,6 +98,41 @@ lemma tssender_delayfun_msg:
                       = delayFun\<cdot>(tsSender\<cdot>msg\<cdot>acks\<cdot>ack)"
 by (simp add: delayfun_tslscons tsmlscons_lscons)
 
+lift_definition tsExampInp_1 :: "nat tstream" is
+  "<[Msg 1, Msg 2, \<surd>, \<surd>, Msg 1, \<surd>]>"
+by (subst ts_well_def, auto)
+
+lift_definition tsExampInp_2 :: "bool tstream" is
+  "<[\<surd>, Msg True, Msg True, \<surd>, Msg False, \<surd>, Msg False, \<surd>, Msg True, \<surd>]>"
+by (subst ts_well_def, auto)
+
+lemma tsExampInp_1_mlscons: 
+  "tsExampInp_1 = tsMLscons\<cdot>(updis 1)\<cdot>(tsMLscons\<cdot>(updis 2)\<cdot>(delayFun\<cdot>
+                    (delayFun\<cdot>(tsMLscons\<cdot>(updis 1)\<cdot>(Abs_tstream (\<up>\<surd>))))))"
+apply (simp add: tsExampInp_1_def)
+using absts2delayfun2 absts2tsmlscons2
+by (metis (no_types, lifting) assoc_sconc lscons_conv lscons_well stream.con_rews(2) tick_msg 
+    ts_well_conc1 ts_well_sing_conc up_defined)
+
+lemma tsExampInp_2_mlscons: 
+  "tsExampInp_2 = delayFun\<cdot>(tsMLscons\<cdot>(updis True)\<cdot>(tsMLscons\<cdot>(updis True)\<cdot>(delayFun\<cdot>
+                    (tsMLscons\<cdot>(updis False)\<cdot>(delayFun\<cdot>(tsMLscons\<cdot>(updis False)\<cdot>
+                       (delayFun\<cdot>(tsMLscons\<cdot>(updis True)\<cdot>(Abs_tstream (\<up>\<surd>))))))))))"
+apply (simp add: tsExampInp_2_def)
+using absts2delayfun2 absts2tsmlscons2
+by (smt Rep_Abs delayfun_nbot sConc_fin_well sconc_scons ts_well_conc1 ts_well_sing_conc 
+    tsmlscons_nbot up_defined)
+
+lift_definition tsExampOut :: "(nat \<times> bool) tstream" is
+  "<[Msg (1, True), Msg (2, False), Msg (2, False), Msg (2, False), \<surd>, \<surd>, Msg (1, True), \<surd>]>"
+by (subst ts_well_def, auto)
+
+lemma "tsSender\<cdot>tsExampInp_1\<cdot>tsExampInp_2\<cdot>(Discr True) = tsExampOut"
+apply (simp add: tsExampInp_1_mlscons tsExampInp_2_mlscons tsExampOut_def)
+using tssender_delayfun tssender_delayfun_msg tssender_mlscons_ack tssender_mlscons_nack
+      tssender_mlscons_nack_tick tssender_strict absts2delayfun2 absts2tsmlscons2
+oops
+
 (* lemmata for sender, see BS01, page 103 *)
 
 (* fds = stream of transmitted messages
