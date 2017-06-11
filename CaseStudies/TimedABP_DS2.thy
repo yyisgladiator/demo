@@ -126,10 +126,19 @@ lift_definition tsExampOut :: "(nat \<times> bool) tstream" is
   "<[Msg (1, True), Msg (2, False), Msg (2, False), Msg (2, False), \<surd>, \<surd>, Msg (1, True), \<surd>]>"
 by (subst ts_well_def, auto)
 
+lemma abs2delay: "Abs_tstream (\<up>\<surd>) = delayFun\<cdot>\<bottom>"
+  by (simp add: DiscrTick_def delayfun_tslscons_bot sup'_def)
+    
+lemma tssender_end: "tsSender\<cdot>(Abs_tstream (\<up>\<surd>))\<cdot>(Abs_tstream (\<up>\<surd>))\<cdot>ack = Abs_tstream (\<up>\<surd>)"
+  apply(simp add: abs2delay)
+  by (simp add: tssender_delayfun)
+    
 lemma "tsSender\<cdot>tsExampInp_1\<cdot>tsExampInp_2\<cdot>(Discr True) = tsExampOut"
 apply (simp add: tsExampInp_1_mlscons tsExampInp_2_mlscons tsExampOut_def)
 apply (simp add: tssender_delayfun tssender_delayfun_msg tssender_mlscons_ack tssender_mlscons_nack
                  tssender_mlscons_nack_tick)
+  apply(simp add: tssender_end abs2delay)
+    
 oops
 
 (* lemmata for sender, see BS01, page 103 *)
