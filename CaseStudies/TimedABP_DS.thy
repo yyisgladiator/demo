@@ -41,7 +41,8 @@ fixrec tsSender :: "'a tstream \<rightarrow> bool tstream \<rightarrow> bool dis
 
 declare tsSender.simps [simp del]
 
-lemma tssender_strict [simp]: 
+lemma tssender_strict [simp]:
+"tsSender\<cdot>\<bottom>\<cdot>\<bottom>\<cdot>ack = \<bottom>"
 "tsSender\<cdot>\<bottom>\<cdot>acks\<cdot>ack = \<bottom>"
 "tsSender\<cdot>msg\<cdot>\<bottom>\<cdot>ack = \<bottom>"
 by (fixrec_simp)+

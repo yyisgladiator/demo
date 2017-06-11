@@ -17,7 +17,7 @@ default_sort countable
 lemma tsabs_slen_adm [simp]: "adm (\<lambda>a. #(tsAbs\<cdot>(f\<cdot>a)) \<le> #(tsAbs\<cdot>a))"
 oops
 
-lemma tsremdups_h_tstickcount: 
+lemma tsremdups_h_tsabs_slen: 
   "#(tsAbs\<cdot>(tsRemDups_h\<cdot>ts\<cdot>(Some (Discr t)))) \<le> #(tsAbs\<cdot>(tsRemDups_h\<cdot>ts\<cdot>None))"
 apply (induction ts arbitrary: t)
 apply (simp_all)
@@ -27,6 +27,9 @@ lemma tsremdups_tsabs_slen [simp]: "#(tsAbs\<cdot>(tsRemDups\<cdot>ts)) \<le> #(
 apply (induction ts)
 apply (simp_all)
 apply (simp add: tsremdups_insert)
+oops
+
+lemma tszip_tsabs_slen_leq [simp]: "#(tsAbs\<cdot>(tsZip\<cdot>ts\<cdot>xs)) \<le> #(tsAbs\<cdot>ts)"
 oops
 
 

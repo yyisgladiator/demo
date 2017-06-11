@@ -70,14 +70,12 @@ text {* If infinite ticks will be sent infinite ticks will be transmitted. *}
 lemma tsmed_tstickcount [simp]: "#ora=\<infinity> \<Longrightarrow> #\<surd>(tsMed\<cdot>msg\<cdot>ora) = #\<surd>msg"
 oops
 
-(* ToDo: lemmata for tsZip needed, first show testings below *)
-
 text {* Not every message will be transmitted. *}    
-lemma tsmed_tsabs_slen_leq: "#(tsAbs\<cdot>(tsMed\<cdot>msg\<cdot>ora)) \<le> #(tsAbs\<cdot>msg)"
+lemma tsmed_tsabs_slen: "#ora=\<infinity> \<Longrightarrow> #(tsAbs\<cdot>(tsMed\<cdot>msg\<cdot>ora)) \<le> #(tsAbs\<cdot>msg)"
 oops
 
 text {* If infinite messages will be sent infinite messages will be transmitted. *}
-lemma tsmed_tsabs_slen [simp]: assumes "#({True} \<ominus> ora)=\<infinity>" and "#(tsAbs\<cdot>msg)=\<infinity>" 
+lemma tsmed_tsabs_slen_inf [simp]: assumes "#({True} \<ominus> ora)=\<infinity>" and "#(tsAbs\<cdot>msg)=\<infinity>" 
   shows "#(tsAbs\<cdot>(tsMed\<cdot>msg\<cdot>ora)) = \<infinity>"
 oops
 
