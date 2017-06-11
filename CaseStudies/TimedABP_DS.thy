@@ -91,12 +91,12 @@ lift_definition tsExampInp_1 :: "nat tstream" is
 by (subst ts_well_def, auto)
 
 lemma tsexampinp_12mlscons: 
-  "tsExampInp_1 = tsMLscons\<cdot>(updis (Suc 0))\<cdot>(tsMLscons\<cdot>(updis 2)\<cdot>
-                     (delayFun\<cdot>(tsMLscons\<cdot>(updis (Suc 0))\<cdot>(Abs_tstream (\<up>\<surd>)))))"
+  "tsExampInp_1 = tsMLscons\<cdot>(updis 1)\<cdot>(tsMLscons\<cdot>(updis 2)\<cdot>
+                     (delayFun\<cdot>(tsMLscons\<cdot>(updis 1)\<cdot>(delayFun\<cdot>\<bottom>))))"
 apply (simp add: tsExampInp_1_def)
-by (metis (no_types, lifting) One_nat_def Rep_Abs absts2delayfun2 absts2tsmlscons2 
-    delayfun_nbot eq_onp_same_args list2s.simps(1) list2s.simps(2) lscons_conv sup'_def 
-    tick_msg tsExampInp_1.rsp ts_well_conc1 ts_well_sing_conc tsmlscons_lscons3)
+by (metis (no_types, lifting) One_nat_def absts2delayfun2 absts2delayfun_tick absts2mlscons2 
+    list2s.simps(1) list2s.simps(2) lscons_conv sconc_scons sup'_def tick_msg tsExampInp_1.rep_eq
+    ts_well_Rep ts_well_conc1 ts_well_sing_conc)
 
 lift_definition tsExampInp_2 :: "bool tstream" is
   "<[\<surd>, Msg True, Msg True, \<surd>, Msg False, \<surd>, Msg True, \<surd>]>"
@@ -105,10 +105,10 @@ by (subst ts_well_def, auto)
 lemma tsexampinp_22mlscons:
   "tsExampInp_2 = delayFun\<cdot>(tsMLscons\<cdot>(updis True)\<cdot>(tsMLscons\<cdot>(updis True)\<cdot>
                     (delayFun\<cdot>(tsMLscons\<cdot>(updis False)\<cdot>(delayFun\<cdot>
-                       (tsMLscons\<cdot>(updis True)\<cdot>(Abs_tstream (\<up>\<surd>))))))))"
+                       (tsMLscons\<cdot>(updis True)\<cdot>(delayFun\<cdot>\<bottom>)))))))"
 apply (simp add: tsExampInp_2_def)
-by (metis (no_types, lifting) Rep_Abs absts2tsmlscons2 delayfun_abststream delayfun_nbot
-    lscons_conv sConc_fin_well tick_msg ts_well_sing_conc tsmlscons_nbot up_defined)
+by (metis (no_types, lifting) Rep_Abs absts2mlscons2 delayfun_abststream delayfun_nbot
+    lscons_conv sConc_fin_well absts2delayfun_tick ts_well_sing_conc tsmlscons_nbot up_defined)
 
 lift_definition tsExampOut :: "(nat \<times> bool) tstream" is
   "<[Msg (1, True), \<surd>,  Msg (2, False), Msg (2, False), \<surd>, \<surd>, Msg (1, True), \<surd>, \<surd>]>"
@@ -117,9 +117,9 @@ by (subst ts_well_def, auto)
 lemma "tsSender\<cdot>tsExampInp_1\<cdot>tsExampInp_2\<cdot>(Discr True) = tsExampOut"
 apply (simp add: tsExampOut_def tsexampinp_12mlscons tsexampinp_22mlscons)
 apply (simp add: tssender_delayfun_nack tssender_mlscons_ack tssender_mlscons_nack 
-tssender_delayfun)
-oops
-
+                 tssender_delayfun)
+by (smt Rep_Abs absts2delayfun2 absts2delayfun_tick absts2mlscons2 delayfun_nbot sConc_fin_well
+    tick_msg tsmlscons_nbot up_defined)
 
 (* lemmata for sender, see BS01, page 103 *)
 

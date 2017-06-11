@@ -2592,13 +2592,13 @@ apply (metis Abs_tstream_bottom_iff mem_Collect_eq stream.con_rews(2) stream.sel
 apply (metis Rep_Abs espf2tspf_def stream.con_rews(2) stream.sel_rews(5) ts_well_drop1)
 by (metis Rep_Abs espf2tspf_def stream.sel_rews(5) ts_well_drop1 up_defined)
 
-lemma absts2tsmlscons: "ts_well (updis (Msg m) && ts) \<Longrightarrow> 
+lemma absts2mlscons: "ts_well (updis (Msg m) && ts) \<Longrightarrow> 
   Abs_tstream (updis (Msg m) && ts) = tsMLscons\<cdot>(updis m)\<cdot>(Abs_tstream ts)"
 by(simp add: tsmlscons2tslscons absts2tslscons)
 
-lemma absts2tsmlscons2: "ts_well (\<up>(Msg m) \<bullet>  ts) \<Longrightarrow> 
+lemma absts2mlscons2: "ts_well (\<up>(Msg m) \<bullet>  ts) \<Longrightarrow> 
   Abs_tstream (\<up>(Msg m) \<bullet>  ts) = tsMLscons\<cdot>(updis m)\<cdot>(Abs_tstream ts)"
-by (metis absts2tsmlscons lscons_conv)
+by (metis absts2mlscons lscons_conv)
 
 lemma delayfun2tswell: "ts_well (updis \<surd> && ts) \<Longrightarrow> ts_well ts"
 by (metis stream.sel_rews(5) ts_well_drop1 up_defined)
@@ -2612,6 +2612,9 @@ by (metis lscons_conv stream.sel_rews(5) ts_well_drop1 up_defined)
 
 lemma absts2delayfun2: "ts_well (\<up>\<surd> \<bullet> ts) \<Longrightarrow> Abs_tstream (\<up>\<surd> \<bullet> ts) = delayFun\<cdot>(Abs_tstream ts)"
 by (metis delayfun2tswell2 delayfun_abststream lscons_conv)
+
+lemma absts2delayfun_tick: "Abs_tstream (\<up>\<surd>) = delayFun\<cdot>\<bottom>"
+by (simp add: DiscrTick_def delayfun_tslscons_bot sup'_def)
 
 (* ----------------------------------------------------------------------- *)
 subsection {* tsMLscons representation *}
@@ -2801,7 +2804,7 @@ next
             slen_empty_eq slen_lnsuc slen_scons stream.con_rews(2) stream.injects sup'_def 
             tick_msg ts_fin_well)
       hence "Abs_tstream (x && xs) = tsMLscons\<cdot>(updis m)\<cdot>(Abs_tstream xs)"
-        using absts2tsmlscons m_def scons_well by blast
+        using absts2mlscons m_def scons_well by blast
       thus "P (Abs_tstream (x && xs))"
         by (simp add: xs_nbot mlscons xs_well xs_well_imp)
       qed   
@@ -2862,7 +2865,7 @@ apply (rule_tac xs="Rep_tstream ts" in tscases_h)
 using Rep_tstream_bottom_iff bottom apply blast
 apply (metis Rep_tstream_inverse absts2tslscons delayfun delayfun_tslscons tick_eq_discrtick
        ts_well_Rep)
-by (metis Rep_tstream_inverse absts2tsmlscons mlscons ts_well_Rep)
+by (metis Rep_tstream_inverse absts2mlscons mlscons ts_well_Rep)
 
 (* ----------------------------------------------------------------------- *)
 subsection {* tsZip *}
