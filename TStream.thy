@@ -3028,12 +3028,14 @@ apply (case_tac "t\<noteq>a", simp_all)
 apply (simp add: tsremdups_h_mlscons_ndup)
 by (simp add: tsremdups_h_mlscons_dup)
 
-(* ToDo: lemmata for tsremdups *)
 lemma tsremdups_h_nbot2 [simp]: "ts\<noteq>\<bottom> \<Longrightarrow> tsRemDups_h\<cdot>ts\<cdot>None \<noteq> \<bottom>"
-oops
+  apply (induction ts arbitrary: a)
+  apply (simp_all)
+  apply (simp add: tsremdups_h_delayfun)
+  by (simp add: tsremdups_h_mlscons)
 
 lemma tsremdups_nbot [simp]: "ts\<noteq>\<bottom> \<Longrightarrow> tsRemDups\<cdot>ts \<noteq> \<bottom>"
-oops
+ by (simp add: tsRemDups_def)
 
 (*TODO
 
