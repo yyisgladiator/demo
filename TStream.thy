@@ -1899,9 +1899,11 @@ lemma tsmap_strict_rev: "tsMap f \<cdot> ts = \<bottom> \<Longrightarrow> ts = \
 lemma tsmap_weak:"tsWeakCausal (Rep_cfun (tsMap f))"
 by (subst tsWeak2cont2, auto)
 
-(* ToDo: lemma for tsmap, modify less general lemmata *)
 lemma tsmap_tsabs_slen [simp]: "#(tsAbs\<cdot>(tsMap f\<cdot>ts)) = #(tsAbs\<cdot>ts)"
-oops
+  apply (simp add: tsAbs_def tsmap_unfold)
+  apply (induct_tac ts, auto)
+  apply (simp add: tsmap_h_well)
+  by (simp add: tsmap_h_fair2)
 
 (* tsProjFst and tsProjSnd *)
 thm tsProjFst_def
@@ -1926,18 +1928,10 @@ lemma tsprojsnd_tstickcount [simp]: "#\<surd>(tsProjSnd\<cdot>ts) = #\<surd>ts"
   by (simp add: tsProjSnd_def)
 
 lemma tsprojfst_tsabs_slen [simp]: "#(tsAbs\<cdot>(tsProjFst\<cdot>ts)) = #(tsAbs\<cdot>ts)"
-  apply (simp add: tsProjFst_def tsAbs_def tsmap_unfold)
-  apply (induct_tac ts, auto)
-  apply (simp add: tsmap_h_well)
-  apply (rule ind [of _ y], auto)
-  by (simp add: tsmap_h_fair2)
+  by (simp add: tsProjFst_def)
 
 lemma tsprojsnd_tsabs_slen [simp]: "#(tsAbs\<cdot>(tsProjSnd\<cdot>ts)) = #(tsAbs\<cdot>ts)"
-  apply (simp add: tsProjSnd_def tsAbs_def tsmap_unfold)
-  apply (induct_tac ts, auto)
-  apply (simp add: tsmap_h_well)
-  apply (rule ind [of _ y], auto)
-  by (simp add: tsmap_h_fair2)
+  by (simp add: tsProjSnd_def)
 
 (* ToDo: lemma for tsprojfst/snd *)
 lemma tsprojfst_nbot [simp]: "ts\<noteq>\<bottom> \<Longrightarrow> tsProjFst\<cdot>ts\<noteq>\<bottom>"
