@@ -14,25 +14,23 @@ default_sort countable
 
 (* here I just try a few things. *)
 
-lemma tszip_tsabs_slen [simp]: "xs\<noteq>\<epsilon> \<Longrightarrow> #(tsAbs\<cdot>(tsZip\<cdot>ts\<cdot>(updis x && xs))) = #(tsAbs\<cdot>ts)"
+lemma tsabs_slen_adm [simp]: "adm (\<lambda>a. #(tsAbs\<cdot>(f\<cdot>a)) \<le> #(tsAbs\<cdot>a))"
 oops
 
-lemma tsremdups_tsabs_slen [simp]: "ts\<noteq>\<bottom> \<Longrightarrow> #(tsAbs\<cdot>(tsRemDups\<cdot>ts)) \<le> #(tsAbs\<cdot>ts)"
+lemma tsremdups_h_tstickcount: 
+  "#(tsAbs\<cdot>(tsRemDups_h\<cdot>ts\<cdot>(Some (Discr t)))) \<le> #(tsAbs\<cdot>(tsRemDups_h\<cdot>ts\<cdot>None))"
+apply (induction ts arbitrary: t)
+apply (simp_all)
+oops
+
+lemma tsremdups_tsabs_slen [simp]: "#(tsAbs\<cdot>(tsRemDups\<cdot>ts)) \<le> #(tsAbs\<cdot>ts)"
+apply (induction ts)
+apply (simp_all)
 apply (simp add: tsremdups_insert)
 oops
 
-(* split in more than one lemmata? *)
-lemma tsremdups_h_nbot [simp]: "ts\<noteq>\<bottom> \<Longrightarrow> tsRemDups_h\<cdot>ts\<cdot>None \<noteq> \<bottom>"
-oops
 
-(*
-lemma delayfun2tswell: "ts_well (\<up>\<surd> \<bullet> ts) \<Longrightarrow> ts_well ts"
-by (metis lscons_conv stream.sel_rews(5) ts_well_drop1 up_defined)
 
-lemma mlscons2tswell: "ts_well (\<up>(Msg m) \<bullet> ts) \<Longrightarrow> ts_well ts"
-by (metis lscons_conv stream.sel_rews(5) ts_well_drop1 up_defined)
-*)
- 
 lift_definition tsExampInp :: "nat tstream" is "<[Msg 1, Msg 2, \<surd>, Msg 2, \<surd>]>"
 by (subst ts_well_def, auto)
 
@@ -62,20 +60,20 @@ using absts2tsmlscons2 absts2delayfun2 tszip_mlscons tszip_delayfun tszip_mlscon
       tszip_mlscons_msgdelayfun tszip_mlscons_2msg_bot tszip_strict
 proof -
   have f1: "Abs_tstream (\<up>(\<M> Suc 0) \<bullet> \<up>\<surd> \<bullet> \<up>(\<M> 2) \<bullet> \<up>\<surd>) 
-             = tsMLscons\<cdot>(updis (Suc 0))\<cdot> (Abs_tstream (\<up>\<surd> \<bullet> \<up>(\<M> 2) \<bullet> \<up>\<surd>))"
+              = tsMLscons\<cdot>(updis (Suc 0))\<cdot> (Abs_tstream (\<up>\<surd> \<bullet> \<up>(\<M> 2) \<bullet> \<up>\<surd>))"
     by (metis (no_types) absts2tsmlscons2 sconc_scons ts_well_conc1 ts_well_sing_conc)
-  have f2: "updis True && updis False && \<epsilon> = \<up>True \<bullet> \<up>False"
+  have f2: "\<up>True \<bullet> \<up>False = updis True && updis False && \<epsilon>"
     by (metis lscons_conv sup'_def)
   have f3: "tsZip\<cdot> (tsMLscons\<cdot>(updis (2::nat))\<cdot>(Abs_tstream (\<up>\<surd>)))\<cdot> (updis False && \<epsilon>) 
               = Abs_tstream (\<up>(\<M> (2, False)) \<bullet> \<up>\<surd>)"
-    by (metis Abs_tstream_strict Rep_tstream_strict absts2delayfun absts2tsmlscons2 sup'_def
-        ts_well_Rep ts_well_sing_conc tszip_mlscons_msgdelayfun tszip_strict(1))
+    by (metis (no_types) Abs_tstream_strict absts2delayfun2 absts2tsmlscons2 lscons_conv sup'_def
+        tick_msg ts_well_sing_conc tszip_mlscons_msgdelayfun tszip_strict(1))
   have "ts_well (\<up>(\<M> (Suc 0, True)) \<bullet> \<up>\<surd> \<bullet> \<up>(\<M> (2, False)) \<bullet> \<up>\<surd>)"
     by (metis (no_types) sconc_scons ts_well_conc1 ts_well_sing_conc)
   then show "tsZip\<cdot> (Abs_tstream (\<up>(\<M> Suc 0) \<bullet> \<up>\<surd> \<bullet> \<up>(\<M> 2) \<bullet> \<up>\<surd>))\<cdot> (\<up>True \<bullet> \<up>False) 
                = Abs_tstream (\<up>(\<M> (Suc 0, True)) \<bullet> \<up>\<surd> \<bullet> \<up>(\<M> (2, False)) \<bullet> \<up>\<surd>)"
-    using f3 f2 f1 by (metis (no_types) absts2delayfun2 absts2tsmlscons2 ts_well_sing_conc 
-                       tszip_mlscons_msgdelayfun)
+    using f3 f2 f1 by (metis (no_types) absts2delayfun2 absts2tsmlscons2 tick_msg ts_well_conc1
+                       ts_well_sing_conc tszip_mlscons_msgdelayfun)
 qed
 
 end  

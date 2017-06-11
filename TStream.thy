@@ -2591,7 +2591,7 @@ apply (metis Abs_tstream_bottom_iff mem_Collect_eq stream.con_rews(2) stream.sel
        ts_well_drop1 msg_nwell2)
 apply (metis Rep_Abs espf2tspf_def stream.con_rews(2) stream.sel_rews(5) ts_well_drop1)
 by (metis Rep_Abs espf2tspf_def stream.sel_rews(5) ts_well_drop1 up_defined)
-  
+
 lemma absts2tsmlscons: "ts_well (updis (Msg m) && ts) \<Longrightarrow> 
   Abs_tstream (updis (Msg m) && ts) = tsMLscons\<cdot>(updis m)\<cdot>(Abs_tstream ts)"
 by(simp add: tsmlscons2tslscons absts2tslscons)
@@ -2600,11 +2600,18 @@ lemma absts2tsmlscons2: "ts_well (\<up>(Msg m) \<bullet>  ts) \<Longrightarrow>
   Abs_tstream (\<up>(Msg m) \<bullet>  ts) = tsMLscons\<cdot>(updis m)\<cdot>(Abs_tstream ts)"
 by (metis absts2tsmlscons lscons_conv)
 
-lemma absts2delayfun: "ts_well ts \<Longrightarrow> Abs_tstream (updis \<surd> && ts) = delayFun\<cdot>(Abs_tstream ts)"
-by (metis delayfun_abststream)
+lemma delayfun2tswell: "ts_well (updis \<surd> && ts) \<Longrightarrow> ts_well ts"
+by (metis stream.sel_rews(5) ts_well_drop1 up_defined)
 
-lemma absts2delayfun2: "ts_well ts \<Longrightarrow> Abs_tstream (\<up>\<surd> \<bullet> ts) = delayFun\<cdot>(Abs_tstream ts)"
-by (metis absts2delayfun lscons_conv)
+lemma absts2delayfun: 
+  "ts_well (updis \<surd> && ts) \<Longrightarrow> Abs_tstream (updis \<surd> && ts) = delayFun\<cdot>(Abs_tstream ts)"
+using delayfun2tswell delayfun_abststream by fastforce
+
+lemma delayfun2tswell2: "ts_well (\<up>\<surd> \<bullet> ts) \<Longrightarrow> ts_well ts"
+by (metis lscons_conv stream.sel_rews(5) ts_well_drop1 up_defined)
+
+lemma absts2delayfun2: "ts_well (\<up>\<surd> \<bullet> ts) \<Longrightarrow> Abs_tstream (\<up>\<surd> \<bullet> ts) = delayFun\<cdot>(Abs_tstream ts)"
+by (metis delayfun2tswell2 delayfun_abststream lscons_conv)
 
 (* ----------------------------------------------------------------------- *)
 subsection {* tsMLscons representation *}
@@ -2942,6 +2949,10 @@ apply (metis Inf'_neq_0 delayFun_dropFirst delayfun_nbot slen_empty_eq tsdropfir
        tszip_delayfun)
 by (metis Inf'_neq_0 inf_scase lscons_conv slen_empty_eq tstickcount_mlscons tszip_mlscons)
 
+(* ToDo: lemmata for tszip *)
+lemma tszip_tsabs_slen [simp]: "#xs=\<infinity> \<Longrightarrow> #(tsAbs\<cdot>(tsZip\<cdot>ts\<cdot>xs)) = #(tsAbs\<cdot>ts)"
+oops
+
 (* ----------------------------------------------------------------------- *)
 subsection {* tsRemDups *}
 (* ----------------------------------------------------------------------- *)   
@@ -3015,6 +3026,21 @@ apply (induction ts)
 apply (simp_all)
 apply (metis delayFun_dropFirst delayfun_nbot tsdropfirst_len tsremdups_h_delayfun)
 by (simp add: tsremdups_h_mlscons tstickcount_mlscons tsremdups_h_tstickcount)
+
+lemma tsremdups_h_nbot [simp]: "ts\<noteq>\<bottom> \<Longrightarrow> tsRemDups_h\<cdot>ts\<cdot>(Some (Discr a)) \<noteq> \<bottom>"
+apply (induction ts arbitrary: a)
+apply (simp_all)
+apply (simp add: tsremdups_h_delayfun)
+apply (case_tac "t\<noteq>a", simp_all)
+apply (simp add: tsremdups_h_mlscons_ndup)
+by (simp add: tsremdups_h_mlscons_dup)
+
+(* ToDo: lemmata for tsremdups *)
+lemma tsremdups_h_nbot2 [simp]: "ts\<noteq>\<bottom> \<Longrightarrow> tsRemDups_h\<cdot>ts\<cdot>None \<noteq> \<bottom>"
+oops
+
+lemma tsremdups_nbot [simp]: "ts\<noteq>\<bottom> \<Longrightarrow> tsRemDups\<cdot>ts \<noteq> \<bottom>"
+oops
 
 (*TODO
 

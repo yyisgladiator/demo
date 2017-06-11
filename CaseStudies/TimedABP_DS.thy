@@ -110,9 +110,9 @@ lemma tsExampInp_1_mlscons:
   "tsExampInp_1 = tsMLscons\<cdot>(updis 1)\<cdot>(tsMLscons\<cdot>(updis 2)\<cdot>(delayFun\<cdot>
                     (delayFun\<cdot>(tsMLscons\<cdot>(updis 1)\<cdot>(Abs_tstream (\<up>\<surd>))))))"
 apply (simp add: tsExampInp_1_def)
-using absts2delayfun2 absts2tsmlscons2
-by (metis (no_types, lifting) assoc_sconc lscons_conv lscons_well stream.con_rews(2) tick_msg 
-    ts_well_conc1 ts_well_sing_conc up_defined)
+using absts2delayfun2
+by (metis (no_types, lifting) absts2tsmlscons lscons_conv lscons_well numeral_2_eq_2 stream.con_rews(2)
+    ts_well_sing_conc up_defined)
 
 lemma tsExampInp_2_mlscons: 
   "tsExampInp_2 = delayFun\<cdot>(tsMLscons\<cdot>(updis True)\<cdot>(tsMLscons\<cdot>(updis True)\<cdot>(delayFun\<cdot>
@@ -120,8 +120,7 @@ lemma tsExampInp_2_mlscons:
                        (delayFun\<cdot>(tsMLscons\<cdot>(updis True)\<cdot>(Abs_tstream (\<up>\<surd>))))))))))"
 apply (simp add: tsExampInp_2_def)
 using absts2delayfun2 absts2tsmlscons2
-by (smt Rep_Abs delayfun_nbot sConc_fin_well sconc_scons ts_well_conc1 ts_well_sing_conc 
-    tsmlscons_nbot up_defined)
+by (smt Rep_Abs delayfun_nbot sConc_fin_well tick_msg ts_well_sing_conc tsmlscons_nbot up_defined)
 
 lift_definition tsExampOut :: "(nat \<times> bool) tstream" is
   "<[Msg (1, True), Msg (2, False), Msg (2, False), Msg (2, False), \<surd>, \<surd>, Msg (1, True), \<surd>]>"
