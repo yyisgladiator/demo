@@ -134,7 +134,7 @@ subsection {* medium *}
 text {* Assumption for medium lemmata: #({True} \<ominus> ora)=\<infinity> *}
 
 lemma tsmed_insert: "tsMed\<cdot>msg\<cdot>ora = tsProjFst\<cdot>(tsFilter {x. snd x}\<cdot>(tsZip\<cdot>msg\<cdot>ora))"
-by (simp add: tsMed_def)
+  by (simp add: tsMed_def)
 
 (* ToDo: basic properties lemmata for medium *)
 
@@ -142,39 +142,40 @@ lemma tsmed_strict [simp]:
   "tsMed\<cdot>\<bottom>\<cdot>\<epsilon> = \<bottom>"
   "tsMed\<cdot>msg\<cdot>\<epsilon> = \<bottom>"
   "tsMed\<cdot>\<bottom>\<cdot>ora = \<bottom>"
-oops
+  by (simp add: tsMed_def)+
 
 lemma tsmed_mlscons_true: "msg\<noteq>\<bottom> \<Longrightarrow> #ora=\<infinity> \<Longrightarrow> 
   tsMed\<cdot>(tsMLscons\<cdot>(updis m)\<cdot>msg)\<cdot>((updis True) && ora) = tsMLscons\<cdot>(updis m)\<cdot>(tsMed\<cdot>msg\<cdot>ora)"
-oops
+  oops
     
 lemma tsmed_mlscons_false: "msg\<noteq>\<bottom> \<Longrightarrow> #ora=\<infinity> \<Longrightarrow> 
   tsMed\<cdot>(tsMLscons\<cdot>(updis m)\<cdot>msg)\<cdot>((updis False) && ora) = tsMed\<cdot>msg\<cdot>ora"
-oops
+  oops
 
 lemma tsmed_delayfun: "ora\<noteq>\<epsilon> \<Longrightarrow> tsMed\<cdot>(delayFun\<cdot>msg)\<cdot>ora = delayFun\<cdot>(tsMed\<cdot>msg\<cdot>ora)"
-oops
- 
+  by (simp add: tsMed_def tszip_delayfun tsfilter_delayfun tsprojfst_delayfun)
+
 text {* If just infinite ticks will be sent just infinite ticks will be transmitted. *}
 lemma tsmed_inftick [simp]: "#ora=\<infinity> \<Longrightarrow> tsMed\<cdot>tsInfTick\<cdot>ora = tsInfTick"
-oops
+  oops
 
 text {* Medium without oracle will transmit all messages and ticks. *}
 lemma tsmed_inftrue [simp]: "tsMed\<cdot>msg\<cdot>((\<up>True) \<infinity>) = msg"
-oops
+  apply (simp add: tsMed_def)
+  oops
 
 text {* If infinite ticks will be sent infinite ticks will be transmitted. *}
 lemma tsmed_tstickcount [simp]: "#ora=\<infinity> \<Longrightarrow> #\<surd>(tsMed\<cdot>msg\<cdot>ora) = #\<surd>msg"
-oops
+  oops
 
 text {* Not every message will be transmitted. *}    
 lemma tsmed_tsabs_slen: "#ora=\<infinity> \<Longrightarrow> #(tsAbs\<cdot>(tsMed\<cdot>msg\<cdot>ora)) \<le> #(tsAbs\<cdot>msg)"
-oops
+  oops
 
 text {* If infinite messages will be sent infinite messages will be transmitted. *}
 lemma tsmed_tsabs_slen_inf [simp]: assumes "#({True} \<ominus> ora)=\<infinity>" and "#(tsAbs\<cdot>msg)=\<infinity>" 
   shows "#(tsAbs\<cdot>(tsMed\<cdot>msg\<cdot>ora)) = \<infinity>"
-oops
+  oops
 
 (* ----------------------------------------------------------------------- *)
 subsection {* receiver *}
