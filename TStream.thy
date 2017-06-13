@@ -2650,14 +2650,21 @@ lemma tsprojsnd_delayfun: "tsProjSnd\<cdot>(delayFun\<cdot>ts) = delayFun\<cdot>
 
 lemma tsfilter_mlscons_in:
   "ts\<noteq>\<bottom> \<Longrightarrow> t\<in>M \<Longrightarrow> tsFilter M\<cdot>(tsMLscons\<cdot>(updis t)\<cdot>ts) = tsMLscons\<cdot>(updis t)\<cdot>(tsFilter M\<cdot>ts)"
-oops
+  apply (induction ts)
+  apply (simp add: tsfilter_unfold)
+  by (smt Rep_Abs absts2mlscons2 image_insert insertI1 insertI2 mk_disjoint_insert
+      sConc_fin_well sfilter_in tsfilter_h_well)
 
 lemma tsfilter_mlscons_nin:
   "ts\<noteq>\<bottom> \<Longrightarrow> t\<notin>M \<Longrightarrow> tsFilter M\<cdot>(tsMLscons\<cdot>(updis t)\<cdot>ts) = tsFilter M\<cdot>ts"
-oops
+  apply (induction ts)
+  apply (simp add: tsfilter_unfold)
+  by (metis (no_types, lifting)
+      Rep_Abs absts2mlscons2 event.distinct(1) event.inject image_iff insert_iff
+      sConc_fin_well sfilter_nin)
 
 lemma tsfilter_delayfun: "tsFilter M\<cdot>(delayFun\<cdot>ts) = delayFun\<cdot>(tsFilter M\<cdot>ts)"
-oops
+  by (simp add: tsfilter_unfold delayFun_def eta_cfun insertI1 tsconc_insert tsfilter_h_well)
 
 lemma tstickcount_mlscons: "#\<surd> tsMLscons\<cdot>(updis t)\<cdot>ts = #\<surd> ts"
 apply (cases "ts=\<bottom>", simp)
