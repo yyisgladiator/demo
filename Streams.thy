@@ -1481,6 +1481,17 @@ by (rule ind [of _ "x"], auto)
 lemma slen_sprojsnd: "#(sprojsnd\<cdot>x) = #x"
 by (rule ind [of _ "x"], auto)
 
+lemma slen_updis_eq: "#s1 = #s2 \<Longrightarrow> #(updis x1 && s1) = #(updis x2 && s2)"
+  by (simp add: lscons_conv)
+
+lemma deconstruct_infstream_h:
+  assumes "#s = \<infinity>" obtains x xs where "(updis x) && xs = s \<and> #xs = \<infinity>"
+  using assms inf_scase lscons_conv by blast
+
+lemma deconstruct_infstream:
+  assumes "#s = \<infinity>" obtains x xs where "(updis x) && xs = s \<and> #xs = \<infinity> \<and> xs \<noteq> \<epsilon>"
+  by (metis Inf'_neq_0 assms deconstruct_infstream_h slen_empty_eq)
+
 (* ----------------------------------------------------------------------- *)
 subsection {* @{term sfilter} *}
 (* ----------------------------------------------------------------------- *)
