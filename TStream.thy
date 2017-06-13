@@ -2953,9 +2953,31 @@ apply (metis Inf'_neq_0 delayFun_dropFirst delayfun_nbot slen_empty_eq tsdropfir
        tszip_delayfun)
 by (metis Inf'_neq_0 inf_scase lscons_conv slen_empty_eq tstickcount_mlscons tszip_mlscons)
 
-(* ToDo: lemmata for tszip *)
+lemma exstream: assumes "#s = \<infinity>" obtains x xs where "(updis x) && xs = s \<and> #xs = \<infinity>"
+  using assms inf_scase lscons_conv by blast
+lemma exstream2: assumes "#s = \<infinity>" obtains x xs where "(updis x) && xs = s \<and> #xs = \<infinity> \<and> xs \<noteq> \<epsilon>"
+  by (metis Inf'_neq_0 assms exstream slen_empty_eq)
+
+lemma helper: "#s1 = #s2 \<Longrightarrow> #(updis x1 && s1) = #(updis x2 && s2)"
+  by (simp add: lscons_conv)
+
 lemma tszip_tsabs_slen [simp]: "#xs=\<infinity> \<Longrightarrow> #(tsAbs\<cdot>(tsZip\<cdot>ts\<cdot>xs)) = #(tsAbs\<cdot>ts)"
-oops
+  apply (induction ts arbitrary: xs)
+  apply (simp_all)
+  apply (metis Inf'_neq_0 strict_slen tsabs_delayfun tszip_delayfun)
+  proof -
+    fix tsa :: "'b tstream" and t :: 'b and xsa :: "'a stream"
+    assume a1: "#xsa = \<infinity>"
+    assume a2: "tsa \<noteq> \<bottom>"
+    assume a3: "\<And>xs. #(xs::'a stream) = \<infinity> \<Longrightarrow> #(tsAbs\<cdot>(tsZip\<cdot>tsa\<cdot>xs)) = #(tsAbs\<cdot>tsa)"
+    obtain aa :: "'a stream \<Rightarrow> 'a" and ss :: "'a stream \<Rightarrow> 'a stream" where
+        f4: "updis (aa xsa) && ss xsa = xsa \<and> #(ss xsa) = \<infinity> \<and> ss xsa \<noteq> \<epsilon>"
+      using a1 by (meson exstream2)
+    then have "tsAbs\<cdot>(tsZip\<cdot>(tsMLscons\<cdot>(updis t)\<cdot>tsa)\<cdot>xsa) = updis (t, aa xsa) && tsAbs\<cdot>(tsZip\<cdot>tsa\<cdot>(ss xsa))"
+      using a2 by (metis (no_types) tsabs_mlscons tszip_mlscons tszip_nbot)
+    then show "#(tsAbs\<cdot> (tsZip\<cdot>(tsMLscons\<cdot>(updis t)\<cdot>tsa)\<cdot>xsa)) = #(tsAbs\<cdot>(tsMLscons\<cdot>(updis t)\<cdot>tsa))"
+      using f4 a3 a2 by (simp add: helper tsabs_mlscons)
+  qed
 
 (* ----------------------------------------------------------------------- *)
 subsection {* tsRemDups *}
