@@ -1893,12 +1893,20 @@ lemma tsmap_tstickcount[simp]:  "#\<surd>(tsMap f\<cdot>ts) = #\<surd>ts"
   apply(simp add:tsmap_h_well)
   by(simp add: tsmap_h_fair)
 
+lemma tsmap_strict_rev: "tsMap f \<cdot> ts = \<bottom> \<Longrightarrow> ts = \<bottom>"
+  by (metis strict_tstickcount ts_0ticks tsmap_tstickcount)
+
 lemma tsmap_weak:"tsWeakCausal (Rep_cfun (tsMap f))"
 by (subst tsWeak2cont2, auto)
 
-(* ToDo: lemma for tsmap, modify less general lemmata *)
 lemma tsmap_tsabs_slen [simp]: "#(tsAbs\<cdot>(tsMap f\<cdot>ts)) = #(tsAbs\<cdot>ts)"
-oops
+  apply (simp add: tsAbs_def tsmap_unfold)
+  apply (induct_tac ts, auto)
+  apply (simp add: tsmap_h_well)
+  by (simp add: tsmap_h_fair2)
+
+lemma tsmap_nbot [simp]: "ts\<noteq>\<bottom> \<Longrightarrow> tsMap f \<cdot> ts \<noteq> \<bottom>"
+  by (rule ccontr, simp add: tsmap_strict_rev)
 
 (* tsProjFst and tsProjSnd *)
 thm tsProjFst_def
@@ -1925,25 +1933,16 @@ lemma tsprojsnd_tstickcount [simp]: "#\<surd>(tsProjSnd\<cdot>ts) = #\<surd>ts"
   by (simp add: tsProjSnd_def)
 
 lemma tsprojfst_tsabs_slen [simp]: "#(tsAbs\<cdot>(tsProjFst\<cdot>ts)) = #(tsAbs\<cdot>ts)"
-  apply (simp add: tsProjFst_def tsAbs_def tsmap_unfold)
-  apply (induct_tac ts, auto)
-  apply (simp add: tsmap_h_well)
-  apply (rule ind [of _ y], auto)
-  by (simp add: tsmap_h_fair2)
+  by (simp add: tsProjFst_def)
 
 lemma tsprojsnd_tsabs_slen [simp]: "#(tsAbs\<cdot>(tsProjSnd\<cdot>ts)) = #(tsAbs\<cdot>ts)"
-  apply (simp add: tsProjSnd_def tsAbs_def tsmap_unfold)
-  apply (induct_tac ts, auto)
-  apply (simp add: tsmap_h_well)
-  apply (rule ind [of _ y], auto)
-  by (simp add: tsmap_h_fair2)
+  by (simp add: tsProjSnd_def)
 
-(* ToDo: lemma for tsprojfst/snd *)
 lemma tsprojfst_nbot [simp]: "ts\<noteq>\<bottom> \<Longrightarrow> tsProjFst\<cdot>ts\<noteq>\<bottom>"
-oops
+  by (rule ccontr, simp add: tsprojfst_strict_rev)
 
 lemma tsprojsnd_nbot [simp]: "ts\<noteq>\<bottom> \<Longrightarrow> tsProjSnd\<cdot>ts\<noteq>\<bottom>"
-oops
+  by (rule ccontr, simp add: tsprojsnd_strict_rev)
 
 (* tsFilter *)
 thm tsFilter_def
@@ -1962,17 +1961,19 @@ by (simp add: tsFilter_def tsfilter_h_well)
 lemma tsfilter_strict [simp]: "tsFilter M\<cdot>\<bottom> = \<bottom>"
   by (simp add: tsfilter_unfold)
 
-(* ToDo: lemma for tsfilter *)
 lemma tsfilter_nbot [simp]: "ts\<noteq>\<bottom> \<Longrightarrow> tsFilter M\<cdot>ts\<noteq>\<bottom>" 
-oops
-  
+  apply (simp add: tsfilter_unfold ts_well_Rep tsfilter_h_well)
+  by (metis (no_types, lifting)
+      Rep_Abs Rep_tstream inf_bot_left insert_inter_insert int_sfilterl1 mem_Collect_eq
+      strict_tstickcount ts_0ticks tsfilter_h_well tstickcount_insert)
+
 lemma tsfilter_tstickcount [simp]: "#\<surd>(tsFilter M\<cdot>ts) = #\<surd>ts"
   apply(simp add: tsTickCount_def)
   apply(simp only: tsfilter_unfold)
   apply(subst Abs_tstream_inverse)
    apply (simp add: tsfilter_h_well)
    by simp
-                                            
+
 lemma tsfilter_weak:"tsWeakCausal (Rep_cfun (tsFilter M))"
   by (subst tsWeak2cont2, auto)
 
@@ -2620,50 +2621,50 @@ by (simp add: DiscrTick_def delayfun_tslscons_bot sup'_def)
 subsection {* tsMLscons representation *}
 (* ----------------------------------------------------------------------- *)
 
-(* ToDo: useful for tsMLscons representation *)
 lemma tsmap_mlscons:
   "ts \<noteq> \<bottom> \<Longrightarrow> tsMap f\<cdot>(tsMLscons\<cdot>(updis t)\<cdot>ts) = tsMLscons\<cdot>(updis (f t))\<cdot>(tsMap f\<cdot>ts)"
-oops
+  apply (simp add: tsmlscons_lscons3 lscons_conv tsmap_unfold smap_split)
+  apply (simp add: tsmlscons2tslscons)
+  apply (subst tslscons2lscons)
+  apply (metis tsmap_unfold tsmap_strict_rev)
+  by (simp add: lscons_conv tsmap_h_well)
 
 lemma tsmap_delayfun: "tsMap f\<cdot>(delayFun\<cdot>ts) = delayFun\<cdot>(tsMap f\<cdot>ts)"
-oops
+  apply (simp add: delayFun_def delayfun_abststream tsmap_unfold tsconc_rep_eq)
+  apply (induct_tac ts, auto)
+  by (simp add: tsConc_def tsmap_h_well)
 
 lemma tsprojfst_mlscons:
   "ts\<noteq>\<bottom> \<Longrightarrow> tsProjFst\<cdot>(tsMLscons\<cdot>(updis (a,b))\<cdot>ts) = tsMLscons\<cdot>(updis a)\<cdot>(tsProjFst\<cdot>ts)"
-  apply (simp add: tsmlscons_lscons3 tsProjFst_def lscons_conv tsmap_unfold smap_split)
-  apply (simp add: tsmlscons2tslscons)
-  apply (subst tslscons2lscons)
-  apply (metis tsProjFst_def tsmap_unfold tsprojfst_strict_rev)
-  by (simp add: lscons_conv tsmap_h_well)
+  by (simp add: tsProjFst_def tsmap_mlscons)
 
-lemma tsprojfst_delayfun: "tsProjFst\<cdot>(delayFun\<cdot>ts) = delayFun\<cdot>(tsProjFst\<cdot>ts)"    
-  apply (simp add: delayFun_def delayfun_abststream tsProjFst_def tsmap_unfold tsconc_rep_eq)
-  apply (induct_tac ts, auto)
-  by (simp add: tsConc_def tsmap_h_well)
+lemma tsprojfst_delayfun: "tsProjFst\<cdot>(delayFun\<cdot>ts) = delayFun\<cdot>(tsProjFst\<cdot>ts)"
+  by (simp add: tsProjFst_def tsmap_delayfun)
 
 lemma tsprojsnd_mlscons:
   "ts\<noteq>\<bottom> \<Longrightarrow> tsProjSnd\<cdot>(tsMLscons\<cdot>(updis (a,b))\<cdot>ts) = tsMLscons\<cdot>(updis b)\<cdot>(tsProjSnd\<cdot>ts)"
-  apply (simp add: tsmlscons_lscons3 tsProjSnd_def lscons_conv tsmap_unfold smap_split)
-  apply (simp add: tsmlscons2tslscons)
-  apply (subst tslscons2lscons)
-  apply (metis tsProjSnd_def tsmap_unfold tsprojsnd_strict_rev)
-  by (simp add: lscons_conv tsmap_h_well)
+  by (simp add: tsProjSnd_def tsmap_mlscons)
 
-lemma tsprojsnd_delayfun: "tsProjSnd\<cdot>(delayFun\<cdot>ts) = delayFun\<cdot>(tsProjSnd\<cdot>ts)"    
-  apply (simp add: delayFun_def delayfun_abststream tsProjSnd_def tsmap_unfold tsconc_rep_eq)
-  apply (induct_tac ts, auto)
-  by (simp add: tsConc_def tsmap_h_well)
+lemma tsprojsnd_delayfun: "tsProjSnd\<cdot>(delayFun\<cdot>ts) = delayFun\<cdot>(tsProjSnd\<cdot>ts)"
+  by (simp add: tsProjSnd_def tsmap_delayfun)
 
 lemma tsfilter_mlscons_in:
   "ts\<noteq>\<bottom> \<Longrightarrow> t\<in>M \<Longrightarrow> tsFilter M\<cdot>(tsMLscons\<cdot>(updis t)\<cdot>ts) = tsMLscons\<cdot>(updis t)\<cdot>(tsFilter M\<cdot>ts)"
-oops
+  apply (induction ts)
+  apply (simp add: tsfilter_unfold)
+  by (smt Rep_Abs absts2mlscons2 image_insert insertI1 insertI2 mk_disjoint_insert
+      sConc_fin_well sfilter_in tsfilter_h_well)
 
 lemma tsfilter_mlscons_nin:
   "ts\<noteq>\<bottom> \<Longrightarrow> t\<notin>M \<Longrightarrow> tsFilter M\<cdot>(tsMLscons\<cdot>(updis t)\<cdot>ts) = tsFilter M\<cdot>ts"
-oops
+  apply (induction ts)
+  apply (simp add: tsfilter_unfold)
+  by (metis (no_types, lifting)
+      Rep_Abs absts2mlscons2 event.distinct(1) event.inject image_iff insert_iff
+      sConc_fin_well sfilter_nin)
 
 lemma tsfilter_delayfun: "tsFilter M\<cdot>(delayFun\<cdot>ts) = delayFun\<cdot>(tsFilter M\<cdot>ts)"
-oops
+  by (simp add: tsfilter_unfold delayFun_def eta_cfun insertI1 tsconc_insert tsfilter_h_well)
 
 lemma tstickcount_mlscons: "#\<surd> tsMLscons\<cdot>(updis t)\<cdot>ts = #\<surd> ts"
 apply (cases "ts=\<bottom>", simp)
@@ -2952,9 +2953,31 @@ apply (metis Inf'_neq_0 delayFun_dropFirst delayfun_nbot slen_empty_eq tsdropfir
        tszip_delayfun)
 by (metis Inf'_neq_0 inf_scase lscons_conv slen_empty_eq tstickcount_mlscons tszip_mlscons)
 
-(* ToDo: lemmata for tszip *)
+lemma exstream: assumes "#s = \<infinity>" obtains x xs where "(updis x) && xs = s \<and> #xs = \<infinity>"
+  using assms inf_scase lscons_conv by blast
+lemma exstream2: assumes "#s = \<infinity>" obtains x xs where "(updis x) && xs = s \<and> #xs = \<infinity> \<and> xs \<noteq> \<epsilon>"
+  by (metis Inf'_neq_0 assms exstream slen_empty_eq)
+
+lemma helper: "#s1 = #s2 \<Longrightarrow> #(updis x1 && s1) = #(updis x2 && s2)"
+  by (simp add: lscons_conv)
+
 lemma tszip_tsabs_slen [simp]: "#xs=\<infinity> \<Longrightarrow> #(tsAbs\<cdot>(tsZip\<cdot>ts\<cdot>xs)) = #(tsAbs\<cdot>ts)"
-oops
+  apply (induction ts arbitrary: xs)
+  apply (simp_all)
+  apply (metis Inf'_neq_0 strict_slen tsabs_delayfun tszip_delayfun)
+  proof -
+    fix tsa :: "'b tstream" and t :: 'b and xsa :: "'a stream"
+    assume a1: "#xsa = \<infinity>"
+    assume a2: "tsa \<noteq> \<bottom>"
+    assume a3: "\<And>xs. #(xs::'a stream) = \<infinity> \<Longrightarrow> #(tsAbs\<cdot>(tsZip\<cdot>tsa\<cdot>xs)) = #(tsAbs\<cdot>tsa)"
+    obtain aa :: "'a stream \<Rightarrow> 'a" and ss :: "'a stream \<Rightarrow> 'a stream" where
+        f4: "updis (aa xsa) && ss xsa = xsa \<and> #(ss xsa) = \<infinity> \<and> ss xsa \<noteq> \<epsilon>"
+      using a1 by (meson exstream2)
+    then have "tsAbs\<cdot>(tsZip\<cdot>(tsMLscons\<cdot>(updis t)\<cdot>tsa)\<cdot>xsa) = updis (t, aa xsa) && tsAbs\<cdot>(tsZip\<cdot>tsa\<cdot>(ss xsa))"
+      using a2 by (metis (no_types) tsabs_mlscons tszip_mlscons tszip_nbot)
+    then show "#(tsAbs\<cdot> (tsZip\<cdot>(tsMLscons\<cdot>(updis t)\<cdot>tsa)\<cdot>xsa)) = #(tsAbs\<cdot>(tsMLscons\<cdot>(updis t)\<cdot>tsa))"
+      using f4 a3 a2 by (simp add: helper tsabs_mlscons)
+  qed
 
 (* ----------------------------------------------------------------------- *)
 subsection {* tsRemDups *}
@@ -3038,12 +3061,14 @@ apply (case_tac "t\<noteq>a", simp_all)
 apply (simp add: tsremdups_h_mlscons_ndup)
 by (simp add: tsremdups_h_mlscons_dup)
 
-(* ToDo: lemmata for tsremdups *)
 lemma tsremdups_h_nbot2 [simp]: "ts\<noteq>\<bottom> \<Longrightarrow> tsRemDups_h\<cdot>ts\<cdot>None \<noteq> \<bottom>"
-oops
+  apply (induction ts arbitrary: a)
+  apply (simp_all)
+  apply (simp add: tsremdups_h_delayfun)
+  by (simp add: tsremdups_h_mlscons)
 
 lemma tsremdups_nbot [simp]: "ts\<noteq>\<bottom> \<Longrightarrow> tsRemDups\<cdot>ts \<noteq> \<bottom>"
-oops
+ by (simp add: tsRemDups_def)
 
 (*TODO
 
