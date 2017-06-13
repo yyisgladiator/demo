@@ -1905,6 +1905,9 @@ lemma tsmap_tsabs_slen [simp]: "#(tsAbs\<cdot>(tsMap f\<cdot>ts)) = #(tsAbs\<cdo
   apply (simp add: tsmap_h_well)
   by (simp add: tsmap_h_fair2)
 
+lemma tsmap_nbot [simp]: "ts\<noteq>\<bottom> \<Longrightarrow> tsMap f \<cdot> ts \<noteq> \<bottom>"
+  by (rule ccontr, simp add: tsmap_strict_rev)
+
 (* tsProjFst and tsProjSnd *)
 thm tsProjFst_def
 thm tsProjSnd_def
@@ -1916,10 +1919,12 @@ lemma tsprojsnd_strict[simp]: "tsProjSnd\<cdot>\<bottom> = \<bottom>"
   by (simp add: tsProjSnd_def)
 
 lemma tsprojfst_strict_rev: "tsProjFst\<cdot>ts = \<bottom> \<Longrightarrow> ts = \<bottom>"
-  by (simp add: tsProjFst_def tsmap_strict_rev)
+  apply (simp add: tsProjFst_def)
+  by (metis strict_tstickcount ts_0ticks tsmap_tstickcount)
 
 lemma tsprojsnd_strict_rev: "tsProjSnd\<cdot>ts = \<bottom> \<Longrightarrow> ts = \<bottom>"
-  by (simp add: tsProjSnd_def tsmap_strict_rev)
+  apply (simp add: tsProjSnd_def)
+  by (metis strict_tstickcount ts_0ticks tsmap_tstickcount)
 
 lemma tsprojfst_tstickcount [simp]: "#\<surd>(tsProjFst\<cdot>ts) = #\<surd>ts"
   by (simp add: tsProjFst_def)
@@ -1933,12 +1938,11 @@ lemma tsprojfst_tsabs_slen [simp]: "#(tsAbs\<cdot>(tsProjFst\<cdot>ts)) = #(tsAb
 lemma tsprojsnd_tsabs_slen [simp]: "#(tsAbs\<cdot>(tsProjSnd\<cdot>ts)) = #(tsAbs\<cdot>ts)"
   by (simp add: tsProjSnd_def)
 
-(* ToDo: lemma for tsprojfst/snd *)
 lemma tsprojfst_nbot [simp]: "ts\<noteq>\<bottom> \<Longrightarrow> tsProjFst\<cdot>ts\<noteq>\<bottom>"
-oops
+  by (rule ccontr, simp add: tsprojfst_strict_rev)
 
 lemma tsprojsnd_nbot [simp]: "ts\<noteq>\<bottom> \<Longrightarrow> tsProjSnd\<cdot>ts\<noteq>\<bottom>"
-oops
+  by (rule ccontr, simp add: tsprojsnd_strict_rev)
 
 (* tsFilter *)
 thm tsFilter_def
