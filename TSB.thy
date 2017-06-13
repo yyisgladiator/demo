@@ -147,7 +147,7 @@ definition tsbLeast :: "channel set \<Rightarrow> 'm TSB" where
 
 
 definition tsbTickCount :: "'m TSB \<rightarrow> lnat" where
-"tsbTickCount \<equiv>  \<Lambda> tb. #\<surd>(SOME ts. ts \<in> ran (Rep_TSB tb))"
+"tsbTickCount \<equiv>  \<Lambda> tb. if tsbDom\<cdot>tb \<noteq> {} then #\<surd>(SOME ts. ts \<in> ran (Rep_TSB tb)) else \<infinity>"
 
 abbreviation tsbTickCount_abbrv :: "'m TSB \<Rightarrow> lnat "  ("#\<surd>tsb _ ") where
 " #\<surd>tsb tsb \<equiv> tsbTickCount\<cdot>tsb"
@@ -335,7 +335,9 @@ lemma tsdom_ctype_subset[simp]: assumes "c\<in>tsbDom\<cdot>tsb"
   shows "tsDom\<cdot>(Rep_TSB tsb)\<rightharpoonup>c \<subseteq> ctype c"
   using assms by(simp add: tsbdom_insert)
 
-
+lemma tsbdom_lub: assumes "chain Y" and "tsbDom\<cdot>(Y i) = cs"
+  shows "tsbDom\<cdot>(\<Squnion> i. Y i) = cs"
+  using assms(1) assms(2) by auto
 
 
 
@@ -362,7 +364,10 @@ lemma tsbgetchE: assumes "c \<in> tsbDom\<cdot>tsb"
   by (metis assms domD is_none_code(2) is_none_simps(1) option.collapse tsbdom_insert 
             tsbgetch_insert)
   
-
+lemma lubgetCh: assumes "chain Y" and "c \<in> tsbDom\<cdot>(\<Squnion> i. Y i)"
+  shows "(\<Squnion>i. Y i) . c = (\<Squnion>i. (Y i) . c)"
+  by (simp add: assms(1) contlub_cfun_arg contlub_cfun_fun)
+          
           
 subsubsection \<open>eq/below\<close>  
   
@@ -515,10 +520,13 @@ subsubsection \<open>tsbTickCount\<close>
 
 thm tsbTickCount_def
 
-lemma [simp]: "cont ((\<lambda> tb. #\<surd> SOME ts. ts \<in> ran (Rep_TSB tb)))"
+lemma tsbtickcount_cont[simp]: "cont (\<lambda> tb. if tsbDom\<cdot>tb \<noteq> {} then #\<surd>(SOME ts. ts \<in> ran (Rep_TSB tb)) else \<infinity>)"
 apply(rule contI2)
 apply(rule monofunI)
   sorry
+    
+lemma tsbtickcount_insert: "tsbTickCount\<cdot>tb = (if tsbDom\<cdot>tb \<noteq> {} then #\<surd>(SOME ts. ts \<in> ran (Rep_TSB tb)) else \<infinity>)"
+  by (simp add: tsbTickCount_def)
     
 lemma tsbtickcountch_eq1: "\<exists>n. \<forall> c \<in> tsbDom\<cdot>tb . n = #\<surd> (tb . c)"
   by (metis ts_ex_len tsbdom_insert tsbgetch_insert)
@@ -529,6 +537,9 @@ lemma tstbtickcount_eq2: "\<exists>n. n = #\<surd> SOME ts. ts \<in> ran (Rep_TS
 lemma tsbtickcountgetch: assumes "c \<in> tsbDom\<cdot>tb"
   shows "#\<surd>tsb tb = #\<surd> (tb . c)"
 proof -
+  have f0: "tsbDom\<cdot>tb \<noteq> {}"
+    using assms by auto
+
   have f1:"(Rep_TSB tb\<rightharpoonup>c) \<in> ran (Rep_TSB tb)"
     by (metis assms domIff option.exhaust_sel ranI tsbdom_insert)
   have f2: "\<forall> ts \<in> ran (Rep_TSB tb). \<exists> c \<in> tsbDom\<cdot>tb.  ts = (tb . c)"
@@ -536,7 +547,7 @@ proof -
   hence f3: "\<exists>n. \<forall> ts \<in> ran (Rep_TSB tb). #\<surd> ts = n"
     by (metis ts_ex_len tsbdom_insert tsbgetch_insert)
   show ?thesis
-  apply (simp add: tsbTickCount_def tsbgetch_insert)
+    apply (simp add: tsbTickCount_def tsbgetch_insert, simp add: f0) 
     by (metis f1 f3 someI_ex)
 qed
   
@@ -551,10 +562,10 @@ subsubsection \<open>tsbTTakeL\<close>
 
 thm tsbTTakeL_def
   
-lemma [simp]: "tsTakeL\<cdot>0\<cdot>ts = \<bottom>"
+lemma tstakel_zero[simp]: "tsTakeL\<cdot>0\<cdot>ts = \<bottom>"
   by (simp add: tsTakeL_def)
     
-lemma [simp]: "tsTakeL\<cdot>n\<cdot>\<bottom> = \<bottom>"
+lemma tstakel_bot[simp]: "tsTakeL\<cdot>n\<cdot>\<bottom> = \<bottom>"
   by (simp add: tsTakeL_def)
     
 lemma [simp]: "Fin 2 = lnsuc\<cdot>(lnsuc\<cdot>(Fin 0))"
@@ -676,7 +687,19 @@ lemma tsTakeL_maxinchain: assumes "Fin n = #\<surd>ts"
   by (metis (no_types, lifting) assms less2nat max_in_chainI min_def 
             tstakeL_len tstakeL_prefix tstake_below_eq)
           
-
+lemma tsTakel_lub1_getch_eq: assumes "chain Y" and "c \<in> tsbDom\<cdot>tb"
+  shows "tsTakeL\<cdot>(Lub Y)\<cdot>(tb  .  c) \<sqsubseteq> (\<Squnion>i::nat. tsTakeL\<cdot>(Y i)\<cdot>(tb  .  c))"
+  by (simp add: assms(1) contlub_cfun_arg contlub_cfun_fun)
+    
+lemma tsTakel_lub2_getch_eq: assumes "chain Y" and "c \<in> tsbDom\<cdot>(Lub Y)"
+  shows "tsTakeL\<cdot>n\<cdot>(Lub Y  .  c) \<sqsubseteq> (\<Squnion>i. tsTakeL\<cdot>n\<cdot>(Y i  .  c))"
+proof -
+    fix c :: channel
+    have "(\<Squnion>na. tsTakeL\<cdot>n\<cdot>(Y na . c)) = tsTakeL\<cdot>n\<cdot>(Lub Y . c)"
+      by (simp add: assms contlub_cfun_arg contlub_cfun_fun)
+    then show "tsTakeL\<cdot>n\<cdot>(Lub Y . c) \<sqsubseteq> (\<Squnion>na. tsTakeL\<cdot>n\<cdot>(Y na . c))"
+      by simp
+qed
   
 
 lemma tsb_newMap_well[simp]: assumes "c\<in>tsbDom\<cdot>b"
@@ -822,7 +845,72 @@ next
     by simp
 qed
   
-
+lemma tsbttake_mono2 [simp]: "monofun (\<lambda> tb. tsbTTakeL n tb)"
+  apply (rule monofunI)
+  apply (rule tsb_below)
+   apply (simp add: tsbdom_below)
+  apply (subst tsbttakeL_getch, simp)
+    apply (subst tsbttakeL_getch, simp add: tsbdom_below)
+  by (simp add: monofun_cfun_arg monofun_cfun_fun)
+    
+declare [[show_types]]
+  
+lemma tsbttake_mono1 [simp]: "\<And> tb. monofun (\<lambda> n. tsbTTakeL n tb)"
+  apply (rule monofunI)
+  apply (rule tsb_below)
+   apply (simp add: tsbdom_below)
+   apply (subst tsbttakeL_getch, simp)
+   apply (subst tsbttakeL_getch, simp add: tsbdom_below)
+  by (simp add: monofun_cfun_arg monofun_cfun_fun)
+    
+lemma tsbttake_chain1: assumes "chain Y"
+  shows "chain (\<lambda>i::nat. tsbTTakeL (Y i) tb)"
+proof -
+    have "\<And>i j. i \<sqsubseteq> j \<Longrightarrow> tsbTTakeL i tb \<sqsubseteq> tsbTTakeL j tb"
+      using lnless_def monofunE tsbttake_mono1 by blast
+    thus ?thesis
+      apply (rule chainI)
+      using assms po_class.chainE by blast
+qed
+    
+  
+lemma tsbttake_cont1_pre: assumes "chain Y"
+  shows "tsbTTakeL (\<Squnion>i. Y i) tb \<sqsubseteq> (\<Squnion>i::nat. tsbTTakeL (Y i) tb)"
+proof -
+  have f1: "\<And>c. c \<in> tsbDom\<cdot>tb \<Longrightarrow> (\<Squnion>i. tsbTTakeL (Y i) tb) . c = (\<Squnion>i. (tsbTTakeL (Y i) tb) . c)"
+    apply (rule lubgetCh, simp only: tsbttake_chain1 assms)
+    using assms tsbChain_dom_eq2 tsbttakeL_dom tsbttake_chain1 by blast
+  show ?thesis
+    apply (rule tsb_below)
+     apply (subst tsbdom_lub, simp_all add: assms)
+     apply (simp only: tsbttake_chain1 assms)
+       apply (simp add: f1 assms)
+       by (simp add: tsTakel_lub1_getch_eq assms) 
+qed
+  
+lemma tsbttake_cont1 [simp]: "\<And>tb. cont (\<lambda> n. tsbTTakeL n tb)"
+  apply (rule contI2)
+    by (simp_all add: tsbttake_cont1_pre)    
+ 
+lemma tsbttake_cont2_pre: assumes "chain Y"
+  shows "tsbTTakeL n (\<Squnion>i. Y i) \<sqsubseteq> (\<Squnion>i. tsbTTakeL n (Y i))"
+proof -
+  have f1: "\<And>c. c \<in> tsbDom\<cdot>(Lub Y) \<Longrightarrow> (\<Squnion>i. tsbTTakeL n (Y i)) . c = (\<Squnion>i. tsbTTakeL n (Y i) .  c)"
+    apply (rule lubgetCh)
+     apply (simp add: assms ch2ch_monofun)
+    by (metis assms monofunE po_class.chain_def tsbChain_dom_eq2 tsbttakeL_dom tsbttake_mono2)
+  show ?thesis
+    apply (rule tsb_below)
+     apply (subst tsbdom_lub, simp_all add: assms)
+      apply (simp add: assms ch2ch_monofun)
+      apply (simp only: f1, simp add: assms)
+      by (simp add: tsTakel_lub2_getch_eq assms)
+qed
+  
+lemma tsbttake_cont2 [simp]: "\<And>n. cont (\<lambda> tb. tsbTTakeL n tb)"
+  apply (rule contI2)
+   by (simp_all add: tsbttake_cont2_pre)
+    
 subsubsection \<open>tsbUnion\<close>
 
 (* ----------------------------------------------------------------------- 
@@ -835,51 +923,78 @@ subsubsection \<open>tsbUnion\<close>
 declare [[show_types]]
 
 
-lemma tsbunion_well1[simp]: assumes "tsb_well b1" and "tsb_well b2" 
+lemma tsbunion_well_pre1[simp]: assumes "tsb_well b1" and "tsb_well b2" 
                            and "\<forall>c1 \<in> dom b1. \<forall> c2 \<in> dom b2.  #\<surd>(b1\<rightharpoonup>c1) = #\<surd>(b2\<rightharpoonup>c2)"
   shows "tsb_well (b1 ++ b2)"        
 proof -
   have "(\<forall>c\<in>dom b2 \<union> dom b1. tsDom\<cdot>b1 ++ b2\<rightharpoonup>c \<subseteq> ctype c)"
-    by (metis (full_types) Un_iff assms(1) assms(2) map_add_dom_app_simps(1) map_add_dom_app_simps(3) tsb_well_def)
+    by (metis (full_types) Un_iff assms(1) assms(2) map_add_dom_app_simps(1) 
+               map_add_dom_app_simps(3) tsb_well_def)
   moreover have "(\<exists>n::lnat. \<forall>c\<in>dom b2 \<union> dom b1. #\<surd> b1 ++ b2\<rightharpoonup>c = n)"
-    by (metis (no_types, lifting) UnE assms(1) assms(2) assms(3) map_add_dom_app_simps(1) map_add_dom_app_simps(3) tsb_well_def)
+    by (metis (no_types, lifting) UnE assms(1) assms(2) assms(3) map_add_dom_app_simps(1) 
+              map_add_dom_app_simps(3) tsb_well_def)
   ultimately show ?thesis
     using tsb_well_def by blast
 qed
   
-lemma tsbunion_well2: assumes "tsbDom\<cdot>tb1 \<noteq> {}" and "tsbDom\<cdot>tb2 \<noteq> {}"
+    
+lemma tsbunion_well [simp]: 
   shows "tsb_well ((Rep_TSB (tsbTTakeL (#\<surd>tsb tb2) tb1)) ++ (Rep_TSB (tsbTTakeL (#\<surd>tsb tb1) tb2)))"
-proof (cases "(#\<surd>tsb tb2) < (#\<surd>tsb tb1)")
+proof (cases "tsbDom\<cdot>tb1 = {} \<or> tsbDom\<cdot>tb2 = {}")
   case True
-  hence "#\<surd>tsb (tsbTTakeL (#\<surd>tsb tb2) tb1) = (#\<surd>tsb tb2)"
-    by (simp add: assms(1) min_absorb2 tsbttakeL_len)
-  thus ?thesis
-    by (metis (no_types, lifting) Rep_TSB True assms(2) mem_Collect_eq min.strict_order_iff 
-        tsbdom_insert tsbgetch_insert tsbtickcountgetch tsbttakeL_len tsbunion_well1)
+  then show ?thesis
+     by (metis Rep_TSB True empty_iff mem_Collect_eq tsbdom_insert tsbttakeL_dom tsbunion_well_pre1)
 next
   case False
-  hence "#\<surd>tsb (tsbTTakeL (#\<surd>tsb tb1) tb2) = (#\<surd>tsb tb1)"
-    by (simp add: assms(2) min_absorb2 tsbttakeL_len)
+  have f0: "tsbDom\<cdot>tb1 \<noteq> {} \<and> tsbDom\<cdot>tb2 \<noteq> {}"
+    using False by auto
   then show ?thesis
-    by (metis (no_types, lifting) Rep_TSB assms(1) assms(2) mem_Collect_eq min.commute 
-              tsbdom_insert tsbgetch_insert tsbtickcountgetch tsbttakeL_len tsbunion_well1)  
+    proof (cases "(#\<surd>tsb tb2) < (#\<surd>tsb tb1)")
+      case True
+      hence "#\<surd>tsb (tsbTTakeL (#\<surd>tsb tb2) tb1) = (#\<surd>tsb tb2)"
+        by (simp add: f0 min_absorb2 tsbttakeL_len)
+      thus ?thesis
+        by (metis (no_types, lifting) Rep_TSB True f0 mem_Collect_eq min.strict_order_iff 
+            tsbdom_insert tsbgetch_insert tsbtickcountgetch tsbttakeL_len tsbunion_well_pre1)
+    next
+      case False
+      hence "#\<surd>tsb (tsbTTakeL (#\<surd>tsb tb1) tb2) = (#\<surd>tsb tb1)"
+        by (simp add: f0 min_absorb2 tsbttakeL_len)
+      then show ?thesis
+        by (metis (no_types, lifting) Rep_TSB f0 mem_Collect_eq min.commute 
+                  tsbdom_insert tsbgetch_insert tsbtickcountgetch tsbttakeL_len tsbunion_well_pre1)  
+    qed
 qed
+  
 
 (* helper function for continuity proof *)
 lemma tsbunion_contL[simp]: "\<And> b2. cont (\<lambda>b1. (Rep_TSB b1) ++ (Rep_TSB b2))"
   using cont_compose part_add_contL rep_tsb_cont by blast
+    
+lemma tsbunion_contL1 [simp]: "\<And> tb2. cont (\<lambda> tb1. (Rep_TSB (tsbTTakeL (#\<surd>tsb tb2) tb1)) ++ (Rep_TSB (tsbTTakeL (#\<surd>tsb tb1) tb2)))"
+(* proof -
+  have f0: "\<And> tb2. cont (\<lambda> tb1. (Rep_TSB (tsbTTakeL (#\<surd>tsb tb2) tb1)))"
+    by (simp add: cont_Rep_TSB)
+  moreover
+  have f1: "\<And> tb2. cont (\<lambda> tb1. (Rep_TSB (tsbTTakeL (#\<surd>tsb tb1) tb2)))"
+    sorry
+  ultimately
+  show "\<And> tb2. cont (\<lambda> tb1. (Rep_TSB (tsbTTakeL (#\<surd>tsb tb2) tb1)) ++ (Rep_TSB (tsbTTakeL (#\<surd>tsb tb1) tb2)))"
+    apply (simp add: cont_compose part_add_contL f0 f1)
+    using cont_compose part_add_contL by blast
+    *) sorry
 
 (* helper function for continuity proof *)
 lemma tsbunion_contR[simp]: "\<And> b1. cont (\<lambda>b2. (Rep_TSB b1) ++ (Rep_TSB b2))"
   using cont_compose part_add_contR rep_tsb_cont by blast
+    
+lemma tsbunion_contR1 [simp]: "\<And> tb1. cont (\<lambda> tb2. (Rep_TSB (tsbTTakeL (#\<surd>tsb tb2) tb1)) ++ (Rep_TSB (tsbTTakeL (#\<surd>tsb tb1) tb2)))"
+  sorry
 
 (* sbUnion is an coninuous function *)
-lemma tsbunion_cont[simp]: assumes "\<forall>c1 \<in> dom b1. \<forall> c2 \<in> dom b2.  #\<surd>(b1\<rightharpoonup>c1) = #\<surd>(b2\<rightharpoonup>c2)"
-  shows "cont (\<lambda> b1. \<Lambda> b2.(Abs_TSB (Rep_TSB b1 ++ Rep_TSB b2)))"
-  apply (rule cont2cont_LAM)
-    apply (subst cont_Abs_TSB, simp_all add: assms)
-    (* by(simp add: cont2cont_LAM cont_Abs_TSB) *)
-  oops
+lemma tsbunion_cont[simp]:
+  shows "cont (\<lambda> tb1. \<Lambda> tb2. Abs_TSB ((Rep_TSB (tsbTTakeL (#\<surd>tsb tb2) tb1)) ++ (Rep_TSB (tsbTTakeL (#\<surd>tsb tb1) tb2))) )"
+  by(simp add: cont2cont_LAM cont_Abs_TSB)
     
 (*
 (* insert rule for sbUnion *)
