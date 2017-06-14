@@ -85,9 +85,20 @@ fixrec tee :: "'a tstream \<rightarrow> 'a tstream" where
 
 
 
+(* New abbreviations for fixrec - use *)
+(* Um gottes willen, die namen sind nur work-in-progess *)
+
+(* Wenn wir das haben... brauchen wir überhaupt noch delayfun? *)
+abbreviation delay_abbr :: "'a tstream \<Rightarrow>  'a tstream" ("delay")
+where "delay ts \<equiv> (tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>ts)"
+
+abbreviation tsmlscons_abbr :: "'a discr \<Rightarrow> 'a tstream \<Rightarrow>  'a tstream" ("_ &&\<surd> _ ")
+where "t &&\<surd> ts \<equiv> (tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>t))\<cdot>ts)"
+
+
 fixrec tsAbsNew :: "'a tstream \<rightarrow> 'a stream" where
-"tsAbsNew\<cdot>(tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>ts) = tsAbsNew\<cdot>ts" |   (* ignore ticks *)  
-"ts\<noteq>\<bottom> \<Longrightarrow> tsAbsNew\<cdot>(tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>t))\<cdot>ts) = up\<cdot>t && tsAbsNew\<cdot>ts"  (* prepend first message and go on *)  
+"tsAbsNew\<cdot>(delay ts) = tsAbsNew\<cdot>ts" |   (* ignore ticks *)  
+"ts\<noteq>\<bottom> \<Longrightarrow> tsAbsNew\<cdot>(t &&\<surd> ts) = up\<cdot>t && tsAbsNew\<cdot>ts"  (* prepend first message and go on *)  
 
 
 
