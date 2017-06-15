@@ -1732,10 +1732,6 @@ lemma "tsStrongCausal (Rep_cfun delayFun)"
 apply(rule tsStrongCausalI)
 using delayFun_sCausal by blast
 
-
-lemma delayFun_dom [simp]: "tsDom\<cdot>(delayFun\<cdot>ts) = tsDom\<cdot>ts"
-by(simp add: delayFun_def tsdom_insert tsconc_rep_eq)
-
 lemma delay_infTick [simp]: "#\<surd>ts = \<infinity> \<Longrightarrow> #\<surd> (delayFun\<cdot>ts) = \<infinity>"
 by(simp add: delayFun_def)
 
@@ -2635,7 +2631,7 @@ subsection {* tsMLscons representation *}
 (* ----------------------------------------------------------------------- *)
 
 lemma tsmap_mlscons:
-  "ts \<noteq> \<bottom> \<Longrightarrow> tsMap f\<cdot>(tsMLscons\<cdot>(updis t)\<cdot>ts) = tsMLscons\<cdot>(updis (f t))\<cdot>(tsMap f\<cdot>ts)"
+  "ts\<noteq>\<bottom> \<Longrightarrow> tsMap f\<cdot>(tsMLscons\<cdot>(updis t)\<cdot>ts) = tsMLscons\<cdot>(updis (f t))\<cdot>(tsMap f\<cdot>ts)"
   apply (simp add: tsmlscons_lscons3 lscons_conv tsmap_unfold smap_split)
   apply (simp add: tsmlscons2tslscons)
   apply (subst tslscons2lscons)
@@ -2692,6 +2688,12 @@ by (simp add: tsabs_insert)
 
 lemma tsabs_delayfun: "tsAbs\<cdot>(delayFun\<cdot>ts) = tsAbs\<cdot>ts"
 by(simp add: delayFun_def)
+
+lemma tsdom_mlscons: "ts\<noteq>\<bottom> \<Longrightarrow> tsDom\<cdot>(tsMLscons\<cdot>(updis t)\<cdot>ts) = {t} \<union> tsDom\<cdot>ts"
+by (metis lscons_conv sdom2un tsabs_mlscons tsabs_tsdom)
+
+lemma tsdom_delayfun: "tsDom\<cdot>(delayFun\<cdot>ts) = tsDom\<cdot>ts"
+by (simp add: delayFun_def tsdom_insert tsconc_rep_eq)
       
 (************************************************)
 (************************************************)      

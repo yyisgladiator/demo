@@ -16,24 +16,31 @@ default_sort countable
 
 (* Assumptions *)
 lemma tszip_tsprojsnd_rev: 
-  "#\<surd>ts=\<infinity> \<Longrightarrow> tsAbs\<cdot>(tsProjSnd\<cdot>(tsZip\<cdot>ts\<cdot>xs)) = xs"
+  "#\<surd>ts=\<infinity> \<Longrightarrow>  #xs=\<infinity> \<Longrightarrow> tsAbs\<cdot>(tsProjSnd\<cdot>(tsZip\<cdot>ts\<cdot>xs)) = xs"
 apply (induction xs arbitrary: ts)
 apply (simp_all)
 oops
 
-lemma tszip_tstickcount_leq [simp]: "#\<surd>ts \<le> #\<surd>(tsZip\<cdot>ts\<cdot>xs)"
+lemma tstickcount_slen_adm [simp]: "\<And>f xs. adm (\<lambda>a. #\<surd> f\<cdot>a\<cdot>xs \<le> #\<surd> a)"
+by (metis (mono_tags, lifting) admI inf_ub l42 ts_infinite_lub)
+
+(* Assumptions *)
+lemma tszip_tstickcount_leq [simp]: "#\<surd>(tsZip\<cdot>ts\<cdot>xs) \<le> #\<surd>ts"
 apply (induction ts arbitrary: xs)
 apply (simp_all)
+apply (metis (no_types, lifting) delayFun_dropFirst delayfun_nbot less_lnsuc lnsuc_lnle_emb 
+       trans_lnle tszip_strict(2) tsdropfirst_len tszip_delayfun)
+apply (rule_tac y=xs in scases', simp)
+apply (case_tac "stream=\<epsilon>", auto)
+apply (rule_tac ts=ts in tscases, auto)
 oops
 
-lemma tsabs_slen_adm [simp]: "adm (\<lambda>a. #(tsAbs\<cdot>(f\<cdot>a\<cdot>xs)) \<le> #(tsAbs\<cdot>a))"
-sorry
+lemma tsabs_slen_adm [simp]: "\<And>f xs. adm (\<lambda>a. #(tsAbs\<cdot>(f\<cdot>a\<cdot>xs)) \<le> #(tsAbs\<cdot>a))"
+oops
 
 lemma tszip_tsabs_slen_leq [simp]: "#(tsAbs\<cdot>(tsZip\<cdot>ts\<cdot>xs)) \<le> #(tsAbs\<cdot>ts)"
 apply (induction ts arbitrary: xs)
 apply (simp_all)
-apply (metis tsZip.simps(1) tsabs_delayfun tszip_delayfun)
-apply (case_tac "xs=\<bottom>", simp)
 oops
 
 

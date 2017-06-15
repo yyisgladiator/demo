@@ -15,6 +15,16 @@ default_sort countable
 
 (* here I just try a few things. *)
 
+lemma [simp]: "\<And>f ts. adm (\<lambda>a. tsDom\<cdot>(f\<cdot>a\<cdot>ts) \<subseteq> tsDom\<cdot>a)"
+apply (rule admI)
+by (smt Collect_mono_iff ch2ch_Rep_cfunL ch2ch_Rep_cfunR contlub_cfun_arg contlub_cfun_fun
+    is_ub_thelub monofun_cfun_arg set_cpo_simps(1) subset_cont tsdom_insert)
+
+lemma "#ora=\<infinity> \<Longrightarrow> tsDom\<cdot>(tsMed\<cdot>msg\<cdot>ora) \<subseteq> tsDom\<cdot>msg"
+apply (induction msg)
+apply (simp_all)
+oops
+
 
 
 lift_definition tsExampInp_1 :: "nat tstream" is
