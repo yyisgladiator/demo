@@ -13,6 +13,14 @@ imports TimedABP
 begin
 default_sort countable
 
+lemma tssnd_tstickcount: "#\<surd>(tsSnd\<cdot>msg\<cdot>acks\<cdot>ack) \<le> #\<surd>msg"
+oops
+
+lemma tssnd_tsabs_slen: "#(tsAbs\<cdot>(tsSnd\<cdot>msg\<cdot>acks\<cdot>ack)) \<le> #(tsAbs\<cdot>msg)"
+oops
+
+
+
 lift_definition tsExampInp_1 :: "nat tstream" is
   "<[Msg 1, Msg 2, \<surd>, Msg 1, \<surd>]>"
 by (subst ts_well_def, auto)
@@ -41,10 +49,10 @@ lift_definition tsExampOut :: "(nat \<times> bool) tstream" is
   "<[Msg (1, True), \<surd>,  Msg (2, False), Msg (2, False), \<surd>, \<surd>, Msg (1, True), \<surd>, \<surd>]>"
 by (subst ts_well_def, auto)
 
-lemma "tsSender\<cdot>tsExampInp_1\<cdot>tsExampInp_2\<cdot>(Discr True) = tsExampOut"
+lemma "tsSnd\<cdot>tsExampInp_1\<cdot>tsExampInp_2\<cdot>(Discr True) = tsExampOut"
 apply (simp add: tsExampOut_def tsexampinp_12mlscons tsexampinp_22mlscons)
-apply (simp add: tssender_delayfun_nack tssender_mlscons_ack tssender_mlscons_nack 
-                 tssender_delayfun)
+apply (simp add: tssnd_delayfun_nack tssnd_mlscons_ack tssnd_mlscons_nack 
+                 tssnd_delayfun)
 by (smt Rep_Abs absts2delayfun2 absts2delayfun_tick absts2mlscons2 delayfun_nbot sConc_fin_well
     tick_msg tsmlscons_nbot up_defined)
 
@@ -61,15 +69,15 @@ by (smt Rep_Abs absts2delayfun2 absts2delayfun_tick absts2mlscons2 delayfun_nbot
 
 (* fds \<sqsubseteq> i where fds = map(\<alpha>.ds, \<Pi>1) *)
 (* fds is a prefix of i *)
-lemma "tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(tsSender\<cdot>i\<cdot>as\<cdot>ack))) \<sqsubseteq> tsAbs\<cdot>i"
+lemma "tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(tsSnd\<cdot>i\<cdot>as\<cdot>ack))) \<sqsubseteq> tsAbs\<cdot>i"
 oops
 
 (* \<alpha>.fb = fb  where fb = map(\<alpha>.ds, \<Pi>2) *)
 (* each new data element from i is assigned a bit different from the bit assigned to 
    the previous one *)    
 lemma 
-  "tsAbs\<cdot>(tsRemDups\<cdot>(tsProjSnd\<cdot>(tsRemDups\<cdot>(tsSender\<cdot>i\<cdot>as\<cdot>ack))))
-    = tsAbs\<cdot>(tsProjSnd\<cdot>(tsRemDups\<cdot>(tsSender\<cdot>i\<cdot>acks\<cdot>ack)))"
+  "tsAbs\<cdot>(tsRemDups\<cdot>(tsProjSnd\<cdot>(tsRemDups\<cdot>(tsSnd\<cdot>i\<cdot>as\<cdot>ack))))
+    = tsAbs\<cdot>(tsProjSnd\<cdot>(tsRemDups\<cdot>(tsSnd\<cdot>i\<cdot>acks\<cdot>ack)))"
 oops
 
 (* #fds = min{#i, #fas+1} where fds = map(\<alpha>.ds, \<Pi>1), fas = \<alpha>.as *)
@@ -77,14 +85,14 @@ oops
    be transmitted given that there are more data elements to transmit *)
 (*
 lemma
-  "#(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(tsSender\<cdot>i\<cdot>as\<cdot>ack)))) = min (#(tsAbs\<cdot>i)) ((#(tsAbs\<cdot>(tsRemDups\<cdot>as)))+1)"
+  "#(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(tsSnd\<cdot>i\<cdot>as\<cdot>ack)))) = min (#(tsAbs\<cdot>i)) ((#(tsAbs\<cdot>(tsRemDups\<cdot>as)))+1)"
 oops
 *)
 
 (* #i > #fas \<Longrightarrow> #ds = \<infinity> where fas = \<alpha>.as *)
 (* if a data element is never acknowledged despite repetitive transmission by the sender then the
    sender never stops transmitting this data element *)
-lemma "#(tsAbs\<cdot>i)>#(tsAbs\<cdot>(tsRemDups\<cdot>as)) \<Longrightarrow> #(tsAbs\<cdot>(tsSender\<cdot>i\<cdot>as\<cdot>ack)) = \<infinity>"
+lemma "#(tsAbs\<cdot>i)>#(tsAbs\<cdot>(tsRemDups\<cdot>as)) \<Longrightarrow> #(tsAbs\<cdot>(tsSnd\<cdot>i\<cdot>as\<cdot>ack)) = \<infinity>"
 oops
 
 end

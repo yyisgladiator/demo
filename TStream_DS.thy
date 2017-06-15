@@ -30,6 +30,8 @@ apply (simp add: tsremdups_insert)
 oops
 
 lemma tszip_tsabs_slen_leq [simp]: "#(tsAbs\<cdot>(tsZip\<cdot>ts\<cdot>xs)) \<le> #(tsAbs\<cdot>ts)"
+apply (induction ts)
+apply (simp_all)
 oops
 
 

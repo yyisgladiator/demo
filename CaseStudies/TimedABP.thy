@@ -23,26 +23,26 @@ subsection {* sender *}
 
 text {* input: msg from the user, acks from the receiver, ack buffer for the expected ack 
         output: msg and expected ack for the receiver *}
-fixrec tsSender :: "'a tstream \<rightarrow> bool tstream \<rightarrow> bool discr \<rightarrow> ('a \<times> bool) tstream" where
+fixrec tsSnd :: "'a tstream \<rightarrow> bool tstream \<rightarrow> bool discr \<rightarrow> ('a \<times> bool) tstream" where
   (* bottom case *)
-"tsSender\<cdot>\<bottom>\<cdot>acks\<cdot>ack = \<bottom>" |
-"tsSender\<cdot>msg\<cdot>\<bottom>\<cdot>ack = \<bottom>" |
+"tsSnd\<cdot>\<bottom>\<cdot>acks\<cdot>ack = \<bottom>" |
+"tsSnd\<cdot>msg\<cdot>\<bottom>\<cdot>ack = \<bottom>" |
 
   (* if an input and ack from the receiver *)
-"msg\<noteq>\<bottom> \<Longrightarrow> acks\<noteq>\<bottom> \<Longrightarrow> tsSender\<cdot>(tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>m))\<cdot>msg)\<cdot>(tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>a))\<cdot>acks)\<cdot>ack = 
+"msg\<noteq>\<bottom> \<Longrightarrow> acks\<noteq>\<bottom> \<Longrightarrow> tsSnd\<cdot>(tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>m))\<cdot>msg)\<cdot>(tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>a))\<cdot>acks)\<cdot>ack = 
   (* ack for the current msg \<Longrightarrow> send next msg *)
-  (if (a = ack) then tsSender\<cdot>msg\<cdot>acks\<cdot>(Discr (\<not>(undiscr ack)))
+  (if (a = ack) then tsSnd\<cdot>msg\<cdot>acks\<cdot>(Discr (\<not>(undiscr ack)))
   (* wrong ack for the current msg \<Longrightarrow> send msg again *)
-   else tsMLscons\<cdot>(upApply2 Pair\<cdot>(up\<cdot>m)\<cdot>(up\<cdot>ack))\<cdot>(tsSender\<cdot>(tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>m))\<cdot>msg)\<cdot>acks\<cdot>ack))" |
+   else tsMLscons\<cdot>(upApply2 Pair\<cdot>(up\<cdot>m)\<cdot>(up\<cdot>ack))\<cdot>(tsSnd\<cdot>(tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>m))\<cdot>msg)\<cdot>acks\<cdot>ack))" |
 
   (* if an input and ack is a tick \<Longrightarrow> send msg again plus a tick
      if transmission starts with tick \<Longrightarrow> #\<surd> acks=\<infinity> *)
-"msg\<noteq>\<bottom> \<Longrightarrow> tsSender\<cdot>(tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>m))\<cdot>msg)\<cdot>(tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>acks)\<cdot>ack 
-  = tsMLscons\<cdot>(upApply2 Pair\<cdot>(up\<cdot>m)\<cdot>(up\<cdot>ack))\<cdot>(delayFun\<cdot>(tsSender\<cdot>(tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>m))\<cdot>msg)\<cdot>acks\<cdot>ack))" |
+"msg\<noteq>\<bottom> \<Longrightarrow> tsSnd\<cdot>(tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>m))\<cdot>msg)\<cdot>(tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>acks)\<cdot>ack 
+  = tsMLscons\<cdot>(upApply2 Pair\<cdot>(up\<cdot>m)\<cdot>(up\<cdot>ack))\<cdot>(delayFun\<cdot>(tsSnd\<cdot>(tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>m))\<cdot>msg)\<cdot>acks\<cdot>ack))" |
 
   (* if input is a tick \<Longrightarrow> send tick *)
-"acks\<noteq>\<bottom> \<Longrightarrow> tsSender\<cdot>(tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>msg)\<cdot>acks\<cdot>ack
-                    = delayFun\<cdot>(tsSender\<cdot>msg\<cdot>acks\<cdot>ack)"
+"acks\<noteq>\<bottom> \<Longrightarrow> tsSnd\<cdot>(tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>msg)\<cdot>acks\<cdot>ack
+                    = delayFun\<cdot>(tsSnd\<cdot>msg\<cdot>acks\<cdot>ack)"
 
 (* ----------------------------------------------------------------------- *)
 subsection {* medium *}
@@ -69,55 +69,60 @@ section {* basic properties *}
 subsection {* sender *}
 (* ----------------------------------------------------------------------- *)
 
-declare tsSender.simps [simp del]
+declare tsSnd.simps [simp del]
 
-lemma tssender_strict [simp]:
-"tsSender\<cdot>\<bottom>\<cdot>\<bottom>\<cdot>ack = \<bottom>"
-"tsSender\<cdot>\<bottom>\<cdot>acks\<cdot>ack = \<bottom>"
-"tsSender\<cdot>msg\<cdot>\<bottom>\<cdot>ack = \<bottom>"
+lemma tssnd_strict [simp]:
+"tsSnd\<cdot>\<bottom>\<cdot>\<bottom>\<cdot>ack = \<bottom>"
+"tsSnd\<cdot>\<bottom>\<cdot>acks\<cdot>ack = \<bottom>"
+"tsSnd\<cdot>msg\<cdot>\<bottom>\<cdot>ack = \<bottom>"
 by (fixrec_simp)+
 
-lemma tssender_tslscons_msgtick [simp]: 
-  "msg\<noteq>\<bottom> \<Longrightarrow> tsSender\<cdot>(tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>m))\<cdot>msg)\<cdot>(tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>acks)\<cdot>ack 
+lemma tssnd_tslscons_msgtick [simp]: 
+  "msg\<noteq>\<bottom> \<Longrightarrow> tsSnd\<cdot>(tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>m))\<cdot>msg)\<cdot>(tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>acks)\<cdot>ack 
      = tsMLscons\<cdot>(upApply2 Pair\<cdot>(up\<cdot>m)\<cdot>(up\<cdot>ack))\<cdot>
-         (delayFun\<cdot>(tsSender\<cdot>(tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>m))\<cdot>msg)\<cdot>acks\<cdot>ack))"
+         (delayFun\<cdot>(tsSnd\<cdot>(tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>m))\<cdot>msg)\<cdot>acks\<cdot>ack))"
 by (fixrec_simp)
 
-lemma tssender_tslscons_msgack [simp]: 
-  "msg\<noteq>\<bottom> \<Longrightarrow> acks\<noteq>\<bottom> \<Longrightarrow> tsSender\<cdot>(tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>m))\<cdot>msg)\<cdot>(tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>a))\<cdot>acks)\<cdot>ack = 
-    (if (a = ack) then tsSender\<cdot>msg\<cdot>acks\<cdot>(Discr (\<not>(undiscr ack)))
-     else tsMLscons\<cdot>(upApply2 Pair\<cdot>(up\<cdot>m)\<cdot>(up\<cdot>ack))\<cdot>(tsSender\<cdot>(tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>m))\<cdot>msg)\<cdot>acks\<cdot>ack))"
+lemma tssnd_tslscons_msgack [simp]: 
+  "msg\<noteq>\<bottom> \<Longrightarrow> acks\<noteq>\<bottom> \<Longrightarrow> tsSnd\<cdot>(tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>m))\<cdot>msg)\<cdot>(tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>a))\<cdot>acks)\<cdot>ack = 
+    (if (a = ack) then tsSnd\<cdot>msg\<cdot>acks\<cdot>(Discr (\<not>(undiscr ack)))
+     else tsMLscons\<cdot>(upApply2 Pair\<cdot>(up\<cdot>m)\<cdot>(up\<cdot>ack))\<cdot>(tsSnd\<cdot>(tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>m))\<cdot>msg)\<cdot>acks\<cdot>ack))"
 by (fixrec_simp)
 
-lemma tssender_tslscons_tick [simp]: 
-  "acks\<noteq>\<bottom> \<Longrightarrow> tsSender\<cdot>(tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>msg)\<cdot>acks\<cdot>ack 
-                      = delayFun\<cdot>(tsSender\<cdot>msg\<cdot>acks\<cdot>ack)"
+lemma tssnd_tslscons_tick [simp]: 
+  "acks\<noteq>\<bottom> \<Longrightarrow> tsSnd\<cdot>(tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>msg)\<cdot>acks\<cdot>ack 
+                      = delayFun\<cdot>(tsSnd\<cdot>msg\<cdot>acks\<cdot>ack)"
 by (fixrec_simp)
 
-lemma tssender_delayfun_nack:
-  "msg\<noteq>\<bottom> \<Longrightarrow> tsSender\<cdot>(tsMLscons\<cdot>(updis m)\<cdot>msg)\<cdot>(delayFun\<cdot>acks)\<cdot>(Discr ack) 
-  = tsMLscons\<cdot>(updis (m, ack))\<cdot>(delayFun\<cdot>(tsSender\<cdot>(tsMLscons\<cdot>(updis m)\<cdot>msg)\<cdot>acks\<cdot>(Discr ack)))"
+lemma tssnd_delayfun_nack:
+  "msg\<noteq>\<bottom> \<Longrightarrow> tsSnd\<cdot>(tsMLscons\<cdot>(updis m)\<cdot>msg)\<cdot>(delayFun\<cdot>acks)\<cdot>(Discr ack) 
+  = tsMLscons\<cdot>(updis (m, ack))\<cdot>(delayFun\<cdot>(tsSnd\<cdot>(tsMLscons\<cdot>(updis m)\<cdot>msg)\<cdot>acks\<cdot>(Discr ack)))"
 by (simp add: delayfun_tslscons tsmlscons_lscons)
 
-lemma tssender_delayfun_bot:
-  "msg\<noteq>\<bottom> \<Longrightarrow> tsSender\<cdot>(tsMLscons\<cdot>(updis m)\<cdot>msg)\<cdot>(delayFun\<cdot>\<bottom>)\<cdot>(Discr ack) 
+lemma tssnd_delayfun_bot:
+  "msg\<noteq>\<bottom> \<Longrightarrow> tsSnd\<cdot>(tsMLscons\<cdot>(updis m)\<cdot>msg)\<cdot>(delayFun\<cdot>\<bottom>)\<cdot>(Discr ack) 
      = tsMLscons\<cdot>(updis (m, ack))\<cdot>(delayFun\<cdot>\<bottom>)"
 by (simp add: delayfun_tslscons tsmlscons_lscons)
 
-lemma tssender_mlscons_ack: "msg\<noteq>\<bottom> \<Longrightarrow> acks\<noteq>\<bottom> \<Longrightarrow>
-   tsSender\<cdot>(tsMLscons\<cdot>(updis m)\<cdot>msg)\<cdot>(tsMLscons\<cdot>(updis a)\<cdot>acks)\<cdot>(Discr a) 
-     = tsSender\<cdot>msg\<cdot>acks\<cdot>(Discr (\<not>a))"
+lemma tssnd_mlscons_ack: "msg\<noteq>\<bottom> \<Longrightarrow> acks\<noteq>\<bottom> \<Longrightarrow>
+   tsSnd\<cdot>(tsMLscons\<cdot>(updis m)\<cdot>msg)\<cdot>(tsMLscons\<cdot>(updis a)\<cdot>acks)\<cdot>(Discr a) 
+     = tsSnd\<cdot>msg\<cdot>acks\<cdot>(Discr (\<not>a))"
 by (simp add: tsmlscons_lscons)
 
-lemma tssender_mlscons_nack: "msg\<noteq>\<bottom> \<Longrightarrow> acks\<noteq>\<bottom> \<Longrightarrow> a\<noteq>ack \<Longrightarrow>
-   tsSender\<cdot>(tsMLscons\<cdot>(updis m)\<cdot>msg)\<cdot>(tsMLscons\<cdot>(updis a)\<cdot>acks)\<cdot>(Discr ack) 
-     = tsMLscons\<cdot>(updis (m, ack))\<cdot>(tsSender\<cdot>(tsMLscons\<cdot>(updis m)\<cdot>msg)\<cdot>acks\<cdot>(Discr ack))"
+lemma tssnd_mlscons_nack: "msg\<noteq>\<bottom> \<Longrightarrow> acks\<noteq>\<bottom> \<Longrightarrow> a\<noteq>ack \<Longrightarrow>
+   tsSnd\<cdot>(tsMLscons\<cdot>(updis m)\<cdot>msg)\<cdot>(tsMLscons\<cdot>(updis a)\<cdot>acks)\<cdot>(Discr ack) 
+     = tsMLscons\<cdot>(updis (m, ack))\<cdot>(tsSnd\<cdot>(tsMLscons\<cdot>(updis m)\<cdot>msg)\<cdot>acks\<cdot>(Discr ack))"
 by (simp add: tsmlscons_lscons)
 
-lemma tssender_delayfun:
-  "acks\<noteq>\<bottom> \<Longrightarrow> tsSender\<cdot>(delayFun\<cdot>msg)\<cdot>acks\<cdot>ack 
-                      = delayFun\<cdot>(tsSender\<cdot>msg\<cdot>acks\<cdot>ack)"
+lemma tssnd_delayfun:
+  "acks\<noteq>\<bottom> \<Longrightarrow> tsSnd\<cdot>(delayFun\<cdot>msg)\<cdot>acks\<cdot>ack 
+                      = delayFun\<cdot>(tsSnd\<cdot>msg\<cdot>acks\<cdot>ack)"
 by (simp add: delayfun_tslscons)
+
+(* ToDo: basic properties lemmata for sender *)
+
+lemma tssnd_nbot [simp]: "msg\<noteq>\<bottom> \<Longrightarrow> acks\<noteq>\<bottom> \<Longrightarrow> tsSnd\<cdot>msg\<cdot>acks\<cdot>(Discr ack) \<noteq> \<bottom>"
+oops
 
 (* ----------------------------------------------------------------------- *)
 subsection {* medium *}
@@ -183,6 +188,9 @@ oops
 lemma tsrecsnd_delayfun: "tsRecSnd\<cdot>(delayFun\<cdot>dat) = delayFun\<cdot>(tsRecSnd\<cdot>dat)"
 oops
 
+lemma tsrecsnd_inftick [simp]: "tsRecSnd\<cdot>tsInfTick = tsInfTick"
+oops
+
 lemma tsrecsnd_tstickcount [simp]: "#\<surd>(tsRecSnd\<cdot>dat) = #\<surd>dat"
 oops
 
@@ -193,6 +201,9 @@ lemma tsrec_strict [simp]: "tsRec\<cdot>\<bottom> = \<bottom>"
 oops
 
 lemma tsrec_delayfun: "tsRec\<cdot>(delayFun\<cdot>dat) = (delayFun\<cdot>(tsProjSnd\<cdot>dat), delayFun\<cdot>(tsRecSnd\<cdot>dat))"
+oops
+
+lemma tsrec_inftick [simp]: "tsRec\<cdot>tsInfTick = (tsInfTick, tsInfTick)"
 oops
 
 (* ----------------------------------------------------------------------- *)
@@ -223,6 +234,10 @@ section {* testing *}
 (* ----------------------------------------------------------------------- *)
 
 text {* equivalence classes: empty tstream, finite tstream, infinite tstream *}
+
+(* ----------------------------------------------------------------------- *)
+subsection {* sender *}
+(* ----------------------------------------------------------------------- *)
 
 (* ----------------------------------------------------------------------- *)
 subsection {* medium *}
@@ -274,7 +289,8 @@ oops
 lemma "tsRec\<cdot>tsRecExampInp = (tsRecExampOut_1, tsRecExampInp_2)"
 oops
 
-lemma "tsRec\<cdot>(tsRecExampInp \<bullet> tsInfTick) = (tsRecExampOut_1 \<bullet> tsInfTick, tsRecExampInp_2 \<bullet> tsInfTick)"
+lemma 
+  "tsRec\<cdot>(tsRecExampInp \<bullet> tsInfTick) = (tsRecExampOut_1 \<bullet> tsInfTick, tsRecExampInp_2 \<bullet> tsInfTick)"
 oops
     
 end
