@@ -124,11 +124,14 @@ by (simp add: delayfun_tslscons)
 lemma tssnd_nbot [simp]: "msg\<noteq>\<bottom> \<Longrightarrow> acks\<noteq>\<bottom> \<Longrightarrow> tsSnd\<cdot>msg\<cdot>acks\<cdot>(Discr ack) \<noteq> \<bottom>"
 oops
 
+lemma tssnd_inftick: "acks\<noteq>\<bottom> \<Longrightarrow> tsSnd\<cdot>tsInfTick\<cdot>acks\<cdot>ack = tsInfTick"
+oops
+
 (* ----------------------------------------------------------------------- *)
 subsection {* medium *}
 (* ----------------------------------------------------------------------- *)
 
-(* Assumption for medium  lemmata: #({True} \<ominus> ora)=\<infinity> *)
+text {* Assumption for medium lemmata: #({True} \<ominus> ora)=\<infinity> *}
 
 lemma tsmed_insert: "tsMed\<cdot>msg\<cdot>ora = tsProjFst\<cdot>(tsFilter {x. snd x}\<cdot>(tsZip\<cdot>msg\<cdot>ora))"
 by (simp add: tsMed_def)
@@ -209,6 +212,51 @@ oops
 (* ----------------------------------------------------------------------- *)
 section {* additional properties *}
 (* ----------------------------------------------------------------------- *)
+
+(* ----------------------------------------------------------------------- *)
+subsection {* sender *}
+(* ----------------------------------------------------------------------- *)
+
+(* ToDo: additional properties lemmata for sender, first show testings below *)
+
+text {* lemmata for sender, see BS01, page 103 
+
+   fds = stream of transmitted messages
+   fb = corresponding stream of bits
+   fas = stream of received acknowledgments
+   i = input stream
+   as = acks stream
+   ds = output stream 
+*}
+
+text {* fds \<sqsubseteq> i where fds = map(\<alpha>.ds, \<Pi>1) 
+        fds is a prefix of i *}
+lemma tssnd_prefix_inp: "tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(tsSnd\<cdot>i\<cdot>as\<cdot>ack))) \<sqsubseteq> tsAbs\<cdot>i"
+oops
+
+text {* \<alpha>.fb = fb  where fb = map(\<alpha>.ds, \<Pi>2)
+        each new data element from i is assigned a bit different from the bit assigned to 
+        the previous one *}
+lemma tssnd_alt_bit:
+  "tsAbs\<cdot>(tsRemDups\<cdot>(tsProjSnd\<cdot>(tsRemDups\<cdot>(tsSnd\<cdot>i\<cdot>as\<cdot>ack))))
+    = tsAbs\<cdot>(tsProjSnd\<cdot>(tsRemDups\<cdot>(tsSnd\<cdot>i\<cdot>acks\<cdot>ack)))"
+oops
+
+text {* #fds = min{#i, #fas+1} where fds = map(\<alpha>.ds, \<Pi>1), fas = \<alpha>.as 
+        when an acknowledgment is received then the next data next data element will eventually
+        be transmitted given that there are more data elements to transmit *}
+lemma tssnd_ack2trans:
+  "#(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(tsSnd\<cdot>i\<cdot>as\<cdot>ack)))) 
+     = min (#(tsAbs\<cdot>i)) (lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>as))))"
+oops
+
+
+text {* #i > #fas \<Longrightarrow> #ds = \<infinity> where fas = \<alpha>.as
+        if a data element is never acknowledged despite repetitive transmission by the sender 
+        then the sender never stops transmitting this data element *}
+lemma tssnd_nack2inftrans:
+  "#(tsAbs\<cdot>i) > #(tsAbs\<cdot>(tsRemDups\<cdot>as)) \<Longrightarrow> #(tsAbs\<cdot>(tsSnd\<cdot>i\<cdot>as\<cdot>ack)) = \<infinity>"
+oops
 
 (* ----------------------------------------------------------------------- *)
 subsection {* medium *}
