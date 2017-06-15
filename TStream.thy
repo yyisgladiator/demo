@@ -1932,6 +1932,14 @@ lemma tsprojfst_tstickcount [simp]: "#\<surd>(tsProjFst\<cdot>ts) = #\<surd>ts"
 lemma tsprojsnd_tstickcount [simp]: "#\<surd>(tsProjSnd\<cdot>ts) = #\<surd>ts"
   by (simp add: tsProjSnd_def)
 
+(* ToDo: lemmata for tsprojfst/snd *)
+
+lemma tsprojfst_tsabs: "tsAbs\<cdot>(tsProjFst\<cdot>ts) = sprojfst\<cdot>(tsAbs\<cdot>ts)"
+oops
+
+lemma tsprojsnd_tsabs: "tsAbs\<cdot>(tsProjSnd\<cdot>ts) = sprojsnd\<cdot>(tsAbs\<cdot>ts)"
+oops
+
 lemma tsprojfst_tsabs_slen [simp]: "#(tsAbs\<cdot>(tsProjFst\<cdot>ts)) = #(tsAbs\<cdot>ts)"
   by (simp add: tsProjFst_def)
 
@@ -1976,6 +1984,11 @@ lemma tsfilter_tstickcount [simp]: "#\<surd>(tsFilter M\<cdot>ts) = #\<surd>ts"
 
 lemma tsfilter_weak:"tsWeakCausal (Rep_cfun (tsFilter M))"
   by (subst tsWeak2cont2, auto)
+
+(* ToDo: lemma for tsfilter *)
+
+lemma tsfilter_tsabs: "tsAbs\<cdot>(tsFilter M\<cdot>ts) = sfilter M\<cdot>(tsAbs\<cdot>ts)"
+oops
 
 lemma tsfilter_tsabs_slen [simp]: "#(tsAbs\<cdot>(tsFilter M\<cdot>ts)) \<le> #(tsAbs\<cdot>ts)"
 apply (simp add: tsfilter_unfold tsAbs_def tsfilter_h_well)
@@ -2971,6 +2984,12 @@ lemma tszip_tsabs_slen [simp]: "#xs=\<infinity> \<Longrightarrow> #(tsAbs\<cdot>
       using f4 a3 a2 by (simp add: slen_updis_eq tsabs_mlscons)
   qed
 
+(* ToDo: lemma for tszip *)
+
+lemma tszip_tsprojfst_rev: 
+  "#xs=\<infinity> \<Longrightarrow> tsProjFst\<cdot>(tsZip\<cdot>ts\<cdot>xs) = ts"
+oops
+
 (* ----------------------------------------------------------------------- *)
 subsection {* tsRemDups *}
 (* ----------------------------------------------------------------------- *)   
@@ -3061,6 +3080,17 @@ lemma tsremdups_h_nbot2 [simp]: "ts\<noteq>\<bottom> \<Longrightarrow> tsRemDups
 
 lemma tsremdups_nbot [simp]: "ts\<noteq>\<bottom> \<Longrightarrow> tsRemDups\<cdot>ts \<noteq> \<bottom>"
  by (simp add: tsRemDups_def)
+
+(* ToDo: lemmata for tsremdups *)
+
+lemma tsremdups_h_tsabs: "tsAbs\<cdot>(tsRemDups_h\<cdot>ts\<cdot>None) = tsAbs\<cdot>(tsRemDups_h\<cdot>ts\<cdot>(Some (Discr t)))"
+oops
+
+lemma tsremdups_tsabs: "tsAbs\<cdot>(tsRemDups\<cdot>ts) = srcdups\<cdot>(tsAbs\<cdot>ts)"
+oops
+
+lemma tsremdups_tsabs_slen [simp]: "#(tsAbs\<cdot>(tsRemDups\<cdot>ts)) \<le> #(tsAbs\<cdot>ts)"
+oops
 
 (*TODO
 

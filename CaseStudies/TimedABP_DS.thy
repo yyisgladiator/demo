@@ -15,12 +15,6 @@ default_sort countable
 
 (* here I just try a few things. *)
 
-lemma tssnd_tstickcount: "#\<surd>(tsSnd\<cdot>msg\<cdot>acks\<cdot>ack) \<le> #\<surd>msg"
-oops
-
-lemma tssnd_tsabs_slen: "#(tsAbs\<cdot>(tsSnd\<cdot>msg\<cdot>acks\<cdot>ack)) \<le> #(tsAbs\<cdot>msg)"
-oops
-
 
 
 lift_definition tsExampInp_1 :: "nat tstream" is

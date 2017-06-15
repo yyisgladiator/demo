@@ -14,24 +14,26 @@ default_sort countable
 
 (* here I just try a few things. *)
 
-lemma tsabs_slen_adm [simp]: "adm (\<lambda>a. #(tsAbs\<cdot>(f\<cdot>a)) \<le> #(tsAbs\<cdot>a))"
-oops
-
-lemma tsremdups_h_tsabs_slen:
-  "#(tsAbs\<cdot>(tsRemDups_h\<cdot>ts\<cdot>(Some (Discr t)))) \<le> #(tsAbs\<cdot>(tsRemDups_h\<cdot>ts\<cdot>None))"
-apply (induction ts arbitrary: t)
+(* Assumptions *)
+lemma tszip_tsprojsnd_rev: 
+  "#\<surd>ts=\<infinity> \<Longrightarrow> tsAbs\<cdot>(tsProjSnd\<cdot>(tsZip\<cdot>ts\<cdot>xs)) = xs"
+apply (induction xs arbitrary: ts)
 apply (simp_all)
 oops
 
-lemma tsremdups_tsabs_slen [simp]: "#(tsAbs\<cdot>(tsRemDups\<cdot>ts)) \<le> #(tsAbs\<cdot>ts)"
-apply (induction ts)
+lemma tszip_tstickcount_leq [simp]: "#\<surd>ts \<le> #\<surd>(tsZip\<cdot>ts\<cdot>xs)"
+apply (induction ts arbitrary: xs)
 apply (simp_all)
-apply (simp add: tsremdups_insert)
 oops
+
+lemma tsabs_slen_adm [simp]: "adm (\<lambda>a. #(tsAbs\<cdot>(f\<cdot>a\<cdot>xs)) \<le> #(tsAbs\<cdot>a))"
+sorry
 
 lemma tszip_tsabs_slen_leq [simp]: "#(tsAbs\<cdot>(tsZip\<cdot>ts\<cdot>xs)) \<le> #(tsAbs\<cdot>ts)"
-apply (induction ts)
+apply (induction ts arbitrary: xs)
 apply (simp_all)
+apply (metis tsZip.simps(1) tsabs_delayfun tszip_delayfun)
+apply (case_tac "xs=\<bottom>", simp)
 oops
 
 
