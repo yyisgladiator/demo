@@ -13,6 +13,8 @@ imports TimedABP
 begin
 default_sort countable
 
+(* here I just try a few things. *)
+
 lemma tssnd_tstickcount: "#\<surd>(tsSnd\<cdot>msg\<cdot>acks\<cdot>ack) \<le> #\<surd>msg"
 oops
 

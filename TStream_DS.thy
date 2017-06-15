@@ -17,7 +17,7 @@ default_sort countable
 lemma tsabs_slen_adm [simp]: "adm (\<lambda>a. #(tsAbs\<cdot>(f\<cdot>a)) \<le> #(tsAbs\<cdot>a))"
 oops
 
-lemma tsremdups_h_tsabs_slen: 
+lemma tsremdups_h_tsabs_slen:
   "#(tsAbs\<cdot>(tsRemDups_h\<cdot>ts\<cdot>(Some (Discr t)))) \<le> #(tsAbs\<cdot>(tsRemDups_h\<cdot>ts\<cdot>None))"
 apply (induction ts arbitrary: t)
 apply (simp_all)
