@@ -119,8 +119,106 @@ definition tsTakeL :: "lnat \<rightarrow> 'a tstream \<rightarrow> 'a tstream" w
 lemma conttsTakeL1[simp]: "cont (\<lambda> ts. if l = \<infinity> then ts else (ts \<down> (THE n. Fin n = l)))"
   by simp
     
-lemma conttsTakeL2[simp]: "cont (\<lambda> l. \<Lambda> ts. if l = \<infinity> then ts else (ts \<down> (THE n. Fin n = l)))"
+lemma ttsTakeL2_monofun_pre: assumes "x \<sqsubseteq> y" 
+shows "(if x = \<infinity> then ts else (ts \<down> THE n. (Fin n = x)) ) \<sqsubseteq> (if y = \<infinity> then ts else (ts \<down> THE n. (Fin n = y)) )"
+proof (cases "y = \<infinity>")
+  case True
+  then show ?thesis
+    by auto
+next
+  case False
+  have f1: "y < \<infinity>" 
+  by (simp add: False less_le)
+  obtain j where f2: "y = Fin j"
+    by (metis f1 infI neq_iff)
+  have f3: "x < \<infinity>"
+    using assms f2 less_le by fastforce
+  obtain k where f4: "x = Fin k"
+    by (metis f3 infI neq_iff)
+  have f5: "k \<le> j"
+    using assms f2 f4 less2nat_lemma lnle_conv by blast
+  then show ?thesis
+    apply (simp add: f1 f2 f4)
+    by (metis tsTake2take tsTake_prefix tstake_less)
+qed
+  
+lemma chain_tsTakeL2: assumes "chain Y"
+  shows "chain (\<lambda> i. if Y i = \<infinity> then ts else (ts \<down> THE n. (Fin n = Y i)) )"
   sorry
+    
+lemma tstake_mono1: assumes "x \<le> y"
+  shows "(ts \<down> x) \<sqsubseteq> (ts \<down> y)"
+    sorry
+    
+lemma chain_tsTakeL23: assumes "chain Y"
+  shows "chain (\<lambda> i. (ts \<down> THE n. (Fin n = Y i)) )"
+  sorry
+    
+lemma asym_insert: assumes "(a::'a tstream) \<sqsubseteq> b" and "b \<sqsubseteq> a"
+  shows "a = b"
+  by (simp add: assms(1) assms(2) po_eq_conv)
+    
+  
+lemma conttsTakeL2_cont_pre: assumes "chain Y"
+  shows "(if (\<Squnion>i. Y i) = \<infinity> then ts else (ts \<down> THE n. (Fin n = (\<Squnion>i. Y i))) ) \<sqsubseteq> (\<Squnion>i. if Y i = \<infinity> then ts else (ts \<down> THE n. (Fin n = Y i)) )"
+proof (cases "\<forall>i. Y i \<noteq> \<infinity>")
+  case True
+    have t1: "(\<Squnion>i. if Y i = \<infinity> then ts else (ts \<down> THE n. (Fin n = Y i))) = (\<Squnion>i. (ts \<down> THE n. (Fin n = Y i)))"
+      by (simp add: True)
+    show ?thesis
+    proof (cases "(\<Squnion>i. Y i) = \<infinity>")
+      case True
+      then show ?thesis
+        apply (simp only: t1)
+        sorry
+    next
+      case False
+        obtain j where b1: "Y j = (\<Squnion>i. Y i)"
+          using False assms l42 unique_inf_lub by fastforce
+        obtain k where b3: "Y j = Fin k"
+          by (metis True infI)
+        have b2: "(\<Squnion>i. (ts \<down> THE n. (Fin n = Y i))) = (ts \<down> THE n. (Fin n = Y j) )"
+          apply (rule lub_chain_maxelem, simp_all)
+          apply (subst tstake_mono1, simp_all)
+          apply (simp add: b3)
+        proof -
+          fix i
+          have b5: "Y i \<sqsubseteq> Y j"
+            using assms b1 is_ub_thelub by fastforce
+          obtain k2 where b4: "Y i = Fin k2"
+            using True infI by blast
+          thus "(THE n. Fin n = Y i) \<le> k"
+              using b5 b3 b4 by auto
+        qed
+      then show ?thesis
+        by (simp only: t1 False b2 b1, simp)
+    qed
+      
+next
+  case False
+  obtain j where f1: "Y j = \<infinity>"
+      using False by auto
+  have f2: "(\<Squnion>i. Y i) = \<infinity>"
+    by (metis False assms inf_less_eq is_ub_thelub lnle_conv)
+  moreover
+  have f3: "(\<Squnion>i. if Y i = \<infinity> then ts else (ts \<down> THE n. (Fin n = Y i)) ) 
+              = (if Y j = \<infinity> then ts else (ts \<down> THE n. (Fin n = Y j)))"
+    apply (rule po_class.below_antisym)
+    using assms chain_tsTakeL2 f1 lub_below tsTake_prefix apply fastforce
+    using assms below_lub chain_tsTakeL2 by blast
+  ultimately
+  show ?thesis
+    by (simp add: f1)
+qed
+  
+  
+
+    
+lemma conttsTakeL2[simp]: "cont (\<lambda> l. \<Lambda> ts. if l = \<infinity> then ts else (ts \<down> (THE n. Fin n = l)))"
+  apply (rule cont2cont_LAM, simp_all)
+  apply (rule contI2)
+   apply (rule monofunI, simp only: ttsTakeL2_monofun_pre)
+    using conttsTakeL2_cont_pre by blast
 
 
 (* returns the first n blocks of the TSB *)
