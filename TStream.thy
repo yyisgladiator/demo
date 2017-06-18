@@ -1904,6 +1904,16 @@ lemma tsmap_tsabs_slen [simp]: "#(tsAbs\<cdot>(tsMap f\<cdot>ts)) = #(tsAbs\<cdo
 lemma tsmap_nbot [simp]: "ts\<noteq>\<bottom> \<Longrightarrow> tsMap f \<cdot> ts \<noteq> \<bottom>"
   by (rule ccontr, simp add: tsmap_strict_rev)
 
+(* ToDo: lemmata for tsmap *)
+
+text {* tsMap only produce elements in the range of the mapped function f *}
+lemma tsmap_tsdom_range: "tsDom\<cdot>(tsMap f\<cdot>ts) \<subseteq> range f"
+oops
+
+text {* every element produced by (tsMap f) is in the image of the function f *}
+lemma tsmap_tsdom: "tsDom\<cdot>(tsMap f\<cdot>ts) =  f ` tsDom\<cdot>ts"
+oops
+
 (* tsProjFst and tsProjSnd *)
 thm tsProjFst_def
 thm tsProjSnd_def
@@ -1989,6 +1999,12 @@ oops
 lemma tsfilter_tsabs_slen [simp]: "#(tsAbs\<cdot>(tsFilter M\<cdot>ts)) \<le> #(tsAbs\<cdot>ts)"
 apply (simp add: tsfilter_unfold tsAbs_def tsfilter_h_well)
 by (metis inf_commute int_sfilterl1 slen_sfilterl1)
+
+(* ToDo: lemma for tsfilter *)
+
+text {* tsFilter removes elements of the domain *}
+lemma tsfilter_tsdom: "tsDom\<cdot>(tsFilter M\<cdot>ts) \<subseteq> tsDom\<cdot>ts"
+oops
 
 (* tsscanl *)
 
@@ -2857,6 +2873,15 @@ assumes adm: "adm P" and bottom: "P \<bottom>"
 by (metis adm bottom delayfun mlscons tstream_fin_induct tstream_infs)
 
 (* ----------------------------------------------------------------------- *)
+subsection {* admissibility rules *}
+(* ----------------------------------------------------------------------- *)
+
+(* ToDo: admissibility lemma *)
+
+lemma [simp]: "\<And>f ts. adm (\<lambda>a. tsDom\<cdot>(f\<cdot>a\<cdot>ts) \<subseteq> tsDom\<cdot>a)"
+oops
+
+(* ----------------------------------------------------------------------- *)
 section {* tscases *}
 (* ----------------------------------------------------------------------- *)  
 
@@ -3075,7 +3100,7 @@ apply (simp add: tsremdups_h_mlscons_ndup)
 by (simp add: tsremdups_h_mlscons_dup)
 
 lemma tsremdups_h_nbot2 [simp]: "ts\<noteq>\<bottom> \<Longrightarrow> tsRemDups_h\<cdot>ts\<cdot>None \<noteq> \<bottom>"
-  apply (induction ts arbitrary: a)
+  apply (induction ts)
   apply (simp_all)
   apply (simp add: tsremdups_h_delayfun)
   by (simp add: tsremdups_h_mlscons)

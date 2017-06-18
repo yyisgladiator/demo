@@ -2,7 +2,7 @@
     Author:       Dennis Slotboom
     e-mail:       dennis.slotboom@rwth-aachen.de
 
-    Description:  Workspace for the  Definition of Alternating Bit Protocol on Timed Streams
+    Description:  Workspace for the Definition of Alternating Bit Protocol on Timed Streams
 *)
 
 chapter {* Alternating Bit Protocol *}       
@@ -13,19 +13,31 @@ imports TimedABP
 begin
 default_sort countable
 
-(* here I just try a few things. *)
+(* here I just try a few things *)
 
-lemma [simp]: "\<And>f ts. adm (\<lambda>a. tsDom\<cdot>(f\<cdot>a\<cdot>ts) \<subseteq> tsDom\<cdot>a)"
-apply (rule admI)
-by (smt Collect_mono_iff ch2ch_Rep_cfunL ch2ch_Rep_cfunR contlub_cfun_arg contlub_cfun_fun
-    is_ub_thelub monofun_cfun_arg set_cpo_simps(1) subset_cont tsdom_insert)
+lemma tssnd_nbot [simp]: "msg\<noteq>\<bottom> \<Longrightarrow> acks\<noteq>\<bottom> \<Longrightarrow> tsSnd\<cdot>msg\<cdot>acks\<cdot>(Discr ack) \<noteq> \<bottom>"
+  apply (induction msg arbitrary: acks ack)
+  apply (simp_all)
+  apply (simp add: tssnd_delayfun)
+  apply (rule_tac ts=acks in tscases, auto)
+  apply (simp add: tssnd_delayfun_nack)
+  apply (case_tac "a\<noteq>ack", auto)
+  oops
 
-lemma "#ora=\<infinity> \<Longrightarrow> tsDom\<cdot>(tsMed\<cdot>msg\<cdot>ora) \<subseteq> tsDom\<cdot>msg"
-apply (induction msg)
-apply (simp_all)
+lemma h1: "adm (\<lambda>a. \<forall>x. x \<noteq> \<bottom> \<longrightarrow> (\<forall>xa. #\<surd> a \<le> #\<surd> tsSnd\<cdot>a\<cdot>x\<cdot>(Discr xa)))"
 oops
 
+(*
+lemma tssnd_tstickcount: "acks\<noteq>\<bottom> \<Longrightarrow> #\<surd>msg \<le> #\<surd>(tsSnd\<cdot>msg\<cdot>acks\<cdot>(Discr ack))"
+  apply (induction msg arbitrary: acks ack)
+  apply (simp_all add: h1 tssnd_delayfun)
+  apply (simp add: delayfun_insert)
+  apply (rule_tac ts=acks in tscases, auto)
+  apply (simp add: tssnd_delayfun_nack tstickcount_mlscons)
+oops
+*)
 
+(* simple test for sender *)
 
 lift_definition tsExampInp_1 :: "nat tstream" is
   "<[Msg 1, Msg 2, \<surd>, Msg 1, \<surd>]>"

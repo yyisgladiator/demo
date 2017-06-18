@@ -12,10 +12,29 @@ imports TStream
 begin  
 default_sort countable
 
-(* here I just try a few things. *)
+(* here I just try a few things *)
+
+lemma tsremdups_h_tsdom: "tsDom\<cdot>(tsRemDups_h\<cdot>ts\<cdot>(Some (Discr t))) = tsDom\<cdot>ts"
+apply (induction ts arbitrary: t)
+apply (simp_all)
+apply (simp add: tsremdups_h_delayfun tsdom_delayfun)
+apply (case_tac "t\<noteq>ta")
+apply (simp add: tsremdups_h_mlscons tsremdups_h_mlscons_ndup tsdom_mlscons)
+apply (simp add: tsremdups_h_mlscons tsremdups_h_mlscons_dup tsdom_mlscons)
+oops
+
+lemma tsremdups_tsdom:
+  "tsDom\<cdot>(tsRemDups\<cdot>ts) = tsDom\<cdot>ts"
+oops
+
+(*
+lemma tszip_tsdom:
+  "#xs=\<infinity> \<Longrightarrow> tsDom\<cdot>(tsZip\<cdot>ts\<cdot>xs) = "
+oops
+*)
 
 (* Assumptions *)
-lemma tszip_tsprojsnd_rev: 
+lemma tszip_tsprojsnd_rev:
   "#\<surd>ts=\<infinity> \<Longrightarrow>  #xs=\<infinity> \<Longrightarrow> tsAbs\<cdot>(tsProjSnd\<cdot>(tsZip\<cdot>ts\<cdot>xs)) = xs"
 apply (induction xs arbitrary: ts)
 apply (simp_all)
@@ -36,6 +55,8 @@ apply (rule_tac ts=ts in tscases, auto)
 oops
 
 lemma tsabs_slen_adm [simp]: "\<And>f xs. adm (\<lambda>a. #(tsAbs\<cdot>(f\<cdot>a\<cdot>xs)) \<le> #(tsAbs\<cdot>a))"
+apply (rule admI)
+apply (simp add: contlub_cfun_arg contlub_cfun_fun tsabs_insert)
 oops
 
 lemma tszip_tsabs_slen_leq [simp]: "#(tsAbs\<cdot>(tsZip\<cdot>ts\<cdot>xs)) \<le> #(tsAbs\<cdot>ts)"
@@ -43,7 +64,7 @@ apply (induction ts arbitrary: xs)
 apply (simp_all)
 oops
 
-
+(* simple test for tsremdups/tszip *)
 
 lift_definition tsExampInp :: "nat tstream" is "<[Msg 1, Msg 2, \<surd>, Msg 2, \<surd>]>"
 by (subst ts_well_def, auto)
