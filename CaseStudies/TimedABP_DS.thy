@@ -15,27 +15,35 @@ default_sort countable
 
 (* here I just try a few things *)
 
-lemma tssnd_nbot [simp]: "msg\<noteq>\<bottom> \<Longrightarrow> acks\<noteq>\<bottom> \<Longrightarrow> tsSnd\<cdot>msg\<cdot>acks\<cdot>(Discr ack) \<noteq> \<bottom>"
-  apply (induction msg arbitrary: acks ack)
-  apply (simp_all)
-  apply (simp add: tssnd_delayfun)
-  apply (rule_tac ts=acks in tscases, auto)
-  apply (simp add: tssnd_delayfun_nack)
-  apply (case_tac "a\<noteq>ack", auto)
-  oops
-
 lemma h1: "adm (\<lambda>a. \<forall>x. x \<noteq> \<bottom> \<longrightarrow> (\<forall>xa. #\<surd> a \<le> #\<surd> tsSnd\<cdot>a\<cdot>x\<cdot>(Discr xa)))"
-oops
+sorry
 
-(*
+lemma h3: "adm (\<lambda>a. \<forall>x. x \<noteq> \<bottom> \<longrightarrow> a \<noteq> \<bottom> \<longrightarrow> (\<forall>xa. #\<surd> tsSnd\<cdot>x\<cdot>a\<cdot>(Discr xa) \<le> #\<surd> tsSnd\<cdot>(tsMLscons\<cdot>(updis t)\<cdot>x)\<cdot>a\<cdot>(Discr xa)))"
+sorry
+
+lemma h2: "msg \<noteq> \<bottom> \<Longrightarrow> acks \<noteq> \<bottom> \<Longrightarrow> 
+  #\<surd> tsSnd\<cdot>msg\<cdot>acks\<cdot>(Discr ack) \<le> #\<surd> tsSnd\<cdot>(tsMLscons\<cdot>(updis t)\<cdot>msg)\<cdot>acks\<cdot>(Discr ack)"
+  apply (induction acks arbitrary: t msg ack)
+  apply (simp_all)
+  apply (simp add: h3)
+  apply (simp add: tssnd_delayfun_nack tstickcount_mlscons)
+sorry
+
 lemma tssnd_tstickcount: "acks\<noteq>\<bottom> \<Longrightarrow> #\<surd>msg \<le> #\<surd>(tsSnd\<cdot>msg\<cdot>acks\<cdot>(Discr ack))"
   apply (induction msg arbitrary: acks ack)
-  apply (simp_all add: h1 tssnd_delayfun)
-  apply (simp add: delayfun_insert)
-  apply (rule_tac ts=acks in tscases, auto)
-  apply (simp add: tssnd_delayfun_nack tstickcount_mlscons)
-oops
-*)
+  apply (simp_all)
+  apply (simp add: h1)
+  apply (metis delayFun_def eta_cfun lnsuc_lnle_emb tssnd_delayfun tstickcount_tscons)
+proof -
+  fix msga :: "'a tstream" and t :: 'a and acksa :: "bool tstream" and acka :: bool
+  assume a1: "msga \<noteq> \<bottom>"
+  assume a2: "acksa \<noteq> \<bottom>"
+  assume "\<And>acks ack. acks \<noteq> \<bottom> \<Longrightarrow> #\<surd> msga \<le> #\<surd> tsSnd\<cdot>msga\<cdot>acks\<cdot>(Discr ack)"
+  then have "\<And>b. #\<surd> msga \<le> #\<surd> tsSnd\<cdot>msga\<cdot>acksa\<cdot>(Discr b)"
+    using a2 by metis
+  then show "#\<surd> tsMLscons\<cdot>(updis t)\<cdot>msga \<le> #\<surd> tsSnd\<cdot>(tsMLscons\<cdot>(updis t)\<cdot>msga)\<cdot> acksa\<cdot> (Discr acka)"
+    using a2 a1 by (metis (no_types) h2 trans_lnle tstickcount_mlscons)
+qed
 
 (* simple test for sender *)
 

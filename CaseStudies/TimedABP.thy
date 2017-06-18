@@ -121,10 +121,22 @@ by (simp add: delayfun_tslscons)
 
 (* ToDo: basic properties lemmata for sender *)
 
-lemma tssnd_nbot [simp]: "msg\<noteq>\<bottom> \<Longrightarrow> acks\<noteq>\<bottom> \<Longrightarrow> tsSnd\<cdot>msg\<cdot>acks\<cdot>(Discr ack) \<noteq> \<bottom>"
-oops
+lemma tssnd_nbot2 [simp]: "msg\<noteq>\<bottom> \<Longrightarrow> tsSnd\<cdot>msg\<cdot>(delayFun\<cdot>acks)\<cdot>(Discr ack) \<noteq> \<bottom>"
+  apply (induction msg arbitrary: acks ack)
+  apply (simp_all)
+  apply (simp add: tssnd_delayfun)
+  by (simp add: tssnd_delayfun_nack)
 
-lemma tssnd_tstickcount: "#\<surd>msg \<le> #\<surd>(tsSnd\<cdot>msg\<cdot>acks\<cdot>ack)"
+lemma tssnd_nbot [simp]: "msg\<noteq>\<bottom> \<Longrightarrow> acks\<noteq>\<bottom> \<Longrightarrow> tsSnd\<cdot>msg\<cdot>acks\<cdot>(Discr ack) \<noteq> \<bottom>"
+  apply (induction acks arbitrary: msg ack)
+  apply (simp_all)
+  apply (rule_tac ts=msg in tscases, simp_all)
+  apply (simp add: tssnd_delayfun)
+  apply (case_tac "t=ack", simp_all)
+  apply (metis tsmlscons_nbot_rev tssnd_mlscons_ack)
+  by (metis tsmlscons_bot2 tsmlscons_nbot tssnd_mlscons_nack up_defined)
+
+lemma tssnd_tstickcount: "acks\<noteq>\<bottom> \<Longrightarrow> #\<surd>msg \<le> #\<surd>(tsSnd\<cdot>msg\<cdot>acks\<cdot>(Discr ack))"
 oops
 
 lemma tssnd_tsabs_slen: "#(tsAbs\<cdot>msg) \<le> #(tsAbs\<cdot>(tsSnd\<cdot>msg\<cdot>acks\<cdot>ack))"

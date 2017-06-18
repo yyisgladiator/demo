@@ -1889,7 +1889,7 @@ lemma tsmap_tstickcount[simp]:  "#\<surd>(tsMap f\<cdot>ts) = #\<surd>ts"
   apply(simp add:tsmap_h_well)
   by(simp add: tsmap_h_fair)
 
-lemma tsmap_strict_rev: "tsMap f \<cdot> ts = \<bottom> \<Longrightarrow> ts = \<bottom>"
+lemma tsmap_strict_rev: "tsMap f\<cdot>ts = \<bottom> \<Longrightarrow> ts=\<bottom>"
   by (metis strict_tstickcount ts_0ticks tsmap_tstickcount)
 
 lemma tsmap_weak:"tsWeakCausal (Rep_cfun (tsMap f))"
@@ -1901,7 +1901,7 @@ lemma tsmap_tsabs_slen [simp]: "#(tsAbs\<cdot>(tsMap f\<cdot>ts)) = #(tsAbs\<cdo
   apply (simp add: tsmap_h_well)
   by (simp add: tsmap_h_fair2)
 
-lemma tsmap_nbot [simp]: "ts\<noteq>\<bottom> \<Longrightarrow> tsMap f \<cdot> ts \<noteq> \<bottom>"
+lemma tsmap_nbot [simp]: "ts\<noteq>\<bottom> \<Longrightarrow> tsMap f\<cdot>ts \<noteq> \<bottom>"
   by (rule ccontr, simp add: tsmap_strict_rev)
 
 (* ToDo: lemmata for tsmap *)
@@ -2567,7 +2567,10 @@ lemma tsmlscons_bot2 [simp]: "tsMLscons\<cdot>t\<cdot>\<bottom> = \<bottom>"
     by(auto simp add: tslscons_insert upapply_insert)
     
 lemma tsmlscons_nbot [simp]: "t\<noteq>\<bottom> \<Longrightarrow>ts \<noteq>\<bottom> \<Longrightarrow> tsMLscons\<cdot>t\<cdot>ts \<noteq>\<bottom>"    
-  by(simp add: tsMLscons_def)    
+  by(simp add: tsMLscons_def)
+
+lemma tsmlscons_nbot_rev: "tsMLscons\<cdot>(updis a)\<cdot>as \<noteq> \<bottom> \<Longrightarrow> as\<noteq>\<bottom>"
+  using tsmlscons_bot2 by blast   
 
 lemma tsmlscons_lscons: "tsMLscons\<cdot>(up\<cdot>t)\<cdot>ts = tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>t))\<cdot>ts"
   by(simp add: uMsg_def tsMLscons_def)
