@@ -14,17 +14,47 @@ default_sort countable
 
 (* here I just try a few things *)
 
-lemma tsremdups_h_tsdom: "tsDom\<cdot>(tsRemDups_h\<cdot>ts\<cdot>(Some (Discr t))) = tsDom\<cdot>ts"
-apply (induction ts arbitrary: t)
-apply (simp_all)
-apply (simp add: tsremdups_h_delayfun tsdom_delayfun)
-apply (case_tac "t\<noteq>ta")
-apply (simp add: tsremdups_h_mlscons tsremdups_h_mlscons_ndup tsdom_mlscons)
-apply (simp add: tsremdups_h_mlscons tsremdups_h_mlscons_dup tsdom_mlscons)
+lemma tsremdups_h_tsdom: "tsDom\<cdot>(tsRemDups_h\<cdot>(tsMLscons\<cdot>(updis t)\<cdot>ts)\<cdot>(Some (Discr t))) = tsDom\<cdot>ts"
+  apply (induction ts)
+  apply (simp_all)
+  apply (metis delayfun_nbot tsdom_delayfun tsmlscons_lscons tsremdups_h_delayfun 
+         tsremdups_h_strict tsremdups_h_tslscons_dup)
+  apply (simp add: tsdom_mlscons tsremdups_h_mlscons_dup)
+  apply (subst tsremdups_h_mlscons_ndup, simp add: tsdom_mlscons)
 oops
+
+(* see ToDo *)
+lemma [simp]: "\<And>f ts. adm (\<lambda>a. tsDom\<cdot>(f\<cdot>a\<cdot>ts) \<subseteq> tsDom\<cdot>a)"
+sorry
+
+lemma [simp]: "adm (\<lambda>a. \<forall>x. tsDom\<cdot>(tsRemDups_h\<cdot>a\<cdot>(Some (Discr x))) \<subseteq> tsDom\<cdot>(tsRemDups_h\<cdot>a\<cdot>None))"
+sorry
+
+lemma h1: "(tsDom\<cdot>(tsRemDups_h\<cdot>ts\<cdot>(Some (Discr t)))) \<subseteq> tsDom\<cdot>(tsRemDups_h\<cdot>ts\<cdot>None)"
+  apply (induction ts arbitrary: t)
+  apply (simp_all)
+  apply (simp add: tsdom_delayfun tsremdups_h_delayfun)
+  by (metis (no_types, lifting) Un_upper2 equalityE tsdom_mlscons tsremdups_h_mlscons
+      tsremdups_h_mlscons_dup tsremdups_h_mlscons_ndup tsremdups_h_nbot)
 
 lemma tsremdups_tsdom:
   "tsDom\<cdot>(tsRemDups\<cdot>ts) = tsDom\<cdot>ts"
+  apply (simp add: tsremdups_insert)
+  apply (induction ts)
+  apply (simp_all)
+  apply (simp add: tsdom_delayfun tsremdups_h_delayfun)
+  apply (simp add: tsremdups_h_mlscons)
+  apply (simp add: tsdom_mlscons)
+oops
+
+lemma tsremdups_tsdom:
+  "tsDom\<cdot>(tsRemDups\<cdot>ts) \<subseteq> tsDom\<cdot>ts"
+  apply (simp add: tsremdups_insert)
+  apply (induction ts)
+  apply (simp_all)
+  apply (simp add: tsdom_delayfun tsremdups_h_delayfun)
+  apply (simp add: tsremdups_h_mlscons)
+  apply (simp add: tsdom_mlscons)
 oops
 
 (*
