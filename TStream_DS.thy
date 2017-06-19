@@ -14,6 +14,25 @@ default_sort countable
 
 (* here I just try a few things *)
 
+(* lemma unprovable *)
+lemma tsremdups_h_tsabs: "tsAbs\<cdot>(tsRemDups_h\<cdot>ts\<cdot>None) = tsAbs\<cdot>(tsRemDups_h\<cdot>ts\<cdot>(Some (Discr a)))"
+oops
+
+lemma tsremdups_tsabs: "tsAbs\<cdot>(tsRemDups\<cdot>ts) = srcdups\<cdot>(tsAbs\<cdot>ts)"
+oops
+
+lemma tsremdups_tsabs_slen [simp]: "#(tsAbs\<cdot>(tsRemDups\<cdot>ts)) \<le> #(tsAbs\<cdot>ts)"
+oops
+
+lemma tsremdups_h_tsabs: "tsAbs\<cdot>(tsRemDups_h\<cdot>ts\<cdot>None) = tsAbs\<cdot>(tsRemDups_h\<cdot>ts\<cdot>(Some (Discr a)))"
+apply (induction ts arbitrary: a)
+apply (simp_all)
+apply (simp add: tsremdups_h_delayfun tsabs_delayfun)
+apply (case_tac "t\<noteq>a", simp_all)
+apply (simp add: tsremdups_h_mlscons_ndup tsabs_mlscons tsremdups_h_mlscons)
+apply (simp add: tsremdups_h_mlscons_dup tsabs_mlscons tsremdups_h_mlscons)
+oops
+
 lemma tsremdups_h_tsdom: "tsDom\<cdot>(tsRemDups_h\<cdot>(tsMLscons\<cdot>(updis t)\<cdot>ts)\<cdot>(Some (Discr t))) = tsDom\<cdot>ts"
   apply (induction ts)
   apply (simp_all)
@@ -55,7 +74,8 @@ lemma tsremdups_tsdom:
   apply (simp add: tsdom_delayfun tsremdups_h_delayfun)
   apply (simp add: tsremdups_h_mlscons)
   apply (simp add: tsdom_mlscons)
-oops
+  using h1 by blast
+
 
 (*
 lemma tszip_tsdom:

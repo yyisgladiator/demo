@@ -1879,30 +1879,30 @@ lemma tsmap_unfold:
   apply (simp add: espf2tspf_def)
   by (simp add: tsmap_h_well)
 
-lemma tsmap_strict[simp]: "tsMap f\<cdot>\<bottom> = \<bottom>"
+lemma tsmap_strict [simp]: "tsMap f\<cdot>\<bottom> = \<bottom>"
   by (simp add: tsmap_unfold)
 
-lemma tsmap_tstickcount[simp]:  "#\<surd>(tsMap f\<cdot>ts) = #\<surd>ts"
+lemma tsmap_tstickcount [simp]:  "#\<surd>(tsMap f\<cdot>ts) = #\<surd>ts"
   apply(simp add: tsTickCount_def)
   apply(simp only: tsmap_unfold)
   apply(subst Abs_tstream_inverse)
   apply(simp add:tsmap_h_well)
   by(simp add: tsmap_h_fair)
 
+lemma tsmap_weak:"tsWeakCausal (Rep_cfun (tsMap f))"
+by (subst tsWeak2cont2, auto)
+
 lemma tsmap_strict_rev: "tsMap f\<cdot>ts = \<bottom> \<Longrightarrow> ts=\<bottom>"
   by (metis strict_tstickcount ts_0ticks tsmap_tstickcount)
 
-lemma tsmap_weak:"tsWeakCausal (Rep_cfun (tsMap f))"
-by (subst tsWeak2cont2, auto)
+lemma tsmap_nbot [simp]: "ts\<noteq>\<bottom> \<Longrightarrow> tsMap f\<cdot>ts \<noteq> \<bottom>"
+  using tsmap_strict_rev by auto
 
 lemma tsmap_tsabs_slen [simp]: "#(tsAbs\<cdot>(tsMap f\<cdot>ts)) = #(tsAbs\<cdot>ts)"
   apply (simp add: tsAbs_def tsmap_unfold)
   apply (induct_tac ts, auto)
   apply (simp add: tsmap_h_well)
   by (simp add: tsmap_h_fair2)
-
-lemma tsmap_nbot [simp]: "ts\<noteq>\<bottom> \<Longrightarrow> tsMap f\<cdot>ts \<noteq> \<bottom>"
-  by (rule ccontr, simp add: tsmap_strict_rev)
 
 (* ToDo: lemmata for tsmap *)
 
@@ -1932,6 +1932,12 @@ lemma tsprojsnd_strict_rev: "tsProjSnd\<cdot>ts = \<bottom> \<Longrightarrow> ts
   apply (simp add: tsProjSnd_def)
   by (metis strict_tstickcount ts_0ticks tsmap_tstickcount)
 
+lemma tsprojfst_nbot [simp]: "ts\<noteq>\<bottom> \<Longrightarrow> tsProjFst\<cdot>ts\<noteq>\<bottom>"
+  by (rule ccontr, simp add: tsprojfst_strict_rev)
+
+lemma tsprojsnd_nbot [simp]: "ts\<noteq>\<bottom> \<Longrightarrow> tsProjSnd\<cdot>ts\<noteq>\<bottom>"
+  by (rule ccontr, simp add: tsprojsnd_strict_rev)
+
 lemma tsprojfst_tstickcount [simp]: "#\<surd>(tsProjFst\<cdot>ts) = #\<surd>ts"
   by (simp add: tsProjFst_def)
 
@@ -1951,12 +1957,6 @@ lemma tsprojfst_tsabs_slen [simp]: "#(tsAbs\<cdot>(tsProjFst\<cdot>ts)) = #(tsAb
 
 lemma tsprojsnd_tsabs_slen [simp]: "#(tsAbs\<cdot>(tsProjSnd\<cdot>ts)) = #(tsAbs\<cdot>ts)"
   by (simp add: tsProjSnd_def)
-
-lemma tsprojfst_nbot [simp]: "ts\<noteq>\<bottom> \<Longrightarrow> tsProjFst\<cdot>ts\<noteq>\<bottom>"
-  by (rule ccontr, simp add: tsprojfst_strict_rev)
-
-lemma tsprojsnd_nbot [simp]: "ts\<noteq>\<bottom> \<Longrightarrow> tsProjSnd\<cdot>ts\<noteq>\<bottom>"
-  by (rule ccontr, simp add: tsprojsnd_strict_rev)
 
 (* tsFilter *)
 thm tsFilter_def
@@ -3079,21 +3079,6 @@ by (simp add: tsmlscons_lscons)
 lemma tsremdups_h_delayfun: "tsRemDups_h\<cdot>(delayFun\<cdot>ts)\<cdot>a = delayFun\<cdot>(tsRemDups_h\<cdot>ts\<cdot>a)"
 by (simp add: delayfun_tslscons)
 
-lemma tsremdups_h_tstickcount: "#\<surd>(tsRemDups_h\<cdot>ts\<cdot>(Some (Discr t))) = #\<surd>(tsRemDups_h\<cdot>ts\<cdot>None)"
-apply (induction ts arbitrary: t)
-apply (simp_all)
-apply (metis delayFun_dropFirst delayfun_nbot tsdropfirst_len tsremdups_h_delayfun)
-apply (case_tac "t\<noteq>ta", auto)
-apply (simp add: tsremdups_h_mlscons tsremdups_h_mlscons_ndup)
-by (simp add: tsremdups_h_mlscons tsremdups_h_mlscons_dup tstickcount_mlscons)
-
-lemma tsremdups_tstickcount [simp]: "#\<surd>(tsRemDups\<cdot>ts) = #\<surd>ts"
-apply (simp add: tsremdups_insert)
-apply (induction ts)
-apply (simp_all)
-apply (metis delayFun_dropFirst delayfun_nbot tsdropfirst_len tsremdups_h_delayfun)
-by (simp add: tsremdups_h_mlscons tstickcount_mlscons tsremdups_h_tstickcount)
-
 lemma tsremdups_h_nbot [simp]: "ts\<noteq>\<bottom> \<Longrightarrow> tsRemDups_h\<cdot>ts\<cdot>(Some (Discr a)) \<noteq> \<bottom>"
 apply (induction ts arbitrary: a)
 apply (simp_all)
@@ -3111,16 +3096,20 @@ lemma tsremdups_h_nbot2 [simp]: "ts\<noteq>\<bottom> \<Longrightarrow> tsRemDups
 lemma tsremdups_nbot [simp]: "ts\<noteq>\<bottom> \<Longrightarrow> tsRemDups\<cdot>ts \<noteq> \<bottom>"
  by (simp add: tsRemDups_def)
 
-(* ToDo: lemmata for tsremdups *)
+lemma tsremdups_h_tstickcount: "#\<surd>(tsRemDups_h\<cdot>ts\<cdot>(Some (Discr t))) = #\<surd>(tsRemDups_h\<cdot>ts\<cdot>None)"
+apply (induction ts arbitrary: t)
+apply (simp_all)
+apply (metis delayFun_dropFirst delayfun_nbot tsdropfirst_len tsremdups_h_delayfun)
+apply (case_tac "t\<noteq>ta", auto)
+apply (simp add: tsremdups_h_mlscons tsremdups_h_mlscons_ndup)
+by (simp add: tsremdups_h_mlscons tsremdups_h_mlscons_dup tstickcount_mlscons)
 
-lemma tsremdups_h_tsabs: "tsAbs\<cdot>(tsRemDups_h\<cdot>ts\<cdot>None) = tsAbs\<cdot>(tsRemDups_h\<cdot>ts\<cdot>(Some (Discr t)))"
-oops
-
-lemma tsremdups_tsabs: "tsAbs\<cdot>(tsRemDups\<cdot>ts) = srcdups\<cdot>(tsAbs\<cdot>ts)"
-oops
-
-lemma tsremdups_tsabs_slen [simp]: "#(tsAbs\<cdot>(tsRemDups\<cdot>ts)) \<le> #(tsAbs\<cdot>ts)"
-oops
+lemma tsremdups_tstickcount [simp]: "#\<surd>(tsRemDups\<cdot>ts) = #\<surd>ts"
+apply (simp add: tsremdups_insert)
+apply (induction ts)
+apply (simp_all)
+apply (metis delayFun_dropFirst delayfun_nbot tsdropfirst_len tsremdups_h_delayfun)
+by (simp add: tsremdups_h_mlscons tstickcount_mlscons tsremdups_h_tstickcount)
 
 (*TODO
 

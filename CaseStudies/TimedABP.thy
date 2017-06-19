@@ -177,6 +177,13 @@ lemma tsmed_mlscons_false: "msg\<noteq>\<bottom> \<Longrightarrow> #ora=\<infini
 lemma tsmed_delayfun: "ora\<noteq>\<epsilon> \<Longrightarrow> tsMed\<cdot>(delayFun\<cdot>msg)\<cdot>ora = delayFun\<cdot>(tsMed\<cdot>msg\<cdot>ora)"
   by (simp add: tsMed_def tszip_delayfun tsfilter_delayfun tsprojfst_delayfun)
 
+lemma tsmed_nbot [simp]: "msg\<noteq>\<bottom> \<Longrightarrow> #ora=\<infinity> \<Longrightarrow> tsMed\<cdot>msg \<noteq> \<bottom>"
+oops
+
+text {* If infinite ticks will be sent infinite ticks will be transmitted. *}
+lemma tsmed_tstickcount [simp]: "#ora=\<infinity> \<Longrightarrow> #\<surd>(tsMed\<cdot>msg\<cdot>ora) = #\<surd>msg"
+  by (simp add: tsmed_insert)
+
 text {* If just infinite ticks will be sent just infinite ticks will be transmitted. *}
 lemma tsmed_inftick [simp]: "#ora=\<infinity> \<Longrightarrow> tsMed\<cdot>tsInfTick\<cdot>ora = tsInfTick"
   apply (simp add: tsmed_insert tsInfTick_def tsfilter_unfold)
@@ -188,10 +195,6 @@ lemma tsmed_inftick [simp]: "#ora=\<infinity> \<Longrightarrow> tsMed\<cdot>tsIn
 text {* Medium without oracle will transmit all messages and ticks. *}
 lemma tsmed_inftrue [simp]: "tsMed\<cdot>msg\<cdot>((\<up>True) \<infinity>) = msg"
   oops
-
-text {* If infinite ticks will be sent infinite ticks will be transmitted. *}
-lemma tsmed_tstickcount [simp]: "#ora=\<infinity> \<Longrightarrow> #\<surd>(tsMed\<cdot>msg\<cdot>ora) = #\<surd>msg"
-  by (simp add: tsmed_insert)
 
 text {* Not every message will be transmitted. *}    
 lemma tsmed_tsabs_slen: "#ora=\<infinity> \<Longrightarrow> #(tsAbs\<cdot>(tsMed\<cdot>msg\<cdot>ora)) \<le> #(tsAbs\<cdot>msg)"
@@ -224,10 +227,13 @@ oops
 lemma tsrecsnd_delayfun: "tsRecSnd\<cdot>(delayFun\<cdot>dat) = delayFun\<cdot>(tsRecSnd\<cdot>dat)"
 oops
 
-lemma tsrecsnd_inftick [simp]: "tsRecSnd\<cdot>tsInfTick = tsInfTick"
+lemma tsrecsnd_nbot [simp]: "dat\<noteq>\<bottom> \<Longrightarrow> tsRecSnd\<cdot>dat \<noteq> \<bottom>"
 oops
 
 lemma tsrecsnd_tstickcount [simp]: "#\<surd>(tsRecSnd\<cdot>dat) = #\<surd>dat"
+oops
+
+lemma tsrecsnd_inftick [simp]: "tsRecSnd\<cdot>tsInfTick = tsInfTick"
 oops
 
 lemma tsrec_insert: "tsRec\<cdot>dat = (tsProjSnd\<cdot>dat, tsRecSnd\<cdot>dat)"
@@ -237,6 +243,9 @@ lemma tsrec_strict [simp]: "tsRec\<cdot>\<bottom> = \<bottom>"
 oops
 
 lemma tsrec_delayfun: "tsRec\<cdot>(delayFun\<cdot>dat) = (delayFun\<cdot>(tsProjSnd\<cdot>dat), delayFun\<cdot>(tsRecSnd\<cdot>dat))"
+oops
+
+lemma tsrec_nbot [simp]: "dat\<noteq>\<bottom> \<Longrightarrow> tsRec\<cdot>dat \<noteq> \<bottom>"
 oops
 
 lemma tsrec_inftick [simp]: "tsRec\<cdot>tsInfTick = (tsInfTick, tsInfTick)"
