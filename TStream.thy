@@ -2879,9 +2879,18 @@ by (metis adm bottom delayfun mlscons tstream_fin_induct tstream_infs)
 subsection {* admissibility rules *}
 (* ----------------------------------------------------------------------- *)
 
-(* ToDo: admissibility lemma *)
+(* ToDo: admissibility lemmata *)
 
-lemma [simp]: "\<And>f ts. adm (\<lambda>a. tsDom\<cdot>(f\<cdot>a\<cdot>ts) \<subseteq> tsDom\<cdot>a)"
+lemma adm_tsdom_sub [simp]: "\<And>f b. adm (\<lambda>a. tsDom\<cdot>(f\<cdot>a\<cdot>b) \<subseteq> tsDom\<cdot>a)"
+oops
+
+lemma adm_tsdom_sup [simp]: "\<And>f b. adm (\<lambda>a. tsDom\<cdot>a \<subseteq> tsDom\<cdot>(f\<cdot>a\<cdot>b))"
+oops
+
+lemma adm_tsdom_sub_fun [simp]: "\<And>f b c. adm (\<lambda>a. tsDom\<cdot>(f\<cdot>a\<cdot>b) \<subseteq> tsDom\<cdot>(f\<cdot>a\<cdot>c))"
+oops
+
+lemma adm_tsdom_sup_fun [simp]: "\<And>f b c d. adm (\<lambda>a. tsDom\<cdot>(f\<cdot>a\<cdot>b) \<subseteq> insert c (tsDom\<cdot>(f\<cdot>a\<cdot>d)))"
 oops
 
 (* ----------------------------------------------------------------------- *)
@@ -3110,6 +3119,25 @@ apply (induction ts)
 apply (simp_all)
 apply (metis delayFun_dropFirst delayfun_nbot tsdropfirst_len tsremdups_h_delayfun)
 by (simp add: tsremdups_h_mlscons tstickcount_mlscons tsremdups_h_tstickcount)
+
+(* ToDo: lemmata for tsremdups *)
+
+lemma tsremdups_h_tsdom_sub: 
+  "(tsDom\<cdot>(tsRemDups_h\<cdot>ts\<cdot>(Some (Discr t)))) \<subseteq> tsDom\<cdot>(tsRemDups_h\<cdot>ts\<cdot>None)"
+oops
+
+lemma tsremdups_h_tsdom_sup: 
+  "tsDom\<cdot>(tsRemDups_h\<cdot>ts\<cdot>None) \<subseteq> insert t (tsDom\<cdot>(tsRemDups_h\<cdot>ts\<cdot>(Some (Discr t))))"
+oops
+
+lemma tsremdups_tsdom_sub: "tsDom\<cdot>(tsRemDups\<cdot>ts) \<subseteq> tsDom\<cdot>ts"
+oops
+
+lemma tsremdups_tsdom_sup: "tsDom\<cdot>ts \<subseteq> tsDom\<cdot>(tsRemDups\<cdot>ts)"
+oops
+
+lemma tsremdups_h_tsdom: "tsDom\<cdot>(tsRemDups\<cdot>ts) = tsDom\<cdot>ts"
+oops
 
 (*TODO
 

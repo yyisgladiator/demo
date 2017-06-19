@@ -14,81 +14,45 @@ default_sort countable
 
 (* here I just try a few things *)
 
-(* lemma unprovable *)
 lemma tsremdups_h_tsabs: "tsAbs\<cdot>(tsRemDups_h\<cdot>ts\<cdot>None) = tsAbs\<cdot>(tsRemDups_h\<cdot>ts\<cdot>(Some (Discr a)))"
 oops
 
 lemma tsremdups_tsabs: "tsAbs\<cdot>(tsRemDups\<cdot>ts) = srcdups\<cdot>(tsAbs\<cdot>ts)"
+  apply (simp add: tsremdups_insert)
+  apply (induction ts)
+  apply (simp_all)
+  apply (simp add: tsremdups_h_delayfun tsabs_delayfun)
+  apply (rule_tac ts=ts in tscases, simp_all)
+  apply (simp add: tsabs_mlscons tsremdups_h_mlscons tsremdups_h_delayfun tsabs_delayfun)
 oops
 
 lemma tsremdups_tsabs_slen [simp]: "#(tsAbs\<cdot>(tsRemDups\<cdot>ts)) \<le> #(tsAbs\<cdot>ts)"
 oops
 
-lemma tsremdups_h_tsabs: "tsAbs\<cdot>(tsRemDups_h\<cdot>ts\<cdot>None) = tsAbs\<cdot>(tsRemDups_h\<cdot>ts\<cdot>(Some (Discr a)))"
-apply (induction ts arbitrary: a)
-apply (simp_all)
-apply (simp add: tsremdups_h_delayfun tsabs_delayfun)
-apply (case_tac "t\<noteq>a", simp_all)
-apply (simp add: tsremdups_h_mlscons_ndup tsabs_mlscons tsremdups_h_mlscons)
-apply (simp add: tsremdups_h_mlscons_dup tsabs_mlscons tsremdups_h_mlscons)
-oops
 
-lemma tsremdups_h_tsdom: "tsDom\<cdot>(tsRemDups_h\<cdot>(tsMLscons\<cdot>(updis t)\<cdot>ts)\<cdot>(Some (Discr t))) = tsDom\<cdot>ts"
-  apply (induction ts)
-  apply (simp_all)
-  apply (metis delayfun_nbot tsdom_delayfun tsmlscons_lscons tsremdups_h_delayfun 
-         tsremdups_h_strict tsremdups_h_tslscons_dup)
-  apply (simp add: tsdom_mlscons tsremdups_h_mlscons_dup)
-  apply (subst tsremdups_h_mlscons_ndup, simp add: tsdom_mlscons)
-oops
-
-(* see ToDo *)
-lemma [simp]: "\<And>f ts. adm (\<lambda>a. tsDom\<cdot>(f\<cdot>a\<cdot>ts) \<subseteq> tsDom\<cdot>a)"
-sorry
-
-lemma [simp]: "adm (\<lambda>a. \<forall>x. tsDom\<cdot>(tsRemDups_h\<cdot>a\<cdot>(Some (Discr x))) \<subseteq> tsDom\<cdot>(tsRemDups_h\<cdot>a\<cdot>None))"
-sorry
-
-lemma h1: "(tsDom\<cdot>(tsRemDups_h\<cdot>ts\<cdot>(Some (Discr t)))) \<subseteq> tsDom\<cdot>(tsRemDups_h\<cdot>ts\<cdot>None)"
-  apply (induction ts arbitrary: t)
-  apply (simp_all)
-  apply (simp add: tsdom_delayfun tsremdups_h_delayfun)
-  by (metis (no_types, lifting) Un_upper2 equalityE tsdom_mlscons tsremdups_h_mlscons
-      tsremdups_h_mlscons_dup tsremdups_h_mlscons_ndup tsremdups_h_nbot)
-
-lemma tsremdups_tsdom:
-  "tsDom\<cdot>(tsRemDups\<cdot>ts) = tsDom\<cdot>ts"
-  apply (simp add: tsremdups_insert)
-  apply (induction ts)
-  apply (simp_all)
-  apply (simp add: tsdom_delayfun tsremdups_h_delayfun)
-  apply (simp add: tsremdups_h_mlscons)
-  apply (simp add: tsdom_mlscons)
-oops
-
-lemma tsremdups_tsdom:
-  "tsDom\<cdot>(tsRemDups\<cdot>ts) \<subseteq> tsDom\<cdot>ts"
-  apply (simp add: tsremdups_insert)
-  apply (induction ts)
-  apply (simp_all)
-  apply (simp add: tsdom_delayfun tsremdups_h_delayfun)
-  apply (simp add: tsremdups_h_mlscons)
-  apply (simp add: tsdom_mlscons)
-  using h1 by blast
-
-
-(*
 lemma tszip_tsdom:
-  "#xs=\<infinity> \<Longrightarrow> tsDom\<cdot>(tsZip\<cdot>ts\<cdot>xs) = "
+  "#xs=\<infinity> \<Longrightarrow> tsDom\<cdot>(tsZip\<cdot>ts\<cdot>xs) = sdom\<cdot>(szip\<cdot>(tsAbs\<cdot>ts)\<cdot>xs)"
 oops
-*)
 
-(* Assumptions *)
+
+lemma h7: "\<And>f g a. adm (\<lambda>b. #\<surd> a = \<infinity> \<longrightarrow> #b = \<infinity> \<longrightarrow> tsAbs\<cdot>(f\<cdot>(g\<cdot>a\<cdot>b)) = b)"
+sorry
+
+lemma h9: "\<And>f g b. adm (\<lambda>a. #\<surd> a = \<infinity> \<longrightarrow> (\<forall>b. #b = \<infinity> \<longrightarrow> tsAbs\<cdot>(f\<cdot>(g\<cdot>(delayFun\<cdot>a)\<cdot>b)) = b))"
+sorry
+
+(* adm provable? *)
+lemma h8: "#\<surd>ts=\<infinity> \<Longrightarrow>  #xs=\<infinity> \<Longrightarrow> tsAbs\<cdot>(tsProjSnd\<cdot>(tsZip\<cdot>(delayFun\<cdot>ts)\<cdot>xs)) = xs"
+  apply (induction ts arbitrary: xs)
+  apply (simp_all add: h9)
+oops
+
 lemma tszip_tsprojsnd_rev:
   "#\<surd>ts=\<infinity> \<Longrightarrow>  #xs=\<infinity> \<Longrightarrow> tsAbs\<cdot>(tsProjSnd\<cdot>(tsZip\<cdot>ts\<cdot>xs)) = xs"
-apply (induction xs arbitrary: ts)
-apply (simp_all)
+  apply (induction xs arbitrary: ts)
+  apply (simp_all add: h7)
 oops
+
 
 lemma tstickcount_slen_adm [simp]: "\<And>f xs. adm (\<lambda>a. #\<surd> f\<cdot>a\<cdot>xs \<le> #\<surd> a)"
 by (metis (mono_tags, lifting) admI inf_ub l42 ts_infinite_lub)
@@ -104,14 +68,21 @@ apply (case_tac "stream=\<epsilon>", auto)
 apply (rule_tac ts=ts in tscases, auto)
 oops
 
+
 lemma tsabs_slen_adm [simp]: "\<And>f xs. adm (\<lambda>a. #(tsAbs\<cdot>(f\<cdot>a\<cdot>xs)) \<le> #(tsAbs\<cdot>a))"
+apply (simp add: tsabs_insert)
 apply (rule admI)
-apply (simp add: contlub_cfun_arg contlub_cfun_fun tsabs_insert)
+apply (simp add: contlub_cfun_arg contlub_cfun_fun)
 oops
 
+lemma h5: "adm (\<lambda>a. \<forall>x. #(tsAbs\<cdot>(tsZip\<cdot>a\<cdot>x)) \<le> #(tsAbs\<cdot>a))"
+sorry
+
 lemma tszip_tsabs_slen_leq [simp]: "#(tsAbs\<cdot>(tsZip\<cdot>ts\<cdot>xs)) \<le> #(tsAbs\<cdot>ts)"
-apply (induction ts arbitrary: xs)
-apply (simp_all)
+  apply (induction ts arbitrary: xs)
+  apply (simp_all add: h5)
+  apply (metis tszip_strict(2) tsabs_delayfun tszip_delayfun)
+  apply (rule_tac y=xs in scases', auto)
 oops
 
 (* simple test for tsremdups/tszip *)
