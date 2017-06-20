@@ -3137,7 +3137,7 @@ lemma tsremdups_tsabs: "tsAbs\<cdot>(tsRemDups\<cdot>ts) = srcdups\<cdot>(tsAbs\
 oops
 
 (* if lemma is proven move it to Streams.thy *)
-lemma srcdups_slen: "#(srcdups\<cdot>s) \<le> #s"
+lemma srcdups_slen [simp]: "#(srcdups\<cdot>s) \<le> #s"
 oops
 
 lemma tsremdups_tsabs_slen [simp]: "#(tsAbs\<cdot>(tsRemDups\<cdot>ts)) \<le> #(tsAbs\<cdot>ts)"
