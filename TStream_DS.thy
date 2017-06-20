@@ -14,45 +14,21 @@ default_sort countable
 
 (* here I just try a few things *)
 
-lemma tsremdups_h_tsabs: "tsAbs\<cdot>(tsRemDups_h\<cdot>ts\<cdot>None) = tsAbs\<cdot>(tsRemDups_h\<cdot>ts\<cdot>(Some (Discr a)))"
-oops
-
-lemma tsremdups_tsabs: "tsAbs\<cdot>(tsRemDups\<cdot>ts) = srcdups\<cdot>(tsAbs\<cdot>ts)"
-  apply (simp add: tsremdups_insert)
-  apply (induction ts)
-  apply (simp_all)
-  apply (simp add: tsremdups_h_delayfun tsabs_delayfun)
-  apply (rule_tac ts=ts in tscases, simp_all)
-  apply (simp add: tsabs_mlscons tsremdups_h_mlscons tsremdups_h_delayfun tsabs_delayfun)
-oops
-
-lemma tsremdups_tsabs_slen [simp]: "#(tsAbs\<cdot>(tsRemDups\<cdot>ts)) \<le> #(tsAbs\<cdot>ts)"
-oops
-
-
-lemma tszip_tsdom:
-  "#xs=\<infinity> \<Longrightarrow> tsDom\<cdot>(tsZip\<cdot>ts\<cdot>xs) = sdom\<cdot>(szip\<cdot>(tsAbs\<cdot>ts)\<cdot>xs)"
-oops
-
-
-lemma h7: "\<And>f g a. adm (\<lambda>b. #\<surd> a = \<infinity> \<longrightarrow> #b = \<infinity> \<longrightarrow> tsAbs\<cdot>(f\<cdot>(g\<cdot>a\<cdot>b)) = b)"
-sorry
-
-lemma h9: "\<And>f g b. adm (\<lambda>a. #\<surd> a = \<infinity> \<longrightarrow> (\<forall>b. #b = \<infinity> \<longrightarrow> tsAbs\<cdot>(f\<cdot>(g\<cdot>(delayFun\<cdot>a)\<cdot>b)) = b))"
-sorry
-
 (* adm provable? *)
-lemma h8: "#\<surd>ts=\<infinity> \<Longrightarrow>  #xs=\<infinity> \<Longrightarrow> tsAbs\<cdot>(tsProjSnd\<cdot>(tsZip\<cdot>(delayFun\<cdot>ts)\<cdot>xs)) = xs"
+lemma [simp]: "adm (\<lambda>a. \<forall>x. #\<surd> x = \<infinity> \<longrightarrow> #a = \<infinity> \<longrightarrow> tsAbs\<cdot>(tsProjSnd\<cdot>(tsZip\<cdot>x\<cdot>a)) = a)"
+  apply (rule admI)
+oops
+
+lemma tszip_tsprojsnd_rev_h: 
+  "#\<surd>ts=\<infinity> \<Longrightarrow> #xs=\<infinity> \<Longrightarrow> tsAbs\<cdot>(tsProjSnd\<cdot>(tsZip\<cdot>(delayFun\<cdot>ts)\<cdot>xs)) = xs"
   apply (induction ts arbitrary: xs)
-  apply (simp_all add: h9)
+  apply (simp_all)
 oops
 
-lemma tszip_tsprojsnd_rev:
-  "#\<surd>ts=\<infinity> \<Longrightarrow>  #xs=\<infinity> \<Longrightarrow> tsAbs\<cdot>(tsProjSnd\<cdot>(tsZip\<cdot>ts\<cdot>xs)) = xs"
+lemma tszip_tsprojsnd_rev: "#\<surd>ts=\<infinity> \<Longrightarrow> #xs=\<infinity> \<Longrightarrow> tsAbs\<cdot>(tsProjSnd\<cdot>(tsZip\<cdot>ts\<cdot>xs)) = xs"
   apply (induction xs arbitrary: ts)
-  apply (simp_all add: h7)
+  apply (simp_all)
 oops
-
 
 lemma tstickcount_slen_adm [simp]: "\<And>f xs. adm (\<lambda>a. #\<surd> f\<cdot>a\<cdot>xs \<le> #\<surd> a)"
 by (metis (mono_tags, lifting) admI inf_ub l42 ts_infinite_lub)
@@ -67,7 +43,6 @@ apply (rule_tac y=xs in scases', simp)
 apply (case_tac "stream=\<epsilon>", auto)
 apply (rule_tac ts=ts in tscases, auto)
 oops
-
 
 lemma tsabs_slen_adm [simp]: "\<And>f xs. adm (\<lambda>a. #(tsAbs\<cdot>(f\<cdot>a\<cdot>xs)) \<le> #(tsAbs\<cdot>a))"
 apply (simp add: tsabs_insert)

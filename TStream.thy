@@ -2796,16 +2796,20 @@ setup \<open>
 (************************************************)
       
 lemma tstream_infs: "(\<And>s. #\<surd>s<\<infinity> \<Longrightarrow> P s) \<Longrightarrow> adm P \<Longrightarrow> P s"
-  by (metis (no_types, lifting) adm_def finite_chain_def inf_less_eq leI ts_infinite_fin tstake_chain tstake_inf_lub tstake_infinite_chain)
+  by (metis (no_types, lifting) adm_def finite_chain_def inf_less_eq leI ts_infinite_fin 
+      tstake_chain tstake_inf_lub tstake_infinite_chain)
         
-lemma tstream_adm_fin: "adm P \<Longrightarrow> (\<forall>ts. #\<surd>ts<\<infinity> \<longrightarrow> P ts) \<Longrightarrow>  adm (\<lambda>a. ts_well a \<longrightarrow> P (Abs_tstream a))"    
-  apply(rule admI)
-    apply auto
-  by (metis (no_types, lifting) adm_def finite_chain_def inf_less_eq leI ts_infinite_fin tstake_chain tstake_inf_lub tstake_infinite_chain)  
+lemma tstream_adm_fin: 
+  "adm P \<Longrightarrow> (\<forall>ts. #\<surd>ts<\<infinity> \<longrightarrow> P ts) \<Longrightarrow>  adm (\<lambda>a. ts_well a \<longrightarrow> P (Abs_tstream a))"    
+  apply (rule admI)
+  apply (auto)
+  by (metis (no_types, lifting) adm_def finite_chain_def inf_less_eq leI ts_infinite_fin 
+      tstake_chain tstake_inf_lub tstake_infinite_chain)  
 
 lemma tsmsg_notwell: "\<not>ts_well((updis (Msg m)) && \<bottom>)"
   apply(simp add: ts_well_def)
-  by (metis Inf'_neq_0 event.distinct(1) fold_inf lnat.sel_rews(2) lscons_conv sfilterl4 sfoot1 sfoot_one slen_scons strict_slen sup'_def)
+  by (metis Inf'_neq_0 event.distinct(1) fold_inf lnat.sel_rews(2) lscons_conv sfilterl4 
+      sfoot1 sfoot_one slen_scons strict_slen sup'_def)
 
 lemma tstream_fin_induct_h:
   assumes bottom: "P \<bottom>" 
@@ -3023,7 +3027,10 @@ lemma tszip_tsabs_slen [simp]: "#xs=\<infinity> \<Longrightarrow> #(tsAbs\<cdot>
       using f4 a3 a2 by (simp add: slen_updis_eq tsabs_mlscons)
   qed
 
-(* ToDo: lemma for tszip *)
+(* ToDo: lemmata for tszip *)
+
+lemma tszip_tsdom: "#xs=\<infinity> \<Longrightarrow> tsDom\<cdot>(tsZip\<cdot>ts\<cdot>xs) = sdom\<cdot>(szip\<cdot>(tsAbs\<cdot>ts)\<cdot>xs)"
+oops
 
 lemma tszip_tsprojfst_rev: 
   "#xs=\<infinity> \<Longrightarrow> tsProjFst\<cdot>(tsZip\<cdot>ts\<cdot>xs) = ts"
@@ -3121,6 +3128,20 @@ apply (metis delayFun_dropFirst delayfun_nbot tsdropfirst_len tsremdups_h_delayf
 by (simp add: tsremdups_h_mlscons tstickcount_mlscons tsremdups_h_tstickcount)
 
 (* ToDo: lemmata for tsremdups *)
+
+lemma tsremdups_h_tsabs: 
+  "updis t && tsAbs\<cdot>(tsRemDups_h\<cdot>ts\<cdot>(Some (Discr t))) = srcdups\<cdot>(updis t && tsAbs\<cdot>ts)"
+oops
+
+lemma tsremdups_tsabs: "tsAbs\<cdot>(tsRemDups\<cdot>ts) = srcdups\<cdot>(tsAbs\<cdot>ts)"
+oops
+
+(* if lemma is proven move it to Streams.thy *)
+lemma srcdups_slen: "#(srcdups\<cdot>s) \<le> #s"
+oops
+
+lemma tsremdups_tsabs_slen [simp]: "#(tsAbs\<cdot>(tsRemDups\<cdot>ts)) \<le> #(tsAbs\<cdot>ts)"
+oops
 
 lemma tsremdups_h_tsdom_sub: 
   "(tsDom\<cdot>(tsRemDups_h\<cdot>ts\<cdot>(Some (Discr t)))) \<subseteq> tsDom\<cdot>(tsRemDups_h\<cdot>ts\<cdot>None)"
