@@ -7,8 +7,7 @@
 *)
 
 theory InnerProd_Case_Study
-  imports "../SPF"  "../SPF_Templates"  "../SPF_Composition_JB" "../Streams" "../SPF_Comp"  
-            "../CaseStudies/StreamCase_Study" "../SPF_MW" "../ParComp_MW_JB"
+  imports "../SPF_Templates" "../SPF_Comp" "../CaseStudies/StreamCase_Study"
 
 begin
 
@@ -192,13 +191,13 @@ lemma mult_comp2: assumes "sbDom\<cdot>sb = I mult1 mult2"
   by (subst spfCompParallelGetch2, simp_all add: assms)
 
 lemma contMult1: "cont (\<lambda>x. (mult1\<rightleftharpoons>(x\<bar>{c1, c2})))"
-by(subst conthelper, simp_all)
+  by (metis cont_Rep_cfun2 cont_compose op_the_cont rep_cspf_cont2)
 
 lemma contMult1Union: "cont (\<lambda>x. sbUnion\<cdot>(mult1\<rightleftharpoons>(x\<bar>{c1, c2})))"
 by(simp add: contMult1)
 
 lemma contMult2: "cont (\<lambda>x. (mult2\<rightleftharpoons>(x\<bar>{c3, c4})))"
-  by(subst conthelper, simp_all)
+  by (metis cont_Rep_cfun2 cont_compose op_the_cont rep_cspf_cont2)
     
     
 lemma mults_comp1: assumes "sbDom\<cdot>sb = I mult1 mult2"
