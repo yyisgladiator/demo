@@ -63,9 +63,12 @@ definition tspfDom:: "'m TSPF \<rightarrow> channel set " where
 definition tsbFix::"('m TSB \<rightarrow> 'm TSB) \<Rightarrow> channel set \<Rightarrow> 'm TSB " where
 "tsbFix f c = Abs_TSB (\<lambda> c. None)"
 
+definition tspfIsStrong :: "'m TSPF \<Rightarrow> bool" where
+"tspfIsStrong tf = True" (* ToDo *)
 
-definition lift1x1TSPF :: " ('m tstream \<rightarrow> 'm tstream) \<Rightarrow> channel \<Rightarrow> channel \<Rightarrow> 'm TSPF" where
-"lift1x1TSPF f cIn cOut = Abs_TSPF (\<Lambda> tb. None)"
+(* Returns "Some x" if the input is correct, "None" if the input is "wrong" and no TSPF can be produced *)
+definition lift1x1TSPF :: " ('m tstream \<rightarrow> 'm tstream) \<Rightarrow> channel \<Rightarrow> channel \<Rightarrow> 'm TSPF option" where
+"lift1x1TSPF f cIn cOut = Some (Abs_TSPF (\<Lambda> tb. None))"
 
 
 lift_definition exampleTSPF :: "'m TSPF" is 
