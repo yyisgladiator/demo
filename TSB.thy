@@ -144,71 +144,143 @@ qed
   
 lemma chain_tsTakeL2: assumes "chain Y"
   shows "chain (\<lambda> i. if Y i = \<infinity> then ts else (ts \<down> THE n. (Fin n = Y i)) )"
-  sorry
+proof (rule chainI)
+  fix i
+  have "Y i \<sqsubseteq> Y (Suc i)"
+    using assms po_class.chainE by blast
+  thus "(if Y i = \<infinity> then ts else (ts \<down> THE n. (Fin n = (Y i))) ) \<sqsubseteq> (if Y (Suc i) = \<infinity> then ts else (ts \<down> THE n. (Fin n = (Y (Suc i)))) )"
+    using ttsTakeL2_monofun_pre by blast
+qed
+  
     
 lemma tstake_mono1: assumes "x \<le> y"
   shows "(ts \<down> x) \<sqsubseteq> (ts \<down> y)"
-    sorry
+    by (metis assms tsTake2take tsTake_prefix tstake_less)
     
-lemma chain_tsTakeL23: assumes "chain Y"
+lemma chain_tsTakeL23[simp]: assumes "chain Y" and "\<And>i. Y i \<noteq> \<infinity>"
   shows "chain (\<lambda> i. (ts \<down> THE n. (Fin n = Y i)) )"
-  sorry
+proof -
+  have f1: "\<And> i. (ts \<down> THE n. (Fin n = Y i)) = (if Y i = \<infinity> then ts else (ts \<down> THE n. (Fin n = (Y i))) )"
+    by (simp add: assms)
+  show ?thesis
+    apply (subst f1)
+      by (simp add: chain_tsTakeL2 assms(1))
+qed
+    
+lemma test34: assumes "chain (Y::nat \<Rightarrow> 'a TSB)"
+  shows "\<forall> i. Y i \<sqsubseteq> (\<Squnion> i. Y i)"
+  by (simp add: assms is_ub_thelub)
     
 lemma asym_insert: assumes "(a::'a tstream) \<sqsubseteq> b" and "b \<sqsubseteq> a"
   shows "a = b"
   by (simp add: assms(1) assms(2) po_eq_conv)
+ declare [[show_types]]   
+
+   (* important general lemma *)
+lemma chain_lub_eqI: assumes "chain (Y::nat \<Rightarrow> 'a::cpo)" and "chain (Z::nat \<Rightarrow> 'a::cpo)"  
+  and "\<forall> i. \<exists>j. Y i \<sqsubseteq> Z j"
+  and "\<forall> j. \<exists>i. Z j \<sqsubseteq> Y i"
+shows "(\<Squnion>i. Y i) = (\<Squnion>i. Z i)"
+  by (metis (no_types, hide_lams) assms(1) assms(2) assms(3) assms(4) below_trans is_ub_thelub 
+            lub_below po_eq_conv)
+          
+lemma tstake_belowI: assumes "i \<le> j"
+  shows "(ts \<down> i) \<sqsubseteq> (ts \<down> j)"
+  by (simp add: assms tstake_mono1)
     
-  
+    
 lemma conttsTakeL2_cont_pre: assumes "chain Y"
-  shows "(if (\<Squnion>i. Y i) = \<infinity> then ts else (ts \<down> THE n. (Fin n = (\<Squnion>i. Y i))) ) \<sqsubseteq> (\<Squnion>i. if Y i = \<infinity> then ts else (ts \<down> THE n. (Fin n = Y i)) )"
+  shows "(if (\<Squnion>i. Y i) = \<infinity> then ts else (ts \<down> THE n. (Fin n = (\<Squnion>i. Y i))) ) 
+          \<sqsubseteq> (\<Squnion>i. if Y i = \<infinity> then ts else (ts \<down> THE n. (Fin n = Y i)) )"
 proof (cases "\<forall>i. Y i \<noteq> \<infinity>")
   case True
-    have t1: "(\<Squnion>i. if Y i = \<infinity> then ts else (ts \<down> THE n. (Fin n = Y i))) = (\<Squnion>i. (ts \<down> THE n. (Fin n = Y i)))"
+    
+  have x1: "\<forall> i. \<exists> j. (Fin j) = (Y i)"
+  proof -
+    fix i
+    have "(Y i) < \<infinity>"
+      by (simp add: True less_le)
+    thus ?thesis
+      by (metis True infI)
+  qed
+
+    
+  have t1: "(\<Squnion>i. if Y i = \<infinity> then ts else (ts \<down> THE n. (Fin n = Y i))) 
+            = (\<Squnion>i. (ts \<down> THE n. (Fin n = Y i)))"
       by (simp add: True)
     show ?thesis
-    proof (cases "(\<Squnion>i. Y i) = \<infinity>")
-      case True
-      then show ?thesis
-        apply (simp only: t1)
-        sorry
-    next
-      case False
-        obtain j where b1: "Y j = (\<Squnion>i. Y i)"
-          using False assms l42 unique_inf_lub by fastforce
-        obtain k where b3: "Y j = Fin k"
-          by (metis True infI)
-        have b2: "(\<Squnion>i. (ts \<down> THE n. (Fin n = Y i))) = (ts \<down> THE n. (Fin n = Y j) )"
-          apply (rule lub_chain_maxelem, simp_all)
-          apply (subst tstake_mono1, simp_all)
-          apply (simp add: b3)
-        proof -
-          fix i
-          have b5: "Y i \<sqsubseteq> Y j"
-            using assms b1 is_ub_thelub by fastforce
-          obtain k2 where b4: "Y i = Fin k2"
-            using True infI by blast
-          thus "(THE n. Fin n = Y i) \<le> k"
-              using b5 b3 b4 by auto
-        qed
-      then show ?thesis
-        by (simp only: t1 False b2 b1, simp)
-    qed
+      proof (cases "(\<Squnion>i. Y i) = \<infinity>")
+        case True
+        (* no chain element is \<infinity> but lub is \<infinity> *)
+        have t100: "\<And>j::nat. \<exists>i::nat.  j  \<le> ( THE n::nat. Fin n = Y i)"
+          proof -
+            fix j::nat
+              obtain k where t102: "Fin j \<sqsubseteq> Y k"
+                by (metis LNat.inf_chainl3 True assms finite_chainE inf_ub lnle_def maxinch_is_thelub)
+              obtain l where t103: "Y k = (Fin l)"
+                by (metis x1)
+              have t104: "j \<le> l"
+                proof -
+                  have "Fin j \<sqsubseteq> Fin l"
+                    using t102 t103 by auto
+                  thus ?thesis
+                    by simp
+                qed      
+              hence "j \<le> (THE n::nat. Fin n = Y k)"
+                by (subst t103, simp)
+              thus "\<exists> i. j  \<le> ( THE n::nat. Fin n = Y i)"
+                by auto
+          qed
+             
+        have t10: "(\<Squnion>i. (ts \<down> THE n. (Fin n = Y i))) = (\<Squnion>i. (ts \<down> i ) )"
+          apply(rule chain_lub_eqI, simp_all add: assms)
+            apply (metis Fin_neq_inf assms chain_tsTakeL23 x1)
+            apply auto[1]
+            using t100 tstake_mono1 x1 by blast
+  
+        show ?thesis
+          apply (simp only: t1 True)
+          by (subst t10, simp)
+      next
+        case False
+          (* neither lub nor chain element is \<infinity> *)
+          obtain j where b1: "Y j = (\<Squnion>i. Y i)"
+            using False assms l42 unique_inf_lub by fastforce
+          obtain k where b3: "Y j = Fin k"
+            by (metis True infI)
+          have b2: "(\<Squnion>i. (ts \<down> THE n. (Fin n = Y i))) = (ts \<down> THE n. (Fin n = Y j) )"
+            apply (rule lub_chain_maxelem, simp_all)
+            apply (subst tstake_mono1, simp_all)
+            apply (simp add: b3)
+          proof -
+            fix i
+            have b5: "Y i \<sqsubseteq> Y j"
+              using assms b1 is_ub_thelub by fastforce
+            obtain k2 where b4: "Y i = Fin k2"
+              using True infI by blast
+            thus "(THE n. Fin n = Y i) \<le> k"
+                using b5 b3 b4 by auto
+          qed
+        then show ?thesis
+          by (simp only: t1 False b2 b1, simp)
+      qed
       
 next
   case False
-  obtain j where f1: "Y j = \<infinity>"
-      using False by auto
-  have f2: "(\<Squnion>i. Y i) = \<infinity>"
-    by (metis False assms inf_less_eq is_ub_thelub lnle_conv)
-  moreover
-  have f3: "(\<Squnion>i. if Y i = \<infinity> then ts else (ts \<down> THE n. (Fin n = Y i)) ) 
-              = (if Y j = \<infinity> then ts else (ts \<down> THE n. (Fin n = Y j)))"
-    apply (rule po_class.below_antisym)
-    using assms chain_tsTakeL2 f1 lub_below tsTake_prefix apply fastforce
-    using assms below_lub chain_tsTakeL2 by blast
-  ultimately
-  show ?thesis
-    by (simp add: f1)
+    (* a chain element is \<infinity> *)
+    obtain j where f1: "Y j = \<infinity>"
+        using False by auto
+    have f2: "(\<Squnion>i. Y i) = \<infinity>"
+      by (metis False assms inf_less_eq is_ub_thelub lnle_conv)
+    moreover
+    have f3: "(\<Squnion>i. if Y i = \<infinity> then ts else (ts \<down> THE n. (Fin n = Y i)) ) 
+                = (if Y j = \<infinity> then ts else (ts \<down> THE n. (Fin n = Y j)))"
+      apply (rule po_class.below_antisym)
+      using assms chain_tsTakeL2 f1 lub_below tsTake_prefix apply fastforce
+      using assms below_lub chain_tsTakeL2 by blast
+    ultimately
+    show ?thesis
+      by (simp add: f1)
 qed
   
   
@@ -951,7 +1023,7 @@ lemma tsbttake_mono2 [simp]: "monofun (\<lambda> tb. tsbTTakeL n tb)"
     apply (subst tsbttakeL_getch, simp add: tsbdom_below)
   by (simp add: monofun_cfun_arg monofun_cfun_fun)
     
-declare [[show_types]]
+
   
 lemma tsbttake_mono1 [simp]: "\<And> tb. monofun (\<lambda> n. tsbTTakeL n tb)"
   apply (rule monofunI)
