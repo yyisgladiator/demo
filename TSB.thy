@@ -541,7 +541,6 @@ lemma tsbttake_below [simp]: fixes tb:: "'m TSB"
 lemma tsbttake_lub [simp] : fixes tb:: "'m TSB"
   shows "(\<Squnion>i. (tb \<down> i)) = tb"
   apply (rule tsb_eq)
-
   oops
 
   subsubsection \<open>tsbTTakeL\<close>
@@ -1102,8 +1101,8 @@ thm tsbiTTake_def
 lemma tsbittake_well[simp]: "tsb_well (\<lambda>c. (c \<in> tsbiDom\<cdot>tbi)\<leadsto>tbi . c \<down> n )"
   apply (rule tsb_wellI)
    apply simp
-   apply (meson order.trans tsbi_getch_type tsttake_dom)
-  by (simp add: tsbiGetCh_def tsbidom_insert)
+   by (meson order.trans tsbi_getch_type tsttake_dom)
+  (* by (simp add: tsbiGetCh_def tsbidom_insert) *)
 
 
 lemma tsbittake_getch [simp]: fixes tsbi:: "'m TSB_inf"
