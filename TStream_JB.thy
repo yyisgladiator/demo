@@ -217,7 +217,7 @@ lemma conttsTakeL2[simp]: "cont (\<lambda> l. \<Lambda> ts. if l = \<infinity> t
 
   subsubsection \<open>more\<close>
 
-thm tsbTTakeL_def
+
   
 lemma tstakel_zero[simp]: "tsTakeL\<cdot>0\<cdot>ts = \<bottom>"
   by (simp add: tsTakeL_def)
