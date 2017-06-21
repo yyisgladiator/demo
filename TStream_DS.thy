@@ -15,7 +15,8 @@ default_sort countable
 (* here I just try a few things *)
 
 (* adm provable? *)
-lemma [simp]: "adm (\<lambda>a. \<forall>x. #\<surd> x = \<infinity> \<longrightarrow> #a = \<infinity> \<longrightarrow> tsAbs\<cdot>(tsProjSnd\<cdot>(tsZip\<cdot>x\<cdot>a)) = a)"
+lemma [simp]: 
+  "adm (\<lambda>a. \<forall>x. #\<surd> x = \<infinity> \<longrightarrow> #a = \<infinity> \<longrightarrow> tsAbs\<cdot>(tsProjSnd\<cdot>(tsZip\<cdot>x\<cdot>a)) = a)"
   apply (rule admI)
 oops
 
@@ -30,27 +31,37 @@ lemma tszip_tsprojsnd_rev: "#\<surd>ts=\<infinity> \<Longrightarrow> #xs=\<infin
   apply (simp_all)
 oops
 
+
+(* Assumptions *)
 lemma tstickcount_slen_adm [simp]: "\<And>f xs. adm (\<lambda>a. #\<surd> f\<cdot>a\<cdot>xs \<le> #\<surd> a)"
 by (metis (mono_tags, lifting) admI inf_ub l42 ts_infinite_lub)
 
-(* Assumptions *)
 lemma tszip_tstickcount_leq [simp]: "#\<surd>(tsZip\<cdot>ts\<cdot>xs) \<le> #\<surd>ts"
 apply (induction ts arbitrary: xs)
 apply (simp_all)
 apply (metis (no_types, lifting) delayFun_dropFirst delayfun_nbot less_lnsuc lnsuc_lnle_emb 
        trans_lnle tszip_strict(2) tsdropfirst_len tszip_delayfun)
-apply (rule_tac y=xs in scases', simp)
-apply (case_tac "stream=\<epsilon>", auto)
-apply (rule_tac ts=ts in tscases, auto)
+apply (rule_tac x=xs in scases, simp_all)
+apply (rule_tac ts=ts in tscases, simp_all)
 oops
 
+
+(* adm provable? *)
 lemma tsabs_slen_adm [simp]: "\<And>f xs. adm (\<lambda>a. #(tsAbs\<cdot>(f\<cdot>a\<cdot>xs)) \<le> #(tsAbs\<cdot>a))"
 apply (simp add: tsabs_insert)
 apply (rule admI)
 apply (simp add: contlub_cfun_arg contlub_cfun_fun)
 oops
 
-lemma h5: "adm (\<lambda>a. \<forall>x. #(tsAbs\<cdot>(tsZip\<cdot>a\<cdot>x)) \<le> #(tsAbs\<cdot>a))"
+lemma h5: "\<And>f b. adm (\<lambda>a. #(tsAbs\<cdot>(f\<cdot>a\<cdot>b)) \<le> #(tsAbs\<cdot>a))"
+  apply (rule admI)
+(*
+  apply (case_tac "#(tsAbs\<cdot>(\<Squnion>i. Y i)) = \<infinity>", simp)
+  apply (simp add: contlub_cfun_arg contlub_cfun_fun)
+  apply (case_tac "finite_chain Y")
+  using l42 apply force
+  apply (rule_tac x="#(tsAbs\<cdot>(\<Squnion>i. Y i))" in lncases, auto)
+*)
 sorry
 
 lemma tszip_tsabs_slen_leq [simp]: "#(tsAbs\<cdot>(tsZip\<cdot>ts\<cdot>xs)) \<le> #(tsAbs\<cdot>ts)"

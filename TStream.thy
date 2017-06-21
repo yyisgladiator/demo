@@ -1944,7 +1944,7 @@ lemma tsprojfst_tstickcount [simp]: "#\<surd>(tsProjFst\<cdot>ts) = #\<surd>ts"
 lemma tsprojsnd_tstickcount [simp]: "#\<surd>(tsProjSnd\<cdot>ts) = #\<surd>ts"
   by (simp add: tsProjSnd_def)
 
-(* ToDo: lemmata for tsprojfst/snd *)
+(* ToDo Oliver: lemmata for tsprojfst/snd *)
 
 lemma tsprojfst_tsabs: "tsAbs\<cdot>(tsProjFst\<cdot>ts) = sprojfst\<cdot>(tsAbs\<cdot>ts)"
 oops
@@ -3127,7 +3127,7 @@ apply (simp_all)
 apply (metis delayFun_dropFirst delayfun_nbot tsdropfirst_len tsremdups_h_delayfun)
 by (simp add: tsremdups_h_mlscons tstickcount_mlscons tsremdups_h_tstickcount)
 
-(* ToDo: lemmata for tsremdups *)
+(* ToDo Oliver: lemmata for tsremdups *)
 
 lemma tsremdups_h_tsabs: 
   "updis t && tsAbs\<cdot>(tsRemDups_h\<cdot>ts\<cdot>(Some (Discr t))) = srcdups\<cdot>(updis t && tsAbs\<cdot>ts)"
@@ -3142,6 +3142,8 @@ oops
 
 lemma tsremdups_tsabs_slen [simp]: "#(tsAbs\<cdot>(tsRemDups\<cdot>ts)) \<le> #(tsAbs\<cdot>ts)"
 oops
+
+(* ToDo: lemmata for tsremdups *)
 
 lemma tsremdups_h_tsdom_sub: 
   "(tsDom\<cdot>(tsRemDups_h\<cdot>ts\<cdot>(Some (Discr t)))) \<subseteq> tsDom\<cdot>(tsRemDups_h\<cdot>ts\<cdot>None)"
