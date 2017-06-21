@@ -344,19 +344,7 @@ lemma tsTakeL_maxinchain: assumes "Fin n = #\<surd>ts"
   by (metis (no_types, lifting) assms less2nat max_in_chainI min_def 
             tstakeL_len tstakeL_prefix tstake_below_eq)
           
-lemma tsTakel_lub1_getch_eq: assumes "chain Y" and "c \<in> tsbDom\<cdot>tb"
-  shows "tsTakeL\<cdot>(Lub Y)\<cdot>(tb  .  c) \<sqsubseteq> (\<Squnion>i::nat. tsTakeL\<cdot>(Y i)\<cdot>(tb  .  c))"
-  by (simp add: assms(1) contlub_cfun_arg contlub_cfun_fun)
-    
-lemma tsTakel_lub2_getch_eq: assumes "chain Y" and "c \<in> tsbDom\<cdot>(Lub Y)"
-  shows "tsTakeL\<cdot>n\<cdot>(Lub Y  .  c) \<sqsubseteq> (\<Squnion>i. tsTakeL\<cdot>n\<cdot>(Y i  .  c))"
-proof -
-    fix c :: channel
-    have "(\<Squnion>na. tsTakeL\<cdot>n\<cdot>(Y na . c)) = tsTakeL\<cdot>n\<cdot>(Lub Y . c)"
-      by (simp add: assms contlub_cfun_arg contlub_cfun_fun)
-    then show "tsTakeL\<cdot>n\<cdot>(Lub Y . c) \<sqsubseteq> (\<Squnion>na. tsTakeL\<cdot>n\<cdot>(Y na . c))"
-      by simp
-qed
+
 
     
 end
