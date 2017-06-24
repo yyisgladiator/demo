@@ -1946,6 +1946,26 @@ lemma tsprojsnd_tstickcount [simp]: "#\<surd>(tsProjSnd\<cdot>ts) = #\<surd>ts"
 
 (* ToDo Oliver: lemmata for tsprojfst/snd *)
 
+lemma tsprojfst_tsabs_h:
+  "smap inversMsg\<cdot>({e. e \<noteq> \<surd>} \<ominus> smap (case_event (\<lambda>m. \<M> fst m) \<surd>)\<cdot>s) 
+     = smap fst\<cdot>(smap inversMsg\<cdot>({e. e \<noteq> \<surd>} \<ominus> s))"
+  proof (induction s, simp_all)
+    fix u :: "('a \<times> 'b) event discr\<^sub>\<bottom>" and s :: "('a \<times> 'b) event stream"
+    assume u_nbot: "u \<noteq> \<bottom>"
+    assume ind_hyp: "smap inversMsg\<cdot>({e. e \<noteq> \<surd>} \<ominus> smap (\<lambda>a. case a of \<M> m \<Rightarrow> \<M> fst m | \<surd> \<Rightarrow> \<surd>)\<cdot>s)
+                  = smap fst\<cdot>(smap inversMsg\<cdot>({e. e \<noteq> \<surd>} \<ominus> s))"
+    obtain m where u_updis: "u=updis m"
+      using u_nbot updis_exists by blast
+    have m_case: "m \<noteq> \<surd> \<Longrightarrow> \<up>(case m of \<M> m \<Rightarrow> \<M> fst m | \<surd> \<Rightarrow> \<surd>) = \<up>(\<M> fst \<M>\<inverse> m)"
+      by (metis event.exhaust event.simps(4))
+    show "smap inversMsg\<cdot>({e. e \<noteq> \<surd>} \<ominus> smap (\<lambda>a. case a of \<M> m \<Rightarrow> \<M> fst m | \<surd> \<Rightarrow> \<surd>)\<cdot>(u && s)) 
+            = smap fst\<cdot>(smap inversMsg\<cdot>({e. e \<noteq> \<surd>} \<ominus> u && s))"
+      apply (simp add: u_updis lscons_conv)
+      apply (case_tac "m=\<surd>")
+      apply (simp add: ind_hyp)
+      by (simp add: m_case ind_hyp)
+  qed
+
 lemma tsprojfst_tsabs: "tsAbs\<cdot>(tsProjFst\<cdot>ts) = sprojfst\<cdot>(tsAbs\<cdot>ts)"
 oops
 
