@@ -2905,6 +2905,9 @@ subsection {* admissibility rules *}
 
 (* ToDo: admissibility lemmata *)
 
+lemma adm_tstickcount_leq [simp]: "\<And>f b. adm (\<lambda>a. #\<surd> f\<cdot>a\<cdot>b \<le> #\<surd> a)"
+by (metis (mono_tags, lifting) admI inf_ub l42 ts_infinite_lub)
+
 lemma adm_tsdom_sub [simp]: "\<And>f b. adm (\<lambda>a. tsDom\<cdot>(f\<cdot>a\<cdot>b) \<subseteq> tsDom\<cdot>a)"
 oops
 
@@ -3022,12 +3025,28 @@ apply (simp_all)
 apply (metis Inf'_neq_0 delayfun_nbot slen_empty_eq tszip_delayfun)
 by (metis Inf'_neq_0 inf_scase lscons_conv strict_slen tsmlscons_nbot tszip_mlscons up_defined)
 
-lemma tszip_tstickcount [simp]: "#xs=\<infinity> \<Longrightarrow> #\<surd>(tsZip\<cdot>ts\<cdot>xs) = #\<surd>ts"
+lemma tszip_tstickcount [simp]: "#xs=\<infinity> \<Longrightarrow> #\<surd> tsZip\<cdot>ts\<cdot>xs  = #\<surd> ts"
 apply (induction ts arbitrary: xs)
 apply (simp_all)
 apply (metis Inf'_neq_0 delayFun_dropFirst delayfun_nbot slen_empty_eq tsdropfirst_len
        tszip_delayfun)
 by (metis Inf'_neq_0 inf_scase lscons_conv slen_empty_eq tstickcount_mlscons tszip_mlscons)
+
+lemma tszip_tstickcount_leq_h:
+  "#\<surd> tsMLscons\<cdot>(updis (t, x))\<cdot>(delayFun\<cdot>\<bottom>) \<le> #\<surd> tsMLscons\<cdot>(updis t)\<cdot>(delayFun\<cdot>ts)"
+by (simp add: tstickcount_mlscons delayfun_insert)
+
+lemma tszip_tstickcount_leq [simp]: "#\<surd> tsZip\<cdot>ts\<cdot>xs \<le> #\<surd> ts"
+  apply (induction ts arbitrary: xs)
+  apply (simp_all)
+  apply (metis (no_types, lifting) delayFun_dropFirst delayfun_nbot less_lnsuc lnsuc_lnle_emb 
+         trans_lnle tszip_strict(2) tsdropfirst_len tszip_delayfun)
+  apply (rule_tac x=xs in scases, simp_all)
+  apply (rule_tac ts=ts in tscases, simp_all)
+  apply (case_tac "s\<noteq>\<epsilon>", auto)
+  apply (metis lscons_conv tstickcount_mlscons tszip_mlscons)
+  apply (simp add: tszip_tstickcount_leq_h sup'_def tszip_mlscons_msgdelayfun)
+  by (metis lscons_conv tstickcount_mlscons tszip_mlscons_2msg)
 
 lemma tszip_tsabs_slen [simp]: "#xs=\<infinity> \<Longrightarrow> #(tsAbs\<cdot>(tsZip\<cdot>ts\<cdot>xs)) = #(tsAbs\<cdot>ts)"
   apply (induction ts arbitrary: xs)

@@ -9,7 +9,7 @@ theory TStream_DS
  
 imports TStream
 
-begin  
+begin
 default_sort countable
 
 (* here I just try a few things *)
@@ -32,44 +32,51 @@ lemma tszip_tsprojsnd_rev: "#\<surd>ts=\<infinity> \<Longrightarrow> #xs=\<infin
 oops
 
 
-(* Assumptions *)
-lemma tstickcount_slen_adm [simp]: "\<And>f xs. adm (\<lambda>a. #\<surd> f\<cdot>a\<cdot>xs \<le> #\<surd> a)"
-by (metis (mono_tags, lifting) admI inf_ub l42 ts_infinite_lub)
-
-lemma tszip_tstickcount_leq [simp]: "#\<surd>(tsZip\<cdot>ts\<cdot>xs) \<le> #\<surd>ts"
-apply (induction ts arbitrary: xs)
-apply (simp_all)
-apply (metis (no_types, lifting) delayFun_dropFirst delayfun_nbot less_lnsuc lnsuc_lnle_emb 
-       trans_lnle tszip_strict(2) tsdropfirst_len tszip_delayfun)
-apply (rule_tac x=xs in scases, simp_all)
-apply (rule_tac ts=ts in tscases, simp_all)
-oops
-
+lemma tsabs_slen_lub [simp]: assumes "chain Y" and "\<not>finite_chain Y"
+  shows "\<exists>k. #(tsAbs\<cdot>(\<Squnion>i. Y i)) = Fin k \<or> #(tsAbs\<cdot>(\<Squnion>i. Y i)) = \<infinity>"
+  using lncases by auto
 
 (* adm provable? *)
-lemma tsabs_slen_adm [simp]: "\<And>f xs. adm (\<lambda>a. #(tsAbs\<cdot>(f\<cdot>a\<cdot>xs)) \<le> #(tsAbs\<cdot>a))"
-apply (simp add: tsabs_insert)
-apply (rule admI)
-apply (simp add: contlub_cfun_arg contlub_cfun_fun)
-oops
-
-lemma h5: "\<And>f b. adm (\<lambda>a. #(tsAbs\<cdot>(f\<cdot>a\<cdot>b)) \<le> #(tsAbs\<cdot>a))"
+lemma tsabs_slen_adm [simp]: "\<And>b. adm (\<lambda>a. #(tsAbs\<cdot>(tsZip\<cdot>a\<cdot>b)) \<le> #(tsAbs\<cdot>a))"
   apply (rule admI)
-(*
-  apply (case_tac "#(tsAbs\<cdot>(\<Squnion>i. Y i)) = \<infinity>", simp)
-  apply (simp add: contlub_cfun_arg contlub_cfun_fun)
   apply (case_tac "finite_chain Y")
   using l42 apply force
-  apply (rule_tac x="#(tsAbs\<cdot>(\<Squnion>i. Y i))" in lncases, auto)
-*)
+  apply (rule_tac x="#(tsAbs\<cdot>(\<Squnion>i. Y i))" in lncases, simp_all)
+  apply (rule_tac x=b in scases, auto)
 sorry
 
 lemma tszip_tsabs_slen_leq [simp]: "#(tsAbs\<cdot>(tsZip\<cdot>ts\<cdot>xs)) \<le> #(tsAbs\<cdot>ts)"
   apply (induction ts arbitrary: xs)
-  apply (simp_all add: h5)
+  apply (simp_all)
   apply (metis tszip_strict(2) tsabs_delayfun tszip_delayfun)
-  apply (rule_tac y=xs in scases', auto)
+  apply (rule_tac x=xs in scases, auto)
+  apply (rule_tac ts=ts in tscases, simp_all)
+  apply (case_tac "s\<noteq>\<epsilon>")
+  apply (metis (no_types, hide_lams) lnle_def lscons_conv minimal monofun_cfun_arg slen_scons
+         strict_slen tsabs_bot tsabs_mlscons tsmlscons_bot2 tszip_mlscons)
+  apply (metis (no_types, hide_lams) delayfun_nbot lnle_def lscons_conv monofun_cfun_arg
+         slen_scons tsZip.simps(1) tsabs_delayfun tsabs_mlscons tszip_mlscons_msgdelayfun)
+  apply (case_tac "s=\<epsilon>")
+  apply (metis bot_is_0 lnle_def minimal sconc_snd_empty strict_slen sup'_def tsZip.simps(1)
+         tsabs_bot tsmlscons_bot2 tszip_mlscons_2msg) 
 oops
+
+(* simple test for abbreviation *)
+
+abbreviation delay_abbr :: "'a tstream \<Rightarrow> 'a tstream" ("delay")
+where "delay ts \<equiv> (tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>ts)"
+
+abbreviation tsmlscons_abbr :: "'a discr \<Rightarrow> 'a tstream \<Rightarrow> 'a tstream" ("_ &&\<surd> _ ")
+where "t &&\<surd> ts \<equiv> (tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>t))\<cdot>ts)"
+
+lemma "tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>t))\<cdot>ts = t &&\<surd> ts"
+  by simp
+
+lemma "delay ts = delayFun\<cdot>ts"
+  by (simp add: delayfun_tslscons)
+
+lemma "tsMLscons\<cdot>(updis t)\<cdot>ts = Discr t &&\<surd> ts"
+  by (simp add: tsmlscons_lscons)
 
 (* simple test for tsremdups/tszip *)
 
