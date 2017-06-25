@@ -14,6 +14,9 @@ default_sort countable
 
 (* here I just try a few things *)
 
+lemma tszip_tsdom: "tsDom\<cdot>(tsZip\<cdot>ts\<cdot>xs) \<subseteq> sdom\<cdot>(szip\<cdot>(tsAbs\<cdot>ts)\<cdot>xs)"
+oops
+
 (* adm provable? *)
 lemma [simp]: 
   "adm (\<lambda>a. \<forall>x. #\<surd> x = \<infinity> \<longrightarrow> #a = \<infinity> \<longrightarrow> tsAbs\<cdot>(tsProjSnd\<cdot>(tsZip\<cdot>x\<cdot>a)) = a)"
@@ -48,17 +51,6 @@ sorry
 lemma tszip_tsabs_slen_leq [simp]: "#(tsAbs\<cdot>(tsZip\<cdot>ts\<cdot>xs)) \<le> #(tsAbs\<cdot>ts)"
   apply (induction ts arbitrary: xs)
   apply (simp_all)
-  apply (metis tszip_strict(2) tsabs_delayfun tszip_delayfun)
-  apply (rule_tac x=xs in scases, auto)
-  apply (rule_tac ts=ts in tscases, simp_all)
-  apply (case_tac "s\<noteq>\<epsilon>")
-  apply (metis (no_types, hide_lams) lnle_def lscons_conv minimal monofun_cfun_arg slen_scons
-         strict_slen tsabs_bot tsabs_mlscons tsmlscons_bot2 tszip_mlscons)
-  apply (metis (no_types, hide_lams) delayfun_nbot lnle_def lscons_conv monofun_cfun_arg
-         slen_scons tsZip.simps(1) tsabs_delayfun tsabs_mlscons tszip_mlscons_msgdelayfun)
-  apply (case_tac "s=\<epsilon>")
-  apply (metis bot_is_0 lnle_def minimal sconc_snd_empty strict_slen sup'_def tsZip.simps(1)
-         tsabs_bot tsmlscons_bot2 tszip_mlscons_2msg) 
 oops
 
 (* simple test for abbreviation *)
