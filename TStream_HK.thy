@@ -239,20 +239,32 @@ definition tsMLscons :: "'a discr u \<rightarrow> 'a tstream \<rightarrow> 'a ts
 definition DiscrTick :: "'a event discr" where
   "DiscrTick = Discr \<surd>"
 
+definition s2list     :: "'a stream \<Rightarrow> 'a list" where
+"s2list s \<equiv> if #s \<noteq> \<infinity> then SOME l. list2s l = s else undefined"
+
+primrec list2ts :: "'a event list \<Rightarrow> 'a tstream"
+where
+  list2ts_0:   "list2ts [] = \<bottom>" |
+  list2ts_Suc: "list2ts (a#as) = (tsLscons\<cdot>(updis a)\<cdot>(list2ts as))"
+
+lift_definition delayFun :: "'m tstream \<rightarrow> 'm tstream" is
+"\<lambda>ts . (Abs_tstream (\<up>\<surd>)) \<bullet> ts"
+  by (simp add: Cfun.cfun.Rep_cfun)
+
+primrec list2ts_alter :: "'a event list \<Rightarrow> 'a tstream"
+where
+  list2ts_alter_0:   "list2ts_alter [] = \<bottom>" |
+  list2ts_alter_Suc: "list2ts_alter (a#as) = (if a=\<surd> then delayFun\<cdot>(list2ts_alter as) else (tsMLscons\<cdot>(updis \<M>\<inverse> a)\<cdot>(list2ts_alter as)))"
+
+(*
 primrec l2ts::"nat \<Rightarrow> 'a event discr u list \<Rightarrow> 'a tstream \<Rightarrow> 'a tstream" where
 "l2ts 0 l ts= ts"|
 "l2ts (Suc n) l ts = (if l=[] then ts else l2ts n (butlast l) (tsLscons\<cdot>(last l)\<cdot>ts))"
 
 definition l2tstream::"'a event discr u list \<Rightarrow> 'a tstream" where
 "l2tstream l = l2ts (length l) l \<bottom> "
-
-(*
-definition l2tstream_helper :: "'a event discr u list \<rightarrow> 'a tstream \<rightarrow>'a tstream" where
-"l2tstream_helper \<equiv> ( \<Lambda> h. (\<lambda>l ts. if l=[] then ts else h\<cdot>(butlast l)\<cdot>(tsLscons\<cdot>(last l)\<cdot>ts)))"
-
-definition l2tstream :: "'a event discr u list \<rightarrow> 'a tstream" where
-"l2tstream \<equiv> \<Lambda> l. l2tstream_helper\<cdot>l\<cdot>\<bottom>"
 *)
+
 (* ----------------------------------------------------------------------- *)
   subsection \<open>Lemmas on tstream\<close>
 (* ----------------------------------------------------------------------- *)
@@ -1717,9 +1729,7 @@ apply(auto simp add: tsId_def tsStrongCausal_def)
 by (metis Rep_cfun_strict1 tsTake.simps(1) ts_existsNBot tstake_bot tstake_fin2)
 
 (* eine stark Causale, stetige function appends a \<surd> to a timed stream *)
-lift_definition delayFun :: "'m tstream \<rightarrow> 'm tstream" is
-"\<lambda>ts . (Abs_tstream (\<up>\<surd>)) \<bullet> ts"
-  by (simp add: Cfun.cfun.Rep_cfun)
+
 
 lemma delayFun_dropFirst[simp]: "tsDropFirst\<cdot>(delayFun\<cdot>ts) = ts"
   apply(simp add: tsdropfirst_insert "delayFun.rep_eq")
@@ -2611,15 +2621,24 @@ lemma tsmlscons_lscons3:
   by (simp add: tsMLscons_def tslscons2lscons)
 
 (************************************************)
-  subsection \<open>l2tstream\<close>    
+  subsection \<open>list2ts\<close>    
 (************************************************)
 
+lemma testlist2ts: "list2ts ([\<M> True,\<M> False, \<surd>,\<M> False]) = Abs_tstream (<[Msg True,Msg False,\<surd>]>)"
+apply (simp add: tslscons_insert)
+apply (simp add: espf2tspf_def)+
+apply (subst lscons_conv)+
+by simp
+
+lemma testlist2ts_alter: "list2ts_alter ([\<M> True,\<M> False, \<surd>,\<M> False]) = tsMLscons\<cdot>(updis True)\<cdot>(tsMLscons\<cdot>(updis False)\<cdot>(delayFun\<cdot>\<bottom>))"
+by (simp add: tslscons_insert)
+(*
 lemma testl2tstream: "l2tstream ([updis (\<M> 1),updis (\<M> 1),(updis \<surd>),updis (\<M> 1)]) = Abs_tstream (<[Msg 1,Msg 1,\<surd>]>)"
 apply (simp add: l2tstream_def tslscons_insert)
 apply (simp add: espf2tspf_def)+
 apply (subst lscons_conv)+
 by simp
-
+*)
 (* ----------------------------------------------------------------------- *)
 subsection {* delayFun *}
 (* ----------------------------------------------------------------------- *)
