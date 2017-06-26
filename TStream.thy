@@ -244,7 +244,6 @@ definition DiscrTick :: "'a event discr" where
   "DiscrTick = Discr \<surd>"
 
 
-
 (* ----------------------------------------------------------------------- *)
   subsection \<open>Lemmas on tstream\<close>
 (* ----------------------------------------------------------------------- *)
@@ -2601,6 +2600,7 @@ lemma tsmlscons_lscons2: "ts\<noteq>\<bottom> \<Longrightarrow> Rep_tstream (tsM
 lemma tsmlscons_lscons3: 
   "ts\<noteq>\<bottom> \<Longrightarrow> tsMLscons\<cdot>(updis t)\<cdot>ts = Abs_tstream (updis (Msg t) && Rep_tstream ts)"
   by (simp add: tsMLscons_def tslscons2lscons)
+
 
 (* ----------------------------------------------------------------------- *)
 subsection {* delayFun *}
