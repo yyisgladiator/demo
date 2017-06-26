@@ -243,20 +243,7 @@ definition tsMLscons :: "'a discr u \<rightarrow> 'a tstream \<rightarrow> 'a ts
 definition DiscrTick :: "'a event discr" where
   "DiscrTick = Discr \<surd>"
 
-primrec l2ts::"nat \<Rightarrow> 'a event discr u list \<Rightarrow> 'a tstream \<Rightarrow> 'a tstream" where
-"l2ts 0 l ts= ts"|
-"l2ts (Suc n) l ts = (if l=[] then ts else l2ts n (butlast l) (tsLscons\<cdot>(last l)\<cdot>ts))"
 
-definition l2tstream::"'a event discr u list \<Rightarrow> 'a tstream" where
-"l2tstream l = l2ts (length l) l \<bottom> "
-
-(*
-definition l2tstream_helper :: "'a event discr u list \<rightarrow> 'a tstream \<rightarrow>'a tstream" where
-"l2tstream_helper \<equiv> ( \<Lambda> h. (\<lambda>l ts. if l=[] then ts else h\<cdot>(butlast l)\<cdot>(tsLscons\<cdot>(last l)\<cdot>ts)))"
-
-definition l2tstream :: "'a event discr u list \<rightarrow> 'a tstream" where
-"l2tstream \<equiv> \<Lambda> l. l2tstream_helper\<cdot>l\<cdot>\<bottom>"
-*)
 (* ----------------------------------------------------------------------- *)
   subsection \<open>Lemmas on tstream\<close>
 (* ----------------------------------------------------------------------- *)
@@ -2614,15 +2601,6 @@ lemma tsmlscons_lscons3:
   "ts\<noteq>\<bottom> \<Longrightarrow> tsMLscons\<cdot>(updis t)\<cdot>ts = Abs_tstream (updis (Msg t) && Rep_tstream ts)"
   by (simp add: tsMLscons_def tslscons2lscons)
 
-(************************************************)
-  subsection \<open>l2tstream\<close>    
-(************************************************)
-
-lemma testl2tstream: "l2tstream ([updis (\<M> 1),updis (\<M> 1),(updis \<surd>),updis (\<M> 1)]) = Abs_tstream (<[Msg 1,Msg 1,\<surd>]>)"
-apply (simp add: l2tstream_def tslscons_insert)
-apply (simp add: espf2tspf_def)+
-apply (subst lscons_conv)+
-by simp
 
 (* ----------------------------------------------------------------------- *)
 subsection {* delayFun *}
