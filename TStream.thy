@@ -1945,22 +1945,17 @@ lemma tsprojsnd_tstickcount [simp]: "#\<surd>(tsProjSnd\<cdot>ts) = #\<surd>ts"
 
 (* ToDo Oliver: lemmata for tsprojfst/snd *)
 
-lemma tsprojfst_tsabs_h:
-  "smap inversMsg\<cdot>({e. e \<noteq> \<surd>} \<ominus> smap (case_event (\<lambda>m. \<M> fst m) \<surd>)\<cdot>s) 
-     = smap fst\<cdot>(smap inversMsg\<cdot>({e. e \<noteq> \<surd>} \<ominus> s))"
-  proof (induction s, simp_all)
-    fix u :: "('a \<times> 'b) event discr\<^sub>\<bottom>" and s :: "('a \<times> 'b) event stream"
-    assume u_nbot: "u \<noteq> \<bottom>"
-    assume ind_hyp: "smap inversMsg\<cdot>({e. e \<noteq> \<surd>} \<ominus> smap (\<lambda>a. case a of \<M> m \<Rightarrow> \<M> fst m | \<surd> \<Rightarrow> \<surd>)\<cdot>s)
-                  = smap fst\<cdot>(smap inversMsg\<cdot>({e. e \<noteq> \<surd>} \<ominus> s))"
-    obtain m where u_updis: "u=updis m"
-      using u_nbot updis_exists by blast
-    have m_case: "m \<noteq> \<surd> \<Longrightarrow> \<up>(case m of \<M> m \<Rightarrow> \<M> fst m | \<surd> \<Rightarrow> \<surd>) = \<up>(\<M> fst \<M>\<inverse> m)"
+lemma tsproj_tsabs_h:
+  "smap inversMsg\<cdot>({e. e \<noteq> \<surd>} \<ominus> smap (case_event (\<lambda>m. \<M> f m) \<surd>)\<cdot>s) 
+     = smap f\<cdot>(smap inversMsg\<cdot>({e. e \<noteq> \<surd>} \<ominus> s))"
+  proof (rule ind [of _ s], simp_all)
+    fix a :: "'b event" and s :: "'b event stream"
+    assume ind_hyp: "smap inversMsg\<cdot>({e. e \<noteq> \<surd>} \<ominus> smap (\<lambda>a. case a of \<M> m \<Rightarrow> \<M> f m | \<surd> \<Rightarrow> \<surd>)\<cdot>s) = smap f\<cdot>(smap inversMsg\<cdot>({e. e \<noteq> \<surd>} \<ominus> s))"
+    have m_case: "a \<noteq> \<surd> \<Longrightarrow> \<up>(case a of \<M> m \<Rightarrow> \<M> f m | \<surd> \<Rightarrow> \<surd>) = \<up>(\<M> f \<M>\<inverse> a)"
       by (metis event.exhaust event.simps(4))
-    show "smap inversMsg\<cdot>({e. e \<noteq> \<surd>} \<ominus> smap (\<lambda>a. case a of \<M> m \<Rightarrow> \<M> fst m | \<surd> \<Rightarrow> \<surd>)\<cdot>(u && s)) 
-            = smap fst\<cdot>(smap inversMsg\<cdot>({e. e \<noteq> \<surd>} \<ominus> u && s))"
-      apply (simp add: u_updis lscons_conv)
-      apply (case_tac "m=\<surd>")
+    show "smap inversMsg\<cdot>({e. e \<noteq> \<surd>} \<ominus> \<up>(case a of \<M> m \<Rightarrow> \<M> f m | \<surd> \<Rightarrow> \<surd>) \<bullet> smap (case_event (\<lambda>m. \<M> f m) \<surd>)\<cdot>s) =
+           smap f\<cdot>(smap inversMsg\<cdot>({e. e \<noteq> \<surd>} \<ominus> \<up>a \<bullet> s))"
+      apply (case_tac "a=\<surd>")
       apply (simp add: ind_hyp)
       by (simp add: m_case ind_hyp)
   qed
@@ -2576,7 +2571,7 @@ lemma tslscons_srt2 [simp]: "tsRt\<cdot>(tsLscons\<cdot>(updis \<surd>)\<cdot>ts
 (************************************************)
     
 lemma tsmlscons2tslscons: "tsMLscons\<cdot>(updis m)\<cdot>ts = tsLscons\<cdot>(updis (Msg m))\<cdot>ts"
-  by(simp add: tsMLscons_def)  
+  by(simp add: tsMLscons_def)
 
 lemma tsmlscons_bot [simp]: "tsMLscons\<cdot>\<bottom>\<cdot>ts = \<bottom>"    
   by(simp add: tsMLscons_def)    
