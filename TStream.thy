@@ -3003,7 +3003,7 @@ lemma tszip_mlscons_2msg_bot:
 by (simp add: tszip_mlscons_2msg)
 
 lemma tszip_mlscons_msgdelayfun:
-  "tsZip\<cdot>(tsMLscons\<cdot>(updis t)\<cdot>(delayFun\<cdot>ts))\<cdot>((updis x) && xs)
+  "tsZip\<cdot>(tsMLscons\<cdot>(updis t)\<cdot>(delayFun\<cdot>ts))\<cdot>(updis x && xs)
                            = tsMLscons\<cdot>(updis (t, x))\<cdot>(delayFun\<cdot>(tsZip\<cdot>ts\<cdot>xs))"
 by (metis (no_types, lifting) delayfun_tslscons tsmlscons_lscons tszip_tslscons_msgtick 
     up_defined upapply2_rep_eq)
@@ -3012,7 +3012,7 @@ lemma tszip_delayfun: "xs\<noteq>\<epsilon> \<Longrightarrow> tsZip\<cdot>(delay
 by (simp add: delayfun_tslscons)
 
 lemma tszip_mlscons:
-  "xs\<noteq>\<epsilon> \<Longrightarrow> tsZip\<cdot>(tsMLscons\<cdot>(updis t)\<cdot>ts)\<cdot>((updis x) && xs)
+  "xs\<noteq>\<epsilon> \<Longrightarrow> tsZip\<cdot>(tsMLscons\<cdot>(updis t)\<cdot>ts)\<cdot>(updis x && xs)
                            = tsMLscons\<cdot>(updis (t, x))\<cdot>(tsZip\<cdot>ts\<cdot>xs)"
 apply (induction ts)
 apply (simp_all)

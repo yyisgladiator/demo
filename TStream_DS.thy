@@ -29,6 +29,7 @@ lemma tszip_tsprojsnd_rev_h:
   apply (simp_all)
 oops
 
+(* tsabs_tsproj/tszip *)
 lemma tszip_tsprojsnd_rev: "#\<surd>ts=\<infinity> \<Longrightarrow> #xs=\<infinity> \<Longrightarrow> tsAbs\<cdot>(tsProjSnd\<cdot>(tsZip\<cdot>ts\<cdot>xs)) = xs"
   apply (induction xs arbitrary: ts)
   apply (simp_all)
@@ -46,7 +47,16 @@ lemma tsabs_slen_adm [simp]: "\<And>b. adm (\<lambda>a. #(tsAbs\<cdot>(tsZip\<cd
   using l42 apply force
   apply (rule_tac x="#(tsAbs\<cdot>(\<Squnion>i. Y i))" in lncases, simp_all)
   apply (rule_tac x=b in scases, auto)
-sorry
+oops
+
+lemma tszip_nbot: "ts \<noteq> \<bottom> \<Longrightarrow> xs \<noteq> \<epsilon> \<Longrightarrow> tsZip\<cdot>ts\<cdot>xs \<noteq> \<bottom>"
+  apply (rule_tac x=xs in scases, simp_all) 
+  apply (rule_tac ts=ts in tscases, simp_all)
+  apply (simp add: tszip_delayfun)  
+oops
+
+lemma tszip_tsabs: "xs\<noteq>\<epsilon> \<Longrightarrow> tsAbs\<cdot>(tsZip\<cdot>ts\<cdot>(updis x && xs)) = szip\<cdot>(tsAbs\<cdot>ts)\<cdot>(updis x && xs)"
+oops
 
 lemma tszip_tsabs_slen_leq [simp]: "#(tsAbs\<cdot>(tsZip\<cdot>ts\<cdot>xs)) \<le> #(tsAbs\<cdot>ts)"
   apply (induction ts arbitrary: xs)
