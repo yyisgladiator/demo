@@ -12,27 +12,31 @@ imports TStream
 begin
 default_sort countable
 
+(* simple test for abbreviation *)
+
+abbreviation delay_abbr :: "'a tstream \<Rightarrow> 'a tstream" ("delay")
+where "delay ts \<equiv> (tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>ts)"
+
+abbreviation tsmlscons_abbr :: "'a discr \<Rightarrow> 'a tstream \<Rightarrow> 'a tstream" ("_ &&\<surd> _ ")
+where "t &&\<surd> ts \<equiv> (tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>t))\<cdot>ts)"
+
+lemma "tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>t))\<cdot>ts = t &&\<surd> ts"
+  by simp
+
+lemma "delay ts = delayFun\<cdot>ts"
+  by (simp add: delayfun_tslscons)
+
+lemma "tsMLscons\<cdot>(updis t)\<cdot>ts = Discr t &&\<surd> ts"
+  by (simp add: tsmlscons_lscons)
+
 (* here I just try a few things *)
 
+lemma [simp]: "\<And>b. adm (\<lambda>a. tsDom\<cdot>(tsZip\<cdot>a\<cdot>b) \<subseteq> sdom\<cdot>(szip\<cdot>(tsAbs\<cdot>a)\<cdot>b))"
+oops
+
 lemma tszip_tsdom: "tsDom\<cdot>(tsZip\<cdot>ts\<cdot>xs) \<subseteq> sdom\<cdot>(szip\<cdot>(tsAbs\<cdot>ts)\<cdot>xs)"
-oops
-
-(* adm provable? *)
-lemma [simp]: 
-  "adm (\<lambda>a. \<forall>x. #\<surd> x = \<infinity> \<longrightarrow> #a = \<infinity> \<longrightarrow> tsAbs\<cdot>(tsProjSnd\<cdot>(tsZip\<cdot>x\<cdot>a)) = a)"
-  apply (rule admI)
-oops
-
-lemma tszip_tsprojsnd_rev_h: 
-  "#\<surd>ts=\<infinity> \<Longrightarrow> #xs=\<infinity> \<Longrightarrow> tsAbs\<cdot>(tsProjSnd\<cdot>(tsZip\<cdot>(delayFun\<cdot>ts)\<cdot>xs)) = xs"
-  apply (induction ts arbitrary: xs)
-  apply (simp_all)
-oops
-
-(* tsabs_tsproj/tszip *)
-lemma tszip_tsprojsnd_rev: "#\<surd>ts=\<infinity> \<Longrightarrow> #xs=\<infinity> \<Longrightarrow> tsAbs\<cdot>(tsProjSnd\<cdot>(tsZip\<cdot>ts\<cdot>xs)) = xs"
-  apply (induction xs arbitrary: ts)
-  apply (simp_all)
+apply (induction ts arbitrary: xs)
+apply (simp_all)
 oops
 
 
@@ -62,23 +66,6 @@ lemma tszip_tsabs_slen_leq [simp]: "#(tsAbs\<cdot>(tsZip\<cdot>ts\<cdot>xs)) \<l
   apply (induction ts arbitrary: xs)
   apply (simp_all)
 oops
-
-(* simple test for abbreviation *)
-
-abbreviation delay_abbr :: "'a tstream \<Rightarrow> 'a tstream" ("delay")
-where "delay ts \<equiv> (tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>ts)"
-
-abbreviation tsmlscons_abbr :: "'a discr \<Rightarrow> 'a tstream \<Rightarrow> 'a tstream" ("_ &&\<surd> _ ")
-where "t &&\<surd> ts \<equiv> (tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>t))\<cdot>ts)"
-
-lemma "tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>t))\<cdot>ts = t &&\<surd> ts"
-  by simp
-
-lemma "delay ts = delayFun\<cdot>ts"
-  by (simp add: delayfun_tslscons)
-
-lemma "tsMLscons\<cdot>(updis t)\<cdot>ts = Discr t &&\<surd> ts"
-  by (simp add: tsmlscons_lscons)
 
 (* simple test for tsremdups/tszip *)
 

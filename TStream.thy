@@ -1905,12 +1905,20 @@ lemma tsmap_tsabs_slen [simp]: "#(tsAbs\<cdot>(tsMap f\<cdot>ts)) = #(tsAbs\<cdo
 
 (* ToDo: lemmata for tsmap *)
 
+lemma tsmap_tsdom_range_h:
+  "{u. \<M> u \<in> sdom\<cdot>(smap (case_event (\<lambda>m. \<M> f m) \<surd>)\<cdot>s)} \<subseteq> range f"
+oops
+
 text {* tsMap only produce elements in the range of the mapped function f *}
 lemma tsmap_tsdom_range: "tsDom\<cdot>(tsMap f\<cdot>ts) \<subseteq> range f"
 oops
 
+lemma tsmap_tsdom_h: 
+  "{u. \<M> u \<in> sdom\<cdot>(smap (case_event (\<lambda>m. \<M> f m) \<surd>)\<cdot>s)} = f ` {u. \<M> u \<in> sdom\<cdot>s}"
+oops
+
 text {* every element produced by (tsMap f) is in the image of the function f *}
-lemma tsmap_tsdom: "tsDom\<cdot>(tsMap f\<cdot>ts) =  f ` tsDom\<cdot>ts"
+lemma tsmap_tsdom: "tsDom\<cdot>(tsMap f\<cdot>ts) = f ` tsDom\<cdot>ts"
 oops
 
 (* tsProjFst and tsProjSnd *)
@@ -2002,10 +2010,14 @@ lemma tsfilter_tstickcount [simp]: "#\<surd>(tsFilter M\<cdot>ts) = #\<surd>ts"
    apply (simp add: tsfilter_h_well)
    by simp
 
-lemma tsfilter_weak:"tsWeakCausal (Rep_cfun (tsFilter M))"
+lemma tsfilter_weak: "tsWeakCausal (Rep_cfun (tsFilter M))"
   by (subst tsWeak2cont2, auto)
 
 (* ToDo: lemma for tsfilter *)
+
+lemma tsfilter_tsabs_h: 
+  "smap inversMsg\<cdot>({e. e \<noteq> \<surd>} \<inter> Msg ` M \<ominus> s) = M \<ominus> smap inversMsg\<cdot>({e. e \<noteq> \<surd>} \<ominus> s)"
+oops
 
 lemma tsfilter_tsabs: "tsAbs\<cdot>(tsFilter M\<cdot>ts) = sfilter M\<cdot>(tsAbs\<cdot>ts)"
 oops
@@ -3071,8 +3083,10 @@ lemma tszip_tsabs_slen [simp]: "#xs=\<infinity> \<Longrightarrow> #(tsAbs\<cdot>
 lemma tszip_tsdom: "#xs=\<infinity> \<Longrightarrow> tsDom\<cdot>(tsZip\<cdot>ts\<cdot>xs) = sdom\<cdot>(szip\<cdot>(tsAbs\<cdot>ts)\<cdot>xs)"
 oops
 
-lemma tszip_tsprojfst_rev: 
-  "#xs=\<infinity> \<Longrightarrow> tsProjFst\<cdot>(tsZip\<cdot>ts\<cdot>xs) = ts"
+lemma tszip_tsprojfst_rev: "#xs=\<infinity> \<Longrightarrow> tsProjFst\<cdot>(tsZip\<cdot>ts\<cdot>xs) = ts"
+oops
+
+lemma tszip_tsprojsnd_rev: "#(tsAbs\<cdot>ts)=\<infinity> \<Longrightarrow> #xs=\<infinity> \<Longrightarrow> tsAbs\<cdot>(tsProjSnd\<cdot>(tsZip\<cdot>ts\<cdot>xs)) = xs"
 oops
 
 (* ----------------------------------------------------------------------- *)
@@ -3168,7 +3182,7 @@ by (simp add: tsremdups_h_mlscons tstickcount_mlscons tsremdups_h_tstickcount)
 
 (* ToDo Oliver: lemmata for tsremdups *)
 
-lemma tsremdups_h_tsabs: 
+lemma tsremdups_h_tsabs:
   "updis t && tsAbs\<cdot>(tsRemDups_h\<cdot>ts\<cdot>(Some (Discr t))) = srcdups\<cdot>(updis t && tsAbs\<cdot>ts)"
 oops
 

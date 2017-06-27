@@ -21,7 +21,7 @@ lift_definition tsExampInp_1 :: "nat tstream" is
   "<[Msg 1, Msg 2, \<surd>, Msg 1, \<surd>]>"
 by (subst ts_well_def, auto)
 
-lemma tsexampinp_12mlscons: 
+lemma tsexampinp_12mlscons:
   "tsExampInp_1 = tsMLscons\<cdot>(updis 1)\<cdot>(tsMLscons\<cdot>(updis 2)\<cdot>
                      (delayFun\<cdot>(tsMLscons\<cdot>(updis 1)\<cdot>(delayFun\<cdot>\<bottom>))))"
 apply (simp add: tsExampInp_1_def)
