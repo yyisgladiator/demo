@@ -53,7 +53,7 @@ definition parcomp :: "'m SPF \<Rightarrow> 'm SPF \<Rightarrow> 'm SPF" ("_\<pa
 
 (* operator for serial composition *)
 definition sercomp :: "'m SPF => 'm SPF => 'm SPF"  ("_\<circ>_") where
-"sercomp f1 f2 \<equiv> Abs_CSPF (\<lambda> x. (sbDom\<cdot>x =  spfDom\<cdot>f1) \<leadsto> ((f1 \<rightleftharpoons> x) \<uplus> (f2 \<rightleftharpoons> (f1 \<rightleftharpoons> x))))"
+"sercomp f1 f2 \<equiv> Abs_CSPF (\<lambda> x. (sbDom\<cdot>x =  spfDom\<cdot>f1) \<leadsto> (f2 \<rightleftharpoons> (f1 \<rightleftharpoons> x)))"
   
   
 subsection \<open>feedback\<close> 
@@ -1640,7 +1640,7 @@ lemma spfComp_I_domf1_eq2: assumes "pL f1 f2 = {}"
                             shows "I f1 f2 = spfDom\<cdot>f1"
   using spfComp_I_domf1_eq assms(1) assms(2) assms(3) pLEmptyNoSelfloops spfComp_dom_I spfdom_insert by blast
 
-     
+(* This need to be adapted
 lemma serCompHelp2Eq: assumes "pL f1 f2 = {}"
                           and "spfRan\<cdot>f1 = spfDom\<cdot>f2"
                           and "spfComp_well f1 f2"
@@ -1670,7 +1670,7 @@ apply(simp add: sercomp_def spfcomp_tospfH2)
 apply(subst spfComp_I_domf1_eq2, simp_all add: assms)
 apply(subst serCompHelp2Eq2)
   by(simp_all add: assms)
-
+*)
     
     
 end
