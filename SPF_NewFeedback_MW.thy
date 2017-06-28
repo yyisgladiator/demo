@@ -45,11 +45,21 @@ subsection \<open>sbRenameChMap\<close>
  
 lemma t10: assumes "map_injective m" 
   shows "sb_well (\<lambda>c. if (c \<in> (sbDom\<cdot>sb \<inter> dom(m) - ran(m))) then None else Rep_SB(sb)((mapIdFunct (map_inverse m))(c)))" 
+  apply(simp add: sb_well_def)
+  apply(auto)
+   apply (simp add: domI)
   sorry
     
 lemma t13: assumes "map_injective m" 
   shows "sb_well (\<lambda>c. if (c \<in> sbDom\<cdot>sb \<and> c \<in> dom m \<and> c \<notin> ran m) then None else Rep_SB(sb)((mapIdFunct (map_inverse m))(c)))" 
-  sorry
+proof - 
+  have f1: " \<forall>c. (c \<in> sbDom\<cdot>sb \<and> c \<in> dom m \<and> c \<notin> ran m) = (c \<in> (sbDom\<cdot>sb \<inter> dom(m) - ran(m)))"
+    by simp
+  show ?thesis
+    apply(subst f1)
+    apply(subst t10)
+    by(simp_all add: assms)
+qed
 
 lemma t11: assumes "map_injective m" and "c \<notin> ran(m)" shows "(mapIdFunct (map_inverse m) c) = c"
   apply(simp add: mapIdFunct_def map_inverse_def)
@@ -178,8 +188,7 @@ lemma t20: assumes "spf_map_well f m" shows "(sbDom\<cdot>sb = (spfDom\<cdot>f -
 lemma spfRename_cont: assumes "spf_map_well f m" shows "cont (\<lambda> sb. (sbDom\<cdot>sb = (spfDom\<cdot>f - ran(m)) \<union> dom(m)) \<leadsto> (f \<rightleftharpoons> (sbRenameChMap sb m)))"
 proof - 
   have f0: "cont (\<lambda> sb. (sbRenameChMap sb m))"
-    apply(simp add: sbRenameChMap_def)
-    sledgehammer 
+    apply(simp add: sbRenameChMap_def) 
     sorry
   have f1: "cont (\<lambda> sb. (f \<rightleftharpoons> (sbRenameChMap sb m)))"
     by (metis (full_types) Rep_CSPF_def cont_Rep_cfun2 cont_compose f0 op_the_cont)
@@ -202,8 +211,8 @@ lemma spfRename_spfDom: assumes "spf_map_well f m" shows "spfDom\<cdot>(spfRenam
   apply(subst spfDomAbs)
     by (simp_all add: spfRename_cont spfRename_spf_well assms)
 
-lemma spfRename_spfRan: "spfRan\<cdot>(spfRename f m) = spfRan\<cdot>f"
-  apply(simp add: spfRan_def spfRename_def spfRename_RepAbs)
+lemma spfRename_spfRan: (*assumes "spf_map_well f m" shows*) "spfRan\<cdot>(spfRename f m) = spfRan\<cdot>f"
+  (*apply(subst spfRan_def, simp add: spfRename_def, subst spfRename_RepAbs, simp add: assms)*)
   sorry  
 
     
