@@ -2540,7 +2540,7 @@ lemma tslscons_insert: "tsLscons\<cdot>t\<cdot>ts = (if (ts=\<bottom> & t\<noteq
 lemma tslscons_bot [simp]: "tsLscons\<cdot>\<bottom>\<cdot>ts = \<bottom>"
   by(auto simp add: tslscons_insert tsLshd_def espf2tspf_def)
 
-lemma tslscons_bot2 [simp]: "tsLscons\<cdot>(updis \<surd>)\<cdot>\<bottom>= Abs_tstream (updis \<surd> && \<bottom>)"
+lemma tslscons_bot2: "tsLscons\<cdot>(updis \<surd>)\<cdot>\<bottom>= Abs_tstream (updis \<surd> && \<bottom>)"
   by(auto simp add: tslscons_insert tsLshd_def espf2tspf_def)
     
 lemma tslscons_bot3 [simp]: "t\<noteq>(updis \<surd>) \<Longrightarrow> tsLscons\<cdot>t\<cdot>\<bottom>= \<bottom>"
@@ -2670,7 +2670,7 @@ lemma absts2delayfun2: "ts_well (\<up>\<surd> \<bullet> ts) \<Longrightarrow> Ab
 by (metis delayfun2tswell2 delayfun_abststream lscons_conv)
 
 lemma absts2delayfun_tick: "Abs_tstream (\<up>\<surd>) = delayFun\<cdot>\<bottom>"
-by (simp add: DiscrTick_def delayfun_tslscons_bot sup'_def)
+by (simp add: DiscrTick_def delayfun_tslscons_bot sup'_def tslscons_bot2)
 
 (* ----------------------------------------------------------------------- *)
 subsection {* tsMLscons representation *}

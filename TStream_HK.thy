@@ -14,6 +14,7 @@ where
   list2ts_Suc: "list2ts (a#as) = (tsLscons\<cdot>(updis a)\<cdot>(list2ts as))"
 
 
+
 primrec list2ts_alter :: "'a event list \<Rightarrow> 'a tstream"
 where
   list2ts_alter_0:   "list2ts_alter [] = \<bottom>" |
@@ -32,7 +33,13 @@ definition l2tstream::"'a event discr u list \<Rightarrow> 'a tstream" where
 (************************************************)
   subsection \<open>list2ts\<close>    
 (************************************************)
-
+thm tslscons_bot2
+    
+    (* NIEEE: Abs_tstream (updis \<surd> && \<epsilon>) *)
+lemma "list2ts [Msg 1, Msg 2, Tick, Msg 3, Tick, Msg 4] = s"
+  apply simp
+  oops
+    
 lemma testlist2ts: "list2ts ([\<M> True,\<M> False, \<surd>,\<M> False]) = Abs_tstream (<[Msg True,Msg False,\<surd>]>)"
 apply (simp add: tslscons_insert)
 apply (simp add: espf2tspf_def)+
