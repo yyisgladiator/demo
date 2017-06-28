@@ -774,15 +774,101 @@ lemma tsbunion_dom [simp]: "tsbDom\<cdot>(tb1 \<uplus> tb2) = tsbDom\<cdot>tb1 \
 
 
     
-subsubsection \<open>tsbTickcount\<close>    
+subsubsection \<open>tsbTickcount\<close>
+(* general lemma *)
+lemma tsb_below_ran_below1: assumes "x \<sqsubseteq> y" and "tsbDom\<cdot>x \<noteq> {}"
+  shows "\<forall> ts \<in> ran (Rep_TSB x).(\<exists> ts2\<in> (ran (Rep_TSB y)). (ts) \<sqsubseteq> (ts2))"
+proof -
+  have f1: "tsbDom\<cdot>y \<noteq> {}"
+    using assms(1) assms(2) tsbdom_below by blast
+  have f2: "\<forall> c \<in> tsbDom\<cdot>x. x . c \<sqsubseteq> y . c"
+    by (simp add: assms(1) monofun_cfun_arg monofun_cfun_fun)
+  show ?thesis
+    (* ISAR proof generateable via sledgehammer *)
+    by (smt assms(1) domI f2 mem_Collect_eq option.simps(1) ran_def tsbdom_below tsbdom_insert 
+            tsbgetchE)
+qed
+  
+lemma tsb_below_ran_below2: assumes "x \<sqsubseteq> y" and "tsbDom\<cdot>x \<noteq> {}"
+  shows "\<forall> ts \<in> ran (Rep_TSB y).(\<exists> ts2\<in> (ran (Rep_TSB x)). (ts2) \<sqsubseteq> (ts))"
+proof -
+  have f1: "tsbDom\<cdot>y = tsbDom\<cdot>x"
+    using assms(1)  tsbdom_below by blast
+  have f2: "\<forall> c \<in> tsbDom\<cdot>y . x . c \<sqsubseteq> y . c"
+    using assms(1) monofun_cfun_arg monofun_cfun_fun by blast
+  thus ?thesis
+    (* ISAR proof generateable via sledgehammer *)
+    by (smt domI f1 mem_Collect_eq option.simps(1) ran_def tsbdom_insert tsbgetchE)
+qed
+  
+  (* general lemma *)
+lemma tsbgetch_below: assumes "x \<sqsubseteq> y"
+  shows "\<forall> c. (x . c) \<sqsubseteq> (y . c)"
+    by (simp add: assms monofun_cfun_arg monofun_cfun_fun)
+    
+(* general lemma *)
+lemma lnat_set_min_below: assumes "finite (A:: lnat set)" and "finite (B ::lnat set)" 
+                          and "A \<noteq> {}" and "B \<noteq> {}" and "\<forall> a \<in> A . \<exists> b \<in> B.  a \<sqsubseteq> b"
+                                                     and "\<forall> b \<in> B. \<exists> a \<in> A. a \<sqsubseteq> b"
+  shows "Min A \<sqsubseteq> Min B"
+  by (meson Min_in Min_le_iff assms(1) assms(2) assms(3) assms(4) assms(6) lnle_conv)  
+  
+  
 (* is equal to the defintion of tsbTickCount3 *)
 definition tsbTickCount :: "'m TSB \<rightarrow> lnat" where
-"tsbTickCount \<equiv> \<Lambda> tb. if tsbDom\<cdot>tb \<noteq> {} then Min {(#\<surd>ts) | ts. (ts \<in> ran (Rep_TSB tb))} else \<infinity>"
+"tsbTickCount \<equiv> \<Lambda> tb. if tsbDom\<cdot>tb \<noteq> {} then (LEAST ln. ln\<in>{(#\<surd>(tb. c)) | c. c \<in> tsbDom\<cdot>tb}) else \<infinity>"
 
 abbreviation tsbTickCount_abbrv :: "'m TSB \<Rightarrow> lnat "  ("#\<surd>tsb _ ") where
 " #\<surd>tsb tsb \<equiv> tsbTickCount\<cdot>tsb"
 
+lemma tsbtick_lengths_ne: assumes "tsbDom\<cdot>tb \<noteq> {}"
+  shows "{(#\<surd>(tb. c)) | c. c \<in> tsbDom\<cdot>tb} \<noteq> {}"
+    using assms by blast
 
+lemma tsbtick_least_in_set: assumes "tsbDom\<cdot>tb \<noteq> {}"
+  shows "(LEAST ln. ln\<in>{(#\<surd>(tb. c)) | c. c \<in> tsbDom\<cdot>tb}) \<in> {(#\<surd>(tb. c)) | c. c \<in> tsbDom\<cdot>tb}"
+  by (metis (mono_tags, lifting) LeastI all_not_in_conv assms mem_Collect_eq)
+    
+lemma tsbtick_min_on_channel: assumes "tsbDom\<cdot>tb \<noteq> {}"
+  shows "\<exists> c \<in> tsbDom\<cdot>tb. (#\<surd>(tb. c)) = (LEAST ln. ln\<in>{(#\<surd>(tb. c)) | c. c \<in> tsbDom\<cdot>tb})"
+    by (smt LeastI assms mem_Collect_eq tsbtick_least_in_set)
+
+lemma tsbtick_least_mono_pre1: assumes "x \<sqsubseteq> y" and "tsbDom\<cdot>x \<noteq> {}"
+  shows "(LEAST ln. ln\<in>{(#\<surd>(x. c)) | c. c \<in> tsbDom\<cdot>x}) \<sqsubseteq> (LEAST ln. ln\<in>{(#\<surd>(y. c)) | c. c \<in> tsbDom\<cdot>y})"
+proof -
+  have f1: "tsbDom\<cdot>y = tsbDom\<cdot>x"
+    using assms(1) assms(2) tsbdom_below by blast
+  thus ?thesis
+    sledgehammer
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
 (* lengths set is not empty if domain is not empty *)
 lemma tsbtick_lengths_ne: assumes "tsbDom\<cdot>tb \<noteq> {}"
   shows "{(#\<surd>ts) | ts. (ts \<in> ran (Rep_TSB tb))} \<noteq> {}"
@@ -935,8 +1021,75 @@ next
     by simp
 qed
   
+lemma finite_tsbdom: "finite (tsbDom\<cdot>tb)"  
+proof -
+  have "finite {c :: channel . True}"
+    sorry (* sledgehammer does not find any solution, is the type internally really finite? *)
+  thus ?thesis
+    using ex_new_if_finitel1 by blast
+qed  
+  
+lemma tsbtick_mono[simp]: "monofun (\<lambda> tb. if tsbDom\<cdot>tb \<noteq> {} then Min {(#\<surd>ts) | ts. (ts \<in> ran (Rep_TSB tb))} else \<infinity>)"
+  apply (rule monofunI)
+    using finite_tsbdom tsbtick_mono_pre by blast
+  
+lemma tsbtick_chain: assumes "chain X"
+  shows "chain (\<lambda> i. if tsbDom\<cdot>x \<noteq> {} then Min {#\<surd> ts |ts. ts \<in> ran (Rep_TSB (X i))} else \<infinity>)"
+proof -
+  have f1: "\<forall> i. X i \<sqsubseteq> X (Suc i)"
+    by (simp add: assms po_class.chainE)
+  have f2: "\<forall> i. finite (tsbDom\<cdot> (X i))"
+    by (simp add: finite_tsbdom)
+  show ?thesis
+    apply (rule chainI)
+    by (smt Collect_cong assms empty_iff f1 f2 po_eq_conv tsbChain_dom_eq3 tsb_eq 
+            tsbtick_min_mono_pre1)
+qed
+  
+lemma tsbtick_inner_chain: assumes "chain X" 
+  shows "chain (\<lambda> i. Min {#\<surd> ts |ts. ts \<in> ran (Rep_TSB (X i))})"  
+    sorry
+   
+lemma assumes "chain Y" and "(Rep_TSB (Lub Y)) \<sqsubseteq> (\<Squnion> i. (Rep_TSB (Y i)))"
+  shows "Min {#\<surd> ts |ts. ts \<in> ran (Rep_TSB (Lub Y))} \<le> (\<Squnion>i. Min {#\<surd> ts |ts. ts \<in> ran (Rep_TSB (Y i))})"
+proof -
+  have "True"
+    apply (rule tsb_below)
+    
+lemma tsbtick_cont_pre: assumes "chain Y" and "\<forall> i .finite (tsbDom\<cdot>(Y i))"
+  shows "(if tsbDom\<cdot>(\<Squnion>i. Y i) \<noteq> {} then Min {#\<surd> ts |ts. ts \<in> ran (Rep_TSB (\<Squnion>i. Y i))} else \<infinity>) \<sqsubseteq> (\<Squnion>i. if tsbDom\<cdot>(Y i) \<noteq> {} then Min {#\<surd> ts |ts. ts \<in> ran (Rep_TSB (Y i))} else \<infinity>)"
+proof (cases "tsbDom\<cdot>(\<Squnion>i. Y i) \<noteq> {}")
+  case True
+  hence f1: "\<forall> i. tsbDom\<cdot>(Y i) = tsbDom\<cdot>(\<Squnion>i. Y i)"
+    by (simp add: assms(1))
+  hence f2: "finite (tsbDom\<cdot>(\<Squnion>i. Y i))"
+    using assms(2) by auto
+   
+  show ?thesis
+  proof -
+    have f10: "(Rep_TSB (Lub Y)) \<sqsubseteq> (\<Squnion> i. (Rep_TSB (Y i)))"
+      by (simp add: assms(1) rep_lub)
+    thus ?thesis
+      apply (simp only: True f1, simp)
+        
+        
+next
+  case False
+  hence "\<forall> i. tsbDom\<cdot>(Y i) = {}"
+    by (simp add: assms)
+  then show ?thesis
+    by (simp)
+qed
+  
 
-lemma tsbtick_mono: "cont (\<lambda> tb. if tsbDom\<cdot>tb \<noteq> {} then Min {(#\<surd>ts) | ts. (ts \<in> ran (Rep_TSB tb))} else \<infinity>)"
+  
+lemma chain_chain_lub: assumes "chain X" and "chain Y"
+  shows "\<Squnion> i. (X (Y i)) = X (\<Squnion> i. Y i)"
+    
+
+     
+    
+lemma tsbtick_cont: "cont (\<lambda> tb. if tsbDom\<cdot>tb \<noteq> {} then Min {(#\<surd>ts) | ts. (ts \<in> ran (Rep_TSB tb))} else \<infinity>)"
 proof (rule contI2)
  
 
