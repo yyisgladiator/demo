@@ -192,6 +192,8 @@ lemma tsmed_inftick [simp]: "#ora=\<infinity> \<Longrightarrow> tsMed\<cdot>tsIn
       sinftimes_unfold slen_empty_eq tick_msg tsInfTick.abs_eq tsInfTick.rep_eq
       tsconc_rep_eq tsprojfst_delayfun tszip_delayfun)
 
+(* ToDo Steffen: basic properties lemmata for medium *)
+
 text {* Medium without oracle will transmit all messages and ticks. *}
 lemma tsmed_inftrue [simp]: "tsMed\<cdot>msg\<cdot>((\<up>True) \<infinity>) = msg"
   oops
@@ -200,6 +202,8 @@ text {* Not every message will be transmitted. *}
 lemma tsmed_tsabs_slen: "#ora=\<infinity> \<Longrightarrow> #(tsAbs\<cdot>(tsMed\<cdot>msg\<cdot>ora)) \<le> #(tsAbs\<cdot>msg)"
   apply (simp add: tsmed_insert)
   by (metis tsfilter_tsabs_slen tszip_tsabs_slen)
+
+(* ToDo Steffen: basic properties lemmata for medium *)
 
 text {* If infinite messages will be sent infinite messages will be transmitted. *}
 lemma tsmed_tsabs_slen_inf [simp]: assumes "#({True} \<ominus> ora)=\<infinity>" and "#(tsAbs\<cdot>msg)=\<infinity>" 

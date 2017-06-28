@@ -3055,7 +3055,7 @@ lemma tszip_tstickcount_leq [simp]: "#\<surd> tsZip\<cdot>ts\<cdot>xs \<le> #\<s
   apply (simp add: tszip_tstickcount_leq_h sup'_def tszip_mlscons_msgdelayfun)
   by (metis lscons_conv tstickcount_mlscons tszip_mlscons_2msg)
 
-(* ToDo: lemma for tszip *)
+(* ToDo Steffen: lemma for tszip *)
 
 lemma tszip_tsabs: "#xs=\<infinity> \<Longrightarrow> tsAbs\<cdot>(tsZip\<cdot>ts\<cdot>xs) = szip\<cdot>(tsAbs\<cdot>ts)\<cdot>xs"
 oops
