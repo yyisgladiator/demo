@@ -833,13 +833,69 @@ lemma tsbtick_min_on_channel: assumes "tsbDom\<cdot>tb \<noteq> {}"
   shows "\<exists> c \<in> tsbDom\<cdot>tb. (#\<surd>(tb. c)) = (LEAST ln. ln\<in>{(#\<surd>(tb. c)) | c. c \<in> tsbDom\<cdot>tb})"
     by (smt LeastI assms mem_Collect_eq tsbtick_least_in_set)
 
+lemma lnat_set_least_below: assumes "(A :: lnat set) \<noteq> {}" and "(B :: lnat set) \<noteq> {}"
+  and "\<forall> a \<in> A . \<exists> b \<in> B.  a \<sqsubseteq> b" and "\<forall> b \<in> B. \<exists> a \<in> A. a \<sqsubseteq> b"
+shows "(LEAST ln. ln \<in> A) \<sqsubseteq> (LEAST ln. ln \<in> B)"
+  by (metis (no_types, lifting) LeastI Least_le all_not_in_conv assms(2) assms(4) lnle_conv rev_below_trans)
+  
+lemma tsbtick_set_below: assumes "\<forall>b\<in>{(y  .  c) |c. c \<in> tsbDom\<cdot>y}. \<exists>a\<in>{(x  .  c) |c. c \<in> tsbDom\<cdot>x}. (#\<surd> a) \<sqsubseteq> (#\<surd> b)"
+  shows "\<forall>b\<in>{#\<surd> (y  .  c) |c. c \<in> tsbDom\<cdot>y}. \<exists>a\<in>{#\<surd> (x  .  c) |c. c \<in> tsbDom\<cdot>x}. a \<sqsubseteq> b"
+    using assms by fastforce
+    
+      
 lemma tsbtick_least_mono_pre1: assumes "x \<sqsubseteq> y" and "tsbDom\<cdot>x \<noteq> {}"
   shows "(LEAST ln. ln\<in>{(#\<surd>(x. c)) | c. c \<in> tsbDom\<cdot>x}) \<sqsubseteq> (LEAST ln. ln\<in>{(#\<surd>(y. c)) | c. c \<in> tsbDom\<cdot>y})"
 proof -
   have f1: "tsbDom\<cdot>y = tsbDom\<cdot>x"
     using assms(1) assms(2) tsbdom_below by blast
-  thus ?thesis
-    sledgehammer
+  have f2: "\<forall>b\<in>{(y  .  c) |c. c \<in> tsbDom\<cdot>y}. \<exists>a\<in>{(x  .  c) |c. c \<in> tsbDom\<cdot>x}. (a) \<sqsubseteq> (b) 
+          \<Longrightarrow> \<forall>b\<in>{(y  .  c) |c. c \<in> tsbDom\<cdot>y}. \<exists>a\<in>{(x  .  c) |c. c \<in> tsbDom\<cdot>x}. (#\<surd> a) \<sqsubseteq> (#\<surd> b)"
+    by (meson monofun_cfun_arg)
+  show ?thesis
+    apply (rule lnat_set_least_below)
+      using assms(2) apply blast
+      using assms(2) f1 apply blast
+      apply (smt assms(1) f1 mem_Collect_eq monofun_cfun_arg tsbgetch_below)
+      apply (rule tsbtick_set_below, rule f2)
+      using assms(1) f1 tsbgetch_below by fastforce
+  qed
+    
+lemma tsbtick_mono_pre: assumes "x \<sqsubseteq> y"
+  shows "(if tsbDom\<cdot>x \<noteq> {} then (LEAST ln. ln\<in>{(#\<surd>(x. c)) | c. c \<in> tsbDom\<cdot>x}) else \<infinity>)
+         \<sqsubseteq> (if tsbDom\<cdot>y \<noteq> {} then (LEAST ln. ln\<in>{(#\<surd>(y. c)) | c. c \<in> tsbDom\<cdot>y}) else \<infinity>)"
+proof (cases "tsbDom\<cdot>x \<noteq> {}")
+  case True
+  then show ?thesis
+    using assms tsbtick_least_mono_pre1 by force
+next
+  case False
+    moreover
+    have f1: "tsbDom\<cdot>y = tsbDom\<cdot>x"
+      using assms(1)  tsbdom_below by blast
+    ultimately show ?thesis
+      by (simp)
+qed
+  
+    
+lemma tsbtick_mono [simp]:
+  shows "monofun (\<lambda> tb. if tsbDom\<cdot>tb \<noteq> {} then 
+                                          (LEAST ln. ln\<in>{(#\<surd>(tb. c)) | c. c \<in> tsbDom\<cdot>tb}) else \<infinity>)"
+  using monofun_def tsbtick_mono_pre by blast
+      
+      
+      
+      
+      
+      
+      
+      
+      
+lemma tsbtick_cont [simp]:
+  shows "cont (\<lambda> tb. if tsbDom\<cdot>tb \<noteq> {} then 
+                                          (LEAST ln. ln\<in>{(#\<surd>(tb. c)) | c. c \<in> tsbDom\<cdot>tb}) else \<infinity>)"
+  apply (rule contI2)
+   apply simp
+    oops
       
       
       
@@ -853,19 +909,7 @@ proof -
       
       
       
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
+(*    
       
       
       
@@ -1092,7 +1136,7 @@ lemma chain_chain_lub: assumes "chain X" and "chain Y"
 lemma tsbtick_cont: "cont (\<lambda> tb. if tsbDom\<cdot>tb \<noteq> {} then Min {(#\<surd>ts) | ts. (ts \<in> ran (Rep_TSB tb))} else \<infinity>)"
 proof (rule contI2)
  
-
+*)
 
 
 (* ----------------------------------------------------------------------- *)
