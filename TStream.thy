@@ -1904,7 +1904,7 @@ lemma tsmap_tsabs_slen [simp]: "#(tsAbs\<cdot>(tsMap f\<cdot>ts)) = #(tsAbs\<cdo
   apply (simp add: tsmap_h_well)
   by (simp add: tsmap_h_fair2)
 
-(* ToDo: lemmata for tsmap *)
+(* ToDo Oliver: lemmata for tsmap *)
 lemma tsmap_tsdom_range_h:
   "{u. \<M> u \<in> sdom\<cdot>(smap (case_event (\<lambda>m. \<M> f m) \<surd>)\<cdot>s)} \<subseteq> range f"
 oops
