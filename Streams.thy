@@ -1994,8 +1994,16 @@ by (rule sym, subst srcdups_def [THEN fix_eq2], simp)
 (* if the head a of a stream is followed by a distinct element, both elements will be keypt by srcdups *)
 lemma srcdups_neq[simp]: 
   "a\<noteq>b \<Longrightarrow> srcdups\<cdot>(\<up>a \<bullet> \<up>b \<bullet> s) = \<up>a \<bullet>  srcdups\<cdot>(\<up>b \<bullet> s)" 
-by (subst srcdups_def [THEN fix_eq2], simp)
-
+  by (subst srcdups_def [THEN fix_eq2], simp)
+    
+lemma srcdups_slen [simp]: "#(srcdups\<cdot>s) \<le> #s"
+  apply (rule ind [of _ s])
+  apply (simp_all)
+  apply (metis (mono_tags, lifting) admI inf_chainl4 inf_ub l42)
+  apply (rule_tac x=s in scases, simp_all)
+  apply (case_tac "a = aa", simp_all)
+  using less_lnsuc order.trans by blast
+    
 (* ----------------------------------------------------------------------- *)
 subsection {* @{term sscanl} *}
 (* ----------------------------------------------------------------------- *)
