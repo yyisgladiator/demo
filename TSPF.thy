@@ -1,6 +1,8 @@
 (*  Title:        TSPFTheorie.thy
     Author:       Sebastian Stüber
+    Author:       Jens Christoph Bürger
     e-mail:       sebastian.stueber@rwth-aachen.de
+    e-mail:       jens.buerger@rwth-aachen.de
 
     Description:  
 *)
@@ -15,64 +17,80 @@ default_sort message
 
 
 (* ----------------------------------------------------------------------- *)
-  section \<open>Definition of "Timed Stream (Bundle) Processing Function"\<close>
+section \<open>Datatype Definition\<close>
 (* ----------------------------------------------------------------------- *)
 
-
-  (* normal wellformed definition, similar to SPF *)
-  (* an 'm TSPF has a fixed input-channel-set and output-set.  *)
-  definition tspf_type :: "('m TSB_inf \<rightharpoonup> 'm TSB_inf) \<Rightarrow> bool" where
-  "tspf_type f \<equiv>  (\<exists> In.  \<forall>b. (b \<in> dom f \<longleftrightarrow>  tsbiDom\<cdot>b = In)) \<and> 
-                  (\<exists> Out. \<forall>b. (b \<in> ran f \<longrightarrow>  tsbiDom\<cdot>b = Out))"
-
-  (* tspf_weakCausality defines equality of the input up to time n to imply equality of the output 
-     up to time n *)
-  definition tspf_weakCausality :: "('m TSB_inf \<rightharpoonup> 'm TSB_inf) \<Rightarrow> bool" where
-  "tspf_weakCausality f \<equiv> (\<forall> (n :: nat) (b1 :: 'm TSB_inf)  b2. b1\<in> dom f \<longrightarrow> b2 \<in>dom f
-      \<longrightarrow> tsbiTTake n\<cdot>b1  = tsbiTTake n\<cdot>b2 
-      \<longrightarrow> (tsbiTTake n\<cdot>(f \<rightharpoonup> b1) = tsbiTTake n\<cdot>(f \<rightharpoonup> b2)))"
-
-  (* A component may only react one time-stamp after it received the input *)
-  definition tspf_strongCausality :: "('m TSB_inf \<rightharpoonup> 'm TSB_inf) \<Rightarrow> bool" where
-  "tspf_strongCausality f \<equiv> (\<forall> (n :: nat) (b1 :: 'm TSB_inf)  b2. b1\<in> dom f \<longrightarrow> b2 \<in>dom f
-      \<longrightarrow> tsbiTTake n\<cdot>b1  = tsbiTTake n\<cdot>b2 
-      \<longrightarrow> (tsbiTTake (Suc n)\<cdot>(f \<rightharpoonup> b1) = tsbiTTake (Suc n)\<cdot>(f \<rightharpoonup> b2)))" 
-
-
-   definition tspf_well ::"('m TSB_inf \<rightharpoonup> 'm TSB_inf) \<Rightarrow> bool" where
-   "tspf_well f \<equiv> tspf_strongCausality f \<and> tspf_type f"
-
-   definition tspfw_well ::"('m TSB_inf \<rightharpoonup> 'm TSB_inf) \<Rightarrow> bool" where
-   "tspfw_well f \<equiv> tspf_weakCausality f \<and> tspf_type f"
-
-
-
-    (* Proof admissibility on the first part of spf_wellformed *)
-  lemma tspf_type_adm1[simp]: "adm (\<lambda>f. \<exists>In. \<forall>b. (b \<in> dom f) = (tsbiDom\<cdot>b = In))"
+(* normal wellformed definition, similar to SPF *)
+(* an 'm TSPF has a fixed input-channel-set and output-set.  *)
+definition tspf_type:: "('m TSB \<rightarrow> 'm TSB option) \<Rightarrow> bool" where
+"tspf_type f \<equiv> \<exists>In Out. \<forall>b. (b \<in> dom (Rep_cfun f) \<longleftrightarrow> tsbDom\<cdot>b = In) \<and> 
+                            (b \<in> dom (Rep_cfun f) \<longrightarrow> tsbDom\<cdot>(the (f\<cdot>b)) = Out)"
+(*
+  (* Proof admissibility on the first part of spf_wellformed *)
+  lemma tspf_type_adm1[simp]: "adm (\<lambda>f. \<exists>In. \<forall>b. (b \<in> dom f) = (tsbDom\<cdot>b = In))"
   by (smt adm_upward below_cfun_def part_dom_eq)
   
     (* Proof admissibility on the second part of spf_wellformed *)
   lemma tspf_type_adm2[simp]: "adm (\<lambda>f. \<exists>Out. \<forall>b. b \<in> dom f \<longrightarrow> tsbDom\<cdot>(f\<rightharpoonup>b) = Out)"   
   apply(rule admI)
-  by (metis part_the_chain part_the_lub tsbChain_dom_eq2 part_dom_lub) 
+    by (metis part_the_chain part_the_lub tsbChain_dom_eq2 part_dom_lub) 
+*)
+          
+lemma tspf_type_adm1 [simp]: "adm (\<lambda>f. \<exists>In. \<forall>b. (b \<in> dom (Rep_cfun f)) = (tsbDom\<cdot>b = In)) "
+  by (smt adm_upward below_cfun_def part_dom_eq)    
+    
+lemma tspf_type_adm2 [simp]: "adm (\<lambda> f. \<exists>Out. \<forall>b. b \<in> dom (Rep_cfun f) \<longrightarrow> tsbDom\<cdot>Rep_cfun f\<rightharpoonup>b = Out)"
+  apply (rule admI)
+  by (smt below_cfun_def ch2ch_Rep_cfunL contlub_cfun_fun op_the_chain op_the_lub 
+        part_dom_eq test34 tsbChain_dom_eq2)
 
-
-  lemma tspf_strongc_exists: "tspf_strongCausality [(Abs_TSB_inf empty) \<mapsto> (Abs_TSB_inf empty)]"
-  by(simp add: tspf_strongCausality_def)
-
-
-  lemma tspf_well_exists: "tspf_well [Abs_TSB_inf Map.empty \<mapsto> Abs_TSB_inf Map.empty]"
-  apply(simp add: tspf_well_def tsbdom_insert dom_def tsb_well_def)
-  apply(rule+)
-  apply (simp add: tspf_strongc_exists)
-  apply(simp add: tspf_type_def)
-  by (metis dom_empty empty_iff tsb_inf_exists tsbi_eq tsbidom_rep_eq)
+lemma tspf_type_adm [simp]: "adm (\<lambda> f. tspf_type f)"
+proof -
+  have f1: "\<And> f. (tspf_type f = ((\<exists>In. \<forall>b. (b \<in> dom (Rep_cfun f)) = (tsbDom\<cdot>b = In)) 
+  \<and> (\<exists>Out. \<forall>b. b \<in> dom (Rep_cfun f) \<longrightarrow> tsbDom\<cdot>(the (f\<cdot>b)) = Out)))"
+  by (meson tspf_type_def)
+  show ?thesis
+    by (simp add: f1)
+qed
   
+        
 
+definition tspf_well:: "('m TSB \<rightarrow> 'm TSB option) \<Rightarrow> bool" where
+"tspf_well f \<equiv> tspf_type f \<and>
+              (\<forall>b. (b \<in> dom (Rep_cfun f) \<longrightarrow> #\<surd>tsb b \<le> #\<surd>tsb (the (f\<cdot>b))))"
 
-  cpodef 'm TSPF = "{F :: 'm TSB_inf \<rightharpoonup> 'm TSB_inf. tspf_well F}"
+lemma tspf_tick_adm [simp]: "adm (\<lambda> f. \<forall>b. (b \<in> dom (Rep_cfun f) \<longrightarrow> #\<surd>tsb b \<le> #\<surd>tsb (the (f\<cdot>b))) )"
+  apply (rule admI)
+    (* ISAR Proof generateable via sledgehammer *)
+  by (smt below_cfun_def below_trans ch2ch_Rep_cfunL ch2ch_Rep_cfunR contlub_cfun_arg 
+          contlub_cfun_fun lnle_def op_the_chain op_the_lub part_dom_eq test34)
+
+        
+lemma tspf_well_exists: "tspf_well (\<Lambda> tb. (tsbDom\<cdot>tb = {c1}) \<leadsto> tb)"
+proof -
+  have f1: "cont (\<lambda> tb. (tsbDom\<cdot>tb = {c1}) \<leadsto> tb)"
+    apply (rule contI2)
+      apply (simp add: below_option_def monofun_def tsbdom_below)
+      by (smt cont2contlubE lub_eq po_class.chain_def po_eq_conv some_cont test34 tsbChain_dom_eq2)   
+  show ?thesis
+    apply (simp add: tspf_well_def f1, rule)
+     apply (simp add: tspf_type_def f1)
+     apply(simp only: domIff2)
+     apply(simp add: tsbdom_rep_eq)
+     apply auto[1]
+     by (simp add: domIff)
+qed
+  
+    
+lemma tspf_well_adm [simp]: "adm (\<lambda> f. tspf_well f)"
+ by (simp add: tspf_well_def)
+
+cpodef 'm :: message TSPF = "{f :: 'm TSB \<rightarrow> 'm TSB option. tspf_well f}"
   using tspf_well_exists apply blast
-  using tsbi_option_adm by blast
+  using tspf_well_adm by auto
+
+
+
   
   
 setup_lifting type_definition_TSPF
@@ -83,14 +101,22 @@ setup_lifting type_definition_TSPF
   subsubsection \<open>Definition on TSPF\<close>
 (* ----------------------------------------------------------------------- *)
 
+(* Shorter version to get to normal functions from 'm SPF's *)
+definition Rep_CTSPF:: "'m TSPF \<Rightarrow> ('m TSB \<rightharpoonup> 'm TSB)" where
+"Rep_CTSPF F \<equiv>  Rep_cfun (Rep_TSPF F) "
 
-  (* Input Channel set of an 'm TSPF-Component *)
-  definition tspfDom :: "'m TSPF \<rightarrow> channel set" where
-  "tspfDom \<equiv> \<Lambda> F. tsbiDom\<cdot>(SOME b. b \<in> dom (Rep_TSPF F))"
+(* Shorter version to get from normal functions to 'm SPF's *)
+  (* of course the argument should be "spf_well" and "cont" *)
+definition Abs_CTSPF:: "('m TSB \<rightharpoonup> 'm TSB) \<Rightarrow> 'm TSPF" where
+"Abs_CTSPF F \<equiv> Abs_TSPF (Abs_cfun F)"
 
-  (* Output Channel set of an 'm TSPF-Component *)
-  definition tspfRan :: "'m TSPF \<rightarrow> channel set" where
-  "tspfRan \<equiv> \<Lambda> F. tsbiDom\<cdot>(SOME b. b \<in> ran (Rep_TSPF F))"
+(* Input Channel set of an 'm TSPF-Component *)
+definition tspfDom :: "'m TSPF \<rightarrow> channel set" where
+"tspfDom \<equiv> \<Lambda> F. tsbDom\<cdot>(SOME b. b \<in> dom (Rep_CTSPF F))"
+
+(* Output Channel set of an 'm TSPF-Component *)
+definition tspfRan :: "'m TSPF \<rightarrow> channel set" where
+"tspfRan \<equiv> \<Lambda> F. tsbDom\<cdot>(SOME b. b \<in> ran (Rep_CTSPF F))"
 
 
 
@@ -726,6 +752,60 @@ apply(simp add: tspfran_insert tspfEmpty.rep_eq)
 by(simp add: tsbidom_insert tsb_inf_well_def)
 
 
+  
+(*
+
+  (* tspf_weakCausality defines equality of the input up to time n to imply equality of the output 
+     up to time n *)
+  definition tspf_weakCausality :: "('m TSB_inf \<rightharpoonup> 'm TSB_inf) \<Rightarrow> bool" where
+  "tspf_weakCausality f \<equiv> (\<forall> (n :: nat) (b1 :: 'm TSB_inf)  b2. b1\<in> dom f \<longrightarrow> b2 \<in>dom f
+      \<longrightarrow> tsbiTTake n\<cdot>b1  = tsbiTTake n\<cdot>b2 
+      \<longrightarrow> (tsbiTTake n\<cdot>(f \<rightharpoonup> b1) = tsbiTTake n\<cdot>(f \<rightharpoonup> b2)))"
+
+  (* A component may only react one time-stamp after it received the input *)
+  definition tspf_strongCausality :: "('m TSB_inf \<rightharpoonup> 'm TSB_inf) \<Rightarrow> bool" where
+  "tspf_strongCausality f \<equiv> (\<forall> (n :: nat) (b1 :: 'm TSB_inf)  b2. b1\<in> dom f \<longrightarrow> b2 \<in>dom f
+      \<longrightarrow> tsbiTTake n\<cdot>b1  = tsbiTTake n\<cdot>b2 
+      \<longrightarrow> (tsbiTTake (Suc n)\<cdot>(f \<rightharpoonup> b1) = tsbiTTake (Suc n)\<cdot>(f \<rightharpoonup> b2)))" 
+
+
+   definition tspf_well_old ::"('m TSB_inf \<rightharpoonup> 'm TSB_inf) \<Rightarrow> bool" where
+   "tspf_well f \<equiv> tspf_strongCausality f \<and> tspf_type f"
+
+   definition tspfw_well ::"('m TSB_inf \<rightharpoonup> 'm TSB_inf) \<Rightarrow> bool" where
+   "tspfw_well f \<equiv> tspf_weakCausality f \<and> tspf_type f"
+
+
+
+    (* Proof admissibility on the first part of spf_wellformed *)
+  lemma tspf_type_adm1[simp]: "adm (\<lambda>f. \<exists>In. \<forall>b. (b \<in> dom f) = (tsbiDom\<cdot>b = In))"
+  by (smt adm_upward below_cfun_def part_dom_eq)
+  
+    (* Proof admissibility on the second part of spf_wellformed *)
+  lemma tspf_type_adm2[simp]: "adm (\<lambda>f. \<exists>Out. \<forall>b. b \<in> dom f \<longrightarrow> tsbDom\<cdot>(f\<rightharpoonup>b) = Out)"   
+  apply(rule admI)
+  by (metis part_the_chain part_the_lub tsbChain_dom_eq2 part_dom_lub) 
+
+
+  lemma tspf_strongc_exists: "tspf_strongCausality [(Abs_TSB_inf empty) \<mapsto> (Abs_TSB_inf empty)]"
+  by(simp add: tspf_strongCausality_def)
+
+
+  lemma tspf_well_exists: "tspf_well [Abs_TSB_inf Map.empty \<mapsto> Abs_TSB_inf Map.empty]"
+  apply(simp add: tspf_well_old_def tsbdom_insert dom_def tsb_well_def)
+  apply(rule+)
+  apply (simp add: tspf_strongc_exists)
+  apply(simp add: tspf_type_def)
+  by (metis dom_empty empty_iff tsb_inf_exists tsbi_eq tsbidom_rep_eq)
+  
+
+
+  cpodef 'm TSPF = "{F :: 'm TSB_inf \<rightharpoonup> 'm TSB_inf. tspf_well F}"
+  using tspf_well_exists apply blast
+  using tsbi_option_adm by blast
+    *)  
+  
+  
 (*
 lemma  assumes"tsbiDom\<cdot>tb = tspfCompIn tspfEmpty tspfEmpty"
           and "\<forall>c \<in> dom (Rep_TSB_inf tb). #\<surd>(f\<rightharpoonup>c) = \<infinity>"
