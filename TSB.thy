@@ -492,13 +492,17 @@ lemma tsresrict_dom3 [simp]: shows "tsbDom\<cdot>(tb \<bar> cs) = tsbDom\<cdot>t
   by (simp add: tsbrestrict_insert tsbdom_insert)
 
 
-lemma [simp]: "(tb \<bar> cs1) \<bar> cs2 = tb \<bar> (cs1\<inter>cs2)"
+lemma tsbrestrict_test [simp]: "(tb \<bar> cs1) \<bar> cs2 = tb \<bar> (cs1\<inter>cs2)"
   by (simp add: tsbrestrict_insert)
 
 lemma tsbgetch_restrict [simp]: assumes "c \<in>cs"
   shows "(tb \<bar> cs)  .  c = tb  .  c"
   by (simp add: tsbgetch_insert tsbrestrict_insert assms)
 
+    
+lemma tsbrestrict_belowI1: assumes "(a \<sqsubseteq> b)"
+  shows "(a \<bar> cs) \<sqsubseteq> (b \<bar> cs)"
+     by (metis assms monofun_cfun_arg)
 
 
 subsubsection \<open>tsbTickCount\<close>
@@ -716,15 +720,15 @@ proof -
 qed
 
 (* helper function for continuity proof *)
-lemma tsbunion_contL[simp]: "cont (\<lambda>b1. (Rep_TSB b1) ++ (Rep_TSB b2))"
+lemma tsbunion_contL [simp]: "cont (\<lambda>b1. (Rep_TSB b1) ++ (Rep_TSB b2))"
   using cont_compose part_add_contL rep_tsb_cont by blast
 
 (* helper function for continuity proof *)
-lemma tsbunion_contR[simp]: "cont (\<lambda>b2. (Rep_TSB b1) ++ (Rep_TSB b2))"
+lemma tsbunion_contR [simp]: "cont (\<lambda>b2. (Rep_TSB b1) ++ (Rep_TSB b2))"
   using cont_compose part_add_contR rep_tsb_cont by blast
 
 (* sbUnion is an coninuous function *)
-lemma tsbunion_cont[simp]: "cont (\<lambda> b1. \<Lambda> b2.(Abs_TSB (Rep_TSB b1 ++ Rep_TSB b2)))"
+lemma tsbunion_cont [simp]: "cont (\<lambda> b1. \<Lambda> b2.(Abs_TSB (Rep_TSB b1 ++ Rep_TSB b2)))"
   by(simp add: cont2cont_LAM cont_Abs_TSB)
     
 (* insert rule for sbUnion *)
@@ -772,6 +776,9 @@ lemma tsbunion_restrict [simp]: assumes "(tsbDom\<cdot>y)\<inter>cs2 = {}"
 lemma tsbunion_dom [simp]: "tsbDom\<cdot>(tb1 \<uplus> tb2) = tsbDom\<cdot>tb1 \<union> tsbDom\<cdot>tb2"
   by(simp add: tsbdom_insert tsbunion_insert Un_commute)
 
+lemma tsbunion_belowI1: assumes "(a \<sqsubseteq> b)" and "(c \<sqsubseteq> d)"
+  shows "(a \<uplus> c \<sqsubseteq> b \<uplus> d)"
+  by (simp add: assms(1) assms(2) monofun_cfun)
 
     
 subsubsection \<open>tsbTickcount\<close>
@@ -895,15 +902,33 @@ proof (cases "tsbDom\<cdot>(\<Squnion>i. Y i) \<noteq> {}")
   case True
   hence f1: "\<forall> i. tsbDom\<cdot>(Y i) = tsbDom\<cdot>(\<Squnion>i. Y i)"
     by (simp add: assms(1))
+  hence f11: "\<forall> i. tsbDom\<cdot>(\<Squnion>i. Y i) =  tsbDom\<cdot>(Y i)"
+    by (simp add: assms(1))
   hence f10: "\<forall> i. tsbDom\<cdot>(Y i) \<noteq> {}"
   sorry
   have f2: "\<forall> c. #\<surd> (Lub Y  .  c) = (\<Squnion> i. #\<surd> ((Y i) .c))"
     by (metis (mono_tags, lifting) assms contlub_cfun_arg lub_eq lub_eval theRep_chain tsbgetch_insert)
-  
+  obtain minval where f20: "minval = (LEAST ln. \<exists>c. ln = (\<Squnion>i. #\<surd> Y i  .  c) \<and> c \<in> tsbDom\<cdot>(Lub Y))"
+    by blast
+  have f21: "minval = (LEAST ln. ln \<in> {#\<surd> (\<Squnion>i. Y i)  .  c |c. c \<in> tsbDom\<cdot>(\<Squnion>i. Y i)})"
+    by (auto, simp add: f20 f2)
+  obtain minc where f22: "minval = (\<Squnion>i. #\<surd> Y i  .  minc)"
+          proof -
+            assume a1: "\<And>c. minval = (\<Squnion>i. #\<surd> Y i . c) \<Longrightarrow> thesis"
+            obtain cc :: "'a TSB \<Rightarrow> channel" where
+              "\<forall>t. tsbDom\<cdot>t = {} \<or> cc t \<in> tsbDom\<cdot>t \<and> #\<surd> t . cc t = (LEAST l. l \<in> {#\<surd> t . c |c. c \<in> tsbDom\<cdot>t})"
+              using tsbtick_min_on_channel by moura
+            then have "\<exists>c. #\<surd> Lub Y . c = minval"
+              using True f21 by blast
+            then show ?thesis
+              using a1 f2 by blast
+          qed
+   have f221: "minval = #\<surd> (Lub Y) .  minc"
+       by (simp add: f2 f22)
   show ?thesis
     apply (simp only: True f10)
+      apply auto
     apply (simp only: f2)
-    apply (auto)
     
     apply (simp add: Least_def)
       sorry
