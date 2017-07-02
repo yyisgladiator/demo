@@ -2951,21 +2951,21 @@ by (metis adm bottom delayfun mlscons tstream_fin_induct tstream_infs)
 subsection {* admissibility rules *}
 (* ----------------------------------------------------------------------- *)
 
-(* ToDo: admissibility lemmata *)
-
-lemma adm_tstickcount_leq [simp]: "\<And>f b. adm (\<lambda>a. #\<surd> f\<cdot>a\<cdot>b \<le> #\<surd> a)"
+lemma adm_tstickcount_leq [simp]: "\<And>b. adm (\<lambda>a. #\<surd> f\<cdot>a\<cdot>b \<le> #\<surd> a)"
 by (metis (mono_tags, lifting) admI inf_ub l42 ts_infinite_lub)
 
-lemma adm_tsdom_sub [simp]: "\<And>f b. adm (\<lambda>a. tsDom\<cdot>(f\<cdot>a\<cdot>b) \<subseteq> tsDom\<cdot>a)"
+(* ToDo Oliver: admissibility lemmata *)
+
+lemma adm_tsdom_sub [simp]: "\<And>b. adm (\<lambda>a. tsDom\<cdot>(f\<cdot>a\<cdot>b) \<subseteq> tsDom\<cdot>a)"
 oops
 
-lemma adm_tsdom_sup [simp]: "\<And>f b. adm (\<lambda>a. tsDom\<cdot>a \<subseteq> tsDom\<cdot>(f\<cdot>a\<cdot>b))"
+lemma adm_tsdom_sup [simp]: "\<And>b. adm (\<lambda>a. tsDom\<cdot>a \<subseteq> tsDom\<cdot>(f\<cdot>a\<cdot>b))"
 oops
 
-lemma adm_tsdom_sub_fun [simp]: "\<And>f b c. adm (\<lambda>a. tsDom\<cdot>(f\<cdot>a\<cdot>b) \<subseteq> tsDom\<cdot>(f\<cdot>a\<cdot>c))"
+lemma adm_tsdom_sub_fun [simp]: "\<And>b c. adm (\<lambda>a. tsDom\<cdot>(f\<cdot>a\<cdot>b) \<subseteq> tsDom\<cdot>(f\<cdot>a\<cdot>c))"
 oops
 
-lemma adm_tsdom_sup_fun [simp]: "\<And>f b c d. adm (\<lambda>a. tsDom\<cdot>(f\<cdot>a\<cdot>b) \<subseteq> insert c (tsDom\<cdot>(f\<cdot>a\<cdot>d)))"
+lemma adm_tsdom_sup_fun [simp]: "\<And>b c d. adm (\<lambda>a. tsDom\<cdot>(f\<cdot>a\<cdot>b) \<subseteq> insert c (tsDom\<cdot>(f\<cdot>a\<cdot>d)))"
 oops
 
 (* ----------------------------------------------------------------------- *)
