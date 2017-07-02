@@ -1906,57 +1906,27 @@ lemma tsmap_tsabs_slen [simp]: "#(tsAbs\<cdot>(tsMap f\<cdot>ts)) = #(tsAbs\<cdo
 
 lemma tsmap_tsdom_range_h:
   "{u. \<M> u \<in> sdom\<cdot>(smap (case_event (\<lambda>m. \<M> f m) \<surd>)\<cdot>s)} \<subseteq> range f"
-  apply(simp add: sdom_def2, auto)
+  apply (simp add: sdom_def2, auto)
   by (metis (mono_tags, lifting) event.distinct(1) event.exhaust event.inject event.simps(4) 
-        event.simps(5) range_eqI smap_snth_lemma)
+      event.simps(5) range_eqI smap_snth_lemma)
 
 text {* tsMap only produce elements in the range of the mapped function f *}
 lemma tsmap_tsdom_range: "tsDom\<cdot>(tsMap f\<cdot>ts) \<subseteq> range f" 
-  by(simp add: tsdom_insert tsmap_unfold tsmap_h_well tsmap_tsdom_range_h)
+  by (simp add: tsdom_insert tsmap_unfold tsmap_h_well tsmap_tsdom_range_h)
 
 lemma tsmap_tsdom_h: 
   "{u. \<M> u \<in> sdom\<cdot>(smap (case_event (\<lambda>m. \<M> f m) \<surd>)\<cdot>s)} = f ` {u. \<M> u \<in> sdom\<cdot>s}"
-proof(auto)
-  show"\<And>x. \<M> x \<in> sdom\<cdot>(smap (case_event (\<lambda>m. \<M> f m) \<surd>)\<cdot>s) \<Longrightarrow> x \<in> f ` {u. \<M> u \<in> sdom\<cdot>s}"
-    proof(-)
-      fix x:: 'a
-      assume as :"\<M> x \<in> sdom\<cdot>(smap (case_event (\<lambda>m. \<M> f m) \<surd>)\<cdot>s)"
-      have f1: "\<M> x \<in> case_event (\<lambda>b. \<M> f b) \<surd> ` sdom\<cdot>s"
-        using as smap_sdom by blast
-      obtain ee :: "'b event set \<Rightarrow> ('b event \<Rightarrow> 'a event) \<Rightarrow> 'a event \<Rightarrow> 'b event" where
-          "\<forall>x0 x1 x2. (\<exists>v3. v3 \<in> x0 \<and> x2 = x1 v3) = (ee x0 x1 x2 \<in> x0 \<and> x2 = x1 (ee x0 x1 x2))"
-        by moura
-      then have f2: "ee (sdom\<cdot>s) (case_event (\<lambda>b. \<M> f b) \<surd>) (\<M> x) \<in> sdom\<cdot>s \<and> \<M> x = 
-                  (case ee (sdom\<cdot>s) (case_event (\<lambda>b. \<M> f b) \<surd>) (\<M> x) of \<M> b \<Rightarrow> \<M> f b | \<surd> \<Rightarrow> \<surd>)"
-        using f1 by (simp add: Bex_def_raw image_iff)
-      then have f3: "ee (sdom\<cdot>s) (case_event (\<lambda>b. \<M> f b) \<surd>) (\<M> x) \<in> {snth n s |n. Fin n < #s}"
-        using sdom_def2 by blast
-      obtain nn :: "'b event \<Rightarrow> 'b event stream \<Rightarrow> nat" where
-          "\<forall>x0 x1. (\<exists>v2. x0 = snth v2 x1 \<and> Fin v2 < #x1) 
-              = (x0 = snth (nn x0 x1) x1 \<and> Fin (nn x0 x1) < #x1)"
-        by moura
-      then have "ee (sdom\<cdot>s) (case_event (\<lambda>b. \<M> f b) \<surd>) (\<M> x) 
-              = snth (nn (ee (sdom\<cdot>s) (case_event (\<lambda>b. \<M> f b) \<surd>) (\<M> x)) s) s \<and> Fin (nn (ee (sdom\<cdot>s)
-              (case_event (\<lambda>b. \<M> f b) \<surd>) (\<M> x)) s) < #s"
-        using f3 by blast
-      then obtain bb :: "'b event \<Rightarrow> 'b" where
-        f4: "\<M> bb (snth (nn (ee (sdom\<cdot>s) (case_event (\<lambda>b. \<M> f b) \<surd>) (\<M> x)) s) s) 
-              = ee (sdom\<cdot>s) (case_event (\<lambda>b. \<M> f b) \<surd>) (\<M> x)"
-        using f2 by (metis (no_types) event.exhaust event.simps(3) event.simps(5))
-      then have "x = f (bb (snth (nn (ee (sdom\<cdot>s) (case_event (\<lambda>b. \<M> f b) \<surd>) (\<M> x)) s) s))"
-        using f2 by (metis (no_types) event.inject event.simps(4))
-   show "x \<in> f ` {u. \<M> u \<in> sdom\<cdot>s}"
-     using \<open>x = f (bb (snth (nn (ee (sdom\<cdot>s) (case_event (\<lambda>b. \<M> f b) \<surd>) (\<M> x)) s) s))\<close> f2 f4 
-     by auto
-  qed
-next     
-  show "\<And>xa. \<M> xa \<in> sdom\<cdot>s \<Longrightarrow> \<M> f xa \<in> sdom\<cdot>(smap (case_event (\<lambda>m. \<M> f m) \<surd>)\<cdot>s)"
+  apply (rule)
+  apply (rule subsetI)
+  apply (simp add: image_def smap_sdom)
+  apply (metis (mono_tags, lifting) event.distinct(1) event.exhaust event.inject event.simps(4)
+         event.simps(5))
+  apply (rule image_Collect_subsetI)
   by (simp add: rev_image_eqI smap_sdom)
-qed
   
 text {* every element produced by (tsMap f) is in the image of the function f *}
 lemma tsmap_tsdom: "tsDom\<cdot>(tsMap f\<cdot>ts) = f ` tsDom\<cdot>ts"
-  by(simp add: tsdom_insert tsmap_unfold tsmap_h_well tsmap_tsdom_h)
+  by (simp add: tsdom_insert tsmap_unfold tsmap_h_well tsmap_tsdom_h)
 
 (* tsProjFst and tsProjSnd *)
 thm tsProjFst_def
@@ -2003,8 +1973,8 @@ lemma tsproj_tsabs_h:
                        = smap f\<cdot>(smap inversMsg\<cdot>({e. e \<noteq> \<surd>} \<ominus> s))"
     have m_case: "a \<noteq> \<surd> \<Longrightarrow> \<up>(case a of \<M> m \<Rightarrow> \<M> f m | \<surd> \<Rightarrow> \<surd>) = \<up>(\<M> f \<M>\<inverse> a)"
       by (metis event.exhaust event.simps(4))
-    show "smap inversMsg\<cdot>({e. e \<noteq> \<surd>} \<ominus> \<up>(case a of \<M> m \<Rightarrow> \<M> f m | \<surd> \<Rightarrow> \<surd>) \<bullet> smap (case_event (\<lambda>m. \<M> f m) \<surd>)\<cdot>s) =
-           smap f\<cdot>(smap inversMsg\<cdot>({e. e \<noteq> \<surd>} \<ominus> \<up>a \<bullet> s))"
+    show "smap inversMsg\<cdot>({e. e \<noteq> \<surd>} \<ominus> \<up>(case a of \<M> m \<Rightarrow> \<M> f m | \<surd> \<Rightarrow> \<surd>) 
+            \<bullet> smap (case_event (\<lambda>m. \<M> f m) \<surd>)\<cdot>s) = smap f\<cdot>(smap inversMsg\<cdot>({e. e \<noteq> \<surd>} \<ominus> \<up>a \<bullet> s))"
       apply (case_tac "a=\<surd>")
       apply (simp add: ind_hyp)
       by (simp add: m_case ind_hyp)
@@ -2049,8 +2019,8 @@ lemma tsfilter_tstickcount [simp]: "#\<surd>(tsFilter M\<cdot>ts) = #\<surd>ts"
   apply(simp add: tsTickCount_def)
   apply(simp only: tsfilter_unfold)
   apply(subst Abs_tstream_inverse)
-   apply (simp add: tsfilter_h_well)
-   by simp
+  apply (simp add: tsfilter_h_well)
+  by simp
 
 lemma tsfilter_weak:"tsWeakCausal (Rep_cfun (tsFilter M))"
   by (subst tsWeak2cont2, auto)
@@ -3105,19 +3075,9 @@ lemma tszip_tsabs_slen [simp]: "#xs=\<infinity> \<Longrightarrow> #(tsAbs\<cdot>
   apply (induction ts arbitrary: xs)
   apply (simp_all)
   apply (metis Inf'_neq_0 strict_slen tsabs_delayfun tszip_delayfun)
-  proof -
-    fix tsa :: "'b tstream" and t :: 'b and xsa :: "'a stream"
-    assume a1: "#xsa = \<infinity>"
-    assume a2: "tsa \<noteq> \<bottom>"
-    assume a3: "\<And>xs. #(xs::'a stream) = \<infinity> \<Longrightarrow> #(tsAbs\<cdot>(tsZip\<cdot>tsa\<cdot>xs)) = #(tsAbs\<cdot>tsa)"
-    obtain aa :: "'a stream \<Rightarrow> 'a" and ss :: "'a stream \<Rightarrow> 'a stream" where
-        f4: "updis (aa xsa) && ss xsa = xsa \<and> #(ss xsa) = \<infinity> \<and> ss xsa \<noteq> \<epsilon>"
-      using a1 by (meson deconstruct_infstream)
-    then have "tsAbs\<cdot>(tsZip\<cdot>(tsMLscons\<cdot>(updis t)\<cdot>tsa)\<cdot>xsa) = updis (t, aa xsa) && tsAbs\<cdot>(tsZip\<cdot>tsa\<cdot>(ss xsa))"
-      using a2 by (metis (no_types) tsabs_mlscons tszip_mlscons tszip_nbot)
-    then show "#(tsAbs\<cdot> (tsZip\<cdot>(tsMLscons\<cdot>(updis t)\<cdot>tsa)\<cdot>xsa)) = #(tsAbs\<cdot>(tsMLscons\<cdot>(updis t)\<cdot>tsa))"
-      using f4 a3 a2 by (simp add: slen_updis_eq tsabs_mlscons)
-  qed
+  apply (rule_tac x=xs in scases, simp_all)
+  by (metis (no_types, hide_lams) Inf'_neq_0 lscons_conv slen_empty_eq slen_scons tsabs_mlscons
+      tszip_mlscons tszip_nbot)
 
 (* ToDo: lemmata for tszip *)
 
@@ -3235,14 +3195,12 @@ lemma tsremdups_tsabs: "tsAbs\<cdot>(tsRemDups\<cdot>ts) = srcdups\<cdot>(tsAbs\
   apply (induct ts)
   apply (simp_all)
   apply (simp add: tsRemDups_def)
-  apply (simp add: tsRemDups_def tsremdups_h_delayfun)  
+  apply (simp add: tsRemDups_def tsremdups_h_delayfun)
   apply (simp add: delayFun_def)
   by (simp add: tsRemDups_def tsremdups_h_mlscons tsabs_mlscons tsremdups_h_tsabs)  
 
 lemma tsremdups_tsabs_slen [simp]: "#(tsAbs\<cdot>(tsRemDups\<cdot>ts)) \<le> #(tsAbs\<cdot>ts)"
   by (simp add: tsremdups_tsabs)
-
-
 
 (* ToDo: lemmata for tsremdups *)
 
