@@ -1240,7 +1240,7 @@ apply simp
 by(simp add: tstake_tsnth)
 
 lemma tstake_tick [simp] :"(Abs_tstream (\<up>\<surd>) \<bullet> ts) \<down> (Suc n)= Abs_tstream (\<up>\<surd>) \<bullet> (ts \<down> n)"
-apply(simp add: tsTake_def2 tstakefirst_insert tsconc_rep_eq)
+  apply(simp add: tsTake_def2 tstakefirst_insert tsconc_rep_eq)
 by (metis (mono_tags, lifting) stwbl_f tick_msg tsConc_notEq tsTakeDropFirst tsconc_rep_eq tstakefirst_insert tstakefirst_len)
 
 
@@ -1904,22 +1904,52 @@ lemma tsmap_tsabs_slen [simp]: "#(tsAbs\<cdot>(tsMap f\<cdot>ts)) = #(tsAbs\<cdo
   apply (simp add: tsmap_h_well)
   by (simp add: tsmap_h_fair2)
 
-(* ToDo Oliver: lemmata for tsmap *)
 lemma tsmap_tsdom_range_h:
   "{u. \<M> u \<in> sdom\<cdot>(smap (case_event (\<lambda>m. \<M> f m) \<surd>)\<cdot>s)} \<subseteq> range f"
-oops
+  apply(simp add: sdom_def2, auto)
+  by (metis (mono_tags, lifting) event.distinct(1) event.exhaust event.inject event.simps(4) event.simps(5) range_eqI smap_snth_lemma)
 
 text {* tsMap only produce elements in the range of the mapped function f *}
-lemma tsmap_tsdom_range: "tsDom\<cdot>(tsMap f\<cdot>ts) \<subseteq> range f"
-oops
+lemma tsmap_tsdom_range: "tsDom\<cdot>(tsMap f\<cdot>ts) \<subseteq> range f" 
+  by(simp add: tsdom_insert tsmap_unfold tsmap_h_well tsmap_tsdom_range_h)
 
 lemma tsmap_tsdom_h: 
   "{u. \<M> u \<in> sdom\<cdot>(smap (case_event (\<lambda>m. \<M> f m) \<surd>)\<cdot>s)} = f ` {u. \<M> u \<in> sdom\<cdot>s}"
-oops
-
+proof(auto)
+  show"\<And>x. \<M> x \<in> sdom\<cdot>(smap (case_event (\<lambda>m. \<M> f m) \<surd>)\<cdot>s) \<Longrightarrow> x \<in> f ` {u. \<M> u \<in> sdom\<cdot>s}"
+    proof(-)
+      fix x:: 'a
+      assume as :"\<M> x \<in> sdom\<cdot>(smap (case_event (\<lambda>m. \<M> f m) \<surd>)\<cdot>s)"
+      have f1: "\<M> x \<in> case_event (\<lambda>b. \<M> f b) \<surd> ` sdom\<cdot>s"
+        using as smap_sdom by blast
+      obtain ee :: "'b event set \<Rightarrow> ('b event \<Rightarrow> 'a event) \<Rightarrow> 'a event \<Rightarrow> 'b event" where
+          "\<forall>x0 x1 x2. (\<exists>v3. v3 \<in> x0 \<and> x2 = x1 v3) = (ee x0 x1 x2 \<in> x0 \<and> x2 = x1 (ee x0 x1 x2))"
+        by moura
+      then have f2: "ee (sdom\<cdot>s) (case_event (\<lambda>b. \<M> f b) \<surd>) (\<M> x) \<in> sdom\<cdot>s \<and> \<M> x = (case ee (sdom\<cdot>s) (case_event (\<lambda>b. \<M> f b) \<surd>) (\<M> x) of \<M> b \<Rightarrow> \<M> f b | \<surd> \<Rightarrow> \<surd>)"
+        using f1 by (simp add: Bex_def_raw image_iff)
+      then have f3: "ee (sdom\<cdot>s) (case_event (\<lambda>b. \<M> f b) \<surd>) (\<M> x) \<in> {snth n s |n. Fin n < #s}"
+        using sdom_def2 by blast
+      obtain nn :: "'b event \<Rightarrow> 'b event stream \<Rightarrow> nat" where
+          "\<forall>x0 x1. (\<exists>v2. x0 = snth v2 x1 \<and> Fin v2 < #x1) = (x0 = snth (nn x0 x1) x1 \<and> Fin (nn x0 x1) < #x1)"
+        by moura
+      then have "ee (sdom\<cdot>s) (case_event (\<lambda>b. \<M> f b) \<surd>) (\<M> x) = snth (nn (ee (sdom\<cdot>s) (case_event (\<lambda>b. \<M> f b) \<surd>) (\<M> x)) s) s \<and> Fin (nn (ee (sdom\<cdot>s) (case_event (\<lambda>b. \<M> f b) \<surd>) (\<M> x)) s) < #s"
+        using f3 by blast
+      then obtain bb :: "'b event \<Rightarrow> 'b" where
+        f4: "\<M> bb (snth (nn (ee (sdom\<cdot>s) (case_event (\<lambda>b. \<M> f b) \<surd>) (\<M> x)) s) s) = ee (sdom\<cdot>s) (case_event (\<lambda>b. \<M> f b) \<surd>) (\<M> x)"
+        using f2 by (metis (no_types) event.exhaust event.simps(3) event.simps(5))
+      then have "x = f (bb (snth (nn (ee (sdom\<cdot>s) (case_event (\<lambda>b. \<M> f b) \<surd>) (\<M> x)) s) s))"
+        using f2 by (metis (no_types) event.inject event.simps(4))
+   show"x \<in> f ` {u. \<M> u \<in> sdom\<cdot>s}"
+     using \<open>x = f (bb (snth (nn (ee (sdom\<cdot>s) (case_event (\<lambda>b. \<M> f b) \<surd>) (\<M> x)) s) s))\<close> f2 f4 by auto
+  qed
+next     
+  show"\<And>xa. \<M> xa \<in> sdom\<cdot>s \<Longrightarrow> \<M> f xa \<in> sdom\<cdot>(smap (case_event (\<lambda>m. \<M> f m) \<surd>)\<cdot>s)"
+  by (simp add: rev_image_eqI smap_sdom)
+qed
+  
 text {* every element produced by (tsMap f) is in the image of the function f *}
 lemma tsmap_tsdom: "tsDom\<cdot>(tsMap f\<cdot>ts) = f ` tsDom\<cdot>ts"
-oops
+  by(simp add: tsdom_insert tsmap_unfold tsmap_h_well tsmap_tsdom_h)
 
 (* tsProjFst and tsProjSnd *)
 thm tsProjFst_def
