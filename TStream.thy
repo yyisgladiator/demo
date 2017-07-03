@@ -1932,10 +1932,16 @@ lemma tsmap_tsdom: "tsDom\<cdot>(tsMap f\<cdot>ts) = f ` tsDom\<cdot>ts"
 thm tsProjFst_def
 thm tsProjSnd_def
 
-lemma tsprojfst_strict[simp]: "tsProjFst\<cdot>\<bottom> = \<bottom>"
+lemma tsprojfst_insert: "tsProjFst = tsMap fst"
   by (simp add: tsProjFst_def)
 
-lemma tsprojsnd_strict[simp]: "tsProjSnd\<cdot>\<bottom> = \<bottom>"
+lemma tsprojsnd_insert: "tsProjSnd = tsMap snd "
+  by (simp add: tsProjSnd_def)
+
+lemma tsprojfst_strict [simp]: "tsProjFst\<cdot>\<bottom> = \<bottom>"
+  by (simp add: tsProjFst_def)
+
+lemma tsprojsnd_strict [simp]: "tsProjSnd\<cdot>\<bottom> = \<bottom>"
   by (simp add: tsProjSnd_def)
 
 lemma tsprojfst_strict_rev: "tsProjFst\<cdot>ts = \<bottom> \<Longrightarrow> ts = \<bottom>"
@@ -1956,12 +1962,6 @@ lemma tsprojfst_tstickcount [simp]: "#\<surd>(tsProjFst\<cdot>ts) = #\<surd>ts"
   by (simp add: tsProjFst_def)
 
 lemma tsprojsnd_tstickcount [simp]: "#\<surd>(tsProjSnd\<cdot>ts) = #\<surd>ts"
-  by (simp add: tsProjSnd_def)
-
-lemma tsprojfst_insert: "tsProjFst = tsMap fst"
-  by (simp add: tsProjFst_def)
-
-lemma tsprojsnd_insert: "tsProjSnd = tsMap snd "
   by (simp add: tsProjSnd_def)
 
 lemma tsproj_tsabs_h:
@@ -2955,7 +2955,7 @@ by (metis bottom delayfun event.exhaust lscons_conv mlscons surj_scons)
 
 text {* If a predicate P holds for empty and non-empty tstreams, it holds for all tstreams *}
 lemma tscases:
-  assumes bottom: "ts=\<bottom> \<Longrightarrow> P ts" 
+  assumes bottom: "ts=\<bottom> \<Longrightarrow> P ts"
     and delayfun: "\<And>as. ts=delayFun\<cdot>as \<Longrightarrow> P ts"
     and mlscons: "\<And>a as. ts=tsMLscons\<cdot>(updis a)\<cdot>as \<Longrightarrow> P ts"
   shows "P ts"
@@ -2985,7 +2985,7 @@ fixrec tsZip :: "'a tstream \<rightarrow> 'b stream \<rightarrow> ('a \<times> '
                             = tsMLscons\<cdot>(upApply2 Pair\<cdot>(up\<cdot>t)\<cdot>x)\<cdot>(tsZip\<cdot>(tsMLscons\<cdot>(up\<cdot>t2)\<cdot>ts)\<cdot>xs)" | 
 
   (* ignore ticks *)
-"xs\<noteq>\<bottom> \<Longrightarrow> 
+"xs\<noteq>\<epsilon> \<Longrightarrow> 
   tsZip\<cdot>(tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>ts)\<cdot>xs = delayFun\<cdot>(tsZip\<cdot>ts\<cdot>xs)"
 
 declare tsZip.simps [simp del]
