@@ -14,57 +14,19 @@ default_sort countable
 
 (* simple test for abbreviation *)
 
-abbreviation delay_abbr :: "'a tstream \<Rightarrow> 'a tstream" ("delay")
-where "delay ts \<equiv> (tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>ts)"
-
-abbreviation tsmlscons_abbr :: "'a discr \<Rightarrow> 'a tstream \<Rightarrow> 'a tstream" ("_ &&\<surd> _ ")
-where "t &&\<surd> ts \<equiv> (tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>t))\<cdot>ts)"
-
-lemma "tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>t))\<cdot>ts = t &&\<surd> ts"
-  by simp
-
-lemma "delay ts = delayFun\<cdot>ts"
-  by (simp add: delayfun_tslscons)
-
-lemma "tsMLscons\<cdot>(updis t)\<cdot>ts = Discr t &&\<surd> ts"
-  by (simp add: tsmlscons_lscons)
-
 (* here I just try a few things *)
 
-lemma [simp]: "\<And>b. adm (\<lambda>a. tsDom\<cdot>(tsZip\<cdot>a\<cdot>b) \<subseteq> sdom\<cdot>(szip\<cdot>(tsAbs\<cdot>a)\<cdot>b))"
-oops
+(* provable *)
+lemma [simp]: "\<And>b. adm (\<lambda>a. tsDom\<cdot>(f\<cdot>a\<cdot>b) \<subseteq> sdom\<cdot>(g\<cdot>(tsAbs\<cdot>a)\<cdot>b))"
+sorry
 
 lemma tszip_tsdom: "tsDom\<cdot>(tsZip\<cdot>ts\<cdot>xs) \<subseteq> sdom\<cdot>(szip\<cdot>(tsAbs\<cdot>ts)\<cdot>xs)"
-apply (induction ts arbitrary: xs)
-apply (simp_all)
-oops
-
-
-lemma tsabs_slen_lub [simp]: assumes "chain Y" and "\<not>finite_chain Y"
-  shows "\<exists>k. #(tsAbs\<cdot>(\<Squnion>i. Y i)) = Fin k \<or> #(tsAbs\<cdot>(\<Squnion>i. Y i)) = \<infinity>"
-  using lncases by auto
-
-(* adm provable? *)
-lemma tsabs_slen_adm [simp]: "\<And>b. adm (\<lambda>a. #(tsAbs\<cdot>(tsZip\<cdot>a\<cdot>b)) \<le> #(tsAbs\<cdot>a))"
-  apply (rule admI)
-  apply (case_tac "finite_chain Y")
-  using l42 apply force
-  apply (rule_tac x="#(tsAbs\<cdot>(\<Squnion>i. Y i))" in lncases, simp_all)
-  apply (rule_tac x=b in scases, auto)
 oops
 
 lemma tszip_nbot: "ts \<noteq> \<bottom> \<Longrightarrow> xs \<noteq> \<epsilon> \<Longrightarrow> tsZip\<cdot>ts\<cdot>xs \<noteq> \<bottom>"
-  apply (rule_tac x=xs in scases, simp_all) 
-  apply (rule_tac ts=ts in tscases, simp_all)
-  apply (simp add: tszip_delayfun)  
 oops
 
-lemma tszip_tsabs: "xs\<noteq>\<epsilon> \<Longrightarrow> tsAbs\<cdot>(tsZip\<cdot>ts\<cdot>(updis x && xs)) = szip\<cdot>(tsAbs\<cdot>ts)\<cdot>(updis x && xs)"
-oops
-
-lemma tszip_tsabs_slen_leq [simp]: "#(tsAbs\<cdot>(tsZip\<cdot>ts\<cdot>xs)) \<le> #(tsAbs\<cdot>ts)"
-  apply (induction ts arbitrary: xs)
-  apply (simp_all)
+lemma tszip_tsabs: "xs\<noteq>\<epsilon> \<Longrightarrow> tsAbs\<cdot>(tsZip\<cdot>ts\<cdot>xs) = szip\<cdot>(tsAbs\<cdot>ts)\<cdot>xs"
 oops
 
 (* simple test for tsremdups/tszip *)

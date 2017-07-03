@@ -383,6 +383,10 @@ apply (induct_tac j, auto)
 apply (case_tac x, auto)
 by (simp add: Fin_def lnzero_def)
 
+lemma lub_mono2: "\<lbrakk>chain (X::nat\<Rightarrow>lnat); chain (Y::nat\<Rightarrow>lnat); \<And>i. X i \<le> Y i\<rbrakk>
+    \<Longrightarrow> (\<Squnion>i. X i) \<le> (\<Squnion>i. Y i)"
+using lnle_conv lub_mono by blast
+
 text {* In an infinite chain, one can find for every element a bigger element
   in the chain *}
 lemma inf_chainl2:

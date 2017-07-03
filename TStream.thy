@@ -2924,6 +2924,10 @@ subsection {* admissibility rules *}
 lemma adm_tstickcount_leq [simp]: "\<And>b. adm (\<lambda>a. #\<surd> f\<cdot>a\<cdot>b \<le> #\<surd> a)"
 by (metis (mono_tags, lifting) admI inf_ub l42 ts_infinite_lub)
 
+lemma adm_tsabs_slen_leq [simp]: "\<And>b. adm (\<lambda>a. #(tsAbs\<cdot>(f\<cdot>a\<cdot>b)) \<le> #(tsAbs\<cdot>a))"
+apply (rule admI)
+by (simp add: contlub_cfun_arg contlub_cfun_fun lub_mono2)
+
 (* ToDo Oliver: admissibility lemmata *)
 
 lemma adm_tsdom_sub [simp]: "\<And>b. adm (\<lambda>a. tsDom\<cdot>(f\<cdot>a\<cdot>b) \<subseteq> tsDom\<cdot>a)"
@@ -3080,6 +3084,9 @@ lemma tszip_tsabs_slen [simp]: "#xs=\<infinity> \<Longrightarrow> #(tsAbs\<cdot>
       tszip_mlscons tszip_nbot)
 
 (* ToDo: lemmata for tszip *)
+
+lemma tszip_tsabs_slen_leq [simp]: "#(tsAbs\<cdot>(tsZip\<cdot>ts\<cdot>xs)) \<le> #(tsAbs\<cdot>ts)"
+oops
 
 lemma tszip_tsdom: "#xs=\<infinity> \<Longrightarrow> tsDom\<cdot>(tsZip\<cdot>ts\<cdot>xs) = sdom\<cdot>(szip\<cdot>(tsAbs\<cdot>ts)\<cdot>xs)"
 oops
