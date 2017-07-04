@@ -167,7 +167,7 @@ definition tspfCompOc :: "'m TSPF \<Rightarrow> 'm TSPF \<Rightarrow> channel se
 definition tspfCompC :: "'m TSPF \<Rightarrow> 'm TSPF \<Rightarrow> channel set" where
 "tspfCompC f1 f2 = tspfDom\<cdot>f1 \<union> tspfDom\<cdot>f2 \<union> tspfRan\<cdot>f1 \<union> tspfRan\<cdot>f2"
 
-
+(*
 
 (* checks that neither f1 nor f2 feed back into themselves and that their outputs don't collide *)
   (* = spfComp_well + no_selfloops *)
@@ -176,7 +176,7 @@ definition comp_well:: "'m TSPF \<Rightarrow> 'm TSPF \<Rightarrow> bool" where
                 \<and>  tspfDom\<cdot>f1 \<inter>tspfRan\<cdot>f1 = {}
                 \<and> tspfRan\<cdot>f1 \<inter> tspfRan\<cdot>f2 = {}"
 
-
+*)
 
 (*
 (* applies a TSPF to an input TSB, resulting in an infinite output TSB *)
@@ -559,7 +559,7 @@ lemma tspfcomp_C_commu: "(tspfCompC f1 f2) = (tspfCompC f2 f1)"
 
 
  (* OLD LEMMA SECTION BELOW THIS LINE *)
-
+(*
 lemma tspf_weakCausalityI: assumes "\<And>n b1 b2. b1\<in> dom f \<Longrightarrow> b2 \<in>dom f
       \<Longrightarrow> tsbiTTake n\<cdot>b1  = tsbiTTake n\<cdot>b2
       \<Longrightarrow> (tsbiTTake n\<cdot>(f \<rightharpoonup> b1) = tsbiTTake n\<cdot>(f \<rightharpoonup> b2))"
@@ -1120,7 +1120,7 @@ lemma [simp]: "tspfRan\<cdot>tspfEmpty = {}"
 apply(simp add: tspfran_insert tspfEmpty.rep_eq)
 by(simp add: tsbidom_insert tsb_inf_well_def)
 
-
+*)
 
 (*
 
@@ -1395,7 +1395,7 @@ oops
 
 
 
-*)
+
 
 
 
@@ -1406,7 +1406,7 @@ oops
  setup_lifting type_definition_TSPFw
 
 
-
+*)
 
 
 end

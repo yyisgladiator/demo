@@ -953,7 +953,7 @@ lemma tsbtick_cont [simp]:
       
       
 
-
+(*
 
 (* ----------------------------------------------------------------------- *)
   section \<open>TSB-fin\<close>
@@ -1400,7 +1400,7 @@ proof(rule tsb_eq)
   thus " b1\<down>n  .  c = b2\<down>n  .  c" by (simp add: c_def dom_eq c_def2)
 qed
 
-
+*)
   
   
   
