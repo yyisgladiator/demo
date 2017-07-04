@@ -108,8 +108,8 @@ abbreviation tsbTTake_abbrv :: "'m TSB \<Rightarrow> nat \<Rightarrow> 'm TSB" (
 "tb \<down> n \<equiv> tsbTTake n tb"
 
 (* defintion with lnat *)
-definition tsbTTakeL :: "lnat \<Rightarrow> 'm TSB \<Rightarrow> 'm TSB" where
-"tsbTTakeL n tb = Abs_TSB (\<lambda>c. (c\<in>tsbDom\<cdot>tb) \<leadsto> (tsTakeL\<cdot>n\<cdot>(tb  .  c)))"
+definition tsbTTakeL :: "lnat \<rightarrow> 'm TSB \<rightarrow> 'm TSB" where
+"tsbTTakeL \<equiv> \<Lambda> n tb. Abs_TSB (\<lambda>c. (c\<in>tsbDom\<cdot>tb) \<leadsto> (tsTakeL\<cdot>n\<cdot>(tb  .  c)))"
 
 
 text {* @{text "tsbRemCh"} removes a channel from a timed stream bundle *}
@@ -601,25 +601,24 @@ next
     by (simp add: tsbgetch_insert)
   qed
 
-lemma tsbttakeL_dom [simp]: "tsbDom\<cdot>(tsbTTakeL i tb) = tsbDom\<cdot>tb"
-  by (simp add: tsbTTakeL_def tsbdom_rep_eq)
+lemma tsbttakeL_dom [simp]: "tsbDom\<cdot>(Abs_TSB (\<lambda>c. (c\<in>tsbDom\<cdot>tb) \<leadsto> (tsTakeL\<cdot>n\<cdot>(tb  .  c)))) = tsbDom\<cdot>tb"
+  by (simp add: tsbdom_rep_eq)
 
-lemma tsbttakeL_least: "tsbTTakeL (Fin 0) tb = tsbLeast (tsbDom\<cdot>tb)"
+lemma tsbttakeL_least: "Abs_TSB (\<lambda>c. (c\<in>tsbDom\<cdot>tb) \<leadsto> (tsTakeL\<cdot>(Fin 0)\<cdot>(tb  .  c))) = tsbLeast (tsbDom\<cdot>tb)"
   apply (rule tsb_eq, simp_all)
-  by (simp add: tsbTTakeL_def tsbgetch_insert)
+  by (simp add: tsbgetch_insert)
 
-lemma tsbttakeL_inf [simp]: "(tsbTTakeL \<infinity> tb) = tb"
-  apply (simp add: tsbTTakeL_def)
+lemma tsbttakeL_inf [simp]: "Abs_TSB (\<lambda>c. (c\<in>tsbDom\<cdot>tb) \<leadsto> (tsTakeL\<cdot>\<infinity>\<cdot>(tb  .  c))) = tb"
   apply (simp only: tstakeL_inf)
     by (metis (no_types) tsbgetch_eq2)
 
 lemma tsbttakeL_least_getch [simp]: assumes "c \<in> tsbDom\<cdot>tb"
-  shows "(tsbTTakeL (Fin 0) tb) . c = \<bottom>"
-  by (metis assms tsbleast_getch tsbttakeL_least)
+  shows "(Abs_TSB (\<lambda>c. (c\<in>tsbDom\<cdot>tb) \<leadsto> (tsTakeL\<cdot>(Fin 0)\<cdot>(tb  .  c)))) . c = \<bottom>"
+  by (simp add: assms tsbttakeL_least)
 
 
 lemma tsbttakeL_getch [simp]: assumes "c \<in> tsbDom\<cdot>tb"
-  shows "((tsbTTakeL n tb) . c) = tsTakeL\<cdot>n\<cdot>(tb . c)"
+  shows "((Abs_TSB (\<lambda>c. (c\<in>tsbDom\<cdot>tb) \<leadsto> (tsTakeL\<cdot>n\<cdot>(tb  .  c)))) . c) = tsTakeL\<cdot>n\<cdot>(tb . c)"
 proof (cases "n \<noteq> \<infinity>")
   case True
   have f1: "n < \<infinity>"
@@ -631,26 +630,26 @@ proof (cases "n \<noteq> \<infinity>")
 next
   case False
   have f1: "\<And>t. Abs_TSB (\<lambda>c. (c \<in> tsbDom\<cdot> (t::'a TSB))\<leadsto>tsTakeL\<cdot>\<infinity>\<cdot> (t . c)) = t"
-      by (metis (no_types) tsbTTakeL_def tsbttakeL_inf)
+    apply (simp only: tstakeL_inf)
+    by (metis (no_types) tsbgetch_eq2)
   then show ?thesis
-    apply (simp add: tsbTTakeL_def)
     using False by auto
 qed
 
-lemma tsbttakeL_below [simp]: "(tsbTTakeL n tb) \<sqsubseteq> tb"
+lemma tsbttakeL_below [simp]: "(Abs_TSB (\<lambda>c. (c\<in>tsbDom\<cdot>tb) \<leadsto> (tsTakeL\<cdot>n\<cdot>(tb  .  c)))) \<sqsubseteq> tb"
   by (rule tsb_below, auto)
 
-lemma tsbttake_mono2 [simp]: "monofun (\<lambda> tb. tsbTTakeL n tb)"
+lemma tsbttake_mono2 [simp]: "monofun (\<lambda> tb. Abs_TSB (\<lambda>c. (c\<in>tsbDom\<cdot>tb) \<leadsto> (tsTakeL\<cdot>n\<cdot>(tb  .  c))))"
   apply (rule monofunI)
   apply (rule tsb_below)
-   apply (simp add: tsbdom_below)
+   apply (simp only: tsbttakeL_dom, simp add: tsbdom_below)
   apply (subst tsbttakeL_getch, simp)
-    apply (subst tsbttakeL_getch, simp add: tsbdom_below)
+    apply (subst tsbttakeL_getch, simp only: tsbttakeL_dom, simp add: tsbdom_below)
   by (simp add: monofun_cfun_arg monofun_cfun_fun)
 
 
 
-lemma tsbttake_mono1 [simp]: "\<And> tb. monofun (\<lambda> n. tsbTTakeL n tb)"
+lemma tsbttake_mono1 [simp]: "\<And> tb. monofun (\<lambda> n. Abs_TSB (\<lambda>c. (c\<in>tsbDom\<cdot>tb) \<leadsto> (tsTakeL\<cdot>n\<cdot>(tb  .  c))))"
   apply (rule monofunI)
   apply (rule tsb_below)
    apply (simp add: tsbdom_below)
@@ -659,9 +658,10 @@ lemma tsbttake_mono1 [simp]: "\<And> tb. monofun (\<lambda> n. tsbTTakeL n tb)"
   by (simp add: monofun_cfun_arg monofun_cfun_fun)
 
 lemma tsbttake_chain1: assumes "chain Y"
-  shows "chain (\<lambda>i::nat. tsbTTakeL (Y i) tb)"
+  shows "chain (\<lambda>i::nat. Abs_TSB (\<lambda>c. (c\<in>tsbDom\<cdot>tb) \<leadsto> (tsTakeL\<cdot>(Y i)\<cdot>(tb  .  c))))"
 proof -
-    have "\<And>i j. i \<sqsubseteq> j \<Longrightarrow> tsbTTakeL i tb \<sqsubseteq> tsbTTakeL j tb"
+  have "\<And>i j. i \<sqsubseteq> j \<Longrightarrow> (Abs_TSB (\<lambda>c. (c\<in>tsbDom\<cdot>tb) \<leadsto> (tsTakeL\<cdot>i\<cdot>(tb  .  c)))) 
+                          \<sqsubseteq> Abs_TSB (\<lambda>c. (c\<in>tsbDom\<cdot>tb) \<leadsto> (tsTakeL\<cdot>j\<cdot>(tb  .  c)))"
       using lnless_def monofunE tsbttake_mono1 by blast
     thus ?thesis
       apply (rule chainI)
@@ -670,9 +670,10 @@ qed
 
 
 lemma tsbttake_cont1_pre: assumes "chain Y"
-  shows "tsbTTakeL (\<Squnion>i. Y i) tb \<sqsubseteq> (\<Squnion>i::nat. tsbTTakeL (Y i) tb)"
+  shows "(Abs_TSB (\<lambda>c. (c\<in>tsbDom\<cdot>tb) \<leadsto> (tsTakeL\<cdot>(\<Squnion>i. Y i)\<cdot>(tb  .  c)))) 
+          \<sqsubseteq> (\<Squnion>i::nat. Abs_TSB (\<lambda>c. (c\<in>tsbDom\<cdot>tb) \<leadsto> (tsTakeL\<cdot>(Y i)\<cdot>(tb  .  c))))"
 proof -
-  have f1: "\<And>c. c \<in> tsbDom\<cdot>tb \<Longrightarrow> (\<Squnion>i. tsbTTakeL (Y i) tb) . c = (\<Squnion>i. (tsbTTakeL (Y i) tb) . c)"
+  have f1: "\<And>c. c \<in> tsbDom\<cdot>tb \<Longrightarrow> (\<Squnion>i. Abs_TSB (\<lambda>c. (c\<in>tsbDom\<cdot>tb) \<leadsto> (tsTakeL\<cdot>(Y i)\<cdot>(tb  .  c)))) . c = (\<Squnion>i. (Abs_TSB (\<lambda>c. (c\<in>tsbDom\<cdot>tb) \<leadsto> (tsTakeL\<cdot>(Y i)\<cdot>(tb  .  c)))) . c)"
     apply (rule lubgetCh, simp only: tsbttake_chain1 assms)
     using assms tsbChain_dom_eq2 tsbttakeL_dom tsbttake_chain1 by blast
   show ?thesis
@@ -683,28 +684,75 @@ proof -
        by (simp add: tsTakel_lub1_getch_eq assms)
 qed
 
-lemma tsbttake_cont1 [simp]: "\<And>tb. cont (\<lambda> n. tsbTTakeL n tb)"
+lemma tsbttake_cont1 [simp]: "\<And>tb. cont (\<lambda> n. Abs_TSB (\<lambda>c. (c\<in>tsbDom\<cdot>tb) \<leadsto> (tsTakeL\<cdot>n\<cdot>(tb  .  c))))"
   apply (rule contI2)
-    by (simp_all add: tsbttake_cont1_pre)
+  by (simp_all add: tsbttake_cont1_pre)
+    
+    
+abbreviation tsbTTakeL_ab :: "lnat \<Rightarrow> 'm TSB \<Rightarrow> 'm TSB" where
+"tsbTTakeL_ab n tb \<equiv>  (\<lambda>c. (c\<in>tsbDom\<cdot>tb) \<leadsto> (tsTakeL\<cdot>n\<cdot>(tb  .  c)))\<Omega>"
 
+
+lemma tmp_tsbttake_chain: assumes "chain Y"
+  shows "chain (\<lambda>i. tsbTTakeL_ab n (Y i))"
+  sorry
+    (* was previously shown as follows 
+    apply (simp add: assms ch2ch_monofun) 
+    *)
+    
 lemma tsbttake_cont2_pre: assumes "chain Y"
-  shows "tsbTTakeL n (\<Squnion>i. Y i) \<sqsubseteq> (\<Squnion>i. tsbTTakeL n (Y i))"
-proof -
-  have f1: "\<And>c. c \<in> tsbDom\<cdot>(Lub Y) \<Longrightarrow> (\<Squnion>i. tsbTTakeL n (Y i)) . c = (\<Squnion>i. tsbTTakeL n (Y i) .  c)"
-    apply (rule lubgetCh)
+  shows "tsbTTakeL_ab n (\<Squnion>i. Y i) \<sqsubseteq> (\<Squnion>i. tsbTTakeL_ab n (Y i))"
+  sorry
+    (*
+proof - 
+  have f1: "\<And>c. c \<in> tsbDom\<cdot>(Lub Y) \<Longrightarrow> (\<Squnion>i. tsbTTakeL_ab n (Y i)) . c = (\<Squnion>i. tsbTTakeL_ab n (Y i) .  c)" 
+    apply (rule lubgetCh) 
+     (* apply (simp add: assms ch2ch_monofun) 
+     by (metis assms monofunE po_class.chain_def tsbChain_dom_eq2 tsbttakeL_dom tsbttake_mono2) *)
+    sorry
+  have f2: "\<And> c. c \<in> tsbDom\<cdot>(Lub Y) \<Longrightarrow> (\<Squnion>i. (\<lambda>c. (c \<in> tsbDom\<cdot>(\<Squnion>j. Y j))\<leadsto>tsTakeL\<cdot>n\<cdot>(Y i  .  c))\<Omega>)  .  c  = (\<Squnion>i. tsbTTakeL_ab n (Y i) .  c)"
+    sorry
+  show ?thesis 
+    apply (rule tsb_below) 
+     apply (subst tsbdom_lub,simp_all add: assms) 
      apply (simp add: assms ch2ch_monofun)
-    by (metis assms monofunE po_class.chain_def tsbChain_dom_eq2 tsbttakeL_dom tsbttake_mono2)
-  show ?thesis
-    apply (rule tsb_below)
-     apply (subst tsbdom_lub, simp_all add: assms)
-      apply (simp add: assms ch2ch_monofun)
-      apply (simp only: f1, simp add: assms)
-      by (simp add: tsTakel_lub2_getch_eq assms)
+      defer
+      apply (simp only: f2, simp add: assms) 
+    by (simp add: tsTakel_lub2_getch_eq assms) 
 qed
+*)
+  
 
-lemma tsbttake_cont2 [simp]: "\<And>n. cont (\<lambda> tb. tsbTTakeL n tb)"
-  apply (rule contI2)
-   by (simp_all add: tsbttake_cont2_pre)
+lemma tsbttake_cont2 [simp]: "\<And>n. cont (\<lambda> tb. Abs_TSB (\<lambda>c. (c\<in>tsbDom\<cdot>tb) \<leadsto> (tsTakeL\<cdot>n\<cdot>(tb  .  c))))"
+  apply (rule contI2, simp)
+  apply (rule+)
+  by (rule tsbttake_cont2_pre, simp)
+    
+    
+(* tsbttakeL is a continuous function *)
+lemma tsbttakel_cont [simp]: "cont (\<lambda> n. \<Lambda> tb. Abs_TSB (\<lambda>c. (c\<in>tsbDom\<cdot>tb) \<leadsto> (tsTakeL\<cdot>n\<cdot>(tb  .  c))))"
+  by (simp add: cont2cont_LAM)
+ 
+    
+lemma tsbttakeL_below2 [simp]: "(tsbTTakeL\<cdot>n\<cdot>tb) \<sqsubseteq> tb"
+  by (simp add: tsbTTakeL_def)
+   
+    
+lemma tsbttakeL_dom2 [simp]: "tsbDom\<cdot>(tsbTTakeL\<cdot>i\<cdot>tb) = tsbDom\<cdot>tb"
+  by (simp add: tsbdom_below)
+
+lemma tsbttakeL_least2: "tsbTTakeL\<cdot>(Fin 0)\<cdot>tb = tsbLeast(tsbDom\<cdot>tb)"
+  apply (rule tsb_eq, simp_all)
+  by (simp add: tsbTTakeL_def tsbgetch_insert)
+
+lemma tsbttakeL_inf2 [simp]: "(tsbTTakeL\<cdot>\<infinity>\<cdot>tb) = tb"
+  by (simp add: tsbTTakeL_def)
+
+
+lemma tsbttakeL_least_getch2 [simp]: assumes "c \<in> tsbDom\<cdot>tb"
+  shows "(tsbTTakeL\<cdot>(Fin 0)\<cdot>tb) . c = \<bottom>"
+  by (metis assms tsbleast_getch tsbttakeL_least2)
+
 
 subsubsection \<open>tsbUnion\<close>
 
