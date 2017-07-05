@@ -8,6 +8,8 @@ theory TStream_HK
 imports TStream
 begin
 
+  (* Vorschlag fuer abbreviation: *)
+  (* <[Msg 1]>\<surd>  *)
 primrec list2ts :: "'a event list \<Rightarrow> 'a tstream"
 where
   list2ts_0:   "list2ts [] = \<bottom>" |
@@ -153,4 +155,13 @@ lemma tswell_list:"ls \<noteq> [] \<Longrightarrow> last ls \<noteq>\<surd> \<Lo
   by (smt append_butlast_last_id list2s_sfoot_ntk sfoot1)
 
 
+lemma "tsRemDups\<cdot><[Msg 1, Msg 1, Tick, Msg 1]>\<surd> = <[Msg 1, Tick]>\<surd>"
+  oops
+    
+lemma "tsProjFst\<cdot><[Msg (1, 11), Msg (2, 12), Tick]>\<surd> = <[Msg 1, Msg 2, Tick]>\<surd>"
+  oops
+
+lemma "tsProjFst\<cdot><[Msg (1, 11), Msg (2, 12), Tick, Msg (100, 200)]>\<surd> = <[Msg 1, Msg 2, Tick]>\<surd>"
+  oops
+        
 end
