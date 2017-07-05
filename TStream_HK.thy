@@ -124,12 +124,15 @@ apply (subgoal_tac "#(<ls>)\<noteq>\<infinity>")
 using sfilterl4 apply blast
 by simp
 
-lemma list2ts2list2s_well:"ts_well (list2s ls) \<Longrightarrow> Rep_tstream (list2ts ls) = list2s (ls)"
+lemma list2ts2list2s_well[simp]:"ts_well (list2s ls) \<Longrightarrow> Rep_tstream (list2ts ls) = list2s (ls)"
   apply(induction ls, simp+)
   by (smt Rep_Abs Rep_tstream_inverse absts2tslscons lscons_conv sconc_fst_empty stream.con_rews(2) 
   stream.sel_rews(5) tick_msg ts_well_conc tslscons_insert tslscons_lscons up_defined)
 
-
+lemma list2s2list2ts_well[simp]:"ts_well (list2s ls) \<Longrightarrow>  Abs_tstream (list2s ls) = list2ts (ls)"
+  apply(induction ls, simp+)
+  by (smt Rep_Abs Rep_tstream_inverse absts2tslscons lscons_conv sconc_fst_empty stream.con_rews(2) 
+  stream.sel_rews(5) tick_msg ts_well_conc tslscons_insert tslscons_lscons up_defined)
 
 (*Test*)
 lemma testlist2ts: "list2ts ([\<M> True,\<M> False, \<surd>,\<M> False]) = Abs_tstream (<[Msg True,Msg False,\<surd>]>)"
@@ -142,6 +145,7 @@ lemma testlist2ts: "list2ts ([\<M> True,\<M> False, \<surd>,\<M> False]) = Abs_t
 lemma testlist2ts_alter: "list2ts_alter ([\<M> True,\<M> False, \<surd>,\<M> False]) = tsMLscons\<cdot>(updis True)\<cdot>(tsMLscons\<cdot>(updis False)\<cdot>(delayFun\<cdot>\<bottom>))"
   by (simp add: tslscons_insert)
 
+(*list2s*)
 lemma list2s_sfoot_ntk:"b\<noteq>\<surd> \<Longrightarrow> sfoot (<(a@[b])>) \<noteq> \<surd> "
   apply(subst sfoot1, simp)
   by (simp add: less_le slen_lnsuc,simp)
@@ -152,5 +156,12 @@ lemma tswell_list:"ls \<noteq> [] \<Longrightarrow> last ls \<noteq>\<surd> \<Lo
   using list2s_inj apply fastforce
   by (smt append_butlast_last_id list2s_sfoot_ntk sfoot1)
 
+lemma list2ts_tsntimes:"ts_well (list2s as) \<Longrightarrow>tsntimes n (list2ts as) = tsntimes n (Abs_tstream (list2s as))"
+  by simp
 
+lemma list2ts_tsinftimes2: "tsinftimes (list2ts (as@[\<surd>])) = tsinftimes (Abs_tstream (list2s (as@[\<surd>])))"
+  apply (subst list2s2list2ts_well,auto)
+  apply (simp add: ts_well_def, auto)
+  by (simp add: less_le slen_lnsuc)
+  
 end
