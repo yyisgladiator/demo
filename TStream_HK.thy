@@ -8,12 +8,15 @@ theory TStream_HK
 imports TStream
 begin
 
+  (* Vorschlag fuer abbreviation: *)
+  (* <[Msg 1]>\<surd>  *)
 primrec list2ts :: "'a event list \<Rightarrow> 'a tstream"
 where
   list2ts_0:   "list2ts [] = \<bottom>" |
   list2ts_Suc: "list2ts (a#as) = (tsLscons\<cdot>(updis a)\<cdot>(list2ts as))"
 
-
+abbreviation tstream_abbrev :: "'a event list \<Rightarrow> 'a tstream" ("<_>\<surd>" [1000] 999)
+where "<l>\<surd> == list2ts l"
 
 primrec list2ts_alter :: "'a event list \<Rightarrow> 'a tstream"
 where
@@ -35,7 +38,7 @@ lemma "list2ts [Msg 1, Msg 2, Tick, Msg 3, Tick, Msg 4] = s"
 lemma list2ts_empty [simp]: "list2ts [] = \<bottom>"
   by simp
 
-lemma list2ts_onetick[simp]: "list2ts[\<surd>]= Abs_tstream (updis \<surd> && \<bottom>)"
+lemma list2ts_onetick: "list2ts[\<surd>]= Abs_tstream (updis \<surd> && \<bottom>)"
   by (simp add: tslscons_insert espf2tspf_def)
 
 lemma list2ts_onemsg[simp]:"a\<noteq>\<surd> \<Longrightarrow> list2ts[a] =\<bottom> "
@@ -47,7 +50,7 @@ lemma list2ts_tickfirst:"list2ts (\<surd>#as) =(Abs_tstream(<[\<surd>]>)) \<bull
   apply (subst lscons_conv)+
   by (simp add: tsconc_insert)
 
-lemma list2ts_nottickfirst [simp]:"a\<noteq>\<surd> \<and> as=(b # \<surd> # bs) \<Longrightarrow>list2ts (a#as) =Abs_tstream (\<up>a \<bullet> Rep_tstream (list2ts as))"
+lemma list2ts_nottickfirst:"a\<noteq>\<surd> \<and> as=(b # \<surd> # bs) \<Longrightarrow>list2ts (a#as) =Abs_tstream (\<up>a \<bullet> Rep_tstream (list2ts as))"
   apply (simp add: tslscons_insert)
   apply (simp add: espf2tspf_def)+
   by (simp add: lscons_conv)
@@ -159,9 +162,49 @@ lemma tswell_list:"ls \<noteq> [] \<Longrightarrow> last ls \<noteq>\<surd> \<Lo
 lemma list2ts_tsntimes:"ts_well (list2s as) \<Longrightarrow>tsntimes n (list2ts as) = tsntimes n (Abs_tstream (list2s as))"
   by simp
 
+
 lemma list2ts_tsinftimes2: "tsinftimes (list2ts (as@[\<surd>])) = tsinftimes (Abs_tstream (list2s (as@[\<surd>])))"
   apply (subst list2s2list2ts_well,auto)
   apply (simp add: ts_well_def, auto)
   by (simp add: less_le slen_lnsuc)
   
+
+lemma "tsRemDups\<cdot>(<[Msg 1, Msg 1, Tick, Msg 1]>\<surd>) = <[Msg 1, Tick]>\<surd>"
+  apply (simp add: tsremdups_insert)  
+  by (metis (no_types) delayfun_tslscons_bot tick_eq_discrtick tslscons_nbot2 tsmlscons2tslscons 
+  tsremdups_h_mlscons tsremdups_h_mlscons_dup tsremdups_h_strict tsremdups_h_tslscons_tick)
+
+  
+lemma "tsProjFst\<cdot>(<[Msg (1, 11), Msg (2, 12), Tick]>\<surd>) = <[Msg 1, Msg 2, Tick]>\<surd>"
+  apply (simp add: tsprojfst_insert tslscons_insert espf2tspf_def)
+  apply (simp add: tsmap_unfold lscons_conv)
+  by (simp add: ts_well_def)
+  (*
+  apply simp
+  by (metis (no_types, lifting) DiscrTick_def delayfun_tslscons_bot tslscons_nbot tslscons_nbot2 
+  tsmlscons2tslscons tsprojfst_delayfun tsprojfst_mlscons tsprojfst_strict up_defined)
+  *)
+  (*
+  apply simp
+  proof -
+    have "tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot> (\<bottom>::('a \<times> 'b) tstream) \<noteq> \<bottom>"
+      by (metis tick_eq_discrtick tslscons_nbot2)
+    then have f1: "tsProjFst\<cdot> (tsMLscons\<cdot>(updis (1::'a, 11::'b))\<cdot> (tsLscons\<cdot>(updis (\<M> (2, 12)))\<cdot> (tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>\<bottom>))) = tsMLscons\<cdot>(updis 1)\<cdot> (tsProjFst\<cdot> (tsLscons\<cdot>(updis (\<M> (2, 12::'b)))\<cdot> (tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>\<bottom>)))"
+      using tslscons_nbot tsprojfst_mlscons up_defined by blast
+    have f2: "tsProjFst\<cdot> (tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot> (\<bottom>::('a \<times> 'b) tstream)) = delayFun\<cdot>\<bottom>"
+      by (metis delayfun_tslscons_bot tsprojfst_delayfun tsprojfst_strict)
+    have "tsProjFst\<cdot> (tsMLscons\<cdot>(updis (2, 12::'b))\<cdot> (tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>\<bottom>)) = tsMLscons\<cdot>(updis 2)\<cdot> (tsProjFst\<cdot> (tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot> (\<bottom>::('a \<times> 'b) tstream)))"
+      by (simp add: tsprojfst_mlscons)
+    then show "tsProjFst\<cdot> (tsLscons\<cdot>(updis (\<M> (1::'a, 11::'b)))\<cdot> (tsLscons\<cdot>(updis (\<M> (2, 12)))\<cdot> (tsLscons\<cdot>(updis \<surd>)\<cdot>\<bottom>))) = tsLscons\<cdot>(updis (\<M> 1))\<cdot> (tsLscons\<cdot>(updis (\<M> 2))\<cdot> (tsLscons\<cdot>(updis \<surd>)\<cdot>\<bottom>))"
+      using f2 f1 by (simp add: delayfun_tslscons_bot tick_eq_discrtick tsmlscons2tslscons)
+  qed
+  *)
+
+
+lemma "tsProjFst\<cdot>(<[Msg (1, 11), Msg (2, 12), Tick, Msg (100, 200)]>\<surd>) = <[Msg 1, Msg 2, Tick]>\<surd>"
+  apply (simp add: tsprojfst_insert tslscons_insert espf2tspf_def)
+  apply (simp add: tsmap_unfold lscons_conv)
+  by (simp add: ts_well_def)
+        
+
 end
