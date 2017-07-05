@@ -2928,19 +2928,29 @@ lemma adm_tsabs_slen_leq [simp]: "\<And>b. adm (\<lambda>a. #(tsAbs\<cdot>(f\<cd
 apply (rule admI)
 by (simp add: contlub_cfun_arg contlub_cfun_fun lub_mono2)
 
-(* ToDo Oliver: admissibility lemmata *)
-
 lemma adm_tsdom_sub [simp]: "\<And>b. adm (\<lambda>a. tsDom\<cdot>(f\<cdot>a\<cdot>b) \<subseteq> tsDom\<cdot>a)"
-oops
+  apply (rule admI)
+  apply (simp add: contlub_cfun_arg contlub_cfun_fun)
+  apply (simp add: lub_eq_Union)
+  by (simp add: SUP_subset_mono)
 
 lemma adm_tsdom_sup [simp]: "\<And>b. adm (\<lambda>a. tsDom\<cdot>a \<subseteq> tsDom\<cdot>(f\<cdot>a\<cdot>b))"
-oops
+  apply (rule admI)
+  apply (simp add: contlub_cfun_arg contlub_cfun_fun)
+  apply (simp add: lub_eq_Union)
+  by (simp add: SUP_subset_mono)
 
 lemma adm_tsdom_sub_fun [simp]: "\<And>b c. adm (\<lambda>a. tsDom\<cdot>(f\<cdot>a\<cdot>b) \<subseteq> tsDom\<cdot>(f\<cdot>a\<cdot>c))"
-oops
+  apply (rule admI)
+  apply (simp add: contlub_cfun_arg contlub_cfun_fun)
+  apply (simp add: lub_eq_Union)
+  by (simp add: SUP_subset_mono)
 
 lemma adm_tsdom_sup_fun [simp]: "\<And>b c d. adm (\<lambda>a. tsDom\<cdot>(f\<cdot>a\<cdot>b) \<subseteq> insert c (tsDom\<cdot>(f\<cdot>a\<cdot>d)))"
-oops
+  apply (rule admI)
+  apply (simp add: contlub_cfun_arg contlub_cfun_fun)
+  apply (simp add: lub_eq_Union)
+  by (auto)
 
 (* ----------------------------------------------------------------------- *)
 section {* tscases *}
