@@ -37,18 +37,58 @@ definition spf_map_well :: "'m SPF \<Rightarrow> (channel \<rightharpoonup> chan
 subsection \<open>map_inverse\<close>
   
   
+lemma t32: assumes "map_injective m" and "c \<in> ran(m)"
+  shows "\<exists> x. (THE z. m z = Some c) = x"
+  by simp
 
 
   
 subsection \<open>sbRenameChMap\<close>
+
   
- 
+(*
+  have f1: "ch \<in> ((sbDom\<cdot>sb - dom(m)) \<union> {c \<in> ran(m). \<exists> x. sb . c = x}) \<longrightarrow>
+          (\<lambda>c. if (c \<in> (sbDom\<cdot>sb \<inter> dom(m) - ran(m))) then None else Rep_SB(sb)((mapIdFunct (map_inverse m))(c))) ch \<noteq> None"
+    sorry
+  have f2: "ch \<notin> ((sbDom\<cdot>sb - dom(m)) \<union> {c \<in> ran(m). \<exists> x. sb . c = x}) \<longrightarrow>
+          (\<lambda>c. if (c \<in> (sbDom\<cdot>sb \<inter> dom(m) - ran(m))) then None else Rep_SB(sb)((mapIdFunct (map_inverse m))(c))) ch = None" 
+    sorry
+*)
+  
+lemma t31: assumes "map_injective m" 
+  shows "dom (\<lambda>c. if (c \<in> (sbDom\<cdot>sb \<inter> dom(m) - ran(m))) then None else Rep_SB(sb)((mapIdFunct (map_inverse m))(c))) 
+      = (((sbDom\<cdot>sb - dom(m)) - ran(m)) \<union> {c \<in> ran(m). (THE z. m z = Some c) \<in> sbDom\<cdot>sb})"  
+  sorry
+      
+lemma t30: assumes "map_injective m" and "c \<in> (((sbDom\<cdot>sb - dom(m)) - ran(m)) \<union> {c \<in> ran(m). (THE z. m z = Some c) \<in> sbDom\<cdot>sb})" 
+  shows "sdom\<cdot>((\<lambda>c. if (c \<in> (sbDom\<cdot>sb \<inter> dom(m) - ran(m))) then None else Rep_SB(sb)((mapIdFunct (map_inverse m))(c)))\<rightharpoonup>c) \<subseteq> ctype c"  
+proof - 
+  have f1: "\<not>(c \<in> sbDom\<cdot>sb \<and> c \<in> dom m \<and> c \<notin> ran m)"
+    apply(simp)
+    using assms(2) by blast
+  (*have f20: "c \<in> ran(m) \<longrightarrow> c \<in> {c \<in> ran(m). (THE z. m z = Some c) \<in> sbDom\<cdot>sb}"
+    using assms(2) by auto
+  have f21: "c \<in> ran(m) \<longrightarrow> (THE z. m z = Some c) \<in> sbDom\<cdot>sb"
+    using f20 by auto*)
+  have f22: "\<And>ch. (THE z. m z = Some c) = ch \<longrightarrow>  sdom\<cdot>((Rep_SB sb)\<rightharpoonup>ch) \<subseteq> ctype c"
+    sorry
+  have f2: "sdom\<cdot>Rep_SB sb\<rightharpoonup>mapIdFunct (map_inverse m) c \<subseteq> ctype c"
+    apply(case_tac "c \<notin> ran(m)")
+     apply(simp add: mapIdFunct_def map_inverse_def)
+      apply (metis (no_types, lifting) Abs_cfun_inverse2 Diff_subset Un_iff assms(2) mem_Collect_eq rep_well sbDom_def sb_well_def sbdom_cont subsetCE)
+    apply(simp add: mapIdFunct_def map_inverse_def)
+    apply(subst f22)
+      by(simp_all)
+  show ?thesis  
+    apply(simp add: assms f1)
+    by(simp add: f2)  
+qed
+    
 lemma t10: assumes "map_injective m" 
   shows "sb_well (\<lambda>c. if (c \<in> (sbDom\<cdot>sb \<inter> dom(m) - ran(m))) then None else Rep_SB(sb)((mapIdFunct (map_inverse m))(c)))" 
-  apply(simp add: sb_well_def)
-  apply(auto)
-   apply (simp add: domI)
-  sorry
+  apply(simp only: sb_well_def)
+  apply(subst t31, simp add: assms)
+  using assms t30 by blast
     
 lemma t13: assumes "map_injective m" 
   shows "sb_well (\<lambda>c. if (c \<in> sbDom\<cdot>sb \<and> c \<in> dom m \<and> c \<notin> ran m) then None else Rep_SB(sb)((mapIdFunct (map_inverse m))(c)))" 
@@ -174,6 +214,66 @@ proof -
     apply(simp_all)
      using f1 f2 by auto 
 qed
+    
+lemma t40: assumes "map_injective m" and "c \<in> ((sbDom\<cdot>sb - dom(m)) - ran(m))" shows "(sbRenameChMap sb m) . c = sb . c"
+proof - 
+  have f1: "\<not>(c \<in> sbDom\<cdot>sb \<and> c \<in> dom m \<and> c \<notin> ran m)"
+    using assms(2) by blast
+  have f2: "c \<notin> ran(m)"
+    using assms(2) by auto
+  show ?thesis
+    apply(simp add: sbRenameChMap_def)
+    apply(subst sbGetCh_def, simp)
+    apply(subst rep_abs)
+     apply(simp add: t13 assms)
+    apply(simp add: f1)
+    apply(simp add: mapIdFunct_def map_inverse_def)
+      apply(simp add: f2)
+    by (simp add: sbgetch_insert) 
+qed
+    
+(* can be removed later *)    
+lemma t41: assumes "map_injective m" and "m x = Some c" and "x \<in> sbDom\<cdot>sb" shows "(sbRenameChMap sb m) . c = sb . x"
+  by(simp add: sbRenameChMap_getCh assms)
+
+(* a more general version of sbRenameChMap_sbDom *)
+lemma sbRenameChMap_sbDom2: assumes "map_injective m" 
+  shows "sbDom\<cdot>(sbRenameChMap sb m) = (((sbDom\<cdot>sb - dom(m)) - ran(m)) \<union> {c \<in> ran(m). (THE z. m z = Some c) \<in> sbDom\<cdot>sb})"
+proof - 
+  show ?thesis
+    apply(simp add: sbRenameChMap_def)
+    apply(subst sbDom_def, simp add: t10)
+    apply(subst rep_abs)
+    apply(simp add: t13 assms)
+    apply(simp only: mapIdFunct_def map_inverse_def)
+    apply(subst dom_def)
+    apply(subst set_eqI)
+     apply(simp_all)
+    apply(case_tac "x \<in> ((sbDom\<cdot>sb - dom(m)) - ran(m))")
+     apply(simp)
+    apply (metis (no_types) sbgetchE)
+    apply(simp)
+    using sbdom_insert by fastforce
+qed
+    
+lemma sbRenameChMap_cont: assumes "map_injective m" shows "cont (\<lambda> sb. (sbRenameChMap sb m))"
+proof - 
+  have f00: "\<forall>x y. x \<sqsubseteq> y \<longrightarrow>  sbDom\<cdot>x = sbDom\<cdot>y" 
+    using sbdom_eq by blast
+  have f01: "\<forall>x y. x \<sqsubseteq> y \<longrightarrow> sbDom\<cdot>(sbRenameChMap x m) = sbDom\<cdot>(sbRenameChMap y m)"
+    by (metis (mono_tags, lifting) Collect_cong assms f00 sbRenameChMap_sbDom2)
+  have f02: "\<forall>x y c. x \<sqsubseteq> y \<longrightarrow>  c \<in> sbDom\<cdot>(sbRenameChMap x m) \<longrightarrow> (sbRenameChMap x m) . c \<sqsubseteq> (sbRenameChMap y m) . c"
+    by (smt assms domIff f00 monofun_cfun_arg monofun_cfun_fun sbRenameChMap_getCh sbRenameChMap_getCh2 sbRenameChMap_sbDom2 t31)
+  with f01 have f0: "monofun (\<lambda> sb. (sbRenameChMap sb m))"
+    apply(simp add: monofun_def)
+    by (smt f01 f02 sb_below)
+  have f1: "\<And>Y. chain Y \<Longrightarrow> chain (\<lambda> i. (sbRenameChMap (Y i) m))"
+    using ch2ch_monofun f0 by auto
+  have f2: "\<And>Y. chain Y \<Longrightarrow> (\<Squnion>i. (sbRenameChMap (Y i) m)) = (sbRenameChMap (Lub Y) m)"
+    sorry
+  show ?thesis
+    by (simp add: f0 f2 mycontI2)
+qed  
   
   
 subsection \<open>spfRename\<close>
@@ -183,13 +283,13 @@ lemma t21: assumes "spf_map_well f m" shows "(sbDom\<cdot>sb = (spfDom\<cdot>f -
   by (smt Diff_Int Diff_cancel Diff_empty Diff_eq_empty_iff Diff_partition Diff_subset Un_Diff assms inf_sup_aci(5) spf_map_well_def)
 
 lemma t20: assumes "spf_map_well f m" shows "(sbDom\<cdot>sb = (spfDom\<cdot>f - ran(m)) \<union> dom(m)) \<longrightarrow> sbDom\<cdot>(sbRenameChMap sb m) = spfDom\<cdot>f"
-  by (metis assms sbRenameChMap_sbDom sb_rename_map_well_def spf_map_well_def sup_ge2 t21)
-  
+  by (metis assms sbRenameChMap_sbDom sb_rename_map_well_def spf_map_well_def sup_ge2 t21)    
+    
 lemma spfRename_cont: assumes "spf_map_well f m" shows "cont (\<lambda> sb. (sbDom\<cdot>sb = (spfDom\<cdot>f - ran(m)) \<union> dom(m)) \<leadsto> (f \<rightleftharpoons> (sbRenameChMap sb m)))"
 proof - 
   have f0: "cont (\<lambda> sb. (sbRenameChMap sb m))"
-    apply(simp add: sbRenameChMap_def) 
-    sorry
+    apply(subst sbRenameChMap_cont, simp_all)
+    using assms spf_map_well_def by auto
   have f1: "cont (\<lambda> sb. (f \<rightleftharpoons> (sbRenameChMap sb m)))"
     by (metis (full_types) Rep_CSPF_def cont_Rep_cfun2 cont_compose f0 op_the_cont)
   show ?thesis
@@ -211,9 +311,12 @@ lemma spfRename_spfDom: assumes "spf_map_well f m" shows "spfDom\<cdot>(spfRenam
   apply(subst spfDomAbs)
     by (simp_all add: spfRename_cont spfRename_spf_well assms)
 
-lemma spfRename_spfRan: (*assumes "spf_map_well f m" shows*) "spfRan\<cdot>(spfRename f m) = spfRan\<cdot>f"
-  (*apply(subst spfRan_def, simp add: spfRename_def, subst spfRename_RepAbs, simp add: assms)*)
-  sorry  
+lemma t23: assumes "spf_map_well f m" and "sbDom\<cdot>sb = spfDom\<cdot>f - ran m \<union> dom m" shows "((spfRename f m)\<rightleftharpoons>sb = a) \<longrightarrow> (sbDom\<cdot>a=spfRan\<cdot>f)"
+  by (metis (no_types, lifting) assms(1) assms(2) hidespfwell_helper spfRename_RepAbs spfRename_def spfRename_spfDom spfran2sbdom t20)
+
+
+lemma spfRename_spfRan: assumes "spf_map_well f m" shows "spfRan\<cdot>(spfRename f m) = spfRan\<cdot>f"
+  by (metis assms sbleast_sbdom spfRename_spfDom spfran_least t23)
 
     
 subsection \<open>spfFeedbackOperator_new\<close>
@@ -223,8 +326,8 @@ lemma spfFeedbackOperator_new_spfDom: assumes "spf_map_well f m" shows "spfDom\<
   apply(simp add: spfFeedbackOperator_new_def)
   by(simp add: spfRename_spfDom spfRename_spfRan assms)
 
-lemma spfFeedbackOperator_new_spfRan: "spfRan\<cdot>(spfFeedbackOperator_new f m) = spfRan\<cdot>f"
-  by (simp add: spfFeedbackOperator_new_def spfRename_spfRan) 
+lemma spfFeedbackOperator_new_spfRan: assumes "spf_map_well f m" shows "spfRan\<cdot>(spfFeedbackOperator_new f m) = spfRan\<cdot>f"
+  by (simp add: spfFeedbackOperator_new_def spfRename_spfRan assms) 
   
   
 section \<open>General lemmas parcomp and sercomp\<close>  
@@ -289,19 +392,12 @@ lemma sercomp_dom: assumes "spfRan\<cdot>f1 = spfDom\<cdot>f2" shows "spfDom\<cd
   apply(simp add: sercomp_def, subst spfDomAbs)
   by (simp_all add: assms)
     
+lemma t24: assumes "spfRan\<cdot>f1 = spfDom\<cdot>f2" and "sbDom\<cdot>sb = spfDom\<cdot>f1" shows "((f1 \<circ> f2)\<rightleftharpoons>sb = a) \<longrightarrow> (sbDom\<cdot>a=spfRan\<cdot>f2)"
+  apply(simp add: sercomp_def sercomp_repAbs assms)
+  using assms(1) assms(2) hidespfwell_helper by blast
+
 lemma sercomp_ran: assumes "spfRan\<cdot>f1 = spfDom\<cdot>f2" shows "spfRan\<cdot>(f1 \<circ> f2) = spfRan\<cdot>f2"
-proof - 
-  have f0: "\<And>x. x \<in> sbDom\<cdot>(SOME b. b \<in> ran (\<lambda>x. (sbDom\<cdot>x = spfDom\<cdot>f1)\<leadsto>f2\<rightleftharpoons>f1\<rightleftharpoons>x)) \<longrightarrow> x \<in> sbDom\<cdot>(SOME b. b \<in> ran (Rep_CSPF f2))"
-    apply(simp only: ran_def)
-    sorry
-  then have f1: "\<And>x. x \<in> spfRan\<cdot>(f1 \<circ> f2) \<longrightarrow> x \<in>  spfRan\<cdot>f2"
-    apply(simp add: sercomp_def spfRan_def)
-    by(subst sercomp_repAbs, simp_all add: assms)
-  have f2: "\<And>x. x \<in> spfRan\<cdot>(f2) \<longrightarrow> x \<in>  spfRan\<cdot>(f1 \<circ> f2)"
-    sorry
-  show ?thesis
-    using f1 f2 by blast
-qed  
+  by (metis assms sbleast_sbdom sercomp_dom spfran_least t24)
     
   
 section \<open>SPF Definitions\<close>
@@ -411,7 +507,8 @@ lemma domInnerFeedbackSum4SPF: "spfDom\<cdot>(innerFeedbackSum4SPF) = {c1, c5}"
   by auto
 
 lemma ranInnerFeedbackSum4SPF: "spfRan\<cdot>(innerFeedbackSum4SPF) = {c5}"
-  by (simp add: spfRename_spfRan)
+  apply(subst spfRename_spfRan)
+  by(simp_all add: spf_map_well_def map_injective_def)
     
 lemma ranInnerFeedbackSum4SPF_sb: assumes "sbDom\<cdot>sb = {c1, c5}" shows "sbDom\<cdot>(innerFeedbackSum4SPF\<rightleftharpoons>sb) = spfRan\<cdot>(innerFeedbackSum4SPF)"
   by (simp add: assms domInnerFeedbackSum4SPF hidespfwell_helper)
@@ -422,8 +519,9 @@ lemma [simp]: "spfDom\<cdot>sum4SPF = {c1}"
   by(auto simp add: spf_map_well_def map_injective_def) 
 
 lemma [simp]: "spfRan\<cdot>sum4SPF = {c5}"
-  by (simp add: spfFeedbackOperator_new_spfRan sum4SPF_def) 
-  
+  apply (simp only: sum4SPF_def) 
+  apply(subst spfFeedbackOperator_new_spfRan)
+    by(simp_all add: spf_map_well_def map_injective_def)
   
 subsubsection \<open>Apply lemmas\<close>
   
