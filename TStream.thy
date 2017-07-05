@@ -3219,7 +3219,7 @@ lemma tsremdups_tsabs: "tsAbs\<cdot>(tsRemDups\<cdot>ts) = srcdups\<cdot>(tsAbs\
 lemma tsremdups_tsabs_slen [simp]: "#(tsAbs\<cdot>(tsRemDups\<cdot>ts)) \<le> #(tsAbs\<cdot>ts)"
   by (simp add: tsremdups_tsabs)
 
-(* ToDo: lemmata for tsremdups *)
+(* ToDo Oliver: lemmata for tsremdups *)
 
 lemma tsremdups_h_tsdom_sub: 
   "(tsDom\<cdot>(tsRemDups_h\<cdot>ts\<cdot>(Some (Discr t)))) \<subseteq> tsDom\<cdot>(tsRemDups_h\<cdot>ts\<cdot>None)"
