@@ -58,7 +58,15 @@ subsection \<open>sbRenameChMap\<close>
 lemma t31: assumes "map_injective m" 
   shows "dom (\<lambda>c. if (c \<in> (sbDom\<cdot>sb \<inter> dom(m) - ran(m))) then None else Rep_SB(sb)((mapIdFunct (map_inverse m))(c))) 
       = (((sbDom\<cdot>sb - dom(m)) - ran(m)) \<union> {c \<in> ran(m). (THE z. m z = Some c) \<in> sbDom\<cdot>sb})"  
-  sorry
+  apply(simp only: mapIdFunct_def map_inverse_def)
+  apply(subst dom_def)
+   apply(subst set_eqI)
+    apply(simp_all)
+    apply(case_tac "x \<in> ((sbDom\<cdot>sb - dom(m)) - ran(m))")
+     apply(simp)
+    apply (metis (no_types) sbgetchE)
+    apply(simp)
+    using sbdom_insert by fastforce
       
 lemma t30: assumes "map_injective m" and "c \<in> (((sbDom\<cdot>sb - dom(m)) - ran(m)) \<union> {c \<in> ran(m). (THE z. m z = Some c) \<in> sbDom\<cdot>sb})" 
   shows "sdom\<cdot>((\<lambda>c. if (c \<in> (sbDom\<cdot>sb \<inter> dom(m) - ran(m))) then None else Rep_SB(sb)((mapIdFunct (map_inverse m))(c)))\<rightharpoonup>c) \<subseteq> ctype c"  
@@ -66,11 +74,10 @@ proof -
   have f1: "\<not>(c \<in> sbDom\<cdot>sb \<and> c \<in> dom m \<and> c \<notin> ran m)"
     apply(simp)
     using assms(2) by blast
-  (*have f20: "c \<in> ran(m) \<longrightarrow> c \<in> {c \<in> ran(m). (THE z. m z = Some c) \<in> sbDom\<cdot>sb}"
+  (* "\<And>ch. c \<in> ran m \<Longrightarrow> (THE z. m z = Some c) = ch \<longrightarrow>  sdom\<cdot>((Rep_SB sb)\<rightharpoonup>ch) \<subseteq> ctype c" *)
+  have f21: "c \<in> ran m \<Longrightarrow> (THE z. m z = Some c) \<in> sbDom\<cdot>sb"
     using assms(2) by auto
-  have f21: "c \<in> ran(m) \<longrightarrow> (THE z. m z = Some c) \<in> sbDom\<cdot>sb"
-    using f20 by auto*)
-  have f22: "\<And>ch. (THE z. m z = Some c) = ch \<longrightarrow>  sdom\<cdot>((Rep_SB sb)\<rightharpoonup>ch) \<subseteq> ctype c"
+  have f22: "c \<in> ran m \<Longrightarrow> sdom\<cdot>((Rep_SB sb)\<rightharpoonup>(THE z. m z = Some c)) \<subseteq> ctype c"
     sorry
   have f2: "sdom\<cdot>Rep_SB sb\<rightharpoonup>mapIdFunct (map_inverse m) c \<subseteq> ctype c"
     apply(case_tac "c \<notin> ran(m)")
@@ -255,7 +262,7 @@ proof -
     apply(simp)
     using sbdom_insert by fastforce
 qed
-    
+  
 lemma sbRenameChMap_cont: assumes "map_injective m" shows "cont (\<lambda> sb. (sbRenameChMap sb m))"
 proof - 
   have f00: "\<forall>x y. x \<sqsubseteq> y \<longrightarrow>  sbDom\<cdot>x = sbDom\<cdot>y" 
@@ -269,8 +276,37 @@ proof -
     by (smt f01 f02 sb_below)
   have f1: "\<And>Y. chain Y \<Longrightarrow> chain (\<lambda> i. (sbRenameChMap (Y i) m))"
     using ch2ch_monofun f0 by auto
+  have f21: "\<forall> c \<in> ran(m). m (THE z. m z = Some c) = Some c"
+    using assms mapIdFunct_def map_inverse_def ran2exists t12 by fastforce
+  have f22: "\<And>Y c. chain Y \<Longrightarrow> c \<in> sbDom\<cdot>(\<Squnion>i. sbRenameChMap (Y i) m) \<Longrightarrow>
+            (\<exists>i. c \<notin> sbDom\<cdot>(Y i)) \<or> c \<in> dom m \<or> c \<in> ran m \<Longrightarrow> c \<in> ran m"
+    apply(simp add:  sbChain_dom_eq2)
+    by (smt DiffD1 Diff_iff Un_iff assms f01 f1 is_ub_thelub lub_eq mem_Collect_eq sbRenameChMap_sbDom2 sbdom_lub_eq2I)
+  have f23: "\<And>Y. chain Y \<Longrightarrow> sbDom\<cdot>(\<Squnion>i. sbRenameChMap (Y i) m) = sbDom\<cdot>(sbRenameChMap (\<Squnion>i. Y i) m)"
+    by(metis (mono_tags, lifting) f01 f1 is_ub_thelub sbChain_dom_eq2)
+  have f25: "\<And>Y. chain Y \<Longrightarrow> sbDom\<cdot>(\<Squnion>i. sbRenameChMap (Y i) m) = (((sbDom\<cdot>(\<Squnion>i. Y i) - dom(m)) - ran(m)) \<union> {c \<in> ran(m). (THE z. m z = Some c) \<in> sbDom\<cdot>(\<Squnion>i. Y i)})"
+    apply(subst f23, simp)
+    apply(subst sbRenameChMap_sbDom2)
+     apply(simp add: assms)
+      by auto
   have f2: "\<And>Y. chain Y \<Longrightarrow> (\<Squnion>i. (sbRenameChMap (Y i) m)) = (sbRenameChMap (Lub Y) m)"
-    sorry
+    apply(subst sb_eq, simp_all)
+     apply(metis (mono_tags, lifting) f01 f1 is_ub_thelub sbChain_dom_eq2)
+      apply(simp add: f25)
+    apply(case_tac "\<forall>i. c \<in> ((sbDom\<cdot>(Y i) - dom(m)) - ran(m))")
+     apply(subst t40, simp_all add: assms)
+    apply (simp add: sbdom_lub_eq2I)
+     apply(subst sbgetch_lub, simp add: f1, subst sbgetch_lub, simp)
+     apply(subst t40, simp_all add: assms)
+     apply(simp add: sbChain_dom_eq2)
+    apply(case_tac "(THE z. m z = Some c) \<in> sbDom\<cdot>(\<Squnion>i. Y i)")
+      apply(subst t41, simp_all add: assms)
+    using f21 sbdom_lub_eq2I apply blast
+     apply(subst sbgetch_lub, simp add: f1, subst sbgetch_lub, simp)
+     apply(subst t41, simp_all add: assms)
+    using f21 sbdom_lub_eq2I apply blast
+     apply(simp add: sbChain_dom_eq2)
+      using sbdom_lub_eq2I by blast
   show ?thesis
     by (simp add: f0 f2 mycontI2)
 qed  
