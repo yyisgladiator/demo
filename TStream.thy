@@ -3219,24 +3219,39 @@ lemma tsremdups_tsabs: "tsAbs\<cdot>(tsRemDups\<cdot>ts) = srcdups\<cdot>(tsAbs\
 lemma tsremdups_tsabs_slen [simp]: "#(tsAbs\<cdot>(tsRemDups\<cdot>ts)) \<le> #(tsAbs\<cdot>ts)"
   by (simp add: tsremdups_tsabs)
 
-(* ToDo Oliver: lemmata for tsremdups *)
-
 lemma tsremdups_h_tsdom_sub: 
   "(tsDom\<cdot>(tsRemDups_h\<cdot>ts\<cdot>(Some (Discr t)))) \<subseteq> tsDom\<cdot>(tsRemDups_h\<cdot>ts\<cdot>None)"
-oops
+  apply (induct ts arbitrary: t, simp_all)
+  apply (simp add: tsremdups_h_delayfun tsdom_delayfun)
+  apply (case_tac "t=ta")
+  apply (simp add: tsremdups_h_mlscons_dup tsremdups_h_mlscons tsdom_mlscons Set.subset_insertI)
+  by (simp add: tsremdups_h_mlscons_ndup tsremdups_h_mlscons)
 
 lemma tsremdups_h_tsdom_sup: 
   "tsDom\<cdot>(tsRemDups_h\<cdot>ts\<cdot>None) \<subseteq> insert t (tsDom\<cdot>(tsRemDups_h\<cdot>ts\<cdot>(Some (Discr t))))"
-oops
+  apply(induct ts arbitrary: t, simp_all)
+  apply(simp add: tsremdups_h_delayfun tsdom_delayfun)
+  apply (case_tac "t=ta")
+  apply (simp add: tsremdups_h_mlscons_dup tsremdups_h_mlscons tsdom_mlscons)
+  by (simp add: tsremdups_h_mlscons_ndup tsremdups_h_mlscons tsdom_mlscons Set.subset_insertI)
 
 lemma tsremdups_tsdom_sub: "tsDom\<cdot>(tsRemDups\<cdot>ts) \<subseteq> tsDom\<cdot>ts"
-oops
+  apply(simp add: tsremdups_insert)
+  apply(induct ts, simp_all)
+  apply(simp add: tsremdups_h_delayfun tsdom_delayfun)
+  apply(simp add: tsremdups_h_mlscons tsdom_mlscons, auto) 
+  by (meson subset_eq tsremdups_h_tsdom_sub)
 
 lemma tsremdups_tsdom_sup: "tsDom\<cdot>ts \<subseteq> tsDom\<cdot>(tsRemDups\<cdot>ts)"
-oops
+  apply(simp add: tsremdups_insert)
+  apply(induct ts arbitrary: t, simp_all)
+  apply(simp add: tsremdups_h_delayfun tsdom_delayfun)  
+  apply(simp add: tsremdups_h_mlscons tsdom_mlscons)
+  using tsremdups_h_tsdom_sup by fastforce
 
 lemma tsremdups_h_tsdom: "tsDom\<cdot>(tsRemDups\<cdot>ts) = tsDom\<cdot>ts"
-oops
+  by (simp add: eq_iff tsremdups_tsdom_sub tsremdups_tsdom_sup)
+
 
 (*TODO
 
