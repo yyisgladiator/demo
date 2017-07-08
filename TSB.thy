@@ -1107,6 +1107,9 @@ lemma tsbtick_cont [simp]:
 
 (* more lemmas *)
   thm tsbTickCount_def
+    
+    
+    
 lemma tsbtick_least1 [simp]: assumes "cs = {}" 
   shows "#\<surd>tsb tsbLeast cs = \<infinity>"
 proof -
@@ -1140,8 +1143,42 @@ lemma tsbtick_least: assumes "tsbDom\<cdot>tsb1 \<noteq> {}"
   apply (subst (asm) tsbTickCount_def, simp add: assms)
   by (metis (mono_tags, lifting) Least_le)
     
+
+(* Intro rule for tsbtickcount *)
+lemma tsbtickI: assumes "\<exists> c \<in> tsbDom\<cdot>tb . #\<surd> (tb . c) = n"
+ and "\<forall> c \<in> tsbDom\<cdot>tb. n \<sqsubseteq> #\<surd> (tb . c)"
+ shows "#\<surd>tsb tb = n"
+proof -
+  have f0: "tsbDom\<cdot>tb \<noteq> {}"
+    using assms(1) by blast
+  obtain cc :: channel where
+    f1: "cc \<in> tsbDom\<cdot>tb \<and> #\<surd> tb . cc = n"
+    using assms(1) by blast
+  have f2: "\<forall>t l. (tsbDom\<cdot>(t::'a TSB) = {} \<or> #\<surd>tsb t \<noteq> l) \<or> (\<forall>c. c \<notin> tsbDom\<cdot>t \<or> l \<sqsubseteq> #\<surd> t . c)"
+    using tsbtick_least by blast
+  have f3: "tsbTickCount_abbrv = (\<lambda>t. if tsbDom\<cdot>(t::'a TSB) \<noteq> {} then 
+                                    LEAST l. l \<in> {#\<surd> t . c |c. c \<in> tsbDom\<cdot>t} else \<infinity>)"
+    by (simp add: tsbTickCount_def)
+  obtain cca :: "'a TSB \<Rightarrow> channel" where
+    f4: "\<forall>t. tsbDom\<cdot>t = {} \<or> cca t \<in> tsbDom\<cdot>t 
+              \<and> #\<surd> t . cca t = (LEAST l. l \<in> {#\<surd> t . c |c. c \<in> tsbDom\<cdot>t})"
+    using tsbtick_min_on_channel by moura
+  hence f5: "n \<sqsubseteq> #\<surd> tb . cca tb"
+    using f0 assms(2) by blast
+  have "(LEAST l. l \<in> {#\<surd> tb . c |c. c \<in> tsbDom\<cdot>tb}) \<sqsubseteq> n"
+    using f3 f2 f1 by (meson f0)
+  thus ?thesis
+    using f5 f4 f3 f0 by auto
+qed
+
+(* insertion rule for tsbtickcount *)
+lemma tsbtick_insert: "#\<surd>tsb tb = (if tsbDom\<cdot>tb \<noteq> {} then 
+                                          (LEAST ln. ln\<in>{(#\<surd>(tb. c)) | c. c \<in> tsbDom\<cdot>tb}) else \<infinity>)"
+  by (simp add: tsbTickCount_def)
     
-    
+lemma tsbtickI_inf: assumes "tsbDom\<cdot>tb = {}"
+  shows "#\<surd>tsb tb = \<infinity>"
+  by (metis assms empty_iff tsb_eq tsbleast_tsdom tsbtick_least1)
   
 lemma tsbtick_pref_eq: assumes "tsb1 \<sqsubseteq> tsb2" and "Fin n \<le> #\<surd>tsb tsb1"
   shows "(tsbTTake n\<cdot>tsb1) = (tsbTTake n\<cdot>tsb2)"
