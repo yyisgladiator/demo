@@ -100,12 +100,12 @@ abbreviation tsbRestrict_abbr :: "'m TSB \<Rightarrow> channel set \<Rightarrow>
 
 
 (* returns the first n blocks of the TSB *)
-definition tsbTTake :: "nat \<Rightarrow> 'm TSB \<Rightarrow> 'm TSB" where
-"tsbTTake n tb = Abs_TSB (\<lambda>c. (c\<in>tsbDom\<cdot>tb) \<leadsto> (tsTake n\<cdot>(tb  .  c)))"
+definition tsbTTake :: "nat \<Rightarrow> 'm TSB \<rightarrow> 'm TSB" where
+"tsbTTake n \<equiv> \<Lambda> tb. Abs_TSB (\<lambda>c. (c\<in>tsbDom\<cdot>tb) \<leadsto> (tsTake n\<cdot>(tb  .  c)))"
 
 
 abbreviation tsbTTake_abbrv :: "'m TSB \<Rightarrow> nat \<Rightarrow> 'm TSB" ("_ \<down> _ ")where
-"tb \<down> n \<equiv> tsbTTake n tb"
+"tb \<down> n \<equiv> tsbTTake n\<cdot>tb"
 
 (* defintion with lnat *)
 definition tsbTTakeL :: "lnat \<rightarrow> 'm TSB \<rightarrow> 'm TSB" where
@@ -155,7 +155,7 @@ definition tsbMapStream:: "('m tstream \<Rightarrow> 'm tstream) \<Rightarrow> '
 
 
 definition tsbHd :: "'m TSB \<Rightarrow> 'm TSB" where
-"tsbHd \<equiv> tsbTTake 1"
+"tsbHd \<equiv> (\<lambda>tb. tsbTTake 1\<cdot>tb)"
 
   (* Deletes the first n Elements of each Stream *)
 definition tsbDrop:: "nat \<Rightarrow> 'm TSB \<Rightarrow> 'm TSB" where
@@ -536,10 +536,99 @@ subsubsection \<open>tsbTTake\<close>
 
 
 thm tsbTTake_def
-lemma tsbttake_well[simp]: "tsb_well (\<lambda>c. (c \<in> tsbDom\<cdot>tb)\<leadsto> ((tb  .  c) \<down> n ))"
+  
+abbreviation tsbTTake_abbr :: "nat \<Rightarrow> 'm TSB \<Rightarrow> 'm TSB" where
+"tsbTTake_abbr n tb \<equiv> (\<lambda>c. (c \<in> tsbDom\<cdot>tb)\<leadsto>tb  .  c \<down> n )\<Omega>"
+
+(* DO NOT USE THIS, just for internal reasoning *)
+definition tsbTTake_abbr_fun :: "nat \<Rightarrow> 'm TSB \<Rightarrow> 'm TSB" where
+"tsbTTake_abbr_fun n tb \<equiv> (\<lambda>c. (c \<in> tsbDom\<cdot>tb)\<leadsto>tb  .  c \<down> n )\<Omega>"
+
+lemma tsbTTake_well [simp]: "tsb_well (\<lambda>c. (c \<in> tsbDom\<cdot>tb)\<leadsto> ((tb  .  c) \<down> n ))"
   apply (simp add: tsb_well_def)
   by (metis (full_types) Rep_TSB dual_order.trans mem_Collect_eq tsb_well_def tsbdom_insert 
                          tsbgetch_insert tsttake_dom)
+                       
+lemma tsbttake_abbr_dom [simp]: "tsbDom\<cdot>(tsbTTake_abbr i tb) = tsbDom\<cdot>tb"
+  by (simp add: tsbTTake_well tsbdom_rep_eq)
+   (* 
+lemma tsbttake_abbr2least: "(tsbTTake_abbr 0 tb) = tsbLeast (tsbDom\<cdot>tb)"
+  apply (rule tsb_eq)
+   apply (simp)
+  apply simp
+  by (simp add:  tsbgetch_insert)
+    
+lemma tsbttake_abbr_getch0 [simp]: assumes "c\<in>tsbDom\<cdot>tb"
+  shows "(tsbTTake_abbr 0 tb) .  c = \<bottom>"
+  by (simp add: tsbttake_abbr2least assms)
+    *)
+    
+lemma tsbttake_abb_getchInsert: assumes "c \<in> tsbDom\<cdot>tb"
+  shows "((tsbTTake_abbr n tb)  .  c) = ((tb  .  c) \<down>n)"
+  by (simp add: tsbgetch_insert assms)
+
+  
+lemma tsbttake_mono [simp]: "monofun  (\<lambda> tb. tsbTTake_abbr n tb)"
+   apply (rule monofunI)
+  apply (rule tsb_below)
+   apply (simp only: tsbttake_abbr_dom, simp add: tsbdom_below)
+  apply (subst tsbttake_abb_getchInsert, simp)
+    apply (subst tsbttake_abb_getchInsert, simp only: tsbttake_abbr_dom, simp add: tsbdom_below)
+  by (simp add: monofun_cfun_arg monofun_cfun_fun) 
+    
+lemma tsbTTake_abb2fun: "tsbTTake_abbr n tb =  tsbTTake_abbr_fun n tb"
+  by (simp add: tsbTTake_abbr_fun_def)
+    
+lemma tsbTTake_abb2funE: "tsbTTake_abbr_fun n tb = tsbTTake_abbr n tb"
+  by (simp add: tsbTTake_abbr_fun_def)
+    
+lemma tsbTTake_abbr_fun_mono [simp]: "monofun (tsbTTake_abbr_fun n)"
+proof -
+  have "monofun (tsbTTake_abbr n)"
+    by simp
+  thus ?thesis
+    by (simp add: tsbTTake_abb2fun)
+qed
+
+
+    
+lemma tsbttake_cont_pre: assumes "chain Y"
+  shows "tsbTTake_abbr n (\<Squnion>i. Y i) \<sqsubseteq> (\<Squnion>i. tsbTTake_abbr n (Y i))"
+proof -
+  have f1: "tsbDom\<cdot>(tsbTTake_abbr_fun n (Lub Y)) = tsbDom\<cdot>(\<Squnion>i. tsbTTake_abbr_fun n (Y i))"
+  proof -
+    have "\<forall>n. chain (\<lambda>na. tsbTTake_abbr_fun n (Y na))"
+      using assms ch2ch_monofun tsbTTake_abbr_fun_mono by blast
+    then show "tsbDom\<cdot>(tsbTTake_abbr_fun n (Lub Y)) = tsbDom\<cdot>(\<Squnion>na. tsbTTake_abbr_fun n (Y na))"
+      by (metis (no_types) assms test34 tsbTTake_abb2fun tsbdom_below tsbdom_insert tsbttake_abbr_dom)
+  qed
+  have f11: "chain (\<lambda> i. tsbTTake_abbr n (Y i))"
+    by (subst tsbTTake_abb2fun, simp add: assms ch2ch_monofun)
+  have f2: "\<And> i tb. tsbDom\<cdot>(tsbTTake_abbr_fun  i tb) = tsbDom\<cdot>tb"
+    by (subst tsbTTake_abb2funE, simp)
+  have f3: "\<And>c. c \<in> tsbDom\<cdot>(Lub Y) \<Longrightarrow> (\<Squnion>i. tsbTTake_abbr_fun n (Y i)) . c = (\<Squnion>i. tsbTTake_abbr_fun n (Y i) .  c)"
+    apply (rule lubgetCh)
+     apply (simp add: assms ch2ch_monofun)
+    by (metis assms monofunE po_class.chain_def tsbChain_dom_eq2 f2 tsbTTake_abbr_fun_mono)
+  show ?thesis
+    apply (subst (1 2) tsbTTake_abb2fun)
+    apply (rule tsb_below)
+      apply (simp add: f1)
+      apply (simp only: f2 f3)
+        (* ISAR Proof generateable by sledgehammer *)
+      by (smt assms contlub_cfun_arg lub_eq lub_eval not_below2not_eq theRep_chain tsbChain_dom_eq2 
+          tsbTTake_abb2fun tsbgetch_insert tsbttake_abb_getchInsert)
+qed
+    
+    
+lemma tsbttake_cont [simp]: "cont (\<lambda> tb. tsbTTake_abbr n tb)"
+  apply (rule contI2, simp)
+  by (rule+, simp only: tsbttake_cont_pre)
+
+    
+lemma tsbttake_abbr2def: "tsbTTake_abbr n tb = tsbTTake n\<cdot>tb"
+  by (simp add: tsbTTake_def)
+  
 
 lemma tsbttake_dom [simp]: "tsbDom\<cdot>(tb \<down> i) = tsbDom\<cdot>tb"
   by (simp add: tsbTTake_def tsbdom_rep_eq)
@@ -549,13 +638,27 @@ lemma tsbttake2least: "(tb \<down> 0) = tsbLeast (tsbDom\<cdot>tb)"
    apply (simp)
   apply simp
   by (simp add: tsbTTake_def tsbgetch_insert)
+    
 
-lemma [simp]: assumes "c\<in>tsbDom\<cdot>tb"
+   (* 
+lemma tsbttake_abbr2least: "(tsbTTake_abbr 0 tb) = tsbLeast (tsbDom\<cdot>tb)"
+  apply (rule tsb_eq)
+   apply (simp)
+  apply simp
+  by (simp add:  tsbgetch_insert)
+    
+lemma tsbttake_abbr_getch0 [simp]: assumes "c\<in>tsbDom\<cdot>tb"
+  shows "(tsbTTake_abbr 0 tb) .  c = \<bottom>"
+  by (simp add: tsbttake_abbr2least assms)
+    *)
+
+lemma tsbttake_getch_least [simp]: assumes "c\<in>tsbDom\<cdot>tb"
   shows "tb \<down> 0  .  c = \<bottom>"
   by (simp add: tsbttake2least assms)
 
-lemma [simp]: "c \<in> tsbDom\<cdot>tb \<Longrightarrow> ((tb \<down> n)  .  c) = ((tb  .  c) \<down>n)"
-by (simp add: tsbTTake_def tsbgetch_insert)
+lemma tsbttake_to_ttakeI [simp]: assumes "c \<in> tsbDom\<cdot>tb"
+ shows "((tb \<down> n)  .  c) = ((tb  .  c) \<down>n)"
+by (simp add: assms tsbTTake_def tsbgetch_insert)
 
 lemma tsbttake_below [simp]: fixes tb:: "'m TSB"
   shows "(tb \<down> i) \<sqsubseteq> tb"
