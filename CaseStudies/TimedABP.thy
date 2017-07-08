@@ -226,34 +226,36 @@ by (simp add: tsRecSnd_def)
 (* ToDo: basic properties lemmata for receiver *)
 
 lemma tsrecsnd_strict [simp]: "tsRecSnd\<cdot>\<bottom> = \<bottom>"
-oops
+  by(simp add: tsRecSnd_def tsremdups_insert)
 
 lemma tsrecsnd_delayfun: "tsRecSnd\<cdot>(delayFun\<cdot>dat) = delayFun\<cdot>(tsRecSnd\<cdot>dat)"
-oops
+  apply(simp add: tsRecSnd_def tsremdups_insert)
+  by (simp add: tsremdups_h_delayfun tsprojfst_delayfun)
 
 lemma tsrecsnd_nbot [simp]: "dat\<noteq>\<bottom> \<Longrightarrow> tsRecSnd\<cdot>dat \<noteq> \<bottom>"
-oops
+  by (simp add: tsrecsnd_insert)
 
 lemma tsrecsnd_tstickcount [simp]: "#\<surd>(tsRecSnd\<cdot>dat) = #\<surd>dat"
-oops
+  by (simp add: tsrecsnd_insert)
 
 lemma tsrecsnd_inftick [simp]: "tsRecSnd\<cdot>tsInfTick = tsInfTick"
-oops
+  by (simp add: tsrecsnd_delayfun)
 
 lemma tsrec_insert: "tsRec\<cdot>dat = (tsProjSnd\<cdot>dat, tsRecSnd\<cdot>dat)"
-by (simp add: tsRec_def)
+  by (simp add: tsRec_def)
 
 lemma tsrec_strict [simp]: "tsRec\<cdot>\<bottom> = \<bottom>"
-oops
+  by (simp add: tsRec_def)
 
 lemma tsrec_delayfun: "tsRec\<cdot>(delayFun\<cdot>dat) = (delayFun\<cdot>(tsProjSnd\<cdot>dat), delayFun\<cdot>(tsRecSnd\<cdot>dat))"
-oops
+  by (simp add: tsprojsnd_delayfun tsrec_insert tsrecsnd_delayfun)
 
 lemma tsrec_nbot [simp]: "dat\<noteq>\<bottom> \<Longrightarrow> tsRec\<cdot>dat \<noteq> \<bottom>"
-oops
+  by (simp add: tsrec_insert)
 
 lemma tsrec_inftick [simp]: "tsRec\<cdot>tsInfTick = (tsInfTick, tsInfTick)"
-oops
+  apply (simp add: tsrec_insert)
+  by (simp add: tsprojsnd_delayfun)
 
 (* ----------------------------------------------------------------------- *)
 section {* additional properties *}
