@@ -3116,11 +3116,11 @@ fixrec tsRemDups_h :: "'a tstream \<rightarrow> 'a discr option \<rightarrow> 'a
 "tsRemDups_h\<cdot>(tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>ts)\<cdot>option = delayFun\<cdot>(tsRemDups_h\<cdot>ts\<cdot>option)"  | 
 
   (* handle first message *)
-"ts\<noteq>\<bottom> \<Longrightarrow> tsRemDups_h\<cdot>(tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>t))\<cdot>ts)\<cdot>None = tsMLscons\<cdot>(up\<cdot>t)\<cdot>(tsRemDups_h\<cdot>ts\<cdot>(Some t))" | 
+"ts\<noteq>\<bottom> \<Longrightarrow> tsRemDups_h\<cdot>(tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>t))\<cdot>ts)\<cdot>None = tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>t))\<cdot>(tsRemDups_h\<cdot>ts\<cdot>(Some t))" | 
 
   (* handle duplicate message *)
 "ts\<noteq>\<bottom> \<Longrightarrow> tsRemDups_h\<cdot>(tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>t))\<cdot>ts)\<cdot>(Some a) = 
-  (if t=a then (tsRemDups_h\<cdot>ts\<cdot>(Some t)) else tsMLscons\<cdot>(up\<cdot>t)\<cdot>(tsRemDups_h\<cdot>ts\<cdot>(Some t)))"   
+  (if t=a then (tsRemDups_h\<cdot>ts\<cdot>(Some t)) else tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>t))\<cdot>(tsRemDups_h\<cdot>ts\<cdot>(Some t)))"   
 
 declare tsRemDups_h.simps [simp del]
 
@@ -3134,13 +3134,13 @@ lemma tsremdups_h_strict [simp]:
 "tsRemDups_h\<cdot>\<bottom>\<cdot>a = \<bottom>"
 by (fixrec_simp)
 
-lemma tsremdups_h_tslscons_fst [simp]: 
-  "ts\<noteq>\<bottom> \<Longrightarrow> tsRemDups_h\<cdot>(tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>t))\<cdot>ts)\<cdot>None = tsMLscons\<cdot>(up\<cdot>t)\<cdot>(tsRemDups_h\<cdot>ts\<cdot>(Some t))"
+lemma tsremdups_h_tslscons_fst[simp] : 
+  "ts\<noteq>\<bottom> \<Longrightarrow> tsRemDups_h\<cdot>(tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>t))\<cdot>ts)\<cdot>None = tsLscons\<cdot>(up\<cdot>(uMsg\<cdot> t))\<cdot>(tsRemDups_h\<cdot>ts\<cdot>(Some t))"
 by (fixrec_simp)
 
-lemma tsremdups_h_tslscons_dup [simp]: 
+lemma tsremdups_h_tslscons_dup[simp] : 
   "ts\<noteq>\<bottom> \<Longrightarrow> tsRemDups_h\<cdot>(tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>t))\<cdot>ts)\<cdot>(Some a) 
-          = (if t=a then (tsRemDups_h\<cdot>ts\<cdot>(Some t)) else tsMLscons\<cdot>(up\<cdot>t)\<cdot>(tsRemDups_h\<cdot>ts\<cdot>(Some t)))"
+          = (if t=a then (tsRemDups_h\<cdot>ts\<cdot>(Some t)) else tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>t))\<cdot>(tsRemDups_h\<cdot>ts\<cdot>(Some t)))"
 by (fixrec_simp)
 
 lemma tsremdups_h_tslscons_tick [simp]: 
@@ -3150,18 +3150,18 @@ by (fixrec_simp)
 (* handle first message *)
 lemma tsremdups_h_mlscons:
 "ts\<noteq>\<bottom> \<Longrightarrow> tsRemDups_h\<cdot>(tsMLscons\<cdot>(updis t)\<cdot>ts)\<cdot>None = tsMLscons\<cdot>(updis t)\<cdot>(tsRemDups_h\<cdot>ts\<cdot>(Some (Discr t)))"
-by (simp add: tsmlscons_lscons)
+by (simp add: tsmlscons_lscons tsremdups_h_tslscons_fst)
 
 (* handle duplicate message *)
 lemma tsremdups_h_mlscons_dup: 
   "ts\<noteq>\<bottom> \<Longrightarrow> tsRemDups_h\<cdot>(tsMLscons\<cdot>(updis t)\<cdot>ts)\<cdot>(Some (Discr t)) = tsRemDups_h\<cdot>ts\<cdot>(Some (Discr t))"
-by (simp add: tsmlscons_lscons)
+by (simp add: tsmlscons_lscons tsremdups_h_tslscons_dup)
 
 (* handle message *)
 lemma tsremdups_h_mlscons_ndup:
   "ts\<noteq>\<bottom> \<Longrightarrow> t\<noteq>a \<Longrightarrow> tsRemDups_h\<cdot>(tsMLscons\<cdot>(updis t)\<cdot>ts)\<cdot>(Some (Discr a)) 
                                = tsMLscons\<cdot>(updis t)\<cdot>(tsRemDups_h\<cdot>ts\<cdot>(Some (Discr t)))"
-by (simp add: tsmlscons_lscons)
+by (simp add: tsmlscons_lscons tsremdups_h_tslscons_dup)
 
 lemma tsremdups_h_delayfun: "tsRemDups_h\<cdot>(delayFun\<cdot>ts)\<cdot>a = delayFun\<cdot>(tsRemDups_h\<cdot>ts\<cdot>a)"
 by (simp add: delayfun_tslscons)

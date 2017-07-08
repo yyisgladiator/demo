@@ -55,11 +55,26 @@ lemma list2ts_nottickfirst:"a\<noteq>\<surd> \<and> as=(b # \<surd> # bs) \<Long
   apply (simp add: espf2tspf_def)+
   by (simp add: lscons_conv)
 
+lemma tstickcount_lscons1: "t\<noteq>\<surd> \<Longrightarrow> #\<surd> tsLscons\<cdot>(updis t)\<cdot>ts = #\<surd> (ts)"
+  apply (cases "ts=\<bottom>", simp)
+  apply (subst tslscons2lscons,simp)
+  apply (simp add: tslscons2lscons tstickcount_insert)
+  by (metis lscons_conv sfilter_nin singletonD)
+
+lemma tstickcount_lscons2: " #\<surd> tsLscons\<cdot>(updis \<surd>)\<cdot>ts = lnsuc\<cdot>(#\<surd> (ts))"
+  apply (cases "ts=\<bottom>", simp)
+  apply (metis DiscrTick_def delayFun_dropFirst delayfun_nbot delayfun_tslscons_bot strict_tstickcount
+  tsdropfirst_len)
+  apply (subst tslscons2lscons,simp)
+  apply (simp add: tslscons2lscons tstickcount_insert)
+  by (simp add: lscons_conv)
+
+
 lemma "#\<surd> (list2ts l) \<le> #\<surd> (list2ts (a#l))"
   apply(cases "a=\<surd>",simp)
   apply (metis DiscrTick_def delayfun_insert delayfun_tslscons less_lnsuc tstickcount_tscons)
-  apply simp
-  by (smt event.exhaust le_cases3 tsmlscons2tslscons tstickcount_mlscons)
+  by(simp add:tstickcount_lscons1)
+  
 
 lemma list2ts_nbot2[simp]:"list2ts (a@[\<surd>])\<noteq>\<bottom>"
   by (induction a, simp+)
@@ -108,6 +123,7 @@ lemma list2ts_srt [simp]: "t\<noteq>\<bottom> \<Longrightarrow> tsRt\<cdot>(list
 
 lemma list2ts_lshd [simp]: "a\<noteq>[] \<Longrightarrow> tsLshd\<cdot>(list2ts (a @ \<surd> # as)) = updis (hd a)"
   by(induction a, simp+)
+
 lemma list2ts2list2s_lscons: "list2ts (a # as @ [\<surd>]) = Abs_tstream (lscons\<cdot>(updis a)\<cdot>(list2s (as@[\<surd>])))"
   apply (induction as arbitrary: a, simp+)
   apply (auto simp add: tslscons_insert espf2tspf_def lscons_conv)
@@ -167,44 +183,78 @@ lemma list2ts_tsinftimes2: "tsinftimes (list2ts (as@[\<surd>])) = tsinftimes (Ab
   apply (subst list2s2list2ts_well,auto)
   apply (simp add: ts_well_def, auto)
   by (simp add: less_le slen_lnsuc)
-  
 
+
+(*Lemmas für TStream.thy*)   
+
+lemma tslscons_bot2 [simp]: "t\<noteq>\<surd> \<Longrightarrow>tsLscons\<cdot>(updis t)\<cdot>\<bottom> = \<bottom>"    
+    by(auto simp add: tslscons_insert upapply_insert)
+
+lemma tslscons_nbot_rev: "a\<noteq> \<surd> \<Longrightarrow> tsLscons\<cdot>(updis a)\<cdot>as \<noteq> \<bottom> \<Longrightarrow> as\<noteq>\<bottom>"
+  using tslscons_bot2 by blast 
+ 
+lemma [simp]:"t \<noteq> \<surd> \<Longrightarrow> uMsg\<cdot>(Discr \<M>\<inverse> t) = Discr t"
+by (metis event.exhaust event.simps(4) up_inject upapply2umsg upapply_rep_eq)
+
+(* handle first message *)
+lemma tsremdups_h_tslscons_fst2:
+"ts\<noteq>\<bottom> \<and> t\<noteq>\<surd> \<Longrightarrow> tsRemDups_h\<cdot>(tsLscons\<cdot>(updis t)\<cdot>ts)\<cdot>None = tsLscons\<cdot>(updis t)\<cdot>(tsRemDups_h\<cdot>ts\<cdot>(Some (Discr (\<M>\<inverse>t))))"
+  by (insert tsremdups_h_tslscons_fst [of ts "Discr \<M>\<inverse> t"], simp)
+
+
+(* handle duplicate message *)
+lemma tsremdups_h_tslscons_dup2: 
+  "ts\<noteq>\<bottom> \<and> t\<noteq>\<surd> \<Longrightarrow> tsRemDups_h\<cdot>(tsLscons\<cdot>(updis t)\<cdot>ts)\<cdot>(Some (Discr (\<M>\<inverse> t))) = tsRemDups_h\<cdot>ts\<cdot>(Some (Discr (\<M>\<inverse> t)))"
+  by (insert tsremdups_h_tslscons_dup [of ts "Discr \<M>\<inverse> t"], simp)
+
+(* handle message *)
+lemma tsremdups_h_lscons_ndup2:
+  "ts\<noteq>\<bottom> \<Longrightarrow> t\<noteq>a \<Longrightarrow> t\<noteq>\<surd> \<Longrightarrow> a\<noteq>\<surd> \<Longrightarrow> tsRemDups_h\<cdot>(tsLscons\<cdot>(updis t)\<cdot>ts)\<cdot>(Some (Discr (\<M>\<inverse>a))) 
+                               = tsLscons\<cdot>(updis t)\<cdot>(tsRemDups_h\<cdot>ts\<cdot>(Some (Discr (\<M>\<inverse>t))))"
+  apply (insert tsremdups_h_tslscons_dup[of ts "Discr \<M>\<inverse> t" "Discr (\<M>\<inverse>a)"], auto)
+  by (metis event.exhaust event.simps(4))
+
+lemma tsremdups_h_tslscons_dup_2 [simp]: 
+  "ts\<noteq>\<bottom> \<Longrightarrow> tsRemDups_h\<cdot>(tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>t))\<cdot>ts)\<cdot>(Some t) 
+          = (tsRemDups_h\<cdot>ts\<cdot>(Some t))"
+  by (fixrec_simp)
+
+(*Test tsRemDups*)
 lemma "tsRemDups\<cdot>(<[Msg 1, Msg 1, Tick, Msg 1]>\<surd>) = <[Msg 1, Tick]>\<surd>"
-  apply (simp add: tsremdups_insert)  
-  by (metis (no_types) delayfun_tslscons_bot tick_eq_discrtick tslscons_nbot2 tsmlscons2tslscons 
-  tsremdups_h_mlscons tsremdups_h_mlscons_dup tsremdups_h_strict tsremdups_h_tslscons_tick)
+  apply (simp add: tsremdups_insert)
+  by (metis (no_types, lifting) DiscrTick_def delayfun_tslscons_bot event.distinct(1) tslscons_nbot2 
+  tsremdups_h_strict tsremdups_h_tslscons_dup2 tsremdups_h_tslscons_fst2 tsremdups_h_tslscons_tick)
 
-  
+
+(*Lemmas für TStream.thy*)
+lemma tsmap_lscons:
+  "ts\<noteq>\<bottom> \<Longrightarrow> tsMap f\<cdot>(tsLscons\<cdot>(updis (\<M> t))\<cdot>ts) = tsLscons\<cdot>(updis (\<M>(f t)))\<cdot>(tsMap f\<cdot>ts)"
+  apply (simp add: lscons_conv tsmap_unfold smap_split)
+  apply (simp add: tslscons2lscons)
+  apply (subst tslscons2lscons)
+  apply (metis tsmap_unfold tsmap_strict_rev)
+  by (simp add: lscons_conv tsmap_h_well)
+
+
+lemma tsprojfst_lscons:
+  "ts\<noteq>\<bottom> \<Longrightarrow> tsProjFst\<cdot>(tsLscons\<cdot>(updis (\<M>(a,b)))\<cdot>ts) = tsLscons\<cdot>(updis (\<M> a))\<cdot>(tsProjFst\<cdot>ts)"
+  by(simp add: tsprojfst_insert tsmap_lscons)
+
+lemma tsprojfst_lscons_bot:
+  "tsProjFst\<cdot>(tsLscons\<cdot>(updis \<surd>)\<cdot>ts) = tsLscons\<cdot>(updis (\<surd>))\<cdot>(tsProjFst\<cdot>ts)"
+  apply(simp add: tsprojfst_insert tsmap_lscons)
+  by (metis DiscrTick_def delayfun_tslscons tsmap_delayfun)
+
+lemma tsprojsnd_lscons:
+  "ts\<noteq>\<bottom> \<Longrightarrow> tsProjSnd\<cdot>(tsLscons\<cdot>(updis (\<M>(a,b)))\<cdot>ts) = tsLscons\<cdot>(updis (\<M> b))\<cdot>(tsProjSnd\<cdot>ts)"
+  by(simp add: tsprojsnd_insert tsmap_lscons)
+
+(*Tests tsProjFst*)
 lemma "tsProjFst\<cdot>(<[Msg (1, 11), Msg (2, 12), Tick]>\<surd>) = <[Msg 1, Msg 2, Tick]>\<surd>"
-  apply (simp add: tsprojfst_insert tslscons_insert espf2tspf_def)
-  apply (simp add: tsmap_unfold lscons_conv)
-  by (simp add: ts_well_def)
-  (*
-  apply simp
-  by (metis (no_types, lifting) DiscrTick_def delayfun_tslscons_bot tslscons_nbot tslscons_nbot2 
-  tsmlscons2tslscons tsprojfst_delayfun tsprojfst_mlscons tsprojfst_strict up_defined)
-  *)
-  (*
-  apply simp
-  proof -
-    have "tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot> (\<bottom>::('a \<times> 'b) tstream) \<noteq> \<bottom>"
-      by (metis tick_eq_discrtick tslscons_nbot2)
-    then have f1: "tsProjFst\<cdot> (tsMLscons\<cdot>(updis (1::'a, 11::'b))\<cdot> (tsLscons\<cdot>(updis (\<M> (2, 12)))\<cdot> (tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>\<bottom>))) = tsMLscons\<cdot>(updis 1)\<cdot> (tsProjFst\<cdot> (tsLscons\<cdot>(updis (\<M> (2, 12::'b)))\<cdot> (tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>\<bottom>)))"
-      using tslscons_nbot tsprojfst_mlscons up_defined by blast
-    have f2: "tsProjFst\<cdot> (tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot> (\<bottom>::('a \<times> 'b) tstream)) = delayFun\<cdot>\<bottom>"
-      by (metis delayfun_tslscons_bot tsprojfst_delayfun tsprojfst_strict)
-    have "tsProjFst\<cdot> (tsMLscons\<cdot>(updis (2, 12::'b))\<cdot> (tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>\<bottom>)) = tsMLscons\<cdot>(updis 2)\<cdot> (tsProjFst\<cdot> (tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot> (\<bottom>::('a \<times> 'b) tstream)))"
-      by (simp add: tsprojfst_mlscons)
-    then show "tsProjFst\<cdot> (tsLscons\<cdot>(updis (\<M> (1::'a, 11::'b)))\<cdot> (tsLscons\<cdot>(updis (\<M> (2, 12)))\<cdot> (tsLscons\<cdot>(updis \<surd>)\<cdot>\<bottom>))) = tsLscons\<cdot>(updis (\<M> 1))\<cdot> (tsLscons\<cdot>(updis (\<M> 2))\<cdot> (tsLscons\<cdot>(updis \<surd>)\<cdot>\<bottom>))"
-      using f2 f1 by (simp add: delayfun_tslscons_bot tick_eq_discrtick tsmlscons2tslscons)
-  qed
-  *)
-
+  by (simp add: tsprojfst_lscons tsprojfst_lscons_bot)
 
 lemma "tsProjFst\<cdot>(<[Msg (1, 11), Msg (2, 12), Tick, Msg (100, 200)]>\<surd>) = <[Msg 1, Msg 2, Tick]>\<surd>"
-  apply (simp add: tsprojfst_insert tslscons_insert espf2tspf_def)
-  apply (simp add: tsmap_unfold lscons_conv)
-  by (simp add: ts_well_def)
+  by (simp add: tsprojfst_lscons tsprojfst_lscons_bot)
         
 
 end
