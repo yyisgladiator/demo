@@ -1206,6 +1206,62 @@ qed
     
     
 
+  
+subsubsection \<open>tsbMapStream\<close>
+  
+  
+abbreviation fun_well_type :: "('a tstream \<Rightarrow> 'a tstream) \<Rightarrow> bool" where
+"fun_well_type f == (\<forall>c ts. (tsDom\<cdot>ts \<subseteq> (ctype c) \<longrightarrow> tsDom\<cdot>(f ts) \<subseteq>(ctype c)))"
+  declare [[show_types]]
+  
+lemma tsdom_funtype [simp]: assumes "\<forall> ts. tsDom\<cdot>(f ts) \<subseteq> tsDom\<cdot>ts"
+  shows "fun_well_type f"
+  using assms by blast
+
+lemma tsbmap_well [simp]: assumes "fun_well_type f"
+  shows "tsb_well (\<lambda>c. (c \<in> tsbDom\<cdot>b)\<leadsto>f (b. c))"
+  by (smt Int_iff assms domIff option.sel singletonI tsb_newMap_restrict tsb_newMap_well 
+          tsb_well_def tsbdom_rep_eq tsbgetch_rep_eq tsbgetch_restrict tsresrict_dom3)
+    
+  
+lemma tsbmapstream_dom [simp]: assumes "fun_well_type f"
+  shows "tsbDom\<cdot>(tsbMapStream f tb) = tsbDom\<cdot>tb"
+proof -
+  have "tsb_well (\<lambda>c. (c \<in> tsbDom\<cdot>tb)\<leadsto>f (tb . c))"
+    using assms tsbmap_well by blast
+  hence "dom (Rep_TSB ((\<lambda>c. (c \<in> dom (Rep_TSB tb))\<leadsto>f (tb . c))\<Omega>)) = dom (Rep_TSB tb)"
+    by (simp add: tsbdom_insert)
+  thus ?thesis
+    by (simp add: tsbMapStream_def tsbDom_def)
+qed
+
+lemma tsbmapstream_getch [simp]: assumes "fun_well_type f" and "c \<in> tsbDom\<cdot>tb"
+  shows "(tsbMapStream f tb) . c = f (tb . c)"
+  apply (subst tsbMapStream_def)
+  by (simp add: tsbgetch_insert assms(1) assms(2))
+   
+lemma tsbmapstream_contI1 [simp]: assumes "cont f" and "fun_well_type f"
+  shows "cont (tsbMapStream f)"
+proof (rule contI2)
+  show "monofun (tsbMapStream f)"
+    proof (rule monofunI)
+      fix x y:: "('a ::message) TSB"
+      assume "x \<sqsubseteq> y"
+      thus "tsbMapStream f x \<sqsubseteq> tsbMapStream f y"
+        by (smt assms(1) assms(2) cont2monofunE tsb_below tsbdom_below tsbgetch_below 
+                tsbmapstream_dom tsbmapstream_getch)
+    qed
+  thus "\<forall>Y::nat \<Rightarrow> 'a TSB. chain Y \<longrightarrow> tsbMapStream f (\<Squnion>i::nat. Y i) 
+                                      \<sqsubseteq> (\<Squnion>i::nat. tsbMapStream f (Y i))"
+    by (smt assms(1) assms(2) cont2contlubE lub_eq lub_eval monofun_def po_class.chain_def 
+            po_eq_conv theRep_chain tsbChain_dom_eq2 tsb_below tsbgetch_insert tsbmapstream_dom 
+            tsbmapstream_getch)
+qed
+  
+lemma tsbmapstream_contI2 [simp]: assumes "cont f" and "\<forall>s. tsDom\<cdot>(f s) \<subseteq> tsDom\<cdot>s"
+  shows "cont (tsbMapStream f)"
+  by (simp add: assms(1) assms(2))
+    
 (*
 
 (* ----------------------------------------------------------------------- *)
