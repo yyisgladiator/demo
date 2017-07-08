@@ -345,6 +345,21 @@ lemma tsTakeL_maxinchain: assumes "Fin n = #\<surd>ts"
             tstakeL_len tstakeL_prefix tstake_below_eq)
           
 
-
+lemma assumes "x \<sqsubseteq> y" and "#\<surd> x = #\<surd> y"
+  shows " x = y"
+  by (simp add: assms(1) assms(2) tstake_below_eq)
+    
+subsection \<open>tsTake\<close>
+  
+lemma tsTake_more_ticks_eq: assumes "#\<surd> (ts:: 'a tstream) = Fin n" and "n < (m::nat)"
+  shows "ts \<down> m = ts"
+  by (metis assms(1) assms(2) less2nat_lemma min.strict_order_iff not_less tsTake_prefix 
+      tstake_below_eq tstake_len)
+    
+(*
+lemma tstake_pref: assumes "ts1 \<sqsubseteq> ts2" and "#\<surd> ts1 \<ge> Fin n"
+  shows "ts1 \<down> n = ts2 \<down> n"
+  using assms(1) assms(2) tstake_less_below by blast
+*)
     
 end

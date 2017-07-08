@@ -656,13 +656,14 @@ lemma tsbttake_getch_least [simp]: assumes "c\<in>tsbDom\<cdot>tb"
   shows "tb \<down> 0  .  c = \<bottom>"
   by (simp add: tsbttake2least assms)
 
-lemma tsbttake_to_ttakeI [simp]: assumes "c \<in> tsbDom\<cdot>tb"
+lemma tsbttake2ttakeI [simp]: assumes "c \<in> tsbDom\<cdot>tb"
  shows "((tb \<down> n)  .  c) = ((tb  .  c) \<down>n)"
 by (simp add: assms tsbTTake_def tsbgetch_insert)
 
 lemma tsbttake_below [simp]: fixes tb:: "'m TSB"
   shows "(tb \<down> i) \<sqsubseteq> tb"
   by (rule tsb_below, auto)
+
 
 
 lemma tsbttake_lub [simp] : fixes tb:: "'m TSB"
@@ -1102,7 +1103,71 @@ lemma tsbtick_cont [simp]:
     using tsbtick_cont_pre by blast
       
       
-      
+ 
+
+(* more lemmas *)
+  thm tsbTickCount_def
+lemma tsbtick_least1 [simp]: assumes "cs = {}" 
+  shows "#\<surd>tsb tsbLeast cs = \<infinity>"
+proof -
+  have "tsbDom\<cdot>(tsbLeast cs) = {}"
+    by (simp add: assms)
+  thus ?thesis
+    by (simp add: tsbTickCount_def)
+qed
+  
+    
+lemma tsbtick_least2 [simp]: assumes "cs \<noteq> {}" 
+ shows "#\<surd>tsb tsbLeast cs = Fin 0 "
+proof -
+  have f1: "tsbDom\<cdot>(tsbLeast cs) \<noteq> {}"
+    by (simp add: assms)
+  moreover
+  have f2: "\<forall> c \<in> tsbDom\<cdot>(tsbLeast cs). #\<surd> ((tsbLeast cs) . c) = Fin 0"
+    by simp
+  ultimately show ?thesis
+    apply (simp add: tsbTickCount_def)
+    by (smt Fin_0 LeastI f2 tsbleast_tsdom tsbtick_min_on_channel)
+qed
+  
+lemma tsbtick_below [simp]: assumes "x \<sqsubseteq> y"
+  shows "#\<surd>tsb x \<sqsubseteq> #\<surd>tsb y"
+  using assms monofun_cfun_arg by blast
+    
+lemma tsbtick_least: assumes "tsbDom\<cdot>tsb1 \<noteq> {}"
+  shows "#\<surd>tsb tsb1 = n \<Longrightarrow> \<forall> c \<in> tsbDom\<cdot>tsb1 . n \<sqsubseteq> #\<surd> (tsb1 . c)"
+  apply rule
+  apply (subst (asm) tsbTickCount_def, simp add: assms)
+  by (metis (mono_tags, lifting) Least_le)
+    
+    
+    
+  
+lemma tsbtick_pref_eq: assumes "tsb1 \<sqsubseteq> tsb2" and "Fin n \<le> #\<surd>tsb tsb1"
+  shows "(tsbTTake n\<cdot>tsb1) = (tsbTTake n\<cdot>tsb2)"
+proof -
+  have f0: "tsbDom\<cdot>tsb1 = tsbDom\<cdot>tsb2"
+    by (simp add: assms(1) tsbdom_below)
+  have f1: "\<forall> c . tsb1 . c \<sqsubseteq> tsb2 . c"
+    by (simp add: assms(1) tsbgetch_below)
+  have f2: "\<forall> c \<in> tsbDom\<cdot>tsb1. Fin n \<le> (#\<surd> (tsb1 . c))"
+    by (metis (mono_tags, hide_lams) all_not_in_conv assms(2) lnle_def trans_lnle tsbtick_least)
+      (*
+  have f3: "\<forall> c \<in> tsbDom\<cdot>tsb1. (#\<surd> (tsb1 . c)) \<le> (#\<surd> (tsb2 . c))"
+    using f1 lnle_def monofun_cfun_arg by blast
+  have f4: "\<forall> c \<in> tsbDom\<cdot>tsb1. Fin n \<le> (#\<surd> (tsb2 . c))"
+    using f2 f3 trans_lnle by blast
+      *)
+  
+  show ?thesis
+    apply (rule tsb_eq)
+    apply (simp add: assms(1) tsbdom_below)
+    apply (subst (1 2) tsbttake2ttakeI, simp_all)
+      using assms(1) tsbdom_below apply blast
+      using f1 f2 tstake_less_below by blast
+qed    
+    
+    
 
 (*
 
@@ -1595,7 +1660,7 @@ qed
   
   
 
-end
+
 
 
 (* OBSOLETE THINGS:
@@ -1922,3 +1987,4 @@ proof (rule contI2)
 *)
 
 
+end
