@@ -75,49 +75,49 @@ lemma tssnd_strict [simp]:
 "tsSnd\<cdot>\<bottom>\<cdot>\<bottom>\<cdot>ack = \<bottom>"
 "tsSnd\<cdot>\<bottom>\<cdot>acks\<cdot>ack = \<bottom>"
 "tsSnd\<cdot>msg\<cdot>\<bottom>\<cdot>ack = \<bottom>"
-by (fixrec_simp)+
+  by (fixrec_simp)+
 
 lemma tssnd_tslscons_msgtick [simp]: 
   "msg\<noteq>\<bottom> \<Longrightarrow> tsSnd\<cdot>(tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>m))\<cdot>msg)\<cdot>(tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>acks)\<cdot>ack 
      = tsMLscons\<cdot>(upApply2 Pair\<cdot>(up\<cdot>m)\<cdot>(up\<cdot>ack))\<cdot>
          (delayFun\<cdot>(tsSnd\<cdot>(tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>m))\<cdot>msg)\<cdot>acks\<cdot>ack))"
-by (fixrec_simp)
+  by (fixrec_simp)
 
 lemma tssnd_tslscons_msgack [simp]: 
   "msg\<noteq>\<bottom> \<Longrightarrow> acks\<noteq>\<bottom> \<Longrightarrow> tsSnd\<cdot>(tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>m))\<cdot>msg)\<cdot>(tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>a))\<cdot>acks)\<cdot>ack = 
     (if (a = ack) then tsSnd\<cdot>msg\<cdot>acks\<cdot>(Discr (\<not>(undiscr ack)))
      else tsMLscons\<cdot>(upApply2 Pair\<cdot>(up\<cdot>m)\<cdot>(up\<cdot>ack))\<cdot>(tsSnd\<cdot>(tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>m))\<cdot>msg)\<cdot>acks\<cdot>ack))"
-by (fixrec_simp)
+  by (fixrec_simp)
 
 lemma tssnd_tslscons_tick [simp]: 
   "acks\<noteq>\<bottom> \<Longrightarrow> tsSnd\<cdot>(tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>msg)\<cdot>acks\<cdot>ack 
                       = delayFun\<cdot>(tsSnd\<cdot>msg\<cdot>acks\<cdot>ack)"
-by (fixrec_simp)
+  by (fixrec_simp)
 
 lemma tssnd_delayfun_nack:
   "msg\<noteq>\<bottom> \<Longrightarrow> tsSnd\<cdot>(tsMLscons\<cdot>(updis m)\<cdot>msg)\<cdot>(delayFun\<cdot>acks)\<cdot>(Discr ack) 
   = tsMLscons\<cdot>(updis (m, ack))\<cdot>(delayFun\<cdot>(tsSnd\<cdot>(tsMLscons\<cdot>(updis m)\<cdot>msg)\<cdot>acks\<cdot>(Discr ack)))"
-by (simp add: delayfun_tslscons tsmlscons_lscons)
+  by (simp add: delayfun_tslscons tsmlscons_lscons)
 
 lemma tssnd_delayfun_bot:
   "msg\<noteq>\<bottom> \<Longrightarrow> tsSnd\<cdot>(tsMLscons\<cdot>(updis m)\<cdot>msg)\<cdot>(delayFun\<cdot>\<bottom>)\<cdot>(Discr ack) 
      = tsMLscons\<cdot>(updis (m, ack))\<cdot>(delayFun\<cdot>\<bottom>)"
-by (simp add: delayfun_tslscons tsmlscons_lscons)
+  by (simp add: delayfun_tslscons tsmlscons_lscons)
 
 lemma tssnd_mlscons_ack: "msg\<noteq>\<bottom> \<Longrightarrow> acks\<noteq>\<bottom> \<Longrightarrow>
    tsSnd\<cdot>(tsMLscons\<cdot>(updis m)\<cdot>msg)\<cdot>(tsMLscons\<cdot>(updis a)\<cdot>acks)\<cdot>(Discr a) 
      = tsSnd\<cdot>msg\<cdot>acks\<cdot>(Discr (\<not>a))"
-by (simp add: tsmlscons_lscons)
+  by (simp add: tsmlscons_lscons)
 
 lemma tssnd_mlscons_nack: "msg\<noteq>\<bottom> \<Longrightarrow> acks\<noteq>\<bottom> \<Longrightarrow> a\<noteq>ack \<Longrightarrow>
    tsSnd\<cdot>(tsMLscons\<cdot>(updis m)\<cdot>msg)\<cdot>(tsMLscons\<cdot>(updis a)\<cdot>acks)\<cdot>(Discr ack) 
      = tsMLscons\<cdot>(updis (m, ack))\<cdot>(tsSnd\<cdot>(tsMLscons\<cdot>(updis m)\<cdot>msg)\<cdot>acks\<cdot>(Discr ack))"
-by (simp add: tsmlscons_lscons)
+  by (simp add: tsmlscons_lscons)
 
 lemma tssnd_delayfun:
   "acks\<noteq>\<bottom> \<Longrightarrow> tsSnd\<cdot>(delayFun\<cdot>msg)\<cdot>acks\<cdot>ack 
                       = delayFun\<cdot>(tsSnd\<cdot>msg\<cdot>acks\<cdot>ack)"
-by (simp add: delayfun_tslscons)
+  by (simp add: delayfun_tslscons)
 
 (* ToDo: basic properties lemmata for sender *)
 
@@ -154,8 +154,6 @@ text {* Assumption for medium lemmata: #({True} \<ominus> ora)=\<infinity> *}
 lemma tsmed_insert: "tsMed\<cdot>msg\<cdot>ora = tsProjFst\<cdot>(tsFilter {x. snd x}\<cdot>(tsZip\<cdot>msg\<cdot>ora))"
   by (simp add: tsMed_def)
 
-(* ToDo: basic properties lemmata for medium *)
-
 lemma tsmed_strict [simp]: 
   "tsMed\<cdot>\<bottom>\<cdot>\<epsilon> = \<bottom>"
   "tsMed\<cdot>msg\<cdot>\<epsilon> = \<bottom>"
@@ -177,8 +175,10 @@ lemma tsmed_mlscons_false: "msg\<noteq>\<bottom> \<Longrightarrow> #ora=\<infini
 lemma tsmed_delayfun: "ora\<noteq>\<epsilon> \<Longrightarrow> tsMed\<cdot>(delayFun\<cdot>msg)\<cdot>ora = delayFun\<cdot>(tsMed\<cdot>msg\<cdot>ora)"
   by (simp add: tsMed_def tszip_delayfun tsfilter_delayfun tsprojfst_delayfun)
 
+(* ToDo: basic properties lemmata for medium *)
+
 lemma tsmed_nbot [simp]: "msg\<noteq>\<bottom> \<Longrightarrow> #ora=\<infinity> \<Longrightarrow> tsMed\<cdot>msg \<noteq> \<bottom>"
-oops
+  oops
 
 text {* If infinite ticks will be sent infinite ticks will be transmitted. *}
 lemma tsmed_tstickcount [simp]: "#ora=\<infinity> \<Longrightarrow> #\<surd>(tsMed\<cdot>msg\<cdot>ora) = #\<surd>msg"
@@ -211,26 +211,23 @@ lemma tsmed_tsabs_slen_inf [simp]: assumes "#({True} \<ominus> ora)=\<infinity>"
   oops
 
 lemma tsmed_map: "tsMed\<cdot>(tsMap f\<cdot>msg)\<cdot>ora = tsMap f\<cdot>(tsMed\<cdot>msg\<cdot>ora)"
-oops
+  oops
 
 lemma tsmed_tsdom: "#ora=\<infinity> \<Longrightarrow> tsDom\<cdot>(tsMed\<cdot>msg\<cdot>ora) \<subseteq> tsDom\<cdot>msg"
-oops
+  oops
 
 (* ----------------------------------------------------------------------- *)
 subsection {* receiver *}
 (* ----------------------------------------------------------------------- *)
 
 lemma tsrecsnd_insert: "tsRecSnd\<cdot>dat = tsProjFst\<cdot>(tsRemDups\<cdot>dat)"
-by (simp add: tsRecSnd_def)
-
-(* ToDo: basic properties lemmata for receiver *)
+  by (simp add: tsRecSnd_def)
 
 lemma tsrecsnd_strict [simp]: "tsRecSnd\<cdot>\<bottom> = \<bottom>"
-  by(simp add: tsRecSnd_def tsremdups_insert)
+  by (simp add: tsRecSnd_def tsremdups_insert)
 
 lemma tsrecsnd_delayfun: "tsRecSnd\<cdot>(delayFun\<cdot>dat) = delayFun\<cdot>(tsRecSnd\<cdot>dat)"
-  apply(simp add: tsRecSnd_def tsremdups_insert)
-  by (simp add: tsremdups_h_delayfun tsprojfst_delayfun)
+  by (simp add: tsRecSnd_def tsremdups_insert tsremdups_h_delayfun tsprojfst_delayfun)
 
 lemma tsrecsnd_nbot [simp]: "dat\<noteq>\<bottom> \<Longrightarrow> tsRecSnd\<cdot>dat \<noteq> \<bottom>"
   by (simp add: tsrecsnd_insert)
@@ -254,8 +251,7 @@ lemma tsrec_nbot [simp]: "dat\<noteq>\<bottom> \<Longrightarrow> tsRec\<cdot>dat
   by (simp add: tsrec_insert)
 
 lemma tsrec_inftick [simp]: "tsRec\<cdot>tsInfTick = (tsInfTick, tsInfTick)"
-  apply (simp add: tsrec_insert)
-  by (simp add: tsprojsnd_delayfun)
+  by (simp add: tsrec_insert tsprojsnd_delayfun)
 
 (* ----------------------------------------------------------------------- *)
 section {* additional properties *}
@@ -265,7 +261,7 @@ section {* additional properties *}
 subsection {* sender *}
 (* ----------------------------------------------------------------------- *)
 
-(* ToDo: additional properties lemmata for sender, first show testings below *)
+(* ToDo: additional properties lemmata for sender *)
 
 text {* lemmata for sender, see BS01, page 103 
 
@@ -310,7 +306,7 @@ oops
 subsection {* medium *}
 (* ----------------------------------------------------------------------- *)
 
-(* ToDo: additional properties lemmata for medium, first show testings below *)
+(* ToDo: additional properties lemmata for medium *)
 
 text {* Two medium can be reduced to one medium. *}
 lemma tsmed2med: obtains ora3 where "tsMed\<cdot>(tsMed\<cdot>msg\<cdot>ora1)\<cdot>ora2 = tsMed\<cdot>msg\<cdot>ora3"
