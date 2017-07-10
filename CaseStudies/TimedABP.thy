@@ -177,6 +177,17 @@ lemma tsmed_delayfun: "ora\<noteq>\<epsilon> \<Longrightarrow> tsMed\<cdot>(dela
 
 (* ToDo: basic properties lemmata for medium *)
 
+lemma tsmed_lscons_true: "msg\<noteq>\<bottom> \<Longrightarrow> #ora=\<infinity> \<Longrightarrow> m\<noteq>\<surd> \<Longrightarrow> 
+  tsMed\<cdot>(tsLscons\<cdot>(updis m)\<cdot>msg)\<cdot>((updis True) && ora) = tsLscons\<cdot>(updis m)\<cdot>(tsMed\<cdot>msg\<cdot>ora)"
+  oops
+
+lemma tsmed_lscons_false: "msg\<noteq>\<bottom> \<Longrightarrow> #ora=\<infinity> \<Longrightarrow> m\<noteq>\<surd> \<Longrightarrow>
+  tsMed\<cdot>(tsLscons\<cdot>(updis m)\<cdot>msg)\<cdot>((updis False) && ora) = tsMed\<cdot>msg\<cdot>ora"
+  oops
+
+lemma tsmed_tsLscons2delayfun: "ora\<noteq>\<epsilon> \<Longrightarrow> tsMed\<cdot>(tsLscons\<cdot>(updis \<surd>)\<cdot>msg)\<cdot>ora = delayFun\<cdot>(tsMed\<cdot>msg\<cdot>ora)"
+  oops
+
 lemma tsmed_nbot [simp]: "msg\<noteq>\<bottom> \<Longrightarrow> #ora=\<infinity> \<Longrightarrow> tsMed\<cdot>msg \<noteq> \<bottom>"
   oops
 
@@ -329,16 +340,16 @@ subsection {* sender *}
 (* ----------------------------------------------------------------------- *)
 
 lift_definition tsSndExampInp_1 :: "nat tstream" is
-  "<[Msg 1, Msg 2, \<surd>, Msg 1, \<surd>]>"
-by (subst ts_well_def, auto)
+  "<[Msg 1, Msg 2, \<surd>, Msg 1, \<surd>]>\<surd>"
+done
 
 lift_definition tsSndExampInp_2 :: "bool tstream" is
-  "<[\<surd>, Msg True, Msg True, \<surd>, Msg False, \<surd>, Msg True, \<surd>]>"
-by (subst ts_well_def, auto)
+  "<[\<surd>, Msg True, Msg True, \<surd>, Msg False, \<surd>, Msg True, \<surd>]>\<surd>"
+done
 
 lift_definition tsSndExampOut :: "(nat \<times> bool) tstream" is
-  "<[Msg (1, True), \<surd>,  Msg (2, False), Msg (2, False), \<surd>, \<surd>, Msg (1, True), \<surd>, \<surd>]>"
-by (subst ts_well_def, auto)
+  "<[Msg (1, True), \<surd>,  Msg (2, False), Msg (2, False), \<surd>, \<surd>, Msg (1, True), \<surd>, \<surd>]>\<surd>"
+done
 
 (* ToDo: testing lemmata for sender *)
 
@@ -359,12 +370,12 @@ subsection {* medium *}
 (* ----------------------------------------------------------------------- *)
 
 lift_definition tsMedExampInp :: "nat tstream" is
-  "<[Msg 1, \<surd>, Msg 2, \<surd>, Msg 3, \<surd>]>"
-by (subst ts_well_def, auto)
+  "<[Msg 1, \<surd>, Msg 2, \<surd>, Msg 3, \<surd>]>\<surd>"
+done
 
 lift_definition tsMedExampOut :: "nat tstream" is
-  "<[Msg 1, \<surd>, \<surd>, Msg 3, \<surd>]>"
-by (subst ts_well_def, auto)
+  "<[Msg 1, \<surd>, \<surd>, Msg 3, \<surd>]>\<surd>"
+done
 
 lemma tsmed_test_bot: "tsMed\<cdot>\<bottom>\<cdot>((\<up>True) \<infinity>) = \<bottom>"
 by (simp add: tsmed_insert)
@@ -386,16 +397,16 @@ subsection {* receiver *}
 (* ----------------------------------------------------------------------- *)
 
 lift_definition tsRecExampInp :: "(nat \<times> bool) tstream" is
-  "<[Msg (1, True), Msg (1, True), \<surd>, Msg (1, True), \<surd>, Msg (1, False), \<surd>]>"
-by (subst ts_well_def, auto)
+  "<[Msg (1, True), Msg (1, True), \<surd>, Msg (1, True), \<surd>, Msg (1, False), \<surd>]>\<surd>"
+done
 
 lift_definition tsRecExampOut_1 :: "bool tstream" is
-  "<[Msg True, Msg True, \<surd>, Msg True, \<surd>, Msg False, \<surd>]>"
-by (subst ts_well_def, auto)
+  "<[Msg True, Msg True, \<surd>, Msg True, \<surd>, Msg False, \<surd>]>\<surd>"
+done
 
 lift_definition tsRecExampOut_2 :: "nat tstream" is
-  "<[Msg 1, \<surd>, \<surd>, Msg 1, \<surd>]>"
-by (subst ts_well_def, auto)
+  "<[Msg 1, \<surd>, \<surd>, Msg 1, \<surd>]>\<surd>"
+done
 
 (* ToDo: testing lemmata for receiver *)
 
