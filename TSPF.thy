@@ -143,6 +143,86 @@ definition tsbFix :: "('m TSB \<rightarrow> 'm TSB) \<Rightarrow> channel set \<
 "tsbFix F cs \<equiv>  (\<Squnion>i. iterate i\<cdot>F\<cdot>(tsbLeast cs))"
 
 
+subsubsection \<open>causality\<close>
+(* tspf_weakCausality defines equality of the input up to time n to imply equality of the output
+   up to time n *)
+definition tspf_weakCausality :: "('m TSB \<rightarrow> 'm TSB option) \<Rightarrow> bool" where
+"tspf_weakCausality f \<equiv> (\<forall> (n ::nat). \<forall> b1 \<in> dom (Rep_cfun f) . \<forall> b2 \<in> dom (Rep_cfun f) . 
+                    (((#\<surd>tsb b1) = \<infinity>) \<and> ((#\<surd>tsb b2) = \<infinity>)) \<longrightarrow> 
+                    (tsbTTake n\<cdot>b1 = tsbTTake n\<cdot>b2) \<longrightarrow>
+                    (tsbTTake n\<cdot>(the (f\<cdot>b1)) = tsbTTake n\<cdot>(the (f\<cdot>b2))) )"
+
+  (*
+definition tspf_weakCausality :: "('m TSB \<rightarrow> 'm TSB option) \<Rightarrow> bool" where
+"tspf_weakCausality f \<equiv> (\<forall> (n :: nat) b1 \<in> dom (Rep_cfun f) . b1\<in> dom f \<longrightarrow> b2 \<in>dom f
+    \<longrightarrow> tsbiTTake n\<cdot>b1  = tsbiTTake n\<cdot>b2
+    \<longrightarrow> (tsbiTTake n\<cdot>(f \<rightharpoonup> b1) = tsbiTTake n\<cdot>(f \<rightharpoonup> b2)))"
+*)
+(*
+(* A component may only react one time-stamp after it received the input *)
+definition tspf_strongCausality :: "('m TSB \<rightarrow> 'm TSB option) \<Rightarrow> bool" where
+"tspf_strongCausality f \<equiv> (\<forall> (n :: nat) (b1 :: 'm TSB_inf)  b2. b1\<in> dom f \<longrightarrow> b2 \<in>dom f
+    \<longrightarrow> tsbiTTake n\<cdot>b1  = tsbiTTake n\<cdot>b2
+    \<longrightarrow> (tsbiTTake (Suc n)\<cdot>(f \<rightharpoonup> b1) = tsbiTTake (Suc n)\<cdot>(f \<rightharpoonup> b2)))"
+fixes tb :: "'m TSB_inf"
+
+*)
+
+
+(* a monotone function which has the the last property of tspf_well is weak causal *)
+lemma tspf_is_weak: fixes f :: "'m TSB \<Rightarrow> 'm TSB option"
+                    assumes "monofun f" and "\<And> b. (b \<in> dom f) \<longrightarrow> #\<surd>tsb b \<le> (#\<surd>tsb (the (f b)))"
+                    and "tb1 \<in> dom f" and "tb2 \<in> dom f"
+                    and "#\<surd>tsb tb1 = \<infinity>" and  "#\<surd>tsb tb2 = \<infinity>"
+                    and "tsbTTake n\<cdot>tb1 = tsbTTake n\<cdot>tb2"
+  shows "tsbTTake n\<cdot>(f\<rightharpoonup>tb1) = tsbTTake n\<cdot>(f\<rightharpoonup>tb2)"
+proof (cases "tsbDom\<cdot>tb1 \<noteq> {}")
+  case True
+  have f0: "tsbDom\<cdot>tb1 \<noteq> {}"
+    by (simp add: True)
+  have f1: "tsbDom\<cdot>tb2 \<noteq> {}"
+    by (metis True assms(7) tsbttake_dom)
+  show ?thesis
+    proof -
+      (* begin with the left side *)
+      have f10: "tsbTTake n\<cdot>tb1 \<in> dom f"
+        by (metis assms(1) assms(3) below_option_def domIff monofun_def tsbttake_below)
+      have f11: "#\<surd>tsb (tsbTTake n\<cdot>tb1) = Fin n"
+        by (simp add: f0 assms(5) tsbtick_tsbttake)
+      have f12: "(f\<rightharpoonup>(tsbTTake n\<cdot>tb1)) \<sqsubseteq> (f\<rightharpoonup>tb1)"
+        by (metis assms(1) below_option_def eq_imp_below monofun_def tsbttake_below)
+      have f14: "#\<surd>tsb (f\<rightharpoonup>(tsbTTake n\<cdot>tb1)) \<ge> Fin n"
+        by (metis (full_types) assms(2) f10 f11)
+      have f15: "tsbTTake n\<cdot>(f\<rightharpoonup>(tsbTTake n\<cdot>tb1)) = tsbTTake n\<cdot>(f\<rightharpoonup>tb1)"
+        by (simp add: f12 f14 tsbtick_pref_eq)
+      
+      (* now the right side *)
+      have f20: "tsbTTake n\<cdot>tb2 \<in> dom f"
+        using assms(7) f10 by presburger
+      have f21: "#\<surd>tsb (tsbTTake n\<cdot>tb2) = Fin n"
+        by (simp add: f1 assms(6) tsbtick_tsbttake)
+      have f22: "(f\<rightharpoonup>(tsbTTake n\<cdot>tb2)) \<sqsubseteq> (f\<rightharpoonup>tb2)"
+        by (metis assms(1) below_option_def eq_imp_below monofun_def tsbttake_below)
+      have f24: "#\<surd>tsb (f\<rightharpoonup>(tsbTTake n\<cdot>tb2)) \<ge> Fin n"
+        by (metis (full_types) assms(2) f20 f21)
+      have f25: "tsbTTake n\<cdot>(f\<rightharpoonup>(tsbTTake n\<cdot>tb2)) = tsbTTake n\<cdot>(f\<rightharpoonup>tb2)"
+        by (simp add: f22 f24 tsbtick_pref_eq)
+      show ?thesis
+        using assms(7) f15 f25 by presburger
+    qed
+next
+  case False
+  have f2: "tsbDom\<cdot>tb1 = {}"
+    using False by blast
+  moreover
+  have  "tsbDom\<cdot>tb2 = {}"
+    by (metis (no_types) assms(7) f2 tsbttake_dom)
+  ultimately show ?thesis
+    by (metis empty_iff tsb_eq)  
+qed
+  
+                 
+
 subsubsection \<open>composition\<close>
 
 (* redefined composition channel sets *)
@@ -492,7 +572,11 @@ lemma tspf_type_cont [simp]: "cont (\<lambda>f. (tspfDom\<cdot>f, tspfRan\<cdot>
 lemma tspf_type_insert: "tspfType\<cdot>f = (tspfDom\<cdot>f, tspfRan\<cdot>f)"
   by (simp add: tspfType_def)
 
-
+  subsection \<open>tspfwell\<close>
+  
+lemma tspfwell_to_weak: assumes "tspf_well f"
+  shows "tspf_weakCausality f"
+    
 
   subsection \<open>comp-sets\<close>
     (* lemmas about I, Oc, etc. and how they correlate *)

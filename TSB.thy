@@ -1204,7 +1204,15 @@ proof -
       using f1 f2 tstake_less_below by blast
 qed    
     
-    
+
+lemma tsbtick_tsbttake: assumes "tsbDom\<cdot>tb \<noteq> {}"
+  shows "#\<surd>tsb (tsbTTake n\<cdot>tb) = min (#\<surd>tsb tb) (Fin n)"
+    apply (rule tsbtickI, subst tsbttake_dom)
+       apply (metis (no_types, lifting) assms tsbtick_insert tsbtick_min_on_channel 
+                    tsbttake2ttakeI tstake_len)
+       apply (subst tsbttake_dom)
+       using min_le_iff_disj tsbtick_least by fastforce
+
 
   
 subsubsection \<open>tsbMapStream\<close>
