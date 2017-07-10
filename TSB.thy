@@ -497,12 +497,19 @@ lemma tsbrestrict_test [simp]: "(tb \<bar> cs1) \<bar> cs2 = tb \<bar> (cs1\<int
 lemma tsbgetch_restrict [simp]: assumes "c \<in>cs"
   shows "(tb \<bar> cs)  .  c = tb  .  c"
   by (simp add: tsbgetch_insert tsbrestrict_insert assms)
+    
+lemma tsbrestrict_least [simp]: "tb \<bar> {} = tsbLeast {}"
+  by (metis empty_iff empty_subsetI tsb_eq tsbleast_tsdom tsresrict_dom2)
+
+lemma tsbrestrict_least2[simp]: assumes "cs \<inter> tsbDom\<cdot>tb = {}" 
+  shows "tb \<bar> cs = tsbLeast {}"
+  by (metis Int_commute assms empty_iff tsb_eq tsbleast_tsdom tsresrict_dom3)
 
     
 lemma tsbrestrict_belowI1: assumes "(a \<sqsubseteq> b)"
   shows "(a \<bar> cs) \<sqsubseteq> (b \<bar> cs)"
-     by (metis assms monofun_cfun_arg)
-
+  by (metis assms monofun_cfun_arg)
+    
 
 subsubsection \<open>tsbTickCount\<close>
   
@@ -923,6 +930,20 @@ lemma tsbunion_restrict2 [simp]:"(x\<uplus>y) \<bar> tsbDom\<cdot>y = y"
 lemma tsbunion_restrict [simp]: assumes "(tsbDom\<cdot>y)\<inter>cs2 = {}" 
   shows "(x\<uplus>y) \<bar> cs2 = x \<bar> cs2"
   using assms by(simp add: tsbunion_insert tsbrestrict_insert tsbDom_def)
+    
+lemma tsbunion_restrict4 [simp]: "(tb1 \<uplus> tb2) \<bar> cs = (tb1 \<bar> cs) \<uplus> (tb2 \<bar> cs)"
+proof -
+  { fix cc :: channel
+    have "(Rep_TSB tb1 ++ Rep_TSB tb2) |` cs \<Omega> = Rep_TSB tb1 |` cs ++ Rep_TSB tb2 |` cs \<Omega> \<or> ((Rep_TSB tb1 ++ Rep_TSB tb2) |` cs) cc = (Rep_TSB tb1 |` cs ++ Rep_TSB tb2 |` cs) cc"
+      by (simp add: mapadd2if_then restrict_map_def) }
+  hence "(Rep_TSB tb1 ++ Rep_TSB tb2) |` cs \<Omega> = Rep_TSB tb1 |` cs ++ Rep_TSB tb2 |` cs \<Omega> \<or> (\<forall>c. ((Rep_TSB tb1 ++ Rep_TSB tb2) |` cs) c = (Rep_TSB tb1 |` cs ++ Rep_TSB tb2 |` cs) c)"
+    by blast
+  hence "(Rep_TSB tb1 ++ Rep_TSB tb2) |` cs \<Omega> = Rep_TSB tb1 |` cs ++ Rep_TSB tb2 |` cs \<Omega>"
+    by meson
+  thus ?thesis
+    by (simp add: tsbrestrict_insert tsbunion_insert)
+qed
+    
 
 lemma tsbunion_dom [simp]: "tsbDom\<cdot>(tb1 \<uplus> tb2) = tsbDom\<cdot>tb1 \<union> tsbDom\<cdot>tb2"
   by(simp add: tsbdom_insert tsbunion_insert Un_commute)
@@ -1438,6 +1459,76 @@ proof -
     by (metis (no_types) tsbleast_tsdom tsbup_sbgetch1 tsbup_sbgetch2)
 qed
   
+  
+subsubsection \<open>tsbEqSelected\<close>
+ thm tsbEqSelected_def    
+  
+lemma tsbeqsel_empty_set [simp]: "tsbEqSelected {} tb1 tb2"
+  by (simp add: tsbEqSelected_def)  
+    
+lemma tsbeqsel_getch_eq: assumes "tsbEqSelected cs tb1 tb2"
+  shows "\<forall> c \<in> cs. (tb1 . c) = (tb2 . c)"
+proof -
+  { fix cc :: channel
+    have "(tb1 \<bar> cs) = tb2 \<bar> cs"
+      using assms tsbEqSelected_def by blast
+    hence "cc \<notin> cs \<or> (tb1 . cc = tb2 . cc)"
+      by (metis (no_types) tsbgetch_restrict) }
+  thus ?thesis
+    by blast
+qed
+ 
+lemma tsbeqselI: assumes "\<forall> c \<in> cs. (tb1 . c) = (tb2 . c)"
+                 and "cs \<subseteq> tsbDom\<cdot>tb1" and "cs \<subseteq> tsbDom\<cdot>tb2"
+  shows "tsbEqSelected cs tb1 tb2"
+proof -
+  obtain cc :: "'a TSB \<Rightarrow> 'a TSB \<Rightarrow> channel" where
+    f1: "\<forall>t ta. tsbDom\<cdot>t \<noteq> tsbDom\<cdot>ta \<or> cc ta t \<in> tsbDom\<cdot>t \<and> t . cc ta t \<noteq> ta . cc ta t \<or> t = ta"
+    by (metis (no_types) tsb_eq)
+  have f2: "\<forall>C t. \<not> C \<subseteq> tsbDom\<cdot>(t::'a TSB) \<or> tsbDom\<cdot>(t \<bar> C) = C"
+    by (meson tsresrict_dom2)
+  moreover
+  { assume "(tb1 \<bar> cs) . cc (tb2 \<bar> cs) (tb1 \<bar> cs) \<noteq> (tb2 \<bar> cs) . cc (tb2 \<bar> cs) (tb1 \<bar> cs)"
+    then have "(tb1 \<bar> cs) = tb2 \<bar> cs"
+      using f2 f1 by (metis (no_types) assms(1) assms(2) assms(3) tsbgetch_restrict) }
+  ultimately have "(tb1 \<bar> cs) = tb2 \<bar> cs"
+    using f1 by (metis (no_types) assms(2) assms(3))
+  thus ?thesis
+    by (simp add: tsbEqSelected_def)
+qed
+    
+
+subsubsection \<open>tsbEqCommon\<close>
+ thm tsbEqCommon_def   
+  
+lemma tsbeqcom_no_inter: assumes "tsbDom\<cdot>tb1 \<inter> tsbDom\<cdot>tb2 = {}"
+  shows "tsbEqCommon tb1 tb2"
+  by (simp add: assms(1) tsbEqCommon_def)
+
+lemma tsbeqcom_ident [simp]: "tsbEqCommon tb tb"
+  using tsbEqCommon_def tsbEqSelected_def by blast
+    
+lemma tsbeqcomI: assumes "\<forall> c \<in> (tsbDom\<cdot>tb1 \<inter> tsbDom\<cdot>tb2). (tb1 . c) = (tb2 . c)"
+  shows "tsbEqCommon tb1 tb2"
+proof -
+  obtain cc :: "'a TSB \<Rightarrow> 'a TSB \<Rightarrow> channel" where
+    f1: "\<forall>t ta. tsbDom\<cdot>t \<noteq> tsbDom\<cdot>ta \<or> cc ta t \<in> tsbDom\<cdot>t \<and> t . cc ta t \<noteq> ta . cc ta t \<or> t = ta"
+    by (metis tsb_eq)
+  have f2: "tsbDom\<cdot>(tb2 \<bar> tsbDom\<cdot>tb1 \<inter> tsbDom\<cdot>tb2) = tsbDom\<cdot>(tb1 \<bar> tsbDom\<cdot>tb1 \<inter> tsbDom\<cdot>tb2)"
+    by (simp add: inf_left_commute)
+  moreover
+  { assume "(tb2 \<bar> tsbDom\<cdot>tb1 \<inter> tsbDom\<cdot>tb2) . cc (tb1 \<bar> tsbDom\<cdot>tb1 \<inter> tsbDom\<cdot>tb2) (tb2 \<bar> tsbDom\<cdot>tb1 \<inter> tsbDom\<cdot>tb2) \<noteq> (tb1 \<bar> tsbDom\<cdot>tb1 \<inter> tsbDom\<cdot>tb2) . cc (tb1 \<bar> tsbDom\<cdot>tb1 \<inter> tsbDom\<cdot>tb2) (tb2 \<bar> tsbDom\<cdot>tb1 \<inter> tsbDom\<cdot>tb2)"
+    have "cc (tb1 \<bar> tsbDom\<cdot>tb1 \<inter> tsbDom\<cdot>tb2) (tb2 \<bar> tsbDom\<cdot>tb1 \<inter> tsbDom\<cdot>tb2) \<notin> tsbDom\<cdot> (tb2 \<bar> tsbDom\<cdot>tb1 \<inter> tsbDom\<cdot>tb2) \<or> (tb2 \<bar> tsbDom\<cdot>tb1 \<inter> tsbDom\<cdot>tb2) . cc (tb1 \<bar> tsbDom\<cdot>tb1 \<inter> tsbDom\<cdot>tb2) (tb2 \<bar> tsbDom\<cdot>tb1 \<inter> tsbDom\<cdot>tb2) = (tb1 \<bar> tsbDom\<cdot>tb1 \<inter> tsbDom\<cdot>tb2) . cc (tb1 \<bar> tsbDom\<cdot>tb1 \<inter> tsbDom\<cdot>tb2) (tb2 \<bar> tsbDom\<cdot>tb1 \<inter> tsbDom\<cdot>tb2)"
+      using assms by fastforce
+    then have "(tb1 \<bar> (tsbDom\<cdot>tb1 \<inter> tsbDom\<cdot>tb2)) = tb2 \<bar> tsbDom\<cdot>tb1 \<inter> tsbDom\<cdot>tb2"
+      using f2 f1 by metis }
+  ultimately have "(tb1 \<bar> (tsbDom\<cdot>tb1 \<inter> tsbDom\<cdot>tb2)) = tb2 \<bar> tsbDom\<cdot>tb1 \<inter> tsbDom\<cdot>tb2"
+    using f1 by (metis (no_types))
+  thus ?thesis
+    using tsbEqCommon_def tsbEqSelected_def by blast
+qed
+    
+   
 (*
 
 (* ----------------------------------------------------------------------- *)
