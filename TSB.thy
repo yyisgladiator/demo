@@ -1220,7 +1220,7 @@ subsubsection \<open>tsbMapStream\<close>
   
 abbreviation fun_well_type :: "('a tstream \<Rightarrow> 'a tstream) \<Rightarrow> bool" where
 "fun_well_type f == (\<forall>c ts. (tsDom\<cdot>ts \<subseteq> (ctype c) \<longrightarrow> tsDom\<cdot>(f ts) \<subseteq>(ctype c)))"
-  declare [[show_types]]
+
   
 lemma tsdom_funtype [simp]: assumes "\<forall> ts. tsDom\<cdot>(f ts) \<subseteq> tsDom\<cdot>ts"
   shows "fun_well_type f"
@@ -1269,7 +1269,140 @@ qed
 lemma tsbmapstream_contI2 [simp]: assumes "cont f" and "\<forall>s. tsDom\<cdot>(f s) \<subseteq> tsDom\<cdot>s"
   shows "cont (tsbMapStream f)"
   by (simp add: assms(1) assms(2))
+ 
     
+    
+subsubsection \<open>tsbSetCh\<close>
+  thm tsbSetCh_def
+  
+lemma tsbsetch_cont [simp]: "cont (\<lambda> b. (\<lambda>c s. b \<uplus> ([c \<mapsto> s]\<Omega>)))"
+  by auto
+    
+lemma tsbsetch_well [simp]: assumes "tsDom\<cdot>s \<subseteq> ctype c"
+  shows "tsb_well ((Rep_TSB b) (c \<mapsto> s) )"
+  by (simp add: assms tsb_well_def tsbdom_insert)
+    
+    
+(* insertion lemma for tsbSetCh *)
+lemma tsbsetch_insert: assumes "sbdom\<cdot>s \<subseteq> ctype c"
+  shows "(tsbSetCh\<cdot>b) c s = b \<uplus> ([c \<mapsto> s]\<Omega>)"
+  by (simp add: tsbSetCh_def)
+    
+
+subsubsection \<open>tsbRemCh\<close>
+ 
+lemma tsbremch_mono [simp]: "monofun (\<lambda> b. \<Lambda> c. b \<bar> -{c})"
+proof -
+  have "\<forall>c. monofun (\<lambda>t. (t::'a TSB) \<bar> - {c})"
+    by (simp add: monofun_cfun_arg monofun_def)
+  then show ?thesis
+    by (simp add: cont2mono_LAM)
+qed
+    
+lemma tsbremch_cont[simp]: "cont (\<lambda> b. \<Lambda> c.  b \<bar> -{c})"
+  by simp
+    
+lemma tsbremch_insert: "tsbRemCh\<cdot>b\<cdot>c =  b \<bar> -{c}"
+  by simp
+
+lemma tsbremch_dom [simp]: "tsbDom\<cdot>(tsbRemCh\<cdot>b\<cdot>c) = tsbDom\<cdot>b - {c}"
+  by auto
+    
+lemma tsbremch2restrict: "tsbRemCh\<cdot>b\<cdot>c = b \<bar> (tsbDom\<cdot>b - {c})"
+  by (metis (no_types) diff_eq inf.left_idem tsbremch_insert tsbrestrict_test 
+                       tsbunion_restrict2)
+  
+  
+subsubsection \<open>tsbRenameCh\<close>
+thm tsbRenameCh_def
+  
+(* definition tsbRenameCh :: "'m TSB \<Rightarrow> channel \<Rightarrow> channel \<Rightarrow> 'm TSB" where
+ "tsbRenameCh b ch1 ch2 \<equiv> (tsbSetCh\<cdot>(tsbRemCh\<cdot>b\<cdot>ch1)) ch2 (b . ch1)" *)
+  
+lemma tsbrenamech_id: assumes "c \<in> tsbDom\<cdot>tb"
+  shows "tsbRenameCh tb c c = tb"
+  apply (simp add: tsbRenameCh_def tsbgetch_insert tsbSetCh_def tsbremch_insert tsbrestrict_insert)
+  proof (rule tsb_eq)
+    have f1: "Rep_cfun tsbDom = (\<lambda>t. dom (Rep_TSB (t::'a TSB)))"
+      by (simp add: tsbDom_def)
+    have f2: "Some Rep_TSB tb\<rightharpoonup>c = Rep_TSB tb c"
+      by (metis (no_types) assms tsbgetchE tsbgetch_insert)
+    then have f3: "Rep_TSB tb c \<noteq> None"
+      by (metis (full_types) option.simps(3))
+    have f4: "Map.empty(c := Rep_TSB tb c)\<Omega> = tb \<bar> {c}"
+      using f2 by (metis (full_types) assms tsb_newMap_restrict tsbgetch_insert)
+    have f5: "tsbDom\<cdot>tb \<inter> {c} = {c}"
+      using assms by fastforce
+    have "(Rep_TSB tb)(c := Rep_TSB tb c) = Rep_TSB tb"
+      by blast
+    then have "insert c (tsbDom\<cdot>((Rep_TSB tb)(c := None)\<Omega>)) = tsbDom\<cdot>tb"
+      using f3 f1 by (metis (no_types) dom_fun_upd dom_restrict fun_upd_upd 
+                                restrict_complement_singleton_eq tsbrestrict_insert tsresrict_dom3)
+    then show "tsbDom\<cdot> ((Rep_TSB tb |` (- {c})\<Omega>) \<uplus> ([c \<mapsto> Rep_TSB tb\<rightharpoonup>c]\<Omega>)) = tsbDom\<cdot>tb"
+      using f5 f4 f2 by (simp add: restrict_complement_singleton_eq)
+  next
+    show "\<And>ca. ca \<in> tsbDom\<cdot>((Rep_TSB tb |` (- {c})\<Omega>) \<uplus> ([c \<mapsto> Rep_TSB tb\<rightharpoonup>c]\<Omega>)) 
+                        \<Longrightarrow> (Rep_TSB tb |` (- {c})\<Omega>) \<uplus> ([c \<mapsto> Rep_TSB tb\<rightharpoonup>c]\<Omega>)  .  ca = tb  .  ca"
+      by (metis (mono_tags, lifting) ComplI assms dom_empty dom_fun_upd option.discI 
+                tsb_newMap_restrict tsb_newMap_well tsbdom_rep_eq tsbgetch_insert 
+                tsbgetch_restrict tsbrestrict_insert tsbunion_getchL tsbunion_getchR)
+      
+qed
+
+lemma tsbrenamech_dom: assumes "ch1 \<in> tsbDom\<cdot>tb" 
+                       and "tsDom\<cdot>(tb . ch1) \<subseteq> ctype ch2"
+                     shows "tsbDom\<cdot>(tsbRenameCh tb ch1 ch2) = (tsbDom\<cdot>tb - {ch1}) \<union> {ch2}"
+proof -
+  have f1: "tsbDom\<cdot>([ch2 \<mapsto> tb  .  ch1]\<Omega>) = {ch2}"
+  proof -
+    have "(Map.empty::channel \<Rightarrow> 'a tstream option) \<in> Collect tsb_well"
+      using tsb_well_exists by blast
+    then obtain tt :: "(channel \<Rightarrow> 'a tstream option) \<Rightarrow> 'a TSB" where
+      "Map.empty = Rep_TSB (tt Map.empty)"
+      by (meson Rep_TSB_cases)
+    then show ?thesis
+      by (metis (no_types) assms(2) dom_empty dom_fun_upd option.simps(3) tsbdom_rep_eq 
+                           tsbsetch_well)
+  qed
+  show ?thesis
+    apply (simp add: tsbRenameCh_def  tsbSetCh_def f1)
+    by (simp add: Diff_eq)
+qed
+  
+  
+lemma tsbrenamech_getChI1: assumes "ch1 \<in> tsbDom\<cdot>tb" 
+                    and "tsDom\<cdot>(tb . ch1) \<subseteq> ctype ch2" 
+  shows "(tsbRenameCh tb ch1 ch2) . ch2 = tb . ch1"
+  apply (simp add: tsbRenameCh_def  tsbSetCh_def)
+  apply (subst tsbunion_getchR)
+    apply (subst tsbdom_rep_eq, simp_all add: assms(2) tsb_well_def)
+    by (metis Abs_TSB_inverse assms(2) fun_upd_same mem_Collect_eq option.sel 
+              tsb_well_exists tsbgetch_rep_eq tsbsetch_well)
+                   
+lemma tsbrenamech_getChI2: assumes "ch1 \<in> tsbDom\<cdot>tb" 
+                     and "tsDom\<cdot>(tb . ch1) \<subseteq> ctype ch2"
+                     and "ch3 \<in> tsbDom\<cdot>tb" and "ch3 \<noteq> ch2" and "ch3 \<noteq> ch1"
+                   shows "(tsbRenameCh tb ch1 ch2) . ch3 = tb . ch3"
+proof -
+  have f1: "ch3 \<notin> tsbDom\<cdot>([ch2 \<mapsto> tb  .  ch1]\<Omega>)"
+    proof -
+    have "\<forall>f. f \<notin> Collect tsb_well \<or> Rep_TSB (f \<Omega>) = f"
+      by (meson Abs_TSB_inverse)
+    then have "tsb_well [ch2 \<mapsto> tb . ch1]"
+      by (metis (no_types) assms(2) mem_Collect_eq tsb_well_exists tsbsetch_well)
+    then show "ch3 \<notin> tsbDom\<cdot>([ch2 \<mapsto> tb . ch1]\<Omega>)"
+      using assms(4) tsbgetchE by fastforce
+  qed
+  show ?thesis
+  apply (simp add: tsbRenameCh_def  tsbSetCh_def)
+  apply (subst tsbunion_getchL, simp add: f1)
+    by (simp add: assms(5))
+qed
+
+  
+
+    
+  
 (*
 
 (* ----------------------------------------------------------------------- *)
