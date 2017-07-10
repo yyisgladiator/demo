@@ -121,7 +121,6 @@ definition tsbRenameCh :: "'m TSB \<Rightarrow> channel \<Rightarrow> channel \<
 
 
   (* Replaces all "None" channels with \<epsilon>. *)
-      (* untested *)
 definition tsbUp:: " 'm TSB \<rightarrow> 'm TSB"  where
 "tsbUp \<equiv> \<Lambda> b . Abs_TSB (\<lambda>c. if (c \<in> tsbDom\<cdot>b) then (Rep_TSB b) c else Some \<bottom>)"
 
@@ -154,7 +153,7 @@ definition tsbMapStream:: "('m tstream \<Rightarrow> 'm tstream) \<Rightarrow> '
 "tsbMapStream f tb =  Abs_TSB(\<lambda>c. (c\<in> tsbDom\<cdot>tb) \<leadsto> f (tb .c))"
 
 
-definition tsbHd :: "'m TSB \<Rightarrow> 'm TSB" where
+abbreviation tsbHd :: "'m TSB \<Rightarrow> 'm TSB" where
 "tsbHd \<equiv> (\<lambda>tb. tsbTTake 1\<cdot>tb)"
 
   (* Deletes the first n Elements of each Stream *)
@@ -1400,8 +1399,44 @@ proof -
 qed
 
   
+  
+subsubsection \<open>tsbUp\<close>
+ thm tsbUp_def  
 
+lemma tsbup_well [simp]: "tsb_well (\<lambda>c. if c \<in> tsbDom\<cdot>b then (Rep_TSB b) c else Some \<bottom>)"
+  by (simp add: tsb_well_def)
+  
+lemma tsbup_cont1: "cont (\<lambda> b. (\<lambda>c. if c \<in> tsbDom\<cdot>b then Rep_TSB b c else Some \<bottom>))"
+  by (smt contI2 below_TSB_def eq_imp_below fun_below_iff is_ub_thelub lub_eq lub_fun monofunI 
+          po_class.chainE po_class.chainI rep_lub tsbdom_below tsbgetchE)
     
+lemma sbup_cont [simp]: "cont (\<lambda> b. (\<lambda>c. if c \<in> tsbDom\<cdot>b then Rep_TSB b c else Some \<bottom>)\<Omega>)"
+  by (simp add: tsbup_cont1)
+    
+lemma tsbup_insert: "tsbUp\<cdot>b =  (\<lambda>c. if c \<in> tsbDom\<cdot>b then Rep_TSB b c else Some \<bottom>)\<Omega>"
+  by (simp add: tsbUp_def)
+    
+lemma tsbup_dom [simp]: "tsbDom\<cdot>(tsbUp\<cdot>b) = UNIV"
+  apply (subst tsbdom_insert, simp add: tsbup_insert)
+  by (smt CollectD Collect_cong UNIV_def dom_def optionLeast_def optionleast_dom tsbdom_insert)
+ 
+lemma tsbup_sbgetch1 [simp]: assumes "c \<in> tsbDom\<cdot>tb"
+  shows "(tsbUp\<cdot>tb) . c = tb . c"
+  apply (simp add: tsbup_insert tsbgetch_insert)
+  by (simp add: assms(1))
+    
+lemma tsbup_sbgetch2 [simp]: assumes "c \<notin> tsbDom\<cdot>tb"
+  shows "(tsbUp\<cdot>tb) . c = \<bottom>"
+  apply (simp add: tsbup_insert tsbgetch_insert)
+  by (simp add: assms(1))
+    
+lemma tsbup_least_getch [simp]: "(tsbUp\<cdot>(tsbLeast cs)) . c = \<bottom>"
+proof -
+  have "c \<in> cs \<longrightarrow> tsbLeast cs . c = (\<bottom>::'a tstream)"
+    by force
+  then show ?thesis
+    by (metis (no_types) tsbleast_tsdom tsbup_sbgetch1 tsbup_sbgetch2)
+qed
   
 (*
 
