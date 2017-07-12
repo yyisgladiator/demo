@@ -2025,7 +2025,7 @@ lemma tsfilter_tstickcount [simp]: "#\<surd>(tsFilter M\<cdot>ts) = #\<surd>ts"
 lemma tsfilter_weak:"tsWeakCausal (Rep_cfun (tsFilter M))"
   by (subst tsWeak2cont2, auto)
 
-(* ToDo: lemma for tsfilter *)
+(* ToDo Jan: lemma for tsfilter *)
 
 lemma tsfilter_tsabs_h: 
   "smap inversMsg\<cdot>({e. e \<noteq> \<surd>} \<inter> Msg ` M \<ominus> s) = M \<ominus> smap inversMsg\<cdot>({e. e \<noteq> \<surd>} \<ominus> s)"
@@ -2038,7 +2038,7 @@ lemma tsfilter_tsabs_slen [simp]: "#(tsAbs\<cdot>(tsFilter M\<cdot>ts)) \<le> #(
 apply (simp add: tsfilter_unfold tsAbs_def tsfilter_h_well)
 by (metis inf_commute int_sfilterl1 slen_sfilterl1)
 
-(* ToDo: lemma for tsfilter *)
+(* ToDo Jan: lemma for tsfilter *)
 
 text {* tsFilter removes elements of the domain *}
 lemma tsfilter_tsdom: "tsDom\<cdot>(tsFilter M\<cdot>ts) \<subseteq> tsDom\<cdot>ts"
