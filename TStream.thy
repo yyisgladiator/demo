@@ -3315,13 +3315,13 @@ lemma tsremdups_h_lscons_ndup2:
   subsection \<open>list2ts\<close>    
 (************************************************)
 
-primrec list2ts :: "'a event list \<Rightarrow> 'a tstream"
+primrec list2tsM :: "'a event list \<Rightarrow> 'a tstream"
 where
-  list2ts_0:   "list2ts [] = \<bottom>" |
-  list2ts_Suc: "list2ts (a#as) = (tsLscons\<cdot>(updis a)\<cdot>(list2ts as))"
+  list2tsM_0:   "list2tsM [] = \<bottom>" |
+  list2tsM_Suc: "list2tsM (a#as) = (if a=\<surd> then delayFun\<cdot>(list2tsM as) else (tsMLscons\<cdot>(updis \<M>\<inverse> a)\<cdot>(list2tsM as)))"
 
 abbreviation tstream_abbrev :: "'a event list \<Rightarrow> 'a tstream" ("<_>\<surd>" [1000] 999)
-where "<l>\<surd> == list2ts l"
+where "<l>\<surd> == list2tsM l"
 
 (*TODO
 
