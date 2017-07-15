@@ -8,7 +8,7 @@
 chapter {* Alternating Bit Protocol *}       
                                                             
 theory TimedABP_Comp
-imports "../TStream" TimedABP
+imports "../TimedABP"
 
 begin
 default_sort countable
@@ -31,6 +31,15 @@ definition "tsSender = {tsSnd :: 'a tstream \<rightarrow> bool tstream \<rightar
 lemma tssnd2rec_inp2out: assumes "tssnd \<in> tsSender"
   shows "tsAbs\<cdot>(tsSnd2Rec\<cdot>tssnd\<cdot>msg) = tsAbs\<cdot>msg"
   apply (simp add: tsSnd2Rec_def)
-oops
-
+  oops
+    
+  (* goal lemma *)    
+lemma assumes 
+      "tssnd \<in> tsSender"
+  and "ds = tssnd\<cdot>msg\<cdot>as\<cdot>ack"
+  and "as = tsProjSnd\<cdot>ds"
+  shows "tsAbs\<cdot>(tsRecSnd\<cdot>ds) = tsAbs\<cdot>msg"
+  oops
+    
+    
 end
