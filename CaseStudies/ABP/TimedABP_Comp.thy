@@ -62,7 +62,7 @@ lemma assumes
   and "#({True} \<ominus> ora1)=\<infinity>"
   and "#({True} \<ominus> ora2)=\<infinity>"
   
-  and "ds = tssnd\<cdot>msg\<cdot>as\<cdot>ack"
+  and "ds = tssnd\<cdot>msg\<cdot>as"
   and "dr = tsMed\<cdot>ds\<cdot>ora1"
   and "ar = tsProjSnd\<cdot>dr"
   and "as = tsMed\<cdot>ar\<cdot>ora2"
