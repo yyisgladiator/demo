@@ -40,6 +40,25 @@ lemma assumes
   and "as = tsProjSnd\<cdot>ds"
   shows "tsAbs\<cdot>(tsRecSnd\<cdot>ds) = tsAbs\<cdot>msg"
   oops
+
     
+    
+    
+(* stuff with medium *)
+
+
+
+  (* goal lemma *)    
+lemma assumes 
+      "tssnd \<in> tsSender"
+  and "#({True} \<ominus> ora1)=\<infinity>"
+  and "#({True} \<ominus> ora2)=\<infinity>"
+  
+  and "ds = tssnd\<cdot>msg\<cdot>as\<cdot>ack"
+  and "dr = tsMed\<cdot>ds\<cdot>ora1"
+  and "ar = tsProjSnd\<cdot>dr"
+  and "as = tsMed\<cdot>ar\<cdot>ora2"
+  shows "tsAbs\<cdot>(tsRecSnd\<cdot>dr) = tsAbs\<cdot>msg"
+  oops
     
 end
