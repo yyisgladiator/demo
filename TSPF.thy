@@ -899,7 +899,19 @@ lemma tsbfix_contI [simp]:   assumes  "cont F" and "\<And> x. (P x) \<Longrighta
     using tsbfix_monoI assms apply blast
     using chain_if_lub_iter_tsbfix2 assms by blast
       
-      
+lemma tsbfix_contI2 [simp]: fixes F :: "'m TSB \<Rightarrow> 'm TSB \<rightarrow> 'm TSB"
+                            assumes  "cont F" and "\<And> x. (P x) \<Longrightarrow> tsbfun_io_eq (F x) cs" 
+                            and "\<And> x y. tsbDom\<cdot>x = tsbDom\<cdot>y \<Longrightarrow> P x = P y"
+                            shows "cont (\<lambda> x. (P x) \<leadsto> tsbFix (F x) cs)"
+proof -
+  have f1: "(\<lambda> x. (P x) \<leadsto> tsbFix (F x) cs) = (\<lambda> x. (P x) \<leadsto> tsbFix2 F x cs)"
+    apply (subst tsbfix_2_tsbfix2)
+    by simp
+  show ?thesis
+    apply (subst f1, subst tsbFix2_def)
+    using tsbfix_contI assms by blast
+qed
+  
     
 
 
