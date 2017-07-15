@@ -2,10 +2,10 @@
     Author:       Dennis Slotboom
     e-mail:       dennis.slotboom@rwth-aachen.de
 
-    Description:  Definition of Alternating Bit Protocol on Timed Streams
+    Description:  Definition of the Components of the Alternating Bit Protocol on Timed Streams
 *)
 
-chapter {* Alternating Bit Protocol *}       
+chapter {* Components of the Alternating Bit Protocol *}
                                                             
 theory TimedABP
 imports "../TStream"
@@ -301,7 +301,7 @@ text {* #fds = min{#i, #fas+1} where fds = map(\<alpha>.ds, \<Pi>1), fas = \<alp
         when an acknowledgment is received then the next data next data element will eventually
         be transmitted given that there are more data elements to transmit *}
 lemma tssnd_ack2trans:
-  "#(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(tsSnd\<cdot>i\<cdot>as\<cdot>ack)))) 
+  "#(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(tsSnd\<cdot>i\<cdot>as\<cdot>ack))))
      = min (#(tsAbs\<cdot>i)) (lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>as))))"
 oops
 
