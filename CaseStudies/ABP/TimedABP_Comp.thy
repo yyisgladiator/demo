@@ -47,9 +47,17 @@ lemma assumes
   and "ds = tssnd\<cdot>msg\<cdot>as"
   and "as = tsProjSnd\<cdot>ds"
   shows "tsAbs\<cdot>(tsRecSnd\<cdot>ds) = tsAbs\<cdot>msg"
-  oops
+proof -
+  have f1: "tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(tssnd\<cdot>msg\<cdot>as))) \<sqsubseteq> tsAbs\<cdot>msg"
+    using assms(1) tsSender_def by auto
 
-    
+  have "#(tsAbs\<cdot>msg) \<le> #(tsAbs\<cdot>(tsRemDups\<cdot>as))" sorry
+  hence "#(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(tssnd\<cdot>msg\<cdot>as))))= #(tsAbs\<cdot>msg)"
+    by (smt assms(1) less2eq less_lnsuc mem_Collect_eq min.bounded_iff order_refl trans_lnle tsSender_def)
+  
+  thus ?thesis
+    by (simp add: assms(2) eq_slen_eq_and_less f1 tsrecsnd_insert) 
+qed
     
     
 (* stuff with medium *)
