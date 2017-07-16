@@ -58,12 +58,28 @@ text {*
    ds = output stream 
 *}
 
+(* application of set2tssnd_alt_bit? *)
+lemma tssnd_tsprojsnd_tsremdups:
+  "tsRemDups\<cdot>(tsProjSnd\<cdot>(send\<cdot>i\<cdot>as)) = tsProjSnd\<cdot>(tsRemDups\<cdot>(send\<cdot>i\<cdot>as))"
+sorry
+
 lemma tssnd2rec_inp2out: 
   assumes send_def: "send \<in> tsSender"
     and out_def: "ds = send\<cdot>i\<cdot>as"
     and acks_def: "as = tsProjSnd\<cdot>ds"
   shows "tsAbs\<cdot>(tsRecSnd\<cdot>ds) = tsAbs\<cdot>i"
 proof -
+  have "#(tsAbs\<cdot>(tsRemDups\<cdot>as)) = #(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(send\<cdot>i\<cdot>as))))"
+    by (metis acks_def out_def tsprojfst_tsabs_slen tsprojsnd_tsabs_slen tssnd_tsprojsnd_tsremdups)
+  thus "tsAbs\<cdot>(tsRecSnd\<cdot>ds) = tsAbs\<cdot>i"
+    by (metis eq_slen_eq_and_less min_rek out_def send_def set2tssnd_ack2trans 
+        set2tssnd_prefix_inp tsrecsnd_insert)
+qed
+
+(* another idea *)
+(*
+proof -
+  (* application of set2tssnd_alt_bit? *)
   have "#(tsAbs\<cdot>(send\<cdot>i\<cdot>as)) = \<infinity> \<Longrightarrow> #(tsAbs\<cdot>(tsProjSnd\<cdot>(tsRemDups\<cdot>(send\<cdot>i\<cdot>as)))) = \<infinity>"
     sorry
   hence "(#(tsAbs\<cdot>i) > #(tsAbs\<cdot>(tsRemDups\<cdot>as)) \<longrightarrow> #(tsAbs\<cdot>(send\<cdot>i\<cdot>as)) = \<infinity>) 
@@ -75,22 +91,30 @@ proof -
   thus "tsAbs\<cdot>(tsRecSnd\<cdot>ds) = tsAbs\<cdot>i"
     by (simp add: eq_slen_eq_and_less out_def send_def set2tssnd_prefix_inp tsrecsnd_insert)
 qed
-    
+*)
+  
 (* ----------------------------------------------------------------------- *)
 subsection {* complete composition *}
 (* ----------------------------------------------------------------------- *)
 
-  (* goal lemma *)    
-lemma assumes 
-      "tssnd \<in> tsSender"
-  and "#({True} \<ominus> ora1)=\<infinity>"
-  and "#({True} \<ominus> ora2)=\<infinity>"
-  
-  and "ds = tssnd\<cdot>msg\<cdot>as"
-  and "dr = tsMed\<cdot>ds\<cdot>ora1"
-  and "ar = tsProjSnd\<cdot>dr"
-  and "as = tsMed\<cdot>ar\<cdot>ora2"
-  shows "tsAbs\<cdot>(tsRecSnd\<cdot>dr) = tsAbs\<cdot>msg"
-  oops
+text {* 
+   i = input stream
+   as = acks stream (in sender)
+   ar = acks stream (from receiver)
+   ds = output stream (from sender)
+   dr = output stream (in receiver)
+   p1/p2 = oracle stream
+*}
+
+lemma tsAltBitPro_inp2out:
+  assumes "send \<in> tsSender"
+    and "#({True} \<ominus> p1) = \<infinity>"
+    and "#({True} \<ominus> p2) = \<infinity>"
+    and "ds = send\<cdot>i\<cdot>as"
+    and "dr = tsMed\<cdot>ds\<cdot>p1"
+    and "ar = tsProjSnd\<cdot>dr"
+    and "as = tsMed\<cdot>ar\<cdot>p2"
+  shows "tsAbs\<cdot>(tsRecSnd\<cdot>dr) = tsAbs\<cdot>i"
+oops
     
 end
