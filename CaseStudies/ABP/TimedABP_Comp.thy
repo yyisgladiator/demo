@@ -13,56 +13,72 @@ imports "../TimedABP"
 begin
 default_sort countable
 
+(* ----------------------------------------------------------------------- *)
+section {* definition of the set of sender *}
+(* ----------------------------------------------------------------------- *)
+
 type_synonym 'a sender = "('a tstream \<rightarrow> bool tstream  \<rightarrow> ('a \<times> bool) tstream)"
 
-definition tsSnd2Rec :: "'a sender \<rightarrow> 'a tstream \<rightarrow> 'a tstream" where
-"tsSnd2Rec \<equiv> \<Lambda> tssnd msg. snd (fix\<cdot>(\<Lambda> (acks, out). tsRec\<cdot>(delayFun\<cdot>(tssnd\<cdot>msg\<cdot>acks))))"
-
 definition tsSender :: "('a sender) set" where
-"tsSender = {tsSnd :: 'a tstream \<rightarrow> bool tstream \<rightarrow> ('a \<times> bool) tstream. 
+"tsSender = {send :: 'a tstream \<rightarrow> bool tstream \<rightarrow> ('a \<times> bool) tstream. 
   \<forall>i as. 
-  tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(tsSnd\<cdot>i\<cdot>as))) \<sqsubseteq> tsAbs\<cdot>i \<and> 
-  tsAbs\<cdot>(tsRemDups\<cdot>(tsProjSnd\<cdot>(tsRemDups\<cdot>(tsSnd\<cdot>i\<cdot>as)))) 
-    = tsAbs\<cdot>(tsProjSnd\<cdot>(tsRemDups\<cdot>(tsSnd\<cdot>i\<cdot>as))) \<and>
-  #(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(tsSnd\<cdot>i\<cdot>as)))) 
+  tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(send\<cdot>i\<cdot>as))) \<sqsubseteq> tsAbs\<cdot>i \<and> 
+  tsAbs\<cdot>(tsRemDups\<cdot>(tsProjSnd\<cdot>(tsRemDups\<cdot>(send\<cdot>i\<cdot>as)))) 
+    = tsAbs\<cdot>(tsProjSnd\<cdot>(tsRemDups\<cdot>(send\<cdot>i\<cdot>as))) \<and>
+  #(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(send\<cdot>i\<cdot>as)))) 
     = min (#(tsAbs\<cdot>i)) (lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>as)))) \<and>
-  (#(tsAbs\<cdot>i) > #(tsAbs\<cdot>(tsRemDups\<cdot>as)) \<longrightarrow> #(tsAbs\<cdot>(tsSnd\<cdot>i\<cdot>as)) = \<infinity>)
+  (#(tsAbs\<cdot>i) > #(tsAbs\<cdot>(tsRemDups\<cdot>as)) \<longrightarrow> #(tsAbs\<cdot>(send\<cdot>i\<cdot>as)) = \<infinity>)
 }"
 
-lemma tssnd2rec_inp2out: assumes "tssnd \<in> tsSender"
-  shows "tsAbs\<cdot>(tsSnd2Rec\<cdot>tssnd\<cdot>msg) = tsAbs\<cdot>msg"
-  apply (simp add: tsSnd2Rec_def)
-  oops
-
-    (* TADA *)
-lemma 
-  fixes send:: "'a sender"
-  assumes "send\<in>tsSender"
+lemma set2tssnd_prefix_inp: assumes "send \<in> tsSender"
   shows "tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(send\<cdot>i\<cdot>as))) \<sqsubseteq> tsAbs\<cdot>i"
   using assms tsSender_def by auto
 
-  (* goal lemma *)    
-lemma assumes 
-      "tssnd \<in> tsSender"
-  and "ds = tssnd\<cdot>msg\<cdot>as"
-  and "as = tsProjSnd\<cdot>ds"
-  shows "tsAbs\<cdot>(tsRecSnd\<cdot>ds) = tsAbs\<cdot>msg"
-proof -
-  have f1: "tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(tssnd\<cdot>msg\<cdot>as))) \<sqsubseteq> tsAbs\<cdot>msg"
-    using assms(1) tsSender_def by auto
+lemma set2tssnd_alt_bit: assumes "send \<in> tsSender"
+  shows "tsAbs\<cdot>(tsRemDups\<cdot>(tsProjSnd\<cdot>(tsRemDups\<cdot>(send\<cdot>i\<cdot>as)))) 
+    = tsAbs\<cdot>(tsProjSnd\<cdot>(tsRemDups\<cdot>(send\<cdot>i\<cdot>as)))"
+  using assms tsSender_def by auto
 
-  have "#(tsAbs\<cdot>msg) \<le> #(tsAbs\<cdot>(tsRemDups\<cdot>as))" sorry
-  hence "#(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(tssnd\<cdot>msg\<cdot>as))))= #(tsAbs\<cdot>msg)"
-    by (smt assms(1) less2eq less_lnsuc mem_Collect_eq min.bounded_iff order_refl trans_lnle tsSender_def)
-  
-  thus ?thesis
-    by (simp add: assms(2) eq_slen_eq_and_less f1 tsrecsnd_insert) 
+lemma set2tssnd_ack2trans: assumes "send \<in> tsSender"
+  shows "#(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(send\<cdot>i\<cdot>as)))) 
+    = min (#(tsAbs\<cdot>i)) (lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>as))))"
+  using assms tsSender_def by auto
+
+lemma set2tssnd_nack2inftrans: assumes "send \<in> tsSender"
+  shows "(#(tsAbs\<cdot>i) > #(tsAbs\<cdot>(tsRemDups\<cdot>as)) \<longrightarrow> #(tsAbs\<cdot>(send\<cdot>i\<cdot>as)) = \<infinity>)"
+  using assms tsSender_def by auto
+
+(* ----------------------------------------------------------------------- *)
+subsection {* sender and receiver composition *}
+(* ----------------------------------------------------------------------- *)
+
+text {* 
+   i = input stream
+   as = acks stream
+   ds = output stream 
+*}
+
+lemma tssnd2rec_inp2out: 
+  assumes send_def: "send \<in> tsSender"
+    and out_def: "ds = send\<cdot>i\<cdot>as"
+    and acks_def: "as = tsProjSnd\<cdot>ds"
+  shows "tsAbs\<cdot>(tsRecSnd\<cdot>ds) = tsAbs\<cdot>i"
+proof -
+  have "#(tsAbs\<cdot>(send\<cdot>i\<cdot>as)) = \<infinity> \<Longrightarrow> #(tsAbs\<cdot>(tsProjSnd\<cdot>(tsRemDups\<cdot>(send\<cdot>i\<cdot>as)))) = \<infinity>"
+    sorry
+  hence "(#(tsAbs\<cdot>i) > #(tsAbs\<cdot>(tsRemDups\<cdot>as)) \<longrightarrow> #(tsAbs\<cdot>(send\<cdot>i\<cdot>as)) = \<infinity>) 
+          \<Longrightarrow> #(tsAbs\<cdot>i) \<le> lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>as)))"
+    by (metis (no_types, hide_lams) dual_order.trans inf_ub leI less_lnsuc min_def 
+        out_def send_def set2tssnd_ack2trans tsprojfst_tsabs_slen tsprojsnd_tsabs_slen)
+  hence "#(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(send\<cdot>i\<cdot>as)))) = #(tsAbs\<cdot>i)"
+    by (metis min_def send_def set2tssnd_ack2trans set2tssnd_nack2inftrans)
+  thus "tsAbs\<cdot>(tsRecSnd\<cdot>ds) = tsAbs\<cdot>i"
+    by (simp add: eq_slen_eq_and_less out_def send_def set2tssnd_prefix_inp tsrecsnd_insert)
 qed
     
-    
-(* stuff with medium *)
-
-
+(* ----------------------------------------------------------------------- *)
+subsection {* complete composition *}
+(* ----------------------------------------------------------------------- *)
 
   (* goal lemma *)    
 lemma assumes 
