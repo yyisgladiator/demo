@@ -203,6 +203,23 @@ definition tspfCompOc :: "'m TSPF \<Rightarrow> 'm TSPF \<Rightarrow> channel se
 definition tspfCompC :: "'m TSPF \<Rightarrow> 'm TSPF \<Rightarrow> channel set" where
 "tspfCompC f1 f2 = tspfDom\<cdot>f1 \<union> tspfDom\<cdot>f2 \<union> tspfRan\<cdot>f1 \<union> tspfRan\<cdot>f2"
 
+
+(* helper for the composition *)
+definition tspfCompH :: "'m TSPF \<Rightarrow> 'm TSPF \<Rightarrow> 'm TSB \<Rightarrow> 'm TSB  \<rightarrow> 'm TSB" where
+"tspfCompH f1 f2 x = (\<Lambda> z. (f1\<rightleftharpoons>((x \<uplus> z)  \<bar> tspfDom\<cdot>f1)) \<uplus>  (f2\<rightleftharpoons>((x \<uplus> z)  \<bar> tspfDom\<cdot>f2)))" 
+
+abbreviation iter_tspfCompH :: "'a TSPF \<Rightarrow> 'a TSPF \<Rightarrow> nat \<Rightarrow> 'a TSB  \<Rightarrow> 'a TSB" where
+"iter_tspfCompH f1 f2 i \<equiv> (\<lambda> x. iterate i\<cdot>(tspfCompH f1 f2 x)\<cdot>(tsbLeast (tspfRan\<cdot>f1 \<union> tspfRan\<cdot>f2)))"
+
+(* general composition operator for TSPFs *)
+ (* NOTE: Does not always deliver an TSPF *)
+definition tspfComp :: "'m TSPF \<Rightarrow> 'm TSPF \<Rightarrow> 'm TSPF" (infixl "\<otimes>" 40) where
+"tspfComp f1 f2 \<equiv>
+let I = tspfCompI f1 f2;
+    Oc = (tspfRan\<cdot>f1 \<union> tspfRan\<cdot>f2)
+in Abs_CTSPF (\<lambda> x. (tsbDom\<cdot>x = I) \<leadsto> tsbFix (tspfCompH f1 f2 x) Oc)"
+
+
 (*
 
 (* checks that neither f1 nor f2 feed back into themselves and that their outputs don't collide *)
@@ -559,15 +576,19 @@ lemma tspf_ran_lub_eq: assumes "chain Y"
   shows "tspfRan\<cdot>(\<Squnion>i. Y i) = tspfRan\<cdot>(Y i)"
   using assms is_ub_thelub tspf_ran_below by blast
 
-lemma tspf_ran_2_sbdom [simp]: assumes "(Rep_CTSPF F) a = Some b"
+lemma tspf_ran_2_tsbdom [simp]: assumes "(Rep_CTSPF F) a = Some b"
   shows "tspfRan\<cdot>F = tsbDom\<cdot>b"
   by (metis (no_types, lifting) Abs_cfun_inverse2 assms ranI someI_ex tspfRan_def 
             tspf_raneq_to_sbdomeq tspf_ran_cont)
 
 lemma spfran_least: "tspfRan\<cdot>f = tsbDom\<cdot>(f\<rightleftharpoons> (tsbLeast (tspfDom\<cdot>f)))"
   apply (simp add: tspfRan_def)
-  by (metis (no_types) domD option.sel tspf_least_in_dom tspf_ran_2_sbdom tspf_ran_insert)
+  by (metis (no_types) domD option.sel tspf_least_in_dom tspf_ran_2_tsbdom tspf_ran_insert)
     
+lemma tspf_ran_2_tsbdom2 [simp]: assumes "tsbDom\<cdot>tb = tspfDom\<cdot>f"
+  shows "tsbDom\<cdot>(f\<rightleftharpoons>tb) = tspfRan\<cdot>f"
+  by (metis (no_types) assms domIff option.collapse tsbleast_tsdom tspf_least_in_dom 
+             tspf_ran_2_tsbdom tspf_sbdomeq_to_domeq)
     
 
   subsection \<open>tspfType\<close>
@@ -912,7 +933,127 @@ proof -
     using tsbfix_contI assms by blast
 qed
   
+  
+section \<open>tspfComp\<close>  
+  
+  subsection \<open>pre\<close>
+
+lemma tspfcomp2_lubiter: "tspfComp f1 f2 = 
+  Abs_CTSPF (\<lambda> x. (tsbDom\<cdot>x = tspfCompI f1 f2) 
+      \<leadsto> (\<Squnion>i. iterate i\<cdot>(tspfCompH f1 f2 x)\<cdot>(tsbLeast (tspfRan\<cdot>f1 \<union> tspfRan\<cdot>f2))))"
+  apply (subst tspfComp_def, subst tsbFix_def)
+  by (simp)
     
+lemma tspfcomp2_iterCompH: "tspfComp f1 f2 = 
+  Abs_CTSPF (\<lambda> x. (tsbDom\<cdot>x = tspfCompI f1 f2) 
+      \<leadsto> (\<Squnion>i. iter_tspfCompH f1 f2 i x))"
+  by (simp add: tspfcomp2_lubiter)
 
 
+  subsection \<open>tspfCompH\<close>
+  (* lemmas about the composition helper *)
+  (* the proofs below are very comparable to those in SPF_Comp.thy *)  
+  thm tspfCompH_def
+    
+subsubsection \<open>cont\<close>
+
+lemma tspfcomph_cont [simp]: 
+  shows "cont (\<lambda> z. (f1\<rightleftharpoons>((x \<uplus> z)  \<bar> tspfDom\<cdot>f1)) \<uplus>  (f2\<rightleftharpoons>((x \<uplus> z)  \<bar> tspfDom\<cdot>f2)))"
+proof -
+  have f1: "cont (\<lambda> z. (Rep_cfun (Rep_TSPF f1)\<rightharpoonup>((x \<uplus> z)\<bar>tspfDom\<cdot>f1)))"
+    by (metis (no_types) cont_Rep_cfun2 cont_compose op_the_cont)
+  moreover 
+  have f2: "cont (\<lambda> z. (Rep_cfun (Rep_TSPF f2)\<rightharpoonup>((x \<uplus> z)\<bar>tspfDom\<cdot>f2)))"
+    by (metis (no_types) cont_Rep_cfun2 cont_compose op_the_cont)
+  ultimately
+  have "cont (\<lambda>z. tsbUnion\<cdot>(Rep_cfun (Rep_TSPF f1)\<rightharpoonup>((x \<uplus> z)\<bar>tspfDom\<cdot>f1))) 
+        \<and> cont (\<lambda>z. Rep_TSPF f2\<cdot>((x \<uplus> z)\<bar>tspfDom\<cdot>f2))"
+    by simp
+  hence "cont (\<lambda> z. (Rep_cfun (Rep_TSPF f1)\<rightharpoonup>((x \<uplus> z)\<bar>tspfDom\<cdot>f1)) 
+                          \<uplus> (Rep_cfun (Rep_TSPF f2)\<rightharpoonup>((x \<uplus> z)\<bar>tspfDom\<cdot>f2)))"
+    using cont2cont_APP cont_compose op_the_cont by blast
+  thus ?thesis
+    by (simp add: Rep_CTSPF_def)
+qed
+  
+lemma tspfcomph_cont2 [simp]:
+  shows "cont (\<lambda> x. (f1\<rightleftharpoons>((x \<uplus> z)  \<bar> tspfDom\<cdot>f1)) \<uplus>  (f2\<rightleftharpoons>((x \<uplus> z)  \<bar> tspfDom\<cdot>f2)))"
+proof -
+  have f0: "cont (\<lambda>x. (x \<uplus> z))"
+    by simp
+  have f1: "cont (\<lambda> x. (Rep_cfun (Rep_TSPF f1)\<rightharpoonup>((x \<uplus> z)\<bar>tspfDom\<cdot>f1)))"
+    by (metis (no_types) f0 cont_Rep_cfun2 cont_compose op_the_cont)
+  moreover
+  have f2: "cont (\<lambda> x. (Rep_cfun (Rep_TSPF f2)\<rightharpoonup>((x \<uplus> z)\<bar>tspfDom\<cdot>f2)))"
+    by (metis (no_types) f0 cont_Rep_cfun2 cont_compose op_the_cont)
+  ultimately
+  have "cont (\<lambda>x. tsbUnion\<cdot>(Rep_cfun (Rep_TSPF f1)\<rightharpoonup>((x \<uplus> z)\<bar>tspfDom\<cdot>f1))) 
+        \<and> cont (\<lambda>x. Rep_TSPF f2\<cdot>((x \<uplus> z)\<bar>tspfDom\<cdot>f2))"
+    by simp
+  hence "cont (\<lambda> x. (Rep_cfun (Rep_TSPF f1)\<rightharpoonup>((x \<uplus> z)\<bar>tspfDom\<cdot>f1)) 
+                    \<uplus> (Rep_cfun (Rep_TSPF f2)\<rightharpoonup>((x \<uplus> z)\<bar>tspfDom\<cdot>f2)))"
+    using cont2cont_APP cont_compose op_the_cont by blast
+  thus ?thesis
+    by (simp add: Rep_CTSPF_def)
+qed
+  
+lemma tspfcomph_cont_x [simp]: "cont (\<lambda> x. tspfCompH f1 f2 x)"
+  apply (subst tspfCompH_def)
+  by (simp only: cont2cont_LAM tspfcomph_cont tspfcomph_cont2)
+    
+lemma tspfcomph_insert: "tspfCompH f1 f2 x\<cdot>z= ((f1\<rightleftharpoons>((x \<uplus> z)  \<bar> tspfDom\<cdot>f1)) \<uplus>  (f2\<rightleftharpoons>((x \<uplus> z)  \<bar> tspfDom\<cdot>f2)))"
+  by (simp add: tspfCompH_def)
+
+    
+subsubsection \<open>dom\<close>
+  
+lemma tspfcomph_dom [simp]: assumes "tsbDom\<cdot>x = tspfCompI f1 f2"
+                            and "tsbDom\<cdot>tb = (tspfRan\<cdot>f1 \<union> tspfRan\<cdot>f2)"
+  shows "tsbDom\<cdot>((tspfCompH f1 f2 x)\<cdot>tb) = (tspfRan\<cdot>f1 \<union> tspfRan\<cdot>f2)"
+proof -
+  have f0: "tspfDom\<cdot>f1 \<union> tspfDom\<cdot>f2 - (tspfRan\<cdot>f1 \<union> tspfRan\<cdot>f2) = tsbDom\<cdot>x"
+        using assms(1) tspfCompI_def by blast
+  have f1: "tsbDom\<cdot>(f1 \<rightleftharpoons> ((x \<uplus> tb)  \<bar> tspfDom\<cdot>f1)) = tspfRan\<cdot>f1"
+    by (metis Un_Diff_cancel2 Un_upper1 assms(2) f0 sup.coboundedI1 tsbunion_dom 
+              tspf_ran_2_tsbdom2 tsresrict_dom2)
+  have f2: "tsbDom\<cdot>(f2 \<rightleftharpoons> ((x \<uplus> tb)  \<bar> tspfDom\<cdot>f2)) = tspfRan\<cdot>f2"
+    proof -
+      have "tspfDom\<cdot>f2 \<subseteq> tsbDom\<cdot>(x \<uplus> tb)"
+        using assms(2) f0 by auto
+      then show ?thesis
+        by (meson tspf_ran_2_tsbdom2 tsresrict_dom2)
+    qed
+    show ?thesis
+      by (simp add: f1 f2 assms tspfCompH_def)
+qed
+    
+  
+  
+  subsection \<open>iter_tspfCompH\<close>      
+    
+lemma iter_tspfcomph_cont [simp]: "cont (\<lambda> x. iter_tspfCompH f1 f2 i x)"
+  by simp
+    
+lemma iter_tspfcomph_chain [simp]: assumes "tsbDom\<cdot>x = tspfCompI f1 f2"
+  shows "chain (\<lambda> i. iter_tspfCompH f1 f2 i x)"
+  by (simp add: assms tsbIterate_chain)    
+    
+lemma iter_tspfcomph_dom [simp]: assumes "tsbDom\<cdot>x = tspfCompI f1 f2"
+  shows "tsbDom\<cdot>(iter_tspfCompH f1 f2 i x) = (tspfRan\<cdot>f1 \<union> tspfRan\<cdot>f2)"
+  by (simp add: assms iter_tsbfix2_dom)
+
+lemma lub_iter_tspfcomph_dom [simp]: assumes "tsbDom\<cdot>x = tspfCompI f1 f2"
+  shows "tsbDom\<cdot>(\<Squnion> i. iter_tspfCompH f1 f2 i x) = (tspfRan\<cdot>f1 \<union> tspfRan\<cdot>f2)"
+  by (simp add: assms lub_iter_tsbfix2_dom)
+    
+    
+subsection \<open>basic properties\<close>
+    
+lemma tspfcomp_cont [simp]: 
+  shows "cont (\<lambda> x. (tsbDom\<cdot>x = (tspfCompI f1 f2)) 
+                \<leadsto> tsbFix (tspfCompH f1 f2 x) (tspfRan\<cdot>f1 \<union> tspfRan\<cdot>f2))"
+  by simp
+  
+    
+    
 end

@@ -931,7 +931,7 @@ lemma tsbunion_restrict [simp]: assumes "(tsbDom\<cdot>y)\<inter>cs2 = {}"
   shows "(x\<uplus>y) \<bar> cs2 = x \<bar> cs2"
   using assms by(simp add: tsbunion_insert tsbrestrict_insert tsbDom_def)
     
-lemma tsbunion_restrict4 [simp]: "(tb1 \<uplus> tb2) \<bar> cs = (tb1 \<bar> cs) \<uplus> (tb2 \<bar> cs)"
+lemma tsbunion_restrict4: "(tb1 \<uplus> tb2) \<bar> cs = (tb1 \<bar> cs) \<uplus> (tb2 \<bar> cs)"
 proof -
   { fix cc :: channel
     have "(Rep_TSB tb1 ++ Rep_TSB tb2) |` cs \<Omega> = Rep_TSB tb1 |` cs ++ Rep_TSB tb2 |` cs \<Omega> \<or> ((Rep_TSB tb1 ++ Rep_TSB tb2) |` cs) cc = (Rep_TSB tb1 |` cs ++ Rep_TSB tb2 |` cs) cc"
