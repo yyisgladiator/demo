@@ -132,7 +132,7 @@ subsubsection \<open>apply\<close>
 
 (* harpoon and Rep operation all in one for simpler SPF on SB applications *)
 abbreviation theRep_abbrv :: "'a TSPF \<Rightarrow> 'a TSB \<Rightarrow> 'a TSB " ("_\<rightleftharpoons>_") where
-"(f \<rightleftharpoons> s) \<equiv> the ((Rep_CTSPF f) s)"
+"(f \<rightleftharpoons> s) \<equiv> (the ((Rep_CTSPF f) s))"
 
 
 subsubsection \<open>fix\<close>
@@ -192,7 +192,7 @@ definition tspfCompL :: "'m TSPF \<Rightarrow> 'm TSPF \<Rightarrow> channel set
 
 (* set of feedback channels *) (* TODO: rename *)
 definition tspfComp_pL :: "'m TSPF \<Rightarrow> 'm TSPF \<Rightarrow> channel set" where
-"tspfComp_pL f1 f2 \<equiv> (tspfDom\<cdot>f1 \<inter> tspfRan\<cdot>f1) 
+"tspfComp_pL f1 f2 \<equiv> (tspfDom\<cdot>f1 \<inter> tspfRan\<cdot>f1) \<union> (tspfDom\<cdot>f2 \<inter> tspfRan\<cdot>f1)
                       \<union> (tspfDom\<cdot>f1 \<inter> tspfRan\<cdot>f2) \<union> (tspfDom\<cdot>f2 \<inter> tspfRan\<cdot>f2)"
 
 (* the output channels *)
