@@ -136,10 +136,12 @@ lemma tssnd_nbot [simp]: "msg\<noteq>\<bottom> \<Longrightarrow> acks\<noteq>\<b
   apply (metis tsmlscons_nbot_rev tssnd_mlscons_ack)
   by (metis tsmlscons_bot2 tsmlscons_nbot tssnd_mlscons_nack up_defined)
 
-lemma tssnd_tstickcount: "acks\<noteq>\<bottom> \<Longrightarrow> #\<surd>msg \<le> #\<surd>(tsSnd\<cdot>msg\<cdot>acks\<cdot>(Discr ack))"
+lemma tssnd_tstickcount: 
+  "#(Rep_tstream msg) \<le> #(Rep_tstream acks) \<Longrightarrow> #\<surd>msg \<le> #\<surd>(tsSnd\<cdot>msg\<cdot>acks\<cdot>(Discr ack))"
 oops
 
-lemma tssnd_tsabs_slen: "#(tsAbs\<cdot>msg) \<le> #(tsAbs\<cdot>(tsSnd\<cdot>msg\<cdot>acks\<cdot>ack))"
+lemma tssnd_tsabs_slen: 
+  "#(Rep_tstream msg) \<le> #(Rep_tstream acks) \<Longrightarrow> #(tsAbs\<cdot>msg) \<le> #(tsAbs\<cdot>(tsSnd\<cdot>msg\<cdot>acks\<cdot>ack))"
 oops
 
 lemma tssnd_inftick: "acks\<noteq>\<bottom> \<Longrightarrow> tsSnd\<cdot>tsInfTick\<cdot>acks\<cdot>ack = tsInfTick"
@@ -220,36 +222,12 @@ text {* If infinite messages will be sent infinite messages will be transmitted.
 lemma tsmed_tsabs_slen_inf [simp]: assumes "#({True} \<ominus> ora)=\<infinity>" and "#(tsAbs\<cdot>msg)=\<infinity>" 
   shows "#(tsAbs\<cdot>(tsMed\<cdot>msg\<cdot>ora)) = \<infinity>"
   oops
-    
-    
 
 lemma tsmed_map: "tsMed\<cdot>(tsMap f\<cdot>msg)\<cdot>ora = tsMap f\<cdot>(tsMed\<cdot>msg\<cdot>ora)"
-  proof(induction msg arbitrary: ora)
-    case adm
-    then show ?case by simp
-  next
-    case bottom
-    then show ?case by simp
-  next
-    case (delayfun msg)
-    then show ?case
-      by (metis tsmap_delayfun tsmed_delayfun tsmed_strict(2))
-  next
-    case (mlscons msg t)
-    then show ?case sorry
-  qed    
-
-lemma tsmes_ora_exhaust: 
-  assumes "ora = \<epsilon> \<Longrightarrow> P" and case2:"(ora = sconc (\<up>True)\<cdot>(srt\<cdot>ora) \<Longrightarrow> P)" and  "ora = sconc (\<up>False)\<cdot>(srt\<cdot>ora) \<Longrightarrow> P" 
-  shows "P"
-  by (metis assms(1) assms(3) case2 surj_scons)
+  oops
 
 lemma tsmed_tsdom: "#ora=\<infinity> \<Longrightarrow> tsDom\<cdot>(tsMed\<cdot>msg\<cdot>ora) \<subseteq> tsDom\<cdot>msg"
-  apply(induction msg arbitrary: ora)
-    apply simp_all
-  apply (metis Inf'_neq_0 slen_empty_eq tsdom_delayfun tsmed_delayfun)
-  apply(rule tsmes_ora_exhaust [of ora])
-    oops
+  oops
 
 (* ----------------------------------------------------------------------- *)
 subsection {* receiver *}
@@ -363,17 +341,15 @@ text {* equivalence classes: empty tstream, finite tstream, infinite tstream *}
 subsection {* sender *}
 (* ----------------------------------------------------------------------- *)
 
-lift_definition tsSndExampInp_1 :: "nat tstream" is
-  "<[Msg 1, Msg 2, \<surd>, Msg 1, \<surd>]>\<surd>"
-done
+definition tsSndExampInp_1 :: "nat tstream" where
+  "tsSndExampInp_1 = <[Msg 1, Msg 2, \<surd>, Msg 1, \<surd>]>\<surd>"
 
-lift_definition tsSndExampInp_2 :: "bool tstream" is
-  "<[\<surd>, Msg True, Msg True, \<surd>, Msg False, \<surd>, Msg True, \<surd>]>\<surd>"
-done
 
-lift_definition tsSndExampOut :: "(nat \<times> bool) tstream" is
-  "<[Msg (1, True), \<surd>,  Msg (2, False), Msg (2, False), \<surd>, \<surd>, Msg (1, True), \<surd>, \<surd>]>\<surd>"
-done
+definition tsSndExampInp_2 :: "bool tstream" where
+  "tsSndExampInp_2 = <[\<surd>, Msg True, Msg True, \<surd>, Msg False, \<surd>, Msg True, \<surd>]>\<surd>"
+
+definition tsSndExampOut :: "(nat \<times> bool) tstream" where
+  "tsSndExampOut = <[Msg (1, True), \<surd>,  Msg (2, False), Msg (2, False), \<surd>, \<surd>, Msg (1, True), \<surd>, \<surd>]>\<surd>"
 
 (* ToDo: testing lemmata for sender *)
 
@@ -393,13 +369,13 @@ oops
 subsection {* medium *}
 (* ----------------------------------------------------------------------- *)
 
-lift_definition tsMedExampInp :: "nat tstream" is
-  "<[Msg 1, \<surd>, Msg 2, \<surd>, Msg 3, \<surd>]>\<surd>"
-done
+definition tsMedExampInp :: "nat tstream" where
+  "tsMedExampInp = <[Msg 1, \<surd>, Msg 2, \<surd>, Msg 3, \<surd>]>\<surd>"
 
-lift_definition tsMedExampOut :: "nat tstream" is
-  "<[Msg 1, \<surd>, \<surd>, Msg 3, \<surd>]>\<surd>"
-done
+
+definition tsMedExampOut :: "nat tstream" where
+  "tsMedExampOut = <[Msg 1, \<surd>, \<surd>, Msg 3, \<surd>]>\<surd>"
+
 
 lemma tsmed_test_bot: "tsMed\<cdot>\<bottom>\<cdot>((\<up>True) \<infinity>) = \<bottom>"
 by (simp add: tsmed_insert)
@@ -420,17 +396,14 @@ oops
 subsection {* receiver *}
 (* ----------------------------------------------------------------------- *)
 
-lift_definition tsRecExampInp :: "(nat \<times> bool) tstream" is
-  "<[Msg (1, True), Msg (1, True), \<surd>, Msg (1, True), \<surd>, Msg (1, False), \<surd>]>\<surd>"
-done
+definition tsRecExampInp :: "(nat \<times> bool) tstream" where
+  "tsRecExampInp = <[Msg (1, True), Msg (1, True), \<surd>, Msg (1, True), \<surd>, Msg (1, False), \<surd>]>\<surd>"
 
-lift_definition tsRecExampOut_1 :: "bool tstream" is
-  "<[Msg True, Msg True, \<surd>, Msg True, \<surd>, Msg False, \<surd>]>\<surd>"
-done
+definition tsRecExampOut_1 :: "bool tstream" where
+  "tsRecExampOut_1 = <[Msg True, Msg True, \<surd>, Msg True, \<surd>, Msg False, \<surd>]>\<surd>"
 
-lift_definition tsRecExampOut_2 :: "nat tstream" is
-  "<[Msg 1, \<surd>, \<surd>, Msg 1, \<surd>]>\<surd>"
-done
+definition tsRecExampOut_2 :: "nat tstream" where
+  "tsRecExampOut_2 = <[Msg 1, \<surd>, \<surd>, Msg 1, \<surd>]>\<surd>"
 
 (* ToDo: testing lemmata for receiver *)
 
