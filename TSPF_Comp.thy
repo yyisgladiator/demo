@@ -13,7 +13,7 @@ begin
 (* ----------------------------------------------------------------------- *)
 section \<open>definitions\<close>
 (* ----------------------------------------------------------------------- *)
-  
+
   (* true if f1 f2 can be composed parallely *)
 abbreviation parcomp_well :: "'m TSPF \<Rightarrow> 'm TSPF \<Rightarrow> bool" where
 "parcomp_well f1 f2 \<equiv> (tspfCompL f1 f2 = {}) \<and> (tspfRan\<cdot>f1 \<inter> tspfRan\<cdot>f2 = {})"
@@ -23,6 +23,15 @@ abbreviation sercomp_well :: "'m TSPF \<Rightarrow> 'm TSPF \<Rightarrow> bool" 
                         \<and> (tspfDom\<cdot>f1 \<inter> tspfRan\<cdot>f1 = {})
                         \<and> (tspfDom\<cdot>f2 \<inter> tspfRan\<cdot>f2 = {})
                         \<and> (tspfDom\<cdot>f1 \<inter> tspfRan\<cdot>f2 = {})"
+
+subsection \<open>special operators\<close>
+
+definition tspfParComp :: "'m TSPF \<Rightarrow> 'm TSPF \<Rightarrow> 'm TSPF"  ("_\<parallel>_") where
+"tspfParComp f1 f2 \<equiv> Abs_CTSPF (\<lambda> x. (tsbDom\<cdot>x = (tspfDom\<cdot>f1 \<union> tspfDom\<cdot>f2)) \<leadsto> ((f1 \<rightleftharpoons> (x \<bar> tspfDom\<cdot>f1)) \<uplus> (f2 \<rightleftharpoons> (x \<bar> tspfDom\<cdot>f2))))"
+
+definition tspfSerComp :: "'m TSPF \<Rightarrow> 'm TSPF \<Rightarrow> 'm TSPF"  ("_\<circ>_") where
+"tspfSerComp f1 f2 \<equiv> Abs_CTSPF (\<lambda> x. (tsbDom\<cdot>x = tspfDom\<cdot>f1) \<leadsto> (f2 \<rightleftharpoons> (f1 \<rightleftharpoons> x)))"
+
 
 (* ----------------------------------------------------------------------- *)
 section \<open>parallel-comp\<close>
@@ -170,21 +179,46 @@ proof -
     apply (subst f1)
     by meson
 qed
-  
+
+(* should be ported to TSB or TSPF *)
+lemma if_then_mono_tspf:  assumes "monofun g"
+  shows "monofun (\<lambda>b. (tsbDom\<cdot>b = In)\<leadsto>g b)"
+proof(rule monofunI)
+  fix x y :: "'a TSB"
+  assume "x\<sqsubseteq>y"
+  hence "tsbDom\<cdot>x = tsbDom\<cdot>y" using tsbdom_below by blast
+  thus "(tsbDom\<cdot>x = In)\<leadsto>g x \<sqsubseteq> (tsbDom\<cdot>y = In)\<leadsto>g y"
+  proof -
+    have "g x \<sqsubseteq> g y"
+      by (meson \<open>x \<sqsubseteq> y\<close> assms monofun_def)
+    then show ?thesis
+      by (simp add: \<open>tsbDom\<cdot>x = tsbDom\<cdot>y\<close> some_below)
+  qed
+qed  
+
+(* should be ported to TSB or TSPF *)  
+lemma if_then_cont_tspf: assumes "cont g"
+  shows "cont (\<lambda>b. (tsbDom\<cdot>b = In)\<leadsto>g b)"
+proof(rule contI2)
+  show "monofun (\<lambda>b. (tsbDom\<cdot>b = In)\<leadsto>g b)"  using assms cont2mono if_then_mono_tspf by blast
+  thus " \<forall>Y. chain Y \<longrightarrow> (tsbDom\<cdot>(\<Squnion>i. Y i) = In)\<leadsto>g (\<Squnion>i. Y i) \<sqsubseteq> (\<Squnion>i. (tsbDom\<cdot>(Y i) = In)\<leadsto>g (Y i))"
+    using assms if_then_lub2 po_class.chain_def by auto
+qed
   
 lemma parallel_iterconst_cont [simp]: "cont (\<lambda> x. (tsbDom\<cdot>x = (tspfDom\<cdot>f1 \<union> tspfDom\<cdot>f2)) 
                         \<leadsto> ((f1\<rightleftharpoons>(x \<bar> tspfDom\<cdot>f1)) \<uplus>  (f2\<rightleftharpoons>(x \<bar> tspfDom\<cdot>f2))))"
 proof -
-  have "cont (\<lambda>s. (Rep_cfun (Rep_TSPF f1))\<rightharpoonup>(s\<bar>tspfDom\<cdot>f1))"
-     by (metis (no_types) cont_Rep_cfun2 cont_compose op_the_cont)
-   hence "cont (\<lambda>s. tsbUnion\<cdot> (s  \<uplus>  ((Rep_cfun (Rep_TSPF f1))\<rightharpoonup>(s\<bar>tspfDom\<cdot>f1)))) \<and> cont (\<lambda>s. Rep_TSPF f2\<cdot>(s\<bar>tspfDom\<cdot>f2))"
-     by simp
-   hence "cont (\<lambda>s. s  \<uplus>  ((Rep_cfun (Rep_TSPF f1))\<rightharpoonup>(s\<bar>tspfDom\<cdot>f1))   \<uplus>  ((Rep_cfun (Rep_TSPF f2))\<rightharpoonup>(s\<bar>tspfDom\<cdot>f2))  )"
-     using cont2cont_APP cont_compose op_the_cont by blast 
-   thus ?thesis
-     (* delayed as this can also be proven by @mw *)
-     sorry
-  qed
+  have "cont (\<lambda> s. (Rep_cfun (Rep_TSPF f1))\<rightharpoonup>(s\<bar>tspfDom\<cdot>f1))" 
+    using cont_Rep_cfun2 cont_compose by force
+  moreover have "cont (\<lambda> s. (Rep_cfun (Rep_TSPF f2))\<rightharpoonup>(s\<bar>tspfDom\<cdot>f2))"
+    using cont_Rep_cfun2 cont_compose by force
+  ultimately have "cont (\<lambda> s. ((Rep_cfun (Rep_TSPF f1))\<rightharpoonup>(s\<bar>tspfDom\<cdot>f1)) \<uplus> ((Rep_cfun (Rep_TSPF f2))\<rightharpoonup>(s\<bar>tspfDom\<cdot>f2)))"
+    using cont2cont_APP cont_Rep_cfun2 cont_compose by blast
+  hence "cont (\<lambda> s. (f1\<rightleftharpoons>(s \<bar> tspfDom\<cdot>f1)) \<uplus> (f2\<rightleftharpoons>(s \<bar> tspfDom\<cdot>f2)))"
+    by (simp add: Rep_CTSPF_def)  
+  thus ?thesis
+    by(simp add: if_then_cont_tspf)
+qed
     
 (* \<And>b. tsbDom\<cdot>b = tspfDom\<cdot>f1 \<union> tspfDom\<cdot>f2 \<Longrightarrow> #\<surd>tsb b  \<le> #\<surd>tsb f1\<rightleftharpoons>b \<bar> tspfDom\<cdot>f1 \<uplus> f2\<rightleftharpoons>b \<bar> tspfDom\<cdot>f2  *)
 
@@ -240,7 +274,47 @@ lemma tspfcomp_parallel_getch2: assumes "parcomp_well f1 f2"
   apply (rule tsbunion_getchR)
   by (metis assms(1) assms(2) assms(3) parcomp_domranf1 tspfcomp_I_commu tspfcomp_L_commu)
 
+    
+subsection \<open>special parallel operator\<close>
 
+lemma tspfParComp_dom: assumes "parcomp_well f1 f2"
+  shows "tspfDom\<cdot>(tspfParComp f1 f2) = tspfDom\<cdot>f1 \<union> tspfDom\<cdot>f2"
+proof -
+  have f1: "Rep_CTSPF f1\<parallel>f2 (tsbLeast (tspfDom\<cdot>f1\<parallel>f2)) \<noteq> None"
+    by (metis (full_types) domIff tspf_least_in_dom)
+  have "(\<lambda>t. (tsbDom\<cdot>t = tspfDom\<cdot>f1 \<union> tspfDom\<cdot> f2)\<leadsto>(f1 \<rightleftharpoons> t \<bar> tspfDom\<cdot>f1) \<uplus> (f2 \<rightleftharpoons> t \<bar> tspfDom\<cdot>f2)) = Rep_CTSPF f1\<parallel>f2"
+    by (simp add: assms tspfParComp_def)
+  then have "(tsbDom\<cdot>(tsbLeast (tspfDom\<cdot>f1\<parallel>f2)::'a TSB) = tspfDom\<cdot>f1 \<union> tspfDom\<cdot> f2)\<leadsto>(f1 \<rightleftharpoons> tsbLeast (tspfDom\<cdot>f1\<parallel>f2) \<bar> tspfDom\<cdot>f1) \<uplus> (f2 \<rightleftharpoons> tsbLeast (tspfDom\<cdot>f1\<parallel>f2) \<bar> tspfDom\<cdot>f2) \<noteq> None"
+    by (smt f1)
+  then show ?thesis
+    by (metis tsbleast_tsdom)
+qed
+
+lemma tspfParComp_ran: assumes "parcomp_well f1 f2"
+  shows "tspfRan\<cdot>(tspfParComp f1 f2) = tspfRan\<cdot>f1 \<union> tspfRan\<cdot>f2"
+  by (smt assms option.sel parallel_iterconst_cont parallel_iterconst_well parcomp_dom_i_below parcomp_domranf1 rep_abs_ctspf spfran_least tsbleast_tsdom tsbunion_dom tspfParComp_def tspfParComp_dom tspfcomp_I_commu tspfcomp_L_commu)
+  
+lemma tspfParComp_getCh: assumes "parcomp_well f1 f2"  
+                             and "tsbDom\<cdot>sb = tspfDom\<cdot>f1 \<union> tspfDom\<cdot>f2"
+                             and "c \<in> tspfRan\<cdot>f1"
+  shows "((tspfParComp f1 f2) \<rightleftharpoons> sb) . c = (f1\<rightleftharpoons>(sb \<bar> tspfDom\<cdot>f1)) . c"                             
+  apply(simp add: tspfParComp_def)
+  apply(simp add: assms)
+  by (metis (no_types, lifting) assms(1) assms(2) assms(3) disjoint_iff_not_equal inf_sup_ord(4) tsbunion_getchL tspf_ran_2_tsbdom2 tsresrict_dom2)
+
+lemma tspfParComp_getCh2: assumes "parcomp_well f1 f2"  
+                             and "tsbDom\<cdot>sb = tspfDom\<cdot>f1 \<union> tspfDom\<cdot>f2"
+                             and "c \<in> tspfRan\<cdot>f2"
+  shows "((tspfParComp f1 f2) \<rightleftharpoons> sb) . c = (f2\<rightleftharpoons>(sb \<bar> tspfDom\<cdot>f2)) . c"                             
+  apply(simp add: tspfParComp_def)
+  apply(simp add: assms)
+  by (metis (no_types, lifting) assms(2) assms(3) inf_sup_ord(4) tsbunion_getchR tspf_ran_2_tsbdom2 tsresrict_dom2)
+
+lemma tspfParComp_eq: assumes "parcomp_well f1 f2"
+  shows "tspfComp f1 f2 = tspfParComp f1 f2"
+  by (simp add: assms tspfParComp_def tspfcomp2_lubiter tspfcomp_parallel_iterconst_eq1)
+    
+    
 (* ----------------------------------------------------------------------- *)
 section \<open>serial-comp\<close>
 (* ----------------------------------------------------------------------- *)
