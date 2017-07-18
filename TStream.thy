@@ -235,15 +235,19 @@ thm lscons_def (* similar to lscons *)
 definition tsLscons :: "'a event discr u \<rightarrow> 'a tstream \<rightarrow> 'a tstream" where
 "tsLscons \<equiv> \<Lambda> t ts. if (ts=\<bottom> & t\<noteq>updis \<surd>) then \<bottom> else espf2tspf (lscons\<cdot>t) ts"
 
+abbreviation tsLscons_abbrv :: "'a event discr u \<Rightarrow> 'a tstream \<Rightarrow> 'a tstream" (infixr "&\<surd>" 65) where
+"t &\<surd> ts \<equiv> tsLscons\<cdot>t\<cdot>ts"
+
 (* append a Message as first element. 
   Returns bot if the tstream is bot *)
 definition tsMLscons :: "'a discr u \<rightarrow> 'a tstream \<rightarrow> 'a tstream" where
 "tsMLscons \<equiv> \<Lambda> t ts. tsLscons\<cdot>(upApply Msg\<cdot>t)\<cdot>ts"
 
+abbreviation tsMLscons_abbrv :: "'a discr u \<Rightarrow> 'a tstream \<Rightarrow> 'a tstream" (infixr "&&\<surd>" 65) where
+"t &&\<surd> ts \<equiv> tsMLscons\<cdot>t\<cdot>ts"
+
 definition DiscrTick :: "'a event discr" where
   "DiscrTick = Discr \<surd>"
-
-
 
 (* ----------------------------------------------------------------------- *)
   subsection \<open>Lemmas on tstream\<close>
@@ -1712,6 +1716,9 @@ by (metis Rep_cfun_strict1 tsTake.simps(1) ts_existsNBot tstake_bot tstake_fin2)
 lift_definition delayFun :: "'m tstream \<rightarrow> 'm tstream" is
 "\<lambda>ts . (Abs_tstream (\<up>\<surd>)) \<bullet> ts"
   by (simp add: Cfun.cfun.Rep_cfun)
+
+abbreviation delay_abbr :: "'a tstream \<Rightarrow>  'a tstream" ("delay")
+where "delay ts \<equiv> delayFun\<cdot>ts"
 
 lemma delayFun_dropFirst[simp]: "tsDropFirst\<cdot>(delayFun\<cdot>ts) = ts"
   apply(simp add: tsdropfirst_insert "delayFun.rep_eq")
