@@ -332,7 +332,10 @@ lemma lubgetCh: assumes "chain Y" and "c \<in> tsbDom\<cdot>(\<Squnion> i. Y i)"
   shows "(\<Squnion>i. Y i) . c = (\<Squnion>i. (Y i) . c)"
   by (simp add: assms(1) contlub_cfun_arg contlub_cfun_fun)
 
-
+lemma tsbgetch_below: assumes "x \<sqsubseteq> y"
+  shows "\<forall> c. (x . c) \<sqsubseteq> (y . c)"
+    by (simp add: assms monofun_cfun_arg monofun_cfun_fun)
+    
 subsubsection \<open>eq/below\<close>
 
 lemma tsb_below: assumes "tsbDom\<cdot>x = tsbDom\<cdot>y" and "\<And> c. c\<in>tsbDom\<cdot>x \<Longrightarrow> x . c \<sqsubseteq>y . c"
@@ -981,9 +984,7 @@ proof -
 qed
   
   (* general lemma *)
-lemma tsbgetch_below: assumes "x \<sqsubseteq> y"
-  shows "\<forall> c. (x . c) \<sqsubseteq> (y . c)"
-    by (simp add: assms monofun_cfun_arg monofun_cfun_fun)
+
     
 (* general lemma *)
 lemma lnat_set_min_below: assumes "finite (A:: lnat set)" and "finite (B ::lnat set)" 
@@ -1156,7 +1157,7 @@ qed
 lemma tsbtick_below [simp]: assumes "x \<sqsubseteq> y"
   shows "#\<surd>tsb x \<sqsubseteq> #\<surd>tsb y"
   using assms monofun_cfun_arg by blast
-    
+       
 lemma tsbtick_least: assumes "tsbDom\<cdot>tsb1 \<noteq> {}"
   shows "#\<surd>tsb tsb1 = n \<Longrightarrow> \<forall> c \<in> tsbDom\<cdot>tsb1 . n \<sqsubseteq> #\<surd> (tsb1 . c)"
   apply rule
@@ -1223,7 +1224,11 @@ proof -
       using assms(1) tsbdom_below apply blast
       using f1 f2 tstake_less_below by blast
 qed    
-    
+
+lemma tsbtick_le: assumes "tsbDom\<cdot>tb1 \<noteq> {}" and "(#\<surd>tsb tb1) \<le> (#\<surd>tsb tb2)"
+shows "\<exists> c1 \<in> tsbDom\<cdot>tb1. \<forall> c2 \<in> tsbDom\<cdot>tb2. (#\<surd>(tb1 . c1)) \<le> (#\<surd>(tb2 . c2))"
+  by (smt assms(1) assms(2) dual_order.trans equals0D lnle_def tsbtick_insert tsbtick_least 
+          tsbtick_min_on_channel) 
 
 lemma tsbtick_tsbttake: assumes "tsbDom\<cdot>tb \<noteq> {}"
   shows "#\<surd>tsb (tsbTTake n\<cdot>tb) = min (#\<surd>tsb tb) (Fin n)"
@@ -1233,8 +1238,83 @@ lemma tsbtick_tsbttake: assumes "tsbDom\<cdot>tb \<noteq> {}"
        apply (subst tsbttake_dom)
        using min_le_iff_disj tsbtick_least by fastforce
 
-
+lemma tsbtick_tsbres:  shows "(#\<surd>tsb tb) \<le> #\<surd>tsb (tb\<bar>cs)"
+proof -
+  have "\<forall>t. #\<surd>tsb t::'a TSB = (if tsbDom\<cdot>t = {} then \<infinity> else LEAST l. l \<in> {#\<surd> t . c |c. c \<in> tsbDom\<cdot>t})"
+    by (simp add: tsbtick_insert)
+  hence f1: "\<forall>t. if tsbDom\<cdot>(t::'a TSB) = {} then #\<surd>tsb t = \<infinity> else #\<surd>tsb t = (LEAST l. l \<in> {#\<surd> t . c |c. c \<in> tsbDom\<cdot>t})"
+    by meson
+  have f2: "\<forall>t l. tsbDom\<cdot>(t::'a TSB) = {} \<or> #\<surd>tsb t \<noteq> l \<or> (\<forall>c. c \<notin> tsbDom\<cdot>t \<or> l \<sqsubseteq> #\<surd> t . c)"
+    using tsbtick_least by blast
+  have f3: "\<forall>C Ca c. \<not> C \<subseteq> Ca \<or> (c::channel) \<notin> C \<or> c \<in> Ca"
+    by blast
+  have f4: "tsbDom\<cdot>tb \<inter> cs \<subseteq> tsbDom\<cdot>tb"
+    by blast
+  obtain cc :: "'a TSB \<Rightarrow> channel" where
+    "\<forall>t. tsbDom\<cdot>t = {} \<or> cc t \<in> tsbDom\<cdot>t \<and> #\<surd> t . cc t = (LEAST l. l \<in> {#\<surd> t . c |c. c \<in> tsbDom\<cdot>t})"
+    using tsbtick_min_on_channel by moura
+  hence f5: "tsbDom\<cdot>(tb \<bar> cs) = {} \<or> cc (tb \<bar> cs) \<in> tsbDom\<cdot>(tb \<bar> cs) \<and> #\<surd> (tb \<bar> cs) . cc (tb \<bar> cs) = (LEAST l. l \<in> {#\<surd> (tb \<bar> cs) . c |c. c \<in> tsbDom\<cdot>(tb \<bar> cs)})"
+    by blast
+  hence f6: "tsbDom\<cdot>(tb \<bar> cs) \<noteq> {} \<longrightarrow> cc (tb \<bar> cs) \<in> tsbDom\<cdot>tb \<inter> cs"
+    using tsresrict_dom3 by blast
+  have f7: "tsbDom\<cdot>(tb \<bar> cs) \<noteq> {} \<and> tsbDom\<cdot>tb \<noteq> {} \<longrightarrow> ((LEAST l. l \<in> {#\<surd> tb . c |c. c \<in> tsbDom\<cdot>tb}) \<sqsubseteq> #\<surd> tb . cc (tb \<bar> cs)) = (#\<surd>tsb tb \<sqsubseteq> #\<surd>tsb tb \<bar> cs )"
+    using f5 f1 by force
+  { assume "(\<infinity> \<le> \<infinity>) \<noteq> (#\<surd>tsb tb \<le> #\<surd>tsb tb \<bar> cs )"
+    hence "tsbDom\<cdot>tb \<noteq> {}"
+      by force
+    moreover
+    { assume "tsbDom\<cdot>tb \<noteq> {} \<and> ((LEAST l. l \<in> {#\<surd> tb . c |c. c \<in> tsbDom\<cdot>tb}) \<le> \<infinity>) \<noteq> (#\<surd>tsb tb \<le> #\<surd>tsb tb \<bar> cs )"
+      hence "tsbDom\<cdot>tb \<noteq> {} \<and> #\<surd>tsb tb \<bar> cs \<noteq> \<infinity>"
+        by force
+      hence ?thesis
+        using f7 f6 f4 f3 f2 f1 by (meson lnle_def) }
+    ultimately have ?thesis
+      using inf_ub by blast }
+  thus ?thesis
+    by blast
+qed
   
+ 
+  
+lemma tsbtick_tsbunion1: assumes "tsbDom\<cdot>tb1 \<noteq> {}" and "tsbDom\<cdot>tb2 \<noteq> {}"
+                        and "tsbDom\<cdot>tb1 \<inter> tsbDom\<cdot>tb2 = {}"
+                        and "(#\<surd>tsb tb1) \<le> (#\<surd>tsb tb2)"
+  shows "(#\<surd>tsb(tb1 \<uplus> tb2)) = (#\<surd>tsb tb1)"
+proof -
+  have f1: "tsbDom\<cdot>(tb1 \<uplus> tb2) \<noteq> {}"
+    by (simp add: assms(1))
+  have f2: "\<exists> c1 \<in> tsbDom\<cdot>tb1. \<forall> c2 \<in> tsbDom\<cdot>tb2. (#\<surd>(tb1 . c1)) \<le> (#\<surd>(tb2 . c2))"
+    using assms(1) assms(4) tsbtick_le by blast
+  have f3: "\<forall> c1 \<in> tsbDom\<cdot>tb1 . ((tb1 \<uplus> tb2) . c1) = (tb1 . c1)"
+    by (meson assms(3) disjoint_iff_not_equal tsbunion_getchL)
+  have f4: "tsbDom\<cdot>(tb1 \<uplus> tb2) = (tsbDom\<cdot>tb1 \<union> tsbDom\<cdot>tb2)"
+    by simp
+  obtain cmin where o1: "(#\<surd>((tb1 \<uplus> tb2) . cmin)) = (#\<surd>tsb tb1)"
+    by (metis (no_types, lifting) assms(1) f3 tsbtick_insert tsbtick_min_on_channel)
+  have f5: "\<forall> c1 \<in> tsbDom\<cdot>tb1 . (#\<surd>((tb1 \<uplus> tb2) . cmin)) \<le> (#\<surd>((tb1 \<uplus> tb2) . c1))"
+    using o1 f3 tsbtick_least by fastforce
+  have f6: "\<forall> c2 \<in> tsbDom\<cdot>tb2.  (#\<surd>((tb1 \<uplus> tb2) . cmin)) \<le> (#\<surd>((tb1 \<uplus> tb2) . c2))"
+    using f2 f3 f5 by fastforce
+  show ?thesis
+    by (smt Abs_cfun_inverse2 Int_commute UnE assms(3) below_antisym f1 f4 f5 f6 lnle_def o1 
+            tsbTickCount_def tsbtick_cont tsbtick_min_on_channel tsbtick_tsbres tsbunion_restrict3)
+qed
+  
+lemma tsbtick_tsbunion2: assumes "tsbDom\<cdot>tb1 \<noteq> {}" and "tsbDom\<cdot>tb2 \<noteq> {}"
+                         and "tsbDom\<cdot>tb1 \<inter> tsbDom\<cdot>tb2 = {}"
+                         and "(#\<surd>tsb tb2) \<le> (#\<surd>tsb tb1)"
+  shows "(#\<surd>tsb(tb1 \<uplus> tb2)) = (#\<surd>tsb tb2)"
+  by (metis assms(1) assms(2) assms(3) assms(4) inf_commute tsbtick_tsbunion1 tsbunion_commutative)    
+
+ 
+lemma tsbtick_tsbunion: assumes "tsbDom\<cdot>tb1 \<noteq> {}" and "tsbDom\<cdot>tb2 \<noteq> {}"
+                        and "tsbDom\<cdot>tb1 \<inter> tsbDom\<cdot>tb2 = {}"
+  shows "(#\<surd>tsb(tb1 \<uplus> tb2)) = min (#\<surd>tsb tb1) (#\<surd>tsb tb2)"
+  by (simp add: assms(1) assms(2) assms(3) min_def tsbtick_tsbunion1 tsbtick_tsbunion2)
+                        
+    
+    
+    
 subsubsection \<open>tsbMapStream\<close>
   
   
