@@ -131,9 +131,14 @@ definition tspfType :: "'m TSPF \<rightarrow> (channel set \<times> channel set)
 subsubsection \<open>apply\<close>
 
 (* harpoon and Rep operation all in one for simpler SPF on SB applications *)
-abbreviation theRep_abbrv :: "'a TSPF \<Rightarrow> 'a TSB \<Rightarrow> 'a TSB " ("_\<rightleftharpoons>_") where
+  (* bounds weaker than tsbres *)
+abbreviation theRep_abbrv :: "'a TSPF \<Rightarrow> 'a TSB \<Rightarrow> 'a TSB " (infix "\<rightleftharpoons>" 62) where
 "(f \<rightleftharpoons> s) \<equiv> (the ((Rep_CTSPF f) s))"
 
+(* old 
+abbreviation theRep_abbrv :: "'a TSPF \<Rightarrow> 'a TSB \<Rightarrow> 'a TSB " ("_\<rightleftharpoons>_") where
+"(f \<rightleftharpoons> s) \<equiv> (the ((Rep_CTSPF f) s))"
+*)
 
 subsubsection \<open>fix\<close>
 
@@ -190,7 +195,7 @@ definition tspfCompI :: "'m TSPF \<Rightarrow> 'm TSPF \<Rightarrow> channel set
 definition tspfCompL :: "'m TSPF \<Rightarrow> 'm TSPF \<Rightarrow> channel set" where
 "tspfCompL f1 f2 = (tspfDom\<cdot>f1 \<union> tspfDom\<cdot>f2) \<inter> (tspfRan\<cdot>f1 \<union> tspfRan\<cdot>f2)"
 
-(* set of feedback channels *) (* TODO: rename *)
+(* for legacy purposes *) 
 definition tspfComp_pL :: "'m TSPF \<Rightarrow> 'm TSPF \<Rightarrow> channel set" where
 "tspfComp_pL f1 f2 \<equiv> (tspfDom\<cdot>f1 \<inter> tspfRan\<cdot>f1) \<union> (tspfDom\<cdot>f2 \<inter> tspfRan\<cdot>f1)
                       \<union> (tspfDom\<cdot>f1 \<inter> tspfRan\<cdot>f2) \<union> (tspfDom\<cdot>f2 \<inter> tspfRan\<cdot>f2)"
@@ -618,7 +623,7 @@ lemma tspfcomp_I_subset_C [simp]: "(tspfCompI f1 f2) \<subseteq> (tspfCompC f1 f
 lemma tspfcomp_L_subset_C [simp]: "(tspfCompL f1 f2) \<subseteq> (tspfCompC f1 f2)"
   using tspfCompL_def tspfCompC_def by blast
     
-lemma tspfcomp_pl_subset_L [simp]: "(tspfComp_pL f1 f2) \<subseteq> (tspfCompL f1 f2)"
+lemma tspfcomp_pl_subset_L [simp]: "(tspfComp_pL f1 f2) = (tspfCompL f1 f2)"
   using tspfComp_pL_def tspfCompL_def by blast
     
 lemma tspfcomp_pL_subset_C [simp]: "(tspfComp_pL f1 f2) \<subseteq> (tspfCompC f1 f2)"
