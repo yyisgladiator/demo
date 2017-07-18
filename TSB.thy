@@ -1225,7 +1225,7 @@ proof -
       using f1 f2 tstake_less_below by blast
 qed    
 
-lemma tsbtick_le: assumes "tsbDom\<cdot>tb1 \<noteq> {}" and "(#\<surd>tsb tb1) \<le> (#\<surd>tsb tb2)"
+lemma tsbtick_le: assumes "tsbDom\<cdot>tb1 \<noteq> {}" and "((#\<surd>tsb tb1)) \<le> (#\<surd>tsb tb2)"
 shows "\<exists> c1 \<in> tsbDom\<cdot>tb1. \<forall> c2 \<in> tsbDom\<cdot>tb2. (#\<surd>(tb1 . c1)) \<le> (#\<surd>(tb2 . c2))"
   by (smt assms(1) assms(2) dual_order.trans equals0D lnle_def tsbtick_insert tsbtick_least 
           tsbtick_min_on_channel) 
@@ -1276,41 +1276,55 @@ qed
   
  
   
-lemma tsbtick_tsbunion1: assumes "tsbDom\<cdot>tb1 \<noteq> {}" and "tsbDom\<cdot>tb2 \<noteq> {}"
+lemma tsbtick_tsbunion1: assumes "tsbDom\<cdot>tb1 \<noteq> {}"
                         and "tsbDom\<cdot>tb1 \<inter> tsbDom\<cdot>tb2 = {}"
-                        and "(#\<surd>tsb tb1) \<le> (#\<surd>tsb tb2)"
-  shows "(#\<surd>tsb(tb1 \<uplus> tb2)) = (#\<surd>tsb tb1)"
+                        and "((#\<surd>tsb tb1)) \<le> (#\<surd>tsb tb2)"
+  shows "(#\<surd>tsb(tb1 \<uplus> tb2)) = ((#\<surd>tsb tb1))"
 proof -
   have f1: "tsbDom\<cdot>(tb1 \<uplus> tb2) \<noteq> {}"
     by (simp add: assms(1))
   have f2: "\<exists> c1 \<in> tsbDom\<cdot>tb1. \<forall> c2 \<in> tsbDom\<cdot>tb2. (#\<surd>(tb1 . c1)) \<le> (#\<surd>(tb2 . c2))"
-    using assms(1) assms(4) tsbtick_le by blast
+    using assms(1) assms(3) tsbtick_le by blast
   have f3: "\<forall> c1 \<in> tsbDom\<cdot>tb1 . ((tb1 \<uplus> tb2) . c1) = (tb1 . c1)"
-    by (meson assms(3) disjoint_iff_not_equal tsbunion_getchL)
+    by (meson assms(2) disjoint_iff_not_equal tsbunion_getchL)
   have f4: "tsbDom\<cdot>(tb1 \<uplus> tb2) = (tsbDom\<cdot>tb1 \<union> tsbDom\<cdot>tb2)"
     by simp
-  obtain cmin where o1: "(#\<surd>((tb1 \<uplus> tb2) . cmin)) = (#\<surd>tsb tb1)"
+  obtain cmin where o1: "(#\<surd>((tb1 \<uplus> tb2) . cmin)) = ((#\<surd>tsb tb1))"
     by (metis (no_types, lifting) assms(1) f3 tsbtick_insert tsbtick_min_on_channel)
   have f5: "\<forall> c1 \<in> tsbDom\<cdot>tb1 . (#\<surd>((tb1 \<uplus> tb2) . cmin)) \<le> (#\<surd>((tb1 \<uplus> tb2) . c1))"
     using o1 f3 tsbtick_least by fastforce
   have f6: "\<forall> c2 \<in> tsbDom\<cdot>tb2.  (#\<surd>((tb1 \<uplus> tb2) . cmin)) \<le> (#\<surd>((tb1 \<uplus> tb2) . c2))"
     using f2 f3 f5 by fastforce
   show ?thesis
-    by (smt Abs_cfun_inverse2 Int_commute UnE assms(3) below_antisym f1 f4 f5 f6 lnle_def o1 
+    by (smt Abs_cfun_inverse2 Int_commute UnE assms(2) below_antisym f1 f4 f5 f6 lnle_def o1 
             tsbTickCount_def tsbtick_cont tsbtick_min_on_channel tsbtick_tsbres tsbunion_restrict3)
 qed
   
-lemma tsbtick_tsbunion2: assumes "tsbDom\<cdot>tb1 \<noteq> {}" and "tsbDom\<cdot>tb2 \<noteq> {}"
+lemma tsbtick_tsbunion2: assumes "tsbDom\<cdot>tb2 \<noteq> {}"
                          and "tsbDom\<cdot>tb1 \<inter> tsbDom\<cdot>tb2 = {}"
-                         and "(#\<surd>tsb tb2) \<le> (#\<surd>tsb tb1)"
+                         and "(#\<surd>tsb tb2) \<le> ((#\<surd>tsb tb1))"
   shows "(#\<surd>tsb(tb1 \<uplus> tb2)) = (#\<surd>tsb tb2)"
-  by (metis assms(1) assms(2) assms(3) assms(4) inf_commute tsbtick_tsbunion1 tsbunion_commutative)    
+  by (metis assms(1) assms(2) assms(3) inf_commute tsbtick_tsbunion1 tsbunion_commutative)    
 
  
-lemma tsbtick_tsbunion: assumes "tsbDom\<cdot>tb1 \<noteq> {}" and "tsbDom\<cdot>tb2 \<noteq> {}"
-                        and "tsbDom\<cdot>tb1 \<inter> tsbDom\<cdot>tb2 = {}"
-  shows "(#\<surd>tsb(tb1 \<uplus> tb2)) = min (#\<surd>tsb tb1) (#\<surd>tsb tb2)"
-  by (simp add: assms(1) assms(2) assms(3) min_def tsbtick_tsbunion1 tsbtick_tsbunion2)
+lemma tsbtick_tsbunion: assumes "tsbDom\<cdot>tb1 \<inter> tsbDom\<cdot>tb2 = {}"
+  shows "(#\<surd>tsb(tb1 \<uplus> tb2)) = min ((#\<surd>tsb tb1)) (#\<surd>tsb tb2)"
+proof -
+  { assume "tsbDom\<cdot>tb1 \<noteq> {}"
+    moreover
+    { assume "(tsbDom\<cdot>tb1 \<noteq> {}) \<and> ((#\<surd>tsb tb2) \<noteq> \<infinity>)"
+      hence "tsbDom\<cdot>tb2 \<noteq> {} \<and> tsbDom\<cdot>tb1 \<noteq> {}"
+        by (meson tsbtick_insert)
+      hence "(#\<surd>tsb tb1) \<le> (#\<surd>tsb tb2) \<and> (#\<surd>tsb tb1) \<le> (#\<surd>tsb tb2) 
+                \<and> (tsbDom\<cdot>tb1 \<noteq> {}) 
+                \<or> (#\<surd>tsb (tb1 \<uplus> tb2)) = min (#\<surd>tsb tb1) (#\<surd>tsb tb2)"
+        by (metis (no_types) assms min.cobounded1 min_def tsbtick_tsbunion2) }
+    ultimately have ?thesis
+      by (metis (no_types) assms inf_ub min_def tsbtick_tsbunion1) }
+  thus ?thesis
+    by (metis (no_types) empty_subsetI inf_ub min.absorb2 tsbtick_insert tsbunion_idL)
+qed
+ 
                         
     
     
@@ -2110,7 +2124,7 @@ qed
 
 
 definition tsbMinTick :: "'m TSB \<Rightarrow> 'm TSB \<Rightarrow> lnat" where
-"tsbMinTick tb1 tb2 \<equiv> lnmin\<cdot>(#\<surd>tsb tb1)\<cdot>(#\<surd>tsb tb2)"
+"tsbMinTick tb1 tb2 \<equiv> lnmin\<cdot>((#\<surd>tsb tb1))\<cdot>(#\<surd>tsb tb2)"
 
 lemma tsb_tick_eq2: assumes "c1\<in>tsbDom\<cdot>f" and "c2\<in>tsbDom\<cdot>f"
   shows "#\<surd> f . c1 = #\<surd> f . c2"

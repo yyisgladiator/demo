@@ -18,6 +18,12 @@ section \<open>definitions\<close>
 abbreviation parcomp_well :: "'m TSPF \<Rightarrow> 'm TSPF \<Rightarrow> bool" where
 "parcomp_well f1 f2 \<equiv> (tspfCompL f1 f2 = {}) \<and> (tspfRan\<cdot>f1 \<inter> tspfRan\<cdot>f2 = {})"
   
+abbreviation sercomp_well :: "'m TSPF \<Rightarrow> 'm TSPF \<Rightarrow> bool" where
+"sercomp_well f1 f2 \<equiv>  (tspfRan\<cdot>f1 = tspfDom\<cdot>f2) 
+                        \<and> (tspfDom\<cdot>f1 \<inter> tspfRan\<cdot>f1 = {})
+                        \<and> (tspfDom\<cdot>f2 \<inter> tspfRan\<cdot>f2 = {})
+                        \<and> (tspfDom\<cdot>f1 \<inter> tspfRan\<cdot>f2 = {})"
+
 (* ----------------------------------------------------------------------- *)
 section \<open>parallel-comp\<close>
 (* ----------------------------------------------------------------------- *)
@@ -40,7 +46,7 @@ lemma parcomp_cInOc: assumes "tspfCompL f1 f2 = {}"
                     
 lemma parcomp_domranf1: assumes "tspfCompL f1 f2 = {}"
                         and "tsbDom\<cdot>tb = tspfCompI f1 f2"
-  shows "(tsbDom\<cdot>f1\<rightleftharpoons>(tb\<bar>tspfDom\<cdot>f1)) = tspfRan\<cdot>f1"
+  shows "(tsbDom\<cdot>(f1\<rightleftharpoons>(tb\<bar>tspfDom\<cdot>f1))) = tspfRan\<cdot>f1"
   proof -
     have "tspfDom\<cdot>f1 \<subseteq> tsbDom\<cdot>tb"
       by (metis (no_types) Un_upper1 assms(1) assms(2) parcomp_dom_i_below)
@@ -234,5 +240,165 @@ lemma tspfcomp_parallel_getch2: assumes "parcomp_well f1 f2"
   apply (rule tsbunion_getchR)
   by (metis assms(1) assms(2) assms(3) parcomp_domranf1 tspfcomp_I_commu tspfcomp_L_commu)
 
+
+(* ----------------------------------------------------------------------- *)
+section \<open>serial-comp\<close>
+(* ----------------------------------------------------------------------- *)
+  
+subsection \<open>channel lemmata\<close>    
+    
+  (* for legacy purposes *)
+lemma sercomp_well2comp_well: assumes "sercomp_well f1 f2"
+ shows "tspfRan\<cdot>f1 \<inter> tspfRan\<cdot>f2 = {}"
+  by (simp add: assms)  
+ 
+  (* for legacy purposes *)
+lemma sercomp_well2no_selfloops: assumes "sercomp_well f1 f2"
+  shows "tspfDom\<cdot>f1 \<inter> tspfRan\<cdot>f1 = {}
+                    \<and> tspfDom\<cdot>f2 \<inter> tspfRan\<cdot>f2 = {}"
+  using assms by linarith
+
+  (* for legacy purposes *)
+lemma sercomp_well2_pL: assumes "sercomp_well f1 f2"
+  shows "((tspfDom\<cdot>f1 \<inter> tspfRan\<cdot>f1) \<union> (tspfDom\<cdot>f1 \<inter> tspfRan\<cdot>f2) \<union> (tspfDom\<cdot>f2 \<inter> tspfRan\<cdot>f2)) = {}"
+  using assms by blast
+
+    
+lemma sercomp_input_ch: assumes "sercomp_well f1 f2"
+  shows "tspfDom\<cdot>f1 = (tspfCompI f1 f2)"
+  by (smt Diff_Diff_Int Diff_Un Un_Diff Un_Diff_Int assms sup_bot.right_neutral tspfCompI_def)
+    
+lemma sercomp_dom_f1: assumes "sercomp_well f1 f2"
+                      and "tsbDom\<cdot>tb = tspfCompI f1 f2"
+  shows "tsbDom\<cdot>(f1\<rightleftharpoons>(tb\<bar>(tspfDom\<cdot>f1))) = tspfRan\<cdot>f1"
+proof -
+  have "tspfDom\<cdot>f1 = tspfCompI f1 f2"
+    by (meson assms(1) sercomp_input_ch)
+  then show ?thesis
+    by (simp add: assms(2))
+qed
+ 
+lemma sercomp_dom_f12: assumes "sercomp_well f1 f2"
+  shows "tspfDom\<cdot>f1 \<inter> (tspfRan\<cdot>f1 \<union> tspfRan\<cdot>f2) = {}"
+  using assms by blast
+    
+  
+  subsection \<open>iterate\<close>    
+        
+lemma sercomp_iter_serial_res_f1: assumes "sercomp_well f1 f2"
+                                  and "tsbDom\<cdot>x = tspfCompI f1 f2"
+  shows "(iter_tspfCompH f1 f2 (Suc (Suc i)) x) \<bar> (tspfRan\<cdot>f1) = (f1 \<rightleftharpoons> (x\<bar>tspfDom\<cdot>f1))"
+  by (smt assms(1) assms(2) inf_sup_absorb inf_sup_aci(1) iter_tspfcomph_dom iterate_Suc 
+          sercomp_dom_f1 sercomp_dom_f12 tsbrestrict_test tsbunion_restrict tsbunion_restrict2 
+          tsbunion_restrict3 tspf_ran_2_tsbdom2 tspfcomph_insert tsresrict_dom3)
+                                  
+
+lemma sercomp_iter_serial: assumes "sercomp_well f1 f2"
+                              and "tsbDom\<cdot>x = tspfCompI f1 f2"
+  shows "(iter_tspfCompH f1 f2 (Suc (Suc (Suc i))) x) = 
+    (f1 \<rightleftharpoons> (x\<bar>tspfDom\<cdot>f1)) \<uplus> (f2 \<rightleftharpoons> (f1 \<rightleftharpoons> (x\<bar>tspfDom\<cdot>f1)))"
+  by (smt assms(1) assms(2) inf_commute iter_tspfcomph_dom iterate_Suc sercomp_dom_f12 
+          sercomp_input_ch sercomp_iter_serial_res_f1 tsbunion_commutative tsbunion_restrict 
+          tspfcomph_insert)
+ 
+lemma sercomp_iter_max_in_chain: assumes "sercomp_well f1 f2"
+                                 and "tsbDom\<cdot>x = tspfCompI f1 f2"
+  shows "max_in_chain (Suc (Suc (Suc 0))) (\<lambda>i. iter_tspfCompH f1 f2 i x)"
+proof (rule max_in_chainI)
+  fix j
+  assume a1: "Suc (Suc (Suc 0)) \<le> j"
+  have f1: "tspfDom\<cdot>f1 \<inter> tspfDom\<cdot>f2 = {}"
+    using assms(1) by blast
+  obtain k where o1: "j = Suc (Suc (Suc k))"
+    by (metis (no_types) Suc_leD Suc_n_not_le_n a1 not0_implies_Suc)  
+  show "iter_tsbfix2 (tspfCompH f1 f2) (Suc (Suc (Suc 0))) (tspfRan\<cdot>f1 \<union> tspfRan\<cdot>f2) x =
+         iter_tsbfix2 (tspfCompH f1 f2) j (tspfRan\<cdot>f1 \<union> tspfRan\<cdot>f2) x "
+    apply (subst o1)
+    by (metis assms(1) assms(2) sercomp_iter_serial)
+qed
+  
+
+  
+  subsection \<open>lub iterate\<close> 
+      
+lemma tspfcomp_sercomp_lub_const1: assumes "sercomp_well f1 f2"
+                                   and "tsbDom\<cdot>x = tspfCompI f1 f2"
+  shows "(\<Squnion>i. iter_tspfCompH f1 f2 i x) = iter_tspfCompH f1 f2 (Suc (Suc (Suc 0))) x"    
+  using assms maxinch_is_thelub sercomp_iter_max_in_chain iter_tspfcomph_chain by blast
+      
+lemma tspfcomp_sercomp_lub_const2: assumes "sercomp_well f1 f2"
+                                   and "tsbDom\<cdot>x = tspfCompI f1 f2"
+  shows "(\<Squnion>i. iter_tspfCompH f1 f2 i x) = (f1 \<rightleftharpoons> (x\<bar>tspfDom\<cdot>f1)) \<uplus> (f2 \<rightleftharpoons> (f1 \<rightleftharpoons> (x\<bar>tspfDom\<cdot>f1)))"
+  by (metis assms(1) assms(2) sercomp_iter_serial tspfcomp_sercomp_lub_const1)   
+      
+
+    
+
+  subsection \<open>fun lub iterate\<close> 
+      
+lemma tspfcomp_serial_iterconst_eq: assumes "sercomp_well f1 f2"
+  shows "(\<lambda> x. (tsbDom\<cdot>x = tspfCompI f1 f2) \<leadsto> (\<Squnion>i. iter_tspfCompH f1 f2 i x) )
+        = (\<lambda> x. (tsbDom\<cdot>x = tspfDom\<cdot>f1) \<leadsto> ((f1 \<rightleftharpoons> (x\<bar>tspfDom\<cdot>f1)) \<uplus> (f2 \<rightleftharpoons> (f1 \<rightleftharpoons> (x\<bar>tspfDom\<cdot>f1)))))"
+proof -
+  have f1: "(tspfDom\<cdot>f1) = tspfCompI f1 f2"
+    using assms sercomp_input_ch by auto
+  
+  have  "\<forall>x. (tsbDom\<cdot>x \<noteq> tspfCompI f1 f2)  \<or> 
+        (Some ((\<Squnion>i. iter_tspfCompH f1 f2 i x))
+        = Some ((f1 \<rightleftharpoons> (x\<bar>tspfDom\<cdot>f1)) \<uplus> (f2 \<rightleftharpoons> (f1 \<rightleftharpoons> (x\<bar>tspfDom\<cdot>f1)))))"
+      by (metis assms tspfcomp_sercomp_lub_const2)
+  thus ?thesis
+    apply (subst f1)
+    by meson  
+qed
+  
+lemma tspfcomp_serial_iterconst_cont [simp]: 
+  "cont (\<lambda> x. (tsbDom\<cdot>x = tspfDom\<cdot>f1) \<leadsto> ((f1 \<rightleftharpoons> (x\<bar>tspfDom\<cdot>f1)) \<uplus> (f2 \<rightleftharpoons> (f1 \<rightleftharpoons> (x\<bar>tspfDom\<cdot>f1)))))"
+  (* left out as this is equal to the special case operator o *)
+sorry
+     
+ 
+(*  \<And>b. tsbDom\<cdot>b = tspfDom\<cdot>f1 \<Longrightarrow> #\<surd>tsb b  \<le> #\<surd>tsb (f1 \<rightleftharpoons> b \<bar> tspfDom\<cdot>f1) \<uplus> (f2 \<rightleftharpoons> (f1 \<rightleftharpoons> b \<bar> tspfDom\<cdot>f1))  *)
+  
+lemma serial_tick_well: assumes "sercomp_well f1 f2" and "tsbDom\<cdot>b = tspfDom\<cdot>f1"
+  shows "(#\<surd>tsb b)  \<le> #\<surd>tsb ((f1 \<rightleftharpoons> b \<bar> tspfDom\<cdot>f1) \<uplus> (f2 \<rightleftharpoons> (f1 \<rightleftharpoons> b \<bar> tspfDom\<cdot>f1)))"
+  apply (subst tsbtick_tsbunion)
+  apply (simp add: assms(1) assms(2))
+  by (smt assms(1) assms(2) inf.idem le_cases3 min.mono min_def tsbleast_tsdom 
+          tsbtick_tsbres tspf_least_in_dom tspf_less_in_than_out_ticks 
+          tspf_ran_2_tsbdom2 tspf_sbdomeq_to_domeq tsresrict_dom3)
+  
+  
+lemma tspfcomp_serial_iterconst_well [simp]: assumes "sercomp_well f1 f2"
+  shows "tspf_well (Abs_cfun (\<lambda> x. (tsbDom\<cdot>x = tspfDom\<cdot>f1) \<leadsto> 
+                    ((f1 \<rightleftharpoons> (x\<bar>tspfDom\<cdot>f1)) \<uplus> (f2 \<rightleftharpoons> (f1 \<rightleftharpoons> (x\<bar>tspfDom\<cdot>f1))))) )"
+  apply (subst tspf_well_def)
+  apply rule
+  apply (auto simp add: tspf_type_def domIff2 tsbdom_rep_eq tspfCompI_def assms)
+  by (meson assms serial_tick_well)
+
+    
+  subsection \<open>result\<close>     
+    
+lemma tspfcomp_serial: assumes "sercomp_well f1 f2"
+  shows "(tspfComp f1 f2) \<rightleftharpoons> sb = 
+        Abs_CTSPF (\<lambda> x. (tsbDom\<cdot>x = tspfDom\<cdot>f1) \<leadsto> 
+                    ((f1 \<rightleftharpoons> (x\<bar>tspfDom\<cdot>f1)) \<uplus> (f2 \<rightleftharpoons> (f1 \<rightleftharpoons> (x\<bar>tspfDom\<cdot>f1))))) \<rightleftharpoons> sb"
+    apply (simp only: tspfcomp2_iterCompH)
+    apply (subst tspfcomp_serial_iterconst_eq)
+      using assms apply blast
+      by (simp)
+   
+    
+    
+    
+    
+    
+    
+    
+    
+
+      
+      
 end
   
