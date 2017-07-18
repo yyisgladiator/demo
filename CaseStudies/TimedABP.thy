@@ -220,12 +220,36 @@ text {* If infinite messages will be sent infinite messages will be transmitted.
 lemma tsmed_tsabs_slen_inf [simp]: assumes "#({True} \<ominus> ora)=\<infinity>" and "#(tsAbs\<cdot>msg)=\<infinity>" 
   shows "#(tsAbs\<cdot>(tsMed\<cdot>msg\<cdot>ora)) = \<infinity>"
   oops
+    
+    
 
 lemma tsmed_map: "tsMed\<cdot>(tsMap f\<cdot>msg)\<cdot>ora = tsMap f\<cdot>(tsMed\<cdot>msg\<cdot>ora)"
-  oops
+  proof(induction msg arbitrary: ora)
+    case adm
+    then show ?case by simp
+  next
+    case bottom
+    then show ?case by simp
+  next
+    case (delayfun msg)
+    then show ?case
+      by (metis tsmap_delayfun tsmed_delayfun tsmed_strict(2))
+  next
+    case (mlscons msg t)
+    then show ?case sorry
+  qed    
+
+lemma tsmes_ora_exhaust: 
+  assumes "ora = \<epsilon> \<Longrightarrow> P" and case2:"(ora = sconc (\<up>True)\<cdot>(srt\<cdot>ora) \<Longrightarrow> P)" and  "ora = sconc (\<up>False)\<cdot>(srt\<cdot>ora) \<Longrightarrow> P" 
+  shows "P"
+  by (metis assms(1) assms(3) case2 surj_scons)
 
 lemma tsmed_tsdom: "#ora=\<infinity> \<Longrightarrow> tsDom\<cdot>(tsMed\<cdot>msg\<cdot>ora) \<subseteq> tsDom\<cdot>msg"
-  oops
+  apply(induction msg arbitrary: ora)
+    apply simp_all
+  apply (metis Inf'_neq_0 slen_empty_eq tsdom_delayfun tsmed_delayfun)
+  apply(rule tsmes_ora_exhaust [of ora])
+    oops
 
 (* ----------------------------------------------------------------------- *)
 subsection {* receiver *}
