@@ -275,7 +275,7 @@ lemma tspfcomp_parallel_getch2: assumes "parcomp_well f1 f2"
   by (metis assms(1) assms(2) assms(3) parcomp_domranf1 tspfcomp_I_commu tspfcomp_L_commu)
 
     
-subsection \<open>special parallel operator\<close>
+  subsection \<open>special parallel operator\<close>
 
 lemma tspfParComp_dom: assumes "parcomp_well f1 f2"
   shows "tspfDom\<cdot>(tspfParComp f1 f2) = tspfDom\<cdot>f1 \<union> tspfDom\<cdot>f2"
@@ -428,9 +428,18 @@ qed
   
 lemma tspfcomp_serial_iterconst_cont [simp]: 
   "cont (\<lambda> x. (tsbDom\<cdot>x = tspfDom\<cdot>f1) \<leadsto> ((f1 \<rightleftharpoons> (x\<bar>tspfDom\<cdot>f1)) \<uplus> (f2 \<rightleftharpoons> (f1 \<rightleftharpoons> (x\<bar>tspfDom\<cdot>f1)))))"
-  (* left out as this is equal to the special case operator o *)
-sorry
-     
+proof - 
+  have "cont (\<lambda> x. (f2 \<rightleftharpoons> x))"
+      by (simp add: cont_compose)
+  moreover have f1: "cont (\<lambda> x. (f1 \<rightleftharpoons> (x\<bar>tspfDom\<cdot>f1)))"
+    by (metis Rep_CTSPF_def cont_Rep_cfun2 cont_compose op_the_cont tspfDom_def tspf_dom_insert)
+  ultimately have f2: "cont (\<lambda> x. (f2 \<rightleftharpoons> (f1 \<rightleftharpoons> (x\<bar>tspfDom\<cdot>f1))))"
+    using cont_compose by blast
+  with f1 f2 have "cont (\<lambda> x. ((f1 \<rightleftharpoons> (x\<bar>tspfDom\<cdot>f1)) \<uplus> (f2 \<rightleftharpoons> (f1 \<rightleftharpoons> (x\<bar>tspfDom\<cdot>f1)))))"
+    using cont2cont_APP cont_Rep_cfun2 cont_compose by blast
+  thus ?thesis
+    by(simp add: if_then_cont_tspf)
+qed    
  
 (*  \<And>b. tsbDom\<cdot>b = tspfDom\<cdot>f1 \<Longrightarrow> #\<surd>tsb b  \<le> #\<surd>tsb (f1 \<rightleftharpoons> b \<bar> tspfDom\<cdot>f1) \<uplus> (f2 \<rightleftharpoons> (f1 \<rightleftharpoons> b \<bar> tspfDom\<cdot>f1))  *)
   
@@ -464,15 +473,60 @@ lemma tspfcomp_serial: assumes "sercomp_well f1 f2"
       by (simp)
    
     
-    
-    
-    
-    
-    
-    
-    
+  subsection \<open> special serial operator\<close>
 
-      
+lemma tspfSerComp_cont [simp]: 
+  "cont (\<lambda> x. (tsbDom\<cdot>x = tspfDom\<cdot>f1) \<leadsto> (f2 \<rightleftharpoons> (f1 \<rightleftharpoons> x)))"
+proof - 
+  have "cont (\<lambda> x. (f1 \<rightleftharpoons> x))"
+    by (simp add: cont_compose)
+  moreover have "cont (\<lambda> x. (f2 \<rightleftharpoons> x))"
+    by (simp add: cont_compose)
+  ultimately show ?thesis
+    using cont_compose if_then_cont_tspf by blast
+qed  
+
+lemma tspfSerComp_tick_well: assumes "sercomp_well f1 f2" and "tsbDom\<cdot>b = tspfDom\<cdot>f1"
+  shows "(#\<surd>tsb b)  \<le> #\<surd>tsb (f2 \<rightleftharpoons> (f1 \<rightleftharpoons> b))"
+  by (smt assms(1) assms(2) inf_sup_ord(1) le_cases3 min.absorb_iff1 serial_tick_well trans_lnle tsbtick_tsbunion tsbtick_tsbunion2 tsbunion_commutative tsbunion_idL tsbunion_restrict2 tspf_ran_2_tsbdom2 tsresrict_dom3)
+  
+lemma tspfSerComp_well [simp]: assumes "sercomp_well f1 f2"
+  shows "tspf_well (Abs_cfun (\<lambda> x. (tsbDom\<cdot>x = tspfDom\<cdot>f1) \<leadsto> (f2 \<rightleftharpoons> (f1 \<rightleftharpoons> x))))"
+  apply (subst tspf_well_def)
+  apply rule
+  apply (auto simp add: tspf_type_def domIff2 tsbdom_rep_eq tspfCompI_def assms)
+  by (meson assms tspfSerComp_tick_well)
+    
+lemma tspfSerComp_dom: assumes "sercomp_well f1 f2"
+  shows "tspfDom\<cdot>(tspfSerComp f1 f2) = tspfDom\<cdot>f1"
+  by (smt assms domIff rep_abs_ctspf tsbleast_tsdom tspfSerComp_cont tspfSerComp_def tspfSerComp_well tspf_least_in_dom)
+
+lemma tspfSerComp_ran: assumes "sercomp_well f1 f2"
+  shows "tspfRan\<cdot>(tspfSerComp f1 f2) = tspfRan\<cdot>f2"
+  by (smt assms option.sel rep_abs_ctspf spfran_least tsbleast_tsdom tspfSerComp_cont tspfSerComp_def tspfSerComp_dom tspfSerComp_well tspf_ran_2_tsbdom2)
+
+lemma tspfSerComp_repAbs: assumes "sercomp_well f1 f2"
+  shows "Rep_CTSPF (tspfSerComp f1 f2) = (\<lambda> x. (tsbDom\<cdot>x = tspfDom\<cdot>f1) \<leadsto> (f2 \<rightleftharpoons> (f1 \<rightleftharpoons> x)))"
+  apply(subst tspfSerComp_def, subst Rep_CTSPF_def, subst Abs_CTSPF_def)
+  apply(subst rep_abs_tspf, subst tspfSerComp_well)
+  apply(simp_all)
+  using assms by blast
+    
+lemma tspfSerComp_getCh: assumes "sercomp_well f1 f2"  
+                             and "tsbDom\<cdot>sb = tspfDom\<cdot>f1"
+                             and "c \<in> tspfRan\<cdot>f2"
+  shows "((tspfSerComp f1 f2) \<rightleftharpoons> sb) . c = (f2 \<rightleftharpoons> (f1 \<rightleftharpoons> (sb))) . c"                             
+  apply(subst tspfSerComp_repAbs)
+  using assms apply blast
+  by(simp add: assms)
+
+(*
+Define hide function to show this lemma:
+    
+lemma tspfSerComp_eq: assumes "sercomp_well f1 f2"
+  shows "tspfComp f1 f2 = (tspfSerComp f1 f2) hide (tspfRan f1)"
+  oops
+*)        
       
 end
   
