@@ -101,7 +101,7 @@ lemma tspfcomp_parallel_f2: assumes "parcomp_well f1 f2"
           parcomp_dom_i_below sup.cobounded2 tsbrestrict_test tsbunion_restrict3 tspfCompL_def 
           tspfcomph_insert)
 
-lemma tspfcomp_parallel: assumes "parcomp_well f1 f2"
+lemma tspfcomp_iter_parallel: assumes "parcomp_well f1 f2"
                          and "tsbDom\<cdot>x = tspfCompI f1 f2"
   shows "(iter_tspfCompH f1 f2 (Suc (Suc i)) x) = ((f1\<rightleftharpoons>(x \<bar> tspfDom\<cdot>f1)) \<uplus>  (f2\<rightleftharpoons>(x \<bar> tspfDom\<cdot>f2)))"
   (* ISAR Proof generateable by sledgehammer *)
@@ -127,11 +127,11 @@ proof -
         using f2 by (metis not_less_eq_eq)
       thus "(f1\<rightleftharpoons>(x \<bar> tspfDom\<cdot>f1)) \<uplus> (f2\<rightleftharpoons>(x \<bar> tspfDom\<cdot>f2)) 
                     = iter_tsbfix2 (tspfCompH f1 f2) j (tspfRan\<cdot>f1 \<union> tspfRan\<cdot>f2) x"
-        using f3 a1 by (metis assms(1) assms(2) not_less_eq_eq tspfcomp_parallel)
+        using f3 a1 by (metis assms(1) assms(2) not_less_eq_eq tspfcomp_iter_parallel)
     qed
   show ?thesis  
     apply (rule max_in_chainI)
-    by (subst tspfcomp_parallel, simp_all add: assms f1) 
+    by (subst tspfcomp_iter_parallel, simp_all add: assms f1) 
 qed
   
   subsection \<open>lub iterate\<close>
@@ -144,26 +144,29 @@ proof -
     using assms(1) assms(2) maxinch_is_thelub tspfcomp_parallel_max_chain 
           iter_tspfcomph_chain  by blast
   thus ?thesis
-    by (metis assms(1) assms(2) tspfcomp_parallel)
+    by (metis assms(1) assms(2) tspfcomp_iter_parallel)
 qed
   
   subsection \<open>fun lub iterate\<close>
 
 lemma tspfcomp_parallel_iterconst_eq1:  assumes "parcomp_well f1 f2"
 shows "(\<lambda> x. (tsbDom\<cdot>x = tspfCompI f1 f2) \<leadsto> (\<Squnion>i. iter_tspfCompH f1 f2 i x))
-            = (\<lambda> x. (tsbDom\<cdot>x = tspfCompI f1 f2) 
+            = (\<lambda> x. (tsbDom\<cdot>x = (tspfDom\<cdot>f1 \<union> tspfDom\<cdot>f2)) 
                         \<leadsto> ((f1\<rightleftharpoons>(x \<bar> tspfDom\<cdot>f1)) \<uplus>  (f2\<rightleftharpoons>(x \<bar> tspfDom\<cdot>f2))))" 
 proof -
+  have f1: "(tspfDom\<cdot>f1 \<union> tspfDom\<cdot>f2) = tspfCompI f1 f2"
+    by (simp add: assms parcomp_dom_i_below)
   have "\<forall> s.  tsbDom\<cdot>s \<noteq> tspfCompI f1 f2 \<or>
               Some ((\<Squnion>i. iter_tspfCompH f1 f2 i s)) 
                 = Some (((f1\<rightleftharpoons>(s \<bar> tspfDom\<cdot>f1)) \<uplus>  (f2\<rightleftharpoons>(s \<bar> tspfDom\<cdot>f2))))"
     by (metis assms tspfcomp_parallel_lub_const1)
   thus ?thesis
+    apply (subst f1)
     by meson
 qed
   
   
-lemma parallel_iterconst_cont [simp]: "cont (\<lambda> x. (tsbDom\<cdot>x = tspfCompI f1 f2) 
+lemma parallel_iterconst_cont [simp]: "cont (\<lambda> x. (tsbDom\<cdot>x = (tspfDom\<cdot>f1 \<union> tspfDom\<cdot>f2)) 
                         \<leadsto> ((f1\<rightleftharpoons>(x \<bar> tspfDom\<cdot>f1)) \<uplus>  (f2\<rightleftharpoons>(x \<bar> tspfDom\<cdot>f2))))"
 proof -
   have "cont (\<lambda>s. (Rep_cfun (Rep_TSPF f1))\<rightharpoonup>(s\<bar>tspfDom\<cdot>f1))"
@@ -173,12 +176,63 @@ proof -
    hence "cont (\<lambda>s. s  \<uplus>  ((Rep_cfun (Rep_TSPF f1))\<rightharpoonup>(s\<bar>tspfDom\<cdot>f1))   \<uplus>  ((Rep_cfun (Rep_TSPF f2))\<rightharpoonup>(s\<bar>tspfDom\<cdot>f2))  )"
      using cont2cont_APP cont_compose op_the_cont by blast 
    thus ?thesis
-     apply (subst tspfCompI_def)
+     (* delayed as this can also be proven by @mw *)
      sorry
   qed
     
-    (* TODO: TSPF well proof *)
+(* \<And>b. tsbDom\<cdot>b = tspfDom\<cdot>f1 \<union> tspfDom\<cdot>f2 \<Longrightarrow> #\<surd>tsb b  \<le> #\<surd>tsb f1\<rightleftharpoons>b \<bar> tspfDom\<cdot>f1 \<uplus> f2\<rightleftharpoons>b \<bar> tspfDom\<cdot>f2  *)
+
+lemma parallel_tick_well: assumes "parcomp_well f1 f2" and "tsbDom\<cdot>b = tspfDom\<cdot>f1 \<union> tspfDom\<cdot>f2"
+  shows "(#\<surd>tsb b)  \<le> #\<surd>tsb ((f1\<rightleftharpoons>(b \<bar> (tspfDom\<cdot>f1))) \<uplus> (f2\<rightleftharpoons>(b \<bar> (tspfDom\<cdot>f2))))"
+    (* ISAR training proof: requires tsbtick_tsbunion as well as case distinction *)
+  by (smt Un_upper1 assms(1) assms(2) inf_commute le_cases3 sup.cobounded2 trans_lnle 
+            tsbleast_tsdom tsbrestrict_test tsbtick_tsbres tsbtick_tsbunion2 tsbunion_commutative
+             tsbunion_idR tsbunion_restrict3 tspf_least_in_dom tspf_less_in_than_out_ticks 
+             tspf_ran_2_tsbdom2 tspf_sbdomeq_to_domeq tsresrict_dom2)
     
-    (* TODO: getch proof *)
+    
+lemma parallel_iterconst_well [simp]: assumes "parcomp_well f1 f2"
+  shows "tspf_well (Abs_cfun (\<lambda> x. (tsbDom\<cdot>x = (tspfDom\<cdot>f1 \<union> tspfDom\<cdot>f2)) 
+                        \<leadsto> ((f1\<rightleftharpoons>(x \<bar> tspfDom\<cdot>f1)) \<uplus>  (f2\<rightleftharpoons>(x \<bar> tspfDom\<cdot>f2)))))"
+  apply (subst tspf_well_def)
+  apply rule
+  apply (auto simp add: tspf_type_def domIff2 tsbdom_rep_eq tspfCompI_def assms)
+   apply (metis (no_types, hide_lams) inf_commute inf_sup_absorb sup_commute 
+                                      tspf_ran_2_tsbdom2 tsresrict_dom3)
+  by (meson assms parallel_tick_well)
+
+ 
+(* results *)
+    
+ (* the general composition operator is capable of the parallel composition :) *)
+lemma tspfcomp_parallel: assumes "parcomp_well f1 f2"
+  shows "(tspfComp f1 f2) \<rightleftharpoons> sb = 
+        (Abs_CTSPF (\<lambda> x. (tsbDom\<cdot>x = (tspfDom\<cdot>f1 \<union> tspfDom\<cdot>f2)) 
+                        \<leadsto> ((f1\<rightleftharpoons>(x \<bar> tspfDom\<cdot>f1)) \<uplus>  (f2\<rightleftharpoons>(x \<bar> tspfDom\<cdot>f2))))) \<rightleftharpoons> sb"
+  apply (simp only: tspfcomp2_iterCompH)
+    by (simp add: assms(1) tspfcomp_parallel_iterconst_eq1)
+
+      
+lemma tspfcomp_parallel_getch1: assumes "parcomp_well f1 f2"
+                                and "tsbDom\<cdot>sb = tspfCompI f1 f2"
+                                and "c \<in> tspfRan\<cdot>f1"
+  shows "((tspfComp f1 f2) \<rightleftharpoons> sb) . c = (f1\<rightleftharpoons>(sb \<bar> tspfDom\<cdot>f1)) . c"
+  apply (simp only: tspfcomp_parallel assms)
+  apply (simp add: assms)
+  apply (subst (1 2) parcomp_dom_i_below, simp_all add: assms)
+  apply (rule tsbunion_getchL)
+  by (metis (no_types) IntI assms(1) assms(2) assms(3) empty_iff parcomp_domranf1 
+                tspfcomp_I_commu tspfcomp_L_commu)  
+    
+lemma tspfcomp_parallel_getch2: assumes "parcomp_well f1 f2"
+                                and "tsbDom\<cdot>sb = tspfCompI f1 f2"
+                                and "c \<in> tspfRan\<cdot>f2"
+  shows "((tspfComp f1 f2) \<rightleftharpoons> sb) . c = (f2\<rightleftharpoons>(sb \<bar> tspfDom\<cdot>f2)) . c"
+  apply (simp only: tspfcomp_parallel assms)
+  apply (simp add: assms)
+  apply (subst (1 2) parcomp_dom_i_below, simp_all add: assms)
+  apply (rule tsbunion_getchR)
+  by (metis assms(1) assms(2) assms(3) parcomp_domranf1 tspfcomp_I_commu tspfcomp_L_commu)
+
 end
   
