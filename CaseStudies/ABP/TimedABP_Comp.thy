@@ -60,7 +60,8 @@ text {*
 
 (* application of set2tssnd_alt_bit? *)
 lemma tssnd_tsprojsnd_tsremdups:
-  "tsRemDups\<cdot>(tsProjSnd\<cdot>(send\<cdot>i\<cdot>as)) = tsProjSnd\<cdot>(tsRemDups\<cdot>(send\<cdot>i\<cdot>as))"
+  assumes send_def: "send \<in> tsSender"
+    shows "tsRemDups\<cdot>(tsProjSnd\<cdot>(send\<cdot>i\<cdot>as)) = tsProjSnd\<cdot>(tsRemDups\<cdot>(send\<cdot>i\<cdot>as))"
 sorry
 
 lemma tssnd2rec_inp2out: 
@@ -70,7 +71,7 @@ lemma tssnd2rec_inp2out:
   shows "tsAbs\<cdot>(tsRecSnd\<cdot>ds) = tsAbs\<cdot>i"
 proof -
   have "#(tsAbs\<cdot>(tsRemDups\<cdot>as)) = #(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(send\<cdot>i\<cdot>as))))"
-    by (metis acks_def out_def tsprojfst_tsabs_slen tsprojsnd_tsabs_slen tssnd_tsprojsnd_tsremdups)
+    by (metis acks_def out_def tsprojfst_tsabs_slen tsprojsnd_tsabs_slen tssnd_tsprojsnd_tsremdups send_def)
   thus "tsAbs\<cdot>(tsRecSnd\<cdot>ds) = tsAbs\<cdot>i"
     by (metis eq_slen_eq_and_less min_rek out_def send_def set2tssnd_ack2trans 
         set2tssnd_prefix_inp tsrecsnd_insert)
