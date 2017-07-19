@@ -61,8 +61,16 @@ text {*
 (* application of set2tssnd_alt_bit? *)
 lemma tssnd_tsprojsnd_tsremdups:
   assumes send_def: "send \<in> tsSender"
-    shows "tsRemDups\<cdot>(tsProjSnd\<cdot>(send\<cdot>i\<cdot>as)) = tsProjSnd\<cdot>(tsRemDups\<cdot>(send\<cdot>i\<cdot>as))"
-sorry
+  shows "tsRemDups\<cdot>(tsProjSnd\<cdot>(send\<cdot>i\<cdot>as)) = tsProjSnd\<cdot>(tsRemDups\<cdot>(send\<cdot>i\<cdot>as))" (is "?L = ?R")
+proof -
+  (* u should definitely use this lemma *)
+  have "tsAbs\<cdot>(tsRemDups\<cdot>(tsProjSnd\<cdot>(tsRemDups\<cdot>(send\<cdot>i\<cdot>as)))) 
+    = tsAbs\<cdot>(tsProjSnd\<cdot>(tsRemDups\<cdot>(send\<cdot>i\<cdot>as)))"  by (simp add: send_def set2tssnd_alt_bit) 
+  
+  (* Maybe this should be the final lemma... *)
+  hence "tsAbs\<cdot>?L = tsAbs\<cdot>?R" sorry
+  thus ?thesis sorry
+qed
 
 lemma tssnd2rec_inp2out: 
   assumes send_def: "send \<in> tsSender"
