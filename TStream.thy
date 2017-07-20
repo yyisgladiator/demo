@@ -2784,7 +2784,7 @@ apply (subst tsabs_insert)
 apply (simp add: tslscons_lscons uMsg_def lscons_conv)
 by (simp add: tsabs_insert)
 
-lemma tsabs_delayfun: "tsAbs\<cdot>(delayFun\<cdot>ts) = tsAbs\<cdot>ts"
+lemma tsabs_delayfun [simp]: "tsAbs\<cdot>(delayFun\<cdot>ts) = tsAbs\<cdot>ts"
 by(simp add: delayFun_def)
 
 lemma tsdom_mlscons: "ts\<noteq>\<bottom> \<Longrightarrow> tsDom\<cdot>(tsMLscons\<cdot>(updis t)\<cdot>ts) = {t} \<union> tsDom\<cdot>ts"
