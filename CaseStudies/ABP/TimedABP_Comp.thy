@@ -8,7 +8,7 @@
 chapter {* Alternating Bit Protocol *}       
                                                             
 theory TimedABP_Comp
-imports "../TimedABP"
+imports Medium Recv
 
 begin
 default_sort countable
