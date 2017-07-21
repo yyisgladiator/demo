@@ -48,12 +48,13 @@ definition spf_well:: "('m SB \<rightarrow> 'm SB option) \<Rightarrow> bool" wh
   proof (cases "sbLeast {} \<in> range (Y)")
    case True
    thus ?thesis
-  by (smt below_refl chY cpo_lubI lub_const lub_eq po_class.chain_def stbundle_allempty)
+    by (simp add: below_option_def chY is_lub_maximal lub_eqI po_class.chainE rangeI stbundle_allempty ub_rangeI)
   next
   case False
   hence "\<forall>i. (sbDom\<cdot>(Y i) \<noteq> {})" by (metis empty_iff rangeI sbleast_sbdom sb_eq)
   hence "(\<Squnion>i. Y i) \<noteq> sbLeast {}" using chY by (auto simp add: sbChain_dom_eq2)
-  thus ?thesis by (smt False fun_upd_apply image_cong image_iff is_lub_const)
+  thus ?thesis
+   by (metis (mono_tags, lifting) False below_option_def fun_upd_apply is_lub_maximal rangeI ub_rangeI)
       qed
   qed 
   
@@ -82,7 +83,27 @@ definition spf_well:: "('m SB \<rightarrow> 'm SB option) \<Rightarrow> bool" wh
   assume chY: "chain Y" and  as2: "\<forall>i. ?P (Y i)"
   hence "Rep_cfun (Y i) \<sqsubseteq> Rep_cfun (\<Squnion>i. Y i)" by (meson below_cfun_def is_ub_thelub)
   hence "dom (Rep_cfun (Y i)) =  dom (Rep_cfun (\<Squnion>i. Y i))" by (simp add: part_dom_eq)
-  thus "?P (\<Squnion>i. Y i)"  by (smt as2 ch2ch_Rep_cfunL chY contlub_cfun_fun op_the_chain op_the_lub sbChain_dom_eq2)
+  thus "?P (\<Squnion>i. Y i)"
+    proof -
+      { fix aa :: "channel set \<Rightarrow> 'a"
+        obtain CC :: "nat \<Rightarrow> channel set" where
+          "\<forall>n a. a \<notin> dom (Rep_cfun (Y n)) \<or> sbDom\<cdot>Rep_cfun (Y n)\<rightharpoonup>a = CC n"
+          using as2 by moura
+        moreover
+        { assume "sbDom\<cdot>Rep_cfun (Y i)\<rightharpoonup>aa (CC i) = CC i"
+          moreover
+          { assume "Y i\<cdot>(aa (CC i)) \<noteq> Lub Y\<cdot>(aa (CC i))"
+            then have "\<exists>C. Rep_cfun (Y i)\<rightharpoonup>aa C \<sqsubseteq> Rep_cfun (Lub Y)\<rightharpoonup>aa (CC i)"
+              by (meson below_option_def chY is_ub_thelub monofun_cfun_fun)
+            then have "(\<exists>C. sbDom\<cdot>Rep_cfun (Y i)\<rightharpoonup>aa C \<noteq> CC i) \<or> (\<exists>C. aa C \<notin> dom (Rep_cfun (Lub Y)) \<or> sbDom\<cdot>Rep_cfun (Lub Y)\<rightharpoonup>aa C = C)"
+              by (metis (no_types) sbdom_eq) }
+          ultimately have "(\<exists>C. sbDom\<cdot>Rep_cfun (Y i)\<rightharpoonup>aa C \<noteq> CC i) \<or> (\<exists>C. aa C \<notin> dom (Rep_cfun (Lub Y)) \<or> sbDom\<cdot>Rep_cfun (Lub Y)\<rightharpoonup>aa C = C)"
+            by fastforce }
+        ultimately have "\<exists>C. aa C \<notin> dom (Rep_cfun (Lub Y)) \<or> sbDom\<cdot>Rep_cfun (Lub Y)\<rightharpoonup>aa C = C"
+          by (metis \<open>dom (Rep_cfun (Y i)) = dom (Rep_cfun (\<Squnion>i. Y i))\<close>) }
+      then show ?thesis
+        by metis
+    qed 
   qed
   
     (* unite the two admissible proofs. Used in cpo_def proof. *)
@@ -339,7 +360,7 @@ lemma rep_spf_mono [simp]: shows "monofun Rep_SPF"
 
 (* The newly defined Rep_SPF is a continuous function *)
 lemma rep_spf_cont [simp]: "cont Rep_SPF"
-  by (smt Abs_SPF_inverse Cont.contI2 Rep_SPF adm_SPF adm_def lub_SPF lub_eq not_below2not_eq rep_spf_mono)
+  using cont_Rep_SPF cont_id by blast
 
 lemma rep_spf_well [simp]:  "spf_well (Rep_SPF s)"
   using Rep_SPF by blast
@@ -464,7 +485,7 @@ by(simp add: spfDom_def)
   (* if 2 elements are in a below relation they have the same Input-channel-Set *)
 lemma spfdom_eq: assumes "x\<sqsubseteq>y"
   shows "spfDom\<cdot>x = spfDom\<cdot>y"
-  by (smt Abs_cfun_inverse2 assms someI_ex spfDom_def spf_below_sbdom spf_dom_cont spf_dom_not_empty)
+  by (metis (no_types, lifting) assms someI_ex spf_below_sbdom spf_dom_not_empty spfdom_insert)
 
   (* the lub of an chain has the same input-set as all elements in the chain *)
 lemma spfdom_eq_lub: assumes "chain Y"
@@ -484,7 +505,7 @@ lemma spf_belowI: assumes "spfDom\<cdot>f = spfDom\<cdot>g"
        shows "f \<sqsubseteq> g"
 proof -
   have "dom (Rep_CSPF f) = dom (Rep_CSPF g)"
-    by (smt Abs_cfun_inverse2 Collect_cong assms(1) domD dom_def dom_eq_empty_conv map_not_spf mem_Collect_eq rep_cspf_cont2 rep_cspf_well spf_well_def2 spfdom2sbdom)
+    by (metis (no_types, lifting) Collect_cong Rep_CSPF_def assms(1) dom_def mem_Collect_eq rep_spf_well spfLeastIDom spf_well_def)
   thus ?thesis
     by (metis Rep_CSPF_def assms(2) below_SPF_def below_cfun_def domIff option.collapse part_below spfdom2sbdom) 
 qed
@@ -493,7 +514,16 @@ lemma spfDomAbs: assumes "cont (\<lambda> x. (sbDom\<cdot>x = cs ) \<leadsto> f(
     shows "spfDom\<cdot>(Abs_CSPF (\<lambda> x. (sbDom\<cdot>x = cs ) \<leadsto> f(x))) = cs" 
 apply(simp add: spfDom_def)
 apply(simp_all add: assms)
-  by (smt domIff option.discI sbleast_sbdom someI_ex)
+proof -
+  have "\<forall>p s pa. (\<not> p (s::'a SB) \<or> (\<exists>s. p s \<and> \<not> pa s)) \<or> pa (Eps p)"
+    by (metis someI2)
+  then have "(SOME s. s \<in> dom (\<lambda>s. (sbDom\<cdot>s = cs)\<leadsto>f s)) \<in> dom (\<lambda>s. (sbDom\<cdot>s = cs)\<leadsto>f s)"
+    by (metis (no_types) assms(1) assms(2) rep_abs_cspf spf_dom_not_empty)
+  then have "(sbDom\<cdot> (SOME s. s \<in> dom (\<lambda>s. (sbDom\<cdot>s = cs)\<leadsto>f s)) = cs)\<leadsto>f (SOME s. s \<in> dom (\<lambda>s. (sbDom\<cdot>s = cs)\<leadsto>f s)) \<noteq> None"
+    by blast
+  then show "sbDom\<cdot> (SOME s. s \<in> dom (\<lambda>s. (sbDom\<cdot>s = cs)\<leadsto>f s)) = cs"
+    by meson
+qed
     
   subsection \<open>spfRan\<close>
 
@@ -543,7 +573,7 @@ lemma spfran2sbdom2: assumes "sbDom\<cdot>sb = spfDom\<cdot>f"
   and "spfDom\<cdot>f \<noteq> {}"
   shows "sbDom\<cdot>((Rep_CSPF f) \<rightharpoonup> sb) = spfRan\<cdot>f"
   apply(simp add: spfran_insert)
-    by (smt assms(1) domIff mem_Collect_eq option.exhaust_sel ran_def sbleast_sbdom some_eq_ex spfLeastIDom spf_sbdom2dom spfran2sbdom)
+by (metis (no_types, lifting) assms(1) domIff option.collapse ran2exists spf_ran_not_empty spf_sbdom2dom spfdom2sbdom spfran2sbdom tfl_some)
 
 
   subsection \<open>spfType\<close>
@@ -570,7 +600,11 @@ lemma spfsblift_well[simp]: "spf_well  (\<Lambda> b. (sbDom\<cdot>b=In) \<leadst
     fix b::"'a SB"
     assume "b \<in> dom (Rep_cfun (\<Lambda> b. (sbDom\<cdot>b = In)\<leadsto>((\<up>(f\<cdot>b))\<bar>Out)))"
     hence b_def:" b \<in> dom (\<lambda> b. (sbDom\<cdot>b = In)\<leadsto>(\<up>f\<cdot>b)\<bar>Out)" by simp
-    thus "sbDom\<cdot>b = In" by (smt domIff)
+    thus "sbDom\<cdot>b = In"
+      proof -
+        show ?thesis
+        by (meson b_def if_then_sbDom)
+      qed
    thus "sbDom\<cdot>(the ((\<Lambda> b. (sbDom\<cdot>b = In)\<leadsto>(\<up>f\<cdot>b)\<bar>Out)\<cdot>b)) = Out" by simp
   next
   fix b2::"'a SB"
@@ -812,7 +846,7 @@ definition pL :: "'m SPF \<Rightarrow> 'm SPF \<Rightarrow> channel set" where
 "pL f1 f2 \<equiv> (spfDom\<cdot>f1 \<inter> spfRan\<cdot>f1) \<union> (spfDom\<cdot>f1 \<inter> spfRan\<cdot>f2) \<union> (spfDom\<cdot>f2 \<inter> spfRan\<cdot>f2)"
 
 lemma spfpl_sub_L[simp]: "pL f1 f2 \<subseteq> L f1 f2"
-  by (smt L_def Un_subset_iff inf_sup_aci(1) inf_sup_distrib1 pL_def sup.cobounded1 sup.cobounded2)
+  by (simp add: L_def pL_def subset_iff)
 
 lemma spfComp_I_domf1_eq: assumes "spfRan\<cdot>f1 = spfDom\<cdot>f2" 
                           and "sbDom\<cdot>sb = I f1 f2" 
@@ -855,8 +889,8 @@ shows "(iterate (Suc (Suc i))\<cdot>(spfCompHelp2 f1 f2 x)\<cdot>(sbLeast (C f1 
   apply (subst iterate_Suc)
   apply(subst spfCompHelp2_def, simp)
   apply (subst sbunion_getchL)
-   apply (smt assms(1) assms(2) assms(3) assms(4) assms(5) disjoint_iff_not_equal inf_sup_ord(4) 
-              le_supI1 spfCompH2_dom spfCompH2_itDom spfComp_well_def spfRanRestrict)
+   apply (metis IntI Oc_def Un_subset_iff assms(1) assms(2) assms(3) assms(5) empty_iff iterate_Suc 
+              spfCompH2_itDom spfComp_well_def spfOc_sub_C spfRanRestrict)
    apply (subst sbunion_getchR)
     apply (metis C_def Un_upper1 assms(2) assms(5) iterate_Suc le_supI1 spfCompH2_itDom 
                  spfRanRestrict)
@@ -875,7 +909,7 @@ lemma spfComp_serialf2: assumes "spfRan\<cdot>f1 = spfDom\<cdot>f2"
   apply (subst spfCompHelp2_def)
   apply (simp)
   apply (subst sbunion_getchR)
-   apply (metis assms(1) assms(2) assms(4) assms(5) inf_sup_ord(4) iterate_Suc le_supI1 spfCompH2_dom 
+   apply (metis assms(1) assms(2)  assms(5) inf_sup_ord(4) iterate_Suc le_supI1 spfCompH2_dom 
                 spfCompH2_itDom spfRanRestrict)
     by (smt Int_absorb1 assms(1) assms(2) assms(3) assms(4) assms(6) inf_sup_ord(4) iterate_Suc 
             le_supI1 sb_eq sbrestrict2sbgetch sbrestrict_sbdom spfCompH2_dom spfComp_domranf1 
@@ -1227,9 +1261,9 @@ lemma hideSbRestrict: assumes "sbDom\<cdot>sb = spfDom\<cdot>f"
 lemma hideSbRestrictCh: assumes "sbDom\<cdot>sb = spfDom\<cdot>f" and "c \<notin> cs"
    shows "(hide f cs)\<rightleftharpoons>sb . c = (f\<rightleftharpoons>sb) . c"
   apply(simp add: hide_def)
-  apply(simp add: hide_cont hide_spfwell assms)
-  by (smt DiffI Diff_subset Int_absorb1 assms(1) assms(2) domIff option.exhaust_sel sbleast_sbdom sbrestrict2sbgetch sbrestrict_sbdom sbunion_getchL sbunion_idL spfLeastIDom spf_sbdom2dom spfran2sbdom)
-    
+  apply(simp add: assms)
+  by (metis DiffI Int_lower1 assms(1) assms(2) hidespfwell_helper sbrestrict2sbgetch sbrestrict_sbdom sbunion_getchL sbunion_idL)
+   
 lemma hideSpfRan: "spfRan\<cdot>(hide f cs) = spfRan\<cdot>f - cs"
   apply(subst spfran_least)
   apply(simp add: spfDomHide)
