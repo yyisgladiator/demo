@@ -47,6 +47,15 @@ abbreviation iter_spfCompH3 :: "'a SPF \<Rightarrow> 'a SPF \<Rightarrow> nat \<
 
 subsection \<open>serial and parallel composition\<close>
 
+abbreviation parcomp_well :: "'m SPF \<Rightarrow> 'm SPF \<Rightarrow> bool" where
+"parcomp_well f1 f2 \<equiv> (L f1 f2 = {}) \<and> (spfRan\<cdot>f1 \<inter> spfRan\<cdot>f2 = {})"
+  
+abbreviation sercomp_well :: "'m SPF \<Rightarrow> 'm SPF \<Rightarrow> bool" where
+"sercomp_well f1 f2 \<equiv>  (spfRan\<cdot>f1 = spfDom\<cdot>f2) 
+                        \<and> (spfDom\<cdot>f1 \<inter> spfRan\<cdot>f1 = {})
+                        \<and> (spfDom\<cdot>f2 \<inter> spfRan\<cdot>f2 = {})
+                        \<and> (spfDom\<cdot>f1 \<inter> spfRan\<cdot>f2 = {})"
+
 (* operator for parallel composition *)  
 definition parcomp :: "'m SPF \<Rightarrow> 'm SPF \<Rightarrow> 'm SPF" ("_\<parallel>_") where
 "parcomp f1 f2 \<equiv> Abs_CSPF (\<lambda> x. (sbDom\<cdot>x = spfDom\<cdot>f1 \<union> spfDom\<cdot>f2 ) \<leadsto> ((f1 \<rightleftharpoons> (x \<bar>spfDom\<cdot>f1)) \<uplus> (f2 \<rightleftharpoons> (x\<bar>spfDom\<cdot>f2))))"
@@ -308,8 +317,8 @@ lemma lub_mult2_shift_eq: fixes Y:: "nat \<Rightarrow> 'a::cpo" fixes Z:: "nat \
   assumes "chain Y" and "chain Z"
   and "\<And> i. Y (i) = Z (2 * i)"
 shows "(\<Squnion>i. (Y i)) = (\<Squnion>i. (Z i))"
-  by (metis One_nat_def Suc_n_not_le_n assms(1) assms(2) assms(3) le_add_same_cancel1 
-        lub_mult_shift_eq mult_2 nat_le_linear nat_mult_1_right)  
+  apply (simp add: assms)
+  by (metis assms(2) lub_range_mult one_le_numeral)
   
 subsection \<open>spf\<close>
    
@@ -1594,37 +1603,32 @@ lemma unionRestrict: assumes "sbDom\<cdot>sb1 \<inter> cs = {}"
    shows "sb1 \<uplus> sb2 \<uplus> sb3 \<bar> cs = sb2 \<uplus> sb3"
   by (metis assms(2) sbunionDom sbunion_associative sbunion_restrict)
 
-lemma parCompHelp2Eq: assumes "L f1 f2 = {}"
-                          and "spfComp_well f1 f2"
+lemma parCompHelp2Eq: assumes "parcomp_well f1 f2"
                           and "sbDom\<cdot>x = spfDom\<cdot>f1 \<union> spfDom\<cdot>f2"    
    shows "(\<Squnion>i. iterate i\<cdot>(spfCompHelp2 f1 f2 x)\<cdot>(sbLeast (C f1 f2)))\<bar>Oc f1 f2 = (f1\<rightleftharpoons>(x\<bar>spfDom\<cdot>f1)) \<uplus> (f2\<rightleftharpoons>(x\<bar>spfDom\<cdot>f2))" 
-apply(subst spfComp_parallel_itconst2, simp_all add: assms)
+apply(subst spfComp_parallel_itconst2, simp_all add: assms spfComp_well_def)
 apply(simp add: Oc_def)
 apply(subst unionRestrict)
 apply(simp_all add: assms)
-by (metis Diff_triv L_def assms(1) inf_commute)
+by (metis L_def assms(1))
 
-lemma parCompHelp2Eq2: assumes "L f1 f2 = {}"
-                           and "spfComp_well f1 f2" 
+lemma parCompHelp2Eq2: assumes "parcomp_well f1 f2" 
    shows " (sbDom\<cdot>x = spfDom\<cdot>f1 \<union> spfDom\<cdot>f2) \<leadsto> ((\<Squnion>i. iterate i\<cdot>(spfCompHelp2 f1 f2 x)\<cdot>(sbLeast (C f1 f2)))\<bar>Oc f1 f2)
          = (sbDom\<cdot>x = spfDom\<cdot>f1 \<union> spfDom\<cdot>f2) \<leadsto> ((f1\<rightleftharpoons>(x\<bar>spfDom\<cdot>f1)) \<uplus> (f2\<rightleftharpoons>(x\<bar>spfDom\<cdot>f2)))"
-using assms(1) assms(2) parCompHelp2Eq by fastforce
+using assms(1) parCompHelp2Eq by fastforce
 
-lemma parallelOperatorEq: assumes "L f1 f2 = {}"
-                              and "spfComp_well f1 f2"  
+lemma parallelOperatorEq: assumes "parcomp_well f1 f2"  
    shows "(f1 \<otimes> f2) = (f1 \<parallel> f2)"
 apply(simp add: parcomp_def spfcomp_tospfH2)
 apply(subst spfComp_I_domf1f2_eq, simp_all add: assms)
 apply(subst parCompHelp2Eq2)
 by(simp_all add: assms)
 
-lemma parCompDom: assumes "L f1 f2 = {}"
-                  and "spfComp_well f1 f2" shows "spfDom\<cdot>(f1 \<parallel> f2) = spfDom\<cdot>(spfcomp f1 f2)"
-  by (simp add: assms(1) assms(2) parallelOperatorEq)
+lemma parCompDom: assumes "parcomp_well f1 f2" shows "spfDom\<cdot>(f1 \<parallel> f2) = spfDom\<cdot>(spfcomp f1 f2)"
+  by (simp add: assms(1) parallelOperatorEq)
 
-lemma parCompRan: assumes "L f1 f2 = {}"
-                  and "spfComp_well f1 f2" shows "spfRan\<cdot>(f1 \<parallel> f2) = spfRan\<cdot>(spfcomp f1 f2)"
-  by (simp add: assms(1) assms(2) parallelOperatorEq)
+lemma parCompRan: assumes "parcomp_well f1 f2" shows "spfRan\<cdot>(f1 \<parallel> f2) = spfRan\<cdot>(spfcomp f1 f2)"
+  by (simp add: assms(1) parallelOperatorEq)
 
     
 section \<open>serial\<close>
@@ -1634,11 +1638,14 @@ lemma pLEmptyNoSelfloops: assumes "pL f1 f2 = {}"
   apply(simp add: no_selfloops_def)
   using assms pL_def by auto
     
-lemma spfComp_I_domf1_eq2: assumes "pL f1 f2 = {}"
-                              and "spfRan\<cdot>f1 = spfDom\<cdot>f2"
-                              and "spfComp_well f1 f2"
-                            shows "I f1 f2 = spfDom\<cdot>f1"
-  using spfComp_I_domf1_eq assms(1) assms(2) assms(3) pLEmptyNoSelfloops spfComp_dom_I spfdom_insert by blast
+lemma spfComp_I_domf1_eq2: assumes "sercomp_well f1 f2"
+  shows "I f1 f2 = spfDom\<cdot>f1"
+proof -
+  have "spfDom\<cdot>f2 \<inter> (spfDom\<cdot>f1 \<union> spfDom\<cdot>f2 - (spfRan\<cdot>f1 \<union> spfRan\<cdot>f2)) = {}"
+    by (simp add: Diff_Int_distrib assms)
+  show "I f1 f2 = spfDom\<cdot>f1"
+    using I_def assms by blast
+qed
 
 (* This need to be adapted
 lemma serCompHelp2Eq: assumes "pL f1 f2 = {}"
