@@ -692,7 +692,7 @@ lemma iter_tsbfix2_chain: assumes "tsbfun_io_eq (F x) cs"
     
 (* the domain is always the same if io_eq holds *)
 lemma iter_tsbfix2_dom: assumes "tsbfun_io_eq (F x) cs"
-  shows "tsbDom\<cdot>(iter_tsbfix2 F i cs x) = tsbDom\<cdot>((F x)\<cdot>(tsbLeast cs))"
+  shows "tsbDom\<cdot>(iter_tsbfix2 F i cs x) = cs"
     proof (induction i)
       case 0
       then show ?case
@@ -783,7 +783,7 @@ qed
   
   
 lemma lub_iter_tsbfix2_dom: assumes "tsbfun_io_eq (F x) cs"
-  shows "tsbDom\<cdot>(\<Squnion>i. iter_tsbfix2 F i cs x) =  tsbDom\<cdot>((F x)\<cdot>(tsbLeast cs))"
+  shows "tsbDom\<cdot>(\<Squnion>i. iter_tsbfix2 F i cs x) =  cs"
 proof -
   have "\<And>n. tsbfun_io_eq (iterate n\<cdot>(F x)) cs"
     by (simp add: assms iter_tsbfix2_dom)
@@ -925,8 +925,12 @@ lemma tsbfix_contI [simp]:   assumes  "cont F" and "\<And> x. (P x) \<Longrighta
     using tsbfix_monoI assms apply blast
     using chain_if_lub_iter_tsbfix2 assms by blast
       
+ 
+  subsection \<open>tsbFix\<close>    
+
+(* tsbfix is cont in X *)
 lemma tsbfix_contI2 [simp]: fixes F :: "'m TSB \<Rightarrow> 'm TSB \<rightarrow> 'm TSB"
-                            assumes  "cont F" and "\<And> x. (P x) \<Longrightarrow> tsbfun_io_eq (F x) cs" 
+                            assumes  "cont F" and "\<And> x. (P x) \<Longrightarrow> tsbfun_io_eq (F x) cs"
                             and "\<And> x y. tsbDom\<cdot>x = tsbDom\<cdot>y \<Longrightarrow> P x = P y"
                             shows "cont (\<lambda> x. (P x) \<leadsto> tsbFix (F x) cs)"
 proof -
@@ -937,8 +941,145 @@ proof -
     apply (subst f1, subst tsbFix2_def)
     using tsbfix_contI assms by blast
 qed
-  
-  
+
+(* the domain is always the same if io_eq holds *)
+lemma iter_tsbfix_dom: assumes "tsbfun_io_eq F cs"
+  shows "tsbDom\<cdot>(iterate i\<cdot>F\<cdot>(tsbLeast cs)) = cs"
+    proof (induction i)
+      case 0
+      then show ?case
+        by (simp add: assms(1))
+    next
+      case (Suc i)
+      then show ?case
+      proof -
+        have "\<And>c. (c\<cdot>(tsbLeast cs)::'a TSB) \<sqsubseteq> c\<cdot>(F\<cdot>(tsbLeast cs))"
+          by (simp add: assms monofun_cfun_arg)
+        then show ?thesis
+          by (metis (no_types) Suc iterate_Suc2 tsbdom_below)
+      qed
+qed
+
+
+lemma tsbfix_dom: assumes "tsbfun_io_eq (F) cs"
+  shows "tsbDom\<cdot>(tsbFix F cs) =  cs"
+proof -
+  have "\<And>n. tsbfun_io_eq (iterate n\<cdot>(F)) cs"
+    by (simp add: assms iter_tsbfix_dom)
+  then show ?thesis
+    by (metis (no_types, lifting) assms tsbChain_dom_eq2 tsbFix_def tsbIterate_chain)
+qed
+
+  subsubsection \<open>fixed point properties\<close>
+
+(* tsbFix calculates the fixed point *)
+lemma tsbfix_eq: assumes io_eq: "tsbfun_io_eq F cs"
+  shows "(tsbFix F cs) = F\<cdot>(tsbFix F cs)"
+  apply (simp add: tsbFix_def)
+   (* perform an chain index shift by 1 *)
+  apply (subst lub_range_shift [of _ 1, symmetric])
+    apply (simp add: io_eq tsbIterate_chain)
+    apply (subst contlub_cfun_arg)
+      apply (simp add: io_eq tsbIterate_chain)
+      by simp
+
+
+lemma tsbfix_least_below: assumes "tsbfun_io_eq F cs" and "tsbDom\<cdot>x = cs"
+  shows "F\<cdot>x \<sqsubseteq> x \<Longrightarrow> (tsbFix F cs) \<sqsubseteq> x"
+  apply (simp add: tsbFix_def)
+  apply (rule lub_below)
+    apply (simp add: assms tsbIterate_chain)
+    apply (induct_tac i)
+      apply (simp add: assms(2))
+      apply (simp add: assms(1))
+      apply (erule rev_below_trans)
+      by (erule monofun_cfun_arg)
+
+(* tsbFix calculates the least fixed point *)
+lemma tsbfix_least: assumes "tsbfun_io_eq F cs" and "tsbDom\<cdot>x = cs"
+                    and "F\<cdot>x = x"
+  shows "(tsbFix F cs) \<sqsubseteq> x"
+  by (simp add: assms(1) assms(2) assms(3) tsbfix_least_below)
+
+ (* Intro rule for tsbfix_eq *)
+lemma tsbfix_eqI: assumes fp: "F\<cdot>x = x" and lst: "\<And>z. F\<cdot>z = z \<Longrightarrow> x \<sqsubseteq> z"
+                  and "tsbfun_io_eq F cs" and "tsbDom\<cdot>x = cs"
+  shows "(tsbFix F cs) = x"
+  by (metis assms(3) assms(4) below_antisym fp lst tsbfix_eq tsbfix_least)
+
+
+(* compatibility lemmas to Fix.thy *)
+lemma tsbfix_least_iff: assumes "tsbfun_io_eq F cs"
+  shows "((tsbFix F cs) = tsbLeast cs) = (F\<cdot>(tsbLeast cs) = tsbLeast cs)"
+proof -
+  have "F\<cdot>(tsbFix F cs) = tsbFix F cs"
+    by (metis (full_types) assms tsbfix_eq)
+  then show ?thesis
+    by (metis assms po_eq_conv tsbfix_dom tsbfix_least tsbleast_below)
+qed
+
+lemma tsbfix_strict: assumes "tsbfun_io_eq F cs" and "F\<cdot>(tsbLeast cs) = (tsbLeast cs)"
+  shows "(tsbFix F cs) = tsbLeast cs"
+  by (simp add: assms(2) tsbfix_least_iff)
+
+lemma tsbfix_defined: assumes "tsbfun_io_eq F cs" and "F\<cdot>(tsbLeast cs) \<noteq> (tsbLeast cs)"
+  shows "(tsbFix F cs) \<noteq> tsbLeast cs"
+  by (metis assms(1) assms(2) tsbfix_eq)
+
+lemma tsbfix_id: "(tsbFix (\<Lambda> x. x) cs) = (tsbLeast cs)"
+  by (simp add: tsbfix_strict)
+
+lemma tsbfix_const: assumes "tsbDom\<cdot>c = cs"
+  shows "(tsbFix (\<Lambda> x. c) cs) = c"
+proof -
+  have "tsbfun_io_eq (\<Lambda> x. c) cs"
+    by (simp add: assms)
+  thus ?thesis
+    by (metis (no_types) beta_cfun cont_const tsbfix_eq)
+qed
+
+
+(* tsbfix induction *)
+
+lemma tsbfix_ind: assumes "tsbfun_io_eq F cs"
+                  and "adm P" and "P (tsbLeast cs)"
+                  and "\<And> x. \<lbrakk>(tsbDom\<cdot>x) = cs; P x\<rbrakk> \<Longrightarrow> P (F\<cdot>x)"
+  shows "P (tsbFix F cs)"
+proof -
+  have f1: "\<And> n. tsbDom\<cdot>(iterate n\<cdot>F\<cdot>(tsbLeast cs)) = cs"
+    by (simp add: assms(1) iter_tsbfix_dom)
+  show ?thesis
+    unfolding tsbFix_def
+    apply (subst admD, simp_all add: assms)
+      apply (simp add: assms(1) tsbIterate_chain)
+      apply (rule nat_induct, simp add: assms(3))
+      by (simp add: assms(4) f1)
+qed
+
+lemma cont_fix_ind: assumes "cont F" and "tsbfun_io_eq (Abs_cfun F) cs"
+                    and "adm P" and "P (tsbLeast cs)"
+                    and "\<And> x. \<lbrakk>(tsbDom\<cdot>x) = cs; P x\<rbrakk> \<Longrightarrow> P (F x)"
+  shows "P (tsbFix (Abs_cfun F) cs)"
+  apply (rule tsbfix_ind, simp_all add: assms)
+  using assms(1) assms(2) by auto
+
+
+lemma tsbfix_ind2:  assumes "tsbfun_io_eq F cs"
+                    and "adm P" and s0: "P ((tsbLeast cs))" and s1: "P (F\<cdot>(tsbLeast cs))"
+                    and s2: "\<And> x. \<lbrakk>(tsbDom\<cdot>x) = cs; P x; P (F\<cdot>x)\<rbrakk> \<Longrightarrow> P (F\<cdot>(F\<cdot>x))"
+  shows "P (tsbFix F cs)"
+  unfolding tsbFix_def
+  apply (subst admD, simp_all add: assms)
+    apply (simp add: assms(1) tsbIterate_chain)
+    apply (rule nat_less_induct)
+    apply (case_tac n)
+      apply (simp add: s0)
+      apply (case_tac nat)
+        apply (simp add: s1)
+        apply (frule_tac x=nat in spec)
+        by (simp add: assms(1) iter_tsbfix_dom s2)
+        
+    
 section \<open>tspfComp\<close>  
   
   subsection \<open>pre\<close>
