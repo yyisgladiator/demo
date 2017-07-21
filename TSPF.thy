@@ -1056,9 +1056,9 @@ proof -
       by (simp add: assms(4) f1)
 qed
 
-lemma cont_fix_ind: assumes "cont F" and "tsbfun_io_eq (Abs_cfun F) cs"
-                    and "adm P" and "P (tsbLeast cs)"
-                    and "\<And> x. \<lbrakk>(tsbDom\<cdot>x) = cs; P x\<rbrakk> \<Longrightarrow> P (F x)"
+lemma cont_tsbfix_ind: assumes "cont F" and "tsbfun_io_eq (Abs_cfun F) cs"
+                       and "adm P" and "P (tsbLeast cs)"
+                       and "\<And> x. \<lbrakk>(tsbDom\<cdot>x) = cs; P x\<rbrakk> \<Longrightarrow> P (F x)"
   shows "P (tsbFix (Abs_cfun F) cs)"
   apply (rule tsbfix_ind, simp_all add: assms)
   using assms(1) assms(2) by auto
