@@ -120,8 +120,20 @@ lemma tssnd_tsabs_slen:
 oops
 
 lemma tssnd_inftick: "acks\<noteq>\<bottom> \<Longrightarrow> tsSnd\<cdot>tsInfTick\<cdot>acks\<cdot>ack = tsInfTick"
-oops
-
+proof -
+  assume a1: "acks \<noteq> \<bottom>"
+  have f2: "delay (Abs_tstream \<up>(\<surd>::'a event)\<infinity>) = tsInfTick"
+    by (metis (no_types)
+        Rep_Abs delayFun.rep_eq sinftimes_unfold tick_msg tsInfTick.abs_eq tsInfTick.rep_eq
+        tsconc_insert)
+  have "\<forall>t ta d. t = \<bottom> \<or> tsSnd\<cdot>(delay (ta::'a tstream))\<cdot>t\<cdot>d = delay (tsSnd\<cdot>ta\<cdot>t\<cdot>d)"
+    using tssnd_delayfun by blast
+  then have "tsSnd\<cdot>(tsInfTick::'a tstream)\<cdot>acks\<cdot>ack = delay (tsSnd\<cdot>(Abs_tstream \<up>\<surd>\<infinity>)\<cdot>acks\<cdot>ack)"
+    using f2 a1 by (metis (no_types))
+  then show ?thesis
+    by (metis (no_types)
+        Rep_Abs delayFun.rep_eq s2sinftimes tick_msg tsInfTick.abs_eq tsconc_insert tsconc_rep_eq)
+qed
 
 (* ToDo: additional properties lemmata for sender *)
 
