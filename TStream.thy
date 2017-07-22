@@ -3244,7 +3244,7 @@ lemma tsremdups_h_tsabs:
   apply (induct ts arbitrary: t)
   apply (simp_all)
   apply (simp add: lscons_conv)
-  apply (simp add: tsabs_delayfun tsremdups_h_delayfun)
+  apply (simp add: tsremdups_h_delayfun)
   apply (case_tac "t=ta")
   apply (simp add: lscons_conv tsabs_mlscons tsremdups_h_mlscons_dup)
   by (simp add: lscons_conv tsabs_mlscons tsremdups_h_mlscons_ndup)
@@ -3254,7 +3254,6 @@ lemma tsremdups_tsabs: "tsAbs\<cdot>(tsRemDups\<cdot>ts) = srcdups\<cdot>(tsAbs\
   apply (simp_all)
   apply (simp add: tsRemDups_def)
   apply (simp add: tsRemDups_def tsremdups_h_delayfun)
-  apply (simp add: delayFun_def)
   by (simp add: tsRemDups_def tsremdups_h_mlscons tsabs_mlscons tsremdups_h_tsabs)  
 
 lemma tsremdups_tsabs_slen [simp]: "#(tsAbs\<cdot>(tsRemDups\<cdot>ts)) \<le> #(tsAbs\<cdot>ts)"
