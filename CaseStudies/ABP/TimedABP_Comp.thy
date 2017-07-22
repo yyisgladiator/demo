@@ -39,6 +39,11 @@ lemma set2tssnd_alt_bit: assumes "send \<in> tsSender"
     = tsAbs\<cdot>(tsProjSnd\<cdot>(tsRemDups\<cdot>(send\<cdot>i\<cdot>as)))"
   using assms tsSender_def by auto
 
+lemma set2tssnd_alt_bit_tabs: assumes "send \<in> tsSender"
+  shows "srcdups\<cdot>(sprojsnd\<cdot>(srcdups\<cdot>(tsAbs\<cdot>(send\<cdot>i\<cdot>as)))) 
+    = (sprojsnd\<cdot>(srcdups\<cdot>(tsAbs\<cdot>(send\<cdot>i\<cdot>as))))"
+  by (metis assms set2tssnd_alt_bit tsprojsnd_tsabs tsremdups_tsabs)
+    
 lemma set2tssnd_ack2trans: assumes "send \<in> tsSender"
   shows "#(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(send\<cdot>i\<cdot>as)))) 
     = min (#(tsAbs\<cdot>i)) (lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>as))))"
@@ -58,20 +63,23 @@ text {*
    ds = output stream 
 *}
 
-(* application of set2tssnd_alt_bit? *)
-lemma tssnd_tsprojsnd_tsremdups:
+lemma srcdups_smap_adm: "adm (\<lambda>a. srcdups\<cdot>(smap f\<cdot>(srcdups\<cdot>a)) = smap f\<cdot>(srcdups\<cdot>a) \<longrightarrow> srcdups\<cdot>(smap f\<cdot>a) = smap f\<cdot>(srcdups\<cdot>a))"
+  sorry
+    
+    (* Copy this to streams after done*)
+lemma srcdups_smap_com: 
+  shows "srcdups\<cdot>(smap f\<cdot>(srcdups\<cdot>s))= smap f\<cdot>(srcdups\<cdot>s) \<Longrightarrow> srcdups\<cdot>(smap f\<cdot>s)= smap f\<cdot>(srcdups\<cdot>s)"
+  apply(rule ind [of _ s])
+  apply(auto simp add: srcdups_smap_adm)
+    sorry
+    
+lemma tssnd_tsprojsnd_tsremdups: 
   assumes send_def: "send \<in> tsSender"
-  shows "tsRemDups\<cdot>(tsProjSnd\<cdot>(send\<cdot>i\<cdot>as)) = tsProjSnd\<cdot>(tsRemDups\<cdot>(send\<cdot>i\<cdot>as))" (is "?L = ?R")
-proof -
-  (* u should definitely use this lemma *)
-  have "tsAbs\<cdot>(tsRemDups\<cdot>(tsProjSnd\<cdot>(tsRemDups\<cdot>(send\<cdot>i\<cdot>as)))) 
-    = tsAbs\<cdot>(tsProjSnd\<cdot>(tsRemDups\<cdot>(send\<cdot>i\<cdot>as)))"  by (simp add: send_def set2tssnd_alt_bit) 
-  
-  (* Maybe this should be the final lemma... *)
-  hence "tsAbs\<cdot>?L = tsAbs\<cdot>?R" sorry
-  thus ?thesis sorry
-qed
-
+  shows "tsAbs\<cdot>(tsRemDups\<cdot>(tsProjSnd\<cdot>(send\<cdot>i\<cdot>as))) = tsAbs\<cdot>(tsProjSnd\<cdot>(tsRemDups\<cdot>(send\<cdot>i\<cdot>as)))"
+  apply(simp add: tsprojsnd_tsabs tsremdups_tsabs sprojsnd_def)
+  by (metis Abs_cfun_inverse2 cont_Rep_cfun2 send_def set2tssnd_alt_bit_tabs sprojsnd_def srcdups_smap_com)
+    
+    
 lemma tssnd2rec_inp2out: 
   assumes send_def: "send \<in> tsSender"
     and out_def: "ds = send\<cdot>i\<cdot>as"
@@ -84,24 +92,34 @@ proof -
     by (metis eq_slen_eq_and_less min_rek out_def send_def set2tssnd_ack2trans 
         set2tssnd_prefix_inp tsrecsnd_insert)
 qed
-
-(* another idea *)
-(*
-proof -
-  (* application of set2tssnd_alt_bit? *)
-  have "#(tsAbs\<cdot>(send\<cdot>i\<cdot>as)) = \<infinity> \<Longrightarrow> #(tsAbs\<cdot>(tsProjSnd\<cdot>(tsRemDups\<cdot>(send\<cdot>i\<cdot>as)))) = \<infinity>"
-    sorry
-  hence "(#(tsAbs\<cdot>i) > #(tsAbs\<cdot>(tsRemDups\<cdot>as)) \<longrightarrow> #(tsAbs\<cdot>(send\<cdot>i\<cdot>as)) = \<infinity>) 
-          \<Longrightarrow> #(tsAbs\<cdot>i) \<le> lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>as)))"
-    by (metis (no_types, hide_lams) dual_order.trans inf_ub leI less_lnsuc min_def 
-        out_def send_def set2tssnd_ack2trans tsprojfst_tsabs_slen tsprojsnd_tsabs_slen)
-  hence "#(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(send\<cdot>i\<cdot>as)))) = #(tsAbs\<cdot>i)"
-    by (metis min_def send_def set2tssnd_ack2trans set2tssnd_nack2inftrans)
-  thus "tsAbs\<cdot>(tsRecSnd\<cdot>ds) = tsAbs\<cdot>i"
-    by (simp add: eq_slen_eq_and_less out_def send_def set2tssnd_prefix_inp tsrecsnd_insert)
-qed
-*)
+ 
   
+  
+
+(* ----------------------------------------------------------------------- *)
+subsection {* sender and receiver and 2. medium composition *}
+(* ----------------------------------------------------------------------- *)
+
+text {* 
+   i = input stream
+   ar = acks stream
+   as = acks stream after medium
+   ds = output stream 
+  
+*}
+
+
+lemma tsAltBitPro_inp2out_sndMed:
+  assumes "send \<in> tsSender"
+    and "#({True} \<ominus> p2) = \<infinity>"
+    and "ds = send\<cdot>i\<cdot>as"
+    and "ar = tsProjSnd\<cdot>ds"
+    and "as = tsMed\<cdot>ar\<cdot>p2"
+  shows "tsAbs\<cdot>(tsRecSnd\<cdot>dr) = tsAbs\<cdot>i"
+oops     
+    
+    
+    
 (* ----------------------------------------------------------------------- *)
 subsection {* complete composition *}
 (* ----------------------------------------------------------------------- *)
