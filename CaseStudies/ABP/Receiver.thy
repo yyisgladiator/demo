@@ -1,4 +1,4 @@
-(*  Title:        Recv.thy
+(*  Title:        Receiver.thy
     Author:       Dennis Slotboom
     e-mail:       dennis.slotboom@rwth-aachen.de
 
@@ -7,7 +7,7 @@
 
 chapter {* Components of the Alternating Bit Protocol *}
                                                             
-theory Recv
+theory Receiver
 imports "../../TStream"
 
 begin
