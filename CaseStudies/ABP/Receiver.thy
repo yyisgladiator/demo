@@ -5,7 +5,7 @@
     Description:  Receiver Component of the ABP on Timed Streams
 *)
 
-chapter {* Components of the Alternating Bit Protocol *}
+chapter {* Receiver of the Alternating Bit Protocol *}
                                                             
 theory Receiver
 imports "../../TStream"
@@ -14,7 +14,7 @@ begin
 default_sort countable
 
 (* ----------------------------------------------------------------------- *)
-section {* components definition *}
+section {* definition *}
 (* ----------------------------------------------------------------------- *)
 
 definition tsRecSnd :: "('a \<times> 'b) tstream \<rightarrow> 'a tstream" where
@@ -25,7 +25,7 @@ definition tsRec :: "('a \<times> 'b) tstream \<rightarrow> ('b tstream \<times>
 
 
 (* ----------------------------------------------------------------------- *)
-subsection {* receiver *}
+subsection {* basic properties *}
 (* ----------------------------------------------------------------------- *)
 
 lemma tsrecsnd_insert: "tsRecSnd\<cdot>dat = tsProjFst\<cdot>(tsRemDups\<cdot>dat)"

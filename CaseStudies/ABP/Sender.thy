@@ -5,7 +5,7 @@
     Description:  Sender Component of the ABP on Timed Streams
 *)
 
-chapter {* Components of the Alternating Bit Protocol *}
+chapter {* Sender of the Alternating Bit Protocol *}
                                                             
 theory Sender
 imports "../../TStream"
@@ -14,7 +14,7 @@ begin
 default_sort countable
 
 (* ----------------------------------------------------------------------- *)
-section {* Definition *}
+section {* definition *}
 (* ----------------------------------------------------------------------- *)
 
 text {* input: msg from the user, acks from the receiver, ack buffer for the expected ack 
@@ -134,6 +134,10 @@ proof -
     by (metis (no_types)
         Rep_Abs delayFun.rep_eq s2sinftimes tick_msg tsInfTick.abs_eq tsconc_insert tsconc_rep_eq)
 qed
+
+(* ----------------------------------------------------------------------- *)
+section {* additional properties *}
+(* ----------------------------------------------------------------------- *)
 
 (* ToDo: additional properties lemmata for sender *)
 

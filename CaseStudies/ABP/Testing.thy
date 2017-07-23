@@ -5,7 +5,7 @@
     Description:  Testing of the ABP components
 *)
 
-chapter {* Components of the Alternating Bit Protocol *}
+chapter {* Testing of the Alternating Bit Protocol components *}
                                                             
 theory Testing
 imports Medium Receiver Sender

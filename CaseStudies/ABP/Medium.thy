@@ -5,7 +5,7 @@
     Description:  Medium Component of the ABP on Timed Streams
 *)
 
-chapter {* Components of the Alternating Bit Protocol *}
+chapter {* Medium of the Alternating Bit Protocol *}
                                                             
 theory Medium
 imports "../../TStream"
@@ -20,9 +20,8 @@ section {* definition *}
 definition tsMed :: "'a tstream \<rightarrow> bool stream \<rightarrow> 'a tstream" where
 "tsMed \<equiv> \<Lambda> msg ora. tsProjFst\<cdot>(tsFilter {x. snd x}\<cdot>(tsZip\<cdot>msg\<cdot>ora))"
 
-
 (* ----------------------------------------------------------------------- *)
-section {* lemma *}
+section {* basic properties *}
 (* ----------------------------------------------------------------------- *)
 
 text {* Assumption for medium lemmata: #({True} \<ominus> ora)=\<infinity> *}
@@ -52,17 +51,6 @@ lemma tsmed_delayfun: "ora\<noteq>\<epsilon> \<Longrightarrow> tsMed\<cdot>(dela
   by (simp add: tsMed_def tszip_delayfun tsfilter_delayfun tsprojfst_delayfun)
 
 (* ToDo: basic properties lemmata for medium *)
-
-lemma tsmed_lscons_true: "msg\<noteq>\<bottom> \<Longrightarrow> #ora=\<infinity> \<Longrightarrow> m\<noteq>\<surd> \<Longrightarrow> 
-  tsMed\<cdot>(tsLscons\<cdot>(updis m)\<cdot>msg)\<cdot>((updis True) && ora) = tsLscons\<cdot>(updis m)\<cdot>(tsMed\<cdot>msg\<cdot>ora)"
-  oops
-
-lemma tsmed_lscons_false: "msg\<noteq>\<bottom> \<Longrightarrow> #ora=\<infinity> \<Longrightarrow> m\<noteq>\<surd> \<Longrightarrow>
-  tsMed\<cdot>(tsLscons\<cdot>(updis m)\<cdot>msg)\<cdot>((updis False) && ora) = tsMed\<cdot>msg\<cdot>ora"
-  oops
-
-lemma tsmed_tsLscons2delayfun: "ora\<noteq>\<epsilon> \<Longrightarrow> tsMed\<cdot>(tsLscons\<cdot>(updis \<surd>)\<cdot>msg)\<cdot>ora = delayFun\<cdot>(tsMed\<cdot>msg\<cdot>ora)"
-  oops
 
 lemma tsmed_nbot [simp]: "msg\<noteq>\<bottom> \<Longrightarrow> #ora=\<infinity> \<Longrightarrow> tsMed\<cdot>msg \<noteq> \<bottom>"
   oops
@@ -102,6 +90,10 @@ lemma tsmed_map: "tsMed\<cdot>(tsMap f\<cdot>msg)\<cdot>ora = tsMap f\<cdot>(tsM
 
 lemma tsmed_tsdom: "#ora=\<infinity> \<Longrightarrow> tsDom\<cdot>(tsMed\<cdot>msg\<cdot>ora) \<subseteq> tsDom\<cdot>msg"
   oops
+
+(* ----------------------------------------------------------------------- *)
+section {* additional properties *}
+(* ----------------------------------------------------------------------- *)
 
 (* ToDo: additional properties lemmata for medium *)
 
