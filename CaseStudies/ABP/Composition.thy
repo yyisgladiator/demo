@@ -1,4 +1,4 @@
-(*  Title:        TimedABP.thy
+(*  Title:        Composition.thy
     Author:       Dennis Slotboom
     e-mail:       dennis.slotboom@rwth-aachen.de
 
@@ -7,8 +7,8 @@
 
 chapter {* Alternating Bit Protocol *}       
                                                             
-theory TimedABP_Comp
-imports Medium Recv
+theory Composition
+imports Medium Receiver
 
 begin
 default_sort countable

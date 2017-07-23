@@ -8,7 +8,7 @@
 chapter {* Components of the Alternating Bit Protocol *}
                                                             
 theory Testing
-imports Medium Recv Sender
+imports Medium Receiver Sender
 
 begin
 default_sort countable
