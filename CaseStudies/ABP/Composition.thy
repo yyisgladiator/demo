@@ -108,8 +108,8 @@ text {*
    p2 = oracle stream
 *}
 
-lemma tsmed_tsabs_slen_inf [simp]: assumes "#({True} \<ominus> ora)=\<infinity>" and "#(tsAbs\<cdot>msg)=\<infinity>" 
-  shows "#(tsAbs\<cdot>(tsMed\<cdot>msg\<cdot>ora)) = \<infinity>"
+lemma tsmed_tsabs_slen_inf [simp]: assumes "#({True} \<ominus> ora)=\<infinity>" 
+  shows "#(tsAbs\<cdot>(tsMed\<cdot>msg\<cdot>ora)) = #(tsAbs\<cdot>msg)"
 sorry
 
 lemma tsaltbitpro_inp2out_sndmed:
