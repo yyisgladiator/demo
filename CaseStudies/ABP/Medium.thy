@@ -106,7 +106,8 @@ lemma tsmed_map: "#ora=\<infinity> \<Longrightarrow> tsMed\<cdot>(tsMap f\<cdot>
   apply(rule_tac x=ora in scases, simp_all)
   apply(rename_tac y x )
   apply (case_tac "y=True", simp_all)
-  apply (metis (no_types, lifting) lscons_conv tsmap_mlscons tsmap_nbot tsmed_mlscons_true tsmed_nbot)
+  apply (metis (no_types, lifting) lscons_conv tsmap_mlscons tsmap_nbot 
+          tsmed_mlscons_true tsmed_nbot)
   by (metis lscons_conv tsmap_mlscons tsmap_nbot tsmed_mlscons_false)
 
 
@@ -131,14 +132,17 @@ proof(induction msg arbitrary: ora)
     
   have lscons_conv_for_True: "\<up>True \<bullet> ora= (updis True) && ora"
     by(simp add:lscons_conv)  
-  hence tsmed_mlscons_true_less_assms: "#ora=\<infinity>  \<Longrightarrow> tsMed\<cdot>(tsMLscons\<cdot>(updis t)\<cdot>msg)\<cdot>(\<up>True \<bullet> ora) =  tsMLscons\<cdot>(updis t)\<cdot>(tsMed\<cdot>msg\<cdot>ora)"
+  hence tsmed_mlscons_true_less_assms: "#ora=\<infinity>  \<Longrightarrow> tsMed\<cdot>(tsMLscons\<cdot>(updis t)\<cdot>msg)\<cdot>(\<up>True \<bullet> ora) 
+                                                     = tsMLscons\<cdot>(updis t)\<cdot>(tsMed\<cdot>msg\<cdot>ora)"
     using tsmed_mlscons_true by force
       
   (* can I user scases somehow here?*)
   have ora_split: "ora = \<up>(shd ora) \<bullet> srt\<cdot>ora \<and> #(srt\<cdot>ora) = \<infinity>"
-    by (metis Inf'_neq_0 fold_inf inject_lnsuc mlscons.prems slen_empty_eq srt_decrements_length surj_scons)    
+    by (metis Inf'_neq_0 fold_inf inject_lnsuc mlscons.prems 
+        slen_empty_eq srt_decrements_length surj_scons)    
   have tsdom_ora_srt: "tsDom\<cdot>(tsMed\<cdot>msg\<cdot>(srt\<cdot>ora)) \<subseteq> {t} \<union> tsDom\<cdot>msg"
-    by (metis Inf'_neq_0 fold_inf inject_lnsuc mlscons.IH mlscons.prems slen_empty_eq srt_decrements_length sup.coboundedI2)
+    by (metis Inf'_neq_0 fold_inf inject_lnsuc mlscons.IH 
+        mlscons.prems slen_empty_eq srt_decrements_length sup.coboundedI2)
       
   { 
     assume "({t} \<union> tsDom\<cdot>(tsMed\<cdot>msg\<cdot>(srt\<cdot>ora)) \<subseteq> {t} \<union> tsDom\<cdot>msg) \<noteq>
@@ -149,7 +153,8 @@ proof(induction msg arbitrary: ora)
     then have "\<up>True \<bullet> srt\<cdot>ora \<noteq> ora"
       by (metis ora_split lscons_conv mlscons.hyps tsdom_mlscons tsmed_mlscons_true tsmed_nbot)        
     then have ?thesis 
-     by (metis (full_types) ora_split tsdom_ora_srt lscons_conv mlscons.hyps tsdom_mlscons tsmed_mlscons_false) }
+      by (metis (full_types) ora_split tsdom_ora_srt lscons_conv 
+          mlscons.hyps tsdom_mlscons tsmed_mlscons_false) }
     
   then show ?thesis
     using tsdom_ora_srt by auto
