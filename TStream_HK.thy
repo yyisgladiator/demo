@@ -12,23 +12,26 @@ begin
 primrec list2ts_alter :: "'a event list \<Rightarrow> 'a tstream"
 where
   list2ts_alter_0:   "list2ts_alter [] = \<bottom>" |
-  list2ts_alter_Suc: "list2ts_alter (a#as) = (if a=\<surd> then delayFun\<cdot>(list2ts_alter as) else (tsMLscons\<cdot>(updis \<M>\<inverse> a)\<cdot>(list2ts_alter as)))"
+  list2ts_alter_Suc: "list2ts_alter (a#as) = tsLscons\<cdot> (updis a) \<cdot>(list2ts_alter as)"
 
 (*Test tsRemDups*)
 lemma "tsRemDups\<cdot>(<[Msg 1, Msg 1, Tick, Msg 1]>\<surd>) = <[Msg 1, Tick]>\<surd>"
   apply (simp add: tsremdups_insert)
-  by (metis (no_types, lifting) DiscrTick_def delayfun_tslscons_bot event.distinct(1) tslscons_nbot2 
-  tsremdups_h_strict tsremdups_h_tslscons_dup2 tsremdups_h_tslscons_fst2 tsremdups_h_tslscons_tick)
+  by (simp add: tsmlscons_lscons tsremdups_h_delayfun)
 
 
 (*Lemmas für TStream.thy*)
 
 (*Tests tsProjFst*)
 lemma "tsProjFst\<cdot>(<[Msg (1, 11), Msg (2, 12), Tick]>\<surd>) = <[Msg 1, Msg 2, Tick]>\<surd>"
-  by (simp add: tsprojfst_lscons tsprojfst_lscons_bot)
+  apply(simp add: tsProjFst_def)
+  by (metis (mono_tags, lifting) delayfun_nbot tsmlscons_nbot tsprojfst_delayfun tsprojfst_insert 
+  tsprojfst_mlscons tsprojfst_strict up_defined)
 
 lemma "tsProjFst\<cdot>(<[Msg (1, 11), Msg (2, 12), Tick, Msg (100, 200)]>\<surd>) = <[Msg 1, Msg 2, Tick]>\<surd>"
-  by (simp add: tsprojfst_lscons tsprojfst_lscons_bot)
+  apply(simp add: tsProjFst_def)
+  by (metis (mono_tags, lifting) delayfun_nbot tsmlscons_nbot tsprojfst_delayfun tsprojfst_insert 
+  tsprojfst_mlscons tsprojfst_strict up_defined)  
 
 (************************************************)
   subsection \<open>list2ts\<close>    
@@ -36,26 +39,26 @@ lemma "tsProjFst\<cdot>(<[Msg (1, 11), Msg (2, 12), Tick, Msg (100, 200)]>\<surd
 thm tslscons_bot2
     
     (* NIEEE: Abs_tstream (updis \<surd> && \<epsilon>) *)
-lemma "list2ts [Msg 1, Msg 2, Tick, Msg 3, Tick, Msg 4] = s"
+lemma "list2tsM [Msg 1, Msg 2, Tick, Msg 3, Tick, Msg 4] = s"
   apply simp
   oops
 
-lemma list2ts_empty [simp]: "list2ts [] = \<bottom>"
+lemma list2ts_empty [simp]: "list2ts_alter [] = \<bottom>"
   by simp
 
-lemma list2ts_onetick: "list2ts[\<surd>]= Abs_tstream (updis \<surd> && \<bottom>)"
+lemma list2ts_onetick: "list2ts_alter[\<surd>]= Abs_tstream (updis \<surd> && \<bottom>)"
   by (simp add: tslscons_insert espf2tspf_def)
 
-lemma list2ts_onemsg[simp]:"a\<noteq>\<surd> \<Longrightarrow> list2ts[a] =\<bottom> "
+lemma list2ts_onemsg[simp]:"a\<noteq>\<surd> \<Longrightarrow> list2ts_alter[a] =\<bottom> "
   by simp
 
-lemma list2ts_tickfirst:"list2ts (\<surd>#as) =(Abs_tstream(<[\<surd>]>)) \<bullet> list2ts as"
+lemma list2ts_tickfirst:"list2ts_alter (\<surd>#as) =(Abs_tstream(<[\<surd>]>)) \<bullet> list2ts_alter as"
   apply (simp add: tslscons_insert)
   apply (simp add: espf2tspf_def)+
   apply (subst lscons_conv)+
   by (simp add: tsconc_insert)
 
-lemma list2ts_nottickfirst:"a\<noteq>\<surd> \<and> as=(b # \<surd> # bs) \<Longrightarrow>list2ts (a#as) =Abs_tstream (\<up>a \<bullet> Rep_tstream (list2ts as))"
+lemma list2ts_nottickfirst:"a\<noteq>\<surd> \<and> as=(b # \<surd> # bs) \<Longrightarrow>list2ts_alter (a#as) =Abs_tstream (\<up>a \<bullet> Rep_tstream (list2ts_alter as))"
   apply (simp add: tslscons_insert)
   apply (simp add: espf2tspf_def)+
   by (simp add: lscons_conv)
@@ -75,61 +78,61 @@ lemma tstickcount_lscons2: " #\<surd> tsLscons\<cdot>(updis \<surd>)\<cdot>ts = 
   by (simp add: lscons_conv)
 
 
-lemma "#\<surd> (list2ts l) \<le> #\<surd> (list2ts (a#l))"
+lemma "#\<surd> (list2ts_alter l) \<le> #\<surd> (list2ts_alter (a#l))"
   apply(cases "a=\<surd>",simp)
   apply (metis DiscrTick_def delayfun_insert delayfun_tslscons less_lnsuc tstickcount_tscons)
   by(simp add:tstickcount_lscons1)
   
 
-lemma list2ts_nbot2[simp]:"list2ts (a@[\<surd>])\<noteq>\<bottom>"
+lemma list2ts_nbot2[simp]:"list2ts_alter (a@[\<surd>])\<noteq>\<bottom>"
   by (induction a, simp+)
 
-lemma list2ts_nbot1[simp]: "list2ts (a@\<surd>#as)\<noteq>\<bottom>"
+lemma list2ts_nbot1[simp]: "list2ts_alter (a@\<surd>#as)\<noteq>\<bottom>"
   by(induction a, simp+)
 
-lemma list2ts_unfold1:"a\<noteq>\<surd> \<Longrightarrow>list2ts (a # b @ [\<surd>]) =Abs_tstream (\<up>a \<bullet> Rep_tstream (list2ts (b @ [\<surd>])))"
+lemma list2ts_unfold1:"a\<noteq>\<surd> \<Longrightarrow>list2ts_alter (a # b @ [\<surd>]) =Abs_tstream (\<up>a \<bullet> Rep_tstream (list2ts_alter (b @ [\<surd>])))"
   apply (simp add: tslscons_insert)
   apply (simp add: espf2tspf_def)+
   by (simp add: lscons_conv)
 
-lemma list2ts_droplist: "filter (\<lambda>e. e=\<surd>) as =[] \<Longrightarrow> list2ts as = \<bottom>"
+lemma list2ts_droplist: "filter (\<lambda>e. e=\<surd>) as =[] \<Longrightarrow> list2ts_alter as = \<bottom>"
   apply (induction as, simp)
   apply (subgoal_tac "a\<noteq>\<surd>")
   apply (simp add: tslscons_insert)
   by auto
 
-lemma list2ts_unfold2:"a \<noteq> \<surd> \<Longrightarrow> list2ts (a # b @ \<surd> # bs) = Abs_tstream (\<up>a \<bullet> Rep_tstream (list2ts (b @ \<surd> # bs)))"
+lemma list2ts_unfold2:"a \<noteq> \<surd> \<Longrightarrow> list2ts_alter (a # b @ \<surd> # bs) = Abs_tstream (\<up>a \<bullet> Rep_tstream (list2ts_alter (b @ \<surd> # bs)))"
   apply(induction bs)
   apply(subst list2ts_unfold1,auto)
   apply(simp add: tslscons_insert)
   apply (simp add: espf2tspf_def)+
   by (simp add: lscons_conv)
 
-lemma list2ts_split:"list2ts (a @ \<surd> # as) = (list2ts (a @ [\<surd>])) \<bullet> (list2ts as)"
+lemma list2ts_split:"list2ts_alter (a @ \<surd> # as) = (list2ts_alter (a @ [\<surd>])) \<bullet> (list2ts_alter as)"
   apply (induction a, simp add: tslscons_insert)
   apply (simp add: espf2tspf_def)+
   apply (simp add: lscons_conv tsconc_insert)
   apply (simp add: tslscons_insert, auto)
   by (simp add: espf2tspf_def lscons_conv tsconc_insert)+
 
-lemma list2ts_dropend:"filter (\<lambda>e. e=\<surd>) as=[] \<Longrightarrow> list2ts (a @ \<surd> # as) = list2ts(a @ [\<surd>])"
+lemma list2ts_dropend:"filter (\<lambda>e. e=\<surd>) as=[] \<Longrightarrow> list2ts_alter (a @ \<surd> # as) = list2ts_alter(a @ [\<surd>])"
   by(subst list2ts_split, simp add: list2ts_droplist)
   
 
-lemma list2ts_lshd1 [simp]: "a\<noteq>[] \<Longrightarrow> tsLshd\<cdot>(list2ts (a @ [\<surd>])) = updis (hd a)"
+lemma list2ts_lshd1 [simp]: "a\<noteq>[] \<Longrightarrow> tsLshd\<cdot>(list2ts_alter (a @ [\<surd>])) = updis (hd a)"
   apply(induction a,simp)
-  by (metis append_Cons list.sel(1) list2ts_Suc list2ts_nbot2 tslscons_lshd)
+  by (metis append_Cons list.sel(1) list2ts_alter_Suc list2ts_nbot2 tslscons_lshd)
 
-lemma list2ts_lshd_tick [simp]: "tsLshd\<cdot>(list2ts (\<surd> # a)) = updis \<surd>"
+lemma list2ts_lshd_tick [simp]: "tsLshd\<cdot>(list2ts_alter (\<surd> # a)) = updis \<surd>"
   by simp
 
-lemma list2ts_srt [simp]: "t\<noteq>\<bottom> \<Longrightarrow> tsRt\<cdot>(list2ts (a # as)) = list2ts (as)"
+lemma list2ts_srt [simp]: "t\<noteq>\<bottom> \<Longrightarrow> tsRt\<cdot>(list2ts_alter (a # as)) = list2ts_alter (as)"
   by simp
 
-lemma list2ts_lshd [simp]: "a\<noteq>[] \<Longrightarrow> tsLshd\<cdot>(list2ts (a @ \<surd> # as)) = updis (hd a)"
+lemma list2ts_lshd [simp]: "a\<noteq>[] \<Longrightarrow> tsLshd\<cdot>(list2ts_alter (a @ \<surd> # as)) = updis (hd a)"
   by(induction a, simp+)
 
-lemma list2ts2list2s_lscons: "list2ts (a # as @ [\<surd>]) = Abs_tstream (lscons\<cdot>(updis a)\<cdot>(list2s (as@[\<surd>])))"
+lemma list2ts2list2s_lscons: "list2ts_alter (a # as @ [\<surd>]) = Abs_tstream (lscons\<cdot>(updis a)\<cdot>(list2s (as@[\<surd>])))"
   apply (induction as arbitrary: a, simp+)
   apply (auto simp add: tslscons_insert espf2tspf_def lscons_conv)
   apply (metis list2ts_nbot1 lscons_conv tslscons2lscons tslscons_nbot up_defined)
@@ -148,25 +151,25 @@ apply (subgoal_tac "#(<ls>)\<noteq>\<infinity>")
 using sfilterl4 apply blast
 by simp
 
-lemma list2ts2list2s_well[simp]:"ts_well (list2s ls) \<Longrightarrow> Rep_tstream (list2ts ls) = list2s (ls)"
+lemma list2ts2list2s_well[simp]:"ts_well (list2s ls) \<Longrightarrow> Rep_tstream (list2ts_alter ls) = list2s (ls)"
   apply(induction ls, simp+)
   by (smt Rep_Abs Rep_tstream_inverse absts2tslscons lscons_conv sconc_fst_empty stream.con_rews(2) 
   stream.sel_rews(5) tick_msg ts_well_conc tslscons_insert tslscons_lscons up_defined)
 
-lemma list2s2list2ts_well[simp]:"ts_well (list2s ls) \<Longrightarrow>  Abs_tstream (list2s ls) = list2ts (ls)"
+lemma list2s2list2ts_well[simp]:"ts_well (list2s ls) \<Longrightarrow>  Abs_tstream (list2s ls) = list2ts_alter (ls)"
   apply(induction ls, simp+)
   by (smt Rep_Abs Rep_tstream_inverse absts2tslscons lscons_conv sconc_fst_empty stream.con_rews(2) 
   stream.sel_rews(5) tick_msg ts_well_conc tslscons_insert tslscons_lscons up_defined)
 
 (*Test*)
-lemma testlist2ts: "list2ts ([\<M> True,\<M> False, \<surd>,\<M> False]) = Abs_tstream (<[Msg True,Msg False,\<surd>]>)"
+lemma testlist2ts: "list2ts_alter ([\<M> True,\<M> False, \<surd>,\<M> False]) = Abs_tstream (<[Msg True,Msg False,\<surd>]>)"
   apply (simp add: tslscons_insert)
   apply (simp add: espf2tspf_def)+
   apply (subst lscons_conv)+
   by simp
 
 (*Test*)
-lemma testlist2ts_alter: "list2ts_alter ([\<M> True,\<M> False, \<surd>,\<M> False]) = tsMLscons\<cdot>(updis True)\<cdot>(tsMLscons\<cdot>(updis False)\<cdot>(delayFun\<cdot>\<bottom>))"
+lemma testlist2tsM: "list2tsM ([\<M> True,\<M> False, \<surd>,\<M> False]) = tsMLscons\<cdot>(updis True)\<cdot>(tsMLscons\<cdot>(updis False)\<cdot>(delayFun\<cdot>\<bottom>))"
   by (simp add: tslscons_insert)
 
 (*list2s*)
@@ -180,16 +183,13 @@ lemma tswell_list:"ls \<noteq> [] \<Longrightarrow> last ls \<noteq>\<surd> \<Lo
   using list2s_inj apply fastforce
   by (smt append_butlast_last_id list2s_sfoot_ntk sfoot1)
 
-lemma list2ts_tsntimes:"ts_well (list2s as) \<Longrightarrow>tsntimes n (list2ts as) = tsntimes n (Abs_tstream (list2s as))"
+lemma list2ts_tsntimes:"ts_well (list2s as) \<Longrightarrow>tsntimes n (list2ts_alter as) = tsntimes n (Abs_tstream (list2s as))"
   by simp
 
 
-lemma list2ts_tsinftimes2: "tsinftimes (list2ts (as@[\<surd>])) = tsinftimes (Abs_tstream (list2s (as@[\<surd>])))"
+lemma list2ts_tsinftimes2: "tsinftimes (list2ts_alter (as@[\<surd>])) = tsinftimes (Abs_tstream (list2s (as@[\<surd>])))"
   apply (subst list2s2list2ts_well,auto)
   apply (simp add: ts_well_def, auto)
   by (simp add: less_le slen_lnsuc)
-
-
-        
-
+  
 end
