@@ -2029,20 +2029,29 @@ lemma tsfilter_weak:"tsWeakCausal (Rep_cfun (tsFilter M))"
 
 lemma tsfilter_tsabs_h: 
   "smap inversMsg\<cdot>({e. e \<noteq> \<surd>} \<inter> Msg ` M \<ominus> s) = M \<ominus> smap inversMsg\<cdot>({e. e \<noteq> \<surd>} \<ominus> s)"
-oops
+proof (rule ind [of _ s], simp_all)
+  fix a :: "'a event" and s :: "'a event stream"
+  assume ind_hyp: "smap inversMsg\<cdot>({e. e \<noteq> \<surd>} \<inter> Msg ` M \<ominus> s) = M \<ominus> smap inversMsg\<cdot>({e. e \<noteq> \<surd>} \<ominus> s)"
+  show  "smap inversMsg\<cdot>({e. e \<noteq> \<surd>} \<inter> Msg ` M \<ominus> s) = M \<ominus> smap inversMsg\<cdot>({e. e \<noteq> \<surd>} \<ominus> s) \<Longrightarrow>
+         smap inversMsg\<cdot>({e. e \<noteq> \<surd>} \<inter> Msg ` M \<ominus> (\<up>a \<bullet> s)) =
+         M \<ominus> smap inversMsg\<cdot>({e. e \<noteq> \<surd>} \<ominus> (\<up>a \<bullet> s)) " 
+    apply (case_tac "a=\<surd>", simp_all)
+    apply (case_tac "a \<in> Msg ` M", simp_all)
+    apply (auto)
+    by (smt event.exhaust event.simps(4) image_iff sfilter_nin)  
+  qed
 
 lemma tsfilter_tsabs: "tsAbs\<cdot>(tsFilter M\<cdot>ts) = sfilter M\<cdot>(tsAbs\<cdot>ts)"
-oops
+  by (simp add: tsAbs_def tsfilter_unfold tsfilter_h_well tsfilter_tsabs_h)
 
 lemma tsfilter_tsabs_slen [simp]: "#(tsAbs\<cdot>(tsFilter M\<cdot>ts)) \<le> #(tsAbs\<cdot>ts)"
 apply (simp add: tsfilter_unfold tsAbs_def tsfilter_h_well)
 by (metis inf_commute int_sfilterl1 slen_sfilterl1)
 
-(* ToDo Jan: lemma for tsfilter *)
-
 text {* tsFilter removes elements of the domain *}
 lemma tsfilter_tsdom: "tsDom\<cdot>(tsFilter M\<cdot>ts) \<subseteq> tsDom\<cdot>ts"
-oops
+  apply (simp add: tsdom_insert tsfilter_unfold tsfilter_h_well) 
+  by auto  
 
 (* tsscanl *)
 
