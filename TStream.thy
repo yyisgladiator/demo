@@ -182,8 +182,7 @@ text {* Convert an event-spf to a timed-spf. Just a restriction of the function 
 definition espf2tspf :: "('a event,'b event) spf \<Rightarrow> 'a tstream \<Rightarrow> 'b tstream" where
 "espf2tspf f x = Abs_tstream (f\<cdot>(Rep_tstream x))"
 
-text {* Apply a function to all messages of a stream. Ticks are mapped to ticks. *}
-definition tsMap :: "('a \<Rightarrow> 'b) \<Rightarrow> 'a tstream \<rightarrow> 'b tstream" where
+text {* Apply a function to all messages of a stream. Ticks are mapped to ticks. *}definition tsMap :: "('a \<Rightarrow> 'b) \<Rightarrow> 'a tstream \<rightarrow> 'b tstream" where
 "tsMap f \<equiv> \<Lambda> s. espf2tspf (smap (\<lambda>x. case x of Msg m \<Rightarrow> Msg (f m) | \<surd> \<Rightarrow> \<surd>)) s"
 
 text {* "Unzipping" of timed streams: project to the first element of a tuple of tstreams. *}
@@ -2009,22 +2008,22 @@ apply (metis assms inf_ub less_le sfilterl4 strict_sfilter ts_well_def)
 by (metis (no_types, lifting) add_sfilter2 assms fold_inf insertI1 lnsuc_lnle_emb not_less
     sconc_snd_empty sfilter_in slen_lnsuc strict_sfilter ts_well_def)
 
-lemma tsfilter_unfold:
+lemma tsfilter_insert :
   "tsFilter M\<cdot>ts = Abs_tstream (insert \<surd> (Msg ` M) \<ominus> Rep_tstream ts)"
 by (simp add: tsFilter_def tsfilter_h_well)
 
 lemma tsfilter_strict [simp]: "tsFilter M\<cdot>\<bottom> = \<bottom>"
-  by (simp add: tsfilter_unfold)
+  by (simp add: tsfilter_insert )
 
 lemma tsfilter_nbot [simp]: "ts\<noteq>\<bottom> \<Longrightarrow> tsFilter M\<cdot>ts\<noteq>\<bottom>" 
-  apply (simp add: tsfilter_unfold ts_well_Rep tsfilter_h_well)
+  apply (simp add: tsfilter_insert  ts_well_Rep tsfilter_h_well)
   by (metis (no_types, lifting)
       Rep_Abs Rep_tstream inf_bot_left insert_inter_insert int_sfilterl1 mem_Collect_eq
       strict_tstickcount ts_0ticks tsfilter_h_well tstickcount_insert)
 
 lemma tsfilter_tstickcount [simp]: "#\<surd>(tsFilter M\<cdot>ts) = #\<surd>ts"
   apply(simp add: tsTickCount_def)
-  apply(simp only: tsfilter_unfold)
+  apply(simp only: tsfilter_insert )
   apply(subst Abs_tstream_inverse)
   apply (simp add: tsfilter_h_well)
   by simp
@@ -2049,15 +2048,15 @@ proof (rule ind [of _ s], simp_all)
   qed
 
 lemma tsfilter_tsabs: "tsAbs\<cdot>(tsFilter M\<cdot>ts) = sfilter M\<cdot>(tsAbs\<cdot>ts)"
-  by (simp add: tsAbs_def tsfilter_unfold tsfilter_h_well tsfilter_tsabs_h)
+  by (simp add: tsAbs_def tsfilter_insert  tsfilter_h_well tsfilter_tsabs_h)
 
 lemma tsfilter_tsabs_slen [simp]: "#(tsAbs\<cdot>(tsFilter M\<cdot>ts)) \<le> #(tsAbs\<cdot>ts)"
-apply (simp add: tsfilter_unfold tsAbs_def tsfilter_h_well)
+apply (simp add: tsfilter_insert  tsAbs_def tsfilter_h_well)
 by (metis inf_commute int_sfilterl1 slen_sfilterl1)
 
 text {* tsFilter removes elements of the domain *}
 lemma tsfilter_tsdom: "tsDom\<cdot>(tsFilter M\<cdot>ts) \<subseteq> tsDom\<cdot>ts"
-  apply (simp add: tsdom_insert tsfilter_unfold tsfilter_h_well) 
+  apply (simp add: tsdom_insert tsfilter_insert  tsfilter_h_well) 
   by auto  
 
 (* tsscanl *)
@@ -2767,20 +2766,20 @@ lemma tsprojsnd_delayfun: "tsProjSnd\<cdot>(delayFun\<cdot>ts) = delayFun\<cdot>
 lemma tsfilter_mlscons_in:
   "ts\<noteq>\<bottom> \<Longrightarrow> t\<in>M \<Longrightarrow> tsFilter M\<cdot>(tsMLscons\<cdot>(updis t)\<cdot>ts) = tsMLscons\<cdot>(updis t)\<cdot>(tsFilter M\<cdot>ts)"
   apply (induction ts)
-  apply (simp add: tsfilter_unfold)
+  apply (simp add: tsfilter_insert )
   by (smt Rep_Abs absts2mlscons2 image_insert insertI1 insertI2 mk_disjoint_insert
       sConc_fin_well sfilter_in tsfilter_h_well)
 
 lemma tsfilter_mlscons_nin:
   "ts\<noteq>\<bottom> \<Longrightarrow> t\<notin>M \<Longrightarrow> tsFilter M\<cdot>(tsMLscons\<cdot>(updis t)\<cdot>ts) = tsFilter M\<cdot>ts"
   apply (induction ts)
-  apply (simp add: tsfilter_unfold)
+  apply (simp add: tsfilter_insert )
   by (metis (no_types, lifting)
       Rep_Abs absts2mlscons2 event.distinct(1) event.inject image_iff insert_iff
       sConc_fin_well sfilter_nin)
 
 lemma tsfilter_delayfun: "tsFilter M\<cdot>(delayFun\<cdot>ts) = delayFun\<cdot>(tsFilter M\<cdot>ts)"
-  by (simp add: tsfilter_unfold delayFun_def eta_cfun insertI1 tsconc_insert tsfilter_h_well)
+  by (simp add: tsfilter_insert  delayFun_def eta_cfun insertI1 tsconc_insert tsfilter_h_well)
 
 lemma tstickcount_mlscons: "#\<surd> tsMLscons\<cdot>(updis t)\<cdot>ts = #\<surd> ts"
 apply (cases "ts=\<bottom>", simp)
@@ -3130,10 +3129,15 @@ lemma tszip_tstickcount_leq [simp]: "#\<surd> tsZip\<cdot>ts\<cdot>xs \<le> #\<s
   apply (simp add: tszip_tstickcount_leq_h sup'_def tszip_mlscons_msgdelayfun)
   by (metis lscons_conv tstickcount_mlscons tszip_mlscons_2msg)
 
-(* ToDo Steffen: lemma for tszip *)
+
 
 lemma tszip_tsabs: "#xs=\<infinity> \<Longrightarrow> tsAbs\<cdot>(tsZip\<cdot>ts\<cdot>xs) = szip\<cdot>(tsAbs\<cdot>ts)\<cdot>xs"
-oops
+  apply (induction ts arbitrary: xs)
+  apply (simp_all)
+  apply (metis Inf'_neq_0 strict_slen tsabs_delayfun tszip_delayfun)
+  by (metis (no_types, lifting) Inf'_neq_0 inf_scase lscons_conv slen_empty_eq
+          szip_scons tsabs_mlscons tszip_mlscons tszip_nbot)
+
 
 lemma tszip_tsabs_slen [simp]: "#xs=\<infinity> \<Longrightarrow> #(tsAbs\<cdot>(tsZip\<cdot>ts\<cdot>xs)) = #(tsAbs\<cdot>ts)"
   apply (induction ts arbitrary: xs)
