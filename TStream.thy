@@ -2040,10 +2040,20 @@ proof (rule ind [of _ s], simp_all)
   show  "smap inversMsg\<cdot>({e. e \<noteq> \<surd>} \<inter> Msg ` M \<ominus> s) = M \<ominus> smap inversMsg\<cdot>({e. e \<noteq> \<surd>} \<ominus> s) \<Longrightarrow>
          smap inversMsg\<cdot>({e. e \<noteq> \<surd>} \<inter> Msg ` M \<ominus> (\<up>a \<bullet> s)) =
          M \<ominus> smap inversMsg\<cdot>({e. e \<noteq> \<surd>} \<ominus> (\<up>a \<bullet> s)) " 
-    apply (case_tac "a=\<surd>", simp_all)
     apply (case_tac "a \<in> Msg ` M", simp_all)
     apply (auto)
-    by (smt event.exhaust event.simps(4) image_iff sfilter_nin)  
+    proof -
+      assume a1: "a \<notin> Msg ` M"
+      { assume "a \<noteq> \<surd>"
+        then have "\<M>\<inverse> a \<notin> M"
+          using a1 by (metis (no_types) event.exhaust event.simps(4) imageI)
+        then have "a \<in> {e. e \<noteq> \<surd>} \<longrightarrow> M \<ominus> smap inversMsg\<cdot>({e. e \<noteq> \<surd>} \<ominus> s) = M \<ominus> smap inversMsg\<cdot> ({e. e \<noteq> \<surd>} \<ominus> \<up>a \<bullet> s)"
+          by simp }
+      then have "a \<in> {e. e \<noteq> \<surd>} \<longrightarrow> M \<ominus> smap inversMsg\<cdot>({e. e \<noteq> \<surd>} \<ominus> s) = M \<ominus> smap inversMsg\<cdot> ({e. e \<noteq> \<surd>} \<ominus> \<up>a \<bullet> s)"
+        by blast
+      then show "M \<ominus> smap inversMsg\<cdot>({e. e \<noteq> \<surd>} \<ominus> s) = M \<ominus> smap inversMsg\<cdot> ({e. e \<noteq> \<surd>} \<ominus> \<up>a \<bullet> s)"
+        by force
+    qed
   qed
 
 lemma tsfilter_tsabs: "tsAbs\<cdot>(tsFilter M\<cdot>ts) = sfilter M\<cdot>(tsAbs\<cdot>ts)"
