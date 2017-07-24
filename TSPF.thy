@@ -321,7 +321,34 @@ lemma rep_abs_ctspf [simp]: assumes "cont f" and "tspf_well (Abs_cfun f)"
 
   subsection \<open>basic lemmata about TSPF\<close>
 
-    (* inter rule for tspf_well proofs *)
+(* Intro Rule for mono, if right part is mono if the domain is <In> the tspf is mono *) 
+lemma tspf_monoI [simp]: assumes "\<And> x y. tsbDom\<cdot>x = In \<Longrightarrow> x \<sqsubseteq> y \<Longrightarrow> (g x) \<sqsubseteq> (g y)"
+  shows "monofun (\<lambda>b. (tsbDom\<cdot>b = In)\<leadsto>g b)"
+  by (simp add: assms monofun_def some_below tsbdom_below)    
+
+    
+(* Intro Rule for mono, if right part is cont if the domain is <In> the tspf is cont *) 
+lemma tspf_contI [simp]: assumes "\<And> x y. tsbDom\<cdot>x = In \<Longrightarrow> x \<sqsubseteq> y \<Longrightarrow> (g x) \<sqsubseteq> (g y)"
+                  and "\<And> Y. chain Y \<Longrightarrow> (tsbDom\<cdot>(\<Squnion>i. Y i) = In) \<Longrightarrow> g (\<Squnion>i. Y i)\<sqsubseteq> (\<Squnion>i. (g (Y i)))"
+  shows "cont (\<lambda>b. (tsbDom\<cdot>b = In)\<leadsto>g b)"
+    apply (rule contI2)
+      apply (simp only: assms(1) tspf_monoI)
+      by (smt assms(1) assms(2) below_option_def is_ub_thelub lub_eq op_the_lub option.sel 
+              option.simps(3) po_class.chain_def tsbChain_dom_eq2)
+
+lemma tspf_monoI2 [simp]: assumes "monofun g"
+  shows "monofun (\<lambda>b. (tsbDom\<cdot>b = In)\<leadsto>g b)"
+    apply (rule tspf_monoI)
+    using assms monofunE by blast
+    
+lemma tspf_contI2 [simp]: assumes "cont g"
+  shows "cont (\<lambda>b. (tsbDom\<cdot>b = In)\<leadsto>g b)"
+    apply (rule contI2)
+    using assms cont2mono apply fastforce
+    using assms if_then_lub2 by auto
+      
+            
+(* Intro rule for tspf_well proofs *)
 lemma tspf_wellI:  assumes "\<And>b. (b \<in> dom (Rep_cfun f)) \<Longrightarrow> (tsbDom\<cdot>b = In)"
   and "(\<And>b. b \<in> dom (Rep_cfun f) \<Longrightarrow> tsbDom\<cdot>((Rep_cfun f)\<rightharpoonup>b) = Out)"
   and "\<And>b2. (tsbDom\<cdot>b2 = In) \<Longrightarrow> (b2 \<in> dom (Rep_cfun f))"
