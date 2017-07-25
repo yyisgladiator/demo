@@ -663,15 +663,18 @@ section \<open>spfCompH2\<close>
   (* WARNING this helper is obsolete *)
   
 subsection \<open>basic properties\<close>  
+
   
 (* Proof comphelper properties by referring to original comphelper *)
 lemma spfCompH2_mono[simp]: "monofun (\<lambda> z. x \<uplus> (f1 \<rightleftharpoons> (z \<bar> spfDom\<cdot>f1)) 
                                              \<uplus> (f2 \<rightleftharpoons> (z \<bar> spfDom\<cdot>f2)))"
   using cont2mono spfCompHelp_cont by blast
 
+(*Wofür?
 lemma spfCompH2_cont[simp]: "cont (\<lambda> z. x \<uplus> (f1 \<rightleftharpoons> (z \<bar> spfDom\<cdot>f1)) 
                                           \<uplus> (f2 \<rightleftharpoons> (z \<bar> spfDom\<cdot>f2)))"
   using spfCompHelp_cont by blast
+*)
 
 lemma helpermonoinX[simp]: shows "monofun (\<lambda> x. spfCompHelp2 f1 f2 x)"
   by(simp add: spfCompHelp2_def)
@@ -908,14 +911,15 @@ chapter \<open>serial-composition\<close>
 (* ----------------------------------------------------------------------- *)
 section \<open>sercomp channel domain lemmata\<close>
 (* ----------------------------------------------------------------------- *)
-    
+
 lemma spfComp_test8: assumes "spfRan\<cdot>f1 = spfDom\<cdot>f2" 
                        and "sbDom\<cdot>x = I f1 f2" 
                        and "spfComp_well f1 f2"
                        and "no_selfloops f1 f2"
                        and "pL f1 f2 = {}"
   shows "spfDom\<cdot>f1  = (I f1 f2)"
-  using assms(1) assms(2) assms(3) assms(4) assms(5) spfComp_I_domf1_eq by blast
+  using assms(1) assms(2) assms(3) assms(4) assms(5)
+  by (simp add: Diff_Un Diff_triv I_def Un_Diff pL_def)
     
 (* for simp usage when the resut is input for f2 *)
 lemma spfComp_domranf1: assumes "spfRan\<cdot>f1 = spfDom\<cdot>f2" 
@@ -924,8 +928,8 @@ lemma spfComp_domranf1: assumes "spfRan\<cdot>f1 = spfDom\<cdot>f2"
                         and "no_selfloops f1 f2"
                         and "pL f1 f2 = {}"
   shows "(sbDom\<cdot>(f1 \<rightleftharpoons> (sb\<bar>spfDom\<cdot>f1))) = spfRan\<cdot>f1"
-  by (metis assms(1) assms(2) assms(3) assms(4) assms(5) spfRanRestrict subset_refl 
-      spfComp_I_domf1_eq)
+  using assms(1) assms(2) assms(3) assms(4) assms(5)
+  by (metis SPF_Comp.spfComp_test8 equalityE spfRanRestrict)
     
 
 lemma spfComp_I_domf1_eq: assumes "spfRan\<cdot>f1 = spfDom\<cdot>f2" 
@@ -935,7 +939,8 @@ lemma spfComp_I_domf1_eq: assumes "spfRan\<cdot>f1 = spfDom\<cdot>f2"
                           and "pL f1 f2 = {}"
   shows "I f1 f2 = spfDom\<cdot>f1"
   apply(simp add: I_def, subst assms(1))
-  by (metis I_def  assms(1) assms(2) assms(3) assms(4) assms(5) spfComp_I_domf1_eq)
+  using assms(1) assms(2) assms(3) assms(4) assms(5)
+  by (simp add: Diff_Un Diff_triv I_def Un_Diff pL_def)
     
 
 lemma spfComp_getC_Oc[simp]:  assumes "c \<in> spfRan\<cdot>f2" 
@@ -1207,7 +1212,7 @@ lemma spfComp_parallelf2 : assumes" L f1 f2 = {}"
   apply(subst iterate_Suc)
   apply(subst spfCompHelp2_def, simp)
   apply(subst sbunion_getchR)
-  apply (metis spfI_sub_C assms(1) assms(2) assms(3) assms(4) spfCompHelp2_dom spfComp_I_domf1f2_eq spfCompH2_itDom spfComp_well_def spfRanRestrict sup.bounded_iff)
+  apply (metis Un_subset_iff assms(1) assms(2) assms(4) iterate_Suc spfCompH2_itDom spfComp_I_domf1f2_eq spfI_sub_C spfRanRestrict)
     apply(subst sbunion_getchR)
    apply(simp add: assms(1) assms(2) assms(4))
      by (smt Int_absorb1 spfCompH2_itResI spfI_sub_C assms(1) assms(2) assms(3) assms(4) inf_sup_ord(4) iterate_Suc sb_eq sbrestrict2sbgetch sbrestrict_sbdom sbunion_associative sbunion_commutative sbunion_getchR spfComp_I_domf1f2_eq spfCompH2_itDom spfComp_well_def spfRanRestrict subsetCE sup.bounded_iff sup_ge1)
@@ -1235,7 +1240,7 @@ lemma spfComp_parallel_itconst1 [simp]: assumes "L f1 f2 = {}"
   shows "(\<Squnion>i. iterate i\<cdot>(spfCompHelp2 f1 f2 x)\<cdot>(sbLeast (C f1 f2)))
                = iterate 2\<cdot>(spfCompHelp2 f1 f2 x)\<cdot>(sbLeast (C f1 f2))"
 using assms(1) assms(2) assms(3) 
-    maxinch_is_thelub spfComp_parallel_max SPF.spfComp_serialnf_chain by blast
+    maxinch_is_thelub spfComp_parallel_max  spfComp_serialnf_chain by blast
 
 lemma spfComp_parallel_itconst2 [simp]: assumes "L f1 f2 = {}" 
                                      and "sbDom\<cdot>x = I f1 f2" 
@@ -1417,8 +1422,7 @@ lemma spf_comp_cont[simp]:
 
 lemma iter_spfcompH2_ran[simp]: assumes "sbDom\<cdot>b = I f1 f2"
   shows  "sbDom\<cdot>(\<Squnion>i. iter_spfcompH2 f1 f2 i b) = C f1 f2"
-  by (metis (mono_tags, lifting) I_commu assms iter_spfcompH2_chain lub_eq sbChain_dom_eq2 
-      spfCompHelp2_iter_dom)
+  by (metis (mono_tags, lifting) assms sbdom_lub_eq2I spfCompH2_itDom spfComp_serialnf_chain)
  
 lemma spf_comp_well[simp]: 
   "spf_well (\<Lambda> x. (sbDom\<cdot>x = I f1 f2) \<leadsto> (\<Squnion>i.(iter_spfcompH2 f1 f2 i) x) \<bar> Oc f1 f2)"
