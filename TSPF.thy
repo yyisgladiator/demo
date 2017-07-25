@@ -98,7 +98,7 @@ setup_lifting type_definition_TSPF
 
 
 (* ----------------------------------------------------------------------- *)
-  subsection \<open>Definition on TSPF\<close>
+ section \<open>Definition on TSPF\<close>
 (* ----------------------------------------------------------------------- *)
 
 subsubsection \<open>rep/abs\<close>
@@ -1200,8 +1200,34 @@ proof -
       by (simp add: f1 f2 assms tspfCompH_def)
 qed
     
+subsubsection \<open>commutative\<close>
+
+lemma tspfcomph_commu: assumes  "tspfRan\<cdot>f1 \<inter> tspfRan\<cdot>f2 = {}"
+                       and "tsbDom\<cdot>tb = (tspfRan\<cdot>f1 \<union> tspfRan\<cdot>f2)"
+                       and "tsbDom\<cdot>x = tspfCompI f1 f2"
+  shows "(tspfCompH f1 f2 x)\<cdot>tb = (tspfCompH f2 f1 x)\<cdot>tb"
+proof -
+  have "tspfDom\<cdot>f1 \<subseteq> tsbDom\<cdot>(x \<uplus> tb)"
+    by (simp add: assms(2) assms(3) inf_sup_aci(6) tspfCompI_def)
+  hence f1:  "tsbDom\<cdot>(f1\<rightleftharpoons>((x \<uplus> tb)  \<bar> tspfDom\<cdot>f1)) = tspfRan\<cdot>f1"
+    by (meson tspf_ran_2_tsbdom2 tsresrict_dom2)
+    
+  have "tspfDom\<cdot>f2 \<subseteq> tsbDom\<cdot>(x \<uplus> tb)"
+    by (simp add: assms(2) assms(3) sup.absorb_iff2 sup.commute sup_left_commute tspfCompI_def)   
+  hence f2:  "tsbDom\<cdot>(f2\<rightleftharpoons>((x \<uplus> tb)  \<bar> tspfDom\<cdot>f2)) = tspfRan\<cdot>f2"
+    by (meson tspf_ran_2_tsbdom2 tsresrict_dom2) 
+      
+  from f1 f2 have f3: "tsbDom\<cdot>(f1\<rightleftharpoons>((x \<uplus> tb)  \<bar> tspfDom\<cdot>f1)) 
+                        \<inter>  tsbDom\<cdot>(f2\<rightleftharpoons>((x \<uplus> tb)  \<bar> tspfDom\<cdot>f2)) = {}"
+    by (simp add: assms(1))
   
+  thus ?thesis
+    apply (simp add: tspfCompH_def)
+    apply (rule tsbunion_commutative)
+    by simp
+qed
   
+      
   subsection \<open>iter_tspfCompH\<close>      
     
 lemma iter_tspfcomph_cont [simp]: "cont (\<lambda> x. iter_tspfCompH f1 f2 i x)"
@@ -1218,7 +1244,22 @@ lemma iter_tspfcomph_dom [simp]: assumes "tsbDom\<cdot>x = tspfCompI f1 f2"
 lemma lub_iter_tspfcomph_dom [simp]: assumes "tsbDom\<cdot>x = tspfCompI f1 f2"
   shows "tsbDom\<cdot>(\<Squnion> i. iter_tspfCompH f1 f2 i x) = (tspfRan\<cdot>f1 \<union> tspfRan\<cdot>f2)"
   by (simp add: assms lub_iter_tsbfix2_dom)
-    
+
+lemma iter_tspfcomph_commu: assumes "tspfRan\<cdot>f1 \<inter> tspfRan\<cdot>f2 = {}"
+                           and "tsbDom\<cdot>tb = tspfCompI f1 f2" 
+  shows "(iter_tspfCompH f1 f2 i tb) = (iter_tspfCompH f2 f1 i tb)"
+proof (induction i)
+  case 0
+  then show ?case
+    by (simp add: sup_commute)
+next
+  case (Suc i)
+  then show ?case
+   apply (unfold iterate_Suc)
+   apply (subst tspfcomph_commu, simp_all add: assms)
+   by (metis (no_types) assms(2) iter_tspfcomph_dom)
+qed
+  
     
 subsection \<open>basic properties\<close>
     
@@ -1227,6 +1268,34 @@ lemma tspfcomp_cont [simp]:
                 \<leadsto> tsbFix (tspfCompH f1 f2 x) (tspfRan\<cdot>f1 \<union> tspfRan\<cdot>f2))"
   by simp
   
-    
-    
+lemma tspfcomp_commu: assumes "tspfRan\<cdot>f1 \<inter> tspfRan\<cdot>f2 = {}"
+  shows "tspfComp f1 f2 = tspfComp f2 f1"
+proof -
+  have f0: "\<And> tb. tsbDom\<cdot>tb = tspfCompI f1 f2 \<Longrightarrow> 
+                  (\<Squnion> i. iter_tspfCompH f1 f2 i tb) = (\<Squnion> i. iter_tspfCompH f2 f1 i tb)"
+    by (meson assms iter_tspfcomph_commu)
+  have f1: "tspfCompI f1 f2 = tspfCompI f2 f1"
+    by (simp add: tspfcomp_I_commu)
+  have f2: "\<forall> tb. (tsbDom\<cdot>tb \<noteq> tspfCompI f1 f2) 
+            \<or> (Some (\<Squnion> i. iter_tspfCompH f1 f2 i tb) = Some (\<Squnion> i. iter_tspfCompH f2 f1 i tb)) "
+    using f0 by blast
+  have f3:"Abs_CTSPF (\<lambda>t. (tsbDom\<cdot>t = tspfCompI f2 f1)
+                              \<leadsto>\<Squnion>n. iter_tsbfix2 (tspfCompH f1 f2) n (tspfRan\<cdot>f1 \<union> tspfRan\<cdot>f2) t) 
+        = Abs_CTSPF (\<lambda>t. (tsbDom\<cdot>t = tspfCompI f2 f1)
+                              \<leadsto>\<Squnion>n. iter_tsbfix2 (tspfCompH f2 f1) n (tspfRan\<cdot>f2 \<union> tspfRan\<cdot>f1) t) 
+          \<or> (\<forall>t. tsbDom\<cdot>t \<noteq> tspfCompI f2 f1 \<or> (tsbDom\<cdot>t \<noteq> tspfCompI f2 f1 \<or> 
+          Some (\<Squnion>n. iter_tsbfix2 (tspfCompH f1 f2) n (tspfRan\<cdot>f1 \<union> tspfRan\<cdot>f2) t) 
+          = Some (\<Squnion>n. iter_tsbfix2 (tspfCompH f2 f1) n (tspfRan\<cdot>f2 \<union> tspfRan\<cdot>f1) t)) 
+          \<and> (tsbDom\<cdot>t = tspfCompI f2 f1 \<or> 
+            None = Some (\<Squnion>n. iter_tsbfix2 (tspfCompH f2 f1) n (tspfRan\<cdot>f2 \<union> tspfRan\<cdot>f1) t))) 
+            \<and> (\<forall>t. tsbDom\<cdot>t = tspfCompI f2 f1 \<or> tsbDom\<cdot>t \<noteq> tspfCompI f2 f1 
+            \<or> Some (\<Squnion>n. iter_tsbfix2 (tspfCompH f1 f2) n (tspfRan\<cdot>f1 \<union> tspfRan\<cdot>f2) t) = None)"
+        using f2 tspfcomp_I_commu by blast  
+    show ?thesis
+     apply (subst (1 2) tspfcomp2_iterCompH)  
+     apply (subst f1)
+     using f3 by meson
+qed
+
+       
 end
