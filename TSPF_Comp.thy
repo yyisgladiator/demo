@@ -26,12 +26,69 @@ abbreviation sercomp_well :: "'m TSPF \<Rightarrow> 'm TSPF \<Rightarrow> bool" 
 
 subsection \<open>special operators\<close>
 
-definition tspfParComp :: "'m TSPF \<Rightarrow> 'm TSPF \<Rightarrow> 'm TSPF"  ("_\<parallel>_") where
+definition tspfParComp :: "'m TSPF \<Rightarrow> 'm TSPF \<Rightarrow> 'm TSPF"  (infix "\<parallel>" 60) where
 "tspfParComp f1 f2 \<equiv> Abs_CTSPF (\<lambda> x. (tsbDom\<cdot>x = (tspfDom\<cdot>f1 \<union> tspfDom\<cdot>f2)) \<leadsto> ((f1 \<rightleftharpoons> (x \<bar> tspfDom\<cdot>f1)) \<uplus> (f2 \<rightleftharpoons> (x \<bar> tspfDom\<cdot>f2))))"
 
-definition tspfSerComp :: "'m TSPF \<Rightarrow> 'm TSPF \<Rightarrow> 'm TSPF"  ("_\<circ>_") where
+definition tspfSerComp :: "'m TSPF \<Rightarrow> 'm TSPF \<Rightarrow> 'm TSPF"  (infix "\<circ>" 60) where
 "tspfSerComp f1 f2 \<equiv> Abs_CTSPF (\<lambda> x. (tsbDom\<cdot>x = tspfDom\<cdot>f1) \<leadsto> (f2 \<rightleftharpoons> (f1 \<rightleftharpoons> x)))"
 
+definition tspfHide :: "'m TSPF \<Rightarrow>  channel set \<Rightarrow> 'm TSPF" (infix "\<h>" 60) where
+"tspfHide f cs \<equiv> Abs_CTSPF (\<lambda> x. (tsbDom\<cdot>x = tspfDom\<cdot>f ) \<leadsto> ((f \<rightleftharpoons> x)\<bar>(tspfRan\<cdot>f - cs)))"
+
+
+section \<open>tspfHide\<close>
+
+(* should be ported to TSB or TSPF *)
+lemma if_then_mono_tspf:  assumes "monofun g"
+  shows "monofun (\<lambda>b. (tsbDom\<cdot>b = In)\<leadsto>g b)"
+proof(rule monofunI)
+  fix x y :: "'a TSB"
+  assume "x\<sqsubseteq>y"
+  hence "tsbDom\<cdot>x = tsbDom\<cdot>y" using tsbdom_below by blast
+  thus "(tsbDom\<cdot>x = In)\<leadsto>g x \<sqsubseteq> (tsbDom\<cdot>y = In)\<leadsto>g y"
+  proof -
+    have "g x \<sqsubseteq> g y"
+      by (meson \<open>x \<sqsubseteq> y\<close> assms monofun_def)
+    then show ?thesis
+      by (simp add: \<open>tsbDom\<cdot>x = tsbDom\<cdot>y\<close> some_below)
+  qed
+qed  
+
+(* should be ported to TSB or TSPF *)  
+lemma if_then_cont_tspf: assumes "cont g"
+  shows "cont (\<lambda>b. (tsbDom\<cdot>b = In)\<leadsto>g b)"
+proof(rule contI2)
+  show "monofun (\<lambda>b. (tsbDom\<cdot>b = In)\<leadsto>g b)"  using assms cont2mono if_then_mono_tspf by blast
+  thus " \<forall>Y. chain Y \<longrightarrow> (tsbDom\<cdot>(\<Squnion>i. Y i) = In)\<leadsto>g (\<Squnion>i. Y i) \<sqsubseteq> (\<Squnion>i. (tsbDom\<cdot>(Y i) = In)\<leadsto>g (Y i))"
+    using assms if_then_lub2 po_class.chain_def by auto
+qed
+
+lemma tspfHide_cont[simp]:  
+  shows "cont (\<lambda> x. (tsbDom\<cdot>x = tspfDom\<cdot>f ) \<leadsto> ((f \<rightleftharpoons> x)\<bar>(tspfRan\<cdot>f - cs)))"
+by(simp add: if_then_cont_tspf cont_compose)
+
+lemma tspfHide_well[simp]: 
+  shows "tspf_well(\<Lambda> x. (tsbDom\<cdot>x = tspfDom\<cdot>f ) \<leadsto> ((f \<rightleftharpoons> x)\<bar>(tspfRan\<cdot>f - cs)))"
+sorry
+
+lemma tspfHide_dom:
+  shows "tspfDom\<cdot>(tspfHide f cs) = tspfDom\<cdot>f"
+proof - 
+  have "\<And> tsb. tsbDom\<cdot>tsb \<noteq> tspfDom\<cdot>f \<Longrightarrow> (Rep_CTSPF (tspfHide f cs) tsb) = None"
+    by (simp add: tspfHide_def)
+  moreover have "\<And> tsb. tsbDom\<cdot>tsb = tspfDom\<cdot>f \<Longrightarrow> (Rep_CTSPF (tspfHide f cs) tsb) \<noteq> None"
+    by (simp add: tspfHide_def)
+  ultimately show ?thesis
+    sorry
+qed
+
+lemma tspfHide_ran:
+  shows "tspfRan\<cdot>(tspfHide f cs) = tspfRan\<cdot>f - cs"
+sorry
+
+lemma tspfHide_getCh: assumes "tsbDom\<cdot>tsb = tspfDom\<cdot>f" and "c \<notin> cs"
+  shows "((tspfHide f cs) \<rightleftharpoons> tsb) . c = (f \<rightleftharpoons> tsb). c"
+  by (smt Diff_iff assms(1) assms(2) domIff option.sel rep_abs_ctspf tsbdom_insert tsbgetch_insert tsbgetch_restrict tspfHide_cont tspfHide_def tspfHide_dom tspfHide_ran tspfHide_well tspf_ran_2_tsbdom2)
 
 (* ----------------------------------------------------------------------- *)
 section \<open>parallel-comp\<close>
@@ -178,31 +235,6 @@ proof -
   thus ?thesis
     apply (subst f1)
     by meson
-qed
-
-(* should be ported to TSB or TSPF *)
-lemma if_then_mono_tspf:  assumes "monofun g"
-  shows "monofun (\<lambda>b. (tsbDom\<cdot>b = In)\<leadsto>g b)"
-proof(rule monofunI)
-  fix x y :: "'a TSB"
-  assume "x\<sqsubseteq>y"
-  hence "tsbDom\<cdot>x = tsbDom\<cdot>y" using tsbdom_below by blast
-  thus "(tsbDom\<cdot>x = In)\<leadsto>g x \<sqsubseteq> (tsbDom\<cdot>y = In)\<leadsto>g y"
-  proof -
-    have "g x \<sqsubseteq> g y"
-      by (meson \<open>x \<sqsubseteq> y\<close> assms monofun_def)
-    then show ?thesis
-      by (simp add: \<open>tsbDom\<cdot>x = tsbDom\<cdot>y\<close> some_below)
-  qed
-qed  
-
-(* should be ported to TSB or TSPF *)  
-lemma if_then_cont_tspf: assumes "cont g"
-  shows "cont (\<lambda>b. (tsbDom\<cdot>b = In)\<leadsto>g b)"
-proof(rule contI2)
-  show "monofun (\<lambda>b. (tsbDom\<cdot>b = In)\<leadsto>g b)"  using assms cont2mono if_then_mono_tspf by blast
-  thus " \<forall>Y. chain Y \<longrightarrow> (tsbDom\<cdot>(\<Squnion>i. Y i) = In)\<leadsto>g (\<Squnion>i. Y i) \<sqsubseteq> (\<Squnion>i. (tsbDom\<cdot>(Y i) = In)\<leadsto>g (Y i))"
-    using assms if_then_lub2 po_class.chain_def by auto
 qed
   
 lemma parallel_iterconst_cont [simp]: "cont (\<lambda> x. (tsbDom\<cdot>x = (tspfDom\<cdot>f1 \<union> tspfDom\<cdot>f2)) 
@@ -520,13 +552,18 @@ lemma tspfSerComp_getCh: assumes "sercomp_well f1 f2"
   using assms apply blast
   by(simp add: assms)
 
-(*
-Define hide function to show this lemma:
-    
 lemma tspfSerComp_eq: assumes "sercomp_well f1 f2"
-  shows "tspfComp f1 f2 = (tspfSerComp f1 f2) hide (tspfRan f1)"
+  shows "tspfHide (tspfComp f1 f2) (tspfRan\<cdot>f1) = (tspfSerComp f1 f2)"
+proof - 
+  have f1: "tspfDom\<cdot>(tspfSerComp f1 f2) = tspfDom\<cdot>(tspfHide (tspfComp f1 f2) (tspfRan\<cdot>f1))"
+    by (smt assms domIff rep_abs_ctspf tsbleast_tsdom tspfHide_dom tspfSerComp_dom tspf_least_in_dom tspfcomp2_lubiter tspfcomp_serial_iterconst_cont tspfcomp_serial_iterconst_eq tspfcomp_serial_iterconst_well)
+  hence f2: "\<And> tsb. (tspfComp f1 f2) \<rightleftharpoons> tsb = (tspfHide (tspfComp f1 f2) (tspfRan\<cdot>f1)) \<rightleftharpoons> tsb"
+    sorry
+  with f1 f2 have ?thesis
+    sorry
+qed
   oops
-*)        
+        
       
 end
   
