@@ -38,9 +38,12 @@ definition tspfHide :: "'m TSPF \<Rightarrow>  channel set \<Rightarrow> 'm TSPF
 definition tspfFeedbackH :: "'m TSPF \<Rightarrow> 'm TSB \<Rightarrow> 'm TSB  \<rightarrow> 'm TSB" where
 "tspfFeedbackH f x = (\<Lambda> z. (f\<rightleftharpoons>((x \<uplus> z) \<bar> tspfDom\<cdot>f)))" 
 
+abbreviation iter_tspfFeedbackH :: "'a TSPF \<Rightarrow> nat \<Rightarrow> 'a TSB  \<Rightarrow> 'a TSB" where
+"iter_tspfFeedbackH f i \<equiv> (\<lambda> x. iterate i\<cdot>(tspfFeedbackH f x)\<cdot>(tsbLeast (tspfRan\<cdot>f)))"
+
 definition tspfFeedback :: "'m TSPF \<Rightarrow> 'm TSPF" where
 "tspfFeedback f \<equiv> 
-let I  = tspfDom\<cdot>f;
+let I  = tspfDom\<cdot>f - tspfRan\<cdot>f;
     Oc = (tspfRan\<cdot>f - tspfDom\<cdot>f)
 in Abs_CTSPF (\<lambda> x. (tsbDom\<cdot>x = I) \<leadsto> tsbFix (tspfFeedbackH f x) Oc)"
 
@@ -590,7 +593,7 @@ qed
 section \<open>Feedback\<close>  
   
   
-lemma tspfFeedbackH_cont: "cont (\<lambda> z. (f\<rightleftharpoons>((x \<uplus> z) \<bar> tspfDom\<cdot>f)))"
+lemma tspfFeedbackH_cont[simp]: "cont (\<lambda> z. (f\<rightleftharpoons>((x \<uplus> z) \<bar> tspfDom\<cdot>f)))"
 proof - 
   have "cont (\<lambda> z. x \<uplus> z)"
     by simp
@@ -601,12 +604,55 @@ proof -
   ultimately show ?thesis
     using cont_compose by blast
 qed
- 
-lemma tspfFeedback_cont: "cont (\<lambda> x. (tsbDom\<cdot>x = tspfDom\<cdot>f) \<leadsto> tsbFix (tspfFeedbackH f x) (tspfRan\<cdot>f))" 
-  
-  sorry
 
-lemma tspfFeedback_tspfwell: "tspf_well (\<Lambda> x. (tsbDom\<cdot>x = tspfDom\<cdot>f) \<leadsto> tsbFix (tspfFeedbackH f x) (tspfRan\<cdot>f - tspfDom\<cdot>f))" 
+lemma tspfFeedbackH_cont2[simp]: "cont (\<lambda> x. (f\<rightleftharpoons>((x \<uplus> z) \<bar> tspfDom\<cdot>f)))"
+proof - 
+  have "cont (\<lambda> x. x \<uplus> z)"
+    by simp
+  then have "cont (\<lambda> x. ((x \<uplus> z) \<bar> tspfDom\<cdot>f))"
+    using cont_Rep_cfun2 cont_compose by blast
+  moreover then have "cont (\<lambda> x. f\<rightleftharpoons>x)"
+    by (simp add: cont_compose)
+  ultimately show ?thesis
+    using cont_compose by blast
+qed  
+  
+lemma tspfcomph_cont_x[simp]: "cont (\<lambda> x. tspfFeedbackH f x)"
+  apply (subst tspfFeedbackH_def)
+  by (simp only: cont2cont_LAM tspfFeedbackH_cont tspfFeedbackH_cont2)  
+  
+lemma tspfFeedbackH_dom: assumes "tsbDom\<cdot>x = tspfDom\<cdot>f - tspfRan\<cdot>f" 
+                              and "tsbDom\<cdot>tb = tspfRan\<cdot>f"  
+  shows "tsbDom\<cdot>(tspfFeedbackH f x\<cdot>tb) = tspfRan\<cdot>f"
+proof - 
+  have "tsbDom\<cdot>((x \<uplus> tb) \<bar> tspfDom\<cdot>f) = tspfDom\<cdot>f"
+    apply(simp add: assms)
+    by auto
+  then show ?thesis
+    by(simp add: tspfFeedbackH_def)
+qed 
+
+lemma iter_tspfFeedbackH_chain [simp]: assumes "tsbDom\<cdot>x = tspfDom\<cdot>f - tspfRan\<cdot>f"
+  shows "chain (\<lambda> i. iter_tspfFeedbackH f i x)"
+  by (simp add: assms tsbIterate_chain tspfFeedbackH_dom)    
+    
+lemma iter_tspfFeedbackH_dom [simp]: assumes "tsbDom\<cdot>x = tspfDom\<cdot>f - tspfRan\<cdot>f"
+  shows "tsbDom\<cdot>(iter_tspfFeedbackH f i x) = tspfRan\<cdot>f"
+  by (simp add: assms iter_tsbfix2_dom tspfFeedbackH_dom)
+
+lemma lub_iter_tspfFeedbackH_dom [simp]: assumes "tsbDom\<cdot>x = tspfDom\<cdot>f - tspfRan\<cdot>f"
+  shows "tsbDom\<cdot>(\<Squnion> i. iter_tspfFeedbackH f i x) = tspfRan\<cdot>f"
+  by (simp add: assms lub_iter_tsbfix2_dom tspfFeedbackH_dom)
+  
+lemma tspfFeedback_cont: "cont (\<lambda> x. (tsbDom\<cdot>x = tspfDom\<cdot>f - tspfRan\<cdot>f) \<leadsto> tsbFix (tspfFeedbackH f x) (tspfRan\<cdot>f))" 
+  apply(subst (1) tsbfix_contI2)
+   apply(simp_all)
+   by (simp add: tspfFeedbackH_dom)
+
+lemma tspfFeedback_tspfwell: "tspf_well (\<Lambda> x. (tsbDom\<cdot>x = tspfDom\<cdot>f - tspfRan\<cdot>f) \<leadsto> tsbFix (tspfFeedbackH f x) (tspfRan\<cdot>f - tspfDom\<cdot>f))" 
+  apply(simp add: tspf_well_def)
+  apply rule
+    
   sorry    
     
 end
