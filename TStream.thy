@@ -2979,7 +2979,7 @@ lemma tstream_exhaust [case_names bottom delayfun mlscons]:
   fixes xs::"'a tstream"
   assumes "xs = \<bottom> \<Longrightarrow> P"
     and "\<And>ts. xs = delay ts \<Longrightarrow> P"
-    and "\<And>t ts. xs = t &&\<surd> ts \<Longrightarrow> P"
+    and "\<And>t ts. t\<noteq>\<bottom> \<Longrightarrow> ts\<noteq>\<bottom> \<Longrightarrow> xs = t &&\<surd> ts \<Longrightarrow> P"
   shows "P"
   apply (cases xs)
   apply (rename_tac s)   
@@ -2987,10 +2987,10 @@ lemma tstream_exhaust [case_names bottom delayfun mlscons]:
   using Abs_tstream_strict assms(1) apply blast
   apply (rename_tac  a as )
   apply(case_tac a, rename_tac x)
-    apply simp_all
+  apply simp_all
   apply(case_tac x, rename_tac xa)
-    apply(case_tac xa, simp_all)
-  using absts2mlscons assms(3) apply blast
+  apply(case_tac xa, simp_all)
+  apply (metis absts2mlscons assms(1) assms(3) tsmlscons_nbot_rev up_defined)
   using absts2delayfun assms(2) by blast
     
 
