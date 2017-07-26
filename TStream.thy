@@ -2975,6 +2975,25 @@ assumes adm: "adm P" and bottom: "P \<bottom>"
   shows "P ts"
 by (metis adm bottom delayfun mlscons tstream_fin_induct tstream_infs)
 
+lemma tstream_exhaust [case_names bottom delayfun mlscons]:
+  fixes xs::"'a tstream"
+  assumes "xs = \<bottom> \<Longrightarrow> P"
+    and "\<And>ts. xs = delay ts \<Longrightarrow> P"
+    and "\<And>t ts. xs = t &&\<surd> ts \<Longrightarrow> P"
+  shows "P"
+  apply (cases xs)
+  apply (rename_tac s)   
+  apply (case_tac s)
+  using Abs_tstream_strict assms(1) apply blast
+  apply (rename_tac  a as )
+  apply(case_tac a, rename_tac x)
+    apply simp_all
+  apply(case_tac x, rename_tac xa)
+    apply(case_tac xa, simp_all)
+  using absts2mlscons assms(3) apply blast
+  using absts2delayfun assms(2) by blast
+    
+
 (* ----------------------------------------------------------------------- *)
 subsection {* admissibility rules *}
 (* ----------------------------------------------------------------------- *)
