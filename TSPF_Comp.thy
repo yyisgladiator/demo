@@ -84,7 +84,8 @@ lemma tspfHide_well[simp]:
   shows "tspf_well(\<Lambda> x. (tsbDom\<cdot>x = tspfDom\<cdot>f ) \<leadsto> ((f \<rightleftharpoons> x)\<bar>(tspfRan\<cdot>f - cs)))"
   apply(simp only: tspf_well_def)
   apply rule
-  apply(simp only: tspf_type_def)
+   apply (auto simp add: tspf_type_def domIff2 tsbdom_rep_eq)
+    
   sorry
 
 lemma tspfHide_dom:
@@ -644,7 +645,7 @@ lemma lub_iter_tspfFeedbackH_dom [simp]: assumes "tsbDom\<cdot>x = tspfDom\<cdot
   shows "tsbDom\<cdot>(\<Squnion> i. iter_tspfFeedbackH f i x) = tspfRan\<cdot>f"
   by (simp add: assms lub_iter_tsbfix2_dom tspfFeedbackH_dom)
   
-lemma tspfFeedback_cont: "cont (\<lambda> x. (tsbDom\<cdot>x = tspfDom\<cdot>f - tspfRan\<cdot>f) \<leadsto> tsbFix (tspfFeedbackH f x) (tspfRan\<cdot>f))" 
+lemma tspfFeedback_cont[simp]: "cont (\<lambda> x. (tsbDom\<cdot>x = tspfDom\<cdot>f - tspfRan\<cdot>f) \<leadsto> tsbFix (tspfFeedbackH f x) (tspfRan\<cdot>f))" 
   apply(subst (1) tsbfix_contI2)
    apply(simp_all)
    by (simp add: tspfFeedbackH_dom)
@@ -652,7 +653,7 @@ lemma tspfFeedback_cont: "cont (\<lambda> x. (tsbDom\<cdot>x = tspfDom\<cdot>f -
 lemma tspfFeedback_tspfwell: "tspf_well (\<Lambda> x. (tsbDom\<cdot>x = tspfDom\<cdot>f - tspfRan\<cdot>f) \<leadsto> tsbFix (tspfFeedbackH f x) (tspfRan\<cdot>f - tspfDom\<cdot>f))" 
   apply(simp add: tspf_well_def)
   apply rule
-    
+   apply (auto simp add: tspf_type_def domIff2 tsbdom_rep_eq)
   sorry    
     
 end
