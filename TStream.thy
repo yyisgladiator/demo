@@ -2031,8 +2031,6 @@ lemma tsfilter_tstickcount [simp]: "#\<surd>(tsFilter M\<cdot>ts) = #\<surd>ts"
 lemma tsfilter_weak:"tsWeakCausal (Rep_cfun (tsFilter M))"
   by (subst tsWeak2cont2, auto)
 
-(* ToDo Jan: lemma for tsfilter *)
-
 lemma tsfilter_tsabs_h: 
   "smap inversMsg\<cdot>({e. e \<noteq> \<surd>} \<inter> Msg ` M \<ominus> s) = M \<ominus> smap inversMsg\<cdot>({e. e \<noteq> \<surd>} \<ominus> s)"
 proof (rule ind [of _ s], simp_all)
@@ -2041,10 +2039,20 @@ proof (rule ind [of _ s], simp_all)
   show  "smap inversMsg\<cdot>({e. e \<noteq> \<surd>} \<inter> Msg ` M \<ominus> s) = M \<ominus> smap inversMsg\<cdot>({e. e \<noteq> \<surd>} \<ominus> s) \<Longrightarrow>
          smap inversMsg\<cdot>({e. e \<noteq> \<surd>} \<inter> Msg ` M \<ominus> (\<up>a \<bullet> s)) =
          M \<ominus> smap inversMsg\<cdot>({e. e \<noteq> \<surd>} \<ominus> (\<up>a \<bullet> s)) " 
-    apply (case_tac "a=\<surd>", simp_all)
     apply (case_tac "a \<in> Msg ` M", simp_all)
     apply (auto)
-    by (smt event.exhaust event.simps(4) image_iff sfilter_nin)  
+    proof -
+      assume a1: "a \<notin> Msg ` M"
+      { assume "a \<noteq> \<surd>"
+        then have "\<M>\<inverse> a \<notin> M"
+          using a1 by (metis (no_types) event.exhaust event.simps(4) imageI)
+        then have "a \<in> {e. e \<noteq> \<surd>} \<longrightarrow> M \<ominus> smap inversMsg\<cdot>({e. e \<noteq> \<surd>} \<ominus> s) = M \<ominus> smap inversMsg\<cdot> ({e. e \<noteq> \<surd>} \<ominus> \<up>a \<bullet> s)"
+          by simp }
+      then have "a \<in> {e. e \<noteq> \<surd>} \<longrightarrow> M \<ominus> smap inversMsg\<cdot>({e. e \<noteq> \<surd>} \<ominus> s) = M \<ominus> smap inversMsg\<cdot> ({e. e \<noteq> \<surd>} \<ominus> \<up>a \<bullet> s)"
+        by blast
+      then show "M \<ominus> smap inversMsg\<cdot>({e. e \<noteq> \<surd>} \<ominus> s) = M \<ominus> smap inversMsg\<cdot> ({e. e \<noteq> \<surd>} \<ominus> \<up>a \<bullet> s)"
+        by force
+    qed
   qed
 
 lemma tsfilter_tsabs: "tsAbs\<cdot>(tsFilter M\<cdot>ts) = sfilter M\<cdot>(tsAbs\<cdot>ts)"
@@ -2965,6 +2973,25 @@ assumes adm: "adm P" and bottom: "P \<bottom>"
   and mlscons: "\<And>ts t. P ts\<Longrightarrow> ts\<noteq>\<bottom> \<Longrightarrow> P (tsMLscons\<cdot>(updis t)\<cdot>ts)"
   shows "P ts"
 by (metis adm bottom delayfun mlscons tstream_fin_induct tstream_infs)
+
+lemma tstream_exhaust [case_names bottom delayfun mlscons]:
+  fixes xs::"'a tstream"
+  assumes "xs = \<bottom> \<Longrightarrow> P"
+    and "\<And>ts. xs = delay ts \<Longrightarrow> P"
+    and "\<And>t ts. t\<noteq>\<bottom> \<Longrightarrow> ts\<noteq>\<bottom> \<Longrightarrow> xs = t &&\<surd> ts \<Longrightarrow> P"
+  shows "P"
+  apply (cases xs)
+  apply (rename_tac s)   
+  apply (case_tac s)
+  using Abs_tstream_strict assms(1) apply blast
+  apply (rename_tac  a as )
+  apply(case_tac a, rename_tac x)
+  apply simp_all
+  apply(case_tac x, rename_tac xa)
+  apply(case_tac xa, simp_all)
+  apply (metis absts2mlscons assms(1) assms(3) tsmlscons_nbot_rev up_defined)
+  using absts2delayfun assms(2) by blast
+    
 
 (* ----------------------------------------------------------------------- *)
 subsection {* admissibility rules *}

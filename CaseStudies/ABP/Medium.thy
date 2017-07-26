@@ -20,9 +20,28 @@ section {* definition *}
 definition tsMed :: "'a tstream \<rightarrow> bool stream \<rightarrow> 'a tstream" where
 "tsMed \<equiv> \<Lambda> msg ora. tsProjFst\<cdot>(tsFilter {x. snd x}\<cdot>(tsZip\<cdot>msg\<cdot>ora))"
 
+definition tsMeds :: "('a tstream \<rightarrow> 'a tstream) set" where
+"tsMeds \<equiv> { (\<Lambda> ts. tsMed\<cdot>ts\<cdot>ora) | ora. #({True} \<ominus> ora)=\<infinity> }"
+
 (* ----------------------------------------------------------------------- *)
 section {* basic properties *}
 (* ----------------------------------------------------------------------- *)
+
+  
+fixrec newOracle :: "bool stream \<rightarrow> bool stream \<rightarrow> bool stream" where
+"newOracle\<cdot>\<bottom>\<cdot>bs = \<bottom> " |
+"newOracle\<cdot>as\<cdot>\<bottom> = \<bottom> " |
+"newOracle\<cdot>((up\<cdot>a)&&as)\<cdot>((up\<cdot>b)&&bs) = 
+  (* First oracle is not transmitting the message *)
+  (if(a = Discr False) then (updis False)&&newOracle\<cdot>as\<cdot>((up\<cdot>b)&&bs)
+  
+  (* First oracle is transmitting *)
+   else  up\<cdot>b && newOracle\<cdot>as\<cdot>bs)"
+
+(* Testing that it works *)
+lemma "newOracle\<cdot>(<[True, True, False, True]>)\<cdot>(<[True, False, True]>) = <[True, False, False, True]>"
+apply (simp only: list2s_0 list2s_Suc)
+  by fixrec_simp
 
 text {* Assumption for medium lemmata: #({True} \<ominus> ora)=\<infinity> *}
 
