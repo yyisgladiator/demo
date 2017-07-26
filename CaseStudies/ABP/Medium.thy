@@ -197,4 +197,19 @@ lemma tsmed2infmed: assumes "#({True} \<ominus> ora1)=\<infinity>" and "#({True}
   obtains ora3 where "tsMed\<cdot>(tsMed\<cdot>msg\<cdot>ora1)\<cdot>ora2 = tsMed\<cdot>msg\<cdot>ora3" and "#({True} \<ominus> ora3)=\<infinity>"
 oops    
     
+  
+  
+  
+section {* tsMeds lemma *}
+
+lemma "tsMeds \<noteq>{}"
+  oops
+    
+lemma assumes "med\<in>tsMeds"
+  shows "#\<surd>ts = #\<surd>med\<cdot>ts"
+  oops
+    
+
+  
+  
 end
