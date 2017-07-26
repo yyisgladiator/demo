@@ -20,6 +20,9 @@ section {* definition *}
 definition tsMed :: "'a tstream \<rightarrow> bool stream \<rightarrow> 'a tstream" where
 "tsMed \<equiv> \<Lambda> msg ora. tsProjFst\<cdot>(tsFilter {x. snd x}\<cdot>(tsZip\<cdot>msg\<cdot>ora))"
 
+definition tsMeds :: "('a tstream \<rightarrow> 'a tstream) set" where
+"tsMeds \<equiv> { (\<Lambda> ts. tsMed\<cdot>ts\<cdot>ora) | ora. #({True} \<ominus> ora)=\<infinity> }"
+
 (* ----------------------------------------------------------------------- *)
 section {* basic properties *}
 (* ----------------------------------------------------------------------- *)
