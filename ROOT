@@ -3,28 +3,23 @@ session "Streams" (mustWork) = "HOLCF" +
   theories
     Streams
 
-session "TStreamSorry" (mustWork) = "Streams" + 
-  options [quick_and_dirty = true]
-  theories
-    TStream   
-    "CaseStudies/TimedABP"
- 
- 
-session "TSPSSorry" (mustWork) = "TStreamSorry" + 
-  options [quick_and_dirty = true]
-  theories
-    TSPS   
-    
-
-
-session "TStream" (canFail) = "Streams" + 
+session "TStream" (mustWork) = "Streams" + 
   options [quick_and_dirty = false]
   theories
-    TStream   
+    TStream
  
-session "TSPS" (canFail) = "TStream" + 
+session "ABP" (mustWork) = "TStream" + 
+  options [quick_and_dirty = true]
+  theories
+    CaseStudies/ABP/Composition
+    CaseStudies/ABP/Sender
+    CaseStudies/ABP/Testing        
+ 
+ 
+session "ABP" (canFail) = "TStream" + 
   options [quick_and_dirty = false]
   theories
-    TSPS   
-    
+    CaseStudies/ABP/Composition
+    CaseStudies/ABP/Sender
+    CaseStudies/ABP/Testing        
 
