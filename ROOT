@@ -8,7 +8,7 @@ session "TStream" (mustWork) = "Streams" +
   theories
     TStream
  
-session "ABP" (mustWork) = "TStream" + 
+session "ABPSorry" (mustWork) = "TStream" + 
   options [quick_and_dirty = true]
   theories
     CaseStudies/ABP/Composition
