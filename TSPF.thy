@@ -613,7 +613,7 @@ lemma tspf_ran_2_tsbdom [simp]: assumes "(Rep_CTSPF F) a = Some b"
   by (metis (no_types, lifting) Abs_cfun_inverse2 assms ranI someI_ex tspfRan_def 
             tspf_raneq_to_sbdomeq tspf_ran_cont)
 
-lemma spfran_least: "tspfRan\<cdot>f = tsbDom\<cdot>(f\<rightleftharpoons> (tsbLeast (tspfDom\<cdot>f)))"
+lemma tspfran_least: "tspfRan\<cdot>f = tsbDom\<cdot>(f\<rightleftharpoons> (tsbLeast (tspfDom\<cdot>f)))"
   apply (simp add: tspfRan_def)
   by (metis (no_types) domD option.sel tspf_least_in_dom tspf_ran_2_tsbdom tspf_ran_insert)
     

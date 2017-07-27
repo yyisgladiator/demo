@@ -27,7 +27,9 @@ lemma [simp]: "cs \<subseteq> ((ctype c) :: nat set)"
   apply(simp add: ctype_nat_def) 
   by(metis subset_UNIV subset_image_iff transfer_int_nat_set_return_embed) 
 
-    
+lemma tsb_well_nx1: fixes f :: "nat tstream \<rightarrow> nat tstream"
+  shows "tsbDom\<cdot>b = cs \<Longrightarrow> tsb_well [ch2 \<mapsto> f\<cdot>(b  .  ch1)]"
+    by (simp add: tsb_wellI)
 
 (* an tspf with at least one input and one output channel is mono *)
 lemma tspf_nx1_mono [simp]: fixes f :: "nat tstream \<rightarrow> nat tstream" assumes "{ch1} \<subseteq> cs"
@@ -123,6 +125,55 @@ proof (rule tspf_contI)
                                        tsbChain_dom_eq2 tsbdom_rep_eq)
       by (simp add: assms(1) lub_f_tsb_getch f2 f3)
 qed
+ 
+lemma tspf_nx1_general_dom [simp]: fixes f :: "nat tstream \<rightarrow> nat tstream" assumes "{ch1} \<subseteq> cs"
+  and "tspf_well (\<Lambda> (tb::nat TSB). (tsbDom\<cdot>tb = cs) \<leadsto>  ([ch2 \<mapsto> f\<cdot>(tb . ch1)]\<Omega>))"
+shows  "tspfDom\<cdot>(Abs_TSPF (\<Lambda> tb. (tsbDom\<cdot>tb = cs) \<leadsto> ([ch2 \<mapsto> f\<cdot>(tb . ch1)]\<Omega>))) = cs"  
+  
+proof -
+  have f1: "cont (\<lambda> tb. (tsbDom\<cdot>tb = cs)\<leadsto>[ch2 \<mapsto> f\<cdot>(tb  .  ch1)]\<Omega>)"
+    by (simp only: tspf_nx1_cont assms(1))
+  
+  hence "Rep_cfun (\<Lambda> tb. (tsbDom\<cdot>tb = cs)\<leadsto>[ch2 \<mapsto> f\<cdot>(tb  .  ch1)]\<Omega>) = (\<lambda> tb. (tsbDom\<cdot>tb = cs)\<leadsto>[ch2 \<mapsto> f\<cdot>(tb  .  ch1)]\<Omega>)"
+    by simp
+  show ?thesis
+  apply (simp add: tspf_dom_insert Rep_CTSPF_def)
+  apply (simp add: assms domIff2 f1)
+    by (metis (mono_tags) TSB_def mem_Collect_eq someI_ex tsb_tsbleast)
+qed
+  
+  
+  section \<open>example Instantiations\<close>  
+  
+  subsection \<open>delay_fun\<close> 
+  
+lemma delay_tspf_cont[simp]: 
+ "cont (\<lambda> tb:: nat TSB. (tsbDom\<cdot>tb = {ch1}) \<leadsto> ([ch2 \<mapsto> delayFun\<cdot>(tb . ch1)]\<Omega>))"
+  by simp
     
+lemma delay_tspf_well [simp]: 
+  "tspf_well (\<Lambda> (tb::nat TSB). (tsbDom\<cdot>tb = {ch1}) \<leadsto> ([ch2 \<mapsto> delayFun\<cdot>(tb . ch1)]\<Omega>))"
+proof -
+  have f1: "\<And> tb. tsbDom\<cdot>tb = {ch1} \<Longrightarrow> #\<surd>tsb tb = #\<surd> (tb . ch1)"
+    by (simp add: tsbtick_single_ch2)
+  have f2: "\<And>b::nat TSB. tsbDom\<cdot>b = {ch1} \<Longrightarrow> tsbDom\<cdot>([ch2 \<mapsto> delayFun\<cdot>(b  .  ch1)]\<Omega>) = {ch2}"
+    by (simp add: tsbdom_rep_eq tsb_well_nx1)
+  show ?thesis  
+  apply (rule tspf_wellI)
+     apply (simp_all add: domIff2 f2)
+     apply (subst tsbtick_single_ch1, simp add: tsb_well_nx1)
+     by (simp add: f1 delayFun.rep_eq)
+qed
+
+lemma delay_tspf_dom [simp]: "tspfDom\<cdot>(Abs_CTSPF (\<lambda> (tb::nat TSB). (tsbDom\<cdot>tb = {ch1}) 
+                      \<leadsto> ([ch2 \<mapsto> delayFun\<cdot>(tb . ch1)]\<Omega>))) = {ch1}"
+  by (simp add: Abs_CTSPF_def)
+ 
+lemma delay_tspf_ran [simp]: "tspfRan\<cdot>(Abs_CTSPF (\<lambda> (tb::nat TSB). (tsbDom\<cdot>tb = {ch1}) 
+                      \<leadsto> ([ch2 \<mapsto> delayFun\<cdot>(tb . ch1)]\<Omega>))) = {ch2}"
+  apply(simp add: tspfran_least)
+  by (simp add: tsb_well_def tsbdom_rep_eq)
+ 
+  subsection \<open>identity\<close> 
     
 end
