@@ -1029,10 +1029,20 @@ lemma tsbfix_least: assumes "tsbfun_io_eq F cs" and "tsbDom\<cdot>x = cs"
   by (simp add: assms(1) assms(2) assms(3) tsbfix_least_below)
 
  (* Intro rule for tsbfix_eq *)
-lemma tsbfix_eqI: assumes fp: "F\<cdot>x = x" and lst: "\<And>z. F\<cdot>z = z \<Longrightarrow> x \<sqsubseteq> z"
+lemma tsbfix_eqI: assumes fp: "F\<cdot>x = x" and lst: "\<And>z. tsbDom\<cdot>z = cs \<Longrightarrow> F\<cdot>z = z \<Longrightarrow> x \<sqsubseteq> z"
                   and "tsbfun_io_eq F cs" and "tsbDom\<cdot>x = cs"
   shows "(tsbFix F cs) = x"
-  by (metis assms(3) assms(4) below_antisym fp lst tsbfix_eq tsbfix_least)
+proof -
+  have f1: "tsbFix F cs \<sqsubseteq> x"
+    by (simp add: assms(3) assms(4) fp tsbfix_least)
+  have f2: "tsbDom\<cdot>(tsbFix F cs) = cs"
+    using assms(3) tsbfix_dom by blast
+  have "tsbFix F cs \<sqsubseteq> x"
+    using f1 by meson
+  then show ?thesis
+    using f2 by (metis assms(3) below_antisym lst tsbfix_eq)
+qed
+  
 
 
 (* compatibility lemmas to Fix.thy *)
