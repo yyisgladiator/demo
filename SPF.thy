@@ -11,6 +11,7 @@ imports SB
 begin
   default_sort message 
 
+    (* REMOVE THIS ASAP *)
 (* instatiate our message space*)
 instantiation nat :: message
 begin
@@ -147,18 +148,6 @@ definition spfDom :: "'m SPF \<rightarrow> channel set" where
 definition spfRan :: "'m SPF \<rightarrow> channel set" where
 "spfRan \<equiv> \<Lambda> f.  sbDom\<cdot>(SOME b. b \<in> ran (Rep_CSPF f))"
 
-(*
-  (* get "Internal" channels *)
-definition spfInternal:: "'m SPF \<Rightarrow> channel set" where
-"spfInternal f \<equiv> spfRan f \<inter> spfDom f"
-
-definition spfIn :: "'m SPF \<Rightarrow> channel set" where
-"spfIn f \<equiv> spfDom f - spfInternal f"
-
-definition spfOut :: "'m SPF \<Rightarrow> channel set" where
-"spfOut f \<equiv> spfRan f - spfInternal f "
-*)
-
 
 text {* spftype" returns the type of the stream processing function.*}
 definition spfType :: "'m SPF \<rightarrow> (channel set \<times> channel set)" where
@@ -179,74 +168,6 @@ translations
 abbreviation theRep_abbrv :: "'a SPF \<Rightarrow> 'a SB \<Rightarrow> 'a SB " ("_\<rightleftharpoons>_") where
 "(f \<rightleftharpoons> s) \<equiv> the ((Rep_CSPF f) s)"
 
-(*
-definition spfCompAll :: "'m SPF \<Rightarrow> 'm SPF \<Rightarrow> channel set" where
-"spfCompAll f1 f2 = spfDom\<cdot>f1 \<union> spfDom\<cdot>f2 \<union> spfRan\<cdot>f1 \<union> spfRan\<cdot>f2"
-
-definition spfCompInternal :: "'m SPF \<Rightarrow> 'm SPF \<Rightarrow> channel set" where
-"spfCompInternal f1 f2 = ((spfDom\<cdot>f1 \<inter> spfRan\<cdot>f2) \<union> (spfDom\<cdot>f2 \<inter> spfRan\<cdot>f1))"
-
-definition spfCompIn :: "'m SPF \<Rightarrow> 'm SPF \<Rightarrow> channel set" where
-"spfCompIn f1 f2 = (spfDom\<cdot>f1 \<union> spfDom\<cdot>f2) - ((spfDom\<cdot>f1 \<inter> spfRan\<cdot>f2) \<union> (spfDom\<cdot>f2 \<inter> spfRan\<cdot>f1))"
-
-definition spfCompOut :: "'m SPF \<Rightarrow> 'm SPF \<Rightarrow> channel set" where
-"spfCompOut f1 f2 = (spfRan\<cdot>f1 \<union> spfRan\<cdot>f2) - ((spfDom\<cdot>f1 \<inter> spfRan\<cdot>f2) \<union> (spfDom\<cdot>f2 \<inter> spfRan\<cdot>f1))"
-
-definition spfComp_well:: "'m SPF \<Rightarrow> 'm SPF \<Rightarrow> bool" where
-"spfComp_well f1 f2 \<equiv> spfDom\<cdot>f2 \<inter>spfRan\<cdot>f2 = {}
-                \<and>  spfDom\<cdot>f1 \<inter>spfRan\<cdot>f1 = {} 
-                \<and> spfRan\<cdot>f1 \<inter> spfRan\<cdot>f2 = {}"
-
-(* (f1 \<otimes> f2) x = [fix\<cdot>(\<Lambda> z. x \<uplus> f1(z\<bar>I1) \<uplus> f2(z\<bar>I2))]\<bar>O  *)
-definition spfComp2 :: "'m SPF \<Rightarrow> 'm SPF \<Rightarrow> 'm SPF"  (infixl "\<otimes>" 40) where
-"spfComp2 f1 f2 \<equiv> Abs_CSPF (\<lambda> x. (sbDom\<cdot>x = spfCompIn f1 f2) \<leadsto> 
-    (\<Squnion>i. iterate i\<cdot>(\<Lambda> z. x \<uplus> ((Rep_CSPF f1)\<rightharpoonup>(z \<bar> spfDom\<cdot>f1)) \<uplus> ((Rep_CSPF f2)\<rightharpoonup>(z \<bar> spfDom\<cdot>f2)))
-                   \<cdot>(sbLeast (spfCompAll f1 f2))) \<bar> spfCompOut f1 f2)"
-
-
-
-definition spfCompHelp :: "'m SPF \<Rightarrow> 'm SPF \<Rightarrow> 'm SB \<Rightarrow> 'm SB  \<rightarrow> 'm SB" where
-"spfCompHelp f1 f2 x \<equiv> \<Lambda> last. x  \<uplus> ((Rep_CSPF f1)\<rightharpoonup>(last \<bar> spfDom\<cdot>f1))
-                                   \<uplus> ((Rep_CSPF f2)\<rightharpoonup>(last \<bar> spfDom\<cdot>f2))"
-
-
-(* Meine Version *)
-(* assumes O1 \<inter> O2 = {}, otherwise arbitrary behaviour *)
-(* Do i know that (I1 \<inter> O1) = {} ? ? ? *)
-  (* because otherwise "(z \<bar> O1) = the (Rep_CSPF f1 (z \<bar> I1))" .... is strange/wrong/not useful  *)
-definition spfComp :: "'m SPF \<Rightarrow> 'm SPF \<Rightarrow> 'm SPF"  (infixl "\<otimes>" 40) where
-"spfComp f1 f2 \<equiv> Abs_CSPF (\<lambda> x. (sbDom\<cdot>x = spfCompIn f1 f2) \<leadsto> 
-    (\<Squnion>i. iterate i\<cdot>(spfCompHelp f1 f2 x)\<cdot>(sbLeast (spfCompAll f1 f2))) \<bar> spfCompOut f1 f2)"
-
-(* equality lemmas *)
-lemma spfcompC_eq : "spfCompAll f1 f2 = C f1 f2"
-by (simp add: Cc_def spfCompAll_def)
-
-lemma spfcompI_eq : "(spfCompIn f1 f2) = I f1 f2"
-oops (* lemma specification incorrect! *)
-
-lemma spfcompL_eq : "(spfCompInternal f1 f2) = L f1 f2"
-oops (* lemma specification incorrect! *)
-
-lemma spfcompOc_eq : "(spfCompOut f1 f2) = Oc f1 f2"
-oops (* lemma specification incorrect! *)
-
-(* Orginale Version *)
-text {* composition operator *}
-definition spfcomp :: "'m SPF => 'm SPF => 'm SPF"  where
-"spfcomp f1 f2 \<equiv> (*?*)
-let I1  = spfDom\<cdot> f1;
-    I2  = spfDom\<cdot> f2;
-    O1  = spfRan\<cdot> f1; 
-    O2  = spfRan\<cdot> f2; 
-    L   =(spfDom\<cdot> f2 \<inter> spfRan\<cdot> f1) \<union> (spfDom\<cdot> f1 \<inter> spfRan\<cdot> f2);
-    In  =(spfDom\<cdot> f1 \<union> spfDom\<cdot> f2) - L;
-    Out =(spfRan\<cdot> f1 \<union> spfRan\<cdot> f2) - L    
-in (Abs_CSPF (\<lambda> b . ((sbDom\<cdot>b = In) \<leadsto>  (THE y . y\<in>{ z \<bar> Out   | z .  
-      (z \<bar> In) = b
-    \<and> (z \<bar> O1) = the (Rep_CSPF f1 (z \<bar> I1))
-    \<and> (z \<bar> O2) = the (Rep_CSPF f2 (z \<bar> I2))}))))"
-*)
 
 (* redefined composition channel sets *)
 definition I :: "'m SPF \<Rightarrow> 'm SPF \<Rightarrow> channel set" where
@@ -267,6 +188,10 @@ definition spfComp_well:: "'m SPF \<Rightarrow> 'm SPF \<Rightarrow> bool" where
 definition no_selfloops:: "'m SPF \<Rightarrow> 'm SPF \<Rightarrow> bool" where
 "no_selfloops f1 f2 \<equiv> spfDom\<cdot>f1 \<inter> spfRan\<cdot>f1 = {}
                     \<and> spfDom\<cdot>f2 \<inter> spfRan\<cdot>f2 = {}"
+
+(* set of feedback channels *) (* TODO: rename *)
+definition pL :: "'m SPF \<Rightarrow> 'm SPF \<Rightarrow> channel set" where
+"pL f1 f2 \<equiv> (spfDom\<cdot>f1 \<inter> spfRan\<cdot>f1) \<union> (spfDom\<cdot>f1 \<inter> spfRan\<cdot>f2) \<union> (spfDom\<cdot>f2 \<inter> spfRan\<cdot>f2)"
 
 (* This should be integrated in the spfcomp definition *)
 definition spfCompHelp2 :: "'m SPF \<Rightarrow> 'm SPF \<Rightarrow> 'm SB \<Rightarrow> 'm SB  \<rightarrow> 'm SB" where
@@ -311,26 +236,6 @@ let I1 = spfDom\<cdot>f1;
     C  = (spfRan\<cdot>f1 \<union> spfRan\<cdot>f2)   (* SWS: Why name it C? O (or Out) would be a better name *)
 in Abs_CSPF (\<lambda> x. (sbDom\<cdot>x = I) \<leadsto> sbFix (\<Lambda> z. (f1\<rightleftharpoons>((x \<uplus> z) \<bar> I1)) \<uplus> (f2\<rightleftharpoons>((x \<uplus> z) \<bar> I2))) C)"
 
-
-(*(* (f1 \<otimes> f2) x = [fix\<cdot>(\<Lambda> z. x \<uplus> f1(z\<bar>I1) \<uplus> f2(z\<bar>I2))]\<bar>O  *)
-definition spfComp2 :: "'m SPF \<Rightarrow> 'm SPF \<Rightarrow> 'm SPF"  (infixl "\<otimes>" 40) where
-"spfComp2 f1 f2 \<equiv> Abs_CSPF (\<lambda> x. (sbDom\<cdot>x = I f1 f2) \<leadsto> 
-    ((\<Squnion>i. iterate i\<cdot>(\<Lambda> z. x \<uplus> ((Rep_CSPF f1)\<rightharpoonup>(z \<bar> spfDom\<cdot>f1)) \<uplus> ((Rep_CSPF f2)\<rightharpoonup>(z \<bar> spfDom\<cdot>f2))))
-                   \<cdot>(sbLeast (C f1 f2))) \<bar> Oc f1 f2)"
-
-
-definition spfcomp :: "'m SPF => 'm SPF => 'm SPF"  where
-"spfcomp f1 f2 \<equiv> 
-let I1 = spfDom\<cdot>f1;
-    I2 = spfDom\<cdot>f2;
-    O1 = spfRan\<cdot>f1; 
-    O2 = spfRan\<cdot>f2; 
-    I  = spfDom\<cdot>f1 \<union> spfDom\<cdot>f2 - (spfRan\<cdot>f1 \<union> spfRan\<cdot>f2);
-    Oc = spfRan\<cdot>f1 \<union> spfRan\<cdot>f2 - (spfDom\<cdot>f1 \<union> spfDom\<cdot>f2);
-    C  = spfDom\<cdot>f1 \<union> spfDom\<cdot>f2 \<union> spfRan\<cdot>f1 \<union> spfRan\<cdot>f2    
-in Abs_CSPF (\<lambda> x. (sbDom\<cdot>x = I) \<leadsto> (\<Squnion>i. iterate i\<cdot>
-   (\<Lambda> z. x \<uplus> ((Rep_CSPF f1)\<rightharpoonup>(z \<bar> I1)) \<uplus> ((Rep_CSPF f2)\<rightharpoonup>(z \<bar> I2)))\<cdot>(sbLeast C)) \<bar> Oc)"
-*)
 
 text {* "spflift" takes a "simple stream processing function" and two channel names where the streams flow, and lifts it to a stream bundle processing function.*}
 definition spfLift :: "('m stream \<rightarrow> 'm stream) => channel => channel => 'm SPF" where
@@ -667,8 +572,7 @@ lemma spfCompHelp_monofun2 [simp]: "monofun (\<lambda> b. \<Lambda> last. (b \<u
                                    \<uplus> ((Rep_CSPF f2)\<rightharpoonup>(last \<bar> spfDom\<cdot>f2))))"
   apply(rule monofunI)
   apply (simp add: below_cfun_def)
-  apply (simp add: fun_belowI monofun_cfun_arg monofun_cfun_fun)
-  done
+  by (simp add: fun_belowI monofun_cfun_arg monofun_cfun_fun)
     
 lemma spfRanRestrict [simp]: assumes "spfDom\<cdot>f2 \<subseteq> sbDom\<cdot>b"
   shows "sbDom\<cdot>(Rep_CSPF f2\<rightharpoonup>(b\<bar>spfDom\<cdot>f2)) = spfRan\<cdot>f2"
@@ -681,34 +585,65 @@ qed
 lemma "chain Y \<Longrightarrow> (\<Squnion>i. g\<cdot>(Y i)) = (g\<cdot>(\<Squnion>i. Y i))"
   by (simp add: contlub_cfun_arg)
     
-(*
-lemma spfCompHelp_cont2 [simp]: "cont (\<lambda> b. \<Lambda> last. (b \<uplus> ((Rep_CSPF f1)\<rightharpoonup>(last \<bar> spfDom\<cdot>f1))
-                                   \<uplus> ((Rep_CSPF f2)\<rightharpoonup>(last \<bar> spfDom\<cdot>f2))))"
-apply(rule contI2)
-apply simp
-apply auto
-apply(simp add: below_cfun_def)
-oops
-*)
-
 
   subsubsection \<open>ChannelSets\<close>
 (* ----------------------------------------------------------------------- *)    
-  
+ 
+ (* subsets *)
+lemma spfcomp_I_subset_C [simp]: "(I f1 f2) \<subseteq> (C f1 f2)"
+  using I_def C_def by blast
+
+lemma spfcomp_L_subset_C [simp]: "(L f1 f2) \<subseteq> (C f1 f2)"
+  using L_def C_def by blast
+    
+lemma spfcomp_pl_subset_L [simp]: "(pL f1 f2)  \<subseteq>  (L f1 f2)"
+  using pL_def L_def by blast
+    
+lemma spfcomp_pL_subset_C [simp]: "(pL f1 f2) \<subseteq> (C f1 f2)"
+  using pL_def C_def by blast
+
+lemma spfcomp_Oc_subset_C [simp]: "(Oc f1 f2) \<subseteq> (C f1 f2)"
+  using Oc_def C_def by blast
+
+lemma spfcomp_L_subset_Oc [simp]: "(L f1 f2) \<subseteq> (Oc f1 f2)"
+  using L_def Oc_def by blast
+
+lemma spfcomp_I_inter_L_empty [simp]: "(I f1 f2) \<inter> (L f1 f2) = {}"
+  using I_def L_def by blast
+
+lemma spfcomp_I_inter_Oc_empty [simp]: "(I f1 f2) \<inter> (Oc f1 f2) = {}"
+  using I_def Oc_def by blast
+    
+
+    
+ (* commutativness *)
+lemma spfcomp_I_commu: "(I f1 f2) = (I f2 f1)"
+  using I_def by blast
+
+lemma spfcomp_L_commu: "(L f1 f2) = (L f2 f1)"
+  using L_def by blast
+
+lemma spfcomp_Oc_commu: "(Oc f1 f2) = (Oc f2 f1)"
+  using Oc_def by blast
+
+lemma spfcomp_C_commu: "(C f1 f2) = (C f2 f1)"
+  using C_def by blast
+    
+(* legacy *)
 lemma spfI_sub_C[simp]: "I f1 f2 \<subseteq> C f1 f2"
-  using I_def C_def by fastforce
+  by simp
 
 lemma spfOc_sub_C[simp]: "Oc f1 f2 \<subseteq> C f1 f2"
-  using Oc_def C_def by fastforce  
+  by simp
 
 lemma Oc_commu: "Oc f1 f2 = Oc f2 f1"
-  by (simp add: Oc_def Un_commute)
+  by (simp add: spfcomp_Oc_commu)
     
 lemma I_commu: "I f1 f2 = I f2 f1"
-  by (simp add: I_def Un_commute)
+  using spfcomp_I_commu by blast
     
 lemma C_commu: "C f1 f2 = C f2 f1"
-  using C_def by blast
+  by (simp add: spfcomp_C_commu)
 
 
   subsubsection \<open>Serial_Composition\<close>
@@ -718,9 +653,7 @@ lemma C_commu: "C f1 f2 = C f2 f1"
 lemma num3_eq[simp] : " 3 = (Suc(Suc(Suc 0)))"
   using numeral_3_eq_3 by blast
 
-(* set of feedback channels *) (* TODO: rename *)
-definition pL :: "'m SPF \<Rightarrow> 'm SPF \<Rightarrow> channel set" where
-"pL f1 f2 \<equiv> (spfDom\<cdot>f1 \<inter> spfRan\<cdot>f1) \<union> (spfDom\<cdot>f1 \<inter> spfRan\<cdot>f2) \<union> (spfDom\<cdot>f2 \<inter> spfRan\<cdot>f2)"
+
 
 lemma spfpl_sub_L[simp]: "pL f1 f2 \<subseteq> L f1 f2"
   by (simp add: L_def pL_def subset_iff)
@@ -733,215 +666,6 @@ lemma sbIterate_chain: "sbDom\<cdot>(f\<cdot>(sbLeast cs)) = cs \<Longrightarrow
   apply(rule Cfun.monofun_cfun_arg)
   by simp
 
-   
-
-(*    
-lemma spfcomp_spfcompwithhelper: assumes "sbDom\<cdot>sb = I f1 f2"
-shows "Abs_CSPF (\<lambda> x. (sbDom\<cdot>x = I f1 f2) \<leadsto> 
-                      (\<Squnion>i. iterate i\<cdot>(\<Lambda> z. x \<uplus> (f1\<rightleftharpoons>(z\<bar>spfDom\<cdot>f1)) \<uplus> (f2\<rightleftharpoons>(z\<bar>spfDom\<cdot>f2)))\<cdot>(sbLeast (C f1 f2))) \<bar> Oc f1 f2) \<rightleftharpoons>sb = (\<Squnion>i. iterate i\<cdot>(\<Lambda> z. x \<uplus> (f1\<rightleftharpoons>(z\<bar>spfDom\<cdot>f1)) \<uplus> (f2\<rightleftharpoons>(z\<bar>spfDom\<cdot>f2)))\<cdot>(sbLeast (C f1 f2))) \<bar> Oc f1 f2"
- oops (* valid as long as spfcomp is cont *)
-    *)
-     
-
-  
-    
-
-(*
-thm spfCompHelp_def
-lemma tsconc_assoc: "sb1 \<uplus> (sb2 \<uplus> sb3) = (sb1 \<uplus> sb2) \<uplus> sb3"
-by(simp add: sbunion_insert)
-
-lemma spfCompHelp_commutative: assumes "spfComp_well f1 f2" and "sbDom\<cdot>b = spfCompAll f1 f2"
-  shows "spfCompHelp f1 f2 x\<cdot>b = spfCompHelp f2 f1 x\<cdot>b"
-proof -
-  have "spfRan\<cdot>f1 \<inter> spfRan\<cdot>f2 = {}" using assms spfComp_well_def by blast
-  hence "sbDom\<cdot>((Rep_CSPF f1)\<rightharpoonup>(b\<bar>spfDom\<cdot>f1)) \<inter> sbDom\<cdot>(Rep_CSPF f2\<rightharpoonup>(b\<bar>spfDom\<cdot>f2)) = {}"
-    by (metis Un_subset_iff assms(2) spfCompAll_def spfRanRestrict sup_ge1)
-  hence "((Rep_CSPF f1)\<rightharpoonup>(b\<bar>spfDom\<cdot>f1)) \<uplus> (Rep_CSPF f2\<rightharpoonup>(b\<bar>spfDom\<cdot>f2)) 
-    = ((Rep_CSPF f2)\<rightharpoonup>(b\<bar>spfDom\<cdot>f2)) \<uplus> (Rep_CSPF f1\<rightharpoonup>(b\<bar>spfDom\<cdot>f1))"
-    using sbunion_commutative by blast
-  thus ?thesis 
-    by (metis (no_types, lifting) Abs_cfun_inverse2 spfCompHelp_cont spfCompHelp_def tsconc_assoc)
-qed
-
-lemma spfCompHelper_in: assumes "c\<notin>spfRan\<cdot>f1" and "c\<notin>spfRan\<cdot>f2" and "sbDom\<cdot>b = spfCompAll f1 f2"
-  shows "(spfCompHelp f1 f2 x)\<cdot>b . c = x . c"
-apply(simp add: spfCompHelp_def)
-apply (subst sbunion_getchL)
-apply (simp add: assms(2) assms(3) spfCompAll_def subsetI)
-apply (subst sbunion_getchL)
-apply (simp add: assms(1) assms(3) spfCompAll_def subsetI)
-apply simp
-done
-
-lemma spfCompH_dom [simp]: assumes "sbDom\<cdot>b = spfCompAll f1 f2"
-  shows "sbDom\<cdot>(spfCompHelp f1 f2 x\<cdot>b) = sbDom\<cdot>x \<union> spfRan\<cdot>f1 \<union> spfRan\<cdot>f2"
-apply(simp add: spfCompHelp_def)
-by (metis Un_assoc assms le_supI1 spfCompAll_def spfRanRestrict sup.cobounded2 sup.left_idem)
-
-
-lemma spfCompHelper_in1: assumes "sbDom\<cdot>b = spfCompAll f1 f2" and "spfComp_well f1 f2" and "sbDom\<cdot>x = spfCompIn f1 f2"
-  shows "(spfCompHelp f1 f2 x)\<cdot>b \<bar> spfCompIn f1 f2 = x \<bar> spfCompIn f1 f2 "
-  apply(rule sb_eq)
-   apply (simp add: assms(1) spfCompIn_def assms)
-   apply blast
-  apply auto
-  by (metis DiffD1 DiffD2 Int_iff Un_iff assms(1) assms(2) spfCompHelper_in spfCompIn_def spfComp_well_def)
-
-
-lemma spfInSubAll[simp]: "spfCompIn f1 f2 \<subseteq> spfCompAll f1 f2"
-using spfCompAll_def spfCompIn_def by fastforce
-
-
-lemma spfCompHelper_dom[simp]: assumes "sbDom\<cdot>x = spfCompIn f1 f2"
-  shows "sbDom\<cdot>(iterate i\<cdot>(spfCompHelp f1 f2 x)\<cdot>(sbLeast (spfCompAll f1 f2))) = spfCompAll f1 f2"
-  apply(induction i)
-   apply (simp add: assms sup_absorb1)
-  apply simp
-  apply(simp add: assms spfCompIn_def spfCompAll_def)
-  apply blast
-done
-
-
-lemma spfCompInt: assumes "sbDom\<cdot>x = spfCompIn f1 f2"
-          and "spfComp_well f1 f2"
-          and "c\<in>spfCompIn f1 f2"
-  shows "(iterate (Suc i)\<cdot>(spfCompHelp f1 f2 x)\<cdot>(sbLeast (spfCompAll f1 f2))) . c = x . c" 
-  apply(unfold iterate_Suc, subst spfCompHelp_def)
-  apply simp
-  apply (subst sbunion_getchL)
-   apply (metis DiffD1 DiffD2 Int_iff Un_commute Un_iff assms(1) assms(2) assms(3) inf_sup_ord(3) le_supI1 spfCompAll_def spfCompHelper_dom spfCompIn_def spfComp_well_def spfRanRestrict)
-  apply (subst sbunion_getchL)
-   apply (metis DiffD1 DiffD2 Int_iff Un_commute Un_iff assms(1) assms(2) assms(3) inf_sup_ord(3) le_supI1 spfCompAll_def spfCompHelper_dom spfCompIn_def spfComp_well_def spfRanRestrict)
-  by simp
-
-lemma spfCompInt_res: assumes "sbDom\<cdot>x = spfCompIn f1 f2"
-          and "spfComp_well f1 f2"
-  shows "(iterate (Suc i)\<cdot>(spfCompHelp f1 f2 x)\<cdot>(sbLeast (spfCompAll f1 f2))) \<bar> spfCompIn f1 f2 = x" 
-  apply(rule sb_eq)
-   apply (simp add: assms Int_absorb1 spfCompIn_def)
-   apply blast
-  apply (simp)
-  apply(subst spfCompHelp_def)
-  apply simp
-  apply (subst sbunion_getchL)
-   apply (metis DiffD1 DiffD2 Int_iff Un_commute Un_iff assms(1) assms(2) inf_sup_ord(3) le_supI1 spfCompAll_def spfCompHelper_dom spfCompIn_def spfComp_well_def spfRanRestrict)
-  apply (subst sbunion_getchL)
-   apply (metis DiffD1 DiffD2 Int_iff Un_commute Un_iff assms(1) assms(2)  inf_sup_ord(3) le_supI1 spfCompAll_def spfCompHelper_dom spfCompIn_def spfComp_well_def spfRanRestrict)
-  by (simp)
-
-lemma spfComp_parallel1: assumes "spfCompInternal f1 f2 = {}"
-          and "sbDom\<cdot> x = spfCompIn f1 f2"
-          and "spfComp_well f1 f2"
-          and "c\<in>spfRan\<cdot>f2"
-        shows "(iterate (Suc (Suc i))\<cdot>(spfCompHelp f1 f2 x)\<cdot>(sbLeast (spfCompAll f1 f2))) . c 
-                      = (Rep_CSPF f2) \<rightharpoonup> (x \<bar>spfDom\<cdot>f2) . c"
-  apply(subst iterate_Suc)
-  apply(subst spfCompHelp_def)
-  apply simp
-  apply (subst sbunion_getchR)
-   apply (metis Diff_empty Un_subset_iff assms(1) assms(2) assms(4) iterate_Suc spfCompHelper_dom spfCompIn_def spfCompInternal_def spfInSubAll spfRanRestrict)
-  by (smt Diff_empty Int_absorb1 Un_subset_iff assms(1) assms(2) assms(3) iterate_Suc sb_eq sbrestrict2sbgetch sbrestrict_sbdom spfCompHelper_dom spfCompIn_def spfCompInt_res spfCompInternal_def spfInSubAll subsetCE sup.cobounded2)
-
-lemma spfComp_parallel2: assumes "spfCompInternal f1 f2 = {}"
-          and "sbDom\<cdot>x = spfCompIn f1 f2"
-          and "spfComp_well f1 f2"
-          and "c\<in>spfRan\<cdot>f1"
-        shows "(iterate (Suc (Suc i))\<cdot>(spfCompHelp f1 f2 x)\<cdot>(sbLeast (spfCompAll f1 f2))) . c 
-                      = (Rep_CSPF f1) \<rightharpoonup> (x \<bar>spfDom\<cdot>f1) . c"
-  apply(subst iterate_Suc)
-  apply(subst spfCompHelp_def)
-  apply simp
-  apply (subst sbunion_getchL)
-   apply (metis Diff_empty Un_subset_iff assms(1) assms(2) assms(3) assms(4) disjoint_iff_not_equal iterate_Suc spfCompHelper_dom spfCompIn_def spfCompInternal_def spfComp_well_def spfInSubAll spfRanRestrict)
-  apply (subst sbunion_getchR)
-   apply (metis Diff_empty Un_subset_iff assms(1) assms(2) assms(4) iterate_Suc spfCompHelper_dom spfCompIn_def spfCompInternal_def spfInSubAll spfRanRestrict)
-  by (smt Diff_empty Int_absorb1 Un_subset_iff assms(1) assms(2) assms(3) inf_sup_ord(3) iterate_Suc sb_eq sbrestrict2sbgetch sbrestrict_sbdom spfCompHelper_dom spfCompIn_def spfCompInt_res spfCompInternal_def spfInSubAll subsetCE)
-
-
-lemma spfComp_parallel: assumes "spfCompInternal f1 f2 = {}"
-          and "sbDom\<cdot>x = spfCompIn f1 f2"
-          and "spfComp_well f1 f2"
-        shows "(iterate (Suc (Suc i))\<cdot>(spfCompHelp f1 f2 x)\<cdot>(sbLeast (spfCompAll f1 f2)))
-                      = x \<uplus> ((Rep_CSPF f1) \<rightharpoonup> (x \<bar>spfDom\<cdot>f1)) \<uplus> (Rep_CSPF f2) \<rightharpoonup> (x \<bar>spfDom\<cdot>f2)" (is "?L = ?R")
-proof(rule sb_eq)
-  have r_dom: "sbDom\<cdot>?R = spfCompAll f1 f2"
-    by (metis Diff_empty Un_upper1 assms(1) assms(2) sbunionDom spfCompAll_def spfCompIn_def spfCompInternal_def spfRanRestrict sup_ge2) 
-  have l_dom: "sbDom\<cdot>?L = spfCompAll f1 f2" by (simp only: spfCompHelper_dom assms)
-  show "sbDom\<cdot>?L = sbDom\<cdot>?R" using l_dom r_dom by blast
-
-  fix c
-  assume "c\<in>sbDom\<cdot>?L"
-  hence c_def: "c\<in>spfCompAll f1 f2" using l_dom by blast
-  thus "?L . c = ?R . c"
-    by (metis Diff_empty UnE assms(1) assms(2) assms(3) sbunion_getchL sbunion_getchR spfCompAll_def spfCompIn_def spfCompInt spfCompInternal_def spfComp_parallel1 spfComp_parallel2 spfRanRestrict sup_ge1 sup_ge2)
-qed
-
-thm spfComp_def
-
-
-(* legacy Comp and Comp2 equality *)
-lemma comp12_eq: "spfComp f1 f2 = spfComp2 f1 f2"
-apply (simp add: spfComp_def spfComp2_def)
-by (metis (no_types) spfCompHelp_def)
-*)
-
-
-
-
-
-(*
-(* the function returned by "spfcompMy" is monotonic. used in cont-proof *)
-(* STUPID *)
-lemma "monofun (spfcompMyHelper S1 S2)"
-  proof -
-  obtain I1 where i1: "I1 = spfDom\<cdot>S1" by simp
-  obtain I2 where i2: "I2 = spfDom\<cdot>S2" by simp
-  obtain O1 where o1: "O1 = spfRan\<cdot>S1" by simp
-  obtain O2 where o2: "O2 = spfRan\<cdot>S2" by simp
-
-  obtain L  where l: "L  = (I1 \<inter> O2) \<union> (I2 \<inter> O1)" by simp  (* Internal Channels *)
-  obtain In where in_def: "In = (I1 \<union> I2) - L" by simp (* Input channels of the composed component *)
-  obtain Out where out: " Out = (O1 \<union> O2) - L" by simp  (* Output channels of the composed component *)
-  have "monofun (\<lambda>b. (THE y. \<exists>z. z\<bar> Out = y \<and>
-                    z\<bar>In = b \<and> z\<bar>O1 = the (Rep_CSPF S1 (z\<bar>I1)) \<and> z\<bar>O2 = the (Rep_CSPF S2 (z\<bar>I2))))" sorry
-  hence "monofun ((\<lambda> b . ((sbDom\<cdot>b = In) \<leadsto> (THE y.(
-  \<exists>z. (z \<bar> Out) = y  
-    \<and> (z \<bar> In) = b
-    \<and> (z \<bar> O1) = the (Rep_CSPF S1 (z \<bar> I1))
-    \<and> (z \<bar> O2) = the (Rep_CSPF S2 (z \<bar> I2)))))))" using if_then_mono out by blast
-  hence "monofun (
-  let I1 = spfDom\<cdot>S1; 
-      I2 = spfDom\<cdot>S2; 
-      O1 = spfRan\<cdot>S1; 
-      O2 = spfRan\<cdot>S2; 
-      L = I1 \<inter> O2 \<union> I2 \<inter> O1; 
-      In = I1 \<union> I2 - L;
-      Out = O1 \<union> O2 - L
-    in (\<lambda>b. ((sbDom\<cdot>b =In) \<leadsto> 
-    THE y. \<exists>z. z\<bar>Out = y \<and> z\<bar>In = b \<and> z\<bar>O1 = the (Rep_CSPF S1 (z\<bar>I1)) \<and> z\<bar>O2 = the (Rep_CSPF S2 (z\<bar>I2)))))"
-  proof -
-  have "monofun (\<lambda>s. (sbDom\<cdot>s = In)\<leadsto>THE sa. \<exists>sb. sb\<bar>Out = sa \<and> sb\<bar>In = s \<and> sb\<bar>O1 = the (Rep_CSPF S1 (sb\<bar>I1)) \<and> sb\<bar>O2 = the (Rep_CSPF S2 (sb\<bar>I2)))"
-  using \<open>monofun (\<lambda>b. (sbDom\<cdot>b = In)\<leadsto>THE y. \<exists>z. z\<bar>Out = y \<and> z\<bar>In = b \<and> z\<bar>O1 = the (Rep_CSPF S1 (z\<bar>I1)) \<and> z\<bar>O2 = the (Rep_CSPF S2 (z\<bar>I2)))\<close> by blast
-  then show ?thesis
-  by (metis (no_types) i1 i2 in_def l o1 o2 out)
-qed
-
-  thus ?thesis using spfcompMyHelper_def sorry 
-qed
-
-
-lemma spfcomp_cont[simp]:"cont (spfcompMyHelper S1 S2)"
-  sorry
-
-lemma spfcomp_well [simp]: "spf_well (Abs_cfun (spfcompMyHelper S1 S2))"
-  sorry
-
-lemma spfcomp_spfdom [simp]: "spfDom\<cdot>(Abs_CSPF (spfcompMyHelper S1 S2)) = 
-  (spfDom\<cdot>S1\<inter>spfRan\<cdot>S2)\<union>(spfDom\<cdot>S2\<inter>spfRan\<cdot>S1)" (*checken ob die menge stimmt *)
-  oops
-
-*)
 
 subsection \<open>hide\<close>  
   
@@ -1064,80 +788,5 @@ lemma spf_cont2cont: assumes "spf_contlub f" and "spf_mono f" and "\<forall>b. b
    show "monofun f" using assms(2) assms(3) spf_mono2monofun by blast
   thus "\<forall>Y. chain Y \<longrightarrow> f (\<Squnion>i. Y i) \<sqsubseteq> (\<Squnion>i. f (Y i))" using assms(1) assms(3) spf_contlub2contlub by blast
 qed
-
-
-
-(*
-thm spfComp_parallel
-
-lemma spfComp_parallel_max: assumes "spfCompInternal f1 f2 = {}"
-          and "sbDom\<cdot>x = spfCompIn f1 f2"
-          and "spfComp_well f1 f2"
-          shows "max_in_chain 2 (\<lambda>i. iterate i\<cdot>(spfCompHelp f1 f2 x)\<cdot>(sbLeast (spfCompAll f1 f2)))"
-apply(rule max_in_chainI)
-apply(simp only: numerals(2))
-apply(subst spfComp_parallel, simp_all add: assms)
-by (metis Suc_le_D Suc_le_lessD assms(1) assms(2) assms(3) less_Suc_eq_le spfComp_parallel)
-*)
-
-
-
-(*
-lemma spfComp_parallel_chain: assumes "spfCompInternal f1 f2 = {}"
-          and "sbDom\<cdot>x = spfCompIn f1 f2"
-          and "spfComp_well f1 f2"
-          shows "chain (\<lambda>i. iterate i\<cdot>(spfCompHelp f1 f2 x)\<cdot>(sbLeast (spfCompAll f1 f2)))"
-apply(rule sbIterate_chain)
-apply (simp add: assms spfCompAll_def spfCompIn_def)
-by blast
-
-
-lemma spfComp_parallel3 [simp]: assumes "spfCompInternal f1 f2 = {}"
-          and "sbDom\<cdot>x = spfCompIn f1 f2"
-          and "spfComp_well f1 f2"
-          shows "(\<Squnion>i. iterate i\<cdot>(spfCompHelp f1 f2 x)\<cdot>(sbLeast (spfCompAll f1 f2)))
-            = iterate 2\<cdot>(spfCompHelp f1 f2 x)\<cdot>(sbLeast (spfCompAll f1 f2))"
-using assms(1) assms(2) assms(3) maxinch_is_thelub spfComp_parallel_chain spfComp_parallel_max by blast
-
-lemma spfComp_parallel4 [simp]: assumes "spfCompInternal f1 f2 = {}"
-          and "sbDom\<cdot>x = spfCompIn f1 f2"
-          and "spfComp_well f1 f2"
-          shows "(\<Squnion>i. iterate i\<cdot>(spfCompHelp f1 f2 x)\<cdot>(sbLeast (spfCompAll f1 f2)))
-              = x \<uplus> ((Rep_CSPF f1) \<rightharpoonup> (x \<bar>spfDom\<cdot>f1)) \<uplus> (Rep_CSPF f2) \<rightharpoonup> (x \<bar>spfDom\<cdot>f2) "
-apply(simp add: assms)
-by (metis One_nat_def Suc_1 assms(1) assms(2) assms(3) spfComp_parallel)
-
-lemma spfApply_below: "b1 \<sqsubseteq> b2  \<Longrightarrow> sbDom\<cdot>b1 = spfDom\<cdot>f1 \<Longrightarrow> (Rep_CSPF f1)\<rightharpoonup>b1 \<sqsubseteq>  (Rep_CSPF f1)\<rightharpoonup>b2"
-by (metis Rep_CSPF_def below_option_def below_refl monofun_cfun_arg)
-
-
-lemma spfComp_parallelCont: assumes "spfCompInternal f1 f2 = {}"
-          and "spfComp_well f1 f2"
-          shows "cont (\<lambda> b. (sbDom\<cdot>b = spfCompIn f1 f2) 
-          \<leadsto>(\<Squnion>i. iterate i\<cdot>(spfCompHelp f1 f2 b)\<cdot>(sbLeast (spfCompAll f1 f2))) \<bar> spfCompOut f1 f2)"
-oops
-(*
-apply(rule spf_mono2monofun)
-apply(simp add: spf_mono_def assms domIff2)
-apply rule+
-apply auto[1]
-apply(rule monofun_cfun_arg)
-apply(simp only: numerals(2) assms spfComp_parallel)
-
-apply auto
-apply(rule +)
-*)
-
-
-
-lemma spfComp_parallel1: assumes "spfCompInternal f1 f2 = {}"
-          and "sbDom\<cdot>b = spfCompIn f1 f2"
-          and "spfComp_well f1 f2"
-        shows "Rep_CSPF(f1 \<otimes> f2)\<rightharpoonup>b = ((Rep_CSPF f1) \<rightharpoonup> (b \<bar>spfDom\<cdot>f1)) \<uplus> (Rep_CSPF f2) \<rightharpoonup> (b \<bar>spfDom\<cdot>f2) "
-apply(simp add: spfComp_def Rep_CSPF_def Abs_CSPF_def)
-oops
-
-*)
-
 
 end
