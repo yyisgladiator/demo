@@ -361,5 +361,33 @@ lemma tstake_pref: assumes "ts1 \<sqsubseteq> ts2" and "#\<surd> ts1 \<ge> Fin n
   shows "ts1 \<down> n = ts2 \<down> n"
   using assms(1) assms(2) tstake_less_below by blast
 *)
+
+
+
+subsection \<open>delayFun\<close>    
+    
+lemma delayfun_fix_tsInftick_below: assumes "delayFun\<cdot>z = z" 
+ shows "tsInfTick \<sqsubseteq> z"
+proof -
+  have f1: "z = (Abs_tstream (\<up>\<surd>)) \<bullet> z"
+    by (metis assms delayFun.rep_eq)
+  have f2: "\<And> n. tsNth n\<cdot>z = (Abs_tstream (\<up>\<surd>))"
+  proof -
+    fix n :: nat
+    have "z = tsInfTick"
+      by (metis (no_types) Rep_Abs f1 s2sinftimes tick_msg tsInfTick_def tsconc_insert 
+                           tsconc_rep_eq)
+    then show "tsNth n\<cdot>z = Abs_tstream (\<up>\<surd>)"
+      by (meson tsInfTick_tsNth)
+  qed
+  have "z = tsInfTick"
+    apply (rule ts_tsnth_eq)
+    by (simp add: f2 tsInfTick_tsNth)    
+  thus ?thesis
+    by simp
+qed
+      
+lemma "fix\<cdot>delayFun = tsInfTick"
+  by (simp add: delayfun_fix_tsInftick_below fix_eqI)
     
 end
