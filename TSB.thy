@@ -1325,8 +1325,37 @@ proof -
     by (metis (no_types) empty_subsetI inf_ub min.absorb2 tsbtick_insert tsbunion_idL)
 qed
  
-                        
+ 
+lemma tsbtick_single_ch1: assumes "tsb_well [ch2 \<mapsto> ts]"
+ shows "#\<surd>tsb [ch2 \<mapsto> ts]\<Omega> = #\<surd> ts"
+proof -
+  have f1: "{ch2} = tsbDom\<cdot>([ch2 \<mapsto> ts]\<Omega>)"
+    by (simp add: assms tsbdom_rep_eq)
+  then have f2: "tsbDom\<cdot>([ch2 \<mapsto> ts]\<Omega>) \<noteq> {}"
+    by blast
+  have f3: "\<forall>t. tsbDom\<cdot>(t::'a TSB) = {} 
+              \<or> (\<exists>c. c \<in> tsbDom\<cdot>t \<and> #\<surd> t . c = (LEAST l. l \<in> {#\<surd> t . c |c. c \<in> tsbDom\<cdot>t}))"
+    using tsbtick_min_on_channel by blast
+  have "tsbDom\<cdot>([ch2 \<mapsto> ts]\<Omega>) \<noteq> {}"
+    using f1 by blast
+  then obtain cc :: "'a TSB \<Rightarrow> channel" where
+    f4: "cc ([ch2 \<mapsto> ts]\<Omega>) \<in> tsbDom\<cdot>([ch2 \<mapsto> ts]\<Omega>) \<and> #\<surd> ([ch2 \<mapsto> ts]\<Omega>) . cc ([ch2 \<mapsto> ts]\<Omega>) 
+         = (LEAST l. l \<in> {#\<surd> ([ch2 \<mapsto> ts]\<Omega>) . c |c. c \<in> tsbDom\<cdot>([ch2 \<mapsto> ts]\<Omega>)})"
+    using f3 by meson
+  obtain tt :: "(channel \<Rightarrow> 'a tstream option) \<Rightarrow> 'a TSB" where
+    f5: "[ch2 \<mapsto> ts] = Rep_TSB (tt [ch2 \<mapsto> ts])"
+    by (metis (no_types) Rep_TSB_cases assms mem_Collect_eq)
+  then have f6: "[ch2 \<mapsto> ts]\<Omega> = tt [ch2 \<mapsto> ts]"
+    by (metis Rep_TSB_inverse)
+  have "cc ([ch2 \<mapsto> ts]\<Omega>) = ch2"
+    using f4 f1 by blast
+  then show ?thesis
+    using f6 f5 f4 f2 by (simp add: tsbgetch_insert tsbtick_insert)
+qed
     
+lemma tsbtick_single_ch2: assumes "tsbDom\<cdot>tb = {ch1}"
+  shows "#\<surd>tsb tb = #\<surd> (tb . ch1)"
+  using assms tsbtickI by fastforce
     
     
 subsubsection \<open>tsbMapStream\<close>
