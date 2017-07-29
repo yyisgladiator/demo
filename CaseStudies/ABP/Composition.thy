@@ -99,10 +99,8 @@ lemma tssnd_tsprojsnd_tsremdups:
   assumes send_def: "send \<in> tsSender"
   shows "tsAbs\<cdot>(tsRemDups\<cdot>(tsProjSnd\<cdot>(send\<cdot>i\<cdot>as))) = tsAbs\<cdot>(tsProjSnd\<cdot>(tsRemDups\<cdot>(send\<cdot>i\<cdot>as)))"
   apply (simp add: tsprojsnd_tsabs tsremdups_tsabs sprojsnd_def)
-    using srcdups_smap_com assms set2tssnd_alt_bit_tabs sorry
-    oops
-  by (metis Abs_cfun_inverse2 cont_Rep_cfun2 send_def set2tssnd_alt_bit_tabs sprojsnd_def
-      srcdups_smap_com)
+    using srcdups_smap_com assms set2tssnd_alt_bit_tabs srcdups_smap_com
+    by (metis Abs_cfun_inverse2 cont_Rep_cfun2 sprojsnd_def)
     
 lemma tsaltbitpro_inp2out_nmed:
   assumes send_def: "send \<in> tsSender"
