@@ -104,12 +104,12 @@ setup_lifting type_definition_TSPF
 subsubsection \<open>rep/abs\<close>
 
 (* Shorter version to get to normal functions from 'm SPF's *)
-definition Rep_CTSPF:: "'m TSPF \<Rightarrow> ('m TSB \<rightharpoonup> 'm TSB)" where
+abbreviation Rep_CTSPF:: "'m TSPF \<Rightarrow> ('m TSB \<rightharpoonup> 'm TSB)" where
 "Rep_CTSPF F \<equiv>  Rep_cfun (Rep_TSPF F) "
 
 (* Shorter version to get from normal functions to 'm SPF's *)
   (* of course the argument should be "spf_well" and "cont" *)
-definition Abs_CTSPF:: "('m TSB \<rightharpoonup> 'm TSB) \<Rightarrow> 'm TSPF" where
+abbreviation Abs_CTSPF:: "('m TSB \<rightharpoonup> 'm TSB) \<Rightarrow> 'm TSPF" where
 "Abs_CTSPF F \<equiv> Abs_TSPF (Abs_cfun F)"
 
 
@@ -300,13 +300,13 @@ lemma rep_tspf_well [simp]: "tspf_well (Rep_TSPF f)"
   using Rep_TSPF by blast
 
 lemma rep_cspf_well [simp]: "tspf_well (Abs_cfun (Rep_CTSPF f))"
-  by (simp add: Cfun.cfun.Rep_cfun_inverse Rep_CTSPF_def)
+  by (simp add: Cfun.cfun.Rep_cfun_inverse)
 
 lemma rep_ctspf_cont1 [simp]: "cont Rep_CTSPF"
-  by (simp add: Rep_CTSPF_def)
+  by (simp)
 
 lemma rep_ctspf_cont2 [simp]: "cont (Rep_CTSPF f)"
-  by (simp add: Rep_CTSPF_def)
+  by (simp)
 
 lemma rep_abs_tspf [simp]: assumes "tspf_well f"
   shows "Rep_TSPF (Abs_TSPF f) = f"
@@ -315,9 +315,13 @@ lemma rep_abs_tspf [simp]: assumes "tspf_well f"
 
 lemma rep_abs_ctspf [simp]: assumes "cont f" and "tspf_well (Abs_cfun f)"
   shows "Rep_CTSPF (Abs_CTSPF f) = f"
-  by (simp add: Abs_CTSPF_def Rep_CTSPF_def assms(1) assms(2))
+  by (simp add: assms(1) assms(2))
 
-
+lemma abs_ctspf_rev: "Abs_TSPF (Abs_cfun F) = Abs_CTSPF F"
+  by simp
+    
+lemma rep_ctspf_rev: "Rep_cfun (Rep_TSPF F) = Rep_CTSPF F"
+  by simp
 
   subsection \<open>basic lemmata about TSPF\<close>
 
@@ -364,7 +368,7 @@ lemma map_not_tspf [simp]: "\<not>(tspf_well (Abs_cfun empty))"
 
 (* domain of an TSPF is never empty \<Rightarrow> ensured by tspf_type *)
 lemma tspf_dom_not_empty [simp]: "\<exists> x. x \<in> dom (Rep_CTSPF f)"
-  by (metis Cfun.cfun.Rep_cfun_inverse Rep_CTSPF_def all_not_in_conv dom_empty map_not_tspf
+  by (metis Cfun.cfun.Rep_cfun_inverse  all_not_in_conv dom_empty map_not_tspf
             part_eq rep_tspf_well)
 (* range of an TSPF is never empty \<Rightarrow> ensured by tspf_type *)
 lemma tspf_ran_not_empty [simp]: "\<exists> x. x \<in> ran (Rep_CTSPF f)"
@@ -373,7 +377,7 @@ lemma tspf_ran_not_empty [simp]: "\<exists> x. x \<in> ran (Rep_CTSPF f)"
 (* if the input of an SPF has the same domain so does its output *)
 lemma tspf_sbdomeq_to_domeq: assumes "tsbDom\<cdot>x=tsbDom\<cdot>y"
   shows "x \<in> dom (Rep_CTSPF f) \<longleftrightarrow> y \<in> dom (Rep_CTSPF f)"
-  by (metis Cfun.cfun.Rep_cfun_inverse Rep_CTSPF_def assms rep_cspf_well tspf_type_def
+  by (metis Cfun.cfun.Rep_cfun_inverse  assms rep_cspf_well tspf_type_def
             tspf_well_def)
 
 (* helper function for "spf_ran2sbdom". Somehow it doesn't work without *)
@@ -385,25 +389,25 @@ lemma ran2exists [simp]: assumes "x\<in>(ran f)"
 lemma tspf_raneq_to_sbdomeq: assumes "x \<in> ran (Rep_CTSPF f)" and "y \<in> ran (Rep_CTSPF f)"
   shows "tsbDom\<cdot>x = tsbDom\<cdot>y"
     (* ISAR Proof generateable via sledgehammer *)
-  by (smt Cfun.cfun.Rep_cfun_inverse Rep_CTSPF_def assms(1) assms(2) domIff mem_Collect_eq
+  by (smt Cfun.cfun.Rep_cfun_inverse  assms(1) assms(2) domIff mem_Collect_eq
           option.sel option.simps(3) ran_def rep_cspf_well tspf_type_def tspf_well_def)
 
 (* If an TSPF is applied to an input x, the output has more ticks  *)
 lemma tspf_less_in_than_out_ticks: assumes "x \<in> dom (Rep_CTSPF f)"
   shows "#\<surd>tsb x \<le> #\<surd>tsb (f \<rightleftharpoons> x)"
-  by (metis Rep_CTSPF_def assms rep_tspf_well tspf_well_def)
+  by (metis  assms rep_tspf_well tspf_well_def)
 
     
 (* only 'm SBs with the same domain are in an 'm SPF *)
 lemma tspf_dom2tsbdom: assumes "x\<in>dom (Rep_CTSPF f)" and "y\<in>dom (Rep_CTSPF f)" 
   shows "tsbDom\<cdot>x = tsbDom\<cdot>y"
-  by (metis (no_types) Rep_CTSPF_def assms(1) assms(2) rep_tspf_well tspf_type_def tspf_well_def)
+  by (metis (no_types)  assms(1) assms(2) rep_tspf_well tspf_type_def tspf_well_def)
     
     
 (* if two TSPFS are in a below-relation their input-channels are equal *)
 lemma spf_below_sbdom: assumes "a\<sqsubseteq>b"  and "y \<in> dom (Rep_CTSPF a)" and "x \<in> dom (Rep_CTSPF b)"
   shows "tsbDom\<cdot>x = tsbDom\<cdot>y"
-  by (metis Rep_CTSPF_def assms below_TSPF_def below_cfun_def part_dom_eq tspf_dom2tsbdom)
+  by (metis  assms below_TSPF_def below_cfun_def part_dom_eq tspf_dom2tsbdom)
 
 (* if two TSPFS are in a below-relation their output-channels are equal *)
 lemma spf_below_ran: assumes "a\<sqsubseteq>b" and "x \<in> ran (Rep_CTSPF b)" and "y \<in> ran (Rep_CTSPF a)"
@@ -413,9 +417,11 @@ proof -
   obtain sy where sy_def: "((Rep_CTSPF a) sy) =  (Some y)" using assms ran2exists by fastforce
       
   have "dom (Rep_CTSPF a) = dom (Rep_CTSPF b)"
-    by (metis Rep_CTSPF_def assms(1) below_TSPF_def below_cfun_def part_dom_eq)
+    by (metis  assms(1) below_TSPF_def below_cfun_def part_dom_eq)
   thus ?thesis
-    sorry
+    by (smt assms(1) below_TSPF_def below_option_def cfun_below_iff domI option.sel rep_tspf_well 
+            sx_def sy_def tsbdom_below tspf_type_def tspf_well_def)
+    
 qed
 
 
@@ -484,7 +490,7 @@ lemma tspf_dom_mono [simp]: "monofun (\<lambda> F. tsbDom\<cdot>(SOME b. b \<in>
     fix x y :: "'m TSPF"
     assume "x \<sqsubseteq> y"
     thus "tsbDom\<cdot>(SOME b. b \<in> dom (Rep_CTSPF x)) \<sqsubseteq> tsbDom\<cdot>(SOME b. b \<in> dom (Rep_CTSPF y))"
-      by (simp add: Rep_CTSPF_def below_TSPF_def below_cfun_def part_dom_eq)
+      by (simp add:  below_TSPF_def below_cfun_def part_dom_eq)
   qed
     
 lemma tspf_dom_contlub: assumes "chain Y"
@@ -540,7 +546,7 @@ lemma tspf_least_in_dom: "(tsbLeast (tspfDom\<cdot>f)) \<in> dom (Rep_CTSPF f)"
     
 lemma tspf_dom_2_dom_ctspf: assumes "tspfDom\<cdot>f = tspfDom\<cdot>g"
   shows "dom (Rep_CTSPF f) = dom (Rep_CTSPF g)"
-    by (metis (no_types, lifting) Cfun.cfun.Rep_cfun_inverse Collect_cong Rep_CTSPF_def assms(1) 
+    by (metis (no_types, lifting) Cfun.cfun.Rep_cfun_inverse Collect_cong  assms(1) 
           dom_def mem_Collect_eq rep_cspf_well tspf_least_in_dom tspf_type_def tspf_well_def)
 
 lemma tspf_belowI: assumes "tspfDom\<cdot>f = tspfDom\<cdot>g"
@@ -550,7 +556,7 @@ proof -
   have "dom (Rep_CTSPF f) = dom (Rep_CTSPF g)"
     by (meson assms(1) tspf_dom_2_dom_ctspf)
   thus ?thesis
-    by (metis Cfun.cfun.Rep_cfun_inverse Rep_CTSPF_def assms(2) below_TSPF_def below_cfun_def 
+    by (metis Cfun.cfun.Rep_cfun_inverse  assms(2) below_TSPF_def below_cfun_def 
               part_below rep_cspf_well tsbleast_tsdom tspf_least_in_dom tspf_type_def 
               tspf_well_def)
 qed
@@ -1156,7 +1162,7 @@ proof -
                           \<uplus> (Rep_cfun (Rep_TSPF f2)\<rightharpoonup>((x \<uplus> z)\<bar>tspfDom\<cdot>f2)))"
     using cont2cont_APP cont_compose op_the_cont by blast
   thus ?thesis
-    by (simp add: Rep_CTSPF_def)
+    by (simp add: )
 qed
   
 lemma tspfcomph_cont2 [simp]:
@@ -1177,7 +1183,7 @@ proof -
                     \<uplus> (Rep_cfun (Rep_TSPF f2)\<rightharpoonup>((x \<uplus> z)\<bar>tspfDom\<cdot>f2)))"
     using cont2cont_APP cont_compose op_the_cont by blast
   thus ?thesis
-    by (simp add: Rep_CTSPF_def)
+    by (simp add: )
 qed
   
 lemma tspfcomph_cont_x [simp]: "cont (\<lambda> x. tspfCompH f1 f2 x)"
