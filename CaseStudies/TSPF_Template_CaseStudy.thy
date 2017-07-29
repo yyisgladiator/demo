@@ -1,4 +1,4 @@
-(*  Title:  TSPF_Tempalte_CaseStudy
+(*  Title:  TSPF_Template_CaseStudy
     Author: Jens Christoph Bürger
     e-mail: jens.buerger@rwth-aachen.de
 
@@ -134,7 +134,8 @@ proof -
   have f1: "cont (\<lambda> tb. (tsbDom\<cdot>tb = cs)\<leadsto>[ch2 \<mapsto> f\<cdot>(tb  .  ch1)]\<Omega>)"
     by (simp only: tspf_nx1_cont assms(1))
   
-  hence "Rep_cfun (\<Lambda> tb. (tsbDom\<cdot>tb = cs)\<leadsto>[ch2 \<mapsto> f\<cdot>(tb  .  ch1)]\<Omega>) = (\<lambda> tb. (tsbDom\<cdot>tb = cs)\<leadsto>[ch2 \<mapsto> f\<cdot>(tb  .  ch1)]\<Omega>)"
+  hence "Rep_cfun (\<Lambda> tb. (tsbDom\<cdot>tb = cs)\<leadsto>[ch2 \<mapsto> f\<cdot>(tb  .  ch1)]\<Omega>) 
+          = (\<lambda> tb. (tsbDom\<cdot>tb = cs)\<leadsto>[ch2 \<mapsto> f\<cdot>(tb  .  ch1)]\<Omega>)"
     by simp
   show ?thesis
   apply (simp add: tspf_dom_insert Rep_CTSPF_def)
@@ -173,7 +174,24 @@ lemma delay_tspf_ran [simp]: "tspfRan\<cdot>(Abs_CTSPF (\<lambda> (tb::nat TSB).
                       \<leadsto> ([ch2 \<mapsto> delayFun\<cdot>(tb . ch1)]\<Omega>))) = {ch2}"
   apply(simp add: tspfran_least)
   by (simp add: tsb_well_def tsbdom_rep_eq)
- 
+
+lemma delay_tspf_apply [simp]: assumes "tsbDom\<cdot>tb = {ch1}"
+  shows "(Abs_CTSPF (\<lambda> (tb::nat TSB). (tsbDom\<cdot>tb = {ch1}) 
+                      \<leadsto> ([ch2 \<mapsto> delayFun\<cdot>(tb . ch1)]\<Omega>)))  \<rightleftharpoons> tb = ([ch2 \<mapsto> delayFun\<cdot>(tb . ch1)]\<Omega>)" 
+  by (simp add: assms(1)) 
+
+    
+(* instances *)
+
+lift_definition delayTSPF1 :: "nat TSPF" is
+  "(\<Lambda> (tb::nat TSB). (tsbDom\<cdot>tb = {c1}) \<leadsto> ([c2 \<mapsto> delayFun\<cdot>(tb . c1)]\<Omega>))"
+  by simp
+
+lift_definition delayTSPF2 :: "nat TSPF" is
+  "(\<Lambda> (tb::nat TSB). (tsbDom\<cdot>tb = {c2}) \<leadsto> ([c1 \<mapsto> delayFun\<cdot>(tb . c2)]\<Omega>))"
+  by simp    
+    
+    
   subsection \<open>identity\<close> 
     
 end
