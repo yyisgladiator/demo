@@ -63,22 +63,44 @@ text {*
    ds = output stream 
 *}
 
-lemma srcdups_smap_adm: 
+lemma srcdups_smap_adm [simp]: 
   "adm (\<lambda>a. srcdups\<cdot>(smap f\<cdot>(srcdups\<cdot>a)) = smap f\<cdot>(srcdups\<cdot>a) 
     \<longrightarrow> srcdups\<cdot>(smap f\<cdot>a) = smap f\<cdot>(srcdups\<cdot>a))"
-  sorry
+  apply(rule admI)
+  apply (auto simp add: contlub_cfun_arg)
+    sorry
     
+      declare [[show_types]]
 (* Move to Streams.thy after done *)
 lemma srcdups_smap_com:
   shows "srcdups\<cdot>(smap f\<cdot>(srcdups\<cdot>s)) = smap f\<cdot>(srcdups\<cdot>s) \<Longrightarrow> srcdups\<cdot>(smap f\<cdot>s)= smap f\<cdot>(srcdups\<cdot>s)"
-  apply (rule ind [of _ s])
-  apply (auto simp add: srcdups_smap_adm)
-  sorry
+  proof(induction rule: ind [of _ s])
+    case 1
+    then show ?case sorry
+  next
+    case 2
+    then show ?case by simp
+  next
+    case (3 a s)
+    have s_eps: "s = \<bottom> \<Longrightarrow>  srcdups\<cdot>(\<up>(f a) \<bullet> smap f\<cdot>s) = smap f\<cdot>(srcdups\<cdot>(\<up>a \<bullet> s))" by simp
+    hence f1: "shd s = a \<Longrightarrow> ?case"
+      by (metis "3.IH" "3.prems" smap_scons srcdups_eq surj_scons)
+    have h1: "s\<noteq>\<bottom> \<Longrightarrow> s = (\<up>(shd s) \<bullet> srt\<cdot>s)" by (simp add: surj_scons)
+    have h2: "s\<noteq>\<bottom> \<Longrightarrow> shd s\<noteq>a \<Longrightarrow>f (shd s) \<noteq> f a \<Longrightarrow> srcdups\<cdot>(smap f\<cdot>(\<up>a \<bullet> (\<up>(shd s) \<bullet> srt\<cdot>s))) = smap f\<cdot>(srcdups\<cdot>(\<up>a \<bullet>  (\<up>(shd s) \<bullet> srt\<cdot>s)))" 
+      apply simp using "3.IH" sorry
+    have f2: "s\<noteq>\<bottom> \<Longrightarrow> shd s\<noteq>a \<Longrightarrow>f (shd s) \<noteq> f a \<Longrightarrow> ?case"
+      using h1 h2 by auto 
+    have f3: "s\<noteq>\<bottom> \<Longrightarrow> shd s\<noteq>a \<Longrightarrow>f (shd s) = f a \<Longrightarrow> ?case" sorry (* This case can never occur, see assumption *)
+      
+    then show ?case using f1 f2 by fastforce
+  qed
     
 lemma tssnd_tsprojsnd_tsremdups: 
   assumes send_def: "send \<in> tsSender"
   shows "tsAbs\<cdot>(tsRemDups\<cdot>(tsProjSnd\<cdot>(send\<cdot>i\<cdot>as))) = tsAbs\<cdot>(tsProjSnd\<cdot>(tsRemDups\<cdot>(send\<cdot>i\<cdot>as)))"
   apply (simp add: tsprojsnd_tsabs tsremdups_tsabs sprojsnd_def)
+    using srcdups_smap_com assms set2tssnd_alt_bit_tabs sorry
+    oops
   by (metis Abs_cfun_inverse2 cont_Rep_cfun2 send_def set2tssnd_alt_bit_tabs sprojsnd_def
       srcdups_smap_com)
     
