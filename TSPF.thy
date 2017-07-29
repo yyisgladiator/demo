@@ -133,7 +133,7 @@ subsubsection \<open>apply\<close>
 (* harpoon and Rep operation all in one for simpler SPF on SB applications *)
   (* bounds weaker than tsbres *)
 abbreviation theRep_abbrv :: "'a TSPF \<Rightarrow> 'a TSB \<Rightarrow> 'a TSB " (infix "\<rightleftharpoons>" 62) where
-"(f \<rightleftharpoons> s) \<equiv> (the ((Rep_CTSPF f) s))"
+"(f \<rightleftharpoons> s) \<equiv> (Rep_CTSPF f)\<rightharpoonup>s"
 
 (* old 
 abbreviation theRep_abbrv :: "'a TSPF \<Rightarrow> 'a TSB \<Rightarrow> 'a TSB " ("_\<rightleftharpoons>_") where
