@@ -101,7 +101,7 @@ qed
 
 lemma tspfHide_ran:
   shows "tspfRan\<cdot>(tspfHide f cs) = tspfRan\<cdot>f - cs"
-  by (smt Un_Diff_Int inf_commute inf_sup_absorb rep_abs_ctspf spfran_least tsbleast_tsdom tspfHide_cont tspfHide_def tspfHide_dom tspfHide_well tspf_ran_2_tsbdom tsresrict_dom3)
+  by (smt Un_Diff_Int inf_commute inf_sup_absorb rep_abs_ctspf tspfran_least tsbleast_tsdom tspfHide_cont tspfHide_def tspfHide_dom tspfHide_well tspf_ran_2_tsbdom tsresrict_dom3)
 
 lemma tspfHide_getCh: assumes "tsbDom\<cdot>tsb = tspfDom\<cdot>f" and "c \<notin> cs"
   shows "((tspfHide f cs) \<rightleftharpoons> tsb) . c = (f \<rightleftharpoons> tsb). c"
@@ -264,7 +264,7 @@ proof -
   ultimately have "cont (\<lambda> s. ((Rep_cfun (Rep_TSPF f1))\<rightharpoonup>(s\<bar>tspfDom\<cdot>f1)) \<uplus> ((Rep_cfun (Rep_TSPF f2))\<rightharpoonup>(s\<bar>tspfDom\<cdot>f2)))"
     using cont2cont_APP cont_Rep_cfun2 cont_compose by blast
   hence "cont (\<lambda> s. (f1\<rightleftharpoons>(s \<bar> tspfDom\<cdot>f1)) \<uplus> (f2\<rightleftharpoons>(s \<bar> tspfDom\<cdot>f2)))"
-    by (simp add: Rep_CTSPF_def)  
+    by (simp add: )  
   thus ?thesis
     by(simp add: if_then_cont_tspf)
 qed
@@ -341,7 +341,7 @@ qed
 
 lemma tspfParComp_ran: assumes "parcomp_well f1 f2"
   shows "tspfRan\<cdot>(tspfParComp f1 f2) = tspfRan\<cdot>f1 \<union> tspfRan\<cdot>f2"
-  by (smt assms option.sel parallel_iterconst_cont parallel_iterconst_well parcomp_dom_i_below parcomp_domranf1 rep_abs_ctspf spfran_least tsbleast_tsdom tsbunion_dom tspfParComp_def tspfParComp_dom tspfcomp_I_commu tspfcomp_L_commu)
+  by (smt assms option.sel parallel_iterconst_cont parallel_iterconst_well parcomp_dom_i_below parcomp_domranf1 rep_abs_ctspf tspfran_least tsbleast_tsdom tsbunion_dom tspfParComp_def tspfParComp_dom tspfcomp_I_commu tspfcomp_L_commu)
   
 lemma tspfParComp_getCh: assumes "parcomp_well f1 f2"  
                              and "tsbDom\<cdot>sb = tspfDom\<cdot>f1 \<union> tspfDom\<cdot>f2"
@@ -481,7 +481,7 @@ proof -
   have "cont (\<lambda> x. (f2 \<rightleftharpoons> x))"
       by (simp add: cont_compose)
   moreover have f1: "cont (\<lambda> x. (f1 \<rightleftharpoons> (x\<bar>tspfDom\<cdot>f1)))"
-    by (metis Rep_CTSPF_def cont_Rep_cfun2 cont_compose op_the_cont tspfDom_def tspf_dom_insert)
+    by (metis  cont_Rep_cfun2 cont_compose op_the_cont tspfDom_def tspf_dom_insert)
   ultimately have f2: "cont (\<lambda> x. (f2 \<rightleftharpoons> (f1 \<rightleftharpoons> (x\<bar>tspfDom\<cdot>f1))))"
     using cont_compose by blast
   with f1 f2 have "cont (\<lambda> x. ((f1 \<rightleftharpoons> (x\<bar>tspfDom\<cdot>f1)) \<uplus> (f2 \<rightleftharpoons> (f1 \<rightleftharpoons> (x\<bar>tspfDom\<cdot>f1)))))"
@@ -552,11 +552,11 @@ lemma tspfSerComp_dom: assumes "sercomp_well f1 f2"
 
 lemma tspfSerComp_ran: assumes "sercomp_well f1 f2"
   shows "tspfRan\<cdot>(tspfSerComp f1 f2) = tspfRan\<cdot>f2"
-  by (smt assms option.sel rep_abs_ctspf spfran_least tsbleast_tsdom tspfSerComp_cont tspfSerComp_def tspfSerComp_dom tspfSerComp_well tspf_ran_2_tsbdom2)
+  by (smt assms option.sel rep_abs_ctspf tspfran_least tsbleast_tsdom tspfSerComp_cont tspfSerComp_def tspfSerComp_dom tspfSerComp_well tspf_ran_2_tsbdom2)
 
 lemma tspfSerComp_repAbs: assumes "sercomp_well f1 f2"
   shows "Rep_CTSPF (tspfSerComp f1 f2) = (\<lambda> x. (tsbDom\<cdot>x = tspfDom\<cdot>f1) \<leadsto> (f2 \<rightleftharpoons> (f1 \<rightleftharpoons> x)))"
-  apply(subst tspfSerComp_def, subst Rep_CTSPF_def, subst Abs_CTSPF_def)
+  apply(subst tspfSerComp_def)
   apply(subst rep_abs_tspf, subst tspfSerComp_well)
   apply(simp_all)
   using assms by blast
@@ -577,7 +577,7 @@ proof(cases "tsbDom\<cdot>tsb = tspfDom\<cdot>(tspfSerComp f1 f2)")
     apply(simp add: tspfHide_ran)
     apply(subst tspfSerComp_ran)
     using assms apply blast
-    (*by (smt Diff_Diff_Int Diff_Int_distrib Diff_Int_distrib2 Diff_empty Diff_idemp Diff_triv Int_Un_distrib2 True Un_Diff Un_Diff_Int assms domIff inf.idem inf_bot_right inf_commute inf_right_idem inf_sup_distrib1 inf_sup_ord(1) option.collapse rep_abs_ctspf sercomp_dom_f12 sercomp_input_ch spfran_least sup_bot.right_neutral sup_commute sup_inf_absorb sup_inf_distrib2 tsbleast_tsdom tsbunion_commutative tsbunion_dom tsbunion_idL tsbunion_restrict3 tspfHide_dom tspfHide_ran tspfSerComp_dom tspfSerComp_ran tspfSerComp_repAbs tspf_least_in_dom tspf_ran_2_tsbdom tspf_ran_insert tspf_sbdomeq_to_domeq tspfcomp2_lubiter tspfcomp_serial_iterconst_cont tspfcomp_serial_iterconst_eq tspfcomp_serial_iterconst_well tsresrict_dom3)
+    (*by (smt Diff_Diff_Int Diff_Int_distrib Diff_Int_distrib2 Diff_empty Diff_idemp Diff_triv Int_Un_distrib2 True Un_Diff Un_Diff_Int assms domIff inf.idem inf_bot_right inf_commute inf_right_idem inf_sup_distrib1 inf_sup_ord(1) option.collapse rep_abs_ctspf sercomp_dom_f12 sercomp_input_ch tspfran_least sup_bot.right_neutral sup_commute sup_inf_absorb sup_inf_distrib2 tsbleast_tsdom tsbunion_commutative tsbunion_dom tsbunion_idL tsbunion_restrict3 tspfHide_dom tspfHide_ran tspfSerComp_dom tspfSerComp_ran tspfSerComp_repAbs tspf_least_in_dom tspf_ran_2_tsbdom tspf_ran_insert tspf_sbdomeq_to_domeq tspfcomp2_lubiter tspfcomp_serial_iterconst_cont tspfcomp_serial_iterconst_eq tspfcomp_serial_iterconst_well tsresrict_dom3)
     prover timeout *)
     sorry
   then show ?thesis 

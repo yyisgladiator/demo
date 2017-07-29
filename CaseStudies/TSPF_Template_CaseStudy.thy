@@ -138,7 +138,7 @@ proof -
           = (\<lambda> tb. (tsbDom\<cdot>tb = cs)\<leadsto>[ch2 \<mapsto> f\<cdot>(tb  .  ch1)]\<Omega>)"
     by simp
   show ?thesis
-  apply (simp add: tspf_dom_insert Rep_CTSPF_def)
+  apply (simp add: tspf_dom_insert)
   apply (simp add: assms domIff2 f1)
     by (metis (mono_tags) TSB_def mem_Collect_eq someI_ex tsb_tsbleast)
 qed
@@ -168,7 +168,7 @@ qed
 
 lemma delay_tspf_dom [simp]: "tspfDom\<cdot>(Abs_CTSPF (\<lambda> (tb::nat TSB). (tsbDom\<cdot>tb = {ch1}) 
                       \<leadsto> ([ch2 \<mapsto> delayFun\<cdot>(tb . ch1)]\<Omega>))) = {ch1}"
-  by (simp add: Abs_CTSPF_def)
+  by (simp)
  
 lemma delay_tspf_ran [simp]: "tspfRan\<cdot>(Abs_CTSPF (\<lambda> (tb::nat TSB). (tsbDom\<cdot>tb = {ch1}) 
                       \<leadsto> ([ch2 \<mapsto> delayFun\<cdot>(tb . ch1)]\<Omega>))) = {ch2}"
