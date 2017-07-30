@@ -171,18 +171,22 @@ definition tsbNth:: "nat \<Rightarrow> 'm TSB \<Rightarrow> 'm TSB" where
 "tsbNth n \<equiv> \<lambda> tb.  tsbHd (tsbDrop n tb)"
 
 (*
+CURRENTLY moved in tsbTickCount Section until cont is proofed
+
 definition tsbTickCount :: "'m TSB \<rightarrow> lnat" where
 "tsbTickCount \<equiv>  \<Lambda> tb. if tsbDom\<cdot>tb \<noteq> {} then #\<surd>(SOME ts. ts \<in> ran (Rep_TSB tb)) else \<infinity>"
 
 
 
 definition tsbTickCount2 :: "'m TSB \<rightarrow> lnat" where
-"tsbTickCount2 \<equiv>  \<Lambda> tb. if tsbDom\<cdot>tb \<noteq> {} then (THE n. (\<exists> c. (c \<in> tsbDom\<cdot>tb \<and> ((#\<surd> (tb . c)) = n)) \<and> (\<forall> c2. c2\<in>tsbDom\<cdot>tb \<longrightarrow> n \<le> (#\<surd> (tb . c2)))))  else \<infinity>"
+"tsbTickCount2 \<equiv>  \<Lambda> tb. if tsbDom\<cdot>tb \<noteq> {} then (THE n. (\<exists> c. (c \<in> tsbDom\<cdot>tb \<and> ((#\<surd> (tb . c)) = n)) 
+                 \<and> (\<forall> c2. c2\<in>tsbDom\<cdot>tb \<longrightarrow> n \<le> (#\<surd> (tb . c2)))))  else \<infinity>"
 
 
 
 definition tsbTickCount3 :: "'m TSB \<rightarrow> lnat" where
-"tsbTickCount3 \<equiv> \<Lambda> tb. if tsbDom\<cdot>tb \<noteq> {} then Min {z. \<exists>ts. (z = #\<surd>ts) \<and> ts \<in> ran (Rep_TSB tb)} else \<infinity>"
+"tsbTickCount3 \<equiv> \<Lambda> tb. if tsbDom\<cdot>tb \<noteq> {} then Min {z. \<exists>ts. (z = #\<surd>ts) 
+                  \<and> ts \<in> ran (Rep_TSB tb)} else \<infinity>"
 *)
 
 
@@ -954,8 +958,7 @@ lemma tsbunion_dom [simp]: "tsbDom\<cdot>(tb1 \<uplus> tb2) = tsbDom\<cdot>tb1 \
 lemma tsbunion_belowI1: assumes "(a \<sqsubseteq> b)" and "(c \<sqsubseteq> d)"
   shows "(a \<uplus> c \<sqsubseteq> b \<uplus> d)"
   by (simp add: assms(1) assms(2) monofun_cfun)
-
-    
+ 
 subsubsection \<open>tsbTickcount\<close>
 (* general lemma *)
 lemma tsb_below_ran_below1: assumes "x \<sqsubseteq> y" and "tsbDom\<cdot>x \<noteq> {}"
