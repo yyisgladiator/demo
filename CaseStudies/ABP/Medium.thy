@@ -175,14 +175,21 @@ lemma tsmed_tsabs_slen_inf_h:
                 #(tsAbs\<cdot>(tsMed\<cdot>(delay as)\<cdot>(u && ora))) = #({True} \<ominus> u && ora)"
          proof (cases "u=updis True ")
            case True
-             
+              have h1:"#({True} \<ominus> (updis False) && ora) = #({True} \<ominus> ora)"
+                by (simp add: lscons_conv)
+               
+              have h2: " #(tsAbs\<cdot>(tsMed\<cdot>(delay msg)\<cdot>ora)) =  #(tsAbs\<cdot>(tsMed\<cdot>msg\<cdot>ora))" 
+                by (metis tsabs_delayfun tsmed_delayfun tsmed_strict(2))
+              hence h3: " #(tsAbs\<cdot>(tsMed\<cdot>(delay as)\<cdot>(u && ora))) =  #(tsAbs\<cdot>(tsMed\<cdot>as\<cdot>(u && ora))) " 
+                by (simp add: lscons.hyps tsmed_delayfun)
            show "\<And>as. #(tsAbs\<cdot>as) = \<infinity> \<Longrightarrow>
                         msg = delay as \<Longrightarrow>
                         u \<noteq> \<bottom> 
                         \<Longrightarrow> (\<And>msg. #(tsAbs\<cdot>msg) = \<infinity> \<Longrightarrow> #(tsAbs\<cdot>(tsMed\<cdot>msg\<cdot>ora)) = #({True} \<ominus> ora)) 
                         \<Longrightarrow> u = updis True 
                         \<Longrightarrow> #(tsAbs\<cdot>(tsMed\<cdot>(delay as)\<cdot>(u && ora))) = #({True} \<ominus> u && ora)"
-         
+             
+       
            sorry
        next 
          case False
