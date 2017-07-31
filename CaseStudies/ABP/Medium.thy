@@ -105,11 +105,52 @@ lemma tsmed_tsabs_slen: "#ora=\<infinity> \<Longrightarrow> #(tsAbs\<cdot>(tsMed
   by (metis tsfilter_tsabs_slen tszip_tsabs_slen)
 
 (* ToDo Steffen: basic properties lemmata for medium *)
-
+lemma helperlein:fixes ora::"bool stream" shows "#(tsAbs\<cdot>msg)=\<infinity> \<Longrightarrow> #(Collect snd \<ominus>  tsAbs\<cdot>(tsZip\<cdot>msg\<cdot>ora)) = #({True} \<ominus> ora)"
+  sorry
+    
+lemma tsmed_tsabs_slen_inf_h: 
+  shows "#(tsAbs\<cdot>msg)=\<infinity> \<Longrightarrow> #(tsAbs\<cdot>(tsMed\<cdot>msg\<cdot>ora)) = #({True} \<ominus> ora)"
+  proof(induction ora arbitrary: msg)
+    case adm
+    then show ?case 
+      apply (rule admI)
+      by (simp add: contlub_cfun_arg contlub_cfun_fun)
+  next
+    case bottom
+    then show ?case 
+      by simp
+  next
+    case (lscons u ora)
+    have h1:"tsAbs\<cdot>(tsMed\<cdot>(delay as)\<cdot>(u && ora)) = tsAbs\<cdot>(tsMed\<cdot>as\<cdot>(u && ora)) "
+      by (simp add: lscons.hyps tsmed_delayfun)
+        
+    then show ?case 
+      apply(rule_tac ts=msg in tscases, simp_all)
+      using lscons.prems apply auto[1]
+       sorry
+      
+       
+  qed
+ 
+    
 text {* If infinite messages will be sent infinite messages will be transmitted. *}
 lemma tsmed_tsabs_slen_inf [simp]: assumes "#({True} \<ominus> ora)=\<infinity>" and "#(tsAbs\<cdot>msg)=\<infinity>" 
   shows "#(tsAbs\<cdot>(tsMed\<cdot>msg\<cdot>ora)) = \<infinity>"
-  oops
+proof -
+   have transform:"#(tsAbs\<cdot>(tsMed\<cdot>msg\<cdot>ora)) =  #(Collect snd \<ominus> tsAbs\<cdot>(tsZip\<cdot>msg\<cdot>ora)) " 
+     by (simp add: tsfilter_tsabs tsmed_insert)
+   hence transform2: "#({True} \<ominus> ora)=\<infinity> \<Longrightarrow> #(tsAbs\<cdot>msg)=\<infinity> \<Longrightarrow> #(Collect snd \<ominus> tsAbs\<cdot>(tsZip\<cdot>msg\<cdot>ora)) = \<infinity> "
+    using tsmed_tsabs_slen_inf_h by fastforce
+   
+    
+   then show ?thesis
+     by (simp add: assms(1) assms(2) transform)
+
+   
+qed
+    
+    
+ 
 (*
 lemma szip_collect_inf_h: assumes "#s=\<infinity>" shows  "#(Collect snd \<ominus> s) = \<infinity>" 
   sorry
@@ -188,7 +229,7 @@ section {* additional properties *}
 (* ToDo: additional properties lemmata for medium *)
 
 text {* Two medium can be reduced to one medium. *}
-lemma tsmed2med: obtains ora3 where "tsMed\<cdot>(tsMed\<cdot>msg\<cdot>ora1)\<cdot>ora2 = tsMed\<cdot>msg\<cdot>ora3"
+lemma tsmed2med: "tsMed\<cdot>(tsMed\<cdot>msg\<cdot>ora1)\<cdot>ora2 = tsMed\<cdot>msg\<cdot>(newOracle\<cdot>ora1\<cdot>ora2 )"
 oops
 
 text {* Two medium with fairness requirement can be reduced to one medium with 
