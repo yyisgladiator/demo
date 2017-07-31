@@ -12,6 +12,7 @@ lemma tspfEmpty_cont[simp]: "cont (\<lambda> x. (tsbDom\<cdot>x = {} ) \<leadsto
 lemma tspfEmpty_cont2[simp]: "cont (\<lambda> x. (tsbDom\<cdot>x = {c1} ) \<leadsto> (empty \<Omega>))"
   by simp 
 
+declare[[show_types]]
 lift_definition tspfEmpty :: "'m TSPF"  is
 "(\<Lambda> x. (tsbDom\<cdot>x = {} ) \<leadsto> (empty \<Omega>))"
 proof - 
