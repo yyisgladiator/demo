@@ -105,9 +105,52 @@ lemma tsmed_tsabs_slen: "#ora=\<infinity> \<Longrightarrow> #(tsAbs\<cdot>(tsMed
   by (metis tsfilter_tsabs_slen tszip_tsabs_slen)
 
 (* ToDo Steffen: basic properties lemmata for medium *)
-lemma helperlein:fixes ora::"bool stream" shows "#(tsAbs\<cdot>msg)=\<infinity> \<Longrightarrow> #(Collect snd \<ominus>  tsAbs\<cdot>(tsZip\<cdot>msg\<cdot>ora)) = #({True} \<ominus> ora)"
-  sorry
+
+ 
+
+lemma   assumes "a \<notin> A" "b \<notin> B"
+  shows "insert a A = insert b B \<longleftrightarrow>
+    (if a = b then A = B else \<exists>C. A = insert b C \<and> b \<notin> C \<and> B = insert a C \<and> a \<notin> C)"
+    (is "?L \<longleftrightarrow> ?R")
+proof
+  show ?R if ?L
+  proof (cases "a = b")
+    case True
+    with assms \<open>?L\<close> show ?R
+      by (simp add: insert_ident)
+  next
+    case False
+    let ?C = "A - {b}"
+    have "A = insert b ?C \<and> b \<notin> ?C \<and> B = insert a ?C \<and> a \<notin> ?C"
+      using assms \<open>?L\<close> \<open>a \<noteq> b\<close> sorry
+    then show ?R using \<open>a \<noteq> b\<close> sorry
+  qed
+  show ?L if ?R
+    using that by (auto split: if_splits)
+qed
+
+ lemma tsmed_map: "#ora=\<infinity> \<Longrightarrow> tsMed\<cdot>(tsMap f\<cdot>msg)\<cdot>ora = tsMap f\<cdot>(tsMed\<cdot>msg\<cdot>ora)"
+  apply(induct msg arbitrary: ora, auto)
+  apply (metis tsmap_delayfun tsmed_delayfun tsmed_strict(2))
+  apply(rule_tac x=ora in scases, simp_all)
+  apply(rename_tac y x )
+  apply (case_tac "y=True", simp_all)
+  apply (metis (no_types, lifting) lscons_conv tsmap_mlscons tsmap_nbot 
+          tsmed_mlscons_true tsmed_nbot)
+  by (metis lscons_conv tsmap_mlscons tsmap_nbot tsmed_mlscons_false)
+
     
+
+lemma s2:"#(tsAbs\<cdot>msg)=\<infinity> \<Longrightarrow> ora\<noteq> \<epsilon>  \<Longrightarrow> tsMed\<cdot>(delay msg)\<cdot>ora = delay (tsMed\<cdot>msg\<cdot>ora) "
+  by (simp add: tsmed_delayfun)
+    
+lemma s3:"#(tsAbs\<cdot>(tsMed\<cdot>(delay msg)\<cdot>ora)) = #(tsAbs\<cdot>(tsMed\<cdot>msg\<cdot>ora))"
+  by (metis tsabs_delayfun tsmed_delayfun tsmed_strict(2))
+
+lemma " #(tsAbs\<cdot>as) = \<infinity> \<Longrightarrow> #(tsAbs\<cdot>(tsMed\<cdot>(delay msg)\<cdot>(\<up>True \<bullet>  ora))) = #({True} \<ominus> \<up>True \<bullet> ora)"
+  apply(simp only: s3)
+    oops
+
 lemma tsmed_tsabs_slen_inf_h: 
   shows "#(tsAbs\<cdot>msg)=\<infinity> \<Longrightarrow> #(tsAbs\<cdot>(tsMed\<cdot>msg\<cdot>ora)) = #({True} \<ominus> ora)"
   proof(induction ora arbitrary: msg)
@@ -120,15 +163,69 @@ lemma tsmed_tsabs_slen_inf_h:
     then show ?case 
       by simp
   next
-    case (lscons u ora)
-    have h1:"tsAbs\<cdot>(tsMed\<cdot>(delay as)\<cdot>(u && ora)) = tsAbs\<cdot>(tsMed\<cdot>as\<cdot>(u && ora)) "
-      by (simp add: lscons.hyps tsmed_delayfun)
-        
+    case (lscons u ora)       
     then show ?case 
-      apply(rule_tac ts=msg in tscases, simp_all)
-      using lscons.prems apply auto[1]
-       sorry
-      
+    proof(rule_tac ts=msg in tscases, simp_all)
+      fix as::"'a tstream"
+      show " \<And>as. 
+                #(tsAbs\<cdot>as) = \<infinity>  \<Longrightarrow>
+                msg = delay as  \<Longrightarrow> 
+                u \<noteq> \<bottom> \<Longrightarrow> 
+                (\<And>msg. #(tsAbs\<cdot>msg) = \<infinity> \<Longrightarrow> #(tsAbs\<cdot>(tsMed\<cdot>msg\<cdot>ora)) = #({True} \<ominus> ora)) \<Longrightarrow> 
+                #(tsAbs\<cdot>(tsMed\<cdot>(delay as)\<cdot>(u && ora))) = #({True} \<ominus> u && ora)"
+         proof (cases "u=updis True ")
+           case True
+             
+           show "\<And>as. #(tsAbs\<cdot>as) = \<infinity> \<Longrightarrow>
+                        msg = delay as \<Longrightarrow>
+                        u \<noteq> \<bottom> 
+                        \<Longrightarrow> (\<And>msg. #(tsAbs\<cdot>msg) = \<infinity> \<Longrightarrow> #(tsAbs\<cdot>(tsMed\<cdot>msg\<cdot>ora)) = #({True} \<ominus> ora)) 
+                        \<Longrightarrow> u = updis True 
+                        \<Longrightarrow> #(tsAbs\<cdot>(tsMed\<cdot>(delay as)\<cdot>(u && ora))) = #({True} \<ominus> u && ora)"
+         
+           sorry
+       next 
+         case False
+           show " \<And>as. #(tsAbs\<cdot>as) = \<infinity> \<Longrightarrow>
+                        msg = delay as \<Longrightarrow>
+                        u \<noteq> \<bottom> \<Longrightarrow> 
+                        (\<And>msg. #(tsAbs\<cdot>msg) = \<infinity> \<Longrightarrow> #(tsAbs\<cdot>(tsMed\<cdot>msg\<cdot>ora)) = #({True} \<ominus> ora)) 
+                        \<Longrightarrow> u \<noteq> updis True 
+                        \<Longrightarrow> #(tsAbs\<cdot>(tsMed\<cdot>(delay as)\<cdot>(u && ora))) = #({True} \<ominus> u && ora) "
+       
+          sorry   
+     qed
+    next     
+       show " \<And>a as. 
+            #(tsAbs\<cdot>(updis a &&\<surd> as)) = \<infinity> 
+            \<Longrightarrow> msg = updis a &&\<surd> as 
+            \<Longrightarrow> u \<noteq> \<bottom> 
+            \<Longrightarrow> (\<And>msg. #(tsAbs\<cdot>msg) = \<infinity> 
+            \<Longrightarrow> #(tsAbs\<cdot>(tsMed\<cdot>msg\<cdot>ora)) = #({True} \<ominus> ora)) 
+            \<Longrightarrow> #(tsAbs\<cdot>(tsMed\<cdot>(updis a &&\<surd> as)\<cdot>(u && ora))) = #({True} \<ominus> u && ora)"
+         
+       proof (cases "u=updis False ")
+         case True
+         then show "\<And>a as. #(tsAbs\<cdot>(updis a &&\<surd> as)) = \<infinity> \<Longrightarrow>
+                       msg = updis a &&\<surd> as \<Longrightarrow>
+                       u \<noteq> \<bottom> \<Longrightarrow> 
+                       (\<And>msg. #(tsAbs\<cdot>msg) = \<infinity> \<Longrightarrow> #(tsAbs\<cdot>(tsMed\<cdot>msg\<cdot>ora)) = #({True} \<ominus> ora)) \<Longrightarrow> 
+                       u = updis False \<Longrightarrow>
+                       #(tsAbs\<cdot>(tsMed\<cdot>(updis a &&\<surd> as)\<cdot>(u && ora))) = #({True} \<ominus> u && ora)"
+           sorry
+       next
+         case False
+         then show " \<And>a as. #(tsAbs\<cdot>(updis a &&\<surd> as)) = \<infinity> \<Longrightarrow>
+                      msg = updis a &&\<surd> as \<Longrightarrow>
+                      u \<noteq> \<bottom> \<Longrightarrow> 
+                      (\<And>msg. #(tsAbs\<cdot>msg) = \<infinity> \<Longrightarrow> #(tsAbs\<cdot>(tsMed\<cdot>msg\<cdot>ora)) = #({True} \<ominus> ora)) \<Longrightarrow> 
+                      u \<noteq> updis False \<Longrightarrow>
+                      #(tsAbs\<cdot>(tsMed\<cdot>(updis a &&\<surd> as)\<cdot>(u && ora))) = #({True} \<ominus> u && ora)"
+           sorry
+       qed
+         
+         
+      qed      
        
   qed
  
@@ -160,15 +257,6 @@ lemma szip_collect_inf: assumes "#ora=\<infinity>" and "#msg=\<infinity>"
   by (simp add: assms(1) assms(2) szip_collect_inf_h)
 *)
     
-lemma tsmed_map: "#ora=\<infinity> \<Longrightarrow> tsMed\<cdot>(tsMap f\<cdot>msg)\<cdot>ora = tsMap f\<cdot>(tsMed\<cdot>msg\<cdot>ora)"
-  apply(induct msg arbitrary: ora, auto)
-  apply (metis tsmap_delayfun tsmed_delayfun tsmed_strict(2))
-  apply(rule_tac x=ora in scases, simp_all)
-  apply(rename_tac y x )
-  apply (case_tac "y=True", simp_all)
-  apply (metis (no_types, lifting) lscons_conv tsmap_mlscons tsmap_nbot 
-          tsmed_mlscons_true tsmed_nbot)
-  by (metis lscons_conv tsmap_mlscons tsmap_nbot tsmed_mlscons_false)
 
 
 lemma tsmed_tsdom: "#ora=\<infinity> \<Longrightarrow> tsDom\<cdot>(tsMed\<cdot>msg\<cdot>ora) \<subseteq> tsDom\<cdot>msg"
