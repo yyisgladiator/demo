@@ -44,7 +44,7 @@ abbreviation iter_tspfFeedbackH :: "'a TSPF \<Rightarrow> nat \<Rightarrow> 'a T
 definition tspfFeedback :: "'m TSPF \<Rightarrow> 'm TSPF" where
 "tspfFeedback f \<equiv> 
 let I  = tspfDom\<cdot>f - tspfRan\<cdot>f;
-    Oc = (tspfRan\<cdot>f - tspfDom\<cdot>f)
+    Oc = tspfRan\<cdot>f
 in Abs_CTSPF (\<lambda> x. (tsbDom\<cdot>x = I) \<leadsto> tsbFix (tspfFeedbackH f x) Oc)"
 
 
@@ -85,8 +85,7 @@ lemma tspfHide_well[simp]:
   apply(simp only: tspf_well_def)
   apply rule
    apply (auto simp add: tspf_type_def domIff2 tsbdom_rep_eq)
-    
-  sorry
+    by (metis (mono_tags, lifting) order.trans tsbleast_tsdom tsbtick_tsbres tspf_least_in_dom tspf_less_in_than_out_ticks tspf_sbdomeq_to_domeq)
 
 lemma tspfHide_dom:
   shows "tspfDom\<cdot>(tspfHide f cs) = tspfDom\<cdot>f"
@@ -649,12 +648,21 @@ lemma tspfFeedback_cont[simp]: "cont (\<lambda> x. (tsbDom\<cdot>x = tspfDom\<cd
   apply(subst (1) tsbfix_contI2)
    apply(simp_all)
    by (simp add: tspfFeedbackH_dom)
-
-lemma tspfFeedback_tspfwell: "tspf_well (\<Lambda> x. (tsbDom\<cdot>x = tspfDom\<cdot>f - tspfRan\<cdot>f) \<leadsto> tsbFix (tspfFeedbackH f x) (tspfRan\<cdot>f - tspfDom\<cdot>f))" 
-  apply(simp add: tspf_well_def)
-  apply rule
-   apply (auto simp add: tspf_type_def domIff2 tsbdom_rep_eq)
-  sorry    
-    
+     
+lemma tspfFeedback_tspfwell: assumes "\<And>b. tsbDom\<cdot>b = tspfDom\<cdot>f \<Longrightarrow> #\<surd>tsb b < #\<surd>tsb (f\<rightleftharpoons>b)" 
+  shows "tspf_well (\<Lambda> x. (tsbDom\<cdot>x = tspfDom\<cdot>f - tspfRan\<cdot>f) \<leadsto> tsbFix (tspfFeedbackH f x) (tspfRan\<cdot>f))" 
+proof - 
+  have f1: "\<And>b. tsbDom\<cdot>b = tspfDom\<cdot>f - tspfRan\<cdot>f \<Longrightarrow> #\<surd>tsb b  \<le> #\<surd>tsb (tsbFix (tspfFeedbackH f b) (tspfRan\<cdot>f))"
+    apply(simp add: tsbFix_def)
+    sorry
+  show ?thesis
+    apply(simp add: tspf_well_def)
+    apply rule
+     apply (auto simp add: tspf_type_def domIff2 tsbdom_rep_eq)
+     apply(simp add: tsbFix_def)
+     apply auto[1]
+    by(simp add: f1)    
+qed
+  
 end
   

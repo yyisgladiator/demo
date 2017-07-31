@@ -999,7 +999,7 @@ lemma lnat_set_min_below: assumes "finite (A:: lnat set)" and "finite (B ::lnat 
   
 (* is equal to the defintion of tsbTickCount3 *)
 definition tsbTickCount :: "'m TSB \<rightarrow> lnat" where
-"tsbTickCount \<equiv> \<Lambda> tb. if tsbDom\<cdot>tb \<noteq> {} then (LEAST ln. ln\<in>{(#\<surd>(tb. c)) | c. c \<in> tsbDom\<cdot>tb}) else \<infinity>"
+"tsbTickCount \<equiv> \<Lambda> tryb. if tsbDom\<cdot>tb \<noteq> {} then (LEAST ln. ln\<in>{(#\<surd>(tb. c)) | c. c \<in> tsbDom\<cdot>tb}) else \<infinity>"
 
 abbreviation tsbTickCount_abbrv :: "'m TSB \<Rightarrow> lnat "  ("#\<surd>tsb _ ") where
 " #\<surd>tsb tsb \<equiv> tsbTickCount\<cdot>tsb"
@@ -1066,9 +1066,17 @@ lemma tsbtick_mono [simp]:
   using monofun_def tsbtick_mono_pre by blast
       
       
-lemma tsbtick_least_chain: assumes "chain Y"
+lemma tsbtick_least_chain: assumes "chain Y" and "tsbDom\<cdot>(Lub Y) \<noteq> {}"
   shows "chain (\<lambda> i. LEAST ln. \<exists>c. ln = #\<surd> Y i  .  c \<and> c \<in> tsbDom\<cdot>(Lub Y))"
+proof - 
+  have f1: "\<And>c.  c \<in> tsbDom\<cdot>(Lub Y) \<longrightarrow> #\<surd> (Y i) . c < #\<surd> (Y (Suc i)) . c"
+    
     sorry
+  show ?thesis
+    apply(simp add: chain_def)
+    apply(simp add: Least_def)
+    sorry
+qed
       
       
 lemma tsbtick_cont_pre: assumes "chain Y"
@@ -1081,7 +1089,7 @@ proof (cases "tsbDom\<cdot>(\<Squnion>i. Y i) \<noteq> {}")
   hence f11: "\<forall> i. tsbDom\<cdot>(\<Squnion>i. Y i) =  tsbDom\<cdot>(Y i)"
     by (simp add: assms(1))
   hence f10: "\<forall> i. tsbDom\<cdot>(Y i) \<noteq> {}"
-  sorry
+    using True by blast
   have f2: "\<forall> c. #\<surd> (Lub Y  .  c) = (\<Squnion> i. #\<surd> ((Y i) .c))"
     by (metis (mono_tags, lifting) assms contlub_cfun_arg lub_eq lub_eval theRep_chain tsbgetch_insert)
   obtain minval where f20: "minval = (LEAST ln. \<exists>c. ln = (\<Squnion>i. #\<surd> Y i  .  c) \<and> c \<in> tsbDom\<cdot>(Lub Y))"
@@ -1105,7 +1113,6 @@ proof (cases "tsbDom\<cdot>(\<Squnion>i. Y i) \<noteq> {}")
     apply (simp only: True f10)
       apply auto
     apply (simp only: f2)
-    
     apply (simp add: Least_def)
       sorry
 next
