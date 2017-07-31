@@ -1356,5 +1356,23 @@ proof -
      using f3 by meson
 qed
 
-       
+text{* the composition is tspfwell if the tick requirement from tspf_well is fulfilled *}
+lemma tspfcomp_wellI [simp]: 
+  assumes "\<And>b. tsbDom\<cdot>b = tspfCompI f1 f2 \<Longrightarrow> 
+                      #\<surd>tsb b  \<le> #\<surd>tsb tsbFix (tspfCompH f1 f2 b) (tspfRan\<cdot>f1 \<union> tspfRan\<cdot>f2)"
+  shows "tspf_well (\<Lambda> x. (tsbDom\<cdot>x = (tspfCompI f1 f2)) 
+                \<leadsto> tsbFix (tspfCompH f1 f2 x) (tspfRan\<cdot>f1 \<union> tspfRan\<cdot>f2))"
+  apply (rule tspf_wellI)
+     apply (simp_all add: domIff2 tsbfix_dom)
+     by (simp add: assms(1))
+
+text{* if the fixed point has length \<infinity> the tspf is always well *}
+lemma tspfcomp_well_empty_in [simp]: 
+  assumes "\<And>b. #\<surd>tsb tsbFix (tspfCompH f1 f2 b) (tspfRan\<cdot>f1 \<union> tspfRan\<cdot>f2) = \<infinity>"
+  shows "tspf_well (\<Lambda> x. (tsbDom\<cdot>x = (tspfCompI f1 f2)) 
+                \<leadsto> tsbFix (tspfCompH f1 f2 x) (tspfRan\<cdot>f1 \<union> tspfRan\<cdot>f2))"
+  apply (rule tspfcomp_wellI)
+  by (simp add: assms(1))
+
+             
 end
