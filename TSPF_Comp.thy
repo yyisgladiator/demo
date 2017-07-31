@@ -422,6 +422,10 @@ qed
 lemma sercomp_dom_f12: assumes "sercomp_well f1 f2"
   shows "tspfDom\<cdot>f1 \<inter> (tspfRan\<cdot>f1 \<union> tspfRan\<cdot>f2) = {}"
   using assms sercomp_well_def by blast
+
+lemma sercomp_dom_input: assumes "sercomp_well f1 f2"
+  shows "tspfCompI f1 f2 = tspfDom\<cdot>f1"
+  using assms sercomp_input_ch by blast
     
   
   subsection \<open>iterate\<close>    
