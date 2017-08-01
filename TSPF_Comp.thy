@@ -44,7 +44,7 @@ abbreviation iter_tspfFeedbackH :: "'a TSPF \<Rightarrow> nat \<Rightarrow> 'a T
 definition tspfFeedback :: "'m TSPF \<Rightarrow> 'm TSPF" where
 "tspfFeedback f \<equiv> 
 let I  = tspfDom\<cdot>f - tspfRan\<cdot>f;
-    Oc = (tspfRan\<cdot>f - tspfDom\<cdot>f)
+    Oc = tspfRan\<cdot>f
 in Abs_CTSPF (\<lambda> x. (tsbDom\<cdot>x = I) \<leadsto> tsbFix (tspfFeedbackH f x) Oc)"
 
 
@@ -85,8 +85,7 @@ lemma tspfHide_well[simp]:
   apply(simp only: tspf_well_def)
   apply rule
    apply (auto simp add: tspf_type_def domIff2 tsbdom_rep_eq)
-    
-  sorry
+    by (metis (no_types, lifting) trans_lnle tsbleast_tsdom tsbtick_tsbres tspf_least_in_dom tspf_less_in_than_out_ticks tspf_sbdomeq_to_domeq)
 
 lemma tspfHide_dom:
   shows "tspfDom\<cdot>(tspfHide f cs) = tspfDom\<cdot>f"
@@ -585,9 +584,8 @@ proof -
     apply (subst tspf_well_def)
     apply rule
      apply (auto simp add: tspf_type_def domIff2 tsbdom_rep_eq tspfCompI_def assms)
-      apply (metis assms sercomp_well_def tspf_ran_2_tsbdom2)
-    (*  by (meson f0  tspfSerComp_tick_well) *)
-    sorry
+     apply (metis assms sercomp_well_def tspf_ran_2_tsbdom2)
+      by (simp add: assms tspfSerComp_tick_well)
 qed
   
     
@@ -621,13 +619,15 @@ proof(cases "tsbDom\<cdot>tsb = tspfDom\<cdot>(tspfSerComp f1 f2)")
   have f0: "(tspfRan\<cdot>f1 = tspfDom\<cdot>f2) \<and> (tspfDom\<cdot>f1 \<inter> tspfRan\<cdot>f1 = {}) \<and> (tspfDom\<cdot>f2 \<inter> tspfRan\<cdot>f2 = {})
       \<and> (tspfDom\<cdot>f1 \<inter> tspfRan\<cdot>f2 = {})"
     using assms(1) sercomp_well_def by blast
+  have f11: "tspfRan\<cdot>(f1 \<otimes> f2) = tspfRan\<cdot>f1 \<union> tspfRan\<cdot>f2"
+    (* by (smt Diff_triv True assms domIff f0 inf_bot_right inf_commute inf_sup_ord(1) option.collapse option.sel rep_abs_ctspf sercomp_dom_f1 sercomp_input_ch tsbleast_tsdom tsbunion_commutative tsbunion_dom tsbunion_idL tsbunion_restrict3 tspfSerComp_dom tspfSerComp_ran tspfSerComp_repAbs tspf_least_in_dom tspf_sbdomeq_to_domeq tspfcomp2_lubiter tspfcomp_commu tspfcomp_serial_iterconst_cont tspfcomp_serial_iterconst_eq tspfcomp_serial_iterconst_well tspfran_least tsresrict_dom3)
+    prover timeout *)
+    sorry
   have f1: "tspfRan\<cdot>(tspfHide (tspfComp f1 f2) (tspfRan\<cdot>f1)) = tspfRan\<cdot>(tspfSerComp f1 f2)"
     apply(simp add: tspfHide_ran)
     apply(subst tspfSerComp_ran)
     using assms apply blast
-    (*by (smt Diff_Diff_Int Diff_Int_distrib Diff_Int_distrib2 Diff_empty Diff_idemp Diff_triv Int_Un_distrib2 True Un_Diff Un_Diff_Int assms domIff inf.idem inf_bot_right inf_commute inf_right_idem inf_sup_distrib1 inf_sup_ord(1) option.collapse rep_abs_ctspf sercomp_dom_f12 sercomp_input_ch tspfran_least sup_bot.right_neutral sup_commute sup_inf_absorb sup_inf_distrib2 tsbleast_tsdom tsbunion_commutative tsbunion_dom tsbunion_idL tsbunion_restrict3 tspfHide_dom tspfHide_ran tspfSerComp_dom tspfSerComp_ran tspfSerComp_repAbs tspf_least_in_dom tspf_ran_2_tsbdom tspf_ran_insert tspf_sbdomeq_to_domeq tspfcomp2_lubiter tspfcomp_serial_iterconst_cont tspfcomp_serial_iterconst_eq tspfcomp_serial_iterconst_well tsresrict_dom3)
-    prover timeout *)
-    sorry
+    by (simp add: Diff_triv Un_Diff f0 f11 inf_commute)
   then show ?thesis 
     apply(subst tsb_eq, simp_all)
     apply (smt True Diff_Un Diff_disjoint Int_Un_distrib2 Un_Diff_Int assms domIff inf_bot_right inf_commute option.sel rep_abs_ctspf sup_bot.right_neutral tsbleast_tsdom tsbunion_dom tspfHide_dom tspfHide_ran tspfSerComp_dom tspfSerComp_ran tspf_least_in_dom tspf_ran_2_tsbdom2 tspfcomp2_lubiter tspfcomp_serial_iterconst_cont tspfcomp_serial_iterconst_eq tspfcomp_serial_iterconst_well tsresrict_dom3)
@@ -698,11 +698,13 @@ lemma tspfFeedback_cont[simp]: "cont (\<lambda> x. (tsbDom\<cdot>x = tspfDom\<cd
    apply(simp_all)
    by (simp add: tspfFeedbackH_dom)
 
+(*   
 lemma tspfFeedback_tspfwell: "tspf_well (\<Lambda> x. (tsbDom\<cdot>x = tspfDom\<cdot>f - tspfRan\<cdot>f) \<leadsto> tsbFix (tspfFeedbackH f x) (tspfRan\<cdot>f - tspfDom\<cdot>f))" 
   apply(simp add: tspf_well_def)
   apply rule
    apply (auto simp add: tspf_type_def domIff2 tsbdom_rep_eq)
-  sorry    
+  sorry
+*)  
     
 end
   
