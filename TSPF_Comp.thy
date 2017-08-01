@@ -697,14 +697,16 @@ lemma tspfFeedback_cont[simp]: "cont (\<lambda> x. (tsbDom\<cdot>x = tspfDom\<cd
   apply(subst (1) tsbfix_contI2)
    apply(simp_all)
    by (simp add: tspfFeedbackH_dom)
-
-(*   
-lemma tspfFeedback_tspfwell: "tspf_well (\<Lambda> x. (tsbDom\<cdot>x = tspfDom\<cdot>f - tspfRan\<cdot>f) \<leadsto> tsbFix (tspfFeedbackH f x) (tspfRan\<cdot>f - tspfDom\<cdot>f))" 
+  
+lemma tspfFeedback_tspfwell:  
+  assumes "\<And>b. tsbDom\<cdot>b = (tspfDom\<cdot>f - tspfRan\<cdot>f) \<Longrightarrow> #\<surd>tsb b  \<le> #\<surd>tsb tsbFix (tspfFeedbackH f b) (tspfRan\<cdot>f)"
+  shows "tspf_well (\<Lambda> x. (tsbDom\<cdot>x = tspfDom\<cdot>f - tspfRan\<cdot>f) \<leadsto> tsbFix (tspfFeedbackH f x) (tspfRan\<cdot>f))" 
   apply(simp add: tspf_well_def)
   apply rule
-   apply (auto simp add: tspf_type_def domIff2 tsbdom_rep_eq)
-  sorry
-*)  
-    
+   apply(auto simp add: tspf_type_def domIff2 tsbdom_rep_eq)
+   apply(simp add: tsbFix_def)
+   apply auto[1]
+   by(simp add: assms)
+ 
 end
   
