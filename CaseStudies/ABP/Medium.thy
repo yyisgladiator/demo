@@ -138,27 +138,44 @@ lemma h5: "#ora=\<infinity> \<Longrightarrow>  #(tsAbs\<cdot>msg) = \<infinity> 
   by (metis h3 h4)
   
 
-lemma tsmed_tsabs_slen_inf_h:  assumes "#ora=\<infinity>" and "#(tsAbs\<cdot>msg)=\<infinity>" 
-  shows " #(tsAbs\<cdot>(tsMed\<cdot>msg\<cdot>ora)) = #({True} \<ominus> ora)"
+    
+
+
+lemma tsmed_tsabs_slen_inf_h: 
+   "#ora=\<infinity> \<Longrightarrow> #(tsAbs\<cdot>msg)=\<infinity> \<Longrightarrow> #(tsAbs\<cdot>(tsMed\<cdot>msg\<cdot>ora)) = #({True} \<ominus> ora)"
 proof(induction msg arbitrary: ora)
   
   case adm
   then  show ?case   
-   apply (rule admI)
-   by (simp add: contlub_cfun_arg contlub_cfun_fun)
+    apply(rule adm_all)
+    apply(rule adm_imp)
+    apply simp
 
-   next
+     
+   sorry    
+  next
     case bottom
-    with assms(2) show ?case 
-      sorry
-    next
+    then show ?case 
+      by simp
+  next
     case (delayfun msg)
     then show ?case 
-  by (metis tsabs_delayfun tsmed_delayfun tsmed_strict(2))
+     by (metis Inf'_neq_0 slen_empty_eq tsabs_delayfun tsmed_delayfun)
   next
     case (mlscons msg t)
     then show ?case 
-   sorry
+    proof (rule_tac x=ora in scases, simp_all)
+      fix a:: "bool"
+      fix s:: "bool stream"
+      show "\<And>a s. #s = \<infinity> \<Longrightarrow>
+           ora = \<up>a \<bullet> s \<Longrightarrow>
+           (\<And>ora. #ora = \<infinity> \<Longrightarrow> #(tsAbs\<cdot>msg) = \<infinity> \<Longrightarrow> #(tsAbs\<cdot>(tsMed\<cdot>msg\<cdot>ora)) = #({True} \<ominus> ora)) \<Longrightarrow>
+           msg \<noteq> \<bottom> \<Longrightarrow> 
+           #(tsAbs\<cdot>(updis t &&\<surd> msg)) = \<infinity> \<Longrightarrow> 
+           #(tsAbs\<cdot>(tsMed\<cdot>(updis t &&\<surd> msg)\<cdot>(\<up>a \<bullet> s))) = #({True} \<ominus> \<up>a \<bullet> s)" 
+     by (simp add: h5 lscons_conv tsabs_mlscons)
+       
+    qed
   qed
 
     
