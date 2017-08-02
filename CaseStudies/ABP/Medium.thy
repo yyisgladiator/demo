@@ -137,9 +137,30 @@ lemma h5: "#ora=\<infinity> \<Longrightarrow>  #(tsAbs\<cdot>msg) = \<infinity> 
            #(tsAbs\<cdot>(tsMed\<cdot>(updis t &&\<surd> msg)\<cdot>(\<up>a \<bullet> ora))) = #({True} \<ominus> \<up>a \<bullet> ora)"
   by (metis h3 h4)
   
+ 
+ (* SWS: Das ist mein vorschlag *)   
+lemma tsmed_tsabs_slen_inf [simp]: 
+  shows "#(tsAbs\<cdot>msg)=\<infinity> \<Longrightarrow> #(tsAbs\<cdot>(tsMed\<cdot>msg\<cdot>ora)) = #({True} \<ominus> ora)"
+  apply(induction ora arbitrary: msg)
+    apply auto
+  apply(rename_tac inMsg) 
+proof -
+  fix u :: "bool discr u"
+  fix ora inMsg
+  assume u_nbot: "u \<noteq> \<bottom>" 
+    and IH: "(\<And>msg. #(tsAbs\<cdot>msg) = \<infinity> \<Longrightarrow> #(tsAbs\<cdot>(tsMed\<cdot>msg\<cdot>ora)) = #({True} \<ominus> ora))"
+    and msgInf: "#(tsAbs\<cdot>inMsg) = \<infinity>" 
+  obtain n where n_def1: "tsDom\<cdot>(tsTake n\<cdot>inMsg) = {}" 
+              and n_def2: "tsDom\<cdot>(tsNth (Suc n)\<cdot>inMsg) \<noteq>{}" sorry
+  have "\<And>ora. tsAbs\<cdot>(tsMed\<cdot>inMsg\<cdot>ora) = tsAbs\<cdot>(tsMed\<cdot>(tsDrop n\<cdot>inMsg)\<cdot>ora)" sorry
 
+ (* have uT: "u = updis True \<Longrightarrow> #(tsAbs\<cdot>(tsMed\<cdot>inMsg\<cdot>(u && ora))) = #({True} \<ominus> u && ora)" sorry
+  have uF: "u = updis False \<Longrightarrow> #(tsAbs\<cdot>(tsMed\<cdot>inMsg\<cdot>(u && ora))) = #({True} \<ominus> u && ora)" sorry       *)
+  show "#(tsAbs\<cdot>(tsMed\<cdot>inMsg\<cdot>(u && ora))) = #({True} \<ominus> u && ora)" sorry
+qed
+  
     
-
+ 
 
 lemma tsmed_tsabs_slen_inf_h: 
    "#ora=\<infinity> \<Longrightarrow> #(tsAbs\<cdot>msg)=\<infinity> \<Longrightarrow> #(tsAbs\<cdot>(tsMed\<cdot>msg\<cdot>ora)) = #({True} \<ominus> ora)"
