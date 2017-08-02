@@ -125,45 +125,40 @@ lemma tsmed_tsabs_slen: "#ora=\<infinity> \<Longrightarrow> #(tsAbs\<cdot>(tsMed
 
 lemma h3:" #ora=\<infinity> \<Longrightarrow>  #(tsAbs\<cdot>msg) = \<infinity> \<Longrightarrow>  #(tsAbs\<cdot>(tsMed\<cdot>msg\<cdot>ora)) = #({True} \<ominus> ora) \<Longrightarrow>
            #(tsAbs\<cdot>(tsMed\<cdot>(updis t &&\<surd> msg)\<cdot>(\<up>True \<bullet> ora))) = #({True} \<ominus> \<up>True \<bullet> ora)"
-  by (metis (no_types, lifting) Inf'_neq_0 lscons_conv sfilter_in singletonI slen_empty_eq slen_updis_eq tsabs_bot tsabs_mlscons tsmed_mlscons_true tsmed_nbot)
+  by (metis (no_types, lifting) Inf'_neq_0 lscons_conv sfilter_in singletonI slen_empty_eq
+      slen_updis_eq tsabs_bot tsabs_mlscons tsmed_mlscons_true tsmed_nbot)
 
 lemma h4:" #ora=\<infinity> \<Longrightarrow>  #(tsAbs\<cdot>msg) = \<infinity> \<Longrightarrow>  #(tsAbs\<cdot>(tsMed\<cdot>msg\<cdot>ora)) = #({True} \<ominus> ora) \<Longrightarrow>
            #(tsAbs\<cdot>(tsMed\<cdot>(updis t &&\<surd> msg)\<cdot>(\<up>False \<bullet> ora))) = #({True} \<ominus> \<up>False  \<bullet> ora)"
-   by (metis Inf'_neq_0 lscons_conv sfilter_nin singletonD slen_empty_eq tsabs_bot tsmed_mlscons_false)
+  by (metis Inf'_neq_0 lscons_conv sfilter_nin singletonD
+       slen_empty_eq tsabs_bot tsmed_mlscons_false)
        
 lemma h5: "#ora=\<infinity> \<Longrightarrow>  #(tsAbs\<cdot>msg) = \<infinity> \<Longrightarrow>   #(tsAbs\<cdot>(tsMed\<cdot>msg\<cdot>ora)) = #({True} \<ominus> ora) \<Longrightarrow>
            #(tsAbs\<cdot>(tsMed\<cdot>(updis t &&\<surd> msg)\<cdot>(\<up>a \<bullet> ora))) = #({True} \<ominus> \<up>a \<bullet> ora)"
   by (metis h3 h4)
- 
   
-      
-lemma tsmed_tsabs_slen_inf_h: 
-  shows "#ora=\<infinity> \<Longrightarrow> #(tsAbs\<cdot>msg)=\<infinity> \<Longrightarrow> #(tsAbs\<cdot>(tsMed\<cdot>msg\<cdot>ora)) = #({True} \<ominus> ora)"
-  proof(induction msg arbitrary: ora)
-    case adm
-    then show ?case sorry
-      
-  next
+
+lemma tsmed_tsabs_slen_inf_h:  assumes "#ora=\<infinity>" and "#(tsAbs\<cdot>msg)=\<infinity>" 
+  shows " #(tsAbs\<cdot>(tsMed\<cdot>msg\<cdot>ora)) = #({True} \<ominus> ora)"
+proof(induction msg arbitrary: ora)
+  
+  case adm
+  then  show ?case   
+   apply (rule admI)
+   by (simp add: contlub_cfun_arg contlub_cfun_fun)
+
+   next
     case bottom
-    then show ?case 
-      by simp
-  next
+    with assms(2) show ?case 
+      sorry
+    next
     case (delayfun msg)
     then show ?case 
-     by (metis Inf'_neq_0 slen_empty_eq tsabs_delayfun tsmed_delayfun)
+  by (metis tsabs_delayfun tsmed_delayfun tsmed_strict(2))
   next
     case (mlscons msg t)
     then show ?case 
-    proof (rule_tac x=ora in scases, simp_all)
-      fix a:: "bool"
-      fix s:: "bool stream"
-      show "\<And>a s. #s = \<infinity> \<Longrightarrow>
-           ora = \<up>a \<bullet> s \<Longrightarrow>
-           (\<And>ora. #ora = \<infinity> \<Longrightarrow> #(tsAbs\<cdot>msg) = \<infinity> \<Longrightarrow> #(tsAbs\<cdot>(tsMed\<cdot>msg\<cdot>ora)) = #({True} \<ominus> ora)) \<Longrightarrow>
-           msg \<noteq> \<bottom> \<Longrightarrow> #(tsAbs\<cdot>(updis t &&\<surd> msg)) = \<infinity> \<Longrightarrow> #(tsAbs\<cdot>(tsMed\<cdot>(updis t &&\<surd> msg)\<cdot>(\<up>a \<bullet> s))) = #({True} \<ominus> \<up>a \<bullet> s)" 
-     by (simp add: h5 lscons_conv tsabs_mlscons)
-       
-    qed
+   sorry
   qed
 
     
@@ -173,14 +168,10 @@ lemma tsmed_tsabs_slen_inf [simp]: assumes "#({True} \<ominus> ora)=\<infinity>"
 proof -
    have transform:"#(tsAbs\<cdot>(tsMed\<cdot>msg\<cdot>ora)) =  #(Collect snd \<ominus> tsAbs\<cdot>(tsZip\<cdot>msg\<cdot>ora)) " 
      by (simp add: tsfilter_tsabs tsmed_insert)
-   hence transform2: "#({True} \<ominus> ora)=\<infinity> \<Longrightarrow> #(tsAbs\<cdot>msg)=\<infinity> \<Longrightarrow> #(Collect snd \<ominus> tsAbs\<cdot>(tsZip\<cdot>msg\<cdot>ora)) = \<infinity> "
+   hence "#({True} \<ominus> ora)=\<infinity> \<Longrightarrow> #(tsAbs\<cdot>msg)=\<infinity> \<Longrightarrow> #(Collect snd \<ominus> tsAbs\<cdot>(tsZip\<cdot>msg\<cdot>ora)) = \<infinity> "
      using sfilterl4 tsmed_tsabs_slen_inf_h by fastforce
-   
-    
    then show ?thesis
      by (simp add: assms(1) assms(2) transform)
-
-   
 qed
     
     
