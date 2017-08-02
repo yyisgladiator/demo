@@ -637,8 +637,34 @@ next
   then show ?thesis
     by (smt assms domIff option.collapse rep_abs_ctspf tspfHide_dom tspfSerComp_dom tspf_dom_2tsbdom tspf_least_in_dom tspfcomp2_lubiter tspfcomp_serial_iterconst_cont tspfcomp_serial_iterconst_eq tspfcomp_serial_iterconst_well)    
 qed
+  
+lemma tspfSerComp_str_causal1: assumes "sercomp_well f1 f2"
+                                   and "tsbDom\<cdot>sb = tspfDom\<cdot>f1"
+                                   and "#\<surd>tsb sb < \<infinity>"
+  and f1_str: "\<And> b. tsbDom\<cdot>b = tspfDom\<cdot>f1 \<Longrightarrow> (#\<surd>tsb b) \<noteq> \<infinity>  \<Longrightarrow> (#\<surd>tsb b) < (#\<surd>tsb (f1\<rightleftharpoons>b))"
+shows "(#\<surd>tsb sb) < (#\<surd>tsb ((tspfSerComp f1 f2) \<rightleftharpoons> sb))"  
+proof - 
+  have f2: "tsbDom\<cdot>(f1 \<rightleftharpoons> sb) = tspfDom\<cdot>f2"
+    by (metis assms(1) assms(2) sercomp_well_def tspf_ran_2_tsbdom2)
+  show ?thesis
+    apply(simp add: tspfSerComp_def assms)
+    by (metis assms(1) assms(2) assms(3) f1_str f2 neq_iff not_less tsbleast_tsdom tspfSerComp_tick_well tspf_least_in_dom tspf_less_in_than_out_ticks tspf_sbdomeq_to_domeq)
+qed
+  
+lemma tspfSerComp_str_causal2: assumes "sercomp_well f1 f2"
+                                   and "tsbDom\<cdot>sb = tspfDom\<cdot>f1"
+                                   and "#\<surd>tsb sb < \<infinity>"
+  and f2_str: "\<And> b. tsbDom\<cdot>b = tspfDom\<cdot>f2 \<Longrightarrow> (#\<surd>tsb b) \<noteq> \<infinity>  \<Longrightarrow> (#\<surd>tsb b) < (#\<surd>tsb (f2\<rightleftharpoons>b))"
+shows "(#\<surd>tsb sb) < (#\<surd>tsb ((tspfSerComp f1 f2) \<rightleftharpoons> sb))"  
+proof - 
+  have f2: "tsbDom\<cdot>(f1 \<rightleftharpoons> sb) = tspfDom\<cdot>f2"
+    by (metis assms(1) assms(2) sercomp_well_def tspf_ran_2_tsbdom2)
+  show ?thesis
+    apply(simp add: tspfSerComp_def assms)
+    by (metis assms(1) assms(2) assms(3) f2 f2_str min.absorb2 min_def order.not_eq_order_implies_strict tsbleast_tsdom tspfSerComp_tick_well tspf_least_in_dom tspf_less_in_than_out_ticks tspf_sbdomeq_to_domeq)
+qed
 
-
+  
 section \<open>Feedback\<close>  
   
   
@@ -707,6 +733,6 @@ lemma tspfFeedback_tspfwell:
    apply(simp add: tsbFix_def)
    apply auto[1]
    by(simp add: assms)
- 
+     
 end
   
