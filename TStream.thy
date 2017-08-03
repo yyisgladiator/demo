@@ -3078,85 +3078,52 @@ fixrec tsZip :: "'a tstream \<rightarrow> 'b stream \<rightarrow> ('a \<times> '
 "xs\<noteq>\<epsilon> \<Longrightarrow> 
   tsZip\<cdot>(tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>ts)\<cdot>xs = delayFun\<cdot>(tsZip\<cdot>ts\<cdot>xs)"
 
-declare tsZip.simps [simp del]
-
 lemma tszip_strict [simp]: 
 "tsZip\<cdot>\<bottom>\<cdot>\<epsilon> = \<bottom>"
 "tsZip\<cdot>ts\<cdot>\<epsilon> = \<bottom>"
 "tsZip\<cdot>\<bottom>\<cdot>s = \<bottom>"
-by (fixrec_simp)+
-
-lemma tszip_tslscons_2msg [simp]: "x\<noteq>\<bottom> \<Longrightarrow> ts\<noteq>\<bottom> \<Longrightarrow>               
-  tsZip\<cdot>(tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>t))\<cdot>(tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>t2))\<cdot>ts))\<cdot>(x && xs) 
-                            = tsMLscons\<cdot>(upApply2 Pair\<cdot>(up\<cdot>t)\<cdot>x)\<cdot>(tsZip\<cdot>(tsMLscons\<cdot>(up\<cdot>t2)\<cdot>ts)\<cdot>xs)"
-by (fixrec_simp)
-
-lemma tszip_tslscons_msgtick [simp]: "x\<noteq>\<bottom> \<Longrightarrow>           
-  tsZip\<cdot>(tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>t))\<cdot>(tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>ts))\<cdot>(lscons\<cdot>x\<cdot>xs)
-                            = tsMLscons\<cdot>(upApply2 Pair\<cdot>(up\<cdot>t)\<cdot>x)\<cdot>(delayFun\<cdot>(tsZip\<cdot>ts\<cdot>xs))"
-by (fixrec_simp)
-
-lemma tszip_tslscons_tick [simp]: "xs\<noteq>\<bottom> \<Longrightarrow> 
-  tsZip\<cdot>(tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>ts)\<cdot>xs = delayFun\<cdot>(tsZip\<cdot>ts\<cdot>xs)"
-by (fixrec_simp)
+  by (fixrec_simp)+
 
 lemma tszip_mlscons_2msg:
   "tsZip\<cdot>(tsMLscons\<cdot>(updis t)\<cdot>(tsMLscons\<cdot>(updis u)\<cdot>ts))\<cdot>((updis x) && xs)
                            = tsMLscons\<cdot>(updis (t, x))\<cdot>(tsZip\<cdot>(tsMLscons\<cdot>(updis u)\<cdot>ts)\<cdot>xs)"
-by (metis (no_types, lifting) tsmlscons_bot2 tsmlscons_lscons tszip_strict(3) tszip_tslscons_2msg
-    up_defined upapply2_rep_eq)
+  by (metis (no_types, lifting) tsZip.simps(3) tsmlscons_bot2 tsmlscons_lscons tszip_strict(3)
+      up_defined upapply2_rep_eq)
 
 lemma tszip_mlscons_2msg_bot:
   "tsZip\<cdot>(tsMLscons\<cdot>(updis t)\<cdot>(tsMLscons\<cdot>(updis u)\<cdot>ts))\<cdot>(updis x && \<epsilon>) = \<bottom>"
-by (simp add: tszip_mlscons_2msg)
+  by (simp add: tszip_mlscons_2msg)
 
-lemma tszip_mlscons_msgdelayfun:
+lemma tszip_mlscons_msgdelay:
   "tsZip\<cdot>(tsMLscons\<cdot>(updis t)\<cdot>(delayFun\<cdot>ts))\<cdot>(updis x && xs)
                            = tsMLscons\<cdot>(updis (t, x))\<cdot>(delayFun\<cdot>(tsZip\<cdot>ts\<cdot>xs))"
-by (metis (no_types, lifting) delayfun_tslscons tsmlscons_lscons tszip_tslscons_msgtick 
-    up_defined upapply2_rep_eq)
+  by (simp add: delayfun_tslscons tsmlscons_lscons)
 
 lemma tszip_delayfun: "xs\<noteq>\<epsilon> \<Longrightarrow> tsZip\<cdot>(delayFun\<cdot>ts)\<cdot>xs = delayFun\<cdot>(tsZip\<cdot>ts\<cdot>xs)"
-by (simp add: delayfun_tslscons)
+  by (simp add: delayfun_tslscons)
 
 lemma tszip_mlscons:
   "xs\<noteq>\<epsilon> \<Longrightarrow> tsZip\<cdot>(tsMLscons\<cdot>(updis t)\<cdot>ts)\<cdot>(updis x && xs)
                            = tsMLscons\<cdot>(updis (t, x))\<cdot>(tsZip\<cdot>ts\<cdot>xs)"
-apply (induction ts)
-apply (simp_all)
-apply (simp add: tszip_delayfun tszip_mlscons_msgdelayfun)
-by (simp add: tszip_mlscons_2msg)
+  apply (induction ts)
+  apply (simp_all)
+  apply (simp add: tszip_delayfun tszip_mlscons_msgdelay)
+  by (simp add: tszip_mlscons_2msg)
+
+(* assumption #xs=\<infinity> *)
 
 lemma tszip_nbot [simp]: "ts\<noteq>\<bottom> \<Longrightarrow> #xs=\<infinity> \<Longrightarrow> (tsZip\<cdot>ts\<cdot>xs) \<noteq> \<bottom>"
-apply (induction ts arbitrary: xs)
-apply (simp_all)
-apply (metis Inf'_neq_0 delayfun_nbot slen_empty_eq tszip_delayfun)
-by (metis Inf'_neq_0 inf_scase lscons_conv strict_slen tsmlscons_nbot tszip_mlscons up_defined)
-
-lemma tszip_tstickcount [simp]: "#xs=\<infinity> \<Longrightarrow> #\<surd> tsZip\<cdot>ts\<cdot>xs  = #\<surd> ts"
-apply (induction ts arbitrary: xs)
-apply (simp_all)
-apply (metis Inf'_neq_0 delayFun_dropFirst delayfun_nbot slen_empty_eq tsdropfirst_len
-       tszip_delayfun)
-by (metis Inf'_neq_0 inf_scase lscons_conv slen_empty_eq tstickcount_mlscons tszip_mlscons)
-
-lemma tszip_tstickcount_leq_h:
-  "#\<surd> tsMLscons\<cdot>(updis (t, x))\<cdot>(delayFun\<cdot>\<bottom>) \<le> #\<surd> tsMLscons\<cdot>(updis t)\<cdot>(delayFun\<cdot>ts)"
-by (simp add: tstickcount_mlscons delayfun_insert)
-
-lemma tszip_tstickcount_leq [simp]: "#\<surd> tsZip\<cdot>ts\<cdot>xs \<le> #\<surd> ts"
   apply (induction ts arbitrary: xs)
   apply (simp_all)
-  apply (metis (no_types, lifting) delayFun_dropFirst delayfun_nbot less_lnsuc lnsuc_lnle_emb 
-         trans_lnle tszip_strict(2) tsdropfirst_len tszip_delayfun)
-  apply (rule_tac x=xs in scases, simp_all)
-  apply (rule_tac ts=ts in tscases, simp_all)
-  apply (case_tac "s\<noteq>\<epsilon>", auto)
-  apply (metis lscons_conv tstickcount_mlscons tszip_mlscons)
-  apply (simp add: tszip_tstickcount_leq_h sup'_def tszip_mlscons_msgdelayfun)
-  by (metis lscons_conv tstickcount_mlscons tszip_mlscons_2msg)
+  apply (metis Inf'_neq_0 delayfun_nbot slen_empty_eq tszip_delayfun)
+  by (metis Inf'_neq_0 inf_scase lscons_conv strict_slen tsmlscons_nbot tszip_mlscons up_defined)
 
-
+lemma tszip_tstickcount [simp]: "#xs=\<infinity> \<Longrightarrow> #\<surd> tsZip\<cdot>ts\<cdot>xs  = #\<surd> ts"
+  apply (induction ts arbitrary: xs)
+  apply (simp_all)
+  apply (metis Inf'_neq_0 delayFun_dropFirst delayfun_nbot slen_empty_eq tsdropfirst_len
+         tszip_delayfun)
+  by (metis Inf'_neq_0 inf_scase lscons_conv slen_empty_eq tstickcount_mlscons tszip_mlscons)
 
 lemma tszip_tsabs: "#xs=\<infinity> \<Longrightarrow> tsAbs\<cdot>(tsZip\<cdot>ts\<cdot>xs) = szip\<cdot>(tsAbs\<cdot>ts)\<cdot>xs"
   apply (induction ts arbitrary: xs)
@@ -3164,7 +3131,6 @@ lemma tszip_tsabs: "#xs=\<infinity> \<Longrightarrow> tsAbs\<cdot>(tsZip\<cdot>t
   apply (metis Inf'_neq_0 strict_slen tsabs_delayfun tszip_delayfun)
   by (metis (no_types, lifting) Inf'_neq_0 inf_scase lscons_conv slen_empty_eq
           szip_scons tsabs_mlscons tszip_mlscons tszip_nbot)
-
 
 lemma tszip_tsabs_slen [simp]: "#xs=\<infinity> \<Longrightarrow> #(tsAbs\<cdot>(tsZip\<cdot>ts\<cdot>xs)) = #(tsAbs\<cdot>ts)"
   apply (induction ts arbitrary: xs)
@@ -3175,18 +3141,46 @@ lemma tszip_tsabs_slen [simp]: "#xs=\<infinity> \<Longrightarrow> #(tsAbs\<cdot>
       tszip_mlscons tszip_nbot)
 
 (* ToDo: lemmata for tszip *)
-
-lemma tszip_tsabs_slen_leq [simp]: "#(tsAbs\<cdot>(tsZip\<cdot>ts\<cdot>xs)) \<le> #(tsAbs\<cdot>ts)"
-oops
-
 lemma tszip_tsdom: "#xs=\<infinity> \<Longrightarrow> tsDom\<cdot>(tsZip\<cdot>ts\<cdot>xs) = sdom\<cdot>(szip\<cdot>(tsAbs\<cdot>ts)\<cdot>xs)"
-oops
+  oops
 
 lemma tszip_tsprojfst_rev: "#xs=\<infinity> \<Longrightarrow> tsProjFst\<cdot>(tsZip\<cdot>ts\<cdot>xs) = ts"
-oops
+  oops
 
 lemma tszip_tsprojsnd_rev: "#(tsAbs\<cdot>ts)=\<infinity> \<Longrightarrow> #xs=\<infinity> \<Longrightarrow> tsAbs\<cdot>(tsProjSnd\<cdot>(tsZip\<cdot>ts\<cdot>xs)) = xs"
-oops
+  oops
+
+(* without assumption #xs=\<infinity> *)
+
+lemma tszip_nbot: "#(Rep_tstream ts) \<le> #xs \<Longrightarrow> tsZip\<cdot>ts\<cdot>xs \<noteq> \<bottom>"
+  oops
+
+lemma tszip_tstickcount_leq_h:
+  "#\<surd> tsMLscons\<cdot>(updis (t, x))\<cdot>(delayFun\<cdot>\<bottom>) \<le> #\<surd> tsMLscons\<cdot>(updis t)\<cdot>(delayFun\<cdot>ts)"
+  by (simp add: tstickcount_mlscons delayfun_insert)
+
+lemma tszip_tstickcount_leq [simp]: "#\<surd> tsZip\<cdot>ts\<cdot>xs \<le> #\<surd> ts"
+  apply (induction ts arbitrary: xs)
+  apply (simp_all)
+  apply (metis (no_types, lifting) delayFun_dropFirst delayfun_nbot less_lnsuc lnsuc_lnle_emb 
+         trans_lnle tszip_strict(2) tsdropfirst_len tszip_delayfun)
+  apply (rule_tac x=xs in scases, simp_all)
+  apply (rule_tac ts=ts in tscases, simp_all)
+  apply (case_tac "s\<noteq>\<epsilon>", auto)
+  apply (metis lscons_conv tstickcount_mlscons tszip_mlscons)
+  apply (simp add: tszip_tstickcount_leq_h sup'_def tszip_mlscons_msgdelay)
+  by (metis lscons_conv tstickcount_mlscons tszip_mlscons_2msg)
+
+(* ToDo: lemmata for tszip *)
+
+lemma tszip_tsabs2: "#(Rep_tstream ts) \<le> #xs \<Longrightarrow> tsAbs\<cdot>(tsZip\<cdot>ts\<cdot>xs) = szip\<cdot>(tsAbs\<cdot>ts)\<cdot>xs"
+  oops
+
+lemma tszip_tsabs_slen_leq [simp]: "#(tsAbs\<cdot>(tsZip\<cdot>ts\<cdot>xs)) \<le> #(tsAbs\<cdot>ts)"
+  oops
+
+lemma tszip_tsdom: "tsDom\<cdot>(tsZip\<cdot>ts\<cdot>xs) \<subseteq> sdom\<cdot>(szip\<cdot>(tsAbs\<cdot>ts)\<cdot>xs)"
+  oops
 
 (* ----------------------------------------------------------------------- *)
 subsection {* tsRemDups *}
@@ -3203,57 +3197,43 @@ fixrec tsRemDups_h :: "'a tstream \<rightarrow> 'a discr option \<rightarrow> 'a
 "ts\<noteq>\<bottom> \<Longrightarrow> tsRemDups_h\<cdot>(tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>t))\<cdot>ts)\<cdot>(Some a) = 
   (if t=a then (tsRemDups_h\<cdot>ts\<cdot>(Some t)) else tsMLscons\<cdot>(up\<cdot>t)\<cdot>(tsRemDups_h\<cdot>ts\<cdot>(Some t)))"   
 
-declare tsRemDups_h.simps [simp del]
-
 definition tsRemDups :: "'a tstream \<rightarrow> 'a tstream" where
 "tsRemDups \<equiv> \<Lambda> ts. tsRemDups_h\<cdot>ts\<cdot>None"
 
 lemma tsremdups_insert: "tsRemDups\<cdot>ts = tsRemDups_h\<cdot>ts\<cdot>None"
-by (simp add: tsRemDups_def)
+  by (simp add: tsRemDups_def)
 
 lemma tsremdups_h_strict [simp]: 
 "tsRemDups_h\<cdot>\<bottom>\<cdot>a = \<bottom>"
-by (fixrec_simp)
-
-lemma tsremdups_h_tslscons_fst [simp]: 
-  "ts\<noteq>\<bottom> \<Longrightarrow> tsRemDups_h\<cdot>(tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>t))\<cdot>ts)\<cdot>None = tsMLscons\<cdot>(up\<cdot>t)\<cdot>(tsRemDups_h\<cdot>ts\<cdot>(Some t))"
-by (fixrec_simp)
-
-lemma tsremdups_h_tslscons_dup [simp]: 
-  "ts\<noteq>\<bottom> \<Longrightarrow> tsRemDups_h\<cdot>(tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>t))\<cdot>ts)\<cdot>(Some a) 
-          = (if t=a then (tsRemDups_h\<cdot>ts\<cdot>(Some t)) else tsMLscons\<cdot>(up\<cdot>t)\<cdot>(tsRemDups_h\<cdot>ts\<cdot>(Some t)))"
-by (fixrec_simp)
-
-lemma tsremdups_h_tslscons_tick [simp]: 
-  "tsRemDups_h\<cdot>(tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>ts)\<cdot>option = delayFun\<cdot>(tsRemDups_h\<cdot>ts\<cdot>option)"
-by (fixrec_simp)
+  by (fixrec_simp)
 
 (* handle first message *)
 lemma tsremdups_h_mlscons:
 "ts\<noteq>\<bottom> \<Longrightarrow> tsRemDups_h\<cdot>(tsMLscons\<cdot>(updis t)\<cdot>ts)\<cdot>None = tsMLscons\<cdot>(updis t)\<cdot>(tsRemDups_h\<cdot>ts\<cdot>(Some (Discr t)))"
-by (simp add: tsmlscons_lscons)
+  by (simp add: tsmlscons_lscons)
 
 (* handle duplicate message *)
 lemma tsremdups_h_mlscons_dup: 
   "ts\<noteq>\<bottom> \<Longrightarrow> tsRemDups_h\<cdot>(tsMLscons\<cdot>(updis t)\<cdot>ts)\<cdot>(Some (Discr t)) = tsRemDups_h\<cdot>ts\<cdot>(Some (Discr t))"
-by (simp add: tsmlscons_lscons)
+  by (simp add: tsmlscons_lscons)
 
 (* handle message *)
 lemma tsremdups_h_mlscons_ndup:
   "ts\<noteq>\<bottom> \<Longrightarrow> t\<noteq>a \<Longrightarrow> tsRemDups_h\<cdot>(tsMLscons\<cdot>(updis t)\<cdot>ts)\<cdot>(Some (Discr a)) 
                                = tsMLscons\<cdot>(updis t)\<cdot>(tsRemDups_h\<cdot>ts\<cdot>(Some (Discr t)))"
-by (simp add: tsmlscons_lscons)
+  by (simp add: tsmlscons_lscons)
 
+(* ignore ticks *)
 lemma tsremdups_h_delayfun: "tsRemDups_h\<cdot>(delayFun\<cdot>ts)\<cdot>a = delayFun\<cdot>(tsRemDups_h\<cdot>ts\<cdot>a)"
-by (simp add: delayfun_tslscons)
+  by (simp add: delayfun_tslscons)
 
 lemma tsremdups_h_nbot [simp]: "ts\<noteq>\<bottom> \<Longrightarrow> tsRemDups_h\<cdot>ts\<cdot>(Some (Discr a)) \<noteq> \<bottom>"
-apply (induction ts arbitrary: a)
-apply (simp_all)
-apply (simp add: tsremdups_h_delayfun)
-apply (case_tac "t\<noteq>a", simp_all)
-apply (simp add: tsremdups_h_mlscons_ndup)
-by (simp add: tsremdups_h_mlscons_dup)
+  apply (induction ts arbitrary: a)
+  apply (simp_all)
+  apply (simp add: tsremdups_h_delayfun)
+  apply (case_tac "t\<noteq>a", simp_all)
+  apply (simp add: tsremdups_h_mlscons_ndup)
+  by (simp add: tsremdups_h_mlscons_dup)
 
 lemma tsremdups_h_nbot2 [simp]: "ts\<noteq>\<bottom> \<Longrightarrow> tsRemDups_h\<cdot>ts\<cdot>None \<noteq> \<bottom>"
   apply (induction ts)
@@ -3265,19 +3245,19 @@ lemma tsremdups_nbot [simp]: "ts\<noteq>\<bottom> \<Longrightarrow> tsRemDups\<c
  by (simp add: tsRemDups_def)
 
 lemma tsremdups_h_tstickcount: "#\<surd>(tsRemDups_h\<cdot>ts\<cdot>(Some (Discr t))) = #\<surd>(tsRemDups_h\<cdot>ts\<cdot>None)"
-apply (induction ts arbitrary: t)
-apply (simp_all)
-apply (metis delayFun_dropFirst delayfun_nbot tsdropfirst_len tsremdups_h_delayfun)
-apply (case_tac "t\<noteq>ta", auto)
-apply (simp add: tsremdups_h_mlscons tsremdups_h_mlscons_ndup)
-by (simp add: tsremdups_h_mlscons tsremdups_h_mlscons_dup tstickcount_mlscons)
+  apply (induction ts arbitrary: t)
+  apply (simp_all)
+  apply (metis delayFun_dropFirst delayfun_nbot tsdropfirst_len tsremdups_h_delayfun)
+  apply (case_tac "t\<noteq>ta", auto)
+  apply (simp add: tsremdups_h_mlscons tsremdups_h_mlscons_ndup)
+  by (simp add: tsremdups_h_mlscons tsremdups_h_mlscons_dup tstickcount_mlscons)
 
 lemma tsremdups_tstickcount [simp]: "#\<surd>(tsRemDups\<cdot>ts) = #\<surd>ts"
-apply (simp add: tsremdups_insert)
-apply (induction ts)
-apply (simp_all)
-apply (metis delayFun_dropFirst delayfun_nbot tsdropfirst_len tsremdups_h_delayfun)
-by (simp add: tsremdups_h_mlscons tstickcount_mlscons tsremdups_h_tstickcount)
+  apply (simp add: tsremdups_insert)
+  apply (induction ts)
+  apply (simp_all)
+  apply (metis delayFun_dropFirst delayfun_nbot tsdropfirst_len tsremdups_h_delayfun)
+  by (simp add: tsremdups_h_mlscons tstickcount_mlscons tsremdups_h_tstickcount)
 
 lemma tsremdups_h_tsabs: 
   "updis t && tsAbs\<cdot>(tsRemDups_h\<cdot>ts\<cdot>(Some (Discr t))) = srcdups\<cdot>(updis t && tsAbs\<cdot>ts)"
@@ -3331,27 +3311,6 @@ lemma tsremdups_tsdom_sup: "tsDom\<cdot>ts \<subseteq> tsDom\<cdot>(tsRemDups\<c
 
 lemma tsremdups_h_tsdom: "tsDom\<cdot>(tsRemDups\<cdot>ts) = tsDom\<cdot>ts"
   by (simp add: eq_iff tsremdups_tsdom_sub tsremdups_tsdom_sup)
-
-(*
-(* handle first message *)
-lemma tsremdups_h_tslscons_fst2:
-"ts\<noteq>\<bottom> \<and> t\<noteq>\<surd> \<Longrightarrow> tsRemDups_h\<cdot>(tsLscons\<cdot>(updis t)\<cdot>ts)\<cdot>None = tsLscons\<cdot>(updis t)\<cdot>(tsRemDups_h\<cdot>ts\<cdot>(Some (Discr (\<M>\<inverse>t))))"
-  by (insert tsremdups_h_tslscons_fst [of ts "Discr \<M>\<inverse> t"], simp)
-
-
-(* handle duplicate message *)
-lemma tsremdups_h_tslscons_dup2: 
-  "ts\<noteq>\<bottom> \<and> t\<noteq>\<surd> \<Longrightarrow> tsRemDups_h\<cdot>(tsLscons\<cdot>(updis t)\<cdot>ts)\<cdot>(Some (Discr (\<M>\<inverse> t))) = tsRemDups_h\<cdot>ts\<cdot>(Some (Discr (\<M>\<inverse> t)))"
-  by (insert tsremdups_h_tslscons_dup [of ts "Discr \<M>\<inverse> t"], simp)
-
-(* handle message *)
-lemma tsremdups_h_lscons_ndup2:
-  "ts\<noteq>\<bottom> \<Longrightarrow> t\<noteq>a \<Longrightarrow> t\<noteq>\<surd> \<Longrightarrow> a\<noteq>\<surd> \<Longrightarrow> tsRemDups_h\<cdot>(tsLscons\<cdot>(updis t)\<cdot>ts)\<cdot>(Some (Discr (\<M>\<inverse>a))) 
-                               = tsLscons\<cdot>(updis t)\<cdot>(tsRemDups_h\<cdot>ts\<cdot>(Some (Discr (\<M>\<inverse>t))))"
-  apply (insert tsremdups_h_tslscons_dup[of ts "Discr \<M>\<inverse> t" "Discr (\<M>\<inverse>a)"], auto)
-  by (metis event.exhaust event.simps(4))
-*)
-
 
 (************************************************)
   subsection \<open>list2ts\<close>    
