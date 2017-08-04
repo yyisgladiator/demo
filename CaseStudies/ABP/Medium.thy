@@ -20,13 +20,12 @@ section {* definition *}
 definition tsMed :: "'a tstream \<rightarrow> bool stream \<rightarrow> 'a tstream" where
 "tsMed \<equiv> \<Lambda> msg ora. tsProjFst\<cdot>(tsFilter {x. snd x}\<cdot>(tsZip\<cdot>msg\<cdot>ora))"
 
-definition tsMeds :: "('a tstream \<rightarrow> 'a tstream) set" where
-"tsMeds \<equiv> { (\<Lambda> ts. tsMed\<cdot>ts\<cdot>ora) | ora. #({True} \<ominus> ora)=\<infinity> }"
+definition tsMedium :: "('a tstream \<rightarrow> 'a tstream) set" where
+"tsMedium \<equiv> { (\<Lambda> ts. tsMed\<cdot>ts\<cdot>ora) | ora. #({True} \<ominus> ora)=\<infinity> }"
 
 (* ----------------------------------------------------------------------- *)
 section {* basic properties *}
 (* ----------------------------------------------------------------------- *)
-
   
 fixrec newOracle :: "bool stream \<rightarrow> bool stream \<rightarrow> bool stream" where
 "newOracle\<cdot>\<bottom>\<cdot>bs = \<bottom> " |
@@ -36,11 +35,12 @@ fixrec newOracle :: "bool stream \<rightarrow> bool stream \<rightarrow> bool st
   (if(a = Discr False) then (updis False)&&newOracle\<cdot>as\<cdot>((up\<cdot>b)&&bs)
   
   (* First oracle is transmitting *)
-   else  up\<cdot>b && newOracle\<cdot>as\<cdot>bs)"
+  else  up\<cdot>b && newOracle\<cdot>as\<cdot>bs)"
 
 (* Testing that it works *)
-lemma "newOracle\<cdot>(<[True, True, False, True]>)\<cdot>(<[True, False, True]>) = <[True, False, False, True]>"
-apply (simp only: list2s_0 list2s_Suc)
+lemma 
+  "newOracle\<cdot>(<[True, True, False, True]>)\<cdot>(<[True, False, True]>) = <[True, False, False, True]>"
+  apply (simp only: list2s_0 list2s_Suc)
   by fixrec_simp
 
 text {* Assumption for medium lemmata: #({True} \<ominus> ora)=\<infinity> *}
@@ -68,8 +68,6 @@ lemma tsmed_mlscons_false: "msg\<noteq>\<bottom> \<Longrightarrow> #ora=\<infini
 
 lemma tsmed_delayfun: "ora\<noteq>\<epsilon> \<Longrightarrow> tsMed\<cdot>(delayFun\<cdot>msg)\<cdot>ora = delayFun\<cdot>(tsMed\<cdot>msg\<cdot>ora)"
   by (simp add: tsMed_def tszip_delayfun tsfilter_delayfun tsprojfst_delayfun)
-
-(* ToDo: basic properties lemmata for medium *)
 
 lemma tsmed_nbot [simp]: "msg\<noteq>\<bottom> \<Longrightarrow> #ora=\<infinity> \<Longrightarrow> tsMed\<cdot>msg\<cdot>ora \<noteq> \<bottom>"
  by (simp add: tsmed_insert)
@@ -197,19 +195,17 @@ lemma tsmed2infmed: assumes "#({True} \<ominus> ora1)=\<infinity>" and "#({True}
   obtains ora3 where "tsMed\<cdot>(tsMed\<cdot>msg\<cdot>ora1)\<cdot>ora2 = tsMed\<cdot>msg\<cdot>ora3" and "#({True} \<ominus> ora3)=\<infinity>"
 oops    
     
-  
-  
+(* ----------------------------------------------------------------------- *)
+section {* tsMedium lemmata *}
+(* ----------------------------------------------------------------------- *)  
   
 section {* tsMeds lemma *}
 
-lemma "tsMeds \<noteq>{}"
+lemma "tsMedium \<noteq> {}"
   oops
     
-lemma assumes "med\<in>tsMeds"
-  shows "#\<surd>ts = #\<surd>med\<cdot>ts"
+lemma assumes "med\<in>tsMedium"
+  shows "#\<surd>msg = #\<surd>med\<cdot>msg"
   oops
-    
-
-  
   
 end

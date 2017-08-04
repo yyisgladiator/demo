@@ -282,38 +282,25 @@ text {*
    p2 = oracle stream
 *}
 
-lemma tsmed_tsabs_slen_inf [simp]: assumes "#({True} \<ominus> ora)=\<infinity>" and "#(tsAbs\<cdot>msg)=\<infinity>" 
-  shows "#(tsAbs\<cdot>(tsMed\<cdot>msg\<cdot>ora)) = \<infinity>"
-sorry
-
 lemma tsaltbitpro_inp2out_sndmed:
   assumes send_def: "send \<in> tsSender"
-    and ora_def: "#({True} \<ominus> p2) = \<infinity>"
-    and out_def: "ds = send\<cdot>i\<cdot>as"
-    and acks2med_def: "ar = tsProjSnd\<cdot>ds"
-    and acks2snd_def: "as = tsMed\<cdot>ar\<cdot>p2"
-  shows "tsAbs\<cdot>(tsRecSnd\<cdot>ds) = tsAbs\<cdot>i"
 (*
   tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(send\<cdot>i\<cdot>as))) \<sqsubseteq> tsAbs\<cdot>i 
   tsAbs\<cdot>(tsRemDups\<cdot>(tsProjSnd\<cdot>(tsRemDups\<cdot>(send\<cdot>i\<cdot>as)))) = tsAbs\<cdot>(tsProjSnd\<cdot>(tsRemDups\<cdot>(send\<cdot>i\<cdot>as)))
   #(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(send\<cdot>i\<cdot>as)))) = min (#(tsAbs\<cdot>i)) (lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>as))))
   (#(tsAbs\<cdot>i) > #(tsAbs\<cdot>(tsRemDups\<cdot>as)) \<longrightarrow> #(tsAbs\<cdot>(send\<cdot>i\<cdot>as)) = \<infinity>)
-
-  lemma min_rek: assumes  "z = min x (lnsuc\<cdot>z)" shows "z = x"
 *)
+    and ora_def: "#({True} \<ominus> p2) = \<infinity>"
+    and out_def: "ds = send\<cdot>i\<cdot>as"
+    and acks2med_def: "ar = tsProjSnd\<cdot>ds"
+    and acks2snd_def: "as = tsMed\<cdot>ar\<cdot>p2"
+  shows "tsAbs\<cdot>(tsRecSnd\<cdot>ds) = tsAbs\<cdot>i"
 proof -
-  have "#(tsAbs\<cdot>ds) = \<infinity> \<Longrightarrow> #(tsAbs\<cdot>as) = \<infinity>"
-    using acks2med_def acks2snd_def ora_def out_def by fastforce
-  have "#(tsAbs\<cdot>(send\<cdot>i\<cdot>as)) = \<infinity> \<Longrightarrow> #(tsAbs\<cdot>(tsProjSnd\<cdot>(tsRemDups\<cdot>(send\<cdot>i\<cdot>as)))) = \<infinity>"
-    sorry
-  hence "(#(tsAbs\<cdot>i) > #(tsAbs\<cdot>(tsRemDups\<cdot>as)) \<longrightarrow> #(tsAbs\<cdot>(send\<cdot>i\<cdot>as)) = \<infinity>) 
-          \<Longrightarrow> #(tsAbs\<cdot>i) \<le> lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>as)))"
-    by (metis (no_types, hide_lams) dual_order.trans inf_ub leI less_lnsuc min_def 
-        out_def send_def set2tssnd_ack2trans tsprojfst_tsabs_slen tsprojsnd_tsabs_slen)
-  hence "#(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(send\<cdot>i\<cdot>as)))) = #(tsAbs\<cdot>i)"
-    by (metis min_def send_def set2tssnd_ack2trans set2tssnd_nack2inftrans)
+  have shd: "shd (tsAbs\<cdot>(tsRecSnd\<cdot>ds)) = shd (tsAbs\<cdot>i)"
+    by (metis below_shd bot_is_0 eq_slen_eq_and_less lnat.con_rews min_def out_def send_def 
+        set2tssnd_ack2trans set2tssnd_prefix_inp strict_slen tsrecsnd_insert)
   thus "tsAbs\<cdot>(tsRecSnd\<cdot>ds) = tsAbs\<cdot>i"
-    by (simp add: eq_slen_eq_and_less out_def send_def set2tssnd_prefix_inp tsrecsnd_insert)
+    sorry
 oops
     
 (* ----------------------------------------------------------------------- *)
