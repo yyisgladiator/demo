@@ -274,6 +274,16 @@ qed
 subsection {* sender, receiver and second medium composition *}
 (* ----------------------------------------------------------------------- *)
 
+lemma tsaltbitpro_inp2out_sndmed_shd:
+  assumes send_def: "send \<in> tsSender"
+    and ora_def: "#({True} \<ominus> p2) = \<infinity>"
+    and out_def: "ds = send\<cdot>i\<cdot>as"
+    and acks2med_def: "ar = tsProjSnd\<cdot>ds"
+    and acks2snd_def: "as = tsMed\<cdot>ar\<cdot>p2"
+  shows "shd (tsAbs\<cdot>(tsRecSnd\<cdot>ds)) = shd (tsAbs\<cdot>i)"
+  by (metis below_shd bot_is_0 eq_slen_eq_and_less lnat.con_rews min_def out_def send_def 
+      set2tssnd_ack2trans set2tssnd_prefix_inp strict_slen tsrecsnd_insert)
+
 text {*
    i = input stream
    as = acks stream (in sender)
@@ -281,6 +291,49 @@ text {*
    ds = output stream (from sender)
    p2 = oracle stream
 *}
+
+lemma tsaltbitpro_inp2out_nmed2:
+  assumes send_def: "send \<in> tsSender"
+    and out_def: "ds = send\<cdot>i\<cdot>as"
+    and acks_def: "as = tsProjSnd\<cdot>ds"
+  shows "tsAbs\<cdot>(tsRecSnd\<cdot>ds) = tsAbs\<cdot>i"
+proof -
+  have h1: "#(tsAbs\<cdot>(tsRemDups\<cdot>as)) \<le> #(tsAbs\<cdot>(tsRecSnd\<cdot>ds))"
+    by (metis acks_def eq_iff out_def send_def tsprojfst_tsabs_slen tsprojsnd_tsabs_slen 
+        tsrecsnd_insert tssnd_tsprojsnd_tsremdups)
+  hence h2: "#(tsAbs\<cdot>(tsRemDups\<cdot>as)) \<le> #(tsAbs\<cdot>i)"
+    by (metis le_less less_imp_le min_less_iff_conj min_rek out_def send_def set2tssnd_ack2trans
+        tsrecsnd_insert)
+  have h3: "#(tsAbs\<cdot>i) < lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>as))) 
+              \<or> #(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(send\<cdot>i\<cdot>as)))) = lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>as)))"
+    by (metis le_less_linear min_absorb2 send_def set2tssnd_ack2trans)
+  hence h4: "#(tsAbs\<cdot>i) \<le> #(tsAbs\<cdot>(tsRemDups\<cdot>as)) \<or> (#(tsAbs\<cdot>(tsRemDups\<cdot>as)) = \<infinity> \<or> #(tsAbs\<cdot>as) < \<infinity>)"
+    by (metis acks_def eq_iff min_rek out_def send_def set2tssnd_ack2trans tsprojfst_tsabs_slen 
+        tsprojsnd_tsabs_slen tssnd_tsprojsnd_tsremdups)
+  hence h5: "#(tsAbs\<cdot>i) \<le> #(tsAbs\<cdot>(tsRemDups\<cdot>as)) \<or> #(tsAbs\<cdot>(tsRemDups\<cdot>as)) = \<infinity>"
+    by (metis acks_def leI neq_iff out_def send_def set2tssnd_nack2inftrans tsprojsnd_tsabs_slen)
+  hence h6: "#(tsAbs\<cdot>(tsRemDups\<cdot>as)) \<ge> #(tsAbs\<cdot>i)"
+    by auto
+  show "tsAbs\<cdot>(tsRecSnd\<cdot>ds) = tsAbs\<cdot>i"
+    by (metis dual_order.antisym eq_slen_eq_and_less h2 h6 less_lnsuc min.absorb1 out_def send_def
+        set2tssnd_ack2trans set2tssnd_prefix_inp tsrecsnd_insert)
+qed
+
+lemma tsaltbitpro_inp2out_sndmed_assm:
+  assumes send_def: "send \<in> tsSender"
+    and ora_def: "#({True} \<ominus> p2) = \<infinity>"
+    and out_def: "ds = send\<cdot>i\<cdot>as"
+    and acks2med_def: "ar = tsProjSnd\<cdot>ds"
+    and acks2snd_def: "as = tsMed\<cdot>ar\<cdot>p2"
+    and "#(tsAbs\<cdot>(send\<cdot>i\<cdot>as)) = \<infinity>"
+  shows "#(tsAbs\<cdot>(tsRemDups\<cdot>as)) = \<infinity> \<or> #(tsAbs\<cdot>as) < \<infinity>"
+sorry
+
+lemma tssnd_tsprojsnd_tsremdups_med: 
+  assumes send_def: "send \<in> tsSender"
+    and ora_def: "#({True} \<ominus> p2) = \<infinity>"
+  shows "tsAbs\<cdot>(tsRemDups\<cdot>(tsProjSnd\<cdot>(tsMed\<cdot>(send\<cdot>i\<cdot>as)\<cdot>p2))) = tsAbs\<cdot>(tsProjSnd\<cdot>(tsRemDups\<cdot>(tsMed\<cdot>(send\<cdot>i\<cdot>as)\<cdot>p2)))"
+sorry
 
 lemma tsaltbitpro_inp2out_sndmed:
   assumes send_def: "send \<in> tsSender"
@@ -296,11 +349,34 @@ lemma tsaltbitpro_inp2out_sndmed:
     and acks2snd_def: "as = tsMed\<cdot>ar\<cdot>p2"
   shows "tsAbs\<cdot>(tsRecSnd\<cdot>ds) = tsAbs\<cdot>i"
 proof -
-  have shd: "shd (tsAbs\<cdot>(tsRecSnd\<cdot>ds)) = shd (tsAbs\<cdot>i)"
-    by (metis below_shd bot_is_0 eq_slen_eq_and_less lnat.con_rews min_def out_def send_def 
-        set2tssnd_ack2trans set2tssnd_prefix_inp strict_slen tsrecsnd_insert)
-  thus "tsAbs\<cdot>(tsRecSnd\<cdot>ds) = tsAbs\<cdot>i"
+  have ora_inf: "#p2 = \<infinity>"
+    using ora_def sfilterl4 by auto
+  hence tsmed_tsprojsnd: "tsMed\<cdot>(tsProjSnd\<cdot>ds)\<cdot>p2 = tsProjSnd\<cdot>(tsMed\<cdot>ds\<cdot>p2)"
+    by (simp add: tsprojsnd_insert tsmed_map)
+  have h1: "#(tsAbs\<cdot>(tsRemDups\<cdot>as)) \<le> #(tsAbs\<cdot>(tsRecSnd\<cdot>ds))"
+    apply (simp add: acks2med_def acks2snd_def tsmed_tsprojsnd tsrecsnd_insert)
+    apply (subst out_def)
+    apply (subst tssnd_tsprojsnd_tsremdups_med)
+    apply (simp_all add: send_def ora_def)
+    apply (subst out_def)
     sorry
+  hence h2: "#(tsAbs\<cdot>(tsRemDups\<cdot>as)) \<le> #(tsAbs\<cdot>i)"
+    by (metis le_less less_imp_le min_less_iff_conj min_rek out_def send_def set2tssnd_ack2trans
+        tsrecsnd_insert)
+  
+  have h3: "#(tsAbs\<cdot>i) < lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>as))) 
+              \<or> #(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(send\<cdot>i\<cdot>as)))) = lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>as)))"
+    by (metis le_less_linear min_absorb2 send_def set2tssnd_ack2trans)
+  hence h4: "#(tsAbs\<cdot>i) \<le> #(tsAbs\<cdot>(tsRemDups\<cdot>as)) \<or> (#(tsAbs\<cdot>(tsRemDups\<cdot>as)) = \<infinity> \<or> #(tsAbs\<cdot>as) < \<infinity>)"
+    by (metis acks2med_def acks2snd_def leI ora_def out_def send_def set2tssnd_nack2inftrans 
+        tsaltbitpro_inp2out_sndmed_assm)
+  hence h5: "#(tsAbs\<cdot>i) \<le> #(tsAbs\<cdot>(tsRemDups\<cdot>as)) \<or> #(tsAbs\<cdot>(tsRemDups\<cdot>as)) = \<infinity>"
+    sorry
+  hence h6: "#(tsAbs\<cdot>(tsRemDups\<cdot>as)) \<ge> #(tsAbs\<cdot>i)"
+    by auto
+  show "tsAbs\<cdot>(tsRecSnd\<cdot>ds) = tsAbs\<cdot>i"
+    by (metis dual_order.antisym eq_slen_eq_and_less h2 h6 less_lnsuc min.absorb1 out_def send_def
+        set2tssnd_ack2trans set2tssnd_prefix_inp tsrecsnd_insert)
 oops
     
 (* ----------------------------------------------------------------------- *)
