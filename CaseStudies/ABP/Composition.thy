@@ -74,113 +74,90 @@ lemma [simp]:"shd (srcdups\<cdot>(\<up>a\<bullet>s)) = a"
   by(subst srcdups_def [THEN fix_eq2], auto)
 
 lemma srcdups2srcdups: "srcdups\<cdot>(srcdups\<cdot>s) = srcdups\<cdot>s"
-  apply(induction s,auto)
-proof -
-  fix u :: "'a discr\<^sub>\<bottom>" and s :: "'a stream" 
-  assume a1:"u\<noteq>\<bottom>"
-  assume a2:"srcdups\<cdot>(srcdups\<cdot>s) = srcdups\<cdot>s"
-  have f1:"u=updis (shd s) \<Longrightarrow> s\<noteq>\<epsilon>\<Longrightarrow> srcdups\<cdot>(u && s) = srcdups\<cdot>s"
-    apply(simp add: lscons_conv)
+proof(induction rule: ind [of _ s])
+  case 1
+  then show ?case 
+    by simp
+next
+  case 2
+  then show ?case 
+    by simp
+next
+  case (3 a s)
+  have f1:"a = shd s \<Longrightarrow> s\<noteq>\<epsilon>\<Longrightarrow> srcdups\<cdot>(\<up>a \<bullet> s) = srcdups\<cdot>s"
     using srcdups_eq[of "shd s" "srt\<cdot>s"] surj_scons[of s] by auto
-  have f2:"u=updis (shd s) \<Longrightarrow> s\<noteq>\<epsilon> \<Longrightarrow> srcdups\<cdot>(srcdups\<cdot>(u && s)) = srcdups\<cdot>(u && s)"
-    using f1 a2 by auto
-  have "(u && s) = \<up>(THE a. updis a = u) \<bullet> s"
-    by (metis a1 lscons_conv shd1 shd_updis updis_exists)
-  moreover have"u\<noteq> updis (shd s) \<Longrightarrow> srcdups\<cdot>(u && s) = \<up>(THE a. updis a = u)\<bullet>srcdups\<cdot>s"
-    by (metis (no_types, lifting) calculation lshd_updis srcdups_neq 
-        stream.sel_rews(4) strict_srcdups surj_scons tsabs_bot tsremdups_h_strict tsremdups_h_tsabs)  
-  ultimately have f3:"u\<noteq> updis (shd s) \<Longrightarrow>srcdups\<cdot>(srcdups\<cdot>(u && s)) = srcdups\<cdot>(u && s)"
-    using surj_scons[of s] srcdups_ex[of "(THE a. updis a = u)" "srcdups\<cdot>s"] apply simp_all
+  have f2:"a=shd s \<Longrightarrow> s\<noteq>\<epsilon> \<Longrightarrow> srcdups\<cdot>(srcdups\<cdot>(\<up>a \<bullet> s)) = srcdups\<cdot>(\<up>a \<bullet> s)"
+    using f1 "3.IH" by auto
+  moreover have"a\<noteq>shd s \<Longrightarrow> srcdups\<cdot>(\<up>a \<bullet> s) = \<up>a\<bullet>srcdups\<cdot>s"
+    by (metis lscons_conv srcdups_neq strict_srcdups surj_scons tsabs_bot tsremdups_h_strict tsremdups_h_tsabs)
+  ultimately have f3:"a\<noteq> shd s \<Longrightarrow>srcdups\<cdot>(srcdups\<cdot>(\<up>a \<bullet> s)) = srcdups\<cdot>(\<up>a \<bullet> s)"
   proof -
-    assume a3: "u && s = \<up>(THE a. updis a = u) \<bullet> s"
-    assume a4: "u \<noteq> updis (shd s)"
-    assume a5: "s \<noteq> \<epsilon> \<Longrightarrow> \<up>(shd s) \<bullet> srt\<cdot>s = s"
-    assume a6: "srcdups\<cdot>(\<up>(THE a. updis a = u) \<bullet> s) = \<up>(THE a. updis a = u) \<bullet> srcdups\<cdot>s"
-    have f4: "updis (THE a. updis a = u) && s = u && s"
-      using a3 lscons_conv by auto
+    assume a1: "a \<noteq> shd s"
+    then have f2: "srcdups\<cdot>(\<up>a \<bullet> s) = \<up>a \<bullet> srcdups\<cdot>s"
+      by (metis \<open>a \<noteq> shd s \<Longrightarrow> srcdups\<cdot>(\<up>a \<bullet> s) = \<up>a \<bullet> srcdups\<cdot>s\<close>)
     obtain ss :: "'a stream \<Rightarrow> 'a \<Rightarrow> 'a stream" where
-      f5: "\<forall>a s. srcdups\<cdot>(\<up>a \<bullet> s) = \<up>a \<bullet> ss s a"
+      f3: "\<forall>a s. srcdups\<cdot>(\<up>a \<bullet> s) = \<up>a \<bullet> ss s a"
       by (meson srcdups_ex)
-    have "(THE a. updis a = u) \<noteq> shd s"
-      using f4 a4 by auto
-    moreover
-    { assume "(srcdups\<cdot> (\<up>(THE a. updis a = u) \<bullet> \<up>(shd s) \<bullet> ss (srt\<cdot>s) (shd s)) = \<up>(THE a. updis a = u) \<bullet> srcdups\<cdot> (\<up>(shd s) \<bullet> ss (srt\<cdot>s) (shd s))) \<noteq> (srcdups\<cdot>(\<up>(THE a. updis a = u) \<bullet> srcdups\<cdot>s) = \<up>(THE a. updis a = u) \<bullet> srcdups\<cdot>s)"
-      then have "\<up>(shd s) \<bullet> ss (srt\<cdot>s) (shd s) \<noteq> srcdups\<cdot>s"
-        using a2 by force
-      then have "srcdups\<cdot>(\<up>(THE a. updis a = u) \<bullet> srcdups\<cdot>s) = \<up>(THE a. updis a = u) \<bullet> srcdups\<cdot>s"
-        using f5 a5 a6 by (metis (no_types) strict_srcdups) }
-    ultimately show "srcdups\<cdot>(\<up>(THE a. updis a = u) \<bullet> srcdups\<cdot>s) = \<up>(THE a. updis a = u) \<bullet> srcdups\<cdot>s"
-      by (meson srcdups_neq)
+    then have f4: "\<up>(shd s) \<bullet> srt\<cdot>s = s \<longrightarrow> srcdups\<cdot>(\<up>a \<bullet> s) = \<up>a \<bullet> \<up>(shd s) \<bullet> ss (srt\<cdot>s) (shd s)"
+      using f2 by metis
+    have f5: "\<up>(shd s) \<bullet> srt\<cdot>s = s \<longrightarrow> srcdups\<cdot>(\<up>(shd s) \<bullet> ss (srt\<cdot>s) (shd s)) = srcdups\<cdot>s"
+      using f3 by (metis "3.IH")
+    { assume "\<up>a \<bullet> s \<noteq> srcdups\<cdot>(\<up>a \<bullet> s)"
+      then have "s \<noteq> \<epsilon>"
+        by force
+      then have ?thesis
+        using f5 f4 f2 a1 by (simp add: surj_scons) }
+    then show ?thesis
+      by fastforce
   qed
-  show "srcdups\<cdot>(srcdups\<cdot>(u && s)) = srcdups\<cdot>(u && s)"
-  apply(cases "s=\<epsilon>", simp)
-  apply (metis f3 tsabs_bot tsremdups_h_strict tsremdups_h_tsabs)
-  using f2 f3 by auto     
+  then show ?case
+    using f2 by fastforce
 qed
-  
-lemma srcdups_imposs_adm_h[simp]:"adm (\<lambda>b. srcdups\<cdot>(\<up>a \<bullet> b) \<noteq> \<up>a \<bullet> \<up>a)"
-  by (metis (mono_tags, lifting) lscons_conv sconc_snd_empty srcdups2srcdups srcdups_eq 
-stream.con_rews(2) stream.injects triv_admI tsabs_bot tsremdups_h_strict tsremdups_h_tsabs up_defined)
 
 lemma srcdups_imposs_adm[simp]:"adm (\<lambda>b. srcdups\<cdot>(\<up>a \<bullet> b) \<noteq> \<up>a \<bullet> \<up>a \<bullet> y)"
   apply (rule admI)
   apply (simp add: contlub_cfun_arg contlub_cfun_fun)
-  sorry
-   
+  sorry 
+
 lemma srcdups_imposs:"srcdups\<cdot>(\<up>a \<bullet> s) \<noteq> \<up>a \<bullet> \<up>a \<bullet> y"
-  apply(induction s,simp+)
-proof -
-  fix u :: "'a discr\<^sub>\<bottom>" and s :: "'a stream" and a ::'a and y :: "'a stream"
-  assume a1:"u\<noteq>\<bottom>"
-  assume a2:"srcdups\<cdot>(\<up>a \<bullet> s) \<noteq> \<up>a \<bullet> \<up>a \<bullet> y"
-  have f1:"u=updis a \<Longrightarrow> srcdups\<cdot>(\<up>a \<bullet> u && s)\<noteq> \<up>a \<bullet> \<up>a \<bullet> y"
-    by (simp add: lscons_conv a2)
-  have f2:"u\<noteq>updis a \<Longrightarrow> srcdups\<cdot>(\<up>a \<bullet> u && s)\<noteq> \<up>a \<bullet> \<up>a \<bullet> y"
-    proof -
-      assume a3: "u \<noteq> updis a"
-      have f2: "\<up>(shd (u && s)) \<bullet> srt\<cdot>(u && s) = u && s"
-        by (meson a1 stream.con_rews(2) surj_scons)
-      then have "u = lshd\<cdot>(\<up>(THE a. updis a = u) \<bullet> srt\<cdot>(u && s))"
-        by (simp add: shd_updis)
-      then have f3: "a \<noteq> (THE a. updis a = u)"
-        using a3 by auto
-      obtain ss :: "'a stream \<Rightarrow> 'a \<Rightarrow> 'a stream" where
-        f4: "\<forall>a s. srcdups\<cdot>(\<up>a \<bullet> s) = \<up>a \<bullet> ss s a"
-        by (meson srcdups_ex)
-      then have f5: "\<up>a \<bullet> ss (u && s) a = srcdups\<cdot> (\<up>a \<bullet> \<up>(THE a. updis a = u) \<bullet> srt\<cdot>(u && s))"
-        using f2 by (simp add: shd_updis)
-      have "\<forall>a aa s. (a::'a) = aa \<or> srcdups\<cdot>(\<up>a \<bullet> \<up>aa \<bullet> s) = \<up>a \<bullet> srcdups\<cdot>(\<up>aa \<bullet> s)"
-        by (meson srcdups_neq)
-      then have "\<up>a \<bullet> ss (u && s) a = \<up>a \<bullet> \<up>(THE a. updis a = u) \<bullet> ss (srt\<cdot>(u && s)) (THE a. updis a = u)"
-        using f5 f4 f3 by auto
-      then have "\<up>a \<bullet> \<up>a \<bullet> y \<noteq> \<up>a \<bullet> ss (u && s) a"
-        using f3 by (metis inject_scons)
-      then show ?thesis
-        using f4 by presburger
-    qed
-  show "srcdups\<cdot>(\<up>a \<bullet> u && s) \<noteq> \<up>a \<bullet> \<up>a \<bullet> y"
-    using f1 f2 by auto
+proof(induction rule: ind [of _ s])
+  case 1
+  then show ?case
+    by simp
+next
+  case 2
+  then show ?case 
+    by simp
+next
+  case (3 aa s)
+  have f1:"aa= a \<Longrightarrow> srcdups\<cdot>(\<up>a \<bullet> \<up>aa \<bullet> s)\<noteq> \<up>a \<bullet> \<up>a \<bullet> y"
+    by (simp add: lscons_conv "3.IH")
+  have f2:"aa\<noteq> a \<Longrightarrow> srcdups\<cdot>(\<up>a \<bullet> \<up>aa \<bullet> s)\<noteq> \<up>a \<bullet> \<up>a \<bullet> y"
+    by (metis inject_scons srcdups_ex srcdups_neq)
+  then show ?case
+    using f1 by linarith
 qed
   
 lemma srcdupsimposs: "srcdups\<cdot>(\<up>a \<bullet> s) \<noteq> \<up>a \<bullet> \<up>a \<bullet> srcdups\<cdot>s"
   by (simp add: srcdups_imposs)
-    
+   
 lemma srcdupsimposs2_h2:"\<forall>x. srcdups\<cdot>(\<up>a \<bullet> s)\<noteq> \<up>a \<bullet> \<up>a \<bullet> x"
   by (simp add: srcdups_imposs)
-  
+ 
 lemma srcdupsimposs2: "srcdups\<cdot>(\<up>a \<bullet> s) \<noteq> \<up>a \<bullet> \<up>a \<bullet> s"
   by(simp add: srcdups_imposs) 
     
 lemma srcdups_anotb_h:"srcdups\<cdot>(\<up>a\<bullet>\<up>b) = \<up>a \<bullet> \<up>b \<Longrightarrow> a \<noteq> b"
   by (metis lscons_conv srcdups_eq2 stream.con_rews(2) stream.sel_rews(5) sup'_def tsabs_bot 
-      tsremdups_h_strict tsremdups_h_tsabs up_defined)
+     tsremdups_h_strict tsremdups_h_tsabs up_defined)
   
 lemma srcdups_anotb:"srcdups\<cdot>(\<up>a \<bullet> \<up>b \<bullet> s) = \<up>a \<bullet> \<up>b \<bullet> s \<Longrightarrow> a\<noteq> b"
   using srcdupsimposs2_h2 by auto
-    
+
 lemma srcdups_smap_adm [simp]: 
   "adm (\<lambda>a. srcdups\<cdot>(smap f\<cdot>(srcdups\<cdot>a)) = smap f\<cdot>(srcdups\<cdot>a) 
     \<longrightarrow> srcdups\<cdot>(smap f\<cdot>a) = smap f\<cdot>(srcdups\<cdot>a))"
+  apply (rule adm_imp, auto)
   apply (rule admI)
   apply (simp add: contlub_cfun_arg contlub_cfun_fun)
   sorry
@@ -203,7 +180,8 @@ lemma srcdups_smap_com:
       by simp
   next
     case 2
-    then show ?case by simp
+    then show ?case 
+      by simp
   next
     case (3 a s)
     have s_eps: "s = \<bottom> \<Longrightarrow>  srcdups\<cdot>(\<up>(f a) \<bullet> smap f\<cdot>s) = smap f\<cdot>(srcdups\<cdot>(\<up>a \<bullet> s))" by simp
