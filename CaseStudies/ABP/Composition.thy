@@ -170,7 +170,6 @@ lemma srcdups_smap_com_h:"s\<noteq>\<epsilon> \<Longrightarrow> a \<noteq> shd s
   apply(insert srcdups_ex[of "shd s" "srt\<cdot>s"],auto)
   by (simp add: srcdupsimposs2_h2)
 
-    declare [[show_types]]
 (* Move to Streams.thy after done *)
 lemma srcdups_smap_com:
   shows "srcdups\<cdot>(smap f\<cdot>(srcdups\<cdot>s)) = smap f\<cdot>(srcdups\<cdot>s) \<Longrightarrow> srcdups\<cdot>(smap f\<cdot>s)= smap f\<cdot>(srcdups\<cdot>s)"
