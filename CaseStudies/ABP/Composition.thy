@@ -161,6 +161,7 @@ lemma srcdups_anotb_h:"srcdups\<cdot>(\<up>a\<bullet>\<up>b) = \<up>a \<bullet> 
 lemma srcdups_anotb:"srcdups\<cdot>(\<up>a \<bullet> \<up>b \<bullet> s) = \<up>a \<bullet> \<up>b \<bullet> s \<Longrightarrow> a\<noteq> b"
   using srcdupsimposs2_h2 by auto
 
+
 lemma srcdups_prefix_neq:"x \<sqsubseteq> y \<Longrightarrow> srcdups\<cdot>x \<noteq>x \<Longrightarrow> srcdups\<cdot>y \<noteq> y"
 proof(induction arbitrary: y rule: ind [of _ x])
     case 1
@@ -184,7 +185,8 @@ proof(induction arbitrary: y rule: ind [of _ x])
          sup'_def surj_scons)
 qed
 
-lemma srcdups_smap_adm[simp]:"adm (\<lambda>a. srcdups\<cdot>(smap f\<cdot>(srcdups\<cdot>a)) = smap f\<cdot>(srcdups\<cdot>a) 
+lemma srcdups_smap_adm [simp]: 
+  "adm (\<lambda>a. srcdups\<cdot>(smap f\<cdot>(srcdups\<cdot>a)) = smap f\<cdot>(srcdups\<cdot>a) 
     \<longrightarrow> srcdups\<cdot>(smap f\<cdot>a) = smap f\<cdot>(srcdups\<cdot>a))"
   apply (rule adm_imp, auto)
   apply(rule adm_upward)
@@ -201,7 +203,7 @@ lemma srcdups_smap_com_h:"s\<noteq>\<epsilon> \<Longrightarrow> a \<noteq> shd s
   by (simp add: srcdupsimposs2_h2)
 
 declare [[show_types]]
-(* ToDo:Move to Streams.thy after done *)
+(* ToDo: Move to Streams.thy after done *)
 lemma srcdups_smap_com:
   shows "srcdups\<cdot>(smap f\<cdot>(srcdups\<cdot>s)) = smap f\<cdot>(srcdups\<cdot>s) \<Longrightarrow> srcdups\<cdot>(smap f\<cdot>s)= smap f\<cdot>(srcdups\<cdot>s)"
   proof(induction rule: ind [of _ s])
@@ -261,8 +263,7 @@ lemma tssnd_tsprojsnd_tsremdups:
   assumes send_def: "send \<in> tsSender"
   shows "tsAbs\<cdot>(tsRemDups\<cdot>(tsProjSnd\<cdot>(send\<cdot>i\<cdot>as))) = tsAbs\<cdot>(tsProjSnd\<cdot>(tsRemDups\<cdot>(send\<cdot>i\<cdot>as)))"
   apply (simp add: tsprojsnd_tsabs tsremdups_tsabs sprojsnd_def)
-    using srcdups_smap_com assms set2tssnd_alt_bit_tabs srcdups_smap_com
-    by (metis Abs_cfun_inverse2 cont_Rep_cfun2 sprojsnd_def)
+  by (metis eta_cfun send_def set2tssnd_alt_bit_tabs sprojsnd_def srcdups_smap_com)
     
 lemma tsaltbitpro_inp2out_nmed:
   assumes send_def: "send \<in> tsSender"
@@ -276,7 +277,7 @@ proof -
   thus "tsAbs\<cdot>(tsRecSnd\<cdot>ds) = tsAbs\<cdot>i"
     by (metis eq_slen_eq_and_less min_rek out_def send_def set2tssnd_ack2trans 
         set2tssnd_prefix_inp tsrecsnd_insert)
-qed
+  qed
 
 (* ----------------------------------------------------------------------- *)
 subsection {* sender, receiver and second medium composition *}
@@ -325,7 +326,7 @@ proof -
   show "tsAbs\<cdot>(tsRecSnd\<cdot>ds) = tsAbs\<cdot>i"
     by (metis dual_order.antisym eq_slen_eq_and_less h2 h6 less_lnsuc min.absorb1 out_def send_def
         set2tssnd_ack2trans set2tssnd_prefix_inp tsrecsnd_insert)
-qed
+  qed
 
 lemma tsaltbitpro_inp2out_sndmed_assm:
   assumes send_def: "send \<in> tsSender"
@@ -333,15 +334,29 @@ lemma tsaltbitpro_inp2out_sndmed_assm:
     and out_def: "ds = send\<cdot>i\<cdot>as"
     and acks2med_def: "ar = tsProjSnd\<cdot>ds"
     and acks2snd_def: "as = tsMed\<cdot>ar\<cdot>p2"
-    and "#(tsAbs\<cdot>(send\<cdot>i\<cdot>as)) = \<infinity>"
+    and "#(tsAbs\<cdot>ds) = \<infinity>"
   shows "#(tsAbs\<cdot>(tsRemDups\<cdot>as)) = \<infinity> \<or> #(tsAbs\<cdot>as) < \<infinity>"
-sorry
+proof -
+  have ora_inf: "#p2 = \<infinity>"
+    using ora_def sfilterl4 by auto
+  hence tsmed_tsprojsnd: "tsMed\<cdot>(tsProjSnd\<cdot>ds)\<cdot>p2 = tsProjSnd\<cdot>(tsMed\<cdot>ds\<cdot>p2)"
+    by (simp add: tsprojsnd_insert tsmed_map)
+  thus "#(tsAbs\<cdot>(tsRemDups\<cdot>as)) = \<infinity> \<or> #(tsAbs\<cdot>as) < \<infinity>"
+    apply (simp add: acks2snd_def acks2med_def)
+    sorry
+  qed
 
 lemma tssnd_tsprojsnd_tsremdups_med: 
   assumes send_def: "send \<in> tsSender"
     and ora_def: "#({True} \<ominus> p2) = \<infinity>"
   shows "tsAbs\<cdot>(tsRemDups\<cdot>(tsProjSnd\<cdot>(tsMed\<cdot>(send\<cdot>i\<cdot>as)\<cdot>p2))) = tsAbs\<cdot>(tsProjSnd\<cdot>(tsRemDups\<cdot>(tsMed\<cdot>(send\<cdot>i\<cdot>as)\<cdot>p2)))"
-sorry
+  sorry
+
+(* oops-Lemmata in Medium *)
+text {* If infinite messages will be sent infinite messages will be transmitted. *}
+lemma tsmed_tsabs_slen_inf [simp]: assumes "#({True} \<ominus> ora)=\<infinity>" and "#(tsAbs\<cdot>msg)=\<infinity>" 
+  shows "#(tsAbs\<cdot>(tsMed\<cdot>msg\<cdot>ora)) = \<infinity>"
+  sorry
 
 lemma tsaltbitpro_inp2out_sndmed:
   assumes send_def: "send \<in> tsSender"
@@ -379,13 +394,13 @@ proof -
     by (metis acks2med_def acks2snd_def leI ora_def out_def send_def set2tssnd_nack2inftrans 
         tsaltbitpro_inp2out_sndmed_assm)
   hence h5: "#(tsAbs\<cdot>i) \<le> #(tsAbs\<cdot>(tsRemDups\<cdot>as)) \<or> #(tsAbs\<cdot>(tsRemDups\<cdot>as)) = \<infinity>"
-    sorry
+    using acks2med_def acks2snd_def le_less_linear neq_iff ora_def out_def send_def set2tssnd_nack2inftrans by fastforce
   hence h6: "#(tsAbs\<cdot>(tsRemDups\<cdot>as)) \<ge> #(tsAbs\<cdot>i)"
     by auto
   show "tsAbs\<cdot>(tsRecSnd\<cdot>ds) = tsAbs\<cdot>i"
     by (metis dual_order.antisym eq_slen_eq_and_less h2 h6 less_lnsuc min.absorb1 out_def send_def
         set2tssnd_ack2trans set2tssnd_prefix_inp tsrecsnd_insert)
-oops
+  oops
     
 (* ----------------------------------------------------------------------- *)
 subsection {* complete composition *}
@@ -409,6 +424,6 @@ lemma tsaltbitpro_inp2out:
     and "ar = tsProjSnd\<cdot>dr"
     and "as = tsMed\<cdot>ar\<cdot>p2"
   shows "tsAbs\<cdot>(tsRecSnd\<cdot>dr) = tsAbs\<cdot>i"
-oops
+  oops
     
 end
