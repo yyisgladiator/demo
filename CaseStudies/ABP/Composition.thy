@@ -160,16 +160,38 @@ lemma srcdups_anotb_h:"srcdups\<cdot>(\<up>a\<bullet>\<up>b) = \<up>a \<bullet> 
   
 lemma srcdups_anotb:"srcdups\<cdot>(\<up>a \<bullet> \<up>b \<bullet> s) = \<up>a \<bullet> \<up>b \<bullet> s \<Longrightarrow> a\<noteq> b"
   using srcdupsimposs2_h2 by auto
-(*ToDo*)
-lemma srcdups_smap_adm [simp]: 
-  "adm (\<lambda>a. srcdups\<cdot>(smap f\<cdot>(srcdups\<cdot>a)) = smap f\<cdot>(srcdups\<cdot>a) 
+
+lemma srcdups_prefix_neq:"x \<sqsubseteq> y \<Longrightarrow> srcdups\<cdot>x \<noteq>x \<Longrightarrow> srcdups\<cdot>y \<noteq> y"
+proof(induction arbitrary: y rule: ind [of _ x])
+    case 1
+    then show ?case 
+      by simp
+  next
+    case 2
+    then show ?case
+      by simp
+  next
+    case (3 a s)
+    have f1:"a=shd s \<Longrightarrow> srcdups\<cdot>(\<up>a \<bullet> s) = srcdups\<cdot>s"
+      by (metis "3.prems"(2) srcdups_eq2 srcdups_shd srcdups_srt strict_sdropwhile strict_srcdups surj_scons)
+    have f2:"a\<noteq>shd s \<Longrightarrow> srcdups\<cdot>(\<up>a \<bullet> s) = \<up>a \<bullet> srcdups\<cdot>s"
+      by (metis srcdups_neq srcdups_shd srcdups_srt strict_sdropwhile surj_scons)
+    then have f3:"a\<noteq>shd s\<Longrightarrow> srcdups\<cdot>s \<noteq> s"
+      using "3.prems" by auto
+    show ?case
+      by (smt "3.IH" "3.prems"(1) f1 f2 f3 less_fst_sconsD lscons_conv scases srcdups2srcdups 
+         srcdups_eq srcdups_ex srcdups_srt srcdupsimposs2 stream.con_rews(2) stream.sel_rews(5) 
+         sup'_def surj_scons)
+qed
+
+lemma srcdups_smap_adm[simp]:"adm (\<lambda>a. srcdups\<cdot>(smap f\<cdot>(srcdups\<cdot>a)) = smap f\<cdot>(srcdups\<cdot>a) 
     \<longrightarrow> srcdups\<cdot>(smap f\<cdot>a) = smap f\<cdot>(srcdups\<cdot>a))"
   apply (rule adm_imp, auto)
-  apply (rule admI)
+  apply(rule adm_upward)
   apply rule+
-  apply (simp add: contlub_cfun_arg contlub_cfun_fun)
-  sorry
- 
+  using srcdups_prefix_neq
+  by (metis monofun_cfun_arg)
+    
 lemma srcdups_smap_com_h:"s\<noteq>\<epsilon> \<Longrightarrow> a \<noteq> shd s \<Longrightarrow> srcdups\<cdot>(smap f\<cdot>(srcdups\<cdot>(\<up>a \<bullet> s))) = smap f\<cdot>(srcdups\<cdot>(\<up>a \<bullet> s)) \<Longrightarrow>f (shd s) \<noteq> f a"
   apply(cases "shd(srt\<cdot>s) \<noteq> shd s")
   apply (insert srcdups_neq[of a "shd s" "srt\<cdot>s"] surj_scons[of s], simp)
@@ -178,7 +200,7 @@ lemma srcdups_smap_com_h:"s\<noteq>\<epsilon> \<Longrightarrow> a \<noteq> shd s
   apply(insert srcdups_ex[of "shd s" "srt\<cdot>s"],auto)
   by (simp add: srcdupsimposs2_h2)
 
-    declare [[show_types]]
+declare [[show_types]]
 (* ToDo:Move to Streams.thy after done *)
 lemma srcdups_smap_com:
   shows "srcdups\<cdot>(smap f\<cdot>(srcdups\<cdot>s)) = smap f\<cdot>(srcdups\<cdot>s) \<Longrightarrow> srcdups\<cdot>(smap f\<cdot>s)= smap f\<cdot>(srcdups\<cdot>s)"
