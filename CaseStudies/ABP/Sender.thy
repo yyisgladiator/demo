@@ -47,8 +47,6 @@ fixrec tsSnd :: "'a tstream \<rightarrow> bool tstream \<rightarrow> bool discr 
 section {* basic properties *}
 (* ----------------------------------------------------------------------- *)
 
-declare tsSnd.simps [simp del]
-
 lemma tssnd_strict [simp]:
 "tsSnd\<cdot>\<bottom>\<cdot>\<bottom>\<cdot>ack = \<bottom>"
 "tsSnd\<cdot>\<bottom>\<cdot>acks\<cdot>ack = \<bottom>"
@@ -100,7 +98,7 @@ lemma tssnd_tstickcount_adm:
   apply (simp add: contlub_cfun_arg contlub_cfun_fun lub_mono2)
   sorry
 
-lemma tssnd_tstickcount:
+(*lemma tssnd_tstickcount:
   "#(Rep_tstream msg) \<le> #(Rep_tstream acks) \<Longrightarrow> #\<surd>msg \<le> #\<surd>(tsSnd\<cdot>msg\<cdot>acks\<cdot>(Discr ack))"
 (*proof (induction msg arbitrary: acks ack, simp_all)
   case adm
@@ -134,32 +132,54 @@ next
     assume as_leq_acks: "#(Rep_tstream msg) \<le> #(Rep_tstream acks)"
     assume ind: "(\<And>msg ack. #(Rep_tstream msg) \<le> #(Rep_tstream acks) \<Longrightarrow>
                  #\<surd>msg \<le> #\<surd> tsSnd\<cdot>msg\<cdot>acks\<cdot>(Discr ack))"
-    hence "#\<surd>msg \<le> #\<surd> tsSnd\<cdot>msg\<cdot>acks\<cdot>(Discr ack)" using as_leq_acks sorry
-    have "#\<surd> delay as = lsuc (#\<surd>as)" sorry
-    have "tsSnd\<cdot>(delay as)\<cdot>(delay acks)\<cdot>(Discr acka) = delay (tsSnd\<cdot>as\<cdot>acks\<cdot>(Discr ack))"
+    hence "#\<surd>msg \<le> #\<surd> tsSnd\<cdot>msg\<cdot>acks\<cdot>(Discr ack)"
+      using as_leq_acks by (simp add: delayfun.IH)
+    have "#\<surd> delay as = lnsuc\<cdot>(#\<surd>as)" by (simp add: delayFun_def)
+    have "tsSnd\<cdot>(delay as)\<cdot>(delay acks)\<cdot>(Discr ack) = delay (tsSnd\<cdot>as\<cdot>acks\<cdot>(Discr ack))"
+      by (simp add: tsSnd.simps(5) delayfun_tslscons)
+    sorry
 next
   case (mlscons acks t)
   then show ?case sorry
-qed
+qed*)
 
 lemma tssnd_tsabs_slen:
   "#(Rep_tstream msg) \<le> #(Rep_tstream acks) \<Longrightarrow> #(tsAbs\<cdot>msg) \<le> #(tsAbs\<cdot>(tsSnd\<cdot>msg\<cdot>acks\<cdot>ack))"
 oops
 
 lemma tssnd_inftick: "acks\<noteq>\<bottom> \<Longrightarrow> tsSnd\<cdot>tsInfTick\<cdot>acks\<cdot>ack = tsInfTick"
-proof -
-  assume a1: "acks \<noteq> \<bottom>"
-  have f2: "delay (Abs_tstream \<up>(\<surd>::'a event)\<infinity>) = tsInfTick"
+proof (induction acks arbitrary: ack)
+  case adm
+  then show ?case by (rule adm_imp, simp_all)
+next
+  case bottom
+  then show ?case using bottom.prems by blast
+next
+  case (delayfun acks)
+  (*have delay_inftick: "delay (Abs_tstream \<up>(\<surd>::'a event)\<infinity>) = tsInfTick"
     by (metis (no_types)
         Rep_Abs delayFun.rep_eq sinftimes_unfold tick_msg tsInfTick.abs_eq tsInfTick.rep_eq
-        tsconc_insert)
-  have "\<forall>t ta d. t = \<bottom> \<or> tsSnd\<cdot>(delay (ta::'a tstream))\<cdot>t\<cdot>d = delay (tsSnd\<cdot>ta\<cdot>t\<cdot>d)"
+        tsconc_insert)*)
+  have inftick_delay: "tsInfTick = delay tsInfTick" by simp
+  have delay_both: "\<forall>msg acks' ack'. acks' = \<bottom> \<or>
+        tsSnd\<cdot>(delay (msg::'a tstream))\<cdot>(delay (acks'::bool tstream))\<cdot>ack' = delay (tsSnd\<cdot>msg\<cdot>acks'\<cdot>ack')"
     using tssnd_delayfun by blast
-  then have "tsSnd\<cdot>(tsInfTick::'a tstream)\<cdot>acks\<cdot>ack = delay (tsSnd\<cdot>(Abs_tstream \<up>\<surd>\<infinity>)\<cdot>acks\<cdot>ack)"
-    using f2 a1 by (metis (no_types))
-  then show ?thesis
-    by (metis (no_types)
-        Rep_Abs delayFun.rep_eq s2sinftimes tick_msg tsInfTick.abs_eq tsconc_insert tsconc_rep_eq)
+  assume ind: "\<And>ack. acks \<noteq> \<bottom> \<Longrightarrow> tsSnd\<cdot>tsInfTick\<cdot>acks\<cdot>ack = tsInfTick"
+  have delay_nbot: "delay acks \<noteq> \<bottom>" by simp
+  show ?case
+    apply (subst inftick_delay)
+    apply (simp add: tsSnd.simps(5))
+    sorry
+next
+  case (mlscons acks t)
+  have inftick_delay: "tsInfTick = delay tsInfTick" by simp
+  have delay_msg: "\<forall>msg acks' ack1' ack2'. acks' = \<bottom> \<or>
+        tsSnd\<cdot>(delay (msg::'a tstream))\<cdot>(tsMLscons\<cdot>(updis (ack1'::bool))\<cdot>(acks'::bool tstream))\<cdot>ack2' =
+        delay (tsSnd\<cdot>msg\<cdot>(tsMLscons\<cdot>(updis ack1')\<cdot>acks')\<cdot>ack2')"
+    by (metis delayfun_tslscons tsSnd.simps(6) tsmlscons_lscons)
+  show ?case
+    by (smt delayFun.rep_eq delay_msg inftick_delay mlscons.hyps s2sinftimes tick_msg tsconc_insert
+            tsconc_rep_eq)
 qed
 
 (* ----------------------------------------------------------------------- *)
