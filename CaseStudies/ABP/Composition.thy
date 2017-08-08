@@ -63,15 +63,23 @@ text {*
    ds = output stream 
 *}
 
- (*TODO: adm & move some lemmas to Streams.thy*)
 lemma srcdups_eq2:"a=b \<Longrightarrow> srcdups\<cdot>(\<up>a\<bullet>\<up>b\<bullet>s) = srcdups\<cdot>(\<up>b\<bullet>s)"
   by simp
     
 lemma srcdups_ex:"\<exists>y. srcdups\<cdot>(\<up>a\<bullet>s) = \<up>a\<bullet>y"
   by(subst srcdups_def [THEN fix_eq2], auto)
     
-lemma [simp]:"shd (srcdups\<cdot>(\<up>a\<bullet>s)) = a"
+lemma srcdups_shd[simp]:"shd (srcdups\<cdot>(\<up>a\<bullet>s)) = a"
+  by(subst srcdups_def [THEN fix_eq2],auto)
+
+lemma srcdups_srt:"srt\<cdot>(srcdups\<cdot>(\<up>a\<bullet>s)) = (srcdups\<cdot>(sdropwhile (\<lambda>z. z = a)\<cdot>s))"
   by(subst srcdups_def [THEN fix_eq2], auto)
+    
+lemma srcdups_shd2[simp]:"s\<noteq>\<epsilon> \<Longrightarrow> shd (srcdups\<cdot>s) = shd s"
+  by(subst srcdups_def [THEN fix_eq2],auto)
+
+lemma srcdups_srt2:"s\<noteq>\<epsilon> \<Longrightarrow> srt\<cdot>(srcdups\<cdot>s) = (srcdups\<cdot>(sdropwhile (\<lambda>z. z = shd s)\<cdot>(srt\<cdot>s)))"
+  by(subst srcdups_def [THEN fix_eq2],auto)
 
 lemma srcdups2srcdups: "srcdups\<cdot>(srcdups\<cdot>s) = srcdups\<cdot>s"
 proof(induction rule: ind [of _ s])
@@ -114,29 +122,28 @@ next
     using f2 by fastforce
 qed
 
-lemma srcdups_imposs_adm[simp]:"adm (\<lambda>b. srcdups\<cdot>(\<up>a \<bullet> b) \<noteq> \<up>a \<bullet> \<up>a \<bullet> y)"
-  apply (rule admI)
-  apply (simp add: contlub_cfun_arg contlub_cfun_fun)
-  sorry 
+lemma srcdups_imposs_h:"Fin 1 < #(srcdups\<cdot>s) \<Longrightarrow> shd(srcdups\<cdot>s)\<noteq>shd(srt\<cdot>(srcdups\<cdot>s))"
+  apply (cases "s=\<epsilon>", simp)
+  apply (subst srcdups_srt2,auto)
+  apply (subgoal_tac "srcdups\<cdot>(sdropwhile (\<lambda>z. z = shd s)\<cdot>(srt\<cdot>s))\<noteq>\<epsilon>")
+  apply (metis (mono_tags, lifting) sdropwhile_resup srcdups_shd2 strict_srcdups surj_scons)
+proof -
+  assume a1: "s \<noteq> \<epsilon>"
+  assume a2: "Fin (Suc 0) < #(srcdups\<cdot>s)"
+  have "Fin 0 = 0"
+    using Fin_02bot bot_is_0 by presburger
+  then have "lnsuc\<cdot>0 = Fin (Suc 0)"
+    by (metis Fin_Suc)
+  then show "srcdups\<cdot> (sdropwhile (\<lambda>a. a = shd s)\<cdot>(srt\<cdot>s)) \<noteq> \<epsilon>"
+    using a2 a1 by (metis (no_types) lnless_def lscons_conv scases slen_empty_eq slen_scons srcdups_ex srcdups_srt2 stream.sel_rews(5) up_defined)
+qed
 
 lemma srcdups_imposs:"srcdups\<cdot>(\<up>a \<bullet> s) \<noteq> \<up>a \<bullet> \<up>a \<bullet> y"
-proof(induction rule: ind [of _ s])
-  case 1
-  then show ?case
-    by simp
-next
-  case 2
-  then show ?case 
-    by simp
-next
-  case (3 aa s)
-  have f1:"aa= a \<Longrightarrow> srcdups\<cdot>(\<up>a \<bullet> \<up>aa \<bullet> s)\<noteq> \<up>a \<bullet> \<up>a \<bullet> y"
-    by (simp add: lscons_conv "3.IH")
-  have f2:"aa\<noteq> a \<Longrightarrow> srcdups\<cdot>(\<up>a \<bullet> \<up>aa \<bullet> s)\<noteq> \<up>a \<bullet> \<up>a \<bullet> y"
-    by (metis inject_scons srcdups_ex srcdups_neq)
-  then show ?case
-    using f1 by linarith
-qed
+  apply(cases "#(srcdups\<cdot>(\<up>a \<bullet>s)) < Fin 1 ")  
+  apply (metis One_nat_def bot_is_0 lnat.con_rews neq02Suclnle not_less slen_scons)
+  apply(insert srcdups_imposs_h[of "\<up>a\<bullet> s"])
+  by (metis Fin_02bot Fin_Suc One_nat_def lnat.con_rews lnat.sel_rews(2) lscons_conv neq_iff shd1 
+      slen_scons stream.sel_rews(5) up_defined)  
   
 lemma srcdupsimposs: "srcdups\<cdot>(\<up>a \<bullet> s) \<noteq> \<up>a \<bullet> \<up>a \<bullet> srcdups\<cdot>s"
   by (simp add: srcdups_imposs)
@@ -153,12 +160,13 @@ lemma srcdups_anotb_h:"srcdups\<cdot>(\<up>a\<bullet>\<up>b) = \<up>a \<bullet> 
   
 lemma srcdups_anotb:"srcdups\<cdot>(\<up>a \<bullet> \<up>b \<bullet> s) = \<up>a \<bullet> \<up>b \<bullet> s \<Longrightarrow> a\<noteq> b"
   using srcdupsimposs2_h2 by auto
-
+(* ToDo *)
 lemma srcdups_smap_adm [simp]: 
   "adm (\<lambda>a. srcdups\<cdot>(smap f\<cdot>(srcdups\<cdot>a)) = smap f\<cdot>(srcdups\<cdot>a) 
     \<longrightarrow> srcdups\<cdot>(smap f\<cdot>a) = smap f\<cdot>(srcdups\<cdot>a))"
   apply (rule adm_imp, auto)
   apply (rule admI)
+  apply rule+
   apply (simp add: contlub_cfun_arg contlub_cfun_fun)
   sorry
  
@@ -170,7 +178,7 @@ lemma srcdups_smap_com_h:"s\<noteq>\<epsilon> \<Longrightarrow> a \<noteq> shd s
   apply(insert srcdups_ex[of "shd s" "srt\<cdot>s"],auto)
   by (simp add: srcdupsimposs2_h2)
 
-(* Move to Streams.thy after done *)
+(* ToDo: Move to Streams.thy after done *)
 lemma srcdups_smap_com:
   shows "srcdups\<cdot>(smap f\<cdot>(srcdups\<cdot>s)) = smap f\<cdot>(srcdups\<cdot>s) \<Longrightarrow> srcdups\<cdot>(smap f\<cdot>s)= smap f\<cdot>(srcdups\<cdot>s)"
   proof(induction rule: ind [of _ s])
