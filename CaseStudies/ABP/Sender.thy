@@ -96,30 +96,32 @@ lemma tssnd_tstickcount_adm:
   "adm (\<lambda>a. \<forall>x. #(Rep_tstream x) \<le> #(Rep_tstream a) \<longrightarrow> (\<forall>xa. #\<surd> x \<le> #\<surd> tsSnd\<cdot>x\<cdot>a\<cdot>(Discr xa)))"
   apply (rule admI) (* trick adm_imp *)
   apply (simp add: contlub_cfun_arg contlub_cfun_fun lub_mono2)
-  sorry
+  oops
 
-(*lemma tssnd_tstickcount:
+lemma tssnd_tstickcount:
   "#(Rep_tstream msg) \<le> #(Rep_tstream acks) \<Longrightarrow> #\<surd>msg \<le> #\<surd>(tsSnd\<cdot>msg\<cdot>acks\<cdot>(Discr ack))"
 (*proof (induction msg arbitrary: acks ack, simp_all)
   case adm
-  then show ?case sorry
+  then show ?case oops
 next
   case (delayfun msg)
-  have "Rep_tstream (delay msg) \<noteq> \<epsilon>" sorry
+  have "Rep_tstream (delay msg) \<noteq> \<epsilon>" oops
   then show ?case proof (rule tscases [of acks], simp_all)
     assume "Rep_tstream (delay msg) = \<epsilon>"
 next
   case (mlscons msg t)
-  then show ?case sorry
+  then show ?case oops
 qed*)
 proof (induction acks arbitrary: msg ack)
   case adm
-  then show ?case by (simp add: tssnd_tstickcount_adm) (*proof (rule admI)
+  then show ?case
+    apply (rule adm_upward)
+    by (simp add: tssnd_tstickcount_adm) (*proof (rule admI)
     fix Y :: "nat \<Rightarrow> bool tstream"
     assume Y_chain: "chain Y"
     assume a: "\<forall>i x. #(Rep_tstream x) \<le> #(Rep_tstream (Y i)) \<longrightarrow> (\<forall>xa. (#\<surd>x) \<le> (#\<surd>tsSnd\<cdot>x\<cdot>(Y i)\<cdot>(Discr xa)))"
     assume b: "\<forall>x. #(Rep_tstream x) \<le> #(Rep_tstream (\<Squnion>i. Y i))"
-    from this have "\<forall>x. #(Rep_tstream x) \<le> (\<Squnion>i. #(Rep_tstream (Y i)))" sorry
+    from this have "\<forall>x. #(Rep_tstream x) \<le> (\<Squnion>i. #(Rep_tstream (Y i)))" oops
   qed*)
 next
   case bottom
@@ -137,11 +139,11 @@ next
     have "#\<surd> delay as = lnsuc\<cdot>(#\<surd>as)" by (simp add: delayFun_def)
     have "tsSnd\<cdot>(delay as)\<cdot>(delay acks)\<cdot>(Discr ack) = delay (tsSnd\<cdot>as\<cdot>acks\<cdot>(Discr ack))"
       by (simp add: tsSnd.simps(5) delayfun_tslscons)
-    sorry
+    oops
 next
   case (mlscons acks t)
-  then show ?case sorry
-qed*)
+  then show ?case oops
+qed
 
 lemma tssnd_tsabs_slen:
   "#(Rep_tstream msg) \<le> #(Rep_tstream acks) \<Longrightarrow> #(tsAbs\<cdot>msg) \<le> #(tsAbs\<cdot>(tsSnd\<cdot>msg\<cdot>acks\<cdot>ack))"
@@ -168,8 +170,9 @@ next
   have delay_nbot: "delay acks \<noteq> \<bottom>" by simp
   show ?case
     apply (subst inftick_delay)
-    apply (simp add: tsSnd.simps(5))
-    sorry
+    (*apply (case_tac "acks = \<bottom>", simp_all)*)
+    apply (subst tssnd_delayfun)
+    oops
 next
   case (mlscons acks t)
   have inftick_delay: "tsInfTick = delay tsInfTick" by simp
