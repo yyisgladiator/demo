@@ -1717,7 +1717,7 @@ lift_definition delayFun :: "'m tstream \<rightarrow> 'm tstream" is
 "\<lambda>ts . (Abs_tstream (\<up>\<surd>)) \<bullet> ts"
   by (simp add: Cfun.cfun.Rep_cfun)
 
-abbreviation delay_abbr :: "'a tstream \<Rightarrow>  'a tstream" ("delay")
+abbreviation delay_abbr :: "'a tstream \<Rightarrow> 'a tstream" ("delay")
 where "delay ts \<equiv> delayFun\<cdot>ts"
 
 lemma delayFun_dropFirst[simp]: "tsDropFirst\<cdot>(delayFun\<cdot>ts) = ts"

@@ -77,7 +77,7 @@ lemma tsmed_tstickcount [simp]: "#ora=\<infinity> \<Longrightarrow> #\<surd>(tsM
   by (simp add: tsmed_insert)
 
 text {* If just infinite ticks will be sent just infinite ticks will be transmitted. *}
-lemma tsmed_inftick [simp]: "#ora=\<infinity> \<Longrightarrow> tsMed\<cdot>tsInfTick\<cdot>ora = tsInfTick"
+lemma tsmed_tsinftick [simp]: "#ora=\<infinity> \<Longrightarrow> tsMed\<cdot>tsInfTick\<cdot>ora = tsInfTick"
   apply (simp add: tsmed_insert tsInfTick_def tsfilter_insert)
   by (metis (no_types, lifting)
       Inf'_neq_0 Rep_tstream_inject delayfun_insert insertI1 s2sinftimes sfilter_in

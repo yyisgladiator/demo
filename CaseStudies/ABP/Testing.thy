@@ -32,7 +32,7 @@ definition tsSndExampInp_2 :: "bool tstream" where
 definition tsSndExampOut :: "(nat \<times> bool) tstream" where
   "tsSndExampOut = <[Msg (1, True), \<surd>,  Msg (2, False), Msg (2, False), \<surd>, \<surd>, Msg (1, True), \<surd>, \<surd>]>\<surd>"
 
-(* ToDo: testing lemmata for sender *) (* wait for redo of Sender*)
+(* ToDo: testing lemmata for sender *)
 
 lemma tssnd_test_bot: "tsSnd\<cdot>\<bottom>\<cdot>tsInfTick = \<bottom>" 
   by (fixrec_simp)
@@ -72,14 +72,13 @@ proof -
     by (simp add: lscons_conv slen_sinftimes)
   have h3: "#(updis False && ((updis True && \<up>False)\<infinity>)) = \<infinity>"
     by (simp add: lscons_conv slen_sinftimes)  
-  show ?thesis    
-  apply (simp add: tsMedExampInp_def tsMedExampOut_def)
-  apply (subst sinftimes_unfold)
-  apply (subst sinftimes_unfold,auto)  
-  apply (fold lscons_conv)    
-  apply (simp add: h1 tsmed_mlscons_true tsmed_delayfun)  
-  apply (simp add: h2 tsmed_mlscons_false tsmed_delayfun)  
-  by (simp add: h3 tsmed_mlscons_true tsmed_delayfun)  
+  show "tsMed\<cdot>tsMedExampInp\<cdot>(<[True, False]> \<infinity>) = tsMedExampOut"    
+    apply (simp add: tsMedExampInp_def tsMedExampOut_def)
+    apply (subst sinftimes_unfold, subst sinftimes_unfold, auto)
+    apply (fold lscons_conv)
+    apply (simp add: h1 tsmed_mlscons_true tsmed_delayfun) 
+    apply (simp add: h2 tsmed_mlscons_false tsmed_delayfun)
+    by (simp add: h3 tsmed_mlscons_true tsmed_delayfun)
 qed
   
 lemma tsmed_test_inf:
@@ -110,41 +109,40 @@ lemma tsrec_test_fin: "tsRec\<cdot>tsRecExampInp = (tsRecExampOut_1, tsRecExampO
       tsprojfst_mlscons tsremdups_h_delayfun tsremdups_h_mlscons tsremdups_h_mlscons_dup 
       tsremdups_h_mlscons_ndup tsremdups_insert)  
 
-lemma tsprojsnd_con: "tsProjSnd\<cdot>(a\<bullet>b) = (tsProjSnd\<cdot>a)\<bullet>(tsProjSnd\<cdot>b)"
-  apply (simp add: tsprojsnd_insert)
-  apply (simp add: tsmap_insert)
-  by (simp add: smap_split tsconc_insert tsmap_h_well)  
- 
-(*    
-lemma tsprojfst_con: "tsProjFst\<cdot>(a\<bullet>b) = (tsProjFst\<cdot>a)\<bullet>(tsProjFst\<cdot>b)"
-  apply (simp add: tsprojfst_insert)
-  apply (simp add: tsmap_insert)
-  by (simp add: smap_split tsconc_insert tsmap_h_well)  
-*)  
-lemma h34: "(updis (Suc 0, True) &&\<surd> delay (updis (Suc 0, True) &&\<surd> delay (updis (Suc 0, False) &&\<surd> delay \<bottom>))) \<bullet>
-  tsInfTick \<noteq> \<bottom>"
-  sorry
+
+
+(* just a few ideas *)
+definition tsInfDelay :: "'a tstream" where "tsInfDelay = tsinftimes (delay \<bottom>)"
+
+lemma tsinfdelay_unfold: "tsInfDelay = delay tsInfDelay"
+  by (metis absts2delayfun_tick delayFun_def eta_cfun tsInfDelay_def tsinftimes_unfold)
+
+lemma tsinftick_eq_tsinfdelay: "tsInfTick = tsInfDelay"
+  apply (simp add: tsInfDelay_def tsInfTick_def)
+  by (metis Rep_Abs absts2delayfun_tick s2sinftimes tick_msg tsconc_insert tsconc_rep_eq 
+      tsinftimes_unfold)
+
+
+
+lemma tsremdups_tsinftick: "tsRemDups\<cdot>tsInfTick = tsInfTick"
+  by (metis delayfun2tsinftick tsremdups_h_delayfun tsremdups_insert)
+
+lemma tsremdups_tsconc_tsinftick: "tsRemDups\<cdot>(ts1 \<bullet> tsInfTick) = tsRemDups\<cdot>ts1 \<bullet> tsRemDups\<cdot>tsInfTick"
+sorry
+
+lemma tsprojsnd_tsconc: "tsProjSnd\<cdot>(ts1 \<bullet> ts2) = tsProjSnd\<cdot>ts1 \<bullet> tsProjSnd\<cdot>ts2"
+  by (simp add: tsprojsnd_insert tsmap_insert smap_split tsconc_insert tsmap_h_well)  
     
+lemma tsprojfst_tsconc: "tsProjFst\<cdot>(ts1 \<bullet> ts2) = tsProjFst\<cdot>ts1 \<bullet> tsProjFst\<cdot>ts2"
+  by (simp add: tsprojfst_insert tsmap_insert smap_split tsconc_insert tsmap_h_well)
+
 lemma tsrec_test_inf:
   "tsRec\<cdot>(tsRecExampInp \<bullet> tsInfTick) = (tsRecExampOut_1 \<bullet> tsInfTick, tsRecExampOut_2 \<bullet> tsInfTick)"
-  apply (simp add: tsrec_insert)
-  apply (simp add: tsRecExampInp_def tsRecExampOut_1_def tsRecExampOut_2_def)  
-  apply (simp add: tsprojsnd_con)
-  apply (simp add: tsprojsnd_mlscons tsprojsnd_delayfun)  
-  apply (simp add: tsrecsnd_insert tsremdups_insert)
-  using [[simp_trace=true]] 
-  apply (unfold tsremdups_h_mlscons [of 
- "((updis (Suc 0, True) &&\<surd> delay (updis (Suc 0, True) &&\<surd> delay (updis (Suc 0, False) &&\<surd> delay \<bottom>))) \<bullet>
-      tsInfTick)" "(Suc 0, True)"])
-  
-  apply (simp add: tsremdups_h_mlscons_dup)
-  apply (simp add: tsremdups_h_delayfun)
-  apply (simp add: tsremdups_h_mlscons_dup)  
-  apply (simp add: tsremdups_h_delayfun)
-  apply (simp add: tsremdups_h_mlscons_ndup) 
-  apply (simp add: tsremdups_h_delayfun)
-  apply (simp add: tsprojfst_delayfun tsprojfst_mlscons)  
-*)  
-oops
+  apply (simp add: tsrec_insert tsRecExampInp_def tsRecExampOut_1_def tsRecExampOut_2_def)
+  apply (simp add: tsprojsnd_tsconc tsprojsnd_mlscons tsprojsnd_delayfun)
+  apply (simp add: tsrecsnd_insert tsremdups_tsconc_tsinftick tsremdups_tsinftick)
+  apply (simp add: tsremdups_h_delayfun tsremdups_h_mlscons tsremdups_h_mlscons_dup
+         tsremdups_h_mlscons_ndup tsremdups_insert)
+  by (simp add: tsprojfst_tsconc tsprojfst_mlscons tsprojfst_delayfun)
     
 end
