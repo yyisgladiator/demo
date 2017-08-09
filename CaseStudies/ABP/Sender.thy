@@ -112,6 +112,7 @@ next
   case (mlscons msg t)
   then show ?case oops
 qed*)
+(*
 proof (induction acks arbitrary: msg ack)
   case adm
   then show ?case
@@ -143,7 +144,8 @@ next
 next
   case (mlscons acks t)
   then show ?case oops
-qed
+*)
+oops
 
 lemma tssnd_tsabs_slen:
   "#(Rep_tstream msg) \<le> #(Rep_tstream acks) \<Longrightarrow> #(tsAbs\<cdot>msg) \<le> #(tsAbs\<cdot>(tsSnd\<cdot>msg\<cdot>acks\<cdot>ack))"
@@ -172,7 +174,7 @@ next
     apply (subst inftick_delay)
     (*apply (case_tac "acks = \<bottom>", simp_all)*)
     apply (subst tssnd_delayfun)
-    oops
+    sorry
 next
   case (mlscons acks t)
   have inftick_delay: "tsInfTick = delay tsInfTick" by simp
@@ -183,7 +185,7 @@ next
   show ?case
     by (smt delayFun.rep_eq delay_msg inftick_delay mlscons.hyps s2sinftimes tick_msg tsconc_insert
             tsconc_rep_eq)
-qed
+oops
 
 (* ----------------------------------------------------------------------- *)
 section {* additional properties *}
