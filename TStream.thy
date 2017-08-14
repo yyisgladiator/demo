@@ -404,7 +404,7 @@ lemma [simp]: fixes ts1::"'a tstream"
   shows "ts1 \<bullet> \<bottom> = ts1"
 by(simp add: tsConc_def)
 
-lemma [simp]: fixes ts1::"'a tstream"
+lemma tsconc_fst_empty [simp]: fixes ts1::"'a tstream"
   shows "\<bottom> \<bullet> ts1 = ts1"
 by(simp add: tsConc_def)
 

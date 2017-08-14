@@ -122,13 +122,8 @@ lemma tsinftick_eq_tsinfdelay: "tsInfTick = tsInfDelay"
   by (metis Rep_Abs absts2delayfun_tick s2sinftimes tick_msg tsconc_insert tsconc_rep_eq 
       tsinftimes_unfold)
 
-
-
 lemma tsremdups_tsinftick: "tsRemDups\<cdot>tsInfTick = tsInfTick"
   by (metis delayfun2tsinftick tsremdups_h_delayfun tsremdups_insert)
-
-lemma tsremdups_tsconc_tsinftick: "tsRemDups\<cdot>(ts1 \<bullet> tsInfTick) = tsRemDups\<cdot>ts1 \<bullet> tsRemDups\<cdot>tsInfTick"
-sorry
 
 lemma tsprojsnd_tsconc: "tsProjSnd\<cdot>(ts1 \<bullet> ts2) = tsProjSnd\<cdot>ts1 \<bullet> tsProjSnd\<cdot>ts2"
   by (simp add: tsprojsnd_insert tsmap_insert smap_split tsconc_insert tsmap_h_well)  
@@ -136,13 +131,78 @@ lemma tsprojsnd_tsconc: "tsProjSnd\<cdot>(ts1 \<bullet> ts2) = tsProjSnd\<cdot>t
 lemma tsprojfst_tsconc: "tsProjFst\<cdot>(ts1 \<bullet> ts2) = tsProjFst\<cdot>ts1 \<bullet> tsProjFst\<cdot>ts2"
   by (simp add: tsprojfst_insert tsmap_insert smap_split tsconc_insert tsmap_h_well)
 
+lemma absts2mlscons3: "ts_well (\<up>(Msg m) \<bullet> (Rep_tstream ts)) \<Longrightarrow> 
+  tsMLscons\<cdot>(updis m)\<cdot>ts = Abs_tstream (\<up>(Msg m) \<bullet> (Rep_tstream ts))"
+  by (metis Abs_Rep absts2mlscons lscons_conv)
+
+lemma h1:" ts_well (\<up>(\<M> (Suc 0,True)) \<bullet> Rep_tstream (updis (Suc 0, True) &&\<surd>
+           delay (updis (Suc 0, True) &&\<surd> delay (updis (Suc 0, False) &&\<surd> delay \<bottom>))))"
+  using delayfun_nbot sConc_fin_well tsmlscons_nbot up_defined by blast
+    
+lemma h2:"ts_well
+     (\<up>(\<M> (Suc 0, True)) \<bullet> Rep_tstream (delay (updis (Suc 0, True) &&\<surd> delay (updis (Suc 0, False) &&\<surd> delay \<bottom>))))" 
+  using delayfun_nbot sConc_fin_well tsmlscons_nbot up_defined by blast
+    
+lemma h3: "ts_well (\<up>(\<M> (Suc 0, True)) \<bullet> Rep_tstream (delay (updis (Suc 0, False) &&\<surd> delay \<bottom>)))"
+  using delayfun_nbot sConc_fin_well tsmlscons_nbot up_defined by blast
+    
+lemma h4:"ts_well (\<up>(\<M> (Suc 0, False)) \<bullet> Rep_tstream (delay \<bottom>))"
+  using delayfun_nbot sConc_fin_well tsmlscons_nbot up_defined by blast
+
+lemma delayh: "ts_well s \<Longrightarrow> delayFun\<cdot>(Abs_tstream s) = Abs_tstream (\<up>\<surd> \<bullet> s)"
+  by (simp add: absts2delayfun2)      
+    
+lemma h6: "tsProjFst\<cdot>(tsRemDups_h\<cdot>(Abs_tstream (\<up>(\<M> (Suc 0, True)) \<bullet> Rep_tstream (Abs_tstream
+           (\<up>(\<M> (Suc 0, True)) \<bullet> Rep_tstream (delay (Abs_tstream (\<up>(\<M> (Suc 0, True)) \<bullet> Rep_tstream 
+           (delay (Abs_tstream (\<up>(\<M> (Suc 0, False)) \<bullet> Rep_tstream (delay \<bottom>)))))))))) \<bullet> tsInfTick)\<cdot>None) = 
+           tsProjFst\<cdot>(tsRemDups_h\<cdot>(Abs_tstream (\<up>(\<M> (Suc 0, True)) \<bullet> Rep_tstream (Abs_tstream
+           (\<up>(\<M> (Suc 0, True)) \<bullet> Rep_tstream (delay (Abs_tstream (\<up>(\<M> (Suc 0, True)) \<bullet> Rep_tstream 
+           (delay (Abs_tstream (\<up>(\<M> (Suc 0, False)) \<bullet> Rep_tstream (delay (\<bottom> \<bullet> tsInfTick))))))))))))\<cdot>None)"
+  by (smt Rep_Abs absts2delayfun_tick absts2mlscons3 assoc_sconc delayfun_nbot delayh h1 sConc_fin_well sinftimes_unfold tick_msg tsInfTick.rep_eq ts_well_conc1 tsconc_fst_empty tsconc_insert tsinfdelay_unfold tsinftick_eq_tsinfdelay)
+
+lemma h5: "tsRemDups_h\<cdot>tsInfTick\<cdot>(Some (Discr (Suc 0, False)))= tsInfTick"
+  by (metis (no_types, lifting) Rep_tstream_inject delayFun.rep_eq s2sinftimes tick_msg tsInfTick.rep_eq tsconc_rep_eq tsinfdelay_unfold tsremdups_h_delayfun)
+
+lemma h7: "tsRemDups_h\<cdot>(\<bottom> \<bullet> tsInfTick)\<cdot>(Some (Discr (Suc 0, False))) = \<bottom> \<bullet> tsInfTick"
+  by (simp add: h5)    
+    
+declare sconc_fst_empty [simp del]  
+declare tsconc_fst_empty [simp del]  
+    
 lemma tsrec_test_inf:
   "tsRec\<cdot>(tsRecExampInp \<bullet> tsInfTick) = (tsRecExampOut_1 \<bullet> tsInfTick, tsRecExampOut_2 \<bullet> tsInfTick)"
   apply (simp add: tsrec_insert tsRecExampInp_def tsRecExampOut_1_def tsRecExampOut_2_def)
   apply (simp add: tsprojsnd_tsconc tsprojsnd_mlscons tsprojsnd_delayfun)
-  apply (simp add: tsrecsnd_insert tsremdups_tsconc_tsinftick tsremdups_tsinftick)
-  apply (simp add: tsremdups_h_delayfun tsremdups_h_mlscons tsremdups_h_mlscons_dup
-         tsremdups_h_mlscons_ndup tsremdups_insert)
-  by (simp add: tsprojfst_tsconc tsprojfst_mlscons tsprojfst_delayfun)
+  apply (simp add: tsrecsnd_insert  tsremdups_insert)   
+     
+  apply (subst absts2mlscons3) 
+  apply (simp add: h1)
+  apply (subst absts2mlscons3)
+  apply (simp add: h2)
+  apply (subst absts2mlscons3)
+  apply (simp add: h3)
+  apply (subst absts2mlscons3)
+  apply (simp add: h4)
+  apply (simp only: h6)
+  apply (subst absts2mlscons2)
+  apply (smt Rep_Abs Rep_tstream_strict delayFun.rep_eq delayfun_nbot inject_scons sConc_fin_well sconc_scons sconc_snd_empty tick_msg tsconc_rep_eq1)  
+   apply (subst absts2mlscons2)
+  using delayfun_nbot sConc_fin_well apply blast
+    apply (subst absts2mlscons2)
+  using delayfun_nbot sConc_fin_well apply blast
+    apply (subst absts2mlscons2)
+  using delayfun_nbot sConc_fin_well apply blast  
+  apply (simp del: sconc_fst_empty  tsconc_fst_empty add: tsremdups_h_delayfun tsremdups_h_mlscons tsremdups_h_mlscons_dup
+         tsremdups_h_mlscons_ndup Rep_tstream_inverse h7)
+  apply (simp add: tsprojfst_tsconc tsprojfst_mlscons tsprojfst_delayfun)
+   apply (subst  absts2mlscons3)
+  using delayfun_nbot sConc_fin_well apply blast 
+     apply (subst  absts2mlscons3)
+  using delayfun_nbot sConc_fin_well apply blast 
+     apply (subst  absts2mlscons3)
+  using delayfun_nbot sConc_fin_well apply blast 
+     apply (subst  absts2mlscons3)
+  using delayfun_nbot sConc_fin_well apply blast
+  by (smt Rep_Abs Rep_tstream_inject Rep_tstream_strict delayFun.rep_eq delayfun_nbot sConc_fin_well sconc_scons sconc_snd_empty tick_msg tsconc_fst_empty tsconc_rep_eq) 
     
 end
