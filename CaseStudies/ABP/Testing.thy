@@ -109,6 +109,8 @@ lemma tsrec_test_fin: "tsRec\<cdot>tsRecExampInp = (tsRecExampOut_1, tsRecExampO
       tsprojfst_mlscons tsremdups_h_delayfun tsremdups_h_mlscons tsremdups_h_mlscons_dup 
       tsremdups_h_mlscons_ndup tsremdups_insert)  
 
+
+
 lemma tsremdups_tsinftick: "tsRemDups\<cdot>tsInfTick = tsInfTick"
   by (metis delayfun2tsinftick tsremdups_h_delayfun tsremdups_insert)
 
@@ -122,42 +124,24 @@ lemma tsprojsnd_tsconc: "tsProjSnd\<cdot>(ts1 \<bullet> ts2) = tsProjSnd\<cdot>t
 lemma tsprojfst_tsconc: "tsProjFst\<cdot>(ts1 \<bullet> ts2) = tsProjFst\<cdot>ts1 \<bullet> tsProjFst\<cdot>ts2"
   by (simp add: tsprojfst_insert tsmap_insert smap_split tsconc_insert tsmap_h_well)
 
-lemma mlscons2absts: "ts_well (\<up>(Msg t) \<bullet> Rep_tstream ts) \<Longrightarrow> 
-  tsMLscons\<cdot>(updis t)\<cdot>ts = Abs_tstream (\<up>(Msg t) \<bullet> (Rep_tstream ts))"
-  by (metis Abs_Rep absts2mlscons lscons_conv)
 
-lemma delayfun2absts: "ts_well s \<Longrightarrow> delayFun\<cdot>(Abs_tstream s) = Abs_tstream (\<up>\<surd> \<bullet> s)"
-  by (simp add: absts2delayfun2)
 
-lemma tsrec_test_inf_h1: 
-  "(Abs_tstream (\<up>(\<M> (Suc 0, True)) \<bullet> Rep_tstream (Abs_tstream
-     (\<up>(\<M> (Suc 0, True)) \<bullet> Rep_tstream (delay (Abs_tstream (\<up>(\<M> (Suc 0, True)) \<bullet> Rep_tstream 
-       (delay (Abs_tstream (\<up>(\<M> (Suc 0, False)) \<bullet> Rep_tstream (delay \<bottom>)))))))))) \<bullet> tsInfTick) = 
-   (Abs_tstream (\<up>(\<M> (Suc 0, True)) \<bullet> Rep_tstream (Abs_tstream
-     (\<up>(\<M> (Suc 0, True)) \<bullet> Rep_tstream (delay (Abs_tstream (\<up>(\<M> (Suc 0, True)) \<bullet> Rep_tstream 
-        (delay (Abs_tstream (\<up>(\<M> (Suc 0, False)) \<bullet> Rep_tstream (delay (\<bottom> \<bullet> tsInfTick))))))))))))"
-  by (smt Rep_Abs Rep_tstream_inject assoc_sconc delayfun_insert delayfun_nbot mlscons2absts 
-      sConc_fin_well tick_msg tsconc_assoc tsconc_rep_eq tsmlscons_nbot up_defined)
+definition tsRecExampInpInf :: "(nat \<times> bool) tstream" where
+  "tsRecExampInpInf = updis (Suc 0, True) &&\<surd> updis (Suc 0, True) &&\<surd> delay (updis (Suc 0, True) 
+                        &&\<surd> delay (updis (Suc 0, False) &&\<surd> delay tsInfTick))"
 
-lemma tsrec_test_inf_h2: "tsRemDups_h\<cdot>(\<bottom> \<bullet> tsInfTick)\<cdot>(Some (Discr (Suc 0, False))) = \<bottom> \<bullet> tsInfTick"
-  by (simp add: tsremdups_h_tsinftick)
+definition tsRecExampOutInf_1 :: "bool tstream" where
+  "tsRecExampOutInf_1 = updis True &&\<surd> updis True &&\<surd> delay (updis True &&\<surd> delay (updis False &&\<surd> 
+                          delay tsInfTick))"
+
+definition tsRecExampOutInf_2 :: "nat tstream" where
+  "tsRecExampOutInf_2 = updis (Suc 0) &&\<surd> delay (delay (updis (Suc 0) &&\<surd> delay tsInfTick))"
   
 lemma tsrec_test_inf:
-  "tsRec\<cdot>(tsRecExampInp \<bullet> tsInfTick) = (tsRecExampOut_1 \<bullet> tsInfTick, tsRecExampOut_2 \<bullet> tsInfTick)"
-  apply (simp add: tsrec_insert tsRecExampInp_def tsRecExampOut_1_def tsRecExampOut_2_def)
-  apply (simp add: tsprojsnd_tsconc tsprojsnd_mlscons tsprojsnd_delayfun)
-  apply (simp add: tsrecsnd_insert tsremdups_insert)
-  using delayfun_nbot sConc_fin_well tsmlscons_nbot up_defined
-  apply (subst mlscons2absts, blast)+
-  apply (simp only: tsrec_test_inf_h1)
-  apply (subst absts2mlscons2)
-  apply (smt mlscons2absts)
-  apply (subst absts2mlscons2, blast)+
-  apply (simp add: tsremdups_h_delayfun tsremdups_h_mlscons tsremdups_h_mlscons_dup
-         tsremdups_h_mlscons_ndup tsremdups_h_tsinftick)
-  apply (simp add: tsprojfst_tsconc tsprojfst_mlscons tsprojfst_delayfun)
-  apply (subst mlscons2absts, smt delayfun_nbot)+
-  by (smt Rep_tstream_inverse absts2delayfun_tick delayFun.rep_eq delayfun2tsinftick delayfun_nbot 
-      lscons_conv sconc_scons' tick_msg ts_well_Rep tsconc_rep_eq1 tsmlscons_lscons2)
+  "tsRec\<cdot>(tsRecExampInpInf) = (tsRecExampOutInf_1, tsRecExampOutInf_2)"
+  by (simp add: tsRecExampInpInf_def tsRecExampOutInf_1_def tsRecExampOutInf_2_def
+      tsrec_insert tsrecsnd_insert tsremdups_insert tsprojsnd_mlscons tsprojsnd_delayfun
+      tsremdups_h_delayfun tsremdups_h_mlscons tsremdups_h_mlscons_dup tsremdups_h_mlscons_ndup
+      tsremdups_h_tsinftick tsprojfst_mlscons tsprojfst_delayfun)
 
 end
