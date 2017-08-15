@@ -1750,6 +1750,9 @@ lemma [simp]: "delayFun\<cdot>tsInfTick = tsInfTick"
 apply (simp add: delayFun_def tsInfTick_def)
 by (metis (no_types) Abs_tstream_inverse mem_Collect_eq sinftimes_unfold tick_msg tsInfTick.abs_eq
     tsInfTick.rep_eq tsconc_insert)
+  
+lemma tsinftick_unfold: "tsInfTick= delay tsInfTick"
+  by simp  
 
 lemma delayfun_nbot[simp]: "delayFun\<cdot>ts \<noteq> \<bottom>"
   by(simp add: delayFun_def)  

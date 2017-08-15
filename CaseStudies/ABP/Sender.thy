@@ -198,7 +198,10 @@ section {* additional properties *}
 
 (* ToDo: additional properties lemmata for sender *)
 
-
+lemma tssnd_inftick_inftick: "tsSnd\<cdot>tsInfTick\<cdot>tsInfTick\<cdot>ack = tsInfTick" 
+  by (metis (no_types, lifting) Rep_Abs delayfun_insert s2sinftimes sinftimes_unfold tick_msg 
+      tsInfTick.rep_eq tsInfTick_def tsconc_insert tsconc_rep_eq tssnd_delayfun)
+  
 lemma tssnd_delayfun_abs:
   "tsAbs\<cdot>(tsSnd\<cdot>(delayFun\<cdot>msg)\<cdot>(delayFun\<cdot>acks)\<cdot>ack) 
                       = tsAbs\<cdot>(tsSnd\<cdot>msg\<cdot>acks\<cdot>ack)"

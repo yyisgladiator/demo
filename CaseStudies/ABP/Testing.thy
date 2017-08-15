@@ -23,13 +23,6 @@ text {* equivalence classes: empty tstream, finite tstream, infinite tstream *}
 subsection {* sender *}
 (* ----------------------------------------------------------------------- *)
 
-lemma tsinftick_unfold: "tsInfTick= delay tsInfTick"
-  by simp
-
-lemma tssnd_inftick_inftick: "tsSnd\<cdot>tsInfTick\<cdot>tsInfTick\<cdot>ack = tsInfTick" 
-  by (metis (no_types, lifting) Rep_Abs delayfun_insert s2sinftimes sinftimes_unfold tick_msg 
-      tsInfTick.rep_eq tsInfTick_def tsconc_insert tsconc_rep_eq tssnd_delayfun)
-
 definition tsSndExampInp_1 :: "nat tstream" where
   "tsSndExampInp_1 = <[Msg 1, Msg 2, \<surd>, Msg 1, \<surd>]>\<surd>"
 
