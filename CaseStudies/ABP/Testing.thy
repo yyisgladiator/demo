@@ -98,8 +98,6 @@ definition tsRecExampOut_1 :: "bool tstream" where
 definition tsRecExampOut_2 :: "nat tstream" where
   "tsRecExampOut_2 = <[Msg 1, \<surd>, \<surd>, Msg 1, \<surd>]>\<surd>"
 
-(* ToDo: testing lemmata for receiver *)
-
 lemma tsrec_test_bot: "tsRec\<cdot>\<bottom> = \<bottom>"
   by simp
 
@@ -108,23 +106,6 @@ lemma tsrec_test_fin: "tsRec\<cdot>tsRecExampInp = (tsRecExampOut_1, tsRecExampO
       tsRecExampOut_2_def tsprojsnd_delayfun tsprojsnd_mlscons tsprojfst_delayfun 
       tsprojfst_mlscons tsremdups_h_delayfun tsremdups_h_mlscons tsremdups_h_mlscons_dup 
       tsremdups_h_mlscons_ndup tsremdups_insert)  
-
-
-
-lemma tsremdups_tsinftick: "tsRemDups\<cdot>tsInfTick = tsInfTick"
-  by (metis delayfun2tsinftick tsremdups_h_delayfun tsremdups_insert)
-
-lemma tsremdups_h_tsinftick: "tsRemDups_h\<cdot>tsInfTick\<cdot>t= tsInfTick"
-  by (metis (no_types, lifting) delayfun2tsinftick delayfun_insert s2sinftimes tick_msg 
-      tsconc_insert tsconc_rep_eq tsremdups_h_delayfun)
-
-lemma tsprojsnd_tsconc: "tsProjSnd\<cdot>(ts1 \<bullet> ts2) = tsProjSnd\<cdot>ts1 \<bullet> tsProjSnd\<cdot>ts2"
-  by (simp add: tsprojsnd_insert tsmap_insert smap_split tsconc_insert tsmap_h_well)  
-    
-lemma tsprojfst_tsconc: "tsProjFst\<cdot>(ts1 \<bullet> ts2) = tsProjFst\<cdot>ts1 \<bullet> tsProjFst\<cdot>ts2"
-  by (simp add: tsprojfst_insert tsmap_insert smap_split tsconc_insert tsmap_h_well)
-
-
 
 definition tsRecExampInpInf :: "(nat \<times> bool) tstream" where
   "tsRecExampInpInf = updis (Suc 0, True) &&\<surd> updis (Suc 0, True) &&\<surd> delay (updis (Suc 0, True) 

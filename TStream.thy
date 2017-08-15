@@ -123,7 +123,9 @@ definition tsConc :: "'a tstream \<Rightarrow> 'a tstream \<rightarrow> 'a tstre
 abbreviation sbConc_abbr :: "'a tstream \<Rightarrow> 'a tstream \<Rightarrow> 'a tstream" (infixl "\<bullet>" 65)
 where "ts1 \<bullet> ts2 \<equiv> tsConc ts1\<cdot>ts2"
 
-
+(*returns the length of a tstream including ticks*)
+definition tslen:: "'a tstream \<rightarrow> lnat" where 
+"tslen \<equiv> \<Lambda> ts. #(Rep_tstream ts)"   
 
 (* filters all ticks and returns the corrosponding 'a stream *)
 definition tsAbs:: "'a tstream \<rightarrow> 'a stream" where
@@ -356,11 +358,13 @@ by(simp add: tsdom_insert assms)
 lemma [simp]: "tsDom\<cdot>\<bottom> = {}"
 by(simp add: tsdom_insert)
 
+(*tslen*)
+thm tslen_def  
 
-
-
-
-
+lemma tslen_smaller_nbot:"tslen\<cdot>ts \<le> tslen\<cdot>ts1 \<Longrightarrow> ts \<noteq> \<bottom> \<Longrightarrow> ts1 \<noteq> \<bottom>"
+  apply (simp add: tslen_def)
+  by (metis Rep_tstream_bottom_iff bot_is_0 eq_bottom_iff lnle_def slen_empty_eq)
+ 
 
 
 (* tsConc *)
@@ -1999,6 +2003,12 @@ lemma tsprojfst_tsabs_slen [simp]: "#(tsAbs\<cdot>(tsProjFst\<cdot>ts)) = #(tsAb
 
 lemma tsprojsnd_tsabs_slen [simp]: "#(tsAbs\<cdot>(tsProjSnd\<cdot>ts)) = #(tsAbs\<cdot>ts)"
   by (simp add: tsProjSnd_def)
+    
+lemma tsprojfst_tsconc: "tsProjFst\<cdot>(ts1 \<bullet> ts2) = tsProjFst\<cdot>ts1 \<bullet> tsProjFst\<cdot>ts2"
+  by (simp add: tsprojfst_insert tsmap_insert smap_split tsconc_insert tsmap_h_well)    
+    
+lemma tsprojsnd_tsconc: "tsProjSnd\<cdot>(ts1 \<bullet> ts2) = tsProjSnd\<cdot>ts1 \<bullet> tsProjSnd\<cdot>ts2"
+  by (simp add: tsprojsnd_insert tsmap_insert smap_split tsconc_insert tsmap_h_well)     
 
 (* ----------------------------------------------------------------------- *)
 subsection {* tsFilter *}
@@ -3252,6 +3262,13 @@ lemma tsremdups_tsdom_sup: "tsDom\<cdot>ts \<subseteq> tsDom\<cdot>(tsRemDups\<c
 
 lemma tsremdups_h_tsdom: "tsDom\<cdot>(tsRemDups\<cdot>ts) = tsDom\<cdot>ts"
   by (simp add: eq_iff tsremdups_tsdom_sub tsremdups_tsdom_sup)
+    
+lemma tsremdups_tsinftick: "tsRemDups\<cdot>tsInfTick = tsInfTick"
+  by (metis delayfun2tsinftick tsremdups_h_delayfun tsremdups_insert)
+
+lemma tsremdups_h_tsinftick: "tsRemDups_h\<cdot>tsInfTick\<cdot>t= tsInfTick"
+  by (metis (no_types, lifting) delayfun2tsinftick delayfun_insert s2sinftimes tick_msg 
+      tsconc_insert tsconc_rep_eq tsremdups_h_delayfun)    
 
 (************************************************)
   subsection \<open>list2ts\<close>    
