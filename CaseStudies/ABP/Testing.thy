@@ -30,23 +30,43 @@ definition tsSndExampInp_2 :: "bool tstream" where
   "tsSndExampInp_2 = <[\<surd>, Msg True, Msg True, \<surd>, Msg False, \<surd>, Msg True, \<surd>]>\<surd>"
 
 definition tsSndExampOut :: "(nat \<times> bool) tstream" where
-  "tsSndExampOut = <[Msg (1, True), \<surd>,  Msg (2, False), Msg (2, False), \<surd>, \<surd>, Msg (1, True), \<surd>, \<surd>]>\<surd>"
+  "tsSndExampOut = <[Msg (1, True), \<surd>, Msg (1, True), Msg (2, False), Msg (2, False), \<surd>, 
+                     Msg (2, False), \<surd>, Msg (1, True), \<surd>]>\<surd>"
 
-(* ToDo: testing lemmata for sender *)
+definition tsSndExampInpInf_1 :: "nat  tstream" where
+  "tsSndExampInpInf_1 = updis 1 &&\<surd> updis 2  &&\<surd> delay (updis 1 
+                        &&\<surd> delay tsInfTick)"
 
+definition tsSndExampInpInf_2 :: "bool tstream" where
+  "tsSndExampInpInf_2 = delay (updis True &&\<surd> updis True &&\<surd> delay (updis False &&\<surd> delay 
+                        (updis True &&\<surd> delay tsInfTick)))"
+
+definition tsSndExampOutInf :: "(nat \<times> bool) tstream" where
+  "tsSndExampOutInf = updis (1, True) &&\<surd> delay (updis (1, True) &&\<surd> updis (2, False) &&\<surd> updis (2, False) 
+                      &&\<surd> delay (updis (2, False) &&\<surd> (delay (updis (1, True)  &&\<surd> delay tsInfTick))))"
+  
 lemma tssnd_test_bot: "tsSnd\<cdot>\<bottom>\<cdot>tsInfTick = \<bottom>" 
   by (fixrec_simp)
 
+lemma tsinftick_unfold: "tsInfTick= delay tsInfTick"
+  by simp
+    
 lemma tssnd_test_fin: 
-  "tsSnd\<cdot>tsSndExampInp_1\<cdot>(tsSndExampInp_2 \<bullet> tsInfTick)\<cdot>(Discr True) = tsSndExampOut"
-  apply (simp add: tsSndExampInp_1_def tsSndExampInp_2_def tsSndExampOut_def)
-  oops
+  "tsSnd\<cdot>tsSndExampInp_1\<cdot>(tsSndExampInpInf_2)\<cdot>(Discr True) = tsSndExampOut"
+  apply (simp add: tsSndExampInp_1_def tsSndExampInpInf_2_def tsSndExampOut_def 
+         tssnd_delayfun_nack tssnd_mlscons_ack tssnd_mlscons_nack tssnd_delayfun)
+  apply (subst tsinftick_unfold)  
+  apply (simp only: tssnd_delayfun)  
+  by simp  
+    
+lemma tssnd_inftick_inftick: "tsSnd\<cdot>tsInfTick\<cdot>tsInfTick\<cdot>ack =tsInfTick" 
+  by (metis (no_types, lifting) Rep_Abs delayfun_insert s2sinftimes sinftimes_unfold tick_msg tsInfTick.rep_eq tsInfTick_def tsconc_insert tsconc_rep_eq tssnd_delayfun)    
 
 lemma tssnd_test_inf:
-  "tsSnd\<cdot>(tsSndExampInp_1 \<bullet> tsInfTick)\<cdot>(tsSndExampInp_2 \<bullet> tsInfTick)\<cdot>(Discr True) 
-       = tsSndExampOut \<bullet> tsInfTick"
-  apply (simp add: tsSndExampInp_1_def tsSndExampInp_2_def tsSndExampOut_def )
-oops
+  "tsSnd\<cdot>(tsSndExampInpInf_1)\<cdot>(tsSndExampInpInf_2)\<cdot>(Discr True) 
+       = tsSndExampOutInf"
+  by (simp add: tsSndExampInpInf_1_def tsSndExampInpInf_2_def tsSndExampOutInf_def 
+      tssnd_delayfun_nack tssnd_mlscons_ack tssnd_mlscons_nack tssnd_delayfun tssnd_inftick_inftick)
 
 (* ----------------------------------------------------------------------- *)
 subsection {* medium *}
