@@ -89,15 +89,15 @@ fixrec tee :: "'a tstream \<rightarrow> 'a tstream" where
 (* Um gottes willen, die namen sind nur work-in-progess *)
 
 (* Wenn wir das haben... brauchen wir überhaupt noch delayfun? *)
-abbreviation delay_abbr :: "'a tstream \<Rightarrow>  'a tstream" ("delay")
-where "delay ts \<equiv> (tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>ts)"
+abbreviation fixdelay_abbr :: "'a tstream \<Rightarrow>  'a tstream" ("fixDelay")
+where "fixDelay ts \<equiv> (tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>ts)"
 
 abbreviation tsmlscons_abbr :: "'a discr \<Rightarrow> 'a tstream \<Rightarrow>  'a tstream" ("_ &&\<surd> _ ")
 where "t &&\<surd> ts \<equiv> (tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>t))\<cdot>ts)"
 
 
 fixrec tsAbsNew :: "'a tstream \<rightarrow> 'a stream" where
-"tsAbsNew\<cdot>(delay ts) = tsAbsNew\<cdot>ts" |   (* ignore ticks *)  
+"tsAbsNew\<cdot>(fixDelay ts) = tsAbsNew\<cdot>ts" |   (* ignore ticks *)  
 "ts\<noteq>\<bottom> \<Longrightarrow> tsAbsNew\<cdot>(t &&\<surd> ts) = up\<cdot>t && tsAbsNew\<cdot>ts"  (* prepend first message and go on *)  
 
 
@@ -114,10 +114,10 @@ lemma tsabs_new_msg [simp]: "xs\<noteq>\<bottom> \<Longrightarrow> tsAbsNew\<cdo
 lemma tsmlscons2tslscons: "xs\<noteq>\<bottom> \<Longrightarrow> (tsMLscons\<cdot>(up\<cdot>x)\<cdot>xs) = tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>x))\<cdot>xs"
   by(simp add: tsMLscons_def)
     
+    
 lemma "tsAbsNew\<cdot>ts= tsAbs\<cdot>ts"
   apply (induction)
   apply simp_all
-  apply (simp add: tsabs_delayfun)
   using updis_exists tsabs_mlscons by fastforce
     
     
