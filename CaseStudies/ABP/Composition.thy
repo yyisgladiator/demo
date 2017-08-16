@@ -53,13 +53,20 @@ lemma set2tssnd_nack2inftrans: assumes "send \<in> tsSender"
   shows "(#(tsAbs\<cdot>i) > #(tsAbs\<cdot>(tsRemDups\<cdot>as)) \<longrightarrow> #(tsAbs\<cdot>(send\<cdot>i\<cdot>as)) = \<infinity>)"
   using assms tsSender_def by auto
 
-lemma  assumes "send\<in>tsSender" and "#(tsAbs\<cdot>as) < \<infinity>"
-  shows "#(tsAbs\<cdot>(send\<cdot>i\<cdot>as)) \<le> lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>as)))"
-  sorry
-    
+lemma set2tssnd_ack2trans2: assumes "send\<in>tsSender"
+  shows "#(tsAbs\<cdot>(tsRemDups\<cdot>(send\<cdot>i\<cdot>as))) 
+    = min (#(tsAbs\<cdot>i)) (lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>as))))"  
+  using assms(1) set2tssnd_ack2trans by simp
+       
+lemma  assumes "send\<in>tsSender"
+  shows "#(tsAbs\<cdot>(tsRemDups\<cdot>(send\<cdot>i\<cdot>as))) \<le> lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>as)))"
+using assms(1) set2tssnd_ack2trans by fastforce
+   
 lemma assumes "send\<in>tsSender" and "#(tsAbs\<cdot>as) = \<infinity>"
-  shows "#(tsAbs\<cdot>(send\<cdot>i\<cdot>as)) \<le> # (tsAbs\<cdot>(tsRemDups\<cdot>as))"
-  sorry
+  shows "#(tsAbs\<cdot>(tsRemDups\<cdot>(send\<cdot>i\<cdot>as))) \<le> # (tsAbs\<cdot>(tsRemDups\<cdot>as))"
+ oops
+  
+  
 
 (* ----------------------------------------------------------------------- *)
 subsection {* sender and receiver composition *}
