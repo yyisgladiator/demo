@@ -358,18 +358,9 @@ by(simp add: tsdom_insert assms)
 lemma [simp]: "tsDom\<cdot>\<bottom> = {}"
 by(simp add: tsdom_insert)
 
-(*tslen*)
-thm tslen_def  
-
-lemma tslen_smaller_nbot:"tslen\<cdot>ts \<le> tslen\<cdot>ts1 \<Longrightarrow> ts \<noteq> \<bottom> \<Longrightarrow> ts1 \<noteq> \<bottom>"
-  apply (simp add: tslen_def)
-  by (metis Rep_tstream_bottom_iff bot_is_0 eq_bottom_iff lnle_def slen_empty_eq)
- 
-
 
 (* tsConc *)
 thm tsConc_def
-
 
 (* the concatination of 2 tStreams is wellformed *)
 lemma ts_well_conc1 [simp]: assumes "ts_well ts1" and "ts_well ts2"
@@ -2643,6 +2634,24 @@ lemma tsmlscons_lscons3:
   "ts\<noteq>\<bottom> \<Longrightarrow> tsMLscons\<cdot>(updis t)\<cdot>ts = Abs_tstream (updis (Msg t) && Rep_tstream ts)"
   by (simp add: tsMLscons_def tslscons2lscons)
 
+(* ----------------------------------------------------------------------- *)
+subsection {* tslen *}
+(* ----------------------------------------------------------------------- *)
+    
+lemma tslen_bottom: "tslen\<cdot>\<bottom> = 0"
+  by  (simp add: tslen_def) 
+    
+lemma tslen_delay: "tslen\<cdot>(delay ts) = lnsuc\<cdot>(tslen\<cdot>ts)"
+  by (simp add: delayFun_def tslen_def tsConc_def)    
+  
+lemma tslen_conc: "ts\<noteq>\<bottom> \<Longrightarrow> tslen\<cdot>(updis msg &&\<surd> ts) = lnsuc\<cdot>(tslen\<cdot>ts)"  
+  apply (simp add: tslen_def tsmlscons_lscons2)
+  by  (subst slen_def [THEN fix_eq2], simp add: lnle_def)  
+
+lemma tslen_smaller_nbot:"tslen\<cdot>ts \<le> tslen\<cdot>ts1 \<Longrightarrow> ts \<noteq> \<bottom> \<Longrightarrow> ts1 \<noteq> \<bottom>"
+  apply (simp add: tslen_def)
+  by (metis Rep_tstream_bottom_iff bot_is_0 eq_bottom_iff lnle_def slen_empty_eq)
+     
 (* ----------------------------------------------------------------------- *)
 subsection {* delayFun *}
 (* ----------------------------------------------------------------------- *)
