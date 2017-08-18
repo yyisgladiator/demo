@@ -92,15 +92,22 @@ lemma tssnd_tsprojsnd_tsremdups:
   apply (simp add: tsprojsnd_tsabs tsremdups_tsabs sprojsnd_def)
   by (metis eta_cfun send_def set2tssnd_alt_bit_tabs sprojsnd_def srcdups_smap_com)
 
-(* property 3 *)
-lemma prop3: "#(tsAbs\<cdot>ts) = \<infinity> \<Longrightarrow> #(tsAbs\<cdot>(tsMed\<cdot>(tsProjSnd\<cdot>(tsMed\<cdot>ts\<cdot>p1))\<cdot>p2)) = \<infinity>"
+(* oops-Lemmata in Medium *)
+text {* If infinite messages will be sent infinite messages will be transmitted. *}
+lemma tsmed_tsabs_slen_inf [simp]: assumes "#({True} \<ominus> ora)=\<infinity>" and "#(tsAbs\<cdot>msg)=\<infinity>" 
+  shows "#(tsAbs\<cdot>(tsMed\<cdot>msg\<cdot>ora)) = \<infinity>"
   sorry
+
+(* property 3 *)
+lemma prop3: assumes p1_def: "#({True} \<ominus> p1) = \<infinity>" and p2_def: "#({True} \<ominus> p2) = \<infinity>"
+  shows "#(tsAbs\<cdot>ts) = \<infinity> \<Longrightarrow> #(tsAbs\<cdot>(tsMed\<cdot>(tsProjSnd\<cdot>(tsMed\<cdot>ts\<cdot>p1))\<cdot>p2)) = \<infinity>"
+  by (simp add: p1_def p2_def)
 
 (* property 4 *)
 lemma prop4: assumes "#({True} \<ominus> p) = \<infinity>"
-  shows"#(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>ts))) < \<infinity> 
-  \<and> #(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>ts))) = #(tsAbs\<cdot>(tsRemDups\<cdot>(tsProjSnd\<cdot>ts)))
-  \<and> #(tsAbs\<cdot>(tsRemDups\<cdot>(tsProjSnd\<cdot>ts))) = #(tsAbs\<cdot>(tsRemDups\<cdot>(tsProjSnd\<cdot>(tsMed\<cdot>ts\<cdot>p))))
+  shows (* #(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>ts))) \<noteq> \<infinity> *) 
+  "#(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>ts))) = #(tsAbs\<cdot>(tsRemDups\<cdot>(tsProjSnd\<cdot>ts)))
+  \<Longrightarrow> #(tsAbs\<cdot>(tsRemDups\<cdot>(tsProjSnd\<cdot>ts))) = #(tsAbs\<cdot>(tsRemDups\<cdot>(tsProjSnd\<cdot>(tsMed\<cdot>ts\<cdot>p))))
   \<Longrightarrow> tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>ts)) = tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(tsMed\<cdot>ts\<cdot>p)))"
   sorry
 
@@ -140,10 +147,10 @@ lemma tsaltbitpro_inp2out:
           \<or> #(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>ds))) = lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>as)))"
       by (metis ds_def le_less_linear min_absorb2 send_def set2tssnd_ack2trans)
     hence "#(tsAbs\<cdot>i) \<le> #(tsAbs\<cdot>(tsRemDups\<cdot>as)) \<or> (#(tsAbs\<cdot>(tsRemDups\<cdot>as)) = \<infinity> \<or> #(tsAbs\<cdot>as) < \<infinity>)"
-      by (metis Inf'_neq_0 leI prop3 send_def set2tssnd_nack2inftrans strict_slen tsabs_bot 
-          tsmed_strict(2))
+      sorry
     hence "#(tsAbs\<cdot>i) \<le> #(tsAbs\<cdot>(tsRemDups\<cdot>as)) \<or> #(tsAbs\<cdot>(tsRemDups\<cdot>as)) = \<infinity>"
-      by (metis ar_def as_def dr_def ds_def leI neq_iff prop3 send_def set2tssnd_nack2inftrans)
+      by (metis ar_def as_def dr_def ds_def leI neq_iff p1_def p2_def prop3 send_def 
+          set2tssnd_nack2inftrans)
     hence geq: "#(tsAbs\<cdot>i) \<le> #(tsAbs\<cdot>(tsRemDups\<cdot>as))"
       by auto
     (* equalities *)
@@ -160,11 +167,11 @@ lemma tsaltbitpro_inp2out:
       by (metis ar_def as_def dr_def dual_order.antisym eq p1_def p2_def prop0 prop6 prop7
           sfilterl4 tsmed_map tsprojsnd_insert)
     (* tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>dr)) = tsAbs\<cdot>i *)
-    have h2: "tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>dr)) = tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>ds))"
-      by (metis Inf'_neq_0 dr_def inf_ub less_le p1_def prop3 prop4 prop7 prop8 strict_slen 
-          tsabs_bot tsmed_strict(2) tsprojfst_tsabs_slen)
+    have h2: "(* #(tsAbs\<cdot>i) \<noteq> \<infinity> \<Longrightarrow> *) tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>dr)) = tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>ds))"
+      using dr_def p1_def prop4 prop6 prop7 prop8 by force  
     show "tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>dr)) = tsAbs\<cdot>i"
-      by (simp add: ds_def eq_slen_eq_and_less h2 prop6 send_def set2tssnd_prefix_inp)
+      (* apply (cases "#(tsAbs\<cdot>i) \<noteq> \<infinity>", simp_all) *)
+      by (simp add: ds_def eq_slen_eq_and_less h2 prop6 send_def set2tssnd_prefix_inp)      
   qed
     
 end
