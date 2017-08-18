@@ -2641,6 +2641,12 @@ subsection {* tslen *}
 lemma tslen_bottom: "tslen\<cdot>\<bottom> = 0"
   by  (simp add: tslen_def) 
     
+lemma tslen_insert: "tslen\<cdot>ts = #(Rep_tstream ts)"
+  by (simp add: tslen_def)
+    
+lemma tslen_cont: "cont (\<lambda>ts. #(Rep_tstream ts))"
+  by simp 
+     
 lemma tslen_delay: "tslen\<cdot>(delay ts) = lnsuc\<cdot>(tslen\<cdot>ts)"
   by (simp add: delayFun_def tslen_def tsConc_def)    
   
