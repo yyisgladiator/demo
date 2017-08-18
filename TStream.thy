@@ -1751,9 +1751,6 @@ lemma delayfun_nbot[simp]: "delayFun\<cdot>ts \<noteq> \<bottom>"
 lemma delayfun_abststream: "ts_well s \<Longrightarrow> delayFun\<cdot>(Abs_tstream s) = Abs_tstream (updis \<surd> && s)"
   by (simp add: delayFun.rep_eq lscons_conv tsconc_insert)    
 
-lemma tsconc_delay: "((delay ts1) \<bullet> ts2) =(delay (ts1 \<bullet> ts2))"
-  by (simp add: delayFun.rep_eq)  
-
 (*tsntimes tsinftimes*)
 
 (*1 times a timed stream is the timed stream itself*)
@@ -2634,19 +2631,6 @@ lemma tsmlscons_lscons2: "ts\<noteq>\<bottom> \<Longrightarrow> Rep_tstream (tsM
 lemma tsmlscons_lscons3: 
   "ts\<noteq>\<bottom> \<Longrightarrow> tsMLscons\<cdot>(updis t)\<cdot>ts = Abs_tstream (updis (Msg t) && Rep_tstream ts)"
   by (simp add: tsMLscons_def tslscons2lscons)
-    
-lemma tsconc_tsmlscons: "ts1 \<noteq> \<bottom> \<Longrightarrow> (updis t &&\<surd> ts1) \<bullet> ts2 = updis t &&\<surd> (ts1 \<bullet> ts2)"
-proof -
-  assume a1: "ts1 \<noteq> \<bottom>"
-  have f2: "\<forall>s. \<not> ts_well s \<or> Rep_tstream (Abs_tstream s::'a tstream) = s"
-    using Rep_Abs by blast
-  have f3: "Abs_tstream (updis (\<M> t) && Rep_tstream (Abs_tstream (Rep_tstream ts1 \<bullet> Rep_tstream ts2))) = (updis t &&\<surd> ts1) \<bullet> ts2"
-    using a1 by (simp add: sconc_scons' tsconc_insert tsmlscons_lscons2)
-  have "\<epsilon> \<noteq> Rep_tstream ts1 \<bullet> Rep_tstream ts2"
-    using a1 by (metis (no_types) msg_nwell sconc_scons' sup'_def ts_well_conc tsmlscons_lscons2)
-  then show ?thesis
-    using f3 f2 by (metis (no_types) Rep_tstream_bottom_iff ts_well_conc tsconc_insert tslscons2lscons tsmlscons2tslscons)
-qed 
 
 (* ----------------------------------------------------------------------- *)
 subsection {* tslen *}
@@ -2799,7 +2783,23 @@ lemma tsdom_mlscons: "ts\<noteq>\<bottom> \<Longrightarrow> tsDom\<cdot>(tsMLsco
 
 lemma tsdom_delayfun: "tsDom\<cdot>(delayFun\<cdot>ts) = tsDom\<cdot>ts"
   by (simp add: delayFun_def tsdom_insert tsconc_rep_eq)
-      
+
+lemma tsconc_delayfun: "((delay ts1) \<bullet> ts2) =(delay (ts1 \<bullet> ts2))"
+  by (simp add: delayFun.rep_eq)  
+    
+lemma tsconc_mlscons: "ts1 \<noteq> \<bottom> \<Longrightarrow> (updis t &&\<surd> ts1) \<bullet> ts2 = updis t &&\<surd> (ts1 \<bullet> ts2)"
+proof -
+  assume a1: "ts1 \<noteq> \<bottom>"
+  have f2: "\<forall>s. \<not> ts_well s \<or> Rep_tstream (Abs_tstream s::'a tstream) = s"
+    using Rep_Abs by blast
+  have f3: "Abs_tstream (updis (\<M> t) && Rep_tstream (Abs_tstream (Rep_tstream ts1 \<bullet> Rep_tstream ts2))) = (updis t &&\<surd> ts1) \<bullet> ts2"
+    using a1 by (simp add: sconc_scons' tsconc_insert tsmlscons_lscons2)
+  have "\<epsilon> \<noteq> Rep_tstream ts1 \<bullet> Rep_tstream ts2"
+    using a1 by (metis (no_types) msg_nwell sconc_scons' sup'_def ts_well_conc tsmlscons_lscons2)
+  then show ?thesis
+    using f3 f2 by (metis (no_types) Rep_tstream_bottom_iff ts_well_conc tsconc_insert tslscons2lscons tsmlscons2tslscons)
+qed 
+  
 (************************************************)
 (************************************************)      
     section \<open>Match definitions\<close>
