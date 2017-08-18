@@ -71,9 +71,14 @@ lemma prop0: assumes "#({True} \<ominus> p) = \<infinity>"
   sorry
 
 (* property 1 *)
-lemma prop1: assumes "#({True} \<ominus> p1) = \<infinity>" and "#({True} \<ominus> p2) = \<infinity>"
+lemma prop1: assumes p1_def: "#({True} \<ominus> p1) = \<infinity>" and p2_def: "#({True} \<ominus> p2) = \<infinity>"
   shows "#(tsAbs\<cdot>(tsRemDups\<cdot>(tsMed\<cdot>(tsProjSnd\<cdot>(tsMed\<cdot>ts\<cdot>p1))\<cdot>p2))) \<le> #(tsAbs\<cdot>(tsRemDups\<cdot>(tsProjSnd\<cdot>ts)))"
-  sorry
+proof -
+  have "#(tsAbs\<cdot>(tsRemDups\<cdot>(tsProjSnd\<cdot>(tsMed\<cdot>ts\<cdot>p1)))) \<le> #(tsAbs\<cdot>(tsRemDups\<cdot>(tsProjSnd\<cdot>ts)))"
+    by (metis (no_types) p1_def prop0 sfilterl4 tsProjSnd_def tsmed_map)
+  thus "#(tsAbs\<cdot>(tsRemDups\<cdot>(tsMed\<cdot>(tsProjSnd\<cdot>(tsMed\<cdot>ts\<cdot>p1))\<cdot>p2))) \<le> #(tsAbs\<cdot>(tsRemDups\<cdot>(tsProjSnd\<cdot>ts)))"
+    using p2_def prop0 trans_lnle by blast
+  qed
 
 lemma set2tssnd_alt_bit_tabs: assumes "send \<in> tsSender"
   shows "srcdups\<cdot>(sprojsnd\<cdot>(srcdups\<cdot>(tsAbs\<cdot>(send\<cdot>i\<cdot>as)))) 
