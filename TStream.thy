@@ -2784,21 +2784,11 @@ lemma tsdom_mlscons: "ts\<noteq>\<bottom> \<Longrightarrow> tsDom\<cdot>(tsMLsco
 lemma tsdom_delayfun: "tsDom\<cdot>(delayFun\<cdot>ts) = tsDom\<cdot>ts"
   by (simp add: delayFun_def tsdom_insert tsconc_rep_eq)
 
-lemma tsconc_delayfun: "((delay ts1) \<bullet> ts2) =(delay (ts1 \<bullet> ts2))"
-  by (simp add: delayFun.rep_eq)  
-    
-lemma tsconc_mlscons: "ts1 \<noteq> \<bottom> \<Longrightarrow> (updis t &&\<surd> ts1) \<bullet> ts2 = updis t &&\<surd> (ts1 \<bullet> ts2)"
-proof -
-  assume a1: "ts1 \<noteq> \<bottom>"
-  have f2: "\<forall>s. \<not> ts_well s \<or> Rep_tstream (Abs_tstream s::'a tstream) = s"
-    using Rep_Abs by blast
-  have f3: "Abs_tstream (updis (\<M> t) && Rep_tstream (Abs_tstream (Rep_tstream ts1 \<bullet> Rep_tstream ts2))) = (updis t &&\<surd> ts1) \<bullet> ts2"
-    using a1 by (simp add: sconc_scons' tsconc_insert tsmlscons_lscons2)
-  have "\<epsilon> \<noteq> Rep_tstream ts1 \<bullet> Rep_tstream ts2"
-    using a1 by (metis (no_types) msg_nwell sconc_scons' sup'_def ts_well_conc tsmlscons_lscons2)
-  then show ?thesis
-    using f3 f2 by (metis (no_types) Rep_tstream_bottom_iff ts_well_conc tsconc_insert tslscons2lscons tsmlscons2tslscons)
-qed 
+lemma tsconc_mlscons: "ts1\<noteq>\<bottom> \<Longrightarrow> (updis t &&\<surd> ts1) \<bullet> ts2 = updis t &&\<surd> (ts1 \<bullet> ts2)"
+  by (metis absts2mlscons sconc_scons' ts_well_conc tsconc_insert tsmlscons_lscons2)
+
+lemma tsconc_delayfun: "(delay ts1) \<bullet> ts2 = delay (ts1 \<bullet> ts2)"
+  by (simp add: delayFun.rep_eq)
   
 (************************************************)
 (************************************************)      

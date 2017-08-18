@@ -38,16 +38,17 @@ lemma tssnd_test_bot: "tsSnd\<cdot>\<bottom>\<cdot>tsInfTick = \<bottom>"
 
 lemma tssnd_test_fin:
   "tsSnd\<cdot>tsSndExampInp_1\<cdot>(tsSndExampInp_2 \<bullet> tsInfTick)\<cdot>(Discr True) = tsSndExampOut"
-  apply (simp add: tsconc_delayfun tsconc_mlscons tsSndExampInp_1_def tsSndExampInp_2_def tsSndExampOut_def 
-         tssnd_delayfun_nack tssnd_mlscons_ack tssnd_mlscons_nack tssnd_delayfun)
+  apply (simp add: tsSndExampInp_1_def tsSndExampInp_2_def tsSndExampOut_def tsconc_mlscons 
+         tsconc_delayfun tssnd_mlscons_ack tssnd_mlscons_nack tssnd_delayfun_nack tssnd_delayfun)
   apply (subst tsinftick_unfold)
   by (simp only: tssnd_delayfun, simp)    
     
 lemma tssnd_test_inf:
   "tsSnd\<cdot>(tsSndExampInp_1 \<bullet> tsInfTick)\<cdot>(tsSndExampInp_2 \<bullet> tsInfTick)\<cdot>(Discr True) 
-       = tsSndExampOut \<bullet> tsInfTick"
-  by (simp add: tsconc_delayfun tsconc_mlscons tsSndExampInp_1_def tsSndExampInp_2_def tsSndExampOut_def
-      tssnd_delayfun_nack tssnd_mlscons_ack tssnd_mlscons_nack tssnd_delayfun tssnd_inftick_inftick)
+     = tsSndExampOut \<bullet> tsInfTick"
+  by (simp add: tsSndExampInp_1_def tsSndExampInp_2_def tsSndExampOut_def tsconc_mlscons 
+      tsconc_delayfun tssnd_mlscons_ack tssnd_mlscons_nack tssnd_delayfun_nack tssnd_delayfun
+      tssnd_inftick_inftick)
 
 (* ----------------------------------------------------------------------- *)
 subsection {* medium *}
@@ -103,16 +104,16 @@ lemma tsrec_test_bot: "tsRec\<cdot>\<bottom> = \<bottom>"
   by simp
 
 lemma tsrec_test_fin: "tsRec\<cdot>tsRecExampInp = (tsRecExampOut_1, tsRecExampOut_2)"
-  by (simp add: tsrec_insert tsrecsnd_insert tsRecExampInp_def tsRecExampOut_1_def 
-      tsRecExampOut_2_def tsprojsnd_delayfun tsprojsnd_mlscons tsprojfst_delayfun 
-      tsprojfst_mlscons tsremdups_h_delayfun tsremdups_h_mlscons tsremdups_h_mlscons_dup 
-      tsremdups_h_mlscons_ndup tsremdups_insert)  
+  by (simp add: tsRecExampInp_def tsRecExampOut_1_def tsRecExampOut_2_def tsrec_insert
+      tsrecsnd_insert tsremdups_insert tsprojsnd_mlscons tsprojsnd_delayfun tsprojfst_mlscons 
+      tsprojfst_delayfun tsremdups_h_mlscons tsremdups_h_mlscons_dup tsremdups_h_mlscons_ndup 
+      tsremdups_h_delayfun)
   
 lemma tsrec_test_inf2:
   "tsRec\<cdot>(tsRecExampInp \<bullet> tsInfTick) = (tsRecExampOut_1 \<bullet> tsInfTick, tsRecExampOut_2 \<bullet> tsInfTick)"
-  by (simp add: tsRecExampInp_def tsRecExampOut_1_def tsRecExampOut_2_def tsconc_delayfun tsconc_mlscons
-      tsrec_insert tsrecsnd_insert tsremdups_insert tsprojsnd_mlscons tsprojsnd_delayfun
-      tsremdups_h_delayfun tsremdups_h_mlscons tsremdups_h_mlscons_dup tsremdups_h_mlscons_ndup
-      tsremdups_h_tsinftick tsprojfst_mlscons tsprojfst_delayfun)
+  by (simp add: tsRecExampInp_def tsRecExampOut_1_def tsRecExampOut_2_def tsrec_insert 
+      tsrecsnd_insert tsremdups_insert tsconc_mlscons tsconc_delayfun tsprojsnd_mlscons
+      tsprojsnd_delayfun tsprojfst_mlscons tsprojfst_delayfun tsremdups_h_mlscons 
+      tsremdups_h_mlscons_dup tsremdups_h_mlscons_ndup tsremdups_h_delayfun tsremdups_h_tsinftick)
     
 end
