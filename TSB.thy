@@ -1350,21 +1350,41 @@ proof (cases "tsbDom\<cdot>(\<Squnion>i. Y i) \<noteq> {}")
             have 4034: "\<exists>k\<ge>a. \<forall>c \<in> tsbDom\<cdot>(Lub Y). minval <  #\<surd> Y k . c"
             proof -
               have 40341: "minval < \<infinity>"
-                
-                sorry
+              proof(rule classical)
+                assume 403411: "\<not> ?thesis"
+                then have "minval = \<infinity>"
+                  using inf_ub order.not_eq_order_implies_strict by blast
+                then have "\<forall>c \<in> tsbDom\<cdot>(Y a). #\<surd> Y a . c = \<infinity>"
+                  by (metis (no_types, lifting) "402" "4031" "4032" assms inf_ub leD tsbChain_dom_eq2)
+                then have "\<forall>k\<ge>a. Y k = Y a"
+                  by (metis (no_types, lifting) "402" "4031" assms inf_ub leD tsbChain_dom_eq2)
+                then have "finite_chain Y"
+                  by (metis (no_types, lifting) "402" "4031" assms less_le tsbChain_dom_eq2)
+                then have "False"
+                  using f300 by auto
+                from this show ?thesis
+                  by blast 
+              qed
               have 40342: "\<forall> i. \<forall> ch1 \<in> tsbDom\<cdot>(Lub Y). \<exists> j\<ge>i. ((#\<surd> Y i . ch1) < (#\<surd> Y j . ch1))"
                 by (simp add: 402)
               then have 40343: "\<forall> x < \<infinity>. \<forall>c \<in> tsbDom\<cdot>(Lub Y). \<exists> k\<ge>a. x < #\<surd> Y k . c"
-                
                 sorry
               have 40344: "\<forall> x < \<infinity>. \<exists> k\<ge>a. \<forall>c \<in> tsbDom\<cdot>(Lub Y).  x < #\<surd> Y k . c"
               proof - 
                 have "\<And>x. x < \<infinity> \<Longrightarrow> \<exists> k\<ge>a. \<forall>c \<in> tsbDom\<cdot>(Lub Y).  x < #\<surd> Y k . c"
                 proof - 
                   fix x
-                  assume "x < \<infinity>"
-                  show "\<exists> k\<ge>a. \<forall>c \<in> tsbDom\<cdot>(Lub Y).  x < #\<surd> Y k . c"
+                  assume 403441: "x < \<infinity>"
+                  then obtain kch :: "channel \<Rightarrow> nat" where 403442: "\<forall>c \<in> tsbDom\<cdot>(Lub Y). (x < #\<surd> Y (kch c) . c \<and> (kch c)\<ge>a)"
+                    using 403441 40343 by metis 
+                  have 4034421: "\<forall>i. \<forall>j\<ge>i. \<forall>c \<in> tsbDom\<cdot>(Lub Y). #\<surd> Y i . c \<le> #\<surd> Y j . c"
+                    using assms lnle_def monofun_cfun_arg po_class.chain_mono tsbgetch_below by blast
+                  then obtain h where 403443: "h\<ge>a \<and> (\<exists>c \<in> tsbDom\<cdot>(Lub Y). h = (kch c)) \<and> (\<forall>c \<in> tsbDom\<cdot>(Lub Y). h \<ge> (kch c))"
                     sorry
+                  then have "h\<ge>a \<and> (\<forall>c \<in> tsbDom\<cdot>(Lub Y). x < #\<surd> Y h . c)"
+                    using 403442 4034421 by (meson dual_order.trans leD not_le_imp_less)
+                  then show "\<exists> k\<ge>a. \<forall>c \<in> tsbDom\<cdot>(Lub Y). x < #\<surd> Y k . c"
+                    by blast
                 qed
                 then show ?thesis
                   by blast
