@@ -67,7 +67,7 @@ lemma axiom3: assumes "send \<in> tsSender" and a1: "#(tsAbs\<cdot>(tsRemDups\<c
   by (simp add: a1)
 
     
-(* WIP prop0 begin*)
+(* prop0 helper begin*)
 lemma prop0_h:"#(srcdups\<cdot>(s\<bullet>s2)) \<le> #(srcdups\<cdot>(s\<bullet>\<up>b\<bullet>s2))"
 proof(induction rule: ind [of _ s])
   case 1
@@ -167,22 +167,60 @@ lemma prop0_h2_2: assumes "#p=\<infinity>"
   
 lemma prop0_h3_h:"tsMed\<cdot>ts\<cdot>p\<noteq>\<bottom> \<Longrightarrow> tsAbs\<cdot>(updis t &&\<surd> tsMed\<cdot>ts\<cdot>p) = \<up>t \<bullet> (tsAbs\<cdot>(tsMed\<cdot>ts\<cdot>p))"
   by (simp add: lscons_conv tsabs_mlscons)
- 
-(* 
-lemma surj_tsmlscons_tsmed:" tsAbs\<cdot>(tsMed\<cdot>ts\<cdot>ora) \<noteq> \<epsilon> \<Longrightarrow> tsAbs\<cdot>(tsMed\<cdot>((THE m . m &&\<surd> x = ts) &&\<surd> (THE msg. m &&\<surd>msg = ts))\<cdot>ora) = tsAbs\<cdot>(tsMed\<cdot>ts\<cdot>ora)"
-  sorry
+
+lemma tsmed_shd_adm_h2:"chain Y \<Longrightarrow> Y i\<noteq>\<epsilon> \<Longrightarrow> shd (Y i) = shd (\<Squnion>i. Y i)"
+  by (simp add: below_shd is_ub_thelub)
     
-lemma prop0_h2_2_cool:
-  shows"#p2=\<infinity> \<Longrightarrow> #(srcdups\<cdot>(tsAbs\<cdot>(tsMed\<cdot>ts\<cdot>(p1 \<bullet> p2)))) \<le> #(srcdups\<cdot>(tsAbs\<cdot>(tsMed\<cdot>ts\<cdot>((p1 \<bullet> \<up>True \<bullet> srt\<cdot>p2)))))"
-apply(cases "shd p2")
-apply (metis (full_types) Inf'_neq_0 order_refl strict_slen surj_scons)
-proof(induction ts arbitrary: p2 p1)
+lemma tsmed_shd:"#ora1=\<infinity> \<Longrightarrow> #ora2=\<infinity> \<Longrightarrow> shd (tsAbs\<cdot>(tsMed\<cdot>ts\<cdot>(updis True && ora1))) = shd (tsAbs\<cdot>(tsMed\<cdot>ts\<cdot>(updis True && ora2)))"
+proof(induction ts)
   case adm
   then show ?case
-    apply (rule adm_all)
-    apply (rule adm_imp, auto)
-    apply (rule admI)
-    by (simp add: contlub_cfun_fun contlub_cfun_arg lub_mono2)
+    apply (rule adm_imp,auto)+
+    apply (rule admI) 
+    apply(simp add: contlub_cfun_arg contlub_cfun_fun)
+    proof-
+      fix Y::"nat \<Rightarrow>'a tstream"
+      assume a1: "chain Y"
+      assume a2: "\<forall>i. shd (tsAbs\<cdot>(tsMed\<cdot>(Y i)\<cdot>(updis True && ora1))) = shd (tsAbs\<cdot>(tsMed\<cdot>(Y i)\<cdot>(updis True && ora2)))"
+      have c1:"chain (\<lambda>i. tsAbs\<cdot>(tsMed\<cdot>(Y i)\<cdot>(updis True && ora1)))"
+        by (simp add: a1)
+      have c2:"chain (\<lambda>i. tsAbs\<cdot>(tsMed\<cdot>(Y i)\<cdot>(updis True && ora2)))"
+        by (simp add: a1)
+      show "shd (\<Squnion>i. tsAbs\<cdot>(tsMed\<cdot>(Y i)\<cdot>(updis True && ora1))) = shd (\<Squnion>i. tsAbs\<cdot>(tsMed\<cdot>(Y i)\<cdot>(updis True && ora2)))"
+        by (metis (no_types, lifting) a2 c1 c2 lub_eq_bottom_iff tsmed_shd_adm_h2)
+    qed
+next
+  case bottom
+  then show ?case 
+    by simp
+next
+  case (delayfun ts)
+  then show ?case
+    by (metis stream.con_rews(2) tsabs_delayfun tsmed_delayfun)
+next
+  case (mlscons ts t)
+  then show ?case
+    by (metis prop0_h3_h shd1 tsmed_mlscons_true tsmed_nbot)
+qed
+
+lemma tsmed_srcdups_shd:"#ora1=\<infinity> \<Longrightarrow> #ora2=\<infinity> \<Longrightarrow> shd (srcdups\<cdot>(tsAbs\<cdot>(tsMed\<cdot>ts\<cdot>(updis True && ora1)))) = shd (srcdups\<cdot>(tsAbs\<cdot>(tsMed\<cdot>ts\<cdot>(updis True && ora2))))"
+  by (metis srcdups_shd2 strict_srcdups tsmed_shd)  
+    
+(*maybe nice to have
+    
+lemma prop0_ind_h2:
+  shows"#p2=\<infinity> \<Longrightarrow> #(srcdups\<cdot>(tsAbs\<cdot>(tsMed\<cdot>ts\<cdot>(p1 \<bullet> p2)))) \<le> #(srcdups\<cdot>(tsAbs\<cdot>(tsMed\<cdot>ts\<cdot>((p1 \<bullet> \<up>True \<bullet> srt\<cdot>p2)))))"
+*)
+
+lemma prop0_h2_ind_h: assumes "#p=\<infinity>"
+    shows"#(srcdups\<cdot>(\<up>t \<bullet> tsAbs\<cdot>(tsMed\<cdot>ts\<cdot>(\<up>b \<bullet> p)))) \<le> #(srcdups\<cdot>(\<up>t \<bullet> tsAbs\<cdot>(tsMed\<cdot>ts\<cdot>(\<up>True\<bullet>p))))"
+  apply(cases "b", simp)
+proof(induction ts)
+  case adm
+  then show ?case
+    apply(rule adm_imp,simp)
+    apply(rule admI)
+    by(simp add: contlub_cfun_arg assms contlub_cfun_fun lub_mono2)
 next
   case bottom
   then show ?case
@@ -190,62 +228,17 @@ next
 next
   case (delayfun ts)
   then show ?case
-    by (metis (full_types) tsabs_delayfun tsmed_delayfun tsmed_strict(2))
+    by (simp add: tsmed_delayfun)
 next
   case (mlscons ts t)
-  have lenp1:"#(srt\<cdot>p1 \<bullet> p2) = \<infinity>"
-    by (simp add: mlscons.prems(1) slen_sconc_snd_inf)
-  have case_eps:"p1=\<epsilon> \<Longrightarrow> ?case"
-    by (simp add: mlscons.prems(1) prop0_h2_2)
-  then have "p1 \<noteq> \<epsilon> \<Longrightarrow> shd p1= False \<Longrightarrow> tsAbs\<cdot>(tsMed\<cdot>(updis t &&\<surd> ts)\<cdot>(p1 \<bullet> p2)) = (tsAbs\<cdot>(tsMed\<cdot>ts\<cdot>(srt\<cdot>p1 \<bullet> p2)))"
-    using tsmed_mlscons_false[of ts "(srt\<cdot>p1)\<bullet>p2" t] mlscons.hyps surj_scons[of p1]
-    by (metis (full_types) lenp1 lscons_conv sconc_scons) 
-  have f1_h:"p1 \<noteq> \<epsilon> \<Longrightarrow> shd p1 \<Longrightarrow> tsAbs\<cdot>(tsMed\<cdot>(updis t &&\<surd> ts)\<cdot>(p1 \<bullet> p2)) = \<up>t \<bullet> (tsAbs\<cdot>(tsMed\<cdot>ts\<cdot>(srt\<cdot>p1 \<bullet> p2)))"
-  proof -
-    assume a1: "shd p1"
-    assume "p1 \<noteq> \<epsilon>"
-    then have "p1 \<bullet> p2 = \<up>True \<bullet> srt\<cdot>p1 \<bullet> p2"
-      using a1 by (metis (full_types) sconc_scons surj_scons)
-    then show ?thesis
-      by (metis (no_types) \<open>#(srt\<cdot>p1 \<bullet> p2) = \<infinity>\<close> lscons_conv mlscons.hyps prop0_h3_h tsmed_mlscons_true tsmed_nbot)
-  qed
-  have f1_h2:"p1 \<noteq> \<epsilon> \<Longrightarrow> shd p1 \<Longrightarrow> (tsAbs\<cdot>(tsMed\<cdot>(updis t &&\<surd> ts)\<cdot>(p1 \<bullet> \<up>True \<bullet> srt\<cdot>p2))) =  \<up>t \<bullet> (tsAbs\<cdot>(tsMed\<cdot>ts\<cdot>(srt\<cdot>p1 \<bullet>\<up>True \<bullet> srt\<cdot>p2)))"
-  proof -
-    assume a1: "shd p1"
-    assume "p1 \<noteq> \<epsilon>"
-    then have f2: "p1 \<bullet> \<up>True \<bullet> srt\<cdot>p2 = \<up>True \<bullet> srt\<cdot>p1 \<bullet> \<up>True \<bullet> srt\<cdot>p2"
-      using a1 by (metis (full_types) sconc_scons surj_scons)
-    have f3: "#(srt\<cdot>p1 \<bullet> \<up>True \<bullet> srt\<cdot>p2) = \<infinity>"
-      by (metis (no_types) Inf'_neq_0 mlscons.prems(1) only_empty_has_length_0 slen_sconc_snd_inf slen_scons surj_scons)
-    then have "tsMed\<cdot>ts\<cdot> (srt\<cdot>p1 \<bullet> \<up>True \<bullet> srt\<cdot>p2) \<noteq> \<bottom>"
-      by (metis mlscons.hyps tsmed_nbot)
-  then show ?thesis
-    using f3 f2 by (metis (no_types) lscons_conv mlscons.hyps prop0_h3_h tsmed_mlscons_true)
-  qed
-  have f1:"p1\<noteq> \<epsilon> \<Longrightarrow> shd p1 \<Longrightarrow> ?case"
-    apply(simp add: f1_h f1_h2)
-    sorry
-  have f2:"p1 \<noteq>\<epsilon> \<Longrightarrow> \<not> shd p1 \<Longrightarrow> ?case" 
-    by (smt Inf'_neq_0 lscons_conv mlscons.IH mlscons.hyps mlscons.prems(1) mlscons.prems(2) sconc_scons slen_empty_eq slen_sconc_snd_inf slen_scons surj_scons tsmed_mlscons_false)
+  have f1:"tsMed\<cdot>(updis t &&\<surd> ts)\<cdot>(\<up>b \<bullet> p) = tsMed\<cdot>ts\<cdot>p"
+    using tsmed_mlscons_false[of ts "p" t]  by (simp add: assms lscons_conv mlscons.hyps mlscons.prems)
   then show ?case 
-    using case_eps f1 f2 by blast
-qed
-proof(induction arbitrary: p2 ts rule: ind [of _ p1])
-  case 1
-  then show ?case
-  apply(rule admI)
-  by(metis inf_chainl4 l42 order_refl sconc_fst_inf)
-next
-  case 2
-  then show ?case
-    by (simp add: prop0_h2_2)
-next
-  case (3 a s)
-  then show ?case
-    sorry
-qed*)
-
-
+    apply (simp add: f1)
+    by (metis assms lscons_conv mlscons.hyps prop0_h prop0_h3_h tsmed_mlscons_true tsmed_nbot)
+qed    
+    
+    
 lemma prop0_h3: "#p=\<infinity> \<Longrightarrow> #(srcdups\<cdot>(tsAbs\<cdot>(tsMed\<cdot>ts\<cdot>p))) \<le> #(srcdups\<cdot>(tsAbs\<cdot>(tsMed\<cdot>ts\<cdot>(\<up>True\<infinity>))))"
 proof(induction ts arbitrary: p)
   case adm
@@ -265,36 +258,24 @@ next
     by (metis (no_types, lifting) tsabs_delayfun tsmed_delayfun tsmed_strict(2))
 next
   case (mlscons ts t)
-  have h1:"#(srcdups\<cdot>(tsAbs\<cdot>(tsMed\<cdot>(updis t &&\<surd> ts)\<cdot>p))) \<le> #(srcdups\<cdot>(tsAbs\<cdot>(tsMed\<cdot>(updis t &&\<surd> ts)\<cdot>((updis True && (srt\<cdot>p))))))"
-    by (simp add: lscons_conv mlscons.prems prop0_h2_2)
-  have h2:"#(srcdups\<cdot>(tsAbs\<cdot>(tsMed\<cdot>(updis t &&\<surd> ts)\<cdot>((updis True && (srt\<cdot>p)))))) = #(srcdups\<cdot>(\<up>t \<bullet> tsAbs\<cdot>(tsMed\<cdot>ts\<cdot>(srt\<cdot>p))))"
-    by (metis deconstruct_infstream mlscons.hyps mlscons.prems prop0_h3_h stream.sel_rews(5) tsmed_mlscons_true tsmed_nbot up_defined)
-  have "#(srt\<cdot>p) = \<infinity>"
-    by (metis Inf'_neq_0 fold_inf inject_lnsuc mlscons.prems slen_empty_eq srt_decrements_length)
-  have h5: "#(srcdups\<cdot>(tsAbs\<cdot>(tsMed\<cdot>(updis t &&\<surd> ts)\<cdot>\<up>True\<infinity>))) = #(srcdups\<cdot>(\<up>t \<bullet> tsAbs\<cdot>(tsMed\<cdot>ts\<cdot>\<up>True\<infinity>)))"
-    by (metis mlscons.hyps prop0_h3_h tsmed_inftrue)
-  then have h4:"#(srcdups\<cdot>(\<up>t \<bullet> tsAbs\<cdot>(tsMed\<cdot>ts\<cdot>(srt\<cdot>p)))) \<le> #(srcdups\<cdot>(tsAbs\<cdot>(tsMed\<cdot>(updis t &&\<surd> ts)\<cdot>\<up>True\<infinity>)))"
-    apply(simp only: h5)
-    apply simp
-    apply (insert mlscons.IH[of "srt\<cdot>p"], simp)
-    apply(cases "t = shd(tsAbs\<cdot>ts)", simp)
-    sorry
-  then show ?case
-    using h1 h2 by auto
-qed
-    
-    
-    
-(*  have ass1:"#(srcdups\<cdot>(tsAbs\<cdot>(tsMed\<cdot>ts\<cdot>(srt\<cdot>p)))) \<le> #(srcdups\<cdot>(tsAbs\<cdot>(tsMed\<cdot>ts\<cdot>\<up>True\<infinity>)))"
-    by (metis Inf'_neq_0 fold_inf lnat.injects mlscons.IH mlscons.prems srt_decrements_length strict_slen)
-  have case_true:"#(srcdups\<cdot>(tsAbs\<cdot>(tsMed\<cdot>(updis t &&\<surd> ts)\<cdot>p))) \<le> #(srcdups\<cdot>(tsAbs\<cdot>(tsMed\<cdot>(updis t &&\<surd> ts)\<cdot>(\<up>True\<bullet>(srt\<cdot>p)))))" 
-    by (simp add: mlscons.prems prop0_h2_2)
+  
   have h1:"tsMed\<cdot>(updis t &&\<surd> ts)\<cdot>(\<up>True\<bullet>(srt\<cdot>p)) = updis t &&\<surd> tsMed\<cdot>ts\<cdot>(srt\<cdot>p)"
     by (metis (no_types, lifting) Inf'_neq_0 fold_inf inject_lnsuc lscons_conv mlscons.hyps mlscons.prems slen_empty_eq srt_decrements_length tsmed_mlscons_true)
   have h2:"tsMed\<cdot>(updis t &&\<surd> ts)\<cdot>\<up>True\<infinity> = updis t &&\<surd> tsMed\<cdot>ts\<cdot>\<up>True\<infinity>"
     by (metis tsmed_inftrue)
   have h5:"tsAbs\<cdot>(tsMed\<cdot>ts\<cdot>(srt\<cdot>p)) \<noteq> \<epsilon> \<Longrightarrow> t\<noteq> shd (tsAbs\<cdot>(tsMed\<cdot>ts\<cdot>(\<up>True\<infinity>))) \<Longrightarrow> #(srcdups\<cdot>(\<up>t \<bullet> tsAbs\<cdot>(tsMed\<cdot>ts\<cdot>\<up>True\<infinity>))) =lnsuc\<cdot>(#(srcdups\<cdot>(tsAbs\<cdot>(tsMed\<cdot>ts\<cdot>\<up>True\<infinity>))))"
-    by (smt Inf'_neq_0 fold_inf inject_lnsuc leD lnless_def lnzero_def minimal mlscons.prems slen_empty_eq slen_scons srcdups_neq surj_scons tsmed_inftrue tsmed_tsabs_slen)
+  proof -
+    assume a1: "tsAbs\<cdot>(tsMed\<cdot>ts\<cdot>(srt\<cdot>p)) \<noteq> \<epsilon>"
+    assume a2: "t \<noteq> shd (tsAbs\<cdot>(tsMed\<cdot>ts\<cdot>\<up>True\<infinity>))"
+    have "p \<noteq> \<epsilon>"
+      using mlscons.prems by force
+    then have "lnsuc\<cdot>(#(srt\<cdot>p)) = \<infinity>"
+      by (metis (no_types) mlscons.prems slen_scons surj_scons)
+    then have "tsAbs\<cdot>ts \<noteq> \<epsilon>"
+      using a1 by (metis bot_is_0 fold_inf inject_lnsuc leD lnless_def minimal slen_empty_eq tsmed_tsabs_slen)
+    then show ?thesis
+      using a2 by (metis (no_types) slen_scons srcdups_neq surj_scons tsmed_inftrue)
+  qed
   have "#(srcdups\<cdot>(tsAbs\<cdot>(tsMed\<cdot>(updis t &&\<surd> ts)\<cdot>(\<up>True\<bullet>(srt\<cdot>p)))))\<le>#(srcdups\<cdot>(tsAbs\<cdot>(tsMed\<cdot>(updis t &&\<surd> ts)\<cdot>\<up>True\<infinity>)))"
     apply(simp only: h1 h2)
     apply(subst prop0_h3_h)
@@ -302,52 +283,69 @@ qed
     apply(subst prop0_h3_h)
     apply (simp add: mlscons.hyps)
     proof-
-      have "#(srt\<cdot>p) = \<infinity>"
+      have srt_len:"#(srt\<cdot>p) = \<infinity>"
         by (metis Inf'_neq_0 fold_inf inject_lnsuc mlscons.prems slen_empty_eq srt_decrements_length)
       then have h1:"#(srcdups\<cdot>(\<up>t \<bullet> tsAbs\<cdot>(tsMed\<cdot>ts\<cdot>(srt\<cdot>p)))) \<le>#(srcdups\<cdot>(\<up>t \<bullet> tsAbs\<cdot>(tsMed\<cdot>ts\<cdot>(\<up>True \<bullet> srt\<cdot>(srt\<cdot>p)))))"
-        sorry
-        (*using prop0_h2_2_cool
-        by (smt Inf'_neq_0 lscons_conv mlscons.hyps prop0_h3_h slen_empty_eq slen_scons srt_decrements_length tsmed_mlscons_true tsmed_nbot)*)
+        by (metis Inf'_neq_0 prop0_h2_ind_h fold_inf lnat.sel_rews(2) only_empty_has_length_0 srt_decrements_length surj_scons)
       have h2:"#(srcdups\<cdot>(\<up>t \<bullet> tsAbs\<cdot>(tsMed\<cdot>ts\<cdot>(\<up>True \<bullet> srt\<cdot>(srt\<cdot>p))))) \<le> #(srcdups\<cdot>(\<up>t \<bullet> tsAbs\<cdot>(tsMed\<cdot>ts\<cdot>\<up>True\<infinity>)))"
-        apply(cases "tsAbs\<cdot>(tsMed\<cdot>ts\<cdot>(\<up>True \<bullet> srt\<cdot>(srt\<cdot>p))) = \<epsilon>")
-        apply (metis lnle_def minimal monofun_cfun_arg)
-        apply(cases "t= shd (tsAbs\<cdot>(tsMed\<cdot>ts\<cdot>(\<up>True \<bullet> srt\<cdot>(srt\<cdot>p))))")
-        proof -
+        proof(cases "tsAbs\<cdot>(tsMed\<cdot>ts\<cdot>(\<up>True \<bullet> srt\<cdot>(srt\<cdot>p))) = \<epsilon>")
+          case True
+          then show ?thesis
+            by (metis lnle_def minimal monofun_cfun_arg)
+        next
+          case False
+          then show ?thesis
+           proof(cases "t= shd (tsAbs\<cdot>(tsMed\<cdot>ts\<cdot>(\<up>True \<bullet> srt\<cdot>(srt\<cdot>p))))")
+          case True
           assume a1: "tsAbs\<cdot>(tsMed\<cdot>ts\<cdot>(\<up>True \<bullet> srt\<cdot>(srt\<cdot>p))) \<noteq> \<epsilon>"
           assume a2: "t = shd (tsAbs\<cdot>(tsMed\<cdot>ts\<cdot>(\<up>True \<bullet> srt\<cdot>(srt\<cdot>p))))"
           have h10:"\<And>s a. #(srcdups\<cdot>s) \<le> #(srcdups\<cdot>(\<up>(a::'a) \<bullet> s))"
             by (metis (full_types) prop0_h sconc_fst_empty)
           then have "#(srcdups\<cdot>(tsAbs\<cdot>(tsMed\<cdot>ts\<cdot>(srt\<cdot>p)))) \<le> #(srcdups\<cdot> (\<up>t \<bullet> tsAbs\<cdot> (tsMed\<cdot>ts\<cdot>\<up>True\<infinity>)))"
-            by (meson ass1 leD leI less_le_trans)
+            using srt_len dual_order.trans mlscons.IH by blast
           then show "#(srcdups\<cdot>(\<up>t \<bullet> tsAbs\<cdot>(tsMed\<cdot>ts\<cdot>(\<up>True \<bullet> srt\<cdot>(srt\<cdot>p))))) \<le> #(srcdups\<cdot>(\<up>t \<bullet> tsAbs\<cdot>(tsMed\<cdot>ts\<cdot>\<up>True\<infinity>)))"
             using a2 a1
           proof -
             have "\<not> #(srcdups\<cdot> (tsAbs\<cdot>(tsMed\<cdot>ts\<cdot>\<up>True\<infinity>))) < #(srcdups\<cdot> (\<up>t \<bullet> tsAbs\<cdot> (tsMed\<cdot>ts\<cdot> (\<up>True \<bullet> srt\<cdot> (srt\<cdot>p)))))"
-              by (metis (no_types) Inf'_neq_0 \<open>#(srt\<cdot>p) = \<infinity>\<close> a1 a2 leD mlscons.IH only_empty_has_length_0 slen_scons srcdups_eq surj_scons)
+              by (metis (no_types) Inf'_neq_0 srt_len a1 a2 leD mlscons.IH only_empty_has_length_0 slen_scons srcdups_eq surj_scons)
             then show ?thesis
               by (meson h10 le_less_trans not_le_imp_less)
           qed
         next
+          case False
           assume a1: "tsAbs\<cdot>(tsMed\<cdot>ts\<cdot>(\<up>True \<bullet> srt\<cdot>(srt\<cdot>p))) \<noteq> \<epsilon>"
           assume a2: "t \<noteq> shd (tsAbs\<cdot>(tsMed\<cdot>ts\<cdot>(\<up>True \<bullet> srt\<cdot>(srt\<cdot>p))))"
           have "tsAbs\<cdot>(tsMed\<cdot>ts\<cdot>\<up>True\<infinity>) \<noteq>\<epsilon>"
-            by (metis Inf'_neq_0 \<open>#(srt\<cdot>p) = \<infinity>\<close> a1 leD lnless_def lnzero_def minimal slen_empty_eq slen_scons srt_decrements_length tsmed_inftrue tsmed_tsabs_slen)
+            by (metis Inf'_neq_0 srt_len a1 leD lnless_def lnzero_def minimal slen_empty_eq slen_scons srt_decrements_length tsmed_inftrue tsmed_tsabs_slen)
           then have "shd (tsAbs\<cdot>(tsMed\<cdot>ts\<cdot>(\<up>True \<bullet> srt\<cdot>(srt\<cdot>p)))) = shd (tsAbs\<cdot>(tsMed\<cdot>ts\<cdot>\<up>True\<infinity>))"
-            sorry
+            by (metis tsmed_shd sinftimes_unfold deconstruct_infstream_h lscons_conv mlscons.prems slen_sinftimes stream.con_rews(2) stream.sel_rews(5) sup'_def up_defined)
           then have "t \<noteq> shd (tsAbs\<cdot>(tsMed\<cdot>ts\<cdot>\<up>True\<infinity>))"
             using a2 by simp
           then show "#(srcdups\<cdot>(\<up>t \<bullet> tsAbs\<cdot>(tsMed\<cdot>ts\<cdot>(\<up>True \<bullet> srt\<cdot>(srt\<cdot>p))))) \<le> #(srcdups\<cdot>(\<up>t \<bullet> tsAbs\<cdot>(tsMed\<cdot>ts\<cdot>\<up>True\<infinity>)))"
-            by (smt Inf'_neq_0 \<open>#(srt\<cdot>p) = \<infinity>\<close> a1 a2 dual_order.antisym h5 lnsuc_lnle_emb mlscons.IH prop0_h2_2 slen_empty_eq slen_scons srcdups2srcdups srcdups_neq strict_srcdups surj_scons)
-        qed
+          proof -
+            have f1: "lnsuc\<cdot> (#(srcdups\<cdot> (tsAbs\<cdot> (tsMed\<cdot>ts\<cdot>(\<up>True \<bullet> srt\<cdot>(srt\<cdot>p)))))) \<le> lnsuc\<cdot> (#(srcdups\<cdot> (tsAbs\<cdot>(tsMed\<cdot>ts\<cdot>\<up>True\<infinity>))))"
+              by (metis (no_types) Inf'_neq_0 srt_len lnsuc_lnle_emb mlscons.IH only_empty_has_length_0 slen_scons surj_scons)
+            have f2: "\<forall>s. s = \<epsilon> \<or> \<up>(shd s::'a) \<bullet> srt\<cdot>s = s"
+              by (metis surj_scons)
+            have f3: "\<forall>a aa s. (a::'a) = aa \<or> srcdups\<cdot>(\<up>a \<bullet> \<up>aa \<bullet> s) = \<up>a \<bullet> srcdups\<cdot>(\<up>aa \<bullet> s)"
+              by (meson srcdups_neq)
+            then have "srcdups\<cdot> (\<up>t \<bullet> tsAbs\<cdot>(tsMed\<cdot>ts\<cdot>\<up>True\<infinity>)) = \<up>t \<bullet> srcdups\<cdot> (tsAbs\<cdot>(tsMed\<cdot>ts\<cdot>\<up>True\<infinity>))"
+              using f2 by (metis (no_types) \<open>t \<noteq> shd (tsAbs\<cdot>(tsMed\<cdot>ts\<cdot>\<up>True\<infinity>))\<close> \<open>tsAbs\<cdot>(tsMed\<cdot>ts\<cdot>\<up>True\<infinity>) \<noteq> \<epsilon>\<close>)
+            then show ?thesis
+              using f3 f2 f1 by (metis (no_types) \<open>shd (tsAbs\<cdot> (tsMed\<cdot>ts\<cdot>(\<up>True \<bullet> srt\<cdot>(srt\<cdot>p)))) = shd (tsAbs\<cdot>(tsMed\<cdot>ts\<cdot>\<up>True\<infinity>))\<close> \<open>t \<noteq> shd (tsAbs\<cdot>(tsMed\<cdot>ts\<cdot>\<up>True\<infinity>))\<close> a1 slen_scons)
+          qed
+        qed    
+      qed
       show "#(srcdups\<cdot>(\<up>t \<bullet> tsAbs\<cdot>(tsMed\<cdot>ts\<cdot>(srt\<cdot>p)))) \<le> #(srcdups\<cdot>(\<up>t \<bullet> tsAbs\<cdot>(tsMed\<cdot>ts\<cdot>\<up>True\<infinity>)))"
         using h1 h2 order.trans by blast
     qed
     then show ?case
-      using case_true trans_lnle by blast
+      using trans_lnle mlscons.prems prop0_h2_2 by blast 
   qed
- *)   
+
+ 
        
-(* WIP prop0 end*)
+(* prop0 helper end*)
     
 (* property 0 *)
 lemma prop0: assumes "#({True} \<ominus> p) = \<infinity>"
