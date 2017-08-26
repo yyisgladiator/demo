@@ -28,7 +28,7 @@ definition tsSender :: "('a sender) set" where
   #(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(send\<cdot>i\<cdot>as))))
     = min (#(tsAbs\<cdot>i)) (lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>as)))) \<and>
   (#(tsAbs\<cdot>i) > #(tsAbs\<cdot>(tsRemDups\<cdot>as)) \<longrightarrow> #(tsAbs\<cdot>(send\<cdot>i\<cdot>as)) = \<infinity>) \<and>
-  min (#\<surd>i) (#\<surd>as) < \<infinity> \<longrightarrow> min (#\<surd>i) (#\<surd>as) <  #\<surd>(send\<cdot>i\<cdot>as)
+  (min (#\<surd>i) (#\<surd>as) < \<infinity> \<longrightarrow> min (#\<surd>i) (#\<surd>as) <  #\<surd>(send\<cdot>i\<cdot>as))
 }"
 
 (* 1st axiom *)
@@ -434,20 +434,27 @@ lemma tsaltbitpro_inp2out:
           \<or> #(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>ds))) = lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>as)))"
       by (metis ds_def le_less_linear min_absorb2 send_def set2tssnd_ack2trans)
 
-    have hh3: "#(tsAbs\<cdot>i) < lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>as))) \<Longrightarrow> #(tsAbs\<cdot>i) \<le> #(tsAbs\<cdot>(tsRemDups\<cdot>as))"
+    have hh1: "#(tsAbs\<cdot>i) < lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>as))) \<Longrightarrow> #(tsAbs\<cdot>i) \<le> #(tsAbs\<cdot>(tsRemDups\<cdot>as))"
       by (simp add: lnle2le)
-    hence hh2: "#(tsAbs\<cdot>i) > #(tsAbs\<cdot>(tsRemDups\<cdot>as)) 
-      \<and> #(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>ds))) = lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>as))) 
-        \<Longrightarrow> (#(tsAbs\<cdot>(tsRemDups\<cdot>as)) = \<infinity> \<or> #(tsAbs\<cdot>as) \<noteq> \<infinity>)"
-      sorry
-
+    have hh2: "lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>as))) < #(tsAbs\<cdot>i) \<Longrightarrow> #(tsAbs\<cdot>ds) = \<infinity>"
+      by (simp add: ds_def dual_order.strict_trans2 less_asym' send_def set2tssnd_nack2inftrans)
+    have hh3: "#(tsAbs\<cdot>ds) = \<infinity> \<Longrightarrow> #(tsAbs\<cdot>as) = \<infinity>"
+      by (simp add: ar_def as_def dr_def p1_def p2_def)
+    have hh4: "#(tsAbs\<cdot>as) = \<infinity> \<Longrightarrow> #(tsAbs\<cdot>(tsRemDups\<cdot>as)) = \<infinity> \<or> #(tsAbs\<cdot>(tsRemDups\<cdot>as)) \<noteq> \<infinity>"
+      by simp
+(*
+    hence hh5: "#(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>ds))) = lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>as))) \<Longrightarrow>
+               #(tsAbs\<cdot>(tsRemDups\<cdot>ds)) \<noteq> \<infinity>"
+      sorry  
+*)
+(*
     have "#(tsAbs\<cdot>i) \<le> #(tsAbs\<cdot>(tsRemDups\<cdot>as)) \<or> (#(tsAbs\<cdot>(tsRemDups\<cdot>as)) = \<infinity> \<or> #(tsAbs\<cdot>as) \<noteq> \<infinity>)"
-      using h3 hh2 hh3 not_less by blast
+      sorry
     hence "#(tsAbs\<cdot>i) \<le> #(tsAbs\<cdot>(tsRemDups\<cdot>as)) \<or> #(tsAbs\<cdot>(tsRemDups\<cdot>as)) = \<infinity>"
-      by (metis ar_def as_def dr_def ds_def leI p1_def p2_def prop3 send_def 
-          set2tssnd_nack2inftrans)
-    hence geq: "#(tsAbs\<cdot>i) \<le> #(tsAbs\<cdot>(tsRemDups\<cdot>as))"
-      by auto
+      sorry
+*)
+    have geq: "#(tsAbs\<cdot>i) \<le> #(tsAbs\<cdot>(tsRemDups\<cdot>as))"
+      sorry
     (* equalities *)
     have eq: "#(tsAbs\<cdot>i) = #(tsAbs\<cdot>(tsRemDups\<cdot>as))"
       by (simp add: dual_order.antisym geq leq)
