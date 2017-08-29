@@ -10,7 +10,7 @@ chapter {* Timed Streams *}
 
 theory TStreamCase_Study
 
-imports "../TStream" Tsum5_HK StreamCase_Study
+imports "../TStream" StreamCase_Study
 begin
 default_sort countable
 declare One_nat_def[simp del]
@@ -1111,7 +1111,18 @@ lemma list2ts_tsinftimes2: "tsinftimes (list2ts_alter (as@[\<surd>])) = tsinftim
   apply (simp add: ts_well_def, auto)
   by (simp add: less_le slen_lnsuc)
   
-  
+lemma list2ts_alter2list2tsM: "list2ts_alter l = list2tsM l"
+proof(induction l)
+  case Nil
+  then show ?case
+    by simp
+next
+  case (Cons a l)
+  then show ?case
+    apply (simp add: delayFun_def, auto)
+    apply (metis DiscrTick_def delayfun_insert delayfun_tslscons)
+    by (simp add: MsginvMsg tsmlscons2tslscons)
+qed
 
 (*Spezifikation tsfork*)
 
