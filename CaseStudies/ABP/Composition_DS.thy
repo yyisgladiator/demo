@@ -56,17 +56,6 @@ lemma set2tssnd_nack2inftrans: assumes "send \<in> tsSender"
 subsection {* additional lemmata *}
 (* ----------------------------------------------------------------------- *)
 
-(* 2nd axiom *)
-lemma axiom2: assumes "send \<in> tsSender"
-  shows "#(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(send\<cdot>i\<cdot>as)))) \<le> lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>as)))"
-  using assms(1) set2tssnd_ack2trans by fastforce
-
-(* 3rd axiom modification *)
-lemma axiom3: assumes "send \<in> tsSender" and a1: "#(tsAbs\<cdot>(tsRemDups\<cdot>as)) = \<infinity>"
-  shows "#(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(send\<cdot>i\<cdot>as)))) \<le> #(tsAbs\<cdot>(tsRemDups\<cdot>as))"
-  by (simp add: a1)
-
-    
 (* prop0 helper begin*)
 lemma prop0_h:"#(srcdups\<cdot>(s\<bullet>s2)) \<le> #(srcdups\<cdot>(s\<bullet>\<up>b\<bullet>s2))"
 proof(induction rule: ind [of _ s])
@@ -411,6 +400,22 @@ lemma lnle2le: "m < lnsuc\<cdot>n \<Longrightarrow> m \<le> n"
   apply (case_tac "m=\<infinity>", auto)
   by (metis Fin_Suc less2lnleD lncases lnsuc_lnle_emb)
 
+lemma le2lnle: "m < \<infinity> \<Longrightarrow> lnsuc\<cdot>m \<le> n \<Longrightarrow> m < n"
+  by (metis dual_order.strict_iff_order dual_order.trans leD ln_less)
+
+(* 2nd axiom *)
+lemma axiom2: assumes "send \<in> tsSender"
+  shows "#(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(send\<cdot>i\<cdot>as)))) \<le> lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>as)))"
+  using assms(1) set2tssnd_ack2trans by fastforce
+
+(* 3rd axiom modification *)
+lemma axiom3: assumes send_def: "send \<in> tsSender" and as_def: "#(tsAbs\<cdot>as) = \<infinity>"
+  shows "#(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(send\<cdot>i\<cdot>as)))) \<le> #(tsAbs\<cdot>(tsRemDups\<cdot>as))"
+  proof -
+    show "#(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(send\<cdot>i\<cdot>as)))) \<le> #(tsAbs\<cdot>(tsRemDups\<cdot>as))"
+      sorry
+  oops
+
 lemma tsaltbitpro_inp2out:
   assumes send_def: "send \<in> tsSender"
     and p1_def: "#({True} \<ominus> p1) = \<infinity>"
@@ -430,30 +435,28 @@ lemma tsaltbitpro_inp2out:
     hence leq: "#(tsAbs\<cdot>(tsRemDups\<cdot>as)) \<le> #(tsAbs\<cdot>i)"
       using ds_def send_def set2tssnd_ack2trans by fastforce
     (* #(tsAbs\<cdot>i) \<le> #(tsAbs\<cdot>(tsRemDups\<cdot>as)) *)
+    have hh1: "#(tsAbs\<cdot>i) < lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>as))) \<Longrightarrow> #(tsAbs\<cdot>i) \<le> #(tsAbs\<cdot>(tsRemDups\<cdot>as))"
+      by (simp add: lnle2le)
+
+    have hh2: "lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>as))) < #(tsAbs\<cdot>i) \<Longrightarrow> #(tsAbs\<cdot>ds) = \<infinity>"
+      by (simp add: ds_def dual_order.strict_trans2 less_asym' send_def set2tssnd_nack2inftrans)
+    have hh3: "lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>as))) < #(tsAbs\<cdot>i) \<Longrightarrow> #(tsAbs\<cdot>as) = \<infinity>"
+      by (simp add: ar_def as_def dr_def hh2 p1_def p2_def)
+
+    have hh4: "#(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>ds))) = lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>as))) 
+      \<Longrightarrow> (#(tsAbs\<cdot>(tsRemDups\<cdot>as)) = \<infinity> \<or> #(tsAbs\<cdot>as) \<noteq> \<infinity>)"
+      sorry
+
     have h3: "#(tsAbs\<cdot>i) < lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>as)))
           \<or> #(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>ds))) = lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>as)))"
       by (metis ds_def le_less_linear min_absorb2 send_def set2tssnd_ack2trans)
 
-    have hh1: "#(tsAbs\<cdot>i) < lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>as))) \<Longrightarrow> #(tsAbs\<cdot>i) \<le> #(tsAbs\<cdot>(tsRemDups\<cdot>as))"
-      by (simp add: lnle2le)
-    have hh2: "lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>as))) < #(tsAbs\<cdot>i) \<Longrightarrow> #(tsAbs\<cdot>ds) = \<infinity>"
-      by (simp add: ds_def dual_order.strict_trans2 less_asym' send_def set2tssnd_nack2inftrans)
-    have hh3: "#(tsAbs\<cdot>ds) = \<infinity> \<Longrightarrow> #(tsAbs\<cdot>as) = \<infinity>"
-      by (simp add: ar_def as_def dr_def p1_def p2_def)
-    have hh4: "#(tsAbs\<cdot>as) = \<infinity> \<Longrightarrow> #(tsAbs\<cdot>(tsRemDups\<cdot>as)) = \<infinity> \<or> #(tsAbs\<cdot>(tsRemDups\<cdot>as)) \<noteq> \<infinity>"
-      by simp
-(*
-    hence hh5: "#(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>ds))) = lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>as))) \<Longrightarrow>
-               #(tsAbs\<cdot>(tsRemDups\<cdot>ds)) \<noteq> \<infinity>"
-      sorry  
-*)
-(*
-    have "#(tsAbs\<cdot>i) \<le> #(tsAbs\<cdot>(tsRemDups\<cdot>as)) \<or> (#(tsAbs\<cdot>(tsRemDups\<cdot>as)) = \<infinity> \<or> #(tsAbs\<cdot>as) \<noteq> \<infinity>)"
+    hence "#(tsAbs\<cdot>i) \<le> #(tsAbs\<cdot>(tsRemDups\<cdot>as)) \<or> (#(tsAbs\<cdot>(tsRemDups\<cdot>as)) = \<infinity> \<or> #(tsAbs\<cdot>as) \<noteq> \<infinity>)"
       sorry
     hence "#(tsAbs\<cdot>i) \<le> #(tsAbs\<cdot>(tsRemDups\<cdot>as)) \<or> #(tsAbs\<cdot>(tsRemDups\<cdot>as)) = \<infinity>"
       sorry
-*)
-    have geq: "#(tsAbs\<cdot>i) \<le> #(tsAbs\<cdot>(tsRemDups\<cdot>as))"
+
+    hence geq: "#(tsAbs\<cdot>i) \<le> #(tsAbs\<cdot>(tsRemDups\<cdot>as))"
       sorry
     (* equalities *)
     have eq: "#(tsAbs\<cdot>i) = #(tsAbs\<cdot>(tsRemDups\<cdot>as))"
