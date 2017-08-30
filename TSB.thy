@@ -1105,7 +1105,6 @@ proof -
     by (simp add: assms(1) assms(2))
   have f3: "\<And>i . (LEAST ln. \<exists>c. ln = #\<surd> Y i  .  c \<and> c \<in> tsbDom\<cdot>(Lub Y)) =  (LEAST ln. \<exists>c. ln = #\<surd> Y i  .  c \<and> c \<in> tsbDom\<cdot>(Y i))"
     using f2 by presburger
-    
   show ?thesis
     apply (subst f3)
     apply (rule tsbtick_least_chain2)
@@ -1204,7 +1203,37 @@ lemma chain_lub_inf: assumes "chain (Y::nat \<Rightarrow> lnat)" and "\<forall> 
 
 lemma chain_mono: assumes "chain (Y::nat \<Rightarrow> lnat)" and "\<exists> i. \<forall> j\<ge>i. (Y i \<ge> Y j)" shows "\<exists> i. \<forall> j\<ge>i. (Y i = Y j)"
   by (meson assms(1) assms(2) dual_order.antisym lnle_def po_class.chain_mono)
-    
+
+lemma h1: assumes "chain Y" 
+              and "\<forall> i. \<forall> ch1 \<in> tsbDom\<cdot>(Lub Y). \<exists> j\<ge>i. ((#\<surd> Y i . ch1) < (#\<surd> Y j . ch1))"
+              and "tsbDom\<cdot>(Lub Y) \<noteq> {}"
+            shows "(x < \<infinity> \<and> c \<in> tsbDom\<cdot>(Lub Y)) \<Longrightarrow> (\<exists> k\<ge>a. x < #\<surd> Y k . c)"
+proof -
+  fix x c
+  fix a
+  assume f0: "x < \<infinity> \<and> c \<in> tsbDom\<cdot>(Lub Y)"
+  have f1: "x < \<infinity>"
+    using f0 by auto
+  have f2: "c \<in> tsbDom\<cdot>(Lub Y)"
+    using f0 by auto
+  have f3: "\<forall>i. \<exists>j\<ge>i. #\<surd> Y i . c <  #\<surd> Y j . c"
+    using assms f0 by blast
+  have f4: "x < #\<surd> Y 0 . c \<Longrightarrow> \<exists>k\<ge>a. x < #\<surd> Y k . c"
+    by (meson assms(1) chain_mono_less dual_order.strict_trans1 leI lnle_def monofun_cfun_arg order_refl tsbgetch_below)
+  moreover have f5: "x \<ge> #\<surd> Y 0 . c \<Longrightarrow> \<exists>k\<ge>a. x < #\<surd> Y k . c"
+    sorry
+  ultimately moreover have f6: "\<exists>k\<ge>a. x < #\<surd> Y k . c" 
+    using leI by blast
+  ultimately show ?thesis
+    sorry
+qed
+
+lemma h2: assumes "chain Y" 
+              and "tsbDom\<cdot>(Lub Y) \<noteq> {}"
+            shows "\<exists>h. (\<exists>c \<in> tsbDom\<cdot>(Lub Y). h = ((kch :: channel \<Rightarrow> nat) c)) \<and> (\<forall>c \<in> tsbDom\<cdot>(Lub Y). h \<ge> (kch c))"  
+  
+  sorry
+              
 lemma tsbtick_cont_pre: assumes "chain Y"
   shows "(if tsbDom\<cdot>(\<Squnion>i. Y i) \<noteq> {} then LEAST ln. ln \<in> {#\<surd> (\<Squnion>i. Y i)  .  c |c. c \<in> tsbDom\<cdot>(\<Squnion>i. Y i)} else \<infinity>) \<sqsubseteq>
          (\<Squnion>i. if tsbDom\<cdot>(Y i) \<noteq> {} then LEAST ln. ln \<in> {#\<surd> ((Y i)  .  c) |c. c \<in> tsbDom\<cdot>(Y i)} else \<infinity>)"
@@ -1368,7 +1397,7 @@ proof (cases "tsbDom\<cdot>(\<Squnion>i. Y i) \<noteq> {}")
               have 40342: "\<forall> i. \<forall> ch1 \<in> tsbDom\<cdot>(Lub Y). \<exists> j\<ge>i. ((#\<surd> Y i . ch1) < (#\<surd> Y j . ch1))"
                 by (simp add: 402)
               then have 40343: "\<forall> x < \<infinity>. \<forall>c \<in> tsbDom\<cdot>(Lub Y). \<exists> k\<ge>a. x < #\<surd> Y k . c"
-                sorry
+                by(simp add: assms True h1)
               have 40344: "\<forall> x < \<infinity>. \<exists> k\<ge>a. \<forall>c \<in> tsbDom\<cdot>(Lub Y).  x < #\<surd> Y k . c"
               proof - 
                 have "\<And>x. x < \<infinity> \<Longrightarrow> \<exists> k\<ge>a. \<forall>c \<in> tsbDom\<cdot>(Lub Y).  x < #\<surd> Y k . c"
@@ -1379,8 +1408,10 @@ proof (cases "tsbDom\<cdot>(\<Squnion>i. Y i) \<noteq> {}")
                     using 403441 40343 by metis 
                   have 4034421: "\<forall>i. \<forall>j\<ge>i. \<forall>c \<in> tsbDom\<cdot>(Lub Y). #\<surd> Y i . c \<le> #\<surd> Y j . c"
                     using assms lnle_def monofun_cfun_arg po_class.chain_mono tsbgetch_below by blast
+                  then have "\<exists>h. (h\<ge>a \<and> (\<exists>c \<in> tsbDom\<cdot>(Lub Y). h = (kch c)))"
+                    using "4031" "403442" assms by auto
                   then obtain h where 403443: "h\<ge>a \<and> (\<exists>c \<in> tsbDom\<cdot>(Lub Y). h = (kch c)) \<and> (\<forall>c \<in> tsbDom\<cdot>(Lub Y). h \<ge> (kch c))"
-                    sorry
+                    by (metis "403442" all_not_in_conv assms h2)
                   then have "h\<ge>a \<and> (\<forall>c \<in> tsbDom\<cdot>(Lub Y). x < #\<surd> Y h . c)"
                     using 403442 4034421 by (meson dual_order.trans leD not_le_imp_less)
                   then show "\<exists> k\<ge>a. \<forall>c \<in> tsbDom\<cdot>(Lub Y). x < #\<surd> Y k . c"
