@@ -3191,8 +3191,6 @@ lemma tszip_tsabs2: "tslen\<cdot>ts \<le> #xs \<Longrightarrow> tsAbs\<cdot>(tsZ
     case (mlscons ts t)
     then show ?case
       apply (rule_tac x=xs in scases, simp_all)
-      by (metis (no_types, lifting) lnsuc_lnle_emb lscons_conv szip_scons tsZip.simps(1) 
-          tsabs_mlscons tslen_conc tszip_mlscons tszip_nbot2)
   oops
 
 lemma tszip_tsabs_slen_leq [simp]: "#(tsAbs\<cdot>(tsZip\<cdot>ts\<cdot>xs)) \<le> #(tsAbs\<cdot>ts)"
