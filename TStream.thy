@@ -3227,7 +3227,8 @@ lemma tszip_tsabs_slen_leq [simp]: "#(tsAbs\<cdot>(tsZip\<cdot>ts\<cdot>xs)) \<l
   qed
 
 lemma tszip_tsdom2: "tsDom\<cdot>(tsZip\<cdot>ts\<cdot>xs) \<subseteq> sdom\<cdot>(szip\<cdot>(tsAbs\<cdot>ts)\<cdot>xs)"
-  proof (induction ts arbitrary: xs)
+  oops
+(*  proof (induction ts arbitrary: xs)
     case adm
     then show ?case sorry
   next
@@ -3242,7 +3243,7 @@ lemma tszip_tsdom2: "tsDom\<cdot>(tsZip\<cdot>ts\<cdot>xs) \<subseteq> sdom\<cdo
     then show ?case 
       apply (rule_tac x=xs in scases, simp_all)
       sorry 
-  oops 
+  oops  *)
 
 (* ----------------------------------------------------------------------- *)
 subsection {* tsRemDups *}
