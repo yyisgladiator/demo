@@ -37,15 +37,15 @@ lemma tssnd_test_bot: "tsSnd\<cdot>\<bottom>\<cdot>tsInfTick = \<bottom>"
   by (fixrec_simp)
 
 lemma tssnd_test_fin:
-  "tsSnd\<cdot>tsSndExampInp_1\<cdot>(tsSndExampInp_2 \<bullet> tsInfTick)\<cdot>(Discr True) = tsSndExampOut"
+  "tsSnd\<cdot>tsSndExampInp_1\<cdot>(tsSndExampInp_2 \<bullet>\<surd> tsInfTick)\<cdot>(Discr True) = tsSndExampOut"
   apply (simp add: tsSndExampInp_1_def tsSndExampInp_2_def tsSndExampOut_def tsconc_mlscons 
          tsconc_delayfun tssnd_mlscons_ack tssnd_mlscons_nack tssnd_delayfun_nack tssnd_delayfun)
   apply (subst tsinftick_unfold)
   by (simp only: tssnd_delayfun, simp)    
     
 lemma tssnd_test_inf:
-  "tsSnd\<cdot>(tsSndExampInp_1 \<bullet> tsInfTick)\<cdot>(tsSndExampInp_2 \<bullet> tsInfTick)\<cdot>(Discr True) 
-     = tsSndExampOut \<bullet> tsInfTick"
+  "tsSnd\<cdot>(tsSndExampInp_1 \<bullet>\<surd> tsInfTick)\<cdot>(tsSndExampInp_2 \<bullet>\<surd> tsInfTick)\<cdot>(Discr True) 
+     = tsSndExampOut \<bullet>\<surd> tsInfTick"
   by (simp add: tsSndExampInp_1_def tsSndExampInp_2_def tsSndExampOut_def tsconc_mlscons 
       tsconc_delayfun tssnd_mlscons_ack tssnd_mlscons_nack tssnd_delayfun_nack tssnd_delayfun
       tssnd_inftick_inftick)
@@ -84,7 +84,7 @@ proof -
 qed
   
 lemma tsmed_test_inf:
-  "tsMed\<cdot>(tsMedExampInp \<bullet> tsInfTick)\<cdot>((\<up>True) \<infinity>) = (tsMedExampInp \<bullet> tsInfTick)"
+  "tsMed\<cdot>(tsMedExampInp \<bullet>\<surd> tsInfTick)\<cdot>((\<up>True) \<infinity>) = (tsMedExampInp \<bullet>\<surd> tsInfTick)"
   by simp
 
 (* ----------------------------------------------------------------------- *)
@@ -110,7 +110,7 @@ lemma tsrec_test_fin: "tsRec\<cdot>tsRecExampInp = (tsRecExampOut_1, tsRecExampO
       tsremdups_h_delayfun)
   
 lemma tsrec_test_inf2:
-  "tsRec\<cdot>(tsRecExampInp \<bullet> tsInfTick) = (tsRecExampOut_1 \<bullet> tsInfTick, tsRecExampOut_2 \<bullet> tsInfTick)"
+  "tsRec\<cdot>(tsRecExampInp \<bullet>\<surd> tsInfTick) = (tsRecExampOut_1 \<bullet>\<surd> tsInfTick, tsRecExampOut_2 \<bullet>\<surd> tsInfTick)"
   by (simp add: tsRecExampInp_def tsRecExampOut_1_def tsRecExampOut_2_def tsrec_insert 
       tsrecsnd_insert tsremdups_insert tsconc_mlscons tsconc_delayfun tsprojsnd_mlscons
       tsprojsnd_delayfun tsprojfst_mlscons tsprojfst_delayfun tsremdups_h_mlscons 

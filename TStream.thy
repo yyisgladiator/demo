@@ -120,8 +120,8 @@ definition tsDom :: "'a tstream \<rightarrow> 'a set" where
 definition tsConc :: "'a tstream \<Rightarrow> 'a tstream \<rightarrow> 'a tstream" where
 "tsConc ts1 \<equiv> \<Lambda> ts2. Abs_tstream ((Rep_tstream ts1) \<bullet> (Rep_tstream ts2))"
 
-abbreviation sbConc_abbr :: "'a tstream \<Rightarrow> 'a tstream \<Rightarrow> 'a tstream" (infixl "\<bullet>" 65)
-where "ts1 \<bullet> ts2 \<equiv> tsConc ts1\<cdot>ts2"
+abbreviation sbConc_abbr :: "'a tstream \<Rightarrow> 'a tstream \<Rightarrow> 'a tstream" (infixl "\<bullet>\<surd>" 65)
+where "ts1 \<bullet>\<surd> ts2 \<equiv> tsConc ts1\<cdot>ts2"
 
 (*returns the length of a tstream including ticks*)
 definition tslen:: "'a tstream \<rightarrow> lnat" where 
@@ -155,7 +155,7 @@ definition tsNth:: "nat \<Rightarrow> 'a tstream \<rightarrow> 'a tstream" where
 (* take the first n time slots. *)
 primrec tsTake :: "nat \<Rightarrow> 'a tstream \<rightarrow> 'a tstream" where
 "tsTake 0 = \<bottom>" |  (* take 0 timeslots. empty stream *)
-"tsTake (Suc n) = (\<Lambda> ts. if ts=\<bottom> then \<bottom> else tsTakeFirst\<cdot>ts \<bullet> tsTake n\<cdot>(tsDropFirst\<cdot>ts))"
+"tsTake (Suc n) = (\<Lambda> ts. if ts=\<bottom> then \<bottom> else tsTakeFirst\<cdot>ts \<bullet>\<surd> tsTake n\<cdot>(tsDropFirst\<cdot>ts))"
 
 declare tsTake.simps [simp del]
 
@@ -383,31 +383,31 @@ qed
 lemma ts_well_conc [simp]: "ts_well ((Rep_tstream ts1) \<bullet> (Rep_tstream ts2))"
 using Rep_tstream ts_well_conc1 by auto
 
-lemma tsconc_insert: "ts1 \<bullet> ts2 = Abs_tstream ((Rep_tstream ts1) \<bullet> (Rep_tstream ts2))"
+lemma tsconc_insert: "ts1 \<bullet>\<surd> ts2 = Abs_tstream ((Rep_tstream ts1) \<bullet> (Rep_tstream ts2))"
 by (simp add: tsConc_def)
 
 lemma tsconc_rep_eq: assumes "ts_well s"
-  shows "Rep_tstream ((Abs_tstream s) \<bullet> ts) = s \<bullet> Rep_tstream ts"
+  shows "Rep_tstream ((Abs_tstream s) \<bullet>\<surd> ts) = s \<bullet> Rep_tstream ts"
   by(simp add: tsconc_insert assms)
 
 lemma tsconc_rep_eq1: assumes "ts_well s" and "ts_well ts"
-  shows "Rep_tstream ((Abs_tstream s) \<bullet> (Abs_tstream ts)) = s \<bullet> ts"
+  shows "Rep_tstream ((Abs_tstream s) \<bullet>\<surd> (Abs_tstream ts)) = s \<bullet> ts"
   by(simp add: tsconc_insert assms)
 
 
 lemma [simp]: fixes ts1::"'a tstream"
-  shows "ts1 \<bullet> \<bottom> = ts1"
+  shows "ts1 \<bullet>\<surd> \<bottom> = ts1"
 by(simp add: tsConc_def)
 
 lemma tsconc_fst_empty [simp]: fixes ts1::"'a tstream"
-  shows "\<bottom> \<bullet> ts1 = ts1"
+  shows "\<bottom> \<bullet>\<surd> ts1 = ts1"
 by(simp add: tsConc_def)
 
 lemma tsconc_assoc [simp]:  fixes a:: "'a tstream"
-  shows "a \<bullet> (x \<bullet> y) = (a \<bullet> x) \<bullet> y"
+  shows "a \<bullet>\<surd> (x \<bullet>\<surd> y) = (a \<bullet>\<surd> x) \<bullet>\<surd> y"
 by(simp add: tsconc_insert)
 
-lemma ts_tsconc_prefix [simp]: "(x::'a tstream) \<sqsubseteq> (x \<bullet> y)"
+lemma ts_tsconc_prefix [simp]: "(x::'a tstream) \<sqsubseteq> (x \<bullet>\<surd> y)"
 by (metis Rep_tstream_inverse Rep_tstream_strict minimal monofun_cfun_arg sconc_snd_empty tsconc_insert)
 
 text {* By appending an event on the left side, a timed stream remains a timed stream. *}
@@ -417,10 +417,10 @@ apply (smt fold_inf lnat.injects mem_Collect_eq sfilter_in sfilter_nin slen_scon
 done
 
 (* appending to a singleton tstream can never yield the empty stream *)
-lemma [simp]: "\<bottom> \<noteq> Abs_tstream(\<up>\<surd>) \<bullet> as"
+lemma [simp]: "\<bottom> \<noteq> Abs_tstream(\<up>\<surd>) \<bullet>\<surd> as"
 by (simp add: tsconc_insert)
 
-lemma [simp]: "Abs_tstream(\<up>\<surd>) \<bullet> as \<noteq> \<bottom>"
+lemma [simp]: "Abs_tstream(\<up>\<surd>) \<bullet>\<surd> as \<noteq> \<bottom>"
 by (simp add: tsconc_insert)
 
 (* the singleton tstream is never equal to the empty stream *)
@@ -455,11 +455,11 @@ lemma tsabs_rep_eq: assumes "ts_well ts"
 by(simp add: tsabs_insert assms)
 
 
-lemma tsabs_tick [simp]: "tsAbs\<cdot>((Abs_tstream (\<up>\<surd>)) \<bullet> ts) = tsAbs\<cdot>ts"
+lemma tsabs_tick [simp]: "tsAbs\<cdot>((Abs_tstream (\<up>\<surd>)) \<bullet>\<surd> ts) = tsAbs\<cdot>ts"
 by(simp add: tsabs_insert tsconc_rep_eq)
 
 lemma tsabs_conc: assumes "#(Rep_tstream ts1)<\<infinity>"
-  shows "tsAbs\<cdot>(ts1 \<bullet> ts2) = tsAbs\<cdot>ts1 \<bullet> tsAbs\<cdot>ts2"
+  shows "tsAbs\<cdot>(ts1 \<bullet>\<surd> ts2) = tsAbs\<cdot>ts1 \<bullet> tsAbs\<cdot>ts2"
 apply(simp add: tsabs_insert tsconc_insert)
 using add_sfilter assms infI lnless_def smap_split by fastforce
 
@@ -741,7 +741,7 @@ lemma [simp]: "tsDropFirst\<cdot>\<bottom> = \<bottom>"
 by(simp add: tsdropfirst_insert)
 
 
-lemma tsTakeDropFirst [simp]: "tsTakeFirst\<cdot>ts \<bullet> tsDropFirst\<cdot>ts = ts"
+lemma tsTakeDropFirst [simp]: "tsTakeFirst\<cdot>ts \<bullet>\<surd> tsDropFirst\<cdot>ts = ts"
 by (metis (no_types, lifting) Abs_tstream_inverse Rep_tstream Rep_tstream_inverse mem_Collect_eq stwbl_srtdw tsconc_insert tsdropfirst_insert tsdropfirst_well tstakefirst_insert tstakefirst_well)
 
 (* the rest of the singleton tstream is empty *)
@@ -760,12 +760,12 @@ by(simp add: tsDrop_def)
 lemma tsDrop_tsDropFirst: "tsDrop (Suc n)\<cdot> x = tsDrop n\<cdot> (tsDropFirst\<cdot> x)"
 by simp
 
-lemma tsDropNth: "tsDrop n\<cdot>ts = (tsNth n\<cdot>ts) \<bullet> tsDrop (Suc n)\<cdot>ts"
+lemma tsDropNth: "tsDrop n\<cdot>ts = (tsNth n\<cdot>ts) \<bullet>\<surd> tsDrop (Suc n)\<cdot>ts"
 apply(induction n arbitrary: ts)
 apply (simp add: tsNth_def)
 by (simp add: tsNth_def)
 
-lemma tsdrop_tick [simp] :"tsDrop (Suc n)\<cdot>(Abs_tstream (\<up>\<surd>) \<bullet> ts) = tsDrop n\<cdot>ts"
+lemma tsdrop_tick [simp] :"tsDrop (Suc n)\<cdot>(Abs_tstream (\<up>\<surd>) \<bullet>\<surd> ts) = tsDrop n\<cdot>ts"
 by(simp add: tsDrop.simps tsdropfirst_insert tsconc_rep_eq)
 
 lemma [simp]: "tsDrop 0\<cdot> x = x"
@@ -818,11 +818,11 @@ lemma tsInfTicks:
 by (metis finititeTicks lnle_def lnless_def sfilterl4 slen_sfilterl1 tstickcount_insert)
 
 (* Prepending to infinite streams produces infinite streams again *)
-lemma slen_tsconc_snd_inf: "(#\<surd> y)=\<infinity> \<Longrightarrow> (#\<surd>(x \<bullet> y)) = \<infinity>"
+lemma slen_tsconc_snd_inf: "(#\<surd> y)=\<infinity> \<Longrightarrow> (#\<surd>(x \<bullet>\<surd> y)) = \<infinity>"
 by (metis Rep_tstream_inverse Rep_tstream_strict sconc_snd_empty slen_sconc_snd_inf tsInfTicks ts_well_conc tsconc_rep_eq)
 
 lemma stickcount_conc [simp]: assumes "#\<surd> ts1 = Fin n1" and "#\<surd> ts2 = Fin n2"
-  shows "#\<surd> (ts1 \<bullet> ts2) = Fin (n1 + n2)"
+  shows "#\<surd> (ts1 \<bullet>\<surd> ts2) = Fin (n1 + n2)"
 apply(simp add: tsTickCount_def tsConc_def)
 apply(subst add_sfilter2)
 apply(simp add: assms)
@@ -843,7 +843,7 @@ qed
 
 (* Each prefix of a stream can be expanded to the original stream *)
 (* TODO: check if duplicate *)
-lemma ts_approxl3: "(s1::'a tstream) \<sqsubseteq> s2 \<Longrightarrow> \<exists>t. s1\<bullet>t = s2"
+lemma ts_approxl3: "(s1::'a tstream) \<sqsubseteq> s2 \<Longrightarrow> \<exists>t. s1\<bullet>\<surd>t = s2"
 using ts_approxl by blast
 
 
@@ -923,18 +923,18 @@ by (simp add: exist_tslen)
 
 
 
-lemma tsdom_conc[simp]:"tsDom\<cdot>ts1 \<subseteq> tsDom\<cdot>(ts1 \<bullet> ts2)"
+lemma tsdom_conc[simp]:"tsDom\<cdot>ts1 \<subseteq> tsDom\<cdot>(ts1 \<bullet>\<surd> ts2)"
 by (metis eq_iff finititeTicks inf_ub less_le sdom_sconc tsabs_conc tsabs_tsdom tsconc_id)
 
 lemma tsdom_tsconc: assumes "#\<surd>ts1 < \<infinity>"
-  shows "tsDom\<cdot>(ts1 \<bullet> ts2) = tsDom\<cdot>ts1 \<union> tsDom\<cdot>ts2"
+  shows "tsDom\<cdot>(ts1 \<bullet>\<surd> ts2) = tsDom\<cdot>ts1 \<union> tsDom\<cdot>ts2"
 apply rule
 apply (metis assms finititeTicks sconc_sdom tsabs_conc tsabs_tsdom)
 proof -
   have "#(Rep_tstream ts1) < \<infinity>" using assms by simp
   hence "sdom\<cdot>((Rep_tstream ts1) \<bullet> (Rep_tstream ts2)) = sdom\<cdot>(Rep_tstream ts1) \<union>  sdom\<cdot>(Rep_tstream ts2)"
     using infI lnless_def sdom_sconc2un by blast
-  thus "tsDom\<cdot>ts1 \<union> tsDom\<cdot>ts2 \<subseteq> tsDom\<cdot>(ts1 \<bullet> ts2)"
+  thus "tsDom\<cdot>ts1 \<union> tsDom\<cdot>ts2 \<subseteq> tsDom\<cdot>(ts1 \<bullet>\<surd> ts2)"
   by (smt Abs_tstream_inverse UnCI UnE mem_Collect_eq subsetI ts_well_conc tsconc_insert tsdom_insert) 
 qed
 
@@ -951,16 +951,16 @@ using tstakefirst_bot apply force
 by (simp add: tsNth_Suc)
 
 text {* Appending to an inifite tstream does not change its @{text "n"}th element *}
-lemma tsconc_fst_inf_lemma: "\<forall>x. #\<surd>x=\<infinity> \<longrightarrow> tstake n\<cdot>(x\<bullet>y) = tstake n\<cdot>x"
+lemma tsconc_fst_inf_lemma: "\<forall>x. #\<surd>x=\<infinity> \<longrightarrow> tstake n\<cdot>(x\<bullet>\<surd>y) = tstake n\<cdot>x"
 by simp
 
 (* concatenating finite tstreams produces another finite tstream *)
 lemma tsconc_tstickcount[simp]: assumes "(#\<surd>s)<\<infinity>" and "(#\<surd>xs)<\<infinity>"
-  shows "(#\<surd>(s\<bullet>xs))<\<infinity>"
+  shows "(#\<surd>(s\<bullet>\<surd>xs))<\<infinity>"
 by (metis Fin_neq_inf assms(1) assms(2) infI inf_ub lnle_def lnless_def stickcount_conc)
 
 (* prepending a singleton tstream increases the length by 1 *)
-lemma tstickcount_tscons[simp]: "#\<surd>(Abs_tstream(\<up>\<surd>)\<bullet>as) = lnsuc\<cdot>(#\<surd>as)"
+lemma tstickcount_tscons[simp]: "#\<surd>(Abs_tstream(\<up>\<surd>)\<bullet>\<surd>as) = lnsuc\<cdot>(#\<surd>as)"
 by (simp add: tstickcount_insert tsconc_rep_eq)
 
 (* the singleton tstream has length 1 *)
@@ -979,7 +979,7 @@ thm tsTake_def
 
 
 (* transforming the rest of a timed stream using a continuous function na is a continuous function *)
-lemma tstake_cont [simp]:"cont (\<lambda> ts. if ts=\<bottom> then \<bottom> else tsTakeFirst\<cdot>ts \<bullet> na\<cdot>(tsDropFirst\<cdot>ts))" (is "cont (?F)")
+lemma tstake_cont [simp]:"cont (\<lambda> ts. if ts=\<bottom> then \<bottom> else tsTakeFirst\<cdot>ts \<bullet>\<surd> na\<cdot>(tsDropFirst\<cdot>ts))" (is "cont (?F)")
 apply(rule contI2)
 apply (smt eq_bottom_iff minimal monofunI monofun_cfun_arg tstakefirst_eq)
 apply rule+
@@ -998,7 +998,7 @@ proof -
     have d_chain: "chain (\<lambda>i. Y (i+j))" (is "chain ?D") by (simp add: chain_shift y_chain) 
     have d_notBot: "\<And>i. ?D i \<noteq> \<bottom>"
       by (metis \<open>(Y::nat \<Rightarrow> 'a tstream) (j::nat) \<noteq> \<bottom>\<close> eq_bottom_iff le_add2 po_class.chain_mono y_chain)
-    hence "tsTakeFirst\<cdot> (\<Squnion>i. ?D i) \<bullet> na\<cdot>(tsDropFirst\<cdot> (\<Squnion>i. ?D i)) = (\<Squnion>i. tsTakeFirst\<cdot> (?D i) \<bullet> na\<cdot>(tsDropFirst\<cdot> (?D i)))"
+    hence "tsTakeFirst\<cdot> (\<Squnion>i. ?D i) \<bullet>\<surd> na\<cdot>(tsDropFirst\<cdot> (\<Squnion>i. ?D i)) = (\<Squnion>i. tsTakeFirst\<cdot> (?D i) \<bullet>\<surd> na\<cdot>(tsDropFirst\<cdot> (?D i)))"
       by (smt d_chain contlub_cfun_arg is_ub_thelub lub_eq monofun_cfun_arg po_class.chainE po_class.chainI tstakefirst_eq)
     hence eq: "?F (\<Squnion>i. ?D i) = (\<Squnion>i. ?F (?D i))" using d_notBot d_chain is_ub_thelub by fastforce
     have "(\<Squnion>i. ?F (?D i)) = (\<Squnion>i. ?F (Y i))" using lub_range_shift f_chain by fastforce
@@ -1013,21 +1013,21 @@ lemma [simp]: "\<bottom> \<down> n = \<bottom>"
 by(induction n, auto simp add: tsTake.simps)
 
 
-lemma tsTake_def2:  "ts \<down> (Suc n) = (tsTakeFirst\<cdot>ts) \<bullet> ((tsDropFirst\<cdot>ts) \<down> n)"
+lemma tsTake_def2:  "ts \<down> (Suc n) = (tsTakeFirst\<cdot>ts) \<bullet>\<surd> ((tsDropFirst\<cdot>ts) \<down> n)"
 by(simp add: tsTake.simps)
 
-lemma tstake_tsnth: "ts \<down> (Suc i) = (ts \<down> i) \<bullet> tsNth i\<cdot>ts"
+lemma tstake_tsnth: "ts \<down> (Suc i) = (ts \<down> i) \<bullet>\<surd> tsNth i\<cdot>ts"
 proof(induction i arbitrary: ts)
   case 0 thus ?case by(simp add: tsNth_def tsTake.simps)
 next
   case (Suc i)
   fix i  :: nat
   fix ts :: "'a tstream"
-  assume "(\<And>ts :: 'a tstream. ts \<down> Suc i  = ts \<down> i  \<bullet> tsNth i\<cdot>ts)"
-  hence eq1: "(tsDropFirst\<cdot>ts) \<down> (Suc i) = ((tsDropFirst\<cdot>ts) \<down> i)  \<bullet> tsNth (Suc i)\<cdot>(ts)" by (simp only: tsNth_Suc) 
-  hence "ts \<down> (Suc (Suc i)) = (tsTakeFirst\<cdot>ts) \<bullet> ((tsDropFirst\<cdot>ts) \<down> (Suc i))" by(simp add: tsTake.simps)
-  hence "ts \<down> (Suc (Suc i)) = tsTakeFirst\<cdot>ts \<bullet> ((tsDropFirst\<cdot>ts) \<down> i)  \<bullet> tsNth (Suc i)\<cdot>(ts)" using eq1 tsconc_assoc by simp
-  thus "ts \<down> (Suc (Suc i))  = ts \<down> (Suc i)  \<bullet> tsNth (Suc i)\<cdot>ts" by(simp add: tsTake.simps)
+  assume "(\<And>ts :: 'a tstream. ts \<down> Suc i  = ts \<down> i  \<bullet>\<surd> tsNth i\<cdot>ts)"
+  hence eq1: "(tsDropFirst\<cdot>ts) \<down> (Suc i) = ((tsDropFirst\<cdot>ts) \<down> i)  \<bullet>\<surd> tsNth (Suc i)\<cdot>(ts)" by (simp only: tsNth_Suc) 
+  hence "ts \<down> (Suc (Suc i)) = (tsTakeFirst\<cdot>ts) \<bullet>\<surd> ((tsDropFirst\<cdot>ts) \<down> (Suc i))" by(simp add: tsTake.simps)
+  hence "ts \<down> (Suc (Suc i)) = tsTakeFirst\<cdot>ts \<bullet>\<surd> ((tsDropFirst\<cdot>ts) \<down> i)  \<bullet>\<surd> tsNth (Suc i)\<cdot>(ts)" using eq1 tsconc_assoc by simp
+  thus "ts \<down> (Suc (Suc i))  = ts \<down> (Suc i)  \<bullet>\<surd> tsNth (Suc i)\<cdot>ts" by(simp add: tsTake.simps)
 qed
 
 
@@ -1041,7 +1041,7 @@ by (simp add: po_class.chainI)
 lemma tsConc_notEq: 
   fixes ts1 ts2 :: "'a tstream"
   assumes "ts1 \<noteq> ts2" and "#\<surd>a < \<infinity>"
-  shows "a \<bullet> ts1 \<noteq> a \<bullet> ts2"
+  shows "a \<bullet>\<surd> ts1 \<noteq> a \<bullet>\<surd> ts2"
 proof -
   have "#(Rep_tstream a) < \<infinity>" by (simp add: assms(2))
   hence "(Rep_tstream a) \<bullet> (Rep_tstream ts1) \<noteq> (Rep_tstream a) \<bullet> (Rep_tstream ts2)"
@@ -1062,7 +1062,7 @@ by (metis tsConc_notEq tsTakeDropFirst tsTake_def2 tstakefirst_len)
 
 
 
-lemma tsTakeDrop [simp]: "(ts \<down> i) \<bullet> (tsDrop i\<cdot>ts) = ts"
+lemma tsTakeDrop [simp]: "(ts \<down> i) \<bullet>\<surd> (tsDrop i\<cdot>ts) = ts"
 apply(induction i arbitrary: ts)
 apply simp
 by (metis tsDropNth tsconc_assoc tstake_tsnth)
@@ -1078,7 +1078,7 @@ by (metis cfcomp1 cfcomp2 monofun_cfun_arg tsNth_def tsTakeDrop tstake_tsnth tst
 lemma tstakeFirst_len [simp]: "ts \<noteq> \<bottom> \<Longrightarrow> #\<surd> tsTakeFirst\<cdot>ts = Fin 1"
 by (simp add: tstickcount_insert Rep_tstream_bottom_iff tstakefirst_insert)
 
-lemma tsfirstConclen [simp]: assumes "ts\<noteq>\<bottom>" shows "#\<surd>tsTakeFirst\<cdot>ts \<bullet> ts2 = lnsuc\<cdot>(#\<surd>ts2)"
+lemma tsfirstConclen [simp]: assumes "ts\<noteq>\<bottom>" shows "#\<surd>tsTakeFirst\<cdot>ts \<bullet>\<surd> ts2 = lnsuc\<cdot>(#\<surd>ts2)"
 proof -
   have "#({\<surd>} \<ominus> (Rep_tstream (tsTakeFirst\<cdot>ts))) = Fin 1"
     by (metis assms tstakeFirst_len tstickcount_insert)
@@ -1177,19 +1177,19 @@ by(simp add: tstakefirst_insert tsdropfirst_insert)
 
 
 
-lemma tsdropfirst_conc: "ts \<noteq> \<bottom> \<Longrightarrow> tsDropFirst \<cdot>(ts \<bullet> as) = (tsDropFirst\<cdot>ts) \<bullet> as"
+lemma tsdropfirst_conc: "ts \<noteq> \<bottom> \<Longrightarrow> tsDropFirst \<cdot>(ts \<bullet>\<surd> as) = (tsDropFirst\<cdot>ts) \<bullet>\<surd> as"
 apply(simp add: tsdropfirst_insert tsconc_insert)
 by (simp add: Rep_tstream_bottom_iff srtdw_conc)
 
-lemma [simp]: "ts \<noteq>\<bottom> \<Longrightarrow> tsDropFirst\<cdot>((tsTakeFirst\<cdot>ts) \<bullet> as ) = as"
+lemma [simp]: "ts \<noteq>\<bottom> \<Longrightarrow> tsDropFirst\<cdot>((tsTakeFirst\<cdot>ts) \<bullet>\<surd> as ) = as"
   apply(simp add: tstakefirst_insert tsconc_rep_eq tsdropfirst_insert)
   by (smt Abs_tstream_bottom_iff Rep_tstream_inject Rep_tstream_strict mem_Collect_eq sconc_fst_empty srtdw_stwbl stwbl_eps tsconc_rep_eq tsdropfirst_conc tsdropfirst_insert tsdropfirst_rep_eq tstakefirst_well1)
 
-lemma tstakefirst_conc: "ts\<noteq>\<bottom> \<Longrightarrow> tsTakeFirst\<cdot>(ts \<bullet> as ) =  tsTakeFirst\<cdot>ts"
+lemma tstakefirst_conc: "ts\<noteq>\<bottom> \<Longrightarrow> tsTakeFirst\<cdot>(ts \<bullet>\<surd> as ) =  tsTakeFirst\<cdot>ts"
 by (metis Rep_tstream_inverse Rep_tstream_strict minimal monofun_cfun_arg sconc_snd_empty tsconc_insert tstakefirst_eq)
 
 
-lemma [simp]:  "ts \<noteq>\<bottom> \<Longrightarrow> tsTakeFirst\<cdot>((tsTakeFirst\<cdot>ts) \<bullet> xs ) = tsTakeFirst\<cdot>ts"
+lemma [simp]:  "ts \<noteq>\<bottom> \<Longrightarrow> tsTakeFirst\<cdot>((tsTakeFirst\<cdot>ts) \<bullet>\<surd> xs ) = tsTakeFirst\<cdot>ts"
   apply(simp add: tstakefirst_insert tsconc_insert)
   by (simp add: Rep_tstream_bottom_iff stwbl_conc)
 
@@ -1238,7 +1238,7 @@ using assms apply (induction i)
 apply simp
 by(simp add: tstake_tsnth)
 
-lemma tstake_tick [simp] :"(Abs_tstream (\<up>\<surd>) \<bullet> ts) \<down> (Suc n)= Abs_tstream (\<up>\<surd>) \<bullet> (ts \<down> n)"
+lemma tstake_tick [simp] :"(Abs_tstream (\<up>\<surd>) \<bullet>\<surd> ts) \<down> (Suc n)= Abs_tstream (\<up>\<surd>) \<bullet>\<surd> (ts \<down> n)"
   apply(simp add: tsTake_def2 tstakefirst_insert tsconc_rep_eq)
 by (metis (mono_tags, lifting) stwbl_f tick_msg tsConc_notEq tsTakeDropFirst tsconc_rep_eq tstakefirst_insert tstakefirst_len)
 
@@ -1269,23 +1269,23 @@ by (metis min.cobounded1 min_def tsTake2take tstake_fin3 tstake_less)
 
 
 
-lemma tsDropTakeFirstConc: "ts \<noteq> \<bottom> \<Longrightarrow> (tsDropFirst\<cdot>(tsTakeFirst\<cdot>ts \<bullet> xs )) = xs"
+lemma tsDropTakeFirstConc: "ts \<noteq> \<bottom> \<Longrightarrow> (tsDropFirst\<cdot>(tsTakeFirst\<cdot>ts \<bullet>\<surd> xs )) = xs"
 apply(simp add: tsdropfirst_insert tstakefirst_insert)
 by (smt Abs_tstream_inverse Rep_tstream_inject Rep_tstream_strict mem_Collect_eq sconc_fst_empty srtdw_stwbl strict_stwbl stwbl_notEps tsconc_rep_eq tsdropfirst_conc tsdropfirst_insert tsdropfirst_rep_eq tsdropfirst_well tstakefirst_well1)
 
 
-lemma tsDropFirstConc: "#\<surd>ts = Fin 1 \<Longrightarrow> tsDropFirst\<cdot>(ts \<bullet> xs) = xs"
-by (metis Fin_02bot Fin_Suc One_nat_def Rep_tstream_inverse Rep_tstream_strict cfcomp2 lnat.con_rews lnat.sel_rews(2) lnzero_def sconc_fst_empty strict_sfilter strict_slen ts_0ticks tsconc_insert tsdropfirst_conc tsdropfirst_len tstickcount_insert)
+lemma tsDropFirstConc: "#\<surd>ts = Fin 1 \<Longrightarrow> tsDropFirst\<cdot>(ts \<bullet>\<surd> xs) = xs"
+by (metis Fin_02bot Fin_Suc One_nat_def Rep_tstream_inverse Rep_tstream_strict lnat.con_rews lnat.sel_rews(2) lnzero_def sconc_fst_empty strict_sfilter strict_slen tsconc_insert tsdropfirst_conc tsdropfirst_len tstickcount_insert)
 
 lemma snth_tscons[simp]: assumes "tsTickCount\<cdot>a = Fin 1 "
-  shows "tsNth (Suc k)\<cdot>(a \<bullet> s) = tsNth k\<cdot>s"
+  shows "tsNth (Suc k)\<cdot>(a \<bullet>\<surd> s) = tsNth k\<cdot>s"
 by (simp add: assms tsDropFirstConc tsNth_Suc)
 
 lemma tsTakeFirst_first[simp]: "#\<surd>ts = Fin 1  \<Longrightarrow> tsTakeFirst\<cdot>ts = ts"
 by (metis (mono_tags, lifting) Fin_02bot Fin_Suc One_nat_def Rep_tstream_inverse Rep_tstream_strict bottomI lnat.sel_rews(2) lnzero_def sconc_snd_empty tsTakeDropFirst ts_0ticks tsconc_rep_eq tsdropfirst_len tstakefirst_insert tstakefirst_prefix tstakefirst_well1)
 
 
-lemma tsTakeFirstConc: "#\<surd>ts = Fin 1 \<Longrightarrow> tsTakeFirst\<cdot>(ts \<bullet> xs) = ts"
+lemma tsTakeFirstConc: "#\<surd>ts = Fin 1 \<Longrightarrow> tsTakeFirst\<cdot>(ts \<bullet>\<surd> xs) = ts"
 by (metis (mono_tags, hide_lams) Fin_Suc One_nat_def Rep_tstream_inverse Rep_tstream_strict lnat.con_rews lnzero_def minimal monofun_cfun_arg sconc_snd_empty strict_sfilter strict_slen tsTakeFirst_first tsconc_insert tstakefirst_eq tstickcount_insert)
 
 
@@ -1297,7 +1297,7 @@ by (metis One_nat_def lnat_po_eq_conv lnle_def lnzero_def minimal tstakeFirst_le
     tstickcount_empty_eq)
 
 lemma tstake_conc [simp]: assumes "#\<surd>ts = Fin n"
-  shows "(ts \<bullet> ts2) \<down> n = ts"
+  shows "(ts \<bullet>\<surd> ts2) \<down> n = ts"
 using assms apply(induction n arbitrary: ts)
 apply (simp add: ts_0ticks)
 apply (auto simp add: tsTake_def2)
@@ -1315,7 +1315,7 @@ using ts_approxl tstake_conc by blast
 lemma ts_approxl2: "s1 \<sqsubseteq> s2 \<Longrightarrow> (s1 = s2) \<or> (\<exists>n. tsTake n\<cdot>s2 = s1 \<and> Fin n = #\<surd>s1)"
 by (metis ts_approxl1 ninf2Fin ts_below_eq)
 
-lemma tsconc_eq: "#\<surd>ts1 = #\<surd>ts2 \<Longrightarrow> (ts1 \<bullet> a1) = (ts2 \<bullet> a2) \<Longrightarrow> ts1 = ts2"
+lemma tsconc_eq: "#\<surd>ts1 = #\<surd>ts2 \<Longrightarrow> (ts1 \<bullet>\<surd> a1) = (ts2 \<bullet>\<surd> a2) \<Longrightarrow> ts1 = ts2"
 by (metis lncases tsconc_id tstake_conc)
 
 lemma tsnth_more: assumes "#\<surd>ts = Fin n" and "n\<le>i"  shows "tsNth i\<cdot>ts = \<bottom>"
@@ -1641,7 +1641,7 @@ by(simp add: tsabs_insert tsInfTick.rep_eq sfilter_sdom_eps)
 lemma [simp]: "tsDom\<cdot>tsInfTick = {}"
 by(simp add: tsdom_insert tsInfTick.rep_eq)
 
-lemma [simp]:  "tsDom\<cdot>(ts \<bullet> tsInfTick) = tsDom\<cdot>ts"
+lemma [simp]:  "tsDom\<cdot>(ts \<bullet>\<surd> tsInfTick) = tsDom\<cdot>ts"
 apply(cases "#\<surd>ts = \<infinity>")
 apply simp
 by(simp add: tsdom_tsconc less_le)
@@ -1649,7 +1649,7 @@ by(simp add: tsdom_tsconc less_le)
 lemma [simp]: "#\<surd>tsInfTick = \<infinity>"
 by(simp add: tstickcount_insert tsInfTick.rep_eq)
 
-lemma [simp]: "#\<surd> (ts \<bullet> tsInfTick) = \<infinity>"
+lemma [simp]: "#\<surd> (ts \<bullet>\<surd> tsInfTick) = \<infinity>"
   apply(simp add: tstickcount_insert)
   apply(simp add: tsconc_insert)
   apply(cases "#\<surd> ts = \<infinity>")
@@ -1709,7 +1709,7 @@ by (metis Rep_cfun_strict1 tsTake.simps(1) ts_existsNBot tstake_bot tstake_fin2)
 
 (* eine stark Causale, stetige function appends a \<surd> to a timed stream *)
 lift_definition delayFun :: "'m tstream \<rightarrow> 'm tstream" is
-"\<lambda>ts . (Abs_tstream (\<up>\<surd>)) \<bullet> ts"
+"\<lambda>ts . (Abs_tstream (\<up>\<surd>)) \<bullet>\<surd> ts"
   by (simp add: Cfun.cfun.Rep_cfun)
 
 abbreviation delay_abbr :: "'a tstream \<Rightarrow> 'a tstream" ("delay")
@@ -1762,13 +1762,13 @@ lemma ts0tmsSubTs1tms: "tsntimes 0 ts1 \<sqsubseteq> ts2"
 by simp
 
 (*Concatenation to @{term tsntimes} is commutative*)
-lemma tsConc_eqts_comm: "ts \<bullet> (tsntimes n ts) =(tsntimes n ts) \<bullet> ts"
+lemma tsConc_eqts_comm: "ts \<bullet>\<surd> (tsntimes n ts) =(tsntimes n ts) \<bullet>\<surd> ts"
 apply (induct_tac n)
 apply simp
 by simp
 
 (*Concatenation of a timed stream to @{term tsntimes} of the same timed stream is Suc n times the timed stream *)
-lemma tsntmsSubTsSucntms: "tsntimes (Suc n) ts = (tsntimes n ts) \<bullet> ts"
+lemma tsntmsSubTsSucntms: "tsntimes (Suc n) ts = (tsntimes n ts) \<bullet>\<surd> ts"
 using tsConc_eqts_comm
 using tsntimes.simps(2) by auto
 
@@ -1797,9 +1797,9 @@ proof -
   { assume "#\<surd> tsntimes na ts \<noteq> \<infinity>"
     moreover
     { assume "tsntimes na ts \<noteq> tsntimes (Suc na) ts"
-      then have "tsntimes na ts \<noteq> ts \<bullet> tsntimes na ts"
+      then have "tsntimes na ts \<noteq> ts \<bullet>\<surd> tsntimes na ts"
         by (metis tsntimes.simps(2))
-      then have "#\<surd> ts \<bullet> tsntimes na ts \<noteq> \<infinity>"
+      then have "#\<surd> ts \<bullet>\<surd> tsntimes na ts \<noteq> \<infinity>"
         using a2 by (metis (full_types) tsConc_eqts_comm tsConc_notEq tsconc_id tsntimes.simps(2))
       then have "#\<surd> tsntimes (Suc na) ts \<noteq> \<infinity>"
         by (metis tsntimes.simps(2)) }
@@ -1817,7 +1817,7 @@ lemma tsinftimes_eps[simp]: "tsinftimes \<bottom> = \<bottom>"
 by (subst tsinftimes_def [THEN fix_eq2], simp)
 
 (* repeating a tstream infinitely often is equivalent to repeating it once and then infinitely often *)
-lemma tsinftimes_unfold: "tsinftimes s = s \<bullet> tsinftimes s"
+lemma tsinftimes_unfold: "tsinftimes s = s \<bullet>\<surd> tsinftimes s"
 by (subst tsinftimes_def [THEN fix_eq2], simp)
 
 (* tsTake*)
@@ -1996,10 +1996,10 @@ lemma tsprojfst_tsabs_slen [simp]: "#(tsAbs\<cdot>(tsProjFst\<cdot>ts)) = #(tsAb
 lemma tsprojsnd_tsabs_slen [simp]: "#(tsAbs\<cdot>(tsProjSnd\<cdot>ts)) = #(tsAbs\<cdot>ts)"
   by (simp add: tsProjSnd_def)
     
-lemma tsprojfst_tsconc: "tsProjFst\<cdot>(ts1 \<bullet> ts2) = tsProjFst\<cdot>ts1 \<bullet> tsProjFst\<cdot>ts2"
+lemma tsprojfst_tsconc: "tsProjFst\<cdot>(ts1 \<bullet>\<surd> ts2) = tsProjFst\<cdot>ts1 \<bullet>\<surd> tsProjFst\<cdot>ts2"
   by (simp add: tsprojfst_insert tsmap_insert smap_split tsconc_insert tsmap_h_well)    
     
-lemma tsprojsnd_tsconc: "tsProjSnd\<cdot>(ts1 \<bullet> ts2) = tsProjSnd\<cdot>ts1 \<bullet> tsProjSnd\<cdot>ts2"
+lemma tsprojsnd_tsconc: "tsProjSnd\<cdot>(ts1 \<bullet>\<surd> ts2) = tsProjSnd\<cdot>ts1 \<bullet>\<surd> tsProjSnd\<cdot>ts2"
   by (simp add: tsprojsnd_insert tsmap_insert smap_split tsconc_insert tsmap_h_well)     
 
 (* ----------------------------------------------------------------------- *)
@@ -2666,7 +2666,7 @@ subsection {* delayFun *}
 lemma tick_eq_discrtick: "updis \<surd> = up\<cdot>DiscrTick"
 by (simp add: DiscrTick_def)
 
-lemma delayfun_insert: "delayFun\<cdot>ts = (Abs_tstream (\<up>\<surd>)\<bullet>ts)"  
+lemma delayfun_insert: "delayFun\<cdot>ts = (Abs_tstream (\<up>\<surd>) \<bullet>\<surd> ts)"  
 by (simp add: delayFun_def)
 
 lemma tsrt_delayfun [simp]: "tsRt\<cdot>(delayFun\<cdot>ts) = ts"
@@ -2787,10 +2787,10 @@ lemma tsdom_mlscons: "ts\<noteq>\<bottom> \<Longrightarrow> tsDom\<cdot>(tsMLsco
 lemma tsdom_delayfun: "tsDom\<cdot>(delayFun\<cdot>ts) = tsDom\<cdot>ts"
   by (simp add: delayFun_def tsdom_insert tsconc_rep_eq)
 
-lemma tsconc_mlscons: "ts1\<noteq>\<bottom> \<Longrightarrow> (updis t &&\<surd> ts1) \<bullet> ts2 = updis t &&\<surd> (ts1 \<bullet> ts2)"
+lemma tsconc_mlscons: "ts1\<noteq>\<bottom> \<Longrightarrow> (updis t &&\<surd> ts1) \<bullet>\<surd> ts2 = updis t &&\<surd> (ts1 \<bullet>\<surd> ts2)"
   by (metis absts2mlscons sconc_scons' ts_well_conc tsconc_insert tsmlscons_lscons2)
 
-lemma tsconc_delayfun: "(delay ts1) \<bullet> ts2 = delay (ts1 \<bullet> ts2)"
+lemma tsconc_delayfun: "(delay ts1) \<bullet>\<surd> ts2 = delay (ts1 \<bullet>\<surd> ts2)"
   by (simp add: delayFun.rep_eq)
   
 (************************************************)
