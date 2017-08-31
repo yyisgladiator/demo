@@ -396,6 +396,18 @@ text {*
    p1/p2 = oracle stream
 *}
 
+(* oops-Lemmata in Medium *)
+text {* Two medium can be reduced to one medium. *}
+lemma tsmed2med: obtains ora3 where "tsMed\<cdot>(tsMed\<cdot>msg\<cdot>ora1)\<cdot>ora2 = tsMed\<cdot>msg\<cdot>ora3"
+  sorry
+
+(* oops-Lemmata in Medium *)
+text {* Two medium with fairness requirement can be reduced to one medium with 
+        fairness requirement. *}
+lemma tsmed2infmed: assumes "#({True} \<ominus> ora1)=\<infinity>" and "#({True} \<ominus> ora2)=\<infinity>" 
+  obtains ora3 where "tsMed\<cdot>(tsMed\<cdot>msg\<cdot>ora1)\<cdot>ora2 = tsMed\<cdot>msg\<cdot>ora3" and "#({True} \<ominus> ora3)=\<infinity>"
+  sorry
+
 lemma lnle2le: "m < lnsuc\<cdot>n \<Longrightarrow> m \<le> n"
   apply (case_tac "m=\<infinity>", auto)
   by (metis Fin_Suc less2lnleD lncases lnsuc_lnle_emb)
@@ -443,21 +455,42 @@ lemma tsaltbitpro_inp2out:
     have hh3: "lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>as))) < #(tsAbs\<cdot>i) \<Longrightarrow> #(tsAbs\<cdot>as) = \<infinity>"
       by (simp add: ar_def as_def dr_def hh2 p1_def p2_def)
 
+(*
     have hh4: "#(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>ds))) = lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>as))) 
       \<Longrightarrow> (#(tsAbs\<cdot>(tsRemDups\<cdot>as)) = \<infinity> \<or> #(tsAbs\<cdot>as) \<noteq> \<infinity>)"
       sorry
+*)
+
 (* property0 medien zusammenfassen tsremdupsblatsremdups lemma *)
+
     have h3: "#(tsAbs\<cdot>i) < lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>as)))
           \<or> #(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>ds))) = lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>as)))"
       by (metis ds_def le_less_linear min_absorb2 send_def set2tssnd_ack2trans)
 
+    have hh4: "#(tsAbs\<cdot>(tsRemDups\<cdot>(tsMed\<cdot>(tsMed\<cdot>(tsProjSnd\<cdot>ds)\<cdot>p1)\<cdot>p2))) 
+                 \<le> #(tsAbs\<cdot>(tsRemDups\<cdot>(tsMed\<cdot>(tsProjSnd\<cdot>ds)\<cdot>p1)))"
+      by (simp add: p2_def prop0)
+    have hh5: " #(tsAbs\<cdot>(tsRemDups\<cdot>(tsMed\<cdot>(tsProjSnd\<cdot>ds)\<cdot>p1))) \<le> #(tsAbs\<cdot>(tsRemDups\<cdot>(tsProjSnd\<cdot>ds)))"
+      by (simp add: p1_def prop0)
+  
+    have hh6: "#p1 = \<infinity>"
+      using p1_def sfilterl4 by auto
+    hence hh7: "tsProjSnd\<cdot>(tsMed\<cdot>ds\<cdot>p1) = tsMed\<cdot>(tsProjSnd\<cdot>ds)\<cdot>p1"
+      by (simp add: tsprojsnd_insert tsmed_map)
+ 
+  
+    have "#(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>ds))) \<le> #(tsAbs\<cdot>(tsRemDups\<cdot>as))"
+      apply (simp add: as_def ar_def dr_def hh7)
+      sorry
+
+(*
     hence "#(tsAbs\<cdot>i) \<le> #(tsAbs\<cdot>(tsRemDups\<cdot>as)) \<or> (#(tsAbs\<cdot>(tsRemDups\<cdot>as)) = \<infinity> \<or> #(tsAbs\<cdot>as) \<noteq> \<infinity>)"
       sorry
     hence "#(tsAbs\<cdot>i) \<le> #(tsAbs\<cdot>(tsRemDups\<cdot>as)) \<or> #(tsAbs\<cdot>(tsRemDups\<cdot>as)) = \<infinity>"
       sorry
-
+*)
     hence geq: "#(tsAbs\<cdot>i) \<le> #(tsAbs\<cdot>(tsRemDups\<cdot>as))"
-      sorry
+      by (metis ds_def dual_order.antisym h4 min_rek send_def set2tssnd_ack2trans)
     (* equalities *)
     have eq: "#(tsAbs\<cdot>i) = #(tsAbs\<cdot>(tsRemDups\<cdot>as))"
       by (simp add: dual_order.antisym geq leq)
