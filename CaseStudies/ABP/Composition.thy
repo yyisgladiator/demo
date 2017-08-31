@@ -104,7 +104,7 @@ lemma prop4: assumes "#({True} \<ominus> p) = \<infinity>"
   "#(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>ts))) = #(tsAbs\<cdot>(tsRemDups\<cdot>(tsProjSnd\<cdot>ts)))
   \<Longrightarrow> #(tsAbs\<cdot>(tsRemDups\<cdot>(tsProjSnd\<cdot>ts))) = #(tsAbs\<cdot>(tsRemDups\<cdot>(tsProjSnd\<cdot>(tsMed\<cdot>ts\<cdot>p))))
   \<Longrightarrow> tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>ts)) = tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(tsMed\<cdot>ts\<cdot>p)))"
-  oops
+  sorry
 
 (* lnat auxiliary lemmata *)
 lemma lnle2le: "m < lnsuc\<cdot>n \<Longrightarrow> m \<le> n"
@@ -178,8 +178,7 @@ lemma tsaltbitpro_inp2out_nmed2:
     have prop8: "#(tsAbs\<cdot>(tsRemDups\<cdot>(tsProjSnd\<cdot>ds))) = #(tsAbs\<cdot>(tsRemDups\<cdot>(tsProjSnd\<cdot>dr)))"
       by (simp add: dr_def)
     (* tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>dr)) = tsAbs\<cdot>i *)
-    have h4:
-      "tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>dr)) = tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>ds))"
+    have h4: "tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>dr)) = tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>ds))"
       by (simp add: dr_def)
     thus "tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>dr)) = tsAbs\<cdot>i"
       by (simp add: ds_def eq_slen_eq_and_less prop6 send_def set2tssnd_prefix_inp)      
@@ -189,12 +188,13 @@ lemma tsaltbitpro_inp2out_nmed2:
 subsection {* sender, receiver and second medium composition *}
 (* ----------------------------------------------------------------------- *)
 
-text {*
+text {* 
    i = input stream
    as = acks stream (in sender)
    ar = acks stream (from receiver)
    ds = output stream (from sender)
-   p2 = oracle stream
+   dr = output stream (in receiver)
+   p1/p2 = oracle stream
 *}
 
 lemma tsaltbitpro_inp2out_sndmed:
@@ -236,9 +236,70 @@ lemma tsaltbitpro_inp2out_sndmed:
     have prop8: "#(tsAbs\<cdot>(tsRemDups\<cdot>(tsProjSnd\<cdot>ds))) = #(tsAbs\<cdot>(tsRemDups\<cdot>(tsProjSnd\<cdot>dr)))"
       by (simp add: dr_def)
     (* tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>dr)) = tsAbs\<cdot>i *)
-    have h4:
-      "tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>dr)) = tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>ds))"
+    have h4: "tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>dr)) = tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>ds))"
       by (simp add: dr_def)
+    thus "tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>dr)) = tsAbs\<cdot>i"
+      by (simp add: ds_def eq_slen_eq_and_less prop6 send_def set2tssnd_prefix_inp)      
+  qed
+
+(* ----------------------------------------------------------------------- *)
+subsection {* sender, receiver and first medium composition *}
+(* ----------------------------------------------------------------------- *)
+
+text {* 
+   i = input stream
+   as = acks stream (in sender)
+   ar = acks stream (from receiver)
+   ds = output stream (from sender)
+   dr = output stream (in receiver)
+   p1/p2 = oracle stream
+*}
+
+lemma tsaltbitpro_inp2out_fstmed:
+  assumes send_def: "send \<in> tsSender"
+    and p1_def: "#({True} \<ominus> p1) = \<infinity>"
+    and ds_def: "ds = send\<cdot>i\<cdot>as"
+    and dr_def: "dr = tsMed\<cdot>ds\<cdot>p1"
+    and ar_def: "ar = tsProjSnd\<cdot>dr"
+    (* definition 5 *)
+    and as_def: "as = ar"
+  shows "tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>dr)) = tsAbs\<cdot>i"
+  proof -
+    (* #(tsAbs\<cdot>(tsRemDups\<cdot>as)) \<le> #(tsAbs\<cdot>i) *)
+    have ora_inf: "#p1 = \<infinity>"
+      using p1_def sfilterl4 by auto
+    hence tsmed_tsprojsnd: "tsMed\<cdot>(tsProjSnd\<cdot>ds)\<cdot>p1 = tsProjSnd\<cdot>(tsMed\<cdot>ds\<cdot>p1)"
+      by (simp add: tsprojsnd_insert tsmed_map)
+    have h1: "#(tsAbs\<cdot>(tsRemDups\<cdot>as)) \<le> #(tsAbs\<cdot>(tsRemDups\<cdot>(tsProjSnd\<cdot>ds)))"
+      by (metis ar_def as_def dr_def p1_def prop0 tsmed_tsprojsnd)
+    hence h2: "#(tsAbs\<cdot>(tsRemDups\<cdot>as)) \<le> #(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>ds)))"
+      by (simp add: ds_def send_def tssnd_tsprojsnd_tsremdups)
+    hence leq: "#(tsAbs\<cdot>(tsRemDups\<cdot>as)) \<le> #(tsAbs\<cdot>i)"
+      by (metis (no_types, lifting) ds_def min.coboundedI2 min_def mono_slen send_def 
+          set2tssnd_prefix_inp)
+    (* #(tsAbs\<cdot>i) \<le> #(tsAbs\<cdot>(tsRemDups\<cdot>as)) *)
+    have h3: "#(tsAbs\<cdot>i) < lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>as)))
+          \<or> #(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>ds))) = lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>as)))"
+      by (metis ar_def as_def dr_def ds_def dual_order.strict_iff_order inf_ub min_def p1_def 
+          send_def set2tssnd_ack2trans set2tssnd_strcausal sfilterl4 tsmed_tstickcount 
+          tsprojsnd_tstickcount)
+    hence geq: "#(tsAbs\<cdot>i) \<le> #(tsAbs\<cdot>(tsRemDups\<cdot>as))"
+      sorry
+    (* equalities *)
+    have eq: "#(tsAbs\<cdot>i) = #(tsAbs\<cdot>(tsRemDups\<cdot>as))"
+      by (simp add: dual_order.antisym geq leq)
+    (* property 6 *)
+    have prop6: "#(tsAbs\<cdot>i) = #(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>ds)))"
+      by (metis ds_def dual_order.antisym eq h2 mono_slen send_def set2tssnd_prefix_inp)
+    (* property 7 *)
+    have prop7: "#(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>ds))) = #(tsAbs\<cdot>(tsRemDups\<cdot>(tsProjSnd\<cdot>ds)))"
+      by (simp add: ds_def send_def tssnd_tsprojsnd_tsremdups)
+    (* property 8 *)
+    have prop8: "#(tsAbs\<cdot>(tsRemDups\<cdot>(tsProjSnd\<cdot>ds))) = #(tsAbs\<cdot>(tsRemDups\<cdot>(tsProjSnd\<cdot>dr)))"
+      using ar_def as_def eq prop6 prop7 by auto
+    (* tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>dr)) = tsAbs\<cdot>i *)
+    have h4: "tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>dr)) = tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>ds))"
+      using ar_def as_def dr_def eq p1_def prop4 prop6 prop7 by fastforce
     thus "tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>dr)) = tsAbs\<cdot>i"
       by (simp add: ds_def eq_slen_eq_and_less prop6 send_def set2tssnd_prefix_inp)      
   qed
