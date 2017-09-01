@@ -138,7 +138,7 @@ lemma h5: "#ora=\<infinity> \<Longrightarrow>  #(tsAbs\<cdot>msg) = \<infinity> 
   by (metis h3 h4)
   
  
- (* SWS: Das ist mein vorschlag *)   
+ (* SWS: Das ist mein vorschlag
 lemma tsmed_tsabs_slen_inf [simp]: 
   shows "#(tsAbs\<cdot>msg)=\<infinity> \<Longrightarrow> #(tsAbs\<cdot>(tsMed\<cdot>msg\<cdot>ora)) = #({True} \<ominus> ora)"
   apply(induction ora arbitrary: msg)
@@ -160,24 +160,49 @@ proof -
 qed
   
     
- 
+  *)   
 
-lemma tsmed_tsabs_slen_inf_h: 
-   "#ora=\<infinity> \<Longrightarrow> #(tsAbs\<cdot>msg)=\<infinity> \<Longrightarrow> #(tsAbs\<cdot>(tsMed\<cdot>msg\<cdot>ora)) = #({True} \<ominus> ora)"
-proof(induction msg arbitrary: ora)
-  
-  case adm
-  then  show ?case   
+
+(*proof -
+  have "msg \<noteq> \<bottom>" using assms  sorry  
+   then  show "#ora=\<infinity> \<Longrightarrow> #(tsAbs\<cdot>(tsMed\<cdot>msg\<cdot>ora)) = #({True} \<ominus> ora)"
+    proof(induction msg arbitrary: ora, simp_all)
+      show  "\<And>msga ora. (\<And>ora. #ora = \<infinity> \<Longrightarrow> msga \<noteq> \<bottom> \<Longrightarrow> #(tsAbs\<cdot>(tsMed\<cdot>msga\<cdot>ora)) = #({True} \<ominus> ora)) \<Longrightarrow> #ora = \<infinity> \<Longrightarrow> msg \<noteq> \<bottom> \<Longrightarrow> #(tsAbs\<cdot>(tsMed\<cdot>(delay msga)\<cdot>ora)) = #({True} \<ominus> ora)"
+        using assms
+          
+          sorry
+    
+      show " \<And>msga t ora. (\<And>ora. #(tsAbs\<cdot>(tsMed\<cdot>msga\<cdot>ora)) = #({True} \<ominus> ora)) \<Longrightarrow> msga \<noteq> \<bottom> \<Longrightarrow> msg \<noteq> \<bottom> \<Longrightarrow> #(tsAbs\<cdot>(tsMed\<cdot>(updis t &&\<surd> msga)\<cdot>ora)) = #({True} \<ominus> ora) " sorry
+     
+    qed
+ qed*)
+    
+
+
+
+    (*  
+
+  lemma tsmed_tsabs_slen_inf_h: assumes"#ora=\<infinity>" and  "msg \<noteq> \<bottom>" "  #(tsAbs\<cdot>msg)=\<infinity>"  shows
+   " #(tsAbs\<cdot>(tsMed\<cdot>msg\<cdot>ora)) = #({True} \<ominus> ora)" 
+  using assms
+  proof(induction msg arbitrary: ora)
+   case adm
+
+   show ?case   
     apply(rule adm_all)
     apply(rule adm_imp)
     apply simp
-
+    apply(rule adm_imp)
+    apply simp
+    apply(rule adm_imp)   
      
    sorry    
-  next
+next
     case bottom
-    then show ?case 
-      by simp
+      
+    then show ?case by simp
+      
+      
   next
     case (delayfun msg)
     then show ?case 
@@ -197,7 +222,7 @@ proof(induction msg arbitrary: ora)
      by (simp add: h5 lscons_conv tsabs_mlscons)
        
     qed
-  qed
+  qed*)
 
     
 text {* If infinite messages will be sent infinite messages will be transmitted. *}
