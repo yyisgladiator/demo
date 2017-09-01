@@ -30,6 +30,10 @@ definition tsSender :: "('a sender) set" where
   (min (#\<surd>i) (#\<surd>as) < \<infinity> \<longrightarrow> min (#\<surd>i) (#\<surd>as) < #\<surd>(send\<cdot>i\<cdot>as))
 }"
 
+lemma set2tssnd_strcausal: assumes "send \<in> tsSender"
+  shows "min (#\<surd>i) (#\<surd>as) < \<infinity> \<longrightarrow> min (#\<surd>i) (#\<surd>as) < #\<surd>(send\<cdot>i\<cdot>as)"
+  using assms tsSender_def by auto
+
 (* 1st axiom *)
 lemma set2tssnd_prefix_inp: assumes "send \<in> tsSender"
   shows "tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(send\<cdot>i\<cdot>as))) \<sqsubseteq> tsAbs\<cdot>i"
@@ -40,6 +44,42 @@ lemma set2tssnd_alt_bit: assumes "send \<in> tsSender"
     = tsAbs\<cdot>(tsProjSnd\<cdot>(tsRemDups\<cdot>(send\<cdot>i\<cdot>as)))"
   using assms tsSender_def by auto
 
+lemma tstickcount_inp2acks:
+  assumes send_def: "send \<in> tsSender"
+    and p1_def: "#({True} \<ominus> p1) = \<infinity>"
+    and p2_def: "#({True} \<ominus> p2) = \<infinity>"
+    and ds_def: "ds = send\<cdot>i\<cdot>as"
+    and dr_def: "dr = tsMed\<cdot>ds\<cdot>p1"
+    and ar_def: "ar = tsProjSnd\<cdot>dr"
+    and as_def: "as = tsMed\<cdot>ar\<cdot>p2"
+  shows "#\<surd>i \<le> #\<surd>as"
+  by (metis ar_def as_def dr_def ds_def inf_ub le_less min_def neq_iff p1_def p2_def send_def 
+      set2tssnd_strcausal sfilterl4 tsmed_tstickcount tsprojsnd_tstickcount)
+
+lemma tstickcount_out2acks:
+  assumes send_def: "send \<in> tsSender"
+    and p1_def: "#({True} \<ominus> p1) = \<infinity>"
+    and p2_def: "#({True} \<ominus> p2) = \<infinity>"
+    and ds_def: "ds = send\<cdot>i\<cdot>as"
+    and dr_def: "dr = tsMed\<cdot>ds\<cdot>p1"
+    and ar_def: "ar = tsProjSnd\<cdot>dr"
+    and as_def: "as = tsMed\<cdot>ar\<cdot>p2"
+  shows "#\<surd>ds \<le> #\<surd>as"
+  by (metis ar_def as_def dr_def min.orderI min_def p1_def p2_def sfilterl4 tsmed_tstickcount 
+      tsprojsnd_tstickcount)
+
+lemma tstickcount_maxinp2out:
+  assumes send_def: "send \<in> tsSender"
+    and p1_def: "#({True} \<ominus> p1) = \<infinity>"
+    and p2_def: "#({True} \<ominus> p2) = \<infinity>"
+    and ds_def: "ds = send\<cdot>i\<cdot>as"
+    and dr_def: "dr = tsMed\<cdot>ds\<cdot>p1"
+    and ar_def: "ar = tsProjSnd\<cdot>dr"
+    and as_def: "as = tsMed\<cdot>ar\<cdot>p2"
+  shows "max (#\<surd>i) (#\<surd>as) \<le> #\<surd>ds"
+  by (metis ar_def as_def dr_def ds_def inf_ub le_less max.bounded_iff min_def neq_iff p1_def p2_def 
+      send_def set2tssnd_strcausal sfilterl4 tsmed_tstickcount tsprojsnd_tstickcount)
+
 (* 5th axiom *)     
 lemma set2tssnd_ack2trans: assumes "send \<in> tsSender"
   shows "#\<surd>i \<le> #\<surd>as \<longrightarrow> #(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(send\<cdot>i\<cdot>as)))) 
@@ -49,10 +89,6 @@ lemma set2tssnd_ack2trans: assumes "send \<in> tsSender"
 (* 4th axiom *)
 lemma set2tssnd_nack2inftrans: assumes "send \<in> tsSender"
   shows "#\<surd>i \<le> #\<surd>as \<longrightarrow> #(tsAbs\<cdot>i) > #(tsAbs\<cdot>(tsRemDups\<cdot>as)) \<longrightarrow> #(tsAbs\<cdot>(send\<cdot>i\<cdot>as)) = \<infinity>"
-  using assms tsSender_def by auto
-
-lemma set2tssnd_strcausal: assumes "send \<in> tsSender"
-  shows "min (#\<surd>i) (#\<surd>as) < \<infinity> \<longrightarrow> min (#\<surd>i) (#\<surd>as) < #\<surd>(send\<cdot>i\<cdot>as)"
   using assms tsSender_def by auto
 
 (* ----------------------------------------------------------------------- *)
