@@ -69,8 +69,6 @@ lemma tsmed_mlscons_false: "msg\<noteq>\<bottom> \<Longrightarrow> #ora=\<infini
 lemma tsmed_delayfun: "ora\<noteq>\<epsilon> \<Longrightarrow> tsMed\<cdot>(delayFun\<cdot>msg)\<cdot>ora = delayFun\<cdot>(tsMed\<cdot>msg\<cdot>ora)"
   by (simp add: tsMed_def tszip_delayfun tsfilter_delayfun tsprojfst_delayfun)
 
-(* ToDo: basic properties lemmata for medium *)
-
 lemma tsmed_nbot [simp]: "msg\<noteq>\<bottom> \<Longrightarrow> #ora=\<infinity> \<Longrightarrow> tsMed\<cdot>msg\<cdot>ora \<noteq> \<bottom>"
  by (simp add: tsmed_insert)
 
@@ -85,8 +83,6 @@ lemma tsmed_inftick [simp]: "#ora=\<infinity> \<Longrightarrow> tsMed\<cdot>tsIn
       Inf'_neq_0 Rep_tstream_inject delayfun_insert insertI1 s2sinftimes sfilter_in
       sinftimes_unfold slen_empty_eq tick_msg tsInfTick.abs_eq tsInfTick.rep_eq
       tsconc_rep_eq tsprojfst_delayfun tszip_delayfun)
-
-(* ToDo Steffen: basic properties lemmata for medium *)
 
 text {* Medium without oracle will transmit all messages and ticks. *}
 lemma tsmed_inftrue [simp]: "tsMed\<cdot>msg\<cdot>((\<up>True) \<infinity>) = msg"
@@ -177,36 +173,37 @@ qed
     qed
  qed*)
     
-
-
-
-    (*  
-
-  lemma tsmed_tsabs_slen_inf_h: assumes"#ora=\<infinity>" and  "msg \<noteq> \<bottom>" "  #(tsAbs\<cdot>msg)=\<infinity>"  shows
-   " #(tsAbs\<cdot>(tsMed\<cdot>msg\<cdot>ora)) = #({True} \<ominus> ora)" 
-  using assms
-  proof(induction msg arbitrary: ora)
-   case adm
-
-   show ?case   
-    apply(rule adm_all)
-    apply(rule adm_imp)
-    apply simp
-    apply(rule adm_imp)
-    apply simp
-    apply(rule adm_imp)   
-     
-   sorry    
-next
-    case bottom
-      
+lemma tsmed_tsabs_slen_inf_h: assumes "#(tsAbs\<cdot>msg)=\<infinity>" "#ora=\<infinity>" shows
+    "msg \<noteq> \<bottom> \<Longrightarrow> #(tsAbs\<cdot>(tsMed\<cdot>msg\<cdot>ora)) = #({True} \<ominus> ora)" 
+  proof(induction msg)
+    case adm
     then show ?case by simp
-      
-      
+  next
+    case bottom
+    then show ?case by simp
   next
     case (delayfun msg)
+    then show ?case  
+      apply simp
+    proof -
+      have h:"#(tsAbs\<cdot>msg) = \<infinity> \<Longrightarrow> msg \<noteq> \<bottom>" by auto 
+      then have"msg \<noteq> \<bottom>" sorry
+      then show "(msg \<noteq> \<bottom> \<Longrightarrow> #(tsAbs\<cdot>(tsMed\<cdot>msg\<cdot>ora)) = #({True} \<ominus> ora)) \<Longrightarrow> #(tsAbs\<cdot>(tsMed\<cdot>(delay msg)\<cdot>ora)) = #({True} \<ominus> ora)"
+      by (simp add: \<open>msg \<noteq> \<bottom>\<close> assms(2) only_empty_has_length_0 tsmed_delayfun)
+    
+    qed
+    next
+    case (mlscons msg t)
     then show ?case 
-     by (metis Inf'_neq_0 slen_empty_eq tsabs_delayfun tsmed_delayfun)
+     apply (rule_tac x=ora in scases, simp_all)
+     apply (case_tac "a=False")
+     apply (fold lscons_conv)  
+       apply (subst tsmed_mlscons_false)
+        sorry
+  qed 
+  
+   
+(*
   next
     case (mlscons msg t)
     then show ?case 
@@ -221,8 +218,7 @@ next
            #(tsAbs\<cdot>(tsMed\<cdot>(updis t &&\<surd> msg)\<cdot>(\<up>a \<bullet> s))) = #({True} \<ominus> \<up>a \<bullet> s)" 
      by (simp add: h5 lscons_conv tsabs_mlscons)
        
-    qed
-  qed*)
+    qed*)
 
     
 text {* If infinite messages will be sent infinite messages will be transmitted. *}
