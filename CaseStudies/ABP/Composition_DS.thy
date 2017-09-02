@@ -95,6 +95,17 @@ lemma prop3: assumes p1_def: "#({True} \<ominus> p1) = \<infinity>" and p2_def: 
   shows "#(tsAbs\<cdot>ts) = \<infinity> \<Longrightarrow> #(tsAbs\<cdot>(tsMed\<cdot>(tsProjSnd\<cdot>(tsMed\<cdot>ts\<cdot>p1))\<cdot>p2)) = \<infinity>"
   by (simp add: p1_def p2_def)
 
+(* first ideas *)
+lemma prop4_h2:
+  "#(tsAbs\<cdot>ts) = #(tsAbs\<cdot>(tsMed\<cdot>ts\<cdot>p))
+     \<Longrightarrow> tsAbs\<cdot>ts = tsAbs\<cdot>(tsMed\<cdot>ts\<cdot>p)"
+  sorry
+
+lemma prop4_h1:
+  "#(tsAbs\<cdot>(tsRemDups\<cdot>ts)) = #(tsAbs\<cdot>(tsRemDups\<cdot>(tsMed\<cdot>ts\<cdot>p)))
+     \<Longrightarrow> tsAbs\<cdot>(tsRemDups\<cdot>ts) = tsAbs\<cdot>(tsRemDups\<cdot>(tsMed\<cdot>ts\<cdot>p))"
+  sorry
+
 (* property 4 *)
 lemma prop4: assumes "#({True} \<ominus> p) = \<infinity>"
   shows (* removed #(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>ts))) \<noteq> \<infinity> *)

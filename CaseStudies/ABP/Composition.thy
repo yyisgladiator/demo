@@ -150,6 +150,23 @@ lemma lnle2le: "m < lnsuc\<cdot>n \<Longrightarrow> m \<le> n"
 lemma le2lnle: "m < \<infinity> \<Longrightarrow> lnsuc\<cdot>m \<le> n \<Longrightarrow> m < n"
   by (metis dual_order.strict_iff_order dual_order.trans leD ln_less)
 
+(* without using set2tssnd_ack2trans *)
+lemma tstickcount_acks_prefix_out:
+  assumes send_def: "send \<in> tsSender"
+    and p1_def: "#({True} \<ominus> p1) = \<infinity>"
+    and p2_def: "#({True} \<ominus> p2) = \<infinity>"
+    and ds_def: "ds = send\<cdot>i\<cdot>as"
+    and dr_def: "dr = tsMed\<cdot>ds\<cdot>p1"
+    and ar_def: "ar = tsProjSnd\<cdot>dr"
+    and as_def: "as = tsMed\<cdot>ar\<cdot>p2"
+  shows "tsAbs\<cdot>(tsRemDups\<cdot>as) \<sqsubseteq> tsAbs\<cdot>(tsRemDups\<cdot>(tsProjSnd\<cdot>ds))"
+  proof -
+    have h1: "#(tsAbs\<cdot>(tsRemDups\<cdot>as)) \<le> #(tsAbs\<cdot>(tsRemDups\<cdot>(tsProjSnd\<cdot>ds)))"
+      by (simp add: ar_def as_def dr_def p1_def p2_def prop1)
+    show "tsAbs\<cdot>(tsRemDups\<cdot>as) \<sqsubseteq> tsAbs\<cdot>(tsRemDups\<cdot>(tsProjSnd\<cdot>ds))"
+      sorry
+  oops
+
 (* ----------------------------------------------------------------------- *)
 subsection {* sender and receiver composition *}
 (* ----------------------------------------------------------------------- *)
