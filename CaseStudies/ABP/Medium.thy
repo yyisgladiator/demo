@@ -20,6 +20,9 @@ section {* definition *}
 definition tsMed :: "'a tstream \<rightarrow> bool stream \<rightarrow> 'a tstream" where
 "tsMed \<equiv> \<Lambda> msg ora. tsProjFst\<cdot>(tsFilter {x. snd x}\<cdot>(tsZip\<cdot>msg\<cdot>ora))"
 
+definition sMed :: "'a stream \<rightarrow> bool stream \<rightarrow> 'a stream" where
+"sMed \<equiv> \<Lambda> msg ora. sprojfst\<cdot>(sfilter {x. snd x}\<cdot>(szip\<cdot>msg\<cdot>ora))"
+
 definition tsMeds :: "('a tstream \<rightarrow> 'a tstream) set" where
 "tsMeds \<equiv> { (\<Lambda> ts. tsMed\<cdot>ts\<cdot>ora) | ora. #({True} \<ominus> ora)=\<infinity> }"
 
@@ -134,117 +137,43 @@ lemma h5: "#ora=\<infinity> \<Longrightarrow>  #(tsAbs\<cdot>msg) = \<infinity> 
   by (metis h3 h4)
   
  
- (* SWS: Das ist mein vorschlag
+ (* SWS: Das ist mein vorschlag *)
+
+lemma tsmed_tsabs [simp]: "#ora = \<infinity> \<Longrightarrow> tsAbs\<cdot>(tsMed\<cdot>msg\<cdot>ora) = sMed\<cdot>(tsAbs\<cdot>msg)\<cdot>ora"
+  apply(simp add: tsMed_def sMed_def)
+  by(simp add: tsprojfst_tsabs tsfilter_tsabs tszip_tsabs)
+    
+lemma smed_t [simp]: "sMed\<cdot>(\<up>a \<bullet> as)\<cdot>(\<up>True \<bullet> ora) = \<up>a \<bullet> (sMed\<cdot>as\<cdot>ora)"
+  by(simp add: sMed_def)
+lemma smed_f [simp]: "sMed\<cdot>(\<up>a \<bullet> as)\<cdot>(\<up>False \<bullet> ora) = (sMed\<cdot>as\<cdot>ora)"
+  by(simp add: sMed_def)    
+lemma smed_bot1 [simp]: "sMed\<cdot>\<bottom>\<cdot>ora = \<bottom>"
+  by(simp add: sMed_def)
+lemma smed_bot2 [simp]: "sMed\<cdot>msg\<cdot>\<bottom> = \<bottom>"
+  by(simp add: sMed_def)    
+    
+lemma smed_slen_inf [simp]: 
+  shows "#msg=\<infinity> \<Longrightarrow> #(sMed\<cdot>msg\<cdot>ora) = #({True} \<ominus> ora)"
+proof(induction ora arbitrary: msg rule:ind)
+  case 1
+  then show ?case by simp
+next
+  case 2
+  then show ?case by simp
+next
+  case (3 a s)
+  have h1: "a = True \<Longrightarrow> ?case"
+    using "3.IH" "3.prems" inf_scase by force 
+  have h2: "a = False \<Longrightarrow> ?case"
+    using "3.IH" "3.prems" inf_scase by force      
+  then show ?case using h1 h2 by blast
+qed
+
 lemma tsmed_tsabs_slen_inf [simp]: 
-  shows "#(tsAbs\<cdot>msg)=\<infinity> \<Longrightarrow> #(tsAbs\<cdot>(tsMed\<cdot>msg\<cdot>ora)) = #({True} \<ominus> ora)"
-  apply(induction ora arbitrary: msg)
-    apply auto
-  apply(rename_tac inMsg) 
-proof -
-  fix u :: "bool discr u"
-  fix ora inMsg
-  assume u_nbot: "u \<noteq> \<bottom>" 
-    and IH: "(\<And>msg. #(tsAbs\<cdot>msg) = \<infinity> \<Longrightarrow> #(tsAbs\<cdot>(tsMed\<cdot>msg\<cdot>ora)) = #({True} \<ominus> ora))"
-    and msgInf: "#(tsAbs\<cdot>inMsg) = \<infinity>" 
-  obtain n where n_def1: "tsDom\<cdot>(tsTake n\<cdot>inMsg) = {}" 
-              and n_def2: "tsDom\<cdot>(tsNth (Suc n)\<cdot>inMsg) \<noteq>{}" sorry
-  have "\<And>ora. tsAbs\<cdot>(tsMed\<cdot>inMsg\<cdot>ora) = tsAbs\<cdot>(tsMed\<cdot>(tsDrop n\<cdot>inMsg)\<cdot>ora)" sorry
-
- (* have uT: "u = updis True \<Longrightarrow> #(tsAbs\<cdot>(tsMed\<cdot>inMsg\<cdot>(u && ora))) = #({True} \<ominus> u && ora)" sorry
-  have uF: "u = updis False \<Longrightarrow> #(tsAbs\<cdot>(tsMed\<cdot>inMsg\<cdot>(u && ora))) = #({True} \<ominus> u && ora)" sorry       *)
-  show "#(tsAbs\<cdot>(tsMed\<cdot>inMsg\<cdot>(u && ora))) = #({True} \<ominus> u && ora)" sorry
-qed
-  
-    
-  *)   
-
-
-(*proof -
-  have "msg \<noteq> \<bottom>" using assms  sorry  
-   then  show "#ora=\<infinity> \<Longrightarrow> #(tsAbs\<cdot>(tsMed\<cdot>msg\<cdot>ora)) = #({True} \<ominus> ora)"
-    proof(induction msg arbitrary: ora, simp_all)
-      show  "\<And>msga ora. (\<And>ora. #ora = \<infinity> \<Longrightarrow> msga \<noteq> \<bottom> \<Longrightarrow> #(tsAbs\<cdot>(tsMed\<cdot>msga\<cdot>ora)) = #({True} \<ominus> ora)) \<Longrightarrow> #ora = \<infinity> \<Longrightarrow> msg \<noteq> \<bottom> \<Longrightarrow> #(tsAbs\<cdot>(tsMed\<cdot>(delay msga)\<cdot>ora)) = #({True} \<ominus> ora)"
-        using assms
-          
-          sorry
-    
-      show " \<And>msga t ora. (\<And>ora. #(tsAbs\<cdot>(tsMed\<cdot>msga\<cdot>ora)) = #({True} \<ominus> ora)) \<Longrightarrow> msga \<noteq> \<bottom> \<Longrightarrow> msg \<noteq> \<bottom> \<Longrightarrow> #(tsAbs\<cdot>(tsMed\<cdot>(updis t &&\<surd> msga)\<cdot>ora)) = #({True} \<ominus> ora) " sorry
-     
-    qed
- qed*)
-    
-lemma tsmed_tsabs_slen_inf_h: assumes "#(tsAbs\<cdot>msg)=\<infinity>" "#ora=\<infinity>" shows
-    "msg \<noteq> \<bottom> \<Longrightarrow> #(tsAbs\<cdot>(tsMed\<cdot>msg\<cdot>ora)) = #({True} \<ominus> ora)" 
-  proof(induction msg)
-    case adm
-    then show ?case by simp
-  next
-    case bottom
-    then show ?case by simp
-  next
-    case (delayfun msg)
-    then show ?case  
-      apply simp
-    proof -
-      have h:"#(tsAbs\<cdot>msg) = \<infinity> \<Longrightarrow> msg \<noteq> \<bottom>" by auto 
-      then have"msg \<noteq> \<bottom>" sorry
-      then show "(msg \<noteq> \<bottom> \<Longrightarrow> #(tsAbs\<cdot>(tsMed\<cdot>msg\<cdot>ora)) = #({True} \<ominus> ora)) \<Longrightarrow> #(tsAbs\<cdot>(tsMed\<cdot>(delay msg)\<cdot>ora)) = #({True} \<ominus> ora)"
-      by (simp add: \<open>msg \<noteq> \<bottom>\<close> assms(2) only_empty_has_length_0 tsmed_delayfun)
-    
-    qed
-    next
-    case (mlscons msg t)
-    then show ?case 
-     apply (rule_tac x=ora in scases, simp_all)
-     apply (case_tac "a=False")
-     apply (fold lscons_conv)  
-       apply (subst tsmed_mlscons_false)
-        sorry
-  qed 
-  
-   
-(*
-  next
-    case (mlscons msg t)
-    then show ?case 
-    proof (rule_tac x=ora in scases, simp_all)
-      fix a:: "bool"
-      fix s:: "bool stream"
-      show "\<And>a s. #s = \<infinity> \<Longrightarrow>
-           ora = \<up>a \<bullet> s \<Longrightarrow>
-           (\<And>ora. #ora = \<infinity> \<Longrightarrow> #(tsAbs\<cdot>msg) = \<infinity> \<Longrightarrow> #(tsAbs\<cdot>(tsMed\<cdot>msg\<cdot>ora)) = #({True} \<ominus> ora)) \<Longrightarrow>
-           msg \<noteq> \<bottom> \<Longrightarrow> 
-           #(tsAbs\<cdot>(updis t &&\<surd> msg)) = \<infinity> \<Longrightarrow> 
-           #(tsAbs\<cdot>(tsMed\<cdot>(updis t &&\<surd> msg)\<cdot>(\<up>a \<bullet> s))) = #({True} \<ominus> \<up>a \<bullet> s)" 
-     by (simp add: h5 lscons_conv tsabs_mlscons)
-       
-    qed*)
-
-    
-text {* If infinite messages will be sent infinite messages will be transmitted. *}
-lemma tsmed_tsabs_slen_inf [simp]: assumes "#({True} \<ominus> ora)=\<infinity>" and "#(tsAbs\<cdot>msg)=\<infinity>" 
-  shows "#(tsAbs\<cdot>(tsMed\<cdot>msg\<cdot>ora)) = \<infinity>"
-proof -
-   have transform:"#(tsAbs\<cdot>(tsMed\<cdot>msg\<cdot>ora)) =  #(Collect snd \<ominus> tsAbs\<cdot>(tsZip\<cdot>msg\<cdot>ora)) " 
-     by (simp add: tsfilter_tsabs tsmed_insert)
-   hence "#({True} \<ominus> ora)=\<infinity> \<Longrightarrow> #(tsAbs\<cdot>msg)=\<infinity> \<Longrightarrow> #(Collect snd \<ominus> tsAbs\<cdot>(tsZip\<cdot>msg\<cdot>ora)) = \<infinity> "
-     using sfilterl4 tsmed_tsabs_slen_inf_h by fastforce
-   then show ?thesis
-     by (simp add: assms(1) assms(2) transform)
-qed
-    
-    
- 
-(*
-lemma szip_collect_inf_h: assumes "#s=\<infinity>" shows  "#(Collect snd \<ominus> s) = \<infinity>" 
-  sorry
-    
-lemma szip_collect_inf: assumes "#ora=\<infinity>" and "#msg=\<infinity>"
-  shows "#(Collect snd \<ominus> szip\<cdot>msg\<cdot>ora) = \<infinity>"
-  by (simp add: assms(1) assms(2) szip_collect_inf_h)
-*)
-    
-
+  assumes " #({True} \<ominus> ora) = \<infinity>"
+      and "#(tsAbs\<cdot>msg)=\<infinity>"
+  shows "#(tsAbs\<cdot>(tsMed\<cdot>msg\<cdot>ora)) = #({True} \<ominus> ora)"
+  using assms(1) assms(2) sfilterl4 by fastforce
 
 lemma tsmed_tsdom: "#ora=\<infinity> \<Longrightarrow> tsDom\<cdot>(tsMed\<cdot>msg\<cdot>ora) \<subseteq> tsDom\<cdot>msg"
 proof(induction msg arbitrary: ora)
