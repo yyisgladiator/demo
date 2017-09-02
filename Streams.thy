@@ -2198,6 +2198,22 @@ lemma srcdups_smap_com:
       by (simp add: "3.prems" srcdups_smap_com_h)
     then show ?case using f1 f2 by fastforce
   qed
+
+lemma srcdups_nbot: "s\<noteq>\<bottom>\<Longrightarrow>srcdups\<cdot>s \<noteq> \<bottom>"
+  by (metis lscons_conv srcdups_ex stream.con_rews(2) surj_scons)
+  
+lemma srcdups_fin: assumes "#(srcdups\<cdot>s)<\<infinity>" and "#s=\<infinity>"
+  obtains x where "srcdups\<cdot>x = srcdups\<cdot>s" and "x\<sqsubseteq>s" and "#x < \<infinity>"
+proof -
+  obtain n where "srcdups\<cdot>(stake n\<cdot>s) = srcdups\<cdot>s"
+    by (metis assms(1) fun_approxl2 min.strict_order_iff ninf2Fin)
+  thus ?thesis
+    using lnless_def that by auto 
+qed
+
+lemma srcdups_step: "srcdups\<cdot>(\<up>a \<bullet> s) = \<up>a \<bullet> srcdups\<cdot>(sdropwhile (\<lambda>x. x=a)\<cdot>s)"
+  apply(rule ind [of _ s], simp_all)
+  by (metis lscons_conv srcdups_ex srcdups_srt stream.sel_rews(5) up_defined)  
     
 (* ----------------------------------------------------------------------- *)
 subsection {* @{term sscanl} *}
@@ -2928,6 +2944,26 @@ apply (auto simp add: sdom_def2)
 apply (case_tac "n", auto)
 apply (rule_tac x="0" in exI, auto)
 by (rule_tac x="Suc n" in exI, auto)
+
+lemma srcdups_dom_h: assumes "sdom\<cdot>(srcdups\<cdot>s) = sdom\<cdot>s"
+  shows "sdom\<cdot>(srcdups\<cdot>(\<up>a \<bullet> s)) = insert a (sdom\<cdot>s)"
+proof (cases "shd s = a")
+  case True
+  have "srcdups\<cdot>(\<up>a \<bullet> \<up>a \<bullet> srt\<cdot>s) = srcdups\<cdot>(\<up>a \<bullet> srt\<cdot>s)"
+    using srcdups_eq by blast
+  hence "a \<in> sdom\<cdot>(srcdups\<cdot>(\<up>a \<bullet> srt\<cdot>s))"
+    by (simp add: srcdups_step) 
+  then show ?thesis
+    by (metis True Un_insert_left assms insert_absorb2 sdom2un srcdups_eq srcdups_step strict_sdropwhile sup_bot.left_neutral surj_scons)
+next
+  case False
+  then show ?thesis
+    by (metis (no_types, lifting) assms insert_is_Un sdom2un srcdups_neq srcdups_step strict_sdropwhile surj_scons)
+qed
+  
+lemma srcdups_dom [simp]: "sdom\<cdot>(srcdups\<cdot>xs) = sdom\<cdot>xs"
+apply(rule ind, simp_all)
+  by (simp add: srcdups_dom_h)  
 
 (* only the empty stream has no elements in its domain *)
 lemma strict_sdom_rev: "sdom\<cdot>s = {} \<Longrightarrow> s = \<epsilon>"
