@@ -232,14 +232,104 @@ section {* additional properties *}
 
 (* ToDo: additional properties lemmata for medium *)
 
+lemma oracases:
+  assumes bottom: "ts=\<bottom> \<Longrightarrow> P ts"
+    and true: "\<And>as. ts= (\<up>True \<bullet> as) \<Longrightarrow> P ts"
+    and false: "\<And>as. ts=(\<up>False \<bullet> as) \<Longrightarrow> P ts"
+  shows "P ts"
+  by (metis (full_types) bottom false scases true)  
+
+lemma conc2cons: "\<up>a \<bullet>as = updis a && as"
+  by (simp add: lscons_conv)    
+    
+lemma newora_f [simp]: "(newOracle\<cdot>(\<up>False \<bullet> ora1)\<cdot>(\<up>ora \<bullet> ora2)) = \<up>False \<bullet> newOracle\<cdot>ora1\<cdot>(\<up>ora \<bullet> ora2)"
+by (simp add: conc2cons)
+
+lemma newora_t [simp]: "(newOracle\<cdot>(\<up>True \<bullet> ora1)\<cdot>(\<up>ora \<bullet> ora2)) = \<up>ora \<bullet> newOracle\<cdot>ora1\<cdot>ora2"
+by (simp add: conc2cons)
+  
+lemma newora_fair: assumes "#({True} \<ominus> ora1)=\<infinity>" and "#({True} \<ominus> ora2)=\<infinity>"
+  shows "#({True} \<ominus> (newOracle\<cdot>ora1\<cdot>ora2))=\<infinity>"
+  sorry
+    
+lemma smed2med: 
+(*    assumes "#ora1 = \<infinity>" and "#ora2 = \<infinity>" *)
+    shows "sMed\<cdot>(sMed\<cdot>msg\<cdot>ora1)\<cdot>ora2 = sMed\<cdot>msg\<cdot>(newOracle\<cdot>ora1\<cdot>ora2 )"
+proof(induction msg arbitrary: ora1 ora2 rule: ind)
+  case 1
+  then show ?case by simp
+next
+  case 2
+  then show ?case by simp
+next
+  case (3 a s)
+  then show ?case 
+  proof (cases rule: oracases [of ora1])
+    case 1
+    then show ?thesis by simp
+  next
+    case (2 as)
+    then show ?thesis 
+      by(cases rule: oracases [of ora2], auto simp add: "3.IH")
+  next
+    case (3 as)
+    then show ?thesis       
+      by(cases rule: oracases [of ora2], auto simp add: "3.IH")
+  qed
+qed
+
+lemma tsmed_mlscons_false2 [simp]: "msg\<noteq>\<bottom> \<Longrightarrow> ora\<noteq>\<bottom>\<Longrightarrow> 
+  tsMed\<cdot>(tsMLscons\<cdot>(updis m)\<cdot>msg)\<cdot>(\<up>False \<bullet> ora) = tsMed\<cdot>msg\<cdot>ora"
+  apply(simp add: tsmed_insert conc2cons)
+  by (metis (full_types) mem_Collect_eq snd_conv tsfilter_mlscons_nin tsmlscons_bot2 tszip_mlscons)
+
+lemma tsmed_mlscons_true2 [simp]: "msg\<noteq>\<bottom> \<Longrightarrow> ora\<noteq>\<bottom>\<Longrightarrow> 
+  tsMed\<cdot>(tsMLscons\<cdot>(updis m)\<cdot>msg)\<cdot>(\<up>True \<bullet> ora) = updis m &&\<surd> tsMed\<cdot>msg\<cdot>ora"
+  apply(simp add: tsmed_insert conc2cons)
+  by (metis (no_types, lifting) mem_Collect_eq snd_conv tsfilter_mlscons_in tsfilter_strict tsmlscons_bot2 tsprojfst_mlscons tsprojfst_strict tszip_mlscons)
+  
+
+    
 text {* Two medium can be reduced to one medium. *}
-lemma tsmed2med: "tsMed\<cdot>(tsMed\<cdot>msg\<cdot>ora1)\<cdot>ora2 = tsMed\<cdot>msg\<cdot>(newOracle\<cdot>ora1\<cdot>ora2 )"
-oops
+lemma tsmed2med: "#ora1=\<infinity> \<Longrightarrow> #ora2=\<infinity> \<Longrightarrow> tsMed\<cdot>(tsMed\<cdot>msg\<cdot>ora1)\<cdot>ora2 = tsMed\<cdot>msg\<cdot>(newOracle\<cdot>ora1\<cdot>ora2 )"
+proof(induction msg arbitrary: ora1 ora2)
+  case adm
+  then show ?case by simp
+next
+  case bottom
+  then show ?case by simp
+next
+  case (delayfun msg)
+  then show ?case
+    by (smt inf_scase lscons_conv newora_f newora_t stream.con_rews(2) tsmed_delayfun up_defined) 
+next
+  case (mlscons msg t)
+  then show ?case 
+  proof (cases rule: oracases [of ora1])
+    case 1
+    then show ?thesis by simp
+  next
+    case (2 as)
+    then show ?thesis 
+      apply(cases rule: oracases [of ora2], auto simp add: conc2cons "mlscons.IH" tsmed_mlscons_true tsmed_mlscons_false)
+       apply (metis (no_types, lifting) fold_inf inject_lnsuc lscons_conv mlscons.IH mlscons.hyps mlscons.prems(1) mlscons.prems(2) slen_scons tsmed_mlscons_true2 tsmed_nbot tsmed_strict(2))
+      by (metis (no_types, lifting) fold_inf inject_lnsuc lscons_conv mlscons.IH mlscons.hyps mlscons.prems(1) mlscons.prems(2) slen_scons tsmed_mlscons_false2 tsmed_mlscons_true tsmed_nbot tsmed_strict(2)) 
+  next
+    case (3 as)
+    then show ?thesis       
+      apply(cases rule: oracases [of ora2], auto simp add: conc2cons "mlscons.IH" tsmed_mlscons_true tsmed_mlscons_false)
+      apply (metis (no_types, lifting) fold_inf inject_lnsuc lscons_conv mlscons.IH mlscons.hyps mlscons.prems(1) mlscons.prems(2) slen_scons tsmed_mlscons_false2 tsmed_nbot tsmed_strict(2))
+      by (metis (no_types, lifting) fold_inf inject_lnsuc lscons_conv mlscons.IH mlscons.hyps mlscons.prems(1) mlscons.prems(2) slen_scons tsmed_mlscons_false2 tsmed_nbot tsmed_strict(2)) 
+  qed
+    
+qed
+
 
 text {* Two medium with fairness requirement can be reduced to one medium with 
         fairness requirement. *}
 lemma tsmed2infmed: assumes "#({True} \<ominus> ora1)=\<infinity>" and "#({True} \<ominus> ora2)=\<infinity>" 
   obtains ora3 where "tsMed\<cdot>(tsMed\<cdot>msg\<cdot>ora1)\<cdot>ora2 = tsMed\<cdot>msg\<cdot>ora3" and "#({True} \<ominus> ora3)=\<infinity>"
-oops    
+  by (meson assms(1) assms(2) newora_fair sfilterl4 tsmed2med)
+
     
 end
