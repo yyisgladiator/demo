@@ -2757,6 +2757,68 @@ lemma sfilter_srt_sinf [simp]: assumes "#(A \<ominus> s) = \<infinity>"
   shows  "#(A \<ominus> (srt\<cdot>s)) = \<infinity>"
 by (smt assms inf_scase inject_scons sfilter_in sfilter_nin stream.sel_rews(2) surj_scons) 
 
+
+  
+  (* additional snth--lemma *)
+lemma sfilter_ntimes [simp]: "#({True} \<ominus> ((sntimes n (\<up>False))\<bullet>ora2)) = #({True} \<ominus> ora2)"
+  apply(induction n)
+    by auto
+
+lemma snth2sntimes: "(\<And>i. i<n \<Longrightarrow> snth i s = False) \<Longrightarrow> Fin n < #s \<Longrightarrow> (sntimes n (\<up>False)) \<sqsubseteq> s"
+proof(induction n arbitrary: s)
+  case 0
+  then show ?case by auto
+next
+  case (Suc n)
+    have "shd s = False"
+      using Suc.prems snth_shd by blast
+     hence "s = \<up>False \<bullet> (srt\<cdot>s)"
+       using Suc.prems(2) empty_is_shortest surj_scons by force
+    have "(\<And>i. i < n \<Longrightarrow> snth i (srt\<cdot>s) = False)"
+      using Suc.prems snth_rt by auto
+     hence "n\<star>\<up>False \<sqsubseteq> (srt\<cdot>s)"
+       by (meson Suc.IH Suc.prems(2) linorder_not_le slen_rt_ile_eq)
+     hence "\<up>False \<bullet> (n\<star>\<up>False) \<sqsubseteq> \<up>False \<bullet> (srt\<cdot>s)"
+       by (simp add: monofun_cfun_arg)
+     then show ?case
+       using \<open>s = \<up>False \<bullet> srt\<cdot>s\<close> by auto
+qed  
+
+lemma sntimes_len [simp]: "#(n\<star>\<up>a) = Fin n"
+  apply(induction n)
+  by auto
+
+lemma snth_scons2: assumes "#xs = Fin n"
+  shows "snth (n+m) (xs\<bullet>ys) = snth m ys"
+  apply(simp add: snth_def)
+  by (simp add: add.commute assms sdrop_plus sdropl6)
+    
+lemma sbool_ntimes_f: assumes "({True} \<ominus> s) \<noteq>\<bottom>"
+  obtains n where "(sntimes n (\<up>False)) \<bullet> \<up>True \<sqsubseteq> s"
+proof -
+  have h1: "\<exists>i. snth i s = True"
+    by (metis assms ex_snth_in_sfilter_nempty singletonD)
+  obtain n where "Fin n < #s" and n_def: "n = Least (\<lambda>i. snth i s = True)"
+    by (smt assms ex_snth_in_sfilter_nempty less2nat not_less not_less_Least not_less_iff_gr_or_eq singletonD trans_lnless)
+  have "snth n s = True"
+    using LeastI h1 n_def by force
+  have "\<And>i. i<n \<Longrightarrow> snth i s \<noteq> True" using not_less_Least n_def by fastforce
+  hence"\<And>i. i<n \<Longrightarrow> snth i s = False" by auto      
+  hence "(sntimes n (\<up>False)) \<sqsubseteq> s"
+    using \<open>Fin n < #s\<close> snth2sntimes by blast
+  obtain xs where xs_def: "s = (sntimes n (\<up>False)) \<bullet> xs"
+    using \<open>n\<star>\<up>False \<sqsubseteq> s\<close> approxl3 by auto
+  hence "xs\<noteq>\<bottom>"
+    by (metis assms sfilter_ntimes slen_empty_eq strict_sfilter)
+  have "shd xs = snth n s"
+    by (simp add: sdropl6 snth_def xs_def)
+  hence "shd xs = True"
+    using \<open>snth n s = True\<close> by auto   
+  thus ?thesis
+    by (metis \<open>xs \<noteq> \<epsilon>\<close> lscons_conv minimal monofun_cfun_arg sup'_def surj_scons that xs_def)
+  qed
+  
+  
 (* ----------------------------------------------------------------------- *)
 section {* @{term sfoot} *}
 (* ----------------------------------------------------------------------- *)

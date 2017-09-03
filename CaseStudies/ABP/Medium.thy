@@ -246,12 +246,66 @@ lemma conc2cons: "\<up>a \<bullet>as = updis a && as"
 lemma newora_f [simp]: "(newOracle\<cdot>(\<up>False \<bullet> ora1)\<cdot>(\<up>ora \<bullet> ora2)) = \<up>False \<bullet> newOracle\<cdot>ora1\<cdot>(\<up>ora \<bullet> ora2)"
 by (simp add: conc2cons)
 
+lemma newora_f2 [simp]: "ora2\<noteq>\<bottom> \<Longrightarrow> (newOracle\<cdot>(\<up>False \<bullet> ora1)\<cdot>ora2) = \<up>False \<bullet> newOracle\<cdot>ora1\<cdot>ora2"
+  by (metis newora_f scases)
+  
 lemma newora_t [simp]: "(newOracle\<cdot>(\<up>True \<bullet> ora1)\<cdot>(\<up>ora \<bullet> ora2)) = \<up>ora \<bullet> newOracle\<cdot>ora1\<cdot>ora2"
 by (simp add: conc2cons)
-  
+
+lemma newora_fair_adm: "adm (\<lambda>a. \<forall>x. #a \<le> #({True} \<ominus> x) \<longrightarrow> #({True} \<ominus> newOracle\<cdot>x\<cdot>a) = #({True} \<ominus> a))"
+proof (rule adm_all, rule admI, rule+)
+  fix x Y
+  assume ch_Y: "chain Y" and as1:"\<forall>i. #(Y i) \<le> #({True} \<ominus> x) \<longrightarrow> #({True} \<ominus> newOracle\<cdot>x\<cdot>(Y i)) = #({True} \<ominus> Y i)"
+    and as2: " #(\<Squnion>i. Y i) \<le> #({True} \<ominus> x)"
+  have "\<And>i. #(Y i) \<sqsubseteq> #(\<Squnion>i. Y i)"
+    using ch_Y is_ub_thelub monofun_cfun_arg by blast
+  hence "\<And>i. #(Y i) \<le> #({True} \<ominus> x)"
+    using as2 lnle_conv trans_lnle by blast
+  thus "#({True} \<ominus> newOracle\<cdot>x\<cdot>(\<Squnion>i. Y i)) = #({True} \<ominus> (\<Squnion>i. Y i))"
+  proof -
+    have "(\<Squnion>n. #({True} \<ominus> newOracle\<cdot>x\<cdot>(Y n))) = (\<Squnion>n. #({True} \<ominus> Y n))"
+      using \<open>\<And>i. #(Y i) \<le> #({True} \<ominus> x)\<close> as1 by presburger
+    then show ?thesis
+      by (simp add: ch_Y contlub_cfun_arg)
+  qed
+qed    
+
+lemma new_ora_ntimes: "ora2\<noteq>\<bottom>\<Longrightarrow>newOracle\<cdot>((sntimes n (\<up>False)) \<bullet> ora1)\<cdot>ora2 =(sntimes n (\<up>False)) \<bullet> newOracle\<cdot>ora1\<cdot>ora2"
+  apply(induction n)
+   by auto
+    
+lemma newora_fair_h:  "#ora2 \<le> #({True} \<ominus> ora1) \<longrightarrow> #({True} \<ominus> (newOracle\<cdot>ora1\<cdot>ora2))=#({True} \<ominus> ora2)"  
+  proof(induction ora2 arbitrary: ora1 rule: ind)
+    case 1
+    then show ?case
+      using newora_fair_adm by blast
+  next
+    case 2
+    then show ?case by simp
+  next
+    case (3 a s)
+    show ?case 
+    proof
+      assume as: "#(\<up>a \<bullet> s) \<le> #({True} \<ominus> ora1)"
+      hence "0 < #({True} \<ominus> ora1)" using lnless_def by auto
+      obtain n where n_def: "(sntimes n (\<up>False)) \<bullet> \<up>True \<sqsubseteq> ora1"
+        using \<open>0 < #({True} \<ominus> ora1)\<close> lnless_def sbool_ntimes_f by fastforce
+      obtain newora where newora_def: "ora1 = (sntimes n (\<up>False)) \<bullet> \<up>True \<bullet> newora"
+        using approxl3 assoc_sconc n_def by blast
+      have h1: "newOracle\<cdot>ora1\<cdot>(\<up>a \<bullet> s) = (sntimes n (\<up>False)) \<bullet> \<up>a \<bullet> (newOracle\<cdot>newora\<cdot>s) "
+        by (simp add: n_def new_ora_ntimes newora_def)
+      have h2: "#({True} \<ominus> ora1) = lnsuc\<cdot>(#({True} \<ominus> newora))"
+        by (simp add: n_def newora_def)
+      thus "#({True} \<ominus> newOracle\<cdot>ora1\<cdot>(\<up>a \<bullet> s)) = #({True} \<ominus> \<up>a \<bullet> s)"
+        by (metis "3.IH" as h1 lnsuc_lnle_emb sfilter_in sfilter_nin sfilter_ntimes slen_scons)
+             
+    qed
+  qed
+    
 lemma newora_fair: assumes "#({True} \<ominus> ora1)=\<infinity>" and "#({True} \<ominus> ora2)=\<infinity>"
   shows "#({True} \<ominus> (newOracle\<cdot>ora1\<cdot>ora2))=\<infinity>"
-  oops
+  by (simp add: assms(1) assms(2) newora_fair_h)
+
     
 lemma smed2med: 
 (*    assumes "#ora1 = \<infinity>" and "#ora2 = \<infinity>" *)
@@ -330,8 +384,7 @@ text {* Two medium with fairness requirement can be reduced to one medium with
         fairness requirement. *}
 lemma tsmed2infmed: assumes "#({True} \<ominus> ora1)=\<infinity>" and "#({True} \<ominus> ora2)=\<infinity>" 
   obtains ora3 where "tsMed\<cdot>(tsMed\<cdot>msg\<cdot>ora1)\<cdot>ora2 = tsMed\<cdot>msg\<cdot>ora3" and "#({True} \<ominus> ora3)=\<infinity>"
-    oops
-(*  by (meson assms(1) assms(2) newora_fair sfilterl4 tsmed2med) *)
+by (meson assms(1) assms(2) newora_fair sfilterl4 tsmed2med)
 
     
 (* ----------------------------------------------------------------------- *)
@@ -339,12 +392,27 @@ section {* tsMedium lemmata *}
 (* ----------------------------------------------------------------------- *)  
   
 section {* tsMeds lemma *}
-
-lemma "tsMeds \<noteq> {}"
-oops
+lemma tsmed_helper: "#({a} \<ominus> (\<up>a \<infinity>)) = \<infinity>"
+  by simp
     
-lemma assumes "med\<in>tsMeds"
-  shows "lnsuc\<cdot>(#\<surd>msg) = #\<surd>med\<cdot>msg"
-  oops
+lemma tsmeds_exists: "(\<Lambda> ts. delay (tsMed\<cdot>ts\<cdot>(\<up>True \<infinity>))) \<in> tsMeds"
+  apply(subst tsMeds_def)
+    using tsmed_helper by blast
+  
+    
+lemma tsmeds_nempty [simp]: "tsMeds \<noteq> {}"
+  by (metis empty_iff tsmeds_exists)
+    
+lemma tsmeds_len [simp]: assumes "med\<in>tsMeds"
+  shows "#\<surd>med\<cdot>msg = lnsuc\<cdot>(#\<surd>msg)"
+proof -
+  obtain ora where med_def: "med = (\<Lambda> ts. delay (tsMed\<cdot>ts\<cdot>ora))" and "#({True} \<ominus> ora)=\<infinity>"
+    using assms tsMeds_def by auto
+  have "#\<surd>(tsMed\<cdot>msg\<cdot>ora) = #\<surd> msg"
+    using \<open>#({True} \<ominus> ora) = \<infinity>\<close> sfilterl4 tsmed_tstickcount by blast
+  hence "#\<surd>(delay (tsMed\<cdot>msg\<cdot>ora)) = lnsuc\<cdot>(#\<surd>msg)"
+    by (metis delayFun_dropFirst delayfun_nbot tsdropfirst_len)
+  thus ?thesis by(simp add: med_def)
+qed
   
 end
