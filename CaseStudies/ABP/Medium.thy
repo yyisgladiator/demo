@@ -379,14 +379,30 @@ next
     
 qed
 
-
-text {* Two medium with fairness requirement can be reduced to one medium with 
-        fairness requirement. *}
+text {* Two medium with fairness requirement can be reduced to one medium with fairness requirement. *}
 lemma tsmed2infmed: assumes "#({True} \<ominus> ora1)=\<infinity>" and "#({True} \<ominus> ora2)=\<infinity>" 
   obtains ora3 where "tsMed\<cdot>(tsMed\<cdot>msg\<cdot>ora1)\<cdot>ora2 = tsMed\<cdot>msg\<cdot>ora3" and "#({True} \<ominus> ora3)=\<infinity>"
 by (meson assms(1) assms(2) newora_fair sfilterl4 tsmed2med)
 
-    
+(* first ideas *)
+lemma prop4_h2:
+  "#(tsAbs\<cdot>ts) = #(tsAbs\<cdot>(tsMed\<cdot>ts\<cdot>p))
+     \<Longrightarrow> tsAbs\<cdot>ts = tsAbs\<cdot>(tsMed\<cdot>ts\<cdot>p)"
+  sorry
+
+lemma prop4_h1:
+  "#(tsAbs\<cdot>(tsRemDups\<cdot>ts)) = #(tsAbs\<cdot>(tsRemDups\<cdot>(tsMed\<cdot>ts\<cdot>p)))
+     \<Longrightarrow> tsAbs\<cdot>(tsRemDups\<cdot>ts) = tsAbs\<cdot>(tsRemDups\<cdot>(tsMed\<cdot>ts\<cdot>p))"
+  sorry
+
+(* property 4 *)
+lemma prop4: assumes "#({True} \<ominus> p) = \<infinity>"
+  shows (* removed #(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>ts))) \<noteq> \<infinity> *)
+  "#(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>ts))) = #(tsAbs\<cdot>(tsRemDups\<cdot>(tsProjSnd\<cdot>ts)))
+  \<Longrightarrow> #(tsAbs\<cdot>(tsRemDups\<cdot>(tsProjSnd\<cdot>ts))) = #(tsAbs\<cdot>(tsRemDups\<cdot>(tsProjSnd\<cdot>(tsMed\<cdot>ts\<cdot>p))))
+  \<Longrightarrow> tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>ts)) = tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(tsMed\<cdot>ts\<cdot>p)))"
+  sorry
+  
 (* ----------------------------------------------------------------------- *)
 section {* tsMedium lemmata *}
 (* ----------------------------------------------------------------------- *)  
