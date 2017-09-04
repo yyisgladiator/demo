@@ -649,6 +649,33 @@ proof
   show "P n" by (blast intro: lnat_well hyp)
 qed
 
+lemma min_adm[simp]: fixes y::lnat
+  shows "adm (\<lambda>x. min y (g\<cdot>x) \<sqsubseteq> h\<cdot>x)"
+proof (rule admI)
+  fix Y
+  assume Y_ch: "chain Y"  and as: "\<forall>i. min y (g\<cdot>(Y i)) \<sqsubseteq> h\<cdot>(Y i)"
+  have h1:"finite_chain Y \<Longrightarrow> min y (g\<cdot>(\<Squnion>i. Y i)) \<sqsubseteq> h\<cdot>(\<Squnion>i. Y i)"
+    using Y_ch as l42 by force
+  have "\<not>finite_chain Y \<Longrightarrow> min y (g\<cdot>(\<Squnion>i. Y i)) \<sqsubseteq> h\<cdot>(\<Squnion>i. Y i)"
+  proof (cases "g\<cdot>(\<Squnion>i. Y i) \<sqsubseteq> y")
+    case True
+    hence "\<And>i. g\<cdot>(Y i) \<sqsubseteq> y"
+      using Y_ch is_ub_thelub monofun_cfun_arg rev_below_trans by blast
+    then show ?thesis
+      by (metis (no_types, lifting) Y_ch as ch2ch_Rep_cfunR contlub_cfun_arg lnle_conv lub_below_iff lub_mono min_absorb2)
+  next
+    case False
+    then show ?thesis
+      by (metis Y_ch as below_lub ch2ch_Rep_cfunR contlub_cfun_arg lnle_conv lub_below min.commute min_def)
+  qed
+  thus "min y (g\<cdot>(\<Squnion>i. Y i)) \<sqsubseteq> h\<cdot>(\<Squnion>i. Y i)"
+    using h1 by blast 
+qed
+
+lemma min_adm2[simp]: fixes y::lnat
+  shows "adm (\<lambda>x. min (g\<cdot>x) y \<sqsubseteq> h\<cdot>x)"
+  apply(subst min.commute)
+  using min_adm by blast
+  
 
 end
-
