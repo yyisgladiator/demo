@@ -84,12 +84,6 @@ lemma tssnd_tsprojsnd_tsremdups:
   apply (simp add: tsprojsnd_tsabs tsremdups_tsabs sprojsnd_def)
   by (metis eta_cfun send_def set2tssnd_alt_bit_tabs sprojsnd_def srcdups_smap_com)
 
-(* oops-Lemmata in Medium *)
-text {* If infinite messages will be sent infinite messages will be transmitted. *}
-lemma tsmed_tsabs_slen_inf [simp]: assumes "#({True} \<ominus> ora)=\<infinity>" and "#(tsAbs\<cdot>msg)=\<infinity>" 
-  shows "#(tsAbs\<cdot>(tsMed\<cdot>msg\<cdot>ora)) = \<infinity>"
-  sorry
-
 (* property 3 *)
 lemma prop3: assumes p1_def: "#({True} \<ominus> p1) = \<infinity>" and p2_def: "#({True} \<ominus> p2) = \<infinity>"
   shows "#(tsAbs\<cdot>ts) = \<infinity> \<Longrightarrow> #(tsAbs\<cdot>(tsMed\<cdot>(tsProjSnd\<cdot>(tsMed\<cdot>ts\<cdot>p1))\<cdot>p2)) = \<infinity>"
@@ -166,12 +160,21 @@ lemma tsaltbitpro_inp2out:
           \<or> #(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>ds))) = lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>as)))"
       by (metis ds_def le_less_linear min_absorb2 send_def set2tssnd_ack2trans)
 
+    obtain ora where as_def2: "as = tsProjSnd\<cdot>(tsMed\<cdot>ds\<cdot>ora)" and ora_def: "#({True} \<ominus> ora) = \<infinity>"
+      by (metis (no_types, lifting) ar_def as_def dr_def p1_def p2_def sfilterl4 tsmed2infmed 
+          tsmed_map tsprojsnd_insert)   
+    have "#(tsAbs\<cdot>(tsRemDups\<cdot>ds)) \<le> #(tsAbs\<cdot>(tsRemDups\<cdot>as))"
+      apply (rule ccontr)
+      apply (simp add: as_def2)
+      sorry
+
 (*
     hence "#(tsAbs\<cdot>i) \<le> #(tsAbs\<cdot>(tsRemDups\<cdot>as)) \<or> (#(tsAbs\<cdot>(tsRemDups\<cdot>as)) = \<infinity> \<or> #(tsAbs\<cdot>as) \<noteq> \<infinity>)"
       sorry
     hence "#(tsAbs\<cdot>i) \<le> #(tsAbs\<cdot>(tsRemDups\<cdot>as)) \<or> #(tsAbs\<cdot>(tsRemDups\<cdot>as)) = \<infinity>"
       sorry
 *)
+
     hence geq: "#(tsAbs\<cdot>i) \<le> #(tsAbs\<cdot>(tsRemDups\<cdot>as))"
       sorry
     (* equalities *)
