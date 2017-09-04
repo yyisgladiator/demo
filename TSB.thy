@@ -2091,7 +2091,7 @@ abbreviation tsbiTTake_abbrv:: "'m TSB_inf \<Rightarrow> nat \<Rightarrow> 'm TS
 
 
 definition tsb2tsbInf :: "'m TSB \<Rightarrow> 'm TSB_inf" where
-"tsb2tsbInf tb \<equiv> Abs_TSB_inf (\<lambda>c. (c\<in>tsbDom\<cdot>tb)\<leadsto>(tb  .  c) \<bullet> tsInfTick)"
+"tsb2tsbInf tb \<equiv> Abs_TSB_inf (\<lambda>c. (c\<in>tsbDom\<cdot>tb)\<leadsto>(tb  .  c) \<bullet>\<surd> tsInfTick)"
 
 definition tsbInf2tsb :: "'m TSB_inf \<rightarrow> 'm TSB" where
 "tsbInf2tsb \<equiv> \<Lambda> tbi.  Abs_TSB (Rep_TSB_inf tbi)"

@@ -294,4 +294,96 @@ apply (simp add: atomize_imp)
 apply (induct_tac k, auto)
 by (case_tac "j = Suc n", auto)
 
+(* ----------------------------------------------------------------------- *)
+section {* updis *}
+(* ----------------------------------------------------------------------- *)
+
+text {* The @{term "updis"} command lifts an arbitrary type to a
+  discrete pointed partial order. *}
+abbreviation
+  updis :: "'a \<Rightarrow> 'a discr u"
+    where "updis \<equiv> (\<lambda>a. up\<cdot>(Discr a))" 
+
+definition upApply :: "('a \<Rightarrow> 'b) \<Rightarrow> 'a discr u \<rightarrow> 'b discr u" where
+"upApply f \<equiv> \<Lambda> a. (if a=\<bottom> then \<bottom> else updis (f (THE b. a = updis b)))"
+
+definition upApply2 :: "('a \<Rightarrow> 'b \<Rightarrow> 'c) \<Rightarrow> 'a discr\<^sub>\<bottom> \<rightarrow> 'b discr\<^sub>\<bottom> \<rightarrow> 'c discr\<^sub>\<bottom>" where 
+"upApply2 f \<equiv> \<Lambda> a b. (if a=\<bottom>\<or>b=\<bottom> then \<bottom> else updis (f (THE x. a = updis x) (THE x. b = updis x)))"
+
+
+(* updis lemma *)
+lemma updis_exists: assumes "x\<noteq>\<bottom>"
+  obtains n where "updis n = x"
+  by (metis Discr_undiscr Exh_Up assms)
+    
+    
+    
+(* upApply *)    
+lemma upapply_mono [simp]: "monofun (\<lambda> a. (if a=\<bottom> then \<bottom> else updis (f (THE b. a = updis b))))"
+apply (rule monofunI, auto)
+by (metis (full_types, hide_lams) discrete_cpo upE up_below)
+
+lemma upapply_lub: assumes "chain Y"
+  shows "((\<lambda> a. (if a=\<bottom> then \<bottom> else updis (f (THE b. a = updis b)))) (\<Squnion>i. Y i))
+=(\<Squnion>i. (\<lambda> a. (if a=\<bottom> then \<bottom> else updis (f (THE b. a = updis b)))) (Y i))"
+apply (rule finite_chain_lub)
+by (simp_all add: assms chfin2finch)
+
+lemma upapply_cont [simp]: "cont (\<lambda> a. (if a=\<bottom> then \<bottom> else updis (f (THE b. a = updis b))))"
+using chfindom_monofun2cont upapply_mono by blast
+
+lemma upapply_rep_eq [simp]: "upApply f\<cdot>(updis a) = updis (f a)"
+by (simp add: upApply_def)
+
+lemma upapply_insert: "upApply f\<cdot>a = (if a=\<bottom> then \<bottom> else updis (f (THE b. a = updis b)))"  
+by(simp add: upApply_def)
+    
+lemma upapply_strict [simp]: "upApply f\<cdot>\<bottom> = \<bottom>"
+by(simp add: upApply_def)
+
+lemma upapply_nbot [simp]: "x\<noteq>\<bottom> \<Longrightarrow> upApply f\<cdot>x\<noteq>\<bottom>"
+by(simp add: upApply_def)
+    
+lemma upapply_up [simp]: assumes "x\<noteq>\<bottom>" obtains a where "up\<cdot>a = upApply f\<cdot>x"
+by(simp add: upApply_def assms)
+  
+lemma chain_nbot: assumes "chain Y" and  "(\<Squnion>i. Y i) \<noteq>\<bottom>"
+  obtains n::nat where "(\<And>i. ((Y (i+n)) \<noteq>\<bottom>))"
+  by (metis assms(1) assms(2) bottomI le_add2 lub_eq_bottom_iff po_class.chain_mono)
+
+lemma upapply2_mono [simp]: 
+  "monofun (\<lambda> b. (if a=\<bottom>\<or>b=\<bottom> then \<bottom> else updis (f (THE x. a = updis x) (THE x. b = updis x))))"
+apply (rule monofunI, auto)
+by (metis discrete_cpo upE up_below)
+
+lemma upapply2_cont [simp]:
+  "cont (\<lambda>b. if a = \<bottom> \<or> b = \<bottom> then \<bottom> else updis (f (THE x. a = updis x) (THE x. b = updis x)))"
+by (simp add: chfindom_monofun2cont)
+
+lemma upapply2_mono2 [simp]: 
+  "monofun (\<lambda>a. \<Lambda> b. if a = \<bottom> \<or> b = \<bottom> then \<bottom> else updis (f (THE x. a = updis x) (THE x. b = updis x)))"
+apply (rule monofunI)
+apply (subst cfun_belowI, auto)
+by (metis discrete_cpo upE up_below)
+
+lemma upapply2_cont2 [simp]:
+  "cont (\<lambda>a. \<Lambda> b. if a = \<bottom> \<or> b = \<bottom> then \<bottom> else updis (f (THE x. a = updis x) (THE x. b = updis x)))"
+by (simp add: chfindom_monofun2cont)
+
+lemma upapply2_rep_eq [simp]: "upApply2 f\<cdot>(updis a)\<cdot>(updis b) = updis (f a b)"
+by (simp add: upApply2_def)
+
+lemma upapply2_insert: 
+  "upApply2 f\<cdot>a\<cdot>b = (if a=\<bottom>\<or>b=\<bottom> then \<bottom> else updis (f (THE x. a = updis x) (THE x. b = updis x)))"
+by (simp add: upApply2_def)
+
+lemma upapply2_strict [simp]: "upApply2 f\<cdot>\<bottom> = \<bottom>"
+by(simp add: upApply2_def)
+
+lemma upapply2_nbot [simp]: "x\<noteq>\<bottom> \<Longrightarrow> y\<noteq>\<bottom> \<Longrightarrow> upApply2 f\<cdot>x\<cdot>y\<noteq>\<bottom>"
+by(simp add: upApply2_def)
+
+lemma upapply2_up [simp]: assumes "x\<noteq>\<bottom>" and "y\<noteq>\<bottom>" obtains a where "up\<cdot>a = upApply2 f\<cdot>x\<cdot>y"
+by(simp add: upApply2_def assms)
+
 end
