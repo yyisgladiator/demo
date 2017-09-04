@@ -76,7 +76,7 @@ proof -
     using cont_compose by force
   have f1: "z = tspfFeedbackH delayTSPF x\<cdot>z"
     by (simp add: assms(2))
-  then have f2: "z . c1 = (Abs_tstream (\<up>\<surd>)) \<bullet> (z . c1)"
+  then have f2: "z . c1 = (Abs_tstream (\<up>\<surd>)) \<bullet>\<surd> (z . c1)"
     apply(subst f1)
     apply(simp add: tspfFeedbackH_def assms f0)
     by (metis delayFun.rep_eq fun_upd_same option.sel tsb_well_test2 tsbgetch_rep_eq)
