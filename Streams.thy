@@ -2213,8 +2213,12 @@ qed
 
 lemma srcdups_step: "srcdups\<cdot>(\<up>a \<bullet> s) = \<up>a \<bullet> srcdups\<cdot>(sdropwhile (\<lambda>x. x=a)\<cdot>s)"
   apply(rule ind [of _ s], simp_all)
-  by (metis lscons_conv srcdups_ex srcdups_srt stream.sel_rews(5) up_defined)  
-    
+  by (metis lscons_conv srcdups_ex srcdups_srt stream.sel_rews(5) up_defined) 
+
+lemma snprefix: "\<not>x\<sqsubseteq>y \<Longrightarrow> lshd\<cdot>x=lshd\<cdot>y \<Longrightarrow> \<not>(srt\<cdot>x)\<sqsubseteq>(srt\<cdot>y)"
+  apply auto
+  by (metis lshd_updis monofun_cfun_arg stream.sel_rews(2) stream.sel_rews(3) sup'_def surj_scons)
+
 (* ----------------------------------------------------------------------- *)
 subsection {* @{term sscanl} *}
 (* ----------------------------------------------------------------------- *)
