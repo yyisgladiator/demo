@@ -1236,6 +1236,19 @@ lemma h2: assumes "chain Y"
   oops
     
     *)
+    
+lemma jc_lem1: assumes "((LEAST l. \<exists>c. l = #\<surd> Y j . c \<and> c \<in> tsbDom\<cdot>(Y j)) \<le> (#\<surd> Y j  .  ch2) ) \<and> ((#\<surd> Y j  .  ch2) < (#\<surd> Y j  .  ch1))"
+  shows "(LEAST l. \<exists>c. l = #\<surd> Y j . c \<and> c \<in> tsbDom\<cdot>(Y j)) < (#\<surd> Y j  .  ch1)"
+  using assms by auto  
+    
+ (* convert betwwen set and non-set based definiton *)
+lemma testc_conv1: "(LEAST ln. ln \<in> {#\<surd> (Y i)  .  c |c. c \<in> tsbDom\<cdot>(Y i)})
+                  = (LEAST l. \<exists>c. l = #\<surd> Y i . c \<and> c \<in> tsbDom\<cdot>(Y i))"
+  by auto
+    
+lemma testc_conv2: "(LEAST ln. ln \<in> {#\<surd> (\<Squnion> i. Y i)  .  c |c. c \<in> tsbDom\<cdot>(\<Squnion> i. Y i)})
+                  = (LEAST l. \<exists>c. l = #\<surd> (\<Squnion> i. Y i) . c \<and> c \<in> tsbDom\<cdot>(\<Squnion> i. Y i))"
+by auto
               
 lemma tsbtick_cont_pre: assumes "chain Y"
   shows "(if tsbDom\<cdot>(\<Squnion>i. Y i) \<noteq> {} then LEAST ln. ln \<in> {#\<surd> (\<Squnion>i. Y i)  .  c |c. c \<in> tsbDom\<cdot>(\<Squnion>i. Y i)} else \<infinity>) \<sqsubseteq>
@@ -1329,12 +1342,35 @@ proof (cases "tsbDom\<cdot>(\<Squnion>i. Y i) \<noteq> {}")
         (* But what can we conclude of that, well that the stream on channel ch1 must eventually get longer 
            otherwise there is no way that he lost the title as the smallest stream in the bundle *)
         (* BOOKMARK1 - Do not delete until finished *)
+        have jc0: "\<And> i. tsbDom\<cdot>(Y i) = tsbDom\<cdot>(Lub Y)"
+          by (simp add: f1)
+          
+        have jc1: "\<forall> i. \<forall> ch1 \<in> tsbDom\<cdot>(Lub Y). (LEAST l. \<exists>c. l = #\<surd> Y i . c \<and> c \<in> tsbDom\<cdot>(Y i)) \<le> (#\<surd> Y i  .  ch1)"
+          by (metis (mono_tags, lifting) Least_le f1)
+        have jc10: "\<forall> i. \<exists> ch1 \<in> tsbDom\<cdot>(Lub Y). (LEAST l. \<exists>c. l = #\<surd> Y i . c \<and> c \<in> tsbDom\<cdot>(Y i)) \<le> (#\<surd> Y i  .  ch1)"
+          using True jc1 by blast
+
+        have jc2: "\<forall> i. \<forall> ch1 \<in> tsbDom\<cdot>(Lub Y). \<exists> j\<ge>i. (LEAST l. \<exists>c. l = #\<surd> Y j . c \<and> c \<in> tsbDom\<cdot>(Y j)) < (#\<surd> Y j  .  ch1)"
+          proof -
+            have "\<forall> i. \<forall> ch1 \<in> tsbDom\<cdot>(Lub Y). \<exists> j\<ge>i. \<exists> ch2 \<in> tsbDom\<cdot>(Lub Y). ((LEAST l. \<exists>c. l = #\<surd> Y j . c \<and> c \<in> tsbDom\<cdot>(Y j)) \<le> (#\<surd> Y j  .  ch2) ) \<and> ((#\<surd> Y j  .  ch2) < (#\<surd> Y j  .  ch1))"
+              by (simp add: "400" jc1)
+            thus ?thesis
+              (* i got a technical problem here  the implication should hold see: jc_lem1 *)
+              (* and sledgehammer also finds a proof shown below *)
+              (* by (metis jc1 lnle_def lnless_def not_le) *)
+              sorry
+          qed
+         (* now change the index of the left side of < to i *)
+          have jc3: "\<forall> i. \<forall> ch1 \<in> tsbDom\<cdot>(Lub Y). \<exists> j\<ge>i. (LEAST l. \<exists>c. l = #\<surd> Y i . c \<and> c \<in> tsbDom\<cdot>(Y i)) < (#\<surd> Y j  .  ch1)" 
+            (* this should hold because of the montonocity requirements *)
+              sorry
+          
+            have jc4: "\<forall> i. \<exists> ch1 \<in> tsbDom\<cdot>(Lub Y). (#\<surd> Y i  .  ch1) = (LEAST ln. \<exists>c. ln = #\<surd> Y i . c \<and> c \<in> tsbDom\<cdot>(Y i))"
+              
+          
             
-            
-            
-        (* as a result all the lengths in the bundle are rising and rising, and hence the limit for 
-           each stream on the channel length is infinity *)
-        then have 403: "\<forall> i. \<exists> j\<ge>i. (LEAST ln. \<exists>c. ln = #\<surd> Y i . c \<and> c \<in> tsbDom\<cdot>(Y i)) < (LEAST ln. \<exists>c. ln = #\<surd> Y j . c \<and> c \<in> tsbDom\<cdot>(Y j))"    
+            have 403: "\<forall> i. \<exists> j\<ge>i. (LEAST ln. \<exists>c. ln = #\<surd> Y i . c \<and> c \<in> tsbDom\<cdot>(Y i)) < (LEAST ln. \<exists>c. ln = #\<surd> Y j . c \<and> c \<in> tsbDom\<cdot>(Y j))"    
+              
           sorry
           
         hence 404: "(\<Squnion>i. LEAST ln. \<exists>c. ln = #\<surd> Y i  .  c \<and> c \<in> tsbDom\<cdot>(Y i)) = \<infinity>"
@@ -1355,6 +1391,9 @@ next
     by (simp)
 qed
        
+
+    
+  
 lemma tsbtick_cont [simp]:
   shows "cont (\<lambda> tb. if tsbDom\<cdot>tb \<noteq> {} then 
                                           (LEAST ln. ln\<in>{(#\<surd>(tb. c)) | c. c \<in> tsbDom\<cdot>tb}) else \<infinity>)"
