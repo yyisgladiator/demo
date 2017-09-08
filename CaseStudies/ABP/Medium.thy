@@ -140,7 +140,7 @@ lemma h5: "#ora=\<infinity> \<Longrightarrow>  #(tsAbs\<cdot>msg) = \<infinity> 
  
  (* SWS: Das ist mein vorschlag *)
 
-lemma tsmed_tsabs [simp]: "#ora = \<infinity> \<Longrightarrow> tsAbs\<cdot>(tsMed\<cdot>msg\<cdot>ora) = sMed\<cdot>(tsAbs\<cdot>msg)\<cdot>ora"
+lemma tsmed_tsabs: "#ora = \<infinity> \<Longrightarrow> tsAbs\<cdot>(tsMed\<cdot>msg\<cdot>ora) = sMed\<cdot>(tsAbs\<cdot>msg)\<cdot>ora"
   apply(simp add: tsMed_def sMed_def)
   by(simp add: tsprojfst_tsabs tsfilter_tsabs tszip_tsabs)
     
@@ -174,7 +174,7 @@ lemma tsmed_tsabs_slen_inf [simp]:
   assumes " #({True} \<ominus> ora) = \<infinity>"
       and "#(tsAbs\<cdot>msg)=\<infinity>"
   shows "#(tsAbs\<cdot>(tsMed\<cdot>msg\<cdot>ora)) = #({True} \<ominus> ora)"
-  using assms(1) assms(2) sfilterl4 by fastforce
+  by (metis assms(1) assms(2) sfilterl4 smed_slen_inf tsmed_tsabs)
 
 lemma tsmed_tsdom: "#ora=\<infinity> \<Longrightarrow> tsDom\<cdot>(tsMed\<cdot>msg\<cdot>ora) \<subseteq> tsDom\<cdot>msg"
 proof(induction msg arbitrary: ora)
@@ -465,8 +465,8 @@ lemma prop4:
   "#({True} \<ominus> p) = \<infinity> \<Longrightarrow> #(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>ts))) = #(tsAbs\<cdot>(tsRemDups\<cdot>(tsProjSnd\<cdot>ts)))
   \<Longrightarrow> #(tsAbs\<cdot>(tsRemDups\<cdot>(tsProjSnd\<cdot>ts))) = #(tsAbs\<cdot>(tsRemDups\<cdot>(tsProjSnd\<cdot>(tsMed\<cdot>ts\<cdot>p))))
   \<Longrightarrow> tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>ts)) = tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(tsMed\<cdot>ts\<cdot>p)))"
-  apply (simp add: sfilterl4 tsprojfst_tsabs tsremdups_tsabs tsprojsnd_tsabs)
-  using prop4s by blast  
+  apply (simp add: sfilterl4 tsprojfst_tsabs tsremdups_tsabs tsprojsnd_tsabs tsmed_tsabs)
+  using prop4s by blast
   
 (* ----------------------------------------------------------------------- *)
 section {* tsMedium lemmata *}
