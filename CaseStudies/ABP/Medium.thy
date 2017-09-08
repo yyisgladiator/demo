@@ -398,10 +398,31 @@ by (meson assms(1) assms(2) newora_fair sfilterl4 tsmed2med)
 (* property 4 *) 
   
 lemma smed_sprojsnd: "sprojsnd\<cdot>(sMed\<cdot>s\<cdot>p) = sMed\<cdot>(sprojsnd\<cdot>s)\<cdot>p"
-  apply(induction s arbitrary: p,simp_all)
+  proof(induction s arbitrary: p rule: ind)
+    case 1
+    then show ?case by simp
+  next
+    case 2
+    then show ?case by simp
+  next
+    case (3 a s)
+    then show ?case
+      proof (cases rule: oracases [of p])
+        case 1
+        then show ?thesis by simp
+      next
+        case (2 as)
+        then show ?thesis
+          apply (cases "a")
+          by (simp add: "3.IH") 
+      next
+        case (3 as)
+        then show ?thesis
+          apply (cases "a")
+          by (simp add: "3.IH") 
+      qed
+  qed
 
-  sorry    
-    
 lemma srcdups_sprojsnd_h: "#(srcdups\<cdot>(sprojsnd\<cdot>s)) \<le> #(sprojsnd\<cdot>(srcdups\<cdot>s))"
   
   sorry
