@@ -1360,18 +1360,31 @@ proof (cases "tsbDom\<cdot>(\<Squnion>i. Y i) \<noteq> {}")
               (* by (metis jc1 lnle_def lnless_def not_le) *)
               sorry
           qed
-         (* now change the index of the left side of < to i *)
-          have jc3: "\<forall> i. \<forall> ch1 \<in> tsbDom\<cdot>(Lub Y). \<exists> j\<ge>i. (LEAST l. \<exists>c. l = #\<surd> Y i . c \<and> c \<in> tsbDom\<cdot>(Y i)) < (#\<surd> Y j  .  ch1)" 
-            (* this should hold because of the montonocity requirements *)
-              sorry
-          
-            have jc4: "\<forall> i. \<exists> ch1 \<in> tsbDom\<cdot>(Lub Y). (#\<surd> Y i  .  ch1) = (LEAST ln. \<exists>c. ln = #\<surd> Y i . c \<and> c \<in> tsbDom\<cdot>(Y i))"
-              
-          
-            
-            have 403: "\<forall> i. \<exists> j\<ge>i. (LEAST ln. \<exists>c. ln = #\<surd> Y i . c \<and> c \<in> tsbDom\<cdot>(Y i)) < (LEAST ln. \<exists>c. ln = #\<surd> Y j . c \<and> c \<in> tsbDom\<cdot>(Y j))"    
-              
-          sorry
+       (* now change the index of the left side of < to i *)
+        have jc3: "\<forall> i. \<forall> ch1 \<in> tsbDom\<cdot>(Lub Y). \<exists> j\<ge>i. (LEAST l. \<exists>c. l = #\<surd> Y i . c \<and> c \<in> tsbDom\<cdot>(Y i)) < (#\<surd> Y j  .  ch1)" 
+          (* this should hold because of the montonocity requirements *)
+            sorry
+        
+        have jc4: "\<forall> i. \<exists> ch1 \<in> tsbDom\<cdot>(Lub Y). (#\<surd> Y i  .  ch1) = (LEAST ln. \<exists>c. ln = #\<surd> Y i . c \<and> c \<in> tsbDom\<cdot>(Y i))"
+          proof -
+            { fix nn :: nat
+              have "\<forall>t. \<exists>c. (c \<in> tsbDom\<cdot>(t::'a TSB) \<or> tsbDom\<cdot>t = {}) \<and> (tsbDom\<cdot>t = {} \<or> #\<surd> t . c = (LEAST l. l \<in> {#\<surd> t . c |c. c \<in> tsbDom\<cdot>t}))"
+                using tsbtick_min_on_channel by blast
+              then obtain cc :: "'a TSB \<Rightarrow> channel" where
+                    ff1: "\<And>t. (cc t \<in> tsbDom\<cdot>t \<or> tsbDom\<cdot>t = {}) \<and> (tsbDom\<cdot>t = {} \<or> #\<surd> t . cc t = (LEAST l. l \<in> {#\<surd> t . c |c. c \<in> tsbDom\<cdot>t}))"
+                by moura
+              then have "\<And>t. tsbDom\<cdot>t = {} \<or> #\<surd> t . cc t = (LEAST l. \<exists>c. l = #\<surd> t . c \<and> c \<in> tsbDom\<cdot>t)"
+                by simp
+              then have "\<exists>n. #\<surd> Y nn . cc (Y n) = (LEAST l. \<exists>c. l = #\<surd> Y nn . c \<and> c \<in> tsbDom\<cdot>(Y nn))"
+                by (meson f10)
+              then have "\<exists>c. c \<in> tsbDom\<cdot>(Lub Y) \<and> #\<surd> Y nn . c = (LEAST l. \<exists>c. l = #\<surd> Y nn . c \<and> c \<in> tsbDom\<cdot>(Y nn))"
+                using ff1 by (metis (no_types) f10 jc0) }
+            then show ?thesis
+              by meson
+          qed
+
+        have 403: "\<forall> i. \<exists> j\<ge>i. (LEAST ln. \<exists>c. ln = #\<surd> Y i . c \<and> c \<in> tsbDom\<cdot>(Y i)) < (LEAST ln. \<exists>c. ln = #\<surd> Y j . c \<and> c \<in> tsbDom\<cdot>(Y j))"    
+            sorry
           
         hence 404: "(\<Squnion>i. LEAST ln. \<exists>c. ln = #\<surd> Y i  .  c \<and> c \<in> tsbDom\<cdot>(Y i)) = \<infinity>"
           apply(subst chain_lub_inf)
