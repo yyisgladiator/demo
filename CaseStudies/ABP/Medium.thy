@@ -356,7 +356,18 @@ next
 next
   case (delayfun msg)
   then show ?case
-    by (smt inf_scase lscons_conv newora_f newora_t stream.con_rews(2) tsmed_delayfun up_defined) 
+    proof (cases rule: oracases [of ora1])
+      case 1
+      then show ?thesis by simp
+    next
+      case (2 as)
+      then show ?thesis
+        by (metis delayfun.IH delayfun.prems(1) delayfun.prems(2) inf_scase lscons_conv newora_t stream.con_rews(2) tsmed_delayfun up_defined)
+    next
+      case (3 as)
+      then show ?thesis
+        by (metis delayfun(2) delayfun(3) delayfun.IH inf_scase lscons_conv newora_f2 stream.con_rews(2) tsmed_delayfun up_defined)        
+    qed
 next
   case (mlscons msg t)
   then show ?case 
@@ -384,24 +395,57 @@ lemma tsmed2infmed: assumes "#({True} \<ominus> ora1)=\<infinity>" and "#({True}
   obtains ora3 where "tsMed\<cdot>(tsMed\<cdot>msg\<cdot>ora1)\<cdot>ora2 = tsMed\<cdot>msg\<cdot>ora3" and "#({True} \<ominus> ora3)=\<infinity>"
 by (meson assms(1) assms(2) newora_fair sfilterl4 tsmed2med)
 
-(* first ideas *)
-lemma prop4_h2:
-  "#(tsAbs\<cdot>ts) = #(tsAbs\<cdot>(tsMed\<cdot>ts\<cdot>p))
-     \<Longrightarrow> tsAbs\<cdot>ts = tsAbs\<cdot>(tsMed\<cdot>ts\<cdot>p)"
-  sorry
+(* property 4 *) 
+  
+lemma smed_sprojsnd: "sprojsnd\<cdot>(sMed\<cdot>s\<cdot>p) = sMed\<cdot>(sprojsnd\<cdot>s)\<cdot>p"
+  apply(induction s arbitrary: p,simp_all)
 
-lemma prop4_h1:
-  "#(tsAbs\<cdot>(tsRemDups\<cdot>ts)) = #(tsAbs\<cdot>(tsRemDups\<cdot>(tsMed\<cdot>ts\<cdot>p)))
-     \<Longrightarrow> tsAbs\<cdot>(tsRemDups\<cdot>ts) = tsAbs\<cdot>(tsRemDups\<cdot>(tsMed\<cdot>ts\<cdot>p))"
+  sorry    
+    
+lemma srcdups_sprojsnd_h: "#(srcdups\<cdot>(sprojsnd\<cdot>s)) \<le> #(sprojsnd\<cdot>(srcdups\<cdot>s))"
+  
   sorry
-
-(* property 4 *)
-lemma prop4: assumes "#({True} \<ominus> p) = \<infinity>"
+    
+lemma srcdups_sprojsnd: "#(srcdups\<cdot>(sprojsnd\<cdot>s)) = #(srcdups\<cdot>s) \<equiv>
+      srcdups\<cdot>(sprojsnd\<cdot>s) = sprojsnd\<cdot>(srcdups\<cdot>s)"
+  apply (simp add: sprojsnd_def)
+  sorry
+    
+lemma prop4s_h3: assumes "#(srcdups\<cdot>s) = #(srcdups\<cdot>(sprojsnd\<cdot>(sMed\<cdot>s\<cdot>p)))" 
+       "#(srcdups\<cdot>s) = #(srcdups\<cdot>(sprojsnd\<cdot>s))"  shows
+       "#(srcdups\<cdot>s) = #(srcdups\<cdot>(sMed\<cdot>s\<cdot>p))" 
+  proof - 
+    from assms(2) have h:"srcdups\<cdot>(sprojsnd\<cdot>s) = sprojsnd\<cdot>(srcdups\<cdot>s)"
+      using srcdups_sprojsnd by fastforce 
+    from assms have " #(srcdups\<cdot>(sprojsnd\<cdot>s)) = #(srcdups\<cdot>(sprojsnd\<cdot>(sMed\<cdot>s\<cdot>p)))" by simp
+    from this h have "(srcdups\<cdot>(sprojsnd\<cdot>(sMed\<cdot>s\<cdot>p))) = sprojsnd\<cdot>(srcdups\<cdot>(sMed\<cdot>s\<cdot>p))"     sorry
+    from this assms show ?thesis
+      by (simp add: slen_sprojsnd) 
+  qed  
+    
+lemma srcdups_smed: "#(srcdups\<cdot>s) = #(srcdups\<cdot>(sMed\<cdot>s\<cdot>p)) \<Longrightarrow>
+      srcdups\<cdot>s = srcdups\<cdot>(sMed\<cdot>s\<cdot>p) "
+  sorry
+    
+lemma prop4s_h1: "srcdups\<cdot>s = srcdups\<cdot>(sMed\<cdot>s\<cdot>p) \<Longrightarrow>
+      sprojfst\<cdot>(srcdups\<cdot>s) = sprojfst\<cdot>(srcdups\<cdot>(sMed\<cdot>s\<cdot>p)) "  
+  by simp
+    
+lemma prop4s: "#({True} \<ominus> p) = \<infinity> \<Longrightarrow>
+    #(sprojfst\<cdot>(srcdups\<cdot>s)) = #(srcdups\<cdot>(sprojsnd\<cdot>(sMed\<cdot>s\<cdot>p))) \<Longrightarrow>
+    #(srcdups\<cdot>(sprojsnd\<cdot>s)) = #(srcdups\<cdot>(sprojsnd\<cdot>(sMed\<cdot>s\<cdot>p))) \<Longrightarrow>
+     sprojfst\<cdot>(srcdups\<cdot>s) = sprojfst\<cdot>(srcdups\<cdot>(sMed\<cdot>s\<cdot>p))" 
+  apply (rule prop4s_h1)
+  apply (rule srcdups_smed)
+  by (metis prop4s_h3 slen_sprojfst)
+    
+lemma prop4: 
   shows (* removed #(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>ts))) \<noteq> \<infinity> *)
-  "#(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>ts))) = #(tsAbs\<cdot>(tsRemDups\<cdot>(tsProjSnd\<cdot>ts)))
+  "#({True} \<ominus> p) = \<infinity> \<Longrightarrow> #(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>ts))) = #(tsAbs\<cdot>(tsRemDups\<cdot>(tsProjSnd\<cdot>ts)))
   \<Longrightarrow> #(tsAbs\<cdot>(tsRemDups\<cdot>(tsProjSnd\<cdot>ts))) = #(tsAbs\<cdot>(tsRemDups\<cdot>(tsProjSnd\<cdot>(tsMed\<cdot>ts\<cdot>p))))
   \<Longrightarrow> tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>ts)) = tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(tsMed\<cdot>ts\<cdot>p)))"
-  sorry
+  apply (simp add: sfilterl4 tsprojfst_tsabs tsremdups_tsabs tsprojsnd_tsabs)
+  using prop4s by blast  
   
 (* ----------------------------------------------------------------------- *)
 section {* tsMedium lemmata *}
