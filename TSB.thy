@@ -1336,7 +1336,7 @@ proof (cases "tsbDom\<cdot>(\<Squnion>i. Y i) \<noteq> {}")
         case False
         hence 400: "\<forall> i. \<forall> ch1 \<in> tsbDom\<cdot>(Lub Y). \<exists> j\<ge>i. \<exists> ch2 \<in> tsbDom\<cdot>(Lub Y). (#\<surd> Y j  .  ch2) < (#\<surd> Y j  .  ch1)"
           by (meson leI lnle_def)
-        have jc24: "\<forall> i. \<forall> ch1 \<in> tsbDom\<cdot>(Lub Y).  \<forall> j\<ge>i. (#\<surd> Y i  .  ch1) \<le> (#\<surd> Y j  .  ch1)"
+        have jc24a: "\<forall> i. \<forall> ch1 \<in> tsbDom\<cdot>(Lub Y).  \<forall> j\<ge>i. (#\<surd> Y i  .  ch1) \<le> (#\<surd> Y j  .  ch1)"
           using assms lnle_def monofun_cfun_arg po_class.chain_mono tsbgetch_below by blast
         
         (* so what this basically means is that no matter what channel you choose, there is always one 
@@ -1400,9 +1400,12 @@ proof (cases "tsbDom\<cdot>(\<Squnion>i. Y i) \<noteq> {}")
         have jc22: "\<forall> i. \<exists> j \<ge> i. \<forall> ch1 \<in> tsbDom\<cdot>(Lub Y).  ((#\<surd> Y i  .  ch1)= (LEAST l. \<exists>c. l = #\<surd> Y i . c \<and> c \<in> tsbDom\<cdot>(Y i))) \<longrightarrow> (\<exists> ch2 \<in> tsbDom\<cdot>(Lub Y). (#\<surd> Y j  .  ch2) < (#\<surd> Y j  .  ch1))"
           sorry
         have jc23: "\<forall> i. \<forall> ch1 \<in> tsbDom\<cdot>(Lub Y). ((#\<surd> Y i  .  ch1) \<noteq> (LEAST l. \<exists>c. l = #\<surd> Y i . c \<and> c \<in> tsbDom\<cdot>(Y i))) \<longrightarrow>  (LEAST l. \<exists>c. l = #\<surd> Y i . c \<and> c \<in> tsbDom\<cdot>(Y i)) < (#\<surd> Y i  .  ch1)"
-          sorry
-         have jc24: "\<forall> i. \<exists> j \<ge> i. \<forall> ch1 \<in> tsbDom\<cdot>(Lub Y).  ((#\<surd> Y i  .  ch1)= (LEAST l. \<exists>c. l = #\<surd> Y i . c \<and> c \<in> tsbDom\<cdot>(Y i))) \<longrightarrow> ((#\<surd> Y i  .  ch1) < (#\<surd> Y j  .  ch1))"
-           sorry  
+          by (simp add: jcb3 order.not_eq_order_implies_strict)
+         
+        have jc24: "\<forall> i. \<exists> j \<ge> i. \<forall> ch1 \<in> tsbDom\<cdot>(Lub Y).  ((#\<surd> Y i  .  ch1)= (LEAST l. \<exists>c. l = #\<surd> Y i . c \<and> c \<in> tsbDom\<cdot>(Y i))) \<longrightarrow> ((#\<surd> Y i  .  ch1) < (#\<surd> Y j  .  ch1))"
+          (* sledgehammer can find a proof for this but somehow times out*)
+            (* by (metis dual_order.strict_trans2 jc10 jc22 jc24a jcb3) *)
+           sorry
              
              
          have jc25: "\<forall> i. \<exists> j \<ge> i. \<forall> ch1 \<in> tsbDom\<cdot>(Lub Y) .  (LEAST l. \<exists>c. l = #\<surd> Y i . c \<and> c \<in> tsbDom\<cdot>(Y i)) < (#\<surd> Y j  .  ch1)"
