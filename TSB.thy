@@ -1358,19 +1358,22 @@ proof (cases "tsbDom\<cdot>(\<Squnion>i. Y i) \<noteq> {}")
             have "\<forall> i. \<forall> ch1 \<in> tsbDom\<cdot>(Lub Y). \<exists> j\<ge>i. \<exists> ch2 \<in> tsbDom\<cdot>(Lub Y). ((LEAST l. \<exists>c. l = #\<surd> Y j . c \<and> c \<in> tsbDom\<cdot>(Y j)) \<le> (#\<surd> Y j  .  ch2) ) \<and> ((#\<surd> Y j  .  ch2) < (#\<surd> Y j  .  ch1))"
               by (simp add: "400" jc1)
             thus ?thesis
+              using dual_order.strict_trans2 by blast
               (* i got a technical problem here  the implication should hold see: jc_lem1 *)
               (* and sledgehammer also finds a proof shown below *)
               (* by (metis jc1 lnle_def lnless_def not_le) *)
-              sorry
+              
+                
           qed
        (* now change the index of the left side of < to i *)
         have jc3: "\<forall> i. \<forall> ch1 \<in> tsbDom\<cdot>(Lub Y). \<exists> j\<ge>i. (LEAST l. \<exists>c. l = #\<surd> Y i . c \<and> c \<in> tsbDom\<cdot>(Y i)) < (#\<surd> Y j  .  ch1)" 
           (* this should hold because of the montonocity requirements *)
           sorry
             
-        have jcb3: "\<forall> i. \<forall> ch1 \<in> tsbDom\<cdot>(Lub Y). (LEAST l. \<exists>c. l = #\<surd> Y i . c \<and> c \<in> tsbDom\<cdot>(Y i)) \<le> (#\<surd> Y i  .  ch1)" 
+        have jcb3: "\<forall> i. \<forall> ch1 \<in> tsbDom\<cdot>(Lub Y). (LEAST l. \<exists>c. l = #\<surd> Y i . c \<and> c \<in> tsbDom\<cdot>(Y i)) \<le> (#\<surd> Y i  .  ch1)"
+          using jc1 by blast 
           (* this should hold because of the montonocity requirements *)
-            sorry
+            
         
         have jc4: "\<forall> i. \<exists> ch1 \<in> tsbDom\<cdot>(Lub Y). (#\<surd> Y i  .  ch1) = (LEAST ln. \<exists>c. ln = #\<surd> Y i . c \<and> c \<in> tsbDom\<cdot>(Y i))"
           proof -
