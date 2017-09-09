@@ -162,11 +162,17 @@ lemma tsaltbitpro_inp2out:
 
     obtain ora where as_def2: "as = tsProjSnd\<cdot>(tsMed\<cdot>ds\<cdot>ora)" and ora_def: "#({True} \<ominus> ora) = \<infinity>"
       by (metis (no_types, lifting) ar_def as_def dr_def p1_def p2_def sfilterl4 tsmed2infmed 
-          tsmed_map tsprojsnd_insert)   
-    have "#(tsAbs\<cdot>(tsRemDups\<cdot>ds)) \<le> #(tsAbs\<cdot>(tsRemDups\<cdot>as))"
-      apply (rule ccontr)
-      apply (simp add: as_def2)
+          tsmed_map tsprojsnd_insert)
+
+    have ora_inf: "#ora = \<infinity>"
+      using ora_def sfilterl4 by auto
+
+    have "#(srcdups\<cdot>(sprojsnd\<cdot>(sMed\<cdot>(tsAbs\<cdot>ds)\<cdot>ora))) < #(srcdups\<cdot>(tsAbs\<cdot>ds)) \<Longrightarrow> False"
       sorry
+
+    hence "#(tsAbs\<cdot>(tsRemDups\<cdot>ds)) \<le> #(tsAbs\<cdot>(tsRemDups\<cdot>as))"
+      apply (rule ccontr)
+      by (simp add: as_def2 tsremdups_tsabs tsprojsnd_tsabs tsmed_tsabs ora_inf)
 
 (*
     hence "#(tsAbs\<cdot>i) \<le> #(tsAbs\<cdot>(tsRemDups\<cdot>as)) \<or> (#(tsAbs\<cdot>(tsRemDups\<cdot>as)) = \<infinity> \<or> #(tsAbs\<cdot>as) \<noteq> \<infinity>)"
@@ -191,11 +197,11 @@ lemma tsaltbitpro_inp2out:
       by (metis ar_def as_def dr_def dual_order.antisym eq p1_def p2_def prop0 prop6 prop7
           sfilterl4 tsmed_map tsprojsnd_insert)
     (* tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>dr)) = tsAbs\<cdot>i *)
-    have h4: (* removed  #(tsAbs\<cdot>i) \<noteq> \<infinity> *)
+    have h4: (* removed #(tsAbs\<cdot>i) \<noteq> \<infinity> *)
       "tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>dr)) = tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>ds))"
       using dr_def p1_def prop4 prop6 prop7 prop8 by force  
     thus "tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>dr)) = tsAbs\<cdot>i"
-      by (simp add: ds_def eq_slen_eq_and_less prop6 send_def set2tssnd_prefix_inp)      
+      by (simp add: ds_def eq_slen_eq_and_less prop6 send_def set2tssnd_prefix_inp)
   qed
     
 end
