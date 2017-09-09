@@ -424,49 +424,138 @@ lemma smed_sprojsnd: "sprojsnd\<cdot>(sMed\<cdot>s\<cdot>p) = sMed\<cdot>(sprojs
   qed
 
 lemma srcdups_sprojsnd_h: "#(srcdups\<cdot>(sprojsnd\<cdot>s)) \<le> #(sprojsnd\<cdot>(srcdups\<cdot>s))"
-  
-  sorry
+  proof(induction s rule: ind,simp_all)
+    case 1
+    then show ?case sorry
+  next
+    case (3 a s)
+    then show ?case
+      apply (cases rule: scases [of s],simp)
+      apply (cases a,simp)
+      apply (case_tac aa,simp) 
+      apply (case_tac "b=ba")
+      apply (case_tac "(aaa,b) = (ab,ba)")  
+      apply simp_all
+      using less_lnsuc trans_lnle by blast
+  qed
     
-lemma srcdups_sprojsnd: "#(srcdups\<cdot>(sprojsnd\<cdot>s)) = #(srcdups\<cdot>s) \<equiv>
+lemma srcdups_sprojsnd: "#(srcdups\<cdot>s) \<noteq> \<infinity> \<Longrightarrow> #(srcdups\<cdot>(sprojsnd\<cdot>s)) = #(srcdups\<cdot>s) \<Longrightarrow> 
       srcdups\<cdot>(sprojsnd\<cdot>s) = sprojsnd\<cdot>(srcdups\<cdot>s)"
-  apply (simp add: sprojsnd_def)
-  sorry
+  proof(induction s rule: ind)
+    case 1
+    then show ?case
+      apply (rule adm_imp,simp)
+      apply (rule adm_imp)  
+      sorry
+  next
+    case 2
+    then show ?case by simp
+  next 
+    case (3 a s)
+    then show ?case
+      apply (cases rule: scases [of s])
+      apply (cases a,simp)
+      apply (cases a,simp)
+      apply (case_tac aa,simp) 
+      apply (case_tac "b=ba")
+      apply (case_tac "(aaa,b) = (ab,ba)")  
+      apply simp_all
+      by (metis inf_ub less2eq ln_less not_less slen_sprojsnd sprojsnd_scons srcdups_sprojsnd_h) 
+  qed
     
-lemma prop4s_h3: assumes "#(srcdups\<cdot>s) = #(srcdups\<cdot>(sprojsnd\<cdot>(sMed\<cdot>s\<cdot>p)))" 
+lemma prop4s_h3: assumes "#(srcdups\<cdot>s) \<noteq> \<infinity>" "#(srcdups\<cdot>s) = #(srcdups\<cdot>(sprojsnd\<cdot>(sMed\<cdot>s\<cdot>p)))" 
        "#(srcdups\<cdot>s) = #(srcdups\<cdot>(sprojsnd\<cdot>s))"  shows
        "#(srcdups\<cdot>s) = #(srcdups\<cdot>(sMed\<cdot>s\<cdot>p))" 
   proof - 
-    from assms(2) have h:"srcdups\<cdot>(sprojsnd\<cdot>s) = sprojsnd\<cdot>(srcdups\<cdot>s)"
-      using srcdups_sprojsnd by fastforce 
+    from assms(3) have h:"srcdups\<cdot>(sprojsnd\<cdot>s) = sprojsnd\<cdot>(srcdups\<cdot>s)"
+      using assms(1) srcdups_sprojsnd by force
     from assms have " #(srcdups\<cdot>(sprojsnd\<cdot>s)) = #(srcdups\<cdot>(sprojsnd\<cdot>(sMed\<cdot>s\<cdot>p)))" by simp
     from this h have "(srcdups\<cdot>(sprojsnd\<cdot>(sMed\<cdot>s\<cdot>p))) = sprojsnd\<cdot>(srcdups\<cdot>(sMed\<cdot>s\<cdot>p))"     sorry
     from this assms show ?thesis
       by (simp add: slen_sprojsnd) 
   qed  
     
-lemma srcdups_smed: "#(srcdups\<cdot>s) = #(srcdups\<cdot>(sMed\<cdot>s\<cdot>p)) \<Longrightarrow>
+lemma srcdups_smed_h: " #(srcdups\<cdot>(sMed\<cdot>s\<cdot>p)) \<le> #(srcdups\<cdot>s)"
+  proof(induction s arbitrary: p rule: ind)
+    case 1
+    then show ?case sorry
+  next
+  case 2
+    then show ?case by simp
+  next
+    case (3 a s)
+    then show ?case 
+      apply (cases rule: oracases,simp_all)
+      apply (cases rule: scases [of s],simp_all)
+      apply (case_tac "a=aa")
+      apply (rule oracases)
+      apply (simp add: neq02Suclnle srcdups_nbot)
+      apply (metis smed_t srcdups_eq)
+      apply (metis smed_f smed_t srcdups_eq)
+      apply (rule oracases)
+         apply auto[1]
+      apply (metis (no_types) lnsuc_lnle_emb slen_scons smed_t srcdups_neq)
+       apply simp
+        sorry
+  qed
+    
+lemma srcdups_smed: "#(srcdups\<cdot>s) \<noteq> \<infinity> \<Longrightarrow> #(srcdups\<cdot>s) = #(srcdups\<cdot>(sMed\<cdot>s\<cdot>p)) \<Longrightarrow>
       srcdups\<cdot>s = srcdups\<cdot>(sMed\<cdot>s\<cdot>p) "
-  sorry
+   proof(induction s arbitrary: p rule: ind)
+     case 1
+     then show ?case sorry
+   next
+  case 2
+     then show ?case by simp
+   next
+     case (3 a s)
+     then show ?case 
+       apply (cases rule: scases [of s])
+         apply (cases rule: oracases) 
+           apply auto[1]   
+           apply (simp only: smed_t,simp)  
+           apply (simp only: smed_f,simp) 
+         apply (cases rule: oracases) 
+           apply auto[1]  
+           apply (case_tac "a=aa")
+             
+             apply (rule_tac oracases )
+        
+      sorry
+qed
     
 lemma prop4s_h1: "srcdups\<cdot>s = srcdups\<cdot>(sMed\<cdot>s\<cdot>p) \<Longrightarrow>
       sprojfst\<cdot>(srcdups\<cdot>s) = sprojfst\<cdot>(srcdups\<cdot>(sMed\<cdot>s\<cdot>p)) "  
   by simp
     
-lemma prop4s: "#({True} \<ominus> p) = \<infinity> \<Longrightarrow>
+lemma prop4s: "#(srcdups\<cdot>s) \<noteq> \<infinity> \<Longrightarrow> #({True} \<ominus> p) = \<infinity> \<Longrightarrow>
     #(sprojfst\<cdot>(srcdups\<cdot>s)) = #(srcdups\<cdot>(sprojsnd\<cdot>(sMed\<cdot>s\<cdot>p))) \<Longrightarrow>
     #(srcdups\<cdot>(sprojsnd\<cdot>s)) = #(srcdups\<cdot>(sprojsnd\<cdot>(sMed\<cdot>s\<cdot>p))) \<Longrightarrow>
      sprojfst\<cdot>(srcdups\<cdot>s) = sprojfst\<cdot>(srcdups\<cdot>(sMed\<cdot>s\<cdot>p))" 
   apply (rule prop4s_h1)
   apply (rule srcdups_smed)
+  apply blast
   by (metis prop4s_h3 slen_sprojfst)
     
 lemma prop4: 
-  shows (* removed #(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>ts))) \<noteq> \<infinity> *)
-  "#({True} \<ominus> p) = \<infinity> \<Longrightarrow> #(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>ts))) = #(tsAbs\<cdot>(tsRemDups\<cdot>(tsProjSnd\<cdot>ts)))
+   " #(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>ts))) \<noteq> \<infinity>  \<Longrightarrow>
+  #({True} \<ominus> p) = \<infinity> \<Longrightarrow> #(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>ts))) = #(tsAbs\<cdot>(tsRemDups\<cdot>(tsProjSnd\<cdot>ts)))
   \<Longrightarrow> #(tsAbs\<cdot>(tsRemDups\<cdot>(tsProjSnd\<cdot>ts))) = #(tsAbs\<cdot>(tsRemDups\<cdot>(tsProjSnd\<cdot>(tsMed\<cdot>ts\<cdot>p))))
   \<Longrightarrow> tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>ts)) = tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(tsMed\<cdot>ts\<cdot>p)))"
-  apply (simp add: sfilterl4 tsprojfst_tsabs tsremdups_tsabs tsprojsnd_tsabs)
-  using prop4s by blast  
+proof -
+  assume a1: "#({True} \<ominus> p) = \<infinity>"
+  assume a2: "#(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>ts))) = #(tsAbs\<cdot>(tsRemDups\<cdot>(tsProjSnd\<cdot>ts)))"
+  assume a3: "#(tsAbs\<cdot>(tsRemDups\<cdot>(tsProjSnd\<cdot>ts))) = #(tsAbs\<cdot>(tsRemDups\<cdot>(tsProjSnd\<cdot>(tsMed\<cdot>ts\<cdot>p))))"
+  assume a4: "#(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>ts))) \<noteq> \<infinity>"
+  have "#p = \<infinity>"
+    using a1 sfilterl4 by blast
+  then have f5: "tsAbs\<cdot>(tsMed\<cdot>ts\<cdot>p) = sMed\<cdot>(tsAbs\<cdot>ts)\<cdot>p"
+    using tsmed_tsabs by blast
+  have "#(srcdups\<cdot>(tsAbs\<cdot>ts)) \<noteq> \<infinity>"
+    using a4 by (simp add: tsremdups_tsabs)
+  then show ?thesis
+    using f5 a3 a2 a1 by (metis (no_types) prop4s tsprojfst_tsabs tsprojsnd_tsabs tsremdups_tsabs)
+qed
   
 (* ----------------------------------------------------------------------- *)
 section {* tsMedium lemmata *}
