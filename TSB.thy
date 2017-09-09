@@ -1336,6 +1336,9 @@ proof (cases "tsbDom\<cdot>(\<Squnion>i. Y i) \<noteq> {}")
         case False
         hence 400: "\<forall> i. \<forall> ch1 \<in> tsbDom\<cdot>(Lub Y). \<exists> j\<ge>i. \<exists> ch2 \<in> tsbDom\<cdot>(Lub Y). (#\<surd> Y j  .  ch2) < (#\<surd> Y j  .  ch1)"
           by (meson leI lnle_def)
+        have jc24: "\<forall> i. \<forall> ch1 \<in> tsbDom\<cdot>(Lub Y).  \<forall> j\<ge>i. (#\<surd> Y i  .  ch1) \<le> (#\<surd> Y j  .  ch1)"
+          using assms lnle_def monofun_cfun_arg po_class.chain_mono tsbgetch_below by blast
+        
         (* so what this basically means is that no matter what channel you choose, there is always one 
            that is smaller for higher chain indices *)
             
@@ -1363,6 +1366,10 @@ proof (cases "tsbDom\<cdot>(\<Squnion>i. Y i) \<noteq> {}")
        (* now change the index of the left side of < to i *)
         have jc3: "\<forall> i. \<forall> ch1 \<in> tsbDom\<cdot>(Lub Y). \<exists> j\<ge>i. (LEAST l. \<exists>c. l = #\<surd> Y i . c \<and> c \<in> tsbDom\<cdot>(Y i)) < (#\<surd> Y j  .  ch1)" 
           (* this should hold because of the montonocity requirements *)
+          sorry
+            
+        have jcb3: "\<forall> i. \<forall> ch1 \<in> tsbDom\<cdot>(Lub Y). (LEAST l. \<exists>c. l = #\<surd> Y i . c \<and> c \<in> tsbDom\<cdot>(Y i)) \<le> (#\<surd> Y i  .  ch1)" 
+          (* this should hold because of the montonocity requirements *)
             sorry
         
         have jc4: "\<forall> i. \<exists> ch1 \<in> tsbDom\<cdot>(Lub Y). (#\<surd> Y i  .  ch1) = (LEAST ln. \<exists>c. ln = #\<surd> Y i . c \<and> c \<in> tsbDom\<cdot>(Y i))"
@@ -1382,9 +1389,56 @@ proof (cases "tsbDom\<cdot>(\<Squnion>i. Y i) \<noteq> {}")
             then show ?thesis
               by meson
           qed
-
-        have 403: "\<forall> i. \<exists> j\<ge>i. (LEAST ln. \<exists>c. ln = #\<surd> Y i . c \<and> c \<in> tsbDom\<cdot>(Y i)) < (LEAST ln. \<exists>c. ln = #\<surd> Y j . c \<and> c \<in> tsbDom\<cdot>(Y j))"    
-            sorry
+            
+        have jc20: "\<forall> i. \<forall> ch1 \<in> tsbDom\<cdot>(Lub Y).  ((#\<surd> Y i  .  ch1)= (LEAST l. \<exists>c. l = #\<surd> Y i . c \<and> c \<in> tsbDom\<cdot>(Y i))) \<longrightarrow> (\<exists> j\<ge>i. \<exists> ch2 \<in> tsbDom\<cdot>(Lub Y). (#\<surd> Y j  .  ch2) < (#\<surd> Y j  .  ch1))"
+          using "400" by blast  
+            
+        have jcb20: "\<forall> i. (LEAST l. \<exists>c. l = #\<surd> Y i . c \<and> c \<in> tsbDom\<cdot>(Y i)) < \<infinity>"
+          sorry
+        have jc21: "finite (tsbDom\<cdot>(Lub Y))"
+          sorry
+        have jc22: "\<forall> i. \<exists> j \<ge> i. \<forall> ch1 \<in> tsbDom\<cdot>(Lub Y).  ((#\<surd> Y i  .  ch1)= (LEAST l. \<exists>c. l = #\<surd> Y i . c \<and> c \<in> tsbDom\<cdot>(Y i))) \<longrightarrow> (\<exists> ch2 \<in> tsbDom\<cdot>(Lub Y). (#\<surd> Y j  .  ch2) < (#\<surd> Y j  .  ch1))"
+          sorry
+        have jc23: "\<forall> i. \<forall> ch1 \<in> tsbDom\<cdot>(Lub Y). ((#\<surd> Y i  .  ch1) \<noteq> (LEAST l. \<exists>c. l = #\<surd> Y i . c \<and> c \<in> tsbDom\<cdot>(Y i))) \<longrightarrow>  (LEAST l. \<exists>c. l = #\<surd> Y i . c \<and> c \<in> tsbDom\<cdot>(Y i)) < (#\<surd> Y i  .  ch1)"
+          sorry
+         have jc24: "\<forall> i. \<exists> j \<ge> i. \<forall> ch1 \<in> tsbDom\<cdot>(Lub Y).  ((#\<surd> Y i  .  ch1)= (LEAST l. \<exists>c. l = #\<surd> Y i . c \<and> c \<in> tsbDom\<cdot>(Y i))) \<longrightarrow> ((#\<surd> Y i  .  ch1) < (#\<surd> Y j  .  ch1))"
+           sorry  
+             
+             
+         have jc25: "\<forall> i. \<exists> j \<ge> i. \<forall> ch1 \<in> tsbDom\<cdot>(Lub Y) .  (LEAST l. \<exists>c. l = #\<surd> Y i . c \<and> c \<in> tsbDom\<cdot>(Y i)) < (#\<surd> Y j  .  ch1)"
+           (* proof needs jc23 and jc24 *)
+         proof (rule)
+           fix i
+           show "\<exists> j \<ge> i. \<forall> ch1 \<in> tsbDom\<cdot>(Lub Y) .  (LEAST l. \<exists>c. l = #\<surd> Y i . c \<and> c \<in> tsbDom\<cdot>(Y i)) < (#\<surd> Y j  .  ch1)"
+           proof -
+             obtain j where oj1:"(j \<ge> i) \<and> (\<forall> ch1 \<in> tsbDom\<cdot>(Lub Y).  ((#\<surd> Y i  .  ch1)= (LEAST l. \<exists>c. l = #\<surd> Y i . c \<and> c \<in> tsbDom\<cdot>(Y i))) \<longrightarrow> ((#\<surd> Y i  .  ch1) < (#\<surd> Y j  .  ch1)))"
+               using jc24 by blast
+             have "\<forall> ch1 \<in> tsbDom\<cdot>(Lub Y) .  (LEAST l. \<exists>c. l = #\<surd> Y i . c \<and> c \<in> tsbDom\<cdot>(Y i)) < (#\<surd> Y j  .  ch1)"  
+             proof (rule)
+               fix ch1
+               assume a1: "ch1 \<in> tsbDom\<cdot>(Lub Y)"
+               show "(LEAST l. \<exists>c. l = #\<surd> Y i  .  c \<and> c \<in> tsbDom\<cdot>(Y i)) < #\<surd> Y j  .  ch1 "
+               proof (cases "((#\<surd> Y i  .  ch1)= (LEAST l. \<exists>c. l = #\<surd> Y i . c \<and> c \<in> tsbDom\<cdot>(Y i)))")
+                 case True
+                 then show ?thesis
+                   using a1 oj1 by auto
+               next
+                 case False
+                 have "(LEAST l. \<exists>c. l = #\<surd> Y i  .  c \<and> c \<in> tsbDom\<cdot>(Y i)) < (#\<surd> Y i  .  ch1)"
+                   by (simp add: False a1 jc23)
+                 thus ?thesis
+                   by (meson assms less_le_trans lnle_def monofun_cfun_arg oj1 po_class.chain_mono 
+                              tsbgetch_below)
+               qed
+             qed  
+             thus  "\<exists> j \<ge> i. \<forall> ch1 \<in> tsbDom\<cdot>(Lub Y) .  (LEAST l. \<exists>c. l = #\<surd> Y i . c \<and> c \<in> tsbDom\<cdot>(Y i)) < (#\<surd> Y j  .  ch1)"
+               using oj1 by blast
+           qed
+         qed
+           
+              
+         have 403: "\<forall> i. \<exists> j\<ge>i. (LEAST ln. \<exists>c. ln = #\<surd> Y i . c \<and> c \<in> tsbDom\<cdot>(Y i)) < (LEAST ln. \<exists>c. ln = #\<surd> Y j . c \<and> c \<in> tsbDom\<cdot>(Y j))"
+           by (metis (mono_tags) jc25 jc4)
           
         hence 404: "(\<Squnion>i. LEAST ln. \<exists>c. ln = #\<surd> Y i  .  c \<and> c \<in> tsbDom\<cdot>(Y i)) = \<infinity>"
           apply(subst chain_lub_inf)
