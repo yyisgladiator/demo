@@ -426,7 +426,24 @@ lemma smed_sprojsnd: "sprojsnd\<cdot>(sMed\<cdot>s\<cdot>p) = sMed\<cdot>(sprojs
 lemma srcdups_sprojsnd_h: "#(srcdups\<cdot>(sprojsnd\<cdot>s)) \<le> #(sprojsnd\<cdot>(srcdups\<cdot>s))"
   proof(induction s rule: ind,simp_all)
     case 1
-    then show ?case sorry
+    then show ?case 
+    proof (rule admI)
+      fix Y :: "nat \<Rightarrow> ('c \<times> 'd) stream"
+      assume a1: "chain Y"
+      assume a2: "\<forall>i. #(srcdups\<cdot>(sprojsnd\<cdot>(Y i))) \<le> #(sprojsnd\<cdot>(srcdups\<cdot>(Y i)))"
+      have f3: "\<forall>f c. \<not> chain f \<or> chain (\<lambda>n. c\<cdot>(f n::'d stream)::lnat)"
+        using ch2ch_Rep_cfunR by blast
+      have f4: "\<forall>f c. \<not> chain f \<or> chain (\<lambda>n. c\<cdot>(f n::('c \<times> 'd) stream)::'d stream)"
+        using ch2ch_Rep_cfunR by blast
+      have f5: "\<forall>f c. \<not> chain f \<or> chain (\<lambda>n. c\<cdot>(f n::('c \<times> 'd) stream)::('c \<times> 'd) stream)"
+        using ch2ch_Rep_cfunR by blast
+      have "\<forall>f c. \<not> chain f \<or> chain (\<lambda>n. c\<cdot>(f n::'d stream)::'d stream)"
+        using ch2ch_Rep_cfunR by blast
+      then have "(\<Squnion>n. #(srcdups\<cdot>(sprojsnd\<cdot>(Y n)))) \<sqsubseteq> (\<Squnion>n. #(sprojsnd\<cdot>(srcdups\<cdot>(Y n))))"
+        using f5 f4 f3 a2 a1 by (meson dual_order.trans is_ub_thelub lnle_conv lub_below)
+      then show "#(srcdups\<cdot>(sprojsnd\<cdot>(Lub Y))) \<le> #(sprojsnd\<cdot>(srcdups\<cdot>(Lub Y)))"
+        using a1 by (simp add: contlub_cfun_arg)
+    qed      
   next
     case (3 a s)
     then show ?case
@@ -438,15 +455,24 @@ lemma srcdups_sprojsnd_h: "#(srcdups\<cdot>(sprojsnd\<cdot>s)) \<le> #(sprojsnd\
       apply simp_all
       using less_lnsuc trans_lnle by blast
   qed
-    
+
 lemma srcdups_sprojsnd: "#(srcdups\<cdot>s) \<noteq> \<infinity> \<Longrightarrow> #(srcdups\<cdot>(sprojsnd\<cdot>s)) = #(srcdups\<cdot>s) \<Longrightarrow> 
       srcdups\<cdot>(sprojsnd\<cdot>s) = sprojsnd\<cdot>(srcdups\<cdot>s)"
   proof(induction s rule: ind)
     case 1
     then show ?case
-      apply (rule adm_imp,simp)
-      apply (rule adm_imp)  
-      sorry
+    proof (rule admI, auto)
+      fix Y :: "nat \<Rightarrow> ('a \<times> 'b) stream"
+      assume chy: "chain Y" and
+         as1: "\<forall>i. #(srcdups\<cdot>(Y i)) \<noteq> \<infinity> \<longrightarrow> #(srcdups\<cdot>(sprojsnd\<cdot>(Y i))) = #(srcdups\<cdot>(Y i)) \<longrightarrow> srcdups\<cdot>(sprojsnd\<cdot>(Y i)) = sprojsnd\<cdot>(srcdups\<cdot>(Y i))"
+         and as2: "#(srcdups\<cdot>(\<Squnion>i::nat. Y i)) \<noteq> \<infinity>"
+         and as3: "#(srcdups\<cdot>(sprojsnd\<cdot>(\<Squnion>i::nat. Y i))) = #(srcdups\<cdot>(\<Squnion>i::nat. Y i))"
+         have h1: "\<And>i. #(srcdups\<cdot>(Y i)) \<noteq> \<infinity>"
+           by (metis as2 chy inf_less_eq is_ub_thelub lnle_conv monofun_cfun_arg)
+         have "\<And>i. #(srcdups\<cdot>(sprojsnd\<cdot>(Y i))) = #(srcdups\<cdot>(Y i))"  sorry
+         thus "srcdups\<cdot>(sprojsnd\<cdot>(\<Squnion>i::nat. Y i)) = sprojsnd\<cdot>(srcdups\<cdot>(\<Squnion>i::nat. Y i))"
+           by (smt as1 ch2ch_Rep_cfunR chy contlub_cfun_arg h1 lub_eq)
+      qed
   next
     case 2
     then show ?case by simp
@@ -470,11 +496,25 @@ lemma prop4s_h3: assumes "#(srcdups\<cdot>s) \<noteq> \<infinity>" "#(srcdups\<c
     from assms(3) have h:"srcdups\<cdot>(sprojsnd\<cdot>s) = sprojsnd\<cdot>(srcdups\<cdot>s)"
       using assms(1) srcdups_sprojsnd by force
     from assms have " #(srcdups\<cdot>(sprojsnd\<cdot>s)) = #(srcdups\<cdot>(sprojsnd\<cdot>(sMed\<cdot>s\<cdot>p)))" by simp
-    from this h have "(srcdups\<cdot>(sprojsnd\<cdot>(sMed\<cdot>s\<cdot>p))) = sprojsnd\<cdot>(srcdups\<cdot>(sMed\<cdot>s\<cdot>p))"     sorry
+    from this h have "(srcdups\<cdot>(sprojsnd\<cdot>(sMed\<cdot>s\<cdot>p))) = sprojsnd\<cdot>(srcdups\<cdot>(sMed\<cdot>s\<cdot>p))"  
+      proof(induction s arbitrary: p rule: ind)
+        case 1
+        then show ?case apply(rule adm_all) sorry
+      next
+        case 2
+        then show ?case by simp
+      next
+        case (3 a s)
+        then show ?case
+          apply (cases rule:oracases,simp)
+           apply (simp)  
+           apply (rule scases [of "(sMed\<cdot>s\<cdot>as)"])
+          sorry
+      qed
     from this assms show ?thesis
       by (simp add: slen_sprojsnd) 
   qed  
-    
+(*    
 lemma srcdups_smed_h: " #(srcdups\<cdot>(sMed\<cdot>s\<cdot>p)) \<le> #(srcdups\<cdot>s)"
   proof(induction s arbitrary: p rule: ind)
     case 1
@@ -498,9 +538,14 @@ lemma srcdups_smed_h: " #(srcdups\<cdot>(sMed\<cdot>s\<cdot>p)) \<le> #(srcdups\
        apply simp
         sorry
   qed
-    
+*)    
 lemma srcdups_smed: "#(srcdups\<cdot>s) \<noteq> \<infinity> \<Longrightarrow> #(srcdups\<cdot>s) = #(srcdups\<cdot>(sMed\<cdot>s\<cdot>p)) \<Longrightarrow>
       srcdups\<cdot>s = srcdups\<cdot>(sMed\<cdot>s\<cdot>p) "
+  apply (rule scases [of s],simp)
+  apply (rule_tac scases [of sa],simp_all)
+    
+    sorry
+   (* 
    proof(induction s arbitrary: p rule: ind)
      case 1
      then show ?case sorry
@@ -520,9 +565,9 @@ lemma srcdups_smed: "#(srcdups\<cdot>s) \<noteq> \<infinity> \<Longrightarrow> #
            apply (case_tac "a=aa")
              
              apply (rule_tac oracases )
-        
+     
       sorry
-qed
+qed    *)
     
 lemma prop4s_h1: "srcdups\<cdot>s = srcdups\<cdot>(sMed\<cdot>s\<cdot>p) \<Longrightarrow>
       sprojfst\<cdot>(srcdups\<cdot>s) = sprojfst\<cdot>(srcdups\<cdot>(sMed\<cdot>s\<cdot>p)) "  
