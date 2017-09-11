@@ -444,8 +444,6 @@ lemma srcdups_sprojsnd: "#(srcdups\<cdot>s) \<noteq> \<infinity> \<Longrightarro
   proof(induction s rule: ind)
     case 1
     then show ?case
-      apply (rule adm_imp,simp)
-      apply (rule adm_imp)  
       sorry
   next
     case 2
@@ -470,11 +468,25 @@ lemma prop4s_h3: assumes "#(srcdups\<cdot>s) \<noteq> \<infinity>" "#(srcdups\<c
     from assms(3) have h:"srcdups\<cdot>(sprojsnd\<cdot>s) = sprojsnd\<cdot>(srcdups\<cdot>s)"
       using assms(1) srcdups_sprojsnd by force
     from assms have " #(srcdups\<cdot>(sprojsnd\<cdot>s)) = #(srcdups\<cdot>(sprojsnd\<cdot>(sMed\<cdot>s\<cdot>p)))" by simp
-    from this h have "(srcdups\<cdot>(sprojsnd\<cdot>(sMed\<cdot>s\<cdot>p))) = sprojsnd\<cdot>(srcdups\<cdot>(sMed\<cdot>s\<cdot>p))"     sorry
+    from this h have "(srcdups\<cdot>(sprojsnd\<cdot>(sMed\<cdot>s\<cdot>p))) = sprojsnd\<cdot>(srcdups\<cdot>(sMed\<cdot>s\<cdot>p))"  
+      proof(induction s arbitrary: p rule: ind)
+        case 1
+        then show ?case sorry
+      next
+        case 2
+        then show ?case by simp
+      next
+        case (3 a s)
+        then show ?case
+          apply (cases rule:oracases,simp)
+           apply (simp)  
+           apply (rule scases [of "(sMed\<cdot>s\<cdot>as)"])
+          sorry
+      qed
     from this assms show ?thesis
       by (simp add: slen_sprojsnd) 
   qed  
-    
+(*    
 lemma srcdups_smed_h: " #(srcdups\<cdot>(sMed\<cdot>s\<cdot>p)) \<le> #(srcdups\<cdot>s)"
   proof(induction s arbitrary: p rule: ind)
     case 1
@@ -498,9 +510,14 @@ lemma srcdups_smed_h: " #(srcdups\<cdot>(sMed\<cdot>s\<cdot>p)) \<le> #(srcdups\
        apply simp
         sorry
   qed
-    
+*)    
 lemma srcdups_smed: "#(srcdups\<cdot>s) \<noteq> \<infinity> \<Longrightarrow> #(srcdups\<cdot>s) = #(srcdups\<cdot>(sMed\<cdot>s\<cdot>p)) \<Longrightarrow>
       srcdups\<cdot>s = srcdups\<cdot>(sMed\<cdot>s\<cdot>p) "
+  apply (rule scases [of s],simp)
+  apply (rule_tac scases [of sa],simp_all)
+    
+    sorry
+   (* 
    proof(induction s arbitrary: p rule: ind)
      case 1
      then show ?case sorry
@@ -520,9 +537,9 @@ lemma srcdups_smed: "#(srcdups\<cdot>s) \<noteq> \<infinity> \<Longrightarrow> #
            apply (case_tac "a=aa")
              
              apply (rule_tac oracases )
-        
+     
       sorry
-qed
+qed    *)
     
 lemma prop4s_h1: "srcdups\<cdot>s = srcdups\<cdot>(sMed\<cdot>s\<cdot>p) \<Longrightarrow>
       sprojfst\<cdot>(srcdups\<cdot>s) = sprojfst\<cdot>(srcdups\<cdot>(sMed\<cdot>s\<cdot>p)) "  
