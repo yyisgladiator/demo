@@ -426,7 +426,24 @@ lemma smed_sprojsnd: "sprojsnd\<cdot>(sMed\<cdot>s\<cdot>p) = sMed\<cdot>(sprojs
 lemma srcdups_sprojsnd_h: "#(srcdups\<cdot>(sprojsnd\<cdot>s)) \<le> #(sprojsnd\<cdot>(srcdups\<cdot>s))"
   proof(induction s rule: ind,simp_all)
     case 1
-    then show ?case sorry
+    then show ?case 
+    proof (rule admI)
+      fix Y :: "nat \<Rightarrow> ('c \<times> 'd) stream"
+      assume a1: "chain Y"
+      assume a2: "\<forall>i. #(srcdups\<cdot>(sprojsnd\<cdot>(Y i))) \<le> #(sprojsnd\<cdot>(srcdups\<cdot>(Y i)))"
+      have f3: "\<forall>f c. \<not> chain f \<or> chain (\<lambda>n. c\<cdot>(f n::'d stream)::lnat)"
+        using ch2ch_Rep_cfunR by blast
+      have f4: "\<forall>f c. \<not> chain f \<or> chain (\<lambda>n. c\<cdot>(f n::('c \<times> 'd) stream)::'d stream)"
+        using ch2ch_Rep_cfunR by blast
+      have f5: "\<forall>f c. \<not> chain f \<or> chain (\<lambda>n. c\<cdot>(f n::('c \<times> 'd) stream)::('c \<times> 'd) stream)"
+        using ch2ch_Rep_cfunR by blast
+      have "\<forall>f c. \<not> chain f \<or> chain (\<lambda>n. c\<cdot>(f n::'d stream)::'d stream)"
+        using ch2ch_Rep_cfunR by blast
+      then have "(\<Squnion>n. #(srcdups\<cdot>(sprojsnd\<cdot>(Y n)))) \<sqsubseteq> (\<Squnion>n. #(sprojsnd\<cdot>(srcdups\<cdot>(Y n))))"
+        using f5 f4 f3 a2 a1 by (meson dual_order.trans is_ub_thelub lnle_conv lub_below)
+      then show "#(srcdups\<cdot>(sprojsnd\<cdot>(Lub Y))) \<le> #(sprojsnd\<cdot>(srcdups\<cdot>(Lub Y)))"
+        using a1 by (simp add: contlub_cfun_arg)
+    qed      
   next
     case (3 a s)
     then show ?case
