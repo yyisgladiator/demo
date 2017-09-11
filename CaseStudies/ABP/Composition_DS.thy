@@ -141,7 +141,7 @@ lemma tsaltbitpro_inp2out:
     have h3: "#(tsAbs\<cdot>i) < lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>as)))
           \<or> #(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>ds))) = lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>as)))"
       by (metis ds_def le_less_linear min_absorb2 send_def set2tssnd_ack2trans)    
-
+(*
     obtain ora where as_def2: "as = tsProjSnd\<cdot>(tsMed\<cdot>ds\<cdot>ora)" and ora_def: "#({True} \<ominus> ora) = \<infinity>"
       by (metis (no_types, lifting) ar_def as_def dr_def p1_def p2_def sfilterl4 tsmed2infmed 
           tsmed_map tsprojsnd_insert)
@@ -156,16 +156,35 @@ lemma tsaltbitpro_inp2out:
                   #(tsAbs\<cdot>(tsRemDups\<cdot>ds)) \<le> #(tsAbs\<cdot>(tsRemDups\<cdot>as))"
       apply (rule ccontr)
       by (simp add: as_def2 ora_inf tsmed_tsabs tsprojsnd_tsabs tsremdups_tsabs)
-
+*)
 (*
     hence "#(tsAbs\<cdot>i) \<le> #(tsAbs\<cdot>(tsRemDups\<cdot>as)) \<or> (#(tsAbs\<cdot>(tsRemDups\<cdot>as)) = \<infinity> \<or> #(tsAbs\<cdot>as) \<noteq> \<infinity>)"
       sorry
     hence "#(tsAbs\<cdot>i) \<le> #(tsAbs\<cdot>(tsRemDups\<cdot>as)) \<or> #(tsAbs\<cdot>(tsRemDups\<cdot>as)) = \<infinity>"
       sorry
 *)
+      have p1_inf: "#p1 = \<infinity>"
+        using p1_def sfilterl4 by auto
+      have p2_inf: "#p2 = \<infinity>"
+        using p2_def sfilterl4 by auto  
+  
+      obtain ora where as_def2: "as = tsProjSnd\<cdot>(tsMed\<cdot>ds\<cdot>ora)" and ora_def: "#({True} \<ominus> ora) = \<infinity>"
+        by (metis (no_types, lifting) ar_def as_def dr_def p1_def p2_def sfilterl4 tsmed2infmed 
+            tsmed_map tsprojsnd_insert)
+  
+      have ora_inf: "#ora = \<infinity>"
+        using ora_def sfilterl4 by auto
+    
+      obtain acks :: "bool stream" where acks_def: "(sMed\<cdot>(sprojsnd\<cdot>(tsAbs\<cdot>ds))\<cdot>ora) = acks"
+        by simp
+
+    have h5: "#(tsAbs\<cdot>(tsRemDups\<cdot>ds)) \<le> #(tsAbs\<cdot>(tsRemDups\<cdot>as))"
+      apply (simp add: as_def2 ar_def dr_def tsremdups_tsabs tsprojsnd_tsabs tsmed_tsabs ora_inf
+             smed_sprojsnd)
+      sorry
 
     hence geq: "#(tsAbs\<cdot>i) \<le> #(tsAbs\<cdot>(tsRemDups\<cdot>as))"
-      by (metis hh1 inf_ub leD leI ln_less local.h3 min.absorb1 min_absorb2 tsprojfst_tsabs_slen)
+      sorry
     (* equalities *)
     have eq: "#(tsAbs\<cdot>i) = #(tsAbs\<cdot>(tsRemDups\<cdot>as))"
       by (simp add: dual_order.antisym geq leq)
