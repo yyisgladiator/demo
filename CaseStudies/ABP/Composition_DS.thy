@@ -97,6 +97,10 @@ lemma lnle2le: "m < lnsuc\<cdot>n \<Longrightarrow> m \<le> n"
 lemma le2lnle: "m < \<infinity> \<Longrightarrow> lnsuc\<cdot>m \<le> n \<Longrightarrow> m < n"
   by (metis dual_order.strict_iff_order dual_order.trans leD ln_less)
 
+lemma hhh1: assumes "#(srcdups\<cdot>s)<\<infinity>" and "#s=\<infinity>"
+obtains n where "s = (stake n\<cdot>s)\<bullet>(\<up>(snth n s)\<infinity>)"
+sorry
+
 (* ----------------------------------------------------------------------- *)
 subsection {* complete composition *}
 (* ----------------------------------------------------------------------- *)
@@ -130,61 +134,30 @@ lemma tsaltbitpro_inp2out:
     hence leq: "#(tsAbs\<cdot>(tsRemDups\<cdot>as)) \<le> #(tsAbs\<cdot>i)"
       using ds_def send_def set2tssnd_ack2trans by fastforce
     (* #(tsAbs\<cdot>i) \<le> #(tsAbs\<cdot>(tsRemDups\<cdot>as)) *)
-    have hh1: "#(tsAbs\<cdot>i) < lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>as))) \<Longrightarrow> #(tsAbs\<cdot>i) \<le> #(tsAbs\<cdot>(tsRemDups\<cdot>as))"
-      by (simp add: lnle2le)
+    have hh4: "#(tsAbs\<cdot>(tsRemDups\<cdot>as)) \<noteq> \<infinity> \<and> #(tsAbs\<cdot>as) = \<infinity> \<Longrightarrow> False"
+      apply (simp add: tsremdups_tsabs)
+      proof -
+        assume a1: "#(srcdups\<cdot>(tsAbs\<cdot>as)) \<noteq> \<infinity> \<and> #(tsAbs\<cdot>as) = \<infinity>"
+        obtain n where "tsAbs\<cdot>as = (stake n\<cdot>(tsAbs\<cdot>as)) \<bullet> (\<up>(snth n (tsAbs\<cdot>as))\<infinity>)"
+          using a1 hhh1 inf_less_eq leI by blast
+        have "#(\<up>(snth n (tsAbs\<cdot>as))\<infinity>) = \<infinity>"
+          by (simp)
+        show "False"
+          sorry
+      qed
 
-    have hh2: "lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>as))) < #(tsAbs\<cdot>i) \<Longrightarrow> #(tsAbs\<cdot>ds) = \<infinity>"
-      by (simp add: ds_def dual_order.strict_trans2 less_asym' send_def set2tssnd_nack2inftrans)
-    have hh3: "lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>as))) < #(tsAbs\<cdot>i) \<Longrightarrow> #(tsAbs\<cdot>as) = \<infinity>"
-      by (simp add: ar_def as_def dr_def hh2 p1_def p2_def)
- 
     have h3: "#(tsAbs\<cdot>i) < lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>as)))
           \<or> #(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>ds))) = lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>as)))"
       by (metis ds_def le_less_linear min_absorb2 send_def set2tssnd_ack2trans)    
-(*
-    obtain ora where as_def2: "as = tsProjSnd\<cdot>(tsMed\<cdot>ds\<cdot>ora)" and ora_def: "#({True} \<ominus> ora) = \<infinity>"
-      by (metis (no_types, lifting) ar_def as_def dr_def p1_def p2_def sfilterl4 tsmed2infmed 
-          tsmed_map tsprojsnd_insert)
 
-    have ora_inf: "#ora = \<infinity>"
-      using ora_def sfilterl4 by auto
-
-    hence "#(srcdups\<cdot>(sprojsnd\<cdot>(sMed\<cdot>(tsAbs\<cdot>ds)\<cdot>ora))) < #(srcdups\<cdot>(tsAbs\<cdot>ds)) \<Longrightarrow> False"
-      sorry
-  
-    hence h5: "#(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>ds))) = lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>as))) \<Longrightarrow>
-                  #(tsAbs\<cdot>(tsRemDups\<cdot>ds)) \<le> #(tsAbs\<cdot>(tsRemDups\<cdot>as))"
-      apply (rule ccontr)
-      by (simp add: as_def2 ora_inf tsmed_tsabs tsprojsnd_tsabs tsremdups_tsabs)
-*)
-(*
     hence "#(tsAbs\<cdot>i) \<le> #(tsAbs\<cdot>(tsRemDups\<cdot>as)) \<or> (#(tsAbs\<cdot>(tsRemDups\<cdot>as)) = \<infinity> \<or> #(tsAbs\<cdot>as) \<noteq> \<infinity>)"
-      sorry
+      using hh4 by auto    
     hence "#(tsAbs\<cdot>i) \<le> #(tsAbs\<cdot>(tsRemDups\<cdot>as)) \<or> #(tsAbs\<cdot>(tsRemDups\<cdot>as)) = \<infinity>"
-      sorry
-*)
-      have p1_inf: "#p1 = \<infinity>"
-        using p1_def sfilterl4 by auto
-      have p2_inf: "#p2 = \<infinity>"
-        using p2_def sfilterl4 by auto  
-  
-      obtain ora where as_def2: "as = tsProjSnd\<cdot>(tsMed\<cdot>ds\<cdot>ora)" and ora_def: "#({True} \<ominus> ora) = \<infinity>"
-        by (metis (no_types, lifting) ar_def as_def dr_def p1_def p2_def sfilterl4 tsmed2infmed 
-            tsmed_map tsprojsnd_insert)
-  
-      have ora_inf: "#ora = \<infinity>"
-        using ora_def sfilterl4 by auto
-    
-      obtain acks :: "bool stream" where acks_def: "(sMed\<cdot>(sprojsnd\<cdot>(tsAbs\<cdot>ds))\<cdot>ora) = acks"
-        by simp
-
-    have h5: "#(tsAbs\<cdot>(tsRemDups\<cdot>ds)) \<le> #(tsAbs\<cdot>(tsRemDups\<cdot>as))"
-      apply (simp add: as_def2 ar_def dr_def tsremdups_tsabs tsprojsnd_tsabs tsmed_tsabs ora_inf
-             smed_sprojsnd)
-      sorry
+      by (metis ar_def as_def dr_def ds_def leI p1_def p2_def prop3 send_def 
+          set2tssnd_nack2inftrans)
 
     hence geq: "#(tsAbs\<cdot>i) \<le> #(tsAbs\<cdot>(tsRemDups\<cdot>as))"
-      sorry
+      by auto
     (* equalities *)
     have eq: "#(tsAbs\<cdot>i) = #(tsAbs\<cdot>(tsRemDups\<cdot>as))"
       by (simp add: dual_order.antisym geq leq)
