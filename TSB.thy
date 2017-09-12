@@ -1404,21 +1404,56 @@ proof (cases "tsbDom\<cdot>(\<Squnion>i. Y i) \<noteq> {}")
         have jc21: "finite (tsbDom\<cdot>(Lub Y))"  
           sorry
             
-        have jc22: "\<forall> i. \<exists> j \<ge> i. \<forall> ch1 \<in> tsbDom\<cdot>(Lub Y).  ((#\<surd> Y i  .  ch1)= (LEAST l. \<exists>c. l = #\<surd> Y i . c \<and> c \<in> tsbDom\<cdot>(Y i))) \<longrightarrow> (\<exists> ch2 \<in> tsbDom\<cdot>(Lub Y). (#\<surd> Y j  .  ch2) < (#\<surd> Y j  .  ch1))"
-          
-          sorry
-            
         have jc23: "\<forall> i. \<forall> ch1 \<in> tsbDom\<cdot>(Lub Y). ((#\<surd> Y i  .  ch1) \<noteq> (LEAST l. \<exists>c. l = #\<surd> Y i . c \<and> c \<in> tsbDom\<cdot>(Y i))) \<longrightarrow>  (LEAST l. \<exists>c. l = #\<surd> Y i . c \<and> c \<in> tsbDom\<cdot>(Y i)) < (#\<surd> Y i  .  ch1)"
           by (simp add: jcb3 order.not_eq_order_implies_strict)
          
         have jc24: "\<forall> i. \<exists> j \<ge> i. \<forall> ch1 \<in> tsbDom\<cdot>(Lub Y).  ((#\<surd> Y i  .  ch1)= (LEAST l. \<exists>c. l = #\<surd> Y i . c \<and> c \<in> tsbDom\<cdot>(Y i))) \<longrightarrow> ((#\<surd> Y i  .  ch1) < (#\<surd> Y j  .  ch1))"
-          (* sledgehammer can find a proof for this but somehow times out*)
-            (* by (metis dual_order.strict_trans2 jc10 jc22 jc24a jcb3) *)
-          sorry
+        proof - 
+          fix i
+          show ?thesis
+            proof(cases "\<forall> ch1 \<in> tsbDom\<cdot>(Lub Y). \<forall> ch2 \<in> tsbDom\<cdot>(Lub Y). (#\<surd> Y i  .  ch1) = (#\<surd> Y i  .  ch2)")
+              case True
+              then have jc2411: "\<forall> ch1 \<in> tsbDom\<cdot>(Lub Y). \<forall> ch2 \<in> tsbDom\<cdot>(Lub Y). (#\<surd> Y i  .  ch1) = (#\<surd> Y i  .  ch2)"
+                by blast
+              then have jc2412: "\<forall> ch1 \<in> tsbDom\<cdot>(Lub Y). (#\<surd> Y i  .  ch1) = (LEAST l. \<exists>c. l = #\<surd> Y i . c \<and> c \<in> tsbDom\<cdot>(Y i))"
+              proof -
+                { fix cc :: channel
+                  obtain cca :: "nat \<Rightarrow> channel" where
+                    ff1: "\<And>n. cca n \<in> tsbDom\<cdot>(Lub Y) \<and> #\<surd> Y n . cca n = (LEAST l. \<exists>c. l = #\<surd> Y n . c \<and> c \<in> tsbDom\<cdot>(Y n))"
+                    using jc4 by moura
+                  moreover
+                  { assume "cca i \<in> tsbDom\<cdot>(Lub Y) \<and> #\<surd> Y i . cc \<noteq> (LEAST l. \<exists>c. l = #\<surd> Y i . c \<and> c \<in> tsbDom\<cdot>(Y i))"
+                    then have "\<exists>c. c \<in> tsbDom\<cdot>(Lub Y) \<and> #\<surd> Y i . c \<noteq> #\<surd> Y i . cc"
+                      using ff1 by fastforce
+                    then have "cc \<notin> tsbDom\<cdot>(Lub Y) \<or> #\<surd> Y i . cc = (LEAST l. \<exists>c. l = #\<surd> Y i . c \<and> c \<in> tsbDom\<cdot>(Y i))"
+                      using jc2411 by blast }
+                  ultimately have "cc \<notin> tsbDom\<cdot>(Lub Y) \<or> #\<surd> Y i . cc = (LEAST l. \<exists>c. l = #\<surd> Y i . c \<and> c \<in> tsbDom\<cdot>(Y i))"
+                    by meson }
+                then show ?thesis
+                  by meson
+              qed
+              have jc2413: "\<forall> i. \<forall> ch1 \<in> tsbDom\<cdot>(Lub Y). \<exists> j\<ge>i. \<exists> ch2 \<in> tsbDom\<cdot>(Lub Y). (#\<surd> Y j  .  ch2) < (#\<surd> Y j  .  ch1)"
+                using 400 by blast
+              show ?thesis 
+                
+                apply(rule ccontr, simp)
+                sorry
+            next
+              case False
+              then have jc2421: "\<exists> ch1 \<in> tsbDom\<cdot>(Lub Y). \<exists> ch2 \<in> tsbDom\<cdot>(Lub Y). (#\<surd> Y i  .  ch1) \<noteq> (#\<surd> Y i  .  ch2)"
+                by blast
+              then have jc2422: "\<exists> j \<ge> i. \<forall> ch1 \<in> tsbDom\<cdot>(Lub Y).  ((#\<surd> Y i  .  ch1)= (LEAST l. \<exists>c. l = #\<surd> Y i . c \<and> c \<in> tsbDom\<cdot>(Y i))) \<longrightarrow> (\<exists> ch2 \<in> tsbDom\<cdot>(Lub Y). (#\<surd> Y j  .  ch2) < (#\<surd> Y j  .  ch1))"
+                sorry
+              then show ?thesis 
+                sorry
+              (* sledgehammer can find a proof for this but somehow times out*)
+              (* by (metis dual_order.strict_trans2 jc10 jc22 jc24a jcb3) *)
+            qed
+        qed
              
-         have jc25: "\<forall> i. \<exists> j \<ge> i. \<forall> ch1 \<in> tsbDom\<cdot>(Lub Y) .  (LEAST l. \<exists>c. l = #\<surd> Y i . c \<and> c \<in> tsbDom\<cdot>(Y i)) < (#\<surd> Y j  .  ch1)"
+        have jc25: "\<forall> i. \<exists> j \<ge> i. \<forall> ch1 \<in> tsbDom\<cdot>(Lub Y) .  (LEAST l. \<exists>c. l = #\<surd> Y i . c \<and> c \<in> tsbDom\<cdot>(Y i)) < (#\<surd> Y j  .  ch1)"
            (* proof needs jc23 and jc24 *)
-         proof (rule)
+        proof (rule)
            fix i
            show "\<exists> j \<ge> i. \<forall> ch1 \<in> tsbDom\<cdot>(Lub Y) .  (LEAST l. \<exists>c. l = #\<surd> Y i . c \<and> c \<in> tsbDom\<cdot>(Y i)) < (#\<surd> Y j  .  ch1)"
            proof -
@@ -1445,10 +1480,10 @@ proof (cases "tsbDom\<cdot>(\<Squnion>i. Y i) \<noteq> {}")
              thus  "\<exists> j \<ge> i. \<forall> ch1 \<in> tsbDom\<cdot>(Lub Y) .  (LEAST l. \<exists>c. l = #\<surd> Y i . c \<and> c \<in> tsbDom\<cdot>(Y i)) < (#\<surd> Y j  .  ch1)"
                using oj1 by blast
            qed
-         qed  
+        qed  
               
-         have 403: "\<forall> i. \<exists> j\<ge>i. (LEAST ln. \<exists>c. ln = #\<surd> Y i . c \<and> c \<in> tsbDom\<cdot>(Y i)) < (LEAST ln. \<exists>c. ln = #\<surd> Y j . c \<and> c \<in> tsbDom\<cdot>(Y j))"
-           by (metis (mono_tags) jc25 jc4)
+        have 403: "\<forall> i. \<exists> j\<ge>i. (LEAST ln. \<exists>c. ln = #\<surd> Y i . c \<and> c \<in> tsbDom\<cdot>(Y i)) < (LEAST ln. \<exists>c. ln = #\<surd> Y j . c \<and> c \<in> tsbDom\<cdot>(Y j))"
+          by (metis (mono_tags) jc25 jc4)
           
         hence 404: "(\<Squnion>i. LEAST ln. \<exists>c. ln = #\<surd> Y i  .  c \<and> c \<in> tsbDom\<cdot>(Y i)) = \<infinity>"
           apply(subst chain_lub_inf)
@@ -1468,7 +1503,104 @@ next
     by (simp)
 qed
        
-
+lemma tsbtick_cont_pre2: assumes "chain Y"
+  shows "(if tsbDom\<cdot>(\<Squnion>i. Y i) \<noteq> {} then LEAST ln. ln \<in> {#\<surd> (\<Squnion>i. Y i)  .  c |c. c \<in> tsbDom\<cdot>(\<Squnion>i. Y i)} else \<infinity>) \<sqsubseteq>
+         (\<Squnion>i. if tsbDom\<cdot>(Y i) \<noteq> {} then LEAST ln. ln \<in> {#\<surd> ((Y i)  .  c) |c. c \<in> tsbDom\<cdot>(Y i)} else \<infinity>)"
+proof (cases "tsbDom\<cdot>(\<Squnion>i. Y i) \<noteq> {}")
+  case True
+  hence f1: "\<forall> i. tsbDom\<cdot>(Y i) = tsbDom\<cdot>(\<Squnion>i. Y i)"
+    by (simp add: assms(1))
+  hence f11: "\<forall> i. tsbDom\<cdot>(\<Squnion>i. Y i) =  tsbDom\<cdot>(Y i)"
+    by (simp add: assms(1))
+  hence f10: "\<forall> i. tsbDom\<cdot>(Y i) \<noteq> {}"
+    using True by auto
+  have f2: "\<forall> c. #\<surd> (Lub Y  .  c) = (\<Squnion> i. #\<surd> ((Y i) .c))"
+    by (metis (mono_tags, lifting) assms contlub_cfun_arg lub_eq lub_eval theRep_chain tsbgetch_insert)
+  show ?thesis
+    apply (simp only: True f10)
+    apply auto
+    proof (cases "finite_chain Y")
+      case True
+      hence "(LEAST ln. \<exists>c. ln = #\<surd> Lub Y  .  c \<and> c \<in> tsbDom\<cdot>(Lub Y)) \<sqsubseteq> (\<Squnion>i. LEAST ln. \<exists>c. ln = #\<surd> Y i  .  c \<and> c \<in> tsbDom\<cdot>(Y i))"
+      proof -
+        obtain nn :: "(nat \<Rightarrow> 'a TSB) \<Rightarrow> nat" where
+          f1: "\<And>f. \<not> finite_chain f \<or> \<not> chain f \<or> Lub f = f (nn f)"
+          using l42 by moura
+        have "\<forall>f. \<exists>n. tsbDom\<cdot>(f n::'a TSB) = {} \<or> chain (\<lambda>n. LEAST l. \<exists>c. l = #\<surd> f n . c \<and> c \<in> tsbDom\<cdot>(f n)) \<or> \<not> chain f"
+          using tsbtick_least_chain2 by blast
+        then have "\<And>n. (LEAST l. \<exists>c. l = #\<surd> Y n . c \<and> c \<in> tsbDom\<cdot>(Y n)) \<sqsubseteq> (\<Squnion>n. LEAST l. \<exists>c. l = #\<surd> Y n . c \<and> c \<in> tsbDom\<cdot>(Y n))"
+          using assms f10 is_ub_thelub by blast
+        then show ?thesis
+          using f1 True assms by presburger
+      qed
+      thus  "(LEAST ln. \<exists>c. ln = #\<surd> Lub Y  .  c \<and> c \<in> tsbDom\<cdot>(Lub Y)) \<le> (\<Squnion>i. LEAST ln. \<exists>c. ln = #\<surd> Y i  .  c \<and> c \<in> tsbDom\<cdot>(Y i))"
+        using lnle_conv by blast  
+    next
+      case False
+      hence f300: "\<not> finite_chain Y"
+        by simp 
+      have f301: "chain (\<lambda> i. LEAST ln. \<exists>c. ln = #\<surd> Y i  .  c \<and> c \<in> tsbDom\<cdot>(Y i))"
+        using assms f10 tsbtick_least_chain3 by blast
+      have f302: "(LEAST ln. \<exists>c. ln = #\<surd> Lub Y  .  c \<and> c \<in> tsbDom\<cdot>(Lub Y)) \<sqsubseteq> (\<Squnion>i. LEAST ln. \<exists>c. ln = #\<surd> Y i  .  c \<and> c \<in> tsbDom\<cdot>(Y i))"
+      proof(cases "finite_chain (\<lambda> i. LEAST ln. \<exists>c. ln = #\<surd> Y i  .  c \<and> c \<in> tsbDom\<cdot>(Y i))")
+        case True
+        then have f30211: "\<exists>i. max_in_chain i (\<lambda> i. LEAST ln. \<exists>c. ln = #\<surd> Y i  .  c \<and> c \<in> tsbDom\<cdot>(Y i))"
+          using finite_chain_def f301 by blast
+        
+        then obtain maxI where f30212: "\<forall>j. maxI \<le> j \<longrightarrow> (LEAST ln. \<exists>c. ln = #\<surd> Y maxI  .  c \<and> c \<in> tsbDom\<cdot>(Y maxI)) = (LEAST ln. \<exists>c. ln = #\<surd> Y j  .  c \<and> c \<in> tsbDom\<cdot>(Y j))"
+          by (meson max_in_chain_def)
+        then obtain maxCount where f30213: "maxCount = (LEAST ln. \<exists>c. ln = #\<surd> Y maxI  .  c \<and> c \<in> tsbDom\<cdot>(Y maxI))"
+          by blast
+        then have f30214: "maxCount = (\<Squnion>i. LEAST ln. \<exists>c. ln = #\<surd> Y i  .  c \<and> c \<in> tsbDom\<cdot>(Y i))"
+          by (metis (mono_tags, lifting) True f30212 f301 l42 le_cases max_in_chainI3 max_in_chain_def)
+        
+        have f30215: "finite (tsbDom\<cdot>(Lub Y))"  
+          sorry
+        have f30216: "\<exists> maxCh \<in> tsbDom\<cdot>(Lub Y). \<forall>j\<ge>maxI. maxCount = #\<surd> (Y j . maxCh)"
+        proof(rule ccontr)
+          assume "\<not>?thesis"
+          then have "\<forall> maxCh \<in> tsbDom\<cdot>(Lub Y). \<exists>j\<ge>maxI. maxCount \<le> #\<surd> (Y j . maxCh)"
+            by (smt Least_le assms f30212 f30213 tsbChain_dom_eq2)
+          then show "False" 
+            
+            sorry
+        qed   
+        then show ?thesis 
+          
+          sorry
+      next
+        case False
+        then have f30221: "\<not>(\<exists>i. max_in_chain i (\<lambda> i. LEAST ln. \<exists>c. ln = #\<surd> Y i  .  c \<and> c \<in> tsbDom\<cdot>(Y i)))"
+          using finite_chain_def f301 by blast
+        have f30222: "\<forall>i. \<exists>j\<ge>i. (LEAST ln. \<exists>c. ln = #\<surd> Y i  .  c \<and> c \<in> tsbDom\<cdot>(Y i)) < ( LEAST ln. \<exists>c. ln = #\<surd> Y j  .  c \<and> c \<in> tsbDom\<cdot>(Y j))"
+        proof(rule ccontr)
+          assume "\<not>?thesis"
+          then have "\<exists>i. \<forall>j\<ge>i. (LEAST ln. \<exists>c. ln = #\<surd> Y i  .  c \<and> c \<in> tsbDom\<cdot>(Y i)) = ( LEAST ln. \<exists>c. ln = #\<surd> Y j  .  c \<and> c \<in> tsbDom\<cdot>(Y j))"
+            (* proof generated by sledgehammer but times out *)
+            (* by (metis TSB.chain_mono f301 not_le_imp_less) *)
+            sorry
+          then have "\<exists>i. max_in_chain i (\<lambda> i. LEAST ln. \<exists>c. ln = #\<surd> Y i  .  c \<and> c \<in> tsbDom\<cdot>(Y i))" 
+            by (meson max_in_chainI)
+          then show "False" 
+            using f30221 by blast
+        qed      
+        then have "(\<Squnion>i. LEAST ln. \<exists>c. ln = #\<surd> Y i  .  c \<and> c \<in> tsbDom\<cdot>(Y i)) = \<infinity>"
+          apply(subst chain_lub_inf)
+          apply(simp_all add: assms)
+          using True assms tsbtick_least_chain by blast
+        then show ?thesis 
+          by simp
+      qed  
+      thus "(LEAST ln. \<exists>c. ln = #\<surd> Lub Y  .  c \<and> c \<in> tsbDom\<cdot>(Lub Y)) \<le> (\<Squnion>i. LEAST ln. \<exists>c. ln = #\<surd> Y i  .  c \<and> c \<in> tsbDom\<cdot>(Y i))"
+        using lnle_conv by blast 
+    qed
+next
+  case False
+  hence "\<forall> i. tsbDom\<cdot>(Y i) = {}"
+    by (simp add: assms)
+  thus?thesis
+    by (simp)
+qed
     
   
 lemma tsbtick_cont [simp]:
