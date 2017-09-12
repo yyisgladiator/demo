@@ -153,7 +153,7 @@ subsection \<open>cont\<close>
    This procedure is necessary as the chain properties of iter_spfFeedH only hold if the input 
    domain is correct *)
   
-  (* Show that 2nd goal from contI holds if input on spfcomp has the correct domain *)   
+  (* Show that 2nd goal from contI holds if input on spfcompOld has the correct domain *)   
 lemma chain_if_lub_iter_spfFeedH_domI: assumes "chain Y"
                                        and     "(sbDom\<cdot>(\<Squnion>i. Y i) = (spfDom\<cdot>f - spfRan\<cdot>f))"
 shows "(sbDom\<cdot>(\<Squnion>i. Y i) = (spfDom\<cdot>f - spfRan\<cdot>f)) \<leadsto>  (\<Squnion>i.(iter_spfFeedH f i) (\<Squnion>i. Y i))
@@ -229,7 +229,7 @@ lemma spfFeedH2_dom: assumes "sbDom\<cdot>x= spfDom\<cdot>f - spfRan\<cdot>f"
     by (simp add: spfFeedH2_def assms(1) assms(2))
 
       
-subsection \<open>iter_spfCompH3\<close>
+subsection \<open>iter_spfCompH\<close>
     
 lemma iter_spfFeedH2_cont[simp]: "cont (\<lambda> x. iter_spfFeedH2 f i x)"
   by simp
@@ -252,7 +252,7 @@ lemma iter_spfFeedH2_dom[simp]: assumes "sbDom\<cdot>x = spfDom\<cdot>f - spfRan
    apply auto[1]
   by (simp add: assms spfFeedH2_dom)
     
-subsection \<open>lub_iter_spfCompH3\<close>
+subsection \<open>lub_iter_spfCompH\<close>
   
 lemma lub_iter_spfFeedH2_dom[simp]: assumes "sbDom\<cdot>x = spfDom\<cdot>f - spfRan\<cdot>f"
   shows "sbDom\<cdot>(\<Squnion>i. iter_spfFeedH2 f i x) = (spfDom\<cdot>f \<union> spfRan\<cdot>f)"
@@ -348,7 +348,7 @@ lemma spf_FeedH2_well[simp]:
   by (simp add: spfFeed_and_spfFeed2_eq_req)
     
     
-(* used abbreviations are equal to spfcomp2 function *)   
+(* used abbreviations are equal to spfcompOldOld2 function *)   
     (* Substitute with this lemma if you need cont properties for spfFeedH2 *)
 lemma spfFeedbackOperator2_to_FeedH2: "spfFeedbackOperator2 f
   = Abs_CSPF(\<lambda> x. (sbDom\<cdot>x = (spfDom\<cdot>f - spfRan\<cdot>f)) \<leadsto> (\<Squnion>i. (iter_spfFeedH2 f i x))\<bar>(spfRan\<cdot>f))"

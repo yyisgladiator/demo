@@ -128,7 +128,7 @@ setup_lifting type_definition_SPF
 (* ----------------------------------------------------------------------- *)
 
 
-
+subsection \<open>rep/abs\<close>
 
 (* Shorter version to get to normal functions from 'm SPF's *)
 definition Rep_CSPF:: "'m SPF \<Rightarrow> ('m SB \<rightharpoonup> 'm SB)" where
@@ -139,6 +139,7 @@ definition Rep_CSPF:: "'m SPF \<Rightarrow> ('m SB \<rightharpoonup> 'm SB)" whe
 definition Abs_CSPF:: "('m SB \<rightharpoonup> 'm SB) \<Rightarrow> 'm SPF" where
 "Abs_CSPF F \<equiv> Abs_SPF (Abs_cfun F)"
 
+subsection \<open>domain/range\<close>
 
   (* get input channel set for given 'm SPF *)
 definition spfDom :: "'m SPF \<rightarrow> channel set" where
@@ -157,85 +158,121 @@ definition spfType :: "'m SPF \<rightarrow> (channel set \<times> channel set)" 
 definition spfIO :: "channel set \<Rightarrow> channel set \<Rightarrow> 'm SPF set" where
 "spfIO In Out = {f. spfDom\<cdot>f = In \<and> spfRan\<cdot>f = Out}"
 
-
+(* for legacy purposes *)
 text \<open>Dummy patterns for abstraction\<close>
 translations
   "\<LL> _ . t" => "CONST Abs_CSPF (\<lambda> _ . t)"
 
-(*?*)
+subsection \<open>apply\<close>
 
 (* harpoon and Rep operation all in one for simpler SPF on SB applications *)
 abbreviation theRep_abbrv :: "'a SPF \<Rightarrow> 'a SB \<Rightarrow> 'a SB " ("_\<rightleftharpoons>_") where
 "(f \<rightleftharpoons> s) \<equiv> the ((Rep_CSPF f) s)"
 
 
+subsection \<open>fix\<close>
+
+definition sbFix :: "('m SB \<rightarrow> 'm SB) \<Rightarrow> channel set \<Rightarrow> 'm SB" where
+"sbFix F cs \<equiv>  (\<Squnion>i. iterate i\<cdot>F\<cdot>(cs^\<bottom>))"
+
+(* adds the input to the original sbFix definition *)
+definition sbFix2 :: "('m SB \<Rightarrow> 'm SB \<rightarrow> 'm SB) \<Rightarrow> 'm SB  \<Rightarrow> channel set \<Rightarrow> 'm SB" where
+"sbFix2 F x cs \<equiv>  (\<Squnion>i. iterate i\<cdot>(F x)\<cdot>(cs^\<bottom>))"
+
+abbreviation iter_sbfix2:: "('m SB \<Rightarrow> 'm SB \<rightarrow> 'm SB) \<Rightarrow> nat \<Rightarrow> channel set \<Rightarrow> 'm SB \<Rightarrow> 'm SB" where
+"iter_sbfix2 F i cs \<equiv> (\<lambda> x. iterate i\<cdot>(F x)\<cdot>(cs^\<bottom>))"
+
+abbreviation sbfun_io_eq :: "('m SB \<rightarrow> 'm SB)  \<Rightarrow> channel set \<Rightarrow> bool" where
+"sbfun_io_eq f cs \<equiv> sbDom\<cdot>(f\<cdot>(cs^\<bottom>)) = cs"
+
+
+subsection \<open>composition\<close>
+
 (* redefined composition channel sets *)
-definition I :: "'m SPF \<Rightarrow> 'm SPF \<Rightarrow> channel set" where
-"I f1 f2 \<equiv> (spfDom\<cdot>f1 \<union> spfDom\<cdot>f2) - (spfRan\<cdot>f1 \<union> spfRan\<cdot>f2)"
+definition spfCompI :: "'m SPF \<Rightarrow> 'm SPF \<Rightarrow> channel set" where
+"spfCompI f1 f2 \<equiv> (spfDom\<cdot>f1 \<union> spfDom\<cdot>f2) - (spfRan\<cdot>f1 \<union> spfRan\<cdot>f2)"
 
-definition Oc :: "'m SPF \<Rightarrow> 'm SPF \<Rightarrow> channel set" where
-"Oc f1 f2 \<equiv> (spfRan\<cdot>f1 \<union> spfRan\<cdot>f2)"   (* old: (spfRan\<cdot>f1 \<union> spfRan\<cdot>f2) - (spfDom\<cdot>f1 \<union> spfDom\<cdot>f2)"*)
+definition spfCompOc :: "'m SPF \<Rightarrow> 'm SPF \<Rightarrow> channel set" where
+"spfCompOc f1 f2 \<equiv> (spfRan\<cdot>f1 \<union> spfRan\<cdot>f2)"
 
-definition L :: "'m SPF \<Rightarrow> 'm SPF \<Rightarrow> channel set" where
-"L f1 f2 \<equiv> (spfDom\<cdot>f1 \<union> spfDom\<cdot>f2) \<inter> (spfRan\<cdot>f1 \<union> spfRan\<cdot>f2)"
+definition spfCompL :: "'m SPF \<Rightarrow> 'm SPF \<Rightarrow> channel set" where
+"spfCompL f1 f2 \<equiv> (spfDom\<cdot>f1 \<union> spfDom\<cdot>f2) \<inter> (spfRan\<cdot>f1 \<union> spfRan\<cdot>f2)"
 
-definition C :: "'m SPF \<Rightarrow> 'm SPF \<Rightarrow> channel set" where
-"C f1 f2 \<equiv> spfDom\<cdot>f1 \<union> spfDom\<cdot>f2 \<union> spfRan\<cdot>f1 \<union> spfRan\<cdot>f2"
+definition spfCompC :: "'m SPF \<Rightarrow> 'm SPF \<Rightarrow> channel set" where
+"spfCompC f1 f2 \<equiv> spfDom\<cdot>f1 \<union> spfDom\<cdot>f2 \<union> spfRan\<cdot>f1 \<union> spfRan\<cdot>f2"
+
+(* newer spfcopmp definition: input is not iterated *)
+definition spfCompH :: "'m SPF \<Rightarrow> 'm SPF \<Rightarrow> 'm SB \<Rightarrow> 'm SB  \<rightarrow> 'm SB" where
+"spfCompH f1 f2 x \<equiv> (\<Lambda> z. (f1\<rightleftharpoons>((x \<uplus> z)  \<bar> spfDom\<cdot>f1)) \<uplus>  (f2\<rightleftharpoons>((x \<uplus> z)  \<bar> spfDom\<cdot>f2)))"
+
+abbreviation iter_spfCompH :: "'a SPF \<Rightarrow> 'a SPF \<Rightarrow> nat \<Rightarrow> 'a SB  \<Rightarrow> 'a SB" where
+"(iter_spfCompH f1 f2 i) \<equiv> (\<lambda> x. iterate i\<cdot>(spfCompH f1 f2 x)\<cdot>((spfRan\<cdot>f1 \<union> spfRan\<cdot>f2)^\<bottom>))" 
+
+
+text {* The general composition operator for TSPFs, 
+        \textbf{NOTE:} does not always deliver an TSPF *}
+definition spfComp :: "'m SPF \<Rightarrow> 'm SPF \<Rightarrow> 'm SPF" (infixl "\<otimes>" 40) where
+"spfComp f1 f2 \<equiv>
+let I = spfCompI f1 f2;
+    Oc = (spfRan\<cdot>f1 \<union> spfRan\<cdot>f2)
+in Abs_CSPF (\<lambda> x. (sbDom\<cdot>x = I) \<leadsto> sbFix (spfCompH f1 f2 x) Oc)"
 
 definition spfComp_well:: "'m SPF \<Rightarrow> 'm SPF \<Rightarrow> bool" where
 "spfComp_well f1 f2 \<equiv> spfRan\<cdot>f1 \<inter> spfRan\<cdot>f2 = {}"
-
+(*
 definition no_selfloops:: "'m SPF \<Rightarrow> 'm SPF \<Rightarrow> bool" where
 "no_selfloops f1 f2 \<equiv> spfDom\<cdot>f1 \<inter> spfRan\<cdot>f1 = {}
                     \<and> spfDom\<cdot>f2 \<inter> spfRan\<cdot>f2 = {}"
-
+*)
 (* set of feedback channels *) (* TODO: rename *)
-definition pL :: "'m SPF \<Rightarrow> 'm SPF \<Rightarrow> channel set" where
-"pL f1 f2 \<equiv> (spfDom\<cdot>f1 \<inter> spfRan\<cdot>f1) \<union> (spfDom\<cdot>f1 \<inter> spfRan\<cdot>f2) \<union> (spfDom\<cdot>f2 \<inter> spfRan\<cdot>f2)"
 
-(* This should be integrated in the spfcomp definition *)
+ (* LEGACY *)
+definition pL :: "'m SPF \<Rightarrow> 'm SPF \<Rightarrow> channel set" where
+"pL f1 f2 \<equiv> (spfDom\<cdot>f1 \<inter> spfRan\<cdot>f1) \<union> (spfDom\<cdot>f2 \<inter> spfRan\<cdot>f1)
+                      \<union> (spfDom\<cdot>f1 \<inter> spfRan\<cdot>f2) \<union> (spfDom\<cdot>f2 \<inter> spfRan\<cdot>f2)"
+
+
+(* This should be integrated in the spfcompOld definition *)
 definition spfCompHelp2 :: "'m SPF \<Rightarrow> 'm SPF \<Rightarrow> 'm SB \<Rightarrow> 'm SB  \<rightarrow> 'm SB" where
 "spfCompHelp2 f1 f2 x \<equiv> (\<Lambda> z. x \<uplus> ((Rep_CSPF f1)\<rightharpoonup>(z \<bar> spfDom\<cdot>f1)) 
                                  \<uplus> ((Rep_CSPF f2)\<rightharpoonup>(z \<bar> spfDom\<cdot>f2)))"
 
-definition spfcomp :: "'m SPF \<Rightarrow> 'm SPF \<Rightarrow> 'm SPF"  (infixl "\<otimes>" 40) where
-"spfcomp f1 f2 \<equiv> 
+definition spfcompOld :: "'m SPF \<Rightarrow> 'm SPF \<Rightarrow> 'm SPF"  (infixl "\<otimes>" 40) where
+"spfcompOld f1 f2 \<equiv> 
 let I1 = spfDom\<cdot>f1;
     I2 = spfDom\<cdot>f2;
     O1 = spfRan\<cdot>f1; 
     O2 = spfRan\<cdot>f2; 
-    I  = I f1 f2;
-    Oc = Oc f1 f2;
-    C  = C f1 f2   
+    I  = spfCompI f1 f2;
+    Oc = spfCompOc f1 f2;
+    C  = spfCompC f1 f2   
 in Abs_CSPF (\<lambda> x. (sbDom\<cdot>x = I) \<leadsto> (\<Squnion>i. iterate i\<cdot>
    (\<Lambda> z. x \<uplus> (f1\<rightleftharpoons>(z \<bar> I1)) \<uplus> (f2\<rightleftharpoons>(z \<bar> I2)))\<cdot>(sbLeast C)) \<bar> Oc)"
 
 (* SWS: rename to spfComp *) 
 (* and by the way, the composition function itself should be cont, right? *) 
-definition spfcomp2 :: "'m SPF \<Rightarrow> 'm SPF \<Rightarrow> 'm SPF" where
-"spfcomp2 f1 f2 \<equiv> 
+definition spfcompOldOld2 :: "'m SPF \<Rightarrow> 'm SPF \<Rightarrow> 'm SPF" where
+"spfcompOldOld2 f1 f2 \<equiv> 
 let I1 = spfDom\<cdot>f1;
     I2 = spfDom\<cdot>f2;
-    I  = I f1 f2; (* SWS: Replace this directly with the definition ? *)
+    I  = spfCompI f1 f2; (* SWS: Replace this directly with the definition ? *)
     C  = (spfRan\<cdot>f1 \<union> spfRan\<cdot>f2)  (* SWS: Why name it C? O (or Out) would be a better name *)
 in Abs_CSPF (\<lambda> x. (sbDom\<cdot>x = I) \<leadsto> (\<Squnion>i. iterate i\<cdot>
    (\<Lambda> z. (f1\<rightleftharpoons>((x \<uplus> z) \<bar> I1)) \<uplus> (f2\<rightleftharpoons>((x \<uplus> z) \<bar> I2)))\<cdot>(C^\<bottom>)))"
 
 
-(* this function is not cont, because for 'strange' functions it is not cont *)
-(* strange = the domain changes from input to output *)
-definition sbFix :: "('m SB \<rightarrow> 'm SB) \<Rightarrow> channel set \<Rightarrow> 'm SB" where
-"sbFix F cs \<equiv>  (\<Squnion>i. iterate i\<cdot>F\<cdot>(cs^\<bottom>))"
 
+(*
 (* Another spfComp definition ... Yaaayy :D *)
-definition spfComp3 :: "'m SPF \<Rightarrow> 'm SPF \<Rightarrow> 'm SPF" where
-"spfComp3 f1 f2 \<equiv> 
+definition spfCompOld3 :: "'m SPF \<Rightarrow> 'm SPF \<Rightarrow> 'm SPF" where
+"spfCompOld3 f1 f2 \<equiv> 
 let I1 = spfDom\<cdot>f1;
     I2 = spfDom\<cdot>f2;
-    I  = I f1 f2; (* SWS: Replace this directly with the definition ? *)
+    I  = spfCompI f1 f2; (* SWS: Replace this directly with the definition ? *)
     C  = (spfRan\<cdot>f1 \<union> spfRan\<cdot>f2)   (* SWS: Why name it C? O (or Out) would be a better name *)
 in Abs_CSPF (\<lambda> x. (sbDom\<cdot>x = I) \<leadsto> sbFix (\<Lambda> z. (f1\<rightleftharpoons>((x \<uplus> z) \<bar> I1)) \<uplus> (f2\<rightleftharpoons>((x \<uplus> z) \<bar> I2))) C)"
 
+*)
 
 text {* "spflift" takes a "simple stream processing function" and two channel names where the streams flow, and lifts it to a stream bundle processing function.*}
 definition spfLift :: "('m stream \<rightarrow> 'm stream) => channel => channel => 'm SPF" where
@@ -589,61 +626,67 @@ lemma "chain Y \<Longrightarrow> (\<Squnion>i. g\<cdot>(Y i)) = (g\<cdot>(\<Squn
   subsubsection \<open>ChannelSets\<close>
 (* ----------------------------------------------------------------------- *)    
  
- (* subsets *)
-lemma spfcomp_I_subset_C [simp]: "(I f1 f2) \<subseteq> (C f1 f2)"
-  using I_def C_def by blast
+text{* Input channels are a subset of all channels *}
+lemma spfcomp_I_subset_C [simp]: "(spfCompI f1 f2) \<subseteq> (spfCompC f1 f2)"
+  using spfCompI_def spfCompC_def by blast
 
-lemma spfcomp_L_subset_C [simp]: "(L f1 f2) \<subseteq> (C f1 f2)"
-  using L_def C_def by blast
+text{* Internal channels are a subset of all channels *}
+lemma spfcomp_L_subset_C [simp]: "(spfCompL f1 f2) \<subseteq> (spfCompC f1 f2)"
+  using spfCompL_def spfCompC_def by blast
+ 
+(* LEGACY
+text{* pL channels are a subset of internal channels *}
+lemma spfcomp_pl_subset_L [simp]: "(pL f1 f2) = (spfCompL f1 f2)"
+  using pL_def spfCompL_def apply simp
+
+text{* pL channels are a subset of all channels *}    
+lemma spfcomp_pL_subset_C [simp]: "(pL f1 f2) \<subseteq> (spfCompC f1 f2)"
+  using pL_def spfCompC_def by blast
+*)
+
+text{* Output channels are a subset of all channels *}
+lemma spfcomp_Oc_subset_C [simp]: "(spfCompOc f1 f2) \<subseteq> (spfCompC f1 f2)"
+  using spfCompOc_def spfCompC_def by blast
+
+text{* Internal channels are a subset of output channels *}
+lemma spfcomp_L_subset_Oc [simp]: "(spfCompL f1 f2) \<subseteq> (spfCompOc f1 f2)"
+  using spfCompL_def spfCompOc_def by blast
+
+text{* Input channels and Internal channels do not intersect *}
+lemma spfcomp_I_inter_L_empty [simp]: "(spfCompI f1 f2) \<inter> (spfCompL f1 f2) = {}"
+  using spfCompI_def spfCompL_def by blast
+
+text{* Input channels and Output channels do not intersect *}
+lemma spfcomp_I_inter_Oc_empty [simp]: "(spfCompI f1 f2) \<inter> (spfCompOc f1 f2) = {}"
+  using spfCompI_def spfCompOc_def by blast
     
-lemma spfcomp_pl_subset_L [simp]: "(pL f1 f2)  \<subseteq>  (L f1 f2)"
-  using pL_def L_def by blast
-    
-lemma spfcomp_pL_subset_C [simp]: "(pL f1 f2) \<subseteq> (C f1 f2)"
-  using pL_def C_def by blast
-
-lemma spfcomp_Oc_subset_C [simp]: "(Oc f1 f2) \<subseteq> (C f1 f2)"
-  using Oc_def C_def by blast
-
-lemma spfcomp_L_subset_Oc [simp]: "(L f1 f2) \<subseteq> (Oc f1 f2)"
-  using L_def Oc_def by blast
-
-lemma spfcomp_I_inter_L_empty [simp]: "(I f1 f2) \<inter> (L f1 f2) = {}"
-  using I_def L_def by blast
-
-lemma spfcomp_I_inter_Oc_empty [simp]: "(I f1 f2) \<inter> (Oc f1 f2) = {}"
-  using I_def Oc_def by blast
-    
 
     
- (* commutativness *)
-lemma spfcomp_I_commu: "(I f1 f2) = (I f2 f1)"
-  using I_def by blast
+subsubsection \<open>commutativness\<close> 
+  
+text{* Input channels are commutative *}
+lemma spfcomp_I_commu: "(spfCompI f1 f2) = (spfCompI f2 f1)"
+  using spfCompI_def by blast
 
-lemma spfcomp_L_commu: "(L f1 f2) = (L f2 f1)"
-  using L_def by blast
+text{* Internal channels are commutative *}
+lemma spfcomp_L_commu: "(spfCompL f1 f2) = (spfCompL f2 f1)"
+  using spfCompL_def by blast
 
-lemma spfcomp_Oc_commu: "(Oc f1 f2) = (Oc f2 f1)"
-  using Oc_def by blast
+text{* Output channels are commutative *}
+lemma spfcomp_Oc_commu: "(spfCompOc f1 f2) = (spfCompOc f2 f1)"
+  using spfCompOc_def by blast
 
-lemma spfcomp_C_commu: "(C f1 f2) = (C f2 f1)"
-  using C_def by blast
+text{* All channels are commutative *}
+lemma spfcomp_C_commu: "(spfCompC f1 f2) = (spfCompC f2 f1)"
+  using spfCompC_def by blast
     
-(* legacy *)
-lemma spfI_sub_C[simp]: "I f1 f2 \<subseteq> C f1 f2"
+(* LEGACY *)
+lemma spfI_sub_C[simp]: "spfCompI f1 f2 \<subseteq> spfCompC f1 f2"
   by simp
 
-lemma spfOc_sub_C[simp]: "Oc f1 f2 \<subseteq> C f1 f2"
+lemma spfOc_sub_C[simp]: "spfCompOc f1 f2 \<subseteq> spfCompC f1 f2"
   by simp
 
-lemma Oc_commu: "Oc f1 f2 = Oc f2 f1"
-  by (simp add: spfcomp_Oc_commu)
-    
-lemma I_commu: "I f1 f2 = I f2 f1"
-  using spfcomp_I_commu by blast
-    
-lemma C_commu: "C f1 f2 = C f2 f1"
-  by (simp add: spfcomp_C_commu)
 
 
   subsubsection \<open>Serial_Composition\<close>
@@ -652,11 +695,6 @@ lemma C_commu: "C f1 f2 = C f2 f1"
 (* TODO: improve this, needed since sledgi does not work effective without this *)
 lemma num3_eq[simp] : " 3 = (Suc(Suc(Suc 0)))"
   using numeral_3_eq_3 by blast
-
-
-
-lemma spfpl_sub_L[simp]: "pL f1 f2 \<subseteq> L f1 f2"
-  by (simp add: L_def pL_def subset_iff)
 
 
 (* lub equalities *)

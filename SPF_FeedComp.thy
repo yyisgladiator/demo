@@ -15,12 +15,12 @@ section \<open>general-lemmas\<close>
 (* ----------------------------------------------------------------------- *)
 
 
-lemma iter_spfcomph3_suc_insert: "iter_spfCompH3 f1 f2 (Suc i) sb
-                        = ((f1 \<rightleftharpoons>((sb \<uplus> (iter_spfCompH3 f1 f2 i sb))  \<bar> spfDom\<cdot>f1))
-                            \<uplus> (f2 \<rightleftharpoons>((sb \<uplus> (iter_spfCompH3 f1 f2 (i) sb))  \<bar> spfDom\<cdot>f2)))"
-  apply (unfold iterate_Suc, subst spfCompH3_def)
+lemma iter_spfcompOldh3_suc_insert: "iter_spfCompH f1 f2 (Suc i) sb
+                        = ((f1 \<rightleftharpoons>((sb \<uplus> (iter_spfCompH f1 f2 i sb))  \<bar> spfDom\<cdot>f1))
+                            \<uplus> (f2 \<rightleftharpoons>((sb \<uplus> (iter_spfCompH f1 f2 (i) sb))  \<bar> spfDom\<cdot>f2)))"
+  apply (unfold iterate_Suc, subst spfCompH_def)
   apply (subst Abs_cfun_inverse2)
-   apply (simp only: spfCompH3_cont)
+   apply (simp only: spfCompH_cont)
    by simp
 
 lemma nat_sb_repackage: assumes "ch \<in> sbDom\<cdot>sb"
@@ -528,7 +528,7 @@ lemma spf_feed_SPF_eq:  fixes f1 :: "nat stream \<rightarrow> nat stream  \<righ
                         assumes "sbDom\<cdot>sb = {ch1}" and "ch1 \<noteq> ch2" and "ch1 \<noteq> ch3" and "ch2 \<noteq> ch3"
                         and "\<forall>sb . f1\<cdot>(sb . ch1)\<cdot>\<epsilon> = \<epsilon>"
                         and "spf1 = SPF2x1 f1 (ch1,ch2,ch3)" and "spf2 = SPF1x1 f2 (ch3,ch2)"
-  shows "(iter_spfCompH3 spf1 spf2 i) sb = spf_feed_sb_inout3_iter f1 f2 ch1 ch2 ch3 sb i"
+  shows "(iter_spfCompH spf1 spf2 i) sb = spf_feed_sb_inout3_iter f1 f2 ch1 ch2 ch3 sb i"
 proof (induction i)
   case 0
   then show ?case
@@ -541,11 +541,11 @@ next
   have spf1x1revapp: "\<And> f s.([ch2 \<mapsto> f\<cdot>(s:: nat stream)]\<Omega>)
                             = (SPF1x1 f (ch3, ch2)) \<rightleftharpoons> ([ch3 \<mapsto> s]\<Omega>)"
     by (simp add: SPF1x1_apply assms)
-  hence "iter_sbfix (spfCompH3 spf1 spf2) i (spfRan\<cdot>spf1 \<union> spfRan\<cdot>spf2) sb
+  hence "iter_sbfix (spfCompH spf1 spf2) i (spfRan\<cdot>spf1 \<union> spfRan\<cdot>spf2) sb
                                                   = spf_feed_sb_inout3_iter f1 f2 ch1 ch2 ch3 sb i"
     using Suc.IH by blast
   then show ?case
-    apply (subst spf_feed_sb_inout3_iter_suc_insert, subst iter_spfcomph3_suc_insert)
+    apply (subst spf_feed_sb_inout3_iter_suc_insert, subst iter_spfcompOldh3_suc_insert)
     apply(rule sbunion_eqI)
 
      (* spf1 component *)
@@ -575,7 +575,7 @@ lemma gen_fix_iter_spfComp_eq:  fixes f1 :: "nat stream \<rightarrow> nat stream
                                 and "\<forall>sb . f1\<cdot>(sb . ch1)\<cdot>\<epsilon> = \<epsilon>"
                                 and "spf1 = SPF2x1 f1 (ch1,ch2,ch3)"
                                 and "spf2 = SPF1x1 f2 (ch3,ch2)"
-  shows "(gen_fix f1 f2)\<cdot>s = (\<Squnion>i. (iter_spfCompH3 spf1 spf2 i) sb) .ch3"
+  shows "(gen_fix f1 f2)\<cdot>s = (\<Squnion>i. (iter_spfCompH spf1 spf2 i) sb) .ch3"
 proof -
   have f1: "(gen_fix f1 f2)\<cdot>s = (\<lambda> x. (\<Squnion>i. spf_feed_sb_inout3_iter f1 f2 ch1 ch2 ch3 x i)) sb . ch3"
     by (rule spf_feed_sb_in_out_eq, simp_all add: assms)
