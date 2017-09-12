@@ -112,7 +112,7 @@ lemma data_data_inv [simp]: "(inv Data) (Data x) = x"
 
 subsection \<open>receiver\<close>
 
-subsection \<open>defs\<close>  
+subsubsection \<open>defs\<close>  
   
       (* helper functions to prove cont *)
 definition recvCH1 :: "'a MABP TSB \<Rightarrow> 'a MABP tstream"  where
@@ -141,15 +141,8 @@ lemma to_recvch2: "tsMap Data\<cdot>(snd (tsRec\<cdot>((tsMap invBoolPair)\<cdot
   by (simp add: recvCH2_def)
   
    
-
-
-lemma fixes Y :: "nat \<Rightarrow> 'a MABP TSB" assumes "chain Y" and "tsbDom\<cdot>(\<Squnion>i::nat. Y i) = {dr}"
-  shows "(tsMap::(bool \<Rightarrow> 'a MABP) \<Rightarrow> bool tstream \<rightarrow> 'a MABP tstream) 
-          Bool\<cdot>(fst ((tsRec)\<cdot>(tsMap invBoolPair\<cdot>((\<Squnion>i. Y i)  .  dr)))) \<sqsubseteq> 
-          (\<Squnion>i::nat. tsMap Bool\<cdot>(fst ((tsRec)\<cdot>(tsMap invBoolPair\<cdot>(Y i  .  dr)))))"
-  by (metis (mono_tags, lifting) assms(1) assms(2) recvCH1_contlub lub_eq po_eq_conv recvCH1_def)
+ 
     
-
     
 lemma recv_tsb_well [simp]:
   shows "tsb_well [ar \<mapsto> tsMap Bool\<cdot>(fst (tsRec\<cdot>((tsMap invBoolPair)\<cdot>(x . dr)))),
@@ -163,7 +156,9 @@ lemma recv_tsb_dom: "tsbDom\<cdot>([ar \<mapsto> tsMap Bool\<cdot>(fst (tsRec\<c
                      = {ar, abpOut}"
   apply (simp add: tsbdom_rep_eq)
     by auto
- 
+
+subsubsection \<open>cont\<close>       
+      
 lemma rec_tsb_mono: "\<And>(x::'a MABP TSB) y::'a MABP TSB. tsbDom\<cdot>x = {dr} \<Longrightarrow> x \<sqsubseteq> y \<Longrightarrow> 
           [ar \<mapsto> tsMap Bool\<cdot>(fst (tsRec\<cdot>(tsMap invBoolPair\<cdot>(x  .  dr)))), 
           abpOut \<mapsto> tsMap Data\<cdot>(snd (tsRec\<cdot>(tsMap invBoolPair\<cdot>(x  .  dr))))]\<Omega> 
@@ -205,8 +200,8 @@ qed
    
      
 
-  
-lemma recvTSPF_cont: 
+  (* show that recTSPF is cont, proof concept taken from TSPF_Template_CaseStudy *)
+lemma recvTSPF_cont [simp]: 
   shows "cont (\<lambda> x. (tsbDom\<cdot>x = {dr}) \<leadsto> 
                       [ar \<mapsto> (tsMap::(bool \<Rightarrow> 'a MABP) \<Rightarrow> bool tstream \<rightarrow> 'a MABP tstream) 
                             Bool\<cdot>(fst ((tsRec::('a * bool) tstream \<rightarrow> (bool tstream \<times> 'a tstream))\<cdot>
@@ -214,7 +209,6 @@ lemma recvTSPF_cont:
                        abpOut \<mapsto> (tsMap::('a \<Rightarrow> 'a MABP) \<Rightarrow> 'a tstream \<rightarrow> 'a MABP tstream) 
                             Data\<cdot>(snd (tsRec\<cdot>((tsMap invBoolPair)\<cdot>(x . dr))))]\<Omega>)"
   proof (rule tspf_contI)
-  
     show recv_mono: "\<And>(x::'a MABP TSB) y::'a MABP TSB. tsbDom\<cdot>x = {dr} \<Longrightarrow> x \<sqsubseteq> y \<Longrightarrow> 
           [ar \<mapsto> tsMap Bool\<cdot>(fst (tsRec\<cdot>(tsMap invBoolPair\<cdot>(x  .  dr)))), 
           abpOut \<mapsto> tsMap Data\<cdot>(snd (tsRec\<cdot>(tsMap invBoolPair\<cdot>(x  .  dr))))]\<Omega> 
@@ -280,9 +274,41 @@ lemma recvTSPF_cont:
   qed
     
         
-        
-       
+  subsubsection \<open>tspf_well\<close>        
     
+ (* show that the recvTSPF fulfills the tickcount property *)
+lemma recvTSPF_tick: assumes "tsbDom\<cdot>b = {dr}" and "(#\<surd>tsb b) = n"
+  shows "n \<le> (#\<surd>tsb ([ar \<mapsto> tsMap Bool\<cdot>(fst (tsRec\<cdot>(tsMap invBoolPair\<cdot>(b  .  dr)))), 
+                       abpOut \<mapsto> tsMap Data\<cdot>(snd (tsRec\<cdot>(tsMap invBoolPair\<cdot>(b  .  dr))))]\<Omega>))" 
+proof -
+  have "(#\<surd>tsb b) = #\<surd>(b . dr)"
+    apply (rule tsbtick_single_ch2)
+     by (simp add: assms(1))
+  hence f1: "n = #\<surd>(b . dr)"
+     using assms(2) by blast
+  hence f2: "n \<le> #\<surd>(tsMap Bool\<cdot>(fst (tsRec\<cdot>(tsMap invBoolPair\<cdot>(b  .  dr)))))"
+    by (simp add: tsrec_insert)
+  with f1 have f3: "n \<le> #\<surd>(tsMap Data\<cdot>(snd (tsRec\<cdot>(tsMap invBoolPair\<cdot>(b  .  dr)))))"
+    by (simp add: tsrec_insert)
+  show ?thesis
+    apply (rule tsbtick_geI)
+      apply (simp_all add: recv_tsb_dom)
+      apply (simp add: tsbgetch_rep_eq)
+      using f2 f3 by auto
+qed
+  
+      
+  (* recvTSPF is an actual TSPF *)
+lemma recvTSPF_well: 
+  shows "tspf_well (\<Lambda> x. (tsbDom\<cdot>x = {dr}) \<leadsto> 
+                      [ar \<mapsto> (tsMap::(bool \<Rightarrow> 'a MABP) \<Rightarrow> bool tstream \<rightarrow> 'a MABP tstream) 
+                            Bool\<cdot>(fst ((tsRec::('a * bool) tstream \<rightarrow> (bool tstream \<times> 'a tstream))\<cdot>
+                            ((tsMap invBoolPair)\<cdot>(x . dr)))),
+                       abpOut \<mapsto> (tsMap::('a \<Rightarrow> 'a MABP) \<Rightarrow> 'a tstream \<rightarrow> 'a MABP tstream) 
+                            Data\<cdot>(snd (tsRec\<cdot>((tsMap invBoolPair)\<cdot>(x . dr))))]\<Omega>)"    
+  apply (rule tspf_wellI)
+    apply (simp_all add: domIff2 recv_tsb_dom)
+    by (simp add: recvTSPF_tick)
     
     
     

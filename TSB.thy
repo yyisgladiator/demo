@@ -1573,8 +1573,13 @@ proof -
     apply (subst (1 2) tsbttake2ttakeI, simp_all)
       using assms(1) tsbdom_below apply blast
       using f1 f2 tstake_less_below by blast
-qed    
+  qed 
+    
+lemma tsbtick_geI: assumes "\<forall> c \<in> tsbDom\<cdot>tb. n \<le> #\<surd>(tb . c)"
+  shows "n \<le> #\<surd>tsb tb"
+  by (metis (no_types, lifting) assms inf_ub tsbtick_insert tsbtick_min_on_channel)
 
+    
 lemma tsbtick_le: assumes "tsbDom\<cdot>tb1 \<noteq> {}" and "((#\<surd>tsb tb1)) \<le> (#\<surd>tsb tb2)"
 shows "\<exists> c1 \<in> tsbDom\<cdot>tb1. \<forall> c2 \<in> tsbDom\<cdot>tb2. (#\<surd>(tb1 . c1)) \<le> (#\<surd>(tb2 . c2))"
   by (smt assms(1) assms(2) dual_order.trans equals0D lnle_def tsbtick_insert tsbtick_least 
