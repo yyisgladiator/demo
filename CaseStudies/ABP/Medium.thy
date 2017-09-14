@@ -23,9 +23,8 @@ definition tsMed :: "'a tstream \<rightarrow> bool stream \<rightarrow> 'a tstre
 definition sMed :: "'a stream \<rightarrow> bool stream \<rightarrow> 'a stream" where
 "sMed \<equiv> \<Lambda> msg ora. sprojfst\<cdot>(sfilter {x. snd x}\<cdot>(szip\<cdot>msg\<cdot>ora))"
 
-definition tsMeds :: "('a tstream \<rightarrow> 'a tstream) set" where
-"tsMeds \<equiv> { (\<Lambda> ts. delay (tsMed\<cdot>ts\<cdot>ora)) | ora. #({True} \<ominus> ora)=\<infinity> }"
-
+definition tsMedium :: "('a tstream \<rightarrow> 'a tstream) set" where
+"tsMedium \<equiv> { (\<Lambda> ts. delay (tsMed\<cdot>ts\<cdot>ora)) | ora. #({True} \<ominus> ora) = \<infinity> }"
 
 (* ----------------------------------------------------------------------- *)
 section {* basic properties *}
@@ -77,7 +76,7 @@ lemma tsmed_nbot [simp]: "msg\<noteq>\<bottom> \<Longrightarrow> #ora=\<infinity
  by (simp add: tsmed_insert)
 
 text {* If infinite ticks will be sent infinite ticks will be transmitted. *}
-lemma tsmed_tstickcount [simp]: "#ora=\<infinity> \<Longrightarrow> #\<surd>(tsMed\<cdot>msg\<cdot>ora) = #\<surd>msg"
+lemma tsmed_tstickcount [simp]: "#ora = \<infinity> \<Longrightarrow> #\<surd>(tsMed\<cdot>msg\<cdot>ora) = #\<surd>msg"
   by (simp add: tsmed_insert)
 
 text {* If just infinite ticks will be sent just infinite ticks will be transmitted. *}
@@ -170,10 +169,9 @@ next
   then show ?case using h1 h2 by blast
 qed
 
-lemma tsmed_tsabs_slen_inf [simp]: 
-  assumes " #({True} \<ominus> ora) = \<infinity>"
-      and "#(tsAbs\<cdot>msg)=\<infinity>"
-  shows "#(tsAbs\<cdot>(tsMed\<cdot>msg\<cdot>ora)) = #({True} \<ominus> ora)"
+lemma tsmed_tsabs_slen_inf [simp]:
+  assumes "#({True} \<ominus> ora) = \<infinity>" and "#(tsAbs\<cdot>msg) = \<infinity>"
+  shows "#(tsAbs\<cdot>(tsMed\<cdot>msg\<cdot>ora)) = \<infinity>"
   by (metis assms(1) assms(2) sfilterl4 smed_slen_inf tsmed_tsabs)
 
 lemma tsmed_tsdom: "#ora=\<infinity> \<Longrightarrow> tsDom\<cdot>(tsMed\<cdot>msg\<cdot>ora) \<subseteq> tsDom\<cdot>msg"
@@ -606,23 +604,23 @@ qed
 section {* tsMedium lemmata *}
 (* ----------------------------------------------------------------------- *)  
   
-section {* tsMeds lemma *}
+section {* tsMedium lemma *}
 lemma tsmed_helper: "#({a} \<ominus> (\<up>a \<infinity>)) = \<infinity>"
   by simp
     
-lemma tsmeds_exists: "(\<Lambda> ts. delay (tsMed\<cdot>ts\<cdot>(\<up>True \<infinity>))) \<in> tsMeds"
-  apply(subst tsMeds_def)
+lemma tsmeds_exists: "(\<Lambda> ts. delay (tsMed\<cdot>ts\<cdot>(\<up>True \<infinity>))) \<in> tsMedium"
+  apply(subst tsMedium_def)
     using tsmed_helper by blast
   
     
-lemma tsmeds_nempty [simp]: "tsMeds \<noteq> {}"
+lemma tsmeds_nempty [simp]: "tsMedium \<noteq> {}"
   by (metis empty_iff tsmeds_exists)
     
-lemma tsmeds_len [simp]: assumes "med\<in>tsMeds"
+lemma tsmeds_len [simp]: assumes "med\<in>tsMedium"
   shows "#\<surd>med\<cdot>msg = lnsuc\<cdot>(#\<surd>msg)"
 proof -
   obtain ora where med_def: "med = (\<Lambda> ts. delay (tsMed\<cdot>ts\<cdot>ora))" and "#({True} \<ominus> ora)=\<infinity>"
-    using assms tsMeds_def by auto
+    using assms tsMedium_def by auto
   have "#\<surd>(tsMed\<cdot>msg\<cdot>ora) = #\<surd> msg"
     using \<open>#({True} \<ominus> ora) = \<infinity>\<close> sfilterl4 tsmed_tstickcount by blast
   hence "#\<surd>(delay (tsMed\<cdot>msg\<cdot>ora)) = lnsuc\<cdot>(#\<surd>msg)"
