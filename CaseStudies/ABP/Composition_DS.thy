@@ -97,9 +97,11 @@ lemma lnle2le: "m < lnsuc\<cdot>n \<Longrightarrow> m \<le> n"
 lemma le2lnle: "m < \<infinity> \<Longrightarrow> lnsuc\<cdot>m \<le> n \<Longrightarrow> m < n"
   by (metis dual_order.strict_iff_order dual_order.trans leD ln_less)
 
-lemma hhh1: assumes "#(srcdups\<cdot>s)<\<infinity>" and "#s=\<infinity>"
-obtains n where "s = (stake n\<cdot>s) \<bullet> (\<up>(snth n s)\<infinity>)"
-sorry
+
+lemma hhh2: assumes "#(srcdups\<cdot>s) < \<infinity>" and "#s = \<infinity>"
+  obtains n where "s = (stake n\<cdot>s) \<bullet> (\<up>(snth n s)\<infinity>)"
+  sorry
+
 
 (* ----------------------------------------------------------------------- *)
 subsection {* complete composition *}
@@ -146,28 +148,33 @@ lemma tsaltbitpro_inp2out:
       proof (rule ccontr)
         assume a1: "#(srcdups\<cdot>(tsAbs\<cdot>as)) \<noteq> \<infinity>"
         assume a2: "\<not> #(srcdups\<cdot>(tsAbs\<cdot>ds)) \<le> #(srcdups\<cdot>(tsAbs\<cdot>as))"
-        hence "#(srcdups\<cdot>(tsAbs\<cdot>as)) \<le> #(srcdups\<cdot>(tsAbs\<cdot>ds))"
+        hence q1: "#(srcdups\<cdot>(tsAbs\<cdot>as)) \<le> #(srcdups\<cdot>(tsAbs\<cdot>ds))"
           by auto
-        hence hhh1: "#(srcdups\<cdot>(tsAbs\<cdot>as)) < #(tsAbs\<cdot>i)"
+        hence q2: "#(srcdups\<cdot>(tsAbs\<cdot>as)) < #(tsAbs\<cdot>i)"
           by (metis a2 ds_def dual_order.antisym leI leq local.h3 min.strict_order_iff send_def 
               set2tssnd_ack2trans tsprojfst_tsabs_slen tsremdups_tsabs)
-        hence "#(tsAbs\<cdot>ds) = \<infinity>"
+        hence q3: "#(tsAbs\<cdot>ds) = \<infinity>"
           by (simp add: ds_def send_def set2tssnd_nack2inftrans tsremdups_tsabs)
-        hence "#(tsAbs\<cdot>as) = \<infinity>"
-          using ar_def as_def dr_def ds_def p1_def p2_def by force 
-        have "#(srcdups\<cdot>(tsAbs\<cdot>ds)) \<noteq> \<infinity>"
-          by (metis a1 fold_inf hh1 leD lnat.sel_rews(2) local.h3 local.hhh1 slen_sprojfst 
-              tsprojfst_tsabs tsremdups_tsabs)
-        have "#(srcdups\<cdot>(tsAbs\<cdot>ds)) = lnsuc\<cdot>(#(srcdups\<cdot>(tsAbs\<cdot>as)))"
-          by (metis hh1 leD local.h3 local.hhh1 tsprojfst_tsabs_slen tsremdups_tsabs)
-        obtain n where "tsAbs\<cdot>ds = (stake n\<cdot>(tsAbs\<cdot>ds)) \<bullet> (\<up>(snth n (tsAbs\<cdot>ds))\<infinity>)"
-          using Composition_DS.hhh1 \<open>#(srcdups\<cdot>(tsAbs\<cdot>ds)) \<noteq> \<infinity>\<close> \<open>#(tsAbs\<cdot>ds) = \<infinity>\<close> inf_less_eq leI 
-          by blast
-        have "#(\<up>(snth n (tsAbs\<cdot>ds))\<infinity>) = \<infinity>"
-          by simp
+        hence q4: "#(tsAbs\<cdot>as) = \<infinity>"
+          using ar_def as_def dr_def ds_def p1_def p2_def by force
+
+        have q5: "#(srcdups\<cdot>(tsAbs\<cdot>ds)) \<noteq> \<infinity>"
+          by (metis a1 fold_inf hh1 inject_lnsuc leD h3 q2 tsprojfst_tsabs_slen 
+              tsremdups_tsabs)
+
+        have q6: "#(srcdups\<cdot>(tsAbs\<cdot>ds)) = lnsuc\<cdot>(#(srcdups\<cdot>(tsAbs\<cdot>as)))"
+          by (metis hh1 leD h3 q2 tsprojfst_tsabs_slen tsremdups_tsabs)
+
+        obtain n where q7: "tsAbs\<cdot>ds = (stake n\<cdot>(tsAbs\<cdot>ds)) \<bullet> (\<up>(snth n (tsAbs\<cdot>ds))\<infinity>)"
+          using hhh2 inf_less_eq leI q3 q5 by blast
+        obtain m where q8: "tsAbs\<cdot>as = (stake m\<cdot>(tsAbs\<cdot>as)) \<bullet> (\<up>(snth m (tsAbs\<cdot>as))\<infinity>)"
+          using a1 hhh2 inf_less_eq leI q4 by blast
+
+        have q9: "#(\<up>(snth n (tsAbs\<cdot>ds))\<infinity>) = \<infinity>"
+          by auto
         thus "False"
           sorry
-    qed  
+    qed
 
     hence geq: "#(tsAbs\<cdot>i) \<le> #(tsAbs\<cdot>(tsRemDups\<cdot>as))"
       by (metis ds_def dual_order.antisym h2 inf_ub min_rek send_def set2tssnd_ack2trans 
