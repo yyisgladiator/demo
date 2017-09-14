@@ -116,6 +116,11 @@ text {*
    p1/p2 = oracle stream
 *}
 
+lemma set2tssnd_axiom3: assumes "send \<in> tsSender"
+  shows "#(tsAbs\<cdot>(tsRemDups\<cdot>as)) \<noteq> \<infinity> \<and> #(tsAbs\<cdot>as) = \<infinity>
+  \<Longrightarrow> #(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(send\<cdot>i\<cdot>as)))) \<le> #(tsAbs\<cdot>(tsRemDups\<cdot>as))"
+  sorry
+
 lemma tsaltbitpro_inp2out:
   assumes send_def: "send \<in> tsSender"
     and p1_def: "#({True} \<ominus> p1) = \<infinity>"
@@ -142,7 +147,7 @@ lemma tsaltbitpro_inp2out:
     have h3: "#(tsAbs\<cdot>i) < lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>as)))
           \<or> #(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>ds))) = lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>as)))"
       by (metis ds_def le_less_linear min_absorb2 send_def set2tssnd_ack2trans)    
-
+(*
     have "#(tsAbs\<cdot>(tsRemDups\<cdot>as)) \<noteq> \<infinity> \<Longrightarrow> #(tsAbs\<cdot>(tsRemDups\<cdot>ds)) \<le> #(tsAbs\<cdot>(tsRemDups\<cdot>as))"
       apply (simp add: tsremdups_tsabs)
       proof (rule ccontr)
@@ -175,10 +180,10 @@ lemma tsaltbitpro_inp2out:
         thus "False"
           sorry
     qed
-
+*)
     hence geq: "#(tsAbs\<cdot>i) \<le> #(tsAbs\<cdot>(tsRemDups\<cdot>as))"
-      by (metis ds_def dual_order.antisym h2 inf_ub min_rek send_def set2tssnd_ack2trans 
-          tsprojfst_tsabs_slen)
+      by (metis antisym_conv ar_def as_def dr_def ds_def fold_inf h2 hh1 leI min_rek p1_def p2_def 
+          prop3 send_def set2tssnd_ack2trans set2tssnd_axiom3 set2tssnd_nack2inftrans)
     (* equalities *)
     have eq: "#(tsAbs\<cdot>i) = #(tsAbs\<cdot>(tsRemDups\<cdot>as))"
       by (simp add: dual_order.antisym geq leq)

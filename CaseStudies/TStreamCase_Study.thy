@@ -171,7 +171,7 @@ by (metis (no_types, lifting) Rep_Abs Suc_1 list2s_0 list2s_Suc list2s_inj lscon
 
 (* Constructed function on tstreams is monotone, continous, weak and strong causal *)
 definition tsf5_mcws :: "'a tstream \<Rightarrow> 'a tstream" where
-"tsf5_mcws ts = Abs_tstream (\<up>\<surd>) \<bullet> ts"
+"tsf5_mcws ts = Abs_tstream (\<up>\<surd>) \<bullet>\<surd> ts"
 
 lemma mono_tsf5_mcws: "monofun tsf5_mcws"
 by (simp add: monofun_def tsf5_mcws_def below_tstream_def tsconc_rep_eq monofun_cfun_arg)
@@ -957,7 +957,7 @@ lemma list2ts_onetick: "list2ts_alter[\<surd>]= Abs_tstream (updis \<surd> && \<
 lemma list2ts_onemsg[simp]:"a\<noteq>\<surd> \<Longrightarrow> list2ts_alter[a] =\<bottom> "
   by simp
 
-lemma list2ts_tickfirst:"list2ts_alter (\<surd>#as) =(Abs_tstream(<[\<surd>]>)) \<bullet> list2ts_alter as"
+lemma list2ts_tickfirst:"list2ts_alter (\<surd>#as) =(Abs_tstream(<[\<surd>]>)) \<bullet>\<surd> list2ts_alter as"
   apply (simp add: tslscons_insert)
   apply (simp add: espf2tspf_def)+
   apply (subst lscons_conv)+
@@ -1013,7 +1013,7 @@ lemma list2ts_unfold2:"a \<noteq> \<surd> \<Longrightarrow> list2ts_alter (a # b
   apply (simp add: espf2tspf_def)+
   by (simp add: lscons_conv)
 
-lemma list2ts_split:"list2ts_alter (a @ \<surd> # as) = (list2ts_alter (a @ [\<surd>])) \<bullet> (list2ts_alter as)"
+lemma list2ts_split:"list2ts_alter (a @ \<surd> # as) = (list2ts_alter (a @ [\<surd>])) \<bullet>\<surd> (list2ts_alter as)"
   apply (induction a, simp add: tslscons_insert)
   apply (simp add: espf2tspf_def)+
   apply (simp add: lscons_conv tsconc_insert)
