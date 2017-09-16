@@ -89,19 +89,9 @@ lemma prop3: assumes p1_def: "#({True} \<ominus> p1) = \<infinity>" and p2_def: 
   shows "#(tsAbs\<cdot>ts) = \<infinity> \<Longrightarrow> #(tsAbs\<cdot>(tsMed\<cdot>(tsProjSnd\<cdot>(tsMed\<cdot>ts\<cdot>p1))\<cdot>p2)) = \<infinity>"
   by (simp add: p1_def p2_def)
 
-(* lnat auxiliary lemmata *)
-lemma lnle2le: "m < lnsuc\<cdot>n \<Longrightarrow> m \<le> n"
-  apply (case_tac "m=\<infinity>", auto)
-  by (metis Fin_Suc less2lnleD lncases lnsuc_lnle_emb)
-
-lemma le2lnle: "m < \<infinity> \<Longrightarrow> lnsuc\<cdot>m \<le> n \<Longrightarrow> m < n"
-  by (metis dual_order.strict_iff_order dual_order.trans leD ln_less)
-
-
 lemma hhh2: assumes "#(srcdups\<cdot>s) < \<infinity>" and "#s = \<infinity>"
   obtains n where "s = (stake n\<cdot>s) \<bullet> (\<up>(snth n s)\<infinity>)"
   sorry
-
 
 (* ----------------------------------------------------------------------- *)
 subsection {* complete composition *}

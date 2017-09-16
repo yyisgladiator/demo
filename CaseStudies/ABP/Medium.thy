@@ -24,7 +24,7 @@ definition sMed :: "'a stream \<rightarrow> bool stream \<rightarrow> 'a stream"
 "sMed \<equiv> \<Lambda> msg ora. sprojfst\<cdot>(sfilter {x. snd x}\<cdot>(szip\<cdot>msg\<cdot>ora))"
 
 definition tsMedium :: "('a tstream \<rightarrow> 'a tstream) set" where
-"tsMedium \<equiv> { (\<Lambda> ts. delay (tsMed\<cdot>ts\<cdot>ora)) | ora. #({True} \<ominus> ora) = \<infinity> }"
+"tsMedium \<equiv> { (\<Lambda> ts. tsMed\<cdot>ts\<cdot>ora) | ora. #({True} \<ominus> ora) = \<infinity> }"
 
 (* ----------------------------------------------------------------------- *)
 section {* basic properties *}
@@ -603,29 +603,15 @@ qed
 (* ----------------------------------------------------------------------- *)
 section {* tsMedium lemmata *}
 (* ----------------------------------------------------------------------- *)  
-  
-section {* tsMedium lemma *}
-lemma tsmed_helper: "#({a} \<ominus> (\<up>a \<infinity>)) = \<infinity>"
+
+lemma ora_exists: "#({a} \<ominus> (\<up>a \<infinity>)) = \<infinity>"
   by simp
     
-lemma tsmeds_exists: "(\<Lambda> ts. delay (tsMed\<cdot>ts\<cdot>(\<up>True \<infinity>))) \<in> tsMedium"
-  apply(subst tsMedium_def)
-    using tsmed_helper by blast
-  
+lemma tsmed_exists: "(\<Lambda> ts. tsMed\<cdot>ts\<cdot>(\<up>True \<infinity>)) \<in> tsMedium"
+  apply (subst tsMedium_def)
+  using ora_exists by blast
     
-lemma tsmeds_nempty [simp]: "tsMedium \<noteq> {}"
-  by (metis empty_iff tsmeds_exists)
-    
-lemma tsmeds_len [simp]: assumes "med\<in>tsMedium"
-  shows "#\<surd>med\<cdot>msg = lnsuc\<cdot>(#\<surd>msg)"
-proof -
-  obtain ora where med_def: "med = (\<Lambda> ts. delay (tsMed\<cdot>ts\<cdot>ora))" and "#({True} \<ominus> ora)=\<infinity>"
-    using assms tsMedium_def by auto
-  have "#\<surd>(tsMed\<cdot>msg\<cdot>ora) = #\<surd> msg"
-    using \<open>#({True} \<ominus> ora) = \<infinity>\<close> sfilterl4 tsmed_tstickcount by blast
-  hence "#\<surd>(delay (tsMed\<cdot>msg\<cdot>ora)) = lnsuc\<cdot>(#\<surd>msg)"
-    by (metis delayFun_dropFirst delayfun_nbot tsdropfirst_len)
-  thus ?thesis by(simp add: med_def)
-qed
-  
+lemma tsmedium_nempty [simp]: "tsMedium \<noteq> {}"
+  by (metis empty_iff tsmed_exists)
+ 
 end

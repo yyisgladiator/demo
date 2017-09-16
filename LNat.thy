@@ -593,6 +593,13 @@ proof -
   thus ?thesis using \<open>Fin n = ln\<close> by auto 
 qed
 
+lemma lnle2le: "m < lnsuc\<cdot>n \<Longrightarrow> m \<le> n"
+  apply (case_tac "m=\<infinity>", auto)
+  by (metis Fin_Suc less2lnleD lncases lnsuc_lnle_emb)
+
+lemma le2lnle: "m < \<infinity> \<Longrightarrow> lnsuc\<cdot>m \<le> n \<Longrightarrow> m < n"
+  by (metis dual_order.strict_iff_order dual_order.trans leD ln_less)
+
 (*few lemmas to simp min*)
 text{*\<infinity> is greater than or equal to any lazy natural number*}
 lemma [simp]: fixes ln :: lnat
