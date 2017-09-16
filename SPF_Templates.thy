@@ -7,6 +7,9 @@
     automatically proves cont, spf_well, dom, range for your definition
 *)
 
+(* NOTE: This instantiation uses the old cont, mono prove technique, for a more 
+          modern/simplified approach use the spfContI and spfMonoI2 lemmata from SPF.thy *)
+
 theory SPF_Templates
   imports SPF SB
     
@@ -15,6 +18,20 @@ begin
 (* ----------------------------------------------------------------------- *)
 section \<open>Definitions\<close>
 (* ----------------------------------------------------------------------- *)
+  
+(* instatiate our message space*)
+instantiation nat :: message
+begin
+  definition ctype_nat :: "channel \<Rightarrow> nat set" where
+  "ctype c = range nat"
+
+instance ..
+end
+
+lemma [simp]: "cs \<subseteq> ((ctype c) :: nat set)"
+  apply(simp add: ctype_nat_def)
+  by(metis subset_UNIV subset_image_iff transfer_int_nat_set_return_embed)
+
 
 (* Identity funciton for nat streams *)  
 definition sb_id :: "nat stream \<rightarrow> nat stream" where
@@ -305,11 +322,11 @@ lemma SPF2x1_dom[simp]: "spfDom\<cdot>(SPF2x1 f (ch1, ch2, ch3)) = {ch1, ch2}"
   by simp  
     
 lemma SPF2x1_ran[simp]: "spfRan\<cdot>(SPF2x1 f (ch1, ch2, ch3)) = {ch3}"
-  apply(simp add: spfran_least)
+  apply(subst spfran_least)
     (* the next step is very ugly, but effectively removes fst, snds *)
   apply(simp add: SPF2x1_def, subst snd_conv, subst fst_conv, 
       subst snd_conv, subst fst_conv, subst snd_conv)
-  by(simp, simp add: spfran_least sbdom_insert)
+  by (simp)
     
 lemma  SPF2x1_rep_eq: "Rep_CSPF (SPF2x1 f (ch1, ch2, ch3)) 
     =  (\<lambda> (sb::nat SB). (sbDom\<cdot>sb = {(fst (ch1, ch2, ch3)), (fst (snd (ch1, ch2, ch3)))}) 
@@ -419,11 +436,11 @@ lemma SPF2x2_dom[simp]: "spfDom\<cdot>(SPF2x2 f1 f2 (ch1, ch2) (ch3,ch4)) = {ch1
     
     
 lemma SPF2x2_ran[simp]: "spfRan\<cdot>(SPF2x2 f1 f2 (ch1, ch2) (ch3,ch4)) = {ch3,ch4}"
-  apply(simp add: spfran_least)
+  apply(subst spfran_least)
     (* the next step is very ugly, but effectively removes fst, snds *)
   apply(simp add: SPF2x2_def, subst snd_conv, subst fst_conv, 
       subst snd_conv, subst fst_conv, subst snd_conv, subst fst_conv)
-  by(simp, auto simp add: spfran_least sbdom_insert)
+  by simp
     
     
 lemma  SPF2x2_rep_eq: "Rep_CSPF (SPF2x2 f1 f2 (ch1, ch2) (ch3,ch4)) 
