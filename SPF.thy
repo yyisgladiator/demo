@@ -197,6 +197,8 @@ definition spfCompC :: "'m SPF \<Rightarrow> 'm SPF \<Rightarrow> channel set" w
 
 
 subsubsection \<open>composition helpers\<close>
+  (* basically the composition helpers are parallel composition operators that take an 
+    additional feedback and input bundle x *)
   
 definition spfCompH :: "'m SPF \<Rightarrow> 'm SPF \<Rightarrow> 'm SB \<Rightarrow> 'm SB  \<rightarrow> 'm SB" where
 "spfCompH f1 f2 x \<equiv> (\<Lambda> z. (f1\<rightleftharpoons>((x \<uplus> z)  \<bar> spfDom\<cdot>f1)) \<uplus>  (f2\<rightleftharpoons>((x \<uplus> z)  \<bar> spfDom\<cdot>f2)))"
@@ -204,11 +206,13 @@ definition spfCompH :: "'m SPF \<Rightarrow> 'm SPF \<Rightarrow> 'm SB \<Righta
 abbreviation iter_spfCompH :: "'a SPF \<Rightarrow> 'a SPF \<Rightarrow> nat \<Rightarrow> 'a SB  \<Rightarrow> 'a SB" where
 "(iter_spfCompH f1 f2 i) \<equiv> (\<lambda> x. iterate i\<cdot>(spfCompH f1 f2 x)\<cdot>((spfRan\<cdot>f1 \<union> spfRan\<cdot>f2)^\<bottom>))" 
 
+(* old composition helper *)
+definition spfCompH2 :: "'m SPF \<Rightarrow> 'm SPF \<Rightarrow> 'm SB \<Rightarrow> 'm SB  \<rightarrow> 'm SB" where
+"spfCompH2 f1 f2 x \<equiv> (\<Lambda> z. x \<uplus> (f1\<rightleftharpoons> (z \<bar> spfDom\<cdot>f1)) \<uplus> (f2 \<rightleftharpoons> (z \<bar> spfDom\<cdot>f2)))"
 
-(* This should be integrated in the spfcompOld definition *)
-definition spfCompHelp2 :: "'m SPF \<Rightarrow> 'm SPF \<Rightarrow> 'm SB \<Rightarrow> 'm SB  \<rightarrow> 'm SB" where
-"spfCompHelp2 f1 f2 x \<equiv> (\<Lambda> z. x \<uplus> ((Rep_CSPF f1)\<rightharpoonup>(z \<bar> spfDom\<cdot>f1)) 
-                                 \<uplus> ((Rep_CSPF f2)\<rightharpoonup>(z \<bar> spfDom\<cdot>f2)))"
+abbreviation iter_spfcompH2 :: "'a SPF \<Rightarrow> 'a SPF \<Rightarrow> nat \<Rightarrow> 'a SB  \<Rightarrow> 'a SB" where
+"(iter_spfcompH2 f1 f2 i) \<equiv> (\<lambda> x. iterate i\<cdot>(spfCompH2 f1 f2 x)\<cdot>(sbLeast (spfCompC f1 f2)))"  
+
 
 subsubsection \<open>composition operators\<close>
 
@@ -764,7 +768,7 @@ lemma hideSubset: "spfRan\<cdot>(hide f cs) \<subseteq> spfRan\<cdot>f"
   
 
  
-subsection \<open>tsbFix2\<close>     
+subsection \<open>sbFix2\<close>     
   (* This is the base for following difficult cont and monofun proofs for spfComp *)
      (* Please Note sbFix2 is just a special case of sbFix which will be evaluated later *)
 
@@ -932,7 +936,7 @@ proof -
       fix x :: "'a SB" and y :: "'a SB"
       assume a1: "x \<sqsubseteq> y"
       hence f2: "\<And>f p C. \<not> cont f \<or> \<not> p y \<or> \<not> p x \<or> sbDom\<cdot>(f x\<cdot>(C^\<bottom>)) \<noteq> C 
-                                  \<or> (p x)\<leadsto>\<Squnion>n. iter_sbfix2 f n C x \<sqsubseteq> (p y)\<leadsto>\<Squnion>n. iter_sbfix2 f n C y"
+                          \<or> (p x)\<leadsto>\<Squnion>n. iter_sbfix2 f n C x \<sqsubseteq> (p y)\<leadsto>\<Squnion>n. iter_sbfix2 f n C y"
       using if_lub_iter_sbfix2_mono_req by blast
     have f3: "\<And>f p C. \<not> cont f \<or> p x \<or> (p x)\<leadsto>\<Squnion>n. iter_sbfix2 f n C x 
                                         \<sqsubseteq> (p y)\<leadsto>\<Squnion>n. iter_sbfix2 f n C y \<or> sbDom\<cdot>y = sbDom\<cdot>x"
@@ -940,15 +944,18 @@ proof -
     have f4: "\<And>p. (p x)\<leadsto>\<Squnion>n. iter_sbfix2 F n cs x \<sqsubseteq> (p y)\<leadsto>\<Squnion>n. iter_sbfix2 F n cs y \<or> p y \<or> p x"
       using a1 assms(1) if_lub_iter_sbfix2_mono_req by blast
     have f5: "\<And>p. sbDom\<cdot>(F x\<cdot>(cs^\<bottom>)) \<noteq> cs \<or> 
-              (p x)\<leadsto>\<Squnion>n. iter_sbfix2 F n cs x \<sqsubseteq> (p y)\<leadsto>\<Squnion>n. iter_sbfix2 F n cs y \<or> sbDom\<cdot>y = sbDom\<cdot>x"
+              (p x)\<leadsto>\<Squnion>n. iter_sbfix2 F n cs x 
+              \<sqsubseteq> (p y)\<leadsto>\<Squnion>n. iter_sbfix2 F n cs y \<or> sbDom\<cdot>y = sbDom\<cdot>x"
       using a1 by (metis assms(1) if_lub_iter_sbfix2_mono_req)
       { assume "P x"
         moreover
         { assume "sbfun_io_eq (F x) cs 
-                            \<and> \<not>(Some (\<Squnion>n. iter_sbfix2 F n cs x) \<sqsubseteq> Some (\<Squnion>n. iter_sbfix2 F n cs y))"
+                            \<and> \<not>(Some (\<Squnion>n. iter_sbfix2 F n cs x) 
+                               \<sqsubseteq> Some (\<Squnion>n. iter_sbfix2 F n cs y))"
           moreover
           { assume "P y \<and> P x \<and> sbfun_io_eq (F x) cs 
-                             \<and> \<not>(True\<leadsto>\<Squnion>n. iter_sbfix2 F n cs x \<sqsubseteq> Some (\<Squnion>n. iter_sbfix2 F n cs y))"
+                             \<and> \<not>(True\<leadsto>\<Squnion>n. iter_sbfix2 F n cs x 
+                                \<sqsubseteq> Some (\<Squnion>n. iter_sbfix2 F n cs y))"
             hence "\<not> P x"
             using f2 assms(1) by auto }
         ultimately have "\<not> P y \<or> \<not> P x"
@@ -1068,7 +1075,421 @@ lemma sbfix_contI [simp]: assumes  "cont F" and "\<And> x. (P x) \<Longrightarro
    apply (rule sbfix_monoI, simp add: assms(1), simp add: assms(2), metis assms(3))
   using chain_if_lub_iter_sbfix2 assms by blast  
     
+
+subsection \<open>sbFix\<close>  
+
+subsubsection \<open>compatibility lemmas\<close>
+
+(* cont in X intro rule for SPFs based on sbFix  *)
+lemma sbfix_contI2 [simp]: fixes F :: "'m SB \<Rightarrow> 'm SB \<rightarrow> 'm SB"
+                            assumes  "cont F" and "\<And> x. (P x) \<Longrightarrow> sbfun_io_eq (F x) cs"
+                            and "\<And> x y. sbDom\<cdot>x = sbDom\<cdot>y \<Longrightarrow> P x = P y"
+                            shows "cont (\<lambda> x. (P x) \<leadsto> sbFix (F x) cs)"
+proof -
+  have f1: "(\<lambda> x. (P x) \<leadsto> sbFix (F x) cs) = (\<lambda> x. (P x) \<leadsto> sbFix2 F x cs)"
+    apply (subst sbfix_2_sbfix2)
+    by simp
+  show ?thesis
+    apply (subst f1, subst sbFix2_def)
+    using sbfix_contI assms by blast
+qed
+
+(* the domain is always the same if io_eq holds *)
+lemma iter_sbfix_dom: assumes "sbfun_io_eq F cs"
+  shows "sbDom\<cdot>(iterate i\<cdot>F\<cdot>(sbLeast cs)) = cs"
+    proof (induction i)
+      case 0
+      thus ?case
+        by (simp add: assms(1))
+    next
+      case (Suc i)
+      thus ?case
+      proof -
+        have "\<And>c. (c\<cdot>(sbLeast cs)::'a SB) \<sqsubseteq> c\<cdot>(F\<cdot>(sbLeast cs))"
+          by (simp add: assms monofun_cfun_arg)
+        thus ?thesis
+          by (metis (no_types) Suc iterate_Suc2 sbdom_eq)
+      qed
+qed
+
+  (* if input und output of F is equals cs sbFix of f has the same domain *)
+lemma sbfix_dom: assumes "sbfun_io_eq (F) cs"
+  shows "sbDom\<cdot>(sbFix F cs) =  cs"
+proof -
+  have "\<And>n. sbfun_io_eq (iterate n\<cdot>(F)) cs"
+    by (simp add: assms iter_sbfix_dom)
+  thus ?thesis
+    by (metis (no_types, lifting) assms sbChain_dom_eq2 sbFix_def sbIterate_chain)
+qed
+
+
+subsubsection \<open>fixed point properties\<close>
+  (* show that sbFix works similar to the fix operator which works on a pcpo function
+     hence "sbfun_io_eq F cs" is a crucial assumptions for the following lemmas, because for
+     a fixed domain cs there exists a least sb *)
+
+  (* sbFix calculates the fixed point *)
+lemma sbfix_eq: assumes io_eq: "sbfun_io_eq F cs"
+  shows "(sbFix F cs) = F\<cdot>(sbFix F cs)"
+  apply (simp add: sbFix_def)
+   (* perform an chain index shift by 1 *)
+  apply (subst lub_range_shift [of _ 1, symmetric])
+    apply (simp add: io_eq sbIterate_chain)
+    apply (subst contlub_cfun_arg)
+      apply (simp add: io_eq sbIterate_chain)
+      by simp
+
+  (* the fixed point calculated bs sbFix is smaller than any other fixed point*)
+lemma sbfix_least_below: assumes "sbfun_io_eq F cs" and "sbDom\<cdot>x = cs"
+  shows "F\<cdot>x \<sqsubseteq> x \<Longrightarrow> (sbFix F cs) \<sqsubseteq> x"
+  apply (simp add: sbFix_def)
+  apply (rule lub_below)
+    apply (simp add: assms sbIterate_chain)
+    apply (induct_tac i)
+      apply (simp add: assms(2))
+      apply (simp add: assms(1))
+      apply (erule rev_below_trans)
+      by (erule monofun_cfun_arg)
+
+
+  (* sbFix calculates the least fixed point *)
+lemma sbfix_least: assumes "sbfun_io_eq F cs" and "sbDom\<cdot>x = cs"
+                    and "F\<cdot>x = x"
+  shows "(sbFix F cs) \<sqsubseteq> x"
+  by (simp add: assms(1) assms(2) assms(3) sbfix_least_below)
+
+ (* Intro rule for sbfix_eq *)
+lemma sbfix_eqI: assumes fp: "F\<cdot>x = x" and lst: "\<And>z. sbDom\<cdot>z = cs \<Longrightarrow> F\<cdot>z = z \<Longrightarrow> x \<sqsubseteq> z"
+                 and "sbfun_io_eq F cs" and "sbDom\<cdot>x = cs"
+  shows "(sbFix F cs) = x"
+proof -
+  have f1: "sbFix F cs \<sqsubseteq> x"
+    by (simp add: assms(3) assms(4) fp sbfix_least)
+  have f2: "sbDom\<cdot>(sbFix F cs) = cs"
+    using assms(3) sbfix_dom by blast
+  have "sbFix F cs \<sqsubseteq> x"
+    using f1 by meson
+  thus ?thesis
+    using f2 by (metis assms(3) below_antisym lst sbfix_eq)
+qed
+
+
+  (* if sbFix = \<bottom> then F \<bottom> = \<bottom> where \<bottom> = sbLeast cs *)
+lemma sbfix_least_iff: assumes "sbfun_io_eq F cs"
+  shows "((sbFix F cs) = sbLeast cs) = (F\<cdot>(sbLeast cs) = sbLeast cs)"
+proof -
+  have "F\<cdot>(sbFix F cs) = sbFix F cs"
+    by (metis (full_types) assms sbfix_eq)
+  thus ?thesis
+    by (metis assms po_eq_conv sbfix_dom sbfix_least sbleast_least)
+qed
+
+  (* sbFix is "strict" concerning the least sb with domain cs *)
+lemma sbfix_strict: assumes "sbfun_io_eq F cs" and "F\<cdot>(sbLeast cs) = (sbLeast cs)"
+  shows "(sbFix F cs) = sbLeast cs"
+  by (simp add: assms(2) sbfix_least_iff)
+
+  (* if sbLeast is not a fixed point sbFix does not calculate it *)
+lemma sbfix_defined: assumes "sbfun_io_eq F cs" and "F\<cdot>(sbLeast cs) \<noteq> (sbLeast cs)"
+  shows "(sbFix F cs) \<noteq> sbLeast cs"
+  by (metis assms(1) assms(2) sbfix_eq)
+
+  (* sbFix applied to identity delivers sbLeast *)
+lemma sbfix_id [simp]: "(sbFix (\<Lambda> x. x) cs) = (sbLeast cs)"
+  by (simp add: sbfix_strict)
+
+  (* sbFix applied to a constant function is the constant *)
+lemma sbfix_const [simp]: assumes "sbDom\<cdot>c = cs"
+  shows "(sbFix (\<Lambda> x. c) cs) = c"
+proof -
+  have "sbfun_io_eq (\<Lambda> x. c) cs"
+    by (simp add: assms)
+  thus ?thesis
+    by (metis (no_types) beta_cfun cont_const sbfix_eq)
+qed
+
+  (* if P holds for sbLeast and every "F\<cdot>x" it also holds for sbFix F *)
+lemma sbfix_ind: assumes "sbfun_io_eq F cs"
+                  and "adm P" and "P (sbLeast cs)"
+                  and "\<And> x. \<lbrakk>(sbDom\<cdot>x) = cs; P x\<rbrakk> \<Longrightarrow> P (F\<cdot>x)"
+  shows "P (sbFix F cs)"
+proof -
+  have f1: "\<And> n. sbDom\<cdot>(iterate n\<cdot>F\<cdot>(sbLeast cs)) = cs"
+    by (simp add: assms(1) iter_sbfix_dom)
+  show ?thesis
+    unfolding sbFix_def
+    apply (subst admD, simp_all add: assms)
+      apply (simp add: assms(1) sbIterate_chain)
+      apply (rule nat_induct, simp add: assms(3))
+      by (simp add: assms(4) f1)
+qed
+
+  (* the previous also holds if F is not a cfun but cont *)
+lemma cont_sbfix_ind: assumes "cont F" and "sbfun_io_eq (Abs_cfun F) cs"
+                       and "adm P" and "P (sbLeast cs)"
+                       and "\<And> x. \<lbrakk>(sbDom\<cdot>x) = cs; P x\<rbrakk> \<Longrightarrow> P (F x)"
+  shows "P (sbFix (Abs_cfun F) cs)"
+  apply (rule sbfix_ind, simp_all add: assms)
+  using assms(1) assms(2) by auto
+
+  (* the same holds if the induction starts at F\<cdot>F\<cdot>x*)
+lemma sbfix_ind2:  assumes "sbfun_io_eq F cs"
+                    and "adm P" and s0: "P ((sbLeast cs))" and s1: "P (F\<cdot>(sbLeast cs))"
+                    and s2: "\<And> x. \<lbrakk>(sbDom\<cdot>x) = cs; P x; P (F\<cdot>x)\<rbrakk> \<Longrightarrow> P (F\<cdot>(F\<cdot>x))"
+  shows "P (sbFix F cs)"
+  unfolding sbFix_def
+  apply (subst admD, simp_all add: assms)
+    apply (simp add: assms(1) sbIterate_chain)
+    apply (rule nat_less_induct)
+    apply (case_tac n)
+      apply (simp add: s0)
+      apply (case_tac nat)
+        apply (simp add: s1)
+        apply (frule_tac x=nat in spec)
+        by (simp add: assms(1) iter_sbfix_dom s2)  
+  
+  
+          
+  section \<open>Lemmas for Composition\<close>
+  (* this is only a part of the composition related lemmata, see SPF_Comp.thy *)
     
+subsection \<open>spfCompH\<close>
+(* ----------------------------------------------------------------------- *)
+  (* similar to spfCompH2 but does not output the input, nevertheless its lub 
+     is equal to the one of spfCompH2 as shown later *)
+
+subsubsection \<open>basic properties\<close>
+  
+paragraph \<open>cont\<close>
+  
+lemma spfCompH_cont[simp]: 
+  shows "cont (\<lambda> z. (f1\<rightleftharpoons>((x \<uplus> z)  \<bar> spfDom\<cdot>f1)) \<uplus>  (f2\<rightleftharpoons>((x \<uplus> z)  \<bar> spfDom\<cdot>f2)))"
+proof -
+  have f1: "cont (\<lambda> z. (Rep_cfun (Rep_SPF f1)\<rightharpoonup>((x \<uplus> z)\<bar>spfDom\<cdot>f1)))"
+    by (metis (no_types) cont_Rep_cfun2 cont_compose op_the_cont)
+  moreover 
+  have f2: "cont (\<lambda> z. (Rep_cfun (Rep_SPF f2)\<rightharpoonup>((x \<uplus> z)\<bar>spfDom\<cdot>f2)))"
+    by (metis (no_types) cont_Rep_cfun2 cont_compose op_the_cont)
+  ultimately
+  have "cont (\<lambda>z. sbUnion\<cdot>(Rep_cfun (Rep_SPF f1)\<rightharpoonup>((x \<uplus> z)\<bar>spfDom\<cdot>f1))) 
+        \<and> cont (\<lambda>z. Rep_SPF f2\<cdot>((x \<uplus> z)\<bar>spfDom\<cdot>f2))"
+    by simp
+  hence "cont (\<lambda> z. (Rep_cfun (Rep_SPF f1)\<rightharpoonup>((x \<uplus> z)\<bar>spfDom\<cdot>f1)) 
+                          \<uplus> (Rep_cfun (Rep_SPF f2)\<rightharpoonup>((x \<uplus> z)\<bar>spfDom\<cdot>f2)))"
+    using cont2cont_APP cont_compose op_the_cont by blast
+  thus ?thesis
+    by simp
+qed
+  
+lemma spfCompH_cont2[simp]: 
+  shows "cont (\<lambda> x. (f1\<rightleftharpoons>((x \<uplus> z)  \<bar> spfDom\<cdot>f1)) \<uplus>  (f2\<rightleftharpoons>((x \<uplus> z)  \<bar> spfDom\<cdot>f2)))"
+proof -
+  have f0: "cont (\<lambda>x. (x \<uplus> z))"
+    by simp
+      
+  have f1: "cont (\<lambda> x. (Rep_cfun (Rep_SPF f1)\<rightharpoonup>((x \<uplus> z)\<bar>spfDom\<cdot>f1)))"
+    by (metis (no_types) f0 cont_Rep_cfun2 cont_compose op_the_cont)
+  moreover
+  have f2: "cont (\<lambda> x. (Rep_cfun (Rep_SPF f2)\<rightharpoonup>((x \<uplus> z)\<bar>spfDom\<cdot>f2)))"
+    by (metis (no_types) f0 cont_Rep_cfun2 cont_compose op_the_cont)
+  ultimately
+  have "cont (\<lambda>x. sbUnion\<cdot>(Rep_cfun (Rep_SPF f1)\<rightharpoonup>((x \<uplus> z)\<bar>spfDom\<cdot>f1))) 
+        \<and> cont (\<lambda>x. Rep_SPF f2\<cdot>((x \<uplus> z)\<bar>spfDom\<cdot>f2))"
+    by simp
+  hence "cont (\<lambda> x. (Rep_cfun (Rep_SPF f1)\<rightharpoonup>((x \<uplus> z)\<bar>spfDom\<cdot>f1)) 
+                                                   \<uplus> (Rep_cfun (Rep_SPF f2)\<rightharpoonup>((x \<uplus> z)\<bar>spfDom\<cdot>f2)))"
+    using cont2cont_APP cont_compose op_the_cont by blast
+  thus ?thesis
+    by simp
+qed
+  
+lemma spfCompH_continX[simp]: "cont (\<lambda> x. spfCompH f1 f2 x)"
+proof -
+  have "cont (\<lambda> x. \<Lambda> z. ((f1\<rightleftharpoons>((x \<uplus> z)  \<bar> spfDom\<cdot>f1)) \<uplus>  (f2\<rightleftharpoons>((x \<uplus> z)  \<bar> spfDom\<cdot>f2))))"
+    by (simp add: cont2cont_LAM)
+  thus ?thesis
+    by (simp add: spfCompH_def)
+qed
+   
+paragraph \<open>dom\<close>
+  
+lemma spfCompH_dom [simp]: assumes "sbDom\<cdot>x = spfCompI f1 f2"
+                            and "sbDom\<cdot>sb = (spfRan\<cdot>f1 \<union> spfRan\<cdot>f2)"
+                          shows "sbDom\<cdot>((spfCompH f1 f2 x)\<cdot>sb) = (spfRan\<cdot>f1 \<union> spfRan\<cdot>f2)"
+proof -
+  have f1: "sbDom\<cdot>(f1 \<rightleftharpoons> ((x \<uplus> sb)  \<bar> spfDom\<cdot>f1)) = spfRan\<cdot>f1"
+    by (simp add: spfCompI_def assms(1) assms(2) inf_sup_aci(6))
+      moreover
+  have f2: "sbDom\<cdot>(f2 \<rightleftharpoons> ((x \<uplus> sb)  \<bar> spfDom\<cdot>f2)) = spfRan\<cdot>f2"
+    by (simp add: spfCompI_def assms(1) assms(2) sup.coboundedI1)
+      ultimately
+  show ?thesis
+    by (simp add: f1 f2 spfCompH_def assms)
+qed
+ 
+subsubsection \<open>iterate spfCompH\<close>  
+  
+lemma iter_spfCompH_cont[simp]: "cont (\<lambda>x. iter_spfCompH f1 f2 i x)"
+  by simp
+    
+lemma iter_spfCompH_mono[simp]: "monofun (\<lambda>x. iter_spfCompH f1 f2 i x)"
+  by (simp add: cont2mono)
+    
+lemma iter_spfCompH_mono2:  assumes "x \<sqsubseteq> y"
+  shows "\<forall>i. ((iter_spfCompH f1 f2 i) x) \<sqsubseteq> ((iter_spfCompH f1 f2 i) y)"
+  using assms monofun_def by fastforce
+  
+lemma iter_spfCompH_chain[simp]: assumes "sbDom\<cdot>x = spfCompI f1 f2"
+  shows "chain (\<lambda> i. iter_spfCompH f1 f2 i x)"
+  by (simp add: assms sbIterate_chain)
+    
+lemma iter_spfCompH_dom[simp]: assumes "sbDom\<cdot>x = spfCompI f1 f2" 
+  shows "sbDom\<cdot>(iter_spfCompH f1 f2 i x) = (spfRan\<cdot>f1 \<union> spfRan\<cdot>f2)"
+  by (simp add: assms iter_sbfix2_dom)
+  
+  
+subsubsection \<open>lub iterate spfCompH\<close> 
+  
+lemma lub_iter_spfCompH_dom[simp]: assumes "sbDom\<cdot>x = spfCompI f1 f2" 
+  shows "sbDom\<cdot>(\<Squnion>i. iter_spfCompH f1 f2 i x) = (spfRan\<cdot>f1 \<union> spfRan\<cdot>f2)"
+  by (simp add: lub_iter_sbfix2_dom assms) 
+    
+    
+    
+subsection \<open>spfCompH2\<close>
+(* ----------------------------------------------------------------------- *)
+  (* WARNING this helper is obsolete *)
+  
+subsubsection \<open>basic properties\<close>  
+
+  
+(* Proof comphelper properties by referring to original comphelper *)
+lemma spfCompH2_mono[simp]: "monofun (\<lambda> z. x \<uplus> (f1 \<rightleftharpoons> (z \<bar> spfDom\<cdot>f1)) 
+                                             \<uplus> (f2 \<rightleftharpoons> (z \<bar> spfDom\<cdot>f2)))"
+  using cont2mono spfCompHelp_cont by blast
+
+lemma helpermonoinX[simp]: shows "monofun (\<lambda> x. spfCompH2 f1 f2 x)"
+  by(simp add: spfCompH2_def)
+
+lemma helpercontinX [simp]: shows "cont (\<lambda> x. spfCompH2 f1 f2 x)"
+  proof -
+     have "\<forall>x. cont (\<lambda> z. x \<uplus> (f1 \<rightleftharpoons> (z \<bar> spfDom\<cdot>f1))  \<uplus> (f2 \<rightleftharpoons>(z \<bar> spfDom\<cdot>f2)))"
+     by simp
+     hence "cont (\<lambda>x. \<Lambda> z. x \<uplus> (f1 \<rightleftharpoons> (z \<bar> spfDom\<cdot>f1))  \<uplus> (f2 \<rightleftharpoons> (z \<bar> spfDom\<cdot>f2)))"
+       by (simp add: cont2cont_LAM)
+     thus ?thesis
+       by (simp add: spfCompH2_def)
+  qed
+
+lemma spfcompOld_tospfH2: "(spfcompOld f1 f2) 
+ = Abs_CSPF (\<lambda> x. (sbDom\<cdot>x = spfCompI f1 f2) \<leadsto> 
+                  (\<Squnion>i. iterate i\<cdot>(spfCompH2 f1 f2 x)\<cdot>(sbLeast (spfCompC f1 f2))) \<bar> spfCompOc f1 f2)"
+  apply (subst spfcompOld_def, subst spfCompH2_def, subst spfCompC_def, 
+                subst (1 2) spfCompI_def, subst spfCompOc_def)    
+  by (metis (no_types) spfCompC_def spfCompI_def spfCompOc_def)
+    
+    
+lemma spfCompH2_getch_outofrange: assumes "c \<notin> spfRan\<cdot>f1" 
+                                and "c \<notin> spfRan\<cdot>f2" 
+                                and "sbDom\<cdot>sb = spfCompC f1 f2"
+  shows "((spfCompH2 f1 f2 x)\<cdot>sb) . c = x . c"
+  apply (simp add: spfCompH2_def)
+  apply (subst sbunion_getchL)
+  apply (simp add: spfCompC_def assms(2) assms(3) subsetI)
+  by (simp add: spfCompC_def Un_assoc assms(1) assms(3))
+
+lemma spfCompH2_dom [simp]: assumes "sbDom\<cdot>sb = spfCompC f1 f2"
+  shows "sbDom\<cdot>((spfCompH2 f1 f2 x)\<cdot>sb) = (sbDom\<cdot>x \<union> spfRan\<cdot>f1 \<union> spfRan\<cdot>f2)"
+  apply (simp add: spfCompH2_def)
+  proof -
+    have f1: "spfDom\<cdot>f1 \<subseteq> sbDom\<cdot>sb"
+      by (simp add: spfCompC_def Un_commute Un_left_commute assms)
+    have "spfDom\<cdot>f2 \<subseteq> sbDom\<cdot>sb"
+      using spfCompC_def assms by auto
+    thus "sbDom\<cdot>x \<union> (sbDom\<cdot>(f1 \<rightleftharpoons> (sb\<bar>spfDom\<cdot>f1))) \<union> (sbDom\<cdot> (f2 \<rightleftharpoons> (sb\<bar>spfDom\<cdot>f2))) 
+                = (sbDom\<cdot>x \<union> spfRan\<cdot>f1 \<union> spfRan\<cdot>f2)"
+      using f1 by simp
+qed
+ 
+  
+subsubsection \<open>iterate spfCompH2\<close>
+  
+  
+(* for all i the i'th iteration on spfcompOld is cont as application iterate is cont on cont fun *) 
+lemma iter_spfcompH2_cont2[simp]: "cont (iter_spfcompH2 f1 f2 i)"
+  by simp
+    
+lemma iter_spfcompH2_mono[simp]:  "monofun (iter_spfcompH2 f1 f2 i)"
+  by simp
+    
+(* replaced spfComp_serialnf_chain *)
+lemma iter_spfcompH2_chain[simp]: assumes "sbDom\<cdot>x = spfCompI f1 f2"
+  shows "chain  (\<lambda>i. iter_spfcompH2 f1 f2 i x)"
+  apply(rule sbIterate_chain)
+  by (simp add: spfCompC_def spfCompI_def assms inf_sup_aci(6))
+    
+  
+lemma spfCompH2_itDom[simp]: assumes "sbDom\<cdot>x = spfCompI f1 f2"
+  shows "sbfun_io_eq (iterate i\<cdot>(spfCompH2 f1 f2 x)) (spfCompC f1 f2)"
+  apply (induct_tac i)
+   apply auto[1]
+  by (simp add: spfCompC_def spfCompI_def assms inf_sup_aci(6))
+  
+  
+lemma spfCompH2_itgetChI: assumes "sbDom\<cdot>x = spfCompI f1 f2" 
+                      and "spfComp_well f1 f2"
+                      and "c \<in> spfCompI f1 f2"
+  shows "iter_spfcompH2 f1 f2 (Suc i) x . c = x .c"
+  apply (unfold iterate_Suc, subst spfCompH2_def)
+  apply (simp)
+  apply (subst sbunion_getchL)
+  apply (metis spfCompC_def DiffD2 spfCompI_def UnI2 assms(1) assms(3) inf_sup_ord(4) 
+               le_supI1 spfCompH2_itDom spfRanRestrict)
+  apply (subst sbunion_getchL)
+   apply (metis spfCompC_def DiffD2 spfCompI_def UnI1 Un_upper1 assms(1) assms(3) 
+                le_supI1 spfCompH2_itDom spfRanRestrict)
+   by (simp)
+
+
+lemma spfCompH2_itResI: assumes "sbDom\<cdot>x = spfCompI f1 f2" 
+                    and "spfComp_well f1 f2"
+  shows "(iter_spfcompH2 f1 f2 (Suc i) x) \<bar> (spfCompI f1 f2) = x"
+  apply (rule sb_eq)
+   apply (simp add: assms(1) inf_sup_aci(1) inf_sup_aci(6))
+   using assms(1) assms(2) spfCompH2_itgetChI by fastforce
+  
+
+subsubsection \<open>lub iterate spfCompH2\<close>
+   
+(* the lub over the iterations of spfcompOldH2 is monotone if the assumtions hold *)
+  (* requires chain property, hence the input must have the right domain *)
+lemma lub_iter_spfCompH2_mono_req: assumes "x \<sqsubseteq> y" and  "sbDom\<cdot>x = spfCompI f1 f2"
+  shows "(\<Squnion>i.(iter_spfcompH2 f1 f2 i) x) \<sqsubseteq> (\<Squnion>i.(iter_spfcompH2 f1 f2 i) y)"
+    apply (rule lub_iter_sbfix2_mono_req)
+    by (simp_all add: assms inf_sup_aci(6) spfCompI_def spfCompC_def)
+
+(* the lub over the iteration is always mono, the correct domain is assured via \<leadsto> *)
+lemma if_lub_iter_spfCompH2_mono_req: assumes "x \<sqsubseteq> y" 
+  shows "((\<lambda> x. (sbDom\<cdot>x = spfCompI f1 f2) \<leadsto> (\<Squnion>i.(iter_spfcompH2 f1 f2 i) x)) x) 
+              \<sqsubseteq> ((\<lambda> x. (sbDom\<cdot>x = spfCompI f1 f2) \<leadsto> (\<Squnion>i.(iter_spfcompH2 f1 f2 i) x)) y)"
+  apply (rule if_lub_iter_sbfix2_mono_req)
+    by (simp_all add: assms inf_sup_aci(6) spfCompI_def spfCompC_def)
+    
+(* the lub of iter_spfcompH2, when applied to a chain, is again a chain *)
+  (* this property follows from the monotonicy of lub_iter_spfCompH2 *)
+lemma chain_lub_iter_spfcompH2: assumes  "chain Y" 
+                                and  "(sbDom\<cdot>(\<Squnion>i. Y i) = spfCompI f1 f2)"
+  shows "chain (\<lambda>i. \<Squnion>ia. iter_spfcompH2 f1 f2 ia (Y i))"   
+  apply (rule chain_lub_iter_sbfix2)
+  by (simp_all add: assms inf_sup_aci(6) spfCompI_def spfCompC_def)
+  
+  
+  
+  
+  
+  
+  
+  
 section \<open>Legacy\<close>
   (* please do not use the lemmas below anymore *)
 
@@ -1089,7 +1510,8 @@ lemma spf_monoI: assumes "\<And>b1 b2. b1 \<in> dom f \<Longrightarrow> b2 \<in>
   by (simp add: assms spf_mono_def)
 
 
-lemma spf_contlubI: assumes " \<And>Y. chain Y \<Longrightarrow> (Y 0) \<in> dom f \<Longrightarrow>  (f \<rightharpoonup>(\<Squnion> i. Y i)) \<sqsubseteq> (\<Squnion> i. (f\<rightharpoonup>(Y i)))"
+lemma spf_contlubI: assumes " \<And>Y. chain Y \<Longrightarrow> (Y 0) \<in> dom f \<Longrightarrow>  
+                                    (f \<rightharpoonup>(\<Squnion> i. Y i)) \<sqsubseteq> (\<Squnion> i. (f\<rightharpoonup>(Y i)))"
   shows "spf_contlub f"
 by (meson assms spf_contlub_def sbChain_dom_eq2 sbdom_eq)
 
