@@ -106,11 +106,12 @@ lemma tsmed_tsabs_slen: "#ora=\<infinity> \<Longrightarrow> #(tsAbs\<cdot>(tsMed
 (* ToDo Steffen: basic properties lemmata for medium *)
 
 
- lemma tsmed_map: "#ora=\<infinity> \<Longrightarrow> tsMed\<cdot>(tsMap f\<cdot>msg)\<cdot>ora = tsMap f\<cdot>(tsMed\<cdot>msg\<cdot>ora)"
-  apply(induct msg arbitrary: ora, auto)
+lemma tsmed_tsmap: 
+  "#ora=\<infinity> \<Longrightarrow> tsMed\<cdot>(tsMap f\<cdot>msg)\<cdot>ora = tsMap f\<cdot>(tsMed\<cdot>msg\<cdot>ora)"
+  apply (induct msg arbitrary: ora, auto)
   apply (metis tsmap_delayfun tsmed_delayfun tsmed_strict(2))
-  apply(rule_tac x=ora in scases, simp_all)
-  apply(rename_tac y x )
+  apply (rule_tac x=ora in scases, simp_all)
+  apply (rename_tac y x)
   apply (case_tac "y=True", simp_all)
   apply (metis (no_types, lifting) lscons_conv tsmap_mlscons tsmap_nbot 
           tsmed_mlscons_true tsmed_nbot)
