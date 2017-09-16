@@ -52,6 +52,8 @@ where
 section {* Some auxiliary HOLCF lemmas *}
 (* ----------------------------------------------------------------------- *)
 
+subsection \<open>cfun\<close> 
+  
 text {* Introduction of continuity of @{text "f"} using monotonicity and lub on chains:*}
 lemma contI2:
   "\<lbrakk>monofun (f::'a::cpo \<Rightarrow> 'b::cpo); 
@@ -88,6 +90,21 @@ text {* Every non-empty set contains an element *}
 lemma neq_emptyD: "s \<noteq> {} \<Longrightarrow> \<exists>x. x \<in> s"
 by auto
 
+(* below lemmata *)   
+lemma cont_pref_eq1I: assumes "(a \<sqsubseteq> b)"
+  shows "f\<cdot>a \<sqsubseteq> f\<cdot>b"
+  by (simp add: assms monofun_cfun_arg)
+     
+lemma cont_pref_eq2I:  assumes "(a \<sqsubseteq> b)"
+  shows "f\<cdot>x\<cdot>a \<sqsubseteq> f\<cdot>x\<cdot>b"
+  by (simp add: assms monofun_cfun_arg)
+    
+(* equality lemmata *)    
+lemma cfun_arg_eqI:  assumes "(a = b)"
+  shows "f\<cdot>a = f\<cdot>b"
+  by (simp add: assms)  
+
+     
 (* ----------------------------------------------------------------------- *)
 section {* More functions *}
 (* ----------------------------------------------------------------------- *)
