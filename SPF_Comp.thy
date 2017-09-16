@@ -1771,7 +1771,6 @@ lemma parCompDom: assumes "parcomp_well f1 f2" shows "spfDom\<cdot>(f1 \<paralle
 lemma parCompRan: assumes "parcomp_well f1 f2" shows "spfRan\<cdot>(f1 \<parallel> f2) = spfRan\<cdot>(spfcompOld f1 f2)"
   by (simp add: assms(1) parallelOperatorEq)
 
-    
 section \<open>serial\<close>
   
 lemma pLEmptyNoSelfloops: assumes "pspfCompL f1 f2 = {}"
@@ -1788,17 +1787,15 @@ proof -
     by (simp add: spfCompI_def Un_Diff Un_Diff_Int assms)
 qed
 
-(* This need to be adapted
-lemma serCompHelp2Eq: assumes "pspfCompL f1 f2 = {}"
+lemma serCompHelp2Eq: assumes "pL f1 f2 = {}"
                           and "spfRan\<cdot>f1 = spfDom\<cdot>f2"
                           and "spfComp_well f1 f2"
                           and "sbDom\<cdot>x = spfDom\<cdot>f1" 
-   shows "(\<Squnion>i. iterate i\<cdot>(SPF.spfCompHelp2 f1 f2 x)\<cdot>(sbLeast (spfCompC f1 f2)))\<bar>spfCompOc f1 f2 = ((f1 \<rightleftharpoons> x)) \<uplus> (f2 \<rightleftharpoons> (f1 \<rightleftharpoons> x))" 
-  apply(subst spfComp_serial_itconst2)
-       apply(simp_all add: assms)
+   shows "(\<Squnion>i. iterate i\<cdot>(SPF.spfCompHelp2 f1 f2 x)\<cdot>(sbLeast (C f1 f2)))\<bar>Oc f1 f2 = ((f1 \<rightleftharpoons> x)) \<uplus> (f2 \<rightleftharpoons> (f1 \<rightleftharpoons> x))" 
+   apply(subst spfComp_serial_itconst2)
+   apply(simp_all add: assms)
     apply(subst spfComp_I_domf1_eq2, simp_all add: assms)
-    apply(simp add: pLEmptyNoSelfloops assms)
-  apply(simp add: spfCompOc_def)
+   apply(simp add: Oc_def)
    apply(subst unionRestrict, simp_all add: assms)
    using pL_def assms(1) assms(2) apply blast
    by (metis (no_types, lifting) assms(2) assms(4) domIff option.collapse sbleast_sbdom spfLeastIDom spf_sbdom2dom spfran2sbdom)
@@ -1813,12 +1810,23 @@ lemma serCompHelp2Eq2: assumes "pspfCompL f1 f2 = {}"
 lemma serialOperatorEq: assumes "pspfCompL f1 f2 = {}"
                             and "spfComp_well f1 f2"
                             and "spfRan\<cdot>f1 = spfDom\<cdot>f2"
-   shows "(f1 \<otimes> f2) = (f1 \<circ> f2)"
-apply(simp add: sercomp_def spfcompOld_tospfH2)
-apply(subst spfComp_I_domf1_eq2, simp_all add: assms)
-apply(subst serCompHelp2Eq2)
-  by(simp_all add: assms)
-*)
+                            and "sbDom\<cdot>sb = spfDom\<cdot>f1"
+   shows "((f1 \<otimes> f2) \<h> spfRan\<cdot>f1) \<rightleftharpoons> sb = (f1 \<circ> f2) \<rightleftharpoons> sb"
+proof - 
+  have "sbDom\<cdot>(((f1 \<otimes> f2) \<h> spfRan\<cdot>f1) \<rightleftharpoons> sb) = spfRan\<cdot>f2"
+    sorry
+  show ?thesis 
+    apply(subst sb_eq, simp_all)
+    sorry
+qed
+  (*  
+  apply(simp add: sercomp_def spfcomp_tospfH2)
+  apply(subst spfComp_I_domf1_eq2, simp_all add: assms)
+  apply(subst serCompHelp2Eq2)
+  apply(simp_all add: assms)
+  apply()
+  sorry*)
+
     
     
 end
