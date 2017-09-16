@@ -38,10 +38,10 @@ fixrec tsSnd_h :: "'a tstream \<rightarrow> bool tstream \<rightarrow> bool disc
 
   (* if input is a tick \<Longrightarrow> send tick *)
 "tsSnd_h\<cdot>(tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>msg)\<cdot>(tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>acks)\<cdot>ack
-                    = delayFun\<cdot>(tsSnd_h\<cdot>msg\<cdot>acks\<cdot>ack)" |
+   = delayFun\<cdot>(tsSnd_h\<cdot>msg\<cdot>acks\<cdot>ack)" |
 
 "acks \<noteq> \<bottom> \<Longrightarrow> tsSnd_h\<cdot>(tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>msg)\<cdot>(tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>a))\<cdot>acks)\<cdot>ack
-                    = delayFun\<cdot>(tsSnd_h\<cdot>msg\<cdot>(tsMLscons\<cdot>(up\<cdot>a)\<cdot>acks)\<cdot>ack)"
+  = delayFun\<cdot>(tsSnd_h\<cdot>msg\<cdot>(tsMLscons\<cdot>(up\<cdot>a)\<cdot>acks)\<cdot>ack)"
 
 definition tsSnd :: "'a tstream \<rightarrow> bool tstream \<rightarrow> ('a \<times> bool) tstream" where
 "tsSnd \<equiv> \<Lambda> msg acks. delay (tsSnd_h\<cdot>msg\<cdot>acks\<cdot>(Discr True))"
@@ -106,7 +106,7 @@ lemma tssnd_h_nbot [simp]: "msg \<noteq> \<bottom> \<Longrightarrow> acks \<note
 (* ToDo: tstickcount lemma for sender *)
 
 lemma tssnd_h_tstickcount:
-  " min (#\<surd>msg) (#\<surd>acks) \<le> #\<surd> tsSnd_h\<cdot>msg\<cdot>acks\<cdot>(Discr ack)"
+  "min (#\<surd>msg) (#\<surd>acks) \<le> #\<surd> tsSnd_h\<cdot>msg\<cdot>acks\<cdot>(Discr ack)"
   oops
 
 lemma tssnd_h_inftick_inftick: "tsSnd_h\<cdot>tsInfTick\<cdot>tsInfTick\<cdot>ack = tsInfTick" 
@@ -130,7 +130,8 @@ text {* lemmata for sender, see BS01, page 103
 
 text {* fds \<sqsubseteq> i where fds = map(\<alpha>.ds, \<Pi>1) 
         fds is a prefix of i *}
-lemma tssnd_prefix_inp: "tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(tsSnd_h\<cdot>i\<cdot>as\<cdot>(Discr ack)))) \<sqsubseteq> tsAbs\<cdot>i"
+lemma tssnd_prefix_inp: 
+  "tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(tsSnd_h\<cdot>i\<cdot>as\<cdot>(Discr ack)))) \<sqsubseteq> tsAbs\<cdot>i"
   oops
     
 text {* \<alpha>.fb = fb  where fb = map(\<alpha>.ds, \<Pi>2)
@@ -144,16 +145,16 @@ lemma tssnd_alt_bit:
 text {* #fds = min{#i, #fas+1} where fds = map(\<alpha>.ds, \<Pi>1), fas = \<alpha>.as 
         when an acknowledgment is received then the next data next data element will eventually
         be transmitted given that there are more data elements to transmit *}
-lemma tssnd_ack2trans:
-  "#\<surd>as = \<infinity> \<Longrightarrow> #(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(tsSnd_h\<cdot>i\<cdot>as\<cdot>ack))))
+lemma tssnd_ack2trans: "#\<surd>as = \<infinity> \<Longrightarrow>
+   #(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(tsSnd_h\<cdot>i\<cdot>as\<cdot>ack))))
      = min (#(tsAbs\<cdot>i)) (lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>as))))"
   oops
 
 text {* #i > #fas \<Longrightarrow> #ds = \<infinity> where fas = \<alpha>.as
         if a data element is never acknowledged despite repetitive transmission by the sender 
         then the sender never stops transmitting this data element *}
-lemma tssnd_nack2inftrans:
-  "#\<surd>as = \<infinity> \<Longrightarrow> #(tsAbs\<cdot>i) > #(tsAbs\<cdot>(tsRemDups\<cdot>as)) \<Longrightarrow> #(tsAbs\<cdot>(tsSnd_h\<cdot>i\<cdot>as\<cdot>ack)) = \<infinity>"
+lemma tssnd_nack2inftrans: "#\<surd>as = \<infinity> \<Longrightarrow> 
+  #(tsAbs\<cdot>i) > #(tsAbs\<cdot>(tsRemDups\<cdot>as)) \<Longrightarrow> #(tsAbs\<cdot>(tsSnd_h\<cdot>i\<cdot>as\<cdot>ack)) = \<infinity>"
   oops
     
 end
