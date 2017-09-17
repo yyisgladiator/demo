@@ -395,6 +395,40 @@ lemma tsmed2infmed: assumes "#({True} \<ominus> ora1)=\<infinity>" and "#({True}
 by (meson assms(1) assms(2) newora_fair sfilterl4 tsmed2med)
 
 (* property 4 *) 
+
+lemma ora_inf: "#({True} \<ominus> p) = \<infinity> \<Longrightarrow> #p = \<infinity>"
+  using sfilterl4 by auto
+
+lemma smed_smap:
+  "sMed\<cdot>(smap f\<cdot>msg)\<cdot>ora = smap f\<cdot>(sMed\<cdot>msg\<cdot>ora)"
+  apply (induct msg arbitrary: ora rule: ind, simp_all)
+  apply (rule_tac x=ora in scases, simp_all)
+  by (case_tac "aa=True", simp_all)
+
+lemma smed_slen2smed2:
+  "#(srcdups\<cdot>(sprojsnd\<cdot>(sMed\<cdot>msg\<cdot>ora))) \<noteq> \<infinity> \<Longrightarrow> #({True} \<ominus> ora) = \<infinity>
+     \<Longrightarrow> #(srcdups\<cdot>(sprojsnd\<cdot>msg)) = #(srcdups\<cdot>(sprojsnd\<cdot>(sMed\<cdot>msg\<cdot>ora))) 
+     \<Longrightarrow> srcdups\<cdot>(sprojsnd\<cdot>msg) = srcdups\<cdot>(sprojsnd\<cdot>(sMed\<cdot>msg\<cdot>ora))"
+  apply (induction msg rule: ind, simp_all)
+  apply (rule admI)
+sorry
+
+lemma smed_slen2smed:
+  "#(srcdups\<cdot>(sprojsnd\<cdot>(sMed\<cdot>msg\<cdot>ora))) \<noteq> \<infinity> \<Longrightarrow> #({True} \<ominus> ora) = \<infinity> 
+     \<Longrightarrow> #(sprojfst\<cdot>(srcdups\<cdot>msg)) = #(srcdups\<cdot>(sprojsnd\<cdot>(sMed\<cdot>msg\<cdot>ora))) 
+     \<Longrightarrow> #(srcdups\<cdot>(sprojsnd\<cdot>msg)) = #(srcdups\<cdot>(sprojsnd\<cdot>(sMed\<cdot>msg\<cdot>ora))) 
+     \<Longrightarrow> sprojfst\<cdot>(srcdups\<cdot>msg) = sprojfst\<cdot>(srcdups\<cdot>(sMed\<cdot>msg\<cdot>ora))"
+sorry
+
+lemma tsmed_tsabs_slen2tsmed_tsabs:
+  "#(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>msg))) \<noteq> \<infinity> \<Longrightarrow> #({True} \<ominus> ora) = \<infinity> 
+    \<Longrightarrow> #(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>msg))) = #(tsAbs\<cdot>(tsRemDups\<cdot>(tsProjSnd\<cdot>msg)))
+    \<Longrightarrow> #(tsAbs\<cdot>(tsRemDups\<cdot>(tsProjSnd\<cdot>msg))) = #(tsAbs\<cdot>(tsRemDups\<cdot>(tsProjSnd\<cdot>(tsMed\<cdot>msg\<cdot>ora))))
+    \<Longrightarrow> tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>msg)) = tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(tsMed\<cdot>msg\<cdot>ora)))"
+  apply (simp add: tsprojfst_tsabs tsprojsnd_tsabs tsremdups_tsabs tsmed_tsabs ora_inf)
+  using smed_slen2smed by auto
+
+
   
 lemma smed_sprojsnd: "sprojsnd\<cdot>(sMed\<cdot>s\<cdot>p) = sMed\<cdot>(sprojsnd\<cdot>s)\<cdot>p"
   proof(induction s arbitrary: p rule: ind)
