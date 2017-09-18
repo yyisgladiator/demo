@@ -189,7 +189,7 @@ lemma tsaltbitpro_inp2out:
           sfilterl4 tsmed_tsmap tsprojsnd_insert)
     (* tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>dr)) = tsAbs\<cdot>i *)
     have h4: "#(tsAbs\<cdot>i) \<noteq> \<infinity> \<Longrightarrow> tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>dr)) = tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>ds))"
-      using dr_def p1_def prop4 prop6 prop7 prop8 by force
+      using dr_def p1_def tsmed_tsabs_slen2tsmed_tsabs prop6 prop7 prop8 by force
     thus "tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>dr)) = tsAbs\<cdot>i"
       by (metis ds_def eq_slen_eq_and_less i_ninf prop6 send_def set2tssnd_prefix_inp)
   qed
