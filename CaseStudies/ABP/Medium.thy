@@ -405,12 +405,24 @@ lemma smed_smap:
   apply (rule_tac x=ora in scases, simp_all)
   by (case_tac "aa=True", simp_all)
 
-lemma smed_slen2smed2:
-  "#(srcdups\<cdot>(sprojsnd\<cdot>(sMed\<cdot>msg\<cdot>ora))) \<noteq> \<infinity> \<Longrightarrow> #({True} \<ominus> ora) = \<infinity>
-     \<Longrightarrow> #(srcdups\<cdot>(sprojsnd\<cdot>msg)) = #(srcdups\<cdot>(sprojsnd\<cdot>(sMed\<cdot>msg\<cdot>ora))) 
-     \<Longrightarrow> srcdups\<cdot>(sprojsnd\<cdot>msg) = srcdups\<cdot>(sprojsnd\<cdot>(sMed\<cdot>msg\<cdot>ora))"
-  apply (induction msg rule: ind, simp_all)
+lemma sprojsnd_srcdups_slen: "#(srcdups\<cdot>(sprojsnd\<cdot>s)) \<le> #(sprojsnd\<cdot>(srcdups\<cdot>s))"
+  apply (induction s rule: ind, simp_all)
   apply (rule admI)
+  apply (simp add: contlub_cfun_arg lub_mono2)
+  apply (rule_tac x=s in scases, simp_all)
+  apply (case_tac "a=aa", simp_all)
+  apply (case_tac a, case_tac aa, simp_all)
+  apply (case_tac a, case_tac aa)
+  apply (case_tac "ab=ac", simp_all)
+  apply (case_tac "b=ba", simp_all)
+  using less_lnsuc trans_lnle by blast
+
+(*
+lemma smed_slen2smed2:
+  "#(srcdups\<cdot>msg) \<noteq> \<infinity> \<Longrightarrow> #({True} \<ominus> ora) = \<infinity> 
+     \<Longrightarrow> #(srcdups\<cdot>(sprojsnd\<cdot>(sMed\<cdot>msg\<cdot>ora))) = #(srcdups\<cdot>msg) 
+     \<Longrightarrow> #(srcdups\<cdot>(sprojsnd\<cdot>msg))= #(srcdups\<cdot>msg)
+     \<Longrightarrow> (srcdups\<cdot>msg) = (srcdups\<cdot>(sMed\<cdot>msg\<cdot>ora))"
 sorry
 
 lemma smed_slen2smed:
@@ -418,7 +430,7 @@ lemma smed_slen2smed:
      \<Longrightarrow> #(sprojfst\<cdot>(srcdups\<cdot>msg)) = #(srcdups\<cdot>(sprojsnd\<cdot>(sMed\<cdot>msg\<cdot>ora))) 
      \<Longrightarrow> #(srcdups\<cdot>(sprojsnd\<cdot>msg)) = #(srcdups\<cdot>(sprojsnd\<cdot>(sMed\<cdot>msg\<cdot>ora))) 
      \<Longrightarrow> sprojfst\<cdot>(srcdups\<cdot>msg) = sprojfst\<cdot>(srcdups\<cdot>(sMed\<cdot>msg\<cdot>ora))"
-sorry
+  by (metis slen_sprojfst smed_slen2smed2)
 
 lemma tsmed_tsabs_slen2tsmed_tsabs:
   "#(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>msg))) \<noteq> \<infinity> \<Longrightarrow> #({True} \<ominus> ora) = \<infinity> 
@@ -427,232 +439,25 @@ lemma tsmed_tsabs_slen2tsmed_tsabs:
     \<Longrightarrow> tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>msg)) = tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(tsMed\<cdot>msg\<cdot>ora)))"
   apply (simp add: tsprojfst_tsabs tsprojsnd_tsabs tsremdups_tsabs tsmed_tsabs ora_inf)
   using smed_slen2smed by auto
+*)
 
+lemma smed_slen2smed2_adm: 
+  "adm (\<lambda>a. #(srcdups\<cdot>a) \<noteq> \<infinity> \<longrightarrow> (\<forall>x. #({True} \<ominus> x) = \<infinity> \<longrightarrow>
+          #(srcdups\<cdot>(sprojsnd\<cdot>(sMed\<cdot>a\<cdot>x))) = #(srcdups\<cdot>a) \<longrightarrow> #(srcdups\<cdot>(sprojsnd\<cdot>a)) = #(srcdups\<cdot>a) \<longrightarrow> 
+            srcdups\<cdot>a = srcdups\<cdot>(sMed\<cdot>a\<cdot>x)))"
+sorry
 
-  
-lemma smed_sprojsnd: "sprojsnd\<cdot>(sMed\<cdot>s\<cdot>p) = sMed\<cdot>(sprojsnd\<cdot>s)\<cdot>p"
-  proof(induction s arbitrary: p rule: ind)
-    case 1
-    then show ?case by simp
-  next
-    case 2
-    then show ?case by simp
-  next
-    case (3 a s)
-    then show ?case
-      proof (cases rule: oracases [of p])
-        case 1
-        then show ?thesis by simp
-      next
-        case (2 as)
-        then show ?thesis
-          apply (cases "a")
-          by (simp add: "3.IH") 
-      next
-        case (3 as)
-        then show ?thesis
-          apply (cases "a")
-          by (simp add: "3.IH") 
-      qed
-  qed
-
-lemma srcdups_sprojsnd_h: "#(srcdups\<cdot>(sprojsnd\<cdot>s)) \<le> #(sprojsnd\<cdot>(srcdups\<cdot>s))"
-  proof(induction s rule: ind,simp_all)
-    case 1
-    then show ?case 
-    proof (rule admI)
-      fix Y :: "nat \<Rightarrow> ('c \<times> 'd) stream"
-      assume a1: "chain Y"
-      assume a2: "\<forall>i. #(srcdups\<cdot>(sprojsnd\<cdot>(Y i))) \<le> #(sprojsnd\<cdot>(srcdups\<cdot>(Y i)))"
-      have f3: "\<forall>f c. \<not> chain f \<or> chain (\<lambda>n. c\<cdot>(f n::'d stream)::lnat)"
-        using ch2ch_Rep_cfunR by blast
-      have f4: "\<forall>f c. \<not> chain f \<or> chain (\<lambda>n. c\<cdot>(f n::('c \<times> 'd) stream)::'d stream)"
-        using ch2ch_Rep_cfunR by blast
-      have f5: "\<forall>f c. \<not> chain f \<or> chain (\<lambda>n. c\<cdot>(f n::('c \<times> 'd) stream)::('c \<times> 'd) stream)"
-        using ch2ch_Rep_cfunR by blast
-      have "\<forall>f c. \<not> chain f \<or> chain (\<lambda>n. c\<cdot>(f n::'d stream)::'d stream)"
-        using ch2ch_Rep_cfunR by blast
-      then have "(\<Squnion>n. #(srcdups\<cdot>(sprojsnd\<cdot>(Y n)))) \<sqsubseteq> (\<Squnion>n. #(sprojsnd\<cdot>(srcdups\<cdot>(Y n))))"
-        using f5 f4 f3 a2 a1 by (meson dual_order.trans is_ub_thelub lnle_conv lub_below)
-      then show "#(srcdups\<cdot>(sprojsnd\<cdot>(Lub Y))) \<le> #(sprojsnd\<cdot>(srcdups\<cdot>(Lub Y)))"
-        using a1 by (simp add: contlub_cfun_arg)
-    qed      
-  next
-    case (3 a s)
-    then show ?case
-      apply (cases rule: scases [of s],simp)
-      apply (cases a,simp)
-      apply (case_tac aa,simp) 
-      apply (case_tac "b=ba")
-      apply (case_tac "(aaa,b) = (ab,ba)")  
-      apply simp_all
-      using less_lnsuc trans_lnle by blast
-  qed
-
-lemma srcdups_sprojsnd: "#(srcdups\<cdot>s) \<noteq> \<infinity> \<Longrightarrow> #(srcdups\<cdot>(sprojsnd\<cdot>s)) = #(srcdups\<cdot>s) \<Longrightarrow> 
-      srcdups\<cdot>(sprojsnd\<cdot>s) = sprojsnd\<cdot>(srcdups\<cdot>s)"
-  proof(induction s rule: ind)
-    case 1
-    then show ?case
-    proof (rule admI, auto)
-      fix Y :: "nat \<Rightarrow> ('a \<times> 'b) stream"
-      assume chy: "chain Y" and
-         as1: "\<forall>i. #(srcdups\<cdot>(Y i)) \<noteq> \<infinity> \<longrightarrow> #(srcdups\<cdot>(sprojsnd\<cdot>(Y i))) = #(srcdups\<cdot>(Y i)) \<longrightarrow> srcdups\<cdot>(sprojsnd\<cdot>(Y i)) = sprojsnd\<cdot>(srcdups\<cdot>(Y i))"
-         and as2: "#(srcdups\<cdot>(\<Squnion>i::nat. Y i)) \<noteq> \<infinity>"
-         and as3: "#(srcdups\<cdot>(sprojsnd\<cdot>(\<Squnion>i::nat. Y i))) = #(srcdups\<cdot>(\<Squnion>i::nat. Y i))"
-         have h1: "\<And>i. #(srcdups\<cdot>(Y i)) \<noteq> \<infinity>"
-           by (metis as2 chy inf_less_eq is_ub_thelub lnle_conv monofun_cfun_arg)
-         have "\<And>i. #(srcdups\<cdot>(sprojsnd\<cdot>(Y i))) = #(srcdups\<cdot>(Y i))"  sorry
-         thus "srcdups\<cdot>(sprojsnd\<cdot>(\<Squnion>i::nat. Y i)) = sprojsnd\<cdot>(srcdups\<cdot>(\<Squnion>i::nat. Y i))"
-           by (smt as1 ch2ch_Rep_cfunR chy contlub_cfun_arg h1 lub_eq)
-      qed
-  next
-    case 2
-    then show ?case by simp
-  next 
-    case (3 a s)
-    then show ?case
-      apply (cases rule: scases [of s])
-      apply (cases a,simp)
-      apply (cases a,simp)
-      apply (case_tac aa,simp) 
-      apply (case_tac "b=ba")
-      apply (case_tac "(aaa,b) = (ab,ba)")  
-      apply simp_all
-      by (metis inf_ub less2eq ln_less not_less slen_sprojsnd sprojsnd_scons srcdups_sprojsnd_h) 
-  qed
-    
-lemma prop4s_h3_h1: "a\<noteq>shd s \<Longrightarrow> srcdups\<cdot>(\<up>a \<bullet> s) = \<up>a\<bullet>srcdups\<cdot>s" 
-  by (metis srcdups_neq srcdups_shd srcdups_srt strict_sdropwhile surj_scons)
-    
-lemma prop4s_h3_h2: "a = shd s \<Longrightarrow> s\<noteq>\<epsilon>\<Longrightarrow> srcdups\<cdot>(\<up>a \<bullet> s) = srcdups\<cdot>s"
-  using srcdups_eq[of "shd s" "srt\<cdot>s"] surj_scons[of s] by auto    
-    
-lemma prop4s_h3_h3: "#(srcdups\<cdot>(sprojsnd\<cdot>(\<up>a))) = Fin 1"
-  by (simp add: sprojsnd_def)
-    
-lemma prop4s_h3_h4: "s \<noteq> \<epsilon> \<Longrightarrow> shd s = a \<Longrightarrow>
-    srcdups\<cdot>(\<up>(snd a) \<bullet> smap snd\<cdot>s) = srcdups\<cdot>(smap snd\<cdot>s)"
-  by (simp add: smap_hd_rst)    
-    
-lemma prop4s_h3_h5: "sMed\<cdot>s\<cdot>as \<noteq> \<epsilon> \<Longrightarrow> shd (smap snd\<cdot>(sMed\<cdot>s\<cdot>as)) \<noteq> snd a \<Longrightarrow> 
-    srcdups\<cdot>(\<up>(snd a) \<bullet> smap snd\<cdot>(sMed\<cdot>s\<cdot>as)) = \<up>(snd a) \<bullet> srcdups\<cdot>(smap snd\<cdot>(sMed\<cdot>s\<cdot>as))"
-  by (simp add: prop4s_h3_h1)    
-    
-lemma prop4s_h3_h6: " #(srcdups\<cdot>(smap snd\<cdot>s)) \<noteq> \<infinity> \<Longrightarrow>  lnsuc\<cdot>(#(srcdups\<cdot>(smap snd\<cdot>(sMed\<cdot>s\<cdot>as)))) = #(srcdups\<cdot>(smap snd\<cdot>s)) \<Longrightarrow> false"
- sorry
-
-lemma prop4s_h3_h7: "s \<noteq> \<epsilon> \<Longrightarrow> shd (smap snd\<cdot>s) \<noteq> snd a \<Longrightarrow> 
-    srcdups\<cdot>(\<up>(snd a) \<bullet> smap snd\<cdot>s) = \<up>(snd a) \<bullet> srcdups\<cdot>(smap snd\<cdot>s)"
-  by (simp add: prop4s_h3_h1)   
-    
-lemma prop4s_h3_h8: "s \<noteq> \<epsilon> \<Longrightarrow> shd (smap snd\<cdot>s) =  snd a \<Longrightarrow>
-    srcdups\<cdot>(\<up>(snd a) \<bullet> smap snd\<cdot>s) = srcdups\<cdot>(smap snd\<cdot>s)"
-  by (simp add: smap_hd_rst)      
-    
-lemma prop4s_h3_h9: "#(srcdups\<cdot>s) \<noteq> \<infinity> \<Longrightarrow>
-         #(srcdups\<cdot>(smap snd\<cdot>s)) = lnsuc\<cdot>(#(srcdups\<cdot>s)) \<Longrightarrow> false" 
+lemma smed_slen2smed2:
+  "#(srcdups\<cdot>msg) \<noteq> \<infinity> \<Longrightarrow> #({True} \<ominus> ora) = \<infinity> 
+     \<Longrightarrow> #(srcdups\<cdot>(sprojsnd\<cdot>(sMed\<cdot>msg\<cdot>ora))) = #(srcdups\<cdot>msg) 
+     \<Longrightarrow> #(srcdups\<cdot>(sprojsnd\<cdot>msg))= #(srcdups\<cdot>msg)
+     \<Longrightarrow> (srcdups\<cdot>msg) = (srcdups\<cdot>(sMed\<cdot>msg\<cdot>ora))"
+  apply (induction msg arbitrary: ora rule: ind, simp_all)
+  apply (simp add: smed_slen2smed2_adm)
+  apply (case_tac "s=\<epsilon>", simp_all)
+  apply (cases rule: oracases, simp_all)
   sorry
 
-lemma prop4s_h3_h10: " #(srcdups\<cdot>(smap snd\<cdot>s)) \<noteq> \<infinity> \<Longrightarrow>
-          #(srcdups\<cdot>(smap snd\<cdot>(sMed\<cdot>s\<cdot>as))) = lnsuc\<cdot>(#(srcdups\<cdot>(smap snd\<cdot>s))) \<Longrightarrow> false"     
-  sorry
-    
-lemma prop4s_h3: assumes  "#(srcdups\<cdot>s) \<noteq> \<infinity>" "#({True} \<ominus> p) = \<infinity>" "#(srcdups\<cdot>(sprojsnd\<cdot>(sMed\<cdot>s\<cdot>p))) = #(srcdups\<cdot>s)"  
-       "#(srcdups\<cdot>(sprojsnd\<cdot>s))= #(srcdups\<cdot>s)" shows 
-       "(srcdups\<cdot>s) = (srcdups\<cdot>(sMed\<cdot>s\<cdot>p))" 
-     using assms proof(induction s arbitrary: p rule:ind)
-       case 1
-       then show ?case sorry
-     next
-       case 2
-       then show ?case by simp
-     next
-       case (3 a s)
-       then show ?case 
-         apply (case_tac "s = \<epsilon>")
-         apply (cases rule: oracases,simp) 
-         apply (metis (no_types, lifting) smed_bot1 smed_t)
-         apply (metis (no_types, lifting) slen_empty_eq smed_bot1 smed_f  strict_sprojsnd strict_srcdups)         
-         apply (case_tac "shd s= a")
-         apply (simp add: prop4s_h3_h2)
-         apply (cases rule: oracases)
-         apply (simp add: prop4s_h3_h2)  
-         apply simp  
-         apply (case_tac "sMed\<cdot>s\<cdot>as= \<epsilon>") 
-         apply (simp add: prop4s_h3_h3)
-         apply (metis Fin_02bot Fin_Suc bot_is_0 inject_lnsuc sconc_snd_empty slen_empty_eq 
-                  srcdups_nbot srcdups_shd srt_decrements_length surj_scons)
-         apply (case_tac "shd (sMed\<cdot>s\<cdot>as)= a")
-         apply (simp add: prop4s_h3_h2)  
-         apply (simp add: sprojsnd_def)
-         apply (metis (no_types, lifting) smap_scons srcdups_eq surj_scons) 
-         apply (simp add: prop4s_h3_h1)  
-           apply (simp add: sprojsnd_def) 
-           apply (case_tac "shd (smap snd\<cdot>(sMed\<cdot>s\<cdot>as)) = snd a")
-         apply (smt prop4s_h3_h4 slen_empty_eq slen_smap srcdups_eq srcdups_shd2 surj_scons)
-           apply (simp add: prop4s_h3_h4 prop4s_h3_h5)
-         apply (metis prop4s_h3_h6)
-         apply (simp add: sprojsnd_def) 
-        apply (case_tac "shd (smap snd\<cdot>s) = snd a")
-           apply (simp add: prop4s_h3_h4)
-         apply (simp add: prop4s_h3_h4)
-         apply (simp add: prop4s_h3_h1)
-         apply (cases rule: oracases,simp)
-          apply simp  
-          apply (case_tac "sMed\<cdot>s\<cdot>as= \<epsilon>") 
-           apply (simp add: prop4s_h3_h3)
-         apply (metis Fin_02bot Fin_Suc bot_is_0 lnat.injects slen_empty_eq)
-           apply (case_tac "shd (sMed\<cdot>s\<cdot>as)= a")
-           apply (simp add: prop4s_h3_h2)
-           apply (simp add: sprojsnd_def)
-            apply (simp add: prop4s_h3_h4)
-         apply (case_tac "shd (smap snd\<cdot>s) = snd a")
-         apply (simp add: prop4s_h3_h8)
-         using prop4s_h3_h9 apply blast
-         apply (simp add: prop4s_h3_h1)
-         apply (metis prop4s_h3_h10)
-          apply (simp add: prop4s_h3_h1)
-           apply (simp add: sprojsnd_def) 
-         apply (case_tac "shd (smap snd\<cdot>s) = snd a")  
-           apply (simp add: prop4s_h3_h8)
-           apply (case_tac "shd (smap snd\<cdot>(sMed\<cdot>s\<cdot>as)) = snd a")
-           apply (simp add: prop4s_h3_h8)
-         using prop4s_h3_h9 apply blast
-         using prop4s_h3_h9 apply blast
-         apply (metis (no_types, lifting) lnat.sel_rews(2) prop4s_h3_h1 prop4s_h3_h10 prop4s_h3_h8 slen_scons)
-          apply (simp add: sprojsnd_def) 
-          apply (case_tac "shd (smap snd\<cdot>s) = snd a")
-         using prop4s_h3_h8 prop4s_h3_h9 apply fastforce
-         by (metis "3.prems"(1) fold_inf prop4s_h3_h1 prop4s_h3_h10 slen_scons)   
-  qed  
-    
-lemma prop4s: "#(srcdups\<cdot>s) \<noteq> \<infinity> \<Longrightarrow> #({True} \<ominus> p) = \<infinity> \<Longrightarrow>
-    #(sprojfst\<cdot>(srcdups\<cdot>s)) = #(srcdups\<cdot>(sprojsnd\<cdot>(sMed\<cdot>s\<cdot>p))) \<Longrightarrow>
-    #(srcdups\<cdot>(sprojsnd\<cdot>s)) = #(srcdups\<cdot>(sprojsnd\<cdot>(sMed\<cdot>s\<cdot>p))) \<Longrightarrow>
-     sprojfst\<cdot>(srcdups\<cdot>s) = sprojfst\<cdot>(srcdups\<cdot>(sMed\<cdot>s\<cdot>p))"
-  by (metis prop4s_h3 slen_sprojfst) 
-    
-lemma prop4: 
-   " #(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>ts))) \<noteq> \<infinity>  \<Longrightarrow>
-  #({True} \<ominus> p) = \<infinity> \<Longrightarrow> #(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>ts))) = #(tsAbs\<cdot>(tsRemDups\<cdot>(tsProjSnd\<cdot>ts)))
-  \<Longrightarrow> #(tsAbs\<cdot>(tsRemDups\<cdot>(tsProjSnd\<cdot>ts))) = #(tsAbs\<cdot>(tsRemDups\<cdot>(tsProjSnd\<cdot>(tsMed\<cdot>ts\<cdot>p))))
-  \<Longrightarrow> tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>ts)) = tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(tsMed\<cdot>ts\<cdot>p)))"
-proof -
-  assume a1: "#({True} \<ominus> p) = \<infinity>"
-  assume a2: "#(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>ts))) = #(tsAbs\<cdot>(tsRemDups\<cdot>(tsProjSnd\<cdot>ts)))"
-  assume a3: "#(tsAbs\<cdot>(tsRemDups\<cdot>(tsProjSnd\<cdot>ts))) = #(tsAbs\<cdot>(tsRemDups\<cdot>(tsProjSnd\<cdot>(tsMed\<cdot>ts\<cdot>p))))"
-  assume a4: "#(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>ts))) \<noteq> \<infinity>"
-  have "#p = \<infinity>"
-    using a1 sfilterl4 by blast
-  then have f5: "tsAbs\<cdot>(tsMed\<cdot>ts\<cdot>p) = sMed\<cdot>(tsAbs\<cdot>ts)\<cdot>p"
-    using tsmed_tsabs by blast
-  have "#(srcdups\<cdot>(tsAbs\<cdot>ts)) \<noteq> \<infinity>"
-    using a4 by (simp add: tsremdups_tsabs)
-  then show ?thesis
-    using f5 a3 a2 a1 by (metis (no_types) prop4s tsprojfst_tsabs tsprojsnd_tsabs tsremdups_tsabs)
-qed
-  
 (* ----------------------------------------------------------------------- *)
 section {* tsMedium lemmata *}
 (* ----------------------------------------------------------------------- *)  
