@@ -98,11 +98,9 @@ lemma prop4s_h3_h4: "s \<noteq> \<epsilon> \<Longrightarrow> shd s = a \<Longrig
 lemma prop4s_h3_h5: "sMed\<cdot>s\<cdot>as \<noteq> \<epsilon> \<Longrightarrow> shd (smap snd\<cdot>(sMed\<cdot>s\<cdot>as)) \<noteq> snd a \<Longrightarrow> 
     srcdups\<cdot>(\<up>(snd a) \<bullet> smap snd\<cdot>(sMed\<cdot>s\<cdot>as)) = \<up>(snd a) \<bullet> srcdups\<cdot>(smap snd\<cdot>(sMed\<cdot>s\<cdot>as))"
   by (simp add: prop4s_h3_h1)    
-
-(*    
-lemma prop4s_h3_h6: " #(srcdups\<cdot>(smap snd\<cdot>s)) \<noteq> \<infinity> \<Longrightarrow>  lnsuc\<cdot>(#(srcdups\<cdot>(smap snd\<cdot>(sMed\<cdot>s\<cdot>as)))) = #(srcdups\<cdot>(smap snd\<cdot>s)) \<Longrightarrow> False"
+    
+lemma prop4s_h3_h6: " #(srcdups\<cdot>(smap snd\<cdot>s)) \<noteq> \<infinity> \<Longrightarrow>  lnsuc\<cdot>(#(srcdups\<cdot>(smap snd\<cdot>(sMed\<cdot>s\<cdot>as)))) = #(srcdups\<cdot>(smap snd\<cdot>s)) \<Longrightarrow> false"
  sorry
-*)
 
 lemma prop4s_h3_h7: "s \<noteq> \<epsilon> \<Longrightarrow> shd (smap snd\<cdot>s) \<noteq> snd a \<Longrightarrow> 
     srcdups\<cdot>(\<up>(snd a) \<bullet> smap snd\<cdot>s) = \<up>(snd a) \<bullet> srcdups\<cdot>(smap snd\<cdot>s)"
@@ -173,7 +171,7 @@ lemma prop4s_h3: assumes  "#(srcdups\<cdot>s) \<noteq> \<infinity>" "#({True} \<
            apply (case_tac "shd (smap snd\<cdot>(sMed\<cdot>s\<cdot>as)) = snd a")
          apply (smt prop4s_h3_h4 slen_empty_eq slen_smap srcdups_eq srcdups_shd2 surj_scons)
            apply (simp add: prop4s_h3_h4 prop4s_h3_h5)
-  apply (metis (no_types, lifting) "3.prems"(2) "3.prems"(3) "3.prems"(4) prop4s_h3_h2 smed_slen2smed2 smed_t srcdups_nfst2snd)
+         apply (metis prop4s_h3_h6)
          apply (simp add: sprojsnd_def) 
         apply (case_tac "shd (smap snd\<cdot>s) = snd a")
            apply (simp add: prop4s_h3_h4)
