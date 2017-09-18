@@ -1249,7 +1249,7 @@ by (metis event.exhaust event.simps(4) tsscanl_h2ttimes_nth_snth)
 lemma ttimes2ttimes_nth: 
   "Fin n<#(Rep_tstream ts) \<Longrightarrow> snth n (Rep_tstream (ttimes\<cdot>ts)) =
       (case (snth n (Rep_tstream ts)) of Msg a \<Rightarrow> \<M> ttimes_nth n (Rep_tstream ts) | \<surd> \<Rightarrow> \<surd>)"
-by (simp add: ttimes_def tsscanl_unfold ts_well_tsscanl_h tsscanl_h2ttimes_nth)
+by (simp add: ttimes_def tsscanl_insert ts_well_tsscanl_h tsscanl_h2ttimes_nth)
 
 (* Verification of tsScanl with tsScanl_nth under assumptions
    f associative operator and q neutral element of f *)
@@ -1366,7 +1366,7 @@ lemma tsscanl2tsscanl_nth:
   "Fin n<#(Rep_tstream ts) \<and> (\<forall>a. f q a=a) \<and> (\<forall>a b c. f (f a b) c = f a (f b c))
      \<Longrightarrow> snth n (Rep_tstream (tsScanl f q\<cdot>ts)) =
        (case (snth n (Rep_tstream ts)) of Msg a \<Rightarrow> \<M> tsScanl_nth n f q (Rep_tstream ts) | \<surd> \<Rightarrow> \<surd>)"
-by (simp add: tsscanl_unfold ts_well_tsscanl_h tsscanl_h2tsscanl_nth)
+by (simp add: tsscanl_insert ts_well_tsscanl_h tsscanl_h2tsscanl_nth)
 
 
 
