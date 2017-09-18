@@ -489,13 +489,92 @@ lemma srcdups_sprojsnd: "#(srcdups\<cdot>s) \<noteq> \<infinity> \<Longrightarro
       by (metis inf_ub less2eq ln_less not_less slen_sprojsnd sprojsnd_scons srcdups_sprojsnd_h) 
   qed
     
-lemma prop4s_h3: assumes "#(srcdups\<cdot>s) \<noteq> \<infinity>" "#(srcdups\<cdot>s) = #(srcdups\<cdot>(sprojsnd\<cdot>(sMed\<cdot>s\<cdot>p)))" 
-       "#(srcdups\<cdot>s) = #(srcdups\<cdot>(sprojsnd\<cdot>s))"  shows
-       "#(srcdups\<cdot>s) = #(srcdups\<cdot>(sMed\<cdot>s\<cdot>p))" 
-  proof - 
-    from assms(3) have h:"srcdups\<cdot>(sprojsnd\<cdot>s) = sprojsnd\<cdot>(srcdups\<cdot>s)"
-      using assms(1) srcdups_sprojsnd by force
-    from assms have " #(srcdups\<cdot>(sprojsnd\<cdot>s)) = #(srcdups\<cdot>(sprojsnd\<cdot>(sMed\<cdot>s\<cdot>p)))" by simp
+lemma prop4s_h3_h1: "a\<noteq>shd s \<Longrightarrow> srcdups\<cdot>(\<up>a \<bullet> s) = \<up>a\<bullet>srcdups\<cdot>s" 
+  by (metis srcdups_neq srcdups_shd srcdups_srt strict_sdropwhile surj_scons)
+    
+lemma prop4s_h3_h2: "a = shd s \<Longrightarrow> s\<noteq>\<epsilon>\<Longrightarrow> srcdups\<cdot>(\<up>a \<bullet> s) = srcdups\<cdot>s"
+  using srcdups_eq[of "shd s" "srt\<cdot>s"] surj_scons[of s] by auto    
+    
+lemma prop4s_h3_h3: "#(srcdups\<cdot>(sprojsnd\<cdot>(\<up>a))) = Fin 1"
+  by (simp add: sprojsnd_def)
+    
+lemma prop4s_h3: assumes  "#(srcdups\<cdot>s) \<noteq> \<infinity>" "#({True} \<ominus> p) = \<infinity>" "#(srcdups\<cdot>s) = #(srcdups\<cdot>(sprojsnd\<cdot>(sMed\<cdot>s\<cdot>p)))"  
+       "#(srcdups\<cdot>s) = #(srcdups\<cdot>(sprojsnd\<cdot>s))" shows 
+       "(srcdups\<cdot>s) = (srcdups\<cdot>(sMed\<cdot>s\<cdot>p))" 
+     (*  using assms proof(induction p arbitrary: s rule:ind)
+       case 1
+  then show ?case sorry
+next
+  case 2
+  then show ?case by simp
+next
+  case (3 a p)
+  then show ?case
+    apply simp
+    apply(rule scases [of s],simp)
+    apply (case_tac "a=False")
+    apply (case_tac "(srcdups\<cdot>(\<up>aa \<bullet> s)) = (srcdups\<cdot>(s))")
+    apply simp 
+      
+    apply (subst srcdups_step)
+    
+    sorry
+   (* apply (metis sconc_snd_empty srcduph srcdups_anotb_h strict_srcdups)
+    by (metis sconc_snd_empty srcduph srcdups_anotb_h strict_srcdups)  *)
+qed *)
+     
+     using assms proof(induction s arbitrary: p rule:ind)
+       case 1
+       then show ?case sorry
+     next
+       case 2
+       then show ?case by simp
+     next
+       case (3 a s)
+       then show ?case 
+         apply (case_tac "s = \<epsilon>")
+         apply (cases rule: oracases,simp) 
+         apply (metis (no_types, lifting) smed_bot1 smed_t)
+         apply (metis (no_types, lifting) slen_empty_eq smed_bot1 smed_f  strict_sprojsnd strict_srcdups)         
+         apply (case_tac "shd s= a")
+         apply (subst prop4s_h3_h2,simp_all)
+         apply (cases rule: oracases)
+         apply (simp add: prop4s_h3_h2)  
+         apply simp  
+         apply (case_tac "sMed\<cdot>s\<cdot>as= \<epsilon>") 
+         apply (simp add: prop4s_h3_h3)
+         apply (simp add: prop4s_h3_h2)
+         apply (metis Fin_02bot Fin_Suc bot_is_0 inject_lnsuc sconc_snd_empty slen_empty_eq srcdups_nbot srcdups_shd srt_decrements_length surj_scons)
+         apply (case_tac "shd (sMed\<cdot>s\<cdot>as)= a")
+         apply (subst prop4s_h3_h2,simp_all)  
+           
+         apply (subst prop4s_h3_h2,simp)
+         sorry  
+         (*  apply (cases rule: scases [of "(sMed\<cdot>(\<up>a \<bullet> s)\<cdot>p)"],simp)
+         apply simp  
+         apply (cases rule: scases [of s])
+          apply (cases rule: oracases) 
+         using assms(2) apply (simp only:  ) 
+         
+         apply (metis (no_types, lifting) smed_bot1 smed_t)
+         apply (metis (no_types, lifting) slen_empty_eq smed_bot1 smed_f  strict_sprojsnd strict_srcdups)         
+         apply (cases rule: oracases,(simp))
+         apply (simp add: lscons_conv)
+         apply (case_tac "(sMed\<cdot>(\<up>aa \<bullet> s)\<cdot>as) = \<up>ab \<bullet> (sMed\<cdot>sb\<cdot>asb)") 
+         apply (case_tac "a=aa")
+            apply (case_tac "a=ab")
+         
+         sorry
+     qed 
+     from assms have " #(srcdups\<cdot>(sprojsnd\<cdot>s)) = #(srcdups\<cdot>(sprojsnd\<cdot>(sMed\<cdot>s\<cdot>p)))" by simp
+     have "#(srcdups\<cdot>(sprojsnd\<cdot>(sMed\<cdot>s\<cdot>p))) = #(sprojsnd\<cdot>(srcdups\<cdot>(sMed\<cdot>s\<cdot>p)))"
+       
+       sorry  
+     from this assms have "#(sprojsnd\<cdot>(srcdups\<cdot>(sMed\<cdot>s\<cdot>p))) = #(srcdups\<cdot>(sprojsnd\<cdot>s))"
+        by auto        
+     from this assms have "#(srcdups\<cdot>(sMed\<cdot>s\<cdot>p)) =#(srcdups\<cdot>s)"
+       by (simp add: slen_sprojsnd) *)
+    (*    
     from this h have "(srcdups\<cdot>(sprojsnd\<cdot>(sMed\<cdot>s\<cdot>p))) = sprojsnd\<cdot>(srcdups\<cdot>(sMed\<cdot>s\<cdot>p))"  
       proof(induction s arbitrary: p rule: ind)
         case 1
@@ -510,9 +589,9 @@ lemma prop4s_h3: assumes "#(srcdups\<cdot>s) \<noteq> \<infinity>" "#(srcdups\<c
            apply (simp)  
            apply (rule scases [of "(sMed\<cdot>s\<cdot>as)"])
           sorry
-      qed
+      qed*)(*
     from this assms show ?thesis
-      by (simp add: slen_sprojsnd) 
+      by (simp)*)
   qed  
 (*    
 lemma srcdups_smed_h: " #(srcdups\<cdot>(sMed\<cdot>s\<cdot>p)) \<le> #(srcdups\<cdot>s)"
@@ -539,14 +618,29 @@ lemma srcdups_smed_h: " #(srcdups\<cdot>(sMed\<cdot>s\<cdot>p)) \<le> #(srcdups\
         sorry
   qed
 *)    
-lemma srcdups_smed: "#(srcdups\<cdot>s) \<noteq> \<infinity> \<Longrightarrow> #(srcdups\<cdot>s) = #(srcdups\<cdot>(sMed\<cdot>s\<cdot>p)) \<Longrightarrow>
-      srcdups\<cdot>s = srcdups\<cdot>(sMed\<cdot>s\<cdot>p) "
-  apply (rule scases [of s],simp)
-  apply (rule_tac scases [of sa],simp_all)
+(*    
+lemma srcdups_smed: assumes "#(srcdups\<cdot>s) \<noteq> \<infinity>"  "#(srcdups\<cdot>s) = #(srcdups\<cdot>(sMed\<cdot>s\<cdot>p))" shows
+      "srcdups\<cdot>s = srcdups\<cdot>(sMed\<cdot>s\<cdot>p) "
+ (* proof (cases rule: scases [of s],simp)
+    case (2 a s)
+    then show ?thesis
+      apply simp
+      apply (cases rule: scases [of s])
+      apply (cases rule: oracases)  
+      using assms apply simp
+      apply (metis smed_bot1 smed_t)
+       apply (metis assms(2) slen_empty_eq smed_bot1 smed_f strict_srcdups)
+        apply (cases rule: oracases)  
+      using assms apply simp
+       apply (case_tac "a=aa")
+       apply simp 
+       apply (cases rule: oracases)
+        
+      sorry
+  qed
+*)
     
-    sorry
-   (* 
-   proof(induction s arbitrary: p rule: ind)
+   using assms proof(induction s arbitrary: p rule: ind)
      case 1
      then show ?case sorry
    next
@@ -563,24 +657,24 @@ lemma srcdups_smed: "#(srcdups\<cdot>s) \<noteq> \<infinity> \<Longrightarrow> #
          apply (cases rule: oracases) 
            apply auto[1]  
            apply (case_tac "a=aa")
-             
-             apply (rule_tac oracases )
-     
+             apply simp  
+             apply (rule_tac oracases)
+               apply (metis smed_bot2 smed_t)
+               apply (metis smed_t srcdups_eq)
+               apply (metis smed_f smed_t)
+             apply simp
+             apply (rule_tac oracases)
+               apply force
+               apply (smt inject_lnsuc slen_scons smed_t srcdups_neq)
+               apply simp
       sorry
-qed    *)
-    
-lemma prop4s_h1: "srcdups\<cdot>s = srcdups\<cdot>(sMed\<cdot>s\<cdot>p) \<Longrightarrow>
-      sprojfst\<cdot>(srcdups\<cdot>s) = sprojfst\<cdot>(srcdups\<cdot>(sMed\<cdot>s\<cdot>p)) "  
-  by simp
+qed  *)  
     
 lemma prop4s: "#(srcdups\<cdot>s) \<noteq> \<infinity> \<Longrightarrow> #({True} \<ominus> p) = \<infinity> \<Longrightarrow>
     #(sprojfst\<cdot>(srcdups\<cdot>s)) = #(srcdups\<cdot>(sprojsnd\<cdot>(sMed\<cdot>s\<cdot>p))) \<Longrightarrow>
     #(srcdups\<cdot>(sprojsnd\<cdot>s)) = #(srcdups\<cdot>(sprojsnd\<cdot>(sMed\<cdot>s\<cdot>p))) \<Longrightarrow>
-     sprojfst\<cdot>(srcdups\<cdot>s) = sprojfst\<cdot>(srcdups\<cdot>(sMed\<cdot>s\<cdot>p))" 
-  apply (rule prop4s_h1)
-  apply (rule srcdups_smed)
-  apply blast
-  by (metis prop4s_h3 slen_sprojfst)
+     sprojfst\<cdot>(srcdups\<cdot>s) = sprojfst\<cdot>(srcdups\<cdot>(sMed\<cdot>s\<cdot>p))"
+  by (metis prop4s_h3 slen_sprojfst) 
     
 lemma prop4: 
    " #(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>ts))) \<noteq> \<infinity>  \<Longrightarrow>
