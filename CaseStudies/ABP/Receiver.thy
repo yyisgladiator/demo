@@ -23,7 +23,6 @@ definition tsRecSnd :: "('a \<times> 'b) tstream \<rightarrow> 'a tstream" where
 definition tsRec :: "('a \<times> 'b) tstream \<rightarrow> ('b tstream \<times> 'a tstream)" where
 "tsRec \<equiv> \<Lambda> dat. (tsProjSnd\<cdot>dat, tsRecSnd\<cdot>dat)"
 
-
 (* ----------------------------------------------------------------------- *)
 subsection {* basic properties *}
 (* ----------------------------------------------------------------------- *)

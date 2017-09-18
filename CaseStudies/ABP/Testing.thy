@@ -33,22 +33,23 @@ definition tsSndExampOut :: "(nat \<times> bool) tstream" where
   "tsSndExampOut = <[Msg (1, True), \<surd>, Msg (1, True), Msg (2, False), Msg (2, False), \<surd>, 
                      Msg (2, False), \<surd>, Msg (1, True), \<surd>]>\<surd>"
 
-lemma tssnd_test_bot: "tsSnd\<cdot>\<bottom>\<cdot>tsInfTick = \<bottom>" 
+lemma tssnd_test_bot: "tsSnd_h\<cdot>\<bottom>\<cdot>tsInfTick = \<bottom>" 
   by (fixrec_simp)
 
 lemma tssnd_test_fin:
-  "tsSnd\<cdot>tsSndExampInp_1\<cdot>(tsSndExampInp_2 \<bullet>\<surd> tsInfTick)\<cdot>(Discr True) = tsSndExampOut"
+  "tsSnd_h\<cdot>tsSndExampInp_1\<cdot>(tsSndExampInp_2 \<bullet>\<surd> tsInfTick)\<cdot>(Discr True) = tsSndExampOut"
   apply (simp add: tsSndExampInp_1_def tsSndExampInp_2_def tsSndExampOut_def tsconc_mlscons 
-         tsconc_delayfun tssnd_mlscons_ack tssnd_mlscons_nack tssnd_delayfun_nack tssnd_delayfun)
+         tsconc_delayfun tssnd_h_mlscons_ack tssnd_h_mlscons_nack tssnd_h_delayfun_nack 
+         tssnd_h_delayfun)
   apply (subst tsinftick_unfold)
-  by (simp only: tssnd_delayfun, simp)    
+  by (simp only: tssnd_h_delayfun, simp)    
     
 lemma tssnd_test_inf:
-  "tsSnd\<cdot>(tsSndExampInp_1 \<bullet>\<surd> tsInfTick)\<cdot>(tsSndExampInp_2 \<bullet>\<surd> tsInfTick)\<cdot>(Discr True) 
+  "tsSnd_h\<cdot>(tsSndExampInp_1 \<bullet>\<surd> tsInfTick)\<cdot>(tsSndExampInp_2 \<bullet>\<surd> tsInfTick)\<cdot>(Discr True) 
      = tsSndExampOut \<bullet>\<surd> tsInfTick"
   by (simp add: tsSndExampInp_1_def tsSndExampInp_2_def tsSndExampOut_def tsconc_mlscons 
-      tsconc_delayfun tssnd_mlscons_ack tssnd_mlscons_nack tssnd_delayfun_nack tssnd_delayfun
-      tssnd_inftick_inftick)
+      tsconc_delayfun tssnd_h_mlscons_ack tssnd_h_mlscons_nack tssnd_h_delayfun_nack 
+      tssnd_h_delayfun tssnd_h_inftick_inftick)
 
 (* ----------------------------------------------------------------------- *)
 subsection {* medium *}
