@@ -1502,7 +1502,8 @@ next
   thus?thesis
     by (simp)
 qed
-       
+
+declare [[show_types]]  
 lemma tsbtick_cont_pre2: assumes "chain Y"
   shows "(if tsbDom\<cdot>(\<Squnion>i. Y i) \<noteq> {} then LEAST ln. ln \<in> {#\<surd> (\<Squnion>i. Y i)  .  c |c. c \<in> tsbDom\<cdot>(\<Squnion>i. Y i)} else \<infinity>) \<sqsubseteq>
          (\<Squnion>i. if tsbDom\<cdot>(Y i) \<noteq> {} then LEAST ln. ln \<in> {#\<surd> ((Y i)  .  c) |c. c \<in> tsbDom\<cdot>(Y i)} else \<infinity>)"
@@ -1546,7 +1547,7 @@ proof (cases "tsbDom\<cdot>(\<Squnion>i. Y i) \<noteq> {}")
         case True
         then have f30211: "\<exists>i. max_in_chain i (\<lambda> i. LEAST ln. \<exists>c. ln = #\<surd> Y i  .  c \<and> c \<in> tsbDom\<cdot>(Y i))"
           using finite_chain_def f301 by blast
-        
+            
         then obtain maxI where f30212: "\<forall>j. maxI \<le> j \<longrightarrow> (LEAST ln. \<exists>c. ln = #\<surd> Y maxI  .  c \<and> c \<in> tsbDom\<cdot>(Y maxI)) = (LEAST ln. \<exists>c. ln = #\<surd> Y j  .  c \<and> c \<in> tsbDom\<cdot>(Y j))"
           by (meson max_in_chain_def)
         then obtain maxCount where f30213: "maxCount = (LEAST ln. \<exists>c. ln = #\<surd> Y maxI  .  c \<and> c \<in> tsbDom\<cdot>(Y maxI))"
@@ -1559,15 +1560,62 @@ proof (cases "tsbDom\<cdot>(\<Squnion>i. Y i) \<noteq> {}")
         have f30216: "\<exists> maxCh \<in> tsbDom\<cdot>(Lub Y). \<forall>j\<ge>maxI. maxCount = #\<surd> (Y j . maxCh)"
         proof(rule ccontr)
           assume "\<not>?thesis"
-          then have "\<forall> maxCh \<in> tsbDom\<cdot>(Lub Y). \<exists>j\<ge>maxI. maxCount \<le> #\<surd> (Y j . maxCh)"
-            by (smt Least_le assms f30212 f30213 tsbChain_dom_eq2)
-          then show "False" 
-            
-            sorry
-        qed   
-        then show ?thesis 
-          
-          sorry
+          then have f302161: "\<forall> ch1 \<in> tsbDom\<cdot>(Lub Y). \<exists>j\<ge>maxI. maxCount < #\<surd> (Y j . ch1)"
+            by (smt Least_le assms f30212 f30213 order.not_eq_order_implies_strict tsbChain_dom_eq2)
+          show "False" 
+          proof(cases "card (tsbDom\<cdot>(Lub Y))")
+            case 0
+            then show ?thesis 
+              using f1 f10 f30215 by auto
+          next
+            case (Suc nat)
+            then have i1: "card (tsbDom\<cdot>(Lub Y)) = Suc nat"
+              by blast
+            show ?thesis
+            proof - 
+              obtain n where i2: "card (tsbDom\<cdot>(Lub Y)) = n"
+                by blast
+              then have i3: "n > 0"    
+                by (simp add: i1) 
+                  
+              obtain f where i4: "tsbDom\<cdot>(Lub Y) = f ` {i::nat. i < n}"
+                using finite_imp_nat_seg_image_inj_on f30215 card_image i2 by fastforce     
+              then have i5: "\<forall>i<n. \<exists>j\<ge>maxI. maxCount < #\<surd> (Y j . (f i))"
+                using f302161 by blast
+              then obtain x where i6: "x = SUPREMUM {i::nat. i < n} (\<lambda>i. (THE x. x\<ge>maxI \<and> (maxCount < #\<surd> (Y x . (f i))) \<and> (\<forall>j<x. maxCount \<ge> #\<surd> (Y x . (f i)))))"
+                
+                sorry
+              have i7: "\<forall>i<n. \<exists>m. m = (THE x. x\<ge>maxI \<and> (maxCount < #\<surd> (Y x . (f i))) \<and> (\<forall>j<x. maxCount \<ge> #\<surd> (Y j . (f i))))"    
+                by blast
+                  
+              have i0: "tsbDom\<cdot>(Lub Y) = tsbDom\<cdot>(Y x)"    
+                using assms by simp    
+              have i01: "\<forall>i<n. maxCount < #\<surd> (Y x . f i)"
+                sorry
+              then have i8: "maxCount < (LEAST ln. \<exists>c. ln = #\<surd> Y x  .  c \<and> c \<in> tsbDom\<cdot>(Y x))"
+                (*using f10 tsbtick_min_on_channel by fastforce*)
+                sorry
+              then have i9: "maxCount < (\<Squnion>i. LEAST ln. \<exists>c. ln = #\<surd> Y i  .  c \<and> c \<in> tsbDom\<cdot>(Y i))"
+                using f301 f30214 lnless_def po_eq_conv test34 by fastforce
+              then show ?thesis
+                using f30214 by simp
+            qed  
+          qed
+        qed
+        then obtain maxCh where f30217: "maxCh \<in> tsbDom\<cdot>(Lub Y) \<and> (\<forall>j\<ge>maxI. maxCount = #\<surd> (Y j . maxCh))"
+          by blast
+        then have f30218: "\<forall>j\<ge>maxI. #\<surd> (Y j . maxCh) = (LEAST ln. \<exists>c. ln = #\<surd> Y j  .  c \<and> c \<in> tsbDom\<cdot>(Y j))"
+          by (simp add: f30212 f30213)
+        have f30219: "maxCh \<in> tsbDom\<cdot>(Lub Y) \<and> (\<forall> j. \<forall> ch2 \<in> tsbDom\<cdot>(Lub Y). (maxI \<le> j) \<longrightarrow> ((#\<surd> Y j . maxCh) \<sqsubseteq> (#\<surd> Y j .  ch2)))"    
+          by (smt Least_le assms f30212 f30213 f30217 lnle_conv tsbChain_dom_eq2)      
+        have f302110: "(\<Squnion>i. LEAST ln. \<exists>c. ln = #\<surd> Y i  .  c \<and> c \<in> tsbDom\<cdot>(Y i)) = (\<Squnion>i.  (#\<surd> Y i  .  maxCh))"
+          apply(subst chains_lub_eq, simp_all)
+          using f301 apply auto[1]
+          using assms apply auto[1]
+          using f30218 by fastforce
+        show ?thesis 
+          apply(subst f302110)
+          by (metis (mono_tags, lifting) Least_le f2 f30219 lnle_conv)
       next
         case False
         then have f30221: "\<not>(\<exists>i. max_in_chain i (\<lambda> i. LEAST ln. \<exists>c. ln = #\<surd> Y i  .  c \<and> c \<in> tsbDom\<cdot>(Y i)))"
