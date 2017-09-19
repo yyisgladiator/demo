@@ -327,7 +327,7 @@ proof -
     apply(subst sbRenameChMap_cont, simp_all)
     using assms spf_map_well_def by auto
   have f1: "cont (\<lambda> sb. (f \<rightleftharpoons> (sbRenameChMap sb m)))"
-    by (metis (full_types) Rep_CSPF_def cont_Rep_cfun2 cont_compose f0 op_the_cont)
+    by (metis (full_types)  cont_Rep_cfun2 cont_compose f0 op_the_cont)
   show ?thesis
     using f1 by auto
 qed
@@ -375,11 +375,11 @@ proof -
   have  "cont (\<lambda>s. (Rep_cfun (Rep_SPF f1))\<rightharpoonup>(s\<bar>spfDom\<cdot>f1))"
     by (metis (no_types) cont_Rep_cfun2 cont_compose op_the_cont)
   then have f1: "cont (\<lambda>x. (f1 \<rightleftharpoons> (x \<bar>spfDom\<cdot>f1)))"
-    by (metis Rep_CSPF_def)
+    by (metis )
   have f3: "cont (\<lambda>x. (f1 \<rightleftharpoons> (x \<bar>spfDom\<cdot>f1)) \<uplus> (f2 \<rightleftharpoons> (x \<bar>spfDom\<cdot>f2)))"
   proof -
-    have f1: "\<And>s. cont (\<lambda>sa. s::'a SPF\<rightleftharpoons>(sa\<bar>spfDom\<cdot>s))"
-      using Rep_CSPF_def contSPFRestrict by auto
+    have f1: "\<And>s. cont (\<lambda>sa. (s::'a SPF) \<rightleftharpoons>(sa\<bar>spfDom\<cdot>s))"
+      using  contSPFRestrict by auto
     have "\<not> cont (\<lambda>s. (f2\<rightleftharpoons>(s\<bar>spfDom\<cdot>f2))) \<or> \<not> cont (\<lambda>s. sbUnion\<cdot> (f1\<rightleftharpoons>(s\<bar>spfDom\<cdot>f1))) \<or> cont (\<lambda>s. (f1\<rightleftharpoons>(s\<bar>spfDom\<cdot>f1)) \<uplus> (f2\<rightleftharpoons>(s\<bar>spfDom\<cdot>f2)))"
       using cont2cont_APP by blast
     then have ?thesis
@@ -407,7 +407,7 @@ proof -
   then have "cont (\<lambda>s. (sbDom\<cdot>s = spfDom\<cdot> f1)\<leadsto>((Rep_cfun (Rep_SPF f2))\<rightharpoonup>((Rep_cfun (Rep_SPF f1))\<rightharpoonup>s)))"
     using if_then_cont by blast
   then show ?thesis
-    by (metis (no_types) Rep_CSPF_def)
+    by (metis (no_types) )
 qed
   
 lemma sercomp_spf_well[simp]: assumes "spfRan\<cdot>f1 = spfDom\<cdot>f2" shows "spf_well (\<Lambda> x. (sbDom\<cdot>x =  spfDom\<cdot>f1) \<leadsto> (f2 \<rightleftharpoons> (f1 \<rightleftharpoons> x)))"  
@@ -485,14 +485,14 @@ lemma [simp]: "spfRan\<cdot>addC = {c5}"
 subsubsection \<open>Composition par\<close>
 
   
-lemma [simp]: "I idC append0C = {c1, c2}"
-by (auto simp add: I_def)
+lemma [simp]: "spfCompI idC append0C = {c1, c2}"
+by (auto simp add: spfCompI_def)
 
-lemma [simp]: "Oc idC append0C = {c3, c4}"
-by (auto simp add: Oc_def)
+lemma [simp]: "spfCompOc idC append0C = {c3, c4}"
+by (auto simp add: spfCompOc_def)
 
-lemma [simp]: "L idC append0C = {}"
-by (auto simp add: L_def)  
+lemma [simp]: "spfCompL idC append0C = {}"
+by (auto simp add: spfCompL_def)  
 
 lemma [simp]: "spfComp_well idC append0C"
   by (simp add: spfComp_well_def) 
@@ -515,18 +515,18 @@ by simp_all
 subsubsection \<open>Composition ser\<close>
   
   
-lemma [simp]: "I (idC \<parallel> append0C) addC = {c1, c2}"
-  by(simp add: I_def)
+lemma [simp]: "spfCompI (idC \<parallel> append0C) addC = {c1, c2}"
+  by(simp add: spfCompI_def)
     
-lemma [simp]: "Oc (idC \<parallel> append0C) addC = {c3, c4, c5}"
-  by(auto simp add: Oc_def)
+lemma [simp]: "spfCompOc (idC \<parallel> append0C) addC = {c3, c4, c5}"
+  by(auto simp add: spfCompOc_def)
 
-lemma [simp]: "L (idC \<parallel> append0C) addC = {c3, c4}"
-  by(auto simp add: L_def) 
-    
+lemma [simp]: "spfCompL (idC \<parallel> append0C) addC = {c3, c4}"
+  by(auto simp add: spfCompL_def) 
+(*    
 lemma [simp]: "pL (idC \<parallel> append0C) addC = {}"
   by(auto simp add: pL_def)   
-  
+  *)
     
 subsubsection \<open>Feedback\<close>
   
@@ -546,7 +546,8 @@ lemma ranInnerFeedbackSum4SPF: "spfRan\<cdot>(innerFeedbackSum4SPF) = {c5}"
   apply(subst spfRename_spfRan)
   by(simp_all add: spf_map_well_def map_injective_def)
     
-lemma ranInnerFeedbackSum4SPF_sb: assumes "sbDom\<cdot>sb = {c1, c5}" shows "sbDom\<cdot>(innerFeedbackSum4SPF\<rightleftharpoons>sb) = spfRan\<cdot>(innerFeedbackSum4SPF)"
+lemma ranInnerFeedbackSum4SPF_sb: assumes "sbDom\<cdot>sb = {c1, c5}" 
+ shows "sbDom\<cdot>(innerFeedbackSum4SPF\<rightleftharpoons>sb) = spfRan\<cdot>(innerFeedbackSum4SPF)"
   by (simp add: assms domInnerFeedbackSum4SPF hidespfwell_helper)
   
 lemma [simp]: "spfDom\<cdot>sum4SPF = {c1}"
@@ -562,7 +563,8 @@ lemma [simp]: "spfRan\<cdot>sum4SPF = {c5}"
 subsubsection \<open>Apply lemmas\<close>
   
   
-lemma innerSum4SPF_c5_eq: assumes "sbDom\<cdot>sb = I (idC \<parallel> append0C) addC" shows "(innerSum4SPF \<rightleftharpoons> sb) . c5 = add\<cdot>(sb . c1)\<cdot>(\<up>0\<bullet>(sb . c2))"
+lemma innerSum4SPF_c5_eq: assumes "sbDom\<cdot>sb = spfCompI (idC \<parallel> append0C) addC" 
+  shows "(innerSum4SPF \<rightleftharpoons> sb) . c5 = add\<cdot>(sb . c1)\<cdot>(\<up>0\<bullet>(sb . c2))"
 proof - 
   have f1: "{c1, c2} = {c2, c1}"
     by auto
@@ -572,11 +574,12 @@ proof -
   have f3: "(([c3 \<mapsto> sb_id\<cdot>(sb . c1)]\<Omega>) \<uplus> ([c4 \<mapsto> appendElem2 0\<cdot>(sb . c2)]\<Omega>)) . c3 = sb_id\<cdot>(sb . c1)"
     apply(subst sbunion_getchL)
      apply(simp add: sbdom_rep_eq)
-      by simp
-  have f4: "(([c3 \<mapsto> sb_id\<cdot>(sb . c1)]\<Omega>) \<uplus> ([c4 \<mapsto> appendElem2 0\<cdot>(sb . c2)]\<Omega>)) . c4 = appendElem2 0\<cdot>(sb . c2)"
+      by (simp add: sbgetch_rep_eq)
+  have f4: "(([c3 \<mapsto> sb_id\<cdot>(sb . c1)]\<Omega>) \<uplus> ([c4 \<mapsto> appendElem2 0\<cdot>(sb . c2)]\<Omega>)) . c4 
+          = appendElem2 0\<cdot>(sb . c2)"
     apply(subst sbunion_getchR)
      apply(simp add: sbdom_rep_eq)
-      by simp
+      by (simp add: sbgetch_rep_eq)
   show ?thesis  
     apply(simp only: sercomp_def)
     apply(subst sercomp_repAbs)
@@ -586,7 +589,7 @@ proof -
     apply(simp add: idC_def append0C_def addC_def)
     apply(simp add: SPF1x1_rep_eq SPF2x1_rep_eq assms)
     apply(simp add: f2 f3 f4)
-    by(simp add: sb_id_def appendElem2_def)
+    by(simp add: sb_id_def appendElem2_def sbgetch_rep_eq)
 qed  
   
 lemma innerFeedbackSum4SPF_c5_eq: assumes "sbDom\<cdot>sb = {c1}" and "sbDom\<cdot>z = {c5}" shows
@@ -601,7 +604,7 @@ proof -
     apply(subst sbRenameChMap_getCh)
     apply(simp)
     by (simp_all add: assms(2) map_injective_def)
-  have f3: "sbDom\<cdot>(sbRenameChMap ((sb \<uplus> z)\<bar>{c1, c5}) [c5 \<mapsto> c2]) = I (idC\<parallel>append0C) addC"
+  have f3: "sbDom\<cdot>(sbRenameChMap ((sb \<uplus> z)\<bar>{c1, c5}) [c5 \<mapsto> c2]) = spfCompI (idC\<parallel>append0C) addC"
     apply(simp add: assms)
     apply(subst sbRenameChMap_sbDom)
      apply(simp_all add: sb_rename_map_well_def map_injective_def assms)
@@ -627,10 +630,12 @@ lemma t5: assumes "sbDom\<cdot>sb = {c1}" shows
   by (metis domInnerFeedbackSum4SPF spfFeedH_cont)
 
 lemma t4: assumes "sbDom\<cdot>sb = {c1}" and "sbDom\<cdot>x = {c5} " shows
-    "(\<Lambda> z. (innerFeedbackSum4SPF\<rightleftharpoons>((sb \<uplus> z)\<bar> {c1, c5})))\<cdot>x = (\<Lambda> z. [c5 \<mapsto> add\<cdot>(sb . c1)\<cdot>(appendElem2 0\<cdot>(z . c5))]\<Omega>)\<cdot>x" 
+    "(\<Lambda> z. (innerFeedbackSum4SPF\<rightleftharpoons>((sb \<uplus> z)\<bar> {c1, c5})))\<cdot>x 
+      = (\<Lambda> z. [c5 \<mapsto> add\<cdot>(sb . c1)\<cdot>(appendElem2 0\<cdot>(z . c5))]\<Omega>)\<cdot>x" 
 proof - 
   have f1: "sbDom\<cdot>(innerFeedbackSum4SPF\<rightleftharpoons>(sb \<uplus> x)) = {c5}"
-    by (metis assms(1) assms(2) insert_is_Un ranInnerFeedbackSum4SPF ranInnerFeedbackSum4SPF_sb sbunionDom)
+    by (metis assms(1) assms(2) insert_is_Un ranInnerFeedbackSum4SPF ranInnerFeedbackSum4SPF_sb 
+              sbunionDom)
   have f2: "sbDom\<cdot>([c5 \<mapsto> add\<cdot>(sb . c1)\<cdot>(appendElem2 0\<cdot>(x . c5))]\<Omega>) = {c5}"
     by(simp add: sbdom_rep_eq)
   have f3: "innerFeedbackSum4SPF\<rightleftharpoons>(sb \<uplus> x) = innerFeedbackSum4SPF\<rightleftharpoons>((sb \<uplus> x)\<bar> {c1, c5})"
@@ -645,13 +650,15 @@ proof -
     apply(simp add: f1)
     apply(subst f3)
     apply(subst innerFeedbackSum4SPF_c5_eq)
-      by(simp_all add: assms appendElem2_def)
+      by(simp_all add: assms appendElem2_def sbgetch_rep_eq)
 qed
   
 lemma sbDomSB_eq: assumes "sbDom\<cdot>sb = {ch1}" shows "sb = ([ch1 \<mapsto> sb . ch1]\<Omega>)"
   apply(subst sb_eq, simp_all)
-   apply (metis Rep_SB_inverse assms dom_eq_singleton_conv fun_upd_same insertI1 sbdom_insert sbgetchE)
-    by (metis Rep_SB_inverse assms dom_eq_singleton_conv fun_upd_same sbdom_insert sbgetchE singletonD)
+   apply (metis Rep_SB_inverse assms dom_eq_singleton_conv fun_upd_same insertI1 sbdom_insert 
+                sbgetchE)
+  by (metis Rep_SB_inverse assms dom_eq_singleton_conv fun_upd_same sbdom_insert 
+            sbgetchE singletonD)
 
 lemma t2: assumes "sbDom\<cdot>sb = {c1}" shows
   "iterate i\<cdot>(\<Lambda> z. (innerFeedbackSum4SPF\<rightleftharpoons>((sb \<uplus> z)\<bar> {c1, c5})))\<cdot>({c5}^\<bottom>) =  
@@ -668,8 +675,9 @@ next
       then show ?case
         by(simp)
     next
-      have f3: "sbDom\<cdot>z = {c5} \<Longrightarrow> sbDom\<cdot>((innerFeedbackSum4SPF\<rightleftharpoons>((sb \<uplus> z)\<bar> {c1, c5}))) = {c5}"
-        by (metis assms domInnerFeedbackSum4SPF insert_absorb2 insert_is_Un ranInnerFeedbackSum4SPF sbunionDom spfRanRestrict subset_insertI)
+      have f3: "\<And> z. sbDom\<cdot>z = {c5} \<Longrightarrow> sbDom\<cdot>((innerFeedbackSum4SPF\<rightleftharpoons>((sb \<uplus> z)\<bar> {c1, c5}))) = {c5}"
+        by (metis assms domInnerFeedbackSum4SPF insert_absorb2 insert_is_Un ranInnerFeedbackSum4SPF 
+                  sbunionDom spfRanRestrict subset_insertI)
       have f4: "sbfun_io_eq (iterate i\<cdot>(\<Lambda> z. innerFeedbackSum4SPF\<rightleftharpoons>((sb \<uplus> z)\<bar>{c1, c5}))) {c5} 
             \<Longrightarrow> sbDom\<cdot>(iterate i\<cdot>(\<Lambda> z. innerFeedbackSum4SPF\<rightleftharpoons>((sb \<uplus> z)\<bar>{c1, c5}))\<cdot>({c5}^\<bottom>)) = {c5}"
         by blast
@@ -678,7 +686,9 @@ next
         apply(subst iterate_Suc)
         apply(subst Abs_cfun_inverse2)
          apply(subst t5, simp add: assms, simp)
-          by (smt Int_insert_right Un_insert_right assms insertI1 insert_commute ranInnerFeedbackSum4SPF ranInnerFeedbackSum4SPF_sb sbrestrict_sbdom sbunionDom sbunion_restrict sup_bot.right_neutral)
+        by (smt Int_insert_right Un_insert_right assms insertI1 insert_commute 
+                ranInnerFeedbackSum4SPF ranInnerFeedbackSum4SPF_sb sbrestrict_sbdom 
+                sbunionDom sbunion_restrict sup_bot.right_neutral)
     qed
   show ?case 
     apply(subst iterate_Suc)

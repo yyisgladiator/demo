@@ -1594,7 +1594,7 @@ translations
   
 definition pL :: "'m SPF \<Rightarrow> 'm SPF \<Rightarrow> channel set" where
 "pL f1 f2 \<equiv> (spfDom\<cdot>f1 \<inter> spfRan\<cdot>f1) \<union> (spfDom\<cdot>f2 \<inter> spfRan\<cdot>f1)
-                      \<union> (spfDom\<cdot>f1 \<inter> spfRan\<cdot>f2) \<union> (spfDom\<cdot>f2 \<inter> spfRan\<cdot>f2)"
+                      \<union> (spfDom\<cdot>f1 \<inter> spfRan\<cdot>f2)"
   
   
 
