@@ -39,7 +39,10 @@ abbreviation parcomp_well :: "'m SPF \<Rightarrow> 'm SPF \<Rightarrow> bool" wh
   
 abbreviation sercomp_well :: "'m SPF \<Rightarrow> 'm SPF \<Rightarrow> bool" where
 "sercomp_well f1 f2 \<equiv>  (spfRan\<cdot>f1 = spfDom\<cdot>f2) 
-                        \<and> (spfCompL f1 f2= {})"
+                        \<and> (spfDom\<cdot>f1 \<inter> spfRan\<cdot>f1 = {})
+                        \<and> (spfDom\<cdot>f2 \<inter> spfRan\<cdot>f2 = {})
+                        \<and> (spfDom\<cdot>f1 \<inter> spfRan\<cdot>f2 = {})"
+
 
 (* operator for parallel composition *)  
 definition parcomp :: "'m SPF \<Rightarrow> 'm SPF \<Rightarrow> 'm SPF" ("_\<parallel>_") where
@@ -451,9 +454,10 @@ lemma spfComp_test8: assumes "sercomp_well f1 f2"
     have "spfDom\<cdot>f1 \<inter> spfRan\<cdot>f1 = {} \<and> spfDom\<cdot>f1 \<inter> spfRan\<cdot>f2 = {}"
       proof -
         have "spfCompL f1 f2 = spfRan\<cdot>f1 \<union> spfRan\<cdot>f2 \<inter> spfDom\<cdot>f1"
-          by (simp add: Int_commute Un_Int_distrib Un_commute assms(1) spfCompL_def)
-        then show ?thesis
+          apply (simp add: Int_commute Un_Int_distrib Un_commute assms(1) spfCompL_def)
           using assms(1) by blast
+        then show ?thesis
+          using assms(1) by blast   
       qed  
     thus ?thesis
       by (simp add: Diff_Un Diff_triv spfCompI_def Un_Diff assms(1))
@@ -546,8 +550,23 @@ lemma spfComp_serial_max: assumes "sercomp_well f1 f2"
   shows "max_in_chain 3 (\<lambda>i. iter_spfcompH2 f1 f2 i x)"
   apply(rule max_in_chainI, subst num3_eq)
   apply(subst spfComp_serial, simp_all add: assms)
-  by (metis Suc_le_D Suc_le_lessD assms(1) assms(2) less_Suc_eq_le 
-        spfComp_serial)
+  using assms(1) apply blast
+proof -
+  fix j :: nat
+  assume a1: "Suc (Suc (Suc 0)) \<le> j"
+  obtain nn :: "nat \<Rightarrow> nat" where
+    f2: "\<And>n na. \<not> Suc n \<le> na \<or> Suc (nn na) = na"
+    by (metis (no_types) Suc_le_D)
+  then have f3: "Suc (nn j) = j"
+    using a1 by blast
+  have f4: "Suc (nn (nn j)) = nn j"
+    using f2 a1 by (metis (no_types) not_less_eq_eq)
+  have "\<And>n. nn j \<le> Suc n \<or> Suc (nn (nn (nn j))) = nn (nn j)"
+    using f2 by (metis (no_types) not_less_eq_eq)
+  then show "x \<uplus> (f1 \<rightleftharpoons> x\<bar>spfDom\<cdot>f1) \<uplus> (f2 \<rightleftharpoons> (f1 \<rightleftharpoons> x\<bar>spfDom\<cdot>f1)) = iter_spfcompH2 f1 f2 j x"
+    using f4 f3 a1 by (metis (no_types) assms(1) assms(2) not_less_eq_eq spfComp_serial)
+qed
+    
       
   (* show that lub can be described by constant if no feedback channels exist *)
 lemma spfComp_serial_itconst1 [simp]: assumes "sercomp_well f1 f2" 
@@ -621,12 +640,19 @@ shows "monofun (\<lambda>x. (sbDom\<cdot>x = spfCompI f1 f2)\<leadsto>(x \<uplus
  using cont2mono serial_iterconst_cont by blast
    
 
-lemma serial_iterconst_well[simp]:       assumes "sercomp_well f1 f2"
-shows "spf_well (Abs_cfun (\<lambda>x. (sbDom\<cdot>x = spfCompI f1 f2)\<leadsto>(x \<uplus> (f1 \<rightleftharpoons> (x \<bar>spfDom\<cdot>f1)) 
-                            \<uplus> (f2 \<rightleftharpoons> (f1 \<rightleftharpoons> (x\<bar>spfDom\<cdot>f1))))\<bar>spfCompOc f1 f2))"
+lemma serial_iterconst_well [simp]:  assumes "sercomp_well f1 f2"
+shows "spf_well (\<Lambda> x. (sbDom\<cdot>x = spfCompI f1 f2)\<leadsto>x \<uplus> (f1 \<rightleftharpoons> x\<bar>spfDom\<cdot>f1) \<uplus> (f2 \<rightleftharpoons> (f1 \<rightleftharpoons> x\<bar>spfDom\<cdot>f1))\<bar>spfCompOc f1 f2)"
  apply (simp add: spf_well_def domIff2 sbdom_rep_eq assms)
  by (smt assms(1) sbunionDom spfCompH2_itDom spfComp_serial_itconst1 
          spfComp_serial_itconst2)
+
+lemma serial_iterconst_well2: assumes "sbDom\<cdot>sb = spfCompI f1 f2"
+                                   and "sercomp_well f1 f2"
+  shows "(Abs_CSPF (\<lambda>x. (sbDom\<cdot>x = spfCompI f1 f2)\<leadsto>x \<uplus> (f1 \<rightleftharpoons> x\<bar>spfDom\<cdot>f1) \<uplus> (f2 \<rightleftharpoons> (f1 \<rightleftharpoons> x\<bar>spfDom\<cdot>f1))\<bar>spfCompOc f1 f2) \<rightleftharpoons> sb) 
+        = sb \<uplus> (f1 \<rightleftharpoons> sb\<bar>spfDom\<cdot>f1) \<uplus> (f2 \<rightleftharpoons> (f1 \<rightleftharpoons> sb\<bar>spfDom\<cdot>f1))\<bar>spfCompOc f1 f2"
+  apply (subst rep_abs_cspf, simp_all add: assms(1))
+  apply (subst serial_iterconst_well, simp_all add: assms)
+  using assms(2) by blast
     
        
 (* ----------------------------------------------------------------------- *)
@@ -635,13 +661,18 @@ subsection \<open>result\<close>
 lemma spfCompSeriellGetch: assumes "sercomp_well f1 f2"
                    and "sbDom\<cdot>sb = spfCompI f1 f2"
                    and "c \<in> spfRan\<cdot>f2"
-shows "((spfCompOld f1 f2) \<rightleftharpoons> sb) . c = (f2 \<rightleftharpoons> (f1 \<rightleftharpoons> (sb\<bar>spfDom\<cdot>f1))) .c"
+  shows "((spfCompOld f1 f2) \<rightleftharpoons> sb) . c = (f2 \<rightleftharpoons> (f1 \<rightleftharpoons> (sb\<bar>spfDom\<cdot>f1))) .c"
   apply (simp only: spfCompOld_tospfH2)
-  apply (subst spfComp_iterconst_eq, simp_all add: assms)
-  apply (subst sbunion_getchR, simp_all add: assms)
+  apply (subst spfComp_iterconst_eq)
+  using assms(1) apply blast
+    apply (subst serial_iterconst_well2)
+    apply (simp_all add: assms)
+    using assms(1) apply blast
+    apply (rule sbunion_getchR)
   by (smt assms(1) assms(2) assms(3) domIff option.exhaust_sel 
         sbleast_sbdom spfLeastIDom spf_sbdom2dom spfran2sbdom spfComp_domranf1)
  
+      
 lemma spfCompSeriellGetch2: assumes "sercomp_well f1 f2"
                    and "sbDom\<cdot>sb = spfCompI f1 f2"
                    and "c \<in> spfRan\<cdot>f2"
@@ -905,12 +936,7 @@ lemma spfComp_I_domf1_eq2: assumes "sercomp_well f1 f2"
   shows "spfCompI f1 f2 = spfDom\<cdot>f1"
 proof -
   have "spfDom\<cdot>f2 - (spfRan\<cdot>f1 \<union> spfRan\<cdot>f2) = spfDom\<cdot>f1 \<inter> (spfDom\<cdot>f2 \<union> spfRan\<cdot>f2)"
-    proof -
-      have "(spfDom\<cdot>f1 \<union> spfDom\<cdot>f2) \<inter> (spfDom\<cdot>f2 \<union> spfRan\<cdot>f2) = {}"
-        using assms spfCompL_def by blast
-      then show ?thesis
-        by blast
-    qed 
+    using assms by blast
   thus ?thesis
     by (simp add: spfCompI_def Un_Diff Un_Diff_Int assms)
 qed
@@ -927,7 +953,8 @@ lemma serCompHelp2Eq: assumes "sercomp_well f1 f2"
    shows "(\<Squnion>i. iterate i\<cdot>(spfCompH2 f1 f2 x)\<cdot>(sbLeast (spfCompC f1 f2)))\<bar> spfCompOc f1 f2 = ((f1 \<rightleftharpoons> x)) \<uplus> (f2 \<rightleftharpoons> (f1 \<rightleftharpoons> x))" 
    apply (subst spfComp_serial_itconst2)
     apply (simp add: assms(1))
-    using assms(1) assms(2) spfComp_I_domf1_eq2 apply blast
+  using assms(1) assms(2) spfComp_I_domf1_eq2 apply blast
+  using assms(1) assms(2) spfComp_I_domf1_eq2 apply auto[1]
     apply(subst unionRestrict, simp_all add: assms)
     using assms(1) spfComp_I_domf1_eq2 spfcomp_I_inter_Oc_empty apply blast
     by (simp add: assms(1) spfCompOc_def)

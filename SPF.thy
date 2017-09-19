@@ -226,7 +226,7 @@ in Abs_CSPF (\<lambda> x. (sbDom\<cdot>x = I) \<leadsto> sbFix (spfCompH f1 f2 x
 
 (* alternative versions, only for evaluation of the spfComp *)
   (* do not use those in production *)
-definition spfCompOld :: "'m SPF \<Rightarrow> 'm SPF \<Rightarrow> 'm SPF"  (infixl "\<otimes>" 40) where
+definition spfCompOld :: "'m SPF \<Rightarrow> 'm SPF \<Rightarrow> 'm SPF"  where
 "spfCompOld f1 f2 \<equiv> 
 let I1 = spfDom\<cdot>f1;
     I2 = spfDom\<cdot>f2;
