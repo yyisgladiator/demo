@@ -239,12 +239,13 @@ in Abs_CSPF (\<lambda> x. (sbDom\<cdot>x = I) \<leadsto> (\<Squnion>i. iterate i
    (\<Lambda> z. x \<uplus> (f1\<rightleftharpoons>(z \<bar> I1)) \<uplus> (f2\<rightleftharpoons>(z \<bar> I2)))\<cdot>(sbLeast C)) \<bar> Oc)"
 
 
-definition spfcompOldOld2 :: "'m SPF \<Rightarrow> 'm SPF \<Rightarrow> 'm SPF" where
-"spfcompOldOld2 f1 f2 \<equiv> 
+(* equal to spfComp \<Rightarrow> sbFix_def *)
+definition spfCompOld2 :: "'m SPF \<Rightarrow> 'm SPF \<Rightarrow> 'm SPF" where
+"spfCompOld2 f1 f2 \<equiv> 
 let I1 = spfDom\<cdot>f1;
     I2 = spfDom\<cdot>f2;
-    I  = spfCompI f1 f2; (* SWS: Replace this directly with the definition ? *)
-    C  = (spfRan\<cdot>f1 \<union> spfRan\<cdot>f2)  (* SWS: Why name it C? O (or Out) would be a better name *)
+    I  = spfCompI f1 f2; 
+    C  = (spfRan\<cdot>f1 \<union> spfRan\<cdot>f2)
 in Abs_CSPF (\<lambda> x. (sbDom\<cdot>x = I) \<leadsto> (\<Squnion>i. iterate i\<cdot>
    (\<Lambda> z. (f1\<rightleftharpoons>((x \<uplus> z) \<bar> I1)) \<uplus> (f2\<rightleftharpoons>((x \<uplus> z) \<bar> I2)))\<cdot>(C^\<bottom>)))"
 
@@ -1422,8 +1423,8 @@ lemma iter_spfcompH2_cont2[simp]: "cont (iter_spfcompH2 f1 f2 i)"
 lemma iter_spfcompH2_mono[simp]:  "monofun (iter_spfcompH2 f1 f2 i)"
   by simp
     
-(* replaced spfComp_serialnf_chain *)
-lemma iter_spfcompH2_chain[simp]: assumes "sbDom\<cdot>x = spfCompI f1 f2"
+(* replaced iter_spfcompH2_chain *)
+lemma iter_spfcompH2_chain [simp]: assumes "sbDom\<cdot>x = spfCompI f1 f2"
   shows "chain  (\<lambda>i. iter_spfcompH2 f1 f2 i x)"
   apply(rule sbIterate_chain)
   by (simp add: spfCompC_def spfCompI_def assms inf_sup_aci(6))
@@ -1451,12 +1452,11 @@ lemma spfCompH2_itgetChI: assumes "sbDom\<cdot>x = spfCompI f1 f2"
    by (simp)
 
 
-lemma spfCompH2_itResI: assumes "sbDom\<cdot>x = spfCompI f1 f2" 
-                    and "spfComp_well f1 f2"
+lemma spfCompH2_itResI: assumes "sbDom\<cdot>x = spfCompI f1 f2"             
   shows "(iter_spfcompH2 f1 f2 (Suc i) x) \<bar> (spfCompI f1 f2) = x"
   apply (rule sb_eq)
    apply (simp add: assms(1) inf_sup_aci(1) inf_sup_aci(6))
-   using assms(1) assms(2) spfCompH2_itgetChI by fastforce
+   using assms(1)  spfCompH2_itgetChI by fastforce
   
 
 subsubsection \<open>lub iterate spfCompH2\<close>
