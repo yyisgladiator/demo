@@ -226,8 +226,8 @@ in Abs_CSPF (\<lambda> x. (sbDom\<cdot>x = I) \<leadsto> sbFix (spfCompH f1 f2 x
 
 (* alternative versions, only for evaluation of the spfComp *)
   (* do not use those in production *)
-definition spfcompOld :: "'m SPF \<Rightarrow> 'm SPF \<Rightarrow> 'm SPF"  (infixl "\<otimes>" 40) where
-"spfcompOld f1 f2 \<equiv> 
+definition spfCompOld :: "'m SPF \<Rightarrow> 'm SPF \<Rightarrow> 'm SPF"  (infixl "\<otimes>" 40) where
+"spfCompOld f1 f2 \<equiv> 
 let I1 = spfDom\<cdot>f1;
     I2 = spfDom\<cdot>f2;
     O1 = spfRan\<cdot>f1; 
@@ -1382,10 +1382,10 @@ lemma helpercontinX [simp]: shows "cont (\<lambda> x. spfCompH2 f1 f2 x)"
        by (simp add: spfCompH2_def)
   qed
 
-lemma spfcompOld_tospfH2: "(spfcompOld f1 f2) 
+lemma spfCompOld_tospfH2: "(spfCompOld f1 f2) 
  = Abs_CSPF (\<lambda> x. (sbDom\<cdot>x = spfCompI f1 f2) \<leadsto> 
                   (\<Squnion>i. iterate i\<cdot>(spfCompH2 f1 f2 x)\<cdot>(sbLeast (spfCompC f1 f2))) \<bar> spfCompOc f1 f2)"
-  apply (subst spfcompOld_def, subst spfCompH2_def, subst spfCompC_def, 
+  apply (subst spfCompOld_def, subst spfCompH2_def, subst spfCompC_def, 
                 subst (1 2) spfCompI_def, subst spfCompOc_def)    
   by (metis (no_types) spfCompC_def spfCompI_def spfCompOc_def)
     
@@ -1416,7 +1416,7 @@ qed
 subsubsection \<open>iterate spfCompH2\<close>
   
   
-(* for all i the i'th iteration on spfcompOld is cont as application iterate is cont on cont fun *) 
+(* for all i the i'th iteration on spfCompOld is cont as application iterate is cont on cont fun *) 
 lemma iter_spfcompH2_cont2[simp]: "cont (iter_spfcompH2 f1 f2 i)"
   by simp
     
@@ -1461,7 +1461,7 @@ lemma spfCompH2_itResI: assumes "sbDom\<cdot>x = spfCompI f1 f2"
 
 subsubsection \<open>lub iterate spfCompH2\<close>
    
-(* the lub over the iterations of spfcompOldH2 is monotone if the assumtions hold *)
+(* the lub over the iterations of spfCompOldH2 is monotone if the assumtions hold *)
   (* requires chain property, hence the input must have the right domain *)
 lemma lub_iter_spfCompH2_mono_req: assumes "x \<sqsubseteq> y" and  "sbDom\<cdot>x = spfCompI f1 f2"
   shows "(\<Squnion>i.(iter_spfcompH2 f1 f2 i) x) \<sqsubseteq> (\<Squnion>i.(iter_spfcompH2 f1 f2 i) y)"
