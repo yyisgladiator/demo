@@ -7,15 +7,20 @@
 *)
 
 theory SPF_FeedComp
-  imports SPF_Comp SPF_Templates
+  imports SPF_Comp  SPF_Templates
 begin
 
+  
+  
 (* ----------------------------------------------------------------------- *)
 section \<open>general-lemmas\<close>
 (* ----------------------------------------------------------------------- *)
 
 
-lemma iter_spfcompOldh3_suc_insert: "iter_spfCompH f1 f2 (Suc i) sb
+lemma sb_onech_getch_insert :"([ch1 \<mapsto> s]\<Omega>) . ch1 = (s:: nat stream)"
+  by(simp add: sbgetch_rep_eq)
+
+lemma iter_spfCompOldh3_suc_insert: "iter_spfCompH f1 f2 (Suc i) sb
                         = ((f1 \<rightleftharpoons>((sb \<uplus> (iter_spfCompH f1 f2 i sb))  \<bar> spfDom\<cdot>f1))
                             \<uplus> (f2 \<rightleftharpoons>((sb \<uplus> (iter_spfCompH f1 f2 (i) sb))  \<bar> spfDom\<cdot>f2)))"
   apply (unfold iterate_Suc, subst spfCompH_def)
@@ -23,11 +28,18 @@ lemma iter_spfcompOldh3_suc_insert: "iter_spfCompH f1 f2 (Suc i) sb
    apply (simp only: spfCompH_cont)
    by simp
 
+(* lemma test [simp]: "sb_well [ch \<mapsto> sb . ch]"
+  sorry
+*)
+     
 lemma nat_sb_repackage: assumes "ch \<in> sbDom\<cdot>sb"
   shows "(sb::nat SB) \<bar> {ch} = [ch \<mapsto> sb . ch]\<Omega>"
   apply (rule sb_eq)
-  by (simp_all add: assms sbdom_rep_eq)
-
+  
+  apply (simp_all add: assms sbdom_rep_eq)
+  apply (subst sbgetch_rep_eq)
+  by simp_all
+    
 
 
 (* used for substitution *)
@@ -84,7 +96,7 @@ lemma spf_feed_sb_in_eq: fixes f1 :: "nat stream \<rightarrow> nat stream \<righ
                          fixes f2 :: "nat stream \<rightarrow> nat stream"
                          assumes "sb = ([ch1 \<mapsto> s]\<Omega>)"
  shows "(gen_fix f1 f2)\<cdot>s = (\<Lambda> x. \<Squnion>i. iterate i\<cdot>(\<Lambda> z. f1\<cdot>(x . ch1)\<cdot>(f2\<cdot>z))\<cdot>(\<bottom>))\<cdot>sb"
- by (simp add: assms)
+ by (simp add: assms sbgetch_rep_eq)
 
 
 subsection \<open>step3\<close>
@@ -166,8 +178,8 @@ proof (induction i)
 next
   case (Suc i)
   then show ?case
-    apply (unfold iterate_Suc)
-    by (simp add: Suc.IH)
+    apply (unfold iterate_Suc)    
+    by (simp add: Suc.IH sbgetch_rep_eq)
 qed
 
 
@@ -185,7 +197,7 @@ lemma spf_feed_sb_inout1_eq: fixes f1 :: "nat stream \<rightarrow> nat stream  \
   assumes "sb = ([ch1 \<mapsto> s]\<Omega>)"
   shows "(gen_fix f1 f2)\<cdot>s =
             ((\<lambda> x. \<Squnion>i. iterate i\<cdot>(\<Lambda> z. [ch3 \<mapsto> f1\<cdot>(x . ch1)\<cdot>(f2\<cdot>(z . ch3))]\<Omega>)\<cdot>({ch3}^\<bottom>)) sb) .ch3"
-  by (simp add: spf_feed_sb_in_eq assms spf_feed_sb_inout1_lub_getch spf_feed_sb_inout1_iter_eq)
+  by (simp add: spf_feed_sb_in_eq assms spf_feed_sb_inout1_lub_getch spf_feed_sb_inout1_iter_eq sbgetch_rep_eq)
 
 
 subsection \<open>step4\<close>
@@ -282,11 +294,11 @@ next
     have f1: "\<And> z. (([ch3 \<mapsto> f1\<cdot>(x . ch1)\<cdot>(f2\<cdot>(z . ch3))]\<Omega>)  \<uplus> ([ch2 \<mapsto> (f2\<cdot>(z . ch3))]\<Omega>)) . ch3
                     = f1\<cdot>(x . ch1)\<cdot>(f2\<cdot>(z . ch3))"
       apply (subst sbunion_getchL)
-       apply (simp_all add: sbdom_rep_eq assms)
+       apply (simp_all add: sbdom_rep_eq assms sbgetch_rep_eq)
         using assms by blast
     thus ?thesis
       apply (unfold iterate_Suc)
-      apply (simp add: f1)
+      apply (simp add: f1 sbgetch_rep_eq)
       using Suc.IH by presburger
   qed
 qed
@@ -405,10 +417,10 @@ lemma spf_feed_iter_new_ch_eq: fixes f1 :: "nat stream \<rightarrow> nat stream 
          apply(simp add: sbdom_rep_eq)
        apply(subst sbunion_getchL, simp add: sbdom_rep_eq)
          using assms apply blast
-         apply (simp)
+         apply (simp add: sbgetch_rep_eq)
          apply(subst sbunion_getchL, simp add: sbdom_rep_eq)
          using assms apply blast
-         by simp
+         by (simp add: sbgetch_rep_eq)
      qed
 
 (* this lemma is very hacky written because simp goes wild *)
@@ -424,10 +436,10 @@ proof (induction i)
     apply (unfold iterate_Suc)
     apply auto
     apply(rule sbunion_eqI, rule sb_one_ch_eqI)
-     apply (simp_all add: sbdom_rep_eq assms)
-    apply(subst sbunion_getchL, simp add: sbdom_rep_eq)
+     apply (simp_all add: sbdom_rep_eq assms sbgetch_rep_eq)
+    apply(subst sbunion_getchL, simp add: sbdom_rep_eq sbgetch_rep_eq)
       using assms apply blast
-      by simp
+      by (simp add: sbgetch_rep_eq)
 next
   case (Suc i)
   hence "spf_feed_sb_inout2_iter f1 f2 ch1 ch2 ch3 x (Suc i)
@@ -442,14 +454,15 @@ next
      apply(rule sb_one_ch_eqI)
      apply(rule cfun_arg_eqI)
      apply(subst sbunion_getchR)
-      apply (simp add: sbdom_rep_eq)
-     apply (simp only: sb_onech_getch_insert)
+      apply (simp add: sbdom_rep_eq sbgetch_rep_eq)
+     apply (simp add: sbgetch_rep_eq)
       (* channel ch2 *)
     apply(rule sb_one_ch_eqI)
     apply(rule cfun_arg_eqI)
-    apply(subst sbunion_getchL, simp add: sbdom_rep_eq)
+      (* on a slow machine, the next step may take some time *)
+    apply(subst sbunion_getchL, simp add: sbdom_rep_eq sbgetch_rep_eq)
     using assms apply blast
-    apply (simp only: sb_onech_getch_insert)
+    apply (simp only:  sb_onech_getch_insert)
       by (rule spf_feed_iter_new_ch_eq, simp_all add: assms)
   qed
 
@@ -523,6 +536,11 @@ lemma SPF2x1_apply_rev: assumes "ch1 \<noteq> ch2"
   apply(simp add: SPF2x1_rep_eq sb_id_def sbgetch_insert)
   by(auto simp add: sbdom_rep_eq assms)
 
+    
+abbreviation iter_sbfix:: "('m SB \<Rightarrow> 'm SB \<rightarrow> 'm SB) \<Rightarrow> nat \<Rightarrow> channel set \<Rightarrow> 'm SB \<Rightarrow> 'm SB" where
+"iter_sbfix F i cs \<equiv> (\<lambda> x. iterate i\<cdot>(F x)\<cdot>(cs^\<bottom>))"
+    
+    
 lemma spf_feed_SPF_eq:  fixes f1 :: "nat stream \<rightarrow> nat stream  \<rightarrow> nat stream"
                         fixes f2 :: "nat stream \<rightarrow> nat stream"
                         assumes "sbDom\<cdot>sb = {ch1}" and "ch1 \<noteq> ch2" and "ch1 \<noteq> ch3" and "ch2 \<noteq> ch3"
@@ -543,9 +561,9 @@ next
     by (simp add: SPF1x1_apply assms)
   hence "iter_sbfix (spfCompH spf1 spf2) i (spfRan\<cdot>spf1 \<union> spfRan\<cdot>spf2) sb
                                                   = spf_feed_sb_inout3_iter f1 f2 ch1 ch2 ch3 sb i"
-    using Suc.IH by blast
+    using Suc.IH  by blast
   then show ?case
-    apply (subst spf_feed_sb_inout3_iter_suc_insert, subst iter_spfcompOldh3_suc_insert)
+    apply (subst spf_feed_sb_inout3_iter_suc_insert, subst iter_spfCompOldh3_suc_insert)
     apply(rule sbunion_eqI)
 
      (* spf1 component *)
