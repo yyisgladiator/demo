@@ -7,7 +7,7 @@
 *)
 
 theory SPF_Feedback_JB
-imports SPF_Comp
+imports SPF SPF_Comp
     
 begin
   
@@ -37,7 +37,7 @@ proof -
   have f1:"cont (\<lambda>z. (Rep_cfun (Rep_SPF f))\<rightharpoonup>((x \<uplus> z)\<bar>spfDom\<cdot>f))"
    by (metis (no_types) cont_Rep_cfun2 cont_compose op_the_cont)
   thus ?thesis
-    by(simp add: Rep_CSPF_def)
+    by simp
 qed
   
 lemma spfFeedH_cont2[simp]: "cont (\<lambda> x. (f\<rightleftharpoons>((x \<uplus> z)\<bar> (spfDom\<cdot>f))))"
@@ -47,7 +47,7 @@ proof -
   hence f2:"cont (\<lambda>x. (Rep_cfun (Rep_SPF f))\<rightharpoonup>((x \<uplus> z)\<bar>spfDom\<cdot>f))"
    by (metis (no_types) cont_Rep_cfun2 cont_compose op_the_cont)
   thus ?thesis
-    by(simp add: Rep_CSPF_def)
+    by simp
 qed
   
 lemma spfFeedH_mono[simp]: "monofun (\<lambda> z. (f\<rightleftharpoons>((x \<uplus> z)\<bar> (spfDom\<cdot>f))))"
@@ -97,7 +97,7 @@ subsection \<open>dom\<close>
   
 lemma iter_spfFeedH_dom: assumes "sbDom\<cdot>x = spfDom\<cdot>f - spfRan\<cdot>f"
   shows "sbDom\<cdot>(iter_spfFeedH f i x) = (spfRan\<cdot>f)"
-  by (subst iter_sbfix_dom, simp add: assms)
+  by (simp add: assms iter_sbfix_dom)
     
     
     
@@ -111,13 +111,13 @@ subsection \<open>mono\<close>
   (* requires chain property, hence the input must have the right domain *)
 lemma lub_iter_spfFeedH_mono_req:  assumes "x \<sqsubseteq> y" and  "sbDom\<cdot>x =  (spfDom\<cdot>f - spfRan\<cdot>f)"
   shows "(\<Squnion>i.(iter_spfFeedH f i) x) \<sqsubseteq> (\<Squnion>i.(iter_spfFeedH f i) y)"
-  by (simp add: assms lub_iter_sbfix_mono_req)
+  by (simp add: assms lub_iter_sbfix2_mono_req)
   
   (* show that the lub over the iteration fulfills the requirements of a monotone function *)
 lemma if_lub_iter_spfFeedH_mono_req: assumes "x \<sqsubseteq> y"
   shows "((\<lambda> x. (sbDom\<cdot>x = (spfDom\<cdot>f - spfRan\<cdot>f)) \<leadsto> (\<Squnion>i.(iter_spfFeedH f i) x)) x)
          \<sqsubseteq> ((\<lambda> x. (sbDom\<cdot>x = (spfDom\<cdot>f - spfRan\<cdot>f)) \<leadsto> (\<Squnion>i.(iter_spfFeedH f i) x)) y)"
-  by (rule if_lub_iter_sbfix_mono_req, simp_all add: assms)
+  by (rule if_lub_iter_sbfix2_mono_req, simp_all add: assms)
 
   
 subsection \<open>cont\<close>  
@@ -126,14 +126,14 @@ subsection \<open>cont\<close>
   (* this property follows from the monotonicity of lub_iter_spfFeedH *)
 lemma chain_lub_iter_spfFeedH: assumes "chain Y" and  "(sbDom\<cdot>(\<Squnion>i. Y i) =  (spfDom\<cdot>f - spfRan\<cdot>f))"
   shows "chain (\<lambda>i. \<Squnion>ia. iter_spfFeedH f ia (Y i))"
-  by (simp add: assms chain_lub_iter_sbfix)
+  by (simp add: assms chain_lub_iter_sbfix2)
 
 subsection \<open>dom\<close>  
   (* the domain of the lub over the iteration is spfRan\<cdot>f *)
    (* this property is required for the spf_well proof *)
 lemma lub_iter_spfFeedH_dom[simp]: assumes "sbDom\<cdot>x = spfDom\<cdot>f - spfRan\<cdot>f"
   shows "sbDom\<cdot>(\<Squnion>i. iter_spfFeedH f i x) = (spfRan\<cdot>f)"
-  by (simp add: lub_iter_sbfix_dom assms)
+  by (simp add: lub_iter_sbfix2_dom assms)
   
 (* ----------------------------------------------------------------------- *)
 section \<open>spfFeedbackOperator\<close>
@@ -158,7 +158,7 @@ lemma chain_if_lub_iter_spfFeedH_domI: assumes "chain Y"
                                        and     "(sbDom\<cdot>(\<Squnion>i. Y i) = (spfDom\<cdot>f - spfRan\<cdot>f))"
 shows "(sbDom\<cdot>(\<Squnion>i. Y i) = (spfDom\<cdot>f - spfRan\<cdot>f)) \<leadsto>  (\<Squnion>i.(iter_spfFeedH f i) (\<Squnion>i. Y i))
         \<sqsubseteq>  (\<Squnion>i. (sbDom\<cdot>(Y i) = (spfDom\<cdot>f - spfRan\<cdot>f)) \<leadsto>(\<Squnion>ia. (iter_spfFeedH f ia) (Y i)))"
-  apply (rule chain_if_lub_iter_sbfix_case)
+  apply (rule chain_if_lub_iter_sbfix2_case)
     by (simp_all add: assms)
 
      
@@ -167,7 +167,7 @@ shows "(sbDom\<cdot>(\<Squnion>i. Y i) = (spfDom\<cdot>f - spfRan\<cdot>f)) \<le
 lemma chain_if_lub_iter_spfFeedH: assumes "chain Y"
   shows "(sbDom\<cdot>(\<Squnion>i. Y i) = (spfDom\<cdot>f - spfRan\<cdot>f))\<leadsto>(\<Squnion>i. iter_spfFeedH f i (\<Squnion>i. Y i))  
          \<sqsubseteq> (\<Squnion>i. (sbDom\<cdot>(Y i) = (spfDom\<cdot>f - spfRan\<cdot>f))\<leadsto>(\<Squnion>ia. iter_spfFeedH f ia (Y i)))" 
-  apply (rule chain_if_lub_iter_sbfix)
+  apply (rule chain_if_lub_iter_sbfix2)
     by (simp_all add: assms)
     
 
@@ -211,7 +211,7 @@ subsection \<open>spfFeedH2\<close>
   
   
 lemma spfFeedH2_cont[simp]: "cont (\<lambda> z. x \<uplus> (f\<rightleftharpoons>(z\<bar>(spfDom\<cdot>f))))"
-  by (metis Rep_CSPF_def cont_Rep_cfun2 cont_compose contSPFRestrict)
+  by (metis  cont_Rep_cfun2 cont_compose contSPFRestrict)
     
 lemma spfFeedH2_continX[simp]: "cont (\<lambda> x. spfFeedH2 f x)"
 proof -
@@ -256,7 +256,7 @@ subsection \<open>lub_iter_spfCompH\<close>
   
 lemma lub_iter_spfFeedH2_dom[simp]: assumes "sbDom\<cdot>x = spfDom\<cdot>f - spfRan\<cdot>f"
   shows "sbDom\<cdot>(\<Squnion>i. iter_spfFeedH2 f i x) = (spfDom\<cdot>f \<union> spfRan\<cdot>f)"
-  apply(subst lub_iter_sbfix_dom)
+  apply(subst lub_iter_sbfix2_dom)
     by (simp add: assms spfFeedH2_dom)
        
        
