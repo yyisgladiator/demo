@@ -179,6 +179,20 @@ lemma spfComp_Oc_sub_C: assumes "c \<in> spfCompOc f1 f2" shows "c \<in> spfComp
     
 section \<open>general comp\<close>
   
+lemma spf_gencomp_cont[simp]: 
+  shows "cont (\<lambda> x. (sbDom\<cdot>x = spfCompI f1 f2) \<leadsto> sbFix (spfCompH f1 f2 x) (spfRan\<cdot>f1 \<union> spfRan\<cdot>f2) )"
+  by simp
+
+    
+lemma spf_gen_well[simp]: 
+  shows "spf_well (\<Lambda> x.  (sbDom\<cdot>x = spfCompI f1 f2) \<leadsto> sbFix (spfCompH f1 f2 x) (spfRan\<cdot>f1 \<union> spfRan\<cdot>f2))"
+    apply (simp add: spf_well_def)
+    apply (simp only: domIff2)
+    apply (simp add: sbdom_rep_eq sbfix_dom)
+    by auto
+    
+    
+    
 (* ----------------------------------------------------------------------- *)
 subsection \<open>spfCompOld\<close>
 (* ----------------------------------------------------------------------- *) 
