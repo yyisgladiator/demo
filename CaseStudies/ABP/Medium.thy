@@ -441,36 +441,18 @@ lemma tsmed_tsabs_slen2tsmed_tsabs:
   using smed_slen2smed by auto
 *)
 
-lemma smed_slen2smed2_adm: 
-  "adm (\<lambda>a. \<forall>x. #(srcdups\<cdot>x) \<noteq> \<infinity> \<longrightarrow>
-                 #({True} \<ominus> a) = \<infinity> \<longrightarrow>
-                 #(srcdups\<cdot>(sprojsnd\<cdot>(sMed\<cdot>x\<cdot>a))) = #(srcdups\<cdot>x) \<longrightarrow> #(srcdups\<cdot>(sprojsnd\<cdot>x)) = #(srcdups\<cdot>x) \<longrightarrow> srcdups\<cdot>x = srcdups\<cdot>(sMed\<cdot>x\<cdot>a))"
-sorry
-
 lemma srcdups_nfst2snd: "a \<noteq> shd s \<Longrightarrow> srcdups\<cdot>(\<up>a \<bullet> s) = \<up>a \<bullet> srcdups\<cdot>s" 
   by (metis srcdups_neq srcdups_shd srcdups_srt strict_sdropwhile surj_scons)
     
 lemma srcdups_fst2snd: "s \<noteq> \<epsilon> \<Longrightarrow> a = shd s \<Longrightarrow> srcdups\<cdot>(\<up>a \<bullet> s) = srcdups\<cdot>s"
   by (metis srcdups_eq surj_scons)
 
-lemma p7001:
-  "#(srcdups\<cdot>(sprojsnd\<cdot>(sMed\<cdot>msg\<cdot>ora))) = #(srcdups\<cdot>msg)
-     \<Longrightarrow> #(srcdups\<cdot>(sprojsnd\<cdot>msg)) = #(srcdups\<cdot>msg)
-     \<Longrightarrow> #(srcdups\<cdot>(sprojsnd\<cdot>(sMed\<cdot>msg\<cdot>ora))) = #(srcdups\<cdot>(sprojsnd\<cdot>msg))"
-  by simp
-
-lemma p7002_adm: 
-  " adm (\<lambda>a. \<forall>x. #(srcdups\<cdot>x) \<noteq> \<infinity> \<longrightarrow>
-                 #({True} \<ominus> a) = \<infinity> \<longrightarrow>
-                 #(srcdups\<cdot>(sprojsnd\<cdot>(sMed\<cdot>x\<cdot>a))) = #(srcdups\<cdot>(sprojsnd\<cdot>x)) \<longrightarrow> srcdups\<cdot>(sprojsnd\<cdot>(sMed\<cdot>x\<cdot>a)) = srcdups\<cdot>(sprojsnd\<cdot>x))"
-  sorry
-
-lemma p7002:
+(* possibly useful if provable *)
+lemma smed_slen2smed2_h:
   "#(srcdups\<cdot>msg) \<noteq> \<infinity> \<Longrightarrow> #({True} \<ominus> ora) = \<infinity>
-    \<Longrightarrow> #(srcdups\<cdot>(sprojsnd\<cdot>(sMed\<cdot>msg\<cdot>ora))) = #(srcdups\<cdot>(sprojsnd\<cdot>msg))
-    \<Longrightarrow> srcdups\<cdot>(sprojsnd\<cdot>(sMed\<cdot>msg\<cdot>ora)) = srcdups\<cdot>(sprojsnd\<cdot>msg)"
-  apply (induction ora arbitrary: msg rule: ind, simp_all)
-  apply (simp add: p7002_adm)
+     \<Longrightarrow> #(srcdups\<cdot>(sprojsnd\<cdot>(sMed\<cdot>msg\<cdot>ora))) = #(srcdups\<cdot>msg)
+     \<Longrightarrow> #(srcdups\<cdot>(sprojsnd\<cdot>msg)) = #(srcdups\<cdot>msg)
+     \<Longrightarrow> shd msg = shd (sMed\<cdot>msg\<cdot>ora)"
   oops
 
 lemma smed_slen2smed2:
@@ -478,10 +460,6 @@ lemma smed_slen2smed2:
      \<Longrightarrow> #(srcdups\<cdot>(sprojsnd\<cdot>(sMed\<cdot>msg\<cdot>ora))) = #(srcdups\<cdot>msg)
      \<Longrightarrow> #(srcdups\<cdot>(sprojsnd\<cdot>msg)) = #(srcdups\<cdot>msg)
      \<Longrightarrow> srcdups\<cdot>msg = srcdups\<cdot>(sMed\<cdot>msg\<cdot>ora)"
-  apply (induction ora arbitrary: msg rule: ind, simp_all)
-  apply (simp add: smed_slen2smed2_adm)
-  apply (rule_tac x=msg in scases, simp_all)
-  apply (case_tac "a=True", simp_all)
   oops
 
 (* ----------------------------------------------------------------------- *)

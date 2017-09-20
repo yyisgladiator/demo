@@ -89,6 +89,14 @@ lemma prop3: assumes p1_def: "#({True} \<ominus> p1) = \<infinity>" and p2_def: 
   shows "#(tsAbs\<cdot>ts) = \<infinity> \<Longrightarrow> #(tsAbs\<cdot>(tsMed\<cdot>(tsProjSnd\<cdot>(tsMed\<cdot>ts\<cdot>p1))\<cdot>p2)) = \<infinity>"
   by (simp add: p1_def p2_def)
 
+(* property 4 *)
+lemma tsmed_tsabs_slen2tsmed_tsabs: 
+  "#(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>ts))) \<noteq> \<infinity> \<Longrightarrow> #({True} \<ominus> p) = \<infinity> 
+  \<Longrightarrow> #(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>ts))) = #(tsAbs\<cdot>(tsRemDups\<cdot>(tsProjSnd\<cdot>ts)))
+  \<Longrightarrow> #(tsAbs\<cdot>(tsRemDups\<cdot>(tsProjSnd\<cdot>ts))) = #(tsAbs\<cdot>(tsRemDups\<cdot>(tsProjSnd\<cdot>(tsMed\<cdot>ts\<cdot>p))))
+  \<Longrightarrow> tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>ts)) = tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(tsMed\<cdot>ts\<cdot>p)))"
+sorry
+
 lemma hhh2: assumes "#(srcdups\<cdot>s) < \<infinity>" and "#s = \<infinity>"
   obtains n where "s = (stake n\<cdot>s) \<bullet> (\<up>(snth n s)\<infinity>)"
   sorry
