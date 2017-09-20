@@ -1,6 +1,8 @@
 (*  Title:        SPF
     Author:       Sebastian Stüber
+    Authro:       Jens Christoph Bürger
     e-mail:       sebastian.stueber@rwth-aachen.de
+    e-mail:       jens.buerger@rwth-aachen.de
 
     Description:  Defines "Stream Processing Functions"
 *)
