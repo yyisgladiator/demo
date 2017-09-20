@@ -449,6 +449,34 @@ lemma spfCompOld2_spfcomp_eq: "(spfCompOld2 f1 f2) = (spfComp f1 f2)"
 lemma spfCompOld_spfcomp_eq: "(spfCompOld f1 f2) = (spfComp f1 f2)"
   by (simp add: spfCompOld2_spfcomp_eq spfCompOld_and_spfCompOld2_eq)
     
+lemma spfcomp_commu: assumes "spfRan\<cdot>f1 \<inter> spfRan\<cdot>f2 = {}"
+  shows "spfComp f1 f2 = spfComp f2 f1"
+proof -
+  have f0: "\<And> tb. sbDom\<cdot>tb = spfCompI f1 f2 \<Longrightarrow> 
+                  (\<Squnion> i. iter_spfCompH f1 f2 i tb) = (\<Squnion> i. iter_spfCompH f2 f1 i tb)"
+    by (meson assms iter_spfcomph_commu)
+  have f1: "spfCompI f1 f2 = spfCompI f2 f1"
+    by (simp add: spfcomp_I_commu)
+  have f2: "\<forall> tb. (sbDom\<cdot>tb \<noteq> spfCompI f1 f2) 
+            \<or> (Some (\<Squnion> i. iter_spfCompH f1 f2 i tb) = Some (\<Squnion> i. iter_spfCompH f2 f1 i tb)) "
+    using f0 by blast
+  have f3:"Abs_CSPF (\<lambda>t. (sbDom\<cdot>t = spfCompI f2 f1)
+                              \<leadsto>\<Squnion>n. iter_sbfix2 (spfCompH f1 f2) n (spfRan\<cdot>f1 \<union> spfRan\<cdot>f2) t) 
+        = Abs_CSPF (\<lambda>t. (sbDom\<cdot>t = spfCompI f2 f1)
+                              \<leadsto>\<Squnion>n. iter_sbfix2 (spfCompH f2 f1) n (spfRan\<cdot>f2 \<union> spfRan\<cdot>f1) t) 
+          \<or> (\<forall>t. sbDom\<cdot>t \<noteq> spfCompI f2 f1 \<or> (sbDom\<cdot>t \<noteq> spfCompI f2 f1 \<or> 
+          Some (\<Squnion>n. iter_sbfix2 (spfCompH f1 f2) n (spfRan\<cdot>f1 \<union> spfRan\<cdot>f2) t) 
+          = Some (\<Squnion>n. iter_sbfix2 (spfCompH f2 f1) n (spfRan\<cdot>f2 \<union> spfRan\<cdot>f1) t)) 
+          \<and> (sbDom\<cdot>t = spfCompI f2 f1 \<or> 
+            None = Some (\<Squnion>n. iter_sbfix2 (spfCompH f2 f1) n (spfRan\<cdot>f2 \<union> spfRan\<cdot>f1) t))) 
+            \<and> (\<forall>t. sbDom\<cdot>t = spfCompI f2 f1 \<or> sbDom\<cdot>t \<noteq> spfCompI f2 f1 
+            \<or> Some (\<Squnion>n. iter_sbfix2 (spfCompH f1 f2) n (spfRan\<cdot>f1 \<union> spfRan\<cdot>f2) t) = None)"
+        using f2 spfcomp_I_commu by blast  
+    show ?thesis
+     apply (simp add: spfComp_def, subst (1 2) sbFix_def)  
+     apply (subst f1)
+     using f3 by meson
+qed
     
     
 section \<open>serial-composition\<close>

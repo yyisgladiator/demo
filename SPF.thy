@@ -1329,6 +1329,35 @@ proof -
   show ?thesis
     by (simp add: f1 f2 spfCompH_def assms)
 qed
+  
+paragraph \<open>commu\<close>  
+  
+lemma spfcomph_commu: assumes  "spfRan\<cdot>f1 \<inter> spfRan\<cdot>f2 = {}"
+                       and "sbDom\<cdot>tb = (spfRan\<cdot>f1 \<union> spfRan\<cdot>f2)"
+                       and "sbDom\<cdot>x = spfCompI f1 f2"
+  shows "(spfCompH f1 f2 x)\<cdot>tb = (spfCompH f2 f1 x)\<cdot>tb"
+proof -
+  have "spfDom\<cdot>f1 \<subseteq> sbDom\<cdot>(x \<uplus> tb)"
+    by (simp add: assms(2) assms(3) inf_sup_aci(6) spfCompI_def)
+  hence f1:  "sbDom\<cdot>(f1\<rightleftharpoons>((x \<uplus> tb)  \<bar> spfDom\<cdot>f1)) = spfRan\<cdot>f1"
+    using spfRanRestrict by blast
+   
+    
+  have "spfDom\<cdot>f2 \<subseteq> sbDom\<cdot>(x \<uplus> tb)"
+    by (simp add: assms(2) assms(3) sup.absorb_iff2 sup.commute sup_left_commute spfCompI_def)   
+  hence f2:  "sbDom\<cdot>(f2\<rightleftharpoons>((x \<uplus> tb)  \<bar> spfDom\<cdot>f2)) = spfRan\<cdot>f2"
+    using spfRanRestrict by blast
+      
+  from f1 f2 have f3: "sbDom\<cdot>(f1\<rightleftharpoons>((x \<uplus> tb)  \<bar> spfDom\<cdot>f1)) 
+                        \<inter>  sbDom\<cdot>(f2\<rightleftharpoons>((x \<uplus> tb)  \<bar> spfDom\<cdot>f2)) = {}"
+    by (simp add: assms(1))
+  
+  thus ?thesis
+    apply (simp add: spfCompH_def)
+    apply (rule sbunion_commutative)
+    by simp
+qed
+
  
 subsubsection \<open>iterate spfCompH\<close>  
   
@@ -1349,7 +1378,21 @@ lemma iter_spfCompH_chain[simp]: assumes "sbDom\<cdot>x = spfCompI f1 f2"
 lemma iter_spfCompH_dom[simp]: assumes "sbDom\<cdot>x = spfCompI f1 f2" 
   shows "sbDom\<cdot>(iter_spfCompH f1 f2 i x) = (spfRan\<cdot>f1 \<union> spfRan\<cdot>f2)"
   by (simp add: assms iter_sbfix2_dom)
-  
+
+lemma iter_spfcomph_commu: assumes "spfRan\<cdot>f1 \<inter> spfRan\<cdot>f2 = {}"
+                           and "sbDom\<cdot>tb = spfCompI f1 f2" 
+  shows "(iter_spfCompH f1 f2 i tb) = (iter_spfCompH f2 f1 i tb)"
+proof (induction i)
+  case 0
+  then show ?case
+    by (simp add: sup_commute)
+next
+  case (Suc i)
+  then show ?case
+   apply (unfold iterate_Suc)
+   apply (subst spfcomph_commu, simp_all add: assms)
+   by (metis (no_types) assms(2) iter_spfCompH_dom)
+qed
   
 subsubsection \<open>lub iterate spfCompH\<close> 
   
