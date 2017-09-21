@@ -142,7 +142,22 @@ lemma prop4s_h3: assumes  "#(srcdups\<cdot>s) \<noteq> \<infinity>" "#({True} \<
        "(srcdups\<cdot>s) = (srcdups\<cdot>(sMed\<cdot>s\<cdot>p))" 
      using assms proof(induction s arbitrary: p rule:ind)
        case 1
-       then show ?case sorry
+       then show ?case proof(rule adm_imp)
+         have "adm (\<lambda>x.  #(srcdups\<cdot>x) = \<infinity>)"
+           by simp
+         then  show " adm (\<lambda>x. \<not> #(srcdups\<cdot>x) \<noteq> \<infinity>)" 
+           by auto
+          
+         show " adm (\<lambda>x. \<forall>xa. #({True} \<ominus> xa) = \<infinity> \<longrightarrow> 
+                     #(srcdups\<cdot>(sprojsnd\<cdot>(sMed\<cdot>x\<cdot>xa))) = #(srcdups\<cdot>x) \<longrightarrow> 
+                     #(srcdups\<cdot>(sprojsnd\<cdot>x)) = #(srcdups\<cdot>x) \<longrightarrow> 
+                     srcdups\<cdot>x = srcdups\<cdot>(sMed\<cdot>x\<cdot>xa))"
+           apply(rule adm_all)
+           apply(rule adm_imp)
+           apply(simp)
+           apply(rule adm_imp)  
+           sorry  
+         qed
      next
        case 2
        then show ?case by simp
