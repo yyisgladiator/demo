@@ -965,6 +965,34 @@ lemma parCompDom: assumes "parcomp_well f1 f2" shows "spfDom\<cdot>(f1 \<paralle
 lemma parCompRan: assumes "parcomp_well f1 f2" shows "spfRan\<cdot>(f1 \<parallel> f2) = spfRan\<cdot>(spfCompOld f1 f2)"
   by (simp add: assms(1) parallelOperatorEq)
 
+lemma parcomp_cont[simp]: "cont (\<lambda> x. (sbDom\<cdot>x = spfDom\<cdot>f1 \<union> spfDom\<cdot>f2 ) \<leadsto> ((f1 \<rightleftharpoons> (x \<bar>spfDom\<cdot>f1)) \<uplus> (f2 \<rightleftharpoons> (x\<bar>spfDom\<cdot>f2))))"
+proof - 
+  have  "cont (\<lambda>s. (Rep_cfun (Rep_SPF f1))\<rightharpoonup>(s\<bar>spfDom\<cdot>f1))"
+    by (metis (no_types) cont_Rep_cfun2 cont_compose op_the_cont)
+  then have f1: "cont (\<lambda>x. (f1 \<rightleftharpoons> (x \<bar>spfDom\<cdot>f1)))"
+    by (metis )
+  have f3: "cont (\<lambda>x. (f1 \<rightleftharpoons> (x \<bar>spfDom\<cdot>f1)) \<uplus> (f2 \<rightleftharpoons> (x \<bar>spfDom\<cdot>f2)))"
+  proof -
+    have f1: "\<And>s. cont (\<lambda>sa. (s::'a SPF) \<rightleftharpoons>(sa\<bar>spfDom\<cdot>s))"
+      using  contSPFRestrict by auto
+    have "\<not> cont (\<lambda>s. (f2\<rightleftharpoons>(s\<bar>spfDom\<cdot>f2))) \<or> \<not> cont (\<lambda>s. sbUnion\<cdot> (f1\<rightleftharpoons>(s\<bar>spfDom\<cdot>f1))) \<or> cont (\<lambda>s. (f1\<rightleftharpoons>(s\<bar>spfDom\<cdot>f1)) \<uplus> (f2\<rightleftharpoons>(s\<bar>spfDom\<cdot>f2)))"
+      using cont2cont_APP by blast
+    then have ?thesis
+      using f1 cont_Rep_cfun2 cont_compose by blast
+    then show ?thesis
+      by force
+  qed
+  show ?thesis
+    apply(subst if_then_cont)
+    by (simp_all add: f3)
+qed
+  
+lemma parcomp_spf_well[simp]: "spf_well (\<Lambda> x. (sbDom\<cdot>x = spfDom\<cdot>f1 \<union> spfDom\<cdot>f2 ) \<leadsto> ((f1 \<rightleftharpoons> (x \<bar>spfDom\<cdot>f1)) \<uplus> (f2 \<rightleftharpoons> (x\<bar>spfDom\<cdot>f2))))"  
+  apply(simp add: spf_well_def)
+  apply(simp only: domIff2)
+  apply(simp add: sbdom_rep_eq)
+  by(auto)    
+    
 subsection \<open>serial\<close>
   
   (*
@@ -988,8 +1016,8 @@ lemma spfComp_serial_itconst2 [simp]: assumes "sercomp_well f1 f2"
                                       and "sbDom\<cdot>x = spfCompI f1 f2"
   shows "(\<Squnion>i. iter_spfcompH2 f1 f2 i x) = x \<uplus> (f1 \<rightleftharpoons> (x \<bar>spfDom\<cdot>f1)) 
                                              \<uplus> (f2 \<rightleftharpoons> (f1 \<rightleftharpoons> (x\<bar>spfDom\<cdot>f1)))"
-*)
-
+*)  
+  
 lemma serCompHelp2Eq: assumes "sercomp_well f1 f2"
                           and "sbDom\<cdot>x = spfDom\<cdot>f1" 
    shows "(\<Squnion>i. iterate i\<cdot>(spfCompH2 f1 f2 x)\<cdot>(sbLeast (spfCompC f1 f2)))\<bar> spfCompOc f1 f2 = ((f1 \<rightleftharpoons> x)) \<uplus> (f2 \<rightleftharpoons> (f1 \<rightleftharpoons> x))" 
@@ -1011,12 +1039,34 @@ lemma serialOperatorEq: assumes "sercomp_well f1 f2"
    shows "((spfCompOld f1 f2) \<h> spfRan\<cdot>f1) \<rightleftharpoons> sb = (f1 \<circ> f2) \<rightleftharpoons> sb"
 proof - 
   have "sbDom\<cdot>(((spfCompOld f1 f2) \<h> spfRan\<cdot>f1) \<rightleftharpoons> sb) = spfRan\<cdot>f2"
+    
     sorry
   show ?thesis 
     apply(subst sb_eq, simp_all)
     sorry
 qed
 
+lemma sercomp_cont[simp]: "cont (\<lambda> x. (sbDom\<cdot>x =  spfDom\<cdot>f1) \<leadsto> (f2 \<rightleftharpoons> (f1 \<rightleftharpoons> x)))"
+proof -
+  have "cont (the::'a SB option \<Rightarrow> _) \<and> cont (\<lambda>s. Rep_SPF f2\<cdot>Rep_cfun (Rep_SPF f1)\<rightharpoonup>s)"
+    by (metis cont_Rep_cfun2 cont_compose op_the_cont)
+  then have "cont (\<lambda>s. Rep_cfun (Rep_SPF f2)\<rightharpoonup>Rep_cfun (Rep_SPF f1)\<rightharpoonup>s)"
+    by (metis cont_compose)
+  then have "cont (\<lambda>s. (sbDom\<cdot>s = spfDom\<cdot> f1)\<leadsto>((Rep_cfun (Rep_SPF f2))\<rightharpoonup>((Rep_cfun (Rep_SPF f1))\<rightharpoonup>s)))"
+    using if_then_cont by blast
+  then show ?thesis
+    by (metis (no_types) )
+qed
+  
+lemma sercomp_spf_well[simp]: assumes "spfRan\<cdot>f1 = spfDom\<cdot>f2" shows "spf_well (\<Lambda> x. (sbDom\<cdot>x =  spfDom\<cdot>f1) \<leadsto> (f2 \<rightleftharpoons> (f1 \<rightleftharpoons> x)))"  
+  apply(simp add: spf_well_def)
+  apply(simp only: domIff2)
+  apply(simp add: sbdom_rep_eq)
+  by (metis (full_types) assms hidespfwell_helper) 
+
+lemma serCompDom: assumes "sercomp_well f1 f2" shows "spfDom\<cdot>(f1 \<circ> f2) = spfDom\<cdot>f1"
+  apply(simp add: sercomp_def)
+  by(simp add: spfDomAbs assms)   
     
 end
   
