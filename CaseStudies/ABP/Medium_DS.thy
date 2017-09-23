@@ -57,7 +57,10 @@ lemma sprojsnd_srcdups:
 lemma srcdups_smed_h: " #(srcdups\<cdot>(sMed\<cdot>s\<cdot>p)) \<le> #(srcdups\<cdot>s)"
    proof (induction s arbitrary: p rule: ind)
     case 1
-    then show ?case sorry
+    then show ?case 
+    apply(rule adm_all)
+    apply(rule admI)
+    by(simp add: contlub_cfun_arg contlub_cfun_fun lub_mono2)
   next
     case 2
     then show ?case by simp
