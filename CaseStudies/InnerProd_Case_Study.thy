@@ -319,6 +319,72 @@ subsection \<open>inner Prod II\<close>
 lemma spfCompOld_well_parallelOp: "spfComp_well (mult1\<parallel>mult2) addC"
   by (metis parallelOperatorEq parcomp_well_mults sercomp2spfComp sercomp_well_mult_add)
 
+lemma mults_parcomp1: assumes "sbDom\<cdot>sb = spfCompI mult1 mult2"
+                          and "c \<in> spfRan\<cdot>mult1" 
+shows "((mult1 \<parallel> mult2) \<rightleftharpoons> sb). c  = (mult1 \<rightleftharpoons> (sb\<bar>spfDom\<cdot>mult1)) .c"
+  by (metis assms(1) assms(2) mults_comp1 parallelOperatorEq parcomp_well_mults)
+  
+lemma mults_parcomp2: assumes "sbDom\<cdot>sb = spfCompI mult1 mult2"
+                          and "c \<in> spfRan\<cdot>mult2" 
+shows "((mult1 \<parallel> mult2) \<rightleftharpoons> sb). c  = (mult2 \<rightleftharpoons> (sb\<bar>spfDom\<cdot>mult2)) .c"
+  by (metis assms(1) assms(2) mults_comp2 parallelOperatorEq parcomp_well_mults) 
+
+lemma innerprod_serComp2: assumes "sbDom\<cdot>sb = spfCompI (mult1 \<parallel> mult2) addC"
+  shows "(((mult1 \<parallel> mult2) \<circ> addC) \<rightleftharpoons> sb) . c7 = 
+         (addC \<rightleftharpoons> ((mult1 \<parallel> mult2) \<rightleftharpoons> (sb))) . c7"
+proof -
+  have "spfCompI (mult1 \<parallel> mult2) addC = {c1,c2,c3,c4}"
+    by(simp add: spfCompI_def parCompDom parCompRan)
+  then show ?thesis
+    apply(simp add: sercomp_def)
+    apply(subst rep_abs_cspf, simp_all)
+     apply(subst sercomp_spf_well, simp_all add: parCompRan)
+     by(simp add: parCompDom assms)
+qed
+
+lemma innerprod_main2: assumes "sbDom\<cdot>sb = spfCompI (mult1 \<parallel> mult2) addC"
+  shows "(innerProd2  \<rightleftharpoons> sb) . c7 = add\<cdot>(mult\<cdot>(sb . c1)\<cdot>(sb . c2))\<cdot>(mult\<cdot>(sb . c3)\<cdot>(sb . c4))"
+proof - 
+  have f1: "spfCompI (mult1 \<parallel> mult2) addC = {c1,c2,c3,c4}"
+    by(simp add: spfCompI_def parCompDom parCompRan)  
+  then have f2: "spfDom\<cdot>((mult1\<parallel>mult2)\<circ>addC) = {c1,c2,c3,c4}"
+    by (metis assms parallelOperatorEq parcomp_well_mults serCompDom sercomp_well_mult_add spfComp_test8)
+  have "cont (\<lambda>s. (SPF2x1 mult (c1, c2, c5) \<rightleftharpoons> s\<bar>spfDom\<cdot>(SPF2x1 mult (c1, c2, c5))) \<uplus> (SPF2x1 mult (c3, c4, c6) \<rightleftharpoons> s\<bar>spfDom\<cdot>(SPF2x1 mult (c3, c4, c6))))"
+    by (simp add: contSPFRestrict)
+  then have f3: "cont (\<lambda>s. (sbDom\<cdot>s = {c3, c4, c1, c2})\<leadsto>(mult1 \<rightleftharpoons> s\<bar>spfDom\<cdot>mult1) \<uplus> (mult2 \<rightleftharpoons> s\<bar>spfDom\<cdot>mult2))"
+    by (simp add: mult1_def mult2_def)
+  have f4: "{c3, c4, c1, c2} = spfDom\<cdot>mult1 \<union> spfDom\<cdot>mult2"
+    by simp
+  have f5: "spf_well (\<Lambda> x. (sbDom\<cdot>x = {c3, c4, c1, c2})\<leadsto>(mult1 \<rightleftharpoons> x\<bar>spfDom\<cdot>mult1) \<uplus> (mult2 \<rightleftharpoons> x\<bar>spfDom\<cdot>mult2))"
+    apply(subst f4)
+    apply(subst parcomp_spf_well)
+    by simp
+  have f6: "(mult1\<parallel>mult2 \<rightleftharpoons> sb) . c5 = mult\<cdot>(sb . c1)\<cdot>(sb . c2)"
+    apply( simp add: parcomp_def)
+    apply(subst rep_abs_cspf)
+      apply(simp_all add: f3 f5)
+    apply(subst mult1Eq, simp add: assms f1)
+      by (simp add: assms f1 insert_commute)
+  have f7: "(mult1\<parallel>mult2 \<rightleftharpoons> sb) . c6 = mult\<cdot>(sb . c3)\<cdot>(sb . c4)"
+    apply( simp add: parcomp_def)
+    apply(subst rep_abs_cspf)
+      apply(simp_all add: f3 f5)
+    apply(subst mult2Eq, simp add: assms f1)
+      by (simp add: assms f1 insert_commute)
+  show ?thesis
+    apply(simp add: innerProd2_def)
+    apply(subst hideSbRestrictCh, simp_all add: assms f1 f2)
+    apply(simp add: sercomp_def assms)
+    apply(subst rep_abs_cspf)
+     apply simp
+      apply(subst sercomp_spf_well)
+      apply (simp add: f1)
+    apply(simp_all add: assms parCompDom f1 parCompRan)
+    apply(subst addCEq)
+    apply(subst spfran2sbdom2)
+    apply (simp_all add: assms f1 parCompDom parCompRan)
+    by (simp add: f6 f7)
+    
 (*
 lemma no_selfloops_parallelOp: "no_selfloops (mult1\<parallel>mult2) addC"
 apply(simp add: no_selfloops_def)
