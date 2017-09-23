@@ -171,18 +171,22 @@ definition tsbNth:: "nat \<Rightarrow> 'm TSB \<Rightarrow> 'm TSB" where
 "tsbNth n \<equiv> \<lambda> tb.  tsbHd (tsbDrop n tb)"
 
 (*
+CURRENTLY moved in tsbTickCount Section until cont is proofed
+
 definition tsbTickCount :: "'m TSB \<rightarrow> lnat" where
 "tsbTickCount \<equiv>  \<Lambda> tb. if tsbDom\<cdot>tb \<noteq> {} then #\<surd>(SOME ts. ts \<in> ran (Rep_TSB tb)) else \<infinity>"
 
 
 
 definition tsbTickCount2 :: "'m TSB \<rightarrow> lnat" where
-"tsbTickCount2 \<equiv>  \<Lambda> tb. if tsbDom\<cdot>tb \<noteq> {} then (THE n. (\<exists> c. (c \<in> tsbDom\<cdot>tb \<and> ((#\<surd> (tb . c)) = n)) \<and> (\<forall> c2. c2\<in>tsbDom\<cdot>tb \<longrightarrow> n \<le> (#\<surd> (tb . c2)))))  else \<infinity>"
+"tsbTickCount2 \<equiv>  \<Lambda> tb. if tsbDom\<cdot>tb \<noteq> {} then (THE n. (\<exists> c. (c \<in> tsbDom\<cdot>tb \<and> ((#\<surd> (tb . c)) = n)) 
+                 \<and> (\<forall> c2. c2\<in>tsbDom\<cdot>tb \<longrightarrow> n \<le> (#\<surd> (tb . c2)))))  else \<infinity>"
 
 
 
 definition tsbTickCount3 :: "'m TSB \<rightarrow> lnat" where
-"tsbTickCount3 \<equiv> \<Lambda> tb. if tsbDom\<cdot>tb \<noteq> {} then Min {z. \<exists>ts. (z = #\<surd>ts) \<and> ts \<in> ran (Rep_TSB tb)} else \<infinity>"
+"tsbTickCount3 \<equiv> \<Lambda> tb. if tsbDom\<cdot>tb \<noteq> {} then Min {z. \<exists>ts. (z = #\<surd>ts) 
+                  \<and> ts \<in> ran (Rep_TSB tb)} else \<infinity>"
 *)
 
 
@@ -954,8 +958,7 @@ lemma tsbunion_dom [simp]: "tsbDom\<cdot>(tb1 \<uplus> tb2) = tsbDom\<cdot>tb1 \
 lemma tsbunion_belowI1: assumes "(a \<sqsubseteq> b)" and "(c \<sqsubseteq> d)"
   shows "(a \<uplus> c \<sqsubseteq> b \<uplus> d)"
   by (simp add: assms(1) assms(2) monofun_cfun)
-
-    
+ 
 subsubsection \<open>tsbTickcount\<close>
 (* general lemma *)
 lemma tsb_below_ran_below1: assumes "x \<sqsubseteq> y" and "tsbDom\<cdot>x \<noteq> {}"
@@ -1061,13 +1064,176 @@ lemma tsbtick_mono [simp]:
   shows "monofun (\<lambda> tb. if tsbDom\<cdot>tb \<noteq> {} then 
                                           (LEAST ln. ln\<in>{(#\<surd>(tb. c)) | c. c \<in> tsbDom\<cdot>tb}) else \<infinity>)"
   using monofun_def tsbtick_mono_pre by blast
-      
-      
-lemma tsbtick_least_chain: assumes "chain Y"
+
+lemma tsbtick_chain [simp]:   assumes "chain Y" and "\<And> i. tsbDom\<cdot>(Y i) \<noteq> {}" 
+shows "chain (\<lambda> i. if tsbDom\<cdot>(Y i) \<noteq> {} then (LEAST ln. ln\<in>{(#\<surd>((Y i). c)) | c. c \<in> tsbDom\<cdot>(Y i)}) else \<infinity>)"
+proof -
+  have f1: "\<And>i.(Y i) \<sqsubseteq> (Y (Suc i))"
+    by (simp add: assms(1) po_class.chainE)
+  have f2: "\<And> i. tsbDom\<cdot>(\<Squnion>i. Y i) = tsbDom\<cdot>(Y i)"
+    by (simp add: assms(1) assms(2))
+  show ?thesis  
+    apply (rule chainI)
+    by (rule tsbtick_mono_pre, simp add: f1)
+qed
+  
+
+lemma tsbtick_least_chain2: assumes "chain Y" and "\<And> i. tsbDom\<cdot>(Y i) \<noteq> {}"
+  shows "chain (\<lambda> i. LEAST ln. \<exists>c. ln = #\<surd> Y i  .  c \<and> c \<in> tsbDom\<cdot>(Y i))"
+proof -
+  have f1: "\<And>i.(Y i) \<sqsubseteq> (Y (Suc i))"
+    by (simp add: assms(1) po_class.chainE)
+  have f2: "\<And> i. tsbDom\<cdot>(\<Squnion>i. Y i) = tsbDom\<cdot>(Y i)"
+    by (simp add: assms(1) assms(2))
+    
+  have f3: "chain (\<lambda> i. if tsbDom\<cdot>(Y i) \<noteq> {} then (LEAST ln. ln\<in>{(#\<surd>((Y i). c)) | c. c \<in> tsbDom\<cdot>(Y i)}) else \<infinity>)"
+    apply (rule chainI)
+    by (rule tsbtick_mono_pre, simp add: f1)
+  have f4: "\<And> i. (LEAST ln. \<exists>c. ln = #\<surd> Y i  .  c \<and> c \<in> tsbDom\<cdot>(Y i)) = (if tsbDom\<cdot>(Y i) \<noteq> {} then (LEAST ln. ln\<in>{(#\<surd>((Y i). c)) | c. c \<in> tsbDom\<cdot>(Y i)}) else \<infinity>)"
+    using assms(2) f2 by auto
+  show ?thesis
+    apply (subst f4)
+    by (simp add: f3)
+qed  
+  
+lemma tsbtick_least_chain: assumes "chain Y" and "tsbDom\<cdot>(\<Squnion>i. Y i) \<noteq> {}"
   shows "chain (\<lambda> i. LEAST ln. \<exists>c. ln = #\<surd> Y i  .  c \<and> c \<in> tsbDom\<cdot>(Lub Y))"
+proof -
+  have f1: "\<And>i.(Y i) \<sqsubseteq> (Y (Suc i))"
+    by (simp add: assms(1) po_class.chainE)
+  have f2: "\<And> i. tsbDom\<cdot>(\<Squnion>i. Y i) = tsbDom\<cdot>(Y i)"
+    by (simp add: assms(1) assms(2))
+  have f3: "\<And>i . (LEAST ln. \<exists>c. ln = #\<surd> Y i  .  c \<and> c \<in> tsbDom\<cdot>(Lub Y)) =  (LEAST ln. \<exists>c. ln = #\<surd> Y i  .  c \<and> c \<in> tsbDom\<cdot>(Y i))"
+    using f2 by presburger
+  show ?thesis
+    apply (subst f3)
+    apply (rule tsbtick_least_chain2)
+      by (simp_all add: assms f2)
+qed    
+ 
+lemma tsbtick_least_chain3: assumes "chain Y" and "\<And> i. tsbDom\<cdot>(Y i) \<noteq> {}"
+  shows "chain (\<lambda> i. LEAST ln. \<exists>c. ln = #\<surd> Y i  .  c \<and> c \<in> tsbDom\<cdot>(Y i))"
+proof -
+  have f1: "\<And>i.(Y i) \<sqsubseteq> (Y (Suc i))"
+    by (simp add: assms(1) po_class.chainE)
+  have f2: "\<And> i. tsbDom\<cdot>(\<Squnion>i. Y i) = tsbDom\<cdot>(Y i)"
+    by (simp add: assms(1) assms(2))
+    
+  have f3: "chain (\<lambda> i. if tsbDom\<cdot>(Y i) \<noteq> {} then (LEAST ln. ln\<in>{(#\<surd>((Y i). c)) | c. c \<in> tsbDom\<cdot>(Y i)}) else \<infinity>)"
+    apply (rule chainI)
+    by (rule tsbtick_mono_pre, simp add: f1)
+  have f4: "\<And> i. (LEAST ln. \<exists>c. ln = #\<surd> Y i  .  c \<and> c \<in> tsbDom\<cdot>(Y i)) = (if tsbDom\<cdot>(Y i) \<noteq> {} then (LEAST ln. ln\<in>{(#\<surd>((Y i). c)) | c. c \<in> tsbDom\<cdot>(Y i)}) else \<infinity>)"
+    using assms(2) f2 by auto
+  show ?thesis
+    apply (subst f4)
+    by (simp add: f3)
+qed
+  
+lemma chains_lub_eq: assumes "chain (Y::nat \<Rightarrow> lnat)" and "chain (X::nat \<Rightarrow> lnat)" and "\<exists> i. \<forall> j\<ge>i. Y j = X j" shows "(\<Squnion>i. Y i) = (\<Squnion>i. X i)"
+proof - 
+  have "(\<Squnion>i. Y i) \<le> (\<Squnion>i. X i)"
+  proof - 
+    obtain i where f1: "\<forall> j\<ge>i. Y j = X j"
+      using assms by blast
+    have "\<And> j. (X j) \<le> (\<Squnion>i. X i)" 
+      using assms(2) is_ub_thelub lnle_def by blast
+    then have "\<forall> j\<ge>i. (Y j) \<le> (\<Squnion>i. X i)"
+      by (simp add: f1)
+    then show ?thesis
+    proof -
+      have f1: "\<forall>n na f l. (\<not> (n::nat) \<le> na \<or> \<not> f na \<le> (l::lnat) \<or> (\<exists>n na. n \<le> na \<and> \<not> f n \<le> f na)) \<or> f n \<le> l"
+        by (meson order_subst2)
+      obtain nn :: "(nat \<Rightarrow> lnat) \<Rightarrow> nat" and nna :: "(nat \<Rightarrow> lnat) \<Rightarrow> nat" where
+        f2: "\<forall>x1. (\<exists>v4 v5. v4 \<le> v5 \<and> \<not> x1 v4 \<le> x1 v5) = (nn x1 \<le> nna x1 \<and> \<not> x1 (nn x1) \<le> x1 (nna x1))"
+        by moura
+      have f3: "\<forall>n. \<not> i \<le> n \<or> Y n \<le> Lub X"
+        by (metis \<open>\<forall>j\<ge>i. Y j \<le> (\<Squnion>i. X i)\<close>)
+      then have f4: "Y i \<le> Lub X"
+        by (metis nat_le_linear)
+      obtain nnb :: "lnat \<Rightarrow> (nat \<Rightarrow> lnat) \<Rightarrow> nat" where
+        f5: "\<forall>f l. (\<not> chain f \<or> f (nnb l f) \<notsqsubseteq> l) \<or> Lub f \<sqsubseteq> l"
+        by (meson lub_below)
+      have "\<not> nn Y \<le> nna Y \<or> Y (nn Y) \<le> Y (nna Y)"
+        by (meson assms(1) lnle_conv po_class.chain_mono)
+      then show ?thesis
+        using f5 f4 f3 f2 f1 by (metis (full_types) assms(1) lnle_conv nat_le_linear)
+    qed
+  qed  
+  moreover have "(\<Squnion>i. X i) \<le> (\<Squnion>i. Y i)"
+  proof -   
+    obtain i where f1: "\<forall> j\<ge>i. X j = Y j"
+      using assms(3) by fastforce
+    have "\<And> j. (Y j) \<le> (\<Squnion>i. Y i)" 
+      using assms(1) is_ub_thelub lnle_def by blast
+    then have "\<forall> j\<ge>i. (X j) \<le> (\<Squnion>i. Y i)"
+      by (simp add: f1)
+    then show ?thesis
+    proof -
+      have f1: "\<forall>n na f l. (\<not> (n::nat) \<le> na \<or> \<not> f na \<le> (l::lnat) \<or> (\<exists>n na. n \<le> na \<and> \<not> f n \<le> f na)) \<or> f n \<le> l"
+        by (meson order_subst2)
+      obtain nn :: "(nat \<Rightarrow> lnat) \<Rightarrow> nat" and nna :: "(nat \<Rightarrow> lnat) \<Rightarrow> nat" where
+        f2: "\<forall>x1. (\<exists>v4 v5. v4 \<le> v5 \<and> \<not> x1 v4 \<le> x1 v5) = (nn x1 \<le> nna x1 \<and> \<not> x1 (nn x1) \<le> x1 (nna x1))"
+        by moura
+      have f3: "\<forall>n. \<not> i \<le> n \<or> X n \<le> Lub Y"
+        by (meson \<open>\<forall>j\<ge>i. X j \<le> (\<Squnion>i. Y i)\<close>)
+      then have f4: "X i \<le> Lub Y"
+        by (meson nat_le_linear)
+      obtain nnb :: "lnat \<Rightarrow> (nat \<Rightarrow> lnat) \<Rightarrow> nat" where
+          f5: "\<forall>f l. (\<not> chain f \<or> f (nnb l f) \<notsqsubseteq> l) \<or> Lub f \<sqsubseteq> l"
+        by (meson lub_below)
+      have "\<not> nn X \<le> nna X \<or> X (nn X) \<le> X (nna X)"
+        by (metis assms(2) lnle_conv po_class.chain_mono)
+      then show ?thesis
+        using f5 f4 f3 f2 f1 by (metis (full_types) assms(2) lnle_conv nat_le_linear)
+    qed
+  qed    
+  ultimately show ?thesis
+    using order_trans by auto
+qed    
+
+  (* lemma chain_lub_eq: assumes "chain (X::nat \<Rightarrow> lnat)" and "" shows "\<exists> i. \<forall> j\<ge>i. X i = X j \<longrightarrow> (\<Squnion>i. X i) = X i" *)
+lemma chain_lub_eq: assumes "chain (X::nat \<Rightarrow> lnat)" and "\<forall> j\<ge>i. X i = X j" shows "(\<Squnion>i. X i) = X i"
+  using assms(1) assms(2) lub_eqI lub_finch1 max_in_chain_def by blast
+  
+lemma chain_lub_lessInf: assumes "chain (Y::nat \<Rightarrow> lnat)" and "\<exists> i. \<forall> j\<ge>i. Y i = Y j \<and> Y i < \<infinity>" shows "(\<Squnion>i. Y i) < \<infinity>"
+  by (metis assms(1) assms(2) dual_order.strict_trans2 lnle_def lub_below nat_le_linear po_class.chain_mono)
+    
+lemma chain_lub_inf: assumes "chain (Y::nat \<Rightarrow> lnat)" and "\<forall> i. \<exists> j\<ge>i. Y j > Y i" shows "(\<Squnion>i. Y i) = \<infinity>"
+  by (metis assms(1) assms(2) below_antisym l42 lnless_def test34 unique_inf_lub) 
+
+lemma chain_mono: assumes "chain (Y::nat \<Rightarrow> lnat)" and "\<exists> i. \<forall> j\<ge>i. (Y i \<ge> Y j)" shows "\<exists> i. \<forall> j\<ge>i. (Y i = Y j)"
+  by (meson assms(1) assms(2) dual_order.antisym lnle_def po_class.chain_mono)
+
+lemma h1: assumes "chain Y" 
+              and "\<forall> i. \<forall> ch1 \<in> tsbDom\<cdot>(Lub Y). \<exists> j\<ge>i. ((#\<surd> Y i . ch1) < (#\<surd> Y j . ch1))"
+              and "tsbDom\<cdot>(Lub Y) \<noteq> {}"
+            shows "(x < \<infinity> \<and> c \<in> tsbDom\<cdot>(Lub Y)) \<Longrightarrow> (\<exists> k\<ge>a. x < #\<surd> Y k . c)"
+proof -
+  fix x c
+  fix a
+  assume f0: "x < \<infinity> \<and> c \<in> tsbDom\<cdot>(Lub Y)"
+  have f1: "x < \<infinity>"
+    using f0 by auto
+  have f2: "c \<in> tsbDom\<cdot>(Lub Y)"
+    using f0 by auto
+  have f3: "\<forall>i. \<exists>j\<ge>i. #\<surd> Y i . c <  #\<surd> Y j . c"
+    using assms f0 by blast
+  have f4: "x < #\<surd> Y 0 . c \<Longrightarrow> \<exists>k\<ge>a. x < #\<surd> Y k . c"
+    by (meson assms(1) chain_mono_less dual_order.strict_trans1 leI lnle_def monofun_cfun_arg order_refl tsbgetch_below)
+  moreover have f5: "x \<ge> #\<surd> Y 0 . c \<Longrightarrow> \<exists>k\<ge>a. x < #\<surd> Y k . c"
     sorry
-      
-      
+  ultimately moreover have f6: "\<exists>k\<ge>a. x < #\<surd> Y k . c" 
+    using leI by blast
+  ultimately show ?thesis
+    sorry
+qed
+
+lemma h2: assumes "chain Y" 
+              and "tsbDom\<cdot>(Lub Y) \<noteq> {}"
+            shows "\<exists>h. (\<exists>c \<in> tsbDom\<cdot>(Lub Y). h = ((kch :: channel \<Rightarrow> nat) c)) \<and> (\<forall>c \<in> tsbDom\<cdot>(Lub Y). h \<ge> (kch c))"  
+  
+  sorry
+              
 lemma tsbtick_cont_pre: assumes "chain Y"
   shows "(if tsbDom\<cdot>(\<Squnion>i. Y i) \<noteq> {} then LEAST ln. ln \<in> {#\<surd> (\<Squnion>i. Y i)  .  c |c. c \<in> tsbDom\<cdot>(\<Squnion>i. Y i)} else \<infinity>) \<sqsubseteq>
          (\<Squnion>i. if tsbDom\<cdot>(Y i) \<noteq> {} then LEAST ln. ln \<in> {#\<surd> ((Y i)  .  c) |c. c \<in> tsbDom\<cdot>(Y i)} else \<infinity>)"
@@ -1078,7 +1244,7 @@ proof (cases "tsbDom\<cdot>(\<Squnion>i. Y i) \<noteq> {}")
   hence f11: "\<forall> i. tsbDom\<cdot>(\<Squnion>i. Y i) =  tsbDom\<cdot>(Y i)"
     by (simp add: assms(1))
   hence f10: "\<forall> i. tsbDom\<cdot>(Y i) \<noteq> {}"
-  sorry
+    using True by auto
   have f2: "\<forall> c. #\<surd> (Lub Y  .  c) = (\<Squnion> i. #\<surd> ((Y i) .c))"
     by (metis (mono_tags, lifting) assms contlub_cfun_arg lub_eq lub_eval theRep_chain tsbgetch_insert)
   obtain minval where f20: "minval = (LEAST ln. \<exists>c. ln = (\<Squnion>i. #\<surd> Y i  .  c) \<and> c \<in> tsbDom\<cdot>(Lub Y))"
@@ -1100,11 +1266,201 @@ proof (cases "tsbDom\<cdot>(\<Squnion>i. Y i) \<noteq> {}")
        by (simp add: f2 f22)
   show ?thesis
     apply (simp only: True f10)
-      apply auto
-    apply (simp only: f2)
-    
-    apply (simp add: Least_def)
-      sorry
+    apply auto
+    proof (cases "finite_chain Y")
+      case True
+      hence "(LEAST ln. \<exists>c. ln = #\<surd> Lub Y  .  c \<and> c \<in> tsbDom\<cdot>(Lub Y)) \<sqsubseteq> (\<Squnion>i. LEAST ln. \<exists>c. ln = #\<surd> Y i  .  c \<and> c \<in> tsbDom\<cdot>(Y i))"
+      proof -
+        obtain nn :: "(nat \<Rightarrow> 'a TSB) \<Rightarrow> nat" where
+          f1: "\<And>f. \<not> finite_chain f \<or> \<not> chain f \<or> Lub f = f (nn f)"
+          using l42 by moura
+        have "\<forall>f. \<exists>n. tsbDom\<cdot>(f n::'a TSB) = {} \<or> chain (\<lambda>n. LEAST l. \<exists>c. l = #\<surd> f n . c \<and> c \<in> tsbDom\<cdot>(f n)) \<or> \<not> chain f"
+          using tsbtick_least_chain2 by blast
+        then have "\<And>n. (LEAST l. \<exists>c. l = #\<surd> Y n . c \<and> c \<in> tsbDom\<cdot>(Y n)) \<sqsubseteq> (\<Squnion>n. LEAST l. \<exists>c. l = #\<surd> Y n . c \<and> c \<in> tsbDom\<cdot>(Y n))"
+          using assms f10 is_ub_thelub by blast
+        then show ?thesis
+          using f1 True assms by presburger
+      qed
+      thus  "(LEAST ln. \<exists>c. ln = #\<surd> Lub Y  .  c \<and> c \<in> tsbDom\<cdot>(Lub Y)) \<le> (\<Squnion>i. LEAST ln. \<exists>c. ln = #\<surd> Y i  .  c \<and> c \<in> tsbDom\<cdot>(Y i))"
+        using lnle_conv by blast  
+    next
+      case False
+      hence f300: "\<not> finite_chain Y"
+        by simp
+      hence f301: "(LEAST ln. \<exists>c. ln = #\<surd> Lub Y  .  c \<and> c \<in> tsbDom\<cdot>(Lub Y)) \<sqsubseteq> (\<Squnion>i. LEAST ln. \<exists>c. ln = #\<surd> Y i  .  c \<and> c \<in> tsbDom\<cdot>(Y i))"
+      proof (cases "\<exists> i. \<exists> ch1 \<in> tsbDom\<cdot>(Lub Y). \<forall> j\<ge>i. \<forall> ch2 \<in> tsbDom\<cdot>(Lub Y). ((#\<surd> Y j  .  ch1) \<sqsubseteq> (#\<surd> Y j  .  ch2))")
+        case True
+        hence f310: "\<exists> i. \<exists> ch1 \<in> tsbDom\<cdot>(Lub Y). \<forall> j\<ge>i. \<forall> ch2 \<in> tsbDom\<cdot>(Lub Y). ((#\<surd> Y j  .  ch1) \<sqsubseteq> (#\<surd> Y j  .  ch2))"
+          by blast
+            (* so this means there exist a least channel index "ch1" which is always the least channel 
+                  if we look at the ith or greater channel element *)
+        obtain i where  f311: "\<exists> ch1 \<in> tsbDom\<cdot>(Lub Y). \<forall> j. \<forall> ch2 \<in> tsbDom\<cdot>(Lub Y). (i \<le> j) \<longrightarrow> ((#\<surd> Y j . ch1) \<sqsubseteq> (#\<surd> Y j . ch2))"
+          using f310 by blast
+        obtain ch1 where  f312: "ch1 \<in> tsbDom\<cdot>(Lub Y) \<and> (\<forall> j. \<forall> ch2 \<in> tsbDom\<cdot>(Lub Y). (i \<le> j) \<longrightarrow> ((#\<surd> Y j . ch1) \<sqsubseteq> (#\<surd> Y j .  ch2)))"
+          using f310 f311 by blast
+        have f313: "ch1 \<in> tsbDom\<cdot>(Y i)"
+          using f312 f11 by blast
+        have f314: "\<forall> j\<ge>i. (LEAST ln. \<exists>c. ln = #\<surd> Y j  .  c \<and> c \<in> tsbDom\<cdot>(Y i)) = (#\<surd> Y j  .  ch1)"
+        proof - 
+          have "\<forall> j\<ge>i. \<forall> ch2 \<in> tsbDom\<cdot>(Y i). (#\<surd> Y j  .  ch1) \<le> (#\<surd> Y j  .  ch2)"
+            using f11 f312 lnle_def by blast
+          then show ?thesis
+            using f312 apply(simp)
+            using f313 by (smt Least_equality)
+        qed
+        hence f315: "(\<Squnion>i. LEAST ln. \<exists>c. ln = #\<surd> Y i  .  c \<and> c \<in> tsbDom\<cdot>(Y i)) = (\<Squnion>i.  (#\<surd> Y i  .  ch1))"
+          apply(subst chains_lub_eq, simp_all)
+          using assms f10 tsbtick_least_chain3 apply blast
+          using assms apply auto[1]
+          using assms f314 by auto   
+        show ?thesis
+          apply (subst f315)
+          by (metis (mono_tags, lifting) Least_le f2 f312 lnle_conv lub_eq)          
+      next
+        case False
+        hence 400: "\<forall> i. \<forall> ch1 \<in> tsbDom\<cdot>(Lub Y). \<exists> j\<ge>i. \<exists> ch2 \<in> tsbDom\<cdot>(Lub Y). (#\<surd> Y j  .  ch2) < (#\<surd> Y j  .  ch1)"
+          by (meson leI lnle_def)
+        (* so what this basically means is that no matter what channel you choose, there is always one 
+           that is smaller for higher chain indices *)
+            
+        (* But what can we conclude of that, well that the stream on channel ch1 must eventually get longer 
+           otherwise there is no way that he lost the title as the smallest stream in the bundle *)
+        have 402: "\<forall> i. \<forall> ch1 \<in> tsbDom\<cdot>(Lub Y). \<exists> j\<ge>i. ((#\<surd> Y i . ch1) < (#\<surd> Y j . ch1))"
+        proof(rule classical)
+          assume 4020: "\<not> ?thesis"
+          then have 4021:"\<exists> i. \<exists> ch1 \<in> tsbDom\<cdot>(Lub Y). \<forall>j\<ge>i. ((#\<surd> Y i . ch1) \<ge> (#\<surd> Y j . ch1))"
+            using not_le_imp_less by blast
+          then obtain i where 4022: "\<exists> ch1 \<in> tsbDom\<cdot>(Lub Y). \<forall>j\<ge>i. ((#\<surd> Y i . ch1) \<ge> (#\<surd> Y j . ch1))"
+            by blast
+          then obtain ch1 where 4023: "ch1 \<in> tsbDom\<cdot>(Lub Y) \<and> (\<forall>j\<ge>i. ((#\<surd> Y i . ch1) \<ge> (#\<surd> Y j . ch1)))"
+            by blast
+          then have 4024: "\<forall>j\<ge>i. ((#\<surd> Y i . ch1) = (#\<surd> Y j . ch1))"
+          proof -
+            { fix nn :: nat
+              { assume "nn \<noteq> i"
+                { assume "i < nn"
+                  moreover
+                  { assume "#\<surd> Y i . ch1 \<sqsubseteq> #\<surd> Y nn . ch1 \<and> #\<surd> Y nn . ch1 \<le> #\<surd> Y i . ch1"
+                    then have "\<not> i \<le> nn \<or> #\<surd> Y nn . ch1 = #\<surd> Y i . ch1"
+            using leD lnless_def by auto }
+            ultimately have "\<not> i \<le> nn \<or> #\<surd> Y nn . ch1 = #\<surd> Y i . ch1"
+              by (meson assms chain_mono_less 4023 monofun_cfun_arg tsbgetch_below) }
+            then have "\<not> i \<le> nn \<or> #\<surd> Y nn . ch1 = #\<surd> Y i . ch1"
+              using le_less by blast }
+            then have "\<not> i \<le> nn \<or> #\<surd> Y nn . ch1 = #\<surd> Y i . ch1"
+              by blast }
+            then show ?thesis
+              by metis
+          qed
+          have 4025: "\<forall> i. \<forall> ch1 \<in> tsbDom\<cdot>(Lub Y). \<exists> j\<ge>i. \<exists> ch2 \<in> tsbDom\<cdot>(Lub Y). (#\<surd> Y j . ch2) < (#\<surd> Y j . ch1)"
+            using 400 by blast
+          have 4026: "ch1 \<in> tsbDom\<cdot>(Lub Y)"
+            using 4023 by blast
+          then have 4027: "\<forall> j. \<exists> k\<ge>j. \<exists> ch2 \<in> tsbDom\<cdot>(Lub Y). (#\<surd> Y k . ch2) < (#\<surd> Y k . ch1)"
+            by(simp add: 4025)
+          have "False"
+            sorry
+          from this show ?thesis
+            by blast 
+        qed
+        (* as a result all the lengths in the bundle are rising and rising, and hence the limit for 
+           each stream on the channel length is infinity *)
+        then have 403: "\<forall> i. \<exists> j\<ge>i. (LEAST ln. \<exists>c. ln = #\<surd> Y i . c \<and> c \<in> tsbDom\<cdot>(Y i)) < (LEAST ln. \<exists>c. ln = #\<surd> Y j . c \<and> c \<in> tsbDom\<cdot>(Y j))"    
+        proof - (* can this be done without two isar proofs? *)
+          have "\<And>i. \<exists>j\<ge>i. (LEAST ln. \<exists>c. ln = #\<surd> Y i . c \<and> c \<in> tsbDom\<cdot>(Y i)) < (LEAST ln. \<exists>c. ln = #\<surd> Y j . c \<and> c \<in> tsbDom\<cdot>(Y j))"
+          proof - 
+            fix a :: nat
+            obtain ch1 where 4031: "ch1 \<in> tsbDom\<cdot>(Y a) \<and> (LEAST ln. \<exists>c. ln = #\<surd> Y a . c \<and> c \<in> tsbDom\<cdot>(Y a)) = #\<surd> Y a . ch1"
+              by (smt LeastI True f11 tsbtick_min_on_channel)
+            then obtain minval where 4032: "minval = #\<surd> Y a . ch1"
+              by blast
+            have 4033: "(LEAST ln. \<exists>c. ln = #\<surd> Y a . c \<and> c \<in> tsbDom\<cdot>(Y a)) = #\<surd> Y a . ch1"
+              by (simp add: 4031)    
+            have 4034: "\<exists>k\<ge>a. \<forall>c \<in> tsbDom\<cdot>(Lub Y). minval <  #\<surd> Y k . c"
+            proof -
+              have 40341: "minval < \<infinity>"
+              proof(rule classical)
+                assume 403411: "\<not> ?thesis"
+                then have "minval = \<infinity>"
+                  using inf_ub order.not_eq_order_implies_strict by blast
+                then have "\<forall>c \<in> tsbDom\<cdot>(Y a). #\<surd> Y a . c = \<infinity>"
+                  by (metis (no_types, lifting) "402" "4031" "4032" assms inf_ub leD tsbChain_dom_eq2)
+                then have "\<forall>k\<ge>a. Y k = Y a"
+                  by (metis (no_types, lifting) "402" "4031" assms inf_ub leD tsbChain_dom_eq2)
+                then have "finite_chain Y"
+                  by (metis (no_types, lifting) "402" "4031" assms less_le tsbChain_dom_eq2)
+                then have "False"
+                  using f300 by auto
+                from this show ?thesis
+                  by blast 
+              qed
+              have 40342: "\<forall> i. \<forall> ch1 \<in> tsbDom\<cdot>(Lub Y). \<exists> j\<ge>i. ((#\<surd> Y i . ch1) < (#\<surd> Y j . ch1))"
+                by (simp add: 402)
+              then have 40343: "\<forall> x < \<infinity>. \<forall>c \<in> tsbDom\<cdot>(Lub Y). \<exists> k\<ge>a. x < #\<surd> Y k . c"
+                by(simp add: assms True h1)
+              have 40344: "\<forall> x < \<infinity>. \<exists> k\<ge>a. \<forall>c \<in> tsbDom\<cdot>(Lub Y).  x < #\<surd> Y k . c"
+              proof - 
+                have "\<And>x. x < \<infinity> \<Longrightarrow> \<exists> k\<ge>a. \<forall>c \<in> tsbDom\<cdot>(Lub Y).  x < #\<surd> Y k . c"
+                proof - 
+                  fix x
+                  assume 403441: "x < \<infinity>"
+                  then obtain kch :: "channel \<Rightarrow> nat" where 403442: "\<forall>c \<in> tsbDom\<cdot>(Lub Y). (x < #\<surd> Y (kch c) . c \<and> (kch c)\<ge>a)"
+                    using 403441 40343 by metis 
+                  have 4034421: "\<forall>i. \<forall>j\<ge>i. \<forall>c \<in> tsbDom\<cdot>(Lub Y). #\<surd> Y i . c \<le> #\<surd> Y j . c"
+                    using assms lnle_def monofun_cfun_arg po_class.chain_mono tsbgetch_below by blast
+                  then have "\<exists>h. (h\<ge>a \<and> (\<exists>c \<in> tsbDom\<cdot>(Lub Y). h = (kch c)))"
+                    using "4031" "403442" assms by auto
+                  then obtain h where 403443: "h\<ge>a \<and> (\<exists>c \<in> tsbDom\<cdot>(Lub Y). h = (kch c)) \<and> (\<forall>c \<in> tsbDom\<cdot>(Lub Y). h \<ge> (kch c))"
+                    by (metis "403442" all_not_in_conv assms h2)
+                  then have "h\<ge>a \<and> (\<forall>c \<in> tsbDom\<cdot>(Lub Y). x < #\<surd> Y h . c)"
+                    using 403442 4034421 by (meson dual_order.trans leD not_le_imp_less)
+                  then show "\<exists> k\<ge>a. \<forall>c \<in> tsbDom\<cdot>(Lub Y). x < #\<surd> Y k . c"
+                    by blast
+                qed
+                then show ?thesis
+                  by blast
+              qed
+              then show ?thesis
+                using "40341" by blast   
+            qed
+            then obtain k where 4035: "k\<ge>a \<and> (\<forall>c \<in> tsbDom\<cdot>(Lub Y). minval <  #\<surd> Y k . c)"
+              by blast
+            then have 4036: "minval < (LEAST ln. \<exists>c. ln = #\<surd> Y k . c \<and> c \<in> tsbDom\<cdot>(Y k))"
+            proof -
+              have "\<forall>l. \<exists>c. \<forall>la ca. c \<in> tsbDom\<cdot>(Y k) \<and> ((\<forall>c. l \<noteq> #\<surd> Y k . c \<or> c \<notin> tsbDom\<cdot>(Y k)) \<or> #\<surd> Y k . c = l) \<and> (la \<noteq> #\<surd> Y k . ca \<or> ca \<notin> tsbDom\<cdot>(Y k) \<or> (\<exists>c. la = #\<surd> Y k . c \<and> c \<in> tsbDom\<cdot>(Y k)))"
+                using f10 by blast
+              then obtain cc :: "lnat \<Rightarrow> channel" where
+                f1: "\<And>l la c. cc l \<in> tsbDom\<cdot>(Y k) \<and> ((\<forall>c. l \<noteq> #\<surd> Y k . c \<or> c \<notin> tsbDom\<cdot>(Y k)) \<or> #\<surd> Y k . cc l = l) \<and> (la \<noteq> #\<surd> Y k . c \<or> c \<notin> tsbDom\<cdot>(Y k) \<or> (\<exists>c. la = #\<surd> Y k . c \<and> c \<in> tsbDom\<cdot>(Y k)))"
+                by moura
+              then have f2: "\<And>c. c \<notin> tsbDom\<cdot>(Y k) \<or> (\<exists>c. (LEAST l. \<exists>c. l = #\<surd> Y k . c \<and> c \<in> tsbDom\<cdot>(Y k)) = #\<surd> Y k . c \<and> c \<in> tsbDom\<cdot>(Y k))"
+                by (smt LeastI)
+              have f3: "\<And>l. minval < #\<surd> Y k . cc l"
+                using f1 by (metis (no_types) "4035" f11)
+              have "#\<surd> Y k . cc (LEAST l. \<exists>c. l = #\<surd> Y k . c \<and> c \<in> tsbDom\<cdot>(Y k)) = (LEAST l. \<exists>c. l = #\<surd> Y k . c \<and> c \<in> tsbDom\<cdot>(Y k))"
+                using f2 f1 by blast
+              then show ?thesis
+              proof -
+                show ?thesis
+                  by (metis (lifting) \<open>#\<surd> Y k . cc (LEAST l. \<exists>c. l = #\<surd> Y k . c \<and> c \<in> tsbDom\<cdot>(Y k)) = (LEAST l. \<exists>c. l = #\<surd> Y k . c \<and> c \<in> tsbDom\<cdot>(Y k))\<close> f3)
+              qed
+            qed
+            show "\<exists>j\<ge>a. (LEAST ln. \<exists>c. ln = #\<surd> Y a . c \<and> c \<in> tsbDom\<cdot>(Y a)) < (LEAST ln. \<exists>c. ln = #\<surd> Y j . c \<and> c \<in> tsbDom\<cdot>(Y j))"
+              apply(subst 4033)
+              using 4032 4035 4036 by blast
+            qed
+          then show ?thesis
+            by simp
+        qed
+        hence 404: "(\<Squnion>i. LEAST ln. \<exists>c. ln = #\<surd> Y i  .  c \<and> c \<in> tsbDom\<cdot>(Y i)) = \<infinity>"
+          apply(subst chain_lub_inf)
+           apply(simp_all add: assms)
+          using True assms tsbtick_least_chain by blast  
+        show ?thesis 
+          by (simp add: 404)
+      qed       
+      thus "(LEAST ln. \<exists>c. ln = #\<surd> Lub Y  .  c \<and> c \<in> tsbDom\<cdot>(Lub Y)) \<le> (\<Squnion>i. LEAST ln. \<exists>c. ln = #\<surd> Y i  .  c \<and> c \<in> tsbDom\<cdot>(Y i))"
+        using lnle_conv by blast 
+    qed
 next
   case False
   hence "\<forall> i. tsbDom\<cdot>(Y i) = {}"
@@ -1112,10 +1468,7 @@ next
   thus?thesis
     by (simp)
 qed
-  
-      
-      
-      
+       
 lemma tsbtick_cont [simp]:
   shows "cont (\<lambda> tb. if tsbDom\<cdot>tb \<noteq> {} then 
                                           (LEAST ln. ln\<in>{(#\<surd>(tb. c)) | c. c \<in> tsbDom\<cdot>tb}) else \<infinity>)"
@@ -1123,13 +1476,10 @@ lemma tsbtick_cont [simp]:
    apply simp
     using tsbtick_cont_pre by blast
       
-      
- 
 
 (* more lemmas *)
   thm tsbTickCount_def
-    
-    
+     
     
 lemma tsbtick_least1 [simp]: assumes "cs = {}" 
   shows "#\<surd>tsb tsbLeast cs = \<infinity>"
@@ -1741,7 +2091,7 @@ abbreviation tsbiTTake_abbrv:: "'m TSB_inf \<Rightarrow> nat \<Rightarrow> 'm TS
 
 
 definition tsb2tsbInf :: "'m TSB \<Rightarrow> 'm TSB_inf" where
-"tsb2tsbInf tb \<equiv> Abs_TSB_inf (\<lambda>c. (c\<in>tsbDom\<cdot>tb)\<leadsto>(tb  .  c) \<bullet> tsInfTick)"
+"tsb2tsbInf tb \<equiv> Abs_TSB_inf (\<lambda>c. (c\<in>tsbDom\<cdot>tb)\<leadsto>(tb  .  c) \<bullet>\<surd> tsInfTick)"
 
 definition tsbInf2tsb :: "'m TSB_inf \<rightarrow> 'm TSB" where
 "tsbInf2tsb \<equiv> \<Lambda> tbi.  Abs_TSB (Rep_TSB_inf tbi)"
