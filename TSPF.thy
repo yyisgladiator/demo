@@ -65,7 +65,7 @@ lemma tspf_tick_adm [simp]: "adm (\<lambda> f. \<forall>b. (b \<in> dom (Rep_cfu
   by (smt below_cfun_def below_trans ch2ch_Rep_cfunL ch2ch_Rep_cfunR contlub_cfun_arg
           contlub_cfun_fun lnle_def op_the_chain op_the_lub part_dom_eq test34)
 
-
+text {* There is a cfun from TSB to TSB option which is tspf_well *}  
 lemma tspf_well_exists: "tspf_well (\<Lambda> tb. (tsbDom\<cdot>tb = {c1}) \<leadsto> tb)"
 proof -
   have f1: "cont (\<lambda> tb. (tsbDom\<cdot>tb = {c1}) \<leadsto> tb)"
@@ -81,7 +81,7 @@ proof -
      by (simp add: domIff)
 qed
 
-
+text {* tspf_well is admissible *}  
 lemma tspf_well_adm [simp]: "adm (\<lambda> f. tspf_well f)"
  by (simp add: tspf_well_def)
 
@@ -103,7 +103,8 @@ setup_lifting type_definition_TSPF
 
 subsubsection \<open>rep/abs\<close>
 
-(* Shorter version to get to normal functions from 'm SPF's *)
+
+text {* shorter version to get normal function from 'm SPF's *} 
 abbreviation Rep_CTSPF:: "'m TSPF \<Rightarrow> ('m TSB \<rightharpoonup> 'm TSB)" where
 "Rep_CTSPF F \<equiv>  Rep_cfun (Rep_TSPF F) "
 
@@ -115,11 +116,11 @@ abbreviation Abs_CTSPF:: "('m TSB \<rightharpoonup> 'm TSB) \<Rightarrow> 'm TSP
 
 subsubsection \<open>domain/range\<close>
 
-(* Input Channel set of an 'm TSPF-Component *)
+text {* Input Channel set of an 'm TSPF-Component *} 
 definition tspfDom :: "'m TSPF \<rightarrow> channel set" where
 "tspfDom \<equiv> \<Lambda> F. tsbDom\<cdot>(SOME b. b \<in> dom (Rep_CTSPF F))"
 
-(* Output Channel set of an 'm TSPF-Component *)
+text {* Output Channel set of an 'm TSPF-Component *}
 definition tspfRan :: "'m TSPF \<rightarrow> channel set" where
 "tspfRan \<equiv> \<Lambda> F. tsbDom\<cdot>(SOME b. b \<in> ran (Rep_CTSPF F))"
 
@@ -132,6 +133,7 @@ subsubsection \<open>apply\<close>
 
 (* harpoon and Rep operation all in one for simpler SPF on SB applications *)
   (* bounds weaker than tsbres *)
+text {* abbreviation to apply a TSPF to a TSB *}
 abbreviation theRep_abbrv :: "'a TSPF \<Rightarrow> 'a TSB \<Rightarrow> 'a TSB " (infix "\<rightleftharpoons>" 62) where
 "(f \<rightleftharpoons> s) \<equiv> (Rep_CTSPF f)\<rightharpoonup>s"
 
@@ -147,13 +149,16 @@ subsubsection \<open>fix\<close>
 definition tsbFix :: "('m TSB \<rightarrow> 'm TSB) \<Rightarrow> channel set \<Rightarrow> 'm TSB" where
 "tsbFix F cs \<equiv>  (\<Squnion>i. iterate i\<cdot>F\<cdot>(tsbLeast cs))"
 
-(* special case tsbFix for cont of the composition *)
+
+text {* special case tsbFix for cont of the composition *}
 definition tsbFix2 :: "('m TSB \<Rightarrow> 'm TSB \<rightarrow> 'm TSB) \<Rightarrow> 'm TSB \<Rightarrow> channel set \<Rightarrow> 'm TSB" where
 "tsbFix2 F x cs \<equiv>  (\<Squnion>i. iterate i\<cdot>(F x)\<cdot>(tsbLeast cs))"
   
 abbreviation iter_tsbfix2 :: "('m TSB \<Rightarrow> 'm TSB \<rightarrow> 'm TSB) \<Rightarrow> nat \<Rightarrow> channel set \<Rightarrow> 'm TSB \<Rightarrow> 'm TSB" where
 "iter_tsbfix2 F i cs \<equiv>  (\<lambda> x. iterate i\<cdot>(F x)\<cdot>(tsbLeast cs))"
 
+text {* tsbfun_io_eq f cs is true if f applied to the least TSB  with domain cs delivers a 
+        TSB with the same domain *}
 abbreviation tsbfun_io_eq :: "('m TSB \<rightarrow> 'm TSB) \<Rightarrow> channel set \<Rightarrow> bool" where
 "tsbfun_io_eq f cs \<equiv> tsbDom\<cdot>(f\<cdot>(tsbLeast cs)) = cs"
 
@@ -161,63 +166,59 @@ abbreviation tsbfun_io_eq :: "('m TSB \<rightarrow> 'm TSB) \<Rightarrow> channe
 subsubsection \<open>causality\<close>
 (* tspf_weakCausality defines equality of the input up to time n to imply equality of the output
    up to time n *)
+  
+text {* the weak causality prefix, from FOCUS *}
 definition tspf_weakCausality :: "('m TSB \<rightarrow> 'm TSB option) \<Rightarrow> bool" where
 "tspf_weakCausality f \<equiv> (\<forall> (n ::nat). \<forall> b1 \<in> dom (Rep_cfun f) . \<forall> b2 \<in> dom (Rep_cfun f) . 
                     (((#\<surd>tsb b1) = \<infinity>) \<and> ((#\<surd>tsb b2) = \<infinity>)) \<longrightarrow> 
                     (tsbTTake n\<cdot>b1 = tsbTTake n\<cdot>b2) \<longrightarrow>
                     (tsbTTake n\<cdot>(the (f\<cdot>b1)) = tsbTTake n\<cdot>(the (f\<cdot>b2))) )"
 
-  (*
-definition tspf_weakCausality :: "('m TSB \<rightarrow> 'm TSB option) \<Rightarrow> bool" where
-"tspf_weakCausality f \<equiv> (\<forall> (n :: nat) b1 \<in> dom (Rep_cfun f) . b1\<in> dom f \<longrightarrow> b2 \<in>dom f
-    \<longrightarrow> tsbiTTake n\<cdot>b1  = tsbiTTake n\<cdot>b2
-    \<longrightarrow> (tsbiTTake n\<cdot>(f \<rightharpoonup> b1) = tsbiTTake n\<cdot>(f \<rightharpoonup> b2)))"
-*)
-(*
-(* A component may only react one time-stamp after it received the input *)
-definition tspf_strongCausality :: "('m TSB \<rightarrow> 'm TSB option) \<Rightarrow> bool" where
-"tspf_strongCausality f \<equiv> (\<forall> (n :: nat) (b1 :: 'm TSB_inf)  b2. b1\<in> dom f \<longrightarrow> b2 \<in>dom f
-    \<longrightarrow> tsbiTTake n\<cdot>b1  = tsbiTTake n\<cdot>b2
-    \<longrightarrow> (tsbiTTake (Suc n)\<cdot>(f \<rightharpoonup> b1) = tsbiTTake (Suc n)\<cdot>(f \<rightharpoonup> b2)))"
-fixes tb :: "'m TSB_inf"
 
-*)
+text {* the strong causality prefix, from FOCUS *}
+definition tspf_strongCausality :: "('m TSB \<rightarrow> 'm TSB option) \<Rightarrow> bool" where
+"tspf_strongCausality f \<equiv> (\<forall> (n ::nat). \<forall> b1 \<in> dom (Rep_cfun f) . \<forall> b2 \<in> dom (Rep_cfun f) . 
+                          (((#\<surd>tsb b1) = \<infinity>) \<and> ((#\<surd>tsb b2) = \<infinity>)) \<longrightarrow> 
+                          (tsbTTake n\<cdot>b1 = tsbTTake n\<cdot>b2) \<longrightarrow>
+                          (tsbTTake (Suc n)\<cdot>(the (f\<cdot>b1)) = tsbTTake (Suc n)\<cdot>(the (f\<cdot>b2))) )"
 
 
 subsubsection \<open>composition\<close>
 
 (* redefined composition channel sets *)
 (* the input channels not fed by f1 or f2 themselves *)
+text {* the input channels of the composition of f1 and f2 *}
 definition tspfCompI :: "'m TSPF \<Rightarrow> 'm TSPF \<Rightarrow> channel set" where
 "tspfCompI f1 f2 = (tspfDom\<cdot>f1 \<union> tspfDom\<cdot>f2) - (tspfRan\<cdot>f1 \<union> tspfRan\<cdot>f2)"
 
-(* internal channels *)
+text {* the internal channels of the composition of f1 and f2 *}
 definition tspfCompL :: "'m TSPF \<Rightarrow> 'm TSPF \<Rightarrow> channel set" where
 "tspfCompL f1 f2 = (tspfDom\<cdot>f1 \<union> tspfDom\<cdot>f2) \<inter> (tspfRan\<cdot>f1 \<union> tspfRan\<cdot>f2)"
 
-(* for legacy purposes *) 
+text {* For legacy purposes ONLY use @{thm tspfCompL_def} *}
 definition tspfComp_pL :: "'m TSPF \<Rightarrow> 'm TSPF \<Rightarrow> channel set" where
 "tspfComp_pL f1 f2 \<equiv> (tspfDom\<cdot>f1 \<inter> tspfRan\<cdot>f1) \<union> (tspfDom\<cdot>f2 \<inter> tspfRan\<cdot>f1)
                       \<union> (tspfDom\<cdot>f1 \<inter> tspfRan\<cdot>f2) \<union> (tspfDom\<cdot>f2 \<inter> tspfRan\<cdot>f2)"
 
-(* the output channels *)
+text {* the output channels of the composition of f1 and f2 *}
 definition tspfCompOc :: "'m TSPF \<Rightarrow> 'm TSPF \<Rightarrow> channel set" where
 "tspfCompOc f1 f2 = (tspfRan\<cdot>f1 \<union> tspfRan\<cdot>f2)"
 
-(* all channels *)
+text {* all channels of the composition of f1 and f2  *}
 definition tspfCompC :: "'m TSPF \<Rightarrow> 'm TSPF \<Rightarrow> channel set" where
 "tspfCompC f1 f2 = tspfDom\<cdot>f1 \<union> tspfDom\<cdot>f2 \<union> tspfRan\<cdot>f1 \<union> tspfRan\<cdot>f2"
 
 
-(* helper for the composition *)
+text {* helper for the composition *}
 definition tspfCompH :: "'m TSPF \<Rightarrow> 'm TSPF \<Rightarrow> 'm TSB \<Rightarrow> 'm TSB  \<rightarrow> 'm TSB" where
 "tspfCompH f1 f2 x = (\<Lambda> z. (f1\<rightleftharpoons>((x \<uplus> z)  \<bar> tspfDom\<cdot>f1)) \<uplus>  (f2\<rightleftharpoons>((x \<uplus> z)  \<bar> tspfDom\<cdot>f2)))" 
 
 abbreviation iter_tspfCompH :: "'a TSPF \<Rightarrow> 'a TSPF \<Rightarrow> nat \<Rightarrow> 'a TSB  \<Rightarrow> 'a TSB" where
 "iter_tspfCompH f1 f2 i \<equiv> (\<lambda> x. iterate i\<cdot>(tspfCompH f1 f2 x)\<cdot>(tsbLeast (tspfRan\<cdot>f1 \<union> tspfRan\<cdot>f2)))"
 
-(* general composition operator for TSPFs *)
- (* NOTE: Does not always deliver an TSPF *)
+
+text {* The general composition operator for TSPFs, 
+        \textbf{NOTE:} does not always deliver an TSPF *}
 definition tspfComp :: "'m TSPF \<Rightarrow> 'm TSPF \<Rightarrow> 'm TSPF" (infixl "\<otimes>" 40) where
 "tspfComp f1 f2 \<equiv>
 let I = tspfCompI f1 f2;
@@ -324,14 +325,16 @@ lemma rep_ctspf_rev: "Rep_cfun (Rep_TSPF F) = Rep_CTSPF F"
   by simp
 
   subsection \<open>basic lemmata about TSPF\<close>
-
-(* Intro Rule for mono, if right part is mono if the domain is <In> the tspf is mono *) 
+ 
+text{* Intro Rule for TSPF is mono in case that the right part is mono if the domain is
+         <In> the tspf is mono *}
 lemma tspf_monoI [simp]: assumes "\<And> x y. tsbDom\<cdot>x = In \<Longrightarrow> x \<sqsubseteq> y \<Longrightarrow> (g x) \<sqsubseteq> (g y)"
   shows "monofun (\<lambda>b. (tsbDom\<cdot>b = In)\<leadsto>g b)"
   by (simp add: assms monofun_def some_below tsbdom_below)    
 
     
-(* Intro Rule for mono, if right part is cont if the domain is <In> the tspf is cont *) 
+text{* Intro Rule for TSPF is mono in case that the right part is mono if the domain is
+         <In> the tspf is cont *}
 lemma tspf_contI [simp]: assumes "\<And> x y. tsbDom\<cdot>x = In \<Longrightarrow> x \<sqsubseteq> y \<Longrightarrow> (g x) \<sqsubseteq> (g y)"
                   and "\<And> Y. chain Y \<Longrightarrow> (tsbDom\<cdot>(\<Squnion>i. Y i) = In) \<Longrightarrow> g (\<Squnion>i. Y i)\<sqsubseteq> (\<Squnion>i. (g (Y i)))"
   shows "cont (\<lambda>b. (tsbDom\<cdot>b = In)\<leadsto>g b)"
@@ -340,11 +343,15 @@ lemma tspf_contI [simp]: assumes "\<And> x y. tsbDom\<cdot>x = In \<Longrightarr
       by (smt assms(1) assms(2) below_option_def is_ub_thelub lub_eq op_the_lub option.sel 
               option.simps(3) po_class.chain_def tsbChain_dom_eq2)
 
+text{* Alternative Intro rule for TSPF is mono with stronger assumptions than 
+         @{thm (prem 1) tspf_monoI} *}
 lemma tspf_monoI2 [simp]: assumes "monofun g"
   shows "monofun (\<lambda>b. (tsbDom\<cdot>b = In)\<leadsto>g b)"
     apply (rule tspf_monoI)
     using assms monofunE by blast
-    
+  
+text{* Alternative Intro rule for TSPF is cont with stronger assumptions than 
+         @{thm (prem 1) tspf_contI} *}
 lemma tspf_contI2 [simp]: assumes "cont g"
   shows "cont (\<lambda>b. (tsbDom\<cdot>b = In)\<leadsto>g b)"
     apply (rule contI2)
@@ -352,7 +359,7 @@ lemma tspf_contI2 [simp]: assumes "cont g"
     using assms if_then_lub2 by auto
       
             
-(* Intro rule for tspf_well proofs *)
+text{* Intro rule for TSPF_well proofs *}
 lemma tspf_wellI:  assumes "\<And>b. (b \<in> dom (Rep_cfun f)) \<Longrightarrow> (tsbDom\<cdot>b = In)"
   and "(\<And>b. b \<in> dom (Rep_cfun f) \<Longrightarrow> tsbDom\<cdot>((Rep_cfun f)\<rightharpoonup>b) = Out)"
   and "\<And>b2. (tsbDom\<cdot>b2 = In) \<Longrightarrow> (b2 \<in> dom (Rep_cfun f))"
@@ -361,26 +368,27 @@ shows "tspf_well f"
   by (meson assms(1) assms(2) assms(3) assms(4) tspf_type_def tspf_well_def)
 
 
-(* mapt.empty is not an TSPF *)
+text{* empty is not a valid TSPF because of the more output than input tick properties  *}
 lemma map_not_tspf [simp]: "\<not>(tspf_well (Abs_cfun empty))"
   apply (simp add: tspf_well_def tspf_type_def)
   using tsbleast_tsdom by blast
 
-(* domain of an TSPF is never empty \<Rightarrow> ensured by tspf_type *)
+text{* the domain of an TSPF is never empty *}
 lemma tspf_dom_not_empty [simp]: "\<exists> x. x \<in> dom (Rep_CTSPF f)"
   by (metis Cfun.cfun.Rep_cfun_inverse  all_not_in_conv dom_empty map_not_tspf
             part_eq rep_tspf_well)
-(* range of an TSPF is never empty \<Rightarrow> ensured by tspf_type *)
+          
+text{* the range of an TSPF is never empty, this is ensured by @{thm tspf_type_def}*}
 lemma tspf_ran_not_empty [simp]: "\<exists> x. x \<in> ran (Rep_CTSPF f)"
   by (meson domD ranI tspf_dom_not_empty)
 
-(* if the input of an SPF has the same domain so does its output *)
+text{* if two input TSB have the same domain so does f's output domain *}
 lemma tspf_sbdomeq_to_domeq: assumes "tsbDom\<cdot>x=tsbDom\<cdot>y"
   shows "x \<in> dom (Rep_CTSPF f) \<longleftrightarrow> y \<in> dom (Rep_CTSPF f)"
   by (metis Cfun.cfun.Rep_cfun_inverse  assms rep_cspf_well tspf_type_def
             tspf_well_def)
 
-(* helper function for "spf_ran2sbdom". Somehow it doesn't work without *)
+(* helper function for "spf_ran2sbdom" *)
 lemma ran2exists [simp]: assumes "x\<in>(ran f)"
   shows "\<exists> xb. ((f xb) = (Some x))"
   using assms by (simp add: ran_def)          
@@ -392,24 +400,23 @@ lemma tspf_raneq_to_sbdomeq: assumes "x \<in> ran (Rep_CTSPF f)" and "y \<in> ra
   by (smt Cfun.cfun.Rep_cfun_inverse  assms(1) assms(2) domIff mem_Collect_eq
           option.sel option.simps(3) ran_def rep_cspf_well tspf_type_def tspf_well_def)
 
-(* If an TSPF is applied to an input x, the output has more ticks  *)
+text{* If an TSPF is applied to an input x, the output has more ticks *}
 lemma tspf_less_in_than_out_ticks: assumes "x \<in> dom (Rep_CTSPF f)"
   shows "#\<surd>tsb x \<le> #\<surd>tsb (f \<rightleftharpoons> x)"
-  by (metis  assms rep_tspf_well tspf_well_def)
+  using assms rep_tspf_well tspf_well_def by blast
 
-    
-(* only 'm SBs with the same domain are in an 'm SPF *)
+text{* only 'm SBs with the same domain are in an 'm SPF *}
 lemma tspf_dom2tsbdom: assumes "x\<in>dom (Rep_CTSPF f)" and "y\<in>dom (Rep_CTSPF f)" 
   shows "tsbDom\<cdot>x = tsbDom\<cdot>y"
   by (metis (no_types)  assms(1) assms(2) rep_tspf_well tspf_type_def tspf_well_def)
     
     
-(* if two TSPFS are in a below-relation their input-channels are equal *)
+text{* if two TSPFS are in a below-relation their input-channels are equal *}
 lemma spf_below_sbdom: assumes "a\<sqsubseteq>b"  and "y \<in> dom (Rep_CTSPF a)" and "x \<in> dom (Rep_CTSPF b)"
   shows "tsbDom\<cdot>x = tsbDom\<cdot>y"
   by (metis  assms below_TSPF_def below_cfun_def part_dom_eq tspf_dom2tsbdom)
 
-(* if two TSPFS are in a below-relation their output-channels are equal *)
+text{* if two TSPFS are in a below-relation their output-channels are equal *}
 lemma spf_below_ran: assumes "a\<sqsubseteq>b" and "x \<in> ran (Rep_CTSPF b)" and "y \<in> ran (Rep_CTSPF a)"
   shows "tsbDom\<cdot>x = tsbDom\<cdot>y"
 proof -
@@ -424,8 +431,8 @@ proof -
     
 qed
 
-
-(* a monotone function which has the the last property of tspf_well is weak causal *)
+text{* a monotone function which has the last property of tspf_well @{thm tspf_well_def} is 
+       weak causl*}
 lemma tspf_is_weak: fixes f :: "'m TSB \<Rightarrow> 'm TSB option"
                     assumes "monofun f" and "\<And> b. (b \<in> dom f) \<longrightarrow> #\<surd>tsb b \<le> (#\<surd>tsb (the (f b)))"
                     and "tb1 \<in> dom f" and "tb2 \<in> dom f"
@@ -484,7 +491,7 @@ thm tspfDom_def
 
   subsubsection \<open>cont\<close>
   
-(* tspfDom is monotone *)
+text{* @{thm tspfDom_def} is monotone *}
 lemma tspf_dom_mono [simp]: "monofun (\<lambda> F. tsbDom\<cdot>(SOME b. b \<in> dom (Rep_CTSPF F)))"
   proof (rule monofunI)
     fix x y :: "'m TSPF"
@@ -493,8 +500,10 @@ lemma tspf_dom_mono [simp]: "monofun (\<lambda> F. tsbDom\<cdot>(SOME b. b \<in>
       by (simp add:  below_TSPF_def below_cfun_def part_dom_eq)
   qed
     
+text{* @{thm tspfDom_def} has the contlub property *}
 lemma tspf_dom_contlub: assumes "chain Y"
-  shows "tsbDom\<cdot>(SOME b. b \<in> dom (Rep_CTSPF (\<Squnion>i. Y i))) = (\<Squnion>i. tsbDom\<cdot>(SOME b. b \<in> dom (Rep_CTSPF (Y i))))"
+  shows "tsbDom\<cdot>(SOME b. b \<in> dom (Rep_CTSPF (\<Squnion>i. Y i))) 
+         = (\<Squnion>i. tsbDom\<cdot>(SOME b. b \<in> dom (Rep_CTSPF (Y i))))"
 proof -
   obtain tt :: "'a TSPF \<Rightarrow> 'a TSB" where
     f1: "\<forall>t. tt t \<in> dom (Rep_CTSPF t)"
@@ -509,20 +518,19 @@ proof -
     using f3 f2 below_refl by auto
 qed
    
-(* tspfDom is cont *)
+
+text{* @{thm tspfDom_def} is continuous *}
 lemma tspf_dom_cont [simp]: "cont (\<lambda> F. tsbDom\<cdot>(SOME b. b \<in> dom (Rep_CTSPF F)))"
   by (simp add: contI2 tspf_dom_contlub)
     
 
-
-
   subsubsection \<open>equalities\<close>
   
-(* insertion rule for tspfDom *)
+text{* Insertion rule for tspfDom: tspfDom = @{thm tspfDom_def} *}
 lemma tspf_dom_insert: "tspfDom\<cdot>f = tsbDom\<cdot>(SOME b. b \<in> dom (Rep_CTSPF f))"
   by (simp add: tspfDom_def)
     
-(* of two spfs are in a below relation the have the same input-channel set *)
+text{* if two TSPFs are in a below relation their tspfDom is equal *}
 lemma tspf_dom_below_eq: assumes "x \<sqsubseteq> y"
   shows "tspfDom\<cdot>x = tspfDom\<cdot>y"
 proof -
@@ -533,9 +541,11 @@ proof -
 qed
 
 
+text{* The lub of a chain of TSPFs has the same domain as each chain element  *}
 lemma tspf_dom_lub_eq: assumes "chain Y"
   shows "tspfDom\<cdot>(\<Squnion>i. Y i) = tspfDom\<cdot>(Y i)"
   using assms is_ub_thelub tspf_dom_below_eq by blast
+  
     
 lemma tspf_dom_2tsbdom [simp]: assumes "(Rep_CTSPF S) a = Some b"
   shows "tspfDom\<cdot>S = tsbDom\<cdot>a"
@@ -549,6 +559,7 @@ lemma tspf_dom_2_dom_ctspf: assumes "tspfDom\<cdot>f = tspfDom\<cdot>g"
     by (metis (no_types, lifting) Cfun.cfun.Rep_cfun_inverse Collect_cong  assms(1) 
           dom_def mem_Collect_eq rep_cspf_well tspf_least_in_dom tspf_type_def tspf_well_def)
 
+text{* Intro Rule for TSPF below relationship  *}
 lemma tspf_belowI: assumes "tspfDom\<cdot>f = tspfDom\<cdot>g"
   and "\<And>x. (tsbDom\<cdot>x = tspfDom\<cdot>f \<Longrightarrow> (Rep_CTSPF f)\<rightharpoonup>x \<sqsubseteq> (Rep_CTSPF g)\<rightharpoonup>x)"
   shows "f \<sqsubseteq> g"
@@ -569,7 +580,7 @@ qed
 
   subsubsection \<open>cont\<close>
 
-(* Show that tspfRan is monotone *)
+text{* @{thm tspfRan_def} is monotone *}
 lemma tspf_ran_mono [simp]: "monofun (\<lambda> F. tsbDom\<cdot>(SOME b. b \<in> ran (Rep_CTSPF F)))"
 proof (rule monofunI)
   fix x y :: "'m TSPF"
@@ -588,22 +599,25 @@ proof (rule monofunI)
   qed
 qed
   
-
+text{* contlub properties of @{thm tspfRan_def} *}
 lemma tspf_ran_contlub [simp]: assumes "chain Y"
   shows "tsbDom\<cdot>(SOME b. b \<in> ran (Rep_CTSPF (\<Squnion>i. Y i))) 
           \<sqsubseteq> (\<Squnion>i. tsbDom\<cdot>(SOME b. b \<in> ran (Rep_CTSPF (Y i))))"
   by (metis (no_types, lifting) assms below_refl is_ub_thelub po_class.chain_def someI_ex 
             spf_below_ran tspf_ran_not_empty)
-    
+ 
+text{* @{thm tspfRan_def} is continuous *}
 lemma tspf_ran_cont [simp]: "cont (\<lambda> F. tsbDom\<cdot>(SOME b. b \<in> ran (Rep_CTSPF F)))"
   by (rule contI2, simp_all)
     
   subsubsection \<open>equalities\<close>
   
+text{* Insertion rule for tspfRan = @{thm tspfRan_def} *}
 lemma tspf_ran_insert: "tspfRan\<cdot>f = tsbDom\<cdot>(SOME b. b \<in> ran (Rep_CTSPF f))"
   by (simp add: tspfRan_def)
     
-(* if two TSPFs are in a below relation their output channels are equal *)
+    
+text{* If two TSPFs are in a below relation their output channels are equal *}
 lemma tspf_ran_below: assumes "x \<sqsubseteq> y"
   shows "tspfRan\<cdot>x = tspfRan\<cdot>y"
   by (smt Abs_cfun_inverse2 assms someI_ex tspfRan_def spf_below_ran tspf_ran_cont 
@@ -619,6 +633,8 @@ lemma tspf_ran_2_tsbdom [simp]: assumes "(Rep_CTSPF F) a = Some b"
   by (metis (no_types, lifting) Abs_cfun_inverse2 assms ranI someI_ex tspfRan_def 
             tspf_raneq_to_sbdomeq tspf_ran_cont)
 
+text{* The range of an TSPF is equal to the domain of f applied to the least TSB with domain 
+       tspfDom f *}
 lemma tspfran_least: "tspfRan\<cdot>f = tsbDom\<cdot>(f\<rightleftharpoons> (tsbLeast (tspfDom\<cdot>f)))"
   apply (simp add: tspfRan_def)
   by (metis (no_types) domD option.sel tspf_least_in_dom tspf_ran_2_tsbdom tspf_ran_insert)
@@ -632,60 +648,86 @@ lemma tspf_ran_2_tsbdom2 [simp]: assumes "tsbDom\<cdot>tb = tspfDom\<cdot>f"
   subsection \<open>tspfType\<close>
 
   thm tspfType_def
- 
+
+text{* @{thm tspfType_def} is continuous *}
 lemma tspf_type_cont [simp]: "cont (\<lambda>f. (tspfDom\<cdot>f, tspfRan\<cdot>f))"
   by simp
-    
+
+text{* Insertion rule for tspfType = @{thm tspfType_def} *}    
 lemma tspf_type_insert: "tspfType\<cdot>f = (tspfDom\<cdot>f, tspfRan\<cdot>f)"
   by (simp add: tspfType_def)
 
   subsection \<open>tspfwell\<close>
   
-    (*
+text {* If f is tspf_well it also is weak causal *}
 lemma tspfwell_to_weak: assumes "tspf_well f"
-  shows "tspf_weakCausality f"*)
+  shows "tspf_weakCausality f"
+proof -
+  have f1: "monofun (Rep_cfun f)"
+    by (simp add: monofun_Rep_cfun2)
+  have f2: "\<And> b. (b \<in> dom (Rep_cfun f)) \<longrightarrow> #\<surd>tsb b \<le> (#\<surd>tsb (the ((Rep_cfun f) b)))"
+    using assms tspf_well_def by blast
+  show ?thesis
+    apply (simp add: tspf_weakCausality_def)
+    using f1 f2 tspf_is_weak by blast
+qed   
+    
     
 
   subsection \<open>comp-sets\<close>
     (* lemmas about I, Oc, etc. and how they correlate *)
     
   subsubsection \<open>subsets\<close>
+    
+text{* Input channels are a subset of all channels *}
 lemma tspfcomp_I_subset_C [simp]: "(tspfCompI f1 f2) \<subseteq> (tspfCompC f1 f2)"
   using tspfCompI_def tspfCompC_def by blast
 
+text{* Internal channels are a subset of all channels *}
 lemma tspfcomp_L_subset_C [simp]: "(tspfCompL f1 f2) \<subseteq> (tspfCompC f1 f2)"
   using tspfCompL_def tspfCompC_def by blast
-    
+ 
+text{* pL channels are a subset of internal channels *}
 lemma tspfcomp_pl_subset_L [simp]: "(tspfComp_pL f1 f2) = (tspfCompL f1 f2)"
   using tspfComp_pL_def tspfCompL_def by blast
-    
+
+text{* pL channels are a subset of all channels *}    
 lemma tspfcomp_pL_subset_C [simp]: "(tspfComp_pL f1 f2) \<subseteq> (tspfCompC f1 f2)"
   using tspfComp_pL_def tspfCompC_def by blast
 
+text{* Output channels are a subset of all channels *}
 lemma tspfcomp_Oc_subset_C [simp]: "(tspfCompOc f1 f2) \<subseteq> (tspfCompC f1 f2)"
   using tspfCompOc_def tspfCompC_def by blast
 
+text{* Internal channels are a subset of output channels *}
 lemma tspfcomp_L_subset_Oc [simp]: "(tspfCompL f1 f2) \<subseteq> (tspfCompOc f1 f2)"
   using tspfCompL_def tspfCompOc_def by blast
 
+text{* Input channels and Internal channels do not intersect *}
 lemma tspfcomp_I_inter_L_empty [simp]: "(tspfCompI f1 f2) \<inter> (tspfCompL f1 f2) = {}"
   using tspfCompI_def tspfCompL_def by blast
 
+text{* Input channels and Output channels do not intersect *}
 lemma tspfcomp_I_inter_Oc_empty [simp]: "(tspfCompI f1 f2) \<inter> (tspfCompOc f1 f2) = {}"
   using tspfCompI_def tspfCompOc_def by blast
     
 
     
-  subsubsection \<open>commutativness\<close> 
+subsubsection \<open>commutativness\<close> 
+  
+text{* Input channels are commutative *}
 lemma tspfcomp_I_commu: "(tspfCompI f1 f2) = (tspfCompI f2 f1)"
   using tspfCompI_def by blast
 
+text{* Internal channels are commutative *}
 lemma tspfcomp_L_commu: "(tspfCompL f1 f2) = (tspfCompL f2 f1)"
   using tspfCompL_def by blast
 
+text{* Output channels are commutative *}
 lemma tspfcomp_Oc_commu: "(tspfCompOc f1 f2) = (tspfCompOc f2 f1)"
   using tspfCompOc_def by blast
 
+text{* All channels are commutative *}
 lemma tspfcomp_C_commu: "(tspfCompC f1 f2) = (tspfCompC f2 f1)"
   using tspfCompC_def by blast
    
@@ -699,7 +741,7 @@ lemma tsbIterate_chain: "tsbDom\<cdot>(f\<cdot>(tsbLeast cs)) = cs \<Longrightar
   by simp    
  
 
-  
+text{* tsbFix2 is a special case of tsbFix *} 
 lemma tsbfix_2_tsbfix2: "tsbFix (F x) cs = tsbFix2 F x cs"
   by (metis (mono_tags, lifting) lub_eq tsbFix2_def tsbFix_def)  
   
@@ -707,7 +749,8 @@ lemma tsbfix2iter_eq: "tsbFix2 F x cs = (\<Squnion> i. iter_tsbfix2 F i cs x)"
   using tsbFix2_def by force
   
   subsubsection \<open>iter_tsbFix2\<close>
-  
+
+text{* the iteration over F is continuous in x *}
 lemma iter_tsbfix2_cont [simp]: assumes "cont F"
   shows "cont (\<lambda> x. iter_tsbfix2 F i cs x)"
   by (simp add: assms)
@@ -1313,5 +1356,46 @@ proof -
      using f3 by meson
 qed
 
-       
+text{* the composition is tspfwell if the tick requirement from tspf_well is fulfilled *}
+lemma tspfcomp_wellI [simp]: 
+  assumes "\<And>b. tsbDom\<cdot>b = tspfCompI f1 f2 \<Longrightarrow> 
+                      #\<surd>tsb b  \<le> #\<surd>tsb tsbFix (tspfCompH f1 f2 b) (tspfRan\<cdot>f1 \<union> tspfRan\<cdot>f2)"
+  shows "tspf_well (\<Lambda> x. (tsbDom\<cdot>x = (tspfCompI f1 f2)) 
+                \<leadsto> tsbFix (tspfCompH f1 f2 x) (tspfRan\<cdot>f1 \<union> tspfRan\<cdot>f2))"
+  apply (rule tspf_wellI)
+     apply (simp_all add: domIff2 tsbfix_dom)
+     by (simp add: assms(1))
+
+text{* if the fixed point has length \<infinity> the tspf is always well *}
+lemma tspfcomp_well_empty_in [simp]: 
+  assumes "\<And>b. #\<surd>tsb tsbFix (tspfCompH f1 f2 b) (tspfRan\<cdot>f1 \<union> tspfRan\<cdot>f2) = \<infinity>"
+  shows "tspf_well (\<Lambda> x. (tsbDom\<cdot>x = (tspfCompI f1 f2)) 
+                \<leadsto> tsbFix (tspfCompH f1 f2 x) (tspfRan\<cdot>f1 \<union> tspfRan\<cdot>f2))"
+  apply (rule tspfcomp_wellI)
+  by (simp add: assms(1))
+
+    
+section\<open>Empty component\<close>
+  
+lift_definition tspfEmptyComponent :: "'m TSPF"  is
+"(\<Lambda> x. (tsbDom\<cdot>x = {} ) \<leadsto> (empty \<Omega>))"
+proof - 
+  have f0: "\<forall>tb. tsbDom\<cdot>(tb :: 'm TSB) = {} \<longrightarrow> Rep_TSB tb = empty"
+    by (simp add: tsbdom_insert)
+  then have f1: "dom (\<lambda> x. (tsbDom\<cdot>x = {}) \<leadsto> (empty \<Omega>)) = {(empty \<Omega>)}"
+    apply(simp add: dom_def)
+    by (smt Collect_cong bot_empty_eq bot_set_def dom_empty empty_iff insert_Collect tsb_eq tsb_well_exists tsbdom_rep_eq)
+  moreover have f2: "{a::'a TSB. tsbDom\<cdot>a = {}} = {empty \<Omega>}"
+    by (smt Abs_cfun_inverse2 Collect_cong bot_apply bot_set_def dom_empty insert_Collect insert_not_empty mem_Collect_eq tsbDom_def tsb_eq tsb_well_exists tsbdom_cont tsbdom_rep_eq)
+  moreover have f3: "dom (Rep_cfun (\<Lambda> x. (tsbDom\<cdot>x = {}) \<leadsto> (empty \<Omega>))) = {(empty \<Omega>)}"
+    apply(simp add: dom_def)
+    using f2 by auto
+  ultimately show ?thesis  
+    apply(simp add: tspf_well_def)
+    apply rule
+    apply (auto simp add: tspf_type_def domIff2 tsbdom_rep_eq)
+    apply(simp add: tsbTickCount_def)
+      by blast
+qed  
+             
 end

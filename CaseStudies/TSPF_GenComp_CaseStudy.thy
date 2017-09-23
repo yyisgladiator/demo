@@ -137,23 +137,23 @@ proof -
     by (simp)
   have f2: "tspfCompH delayTSPF1 delayTSPF2 x\<cdot>z = (delayTSPF1 \<rightleftharpoons> z \<bar> {c1}) \<uplus> (delayTSPF2 \<rightleftharpoons> z \<bar> {c2})"
     by (simp add: tspfCompH_def, simp add: delay_compH_simp2 assms(3))
-  have f3a: "tspfCompH delayTSPF1 delayTSPF2 x\<cdot>z . c1 = (Abs_tstream (\<up>\<surd>)) \<bullet> (z . c2)"
+  have f3a: "tspfCompH delayTSPF1 delayTSPF2 x\<cdot>z . c1 = (Abs_tstream (\<up>\<surd>)) \<bullet>\<surd> (z . c2)"
     apply (subst f2, subst tsbunion_getchR)
     by (simp_all add: assms(1) delay_tspf2_dom tsbdom_rep_eq tsbgetch_rep_eq delayFun.rep_eq)
-  have f3b: "tspfCompH delayTSPF1 delayTSPF2 x\<cdot>z . c2 = (Abs_tstream (\<up>\<surd>)) \<bullet> (z . c1)"
+  have f3b: "tspfCompH delayTSPF1 delayTSPF2 x\<cdot>z . c2 = (Abs_tstream (\<up>\<surd>)) \<bullet>\<surd> (z . c1)"
     apply (subst f2, subst tsbunion_getchL)
     by (simp_all add: assms(1) delay_tspf2_dom tsbdom_rep_eq tsbgetch_rep_eq delayFun.rep_eq)
       
     (* get recursive equations with alternating channel *)
-  have f4a: "z . c1 = (Abs_tstream (\<up>\<surd>)) \<bullet> (z . c2)"
+  have f4a: "z . c1 = (Abs_tstream (\<up>\<surd>)) \<bullet>\<surd> (z . c2)"
     by (subst  f0, simp add: f3a)
-  have f4b: "z . c2 = (Abs_tstream (\<up>\<surd>)) \<bullet> (z . c1)"   
+  have f4b: "z . c2 = (Abs_tstream (\<up>\<surd>)) \<bullet>\<surd> (z . c1)"   
     by (subst  f0, simp add: f3b) 
   
     (* get recursive equations with same channel *)
-  have f5a: "z . c1 = (Abs_tstream (\<up>\<surd>)) \<bullet> ((Abs_tstream (\<up>\<surd>)) \<bullet> (z . c1))"
+  have f5a: "z . c1 = (Abs_tstream (\<up>\<surd>)) \<bullet>\<surd> ((Abs_tstream (\<up>\<surd>)) \<bullet>\<surd> (z . c1))"
     by (subst f4a, subst f4b, simp)
-  have f5b: "z . c2 = (Abs_tstream (\<up>\<surd>)) \<bullet> ((Abs_tstream (\<up>\<surd>)) \<bullet> (z . c2))"
+  have f5b: "z . c2 = (Abs_tstream (\<up>\<surd>)) \<bullet>\<surd> ((Abs_tstream (\<up>\<surd>)) \<bullet>\<surd> (z . c2))"
     by (subst f4b, subst f4a, simp) 
       
       

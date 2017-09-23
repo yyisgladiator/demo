@@ -9,7 +9,7 @@
 *)
 
 theory OptionCpo
-imports SetPcpo Prelude
+imports SetPcpo Prelude (* "~~/src/HOL/HOLCF/Library/Option_Cpo" *)
 
 begin
 
@@ -576,5 +576,79 @@ lemma lub_mult2_shift_eq: fixes Y:: "nat \<Rightarrow> 'a::cpo" fixes Z:: "nat \
 shows "(\<Squnion>i. (Y i)) = (\<Squnion>i. (Z i))"
   apply (simp add: assms)
   by (metis assms(2) lub_range_mult one_le_numeral)
+    
+
+    (* copied from the HOLCF library *)
+
+lemma option_chain_cases:
+  assumes Y: "chain Y"
+  obtains "Y = (\<lambda>i. None)" | A where "chain A" and "Y = (\<lambda>i. Some (A i))"
+ apply (cases "Y 0")
+  apply (rule that(1))
+  apply (rule ext)
+  apply (cut_tac j=i in chain_mono [OF Y le0], simp)
+  apply (simp add: below_option_def)
+ apply (rule that(2))
+  apply (rule ch2ch_monofun [OF op_the_mono Y])
+ apply (rule ext)
+ apply (cut_tac j=i in chain_mono [OF Y le0], simp)
+ apply (case_tac "Y i", simp_all)
+  by (simp add: below_option_def)
+
+
+lemma is_lub_Some: "range S <<| x \<Longrightarrow> range (\<lambda>i. Some (S i)) <<| Some x"
+ apply (rule is_lubI)
+  apply (rule ub_rangeI)
+  apply (simp add: is_lubD1 some_below ub_rangeD)
+ apply (frule ub_rangeD [where i=arbitrary])
+ apply (case_tac u, simp_all)
+  apply (simp add: below_option_def)
+  by (meson is_lub_def some_below some_below2 ub_rangeD ub_rangeI)
+
+lemma cont2cont_case_option:
+  assumes f: "cont (\<lambda>x. f x)"
+  assumes g: "cont (\<lambda>x. g x)"
+  assumes h1: "\<And>a. cont (\<lambda>x. h x a)"
+  assumes h2: "\<And>x. cont (\<lambda>a. h x a)"
+  shows "cont (\<lambda>x. case f x of None \<Rightarrow> g x | Some a \<Rightarrow> h x a)"
+apply (rule cont_apply [OF f])
+apply (rule contI)
+apply (erule option_chain_cases)
+apply (simp add: is_lub_const)
+  apply (smt cont_def cpo_lubI h2 image_cong is_lub_Some lub_eqI option.simps(5))
+apply (case_tac y, simp_all add: g h1)
+done
+
+lemma cont2cont_case_option' [simp, cont2cont]:
+  assumes f: "cont (\<lambda>x. f x)"
+  assumes g: "cont (\<lambda>x. g x)"
+  assumes h: "cont (\<lambda>p. h (fst p) (snd p))"
+  shows "cont (\<lambda>x. case f x of None \<Rightarrow> g x | Some a \<Rightarrow> h x a)"
+using assms by (simp add: cont2cont_case_option prod_cont_iff)
+    
+subsection \<open>Using option types with Fixrec\<close>
+
+definition
+  "match_None = (\<Lambda> x k. case x of None \<Rightarrow> k | Some a \<Rightarrow> Fixrec.fail)"
+
+definition
+  "match_Some = (\<Lambda> x k. case x of None \<Rightarrow> Fixrec.fail | Some a \<Rightarrow> k\<cdot>a)"
+
+lemma match_None_simps [simp]:
+  "match_None\<cdot>None\<cdot>k = k"
+  "match_None\<cdot>(Some a)\<cdot>k = Fixrec.fail"
+unfolding match_None_def by simp_all
+
+lemma match_Some_simps [simp]:
+  "match_Some\<cdot>None\<cdot>k = Fixrec.fail"
+  "match_Some\<cdot>(Some a)\<cdot>k = k\<cdot>a"
+unfolding match_Some_def by simp_all
+
+setup \<open>
+  Fixrec.add_matchers
+    [ (@{const_name None}, @{const_name match_None}),
+      (@{const_name Some}, @{const_name match_Some}) ]
+\<close>
+
     
 end

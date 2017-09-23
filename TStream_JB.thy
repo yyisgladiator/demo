@@ -248,7 +248,7 @@ lemma test11: assumes "n < \<infinity>"
    
     
 lemma tsTakeL_def2: assumes "n < \<infinity>"
-shows "tsTakeL\<cdot>(lnsuc\<cdot>n)\<cdot>ts = (tsTakeFirst\<cdot>ts) \<bullet> (tsTakeL\<cdot>n\<cdot>(tsDropFirst\<cdot>ts))"
+shows "tsTakeL\<cdot>(lnsuc\<cdot>n)\<cdot>ts = (tsTakeFirst\<cdot>ts) \<bullet>\<surd> (tsTakeL\<cdot>n\<cdot>(tsDropFirst\<cdot>ts))"
     proof -
     obtain j where f1: "n = Fin j"
       by (metis assms infI neq_iff)
@@ -274,7 +274,7 @@ lemma tstake_noteq: "(tsTakeL\<cdot>(Fin i)\<cdot>ts) \<noteq> ts \<Longrightarr
     apply (simp add: tsTakeL_def)
     by (simp add: tstake_noteq)
       
-lemma tstakeL_drop [simp]: "tsTakeL\<cdot>(Fin i)\<cdot>ts \<bullet> (tsDrop i\<cdot>ts) = ts"
+lemma tstakeL_drop [simp]: "tsTakeL\<cdot>(Fin i)\<cdot>ts \<bullet>\<surd> (tsDrop i\<cdot>ts) = ts"
   by (simp add: tsTakeL_def)
     
 lemma tstakeL_prefix [simp]: "tsTakeL\<cdot>n\<cdot>ts \<sqsubseteq> ts"
@@ -369,7 +369,7 @@ subsection \<open>delayFun\<close>
 lemma delayfun_fix_tsInftick_below: assumes "delayFun\<cdot>z = z" 
  shows "tsInfTick \<sqsubseteq> z"
 proof -
-  have f1: "z = (Abs_tstream (\<up>\<surd>)) \<bullet> z"
+  have f1: "z = (Abs_tstream (\<up>\<surd>)) \<bullet>\<surd> z"
     by (metis assms delayFun.rep_eq)
   have f2: "\<And> n. tsNth n\<cdot>z = (Abs_tstream (\<up>\<surd>))"
   proof -
