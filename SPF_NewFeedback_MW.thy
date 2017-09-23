@@ -320,8 +320,8 @@ lemma t21: assumes "spf_map_well f m" shows "(sbDom\<cdot>sb = (spfDom\<cdot>f -
 
 lemma t20: assumes "spf_map_well f m" shows "(sbDom\<cdot>sb = (spfDom\<cdot>f - ran(m)) \<union> dom(m)) \<longrightarrow> sbDom\<cdot>(sbRenameChMap sb m) = spfDom\<cdot>f"
   by (metis assms sbRenameChMap_sbDom sb_rename_map_well_def spf_map_well_def sup_ge2 t21)    
-    
-lemma spfRename_cont: assumes "spf_map_well f m" shows "cont (\<lambda> sb. (sbDom\<cdot>sb = (spfDom\<cdot>f - ran(m)) \<union> dom(m)) \<leadsto> (f \<rightleftharpoons> (sbRenameChMap sb m)))"
+
+lemma spfRename_cont: assumes "map_well m (ctype :: channel \<Rightarrow> 'b set)" shows "cont (\<lambda> (sb :: 'b SB). (sbDom\<cdot>sb = (spfDom\<cdot>f - ran(m)) \<union> dom(m)) \<leadsto> (f \<rightleftharpoons> (sbRenameChMap sb m)))"
 proof - 
   have f0: "cont (\<lambda> sb. (sbRenameChMap sb m))"
     apply(subst sbRenameChMap_cont, simp_all)
