@@ -1430,18 +1430,19 @@ next
     by (simp add: assms)
   thus?thesis
     by (simp)
-qed  
-
-lemma tsbDom_finite: "finite (tsbDom\<cdot>sb)"
-  
-  sorry  
+qed   
   
 lemma tsbtick_cont [simp]:
   shows "cont (\<lambda> tb. if tsbDom\<cdot>tb \<noteq> {} then 
                                           (LEAST ln. ln\<in>{(#\<surd>(tb. c)) | c. c \<in> tsbDom\<cdot>tb}) else \<infinity>)"
-  apply (rule contI2)
-   apply simp
-    using tsbtick_cont_pre tsbDom_finite by blast
+proof - 
+  have f1: "\<forall>sb. finite (tsbDom\<cdot>sb)"
+    sorry
+  show ?thesis
+    apply (rule contI2)
+    apply simp
+    using f1 tsbtick_cont_pre by blast
+qed
       
 
 (* more lemmas *)
