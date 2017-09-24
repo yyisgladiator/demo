@@ -52,6 +52,8 @@ where
 section {* Some auxiliary HOLCF lemmas *}
 (* ----------------------------------------------------------------------- *)
 
+subsection \<open>cfun\<close> 
+  
 text {* Introduction of continuity of @{text "f"} using monotonicity and lub on chains:*}
 lemma contI2:
   "\<lbrakk>monofun (f::'a::cpo \<Rightarrow> 'b::cpo); 
@@ -88,6 +90,21 @@ text {* Every non-empty set contains an element *}
 lemma neq_emptyD: "s \<noteq> {} \<Longrightarrow> \<exists>x. x \<in> s"
 by auto
 
+(* below lemmata *)   
+lemma cont_pref_eq1I: assumes "(a \<sqsubseteq> b)"
+  shows "f\<cdot>a \<sqsubseteq> f\<cdot>b"
+  by (simp add: assms monofun_cfun_arg)
+     
+lemma cont_pref_eq2I:  assumes "(a \<sqsubseteq> b)"
+  shows "f\<cdot>x\<cdot>a \<sqsubseteq> f\<cdot>x\<cdot>b"
+  by (simp add: assms monofun_cfun_arg)
+    
+(* equality lemmata *)    
+lemma cfun_arg_eqI:  assumes "(a = b)"
+  shows "f\<cdot>a = f\<cdot>b"
+  by (simp add: assms)  
+
+     
 (* ----------------------------------------------------------------------- *)
 section {* More functions *}
 (* ----------------------------------------------------------------------- *)
@@ -158,7 +175,27 @@ proof -
     using f1 by (simp add: lub_chain_maxelem)
 qed 
 
-
+(* If you like admissibility proofs you will love this one. Never again "contI" ! *)
+(* Dieses Lemma wurde nach langer suche von Sebastian entdeckt. Möge er ewig leben *)
+lemma adm2cont: 
+  fixes f:: "'a::cpo \<Rightarrow> 'b::cpo"
+  assumes "monofun f" and "\<And>k. adm (\<lambda>Y. (f Y)\<sqsubseteq>k)" 
+  shows "cont f"
+  apply(rule contI2)    
+   apply(auto simp add: assms)
+proof -
+  fix Y:: "nat \<Rightarrow> 'a"
+  assume "chain Y"
+  obtain k where k_def: "k=(\<Squnion>i. (f (Y i)))" by simp 
+      (* komischer zwischenschritt, aber anders schafft sledgi das nicht *)
+  have "\<And>j. f (Y j) \<sqsubseteq> (\<Squnion>i. (f (Y i)))"
+    using \<open>chain Y\<close> assms(1) below_lub ch2ch_monofun by blast  
+  hence "\<And>j. f (Y j) \<sqsubseteq> k" by(simp add: k_def)
+  hence "f (\<Squnion>j. Y j) \<sqsubseteq> k"
+    by (metis (no_types, lifting) \<open>chain Y\<close> adm_def assms(2))
+  thus "f (\<Squnion>i. Y i) \<sqsubseteq> (\<Squnion>i. f (Y i)) "
+    using k_def by blast 
+qed     
 
 text {* Creating a list from iteration a function @{text "f"} 
   @{text "n"}-times on a start value @{text s}.*}
@@ -386,4 +423,5 @@ by(simp add: upApply2_def)
 lemma upapply2_up [simp]: assumes "x\<noteq>\<bottom>" and "y\<noteq>\<bottom>" obtains a where "up\<cdot>a = upApply2 f\<cdot>x\<cdot>y"
 by(simp add: upApply2_def assms)
 
+  
 end

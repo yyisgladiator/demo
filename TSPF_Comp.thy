@@ -340,8 +340,8 @@ qed
   
 
     
-  subsection \<open>special parallel operator\<close>
-
+  subsection \<open>special parallel operator\<close>   
+    
 lemma tspfParComp_dom: assumes "parcomp_well f1 f2"
   shows "tspfDom\<cdot>(tspfParComp f1 f2) = tspfDom\<cdot>f1 \<union> tspfDom\<cdot>f2"
 proof -
