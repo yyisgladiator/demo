@@ -84,7 +84,7 @@ lemma tspfHide_well[simp]:
   shows "tspf_well(\<Lambda> x. (tsbDom\<cdot>x = tspfDom\<cdot>f ) \<leadsto> ((f \<rightleftharpoons> x)\<bar>(tspfRan\<cdot>f - cs)))"
   apply(simp only: tspf_well_def)
   apply rule
-   apply (auto simp add: tspf_type_def domIff2 tsbdom_rep_eq)
+   apply (auto simp add: tspf_type_def domIff2 tsbdom_rep_eq tspf_ran_2_tsbdom2)
     by (metis (no_types, lifting) trans_lnle tsbleast_tsdom tsbtick_tsbres tspf_least_in_dom tspf_less_in_than_out_ticks tspf_sbdomeq_to_domeq)
 
 lemma tspfHide_dom:
@@ -415,7 +415,7 @@ proof -
   have "tspfDom\<cdot>f1 = tspfCompI f1 f2"
     by (meson assms(1) sercomp_input_ch)
   then show ?thesis
-    by (simp add: assms(2))
+    by (simp add: assms(2) tspf_ran_2_tsbdom2)
 qed
  
 lemma sercomp_dom_f12: assumes "sercomp_well f1 f2"
@@ -522,7 +522,7 @@ proof -
   
   thus ?thesis
     apply (subst tsbtick_tsbunion)
-       apply (simp add: assms(1) assms(2))
+       apply (simp add: assms(1) assms(2) tspf_ran_2_tsbdom2)
        apply (simp add: f0 assms(2)) 
        by (smt f0 assms(1) assms(2) inf.idem le_cases3 min.mono min_def tsbleast_tsdom 
                 tsbtick_tsbres tspf_least_in_dom tspf_less_in_than_out_ticks 
@@ -541,7 +541,7 @@ proof -
   thus ?thesis
     apply (subst tspf_well_def)
     apply rule
-    apply (auto simp add: tspf_type_def domIff2 tsbdom_rep_eq tspfCompI_def assms)
+    apply (auto simp add: tspf_type_def domIff2 tsbdom_rep_eq tspfCompI_def assms tspf_ran_2_tsbdom2)
     by (meson assms serial_tick_well )
 qed
     
@@ -704,7 +704,7 @@ proof -
     apply(simp add: assms)
     by auto
   then show ?thesis
-    by(simp add: tspfFeedbackH_def)
+    by(simp add: tspfFeedbackH_def tspf_ran_2_tsbdom2)
 qed 
 
 lemma iter_tspfFeedbackH_chain [simp]: assumes "tsbDom\<cdot>x = tspfDom\<cdot>f - tspfRan\<cdot>f"

@@ -105,12 +105,12 @@ definition tspsDom :: "'m TSPS \<Rightarrow> channel set" where
 definition tspsRan :: "'m TSPS \<Rightarrow> channel set" where
 "tspsRan S = tspfRan\<cdot>(SOME f. f\<in> Rep_TSPS S)"
 
-(*
+
 definition tspsComp :: "'m TSPS \<Rightarrow> 'm TSPS \<Rightarrow> 'm TSPS" (infixl "\<Otimes>" 50) where 
 "tspsComp S1 S2 \<equiv> let repS1 = Rep_TSPS S1;
                       repS2 = Rep_TSPS S2     in
                   Abs_TSPS {f1 \<otimes> f2 | f1 f2. f1\<in>repS1 \<and> f2\<in>repS2}"
-*)
+
 
 
 

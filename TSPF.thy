@@ -639,7 +639,7 @@ lemma tspfran_least: "tspfRan\<cdot>f = tsbDom\<cdot>(f\<rightleftharpoons> (tsb
   apply (simp add: tspfRan_def)
   by (metis (no_types) domD option.sel tspf_least_in_dom tspf_ran_2_tsbdom tspf_ran_insert)
     
-lemma tspf_ran_2_tsbdom2 [simp]: assumes "tsbDom\<cdot>tb = tspfDom\<cdot>f"
+lemma tspf_ran_2_tsbdom2: assumes "tsbDom\<cdot>tb = tspfDom\<cdot>f"
   shows "tsbDom\<cdot>(f\<rightleftharpoons>tb) = tspfRan\<cdot>f"
   by (metis (no_types) assms domIff option.collapse tsbleast_tsdom tspf_least_in_dom 
              tspf_ran_2_tsbdom tspf_sbdomeq_to_domeq)
