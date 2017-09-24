@@ -1,5 +1,5 @@
-theory Feedback_MW
-imports SPF Streams SB ParComp_MW_JB "CaseStudies/StreamCase_Study" SPF_MW SerComp_JB SPF_Templates
+theory SPF_Feedback_MW
+imports "../CaseStudies/StreamCase_Study" "../SPF_Comp" "../SPF_Templates"  SPF_FeedComp_JB "../SPF_Feedback_JB"
 
 begin
 
@@ -9,7 +9,7 @@ section \<open>SPF definitions\<close>
 
   
 definition addC :: "nat SPF" where
-"addC \<equiv> addSPF (c1, c2, c3)" 
+"addC \<equiv> SPF2x1 add (c1, c2, c3)" 
   
 definition append0C :: "nat SPF" where
 "append0C \<equiv> SPF1x1 (appendElem2 0) (c3,c2)"
@@ -18,7 +18,7 @@ definition append0C :: "nat SPF" where
 subsection \<open>SPF properties\<close>
 
 lemma add_rep_eqC: "Rep_CSPF addC = (\<lambda> sb. (sbDom\<cdot>sb = {c1, c2}) \<leadsto> ([c3\<mapsto>add\<cdot>(sb . c1)\<cdot>(sb . c2)]\<Omega>))"
-by(auto simp add: addC_def addSPF_rep_eqC)
+by(auto simp add: addC_def SPF2x1_rep_eq)
 
 lemma append0_rep_eqC: "Rep_CSPF append0C = (\<lambda> sb. (sbDom\<cdot>sb = {c3}) \<leadsto> ([c2\<mapsto>((appendElem2 0)\<cdot>(sb . c3))]\<Omega>))"
   apply(simp add: append0C_def)
@@ -107,6 +107,9 @@ lemma unionRestrict2: assumes "sbDom\<cdot>sb3 \<inter> cs = {}"
 apply(rule sb_eq)
 by(simp_all add: assms)
 
+lemma conthelper: assumes "cont (Rep_CSPF f)" and "spfDom\<cdot>f = cs" shows "cont (\<lambda> z. (f\<rightleftharpoons>(z\<bar>cs)))"
+by (metis Rep_CSPF_def cont_Rep_cfun2 cont_compose op_the_cont)  
+  
 lemma contAddC: "cont (\<lambda> z. (addC\<rightleftharpoons>(z\<bar>{c1, c2})))"
 by(subst conthelper, simp_all)
 
@@ -131,7 +134,7 @@ apply(subst Iterate1_H2_test)
 apply(simp add: SPF.spfCompHelp2_def contAddCAppend0CUnion)
 apply(subst unionRestrict2, auto simp add: sbdom_rep_eq)
 apply(simp add: add_rep_eqC append0_rep_eqC appendElem2_def)
-apply(auto simp add: sbdom_rep_eq)
+apply(simp add: sbdom_rep_eq)
 apply(simp add: add_def)
 apply(subst sbunion_commutative2)
 by(auto simp add: sbdom_rep_eq)
@@ -143,7 +146,7 @@ apply(subst Iterate2_H2_test)
 apply(simp add: SPF.spfCompHelp2_def contAddCAppend0CUnion)
 apply(subst unionRestrict2, auto simp add: sbdom_rep_eq)
 apply(simp add: add_rep_eqC append0_rep_eqC appendElem2_def)
-apply(auto simp add: sbdom_rep_eq)
+apply(simp add: sbdom_rep_eq)
 apply(simp add: add_def)
 apply(subst sbunion_commutative2)
 by(auto simp add: sbdom_rep_eq)
@@ -155,7 +158,7 @@ apply(subst Iterate3_H2_test)
 apply(simp add: SPF.spfCompHelp2_def contAddCAppend0CUnion)
 apply(subst unionRestrict2, auto simp add: sbdom_rep_eq)
 apply(simp add: add_rep_eqC append0_rep_eqC appendElem2_def)
-apply(auto simp add: sbdom_rep_eq)
+apply(simp add: sbdom_rep_eq)
 apply(simp add: add_def)
 apply(subst sbunion_commutative2)
 by(auto simp add: sbdom_rep_eq)
@@ -167,7 +170,7 @@ apply(subst Iterate4_H2_test)
 apply(simp add: SPF.spfCompHelp2_def contAddCAppend0CUnion)
 apply(subst unionRestrict2, auto simp add: sbdom_rep_eq)
 apply(simp add: add_rep_eqC append0_rep_eqC appendElem2_def)
-apply(auto simp add: sbdom_rep_eq)
+apply(simp add: sbdom_rep_eq)
 apply(simp add: add_def)
 apply(subst sbunion_commutative2)
 by(auto simp add: sbdom_rep_eq)
@@ -179,7 +182,7 @@ apply(subst Iterate5_H2_test)
 apply(simp add: SPF.spfCompHelp2_def contAddCAppend0CUnion)
 apply(subst unionRestrict2, auto simp add: sbdom_rep_eq)
 apply(simp add: add_rep_eqC append0_rep_eqC appendElem2_def)
-apply(auto simp add: sbdom_rep_eq)
+apply(simp add: sbdom_rep_eq)
 apply(simp add: add_def)
 apply(subst sbunion_commutative2)
 by(auto simp add: sbdom_rep_eq)
@@ -191,7 +194,7 @@ apply(subst Iterate6_H2_test)
 apply(simp add: SPF.spfCompHelp2_def contAddCAppend0CUnion)
 apply(subst unionRestrict2, auto simp add: sbdom_rep_eq)
 apply(simp add: add_rep_eqC append0_rep_eqC appendElem2_def)
-apply(auto simp add: sbdom_rep_eq)
+apply(simp add: sbdom_rep_eq)
 apply(simp add: add_def)
 apply(subst sbunion_commutative2)
 by(auto simp add: sbdom_rep_eq)
@@ -201,7 +204,7 @@ lemma Iterate_H2_test_max: "(SPF.spfCompHelp2 addC append0C ([c1 \<mapsto> <[1,2
 apply(simp add: SPF.spfCompHelp2_def contAddCAppend0CUnion)
 apply(subst unionRestrict2, auto simp add: sbdom_rep_eq)
 apply(simp add: add_rep_eqC append0_rep_eqC appendElem2_def)
-apply(auto simp add: sbdom_rep_eq)
+apply(simp add: sbdom_rep_eq)
 apply(simp add: add_def)
 apply(subst sbunion_commutative2)
 by(auto simp add: sbdom_rep_eq)
@@ -214,21 +217,34 @@ lemma Iterate_H2_max:
   using Iterate7_H2_test apply blast
   by (metis (no_types, lifting) Iterate_H2_test_max iterate_Suc)
 
+lemma Iterate_H2_max2:
+  "((iterate (Suc (Suc (Suc (Suc (Suc (Suc (Suc i)))))))\<cdot>(SPF.spfCompHelp2 addC append0C ([c1 \<mapsto> <[1,2,3]>]\<Omega>)))\<cdot>(sbLeast {c1, c2, c3})) 
+           = ([c1 \<mapsto> <[1,2,3]>]\<Omega>) \<uplus> ([c2 \<mapsto> <[0,1,3,6]>]\<Omega>) \<uplus> ([c3 \<mapsto> <[1,3,6]>]\<Omega>)"
+  apply(subst Iterate_H2_max)
+  apply(subst numeral_7_eq_7)
+  apply(subst Iterate7_H2_test)
+    by auto
     
 lemma addAppend_H2_chain:  "chain (\<lambda>i. iterate i\<cdot>(SPF.spfCompHelp2 addC append0C ([c1 \<mapsto> <[1,2,3]>]\<Omega>))\<cdot>(sbLeast {c1, c2, c3}))"
-apply(rule sbIterate_chain)
-by (auto)
-
+proof - 
+  have f1: "C addC append0C = {c1, c2, c3}"
+    apply(simp add: C_def)
+    by auto
+  then have f2: "(\<lambda>i. iterate i\<cdot>(SPF.spfCompHelp2 addC append0C ([c1 \<mapsto> <[1,2,3]>]\<Omega>))\<cdot>(sbLeast {c1, c2, c3}))
+                = (\<lambda>i. iterate i\<cdot>(SPF.spfCompHelp2 addC append0C ([c1 \<mapsto> <[1,2,3]>]\<Omega>))\<cdot>(sbLeast (C addC append0C)))"
+    by(simp)
+  show ?thesis
+    apply(subst f2)
+    apply(rule spfComp_serialnf_chain, simp_all)
+    by(simp add: sbdom_rep_eq)
+qed
+    
 lemma Iterate_max_H2_test: "max_in_chain 7 (\<lambda>i. iterate i\<cdot>(SPF.spfCompHelp2 addC append0C ([c1 \<mapsto> <[1,2,3]>]\<Omega>))
                          \<cdot>(sbLeast {c1, c2, c3}))"
-apply(rule max_in_chainI, subst numeral_7_eq_7)
-  apply(subst Iterate7_H2_test)
-  sorry
-(*
-    apply(subst Iterate_H2_max, simp)
-  apply(subst numeral_7_eq_7, subst Iterate7_H2_test)
-    by auto
-*)
+  apply(rule max_in_chainI)
+  apply(subst numeral_7_eq_7)
+  apply(subst Iterate_H2_max2)
+  by (smt Iterate_H2_max2 Suc_le_D Suc_le_mono numeral_7_eq_7)
 
 lemma lub_H2_test1: "(\<Squnion>i. (iterate i\<cdot>(SPF.spfCompHelp2 addC append0C ([c1 \<mapsto> <[1,2,3]>]\<Omega>)))\<cdot>(sbLeast {c1, c2, c3}))
                   = ((iterate (Suc (Suc (Suc (Suc (Suc (Suc (Suc 0)))))))\<cdot>(SPF.spfCompHelp2 addC append0C ([c1 \<mapsto> <[1,2,3]>]\<Omega>)))\<cdot>(sbLeast {c1, c2, c3})) "
@@ -253,11 +269,11 @@ lemma sfa: "\<up>(Suc 0) \<bullet> \<up>2 \<bullet> \<up>(Suc (Suc (Suc 0))) = <
 by auto
 
 lemma test: "sum1SPF \<rightleftharpoons>([c1\<mapsto><[1,2,3]>]\<Omega>).c3 = <[1,3,6]>"
-apply(simp add: sum1EqCh)
+apply(subst  sum1EqCh, simp add: sbdom_rep_eq)
 apply(subst SPF.spfcomp_tospfH2)
 apply(subst spfcomp_RepAbs, simp_all)
-apply(subst sfa, subst lub_H2_test_getCh)
-by auto
+  apply(subst sfa, subst lub_H2_test_getCh)
+by(simp add: sbdom_rep_eq)
 
 
 section \<open>feedback operator\<close>
@@ -320,34 +336,7 @@ lemma spfFeedbackOperatorEqRec: "spfFeedbackOperator2 f = spfFeedbackOperatorRec
   apply(subst feedbackHelpFunctionEq)
     by auto
 
-      
-subsubsection prerequirements
-
-lemma [simp]: "cont (\<lambda> z. (f\<rightleftharpoons>((sb \<uplus> z)\<bar> (spfDom\<cdot>f))))"
-  sorry
-  
-
-subsubsection \<open>spfFeedbackOperator eq spfFeedbackOperator2\<close>      
-
-lemma feedbackInductionStart: assumes "sbDom\<cdot>sb = spfDom\<cdot>f - spfRan\<cdot>f" 
-  shows "f\<rightleftharpoons>((sb \<uplus> ((spfRan\<cdot>f)^\<bottom>))\<bar>spfDom\<cdot>f) = f\<rightleftharpoons>(sb \<uplus> (f\<rightleftharpoons>(((spfDom\<cdot>f \<union> spfRan\<cdot>f)^\<bottom>)\<bar>spfDom\<cdot>f))\<bar>spfDom\<cdot>f)"  
-  sorry
-  
-lemma feedbackIterateEq2: assumes "sbDom\<cdot>sb = spfDom\<cdot>f - spfRan\<cdot>f"
-                                 shows "sb \<uplus> iterate (Suc i)\<cdot>(\<Lambda> z. (f\<rightleftharpoons>((sb \<uplus> z)\<bar> (spfDom\<cdot>f))))\<cdot>((spfRan\<cdot>f)^\<bottom>) = 
-                                             iterate (Suc (Suc i))\<cdot>(\<Lambda> z. sb \<uplus> (f\<rightleftharpoons>(z \<bar> (spfDom\<cdot>f))))\<cdot>((spfDom\<cdot>f \<union> spfRan\<cdot>f)^\<bottom>)"   
-  apply(induction i)
-   apply(simp add: assms feedbackInductionStart)
-  by(simp)  
-  
-lemma feedbackIterateEq2Lub: assumes "sbDom\<cdot>sb = spfDom\<cdot>f - spfRan\<cdot>f"
-                                 shows "(\<Squnion>i. iterate i\<cdot>(\<Lambda> z. (f\<rightleftharpoons>((sb \<uplus> z)\<bar> (spfDom\<cdot>f))))\<cdot>((spfRan\<cdot>f)^\<bottom>)) = 
-                                        (\<Squnion>i. iterate i\<cdot>(\<Lambda> z. sb \<uplus> (f\<rightleftharpoons>(z \<bar> (spfDom\<cdot>f))))\<cdot>((spfDom\<cdot>f \<union> spfRan\<cdot>f)^\<bottom>)) \<bar> (spfRan\<cdot>f)"
-sorry
-  
-lemma spfFeedbackOperatorEq: "spfFeedbackOperator f = spfFeedbackOperator2 f"
-  apply(simp add: spfFeedbackOperator_def spfFeedbackOperator2_def)
-  sorry
+    
       
 section \<open>sum4SPF definition\<close>
 
@@ -362,8 +351,9 @@ by (simp add: idC_def)
 lemma [simp]: "spfRan\<cdot>idC = {c1}"
 by (simp add: idC_def)
 
+(* \<mu>((idC \<parallel> append0C) \<circ> addC) *)  
 definition sum4SPF :: "nat SPF" where
-"sum4SPF \<equiv> \<mu>((idC \<parallel> append0C) \<circ> addC)"
+"sum4SPF \<equiv> spfFeedbackOperator (sercomp (idC \<parallel> append0C) addC)"
 
 subsubsection Properties
 
@@ -395,64 +385,175 @@ sorry
 lemma ranIdAppendAdd: "spfRan\<cdot>((idC \<parallel> append0C) \<circ> addC) = {c3}"
 sorry 
   
-lemma contFeedback: "cont (\<lambda>sb. (sbDom\<cdot>sb = {c5})\<leadsto>
-  (\<Squnion>i. iterate i\<cdot>(\<Lambda> z. (((idC\<parallel>append0C)\<circ>addC)\<rightleftharpoons>((sb \<uplus> z)\<bar> (spfDom\<cdot>((idC\<parallel>append0C)\<circ>addC)))))\<cdot>((spfRan\<cdot>((idC\<parallel>append0C)\<circ>addC))^\<bottom>)))"
-sorry
-
-lemma spfwellFeedback: "spf_well (\<Lambda> sb. (sbDom\<cdot>sb = {c5})\<leadsto>
-  (\<Squnion>i. iterate i\<cdot>(\<Lambda> z. (((idC\<parallel>append0C)\<circ>addC)\<rightleftharpoons>((sb \<uplus> z)\<bar> (spfDom\<cdot>((idC\<parallel>append0C)\<circ>addC)))))\<cdot>((spfRan\<cdot>((idC\<parallel>append0C)\<circ>addC))^\<bottom>)))"
-sorry  
-
-lemma domFeedback: "spfDom\<cdot>(sum4SPF) = {c5}"
-apply(simp add: sum4SPF_def spfFeedbackOperator_def)
-apply(subst spfDomAbs)
-apply(simp_all add: domIdAppendAdd ranIdAppendAdd)
-by(simp_all add: contFeedback spfwellFeedback)
-
-lemma ranFeedback: "spfRan\<cdot>(sum4SPF) = {c3}"
-apply(simp add: sum4SPF_def spfFeedbackOperator_def)
-sorry
-
   
 section \<open>sum1SPF eq sum4SPF\<close>
-
-subsection prerequirements
-(* prerequirements for final lemma *)
-
-  
-  
   
 subsection \<open>lemma\<close> 
 (* final lemma *)  
   
-  
 lemma sum1SPFeqSum4SPF: assumes "sbDom\<cdot>sb = I addC append0C"
   shows "(sum1SPF \<rightleftharpoons> sb) . c3 = (sum4SPF \<rightleftharpoons> sb) . c3" 
-  sorry
+  oops
       
   
 section \<open>sum1SPF eq sum4\<close>
 
+  
+  (* old proof structure
 subsection prerequirements
 (* prerequirements for final lemma *)
 
+lemma sbZ_eq:"([c2 \<mapsto> \<up>0\<bullet>z]\<Omega>) \<uplus> ([c3 \<mapsto> z]\<Omega>) = ([c2 \<mapsto> \<up>0\<bullet>z, c3 \<mapsto> z]\<Omega>)"
+sorry
   
-lemma spfCompFixEq: assumes "sbDom\<cdot>sb = I addC append0C"
-  shows "(\<Squnion>i. iterate i\<cdot>(SPF.spfCompHelp2 addC append0C sb)\<cdot>(sbLeast {c1, c2, c3})) = sb \<uplus> ([c2 \<mapsto> \<up>0\<bullet>z]\<Omega>) \<uplus> ([c3 \<mapsto> z]\<Omega>) \<and>
-         z = add\<cdot>(sb . c1)\<cdot>(\<up>0\<bullet>z)"
+lemma spfCompFeedback_iter_prefix: assumes "sbDom\<cdot>sb = I addC append0C" 
+                                       and "z = add\<cdot>(sb . c1)\<cdot>(\<up>0\<bullet>z)"
+                                     shows "(iter_spfCompH3 addC append0C i sb) \<sqsubseteq>  ([c2 \<mapsto> \<up>0\<bullet>z, c3 \<mapsto> z]\<Omega>)"
+ proof(induct i)
+   case 0
+   then show ?case
+     apply(subst less_SBI)
+       apply(simp_all add: sbLeast_def)
+       apply(simp add: dom_def)
+       by auto
+ next
+   case (Suc i)
+   then show ?case 
+     apply(subst less_SBI)
+       apply(simp)
+       sorry
+ qed
+
+lemma sum4_finiteInput: assumes "z = add\<cdot>x\<cdot>(\<up>0\<bullet>z)"
+                            and "#x < \<infinity>"
+                          shows "#z < \<infinity>"
+proof (rule ccontr)
+  have f1: "#z = \<infinity> \<Longrightarrow> #(add\<cdot>x\<cdot>(\<up>0\<bullet>z)) = \<infinity>"
+    using assms(1) by auto
+  then have f2: "#z = \<infinity> \<Longrightarrow> #x = \<infinity>"
+    by simp
+  assume "~ ?thesis"
+  then show False
+    using f2 assms(2) by (simp add: less_le)
+qed
+   
+lemma spfCompFeedback_iter_nthEq: assumes "sbDom\<cdot>sb = I addC append0C" 
+                                      and "z = add\<cdot>(sb . c1)\<cdot>(\<up>0\<bullet>z)"
+                                      and "#(sb . c1) < \<infinity>"
+  shows "stake i\<cdot>((iter_spfCompH3 addC append0C (2 * i) sb) . c3) = stake i\<cdot>z"
   sorry
+    
+lemma spfCompFeedback_iter_nthEq2: assumes "sbDom\<cdot>sb = I addC append0C" 
+                                      and "z = add\<cdot>(sb . c1)\<cdot>(\<up>0\<bullet>z)"
+                                      and "#(sb . c1) < \<infinity>"
+  shows "stake i\<cdot>((iter_spfCompH3 addC append0C (2 * i) sb) . c3) = stake i\<cdot>(\<up>0\<bullet>z)"
+  sorry
+   
+lemma spfCompFeedback_lub_iter_finiteInput: assumes "sbDom\<cdot>sb = I addC append0C" 
+                                                and "z = add\<cdot>(sb . c1)\<cdot>(\<up>0\<bullet>z)"
+                                                and "#(sb . c1) < \<infinity>"
+                                              shows "(\<Squnion>i. (iter_spfCompH3 addC append0C i sb)) = ([c2 \<mapsto> \<up>0\<bullet>z, c3 \<mapsto> z]\<Omega>)"
+proof - 
+  have f11: "sbDom\<cdot>(\<Squnion>i. (iter_spfCompH3 addC append0C i sb)) = {c2,c3}"
+    apply(subst lub_iter_spfCompH3_dom)
+    by(simp_all add: assms)
+  have f12: "sbDom\<cdot>([c2 \<mapsto> \<up>0\<bullet>z, c3 \<mapsto> z]\<Omega>) = {c2,c3}"
+    sorry
+  then have f13: "sbDom\<cdot>(\<Squnion>i. (iter_spfCompH3 addC append0C i sb)) = sbDom\<cdot>([c2 \<mapsto> \<up>0\<bullet>z, c3 \<mapsto> z]\<Omega>)"
+    using f11 f12 by auto
+  have f21: "(\<Squnion>i. (iter_spfCompH3 addC append0C i sb)) . c2 = \<up>0\<bullet>z"
+    sorry
+  then have f22: "(\<Squnion>i. (iter_spfCompH3 addC append0C i sb)) . c2 = ([c2 \<mapsto> \<up>0\<bullet>z, c3 \<mapsto> z]\<Omega>) . c2"
+    sorry
+  have f31: "(\<Squnion>i. (iter_spfCompH3 addC append0C i sb)) . c3 = z"
+    sorry
+  then have f32: "(\<Squnion>i. (iter_spfCompH3 addC append0C i sb)) . c3 = ([c2 \<mapsto> \<up>0\<bullet>z, c3 \<mapsto> z]\<Omega>) . c3"
+    sorry
+  show ?thesis
+    apply(subst sb_eq, simp_all)
+    using f13 apply auto[1]
+    sorry
+qed
+
+lemma spfCompFeedback_lub_iter_infiniteInput: assumes "sbDom\<cdot>sb = I addC append0C" 
+                                                  and "z = add\<cdot>(sb . c1)\<cdot>(\<up>0\<bullet>z)"
+                                                  and "#(sb . c1) = \<infinity>"
+  shows "(\<Squnion>i. (iter_spfCompH3 addC append0C i sb)) = ([c2 \<mapsto> \<up>0\<bullet>z]\<Omega>) \<uplus> ([c3 \<mapsto> z]\<Omega>)"  
+  sorry    
+    
+lemma spfCompFeedbackFixEq: assumes "sbDom\<cdot>sb = I addC append0C" and "z = add\<cdot>(sb . c1)\<cdot>(\<up>0\<bullet>z)"
+  shows "(\<Squnion>i. (iter_spfCompH3 addC append0C i sb)) = ([c2 \<mapsto> \<up>0\<bullet>z]\<Omega>) \<uplus> ([c3 \<mapsto> z]\<Omega>)"
+proof(cases "#(sb . c1) < \<infinity>")
+  case True
+  then show ?thesis
+    apply(subst sbZ_eq)
+    using assms(1) assms(2) spfCompFeedback_lub_iter_finiteInput by blast
+next
+  case False
+  have "\<not> #(sb . c1) < \<infinity> \<Longrightarrow> #(sb . c1) = \<infinity>"
+    by (simp add: less_le)
+  then show ?thesis 
+    using False assms(1) assms(2) spfCompFeedback_lub_iter_infiniteInput by blast
+qed
   
+lemma spfCompFeedbackFixEqHelper: assumes "sbDom\<cdot>sb = I addC append0C" and "z = add\<cdot>(sb . c1)\<cdot>(\<up>0\<bullet>z)"
+  shows "(\<Squnion>i. iterate i\<cdot>(spfCompH3 addC append0C sb)\<cdot>({c2, c3}^\<bottom>)) = ([c2 \<mapsto> \<up>0\<bullet>z]\<Omega>) \<uplus> ([c3 \<mapsto> z]\<Omega>)"
+proof - 
+  have "(\<Squnion>i. iterate i\<cdot>(spfCompH3 addC append0C sb)\<cdot>({c2, c3}^\<bottom>)) = (\<Squnion>i. (iter_spfCompH3 addC append0C i sb))"
+    by simp
+  then show ?thesis
+    using assms(1) assms(2) spfCompFeedbackFixEq by presburger
+qed
+
+
+lemma spfCompFeedbackFixEqCh: assumes "sbDom\<cdot>sb = I addC append0C" and "z = add\<cdot>(sb . c1)\<cdot>(\<up>0\<bullet>z)"
+  shows "(\<Squnion>i. iterate i\<cdot>(spfCompH3 addC append0C sb)\<cdot>({c2, c3}^\<bottom>)) . c3 = z"
+proof -
+  have f1: "(\<Squnion>i. iterate i\<cdot>(spfCompH3 addC append0C sb)\<cdot>({c2, c3}^\<bottom>)) = ([c2 \<mapsto> \<up>0\<bullet>z]\<Omega>) \<uplus> ([c3 \<mapsto> z]\<Omega>)"
+    by (metis spfCompFeedbackFixEqHelper assms)
+  have f2: "([c2 \<mapsto> \<up>0 \<bullet> z]\<Omega>) \<uplus> ([c3 \<mapsto> z]\<Omega>) . c3 = z"
+    by (subst sbunion_getchR, simp_all add: sbdom_rep_eq)
+  thus ?thesis
+    by (simp add: f1)
+qed
+       
+*)   
+      
+subsubsection general      
+      
+  
+lemma spfcomp2_RepAbs: assumes "spfComp_well f1 f2" shows
+ "Rep_CSPF (Abs_CSPF (\<lambda>x. (sbDom\<cdot>x = I f1 f2)\<leadsto>(\<Squnion>i. iterate i\<cdot>(spfCompH3 f1 f2 x)\<cdot>((spfRan\<cdot>f1 \<union> spfRan\<cdot>f2)^\<bottom>))))
+            = (\<lambda>x. (sbDom\<cdot>x = I f1 f2)\<leadsto>(\<Squnion>i. iterate i\<cdot>(spfCompH3 f1 f2 x)\<cdot>((spfRan\<cdot>f1 \<union> spfRan\<cdot>f2)^\<bottom>)))"
+  by simp   
+  
+lemma sbDomSB_eq: assumes "sbDom\<cdot>sb = {c1}" shows "sb = ([c1 \<mapsto> sb . c1]\<Omega>)"
+  apply(subst sb_eq, simp_all)
+   apply (metis Rep_SB_inverse assms dom_eq_singleton_conv fun_upd_same insertI1 sbdom_insert sbgetchE)
+    by (metis Rep_SB_inverse assms dom_eq_singleton_conv fun_upd_same sbdom_insert sbgetchE singletonD)
+    
+    
 subsection \<open>lemma\<close> 
 (* final lemma *)
 
     
 lemma sumEq: assumes "sbDom\<cdot>sb = I addC append0C" shows "(sum1SPF \<rightleftharpoons> sb) . c3 = sum4\<cdot>(sb . c1)"
   apply(subst sum1EqCh, simp add: assms)
-  apply(simp only: SPF.spfcomp_tospfH2)
-  apply(subst  spfcomp_RepAbs)
-   apply(simp_all add: assms)
-  apply(subst spfCompFixEq)
-  apply(simp_all add: assms)
-
+  apply(subst spfcomp_and_spfcomp2_eq)
+  apply(subst spfcompH3_abbrv_tospfH32)
+  apply(subst spfcomp2_RepAbs, simp_all add: assms)
+  apply(simp add: sum4_sb_spf_eq)
+  apply(subst SPF_FeedComp_JB.addC_def, subst SPF_Feedback_MW.addC_def)
+  apply(subst SPF_FeedComp_JB.append0C_def, subst SPF_Feedback_MW.append0C_def)
+  apply(subst (2) sbDomSB_eq)
+  by(simp_all add: assms SPF_FeedComp_JB.addC_def SPF_FeedComp_JB.append0C_def)
+  
+(*  apply(subst sum1EqCh, simp add: assms)
+  apply(subst spfcomp_and_spfcomp2_eq)
+  apply(subst spfcompH3_abbrv_tospfH32)
+  apply(subst spfcomp2_RepAbs, simp_all add: assms)
+  apply(subst spfCompFeedbackFixEqCh)
+    using assms sum4_unfold  by auto
+*)
          
 end

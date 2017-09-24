@@ -13,11 +13,7 @@ begin
 section \<open>Definitions\<close>
 (* ----------------------------------------------------------------------- *)  
   
-(* special operator for serial composition, domain of f2 must be range of f1  *)
-  (* THIS IS OBSOLETE *)
-abbreviation iconst :: "'a SB \<rightarrow> 'a SPF \<rightarrow> 'a SPF \<rightarrow> 'a SB" where
-"iconst \<equiv> \<Lambda> x f1 f2 . (x \<uplus> (f1 \<rightleftharpoons> (x \<bar>spfDom\<cdot>f1)) 
-                                    \<uplus> (f2 \<rightleftharpoons> (f1 \<rightleftharpoons> (x\<bar>spfDom\<cdot>f1))))\<bar>Oc f1 f2"
+
 
 (* ----------------------------------------------------------------------- *)
 section \<open>General lemmata\<close>
@@ -29,12 +25,10 @@ lemma sb_rest: "([ch1 \<mapsto> s]\<Omega>)\<bar>{ch1} = [ch1 \<mapsto> (s:: nat
 lemma [simp]:"([ch1 \<mapsto> s]\<Omega>) . ch1 = (s:: nat stream)"
   by(simp add: sbgetch_rep_eq)
   
-lemma spfI_sub_C[simp]: "I f1 f2 \<subseteq> C f1 f2"
-using I_def C_def by fastforce
+
   
   (* necessary for sledgehammer *)
-lemma num3_eq[simp] : " 3 = (Suc(Suc(Suc 0)))"
-  using numeral_3_eq_3 by blast  
+
   
 
 
@@ -75,7 +69,7 @@ lemma spfComp_I_domf1_eq: assumes "spfRan\<cdot>f1 = spfDom\<cdot>f2"
 lemma spfComp_Oc_sub_C: assumes "c \<in> Oc f1 f2" shows "c \<in> C f1 f2"
   by (meson assms set_mp spfOc_sub_C)
 
-lemma spfComp_getC_Oc[simp]:  assumes "spfRan\<cdot>f1 = spfDom\<cdot>f2" 
+lemma spfComp_getC_Oc:  assumes "spfRan\<cdot>f1 = spfDom\<cdot>f2" 
                               and "spfComp_well f1 f2"
                               and "c \<in> spfRan\<cdot>f2" 
                               and "pL f1 f2 = {}"

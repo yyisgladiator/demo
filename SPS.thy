@@ -72,4 +72,15 @@ definition spsDom :: "'m SPS \<Rightarrow> channel set" where
 definition spsRan :: "'m SPS \<Rightarrow> channel set" where
 "spsRan S = spfRan\<cdot>(SOME f. f\<in> Rep_SPS S)"
 
+(* helpful lemmas *)
+
+lemma sps_well_SingleSet[simp]: "sps_well {f :: 'a SPF}"
+  by(simp add: sps_well_def)
+    
+lemma sps_repAbs[simp]: assumes "sps_well S" shows "Rep_SPS (Abs_SPS S) = S"
+  using Abs_SPS_inverse assms by auto
+
+lemma spsWell_subset: assumes "sps_well A" and "a \<subseteq> B" shows "sps_well B"
+  sorry
+    
 end

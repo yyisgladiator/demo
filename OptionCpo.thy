@@ -1,6 +1,8 @@
 (*  Title:        OptionCpo
     Author:       Sebastian Stüber
+    Author:       Jens Christoph Bürger
     e-mail:       sebastian.stueber@rwth-aachen.de
+    e-mail:       jens.buerger@rwth-aachen.de
 
     Description:  Defines "option" as CPO 
                    + Lemmas about partial functions
@@ -463,7 +465,117 @@ qed
 lemma domIff2: "b\<in>dom (\<lambda>b2. ((P b2) \<leadsto> h b2)) \<longleftrightarrow> P b"
   using domIff by force
 
+(* Some can be pulled out when applied to a chain *)  
+lemma some_lub_chain_eq: fixes Y :: "nat \<Rightarrow> 'a::cpo"
+            assumes "chain Y"
+            shows " Some (\<Squnion> i. Y i) = (\<Squnion> i. Some (Y i))"
+  using assms cont2contlubE some_cont by blast
     
+lemma some_lub_chain_eq3: fixes Y :: "nat \<Rightarrow> 'a::cpo"
+            assumes "chain Y"
+            shows "(\<Squnion> i. Some (Y i)) = Some (\<Squnion> i. Y i)"
+ by (simp add: some_lub_chain_eq assms)
+
+(* Some can be pulled out when applied to a function which is applied to a chain *)   
+lemma some_lub_chain_eq2: fixes Y:: "nat \<Rightarrow> 'a::cpo"
+             fixes f:: "'a \<Rightarrow> 'b::cpo"
+             assumes "chain (\<lambda>i. f (Y i))"
+             shows " Some (\<Squnion> i. f (Y i)) = (\<Squnion> i. Some (f (Y i)))"
+  using assms(1) some_lub_chain_eq by blast
+ 
+subsection \<open>Lub\<close>     
+    
+(* two lubs can be merged together if a function F is cont in x for every i *)
+lemma cont2lub_lub_eq: assumes cont: "\<And>i. cont (\<lambda>x. F i x)" 
+  shows "chain Y\<longrightarrow>  (\<Squnion>i. F i (\<Squnion>i. Y i)) = (\<Squnion>i ia. F i (Y ia))"
+proof -
+  { assume "\<exists>a. (\<Squnion>n. F a (Y n)) \<noteq> F a (Lub Y)"
+    have ?thesis
+      by (simp add: cont cont2contlubE) }
+  thus ?thesis
+    by force
+qed
+  
+lemma lub_suc_shift: fixes Y:: "nat \<Rightarrow> 'a::cpo" assumes "chain Y"
+  shows "(\<Squnion>i. Y (Suc i)) = (\<Squnion>i. Y i)"
+proof-
+  have f1: "(\<Squnion>i. Y (Suc i)) = (\<Squnion>i. Y (i + 1))"
+    by auto
+  thus ?thesis
+    apply (subst f1)
+    by (subst lub_range_shift, simp_all add: assms)
+qed
+     
+(* two chain lubs are equal if one is the shifted by one version of the other *)
+lemma lub_suc_shift_eq: fixes Y:: "nat \<Rightarrow> 'a::cpo" fixes Z:: "nat \<Rightarrow> 'a::cpo" 
+              assumes "chain Y" and "chain Z" 
+              and "\<And> i. (Y (Suc i) = Z (Suc (Suc(i))))"
+shows "(\<Squnion>i. (Y i)) = (\<Squnion>i. (Z i))"
+proof -  
+  have f1: "(\<Squnion>i. (Y (Suc(i)))) = (\<Squnion>i. (Z i))"
+    apply (simp only: assms(3))
+    apply (subst lub_suc_shift)
+    using assms(2) po_class.chain_def 
+    apply blast
+    by (subst lub_suc_shift, simp_all add: assms)
+      
+  have f2: "(\<Squnion>i. Y (Suc i)) = (\<Squnion>i. Y i)"
+    by (simp add: assms(1) lub_suc_shift)
+  thus ?thesis
+    by (simp add: f1)
+qed
+  
+(* two interleaved chains have the same least upper bound *)
+lemma lub_interl_chain_eq:  fixes Y:: "nat \<Rightarrow> 'a::cpo" fixes Z:: "nat \<Rightarrow> 'a::cpo" 
+  assumes "\<And> i. Y i \<sqsubseteq> Z i" and "\<And> i. Z i \<sqsubseteq> Y (Suc i)"
+  shows "(\<Squnion>i. (Y i)) = (\<Squnion>i. (Z i))"
+proof -
+  have f1: "(\<Squnion>i. (Y i)) \<sqsubseteq> (\<Squnion>i. (Z i))"
+    by (meson assms(1) assms(2) below_trans lub_mono po_class.chain_def)
+  moreover 
+  have f2: "(\<Squnion>i. (Z i)) \<sqsubseteq> (\<Squnion>i. (Y i))"
+  proof (rule ccontr)
+    assume "\<not> ((\<Squnion>i. (Z i)) \<sqsubseteq> (\<Squnion>i. (Y i)))"
+    thus False
+      by (meson assms(1) assms(2) below_lub lub_below_iff po_class.chain_def rev_below_trans)
+  qed
+  ultimately    
+  show ?thesis
+    by (simp add: below_antisym)
+qed
+ 
+(* lubs are equal if chain index is multiplied *)
+lemma lub_range_mult:  fixes Y:: "nat \<Rightarrow> 'a::cpo" assumes "chain Y" and "m \<ge> 1"
+  shows "(\<Squnion>i. Y (i)) = (\<Squnion>i. Y (m * i))"
+proof -
+  have f1: "\<forall> (i::nat). i \<le> (m * i)"
+    using assms(2) by auto
+  have f2: "\<forall> i. Y (i) \<sqsubseteq> Y (m * i)"
+    by (simp add: assms(1) f1 po_class.chain_mono)
+  have f3: "chain (\<lambda>i. Y (m * i))"
+    by (metis (no_types, lifting) Suc_n_not_le_n assms mult.commute nat_le_linear 
+          nat_mult_le_cancel_disj po_class.chain_def po_class.chain_mono) 
+        
+  hence "(\<Squnion>i. Y (m * i)) \<sqsubseteq> (\<Squnion>i. Y (i))"
+    using assms lub_below_iff by blast    
+  thus ?thesis
+    by (simp only: assms below_antisym f2 f3 lub_mono)
+qed
+  
+(* lub equality rule for mult lub equality *)
+lemma lub_mult_shift_eq: fixes Y:: "nat \<Rightarrow> 'a::cpo" fixes Z:: "nat \<Rightarrow> 'a::cpo" 
+  assumes "chain Y" and "chain Z" and "m \<ge> 1"
+  and "\<And> i. Y (i) = Z (m * i)"
+shows "(\<Squnion>i. (Y i)) = (\<Squnion>i. (Z i))"
+  apply (simp only: assms(4))
+  using assms(2) assms(3) lub_range_mult by fastforce
+  
+lemma lub_mult2_shift_eq: fixes Y:: "nat \<Rightarrow> 'a::cpo" fixes Z:: "nat \<Rightarrow> 'a::cpo" 
+  assumes "chain Y" and "chain Z"
+  and "\<And> i. Y (i) = Z (2 * i)"
+shows "(\<Squnion>i. (Y i)) = (\<Squnion>i. (Z i))"
+  apply (simp add: assms)
+  by (metis assms(2) lub_range_mult one_le_numeral)
     
 
     (* copied from the HOLCF library *)
@@ -537,5 +649,6 @@ setup \<open>
     [ (@{const_name None}, @{const_name match_None}),
       (@{const_name Some}, @{const_name match_Some}) ]
 \<close>
+
     
 end
