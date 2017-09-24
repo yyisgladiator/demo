@@ -6,7 +6,7 @@
 *)
 
 theory ABP_TSPS
-  imports "../../TSPS" Receiver Composition Medium "../../TSPF"
+  imports "../../TSPS" Receiver Composition Medium "../../TSPF" "../../TSPF_Comp"
 
 begin
 
@@ -43,7 +43,7 @@ end
 declare [[show_consts]]
 
 (* ----------------------------------------------------------------------- *)
-section \<open>Definitions\<close>
+section \<open>Helper Definitions\<close>
 (* ----------------------------------------------------------------------- *)
 
 subsection \<open>datatype destructors\<close>
@@ -72,8 +72,8 @@ subsection \<open>medium_rs\<close>
   (* medium from receiver to sender *)
   (* input: ar, output: as, transport booleans *)
 
-definition tsMedRSTSPF :: "bool stream \<Rightarrow> 'a MABP TSPF" where
-"tsMedRSTSPF bst\<equiv> Abs_CTSPF (\<lambda> x. (tsbDom\<cdot>x = {ar})
+definition medRS_TSPF :: "bool stream \<Rightarrow> 'a MABP TSPF" where
+"medRS_TSPF bst\<equiv> Abs_CTSPF (\<lambda> x. (tsbDom\<cdot>x = {ar})
                            \<leadsto> [as \<mapsto> (tsMap::(bool \<Rightarrow> 'a MABP) \<Rightarrow> bool tstream \<rightarrow> 'a MABP tstream) Bool\<cdot>(tsMed\<cdot>(tsMap invBool\<cdot>(x . ar))\<cdot>bst)]\<Omega>)"
 
 abbreviation tsMedRSAbb  :: "bool stream \<Rightarrow> 'a MABP TSB \<Rightarrow> 'a MABP TSB option" where
@@ -84,11 +84,22 @@ subsection \<open>medium_sr\<close>
   (* medium from sender to receiver *)
   (* input: ds, output: dr, transport (data, bool) tuples *)
 
+definition medSR_TSPF :: "bool stream \<Rightarrow> 'a MABP TSPF" where
+"medSR_TSPF bst\<equiv> Abs_CTSPF (\<lambda> x. (tsbDom\<cdot>x = {ds})
+  \<leadsto> [dr \<mapsto> (tsMap:: ('a \<times> bool \<Rightarrow> 'a MABP) \<Rightarrow> ('a \<times> bool) tstream \<rightarrow> 'a MABP tstream) 
+            BoolPair\<cdot>(tsMed\<cdot>(tsMap invBoolPair\<cdot>(x . ds))\<cdot>bst)]\<Omega>)"
 
-  (* TODO: fix types *)
-definition tsMedSRTSPF :: "bool stream \<Rightarrow> 'a MABP TSPF" where
-"tsMedSRTSPF bst\<equiv> Abs_CTSPF (\<lambda> x. (tsbDom\<cdot>x = {ds})
-                                \<leadsto> [dr \<mapsto> tsMap BoolPair\<cdot>(tsMed\<cdot>(tsMap invBoolPair\<cdot>(x . ds))\<cdot>bst)]\<Omega>)"
+abbreviation medSR_TSPFAbb  :: "bool stream \<Rightarrow> 'a MABP TSB \<Rightarrow> 'a MABP TSB option" where
+"medSR_TSPFAbb bst x \<equiv> ((tsbDom\<cdot>x = {ds})
+  \<leadsto> [dr \<mapsto> (tsMap:: ('a \<times> bool \<Rightarrow> 'a MABP) \<Rightarrow> ('a \<times> bool) tstream \<rightarrow> 'a MABP tstream) 
+            BoolPair\<cdot>(tsMed\<cdot>(tsMap invBoolPair\<cdot>(x . ds))\<cdot>bst)]\<Omega>)"
+
+subsection \<open>sender\<close>
+
+  (* lift a sender function to a TSPF *)
+definition sender_TSPF :: "'a sender \<Rightarrow> 'a MABP TSPF" where
+"sender_TSPF se \<equiv> Abs_CTSPF (\<lambda> x. (tsbDom\<cdot>x = {as, abpIn})
+                \<leadsto> [ds \<mapsto> tsMap BoolPair\<cdot>(se\<cdot>(tsMap invData\<cdot>(x . abpIn))\<cdot>(tsMap invBool\<cdot>(x . as)))]\<Omega>)"
 
 
 (* ----------------------------------------------------------------------- *)
@@ -101,6 +112,10 @@ lemma tsmap_id[simp]: assumes "inj f" shows "tsMap (inv f)\<cdot>(tsMap f\<cdot>
 apply(induction ts)
 by(simp_all add: assms tsmap_delayfun  tsmap_mlscons)
 
+lemma med_ora_length: assumes "#({True} \<ominus> ora) = \<infinity>"
+  shows "#ora = \<infinity>"
+  using assms sfilterl4 by auto  
+  
 subsection \<open>datatype\<close>
 
   (* inverse BoolPair applied to BoolPair is identity *)
@@ -305,7 +320,7 @@ qed
 
 
   (* recvTSPF is an actual TSPF *)
-lemma recvTSPF_well:
+lemma recvTSPF_well [simp]:
   shows "tspf_well (\<Lambda> x. (tsbDom\<cdot>x = {dr}) \<leadsto>
                       [ar \<mapsto> (tsMap::(bool \<Rightarrow> 'a MABP) \<Rightarrow> bool tstream \<rightarrow> 'a MABP tstream)
                             Bool\<cdot>(fst ((tsRec::('a * bool) tstream \<rightarrow> (bool tstream \<times> 'a tstream))\<cdot>
@@ -316,7 +331,22 @@ lemma recvTSPF_well:
     apply (simp_all add: domIff2 recv_tsb_dom)
     by (simp add: recvTSPF_tick)
 
-
+lemma recv_revsubst: "Abs_CTSPF (recvAbb) = recvTSPF"
+  by (simp add: recvTSPF_def)
+    
+lemma recv_tspfdom: "tspfDom\<cdot>(recvTSPF) = {dr}"
+    apply (simp add: recvTSPF_def)
+    apply (simp add: tspf_dom_insert)
+    apply (simp add: domIff2)
+    by (meson tsbleast_tsdom someI)
+   
+lemma recv_tspfran: "tspfRan\<cdot>(recvTSPF) = {ar, abpOut}"   
+    apply (simp add: tspfran_least)
+    apply (subst recv_tspfdom)
+    apply (simp add: recvTSPF_def)
+    apply (subst tsbdom_rep_eq)
+    apply (simp_all add: tsb_well_def)
+    by blast
 
 
   subsection \<open>medium_rs\<close>
@@ -445,13 +475,266 @@ qed
       
     
   (* a medium is a tspf if the oracle bool stream bst is infinitly long*)
-lemma medrs_well: assumes "#bst=\<infinity>"
-shows "tspf_well (\<Lambda> x. (tsbDom\<cdot>x = {ar})
+lemma medrs_well [simp]: assumes "#bst=\<infinity>"
+  shows "tspf_well (\<Lambda> x. (tsbDom\<cdot>x = {ar})
                            \<leadsto> [as \<mapsto> (tsMap::(bool \<Rightarrow> 'a MABP) \<Rightarrow> bool tstream \<rightarrow> 'a MABP tstream)
                                 Bool\<cdot>(tsMed\<cdot>(tsMap invBool\<cdot>(x . ar))\<cdot>bst)]\<Omega>)"
   apply (rule tspf_wellI)
     apply (simp_all add: domIff2 medrs_tsb_dom)
     apply (subst tsbtick_single_ch1, simp)
     by (simp add: assms tsbtick_single_ch2)
+
+      
+lemma medrs_revsubst: "Abs_CTSPF (tsMedRSAbb bst) = (medRS_TSPF bst)"
+  by (simp add: medRS_TSPF_def)
     
+lemma medrs_tspfdom: assumes "#bst =\<infinity>"
+  shows "tspfDom\<cdot>(medRS_TSPF bst) = {ar}"
+    apply (simp add: medRS_TSPF_def)
+    apply (simp add: tspf_dom_insert assms)
+    apply (simp add: domIff2)
+    by (meson tsbleast_tsdom someI)
+   
+lemma medrs_tspfran: assumes "#bst =\<infinity>"
+  shows "tspfRan\<cdot>(medRS_TSPF bst) = {as}"   
+    apply (simp add: medRS_TSPF_def)
+    apply (simp add: tspfran_least medrs_tspfdom assms)
+    apply (simp add: medrs_revsubst medrs_tspfdom assms)
+    by (metis singletonI tsb_newMap_id tsbleast_getch tsbleast_tsdom)
+
+
+  (* now special lemmata for TSPS instantiation *)
+
+lemma medrs_well2 [simp]: assumes "#({True} \<ominus> bst) = \<infinity>"
+  shows "tspf_well (\<Lambda> x. (tsbDom\<cdot>x = {ar})
+                           \<leadsto> [as \<mapsto> (tsMap::(bool \<Rightarrow> 'a MABP) \<Rightarrow> bool tstream \<rightarrow> 'a MABP tstream)
+                                Bool\<cdot>(tsMed\<cdot>(tsMap invBool\<cdot>(x . ar))\<cdot>bst)]\<Omega>)"
+proof -
+   have "#bst = \<infinity>"
+     by (simp add: med_ora_length assms(1))
+   thus ?thesis
+     by (simp add: medrs_tspfdom)
+qed
+  
+
+lemma medrs_tspfdom2: assumes "#({True} \<ominus> bst) = \<infinity>"
+  shows "tspfDom\<cdot>(medRS_TSPF bst) = {ar}"
+proof -
+  have "#bst = \<infinity>"
+    by (simp add: med_ora_length assms(1))
+  thus ?thesis
+    by (simp add: medrs_tspfdom)
+qed
+  
+lemma medrs_tspfran2: assumes "#({True} \<ominus> bst) = \<infinity>"
+  shows "tspfRan\<cdot>(medRS_TSPF bst) = {as}"
+proof -
+  have "#bst = \<infinity>"
+    by (simp add: med_ora_length assms(1))
+  thus ?thesis
+    by (simp add: medrs_tspfran)
+qed
+
+  (* necessary for TSPS instantiation *)
+lemma medrs_tsps_dom1 [simp]: "f = medRS_TSPF ora \<and> #({True} \<ominus> ora) = \<infinity> \<Longrightarrow> tspfDom\<cdot>f = {ar}"
+  by (simp add: medrs_tspfdom2)
+
+lemma medrs_tsps_dom2 [simp]: "\<exists>ora::bool stream. f = medRS_TSPF ora \<and> #({True} \<ominus> ora) = \<infinity> 
+                               \<Longrightarrow> tspfDom\<cdot>f = {ar}"
+  using medrs_tsps_dom1  by auto
+ 
+lemma medrs_tsps_ran1 [simp]: "f = medRS_TSPF ora \<and> #({True} \<ominus> ora) = \<infinity> \<Longrightarrow> tspfRan\<cdot>f = {as}"
+  by (simp add: medrs_tspfran2)
+
+lemma medrs_tsps_ran2 [simp]: "\<exists>ora::bool stream. f = medRS_TSPF ora \<and> #({True} \<ominus> ora) = \<infinity> 
+                               \<Longrightarrow> tspfRan\<cdot>f = {as}"
+  using medrs_tsps_ran1 by auto
+
+
+      
+  subsection \<open>medium_sr\<close>     
+
+subsubsection \<open>defs\<close>
+
+definition medSRH :: "bool stream \<Rightarrow> 'a MABP TSB \<Rightarrow> 'a MABP tstream"  where
+"medSRH bst \<equiv> (\<lambda> x. (tsMap:: ('a \<times> bool \<Rightarrow> 'a MABP) \<Rightarrow> ('a \<times> bool) tstream \<rightarrow> 'a MABP tstream) 
+            BoolPair\<cdot>(tsMed\<cdot>(tsMap invBoolPair\<cdot>(x . ds))\<cdot>bst))"
+
+lemma medsrh_cont [simp]: "cont (medSRH bst)"
+  by (simp add: medSRH_def)
+
+lemma medsrh_contlub: assumes "chain Y"
+  shows "(medSRH bst) ((\<Squnion>i. Y i)) = (\<Squnion>i. ((medSRH bst) ((Y i))))"
+  apply (rule cont2contlubE)
+  by (simp_all add: assms)
+
+lemma to_medsrh: "tsMap BoolPair\<cdot>(tsMed\<cdot>(tsMap invBoolPair\<cdot>(x  .  ds))\<cdot>bst)
+                  = ((medSRH :: bool stream \<Rightarrow> 'a MABP TSB \<Rightarrow> 'a MABP tstream) bst) x"
+  by (simp add: medSRH_def)
+
+subsubsection \<open>pre\<close>
+(*
+lemma tsmed_input_cont [simp]: "cont (\<lambda> x. tsMed\<cdot>x\<cdot>bst)"
+  by simp
+
+lemma tsmed_input_mono [simp]: "monofun (\<lambda> x. tsMed\<cdot>x\<cdot>bst)"
+  using cont2mono tsmed_input_cont by blast
+*)
+
+lemma medsr_tsb_well[simp]: "tsb_well [dr \<mapsto> tsMap BoolPair\<cdot>(tsMed\<cdot>(tsMap invBoolPair\<cdot>(x . ds))\<cdot>bst)]"
+  apply (rule tsb_wellI)
+  by (simp add: tsmap_tsdom_range)
+
+lemma medsr_tsb_dom: "tsbDom\<cdot>([dr \<mapsto> tsMap BoolPair\<cdot>(tsMed\<cdot>(tsMap invBoolPair\<cdot>(x . ds))\<cdot>bst)]\<Omega>) = {dr}"
+  by (simp add: tsbdom_rep_eq)
+    
+  subsubsection \<open>cont\<close>
+    
+(* definition tsMedSRTSPF :: "bool stream \<Rightarrow> 'a MABP TSPF" where
+"tsMedSRTSPF bst\<equiv> Abs_CTSPF (\<lambda> x. (tsbDom\<cdot>x = {ds})
+  \<leadsto> [dr \<mapsto> (tsMap:: ('a \<times> bool \<Rightarrow> 'a MABP) \<Rightarrow> ('a \<times> bool) tstream \<rightarrow> 'a MABP tstream) 
+            BoolPair\<cdot>(tsMed\<cdot>(tsMap invBoolPair\<cdot>(x . ds))\<cdot>bst)]\<Omega>)" *)
+
+(* this can be shown analogue to before *)
+lemma medsr_cont [simp]: "cont (\<lambda> x::'a MABP TSB. (tsbDom\<cdot>x = {ds})
+  \<leadsto> [dr \<mapsto> (tsMap:: ('a \<times> bool \<Rightarrow> 'a MABP) \<Rightarrow> ('a \<times> bool) tstream \<rightarrow> 'a MABP tstream) 
+            BoolPair\<cdot>(tsMed\<cdot>(tsMap invBoolPair\<cdot>(x . ds))\<cdot>bst)]\<Omega>)"
+  sorry
+    
+ 
+  subsubsection \<open>tspf_well\<close>
+
+lemma medsr_tick: assumes "tsbDom\<cdot>b = {ds}" and "(#\<surd>tsb b) = n" and "#bst=\<infinity>"
+  shows "n \<le> (#\<surd>tsb [dr \<mapsto> (tsMap:: ('a \<times> bool \<Rightarrow> 'a MABP) \<Rightarrow> ('a \<times> bool) tstream \<rightarrow> 'a MABP tstream) 
+            BoolPair\<cdot>(tsMed\<cdot>(tsMap invBoolPair\<cdot>(b . ds))\<cdot>bst)]\<Omega>)"
+proof -
+  have "(#\<surd>tsb b) = #\<surd>(b . ds)"
+    apply (rule tsbtick_single_ch2)
+    by (simp add: assms(1))
+  hence f1: "n = #\<surd>(b . ds)"
+    using assms(2) by blast
+  hence f2: "n \<le> #\<surd>((tsMap:: ('a \<times> bool \<Rightarrow> 'a MABP) \<Rightarrow> ('a \<times> bool) tstream \<rightarrow> 'a MABP tstream) 
+            BoolPair\<cdot>(tsMed\<cdot>(tsMap invBoolPair\<cdot>(b . ds))\<cdot>bst))"
+    by (simp add: assms(3))
+  show ?thesis
+    apply (rule tsbtick_geI)
+    apply (simp add: medsr_tsb_dom tsbgetch_rep_eq)
+    using f2 by force
+qed    
+    
+  (* a medium is a tspf if the oracle bool stream bst is infinitly long*)
+lemma medsr_well [simp]: assumes "#bst=\<infinity>"
+  shows "tspf_well (\<Lambda> x.(tsbDom\<cdot>x = {ds})
+  \<leadsto> [dr \<mapsto> (tsMap:: ('a \<times> bool \<Rightarrow> 'a MABP) \<Rightarrow> ('a \<times> bool) tstream \<rightarrow> 'a MABP tstream) 
+            BoolPair\<cdot>(tsMed\<cdot>(tsMap invBoolPair\<cdot>(x . ds))\<cdot>bst)]\<Omega>)"
+  apply (rule tspf_wellI)
+    apply (simp_all add: domIff2 medsr_tsb_dom)
+    apply (subst tsbtick_single_ch1, simp)
+    by (simp add: assms tsbtick_single_ch2)    
+ 
+lemma medsr_revsubst: "Abs_CTSPF (medSR_TSPFAbb bst) = (medSR_TSPF bst)"
+  by (simp add: medSR_TSPF_def)
+    
+lemma medsr_tspfdom: assumes "#bst =\<infinity>"
+  shows "tspfDom\<cdot>(medSR_TSPF bst) = {ds}"
+    apply (simp add: medSR_TSPF_def)
+    apply (simp add: tspf_dom_insert assms)
+    apply (simp add: domIff2)
+    by (meson tsbleast_tsdom someI)
+   
+lemma medsr_tspfran: assumes "#bst =\<infinity>"
+  shows "tspfRan\<cdot>(medSR_TSPF bst) = {dr}"   
+    apply (simp add: medSR_TSPF_def)
+    apply (simp add: tspfran_least medsr_tspfdom assms)
+    apply (simp add: medsr_revsubst medsr_tspfdom assms)
+    by (metis singletonI tsb_newMap_id tsbleast_getch tsbleast_tsdom)
+
+  (* now special lemmata for TSPS instantiation *)
+
+lemma medsr_well2 [simp]: assumes "#({True} \<ominus> bst) = \<infinity>"
+  shows "tspf_well (\<Lambda> x.(tsbDom\<cdot>x = {ds})
+  \<leadsto> [dr \<mapsto> (tsMap:: ('a \<times> bool \<Rightarrow> 'a MABP) \<Rightarrow> ('a \<times> bool) tstream \<rightarrow> 'a MABP tstream) 
+            BoolPair\<cdot>(tsMed\<cdot>(tsMap invBoolPair\<cdot>(x . ds))\<cdot>bst)]\<Omega>)"
+proof -
+   have "#bst = \<infinity>"
+     by (simp add: med_ora_length assms(1))
+   thus ?thesis
+     by (simp add: medsr_tspfdom)
+qed
+  
+
+lemma medsr_tspfdom2: assumes "#({True} \<ominus> bst) = \<infinity>"
+  shows "tspfDom\<cdot>(medSR_TSPF bst) = {ds}"
+proof -
+  have "#bst = \<infinity>"
+    by (simp add: med_ora_length assms(1))
+  thus ?thesis
+    by (simp add: medsr_tspfdom)
+qed
+  
+lemma medsr_tspfran2: assumes "#({True} \<ominus> bst) = \<infinity>"
+  shows "tspfRan\<cdot>(medSR_TSPF bst) = {dr}"
+proof -
+  have "#bst = \<infinity>"
+    by (simp add: med_ora_length assms(1))
+  thus ?thesis
+    by (simp add: medsr_tspfran)
+qed
+
+  (* necessary for TSPS instantiation *)
+lemma medsr_tsps_dom1 [simp]: "f = medSR_TSPF ora \<and> #({True} \<ominus> ora) = \<infinity> \<Longrightarrow> tspfDom\<cdot>f = {ds}"
+  by (simp add: medsr_tspfdom2)
+
+lemma medsr_tsps_dom2 [simp]: "\<exists>ora::bool stream. f = medSR_TSPF ora \<and> #({True} \<ominus> ora) = \<infinity> 
+                               \<Longrightarrow> tspfDom\<cdot>f = {ds}"
+  using medsr_tsps_dom1  by auto
+ 
+lemma medsr_tsps_ran1 [simp]: "f = medSR_TSPF ora \<and> #({True} \<ominus> ora) = \<infinity> \<Longrightarrow> tspfRan\<cdot>f = {dr}"
+  by (simp add: medsr_tspfran2)
+
+lemma medsr_tsps_ran2 [simp]: "\<exists>ora::bool stream. f = medSR_TSPF ora \<and> #({True} \<ominus> ora) = \<infinity> 
+                               \<Longrightarrow> tspfRan\<cdot>f = {dr}"
+  using medsr_tsps_ran1 by auto
+      
+(* ----------------------------------------------------------------------- *)
+section \<open>Component Definitions\<close>
+(* ----------------------------------------------------------------------- *)
+  
+lift_definition RCV :: "'a MABP TSPS" is "{recvTSPF}"
+  apply (rule tsps_wellI)
+  by simp_all
+    
+lift_definition MEDSR :: "'a MABP TSPS" is "{medSR_TSPF ora | ora. #({True} \<ominus> ora)=\<infinity>}"
+  apply (rule tsps_wellI)
+   by (simp_all)
+    
+lift_definition MEDRS :: "'a MABP TSPS" is "{medRS_TSPF ora | ora. #({True} \<ominus> ora)=\<infinity>}"
+  apply (rule tsps_wellI)
+   by (simp_all) (* proof uses the special medrs_tsps lemmata *)
+    
+lift_definition SND  :: "'a MABP TSPS" is "{sender_TSPF s | s. s \<in> tsSender}"
+  apply (rule tsps_wellI)
+   apply (simp_all)
+    (* instantiation analogue to MEDRS *)
+    sorry
+
+abbreviation sendCompRecv :: "'a MABP TSPS" where 
+"sendCompRecv \<equiv> (SND::'a MABP TSPS) \<Otimes> (RCV::'a MABP TSPS)"
+  
+      
+abbreviation gencompABP :: "'a MABP TSPS" where
+"gencompABP \<equiv> ((SND \<Otimes> MEDSR) \<Otimes> RCV) \<Otimes> MEDRS"
+  
+  
+
+(* ----------------------------------------------------------------------- *)
+section \<open>More Lemmas\<close>
+(* ----------------------------------------------------------------------- *)
+  
+  (* Final lemma for general composition operator*)
+lemma abp_gencomp_final: assumes "f \<in> Rep_TSPS gencompABP"
+                            and "tsbDom\<cdot>tb = {abpIn}"
+  shows "tsAbs\<cdot>((f \<rightleftharpoons> tb) . abpOut) = tsAbs\<cdot>(tb . abpIn)"
+  oops                          
+      
 end
