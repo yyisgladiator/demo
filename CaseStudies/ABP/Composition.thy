@@ -378,8 +378,8 @@ lemma tsaltbitpro_inp2out:
     hence as_leq_ds: "#(tsAbs\<cdot>(tsRemDups\<cdot>as)) \<le> #(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>ds)))"
       by (simp add: ds_def send_def tssnd_tsprojsnd_tsremdups)
     hence as_leq_i: "#(tsAbs\<cdot>(tsRemDups\<cdot>as)) \<le> #(tsAbs\<cdot>i)"
-      by (metis (no_types, lifting) ds_def min.coboundedI2 min.orderE mono_slen send_def
-          set2tssnd_prefix_inp)
+      by (metis ar_def as_def dr_def ds_def i_inf le_less min_less_iff_conj min_rek p1_def p2_def 
+          send_def set2tssnd_ack2trans tstickcount_inp2acks_inf)
     (* #(tsAbs\<cdot>i) \<le> #(tsAbs\<cdot>(tsRemDups\<cdot>as)) *)
     have "#(tsAbs\<cdot>i) < lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>as)))
           \<or> #(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>ds))) = lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>as)))"

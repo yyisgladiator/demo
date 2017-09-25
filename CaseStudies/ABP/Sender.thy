@@ -106,7 +106,7 @@ lemma tssnd_h_nbot [simp]: "msg \<noteq> \<bottom> \<Longrightarrow> acks \<note
 (* ToDo: tstickcount lemma for sender *)
 
 lemma tssnd_h_tstickcount:
-  "min (#\<surd>msg) (#\<surd>acks) \<le> #\<surd> tsSnd_h\<cdot>msg\<cdot>acks\<cdot>(Discr ack)"
+  "min (#\<surd>msg) (#\<surd>acks) \<le> #\<surd>tsSnd_h\<cdot>msg\<cdot>acks\<cdot>(Discr ack)"
   oops
 
 lemma tssnd_h_inftick_inftick: "tsSnd_h\<cdot>tsInfTick\<cdot>tsInfTick\<cdot>ack = tsInfTick" 

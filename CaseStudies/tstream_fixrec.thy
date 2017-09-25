@@ -136,5 +136,9 @@ lemma [simp]: "ts\<noteq>\<bottom>\<Longrightarrow>match_tstream\<cdot>ts\<cdot>
 oops
 lemma [simp]: "ts\<noteq>\<bottom> \<Longrightarrow> tsLshd\<cdot>ts\<noteq>\<bottom>" 
   oops
+
+fixrec f :: "nat tstream \<rightarrow> nat tstream" where
+"f\<cdot>(tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>ts) = delayFun\<cdot>(f\<cdot>ts)" | 
+"ts \<noteq> \<bottom> \<Longrightarrow> f\<cdot>(tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>t))\<cdot>ts) = tsMLscons\<cdot>(upApply Suc\<cdot>(up\<cdot>t))\<cdot>(f\<cdot>ts)"
        
 end  
