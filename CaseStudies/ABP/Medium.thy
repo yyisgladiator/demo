@@ -469,12 +469,30 @@ lemma tsmed_tsabs_slen2tsmed_tsabs:
   using smed_slen2smed by auto
 *)
 
+lemma j200: "#(srcdups\<cdot>s) = \<infinity> \<Longrightarrow> #s = \<infinity>"
+  by (metis inf_less_eq srcdups_slen)
+
+lemma smed_slen2smed3:
+  "#(srcdups\<cdot>msg) \<noteq> \<infinity>
+     \<and> #(srcdups\<cdot>(sMed\<cdot>msg\<cdot>ora)) = #(srcdups\<cdot>msg)
+     \<Longrightarrow> srcdups\<cdot>msg = srcdups\<cdot>(sMed\<cdot>msg\<cdot>ora)"
+  apply (induction msg arbitrary: ora rule: ind, simp_all)
+  apply (rule adm_all, rule adm_imp, simp_all, rule admI)
+  oops
+
 (* possibly useful if provable *)
 lemma smed_slen2smed2_h:
   "#(srcdups\<cdot>msg) \<noteq> \<infinity> \<Longrightarrow> #({True} \<ominus> ora) = \<infinity>
      \<Longrightarrow> #(srcdups\<cdot>(sprojsnd\<cdot>(sMed\<cdot>msg\<cdot>ora))) = #(srcdups\<cdot>msg)
      \<Longrightarrow> #(srcdups\<cdot>(sprojsnd\<cdot>msg)) = #(srcdups\<cdot>msg)
      \<Longrightarrow> shd msg = shd (sMed\<cdot>msg\<cdot>ora)"
+  oops
+
+lemma smed_slen2smed2:
+  "#(srcdups\<cdot>msg) \<noteq> \<infinity> \<Longrightarrow> #({True} \<ominus> ora) = \<infinity> 
+     \<Longrightarrow> #(srcdups\<cdot>(sprojsnd\<cdot>(sMed\<cdot>msg\<cdot>ora))) = #(srcdups\<cdot>msg) 
+     \<Longrightarrow> #(srcdups\<cdot>(sprojsnd\<cdot>msg))= #(srcdups\<cdot>msg)
+     \<Longrightarrow> srcdups\<cdot>msg = srcdups\<cdot>(sMed\<cdot>msg\<cdot>ora)"
   oops
 
 (* ----------------------------------------------------------------------- *)
