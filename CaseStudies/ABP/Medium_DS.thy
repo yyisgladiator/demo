@@ -147,19 +147,29 @@ lemma prop4s_h3_h11: "#(srcdups\<cdot>s)\<noteq> \<infinity> \<Longrightarrow> l
 lemma prop4s_h3_h12: "sprojsnd\<cdot>(sa \<bullet> sb) = sprojsnd\<cdot>sa \<bullet> sprojsnd\<cdot>sb"
   sorry
     
+fixrec newOracle_srcdups :: "'a stream \<rightarrow> bool stream \<rightarrow> bool stream" where
+"newOracle_srcdups\<cdot>\<bottom>\<cdot>bs = \<bottom> " |
+"newOracle_srcdups\<cdot>as\<cdot>\<bottom> = \<bottom> " |
+"newOracle_srcdups\<cdot>((up\<cdot>a)&&as)\<cdot>((up\<cdot>b)&&bs) = 
+  (if (shd (srcdups\<cdot>(sMed\<cdot>s\<cdot>ora)) = shd (srcdups\<cdot>s)) then (updis True) && newOracle_srcdups\<cdot>(srcdups\<cdot>s)\<cdot>(sdropn\<cdot>ora)
+   else (updis False) && newOracle_srcdups\<cdot>(srcdups\<cdot>s)\<cdot>(sdropn\<cdot>ora))"  
+
+lemma newOra_srcdups: "srcdups\<cdot>(sMed\<cdot>s\<cdot>ora) =sMed\<cdot>(srcdups\<cdot>s)\<cdot>(newOracle_srcdups\<cdot>s\<cdot>ora)"
+  oops
+    
+lemma newOra_srcdups_ex: "\<exists>ora2. srcdups\<cdot>(sMed\<cdot>s\<cdot>ora) =sMed\<cdot>(srcdups\<cdot>s)\<cdot>ora2"
+  apply (case_tac "srcdups\<cdot>(sMed\<cdot>s\<cdot>ora) = srcdups\<cdot>s")
+  apply (rule_tac x="(\<up>True)\<infinity>" in exI)
+  apply (simp add: smed_inftrue) 
+    
+  sorry
+
 lemma prop4s_h3: assumes  "#(srcdups\<cdot>s) \<noteq> \<infinity>" "#({True} \<ominus> p) = \<infinity>" "#(srcdups\<cdot>(sprojsnd\<cdot>(sMed\<cdot>s\<cdot>p))) = #(srcdups\<cdot>s)"  
        "#(srcdups\<cdot>(sprojsnd\<cdot>s))= #(srcdups\<cdot>s)" shows 
        "(srcdups\<cdot>s) = (srcdups\<cdot>(sMed\<cdot>s\<cdot>p))" 
   using assms proof (erule_tac contrapos_np)
-  have h11:"srcdups\<cdot>s \<noteq> srcdups\<cdot>(sMed\<cdot>s\<cdot>p) \<Longrightarrow> s \<noteq> sMed\<cdot>s\<cdot>p"
-    by fastforce
-  have h12:"\<exists>ora. srcdups\<cdot>(sMed\<cdot>s\<cdot>p) =sMed\<cdot>(srcdups\<cdot>s)\<cdot>ora"    
-    sorry
-  have h13:"s \<noteq> sMed\<cdot>s\<cdot>p \<Longrightarrow> #s \<noteq> \<infinity> \<Longrightarrow> #s \<noteq> #(sMed\<cdot>s\<cdot>p)"
-    by (metis smed_slen2s)
   have h1: "srcdups\<cdot>s \<noteq> srcdups\<cdot>(sMed\<cdot>s\<cdot>p) \<Longrightarrow> #(srcdups\<cdot>s) \<noteq> \<infinity> \<Longrightarrow> #(srcdups\<cdot>(sMed\<cdot>s\<cdot>p)) \<noteq> #(srcdups\<cdot>s)"
-    using h12 apply (simp add: h13) 
-    sorry
+    by (metis newOra_srcdups_ex smed_slen2s)
   have "#(srcdups\<cdot>(sprojsnd\<cdot>(sMed\<cdot>s\<cdot>p))) \<noteq> #(srcdups\<cdot>(sMed\<cdot>s\<cdot>p)) \<Longrightarrow>  #(srcdups\<cdot>(sprojsnd\<cdot>s)) \<noteq> #(srcdups\<cdot>s)"
     by (metis (no_types) antisym_conv assms(3) slen_sprojsnd sprojsnd_srcdups_slen srcdups_smed_h) 
   then have "#({True} \<ominus> p) = \<infinity> \<Longrightarrow>
