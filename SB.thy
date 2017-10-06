@@ -420,11 +420,11 @@ lemma sbgetch_lub: "chain Y \<Longrightarrow> ((\<Squnion>i. Y i) . c) =  (\<Squ
 (* verwendet sbDom && sbGetCh *)
 lemma sbchain_dom_eq: assumes "chain S"
   shows "sbDom\<cdot>(S i) = sbDom\<cdot>(S j)"
-by (simp add: assms l1 sbdom_insert)
+  by (simp add: assms l1 sbdom_insert)
 
 lemma sbChain_dom_eq2: assumes "chain S"
   shows "sbDom\<cdot>(S i) = sbDom\<cdot>(\<Squnion>j. S j)"
-by (simp add: assms l1 sbdom_insert)
+  by (simp add: assms l1 sbdom_insert)
 
 lemma sb_eq: assumes "sbDom\<cdot>x = sbDom\<cdot>y" and "\<And>c. c\<in>(sbDom\<cdot>x) \<Longrightarrow> (x .c) = (y .c)"
   shows "x = y"
@@ -546,6 +546,20 @@ by (metis assms map_add_dom_app_simps(3) sbdom_insert)
 lemma sbunionDom [simp] : "sbDom\<cdot>(b1 \<uplus> b2) = sbDom\<cdot>b1 \<union> sbDom\<cdot>b2"
 by(auto simp add: sbdom_insert sbunion_insert)
 
+lemma sbunion_pref_eq: assumes "(a \<sqsubseteq> b)" and "(c \<sqsubseteq> d)"
+  shows "(a \<uplus> c \<sqsubseteq> b \<uplus> d)"
+  by (simp add: assms(1) assms(2) monofun_cfun)
+  
+lemma sbunion_pref_eq2: assumes "(a \<sqsubseteq> b)"
+  shows "(x \<uplus> a \<sqsubseteq> x \<uplus> b)"
+     by (metis assms monofun_cfun_arg)
+  
+lemma sbunion_assoc2: "(sb1 \<uplus> sb2) \<uplus> sb3 = sb1 \<uplus> (sb2 \<uplus> sb3)"
+  by (simp add: sbunion_associative)
+    
+lemma sbunion_eqI:  assumes "(a = b)" and "(c = d)"
+  shows "(a \<uplus> c = b \<uplus> d)"
+  by (simp add: assms(1) assms(2))
 
 (* ----------------------------------------------------------------------- *)
   subsection \<open>sbSetCh\<close>
@@ -669,8 +683,19 @@ by(simp add: sbremch_insert diff_eq)
 lemma sbrem2sbrestrict: "sbRemCh\<cdot>b\<cdot>c = b \<bar> (sbDom\<cdot>b - {c})"
 by (smt Int_absorb1 Int_commute Int_lower2 Set.basic_monos(7) sbremch_insert sbremch_sbdom sbrestrict2sbgetch sbrestrict_sbdom sb_eq)
 
-
-
+lemma sbres_pref_eq: assumes "(a \<sqsubseteq> b)"
+  shows "(a \<bar> cs) \<sqsubseteq> (b \<bar> cs)"
+  by (metis assms monofun_cfun_arg)
+    
+lemma sbres_sbdom_supset: assumes "sbDom\<cdot>sb \<subseteq> cs"
+  shows "sb \<bar> cs = sb \<bar> (sbDom\<cdot>sb)"
+  by (simp add: assms)
+    
+lemma sbres_sbdom_supset_inter: 
+  shows "sb \<bar> cs = sb \<bar> (cs \<inter> (sbDom\<cdot>sb))"
+  by (smt inf.right_idem inf_commute inf_sup_ord(1) sb_eq 
+          sbrestrict2sbgetch sbrestrict_sbdom set_mp)
+        
 
 
 (* ----------------------------------------------------------------------- *)

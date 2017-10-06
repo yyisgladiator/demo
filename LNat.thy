@@ -383,6 +383,10 @@ apply (induct_tac j, auto)
 apply (case_tac x, auto)
 by (simp add: Fin_def lnzero_def)
 
+lemma lub_mono2: "\<lbrakk>chain (X::nat\<Rightarrow>lnat); chain (Y::nat\<Rightarrow>lnat); \<And>i. X i \<le> Y i\<rbrakk>
+    \<Longrightarrow> (\<Squnion>i. X i) \<le> (\<Squnion>i. Y i)"
+using lnle_conv lub_mono by blast
+
 text {* In an infinite chain, one can find for every element a bigger element
   in the chain *}
 lemma inf_chainl2:
@@ -613,6 +617,37 @@ lemma min_rek: assumes  "z = min x (lnsuc\<cdot>z)"
   apply(rule ccontr, cases "x < z")
    apply (metis assms dual_order.irrefl min_less_iff_conj)
   by (metis assms inf_ub ln_less lnle_def lnless_def min_def)
+    
+lemma lnat_well_h1:
+  "[| n < Fin m; \<And>k. n = Fin k ==> k < m ==> P |] ==> P"
+by (metis less2nat less_le lncases notinfI3)
+
+lemma lnat_well_h2:
+  "[| n < \<infinity>; \<And>k. n = Fin k ==> P |] ==> P"
+using lncases by auto 
+
+lemma lnat_well:
+  assumes prem: "\<And>n. \<forall>m::lnat. m < n --> P m ==> P n" shows "P n"
+proof -
+  have P_lnat: "\<And>k. P (Fin k)"
+    apply (rule nat_less_induct)
+    apply (rule prem, clarify)
+    apply (erule lnat_well_h1, simp)
+    done
+  show ?thesis
+  proof (induct n)
+    next show "adm P" by (metis P_lnat adm_upward inf_ub lnat_well_h2 less_le_trans prem)
+    next show "P \<bottom>" by (metis Fin_02bot P_lnat)
+    then show "\<And>n. P n \<Longrightarrow> P (lnsuc\<cdot>n)" by (metis Fin_Suc P_lnat lncases)
+  qed
+qed
+
+instance lnat :: wellorder
+proof
+  fix P and n
+  assume hyp: "(\<And>n::lnat. (\<And>m::lnat. m < n ==> P m) ==> P n)"
+  show "P n" by (blast intro: lnat_well hyp)
+qed
 
 
 end

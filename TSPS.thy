@@ -55,9 +55,11 @@ proof(rule tsps_wellI)
   assume as_f: "f\<in>(\<Union>i. Y i)"
   obtain i where i_def: "f\<in>Y i" using as_f by blast
   thus "tspfDom\<cdot>f = tspfDom\<cdot>(SOME a. a\<in>(Y 0))"
-    by (metis assms(1) assms(2) assms(3) contra_subsetD le0 po_class.chain_mono set_cpo_simps(1) some_in_eq tsps_dom_eq)
+    by (metis assms(1) assms(2) assms(3) contra_subsetD le0 po_class.chain_mono set_cpo_simps(1) 
+              some_in_eq tsps_dom_eq)
   thus "tspfRan\<cdot>f = tspfRan\<cdot>(SOME a. a\<in>(Y 0))"
-    by (metis i_def assms(1) assms(2) assms(3) contra_subsetD le0 po_class.chain_mono set_cpo_simps(1) some_in_eq tsps_ran_eq)
+    by (metis i_def assms(1) assms(2) assms(3) contra_subsetD le0 po_class.chain_mono 
+              set_cpo_simps(1) some_in_eq tsps_ran_eq)
 qed
 
 
@@ -73,7 +75,8 @@ proof(rule admI)
   next
     case False
     obtain k where k_def: "Y k\<noteq>{}" using False by auto
-    hence chain_d: "chain (\<lambda>i. Y (i + k))" (is "chain ?D") by (simp add: as1 po_class.chainE po_class.chainI)
+    hence chain_d: "chain (\<lambda>i. Y (i + k))" (is "chain ?D") by (simp add: as1 po_class.chainE 
+                                                                         po_class.chainI)
     have "\<And>i. ?D i \<noteq> {}" using as1 chain_notEmpty k_def le_add2 by blast
     hence "tsps_well (\<Union>i. ?D i)" using as2 chain_d tsps_well_adm1 by blast
     thus ?thesis by (metis as1 lub_range_shift set_cpo_simps(2)) 
@@ -101,6 +104,7 @@ definition tspsDom :: "'m TSPS \<Rightarrow> channel set" where
 
 definition tspsRan :: "'m TSPS \<Rightarrow> channel set" where
 "tspsRan S = tspfRan\<cdot>(SOME f. f\<in> Rep_TSPS S)"
+
 
 definition tspsComp :: "'m TSPS \<Rightarrow> 'm TSPS \<Rightarrow> 'm TSPS" (infixl "\<Otimes>" 50) where 
 "tspsComp S1 S2 \<equiv> let repS1 = Rep_TSPS S1;
@@ -136,7 +140,8 @@ lemma tsps_rep_cont [simp]: "cont Rep_TSPS"
 apply(rule contI2)
 apply simp
 apply auto
-by (metis (mono_tags, lifting) Abs_TSPS_inverse Rep_TSPS adm_def below_TSPS_def eq_imp_below image_cong lub_TSPS mem_Collect_eq po_class.chain_def tsps_well_adm)
+  by (metis (mono_tags, lifting) Abs_TSPS_inverse Rep_TSPS adm_def below_TSPS_def eq_imp_below 
+            image_cong lub_TSPS mem_Collect_eq po_class.chain_def tsps_well_adm)
 
 lemma "S \<noteq> \<bottom> \<Longrightarrow> Rep_TSPS S \<noteq> {}"
 using Rep_TSPS_bottom_iff UU_eq_empty by fastforce
@@ -150,8 +155,10 @@ proof -
   { fix tt :: "'a TSPF"
     have "\<And>t. tsps_well (Rep_TSPS (t::'a TSPS))"
       using Rep_TSPS by blast
-    then have "tspfDom\<cdot>(SOME t. t \<in> Rep_TSPS S1) = tspfDom\<cdot>(SOME t. t \<in> Rep_TSPS S2) \<or> tt \<in> Rep_TSPS S1 \<and> tt \<in> Rep_TSPS S2 \<or> tt \<notin> Rep_TSPS S1 \<and> tt \<notin> Rep_TSPS S2"
-      by (metis Abs_TSPS_strict Rep_TSPS_inverse SetPcpo.less_set_def UU_eq_empty assms(1) assms(2) below_TSPS_def contra_subsetD empty_iff some_in_eq tsps_dom_eq) }
+    then have "tspfDom\<cdot>(SOME t. t \<in> Rep_TSPS S1) = tspfDom\<cdot>(SOME t. t \<in> Rep_TSPS S2) 
+                \<or> tt \<in> Rep_TSPS S1 \<and> tt \<in> Rep_TSPS S2 \<or> tt \<notin> Rep_TSPS S1 \<and> tt \<notin> Rep_TSPS S2"
+      by (metis Abs_TSPS_strict Rep_TSPS_inverse SetPcpo.less_set_def UU_eq_empty assms(1) assms(2) 
+                below_TSPS_def contra_subsetD empty_iff some_in_eq tsps_dom_eq) }
   then have "tspfDom\<cdot>(SOME t. t \<in> Rep_TSPS S1) = tspfDom\<cdot>(SOME t. t \<in> Rep_TSPS S2)"
     by meson
   thus ?thesis by(simp add: tspsDom_def)
@@ -160,6 +167,7 @@ qed
 lemma tsps_allDom: "\<exists>In. \<forall>f\<in>Rep_TSPS S1. tspfDom\<cdot>f=In"
 using tsps_well_def by fastforce
 
+  (*
 lemma assumes "tsps_well S1" and "tsps_well S2" 
   shows "\<exists>In. \<forall>f1\<in>S1. \<forall> f2\<in>S2. tspfCompIn f1 f2 = In"
   apply(cases "S1 = {} \<or> S2 = {}")
@@ -175,11 +183,14 @@ lemma tspsComp_well [simp]: "tsps_well {f1 \<otimes> f2 | f1 f2. f1\<in> (Rep_TS
    apply auto
    apply (auto simp add: tspfCompIn_def)
 sorry
+*)
 
 lemma "X= Y \<Longrightarrow> Abs_TSPS X=Abs_TSPS Y"
-by (simp add: Rep_TSPS_inject)
+  by simp
+
 thm Rep_TSPS_inject
 
+  (*
 (* composite operator in TSPS is commutative *)
 lemma tspscomp_commute: "(X \<Otimes> Y) = (Y \<Otimes> X)"
 apply(simp add: tspsComp_def)
@@ -194,7 +205,7 @@ by(simp add: tspsComp_def tsps_well_def)
 lemma [simp]: "(Abs_TSPS {f1}) \<Otimes> (Abs_TSPS {f2}) = Abs_TSPS{f1\<otimes>f2}"
 by(simp add: tspsComp_def tsps_well_def)
 
-
+*)
 
 
 end

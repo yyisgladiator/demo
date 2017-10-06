@@ -2,57 +2,76 @@
 image: isabelle
 
 
+
+
+#####################################
+## Setup Stuff
+#####################################
+
+## run this bevore every stage
+
 before_script:
-  - find /home/isabelle/.isabelle
   - if [ ! -z "$(ls -A cache)" ]; then mv cache/* /home/isabelle/.isabelle; fi
   - find /home/isabelle/.isabelle
   
+  # run after every stage
 after_script:
   - find /home/isabelle/.isabelle
   - mv /home/isabelle/.isabelle/* cache/
   
+  
 cache: 
-  key: "$CI_COMMIT_REF_NAME"
+  key: "$CI_COMMIT_REF_NAME"  # cache per branch
   paths:
     - cache/
 #    - /home/isabelle/.isabelle
     
+    
+    
 # stages are run one after another, it the previous stage is successful
 stages:
   - dependency
-  - usingSorry
-  - verified
+  - mustWork
+  - canFail
   
   
 
-# Look in the "ROOT" file to see the sessions and add files
+
+
+#####################################
+## Main Tests
+#####################################
+
+## Look in the "ROOT" file to see the sessions and add files
   
 
-  #check for ALL sessions in ROOT if the dependencies are working
+  # check for ALL sessions in ROOT if the dependencies are working
   # -D .  loads all sessions in directory
   # -n    checks imports  
-depends:
+dependency:
   stage: dependency
   script:
-    - isabelle getenv ISABELLE_HOME_USER 
     - isabelle build -D . -j4 -n -v || if [ $? -eq 1 ]; then exit 0; else exit $?; fi
     
     
-  # run everything in the group "sorry"
+    
+  # run everything in the group "mustWork" (as defined in ROOT)
   # -d .      make sessions addable (but do not load them)
   # -g sorry  load all "sorry" sessions
-sorry:
-  stage: usingSorry
+  # -b        save heap files
+mustWork:
+  stage: mustWork
   script:
-    - isabelle build -d . -j4 -v -b -g sorry
+    - isabelle build -d . -j4 -v -b -g mustWork
     
 
 
-  # run everything in the group "verified"
+  # run everything in the group "canFail" (as defined in ROOT)
   # -d .          make sessions addable (but do not load them)
   # -g verified   load all "verified" sessions
-verified:
-  stage: verified
+  # -b            save heap files
+canFail:
+  stage: canFail
   allow_failure: true   #for now, sorrys are allowed
   script:
-    - isabelle build -d . -j4 -v -b -g verified
+    - isabelle build -d . -j4 -v -b -g canFail
