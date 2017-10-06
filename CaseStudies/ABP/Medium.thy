@@ -178,10 +178,6 @@ lemma smed_inftrue: "sMed\<cdot>msg\<cdot>((\<up>True) \<infinity>) = msg"
   apply (simp_all)
   by (metis sinftimes_unfold smed_insert smed_t)  
   
-lemma smed_slen: " #(sMed\<cdot>msg\<cdot>ora) \<le> #msg"   
-  apply (simp add: smed_insert)
-  by (metis min.bounded_iff slen_sfilterl1 slen_sprojfst szip_len)
-    
 lemma tsmed_tsabs_slen_inf [simp]:
   assumes "#({True} \<ominus> ora) = \<infinity>" and "#(tsAbs\<cdot>msg) = \<infinity>"
   shows "#(tsAbs\<cdot>(tsMed\<cdot>msg\<cdot>ora)) = \<infinity>"
@@ -436,11 +432,8 @@ lemma srcdups_fst2snd: "s \<noteq> \<epsilon> \<Longrightarrow> a = shd s \<Long
   by (metis srcdups_eq surj_scons)
 
 lemma smed_slen: "#(sMed\<cdot>msg\<cdot>ora) \<le> #msg"
-  apply (induction msg arbitrary: ora rule: ind, simp_all)
-  apply (rule admI)
-  using inf_chainl4 l42 apply force
-  apply (rule_tac ts=ora in oracases, simp_all)
-  using less_lnsuc order_trans by blast
+  apply (simp add: smed_insert)
+  by (metis min.bounded_iff slen_sfilterl1 slen_sprojfst szip_len)
 
 lemma smed_slen2shd:
   "#msg \<noteq> \<infinity> \<Longrightarrow> #(sMed\<cdot>msg\<cdot>ora) = #msg \<Longrightarrow> shd (sMed\<cdot>msg\<cdot>ora) = shd msg"

@@ -156,15 +156,7 @@ lemma prop4s_h3: assumes  "#(srcdups\<cdot>s) \<noteq> \<infinity>" "#({True} \<
   have h12:"\<exists>ora. srcdups\<cdot>(sMed\<cdot>s\<cdot>p) =sMed\<cdot>(srcdups\<cdot>s)\<cdot>ora"    
     sorry
   have h13:"s \<noteq> sMed\<cdot>s\<cdot>p \<Longrightarrow> #s \<noteq> \<infinity> \<Longrightarrow> #s \<noteq> #(sMed\<cdot>s\<cdot>p)"
-    apply (induction s arbitrary:p rule:ind)
-    apply (rule adm_all)
-    apply (rule admI)
-    apply (metis inf_chainl4 l42)
-    apply simp
-    apply (cases rule:oracases,simp)
-    apply (metis (no_types, lifting) fold_inf lnat.injects slen_scons smed_t)
-    apply simp
-    by (metis inf_less_eq leD leI ln_less smed_slen) 
+    by (metis smed_slen2s)
   have h1: "srcdups\<cdot>s \<noteq> srcdups\<cdot>(sMed\<cdot>s\<cdot>p) \<Longrightarrow> #(srcdups\<cdot>s) \<noteq> \<infinity> \<Longrightarrow> #(srcdups\<cdot>(sMed\<cdot>s\<cdot>p)) \<noteq> #(srcdups\<cdot>s)"
     using h12 apply (simp add: h13) 
     sorry
