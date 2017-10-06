@@ -263,7 +263,7 @@ by (simp add: monofun_def f2_spfw_def)
 (*Definition of tsum5 and verification with sum5*)
 (*Helper like h for sum5 but over nat event streams*)
 primrec tsh :: "nat \<Rightarrow> nat \<Rightarrow> nat event stream \<Rightarrow> nat event stream" where
-"tsh 0 p ts =  \<epsilon>" |
+"tsh 0 p ts = \<epsilon>" |
 "tsh (Suc n) p ts = (if ts = \<epsilon> then \<epsilon> 
                         else(if shd ts= \<surd> then (\<up>\<surd> \<bullet> (tsh n p (srt\<cdot>ts)))
                                 else (\<up>(\<M> (p + (\<M>\<inverse> (shd ts))))) \<bullet> (tsh n (p +(\<M>\<inverse> (shd ts))) (srt\<cdot> ts))))"
@@ -273,7 +273,7 @@ definition tsum5_h :: " nat \<Rightarrow> nat event stream \<rightarrow> nat eve
 "tsum5_h p \<equiv> \<Lambda> ts. (\<Squnion>i. tsh i p ts)"
 
 (*Definition of sum5 over timed streams*)
-definition tsum5:: "nat tstream \<rightarrow> nat tstream" where
+definition tsum5 :: "nat tstream \<rightarrow> nat tstream" where
 "tsum5 \<equiv> (\<Lambda> ts. Abs_tstream (tsum5_h 0\<cdot>(Rep_tstream ts)))"
 
 
