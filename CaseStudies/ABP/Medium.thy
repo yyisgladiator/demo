@@ -50,6 +50,9 @@ text {* Assumption for medium lemmata: #({True} \<ominus> ora)=\<infinity> *}
 
 lemma tsmed_insert: "tsMed\<cdot>msg\<cdot>ora = tsProjFst\<cdot>(tsFilter {x. snd x}\<cdot>(tsZip\<cdot>msg\<cdot>ora))"
   by (simp add: tsMed_def)
+    
+lemma smed_insert: "sMed\<cdot>msg\<cdot>ora = sprojfst\<cdot>(sfilter {x. snd x}\<cdot>(szip\<cdot>msg\<cdot>ora))"
+  by (simp add: sMed_def)    
 
 lemma tsmed_strict [simp]: 
   "tsMed\<cdot>\<bottom>\<cdot>\<epsilon> = \<bottom>"
@@ -96,7 +99,6 @@ lemma tsmed_inftrue [simp]: "tsMed\<cdot>msg\<cdot>((\<up>True) \<infinity>) = m
          tsmed_delayfun tsmed_insert up_defined)
   by (metis lscons_conv sinftimes_unfold slen_sinftimes strict_icycle
       tsmed_insert tsmed_mlscons_true tsmed_strict(2))
-
 
 text {* Not every message will be transmitted. *}    
 lemma tsmed_tsabs_slen: "#ora=\<infinity> \<Longrightarrow> #(tsAbs\<cdot>(tsMed\<cdot>msg\<cdot>ora)) \<le> #(tsAbs\<cdot>msg)"
@@ -170,6 +172,16 @@ next
   then show ?case using h1 h2 by blast
 qed
 
+lemma smed_inftrue: "sMed\<cdot>msg\<cdot>((\<up>True) \<infinity>) = msg"  
+  apply(simp add: smed_insert)
+  apply (induction msg rule: ind)
+  apply (simp_all)
+  by (metis sinftimes_unfold smed_insert smed_t)  
+  
+lemma smed_slen: " #(sMed\<cdot>msg\<cdot>ora) \<le> #msg"   
+  apply (simp add: smed_insert)
+  by (metis min.bounded_iff slen_sfilterl1 slen_sprojfst szip_len)
+    
 lemma tsmed_tsabs_slen_inf [simp]:
   assumes "#({True} \<ominus> ora) = \<infinity>" and "#(tsAbs\<cdot>msg) = \<infinity>"
   shows "#(tsAbs\<cdot>(tsMed\<cdot>msg\<cdot>ora)) = \<infinity>"
@@ -464,7 +476,7 @@ lemma smed_slen2smed2:
   apply (case_tac "shd s=a")
   apply (rule_tac ts=ora in oracases, simp)
   apply (case_tac "sMed\<cdot>s\<cdot>as=\<epsilon>")
-  sorry
+ oops
 
 (* ----------------------------------------------------------------------- *)
 section {* tsMedium lemmata *}
