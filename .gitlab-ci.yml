@@ -1,5 +1,5 @@
 # load docker image with isabelle-support
-image: isabelle
+image: jecb96/isabelle-holcf
 
 
 
