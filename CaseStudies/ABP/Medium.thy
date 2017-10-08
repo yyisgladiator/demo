@@ -353,7 +353,7 @@ lemma tsmed_mlscons_true2 [simp]: "msg\<noteq>\<bottom> \<Longrightarrow> ora\<n
 
     
 text {* Two medium can be reduced to one medium. *}
-lemma tsmed2med: "#ora1=\<infinity> \<Longrightarrow> #ora2=\<infinity> \<Longrightarrow> tsMed\<cdot>(tsMed\<cdot>msg\<cdot>ora1)\<cdot>ora2 = tsMed\<cdot>msg\<cdot>(newOracle\<cdot>ora1\<cdot>ora2 )"
+lemma tsmed2med: "#ora1=\<infinity> \<Longrightarrow> #ora2=\<infinity> \<Longrightarrow> tsMed\<cdot>(tsMed\<cdot>msg\<cdot>ora1)\<cdot>ora2 = tsMed\<cdot>msg\<cdot>(newOracle\<cdot>ora1\<cdot>ora2)"
 proof(induction msg arbitrary: ora1 ora2)
   case adm
   then show ?case by simp

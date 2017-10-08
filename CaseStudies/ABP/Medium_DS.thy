@@ -12,6 +12,33 @@ imports "../../TStream" Medium
 
 begin
 default_sort countable
+
+fixrec newOracle_srcdups :: "'a stream \<rightarrow> 'a stream \<rightarrow> bool stream" where
+"newOracle_srcdups\<cdot>\<bottom>\<cdot>bs = \<bottom> " |
+"newOracle_srcdups\<cdot>as\<cdot>\<bottom> = \<bottom> " |
+"newOracle_srcdups\<cdot>((up\<cdot>a) && as)\<cdot>((up\<cdot>b) && bs) = 
+  (if a=b then (updis True) && newOracle_srcdups\<cdot>as\<cdot>bs
+   else (updis False) && newOracle_srcdups\<cdot>as\<cdot>bs)"
+
+lemma newOra_srcdups: 
+  "srcdups\<cdot>(sMed\<cdot>msg\<cdot>ora) = sMed\<cdot>(srcdups\<cdot>msg)\<cdot>(newOracle_srcdups\<cdot>(srcdups\<cdot>(sMed\<cdot>msg\<cdot>ora))\<cdot>(srcdups\<cdot>msg))"
+  apply (induction msg arbitrary: ora, simp_all)
+  sorry
+    
+lemma newOra_srcdups_obtains: obtains ora2 where "srcdups\<cdot>(sMed\<cdot>msg\<cdot>ora1) = sMed\<cdot>(srcdups\<cdot>msg)\<cdot>ora2"
+  using newOra_srcdups by auto
+
+
+
+
+
+
+
+
+
+
+
+
 (*
 lemma sprojsnd_srcdups:
   "#(srcdups\<cdot>s) \<noteq> \<infinity> \<Longrightarrow> #(srcdups\<cdot>(sprojsnd\<cdot>s)) = #(srcdups\<cdot>s)
@@ -147,22 +174,7 @@ lemma prop4s_h3_h11: "#(srcdups\<cdot>s)\<noteq> \<infinity> \<Longrightarrow> l
 lemma prop4s_h3_h12: "sprojsnd\<cdot>(sa \<bullet> sb) = sprojsnd\<cdot>sa \<bullet> sprojsnd\<cdot>sb"
   sorry
     
-fixrec newOracle_srcdups :: "'a stream \<rightarrow> bool stream \<rightarrow> bool stream" where
-"newOracle_srcdups\<cdot>\<bottom>\<cdot>bs = \<bottom> " |
-"newOracle_srcdups\<cdot>as\<cdot>\<bottom> = \<bottom> " |
-"newOracle_srcdups\<cdot>((up\<cdot>a)&&as)\<cdot>((up\<cdot>b)&&bs) = 
-  (if (shd (srcdups\<cdot>(sMed\<cdot>s\<cdot>ora)) = shd (srcdups\<cdot>s)) then (updis True) && newOracle_srcdups\<cdot>(srcdups\<cdot>s)\<cdot>(sdropn\<cdot>ora)
-   else (updis False) && newOracle_srcdups\<cdot>(srcdups\<cdot>s)\<cdot>(sdropn\<cdot>ora))"  
 
-lemma newOra_srcdups: "srcdups\<cdot>(sMed\<cdot>s\<cdot>ora) =sMed\<cdot>(srcdups\<cdot>s)\<cdot>(newOracle_srcdups\<cdot>s\<cdot>ora)"
-  oops
-    
-lemma newOra_srcdups_ex: "\<exists>ora2. srcdups\<cdot>(sMed\<cdot>s\<cdot>ora) =sMed\<cdot>(srcdups\<cdot>s)\<cdot>ora2"
-  apply (case_tac "srcdups\<cdot>(sMed\<cdot>s\<cdot>ora) = srcdups\<cdot>s")
-  apply (rule_tac x="(\<up>True)\<infinity>" in exI)
-  apply (simp add: smed_inftrue) 
-    
-  sorry
 
 lemma prop4s_h3: assumes  "#(srcdups\<cdot>s) \<noteq> \<infinity>" "#({True} \<ominus> p) = \<infinity>" "#(srcdups\<cdot>(sprojsnd\<cdot>(sMed\<cdot>s\<cdot>p))) = #(srcdups\<cdot>s)"  
        "#(srcdups\<cdot>(sprojsnd\<cdot>s))= #(srcdups\<cdot>s)" shows 
