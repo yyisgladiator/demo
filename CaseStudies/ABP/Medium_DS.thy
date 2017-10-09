@@ -18,7 +18,7 @@ fixrec newOracle_srcdups :: "'a stream \<rightarrow> 'a stream \<rightarrow> boo
 "newOracle_srcdups\<cdot>as\<cdot>\<bottom> = \<bottom> " |
 "newOracle_srcdups\<cdot>((up\<cdot>a) && as)\<cdot>((up\<cdot>b) && bs) = 
   (if a=b then (updis True) && newOracle_srcdups\<cdot>as\<cdot>bs
-   else (updis False) && newOracle_srcdups\<cdot>as\<cdot>bs)"
+   else (updis False) && newOracle_srcdups\<cdot>((up\<cdot>a) && as)\<cdot>bs)"
 
 lemma newOra_srcdups: 
   "srcdups\<cdot>(sMed\<cdot>msg\<cdot>ora) = sMed\<cdot>(srcdups\<cdot>msg)\<cdot>(newOracle_srcdups\<cdot>(srcdups\<cdot>(sMed\<cdot>msg\<cdot>ora))\<cdot>(srcdups\<cdot>msg))"
