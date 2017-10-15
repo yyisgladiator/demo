@@ -2775,6 +2775,9 @@ lemma tstickcount_mlscons: "#\<surd> tsMLscons\<cdot>(updis t)\<cdot>ts = #\<sur
   apply (simp add: tsmlscons_lscons3 tstickcount_insert)
   by (metis event.distinct(1) lscons_conv sfilter_nin singletonD)
 
+lemma tstickcount_delayfun: "#\<surd> delayFun\<cdot>ts = lnsuc\<cdot>(#\<surd> ts)"
+  by (simp add: delayfun_insert)
+
 lemma tsabs_mlscons: "ts\<noteq>\<bottom> \<Longrightarrow> tsAbs\<cdot>(tsMLscons\<cdot>(updis t)\<cdot>ts) = (updis t) && (tsAbs\<cdot>ts)"
   by (simp add: tsmlscons2tslscons tsabs_insert tslscons_lscons uMsg_def lscons_conv)
 
@@ -2959,10 +2962,10 @@ assumes adm: "adm P" and bottom: "P \<bottom>"
 by (metis adm bottom delayfun mlscons tstream_fin_induct tstream_infs)
 
 lemma tstream_exhaust [case_names bottom delayfun mlscons]:
-  fixes xs::"'a tstream"
+  fixes xs :: "'a tstream"
   assumes "xs = \<bottom> \<Longrightarrow> P"
     and "\<And>ts. xs = delay ts \<Longrightarrow> P"
-    and "\<And>t ts. t\<noteq>\<bottom> \<Longrightarrow> ts\<noteq>\<bottom> \<Longrightarrow> xs = t &&\<surd> ts \<Longrightarrow> P"
+    and "\<And>t ts. ts\<noteq>\<bottom> \<Longrightarrow> xs = (updis t) &&\<surd> ts \<Longrightarrow> P"
   shows "P"
   apply (cases xs)
   apply (rename_tac s)   
@@ -2973,10 +2976,9 @@ lemma tstream_exhaust [case_names bottom delayfun mlscons]:
   apply simp_all
   apply(case_tac x, rename_tac xa)
   apply(case_tac xa, simp_all)
-  apply (metis absts2mlscons assms(1) assms(3) tsmlscons_nbot_rev up_defined)
+  apply (metis absts2mlscons assms(1) assms(3) tsmlscons_nbot_rev)
   using absts2delayfun assms(2) by blast
     
-
 (* ----------------------------------------------------------------------- *)
 subsection {* admissibility rules *}
 (* ----------------------------------------------------------------------- *)
