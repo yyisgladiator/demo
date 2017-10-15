@@ -1,0 +1,241 @@
+(*  Title:        Sender.thy
+    Author:       Dennis Slotboom
+    e-mail:       dennis.slotboom@rwth-aachen.de
+
+    Description:  Sender Component of the ABP on Timed Streams
+*)
+
+chapter {* Sender of the Alternating Bit Protocol *}
+                                                            
+theory Sender_DS
+imports Sender
+
+begin
+default_sort countable
+
+lemma tssnd_tstickcount_adm_h1: "\<And>x. adm (\<lambda>a. \<not>(tslen\<cdot>a \<le> tslen\<cdot>x))"
+  by (smt admI ch2ch_Rep_cfunR contlub_cfun_arg dual_order.trans is_ub_thelub lnle_def)
+
+lemma tssnd_tstickcount_adm_h2: "\<And>x xa. adm (\<lambda>a. #\<surd>a \<le> #\<surd> tsSnd\<cdot>a\<cdot>x\<cdot>(Discr xa))"
+  apply (rule admI)
+  by (simp add: contlub_cfun_arg contlub_cfun_fun lub_mono2)
+
+lemma tssnd_tstickcount_adm:
+  "adm (\<lambda>a. \<forall>x. tslen\<cdot>a \<le> tslen\<cdot>x \<longrightarrow> (\<forall>xa. #\<surd>a \<le> #\<surd> tsSnd\<cdot>a\<cdot>x\<cdot>(Discr xa)))"
+  apply(rule adm_all)
+  apply(rule adm_imp)
+  by (auto simp add: tssnd_tstickcount_adm_h1 tssnd_tstickcount_adm_h2)
+
+lemma tssnd_tstickcount2_adm: "adm (\<lambda>a. \<forall>x xa. min (#\<surd> x) (#\<surd> a) \<le> #\<surd> tsSnd\<cdot>x\<cdot>a\<cdot>(Discr xa))"
+  apply (rule adm_all)+
+  apply (rule admI)
+  apply (simp add: contlub_cfun_arg contlub_cfun_fun lub_mono2)
+  sorry
+
+lemma tssnd_tstickcount2_h:
+  "\<And>msg ack. min (#\<surd> msg) (#\<surd> acks) \<le> #\<surd> tsSnd\<cdot>msg\<cdot>acks\<cdot>(Discr ack) \<Longrightarrow>
+   min (#\<surd> delay msg) (#\<surd> (a &&\<surd> acks)) \<le> #\<surd> tsSnd\<cdot>(delay msg)\<cdot>(a &&\<surd> acks)\<cdot>(Discr ack)"
+  proof (induction acks arbitrary: msg ack, simp_all)
+    case adm
+    then show ?case sorry
+  next
+    case (delayfun acks)
+    then show ?case sorry
+  next
+    case (mlscons acks t)
+    then show ?case sorry
+  qed
+
+lemma tssnd_tstickcount2: "min (#\<surd>msg) (#\<surd>acks) \<le> #\<surd> tsSnd\<cdot>msg\<cdot>acks\<cdot>(Discr ack)"
+proof (induction acks arbitrary: msg ack, simp_all)
+  case adm
+  thus ?case
+    by (simp add: tssnd_tstickcount2_adm)
+next
+  case (delayfun acks)
+  assume ind_hyp: "\<And>msg ack. min (#\<surd> msg) (#\<surd> acks) \<le> #\<surd> tsSnd\<cdot>msg\<cdot>acks\<cdot>(Discr ack)"
+  thus ?case
+    proof (cases rule: tstream_exhaust [of msg], simp_all)
+      case (delayfun ts)
+      thus "min (#\<surd> delay ts) (#\<surd> delay acks) \<le> #\<surd> tsSnd\<cdot>(delay ts)\<cdot>(delay acks)\<cdot>(Discr ack)"
+        using ind_hyp
+        by (metis delayfun.IH delayfun_insert lnsuc_lnle_emb min_le_iff_disj tssnd_delayfun 
+            tstickcount_tscons)
+    next
+      case (mlscons t ts)
+      assume ts_nbot: "ts \<noteq> \<bottom>"
+      thus "min (#\<surd> updis t &&\<surd> ts) (#\<surd> delay acks)
+              \<le> #\<surd> tsSnd\<cdot>(updis t &&\<surd> ts)\<cdot>(delay acks)\<cdot>(Discr ack)"
+        by (smt
+            ind_hyp delayfun.IH delayfun_insert less_lnsuc lnle_def lnsuc_lnle_emb lnzero_def
+            min.coboundedI2 min_def min_le_iff_disj minimal strict_tstickcount tssnd_delayfun_nack
+            tstickcount_mlscons tstickcount_tscons)
+    qed
+next
+  case (mlscons acks t)
+  assume ind_hyp: "\<And>msg ack. min (#\<surd> msg) (#\<surd> acks) \<le> #\<surd> tsSnd\<cdot>msg\<cdot>acks\<cdot>(Discr ack)"
+  assume acks_nbot: "acks \<noteq> \<bottom>"
+  thus "min (#\<surd> msg) (#\<surd> updis t &&\<surd> acks) \<le> #\<surd> tsSnd\<cdot>msg\<cdot>(updis t &&\<surd> acks)\<cdot>(Discr ack)"
+    proof (cases rule: tstream_exhaust [of msg], simp_all)
+      case (delayfun ts)
+      thus "min (#\<surd> delay ts) (#\<surd> updis t &&\<surd> acks) 
+              \<le> #\<surd> tsSnd\<cdot>(delay ts)\<cdot>(updis t &&\<surd> acks)\<cdot>(Discr ack)"
+        apply (simp add: tssnd_delayfun_msg tstickcount_delayfun)
+        by (metis (no_types, lifting)
+            mlscons.IH tssnd_delayfun_msg tssnd_tstickcount2_h tstickcount_delayfun)
+    next
+      case (mlscons ta ts)
+      assume ts_nbot: "ts \<noteq> \<bottom>"
+      thus "min (#\<surd> updis ta &&\<surd> ts) (#\<surd> updis t &&\<surd> acks) 
+              \<le> #\<surd> tsSnd\<cdot>(updis ta &&\<surd> ts)\<cdot>(updis t &&\<surd> acks)\<cdot>(Discr ack)"
+        using ind_hyp acks_nbot
+        by (smt mlscons.IH tssnd_mlscons_ack tssnd_mlscons_nack tstickcount_mlscons updis_eq)
+    qed
+qed
+
+lemma tssnd_tstickcount: "tslen\<cdot>msg \<le> tslen\<cdot>acks \<Longrightarrow> #\<surd>msg \<le> #\<surd>(tsSnd\<cdot>msg\<cdot>acks\<cdot>(Discr ack))"
+proof (induction acks arbitrary: msg ack)
+  case adm
+  then show ?case sorry
+next
+  case bottom
+  then show ?case using tslen_smaller_nbot by auto
+next
+  case (delayfun acks)
+  assume ind: "\<And>msg ack. tslen\<cdot>msg \<le> tslen\<cdot>acks \<Longrightarrow> #\<surd> msg \<le> #\<surd> tsSnd\<cdot>msg\<cdot>acks\<cdot>(Discr ack)"
+  assume len: "tslen\<cdot>msg \<le> tslen\<cdot>(delay acks)"
+  have len_delay: "tslen\<cdot>(delay acks) = lnsuc\<cdot>(tslen\<cdot>acks)"
+    by (simp add: tslen_delay)
+  then show ?case proof (cases rule: tstream_exhaust [of msg])
+    case bottom
+    then show ?thesis
+      by simp
+  next
+    case (delayfun ts)
+    then have "tsSnd\<cdot>(delay ts)\<cdot>(delay acks)\<cdot>(Discr ack) = delay (tsSnd\<cdot>ts\<cdot>acks\<cdot>(Discr ack))"
+      by (simp add: delayfun_tslscons)
+    then show ?thesis
+      by (metis
+          delayFun_dropFirst delayfun delayfun.IH delayfun_nbot len lnsuc_lnle_emb
+          tsdropfirst_len tslen_delay)
+  next
+    case (mlscons t ts)
+    then have "ts \<noteq> \<bottom>"
+      by (simp add: mlscons(2))
+    then have "#\<surd> tsSnd\<cdot>msg\<cdot>(delay acks)\<cdot>(Discr ack) = lnsuc\<cdot>(#\<surd> tsSnd\<cdot>msg\<cdot>acks\<cdot>(Discr ack))"
+      sorry
+    then show ?thesis sorry
+  qed
+next
+  case (mlscons acks t)
+  then show ?case sorry
+qed
+(*proof (induction msg arbitrary: acks ack)
+  case adm
+  then show ?case by (simp add: tssnd_tstickcount_adm)
+next
+  case bottom
+  then show ?case by simp
+next
+  case (delayfun msg)
+  assume ind: "\<And>acks ack. tslen\<cdot>msg \<le> tslen\<cdot>acks \<Longrightarrow> #\<surd>msg \<le> #\<surd> tsSnd\<cdot>msg\<cdot>acks\<cdot>(Discr ack)"
+  assume len: "tslen\<cdot>(delay msg) \<le> tslen\<cdot>acks"
+  have len_delay: "tslen\<cdot>(delay msg) = lnsuc\<cdot>(tslen\<cdot>msg)"
+    by (simp add: tslen_delay)
+  then have len2: "lnsuc\<cdot>(tslen\<cdot>msg) \<le> tslen\<cdot>acks"
+    using len by simp
+  then have prev_step: "#\<surd>msg \<le> #\<surd> tsSnd\<cdot>msg\<cdot>acks\<cdot>(Discr ack)"
+    using less_lnsuc local.ind trans_lnle delayfun.IH by blast
+  have delay_tickcount: "#\<surd> delay msg = lnsuc\<cdot>(#\<surd>msg)"
+    by (simp add: delayFun.rep_eq)
+  then show ?case proof (cases rule: tstream_exhaust [of acks])
+    case bottom
+    then show ?thesis
+      by (metis delayfun_nbot len2 len_delay tslen_smaller_nbot)
+  next
+    case (delayfun ts)
+    then have "tsSnd\<cdot>(delay msg)\<cdot>(delay ts)\<cdot>(Discr ack) = delay (tsSnd\<cdot>msg\<cdot>ts\<cdot>(Discr ack))"
+      by (simp add: delayfun_tslscons)
+    then show ?thesis
+      by (metis (no_types, lifting)
+          delayFun.rep_eq delayfun len2 lnsuc_lnle_emb local.ind tslen_delay tstickcount_tscons)
+  next
+    case (mlscons t ts)
+    then have "ts \<noteq> \<bottom>" by blast
+    then have "tsSnd\<cdot>(delay msg)\<cdot>(t &&\<surd> ts)\<cdot>(Discr ack) = delay (tsSnd\<cdot>msg\<cdot>(t &&\<surd> ts)\<cdot>(Discr ack))"
+      by (metis mlscons(1) tssnd_delayfun_msg updis_exists)
+    then show ?thesis
+      by (metis delayFun.rep_eq lnsuc_lnle_emb mlscons(3) prev_step tstickcount_tscons)
+  qed
+next
+  case (mlscons msg m)
+  assume ind: "\<And>acks ack. tslen\<cdot>msg \<le> tslen\<cdot>acks \<Longrightarrow> #\<surd>msg \<le> #\<surd> tsSnd\<cdot>msg\<cdot>acks\<cdot>(Discr ack)"
+  assume msg_nbot: "msg \<noteq> \<bottom>"
+  assume len: "tslen\<cdot>(updis m &&\<surd> msg) \<le> tslen\<cdot>acks"
+  have "tslen\<cdot>(updis m &&\<surd> msg) = lnsuc\<cdot>(tslen\<cdot>msg)"
+    by (simp add: msg_nbot tslen_conc)
+  then have len2: "lnsuc\<cdot>(tslen\<cdot>msg) \<le> tslen\<cdot>acks"
+    using len by simp
+  then have prev_step: "#\<surd>msg \<le> #\<surd> tsSnd\<cdot>msg\<cdot>acks\<cdot>(Discr ack)"
+    using less_lnsuc local.ind trans_lnle by blast
+  have delay_mlscons: "#\<surd> updis m &&\<surd> msg = #\<surd>msg"
+    by (simp add: tstickcount_mlscons)
+  then show ?case proof (cases rule: tstream_exhaust [of acks])
+    case bottom
+    then show ?thesis
+      using prev_step by auto
+  next
+    case (delayfun ts)
+    then have "tslen\<cdot>msg \<le> tslen\<cdot>ts"
+      by (metis len2 lnsuc_lnle_emb tslen_delay)
+    then have "#\<surd>msg \<le> #\<surd> tsSnd\<cdot>msg\<cdot>ts\<cdot>(Discr ack)"
+      using mlscons.IH by blast
+    then show ?thesis sorry
+  next
+    case (mlscons t ts)
+    then show ?thesis sorry
+  qed
+qed*)
+
+lemma tssnd_tsabs_slen:
+  "#(Rep_tstream msg) \<le> #(Rep_tstream acks) \<Longrightarrow> #(tsAbs\<cdot>msg) \<le> #(tsAbs\<cdot>(tsSnd\<cdot>msg\<cdot>acks\<cdot>ack))"
+oops
+
+lemma tssnd_inftick: "acks\<noteq>\<bottom> \<Longrightarrow> tsSnd\<cdot>tsInfTick\<cdot>acks\<cdot>ack = tsInfTick"
+oops
+(*proof (induction acks arbitrary: ack)
+  case adm
+  then show ?case by (rule adm_imp, simp_all)
+next
+  case bottom
+  then show ?case using bottom.prems by blast
+next
+  case (delayfun acks)
+  (*have delay_inftick: "delay (Abs_tstream \<up>(\<surd>::'a event)\<infinity>) = tsInfTick"
+    by (metis (no_types)
+        Rep_Abs delayFun.rep_eq sinftimes_unfold tick_msg tsInfTick.abs_eq tsInfTick.rep_eq
+        tsconc_insert)*)
+  have inftick_delay: "tsInfTick = delay tsInfTick" by simp
+  have delay_both: "\<forall>msg acks' ack'. acks' = \<bottom> \<or>
+        tsSnd\<cdot>(delay (msg::'a tstream))\<cdot>(delay (acks'::bool tstream))\<cdot>ack' = delay (tsSnd\<cdot>msg\<cdot>acks'\<cdot>ack')"
+    using tssnd_delayfun by blast
+  assume ind: "\<And>ack. acks \<noteq> \<bottom> \<Longrightarrow> tsSnd\<cdot>tsInfTick\<cdot>acks\<cdot>ack = tsInfTick"
+  have delay_nbot: "delay acks \<noteq> \<bottom>" by simp
+  show ?case
+    apply (subst inftick_delay)
+    (*apply (case_tac "acks = \<bottom>", simp_all)*)
+    apply (subst tssnd_delayfun)
+    sorry
+next
+  case (mlscons acks t)
+  have inftick_delay: "tsInfTick = delay tsInfTick" by simp
+  have delay_msg: "\<forall>msg acks' ack1' ack2'. acks' = \<bottom> \<or>
+        tsSnd\<cdot>(delay (msg::'a tstream))\<cdot>(tsMLscons\<cdot>(updis (ack1'::bool))\<cdot>(acks'::bool tstream))\<cdot>ack2' =
+        delay (tsSnd\<cdot>msg\<cdot>(tsMLscons\<cdot>(updis ack1')\<cdot>acks')\<cdot>ack2')"
+    by (metis delayfun_tslscons tsSnd.simps(6) tsmlscons_lscons)
+  show ?case
+    by (smt delayFun.rep_eq delay_msg inftick_delay mlscons.hyps s2sinftimes tick_msg tsconc_insert
+            tsconc_rep_eq)
+qed*)
+    
+end
