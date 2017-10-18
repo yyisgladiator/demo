@@ -3211,7 +3211,13 @@ lemma tszip_tsdom2: "tsDom\<cdot>(tsZip\<cdot>ts\<cdot>xs) \<subseteq> sdom\<cdo
   apply (induction ts arbitrary: xs)
   apply (simp_all)
   apply (rule admI)
+  apply (simp add: chain_def)
   oops
+
+(*lub_def is_lub_def is_ub_def
+tsabs_tsdom
+subst szip_def [THEN fix_eq3]
+sdom_cont2*)
 
 (* ----------------------------------------------------------------------- *)
 subsection {* tsRemDups *}
