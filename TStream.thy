@@ -3136,7 +3136,17 @@ lemma tszip_tsprojsnd_rev: "#(tsAbs\<cdot>ts)=\<infinity> \<Longrightarrow> #xs=
 (* without assumption #xs=\<infinity> *)
     
 lemma tszip_nbot2: "ts \<noteq> \<bottom> \<Longrightarrow> tslen\<cdot>ts \<le> #xs \<Longrightarrow> tsZip\<cdot>ts\<cdot>xs \<noteq> \<bottom>"
-  oops
+  apply (induction ts arbitrary: xs)
+  apply (simp_all)
+  apply (rule admI)
+  apply (metis inf_ub l42 less2eq tsInfTicks ts_infinite_lub tslen_insert tszip_nbot)
+  apply (simp add: tslen_slen_smaller_nbot tszip_delayfun)
+  apply (simp add: tslen_conc)
+  apply (rule_tac x=xs in scases, simp_all)
+  apply (rule_tac ts=ts in tscases, simp_all)
+  apply (metis bot_is_0 lnat.con_rews lscons_conv tsZip.simps(1) tslen_bottom tslen_conc 
+         tszip_delayfun tszip_mlscons_msgdelay)
+  by (metis bot_is_0 lnat.con_rews lscons_conv tslen_bottom tslen_conc tszip_mlscons_2msg)
 
 lemma tszip_tstickcount_leq_h:
   "#\<surd>tsMLscons\<cdot>(updis (t, x))\<cdot>(delayFun\<cdot>\<bottom>) \<le> #\<surd>tsMLscons\<cdot>(updis t)\<cdot>(delayFun\<cdot>ts)"
@@ -3155,7 +3165,18 @@ lemma tszip_tstickcount_leq [simp]: "#\<surd>tsZip\<cdot>ts\<cdot>xs \<le> #\<su
   by (metis lscons_conv tstickcount_mlscons tszip_mlscons_2msg)
 
 lemma tszip_tsabs2: "tslen\<cdot>ts \<le> #xs \<Longrightarrow> tsAbs\<cdot>(tsZip\<cdot>ts\<cdot>xs) = szip\<cdot>(tsAbs\<cdot>ts)\<cdot>xs"
-  oops
+  apply (induction ts arbitrary: xs)
+  apply (simp_all)
+  apply (rule admI)
+  apply (metis inf_ub l42 less2eq tsInfTicks ts_infinite_lub tslen_insert tszip_tsabs)
+  apply (metis (no_types, lifting) less_lnsuc trans_lnle tsabs_delayfun tslen_delay 
+         tslen_slen_smaller_nbot tszip_delayfun)
+  apply (simp add: tsabs_mlscons tslen_conc)
+  apply (rule_tac x=xs in scases, simp_all)
+  apply (rule_tac ts=ts in tscases, simp_all)
+  apply (metis (no_types) delayfun_nbot lscons_conv szip_scons tsabs_mlscons tslen_slen_smaller_nbot 
+         tszip_delayfun tszip_mlscons_msgdelay)
+  by (metis lscons_conv szip_scons tsabs_mlscons tszip_mlscons_2msg tszip_nbot2)
 
 lemma tszip_tsabs_slen_leq [simp]: "#(tsAbs\<cdot>(tsZip\<cdot>ts\<cdot>xs)) \<le> #(tsAbs\<cdot>ts)"
   apply (induction ts arbitrary: xs)
@@ -3187,6 +3208,9 @@ lemma tszip_tsabs_slen_leq [simp]: "#(tsAbs\<cdot>(tsZip\<cdot>ts\<cdot>xs)) \<l
   qed
 
 lemma tszip_tsdom2: "tsDom\<cdot>(tsZip\<cdot>ts\<cdot>xs) \<subseteq> sdom\<cdot>(szip\<cdot>(tsAbs\<cdot>ts)\<cdot>xs)"
+  apply (induction ts arbitrary: xs)
+  apply (simp_all)
+  apply (rule admI)
   oops
 
 (* ----------------------------------------------------------------------- *)
