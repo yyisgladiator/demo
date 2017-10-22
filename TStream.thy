@@ -127,6 +127,9 @@ where "ts1 \<bullet>\<surd> ts2 \<equiv> tsConc ts1\<cdot>ts2"
 definition tslen:: "'a tstream \<rightarrow> lnat" where 
 "tslen \<equiv> \<Lambda> ts. #(Rep_tstream ts)"   
 
+abbreviation tslen_abbr :: "'a tstream \<Rightarrow> lnat" ( "#\<^sub>t _" 65)
+  where " #\<^sub>tts \<equiv> tslen\<cdot>ts"
+
 (* filters all ticks and returns the corrosponding 'a stream *)
 definition tsAbs:: "'a tstream \<rightarrow> 'a stream" where
 "tsAbs \<equiv> \<Lambda> ts.  smap (\<lambda>e. case e of Msg m \<Rightarrow> m | \<surd> \<Rightarrow> undefined)\<cdot>(sfilter {e. e \<noteq> \<surd>}\<cdot>(Rep_tstream ts))"
