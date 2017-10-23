@@ -13,6 +13,48 @@ imports Sender
 begin
 default_sort countable
 
+lemma min_lub:" chain Y \<Longrightarrow> (\<Squnion>i::nat. min (x::lnat) (Y i)) = min (x) (\<Squnion>i::nat. (Y i))"
+  apply(case_tac "x=\<infinity>", simp_all)
+  apply(case_tac "finite_chain Y")
+proof -
+  assume a1: "chain Y"
+  assume a2: "finite_chain Y"
+  then have "monofun (min x)"
+    by (metis (mono_tags, lifting) lnle_conv min.idem min.semilattice_order_axioms monofunI
+                                                   semilattice_order.mono semilattice_order.orderI)
+  then show ?thesis
+    using a2 a1 by (metis (no_types) finite_chain_lub)
+next
+  assume a0:"chain Y"
+  assume a1:"\<not> finite_chain Y"
+  assume a2:"x \<noteq> \<infinity>"
+  have h0:"\<forall>i. \<exists>j\<ge>i. Y i \<sqsubseteq> Y j"
+  by blast  
+  then have"(\<Squnion>i. min x (Y i)) = x"
+  proof -
+    have f1: "\<And>n. min x (Y n) \<sqsubseteq> x"
+      by (metis (lifting) lnle_def min.bounded_iff order_refl)
+    then have f2: "\<And>n. min x (Y n) = x \<or> Y n \<sqsubseteq> x"
+      by (metis (lifting) min_def)
+    have f3: "\<infinity> \<notsqsubseteq> x"
+      by (metis (lifting) a2 inf_less_eq lnle_def) 
+    have "Lub Y = \<infinity>"
+      by (meson a0 a1 unique_inf_lub)
+    then obtain nn :: "(nat \<Rightarrow> lnat) \<Rightarrow> lnat \<Rightarrow> nat" where
+      f4: "min x (Y (nn Y x)) = x \<or> \<infinity> \<sqsubseteq> x"
+      using f2 by (metis (no_types) a0 lub_below_iff)
+    have "\<forall>f n. \<exists>na. (f (na::nat)::lnat) \<notsqsubseteq> f n \<or> Lub f = f n"
+      by (metis lub_chain_maxelem)
+    then show ?thesis
+      using f4 f3 f1 by (metis (full_types))
+    qed
+  then show ?thesis
+    by (simp add: a0 a1 unique_inf_lub)
+qed
+
+lemma min_lub_tstickcount: "chain Y \<Longrightarrow> (\<Squnion>i::nat. min (#\<surd> x) (#\<surd> Y i)) = min (#\<surd> x) (\<Squnion>i::nat. (#\<surd> Y i))"
+  by (simp add: min_lub)
+
 lemma tssnd_tstickcount_adm_h1: "\<And>x. adm (\<lambda>a. \<not>(tslen\<cdot>a \<le> tslen\<cdot>x))"
   by (smt admI ch2ch_Rep_cfunR contlub_cfun_arg dual_order.trans is_ub_thelub lnle_def)
 
@@ -29,7 +71,9 @@ lemma tssnd_tstickcount_adm:
 lemma tssnd_tstickcount2_adm: "adm (\<lambda>a. \<forall>x xa. min (#\<surd> x) (#\<surd> a) \<le> #\<surd> tsSnd_h\<cdot>x\<cdot>a\<cdot>(Discr xa))"
   apply (rule adm_all)+
   apply (rule admI)
-  apply (simp add: contlub_cfun_arg contlub_cfun_fun lub_mono2)
+  apply (simp add: contlub_cfun_arg contlub_cfun_fun) 
+  (*using ord_eq_le_trans 
+  apply (simp add: min_lub_tstickcount)*)
   sorry
 
 lemma tssnd_tstickcount2_h:
