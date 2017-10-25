@@ -68,11 +68,26 @@ lemma tssnd_tstickcount_adm:
   apply(rule adm_imp)
   by (auto simp add: tssnd_tstickcount_adm_h1 tssnd_tstickcount_adm_h2)
 
+lemma tssnd_tstickcount2_adm_h1: "\<And>x xa Y. chain Y \<Longrightarrow> \<forall>i. min (#\<surd> x) (#\<surd> Y i) = #\<surd> tsSnd_h\<cdot>x\<cdot>(Y i)\<cdot>(Discr xa) 
+                \<Longrightarrow> min (#\<surd> x) (\<Squnion>i. #\<surd> Y i) \<le> (\<Squnion>i. #\<surd> tsSnd_h\<cdot>x\<cdot>(Y i)\<cdot>(Discr xa))"
+  apply (simp add: chain_def)
+  by (metis (mono_tags, lifting) eq_imp_below lnle_def lub_eq min_lub monofun_cfun_arg po_class.chain_def)
+
+lemma tssnd_tstickcount2_adm_h2: "chain Y \<Longrightarrow> \<forall>i. min (#\<surd> x) (#\<surd> Y i) < #\<surd> tsSnd_h\<cdot>x\<cdot>(Y i)\<cdot>(Discr xa) 
+                \<Longrightarrow> min (#\<surd> x) (\<Squnion>i. #\<surd> Y i) \<le> (\<Squnion>i. #\<surd> tsSnd_h\<cdot>x\<cdot>(Y i)\<cdot>(Discr xa))"
+  apply (simp add: chain_def)
+  apply (simp add: min_def)
+  apply (case_tac "(#\<surd>x)=\<infinity>", simp_all)
+  apply(case_tac "finite_chain Y")
+sorry
+
+
 lemma tssnd_tstickcount2_adm: "adm (\<lambda>a. \<forall>x xa. min (#\<surd> x) (#\<surd> a) \<le> #\<surd> tsSnd_h\<cdot>x\<cdot>a\<cdot>(Discr xa))"
   apply (rule adm_all)+
   apply (rule admI)
-  apply (simp add: contlub_cfun_arg contlub_cfun_fun) 
-  (*using ord_eq_le_trans 
+  apply (simp add: contlub_cfun_arg contlub_cfun_fun)
+  (* Fallunterscheidung nach Minimum?
+  using ord_eq_le_trans 
   apply (simp add: min_lub_tstickcount)*)
   sorry
 
