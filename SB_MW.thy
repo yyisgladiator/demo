@@ -11,8 +11,8 @@ definition sbHd :: "'m SB \<rightarrow> (channel \<rightharpoonup> 'm discr\<^su
 
 (* sbRt is defined in SB.thy *)
 
-definition sbLscons :: "(channel \<rightharpoonup> 'm discr\<^sub>\<bottom>) \<rightarrow> 'm SB \<rightarrow> 'm SB" where
-"sbLscons \<equiv> \<Lambda> sb1 sb. (\<lambda>c. (c \<in> (sbDom\<cdot>sb \<inter> (dom sb1))) \<leadsto> (lscons\<cdot>(sb1 \<rightharpoonup> c)\<cdot>(sb . c)))\<Omega>"
+definition sbLscons :: "(channel \<rightharpoonup> 'm discr\<^sub>\<bottom>) \<Rightarrow> 'm SB \<Rightarrow> 'm SB" where
+"sbLscons \<equiv> \<lambda> f sb. (\<lambda>c. (c \<in> (sbDom\<cdot>sb \<inter> (dom f))) \<leadsto> (lscons\<cdot>(f \<rightharpoonup> c)\<cdot>(sb . c)))\<Omega>"
 
 definition convDiscrUp :: "(channel \<rightharpoonup> 'm) \<Rightarrow> (channel \<rightharpoonup> 'm discr\<^sub>\<bottom>)" where
 "convDiscrUp sb \<equiv> (\<lambda>c. (c \<in> dom sb) \<leadsto> (Iup (Discr (sb \<rightharpoonup> c))))"
@@ -63,47 +63,56 @@ lemma sbHd_cont: "cont (\<lambda> sb::'a SB. (\<lambda>c. (c \<in> sbDom\<cdot>s
   apply(rule contI2)
   by(simp_all add: sbHd_mono sbHd_cont_pre)
   
-
+(* 
 section\<open>sbLscons\<close>
 
-  
-lemma sbLscons_mono1: "monofun (\<lambda> sb1. (\<lambda>c. (c \<in> (sbDom\<cdot>sb \<inter> (dom sb1))) \<leadsto> (lscons\<cdot>(sb1 \<rightharpoonup> c)\<cdot>(sb . c)))\<Omega>)"  
-proof(rule monofunI)  
-  fix x y ::"(channel \<rightharpoonup> 'a discr\<^sub>\<bottom>)"
-  assume "x \<sqsubseteq> y"
-  thus "(\<lambda> sb1. (\<lambda>c. (c \<in> (sbDom\<cdot>sb \<inter> (dom sb1))) \<leadsto> (lscons\<cdot>(sb1 \<rightharpoonup> c)\<cdot>(sb . c)))\<Omega>) x \<sqsubseteq> 
-        (\<lambda> sb1. (\<lambda>c. (c \<in> (sbDom\<cdot>sb \<inter> (dom sb1))) \<leadsto> (lscons\<cdot>(sb1 \<rightharpoonup> c)\<cdot>(sb . c)))\<Omega>) y"
-    
-    sorry
-qed
-    
-lemma sbLscons_cont1_pre: assumes "chain Y" 
-  shows "(\<lambda>c. (c \<in> (sbDom\<cdot>sb \<inter> (dom (\<Squnion>i. Y i)))) \<leadsto> (lscons\<cdot>((\<Squnion>i. Y i) \<rightharpoonup> c)\<cdot>(sb . c)))\<Omega> \<sqsubseteq> (\<Squnion>i. (\<lambda>c. (c \<in> (sbDom\<cdot>sb \<inter> (dom (Y i)))) \<leadsto> (lscons\<cdot>((Y i) \<rightharpoonup> c)\<cdot>(sb . c)))\<Omega>)"    
-  sorry
-    
-lemma sbLscons_cont1: "cont (\<lambda> sb1. (\<lambda>c. (c \<in> (sbDom\<cdot>sb \<inter> (dom sb1))) \<leadsto> (lscons\<cdot>(sb1 \<rightharpoonup> c)\<cdot>(sb . c)))\<Omega>)" 
-  apply(rule contI2)
-  using sbLscons_mono1 apply auto[1]
-  using sbLscons_cont1_pre by blast
-
-lemma sbLscons_mono2: "monofun (\<lambda> sb. (\<lambda>c. (c \<in> (sbDom\<cdot>sb \<inter> (dom sb1))) \<leadsto> (lscons\<cdot>(sb1 \<rightharpoonup> c)\<cdot>(sb . c)))\<Omega>)"  
+lemma sbLscons_mono: assumes "\<forall>c \<in> dom f. sdom\<cdot>(lscons\<cdot>(f \<rightharpoonup> c)\<cdot>\<epsilon>) \<subseteq> ctype c" shows 
+  "monofun (\<lambda> sb. (\<lambda>c. (c \<in> (sbDom\<cdot>sb \<inter> (dom f))) \<leadsto> (lscons\<cdot>(f \<rightharpoonup> c)\<cdot>(sb . c)))\<Omega>)"  
 proof(rule monofunI)  
   fix x y ::"'a SB"
   assume "x \<sqsubseteq> y"
-  thus "(\<lambda> sb. (\<lambda>c. (c \<in> (sbDom\<cdot>sb \<inter> (dom sb1))) \<leadsto> (lscons\<cdot>(sb1 \<rightharpoonup> c)\<cdot>(sb . c)))\<Omega>) x \<sqsubseteq> 
-        (\<lambda> sb. (\<lambda>c. (c \<in> (sbDom\<cdot>sb \<inter> (dom sb1))) \<leadsto> (lscons\<cdot>(sb1 \<rightharpoonup> c)\<cdot>(sb . c)))\<Omega>) y"
-   
-    sorry
+  thus "(\<lambda> sb. (\<lambda>c. (c \<in> (sbDom\<cdot>sb \<inter> (dom f))) \<leadsto> (lscons\<cdot>(f \<rightharpoonup> c)\<cdot>(sb . c)))\<Omega>) x \<sqsubseteq> 
+        (\<lambda> sb. (\<lambda>c. (c \<in> (sbDom\<cdot>sb \<inter> (dom f))) \<leadsto> (lscons\<cdot>(f \<rightharpoonup> c)\<cdot>(sb . c)))\<Omega>) y"
+  proof - 
+    have f0: "sbDom\<cdot>x = sbDom\<cdot>y"
+      using \<open>x \<sqsubseteq> y\<close> sbdom_eq by auto
+    have f3: "sb_well (\<lambda>c. (c \<in> sbDom\<cdot>x \<inter> dom f)\<leadsto>f\<rightharpoonup>c && x . c)"
+      apply(simp only: sb_well_def)
+      apply(subst OptionCpo.if_then_dom, simp)
+      sorry
+    have f4: "sb_well (\<lambda>c. (c \<in> sbDom\<cdot>y \<inter> dom f)\<leadsto>f\<rightharpoonup>c && y . c)"
+      apply(simp only: sb_well_def)
+      apply(subst OptionCpo.if_then_dom, simp)
+      sorry
+    have f5: "dom (Rep_SB ((\<lambda>c. (c \<in> sbDom\<cdot>x \<inter> dom f)\<leadsto>f\<rightharpoonup>c && x . c)\<Omega>)) = sbDom\<cdot>x \<inter> dom f"
+      apply(subst rep_abs, simp only: f3)
+      by (metis OptionCpo.if_then_dom)
+    have f6: "dom (Rep_SB ((\<lambda>c. (c \<in> sbDom\<cdot>y \<inter> dom f)\<leadsto>f\<rightharpoonup>c && y . c)\<Omega>)) = sbDom\<cdot>y \<inter> dom f"
+      apply(subst rep_abs, simp only: f4)
+        by (metis OptionCpo.if_then_dom)
+    show ?thesis
+      apply(subst less_SBI)
+      using f0 f5 f6 apply auto[1]
+      (* proof found by sledgehammer *)
+      sorry
+  qed    
 qed    
 
-lemma sbLscons_cont2_pre: assumes "chain Y" 
+lemma sbLscons_cont_pre: assumes "chain Y" 
   shows "(\<lambda>c. (c \<in> (sbDom\<cdot>(\<Squnion>i. Y i) \<inter> (dom sb1))) \<leadsto> (lscons\<cdot>(sb1 \<rightharpoonup> c)\<cdot>((\<Squnion>i. Y i) . c)))\<Omega> \<sqsubseteq> (\<Squnion>i. (\<lambda>c. (c \<in> (sbDom\<cdot>(Y i) \<inter> (dom sb1))) \<leadsto> (lscons\<cdot>(sb1 \<rightharpoonup> c)\<cdot>((Y i) . c)))\<Omega>)"    
-  
+proof - 
+  have "dom (\<lambda>c. (c \<in> (sbDom\<cdot>(Y i) \<inter> (dom sb1))) \<leadsto> (lscons\<cdot>(sb1 \<rightharpoonup> c)\<cdot>((Y i) . c))) = sbDom\<cdot>(Y i) \<inter> (dom sb1)"
+    sorry
+  show ?thesis
+    apply(subst less_SBI)
+    
+qed
   sorry  
   
-lemma sbLscons_cont2: "cont (\<lambda> sb. (\<lambda>c. (c \<in> (sbDom\<cdot>sb \<inter> (dom sb1))) \<leadsto> (lscons\<cdot>(sb1 \<rightharpoonup> c)\<cdot>(sb . c)))\<Omega>)"  
+lemma sbLscons_cont: "cont (\<lambda> sb. (\<lambda>c. (c \<in> (sbDom\<cdot>sb \<inter> (dom sb1))) \<leadsto> (lscons\<cdot>(sb1 \<rightharpoonup> c)\<cdot>(sb . c)))\<Omega>)"  
   apply(rule contI2)
-  using sbLscons_mono2 apply auto[1]
-  using sbLscons_cont2_pre by blast
-  
+  using sbLscons_mono apply auto[1]
+  using sbLscons_cont_pre by blast
+*)
+    
 end
