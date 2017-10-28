@@ -22,7 +22,7 @@ section \<open>Backend Signatures\<close>
 
 (* FYI: in the non-deterministic case the automaton will be a cpo *)
 typedef ('state::type, 'm::message) automaton = 
-  "{f::(('state \<times>(channel \<Rightarrow> 'm)) \<Rightarrow> ('state \<times> 'm SB)) \<times> 'state \<times> 'm SB. True}"
+  "{f::(('state \<times>(channel \<rightharpoonup> 'm)) \<Rightarrow> ('state \<times> 'm SB)) \<times> 'state \<times> 'm SB. True}"
   sorry
 
 definition getInitialState :: "('s, 'm::message) automaton \<Rightarrow> 's" where
@@ -86,7 +86,7 @@ end
 section \<open>Automaton Functions\<close>
 
 (* Somehow define the transition function *)
-definition myTransition :: "(myState \<times>(channel \<Rightarrow> myM)) \<Rightarrow> (myState \<times> myM SB)" where
+definition myTransition :: "(myState \<times>(channel \<rightharpoonup> myM)) \<Rightarrow> (myState \<times> myM SB)" where
 "myTransition = undefined"
 
 lift_definition myAutomaton :: "(myState, myM) automaton" is "(myTransition, State even 0 True, sbLeast {})"
