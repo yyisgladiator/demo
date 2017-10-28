@@ -18,7 +18,7 @@ section \<open>Backend Signatures\<close>
 
 
 (* VERY Basic automaton type *)
-(* ToDo: initial step, wellformed condition *)
+(* ToDo: wellformed condition *)
 
 (* FYI: in the non-deterministic case the automaton will be a cpo *)
 typedef ('state::type, 'm::message) automaton = 
@@ -35,14 +35,25 @@ setup_lifting type_definition_automaton
 definition myFixer :: "(('s \<Rightarrow> 'm SPF)\<rightarrow>('s \<Rightarrow> 'm SPF)) \<rightarrow> ('s \<Rightarrow> 'm SPF)" where
 "myFixer = undefined"
 
-(* a modified version of spfStep. The real signature will be different ! ! *)
-definition spfStep :: "('s \<Rightarrow> 'm SPF) \<rightarrow> 'm SPF" where
-"spfStep = undefined"
+definition spfLeast::"channel set \<Rightarrow> channel set \<Rightarrow> 'm::message SPF" where
+"spfLeast cin cout = Abs_SPF (\<Lambda>  sb.  (sbDom\<cdot>sb = cin) \<leadsto> sbLeast cout)"
 
+(* Skeleton of spfStep. Returns the SPF that switches depending on input *)
+definition spfStep :: "channel set \<Rightarrow> channel set \<Rightarrow> ((channel\<rightharpoonup>'m::message) \<Rightarrow> 'm SPF) \<rightarrow> 'm SPF" where
+"spfStep cin cout \<equiv> \<Lambda> h. Abs_SPF (\<Lambda>  sb.  (sbDom\<cdot>sb = cin) \<leadsto> undefined)"
+
+(* Converter function. *)
+definition helper:: "('s::type, 'm::message) automaton \<Rightarrow> 's \<Rightarrow> ('s \<Rightarrow> 'm SPF) \<rightarrow> ((channel\<rightharpoonup>'m) \<Rightarrow> 'm SPF)" where
+"helper = undefined"
+
+(* As defined in Rum96 *)
 definition h :: "('s::type, 'm::message) automaton \<Rightarrow> ('s \<Rightarrow> 'm SPF)" where
-"h automat = myFixer\<cdot>(\<Lambda> h. (\<lambda>s. spfStep\<cdot>h))"
+"h automat = myFixer\<cdot>(\<Lambda> h. (\<lambda>s. spfStep {}{}\<cdot>(helper automat s\<cdot>h)))"
 
-(* This function also prerepends the first SB ... *)
+lemma "cont (\<lambda> h. (\<lambda>s. spfStep{}{}\<cdot>(helper automat s\<cdot>h)))"
+  by simp
+
+(* This function also prepends the first SB ... *)
 (* But basically she just calls h *)
 definition H :: "('s, 'm::message) automaton \<Rightarrow> 'm SPF" where
 "H automat = h automat (getInitialState automat)"
