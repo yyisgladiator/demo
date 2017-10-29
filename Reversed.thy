@@ -62,9 +62,22 @@ end
 
 (* SWS: I am not 100% sure this is true... *)
 (* If not, create a new class so that is works *)
-instance rev :: (pcpo) cpo
+instantiation rev :: (pcpo) cpo
+begin
+lemma rev_bot_top: "x\<sqsubseteq>(Abs_rev \<bottom>)"
+  by (simp add: Abs_rev_inverse)
+
+instance
   apply intro_classes
+  
+  apply( simp add: is_lub_def)
+  apply (rule+)
+   apply(rule ccontr)
+  unfolding is_ub_def
+  apply auto[2]
+
   sorry
+end
 
 instance rev :: (pcpo) upcpo
   apply intro_classes
