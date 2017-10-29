@@ -42,13 +42,20 @@ definition spfLeast::"channel set \<Rightarrow> channel set \<Rightarrow> 'm::me
 definition spfStep :: "channel set \<Rightarrow> channel set \<Rightarrow> ((channel\<rightharpoonup>'m::message) \<Rightarrow> 'm SPF) \<rightarrow> 'm SPF" where
 "spfStep cin cout \<equiv> \<Lambda> h. Abs_SPF (\<Lambda>  sb.  (sbDom\<cdot>sb = cin) \<leadsto> undefined)"
 
+definition spfCons :: "'m SB \<Rightarrow> 'm SPF \<rightarrow> 'm SPF" where
+"spfCons = undefined"
+
 (* Converter function. *)
-definition helper:: "('s::type, 'm::message) automaton \<Rightarrow> 's \<Rightarrow> ('s \<Rightarrow> 'm SPF) \<rightarrow> ((channel\<rightharpoonup>'m) \<Rightarrow> 'm SPF)" where
-"helper = undefined"
+  (* definition should be right, but needs to be nicer *)
+definition helper:: "(('s \<times>'e) \<Rightarrow> ('s \<times> 'm::message SB)) \<Rightarrow> 's \<Rightarrow> ('s \<Rightarrow> 'm SPF) \<rightarrow> ('e \<Rightarrow> 'm SPF)" where
+"helper f s \<equiv> \<Lambda> h. (\<lambda> e. spfCons (snd (f (s,e)))\<cdot>(h (fst (f (s,e)))))" 
+
+lemma "cont (\<lambda>h. (\<lambda> e. spfCons (snd (f (s,e)))\<cdot>(h (fst (f (s,e))))))"
+  oops
 
 (* As defined in Rum96 *)
 definition h :: "('s::type, 'm::message) automaton \<Rightarrow> ('s \<Rightarrow> 'm SPF)" where
-"h automat = myFixer\<cdot>(\<Lambda> h. (\<lambda>s. spfStep {}{}\<cdot>(helper automat s\<cdot>h)))"
+"h automat = myFixer\<cdot>(\<Lambda> h. (\<lambda>s. spfStep {}{}\<cdot>(helper undefined s\<cdot>h)))"
 
 lemma "cont (\<lambda> h. (\<lambda>s. spfStep{}{}\<cdot>(helper automat s\<cdot>h)))"
   by simp
