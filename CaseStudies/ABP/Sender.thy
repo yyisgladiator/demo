@@ -105,7 +105,7 @@ lemma tssnd_h_nbot [simp]: "msg \<noteq> \<bottom> \<Longrightarrow> acks \<note
 
 (* ToDo: tstickcount lemma for sender *)
 
-lemma tssnd_h_tstickcount_adm: "adm (\<lambda>a. \<forall>x xa. min (#\<surd> x) (#\<surd> a) \<le> #\<surd> tsSnd_h\<cdot>x\<cdot>a\<cdot>(Discr xa))"
+(*lemma tssnd_h_tstickcount_adm: "adm (\<lambda>a. \<forall>x xa. min (#\<surd> x) (#\<surd> a) \<le> #\<surd> tsSnd_h\<cdot>x\<cdot>a\<cdot>(Discr xa))"
   sorry
 
 lemma tssnd_tstickcount2_h:
@@ -127,7 +127,7 @@ lemma tssnd_h_tstickcount:
   apply (rule_tac ts=msg in tscases, simp_all)
   using tssnd_tstickcount2_h apply blast
   by (smt le_less lenmin min.cobounded1 min.orderI min_def strict_tstickcount tssnd_h_mlscons_ack 
-      tssnd_h_mlscons_nack tstickcount_mlscons)
+      tssnd_h_mlscons_nack tstickcount_mlscons)*)
 
 lemma tssnd_h_inftick_inftick: "tsSnd_h\<cdot>tsInfTick\<cdot>tsInfTick\<cdot>ack = tsInfTick" 
   by (metis (no_types, lifting) Rep_Abs delayfun_insert s2sinftimes sinftimes_unfold tick_msg 

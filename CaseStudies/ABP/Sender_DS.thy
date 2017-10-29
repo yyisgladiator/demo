@@ -13,6 +13,7 @@ imports Sender
 begin
 default_sort countable
 
+(* minimum and lub  *)
 lemma min_lub:" chain Y \<Longrightarrow> (\<Squnion>i::nat. min (x::lnat) (Y i)) = min (x) (\<Squnion>i::nat. (Y i))"
   apply(case_tac "x=\<infinity>", simp_all)
   apply(case_tac "finite_chain Y")
@@ -52,9 +53,6 @@ next
     by (simp add: a0 a1 unique_inf_lub)
 qed
 
-lemma min_lub_tstickcount: "chain Y \<Longrightarrow> (\<Squnion>i::nat. min (#\<surd> x) (#\<surd> Y i)) = min (#\<surd> x) (\<Squnion>i::nat. (#\<surd> Y i))"
-  by (simp add: min_lub)
-
 lemma tssnd_tstickcount_adm_h1: "\<And>x. adm (\<lambda>a. \<not>(tslen\<cdot>a \<le> tslen\<cdot>x))"
   by (smt admI ch2ch_Rep_cfunR contlub_cfun_arg dual_order.trans is_ub_thelub lnle_def)
 
@@ -76,11 +74,10 @@ lemma tssnd_tstickcount2_adm_h1: "\<And>x xa Y. chain Y \<Longrightarrow> \<fora
 lemma tssnd_tstickcount2_adm_h2: "chain Y \<Longrightarrow> \<forall>i. min (#\<surd> x) (#\<surd> Y i) < #\<surd> tsSnd_h\<cdot>x\<cdot>(Y i)\<cdot>(Discr xa) 
                 \<Longrightarrow> min (#\<surd> x) (\<Squnion>i. #\<surd> Y i) \<le> (\<Squnion>i. #\<surd> tsSnd_h\<cdot>x\<cdot>(Y i)\<cdot>(Discr xa))"
   apply (simp add: chain_def)
-  apply (simp add: min_def)
   apply (case_tac "(#\<surd>x)=\<infinity>", simp_all)
-  apply(case_tac "finite_chain Y")
-sorry
+  apply (case_tac "finite_chain Y")
 
+sorry
 
 lemma tssnd_tstickcount2_adm: "adm (\<lambda>a. \<forall>x xa. min (#\<surd> x) (#\<surd> a) \<le> #\<surd> tsSnd_h\<cdot>x\<cdot>a\<cdot>(Discr xa))"
   apply (rule adm_all)+
@@ -104,6 +101,28 @@ lemma tssnd_tstickcount2_h:
     case (mlscons acks t)
     then show ?case sorry
   qed
+
+lemma tssnd_tstickcount2_msg: "min (#\<surd>msg) (#\<surd>acks) = #\<surd>msg \<Longrightarrow> #\<surd>msg \<le> #\<surd> tsSnd_h\<cdot>msg\<cdot>acks\<cdot>(Discr ack)"
+  apply (induction acks arbitrary: msg ack, simp_all)
+  apply (rule adm_all)
+  apply (rule adm_imp)
+  apply (rule admI)
+  apply (simp add: chain_def contlub_cfun_arg lub_mono2)
+oops
+
+lemma tssnd_tstickcount2_acks: "min (#\<surd>msg) (#\<surd>acks) = #\<surd>acks \<Longrightarrow> #\<surd>acks \<le> #\<surd> tsSnd_h\<cdot>msg\<cdot>acks\<cdot>(Discr ack)"
+  apply (induction acks arbitrary: msg ack, simp_all)
+  apply (rule adm_all)
+  apply (rule admI)
+  apply (simp add: contlub_cfun_arg contlub_cfun_fun lub_mono2)
+oops
+
+lemma tssnd_tstickcount2_v2: "min (#\<surd>msg) (#\<surd>acks) \<le> #\<surd> tsSnd_h\<cdot>msg\<cdot>acks\<cdot>(Discr ack)"
+  apply (induction msg arbitrary: acks ack, simp_all)
+  apply (rule adm_all)+
+  apply (rule admI)
+  apply (simp add: contlub_cfun_arg contlub_cfun_fun lub_mono2)
+oops
 
 lemma tssnd_tstickcount2: "min (#\<surd>msg) (#\<surd>acks) \<le> #\<surd> tsSnd_h\<cdot>msg\<cdot>acks\<cdot>(Discr ack)"
 proof (induction acks arbitrary: msg ack, simp_all)
