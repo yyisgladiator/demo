@@ -42,13 +42,18 @@ definition spfLeast::"channel set \<Rightarrow> channel set \<Rightarrow> 'm::me
 definition spfStep :: "channel set \<Rightarrow> channel set \<Rightarrow> ((channel\<rightharpoonup>'m::message) \<Rightarrow> 'm SPF) \<rightarrow> 'm SPF" where
 "spfStep cin cout \<equiv> \<Lambda> h. Abs_SPF (\<Lambda>  sb.  (sbDom\<cdot>sb = cin) \<leadsto> undefined)"
 
+(* Defined by SWS *)
+definition spfRt :: "'m SPF \<rightarrow> 'm SPF" where
+"spfRt = undefined"
+
+(* Defined by JCB *)
 definition spfCons :: "'m SB \<Rightarrow> 'm SPF \<rightarrow> 'm SPF" where
 "spfCons = undefined"
 
 (* Converter function. *)
   (* definition should be right, but needs to be nicer *)
 definition helper:: "(('s \<times>'e) \<Rightarrow> ('s \<times> 'm::message SB)) \<Rightarrow> 's \<Rightarrow> ('s \<Rightarrow> 'm SPF) \<rightarrow> ('e \<Rightarrow> 'm SPF)" where
-"helper f s \<equiv> \<Lambda> h. (\<lambda> e. spfCons (snd (f (s,e)))\<cdot>(h (fst (f (s,e)))))" 
+"helper f s \<equiv> \<Lambda> h. (\<lambda> e. spfRt\<cdot>(spfCons (snd (f (s,e)))\<cdot>(h (fst (f (s,e))))))" 
 
 lemma "cont (\<lambda>h. (\<lambda> e. spfCons (snd (f (s,e)))\<cdot>(h (fst (f (s,e))))))"
   oops
