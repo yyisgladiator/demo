@@ -3,18 +3,12 @@ session "Streams" (mustWork) = "HOLCF" +
   theories
     Streams
 
-session "TStream" (mustWork) = "Streams" + 
+session "StreamBundle" (mustWork) = "Streams" + 
   options [quick_and_dirty = false]
   theories
-    TStream
+    SB
  
-session "ABPSorry" (mustWork) = "TStream" + 
+session "SPF" (mustWork) = "StreamBundle" + 
   options [quick_and_dirty = true]
   theories
-    "CaseStudies/ABP/ABP_TSPS"
- 
-session "ABP" (canFail) = "TStream" + 
-  options [quick_and_dirty = false]
-  theories
-    "CaseStudies/ABP/ABP_TSPS"
-
+    SPF
