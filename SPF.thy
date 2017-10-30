@@ -1280,24 +1280,29 @@ lemma spfLeast_dom: "spfDom\<cdot>(spfLeast In Out) = In"
 lemma spfLeast_ran: "spfRan\<cdot>(spfLeast In Out) = Out"
 proof - 
   have "sbDom\<cdot>(sbLeast Out) = Out"
-    sorry
+    by simp
   thus ?thesis
     apply(simp add: spfLeast_def)
-    
-    sorry  
+    apply(simp add: spfRan_def spfLeast_cont spfLeast_well)
+    by (smt option.distinct(1) option.inject ran2exists ranI sbleast_sbdom someI)
 qed
  
 lemma spfLeast_bottom: assumes "spfDom\<cdot>f = In" and "spfRan\<cdot>f = Out"
   shows "(spfLeast In Out) \<sqsubseteq> f"
 proof - 
-  have f0: "\<And>sb c. c \<in> sbDom\<cdot>(spfLeast In Out \<rightleftharpoons> sb) \<longrightarrow> (spfLeast In Out \<rightleftharpoons> sb) . c = \<epsilon>"
-    apply(subst(2) spfLeast_def)
-    apply(simp add: spfLeast_cont spfLeast_well)
-    sorry
-  have f1: "\<And>sb. (spfLeast In Out)\<rightleftharpoons>sb \<sqsubseteq> f\<rightleftharpoons>sb"
+  have f0: "\<And>sb c. sbDom\<cdot>sb = In \<and> c \<in> sbDom\<cdot>(spfLeast In Out \<rightleftharpoons> sb) \<longrightarrow> (spfLeast In Out \<rightleftharpoons> sb) . c = \<epsilon>"
+  proof
+    fix sb
+    fix c
+    assume f01: "sbDom\<cdot>sb = In \<and> c \<in> sbDom\<cdot>(spfLeast In Out \<rightleftharpoons> sb)"
+    show "(spfLeast In Out \<rightleftharpoons> sb) . c = \<epsilon>"
+      apply(simp add: spfLeast_def spfLeast_cont spfLeast_well)
+      by (metis (full_types) f01 sbleast_getch spfLeast_dom spfLeast_ran spf_ran_2_tsbdom2)
+  qed
+  have f1: "\<And>sb. sbDom\<cdot>sb = In \<longrightarrow> (spfLeast In Out)\<rightleftharpoons>sb \<sqsubseteq> f\<rightleftharpoons>sb"
     apply(subst sb_below)
      apply (metis assms(1) assms(2) option.collapse spfLeast_dom spfLeast_ran spf_ran_2_tsbdom2 spfdom2sbdom)
-      apply (simp add: f0)
+    apply (metis (no_types, lifting) assms(1) assms(2) f0 monofun_cfun_arg monofun_cfun_fun option.collapse po_eq_conv sbleast_getch sbleast_least spfLeast_dom spfLeast_ran spf_ran_2_tsbdom2 spfdom2sbdom)  
     by simp
   show ?thesis
     apply(simp add: spfLeast_def)  
