@@ -261,7 +261,14 @@ definition sbFilterTupel2:: " 'm SB set \<Rightarrow> 'm SB \<Rightarrow> 'm SB"
   if (b=sbLeast (sbDom\<cdot>b)) then sbLeast (sbDom\<cdot>b) else
     if (sbHd\<cdot>b\<in>bs) then (sbHd\<cdot>b) \<bullet> f (sbRt\<cdot>b) else f (sbRt\<cdot>b) ))\<cdot>(\<lambda>x. empty \<Omega>)"  *)
 
+definition sbHdElem :: "'m SB \<rightarrow> (channel \<rightharpoonup> 'm discr\<^sub>\<bottom>)" where
+"sbHdElem \<equiv> \<Lambda> sb. (\<lambda>c. (c \<in> sbDom\<cdot>sb) \<leadsto> (lshd\<cdot>(sb . c)))" 
 
+definition convDiscrUp :: "(channel \<rightharpoonup> 'm) \<Rightarrow> (channel \<rightharpoonup> 'm discr\<^sub>\<bottom>)" where
+"convDiscrUp sb \<equiv> (\<lambda>c. (c \<in> dom sb) \<leadsto> (Iup (Discr (sb \<rightharpoonup> c))))"
+
+definition convSB :: "(channel \<rightharpoonup> 'm discr\<^sub>\<bottom>) \<Rightarrow> 'm SB" where
+"convSB sb \<equiv> (\<lambda>c. (c \<in> dom sb) \<leadsto> (lscons\<cdot>(sb \<rightharpoonup> c)\<cdot>\<epsilon>))\<Omega>"
 
 (* ----------------------------------------------------------------------- *)
 section \<open>Lemmas\<close>
@@ -1546,43 +1553,12 @@ proof (cases "sbDom\<cdot>(\<Squnion>i. Y i) \<noteq> {}")
         proof(rule ccontr)
           assume a0: "\<not>?thesis"
           then have "\<exists>i. \<forall>j\<ge>i. (LEAST ln. \<exists>c. ln = #(Y i  .  c) \<and> c \<in> sbDom\<cdot>(Y i)) = ( LEAST ln. \<exists>c. ln = #(Y j  .  c) \<and> c \<in> sbDom\<cdot>(Y j))"
-            apply(simp)
-            sorry (* Proof found by sledgehammer times out *)
-            (* by (metis True assms(1) chain_mono_sb not_le_imp_less sbChain_dom_eq2 sbLen_chain2) *)
-            (* proof -  ISAR
-            assume a1: "\<exists>i. \<forall>j\<ge>i. \<not> (LEAST ln. \<exists>c. ln = #(Y i . c) \<and> c \<in> sbDom\<cdot>(Y i)) < (LEAST ln. \<exists>c. ln = #(Y j . c) \<and> c \<in> sbDom\<cdot>(Y j))"
-            { fix nn :: "nat \<Rightarrow> nat" and nna :: "nat \<Rightarrow> (nat \<Rightarrow> lnat) \<Rightarrow> nat" and nnb :: "(nat \<Rightarrow> lnat) \<Rightarrow> nat"
-              have "\<exists>n. \<forall>na. \<not> n \<le> na \<or> \<not> (LEAST l. \<exists>c. l = #(Y n . c) \<and> c \<in> sbDom\<cdot>(Y n)) < (LEAST l. \<exists>c. l = #(Y na . c) \<and> c \<in> sbDom\<cdot>(Y na))"
-                using a1 by auto
-              then obtain nnc :: nat where
-                ff1: "\<And>n. \<not> nnc \<le> n \<or> (LEAST l. \<exists>c. l = #(Y n . c) \<and> c \<in> sbDom\<cdot>(Y n)) \<le> (LEAST l. \<exists>c. l = #(Y nnc . c) \<and> c \<in> sbDom\<cdot>(Y nnc))"
-                using not_le_imp_less by blast
-              have "\<forall>f. \<exists>n. sbDom\<cdot>(f n::'a SB) = {} \<or> chain (\<lambda>n. LEAST l. \<exists>c. l = #(f n . c) \<and> c \<in> sbDom\<cdot>(f n)) \<or> \<not> chain f"
-                using sbLen_chain2 by blast
-              then have ff2: "chain (\<lambda>n. LEAST l. \<exists>c. l = #(Y n . c) \<and> c \<in> sbDom\<cdot>(Y n))"
-                using True assms(1) sbChain_dom_eq2 by blast
-              { assume "(LEAST l. \<exists>c. l = #(Y (nn (nnb (\<lambda>n. LEAST l. \<exists>c. l = #(Y n . c) \<and> c \<in> sbDom\<cdot>(Y n)))) . c) \<and> c \<in> sbDom\<cdot> (Y (nn (nnb (\<lambda>n. LEAST l. \<exists>c. l = #(Y n . c) \<and> c \<in> sbDom\<cdot>(Y n)))))) \<noteq> (LEAST l. \<exists>c. l = #(Y (nnb (\<lambda>n. LEAST l. \<exists>c. l = #(Y n . c) \<and> c \<in> sbDom\<cdot>(Y n))) . c) \<and> c \<in> sbDom\<cdot> (Y (nnb (\<lambda>n. LEAST l. \<exists>c. l = #(Y n . c) \<and> c \<in> sbDom\<cdot>(Y n)))))"
-                have "(\<exists>n na f nb. \<not> n \<le> nn n \<or> \<not> na \<le> nna na f \<or> (LEAST l. \<exists>c. l = #(Y (nn n) . c) \<and> c \<in> sbDom\<cdot>(Y (nn n))) = (LEAST l. \<exists>c. l = #(Y n . c) \<and> c \<in> sbDom\<cdot>(Y n)) \<or> chain f \<and> nnb f \<le> nb \<and> f (nna na f) \<le> f na \<and> f (nnb f) \<noteq> f nb) \<or> (\<exists>n\<ge>nnb (\<lambda>n. LEAST l. \<exists>c. l = #(Y n . c) \<and> c \<in> sbDom\<cdot>(Y n)). (LEAST l. \<exists>c. l = #(Y (nnb (\<lambda>n. LEAST l. \<exists>c. l = #(Y n . c) \<and> c \<in> sbDom\<cdot>(Y n))) . c) \<and> c \<in> sbDom\<cdot> (Y (nnb (\<lambda>n. LEAST l. \<exists>c. l = #(Y n . c) \<and> c \<in> sbDom\<cdot>(Y n))))) \<noteq> (LEAST l. \<exists>c. l = #(Y n . c) \<and> c \<in> sbDom\<cdot>(Y n)))"
-                  by fastforce
-                moreover
-                { assume "\<exists>n\<ge>nnb (\<lambda>n. LEAST l. \<exists>c. l = #(Y n . c) \<and> c \<in> sbDom\<cdot>(Y n)). (LEAST l. \<exists>c. l = #(Y (nnb (\<lambda>n. LEAST l. \<exists>c. l = #(Y n . c) \<and> c \<in> sbDom\<cdot>(Y n))) . c) \<and> c \<in> sbDom\<cdot> (Y (nnb (\<lambda>n. LEAST l. \<exists>c. l = #(Y n . c) \<and> c \<in> sbDom\<cdot>(Y n))))) \<noteq> (LEAST l. \<exists>c. l = #(Y n . c) \<and> c \<in> sbDom\<cdot>(Y n))"
-                  moreover
-                  { assume "\<exists>n. nnc \<le> nna nnc (\<lambda>n. LEAST l. \<exists>c. l = #(Y n . c) \<and> c \<in> sbDom\<cdot>(Y n)) \<and> nnb (\<lambda>n. LEAST l. \<exists>c. l = #(Y n . c) \<and> c \<in> sbDom\<cdot>(Y n)) \<le> n \<and> (LEAST l. \<exists>c. l = #(Y (nnb (\<lambda>n. LEAST l. \<exists>c. l = #(Y n . c) \<and> c \<in> sbDom\<cdot>(Y n))) . c) \<and> c \<in> sbDom\<cdot> (Y (nnb (\<lambda>n. LEAST l. \<exists>c. l = #(Y n . c) \<and> c \<in> sbDom\<cdot>(Y n))))) \<noteq> (LEAST l. \<exists>c. l = #(Y n . c) \<and> c \<in> sbDom\<cdot>(Y n))"
-                    then have "\<exists>n na. nnb (\<lambda>n. LEAST l. \<exists>c. l = #(Y n . c) \<and> c \<in> sbDom\<cdot>(Y n)) \<le> n \<and> (LEAST l. \<exists>c. l = #(Y (nna na (\<lambda>n. LEAST l. \<exists>c. l = #(Y n . c) \<and> c \<in> sbDom\<cdot>(Y n))) . c) \<and> c \<in> sbDom\<cdot> (Y (nna na (\<lambda>n. LEAST l. \<exists>c. l = #(Y n . c) \<and> c \<in> sbDom\<cdot>(Y n))))) \<le> (LEAST l. \<exists>c. l = #(Y na . c) \<and> c \<in> sbDom\<cdot>(Y na)) \<and> (LEAST l. \<exists>c. l = #(Y (nnb (\<lambda>n. LEAST l. \<exists>c. l = #(Y n . c) \<and> c \<in> sbDom\<cdot>(Y n))) . c) \<and> c \<in> sbDom\<cdot> (Y (nnb (\<lambda>n. LEAST l. \<exists>c. l = #(Y n . c) \<and> c \<in> sbDom\<cdot>(Y n))))) \<noteq> (LEAST l. \<exists>c. l = #(Y n . c) \<and> c \<in> sbDom\<cdot>(Y n))"
-                      using ff1 by blast
-                    then have "\<exists>n na f nb. \<not> n \<le> nn n \<or> \<not> na \<le> nna na f \<or> (LEAST l. \<exists>c. l = #(Y (nn n) . c) \<and> c \<in> sbDom\<cdot>(Y (nn n))) = (LEAST l. \<exists>c. l = #(Y n . c) \<and> c \<in> sbDom\<cdot>(Y n)) \<or> chain f \<and> nnb f \<le> nb \<and> f (nna na f) \<le> f na \<and> f (nnb f) \<noteq> f nb"
-                      using ff2 by blast }
-                  ultimately have "\<exists>n na f nb. \<not> n \<le> nn n \<or> \<not> na \<le> nna na f \<or> (LEAST l. \<exists>c. l = #(Y (nn n) . c) \<and> c \<in> sbDom\<cdot>(Y (nn n))) = (LEAST l. \<exists>c. l = #(Y n . c) \<and> c \<in> sbDom\<cdot>(Y n)) \<or> chain f \<and> nnb f \<le> nb \<and> f (nna na f) \<le> f na \<and> f (nnb f) \<noteq> f nb"
-                    by blast }
-                ultimately have "\<exists>n na f nb. \<not> n \<le> nn n \<or> \<not> na \<le> nna na f \<or> (LEAST l. \<exists>c. l = #(Y (nn n) . c) \<and> c \<in> sbDom\<cdot>(Y (nn n))) = (LEAST l. \<exists>c. l = #(Y n . c) \<and> c \<in> sbDom\<cdot>(Y n)) \<or> chain f \<and> nnb f \<le> nb \<and> f (nna na f) \<le> f na \<and> f (nnb f) \<noteq> f nb"
-                  by blast }
-              then have "\<exists>n na f nb. \<not> n \<le> nn n \<or> \<not> na \<le> nna na f \<or> (LEAST l. \<exists>c. l = #(Y (nn n) . c) \<and> c \<in> sbDom\<cdot>(Y (nn n))) = (LEAST l. \<exists>c. l = #(Y n . c) \<and> c \<in> sbDom\<cdot>(Y n)) \<or> chain f \<and> nnb f \<le> nb \<and> f (nna na f) \<le> f na \<and> f (nnb f) \<noteq> f nb"
-                by blast }
-            then have "\<exists>n. \<forall>na nb. \<exists>f. \<forall>nc. \<exists>nd ne. \<not> n \<le> na \<or> \<not> nd \<le> nc \<or> (LEAST l. \<exists>c. l = #(Y na . c) \<and> c \<in> sbDom\<cdot>(Y na)) = (LEAST l. \<exists>c. l = #(Y n . c) \<and> c \<in> sbDom\<cdot>(Y n)) \<or> chain f \<and> nb \<le> ne \<and> (f nc::lnat) \<le> f nd \<and> f nb \<noteq> f ne"
-              using Suc_le_eq by blast
-            then show ?thesis
-              by metis (* time out *)
-          qed *)
+          proof - 
+            have "chain (\<lambda> i. LEAST ln. \<exists>c. ln = #(Y i  .  c) \<and> c \<in> sbDom\<cdot>(Y i))"
+              by (simp add: assms(1) f11 sbLen_chain2)
+            thus ?thesis
+              using  a0 chain_mono_sb by fastforce
+          qed
           then have "\<exists>i. max_in_chain i (\<lambda> i. LEAST ln. \<exists>c. ln = #(Y i  .  c) \<and> c \<in> sbDom\<cdot>(Y i))" 
             by (meson max_in_chainI)
           then show "False" 
@@ -1611,7 +1587,51 @@ proof -
     apply simp
     using f1 sbLen_cont_pre by blast
 qed
+
   
+(* ----------------------------------------------------------------------- *)
+  subsection \<open>sbHdElem\<close>
+(* ----------------------------------------------------------------------- *)    
+
+lemma sbHd_mono: "monofun (\<lambda> sb::'a SB. (\<lambda>c. (c \<in> sbDom\<cdot>sb) \<leadsto> (lshd\<cdot>(sb . c))))"  
+proof(rule monofunI) 
+  fix x y ::"'a SB"
+  assume "x \<sqsubseteq> y"
+  then show "(\<lambda> sb::'a SB. (\<lambda>c. (c \<in> sbDom\<cdot>sb) \<leadsto> (lshd\<cdot>(sb . c)))) x \<sqsubseteq> (\<lambda> sb::'a SB. (\<lambda>c. (c \<in> sbDom\<cdot>sb) \<leadsto> (lshd\<cdot>(sb . c)))) y"
+    by (smt \<open>x \<sqsubseteq> y\<close> cont_pref_eq1I fun_below_iff monofun_cfun_fun po_eq_conv sbdom_eq some_below)
+qed  
+  
+lemma sbHd_cont_pre: assumes "chain Y" shows "(\<lambda>c. (c \<in> sbDom\<cdot>(\<Squnion>i. Y i))\<leadsto>lshd\<cdot>((\<Squnion>i. Y i) . c)) \<sqsubseteq> (\<Squnion>i. (\<lambda>c. (c \<in> sbDom\<cdot>(Y i))\<leadsto>lshd\<cdot>(Y i . c)))"
+proof - 
+  fix c
+  have "(\<lambda>c. (c \<in> sbDom\<cdot>(\<Squnion>i. Y i))\<leadsto>lshd\<cdot>((\<Squnion>i. Y i) . c)) c \<sqsubseteq> (\<Squnion>i. (\<lambda>c. (c \<in> sbDom\<cdot>(Y i))\<leadsto>lshd\<cdot>(Y i . c)) c)"
+  proof(cases "c \<in> sbDom\<cdot>(\<Squnion>i. Y i)")
+    case True
+    have f1: "\<And>i. sbDom\<cdot>(\<Squnion>i. Y i) =  sbDom\<cdot>(Y i)"
+      by (simp add: assms sbChain_dom_eq2)
+    then show ?thesis 
+      apply(simp add: True)
+    proof -
+      have "Some (lshd\<cdot>(\<Squnion>n. Y n . c)) \<sqsubseteq> (\<Squnion>n. Some (lshd\<cdot>(Y n . c)))"
+        by (metis assms ch2ch_Rep_cfunL ch2ch_Rep_cfunR if_then_lub)
+      then show "Some (lshd\<cdot>(Lub Y . c)) \<sqsubseteq> (\<Squnion>n. Some (lshd\<cdot>(Y n . c)))"
+        by (simp add: assms sbgetch_lub)
+    qed
+  next
+    case False
+    then show ?thesis 
+      using assms sbChain_dom_eq2 by fastforce
+  qed  
+  then show ?thesis
+    by (smt assms ch2ch_Rep_cfunL ch2ch_Rep_cfunR contlub_cfun_arg contlub_cfun_fun fun_below_iff if_then_lub is_ub_thelub lub_eq lub_fun monofun_cfun_arg monofun_cfun_fun po_class.chain_def po_eq_conv sbChain_dom_eq2 some_below)
+qed  
+    
+lemma sbHd_cont: "cont (\<lambda> sb::'a SB. (\<lambda>c. (c \<in> sbDom\<cdot>sb) \<leadsto> (lshd\<cdot>(sb . c))))"  
+  apply(rule contI2)
+  by(simp_all add: sbHd_mono sbHd_cont_pre)
+
+
+
 end
 
 
