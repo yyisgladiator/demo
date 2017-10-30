@@ -276,6 +276,11 @@ subsection \<open>spfLeast\<close>
 definition spfLeast :: "channel set \<Rightarrow> channel set \<Rightarrow> 'm SPF" where
 "spfLeast In Out \<equiv> Abs_CSPF (\<lambda> sb. (sbDom\<cdot>sb = In) \<leadsto> (sbLeast Out))" 
 
+subsection \<open>spfRestrict\<close>
+  
+definition spfRestrict :: "channel set \<Rightarrow> channel set \<Rightarrow> 'm SPF \<rightarrow> 'm SPF" where
+"spfRestrict In Out \<equiv> (\<Lambda> f. if (spfDom\<cdot>f = In \<and> spfRan\<cdot>f = Out) then f else (spfLeast In Out))"
+
 (* ----------------------------------------------------------------------- *)
   section \<open>Lemmas on 'm SPF's\<close>
 (* ----------------------------------------------------------------------- *)
@@ -1300,10 +1305,44 @@ proof -
 qed  
     
     
+subsection \<open>spfRestrict\<close>
+  
+lemma spfRestrict_mono: "monofun (\<lambda> f. if (spfDom\<cdot>f = In \<and> spfRan\<cdot>f = Out) then f else (spfLeast In Out))"
+  by (simp add: monofun_def spfdom_eq spfran_eq)
+
+lemma spfRestrict_cont: "cont (\<lambda> f. if (spfDom\<cdot>f = In \<and> spfRan\<cdot>f = Out) then f else (spfLeast In Out))"
+  by (smt Cont.contI2 lub_eq monofun_def po_eq_conv spfLeast_bottom spfLeast_dom spfLeast_ran spfdom_eq spfdom_eq_lub spfran_eq spfran_eq_lub)    
+  
+lemma spfRestrict_apply: assumes "spfDom\<cdot>f = In" and "spfRan\<cdot>f = Out" shows "spfRestrict In Out\<cdot>f = f"
+  apply(simp add: spfRestrict_def)  
+  by (simp add: spfRestrict_cont assms)  
+    
+lemma spfRestrict_dom: "spfDom\<cdot>(spfRestrict In Out\<cdot>f) = In" 
+proof(cases "spfDom\<cdot>f = In \<and> spfRan\<cdot>f = Out")
+  case True
+  then show ?thesis 
+    by (simp add: spfRestrict_apply)
+next
+  case False
+  then show ?thesis 
+    by (simp add: spfLeast_dom spfRestrict_cont spfRestrict_def)
+qed 
+  
+lemma spfRestrict_ran: "spfRan\<cdot>(spfRestrict In Out\<cdot>f) = Out" 
+proof(cases "spfDom\<cdot>f = In \<and> spfRan\<cdot>f = Out")
+  case True
+  then show ?thesis 
+    by (simp add: spfRestrict_apply)
+next
+  case False
+  then show ?thesis 
+    by (simp add: spfLeast_ran spfRestrict_cont spfRestrict_def)
+qed 
     
     
     
-          
+    
+    
 section \<open>Lemmas for Composition\<close>
   (* this is only a part of the composition related lemmata, see SPF_Comp.thy *)
     
