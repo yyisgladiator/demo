@@ -1274,10 +1274,10 @@ lemma spfLeast_well: "spf_well (\<Lambda> sb. (sbDom\<cdot>sb = In) \<leadsto> (
   apply(simp add: sbdom_rep_eq)
   by(auto)       
 
-lemma spfLeast_dom: "spfDom\<cdot>(spfLeast In Out) = In"
+lemma spfLeast_dom [simp]: "spfDom\<cdot>(spfLeast In Out) = In"
   by(simp add: spfLeast_def spfDomAbs spfLeast_cont spfLeast_well)
 
-lemma spfLeast_ran: "spfRan\<cdot>(spfLeast In Out) = Out"
+lemma spfLeast_ran[simp]: "spfRan\<cdot>(spfLeast In Out) = Out"
 proof - 
   have "sbDom\<cdot>(sbLeast Out) = Out"
     by simp
@@ -1322,7 +1322,7 @@ lemma spfRestrict_apply: assumes "spfDom\<cdot>f = In" and "spfRan\<cdot>f = Out
   apply(simp add: spfRestrict_def)  
   by (simp add: spfRestrict_cont assms)  
     
-lemma spfRestrict_dom: "spfDom\<cdot>(spfRestrict In Out\<cdot>f) = In" 
+lemma spfRestrict_dom[simp]: "spfDom\<cdot>(spfRestrict In Out\<cdot>f) = In" 
 proof(cases "spfDom\<cdot>f = In \<and> spfRan\<cdot>f = Out")
   case True
   then show ?thesis 
@@ -1333,7 +1333,7 @@ next
     by (simp add: spfLeast_dom spfRestrict_cont spfRestrict_def)
 qed 
   
-lemma spfRestrict_ran: "spfRan\<cdot>(spfRestrict In Out\<cdot>f) = Out" 
+lemma spfRestrict_ran[simp]: "spfRan\<cdot>(spfRestrict In Out\<cdot>f) = Out" 
 proof(cases "spfDom\<cdot>f = In \<and> spfRan\<cdot>f = Out")
   case True
   then show ?thesis 
