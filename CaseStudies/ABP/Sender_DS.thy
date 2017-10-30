@@ -142,22 +142,36 @@ next
             tsconc_rep_eq)
 oops
 
-lemma tssnd_h_tstickcount_adm: "adm (\<lambda>a. \<forall>x xa. min (#\<surd> x) (#\<surd> a) \<le> #\<surd> tsSnd_h\<cdot>x\<cdot>a\<cdot>(Discr xa))"
-  apply (rule adm_all)+
-  apply (rule admI)
-  apply (simp add: contlub_cfun_arg contlub_cfun_fun min_lub_rev)
-  sorry
 
-lemma tssnd_h_tstickcount_h:
-  "\<And>msg ack. min (#\<surd> msg) (#\<surd> acks) \<le> #\<surd> tsSnd_h\<cdot>msg\<cdot>acks\<cdot>(Discr ack) \<Longrightarrow>
-   min (#\<surd> delay msg) (#\<surd> (a &&\<surd> acks)) \<le> #\<surd> tsSnd_h\<cdot>(delay msg)\<cdot>(a &&\<surd> acks)\<cdot>(Discr ack)"
-  apply (induction acks arbitrary: a, simp_all)
+
+lemma lub_mono3: "\<lbrakk>chain (X::nat\<Rightarrow>lnat); chain (Y::nat\<Rightarrow>lnat); \<And>i. min x (X i) \<le> Y i\<rbrakk>
+    \<Longrightarrow> min x (\<Squnion>i. X i) \<le> (\<Squnion>i. Y i)"
+  by (metis dual_order.trans is_ub_thelub lnle_def lub_mono2 min_le_iff_disj)
+
+lemma lub_mono4: "\<lbrakk>chain (X::nat\<Rightarrow>lnat); chain (Y::nat\<Rightarrow>lnat); \<And>i. min (X i) y \<le> Y i\<rbrakk>
+    \<Longrightarrow> min (\<Squnion>i. X i) y \<le> (\<Squnion>i. Y i)"
+  by (metis dual_order.trans is_ub_thelub lnle_def lub_mono2 min_le_iff_disj)
+
+lemma tssnd_h_tstickcount_h: "acks \<noteq> \<bottom> \<Longrightarrow> 
+  min (#\<surd> delay as) (#\<surd> updis t &&\<surd> acks) \<le> #\<surd> tsSnd_h\<cdot>(delay as)\<cdot>(updis t &&\<surd> acks)\<cdot>(Discr ack)"
+  apply (simp add: tstickcount_delayfun tstickcount_mlscons tssnd_h_delayfun_msg)
+  apply (induction as arbitrary: acks t ack, simp_all)
+  apply (rule adm_all)+
+  apply (rule adm_imp, simp_all)
+  apply (rule admI)
+  apply (simp add: contlub_cfun_arg contlub_cfun_fun lub_mono4)
+  apply (smt less_lnsuc lnsuc_lnle_emb min.coboundedI1 min.coboundedI2 min_def tssnd_h_delayfun_msg 
+         tstickcount_delayfun)
+  apply (case_tac "ta=ack", simp_all)
+  apply (simp add: tssnd_h_mlscons_ack tstickcount_mlscons)
   sorry
 
 lemma tssnd_h_tstickcount:
   "min (#\<surd>msg) (#\<surd>acks) \<le> #\<surd>tsSnd_h\<cdot>msg\<cdot>acks\<cdot>(Discr ack)"
   apply (induction acks arbitrary: msg ack, simp_all)
-  apply (simp add: tssnd_h_tstickcount_adm)
+  apply (rule adm_all)+
+  apply (rule admI)
+  apply (simp add: contlub_cfun_arg contlub_cfun_fun lub_mono3)
   apply (rule_tac ts=msg in tscases, simp_all)
   apply (metis (no_types, lifting) delayfun_insert lnsuc_lnle_emb min_def tssnd_h_delayfun 
          tstickcount_tscons)
@@ -165,6 +179,7 @@ lemma tssnd_h_tstickcount:
          min_absorb2 min_def not_less strict_tstickcount tssnd_h_delayfun_nack tstickcount_delayfun
          tstickcount_mlscons)
   apply (rule_tac ts=msg in tscases, simp_all)
+  (* unproved *)
   using tssnd_h_tstickcount_h apply blast
   by (smt le_less lenmin min.cobounded1 min.orderI min_def strict_tstickcount tssnd_h_mlscons_ack 
       tssnd_h_mlscons_nack tstickcount_mlscons)
