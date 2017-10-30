@@ -1268,7 +1268,7 @@ lemma spfLeast_mono: "monofun (\<lambda> sb. (sbDom\<cdot>sb = In) \<leadsto> (s
 lemma spfLeast_cont: "cont (\<lambda> sb. (sbDom\<cdot>sb = In) \<leadsto> (sbLeast Out))" 
   by simp
   
-lemma spfLeast_well: "spf_well (\<Lambda> sb. (sbDom\<cdot>sb = In) \<leadsto> (sbLeast Out))"        
+lemma spfLeast_well [simp]: "spf_well (\<Lambda> sb. (sbDom\<cdot>sb = In) \<leadsto> (sbLeast Out))"        
   apply(simp add: spf_well_def)
   apply(simp only: domIff2)
   apply(simp add: sbdom_rep_eq)
@@ -1286,8 +1286,13 @@ proof -
     apply(simp add: spfRan_def spfLeast_cont spfLeast_well)
     by (smt option.distinct(1) option.inject ran2exists ranI sbleast_sbdom someI)
 qed
- 
-lemma spfLeast_bottom: assumes "spfDom\<cdot>f = In" and "spfRan\<cdot>f = Out"
+
+lemma spfLeast_apply[simp]: 
+  assumes "sbDom\<cdot>sb = In"
+  shows "spfLeast In Out \<rightleftharpoons>sb = sbLeast Out"
+  by(simp add: spfLeast_def assms)
+
+lemma spfLeast_bottom [simp]: assumes "spfDom\<cdot>f = In" and "spfRan\<cdot>f = Out"
   shows "(spfLeast In Out) \<sqsubseteq> f"
 proof - 
   have f0: "\<And>sb c. sbDom\<cdot>sb = In \<and> c \<in> sbDom\<cdot>(spfLeast In Out \<rightleftharpoons> sb) \<longrightarrow> (spfLeast In Out \<rightleftharpoons> sb) . c = \<epsilon>"
@@ -1315,10 +1320,10 @@ subsection \<open>spfRestrict\<close>
 lemma spfRestrict_mono: "monofun (\<lambda> f. if (spfDom\<cdot>f = In \<and> spfRan\<cdot>f = Out) then f else (spfLeast In Out))"
   by (simp add: monofun_def spfdom_eq spfran_eq)
 
-lemma spfRestrict_cont: "cont (\<lambda> f. if (spfDom\<cdot>f = In \<and> spfRan\<cdot>f = Out) then f else (spfLeast In Out))"
+lemma spfRestrict_cont[simp]: "cont (\<lambda> f. if (spfDom\<cdot>f = In \<and> spfRan\<cdot>f = Out) then f else (spfLeast In Out))"
   by (smt Cont.contI2 lub_eq monofun_def po_eq_conv spfLeast_bottom spfLeast_dom spfLeast_ran spfdom_eq spfdom_eq_lub spfran_eq spfran_eq_lub)    
   
-lemma spfRestrict_apply: assumes "spfDom\<cdot>f = In" and "spfRan\<cdot>f = Out" shows "spfRestrict In Out\<cdot>f = f"
+lemma spfRestrict_apply[simp]: assumes "spfDom\<cdot>f = In" and "spfRan\<cdot>f = Out" shows "spfRestrict In Out\<cdot>f = f"
   apply(simp add: spfRestrict_def)  
   by (simp add: spfRestrict_cont assms)  
     
