@@ -271,7 +271,10 @@ subsection \<open>hide\<close>
 definition hide :: "'m SPF \<Rightarrow>  channel set \<Rightarrow> 'm SPF" ("_\<h>_") where
 "hide f cs \<equiv> Abs_CSPF (\<lambda> x. (sbDom\<cdot>x = spfDom\<cdot>f ) \<leadsto> ((f \<rightleftharpoons> x)\<bar>(spfRan\<cdot>f - cs)))"
 
-
+subsection \<open>spfLeast\<close>
+  
+definition spfLeast :: "channel set \<Rightarrow> channel set \<Rightarrow> 'm SPF" where
+"spfLeast In Out \<equiv> Abs_CSPF (\<lambda> sb. (sbDom\<cdot>sb = In) \<leadsto> (sbLeast Out))" 
 
 (* ----------------------------------------------------------------------- *)
   section \<open>Lemmas on 'm SPF's\<close>
@@ -1251,9 +1254,57 @@ lemma sbfix_ind2:  assumes "sbfun_io_eq F cs"
         apply (frule_tac x=nat in spec)
         by (simp add: assms(1) iter_sbfix_dom s2)  
   
-  
           
-  section \<open>Lemmas for Composition\<close>
+subsection \<open>spfLeast\<close>
+        
+lemma spfLeast_mono: "monofun (\<lambda> sb. (sbDom\<cdot>sb = In) \<leadsto> (sbLeast Out))" 
+  by simp  
+  
+lemma spfLeast_cont: "cont (\<lambda> sb. (sbDom\<cdot>sb = In) \<leadsto> (sbLeast Out))" 
+  by simp
+  
+lemma spfLeast_well: "spf_well (\<Lambda> sb. (sbDom\<cdot>sb = In) \<leadsto> (sbLeast Out))"        
+  apply(simp add: spf_well_def)
+  apply(simp only: domIff2)
+  apply(simp add: sbdom_rep_eq)
+  by(auto)       
+
+lemma spfLeast_dom: "spfDom\<cdot>(spfLeast In Out) = In"
+  by(simp add: spfLeast_def spfDomAbs spfLeast_cont spfLeast_well)
+
+lemma spfLeast_ran: "spfRan\<cdot>(spfLeast In Out) = Out"
+proof - 
+  have "sbDom\<cdot>(sbLeast Out) = Out"
+    sorry
+  thus ?thesis
+    apply(simp add: spfLeast_def)
+    
+    sorry  
+qed
+ 
+lemma spfLeast_bottom: assumes "spfDom\<cdot>f = In" and "spfRan\<cdot>f = Out"
+  shows "(spfLeast In Out) \<sqsubseteq> f"
+proof - 
+  have f0: "\<And>sb c. c \<in> sbDom\<cdot>(spfLeast In Out \<rightleftharpoons> sb) \<longrightarrow> (spfLeast In Out \<rightleftharpoons> sb) . c = \<epsilon>"
+    apply(subst(2) spfLeast_def)
+    apply(simp add: spfLeast_cont spfLeast_well)
+    sorry
+  have f1: "\<And>sb. (spfLeast In Out)\<rightleftharpoons>sb \<sqsubseteq> f\<rightleftharpoons>sb"
+    apply(subst sb_below)
+     apply (metis assms(1) assms(2) option.collapse spfLeast_dom spfLeast_ran spf_ran_2_tsbdom2 spfdom2sbdom)
+      apply (simp add: f0)
+    by simp
+  show ?thesis
+    apply(simp add: spfLeast_def)  
+      by (metis assms(1) f1 spfLeast_def spfLeast_dom spf_belowI)
+qed  
+    
+    
+    
+    
+    
+          
+section \<open>Lemmas for Composition\<close>
   (* this is only a part of the composition related lemmata, see SPF_Comp.thy *)
     
 subsection \<open>spfCompH\<close>
