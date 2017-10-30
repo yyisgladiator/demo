@@ -52,6 +52,9 @@ next
   then show ?thesis
     by (simp add: a0 a1 unique_inf_lub)
 qed
+  
+lemma min_lub_rev:"chain Y \<Longrightarrow>  min (x) (\<Squnion>i::nat. (Y i)) = (\<Squnion>i::nat. min (x::lnat) (Y i)) "
+  using min_lub by auto
 
 lemma tssnd_tstickcount_adm_h1: "\<And>x. adm (\<lambda>a. \<not>(tslen\<cdot>a \<le> tslen\<cdot>x))"
   by (smt admI ch2ch_Rep_cfunR contlub_cfun_arg dual_order.trans is_ub_thelub lnle_def)
@@ -82,7 +85,7 @@ sorry
 lemma tssnd_tstickcount2_adm: "adm (\<lambda>a. \<forall>x xa. min (#\<surd> x) (#\<surd> a) \<le> #\<surd> tsSnd_h\<cdot>x\<cdot>a\<cdot>(Discr xa))"
   apply (rule adm_all)+
   apply (rule admI)
-  apply (simp add: contlub_cfun_arg contlub_cfun_fun)
+  apply (simp add: contlub_cfun_arg contlub_cfun_fun min_lub_rev)
   (* Fallunterscheidung nach Minimum?
   using ord_eq_le_trans 
   apply (simp add: min_lub_tstickcount)*)
