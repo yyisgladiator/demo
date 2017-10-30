@@ -40,7 +40,6 @@ end
 class dpcpo = pcpo + upcpo
 
 
-
 section \<open>rev type\<close>
 
 typedef 'a rev = "{a::'a. True}"
@@ -60,9 +59,43 @@ begin
     using Rep_rev_inject below_antisym by auto 
 end
 
+declare [[show_types]]
+declare [[show_consts]]
+class revcpo = po +
+  assumes "\<And>S::(nat \<Rightarrow> 'a::po). chain (\<lambda>i. Abs_rev (S i)) \<Longrightarrow> \<exists>x. range (\<lambda>i. Abs_rev (S i)) <<| (Abs_rev x)"
+begin
+lemma rev_lubex:
+  fixes S::"(nat \<Rightarrow> 'a::po)"
+  assumes "chain (\<lambda>i. Abs_rev (S i))"
+  shows "\<exists>x. range (\<lambda>i. Abs_rev (S i)) <<| (Abs_rev x)"
+  sorry
+
+end
+
+instantiation rev :: (revcpo) cpo
+begin
+lemma rev_bot_top: "x\<sqsubseteq>(Abs_rev \<bottom>)"
+  by (simp add: Abs_rev_inverse)
+
+  instance
+  proof intro_classes
+    fix S :: "nat \<Rightarrow> 'a::revcpo rev"
+    assume as: "chain S"
+    obtain Y :: "nat \<Rightarrow> 'a::revcpo" where y_def: "\<And>i. Y i = Rep_rev (S i)" by simp
+    have "chain (\<lambda>i. Abs_rev (Y i))"
+      by (metis Rep_rev_inverse as po_class.chain_def y_def)
+    hence "\<exists>x. range (\<lambda>i. Abs_rev (Y i)) <<| (Abs_rev x)"
+      using rev_lubex by blast
+    thus "\<exists>x. range S <<| x"
+      by (metis Rep_rev_inverse image_cong y_def)
+  qed
+end
+
+
 (* SWS: I am not 100% sure this is true... *)
 (* If not, create a new class so that is works *)
-instantiation rev :: (pcpo) cpo
+(* Update: 100% sure this does not work. New class is revcpo *)
+(*instantiation rev :: (pcpo) cpo
 begin
 lemma rev_bot_top: "x\<sqsubseteq>(Abs_rev \<bottom>)"
   by (simp add: Abs_rev_inverse)
@@ -77,7 +110,7 @@ instance
   apply auto[2]
 
   sorry
-end
+end *)
 
 instance rev :: (pcpo) upcpo
   apply intro_classes
