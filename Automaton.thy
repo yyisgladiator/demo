@@ -21,18 +21,26 @@ section \<open>Backend Signatures\<close>
 (* ToDo: wellformed condition *)
 
 (* FYI: in the non-deterministic case the automaton will be a cpo *)
+
+(* The content is:
+  transition function \<times> initial state \<times> initial Output \<times> input domain \<times> output domain *)
 typedef ('state::type, 'm::message) automaton = 
-  "{f::(('state \<times>(channel \<rightharpoonup> 'm)) \<Rightarrow> ('state \<times> 'm SB)) \<times> 'state \<times> 'm SB. True}"
+  "{f::(('state \<times>(channel \<rightharpoonup> 'm)) \<Rightarrow> ('state \<times> 'm SB)) \<times> 'state \<times> 'm SB \<times> channel set \<times> channel set. True}"
   sorry
 
 definition getInitialState :: "('s, 'm::message) automaton \<Rightarrow> 's" where
 "getInitialState automat = fst (snd (Rep_automaton automat))"
 
+definition getDom :: "('s, 'm::message) automaton \<Rightarrow> channel set" where
+"getDom = undefined" (* todo *)
+
+definition getRan :: "('s, 'm::message) automaton \<Rightarrow> channel set" where
+"getRan = undefined" (* todo *)
 
 setup_lifting type_definition_automaton
 
 (* HK is defining this. returns the fixpoint *)
-definition myFixer :: "(('s \<Rightarrow> 'm SPF)\<rightarrow>('s \<Rightarrow> 'm SPF)) \<rightarrow> ('s \<Rightarrow> 'm SPF)" where
+definition myFixer :: "channel set \<Rightarrow> channel set \<Rightarrow> (('s \<Rightarrow> 'm SPF)\<rightarrow>('s \<Rightarrow> 'm SPF)) \<rightarrow> ('s \<Rightarrow> 'm SPF)" where
 "myFixer = undefined"
 
 definition spfLeast::"channel set \<Rightarrow> channel set \<Rightarrow> 'm::message SPF" where
@@ -60,7 +68,7 @@ lemma "cont (\<lambda>h. (\<lambda> e. spfCons (snd (f (s,e)))\<cdot>(h (fst (f 
 
 (* As defined in Rum96 *)
 definition h :: "('s::type, 'm::message) automaton \<Rightarrow> ('s \<Rightarrow> 'm SPF)" where
-"h automat = myFixer\<cdot>(\<Lambda> h. (\<lambda>s. spfStep {}{}\<cdot>(helper undefined s\<cdot>h)))"
+"h automat = myFixer (getDom automat)(getRan automat)\<cdot>(\<Lambda> h. (\<lambda>s. spfStep {}{}\<cdot>(helper undefined s\<cdot>h)))"
 
 lemma "cont (\<lambda> h. (\<lambda>s. spfStep{}{}\<cdot>(helper automat s\<cdot>h)))"
   by simp
@@ -69,6 +77,8 @@ lemma "cont (\<lambda> h. (\<lambda>s. spfStep{}{}\<cdot>(helper automat s\<cdot
 (* But basically she just calls h *)
 definition H :: "('s, 'm::message) automaton \<Rightarrow> 'm SPF" where
 "H automat = h automat (getInitialState automat)"
+
+
 
 
 
@@ -108,11 +118,20 @@ end
 
 section \<open>Automaton Functions\<close>
 
+(* Creates a fitting SB given the right output values *)
+(* Parameter: 
+  channel set \<Rightarrow> domain of the output
+  nat         \<Rightarrow> maps to channel c1, in MAA called "XXXX"
+  bool        \<Rightarrow> maps to channel c2, in MAA calles "YYYY" *)
+fun createOutput :: "channel set \<Rightarrow> nat \<Rightarrow> bool \<Rightarrow> M SB" where
+"createOutput cs n b = undefined"
+
 (* Somehow define the transition function *)
+(* use the createOutput function *)
 definition myTransition :: "(myState \<times>(channel \<rightharpoonup> myM)) \<Rightarrow> (myState \<times> myM SB)" where
 "myTransition = undefined"
 
-lift_definition myAutomaton :: "(myState, myM) automaton" is "(myTransition, State even 0 True, sbLeast {})"
+lift_definition myAutomaton :: "(myState, myM) automaton" is "(myTransition, State even 0 True, sbLeast {}, {}, {})"
   sorry (* In the final form of the automaton datatype we will have to proof stuff *)
 
 definition mySPF :: "myM SPF" where
