@@ -6,28 +6,31 @@
 *)
 
 theory USB
-imports HOLCF
+imports LNat OptionCpo
 
 begin
-default_sort type
 
 
 (* ----------------------------------------------------------------------- *)
 section \<open>Datatype Definition\<close>
 (* ----------------------------------------------------------------------- *)
 
+datatype channel = c1 | c2
 
-typedef ('c,'s) USF = "{f :: 'c \<Rightarrow> 's set. True}"
-  sorry
+default_sort cpo
 
-
+(* Not sure if it should be a cpo or pcpo *)
 class us = cpo +
-  fixes getUSF :: "'a \<Rightarrow> ('a,'a) USF"
+  fixes isOkay :: "channel \<Rightarrow> 'a \<Rightarrow> bool"
+  fixes len :: "'a \<rightarrow> lnat"
+  fixes conc :: "'a \<Rightarrow> 'a \<rightarrow> 'a"
+
+(* assumes "\<And>c. isOkay c \<bottom>" (* Just an example, do not use this *) *)
+  assumes "\<And>c. (isOkay c s1 \<Longrightarrow> isOkay c s2 \<Longrightarrow> isOkay c (conc s1\<cdot>s2))"
 begin
 end
 
-datatype channel = c1 | c2 
-
+(* Legacy *)
 class message = countable +
   fixes ctype :: "channel \<Rightarrow> 'a set" 
 begin
@@ -35,10 +38,10 @@ end
 
   (* Definition: Welltyped. "a \<rightharpoonup> b" means "a => b option" *)
   (* Every Stream may only contain certain elements *)
-definition sb_well :: "(channel \<rightharpoonup> 's::message) => bool" where
-"sb_well f \<equiv> \<forall>c \<in> dom f. sdom\<cdot>(f\<rightharpoonup>c) \<subseteq> ctype c"
+definition sb_well :: "(channel \<rightharpoonup> 's::us) => bool" where
+"sb_well f \<equiv> \<forall>c \<in> dom f. (isOkay c (f\<rightharpoonup>c))"
 
-cpodef ('c,'s) SB = "{b :: 'c \<rightharpoonup> 's . sb_well b}"
+cpodef 's::us SB = "{b :: channel \<rightharpoonup> 's . sb_well b}"
   sorry
 
 
