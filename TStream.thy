@@ -127,6 +127,9 @@ where "ts1 \<bullet>\<surd> ts2 \<equiv> tsConc ts1\<cdot>ts2"
 definition tslen:: "'a tstream \<rightarrow> lnat" where 
 "tslen \<equiv> \<Lambda> ts. #(Rep_tstream ts)"   
 
+abbreviation tslen_abbr :: "'a tstream \<Rightarrow> lnat" ( "#\<^sub>t _" 65)
+  where " #\<^sub>tts \<equiv> tslen\<cdot>ts"
+
 (* filters all ticks and returns the corrosponding 'a stream *)
 definition tsAbs:: "'a tstream \<rightarrow> 'a stream" where
 "tsAbs \<equiv> \<Lambda> ts.  smap (\<lambda>e. case e of Msg m \<Rightarrow> m | \<surd> \<Rightarrow> undefined)\<cdot>(sfilter {e. e \<noteq> \<surd>}\<cdot>(Rep_tstream ts))"
@@ -3134,31 +3137,16 @@ lemma tszip_tsprojsnd_rev: "#(tsAbs\<cdot>ts)=\<infinity> \<Longrightarrow> #xs=
   by (metis sprojsnd_szipl1 tsprojsnd_tsabs tszip_tsabs)
 
 (* without assumption #xs=\<infinity> *)
-(* ToDo: lemmata for tszip *)
     
 lemma tszip_nbot2: "ts \<noteq> \<bottom> \<Longrightarrow> tslen\<cdot>ts \<le> #xs \<Longrightarrow> tsZip\<cdot>ts\<cdot>xs \<noteq> \<bottom>"
-  oops
-(*  proof (induction ts arbitrary: xs)
-    case adm
-    then show ?case 
-      apply (rule admI)
-      oops
-  next
-    case bottom
-    then show ?case by simp
-  next
-    case (delayfun ts)
-    then show ?case
-      by (metis bot_is_0 delayfun_nbot eq_bottom_iff lnle_def strictI strict_slen 
-                tslen_smaller_nbot tszip_delayfun) 
-  next
-    case (mlscons ts t)
-    then show ?case
-      apply (rule_tac x=xs in scases, simp_all)
-      apply (metis (no_types) mlscons.prems(1) order_refl strict_slen tslen_slen_smaller_nbot)
-      by (metis bot_is_0 lnat.con_rews lnsuc_lnle_emb lscons_conv tsZip.simps(1) tslen_bottom 
-            tslen_conc tszip_mlscons)  
-  oops *)
+  apply (induction ts arbitrary: xs)
+  apply (simp_all)
+  apply (rule admI)
+  apply (metis inf_ub l42 less2eq tsInfTicks ts_infinite_lub tslen_insert tszip_nbot)
+  apply (simp add: tslen_slen_smaller_nbot tszip_delayfun)
+  apply (simp add: tslen_conc)
+  apply (rule_tac x=xs in scases, simp_all)
+  by (metis lscons_conv tsmlscons_nbot tszip_mlscons tszip_strict(2) up_defined)
 
 lemma tszip_tstickcount_leq_h:
   "#\<surd>tsMLscons\<cdot>(updis (t, x))\<cdot>(delayFun\<cdot>\<bottom>) \<le> #\<surd>tsMLscons\<cdot>(updis t)\<cdot>(delayFun\<cdot>ts)"
@@ -3176,28 +3164,17 @@ lemma tszip_tstickcount_leq [simp]: "#\<surd>tsZip\<cdot>ts\<cdot>xs \<le> #\<su
   apply (simp add: tszip_tstickcount_leq_h sup'_def tszip_mlscons_msgdelay)
   by (metis lscons_conv tstickcount_mlscons tszip_mlscons_2msg)
 
-(* ToDo: lemmata for tszip *)
-
 lemma tszip_tsabs2: "tslen\<cdot>ts \<le> #xs \<Longrightarrow> tsAbs\<cdot>(tsZip\<cdot>ts\<cdot>xs) = szip\<cdot>(tsAbs\<cdot>ts)\<cdot>xs"
-  oops
-  (*
-  proof (induction ts arbitrary: xs)
-    case adm
-    then show ?case sorry
-  next
-    case bottom
-    then show ?case by simp
-  next
-    case (delayfun ts)
-    then show ?case
-      by (metis (no_types, lifting) less_lnsuc trans_lnle tsZip.simps(1) 
-                tsabs_delayfun tslen_delay tszip_delayfun) 
-  next
-    case (mlscons ts t)
-    then show ?case
-      apply (rule_tac x=xs in scases, simp_all)
-  oops
-*)
+  apply (induction ts arbitrary: xs)
+  apply (simp_all)
+  apply (rule admI)
+  apply (metis inf_ub l42 less2eq tsInfTicks ts_infinite_lub tslen_insert tszip_tsabs)
+  apply (metis (no_types, lifting) less_lnsuc trans_lnle tsabs_delayfun tslen_delay 
+         tslen_slen_smaller_nbot tszip_delayfun)
+  apply (simp add: tsabs_mlscons tslen_conc)
+  apply (rule_tac x=xs in scases, simp_all)
+  by (metis (no_types, lifting) lscons_conv szip_scons tsabs_mlscons tslen_slen_smaller_nbot 
+      tszip_mlscons tszip_nbot2)
 
 lemma tszip_tsabs_slen_leq [simp]: "#(tsAbs\<cdot>(tsZip\<cdot>ts\<cdot>xs)) \<le> #(tsAbs\<cdot>ts)"
   apply (induction ts arbitrary: xs)
@@ -3228,24 +3205,19 @@ lemma tszip_tsabs_slen_leq [simp]: "#(tsAbs\<cdot>(tsZip\<cdot>ts\<cdot>xs)) \<l
       by (metis lnle_def lscons_conv tszip_mlscons_2msg)
   qed
 
-lemma tszip_tsdom2: "tsDom\<cdot>(tsZip\<cdot>ts\<cdot>xs) \<subseteq> sdom\<cdot>(szip\<cdot>(tsAbs\<cdot>ts)\<cdot>xs)"
-  oops
-(*  proof (induction ts arbitrary: xs)
-    case adm
-    then show ?case sorry
-  next
-    case bottom
-    then show ?case by simp
-  next
-    case (delayfun ts)
-    then show ?case
-      by (metis tsZip.simps(1) tsabs_delayfun tsdom_delayfun tszip_delayfun)
-  next
-    case (mlscons ts t)
-    then show ?case 
-      apply (rule_tac x=xs in scases, simp_all)
-      sorry 
-  oops  *)
+lemma tszip_tsdom2: "tslen\<cdot>ts \<le> #xs \<Longrightarrow> tsDom\<cdot>(tsZip\<cdot>ts\<cdot>xs) \<subseteq> sdom\<cdot>(szip\<cdot>(tsAbs\<cdot>ts)\<cdot>xs)"
+  apply (induction ts arbitrary: xs)
+  apply (simp_all)
+  apply (rule adm_all, rule adm_imp)
+  apply (metis (mono_tags, lifting) admI inf_ub l42 less2eq tsInfTicks ts_infinite_lub tslen_insert)
+  apply (rule admI)
+  apply (simp add: contlub_cfun_arg contlub_cfun_fun lub_eq_Union SUP_subset_mono)
+  apply (rule_tac x=xs in scases, simp_all)
+  apply (rule_tac ts=ts in tscases, simp_all)
+  apply (simp add: tszip_delayfun tsdom_delayfun)
+  apply (metis (no_types, lifting) eq_iff slen_scons tsabs_delayfun tsabs_tsdom tszip_tsabs2)
+  apply (metis (no_types, lifting) eq_iff slen_scons tsabs_delayfun tsabs_tsdom tszip_tsabs2)
+  by (metis equalityE tsabs_tsdom tszip_tsabs2)
 
 (* ----------------------------------------------------------------------- *)
 subsection {* tsRemDups *}
