@@ -29,13 +29,6 @@ typedef ('state::type, 'm::message) automaton =
   by blast
 setup_lifting type_definition_automaton
 
-
-(* FYI: Non-deterministic version *)
-typedef ('state::type, 'm::message) NDA = 
-  "{f::(('state \<times>(channel \<rightharpoonup> 'm)) \<Rightarrow> (('state \<times> 'm SB) set)) \<times> ('state \<times> 'm SB) set \<times> channel set \<times> channel set. True}"
-  by blast
-
-
 definition getTransition :: "('s, 'm::message) automaton \<Rightarrow> (('s \<times>(channel \<rightharpoonup> 'm)) \<Rightarrow> ('s \<times> 'm SB))" where
 "getTransition automat = fst (Rep_automaton automat)"
 
@@ -162,6 +155,47 @@ definition mySPF :: "myM SPF" where
 
 
 section \<open>Automaton Lemma\<close>
+
+
+
+
+
+
+
+
+section \<open>Non Deterministic Case \<close>
+
+(* FYI: Non-deterministic version *)
+typedef ('state::type, 'm::message) NDA = 
+  "{f::(('state \<times>(channel \<rightharpoonup> 'm)) \<Rightarrow> (('state \<times> 'm SB) set)) \<times> ('state \<times> 'm SB) set \<times> channel set \<times> channel set. True}"
+  by blast
+
+(* relation based on transition function and initial set *)
+instance NDA :: (type, message) cpo 
+  sorry
+
+definition spsFix :: "('a \<rightarrow> 'a) \<rightarrow> 'a" where
+"spsFix = undefined"  (* Die ganze function ist natürlich grober unsinn *)
+
+definition spsHelp :: "('m SPF set \<times> 'm SB) set \<rightarrow> 'm SPF set" where
+"spsHelp = undefined"
+
+definition stepify :: "('e \<Rightarrow> 'm SPF set) \<rightarrow> ('e \<Rightarrow> 'm SPF) set" where
+"stepify = undefined"
+
+
+(* Similar to Rum96 *)
+definition nda_h :: "('s::type, 'm::message) NDA \<rightarrow> ('s \<Rightarrow> 'm SPF set)" where
+"nda_h \<equiv> \<Lambda> nda.  spsFix\<cdot>(\<Lambda> h. (\<lambda>s.  {(spfStep {} {}\<cdot>f) . f\<in>(stepify\<cdot>h)}))" (* Does not work yet *)
+
+
+(* This function also prepends the first SB ... *)
+(* But basically she just calls h *)
+definition nda_H :: "('s, 'm::message) NDA \<rightarrow> 'm SPF set" where
+"nda_H \<equiv> \<Lambda> nda. undefined" (* use spsHelp for this *)
+
+
+
 
 
 end
