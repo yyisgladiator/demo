@@ -81,11 +81,7 @@ lemma ora_f_ex: "\<exists>ora1. P (\<up>False\<bullet>ora1) \<Longrightarrow> \<
      
       sorry
   qed
-   
-
-lemma newOra_srcdups_ex:
-  "\<exists> ora2. srcdups\<cdot>(sMed\<cdot>msg\<cdot>ora1) = sMed\<cdot>(srcdups\<cdot>msg)\<cdot>ora2"
-  by (simp add: newOra_srcdups_ex_h) *)
+   *)
 
 lemma smed_t2: "s \<noteq> \<epsilon> \<Longrightarrow>  sMed\<cdot>s\<cdot>(\<up>True \<bullet> ora) = \<up>(shd s) \<bullet> sMed\<cdot>(srt\<cdot>s)\<cdot>ora"
   by (metis smed_t surj_scons)
@@ -100,19 +96,92 @@ fixrec drop_false_ora :: "'a discr \<rightarrow> 'a stream \<rightarrow> bool st
   (if c=a then drop_false_ora\<cdot>c\<cdot>as\<cdot>bs
    else ((up\<cdot>b) && bs))" 
 
-lemma drop_ora: "shd s \<noteq> shd (sMed\<cdot>s\<cdot>ora) \<Longrightarrow> 
+lemma drop_false_ora_f: "drop_false_ora\<cdot>(Discr a)\<cdot>(\<up>a \<bullet> sa)\<cdot>(\<up>b \<bullet> sb) = drop_false_ora\<cdot>(Discr a)\<cdot>(sa)\<cdot>(sb)"
+  by (simp add: conc2cons)
+
+lemma drop_false_ora_t: "a \<noteq> as \<Longrightarrow> drop_false_ora\<cdot>(Discr a)\<cdot>(\<up>as \<bullet> sa)\<cdot>(sb) = sb"
+  apply (rule scases [of sb],simp)
+  by (simp add: conc2cons)
+
+lemma drop_ora: assumes "s \<noteq> \<epsilon>"  "(sMed\<cdot>s\<cdot>ora) \<noteq> \<epsilon>" shows "shd s \<noteq> shd (sMed\<cdot>s\<cdot>ora) \<Longrightarrow> 
   sMed\<cdot>s\<cdot>ora = sMed\<cdot>(sdropwhile (\<lambda>x. x = shd s)\<cdot>s)\<cdot>(drop_false_ora\<cdot>(Discr(shd s))\<cdot>s\<cdot>ora)" 
-  apply (induction s arbitrary: ora rule:ind,simp_all)
-  apply (rule adm_all)
-  apply (rule admI)
+  proof(induction s arbitrary: ora rule:ind)
+    case 1
+    then show ?case
+      apply (rule adm_all)
+      apply (rule admI)
+      sorry
+  next
+    case 2
+    then show ?case by simp
+  next
+    case (3 a s)
+    then show ?case
+      apply (cases rule: oracases[of ora]) 
+      using assms apply simp
+      using assms apply simp_all 
+      apply (simp add: drop_false_ora_f)
+      apply (case_tac "a =shd s",simp)
+      by (smt drop_false_ora_t sdropwhile_f smed_bot1 strict_sdropwhile surj_scons)     
+  qed
+
+lemma smed_false:assumes "s \<noteq> \<epsilon>"  "(sMed\<cdot>s\<cdot>ora) \<noteq> \<epsilon>" "shd s \<noteq> shd (sMed\<cdot>s\<cdot>ora)" obtains ora2 where "sMed\<cdot>s\<cdot>ora = sMed\<cdot>(sdropwhile (\<lambda>x. x = shd s)\<cdot>s)\<cdot>ora2"
+  using drop_ora assms by auto
+
+lemma newOra_srcdups_h: " s \<noteq> \<epsilon> \<and> sMed\<cdot>s\<cdot>as \<noteq> \<epsilon> \<and>  shd s \<noteq> shd (sMed\<cdot>s\<cdot>as) \<Longrightarrow>
+       srcdups\<cdot>(sMed\<cdot>s\<cdot>as) =
+       sMed\<cdot>(srcdups\<cdot>(sdropwhile (\<lambda>x. x = shd s)\<cdot>s))\<cdot>
+                  (newOracle_srcdups\<cdot>(srcdups\<cdot>(sMed\<cdot>s\<cdot>as))\<cdot>(srcdups\<cdot>(sdropwhile (\<lambda>x. x = shd s)\<cdot>s)))"
+apply (induction s arbitrary: as rule:ind,simp_all)
+apply (rule adm_all)
+apply (rule adm_imp,simp)
+apply (rule scases)
+apply (rule admI)
 
 sorry
 
-lemma smed_false:assumes "shd s \<noteq> shd (sMed\<cdot>s\<cdot>ora)" obtains ora2 where "sMed\<cdot>s\<cdot>ora = sMed\<cdot>(sdropwhile (\<lambda>x. x = shd s)\<cdot>s)\<cdot>ora2"
-  using drop_ora assms by auto
+lemma newOra_srcdups_h2: " s \<noteq> \<epsilon> \<Longrightarrow>
+       sMed\<cdot>s\<cdot>as \<noteq> \<epsilon> \<Longrightarrow>
+       a \<noteq> shd s \<Longrightarrow>
+       srcdups\<cdot>(\<up>a \<bullet> sMed\<cdot>s\<cdot>as) = sMed\<cdot>(\<up>a \<bullet> srcdups\<cdot>s)\<cdot>(newOracle_srcdups\<cdot>(srcdups\<cdot>(\<up>a \<bullet> sMed\<cdot>s\<cdot>as))\<cdot>(\<up>a \<bullet> srcdups\<cdot>s))"
+sorry
 
+(*lemma induct_lem: "(\<And>s::'a stream. \<forall>(sa \<sqsubseteq> s). P sa \<Longrightarrow> P s) \<Longrightarrow> \<forall>(sa\<sqsubseteq>s). P sa"*)
+lemma newOra_srcdups_ex:
+  "\<exists> ora2. srcdups\<cdot>(sMed\<cdot>msg\<cdot>ora1) = sMed\<cdot>(srcdups\<cdot>msg)\<cdot>ora2"
+   apply (induction ora1  arbitrary: msg rule: ind,simp_all)
+   apply (rule adm_all)
+   apply (rule admI)
+   
+   apply (rule_tac x="(newOracle_srcdups\<cdot>(srcdups\<cdot>(sMed\<cdot>x\<cdot>(\<Squnion>i. Y i)))\<cdot>(srcdups\<cdot>x))" in exI)
+   oops            
+              
 lemma newOra_srcdups: 
   "srcdups\<cdot>(sMed\<cdot>msg\<cdot>ora) = sMed\<cdot>(srcdups\<cdot>msg)\<cdot>(newOracle_srcdups\<cdot>(srcdups\<cdot>(sMed\<cdot>msg\<cdot>ora))\<cdot>(srcdups\<cdot>msg))"
+(*  apply (induction ora  arbitrary: msg rule: ind,simp_all)
+  apply (rule_tac x=msg in scases,simp)
+  apply (case_tac "sa= \<epsilon>",simp)
+  apply (case_tac "a = True",simp)
+  apply (metis (no_types, lifting) lscons_conv newOracle_srcdups.simps(3) smed_bot1 smed_t srcdups_step strict_sdropwhile strict_srcdups sup'_def)
+  apply (metis (full_types) lscons_conv newOracle_srcdups.simps(1) smed_bot1 smed_bot2 smed_f strict_srcdups sup'_def)
+  apply (case_tac "(sMed\<cdot>sa\<cdot>s) = \<epsilon>")
+  apply (case_tac "a = True",simp)
+  apply (metis conc2cons newOracle_srcdups.simps(1) newOracle_srcdups.simps(3) smed_bot2 smed_t srcdups_step sup'_def)
+  apply simp
+  apply (case_tac "a = True",simp)
+  apply (case_tac "shd sa = aa")
+  apply (case_tac "shd (sMed\<cdot>sa\<cdot>s) = aa") 
+  apply (simp add: srcdups_fst2snd)
+  apply (simp add: srcdups_fst2snd srcdups_nfst2snd)
+  apply (smt conc2cons newOra_srcdups_f newOracle_srcdups.simps(3) smed_f smed_t srcdups_fst2snd srcdups_nbot srcdups_shd2 srcdups_srt srcdups_step)
+  apply (case_tac "shd (sMed\<cdot>sa\<cdot>s) = aa") 
+  apply (simp add: srcdups_fst2snd srcdups_nfst2snd)
+  apply (subst newOra_srcdups_t)
+  using srcdups_nbot apply blast
+  apply simp+
+  *)
+
+
   apply (induction msg arbitrary: ora rule: ind, simp_all)
   apply (rule_tac ts=ora in oracases,simp)
   apply simp
@@ -122,8 +191,6 @@ lemma newOra_srcdups:
   apply (case_tac "(sMed\<cdot>s\<cdot>as) = \<epsilon>")
   apply (simp add: srcdups_step newOra_srcdups_t)
   apply (metis sconc_snd_empty smed_bot2 smed_t)
-  apply (case_tac "srcdups\<cdot>s = \<epsilon>")
-  using srcdups_nbot apply blast
   apply (case_tac "a = shd s")
   apply (case_tac "a = shd (sMed\<cdot>s\<cdot>as)") 
   apply (subst srcdups_fst2snd,simp,simp)+   
@@ -135,25 +202,25 @@ lemma newOra_srcdups:
   apply (subst newOra_srcdups_t,simp)
   using srcdups_nbot apply blast
   apply simp
-  apply (simp add: smed_t2 srt_srcdups)
-
-  using smed_false 
-  
-sorry
-    
+  apply (simp add: srcdups_nbot smed_t2 srt_srcdups)
+  using newOra_srcdups_h apply force
+  apply (simp add: srcdups_nfst2snd)
+  using newOra_srcdups_h2 apply force
+  apply simp
+  apply (case_tac "shd s = a")
+  apply (metis newOracle_srcdups.simps(1) smed_bot1 smed_bot2 srcdups_eq strict_srcdups surj_scons)
+  apply (simp add: srcdups_nfst2snd)
+  apply (case_tac "s= \<epsilon>")
+  apply (simp add: newOra_srcdups_t) 
+  apply (case_tac "(sMed\<cdot>s\<cdot>as) = \<epsilon>")
+  apply (simp add: srcdups_step newOra_srcdups_t)
+  apply (case_tac "shd (sMed\<cdot>s\<cdot>as) = a")
+  apply (metis newOra_srcdups_h2 srcdups_fst2snd) 
+  apply (subst newOra_srcdups_f)
+  by (simp add: srcdups_nbot,simp+)
+   
 lemma newOra_srcdups_obtains: obtains ora2 where "srcdups\<cdot>(sMed\<cdot>msg\<cdot>ora1) = sMed\<cdot>(srcdups\<cdot>msg)\<cdot>ora2"
   using newOra_srcdups by auto
-
-
-
-
-
-
-
-
-
-
-
 
 (*
 lemma sprojsnd_srcdups:
@@ -227,7 +294,8 @@ lemma srcdups_smed_h: " #(srcdups\<cdot>(sMed\<cdot>s\<cdot>p)) \<le> #(srcdups\
     
 lemma smed_sprojsnd: "sprojsnd\<cdot>(sMed\<cdot>s\<cdot>p) = sMed\<cdot>(sprojsnd\<cdot>s)\<cdot>p" 
   by (simp add: sprojsnd_def smed_smap)
-    
+
+(*    
 lemma prop4s_h3_h1: "a\<noteq>shd s \<Longrightarrow> srcdups\<cdot>(\<up>a \<bullet> s) = \<up>a\<bullet>srcdups\<cdot>s" 
   by (metis srcdups_neq srcdups_shd srcdups_srt strict_sdropwhile surj_scons)
     
@@ -289,7 +357,7 @@ lemma prop4s_h3_h11: "#(srcdups\<cdot>s)\<noteq> \<infinity> \<Longrightarrow> l
     
 lemma prop4s_h3_h12: "sprojsnd\<cdot>(sa \<bullet> sb) = sprojsnd\<cdot>sa \<bullet> sprojsnd\<cdot>sb"
   sorry
-    
+*)    
 
 
 lemma prop4s_h3: assumes  "#(srcdups\<cdot>s) \<noteq> \<infinity>" "#({True} \<ominus> p) = \<infinity>" "#(srcdups\<cdot>(sprojsnd\<cdot>(sMed\<cdot>s\<cdot>p))) = #(srcdups\<cdot>s)"  
@@ -297,6 +365,7 @@ lemma prop4s_h3: assumes  "#(srcdups\<cdot>s) \<noteq> \<infinity>" "#({True} \<
        "(srcdups\<cdot>s) = (srcdups\<cdot>(sMed\<cdot>s\<cdot>p))" 
   using assms proof (erule_tac contrapos_np)
   have h1: "srcdups\<cdot>s \<noteq> srcdups\<cdot>(sMed\<cdot>s\<cdot>p) \<Longrightarrow> #(srcdups\<cdot>s) \<noteq> \<infinity> \<Longrightarrow> #(srcdups\<cdot>(sMed\<cdot>s\<cdot>p)) \<noteq> #(srcdups\<cdot>s)"
+    apply (erule_tac contrapos_np,simp)
     by (metis newOra_srcdups_obtains smed_slen2s)
   have "#(srcdups\<cdot>(sprojsnd\<cdot>(sMed\<cdot>s\<cdot>p))) \<noteq> #(srcdups\<cdot>(sMed\<cdot>s\<cdot>p)) \<Longrightarrow>  #(srcdups\<cdot>(sprojsnd\<cdot>s)) \<noteq> #(srcdups\<cdot>s)"
     by (metis (no_types) antisym_conv assms(3) slen_sprojsnd sprojsnd_srcdups_slen srcdups_smed_h) 
