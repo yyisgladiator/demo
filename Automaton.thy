@@ -26,7 +26,18 @@ section \<open>Backend Signatures\<close>
   transition function \<times> initial state \<times> initial Output \<times> input domain \<times> output domain *)
 typedef ('state::type, 'm::message) automaton = 
   "{f::(('state \<times>(channel \<rightharpoonup> 'm)) \<Rightarrow> ('state \<times> 'm SB)) \<times> 'state \<times> 'm SB \<times> channel set \<times> channel set. True}"
-  sorry
+  by blast
+setup_lifting type_definition_automaton
+
+
+(* FYI: Non-deterministic version *)
+typedef ('state::type, 'm::message) NDA = 
+  "{f::(('state \<times>(channel \<rightharpoonup> 'm)) \<Rightarrow> (('state \<times> 'm SB) set)) \<times> ('state \<times> 'm SB) set \<times> channel set \<times> channel set. True}"
+  by blast
+
+
+definition getTransition :: "('s, 'm::message) automaton \<Rightarrow> (('s \<times>(channel \<rightharpoonup> 'm)) \<Rightarrow> ('s \<times> 'm SB))" where
+"getTransition automat = fst (Rep_automaton automat)"
 
 definition getInitialState :: "('s, 'm::message) automaton \<Rightarrow> 's" where
 "getInitialState automat = fst (snd (Rep_automaton automat))"
@@ -37,7 +48,8 @@ definition getDom :: "('s, 'm::message) automaton \<Rightarrow> channel set" whe
 definition getRan :: "('s, 'm::message) automaton \<Rightarrow> channel set" where
 "getRan = undefined" (* todo *)
 
-setup_lifting type_definition_automaton
+
+
 
 (* HK is defining this. returns the fixpoint *)
 definition myFixer :: "channel set \<Rightarrow> channel set \<Rightarrow> (('s \<Rightarrow> 'm SPF)\<rightarrow>('s \<Rightarrow> 'm SPF)) \<rightarrow> ('s \<Rightarrow> 'm SPF)" where
@@ -63,21 +75,27 @@ definition spfCons :: "'m SB \<Rightarrow> 'm SPF \<rightarrow> 'm SPF" where
 definition helper:: "(('s \<times>'e) \<Rightarrow> ('s \<times> 'm::message SB)) \<Rightarrow> 's \<Rightarrow> ('s \<Rightarrow> 'm SPF) \<rightarrow> ('e \<Rightarrow> 'm SPF)" where
 "helper f s \<equiv> \<Lambda> h. (\<lambda> e. spfRt\<cdot>(spfCons (snd (f (s,e)))\<cdot>(h (fst (f (s,e))))))" 
 
-lemma "cont (\<lambda>h. (\<lambda> e. spfCons (snd (f (s,e)))\<cdot>(h (fst (f (s,e))))))"
-  oops
+lemma "cont (\<lambda>h. (\<lambda> e. spfRt\<cdot>(spfCons (snd (f (s,e)))\<cdot>(h (fst (f (s,e)))))))"
+  by simp
+
+
 
 (* As defined in Rum96 *)
 definition h :: "('s::type, 'm::message) automaton \<Rightarrow> ('s \<Rightarrow> 'm SPF)" where
-"h automat = myFixer (getDom automat)(getRan automat)\<cdot>(\<Lambda> h. (\<lambda>s. spfStep {}{}\<cdot>(helper undefined s\<cdot>h)))"
-(* ToDo real transition function *)
+"h automat = myFixer (getDom automat)(getRan automat)\<cdot>
+    (\<Lambda> h. (\<lambda>s. spfStep (getDom automat) (getRan automat)\<cdot>(helper (getTransition automat) s\<cdot>h)))"
 
-lemma "cont (\<lambda> h. (\<lambda>s. spfStep{}{}\<cdot>(helper automat s\<cdot>h)))"
+lemma "cont (\<lambda> h. (\<lambda>s. spfStep (getDom automat) (getRan automat)\<cdot>(helper (getTransition automat) s\<cdot>h)))"
   by simp
 
 (* This function also prepends the first SB ... *)
 (* But basically she just calls h *)
 definition H :: "('s, 'm::message) automaton \<Rightarrow> 'm SPF" where
 "H automat = h automat (getInitialState automat)"
+
+
+
+
 
 
 
@@ -92,12 +110,10 @@ datatype substate = even | odd  (* This are the actual states from MAA *)
 datatype myState = State substate nat bool (* And these have also the variables *)
 
 fun getVarI :: "myState \<Rightarrow> nat" where
-"getVarI (State even n true) = 0" | 
-"getVarI (State even k false) = 1" | 
-"getVarI other = undefined" 
+"getVarI (State _ n _) = n"
 
 fun getSubState :: "myState \<Rightarrow> substate" where
-"getSubState (State s n b) = s"
+"getSubState (State s _ _) = s"
 
 
 datatype myM = N nat | B bool
@@ -113,8 +129,8 @@ begin
   "ctype_myM c1 = range N"  |
   "ctype_myM c2 = range B"
 
-instance
-by(intro_classes)
+  instance
+    by(intro_classes)
 end
 
 
@@ -123,19 +139,21 @@ section \<open>Automaton Functions\<close>
 
 (* Creates a fitting SB given the right output values *)
 (* Parameter: 
-  channel set \<Rightarrow> domain of the output
   nat         \<Rightarrow> maps to channel c1, in MAA called "XXXX"
   bool        \<Rightarrow> maps to channel c2, in MAA calles "YYYY" *)
-fun createOutput :: "channel set \<Rightarrow> nat \<Rightarrow> bool \<Rightarrow> myM SB" where
-"createOutput cs n b = undefined"
+lift_definition createOutput :: "nat \<Rightarrow> bool \<Rightarrow> myM SB" is
+"\<lambda>n b. ([c1 \<mapsto> \<up>(N n), c2 \<mapsto> \<up>(B b)])"
+  by(auto simp add: sb_well_def)
 
 (* Somehow define the transition function *)
 (* use the createOutput function *)
-definition myTransition :: "(myState \<times>(channel \<rightharpoonup> myM)) \<Rightarrow> (myState \<times> myM SB)" where
-"myTransition = undefined"
+(* SWS: Sadly I was unable to pattern-match "(channel \<rightharpoonup> myM)". Marc is trying this also, he is the person to talk to *)
+fun myTransition :: "(myState \<times>(channel \<rightharpoonup> myM)) \<Rightarrow> (myState \<times> myM SB)" where
+"myTransition (State even n b, input)= ((State odd n b), createOutput 1 True)" |
+"myTransition (State odd n b, input) = ((State even n b), createOutput 0 False)"
 
 lift_definition myAutomaton :: "(myState, myM) automaton" is "(myTransition, State even 0 True, sbLeast {}, {}, {})"
-  sorry (* In the final form of the automaton datatype we will have to proof stuff *)
+  by blast  (* In the final form of the automaton datatype we will have to proof stuff *)
 
 definition mySPF :: "myM SPF" where
 "mySPF = H myAutomaton"
