@@ -46,9 +46,13 @@ definition myFixer :: "channel set \<Rightarrow> channel set \<Rightarrow> (('s 
 definition spfLeast::"channel set \<Rightarrow> channel set \<Rightarrow> 'm::message SPF" where
 "spfLeast cin cout = Abs_SPF (\<Lambda>  sb.  (sbDom\<cdot>sb = cin) \<leadsto> sbLeast cout)"
 
+
+definition spfStep_h1::"(channel\<rightharpoonup>'m::message discr\<^sub>\<bottom>) \<Rightarrow>(channel\<rightharpoonup>'m::message)" where
+"spfStep_h1 = (\<lambda>f. (\<lambda>c. (c \<in> dom f \<and> f \<rightharpoonup> c \<noteq> \<bottom>) \<leadsto> (THE a. updis a = f \<rightharpoonup> c)))"
+
 (* Skeleton of spfStep. Returns the SPF that switches depending on input *)
-definition spfStep :: "channel set \<Rightarrow> channel set \<Rightarrow> ((channel\<rightharpoonup>'m::message) \<Rightarrow> 'm SPF) \<rightarrow> 'm SPF" where
-"spfStep cin cout \<equiv> \<Lambda> h. Abs_SPF (\<Lambda>  sb.  (sbDom\<cdot>sb = cin) \<leadsto> undefined)"
+definition spfStep :: "((channel\<rightharpoonup>'m::message) \<Rightarrow> 'm SPF) \<rightarrow> 'm SPF" where
+"spfStep  \<equiv> \<Lambda> h. Abs_SPF (\<Lambda>  sb.  (sbDom\<cdot>sb = spfDom\<cdot>(h (spfStep_h1 (sbHdElem\<cdot>sb)))) \<leadsto> h (spfStep_h1 (sbHdElem\<cdot>sb)) \<rightleftharpoons> sb) "
 
 (* Defined by SWS *)
 definition spfRt :: "'m SPF \<rightarrow> 'm SPF" where
@@ -68,9 +72,9 @@ lemma "cont (\<lambda>h. (\<lambda> e. spfCons (snd (f (s,e)))\<cdot>(h (fst (f 
 
 (* As defined in Rum96 *)
 definition h :: "('s::type, 'm::message) automaton \<Rightarrow> ('s \<Rightarrow> 'm SPF)" where
-"h automat = myFixer (getDom automat)(getRan automat)\<cdot>(\<Lambda> h. (\<lambda>s. spfStep {}{}\<cdot>(helper undefined s\<cdot>h)))"
+"h automat = myFixer (getDom automat)(getRan automat)\<cdot>(\<Lambda> h. (\<lambda>s. spfStep\<cdot>(helper undefined s\<cdot>h)))"
 
-lemma "cont (\<lambda> h. (\<lambda>s. spfStep{}{}\<cdot>(helper automat s\<cdot>h)))"
+lemma "cont (\<lambda> h. (\<lambda>s. spfStep\<cdot>(helper automat s\<cdot>h)))"
   by simp
 
 (* This function also prepends the first SB ... *)
