@@ -69,6 +69,7 @@ lemma "cont (\<lambda>h. (\<lambda> e. spfCons (snd (f (s,e)))\<cdot>(h (fst (f 
 (* As defined in Rum96 *)
 definition h :: "('s::type, 'm::message) automaton \<Rightarrow> ('s \<Rightarrow> 'm SPF)" where
 "h automat = myFixer (getDom automat)(getRan automat)\<cdot>(\<Lambda> h. (\<lambda>s. spfStep {}{}\<cdot>(helper undefined s\<cdot>h)))"
+(* ToDo real transition function *)
 
 lemma "cont (\<lambda> h. (\<lambda>s. spfStep{}{}\<cdot>(helper automat s\<cdot>h)))"
   by simp
@@ -91,7 +92,9 @@ datatype substate = even | odd  (* This are the actual states from MAA *)
 datatype myState = State substate nat bool (* And these have also the variables *)
 
 fun getVarI :: "myState \<Rightarrow> nat" where
-"getVarI (State s n b) = n"
+"getVarI (State even n true) = 0" | 
+"getVarI (State even k false) = 1" | 
+"getVarI other = undefined" 
 
 fun getSubState :: "myState \<Rightarrow> substate" where
 "getSubState (State s n b) = s"
@@ -123,7 +126,7 @@ section \<open>Automaton Functions\<close>
   channel set \<Rightarrow> domain of the output
   nat         \<Rightarrow> maps to channel c1, in MAA called "XXXX"
   bool        \<Rightarrow> maps to channel c2, in MAA calles "YYYY" *)
-fun createOutput :: "channel set \<Rightarrow> nat \<Rightarrow> bool \<Rightarrow> M SB" where
+fun createOutput :: "channel set \<Rightarrow> nat \<Rightarrow> bool \<Rightarrow> myM SB" where
 "createOutput cs n b = undefined"
 
 (* Somehow define the transition function *)
