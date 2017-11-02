@@ -67,7 +67,7 @@ end
 definition usbWell :: "(channel \<rightharpoonup> ('s::us)) \<Rightarrow> bool" where
 "usbWell f \<equiv> \<forall>c \<in> (dom f). (isOkay c (f\<rightharpoonup>c))" 
 
-cpodef 's::us USB = "{b :: channel \<rightharpoonup> 's . usbWell b}"
+cpodef 's::us USB ("(_\<^sup>\<omega>)" [1000] 999) = "{b :: channel \<rightharpoonup> 's . usbWell b}"
   apply auto
    apply (meson domIff optionleast_empty usbWell_def)
   unfolding usbWell_def
@@ -93,7 +93,7 @@ subsection \<open>General Usage\<close>
 default_sort us
 
 (* This function can be used in "'m stream USB" and "'m tstream USB" *)
-definition usbDom :: "'m USB \<rightarrow> channel set" where
+definition usbDom :: "'m\<^sup>\<omega> \<rightarrow> channel set" where
 "usbDom \<equiv> \<Lambda> b. dom (Rep_USB b)"
 
 definition usbRestrict:: "channel set \<Rightarrow> 'm USB \<rightarrow> 'm USB" where
