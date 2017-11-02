@@ -89,7 +89,8 @@ definition usbRestrict:: "channel set \<Rightarrow> 'm USB \<rightarrow> 'm USB"
 definition usbGetCh :: "channel \<Rightarrow> 'm USB \<rightarrow> 'm"  where
 "usbGetCh c = (\<Lambda> b. ((Rep_USB b) \<rightharpoonup> c))"
 
-
+definition usbLen :: "'m USB \<rightarrow> lnat" where
+"usbLen = undefined"
 
 (****************************************************)
 subsection \<open>Specific Usage\<close>
@@ -112,13 +113,24 @@ definition spf_well:: "('m USB \<rightarrow> 'm USB option) \<Rightarrow> bool" 
 "spf_well f \<equiv> \<exists>In Out. \<forall>b. (b \<in> dom (Rep_cfun f) \<longleftrightarrow> usbDom\<cdot>b = In) \<and> 
     (b \<in> dom (Rep_cfun f) \<longrightarrow> usbDom\<cdot>(the (f\<cdot>b)) = Out)"
 
-  (* Define the type 'm USPF (Universal Stream Processing Functions) as cpo *)
-  cpodef 'm USPF = "{f :: 'm USB \<rightarrow> 'm USB option . spf_well f}"
-    sorry
+(* Define the type 'm USPF (Universal Stream Processing Functions) as cpo *)
+cpodef 'm USPF = "{f :: 'm USB \<rightarrow> 'm USB option . spf_well f}"
+  sorry
+
+
+
+subsection \<open>Strong Causal Subtype\<close>
+
+(* return true iff tickcount holds *)
+definition uspfTickCount :: "'m USPF \<Rightarrow> bool" where
+"uspfTickCount = undefined"
+
+cpodef 'm USPF_strong = "{f :: 'm USPF. uspfTickCount f}"
+sorry
 
 (*
 
-Alternative is ML....
+Alternative is something with ML....
 
 bundledef 'c 's::stream SB2 = "{b :: 'c \<rightharpoonup> 's . True}"
 *)
