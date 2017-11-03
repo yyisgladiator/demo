@@ -306,7 +306,7 @@ lemma rep_abs_cspf [simp]: assumes "cont f" and "spf_well (Abs_cfun f)"
   shows "Rep_CSPF (Abs_CSPF f) = f"
   by (simp add: Abs_SPF_inverse  assms(1) assms(2))
 
-lemma [simp]: "spf_well f \<Longrightarrow> Rep_SPF (Abs_SPF f) = f"
+lemma rep_abs_spf [simp]: "spf_well f \<Longrightarrow> Rep_SPF (Abs_SPF f) = f"
 by (simp add: Abs_SPF_inverse)
 
   (* lemmata for reverse substitution *)
