@@ -110,7 +110,7 @@ definition usbLeast :: "channel set \<Rightarrow> 'm USB"  where
 
 (* Interesting function, uses the "len" operator over 'm *)
 definition usbLen:: " 'm USB \<Rightarrow> lnat " where
-"usbLen b \<equiv> LEAST ln. ln\<in> {len\<cdot>(usbGetCh c\<cdot>b) | c. c\<in>usbDom\<cdot>b}"  
+"usbLen b \<equiv> if usbDom\<cdot>b \<noteq> {} then (LEAST ln. ln\<in>{(len\<cdot>(usbGetCh c\<cdot>b)) | c. c \<in> usbDom\<cdot>b}) else \<infinity>"  
 
 (* Thats an easy converter. For example from "tstream USB" to "stream USB" *)
 (* Can also be cont *)
