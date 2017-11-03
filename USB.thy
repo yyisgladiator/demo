@@ -20,15 +20,17 @@ section \<open>Datatype Definition\<close>
 (* This channel is not a CPO... and thats good so *)
 datatype channel = c1 | c2
 
+
+(* SWS: I prefer PCPO, usbLeast/usbFix are IMPORTANT! *)
 default_sort pcpo
 
 
 (* The new way. 
   us = universal stream *)
-(* SWS: I prefer PCPO, usbLeast/usbFix are IMPORTANT! *)
+(* This class is just the very basic functions required for an Bundle *)
 class us = pcpo +
   fixes isOkay :: "channel \<Rightarrow> 'a \<Rightarrow> bool"
-  fixes len :: "'a \<rightarrow> lnat"
+  fixes len :: "'a \<rightarrow> lnat"  (* Debatable *)
   fixes conc :: "'a \<Rightarrow> 'a \<rightarrow> 'a"  (* Is not really required for a SB... just here for a demo *)
 
   assumes "\<And>c. isOkay c \<bottom>" (* Just an example *)
@@ -71,7 +73,7 @@ cpodef 's::us USB ("(_\<^sup>\<omega>)" [1000] 999) = "{b :: channel \<rightharp
   apply auto
    apply (meson domIff optionleast_empty usbWell_def)
   unfolding usbWell_def
-  sorry
+  sorry (* We are putting the right assumptions in the us class, so that this holds *)
 
 setup_lifting type_definition_USB
 
@@ -93,6 +95,7 @@ subsection \<open>General Usage\<close>
 default_sort us
 
 (* This function can be used in "'m stream USB" and "'m tstream USB" *)
+(* and by the way, look at the "'m\<^sup>\<omega>" shorcode for 'm USB *)
 definition usbDom :: "'m\<^sup>\<omega> \<rightarrow> channel set" where
 "usbDom \<equiv> \<Lambda> b. dom (Rep_USB b)"
 
@@ -165,25 +168,66 @@ definition uspfWell:: "('m USB \<rightarrow> 'm USB option) \<Rightarrow> bool" 
 cpodef 'm USPF = "{f :: 'm USB \<rightarrow> 'm USB option . uspfWell f}"
   sorry
 
+definition uspfDom :: "'m USPF \<rightarrow> channel set" where
+"uspfDom \<equiv> \<Lambda> f. usbDom\<cdot>(SOME b. b \<in> dom (Rep_cfun (Rep_USPF f)))" 
+
+definition uspfRan :: "'m USPF \<rightarrow> channel set" where
+"uspfRan \<equiv> \<Lambda> f. usbDom\<cdot>(SOME b. b \<in> ran (Rep_cfun (Rep_USPF f)))" 
+
+(* We can reuse this composition in the subtypes, for weak/strong causal stuff *)
+definition uspfComp :: "'m USPF \<rightarrow> 'm USPF \<rightarrow> 'm USPF" where
+"uspfComp = undefined"
 
 
-subsection \<open>Strong Causal Subtype\<close>
+
+subsection \<open>Causal Subtype\<close>
 
 (* return true iff tickcount holds *)
-definition uspfTickCount :: "'m USPF \<Rightarrow> bool" where
-"uspfTickCount f = (\<forall>b. (b \<in> dom (Rep_cfun (Rep_USPF f)) \<longrightarrow> usbLen b \<le> usbLen (the ((Rep_USPF f)\<cdot>b))))"
+definition uspfIsWeak :: "'m USPF \<Rightarrow> bool" where
+"uspfIsWeak f = (\<forall>b. (b \<in> dom (Rep_cfun (Rep_USPF f)) \<longrightarrow> usbLen b \<le> usbLen (the ((Rep_USPF f)\<cdot>b))))"
 
-cpodef 'm USPF_strong = "{f :: 'm USPF. uspfTickCount f}"
+cpodef 'm USPFw = "{f :: 'm USPF. uspfIsWeak f}"
 sorry
 
-(*
+definition uspfIsStrong :: "'m USPF \<Rightarrow> bool" where
+"uspfIsStrong f = (\<forall>b. (b \<in> dom (Rep_cfun (Rep_USPF f)) \<longrightarrow> lnsuc\<cdot>(usbLen b) \<le> usbLen (the ((Rep_USPF f)\<cdot>b))))"
 
-Alternative is something with ML....
-
-bundledef 'c 's::stream SB2 = "{b :: 'c \<rightharpoonup> 's . True}"
-*)
+cpodef 'm USPFs = "{f :: 'm USPF. uspfIsStrong f}"
+sorry
 
 
+
+section \<open>General SPS datatype\<close>
+
+(* First a general class for USPF/USPFw/USPFs *)
+class usb = cpo +
+  fixes dom :: "'a \<rightarrow> channel set"
+  fixes ran :: "'a \<rightarrow> channel set"
+
+  assumes "\<And>x y. x\<sqsubseteq>y \<Longrightarrow> dom\<cdot>x = dom\<cdot>y" 
+  assumes "\<And>x y. x\<sqsubseteq>y \<Longrightarrow> ran\<cdot>x = ran\<cdot>y" 
+begin
+end
+
+class usb_comp = usb +
+  fixes comp :: "'a \<rightarrow> 'a \<rightarrow> 'a"  (* Here we can put the abbreviation \<otimes> *)
+begin
+end
+
+default_sort usb
+
+
+definition uspsWell :: "'m set \<Rightarrow> bool" where
+"uspsWell S \<equiv> \<exists>In Out. \<forall> f\<in>S . (dom\<cdot>f = In \<and> ran\<cdot>f=Out) "
+
+pcpodef 'm USPS = "{S :: 'm set. uspsWell S }"
+  apply (simp add: UU_eq_empty uspsWell_def)
+  sorry
+
+  (* composite operator on USPS *)
+  (* 'm has to have a composition operator ... duh *)
+definition uspsComp :: "'m::usb_comp USPS \<Rightarrow>'m  USPS \<Rightarrow> 'm USPS"  where
+"uspsComp S1 S2 \<equiv> Abs_USPS {comp\<cdot>f1\<cdot>f2 | f1 f2. f1\<in>(Rep_USPS S1) \<and> f2\<in>(Rep_USPS S2)}"
 
 
 end
