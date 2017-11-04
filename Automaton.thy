@@ -50,7 +50,7 @@ definition spfStep_h2::"(channel\<rightharpoonup>'m::message discr\<^sub>\<botto
 "spfStep_h2 = (\<lambda>f. (\<lambda>c. (c \<in> dom f) \<leadsto> (THE a. updis a = f \<rightharpoonup> c)))"
 
 definition spfStep_h1::"channel set \<Rightarrow> channel set \<Rightarrow>((channel\<rightharpoonup>'m::message) \<Rightarrow> 'm SPF) \<Rightarrow>((channel\<rightharpoonup>'m discr\<^sub>\<bottom>)\<rightarrow> 'm SPF)" where
-"spfStep_h1 In Out= (\<lambda> h. (\<Lambda> f. if (\<forall>c. (c \<in> dom f \<longrightarrow> (f \<rightharpoonup> c \<noteq> \<bottom>))) then Abs_SPF (\<Lambda> sb . (sbDom\<cdot>sb = In) \<leadsto> h (spfStep_h2 f) \<rightleftharpoons> sb) else spfLeast In Out))"
+"spfStep_h1 In Out= (\<lambda> h. (\<Lambda> f. if (\<forall>c. (c \<in> In \<longrightarrow> (f \<rightharpoonup> c \<noteq> \<bottom>))) then h (spfStep_h2 f) else spfLeast In Out))"
 
 (* Skeleton of spfStep. Returns the SPF that switches depending on input *)
 definition spfStep :: "channel set \<Rightarrow> channel set \<Rightarrow> ((channel\<rightharpoonup>'m::message) \<Rightarrow> 'm SPF) \<rightarrow> 'm SPF" where
@@ -93,14 +93,14 @@ definition H :: "('s, 'm::message) automaton \<Rightarrow> 'm SPF" where
 section \<open>Automaton Datatypes\<close>
 
 (* Only on idea how the states could be implemented *)
-datatype substate = even | odd  (* This are the actual states from MAA *)
-datatype myState = State substate nat bool (* And these have also the variables *)
+datatype substate = singleState  (* This are the actual states from MAA *)
+datatype myState = State substate nat (* And these have also the variables *)
 
 fun getVarI :: "myState \<Rightarrow> nat" where
-"getVarI (State s n b) = n"
+"getVarI (State s n ) = n"
 
 fun getSubState :: "myState \<Rightarrow> substate" where
-"getSubState (State s n b) = s"
+"getSubState (State s n ) = s"
 
 
 datatype myM = N nat | B bool
@@ -129,16 +129,21 @@ section \<open>Automaton Functions\<close>
   channel set \<Rightarrow> domain of the output
   nat         \<Rightarrow> maps to channel c1, in MAA called "XXXX"
   bool        \<Rightarrow> maps to channel c2, in MAA calles "YYYY" *)
-fun createOutput :: "channel set \<Rightarrow> nat \<Rightarrow> bool \<Rightarrow> M SB" where
-"createOutput cs n b = undefined"
+fun createOutput :: "channel set \<Rightarrow> nat \<Rightarrow> nat  \<Rightarrow> myM SB" where
+"createOutput cs n var = Abs_SB(\<lambda>c. (c \<in> cs) \<leadsto> \<up>(B (((n + var) mod 2) = 0) ))"
 
+definition myTr_h::"(channel \<rightharpoonup> myM) \<Rightarrow> channel \<Rightarrow> nat" where
+"myTr_h f c =  (THE a. Some (N a) =(f c))"
 (* Somehow define the transition function *)
 (* use the createOutput function *)
 definition myTransition :: "(myState \<times>(channel \<rightharpoonup> myM)) \<Rightarrow> (myState \<times> myM SB)" where
-"myTransition = undefined"
+"myTransition x =   (if  ((getSubState (fst x) = singleState) \<and> (snd x c1 \<noteq> None)) 
+                     then (State singleState (myTr_h (snd x) c1 + getVarI (fst x)), 
+                            (createOutput {c1} (getVarI (fst x)) (myTr_h(snd x) c1)))
+                     else ((fst x), (sbLeast {c1})))"
 
-lift_definition myAutomaton :: "(myState, myM) automaton" is "(myTransition, State even 0 True, sbLeast {}, {}, {})"
-  sorry (* In the final form of the automaton datatype we will have to proof stuff *)
+lift_definition myAutomaton :: "(myState, myM) automaton" is "(myTransition, State singleState 0, sbLeast {}, {}, {})"
+ by simp
 
 definition mySPF :: "myM SPF" where
 "mySPF = H myAutomaton"
