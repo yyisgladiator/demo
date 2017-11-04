@@ -46,15 +46,15 @@ definition myFixer :: "channel set \<Rightarrow> channel set \<Rightarrow> (('s 
 definition spfLeast::"channel set \<Rightarrow> channel set \<Rightarrow> 'm::message SPF" where
 "spfLeast cin cout = Abs_SPF (\<Lambda>  sb.  (sbDom\<cdot>sb = cin) \<leadsto> sbLeast cout)"
 
-definition spfStep_h2::"(channel\<rightharpoonup>'m::message discr\<^sub>\<bottom>) \<Rightarrow> (channel\<rightharpoonup>'m)" where
-"spfStep_h2 = (\<lambda>f. (\<lambda>c. (c \<in> dom f) \<leadsto> (THE a. updis a = f \<rightharpoonup> c)))"
+definition spfStep_h2::" channel set \<Rightarrow> (channel\<rightharpoonup>'m::message discr\<^sub>\<bottom>) \<Rightarrow> (channel\<rightharpoonup>'m)" where
+"spfStep_h2 In = (\<lambda>f. (\<lambda>c. (c \<in> In) \<leadsto> (THE a. updis a = f \<rightharpoonup> c)))"
 
 definition spfStep_h1::"channel set \<Rightarrow> channel set \<Rightarrow>((channel\<rightharpoonup>'m::message) \<Rightarrow> 'm SPF) \<Rightarrow>((channel\<rightharpoonup>'m discr\<^sub>\<bottom>)\<rightarrow> 'm SPF)" where
-"spfStep_h1 In Out= (\<lambda> h. (\<Lambda> f. if (\<forall>c. (c \<in> In \<longrightarrow> (f \<rightharpoonup> c \<noteq> \<bottom>))) then h (spfStep_h2 f) else spfLeast In Out))"
+"spfStep_h1 In Out= (\<lambda> h. (\<Lambda> f. if (\<forall>c. (c \<in> In \<longrightarrow> (f \<rightharpoonup> c \<noteq> \<bottom>))) then h (spfStep_h2 In f) else spfLeast In Out))"
 
 (* Skeleton of spfStep. Returns the SPF that switches depending on input *)
 definition spfStep :: "channel set \<Rightarrow> channel set \<Rightarrow> ((channel\<rightharpoonup>'m::message) \<Rightarrow> 'm SPF) \<rightarrow> 'm SPF" where
-"spfStep In Out \<equiv> \<Lambda> h. Abs_SPF (\<Lambda>  sb.  (sbDom\<cdot>sb = In) \<leadsto> (spfStep_h1 In Out h)\<cdot>(sbHdElem\<cdot>sb) \<rightleftharpoons> sb) "
+"spfStep In Out \<equiv> \<Lambda> h. Abs_SPF (\<Lambda>  sb.  (sbDom\<cdot>sb = In) \<leadsto> (spfStep_h1 In Out h)\<cdot>(sbHdElem\<cdot>sb) \<rightleftharpoons> sb)"
 
 (* Defined by SWS *)
 definition spfRt :: "'m SPF \<rightarrow> 'm SPF" where
@@ -93,7 +93,7 @@ definition H :: "('s, 'm::message) automaton \<Rightarrow> 'm SPF" where
 section \<open>Automaton Datatypes\<close>
 
 (* Only on idea how the states could be implemented *)
-datatype substate = singleState  (* This are the actual states from MAA *)
+datatype substate = singleState | \<NN>  (* This are the actual states from MAA *)
 datatype myState = State substate nat (* And these have also the variables *)
 
 fun getVarI :: "myState \<Rightarrow> nat" where
@@ -140,7 +140,7 @@ definition myTransition :: "(myState \<times>(channel \<rightharpoonup> myM)) \<
 "myTransition x =   (if  ((getSubState (fst x) = singleState) \<and> (snd x c1 \<noteq> None)) 
                      then (State singleState (myTr_h (snd x) c1 + getVarI (fst x)), 
                             (createOutput {c1} (getVarI (fst x)) (myTr_h(snd x) c1)))
-                     else ((fst x), (sbLeast {c1})))"
+                     else (State \<NN> 0, (sbLeast {c1})))"
 
 lift_definition myAutomaton :: "(myState, myM) automaton" is "(myTransition, State singleState 0, sbLeast {}, {}, {})"
  by simp
