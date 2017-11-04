@@ -1630,7 +1630,7 @@ qed
     
 lemma sbHdElem_cont: "cont (\<lambda> sb::'a SB. (\<lambda>c. (c \<in> sbDom\<cdot>sb) \<leadsto> (lshd\<cdot>(sb . c))))"  
   apply(rule contI2)
-  by(simp_all add: sbHd_mono sbHd_cont_pre)
+  by(simp_all add: sbHdElem_mono sbHdElem_cont_pre)
 
 
 
