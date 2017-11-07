@@ -138,12 +138,26 @@ lift_definition createOutput :: "nat \<Rightarrow> bool \<Rightarrow> myM SB" is
 "\<lambda>n b. ([c1 \<mapsto> \<up>(N n), c2 \<mapsto> \<up>(B b)])"
   by(auto simp add: sb_well_def)
 
+function test4 :: "(channel \<rightharpoonup> nat stream) \<Rightarrow> bool" where
+  "test4 [c1 \<mapsto> a] = True" |
+  "dom f \<noteq> {c1} \<Longrightarrow> test4 f = False" 
+  sorry
+
 (* Somehow define the transition function *)
 (* use the createOutput function *)
 (* SWS: Sadly I was unable to pattern-match "(channel \<rightharpoonup> myM)". Marc is trying this also, he is the person to talk to *)
-fun myTransition :: "(myState \<times>(channel \<rightharpoonup> myM)) \<Rightarrow> (myState \<times> myM SB)" where
-"myTransition (State even n b, input)= ((State odd n b), createOutput 1 True)" |
-"myTransition (State odd n b, input) = ((State even n b), createOutput 0 False)"
+function myTransition :: "(myState \<times>(channel \<rightharpoonup> myM)) \<Rightarrow> (myState \<times> myM SB)" where
+"myTransition (State even n b,  [c1 \<mapsto> N z])= ((State odd n b), createOutput 1 True)" |
+"myTransition (State odd n b, [c1 \<mapsto> N z]) = ((State even n b), createOutput 0 False)"  |
+
+"myTransition (_, [c1 \<mapsto> B z]) = undefined"  |
+"dom f\<noteq> {c1} \<Longrightarrow> myTransition (_,f) = undefined"
+  apply auto
+  apply (smt dom_eq_singleton_conv getSubState.elims myM.exhaust substate.exhaust)
+  apply (meson map_upd_eqD1 myM.distinct(1))
+  apply (meson option.distinct(1))
+  apply (meson map_upd_eqD1 myM.distinct(1))
+  by (metis option.simps(3))
 
 lift_definition myAutomaton :: "(myState, myM) automaton" is "(myTransition, State even 0 True, sbLeast {}, {}, {})"
   by blast  (* In the final form of the automaton datatype we will have to proof stuff *)
