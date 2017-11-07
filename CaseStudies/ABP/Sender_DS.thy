@@ -152,10 +152,13 @@ lemma lub_mono4: "\<lbrakk>chain (X::nat\<Rightarrow>lnat); chain (Y::nat\<Right
     \<Longrightarrow> min (\<Squnion>i. X i) y \<le> (\<Squnion>i. Y i)"
   by (metis dual_order.trans is_ub_thelub lnle_def lub_mono2 min_le_iff_disj)
 
+lemma tssnd_h1: "acks \<noteq> \<bottom> \<Longrightarrow> #\<surd> tsSnd_h\<cdot>msg\<cdot>(updis t &&\<surd> acks)\<cdot>(Discr ack) = #\<surd> tsSnd_h\<cdot>msg\<cdot>acks\<cdot>(Discr ack)"
+sorry
+
 lemma tssnd_h_tstickcount_h: "acks \<noteq> \<bottom> \<Longrightarrow> 
-  min (#\<surd> delay as) (#\<surd> updis t &&\<surd> acks) \<le> #\<surd> tsSnd_h\<cdot>(delay as)\<cdot>(updis t &&\<surd> acks)\<cdot>(Discr ack)"
+  min (#\<surd> delay msg) (#\<surd> updis t &&\<surd> acks) \<le> #\<surd> tsSnd_h\<cdot>(delay msg)\<cdot>(updis t &&\<surd> acks)\<cdot>(Discr ack)"
   apply (simp add: tstickcount_delayfun tstickcount_mlscons tssnd_h_delayfun_msg)
-  apply (induction as arbitrary: acks t ack, simp_all)
+  apply (induction msg arbitrary: acks t ack, simp_all)
   apply (rule adm_all)+
   apply (rule adm_imp, simp_all)
   apply (rule admI)
@@ -164,6 +167,7 @@ lemma tssnd_h_tstickcount_h: "acks \<noteq> \<bottom> \<Longrightarrow>
          tstickcount_delayfun)
   apply (case_tac "ta=ack", simp_all)
   apply (simp add: tssnd_h_mlscons_ack tstickcount_mlscons)
+  apply (simp add: tssnd_h1)
   sorry
 
 lemma tssnd_h_tstickcount:
