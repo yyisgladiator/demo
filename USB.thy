@@ -157,25 +157,39 @@ lift_definition stB1 :: "M stream USB" is "([c1\<mapsto><[MNat 1,MNat 2,MNat 3]>
 section \<open>SPF testing\<close>
 (****************************************************)
 
+(* The new way. 
+  usb = universal stream bundle *)
+(* This class is just the very basic functions required for an SPF *)
+default_sort cpo
 
-default_sort us
+class usb = cpo +
+  fixes usbDom :: "'a \<rightarrow> channel set"
+  fixes usbLen :: "'a \<Rightarrow> lnat"  (* Debatable *)
 
-definition uspfWell:: "('m USB \<rightarrow> 'm USB option) \<Rightarrow> bool" where
+  assumes "\<And> x y. x\<sqsubseteq>y \<Longrightarrow> usbDom\<cdot>x = usbDom\<cdot>y"
+begin
+end
+
+default_sort usb
+
+definition uspfWell:: "('in \<rightarrow> 'out option) \<Rightarrow> bool" where
 "uspfWell f \<equiv> \<exists>In Out. \<forall>b. (b \<in> dom (Rep_cfun f) \<longleftrightarrow> usbDom\<cdot>b = In) \<and> 
     (b \<in> dom (Rep_cfun f) \<longrightarrow> usbDom\<cdot>(the (f\<cdot>b)) = Out)"
 
-(* Define the type 'm USPF (Universal Stream Processing Functions) as cpo *)
-cpodef 'm USPF = "{f :: 'm USB \<rightarrow> 'm USB option . uspfWell f}"
+(* Define the type 'm USPF (Very Universal Stream Processing Functions) as cpo *)
+cpodef ('in,'out) vuSPF = "{f :: 'in \<rightarrow> 'out option . uspfWell f}"
   sorry
 
-definition uspfDom :: "'m USPF \<rightarrow> channel set" where
-"uspfDom \<equiv> \<Lambda> f. usbDom\<cdot>(SOME b. b \<in> dom (Rep_cfun (Rep_USPF f)))" 
+type_synonym 'm uSPF = "('m, 'm) vuSPF"
 
-definition uspfRan :: "'m USPF \<rightarrow> channel set" where
-"uspfRan \<equiv> \<Lambda> f. usbDom\<cdot>(SOME b. b \<in> ran (Rep_cfun (Rep_USPF f)))" 
+definition uspfDom :: "('in,'out) vuSPF \<rightarrow> channel set" where
+"uspfDom \<equiv> \<Lambda> f. usbDom\<cdot>(SOME b. b \<in> dom (Rep_cfun (Rep_vuSPF f)))" 
+
+definition uspfRan :: "('in,'out) vuSPF \<rightarrow> channel set" where
+"uspfRan \<equiv> \<Lambda> f. usbDom\<cdot>(SOME b. b \<in> ran (Rep_cfun (Rep_vuSPF f)))" 
 
 (* We can reuse this composition in the subtypes, for weak/strong causal stuff *)
-definition uspfComp :: "'m USPF \<rightarrow> 'm USPF \<rightarrow> 'm USPF" where
+definition uspfComp :: "'m uSPF \<rightarrow> 'm uSPF \<rightarrow> 'm uSPF" where
 "uspfComp = undefined"
 
 
@@ -183,16 +197,16 @@ definition uspfComp :: "'m USPF \<rightarrow> 'm USPF \<rightarrow> 'm USPF" whe
 subsection \<open>Causal Subtype\<close>
 
 (* return true iff tickcount holds *)
-definition uspfIsWeak :: "'m USPF \<Rightarrow> bool" where
-"uspfIsWeak f = (\<forall>b. (b \<in> dom (Rep_cfun (Rep_USPF f)) \<longrightarrow> usbLen b \<le> usbLen (the ((Rep_USPF f)\<cdot>b))))"
+definition uspfIsWeak :: "('in,'out) vuSPF \<Rightarrow> bool" where
+"uspfIsWeak f = (\<forall>b. (b \<in> dom (Rep_cfun (Rep_vuSPF f)) \<longrightarrow> usbLen b \<le> usbLen (the ((Rep_vuSPF f)\<cdot>b))))"
 
-cpodef 'm USPFw = "{f :: 'm USPF. uspfIsWeak f}"
+cpodef ('in,'out)  USPFw = "{f ::  ('in,'out) vuSPF. uspfIsWeak f}"
 sorry
 
-definition uspfIsStrong :: "'m USPF \<Rightarrow> bool" where
-"uspfIsStrong f = (\<forall>b. (b \<in> dom (Rep_cfun (Rep_USPF f)) \<longrightarrow> lnsuc\<cdot>(usbLen b) \<le> usbLen (the ((Rep_USPF f)\<cdot>b))))"
+definition uspfIsStrong :: "('in,'out) vuSPF \<Rightarrow> bool" where
+"uspfIsStrong f = (\<forall>b. (b \<in> dom (Rep_cfun (Rep_vuSPF f)) \<longrightarrow> lnsuc\<cdot>(usbLen b) \<le> usbLen (the ((Rep_vuSPF f)\<cdot>b))))"
 
-cpodef 'm USPFs = "{f :: 'm USPF. uspfIsStrong f}"
+cpodef ('in,'out) USPFs = "{f :: ('in,'out) vuSPF. uspfIsStrong f}"
 sorry
 
 
@@ -200,7 +214,7 @@ sorry
 section \<open>General SPS datatype\<close>
 
 (* First a general class for USPF/USPFw/USPFs *)
-class usb = cpo +
+class uspf = cpo +
   fixes dom :: "'a \<rightarrow> channel set"
   fixes ran :: "'a \<rightarrow> channel set"
 
@@ -209,24 +223,24 @@ class usb = cpo +
 begin
 end
 
-class usb_comp = usb +
+class uspf_comp = uspf +
   fixes comp :: "'a \<rightarrow> 'a \<rightarrow> 'a"  (* Here we can put the abbreviation \<otimes> *)
 begin
 end
 
-default_sort usb
+default_sort uspf
 
 
 definition uspsWell :: "'m set \<Rightarrow> bool" where
 "uspsWell S \<equiv> \<exists>In Out. \<forall> f\<in>S . (dom\<cdot>f = In \<and> ran\<cdot>f=Out) "
 
 pcpodef 'm USPS = "{S :: 'm set. uspsWell S }"
-  apply (simp add: UU_eq_empty uspsWell_def)
+   apply (simp add: UU_eq_empty uspsWell_def)
   sorry
 
   (* composite operator on USPS *)
   (* 'm has to have a composition operator ... duh *)
-definition uspsComp :: "'m::usb_comp USPS \<Rightarrow>'m  USPS \<Rightarrow> 'm USPS"  where
+definition uspsComp :: "'m::uspf_comp USPS \<Rightarrow>'m  USPS \<Rightarrow> 'm USPS"  where
 "uspsComp S1 S2 \<equiv> Abs_USPS {comp\<cdot>f1\<cdot>f2 | f1 f2. f1\<in>(Rep_USPS S1) \<and> f2\<in>(Rep_USPS S2)}"
 
 
