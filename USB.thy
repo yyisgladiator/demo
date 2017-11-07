@@ -78,13 +78,6 @@ cpodef 's::us USB ("(_\<^sup>\<omega>)" [1000] 999) = "{b :: channel \<rightharp
 setup_lifting type_definition_USB
 
 
-
-
-section \<open>Examples\<close>
-(* Some examples how it would look like *)
-
-
-
 (****************************************************)
 subsection \<open>General Usage\<close>
 (* Independend of the stream definition. Could be stream or tstream *)
@@ -165,16 +158,20 @@ default_sort cpo
 class usb = cpo +
   fixes usbDom :: "'a \<rightarrow> channel set"
   fixes usbLen :: "'a \<Rightarrow> lnat"  (* Debatable *)
+  fixes usbLeast :: "channel set \<Rightarrow> 'a"
 
   assumes "\<And> x y. x\<sqsubseteq>y \<Longrightarrow> usbDom\<cdot>x = usbDom\<cdot>y"
+  assumes "\<And> x. usbLeast (usbDom\<cdot>x)\<sqsubseteq>x"
 begin
 end
 
 default_sort usb
 
+(* SWS: This is different from the original spf_well *)
+(* But hopefully identical, better ... *)
 definition uspfWell:: "('in \<rightarrow> 'out option) \<Rightarrow> bool" where
-"uspfWell f \<equiv> \<exists>In Out. \<forall>b. (b \<in> dom (Rep_cfun f) \<longleftrightarrow> usbDom\<cdot>b = In) \<and> 
-    (b \<in> dom (Rep_cfun f) \<longrightarrow> usbDom\<cdot>(the (f\<cdot>b)) = Out)"
+"uspfWell f \<equiv> (\<exists>In. \<forall>b. (b \<in> dom (Rep_cfun f) \<longleftrightarrow> usbDom\<cdot>b = In)) \<and> 
+              (\<exists>Out. \<forall>b. (b \<in> ran (Rep_cfun f) \<longrightarrow> usbDom\<cdot>b = Out))"
 
 (* Define the type 'm USPF (Very Universal Stream Processing Functions) as cpo *)
 cpodef ('in,'out) vuSPF = "{f :: 'in \<rightarrow> 'out option . uspfWell f}"
@@ -187,6 +184,10 @@ definition uspfDom :: "('in,'out) vuSPF \<rightarrow> channel set" where
 
 definition uspfRan :: "('in,'out) vuSPF \<rightarrow> channel set" where
 "uspfRan \<equiv> \<Lambda> f. usbDom\<cdot>(SOME b. b \<in> ran (Rep_cfun (Rep_vuSPF f)))" 
+
+definition uspfLeast :: "channel set \<Rightarrow> channel set \<Rightarrow> ('in,'out) vuSPF" where
+"uspfLeast cin cout = Abs_vuSPF (\<Lambda>  sb.  (usbDom\<cdot>sb = cin) \<leadsto> usbLeast cout)"
+
 
 (* We can reuse this composition in the subtypes, for weak/strong causal stuff *)
 definition uspfComp :: "'m uSPF \<rightarrow> 'm uSPF \<rightarrow> 'm uSPF" where
@@ -233,6 +234,9 @@ default_sort uspf
 
 definition uspsWell :: "'m set \<Rightarrow> bool" where
 "uspsWell S \<equiv> \<exists>In Out. \<forall> f\<in>S . (dom\<cdot>f = In \<and> ran\<cdot>f=Out) "
+
+(* Do not use this! We are changing the SPS definition in the automaton group *)
+(* This is just for testing what is possible/what classes are required *)
 
 pcpodef 'm USPS = "{S :: 'm set. uspsWell S }"
    apply (simp add: UU_eq_empty uspsWell_def)
