@@ -60,14 +60,17 @@ end
 declare [[show_types]]
 declare [[show_consts]]
 class revcpo = po +
-  assumes "\<And>S::(nat \<Rightarrow> 'a::po). chain (\<lambda>i. Rev (S i)) \<Longrightarrow> \<exists>x. range (\<lambda>i. Rev (S i)) <<| (Rev x)"
+  assumes a_blub: "\<And>S::(nat \<Rightarrow> 'a::po). chain (\<lambda>i. Rev (S i)) 
+                                        \<Longrightarrow> \<exists>x. range (\<lambda>i. Rev (S i)) <<| (Rev x)"
+  (* Yes, naming this assumption is crucial :D *)
 begin
+
 lemma rev_lubex:
   fixes S::"(nat \<Rightarrow> 'a::po)"
   assumes "chain (\<lambda>i. Rev (S i))"
   shows "\<exists>x. range (\<lambda>i. Rev (S i)) <<| (Rev x)"
-  sorry
-
+  by (simp add: assms local.a_blub)
+  
 end
 
 instantiation rev :: (revcpo) cpo
