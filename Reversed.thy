@@ -66,7 +66,7 @@ class revcpo = po +
 begin
 end
 
-class uprecvpo = revcpo + upcpo
+class uprevcpo = revcpo + upcpo
 
 instantiation rev :: (revcpo) cpo
 begin
@@ -90,7 +90,7 @@ instance
   qed
 end
 
-instance rev :: (uprecvpo) pcpo
+instance rev :: (uprevcpo) pcpo
   apply(intro_classes)
   by (metis below_rev.simps rev.exhaust top)
 
