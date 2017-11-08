@@ -145,7 +145,6 @@ function test4 :: "(channel \<rightharpoonup> nat stream) \<Rightarrow> bool" wh
 
 (* Somehow define the transition function *)
 (* use the createOutput function *)
-(* SWS: Sadly I was unable to pattern-match "(channel \<rightharpoonup> myM)". Marc is trying this also, he is the person to talk to *)
 function myTransition :: "(myState \<times>(channel \<rightharpoonup> myM)) \<Rightarrow> (myState \<times> myM SB)" where
 "myTransition (State even n b,  [c1 \<mapsto> N z])= ((State odd n b), createOutput 1 True)" |
 "myTransition (State odd n b, [c1 \<mapsto> N z]) = ((State even n b), createOutput 0 False)"  |
