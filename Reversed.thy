@@ -14,7 +14,7 @@ default_sort type
 
 
 section \<open>Class Definitions \<close>
-(*
+
 (* The new class definitions are later used for the 'rev' type *)
 (* upper pointed cpo *)
 class upcpo = cpo +
@@ -37,7 +37,7 @@ end
 
 (* double pointed cpo *)
 class dpcpo = pcpo + upcpo
-*)
+
 
 section \<open>rev type\<close>
 
@@ -60,37 +60,39 @@ end
 declare [[show_types]]
 declare [[show_consts]]
 class revcpo = po +
-  assumes a_blub: "\<And>S::(nat \<Rightarrow> 'a::po). chain (\<lambda>i. Rev (S i)) 
+  assumes revlub_ex: "\<And>S::(nat \<Rightarrow> 'a::po). chain (\<lambda>i. Rev (S i)) 
                                         \<Longrightarrow> \<exists>x. range (\<lambda>i. Rev (S i)) <<| (Rev x)"
   (* Yes, naming this assumption is crucial :D *)
 begin
-
-lemma rev_lubex:
-  fixes S::"(nat \<Rightarrow> 'a::po)"
-  assumes "chain (\<lambda>i. Rev (S i))"
-  shows "\<exists>x. range (\<lambda>i. Rev (S i)) <<| (Rev x)"
-  by (simp add: assms local.a_blub)
-  
 end
+
+class uprecvpo = revcpo + upcpo
 
 instantiation rev :: (revcpo) cpo
 begin
 lemma rev_bot_top: "x\<sqsubseteq>(Rev \<bottom>)"
   using below_rev.elims(3) by blast
 
-  instance
+instance
   proof intro_classes
     fix S :: "nat \<Rightarrow> 'a::revcpo rev"
     assume as: "chain S"
-    obtain Y :: "nat \<Rightarrow> 'a::revcpo" where y_def: "\<And>i. Rev (Y i) = (S i)" sorry
+    have "\<And>i. \<exists>x. (S i) = Rev x"
+      by (meson rev.exhaust)
+    hence h1: "\<exists>Y . (\<forall> i. Rev (Y i) = (S i))" by metis
+    obtain Y :: "nat \<Rightarrow> 'a::revcpo" where y_def: "\<And>i. Rev (Y i) = (S i)" using h1 by blast
     have "chain (\<lambda>i. Rev (Y i))"
       by (metis Rep_rev_inverse as po_class.chain_def y_def)
     hence "\<exists>x. range (\<lambda>i. Rev (Y i)) <<| (Rev x)"
-      using rev_lubex by blast
+      using revlub_ex by blast
     thus "\<exists>x. range S <<| x"
       by (metis Rep_rev_inverse image_cong y_def)
   qed
 end
+
+instance rev :: (uprecvpo) pcpo
+  apply(intro_classes)
+  by (metis below_rev.simps rev.exhaust top)
 
 
 (* SWS: I am not 100% sure this is true... *)

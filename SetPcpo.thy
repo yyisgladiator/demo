@@ -1,7 +1,7 @@
 chapter {* Set and bool as a pointed cpo. *}
 
 theory SetPcpo
-imports "~~/src/HOL/HOLCF/Adm"
+imports "~~/src/HOL/HOLCF/Adm" Reversed
 begin
 
 text {*PCPO on sets and bools. The @{text "\<sqsubseteq>"} operator of the order is defined as the @{text "\<subseteq>"} operator on sets
@@ -190,4 +190,19 @@ apply (rule compact_empty)
 apply (erule compact_insert)
 done
 
-end
+instance set :: (type) revcpo
+proof(intro_classes)
+  fix S:: "nat \<Rightarrow> 'a set"
+  assume "chain (\<lambda>i::nat. Rev (S i))"
+  have rev_below:"\<And>a b:: 'a set . Rev a \<sqsubseteq> Rev b \<longleftrightarrow> b \<subseteq> a"
+    by (simp add: SetPcpo.less_set_def)
+  hence "range (\<lambda>i::nat. Rev (S i)) <<| Rev (\<Inter> range S)" 
+    apply(auto simp add: is_lub_def is_ub_def)
+    by (metis below_rev.elims(2) le_INF_iff rev_below)
+  thus "\<exists>x::'a set. range (\<lambda>i::nat. Rev (S i)) <<| Rev x"
+    by blast
+qed
+
+instance set :: (type) uprevcpo
+  apply(intro_classes)
+  by (meson UNIV_I Union_is_lub is_lub_def is_ub_def)
