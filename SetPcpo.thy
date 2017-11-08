@@ -206,3 +206,6 @@ qed
 instance set :: (type) uprevcpo
   apply(intro_classes)
   by (meson UNIV_I Union_is_lub is_lub_def is_ub_def)
+
+
+end
