@@ -194,6 +194,19 @@ proof -
     by (simp add: f3)
 qed
 
+lemma spf_chain_dom: assumes "chain (Y :: nat \<Rightarrow> 'a SPF)" and "spfDom\<cdot>(Y 0) = cs"
+  shows "\<And> i. spfDom\<cdot>(Y i) = cs"
+  using assms(1) assms(2) spfdom_eq_lub by blast
+
+lemma spf_chain_ran: assumes "chain (Y :: nat \<Rightarrow> 'a SPF)" and "spfRan\<cdot>(Y 0) = cs"
+  shows "\<And> i. spfRan\<cdot>(Y i) = cs"
+  using assms(1) assms(2) spfran_eq_lub by blast
+  
+lemma my_func_eq: assumes "\<And> x. (f x) = (g x)"
+  shows "f = g"
+  by (simp add: assms ext)
+  
+
 lemma spfapplyout_chain_lub [simp]: assumes "chain Y" and "\<And>b. sbDom\<cdot>(k\<cdot>b) = sbDom\<cdot>b" 
   shows "Abs_CSPF (\<lambda>x. (sbDom\<cdot>x = spfDom\<cdot>(\<Squnion>i. Y i))\<leadsto>k\<cdot>((\<Squnion>i. Y i) \<rightleftharpoons> x)) 
           \<sqsubseteq> (\<Squnion>i. Abs_CSPF (\<lambda>x. (sbDom\<cdot>x = spfDom\<cdot>(Y i))\<leadsto>k\<cdot>(Y i \<rightleftharpoons> x)))"
@@ -263,7 +276,8 @@ proof -
       then show "(\<Squnion>n. k\<cdot>(Y n \<rightleftharpoons> x)) = k\<cdot>(Lub Y \<rightleftharpoons> x)"
         by blast
     qed
-   
+    have f60: "chain (\<lambda>i. (\<lambda>x::'a SB. (sbDom\<cdot>x = spfDom\<cdot>(Lub Y))\<leadsto>k\<cdot>(Y i \<rightleftharpoons> x)))"
+      sorry
   have f51: "(\<Squnion>i::nat. (\<lambda>x::'a SB. (sbDom\<cdot>x = spfDom\<cdot>(Lub Y))\<leadsto>k\<cdot>(Y i \<rightleftharpoons> x))) = (\<lambda>x::'a SB. (sbDom\<cdot>x = spfDom\<cdot>(Lub Y))\<leadsto>(\<Squnion>i::nat. k\<cdot>(Y i \<rightleftharpoons> x)))"
     sorry
   show ?thesis
