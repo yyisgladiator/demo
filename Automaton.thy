@@ -43,18 +43,33 @@ setup_lifting type_definition_automaton
 definition myFixer :: "channel set \<Rightarrow> channel set \<Rightarrow> (('s \<Rightarrow> 'm SPF)\<rightarrow>('s \<Rightarrow> 'm SPF)) \<rightarrow> ('s \<Rightarrow> 'm SPF)" where
 "myFixer = undefined"
 
+(* Already in SPF *)
 definition spfLeast::"channel set \<Rightarrow> channel set \<Rightarrow> 'm::message SPF" where
 "spfLeast cin cout = Abs_SPF (\<Lambda>  sb.  (sbDom\<cdot>sb = cin) \<leadsto> sbLeast cout)"
 
+(* updis bijectiv *)
+thm inv_def
 definition spfStep_h2::" channel set \<Rightarrow> (channel\<rightharpoonup>'m::message discr\<^sub>\<bottom>) \<Rightarrow> (channel\<rightharpoonup>'m)" where
 "spfStep_h2 In = (\<lambda>f. (\<lambda>c. (c \<in> In) \<leadsto> (THE a. updis a = f \<rightharpoonup> c)))"
 
-definition spfStep_h1::"channel set \<Rightarrow> channel set \<Rightarrow>((channel\<rightharpoonup>'m::message) \<Rightarrow> 'm SPF) \<Rightarrow>((channel\<rightharpoonup>'m discr\<^sub>\<bottom>)\<rightarrow> 'm SPF)" where
-"spfStep_h1 In Out= (\<lambda> h. (\<Lambda> f. if (\<forall>c. (c \<in> In \<longrightarrow> (f \<rightharpoonup> c \<noteq> \<bottom>))) then h (spfStep_h2 In f) else spfLeast In Out))"
+(* look at "if-then-cont" file in root *)
+(* If_Else_Continuity.thy *)
 
+(* spfRestrict wrapper on "h (spfStep_h2 In f)" *)
+(* "h" should be cont, maybe later *)
+(* alternative (\<bottom> \<notin> ran f) *)
+definition spfStep_h1::"channel set \<Rightarrow> channel set \<Rightarrow>((channel\<rightharpoonup>'m::message) \<Rightarrow> 'm SPF) \<Rightarrow>((channel\<rightharpoonup>'m discr\<^sub>\<bottom>)\<rightarrow> 'm SPF)" where
+"spfStep_h1 In Out= (\<lambda> h. (\<Lambda> f. if (In \<subseteq> dom f \<and> (\<forall>c \<in> In. (f \<rightharpoonup> c \<noteq> \<bottom>))) then h (spfStep_h2 In f) else spfLeast In Out))"
+
+thm spfRestrict_def
 (* Skeleton of spfStep. Returns the SPF that switches depending on input *)
 definition spfStep :: "channel set \<Rightarrow> channel set \<Rightarrow> ((channel\<rightharpoonup>'m::message) \<Rightarrow> 'm SPF) \<rightarrow> 'm SPF" where
 "spfStep In Out \<equiv> \<Lambda> h. Abs_SPF (\<Lambda>  sb.  (sbDom\<cdot>sb = In) \<leadsto> (spfStep_h1 In Out h)\<cdot>(sbHdElem\<cdot>sb) \<rightleftharpoons> sb)"
+
+(* Benutze *)
+thm spf_contI
+
+thm spf_contI2
 
 (* Defined by SWS *)
 definition spfRt :: "'m SPF \<rightarrow> 'm SPF" where
