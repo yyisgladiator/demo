@@ -177,28 +177,68 @@ lemma dropwhile_med_h: "sdropwhile (\<lambda>x. x = a)\<cdot>(sMed\<cdot>s\<cdot
 
 oops
 
-lemma smed_drop: "shd  (sMed\<cdot>s\<cdot>ora) \<noteq> shd s \<Longrightarrow> \<exists>n. sMed\<cdot>s\<cdot>ora = sMed\<cdot>(sdropwhile (\<lambda>x. x = a)\<cdot>s)\<cdot>(sdrop n\<cdot>ora)" sorry
+fixrec newOracle_dropwhile :: "('a \<Rightarrow> bool) \<rightarrow> 'a stream \<rightarrow> bool stream" where
+"newOracle_dropwhile\<cdot>f\<cdot>\<bottom> = \<bottom> " |
+"newOracle_dropwhile\<cdot>f\<cdot>((up\<cdot>b) && bs) = 
+  (if (f b) then (updis False) && newOracle_dropwhile\<cdot>f\<cdot>bs
+   else ((\<up>(True))\<infinity>))"
 
-lemma dropwhile2smed: "\<exists>ora. sdropwhile (\<lambda>x. x = a)\<cdot>s = sMed\<cdot>s\<cdot>ora" sorry
+lemma drop2med: "sdrop n\<cdot>s = sMed\<cdot>s\<cdot>((sntimes n (\<up>False)) \<bullet> ((\<up>True)\<infinity>))" 
+  apply (induction n arbitrary: s)
+  apply (simp add: smed_inftrue)
+  apply (rule_tac x=s in scases)
+  by simp_all
+
+lemma slen_dropwhile_takewhile: "sdropwhile (\<lambda>x. x = a)\<cdot>s \<noteq> \<epsilon> \<Longrightarrow> #(stakewhile (\<lambda>x. x = a)\<cdot>s) \<noteq> \<infinity>"
+  apply (erule_tac contrapos_pp,simp)
+  using stakewhile_sinftimesup [of a s] apply (simp)
+  b (metis sinftimes_unfold sdropwhile_t)
+sorry
+
+lemma dropwhile2drop: "sdropwhile (\<lambda>x. x = a)\<cdot>s \<noteq> \<epsilon> \<Longrightarrow> \<exists>n .sdropwhile (\<lambda>x. x = a)\<cdot>s = sdrop n\<cdot>s"
+  by (metis stakewhile_sdropwhilel1 ninf2Fin slen_dropwhile_takewhile)
+
+lemma dropwhile2smed: "\<exists>ora. sdropwhile (\<lambda>x. x = a)\<cdot>s = sMed\<cdot>s\<cdot>ora"
+  apply (case_tac "sdropwhile (\<lambda>x. x = a)\<cdot>s = \<epsilon>")
+  apply (metis (no_types) smed_bot2)
+  by (metis dropwhile2drop drop2med)
+
+lemma stakewhileDropwhile_rev: "s = stakewhile f\<cdot>s \<bullet> (sdropwhile f\<cdot>s)"
+by (simp add: stakewhileDropwhile)
+
+text {* @{term sdropwhile} after @{term stakewhile} gives the empty stream *}
+lemma dtw: "sdropwhile f\<cdot>(stakewhile f\<cdot>s) = \<epsilon>"
+apply (rule ind [of _ s], auto)
+by (case_tac "f a", auto)
+
+lemma smed_conc: "\<exists>ora2. sMed\<cdot>(sa \<bullet> sb)\<cdot>ora = sMed\<cdot>sa\<cdot>ora \<bullet> sMed\<cdot>sb\<cdot>ora2"
+  apply (case_tac "#sa = \<infinity>",simp)
+  apply (metis (no_types) sconc_snd_empty smed_bot2)
+  apply (case_tac "#ora \<le> #sa")
+  apply (rule_tac x=\<epsilon> in exI,simp)
+
+  (* ora2 = sdrop #sa ora *)
+sorry
+
+lemma smed_dtw: "sdropwhile (\<lambda>x. x = a)\<cdot>(sMed\<cdot>(stakewhile (\<lambda>x. x = a)\<cdot>s)\<cdot>ora) = \<epsilon>"
+ apply (induction s arbitrary: a ora rule: ind,simp_all) 
+ apply (case_tac "aa=a",simp_all)
+ by (rule_tac ts=ora in oracases,simp_all)
+
+lemma sdropwhile_conc: "sdropwhile (\<lambda>x. x = a)\<cdot>sa = \<epsilon> \<Longrightarrow> sdropwhile (\<lambda>x. x = a)\<cdot>(sa \<bullet> sb) = sdropwhile (\<lambda>x. x = a)\<cdot>sb"
+ sorry
 
 lemma dropwhile_med: "\<exists>ora2. sdropwhile (\<lambda>x. x = a)\<cdot>(sMed\<cdot>s\<cdot>ora) = sMed\<cdot>(sdropwhile (\<lambda>x. x = a)\<cdot>s)\<cdot>ora2"
-  apply (rule_tac x=s in scases,simp)
+  apply (case_tac "s= \<epsilon>",simp)
   apply (case_tac "(sMed\<cdot>s\<cdot>ora) = \<epsilon>",simp)
   using smed_bot2 apply blast 
-  apply(case_tac "aa \<noteq> a")
+  apply(case_tac "shd s \<noteq> a")
   apply(case_tac "shd (sMed\<cdot>s\<cdot>ora)  \<noteq> a")
   apply (simp add: dropwhile_shd_f,blast)
-  apply (simp,metis dropwhile2smed smed2med)
-  apply (case_tac "shd (sMed\<cdot>s\<cdot>ora)  \<noteq> a")
-  apply (metis dropwhile_shd_f smed_drop)
-  apply (subst smed_insert,simp)
-
-  apply (subst dropwhile2smed smed2med)
-  apply (meti dropwhile_shd_f smed_drop dropwhile2smed smed2med)
-  apply (case_tac "\<exists>n. #(stakewhile (\<lambda>x. x = a)\<cdot>sa) = Fin n")
-  apply (subst stakewhile_sdropwhilel1)
-  apply (meti dropwhile2smed smed2med)
-sorry
+  apply (simp) 
+  apply (metis dropwhile_shd_f dropwhile2smed smed2med,simp)
+  apply (subst stakewhileDropwhile_rev [of s "(\<lambda>x. x = a)"])
+  by (metis smed_conc [of "stakewhile (\<lambda>x. x = a)\<cdot>s" "sdropwhile (\<lambda>x. x = a)\<cdot>s" ora] smed_dtw sdropwhile_conc dropwhile2smed smed2med)
 
 lemma med_dropwhile_t: "(sMed\<cdot>sa\<cdot>as) \<noteq> \<epsilon> \<Longrightarrow> shd (sMed\<cdot>sa\<cdot>as) = a \<Longrightarrow> srcdups\<cdot>(sMed\<cdot>sa\<cdot>as) = \<up>a \<bullet> srcdups\<cdot>(sdropwhile (\<lambda>x. x = a)\<cdot>(sMed\<cdot>sa\<cdot>as))"
   apply(rule_tac x="sMed\<cdot>sa\<cdot>as" in scases,simp_all)

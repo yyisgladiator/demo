@@ -1839,7 +1839,7 @@ lemma tdw[simp]: "stakewhile f\<cdot>(sdropwhile f\<cdot>s) = \<epsilon>"
 apply (rule ind [of _ s], auto)
 by (case_tac "f a", auto)
 
-lemma stakewhileDropwhile[simp]: "stakewhile f\<cdot>s \<bullet> (sdropwhile f\<cdot>s) = s "
+lemma stakewhileDropwhile: "stakewhile f\<cdot>s \<bullet> (sdropwhile f\<cdot>s) = s "
 apply(rule ind [of _s])
 apply (rule admI)
 apply (metis (no_types, lifting) approxl2 inf_chainl4 lub_eqI lub_finch2 sconc_fst_inf split_streaml1 stakewhile_below stakewhile_sdropwhilel1)
