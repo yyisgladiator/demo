@@ -38,6 +38,14 @@ lemma newOra_srcdups_f:
   "s1 \<noteq> \<epsilon> \<Longrightarrow> s2 \<noteq> \<epsilon> \<Longrightarrow> shd s1 \<noteq> shd s2 \<Longrightarrow> newOracle_srcdups\<cdot>s1\<cdot>s2 = \<up>False \<bullet> newOracle_srcdups\<cdot>(s1)\<cdot>(srt\<cdot>s2)"
   by (smt inject_scons lscons_conv newOracle_srcdups.simps(3) surj_scons)
 
+lemma newOra_srcdups_ind:"sMed\<cdot>s\<cdot>(newOracle_srcdups\<cdot>(sMed\<cdot>s\<cdot>ora)\<cdot>s) = sMed\<cdot>s\<cdot>ora" 
+  apply (induction s arbitrary: ora rule: ind,simp_all)
+  apply (rule_tac ts=ora in oracases,simp_all)
+  apply (simp add: newOra_srcdups_t)
+  apply (case_tac "(sMed\<cdot>s\<cdot>as) = \<epsilon>",simp)
+  apply (subst newOra_srcdups_f,simp_all)
+  oops
+
 lemma smed_t2: "s \<noteq> \<epsilon> \<Longrightarrow>  sMed\<cdot>s\<cdot>(\<up>True \<bullet> ora) = \<up>(shd s) \<bullet> sMed\<cdot>(srt\<cdot>s)\<cdot>ora"
   by (metis smed_t surj_scons)
   
@@ -136,30 +144,106 @@ lemma newOra_srcdups2:
   apply smt conc2cons newOra_srcdups_f newOracle_srcdups.simps(3) smed_f smed_t srcdups_fst2snd srcdups_nbot srcdups_shd2 srcdups_srt srcdups_step)
   apply (case_tac "shd (sMed\<cdot>sa\<cdot>s) = aa") 
   apply (simp add: srcdups_fst2snd srcdups_nfst2snd)
-  oops       
+  oops     
+  
+lemma dropwhile_shd_f: "shd s \<noteq> a \<Longrightarrow> sdropwhile (\<lambda>x. x = a)\<cdot>s = s"
+  by (metis (full_types) sdropwhile_f strict_sdropwhile surj_scons)
      
-lemma dropwhile_med: "\<exists>ora2. sdropwhile (\<lambda>x. x = a)\<cdot>(sMed\<cdot>s\<cdot>ora1) = sMed\<cdot>(sdropwhile (\<lambda>x. x = a)\<cdot>s)\<cdot>ora2"
+lemma dropwhile_med_h: "sdropwhile (\<lambda>x. x = a)\<cdot>(sMed\<cdot>s\<cdot>ora) = sMed\<cdot>(sdropwhile (\<lambda>x. x = a)\<cdot>s)\<cdot>(newOracle_srcdups\<cdot>(sdropwhile (\<lambda>x. x = a)\<cdot>(sMed\<cdot>s\<cdot>ora))\<cdot>(sdropwhile (\<lambda>x. x = a)\<cdot>s))"
+ 
+
+ apply (induction ora  arbitrary: s a rule: ind,simp_all)
+  apply (rule_tac x=sa in scases,simp)
+  apply (case_tac "s= \<epsilon>",simp)
+  apply (case_tac "a = True",simp)
+  apply (meti (no_types, lifting) conc2cons newOracle_srcdups.simps(1) newOracle_srcdups.simps(3) sconc_snd_empty sdropwhile_f sdropwhile_t smed_bot2 smed_t strict_sdropwhile)
+  apply (meti (full_types) newOracle_srcdups.simps(1) sconc_snd_empty smed_bot2 smed_f strict_sdropwhile)
+  apply simp
+  
+  apply (case_tac "a = True",simp)
+  apply (case_tac "ab=aa")
+  apply auto[1]
+  apply (simp add: newOra_srcdups_t)
+  apply (etis conc2cons newOracle_srcdups.simps(1) newOracle_srcdups.simps(3) smed_bot2 smed_t srcdups_step sup'_def)
+  apply simp
+  apply (case_tac "a = True",simp)
+  apply (case_tac "shd sa = aa")
+  apply (case_tac "shd (sMed\<cdot>sa\<cdot>s) = aa") 
+  apply (simp add: srcdups_fst2snd)
+  apply (simp add: srcdups_fst2snd srcdups_nfst2snd)
+  apply (mt conc2cons newOra_srcdups_f newOracle_srcdups.simps(3) smed_f smed_t srcdups_fst2snd srcdups_nbot srcdups_shd2 srcdups_srt srcdups_step)
+  apply (case_tac "shd (sMed\<cdot>sa\<cdot>s) = aa") 
+  apply (simp add: srcdups_fst2snd srcdups_nfst2snd)
+
+oops
+
+lemma smed_drop: "shd  (sMed\<cdot>s\<cdot>ora) \<noteq> shd s \<Longrightarrow> \<exists>n. sMed\<cdot>s\<cdot>ora = sMed\<cdot>(sdropwhile (\<lambda>x. x = a)\<cdot>s)\<cdot>(sdrop n\<cdot>ora)" sorry
+
+lemma dropwhile2smed: "\<exists>ora. sdropwhile (\<lambda>x. x = a)\<cdot>s = sMed\<cdot>s\<cdot>ora" sorry
+
+lemma dropwhile_med: "\<exists>ora2. sdropwhile (\<lambda>x. x = a)\<cdot>(sMed\<cdot>s\<cdot>ora) = sMed\<cdot>(sdropwhile (\<lambda>x. x = a)\<cdot>s)\<cdot>ora2"
+  apply (rule_tac x=s in scases,simp)
+  apply (case_tac "(sMed\<cdot>s\<cdot>ora) = \<epsilon>",simp)
+  using smed_bot2 apply blast 
+  apply(case_tac "aa \<noteq> a")
+  apply(case_tac "shd (sMed\<cdot>s\<cdot>ora)  \<noteq> a")
+  apply (simp add: dropwhile_shd_f,blast)
+  apply (simp,metis dropwhile2smed smed2med)
+  apply (case_tac "shd (sMed\<cdot>s\<cdot>ora)  \<noteq> a")
+  apply (metis dropwhile_shd_f smed_drop)
+  apply (subst smed_insert,simp)
+
+  apply (subst dropwhile2smed smed2med)
+  apply (meti dropwhile_shd_f smed_drop dropwhile2smed smed2med)
+  apply (case_tac "\<exists>n. #(stakewhile (\<lambda>x. x = a)\<cdot>sa) = Fin n")
+  apply (subst stakewhile_sdropwhilel1)
+  apply (meti dropwhile2smed smed2med)
 sorry
+
+lemma med_dropwhile_t: "(sMed\<cdot>sa\<cdot>as) \<noteq> \<epsilon> \<Longrightarrow> shd (sMed\<cdot>sa\<cdot>as) = a \<Longrightarrow> srcdups\<cdot>(sMed\<cdot>sa\<cdot>as) = \<up>a \<bullet> srcdups\<cdot>(sdropwhile (\<lambda>x. x = a)\<cdot>(sMed\<cdot>sa\<cdot>as))"
+  apply(rule_tac x="sMed\<cdot>sa\<cdot>as" in scases,simp_all)
+  by (simp add: srcdups_step)
+
+lemma dropwhile_f: "s \<noteq> \<epsilon> \<Longrightarrow> shd s \<noteq> a \<Longrightarrow> s =  sdropwhile (\<lambda>x. x = a)\<cdot>s"
+  by (metis (full_types) sdropwhile_f surj_scons)
 
 lemma ora_t_ex: "\<exists>ora1. P (\<up>True\<bullet>ora1) \<Longrightarrow> \<exists>ora2. P ora2"
   by auto    
     
 lemma ora_f_ex: "\<exists>ora1. P (\<up>False\<bullet>ora1) \<Longrightarrow> \<exists>ora2. P ora2"
-  by auto     
+  by auto   
+
+lemma srcdups_fin:"#(srcdups\<cdot>msg) = Fin n \<Longrightarrow> msg = \<up>aa \<bullet> sa \<Longrightarrow>\<exists>n2.  #(srcdups\<cdot>sa) = Fin n2" 
+  apply (case_tac "shd sa = aa")
+  apply (metis Fin_02bot lnzero_def only_empty_has_length_0 srcdups_eq strict_srcdups surj_scons)
+  by (metis fold_inf infI slen_scons srcdups_nfst2snd)  
  
 lemma newOra_srcdups_ex: assumes "#(srcdups\<cdot>msg) = Fin n" shows "\<exists>ora2. srcdups\<cdot>(sMed\<cdot>msg\<cdot>ora1) = sMed\<cdot>(srcdups\<cdot>msg)\<cdot>ora2"
    apply (induction "srcdups\<cdot>msg"  arbitrary: msg  ora1 rule: finind)
    using assms apply simp
    apply (metis smed_bot1 srcdups_nbot)
    apply (rule_tac x=msg in scases,simp)
-   apply (simp add: srcdups_step)
    apply (rule_tac ts=ora1 in oracases,simp_all)
    using smed_bot2 apply blast
    apply (rule ora_t_ex)
    apply (simp add: srcdups_step)
-   apply (subst dropwhile_med)
-   sorry
-
+   apply (metis inject_scons dropwhile_med)
+   apply (case_tac "sa = \<epsilon>")
+   apply (metis smed_bot1 smed_bot2 strict_srcdups)
+   apply (case_tac "shd sa \<noteq> aa")
+   apply (simp add: srcdups_nfst2snd)
+   apply (rule ora_f_ex,simp)
+   using inject_scons apply blast
+   apply (simp add: srcdups_step)
+   apply (case_tac "sMed\<cdot>sa\<cdot>as = \<epsilon>")
+   apply (metis smed_bot2 strict_srcdups)
+   apply (case_tac "shd (sMed\<cdot>sa\<cdot>as) = aa")
+   apply (rule ora_t_ex,simp)
+   apply (simp add: med_dropwhile_t)
+   apply (metis inject_scons dropwhile_med)
+   apply (rule ora_f_ex,simp)
+   apply (subst dropwhile_f [of "sMed\<cdot>sa\<cdot>as" aa],simp_all)
+   by (metis inject_scons dropwhile_med)
 
 lemma newOra_srcdups: 
   "srcdups\<cdot>(sMed\<cdot>msg\<cdot>ora) = sMed\<cdot>(srcdups\<cdot>msg)\<cdot>(newOracle_srcdups\<cdot>(srcdups\<cdot>(sMed\<cdot>msg\<cdot>ora))\<cdot>(srcdups\<cdot>msg))"
