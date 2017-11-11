@@ -22,11 +22,19 @@ lemma drop2med: "sdrop n\<cdot>s = sMed\<cdot>s\<cdot>((sntimes n (\<up>False)) 
   apply (rule_tac x=s in scases)
   by simp_all
 
-(* To Do *)
 lemma dropwhile_inf_bot: "sdropwhile (\<lambda>x. x = a)\<cdot>\<up>a\<infinity> = \<epsilon>"
-  
-  (* by (metis sinftimes_unfold sdropwhile_t) *)
-sorry
+  proof -
+  have h2:"\<forall>a. sdom\<cdot>\<up>a\<infinity> = {a}" by simp
+  have "\<forall>a b s.(sdropwhile (\<lambda>x. x = a)\<cdot>(sinftimes (\<up>a))) \<noteq> \<up>b \<bullet> s"
+    apply auto    
+    apply (case_tac "b=a")
+    using sdropwhile_resup apply blast
+    by (metis (no_types) Un_absorb h2 insert_commute insert_is_Un sdom2un singleton_insert_inj_eq' srcdups_dom srcdups_step)
+  then have "\<forall>a.(sdropwhile (\<lambda>x. x = a)\<cdot>(sinftimes (\<up>a))) = \<epsilon>"
+    by (metis scases)
+  thus ?thesis 
+  by auto
+  qed
 
 lemma slen_dropwhile_takewhile: "sdropwhile (\<lambda>x. x = a)\<cdot>s \<noteq> \<epsilon> \<Longrightarrow> #(stakewhile (\<lambda>x. x = a)\<cdot>s) \<noteq> \<infinity>"
   apply (erule_tac contrapos_pp,simp)
