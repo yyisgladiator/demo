@@ -16,12 +16,12 @@ default_sort usb
 
 (* SWS: This is different from the original spf_well *)
 (* But hopefully identical, better ... *)
-definition uspfWell:: "('in \<rightarrow> 'out option) \<Rightarrow> bool" where
-"uspfWell f \<equiv> (\<exists>In. \<forall>b. (b \<in> dom (Rep_cfun f) \<longleftrightarrow> usbDom\<cdot>b = In)) \<and> 
+definition pfWell:: "('in \<rightarrow> 'out option) \<Rightarrow> bool" where
+"pfWell f \<equiv> (\<exists>In. \<forall>b. (b \<in> dom (Rep_cfun f) \<longleftrightarrow> usbDom\<cdot>b = In)) \<and> 
               (\<exists>Out. \<forall>b. (b \<in> ran (Rep_cfun f) \<longrightarrow> usbDom\<cdot>b = Out))"
 
 (* Define the type 'm USPF (Very Universal Stream Processing Functions) as cpo *)
-cpodef ('in,'out) pfun = "{f :: 'in \<rightarrow> 'out option . uspfWell f}"
+cpodef ('in,'out) pfun = "{f :: 'in \<rightarrow> 'out option . pfWell f}"
   sorry
 
 type_synonym 'm uSPF = "('m, 'm) pfun"
