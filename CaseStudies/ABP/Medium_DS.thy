@@ -26,7 +26,8 @@ lemma drop2med: "sdrop n\<cdot>s = sMed\<cdot>s\<cdot>((sntimes n (\<up>False)) 
 lemma slen_dropwhile_takewhile: "sdropwhile (\<lambda>x. x = a)\<cdot>s \<noteq> \<epsilon> \<Longrightarrow> #(stakewhile (\<lambda>x. x = a)\<cdot>s) \<noteq> \<infinity>"
   apply (erule_tac contrapos_pp,simp)
   using stakewhile_sinftimesup [of a s] apply (simp)
-  b (metis sinftimes_unfold sdropwhile_t)
+ 
+  (* by (metis sinftimes_unfold sdropwhile_t) *)
 sorry
 
 lemma dropwhile2drop: "sdropwhile (\<lambda>x. x = a)\<cdot>s \<noteq> \<epsilon> \<Longrightarrow> \<exists>n .sdropwhile (\<lambda>x. x = a)\<cdot>s = sdrop n\<cdot>s"
@@ -45,15 +46,34 @@ lemma dtw: "sdropwhile f\<cdot>(stakewhile f\<cdot>s) = \<epsilon>"
 apply (rule ind [of _ s], auto)
 by (case_tac "f a", auto)
 
-(* To Do *)
+lemma split_stream_rev: "s = stake n\<cdot>s \<bullet> sdrop n\<cdot>s " by simp
+
+lemma szip_slen_conc: "#ora \<le> #sa \<Longrightarrow> #sa = Fin k \<Longrightarrow> szip\<cdot>(sa \<bullet> sb)\<cdot>ora =  szip\<cdot>sa\<cdot>ora"
+  apply (induction k arbitrary: ora sa sb,simp_all)
+  apply (rule_tac x=sa in scases,simp_all)
+  by (rule_tac x=ora in scases,simp_all)
+
+lemma szip_slen_conc2: "#ora > #sa \<Longrightarrow> #sa = Fin k \<Longrightarrow> szip\<cdot>(sa \<bullet> sb)\<cdot>ora = szip\<cdot>sa\<cdot>ora \<bullet> szip\<cdot>sb\<cdot>(sdrop k\<cdot>ora)"
+  apply (induction k arbitrary: ora sa sb,simp_all)
+  apply (rule_tac x=sa in scases,simp_all)
+  by (rule_tac x=ora in scases,simp_all)
+
+lemma add_sfilter_rev:
+  "#x = Fin k \<Longrightarrow> sfilter t\<cdot>x \<bullet> sfilter t\<cdot>y = sfilter t\<cdot>(x \<bullet> y)" by (simp add: add_sfilter)
+
 lemma smed_conc: "\<exists>ora2. sMed\<cdot>(sa \<bullet> sb)\<cdot>ora = sMed\<cdot>sa\<cdot>ora \<bullet> sMed\<cdot>sb\<cdot>ora2"
   apply (case_tac "#sa = \<infinity>",simp)
   apply (metis (no_types) sconc_snd_empty smed_bot2)
+  using ninf2Fin [of "#sa"] apply auto
   apply (case_tac "#ora \<le> #sa")
   apply (rule_tac x=\<epsilon> in exI,simp)
-
-  (* ora2 = sdrop #sa ora *)
-sorry
+  apply (simp add: smed_insert szip_slen_conc)
+  apply (rule_tac x="sdrop k\<cdot>ora" in exI)
+  apply (simp add: smed_insert sprojfst_def)
+  apply (fold smap_split) 
+  apply (subst add_sfilter_rev [of "szip\<cdot>sa\<cdot>ora" k])
+  apply (simp add: min.absorb1)
+  by (simp add: szip_slen_conc2)
 
 lemma smed_dtw: "sdropwhile (\<lambda>x. x = a)\<cdot>(sMed\<cdot>(stakewhile (\<lambda>x. x = a)\<cdot>s)\<cdot>ora) = \<epsilon>"
  apply (induction s arbitrary: a ora rule: ind,simp_all) 
