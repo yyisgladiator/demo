@@ -3009,7 +3009,7 @@ lemma adm_tsdom_sup_fun [simp]: "\<And>b c d. adm (\<lambda>a. tsDom\<cdot>(f\<c
   apply (rule admI)
   by (simp add: contlub_cfun_arg contlub_cfun_fun lub_eq_Union, auto)
     
-lemma adm_tstickcount_leq:"adm (\<lambda>xa. #\<surd> x \<le> #\<surd> f\<cdot>xa)"
+lemma adm_tstickcount_leq2:"adm (\<lambda>xa. #\<surd> x \<le> #\<surd> f\<cdot>xa)"
   apply(rule admI)
   apply(simp add: contlub_cfun_arg contlub_cfun_fun)
   by (meson below_lub lnle_def monofun_cfun_arg po_class.chain_def)

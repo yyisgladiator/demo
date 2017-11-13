@@ -686,7 +686,6 @@ lemma min_adm2[simp]: fixes y::lnat
     
 lemma lub_sml_eq:"\<lbrakk>chain (Y::nat\<Rightarrow>lnat); \<And>i. x \<le> Y i\<rbrakk> \<Longrightarrow> x \<le> (\<Squnion>i. Y i)"
   using l42 unique_inf_lub by force
-  
 
 text{* The lub of a chain in minimum is the minimum of the lub. *}
 lemma min_lub:" chain Y \<Longrightarrow> (\<Squnion>i::nat. min (x::lnat) (Y i)) = min (x) (\<Squnion>i::nat. (Y i))"
