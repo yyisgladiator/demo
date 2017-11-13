@@ -28,20 +28,75 @@ qed
   
 lemma tssnd_nack2inftrans_h:"#\<surd>as = \<infinity> \<Longrightarrow> #(tsAbs\<cdot>i) > #(tsAbs\<cdot>(tsRemDups\<cdot>as)) \<Longrightarrow> #(tsAbs\<cdot>as)\<noteq> \<infinity> \<Longrightarrow> (\<exists>k. i = k \<bullet>\<surd> is) 
        \<and> (#(tsAbs\<cdot>is)\<noteq>0) \<and> ((\<exists>t. (tsSnd_h\<cdot>i\<cdot>as\<cdot>(Discr ack)) = t \<bullet>\<surd> (tsSnd_h\<cdot>is\<cdot>tsInfTick\<cdot>(Discr ack)))\<or>(\<exists>t. (tsSnd_h\<cdot>i\<cdot>as\<cdot>(Discr ack)) = t \<bullet>\<surd> (tsSnd_h\<cdot>is\<cdot>tsInfTick\<cdot>(Discr (\<not>ack)))))"
-sorry
+oops
+
+lemma tssnd_h_tsAbs_nbot: "tsAbs\<cdot>msg \<noteq> \<epsilon> \<Longrightarrow>  #\<surd> acks = \<infinity> \<Longrightarrow> tsAbs\<cdot>(tsSnd_h\<cdot>msg\<cdot>acks\<cdot>(Discr ack)) \<noteq> \<epsilon>"
+  apply (induction acks arbitrary: msg ack)
+  apply (simp_all)
+  apply (rule adm_all, rule adm_imp,simp, rule adm_imp,simp)
+  apply (rule_tac ts=msg in tscases, simp_all)
+  apply (simp add: delayfun_tslscons tsmlscons_lscons)
+  apply (case_tac "t=ack", simp_all)
+  apply (meis tsmlscons_bot2 tsmlscons_nbot tssnd_h_mlscons_ack up_defined)
+  by (mets tsmlscons_bot2 tsmlscons_nbot tssnd_h_mlscons_nack up_defined)
+
+lemma tssnd_nack2inftrans_h2: "#(tsAbs\<cdot>(tsSnd_h\<cdot>i\<cdot>as\<cdot>(Discr ack))) = Fin k \<Longrightarrow> #\<surd> as = \<infinity> \<Longrightarrow> #(tsAbs\<cdot>(tsRemDups\<cdot>as)) \<ge> #(tsAbs\<cdot>i)"
+  apply (erule_tac contrapos_pp)
+
+apply (induction k arbitrary: i as ack,simp_all)
+  apply (case_tac "tsAbs\<cdot>i=\<epsilon>",simp)
+  apply (erule_tac contrapos_pp)
+  apply (simp add: tssnd_h_tsAbs_nbot)
   
-lemma tssnd_nack2inftrans: "#\<surd>as = \<infinity> \<Longrightarrow> 
-  #(tsAbs\<cdot>i) > #(tsAbs\<cdot>(tsRemDups\<cdot>as)) \<Longrightarrow> #(tsAbs\<cdot>(tsSnd_h\<cdot>i\<cdot>as\<cdot>(Discr ack))) = \<infinity>"
+  apply (rule_tac ts=i in tscases,simp_all)
+  apply (rule_tac ts=as in tscases,simp_all)
+  apply (simp add: tssnd_h_delayfun tsremdups_insert tsremdups_h_delayfun)
+  using shit apply blast
+  apply (metis delay_infTick shit tsabs_delayfun tsremdups_insert)
+  apply (rule_tac ts=as in tscases,simp_all)
+  apply (metis delay_infTick shit tsremdups_insert)
+oops
+
+lemma tssnd_infmsg2inftrans: "#\<surd> as = \<infinity> \<Longrightarrow> #(tsAbs\<cdot>i) = \<infinity> \<Longrightarrow> #(tsAbs\<cdot>(tsSnd_h\<cdot>i\<cdot>as\<cdot>(Discr ack))) = \<infinity>"
+sorry
+
+lemma less_fin:" n < Fin k \<Longrightarrow> \<exists>k2. n = Fin k2"
+  using lnat_well_h1 by blast
+
+lemma nmsg_inftick: "tsAbs\<cdot>as = \<epsilon> \<Longrightarrow> #\<surd> as = \<infinity> \<Longrightarrow> as = tsInfTick"
+sorry
+
+lemma tssnd_fmsg2inftrans: assumes "#(tsAbs\<cdot>i) = Fin k" "#(srcdups\<cdot>(tsAbs\<cdot>as)) = Fin k2"  "#(srcdups\<cdot>(tsAbs\<cdot>as)) < Fin k" " #\<surd> as = \<infinity>" shows "#(tsAbs\<cdot>(tsSnd_h\<cdot>i\<cdot>as\<cdot>(Discr ack))) = \<infinity>"
+  using assms apply(induction "(srcdups\<cdot>(tsAbs\<cdot>as))" arbitrary: i as ack k k2 rule: finind)
+  using assms apply simp
+  apply (case_tac "tsAbs\<cdot>i = \<epsilon>",simp)
+  using hhhhh nmsg_inftick srcdups_nbot apply auto[1]
+  apply (simp)
+  apply (subst srcdups_step)
+  using lnat_well_h1 apply forc
+
+sorry
+
+lemma tssnd_nack2inftrans: 
+  "#(tsAbs\<cdot>i) > #(tsAbs\<cdot>(tsRemDups\<cdot>as)) \<Longrightarrow> #\<surd>as = \<infinity> \<Longrightarrow>  #(tsAbs\<cdot>(tsSnd_h\<cdot>i\<cdot>as\<cdot>(Discr ack))) = \<infinity>"
+(*  apply (erule_tac contrapos_pp)
+  using ninf2Fin [of "#(tsAbs\<cdot>(tsSnd_h\<cdot>i\<cdot>as\<cdot>(Discr ack)))"] apply auto
+  by (simp add: leD tssnd_nack2inftrans_h2) *)
+  apply (case_tac "#(tsAbs\<cdot>i) = \<infinity>")
+  apply (simp add:  tssnd_infmsg2inftrans)
+   using ninf2Fin [of "#(tsAbs\<cdot>i)"] apply auto
 apply(simp add: tsremdups_tsabs)
-proof(induction i arbitrary: as ack)
+  using tssnd_fmsg2inftrans by blast
+proof(induction "tsAbs\<cdot>i" arbitrary: i as ack rule: finind)
   case adm
   then show ?case
     apply(rule adm_all)
-    apply(rule adm_imp,simp)
     apply(rule adm_imp)
+    apply (simp add: not_less)
+    apply (sm adm_upward min.coboundedI2 min_def mono_slen monofun_cfun_arg)
     apply(rule admI)
     apply(simp add: contlub_cfun_arg contlub_cfun_fun)
-    apply(meson lnle_def lub_below monofun_cfun_arg not_le po_class.chain_def)
+    apply(meso lnle_def lub_below monofun_cfun_arg not_le po_class.chain_def)
     by simp
 next
   case bottom
