@@ -152,8 +152,40 @@ lemma lub_mono4: "\<lbrakk>chain (X::nat\<Rightarrow>lnat); chain (Y::nat\<Right
     \<Longrightarrow> min (\<Squnion>i. X i) y \<le> (\<Squnion>i. Y i)"
   by (metis dual_order.trans is_ub_thelub lnle_def lub_mono2 min_le_iff_disj)
 
+(* Neither \<ge> nor \<le> holds: for msg=\<surd>\<surd> and acks=\<surd> the left side is greater and for msg=t1\<surd> , 
+  acks= \<surd>\<surd>\<surd> and t=ack the right side is greater *)
 lemma tssnd_h1: "acks \<noteq> \<bottom> \<Longrightarrow> #\<surd> tsSnd_h\<cdot>msg\<cdot>(updis t &&\<surd> acks)\<cdot>(Discr ack) = #\<surd> tsSnd_h\<cdot>msg\<cdot>acks\<cdot>(Discr ack)"
+oops
+
+lemma tssnd_h2: "acks \<noteq> \<bottom> \<Longrightarrow> min (lnsuc\<cdot>(#\<surd> msg)) (#\<surd> acks) = #\<surd> acks 
+    \<Longrightarrow> #\<surd> acks \<le> lnsuc\<cdot>(#\<surd> tsSnd_h\<cdot>msg\<cdot>acks\<cdot>(Discr (\<not> ack)))"
+  apply (induction acks arbitrary: msg ack, simp_all)
+  apply (rule adm_imp, simp_all)
+  apply (rule adm_all)
+  apply (rule adm_imp)
+  apply (rule admI)
+  using l42 apply force
+  apply (rule admI)
+  apply (simp add: contlub_cfun_arg contlub_cfun_fun lub_mono2)
+  apply (simp add: tstickcount_delayfun tstickcount_mlscons)
+  apply (rule_tac ts=msg in tscases, simp_all)
+  apply (metis bottomI lnle_def lnsuc_lnle_emb lnzero_def min.cobounded1 ts_0ticks)
+  apply (metis lnle_def lnsuc_lnle_emb lnzero_def min.absorb_iff2 minimal strict_tstickcount 
+     tssnd_h_delayfun tstickcount_delayfun)
+  apply (case_tac "as=\<bottom>")
+  apply (metis lnsuc_lnle_emb min.cobounded1 strict_tstickcount tsmlscons_bot2 tssnd_h_strict(2))
+  apply (simp add: tssnd_h_delayfun_nack)
+  apply (metis (no_types, hide_lams) less_lnsuc min.absorb_iff2 min.bounded_iff strict_tstickcount 
+    tsSnd_h.simps(2) tstickcount_delayfun tstickcount_mlscons)
+  apply (rule_tac ts=msg in tscases, simp_all)
+  apply (simp add: min.absorb_iff2)
+  apply (case_tac "t=ack")
+  apply (simp add: tssnd_h_delayfun_nack tssnd_h_delayfun_msg tstickcount_delayfun tstickcount_mlscons)
+  apply (rule_tac ts=as in tscases, simp_all)
+  using min.absorb_iff2 apply blast 
+  apply (simp add: tstickcount_delayfun tssnd_h_delayfun_msg)
 sorry
+
 
 lemma tssnd_h_tstickcount_h: "acks \<noteq> \<bottom> \<Longrightarrow> 
   min (#\<surd> delay msg) (#\<surd> updis t &&\<surd> acks) \<le> #\<surd> tsSnd_h\<cdot>(delay msg)\<cdot>(updis t &&\<surd> acks)\<cdot>(Discr ack)"
@@ -167,7 +199,8 @@ lemma tssnd_h_tstickcount_h: "acks \<noteq> \<bottom> \<Longrightarrow>
          tstickcount_delayfun)
   apply (case_tac "ta=ack", simp_all)
   apply (simp add: tssnd_h_mlscons_ack tstickcount_mlscons)
-  apply (simp add: tssnd_h1)
+  apply (case_tac "min (lnsuc\<cdot>(#\<surd> msg)) (#\<surd> acks) = #\<surd> acks", simp_all)
+
   sorry
 
 lemma tssnd_h_tstickcount:
