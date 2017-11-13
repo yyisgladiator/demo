@@ -683,6 +683,9 @@ lemma min_adm2[simp]: fixes y::lnat
   shows "adm (\<lambda>x. min (g\<cdot>x) y \<sqsubseteq> h\<cdot>x)"
   apply(subst min.commute)
   using min_adm by blast
+    
+lemma lub_sml_eq:"\<lbrakk>chain (Y::nat\<Rightarrow>lnat); \<And>i. x \<le> Y i\<rbrakk> \<Longrightarrow> x \<le> (\<Squnion>i. Y i)"
+  using l42 unique_inf_lub by force
   
 
 end

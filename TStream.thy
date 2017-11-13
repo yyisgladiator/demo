@@ -3008,6 +3008,26 @@ lemma adm_tsdom_sub_fun [simp]: "\<And>b c. adm (\<lambda>a. tsDom\<cdot>(f\<cdo
 lemma adm_tsdom_sup_fun [simp]: "\<And>b c d. adm (\<lambda>a. tsDom\<cdot>(f\<cdot>a\<cdot>b) \<subseteq> insert c (tsDom\<cdot>(f\<cdot>a\<cdot>d)))"
   apply (rule admI)
   by (simp add: contlub_cfun_arg contlub_cfun_fun lub_eq_Union, auto)
+    
+lemma adm_tstickcount_leq:"adm (\<lambda>xa. #\<surd> x \<le> #\<surd> f\<cdot>xa)"
+  apply(rule admI)
+  apply(simp add: contlub_cfun_arg contlub_cfun_fun)
+  by (meson below_lub lnle_def monofun_cfun_arg po_class.chain_def)
+
+lemma adm_tstickcount_geq:"adm (\<lambda>xa. #\<surd> x \<ge> #\<surd> f\<cdot>xa)"    
+  apply(rule admI)  
+  apply(simp add: contlub_cfun_arg contlub_cfun_fun)
+  by (meson lnle_def lub_below monofun_cfun_arg po_class.chain_def)
+
+lemma adm_slen_nle:"adm (\<lambda>xa. \<not> #xa < #x)"
+  apply(rule admI)
+  by (metis ch2ch_Rep_cfunR contlub_cfun_arg inf_ub l42 not_less unique_inf_lub)
+    
+lemma adm_slen_tsabs_nle:"adm (\<lambda>xa. \<not> #(tsAbs\<cdot>xa) < #(tsAbs\<cdot>x))"
+  apply(rule admI)
+  apply(simp add: not_less contlub_cfun_arg contlub_cfun_fun)
+  by (meson below_lub lnle_def monofun_cfun_arg po_class.chain_def)
+  
 
 (* ----------------------------------------------------------------------- *)
 section {* tscases *}
