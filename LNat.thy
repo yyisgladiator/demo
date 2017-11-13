@@ -685,4 +685,58 @@ lemma min_adm2[simp]: fixes y::lnat
   using min_adm by blast
   
 
+text{* The lub of a chain in minimum is the minimum of the lub. *}
+lemma min_lub:" chain Y \<Longrightarrow> (\<Squnion>i::nat. min (x::lnat) (Y i)) = min (x) (\<Squnion>i::nat. (Y i))"
+  apply (case_tac "x=\<infinity>", simp_all)
+  apply (case_tac "finite_chain Y")
+proof -
+  assume a1: "chain Y"
+  assume a2: "finite_chain Y"
+  then have "monofun (min x)"
+    by (metis (mono_tags, lifting) lnle_conv min.idem min.semilattice_order_axioms monofunI
+        semilattice_order.mono semilattice_order.orderI)
+  then show ?thesis
+    using a2 a1 by (metis (no_types) finite_chain_lub)
+next
+  assume a0:"chain Y"
+  assume a1:"\<not> finite_chain Y"
+  assume a2:"x \<noteq> \<infinity>"
+  have h0:"\<forall>i. \<exists>j\<ge>i. Y i \<sqsubseteq> Y j"
+  by blast  
+  then have"(\<Squnion>i. min x (Y i)) = x"
+  proof -
+    have f1: "\<And>n. min x (Y n) \<sqsubseteq> x"
+      by (metis (lifting) lnle_def min.bounded_iff order_refl)
+    then have f2: "\<And>n. min x (Y n) = x \<or> Y n \<sqsubseteq> x"
+      by (metis (lifting) min_def)
+    have f3: "\<infinity> \<notsqsubseteq> x"
+      by (metis (lifting) a2 inf_less_eq lnle_def) 
+    have "Lub Y = \<infinity>"
+      by (meson a0 a1 unique_inf_lub)
+    then obtain nn :: "(nat \<Rightarrow> lnat) \<Rightarrow> lnat \<Rightarrow> nat" where
+      f4: "min x (Y (nn Y x)) = x \<or> \<infinity> \<sqsubseteq> x"
+      using f2 by (metis (no_types) a0 lub_below_iff)
+    have "\<forall>f n. \<exists>na. (f (na::nat)::lnat) \<notsqsubseteq> f n \<or> Lub f = f n"
+      by (metis lub_chain_maxelem)
+    then show ?thesis
+      using f4 f3 f1 by (metis (full_types))
+    qed
+  then show ?thesis
+    by (simp add: a0 a1 unique_inf_lub)
+qed
+
+text{* Reversed Version of min_lub: The minimum of the lub is the lub of a chain in a minimum. *}  
+lemma min_lub_rev:"chain Y \<Longrightarrow>  min (x) (\<Squnion>i::nat. (Y i)) = (\<Squnion>i::nat. min (x::lnat) (Y i)) "
+  using min_lub by auto
+
+text{* \<le> relation between two chains in a minimum is as well preserved by their lubs. *}
+lemma lub_min_mono: "\<lbrakk>chain (X::nat\<Rightarrow>lnat); chain (Y::nat\<Rightarrow>lnat); \<And>i. min x (X i) \<le> Y i\<rbrakk>
+    \<Longrightarrow> min x (\<Squnion>i. X i) \<le> (\<Squnion>i. Y i)"
+  by (metis dual_order.trans is_ub_thelub lnle_def lub_mono2 min_le_iff_disj)
+
+text{* Twisted version of lub_min_mono: \<le> rel. between two chains in minimum is preserved by lubs. *}
+lemma lub_min_mono2: "\<lbrakk>chain (X::nat\<Rightarrow>lnat); chain (Y::nat\<Rightarrow>lnat); \<And>i. min (X i) y \<le> Y i\<rbrakk>
+    \<Longrightarrow> min (\<Squnion>i. X i) y \<le> (\<Squnion>i. Y i)"
+  by (metis dual_order.trans is_ub_thelub lnle_def lub_mono2 min_le_iff_disj)
+
 end
