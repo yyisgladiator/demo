@@ -6,11 +6,9 @@
 *)
 
 theory Automaton
-imports SPF
+imports SPF If_Else_Continuity
 begin
 default_sort type
-declare [[show_types]]
-declare [[show_consts]]
 
 
 section \<open>Backend Signatures\<close>
@@ -43,14 +41,11 @@ setup_lifting type_definition_automaton
 definition myFixer :: "channel set \<Rightarrow> channel set \<Rightarrow> (('s \<Rightarrow> 'm SPF)\<rightarrow>('s \<Rightarrow> 'm SPF)) \<rightarrow> ('s \<Rightarrow> 'm SPF)" where
 "myFixer = undefined"
 
-(* Already in SPF *)
-definition spfLeast::"channel set \<Rightarrow> channel set \<Rightarrow> 'm::message SPF" where
-"spfLeast cin cout = Abs_SPF (\<Lambda>  sb.  (sbDom\<cdot>sb = cin) \<leadsto> sbLeast cout)"
 
 (* updis bijectiv *)
 thm inv_def
 definition spfStep_h2::" channel set \<Rightarrow> (channel\<rightharpoonup>'m::message discr\<^sub>\<bottom>) \<Rightarrow> (channel\<rightharpoonup>'m)" where
-"spfStep_h2 In = (\<lambda>f. (\<lambda>c. (c \<in> In) \<leadsto> (THE a. updis a = f \<rightharpoonup> c)))"
+"spfStep_h2 In = (\<lambda>f. (\<lambda>c. (c \<in> In) \<leadsto> (inv updis f \<rightharpoonup> c)))"
 
 (* look at "if-then-cont" file in root *)
 (* If_Else_Continuity.thy *)
@@ -59,8 +54,108 @@ definition spfStep_h2::" channel set \<Rightarrow> (channel\<rightharpoonup>'m::
 (* "h" should be cont, maybe later *)
 (* alternative (\<bottom> \<notin> ran f) *)
 definition spfStep_h1::"channel set \<Rightarrow> channel set \<Rightarrow>((channel\<rightharpoonup>'m::message) \<Rightarrow> 'm SPF) \<Rightarrow>((channel\<rightharpoonup>'m discr\<^sub>\<bottom>)\<rightarrow> 'm SPF)" where
-"spfStep_h1 In Out= (\<lambda> h. (\<Lambda> f. if (In \<subseteq> dom f \<and> (\<forall>c \<in> In. (f \<rightharpoonup> c \<noteq> \<bottom>))) then h (spfStep_h2 In f) else spfLeast In Out))"
+"spfStep_h1 In Out= (\<lambda> h. (\<Lambda> f. if (In \<subseteq> dom f \<and> (\<forall>c \<in> In. (f \<rightharpoonup> c \<noteq> \<bottom>))) then spfRestrict In Out\<cdot>(h (spfStep_h2 In f)) else spfLeast In Out))"
 
+lemma[simp]: "spfDom\<cdot>((\<lambda> f. if (In \<subseteq> dom f \<and> (\<forall>c \<in> In. (f \<rightharpoonup> c \<noteq> \<bottom>))) then spfRestrict In Out\<cdot>(h (spfStep_h2 In f)) else spfLeast In Out)f) = In"
+  by simp
+    
+lemma[simp]: "spfRan\<cdot>((\<lambda> f. if (In \<subseteq> dom f \<and> (\<forall>c \<in> In. (f \<rightharpoonup> c \<noteq> \<bottom>))) then spfRestrict In Out\<cdot>(h (spfStep_h2 In f)) else spfLeast In Out)f) = Out"
+  by simp
+
+lemma spfRestrict_apply2[simp]: assumes "spfDom\<cdot>f \<noteq> In \<or> spfRan\<cdot>f \<noteq> Out" shows "spfRestrict In Out\<cdot>f = spfLeast In Out"
+  apply(simp add: spfRestrict_def)
+  using assms by blast
+
+lemma assumes "F \<sqsubseteq> G" shows "spfRestrict In Out\<cdot>F = F \<Longrightarrow> spfRestrict In Out\<cdot>G = G"
+  by (metis assms spfRestrict_apply spfRestrict_dom spfRestrict_ran spfdom_eq spfran_eq)
+
+
+lemma[simp]:"monofun (\<lambda> f. if (In \<subseteq> dom f \<and> (\<forall>c \<in> In. (f \<rightharpoonup> c \<noteq> \<bottom>))) then spfRestrict In Out\<cdot>(h (spfStep_h2 In f)) else spfLeast In Out)"
+  proof(rule monofunI)  
+    fix x and y::"(channel\<rightharpoonup>'a::message discr\<^sub>\<bottom>)"
+    assume a1:"x \<sqsubseteq> y"
+    show "(if In \<subseteq> dom x \<and> (\<forall>c\<in>In. x\<rightharpoonup>c \<noteq> \<bottom>) then spfRestrict In Out\<cdot>(h (spfStep_h2 In x)) else spfLeast In Out) \<sqsubseteq>
+           (if In \<subseteq> dom y \<and> (\<forall>c\<in>In. y\<rightharpoonup>c \<noteq> \<bottom>) then spfRestrict In Out\<cdot>(h (spfStep_h2 In y)) else spfLeast In Out)"
+    proof(cases "In \<subseteq> dom x \<and> (\<forall>c\<in>In. x\<rightharpoonup>c \<noteq> \<bottom>)")
+      case True
+      have "dom x = dom y"
+        by (simp add: a1 part_dom_eq)
+      then have h1:"In \<subseteq> dom y"
+        using True by auto
+      have "\<forall>c. x\<rightharpoonup> c \<sqsubseteq> y\<rightharpoonup> c"
+        by (metis a1 below_option_def fun_below_iff not_below2not_eq)
+      then have h2:"(\<forall>c\<in>In. y\<rightharpoonup>c \<noteq> \<bottom>)"
+        by (metis True bottomI)
+      show ?thesis
+      proof(simp add: True h1 h2)
+        show "spfRestrict In Out\<cdot>(h (spfStep_h2 In x)) \<sqsubseteq> spfRestrict In Out\<cdot>(h (spfStep_h2 In y))"
+          proof(cases "spfDom\<cdot>(h (spfStep_h2 In x)) = In \<and> spfRan\<cdot>(h (spfStep_h2 In x)) = Out")
+            case True
+            have "(h (spfStep_h2 In x)) \<sqsubseteq> (h (spfStep_h2 In y))"
+              sorry
+            then show ?thesis
+              using cont_pref_eq1I by blast
+          next
+            case False
+            have h11:"spfRestrict In Out\<cdot>(h (spfStep_h2 In x)) = spfLeast In Out"
+              using False by auto
+            then show ?thesis
+              proof(cases "spfDom\<cdot>(h (spfStep_h2 In y)) = In \<and> spfRan\<cdot>(h (spfStep_h2 In y)) = Out")
+                case True
+                then show ?thesis
+                  by (simp add: h11)
+              next
+                case False
+                have h12:"spfRestrict In Out\<cdot>(h (spfStep_h2 In y)) = spfLeast In Out"
+                  using False by auto
+                then show ?thesis
+                  by (simp add: h11)
+              qed
+          qed
+      qed
+    next
+      case False
+      show ?thesis
+        by (simp add: False)
+    qed
+  qed
+    
+lemma[simp]:"cont(\<lambda> f. if (In \<subseteq> dom f \<and> (\<forall>c \<in> In. (f \<rightharpoonup> c \<noteq> \<bottom>))) then spfRestrict In Out\<cdot>(h (spfStep_h2 In f)) else spfLeast In Out) "
+  apply(rule equalizing_pred_cont)
+  apply(simp_all add: cont_at_def,auto)
+    (*
+    fix Y::"nat \<Rightarrow> (channel\<rightharpoonup>'a::message discr\<^sub>\<bottom>)"
+    assume a1:"chain Y"
+    assume a2:"chain (\<lambda>i. if (In \<subseteq> dom (Y i) \<and> (\<forall>c\<in>In. ((Y i)\<rightharpoonup>c \<noteq> \<bottom>))) then spfRestrict In Out\<cdot>(h (spfStep_h2 In (Y i))) else spfLeast In Out)"
+    show "(if In \<subseteq> dom (\<Squnion>i. Y i) \<and> (\<forall>c\<in>In. (\<Squnion>i. Y i)\<rightharpoonup>c \<noteq> \<bottom>) then spfRestrict In Out\<cdot>(h (spfStep_h2 In (\<Squnion>i. Y i))) else spfLeast In Out) \<sqsubseteq>
+         (\<Squnion>i. if In \<subseteq> dom (Y i) \<and> (\<forall>c\<in>In. Y i\<rightharpoonup>c \<noteq> \<bottom>) then spfRestrict In Out\<cdot>(h (spfStep_h2 In (Y i))) else spfLeast In Out)"
+      proof(cases "In \<subseteq> dom (\<Squnion>i. Y i) \<and> (\<forall>c\<in>In. (\<Squnion>i. Y i)\<rightharpoonup>c \<noteq> \<bottom>)")
+        case True
+        then have "\<And>i. In \<subseteq> dom (Y i)" 
+          by(simp add:  part_dom_lub a1)
+        then show ?thesis
+          sorry
+      next
+        case False
+        then have "\<not>(In \<subseteq> dom (\<Squnion>i. Y i)) \<or> \<not>(\<forall>c\<in>In. (\<Squnion>i. Y i) \<rightharpoonup>c \<noteq> \<bottom>)"
+          by simp
+        have "\<And>i. dom (Y i) = dom (\<Squnion>i. Y i)"
+          by(simp add:  part_dom_lub a1)
+        then have c1:"\<And>i. \<not>(In \<subseteq> dom (\<Squnion>i. Y i)) \<Longrightarrow> \<not>(In \<subseteq> dom (Y i))"
+          by simp
+        have c2:"\<And>i. \<not>(\<forall>c\<in>In. (\<Squnion>i. Y i) \<rightharpoonup>c \<noteq> \<bottom>) \<Longrightarrow> \<not>(\<forall>c\<in>In. (Y i) \<rightharpoonup>c \<noteq> \<bottom>)"
+          by (metis a1 is_ub_thelub minimal part_the_chain part_the_lub po_eq_conv)
+        have "\<And> i. \<not>(In \<subseteq> dom (Y i)) \<or> \<not>(\<forall>c\<in>In. (Y i) \<rightharpoonup>c \<noteq> \<bottom>)"
+          by(metis c1 c2 False)
+        then have False2:"\<And>i. \<not>(In \<subseteq> dom (Y i) \<and> (\<forall>c\<in>In. Y i\<rightharpoonup>c \<noteq> \<bottom>))"
+          by simp
+        show ?thesis 
+          by(simp add: False False2)
+      qed
+    qed
+    *)
+  sorry  
+    
 thm spfRestrict_def
 (* Skeleton of spfStep. Returns the SPF that switches depending on input *)
 definition spfStep :: "channel set \<Rightarrow> channel set \<Rightarrow> ((channel\<rightharpoonup>'m::message) \<Rightarrow> 'm SPF) \<rightarrow> 'm SPF" where
