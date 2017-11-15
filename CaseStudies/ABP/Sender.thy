@@ -120,7 +120,11 @@ lemma tssnd_h_tstickcount_h4: "acks \<noteq> \<bottom> \<Longrightarrow> min (ln
   apply (simp add: tstickcount_delayfun tstickcount_mlscons)
   apply (rule_tac ts=msg in tscases, simp_all)
   apply (metis bottomI lnle_def lnsuc_lnle_emb lnzero_def min.cobounded1 ts_0ticks)
+  apply (case_tac "t\<noteq>ack")
   apply (simp add: tssnd_h_delayfun_msg tstickcount_delayfun)
+  apply (rule_tac ts=as in tscases, simp_all)
+  using lnsuc_lnle_emb min.absorb_iff2 apply blast
+  apply (simp add: tssnd_h_delayfun_msg tstickcount_delayfun)  
 sorry
 
 lemma tssnd_h_tstickcount_h2: "acks \<noteq> \<bottom> \<Longrightarrow> min (lnsuc\<cdot>(#\<surd> msg)) (#\<surd> acks) = #\<surd> acks 
@@ -143,7 +147,8 @@ lemma tssnd_h_tstickcount_h2: "acks \<noteq> \<bottom> \<Longrightarrow> min (ln
   apply (simp add: tssnd_h_delayfun_nack)
   apply (metis (no_types, hide_lams) less_lnsuc min.absorb_iff2 min.bounded_iff strict_tstickcount 
     tsSnd_h.simps(2) tstickcount_delayfun tstickcount_mlscons)
-  apply (simp add: tstickcount_mlscons)
+  by (simp add: tssnd_h_tstickcount_h4 tstickcount_mlscons)
+(*  apply (simp add: tstickcount_mlscons)
   apply (rule_tac ts=msg in tscases, simp_all)
   apply (simp add: min.absorb_iff2)
   apply (case_tac "t\<noteq>ack")
@@ -151,7 +156,7 @@ lemma tssnd_h_tstickcount_h2: "acks \<noteq> \<bottom> \<Longrightarrow> min (ln
   apply (rule_tac ts=as in tscases, simp_all)
   using min.absorb_iff2 apply blast 
   apply (simp add: tstickcount_delayfun tssnd_h_delayfun_msg tstickcount_mlscons)
-sorry
+sorry*)
 
 lemma tssnd_h_tstickcount_h3: "acks \<noteq> \<bottom> \<Longrightarrow> min (lnsuc\<cdot>(#\<surd> msg)) (#\<surd> acks) = (lnsuc\<cdot>(#\<surd> msg)) 
     \<Longrightarrow> (lnsuc\<cdot>(#\<surd> msg)) \<le> lnsuc\<cdot>(#\<surd> tsSnd_h\<cdot>msg\<cdot>acks\<cdot>(Discr ack))"
