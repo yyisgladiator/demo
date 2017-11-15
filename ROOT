@@ -1,14 +1,25 @@
-session "Streams" (mustWork) = "HOLCF" +
+session "uClasses" (mustWork) = "HOLCF" +
   options [quick_and_dirty = false]
   theories
-    Streams
+    UnivClasses
 
-session "StreamBundle" (mustWork) = "Streams" + 
-  options [quick_and_dirty = false]
-  theories
-    SB
- 
-session "SPF" (mustWork) = "StreamBundle" + 
+session "ubundle" (mustWork) = "uClasses" + 
   options [quick_and_dirty = true]
   theories
-    SPF
+    UBundle
+ 
+session "ufun" (mustWork) = "uClasses" + 
+  options [quick_and_dirty = true]
+  theories
+    UFun
+ 
+session "ubundle_opt" (canFail) = "uClasses" + 
+  options [quick_and_dirty = false]
+  theories
+    UBundle
+ 
+session "ufun_opt" (canFail) = "uClasses" + 
+  options [quick_and_dirty = false]
+  theories
+    UFun
+
