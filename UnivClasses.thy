@@ -32,11 +32,11 @@ section\<open>Universal Stream\<close>
 
 (* This class is just the very basic functions required for an Bundle *)
 class uscl = pcpo +
-  fixes usOkay :: "channel \<Rightarrow> 'a \<Rightarrow> bool"
+  fixes usOkay :: "channel \<Rightarrow> 'a \<Rightarrow> bool" (* similar to "ctype" in message *)
   fixes usLen :: "'a \<rightarrow> lnat"
 
-  assumes usOkay_bot: "\<And>c. usOkay c \<bottom>"
-  assumes usOkay_adm: "\<And>c. adm (usOkay c)"
+  assumes usOkay_bot: "\<And>c. usOkay c \<bottom>"    (* used for ubLeast wellformed proof *)
+  assumes usOkay_adm: "\<And>c. adm (usOkay c)" (* used to instanciate ubundle *)
 begin
 end
 

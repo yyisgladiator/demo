@@ -8,6 +8,8 @@ theory UBundle
   imports UnivClasses
 begin
 
+default_sort uscl
+
   
 (****************************************************)
 section\<open>Data type\<close>
@@ -54,8 +56,6 @@ setup_lifting type_definition_ubundle
 section\<open>Definitions\<close>
 (****************************************************)
 
-
-default_sort uscl
 
 (* This function can be used in "'m stream USB" and "'m tstream USB" *)
 (* and by the way, look at the "'m\<^sup>\<omega>" shorcode for 'm USB *)

@@ -94,11 +94,12 @@ lemma ufWell_adm2: "adm (\<lambda>f. ufWell f)"
   by (simp add: ufWell_def)
   
 (* Define the type 'm USPF (Very Universal Stream Processing Functions) as cpo *)
-cpodef ('in,'out) ufun = "{f :: 'in \<rightarrow> 'out option . ufWell f}"
+cpodef ('in,'out) ufun ("(_ \<Rrightarrow>/ _)" [20, 20] 20) = "{f :: 'in \<rightarrow> 'out option . ufWell f}"
   using uf_least_well apply auto[1]
   using ufWell_adm2 by auto
 
-type_synonym 'm uSPF = "('m, 'm) ufun"
+(* this synonym sucks ... *)
+(* type_synonym 'm uSPF = "('m, 'm) ufun" *)
 
   
 (****************************************************)
@@ -106,17 +107,17 @@ section\<open>Definitions\<close>
 (****************************************************)   
   
   
-definition ufDom :: "('in,'out) ufun \<rightarrow> channel set" where
+definition ufDom :: "('in \<Rrightarrow> 'out) \<rightarrow> channel set" where
 "ufDom \<equiv> \<Lambda> f. ubDom\<cdot>(SOME b. b \<in> dom (Rep_cfun (Rep_ufun f)))" 
 
 definition ufRan :: "('in,'out) ufun \<rightarrow> channel set" where
 "ufRan \<equiv> \<Lambda> f. ubDom\<cdot>(SOME b. b \<in> ran (Rep_cfun (Rep_ufun f)))" 
 
-definition ufLeast :: "channel set \<Rightarrow> channel set \<Rightarrow> ('in,'out) ufun" where
+definition ufLeast :: "channel set \<Rightarrow> channel set \<Rightarrow> ('in \<Rrightarrow> 'out)" where
 "ufLeast cin cout = Abs_ufun (\<Lambda>  sb.  (ubDom\<cdot>sb = cin) \<leadsto> ubLeast cout)"
 
 (* We can reuse this composition in the subtypes, for weak/strong causal stuff *)
-definition ufComp :: "'m uSPF \<rightarrow> 'm uSPF \<rightarrow> 'm uSPF" where
+definition ufComp :: "('m \<Rrightarrow> 'm) \<rightarrow> ('m \<Rrightarrow> 'm) \<rightarrow> ('m \<Rrightarrow> 'm)" where
 "ufComp = undefined"
 
 
