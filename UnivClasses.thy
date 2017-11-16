@@ -5,7 +5,7 @@
 *)
 
 theory UnivClasses
-  imports "inc/LNat" "inc/OptionCpo"
+  imports "inc/LNat" "inc/OptionCpo" Channel
 begin
   
 
@@ -15,9 +15,6 @@ default_sort pcpo
 (****************************************************)
 section\<open>Message\<close>
 (****************************************************) 
-  
-  
-datatype channel = c1 | c2
 
 class message = countable +
   fixes ctype :: "channel \<Rightarrow> ('a::type) set" 

@@ -56,34 +56,92 @@ setup_lifting type_definition_ubundle
 section\<open>Definitions\<close>
 (****************************************************)
 
-
+(* ubDom *)
 (* This function can be used in "'m stream USB" and "'m tstream USB" *)
 (* and by the way, look at the "'m\<^sup>\<omega>" shorcode for 'm USB *)
 definition ubDom :: "'m\<^sup>\<omega> \<rightarrow> channel set" where
 "ubDom \<equiv> \<Lambda> b. dom (Rep_ubundle b)"
 
+(* ubRestrict *)
 definition ubRestrict:: "channel set \<Rightarrow> 'm ubundle \<rightarrow> 'm ubundle" where
 "ubRestrict cs  \<equiv> \<Lambda> b. Abs_ubundle (Rep_ubundle b |` cs)"
 
+
+(* ubGetCh *)
 definition ubGetCh :: "channel \<Rightarrow> 'm ubundle \<rightarrow> 'm"  where
 "ubGetCh c = (\<Lambda> b. ((Rep_ubundle b) \<rightharpoonup> c))"
 
+(* ubLeast *)
 definition ubLeast :: "channel set \<Rightarrow> 'm ubundle"  where
 "ubLeast cs \<equiv> Abs_ubundle (\<lambda>c. (c \<in> cs) \<leadsto> \<bottom> )"
 
+(* ubLen *)
 (* Interesting function, uses the "len" operator over 'm *)
 definition ubLen:: " 'm ubundle \<Rightarrow> lnat " where
 "ubLen b \<equiv> if ubDom\<cdot>b \<noteq> {} then (LEAST ln. ln\<in>{(usLen\<cdot>(ubGetCh c\<cdot>b)) | c. c \<in> ubDom\<cdot>b}) else \<infinity>"  
 
+(* ubShift *)
 (* Thats an easy converter. For example from "tstream USB" to "stream USB" *)
 (* Can also be cont *)
 definition ubShift :: "('a \<Rightarrow> 'b) \<Rightarrow> 'a ubundle \<Rightarrow> 'b ubundle" where
 "ubShift f sb = Abs_ubundle (\<lambda>c. ((c\<in>ubDom\<cdot>sb) \<leadsto> f (ubGetCh c\<cdot>sb)))"
+
+(* ubUnion *)
+
+(* ubSetCh *)
+
+(* ubRemCh *)
+
+(* ubRenameCh *)
+
+(* ubUp *)
+
+(* ubEqSelected *)
+
+(* ubEqCommon *)
+
+(* ubPrefixSelected *)
+
+(* ubPrefixCommon *)
+
+(* ubMapStream *)
 
 
 (****************************************************)
 section\<open>Lemmas\<close>
 (****************************************************)
 
+(* ubDom *)
+
+(* ubRestrict *)
+  
+(* ubGetCh *)
+
+(* ubLeast *)
+  
+(* ubLen *) 
+
+(* ubShift *) 
+  
+(* ubUnion *)
+
+(* ubSetCh *)
+
+(* ubRemCh *)
+
+(* ubRenameCh *)
+
+(* ubUp *)
+
+(* ubEqSelected *)
+
+(* ubEqCommon *)
+
+(* ubPrefixSelected *)
+
+(* ubPrefixCommon *)
+
+(* ubMapStream *)
+  
   
 end
