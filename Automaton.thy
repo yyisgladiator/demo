@@ -146,16 +146,14 @@ function test4 :: "(channel \<rightharpoonup> nat stream) \<Rightarrow> bool" wh
 (* Somehow define the transition function *)
 (* use the createOutput function *)
 function myTransition :: "(myState \<times>(channel \<rightharpoonup> myM)) \<Rightarrow> (myState \<times> myM SB)" where
-"myTransition (State even n b,  [c1 \<mapsto> N z])= ((State odd n b), createOutput 1 True)" |
-"myTransition (State odd n b, [c1 \<mapsto> N z]) = ((State even n b), createOutput 0 False)"  |
+"myTransition (State even n b,  [c1 \<mapsto> z])= (case z of N n \<Rightarrow> ((State odd n b), createOutput n True) | _ \<Rightarrow> undefined)" |
+"myTransition (State odd n b, [c1 \<mapsto> z]) = ((State even n b), createOutput 0 False)"  |
 
-"myTransition (_, [c1 \<mapsto> B z]) = undefined"  |
 "dom f\<noteq> {c1} \<Longrightarrow> myTransition (_,f) = undefined"
   apply auto
   apply (smt dom_eq_singleton_conv getSubState.elims myM.exhaust substate.exhaust)
-  apply (meson map_upd_eqD1 myM.distinct(1))
-  apply (meson option.distinct(1))
-  apply (meson map_upd_eqD1 myM.distinct(1))
+  using map_upd_eqD1 apply fastforce
+  apply (metis option.simps(3))
   by (metis option.simps(3))
 
 lift_definition myAutomaton :: "(myState, myM) automaton" is "(myTransition, State even 0 True, sbLeast {}, {}, {})"
