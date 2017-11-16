@@ -289,8 +289,20 @@ lemma spfStep_mono:"monofun (\<lambda> h. Abs_SPF (\<Lambda>  sb.  (sbDom\<cdot>
   
 lemma spfStep_cont:"cont (\<lambda> h. Abs_SPF (\<Lambda>  sb.  (sbDom\<cdot>sb = In) \<leadsto> (spfStep_h1 In Out h)\<cdot>(sbHdElem\<cdot>sb) \<rightleftharpoons> sb))" 
   sorry
-    
-    
+
+lemma spfstep_insert: "spfStep In Out\<cdot>h= Abs_SPF (\<Lambda>  sb.  (sbDom\<cdot>sb = In) \<leadsto> (spfStep_h1 In Out h)\<cdot>(sbHdElem\<cdot>sb) \<rightleftharpoons> sb)"
+  by(simp add: spfStep_cont spfStep_def)
+
+thm spfStep_h2_def
+lemma "sbHdElem\<cdot>sb = convDiscrUp a \<Longrightarrow> spfStep_h2 (sbDom\<cdot>sb) (sbHdElem\<cdot>sb) = a"
+  apply(auto simp add: spfStep_h2_def convDiscrUp_def)
+  sorry
+
+(* Any idea how we can write the final lemma nicer? *)
+lemma assumes "sbDom\<cdot>sb = In" and "sbHdElem\<cdot>sb = convDiscrUp a"
+  shows "spfStep In Out\<cdot>h\<rightleftharpoons>sb = (h a)\<rightleftharpoons>sb"
+  sorry
+
 (* spfStep mono and cont end*)
 
 (* spfStep Test Lemma*)
