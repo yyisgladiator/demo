@@ -69,7 +69,18 @@ lemma spfRestrict_apply2[simp]: assumes "spfDom\<cdot>f \<noteq> In \<or> spfRan
 lemma assumes "F \<sqsubseteq> G" shows "spfRestrict In Out\<cdot>F = F \<Longrightarrow> spfRestrict In Out\<cdot>G = G"
   by (metis assms spfRestrict_apply spfRestrict_dom spfRestrict_ran spfdom_eq spfran_eq)
 
-declare[[show_types]]
+lemma discr_u_below_eq:assumes "(x::'a discr\<^sub>\<bottom>)\<sqsubseteq>y" and "x\<noteq>\<bottom>" shows "x = y"
+  proof(insert assms(1), simp add: below_up_def assms)
+    have "x \<noteq> Ibottom"
+      using assms(2) inst_up_pcpo by auto
+    then have "y \<noteq>Ibottom"
+      by (metis assms(1) inst_up_pcpo bottomI)
+    then show "case x of Ibottom \<Rightarrow> True | Iup a \<Rightarrow> case y of Ibottom \<Rightarrow> False | Iup x \<Rightarrow> a \<sqsubseteq> x \<Longrightarrow> x = y"
+      by (metis assms(2) discrete_cpo inst_up_pcpo u.exhaust u.simps(5))
+  qed
+    
+(*    
+declare[[show_types]]*)
 lemma[simp]:"monofun (\<lambda> f. if (In \<subseteq> dom f \<and> (\<forall>c \<in> In. (f \<rightharpoonup> c \<noteq> \<bottom>))) then spfRestrict In Out\<cdot>(h (spfStep_h2 In f)) else spfLeast In Out)"
   proof(rule monofunI)  
     fix x and y::"(channel\<rightharpoonup>'a::message discr\<^sub>\<bottom>)"
@@ -86,16 +97,26 @@ lemma[simp]:"monofun (\<lambda> f. if (In \<subseteq> dom f \<and> (\<forall>c \
         by (metis a1 below_option_def fun_below_iff not_below2not_eq)
       then have h2:"(\<forall>c\<in>In. y\<rightharpoonup>c \<noteq> \<bottom>)"
         by (metis True bottomI)
-      then have h3:"(\<forall>c\<in>In. y\<rightharpoonup>c = x\<rightharpoonup>c)" sorry
+      have h3:"(\<And>c. c\<in>In \<Longrightarrow> x\<rightharpoonup>c = y\<rightharpoonup>c)"
+      proof-
+        fix c::channel
+        assume a1:"c \<in> In"
+        have h1:"x\<rightharpoonup>c \<noteq> \<bottom>"
+          by(simp add: True a1)
+        show "x\<rightharpoonup>c = y\<rightharpoonup>c"
+          by (simp add: \<open>\<forall>c. x\<rightharpoonup>c \<sqsubseteq> y\<rightharpoonup>c\<close> h1 discr_u_below_eq)
+      qed
       show ?thesis
       proof(simp add: True h1 h2)
         show "spfRestrict In Out\<cdot>(h (spfStep_h2 In x)) \<sqsubseteq> spfRestrict In Out\<cdot>(h (spfStep_h2 In y))"
           proof(cases "spfDom\<cdot>(h (spfStep_h2 In x)) = In \<and> spfRan\<cdot>(h (spfStep_h2 In x)) = Out")
             case True
             have "\<And>c. (c \<in> In) \<Longrightarrow> x\<rightharpoonup>c = y\<rightharpoonup>c"
-            have "spfStep_h2 In x = spfStep_h2 In y" apply(simp add: spfStep_h2_def ) sorry
-            have "(h (spfStep_h2 In x)) \<sqsubseteq> (h (spfStep_h2 In y))"
-              sorry
+              by (simp add: h3)
+            then have "spfStep_h2 In x = spfStep_h2 In y" 
+                by(auto simp add: spfStep_h2_def)
+            then have "(h (spfStep_h2 In x)) \<sqsubseteq> (h (spfStep_h2 In y))"
+              by simp
             then show ?thesis
               using cont_pref_eq1I by blast
           next
