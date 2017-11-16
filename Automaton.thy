@@ -69,7 +69,7 @@ lemma spfRestrict_apply2[simp]: assumes "spfDom\<cdot>f \<noteq> In \<or> spfRan
 lemma assumes "F \<sqsubseteq> G" shows "spfRestrict In Out\<cdot>F = F \<Longrightarrow> spfRestrict In Out\<cdot>G = G"
   by (metis assms spfRestrict_apply spfRestrict_dom spfRestrict_ran spfdom_eq spfran_eq)
 
-
+declare[[show_types]]
 lemma[simp]:"monofun (\<lambda> f. if (In \<subseteq> dom f \<and> (\<forall>c \<in> In. (f \<rightharpoonup> c \<noteq> \<bottom>))) then spfRestrict In Out\<cdot>(h (spfStep_h2 In f)) else spfLeast In Out)"
   proof(rule monofunI)  
     fix x and y::"(channel\<rightharpoonup>'a::message discr\<^sub>\<bottom>)"
@@ -86,11 +86,14 @@ lemma[simp]:"monofun (\<lambda> f. if (In \<subseteq> dom f \<and> (\<forall>c \
         by (metis a1 below_option_def fun_below_iff not_below2not_eq)
       then have h2:"(\<forall>c\<in>In. y\<rightharpoonup>c \<noteq> \<bottom>)"
         by (metis True bottomI)
+      then have h3:"(\<forall>c\<in>In. y\<rightharpoonup>c = x\<rightharpoonup>c)" sorry
       show ?thesis
       proof(simp add: True h1 h2)
         show "spfRestrict In Out\<cdot>(h (spfStep_h2 In x)) \<sqsubseteq> spfRestrict In Out\<cdot>(h (spfStep_h2 In y))"
           proof(cases "spfDom\<cdot>(h (spfStep_h2 In x)) = In \<and> spfRan\<cdot>(h (spfStep_h2 In x)) = Out")
             case True
+            have "\<And>c. (c \<in> In) \<Longrightarrow> x\<rightharpoonup>c = y\<rightharpoonup>c"
+            have "spfStep_h2 In x = spfStep_h2 In y" apply(simp add: spfStep_h2_def ) sorry
             have "(h (spfStep_h2 In x)) \<sqsubseteq> (h (spfStep_h2 In y))"
               sorry
             then show ?thesis
