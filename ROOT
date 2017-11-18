@@ -12,6 +12,13 @@ session "ufun" (mustWork) = "uClasses" +
   options [quick_and_dirty = true]
   theories
     UFun
+
+session "uspec" (mustWork) = "uClasses" + 
+  options [quick_and_dirty = true]
+  theories
+    USpec
+  
+ 
  
 session "ubundle_opt" (canFail) = "uClasses" + 
   options [quick_and_dirty = false]
@@ -23,3 +30,8 @@ session "ufun_opt" (canFail) = "uClasses" +
   theories
     UFun
 
+session "uspec_opt" (mustWork) = "uClasses" + 
+  options [quick_and_dirty = false]
+  theories
+    USpec
+  
