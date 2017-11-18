@@ -103,110 +103,22 @@ lemma tssnd_h_nbot [simp]: "msg \<noteq> \<bottom> \<Longrightarrow> acks \<note
   apply (metis tsmlscons_bot2 tsmlscons_nbot tssnd_h_mlscons_ack up_defined)
   by (metis tsmlscons_bot2 tsmlscons_nbot tssnd_h_mlscons_nack up_defined)
 
-(* ToDo: tstickcount lemma for sender *)
-
-(*lemma tssnd_h_tstickcount_h4: "acks \<noteq> \<bottom> \<Longrightarrow> min (lnsuc\<cdot>(#\<surd> msg)) (#\<surd> acks) = #\<surd> acks 
-    \<Longrightarrow> #\<surd> acks \<le> lnsuc\<cdot>(#\<surd> tsSnd_h\<cdot>msg\<cdot>(updis t &&\<surd> acks)\<cdot>(Discr ack))"
-  apply (induction acks arbitrary: t msg ack, simp_all)
-  apply (rule adm_imp, simp_all)
-  apply (rule adm_all)+
-  apply (rule adm_imp)
-  apply (rule admI)
-  apply (simp add: contlub_cfun_arg contlub_cfun_fun)
-  apply (metis contlub_cfun_arg inf_less_eq inf_ub l42 min.absorb_iff2 ts_infinite_lub)
-  apply (rule adm_all)
-  apply (rule admI)
-  apply (simp add: contlub_cfun_arg contlub_cfun_fun lub_mono2)
-  apply (simp add: tstickcount_delayfun tstickcount_mlscons)
-  apply (rule_tac ts=msg in tscases, simp_all)
-  apply (metis bottomI lnle_def lnsuc_lnle_emb lnzero_def min.cobounded1 ts_0ticks)
-  apply (case_tac "t\<noteq>ack")
-  apply (simp add: tssnd_h_delayfun_msg tstickcount_delayfun)
-  apply (rule_tac ts=as in tscases, simp_all)
-  using lnsuc_lnle_emb min.absorb_iff2 apply blast
-  apply (simp add: tssnd_h_delayfun_msg tstickcount_delayfun)  
-sorry
-
-lemma tssnd_h_tstickcount_h2: "acks \<noteq> \<bottom> \<Longrightarrow> min (lnsuc\<cdot>(#\<surd> msg)) (#\<surd> acks) = #\<surd> acks 
-    \<Longrightarrow> #\<surd> acks \<le> lnsuc\<cdot>(#\<surd> tsSnd_h\<cdot>msg\<cdot>acks\<cdot>(Discr ack))"
-  apply (induction acks arbitrary: msg ack, simp_all)
-  apply (rule adm_imp, simp_all)
-  apply (rule adm_all)
-  apply (rule adm_imp)
-  apply (rule admI)
-  using l42 apply force
-  apply (rule admI)
-  apply (simp add: contlub_cfun_arg contlub_cfun_fun lub_mono2)
-  apply (simp add: tstickcount_delayfun tstickcount_mlscons)
-  apply (rule_tac ts=msg in tscases, simp_all)
-  apply (metis bottomI lnle_def lnsuc_lnle_emb lnzero_def min.cobounded1 ts_0ticks)
-  apply (metis lnle_def lnsuc_lnle_emb lnzero_def min.absorb_iff2 minimal strict_tstickcount 
-     tssnd_h_delayfun tstickcount_delayfun)
-  apply (case_tac "as=\<bottom>")
-  apply (metis lnsuc_lnle_emb min.cobounded1 strict_tstickcount tsmlscons_bot2 tssnd_h_strict(2))
-  apply (simp add: tssnd_h_delayfun_nack)
-  apply (metis (no_types, hide_lams) less_lnsuc min.absorb_iff2 min.bounded_iff strict_tstickcount 
-    tsSnd_h.simps(2) tstickcount_delayfun tstickcount_mlscons)
-  by (simp add: tssnd_h_tstickcount_h4 tstickcount_mlscons)
-(*  apply (simp add: tstickcount_mlscons)
-  apply (rule_tac ts=msg in tscases, simp_all)
-  apply (simp add: min.absorb_iff2)
-  apply (case_tac "t\<noteq>ack")
-  apply (simp add: tssnd_h_delayfun_nack tssnd_h_delayfun_msg tstickcount_delayfun tstickcount_mlscons)
-  apply (rule_tac ts=as in tscases, simp_all)
-  using min.absorb_iff2 apply blast 
-  apply (simp add: tstickcount_delayfun tssnd_h_delayfun_msg tstickcount_mlscons)
-sorry*)
-
-lemma tssnd_h_tstickcount_h3: "acks \<noteq> \<bottom> \<Longrightarrow> min (lnsuc\<cdot>(#\<surd> msg)) (#\<surd> acks) = (lnsuc\<cdot>(#\<surd> msg)) 
-    \<Longrightarrow> (lnsuc\<cdot>(#\<surd> msg)) \<le> lnsuc\<cdot>(#\<surd> tsSnd_h\<cdot>msg\<cdot>acks\<cdot>(Discr ack))"
-sorry
-
-text{* Minimum of ticks in delay msg and t \<bullet> acks is smaller then in sender output. *}
-lemma tssnd_h_tstickcount_h1: "acks \<noteq> \<bottom> \<Longrightarrow> 
-  min (#\<surd> delay msg) (#\<surd> updis t &&\<surd> acks) \<le> #\<surd> tsSnd_h\<cdot>(delay msg)\<cdot>(updis t &&\<surd> acks)\<cdot>(Discr ack)"
-  apply (simp add: tstickcount_delayfun tstickcount_mlscons tssnd_h_delayfun_msg)
-  apply (induction msg arbitrary: acks t ack, simp_all)
-  apply (rule adm_all)+
-  apply (rule adm_imp, simp_all)
-  apply (rule admI)
-  apply (simp add: contlub_cfun_arg contlub_cfun_fun lub_min_mono2)
-  apply (smt less_lnsuc lnsuc_lnle_emb min.coboundedI1 min.coboundedI2 min_def tssnd_h_delayfun_msg 
-         tstickcount_delayfun)
-  (*by (metis (no_types, lifting) min_def tsmlscons_nbot tssnd_h_tstickcount_h2 
-    tssnd_h_tstickcount_h3 tstickcount_mlscons up_defined)*)
-oops*)
-
-text{* Count of ticks in sender output is greater than the minimum of ticks in msg and acks. *}
-(*lemma tssnd_h_tstickcount:
-  "min (#\<surd>msg) (#\<surd>acks) \<le> #\<surd>tsSnd_h\<cdot>msg\<cdot>acks\<cdot>(Discr ack)"
-  apply (induction acks arbitrary: msg ack, simp_all)
-  apply (rule adm_all)+
-  apply (rule admI)
-  apply (simp add: contlub_cfun_arg contlub_cfun_fun lub_min_mono)
-  apply (rule_tac ts=msg in tscases, simp_all)
-  apply (metis (no_types, lifting) delayfun_insert lnsuc_lnle_emb min_def tssnd_h_delayfun 
-         tstickcount_tscons)
-  apply (smt le_less le_less_linear lenmin less_lnsuc lnsuc_lnle_emb min.coboundedI2 min.orderI 
-         min_absorb2 min_def not_less strict_tstickcount tssnd_h_delayfun_nack tstickcount_delayfun
-         tstickcount_mlscons)
-  apply (rule_tac ts=msg in tscases, simp_all)
-  (* using tssnd_h_tstickcount_h1 apply blast
-  by (smt le_less lenmin min.cobounded1 min.orderI min_def strict_tstickcount tssnd_h_mlscons_ack 
-      tssnd_h_mlscons_nack tstickcount_mlscons)*)
-oops*)
+(* tstickcount lemma for sender *)
 lemma tssnd_h_tstickcount_hhhh:"#\<surd> msg \<le> #\<surd> tsSnd_h\<cdot>msg\<cdot>(updis a &&\<surd> acks)\<cdot>(Discr ack) \<Longrightarrow>
     as \<noteq> \<bottom> \<Longrightarrow>
-    min (#\<surd> msg) (#\<surd> acks) = #\<surd> msg \<Longrightarrow> min (lnsuc\<cdot>(#\<surd> msg)) (#\<surd> acks) \<le> lnsuc\<cdot>(#\<surd> tsSnd_h\<cdot>msg\<cdot>(updis a &&\<surd> acks)\<cdot>(Discr ack))"
+    min (#\<surd> msg) (#\<surd> acks) = #\<surd> msg \<Longrightarrow> min (lnsuc\<cdot>(#\<surd> msg)) (#\<surd> acks) 
+        \<le> lnsuc\<cdot>(#\<surd> tsSnd_h\<cdot>msg\<cdot>(updis a &&\<surd> acks)\<cdot>(Discr ack))"
 by (simp add: min.coboundedI1)  
   
-lemma tssnd_h_tstickcount_hhh:"min (#\<surd> msg) (#\<surd> acks) \<le> #\<surd> tsSnd_h\<cdot>msg\<cdot>(updis a &&\<surd> acks)\<cdot>(Discr ack) \<Longrightarrow>
-            as \<noteq> \<bottom> \<Longrightarrow> min (lnsuc\<cdot>(#\<surd> msg)) (#\<surd> acks) \<le> lnsuc\<cdot>(#\<surd> tsSnd_h\<cdot>msg\<cdot>(updis a &&\<surd> acks)\<cdot>(Discr ack))"
+lemma tssnd_h_tstickcount_hhh:"min (#\<surd> msg) (#\<surd> acks) \<le> #\<surd> tsSnd_h\<cdot>msg\<cdot>(updis a &&\<surd> acks)\<cdot>(Discr ack) 
+    \<Longrightarrow> as \<noteq> \<bottom> \<Longrightarrow> min (lnsuc\<cdot>(#\<surd> msg)) (#\<surd> acks) \<le> lnsuc\<cdot>(#\<surd> tsSnd_h\<cdot>msg\<cdot>(updis a &&\<surd> acks)\<cdot>(Discr ack))"
 apply(case_tac "min (#\<surd> msg) (#\<surd> acks) = (#\<surd> acks)",simp)
-apply (metis (no_types, lifting) leD le_less_trans less_lnsuc lnsuc_lnle_emb min_le_iff_disj not_le_imp_less)
+apply (metis (no_types, lifting) leD le_less_trans less_lnsuc lnsuc_lnle_emb min_le_iff_disj 
+    not_le_imp_less)
 by (smt lnsuc_lnle_emb min.coboundedI1 min_def)
   
-lemma tssnd_h_tstickcount_hh:"(\<And>acks ack. min (#\<surd> msg) (#\<surd> acks) \<le> #\<surd> tsSnd_h\<cdot>msg\<cdot>acks\<cdot>(Discr ack)) \<Longrightarrow> msg \<noteq> \<bottom> \<Longrightarrow> min (#\<surd> msg) (#\<surd> as) \<le> #\<surd> tsSnd_h\<cdot>(updis ta &&\<surd> msg)\<cdot>as\<cdot>(Discr ack)"
+lemma tssnd_h_tstickcount_hh:"(\<And>acks ack. min (#\<surd> msg) (#\<surd> acks) \<le> #\<surd> tsSnd_h\<cdot>msg\<cdot>acks\<cdot>(Discr ack)) 
+    \<Longrightarrow> msg \<noteq> \<bottom> \<Longrightarrow> min (#\<surd> msg) (#\<surd> as) \<le> #\<surd> tsSnd_h\<cdot>(updis ta &&\<surd> msg)\<cdot>as\<cdot>(Discr ack)"
 proof(induction as arbitrary:msg ack)
   case adm
   then show ?case 
@@ -219,18 +131,19 @@ proof(induction as arbitrary:msg ack)
 next
   case bottom
   then show ?case 
-  sorry
+  by simp
 next
   case (delayfun as)
   then show ?case
-  sorry
+  apply (simp add: tssnd_h_delayfun_nack tstickcount_delayfun tstickcount_mlscons)
+  by (smt dual_order.trans less_lnsuc lnsuc_lnle_emb min_le_iff_disj)
 next
   case (mlscons as t)
   then show ?case
-  sorry
+  by (smt tssnd_h_mlscons_ack tssnd_h_mlscons_nack tstickcount_mlscons)
 qed
 
-  
+text{* Count of ticks in sender output is greater than the minimum of ticks in msg and acks. *}  
 lemma tssnd_h_tstickcount:
   "min (#\<surd>msg) (#\<surd>acks) \<le> #\<surd>tsSnd_h\<cdot>msg\<cdot>acks\<cdot>(Discr ack)"
 proof(induction msg arbitrary: acks ack)
