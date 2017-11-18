@@ -39,3 +39,6 @@ default_sort ufuncl_comp
 (* THIS IS JUST A DEMO! there should be many changes *)
 definition uspecComp :: "'m uspec \<Rightarrow>'m uspec \<Rightarrow> 'm uspec" (infixl "\<Otimes>" 50) where
 "uspecComp S1 S2 \<equiv> Abs_uspec (Rev {ufunclComp\<cdot>f1\<cdot>f2 | f1 f2. f1\<in>((inv Rev) (Rep_uspec S1)) \<and> f2\<in>((inv Rev) (Rep_uspec S2))})"
+
+
+end
