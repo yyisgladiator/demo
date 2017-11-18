@@ -30,7 +30,7 @@ session "ufun_opt" (canFail) = "uClasses" +
   theories
     UFun
 
-session "uspec_opt" (mustWork) = "uClasses" + 
+session "uspec_opt" (canFail) = "uClasses" + 
   options [quick_and_dirty = false]
   theories
     USpec
