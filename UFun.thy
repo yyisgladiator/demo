@@ -16,7 +16,7 @@ section\<open>Data type\<close>
   
 default_sort ubcl
 
-declare[[show_types]]  
+  
 definition ufWell:: "('in \<rightarrow> 'out option) \<Rightarrow> bool" where
 "ufWell f \<equiv> (\<exists>In. \<forall>b. (b \<in> dom (Rep_cfun f) \<longleftrightarrow> ubDom\<cdot>b = In)) \<and> 
               (\<exists>Out. \<forall>b. (b \<in> ran (Rep_cfun f) \<longrightarrow> ubDom\<cdot>b = Out))"
@@ -126,19 +126,34 @@ cpodef ('in,'out) ufun ("(_ \<Rrightarrow>/ _)" [20, 20] 20) = "{f :: 'in \<righ
 section\<open>Definitions\<close>
 (****************************************************)   
   
-  
+(* ufDom *) 
 definition ufDom :: "('in \<Rrightarrow> 'out) \<rightarrow> channel set" where
 "ufDom \<equiv> \<Lambda> f. ubDom\<cdot>(SOME b. b \<in> dom (Rep_cfun (Rep_ufun f)))" 
 
+(* ufRan *)
 definition ufRan :: "('in,'out) ufun \<rightarrow> channel set" where
 "ufRan \<equiv> \<Lambda> f. ubDom\<cdot>(SOME b. b \<in> ran (Rep_cfun (Rep_ufun f)))" 
 
+(* ufLeast *)
 definition ufLeast :: "channel set \<Rightarrow> channel set \<Rightarrow> ('in \<Rrightarrow> 'out)" where
 "ufLeast cin cout = Abs_ufun (\<Lambda>  sb.  (ubDom\<cdot>sb = cin) \<leadsto> ubLeast cout)"
 
+(* ufComp *)
 (* We can reuse this composition in the subtypes, for weak/strong causal stuff *)
 definition ufComp :: "('m \<Rrightarrow> 'm) \<rightarrow> ('m \<Rrightarrow> 'm) \<rightarrow> ('m \<Rrightarrow> 'm)" where
 "ufComp = undefined"
+
+(* spfType *)
+
+(* spfIO *)
+
+(* apply *)
+
+(* Composition channel sets *)
+
+(* sbFix *)
+
+(* Composition *)
 
 
 (****************************************************)
@@ -163,6 +178,25 @@ sorry
 (****************************************************)
 section\<open>Lemmas\<close>
 (****************************************************)   
-  
+ 
+(* ufDom *) 
+
+(* ufRan *)
+
+(* ufLeast *)
+
+(* ufComp *)
+
+(* spfType *)
+
+(* spfIO *)
+
+(* apply *)
+
+(* Composition channel sets *)
+
+(* sbFix *)
+
+(* Composition *)  
 
 end
