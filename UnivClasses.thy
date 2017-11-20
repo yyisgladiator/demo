@@ -51,6 +51,7 @@ class ubcl = cpo +
   fixes ubLen :: "'a \<Rightarrow> lnat"  (* Debatable *)
   fixes ubLeast :: "channel set \<Rightarrow> 'a"
 
+  assumes ublen_mono: "monofun ubLen"
   assumes ubdom_fix: "\<And> x y. x\<sqsubseteq>y \<Longrightarrow> ubDom\<cdot>x = ubDom\<cdot>y"
   assumes ubdom_least: "\<And> x. ubLeast (ubDom\<cdot>x)\<sqsubseteq>x"
 begin
@@ -66,7 +67,7 @@ section\<open>Universal Stream Processing Function\<close>
 class ufuncl = cpo +
   fixes ufDom :: "'a \<rightarrow> channel set"
   fixes ufRan :: "'a \<rightarrow> channel set"
-
+  
   assumes ufDom_fix: "\<And>x y. x\<sqsubseteq>y \<Longrightarrow> ufDom\<cdot>x = ufDom\<cdot>y" 
   assumes ufRan_fix: "\<And>x y. x\<sqsubseteq>y \<Longrightarrow> ufRan\<cdot>x = ufRan\<cdot>y" 
 begin
