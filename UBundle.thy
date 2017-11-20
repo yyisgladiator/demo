@@ -469,113 +469,12 @@ lemma ubrestrict_ubdom_sup_inter:
   thm ubShift_def
 
   
-  subsection \<open>ubUnion\<close>
 (* ubUnion *)
-  thm ubUnion_def
-
-lemma ubunion_well[simp]: assumes "ubWell b1" and "ubWell b2"
-  shows "ubWell (b1 ++ b2)"
-  by (metis assms(1) assms(2) domIff mapadd2if_then ubWell_def)
-
-(* helper function for continuity proof *)
-lemma ubunion_contL [simp]: "cont (\<lambda>b1. (Rep_ubundle b1) ++ (Rep_ubundle b2))"
-  using cont_compose part_add_contL ubrep_cont by blast
-
-(* helper function for continuity proof *)
-lemma ubunion_contR [simp]: "cont (\<lambda>b2. (Rep_ubundle b1) ++ (Rep_ubundle b2))"
-using cont_compose part_add_contR ubrep_cont by blast
-
-(* ubUnion is an coninuous function *)
-lemma ubunion_cont [simp]: "cont (\<lambda> b1. \<Lambda> b2.(Abs_ubundle (Rep_ubundle b1 ++ Rep_ubundle b2)))"
-  apply (rule cont2cont_LAM)
-  apply (metis (mono_tags) Rep_ubundle cont_Abs_ubundle mem_Collect_eq ubunion_contR ubunion_well)
-  by (metis (mono_tags) Rep_ubundle cont_Abs_ubundle mem_Collect_eq ubunion_contL ubunion_well)
-
-    
-(* insert rule for ubUnion *)
-lemma ubunion_insert: "ubUnion\<cdot>ub1\<cdot>ub2 = (Abs_ubundle (Rep_ubundle ub1 ++ Rep_ubundle ub2))"
-  apply (simp add: ubUnion_def)
-  using ubunion_contR ubunion_contL ubunion_cont 
-  by (simp add: cont_Abs_ubundle)
-
-(* if all channels in b1 are also in b2 the union produces b2 *)
-lemma ubunion_idL [simp]: assumes "ubDom\<cdot>ub1 \<subseteq> ubDom\<cdot>ub2" shows "ubUnion\<cdot>ub1\<cdot>ub2 = ub2"
-  using ubunion_insert ubdom_insert  
-  by (metis Rep_ubundle_inverse assms part_add_id)
 
 
-lemma ubunion_idR [simp]: "ubUnion\<cdot>ub\<cdot>(ubLeast {}) = ub"
-  by (simp add: Rep_ubundle_inverse map_add_comm ubleast_optionLeast_eq ubunion_insert ubleast_well)
-
-
-(* if b1 and b2 have no common channels, ubUnion is commutative *)
-lemma ubunion_commutative: assumes "ubDom\<cdot>ub1 \<inter> ubDom\<cdot>ub2 = {}"
-  shows "ubUnion\<cdot>ub1\<cdot>ub2 = ubUnion\<cdot>ub2\<cdot>ub1"
-  apply(simp add: ubunion_insert)
-  by (metis assms map_add_comm ubdom_insert)
-
-
-lemma ubunion_asso: "ubUnion\<cdot>ub1\<cdot>(ubUnion\<cdot>ub2\<cdot>ub3) = ubUnion\<cdot>(ubUnion\<cdot>ub1\<cdot>ub2)\<cdot>ub3"
-  by (simp add: ubunion_insert)
-
-(* the second argument has priority in ubUnion *)
-lemma ubunion_ubgetchR [simp]: assumes "c \<in> ubDom\<cdot>ub2"
-  shows "ubUnion\<cdot>ub1\<cdot>ub2  .  c = ub2  .  c"
-  by (metis assms map_add_dom_app_simps(1) ubrep_well ubdom_insert ubgetch_insert ubgetch_ubrep_eq ubunion_insert ubunion_well)
-
-
-lemma ubunion_ubgetchL [simp]: assumes "c \<notin> ubDom\<cdot>ub2"
-  shows "ubUnion\<cdot>ub1\<cdot>ub2   .  c = ub1  .  c"
-  by (metis assms domIff mapadd2if_then ubrep_ubabs ubrep_well ubdom_insert ubgetch_insert ubunion_insert ubunion_well)
-
-lemma ubunion_ubrestrict3 [simp]: assumes "(ubDom\<cdot>ub1)\<inter>(ubDom\<cdot>ub2) = {}" 
-  shows "ubRestrict (ubDom\<cdot>ub1)\<cdot>(ubUnion\<cdot>ub1\<cdot>ub2) = ub1"
-  apply(simp add: ubunion_insert ubdom_insert)
-  by (metis Rep_ubundle_inverse assms map_add_comm map_union_restrict2 ubrep_well ubdom_insert ubrestrict_ubrep_eq ubunion_well)
-
-
-lemma ubunion_ubrestrict2 [simp]:"ubRestrict (ubDom\<cdot>ub2)\<cdot>(ubUnion\<cdot>ub1\<cdot>ub2) = ub2"
-  by (simp add: Rep_ubundle_inverse ubDom_def ubrestrict_insert ubunion_insert)
-
-
-lemma ubunion_ubrestrict [simp]: assumes "(ubDom\<cdot>ub2) \<inter> cs = {}" 
-  shows "ubRestrict cs\<cdot>(ubUnion\<cdot>ub1\<cdot>ub2) = ubRestrict cs\<cdot>ub1"
-  using assms by (simp add: ubunion_insert ubrestrict_insert ubDom_def)
-
-
-lemma ubunion_ubrestrict4: "ubRestrict cs\<cdot>(ubUnion\<cdot>ub1\<cdot>ub2) = ubUnion\<cdot>(ubRestrict cs\<cdot>ub1)\<cdot>(ubRestrict cs\<cdot>ub2)"
-  apply (simp add: ubrestrict_insert ubunion_insert)
-  by (metis mapadd2if_then restrict_map_def)
-    
-
-lemma ubunion_ubdom [simp]: "ubDom\<cdot>(ubUnion\<cdot>ub1\<cdot>ub2) = ubDom\<cdot>ub1 \<union> ubDom\<cdot>ub2"
-  by (simp add: ubdom_insert ubunion_insert Un_commute) 
-
-
-lemma ubunion_belowI1: assumes "(ub1 \<sqsubseteq> ub2)" and "(ub3 \<sqsubseteq> ub4)"
-  shows "ubUnion\<cdot>ub1\<cdot>ub3 \<sqsubseteq> ubUnion\<cdot>ub2\<cdot>ub4"
-  by (simp add: assms(1) assms(2) monofun_cfun)
-
-
-  subsection \<open>ubSetCh\<close>
 (* ubSetCh *)
-  thm ubSetCh_def
 
-
-lemma ubsetch_cont [simp]: "cont (\<lambda> ub. (\<lambda>c m. ubUnion\<cdot>ub\<cdot>(Abs_ubundle [c \<mapsto> m])))"
-  by simp
-
-
-lemma ubsetch_well [simp]: assumes "usOkay c s"
-  shows "ubWell ((Rep_ubundle b) (c \<mapsto> s) )"
-  by (metis assms dom_fun_upd fun_upd_apply insert_iff option.sel option.simps(3) ubrep_well ubWell_def)
-    
-    
-(* insertion lemma for tubSetCh *)
-lemma ubsetch_insert: assumes "usOkay c s"
-  shows "(ubSetCh\<cdot>b) c s = ubUnion\<cdot>b\<cdot>(Abs_ubundle [c \<mapsto> s])"
-  by (simp add: ubSetCh_def)
-    
+(*    
   subsection \<open>ubRemCh\<close>
 (* ubRemCh *)
 
@@ -622,6 +521,7 @@ lemma ubrenamech_ubgetchI2: assumes "ch1 \<in> ubDom\<cdot>ub"  and "usOkay ch2 
   shows "(ubRenameCh ub ch1 ch2) . ch3 = ub . ch3"
   apply (simp add: ubRenameCh_def  ubSetCh_def)
   by (metis ComplI assms(2) assms(4) assms(5) dom_empty dom_fun_upd option.discI ubrep_ubabs singletonD ubsetch_well ubdom_ubrep_eq ubgetch_ubrestrict ubunion_ubgetchL ubWell_empty)
+*)
 
   subsection \<open>ubUp\<close>
 (* ubUp *)
