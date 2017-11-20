@@ -416,11 +416,11 @@ lemma ubrestrict_ubrep_eq : "ubWell ub \<Longrightarrow> ubRestrict cs\<cdot>(Ab
   by (simp add: Abs_ubundle_inverse ubrestrict_insert)
 
 (* the dom of the bundle after restrict its channel is a subset (or equal) its argument*)
-lemma ubrestrict_dom [simp]: "ubDom\<cdot>(ubRestrict cs\<cdot>ub) \<subseteq> cs"
+lemma ubrestrict_ubdom [simp]: "ubDom\<cdot>(ubRestrict cs\<cdot>ub) \<subseteq> cs"
   by (simp add: ubdom_ubrep_eq ubrestrict_insert)
 
 (* the dom of the bundle after restrict its channel is the conjunction of dom ub and first argument*)
-lemma ubrestrict_dom2 [simp]: "ubDom\<cdot>(ubRestrict cs\<cdot>ub) = ubDom\<cdot>ub \<inter> cs"
+lemma ubrestrict_ubdom2 [simp]: "ubDom\<cdot>(ubRestrict cs\<cdot>ub) = ubDom\<cdot>ub \<inter> cs"
   by (metis dom_restrict ubdom_insert ubdom_ubrep_eq ubrestrict_insert ubrestrict_well)
 
 (* applying 2 times ubRestriction on a ubundle is eq the application of the function with the union of both channel set as argument  *)
@@ -439,7 +439,7 @@ lemma ubrestrict_belowI1: assumes "(a \<sqsubseteq> b)"
 
 (* if an empty channel set is the first argument, then ubRestrict return the ubLeast with empty channel set  *)
 lemma ubrestrict_ubleast [simp]: "ubRestrict {}\<cdot>ub = ubLeast {}"
-  by (metis Rep_ubundle_inverse empty_iff empty_subsetI optionleast_dom part_eq subset_antisym ubleast_optionLeast_eq ubdom_insert ubrestrict_dom)
+  by (metis Rep_ubundle_inverse empty_iff empty_subsetI optionleast_dom part_eq subset_antisym ubleast_optionLeast_eq ubdom_insert ubrestrict_ubdom)
 
 (* if the first argument disjoint with the domain of the bundle then the function return ubLeast with an empty channel set *)
 lemma ubrestrict_ubleast2[simp]: assumes "cs \<inter> ubDom\<cdot>ub = {}" 
@@ -448,7 +448,7 @@ lemma ubrestrict_ubleast2[simp]: assumes "cs \<inter> ubDom\<cdot>ub = {}"
 
 
 lemma ubrestrict_id [simp]: assumes "ubDom\<cdot>ub \<subseteq> cs" shows "ubRestrict cs\<cdot>ub = ub"
-  by (metis (mono_tags, lifting) assms contra_subsetD inf.absorb_iff1 ubgetchI ubgetch_ubrestrict ubrestrict_dom2)
+  by (metis (mono_tags, lifting) assms contra_subsetD inf.absorb_iff1 ubgetchI ubgetch_ubrestrict ubrestrict_ubdom2)
 
     
 lemma ubrestrict_ubdom_sub: assumes "ubDom\<cdot>ub \<subseteq> cs"
@@ -457,7 +457,7 @@ lemma ubrestrict_ubdom_sub: assumes "ubDom\<cdot>ub \<subseteq> cs"
     
 lemma ubrestrict_ubdom_sup_inter: 
   shows "ub \<bar> cs = ub \<bar> (cs \<inter> (ubDom\<cdot>ub))"
-  by (metis (no_types, hide_lams) Int_commute inf_le2 ubrestrict_dom2 ubrestrict_id ubRestrict_twice)
+  by (metis (no_types, hide_lams) Int_commute inf_le2 ubrestrict_ubdom2 ubrestrict_id ubRestrict_twice)
 
   subsection \<open>ubLen\<close>
 (* ubLen *) 
@@ -591,7 +591,7 @@ proof -
   moreover
   { assume "(ub1 \<bar> cs) . cc (ub2 \<bar> cs) (ub1 \<bar> cs) \<noteq> (ub2 \<bar> cs) . cc (ub2 \<bar> cs) (ub1 \<bar> cs)"
     have "cc (ub2 \<bar> cs) (ub1 \<bar> cs) \<notin> UBundle.ubDom\<cdot>(ub1 \<bar> cs) \<or> (ub1 \<bar> cs) . cc (ub2 \<bar> cs) (ub1 \<bar> cs) = (ub2 \<bar> cs) . cc (ub2 \<bar> cs) (ub1 \<bar> cs)"
-      by (metis (no_types) assms(1) assms(2) inf.absorb_iff2 ubgetch_ubrestrict ubrestrict_dom2)
+      by (metis (no_types) assms(1) assms(2) inf.absorb_iff2 ubgetch_ubrestrict ubrestrict_ubdom2)
     then have "ub1 \<bar> cs = ub2 \<bar> cs"
       using f2 f1 by meson }
   ultimately show "ub1 \<bar> cs = ub2 \<bar> cs"
