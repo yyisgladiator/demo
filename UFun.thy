@@ -213,7 +213,6 @@ lemma emptydom_fun_cont: "cont emptydom_fun"
   apply (simp add: emptydom_fun_def, rule contI)
   by (smt cont_def image_cong is_ub_thelub some_cont ubdom_fix uf_least_cont)
 
-lemma bla: assumes "ubDom\<cdot>f = {}" shows "ubDom\<cdot>f = {}"
 
 lemma emptydom_fun_ufwell: "ufWell (Abs_cfun emptydom_fun)"
   apply(simp only: ufWell_def)
@@ -224,7 +223,8 @@ lemma emptydom_fun_ufwell: "ufWell (Abs_cfun emptydom_fun)"
   by (metis emptydom_fun_def option.sel option.simps(3))
 
 
-  thm ufIsWeak_def
+thm ufIsWeak_def
+(*
 lemma emptydom_fun_ufisweak: "ufIsWeak (Abs_ufun (Abs_cfun emptydom_fun))"
   apply (simp  add: ufIsWeak_def)
   apply (subst rep_abs_cufun)
@@ -234,22 +234,19 @@ lemma emptydom_fun_ufisweak: "ufIsWeak (Abs_ufun (Abs_cfun emptydom_fun))"
     apply (simp add: emptydom_fun_cont)
    apply (simp add: emptydom_fun_ufwell)
   sorry
+*)
 
 
-lemma bla: "\<exists> x:: 'a \<Rightarrow> 'a option. ufIsWeak (Abs_ufun (Abs_cfun x))"
-  using emptydom_fun_ufisweak 
-  by auto
-
-
-lemma bla2: "\<exists> x:: ('a, 'b) ufun. ufIsWeak x"
-  sorry
-
-lift_definition bla :: "('in, 'out) ufun" 
-is "Abs_ufun (Abs_cfun (\<lambda>f. (ubDom\<cdot>f = {})\<leadsto> (ubLeast (ubDom\<cdot>f))))"
+lift_definition bla :: "('in, 'in) ufun" 
+is "Abs_ufun (Abs_cfun (\<lambda>f. (f = ubLeast {})\<leadsto> (ubLeast {})))"
   done
 
+lemma bla_ufIsWeak: "ufIsWeak bla"
+  sorry
+
+
 cpodef ('in,'out)  USPFw = "{f ::  ('in,'out) ufun. ufIsWeak f}"
-  using emptydom_fun_ufisweak apply auto[1]
+  using bla_ufIsWeak apply auto[1]
   using ufIsWeak_adm2 by auto
 
 
