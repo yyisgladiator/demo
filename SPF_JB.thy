@@ -278,13 +278,20 @@ proof -
     qed
     have f60: "chain (\<lambda>i. (\<lambda>x::'a SB. (sbDom\<cdot>x = spfDom\<cdot>(Lub Y))\<leadsto>k\<cdot>(Y i \<rightleftharpoons> x)))"
       sorry
+    have f100: "\<And> x. (\<Squnion>i::nat. (\<lambda>x::'a SB. (sbDom\<cdot>x = spfDom\<cdot>(Lub Y))\<leadsto>k\<cdot>(Y i \<rightleftharpoons> x))) x = (\<lambda>x::'a SB. (sbDom\<cdot>x = spfDom\<cdot>(Lub Y))\<leadsto>(\<Squnion>i::nat. k\<cdot>(Y i \<rightleftharpoons> x))) x"
+      apply (simp)
+      apply rule
+      apply (smt ch2ch_fun f60 image_cong lub_fun option.collapse option.discI option.inject option_chain_cases part_the_lub some_lub_chain_eq)
+      by (smt Abs_cfun_inverse2 below_option_def cfun_below_iff f10 f12 f14 image_cong is_ub_thelub rep_cfun_cont)
+      
   have f51: "(\<Squnion>i::nat. (\<lambda>x::'a SB. (sbDom\<cdot>x = spfDom\<cdot>(Lub Y))\<leadsto>k\<cdot>(Y i \<rightleftharpoons> x))) = (\<lambda>x::'a SB. (sbDom\<cdot>x = spfDom\<cdot>(Lub Y))\<leadsto>(\<Squnion>i::nat. k\<cdot>(Y i \<rightleftharpoons> x)))"
-    sorry
+    using f100 by auto 
   show ?thesis
     apply (subst f30_rev)
     apply (subst f20)
-    apply (rule f40, subst f50)
-    sorry
+    apply (subst f51)
+    apply (subst f52)
+    by simp
 qed
 
 lemma spfapplyout_cont [simp]:  assumes "\<And>b. sbDom\<cdot>(k\<cdot>b) = sbDom\<cdot>b" 
