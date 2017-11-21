@@ -50,12 +50,12 @@ lemma dropwhile2smed: "\<exists>ora. sdropwhile (\<lambda>x. x = a)\<cdot>s = sM
   by (metis dropwhile2drop drop2med)
 
 lemma stakewhileDropwhile_rev: "s = stakewhile f\<cdot>s \<bullet> (sdropwhile f\<cdot>s)"
-by (simp add: stakewhileDropwhile)
+  by (simp add: stakewhileDropwhile)
 
 text {* @{term sdropwhile} after @{term stakewhile} gives the empty stream *}
 lemma dtw: "sdropwhile f\<cdot>(stakewhile f\<cdot>s) = \<epsilon>"
-apply (rule ind [of _ s], auto)
-by (case_tac "f a", auto)
+  apply (rule ind [of _ s], auto)
+  by (case_tac "f a", auto)
 
 lemma split_stream_rev: "s = stake n\<cdot>s \<bullet> sdrop n\<cdot>s " by simp
 
@@ -131,34 +131,34 @@ lemma srcdups_fin:"#(srcdups\<cdot>msg) = Fin n \<Longrightarrow> msg = \<up>aa 
   by (metis fold_inf infI slen_scons srcdups_nfst2snd)  
  
 lemma newOra_srcdups_ex: assumes "#(srcdups\<cdot>msg) = Fin n" shows "\<exists>ora2. srcdups\<cdot>(sMed\<cdot>msg\<cdot>ora1) = sMed\<cdot>(srcdups\<cdot>msg)\<cdot>ora2"
-   apply (induction "srcdups\<cdot>msg"  arbitrary: msg  ora1 rule: finind)
-   using assms apply simp
-   apply (metis smed_bot1 srcdups_nbot)
-   apply (rule_tac x=msg in scases,simp)
-   apply (rule_tac ts=ora1 in oracases,simp_all)
-   using smed_bot2 apply blast
-   apply (rule ora_t_ex)
-   apply (simp add: srcdups_step)
-   apply (metis inject_scons dropwhile_med)
-   apply (case_tac "sa = \<epsilon>")
-   apply (metis smed_bot1 smed_bot2 strict_srcdups)
-   apply (case_tac "shd sa \<noteq> aa")
-   apply (simp add: srcdups_nfst2snd)
-   apply (rule ora_f_ex,simp)
-   using inject_scons apply blast
-   apply (simp add: srcdups_step)
-   apply (case_tac "sMed\<cdot>sa\<cdot>as = \<epsilon>")
-   apply (metis smed_bot2 strict_srcdups)
-   apply (case_tac "shd (sMed\<cdot>sa\<cdot>as) = aa")
-   apply (rule ora_t_ex,simp)
-   apply (simp add: med_dropwhile_t)
-   apply (metis inject_scons dropwhile_med)
-   apply (rule ora_f_ex,simp)
-   apply (subst dropwhile_f [of "sMed\<cdot>sa\<cdot>as" aa],simp_all)
-   by (metis inject_scons dropwhile_med)
+  apply (induction "srcdups\<cdot>msg"  arbitrary: msg  ora1 rule: finind)
+  using assms apply simp
+  apply (metis smed_bot1 srcdups_nbot)
+  apply (rule_tac x=msg in scases,simp)
+  apply (rule_tac ts=ora1 in oracases,simp_all)
+  using smed_bot2 apply blast
+  apply (rule ora_t_ex)
+  apply (simp add: srcdups_step)
+  apply (metis inject_scons dropwhile_med)
+  apply (case_tac "sa = \<epsilon>")
+  apply (metis smed_bot1 smed_bot2 strict_srcdups)
+  apply (case_tac "shd sa \<noteq> aa")
+  apply (simp add: srcdups_nfst2snd)
+  apply (rule ora_f_ex,simp)
+  using inject_scons apply blast
+  apply (simp add: srcdups_step)
+  apply (case_tac "sMed\<cdot>sa\<cdot>as = \<epsilon>")
+  apply (metis smed_bot2 strict_srcdups)
+  apply (case_tac "shd (sMed\<cdot>sa\<cdot>as) = aa")
+  apply (rule ora_t_ex,simp)
+  apply (simp add: med_dropwhile_t)
+  apply (metis inject_scons dropwhile_med)
+  apply (rule ora_f_ex,simp)
+  apply (subst dropwhile_f [of "sMed\<cdot>sa\<cdot>as" aa],simp_all)
+  by (metis inject_scons dropwhile_med)
 
 lemma srcdups_smed_h: " #(srcdups\<cdot>(sMed\<cdot>s\<cdot>p)) \<le> #(srcdups\<cdot>s)"
-   proof (induction s arbitrary: p rule: ind)
+  proof (induction s arbitrary: p rule: ind)
     case 1
     then show ?case 
     apply(rule adm_all)
@@ -179,10 +179,13 @@ lemma srcdups_smed_h: " #(srcdups\<cdot>(sMed\<cdot>s\<cdot>p)) \<le> #(srcdups\
       apply (simp add: neq02Suclnle srcdups_nbot)
       apply (case_tac "shd s = a")
       apply (case_tac "shd (sMed\<cdot>s\<cdot>as) = a")
-      apply (simp add: srcdups_fst2snd)
-      apply (smt inject_scons smed_bot2 smed_f smed_t srcdups_eq surj_scons surj_scons)
-      apply (smt less_lnsuc lnsuc_lnle_emb srcdups_nfst2snd srcdups_fst2snd slen_scons trans_lnle)
-      by (metis (no_types, lifting) less_lnsuc srcdups_nfst2snd srcdups_fst2snd slen_scons trans_lnle) 
+      apply (simp add: srcdups_fst2snd) 
+      apply (cases rule: oracases,simp_all)
+      apply (metis inject_scons smed_t surj_scons)
+      apply (metis smed_f smed_t srcdups_fst2snd surj_scons)
+      apply (simp add: srcdups_nfst2snd)
+      apply (metis dropwhile2smed lnsuc_lnle_emb slen_scons smed2med srcdups_step)
+      by (metis (no_types, lifting) less_lnsuc srcdups_nfst2snd srcdups_fst2snd slen_scons trans_lnle)
   qed              
 
 lemma prop4s_h3: assumes  "#(srcdups\<cdot>s) \<noteq> \<infinity>" "#({True} \<ominus> p) = \<infinity>" "#(srcdups\<cdot>(sprojsnd\<cdot>(sMed\<cdot>s\<cdot>p))) = #(srcdups\<cdot>s)"  
