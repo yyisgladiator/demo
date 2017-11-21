@@ -56,6 +56,13 @@ class ubcl = cpo +
 begin
 end
 
+class ubcl_comp = ubcl +
+  fixes ubUnion :: "'a \<rightarrow> 'a \<rightarrow> 'a"
+  fixes ubRestrict :: "channel set \<Rightarrow> 'a \<rightarrow> 'a"
+  
+begin
+end  
+  
 
 (****************************************************)
 section\<open>Universal Stream Processing Function\<close>

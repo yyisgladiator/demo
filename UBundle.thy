@@ -1,7 +1,7 @@
-(*  Title:        UnivClasses
+(*  Title:        UBundle
     Author:       Sebastian, Jens, Marc
 
-    Description:  All "Universal Classes". Later used to define bundles/pfun 
+    Description:  Defines stream bundles
 *)
 
 theory UBundle
@@ -106,6 +106,7 @@ definition ubUnion :: "'M\<^sup>\<Omega> \<rightarrow> 'M\<^sup>\<Omega> \<right
 
 abbreviation ubunion_abbr :: " 'M\<^sup>\<Omega> \<Rightarrow> 'M\<^sup>\<Omega> \<Rightarrow> 'M\<^sup>\<Omega>" (infixl "\<uplus>" 100) where 
 "b1 \<uplus> b2 \<equiv> ubUnion\<cdot>b1\<cdot>b2"
+
 
 (* ubSetCh *)
 text {* @{text "ubSetCh"} adds a channel or ubReplaces its content *}

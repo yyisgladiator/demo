@@ -1,4 +1,4 @@
-(*  Title:        PFun
+(*  Title:        UFun
     Author:       Stüber, Jens, Marc
     e-mail:       sebastian.stueber@rwth-aachen.de
 
@@ -138,22 +138,11 @@ definition ufRan :: "('in,'out) ufun \<rightarrow> channel set" where
 definition ufLeast :: "channel set \<Rightarrow> channel set \<Rightarrow> ('in \<Rrightarrow> 'out)" where
 "ufLeast cin cout = Abs_ufun (\<Lambda>  sb.  (ubDom\<cdot>sb = cin) \<leadsto> ubLeast cout)"
 
-(* ufComp *)
-(* We can reuse this composition in the subtypes, for weak/strong causal stuff *)
-definition ufComp :: "('m \<Rrightarrow> 'm) \<rightarrow> ('m \<Rrightarrow> 'm) \<rightarrow> ('m \<Rrightarrow> 'm)" where
-"ufComp = undefined"
-
 (* spfType *)
 
 (* spfIO *)
 
 (* apply *)
-
-(* Composition channel sets *)
-
-(* sbFix *)
-
-(* Composition *)
 
 
 (****************************************************)
@@ -185,18 +174,11 @@ section\<open>Lemmas\<close>
 
 (* ufLeast *)
 
-(* ufComp *)
-
 (* spfType *)
 
 (* spfIO *)
 
 (* apply *)
-
-(* Composition channel sets *)
-
-(* sbFix *)
-
-(* Composition *)  
+  
 
 end
