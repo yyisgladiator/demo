@@ -240,30 +240,6 @@ proof -
   qed
 
 
-
-lemma ufIsStrong_adm: "adm (\<lambda> f. (\<forall>b. (b \<in> dom (Rep_cfun (Rep_ufun f)) \<longrightarrow> lnsuc\<cdot>(ubLen b) \<le> ubLen (the ((Rep_ufun f)\<cdot>b)))))" (is "adm( ?P )")
-proof (rule admI)
-  fix Y :: "nat \<Rightarrow> (('a,'b) ufun)"
-  assume chY: "chain Y" and  as2: "\<forall>i. ?P (Y i)"
-  show "?P (\<Squnion>i. Y i)"
-  proof (auto)
-    fix b:: "'a"
-    fix y:: "'b"
-    fix i2:: "nat"
-    assume as3: "Rep_cufun (\<Squnion>i. Y i) b = Some y"
-    obtain c where c_def: "Rep_cufun (Y i2) b = Some c"
-      by (metis as3 below_option_def below_ufun_def cfun_below_iff chY is_ub_thelub not_None_eq)
-    show "lnsuc\<cdot>(ubLen b) \<le> ubLen y"
-      by (metis (no_types, lifting) ublen_mono as2 as3 below_ufun_def c_def cfun_below_iff chY domI is_ub_thelub 
-          lnle_def monofun_def option.sel some_below2 trans_lnle)
-  qed
-qed
-
-
-lemma ufIsStrong_adm2: "adm (\<lambda>f. ufIsStrong f)"
-  by  (simp add: ufIsStrong_def ufIsStrong_adm)
-
-
 lemma ufisstrong_2_ufisweak: "\<And> f. ufIsStrong f \<Longrightarrow> ufIsWeak f"
   by (meson less_lnsuc trans_lnle ufIsStrong_def ufIsWeak_def)
 
@@ -273,9 +249,32 @@ cpodef ('in,'out)  USPFw = "{f ::  ('in,'out) ufun. ufIsWeak f}"
   using ufisstrong_2_ufisweak ufistrongk_exist apply auto[1]
   using ufIsWeak_adm2 by auto
 
+lemma ufIsStrong_adm2: "adm (\<lambda>f. ufIsStrong (Rep_USPFw f))" (is "adm( ?P )")
+proof  (rule admI)
+  fix Y :: "nat \<Rightarrow> (('a,'b) USPFw)"
+  assume chY: "chain Y" and  as2: "\<forall>i. ?P (Y i)"
+  show "?P (\<Squnion>i. Y i)"
+  proof (simp add: ufIsStrong_def, auto)
+    fix b:: "'a"
+    fix y:: "'b"
+    fix i2:: "nat"
+    assume as3: "Rep_cufun (Rep_USPFw (Lub Y)) b = Some y"
+    obtain c where c_def: "Rep_cufun (Rep_USPFw (Y i2)) b = Some c"
+      by (metis as3 below_USPFw_def below_option_def below_ufun_def cfun_below_iff chY is_ub_thelub not_None_eq)
+    have f1: "lnsuc\<cdot>(ubLen b) \<le> ubLen c"
+      using as2 c_def ufIsStrong_def by fastforce
+    have f3: "c \<sqsubseteq> y"
+      by (metis as3 below_USPFw_def below_ufun_def c_def chY is_ub_thelub monofun_cfun_fun some_below2)
+    have f4: "ubLen c \<le> ubLen y"
+      using ublen_mono f3 lnle_def monofun_def by blast
+    show "lnsuc\<cdot>(ubLen b) \<le> ubLen y"
+      using f1 f4 by auto
+  qed
+qed
 
-cpodef ('in,'out) USPFs = "{f :: ('in,'out) ufun. ufIsStrong f}"
-  apply (simp add: ufistrongk_exist)
+
+cpodef ('in,'out) USPFs = "{f :: ('in,'out) USPFw. ufIsStrong (Rep_USPFw f)}"
+   apply (metis Rep_USPFw_cases mem_Collect_eq ufisstrong_2_ufisweak ufistrongk_exist)
   using ufIsStrong_adm2 by auto
 
 
