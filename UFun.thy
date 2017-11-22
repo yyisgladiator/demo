@@ -200,14 +200,88 @@ qed
 lemma ufIsWeak_adm2: "adm (\<lambda>f. ufIsWeak f)"
   by  (simp add: ufIsWeak_def ufIsWeak_adm)
 
+lemma rep_abs_cufun [simp]: assumes "cont f" and "ufWell (Abs_cfun f)" 
+  shows "Rep_cufun (Abs_cufun f) = f"
+  by (simp add: Abs_ufun_inverse assms(1) assms(2))
 
 cpodef ('in,'out)  USPFw = "{f ::  ('in,'out) ufun. ufIsWeak f}"
-sorry
+  apply auto[1]
+  defer
+  using ufIsWeak_adm2 apply auto[1]
+proof -
+   obtain inf_ub:: "'out"  where inf_ub_ublen: "ubLen inf_ub = \<infinity>"
+      using ublen_inf_ex by auto
+    obtain ufun1:: "'in \<Rightarrow> 'out option" where ufun1_def: "ufun1 = (\<lambda> f. if ubDom\<cdot>f = {} then  Some inf_ub else None)"
+      by simp
+    have f1: "cont ufun1"
+      apply(rule contI2)
+       apply (simp add: ufun1_def monofunI ubdom_fix)
+      by (smt is_ub_thelub lub_maximal not_below2not_eq rangeI ub_rangeI ubdom_fix ufun1_def)
+    have f2: "(Rep_cfun (Abs_cfun ufun1)) = ufun1"
+      using f1 by auto
+    have f3: "ufWell (Abs_cfun ufun1)"
+      apply (simp add: ufWell_def, rule)
+      apply (metis Abs_cfun_inverse2 domIff f1 option.distinct(1) ufun1_def)
+      apply (simp add: f2)
+      apply (rule_tac x = "ubDom\<cdot>inf_ub" in exI)
+      by (smt mem_Collect_eq option.distinct(1) option.inject ran_def ufun1_def)
+    have f31: "Rep_cufun (Abs_cufun ufun1) = ufun1"
+      using f1 f3 by auto
+    have f4: "ufIsWeak (Abs_ufun (Abs_cfun ufun1))"
+      apply (simp add: ufIsWeak_def, auto)
+      apply (simp add: f31)
+    proof -
+      fix b:: "'in"
+      fix y:: "'out"
+      assume assm41: "ufun1 b = Some y"
+      have f41: "ufun1 b =  Some inf_ub"
+        by (metis assm41 option.distinct(1) ufun1_def)
+      then have "y = inf_ub"
+        by (simp add: assm41)
+      then have "ubLen y = \<infinity>"
+        by (simp add: inf_ub_ublen)
+      then show "ubLen b \<le> ubLen y"
+        by auto
+    qed
+    obtain ufun2:: "('in,'out) ufun"  where "ufun2 = (Abs_ufun (Abs_cfun ufun1))"
+      by simp
+    have "ufIsWeak ufun2"
+      by (simp add: \<open>ufun2 = Abs_cufun ufun1\<close> f4)
+    then show "\<exists>x::('in,'out) ufun. ufIsWeak x"
+      by (rule_tac x = "ufun2" in exI)
+qed
+
 
 definition ufIsStrong :: "('in,'out) ufun \<Rightarrow> bool" where
 "ufIsStrong f = (\<forall>b. (b \<in> dom (Rep_cfun (Rep_ufun f)) \<longrightarrow> lnsuc\<cdot>(ubLen b) \<le> ubLen (the ((Rep_ufun f)\<cdot>b))))"
 
+lemma ufIsStrong_adm: "adm (\<lambda> f. (\<forall>b. (b \<in> dom (Rep_cfun (Rep_ufun f)) \<longrightarrow> lnsuc\<cdot>(ubLen b) \<le> ubLen (the ((Rep_ufun f)\<cdot>b)))))" (is "adm( ?P )")
+proof (rule admI)
+  fix Y :: "nat \<Rightarrow> (('a,'b) ufun)"
+  assume chY: "chain Y" and  as2: "\<forall>i. ?P (Y i)"
+  show "?P (\<Squnion>i. Y i)"
+  proof (auto)
+    fix b:: "'a"
+    fix y:: "'b"
+    fix i2:: "nat"
+    assume as3: "Rep_cufun (\<Squnion>i. Y i) b = Some y"
+    obtain c where c_def: "Rep_cufun (Y i2) b = Some c"
+      by (metis as3 below_option_def below_ufun_def cfun_below_iff chY is_ub_thelub not_None_eq)
+    show "lnsuc\<cdot>(ubLen b) \<le> ubLen y"
+      by (metis (no_types, lifting) ublen_mono as2 as3 below_ufun_def c_def cfun_below_iff chY domI is_ub_thelub 
+          lnle_def monofun_def option.sel some_below2 trans_lnle)
+  qed
+qed
+
+
+lemma ufIsStrong_adm2: "adm (\<lambda>f. ufIsStrong f)"
+  by  (simp add: ufIsStrong_def ufIsStrong_adm)
+
+
 cpodef ('in,'out) USPFs = "{f :: ('in,'out) ufun. ufIsStrong f}"
+  apply auto[1]
+  defer
+  using ufIsStrong_adm2 apply auto[1]
 sorry
 
 

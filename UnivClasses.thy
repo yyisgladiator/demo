@@ -55,6 +55,7 @@ class ubcl = cpo +
   assumes ubdom_fix: "\<And> x y. x\<sqsubseteq>y \<Longrightarrow> ubDom\<cdot>x = ubDom\<cdot>y"
   assumes ubdom_least: "\<And> x. ubLeast (ubDom\<cdot>x)\<sqsubseteq>x"
   assumes ubdom_least_cs: "\<And> cs. ubDom\<cdot>(ubLeast cs) = cs"
+  assumes ublen_inf_ex: "\<exists>ub. ubLen ub = \<infinity>"
 begin
 end
 
