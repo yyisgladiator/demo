@@ -179,6 +179,11 @@ section\<open>Subtype\<close>
 definition ufIsWeak :: "('in,'out) ufun \<Rightarrow> bool" where
 "ufIsWeak f = (\<forall>b. (b \<in> dom (Rep_cfun (Rep_ufun f)) \<longrightarrow> ubLen b \<le> ubLen (the ((Rep_ufun f)\<cdot>b))))"
 
+
+definition ufIsStrong :: "('in,'out) ufun \<Rightarrow> bool" where
+"ufIsStrong f = (\<forall>b. (b \<in> dom (Rep_cfun (Rep_ufun f)) \<longrightarrow> lnsuc\<cdot>(ubLen b) \<le> ubLen (the ((Rep_ufun f)\<cdot>b))))"
+
+
 lemma ufIsWeak_adm: "adm (\<lambda> f. (\<forall>b. (b \<in> dom (Rep_cfun (Rep_ufun f)) \<longrightarrow> ubLen b \<le> ubLen (the ((Rep_ufun f)\<cdot>b)))))" (is "adm( ?P )")
 proof (rule admI)
   fix Y :: "nat \<Rightarrow> (('a,'b) ufun)"
@@ -200,14 +205,8 @@ qed
 lemma ufIsWeak_adm2: "adm (\<lambda>f. ufIsWeak f)"
   by  (simp add: ufIsWeak_def ufIsWeak_adm)
 
-lemma rep_abs_cufun [simp]: assumes "cont f" and "ufWell (Abs_cfun f)" 
-  shows "Rep_cufun (Abs_cufun f) = f"
-  by (simp add: Abs_ufun_inverse assms(1) assms(2))
 
-cpodef ('in,'out)  USPFw = "{f ::  ('in,'out) ufun. ufIsWeak f}"
-  apply auto[1]
-  defer
-  using ufIsWeak_adm2 apply auto[1]
+lemma ufistrongk_exist: "\<exists>x::('in,'out) ufun. ufIsStrong x"
 proof -
    obtain inf_ub:: "'out"  where inf_ub_ublen: "ubLen inf_ub = \<infinity>"
       using ublen_inf_ex by auto
@@ -220,40 +219,27 @@ proof -
     have f2: "(Rep_cfun (Abs_cfun ufun1)) = ufun1"
       using f1 by auto
     have f3: "ufWell (Abs_cfun ufun1)"
-      apply (simp add: ufWell_def, rule)
-      apply (metis Abs_cfun_inverse2 domIff f1 option.distinct(1) ufun1_def)
-      apply (simp add: f2)
+      apply (simp only: ufWell_def f2, rule)
+       apply (metis domIff option.distinct(1) ufun1_def)
       apply (rule_tac x = "ubDom\<cdot>inf_ub" in exI)
       by (smt mem_Collect_eq option.distinct(1) option.inject ran_def ufun1_def)
     have f31: "Rep_cufun (Abs_cufun ufun1) = ufun1"
-      using f1 f3 by auto
-    have f4: "ufIsWeak (Abs_ufun (Abs_cfun ufun1))"
-      apply (simp add: ufIsWeak_def, auto)
-      apply (simp add: f31)
-    proof -
+      by (simp add: Abs_ufun_inverse f2 f3)
+    have f4: "ufIsStrong (Abs_ufun (Abs_cfun ufun1))"
+    proof (simp add: ufIsStrong_def, auto, simp add: f31)
       fix b:: "'in"
       fix y:: "'out"
       assume assm41: "ufun1 b = Some y"
       have f41: "ufun1 b =  Some inf_ub"
         by (metis assm41 option.distinct(1) ufun1_def)
-      then have "y = inf_ub"
-        by (simp add: assm41)
-      then have "ubLen y = \<infinity>"
-        by (simp add: inf_ub_ublen)
-      then show "ubLen b \<le> ubLen y"
-        by auto
-    qed
-    obtain ufun2:: "('in,'out) ufun"  where "ufun2 = (Abs_ufun (Abs_cfun ufun1))"
-      by simp
-    have "ufIsWeak ufun2"
-      by (simp add: \<open>ufun2 = Abs_cufun ufun1\<close> f4)
-    then show "\<exists>x::('in,'out) ufun. ufIsWeak x"
-      by (rule_tac x = "ufun2" in exI)
-qed
+      then show "lnsuc\<cdot>(ubLen b) \<le> ubLen y"
+        by (simp add: assm41 inf_ub_ublen)
+      qed
+    then show "\<exists>x::('in,'out) ufun. ufIsStrong x"
+      by (rule_tac x = "(Abs_ufun (Abs_cfun ufun1))" in exI)
+  qed
 
 
-definition ufIsStrong :: "('in,'out) ufun \<Rightarrow> bool" where
-"ufIsStrong f = (\<forall>b. (b \<in> dom (Rep_cfun (Rep_ufun f)) \<longrightarrow> lnsuc\<cdot>(ubLen b) \<le> ubLen (the ((Rep_ufun f)\<cdot>b))))"
 
 lemma ufIsStrong_adm: "adm (\<lambda> f. (\<forall>b. (b \<in> dom (Rep_cfun (Rep_ufun f)) \<longrightarrow> lnsuc\<cdot>(ubLen b) \<le> ubLen (the ((Rep_ufun f)\<cdot>b)))))" (is "adm( ?P )")
 proof (rule admI)
@@ -278,11 +264,19 @@ lemma ufIsStrong_adm2: "adm (\<lambda>f. ufIsStrong f)"
   by  (simp add: ufIsStrong_def ufIsStrong_adm)
 
 
+lemma ufisstrong_2_ufisweak: "\<And> f. ufIsStrong f \<Longrightarrow> ufIsWeak f"
+  by (meson less_lnsuc trans_lnle ufIsStrong_def ufIsWeak_def)
+
+
+
+cpodef ('in,'out)  USPFw = "{f ::  ('in,'out) ufun. ufIsWeak f}"
+  using ufisstrong_2_ufisweak ufistrongk_exist apply auto[1]
+  using ufIsWeak_adm2 by auto
+
+
 cpodef ('in,'out) USPFs = "{f :: ('in,'out) ufun. ufIsStrong f}"
-  apply auto[1]
-  defer
-  using ufIsStrong_adm2 apply auto[1]
-sorry
+  apply (simp add: ufistrongk_exist)
+  using ufIsStrong_adm2 by auto
 
 
 (****************************************************)
