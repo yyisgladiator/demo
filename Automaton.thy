@@ -401,9 +401,9 @@ definition spfStep :: "channel set \<Rightarrow> channel set \<Rightarrow> ((cha
 lemma spfStep_inSPF_mono[simp]:"monofun (\<lambda>b. spfStep_h1 In Out\<cdot> h\<cdot>(sbHdElem\<cdot>b) \<rightleftharpoons> b)"
   apply(rule monofunI)
   by (metis below_SPF_def below_option_def below_refl monofun_cfun monofun_cfun_arg)
-
-
-lemma spfStep_inSPF_cont[simp]:"cont (\<lambda> sb.  (sbDom\<cdot>sb = In) \<leadsto> (spfStep_h1 In Out\<cdot> h)\<cdot>(sbHdElem\<cdot>sb) \<rightleftharpoons> sb)"
+   
+    
+lemma spfStep_inSPF_cont[simp]:"cont (\<lambda> sb.  (sbDom\<cdot>sb = In) \<leadsto> (spfStep_h1 In Out\<cdot> h)\<cdot>(sbHdElem\<cdot>sb) \<rightleftharpoons> sb)"  
 proof(rule spf_contI2,rule Cont.contI2,auto)
   fix Y::"nat \<Rightarrow> 'a SB"
   assume chain:"chain Y"
@@ -414,7 +414,7 @@ proof(rule spf_contI2,rule Cont.contI2,auto)
     by (simp add: chain sbChain_dom_eq2)
   have h_false:"sbDom\<cdot>(\<Squnion>i. Y i) \<noteq> In \<Longrightarrow> \<forall>i. sbDom\<cdot>(Y i) \<noteq> In"
     by (simp add: chain sbChain_dom_eq2)
-  have "(\<Squnion>i. spfStep_h1 In Out\<cdot> h\<cdot>(sbHdElem\<cdot>(Y i))) \<rightleftharpoons> (\<Squnion>i. Y i) = (\<Squnion>i. spfStep_h1 In Out\<cdot> h\<cdot>(sbHdElem\<cdot>(Y i)) \<rightleftharpoons> Y i)" 
+  have "(\<Squnion>i. spfStep_h1 In Out\<cdot> h\<cdot>(sbHdElem\<cdot>(Y i))) \<rightleftharpoons> (\<Squnion>i. Y i) \<sqsubseteq> (\<Squnion>i. spfStep_h1 In Out\<cdot> h\<cdot>(sbHdElem\<cdot>(Y i)) \<rightleftharpoons> Y i)"
     sorry
   then show "spfStep_h1 In Out\<cdot> h\<cdot>(sbHdElem\<cdot>(\<Squnion>i. Y i)) \<rightleftharpoons> (\<Squnion>i. Y i) \<sqsubseteq> (\<Squnion>i. spfStep_h1 In Out\<cdot> h\<cdot>(sbHdElem\<cdot>(Y i)) \<rightleftharpoons> Y i)"
     by(simp add: h1)
@@ -479,7 +479,7 @@ proof(cases "spfDom\<cdot>(\<Squnion>i. Y i) = sbDom\<cdot>sb")
     by (simp add: op_the_chain assms)
   have "\<forall>i. Y i  \<rightleftharpoons> sb \<sqsubseteq> (\<Squnion>i. Y i \<rightleftharpoons> sb)"
     using below_lub chain by blast
-  show ?thesis 
+  show ?thesis
     (*
   proof(rule sb_below)
     show "sbDom\<cdot>((\<Squnion>i. Y i) \<rightleftharpoons> sb) = sbDom\<cdot>(\<Squnion>i. Y i \<rightleftharpoons> sb)"
@@ -496,11 +496,9 @@ next
   then show ?thesis 
     by (metis (mono_tags, lifting) spf_pref_eq_2 False assms lub_chain_maxelem option.exhaust_sel po_class.chainE spfdom2sbdom)
 qed
-
-lemma Rep_Abs_CSPF:"cont spf \<and> spf_well (Abs_cfun spf) \<Longrightarrow> Rep_CSPF (Abs_CSPF spf) = spf"
-  by simp   
     
-  
+lemma spf_sbDom: assumes "spfDom\<cdot>f = In" and "spfRan\<cdot>f = Out" and "sbDom\<cdot>sb= In" shows "sbDom\<cdot>(f \<rightleftharpoons> sb) = Out"
+  by (simp add: assms(1) assms(2) assms(3))
 lemma spfStep_cont:"cont (\<lambda> h. Abs_SPF (\<Lambda>  sb.  (sbDom\<cdot>sb = In) \<leadsto> (spfStep_h1 In Out\<cdot> h)\<cdot>(sbHdElem\<cdot>sb) \<rightleftharpoons> sb))"
 proof(rule Cont.contI2, simp)
   fix Y::"nat \<Rightarrow> ((channel\<rightharpoonup>'m::message) \<Rightarrow> 'm SPF)"
@@ -550,12 +548,7 @@ proof(rule Cont.contI2, simp)
     apply(rule chainI)
     by (smt below_option_def cfun_below_iff chain_1 fun_belowI po_class.chain_def some_below spf_pref_eq_2)
   have "\<And>b.  sbDom\<cdot>b= In \<Longrightarrow> \<forall>i . sbDom\<cdot>(spfStep_h1 In Out\<cdot>(Y i)\<cdot>(sbHdElem\<cdot>b) \<rightleftharpoons> b) = Out"
-  proof-
-    have "\<And>b. \<forall>i. spfRan\<cdot>(spfStep_h1 In Out\<cdot>(Y i)\<cdot>(sbHdElem\<cdot>b)) = Out"
-      by simp
-    then show "\<And>b. sbDom\<cdot>b= In \<Longrightarrow> \<forall>i. sbDom\<cdot>(spfStep_h1 In Out\<cdot>(Y i)\<cdot>(sbHdElem\<cdot>b) \<rightleftharpoons> b) = Out"
-      sorry
-  qed
+  by auto
   then have "\<And>b. sbDom\<cdot>b= In \<Longrightarrow> sbDom\<cdot>(\<Squnion>i. (spfStep_h1 In Out\<cdot>(Y i)\<cdot>(sbHdElem\<cdot>b) \<rightleftharpoons> b)) = Out"
     by (metis (no_types, lifting) chain_4 sbChain_dom_eq2)
   have spf_well:"spf_well (\<Lambda> x. \<Squnion>i. (\<Lambda> sb. (sbDom\<cdot>sb = In)\<leadsto>spfStep_h1 In Out\<cdot>(Y i)\<cdot>(sbHdElem\<cdot>sb) \<rightleftharpoons> sb)\<cdot>x)"
