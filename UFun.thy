@@ -21,35 +21,35 @@ definition ufWell:: "('in \<rightarrow> 'out option) \<Rightarrow> bool" where
 "ufWell f \<equiv> (\<exists>In. \<forall>b. (b \<in> dom (Rep_cfun f) \<longleftrightarrow> ubDom\<cdot>b = In)) \<and> 
               (\<exists>Out. \<forall>b. (b \<in> ran (Rep_cfun f) \<longrightarrow> ubDom\<cdot>b = Out))"
 
-lemma uf_least_cont: "cont (\<lambda> f. if ubDom\<cdot>f = {} then  Some (ubLeast {}) else None)"
+(*lemma uf_least_cont: "cont (\<lambda> f. if ubDom\<cdot>f = {} then Some f else None)"
 proof - 
-  have f0: "\<And>(x::'a) y::'a. x \<sqsubseteq> y \<Longrightarrow> (if ubDom\<cdot>x = {} then  Some (ubLeast {}) else None) \<sqsubseteq> (if ubDom\<cdot>y = {} then  Some (ubLeast {}) else None)"
+  have f0: "\<And>(x::'a) y::'a. x \<sqsubseteq> y \<Longrightarrow> (if ubDom\<cdot>x = {} then Some x else None) \<sqsubseteq> (if ubDom\<cdot>y = {} then Some y else None)"
   proof - 
     fix x :: "'a" 
     fix y :: "'a"
     assume "x \<sqsubseteq> y"
-    show "(if ubDom\<cdot>x = {} then  Some (ubLeast {}) else None) \<sqsubseteq> (if ubDom\<cdot>y = {} then  Some (ubLeast {}) else None)"
+    show "(if ubDom\<cdot>x = {} then Some x else None) \<sqsubseteq> (if ubDom\<cdot>y = {} then Some y else None)"
     proof(cases "ubDom\<cdot>x = {}")
       case True
       then show ?thesis 
-        using \<open>(x::'a) \<sqsubseteq> (y::'a)\<close> ubdom_fix by auto
+        using \<open>(x::'a) \<sqsubseteq> (y::'a)\<close> some_below ubdom_fix by fastforce
     next
       case False
       then show ?thesis 
         using \<open>(x::'a) \<sqsubseteq> (y::'a)\<close> ubdom_fix by auto
     qed
   qed
-  have f1: "\<And>Y::nat \<Rightarrow> 'a. chain Y \<Longrightarrow> (if ubDom\<cdot>(\<Squnion>i. Y i) = {} then  Some (ubLeast {}) else None) \<sqsubseteq> (\<Squnion>i. (if ubDom\<cdot>(Y i) = {} then  Some (ubLeast {}) else None))"
+  have f1: "\<And>Y::nat \<Rightarrow> 'a. chain Y \<Longrightarrow> (if ubDom\<cdot>(\<Squnion>i. Y i) = {} then Some (\<Squnion>i. Y i) else None) \<sqsubseteq> (\<Squnion>i. (if ubDom\<cdot>(Y i) = {} then Some (Y i) else None))"
   proof - 
     fix Y :: "nat \<Rightarrow> 'a"
     assume f2: "chain Y"
     have f3: "\<forall>i. ubDom\<cdot>(Y i) = ubDom\<cdot>(Lub Y)"
       by (simp add: f2 is_ub_thelub ubdom_fix)
-    show "(if ubDom\<cdot>(\<Squnion>i. Y i) = {} then  Some (ubLeast {}) else None) \<sqsubseteq> (\<Squnion>i. (if ubDom\<cdot>(Y i) = {} then  Some (ubLeast {}) else None))"
+    show "(if ubDom\<cdot>(\<Squnion>i. Y i) = {} then Some (\<Squnion>i. Y i) else None) \<sqsubseteq> (\<Squnion>i. (if ubDom\<cdot>(Y i) = {} then Some (Y i) else None))"
     proof(cases "ubDom\<cdot>(Lub Y) = {}")
       case True
       then show ?thesis 
-        by (simp add: f3)        
+        using f2 f3 some_lub_chain_eq3 by fastforce        
     next
       case False
       then show ?thesis 
@@ -63,13 +63,16 @@ proof -
       using f1 by blast
 qed
   
-lemma uf_least_well: "ufWell (Abs_cfun (\<lambda> f. if ubDom\<cdot>f = {} then  Some (ubLeast {}) else None))"
+lemma uf_least_well: "ufWell (Abs_cfun (\<lambda> f. if ubDom\<cdot>f = {} then  Some f else None))"
   apply(simp add: ufWell_def)
   apply rule
    apply(simp add: uf_least_cont)
-  apply (metis (mono_tags, lifting) domIff dom_empty option.distinct(1))
+  apply (metis (mono_tags, lifting) domIff option.distinct(1))
   apply(simp add: uf_least_cont ran_def)
-  by blast
+  by blast*)
+
+lemma ufWell_exists: "\<exists>x::('in \<rightarrow> 'out option). ufWell x"
+  sorry
     
 lemma ufWell_adm: "adm (\<lambda>f. ((\<exists>In. \<forall>b. (b \<in> dom (Rep_cfun f) \<longleftrightarrow> ubDom\<cdot>b = In)) \<and> 
               (\<exists>Out. \<forall>b. (b \<in> ran (Rep_cfun f) \<longrightarrow> ubDom\<cdot>b = Out))))" (is "adm( ?P )")
@@ -77,7 +80,9 @@ proof (rule admI)
   fix Y :: "nat \<Rightarrow> 'a \<rightarrow> 'b option"
   assume chY: "chain Y" and  as2: "\<forall>i. ?P (Y i)"
   show "?P (\<Squnion>i. Y i)"
-  proof -
+    
+    sorry
+  (*proof -
     have f1: "\<exists>Out::channel set. \<forall>b. b \<in> dom (Rep_cfun (\<Squnion>i::nat. Y i)) \<longrightarrow> ubDom\<cdot>(the ((Lub Y)\<cdot>b)) = Out"
     proof -
       { fix aa :: "channel set \<Rightarrow> 'a"
@@ -106,7 +111,7 @@ proof (rule admI)
       apply rule
       apply (metis as2 below_cfun_def chY is_ub_thelub part_dom_eq)
       using f1 f2 by metis
-  qed
+  qed*)
 qed
 
 lemma ufWell_adm2: "adm (\<lambda>f. ufWell f)"
@@ -115,11 +120,8 @@ lemma ufWell_adm2: "adm (\<lambda>f. ufWell f)"
   
 (* Define the type 'm USPF (Very Universal Stream Processing Functions) as cpo *)
 cpodef ('in,'out) ufun ("(_ \<Rrightarrow>/ _)" [20, 20] 20) = "{f :: 'in \<rightarrow> 'out option . ufWell f}"
-  using uf_least_well apply auto[1]
+  apply (simp add: ufWell_exists)
   using ufWell_adm2 by auto
-
-(* this synonym sucks ... *)
-(* type_synonym 'm uSPF = "('m, 'm) ufun" *)
 
   
 (****************************************************)
@@ -133,10 +135,6 @@ definition ufDom :: "('in \<Rrightarrow> 'out) \<rightarrow> channel set" where
 (* ufRan *)
 definition ufRan :: "('in,'out) ufun \<rightarrow> channel set" where
 "ufRan \<equiv> \<Lambda> f. ubDom\<cdot>(SOME b. b \<in> ran (Rep_cfun (Rep_ufun f)))" 
-
-(* ufLeast *)
-definition ufLeast :: "channel set \<Rightarrow> channel set \<Rightarrow> ('in \<Rrightarrow> 'out)" where
-"ufLeast cin cout = Abs_ufun (\<Lambda>  sb.  (ubDom\<cdot>sb = cin) \<leadsto> ubLeast cout)"
 
 (* spfType *)
 
@@ -171,8 +169,6 @@ section\<open>Lemmas\<close>
 (* ufDom *) 
 
 (* ufRan *)
-
-(* ufLeast *)
 
 (* spfType *)
 
