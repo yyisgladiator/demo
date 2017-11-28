@@ -149,8 +149,15 @@ definition ubPrefixSelected:: "channel set \<Rightarrow> 'M\<^sup>\<Omega> \<Rig
 "ubPrefixSelected cs b1 b2 \<equiv> (b1\<bar>cs \<sqsubseteq> b2\<bar>cs)"
 
 (* ubPrefixCommon *)
+text {* @{text " ubPrefixCommon"} prefix relation on common channels *}
+definition ubPrefixCommon:: "'M\<^sup>\<Omega> \<Rightarrow> 'M\<^sup>\<Omega> \<Rightarrow> bool" where
+"ubPrefixCommon b1 b2 \<equiv> ubPrefixSelected (ubDom\<cdot>b1 \<inter> ubDom\<cdot>b2) b1 b2"
+
 
 (* ubMapStream *)
+text {* @{text " ubMapStream"} applies function to all streams *}
+definition ubMapStream:: "('M \<Rightarrow> 'M) \<Rightarrow>'M\<^sup>\<Omega> \<Rightarrow> 'M\<^sup>\<Omega>" where
+"ubMapStream f b =  Abs_ubundle (\<lambda>c. (c\<in>ubDom\<cdot>b) \<leadsto> f (b . c))"
 
 
 (****************************************************)
@@ -619,6 +626,204 @@ lemma ubeqcommonI: assumes "\<forall> c \<in> (ubDom\<cdot>ub1 \<inter> ubDom\<c
 (* ubPrefixCommon *)
 
 (* ubMapStream *)
-  
-  
+
+abbreviation fun_well_type :: "('M \<Rightarrow> 'M) \<Rightarrow> bool" where
+"fun_well_type f \<equiv> (\<forall> cs s. (usOkay cs s \<longrightarrow> usOkay cs (f s)))"
+
+lemma ubDom_funtype: assumes "\<forall>c ts. usOkay c ts \<longrightarrow> usOkay c (f ts)"
+  shows "fun_well_type f"
+  using assms by blast
+
+lemma ubMapStream_well: assumes "fun_well_type f"
+  shows "ubWell (\<lambda>c. ((c \<in> ubDom\<cdot>b)\<leadsto>(f (b . c))))"
+  by (simp add: assms ubWell_def ubgetch_insert)
+
+
+lemma ubMapStream_ubDom: assumes "fun_well_type f"
+  shows "ubDom\<cdot>(ubMapStream f b) = ubDom\<cdot>b"
+  by (simp add: assms ubMapStream_def ubMapStream_well ubdom_ubrep_eq)
+
+
+lemma ubMapStream_ubGetCh: assumes "fun_well_type f" and "c \<in> ubDom\<cdot>b"
+  shows "(ubMapStream f b) . c = f (b . c)"
+  by (simp add: assms(1) assms(2) ubMapStream_def ubMapStream_well ubgetch_insert)
+
+
+lemma ubMapStream_contI1: assumes "cont f" and "fun_well_type f"
+  shows "cont (ubMapStream f)"
+proof (rule contI2)
+  show "monofun (ubMapStream f)"
+    using monofunI ubMapStream_def ubMapStream_ubDom ubMapStream_well ub_below ubdom_below ubgetchE ubrep_ubabs Abs_cfun_inverse2
+      (** isar für nur "using monofunI"*)
+    by (smt assms(1) assms(2) monofunE monofun_Rep_cfun2 ubMapStream_ubGetCh)
+  thus "\<forall>Y. chain Y \<longrightarrow> ubMapStream f (\<Squnion>i. Y i) \<sqsubseteq> (\<Squnion>i. ubMapStream f (Y i))"
+ (***)  by (smt assms(1) assms(2) cont2contlubE lub_eq monofun_def not_below2not_eq po_class.chain_def ubMapStream_ubDom ubMapStream_ubGetCh ub_below ubdom_insert ubgetch_insert ubrep_chain_lub_dom_eq ubrep_chain_the ubrep_lub_eval)
+qed
+
+
+lemma ubMapStream_contI2: assumes "cont f" and "\<forall>c ts. usOkay c ts \<longrightarrow> usOkay c (f ts)"
+  shows "cont (ubMapStream f)"
+  by (simp add: assms(1) assms(2) ubMapStream_contI1)
 end
+
+
+(**)
+(*
+ proof -
+  have "\<forall>f. (\<exists>u ua. (u::'a\<^sup>\<Omega>) \<sqsubseteq> ua \<and> (f u::'a\<^sup>\<Omega>) \<notsqsubseteq> f ua) \<or> monofun f"
+    by (metis (no_types) monofunI)
+  then obtain uu :: "('a\<^sup>\<Omega> \<Rightarrow> 'a\<^sup>\<Omega>) \<Rightarrow> 'a\<^sup>\<Omega>" and uua :: "('a\<^sup>\<Omega> \<Rightarrow> 'a\<^sup>\<Omega>) \<Rightarrow> 'a\<^sup>\<Omega>" where
+    f1: "\<forall>f. uu f \<sqsubseteq> uua f \<and> f (uu f) \<notsqsubseteq> f (uua f) \<or> monofun f"
+    by (metis (full_types))
+  obtain cc :: "'a\<^sup>\<Omega> \<Rightarrow> 'a\<^sup>\<Omega> \<Rightarrow> channel" where
+    f2: "\<forall>x0 x1. (\<exists>v2. v2 \<in> UBundle.ubDom\<cdot>x1 \<and> x1 . v2 \<notsqsubseteq> x0 . v2) = (cc x0 x1 \<in> UBundle.ubDom\<cdot>x1 \<and> x1 . cc x0 x1 \<notsqsubseteq> x0 . cc x0 x1)"
+    by moura
+  have "\<forall>f u. (\<exists>c a. usOkay c (a::'a) \<and> \<not> usOkay c (f a)) \<or> UBundle.ubDom\<cdot>(ubMapStream f u) = UBundle.ubDom\<cdot>u"
+    by (metis (no_types) ubMapStream_ubDom)
+  then obtain cca :: "('a \<Rightarrow> 'a) \<Rightarrow> channel" and aa :: "('a \<Rightarrow> 'a) \<Rightarrow> 'a" where
+    f3: "\<forall>f u. usOkay (cca f) (aa f) \<and> \<not> usOkay (cca f) (f (aa f)) \<or> UBundle.ubDom\<cdot>(ubMapStream f u) = UBundle.ubDom\<cdot>u"
+    by moura
+  have f4: "\<forall>c a. \<not> usOkay c a \<or> usOkay c (f a)"
+    using assms(2) by auto
+  then have f5: "UBundle.ubDom\<cdot>(ubMapStream f (uu (ubMapStream f))) = UBundle.ubDom\<cdot>(uu (ubMapStream f))"
+    using f3 by metis
+  have f6: "UBundle.ubDom\<cdot>(ubMapStream f (uua (ubMapStream f))) = UBundle.ubDom\<cdot>(uua (ubMapStream f))"
+    using f4 f3 by metis
+  have f7: "UBundle.ubDom\<cdot>(ubMapStream f (uu (ubMapStream f))) = UBundle.ubDom\<cdot>(uu (ubMapStream f))"
+    using f4 f3 by metis
+  have f8: "\<forall>f u. (\<exists>c a. usOkay c (a::'a) \<and> \<not> usOkay c (f a::'a)) \<or> ubWell (\<lambda>c. (c \<in> UBundle.ubDom\<cdot>u)\<leadsto>f (u . c))"
+    using ubMapStream_well by auto
+  then have f9: "ubWell (\<lambda>c. (c \<in> UBundle.ubDom\<cdot> (uu (ubMapStream f)))\<leadsto>f (uu (ubMapStream f) . c))"
+    using f4 by blast
+  have f10: "ubWell (\<lambda>c. (c \<in> UBundle.ubDom\<cdot> (uua (ubMapStream f)))\<leadsto>f (uua (ubMapStream f) . c))"
+    using f8 f4 by blast
+  have "UBundle.ubDom\<cdot>(ubMapStream f (uua (ubMapStream f))) = UBundle.ubDom\<cdot>(uua (ubMapStream f))"
+    using f4 f3 by metis
+  then have f11: "UBundle.ubDom\<cdot> (Abs_ubundle (\<lambda>c. (c \<in> UBundle.ubDom\<cdot> (uua (ubMapStream f)))\<leadsto>f (uua (ubMapStream f) . c))) = UBundle.ubDom\<cdot>(uua (ubMapStream f))"
+    by (simp add: ubMapStream_def)
+  { assume "uu (ubMapStream f) . cc (ubMapStream f (uua (ubMapStream f))) (ubMapStream f (uu (ubMapStream f))) \<sqsubseteq> uua (ubMapStream f) . cc (ubMapStream f (uua (ubMapStream f))) (ubMapStream f (uu (ubMapStream f)))"
+    { assume "(Abs_cfun f\<cdot> (uu (ubMapStream f) . cc (ubMapStream f (uua (ubMapStream f))) (ubMapStream f (uu (ubMapStream f)))) \<sqsubseteq> Abs_cfun f\<cdot> (uua (ubMapStream f) . cc (ubMapStream f (uua (ubMapStream f))) (ubMapStream f (uu (ubMapStream f))))) \<noteq> (ubMapStream f (uu (ubMapStream f)) . cc (ubMapStream f (uua (ubMapStream f))) (ubMapStream f (uu (ubMapStream f))) \<sqsubseteq> ubMapStream f (uua (ubMapStream f)) . cc (ubMapStream f (uua (ubMapStream f))) (ubMapStream f (uu (ubMapStream f))))"
+      moreover
+      { assume "Abs_cfun f\<cdot> (uu (ubMapStream f) . cc (ubMapStream f (uua (ubMapStream f))) (ubMapStream f (uu (ubMapStream f)))) \<noteq> ubMapStream f (uu (ubMapStream f)) . cc (ubMapStream f (uua (ubMapStream f))) (ubMapStream f (uu (ubMapStream f)))"
+        moreover
+        { assume "Some (Abs_ubundle (\<lambda>c. (c \<in> UBundle.ubDom\<cdot> (uu (ubMapStream f)))\<leadsto>f (uu (ubMapStream f) . c)) . cc (ubMapStream f (uua (ubMapStream f))) (ubMapStream f (uu (ubMapStream f)))) \<noteq> Rep_ubundle (Abs_ubundle (\<lambda>c. (c \<in> UBundle.ubDom\<cdot> (uu (ubMapStream f)))\<leadsto>f (uu (ubMapStream f) . c))) (cc (ubMapStream f (uua (ubMapStream f))) (ubMapStream f (uu (ubMapStream f))))"
+          then have "cc (ubMapStream f (uua (ubMapStream f))) (ubMapStream f (uu (ubMapStream f))) \<notin> UBundle.ubDom\<cdot> (Abs_ubundle (\<lambda>c. (c \<in> UBundle.ubDom\<cdot> (uu (ubMapStream f)))\<leadsto>f (uu (ubMapStream f) . c)))"
+            using ubgetchE by force
+          then have "cc (ubMapStream f (uua (ubMapStream f))) (ubMapStream f (uu (ubMapStream f))) \<notin> UBundle.ubDom\<cdot>(ubMapStream f (uu (ubMapStream f))) \<or> ubMapStream f (uu (ubMapStream f)) . cc (ubMapStream f (uua (ubMapStream f))) (ubMapStream f (uu (ubMapStream f))) \<sqsubseteq> ubMapStream f (uua (ubMapStream f)) . cc (ubMapStream f (uua (ubMapStream f))) (ubMapStream f (uu (ubMapStream f)))"
+            by (simp add: ubMapStream_def) }
+        ultimately have "cc (ubMapStream f (uua (ubMapStream f))) (ubMapStream f (uu (ubMapStream f))) \<notin> UBundle.ubDom\<cdot>(ubMapStream f (uu (ubMapStream f))) \<or> ubMapStream f (uu (ubMapStream f)) . cc (ubMapStream f (uua (ubMapStream f))) (ubMapStream f (uu (ubMapStream f))) \<sqsubseteq> ubMapStream f (uua (ubMapStream f)) . cc (ubMapStream f (uua (ubMapStream f))) (ubMapStream f (uu (ubMapStream f)))"
+          using f9 by (simp add: assms(1) ubMapStream_def) }
+      moreover
+      { assume "Abs_cfun f\<cdot> (uua (ubMapStream f) . cc (ubMapStream f (uua (ubMapStream f))) (ubMapStream f (uu (ubMapStream f)))) \<noteq> ubMapStream f (uua (ubMapStream f)) . cc (ubMapStream f (uua (ubMapStream f))) (ubMapStream f (uu (ubMapStream f)))"
+        then have "Some (f (uua (ubMapStream f) . cc (ubMapStream f (uua (ubMapStream f))) (ubMapStream f (uu (ubMapStream f))))) \<noteq> Some (ubMapStream f (uua (ubMapStream f)) . cc (ubMapStream f (uua (ubMapStream f))) (ubMapStream f (uu (ubMapStream f))))"
+          using assms(1) by force
+        then have "Some (f (uua (ubMapStream f) . cc (ubMapStream f (uua (ubMapStream f))) (ubMapStream f (uu (ubMapStream f))))) \<noteq> Some (Abs_ubundle (\<lambda>c. (c \<in> UBundle.ubDom\<cdot> (uua (ubMapStream f)))\<leadsto>f (uua (ubMapStream f) . c)) . cc (ubMapStream f (uua (ubMapStream f))) (ubMapStream f (uu (ubMapStream f))))"
+          by (simp add: ubMapStream_def)
+        then have "Some (Abs_ubundle (\<lambda>c. (c \<in> UBundle.ubDom\<cdot> (uua (ubMapStream f)))\<leadsto>f (uua (ubMapStream f) . c)) . cc (ubMapStream f (uua (ubMapStream f))) (ubMapStream f (uu (ubMapStream f)))) \<noteq> Rep_ubundle (Abs_ubundle (\<lambda>c. (c \<in> UBundle.ubDom\<cdot> (uua (ubMapStream f)))\<leadsto>f (uua (ubMapStream f) . c))) (cc (ubMapStream f (uua (ubMapStream f))) (ubMapStream f (uu (ubMapStream f)))) \<or> Some (f (uua (ubMapStream f) . cc (ubMapStream f (uua (ubMapStream f))) (ubMapStream f (uu (ubMapStream f))))) \<noteq> Rep_ubundle (Abs_ubundle (\<lambda>c. (c \<in> UBundle.ubDom\<cdot> (uua (ubMapStream f)))\<leadsto>f (uua (ubMapStream f) . c))) (cc (ubMapStream f (uua (ubMapStream f))) (ubMapStream f (uu (ubMapStream f))))"
+          by metis
+        moreover
+        { assume "Some (f (uua (ubMapStream f) . cc (ubMapStream f (uua (ubMapStream f))) (ubMapStream f (uu (ubMapStream f))))) \<noteq> Rep_ubundle (Abs_ubundle (\<lambda>c. (c \<in> UBundle.ubDom\<cdot> (uua (ubMapStream f)))\<leadsto>f (uua (ubMapStream f) . c))) (cc (ubMapStream f (uua (ubMapStream f))) (ubMapStream f (uu (ubMapStream f))))"
+          then have "(cc (ubMapStream f (uua (ubMapStream f))) (ubMapStream f (uu (ubMapStream f))) \<in> UBundle.ubDom\<cdot> (uua (ubMapStream f)))\<leadsto>f (uua (ubMapStream f) . cc (ubMapStream f (uua (ubMapStream f))) (ubMapStream f (uu (ubMapStream f)))) \<noteq> Some (f (uua (ubMapStream f) . cc (ubMapStream f (uua (ubMapStream f))) (ubMapStream f (uu (ubMapStream f)))))"
+            using f10 by force
+          then have "UBundle.ubDom\<cdot>(uu (ubMapStream f)) = UBundle.ubDom\<cdot>(uua (ubMapStream f)) \<longrightarrow> cc (ubMapStream f (uua (ubMapStream f))) (ubMapStream f (uu (ubMapStream f))) \<notin> UBundle.ubDom\<cdot>(ubMapStream f (uu (ubMapStream f))) \<or> ubMapStream f (uu (ubMapStream f)) . cc (ubMapStream f (uua (ubMapStream f))) (ubMapStream f (uu (ubMapStream f))) \<sqsubseteq> ubMapStream f (uua (ubMapStream f)) . cc (ubMapStream f (uua (ubMapStream f))) (ubMapStream f (uu (ubMapStream f)))"
+            using f7 by (metis (no_types)) }
+        ultimately have "UBundle.ubDom\<cdot>(uu (ubMapStream f)) = UBundle.ubDom\<cdot>(uua (ubMapStream f)) \<longrightarrow> cc (ubMapStream f (uua (ubMapStream f))) (ubMapStream f (uu (ubMapStream f))) \<notin> UBundle.ubDom\<cdot>(ubMapStream f (uu (ubMapStream f))) \<or> ubMapStream f (uu (ubMapStream f)) . cc (ubMapStream f (uua (ubMapStream f))) (ubMapStream f (uu (ubMapStream f))) \<sqsubseteq> ubMapStream f (uua (ubMapStream f)) . cc (ubMapStream f (uua (ubMapStream f))) (ubMapStream f (uu (ubMapStream f)))"
+          using f11 f7 ubgetchE by blast }
+      ultimately have "UBundle.ubDom\<cdot>(uu (ubMapStream f)) = UBundle.ubDom\<cdot>(uua (ubMapStream f)) \<longrightarrow> cc (ubMapStream f (uua (ubMapStream f))) (ubMapStream f (uu (ubMapStream f))) \<notin> UBundle.ubDom\<cdot>(ubMapStream f (uu (ubMapStream f))) \<or> ubMapStream f (uu (ubMapStream f)) . cc (ubMapStream f (uua (ubMapStream f))) (ubMapStream f (uu (ubMapStream f))) \<sqsubseteq> ubMapStream f (uua (ubMapStream f)) . cc (ubMapStream f (uua (ubMapStream f))) (ubMapStream f (uu (ubMapStream f)))"
+        by fastforce }
+    moreover
+    { assume "cc (ubMapStream f (uua (ubMapStream f))) (ubMapStream f (uu (ubMapStream f))) \<notin> UBundle.ubDom\<cdot>(ubMapStream f (uu (ubMapStream f))) \<or> ubMapStream f (uu (ubMapStream f)) . cc (ubMapStream f (uua (ubMapStream f))) (ubMapStream f (uu (ubMapStream f))) \<sqsubseteq> ubMapStream f (uua (ubMapStream f)) . cc (ubMapStream f (uua (ubMapStream f))) (ubMapStream f (uu (ubMapStream f)))"
+      then have "UBundle.ubDom\<cdot>(ubMapStream f (uu (ubMapStream f))) = UBundle.ubDom\<cdot>(ubMapStream f (uua (ubMapStream f))) \<longrightarrow> UBundle.ubDom\<cdot>(ubMapStream f (uu (ubMapStream f))) = UBundle.ubDom\<cdot>(ubMapStream f (uua (ubMapStream f))) \<and> (cc (ubMapStream f (uua (ubMapStream f))) (ubMapStream f (uu (ubMapStream f))) \<notin> UBundle.ubDom\<cdot>(ubMapStream f (uu (ubMapStream f))) \<or> ubMapStream f (uu (ubMapStream f)) . cc (ubMapStream f (uua (ubMapStream f))) (ubMapStream f (uu (ubMapStream f))) \<sqsubseteq> ubMapStream f (uua (ubMapStream f)) . cc (ubMapStream f (uua (ubMapStream f))) (ubMapStream f (uu (ubMapStream f))))"
+        by metis
+      moreover
+      { assume "UBundle.ubDom\<cdot>(ubMapStream f (uu (ubMapStream f))) \<noteq> UBundle.ubDom\<cdot>(ubMapStream f (uua (ubMapStream f)))"
+        then have "UBundle.ubDom\<cdot>(uu (ubMapStream f)) \<noteq> UBundle.ubDom\<cdot>(uua (ubMapStream f))"
+          using f6 f5 by blast }
+      ultimately have "UBundle.ubDom\<cdot>(uu (ubMapStream f)) = UBundle.ubDom\<cdot>(uua (ubMapStream f)) \<longrightarrow> monofun (ubMapStream f)"
+        using f2 f1 by (meson ub_below) }
+    ultimately have "monofun (ubMapStream f) \<or> uu (ubMapStream f) \<notsqsubseteq> uua (ubMapStream f) \<or> ubMapStream f (uu (ubMapStream f)) \<sqsubseteq> ubMapStream f (uua (ubMapStream f))"
+      by (meson cont_pref_eq1I ubdom_below) }
+  then show ?thesis
+    using f1 by (metis (no_types) cont_pref_eq1I)
+qed
+*)
+
+
+(***)
+(*
+proof -
+obtain cc :: "'a\<^sup>\<Omega> \<Rightarrow> 'a\<^sup>\<Omega> \<Rightarrow> channel" where
+f1: "\<forall>x0 x1. (\<exists>v2. v2 \<in> UBundle.ubDom\<cdot>x1 \<and> x1 . v2 \<notsqsubseteq> x0 . v2) = (cc x0 x1 \<in> UBundle.ubDom\<cdot>x1 \<and> x1 . cc x0 x1 \<notsqsubseteq> x0 . cc x0 x1)"
+  by moura
+  have f2: "\<forall>c a. \<not> usOkay c a \<or> usOkay c (f a)"
+    using assms(2) by presburger
+  then have f3: "cc (\<Squnion>n. ubMapStream f (v0_0 (n::nat))) (ubMapStream f (Lub v0_0)) \<notin> UBundle.ubDom\<cdot> (v0_0 (v2_1 (\<lambda>n. Rep_ubundle (ubMapStream f (v0_0 n))\<rightharpoonup>cc (\<Squnion>n. ubMapStream f (v0_0 n)) (ubMapStream f (Lub v0_0))) (\<lambda>n. f Rep_ubundle (v0_0 n)\<rightharpoonup>cc (\<Squnion>n. ubMapStream f (v0_0 n)) (ubMapStream f (Lub v0_0))))) \<or> ubMapStream f (v0_0 (v2_1 (\<lambda>n. Rep_ubundle (ubMapStream f (v0_0 n))\<rightharpoonup>cc (\<Squnion>n. ubMapStream f (v0_0 n)) (ubMapStream f (Lub v0_0))) (\<lambda>n. f Rep_ubundle (v0_0 n)\<rightharpoonup>cc (\<Squnion>n. ubMapStream f (v0_0 n)) (ubMapStream f (Lub v0_0))))) . cc (\<Squnion>n. ubMapStream f (v0_0 n)) (ubMapStream f (Lub v0_0)) = f (v0_0 (v2_1 (\<lambda>n. Rep_ubundle (ubMapStream f (v0_0 n))\<rightharpoonup>cc (\<Squnion>n. ubMapStream f (v0_0 n)) (ubMapStream f (Lub v0_0))) (\<lambda>n. f Rep_ubundle (v0_0 n)\<rightharpoonup>cc (\<Squnion>n. ubMapStream f (v0_0 n)) (ubMapStream f (Lub v0_0)))) . cc (\<Squnion>n. ubMapStream f (v0_0 n)) (ubMapStream f (Lub v0_0)))"
+using ubMapStream_ubGetCh by blast
+have "\<forall>f fa. (\<exists>n. (f (n::nat)::'a) \<noteq> fa n) \<or> Lub f = Lub fa"
+  using lub_eq by fastforce
+  then obtain nn :: "(nat \<Rightarrow> 'a) \<Rightarrow> (nat \<Rightarrow> 'a) \<Rightarrow> nat" where
+    f4: "\<forall>f fa. f (nn fa f) \<noteq> fa (nn fa f) \<or> Lub f = Lub fa"
+    by meson
+  have f5: "\<forall>f fa. (\<not> cont f \<or> \<not> chain fa) \<or> (f (Lub fa::'a)::'a) = (\<Squnion>n. f (fa n))"
+    using cont2contlubE by auto
+  have "\<forall>f u. (\<exists>c a. usOkay c (a::'a) \<and> \<not> usOkay c (f a)) \<or> UBundle.ubDom\<cdot>(ubMapStream f u) = UBundle.ubDom\<cdot>u"
+    by (metis (no_types) ubMapStream_ubDom)
+  then obtain cca :: "('a \<Rightarrow> 'a) \<Rightarrow> channel" and aa :: "('a \<Rightarrow> 'a) \<Rightarrow> 'a" where
+    f6: "\<forall>f u. usOkay (cca f) (aa f) \<and> \<not> usOkay (cca f) (f (aa f)) \<or> UBundle.ubDom\<cdot>(ubMapStream f u) = UBundle.ubDom\<cdot>u"
+    by moura
+  then have f7: "UBundle.ubDom\<cdot>(ubMapStream f (Lub v0_0)) = UBundle.ubDom\<cdot>(Lub v0_0)"
+    using f2 by metis
+  have f8: "ubMapStream f (v0_0 (nn (\<lambda>n. Rep_ubundle (ubMapStream f (v0_0 n))\<rightharpoonup>cc (\<Squnion>n. ubMapStream f (v0_0 n)) (ubMapStream f (Lub v0_0))) (\<lambda>n. f Rep_ubundle (v0_0 n)\<rightharpoonup>cc (\<Squnion>n. ubMapStream f (v0_0 n)) (ubMapStream f (Lub v0_0))))) . cc (\<Squnion>n. ubMapStream f (v0_0 n)) (ubMapStream f (Lub v0_0)) = Rep_ubundle (ubMapStream f (v0_0 (nn (\<lambda>n. Rep_ubundle (ubMapStream f (v0_0 n))\<rightharpoonup>cc (\<Squnion>n. ubMapStream f (v0_0 n)) (ubMapStream f (Lub v0_0))) (\<lambda>n. f Rep_ubundle (v0_0 n)\<rightharpoonup>cc (\<Squnion>n. ubMapStream f (v0_0 n)) (ubMapStream f (Lub v0_0))))))\<rightharpoonup>cc (\<Squnion>n. ubMapStream f (v0_0 n)) (ubMapStream f (Lub v0_0))"
+    by (meson ubgetch_insert)
+  have f9: "v0_0 (nn (\<lambda>n. Rep_ubundle (ubMapStream f (v0_0 n))\<rightharpoonup>cc (\<Squnion>n. ubMapStream f (v0_0 n)) (ubMapStream f (Lub v0_0))) (\<lambda>n. f Rep_ubundle (v0_0 n)\<rightharpoonup>cc (\<Squnion>n. ubMapStream f (v0_0 n)) (ubMapStream f (Lub v0_0)))) . cc (\<Squnion>n. ubMapStream f (v0_0 n)) (ubMapStream f (Lub v0_0)) = Rep_ubundle (v0_0 (nn (\<lambda>n. Rep_ubundle (ubMapStream f (v0_0 n))\<rightharpoonup>cc (\<Squnion>n. ubMapStream f (v0_0 n)) (ubMapStream f (Lub v0_0))) (\<lambda>n. f Rep_ubundle (v0_0 n)\<rightharpoonup>cc (\<Squnion>n. ubMapStream f (v0_0 n)) (ubMapStream f (Lub v0_0)))))\<rightharpoonup>cc (\<Squnion>n. ubMapStream f (v0_0 n)) (ubMapStream f (Lub v0_0))"
+    by (meson ubgetch_insert)
+  have f10: "\<forall>f n. \<not> chain f \<or> dom (Rep_ubundle (f n::'a\<^sup>\<Omega>)) = dom (Rep_ubundle (Lub f))"
+    using ubrep_chain_lub_dom_eq by blast
+  have f11: "UBundle.ubDom\<cdot>(ubMapStream f (Lub v0_0)) = UBundle.ubDom\<cdot>(Lub v0_0)"
+    using f6 f2 by metis
+  have f12: "UBundle.ubDom\<cdot> (ubMapStream f (v0_0 (v2_2 (\<lambda>n. ubMapStream f (v0_0 n)) v0_0))) = UBundle.ubDom\<cdot>(v0_0 (v2_2 (\<lambda>n. ubMapStream f (v0_0 n)) v0_0))"
+    using f6 f2 by metis
+  { assume "UBundle.ubDom\<cdot>(ubMapStream f (Lub v0_0)) = UBundle.ubDom\<cdot>(\<Squnion>n. ubMapStream f (v0_0 n))"
+    moreover
+    { assume "cc (\<Squnion>n. ubMapStream f (v0_0 n)) (ubMapStream f (Lub v0_0)) \<in> UBundle.ubDom\<cdot>(ubMapStream f (Lub v0_0)) \<and> ubMapStream f (Lub v0_0) . cc (\<Squnion>n. ubMapStream f (v0_0 n)) (ubMapStream f (Lub v0_0)) \<notsqsubseteq> (\<Squnion>n. ubMapStream f (v0_0 n)) . cc (\<Squnion>n. ubMapStream f (v0_0 n)) (ubMapStream f (Lub v0_0))"
+      moreover
+      { assume "(cc (\<Squnion>n. ubMapStream f (v0_0 n)) (ubMapStream f (Lub v0_0)) \<in> UBundle.ubDom\<cdot>(ubMapStream f (Lub v0_0)) \<and> ubMapStream f (Lub v0_0) . cc (\<Squnion>n. ubMapStream f (v0_0 n)) (ubMapStream f (Lub v0_0)) \<notsqsubseteq> (\<Squnion>n. ubMapStream f (v0_0 n)) . cc (\<Squnion>n. ubMapStream f (v0_0 n)) (ubMapStream f (Lub v0_0))) \<and> ubMapStream f (v0_0 (nn (\<lambda>n. Rep_ubundle (ubMapStream f (v0_0 n))\<rightharpoonup>cc (\<Squnion>n. ubMapStream f (v0_0 n)) (ubMapStream f (Lub v0_0))) (\<lambda>n. f Rep_ubundle (v0_0 n)\<rightharpoonup>cc (\<Squnion>n. ubMapStream f (v0_0 n)) (ubMapStream f (Lub v0_0))))) . cc (\<Squnion>n. ubMapStream f (v0_0 n)) (ubMapStream f (Lub v0_0)) = f (v0_0 (nn (\<lambda>n. Rep_ubundle (ubMapStream f (v0_0 n))\<rightharpoonup>cc (\<Squnion>n. ubMapStream f (v0_0 n)) (ubMapStream f (Lub v0_0))) (\<lambda>n. f Rep_ubundle (v0_0 n)\<rightharpoonup>cc (\<Squnion>n. ubMapStream f (v0_0 n)) (ubMapStream f (Lub v0_0)))) . cc (\<Squnion>n. ubMapStream f (v0_0 n)) (ubMapStream f (Lub v0_0)))"
+        then have "(cc (\<Squnion>n. ubMapStream f (v0_0 n)) (ubMapStream f (Lub v0_0)) \<in> UBundle.ubDom\<cdot>(ubMapStream f (Lub v0_0)) \<and> ubMapStream f (Lub v0_0) . cc (\<Squnion>n. ubMapStream f (v0_0 n)) (ubMapStream f (Lub v0_0)) \<notsqsubseteq> (\<Squnion>n. ubMapStream f (v0_0 n)) . cc (\<Squnion>n. ubMapStream f (v0_0 n)) (ubMapStream f (Lub v0_0))) \<and> (\<Squnion>n. f Rep_ubundle (v0_0 n)\<rightharpoonup>cc (\<Squnion>n. ubMapStream f (v0_0 n)) (ubMapStream f (Lub v0_0))) = (\<Squnion>n. Rep_ubundle (ubMapStream f (v0_0 n))\<rightharpoonup>cc (\<Squnion>n. ubMapStream f (v0_0 n)) (ubMapStream f (Lub v0_0)))"
+          using f9 f8 f4 by metis
+        moreover
+        { assume "(cc (\<Squnion>n. ubMapStream f (v0_0 n)) (ubMapStream f (Lub v0_0)) \<in> UBundle.ubDom\<cdot>(ubMapStream f (Lub v0_0)) \<and> ubMapStream f (Lub v0_0) . cc (\<Squnion>n. ubMapStream f (v0_0 n)) (ubMapStream f (Lub v0_0)) \<notsqsubseteq> (\<Squnion>n. ubMapStream f (v0_0 n)) . cc (\<Squnion>n. ubMapStream f (v0_0 n)) (ubMapStream f (Lub v0_0))) \<and> (\<Squnion>n. f Rep_ubundle (v0_0 n)\<rightharpoonup>cc (\<Squnion>n. ubMapStream f (v0_0 n)) (ubMapStream f (Lub v0_0))) \<noteq> ubMapStream f (Lub v0_0) . cc (\<Squnion>n. ubMapStream f (v0_0 n)) (ubMapStream f (Lub v0_0))"
+          moreover
+          { assume "(\<Squnion>n. Rep_ubundle (v0_0 n)\<rightharpoonup>cc (\<Squnion>n. ubMapStream f (v0_0 n)) (ubMapStream f (Lub v0_0))) \<noteq> Lub v0_0 . cc (\<Squnion>n. ubMapStream f (v0_0 n)) (ubMapStream f (Lub v0_0))"
+            then have "\<not> chain v0_0 \<or> ubMapStream f (Lub v0_0) \<sqsubseteq> (\<Squnion>n. ubMapStream f (v0_0 n))"
+              by (metis ubgetch_insert ubrep_lub_eval) }
+          ultimately have "\<not> chain v0_0 \<or> ubMapStream f (Lub v0_0) \<sqsubseteq> (\<Squnion>n. ubMapStream f (v0_0 n))"
+            using f7 f5 f2 by (metis assms(1) ubMapStream_ubGetCh ubrep_chain_the) }
+        ultimately have "chain (\<lambda>n. ubMapStream f (v0_0 n)) \<longrightarrow> \<not> chain v0_0 \<or> ubMapStream f (Lub v0_0) \<sqsubseteq> (\<Squnion>n. ubMapStream f (v0_0 n))"
+          by (metis not_below2not_eq ubgetch_insert ubrep_lub_eval) }
+      ultimately have "chain (\<lambda>n. ubMapStream f (v0_0 n)) \<longrightarrow> \<not> chain v0_0 \<or> ubMapStream f (Lub v0_0) \<sqsubseteq> (\<Squnion>n. ubMapStream f (v0_0 n))"
+        using f7 f3 by force }
+    ultimately have "chain (\<lambda>n. ubMapStream f (v0_0 n)) \<longrightarrow> \<not> chain v0_0 \<or> ubMapStream f (Lub v0_0) \<sqsubseteq> (\<Squnion>n. ubMapStream f (v0_0 n))"
+      using f1 by (meson ub_below) }
+  moreover
+  { assume "ubMapStream f (v0_0 (v2_2 (\<lambda>n. ubMapStream f (v0_0 n)) v0_0)) = ubMapStream f (v0_0 (v2_2 (\<lambda>n. ubMapStream f (v0_0 n)) v0_0)) \<and> UBundle.ubDom\<cdot>(ubMapStream f (Lub v0_0)) \<noteq> UBundle.ubDom\<cdot>(\<Squnion>n. ubMapStream f (v0_0 n))"
+    then have "dom (Rep_ubundle (ubMapStream f (v0_0 (v2_2 (\<lambda>n. ubMapStream f (v0_0 n)) v0_0)))) \<noteq> dom (Rep_ubundle (\<Squnion>n. ubMapStream f (v0_0 n))) \<or> UBundle.ubDom\<cdot>(ubMapStream f (Lub v0_0)) \<noteq> dom (Rep_ubundle (ubMapStream f (v0_0 (v2_2 (\<lambda>n. ubMapStream f (v0_0 n)) v0_0))))"
+      by (simp add: ubdom_insert)
+    moreover
+    { assume "UBundle.ubDom\<cdot>(ubMapStream f (Lub v0_0)) \<noteq> dom (Rep_ubundle (ubMapStream f (v0_0 (v2_2 (\<lambda>n. ubMapStream f (v0_0 n)) v0_0))))"
+      then have "dom (Rep_ubundle (v0_0 (v2_2 (\<lambda>n. ubMapStream f (v0_0 n)) v0_0))) \<noteq> dom (Rep_ubundle (Lub v0_0))"
+        using f12 f11 by (simp add: ubdom_insert)
+      then have "\<not> chain v0_0 \<or> ubMapStream f (Lub v0_0) \<sqsubseteq> (\<Squnion>n. ubMapStream f (v0_0 n))"
+        using f10 by metis }
+    ultimately have "chain (\<lambda>n. ubMapStream f (v0_0 n)) \<longrightarrow> \<not> chain v0_0 \<or> ubMapStream f (Lub v0_0) \<sqsubseteq> (\<Squnion>n. ubMapStream f (v0_0 n))"
+      using f10 by blast }
+  ultimately have "chain (\<lambda>n. ubMapStream f (v0_0 n)) \<longrightarrow> \<not> chain v0_0 \<or> ubMapStream f (Lub v0_0) \<sqsubseteq> (\<Squnion>n. ubMapStream f (v0_0 n))"
+    by blast
+  then have f13: "\<not> chain v0_0 \<or> ubMapStream f (Lub v0_0) \<sqsubseteq> (\<Squnion>n. ubMapStream f (v0_0 n))"
+    by (meson \<open>monofun (ubMapStream (f::'a \<Rightarrow> 'a))\<close> monofun_def po_class.chain_def)
+  obtain uu :: "nat \<Rightarrow> 'a\<^sup>\<Omega>" where
+    "(\<exists>v0. chain v0 \<and> ubMapStream f (Lub v0) \<notsqsubseteq> (\<Squnion>uua. ubMapStream f (v0 uua))) = (chain uu \<and> ubMapStream f (Lub uu) \<notsqsubseteq> (\<Squnion>uua. ubMapStream f (uu uua)))"
+    by moura
+  then show ?thesis
+    using f13 by blast
+qed
+*)
