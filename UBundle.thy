@@ -469,7 +469,7 @@ lemma ubrenamech_ubgetchI2: assumes "ch1 \<in> ubDom\<cdot>ub"  and "usOkay ch2 
 lemma ubeqselected_empty_set [simp]: "ubEqSelected {} ub1 ub2"
   by (metis (no_types, lifting) bot.extremum_uniqueI empty_iff ubEqSelected_def ub_eq ubrestrict_ubdom)  
 
-(*   *)
+(*   *)  
 lemma ubeqselected_ubgetch_eq: assumes "ubEqSelected cs ub1 ub2"
   shows "\<forall> c \<in> cs. (ub1 . c) = (ub2 . c)"
   by (metis (mono_tags) assms ubEqSelected_def ubgetch_ubrestrict)

@@ -36,6 +36,7 @@ subsection \<open>ubLeast\<close>
 
 (* the optionLeast of the optionCpo is well-formed  *)
 lemma ubleast_well: "ubWell (optionLeast cs)"
+  
   sorry
 
 (* our definition of ubLeast is equal optionLeast  *)
