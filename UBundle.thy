@@ -653,11 +653,11 @@ lemma ubMapStream_contI1: assumes "cont f" and "fun_well_type f"
   shows "cont (ubMapStream f)"
 proof (rule contI2)
   show "monofun (ubMapStream f)"
-    using monofunI ubMapStream_def ubMapStream_ubDom ubMapStream_well ub_below ubdom_below ubgetchE ubrep_ubabs Abs_cfun_inverse2
-      (** isar für nur "using monofunI"*)
-    by (smt assms(1) assms(2) monofunE monofun_Rep_cfun2 ubMapStream_ubGetCh)
+    using monofunI
+    by (smt assms(1) assms(2) monofunE monofun_Rep_cfun2 ubMapStream_ubGetCh ubMapStream_def ubMapStream_ubDom ubMapStream_well ub_below ubdom_below ubgetchE ubrep_ubabs Abs_cfun_inverse2)
   thus "\<forall>Y. chain Y \<longrightarrow> ubMapStream f (\<Squnion>i. Y i) \<sqsubseteq> (\<Squnion>i. ubMapStream f (Y i))"
  (***)  by (smt assms(1) assms(2) cont2contlubE lub_eq monofun_def not_below2not_eq po_class.chain_def ubMapStream_ubDom ubMapStream_ubGetCh ub_below ubdom_insert ubgetch_insert ubrep_chain_lub_dom_eq ubrep_chain_the ubrep_lub_eval)
+(* konnten leider beide nicht per using auf nicht-smt form gebracht werden*) 
 qed
 
 
