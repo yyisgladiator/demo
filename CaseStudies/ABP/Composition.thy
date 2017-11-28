@@ -46,6 +46,23 @@ lemma set2tssnd_alt_bit: assumes "send \<in> tsSender"
     = tsAbs\<cdot>(tsProjSnd\<cdot>(tsRemDups\<cdot>(send\<cdot>i\<cdot>as)))"
   using assms tsSender_def by auto
 
+lemma set2tssnd_as_inftick: assumes "send \<in> tsSender"
+  shows "#(tsAbs\<cdot>i) > #(tsAbs\<cdot>(tsRemDups\<cdot>as)) \<longrightarrow> lnsuc\<cdot>(#\<surd>as) \<le> #\<surd>(send\<cdot>i\<cdot>as)"
+  using assms tsSender_def by auto
+
+lemma tstickcount_inp2infacks:
+  assumes send_def: "send \<in> tsSender"
+    and p1_def: "#({True} \<ominus> p1) = \<infinity>"
+    and p2_def: "#({True} \<ominus> p2) = \<infinity>"
+    and ds_def: "ds = send\<cdot>i\<cdot>as"
+    and dr_def: "dr = tsMed\<cdot>ds\<cdot>p1"
+    and ar_def: "ar = tsProjSnd\<cdot>dr"
+    and as_def: "as = tsMed\<cdot>ar\<cdot>p2"
+    and i2as: "#(tsAbs\<cdot>i) > #(tsAbs\<cdot>(tsRemDups\<cdot>as))"
+  shows "#\<surd>as = \<infinity>"
+  by (metis ar_def as_def dr_def ds_def i2as inf_less_eq leD le_less_linear ln_less p1_def p2_def 
+      send_def set2tssnd_as_inftick sfilterl4 tsmed_tstickcount tsprojsnd_tstickcount)
+
 lemma tstickcount_inp2acks:
   assumes send_def: "send \<in> tsSender"
     and p1_def: "#({True} \<ominus> p1) = \<infinity>"
@@ -369,7 +386,6 @@ lemma tsaltbitpro_inp2out:
     and ar_def: "ar = tsProjSnd\<cdot>dr"
     (* definition 5 *)
     and as_def: "as = tsMed\<cdot>ar\<cdot>p2"
-    and i_inf: "#\<surd>i = \<infinity>"
     and i_ninf: "#(tsAbs\<cdot>i) \<noteq> \<infinity>"
   shows "tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>dr)) = tsAbs\<cdot>i"
   proof -
@@ -379,24 +395,26 @@ lemma tsaltbitpro_inp2out:
     hence as_leq_ds: "#(tsAbs\<cdot>(tsRemDups\<cdot>as)) \<le> #(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>ds)))"
       by (simp add: ds_def send_def tssnd_tsprojsnd_tsremdups)
     hence as_leq_i: "#(tsAbs\<cdot>(tsRemDups\<cdot>as)) \<le> #(tsAbs\<cdot>i)"
-      by (metis ar_def as_def dr_def ds_def i_inf le_less min_less_iff_conj min_rek p1_def p2_def 
-          send_def set2tssnd_ack2trans tstickcount_inp2acks_inf)
+      by (metis (mono_tags, lifting) ds_def min.coboundedI1 min_absorb2 mono_slen send_def
+          set2tssnd_prefix_inp)
     (* #(tsAbs\<cdot>i) \<le> #(tsAbs\<cdot>(tsRemDups\<cdot>as)) *)
     have "#(tsAbs\<cdot>i) < lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>as)))
           \<or> #(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>ds))) = lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>as)))"
-      by (metis ar_def as_def dr_def ds_def i_inf leI min_absorb2 p1_def p2_def send_def 
-          set2tssnd_ack2trans tstickcount_inp2acks_inf)
+      by (metis ar_def as_def as_leq_ds as_leq_i dr_def ds_def dual_order.order_iff_strict less2eq 
+          less_lnsuc min_absorb2 min_rek p1_def p2_def send_def set2tssnd_ack2trans 
+          set2tssnd_infacks2inpack set2tssnd_nack2inftrans tsmed2_tsabs_slen_inf 
+          tsprojfst_tsabs_slen tstickcount_inp2infacks)
     hence i_geq_as: "#(tsAbs\<cdot>i) \<le> #(tsAbs\<cdot>(tsRemDups\<cdot>as))"
-      by (metis ar_def as_def dr_def ds_def as_leq_ds i_inf leI lnat_po_eq_conv min_rek p1_def 
-          p2_def tsmed2_tsabs_slen_inf send_def set2tssnd_ack2trans set2tssnd_infacks2inpack 
-          set2tssnd_nack2inftrans tsprojfst_tsabs_slen tstickcount_inp2acks_inf)
+      by (metis ar_def as_def as_leq_ds dr_def ds_def leD le_less_linear le_neq_trans min_rek 
+          p1_def p2_def send_def set2tssnd_ack2trans set2tssnd_infacks2inpack 
+          set2tssnd_nack2inftrans tsmed2_tsabs_slen_inf tsprojfst_tsabs_slen 
+          tstickcount_inp2infacks)
     (* equalities *)
     have i_eq_as: "#(tsAbs\<cdot>i) = #(tsAbs\<cdot>(tsRemDups\<cdot>as))"
       by (simp add: dual_order.antisym i_geq_as as_leq_i)
     (* property 6 *)
     have i_eq_ds: "#(tsAbs\<cdot>i) = #(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>ds)))"
-      by (metis ar_def as_def dr_def ds_def i_eq_as i_inf less_lnsuc min_absorb1 p1_def p2_def
-          send_def set2tssnd_ack2trans tstickcount_inp2acks_inf)
+      by (metis as_leq_ds ds_def i_eq_as less2eq mono_slen send_def set2tssnd_prefix_inp)
     (* property 7 *)
     have projfst2projsnd: "#(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>ds))) = #(tsAbs\<cdot>(tsRemDups\<cdot>(tsProjSnd\<cdot>ds)))"
       by (simp add: ds_def send_def tssnd_tsprojsnd_tsremdups)
