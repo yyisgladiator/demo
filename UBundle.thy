@@ -468,7 +468,74 @@ lemma ubrestrict_ubdom_sup_inter:
 
   
 (* ubUnion *)
+subsection \<open>ubUnion\<close>
 
+lemma ubunion_well [simp]: assumes "ubWell b1" and "ubWell b2"
+  shows "ubWell (b1 ++ b2)"
+  apply (simp add: ubWell_def)
+  by (metis (no_types, lifting)
+      Un_iff assms(1) assms(2) map_add_dom_app_simps(1) map_add_dom_app_simps(3) ubWell_def)
+
+lemma ubunion_contL [simp]: "cont (\<lambda> b1. (Rep_ubundle b1) ++ (Rep_ubundle b2))"
+  using cont_compose part_add_contL ubrep_cont by blast
+
+lemma ubunion_contR [simp]: "cont (\<lambda> b2. (Rep_ubundle b1) ++ (Rep_ubundle b2))"
+  using cont_compose part_add_contR ubrep_cont by blast
+
+lemma ubunion_cont [simp]: "cont (\<lambda> b1. \<Lambda> b2. Abs_ubundle (Rep_ubundle b1 ++ Rep_ubundle b2))"
+  apply (rule cont2cont_LAM)
+  apply (metis (mono_tags)
+         Rep_ubundle cont_Abs_ubundle mem_Collect_eq ubunion_contR ubunion_well)
+  by (metis (mono_tags)
+      Rep_ubundle cont_Abs_ubundle mem_Collect_eq ubunion_contL ubunion_well)
+
+lemma ubunion_insert: "(b1 \<uplus> b2) = Abs_ubundle (Rep_ubundle b1 ++ Rep_ubundle b2)"
+  apply (simp add: ubUnion_def)
+  using ubunion_contR ubunion_contL ubunion_cont by (simp add: cont_Abs_ubundle)
+
+lemma ubunion_idL [simp]: assumes "ubDom\<cdot>b1 \<subseteq> ubDom\<cdot>b2"
+  shows "b1 \<uplus> b2 = b2"
+  using assms apply (simp add: ubunion_insert)
+  by (simp add: ubdom_insert)
+
+lemma ubunion_idR [simp]: "b \<uplus> (ubLeast {}) = b"
+  by (simp add: ubunion_insert ubLeast_def ubWell_empty)
+
+lemma ubunion_commutative: assumes "ubDom\<cdot>b1 \<inter> ubDom\<cdot>b2 = {}"
+  shows "b1 \<uplus> b2 = b2 \<uplus> b1"
+  using assms apply (simp add: ubunion_insert)
+  by (metis map_add_comm ubdom_insert)
+
+lemma ubunion_associative: "b1 \<uplus> (b2 \<uplus> b3) = (b1 \<uplus> b2) \<uplus> b3"
+  by (simp add: ubunion_insert)
+
+lemma ubunion_getchR [simp]: assumes "c \<in> ubDom\<cdot>b2"
+  shows "b1 \<uplus> b2 . c = b2 . c"
+  apply (simp add: ubunion_insert ubgetch_insert)
+  by (metis assms map_add_find_right ubgetchE)
+
+lemma ubunion_getchL [simp]: assumes "c \<notin> ubDom\<cdot>b2"
+  shows "b1 \<uplus> b2 . c = b1 . c"
+  apply (simp add: ubunion_insert ubgetch_insert)
+  by (metis assms map_add_dom_app_simps(3) ubdom_insert)
+
+lemma ubunionDom [simp]: "ubDom\<cdot>(b1 \<uplus> b2) = ubDom\<cdot>b1 \<union> ubDom\<cdot>b2"
+  by (auto simp add: ubdom_insert ubunion_insert)
+
+lemma ubunion_pref_eq: assumes "a \<sqsubseteq> b" and "c \<sqsubseteq> d"
+  shows "a \<uplus> c \<sqsubseteq> b \<uplus> d"
+  by (simp add: assms monofun_cfun)
+
+lemma ubunion_pref_eq2: assumes "a \<sqsubseteq> b"
+  shows "x \<uplus> a \<sqsubseteq> x \<uplus> b"
+  by (metis assms monofun_cfun_arg)
+
+lemma ubunion_assoc2: "(b1 \<uplus> b2) \<uplus> b3 = b1 \<uplus> (b2 \<uplus> b3)"
+  by (simp add: ubunion_associative)
+
+lemma ubunion_eqI: assumes "a = b" and "c = d"
+  shows "a \<uplus> c = b \<uplus> d"
+  by (simp add: assms)
 
 (* ubSetCh *)
 
