@@ -116,5 +116,19 @@ lemma tsrec_test_inf2:
       tsrecsnd_insert tsremdups_insert tsconc_mlscons tsconc_delayfun tsprojsnd_mlscons
       tsprojsnd_delayfun tsprojfst_mlscons tsprojfst_delayfun tsremdups_h_mlscons 
       tsremdups_h_mlscons_dup tsremdups_h_mlscons_ndup tsremdups_h_delayfun tsremdups_h_tsinftick)
+
+(* ----------------------------------------------------------------------- *)
+subsection {* composition *}
+(* ----------------------------------------------------------------------- *)
+
+(* ToDo: add definitions for oracles p1, p2 and input stream i to cover all possibilities *)
+
+lemma tsaltbitpro_test:
+  assumes ds_def: "ds = tsSnd\<cdot>i\<cdot>as"
+    and dr_def: "dr = tsMed\<cdot>ds\<cdot>p1"
+    and ar_def: "ar = tsProjSnd\<cdot>dr"
+    and as_def: "as = tsMed\<cdot>ar\<cdot>p2"
+  shows "tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>dr)) = tsAbs\<cdot>i"
+  oops
     
 end
