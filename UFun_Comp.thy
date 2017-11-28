@@ -101,8 +101,8 @@ definition ufFeedbackComp :: "('m \<Rrightarrow> 'm) \<Rightarrow> ('m \<Rrighta
 let I  = ufDom\<cdot>f - ufRan\<cdot>f;
     I1 = ufDom\<cdot>f;
     C  = ufRan\<cdot>f
-in Abs_ufun (Abs_cfun (\<lambda> sb. (ubDom\<cdot>sb = I) \<leadsto>
-    (ubFix (ufFeedH f sb) C)))"  
+in Abs_ufun (Abs_cfun (\<lambda> ub. (ubDom\<cdot>ub = I) \<leadsto>
+    (ubFix (ufFeedH f ub) C)))"  
 
   
 (****************************************************)
@@ -183,7 +183,7 @@ qed
     
 (* cont *)
 (* a chain of the last argument can be build with the lub of the second one  *)
-lemma chain_lub_iter_sbfix2: assumes "chain Y" and "cont F" and "ubfun_io_eq (F (\<Squnion>i. Y i)) cs"
+lemma chain_lub_iter_ubfix2: assumes "chain Y" and "cont F" and "ubfun_io_eq (F (\<Squnion>i. Y i)) cs"
   shows "chain (\<lambda>i. \<Squnion>ia. iter_ubfix2 F ia cs (Y i))"
 proof -
   have f1: "\<And> i. (Y i) \<sqsubseteq> (Y (Suc i))"
@@ -252,7 +252,7 @@ next
     using False assms(4) by auto
 qed
 
-(* Intro lemma for if sbfix is mono *)  
+(* Intro lemma for if ubfix is mono *)  
 (* the processing function is mono on the last argument of iter_ubfix2  *)
 lemma ubfix_monoI [simp]: assumes "cont F" "\<And> x. (P x) \<Longrightarrow> ubfun_io_eq (F x) cs" 
                           and "\<And> x y. ubDom\<cdot>x = ubDom\<cdot>y \<Longrightarrow> P x = P y"
@@ -300,7 +300,7 @@ proof -
                  = (\<Squnion>i. Some(\<Squnion>ia. iter_ubfix2 F ia cs (Y i)))"
     by (meson assms(1) assms(2) assms(5) is_ub_thelub ubdom_fix)
   have "Some (\<Squnion>n na. iter_ubfix2 F na cs (Y n)) = (\<Squnion>n. Some (\<Squnion>na. iter_ubfix2 F na cs (Y n)))"
-    by (simp add: assms(1) assms(2) assms(3) assms(4) chain_lub_iter_sbfix2 some_lub_chain_eq)
+    by (simp add: assms(1) assms(2) assms(3) assms(4) chain_lub_iter_ubfix2 some_lub_chain_eq)
   then show ?thesis
       using assms(1) f2 f4 f5 by presburger
   qed
@@ -624,17 +624,58 @@ proof -
     by (simp add: ufCompH_def)
 qed
 
+thm ufComp_def
+lemma ubdom_lub_eq: assumes "chain Y" 
+                    and  "(ubDom\<cdot>(\<Squnion>i. Y i) = ufCompI f1 f2)"
+                  shows "\<forall>ia. ubDom\<cdot>(Y ia) = ufCompI f1 f2"
+  using assms(1) assms(2) is_ub_thelub ubdom_fix by blast
+
+lemma ubdom_lub_eq2I: assumes "chain Y" 
+                    and  "(ubDom\<cdot>(\<Squnion>i. Y i) = cs)"
+                  shows "\<forall>ia. ubDom\<cdot>(Y ia) = cs"
+  using assms(1) assms(2) is_ub_thelub ubdom_fix by blast
+
+
+lemma if_then_mono:  assumes "monofun g"
+  shows "monofun (\<lambda>b. (ubDom\<cdot>b = In) \<leadsto> g b)"
+proof(rule monofunI)
+  fix x y :: "'a"
+  assume "x\<sqsubseteq>y"
+  hence "ubDom\<cdot>x = ubDom\<cdot>y" using ubdom_fix by blast 
+  thus "(ubDom\<cdot>x = In)\<leadsto>g x \<sqsubseteq> (ubDom\<cdot>y = In)\<leadsto>g y" 
+    by (smt \<open>(x::'a) \<sqsubseteq> (y::'a)\<close> assms monofun_def po_eq_conv some_below)
+qed  
+  
+lemma if_then_cont:  assumes "cont g"
+  shows "cont (\<lambda>b. (ubDom\<cdot>b = In) \<leadsto> g b)"
+proof(rule contI2)
+  show "monofun (\<lambda>b. (ubDom\<cdot>b = In)\<leadsto>g b)" using assms cont2mono if_then_mono by blast 
+  thus " \<forall>Y. chain Y \<longrightarrow> (ubDom\<cdot>(\<Squnion>i. Y i) = In)\<leadsto>g (\<Squnion>i. Y i) \<sqsubseteq> (\<Squnion>i. (ubDom\<cdot>(Y i) = In)\<leadsto>g (Y i))"
+    by (smt Abs_cfun_inverse2 assms below_refl if_then_lub is_ub_thelub lub_eq po_class.chainI ubdom_fix)
+qed
+
+
+lemma uf_gencomp_cont[simp]: 
+  shows "cont (\<lambda> x. (ubDom\<cdot>x = ufCompI f1 f2) \<leadsto> ubFix (ufCompH f1 f2 x) (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2) )"
+proof (subst ubfix_contI2, simp_all)
+  fix x:: "'a"
+  assume x_ubDom: "ubDom\<cdot>x = ufCompI f1 f2"
+  show " ubfun_io_eq (ufCompH f1 f2 x) (UFun.ufRan\<cdot>f1 \<union> UFun.ufRan\<cdot>f2)"
+    apply (simp add: ufCompH_def)
+    sorry
+qed
+
 subparagraph \<open>dom\<close>
 
 (* cannot be proof since ubRestrict and ubDom is not specified
 lemma ufCompH_dom [simp]: assumes "ubDom\<cdot>x = ufCompI f1 f2"
-                            and "ubDom\<cdot>sb = (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2)"
-                          shows "ubDom\<cdot>((ufCompH f1 f2 x)\<cdot>sb) = (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2)"
+                            and "ubDom\<cdot>ub = (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2)"
+                          shows "ubDom\<cdot>((ufCompH f1 f2 x)\<cdot>ub) = (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2)"
 proof -
-  have f1: "ubDom\<cdot>(f1 \<rightleftharpoons> ((x \<uplus> sb)  \<bar> ufDom\<cdot>f1)) = ufRan\<cdot>f1"
+  have f1: "ubDom\<cdot>(f1 \<rightleftharpoons> ((x \<uplus> ub)  \<bar> ufDom\<cdot>f1)) = ufRan\<cdot>f1"
     by (simp add: ufCompI_def assms(1) assms(2) inf_sup_aci(6))
       moreover
-  have f2: "ubDom\<cdot>(f2 \<rightleftharpoons> ((x \<uplus> sb)  \<bar> ufDom\<cdot>f2)) = ufRan\<cdot>f2"
+  have f2: "ubDom\<cdot>(f2 \<rightleftharpoons> ((x \<uplus> ub)  \<bar> ufDom\<cdot>f2)) = ufRan\<cdot>f2"
     by (simp add: ufCompI_def assms(1) assms(2) sup.coboundedI1)
       ultimately
   show ?thesis
