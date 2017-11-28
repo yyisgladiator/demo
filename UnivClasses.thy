@@ -61,7 +61,11 @@ end
 class ubcl_comp = ubcl +
   fixes ubUnion :: "'a \<rightarrow> 'a \<rightarrow> 'a"
   fixes ubRestrict :: "channel set \<Rightarrow> 'a \<rightarrow> 'a"
-  
+
+  assumes ubUnion_bla: "ubDom\<cdot>(ubUnion\<cdot>f1\<cdot>f2) = ubDom\<cdot>f1 \<union> ubDom\<cdot>f2"
+  assumes ubUnion_bla2: "ubRestrict cs\<cdot>(ubUnion\<cdot>f1\<cdot>f2) = ubUnion\<cdot>(ubRestrict cs\<cdot>f1)\<cdot>(ubRestrict cs\<cdot>f2)" 
+  assumes sbrestrict_sbdom: "ubDom\<cdot>(ubRestrict cs\<cdot>b) = ubDom\<cdot>b \<inter> cs"
+  assumes sbunionDom : "ubDom\<cdot>(ubUnion\<cdot>b1\<cdot>b2) = ubDom\<cdot>b1 \<union> ubDom\<cdot>b2"
 begin
 end  
   

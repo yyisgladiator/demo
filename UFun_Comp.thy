@@ -636,33 +636,35 @@ lemma ubdom_lub_eq2I: assumes "chain Y"
   using assms(1) assms(2) is_ub_thelub ubdom_fix by blast
 
 
-lemma if_then_mono:  assumes "monofun g"
-  shows "monofun (\<lambda>b. (ubDom\<cdot>b = In) \<leadsto> g b)"
-proof(rule monofunI)
-  fix x y :: "'a"
-  assume "x\<sqsubseteq>y"
-  hence "ubDom\<cdot>x = ubDom\<cdot>y" using ubdom_fix by blast 
-  thus "(ubDom\<cdot>x = In)\<leadsto>g x \<sqsubseteq> (ubDom\<cdot>y = In)\<leadsto>g y" 
-    by (smt \<open>(x::'a) \<sqsubseteq> (y::'a)\<close> assms monofun_def po_eq_conv some_below)
-qed  
-  
-lemma if_then_cont:  assumes "cont g"
-  shows "cont (\<lambda>b. (ubDom\<cdot>b = In) \<leadsto> g b)"
-proof(rule contI2)
-  show "monofun (\<lambda>b. (ubDom\<cdot>b = In)\<leadsto>g b)" using assms cont2mono if_then_mono by blast 
-  thus " \<forall>Y. chain Y \<longrightarrow> (ubDom\<cdot>(\<Squnion>i. Y i) = In)\<leadsto>g (\<Squnion>i. Y i) \<sqsubseteq> (\<Squnion>i. (ubDom\<cdot>(Y i) = In)\<leadsto>g (Y i))"
-    by (smt Abs_cfun_inverse2 assms below_refl if_then_lub is_ub_thelub lub_eq po_class.chainI ubdom_fix)
-qed
-
-
 lemma uf_gencomp_cont[simp]: 
   shows "cont (\<lambda> x. (ubDom\<cdot>x = ufCompI f1 f2) \<leadsto> ubFix (ufCompH f1 f2 x) (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2) )"
 proof (subst ubfix_contI2, simp_all)
   fix x:: "'a"
   assume x_ubDom: "ubDom\<cdot>x = ufCompI f1 f2"
+  have f1: "ubDom\<cdot>((f1 \<rightleftharpoons> x \<uplus> ubLeast (UFun.ufRan\<cdot>f1 \<union> UFun.ufRan\<cdot>f2)\<bar>UFun.ufDom\<cdot>f1) \<uplus> (f2 \<rightleftharpoons> x \<uplus> ubLeast (UFun.ufRan\<cdot>f1 \<union> UFun.ufRan\<cdot>f2)\<bar>UFun.ufDom\<cdot>f2))
+ = ubDom\<cdot>(f1 \<rightleftharpoons> x \<uplus> ubLeast (UFun.ufRan\<cdot>f1 \<union> UFun.ufRan\<cdot>f2)\<bar>UFun.ufDom\<cdot>f1) \<union> ubDom\<cdot>(f2 \<rightleftharpoons> x \<uplus> ubLeast (UFun.ufRan\<cdot>f1 \<union> UFun.ufRan\<cdot>f2)\<bar>UFun.ufDom\<cdot>f2)"
+    by (simp add: ubUnion_bla)
+  have f2: "\<And> b f. b \<in> ran (Rep_cufun f) \<longrightarrow> ubDom\<cdot>b = ufRan\<cdot>f"
+    using ran2exists by fastforce
+  have f3: "\<And> x f. x \<in> dom (Rep_cufun f) \<longrightarrow> ubDom\<cdot>(f \<rightleftharpoons> x) = ufRan\<cdot>f"
+    by auto
+  have f4: "ubDom\<cdot>(x \<uplus> ubLeast (UFun.ufRan\<cdot>f1 \<union> UFun.ufRan\<cdot>f2)\<bar>UFun.ufDom\<cdot>f1) = ufDom\<cdot>f1"
+    apply (simp add: ubUnion_bla2)
+    apply (simp add: sbunionDom)
+    apply (simp add: sbrestrict_sbdom)
+    apply (subst x_ubDom)
+    by (metis (no_types, lifting) Int_Diff Un_Diff_Int inf_commute inf_sup_absorb inf_sup_aci(1) ubdom_least_cs ufCompI_def)
+  have f5: "ubDom\<cdot>(x \<uplus> ubLeast (UFun.ufRan\<cdot>f1 \<union> UFun.ufRan\<cdot>f2)\<bar>UFun.ufDom\<cdot>f2) = ufDom\<cdot>f2"
+    apply (simp add: ubUnion_bla2)
+    apply (simp add: sbunionDom)
+    apply (simp add: sbrestrict_sbdom)
+    apply (subst x_ubDom)
+    by (metis (no_types, lifting) Int_Un_distrib2 Int_absorb1 Un_Diff_cancel2 le_supI1 sup_ge2 ubdom_least_cs ufCompI_def)
+
   show " ubfun_io_eq (ufCompH f1 f2 x) (UFun.ufRan\<cdot>f1 \<union> UFun.ufRan\<cdot>f2)"
     apply (simp add: ufCompH_def)
-    sorry
+    apply (subst f1)
+    using f4 f5 ufran_2_ubdom2 by blast
 qed
 
 subparagraph \<open>dom\<close>
