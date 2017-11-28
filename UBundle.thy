@@ -538,6 +538,19 @@ lemma ubunion_eqI: assumes "a = b" and "c = d"
   by (simp add: assms)
 
 (* ubSetCh *)
+subsection \<open>ubSetCh\<close>
+
+lemma ubsetch_cont [simp]: "cont (\<lambda> ub. (\<lambda> c m. ubUnion\<cdot>ub\<cdot>(Abs_ubundle [c \<mapsto> m])))"
+  by simp
+
+lemma ubsetch_well [simp]: assumes "usOkay c s"
+  shows "ubWell ((Rep_ubundle b) (c \<mapsto> s))"
+  by (metis
+      assms dom_fun_upd fun_upd_apply insert_iff option.sel option.simps(3) ubrep_well ubWell_def)
+
+lemma ubsetch_insert: assumes "usOkay c s"
+  shows "(ubSetCh\<cdot>b) c s = b \<uplus> Abs_ubundle [c \<mapsto> s]"
+  by (simp add: ubSetCh_def)
 
 (*    
   subsection \<open>ubRemCh\<close>
