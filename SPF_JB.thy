@@ -12,10 +12,9 @@ begin
   
 default_sort message 
 
-(*
 declare [[show_types]]
+
 declare [[show_consts]]
-*)
 
 section \<open>definitions\<close>
 
@@ -23,8 +22,11 @@ definition spfApplyOut :: "('a SB \<rightarrow> 'a SB) \<Rightarrow> 'a SPF \<ri
 "spfApplyOut k \<equiv> (\<Lambda> g. Abs_CSPF (\<lambda>x. (sbDom\<cdot>x = spfDom\<cdot>g) \<leadsto> k\<cdot>(g \<rightleftharpoons>x)))"
 
 definition spfApplyIn :: "('m SB \<rightarrow> 'm SB) \<Rightarrow> 'm SPF \<rightarrow> 'm SPF" where 
-"spfApplyIn f \<equiv> \<Lambda> spf. Abs_CSPF (\<lambda>sb. (Rep_CSPF spf)(f\<cdot>sb))" 
+"spfApplyIn k \<equiv> \<Lambda> g. Abs_CSPF (\<lambda>x. (Rep_CSPF g)(k\<cdot>x))" 
  
+
+definition spfApplyIn2 :: "('a SB \<rightarrow> 'a SB) \<Rightarrow> 'a SPF \<rightarrow> 'a SPF" where
+"spfApplyIn2 k \<equiv> (\<Lambda> g. Abs_CSPF (\<lambda>x. (sbDom\<cdot>(k\<cdot>x) = spfDom\<cdot>g) \<leadsto> (g \<rightleftharpoons>(k\<cdot>x))))"
 
 definition spfRt :: "'m SPF \<rightarrow> 'm SPF" where
 "spfRt \<equiv> spfApplyIn sbRt"
@@ -33,6 +35,16 @@ definition spfRt :: "'m SPF \<rightarrow> 'm SPF" where
 definition spfApplyOut_pre :: "('a SB \<rightarrow> 'a SB) \<Rightarrow> 'a SPF \<Rightarrow> channel set \<Rightarrow>  bool" where
 "spfApplyOut_pre k g cs \<equiv> \<forall> b. sbDom\<cdot>b = spfDom\<cdot>g \<longrightarrow> sbDom\<cdot>(k\<cdot>(g \<rightleftharpoons> b)) = cs"
 *)
+
+lemma spfapplyin_eq_pre: "(Rep_CSPF spf)(f\<cdot>x) = (sbDom\<cdot>(f\<cdot>x) = spfDom\<cdot>spf) \<leadsto> (spf \<rightleftharpoons>(f\<cdot>x))"
+  by (metis domIff option.collapse spfLeastIDom spf_sbdom2dom spfdom2sbdom)
+
+ (* convert between original and proof oriented definition *)
+lemma spfapplyin_eq: "spfApplyIn k = spfApplyIn2 k"
+  apply (subst spfApplyIn_def, subst spfApplyIn2_def)
+  apply (subst spfapplyin_eq_pre)
+  by simp
+
 
 section \<open>spfApplyOut\<close>
 
@@ -380,6 +392,93 @@ lemma spfapplyout_apply:  assumes "\<And>b. sbDom\<cdot>(k\<cdot>b) = sbDom\<cdo
   shows "(spfApplyOut k\<cdot>f) \<rightleftharpoons> sb = k\<cdot>(f \<rightleftharpoons>sb)"
   by (simp add: spfapplyout_insert assms)
 
+section \<open>spfApplyIn2\<close>
+(* note that these proofs only really work if k does not change the domain *)
+
+lemma spfapplyin_spf_cont [simp]: "cont (\<lambda>x. (sbDom\<cdot>x = spfDom\<cdot>g) \<leadsto> (g \<rightleftharpoons>(k\<cdot>x)))"
+proof (rule spf_contI)
+  show "\<And>(x::'a SB) y::'a SB. sbDom\<cdot>x = spfDom\<cdot>g \<Longrightarrow> x \<sqsubseteq> y \<Longrightarrow> g \<rightleftharpoons> k\<cdot>x \<sqsubseteq> g \<rightleftharpoons> k\<cdot>y"
+    by (simp add: monofun_cfun_arg spf_pref_eq)
+  show "\<And>Y::nat \<Rightarrow> 'a SB. chain Y \<Longrightarrow> sbDom\<cdot>(\<Squnion>i::nat. Y i) = spfDom\<cdot>g 
+                \<Longrightarrow> g \<rightleftharpoons> k\<cdot>(\<Squnion>i::nat. Y i) \<sqsubseteq> (\<Squnion>i::nat. g \<rightleftharpoons> k\<cdot>(Y i))"
+    by (simp add: contlub_cfun_arg op_the_lub)
+qed
+
+lemma spfapplyin_ran: assumes "\<And> b. sbDom\<cdot>(k\<cdot>x) = sbDom\<cdot>x" and "sbDom\<cdot>b = spfDom\<cdot>g"
+  shows "sbDom\<cdot>(g \<rightleftharpoons> k\<cdot>b) = spfRan\<cdot>g"
+  sorry (* TODO *)
+
+lemma spfapplyin_spf_wellI [simp]: assumes "\<And>b. sbDom\<cdot>(k\<cdot>b) = sbDom\<cdot>b"
+  shows "spf_well (\<Lambda> x. (sbDom\<cdot>x = spfDom\<cdot>g) \<leadsto> (g \<rightleftharpoons>(k\<cdot>x)))"
+  apply (rule spf_wellI)
+    apply (simp_all add: domIff2)
+    by (simp add: assms(1))
+
+
+
+lemma spfapplyin_spf_dom [simp]:  assumes "\<And>b. sbDom\<cdot>(k\<cdot>b) = sbDom\<cdot>b"
+  shows "spfDom\<cdot>(Abs_SPF (\<Lambda> x. (sbDom\<cdot>x = spfDom\<cdot>g) \<leadsto> (g \<rightleftharpoons>(k\<cdot>x)))) = spfDom\<cdot>g"
+  by (simp add: assms spfDomAbs)
+
+lemma spfapplyin_spf_ran [simp]: assumes "\<And>b. sbDom\<cdot>(k\<cdot>b) = sbDom\<cdot>b"
+  shows "spfRan\<cdot>(Abs_SPF (\<Lambda> x. (sbDom\<cdot>x = spfDom\<cdot>g) \<leadsto> (g \<rightleftharpoons>(k\<cdot>x)))) =  spfRan\<cdot>g"
+  apply (subst spfran_least)
+  by (simp add: spfapplyin_spf_dom assms)
+
+lemma spfapplyin_spf_apply:  assumes "\<And>b. sbDom\<cdot>(k\<cdot>b) = sbDom\<cdot>b"
+                             and "sbDom\<cdot>sb = spfDom\<cdot>g"
+  shows "(Abs_SPF (\<Lambda> x. (sbDom\<cdot>x = spfDom\<cdot>g) \<leadsto> (g \<rightleftharpoons>(k\<cdot>x)))) \<rightleftharpoons> sb = g \<rightleftharpoons> (k\<cdot>sb)"
+  by (simp add: assms)
+
+lemma spfapplyin_mono [simp]: assumes "\<And>b. sbDom\<cdot>(k\<cdot>b) = sbDom\<cdot>b"
+  shows "monofun (\<lambda> g. Abs_CSPF (\<lambda>x. (sbDom\<cdot>x = spfDom\<cdot>g) \<leadsto> (g \<rightleftharpoons>(k\<cdot>x))))"
+apply (rule monofunI)
+    apply (rule spfbelowI2)
+    apply (simp_all add: assms)
+    apply (simp add: spfdom_eq)
+    by (metis (full_types) below_SPF_def below_option_def below_refl monofun_cfun_arg 
+                                monofun_cfun_fun)
+
+(* this is just a proxy definition used to make the simplifier less agressive ;) *)
+definition "applycd k = (\<lambda> g. Abs_CSPF (\<lambda>x. (sbDom\<cdot>x = spfDom\<cdot>g) \<leadsto> (g \<rightleftharpoons>(k\<cdot>x))))"
+
+
+lemma applycd_mono [simp]: assumes "\<And>b. sbDom\<cdot>(k\<cdot>b) = sbDom\<cdot>b"
+  shows "monofun (applycd k)"
+  apply (subst applycd_def)
+  by (rule spfapplyin_mono, simp add: assms)
+
+(* applycd substitution and reverse substitution lemmata *)
+
+lemma applycd_rev: "(\<lambda> g. Abs_CSPF (\<lambda>x. (sbDom\<cdot>x = spfDom\<cdot>g) \<leadsto> (g \<rightleftharpoons>(k\<cdot>x)))) = applycd k"
+  by (simp add: applycd_def)
+
+lemma applycd_rev2: "Abs_CSPF (\<lambda>x. (sbDom\<cdot>x = spfDom\<cdot>g) \<leadsto> (g \<rightleftharpoons>(k\<cdot>x))) = applycd k g"
+  by (simp add: applycd_def)
+
+lemma spfapplyin_chain: assumes "chain Y" and "\<And>b. sbDom\<cdot>(k\<cdot>b) = sbDom\<cdot>b"
+  shows "chain (\<lambda> i. Abs_CSPF (\<lambda>x. (sbDom\<cdot>x = spfDom\<cdot>(Y i)) \<leadsto> ((Y i) \<rightleftharpoons>(k\<cdot>x))))"
+proof (rule chainI)
+  have f1: "\<And> i. (Y i) \<sqsubseteq> (Y (Suc i))"
+    using assms(1) po_class.chainE by auto
+
+  have f2: "\<And> i. spfDom\<cdot>(Y (Suc i)) = spfDom\<cdot>(Y i)"
+    using f1 spfdom_eq by blast
+
+  have f3: "\<And> x y. x \<sqsubseteq> y \<Longrightarrow> Abs_CSPF (\<lambda>xa. (sbDom\<cdot>xa = spfDom\<cdot>x) \<leadsto> (x \<rightleftharpoons>(k\<cdot>xa)))
+                             \<sqsubseteq> Abs_CSPF (\<lambda>xa. (sbDom\<cdot>xa = spfDom\<cdot>y) \<leadsto> (y \<rightleftharpoons>(k\<cdot>xa)))"
+    apply (subst (1 2) applycd_rev2)
+    using applycd_mono assms(2) monofun_def by blast
+
+  show "\<And>i. Abs_CSPF (\<lambda>x. (sbDom\<cdot>x = spfDom\<cdot>(Y i))\<leadsto>Y i \<rightleftharpoons> k\<cdot>x) 
+            \<sqsubseteq> Abs_CSPF (\<lambda>x. (sbDom\<cdot>x = spfDom\<cdot>(Y (Suc i)))\<leadsto>Y (Suc i) \<rightleftharpoons> k\<cdot>x)"
+    apply (rule f3)
+    by (simp add: f1)
+qed
+
+(* continue with abs_spf_lub_chain *)
+
+
 
 section \<open>spfApplyIn\<close>
 
@@ -498,7 +597,8 @@ next
     by (simp add: as1 op_the_chain)
   hence eq1:"(\<Squnion>i. (Y i) \<rightleftharpoons> f\<cdot>x)=(\<Squnion>i. Y i) \<rightleftharpoons> f\<cdot>x"
     by (metis as1 as2 assms spf_therep_lub spfapplyin_dom1 spfdom_eq_lub) 
-  have h10: "\<And>i. (( Y i) \<rightleftharpoons> f\<cdot>x\<sqsubseteq>(\<Squnion>i. Abs_CSPF (\<lambda>sb. Rep_CSPF (Y i) (f\<cdot>sb))) \<rightleftharpoons> x)" sorry
+  have h10: "\<And>i. (( Y i) \<rightleftharpoons> f\<cdot>x\<sqsubseteq>(\<Squnion>i. Abs_CSPF (\<lambda>sb. Rep_CSPF (Y i) (f\<cdot>sb))) \<rightleftharpoons> x)" 
+    sorry
   hence h1: "(\<Squnion>i. Y i \<rightleftharpoons> f\<cdot>x)\<sqsubseteq>(\<Squnion>i. Abs_CSPF (\<lambda>sb. Rep_CSPF (Y i) (f\<cdot>sb))) \<rightleftharpoons> x"
     using ch2 lub_below by blast 
   have "Abs_CSPF (\<lambda>sb. Rep_CSPF (\<Squnion>i. Y i) (f\<cdot>sb)) \<rightleftharpoons> x =  (\<Squnion>i. Y i) \<rightleftharpoons> f\<cdot>x" using assms by auto
