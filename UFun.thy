@@ -183,7 +183,7 @@ definition ufIsWeak :: "('in,'out) ufun \<Rightarrow> bool" where
 definition ufIsStrong :: "('in,'out) ufun \<Rightarrow> bool" where
 "ufIsStrong f = (\<forall>b. (b \<in> dom (Rep_cfun (Rep_ufun f)) \<longrightarrow> lnsuc\<cdot>(ubLen b) \<le> ubLen (the ((Rep_ufun f)\<cdot>b))))"
 
-
+(* ufIsWeak is adm (helper) *)
 lemma ufIsWeak_adm: "adm (\<lambda> f. (\<forall>b. (b \<in> dom (Rep_cfun (Rep_ufun f)) \<longrightarrow> ubLen b \<le> ubLen (the ((Rep_ufun f)\<cdot>b)))))" (is "adm( ?P )")
 proof (rule admI)
   fix Y :: "nat \<Rightarrow> (('a,'b) ufun)"
@@ -202,10 +202,11 @@ proof (rule admI)
   qed
 qed
 
+(* ufIsWeak is adm *)
 lemma ufIsWeak_adm2: "adm (\<lambda>f. ufIsWeak f)"
   by  (simp add: ufIsWeak_def ufIsWeak_adm)
 
-
+(* there is a ufun which has ufIsStrong property *)
 lemma ufistrongk_exist: "\<exists>x::('in,'out) ufun. ufIsStrong x"
 proof -
    obtain inf_ub:: "'out"  where inf_ub_ublen: "ubLen inf_ub = \<infinity>"
@@ -239,16 +240,17 @@ proof -
       by (rule_tac x = "(Abs_ufun (Abs_cfun ufun1))" in exI)
   qed
 
-
+(* if ufun has the ufisstrong property then it also has the ufisweak property  *)
 lemma ufisstrong_2_ufisweak: "\<And> f. ufIsStrong f \<Longrightarrow> ufIsWeak f"
   by (meson less_lnsuc trans_lnle ufIsStrong_def ufIsWeak_def)
 
 
-
+(* new type, ufun which has the ufISWeak property  *)
 cpodef ('in,'out)  USPFw = "{f ::  ('in,'out) ufun. ufIsWeak f}"
   using ufisstrong_2_ufisweak ufistrongk_exist apply auto[1]
   using ufIsWeak_adm2 by auto
 
+(* ufIsStrong is adm  *)
 lemma ufIsStrong_adm2: "adm (\<lambda>f. ufIsStrong (Rep_USPFw f))" (is "adm( ?P )")
 proof  (rule admI)
   fix Y :: "nat \<Rightarrow> (('a,'b) USPFw)"
@@ -272,7 +274,7 @@ proof  (rule admI)
   qed
 qed
 
-
+(* ufun, which has the ufIsStrong property  *)
 cpodef ('in,'out) USPFs = "{f :: ('in,'out) USPFw. ufIsStrong (Rep_USPFw f)}"
    apply (metis Rep_USPFw_cases mem_Collect_eq ufisstrong_2_ufisweak ufistrongk_exist)
   using ufIsStrong_adm2 by auto
