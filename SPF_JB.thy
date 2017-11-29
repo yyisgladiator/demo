@@ -404,9 +404,9 @@ proof (rule spf_contI)
     by (simp add: contlub_cfun_arg op_the_lub)
 qed
 
-lemma spfapplyin_ran: assumes "\<And> b. sbDom\<cdot>(k\<cdot>x) = sbDom\<cdot>x" and "sbDom\<cdot>b = spfDom\<cdot>g"
+lemma spfapplyin_ran: assumes "\<And> x. sbDom\<cdot>(k\<cdot>x) = sbDom\<cdot>x" and "sbDom\<cdot>b = spfDom\<cdot>g"
   shows "sbDom\<cdot>(g \<rightleftharpoons> k\<cdot>b) = spfRan\<cdot>g"
-  sorry (* TODO *)
+  by (simp add: assms(1) assms(2))
 
 lemma spfapplyin_spf_wellI [simp]: assumes "\<And>b. sbDom\<cdot>(k\<cdot>b) = sbDom\<cdot>b"
   shows "spf_well (\<Lambda> x. (sbDom\<cdot>x = spfDom\<cdot>g) \<leadsto> (g \<rightleftharpoons>(k\<cdot>x)))"
