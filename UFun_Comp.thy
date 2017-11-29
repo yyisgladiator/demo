@@ -18,9 +18,6 @@ section\<open>Definitions\<close>
 (* abbreviations should be defined in the classes or ufun.thy *)
 subsection\<open>abbreviations\<close>
 
-  
-abbreviation theRep_abbrv :: "('a \<Rrightarrow> 'b) \<Rightarrow> 'a \<Rightarrow> 'b " (infix "\<rightleftharpoons>" 62) where
-"(f \<rightleftharpoons> s) \<equiv> (Rep_cfun (Rep_ufun(f)))\<rightharpoonup>s"  
 
 abbreviation ubclUnion_abbr :: " 'm \<Rightarrow> 'm \<Rightarrow> 'm" (infixl "\<uplus>" 100) where 
 "b1 \<uplus> b2 \<equiv> ubUnion\<cdot>b1\<cdot>b2"

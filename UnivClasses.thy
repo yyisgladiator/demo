@@ -55,10 +55,10 @@ class ubcl = cpo +
   fixes ubDom :: "'a \<rightarrow> channel set"
   fixes ubLen :: "'a \<Rightarrow> lnat"  (* Debatable *)
 
-  assumes ublen_mono: "monofun ubLen"
   assumes ubdom_fix: "\<And> x y. x\<sqsubseteq>y \<Longrightarrow> ubDom\<cdot>x = ubDom\<cdot>y"
-  assumes ubdom_least: "\<And> x. ubLeast (ubDom\<cdot>x)\<sqsubseteq>x"
-  assumes ubdom_least_cs: "\<And> cs. ubDom\<cdot>(ubLeast cs) = cs"
+  assumes ubdom_ex: "\<And>C. \<exists>x. ubDom\<cdot>b = C"
+    
+  assumes ublen_mono: "monofun ubLen"
   assumes ublen_inf_ex: "\<exists>ub. ubLen ub = \<infinity>"
 begin
 end
