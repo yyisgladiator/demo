@@ -2,7 +2,7 @@
     Author:       Jens Christoph Bürger
     e-mail:       jens.buerger@rwth-aachen.de
 
-    Description:  Extends "Stream Processing Functions"
+    Description:  Extends "Stream Processing Functions" by SpfApplyIn/Out etc ...
 *)
 
 theory SPF_JB
@@ -590,8 +590,13 @@ lemma spfapplyin_cont [simp]: assumes "\<And>b. sbDom\<cdot>(k\<cdot>b) = sbDom\
   using assms apply auto[1]
   by (simp add: assms)
 
-section \<open>spfApplyIn\<close>
+section \<open>spfApplyInOld\<close>
 
+  (* these lemmas concern the original spfApplyIn definition by Sebastian *)
+    (* since both versions are equivalent under the assumption "\<And>b. sbDom\<cdot>(k\<cdot>b) = sbDom\<cdot>b", 
+        eventually it does not matter which definition we use.
+        HOWEVER: a \<leadsto> based lemma *)
+        
 lemma spfapplyin_well [simp]: 
   assumes "\<And>sb. sbDom\<cdot>(f\<cdot>sb) = sbDom\<cdot>sb"
   shows "spf_well (\<Lambda> sb.(Rep_CSPF spf)(f\<cdot>sb))" (is "spf_well ?g")
@@ -675,64 +680,32 @@ qed
 lemma "adm (\<lambda>x. x\<sqsubseteq>h)"
   by (metis admI lub_below_iff)
 
-lemma "chain Y \<Longrightarrow> (\<And>i. Y i \<sqsubseteq> h) \<Longrightarrow> (\<Squnion>i. Y i) \<sqsubseteq> h"
-  oops
 
+ (* inject cont proof of alternative definition in the definition by sebastian *)
+lemma spfapplyinOld_cont [simp]: assumes "\<And>sb. sbDom\<cdot>(f\<cdot>sb) =  sbDom\<cdot>sb"
+  shows "cont (\<lambda>spf. Abs_CSPF (\<lambda>sb. (Rep_CSPF spf)(f\<cdot>sb)))"
+  apply (subst spfapplyin_eq_pre)
+  apply (subst assms(1))
+  apply (rule spfapplyin_cont)
+  by (simp add: assms(1))
 
-lemma spf_therep_lub: "chain Y \<Longrightarrow> spfDom\<cdot>(Y j) = sbDom\<cdot>x \<Longrightarrow> (\<Squnion>i. (Y i) \<rightleftharpoons> x) = (\<Squnion>i. (Y i)) \<rightleftharpoons> x"
-  sorry
-
-lemma spfapplyin_cont: assumes "\<And>sb. sbDom\<cdot>(f\<cdot>sb) =  sbDom\<cdot>sb"
-  shows "cont (\<lambda>spf. Abs_CSPF (\<lambda>sb. (Rep_CSPF spf)(f\<cdot>sb)))" (is "cont ?g")
-  apply(rule contI2)
-   apply (simp add: assms spfapplyin_monofun)
-  apply(auto)
-proof (rule spf_belowI)
-  fix Y ::" nat \<Rightarrow> 'a SPF"
-  assume as1: "chain Y"
-  have h1: " spfDom\<cdot>(Abs_CSPF (\<lambda>sb. Rep_CSPF (\<Squnion>i. Y i) (f\<cdot>sb))) = spfDom\<cdot>(Y 0)"
-    by (simp add: \<open>chain Y\<close> assms spfdom_eq_lub)
-  have "chain (\<lambda>i. Abs_CSPF (\<lambda>sb. Rep_CSPF (Y i) (f\<cdot>sb)))" using ch2ch_monofun as1 spfapplyin_monofun assms by auto
-  hence h2: "spfDom\<cdot>(\<Squnion>i. Abs_CSPF (\<lambda>sb. Rep_CSPF (Y i) (f\<cdot>sb))) = spfDom\<cdot>(Y 0)"
-    using assms spfapplyin_dom1 spfdom_eq_lub by blast
-  thus " spfDom\<cdot>(Abs_CSPF (\<lambda>sb. Rep_CSPF (\<Squnion>i. Y i) (f\<cdot>sb))) = spfDom\<cdot>(\<Squnion>i. Abs_CSPF (\<lambda>sb. Rep_CSPF (Y i) (f\<cdot>sb)))"
-    using h1 by blast
-next
-  fix Y ::" nat \<Rightarrow> 'a SPF"
-  fix x :: "'a SB"
-  assume as1: "chain Y"
-    and as2: "sbDom\<cdot>x = spfDom\<cdot>(Abs_CSPF (\<lambda>sb. Rep_CSPF (\<Squnion>i. Y i) (f\<cdot>sb)))"
-  have ch1: "chain (\<lambda>i. Abs_CSPF (\<lambda>sb. Rep_CSPF (Y i) (f\<cdot>sb)))" using ch2ch_monofun as1 spfapplyin_monofun assms by auto
-  have ch2: "chain (\<lambda>i. (Y i) \<rightleftharpoons> f\<cdot>x)"
-    by (simp add: as1 op_the_chain)
-  hence eq1:"(\<Squnion>i. (Y i) \<rightleftharpoons> f\<cdot>x)=(\<Squnion>i. Y i) \<rightleftharpoons> f\<cdot>x"
-    by (metis as1 as2 assms spf_therep_lub spfapplyin_dom1 spfdom_eq_lub) 
-  have h10: "\<And>i. (( Y i) \<rightleftharpoons> f\<cdot>x\<sqsubseteq>(\<Squnion>i. Abs_CSPF (\<lambda>sb. Rep_CSPF (Y i) (f\<cdot>sb))) \<rightleftharpoons> x)" 
-    sorry
-  hence h1: "(\<Squnion>i. Y i \<rightleftharpoons> f\<cdot>x)\<sqsubseteq>(\<Squnion>i. Abs_CSPF (\<lambda>sb. Rep_CSPF (Y i) (f\<cdot>sb))) \<rightleftharpoons> x"
-    using ch2 lub_below by blast 
-  have "Abs_CSPF (\<lambda>sb. Rep_CSPF (\<Squnion>i. Y i) (f\<cdot>sb)) \<rightleftharpoons> x =  (\<Squnion>i. Y i) \<rightleftharpoons> f\<cdot>x" using assms by auto
-  thus "Abs_CSPF (\<lambda>sb. Rep_CSPF (\<Squnion>i. Y i) (f\<cdot>sb)) \<rightleftharpoons> x \<sqsubseteq> (\<Squnion>i. Abs_CSPF (\<lambda>sb. Rep_CSPF (Y i) (f\<cdot>sb))) \<rightleftharpoons> x"
-    using eq1 h1 by auto
-qed
-
-lemma spfapplyin_insert: 
+lemma spfapplyinOld_insert: 
   assumes "\<And>sb. sbDom\<cdot>(f\<cdot>sb) =  sbDom\<cdot>sb"
   shows "spfApplyIn f\<cdot>spf = Abs_CSPF (\<lambda>sb. (Rep_CSPF spf)(f\<cdot>sb))"
   apply(simp add: spfApplyIn_def)
-  using assms beta_cfun spfapplyin_cont by blast
+  using assms beta_cfun spfapplyinOld_cont by blast
 
 
-lemma spfapplyin_dom [simp]: assumes "\<And>sb. sbDom\<cdot>(f\<cdot>sb) =  sbDom\<cdot>sb"
+lemma spfapplyinOld_dom [simp]: assumes "\<And>sb. sbDom\<cdot>(f\<cdot>sb) =  sbDom\<cdot>sb"
   shows "spfDom\<cdot>(spfApplyIn f\<cdot>spf) = spfDom\<cdot>spf"
-  using assms spfapplyin_insert by fastforce
+  using assms spfapplyinOld_insert by fastforce
 
-lemma spfapplyin_ran [simp]: assumes "\<And>sb. sbDom\<cdot>(f\<cdot>sb) =  sbDom\<cdot>sb"
+lemma spfapplyinOld_ran [simp]: assumes "\<And>sb. sbDom\<cdot>(f\<cdot>sb) =  sbDom\<cdot>sb"
   shows "spfRan\<cdot>(spfApplyIn f\<cdot>spf) = spfRan\<cdot>spf"
-  using assms spfapplyin_insert by fastforce
+  using assms spfapplyinOld_insert by fastforce
 
-lemma spfapplyin_step [simp]: assumes "\<And>sb. sbDom\<cdot>(f\<cdot>sb) =  sbDom\<cdot>sb"
+lemma spfapplyinOld_step [simp]: assumes "\<And>sb. sbDom\<cdot>(f\<cdot>sb) =  sbDom\<cdot>sb"
   shows "(spfApplyIn f\<cdot>spf)\<rightleftharpoons>sb = spf\<rightleftharpoons>f\<cdot>sb"
-  by(simp add: spfapplyin_insert assms)
+  by(simp add: spfapplyinOld_insert assms)
 
 end
