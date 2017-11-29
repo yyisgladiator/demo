@@ -5,12 +5,12 @@ begin
 
 default_sort countable
 
-definition tsyn_well :: "'a event stream \<Rightarrow> bool" where
-"tsyn_well s \<equiv> ts_well s \<and> (\<forall> n. Fin n < #s \<longrightarrow> tslen\<cdot>(tsNth n\<cdot>(Abs_tstream(s))) \<le> Fin 1)"
+definition tsynWell :: "'a event stream \<Rightarrow> bool" where
+"tsynWell s \<equiv> ts_well s \<and> (\<forall> n. Fin n < #s \<longrightarrow> tslen\<cdot>(tsNth n\<cdot>(Abs_tstream(s))) \<le> Fin 1)"
 
-pcpodef 'a tsynstream = "{t :: 'a event stream. tsyn_well t}"
+pcpodef 'a tsynstream = "{t :: 'a event stream. tsynWell t}"
    apply auto
-   apply (simp add: tsyn_well_def tslen_bottom)
+   apply (simp add: tsynWell_def tslen_bottom)
   sorry
 
 
@@ -24,7 +24,7 @@ instantiation tsynstream :: (message) uscl
 begin
 
 definition usOkay_tsynstream :: "channel \<Rightarrow> 'm::message tsynstream \<Rightarrow> bool" where
-"usOkay_tsynstream c ts \<equiv> (ctype c = tsynDom\<cdot>ts)"
+"usOkay_tsynstream c ts \<equiv> (tsynDom\<cdot>ts \<subseteq> ctype c)"
 
 definition usLen_tsynstream :: "'a tsynstream \<rightarrow> lnat" where 
 "usLen_tsynstream = tsynlen"
