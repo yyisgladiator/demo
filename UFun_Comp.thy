@@ -534,10 +534,6 @@ proof -
     by (simp add: if_then_cont)
 qed
 
-(* This should be proven with the ufDom/Ran lemmas *)
-lemma ufRan_dom: assumes "ubDom\<cdot>b = ufDom\<cdot>f" shows "ubDom\<cdot>(f\<rightleftharpoons>b) = ufRan\<cdot>f" 
-  sorry  
-  
 lemma ufSerComp_well: assumes "ufRan\<cdot>f1 = ufDom\<cdot>f2" shows "ufWell (\<Lambda> x. (ubDom\<cdot>x =  ufDom\<cdot>f1) \<leadsto> (f2 \<rightleftharpoons> (f1 \<rightleftharpoons> x)))"
   apply(simp add: ufWell_def)
   apply rule
@@ -566,11 +562,31 @@ proof -
     by meson
 next
   have f1: "\<forall>b::'c. b \<in> ran (\<lambda>x::'a. (ubDom\<cdot>x = UFun.ufDom\<cdot>f1)\<leadsto>f2 \<rightleftharpoons> (f1 \<rightleftharpoons> x)) \<longrightarrow> ubDom\<cdot>b = ufRan\<cdot>f2"
-    by (smt CollectD assms option.distinct(1) option.sel ran_def ufRan_dom)
+    by (smt CollectD assms option.distinct(1) option.sel ran_def ufran_2_ubdom2)
   show "\<exists>Out. \<forall>b. (b \<in> ran (Rep_cfun (\<Lambda> (x::'a). (ubDom\<cdot>x = ufDom\<cdot>f1)\<leadsto>f2 \<rightleftharpoons> (f1 \<rightleftharpoons> x)))) \<longrightarrow> (ubDom\<cdot>b = Out)"
     apply(simp add: ufSerComp_cont)
     by (simp add: f1)
 qed
+
+lemma ufSerComp_dom: assumes "sercomp_well f1 f2"
+  shows "ufDom\<cdot>(ufSerComp f1 f2) = ufDom\<cdot>f1"
+  apply(simp add: ufDom_def ufSerComp_def)
+  using ubdom_ex by blast
+  
+
+lemma ufSerComp_ran: assumes "sercomp_well f1 f2"
+  shows "ufRan\<cdot>(ufSerComp f1 f2) = ufRan\<cdot>f2"
+  apply(simp add: ufRan_def ufSerComp_def)
+  using ubdom_ex by auto
+    
+
+lemma uSerComp_repAbs: assumes "sercomp_well f1 f2"
+  shows "Rep_cufun (ufSerComp f1 f2) = (\<lambda> x. (ubDom\<cdot>x = ufDom\<cdot>f1) \<leadsto> (f2 \<rightleftharpoons> (f1 \<rightleftharpoons> x)))"
+  apply(simp add: ufSerComp_def, subst rep_abs_cufun)
+    apply (simp add: ufSerComp_cont)
+   apply (simp add: assms ufSerComp_well)
+  by auto
+
   
 
 (* feedback *)  
