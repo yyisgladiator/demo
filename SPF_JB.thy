@@ -456,7 +456,7 @@ lemma applycd_rev: "(\<lambda> g. Abs_CSPF (\<lambda>x. (sbDom\<cdot>x = spfDom\
 lemma applycd_rev2: "Abs_CSPF (\<lambda>x. (sbDom\<cdot>x = spfDom\<cdot>g) \<leadsto> (g \<rightleftharpoons>(k\<cdot>x))) = applycd k g"
   by (simp add: applycd_def)
 
-lemma spfapplyin_chain: assumes "chain Y" and "\<And>b. sbDom\<cdot>(k\<cdot>b) = sbDom\<cdot>b"
+lemma spfapplyin_chain [simp]: assumes "chain Y" and "\<And>b. sbDom\<cdot>(k\<cdot>b) = sbDom\<cdot>b"
   shows "chain (\<lambda> i. Abs_CSPF (\<lambda>x. (sbDom\<cdot>x = spfDom\<cdot>(Y i)) \<leadsto> ((Y i) \<rightleftharpoons>(k\<cdot>x))))"
 proof (rule chainI)
   have f1: "\<And> i. (Y i) \<sqsubseteq> (Y (Suc i))"
@@ -476,9 +476,119 @@ proof (rule chainI)
     by (simp add: f1)
 qed
 
-(* continue with abs_spf_lub_chain *)
+lemma spfapplyin_chain_lub [simp]: assumes "chain Y" and "\<And>b. sbDom\<cdot>(k\<cdot>b) = sbDom\<cdot>b"
+  shows " Abs_CSPF (\<lambda>x. (sbDom\<cdot>x = spfDom\<cdot>(\<Squnion>i::nat. Y i))\<leadsto>(\<Squnion>i. Y i) \<rightleftharpoons> k\<cdot>x) \<sqsubseteq>
+       (\<Squnion>i. Abs_CSPF (\<lambda>x. (sbDom\<cdot>x = spfDom\<cdot>(Y i))\<leadsto>Y i \<rightleftharpoons> k\<cdot>x))"
+proof -
+  have f1: "\<And> i. spfDom\<cdot>(Y i) = spfDom\<cdot>(\<Squnion>i. Y i)"
+    using assms(1) spfdom_eq_lub by blast
+  have f11: "\<And> i. spfDom\<cdot>(\<Squnion>i. Y i) = spfDom\<cdot>(Y i)"
+    using assms(1) spfdom_eq_lub by blast
+
+  have f10: "\<And> i. cont (\<lambda>x. (sbDom\<cdot>x = spfDom\<cdot>(Lub Y)) \<leadsto> ((Y i) \<rightleftharpoons>(k\<cdot>x)))"
+    apply (subst f11, subst spfapplyin_spf_cont)
+    by simp
+
+  (* handy substitution facts *)
+
+  have f12: "(\<lambda> i::nat. (\<Lambda> x. (sbDom\<cdot>x = spfDom\<cdot>(Lub Y))\<leadsto>(Y i) \<rightleftharpoons> (k\<cdot>x))) 
+              = (\<lambda> i::nat. (\<Lambda> x. (sbDom\<cdot>x = spfDom\<cdot>(Y i))\<leadsto>(Y i) \<rightleftharpoons> (k\<cdot>x)))"
+    using f1 by auto
+
+  (* like f12 but without the outer lambda function *)
+  have f30: "\<And> i. (\<Lambda> x. (sbDom\<cdot>x = spfDom\<cdot>(Lub Y))\<leadsto>(Y i) \<rightleftharpoons> (k\<cdot>x)) 
+                  = (\<Lambda> x. (sbDom\<cdot>x = spfDom\<cdot>(Y i))\<leadsto>(Y i) \<rightleftharpoons> (k\<cdot>x))"
+    by (simp add: f1)
+  have f30_rev: "\<And> i. (\<Lambda> x. (sbDom\<cdot>x = spfDom\<cdot>(Y i))\<leadsto>(Y i) \<rightleftharpoons> (k\<cdot>x)) 
+                      = (\<Lambda> x. (sbDom\<cdot>x = spfDom\<cdot>(Lub Y))\<leadsto>(Y i) \<rightleftharpoons> (k\<cdot>x))"
+    by (simp add: f30)
+
+  have f14: "chain (\<lambda> i::nat. (\<Lambda> x. (sbDom\<cdot>x = spfDom\<cdot>(Y i))\<leadsto>(Y i) \<rightleftharpoons> (k\<cdot>x)))"
+  proof (rule chainI)
+    have f141: "\<And> i. Y i \<sqsubseteq> Y (Suc i)"
+      by (simp add: assms(1) po_class.chainE)
+
+    have "\<And> i. (\<Lambda> x. (sbDom\<cdot>x = spfDom\<cdot>(Lub Y))\<leadsto>(Y i) \<rightleftharpoons> (k\<cdot>x)) 
+                \<sqsubseteq> (\<Lambda> x. (sbDom\<cdot>x = spfDom\<cdot>(Lub Y))\<leadsto>(Y (Suc i)) \<rightleftharpoons> (k\<cdot>x))"
+      apply (rule cfun_below)
+        apply (simp_all add: f10)
+        apply (rule spfbelowI3)
+        by (metis (no_types) below_SPF_def below_option_def below_refl cfun_below_iff f141)
 
 
+      thus "\<And> i. (\<Lambda> x. (sbDom\<cdot>x = spfDom\<cdot>(Y i))\<leadsto>Y i \<rightleftharpoons> k\<cdot>x) 
+               \<sqsubseteq> (\<Lambda> x. (sbDom\<cdot>x = spfDom\<cdot>(Y (Suc i)))\<leadsto>Y (Suc i) \<rightleftharpoons> k\<cdot>x)"
+     by (simp add: f1)
+  qed
+
+  have f20: "(\<Squnion>i. Abs_CSPF (\<lambda> x. (sbDom\<cdot>x = spfDom\<cdot>(Lub Y))\<leadsto>(Y i) \<rightleftharpoons> (k\<cdot>x)))
+            = Abs_CSPF (\<Squnion>i.(\<lambda> x. (sbDom\<cdot>x = spfDom\<cdot>(Lub Y))\<leadsto>(Y i) \<rightleftharpoons> (k\<cdot>x)))"
+    apply (subst abs_spf_lub_chain)
+    apply (simp_all add: f12)
+      apply (simp add: f14)
+     apply (subst f30)
+     apply (rule spfapplyin_spf_wellI, simp add: assms)
+    apply (subst f30_rev)
+    apply (subst cfun.lub_cfun)
+    apply (subst f30, simp add: f14)
+    using f10 by auto[1]
+    
+  have f40: "\<And> f1 f2. Rep_CSPF f1 \<sqsubseteq> Rep_CSPF f2 \<Longrightarrow> f1 \<sqsubseteq> f2"
+    by (meson below_SPF_def below_cfun_def)
+
+  have f52: "\<And> x. (\<Squnion>i. (Y i) \<rightleftharpoons> (k\<cdot>x)) = ((\<Squnion>i. Y i) \<rightleftharpoons> k\<cdot>x)"
+  proof -
+    fix x :: "'a SB"
+    have "chain (\<lambda>n. Rep_SPF (Y n))"
+      by (metis assms(1) rep_spf_chain)
+    then have f1: "spf_well (\<Squnion>n. Rep_SPF (Y n))"
+      using rep_spf_well spf_well_lub by blast
+    have "\<forall>f s. \<not> chain f \<or> (Lub f\<cdot>(s::'a SB)::'a SB option) = (\<Squnion>n. f n\<cdot>s)"
+      using contlub_cfun_fun by blast
+    then have "(\<Squnion>n. \<lambda>n. Rep_CSPF (Y n) (k\<cdot>x)\<rightharpoonup>n) = Lub Y \<rightleftharpoons> k\<cdot>x"
+      using f1 by (simp add: assms(1) lub_SPF op_the_lub)
+    then show "(\<Squnion>n. Y n \<rightleftharpoons> k\<cdot>x) = (\<Squnion>n. Y n) \<rightleftharpoons> k\<cdot>x"
+      by meson
+  qed
+  have f60: "chain (\<lambda> i. (\<Lambda> x. (sbDom\<cdot>x = spfDom\<cdot>(Lub Y))\<leadsto>(Y i) \<rightleftharpoons> (k\<cdot>x)))"
+  proof (rule chainI)
+    have f601: "\<And> i. Y i \<sqsubseteq> Y (Suc i)"
+      by (simp add: assms(1) po_class.chainE)
+    show "\<And>i. (\<Lambda> x. (sbDom\<cdot>x = spfDom\<cdot>(Lub Y))\<leadsto>Y i \<rightleftharpoons> k\<cdot>x) 
+               \<sqsubseteq> (\<Lambda> x. (sbDom\<cdot>x = spfDom\<cdot>(Lub Y))\<leadsto>Y (Suc i) \<rightleftharpoons> k\<cdot>x)"
+      apply (rule cfun_below)
+        apply (simp_all add: f10)
+        apply (rule spfbelowI3)
+      by (metis (no_types) below_SPF_def below_option_def below_refl cfun_below_iff f601)
+  qed
+          
+  have f100: "\<And> x. (\<Squnion>i::nat. (\<lambda>x. (sbDom\<cdot>x = spfDom\<cdot>(Lub Y))\<leadsto>(Y i) \<rightleftharpoons> (k\<cdot>x))) x 
+                          = (\<lambda>x. (sbDom\<cdot>x = spfDom\<cdot>(Lub Y))\<leadsto>(\<Squnion>i. (Y i) \<rightleftharpoons> (k\<cdot>x))) x"
+    apply simp
+    apply rule
+     apply (smt Abs_cfun_inverse2 assms(2) ch2ch_Rep_cfunL contlub_cfun_fun f10 f11 f60 
+                image_cong op_the_lub option.collapse option.discI option_chain_cases 
+                rep_cfun_cont some_lub_chain_eq spfapplyin_eq_pre)
+     by (smt Abs_cfun_inverse2 below_option_def cfun_below_iff f10 f12 f14 image_cong 
+                    is_ub_thelub rep_cfun_cont)
+   
+   have f101: "(\<Squnion>i::nat. (\<lambda>x. (sbDom\<cdot>x = spfDom\<cdot>(Lub Y))\<leadsto>(Y i) \<rightleftharpoons> (k\<cdot>x))) 
+                = (\<lambda>x. (sbDom\<cdot>x = spfDom\<cdot>(Lub Y))\<leadsto>(\<Squnion>i. (Y i) \<rightleftharpoons> (k\<cdot>x)))" 
+     using f100 by auto
+  show ?thesis
+    apply (subst f30_rev)
+     apply (subst f20)
+     apply (subst f101)
+     apply (subst f52)
+     by simp
+qed
+
+
+lemma spfapplyin_cont [simp]: assumes "\<And>b. sbDom\<cdot>(k\<cdot>b) = sbDom\<cdot>b"
+  shows "cont (\<lambda> g. Abs_CSPF (\<lambda>x. (sbDom\<cdot>x = spfDom\<cdot>g) \<leadsto> (g \<rightleftharpoons>(k\<cdot>x))))"
+  apply (rule contI2)
+  using assms apply auto[1]
+  by (simp add: assms)
 
 section \<open>spfApplyIn\<close>
 
