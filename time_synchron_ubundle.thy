@@ -35,14 +35,14 @@ proof
   have " chain Y \<Longrightarrow> (\<forall>i::nat. usOkay c (Y i)) \<Longrightarrow> usOkay c (\<Squnion>i::nat. Y i)"
   proof -
     fix Y :: "nat \<Rightarrow> 'a tsynstream" assume a0:"chain Y" and a1:"(\<forall>i::nat. usOkay c (Y i))"
-  have 1: "\<forall> i. tsynDom\<cdot>(Y i) = tsynDom\<cdot>(\<Squnion> i. Y i)"
-    by (smt a0 a1 chain_monofun contlub_cfun_arg is_ub_thelub lub_below po_eq_conv usOkay_tsynstream_def)
+  have 1: "\<forall> i. tsynDom\<cdot>(Y i) \<subseteq> tsynDom\<cdot>(\<Squnion> i. Y i)"
+    by (metis SetPcpo.less_set_def a0 is_ub_thelub monofun_cfun_arg)
   show "usOkay c (\<Squnion>i::nat. Y i)"
-    using "1" a1 usOkay_tsynstream_def by blast
+    using "1" a1 usOkay_tsynstream_def
+    by (simp add: usOkay_tsynstream_def a0 subset_cont)
   qed
   then show "chain Y \<longrightarrow> (\<forall>i::nat. usOkay c (Y i)) \<longrightarrow> usOkay c (\<Squnion>i::nat. Y i)" by blast
   qed
 end
-
 
 end
