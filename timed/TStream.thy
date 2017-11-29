@@ -9,7 +9,7 @@ chapter {* Timed Streams *}
 
 theory TStream
 
-imports Streams OptionCpo
+imports "../untimed/Streams" "../inc/OptionCpo"
 begin
 default_sort countable
 setup_lifting type_definition_cfun
