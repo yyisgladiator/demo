@@ -476,7 +476,8 @@ qed
 lemma ufun_ufdom_abs: assumes "cont (\<lambda> x. (ubDom\<cdot>x = cs ) \<leadsto> f(x))" 
                      and "ufWell (\<Lambda> x. (ubDom\<cdot>x = cs ) \<leadsto> f(x))"
   shows "ufDom\<cdot>(Abs_cufun (\<lambda> x. (ubDom\<cdot>x = cs ) \<leadsto> f(x))) = cs" 
-  using ubdom_ex by blast
+  apply(simp add: assms ufDom_def)
+  by (smt Collect_cong assms(2) domIff dom_def dom_eq_empty_conv map_not_ufun someI_ex)
 
 
   subsection \<open>ufRan\<close>
@@ -533,7 +534,7 @@ lemma ufran_least: "ufRan\<cdot>f = ubDom\<cdot>((Rep_cufun f)\<rightharpoonup>(
 (*   *)
 lemma ufran_2_ubdom2: assumes "ubDom\<cdot>tb = ufDom\<cdot>f"
   shows "ubDom\<cdot>((Rep_cufun f)\<rightharpoonup>tb) = ufRan\<cdot>f"
-  using ubdom_ex by blast
+  by (metis assms domIff option.exhaust_sel rep_ufun_well ufWell_def ufdom_2ufundom ufdom_not_empty ufran_2_ubdom)
 
 (* Should be ported to UFun_Comp
 

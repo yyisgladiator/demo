@@ -570,14 +570,25 @@ qed
 
 lemma ufSerComp_dom: assumes "sercomp_well f1 f2"
   shows "ufDom\<cdot>(ufSerComp f1 f2) = ufDom\<cdot>f1"
-  apply(simp add: ufDom_def ufSerComp_def)
-  using ubdom_ex by blast
+  apply(subst ufDom_def, simp add: ufSerComp_def)
+  apply(subst rep_abs_cufun, simp add: ufSerComp_cont)
+   apply (simp add: assms ufSerComp_well)
+  by (smt domIff rep_ufun_well tfl_some ubdom_least_cs ufWell_def ufdom_2ufundom ufunLeastIDom)
   
 
 lemma ufSerComp_ran: assumes "sercomp_well f1 f2"
   shows "ufRan\<cdot>(ufSerComp f1 f2) = ufRan\<cdot>f2"
-  apply(simp add: ufRan_def ufSerComp_def)
-  using ubdom_ex by auto
+proof - 
+  have f1: "ufRan\<cdot>f1 = ufDom\<cdot>f2"
+    using assms by blast
+  have f2: "\<And>b. ubDom\<cdot>b=ufDom\<cdot>f1 \<longrightarrow> ubDom\<cdot>(the ((\<lambda>x::'a. (ubDom\<cdot>x = UFun.ufDom\<cdot>f1)\<leadsto>f2 \<rightleftharpoons> (f1 \<rightleftharpoons> x)) b)) = ufRan\<cdot>f2"
+    by (simp add: assms ufran_2_ubdom2)
+  show ?thesis
+    apply(subst ufRan_def, simp add: ufSerComp_def)
+    apply(subst rep_abs_cufun, simp add: ufSerComp_cont)
+     apply (simp add: assms ufSerComp_well)
+     using f1 f2 sorry 
+qed
     
 
 lemma uSerComp_repAbs: assumes "sercomp_well f1 f2"

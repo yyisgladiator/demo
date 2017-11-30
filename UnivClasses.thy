@@ -56,7 +56,7 @@ class ubcl = cpo +
   fixes ubLen :: "'a \<Rightarrow> lnat"  (* Debatable *)
 
   assumes ubdom_fix: "\<And> x y. x\<sqsubseteq>y \<Longrightarrow> ubDom\<cdot>x = ubDom\<cdot>y"
-  assumes ubdom_ex: "\<And>C. \<exists>x. ubDom\<cdot>b = C"
+  assumes ubdom_ex: "\<And>C. \<exists>x. ubDom\<cdot>x = C"
     
   assumes ublen_mono: "monofun ubLen"
   assumes ublen_inf_ex: "\<exists>ub. ubLen ub = \<infinity>"
