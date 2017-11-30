@@ -422,6 +422,26 @@ by(simp add: upApply2_def)
 
 lemma upapply2_up [simp]: assumes "x\<noteq>\<bottom>" and "y\<noteq>\<bottom>" obtains a where "up\<cdot>a = upApply2 f\<cdot>x\<cdot>y"
 by(simp add: upApply2_def assms)
-
+ 
+lemma cont2lub_lub_eq: assumes cont: "\<And>i. cont (\<lambda>x. F i x)" 
+  shows "chain Y\<longrightarrow>  (\<Squnion>i. F i (\<Squnion>i. Y i)) = (\<Squnion>i ia. F i (Y ia))"
+proof -
+  { assume "\<exists>a. (\<Squnion>n. F a (Y n)) \<noteq> F a (Lub Y)"
+    have ?thesis
+      by (simp add: cont cont2contlubE) }
+  thus ?thesis
+    by force
+qed  
   
+lemma[simp]: "x \<sqsubseteq> y \<Longrightarrow> (\<Lambda> ya. f\<cdot>x\<cdot>ya) \<sqsubseteq> (\<Lambda> ya. f\<cdot>y\<cdot>ya)"
+  by (simp add: cont_pref_eq1I eta_cfun)
+
+lemma[simp]:"\<forall>Y. chain Y \<longrightarrow> (\<Lambda> y. f\<cdot>(\<Squnion>i. Y i)\<cdot>y) \<sqsubseteq> (\<Squnion>i. \<Lambda> y. f\<cdot>(Y i)\<cdot>y)"
+  apply(simp add: contlub_cfun_fun contlub_cfun_arg,auto)
+  apply(subst contlub_lambda,auto)
+  by (simp add: cfun.lub_cfun cont_pref_eq1I)
+
+lemma cont_lam2cont[simp]:"cont (\<lambda>x. \<Lambda> y. f\<cdot>x\<cdot>y)"
+  by(rule contI2, rule monofunI, simp+)
+
 end
