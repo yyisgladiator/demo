@@ -132,7 +132,12 @@ lemma discr_u_chain_lubnbot_equiv: assumes"chain (Y::nat \<Rightarrow> channel \
 lemma discr_u_chain_lubnbot_equiv_allc: assumes"chain (Y::nat \<Rightarrow> channel \<Rightarrow> 'a discr\<^sub>\<bottom>)" shows " (\<forall>c. (\<Squnion>i. Y i) c \<noteq>\<bottom>) \<longleftrightarrow> (\<exists>i.\<forall>c. Y i c \<noteq> \<bottom>)"
   apply(auto)*)
     
-lemma obtain_n_for_all_c:assumes "chain (Y::nat \<Rightarrow> channel\<rightharpoonup>'a discr\<^sub>\<bottom>)" and "\<forall>c\<in>In. \<exists>i. ((Y i) \<rightharpoonup> c) \<noteq> \<bottom>" and "\<forall>c\<in>In. ((\<Squnion>i. Y i) \<rightharpoonup> c) \<noteq> \<bottom>" shows "\<exists>n. \<forall>c\<in>In. ((Y n)\<rightharpoonup> c) = ((\<Squnion>i. Y i) \<rightharpoonup> c)"
+lemma obtain_n_for_all_c:assumes "chain (Y::nat \<Rightarrow> channel\<rightharpoonup>'a discr\<^sub>\<bottom>)"
+(*  shows "finite_chain Y" (* Wenn channel finite *) *)
+and "\<forall>c\<in>In. \<exists>i. ((Y i) \<rightharpoonup> c) \<noteq> \<bottom>" 
+and "\<forall>c\<in>In. ((\<Squnion>i. Y i) \<rightharpoonup> c) \<noteq> \<bottom>" 
+
+shows "\<exists>n. \<forall>c\<in>In. ((Y n)\<rightharpoonup> c) = ((\<Squnion>i. Y i) \<rightharpoonup> c)"
 proof-
   have chain_Yc:"\<forall>c. chain(\<lambda>i. Y i  \<rightharpoonup> c)"
     by (metis assms(1) part_the_chain)
@@ -415,7 +420,7 @@ proof(rule spf_contI2,rule Cont.contI2,auto)
   have h_false:"sbDom\<cdot>(\<Squnion>i. Y i) \<noteq> In \<Longrightarrow> \<forall>i. sbDom\<cdot>(Y i) \<noteq> In"
     by (simp add: chain sbChain_dom_eq2)
   have "(\<Squnion>i. spfStep_h1 In Out\<cdot> h\<cdot>(sbHdElem\<cdot>(Y i))) \<rightleftharpoons> (\<Squnion>i. Y i) \<sqsubseteq> (\<Squnion>i. spfStep_h1 In Out\<cdot> h\<cdot>(sbHdElem\<cdot>(Y i)) \<rightleftharpoons> Y i)"
-    sorry
+    sorry (* @Jens *)
   then show "spfStep_h1 In Out\<cdot> h\<cdot>(sbHdElem\<cdot>(\<Squnion>i. Y i)) \<rightleftharpoons> (\<Squnion>i. Y i) \<sqsubseteq> (\<Squnion>i. spfStep_h1 In Out\<cdot> h\<cdot>(sbHdElem\<cdot>(Y i)) \<rightleftharpoons> Y i)"
     by(simp add: h1)
 qed   
@@ -641,7 +646,8 @@ lemma abcc:"sbHdElem\<cdot>sb = convDiscrUp a \<Longrightarrow> spfStep_h2 (sbDo
   sorry
 
 (* Any idea how we can write the final lemma nicer? *)
-lemma assumes "sbDom\<cdot>sb = In" and "sbHdElem\<cdot>sb = convDiscrUp a" and "spfDom\<cdot>(h a) = In" and "spfRan\<cdot>(h a) = Out" and "\<forall>c\<in>In. (sbHdElem\<cdot>sb \<rightharpoonup> c) \<noteq> \<bottom>"
+lemma spfStep_final: assumes "sbDom\<cdot>sb = In" and "sbHdElem\<cdot>sb = convDiscrUp a" and "spfDom\<cdot>(h a) = In" and "spfRan\<cdot>(h a) = Out" 
+  (* and  "\<forall>c\<in>In. (sbHdElem\<cdot>sb \<rightharpoonup> c) \<noteq> \<bottom>" *) and "sbLen\<cdot>sb > 0"
   shows "spfStep In Out\<cdot>h\<rightleftharpoons>sb = (h a)\<rightleftharpoons>sb"
   apply(simp add: spfstep_insert assms)
   apply(simp add: spfstep_h1_insert)
