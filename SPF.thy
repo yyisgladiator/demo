@@ -288,10 +288,10 @@ definition spfFix ::"channel set \<Rightarrow> channel set \<Rightarrow>('m SPF 
 
 subsection \<open>spfStateFix\<close>
   
-definition spfStateLeast :: "channel set \<Rightarrow> channel set \<Rightarrow>('s1 \<Rightarrow> 'm SPF)" where
+definition spfStateLeast :: "channel set \<Rightarrow> channel set \<Rightarrow>('s1::type \<Rightarrow> 'm SPF)" where
 "spfStateLeast In Out \<equiv> (\<lambda> x. spfLeast In Out)"
 
-definition spfStateFix ::"channel set \<Rightarrow> channel set \<Rightarrow>(('s1 \<Rightarrow>'m SPF) \<rightarrow> ('s1 \<Rightarrow>'m SPF)) \<rightarrow> ('s1 \<Rightarrow> 'm SPF)" where
+definition spfStateFix ::"channel set \<Rightarrow> channel set \<Rightarrow>(('s1::type \<Rightarrow>'m SPF) \<rightarrow> ('s1 \<Rightarrow>'m SPF)) \<rightarrow> ('s1 \<Rightarrow> 'm SPF)" where
 "spfStateFix In Out \<equiv> (\<Lambda> F.  if \<forall>x. (spfDom\<cdot>((F\<cdot>(spfStateLeast In Out)) x) = In \<and> spfRan\<cdot>((F\<cdot>(spfStateLeast In Out)) x) = Out) then fixg (spfStateLeast In Out) F else (spfStateLeast In Out))"  
 
 (* ----------------------------------------------------------------------- *)
@@ -1488,7 +1488,7 @@ subsection \<open>spfStateFix\<close>
 
 lemma spfStateFix_mono[simp]: "monofun (\<lambda> F.  if \<forall>x. (spfDom\<cdot>((F\<cdot>(spfStateLeast In Out)) x) = In \<and> spfRan\<cdot>((F\<cdot>(spfStateLeast In Out)) x) = Out) then fixg (spfStateLeast In Out) F else (spfStateLeast In Out))"
 proof(rule monofunI)
-  fix x::"('s1 \<Rightarrow> 'm SPF) \<rightarrow> ('s1 \<Rightarrow> 'm SPF)" and y::"('s1 \<Rightarrow>'m SPF) \<rightarrow> ('s1 \<Rightarrow>'m SPF)"
+  fix x::"('s1::type \<Rightarrow> 'm SPF) \<rightarrow> ('s1 \<Rightarrow> 'm SPF)" and y::"('s1 \<Rightarrow>'m SPF) \<rightarrow> ('s1 \<Rightarrow>'m SPF)"
   assume a1:"x \<sqsubseteq> y"
   show "(if \<forall>xa. spfDom\<cdot>((x\<cdot>(spfStateLeast In Out)) xa) = In \<and> spfRan\<cdot>((x\<cdot>(spfStateLeast In Out)) xa) = Out then fixg (spfStateLeast In Out) x else spfStateLeast In Out) \<sqsubseteq>
            (if \<forall>x. spfDom\<cdot>((y\<cdot>(spfStateLeast In Out)) x) = In \<and> spfRan\<cdot>((y\<cdot>(spfStateLeast In Out)) x) = Out then fixg (spfStateLeast In Out) y else spfStateLeast In Out)"
@@ -1511,7 +1511,7 @@ qed
   
 lemma spfStateFix_cont[simp]: "cont (\<lambda> F.  if \<forall>x. (spfDom\<cdot>((F\<cdot>(spfStateLeast In Out)) x) = In \<and> spfRan\<cdot>((F\<cdot>(spfStateLeast In Out)) x) = Out) then fixg (spfStateLeast In Out) F else (spfStateLeast In Out))"
 proof(rule Cont.contI2,simp)
-  fix Y:: "nat \<Rightarrow> (('s1 \<Rightarrow>'m SPF) \<rightarrow> ('s1 \<Rightarrow>'m SPF))"
+  fix Y:: "nat \<Rightarrow> (('s1::type \<Rightarrow>'m SPF) \<rightarrow> ('s1 \<Rightarrow>'m SPF))"
   assume a1:"chain Y"
   assume a2:"chain (\<lambda>i. if \<forall>x. spfDom\<cdot>((Y i\<cdot>(spfStateLeast In Out)) x) = In \<and> spfRan\<cdot>((Y i\<cdot>(spfStateLeast In Out)) x) = Out then fixg (spfStateLeast In Out) (Y i)
                     else spfStateLeast In Out)"

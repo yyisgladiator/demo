@@ -38,8 +38,8 @@ definition getRan :: "('s, 'm::message) automaton \<Rightarrow> channel set" whe
 setup_lifting type_definition_automaton
 
 (* HK is defining this. returns the fixpoint *)
-definition myFixer :: "channel set \<Rightarrow> channel set \<Rightarrow> (('s \<Rightarrow> 'm SPF)\<rightarrow>('s \<Rightarrow> 'm SPF)) \<rightarrow> ('s \<Rightarrow> 'm SPF)" where
-"myFixer = undefined"
+definition myFixer :: "channel set \<Rightarrow> channel set \<Rightarrow> (('s \<Rightarrow> 'm::message SPF)\<rightarrow>('s \<Rightarrow> 'm SPF)) \<rightarrow> ('s \<Rightarrow> 'm SPF)" where
+"myFixer = spfStateFix"
 
 
 (* Defined by SWS *)
