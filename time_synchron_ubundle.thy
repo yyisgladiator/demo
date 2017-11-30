@@ -5,13 +5,17 @@ begin
 
 default_sort countable
 
+(*
 definition tsynWell :: "'a event stream \<Rightarrow> bool" where
 "tsynWell s \<equiv> ts_well s \<and> (\<forall> n. Fin n < #s \<longrightarrow> tslen\<cdot>(tsNth n\<cdot>(Abs_tstream(s))) \<le> Fin 1)"
+*)
 
-pcpodef 'a tsynstream = "{t :: 'a event stream. tsynWell t}"
-   apply auto
+pcpodef 'a tsynstream = "{t :: 'a event stream. True}"
+  by auto
+(*
    apply (simp add: tsynWell_def tslen_bottom)
   sorry
+*)
 
 definition tsynDom :: "'a tsynstream \<rightarrow> 'a set" where
 "tsynDom \<equiv> \<Lambda> ts . {a | a. (Msg a) \<in> sdom\<cdot>(Rep_tsynstream ts)}"
@@ -29,12 +33,13 @@ definition usLen_tsynstream :: "'a tsynstream \<rightarrow> lnat" where
 "usLen_tsynstream = tsynlen"
 
 instance
-  apply intro_classes apply (simp add: adm_def)
+  apply intro_classes 
+  apply (simp add: adm_def)
 proof 
   fix c :: "channel" and Y :: "nat \<Rightarrow> 'a tsynstream"
   have " chain Y \<Longrightarrow> (\<forall>i::nat. usOkay c (Y i)) \<Longrightarrow> usOkay c (\<Squnion>i::nat. Y i)"
   proof -
-    fix Y :: "nat \<Rightarrow> 'a tsynstream" assume a0:"chain Y" and a1:"(\<forall>i::nat. usOkay c (Y i))"
+    assume a0:"chain Y" and a1:"(\<forall>i::nat. usOkay c (Y i))"
   have 1: "\<forall> i. tsynDom\<cdot>(Y i) \<subseteq> tsynDom\<cdot>(\<Squnion> i. Y i)"
     by (metis SetPcpo.less_set_def a0 is_ub_thelub monofun_cfun_arg)
   show "usOkay c (\<Squnion>i::nat. Y i)"
