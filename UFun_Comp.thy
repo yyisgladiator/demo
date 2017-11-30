@@ -497,30 +497,69 @@ lemma ubfix_ind2:  assumes "ubfun_io_eq F cs"
         by (simp add: assms(1) iter_ubfix_dom s2)
 
   
-(* general *)  
-  
-(* parcomp *)
-
-(* sercomp *)
-subsection\<open>Serial Composition\<close>
-
+(* general *)
 lemma if_then_mono:  assumes "monofun g"
   shows "monofun (\<lambda>b. (ubDom\<cdot>b = In) \<leadsto> g b)"
-proof(rule monofunI)
-  fix x y :: "'a"
-  assume "x\<sqsubseteq>y"
-  hence "ubDom\<cdot>x = ubDom\<cdot>y" using ubdom_fix by blast 
-  thus "(ubDom\<cdot>x = In)\<leadsto>g x \<sqsubseteq> (ubDom\<cdot>y = In)\<leadsto>g y" 
-    by (smt \<open>(x::'a) \<sqsubseteq> (y::'a)\<close> assms monofun_def po_eq_conv some_below)
-qed  
+  by (simp add: assms)
+
   
 lemma if_then_cont:  assumes "cont g"
   shows "cont (\<lambda>b. (ubDom\<cdot>b = In) \<leadsto> g b)"
-proof(rule contI2)
-  show "monofun (\<lambda>b. (ubDom\<cdot>b = In)\<leadsto>g b)" using assms cont2mono if_then_mono by blast 
-  thus " \<forall>Y. chain Y \<longrightarrow> (ubDom\<cdot>(\<Squnion>i. Y i) = In)\<leadsto>g (\<Squnion>i. Y i) \<sqsubseteq> (\<Squnion>i. (ubDom\<cdot>(Y i) = In)\<leadsto>g (Y i))"
-    by (smt Abs_cfun_inverse2 assms below_refl if_then_lub is_ub_thelub lub_eq po_class.chainI ubdom_fix)
+  by (simp add: assms)
+  
+(* parcomp *)
+subsection\<open>parallel Composition\<close>
+
+lemma ufParComp_cont: "cont (\<lambda> x. (ubDom\<cdot>x = ufDom\<cdot>f1 \<union> ufDom\<cdot>f2 ) 
+                                      \<leadsto> ((f1 \<rightleftharpoons> (x \<bar>ufDom\<cdot>f1)) \<uplus> (f2 \<rightleftharpoons> (x\<bar>ufDom\<cdot>f2))))"
+proof -
+  have "cont (\<lambda> s. (Rep_cfun (Rep_ufun f1))\<rightharpoonup>(s\<bar>ufDom\<cdot>f1))" 
+    using cont_Rep_cfun2 cont_compose by force
+  moreover have "cont (\<lambda> s. (Rep_cfun (Rep_ufun f2))\<rightharpoonup>(s\<bar>ufDom\<cdot>f2))"
+    using cont_Rep_cfun2 cont_compose by force
+  ultimately have "cont (\<lambda> s. ((Rep_cfun (Rep_ufun f1))\<rightharpoonup>(s\<bar>ufDom\<cdot>f1)) \<uplus> ((Rep_cfun (Rep_ufun f2))\<rightharpoonup>(s\<bar>ufDom\<cdot>f2)))"
+    using cont2cont_APP cont_Rep_cfun2 cont_compose by blast
+  hence "cont (\<lambda> s. (f1\<rightleftharpoons>(s \<bar> ufDom\<cdot>f1)) \<uplus> (f2\<rightleftharpoons>(s \<bar> ufDom\<cdot>f2)))"
+    by simp 
+  thus ?thesis
+    using ufun_contI2 by blast
+   (* by(simp add: if_then_cont)*) (*alternative*)
 qed
+
+(*funktioniert auch(\<leftarrow>theoretisch) ohne assumes*)
+lemma ufParComp_well:  assumes "(ufCompL f1 f2 = {}) \<and> (ufRan\<cdot>f1 \<inter> ufRan\<cdot>f2 = {})"
+  shows "ufWell (\<Lambda> x. (ubDom\<cdot>x = ufDom\<cdot>f1 \<union> ufDom\<cdot>f2 )
+\<leadsto> ((f1 \<rightleftharpoons> (x \<bar>ufDom\<cdot>f1)) \<uplus> (f2 \<rightleftharpoons> (x\<bar>ufDom\<cdot>f2))))"
+  apply(simp add: ufWell_def) 
+  apply rule
+(*      \<down>assumptions inconsistent?       *)
+  apply (metis (mono_tags, lifting) Un_iff dom_if ex_in_conv if_then_dom mem_Collect_eq ubdom_ex)
+  using ubdom_ex by auto
+
+lemma parcomp_dom_ran_empty: assumes "ufCompL f1 f2 = {}"
+  shows "(ufDom\<cdot>f1 \<union> ufDom\<cdot>f2) \<inter> (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2) = {}"
+    using assms ufCompL_def by fastforce
+
+
+lemma parcomp_dom_i_below: assumes "ufCompL f1 f2 = {}"
+  shows "(ufDom\<cdot>f1 \<union> ufDom\<cdot>f2) = ufCompI f1 f2"
+  using assms ufCompI_def ufCompL_def by fastforce
+
+
+lemma parcomp_cInOc: assumes "ufCompL f1 f2 = {}"
+                    and "c \<in> ufRan\<cdot>f1"
+                  shows "c \<in> ufCompO f1 f2"
+  by (simp add: assms(2) ufCompO_def)
+
+(*funktioniert auch ohne assumes*)
+lemma parcomp_domranf1: assumes "ufCompL f1 f2 = {}"
+                        and "ubDom\<cdot>ub = ufCompI f1 f2"
+                      shows "(ubDom\<cdot>(f1\<rightleftharpoons>(ub\<bar>ufDom\<cdot>f1))) = ufRan\<cdot>f1"
+  using ubdom_ex by auto
+
+
+(* sercomp *)
+subsection\<open>Serial Composition\<close>
   
 lemma ufSerComp_cont: "cont (\<lambda> x. (ubDom\<cdot>x =  ufDom\<cdot>f1) \<leadsto> (f2 \<rightleftharpoons> (f1 \<rightleftharpoons> x)))"
 proof - 
