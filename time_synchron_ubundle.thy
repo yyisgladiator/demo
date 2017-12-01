@@ -12,13 +12,9 @@ definition tsynWell :: "'a event stream \<Rightarrow> bool" where
 
 pcpodef 'a tsynstream = "{t :: 'a event stream. True}"
   by auto
-(*
-   apply (simp add: tsynWell_def tslen_bottom)
-  sorry
-*)
 
 definition tsynDom :: "'a tsynstream \<rightarrow> 'a set" where
-"tsynDom \<equiv> \<Lambda> ts . {a | a. (Msg a) \<in> sdom\<cdot>(Rep_tsynstream ts)}"
+"tsynDom \<equiv> \<Lambda> ts . {a | a::'a . (Msg a) \<in> sdom\<cdot>(Rep_tsynstream ts)}"
 
 definition tsynlen:: "'a tsynstream \<rightarrow> lnat" where 
 "tsynlen \<equiv> \<Lambda> ts. #(Rep_tsynstream ts)"
@@ -49,5 +45,23 @@ proof
   then show "chain Y \<longrightarrow> (\<forall>i::nat. usOkay c (Y i)) \<longrightarrow> usOkay c (\<Squnion>i::nat. Y i)" by blast
   qed
 end
+
+(* lshd etc *)
+
+definition tsynLshd :: "'a tsynstream \<rightarrow> 'a event discr u" where
+"tsynLshd \<equiv> \<Lambda> s.  lshd\<cdot>(Rep_tsynstream s)"
+
+definition tsynRt :: "'a tsynstream \<rightarrow> 'a tsynstream" where
+"tsynRt \<equiv> \<Lambda> s. Abs_tsynstream (srt\<cdot>(Rep_tsynstream s))"
+
+
+definition tsynLscons :: "'a event discr u \<rightarrow> 'a tsynstream \<rightarrow> 'a tsynstream" where
+"tsynLscons \<equiv> \<Lambda> t ts. if (ts=\<bottom> & t\<noteq>updis \<surd>) then \<bottom> else Abs_tsynstream((lscons\<cdot>t)\<cdot>(Rep_tsynstream ts))"
+
+
+definition tsynMLscons :: "'a discr u \<rightarrow> 'a tsynstream \<rightarrow> 'a tsynstream" where
+"tsynMLscons \<equiv> \<Lambda> t ts. tsynLscons\<cdot>(upApply Msg\<cdot>t)\<cdot>ts"
+
+
 
 end
