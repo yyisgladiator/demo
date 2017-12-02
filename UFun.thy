@@ -458,7 +458,9 @@ lemma ufunLeastIDom: "(ubLeast (ufDom\<cdot>f)) \<in> dom (Rep_cufun f)"
 lemma ufdom_2_dom_ctufun: assumes "ufDom\<cdot>f = ufDom\<cdot>g"
   shows "dom (Rep_cufun f) = dom (Rep_cufun g)"  
   (* proof found by sledgehammer *)
-  sorry
+  apply auto
+  apply (metis assms domIff not_None_eq ufdom_2ufundom ufdom_not_empty ufun_ufundom2dom)
+  by (metis assms domIff not_None_eq ufdom_2ufundom ufdom_not_empty ufun_ufundom2dom)
 
 (* induction rule to proof that f is leq g  *)
 lemma ufun_belowI: assumes "ufDom\<cdot>f = ufDom\<cdot>g"
