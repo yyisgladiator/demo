@@ -89,11 +89,38 @@ definition H :: "('s, 'm::message) automaton \<Rightarrow> 'm SPF" where
 
 
 
+section \<open>stuff i need in spfStep\<close>
+lemma spfstep_dom [simp]: "spfDom\<cdot>(spfStep cIn cOut\<cdot>f) = cIn"
+  sorry
+
+lemma spfstep_ran [simp]: "spfRan\<cdot>(spfStep cIn cOut\<cdot>f) = cOut"
+  sorry
+
+lemma stepstep_step: "spfStep In Out\<cdot>f\<rightleftharpoons>sb = (f ((inv convDiscrUp)(sbHdElem\<cdot>sb)))\<rightleftharpoons>sb"
+  sorry
+
+
+
 
 section \<open>Lemma about h\<close>
 
+lemma h_unfolding: "(h automat s) = spfStep (getDom automat) (getRan automat)\<cdot>(helper (getTransition automat) s\<cdot>(h automat))"
+  by (metis (no_types, lifting) Abs_cfun_inverse2 h_cont h_def spfStateFix_fix spfstep_dom spfstep_ran)
+
+lemma h_step: "(h automat s)\<rightleftharpoons>sb = ((helper (getTransition automat) s\<cdot>(h automat)) ((inv convDiscrUp)(sbHdElem\<cdot>sb))) \<rightleftharpoons>sb"
+  by (simp add: h_unfolding stepstep_step)
+
+definition autGetNextState:: "('s::type, 'm::message) automaton \<Rightarrow> 's \<Rightarrow> 's" where
+"autGetNextState = undefined"
+
+definition autGetNextOutput:: "('s::type, 'm::message) automaton \<Rightarrow> 's \<Rightarrow> 'm SB" where
+"autGetNextOutput = undefined"
 
 
+lemma h_final: "(h automat s)\<rightleftharpoons>sb = spfConc (autGetNextOutput automat s)\<cdot>(spfRt\<cdot>(h automat (autGetNextState automat s))) \<rightleftharpoons>sb"
+  unfolding h_step
+  apply(simp add: helper_def autGetNextOutput_def autGetNextState_def)
+  oops
 
 section \<open>Lemma about H\<close>
 

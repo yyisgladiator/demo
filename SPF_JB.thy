@@ -721,6 +721,10 @@ definition spfConc :: "'m SB \<Rightarrow> 'm SPF \<rightarrow> 'm SPF" where
 "spfConc sb = spfApplyOut (sbConc sb)"
 
 
+subsection \<open>more general lemma\<close>
+
+lemma spfapply_in_out: "spfApplyIn f\<cdot>(spfApplyOut g\<cdot>spf) = spfApplyOut g\<cdot>(spfApplyIn f\<cdot>spf)"
+  sorry
 
 subsection \<open>spfRt lemma\<close>
 
