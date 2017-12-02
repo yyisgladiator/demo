@@ -24,12 +24,10 @@ definition spfApplyOut :: "('a SB \<rightarrow> 'a SB) \<Rightarrow> 'a SPF \<ri
 definition spfApplyIn :: "('m SB \<rightarrow> 'm SB) \<Rightarrow> 'm SPF \<rightarrow> 'm SPF" where 
 "spfApplyIn k \<equiv> \<Lambda> g. Abs_CSPF (\<lambda>x. (Rep_CSPF g)(k\<cdot>x))" 
  
-
+(*
 definition spfApplyIn2 :: "('a SB \<rightarrow> 'a SB) \<Rightarrow> 'a SPF \<rightarrow> 'a SPF" where
 "spfApplyIn2 k \<equiv> (\<Lambda> g. Abs_CSPF (\<lambda>x. (sbDom\<cdot>(k\<cdot>x) = spfDom\<cdot>g) \<leadsto> (g \<rightleftharpoons>(k\<cdot>x))))"
-
-definition spfRt :: "'m SPF \<rightarrow> 'm SPF" where
-"spfRt \<equiv> spfApplyIn sbRt"
+*)
 
 (*
 definition spfApplyOut_pre :: "('a SB \<rightarrow> 'a SB) \<Rightarrow> 'a SPF \<Rightarrow> channel set \<Rightarrow>  bool" where
@@ -39,12 +37,13 @@ definition spfApplyOut_pre :: "('a SB \<rightarrow> 'a SB) \<Rightarrow> 'a SPF 
 lemma spfapplyin_eq_pre: "(Rep_CSPF spf)(f\<cdot>x) = (sbDom\<cdot>(f\<cdot>x) = spfDom\<cdot>spf) \<leadsto> (spf \<rightleftharpoons>(f\<cdot>x))"
   by (metis domIff option.collapse spfLeastIDom spf_sbdom2dom spfdom2sbdom)
 
+(*
  (* convert between original and proof oriented definition *)
 lemma spfapplyin_eq: "spfApplyIn k = spfApplyIn2 k"
   apply (subst spfApplyIn_def, subst spfApplyIn2_def)
   apply (subst spfapplyin_eq_pre)
   by simp
-
+*)
 
 section \<open>spfApplyOut\<close>
 
@@ -707,5 +706,25 @@ lemma spfapplyinOld_ran [simp]: assumes "\<And>sb. sbDom\<cdot>(f\<cdot>sb) =  s
 lemma spfapplyinOld_step [simp]: assumes "\<And>sb. sbDom\<cdot>(f\<cdot>sb) =  sbDom\<cdot>sb"
   shows "(spfApplyIn f\<cdot>spf)\<rightleftharpoons>sb = spf\<rightleftharpoons>f\<cdot>sb"
   by(simp add: spfapplyinOld_insert assms)
+
+
+
+
+section \<open>Definitions with spfApplyIn\<close>
+
+definition spfRt :: "'m SPF \<rightarrow> 'm SPF" where
+"spfRt \<equiv> spfApplyIn sbRt"
+
+section \<open>Definitions with spfApplyOut\<close>
+
+definition spfConc :: "'m SB \<Rightarrow> 'm SPF \<rightarrow> 'm SPF" where
+"spfConc sb = spfApplyOut (sbConc sb)"
+
+
+
+subsection \<open>spfRt lemma\<close>
+
+subsection \<open>spfConc lemma\<close>
+
 
 end

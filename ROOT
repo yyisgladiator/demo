@@ -3,18 +3,17 @@ session "Streams" (mustWork) = "HOLCF" +
   theories
     Streams
 
-session "TStream" (mustWork) = "Streams" + 
-  options [quick_and_dirty = false]
-  theories
-    TStream
- 
-session "ABPSorry" (mustWork) = "TStream" + 
+session "SB" (mustWork) = "Streams" +
   options [quick_and_dirty = true]
   theories
-    "CaseStudies/ABP/ABP_TSPS"
- 
-session "ABP" (canFail) = "TStream" + 
-  options [quick_and_dirty = false]
-  theories
-    "CaseStudies/ABP/ABP_TSPS"
+    SB
 
+session "SPF" (mustWork) = "SB" +
+  options [quick_and_dirty = true]
+  theories
+    SB
+
+session "Automat" (mustWork) = "SPF" +
+  options [quick_and_dirty = true]
+  theories
+    Automaton
