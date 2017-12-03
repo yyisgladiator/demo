@@ -974,6 +974,7 @@ proof -
     by (metis assms(1) assms(2) ufComp_parallel)
 qed
 
+(* eq proof between ufComp and ufParComp*)
 lemma parallelOperatorEq: assumes "(ufCompL f1 f2 = {}) \<and> (ufRan\<cdot>f1 \<inter> ufRan\<cdot>f2 = {})"
   shows "ufComp f1 f2 = ufParComp f1 f2" (is "?F1 = ?F2")
 proof -
