@@ -748,7 +748,7 @@ lemma spfrt_step[simp]: "(spfRt\<cdot>spf)\<rightleftharpoons>sb = spf\<rightlef
 
 subsection \<open>spfConc lemma\<close>
 lemma spconc_step[simp]: 
-  shows "(spfConc sb1\<cdot>spf)\<rightleftharpoons>sb2 = sbConc sb1\<cdot>(spf\<rightleftharpoons>sb)"
+  shows "(spfConc sb1\<cdot>spf)\<rightleftharpoons>sb = sbConc sb1\<cdot>(spf\<rightleftharpoons>sb)"
   apply(simp add: spfConc_def)
   sorry
 

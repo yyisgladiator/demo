@@ -120,8 +120,8 @@ definition autGetNextOutput:: "('s::type, 'm::message) automaton \<Rightarrow> '
 lemma h_final: "(h automat s)\<rightleftharpoons>sb = 
   spfConc (autGetNextOutput automat s ((inv convDiscrUp)(sbHdElem\<cdot>sb)))\<cdot>(spfRt\<cdot>(h automat (autGetNextState automat s ((inv convDiscrUp)(sbHdElem\<cdot>sb))))) \<rightleftharpoons>sb"
   unfolding h_step
-  apply(simp add: helper_def autGetNextOutput_def autGetNextState_def)
-  by (metis spconc_step spfrt_step)
+  by(simp add: helper_def autGetNextOutput_def autGetNextState_def)
+  
 
 section \<open>Lemma about H\<close>
 
