@@ -110,17 +110,18 @@ lemma h_unfolding: "(h automat s) = spfStep (getDom automat) (getRan automat)\<c
 lemma h_step: "(h automat s)\<rightleftharpoons>sb = ((helper (getTransition automat) s\<cdot>(h automat)) ((inv convDiscrUp)(sbHdElem\<cdot>sb))) \<rightleftharpoons>sb"
   by (simp add: h_unfolding stepstep_step)
 
-definition autGetNextState:: "('s::type, 'm::message) automaton \<Rightarrow> 's \<Rightarrow> 's" where
-"autGetNextState = undefined"
+definition autGetNextState:: "('s::type, 'm::message) automaton \<Rightarrow> 's \<Rightarrow>  ((channel \<rightharpoonup> 'm)) \<Rightarrow> 's" where
+"autGetNextState aut s m = fst ((getTransition aut) (s,m))"
 
-definition autGetNextOutput:: "('s::type, 'm::message) automaton \<Rightarrow> 's \<Rightarrow> 'm SB" where
-"autGetNextOutput = undefined"
+definition autGetNextOutput:: "('s::type, 'm::message) automaton \<Rightarrow> 's \<Rightarrow>  ((channel \<rightharpoonup> 'm)) \<Rightarrow>  'm SB" where
+"autGetNextOutput aut s m = snd ((getTransition aut) (s,m))"
 
-
-lemma h_final: "(h automat s)\<rightleftharpoons>sb = spfConc (autGetNextOutput automat s)\<cdot>(spfRt\<cdot>(h automat (autGetNextState automat s))) \<rightleftharpoons>sb"
+(* ToDo: make a bit more readable *)
+lemma h_final: "(h automat s)\<rightleftharpoons>sb = 
+  spfConc (autGetNextOutput automat s ((inv convDiscrUp)(sbHdElem\<cdot>sb)))\<cdot>(spfRt\<cdot>(h automat (autGetNextState automat s ((inv convDiscrUp)(sbHdElem\<cdot>sb))))) \<rightleftharpoons>sb"
   unfolding h_step
   apply(simp add: helper_def autGetNextOutput_def autGetNextState_def)
-  oops
+  by (metis spconc_step spfrt_step)
 
 section \<open>Lemma about H\<close>
 
