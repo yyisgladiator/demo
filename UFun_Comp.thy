@@ -96,6 +96,9 @@ in Abs_ufun (Abs_cfun (\<lambda> x. (ubDom\<cdot>x = I) \<leadsto> ubFix (ufComp
 definition ufParComp :: "('m \<Rrightarrow> 'm) \<Rightarrow> ('m \<Rrightarrow> 'm) \<Rightarrow> ('m \<Rrightarrow> 'm)" ("_\<parallel>_") where
 "ufParComp f1 f2 \<equiv> Abs_ufun (Abs_cfun (\<lambda> x. (ubDom\<cdot>x = ufDom\<cdot>f1 \<union> ufDom\<cdot>f2 ) \<leadsto> ((f1 \<rightleftharpoons> (x \<bar>ufDom\<cdot>f1)) \<uplus> (f2 \<rightleftharpoons> (x\<bar>ufDom\<cdot>f2)))))"
 
+definition parcomp_well :: "('m \<Rrightarrow> 'm) \<Rightarrow> ('m \<Rrightarrow> 'm) \<Rightarrow> bool" where
+"parcomp_well f1 f2 \<equiv> (ufCompL f1 f2 = {}) \<and> (ufRan\<cdot>f1 \<inter> ufRan\<cdot>f2 = {})"
+
 (* sercomp *)
 abbreviation sercomp_well :: "('m \<Rrightarrow> 'm) \<Rightarrow> ('m \<Rrightarrow> 'm) \<Rightarrow> bool" where
 "sercomp_well f1 f2 \<equiv>  (ufRan\<cdot>f1 = ufDom\<cdot>f2) 
@@ -122,6 +125,19 @@ in Abs_ufun (Abs_cfun (\<lambda> sb. (ubDom\<cdot>sb = I) \<leadsto>
 (****************************************************)
 section\<open>Lemmas\<close>
 (****************************************************)  
+
+subsection \<open>ubLeast\<close>
+
+(* ubLeast is in the same dome as the function f  *)
+lemma ufunLeastIDom: "(ubLeast (ufDom\<cdot>f)) \<in> dom (Rep_cufun f)"
+  by (metis rep_ufun_well domD ubdom_least_cs ufWell_def ufdom_2ufundom)
+
+
+(* The range of an ufun is equal to the domain of f applied to the least ubundle with domain 
+       ufDom f *)
+lemma ufran_least: "ufRan\<cdot>f = ubDom\<cdot>(f\<rightleftharpoons>(ubLeast (ufDom\<cdot>f)))"
+  apply (simp add: ufRan_def)
+  by (metis (no_types) domD option.sel ufunLeastIDom ufran_2_ubdom ufran_insert)
 
 subsection\<open>ubFix\<close>
 thm ubFix_def
@@ -714,7 +730,7 @@ proof -
     by (metis ubFix_def ubfix_dom)
 qed
 
-subsection \<open>General Comp\<close> 
+subsubsection \<open>General Comp\<close> 
 (* ufComp is a cont function *)
 lemma ufcomp_cont[simp]: 
   shows "cont (\<lambda> x. (ubDom\<cdot>x = ufCompI f1 f2) \<leadsto> ubFix (ufCompH f1 f2 x) (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2) )"
@@ -765,6 +781,14 @@ lemma ufcomp_dom: assumes "ufRan\<cdot>f1 \<inter> ufRan\<cdot>f2 = {}"
   apply (simp add: domIff)
   by (meson someI_ex ubdom_ex)
 
+
+lemma ubDom_h: " ubDom\<cdot>(SOME b::'a. ubDom\<cdot>b = cs) = cs"
+proof -
+  obtain x::"'a" where x_def: "ubDom\<cdot>x = cs" using ubdom_ex by auto
+  show ?thesis
+    by (meson x_def someI_ex)
+qed
+
 lemma ufcomp_ran: assumes "ufRan\<cdot>f1 \<inter> ufRan\<cdot>f2 = {}"
   shows "ufRan\<cdot>(ufComp f1 f2) = ufCompO f1 f2"
 proof -
@@ -779,7 +803,48 @@ proof -
 qed
 
 (* parcomp *)
+subsection\<open>Parallel Composition\<close>
+lemma ufparcomp_cont: "cont (\<lambda> x. (ubDom\<cdot>x = ufDom\<cdot>f1 \<union> ufDom\<cdot>f2 ) \<leadsto> ((f1 \<rightleftharpoons> (x \<bar>ufDom\<cdot>f1)) \<uplus> (f2 \<rightleftharpoons> (x\<bar>ufDom\<cdot>f2))))"
+  sorry
 
+lemma ufparcomp_well: "ufWell (Abs_cfun (\<lambda> x. (ubDom\<cdot>x = ufDom\<cdot>f1 \<union> ufDom\<cdot>f2 ) \<leadsto> ((f1 \<rightleftharpoons> (x \<bar>ufDom\<cdot>f1)) \<uplus> (f2 \<rightleftharpoons> (x\<bar>ufDom\<cdot>f2)))))"
+  sorry
+
+lemma ufparcomp_repabs: assumes "(ufCompL f1 f2 = {}) \<and> (ufRan\<cdot>f1 \<inter> ufRan\<cdot>f2 = {})"
+  shows "Rep_cufun (ufParComp f1 f2) = (\<lambda> x. (ubDom\<cdot>x = ufDom\<cdot>f1 \<union> ufDom\<cdot>f2 ) \<leadsto> ((f1 \<rightleftharpoons> (x \<bar>ufDom\<cdot>f1)) \<uplus> (f2 \<rightleftharpoons> (x\<bar>ufDom\<cdot>f2))))"
+  apply (simp add: ufParComp_def)
+  apply (subst rep_abs_cufun)
+    apply (simp add: ufparcomp_cont)
+   apply (simp add: ufparcomp_well)
+  by auto
+
+
+lemma ufparcom_dom: assumes "(ufCompL f1 f2 = {}) \<and> (ufRan\<cdot>f1 \<inter> ufRan\<cdot>f2 = {})"
+  shows "ufDom\<cdot>(ufParComp f1 f2) = ufDom\<cdot>f1 \<union> ufDom\<cdot>f2"
+  apply (simp add: ufDom_def ufParComp_def)
+  apply (subst rep_abs_cufun)
+  apply (metis (no_types) ufdom_insert ufparcomp_cont)
+   apply (metis (no_types) ufdom_insert ufparcomp_well)
+  apply (simp add: domIff)
+  by (simp add: ubDom_h)
+
+lemma ufparcomp_well_h2: assumes "(ufCompL f1 f2 = {}) \<and> (ufRan\<cdot>f1 \<inter> ufRan\<cdot>f2 = {})"
+  and "ubDom\<cdot>x =  ufDom\<cdot>f1 \<union> ufDom\<cdot>f2" shows  "ubDom\<cdot>((f1 \<rightleftharpoons> (x \<bar>ufDom\<cdot>f1)) \<uplus> (f2 \<rightleftharpoons> (x\<bar>ufDom\<cdot>f2))) =  ufRan\<cdot>f1 \<union> ufRan\<cdot>f2"
+  apply (simp add: ubunion_ubdom)
+  by (simp add: assms(2))
+
+lemma ufparcom_ran: assumes "(ufCompL f1 f2 = {}) \<and> (ufRan\<cdot>f1 \<inter> ufRan\<cdot>f2 = {})"
+  shows "ufRan\<cdot>(ufParComp f1 f2) = ufRan\<cdot>f1 \<union> ufRan\<cdot>f2"
+proof -
+  obtain x where x_def: "x \<in> (ran (Rep_cufun (ufParComp f1 f2)))"
+    using ufran_not_empty by blast
+  have f2: "ufRan\<cdot>(ufParComp f1 f2) = ubDom\<cdot>x"
+    by (meson ran2exists ufran_2_ubdom x_def)
+  have f3: "ubDom\<cdot>x = ufRan\<cdot>f1 \<union> ufRan\<cdot>f2"
+    by (metis (no_types, lifting) assms f2 option.sel ubdom_least_cs ufparcomp_well_h2 ufparcom_dom ufparcomp_repabs ufran_least)
+  show ?thesis
+    by (simp add: f2 f3)
+qed
 (* sercomp *)
 subsection\<open>Serial Composition\<close>
 
@@ -880,6 +945,198 @@ lemma uSerComp_repAbs: assumes "sercomp_well f1 f2"
   
 
 (* feedback *)  
-  
-  
+
+
+subsection \<open>Equality\<close>
+
+(* ufcomp ufsercomp  *)
+
+lemma ufcomph_insert: "ufCompH f1 f2 x\<cdot>z = ((f1\<rightleftharpoons>((x \<uplus> z)  \<bar> ufDom\<cdot>f1)) \<uplus>  (f2\<rightleftharpoons>((x \<uplus> z)  \<bar> ufDom\<cdot>f2)))"
+  by (simp add: ufCompH_def)
+
+
+lemma sercomp_dom_f1: assumes "sercomp_well f1 f2"
+                      and "ubDom\<cdot>tb = ufCompI f1 f2"
+                    shows "ubDom\<cdot>(f1\<rightleftharpoons>(tb\<bar>(ufDom\<cdot>f1))) = ufRan\<cdot>f1"
+proof -
+  have "ufDom\<cdot>f1 = ufCompI f1 f2"
+    using assms(1) ufCompI_def by fastforce
+  then show ?thesis
+    by (simp add: assms(2) ubrestrict_ubdom ufran_2_ubdom2)
+qed
+
+lemma sercomp_dom_f12: assumes "sercomp_well f1 f2"
+  shows "ufDom\<cdot>f1 \<inter> (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2) = {}"
+  using assms by blast
+
+
+lemma ubunion_restrict3 [simp]: assumes "(ubDom\<cdot>y)\<inter>(ubDom\<cdot>x) = {}" 
+  shows "(x\<uplus>y) \<bar> ubDom\<cdot>x = x"
+  by (metis assms ubunion_ubrestrict2 ubunion_ubrestrict_R)
+
+
+lemma sercomp_iter_serial_res_f1: assumes "sercomp_well f1 f2"
+                                  and "ubDom\<cdot>x = ufCompI f1 f2"
+                                shows "(iter_ufCompH f1 f2 (Suc (Suci)) x) \<bar> (ufRan\<cdot>f1) = (f1 \<rightleftharpoons> (x\<bar>ufDom\<cdot>f1))"
+  by (smt assms(1) assms(2) sercomp_dom_f1 ubdom_least_cs ubunion_ubrestrict_R ubunion_restrict3)
+
+lemma sercomp_iter_serial: assumes "sercomp_well f1 f2"
+                              and "ubDom\<cdot>x = ufCompI f1 f2"
+  shows "(iter_ufCompH f1 f2 (Suc (Suc (Suc i))) x) = 
+    (f1 \<rightleftharpoons> (x\<bar>ufDom\<cdot>f1)) \<uplus> (f2 \<rightleftharpoons> (f1 \<rightleftharpoons> (x\<bar>ufDom\<cdot>f1)))"
+proof -
+  have "ubDom\<cdot>(f1 \<rightleftharpoons> ubLeast (UFun.ufDom\<cdot>f1)) \<inter> UFun.ufDom\<cdot>f1 = UFun.ufDom\<cdot>f1 \<inter> UFun.ufRan\<cdot>f1"
+    by (simp add: inf_commute ufran_least)
+then have f1: "ubDom\<cdot>(f1 \<rightleftharpoons> ubLeast (UFun.ufDom\<cdot>f1)) \<inter> UFun.ufDom\<cdot>f1 = {}"
+by (metis assms(1))
+  have f2: "ubDom\<cdot>(f2 \<rightleftharpoons> ubLeast (UFun.ufDom\<cdot>f2)) \<inter> UFun.ufDom\<cdot>f2 = UFun.ufDom\<cdot>f2 \<inter> UFun.ufRan\<cdot>f2"
+    by (simp add: inf_commute ufran_least)
+  have "iter_ubfix2 (ufCompH f1 f2) (Suc (Suc (Suc i))) (UFun.ufRan\<cdot>f1 \<union> UFun.ufRan\<cdot>f2) x\<bar>UFun.ufRan\<cdot>f1 = f1 \<rightleftharpoons> x\<bar>UFun.ufDom\<cdot>f1"
+    using assms(1) assms(2) sercomp_iter_serial_res_f1 by blast
+  then show ?thesis
+    using f2 f1 by (metis (no_types) assms(1) iterate_Suc ubunion_ubrestrict_R ufcomph_insert)
+qed
+ 
+lemma sercomp_iter_max_in_chain: assumes "sercomp_well f1 f2"
+                                 and "ubDom\<cdot>x = ufCompI f1 f2"
+                               shows "max_in_chain (Suc (Suc (Suc 0))) (\<lambda>i. iter_ufCompH f1 f2 i x)"
+proof (rule max_in_chainI)
+  fix j
+  assume a1: "Suc (Suc (Suc 0)) \<le> j"
+  have f1: "ufDom\<cdot>f1 \<inter> ufDom\<cdot>f2 = {}"
+    using assms(1) by blast
+  obtain k where o1: "j = Suc (Suc (Suc k))"
+    by (metis (no_types) Suc_leD Suc_n_not_le_n a1 not0_implies_Suc)  
+  show "iter_ubfix2 (ufCompH f1 f2) (Suc (Suc (Suc 0))) (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2) x =
+     iter_ubfix2 (ufCompH f1 f2) j (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2) x"
+    apply (subst o1)
+    by (metis assms(1) assms(2) sercomp_iter_serial)
+  qed
+
+
+lemma ufcomp_sercomp_lub_const1: assumes "sercomp_well f1 f2"
+                                   and "ubDom\<cdot>x = ufCompI f1 f2"
+                                 shows "(\<Squnion>i. iter_ufCompH f1 f2 i x) = iter_ufCompH f1 f2 (Suc (Suc (Suc 0))) x"  
+  using assms(1) assms(2) iter_ufCompH_chain maxinch_is_thelub sercomp_iter_max_in_chain by blast
+
+
+lemma ufcomp_sercomp_lub_const2: assumes "sercomp_well f1 f2"
+                                   and "ubDom\<cdot>x = ufCompI f1 f2"
+                                 shows "(\<Squnion>i. iter_ufCompH f1 f2 i x) = (f1 \<rightleftharpoons> (x\<bar>ufDom\<cdot>f1)) \<uplus> (f2 \<rightleftharpoons> (f1 \<rightleftharpoons> (x\<bar>ufDom\<cdot>f1)))"
+  by (metis assms(1) assms(2) sercomp_iter_serial ufcomp_sercomp_lub_const1)
+
+
+lemma ufcomp_serial_iterconst_eq: assumes "sercomp_well f1 f2"
+  shows "(\<lambda> x. (ubDom\<cdot>x = ufCompI f1 f2) \<leadsto> (\<Squnion>i. iter_ufCompH f1 f2 i x) )
+        = (\<lambda> x. (ubDom\<cdot>x = ufDom\<cdot>f1) \<leadsto> ((f1 \<rightleftharpoons> (x\<bar>ufDom\<cdot>f1)) \<uplus> (f2 \<rightleftharpoons> (f1 \<rightleftharpoons> (x\<bar>ufDom\<cdot>f1)))))"
+proof -
+  have f1: " ufCompI f1 f2 = ufDom\<cdot>f1"
+    using assms ufCompI_def by blast
+  have  "\<forall>x. (ubDom\<cdot>x \<noteq> ufCompI f1 f2)  \<or> 
+        (Some ((\<Squnion>i. iter_ufCompH f1 f2 i x))
+        = Some ((f1 \<rightleftharpoons> (x\<bar>ufDom\<cdot>f1)) \<uplus> (f2 \<rightleftharpoons> (f1 \<rightleftharpoons> (x\<bar>ufDom\<cdot>f1)))))"
+      by (metis assms ufcomp_sercomp_lub_const2)
+    then show ?thesis
+      using f1 by auto
+qed
+
+(* ufcomp ufparcomp  *)
+(*  *)
+lemma parcomp_dom_ran_empty: assumes "ufCompL f1 f2 = {}"
+  shows "(ufRan\<cdot>f1 \<union> ufRan\<cdot>f2) \<inter> (ufDom\<cdot>f1 \<union> ufDom\<cdot>f2) = {}"
+  by (metis assms inf_commute ufCompL_def)
+
+(*  *)
+lemma ufComp_parallel :assumes "(ufCompL f1 f2 = {}) \<and> (ufRan\<cdot>f1 \<inter> ufRan\<cdot>f2 = {})"
+  and "ubDom\<cdot>x = ufCompI f1 f2"
+  shows "(iter_ubfix2 (ufCompH f1 f2) (Suc (Suc i)) (UFun.ufRan\<cdot>f1 \<union> UFun.ufRan\<cdot>f2) x)
+                  =(f1\<rightleftharpoons>(x \<bar>ufDom\<cdot>f1)) \<uplus> (f2\<rightleftharpoons>(x\<bar>ufDom\<cdot>f2))" (is "?L = ?R")
+  by (smt assms(1) assms(2) inf.orderE inf_bot_right inf_sup_absorb inf_sup_aci(3) 
+      iterate_Suc parcomp_dom_ran_empty sup_ge2 ubunion_ubrestrict_R ufCompO_def 
+      ufcomp_well_h ufcomph_insert)
+
+(* the third iteration returns the fixpoint  *)
+lemma ufComp_parallel_max: assumes "(ufCompL f1 f2 = {}) \<and> (ufRan\<cdot>f1 \<inter> ufRan\<cdot>f2 = {})"
+  and "ubDom\<cdot>x = ufCompI f1 f2"
+shows "max_in_chain (Suc (Suc 0)) (\<lambda>i. iterate i\<cdot>(ufCompH f1 f2 x)\<cdot>(ubLeast (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2)))"
+  by (metis (no_types, lifting) Suc_le_D Suc_le_lessD assms(1) assms(2) le_simps(2) max_in_chainI ufComp_parallel)
+
+(* the lub of ubFix is the parcomp *)
+lemma ufComp_parallel_itconst1: assumes "(ufCompL f1 f2 = {}) \<and> (ufRan\<cdot>f1 \<inter> ufRan\<cdot>f2 = {})"
+  and "ubDom\<cdot>x = ufCompI f1 f2"
+shows "(\<Squnion> i. iter_ubfix2 (ufCompH f1 f2) i (UFun.ufRan\<cdot>f1 \<union> UFun.ufRan\<cdot>f2) x) = ((f1\<rightleftharpoons>(x \<bar> ufDom\<cdot>f1)) \<uplus>  (f2\<rightleftharpoons>(x \<bar> ufDom\<cdot>f2)))"
+proof -
+  have "(\<Squnion> i. iter_ubfix2 (ufCompH f1 f2) i (UFun.ufRan\<cdot>f1 \<union> UFun.ufRan\<cdot>f2) x) = 
+      (iter_ubfix2 (ufCompH f1 f2) (Suc (Suc 0)) (UFun.ufRan\<cdot>f1 \<union> UFun.ufRan\<cdot>f2) x)"
+    using assms(1) assms(2) maxinch_is_thelub ufComp_parallel_max iter_ufCompH_chain by blast 
+  thus ?thesis
+    by (metis assms(1) assms(2) ufComp_parallel)
+qed
+
+(* eq proof between ufComp and ufParComp*)
+lemma parallelOperatorEq: assumes "(ufCompL f1 f2 = {}) \<and> (ufRan\<cdot>f1 \<inter> ufRan\<cdot>f2 = {})"
+  shows "ufComp f1 f2 = ufParComp f1 f2" (is "?F1 = ?F2")
+proof -
+  have f1: "ufCompI f1 f2 = UFun.ufDom\<cdot>f1 \<union> UFun.ufDom\<cdot>f2"
+    apply (simp add: ufCompI_def)
+    using assms ufCompL_def by fastforce
+  have f2: "ufDom\<cdot>(ufComp f1 f2) = ufDom\<cdot>(ufParComp f1 f2)"
+    using assms f1 ufcomp_dom ufparcom_dom by blast
+  have "\<And> ub. ubDom\<cdot>ub \<noteq> UFun.ufDom\<cdot>f1 \<union> UFun.ufDom\<cdot>f2 \<or> ubFix (ufCompH f1 f2 ub) (UFun.ufRan\<cdot>f1 \<union> UFun.ufRan\<cdot>f2) =
+    (f1 \<rightleftharpoons> ub\<bar>UFun.ufDom\<cdot>f1) \<uplus> (f2 \<rightleftharpoons> ub\<bar>UFun.ufDom\<cdot>f2)"
+    by (simp add: assms f1 ubFix_def ufComp_parallel_itconst1)
+  then have "(\<lambda>x::'a. (ubDom\<cdot>x = ufCompI f1 f2)\<leadsto>ubFix (ufCompH f1 f2 x) (UFun.ufRan\<cdot>f1 \<union> UFun.ufRan\<cdot>f2)) =
+    (\<lambda>x::'a. (ubDom\<cdot>x = UFun.ufDom\<cdot>f1 \<union> UFun.ufDom\<cdot>f2)\<leadsto>(f1 \<rightleftharpoons> x\<bar>UFun.ufDom\<cdot>f1) \<uplus> (f2 \<rightleftharpoons> x\<bar>UFun.ufDom\<cdot>f2))"
+    using f1 by auto
+  then show ?thesis
+    by (simp add: ufComp_def ufParComp_def)
+qed
+
+
+  subsection \<open>ufLeast\<close>
+(* ufLeast *)
+  thm ufLeast_def
+
+(* ufelast if a mono function  *)
+lemma ufleast_mono[simp]: "\<And> cin cout. monofun (\<lambda>sb. (ubDom\<cdot>sb = cin)\<leadsto>ubLeast cout)"
+  by simp
+
+(* ufleast is a cont function *)
+lemma ufleast_cont[simp]: "\<And> cin cout. cont (\<lambda>sb. (ubDom\<cdot>sb = cin)\<leadsto>ubLeast cout)"
+  by simp
+
+(* ufleast produce a ufwell function  *)
+lemma ufleast_ufwell[simp]: "\<And> cin cout. ufWell (Abs_cfun (\<lambda>sb. (ubDom\<cdot>sb = cin)\<leadsto>ubLeast cout))"
+  apply (simp add: ufWell_def, rule)
+   apply (rule_tac x="cin" in exI, simp add: domIff)
+  by (smt option.distinct(1) option.sel ran2exists ubdom_least_cs)
+
+(* insert rule of ufleast *)
+lemma ufleast_insert:"ufLeast In Out = Abs_ufun (Abs_cfun (\<lambda>sb. (ubDom\<cdot>sb = In)\<leadsto>ubLeast Out))"
+  by (simp add: ufLeast_def)
+
+(* somwe how ufleast_ufran need this otherwise this cannt be proven with metis  *)
+lemma ufleast_rep_abs[simp]: "(Rep_cufun (Abs_cufun (\<lambda>sb. (ubDom\<cdot>sb = In)\<leadsto>ubLeast Out))) = (\<lambda>sb. (ubDom\<cdot>sb = In)\<leadsto>ubLeast Out)"
+  by simp
+
+(* ufdom of ufleast is the first argument  *)
+lemma ufleast_ufdom: "ufDom\<cdot>(ufLeast In Out) = In"
+  apply (simp add: ufLeast_def  ufdom_insert domIff)
+  by (meson someI_ex ubdom_least_cs)
+
+(* ufran of ufleast is its second argument *)
+lemma ufleast_ufRan: "ufRan\<cdot>(ufLeast In Out) = Out"
+  by (metis (no_types) option.sel ubdom_least_cs ufleast_insert ufleast_rep_abs ufleast_ufdom ufran_least)
+
+(* ufleast can produce a function smaller or equal other function  *)
+lemma ufleast_min: "(ufLeast (ufDom\<cdot>uf) (ufRan\<cdot>uf)) \<sqsubseteq> uf"
+proof (rule ufun_belowI)
+  show "ufDom\<cdot>(ufLeast (ufDom\<cdot>uf) (ufRan\<cdot>uf)) = UFun.ufDom\<cdot>uf"
+    by (simp add: ufleast_ufdom)
+next
+  show "\<And>x. ubDom\<cdot>x = ufDom\<cdot>(ufLeast (ufDom\<cdot>uf) (ufRan\<cdot>uf)) \<Longrightarrow>
+         Rep_cufun (ufLeast (ufDom\<cdot>uf) (ufRan\<cdot>uf))\<rightharpoonup>x \<sqsubseteq> Rep_cufun uf\<rightharpoonup>x"
+    by (metis ufleast_rep_abs option.sel ubdom_least ufLeast_def ufleast_ufdom ufran_2_ubdom2)
+qed
+
 end
