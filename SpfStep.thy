@@ -91,47 +91,71 @@ lemma discr_u_chain_lubnbot_forall_c: assumes"chain (Y::nat \<Rightarrow> channe
     
 lemma discr_u_chain_lubnbot_equiv: assumes"chain (Y::nat \<Rightarrow> channel \<Rightarrow> 'a discr\<^sub>\<bottom>)" shows "((\<Squnion>i. Y i) c \<noteq>\<bottom>) \<longleftrightarrow> (\<exists>i. Y i c \<noteq> \<bottom>)" 
   by (simp add: assms ch2ch_fun lub_eq_bottom_iff lub_fun)
+
+(*    
+lemma test:  assumes "chain (Y::nat \<Rightarrow> channel\<rightharpoonup>'a discr\<^sub>\<bottom>)" 
+  and "\<forall>c. \<exists>i. ((Y i) \<rightharpoonup> c) \<noteq> \<bottom>" 
+  and "\<forall>c. ((\<Squnion>i. Y i) \<rightharpoonup> c) \<noteq> \<bottom>"
+shows "finite_chain Y"
+proof(rule finite_chainI, simp add: assms,rule max_in_chainI)
+    show "\<exists>i. max_in_chain i Y"
     
+lemma test2:
+  assumes "chain (Y::nat \<Rightarrow> channel\<rightharpoonup>'a discr\<^sub>\<bottom>)" 
+  and "\<forall>c\<in>In. \<exists>i. ((Y i) \<rightharpoonup> c) \<noteq> \<bottom>" 
+  and "\<forall>c\<in>In. ((\<Squnion>i. Y i) \<rightharpoonup> c) \<noteq> \<bottom>" 
+shows "finite_chain Y"
+    sorry
+  *)  
 (*Change goal to finite chain Y, works only for finite channel type*)    
 lemma obtain_n_for_all_c:
   assumes "chain (Y::nat \<Rightarrow> channel\<rightharpoonup>'a discr\<^sub>\<bottom>)" 
   and "\<forall>c\<in>In. \<exists>i. ((Y i) \<rightharpoonup> c) \<noteq> \<bottom>" 
   and "\<forall>c\<in>In. ((\<Squnion>i. Y i) \<rightharpoonup> c) \<noteq> \<bottom>" 
-  shows "\<exists>n. \<forall>c\<in>In. ((Y n)\<rightharpoonup> c) = ((\<Squnion>i. Y i) \<rightharpoonup> c)"
-proof-
-  have chain_Yc:"\<forall>c. chain(\<lambda>i. Y i  \<rightharpoonup> c)"
-    by (metis assms(1) part_the_chain)
-  have "\<forall>c\<in>In. \<exists>i. (Y i  \<rightharpoonup> c) \<noteq> \<bottom>"
-    by (simp add: assms(2))
-  have test1:"\<And>c. c\<in>In \<Longrightarrow> ((\<Squnion>i. Y i) \<rightharpoonup> c) \<noteq> \<bottom>"
-    by(simp add: assms(3))
-  have "\<And>c. c\<in>In  \<Longrightarrow> \<exists>i. (Y i)\<rightharpoonup> c \<noteq> \<bottom>"
-    by (simp add: assms(2))
-  have h1:"\<And>c. c\<in>In \<Longrightarrow>  \<exists>i. (Y i)\<rightharpoonup> c = ((\<Squnion>i. Y i) \<rightharpoonup> c)"
-    using assms(1) assms(3) exists_n_for_c by blast
-  have h2:"\<And>c. c\<in>In \<Longrightarrow> \<exists>i. \<forall>ia\<ge>i. Y ia \<rightharpoonup> c = (Y i)\<rightharpoonup> c"
-  proof -
-    fix c :: channel
-    { fix nn :: "nat \<Rightarrow> nat"
-      have "\<And>f n na c. \<not> chain f \<or> \<not> n \<le> na \<or> (f n\<rightharpoonup>c::channel::'a discr\<^sub>\<bottom>) \<sqsubseteq> f na\<rightharpoonup>c"
-        by (metis part_the_chain po_class.chain_mono)
-      then have "\<exists>n. \<not> n \<le> nn n \<or> Y (nn n)\<rightharpoonup>c = Y n\<rightharpoonup>c"
-        by (metis assms(1) discr_u_below_eq) }
-    then show "\<exists>n. \<forall>na\<ge>n. Y na\<rightharpoonup>c = Y n\<rightharpoonup>c"
-      by meson
-  qed
-  have h3_2:"\<exists>i. \<forall>c\<in>In. Y i \<rightharpoonup> c \<noteq> \<bottom>"
-      sorry
-  (*have h3:"\<exists>i. \<forall>c\<in>In. \<forall>ia\<ge>i. Y ia \<rightharpoonup> c = (Y i)\<rightharpoonup> c" 
-    sorry*)
-  then have h4:"\<exists>i. \<forall>c\<in>In. Y i \<rightharpoonup> c = (\<Squnion>i. ((Y i) \<rightharpoonup> c))"
-    using below_lub chain_Yc discr_u_below_eq by blast
-  then have "\<exists>i. \<forall>c\<in>In. (Y i)\<rightharpoonup> c = (\<Squnion>i. Y i)\<rightharpoonup> c"
-    by (metis assms(1) part_the_lub)
-  then show ?thesis
-    by simp
-qed  
-  
+shows "\<exists>n. \<forall>c\<in>In. ((Y n)\<rightharpoonup> c) = ((\<Squnion>i. Y i) \<rightharpoonup> c)"
+proof(induct In rule: infinite_finite_induct)
+  case (infinite A)
+  have "finite A"
+    sorry
+  then show ?case
+    using infinite.hyps by auto
+  next
+    case empty
+    then show ?case 
+      by simp
+  next
+    case (insert x F)
+    then show ?case
+    proof-
+      assume a1:"finite F"
+      assume a2:"x \<notin> F"
+      assume a3:"\<exists>n. \<forall>c\<in>F. Y n\<rightharpoonup>c = \<Squnion>i. Y i\<rightharpoonup>c"
+      obtain n where "\<forall>c\<in>F. Y n\<rightharpoonup>c = \<Squnion>i. Y i\<rightharpoonup>c"
+        using a3 by blast
+      obtain m where "Y m\<rightharpoonup>x = \<Squnion>i. Y i\<rightharpoonup>x"
+        by (metis (mono_tags, lifting) assms(1) lub_eq_bottom_iff obtain_n_for_c part_the_chain part_the_lub)
+      show "\<exists>n. \<forall>c\<in>insert x F. Y n\<rightharpoonup>c = \<Squnion>i. Y i\<rightharpoonup>c"
+      proof(cases "n \<le>m")
+        case True
+        have "\<forall>c\<in>F. Y n\<rightharpoonup>c \<sqsubseteq> Y m \<rightharpoonup>c"
+          by (metis True assms(1) part_the_chain po_class.chain_mono)
+        then have "\<forall>c\<in>F. Y n\<rightharpoonup>c = Y m \<rightharpoonup>c"
+          by (metis (mono_tags, lifting) \<open>\<forall>c\<in>F. Y n\<rightharpoonup>c = \<Squnion>i. Y i\<rightharpoonup>c\<close> assms(1) discr_u_below_eq lub_eq_bottom_iff part_the_chain part_the_lub)
+        then have "\<forall>c\<in>insert x F. Y m\<rightharpoonup>c = \<Squnion>i. Y i\<rightharpoonup>c"
+          using \<open>Y m\<rightharpoonup>x = \<Squnion>i. Y i\<rightharpoonup>x\<close> \<open>\<forall>c\<in>F. Y n\<rightharpoonup>c = \<Squnion>i. Y i\<rightharpoonup>c\<close> by auto
+        then show ?thesis
+          by blast
+      next
+        case False
+        have "\<forall>c\<in>insert x F. Y m\<rightharpoonup>c \<sqsubseteq> Y n \<rightharpoonup>c"
+          by (metis False assms(1) below_option_def below_refl fun_below_iff le_cases po_class.chain_mono)
+        have "\<forall>c\<in>insert x F. Y n\<rightharpoonup>c = \<Squnion>i. Y i\<rightharpoonup>c"
+          by (metis (mono_tags, lifting) \<open>Y m\<rightharpoonup>x = \<Squnion>i. Y i\<rightharpoonup>x\<close> \<open>\<forall>c\<in>F. Y n\<rightharpoonup>c = \<Squnion>i. Y i\<rightharpoonup>c\<close> \<open>\<forall>c\<in>insert x F. Y m\<rightharpoonup>c \<sqsubseteq> Y n\<rightharpoonup>c\<close> assms(1) discr_u_below_eq insertE lub_eq_bottom_iff part_the_chain part_the_lub)
+        then show ?thesis 
+          by blast
+      qed
+    qed
+qed
 
 
 lemma obtain_n_for_all_ch:assumes "chain (Y::nat \<Rightarrow> channel\<rightharpoonup>'a discr\<^sub>\<bottom>)" and "\<forall>c\<in>In. \<exists>i. ((Y i) \<rightharpoonup> c) \<noteq> \<bottom>" and "\<forall>c\<in>In. ((\<Squnion>i. Y i) \<rightharpoonup> c) \<noteq> \<bottom>" obtains n where "\<forall>c\<in>In. ((Y n)\<rightharpoonup> c) = ((\<Squnion>i. Y i) \<rightharpoonup> c)"
