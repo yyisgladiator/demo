@@ -261,6 +261,8 @@ definition sbFilterTupel2:: " 'm SB set \<Rightarrow> 'm SB \<Rightarrow> 'm SB"
   if (b=sbLeast (sbDom\<cdot>b)) then sbLeast (sbDom\<cdot>b) else
     if (sbHd\<cdot>b\<in>bs) then (sbHd\<cdot>b) \<bullet> f (sbRt\<cdot>b) else f (sbRt\<cdot>b) ))\<cdot>(\<lambda>x. empty \<Omega>)"  *)
 
+subsection \<open>Automaton\<close>
+
 definition sbHdElem :: "'m SB \<rightarrow> (channel \<rightharpoonup> 'm discr\<^sub>\<bottom>)" where
 "sbHdElem \<equiv> \<Lambda> sb. (\<lambda>c. (c \<in> sbDom\<cdot>sb) \<leadsto> (lshd\<cdot>(sb . c)))" 
 
@@ -1593,7 +1595,7 @@ qed
   subsection \<open>sbHdElem\<close>
 (* ----------------------------------------------------------------------- *)    
 
-lemma sbHd_mono: "monofun (\<lambda> sb::'a SB. (\<lambda>c. (c \<in> sbDom\<cdot>sb) \<leadsto> (lshd\<cdot>(sb . c))))"  
+lemma sbHdElem_mono: "monofun (\<lambda> sb::'a SB. (\<lambda>c. (c \<in> sbDom\<cdot>sb) \<leadsto> (lshd\<cdot>(sb . c))))"  
 proof(rule monofunI) 
   fix x y ::"'a SB"
   assume "x \<sqsubseteq> y"
@@ -1601,7 +1603,7 @@ proof(rule monofunI)
     by (smt \<open>x \<sqsubseteq> y\<close> cont_pref_eq1I fun_below_iff monofun_cfun_fun po_eq_conv sbdom_eq some_below)
 qed  
   
-lemma sbHd_cont_pre: assumes "chain Y" shows "(\<lambda>c. (c \<in> sbDom\<cdot>(\<Squnion>i. Y i))\<leadsto>lshd\<cdot>((\<Squnion>i. Y i) . c)) \<sqsubseteq> (\<Squnion>i. (\<lambda>c. (c \<in> sbDom\<cdot>(Y i))\<leadsto>lshd\<cdot>(Y i . c)))"
+lemma sbHdElem_cont_pre: assumes "chain Y" shows "(\<lambda>c. (c \<in> sbDom\<cdot>(\<Squnion>i. Y i))\<leadsto>lshd\<cdot>((\<Squnion>i. Y i) . c)) \<sqsubseteq> (\<Squnion>i. (\<lambda>c. (c \<in> sbDom\<cdot>(Y i))\<leadsto>lshd\<cdot>(Y i . c)))"
 proof - 
   fix c
   have "(\<lambda>c. (c \<in> sbDom\<cdot>(\<Squnion>i. Y i))\<leadsto>lshd\<cdot>((\<Squnion>i. Y i) . c)) c \<sqsubseteq> (\<Squnion>i. (\<lambda>c. (c \<in> sbDom\<cdot>(Y i))\<leadsto>lshd\<cdot>(Y i . c)) c)"
@@ -1626,9 +1628,9 @@ proof -
     by (smt assms ch2ch_Rep_cfunL ch2ch_Rep_cfunR contlub_cfun_arg contlub_cfun_fun fun_below_iff if_then_lub is_ub_thelub lub_eq lub_fun monofun_cfun_arg monofun_cfun_fun po_class.chain_def po_eq_conv sbChain_dom_eq2 some_below)
 qed  
     
-lemma sbHd_cont: "cont (\<lambda> sb::'a SB. (\<lambda>c. (c \<in> sbDom\<cdot>sb) \<leadsto> (lshd\<cdot>(sb . c))))"  
+lemma sbHdElem_cont: "cont (\<lambda> sb::'a SB. (\<lambda>c. (c \<in> sbDom\<cdot>sb) \<leadsto> (lshd\<cdot>(sb . c))))"  
   apply(rule contI2)
-  by(simp_all add: sbHd_mono sbHd_cont_pre)
+  by(simp_all add: sbHdElem_mono sbHdElem_cont_pre)
 
 
 

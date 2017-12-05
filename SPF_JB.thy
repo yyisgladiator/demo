@@ -6,7 +6,7 @@
 *)
 
 theory SPF_JB
-imports SPF
+imports SPF SB_SWS
 
 begin
   
@@ -24,12 +24,10 @@ definition spfApplyOut :: "('a SB \<rightarrow> 'a SB) \<Rightarrow> 'a SPF \<ri
 definition spfApplyIn :: "('m SB \<rightarrow> 'm SB) \<Rightarrow> 'm SPF \<rightarrow> 'm SPF" where 
 "spfApplyIn k \<equiv> \<Lambda> g. Abs_CSPF (\<lambda>x. (Rep_CSPF g)(k\<cdot>x))" 
  
-
+(*
 definition spfApplyIn2 :: "('a SB \<rightarrow> 'a SB) \<Rightarrow> 'a SPF \<rightarrow> 'a SPF" where
 "spfApplyIn2 k \<equiv> (\<Lambda> g. Abs_CSPF (\<lambda>x. (sbDom\<cdot>(k\<cdot>x) = spfDom\<cdot>g) \<leadsto> (g \<rightleftharpoons>(k\<cdot>x))))"
-
-definition spfRt :: "'m SPF \<rightarrow> 'm SPF" where
-"spfRt \<equiv> spfApplyIn sbRt"
+*)
 
 (*
 definition spfApplyOut_pre :: "('a SB \<rightarrow> 'a SB) \<Rightarrow> 'a SPF \<Rightarrow> channel set \<Rightarrow>  bool" where
@@ -39,12 +37,13 @@ definition spfApplyOut_pre :: "('a SB \<rightarrow> 'a SB) \<Rightarrow> 'a SPF 
 lemma spfapplyin_eq_pre: "(Rep_CSPF spf)(f\<cdot>x) = (sbDom\<cdot>(f\<cdot>x) = spfDom\<cdot>spf) \<leadsto> (spf \<rightleftharpoons>(f\<cdot>x))"
   by (metis domIff option.collapse spfLeastIDom spf_sbdom2dom spfdom2sbdom)
 
+(*
  (* convert between original and proof oriented definition *)
 lemma spfapplyin_eq: "spfApplyIn k = spfApplyIn2 k"
   apply (subst spfApplyIn_def, subst spfApplyIn2_def)
   apply (subst spfapplyin_eq_pre)
   by simp
-
+*)
 
 section \<open>spfApplyOut\<close>
 
@@ -378,7 +377,7 @@ lemma spfapplyout_insert: assumes "\<And>b. sbDom\<cdot>(k\<cdot>b) = sbDom\<cdo
   shows "spfApplyOut k\<cdot>f =  Abs_CSPF (\<lambda>x. (sbDom\<cdot>x = spfDom\<cdot>f) \<leadsto> k\<cdot>(f \<rightleftharpoons>x))"
   by (simp add: spfApplyOut_def assms)
 
-lemma spfapplyout_dom: assumes "\<And>b. sbDom\<cdot>(k\<cdot>b) = sbDom\<cdot>b" 
+lemma spfapplyout_dom [simp]: assumes "\<And>b. sbDom\<cdot>(k\<cdot>b) = sbDom\<cdot>b" 
   shows "spfDom\<cdot>(spfApplyOut k\<cdot>f) = spfDom\<cdot>f"
   by (simp add: spfapplyout_insert assms)
 
@@ -387,7 +386,7 @@ lemma spfapplyout_ran: assumes "\<And>b. sbDom\<cdot>(k\<cdot>b) = sbDom\<cdot>b
   shows "spfRan\<cdot>(spfApplyOut k\<cdot>f) = spfRan\<cdot>f"
   by (simp add: spfapplyout_insert assms)
 
-lemma spfapplyout_apply:  assumes "\<And>b. sbDom\<cdot>(k\<cdot>b) = sbDom\<cdot>b" 
+lemma spfapplyout_step [simp]:  assumes "\<And>b. sbDom\<cdot>(k\<cdot>b) = sbDom\<cdot>b" 
                               and "sbDom\<cdot>sb = spfDom\<cdot>f"
   shows "(spfApplyOut k\<cdot>f) \<rightleftharpoons> sb = k\<cdot>(f \<rightleftharpoons>sb)"
   by (simp add: spfapplyout_insert assms)
@@ -707,5 +706,50 @@ lemma spfapplyinOld_ran [simp]: assumes "\<And>sb. sbDom\<cdot>(f\<cdot>sb) =  s
 lemma spfapplyinOld_step [simp]: assumes "\<And>sb. sbDom\<cdot>(f\<cdot>sb) =  sbDom\<cdot>sb"
   shows "(spfApplyIn f\<cdot>spf)\<rightleftharpoons>sb = spf\<rightleftharpoons>f\<cdot>sb"
   by(simp add: spfapplyinOld_insert assms)
+
+
+
+
+section \<open>Definitions with spfApplyIn\<close>
+
+definition spfRt :: "'m SPF \<rightarrow> 'm SPF" where
+"spfRt \<equiv> spfApplyIn sbRt"
+
+section \<open>Definitions with spfApplyOut\<close>
+
+definition spfConc :: "'m SB \<Rightarrow> 'm SPF \<rightarrow> 'm SPF" where
+"spfConc sb = spfApplyOut (sbConcEq sb)"
+
+
+subsection \<open>more general lemma\<close>
+
+(* Very general! move this to spf *)
+lemma spf_eq: assumes "spfDom\<cdot>spf1 = spfDom\<cdot>spf2"
+  and "\<And>sb. sbDom\<cdot>sb = spfDom\<cdot>spf1 \<Longrightarrow> spf1 \<rightleftharpoons> sb = spf2 \<rightleftharpoons> sb"
+shows "spf1 = spf2"
+proof -
+  have "spfRan\<cdot>spf1 = spfRan\<cdot>spf2"
+    by (metis assms(1) assms(2) sbleast_sbdom spfran_least)
+  thus ?thesis
+    by (simp add: assms(1) assms(2) po_eq_conv spf_belowI)
+qed
+
+lemma spfapply_in_out:
+  assumes "\<And>sb. sbDom\<cdot>(f\<cdot>sb) =  sbDom\<cdot>sb"
+      and "\<And>sb. sbDom\<cdot>(g\<cdot>sb) =  sbDom\<cdot>sb"
+    shows  "spfApplyIn f\<cdot>(spfApplyOut g\<cdot>spf) = spfApplyOut g\<cdot>(spfApplyIn f\<cdot>spf)"
+  apply(rule spf_eq)
+  using assms by (auto)
+  
+
+subsection \<open>spfRt lemma\<close>
+lemma spfrt_step[simp]: "(spfRt\<cdot>spf)\<rightleftharpoons>sb = spf\<rightleftharpoons>(sbRt\<cdot>sb)"
+  by(simp add: spfRt_def)
+
+subsection \<open>spfConc lemma\<close>
+lemma spconc_step[simp]: 
+  assumes "sbDom\<cdot>sb = spfDom\<cdot>spf"
+  shows "(spfConc sb1\<cdot>spf)\<rightleftharpoons>sb = sbConcEq sb1\<cdot>(spf\<rightleftharpoons>sb)"
+  by(simp add: spfConc_def assms)
 
 end
