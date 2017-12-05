@@ -6,7 +6,7 @@
 *)
 
 theory SPF_JB
-imports SPF
+imports SPF SB_SWS
 
 begin
   
@@ -718,7 +718,7 @@ definition spfRt :: "'m SPF \<rightarrow> 'm SPF" where
 section \<open>Definitions with spfApplyOut\<close>
 
 definition spfConc :: "'m SB \<Rightarrow> 'm SPF \<rightarrow> 'm SPF" where
-"spfConc sb = spfApplyOut (sbConc sb)"
+"spfConc sb = spfApplyOut (sbConcEq sb)"
 
 
 subsection \<open>more general lemma\<close>
@@ -748,8 +748,8 @@ lemma spfrt_step[simp]: "(spfRt\<cdot>spf)\<rightleftharpoons>sb = spf\<rightlef
 
 subsection \<open>spfConc lemma\<close>
 lemma spconc_step[simp]: 
-  shows "(spfConc sb1\<cdot>spf)\<rightleftharpoons>sb = sbConc sb1\<cdot>(spf\<rightleftharpoons>sb)"
-  apply(simp add: spfConc_def)
-  sorry
+  assumes "sbDom\<cdot>sb = spfDom\<cdot>spf"
+  shows "(spfConc sb1\<cdot>spf)\<rightleftharpoons>sb = sbConcEq sb1\<cdot>(spf\<rightleftharpoons>sb)"
+  by(simp add: spfConc_def assms)
 
 end
