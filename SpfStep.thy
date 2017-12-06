@@ -110,8 +110,6 @@ shows "finite_chain Y"
 (*Change goal to finite chain Y, works only for finite channel type*)    
 lemma obtain_n_for_all_c:
   assumes "chain (Y::nat \<Rightarrow> channel\<rightharpoonup>'a discr\<^sub>\<bottom>)" 
-  and "\<forall>c\<in>In. \<exists>i. ((Y i) \<rightharpoonup> c) \<noteq> \<bottom>" 
-  and "\<forall>c\<in>In. ((\<Squnion>i. Y i) \<rightharpoonup> c) \<noteq> \<bottom>" 
 shows "\<exists>n. \<forall>c\<in>In. ((Y n)\<rightharpoonup> c) = ((\<Squnion>i. Y i) \<rightharpoonup> c)"
 proof(induct In rule: infinite_finite_induct)
   case (infinite A)
