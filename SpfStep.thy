@@ -583,12 +583,52 @@ proof(rule Cont.contI2, simp)
   qed
   show "Abs_CSPF (\<lambda>sb. (sbDom\<cdot>sb = In)\<leadsto>spfStep_h1 In Out\<cdot>(\<Squnion>i. Y i)\<cdot>(sbHdElem\<cdot>sb) \<rightleftharpoons> sb) \<sqsubseteq> (\<Squnion>i. Abs_CSPF (\<lambda>sb. (sbDom\<cdot>sb = In)\<leadsto>spfStep_h1 In Out\<cdot>(Y i)\<cdot>(sbHdElem\<cdot>sb) \<rightleftharpoons> sb))"
     by(simp add: below_SPF_def below_cfun_def h1)
-qed
+qed 
   
-
 lemma spfstep_insert: "spfStep In Out\<cdot>h= Abs_SPF (\<Lambda>  sb.  (sbDom\<cdot>sb = In) \<leadsto> (spfStep_h1 In Out\<cdot> h)\<cdot>(sbHdElem\<cdot>sb) \<rightleftharpoons> sb)"
   by(simp add: spfStep_cont spfStep_def)
 
+lemma spfstep_dom [simp]: "spfDom\<cdot>(spfStep cIn cOut\<cdot>f) = cIn"
+  by(simp add: spfstep_insert spfDomAbs)
+
+lemma spfstep_ran [simp]: "spfRan\<cdot>(spfStep cIn cOut\<cdot>f) = cOut"
+  apply(simp add: spfstep_insert)
+  apply(unfold spfran_least,simp)
+  by (metis (no_types) spfstep_dom spfstep_insert)
+   
+lemma sbHdElem_dom[simp]:"dom (sbHdElem\<cdot>sb) = sbDom\<cdot>sb"
+  by(simp add: sbHdElem_def sbHdElem_cont)
+
+lemma sbHdElem_channel: assumes "sbDom\<cdot>sb = In"  and "c \<in> In" and "sb . c \<noteq> \<bottom>" shows "sbHdElem\<cdot>sb\<rightharpoonup>c \<noteq> \<bottom>"
+    by(simp add: sbHdElem_def sbHdElem_cont assms)    
+    
+lemma stepstep_step: assumes "sbDom\<cdot>sb = In" and "\<forall>c\<in>In. sb . c \<noteq> \<bottom>" shows "spfStep In Out\<cdot>f\<rightleftharpoons>sb = (f ((inv convDiscrUp)(sbHdElem\<cdot>sb)))\<rightleftharpoons>sb"
+proof(simp add: spfstep_insert assms)
+  fix c::channel
+  have "\<forall>c\<in>In. sb . c \<noteq> \<bottom> \<longrightarrow> sbHdElem\<cdot>sb\<rightharpoonup>c \<noteq> \<bottom>"
+  proof auto
+    fix x::channel
+    assume a1:"x \<in> In"
+    assume a2:"sb . x \<noteq> \<bottom>"
+    have " sbHdElem\<cdot>sb\<rightharpoonup>x \<noteq> \<bottom>"
+      by(rule sbHdElem_channel, simp_all add: a1 assms, simp add: a1)
+    then show "sbHdElem\<cdot>sb\<rightharpoonup>x = \<bottom> \<Longrightarrow> False"
+      by auto
+  qed
+  then have h1_h:"In \<subseteq> dom (sbHdElem\<cdot>sb) \<and> (\<forall>c\<in>In. sbHdElem\<cdot>sb\<rightharpoonup>c \<noteq> \<bottom>)"
+    by(simp add: assms)
+  have "spfDom\<cdot>(f (spfStep_h2 In (sbHdElem\<cdot>sb))) = In \<and> spfRan\<cdot>(f (spfStep_h2 In (sbHdElem\<cdot>sb))) = Out" (* in Lemma assumptions for f*)
+    sorry
+  then have h1:"spfStep_h1 In Out\<cdot>f\<cdot>(sbHdElem\<cdot>sb) = (f (spfStep_h2 In (sbHdElem\<cdot>sb)))"
+    by(simp add: spfstep_h1_insert h1_h assms)
+  have h2:"spfStep_h2 In (sbHdElem\<cdot>sb) = inv convDiscrUp (sbHdElem\<cdot>sb)"
+    apply(simp add: spfStep_h2_def, unfold convDiscrUp_def inv_def updis_exists) (*ToDo*)
+    sorry
+  then show "spfStep_h1 In Out\<cdot>f\<cdot>(sbHdElem\<cdot>sb) \<rightleftharpoons> sb = f (inv convDiscrUp (sbHdElem\<cdot>sb)) \<rightleftharpoons> sb"
+    by(simp add: h1)
+qed
+    
+(*
 thm spfStep_h2_def
 lemma abcc:"sbHdElem\<cdot>sb = convDiscrUp a \<Longrightarrow> spfStep_h2 (sbDom\<cdot>sb) (sbHdElem\<cdot>sb) = a"
   apply(auto simp add: spfStep_h2_def convDiscrUp_def)
@@ -616,5 +656,5 @@ proof-
       sorry
   qed
 qed
-
+*)
 end
