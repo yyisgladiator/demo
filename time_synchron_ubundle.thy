@@ -62,6 +62,98 @@ definition tsynLscons :: "'a event discr u \<rightarrow> 'a tsynstream \<rightar
 definition tsynMLscons :: "'a discr u \<rightarrow> 'a tsynstream \<rightarrow> 'a tsynstream" where
 "tsynMLscons \<equiv> \<Lambda> t ts. tsynLscons\<cdot>(upApply Msg\<cdot>t)\<cdot>ts"
 
+definition tsynConc :: "'a tsynstream \<Rightarrow> 'a tsynstream \<rightarrow> 'a tsynstream" where
+"tsynConc ts1 \<equiv> (\<Lambda> ts2. Abs_tsynstream ((Rep_tsynstream ts1) \<bullet> (Rep_tsynstream ts2)))"
 
+
+lift_definition tsynDelay :: "'m tsynstream \<rightarrow> 'm tsynstream" is
+"\<lambda>ts . tsynConc (Abs_tsynstream (\<up>\<surd>))\<cdot>ts"
+  by (simp add: Cfun.cfun.Rep_cfun)
+
+(* Induction rule *)
+
+lemma tsynconc_insert: "tsynConc ts1\<cdot>ts2 = Abs_tsynstream ((Rep_tsynstream ts1) \<bullet> (Rep_tsynstream ts2))"
+apply (simp add: tsynConc_def)
+
+lemma tsynstream_fin_induct_h:
+  assumes bottom: "P \<bottom>"
+    and delayfun: "\<And>xs. P xs \<Longrightarrow> P (tsynDelay\<cdot>xs)"
+    and mlscons: "\<And>xs x. P xs \<Longrightarrow> xs\<noteq>\<bottom> \<Longrightarrow> P (tsynMLscons\<cdot>(updis x)\<cdot>xs)"
+    and fin: "#s < \<infinity>"
+  shows "P (Abs_tsynstream s)"
+proof (induction rule: stream_fin_induct)
+  show " P (Abs_tsynstream \<epsilon>)"
+    by (simp add: Abs_tsynstream_strict bottom)
+next
+  fix x :: "'a event discr u" and xs :: "'a event stream"
+  assume x_nbot: "x \<noteq> \<bottom>"
+  assume xs_imp: "P (Abs_tsynstream xs)"
+  show "P (Abs_tsynstream (x && xs))"
+    proof (cases "x=updis \<surd>")
+      case True
+      have "tsynDelay\<cdot>(Abs_tsynstream xs) = Abs_tsynstream (x && xs)"
+        apply (simp add: True tsynDelay_def delayfun_abststream delayfun) sorry
+      thus "P (Abs_tsynstream (x && xs))"
+        using delayfun xs_imp by fastforce
+    next
+      case False
+      obtain m where m_def: "x = up\<cdot>(Discr (Msg m))"
+        by (metis False event.exhaust updis_exists x_nbot)                        
+      have xs_nbot: "xs\<noteq>\<bottom>" sorry
+      hence "Abs_tsynstream (x && xs) = tsynMLscons\<cdot>(updis m)\<cdot>(Abs_tsynstream xs)"
+        using m_def sorry
+      thus "P (Abs_tsynstream (x && xs))"
+        by (simp add: Abs_tsynstream_bottom_iff assms(3) xs_imp xs_nbot)
+      qed
+next
+  show "#s < \<infinity>"
+    by (simp add: fin)
+qed
+
+lemma synfinititeTicks[simp]: assumes "tsynlen\<cdot>ts < \<infinity>"
+  shows "#(Rep_tsynstream ts) < \<infinity>"
+proof(rule ccontr)
+  assume "\<not> #(Rep_tsynstream ts) < \<infinity>"
+  hence "#(Rep_tsynstream ts) = \<infinity>" using inf_ub lnle_def lnless_def by blast 
+  hence "#({\<surd>} \<ominus> (Rep_tsynstream ts)) = \<infinity>" sorry
+  hence "tsynlen\<cdot>ts = \<infinity>" sorry
+  thus False using assms by auto 
+qed
+
+lemma tsynstream_fin_induct:
+  assumes bottom: "P \<bottom>" 
+    and delayfun: "\<And>xs. P xs \<Longrightarrow> P (tsynDelay\<cdot>xs)" 
+    and mlscons: "\<And>xs x. P xs \<Longrightarrow> xs\<noteq>\<bottom> \<Longrightarrow> P (tsynMLscons\<cdot>(updis x)\<cdot>xs)"
+    and fin: "tsynlen\<cdot>ts < \<infinity>"
+  shows "P ts"
+proof -
+  obtain s where s_def: "Abs_tsynstream s = ts"
+    using Rep_tsynstream_inverse by blast
+  hence "#s < \<infinity>" 
+    using Rep_Abs fin synfinititeTicks sorry
+  hence "P (Abs_tsynstream s)"
+    using tsynstream_fin_induct_h bottom delayfun mlscons sorry
+  thus "P ts" 
+    by (simp add: s_def)   
+qed     
+
+ 
+lemma tsynstream_induct [case_names adm bottom delayfun mlscons, induct type: tsynstream]:
+fixes ts :: "'a tsynstream"
+assumes adm: "adm P" and bottom: "P \<bottom>"  
+  and delayfun: "\<And>ts. P ts \<Longrightarrow> P (tsynDelay\<cdot>ts)" 
+  and mlscons: "\<And>ts t. P ts\<Longrightarrow> ts\<noteq>\<bottom> \<Longrightarrow> P (tsynMLscons\<cdot>(updis t)\<cdot>ts)"
+shows "P ts" using adm bottom delayfun mlscons tsynstream_fin_induct sorry
+
+
+(* Case rule *)
+
+lemma tscases:
+  assumes bottom: "ts=\<bottom> \<Longrightarrow> P ts"
+    and delayfun: "\<And>as. ts=tsynDelay\<cdot>as \<Longrightarrow> P ts"
+    and mlscons: "\<And>a as. ts=tsynMLscons\<cdot>(updis a)\<cdot>as \<Longrightarrow> P ts"
+  shows "P ts"
+  apply (rule_tac xs="Rep_tsynstream ts" in tscases_h)
+  using Rep_tsynstream_bottom_iff bottom apply blast sorry
 
 end
