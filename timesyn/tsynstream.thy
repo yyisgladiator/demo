@@ -1,5 +1,5 @@
-theory time_synchron_ubundle
-  imports "untimed/Streams" "inc/Event" "UnivClasses"
+theory tsynstream
+  imports "../untimed/Streams" "../inc/Event" "../UnivClasses"
 
 begin
 
@@ -43,8 +43,8 @@ definition tsynMLscons :: "'a discr u \<rightarrow> 'a tsynstream \<rightarrow> 
 definition tsynConc :: "'a tsynstream \<Rightarrow> 'a tsynstream \<rightarrow> 'a tsynstream" where
 "tsynConc ts1 \<equiv> (\<Lambda> ts2. Abs_tsynstream ((Rep_tsynstream ts1) \<bullet> (Rep_tsynstream ts2)))"
 
-abbreviation tsyncDelay :: "'m tsynstream \<rightarrow> 'm tsynstream" where
-"tsyncDelay \<equiv> tsynLscons\<cdot>(up\<cdot>(Discr Tick))"
+abbreviation tsynDelay :: "'m tsynstream \<rightarrow> 'm tsynstream" where
+"tsynDelay \<equiv> tsynLscons\<cdot>(up\<cdot>(Discr Tick))"
 
 
 
@@ -139,13 +139,13 @@ next
     by (simp add: fin)
 qed
 
-lemma synfinititeTicks[simp]: assumes "tsynlen\<cdot>ts < \<infinity>"
+lemma synfinititeTicks[simp]: assumes "tsynLen\<cdot>ts < \<infinity>"
   shows "#(Rep_tsynstream ts) < \<infinity>"
 proof(rule ccontr)
   assume "\<not> #(Rep_tsynstream ts) < \<infinity>"
   hence "#(Rep_tsynstream ts) = \<infinity>" using inf_ub lnle_def lnless_def by blast 
   hence "#({\<surd>} \<ominus> (Rep_tsynstream ts)) = \<infinity>" sorry
-  hence "tsynlen\<cdot>ts = \<infinity>" sorry
+  hence "tsynLen\<cdot>ts = \<infinity>" sorry
   thus False using assms by auto 
 qed
 
@@ -153,7 +153,7 @@ lemma tsynstream_fin_induct:
   assumes bottom: "P \<bottom>" 
     and delayfun: "\<And>xs. P xs \<Longrightarrow> P (tsynDelay\<cdot>xs)" 
     and mlscons: "\<And>xs x. P xs \<Longrightarrow> xs\<noteq>\<bottom> \<Longrightarrow> P (tsynMLscons\<cdot>(updis x)\<cdot>xs)"
-    and fin: "tsynlen\<cdot>ts < \<infinity>"
+    and fin: "tsynLen\<cdot>ts < \<infinity>"
   shows "P ts"
 proof -
   obtain s where s_def: "Abs_tsynstream s = ts"
