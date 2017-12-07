@@ -1,23 +1,53 @@
 theory time_synchron_ubundle
-  imports UBundle "untimed/Streams" "timed/TStream" "inc/OptionCpo"
+  imports "untimed/Streams" "inc/Event" "UnivClasses"
 
 begin
 
 default_sort countable
 
-(*
-definition tsynWell :: "'a event stream \<Rightarrow> bool" where
-"tsynWell s \<equiv> ts_well s \<and> (\<forall> n. Fin n < #s \<longrightarrow> tslen\<cdot>(tsNth n\<cdot>(Abs_tstream(s))) \<le> Fin 1)"
-*)
+(***************************************)
+section \<open>Typ Definition\<close>
+(***************************************)
 
 pcpodef 'a tsynstream = "{t :: 'a event stream. True}"
   by auto
 
+
+
+
+
+(***************************************)
+section \<open>Function Definitions\<close>
+(***************************************)
+
 definition tsynDom :: "'a tsynstream \<rightarrow> 'a set" where
 "tsynDom \<equiv> \<Lambda> ts . {a | a::'a . (Msg a) \<in> sdom\<cdot>(Rep_tsynstream ts)}"
 
-definition tsynlen:: "'a tsynstream \<rightarrow> lnat" where 
-"tsynlen \<equiv> \<Lambda> ts. #(Rep_tsynstream ts)"
+definition tsynLen:: "'a tsynstream \<rightarrow> lnat" where 
+"tsynLen \<equiv> \<Lambda> ts. #(Rep_tsynstream ts)"
+
+definition tsynLshd :: "'a tsynstream \<rightarrow> 'a event discr u" where
+"tsynLshd \<equiv> \<Lambda> s.  lshd\<cdot>(Rep_tsynstream s)"
+
+definition tsynRt :: "'a tsynstream \<rightarrow> 'a tsynstream" where
+"tsynRt \<equiv> \<Lambda> s. Abs_tsynstream (srt\<cdot>(Rep_tsynstream s))"
+
+
+definition tsynLscons :: "'a event discr u \<rightarrow> 'a tsynstream \<rightarrow> 'a tsynstream" where
+"tsynLscons \<equiv> \<Lambda> t ts. Abs_tsynstream((lscons\<cdot>t)\<cdot>(Rep_tsynstream ts))"
+
+
+definition tsynMLscons :: "'a discr u \<rightarrow> 'a tsynstream \<rightarrow> 'a tsynstream" where
+"tsynMLscons \<equiv> \<Lambda> t ts. tsynLscons\<cdot>(upApply Msg\<cdot>t)\<cdot>ts"
+
+definition tsynConc :: "'a tsynstream \<Rightarrow> 'a tsynstream \<rightarrow> 'a tsynstream" where
+"tsynConc ts1 \<equiv> (\<Lambda> ts2. Abs_tsynstream ((Rep_tsynstream ts1) \<bullet> (Rep_tsynstream ts2)))"
+
+abbreviation tsyncDelay :: "'m tsynstream \<rightarrow> 'm tsynstream" where
+"tsyncDelay \<equiv> tsynLscons\<cdot>(up\<cdot>(Discr Tick))"
+
+
+
 
 instantiation tsynstream :: (message) uscl
 begin
@@ -26,7 +56,7 @@ definition usOkay_tsynstream :: "channel \<Rightarrow> 'm::message tsynstream \<
 "usOkay_tsynstream c ts \<equiv> (tsynDom\<cdot>ts \<subseteq> ctype c)"
 
 definition usLen_tsynstream :: "'a tsynstream \<rightarrow> lnat" where 
-"usLen_tsynstream = tsynlen"
+"usLen_tsynstream = tsynLen"
 
 instance
   apply intro_classes 
@@ -46,34 +76,33 @@ proof
   qed
 end
 
-(* lshd etc *)
-
-definition tsynLshd :: "'a tsynstream \<rightarrow> 'a event discr u" where
-"tsynLshd \<equiv> \<Lambda> s.  lshd\<cdot>(Rep_tsynstream s)"
-
-definition tsynRt :: "'a tsynstream \<rightarrow> 'a tsynstream" where
-"tsynRt \<equiv> \<Lambda> s. Abs_tsynstream (srt\<cdot>(Rep_tsynstream s))"
 
 
-definition tsynLscons :: "'a event discr u \<rightarrow> 'a tsynstream \<rightarrow> 'a tsynstream" where
-"tsynLscons \<equiv> \<Lambda> t ts. if (ts=\<bottom> & t\<noteq>updis \<surd>) then \<bottom> else Abs_tsynstream((lscons\<cdot>t)\<cdot>(Rep_tsynstream ts))"
 
+(***************************************)
+section \<open>Lemma\<close>
+(***************************************)
 
-definition tsynMLscons :: "'a discr u \<rightarrow> 'a tsynstream \<rightarrow> 'a tsynstream" where
-"tsynMLscons \<equiv> \<Lambda> t ts. tsynLscons\<cdot>(upApply Msg\<cdot>t)\<cdot>ts"
+lemma tsync_rep_cont [simp]: "cont Rep_tsynstream"
+  by (smt Abs_tsynstream_inverse Prelude.contI2 UNIV_I UNIV_def below_tsynstream_def lub_eq lub_tsynstream monofunI po_eq_conv)
 
-definition tsynConc :: "'a tsynstream \<Rightarrow> 'a tsynstream \<rightarrow> 'a tsynstream" where
-"tsynConc ts1 \<equiv> (\<Lambda> ts2. Abs_tsynstream ((Rep_tsynstream ts1) \<bullet> (Rep_tsynstream ts2)))"
+lemma tsync_abs_cont [simp]: "cont Abs_tsynstream"
+  apply(rule contI2)
+  apply (metis Abs_tsynstream_inverse UNIV_I UNIV_def below_tsynstream_def monofun_def)
+proof -
+have "cont (\<lambda>s. Abs_tsynstream s::'a tsynstream)"
+  using cont_Abs_tsynstream by force
+  then show "\<forall>f. chain f \<longrightarrow> Abs_tsynstream (\<Squnion>n. f n) \<sqsubseteq> (\<Squnion>n. (Abs_tsynstream (f n)::'a tsynstream))"
+    using cont2contlubE eq_imp_below by blast
+qed  
 
+lemma tsync_rep_abs [simp]: "Rep_tsynstream (Abs_tsynstream sy) = sy"
+  using Abs_tsynstream_inverse by blast
 
-lift_definition tsynDelay :: "'m tsynstream \<rightarrow> 'm tsynstream" is
-"\<lambda>ts . tsynConc (Abs_tsynstream (\<up>\<surd>))\<cdot>ts"
-  by (simp add: Cfun.cfun.Rep_cfun)
-
-(* Induction rule *)
 
 lemma tsynconc_insert: "tsynConc ts1\<cdot>ts2 = Abs_tsynstream ((Rep_tsynstream ts1) \<bullet> (Rep_tsynstream ts2))"
 apply (simp add: tsynConc_def)
+  oops
 
 lemma tsynstream_fin_induct_h:
   assumes bottom: "P \<bottom>"
@@ -92,7 +121,7 @@ next
     proof (cases "x=updis \<surd>")
       case True
       have "tsynDelay\<cdot>(Abs_tsynstream xs) = Abs_tsynstream (x && xs)"
-        apply (simp add: True tsynDelay_def delayfun_abststream delayfun) sorry
+        apply (simp add: True delayfun) sorry
       thus "P (Abs_tsynstream (x && xs))"
         using delayfun xs_imp by fastforce
     next
