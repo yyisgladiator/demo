@@ -58,8 +58,8 @@ section\<open>Definitions\<close>
 
 (* ubDom *)
 text {* @{text "ubDom"} returns the domain of the given bundle *}
-(* This function can be used in "'m stream USB" and "'m tstream USB" *)
-(* and by the way, look at the "'m\<^sup>\<omega>" shorcode for 'm USB *)
+(* This function can be used in "'M stream USB" and "'M tstream USB" *)
+(* and by the way, look at the "'M\<^sup>\<omega>" shorcode for 'M USB *)
 definition ubDom :: "'M\<^sup>\<Omega> \<rightarrow> channel set" where
 "ubDom \<equiv> \<Lambda> b. dom (Rep_ubundle b)"
 
