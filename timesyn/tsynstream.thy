@@ -130,9 +130,7 @@ lemma mlscons_abstsynstream: "Abs_tsynstream (updis (Msg m) && ts) = tsynMLscons
 
 
 lemma tsynhd_insert: "tsynLshd\<cdot>ts = lshd\<cdot>(Rep_tsynstream ts)"
-  apply(simp add: tsynLshd_def) sorry
-
-lemma tsynrt_insert: "tsynRt\<cdot>ts = Abs_tsynstream (srt\<cdot>(Rep_tsynstream ts))" sorry
+  by(simp add: tsynLshd_def)
 
 lemma tsync_rt_cont: "cont (\<lambda> ts. Abs_tsynstream (srt\<cdot>(Rep_tsynstream ts)))" sorry
 
@@ -160,6 +158,15 @@ proof -
     by (metis (mono_tags) Rep_tsynstream_cases Rep_tsynstream_inverse mem_Collect_eq tsynconc_insert) 
 qed
 
+lemma tsynfirstConclen [simp]: assumes "ts\<noteq>\<bottom>" shows "tsynLen\<cdot>(tsynLscons\<cdot>(tsynLshd\<cdot>ts)\<cdot>ts2) = lnsuc\<cdot>(tsynLen\<cdot>ts2)" sorry (*
+proof -
+  have "({\<surd>} \<ominus> (Rep_tsynstream (tsynLshd\<cdot>ts))) = \<up>\<surd>"
+    by (smt Fin_02bot Fin_Suc One_nat_def inject_lnsuc lnzero_def lscons_conv sfilter_ne_resup singletonD slen_empty_eq slen_scons sup'_def surj_scons)
+  hence "{\<surd>} \<ominus> ((Rep_tstream (tsTakeFirst\<cdot>ts)) \<bullet> Rep_tstream ts2) = \<up>\<surd> \<bullet> {\<surd>} \<ominus> Rep_tstream ts2"
+    by (simp add: add_sfilter2)
+  thus ?thesis by (simp add: tsconc_insert tstickcount_insert) 
+qed
+*)
 
 
 (* delay *)
@@ -174,6 +181,9 @@ lemma delayfun_abstsynstream: "tsynDelay\<cdot>(Abs_tsynstream s) = Abs_tsynstre
 lemma tsynInf:  
   shows "tsynLen\<cdot>ts = \<infinity> \<longleftrightarrow> #(Rep_tsynstream ts) = \<infinity>"
   by (simp add: sfilterl4 tsynLen_def)
+
+lemma tsync_slen_cont: "cont (\<lambda> ts. #(Rep_tsynstream ts))" by simp
+
 
 lemma tsynlen_insert:  "tsynLen\<cdot>ts =  #(Rep_tsynstream ts)" sorry
 
@@ -221,16 +231,29 @@ lemma tsyn_below_eq: assumes "tsynLen\<cdot>ts1 = \<infinity>" and "ts1 \<sqsubs
 
 lemma tsync_take_cont: "cont (\<lambda> ts. Abs_tsynstream (stake n\<cdot>(Rep_tsynstream ts)))" sorry
 
-lemma tsyntake_chain: "chain (\<lambda>i. tsynTake i\<cdot>ts)" sorry
+lemma tsyntake_chain: "chain (\<lambda>i. tsynTake i\<cdot>ts)" apply (simp add: chain_def)
+  by (metis (no_types, lifting) Abs_cfun_inverse2 Suc_n_not_le_n below_tsynstream_def linorder_le_cases min_def stakeostake tsynTake_def tsync_rep_abs tsync_take_cont ub_stake) sorry
 
-lemma tsyntake_len[simp]: "tsynLen\<cdot>(tsynTake i\<cdot>ts) = min (tsynLen\<cdot>ts) (Fin i)"
-  apply(induction i arbitrary: ts)
-   apply (simp)
-   apply (simp add: Rep_tsynstream_strict tsynlen_insert)
-  using Fin_Suc lnsuc_lnle_emb min_def tsyntakedropfirst sorry
+lemma tsyntake_len[simp]: "tsynLen\<cdot>(tsynTake i\<cdot>ts) = min (tsynLen\<cdot>ts) (Fin i)" 
+  apply (simp add: min_def tsynLen_def)
+  apply auto
+  apply (metis (mono_tags, lifting) Abs_cfun_inverse2 fin2stake_lemma inf_ub le_neq_trans less2nat lnat_well_h2 notinfI3 tsynTake_def tsync_rep_abs tsync_take_cont)
+  apply (simp add: tsynTake_def tsync_take_cont)
+proof (induct i)
+  case 0
+  then show ?case by simp
+next
+  case (Suc i)
+  hence 1:"(\<not> #(Rep_tsynstream (tsynRt\<cdot>ts)) \<le> Fin i)"
+    apply (simp add: tsynRt_def tsync_rt_cont) 
+    by (simp add: slen_rt_ile_eq)
+  hence 2:"#(stake i\<cdot>(Rep_tsynstream (tsynRt\<cdot>ts))) = Fin i" using Suc sorry
+  then show ?case
+    by (metis (no_types, lifting) Abs_cfun_inverse2 Fin_Suc Suc(2) le_cases lnle_Fin_0 nat.simps(3) slen_scons stake_Suc strict_slen surj_scons tsynRt_def tsync_rep_abs tsync_rt_cont)
+qed
 
 lemma tsyntake_infinite_chain: assumes "tsynLen\<cdot>ts = \<infinity>" shows "\<not> max_in_chain n (\<lambda>i. tsynTake i\<cdot>ts)"
- by (smt Abs_cfun_inverse2 HOLCF_trans_rules(2) Suc_n_not_le_n abstsyn2tsynlscons assms below_tsynstream_def inject_Fin is_ub_thelub leI lub_below_iff lub_tsynstream maxinch_is_thelub min.strict_order_iff po_class.chain_def slen_stake_fst_inf stream.take_take tsynTake_def tsync_rep_abs tsync_take_cont tsynlen_insert tsynrt_insert tsyntakedropfirst ub_stake)
+ by (smt Abs_cfun_inverse2 HOLCF_trans_rules(2) Suc_n_not_le_n abstsyn2tsynlscons assms below_tsynstream_def inject_Fin is_ub_thelub leI lub_below_iff lub_tsynstream maxinch_is_thelub min.strict_order_iff po_class.chain_def slen_stake_fst_inf stream.take_take tsynTake_def tsync_rep_abs tsync_take_cont tsynlen_insert tsync_rt_cont tsyntakedropfirst ub_stake)
 
 (* Well... Smt proof is also available *)
 (*     by (smt Abs_cfun_inverse2 Suc_n_not_le_n assms below_tsynstream_def finite_chain_def inf_chainl4 inject_Fin linorder_le_cases lub_tsynstream max_in_chain_def maxinch_is_thelub min_def po_class.chainI stakeostake tsynInf tsynTake_def tsync_rep_abs tsync_take_cont tsyntake_len ub_stake) *)
