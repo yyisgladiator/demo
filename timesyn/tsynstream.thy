@@ -4,6 +4,8 @@ theory tsynstream
 begin
 
 default_sort countable
+setup_lifting type_definition_cfun
+
 
 (***************************************)
 section \<open>Typ Definition\<close>
@@ -43,7 +45,7 @@ definition tsynMLscons :: "'a discr u \<rightarrow> 'a tsynstream \<rightarrow> 
 definition tsynConc :: "'a tsynstream \<Rightarrow> 'a tsynstream \<rightarrow> 'a tsynstream" where
 "tsynConc ts1 \<equiv> (\<Lambda> ts2. Abs_tsynstream ((Rep_tsynstream ts1) \<bullet> (Rep_tsynstream ts2)))"
 
-abbreviation tsynDelay :: "'m tsynstream \<rightarrow> 'm tsynstream" where
+definition tsynDelay :: "'m tsynstream \<rightarrow> 'm tsynstream" where
 "tsynDelay \<equiv> tsynLscons\<cdot>(up\<cdot>(Discr Tick))"
 
 
@@ -94,20 +96,53 @@ have "cont (\<lambda>s. Abs_tsynstream s::'a tsynstream)"
   using cont_Abs_tsynstream by force
   then show "\<forall>f. chain f \<longrightarrow> Abs_tsynstream (\<Squnion>n. f n) \<sqsubseteq> (\<Squnion>n. (Abs_tsynstream (f n)::'a tsynstream))"
     using cont2contlubE eq_imp_below by blast
-qed  
+qed
 
 lemma tsync_rep_abs [simp]: "Rep_tsynstream (Abs_tsynstream sy) = sy"
   using Abs_tsynstream_inverse by blast
 
+lemma tsync_lscons_cont: "cont  (\<lambda> ts. Abs_tsynstream((t && Rep_tsynstream ts)))" sorry
+
+lemma tsync_lscons_cont2: "cont (\<lambda> ts. Abs_tsynstream (t \<bullet> Rep_tsynstream ts))" sorry
+
+lemma tsync_lscons_cont3: "cont (\<lambda> t. \<Lambda> ts. Abs_tsynstream(t && (Rep_tsynstream ts)))" sorry
+
+
+lemma tsync_conc_cont: "cont (\<lambda> ts2. Abs_tsynstream ((Rep_tsynstream ts1) \<bullet> (Rep_tsynstream ts2)))"
+  apply (rule contI2)
+  apply (metis (no_types, lifting) below_tsynstream_def monofunI monofun_cfun_arg tsync_rep_abs)
+proof -
+have "cont (\<lambda> ts2. Abs_tsynstream ((Rep_tsynstream ts1) \<bullet> (Rep_tsynstream (ts2:: 'a tsynstream))))"
+  using cont_Abs_tsynstream by force
+  then show "\<forall>Y::nat \<Rightarrow> 'a tsynstream.
+       chain Y \<longrightarrow>
+       Abs_tsynstream (Rep_tsynstream ts1 \<bullet> Rep_tsynstream (\<Squnion>i::nat. Y i)) \<sqsubseteq> (\<Squnion>i::nat. Abs_tsynstream (Rep_tsynstream ts1 \<bullet> Rep_tsynstream (Y i)))"
+    using cont2contlubE eq_imp_below by blast
+qed
 
 lemma tsynconc_insert: "tsynConc ts1\<cdot>ts2 = Abs_tsynstream ((Rep_tsynstream ts1) \<bullet> (Rep_tsynstream ts2))"
-apply (simp add: tsynConc_def)
-  oops
+  by (simp add: tsynConc_def tsync_conc_cont)
+
+lemma delayfun_abstsynstream: "tsynDelay\<cdot>(Abs_tsynstream s) = Abs_tsynstream (updis \<surd> && s)" 
+  by (simp add:  lscons_conv tsynconc_insert tsynDelay_def tsynLscons_def tsync_lscons_cont3 tsync_lscons_cont2)
+
+lemma tsynmlscons2tsynlscons: "tsynMLscons\<cdot>(updis m)\<cdot>ts = tsynLscons\<cdot>(updis (Msg m))\<cdot>ts"
+  by (simp add: tsynMLscons_def)
+
+lemma tsynlscons_insert: "tsynLscons\<cdot>t\<cdot>ts = Abs_tsynstream ((lscons\<cdot>t)\<cdot>(Rep_tsynstream ts))"
+  unfolding tsynLscons_def 
+  by (simp only: beta_cfun tsync_lscons_cont3 tsync_lscons_cont)
+
+lemma abstsyn2tsynlscons: "Abs_tsynstream (t && ts) = tsynLscons\<cdot>t\<cdot>(Abs_tsynstream ts)"
+  by (simp add: tsynlscons_insert)
+
+lemma mlscons_abstsynstream: "Abs_tsynstream (updis (Msg m) && ts) = tsynMLscons\<cdot>(updis m)\<cdot>(Abs_tsynstream ts)"
+by(simp add: tsynmlscons2tsynlscons abstsyn2tsynlscons)
 
 lemma tsynstream_fin_induct_h:
   assumes bottom: "P \<bottom>"
     and delayfun: "\<And>xs. P xs \<Longrightarrow> P (tsynDelay\<cdot>xs)"
-    and mlscons: "\<And>xs x. P xs \<Longrightarrow> xs\<noteq>\<bottom> \<Longrightarrow> P (tsynMLscons\<cdot>(updis x)\<cdot>xs)"
+    and mlscons: "\<And>xs x. P xs  \<Longrightarrow> P (tsynMLscons\<cdot>(updis x)\<cdot>xs)"
     and fin: "#s < \<infinity>"
   shows "P (Abs_tsynstream s)"
 proof (induction rule: stream_fin_induct)
@@ -121,19 +156,19 @@ next
     proof (cases "x=updis \<surd>")
       case True
       have "tsynDelay\<cdot>(Abs_tsynstream xs) = Abs_tsynstream (x && xs)"
-        apply (simp add: True delayfun) sorry
+        by (simp add: True delayfun_abstsynstream)
       thus "P (Abs_tsynstream (x && xs))"
         using delayfun xs_imp by fastforce
     next
       case False
       obtain m where m_def: "x = up\<cdot>(Discr (Msg m))"
         by (metis False event.exhaust updis_exists x_nbot)                        
-      have xs_nbot: "xs\<noteq>\<bottom>" sorry
-      hence "Abs_tsynstream (x && xs) = tsynMLscons\<cdot>(updis m)\<cdot>(Abs_tsynstream xs)"
-        using m_def sorry
+      have 1:"Abs_tsynstream (x && xs) = tsynMLscons\<cdot>(updis m)\<cdot>(Abs_tsynstream xs)" 
+        apply (simp add: m_def)
+        using m_def by (simp add: mlscons_abstsynstream)
       thus "P (Abs_tsynstream (x && xs))"
-        by (simp add: Abs_tsynstream_bottom_iff assms(3) xs_imp xs_nbot)
-      qed
+        by (simp add: mlscons xs_imp)
+    qed
 next
   show "#s < \<infinity>"
     by (simp add: fin)
@@ -152,14 +187,14 @@ qed
 lemma tsynstream_fin_induct:
   assumes bottom: "P \<bottom>" 
     and delayfun: "\<And>xs. P xs \<Longrightarrow> P (tsynDelay\<cdot>xs)" 
-    and mlscons: "\<And>xs x. P xs \<Longrightarrow> xs\<noteq>\<bottom> \<Longrightarrow> P (tsynMLscons\<cdot>(updis x)\<cdot>xs)"
+    and mlscons: "\<And>xs x. P xs \<Longrightarrow> P (tsynMLscons\<cdot>(updis x)\<cdot>xs)"
     and fin: "tsynLen\<cdot>ts < \<infinity>"
   shows "P ts"
 proof -
   obtain s where s_def: "Abs_tsynstream s = ts"
     using Rep_tsynstream_inverse by blast
   hence "#s < \<infinity>" 
-    using Rep_Abs fin synfinititeTicks sorry
+    using tsync_rep_abs fin synfinititeTicks by force
   hence "P (Abs_tsynstream s)"
     using tsynstream_fin_induct_h bottom delayfun mlscons sorry
   thus "P ts" 
@@ -171,7 +206,7 @@ lemma tsynstream_induct [case_names adm bottom delayfun mlscons, induct type: ts
 fixes ts :: "'a tsynstream"
 assumes adm: "adm P" and bottom: "P \<bottom>"  
   and delayfun: "\<And>ts. P ts \<Longrightarrow> P (tsynDelay\<cdot>ts)" 
-  and mlscons: "\<And>ts t. P ts\<Longrightarrow> ts\<noteq>\<bottom> \<Longrightarrow> P (tsynMLscons\<cdot>(updis t)\<cdot>ts)"
+  and mlscons: "\<And>ts t. P ts \<Longrightarrow> P (tsynMLscons\<cdot>(updis t)\<cdot>ts)"
 shows "P ts" using adm bottom delayfun mlscons tsynstream_fin_induct sorry
 
 
