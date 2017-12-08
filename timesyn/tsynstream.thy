@@ -101,30 +101,20 @@ qed
 lemma tsync_rep_abs [simp]: "Rep_tsynstream (Abs_tsynstream sy) = sy"
   using Abs_tsynstream_inverse by blast
 
-lemma tsync_lscons_cont: "cont  (\<lambda> ts. Abs_tsynstream((t && Rep_tsynstream ts)))" sorry
+lemma tsync_lscons_cont [simp]: "cont  (\<lambda> ts. Abs_tsynstream((t && Rep_tsynstream ts)))" 
+  using cont_compose by force
 
-lemma tsync_lscons_cont2: "cont (\<lambda> ts. Abs_tsynstream (t \<bullet> Rep_tsynstream ts))" sorry
+lemma tsync_sconc_cont [simp]: "cont (\<lambda> ts. Abs_tsynstream (t \<bullet> Rep_tsynstream ts))"
+  using cont_compose by force
 
-lemma tsync_lscons_cont3: "cont (\<lambda> t. \<Lambda> ts. Abs_tsynstream(t && (Rep_tsynstream ts)))" sorry
-
-
-lemma tsync_conc_cont: "cont (\<lambda> ts2. Abs_tsynstream ((Rep_tsynstream ts1) \<bullet> (Rep_tsynstream ts2)))"
-  apply (rule contI2)
-  apply (metis (no_types, lifting) below_tsynstream_def monofunI monofun_cfun_arg tsync_rep_abs)
-proof -
-have "cont (\<lambda> ts2. Abs_tsynstream ((Rep_tsynstream ts1) \<bullet> (Rep_tsynstream (ts2:: 'a tsynstream))))"
-  using cont_Abs_tsynstream by force
-  then show "\<forall>Y::nat \<Rightarrow> 'a tsynstream.
-       chain Y \<longrightarrow>
-       Abs_tsynstream (Rep_tsynstream ts1 \<bullet> Rep_tsynstream (\<Squnion>i::nat. Y i)) \<sqsubseteq> (\<Squnion>i::nat. Abs_tsynstream (Rep_tsynstream ts1 \<bullet> Rep_tsynstream (Y i)))"
-    using cont2contlubE eq_imp_below by blast
-qed
+lemma tsync_lscons_cont3: "cont (\<lambda> t. \<Lambda> ts. Abs_tsynstream(t && (Rep_tsynstream ts)))" 
+  sorry
 
 lemma tsynconc_insert: "tsynConc ts1\<cdot>ts2 = Abs_tsynstream ((Rep_tsynstream ts1) \<bullet> (Rep_tsynstream ts2))"
-  by (simp add: tsynConc_def tsync_conc_cont)
+  by (simp add: tsynConc_def)
 
 lemma delayfun_abstsynstream: "tsynDelay\<cdot>(Abs_tsynstream s) = Abs_tsynstream (updis \<surd> && s)" 
-  by (simp add:  lscons_conv tsynconc_insert tsynDelay_def tsynLscons_def tsync_lscons_cont3 tsync_lscons_cont2)
+  by (simp add:  lscons_conv tsynconc_insert tsynDelay_def tsynLscons_def tsync_lscons_cont3)
 
 lemma tsynmlscons2tsynlscons: "tsynMLscons\<cdot>(updis m)\<cdot>ts = tsynLscons\<cdot>(updis (Msg m))\<cdot>ts"
   by (simp add: tsynMLscons_def)
