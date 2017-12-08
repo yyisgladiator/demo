@@ -103,21 +103,14 @@ have "cont (\<lambda>s. Abs_tsynstream s::'a tsynstream)"
 qed
 
 lemma tsync_rep_abs [simp]: "Rep_tsynstream (Abs_tsynstream sy) = sy"
-  using Abs_tsynstream_inverse by blast
+  by (simp add: Abs_tsynstream_inverse)
 
-<<<<<<< HEAD
+
 (* tsynLscons, tsynMLscons *)
 
-lemma tsync_lscons_cont: "cont  (\<lambda> ts. Abs_tsynstream((t && Rep_tsynstream ts)))" sorry
-=======
 lemma tsync_lscons_cont [simp]: "cont  (\<lambda> ts. Abs_tsynstream((t && Rep_tsynstream ts)))" 
   using cont_compose by force
->>>>>>> 72dd09d8265dd75f3374ddd11abc989c41832ac8
 
-lemma tsync_sconc_cont [simp]: "cont (\<lambda> ts. Abs_tsynstream (t \<bullet> Rep_tsynstream ts))"
-  using cont_compose by force
-
-<<<<<<< HEAD
 lemma tsync_lscons_cont3: "cont (\<lambda> t. \<Lambda> ts. Abs_tsynstream(t && (Rep_tsynstream ts)))" sorry
 
 lemma tsynmlscons2tsynlscons: "tsynMLscons\<cdot>(updis m)\<cdot>ts = tsynLscons\<cdot>(updis (Msg m))\<cdot>ts"
@@ -143,7 +136,7 @@ lemma tsynrt_insert: "tsynRt\<cdot>ts = Abs_tsynstream (srt\<cdot>(Rep_tsynstrea
 
 lemma tsync_rt_cont: "cont (\<lambda> ts. Abs_tsynstream (srt\<cdot>(Rep_tsynstream ts)))" sorry
 
-lemma tsync_lshd_cont: "cont (\<lambda> ts. lshd\<cdot>(Rep_tsynstream ts))" sorry
+lemma tsync_lshd_cont: "cont (\<lambda> ts. lshd\<cdot>(Rep_tsynstream ts))" by simp
 
 lemma tsyntakedropfirst [simp]: "tsynLscons\<cdot>(tsynLshd\<cdot>ts)\<cdot>(tsynRt\<cdot>ts) = ts"
   apply (simp add: tsynLscons_def tsync_lscons_cont3 tsync_lscons_cont tsynRt_def tsync_rt_cont tsynLshd_def tsync_lshd_cont)
@@ -152,21 +145,8 @@ lemma tsyntakedropfirst [simp]: "tsynLscons\<cdot>(tsynLshd\<cdot>ts)\<cdot>(tsy
 
 (* tsynConc *)
 
-lemma tsync_conc_cont: "cont (\<lambda> ts2. Abs_tsynstream ((Rep_tsynstream ts1) \<bullet> (Rep_tsynstream ts2)))"
-  apply (rule contI2)
-  apply (metis (no_types, lifting) below_tsynstream_def monofunI monofun_cfun_arg tsync_rep_abs)
-proof -
-have "cont (\<lambda> ts2. Abs_tsynstream ((Rep_tsynstream ts1) \<bullet> (Rep_tsynstream (ts2:: 'a tsynstream))))"
-  using cont_Abs_tsynstream by force
-  then show "\<forall>Y::nat \<Rightarrow> 'a tsynstream.
-       chain Y \<longrightarrow>
-       Abs_tsynstream (Rep_tsynstream ts1 \<bullet> Rep_tsynstream (\<Squnion>i::nat. Y i)) \<sqsubseteq> (\<Squnion>i::nat. Abs_tsynstream (Rep_tsynstream ts1 \<bullet> Rep_tsynstream (Y i)))"
-    using cont2contlubE eq_imp_below by blast
-qed
-=======
-lemma tsync_lscons_cont3: "cont (\<lambda> t. \<Lambda> ts. Abs_tsynstream(t && (Rep_tsynstream ts)))" 
-  sorry
->>>>>>> 72dd09d8265dd75f3374ddd11abc989c41832ac8
+lemma tsync_sconc_cont [simp]: "cont (\<lambda> ts. Abs_tsynstream (t \<bullet> Rep_tsynstream ts))"
+  using cont_compose by force
 
 lemma tsynconc_insert: "tsynConc ts1\<cdot>ts2 = Abs_tsynstream ((Rep_tsynstream ts1) \<bullet> (Rep_tsynstream ts2))"
   by (simp add: tsynConc_def)
@@ -179,6 +159,8 @@ proof -
   thus ?thesis
     by (metis (mono_tags) Rep_tsynstream_cases Rep_tsynstream_inverse mem_Collect_eq tsynconc_insert) 
 qed
+
+
 
 (* delay *)
 
