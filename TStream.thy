@@ -2639,7 +2639,7 @@ lemma tsmlscons_lscons3:
 subsection {* tslen *}
 (* ----------------------------------------------------------------------- *)
     
-lemma tslen_bottom: "tslen\<cdot>\<bottom> = 0"
+lemma tslen_bot [simp]: "tslen\<cdot>\<bottom> = 0"
   by  (simp add: tslen_def) 
     
 lemma tslen_insert: "tslen\<cdot>ts = #(Rep_tstream ts)"
@@ -2648,20 +2648,20 @@ lemma tslen_insert: "tslen\<cdot>ts = #(Rep_tstream ts)"
 lemma tslen_cont: "cont (\<lambda>ts. #(Rep_tstream ts))"
   by simp 
      
-lemma tslen_delay: "tslen\<cdot>(delay ts) = lnsuc\<cdot>(tslen\<cdot>ts)"
+lemma tslen_delayfun: "tslen\<cdot>(delay ts) = lnsuc\<cdot>(tslen\<cdot>ts)"
   by (simp add: delayFun_def tslen_def tsConc_def)    
   
-lemma tslen_conc: "ts\<noteq>\<bottom> \<Longrightarrow> tslen\<cdot>(updis msg &&\<surd> ts) = lnsuc\<cdot>(tslen\<cdot>ts)"  
+lemma tslen_mlscons: "ts\<noteq>\<bottom> \<Longrightarrow> tslen\<cdot>(updis msg &&\<surd> ts) = lnsuc\<cdot>(tslen\<cdot>ts)"  
   apply (simp add: tslen_def tsmlscons_lscons2)
   by  (subst slen_def [THEN fix_eq2], simp add: lnle_def)  
 
-lemma tslen_smaller_nbot:"tslen\<cdot>ts \<le> tslen\<cdot>ts1 \<Longrightarrow> ts \<noteq> \<bottom> \<Longrightarrow> ts1 \<noteq> \<bottom>"
+lemma tslen_nbot_leq:"tslen\<cdot>ts \<le> tslen\<cdot>ts1 \<Longrightarrow> ts \<noteq> \<bottom> \<Longrightarrow> ts1 \<noteq> \<bottom>"
   apply (simp add: tslen_def)
   by (metis Rep_tstream_bottom_iff bot_is_0 eq_bottom_iff lnle_def slen_empty_eq)
 
-lemma tslen_slen_smaller_nbot:"tslen\<cdot>ts \<le> slen\<cdot>s1 \<Longrightarrow> ts \<noteq> \<bottom> \<Longrightarrow> s1 \<noteq> \<epsilon>"   
+lemma tslen_slen_nbot_leq:"tslen\<cdot>ts \<le> slen\<cdot>s1 \<Longrightarrow> ts \<noteq> \<bottom> \<Longrightarrow> s1 \<noteq> \<epsilon>"   
   apply (simp add: tslen_def)
-  by (metis Rep_tstream_strict strict_slen tslen_insert tslen_smaller_nbot)
+  by (metis Rep_tstream_strict strict_slen tslen_insert tslen_nbot_leq)
 (* ----------------------------------------------------------------------- *)
 subsection {* delayFun *}
 (* ----------------------------------------------------------------------- *)
@@ -3163,8 +3163,8 @@ lemma tszip_nbot2: "ts \<noteq> \<bottom> \<Longrightarrow> tslen\<cdot>ts \<le>
   apply (simp_all)
   apply (rule admI)
   apply (metis inf_ub l42 less2eq tsInfTicks ts_infinite_lub tslen_insert tszip_nbot)
-  apply (simp add: tslen_slen_smaller_nbot tszip_delayfun)
-  apply (simp add: tslen_conc)
+  apply (simp add: tslen_slen_nbot_leq tszip_delayfun)
+  apply (simp add: tslen_mlscons)
   apply (rule_tac x=xs in scases, simp_all)
   by (metis lscons_conv tsmlscons_nbot tszip_mlscons tszip_strict(2) up_defined)
 
@@ -3189,11 +3189,11 @@ lemma tszip_tsabs2: "tslen\<cdot>ts \<le> #xs \<Longrightarrow> tsAbs\<cdot>(tsZ
   apply (simp_all)
   apply (rule admI)
   apply (metis inf_ub l42 less2eq tsInfTicks ts_infinite_lub tslen_insert tszip_tsabs)
-  apply (metis (no_types, lifting) less_lnsuc trans_lnle tsabs_delayfun tslen_delay 
-         tslen_slen_smaller_nbot tszip_delayfun)
-  apply (simp add: tsabs_mlscons tslen_conc)
+  apply (metis (no_types, lifting) less_lnsuc trans_lnle tsabs_delayfun tslen_delayfun
+         tslen_slen_nbot_leq tszip_delayfun)
+  apply (simp add: tsabs_mlscons tslen_mlscons)
   apply (rule_tac x=xs in scases, simp_all)
-  by (metis (no_types, lifting) lscons_conv szip_scons tsabs_mlscons tslen_slen_smaller_nbot 
+  by (metis (no_types, lifting) lscons_conv szip_scons tsabs_mlscons tslen_slen_nbot_leq 
       tszip_mlscons tszip_nbot2)
 
 lemma tszip_tsabs_slen_leq [simp]: "#(tsAbs\<cdot>(tsZip\<cdot>ts\<cdot>xs)) \<le> #(tsAbs\<cdot>ts)"
@@ -3375,6 +3375,20 @@ lemma tsremdups_tsinftick: "tsRemDups\<cdot>tsInfTick = tsInfTick"
 lemma tsremdups_h_tsinftick: "tsRemDups_h\<cdot>tsInfTick\<cdot>t= tsInfTick"
   by (metis (no_types, lifting) delayfun2tsinftick delayfun_insert s2sinftimes tick_msg 
       tsconc_insert tsconc_rep_eq tsremdups_h_delayfun)    
+
+lemma tsremdups_eq: "tsRemDups\<cdot>(updis a &&\<surd> updis a &&\<surd> ts) = tsRemDups\<cdot>(updis a &&\<surd> ts)"
+  apply(rule tscases)
+    apply(simp add: tsRemDups_def)
+    apply (metis tsmlscons_bot2 tsremdups_h_nbot2)
+  apply (metis tsmlscons_bot2 tsremdups_h_mlscons tsremdups_h_mlscons_dup tsremdups_insert)
+  by (metis tsmlscons_bot2 tsremdups_h_mlscons tsremdups_h_mlscons_dup tsremdups_insert)
+
+lemma tsremdups_neq: "a\<noteq>b \<Longrightarrow> tsRemDups\<cdot>(updis a &&\<surd> updis b &&\<surd> ts) = updis a &&\<surd> tsRemDups\<cdot>(updis b &&\<surd> ts)"
+  apply(rule tscases)
+    apply(simp add: tsRemDups_def)
+    apply (metis tsmlscons_nbot tsremdups_h_nbot2 up_defined)
+   apply (metis delayfun_nbot delayfun_tslscons_bot tick_eq_discrtick tslscons_lshd tslshd_delayfun tsmlscons_bot2 tsmlscons_lscons)
+  by (metis (no_types, lifting) event.simps(3) tsRemDups_h.simps(2) tslscons_nbot_rev tsmlscons2tslscons tsmlscons_lscons tsremdups_h_mlscons_ndup tsremdups_h_strict tsremdups_insert)
 
 (************************************************)
   subsection \<open>list2ts\<close>    
