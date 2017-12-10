@@ -2662,6 +2662,7 @@ lemma tslen_nbot_leq:"tslen\<cdot>ts \<le> tslen\<cdot>ts1 \<Longrightarrow> ts 
 lemma tslen_slen_nbot_leq:"tslen\<cdot>ts \<le> slen\<cdot>s1 \<Longrightarrow> ts \<noteq> \<bottom> \<Longrightarrow> s1 \<noteq> \<epsilon>"   
   apply (simp add: tslen_def)
   by (metis Rep_tstream_strict strict_slen tslen_insert tslen_nbot_leq)
+
 (* ----------------------------------------------------------------------- *)
 subsection {* delayFun *}
 (* ----------------------------------------------------------------------- *)
@@ -3378,17 +3379,21 @@ lemma tsremdups_h_tsinftick: "tsRemDups_h\<cdot>tsInfTick\<cdot>t= tsInfTick"
 
 lemma tsremdups_eq: "tsRemDups\<cdot>(updis a &&\<surd> updis a &&\<surd> ts) = tsRemDups\<cdot>(updis a &&\<surd> ts)"
   apply(rule tscases)
-    apply(simp add: tsRemDups_def)
-    apply (metis tsmlscons_bot2 tsremdups_h_nbot2)
+  apply(simp add: tsRemDups_def)
+  apply (metis tsmlscons_bot2 tsremdups_h_nbot2)
   apply (metis tsmlscons_bot2 tsremdups_h_mlscons tsremdups_h_mlscons_dup tsremdups_insert)
   by (metis tsmlscons_bot2 tsremdups_h_mlscons tsremdups_h_mlscons_dup tsremdups_insert)
 
-lemma tsremdups_neq: "a\<noteq>b \<Longrightarrow> tsRemDups\<cdot>(updis a &&\<surd> updis b &&\<surd> ts) = updis a &&\<surd> tsRemDups\<cdot>(updis b &&\<surd> ts)"
+lemma tsremdups_neq: 
+  "a\<noteq>b \<Longrightarrow> tsRemDups\<cdot>(updis a &&\<surd> updis b &&\<surd> ts) = updis a &&\<surd> tsRemDups\<cdot>(updis b &&\<surd> ts)"
   apply(rule tscases)
-    apply(simp add: tsRemDups_def)
-    apply (metis tsmlscons_nbot tsremdups_h_nbot2 up_defined)
-   apply (metis delayfun_nbot delayfun_tslscons_bot tick_eq_discrtick tslscons_lshd tslshd_delayfun tsmlscons_bot2 tsmlscons_lscons)
-  by (metis (no_types, lifting) event.simps(3) tsRemDups_h.simps(2) tslscons_nbot_rev tsmlscons2tslscons tsmlscons_lscons tsremdups_h_mlscons_ndup tsremdups_h_strict tsremdups_insert)
+  apply(simp add: tsRemDups_def)
+  apply (metis tsmlscons_nbot tsremdups_h_nbot2 up_defined)
+  apply (metis delayfun_nbot delayfun_tslscons_bot tick_eq_discrtick tslscons_lshd tslshd_delayfun 
+         tsmlscons_bot2 tsmlscons_lscons)
+  by (metis (no_types, lifting) event.simps(3) tsRemDups_h.simps(2) tslscons_nbot_rev 
+      tsmlscons2tslscons tsmlscons_lscons tsremdups_h_mlscons_ndup tsremdups_h_strict 
+      tsremdups_insert)
 
 (************************************************)
   subsection \<open>list2ts\<close>    
