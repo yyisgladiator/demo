@@ -337,7 +337,28 @@ lemma abs_cspf_rev: "Abs_SPF (Abs_cfun F) = Abs_CSPF F"
 lemma rep_cspf_rev: "Rep_cfun (Rep_SPF F) = Rep_CSPF F"
   by simp
 
-
+subsection \<open>SPF_apply_Lub\<close>
+  
+lemma spf_well_lub: assumes "chain Y" and "\<And> i. spf_well (Y i)"
+  shows "spf_well (\<Squnion> i. Y i)"
+  by (simp add: admD assms(1) assms(2))
+    
+lemma spfapply_lub: assumes "chain Y"
+  shows "(\<Squnion> i. Y i) \<rightleftharpoons> sb = (\<Squnion> i. ((Y i)  \<rightleftharpoons> sb))"
+proof -
+  have f1: "chain (\<lambda>n. Rep_SPF (Y n))"
+    by (metis assms rep_spf_chain)
+  hence "spf_well (\<Squnion>n. Rep_SPF (Y n))"
+    using rep_spf_well spf_well_lub by blast
+  hence "Rep_CSPF (Lub Y) = Rep_cfun (\<Squnion>n. Rep_SPF (Y n))"
+    by (simp add: assms lub_SPF)
+  hence "Rep_CSPF (Lub Y) sb = (\<Squnion>n. Rep_CSPF (Y n) sb)"
+    using f1 contlub_cfun_fun by auto
+  hence "(\<Squnion>n. \<lambda>n. Rep_CSPF (Y n) sb\<rightharpoonup>n) = Lub Y \<rightleftharpoons> sb"
+    using f1 by (simp add: op_the_lub)
+  thus ?thesis
+    by auto
+qed
 
 subsection \<open>SPF_definition\<close>
   
