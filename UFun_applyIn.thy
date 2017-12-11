@@ -23,6 +23,8 @@ definition ufApplyIn :: "('m \<rightarrow> 'm ) \<Rightarrow> ('m \<Rrightarrow>
 definition ufApplyIn2 :: "('m \<rightarrow> 'm ) \<Rightarrow> ('m \<Rrightarrow> 'm) \<rightarrow> ('m \<Rrightarrow> 'm)" where
 "ufApplyIn2 k \<equiv> (\<Lambda> g. Abs_cufun (\<lambda>x. (ubDom\<cdot>(k\<cdot>x) = ufDom\<cdot>g) \<leadsto> (g \<rightleftharpoons>(k\<cdot>x))))"
 
+
+subsection \<open>some rules\<close>
 (* unfolding rule  *)
 lemma ufapplyin_eq_pre: "(Rep_cufun uf)(f\<cdot>x) = (ubDom\<cdot>(f\<cdot>x) = ufDom\<cdot>uf) \<leadsto> (uf \<rightleftharpoons>(f\<cdot>x))"
   by (metis domIff option.collapse rep_ufun_well ufWell_def ufdom_2ufundom ufdom_not_empty)
@@ -63,14 +65,14 @@ lemma ufapplyout_uf_dom [simp]: assumes "\<And>b. ubDom\<cdot>b = ufDom\<cdot>g 
   shows "ufDom\<cdot>(Abs_cufun (\<lambda> x. (ubDom\<cdot>x = ufDom\<cdot>g) \<leadsto> k\<cdot>(g \<rightleftharpoons>x))) = ufDom\<cdot>g"
   by (simp add: assms ufun_ufdom_abs)
 
-
+(* ran of ufapplyout is the same as the ubDom of the result after applying k and g on input b *)
 lemma ufapplyout_uf_ran [simp]: assumes "\<And>b. ubDom\<cdot>b = ufDom\<cdot>(g::'m \<Rrightarrow> 'm) \<Longrightarrow> ubDom\<cdot>(k\<cdot>(g \<rightleftharpoons> b)) = cs"
   shows "ufRan\<cdot>(Abs_cufun (\<lambda> x. (ubDom\<cdot>x = ufDom\<cdot>g) \<leadsto> k\<cdot>(g \<rightleftharpoons>x))) = cs" (is "ufRan\<cdot>?F = ?cs")
     apply (subst ufran_least)
     apply (subst rep_abs_cufun, simp_all add: assms)
     by (simp add: ubdom_least_cs)
 
-
+(* unfolding rule when the input has the right domain  *)
 lemma ufapplyout_uf_apply: assumes "\<And>b. ubDom\<cdot>b = ufDom\<cdot>g \<Longrightarrow> ubDom\<cdot>(k\<cdot>(g \<rightleftharpoons> b)) = cs"
                              and "ubDom\<cdot>ub = ufDom\<cdot>g"
   shows "(Abs_cufun (\<lambda> x. (ubDom\<cdot>x = ufDom\<cdot>g) \<leadsto> k\<cdot>(g \<rightleftharpoons>x))) \<rightleftharpoons> ub = k\<cdot>(g \<rightleftharpoons>ub)"
@@ -81,7 +83,8 @@ lemma ufapplyout_uf_apply: assumes "\<And>b. ubDom\<cdot>b = ufDom\<cdot>g \<Lon
  (* show that ufApplyOut is continuous in its second argument *)
 
 
-  (* put this into SPF.thy *)
+  (* put this into Ufun.thy *)
+(* below rule with additional assums  *)
 lemma ufbelowI: assumes "\<And> x. P x \<Longrightarrow> (f x) \<sqsubseteq> (g x)"
                  and "cont (\<lambda> x. (P x) \<leadsto> (f x))" and "cont (\<lambda> x. (P x) \<leadsto> g x)" 
                  and "ufWell (\<Lambda> x. (P x) \<leadsto> (f x))" and "ufWell (\<Lambda> x. (P x) \<leadsto> g x)"
@@ -89,7 +92,8 @@ lemma ufbelowI: assumes "\<And> x. P x \<Longrightarrow> (f x) \<sqsubseteq> (g 
   by (simp add: assms(1) assms(2) assms(3) assms(4) assms(5) below_option_def below_ufun_def monofun_LAM)
 
 
-  (* put this into SPF.thy *)
+  (* put this into Ufun.thy *)
+(* below rule with additional assums  *)
 lemma ufbelowI2: assumes "cs1 = cs2"  
                  and "\<And> x. (ubDom\<cdot>x = cs2) \<Longrightarrow> (f x) \<sqsubseteq> (g x)" 
                  and "cont (\<lambda> x. (ubDom\<cdot>x = cs1) \<leadsto> (f x))" 
@@ -113,12 +117,12 @@ lemma ufbelowI2: assumes "cs1 = cs2"
          by (simp add: f3)
      qed
 
-
+(* rule to proof that function f is below funtion g  *)
 lemma ufbelowI3: assumes "\<And> x. (ubDom\<cdot>x = cs) \<Longrightarrow> (f x) \<sqsubseteq> (g x)"
   shows "(\<lambda> x. (ubDom\<cdot>x = cs) \<leadsto> (f x)) \<sqsubseteq> (\<lambda> x. (ubDom\<cdot>x = cs) \<leadsto> (g x))"
   by (simp add: assms below_option_def fun_belowI)
 
-
+(* ufapplyout is monoton if k doesnt change the dom of the input  *)
 lemma ufapplyout_mono [simp]:  assumes "\<And>b. ubDom\<cdot>(k\<cdot>b) = ubDom\<cdot>b" 
   shows " monofun (\<lambda>g. Abs_cufun (\<lambda>x. (ubDom\<cdot>x = ufDom\<cdot>g)\<leadsto>k\<cdot>(g \<rightleftharpoons> x)))"
   apply (rule monofunI)
@@ -129,24 +133,26 @@ lemma ufapplyout_mono [simp]:  assumes "\<And>b. ubDom\<cdot>(k\<cdot>b) = ubDom
   by (simp add: assms ufran_2_ubdom2) +
 
 
-
+(* dont know how it bahaves with ufun *)
 (* this is just a proxy definition used to make the simplifier less agressive ;) *)
 definition "applyab k \<equiv> (\<lambda>g. Abs_cufun (\<lambda>x. (ubDom\<cdot>x = ufDom\<cdot>g)\<leadsto>k\<cdot>(g \<rightleftharpoons> x)))"
 
-
+(* applyab is a monoton function if k doesnt change the dom pf the input  *)
 lemma applyab_mono [simp]: assumes "\<And>b. ubDom\<cdot>(k\<cdot>b) = ubDom\<cdot>b" 
   shows " monofun (applyab k)"
   apply (subst applyab_def)
   by (rule ufapplyout_mono, simp add: assms)
 
-
+(* substitution rule of applyab with only one arg *)
 lemma applyab_rev: "(\<lambda>g. Abs_cufun (\<lambda>x. (ubDom\<cdot>x = ufDom\<cdot>g)\<leadsto>k\<cdot>(g \<rightleftharpoons> x))) = applyab k"
   by (simp add: applyab_def)
 
+
+(* substitution rule of applyab with only two args *)
 lemma applyab_rev2: "Abs_cufun (\<lambda>xa. (ubDom\<cdot>xa = ufDom\<cdot>x)\<leadsto>k\<cdot>(x \<rightleftharpoons> xa)) = applyab k x"
   by (simp add: applyab_def)
 
-
+(* ufapplyout builds a chain from a chain Y *)
 lemma ufapplyout_chain: assumes "chain Y" and "\<And>b. ubDom\<cdot>(k\<cdot>b) = ubDom\<cdot>b" 
   shows "chain (\<lambda> i. Abs_cufun (\<lambda>x. (ubDom\<cdot>x = ufDom\<cdot>(Y i))\<leadsto>k\<cdot>(Y i \<rightleftharpoons> x)))"
 proof (rule chainI)
@@ -163,15 +169,13 @@ proof (rule chainI)
     by (simp add: f1 f4)
 qed
 
-
+(* put this in UFun.thy *)
+(* the lub of a chain is also ufWell if all elements of the chain are  *)
 lemma uf_well_lub : assumes "chain Y" and "\<And> i. ufWell (Y i)"
   shows "ufWell (\<Squnion> i. Y i)"
   by (simp add: admD assms(1) assms(2) ufWell_adm2)
 
-lemma rep_ufun_eq : assumes "Rep_ufun f1 = Rep_ufun f2"
-  shows "f1 = f2"
-  using Rep_ufun_inject assms by blast
-
+(* Abs_ufun is cont if all element of the chain are ufWell  *)
 lemma abs_uf_lub_chain : assumes "chain Y" and "\<And> i. ufWell (Y i)"
   shows "(\<Squnion> i. Abs_ufun (Y i)) = Abs_ufun (\<Squnion> i. Y i)"
 proof -
@@ -193,20 +197,14 @@ proof -
     by (metis (mono_tags, lifting) Rep_ufun_inverse assms(2) f2 lub_eq rep_abs_cufun2)
 qed
 
-lemma uf_chain_dom: assumes "chain Y" and "ufDom\<cdot>(Y 0) = cs"
-  shows "\<And> i. ufDom\<cdot>(Y i) = cs"
-  using assms(1) assms(2) is_ub_thelub ufdom_below_eq by blast
 
-
-lemma uf_chain_ran: assumes "chain Y" and "ufRan\<cdot>(Y 0) = cs"
-  shows "\<And> i. ufRan\<cdot>(Y i) = cs"
-  using assms(1) assms(2) is_ub_thelub ufran_below by blast
-  
 (*  do we really need this ?  *)
+(* Abs_cfun is monoton if x and y are cont  *)
 lemma cfun_below: assumes "x \<sqsubseteq> y" and "cont x" and "cont y"
   shows "Abs_cfun x \<sqsubseteq> Abs_cfun y"
   by (simp add: assms(1) assms(2) assms(3) below_cfun_def)
 
+(* Rep_cfun is a cont function  *)
 lemma rep_cfun_cont: assumes "chain Y"
   shows "Rep_cfun (\<Squnion>i. (Y i)) = (\<Squnion>i. (Rep_cfun ((Y i))))"
 proof -
@@ -218,7 +216,7 @@ proof -
     by (metis (no_types) assms fun_belowI po_eq_conv)
 qed
 
-
+(* Abs_cufun is a cont function if k doesnt change the dom of the arg b  *)
 lemma ufapplyout_chain_lub [simp]: assumes "chain Y" and "\<And>b. ubDom\<cdot>(k\<cdot>b) = ubDom\<cdot>b" 
   shows "Abs_cufun (\<lambda>x. (ubDom\<cdot>x = ufDom\<cdot>(\<Squnion>i. Y i))\<leadsto>k\<cdot>((\<Squnion>i. Y i) \<rightleftharpoons> x)) 
           \<sqsubseteq> (\<Squnion>i. Abs_cufun (\<lambda>x. (ubDom\<cdot>x = ufDom\<cdot>(Y i))\<leadsto>k\<cdot>(Y i \<rightleftharpoons> x)))"
@@ -226,11 +224,12 @@ proof -
   have f1: "\<And> i. ufDom\<cdot>(\<Squnion>i. Y i) = ufDom\<cdot>(Y i)"
     by (simp add: assms(1) ufdom_lub_eq)
 
+  have f9: "\<And> i. ufDom\<cdot>(Lub Y)= ufDom\<cdot>(Y i)"
+    by (simp add: f1)
+
   have f10: "\<And> i. cont (\<lambda>x. (ubDom\<cdot>x = ufDom\<cdot>(Lub Y))\<leadsto>k\<cdot>(Y i \<rightleftharpoons> x))"
     by (metis (no_types) f1 ufapplyout_uf_cont)
   
-  have f9: "\<And> i. ufDom\<cdot>(Lub Y)= ufDom\<cdot>(Y i)"
-    by (simp add: f1)
   have f12: "(\<lambda>i::nat. \<Lambda> (x::'a ). (ubDom\<cdot>x = ufDom\<cdot>(Lub Y))\<leadsto>k\<cdot>(Y i \<rightleftharpoons> x)) 
               = (\<lambda>i::nat. \<Lambda> (x::'a ). (ubDom\<cdot>x = ufDom\<cdot>(Y i))\<leadsto>k\<cdot>(Y i \<rightleftharpoons> x))"
     using f1 by auto
@@ -283,7 +282,7 @@ proof -
   qed
   have f100: "\<And> x. (\<Squnion>i::nat. (\<lambda>x. (ubDom\<cdot>x = ufDom\<cdot>(Lub Y))\<leadsto>k\<cdot>(Y i \<rightleftharpoons> x))) x
                           = (\<lambda>x. (ubDom\<cdot>x = ufDom\<cdot>(Lub Y))\<leadsto>(\<Squnion>i::nat. k\<cdot>(Y i \<rightleftharpoons> x))) x"
-      apply (simp)
+    apply (simp)
     apply rule
      apply (smt ch2ch_fun f60 image_cong lub_fun option.collapse option.discI option.inject 
                           option_chain_cases part_the_lub some_lub_chain_eq)
@@ -322,7 +321,7 @@ proof -
     by simp
 qed
 
-
+(* ufapplyout is cont if k doesnt change the dom of the input  *)
 lemma ufapplyout_cont [simp]:  assumes "\<And>b. ubDom\<cdot>(k\<cdot>b) = ubDom\<cdot>b" 
   shows "cont (\<lambda> g. Abs_cufun (\<lambda>x. (ubDom\<cdot>x = ufDom\<cdot>g) \<leadsto> k\<cdot>(g \<rightleftharpoons>x)))"
   apply (rule contI2)
@@ -330,11 +329,14 @@ lemma ufapplyout_cont [simp]:  assumes "\<And>b. ubDom\<cdot>(k\<cdot>b) = ubDom
   by (simp add: assms)
 
 (* further properties *)
+subsection \<open>ufApplyOut Lemmas\<close>
 
+(* insert rules *)
 lemma ufapplyout_insert: assumes "\<And>b. ubDom\<cdot>(k\<cdot>b) = ubDom\<cdot>b" 
   shows "ufApplyOut k\<cdot>(f::'a \<Rrightarrow> 'a) =  Abs_cufun (\<lambda>x. (ubDom\<cdot>x = ufDom\<cdot>f) \<leadsto> k\<cdot>(f \<rightleftharpoons>x))"
   by (simp add: ufApplyOut_def assms) 
 
+(* dom of ufApplyOut is the same as the dom of input ufun  *)
 lemma ufapplyout_dom: assumes "\<And>b. ubDom\<cdot>(k\<cdot>b) = ubDom\<cdot>b" 
   shows "ufDom\<cdot>(ufApplyOut k\<cdot>f) = ufDom\<cdot>f"
 proof -
@@ -346,7 +348,7 @@ proof -
     by (simp add: f1)
 qed
 
-
+(* ran of ufApplyOut is the same as the ran of input ufun  *)
 lemma ufapplyout_ran: assumes "\<And>b. ubDom\<cdot>(k\<cdot>b) = ubDom\<cdot>b" 
   shows "ufRan\<cdot>(ufApplyOut k\<cdot>f) = ufRan\<cdot>f"
 proof -
@@ -358,6 +360,8 @@ proof -
     by (simp add: f1)
 qed
 
+
+(* substitution if the arg has the right domain  *)
 lemma ufapplyout_apply:  assumes "\<And>b. ubDom\<cdot>(k\<cdot>b) = ubDom\<cdot>b" 
   and "ubDom\<cdot>ub = ufDom\<cdot>f"
   shows "(ufApplyOut k\<cdot>f) \<rightleftharpoons> ub = k\<cdot>(f\<rightleftharpoons>ub)"
@@ -372,9 +376,10 @@ proof -
     by (simp add: assms(1) assms(2) ufran_2_ubdom2)
 qed
 
-section \<open>ufApplyIn2\<close>
+section \<open>ufApplyIn\<close>
 (* note that these proofs only really work if k does not change the domain *)
 
+(* the ufapplyin function is cont  without lifting to ufun *)
 lemma ufapplyin_uf_cont [simp]: "cont (\<lambda>x. (ubDom\<cdot>x = ufDom\<cdot>g) \<leadsto> (g \<rightleftharpoons>(k\<cdot>x)))"
 proof (rule ufun_contI)
   show "\<And> x y. ubDom\<cdot>x = ufDom\<cdot>g \<Longrightarrow> x \<sqsubseteq> y \<Longrightarrow> g \<rightleftharpoons> k\<cdot>x \<sqsubseteq> g \<rightleftharpoons> k\<cdot>y"
@@ -384,11 +389,12 @@ proof (rule ufun_contI)
     by (simp add: contlub_cfun_arg op_the_lub)
 qed
 
+(* the ran of ufapply is if the same as ran of the input ufun  *)
 lemma ufapplyin_ran: assumes "\<And> x. ubDom\<cdot>(k\<cdot>x) = ubDom\<cdot>x" and "ubDom\<cdot>b = ufDom\<cdot>g"
   shows "ubDom\<cdot>(g \<rightleftharpoons> k\<cdot>b) = ufRan\<cdot>g"
   by (simp add: assms(1) assms(2) ufran_2_ubdom2)
 
-
+(* ufApplyin produces a ufWell function  *)
 lemma ufapplyin_uf_wellI [simp]: assumes "\<And>b. ubDom\<cdot>(k\<cdot>b) = ubDom\<cdot>b"
   shows "ufWell (\<Lambda> x. (ubDom\<cdot>x = ufDom\<cdot>g) \<leadsto> (g \<rightleftharpoons>(k\<cdot>x)))"
   apply (simp add: ufWell_def, rule)
@@ -397,13 +403,14 @@ lemma ufapplyin_uf_wellI [simp]: assumes "\<And>b. ubDom\<cdot>(k\<cdot>b) = ubD
   apply (rule_tac x= "ufRan\<cdot>g" in exI)
   by (smt assms option.distinct(1) option.sel ran2exists ufran_2_ubdom2)
 
-
+(* ufApplyIn has the same dom as the input ufun *)
 lemma ufapplyin_uf_dom [simp]:  assumes "\<And>b. ubDom\<cdot>(k\<cdot>b) = ubDom\<cdot>b"
   shows "ufDom\<cdot>(Abs_ufun (\<Lambda> x. (ubDom\<cdot>x = ufDom\<cdot>g) \<leadsto> (g \<rightleftharpoons>(k\<cdot>x)))) = ufDom\<cdot>g"
   apply (subst ufun_ufdom_abs, simp_all)
   apply (rule ufapplyin_uf_wellI)
   by (simp add: assms)
 
+(* ufApplyIn has the same ran as the input ufun *)
 lemma ufapplyin_uf_ran [simp]: assumes "\<And>b. ubDom\<cdot>((k:: 'm \<rightarrow> 'm)\<cdot>b) = ubDom\<cdot>b"
   shows "ufRan\<cdot>(Abs_ufun (\<Lambda> x. (ubDom\<cdot>x = ufDom\<cdot>g) \<leadsto> (g \<rightleftharpoons>(k\<cdot>x)))) =  ufRan\<cdot>g" (is "ufRan\<cdot>?F = ufRan\<cdot>?g")
 proof -
@@ -427,35 +434,38 @@ proof -
     by (simp add: f2)
 qed
 
+(* substitution rules for ufapplyin  *)
 lemma ufapplyin_uf_apply:  assumes "\<And>b. ubDom\<cdot>(k\<cdot>b) = ubDom\<cdot>b"
                              and "ubDom\<cdot>ub = ufDom\<cdot>g"
   shows "(Abs_ufun (\<Lambda> x. (ubDom\<cdot>x = ufDom\<cdot>g) \<leadsto> (g \<rightleftharpoons>(k\<cdot>x)))) \<rightleftharpoons> ub = g \<rightleftharpoons> (k\<cdot>ub)"
   by (simp add: assms)
 
+(* ufApplyIn is a  monofun   *)
 lemma ufapplyin_mono [simp]: assumes "\<And>b. ubDom\<cdot>(k\<cdot>b) = ubDom\<cdot>b"
   shows "monofun (\<lambda> g. Abs_cufun (\<lambda>x. (ubDom\<cdot>x = ufDom\<cdot>g) \<leadsto> (g \<rightleftharpoons>(k\<cdot>x))))"
-apply (rule monofunI)
-    apply (rule ufbelowI2)
-    apply (simp_all add: assms)
+  apply (rule monofunI)
+  apply (rule ufbelowI2)
+       apply (simp_all add: assms)
    apply (simp add: ufdom_below_eq)
-    by (metis (full_types) below_ufun_def below_option_def below_refl monofun_cfun_fun)
+  by (metis (full_types) below_ufun_def below_option_def below_refl monofun_cfun_fun)
 
 (* this is just a proxy definition used to make the simplifier less agressive ;) *)
 definition "applycd k = (\<lambda> g. Abs_cufun (\<lambda>x. (ubDom\<cdot>x = ufDom\<cdot>g) \<leadsto> (g \<rightleftharpoons>(k\<cdot>x))))"
 
+(* applycd is a monofun  *)
 lemma applycd_mono [simp]: assumes "\<And>b. ubDom\<cdot>(k\<cdot>b) = ubDom\<cdot>b"
   shows "monofun (applycd k)"
   apply (subst applycd_def)
   by (rule ufapplyin_mono, simp add: assms)
 
 (* applycd substitution and reverse substitution lemmata *)
-
 lemma applycd_rev: "(\<lambda> g. Abs_cufun (\<lambda>x. (ubDom\<cdot>x = ufDom\<cdot>g) \<leadsto> (g \<rightleftharpoons>(k\<cdot>x)))) = applycd k"
   by (simp add: applycd_def)
 
 lemma applycd_rev2: "Abs_cufun (\<lambda>x. (ubDom\<cdot>x = ufDom\<cdot>g) \<leadsto> (g \<rightleftharpoons>(k\<cdot>x))) = applycd k g"
   by (simp add: applycd_def)
 
+(* ufapplyin produces a chain  *)
 lemma ufapplyin_chain [simp]: assumes "chain Y" and "\<And>b. ubDom\<cdot>(k\<cdot>b) = ubDom\<cdot>b"
   shows "chain (\<lambda> i. Abs_cufun (\<lambda>x. (ubDom\<cdot>x = ufDom\<cdot>(Y i)) \<leadsto> ((Y i) \<rightleftharpoons>(k\<cdot>x))))"
 proof (rule chainI)
@@ -475,6 +485,7 @@ proof (rule chainI)
     by (simp add: f1)
 qed
 
+(* Abs_cufun is cont function for ufApplyIn  *)
 lemma ufapplyin_chain_lub [simp]: assumes "chain Y" and "\<And>b. ubDom\<cdot>(k\<cdot>b) = ubDom\<cdot>b"
   shows " Abs_cufun (\<lambda>x. (ubDom\<cdot>x = ufDom\<cdot>(\<Squnion>i::nat. Y i))\<leadsto>(\<Squnion>i. Y i) \<rightleftharpoons> k\<cdot>x) \<sqsubseteq>
        (\<Squnion>i. Abs_cufun (\<lambda>x. (ubDom\<cdot>x = ufDom\<cdot>(Y i))\<leadsto>Y i \<rightleftharpoons> k\<cdot>x))"
@@ -489,7 +500,6 @@ proof -
     by simp
 
   (* handy substitution facts *)
-
   have f12: "(\<lambda> i::nat. (\<Lambda> x. (ubDom\<cdot>x = ufDom\<cdot>(Lub Y))\<leadsto>(Y i) \<rightleftharpoons> (k\<cdot>x))) 
               = (\<lambda> i::nat. (\<Lambda> x. (ubDom\<cdot>x = ufDom\<cdot>(Y i))\<leadsto>(Y i) \<rightleftharpoons> (k\<cdot>x)))"
     using f1 by auto
@@ -511,11 +521,9 @@ proof -
                 \<sqsubseteq> (\<Lambda> x. (ubDom\<cdot>x = ufDom\<cdot>(Lub Y))\<leadsto>(Y (Suc i)) \<rightleftharpoons> (k\<cdot>x))"
       apply (rule cfun_below)
         apply (simp_all add: f10)
-        apply (rule ufbelowI3)
-        by (metis (no_types) below_ufun_def below_option_def below_refl cfun_below_iff f141)
-
-
-      thus "\<And> i. (\<Lambda> x. (ubDom\<cdot>x = ufDom\<cdot>(Y i))\<leadsto>Y i \<rightleftharpoons> k\<cdot>x) 
+      apply (rule ufbelowI3)
+      by (metis (no_types) below_ufun_def below_option_def below_refl cfun_below_iff f141)
+    thus "\<And> i. (\<Lambda> x. (ubDom\<cdot>x = ufDom\<cdot>(Y i))\<leadsto>Y i \<rightleftharpoons> k\<cdot>x) 
                \<sqsubseteq> (\<Lambda> x. (ubDom\<cdot>x = ufDom\<cdot>(Y (Suc i)))\<leadsto>Y (Suc i) \<rightleftharpoons> k\<cdot>x)"
      by (simp add: f1)
   qed
@@ -583,6 +591,7 @@ proof -
      by simp
  qed
 
+(* ufApplyIn is cont overall*)
 lemma ufapplyin_cont [simp]: assumes "\<And>b. ubDom\<cdot>(k\<cdot>b) = ubDom\<cdot>b"
   shows "cont (\<lambda> g. Abs_cufun (\<lambda>x. (ubDom\<cdot>x = ufDom\<cdot>g) \<leadsto> (g \<rightleftharpoons>(k\<cdot>x))))"
   apply (rule contI2)
