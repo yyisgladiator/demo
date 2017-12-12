@@ -111,11 +111,7 @@ definition ufLeast :: "channel set \<Rightarrow> channel set \<Rightarrow> ('in 
 "ufLeast cin cout = Abs_ufun (\<Lambda>  sb.  (ubDom\<cdot>sb = cin) \<leadsto> ubLeast cout)"
 *)
 
-(* ufComp *)
-(* We can reuse this composition in the subtypes, for weak/strong causal stuff *)
-definition ufComp :: "('m \<Rrightarrow> 'm) \<rightarrow> ('m \<Rrightarrow> 'm) \<rightarrow> ('m \<Rrightarrow> 'm)" where
-"ufComp = undefined"
-
+(* ufType *)
 definition ufunType :: "('in,'out) ufun \<rightarrow> (channel set \<times> channel set)" where
 "ufunType \<equiv> \<Lambda> f . (ufDom\<cdot>f, ufRan\<cdot>f)"
 
@@ -241,8 +237,11 @@ cpodef ('in,'out) USPFs = "{f :: ('in,'out) USPFw. ufIsStrong (Rep_USPFw f)}"
 (****************************************************)
 section\<open>Lemmas\<close>
 (****************************************************)   
-   subsection \<open>Rep_ufun / Abs_ufun\<close>
+ 
 
+subsection \<open>Rep_ufun / Abs_ufun\<close>
+
+     
 (* if we have a ufun chain, then we still have a chain after applying rep on each element in the chain  *)
 lemma rep_ufun_chain [simp]: assumes "chain Y" shows "chain (\<lambda>i. Rep_ufun (Y i))"
   by (meson assms below_ufun_def po_class.chain_def)
@@ -262,7 +261,6 @@ lemma rep_ufun_well [simp]:  "ufWell (Rep_ufun s)"
 (* Rep_cufun is continuous  *)
 lemma rep_cufun_cont [simp]: "cont Rep_cufun"
   by simp
-
 
 (* Rep_cufun produces a ufwell function  *)
 lemma rep_cufun_well [simp]: "ufWell (Abs_cfun (Rep_cufun x))"
@@ -287,6 +285,7 @@ lemma rep_cufun_rev: "Rep_cfun (Rep_ufun F) = Rep_cufun F"
 
 subsection \<open>ufun_definition\<close>
 
+  
 text{*  introduction rules for mono proofs *}
 lemma ufun_monoI2 [simp]: assumes "\<And> x y. ubDom\<cdot>x = In \<Longrightarrow> x \<sqsubseteq> y \<Longrightarrow> (g x) \<sqsubseteq> (g y)"
   shows "monofun (\<lambda>b. (ubDom\<cdot>b = In)\<leadsto>g b)"
@@ -319,7 +318,6 @@ proof(rule contI2)
     by (smt assms below_refl if_then_lub2 is_ub_thelub lub_eq po_class.chain_def ubdom_fix)
 qed
 
-
 text{* Intro rule for ufun well *}
 lemma ufun_wellI:  assumes "\<And>b. (b \<in> dom (Rep_cfun f)) \<Longrightarrow> (ubDom\<cdot>b = In)"
   and "(\<And>b. b \<in> dom (Rep_cfun f) \<Longrightarrow> ubDom\<cdot>((Rep_cfun f)\<rightharpoonup>b) = Out)"
@@ -329,8 +327,6 @@ lemma ufun_wellI:  assumes "\<And>b. (b \<in> dom (Rep_cfun f)) \<Longrightarrow
   apply rule
    apply (meson assms(1) assms(3))
   by (smt assms(2) domI mem_Collect_eq option.sel ran_def)
-    
-
 
 (* only 'm ubs with the same domain are in an (in, out) ufun *)
 lemma ufun_ufundom2dom: assumes "ubDom\<cdot>x = ubDom\<cdot>y" 
@@ -405,6 +401,7 @@ subsection \<open>ufDom\<close>
 (* ufDom *) 
 thm ufDom_def
 
+  
 (* mono proof of ufDom  *)
 lemma ufdom_mono[simp]: "monofun (\<lambda>f. ubDom\<cdot>(SOME b. b \<in> dom (Rep_cufun f)))"
 proof(rule monofunI)
@@ -484,6 +481,7 @@ lemma ufun_ufdom_abs: assumes "cont (\<lambda> x. (ubDom\<cdot>x = cs ) \<leadst
 (* ufRan *)
   thm ufRan_def
 
+    
 (* ufRan_def is monotone *)
 lemma ufran_mono [simp]: "monofun (\<lambda> F. ubDom\<cdot>(SOME b. b \<in> ran (Rep_cufun F)))"
 proof (rule monofunI)
@@ -542,6 +540,7 @@ lemma ufran_2_ubdom2: assumes "ubDom\<cdot>tb = ufDom\<cdot>f"
 (* ufLeast *)
   thm ufLeast_def
 
+    
 (* ufelast if a mono function  *)
 lemma ufleast_mono[simp]: "\<And> cin cout. monofun (\<lambda>sb. (ubDom\<cdot>sb = cin)\<leadsto>ubLeast cout)"
   by simp
@@ -587,9 +586,11 @@ qed
 
 (* ufComp *)
 
+  
 subsection \<open>ufunType\<close>
 (* ufunType *)
 
+  
 (* cont proof because ufdom and ufran are cont *)
 lemma ufuntype_cont: "cont (\<lambda>f. (ufDom\<cdot>f, ufRan\<cdot>f))"
   by simp
