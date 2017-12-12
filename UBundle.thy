@@ -443,9 +443,6 @@ lemma ubunion_idL [simp]: assumes "ubDom\<cdot>b1 \<subseteq> ubDom\<cdot>b2"
   using assms apply (simp add: ubunion_insert)
   by (simp add: ubdom_insert)
 
-lemma ubunion_idR [simp]: "b \<uplus> (ubLeast {}) = b"
-  by (simp add: ubunion_insert ubLeast_def ubWell_empty)
-
 lemma ubunion_commutative: assumes "ubDom\<cdot>b1 \<inter> ubDom\<cdot>b2 = {}"
   shows "b1 \<uplus> b2 = b2 \<uplus> b1"
   using assms apply (simp add: ubunion_insert)
