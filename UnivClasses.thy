@@ -28,14 +28,19 @@ section\<open>Universal Stream\<close>
 
 
 (* This class is just the very basic functions required for an Bundle *)
-class uscl = pcpo +
+class uscl = cpo +
   fixes usOkay :: "channel \<Rightarrow> 'a \<Rightarrow> bool" (* similar to "ctype" in message *)
   fixes usLen :: "'a \<rightarrow> lnat"
 
-  assumes usOkay_bot: "\<And>c. usOkay c \<bottom>"    (* used for ubLeast wellformed proof *)
+  (*assumes usOkay_bot: "\<And>c. usOkay c \<bottom>"    (* used for ubLeast wellformed proof *)*)
   assumes usOkay_adm: "\<And>c. adm (usOkay c)" (* used to instanciate ubundle *)
 begin
 end
+  
+class uscl_pcpo = uscl + pcpo + 
+  assumes usOkay_bot: "\<And>c. usOkay c \<bottom>"    (* used for ubLeast wellformed proof *)
+begin
+end  
 
 
 (****************************************************)
@@ -49,15 +54,29 @@ default_sort cpo
 class ubcl = cpo +
   fixes ubDom :: "'a \<rightarrow> channel set"
   fixes ubLen :: "'a \<Rightarrow> lnat"  (* Debatable *)
-  fixes ubLeast :: "channel set \<Rightarrow> 'a"
 
-  assumes ublen_mono: "monofun ubLen"
   assumes ubdom_fix: "\<And> x y. x\<sqsubseteq>y \<Longrightarrow> ubDom\<cdot>x = ubDom\<cdot>y"
-  assumes ubdom_least: "\<And> x. ubLeast (ubDom\<cdot>x)\<sqsubseteq>x"
-  assumes ubdom_least_cs: "\<And> cs. ubDom\<cdot>(ubLeast cs) = cs"
+  assumes ubdom_ex: "\<And>C. \<exists>x. ubDom\<cdot>x = C"
+    
+  assumes ublen_mono: "monofun ubLen"
+  assumes ublen_inf_ex: "\<exists>ub. ubLen ub = \<infinity>"
 begin
 end
 
+class ubcl_comp = ubcl +
+  fixes ubLeast :: "channel set \<Rightarrow> 'a"
+  fixes ubUnion :: "'a \<rightarrow> 'a \<rightarrow> 'a"
+  fixes ubRestrict :: "channel set \<Rightarrow> 'a \<rightarrow> 'a"
+  
+  assumes ubunion_dom: "ubDom\<cdot>(ubUnion\<cdot>f1\<cdot>f2) = ubDom\<cdot>f1 \<union> ubDom\<cdot>f2"
+  assumes ubunion_restrict: "ubRestrict cs\<cdot>(ubUnion\<cdot>f1\<cdot>f2) = ubUnion\<cdot>(ubRestrict cs\<cdot>f1)\<cdot>(ubRestrict cs\<cdot>f2)" 
+  assumes ubrestrict_dom: "ubDom\<cdot>(ubRestrict cs\<cdot>b) = ubDom\<cdot>b \<inter> cs"  
+    
+  assumes ubdom_least: "\<And> x. ubLeast (ubDom\<cdot>x)\<sqsubseteq>x"
+  assumes ubdom_least_cs: "\<And> cs. ubDom\<cdot>(ubLeast cs) = cs"
+begin
+end  
+  
 
 (****************************************************)
 section\<open>Universal Stream Processing Function\<close>

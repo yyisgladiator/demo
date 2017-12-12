@@ -25,6 +25,12 @@ cpodef 'm uspec = "{S :: 'm set rev. uspecWell (inv Rev S) }"
 
 setup_lifting type_definition_uspec
 
+
+(****************************************************)
+section\<open>Definitions\<close>
+(****************************************************) 
+  
+  
 definition uspecDom :: "'m uspec \<Rightarrow> channel set" where
 "uspecDom S = ufDom\<cdot>(SOME f. f\<in>  ((inv Rev) (Rep_uspec S)))"
 
@@ -32,6 +38,17 @@ definition uspecRan :: "'m uspec \<Rightarrow> channel set" where
 "uspecRan S = ufRan\<cdot>(SOME f. f\<in> ((inv Rev) (Rep_uspec S)))"
 
 
+(****************************************************)
+section\<open>Lemmas\<close>
+(****************************************************) 
+
+ 
+  
+  
+(****************************************************)
+section\<open>Composition\<close>
+(****************************************************)   
+  
 
 (* from here on only lemma on composition *)
 default_sort ufuncl_comp
