@@ -116,7 +116,6 @@ definition ufFeedH:: "('m \<Rrightarrow> 'm) \<Rightarrow> 'm \<Rightarrow> 'm  
 definition ufFeedbackComp :: "('m \<Rrightarrow> 'm) \<Rightarrow> ('m \<Rrightarrow> 'm)" ("\<mu>_" 50) where
 "ufFeedbackComp f \<equiv>
 let I  = ufDom\<cdot>f - ufRan\<cdot>f;
-    I1 = ufDom\<cdot>f;
     C  = ufRan\<cdot>f
 in Abs_ufun (Abs_cfun (\<lambda> sb. (ubDom\<cdot>sb = I) \<leadsto>
     (ubFix (ufFeedH f sb) C)))"  
@@ -919,30 +918,30 @@ lemma ufSerComp_dom: assumes "sercomp_well f1 f2"
    apply (simp add: assms ufSerComp_well)
   by (smt domIff rep_ufun_well tfl_some ubdom_least_cs ufWell_def ufdom_2ufundom ufunLeastIDom)
   
-
 lemma ufSerComp_ran: assumes "sercomp_well f1 f2"
   shows "ufRan\<cdot>(ufSerComp f1 f2) = ufRan\<cdot>f2"
 proof - 
   have f1: "ufRan\<cdot>f1 = ufDom\<cdot>f2"
     using assms by blast
-  have f2: "\<And>b. ubDom\<cdot>b=ufDom\<cdot>f1 \<longrightarrow> ubDom\<cdot>(the ((\<lambda>x::'a. (ubDom\<cdot>x = UFun.ufDom\<cdot>f1)\<leadsto>f2 \<rightleftharpoons> (f1 \<rightleftharpoons> x)) b)) = ufRan\<cdot>f2"
+  have f2: "\<And>b. ubDom\<cdot>b=ufDom\<cdot>f1 \<longrightarrow> (the ((\<lambda>x::'a. (ubDom\<cdot>x = UFun.ufDom\<cdot>f1)\<leadsto>f2 \<rightleftharpoons> (f1 \<rightleftharpoons> x)) b)) \<in> ran (\<lambda>x::'a. (ubDom\<cdot>x = UFun.ufDom\<cdot>f1)\<leadsto>(f2 \<rightleftharpoons> (f1 \<rightleftharpoons> x)))"
+    by (smt option.sel ranI)
+  have f3: "\<And>b. ubDom\<cdot>b=ufDom\<cdot>f1 \<longrightarrow> ubDom\<cdot>(the ((\<lambda>x::'a. (ubDom\<cdot>x = UFun.ufDom\<cdot>f1)\<leadsto>f2 \<rightleftharpoons> (f1 \<rightleftharpoons> x)) b)) = ufRan\<cdot>f2"
     by (simp add: assms ufran_2_ubdom2)
   show ?thesis
     apply(subst ufRan_def, simp add: ufSerComp_def)
     apply(subst rep_abs_cufun, simp add: ufSerComp_cont)
      apply (simp add: assms ufSerComp_well)
-     using f1 f2 sorry 
+     using f2 f3 (* proof found by sledgehammer *)
+    sorry 
 qed
     
-
-lemma uSerComp_repAbs: assumes "sercomp_well f1 f2"
+lemma ufSerComp_repAbs: assumes "sercomp_well f1 f2"
   shows "Rep_cufun (ufSerComp f1 f2) = (\<lambda> x. (ubDom\<cdot>x = ufDom\<cdot>f1) \<leadsto> (f2 \<rightleftharpoons> (f1 \<rightleftharpoons> x)))"
   apply(simp add: ufSerComp_def, subst rep_abs_cufun)
     apply (simp add: ufSerComp_cont)
    apply (simp add: assms ufSerComp_well)
-  by auto
-
-  
+  by auto 
+    
 
 (* feedback *)  
 
