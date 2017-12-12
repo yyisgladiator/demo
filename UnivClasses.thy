@@ -75,9 +75,11 @@ class ubcl_comp = ubcl +
   assumes ubunion_ubrestrict: "ubRestrict cs\<cdot>(ubUnion\<cdot>f1\<cdot>f2) = ubUnion\<cdot>(ubRestrict cs\<cdot>f1)\<cdot>(ubRestrict cs\<cdot>f2)" 
   assumes ubrestrict_ubdom: "ubDom\<cdot>(ubRestrict cs\<cdot>b) = ubDom\<cdot>b \<inter> cs"
   (* we need this assm to proof the equality between ufComp and ufParComp *)
-  assumes ubunion_ubrestrict_R: "(ubDom\<cdot>y) \<inter> cs = {} \<Longrightarrow> ubRestrict cs\<cdot>(ubUnion\<cdot>f1\<cdot>f2) = ubRestrict cs\<cdot>x"
+  assumes ubunion_ubrestrict_R: "(ubDom\<cdot>y) \<inter> cs = {} \<Longrightarrow> ubRestrict cs\<cdot>(ubUnion\<cdot>x\<cdot>y) = ubRestrict cs\<cdot>x"
   (* we need this assm to proof the equality between ufComp and ufSerComp *)
   assumes ubunion_ubrestrict2 :"ubRestrict (ubDom\<cdot>y)\<cdot>(ubUnion\<cdot>x\<cdot>y) = y"
+  assumes ubrestrict_ubdom_id: "ubRestrict (ubDom\<cdot>x)\<cdot>x = x"
+  assumes ubrestrict_twice: "ubRestrict cs2\<cdot>(ubRestrict cs1\<cdot>ub) = ubRestrict (cs1\<inter>cs2)\<cdot>ub"
 begin
 end  
   
