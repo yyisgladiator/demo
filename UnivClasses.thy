@@ -16,6 +16,7 @@ default_sort pcpo
 section\<open>Message\<close>
 (****************************************************) 
 
+  
 class message = countable +
   fixes ctype :: "channel \<Rightarrow> ('a::type) set" 
 begin
@@ -71,6 +72,8 @@ class ubcl_comp = ubcl +
   assumes ubunion_dom: "ubDom\<cdot>(ubUnion\<cdot>f1\<cdot>f2) = ubDom\<cdot>f1 \<union> ubDom\<cdot>f2"
   assumes ubunion_restrict: "ubRestrict cs\<cdot>(ubUnion\<cdot>f1\<cdot>f2) = ubUnion\<cdot>(ubRestrict cs\<cdot>f1)\<cdot>(ubRestrict cs\<cdot>f2)" 
   assumes ubrestrict_dom: "ubDom\<cdot>(ubRestrict cs\<cdot>b) = ubDom\<cdot>b \<inter> cs"  
+  
+  assumes ubunion_ubrestrict_R: "(ubDom\<cdot>y) \<inter> cs = {} \<Longrightarrow> ubRestrict cs\<cdot>(ubUnion\<cdot>x\<cdot>y) = ubRestrict cs\<cdot>x"  
     
   assumes ubdom_least: "\<And> x. ubLeast (ubDom\<cdot>x)\<sqsubseteq>x"
   assumes ubdom_least_cs: "\<And> cs. ubDom\<cdot>(ubLeast cs) = cs"

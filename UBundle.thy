@@ -8,6 +8,7 @@ theory UBundle
   imports UnivClasses
 begin
 
+  
 default_sort uscl
 
   
@@ -56,14 +57,12 @@ setup_lifting type_definition_ubundle
 section\<open>Definitions\<close>
 (****************************************************)
 
-(* ubDom *)
+  
 text {* @{text "ubDom"} returns the domain of the given bundle *}
-(* This function can be used in "'M stream USB" and "'M tstream USB" *)
-(* and by the way, look at the "'M\<^sup>\<omega>" shorcode for 'M USB *)
 definition ubDom :: "'M\<^sup>\<Omega> \<rightarrow> channel set" where
 "ubDom \<equiv> \<Lambda> b. dom (Rep_ubundle b)"
 
-(* ubRestrict *)
+
 text {* @{text "ubRestrict"} creates a new bundle with the restricted channel set *}
 definition ubRestrict:: "channel set \<Rightarrow> 'M\<^sup>\<Omega> \<rightarrow> 'M\<^sup>\<Omega>" where
 "ubRestrict cs  \<equiv> \<Lambda> b. Abs_ubundle (Rep_ubundle b |` cs)"
@@ -72,7 +71,6 @@ abbreviation ubRestrict_abbr :: "'M\<^sup>\<Omega> \<Rightarrow> channel set \<R
 "b \<bar> cs \<equiv> ubRestrict cs\<cdot>b"
 
 
-(* ubGetCh *)
 text {* @{text "ubGetCh"} returns the element of a given channel  *}
 definition ubGetCh :: "channel \<Rightarrow> 'M\<^sup>\<Omega> \<rightarrow> 'M"  where
 "ubGetCh c = (\<Lambda> b. ((Rep_ubundle b) \<rightharpoonup> c))"
@@ -81,19 +79,16 @@ abbreviation ubgetch_abbr :: "'M\<^sup>\<Omega> \<Rightarrow> channel \<Rightarr
 "b . c \<equiv> ubGetCh c\<cdot>b"
 
 
-(* ubLen *)
 definition ubLen:: "'M\<^sup>\<Omega> \<Rightarrow> lnat " where
 "ubLen b \<equiv> if ubDom\<cdot>b \<noteq> {} then (LEAST ln. ln\<in>{(usLen\<cdot>(b . c)) | c. c \<in> ubDom\<cdot>b}) else \<infinity>"  
 
 
-(* ubShift *)
 text {* @{text "ubShift"}  the channel-domains are merged . Thats an easy converter. For example from "tstream USB" to "stream USB" *}
 (* Can also be cont *)
 definition ubShift :: "('A \<Rightarrow> 'B) \<Rightarrow> 'A\<^sup>\<Omega> \<Rightarrow> 'B\<^sup>\<Omega>" where
 "ubShift f ub = Abs_ubundle (\<lambda>c. ((c\<in>ubDom\<cdot>ub) \<leadsto> f (ub . c)))"
 
 
-(* ubUnion *)
 text {* @{text "ubUnion"}  the channel-domains are merged *}
 definition ubUnion :: "'M\<^sup>\<Omega> \<rightarrow> 'M\<^sup>\<Omega> \<rightarrow> 'M\<^sup>\<Omega>"  where 
 "ubUnion \<equiv> \<Lambda> ub1 ub2 . Abs_ubundle ((Rep_ubundle ub1) ++ (Rep_ubundle ub2))"
@@ -102,48 +97,41 @@ abbreviation ubunion_abbr :: " 'M\<^sup>\<Omega> \<Rightarrow> 'M\<^sup>\<Omega>
 "b1 \<uplus> b2 \<equiv> ubUnion\<cdot>b1\<cdot>b2"
 
 
-(* ubSetCh *)
 text {* @{text "ubSetCh"} adds a channel or ubReplaces its content *}
 definition ubSetCh :: "'M\<^sup>\<Omega> \<rightarrow> channel \<Rightarrow> 'M  \<Rightarrow> 'M\<^sup>\<Omega>" where
 "ubSetCh \<equiv> \<Lambda> ub. (\<lambda> c m. ubUnion\<cdot>ub\<cdot>(Abs_ubundle([c \<mapsto> m])))"
 
 
-(* ubRemCh *)
 text {* @{text "ubRemCh"} removes a channel from a timed stream bundle *}
 abbreviation ubRemCh :: "channel \<Rightarrow> 'M\<^sup>\<Omega>  \<rightarrow> 'M\<^sup>\<Omega>" where
 "ubRemCh \<equiv> \<lambda> c. \<Lambda> b. ubRestrict (-{c})\<cdot>b"
 
 
-(* ubRenameCh *)
 text {* @{text "ubRenameCh"} renames a channel  in a bundle *}
 definition ubRenameCh :: "'M\<^sup>\<Omega> \<Rightarrow> channel \<Rightarrow> channel \<Rightarrow> 'M\<^sup>\<Omega>" where
  "ubRenameCh b ch1 ch2 \<equiv> (ubSetCh\<cdot>(ubRemCh ch1\<cdot>b)) ch2 (b . ch1)"
 
 
-(* ubEqSelected *)
 text {* @{text "ubEqSelected"} equality on specific channels *}
 definition ubEqSelected:: " channel set \<Rightarrow> 'M\<^sup>\<Omega> => 'M\<^sup>\<Omega> => bool" where
 "ubEqSelected cs b1 b2 \<equiv>  (b1\<bar>cs) = (b2\<bar>cs)"
 
 
-(* ubEqCommon *)
 text {* @{text "ubEqCommon"} equality on common channels *}
 definition ubEqCommon:: " 'M\<^sup>\<Omega> => 'M\<^sup>\<Omega> => bool" where
 "ubEqCommon b1 b2\<equiv> ubEqSelected (ubDom\<cdot>b1 \<inter> ubDom\<cdot>b2) b1 b2"
 
 
-(* ubPrefixSelected *)
 text {* @{text " ubPrefixSelected"} prefix relation on selected channels *}
 definition ubPrefixSelected:: "channel set \<Rightarrow> 'M\<^sup>\<Omega> \<Rightarrow> 'M\<^sup>\<Omega> \<Rightarrow> bool" where
 "ubPrefixSelected cs b1 b2 \<equiv> (b1\<bar>cs \<sqsubseteq> b2\<bar>cs)"
 
-(* ubPrefixCommon *)
+
 text {* @{text " ubPrefixCommon"} prefix relation on common channels *}
 definition ubPrefixCommon:: "'M\<^sup>\<Omega> \<Rightarrow> 'M\<^sup>\<Omega> \<Rightarrow> bool" where
 "ubPrefixCommon b1 b2 \<equiv> ubPrefixSelected (ubDom\<cdot>b1 \<inter> ubDom\<cdot>b2) b1 b2"
 
 
-(* ubMapStream *)
 text {* @{text " ubMapStream"} applies function to all streams *}
 definition ubMapStream:: "('M \<Rightarrow> 'M) \<Rightarrow>'M\<^sup>\<Omega> \<Rightarrow> 'M\<^sup>\<Omega>" where
 "ubMapStream f b =  Abs_ubundle (\<lambda>c. (c\<in>ubDom\<cdot>b) \<leadsto> f (b . c))"
@@ -228,16 +216,13 @@ lemma [simp]: assumes "ubWell f" and "c \<in> dom f"
   shows "usOkay c (f\<rightharpoonup>c)"
   using assms(1) assms(2) ubWell_def by auto
 
-
 (* if each element in the stream is usOkay then the function is ubWell  *)
 lemma ubwellI: assumes "\<And> c. c \<in> dom f \<Longrightarrow> usOkay c (f\<rightharpoonup>c)"
   shows "ubWell f"
   using assms ubWell_def by blast
 
     
-(* ubDom *)
 subsection \<open>ubDom\<close>
-
 
 
 (* the function udom is continuous *)
@@ -272,13 +257,11 @@ lemma ubdom_lub: assumes "chain Y" and "ubDom\<cdot>(Y i) = cs"
   shows "ubDom\<cdot>(\<Squnion> i. Y i) = cs"
   using assms(1) assms(2) by auto
 
-
 lemma ubdom_channel_usokay[simp]: assumes "c \<in> ubDom\<cdot>ub"
   shows "usOkay c ((Rep_ubundle ub)\<rightharpoonup>c)"
   using assms ubrep_well ubdom_insert ubWell_def by blast
 
     
-(* ubGetCh *)
 subsection \<open>ubGetCh\<close>
 
   
@@ -336,7 +319,6 @@ lemma ub_eq: assumes "ubDom\<cdot>x = ubDom\<cdot>y" and "\<And> c. c\<in>ubDom\
   using assms(1) assms(2) ubgetchI by blast
 
       
-(* ubRestrict *)
 subsection \<open>ubRestrict\<close>
 
 
@@ -392,7 +374,6 @@ lemma ubrestrict_belowI1: assumes "(a \<sqsubseteq> b)"
 lemma ubrestrict_id [simp]: assumes "ubDom\<cdot>ub \<subseteq> cs" shows "ubRestrict cs\<cdot>ub = ub"
   by (metis (mono_tags, lifting) assms contra_subsetD inf.absorb_iff1 ubgetchI ubgetch_ubrestrict ubrestrict_ubdom2)
 
-    
 lemma ubrestrict_ubdom_sub: assumes "ubDom\<cdot>ub \<subseteq> cs"
   shows "ub \<bar> cs = ub \<bar> (ubDom\<cdot>ub)"
   by (simp add: assms)
@@ -402,19 +383,19 @@ lemma ubrestrict_ubdom_sup_inter:
   by (metis (no_types, hide_lams) Int_commute inf_le2 ubrestrict_ubdom2 ubrestrict_id ubRestrict_twice)
 
     
-  subsection \<open>ubLen\<close>
-(* ubLen *) 
-  thm ubLen_def
+subsection \<open>ubLen\<close>
 
-
-  subsection \<open>ubShift\<close>
-(* ubShift *) 
-  thm ubShift_def
 
   
-(* ubUnion *)
+  
+subsection \<open>ubShift\<close>
+
+
+  
+
 subsection \<open>ubUnion\<close>
 
+  
 lemma ubunion_well [simp]: assumes "ubWell b1" and "ubWell b2"
   shows "ubWell (b1 ++ b2)"
   apply (simp add: ubWell_def)
@@ -479,9 +460,10 @@ lemma ubunion_eqI: assumes "a = b" and "c = d"
   shows "a \<uplus> c = b \<uplus> d"
   by (simp add: assms)
 
-(* ubSetCh *)
+
 subsection \<open>ubSetCh\<close>
 
+  
 lemma ubsetch_cont [simp]: "cont (\<lambda> ub. (\<lambda> c m. ubUnion\<cdot>ub\<cdot>(Abs_ubundle [c \<mapsto> m])))"
   by simp
 
@@ -544,11 +526,10 @@ lemma ubrenamech_ubgetchI2: assumes "ch1 \<in> ubDom\<cdot>ub"  and "usOkay ch2 
 *)
 
 
-(* ubEqSelected *)
-  subsection \<open>ubEqSelected\<close>
- thm ubEqSelected_def    
 
-   
+subsection \<open>ubEqSelected\<close>
+    
+  
 (* two bundles are eq when an emty set is selected *)
 lemma ubeqselected_empty_set [simp]: "ubEqSelected {} ub1 ub2"
   by (metis (no_types, lifting) bot.extremum_uniqueI empty_iff ubEqSelected_def ub_eq ubrestrict_ubdom)  
@@ -580,9 +561,7 @@ proof -
 qed
 
 
-(* ubEqCommon *)
-  subsection \<open>ubEqCommon\<close>
- thm ubEqCommon_def   
+subsection \<open>ubEqCommon\<close>  
 
    
 (* if two bundles dont have same channel then ubEqCommon is true  *)
@@ -603,7 +582,8 @@ lemma ubeqcommonI: assumes "\<forall> c \<in> (ubDom\<cdot>ub1 \<inter> ubDom\<c
 
 (* ubPrefixCommon *)
 
-(* ubMapStream *)
+subsection \<open>ubMapStream\<close>
+
 
 abbreviation fun_well_type :: "('M \<Rightarrow> 'M) \<Rightarrow> bool" where
 "fun_well_type f \<equiv> (\<forall> cs s. (usOkay cs s \<longrightarrow> usOkay cs (f s)))"
@@ -616,11 +596,9 @@ lemma ubMapStream_well: assumes "fun_well_type f"
   shows "ubWell (\<lambda>c. ((c \<in> ubDom\<cdot>b)\<leadsto>(f (b . c))))"
   by (simp add: assms ubWell_def ubgetch_insert)
 
-
 lemma ubMapStream_ubDom: assumes "fun_well_type f"
   shows "ubDom\<cdot>(ubMapStream f b) = ubDom\<cdot>b"
   by (simp add: assms ubMapStream_def ubMapStream_well ubdom_ubrep_eq)
-
 
 lemma ubMapStream_ubGetCh: assumes "fun_well_type f" and "c \<in> ubDom\<cdot>b"
   shows "(ubMapStream f b) . c = f (b . c)"
