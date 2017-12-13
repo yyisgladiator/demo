@@ -30,8 +30,8 @@ proof -
     by simp
   have f1: "cont ufun1"
     apply(rule contI2)
-    apply (simp add: monofun_def ubdom_fix ufun1_def)
-    by (smt below_refl is_ub_thelub po_class.chainI ubdom_fix ufun1_def)
+     apply (simp add: monofun_def ubdom_fix ufun1_def)
+      by (smt below_option_def is_ub_thelub po_class.chain_def ubdom_fix ufun1_def)
   have f2: "(Rep_cfun (Abs_cfun ufun1)) = ufun1"
     using f1 by auto
   have f3: "ufWell (Abs_cfun ufun1)"
