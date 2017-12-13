@@ -829,7 +829,7 @@ lemma ufparcom_dom: assumes "(ufCompL f1 f2 = {}) \<and> (ufRan\<cdot>f1 \<inter
 
 lemma ufparcomp_well_h2: assumes "(ufCompL f1 f2 = {}) \<and> (ufRan\<cdot>f1 \<inter> ufRan\<cdot>f2 = {})"
   and "ubDom\<cdot>x =  ufDom\<cdot>f1 \<union> ufDom\<cdot>f2" shows  "ubDom\<cdot>((f1 \<rightleftharpoons> (x \<bar>ufDom\<cdot>f1)) \<uplus> (f2 \<rightleftharpoons> (x\<bar>ufDom\<cdot>f2))) =  ufRan\<cdot>f1 \<union> ufRan\<cdot>f2"
-  apply (simp add: ubunion_dom)
+  apply (simp add: ubunion_ubdom)
   by (simp add: assms(2))
 
 lemma ufparcom_ran: assumes "(ufCompL f1 f2 = {}) \<and> (ufRan\<cdot>f1 \<inter> ufRan\<cdot>f2 = {})"
@@ -1051,7 +1051,7 @@ qed
 subsection \<open>Equality\<close>
 
 (* ufcomp ufsercomp  *)
-(*
+
 lemma ufcomph_insert: "ufCompH f1 f2 x\<cdot>z = ((f1\<rightleftharpoons>((x \<uplus> z)  \<bar> ufDom\<cdot>f1)) \<uplus>  (f2\<rightleftharpoons>((x \<uplus> z)  \<bar> ufDom\<cdot>f2)))"
   by (simp add: ufCompH_def)
 
@@ -1063,7 +1063,7 @@ proof -
   have "ufDom\<cdot>f1 = ufCompI f1 f2"
     using assms(1) ufCompI_def by fastforce
   then show ?thesis
-    by (simp add: assms(2) ubrestrict_dom ufran_2_ubdom2)
+    by (simp add: assms(2) ubrestrict_ubdom ufran_2_ubdom2)
 qed
 
 lemma sercomp_dom_f12: assumes "sercomp_well f1 f2"
@@ -1073,13 +1073,15 @@ lemma sercomp_dom_f12: assumes "sercomp_well f1 f2"
 
 lemma ubunion_restrict3 [simp]: assumes "(ubDom\<cdot>y)\<inter>(ubDom\<cdot>x) = {}" 
   shows "(x\<uplus>y) \<bar> ubDom\<cdot>x = x"
-  by (metis assms ubunion_restrict ubunion_ubrestrict_R)
+  by (simp add: assms ubrestrict_ubdom_id ubunion_ubrestrict_R)
 
 
 lemma sercomp_iter_serial_res_f1: assumes "sercomp_well f1 f2"
                                   and "ubDom\<cdot>x = ufCompI f1 f2"
-                                shows "(iter_ufCompH f1 f2 (Suc (Suci)) x) \<bar> (ufRan\<cdot>f1) = (f1 \<rightleftharpoons> (x\<bar>ufDom\<cdot>f1))"
-  by (smt assms(1) assms(2) sercomp_dom_f1 ubdom_least_cs ubunion_ubrestrict_R ubunion_restrict3)
+                                shows "(iter_ufCompH f1 f2 (Suc (Suc i)) x) \<bar> (ufRan\<cdot>f1) = (f1 \<rightleftharpoons> (x\<bar>ufDom\<cdot>f1))"
+  by (smt assms(1) assms(2) inf_sup_absorb inf_sup_aci(1) iter_ufCompH_dom iterate_Suc 
+          sercomp_dom_f1 sercomp_dom_f12 ubrestrict_twice ubunion_ubrestrict_R ubunion_ubrestrict2 
+          ubunion_restrict3 ufran_2_ubdom2 ufcomph_insert ubrestrict_ubdom)
 
 lemma sercomp_iter_serial: assumes "sercomp_well f1 f2"
                               and "ubDom\<cdot>x = ufCompI f1 f2"
@@ -1095,7 +1097,8 @@ by (metis assms(1))
   have "iter_ubfix2 (ufCompH f1 f2) (Suc (Suc (Suc i))) (UFun.ufRan\<cdot>f1 \<union> UFun.ufRan\<cdot>f2) x\<bar>UFun.ufRan\<cdot>f1 = f1 \<rightleftharpoons> x\<bar>UFun.ufDom\<cdot>f1"
     using assms(1) assms(2) sercomp_iter_serial_res_f1 by blast
   then show ?thesis
-    using f2 f1 by (metis (no_types) assms(1) iterate_Suc ubunion_ubrestrict_R ufcomph_insert)
+    by (smt assms(1) assms(2) inf_sup_aci(1) iter_ufCompH_dom iterate_Suc sercomp_dom_f1 sercomp_dom_f12 sercomp_iter_serial_res_f1 ubrestrict_twice
+          ubrestrict_ubdom ubunion_ubrestrict2 ubunion_ubrestrict_R ufcomph_insert)
 qed
  
 lemma sercomp_iter_max_in_chain: assumes "sercomp_well f1 f2"
@@ -1152,9 +1155,7 @@ lemma ufComp_parallel :assumes "(ufCompL f1 f2 = {}) \<and> (ufRan\<cdot>f1 \<in
   and "ubDom\<cdot>x = ufCompI f1 f2"
   shows "(iter_ubfix2 (ufCompH f1 f2) (Suc (Suc i)) (UFun.ufRan\<cdot>f1 \<union> UFun.ufRan\<cdot>f2) x)
                   =(f1\<rightleftharpoons>(x \<bar>ufDom\<cdot>f1)) \<uplus> (f2\<rightleftharpoons>(x\<bar>ufDom\<cdot>f2))" (is "?L = ?R")
-  by (smt assms(1) assms(2) inf.orderE inf_bot_right inf_sup_absorb inf_sup_aci(3) 
-      iterate_Suc parcomp_dom_ran_empty sup_ge2 ubunion_ubrestrict_R ufCompO_def 
-      ufcomp_well_h ufcomph_insert)
+  by (smt assms(1) assms(2) bot_eq_sup_iff inf_sup_aci(1) inf_sup_distrib2 iter_ufCompH_dom iterate_Suc ubunion_ubrestrict_R ufCompL_def ufcomph_insert)
 
 (* the third iteration returns the fixpoint  *)
 lemma ufComp_parallel_max: assumes "(ufCompL f1 f2 = {}) \<and> (ufRan\<cdot>f1 \<inter> ufRan\<cdot>f2 = {})"

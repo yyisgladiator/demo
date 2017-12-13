@@ -478,6 +478,15 @@ lemma ufun_ufdom_abs: assumes "cont (\<lambda> x. (ubDom\<cdot>x = cs ) \<leadst
   apply(simp add: assms ufDom_def)
   by (smt Collect_cong assms(2) domIff dom_def dom_eq_empty_conv map_not_ufun someI_ex)
 
+lemma ufun_eqI: assumes "ufDom\<cdot>f = ufDom\<cdot>g"
+          and "\<And>x. (ubDom\<cdot>x = ufDom\<cdot>f \<Longrightarrow> (Rep_cufun f)\<rightharpoonup>x = (Rep_cufun g)\<rightharpoonup>x)"
+        shows "f = g"
+proof -
+  have "dom (Rep_cufun f) = dom (Rep_cufun g)"
+    using assms(1) ufdom_2_dom_ctufun by blast
+  thus ?thesis
+    by (metis Cfun.cfun.Rep_cfun_inject Rep_ufun_inject assms(2) domD part_eq ufdom_2ufundom)
+qed
 
   subsection \<open>ufRan\<close>
 (* ufRan *)
