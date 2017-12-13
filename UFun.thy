@@ -278,7 +278,7 @@ lemma rep_abs_cufun2 [simp]: "ufWell f \<Longrightarrow> Rep_ufun (Abs_ufun f) =
   by (simp add: Abs_ufun_inverse)
 
   (* lemmata for reverse substitution *)
-lemma rbs_cufun_rev: "Abs_ufun (Abs_cfun F) = Abs_cufun F"
+lemma abs_cufun_rev: "Abs_ufun (Abs_cfun F) = Abs_cufun F"
   by simp
     
 lemma rep_cufun_rev: "Rep_cfun (Rep_ufun F) = Rep_cufun F"
@@ -450,9 +450,6 @@ lemma ufdom_2ufundom [simp]: assumes "(Rep_cufun S) a = Some b"
   shows "ufDom\<cdot>S = ubDom\<cdot>a"
   by (metis assms domI someI_ex ufun_dom2ufundom ufdom_insert)
 
-(* ubLeast is in the same dome as the function f  *)
-lemma ufunLeastIDom: "(ubLeast (ufDom\<cdot>f)) \<in> dom (Rep_cufun f)"
-  by (metis rep_ufun_well domD ubdom_least_cs ufWell_def ufdom_2ufundom)
 
 (* if the function has the same dom then they also have the same dom after rep is applied  *)
 lemma ufdom_2_dom_ctufun: assumes "ufDom\<cdot>f = ufDom\<cdot>g"
@@ -536,65 +533,10 @@ lemma ufran_2_ubdom [simp]: assumes "(Rep_cufun F) a = Some b"
     by (metis (no_types, lifting) Abs_cfun_inverse2 assms ranI someI_ex ufRan_def 
             ufun_ran2ufundom ufran_cont)
 
-(* The range of an ufun is equal to the domain of f applied to the least ubundle with domain 
-       ufDom f *)
-lemma ufran_least: "ufRan\<cdot>f = ubDom\<cdot>((Rep_cufun f)\<rightharpoonup>(ubLeast (ufDom\<cdot>f)))"
-  apply (simp add: ufRan_def)
-  by (metis (no_types) domD option.sel ufunLeastIDom ufran_2_ubdom ufran_insert)
-
 (*   *)
 lemma ufran_2_ubdom2: assumes "ubDom\<cdot>tb = ufDom\<cdot>f"
   shows "ubDom\<cdot>((Rep_cufun f)\<rightharpoonup>tb) = ufRan\<cdot>f"
   by (metis assms domIff option.exhaust_sel rep_ufun_well ufWell_def ufdom_2ufundom ufdom_not_empty ufran_2_ubdom)
-
-(* Should be ported to UFun_Comp
-
-  subsection \<open>ufLeast\<close>
-(* ufLeast *)
-  thm ufLeast_def
-
-(* ufelast if a mono function  *)
-lemma ufleast_mono[simp]: "\<And> cin cout. monofun (\<lambda>sb. (ubDom\<cdot>sb = cin)\<leadsto>ubLeast cout)"
-  by simp
-
-(* ufleast is a cont function *)
-lemma ufleast_cont[simp]: "\<And> cin cout. cont (\<lambda>sb. (ubDom\<cdot>sb = cin)\<leadsto>ubLeast cout)"
-  by simp
-
-(* ufleast produce a ufwell function  *)
-lemma ufleast_ufwell[simp]: "\<And> cin cout. ufWell (Abs_cfun (\<lambda>sb. (ubDom\<cdot>sb = cin)\<leadsto>ubLeast cout))"
-  apply (simp add: ufWell_def, rule)
-   apply (rule_tac x="cin" in exI, simp add: domIff)
-  by (smt option.distinct(1) option.sel ran2exists ubdom_least_cs)
-
-(* insert rule of ufleast *)
-lemma ufleast_insert:"ufLeast In Out = Abs_ufun (Abs_cfun (\<lambda>sb. (ubDom\<cdot>sb = In)\<leadsto>ubLeast Out))"
-  by (simp add: ufLeast_def)
-
-(* somwe how ufleast_ufran need this otherwise this cannt be proven with metis  *)
-lemma ufleast_rep_abs[simp]: "(Rep_cufun (Abs_cufun (\<lambda>sb. (ubDom\<cdot>sb = In)\<leadsto>ubLeast Out))) = (\<lambda>sb. (ubDom\<cdot>sb = In)\<leadsto>ubLeast Out)"
-  by simp
-
-(* ufdom of ufleast is the first argument  *)
-lemma ufleast_ufdom: "ufDom\<cdot>(ufLeast In Out) = In"
-  apply (simp add: ufLeast_def  ufdom_insert domIff)
-  by (meson someI_ex ubdom_least_cs)
-
-(* ufran of ufleast is its second argument *)
-lemma ufleast_ufRan: "ufRan\<cdot>(ufLeast In Out) = Out"
-  by (metis (no_types) option.sel ubdom_least_cs ufleast_insert ufleast_rep_abs ufleast_ufdom ufran_least)
-
-(* ufleast can produce a function smaller or equal other function  *)
-lemma ufleast_min: "(ufLeast (ufDom\<cdot>uf) (ufRan\<cdot>uf)) \<sqsubseteq> uf"
-proof (rule ufun_belowI)
-  show "ufDom\<cdot>(ufLeast (ufDom\<cdot>uf) (ufRan\<cdot>uf)) = UFun.ufDom\<cdot>uf"
-    by (simp add: ufleast_ufdom)
-next
-  show "\<And>x. ubDom\<cdot>x = ufDom\<cdot>(ufLeast (ufDom\<cdot>uf) (ufRan\<cdot>uf)) \<Longrightarrow>
-         Rep_cufun (ufLeast (ufDom\<cdot>uf) (ufRan\<cdot>uf))\<rightharpoonup>x \<sqsubseteq> Rep_cufun uf\<rightharpoonup>x"
-    by (metis ufleast_rep_abs option.sel ubdom_least ufLeast_def ufleast_ufdom ufran_2_ubdom2)
-qed
-*)
 
 (* ufComp *)
 

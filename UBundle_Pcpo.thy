@@ -121,7 +121,10 @@ lemma [simp]: "ubUp\<cdot>(ubLeast cs) . c = \<bottom>"
   using ubup_ubgetch2 by force
     
     
+(* ubUnion *)    
     
+lemma ubunion_idR [simp]: "b \<uplus> (ubLeast {}) = b"
+  by (simp add: ubunion_insert ubLeast_def ubWell_empty)
     
     
 end    
