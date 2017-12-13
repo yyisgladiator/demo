@@ -387,26 +387,6 @@ lemma getSb_in_h:assumes "chain (Y::nat \<Rightarrow> 'a::message SPF)" shows "(
 lemma spf_sbDom: assumes "spfDom\<cdot>f = In" and "spfRan\<cdot>f = Out" and "sbDom\<cdot>sb= In" shows "sbDom\<cdot>(f \<rightleftharpoons> sb) = Out"
   by (simp add: assms(1) assms(2) assms(3))
 
-(* Used for cont proofs*)
-lemma getSb_in:assumes "chain Y" shows "(\<Squnion>i. Y i) \<rightleftharpoons> sb = (\<Squnion>i. Y i \<rightleftharpoons> sb)"
-proof(cases "spfDom\<cdot>(\<Squnion>i. Y i) = sbDom\<cdot>sb")
-  case True
-  then have "\<forall>i. spfDom\<cdot>(Y i) = sbDom\<cdot>(sb)"
-    using assms spfdom_eq_lub by auto
-  have chain:"chain (\<lambda>i. Y i \<rightleftharpoons> sb)"
-    by (simp add: op_the_chain assms)
-  have "\<forall>i. Y i  \<rightleftharpoons> sb \<sqsubseteq> (\<Squnion>i. Y i \<rightleftharpoons> sb)"
-    using below_lub chain by blast
-  show ?thesis (*@jens.buerger*)
-      sorry
-next
-  case False
-  then have "\<forall>i. spfDom\<cdot>(Y i) \<noteq> sbDom\<cdot>(sb)"
-    using assms spfdom_eq_lub by blast
-  then show ?thesis 
-    by (metis (mono_tags, lifting) spf_pref_eq_2 False assms lub_chain_maxelem option.exhaust_sel po_class.chainE spfdom2sbdom)
-qed
-
 (* spfStep inner SPF spf_well and cont*)
 
 lemma spfStep_inSPF_mono[simp]:"monofun (\<lambda>b. spfStep_h1 In Out\<cdot> h\<cdot>(sbHdElem\<cdot>b) \<rightleftharpoons> b)"
@@ -426,15 +406,17 @@ proof(rule spf_contI2,rule Cont.contI2,auto)
   have h_false:"sbDom\<cdot>(\<Squnion>i. Y i) \<noteq> In \<Longrightarrow> \<forall>i. sbDom\<cdot>(Y i) \<noteq> In"
     by (simp add: chain sbChain_dom_eq2)
   have "(\<Squnion>i. spfStep_h1 In Out\<cdot> h\<cdot>(sbHdElem\<cdot>(Y i))) \<rightleftharpoons> (Y ia) = (\<Squnion>i. spfStep_h1 In Out\<cdot> h\<cdot>(sbHdElem\<cdot>(Y i)) \<rightleftharpoons> (Y ia))"
-    by (simp add:  getSb_in chain)
+    by (simp add: spfapply_lub chain)
   then have "\<forall>ia. (\<Squnion>i. spfStep_h1 In Out\<cdot> h\<cdot>(sbHdElem\<cdot>(Y i))) \<rightleftharpoons> (Y ia) = (\<Squnion>i. spfStep_h1 In Out\<cdot> h\<cdot>(sbHdElem\<cdot>(Y i)) \<rightleftharpoons> (Y ia))"
-    by (simp add: chain getSb_in)
+    by (simp add: chain spfapply_lub)
   then have h2_h:"(\<Squnion>i. spfStep_h1 In Out\<cdot> h\<cdot>(sbHdElem\<cdot>(Y i))) \<rightleftharpoons> (\<Squnion>i. Y i) = (\<Squnion>i. spfStep_h1 In Out\<cdot> h\<cdot>(sbHdElem\<cdot>(Y i)) \<rightleftharpoons> (\<Squnion>i. Y i))"
-    by (simp add: chain getSb_in)
+    by (simp add: chain spfapply_lub)
   have h2:"(\<Squnion>i. spfStep_h1 In Out\<cdot> h\<cdot>(sbHdElem\<cdot>(Y i)) \<rightleftharpoons> (\<Squnion>ib. Y ib)) = (\<Squnion>i. \<Squnion>ib. spfStep_h1 In Out\<cdot> h\<cdot>(sbHdElem\<cdot>(Y i)) \<rightleftharpoons> (Y ib))"
     by (simp add: chain contlub_cfun_arg op_the_lub)
-  have "(\<Squnion>i ib. spfStep_h1 In Out\<cdot>h\<cdot>(sbHdElem\<cdot>(Y i)) \<rightleftharpoons> Y ib) \<sqsubseteq> (\<Squnion>i. spfStep_h1 In Out\<cdot>h\<cdot>(sbHdElem\<cdot>(Y i)) \<rightleftharpoons> Y i)" (* @jens.buerger*)
-    sorry
+  have "(\<Squnion>i ib. spfStep_h1 In Out\<cdot>h\<cdot>(sbHdElem\<cdot>(Y i)) \<rightleftharpoons> Y ib) = (\<Squnion>i. spfStep_h1 In Out\<cdot>h\<cdot>(sbHdElem\<cdot>(Y i)) \<rightleftharpoons> Y i)" (* @jens.buerger*)
+    apply(rule diag_lub)
+    apply (meson chain monofun_cfun_arg po_class.chain_def spf_pref_eq_2)
+    using ch2ch_Rep_cfunR chain op_the_chain by auto
   then have "(\<Squnion>i. spfStep_h1 In Out\<cdot> h\<cdot>(sbHdElem\<cdot>(Y i))) \<rightleftharpoons> (\<Squnion>i. Y i) \<sqsubseteq> (\<Squnion>i. spfStep_h1 In Out\<cdot> h\<cdot>(sbHdElem\<cdot>(Y i)) \<rightleftharpoons> Y i)"
     by(simp add: h2_h h2)
   then show "spfStep_h1 In Out\<cdot> h\<cdot>(sbHdElem\<cdot>(\<Squnion>i. Y i)) \<rightleftharpoons> (\<Squnion>i. Y i) \<sqsubseteq> (\<Squnion>i. spfStep_h1 In Out\<cdot> h\<cdot>(sbHdElem\<cdot>(Y i)) \<rightleftharpoons> Y i)"
@@ -501,7 +483,7 @@ proof(rule Cont.contI2, simp add: assms)
   have h0_1:"\<forall>sb.  spfStep_h1 In Out\<cdot>(\<Squnion>i. Y i)\<cdot>(sbHdElem\<cdot>sb) \<rightleftharpoons> sb = (\<Squnion>i. (spfStep_h1 In Out\<cdot>(Y i)\<cdot>(sbHdElem\<cdot>sb) \<rightleftharpoons> sb))"
     apply(subst contlub_cfun_arg, simp add: a1)
     apply(subst contlub_cfun_fun, simp add: chain_1)
-    by(simp add: getSb_in chain_3)
+    by(simp add: spfapply_lub chain_3)
   have h0_2:"\<forall>sb. ((sbDom\<cdot>sb = In)\<leadsto>\<Squnion>i. spfStep_h1 In Out\<cdot>(Y i)\<cdot>(sbHdElem\<cdot>sb) \<rightleftharpoons> sb) = (\<Squnion>i. (sbDom\<cdot>sb = In)\<leadsto>spfStep_h1 In Out\<cdot>(Y i)\<cdot>(sbHdElem\<cdot>sb) \<rightleftharpoons> sb)"
   proof(auto)
     fix sb::"'m SB"
