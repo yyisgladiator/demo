@@ -9,7 +9,7 @@ theory UnivClasses
 begin
   
 
-default_sort cpo
+default_sort pcpo
 
   
 (****************************************************)
@@ -37,13 +37,13 @@ class uscl = cpo +
   assumes usOkay_adm: "\<And>c. adm (usOkay c)" (* used to instanciate ubundle *)
 begin
 end
-  
+ 
+
 class uscl_pcpo = uscl + pcpo + 
   assumes usOkay_bot: "\<And>c. usOkay c \<bottom>"    (* used for ubLeast wellformed proof *)
 begin
 end  
 
-default_sort pcpo
   (*
 class uscl_pcpo = uscl + pcpo + 
   assumes usOkay_bot: "\<And>c. usOkay c \<bottom>"    (* used for ubLeast wellformed proof *)

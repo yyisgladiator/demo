@@ -232,7 +232,7 @@ lemma tsyn_below_eq: assumes "tsynLen\<cdot>ts1 = \<infinity>" and "ts1 \<sqsubs
 lemma tsync_take_cont: "cont (\<lambda> ts. Abs_tsynstream (stake n\<cdot>(Rep_tsynstream ts)))" sorry
 
 lemma tsyntake_chain: "chain (\<lambda>i. tsynTake i\<cdot>ts)" apply (simp add: chain_def)
-  by (metis (no_types, lifting) Abs_cfun_inverse2 Suc_n_not_le_n below_tsynstream_def linorder_le_cases min_def stakeostake tsynTake_def tsync_rep_abs tsync_take_cont ub_stake) sorry
+  by (metis (no_types, lifting) Abs_cfun_inverse2 Suc_n_not_le_n below_tsynstream_def linorder_le_cases min_def stakeostake tsynTake_def tsync_rep_abs tsync_take_cont ub_stake)
 
 lemma tsyntake_len[simp]: "tsynLen\<cdot>(tsynTake i\<cdot>ts) = min (tsynLen\<cdot>ts) (Fin i)" 
   apply (simp add: min_def tsynLen_def)
