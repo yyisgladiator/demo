@@ -6,10 +6,31 @@
 *)
 
 theory SB
-imports Channel OptionCpo Streams
+imports "../Channel" "../inc/OptionCpo" "../UnivClasses" Streams
 
 begin
+
 default_sort message
+
+
+(* ----------------------------------------------------------------------- *)
+section \<open>Datatype Definition\<close>
+(* ----------------------------------------------------------------------- *)
+
+
+instantiation stream :: (message) uscl
+begin
+
+definition usOkay_stream_def: "usOkay c m \<equiv> sdom\<cdot>m \<subseteq> ctype c"
+
+definition usLen_stream_def: "usLen \<equiv> slen"
+
+instance
+  apply intro_classes
+  apply (rule admI)
+  by (simp add: usOkay_stream_def l44)
+
+end
 
 
 (* ----------------------------------------------------------------------- *)

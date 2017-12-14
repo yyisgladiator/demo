@@ -796,8 +796,6 @@ definition ubLen_ubundle_def: "UnivClasses.ubLen \<equiv> ubLen"
 
 instance
   apply intro_classes
-     apply (simp add: ubDom_ubundle_def ubdom_below)
-    defer
   sorry
 
 end
