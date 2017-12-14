@@ -930,8 +930,7 @@ proof -
     apply(subst rep_abs_cufun, simp add: ufSerComp_cont)
      apply (simp add: assms ufSerComp_well)
      using f2 f3 (* proof found by sledgehammer *)
-     sorry 
-qed
+     oops 
     
 lemma ufSerComp_repAbs: assumes "sercomp_well f1 f2"
   shows "Rep_cufun (ufSerComp f1 f2) = (\<lambda> x. (ubDom\<cdot>x = ufDom\<cdot>f1) \<leadsto> (f2 \<rightleftharpoons> (f1 \<rightleftharpoons> x)))"
@@ -940,6 +939,23 @@ lemma ufSerComp_repAbs: assumes "sercomp_well f1 f2"
    apply (simp add: assms ufSerComp_well)
   by auto 
     
+lemma ufSerComp_asso: assumes "sercomp_well f1 f2" and "sercomp_well f2 f3" 
+  shows "(ufSerComp f1 (ufSerComp f2 f3)) = (ufSerComp (ufSerComp f1 f2) f3)"
+proof - 
+  have f1: "UFun.ufDom\<cdot>(Abs_cufun(\<lambda>x::'a. (ubDom\<cdot>x = UFun.ufDom\<cdot>f1)\<leadsto>f2 \<rightleftharpoons> (f1 \<rightleftharpoons> x))) = UFun.ufDom\<cdot>f1"
+    using ufSerComp_def ufSerComp_dom assms(1)
+    (* proof found by sledgehammer *)
+    sorry
+  have f2: "\<And>x. ubDom\<cdot>x = UFun.ufDom\<cdot>f1 \<longrightarrow> ubDom\<cdot>(f1 \<rightleftharpoons> x) = UFun.ufDom\<cdot>f2"
+    by (simp add: assms(1) ufran_2_ubdom2)
+  show ?thesis
+    apply(simp add: ufSerComp_def)
+    apply(subst rep_abs_cufun)
+    apply(simp add: ufSerComp_cont, simp add: ufSerComp_well assms)
+    apply(subst rep_abs_cufun, simp add: ufSerComp_cont, simp add: ufSerComp_well assms)
+    apply(subst f1)
+    using f2 oops (* proof found by sledgehammer *) 
+      
 
 subsection \<open>Feedback\<close>    
 

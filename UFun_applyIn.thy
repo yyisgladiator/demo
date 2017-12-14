@@ -11,24 +11,28 @@ begin
 
 default_sort ubcl_comp  
 
-section \<open>definitions\<close>
+  
+(****************************************************)
+section\<open>Definitions\<close>
+(****************************************************)
 
+  
 definition ufApplyOut :: "('m \<rightarrow> 'm ) \<Rightarrow> ('m \<Rrightarrow> 'm) \<rightarrow> ('m \<Rrightarrow> 'm)" where
 "ufApplyOut k \<equiv> (\<Lambda> g. Abs_cufun (\<lambda>x. (ubDom\<cdot>x = ufDom\<cdot>g) \<leadsto> k\<cdot>(g \<rightleftharpoons>x)))"
 
 definition ufApplyIn :: "('m \<rightarrow> 'm ) \<Rightarrow> ('m \<Rrightarrow> 'm) \<rightarrow> ('m \<Rrightarrow> 'm)" where 
 "ufApplyIn k \<equiv> \<Lambda> g. Abs_cufun (\<lambda>x. (Rep_cufun g)(k\<cdot>x))" 
 
-
 definition ufApplyIn2 :: "('m \<rightarrow> 'm ) \<Rightarrow> ('m \<Rrightarrow> 'm) \<rightarrow> ('m \<Rrightarrow> 'm)" where
 "ufApplyIn2 k \<equiv> (\<Lambda> g. Abs_cufun (\<lambda>x. (ubDom\<cdot>(k\<cdot>x) = ufDom\<cdot>g) \<leadsto> (g \<rightleftharpoons>(k\<cdot>x))))"
 
 
 subsection \<open>some rules\<close>
+  
+  
 (* unfolding rule  *)
 lemma ufapplyin_eq_pre: "(Rep_cufun uf)(f\<cdot>x) = (ubDom\<cdot>(f\<cdot>x) = ufDom\<cdot>uf) \<leadsto> (uf \<rightleftharpoons>(f\<cdot>x))"
   by (metis domIff option.collapse rep_ufun_well ufWell_def ufdom_2ufundom ufdom_not_empty)
-
 
  (* convert between original and proof oriented definition *)
 lemma ufapplyin_eq: "ufApplyIn k = ufApplyIn2 k"
@@ -40,6 +44,7 @@ lemma ufapplyin_eq: "ufApplyIn k = ufApplyIn2 k"
 section \<open>ufApplyOut\<close>
 
 subsection \<open>resulting uf\<close>
+  
 
 (* function ufapplyout is cont *)
 lemma ufapplyout_uf_cont [simp]: "cont (\<lambda>x. (ubDom\<cdot>x = ufDom\<cdot>g) \<leadsto> k\<cdot>(g \<rightleftharpoons>x))"
@@ -51,7 +56,6 @@ next
               \<Longrightarrow> k\<cdot>(g \<rightleftharpoons> (\<Squnion>i::nat. Y i)) \<sqsubseteq> (\<Squnion>i::nat. k\<cdot>(g \<rightleftharpoons> Y i))"
     by (simp add: contlub_cfun_arg op_the_chain op_the_lub)
 qed
-
 
  (* intro lemma for uf_well proofs with uf_applyout *)
 lemma ufapplyout_uf_wellI [simp]: assumes "\<And>b. ubDom\<cdot>b = ufDom\<cdot>g \<Longrightarrow> ubDom\<cdot>(k\<cdot>(g \<rightleftharpoons> b)) = cs"
@@ -78,10 +82,7 @@ lemma ufapplyout_uf_apply: assumes "\<And>b. ubDom\<cdot>b = ufDom\<cdot>g \<Lon
   shows "(Abs_cufun (\<lambda> x. (ubDom\<cdot>x = ufDom\<cdot>g) \<leadsto> k\<cdot>(g \<rightleftharpoons>x))) \<rightleftharpoons> ub = k\<cdot>(g \<rightleftharpoons>ub)"
   by (simp add: assms)
 
-
-
  (* show that ufApplyOut is continuous in its second argument *)
-
 
   (* put this into Ufun.thy *)
 (* below rule with additional assums  *)
@@ -90,7 +91,6 @@ lemma ufbelowI: assumes "\<And> x. P x \<Longrightarrow> (f x) \<sqsubseteq> (g 
                  and "ufWell (\<Lambda> x. (P x) \<leadsto> (f x))" and "ufWell (\<Lambda> x. (P x) \<leadsto> g x)"
                shows "Abs_cufun (\<lambda> x. (P x) \<leadsto> (f x)) \<sqsubseteq> Abs_cufun (\<lambda> x. (P x) \<leadsto> (g x))"
   by (simp add: assms(1) assms(2) assms(3) assms(4) assms(5) below_option_def below_ufun_def monofun_LAM)
-
 
   (* put this into Ufun.thy *)
 (* below rule with additional assums  *)
@@ -132,7 +132,6 @@ lemma ufapplyout_mono [simp]:  assumes "\<And>b. ubDom\<cdot>(k\<cdot>b) = ubDom
     apply (metis below_option_def below_ufun_def cfun_below_iff monofun_cfun_arg po_eq_conv)
   by (simp add: assms ufran_2_ubdom2) +
 
-
 (* dont know how it bahaves with ufun *)
 (* this is just a proxy definition used to make the simplifier less agressive ;) *)
 definition "applyab k \<equiv> (\<lambda>g. Abs_cufun (\<lambda>x. (ubDom\<cdot>x = ufDom\<cdot>g)\<leadsto>k\<cdot>(g \<rightleftharpoons> x)))"
@@ -146,7 +145,6 @@ lemma applyab_mono [simp]: assumes "\<And>b. ubDom\<cdot>(k\<cdot>b) = ubDom\<cd
 (* substitution rule of applyab with only one arg *)
 lemma applyab_rev: "(\<lambda>g. Abs_cufun (\<lambda>x. (ubDom\<cdot>x = ufDom\<cdot>g)\<leadsto>k\<cdot>(g \<rightleftharpoons> x))) = applyab k"
   by (simp add: applyab_def)
-
 
 (* substitution rule of applyab with only two args *)
 lemma applyab_rev2: "Abs_cufun (\<lambda>xa. (ubDom\<cdot>xa = ufDom\<cdot>x)\<leadsto>k\<cdot>(x \<rightleftharpoons> xa)) = applyab k x"
@@ -196,7 +194,6 @@ proof -
   show ?thesis
     by (metis (mono_tags, lifting) Rep_ufun_inverse assms(2) f2 lub_eq rep_abs_cufun2)
 qed
-
 
 (*  do we really need this ?  *)
 (* Abs_cfun is monoton if x and y are cont  *)
@@ -257,7 +254,6 @@ proof -
       apply (subst f141)
       by (smt assms(1) below_option_def below_ufun_def cfun_below_iff cont_pref_eq1I fun_belowI po_class.chainE some_below)
   qed
-
 
   have f20: "(\<Squnion>i. Abs_cufun (\<lambda>x. (ubDom\<cdot>x = ufDom\<cdot>(Lub Y))\<leadsto>k\<cdot>(Y i \<rightleftharpoons> x))) 
                   = (Abs_cufun (\<Squnion>i.  (\<lambda>x. (ubDom\<cdot>x = ufDom\<cdot>(Lub Y))\<leadsto>k\<cdot>(Y i \<rightleftharpoons> x))))"
@@ -328,9 +324,11 @@ lemma ufapplyout_cont [simp]:  assumes "\<And>b. ubDom\<cdot>(k\<cdot>b) = ubDom
   using assms apply auto[1]
   by (simp add: assms)
 
+    
 (* further properties *)
 subsection \<open>ufApplyOut Lemmas\<close>
 
+  
 (* insert rules *)
 lemma ufapplyout_insert: assumes "\<And>b. ubDom\<cdot>(k\<cdot>b) = ubDom\<cdot>b" 
   shows "ufApplyOut k\<cdot>(f::'a \<Rrightarrow> 'a) =  Abs_cufun (\<lambda>x. (ubDom\<cdot>x = ufDom\<cdot>f) \<leadsto> k\<cdot>(f \<rightleftharpoons>x))"
@@ -360,7 +358,6 @@ proof -
     by (simp add: f1)
 qed
 
-
 (* substitution if the arg has the right domain  *)
 lemma ufapplyout_apply:  assumes "\<And>b. ubDom\<cdot>(k\<cdot>b) = ubDom\<cdot>b" 
   and "ubDom\<cdot>ub = ufDom\<cdot>f"
@@ -376,9 +373,11 @@ proof -
     by (simp add: assms(1) assms(2) ufran_2_ubdom2)
 qed
 
+  
 section \<open>ufApplyIn\<close>
 (* note that these proofs only really work if k does not change the domain *)
 
+  
 (* the ufapplyin function is cont  without lifting to ufun *)
 lemma ufapplyin_uf_cont [simp]: "cont (\<lambda>x. (ubDom\<cdot>x = ufDom\<cdot>g) \<leadsto> (g \<rightleftharpoons>(k\<cdot>x)))"
 proof (rule ufun_contI)
