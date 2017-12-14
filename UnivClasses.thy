@@ -9,7 +9,7 @@ theory UnivClasses
 begin
   
 
-default_sort pcpo
+default_sort cpo
 
   
 (****************************************************)
@@ -43,6 +43,13 @@ class uscl_pcpo = uscl + pcpo +
 begin
 end  
 
+default_sort pcpo
+  (*
+class uscl_pcpo = uscl + pcpo + 
+  assumes usOkay_bot: "\<And>c. usOkay c \<bottom>"    (* used for ubLeast wellformed proof *)
+begin
+end  
+*)
 
 (****************************************************)
 section\<open>Universal Stream Bundle\<close>
@@ -95,7 +102,7 @@ section\<open>Universal Stream Processing Function\<close>
 class ufuncl = cpo +
   fixes ufDom :: "'a \<rightarrow> channel set"
   fixes ufRan :: "'a \<rightarrow> channel set"
-  
+
   assumes ufDom_fix: "\<And>x y. x\<sqsubseteq>y \<Longrightarrow> ufDom\<cdot>x = ufDom\<cdot>y" 
   assumes ufRan_fix: "\<And>x y. x\<sqsubseteq>y \<Longrightarrow> ufRan\<cdot>x = ufRan\<cdot>y" 
 begin
