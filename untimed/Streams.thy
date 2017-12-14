@@ -1,7 +1,7 @@
 section {* Lazy Streams *} 
 
 theory Streams
-imports LNat SetPcpo
+imports "../inc/LNat" "../inc/SetPcpo"
 begin
 
 section {* The Datatype of Lazy Streams *}

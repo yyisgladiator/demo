@@ -1,19 +1,19 @@
 
 theory SB_SWS
-imports SB
+imports UBundle
 
 begin
 
-definition sbConcEq:: "'m SB \<Rightarrow> 'm SB \<rightarrow> 'm SB" where
-"sbConcEq sb1 \<equiv> \<Lambda> sb2.  (sbConc sb1\<cdot>sb2) \<bar> sbDom\<cdot>sb2 "
+definition ubConcEq:: "'m ubundle \<Rightarrow> 'm ubundle \<rightarrow> 'm ubundle" where
+"ubConcEq sb1 \<equiv> \<Lambda> sb2.  (ubConc sb1\<cdot>sb2) \<bar> ubDom\<cdot>sb2 "
 
 
-lemma sbconceq_cont [simp]: "cont (\<lambda> sb2.  (sbConc sb1\<cdot>sb2) \<bar> sbDom\<cdot>sb2)"
+lemma sbconceq_cont [simp]: "cont (\<lambda> sb2.  (ubConc sb1\<cdot>sb2) \<bar> ubDom\<cdot>sb2)"
   apply(rule contI)
   by (smt ch2ch_Rep_cfunR contlub_cfun_arg image_cong sbChain_dom_eq2 thelubE)
 
-lemma sbConcEq [simp]: "sbDom\<cdot>(sbConcEq sb1\<cdot>sb2) = sbDom\<cdot>sb2"
-  apply(simp add: sbConcEq_def)
+lemma sbConcEq [simp]: "ubDom\<cdot>(ubConcEq sb1\<cdot>sb2) = ubDom\<cdot>sb2"
+  apply(simp add: ubConcEq_def)
   by blast
 
 end
