@@ -7,7 +7,7 @@
 
 theory Automaton
 
-imports SPS SpfStep SPF_JB
+imports SPS SpfStep SPF_JB Event
 begin
 default_sort type
 
