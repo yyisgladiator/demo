@@ -11,7 +11,7 @@ section\<open>Definitions\<close>
 default_sort ufuncl_comp
 
 definition uspec_comp_well :: "'m uspec \<Rightarrow> 'm uspec \<Rightarrow> bool" where
-"uspec_comp_well S1 S2 \<equiv> uspecRan S1 \<inter> uspecRan S2 = {}"
+"uspec_comp_well S1 S2 \<equiv> \<forall> f1 f2. f1 \<in> (Rep_rev_uspec S1) \<and> f2 \<in> (Rep_rev_uspec S2) \<and> ufunclCompWell f1 f2"
 
   (* composite operator on SPS *)
 (* THIS IS JUST A DEMO! there should be many changes *)
@@ -20,16 +20,13 @@ definition uspecComp :: "'m uspec \<Rightarrow>'m uspec \<Rightarrow> 'm uspec" 
 
 
 definition uspec_sercomp_well :: "'m uspec \<Rightarrow> 'm uspec \<Rightarrow> bool" where
-"uspec_sercomp_well S1 S2 \<equiv> (uspecRan S1 = uspecDom S2) 
-                        \<and> (uspecDom S1 \<inter> uspecRan S1 = {})
-                        \<and> (uspecDom S2 \<inter> uspecRan S2 = {})
-                        \<and> (uspecDom S1 \<inter> uspecRan S2 = {})"
+"uspec_sercomp_well S1 S2 \<equiv> \<forall> f1 f2. f1 \<in> (Rep_rev_uspec S1) \<and> f2 \<in> (Rep_rev_uspec S2) \<and> ufunclSerCompWell f1 f2"
 
 definition uspecSerComp :: "'m uspec \<Rightarrow>'m uspec \<Rightarrow> 'm uspec" (infixl "\<circle>" 50) where
 "uspecSerComp S1 S2 \<equiv> Abs_rev_uspec {ufunclSerComp\<cdot>f1\<cdot>f2 | f1 f2.  f1\<in>(Rep_rev_uspec S1) \<and> f2\<in>(Rep_rev_uspec S2)}"
 
 definition uspec_parcomp_well :: "'m uspec \<Rightarrow> 'm uspec \<Rightarrow> bool" where
-"uspec_parcomp_well S1 S2 \<equiv> ((uspecDom S1 \<union> uspecDom S2) \<inter> (uspecRan S1 \<union> uspecRan S2) = {}) \<and> (uspecRan S1 \<inter> uspecRan S2 = {})"
+"uspec_parcomp_well S1 S2 \<equiv> \<forall> f1 f2. f1 \<in> (Rep_rev_uspec S1) \<and> f2 \<in> (Rep_rev_uspec S2) \<and> ufunclParCompWell f1 f2"
   
 
 definition uspecParComp :: "'m uspec \<Rightarrow>'m uspec \<Rightarrow> 'm uspec" (infixl "\<parallel>" 50) where
@@ -46,7 +43,7 @@ section\<open>Lemmas\<close>
 (****************************************************)   
 
 lemma uspec_comp_well_commu: "uspec_comp_well S1 S2 =  uspec_comp_well S2 S1"
-  by (simp add: inf_commute uspec_comp_well_def)
+  using uspec_comp_well_def by blast
 
 lemma rev_eqI: assumes "x = y"
   shows "Rev x = Rev y"
@@ -70,7 +67,7 @@ proof -
     proof auto
       fix f1 f2 assume f1_def: "f1 \<in> Rep_rev_uspec S1" and f2_def: "f2 \<in> Rep_rev_uspec S2"
       have "(ufunclComp\<cdot>f1\<cdot>f2) = (ufunclComp\<cdot>f2\<cdot>f1)"
-        sorry
+        using assms ufunclcomp_commute uspec_comp_well_def by blast
       then show " \<exists>(f1a::'a) f2a::'a. ufunclComp\<cdot>f1\<cdot>f2 = ufunclComp\<cdot>f2a\<cdot>f1a \<and> f1a \<in> Rep_rev_uspec S1 \<and> f2a \<in> Rep_rev_uspec S2"
         using f1_def f2_def by auto
     qed
@@ -79,7 +76,7 @@ proof -
     proof auto
       fix f1 f2 assume f1_def: "f1 \<in> Rep_rev_uspec S1" and f2_def: "f2 \<in> Rep_rev_uspec S2"
       have "(ufunclComp\<cdot>f2\<cdot>f1) = (ufunclComp\<cdot>f1\<cdot>f2)"
-        sorry
+        using assms ufunclcomp_commute uspec_comp_well_def by blast
       then show "\<exists>(f1a::'a) f2a::'a. ufunclComp\<cdot>f2\<cdot>f1 = ufunclComp\<cdot>f1a\<cdot>f2a \<and> f1a \<in> Rep_rev_uspec S1 \<and> f2a \<in> Rep_rev_uspec S2"
         using f1_def f2_def by auto
     qed
@@ -97,31 +94,98 @@ proof -
 qed
 
 
-lemma uspecParComp_well: assumes "uspec_parcomp_well S1 S2" shows "uspecWell {ufunclParComp\<cdot>f1\<cdot>f2 |f1 f2. f1 \<in> Rep_rev_uspec S1 \<and> f2 \<in> Rep_rev_uspec S2}" 
-proof(cases "Rep_rev_uspec S1 = {} \<or> Rep_rev_uspec S2 = {}")
-case True
+
+lemma uspecParCompCommu: assumes "uspec_parcomp_well S1 S2"
+  shows "(S1 \<parallel> S2) =  (S2 \<parallel> S1)" (is "?L = ?R")
+proof -
+  have "{ufunclParComp\<cdot>f1\<cdot>f2 |(f1::'a) f2::'a. f1 \<in> Rep_rev_uspec S1 \<and> f2 \<in> Rep_rev_uspec S2} =
+    {ufunclParComp\<cdot>f1\<cdot>f2 |(f1::'a) f2::'a. f1 \<in> Rep_rev_uspec S2 \<and> f2 \<in> Rep_rev_uspec S1}" (is "?L1 = ?R1")
+  proof rule
+    show "?L1 \<subseteq> ?R1"
+    proof auto
+      fix f1 f2 assume f1_def: "f1 \<in> Rep_rev_uspec S1" and f2_def: "f2 \<in> Rep_rev_uspec S2"
+      have "(ufunclParComp\<cdot>f1\<cdot>f2) = (ufunclParComp\<cdot>f2\<cdot>f1)"
+        using assms ufunclparcomp_commute uspec_parcomp_well_def by blast
+      then show "\<exists>(f1a::'a) f2a::'a. ufunclParComp\<cdot>f1\<cdot>f2 = ufunclParComp\<cdot>f1a\<cdot>f2a \<and> f1a \<in> Rep_rev_uspec S2 \<and> f2a \<in> Rep_rev_uspec S1"
+        using f1_def f2_def by auto
+    qed
+  next
+    show "?R1 \<subseteq> ?L1"
+    proof auto
+      fix f1 f2 assume f1_def: "f1 \<in> Rep_rev_uspec S2" and f2_def: "f2 \<in> Rep_rev_uspec S1"
+      have "(ufunclParComp\<cdot>f1\<cdot>f2) = (ufunclParComp\<cdot>f2\<cdot>f1)"
+        using assms ufunclparcomp_commute uspec_parcomp_well_def by blast
+      then show "\<exists>(f1a::'a) f2a::'a. ufunclParComp\<cdot>f1\<cdot>f2 = ufunclParComp\<cdot>f1a\<cdot>f2a \<and> f1a \<in> Rep_rev_uspec S1 \<and> f2a \<in> Rep_rev_uspec S2"
+        using f1_def f2_def by auto
+    qed
+  qed
+  then have "Abs_rev_uspec {ufunclParComp\<cdot>f1\<cdot>f2 |(f1::'a) f2::'a. f1 \<in> Rep_rev_uspec S1 \<and> f2 \<in> Rep_rev_uspec S2} =
+    Abs_rev_uspec {ufunclParComp\<cdot>f1\<cdot>f2 |(f1::'a) f2::'a. f1 \<in> Rep_rev_uspec S2 \<and> f2 \<in> Rep_rev_uspec S1}"
+    by simp
   then show ?thesis
-    using uspecWell_def by auto
-next
-case False
-  have f0: "\<forall> f1 \<in> Rep_rev_uspec S1. ufDom\<cdot>f1 = uspecDom S1 \<and> ufRan\<cdot>f1 = uspecRan S1"
-    by (simp add: uspec_dom_eq uspec_ran_eq)
-  have f1: "\<forall> f2 \<in> Rep_rev_uspec S2. ufDom\<cdot>f2 = uspecDom S2 \<and> ufRan\<cdot>f2 = uspecRan S2"
-    by (simp add: uspec_dom_eq uspec_ran_eq)
-  show ?thesis 
-    apply (simp add: uspecWell_def)
-    apply (rule_tac x="uspecDom S1 \<union> uspecDom S2" in exI)
-    apply (rule_tac x="uspecRan S1 \<union> uspecRan S2" in exI)
-    apply (rule allI)
-    apply (rule impI)
-  proof -
-    fix f::'a
-    assume assm1: "\<exists>(f1::'a) f2::'a. f = ufunclParComp\<cdot>f1\<cdot>f2 \<and> f1 \<in> Rep_rev_uspec S1 \<and> f2 \<in> Rep_rev_uspec S2"
-    obtain f1 f2 where f1_f2_def: "f = ufunclParComp\<cdot>f1\<cdot>f2 \<and> f1 \<in> Rep_rev_uspec S1 \<and> f2 \<in> Rep_rev_uspec S2"
-      using assm1 by auto
-    show " ufDom\<cdot>f = uspecDom S1 \<union> uspecDom S2 \<and> ufRan\<cdot>f = uspecRan S1 \<union> uspecRan S2"
-      
-      sorry
+    by (simp add: uspecParComp_def)
+qed
+lemma uspecParCompWell: assumes "uspec_parcomp_well S1 S2"
+  shows "uspecWell {ufunclParComp\<cdot>f1\<cdot>f2 | f1 f2.  f1\<in>(Rep_rev_uspec S1) \<and> f2\<in>(Rep_rev_uspec S2)}"
+  apply (simp add: uspecWell_def)
+    sorry
+
+
+lemma inv_rev_rev: "inv Rev (Rev S) = S"
+  by (simp add: inv_def)
+
+lemma uspecParCompAsso: assumes "uspec_parcomp_well S1 S2" and "uspec_parcomp_well S1 S3" and "uspec_parcomp_well S2 S3"
+  shows "((S1 \<parallel> S2) \<parallel> S3) =  (S1 \<parallel> (S2 \<parallel> S3))" (is "?L = ?R")
+proof -
+  have "{ufunclParComp\<cdot>f1\<cdot>f2 |(f1::'a) f2::'a. f1 \<in> Rep_rev_uspec (S1 \<parallel> S2) \<and> f2 \<in> Rep_rev_uspec S3} =
+    {ufunclParComp\<cdot>f1\<cdot>f2 |(f1::'a) f2::'a. f1 \<in> Rep_rev_uspec S1 \<and> f2 \<in> Rep_rev_uspec (S2 \<parallel> S3)}" (is "?L1 = ?R1")
+  proof rule
+    show "?L1 \<subseteq> ?R1"
+    proof auto
+      fix f1::'a and f2::'a
+      assume f1_def: "f1 \<in> Rep_rev_uspec (S1 \<parallel> S2)" and f2_def: "f2 \<in> Rep_rev_uspec S3"
+      obtain f3 f4 where f3_f4_def: "f3 \<in> Rep_rev_uspec S1 \<and> f4 \<in> Rep_rev_uspec S2 \<and> f1 = ufunclParComp\<cdot>f3\<cdot>f4"
+        by (smt UNIV_I f1_def assms(1) f_inv_into_f image_eqI mem_Collect_eq rep_abs_uspec rev.inject uspecParCompWell uspecParComp_def)
+      have f1: "ufunclParComp\<cdot>f1\<cdot>f2 = ufunclParComp\<cdot>(ufunclParComp\<cdot>f3\<cdot>f4)\<cdot>f2"
+        by (simp add: f3_f4_def)
+      have f2: "ufunclParComp\<cdot>(ufunclParComp\<cdot>f3\<cdot>f4)\<cdot>f2 = ufunclParComp\<cdot>f3\<cdot>(ufunclParComp\<cdot>f4\<cdot>f2)"
+        using assms(3) ufunclparcomp_asso uspec_parcomp_well_def by blast
+      have f3: "(ufunclParComp\<cdot>f4\<cdot>f2) \<in> Rep_rev_uspec (S2 \<parallel> S3)"
+        apply (simp add: uspecParComp_def)
+        apply (subst rep_abs_uspec)
+         apply (simp add: assms(3) uspecParCompWell)
+        apply (simp add: inv_rev_rev)
+        using f2_def f3_f4_def by auto
+      show "\<exists>(f1a::'a) f2a::'a. ufunclParComp\<cdot>f1\<cdot>f2 = ufunclParComp\<cdot>f1a\<cdot>f2a \<and> f1a \<in> Rep_rev_uspec S1 \<and> f2a \<in> Rep_rev_uspec (S2 \<parallel> S3)"
+        using f2 f3 f3_f4_def by auto
+    qed
+  next
+    show "?R1 \<subseteq> ?L1"
+    proof auto
+      fix f2::'a and f1::'a
+      assume f2_def: "f2 \<in> Rep_rev_uspec (S2 \<parallel> S3)" and f1_def: "f1 \<in> Rep_rev_uspec S1"
+      obtain f3 f4 where f3_f4_def: "f3 \<in> Rep_rev_uspec S2 \<and> f4 \<in> Rep_rev_uspec S3 \<and> f2 = ufunclParComp\<cdot>f3\<cdot>f4"
+        by (smt assms(3) f2_def inv_rev_rev mem_Collect_eq rep_abs_uspec uspecParCompWell uspecParComp_def)
+      have f1: "ufunclParComp\<cdot>f1\<cdot>f2 = ufunclParComp\<cdot>f1\<cdot>(ufunclParComp\<cdot>f3\<cdot>f4)"
+        by (simp add: f3_f4_def)
+      have f2: "ufunclParComp\<cdot>f1\<cdot>(ufunclParComp\<cdot>f3\<cdot>f4) = ufunclParComp\<cdot>(ufunclParComp\<cdot>f1\<cdot>f3)\<cdot>f4"
+        by (metis assms(1) ufunclparcomp_asso uspec_parcomp_well_def)
+      have f3: "(ufunclParComp\<cdot>f1\<cdot>f3) \<in> Rep_rev_uspec (S1 \<parallel> S2)"
+        apply (simp add: uspecParComp_def)
+        apply (subst rep_abs_uspec)
+         apply (simp add: assms uspecParCompWell)
+        apply (simp add: inv_rev_rev)
+        using f1_def f3_f4_def by auto
+      show "\<exists>(f1a::'a) f2a::'a. ufunclParComp\<cdot>f1\<cdot>f2 = ufunclParComp\<cdot>f1a\<cdot>f2a \<and> f1a \<in> Rep_rev_uspec (S1 \<parallel> S2) \<and> f2a \<in> Rep_rev_uspec S3"
+        using f2 f3 f3_f4_def by auto
+    qed
+  qed
+  then have "Abs_rev_uspec
+     {ufunclParComp\<cdot>f1\<cdot>f2 |(f1::'a) f2::'a. f1 \<in> Rep_rev_uspec (S1 \<parallel> S2) \<and> f2 \<in> Rep_rev_uspec S3} =
+    Abs_rev_uspec {ufunclParComp\<cdot>f1\<cdot>f2 |(f1::'a) f2::'a. f1 \<in> Rep_rev_uspec S1 \<and> f2 \<in> Rep_rev_uspec (S2 \<parallel> S3)}"
+    by simp
+  then show ?thesis
+    by (simp add: uspecParComp_def)
 qed
 
 

@@ -76,9 +76,18 @@ end
 
 class ufuncl_comp = ufuncl +
   fixes ufunclComp :: "'a \<rightarrow> 'a \<rightarrow> 'a"  (* Here we can put the abbreviation \<otimes> *)
+  fixes ufunclCompWell:: "'a \<Rightarrow> 'a \<Rightarrow> bool"
   fixes ufunclSerComp :: "'a \<rightarrow> 'a \<rightarrow> 'a"  (* Here we can put the abbreviation \<circ> *) 
+  fixes ufunclSerCompWell:: "'a \<Rightarrow> 'a \<Rightarrow> bool"
   fixes ufunclParComp :: "'a \<rightarrow> 'a \<rightarrow> 'a"  (* Here we can put the abbreviation \<parallel> *) 
+  fixes ufunclParCompWell:: "'a \<Rightarrow> 'a \<Rightarrow> bool"
   fixes ufunclFeedbackComp :: "'a \<rightarrow> 'a"  (* Here we can put the abbreviation \<mu> *) 
+
+  assumes ufunclcomp_commute: "\<And> x y. ufunclCompWell x y \<Longrightarrow> ufunclComp\<cdot>x\<cdot>y = ufunclComp\<cdot>y\<cdot>x"
+  assumes ufunclparcomp_commute: "\<And> x y. ufunclParCompWell x y \<Longrightarrow>  ufunclParComp\<cdot>x\<cdot>y = ufunclParComp\<cdot>y\<cdot>x"
+
+  assumes ufunclparcomp_asso: "\<And> x y z.  ufunclParCompWell x y \<Longrightarrow>  ufunclParCompWell x z \<Longrightarrow>  ufunclParCompWell y z \<Longrightarrow> ufunclParComp\<cdot>(ufunclParComp\<cdot>x\<cdot>y)\<cdot>z = ufunclParComp\<cdot>x\<cdot>(ufunclParComp\<cdot>y\<cdot>z)"
+
 begin
 end
 
