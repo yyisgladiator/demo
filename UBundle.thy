@@ -620,8 +620,6 @@ qed
 lemma ubMapStream_contI2: assumes "cont f" and "\<forall>c ts. usOkay c ts \<longrightarrow> usOkay c (f ts)"
   shows "cont (ubMapStream f)"
   by (simp add: assms(1) assms(2) ubMapStream_contI1)
-end
-
 
 (**)
 (*
@@ -783,3 +781,26 @@ have "\<forall>f fa. (\<exists>n. (f (n::nat)::'a) \<noteq> fa n) \<or> Lub f = 
     using f13 by blast
 qed
 *)
+
+
+(****************************************************)
+section\<open>Instantiation\<close>
+(****************************************************) 
+
+
+instantiation ubundle :: (uscl) ubcl
+begin
+definition ubDom_ubundle_def: "UnivClasses.ubDom \<equiv> ubDom"
+
+definition ubLen_ubundle_def: "UnivClasses.ubLen \<equiv> ubLen"
+
+instance
+  apply intro_classes
+     apply (simp add: ubDom_ubundle_def ubdom_below)
+    defer
+  sorry
+
+end
+
+
+end

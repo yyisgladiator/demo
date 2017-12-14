@@ -547,4 +547,23 @@ lemma ufuntype_insert: "ufunType\<cdot>f = (ufDom\<cdot>f, ufRan\<cdot>f)"
   by (simp add: ufunType_def)
   
 
+
+(****************************************************)
+section\<open>Instantiation\<close>
+(****************************************************) 
+
+
+instantiation ufun :: (ubcl, ubcl) ufuncl
+begin
+
+definition ufDom_ufun_def: "UnivClasses.ufDom \<equiv> ufDom"
+
+definition ufRan_ufun_def: "UnivClasses.ufRan \<equiv> ufRan"
+
+instance
+  apply intro_classes
+  apply (simp add: ufDom_ufun_def ufdom_below_eq)
+  by (simp add: ufRan_ufun_def ufran_below)
+end
+
 end

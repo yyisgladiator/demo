@@ -118,5 +118,25 @@ lemma ubup_ubgetch2[simp]: assumes "c\<notin>ubDom\<cdot>b"
 lemma [simp]: "ubUp\<cdot>(ubLeast cs) . c = \<bottom>"
   using ubup_ubgetch2 by force
     
-    
+
+(****************************************************)
+section\<open>Instantiation\<close>
+(****************************************************) 
+
+
+instantiation ubundle :: (uscl_pcpo) ubcl_comp
+begin
+definition ubLeast_ubundle_def: "UnivClasses.ubLeast \<equiv> ubLeast"
+
+definition ubUnion_ubundle_def: "UnivClasses.ubUnion \<equiv> ubUnion"
+
+definition ubRestrict_ubundle_def: "UnivClasses.ubRestrict \<equiv> ubRestrict"
+
+instance
+  apply intro_classes
+  sorry
+
+end
+
+
 end    

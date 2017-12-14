@@ -34,7 +34,10 @@ subsection\<open>definitions\<close>
   
 definition ufLeast :: "channel set \<Rightarrow> channel set \<Rightarrow> ('in \<Rrightarrow> 'out)" where
 "ufLeast cin cout = Abs_ufun (\<Lambda>  sb.  (ubDom\<cdot>sb = cin) \<leadsto> ubLeast cout)"  
-  
+
+definition ufRestrict :: "channel set \<Rightarrow> channel set \<Rightarrow> ('m, 'n) ufun \<rightarrow> ('m, 'n) ufun" where
+  "ufRestrict In Out \<equiv> (\<Lambda> f. if (ufDom\<cdot>f = In \<and> ufRan\<cdot>f = Out) then f else (ufLeast In Out))"
+
   
 subsection\<open>channel sets\<close>
 
@@ -1247,5 +1250,51 @@ next
     by (metis ufleast_rep_abs option.sel ubdom_least ufLeast_def ufleast_ufdom ufran_2_ubdom2)
 qed
 
-  
+
+subsection \<open>ufRestrict\<close>
+
+
+lemma ufLeast_bottom [simp]: assumes "ufDom\<cdot>f = In" and "ufRan\<cdot>f = Out" shows "(ufLeast In Out) \<sqsubseteq> f"
+  using assms(1) assms(2) ufleast_min by blast
+
+lemma ufLeast_dom [simp]: "ufDom\<cdot>(ufLeast In Out) = In"
+  by (simp add: ufleast_ufdom)
+
+lemma ufLeast_ran [simp]: "ufRan\<cdot>(ufLeast In Out) = Out"
+  by (simp add: ufleast_ufRan)
+
+lemma ufRestrict_mono: "monofun (\<lambda> f. if (ufDom\<cdot>f = In \<and> ufRan\<cdot>f = Out) then f else (ufLeast In Out))"
+  by (simp add: monofun_def ufdom_below_eq ufran_below)
+
+lemma ufRestrict_cont[simp]: "cont (\<lambda> f. if (ufDom\<cdot>f = In \<and> ufRan\<cdot>f = Out) then f else (ufLeast In Out))"
+  by (smt
+      Cont.contI2 lub_eq monofun_def po_eq_conv ufLeast_bottom ufLeast_dom ufLeast_ran ufdom_below_eq
+      ufdom_lub_eq ufran_below ufran_lub_eq)
+
+lemma ufRestrict_apply[simp]: assumes "ufDom\<cdot>f = In" and "ufRan\<cdot>f = Out" shows "ufRestrict In Out\<cdot>f = f"
+  by (simp add: ufRestrict_def ufRestrict_cont assms)
+
+lemma ufRestrict_dom[simp]: "ufDom\<cdot>(ufRestrict In Out\<cdot>f) = In"
+proof (cases "ufDom\<cdot>f = In \<and> ufRan\<cdot>f = Out")
+  case True
+  then show ?thesis
+    by (simp add: ufRestrict_apply)
+next
+  case False
+  then show ?thesis
+    by (simp add: ufRestrict_def ufleast_ufdom)
+qed
+
+lemma ufRestrict_ran[simp]: "ufRan\<cdot>(ufRestrict In Out\<cdot>f) = Out"
+proof (cases "ufDom\<cdot>f = In \<and> ufRan\<cdot>f = Out")
+  case True
+  then show ?thesis
+    by (simp add: ufRestrict_def ufleast_ufRan)
+next
+  case False
+  then show ?thesis
+    by (simp add: ufRestrict_def ufleast_ufRan)
+qed
+
+
 end
