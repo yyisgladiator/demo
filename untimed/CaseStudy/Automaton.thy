@@ -7,7 +7,7 @@
 
 theory Automaton
 
-imports SPS SpfStep SPF_JB Event
+imports "../SPF" "../../Event"
 begin
 default_sort type
 
@@ -44,21 +44,23 @@ definition getRan :: "('s, 'm::message) automaton \<Rightarrow> channel set" whe
 
 
 (* HK is defining this. returns the fixpoint *)
-thm spfStateFix_def
-(* definition myFixer :: "channel set \<Rightarrow> channel set \<Rightarrow> (('s \<Rightarrow> 'm::message SPF)\<rightarrow>('s \<Rightarrow> 'm SPF)) \<rightarrow> ('s \<Rightarrow> 'm SPF)" where
-"myFixer = spfStateFix" *)
+(* thm spfStateFix_def *)
+definition myFixxer :: "channel set \<Rightarrow> channel set \<Rightarrow> (('s \<Rightarrow> 'm::message SPF)\<rightarrow>('s \<Rightarrow> 'm SPF)) \<rightarrow> ('s \<Rightarrow> 'm SPF)" where
+"myFixxer = undefined"
 
+definition spfStep :: "channel set\<Rightarrow> channel set \<Rightarrow> ((channel \<Rightarrow> 'm option) \<Rightarrow> 'm SPF) \<rightarrow> 'm SPF" where
+"spfStep = undefined"
 
 (* Defined by SWS *)
-thm spfApplyIn_def
-thm spfRt_def
+(* thm spfApplyIn_def
+thm spfRt_def *)
 (* 
 definition spfRt :: "'m SPF \<rightarrow> 'm SPF" where
 "spfRt = undefined"
 *)
 
 
-thm spfConc_def
+(* thm spfConc_def *)
 (*
 (* Defined by JCB *)
 definition spfCons :: "'m SB \<Rightarrow> 'm SPF \<rightarrow> 'm SPF" where
@@ -67,7 +69,7 @@ definition spfCons :: "'m SB \<Rightarrow> 'm SPF \<rightarrow> 'm SPF" where
 
 (* Converter function. *)
   (* definition should be right, but needs to be nicer *)
-definition helper:: "(('s \<times>'e) \<Rightarrow> ('s \<times> 'm::message SB)) \<Rightarrow> 's \<Rightarrow> ('s \<Rightarrow> 'm SPF) \<rightarrow> ('e \<Rightarrow> 'm SPF)" where
+definition helper:: "(('s \<times>'e) \<Rightarrow> ('s \<times> 'm::message  SB)) \<Rightarrow> 's \<Rightarrow> ('s \<Rightarrow> 'm SPF) \<rightarrow> ('e \<Rightarrow> 'm SPF)" where
 "helper f s \<equiv> \<Lambda> h. (\<lambda> e. spfRt\<cdot>(spfConc (snd (f (s,e)))\<cdot>(h (fst (f (s,e))))))" 
 
 lemma helper_cont: "cont (\<lambda>h. (\<lambda> e. spfConc (snd (f (s,e)))\<cdot>(h (fst (f (s,e))))))"
@@ -75,7 +77,7 @@ lemma helper_cont: "cont (\<lambda>h. (\<lambda> e. spfConc (snd (f (s,e)))\<cdo
 
 (* As defined in Rum96 *)
 definition h :: "('s::type, 'm::message) automaton \<Rightarrow> ('s \<Rightarrow> 'm SPF)" where
-"h automat = spfStateFix (getDom automat)(getRan automat)\<cdot>
+"h automat = myFixxer (getDom automat)(getRan automat)\<cdot>
      (\<Lambda> h. (\<lambda>s. spfStep  (getDom automat) (getRan automat)\<cdot>(helper (getTransition automat) s\<cdot>h)))"
 
 lemma h_cont: "cont (\<lambda> h. (\<lambda>s. spfStep  (getDom automat) (getRan automat)\<cdot>(helper (getTransition automat) s\<cdot>h)))"
@@ -90,10 +92,10 @@ definition H :: "('s, 'm::message) automaton \<Rightarrow> 'm SPF" where
 
 
 section \<open>stuff i need in spfStep\<close>
-lemma spfstep_dom [simp]: "spfDom\<cdot>(spfStep cIn cOut\<cdot>f) = cIn"
+lemma spfstep_dom [simp]: "ufDom\<cdot>(spfStep cIn cOut\<cdot>f) = cIn"
   sorry
 
-lemma spfstep_ran [simp]: "spfRan\<cdot>(spfStep cIn cOut\<cdot>f) = cOut"
+lemma spfstep_ran [simp]: "ufRan\<cdot>(spfStep cIn cOut\<cdot>f) = cOut"
   sorry
 
 lemma stepstep_step: "spfStep In Out\<cdot>f\<rightleftharpoons>sb = (f ((inv convDiscrUp)(sbHdElem\<cdot>sb)))\<rightleftharpoons>sb"
