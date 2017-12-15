@@ -4,7 +4,7 @@
 *)
 
 theory SpfStep
-imports SPF If_Else_Continuity
+imports SPF "../inc/If_Else_Continuity"
 begin
 default_sort type
 
@@ -17,20 +17,20 @@ definition spfStep_h2::" channel set \<Rightarrow> (channel\<rightharpoonup>'m::
 
 (* If the conditions are correct then we use imput h to compute a SPF. After that check if the SPF has the right dom and ran*)
 definition spfStep_h1::"channel set \<Rightarrow> channel set \<Rightarrow>((channel\<rightharpoonup>'m::message) \<Rightarrow> 'm SPF) \<rightarrow>((channel\<rightharpoonup>'m discr\<^sub>\<bottom>)\<rightarrow> 'm SPF)" where
-"spfStep_h1 In Out= (\<Lambda> h. (\<Lambda> f. if (In \<subseteq> dom f \<and> (\<forall>c \<in> In. (f \<rightharpoonup> c \<noteq> \<bottom>))) then spfRestrict In Out\<cdot>(h (spfStep_h2 In f)) else spfLeast In Out))"
+"spfStep_h1 In Out= (\<Lambda> h. (\<Lambda> f. if (In \<subseteq> dom f \<and> (\<forall>c \<in> In. (f \<rightharpoonup> c \<noteq> \<bottom>))) then ufRestrict In Out\<cdot>(h (spfStep_h2 In f)) else ufLeast In Out))"
 
-lemma[simp]: "spfDom\<cdot>((\<lambda> f. if (In \<subseteq> dom f \<and> (\<forall>c \<in> In. (f \<rightharpoonup> c \<noteq> \<bottom>))) then spfRestrict In Out\<cdot>(h (spfStep_h2 In f)) else spfLeast In Out)f) = In"
+lemma[simp]: "ufDom\<cdot>((\<lambda> f. if (In \<subseteq> dom f \<and> (\<forall>c \<in> In. (f \<rightharpoonup> c \<noteq> \<bottom>))) then ufRestrict In Out\<cdot>(h (spfStep_h2 In f)) else ufLeast In Out)f) = In"
   by simp
     
-lemma[simp]: "spfRan\<cdot>((\<lambda> f. if (In \<subseteq> dom f \<and> (\<forall>c \<in> In. (f \<rightharpoonup> c \<noteq> \<bottom>))) then spfRestrict In Out\<cdot>(h (spfStep_h2 In f)) else spfLeast In Out)f) = Out"
+lemma[simp]: "ufRan\<cdot>((\<lambda> f. if (In \<subseteq> dom f \<and> (\<forall>c \<in> In. (f \<rightharpoonup> c \<noteq> \<bottom>))) then ufRestrict In Out\<cdot>(h (spfStep_h2 In f)) else ufLeast In Out)f) = Out"
   by simp
 
-lemma spfRestrict_apply2[simp]: assumes "spfDom\<cdot>f \<noteq> In \<or> spfRan\<cdot>f \<noteq> Out" shows "spfRestrict In Out\<cdot>f = spfLeast In Out"
-  apply(simp add: spfRestrict_def)
+lemma ufRestrict_apply2[simp]: assumes "ufDom\<cdot>f \<noteq> In \<or> ufRan\<cdot>f \<noteq> Out" shows "ufRestrict In Out\<cdot>f = ufLeast In Out"
+  apply(simp add: ufRestrict_def)
   using assms by blast
 
-lemma assumes "F \<sqsubseteq> G" shows "spfRestrict In Out\<cdot>F = F \<Longrightarrow> spfRestrict In Out\<cdot>G = G"
-  by (metis assms spfRestrict_apply spfRestrict_dom spfRestrict_ran spfdom_eq spfran_eq)
+lemma assumes "F \<sqsubseteq> G" shows "ufRestrict In Out\<cdot>F = F \<Longrightarrow> ufRestrict In Out\<cdot>G = G"
+  by (metis assms ufRestrict_apply ufRestrict_dom ufRestrict_ran ufdom_below_eq ufran_below)
 
 lemma discr_u_below_eq:assumes "(x::'a discr\<^sub>\<bottom>)\<sqsubseteq>y" and "x\<noteq>\<bottom>" shows "x = y"
   proof(insert assms(1), simp add: below_up_def assms)
@@ -74,7 +74,7 @@ qed
 lemma fun_discr_u_spfStep_h2_h: assumes "chain (Y::nat \<Rightarrow>(channel \<rightharpoonup> 'a::message discr\<^sub>\<bottom>))" and "(\<forall>c\<in>In. ((Y n)\<rightharpoonup>c) \<noteq> \<bottom>)"  shows "h(spfStep_h2 In (\<Squnion>i. Y i)) = h(spfStep_h2 In (Y n))"
   by(simp add: fun_discr_u_spfStep_h2[of Y In n] assms)
 
-lemma spfrestrict_below: assumes"x\<sqsubseteq>y" shows "spfRestrict In Out\<cdot>x \<sqsubseteq> spfRestrict In Out\<cdot>y"
+lemma spfrestrict_below: assumes"x\<sqsubseteq>y" shows "ufRestrict In Out\<cdot>x \<sqsubseteq> ufRestrict In Out\<cdot>y"
   by (simp add: assms monofun_cfun_arg)
 
 lemma obtain_n_for_c:assumes "chain (Y::nat \<Rightarrow> channel\<rightharpoonup>'a discr\<^sub>\<bottom>)" and "((\<Squnion>i. Y i) \<rightharpoonup> c) \<noteq> \<bottom>" obtains n where "(Y n \<rightharpoonup> c) = ((\<Squnion>i. Y i) \<rightharpoonup> c)"
@@ -163,12 +163,12 @@ lemma obtain_n_for_all_ch:assumes "chain (Y::nat \<Rightarrow> channel\<righthar
     
 (*    
 declare[[show_types]]*)
-lemma[simp]:"monofun (\<lambda> f. if (In \<subseteq> dom f \<and> (\<forall>c \<in> In. (f \<rightharpoonup> c \<noteq> \<bottom>))) then spfRestrict In Out\<cdot>(h (spfStep_h2 In f)) else spfLeast In Out)"
+lemma[simp]:"monofun (\<lambda> f. if (In \<subseteq> dom f \<and> (\<forall>c \<in> In. (f \<rightharpoonup> c \<noteq> \<bottom>))) then ufRestrict In Out\<cdot>(h (spfStep_h2 In f)) else ufLeast In Out)"
   proof(rule monofunI)  
     fix x and y::"(channel\<rightharpoonup>'a::message discr\<^sub>\<bottom>)"
     assume a1:"x \<sqsubseteq> y"
-    show "(if In \<subseteq> dom x \<and> (\<forall>c\<in>In. x\<rightharpoonup>c \<noteq> \<bottom>) then spfRestrict In Out\<cdot>(h (spfStep_h2 In x)) else spfLeast In Out) \<sqsubseteq>
-           (if In \<subseteq> dom y \<and> (\<forall>c\<in>In. y\<rightharpoonup>c \<noteq> \<bottom>) then spfRestrict In Out\<cdot>(h (spfStep_h2 In y)) else spfLeast In Out)"
+    show "(if In \<subseteq> dom x \<and> (\<forall>c\<in>In. x\<rightharpoonup>c \<noteq> \<bottom>) then ufRestrict In Out\<cdot>(h (spfStep_h2 In x)) else ufLeast In Out) \<sqsubseteq>
+           (if In \<subseteq> dom y \<and> (\<forall>c\<in>In. y\<rightharpoonup>c \<noteq> \<bottom>) then ufRestrict In Out\<cdot>(h (spfStep_h2 In y)) else ufLeast In Out)"
     proof(cases "In \<subseteq> dom x \<and> (\<forall>c\<in>In. x\<rightharpoonup>c \<noteq> \<bottom>)")
       case True
       have "dom x = dom y"
@@ -190,8 +190,8 @@ lemma[simp]:"monofun (\<lambda> f. if (In \<subseteq> dom f \<and> (\<forall>c \
       qed
       show ?thesis
       proof(simp add: True h1 h2)
-        show "spfRestrict In Out\<cdot>(h (spfStep_h2 In x)) \<sqsubseteq> spfRestrict In Out\<cdot>(h (spfStep_h2 In y))"
-          proof(cases "spfDom\<cdot>(h (spfStep_h2 In x)) = In \<and> spfRan\<cdot>(h (spfStep_h2 In x)) = Out")
+        show "ufRestrict In Out\<cdot>(h (spfStep_h2 In x)) \<sqsubseteq> ufRestrict In Out\<cdot>(h (spfStep_h2 In y))"
+          proof(cases "ufDom\<cdot>(h (spfStep_h2 In x)) = In \<and> ufRan\<cdot>(h (spfStep_h2 In x)) = Out")
             case True
             have "\<And>c. (c \<in> In) \<Longrightarrow> x\<rightharpoonup>c = y\<rightharpoonup>c"
               by (simp add: h3)
@@ -203,16 +203,16 @@ lemma[simp]:"monofun (\<lambda> f. if (In \<subseteq> dom f \<and> (\<forall>c \
               using cont_pref_eq1I by blast
           next
             case False
-            have h11:"spfRestrict In Out\<cdot>(h (spfStep_h2 In x)) = spfLeast In Out"
+            have h11:"ufRestrict In Out\<cdot>(h (spfStep_h2 In x)) = ufLeast In Out"
               using False by auto
             then show ?thesis
-              proof(cases "spfDom\<cdot>(h (spfStep_h2 In y)) = In \<and> spfRan\<cdot>(h (spfStep_h2 In y)) = Out")
+              proof(cases "ufDom\<cdot>(h (spfStep_h2 In y)) = In \<and> ufRan\<cdot>(h (spfStep_h2 In y)) = Out")
                 case True
                 then show ?thesis
                   by (simp add: h11)
               next
                 case False
-                have h12:"spfRestrict In Out\<cdot>(h (spfStep_h2 In y)) = spfLeast In Out"
+                have h12:"ufRestrict In Out\<cdot>(h (spfStep_h2 In y)) = ufLeast In Out"
                   using False by auto
                 then show ?thesis
                   by (simp add: h11)
@@ -226,15 +226,15 @@ lemma[simp]:"monofun (\<lambda> f. if (In \<subseteq> dom f \<and> (\<forall>c \
     qed
   qed
     
-lemma[simp]:assumes "finite In" shows "cont(\<lambda> f. if (In \<subseteq> dom f \<and> (\<forall>c \<in> In. (f \<rightharpoonup> c \<noteq> \<bottom>))) then spfRestrict In Out\<cdot>(h (spfStep_h2 In f)) else spfLeast In Out) "
+lemma[simp]:assumes "finite In" shows "cont(\<lambda> f. if (In \<subseteq> dom f \<and> (\<forall>c \<in> In. (f \<rightharpoonup> c \<noteq> \<bottom>))) then ufRestrict In Out\<cdot>(h (spfStep_h2 In f)) else ufLeast In Out) "
   (*apply(rule equalizing_pred_cont)
   apply(simp_all add: cont_at_def,auto)*)
   proof(rule Cont.contI2,simp)    
     fix Y::"nat \<Rightarrow> (channel\<rightharpoonup>'a::message discr\<^sub>\<bottom>)"
     assume a1:"chain Y"
-    assume a2:"chain (\<lambda>i. if (In \<subseteq> dom (Y i) \<and> (\<forall>c\<in>In. ((Y i)\<rightharpoonup>c \<noteq> \<bottom>))) then spfRestrict In Out\<cdot>(h (spfStep_h2 In (Y i))) else spfLeast In Out)"
-    show "(if In \<subseteq> dom (\<Squnion>i. Y i) \<and> (\<forall>c\<in>In. (\<Squnion>i. Y i)\<rightharpoonup>c \<noteq> \<bottom>) then spfRestrict In Out\<cdot>(h (spfStep_h2 In (\<Squnion>i. Y i))) else spfLeast In Out) \<sqsubseteq>
-         (\<Squnion>i. if In \<subseteq> dom (Y i) \<and> (\<forall>c\<in>In. Y i\<rightharpoonup>c \<noteq> \<bottom>) then spfRestrict In Out\<cdot>(h (spfStep_h2 In (Y i))) else spfLeast In Out)"
+    assume a2:"chain (\<lambda>i. if (In \<subseteq> dom (Y i) \<and> (\<forall>c\<in>In. ((Y i)\<rightharpoonup>c \<noteq> \<bottom>))) then ufRestrict In Out\<cdot>(h (spfStep_h2 In (Y i))) else ufLeast In Out)"
+    show "(if In \<subseteq> dom (\<Squnion>i. Y i) \<and> (\<forall>c\<in>In. (\<Squnion>i. Y i)\<rightharpoonup>c \<noteq> \<bottom>) then ufRestrict In Out\<cdot>(h (spfStep_h2 In (\<Squnion>i. Y i))) else ufLeast In Out) \<sqsubseteq>
+         (\<Squnion>i. if In \<subseteq> dom (Y i) \<and> (\<forall>c\<in>In. Y i\<rightharpoonup>c \<noteq> \<bottom>) then ufRestrict In Out\<cdot>(h (spfStep_h2 In (Y i))) else ufLeast In Out)"
       proof(cases "In \<subseteq> dom (\<Squnion>i. Y i) \<and> (\<forall>c\<in>In. (\<Squnion>i. Y i)\<rightharpoonup>c \<noteq> \<bottom>)")
         case True
         then have "\<forall>i. In \<subseteq> dom (Y i)" 
@@ -273,7 +273,7 @@ lemma[simp]:assumes "finite In" shows "cont(\<lambda> f. if (In \<subseteq> dom 
           by simp
         obtain n where "\<forall>c\<in>In. ((Y n)\<rightharpoonup>c = ((\<Squnion>i. Y i) \<rightharpoonup>c))"
           by(rule obtain_n_for_all_ch[of Y In],simp_all add: assms a1 True h123)
-        then have "(\<lambda>i. if (In \<subseteq> dom (Y i) \<and> (\<forall>c\<in>In. ((Y i)\<rightharpoonup>c \<noteq> \<bottom>))) then spfRestrict In Out\<cdot>(h (spfStep_h2 In (Y i))) else spfLeast In Out) n = spfRestrict In Out\<cdot>(h (spfStep_h2 In (Y n)))"
+        then have "(\<lambda>i. if (In \<subseteq> dom (Y i) \<and> (\<forall>c\<in>In. ((Y i)\<rightharpoonup>c \<noteq> \<bottom>))) then ufRestrict In Out\<cdot>(h (spfStep_h2 In (Y i))) else ufLeast In Out) n = ufRestrict In Out\<cdot>(h (spfStep_h2 In (Y n)))"
         by (simp add: True \<open>\<forall>i. In \<subseteq> dom (Y i)\<close>)
         have "In \<subseteq> dom (Y n) \<and> (\<forall>c\<in>In. Y n\<rightharpoonup>c \<noteq> \<bottom>)"
           by (simp add: True \<open>\<forall>c\<in>In. Y n\<rightharpoonup>c = \<Squnion>i. Y i\<rightharpoonup>c\<close> \<open>\<forall>i. In \<subseteq> dom (Y i)\<close>)
@@ -290,12 +290,12 @@ lemma[simp]:assumes "finite In" shows "cont(\<lambda> f. if (In \<subseteq> dom 
           then show "False"
             by (simp add: \<open>In \<subseteq> dom (Y n) \<and> (\<forall>c\<in>In. Y n\<rightharpoonup>c \<noteq> \<bottom>)\<close> a2 a3)
         qed
-        have chain_eq_second_gen:"\<forall>i\<ge>n. (\<lambda>i. if (In \<subseteq> dom (Y i) \<and> (\<forall>c\<in>In. ((Y i)\<rightharpoonup>c \<noteq> \<bottom>))) then spfRestrict In Out\<cdot>(h (spfStep_h2 In (Y i))) else spfLeast In Out) i = spfRestrict In Out\<cdot>(h (spfStep_h2 In (Y i)))" 
+        have chain_eq_second_gen:"\<forall>i\<ge>n. (\<lambda>i. if (In \<subseteq> dom (Y i) \<and> (\<forall>c\<in>In. ((Y i)\<rightharpoonup>c \<noteq> \<bottom>))) then ufRestrict In Out\<cdot>(h (spfStep_h2 In (Y i))) else ufLeast In Out) i = ufRestrict In Out\<cdot>(h (spfStep_h2 In (Y i)))" 
           by (simp add: \<open>\<forall>i. In \<subseteq> dom (Y i)\<close> \<open>\<forall>i\<ge>n. \<forall>c\<in>In. Y i\<rightharpoonup>c \<noteq> \<bottom>\<close>)
-        have chain_second_part:"chain (\<lambda>i. if n \<le> i then spfRestrict In Out\<cdot>(h (spfStep_h2 In (Y i))) else spfLeast In Out)"
+        have chain_second_part:"chain (\<lambda>i. if n \<le> i then ufRestrict In Out\<cdot>(h (spfStep_h2 In (Y i))) else ufLeast In Out)"
         proof(rule chainI)
           fix i::nat
-          show "(if n \<le> i then spfRestrict In Out\<cdot>(h (spfStep_h2 In (Y i))) else spfLeast In Out) \<sqsubseteq> (if n \<le> Suc i then spfRestrict In Out\<cdot>(h (spfStep_h2 In (Y (Suc i)))) else spfLeast In Out)"
+          show "(if n \<le> i then ufRestrict In Out\<cdot>(h (spfStep_h2 In (Y i))) else ufLeast In Out) \<sqsubseteq> (if n \<le> Suc i then ufRestrict In Out\<cdot>(h (spfStep_h2 In (Y (Suc i)))) else ufLeast In Out)"
           proof(cases "n \<le> i")
             case True
             have "\<forall>c\<in>In. Y i\<rightharpoonup>c = Y (Suc i)\<rightharpoonup>c"
@@ -312,9 +312,9 @@ lemma[simp]:assumes "finite In" shows "cont(\<lambda> f. if (In \<subseteq> dom 
               by simp
           qed
         qed
-        have h1:"(if In \<subseteq> dom (Y n) \<and> (\<forall>c\<in>In. (Y n\<rightharpoonup>c \<noteq> \<bottom>)) then spfRestrict In Out\<cdot>(h (spfStep_h2 In (Y n))) else spfLeast In Out) \<sqsubseteq>(\<Squnion>i. if In \<subseteq> dom (Y i) \<and> (\<forall>c\<in>In. Y i\<rightharpoonup>c \<noteq> \<bottom>) then spfRestrict In Out\<cdot>(h (spfStep_h2 In (Y i))) else spfLeast In Out)"
+        have h1:"(if In \<subseteq> dom (Y n) \<and> (\<forall>c\<in>In. (Y n\<rightharpoonup>c \<noteq> \<bottom>)) then ufRestrict In Out\<cdot>(h (spfStep_h2 In (Y n))) else ufLeast In Out) \<sqsubseteq>(\<Squnion>i. if In \<subseteq> dom (Y i) \<and> (\<forall>c\<in>In. Y i\<rightharpoonup>c \<noteq> \<bottom>) then ufRestrict In Out\<cdot>(h (spfStep_h2 In (Y i))) else ufLeast In Out)"
           using a2 below_lub by blast
-        have h2:"(if In \<subseteq> dom (\<Squnion>i. Y i) \<and> (\<forall>c\<in>In. (\<Squnion>i. Y i)\<rightharpoonup>c \<noteq> \<bottom>) then spfRestrict In Out\<cdot>(h (spfStep_h2 In (\<Squnion>i. Y i))) else spfLeast In Out) = (if In \<subseteq> dom (Y n) \<and> (\<forall>c\<in>In. (Y n\<rightharpoonup>c \<noteq> \<bottom>)) then spfRestrict In Out\<cdot>(h (spfStep_h2 In (Y n))) else spfLeast In Out)"
+        have h2:"(if In \<subseteq> dom (\<Squnion>i. Y i) \<and> (\<forall>c\<in>In. (\<Squnion>i. Y i)\<rightharpoonup>c \<noteq> \<bottom>) then ufRestrict In Out\<cdot>(h (spfStep_h2 In (\<Squnion>i. Y i))) else ufLeast In Out) = (if In \<subseteq> dom (Y n) \<and> (\<forall>c\<in>In. (Y n\<rightharpoonup>c \<noteq> \<bottom>)) then ufRestrict In Out\<cdot>(h (spfStep_h2 In (Y n))) else ufLeast In Out)"
           by (metis True \<open>In \<subseteq> dom (Y n) \<and> (\<forall>c\<in>In. Y n\<rightharpoonup>c \<noteq> \<bottom>)\<close> a1 fun_discr_u_spfStep_h2)
         then show ?thesis
           by(simp only: h1 h2)
@@ -337,40 +337,40 @@ lemma[simp]:assumes "finite In" shows "cont(\<lambda> f. if (In \<subseteq> dom 
       qed
     qed
               
-lemma spfStep_h1_mono[simp]:assumes "finite In" shows "monofun (\<lambda> h. (\<Lambda> f. if (In \<subseteq> dom f \<and> (\<forall>c \<in> In. (f \<rightharpoonup> c \<noteq> \<bottom>))) then spfRestrict In Out\<cdot>(h (spfStep_h2 In f)) else spfLeast In Out))"
+lemma spfStep_h1_mono[simp]:assumes "finite In" shows "monofun (\<lambda> h. (\<Lambda> f. if (In \<subseteq> dom f \<and> (\<forall>c \<in> In. (f \<rightharpoonup> c \<noteq> \<bottom>))) then ufRestrict In Out\<cdot>(h (spfStep_h2 In f)) else ufLeast In Out))"
 by(rule monofunI, simp add: below_cfun_def below_fun_def, simp add: spfrestrict_below assms)
   
         
-lemma spfStep_h1_cont[simp]:assumes "finite In" shows "cont (\<lambda> h. (\<Lambda> f. if (In \<subseteq> dom f \<and> (\<forall>c \<in> In. (f \<rightharpoonup> c \<noteq> \<bottom>))) then spfRestrict In Out\<cdot>(h (spfStep_h2 In f)) else spfLeast In Out))"
+lemma spfStep_h1_cont[simp]:assumes "finite In" shows "cont (\<lambda> h. (\<Lambda> f. if (In \<subseteq> dom f \<and> (\<forall>c \<in> In. (f \<rightharpoonup> c \<noteq> \<bottom>))) then ufRestrict In Out\<cdot>(h (spfStep_h2 In f)) else ufLeast In Out))"
 proof(rule Cont.contI2, simp add: spfStep_h1_mono assms)  
   have h0: " \<And>Y x. chain Y \<Longrightarrow> chain (\<lambda>i. Y i (spfStep_h2 In x))"
     by (simp add: ch2ch_fun)
   have h1:"\<And>Y x. chain Y \<Longrightarrow>
-           chain (\<lambda>i. \<Lambda> f. if In \<subseteq> dom f \<and> (\<forall>c\<in>In. f\<rightharpoonup>c \<noteq> \<bottom>) then spfRestrict In Out\<cdot>(Y i (spfStep_h2 In f)) else spfLeast In Out) \<Longrightarrow>
-           In \<subseteq> dom x \<Longrightarrow> \<forall>c\<in>In. x\<rightharpoonup>c \<noteq> \<bottom> \<Longrightarrow> spfRestrict In Out\<cdot>((\<Squnion>i. Y i) (spfStep_h2 In x)) \<sqsubseteq> (\<Squnion>i. spfRestrict In Out\<cdot>(Y i (spfStep_h2 In x)))"
+           chain (\<lambda>i. \<Lambda> f. if In \<subseteq> dom f \<and> (\<forall>c\<in>In. f\<rightharpoonup>c \<noteq> \<bottom>) then ufRestrict In Out\<cdot>(Y i (spfStep_h2 In f)) else ufLeast In Out) \<Longrightarrow>
+           In \<subseteq> dom x \<Longrightarrow> \<forall>c\<in>In. x\<rightharpoonup>c \<noteq> \<bottom> \<Longrightarrow> ufRestrict In Out\<cdot>((\<Squnion>i. Y i) (spfStep_h2 In x)) \<sqsubseteq> (\<Squnion>i. ufRestrict In Out\<cdot>(Y i (spfStep_h2 In x)))"
     by(simp add: lub_fun h0 contlub_cfun_arg)
   show "\<And>Y. chain Y \<Longrightarrow>
-         chain (\<lambda>i. \<Lambda> f. if In \<subseteq> dom f \<and> (\<forall>c\<in>In. f\<rightharpoonup>c \<noteq> \<bottom>) then spfRestrict In Out\<cdot>(Y i (spfStep_h2 In f)) else spfLeast In Out) \<Longrightarrow>
-         (\<Lambda> f. if In \<subseteq> dom f \<and> (\<forall>c\<in>In. f\<rightharpoonup>c \<noteq> \<bottom>) then spfRestrict In Out\<cdot>((\<Squnion>i. Y i) (spfStep_h2 In f)) else spfLeast In Out) \<sqsubseteq>
-         (\<Squnion>i. \<Lambda> f. if In \<subseteq> dom f \<and> (\<forall>c\<in>In. f\<rightharpoonup>c \<noteq> \<bottom>) then spfRestrict In Out\<cdot>(Y i (spfStep_h2 In f)) else spfLeast In Out)"
+         chain (\<lambda>i. \<Lambda> f. if In \<subseteq> dom f \<and> (\<forall>c\<in>In. f\<rightharpoonup>c \<noteq> \<bottom>) then ufRestrict In Out\<cdot>(Y i (spfStep_h2 In f)) else ufLeast In Out) \<Longrightarrow>
+         (\<Lambda> f. if In \<subseteq> dom f \<and> (\<forall>c\<in>In. f\<rightharpoonup>c \<noteq> \<bottom>) then ufRestrict In Out\<cdot>((\<Squnion>i. Y i) (spfStep_h2 In f)) else ufLeast In Out) \<sqsubseteq>
+         (\<Squnion>i. \<Lambda> f. if In \<subseteq> dom f \<and> (\<forall>c\<in>In. f\<rightharpoonup>c \<noteq> \<bottom>) then ufRestrict In Out\<cdot>(Y i (spfStep_h2 In f)) else ufLeast In Out)"
     by(simp add: below_cfun_def below_fun_def contlub_cfun_fun, auto, simp add: h1 assms)
 qed
   
-lemma[simp]:assumes"finite In" shows"spfDom\<cdot>(spfStep_h1 In Out\<cdot> h \<cdot> f) = In"
+lemma[simp]:assumes"finite In" shows"ufDom\<cdot>(spfStep_h1 In Out\<cdot> h \<cdot> f) = In"
   by(simp add: spfStep_h1_def assms)
     
 
-lemma spfStep_h1_ran[simp]:assumes "finite In" shows"spfRan\<cdot>(spfStep_h1 In Out\<cdot> h \<cdot> f) = Out"
+lemma spfStep_h1_ran[simp]:assumes "finite In" shows"ufRan\<cdot>(spfStep_h1 In Out\<cdot> h \<cdot> f) = Out"
   by(simp add: spfStep_h1_def assms)
 
-lemma spfstep_h1_insert:assumes "finite In" shows"spfStep_h1 In Out\<cdot> h\<cdot>f = (if (In \<subseteq> dom f \<and> (\<forall>c \<in> In. (f \<rightharpoonup> c \<noteq> \<bottom>))) then spfRestrict In Out\<cdot>(h (spfStep_h2 In f)) else spfLeast In Out)"
+lemma spfstep_h1_insert:assumes "finite In" shows"spfStep_h1 In Out\<cdot> h\<cdot>f = (if (In \<subseteq> dom f \<and> (\<forall>c \<in> In. (f \<rightharpoonup> c \<noteq> \<bottom>))) then ufRestrict In Out\<cdot>(h (spfStep_h2 In f)) else ufLeast In Out)"
   by(simp add:  spfStep_h1_def assms)    
 
 (*spfStep_h1 mono cont end*)     
       
 (* Returns the SPF that switches depending on input.  (spfStep_h1 In Out\<cdot>h)\<cdot>(sbHdElem\<cdot>sb) computes the SPF which has to be applied to the input sb*)
 definition spfStep :: "channel set \<Rightarrow> channel set \<Rightarrow> ((channel\<rightharpoonup>'m::message) \<Rightarrow> 'm SPF) \<rightarrow> 'm SPF" where
-"spfStep In Out \<equiv> \<Lambda> h. Abs_SPF (\<Lambda>  sb.  (sbDom\<cdot>sb = In) \<leadsto> (spfStep_h1 In Out\<cdot>h)\<cdot>(sbHdElem\<cdot>sb) \<rightleftharpoons> sb)"
+"spfStep In Out \<equiv> \<Lambda> h. Abs_ufun (\<Lambda>  sb.  (ubDom\<cdot>sb = In) \<leadsto> (spfStep_h1 In Out\<cdot>h)\<cdot>(sbHdElem\<cdot>sb) \<rightleftharpoons> sb)"
 
 
 (* spfStep mono and cont*)
@@ -378,32 +378,32 @@ definition spfStep :: "channel set \<Rightarrow> channel set \<Rightarrow> ((cha
 
 lemma spf_pref_eq_2: assumes "(f \<sqsubseteq> g)"
   shows "(f \<rightleftharpoons> a) \<sqsubseteq> (g \<rightleftharpoons> a)" 
-  by (metis assms below_SPF_def below_option_def cfun_below_iff po_eq_conv)
+  by (metis assms below_ufun_def below_option_def cfun_below_iff po_eq_conv)
 
 
-lemma getSb_in_h:assumes "chain (Y::nat \<Rightarrow> 'a::message SPF)" shows "(\<Squnion>i. Rep_SPF (Y i))\<cdot> sb = (\<Squnion>i. (Rep_SPF (Y i) \<cdot> sb))"
+lemma getSb_in_h:assumes "chain (Y::nat \<Rightarrow> 'a::message SPF)" shows "(\<Squnion>i. Rep_ufun (Y i))\<cdot> sb = (\<Squnion>i. (Rep_ufun (Y i) \<cdot> sb))"
   by(subst contlub_cfun_fun, simp_all add: assms)
     
-lemma spf_sbDom: assumes "spfDom\<cdot>f = In" and "spfRan\<cdot>f = Out" and "sbDom\<cdot>sb= In" shows "sbDom\<cdot>(f \<rightleftharpoons> sb) = Out"
-  by (simp add: assms(1) assms(2) assms(3))
+lemma spf_ubDom: assumes "ufDom\<cdot>f = In" and "ufRan\<cdot>f = Out" and "ubDom\<cdot>sb= In" shows "ubDom\<cdot>(f \<rightleftharpoons> sb) = Out"
+  by (metis assms(1) assms(2) assms(3) ubDom_ubundle_def ufran_2_ubdom2)
 
 (* spfStep inner SPF spf_well and cont*)
 
 lemma spfStep_inSPF_mono[simp]:"monofun (\<lambda>b. spfStep_h1 In Out\<cdot> h\<cdot>(sbHdElem\<cdot>b) \<rightleftharpoons> b)"
   apply(rule monofunI)
-  by (metis below_SPF_def below_option_def below_refl monofun_cfun monofun_cfun_arg)
+  by (metis below_ufun_def below_option_def below_refl monofun_cfun monofun_cfun_arg)
    
     
-lemma spfStep_inSPF_cont[simp]:assumes "finite In" shows"cont (\<lambda> sb.  (sbDom\<cdot>sb = In) \<leadsto> (spfStep_h1 In Out\<cdot> h)\<cdot>(sbHdElem\<cdot>sb) \<rightleftharpoons> sb)"  
+lemma spfStep_inSPF_cont[simp]:assumes "finite In" shows"cont (\<lambda> sb.  (ubDom\<cdot>sb = In) \<leadsto> (spfStep_h1 In Out\<cdot> h)\<cdot>(sbHdElem\<cdot>sb) \<rightleftharpoons> sb)"  
 proof(rule spf_contI2,rule Cont.contI2,auto)
   fix Y::"nat \<Rightarrow> 'a SB" and ia::nat
   assume chain:"chain Y"
   assume chain2:"chain (\<lambda>i. spfStep_h1 In Out\<cdot> h\<cdot>(sbHdElem\<cdot>(Y i)) \<rightleftharpoons> Y i)"
   have h1:"spfStep_h1 In Out\<cdot> h\<cdot>(sbHdElem\<cdot>(\<Squnion>i. Y i)) = (\<Squnion>i. spfStep_h1 In Out\<cdot> h\<cdot>(sbHdElem\<cdot>(Y i)))"
     by(simp add: chain contlub_cfun_fun contlub_cfun_arg)
-  have h_true:"sbDom\<cdot>(\<Squnion>i. Y i) = In \<Longrightarrow> \<forall>i. sbDom\<cdot>(Y i) = In"
+  have h_true:"ubDom\<cdot>(\<Squnion>i. Y i) = In \<Longrightarrow> \<forall>i. ubDom\<cdot>(Y i) = In"
     by (simp add: chain sbChain_dom_eq2)
-  have h_false:"sbDom\<cdot>(\<Squnion>i. Y i) \<noteq> In \<Longrightarrow> \<forall>i. sbDom\<cdot>(Y i) \<noteq> In"
+  have h_false:"ubDom\<cdot>(\<Squnion>i. Y i) \<noteq> In \<Longrightarrow> \<forall>i. ubDom\<cdot>(Y i) \<noteq> In"
     by (simp add: chain sbChain_dom_eq2)
   have "(\<Squnion>i. spfStep_h1 In Out\<cdot> h\<cdot>(sbHdElem\<cdot>(Y i))) \<rightleftharpoons> (Y ia) = (\<Squnion>i. spfStep_h1 In Out\<cdot> h\<cdot>(sbHdElem\<cdot>(Y i)) \<rightleftharpoons> (Y ia))"
     by (simp add: spfapply_lub chain)
@@ -423,29 +423,29 @@ proof(rule spf_contI2,rule Cont.contI2,auto)
     by(simp add: h1)
 qed   
     
-lemma spfStep_inSPF_well[simp]:assumes"finite In" shows "spf_well (\<Lambda>  sb.  (sbDom\<cdot>sb = In) \<leadsto> (spfStep_h1 In Out\<cdot> h)\<cdot>(sbHdElem\<cdot>sb) \<rightleftharpoons> sb)" 
+lemma spfStep_inSPF_well[simp]:assumes"finite In" shows "ufWell (\<Lambda>  sb.  (ubDom\<cdot>sb = In) \<leadsto> (spfStep_h1 In Out\<cdot> h)\<cdot>(sbHdElem\<cdot>sb) \<rightleftharpoons> sb)" 
   proof(rule spf_wellI)
     fix b::"'a SB"
-    assume "b \<in> dom (Rep_cfun (\<Lambda> sb. (sbDom\<cdot>sb = In)\<leadsto>spfStep_h1 In Out\<cdot> h\<cdot>(sbHdElem\<cdot>sb) \<rightleftharpoons> sb))"
-    hence b_def:" b \<in> dom (\<lambda> sb. (sbDom\<cdot>sb = In)\<leadsto>spfStep_h1 In Out\<cdot> h\<cdot>(sbHdElem\<cdot>sb) \<rightleftharpoons> sb)" 
+    assume "b \<in> dom (Rep_cfun (\<Lambda> sb. (ubDom\<cdot>sb = In)\<leadsto>spfStep_h1 In Out\<cdot> h\<cdot>(sbHdElem\<cdot>sb) \<rightleftharpoons> sb))"
+    hence b_def:" b \<in> dom (\<lambda> sb. (ubDom\<cdot>sb = In)\<leadsto>spfStep_h1 In Out\<cdot> h\<cdot>(sbHdElem\<cdot>sb) \<rightleftharpoons> sb)" 
       by (simp add: assms)
-    thus "sbDom\<cdot>b = In"
+    thus "ubDom\<cdot>b = In"
     proof -
       show ?thesis
-      by (meson b_def if_then_sbDom)
+      by (meson b_def if_then_ubDom)
     qed
-    thus "sbDom\<cdot>(the ((\<Lambda> sb. (sbDom\<cdot>sb = In)\<leadsto>spfStep_h1 In Out\<cdot> h\<cdot>(sbHdElem\<cdot>sb) \<rightleftharpoons> sb)\<cdot>b)) = Out" 
+    thus "ubDom\<cdot>(the ((\<Lambda> sb. (ubDom\<cdot>sb = In)\<leadsto>spfStep_h1 In Out\<cdot> h\<cdot>(sbHdElem\<cdot>sb) \<rightleftharpoons> sb)\<cdot>b)) = Out" 
       by (simp add: assms)
   next
     fix b2::"'a SB"
-    assume "sbDom\<cdot>b2 = In"
-    thus "b2 \<in> dom (Rep_cfun (\<Lambda> sb. (sbDom\<cdot>sb = In)\<leadsto>spfStep_h1 In Out\<cdot> h\<cdot>(sbHdElem\<cdot>sb) \<rightleftharpoons> sb))" 
+    assume "ubDom\<cdot>b2 = In"
+    thus "b2 \<in> dom (Rep_cfun (\<Lambda> sb. (ubDom\<cdot>sb = In)\<leadsto>spfStep_h1 In Out\<cdot> h\<cdot>(sbHdElem\<cdot>sb) \<rightleftharpoons> sb))" 
       by (simp add: domIff assms)
 qed
 
 (*spfStep outer cont*)
     
-lemma spfStep_mono[simp]:assumes"finite In" shows"monofun (\<lambda> h. Abs_SPF (\<Lambda>  sb.  (sbDom\<cdot>sb = In) \<leadsto> (spfStep_h1 In Out\<cdot> h)\<cdot>(sbHdElem\<cdot>sb) \<rightleftharpoons> sb))"
+lemma spfStep_mono[simp]:assumes"finite In" shows"monofun (\<lambda> h. Abs_ufun (\<Lambda>  sb.  (ubDom\<cdot>sb = In) \<leadsto> (spfStep_h1 In Out\<cdot> h)\<cdot>(sbHdElem\<cdot>sb) \<rightleftharpoons> sb))"
 proof(rule monofunI, simp add: below_SPF_def below_cfun_def assms)
   fix x y::"((channel\<rightharpoonup>'m::message) \<Rightarrow> 'm SPF)"
   assume a1:"x \<sqsubseteq> y"
@@ -460,16 +460,16 @@ proof(rule monofunI, simp add: below_SPF_def below_cfun_def assms)
     then show "spfStep_h1 In Out\<cdot>x\<cdot>(sbHdElem\<cdot>xa) \<rightleftharpoons> xa \<sqsubseteq> spfStep_h1 In Out\<cdot>y\<cdot>(sbHdElem\<cdot>xa) \<rightleftharpoons> xa"
       by (metis (no_types) below_SPF_def below_option_def below_refl cfun_below_iff)
   qed
-  show "(\<lambda>sb. (sbDom\<cdot>sb = In)\<leadsto>spfStep_h1 In Out\<cdot>x\<cdot>(sbHdElem\<cdot>sb) \<rightleftharpoons> sb) \<sqsubseteq> (\<lambda>sb. (sbDom\<cdot>sb = In)\<leadsto>spfStep_h1 In Out\<cdot>y\<cdot>(sbHdElem\<cdot>sb) \<rightleftharpoons> sb)"
+  show "(\<lambda>sb. (ubDom\<cdot>sb = In)\<leadsto>spfStep_h1 In Out\<cdot>x\<cdot>(sbHdElem\<cdot>sb) \<rightleftharpoons> sb) \<sqsubseteq> (\<lambda>sb. (ubDom\<cdot>sb = In)\<leadsto>spfStep_h1 In Out\<cdot>y\<cdot>(sbHdElem\<cdot>sb) \<rightleftharpoons> sb)"
     using h2 by (simp add: below_option_def fun_below_iff)
 qed
 
     
-lemma spfStep_cont:assumes "finite In" shows"cont (\<lambda> h. Abs_SPF (\<Lambda>  sb.  (sbDom\<cdot>sb = In) \<leadsto> (spfStep_h1 In Out\<cdot> h)\<cdot>(sbHdElem\<cdot>sb) \<rightleftharpoons> sb))"
+lemma spfStep_cont:assumes "finite In" shows"cont (\<lambda> h. Abs_ufun (\<Lambda>  sb.  (ubDom\<cdot>sb = In) \<leadsto> (spfStep_h1 In Out\<cdot> h)\<cdot>(sbHdElem\<cdot>sb) \<rightleftharpoons> sb))"
 proof(rule Cont.contI2, simp add: assms)
   fix Y::"nat \<Rightarrow> ((channel\<rightharpoonup>'m::message) \<Rightarrow> 'm SPF)"
   assume a1: "chain Y"
-  assume a2: "chain (\<lambda>i. Abs_CSPF (\<lambda>sb. (sbDom\<cdot>sb = In)\<leadsto>spfStep_h1 In Out\<cdot>(Y i)\<cdot>(sbHdElem\<cdot>sb) \<rightleftharpoons> sb))"
+  assume a2: "chain (\<lambda>i. Abs_CSPF (\<lambda>sb. (ubDom\<cdot>sb = In)\<leadsto>spfStep_h1 In Out\<cdot>(Y i)\<cdot>(sbHdElem\<cdot>sb) \<rightleftharpoons> sb))"
   have chain_1:"chain (\<lambda>i. spfStep_h1 In Out\<cdot>(Y i))"
     using a1 by auto
   have chain_2:"\<And>x. chain (\<lambda>i. spfStep_h1 In Out\<cdot>(Y i)\<cdot>(sbHdElem\<cdot>x))"
@@ -484,51 +484,51 @@ proof(rule Cont.contI2, simp add: assms)
     apply(subst contlub_cfun_arg, simp add: a1)
     apply(subst contlub_cfun_fun, simp add: chain_1)
     by(simp add: spfapply_lub chain_3)
-  have h0_2:"\<forall>sb. ((sbDom\<cdot>sb = In)\<leadsto>\<Squnion>i. spfStep_h1 In Out\<cdot>(Y i)\<cdot>(sbHdElem\<cdot>sb) \<rightleftharpoons> sb) = (\<Squnion>i. (sbDom\<cdot>sb = In)\<leadsto>spfStep_h1 In Out\<cdot>(Y i)\<cdot>(sbHdElem\<cdot>sb) \<rightleftharpoons> sb)"
+  have h0_2:"\<forall>sb. ((ubDom\<cdot>sb = In)\<leadsto>\<Squnion>i. spfStep_h1 In Out\<cdot>(Y i)\<cdot>(sbHdElem\<cdot>sb) \<rightleftharpoons> sb) = (\<Squnion>i. (ubDom\<cdot>sb = In)\<leadsto>spfStep_h1 In Out\<cdot>(Y i)\<cdot>(sbHdElem\<cdot>sb) \<rightleftharpoons> sb)"
   proof(auto)
     fix sb::"'m SB"
-    assume a11: "In = sbDom\<cdot>sb"  
-    have h0_21:"((sbDom\<cdot>sb = In)\<leadsto>(\<Squnion>i. spfStep_h1 In Out\<cdot>(Y i)\<cdot>(sbHdElem\<cdot>sb) \<rightleftharpoons> sb)) = (\<Squnion>i. (sbDom\<cdot>sb = In)\<leadsto>spfStep_h1 In Out\<cdot>(Y i)\<cdot>(sbHdElem\<cdot>sb) \<rightleftharpoons> sb)"
+    assume a11: "In = ubDom\<cdot>sb"  
+    have h0_21:"((ubDom\<cdot>sb = In)\<leadsto>(\<Squnion>i. spfStep_h1 In Out\<cdot>(Y i)\<cdot>(sbHdElem\<cdot>sb) \<rightleftharpoons> sb)) = (\<Squnion>i. (ubDom\<cdot>sb = In)\<leadsto>spfStep_h1 In Out\<cdot>(Y i)\<cdot>(sbHdElem\<cdot>sb) \<rightleftharpoons> sb)"
     by(simp add: some_lub_chain_eq chain_4)
-      show"Some (\<Squnion>i. (spfStep_h1 (sbDom\<cdot>sb) Out\<cdot>(Y i)\<cdot>(sbHdElem\<cdot>sb)) \<rightleftharpoons> sb) = (\<Squnion>i. Some ((spfStep_h1 (sbDom\<cdot>sb) Out\<cdot>(Y i)\<cdot>(sbHdElem\<cdot>sb)) \<rightleftharpoons> sb))"
+      show"Some (\<Squnion>i. (spfStep_h1 (ubDom\<cdot>sb) Out\<cdot>(Y i)\<cdot>(sbHdElem\<cdot>sb)) \<rightleftharpoons> sb) = (\<Squnion>i. Some ((spfStep_h1 (ubDom\<cdot>sb) Out\<cdot>(Y i)\<cdot>(sbHdElem\<cdot>sb)) \<rightleftharpoons> sb))"
       using a11 h0_21 by auto
   qed 
-  have chain_h0:"chain (\<lambda>i. \<Lambda> sb. (sbDom\<cdot>sb = In)\<leadsto>spfStep_h1 In Out\<cdot>(Y i)\<cdot>(sbHdElem\<cdot>sb) \<rightleftharpoons> sb)"
+  have chain_h0:"chain (\<lambda>i. \<Lambda> sb. (ubDom\<cdot>sb = In)\<leadsto>spfStep_h1 In Out\<cdot>(Y i)\<cdot>(sbHdElem\<cdot>sb) \<rightleftharpoons> sb)"
   proof(rule chainI)
     fix i::nat
-    show "(\<Lambda> sb. (sbDom\<cdot>sb = In)\<leadsto>spfStep_h1 In Out\<cdot>(Y i)\<cdot>(sbHdElem\<cdot>sb) \<rightleftharpoons> sb) \<sqsubseteq> (\<Lambda> sb. (sbDom\<cdot>sb = In)\<leadsto>spfStep_h1 In Out\<cdot>(Y (Suc i))\<cdot>(sbHdElem\<cdot>sb) \<rightleftharpoons> sb)"
+    show "(\<Lambda> sb. (ubDom\<cdot>sb = In)\<leadsto>spfStep_h1 In Out\<cdot>(Y i)\<cdot>(sbHdElem\<cdot>sb) \<rightleftharpoons> sb) \<sqsubseteq> (\<Lambda> sb. (ubDom\<cdot>sb = In)\<leadsto>spfStep_h1 In Out\<cdot>(Y (Suc i))\<cdot>(sbHdElem\<cdot>sb) \<rightleftharpoons> sb)"
       apply(simp add: below_cfun_def assms)
       by (smt below_option_def cfun_below_iff chain_1 fun_belowI po_class.chain_def some_below spf_pref_eq_2)
   qed    
-  have cont_lub2:"cont (\<lambda>x. \<Squnion>i. (sbDom\<cdot>x = In)\<leadsto>spfStep_h1 In Out\<cdot>(Y i)\<cdot>(sbHdElem\<cdot>x) \<rightleftharpoons> x)"
+  have cont_lub2:"cont (\<lambda>x. \<Squnion>i. (ubDom\<cdot>x = In)\<leadsto>spfStep_h1 In Out\<cdot>(Y i)\<cdot>(sbHdElem\<cdot>x) \<rightleftharpoons> x)"
     apply(rule cont2cont_lub,simp_all add: assms)
     apply(rule chainI)
     by (smt below_option_def cfun_below_iff chain_1 fun_belowI po_class.chain_def some_below spf_pref_eq_2)
-  have "\<And>b.  sbDom\<cdot>b= In \<Longrightarrow> \<forall>i . sbDom\<cdot>(spfStep_h1 In Out\<cdot>(Y i)\<cdot>(sbHdElem\<cdot>b) \<rightleftharpoons> b) = Out"
+  have "\<And>b.  ubDom\<cdot>b= In \<Longrightarrow> \<forall>i . ubDom\<cdot>(spfStep_h1 In Out\<cdot>(Y i)\<cdot>(sbHdElem\<cdot>b) \<rightleftharpoons> b) = Out"
     using assms by auto
-  then have spf_well_h:"\<And>b. sbDom\<cdot>b= In \<Longrightarrow> sbDom\<cdot>(\<Squnion>i. (spfStep_h1 In Out\<cdot>(Y i)\<cdot>(sbHdElem\<cdot>b) \<rightleftharpoons> b)) = Out"
+  then have spf_well_h:"\<And>b. ubDom\<cdot>b= In \<Longrightarrow> ubDom\<cdot>(\<Squnion>i. (spfStep_h1 In Out\<cdot>(Y i)\<cdot>(sbHdElem\<cdot>b) \<rightleftharpoons> b)) = Out"
     by (metis (no_types, lifting) chain_4 sbChain_dom_eq2)
-  have spf_well2:"spf_well (\<Lambda> x. \<Squnion>i. (sbDom\<cdot>x = In)\<leadsto>spfStep_h1 In Out\<cdot>(Y i)\<cdot>(sbHdElem\<cdot>x) \<rightleftharpoons> x)"
+  have spf_well2:"ufWell (\<Lambda> x. \<Squnion>i. (ubDom\<cdot>x = In)\<leadsto>spfStep_h1 In Out\<cdot>(Y i)\<cdot>(sbHdElem\<cdot>x) \<rightleftharpoons> x)"
     proof(rule spf_wellI)
     fix b:: "'m SB"    
-    assume "b \<in> dom (Rep_cfun (\<Lambda> x. \<Squnion>i. (sbDom\<cdot>x = In) \<leadsto> spfStep_h1 In Out\<cdot>(Y i)\<cdot>(sbHdElem\<cdot>x) \<rightleftharpoons> x))"
-    hence b_def:" b \<in> dom (\<lambda> x. \<Squnion>i. (sbDom\<cdot>x = In) \<leadsto> spfStep_h1 In Out\<cdot>(Y i)\<cdot>(sbHdElem\<cdot>x) \<rightleftharpoons> x)"
+    assume "b \<in> dom (Rep_cfun (\<Lambda> x. \<Squnion>i. (ubDom\<cdot>x = In) \<leadsto> spfStep_h1 In Out\<cdot>(Y i)\<cdot>(sbHdElem\<cdot>x) \<rightleftharpoons> x))"
+    hence b_def:" b \<in> dom (\<lambda> x. \<Squnion>i. (ubDom\<cdot>x = In) \<leadsto> spfStep_h1 In Out\<cdot>(Y i)\<cdot>(sbHdElem\<cdot>x) \<rightleftharpoons> x)"
       using cont_lub2 by auto
-    thus "sbDom\<cdot>b = In"
+    thus "ubDom\<cdot>b = In"
       by (metis (no_types, lifting) domIff h0_2)
-    thus "sbDom\<cdot>Rep_cfun (\<Lambda> x. \<Squnion>i. (sbDom\<cdot>x = In)\<leadsto>spfStep_h1 In Out\<cdot>(Y i)\<cdot>(sbHdElem\<cdot>x) \<rightleftharpoons> x)\<rightharpoonup>b = Out"
+    thus "ubDom\<cdot>Rep_cfun (\<Lambda> x. \<Squnion>i. (ubDom\<cdot>x = In)\<leadsto>spfStep_h1 In Out\<cdot>(Y i)\<cdot>(sbHdElem\<cdot>x) \<rightleftharpoons> x)\<rightharpoonup>b = Out"
       apply(subst beta_cfun,subst cont_lub2, simp,simp)
-      by (smt \<open>sbDom\<cdot>b = In\<close> \<open>\<And>b. sbDom\<cdot>b = In \<Longrightarrow> sbDom\<cdot> (\<Squnion>i. spfStep_h1 In Out\<cdot>(Y i)\<cdot> (sbHdElem\<cdot>b) \<rightleftharpoons> b) = Out\<close> h0_2 lub_eq option.sel)
+      by (smt \<open>ubDom\<cdot>b = In\<close> \<open>\<And>b. ubDom\<cdot>b = In \<Longrightarrow> ubDom\<cdot> (\<Squnion>i. spfStep_h1 In Out\<cdot>(Y i)\<cdot> (sbHdElem\<cdot>b) \<rightleftharpoons> b) = Out\<close> h0_2 lub_eq option.sel)
   next
     fix b2::"'m SB"
-    assume "sbDom\<cdot>b2 = In"
-    thus "b2 \<in> dom (Rep_cfun (\<Lambda> x. \<Squnion>i. (sbDom\<cdot>x = In)\<leadsto>spfStep_h1 In Out\<cdot>(Y i)\<cdot>(sbHdElem\<cdot>x) \<rightleftharpoons> x))"
+    assume "ubDom\<cdot>b2 = In"
+    thus "b2 \<in> dom (Rep_cfun (\<Lambda> x. \<Squnion>i. (ubDom\<cdot>x = In)\<leadsto>spfStep_h1 In Out\<cdot>(Y i)\<cdot>(sbHdElem\<cdot>x) \<rightleftharpoons> x))"
     proof -
       show ?thesis
-        by (metis (lifting) Abs_cfun_inverse2 \<open>sbDom\<cdot>b2 = In\<close> cont_lub2 domIff h0_2 option.distinct(1))
+        by (metis (lifting) Abs_cfun_inverse2 \<open>ubDom\<cdot>b2 = In\<close> cont_lub2 domIff h0_2 option.distinct(1))
     qed
   qed
-  have h0:"Rep_CSPF (\<Squnion>i. Abs_CSPF (\<lambda>sb. (sbDom\<cdot>sb = In)\<leadsto>spfStep_h1 In Out\<cdot>(Y i)\<cdot>(sbHdElem\<cdot>sb) \<rightleftharpoons> sb)) = (\<Squnion>i. (\<lambda>sb. (sbDom\<cdot>sb = In)\<leadsto>spfStep_h1 In Out\<cdot>(Y i)\<cdot>(sbHdElem\<cdot>sb) \<rightleftharpoons> sb))"
+  have h0:"Rep_cufun (\<Squnion>i. Abs_cufun (\<lambda>sb. (ubDom\<cdot>sb = In)\<leadsto>spfStep_h1 In Out\<cdot>(Y i)\<cdot>(sbHdElem\<cdot>sb) \<rightleftharpoons> sb)) = (\<Squnion>i. (\<lambda>sb. (ubDom\<cdot>sb = In)\<leadsto>spfStep_h1 In Out\<cdot>(Y i)\<cdot>(sbHdElem\<cdot>sb) \<rightleftharpoons> sb))"
    apply(subst lub_SPF)
    apply (simp add: a2)
    apply(subst lub_cfun)
@@ -539,50 +539,50 @@ proof(rule Cont.contI2, simp add: assms)
    apply(subst contlub_lambda,simp_all)
    apply(rule chainI)
    by (smt below_option_def cfun_below_iff chain_1 fun_belowI po_class.chain_def some_below spf_pref_eq_2)
-  have h1:"(\<lambda>sb. (sbDom\<cdot>sb = In)\<leadsto>spfStep_h1 In Out\<cdot>(\<Squnion>i. Y i)\<cdot>(sbHdElem\<cdot>sb) \<rightleftharpoons> sb) \<sqsubseteq> Rep_CSPF (\<Squnion>i. Abs_CSPF (\<lambda>sb. (sbDom\<cdot>sb = In)\<leadsto>spfStep_h1 In Out\<cdot>(Y i)\<cdot>(sbHdElem\<cdot>sb) \<rightleftharpoons> sb))"
+  have h1:"(\<lambda>sb. (ubDom\<cdot>sb = In)\<leadsto>spfStep_h1 In Out\<cdot>(\<Squnion>i. Y i)\<cdot>(sbHdElem\<cdot>sb) \<rightleftharpoons> sb) \<sqsubseteq> Rep_CSPF (\<Squnion>i. Abs_CSPF (\<lambda>sb. (ubDom\<cdot>sb = In)\<leadsto>spfStep_h1 In Out\<cdot>(Y i)\<cdot>(sbHdElem\<cdot>sb) \<rightleftharpoons> sb))"
   proof(simp add: h0, subst h0_1, rule fun_belowI)
     fix x::"'m SB"
-    have chain_sb:"chain (\<lambda>i.(\<lambda>sb. (sbDom\<cdot>sb = In)\<leadsto>spfStep_h1 In Out\<cdot>(Y i)\<cdot>(sbHdElem\<cdot>sb) \<rightleftharpoons> sb))"
+    have chain_sb:"chain (\<lambda>i.(\<lambda>sb. (ubDom\<cdot>sb = In)\<leadsto>spfStep_h1 In Out\<cdot>(Y i)\<cdot>(sbHdElem\<cdot>sb) \<rightleftharpoons> sb))"
     proof(rule chainI)
       fix i::nat
-      show "(\<lambda>sb. (sbDom\<cdot>sb = In)\<leadsto>spfStep_h1 In Out\<cdot>(Y i)\<cdot>(sbHdElem\<cdot>sb) \<rightleftharpoons> sb) \<sqsubseteq> (\<lambda>sb. (sbDom\<cdot>sb = In)\<leadsto>spfStep_h1 In Out\<cdot>(Y (Suc i))\<cdot>(sbHdElem\<cdot>sb) \<rightleftharpoons> sb)"
+      show "(\<lambda>sb. (ubDom\<cdot>sb = In)\<leadsto>spfStep_h1 In Out\<cdot>(Y i)\<cdot>(sbHdElem\<cdot>sb) \<rightleftharpoons> sb) \<sqsubseteq> (\<lambda>sb. (ubDom\<cdot>sb = In)\<leadsto>spfStep_h1 In Out\<cdot>(Y (Suc i))\<cdot>(sbHdElem\<cdot>sb) \<rightleftharpoons> sb)"
         by (smt below_option_def cfun_below_iff chain_1 fun_belowI po_class.chain_def some_below spf_pref_eq_2)
     qed 
-    show"(sbDom\<cdot>x = In)\<leadsto>\<Squnion>i. spfStep_h1 In Out\<cdot>(Y i)\<cdot>(sbHdElem\<cdot>x) \<rightleftharpoons> x \<sqsubseteq> (\<Squnion>i. (\<lambda>sb. (sbDom\<cdot>sb = In)\<leadsto>spfStep_h1 In Out\<cdot>(Y i)\<cdot>(sbHdElem\<cdot>sb) \<rightleftharpoons> sb)) x"
-    proof(cases "(sbDom\<cdot>x = In)")
+    show"(ubDom\<cdot>x = In)\<leadsto>\<Squnion>i. spfStep_h1 In Out\<cdot>(Y i)\<cdot>(sbHdElem\<cdot>x) \<rightleftharpoons> x \<sqsubseteq> (\<Squnion>i. (\<lambda>sb. (ubDom\<cdot>sb = In)\<leadsto>spfStep_h1 In Out\<cdot>(Y i)\<cdot>(sbHdElem\<cdot>sb) \<rightleftharpoons> sb)) x"
+    proof(cases "(ubDom\<cdot>x = In)")
       case True
       then show ?thesis
         by (smt chain_4 chain_sb lub_eq lub_fun po_eq_conv some_lub_chain_eq3)
     next
       case False
-      then have "(\<Squnion>i. (\<lambda>sb. (sbDom\<cdot>sb = In)\<leadsto>spfStep_h1 In Out\<cdot>(Y i)\<cdot>(sbHdElem\<cdot>sb) \<rightleftharpoons> sb)) x = None"
+      then have "(\<Squnion>i. (\<lambda>sb. (ubDom\<cdot>sb = In)\<leadsto>spfStep_h1 In Out\<cdot>(Y i)\<cdot>(sbHdElem\<cdot>sb) \<rightleftharpoons> sb)) x = None"
         by (simp add: chain_sb False lub_fun)
       then show ?thesis
         by (simp add: False)
     qed
   qed
-  show "Abs_CSPF (\<lambda>sb. (sbDom\<cdot>sb = In)\<leadsto>spfStep_h1 In Out\<cdot>(\<Squnion>i. Y i)\<cdot>(sbHdElem\<cdot>sb) \<rightleftharpoons> sb) \<sqsubseteq> (\<Squnion>i. Abs_CSPF (\<lambda>sb. (sbDom\<cdot>sb = In)\<leadsto>spfStep_h1 In Out\<cdot>(Y i)\<cdot>(sbHdElem\<cdot>sb) \<rightleftharpoons> sb))"
+  show "Abs_CSPF (\<lambda>sb. (ubDom\<cdot>sb = In)\<leadsto>spfStep_h1 In Out\<cdot>(\<Squnion>i. Y i)\<cdot>(sbHdElem\<cdot>sb) \<rightleftharpoons> sb) \<sqsubseteq> (\<Squnion>i. Abs_CSPF (\<lambda>sb. (ubDom\<cdot>sb = In)\<leadsto>spfStep_h1 In Out\<cdot>(Y i)\<cdot>(sbHdElem\<cdot>sb) \<rightleftharpoons> sb))"
     by(simp add: below_SPF_def below_cfun_def h1 assms)
 qed 
   
-lemma spfstep_insert: assumes "finite In" shows "spfStep In Out\<cdot>h= Abs_SPF (\<Lambda>  sb.  (sbDom\<cdot>sb = In) \<leadsto> (spfStep_h1 In Out\<cdot> h)\<cdot>(sbHdElem\<cdot>sb) \<rightleftharpoons> sb)"
+lemma spfstep_insert: assumes "finite In" shows "spfStep In Out\<cdot>h= Abs_ubundle (\<Lambda>  sb.  (ubDom\<cdot>sb = In) \<leadsto> (spfStep_h1 In Out\<cdot> h)\<cdot>(sbHdElem\<cdot>sb) \<rightleftharpoons> sb)"
   by(simp add: spfStep_cont spfStep_def assms)
 
-lemma spfstep_dom [simp]:assumes "finite cIn" shows"spfDom\<cdot>(spfStep cIn cOut\<cdot>f) = cIn"
-  by(simp add: spfstep_insert spfDomAbs assms)
+lemma spfstep_dom [simp]:assumes "finite cIn" shows"ufDom\<cdot>(spfStep cIn cOut\<cdot>f) = cIn"
+  by(simp add: spfstep_insert ufDomAbs assms)
 
-lemma spfstep_ran [simp]:assumes "finite cIn" shows"spfRan\<cdot>(spfStep cIn cOut\<cdot>f) = cOut"
+lemma spfstep_ran [simp]:assumes "finite cIn" shows"ufRan\<cdot>(spfStep cIn cOut\<cdot>f) = cOut"
   apply(simp add: spfstep_insert assms)
   apply(unfold spfran_least,simp add: assms)
-  by (simp add: assms spfDomAbs)
+  by (simp add: assms ufDomAbs)
    
-lemma sbHdElem_dom[simp]:"dom (sbHdElem\<cdot>sb) = sbDom\<cdot>sb"
+lemma sbHdElem_dom[simp]:"dom (sbHdElem\<cdot>sb) = ubDom\<cdot>sb"
   by(simp add: sbHdElem_def sbHdElem_cont)
 
-lemma sbHdElem_channel: assumes "sbDom\<cdot>sb = In"  and "c \<in> In" and "sb . c \<noteq> \<bottom>" shows "sbHdElem\<cdot>sb\<rightharpoonup>c \<noteq> \<bottom>"
+lemma sbHdElem_channel: assumes "ubDom\<cdot>sb = In"  and "c \<in> In" and "sb . c \<noteq> \<bottom>" shows "sbHdElem\<cdot>sb\<rightharpoonup>c \<noteq> \<bottom>"
     by(simp add: sbHdElem_def sbHdElem_cont assms)    
     
-lemma stepstep_step: assumes "sbDom\<cdot>sb = In" and "\<forall>c\<in>In. sb . c \<noteq> \<bottom>" and "finite In" shows "spfStep In Out\<cdot>f\<rightleftharpoons>sb = (f ((inv convDiscrUp)(sbHdElem\<cdot>sb)))\<rightleftharpoons>sb"
+lemma stepstep_step: assumes "ubDom\<cdot>sb = In" and "\<forall>c\<in>In. sb . c \<noteq> \<bottom>" and "finite In" shows "spfStep In Out\<cdot>f\<rightleftharpoons>sb = (f ((inv convDiscrUp)(sbHdElem\<cdot>sb)))\<rightleftharpoons>sb"
 proof(simp add: spfstep_insert assms)
   fix c::channel
   have "\<forall>c\<in>In. sb . c \<noteq> \<bottom> \<longrightarrow> sbHdElem\<cdot>sb\<rightharpoonup>c \<noteq> \<bottom>"
@@ -597,7 +597,7 @@ proof(simp add: spfstep_insert assms)
   qed
   then have h1_h:"In \<subseteq> dom (sbHdElem\<cdot>sb) \<and> (\<forall>c\<in>In. sbHdElem\<cdot>sb\<rightharpoonup>c \<noteq> \<bottom>)"
     by(simp add: assms)
-  have "spfDom\<cdot>(f (spfStep_h2 In (sbHdElem\<cdot>sb))) = In \<and> spfRan\<cdot>(f (spfStep_h2 In (sbHdElem\<cdot>sb))) = Out" (* in Lemma assumptions for f*)
+  have "ufDom\<cdot>(f (spfStep_h2 In (sbHdElem\<cdot>sb))) = In \<and> ufRan\<cdot>(f (spfStep_h2 In (sbHdElem\<cdot>sb))) = Out" (* in Lemma assumptions for f*)
     sorry
   then have h1:"spfStep_h1 In Out\<cdot>f\<cdot>(sbHdElem\<cdot>sb) = (f (spfStep_h2 In (sbHdElem\<cdot>sb)))"
     by(simp add: spfstep_h1_insert h1_h assms)

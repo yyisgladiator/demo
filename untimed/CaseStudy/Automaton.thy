@@ -7,7 +7,7 @@
 
 theory Automaton
 
-imports "../SPF" "../../Event"
+imports "../SPF" "../../Event" "../SpfStep"
 begin
 default_sort type
 
@@ -45,8 +45,8 @@ definition getRan :: "('s, 'm::message) automaton \<Rightarrow> channel set" whe
 
 (* HK is defining this. returns the fixpoint *)
 (* thm spfStateFix_def *)
-definition myFixxer :: "channel set \<Rightarrow> channel set \<Rightarrow> (('s \<Rightarrow> 'm::message SPF)\<rightarrow>('s \<Rightarrow> 'm SPF)) \<rightarrow> ('s \<Rightarrow> 'm SPF)" where
-"myFixxer = undefined"
+(* definition myFixxer :: "channel set \<Rightarrow> channel set \<Rightarrow> (('s \<Rightarrow> 'm::message SPF)\<rightarrow>('s \<Rightarrow> 'm SPF)) \<rightarrow> ('s \<Rightarrow> 'm SPF)" where
+"myFixxer = undefined" *)
 
 definition spfStep :: "channel set\<Rightarrow> channel set \<Rightarrow> ((channel \<Rightarrow> 'm option) \<Rightarrow> 'm SPF) \<rightarrow> 'm SPF" where
 "spfStep = undefined"
@@ -77,7 +77,7 @@ lemma helper_cont: "cont (\<lambda>h. (\<lambda> e. spfConc (snd (f (s,e)))\<cdo
 
 (* As defined in Rum96 *)
 definition h :: "('s::type, 'm::message) automaton \<Rightarrow> ('s \<Rightarrow> 'm SPF)" where
-"h automat = myFixxer (getDom automat)(getRan automat)\<cdot>
+"h automat = spfStateFix (getDom automat)(getRan automat)\<cdot>
      (\<Lambda> h. (\<lambda>s. spfStep  (getDom automat) (getRan automat)\<cdot>(helper (getTransition automat) s\<cdot>h)))"
 
 lemma h_cont: "cont (\<lambda> h. (\<lambda>s. spfStep  (getDom automat) (getRan automat)\<cdot>(helper (getTransition automat) s\<cdot>h)))"
@@ -106,11 +106,11 @@ lemma stepstep_step: "spfStep In Out\<cdot>f\<rightleftharpoons>sb = (f ((inv co
 
 section \<open>Lemma about h\<close>
 
-lemma h_dom [simp]: "spfDom\<cdot>(h automat s) = getDom automat"
+lemma h_dom [simp]: "ufDom\<cdot>(h automat s) = getDom automat"
   by (metis (no_types, lifting) Abs_cfun_inverse2 h_cont h_def spfStateFix_fix spfstep_dom spfstep_ran)
 
-lemma h_ran [simp]: "spfRan\<cdot>(h automat s) = getRan automat"
-  by (metis spf_ran_2_tsbdom2 spfstep_dom spfstep_ran stepstep_step)
+lemma h_ran [simp]: "ufRan\<cdot>(h automat s) = getRan automat"
+  by (metis Automaton.spfstep_dom Automaton.spfstep_ran Automaton.stepstep_step ufran_2_ubdom2)
 
 lemma h_unfolding: "(h automat s) = spfStep (getDom automat) (getRan automat)\<cdot>(helper (getTransition automat) s\<cdot>(h automat))"
   by (metis (no_types, lifting) Abs_cfun_inverse2 h_cont h_def spfStateFix_fix spfstep_dom spfstep_ran)
@@ -184,7 +184,8 @@ section \<open>Automaton Functions\<close>
   bool        \<Rightarrow> maps to channel c2, in MAA calles "YYYY" *)
 lift_definition createOutput :: "nat \<Rightarrow> bool \<Rightarrow> myM SB" is
 "\<lambda>n b. ([c1 \<mapsto> \<up>(N n), c2 \<mapsto> \<up>(B b)])"
-  by(auto simp add: sb_well_def)
+  apply(auto simp add: ubWell_def)
+  sorry (* fails because stream instantiation is not there *)
 
 function test4 :: "(channel \<rightharpoonup> nat stream) \<Rightarrow> bool" where
   "test4 [c1 \<mapsto> a] = True" |
