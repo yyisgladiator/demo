@@ -32,6 +32,36 @@ definition spfConc :: "'m SB \<Rightarrow> 'm SPF \<rightarrow> 'm SPF" where
 
 
 subsection \<open>more general lemma\<close>
+subsection \<open>SPF_apply_Lub\<close>
+
+text{* Intro rule for spf well *}
+lemma ufwellI:  assumes "\<And>b. (b \<in> dom (Rep_cfun f)) \<Longrightarrow> (ubDom\<cdot>b = In)"
+  and "(\<And>b. b \<in> dom (Rep_cfun f) \<Longrightarrow> ubDom\<cdot>((Rep_cfun f)\<rightharpoonup>b) = Out)"
+  and "\<And>b2. (ubDom\<cdot>b2 = In) \<Longrightarrow> (b2 \<in> dom (Rep_cfun f))"
+  shows "ufWell f"
+  by (metis assms(1) assms(2) assms(3) ubDom_ubundle_def ufun_wellI)
+  
+
+
+(* move this to ufun *)
+lemma spfapply_lub: assumes "chain Y"
+  shows "(\<Squnion> i. Y i) \<rightleftharpoons> sb = (\<Squnion> i. ((Y i)  \<rightleftharpoons> sb))"
+proof -
+  have f1: "chain (\<lambda>n. Rep_ufun (Y n))"
+    by (simp add: assms)
+  hence "ufWell (\<Squnion>n. Rep_ufun (Y n))"
+    by (simp add: admD ufWell_adm2)
+  hence "Rep_cufun (Lub Y) = Rep_cfun (\<Squnion>n. Rep_ufun (Y n))"
+    by (simp add: assms lub_ufun)
+  hence "Rep_cufun (Lub Y) sb = (\<Squnion>n. Rep_cufun (Y n) sb)"
+    using f1 contlub_cfun_fun by auto
+  hence "(\<Squnion>n. \<lambda>n. Rep_cufun (Y n) sb\<rightharpoonup>n) = Lub Y \<rightleftharpoons> sb"
+    using f1 by (simp add: op_the_lub)
+  thus ?thesis
+    by auto
+qed
+
+
 
 
 subsection \<open>spfStateLeast\<close>
