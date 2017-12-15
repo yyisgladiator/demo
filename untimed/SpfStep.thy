@@ -393,6 +393,9 @@ lemma spfStep_inSPF_mono[simp]:"monofun (\<lambda>b. spfStep_h1 In Out\<cdot> h\
   apply(rule monofunI)
   by (metis below_ufun_def below_option_def below_refl monofun_cfun monofun_cfun_arg)
    
+lemma spf_contI2 [simp]: assumes "cont g"
+  shows "cont (\<lambda>b. (ubDom\<cdot>b = In)\<leadsto>g b)"
+  by (metis (no_types) assms if_then_cont ubDom_ubundle_def)
     
 lemma spfStep_inSPF_cont[simp]:assumes "finite In" shows"cont (\<lambda> sb.  (ubDom\<cdot>sb = In) \<leadsto> (spfStep_h1 In Out\<cdot> h)\<cdot>(sbHdElem\<cdot>sb) \<rightleftharpoons> sb)"  
 proof(rule spf_contI2,rule Cont.contI2,auto)
@@ -402,9 +405,9 @@ proof(rule spf_contI2,rule Cont.contI2,auto)
   have h1:"spfStep_h1 In Out\<cdot> h\<cdot>(sbHdElem\<cdot>(\<Squnion>i. Y i)) = (\<Squnion>i. spfStep_h1 In Out\<cdot> h\<cdot>(sbHdElem\<cdot>(Y i)))"
     by(simp add: chain contlub_cfun_fun contlub_cfun_arg)
   have h_true:"ubDom\<cdot>(\<Squnion>i. Y i) = In \<Longrightarrow> \<forall>i. ubDom\<cdot>(Y i) = In"
-    by (simp add: chain sbChain_dom_eq2)
+    by (simp add: chain)
   have h_false:"ubDom\<cdot>(\<Squnion>i. Y i) \<noteq> In \<Longrightarrow> \<forall>i. ubDom\<cdot>(Y i) \<noteq> In"
-    by (simp add: chain sbChain_dom_eq2)
+    by (simp add: chain)
   have "(\<Squnion>i. spfStep_h1 In Out\<cdot> h\<cdot>(sbHdElem\<cdot>(Y i))) \<rightleftharpoons> (Y ia) = (\<Squnion>i. spfStep_h1 In Out\<cdot> h\<cdot>(sbHdElem\<cdot>(Y i)) \<rightleftharpoons> (Y ia))"
     by (simp add: spfapply_lub chain)
   then have "\<forall>ia. (\<Squnion>i. spfStep_h1 In Out\<cdot> h\<cdot>(sbHdElem\<cdot>(Y i))) \<rightleftharpoons> (Y ia) = (\<Squnion>i. spfStep_h1 In Out\<cdot> h\<cdot>(sbHdElem\<cdot>(Y i)) \<rightleftharpoons> (Y ia))"
