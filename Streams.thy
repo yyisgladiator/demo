@@ -246,6 +246,13 @@ text {* @{term sscanl}: Apply a function elementwise to the input stream.
 definition sscanl     :: "('o \<Rightarrow> 'i \<Rightarrow> 'o) \<Rightarrow> 'o \<Rightarrow> ('i, 'o) spf" where
 "sscanl f q \<equiv> \<Lambda> s. \<Squnion>i. SSCANL i f q s"
 
+(* scanline Advanced :D  *)
+(* or stateful ... *)
+(* The user has more control. Instead of the last output ('b)  a state ('s) is used as next input *)
+definition sscanlA :: "('s \<Rightarrow>'a \<Rightarrow> ('b \<times>'s)) \<Rightarrow> 's  \<Rightarrow> 'a stream \<rightarrow> 'b stream" where
+"sscanlA f s0 \<equiv> \<Lambda> s. sprojfst\<cdot>(sscanl (\<lambda>(_,b). f b) (undefined, s0)\<cdot>s)"
+
+
 text {* @{term siterate}: Create a stream by repeated application of
   a function to an element. The generated stream starts with @{text "a"},
   @{text "f(a)"}, @{text "f(f(a))"}, and so on. *}
@@ -2481,6 +2488,30 @@ proof -
   obtain b bs2 where b_def: "bs = \<up>b \<bullet> bs2" by (metis as3 surj_scons) 
   hence "#(szip\<cdot>(\<up>a \<bullet> as)\<cdot>(\<up>b \<bullet> bs2)) = min (#(\<up>a \<bullet> as)) (#(\<up>b \<bullet> bs2))" by (simp add: as2 min_def) 
   thus "#(szip\<cdot>(u && as)\<cdot>bs) = min (#(u && as)) (#bs)" by (metis a_def b_def lscons_conv) 
+qed
+
+(* ----------------------------------------------------------------------- *)
+subsection {* @{term sscanlA} *}
+(* ----------------------------------------------------------------------- *)
+
+lemma sscanla_cont: "cont (\<lambda>s. sprojfst\<cdot>(sscanl (\<lambda>(_,b). f b) (undefined, s0)\<cdot>s))"
+  by simp
+
+lemma sscanla_len [simp]: "#(sscanlA f s0\<cdot>s) = #s"
+  by(simp add: sscanlA_def slen_sprojfst)
+
+lemma sscanla_bot [simp]: "sscanlA f s0\<cdot>\<bottom> = \<bottom>"
+  by (simp add: sscanlA_def)
+
+lemma sscanla_step [simp]: "sscanlA f s0\<cdot>(\<up>a \<bullet> as) = \<up>(fst (f s0 a)) \<bullet> sscanlA f (snd (f s0 a))\<cdot>as"
+  apply(simp add: sscanlA_def sprojfst_def)
+proof -
+  have "(case f s0 a of (a, x) \<Rightarrow> f x) = (case (undefined::'a, snd (f s0 a)) of (a, x) \<Rightarrow> f x)"
+by (metis (no_types) old.prod.case prod.collapse)
+  then have "\<up>(shd as) \<bullet> srt\<cdot>as = as \<longrightarrow> sscanl (\<lambda>(a, y). f y) (f s0 a)\<cdot>as = sscanl (\<lambda>(a, y). f y) (undefined, snd (f s0 a))\<cdot> (\<up>(shd as) \<bullet> srt\<cdot>as)"
+    by (metis (no_types) sscanl_scons)
+  then show "\<up>(fst (f s0 a)) \<bullet> smap fst\<cdot> (sscanl (\<lambda>(a, y). f y) (f s0 a)\<cdot> as) = \<up>(fst (f s0 a)) \<bullet> smap fst\<cdot> (sscanl (\<lambda>(a, y). f y) (undefined, snd (f s0 a))\<cdot> as)"
+    using surj_scons by force
 qed
 
 
