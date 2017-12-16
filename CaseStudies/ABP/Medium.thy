@@ -650,14 +650,6 @@ lemma smed_slen2smed:
      \<Longrightarrow> sprojfst\<cdot>(srcdups\<cdot>msg) = sprojfst\<cdot>(srcdups\<cdot>(sMed\<cdot>msg\<cdot>ora))"
   by (metis slen_sprojfst smed_slen2smed2)
 
-lemma tsmed_tsabs_slen2tsmed_tsabs:
-  "#(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>msg))) \<noteq> \<infinity> \<Longrightarrow> #({True} \<ominus> ora) = \<infinity> 
-    \<Longrightarrow> #(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>msg))) = #(tsAbs\<cdot>(tsRemDups\<cdot>(tsProjSnd\<cdot>msg)))
-    \<Longrightarrow> #(tsAbs\<cdot>(tsRemDups\<cdot>(tsProjSnd\<cdot>msg))) = #(tsAbs\<cdot>(tsRemDups\<cdot>(tsProjSnd\<cdot>(tsMed\<cdot>msg\<cdot>ora))))
-    \<Longrightarrow> tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>msg)) = tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(tsMed\<cdot>msg\<cdot>ora)))"
-  apply (simp add: tsprojfst_tsabs tsprojsnd_tsabs tsremdups_tsabs tsmed_tsabs ora_inf)
-  using smed_slen2smed by auto
-
 (* property 0 *)
 
 lemma prop0_h:"#(srcdups\<cdot>(s\<bullet>s2)) \<le> #(srcdups\<cdot>(s\<bullet>\<up>b\<bullet>s2))"

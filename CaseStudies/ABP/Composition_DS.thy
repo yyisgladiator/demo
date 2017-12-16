@@ -8,7 +8,7 @@
 chapter {* Alternating Bit Protocol *}       
                                                             
 theory Composition_DS
-imports Medium Receiver Prop0_DS
+imports Medium Receiver
 
 begin
 default_sort countable
