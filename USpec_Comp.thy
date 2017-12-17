@@ -125,10 +125,14 @@ proof -
   then show ?thesis
     by (simp add: uspecParComp_def)
 qed
+
+
 lemma uspecParCompWell: assumes "uspec_parcomp_well S1 S2"
   shows "uspecWell {ufunclParComp\<cdot>f1\<cdot>f2 | f1 f2.  f1\<in>(Rep_rev_uspec S1) \<and> f2\<in>(Rep_rev_uspec S2)}"
-  apply (simp add: uspecWell_def)
-    sorry
+    apply (simp add: uspecWell_def)
+    apply (rule_tac x="uspecDom S1 \<union> uspecDom S2" in exI)
+    apply (rule_tac x="uspecRan S1 \<union> uspecRan S2" in exI)
+    by (metis (no_types, hide_lams) assms sup_idem uspec_dom_eq uspec_parcomp_well_def uspec_ran_eq)
 
 
 lemma inv_rev_rev: "inv Rev (Rev S) = S"
@@ -180,9 +184,8 @@ proof -
         using f2 f3 f3_f4_def by auto
     qed
   qed
-  then have "Abs_rev_uspec
-     {ufunclParComp\<cdot>f1\<cdot>f2 |(f1::'a) f2::'a. f1 \<in> Rep_rev_uspec (S1 \<parallel> S2) \<and> f2 \<in> Rep_rev_uspec S3} =
-    Abs_rev_uspec {ufunclParComp\<cdot>f1\<cdot>f2 |(f1::'a) f2::'a. f1 \<in> Rep_rev_uspec S1 \<and> f2 \<in> Rep_rev_uspec (S2 \<parallel> S3)}"
+  then have "Abs_rev_uspec {ufunclParComp\<cdot>f1\<cdot>f2 |(f1::'a) f2::'a. f1 \<in> Rep_rev_uspec (S1 \<parallel> S2) \<and> f2 \<in> Rep_rev_uspec S3} =
+              Abs_rev_uspec {ufunclParComp\<cdot>f1\<cdot>f2 |(f1::'a) f2::'a. f1 \<in> Rep_rev_uspec S1 \<and> f2 \<in> Rep_rev_uspec (S2 \<parallel> S3)}"
     by simp
   then show ?thesis
     by (simp add: uspecParComp_def)
