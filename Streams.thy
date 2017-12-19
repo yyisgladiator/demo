@@ -3203,7 +3203,7 @@ proof
   proof (rule ccontr)
     assume "srcdups\<cdot>(stake (Suc (Suc n))\<cdot>s) \<noteq> srcdups\<cdot>s"
     moreover have "srcdups\<cdot>(stake (Suc n)\<cdot>s) \<sqsubseteq> srcdups\<cdot>(stake (Suc (Suc n))\<cdot>s)"
-      by (simp add: cont_pref_eq1I stake_mono)
+      by (simp add: monofun_cfun_arg stake_mono)
     ultimately have "srcdups\<cdot>(stake (Suc n)\<cdot>s) \<noteq> srcdups\<cdot>s"
       by (metis below_antisym monofun_cfun_arg stream.take_below)
     then show "False"
