@@ -104,14 +104,8 @@ lemma tssnd_h_nbot [simp]: "msg \<noteq> \<bottom> \<Longrightarrow> acks \<note
   by (metis tsmlscons_bot2 tsmlscons_nbot tssnd_h_mlscons_nack up_defined)
 
 (* tstickcount lemma for sender *)
-lemma tssnd_h_tstickcount_hhhh:"#\<surd> msg \<le> #\<surd> tsSnd_h\<cdot>msg\<cdot>(updis a &&\<surd> acks)\<cdot>(Discr ack) \<Longrightarrow>
-    as \<noteq> \<bottom> \<Longrightarrow>
-    min (#\<surd> msg) (#\<surd> acks) = #\<surd> msg \<Longrightarrow> min (lnsuc\<cdot>(#\<surd> msg)) (#\<surd> acks) 
-        \<le> lnsuc\<cdot>(#\<surd> tsSnd_h\<cdot>msg\<cdot>(updis a &&\<surd> acks)\<cdot>(Discr ack))"
-by (simp add: min.coboundedI1)  
-  
 lemma tssnd_h_tstickcount_hhh:"min (#\<surd> msg) (#\<surd> acks) \<le> #\<surd> tsSnd_h\<cdot>msg\<cdot>(updis a &&\<surd> acks)\<cdot>(Discr ack) 
-    \<Longrightarrow> as \<noteq> \<bottom> \<Longrightarrow> min (lnsuc\<cdot>(#\<surd> msg)) (#\<surd> acks) \<le> lnsuc\<cdot>(#\<surd> tsSnd_h\<cdot>msg\<cdot>(updis a &&\<surd> acks)\<cdot>(Discr ack))"
+    \<Longrightarrow> min (lnsuc\<cdot>(#\<surd> msg)) (#\<surd> acks) \<le> lnsuc\<cdot>(#\<surd> tsSnd_h\<cdot>msg\<cdot>(updis a &&\<surd> acks)\<cdot>(Discr ack))"
 apply(case_tac "min (#\<surd> msg) (#\<surd> acks) = (#\<surd> acks)",simp)
 apply (metis (no_types, lifting) leD le_less_trans less_lnsuc lnsuc_lnle_emb min_le_iff_disj 
     not_le_imp_less)
