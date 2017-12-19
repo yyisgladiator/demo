@@ -11,14 +11,12 @@ session "TStream" (mustWork) = "Streams" +
 session "ABPSorry" (mustWork) = "TStream" + 
   options [quick_and_dirty = true]
   theories
-    "CaseStudies/ABP/Composition"
-    "CaseStudies/ABP/Composition_DS"    
+    "CaseStudies/ABP/Composition"   
     "CaseStudies/ABP/Sender"
  
 session "ABP" (canFail) = "TStream" + 
   options [quick_and_dirty = false]
   theories
     "CaseStudies/ABP/Composition"
-    "CaseStudies/ABP/Composition_DS"    
     "CaseStudies/ABP/Sender"
 
