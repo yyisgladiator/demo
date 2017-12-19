@@ -180,6 +180,11 @@ next
     by(simp add: tssnd_h_tstickcount_hh)
 qed
 
+lemma tssnd_tstickcount:
+  "min (#\<surd>msg) (#\<surd>acks) < \<infinity> \<Longrightarrow> min (#\<surd>msg) (#\<surd>acks) < #\<surd>tsSnd\<cdot>msg\<cdot>acks"
+  by (metis (no_types, lifting) leI le_less_trans less_lnsuc ln_less tssnd_h_tstickcount 
+      tssnd_insert tstickcount_delayfun)
+
 lemma tssnd_h_inftick_inftick: "tsSnd_h\<cdot>tsInfTick\<cdot>tsInfTick\<cdot>ack = tsInfTick" 
   by (metis (no_types, lifting) Rep_Abs delayfun_insert s2sinftimes sinftimes_unfold tick_msg 
       tsInfTick.rep_eq tsInfTick_def tsconc_insert tsconc_rep_eq tssnd_h_delayfun)
@@ -570,16 +575,17 @@ lemma tssnd_alt_bit:
 text {* #fds = min{#i, #fas+1} where fds = map(\<alpha>.ds, \<Pi>1), fas = \<alpha>.as 
         when an acknowledgment is received then the next data next data element will eventually
         be transmitted given that there are more data elements to transmit *}
-lemma tssnd_ack2trans: "#\<surd>as = \<infinity> \<Longrightarrow>
-   #(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(tsSnd_h\<cdot>i\<cdot>as\<cdot>ack))))
-     = min (#(tsAbs\<cdot>i)) (lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>as))))"
+lemma tssnd_ack2trans: 
+  "tsAbs\<cdot>(tsRemDups\<cdot>as) \<sqsubseteq> tsAbs\<cdot>(tsRemDups\<cdot>(tsProjSnd\<cdot>(tsSnd_h\<cdot>i\<cdot>as\<cdot>(Discr ack)))) \<Longrightarrow> 
+   #\<surd>as = \<infinity> \<Longrightarrow> #(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(tsSnd_h\<cdot>i\<cdot>as\<cdot>(Discr ack)))))
+                  = min (#(tsAbs\<cdot>i)) (lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>as))))"
   oops
 
 text {* #i > #fas \<Longrightarrow> #ds = \<infinity> where fas = \<alpha>.as
         if a data element is never acknowledged despite repetitive transmission by the sender 
         then the sender never stops transmitting this data element *}
 lemma tssnd_nack2inftrans: "#\<surd>as = \<infinity> \<Longrightarrow> 
-  #(tsAbs\<cdot>i) > #(tsAbs\<cdot>(tsRemDups\<cdot>as)) \<Longrightarrow> #(tsAbs\<cdot>(tsSnd_h\<cdot>i\<cdot>as\<cdot>ack)) = \<infinity>"
+  #(tsAbs\<cdot>i) > #(tsAbs\<cdot>(tsRemDups\<cdot>as)) \<Longrightarrow> #(tsAbs\<cdot>(tsSnd_h\<cdot>i\<cdot>as\<cdot>(Discr ack))) = \<infinity>"
   oops
   
 lemma tssnd_as_inftick_h9:"(i::'a tstream) \<noteq> \<bottom> \<Longrightarrow>
@@ -842,7 +848,7 @@ next
   using less_lnsuc trans_lnle tssnd_as_inftick_h2 by blast    
 qed     
     
-lemma tssnd_as_inftick:"#(tsAbs\<cdot>i) > #(tsAbs\<cdot>(tsRemDups\<cdot>as)) \<Longrightarrow> lnsuc\<cdot>(#\<surd>as) \<le> #\<surd>(tsSnd\<cdot>i\<cdot>as)"
+lemma tssnd_as_inftick: "#(tsAbs\<cdot>i) > #(tsAbs\<cdot>(tsRemDups\<cdot>as)) \<Longrightarrow> lnsuc\<cdot>(#\<surd>as) \<le> #\<surd>(tsSnd\<cdot>i\<cdot>as)"
 apply(simp add: tsSnd_def)
 apply(simp add: delayFun_def)
 apply(simp add: tsremdups_tsabs)
