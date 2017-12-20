@@ -38,6 +38,8 @@ subsection \<open>ubLeast\<close>
   
 (* the optionLeast of the optionCpo is well-formed  *)
 lemma ubleast_well: "ubWell (optionLeast cs)"
+  apply(simp add: ubWell_def optionLeast_def)
+    using usOkay_bot
   sorry
 
 (* our definition of ubLeast is equal optionLeast  *)
