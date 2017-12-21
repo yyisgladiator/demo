@@ -5,7 +5,7 @@
 *)
 
 theory UBundle
-  imports UnivClasses
+  imports UnivClasses Channel "inc/OptionCpo"
 begin
 
   
@@ -122,6 +122,10 @@ definition ubEqCommon:: " 'M\<^sup>\<Omega> => 'M\<^sup>\<Omega> => bool" where
 "ubEqCommon b1 b2\<equiv> ubEqSelected (ubDom\<cdot>b1 \<inter> ubDom\<cdot>b2) b1 b2"
 
 
+definition UB :: "channel set \<Rightarrow> 'm ubundle set" where
+  "UB cs = {b. ubDom\<cdot>b = cs}"
+
+
 text {* @{text " ubPrefixSelected"} prefix relation on selected channels *}
 definition ubPrefixSelected:: "channel set \<Rightarrow> 'M\<^sup>\<Omega> \<Rightarrow> 'M\<^sup>\<Omega> \<Rightarrow> bool" where
 "ubPrefixSelected cs b1 b2 \<equiv> (b1\<bar>cs \<sqsubseteq> b2\<bar>cs)"
@@ -135,7 +139,6 @@ definition ubPrefixCommon:: "'M\<^sup>\<Omega> \<Rightarrow> 'M\<^sup>\<Omega> \
 text {* @{text " ubMapStream"} applies function to all streams *}
 definition ubMapStream:: "('M \<Rightarrow> 'M) \<Rightarrow>'M\<^sup>\<Omega> \<Rightarrow> 'M\<^sup>\<Omega>" where
 "ubMapStream f b =  Abs_ubundle (\<lambda>c. (c\<in>ubDom\<cdot>b) \<leadsto> f (b . c))"
-
 
 (****************************************************)
 section\<open>Lemmas\<close>
@@ -155,6 +158,10 @@ theorem ubrep_ubabs[simp]: assumes "ubWell f" shows "Rep_ubundle (Abs_ubundle f)
 
 theorem ubabs_ubrep[simp]: shows "Abs_ubundle (Rep_ubundle f) = f"
   by (simp add: Rep_ubundle_inverse)
+
+lemma cont_Abs_UB[simp]: assumes "cont g" and "\<forall>x. ub_well (g x)"
+  shows "cont (\<lambda>x. Abs_ubundle (g x))"
+  sorry
 
 (* a chain of 'M\<^sup>\<Omega>s is also a chain after applying Rep_ubundle *)
 lemma ubrep_chain[simp]: assumes "chain S"
@@ -221,7 +228,19 @@ lemma ubwellI: assumes "\<And> c. c \<in> dom f \<Longrightarrow> usOkay c (f\<r
   shows "ubWell f"
   using assms ubWell_def by blast
 
-    
+lemma less_UBI: assumes "dom (Rep_ubundle b1) = dom (Rep_ubundle b2)"
+    and "\<And>c. c \<in> dom (Rep_ubundle b1) \<Longrightarrow> the ((Rep_ubundle b1) c) \<sqsubseteq> the ((Rep_ubundle b2) c)"
+  shows "b1 \<sqsubseteq> b2"
+  using assms(1) assms(2) ubrep_lessI by blast
+
+lemma less_ubLub1: assumes "chain S"
+  shows "the (Rep_ubundle (S i) c) \<sqsubseteq> the (Rep_ubundle (\<Squnion>i. S i) c)"
+  by (simp add: assms ubrep_less_lub1)
+
+lemma less_ubLub2: assumes "chain S" and "range S <| u"
+  shows "the (Rep_ubundle (\<Squnion>i. S i) c) \<sqsubseteq> the (Rep_ubundle u c)"
+  by (simp add: assms(1) assms(2) ubrep_less_lub2)
+
 subsection \<open>ubDom\<close>
 
 
@@ -261,6 +280,8 @@ lemma ubdom_channel_usokay[simp]: assumes "c \<in> ubDom\<cdot>ub"
   shows "usOkay c ((Rep_ubundle ub)\<rightharpoonup>c)"
   using assms ubrep_well ubdom_insert ubWell_def by blast
 
+lemma ubdom_empty [simp]: "ubDom\<cdot>(Abs_ubundle empty) = {}"
+  by (simp add: ubWell_empty ubdom_ubrep_eq)
     
 subsection \<open>ubGetCh\<close>
 
@@ -268,6 +289,9 @@ subsection \<open>ubGetCh\<close>
 (* ubGetCh is cont *)
 lemma ubgetch_cont [simp]: "cont (\<lambda>ub. ((Rep_ubundle ub) \<rightharpoonup> c))"
   by (smt Prelude.contI2 below_ubundle_def fun_below_iff lub_eq ubrep_lub_eval monofun_def not_below2not_eq op_the_mono)
+
+lemma ubgetch_cont2[simp]: "cont (\<lambda>ub uc. the ((Rep_ubundle ub) uc))"
+  by simp
 
 (* the element in a channel is the same when it's lifted  *)
 lemma ubgetch_ubrep_eq: "ubWell ub \<Longrightarrow> (Abs_ubundle ub) . c= ub \<rightharpoonup> c"
@@ -363,13 +387,18 @@ lemma ubRestrict_twice [simp]: "ubRestrict cs2\<cdot>(ubRestrict cs1\<cdot>ub) =
 
 (* the element in the channel after restriction is equal the unrestrict bundle *)
 lemma ubgetch_ubrestrict [simp]: assumes "c \<in> cs"
-  shows "(ubRestrict cs\<cdot>ub) . c= ub . c "
+  shows "(ubRestrict cs\<cdot>ub) . c = ub . c "
   by (metis (no_types, lifting) Abs_cfun_inverse2 assms restrict_in ubGetCh_def ubgetch_cont ubgetch_ubrep_eq ubrestrict_insert ubrestrict_well)
 
 (* the bundles after applying ubRestrict have the same below relation like its second  *)
 lemma ubrestrict_belowI1: assumes "(a \<sqsubseteq> b)"
   shows "ubRestrict cs\<cdot>a \<sqsubseteq> ubRestrict cs\<cdot>b"
   using assms monofun_cfun_arg by auto
+
+lemma ubrestrict_below: assumes "chain Y" and "cont h"
+  shows "(ubRestrict (h (\<Squnion>i. Y i))\<cdot>(g (ubDom\<cdot>(\<Squnion>i. Y i)))) \<sqsubseteq>
+         (\<Squnion>i. (ubRestrict (h (Y i))\<cdot>(g (ubDom\<cdot>(\<Squnion>i. Y i)))))"
+    sorry
 
 lemma ubrestrict_id [simp]: assumes "ubDom\<cdot>ub \<subseteq> cs" shows "ubRestrict cs\<cdot>ub = ub"
   by (metis (mono_tags, lifting) assms contra_subsetD inf.absorb_iff1 ubgetchI ubgetch_ubrestrict ubrestrict_ubdom2)
@@ -476,7 +505,7 @@ lemma ubsetch_insert: assumes "usOkay c s"
   shows "(ubSetCh\<cdot>b) c s = b \<uplus> Abs_ubundle [c \<mapsto> s]"
   by (simp add: ubSetCh_def)
 
-(*    
+
   subsection \<open>ubRemCh\<close>
 (* ubRemCh *)
 
@@ -489,6 +518,18 @@ lemma ubremch_ubdom [simp]: "ubDom\<cdot>(ubRemCh c\<cdot>b) = ubDom\<cdot>b - {
 lemma ubremch2ubrestrict: "ubRemCh c\<cdot>b = ubRestrict (ubDom\<cdot>b - {c})\<cdot>b"
   by (metis (no_types, lifting) diff_eq eta_cfun subset_iff ubrestrict_id ubRestrict_twice)
 
+lemma ubres_pref_eq: assumes "(a \<sqsubseteq> b)" shows "(a \<bar> cs) \<sqsubseteq> (b \<bar> cs)"
+  by (simp add: assms ubrestrict_belowI1)
+
+lemma ubres_ubdom_supset: assumes "ubDom\<cdot>ub \<subseteq> cs" shows "ub \<bar> cs = ub \<bar> (ubDom\<cdot>ub)"
+  by (simp add: assms)
+
+lemma ubres_ubdom_supset_inter: "ub \<bar> cs = ub \<bar> (cs \<inter> (ubDom\<cdot>ub))"
+  using ubrestrict_ubdom_sup_inter by blast
+
+lemma ub_ubdom: "ubDom\<cdot>(SOME b. b \<in> UB cs) = cs"
+  apply (simp add: UB_def)
+  sorry
 
   subsection \<open>ubRenameCh\<close>
 (* ubRenameCh *)
@@ -508,7 +549,8 @@ lemma ubrenamech_ubdom: assumes "ch1 \<in> ubDom\<cdot>ub"  and "usOkay ch2 (ub 
   shows "ubDom\<cdot>(ubRenameCh ub ch1 ch2) = (ubDom\<cdot>ub - {ch1}) \<union> {ch2}"
   apply (simp add: ubRenameCh_def  ubSetCh_def)
   by (metis assms(2) diff_eq dom_empty dom_fun_upd insert_is_Un option.simps(3) ubrep_ubabs sup_commute ubsetch_well ubdom_ubrep_eq ubWell_empty)
-  
+
+    (*
 (* after renaming channel ch1 to ch2, old and new bundles have the same element on those channel  *)  
 lemma ubrenamech_ubgetchI1: assumes "ch1 \<in> ubDom\<cdot>ub" 
                     and "usOkay ch2 (ub . ch1)"
@@ -620,6 +662,10 @@ qed
 lemma ubMapStream_contI2: assumes "cont f" and "\<forall>c ts. usOkay c ts \<longrightarrow> usOkay c (f ts)"
   shows "cont (ubMapStream f)"
   by (simp add: assms(1) assms(2) ubMapStream_contI1)
+
+lemma if_then_ubDom: assumes "d \<in> dom (\<lambda> b. (ubDom\<cdot>b = In) \<leadsto> (F b))"
+  shows "ubDom\<cdot>d = In"
+  by (smt assms domIff)
 
 (**)
 (*
