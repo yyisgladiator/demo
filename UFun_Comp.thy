@@ -615,11 +615,11 @@ lemma parcomp_func_h: assumes "parcomp_well f1 f2"
                    and "ufDom\<cdot>f1 \<union> ufDom\<cdot>f2 \<subseteq> ubDom\<cdot>ub"
                shows "((f1 \<parallel> f2) \<rightleftharpoons> (ub\<bar>ufDom\<cdot>(f1 \<parallel> f2))) = (f1 \<rightleftharpoons> ub\<bar>ufDom\<cdot>f1) \<uplus> (f2 \<rightleftharpoons> ub\<bar>ufDom\<cdot>f2)"
 proof -
-  have f3: "((ub\<bar>ufDom\<cdot>(f1 \<parallel> f2))\<bar>ufDom\<cdot>f1) = (ub\<bar>ufDom\<cdot>f1)"
-    by (metis inf_sup_absorb ubunion_test)
+  have f3: "((ub¦ufDom⋅(f1 ∥ f2))¦ufDom⋅f1) = (ub¦ufDom⋅f1)"
+    by (metis assms(1) inf.absorb_iff2 sup_ge1 ubunion_test ufParComp_dom)
 
-  have f4: "(ub\<bar>ufDom\<cdot>(f1 \<parallel> f2))\<bar>ufDom\<cdot>f2 = (ub\<bar>ufDom\<cdot>f2)"
-    by (metis (no_types, lifting) Un_upper2 assms(2) ubresrict_dom2 ubrestrict_ubdom ubunion_test)
+  have f4: "(ub¦ufDom⋅(f1 ∥ f2))¦ufDom⋅f2 = (ub¦ufDom⋅f2)"
+    by (metis assms(1) inf.absorb_iff2 sup.cobounded2 ubunion_test ufParComp_dom)
 
   have f1: "ufDom\<cdot>(f1 \<parallel> f2) = ufDom\<cdot>f1 \<union> ufDom\<cdot>f2"
     by (simp add: assms(1) ufParComp_dom)
