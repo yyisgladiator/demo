@@ -122,6 +122,7 @@ definition ubEqCommon:: " 'M\<^sup>\<Omega> => 'M\<^sup>\<Omega> => bool" where
 "ubEqCommon b1 b2\<equiv> ubEqSelected (ubDom\<cdot>b1 \<inter> ubDom\<cdot>b2) b1 b2"
 
 
+text {* @{text "UB"} is the set of bundles over a channel signature}*}
 definition UB :: "channel set \<Rightarrow> 'm ubundle set" where
   "UB cs = {b. ubDom\<cdot>b = cs}"
 
@@ -394,11 +395,6 @@ lemma ubgetch_ubrestrict [simp]: assumes "c \<in> cs"
 lemma ubrestrict_belowI1: assumes "(a \<sqsubseteq> b)"
   shows "ubRestrict cs\<cdot>a \<sqsubseteq> ubRestrict cs\<cdot>b"
   using assms monofun_cfun_arg by auto
-
-lemma ubrestrict_below: assumes "chain Y" and "cont h"
-  shows "(ubRestrict (h (\<Squnion>i. Y i))\<cdot>(g (ubDom\<cdot>(\<Squnion>i. Y i)))) \<sqsubseteq>
-         (\<Squnion>i. (ubRestrict (h (Y i))\<cdot>(g (ubDom\<cdot>(\<Squnion>i. Y i)))))"
-    sorry
 
 lemma ubrestrict_id [simp]: assumes "ubDom\<cdot>ub \<subseteq> cs" shows "ubRestrict cs\<cdot>ub = ub"
   by (metis (mono_tags, lifting) assms contra_subsetD inf.absorb_iff1 ubgetchI ubgetch_ubrestrict ubrestrict_ubdom2)
@@ -687,26 +683,6 @@ lemma [simp]: "Abs_ubundle (\<lambda> c. (c \<in> ubDom\<cdot>b) \<leadsto> b . 
   apply (rule ub_eq)
   apply auto[1]
   by auto
-
-lemma wt2 [simp]: assumes "c \<in> dom (Rep_ubundle (S k))"
-  shows "sdom\<cdot>(the (Rep_ubundle (S k) c)) \<subseteq> ctype c"
-  sorry
-
-lemma l400 [simp]: assumes "chain S" and "c \<in> dom (Rep_ubundle (S k))"
-  shows "c \<in> dom (Rep_ubundle (S j))"
-  using assms(1) assms(2) ubdom_chain_eq3 ubdom_insert by blast
-
-lemma l460: assumes "chain S" and "c \<in> dom (Rep_ubundle (S k))"
-  shows "sdom\<cdot>(the (Rep_ubundle (S i) c)) \<subseteq> ctype c"
-  sorry
-
-lemma l500: assumes "chain S" and "c \<in> dom (Rep_ubundle (S k))"
-  shows "sdom\<cdot>(\<Squnion>j. the (Rep_ubundle (S j) c)) \<subseteq> ctype c"
-  by (metis (mono_tags, lifting) assms(1) assms(2) l460 lub_eq subset_cont ubrep_chain_the)
-
-lemma l1: assumes "chain S"
-  shows "dom (Rep_ubundle (S i)) = dom (Rep_ubundle (\<Squnion>i. S i))"
-  by (simp add: assms ubrep_chain_lub_dom_eq)
 
 (**)
 (*
