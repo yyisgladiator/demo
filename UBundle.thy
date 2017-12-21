@@ -846,9 +846,61 @@ definition ubDom_ubundle_def: "UnivClasses.ubDom \<equiv> ubDom"
 
 definition ubLen_ubundle_def: "UnivClasses.ubLen \<equiv> ubLen"
 
+
 instance
   apply intro_classes
-  sorry
+     apply (simp add: ubDom_ubundle_def ubdom_below)
+    defer
+    apply (rule monofunI)
+    defer
+  apply (metis (mono_tags) domIff empty_iff equalityI subsetI ubLen_def ubLen_ubundle_def ubWell_empty ubdom_ubrep_eq)
+proof -
+  fix C::"channel set"
+  have "finite C"
+    by simp
+  show "\<exists>x::'a\<^sup>\<Omega>. ubcl_class.ubDom\<cdot>x = C"
+  proof (cases "C = {}")
+    case True
+    then show ?thesis 
+      by (metis (mono_tags, hide_lams) Int_empty_right ubDom_ubundle_def ubrestrict_ubdom2)
+  next
+    case False
+    obtain set_bla::"'a set" where set_bla_def: "set_bla = {a . \<exists> c \<in> C. usOkay c a}"
+      by simp
+    have "set_bla \<noteq> {}"
+    proof -
+      obtain c where as1: "c \<in> C" 
+        using False by auto
+      obtain a::'a where as2: "usOkay c a"
+        using bla by auto
+      have "a \<in> set_bla"
+        using as1 as2 set_bla_def by auto
+      then show ?thesis
+        by auto
+    qed
+    obtain ub where ub_def: "ub = (\<lambda> c. (c \<in> C) \<leadsto> (SOME a. a \<in> set_bla \<and> usOkay c a))"
+      by simp
+    have "ubWell ub"
+      apply (simp add: ubWell_def)
+    proof (rule)
+      fix c:: channel
+      assume as11: "c \<in> dom ub"
+      have "\<exists> a \<in> set_bla. usOkay c a"
+        using as11 bla set_bla_def ub_def by fastforce
+      then show "usOkay c ub\<rightharpoonup>c"
+        by (metis (mono_tags, lifting) as11 domIff option.sel some_eq_ex ub_def)
+    qed
+    then have "ubDom\<cdot>(Abs_ubundle ub) = C"
+      by (simp add: ub_def ubdom_ubrep_eq)
+    then show ?thesis 
+      using ubDom_ubundle_def by auto
+  qed
+next 
+  fix x::"'a\<^sup>\<Omega>" and y::"'a\<^sup>\<Omega>"
+  assume a1: "x \<sqsubseteq> y"
+  show "ubcl_class.ubLen x \<sqsubseteq> ubcl_class.ubLen y"
+    using a1 monofunE ubLen_ubundle_def ublen_monofun by fastforce
+qed
 
 end
 
