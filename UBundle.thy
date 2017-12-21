@@ -667,6 +667,43 @@ lemma if_then_ubDom: assumes "d \<in> dom (\<lambda> b. (ubDom\<cdot>b = In) \<l
   shows "ubDom\<cdot>d = In"
   by (smt assms domIff)
 
+lemma ub_lub [simp]: fixes S :: "nat \<Rightarrow> 'm ubundle" assumes "chain S"
+  shows "Abs_ubundle (\<lambda> c. (c \<in> ubDom\<cdot>(S i)) \<leadsto> (\<Squnion>j. (S j) . c)) = (\<Squnion>i. S i)" (is "?L = ?R")
+proof (rule ub_eq)
+  show "ubDom\<cdot>?L = ubDom\<cdot>?R"
+    sorry
+  fix c
+  assume "c \<in> ubDom\<cdot>?L"
+  show "?L . c = ?R . c"
+  proof -
+    have "?R . c = (\<Squnion>i. (S i) . c)"
+      using assms contlub_cfun_arg by blast
+    thus ?thesis
+      sorry
+  qed
+qed
+
+lemma [simp]: "Abs_ubundle (\<lambda> c. (c \<in> ubDom\<cdot>b) \<leadsto> b . c) = b"
+  apply (rule ub_eq)
+  apply auto[1]
+  by auto
+
+lemma l400 [simp]: assumes "chain S" and "c \<in> dom (Rep_ubundle (S k))"
+  shows "c \<in> dom (Rep_ubundle (S j))"
+  using assms(1) assms(2) ubdom_chain_eq3 ubdom_insert by blast
+
+lemma l460: assumes "chain S" and "c \<in> dom (Rep_ubundle (S k))"
+  shows "sdom\<cdot>(the (Rep_ubundle (S i) c)) \<subseteq> ctype c"
+  sorry
+
+lemma l500: assumes "chain S" and "c \<in> dom (Rep_ubundle (S k))"
+  shows "sdom\<cdot>(\<Squnion>j. the (Rep_ubundle (S j) c)) \<subseteq> ctype c"
+  by (metis (mono_tags, lifting) assms(1) assms(2) l460 lub_eq subset_cont ubrep_chain_the)
+
+lemma l1: assumes "chain S"
+  shows "dom (Rep_ubundle (S i)) = dom (Rep_ubundle (\<Squnion>i. S i))"
+  by (simp add: assms ubrep_chain_lub_dom_eq)
+
 (**)
 (*
  proof -
