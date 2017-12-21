@@ -688,6 +688,10 @@ lemma [simp]: "Abs_ubundle (\<lambda> c. (c \<in> ubDom\<cdot>b) \<leadsto> b . 
   apply auto[1]
   by auto
 
+lemma wt2 [simp]: assumes "c \<in> dom (Rep_ubundle (S k))"
+  shows "sdom\<cdot>(the (Rep_ubundle (S k) c)) \<subseteq> ctype c"
+  sorry
+
 lemma l400 [simp]: assumes "chain S" and "c \<in> dom (Rep_ubundle (S k))"
   shows "c \<in> dom (Rep_ubundle (S j))"
   using assms(1) assms(2) ubdom_chain_eq3 ubdom_insert by blast
