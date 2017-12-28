@@ -1297,4 +1297,11 @@ next
 qed
 
 
+instantiation ufun :: (ubcl, ubcl) ufuncl_comp
+begin
+instance
+  apply intro_classes
+  sorry
+end
+
 end
