@@ -2,15 +2,25 @@ theory SB
   imports "../UBundle" Streams
 begin
 
+default_sort message
+
 type_synonym 'm SB = "'m stream ubundle"
 
-instance stream :: (countable) uscl
-  sorry
+instantiation stream :: (message) uscl_pcpo
+begin
 
-instance stream :: (countable) uscl_pcpo
-  sorry
-
-default_sort message
+  definition usOkay_stream_def: "usOkay c m \<equiv> sdom\<cdot>m \<subseteq> ctype c"
+  
+  definition usLen_stream_def: "usLen \<equiv> slen"
+  
+  instance
+    apply intro_classes
+    apply (rule admI)
+     apply (simp add: usOkay_stream_def l44)
+    by (simp add: usOkay_stream_def)
+  
+  
+  end
 
 definition sbRt :: "'m SB \<rightarrow> 'm SB" where
 "sbRt \<equiv> \<Lambda> sb. ubMapStream (Rep_cfun srt) sb"
@@ -25,9 +35,11 @@ definition convDiscrUp :: "(channel \<rightharpoonup> 'm) \<Rightarrow> (channel
 section \<open>Lemma\<close>
 
 subsection \<open>sbRt\<close>
-(* Does not work now, because the instantiation of stream is only a sorry *)
+
 lemma sbrt_okay: "usOkay c s \<Longrightarrow> usOkay c (srt\<cdot>s)"
-  sorry
+  apply(simp add: usOkay_stream_def)
+  by (metis (no_types, lifting) Un_iff sdom2un stream.sel_rews(2) subsetCE subsetI surj_scons)
+
 
 lemma sbrt_cont [simp]: "cont (ubMapStream (Rep_cfun srt))"
   by (simp add: sbrt_okay ubMapStream_contI2)
