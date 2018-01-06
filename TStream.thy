@@ -3397,12 +3397,6 @@ where
 abbreviation tstream_abbrev :: "'a event list \<Rightarrow> 'a tstream" ("<_>\<surd>" [1000] 999)
 where "<l>\<surd> == list2tsM l"
 
-(*TODO
-
-(*-----------------------------*)
-     old TStream.thy (now TStream_old.thy)
-     some lemmas may be not necessary because of pcpodef
-(*-----------------------------*)
 
 (* ----------------------------------------------------------------------- *)
 subsection {* Fertig bewiesene Lemmata aus dem TODO von unten. *}
