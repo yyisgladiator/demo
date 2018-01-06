@@ -974,6 +974,9 @@ apply (simp add: ts_0ticks)
 by simp
 
 
+(* Fertig mit Kommentieren! ;-) *)
+
+
 (* tsTake *)
 thm tsTake_def
 
@@ -3394,6 +3397,38 @@ where
 abbreviation tstream_abbrev :: "'a event list \<Rightarrow> 'a tstream" ("<_>\<surd>" [1000] 999)
 where "<l>\<surd> == list2tsM l"
 
+
+(* ----------------------------------------------------------------------- *)
+subsection {* Fertig bewiesene Lemmata aus dem TODO von unten. *}
+(* ----------------------------------------------------------------------- *)  
+  
+(* Lemma 1: The domain of every timeslot is in the domain of all timeslots*)
+lemma tsNth_tsDom1: "tsDom\<cdot> (tsNth n\<cdot> ts)\<subseteq> tsDom\<cdot> ts"
+  apply(induction n arbitrary: ts)
+  apply(simp)
+  by (smt UnCI inf_ub order_less_le subsetCE subsetI tsDropFirstConc tsDropNth tsDropTake1 tsNth_Suc tsTakeDrop tsTakeDropFirst tsconc_id tsdom_tsconc tsinf_nth tstakeFirst_len tstake_tsnth)
+    
+(* Lemma 2 *)
+lemma [simp]:  "Fin n \<le> #\<surd>ts \<Longrightarrow> tsDom\<cdot>(tsNth n\<cdot>ts)\<subseteq>tsDom\<cdot>ts"
+  apply(induction n arbitrary: ts)
+  apply(simp)
+  by (smt UnCI inf_ub order_less_le subsetCE subsetI tsDropFirstConc tsDropNth tsDropTake1 tsNth_Suc tsTakeDrop tsTakeDropFirst tsconc_id tsdom_tsconc tstakeFirst_len tstake_tsnth)
+  
+(* Lemma 3 *)  
+lemma p1 [simp]: "tsDom\<cdot> (Abs_tstream(\<up>\<surd>)) = {}"
+  by(simp add: tsdom_insert)  
+
+(* Lemma 4 *)
+text {* If the domain of a stream is a subset of a set M, then the domain of the remainder
+of the stream after removing the head element, is also a subset of the set M. *}
+lemma tsDom_tsDropI: "tsDom\<cdot> x \<subseteq> M \<Longrightarrow> tsDom\<cdot> (tsDropFirst\<cdot> x) \<subseteq> M"
+by (smt UnCI delayFun_dropFirst delayFun_takeFirst dual_order.trans inf_ub less_le strictI subsetI tsTakeDropFirst tsconc_id tsdom_tsconc tstakeFirst_len)
+
+(* Lemma 5 *)    
+lemma tsDom_tsConc[simp]: "tsDom\<cdot> (tsConc ts\<cdot> ts)= tsDom\<cdot> ts"
+by (metis UnE equalityI inf_ub order_less_le subsetI tsconc_id tsdom_conc tsdom_tsconc)  
+  
+  
 (*TODO
 
 (*-----------------------------*)
@@ -3402,40 +3437,15 @@ where "<l>\<surd> == list2tsM l"
 (*-----------------------------*)
 
 
-
+(* 5 Lemmata noch zu beweisen: *)
 (*To drop n+1 timeslots is the same as dropping one timeslot and then n *)
 lemma tsdrop_back_tsrt:"tsDrop (Suc n)\<cdot> x = tsDropFirst \<cdot> (tsDrop n\<cdot> x)"
 apply (simp add: tsDrop_def tsDropFirst_def)
 sorry
 
-
-(*The domain of every timeslot is in the domain of all timeslots*)
-lemma tsNth_tsDom1: "tsDom\<cdot> (tsNth n\<cdot> ts)\<subseteq> tsDom\<cdot> ts"
-apply(simp add: tsNth_def)
-apply auto
-sorry
-
-
-text {* If the domain of a stream is a subset of a set M, then the domain of the remainder
-of the stream after removing the head element, is also a subset of the set M. *}
-lemma tsDom_tsDropI: "tsDom\<cdot> x \<subseteq> M \<Longrightarrow> tsDom\<cdot> (tsDropFirst\<cdot> x) \<subseteq> M"
-apply (simp add: tsDom_def)
-apply (simp add: tsDropFirst_def)
-sorry
-
-
 text {* If the domain of a stream is a subset of a set M, then the domain of the remainder
 of the stream after removing n elements, is also a subset of the set M. *}
 lemma tsdom_tsdropI: "tsDom\<cdot> s \<subseteq> M \<Longrightarrow> tsDom\<cdot> (tsDrop n\<cdot> s) \<subseteq> M"
-sorry
-
-
-lemma[simp]: "tsDom\<cdot> (Abs_tstream(\<up>\<surd>)) = {}"
-apply(simp add: tsDom_def)
-sorry
-
-lemma tsDom_tsConc[simp]: "tsDom\<cdot> (tsConc ts\<cdot> ts)= tsDom\<cdot> ts"
-apply(simp add: tsConc_def tsDom_def sdom_def)
 sorry
 
 lemma tsDom_tsntimes_eq: "tsDom\<cdot>(tsntimes n ts) = tsDom\<cdot>ts"
@@ -3449,11 +3459,13 @@ apply(simp add: tsinftimes_def)
 using tsDom_tsntimes_eq
 sorry
 
-
 text {* The domain of the infinite stream consisting only of ticks is empty. *}
 lemma tsDom_infTick_empty: "ts= tsinftimes(Abs_tstream(\<up>\<surd>)) \<Longrightarrow> tsDom\<cdot> ts = {}"
 apply (simp add: tsDom_def tsinftimes_def)
 sorry
+
+
+(* Für unendlich lange TStream, muss erweitert werden auf ganz TStream *)
 
 text {* The remainder of the concatenation of a list with a timed stream is the same as
 the concatenation of the remainder of the list with the timed stream. **}

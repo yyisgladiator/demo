@@ -1,7 +1,7 @@
 section {* The Datatype of Lazy Natural Numbers *} 
 
 theory LNat
-imports Prelude
+imports Prelude Nat
 begin
 
 (* ----------------------------------------------------------------------- *)
@@ -49,6 +49,21 @@ definition lnmin ::  "lnat \<rightarrow> lnat \<rightarrow> lnat" where
 "lnmin \<equiv> fix\<cdot>(\<Lambda> h. strictify\<cdot>(\<Lambda> m. strictify\<cdot>(\<Lambda> n. 
                      lnsuc\<cdot>(h\<cdot>(lnpred\<cdot>m)\<cdot>(lnpred\<cdot>n)))))"
 
+instantiation lnat :: plus
+begin  
+  definition plus_lnat:: "lnat \<Rightarrow> lnat \<Rightarrow> lnat"  where 
+    "plus_lnat ln1 ln2 \<equiv> if (ln1 = \<infinity> \<or> ln2=\<infinity>) then \<infinity> else Fin ((inv Fin) ln1 + (inv Fin) ln2)"
+
+  (*definition lnat_plus2:: "lnat \<rightarrow> lnat \<rightarrow> lnat" where
+    "lnat_plus2 \<equiv> \<Lambda> ln1 ln2. (if (ln1 = \<infinity> \<or> ln2=\<infinity>) then \<infinity> else Fin ((inv Fin) ln1 + (inv Fin) ln2))"
+    
+  definition lnat_plus_moreIdiotic :: "lnat \<rightarrow> lnat \<rightarrow> lnat" where
+    "lnat_plus_moreIdiotic = fix\<cdot>(\<Lambda> h. (\<Lambda> m. ( \<Lambda> n. 
+                           if m = 0 then n else h\<cdot>(lnpred\<cdot>m)\<cdot>(lnsuc\<cdot>n))))"*)   
+instance 
+  by(intro_classes)
+end
+      
 (* ----------------------------------------------------------------------- *)
 section {* Some basic lemmas *}
 (* ----------------------------------------------------------------------- *)
@@ -62,7 +77,7 @@ subsection
 
 text {* x is smaller then lnsuc x. *}
 lemma less_lnsuc[simp]: "x \<le> lnsuc\<cdot>x"
-apply (subst lnle_def) 
+apply (subst lnle_def)
 by (rule lnat.induct [of _ x], auto)
 
 text {* @{text "\<infinity>"} is a fix point of @{term lnsuc} *}
@@ -347,7 +362,7 @@ subsection {*Basic lemmas on @{term lmin}  *}
 
 text {* lnmin\<cdot>0\<cdot>n = 0 *}
 lemma strict_lnmin_fst[simp]: "lnmin\<cdot>0\<cdot>n = 0"
-apply (subst lnmin_def [THEN fix_eq2])
+apply (subst lnmin_def [THEN fix_eq2])    
 by (simp add: lnzero_def)
 
 text {* lnmin\<cdot>m\<cdot>0 = 0*}
@@ -649,6 +664,94 @@ proof
   show "P n" by (blast intro: lnat_well hyp)
 qed
 
+(* ----------------------------------------------------------------------- *)
+subsection {*Basic lemmas on @{term lnat_plus}  *}
+(* ----------------------------------------------------------------------- *) 
 
+text {* Plus on nats behaves the same as on lnats. *}  
+lemma lnat_plus_fin [simp]: "(Fin n) + (Fin m) = Fin (n + m)"
+  apply(simp add: plus_lnat_def)
+  by (metis UNIV_I f_inv_into_f image_eqI inject_Fin)
+
+text {* 0 + 0 = 0. *}    
+lemma plus_lnat0_0:"Fin 0 + Fin 0 = Fin 0"
+  apply(simp add: plus_lnat_def)
+  apply(simp add: Fin_def inv_def)
+  apply(rule_tac someI_ex)
+  using Fin_def lnle_Fin_0 by auto
+
+text {* 0 is a right neutral element of + on lnats. *}    
+lemma plus_lnat0_r[simp]:"(0::lnat) + n = n"
+  apply(simp add: plus_lnat_def)
+  by (metis Fin_0 Inf'_neq_0_rev add_cancel_right_left plus_lnat_def lnat_plus_fin ninf2Fin)
+
+text {* 0 is a left neutral element of + on lnats. *}       
+lemma plus_lnat0_l:"m + (0::lnat) = m"
+  apply(simp add: plus_lnat_def)
+  by (metis (mono_tags, lifting) Fin_0 UNIV_I add.right_neutral f_inv_into_f image_eqI plus_lnat_def plus_lnat0_r)
+
+text {* m + \<infinity> = \<infinity>. *}       
+lemma plus_lnatInf_l[simp]:"m + \<infinity> = \<infinity>"
+  by(simp add: plus_lnat_def)  
+
+text {* \<infinity> + n = \<infinity>. *}    
+lemma plus_lnatInf_r:"\<infinity> + n = \<infinity>"
+  by(simp add: plus_lnat_def)  
+
+text {* + on lnats is commutative. *}    
+lemma lnat_plus_commu:"(ln1::lnat) + ln2 = ln2 + ln1"
+  by(simp add: plus_lnat_def)
+
+text {* + is associative. *}    
+instance lnat:: semigroup_add
+  apply(intro_classes)
+  apply(simp add: plus_lnat_def)
+  by (smt add.left_commute f_inv_into_f inject_Fin natl2 rangeI)
+
+text{* + is commutative. *}
+instance lnat:: ab_semigroup_add
+  apply(intro_classes)
+  by (simp add: lnat_plus_commu)
+
+text{* + is zero neutral.  *}    
+instance lnat:: monoid_add
+  apply(intro_classes)
+  apply (simp)
+  by (simp add: plus_lnat0_l)
+
+text{* Define a 1 element in lnat. *}    
+instantiation lnat :: one
+begin
+definition one_lnat:: "lnat" where 
+  "one_lnat = Fin 1"
+  
+  instance ..
+end 
+
+text{* This 1 element is the successor of 0. *}  
+lemma one_def: "1 = lnsuc\<cdot>0"
+   by (metis Fin_02bot Fin_Suc One_nat_def lnzero_def one_lnat_def)
+
+text{* Adding 1 to an lnat ln1 yields the same result as the successor of ln1. *}     
+lemma lnat_plus_suc: "ln1 + 1 = lnsuc\<cdot>ln1"
+  apply(simp add: plus_lnat_def)
+  by (metis Fin_Suc Inf'_neq_0_rev One_nat_def Suc_def2 f_inv_into_f fold_inf inf_ub inject_Fin inject_lnsuc less_le lnat_well_h2 one_def one_lnat_def rangeI)
+
+text{* Applying lnsuc to the first or second element of the addition yields the same result.  *}    
+lemma lnat_plus_lnsuc: "ln1 + (lnsuc\<cdot>ln2) = (lnsuc\<cdot>ln1) + ln2"
+  apply(simp add: plus_lnat_def)
+  proof -
+    have f1: "\<And>f n. f (inv f (f (n::nat)::lnat)) = f n"
+      by (simp add: f_inv_into_f)
+    have "\<And>l. Fin (inv Fin l) = l \<or> \<infinity> = l"
+      by (metis (no_types) f_inv_into_f ninf2Fin rangeI)
+    then have f2: "\<And>l. inv Fin (lnsuc\<cdot>l) = Suc (inv Fin l) \<or> \<infinity> = l"
+      using f1 by (metis (no_types) Fin_Suc inject_Fin)
+    then have "\<And>n l. n + inv Fin (lnsuc\<cdot>l) = inv Fin l + Suc n \<or> \<infinity> = l"
+      by simp
+    then show "ln1 \<noteq> \<infinity> \<and> ln2 \<noteq> \<infinity> \<longrightarrow> inv Fin ln1 + inv Fin (lnsuc\<cdot>ln2) = inv Fin (lnsuc\<cdot>ln1) + inv Fin ln2"
+      using f2 by (metis (no_types) natl2)
+  qed
+  
 end
 
