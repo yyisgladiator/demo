@@ -363,6 +363,14 @@ lemma[simp]:assumes"finite In" shows"ufDom\<cdot>(spfStep_h1 In Out\<cdot> h \<c
 lemma spfStep_h1_ran[simp]:assumes "finite In" shows"ufRan\<cdot>(spfStep_h1 In Out\<cdot> h \<cdot> f) = Out"
   by(simp add: spfStep_h1_def assms)
 
+lemma ufLeast_out_ubDom:assumes "ubDom\<cdot>sb = In" shows "ubDom\<cdot>(ufLeast In Out \<rightleftharpoons> sb) = Out"
+  apply(simp add: ufLeast_def assms)
+  by (metis assms ubDom_ubundle_def ubdom_least_cs)
+    
+lemma spfStep_h1_out_dom[simp]:assumes "finite In" and "ubDom\<cdot>sb = In" shows "ubDom\<cdot>(spfStep_h1 In Out\<cdot> h \<cdot> f \<rightleftharpoons> sb) = Out"
+  apply(simp add: spfStep_h1_def assms ufLeast_out_ubDom)
+  by (metis assms(2) ubDom_ubundle_def ufRestrict_dom ufRestrict_ran ufran_2_ubdom2)
+
 lemma spfstep_h1_insert:assumes "finite In" shows"spfStep_h1 In Out\<cdot> h\<cdot>f = (if (In \<subseteq> dom f \<and> (\<forall>c \<in> In. (f \<rightharpoonup> c \<noteq> \<bottom>))) then ufRestrict In Out\<cdot>(h (spfStep_h2 In f)) else ufLeast In Out)"
   by(simp add:  spfStep_h1_def assms)    
 
@@ -438,7 +446,7 @@ lemma spfStep_inSPF_well[simp]:assumes"finite In" shows "ufWell (\<Lambda>  sb. 
         by (smt b_def domIff)
     qed
     thus "ubDom\<cdot>(the ((\<Lambda> sb. (ubDom\<cdot>sb = In)\<leadsto>spfStep_h1 In Out\<cdot> h\<cdot>(sbHdElem\<cdot>sb) \<rightleftharpoons> sb)\<cdot>b)) = Out" 
-      using assms apply auto sorry
+      using assms by simp
       (* by (simp add: assms) *)
   next
     fix b2::"'a SB"
@@ -509,7 +517,7 @@ proof(rule Cont.contI2, simp add: assms)
     apply(rule chainI)
     by (smt below_option_def cfun_below_iff chain_1 fun_belowI po_class.chain_def some_below spf_pref_eq_2)
   have "\<And>b.  ubDom\<cdot>b= In \<Longrightarrow> \<forall>i . ubDom\<cdot>(spfStep_h1 In Out\<cdot>(Y i)\<cdot>(sbHdElem\<cdot>b) \<rightleftharpoons> b) = Out"
-    using assms apply auto  sorry
+    using assms by simp
   then have spf_well_h:"\<And>b. ubDom\<cdot>b= In \<Longrightarrow> ubDom\<cdot>(\<Squnion>i. (spfStep_h1 In Out\<cdot>(Y i)\<cdot>(sbHdElem\<cdot>b) \<rightleftharpoons> b)) = Out"
     by (metis (no_types, lifting) chain_4 lub_eq ubdom_chain_eq2)
   have spf_well2:"ufWell (\<Lambda> x. \<Squnion>i. (ubDom\<cdot>x = In)\<leadsto>spfStep_h1 In Out\<cdot>(Y i)\<cdot>(sbHdElem\<cdot>x) \<rightleftharpoons> x)"
@@ -582,11 +590,14 @@ apply(simp_all add: assms)
 lemma spfstep_dom [simp]:assumes "finite cIn" shows"ufDom\<cdot>(spfStep cIn cOut\<cdot>f) = cIn"
   by(simp add: spfstep_insert spfDomAbs assms)
 
+lemma ubDom_ubLeast[simp]:"ubDom\<cdot>(ubLeast cIn) = cIn"
+  by (metis ubDom_ubundle_def ubdom_least_cs)
+    
 lemma spfstep_ran [simp]:assumes "finite cIn" shows"ufRan\<cdot>(spfStep cIn cOut\<cdot>f) = cOut"
   apply(simp add: spfstep_insert assms)
   apply(unfold ufran_least,simp add: assms)
   apply (simp add: assms spfDomAbs)
-  sorry
+  by (simp add: ubDom_ubundle_def)
 
 lemma sbHdElem_dom[simp]:"dom (sbHdElem\<cdot>sb) = ubDom\<cdot>sb"
   by(simp add: sbHdElem_def sbHdElem_cont)
