@@ -32,6 +32,13 @@ instance
 
 end
 
+instantiation stream :: (message) uscl_pcpo
+begin
+instance
+  apply intro_classes
+  sorry
+end
+  
 (* ----------------------------------------------------------------------- *)
   section \<open>Function Definition\<close>
 (* ----------------------------------------------------------------------- *)
@@ -375,6 +382,7 @@ using assms by blast
 
 lemma sbmapstream_cont2[simp]:  assumes "cont f" and "\<forall>s. sdom\<cdot>(f s)\<subseteq>sdom\<cdot>s"
   shows "cont (sbMapStream f)"
+  apply (rule contI)
   sorry
 
 
@@ -384,13 +392,14 @@ lemma sbmapstream_cont2[simp]:  assumes "cont f" and "\<forall>s. sdom\<cdot>(f 
 lemma sbtake_cont [simp]:"cont (\<lambda>b. sbMapStream (\<lambda>s. stake n\<cdot>s) b)"
 by (simp)
 
-lemma sbtake_insert: "sbTake n\<cdot>b \<equiv>  sbMapStream (\<lambda>s. stake n\<cdot>s) b"
+lemma sbtake_insert: "sbTake n\<cdot>b \<equiv> sbMapStream (\<lambda>s. stake n\<cdot>s) b"
 by(simp add: sbTake_def)
 
 lemma sbtake_zero: "sbTake 0\<cdot>In = ubLeast (ubDom\<cdot>In)"
-  by (simp add: sbtake_insert sbMapStream_def sbLeast_def)
+  by (simp add: sbtake_insert sbMapStream_def ubLeast_def)
 
 lemma sbtake_sbdom[simp]: "ubDom\<cdot>(sbTake n\<cdot>b) = ubDom\<cdot>b"
+  apply (simp add: sbtake_insert)
   by (simp add: sbtake_insert)
 
 lemma sbtake_sbgetch [simp]: assumes "c\<in>ubDom\<cdot>b"
@@ -485,13 +494,13 @@ lemma sbntimes_sbgetch [simp]: assumes "c\<in>ubDom\<cdot>b"
     ubdom_channel_usokay ubgetch_insert ubgetch_ubrep_eq usOkay_stream_def)
 
 lemma sbntimes_zero [simp]: "0\<star>b = ubLeast (ubDom\<cdot>b)" 
-  by (simp add: sbNTimes_def sbMapStream_def sntimes_def sbLeast_def)
+  by (simp add: sbNTimes_def sbMapStream_def sntimes_def ubLeast_def)
 
 lemma sbntimes_one [simp]: fixes b:: "'m stream ubundle" shows "1\<star>b = b" 
   by (simp add: sbNTimes_def sbMapStream_def sntimes_def ubLeast_def)
 
 lemma sbntimes_sbdom [simp]: "ubDom\<cdot>(i\<star>b) = ubDom\<cdot>b"
-  by(simp add: sbNTimes_def)
+  by (simp add: sbNTimes_def)
 
 lemma sbntimes_below [simp]: fixes b:: "'m stream ubundle"
   shows "(i\<star>b) \<sqsubseteq> (Suc i)\<star>b" (is "?L \<sqsubseteq> ?R")
@@ -602,370 +611,6 @@ qed
 lemma if_then_sbDom: assumes "d \<in> dom (\<lambda>b. (ubDom\<cdot>b = In)\<leadsto>(F b))"
   shows "ubDom\<cdot>d = In"
 by (smt assms domIff)
-
-(* ----------------------------------------------------------------------- *)
-  subsection \<open>sbLen\<close>
-(* ----------------------------------------------------------------------- *)  
-
-lemma sbLen_set_below: assumes "\<forall>b\<in>{(y . c) |c. c \<in> ubDom\<cdot>y}. \<exists>a\<in>{(x . c) |c. c \<in> ubDom\<cdot>x}. (#a) \<sqsubseteq> (#b)"
-  shows "\<forall>b\<in>{#(y . c) |c. c \<in> ubDom\<cdot>y}. \<exists>a\<in>{#(x . c) |c. c \<in> ubDom\<cdot>x}. a \<sqsubseteq> b"
-    using assms by fastforce
-
-lemma sbLen_below: assumes "a \<sqsubseteq> b" shows "\<forall>c\<in>ubDom\<cdot>a. #(a. c) \<le> #(b . c)"   
-by (simp add: assms mono_slen monofun_cfun_arg monofun_cfun_fun)
-
-lemma lnat_set_least_below_sb: assumes "(A :: lnat set) \<noteq> {}" and "(B :: lnat set) \<noteq> {}"
-  and "\<forall> a \<in> A . \<exists> b \<in> B.  a \<sqsubseteq> b" and "\<forall> b \<in> B. \<exists> a \<in> A. a \<sqsubseteq> b"
-shows "(LEAST ln. ln \<in> A) \<sqsubseteq> (LEAST ln. ln \<in> B)"
-  by (metis (no_types, lifting) LeastI Least_le all_not_in_conv assms(2) assms(4) lnle_conv rev_below_trans)  
-  
-lemma sbLen_mono_pre: assumes "x \<sqsubseteq> y" shows 
-  "(if ubDom\<cdot>x \<noteq> {} then LEAST ln. ln \<in> { #(x. c) | c. c \<in> ubDom\<cdot>x} else \<infinity>) \<sqsubseteq>
-   (if ubDom\<cdot>y \<noteq> {} then LEAST ln. ln \<in> { #(y. c) | c. c \<in> ubDom\<cdot>y} else \<infinity>)" 
-proof(cases "ubDom\<cdot>x \<noteq> {}")
-  case True
-  have f1: "ubDom\<cdot>y = ubDom\<cdot>x"
-    using assms ubdom_below by blast
-  have f2: "\<forall>b\<in>{(y . c) |c. c \<in> ubDom\<cdot>y}. \<exists>a\<in>{(x . c) |c. c \<in> ubDom\<cdot>x}. (a) \<sqsubseteq> (b) 
-          \<Longrightarrow> \<forall>b\<in>{(y . c) |c. c \<in> ubDom\<cdot>y}. \<exists>a\<in>{(x . c) |c. c \<in> ubDom\<cdot>x}. (#a) \<sqsubseteq> (#b)"
-    by (meson monofun_cfun_arg)
-  have f3: "(LEAST ln. ln \<in> {#(x . c) |c. c \<in> ubDom\<cdot>x}) \<sqsubseteq> (LEAST ln. ln \<in> {#(y . c) |c. c \<in> ubDom\<cdot>y})"
-    apply (rule lnat_set_least_below_sb)
-    apply (simp add: True)
-    apply (simp add: True f1)
-    using assms f1 sbLen_below apply fastforce
-    using assms f1 sbLen_below by fastforce
-  show ?thesis
-    using f1 f3 by auto
-next
-  case False
-  have f1: "ubDom\<cdot>y = ubDom\<cdot>x"
-    using assms ubdom_below by blast
-  then show ?thesis 
-    by(simp add: False)
-qed
- 
-lemma sbLen_mono[simp]: "monofun (\<lambda> b. if ubDom\<cdot>b \<noteq> {} then LEAST ln. ln \<in> { #(b. c) | c. c \<in> ubDom\<cdot>b} else \<infinity>)"
-  using monofun_def sbLen_mono_pre by blast  
-
-lemma sbLen_chain: assumes "chain Y" and "\<And> i. ubDom\<cdot>(Y i) \<noteq> {}" shows 
-  "chain (\<lambda> i. if ubDom\<cdot>(Y i) \<noteq> {} then LEAST ln. ln \<in> { #((Y i). c) | c. c \<in> ubDom\<cdot>(Y i)} else \<infinity>)"
-  apply(simp only: chain_def)
-  apply(subst sbLen_mono_pre)
-  using assms(1) po_class.chainE apply auto[1]
-  by auto
-
-lemma sbLen_conv: "(LEAST ln. \<exists>c. ln = #(sb . c) \<and> c \<in> ubDom\<cdot>sb) = (LEAST ln. ln \<in> { #(sb . c) | c. c \<in> ubDom\<cdot>sb})"
-  by auto
-    
-lemma sbLen_chain2: assumes "chain Y" and "\<And> i. ubDom\<cdot>(Y i) \<noteq> {}" shows
-  "chain (\<lambda> i. (LEAST ln. \<exists>c. ln = #(Y i . c) \<and> c \<in> ubDom\<cdot>(Y i)))"
-proof - 
-  fix i
-  have f1: "\<forall>i. (LEAST ln. ln \<in> {#(Y i . c) |c. c \<in> ubDom\<cdot>(Y i)}) \<sqsubseteq> (LEAST ln. ln \<in> {#(Y (Suc i) . c) |c. c \<in> ubDom\<cdot>(Y (Suc i))})"
-  proof
-    fix i
-    show "(LEAST ln. ln \<in> {#(Y i . c) |c. c \<in> ubDom\<cdot>(Y i)}) \<sqsubseteq> (LEAST ln. ln \<in> {#(Y (Suc i) . c) |c. c \<in> ubDom\<cdot>(Y (Suc i))})"
-      apply (rule lnat_set_least_below_sb)  
-      using assms(2) apply auto[1]
-      using assms(2) apply auto[1]
-      using assms(1) po_class.chainE sbLen_below ubdom_eq apply fastforce
-      using assms(1) po_class.chainE sbLen_below ubdom_eq by fastforce
-  qed
-  show ?thesis
-    apply(subst sbLen_conv)
-    apply(simp only: chain_def)
-    using f1 by auto
-qed
-
-lemma chains_lub_eq_sb: assumes "chain (Y::nat \<Rightarrow> lnat)" and "chain (X::nat \<Rightarrow> lnat)" and "\<exists> i. \<forall> j\<ge>i. Y j = X j" shows "(\<Squnion>i. Y i) = (\<Squnion>i. X i)"
-proof - 
-  have "(\<Squnion>i. Y i) \<le> (\<Squnion>i. X i)"
-  proof - 
-    obtain i where f1: "\<forall> j\<ge>i. Y j = X j"
-      using assms by blast
-    have "\<And> j. (X j) \<le> (\<Squnion>i. X i)" 
-      using assms(2) is_ub_thelub lnle_def by blast
-    then have "\<forall> j\<ge>i. (Y j) \<le> (\<Squnion>i. X i)"
-      by (simp add: f1)
-    then show ?thesis
-    proof -
-      have f1: "\<forall>n na f l. (\<not> (n::nat) \<le> na \<or> \<not> f na \<le> (l::lnat) \<or> (\<exists>n na. n \<le> na \<and> \<not> f n \<le> f na)) \<or> f n \<le> l"
-        by (meson order_subst2)
-      obtain nn :: "(nat \<Rightarrow> lnat) \<Rightarrow> nat" and nna :: "(nat \<Rightarrow> lnat) \<Rightarrow> nat" where
-        f2: "\<forall>x1. (\<exists>v4 v5. v4 \<le> v5 \<and> \<not> x1 v4 \<le> x1 v5) = (nn x1 \<le> nna x1 \<and> \<not> x1 (nn x1) \<le> x1 (nna x1))"
-        by moura
-      have f3: "\<forall>n. \<not> i \<le> n \<or> Y n \<le> Lub X"
-        by (metis \<open>\<forall>j\<ge>i. Y j \<le> (\<Squnion>i. X i)\<close>)
-      then have f4: "Y i \<le> Lub X"
-        by (metis nat_le_linear)
-      obtain nnb :: "lnat \<Rightarrow> (nat \<Rightarrow> lnat) \<Rightarrow> nat" where
-        f5: "\<forall>f l. (\<not> chain f \<or> f (nnb l f) \<notsqsubseteq> l) \<or> Lub f \<sqsubseteq> l"
-        by (meson lub_below)
-      have "\<not> nn Y \<le> nna Y \<or> Y (nn Y) \<le> Y (nna Y)"
-        by (meson assms(1) lnle_conv po_class.chain_mono)
-      then show ?thesis
-        using f5 f4 f3 f2 f1 by (metis (full_types) assms(1) lnle_conv nat_le_linear)
-    qed
-  qed  
-  moreover have "(\<Squnion>i. X i) \<le> (\<Squnion>i. Y i)"
-  proof -   
-    obtain i where f1: "\<forall> j\<ge>i. X j = Y j"
-      using assms(3) by fastforce
-    have "\<And> j. (Y j) \<le> (\<Squnion>i. Y i)" 
-      using assms(1) is_ub_thelub lnle_def by blast
-    then have "\<forall> j\<ge>i. (X j) \<le> (\<Squnion>i. Y i)"
-      by (simp add: f1)
-    then show ?thesis
-    proof -
-      have f1: "\<forall>n na f l. (\<not> (n::nat) \<le> na \<or> \<not> f na \<le> (l::lnat) \<or> (\<exists>n na. n \<le> na \<and> \<not> f n \<le> f na)) \<or> f n \<le> l"
-        by (meson order_subst2)
-      obtain nn :: "(nat \<Rightarrow> lnat) \<Rightarrow> nat" and nna :: "(nat \<Rightarrow> lnat) \<Rightarrow> nat" where
-        f2: "\<forall>x1. (\<exists>v4 v5. v4 \<le> v5 \<and> \<not> x1 v4 \<le> x1 v5) = (nn x1 \<le> nna x1 \<and> \<not> x1 (nn x1) \<le> x1 (nna x1))"
-        by moura
-      have f3: "\<forall>n. \<not> i \<le> n \<or> X n \<le> Lub Y"
-        by (meson \<open>\<forall>j\<ge>i. X j \<le> (\<Squnion>i. Y i)\<close>)
-      then have f4: "X i \<le> Lub Y"
-        by (meson nat_le_linear)
-      obtain nnb :: "lnat \<Rightarrow> (nat \<Rightarrow> lnat) \<Rightarrow> nat" where
-          f5: "\<forall>f l. (\<not> chain f \<or> f (nnb l f) \<notsqsubseteq> l) \<or> Lub f \<sqsubseteq> l"
-        by (meson lub_below)
-      have "\<not> nn X \<le> nna X \<or> X (nn X) \<le> X (nna X)"
-        by (metis assms(2) lnle_conv po_class.chain_mono)
-      then show ?thesis
-        using f5 f4 f3 f2 f1 by (metis (full_types) assms(2) lnle_conv nat_le_linear)
-    qed
-  qed    
-  ultimately show ?thesis
-    using order_trans by auto
-qed   
-
-lemma chain_mono_sb: assumes "chain (Y::nat \<Rightarrow> lnat)" and "\<exists> i. \<forall> j\<ge>i. (Y i \<ge> Y j)" shows "\<exists> i. \<forall> j\<ge>i. (Y i = Y j)"
-  by (meson assms(1) assms(2) dual_order.antisym lnle_def po_class.chain_mono)  
-  
-lemma sbLen_cont_pre: assumes "chain Y" and "finite (ubDom\<cdot>(Lub Y))" shows 
-  "(if ubDom\<cdot>(\<Squnion>i. Y i) \<noteq> {} then LEAST ln. ln \<in> { #((\<Squnion>i. Y i). c) | c. c \<in> ubDom\<cdot>(\<Squnion>i. Y i)} else \<infinity>) \<sqsubseteq>
-   (\<Squnion>i. if ubDom\<cdot>(Y i) \<noteq> {} then LEAST ln. ln \<in> { #((Y i). c) | c. c \<in> ubDom\<cdot>(Y i)} else \<infinity>)"
-proof (cases "ubDom\<cdot>(\<Squnion>i. Y i) \<noteq> {}")
-  case True
-  hence f1: "\<forall> i. ubDom\<cdot>(Y i) = ubDom\<cdot>(\<Squnion>i. Y i)"
-    using assms(1) ubdom_chain_eq2 by auto
-  hence f10: "\<forall> i. ubDom\<cdot>(\<Squnion>i. Y i) =  ubDom\<cdot>(Y i)"
-    by simp
-  hence f11: "\<forall> i. ubDom\<cdot>(Y i) \<noteq> {}"
-    using True by auto
-  show ?thesis 
-    apply(simp only: True f11)
-    apply(auto)
-    proof (cases "finite_chain Y")
-      case True
-      obtain maxI where f21: "max_in_chain maxI Y"
-        using True finite_chain_def by auto
-      have f22: "\<forall>j. maxI \<le> j \<longrightarrow> (LEAST ln. \<exists>c. ln = #(Y maxI . c) \<and> c \<in> ubDom\<cdot>(Y maxI)) = (LEAST ln. \<exists>c. ln = #(Y j . c) \<and> c \<in> ubDom\<cdot>(Y j))"
-      proof -
-        { fix nn :: nat
-          { assume "Y nn \<noteq> Y maxI"
-            then have "\<not> maxI \<le> nn \<or> (LEAST l. \<exists>c. l = #(Y nn . c) \<and> c \<in> ubDom\<cdot>(Y nn)) = (LEAST l. \<exists>c. l = #(Y maxI . c) \<and> c \<in> ubDom\<cdot>(Y maxI))"
-              by (metis f21 max_in_chain_def) }
-          then have "\<not> maxI \<le> nn \<or> (LEAST l. \<exists>c. l = #(Y nn . c) \<and> c \<in> ubDom\<cdot>(Y nn)) = (LEAST l. \<exists>c. l = #(Y maxI . c) \<and> c \<in> ubDom\<cdot>(Y maxI))"
-            by fastforce }
-        then show ?thesis
-          by presburger
-      qed
-      have f221: "max_in_chain maxI (\<lambda> i. LEAST ln. \<exists>c. ln = #(Y i . c) \<and> c \<in> ubDom\<cdot>(Y i))"
-        by (simp add: f22 max_in_chainI)
-      have f23: "(\<Squnion>i. LEAST ln. \<exists>c. ln = #(Y i . c) \<and> c \<in> ubDom\<cdot>(Y i)) = (LEAST ln. \<exists>c. ln = #(Y maxI . c) \<and> c \<in> ubDom\<cdot>(Y maxI))"
-        using maxinch_is_thelub assms(1) sbLen_chain2 f221 f11 by fastforce
-      show "(LEAST ln. \<exists>c. ln = #(Lub Y . c) \<and> c \<in> ubDom\<cdot>(Lub Y)) \<le> (\<Squnion>i. LEAST ln. \<exists>c. ln = #(Y i . c) \<and> c \<in> ubDom\<cdot>(Y i))" 
-        using assms(1) f21 f23 maxinch_is_thelub sorry (*by fastforce*)
-    next
-      case False 
-      then show"(LEAST ln. \<exists>c. ln = #(Lub Y . c) \<and> c \<in> ubDom\<cdot>(Lub Y)) \<le> (\<Squnion>i. LEAST ln. \<exists>c. ln = #(Y i . c) \<and> c \<in> ubDom\<cdot>(Y i))"
-      proof(cases "finite_chain (\<lambda> i. LEAST ln. \<exists>c. ln = #(Y i  .  c) \<and> c \<in> ubDom\<cdot>(Y i))")
-        case True
-        then have f31: "\<exists>i. max_in_chain i (\<lambda> i. LEAST ln. \<exists>c. ln = #(Y i . c) \<and> c \<in> ubDom\<cdot>(Y i))"
-          using finite_chain_def by auto    
-        then obtain maxI where f32: "\<forall>j. maxI \<le> j \<longrightarrow> (LEAST ln. \<exists>c. ln = #(Y maxI . c) \<and> c \<in> ubDom\<cdot>(Y maxI)) = (LEAST ln. \<exists>c. ln = #(Y j . c) \<and> c \<in> ubDom\<cdot>(Y j))"
-          by (meson max_in_chain_def)
-        then obtain maxCount where f33: "maxCount = (LEAST ln. \<exists>c. ln = #(Y maxI . c) \<and> c \<in> ubDom\<cdot>(Y maxI))"
-          by blast
-        then have f34: "maxCount = (\<Squnion>i. LEAST ln. \<exists>c. ln = #(Y i . c) \<and> c \<in> ubDom\<cdot>(Y i))"
-          by (metis (mono_tags, lifting) True f32 finite_chainE l42 le_cases max_in_chainI3 max_in_chain_def)
-        have f35: "finite (ubDom\<cdot>(Lub Y))"  
-          using assms by blast    
-        have f36: "\<exists> maxCh \<in> ubDom\<cdot>(Lub Y). \<forall>j\<ge>maxI. maxCount = #(Y j . maxCh)"
-        proof(rule ccontr)
-          assume "\<not>?thesis"
-          then have f361: "\<forall> ch1 \<in> ubDom\<cdot>(Lub Y). \<exists>j\<ge>maxI. maxCount < #(Y j . ch1)"
-          proof -
-            obtain nn :: "channel \<Rightarrow> nat" where
-              f1: "\<forall>c. c \<notin> ubDom\<cdot>(Lub Y) \<or> maxI \<le> nn c \<and> maxCount \<noteq> #(Y (nn c) . c)"
-              using \<open>\<not> (\<exists>maxCh\<in>ubDom\<cdot>(Lub Y). \<forall>j\<ge>maxI. maxCount = #(Y j . maxCh))\<close> by moura
-            obtain cc :: channel where
-              "(\<exists>v0. v0 \<in> ubDom\<cdot>(Lub Y) \<and> (\<forall>v1. \<not> maxI \<le> v1 \<or> \<not> maxCount < #(Y v1 . v0))) = (cc \<in> ubDom\<cdot>(Lub Y) \<and> (\<forall>v1. \<not> maxI \<le> v1 \<or> \<not> maxCount < #(Y v1 . cc)))"
-              by blast
-            moreover
-            { assume "cc \<in> ubDom\<cdot>(Y (nn cc))"
-              then have "\<not> #(Y (nn cc) . cc) < (LEAST l. \<exists>c. l = #(Y (nn cc) . c) \<and> c \<in> ubDom\<cdot>(Y (nn cc)))"
-                using not_less_Least by blast
-              moreover
-              { assume "\<not> #(Y (nn cc) . cc) < (LEAST l. \<exists>c. l = #(Y maxI . c) \<and> c \<in> ubDom\<cdot>(Y maxI))"
-                moreover
-                { assume "\<not> #(Y (nn cc) . cc) < (LEAST l. \<exists>c. l = #(Y maxI . c) \<and> c \<in> ubDom\<cdot>(Y maxI)) \<and> \<not> (LEAST l. \<exists>c. l = #(Y maxI . c) \<and> c \<in> ubDom\<cdot>(Y maxI)) < #(Y (nn cc) . cc)"
-                  then have "cc \<notin> ubDom\<cdot>(Lub Y)"
-                    using f1 f33 neq_iff by blast }
-                ultimately have "cc \<in> ubDom\<cdot>(Lub Y) \<longrightarrow> (cc \<notin> ubDom\<cdot>(Lub Y) \<or> (\<exists>n\<ge>maxI. maxCount < #(Y n . cc))) \<or> \<not> maxI \<le> nn cc \<or> maxCount = #(Y (nn cc) . cc)"
-                  using f33 by blast }
-              ultimately have "cc \<in> ubDom\<cdot>(Lub Y) \<longrightarrow> (cc \<notin> ubDom\<cdot>(Lub Y) \<or> (\<exists>n\<ge>maxI. maxCount < #(Y n . cc))) \<or> \<not> maxI \<le> nn cc \<or> maxCount = #(Y (nn cc) . cc)"
-                using f32 by presburger
-              then have "cc \<in> ubDom\<cdot>(Lub Y) \<longrightarrow> cc \<notin> ubDom\<cdot>(Lub Y) \<or> (\<exists>n\<ge>maxI. maxCount < #(Y n . cc))"
-                using f1 by blast }
-            ultimately show ?thesis
-              using assms(1) ubdom_chain_eq2 by blast
-          qed
-          show "False" 
-          proof(cases "card (ubDom\<cdot>(Lub Y))")
-            case 0
-            then show ?thesis 
-              using f10 f11 f35 by auto
-          next
-            case (Suc nat)
-            then have i1: "card (ubDom\<cdot>(Lub Y)) = Suc nat"
-              by blast
-            show ?thesis
-            proof - 
-              obtain n where i2: "card (ubDom\<cdot>(Lub Y)) = n"
-                by blast
-              then have i3: "n > 0"    
-                by (simp add: i1) 
-                 
-              obtain f where i4: "ubDom\<cdot>(Lub Y) = f ` {i::nat. i < n}"
-                by (metis card_Collect_less_nat card_image f35 finite_imp_nat_seg_image_inj_on i2)   
-              then have i5: "\<forall>i<n. \<exists>j\<ge>maxI. maxCount < #(Y j . (f i))"
-                using f361 by blast
-
-              then obtain x where i6: "x = Max {(LEAST x. x\<ge>maxI \<and> (maxCount < #(Y x . (f i)))) | i::nat. i < n}"
-                by blast
-              have i7: "\<forall>i<n. \<exists>m. (m = (LEAST x. x\<ge>maxI \<and> (maxCount < #(Y x . (f i)))) \<and> m\<ge>maxI \<and> (maxCount < #(Y m . (f i))))"    
-                by (metis (no_types, lifting) LeastI i5)
-              have i0: "ubDom\<cdot>(Lub Y) = ubDom\<cdot>(Y x)"    
-                by (simp add: assms(1) ubdom_chain_eq2)  
-              have i01: "\<forall>i<n. maxCount < #(Y x . f i)"
-              proof -
-                have i010: "\<forall>i<n. maxCount < #(Y (LEAST x. x\<ge>maxI \<and> (maxCount < #(Y x . (f i)))) . f i)"
-                  using i7 by blast
-                moreover have i011: "\<forall>i<n. (LEAST x. x\<ge>maxI \<and> (maxCount < #(Y x . (f i)))) \<le> x"
-                proof - 
-                  obtain g where "g = (\<lambda>i. (LEAST x. x\<ge>maxI \<and> (maxCount < #(Y x . (f i)))))"
-                    by blast
-                  then have "g ` {i::nat. i < n} = {(LEAST x. x\<ge>maxI \<and> (maxCount < #(Y x . (f i)))) | i::nat. i < n}"
-                    by blast
-                  then have "finite {(LEAST x. x\<ge>maxI \<and> (maxCount < #(Y x . (f i)))) | i::nat. i < n}"
-                    using nat_seg_image_imp_finite by auto
-                  then show ?thesis
-                    using Max_ge i6 by blast
-                qed
-                ultimately show ?thesis
-                proof - 
-                  have "\<forall>i<n. #(Y (LEAST x. x\<ge>maxI \<and> (maxCount < #(Y x . (f i)))) . f i) \<le> #(Y x . (f i))"
-                    by (simp add: assms(1) i011 mono_slen monofun_cfun_arg monofun_cfun_fun po_class.chain_mono)
-                  then show ?thesis
-                    using i010 less_le_trans by blast
-                qed
-              qed
-              then have i02: "\<forall>ch1\<in>ubDom\<cdot>(Lub Y). maxCount < #(Y x . ch1)"
-                by (simp add: i4)
-              then have i8: "maxCount < (LEAST ln. \<exists>c. ln = #(Y x  .  c) \<and> c \<in> ubDom\<cdot>(Y x))"
-              proof - 
-                have "ubDom\<cdot>(Y x) \<noteq> {}"
-                  using f11 by auto
-                then have "\<exists>ch1\<in>ubDom\<cdot>(Y x). (LEAST ln. \<exists>c. ln = #(Y x  .  c) \<and> c \<in> ubDom\<cdot>(Y x)) = #(Y x . ch1)"
-                  by (smt Collect_empty_eq LeastI all_not_in_conv assms(1) f11 f33 ubchain_dom_eq)
-                then show ?thesis
-                  using i0 i02 by auto
-              qed
-              then have i9: "maxCount < (\<Squnion>i. LEAST ln. \<exists>c. ln = #(Y i  .  c) \<and> c \<in> ubDom\<cdot>(Y i))"
-              proof -
-                have "\<exists>l. l \<sqsubseteq> (\<Squnion>n. LEAST l. \<exists>c. l = #(Y n . c) \<and> c \<in> ubDom\<cdot>(Y n)) \<and> maxCount < l"
-                  using True finite_chain_def i8 is_ub_thelub by blast
-                then show ?thesis
-                  using less_le_trans lnle_def by blast
-              qed
-              then show ?thesis
-                using f34 by auto
-            qed  
-          qed
-        qed
-        then obtain maxCh where f37: "maxCh \<in> ubDom\<cdot>(Lub Y) \<and> (\<forall>j\<ge>maxI. maxCount = #(Y j . maxCh))"
-          by blast
-        then have f38: "\<forall>j\<ge>maxI. #(Y j . maxCh) = (LEAST ln. \<exists>c. ln = # (Y j . c) \<and> c \<in> ubDom\<cdot>(Y j))"
-          by (simp add: f32 f33)
-        have f39: "maxCh \<in> ubDom\<cdot>(Lub Y) \<and> (\<forall> j. \<forall> ch2 \<in> ubDom\<cdot>(Lub Y). (maxI \<le> j) \<longrightarrow> ((#(Y j . maxCh)) \<sqsubseteq> (#(Y j .  ch2))))"    
-          by (smt Least_le assms(1) f37 f38 lnle_conv ubdom_chain_eq2)     
-        have f40: "(\<Squnion>i. LEAST ln. \<exists>c. ln = # (Y i  .  c) \<and> c \<in> ubDom\<cdot>(Y i)) = (\<Squnion>i.  (# (Y i  .  maxCh)))"
-          apply(subst chains_lub_eq_sb, simp_all)
-          using True finite_chain_def apply auto[1]
-           apply (simp add: assms(1))
-            using f38 by fastforce
-        show ?thesis 
-          apply(subst f40)
-        proof -
-          have f1: "\<forall>f c. \<not> chain f \<or> (c\<cdot>(Lub f::'a stream)::lnat) = (\<Squnion>n. c\<cdot>(f n))"
-            using contlub_cfun_arg by blast
-          have f2: "ubGetCh\<cdot>(Lub Y) = (\<Squnion>n. ubGetCh\<cdot>(Y n))"
-            using assms(1) contlub_cfun_arg by blast
-          have "\<forall>f c. \<not> chain f \<or> (Lub f\<cdot>(c::channel)::'a stream) = (\<Squnion>n. f n\<cdot>c)"
-            using contlub_cfun_fun by blast
-          then have "(\<Squnion>n. #(Y n . maxCh)) = #(Lub Y . maxCh)"
-            using f2 f1 by (simp add: assms(1))
-          then have "\<exists>c. (\<Squnion>n. #(Y n . maxCh)) = #(Lub Y . c) \<and> c \<in> ubDom\<cdot>(Lub Y)"
-            by (meson f37)
-          then show "(LEAST l. \<exists>c. l = #(Lub Y . c) \<and> c \<in> ubDom\<cdot>(Lub Y)) \<le> (\<Squnion>n. #(Y n . maxCh))"
-            by (simp add: Least_le)
-        qed
-      next
-        case False
-        then have f41: "\<not>(\<exists>i. max_in_chain i (\<lambda> i. LEAST ln. \<exists>c. ln = #(Y i  .  c) \<and> c \<in> ubDom\<cdot>(Y i)))"
-          using assms(1) f11 finite_chain_def sbLen_chain2 by auto
-        have f42: "\<forall>i. \<exists>j\<ge>i. (LEAST ln. \<exists>c. ln = #(Y i  .  c) \<and> c \<in> ubDom\<cdot>(Y i)) < (LEAST ln. \<exists>c. ln = #(Y j  .  c) \<and> c \<in> ubDom\<cdot>(Y j))"
-        proof(rule ccontr)
-          assume a0: "\<not>?thesis"
-          then have "\<exists>i. \<forall>j\<ge>i. (LEAST ln. \<exists>c. ln = #(Y i  .  c) \<and> c \<in> ubDom\<cdot>(Y i)) = ( LEAST ln. \<exists>c. ln = #(Y j  .  c) \<and> c \<in> ubDom\<cdot>(Y j))"
-          proof - 
-            have "chain (\<lambda> i. LEAST ln. \<exists>c. ln = #(Y i  .  c) \<and> c \<in> ubDom\<cdot>(Y i))"
-              by (simp add: assms(1) f11 sbLen_chain2)
-            thus ?thesis
-              using  a0 chain_mono_sb by fastforce
-          qed
-          then have "\<exists>i. max_in_chain i (\<lambda> i. LEAST ln. \<exists>c. ln = #(Y i  .  c) \<and> c \<in> ubDom\<cdot>(Y i))" 
-            by (meson max_in_chainI)
-          then show "False" 
-            using f41 by blast
-        qed      
-        then have "(\<Squnion>i. LEAST ln. \<exists>c. ln = #(Y i  .  c) \<and> c \<in> ubDom\<cdot>(Y i)) = \<infinity>"
-          using False assms(1) f11 sbLen_chain2 unique_inf_lub by blast
-        then show ?thesis 
-          by simp
-      qed  
-    qed 
-next
-  case False
-  have f0: "\<And>x y. x \<sqsubseteq> y \<Longrightarrow> ubDom\<cdot>y = ubDom\<cdot>x"
-    using ubdom_below by blast
-  show ?thesis 
-    using False assms(1) ubdom_chain_eq2 by fastforce
-qed
-
-lemma sbLen_cont[simp]: "cont (\<lambda> b. if ubDom\<cdot>b \<noteq> {} then LEAST ln. ln \<in> { #(b. c) | c. c \<in> ubDom\<cdot>b} else \<infinity>)"  
-proof - 
-  have f1: "\<forall>sb. finite (ubDom\<cdot>sb)"
-    sorry
-  show ?thesis
-    apply (rule contI2)
-    apply simp
-    using f1 sbLen_cont_pre by blast
-qed
-
   
 (* ----------------------------------------------------------------------- *)
   subsection \<open>sbHdElem\<close>
