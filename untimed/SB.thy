@@ -380,11 +380,55 @@ lemma [simp]: assumes "\<forall>s. sdom\<cdot>(f s) \<subseteq> sdom\<cdot>s"
   shows "\<forall>c s. (sdom\<cdot>s\<subseteq>(ctype c) \<longrightarrow> sdom\<cdot>(f s)\<subseteq>(ctype c))"
 using assms by blast
 
-lemma sbmapstream_cont2[simp]:  assumes "cont f" and "\<forall>s. sdom\<cdot>(f s)\<subseteq>sdom\<cdot>s"
+lemma sbmapstream_well[simp]: assumes "\<forall>c s. (sdom\<cdot>s\<subseteq>(ctype c) \<longrightarrow> sdom\<cdot>(f s)\<subseteq>(ctype c))"
+  shows "ubWell (\<lambda>c. (c \<in> ubDom\<cdot>b)\<leadsto>f (b. c))"
+  by (smt assms domIff option.sel ubWell_def ubdom_channel_usokay ubgetch_insert usOkay_stream_def)
+
+lemma sbmapstream_dom [simp]: assumes "\<forall>c s. (sdom\<cdot>s\<subseteq>(ctype c) \<longrightarrow> sdom\<cdot>(f s)\<subseteq>(ctype c))"
+  shows "ubDom\<cdot>(sbMapStream f b) = ubDom\<cdot>b"
+proof -
+  have "\<forall>f u. (\<exists>c s. usOkay c (s::'a stream) \<and> \<not> usOkay c (f s)) \<or> UBundle.ubDom\<cdot>(ubMapStream f u) = UBundle.ubDom\<cdot>u"
+    using ubMapStream_ubDom by blast
+  then obtain cc :: "('a stream \<Rightarrow> 'a stream) \<Rightarrow> channel" and ss :: "('a stream \<Rightarrow> 'a stream) \<Rightarrow> 'a stream" where
+    f1: "\<forall>f u. usOkay (cc f) (ss f) \<and> \<not> usOkay (cc f) (f (ss f)) \<or> UBundle.ubDom\<cdot>(ubMapStream f u) = UBundle.ubDom\<cdot>u"
+    by moura
+  have "ubMapStream f b = sbMapStream f b"
+    by (simp add: sbMapStream_def ubMapStream_def)
+  then show ?thesis
+    using f1 by (metis (no_types) assms usOkay_stream_def)
+qed
+
+lemma sbmapstream_sbgetch [simp]: assumes "\<forall>c s. (sdom\<cdot>s\<subseteq>(ctype c) \<longrightarrow> sdom\<cdot>(f s)\<subseteq>(ctype c))"
+  and "c\<in>ubDom\<cdot>b"
+shows "(sbMapStream f b) . c = f (b . c)"
+  by (simp add: assms(1) assms(2) sbMapStream_def ubgetch_insert)
+
+(* for any continuous function f from stream to stream which preserves the well-typed property,
+   (sbMapStream f) is also continuous *)
+lemma sbmapstream_cont [simp]: assumes "cont f" and "\<forall>c s. (sdom\<cdot>s\<subseteq>(ctype c) \<longrightarrow> sdom\<cdot>(f s)\<subseteq>(ctype c))"
+  shows "cont (sbMapStream f)"
+proof (rule contI2)
+  show "monofun (sbMapStream f)"
+  proof  (rule monofunI)
+    fix x y:: "('a ::message) stream ubundle"
+    assume "x \<sqsubseteq> y"
+    thus "sbMapStream f x \<sqsubseteq> sbMapStream f y "
+      by (smt
+          Abs_cfun_inverse2 assms(1) assms(2) below_ubundle_def below_option_def eq_imp_below
+          fun_below_iff monofun_cfun_arg ubdom_below ubgetch_insert sbmapstream_dom sbmapstream_sbgetch
+          ub_below)
+  qed
+  thus "\<forall>Y. chain Y \<longrightarrow> sbMapStream f (\<Squnion>i. Y i) \<sqsubseteq> (\<Squnion>i. sbMapStream f (Y i))"
+    by (smt 
+        assms(1) assms(2) ch2ch_monofun cont2contlubE eq_imp_below ubrep_chain_lub_dom_eq ubrep_chain_the
+        less_UBI lub_eq ubrep_lub_eval option.sel ubrep_ubabs ubGetCh_def sbMapStream_def ubdom_insert
+        ubgetch_insert sbmapstream_dom sbmapstream_well)
+qed
+
+lemma sbmapstream_cont2[simp]: assumes "cont f" and "\<forall>s. sdom\<cdot>(f s)\<subseteq>sdom\<cdot>s"
   shows "cont (sbMapStream f)"
   apply (rule contI)
-  sorry
-
+  using sbmapstream_cont assms(1) assms(2) contE by blast
 
 (* ----------------------------------------------------------------------- *)
   subsection \<open>sbTake\<close>
@@ -392,14 +436,13 @@ lemma sbmapstream_cont2[simp]:  assumes "cont f" and "\<forall>s. sdom\<cdot>(f 
 lemma sbtake_cont [simp]:"cont (\<lambda>b. sbMapStream (\<lambda>s. stake n\<cdot>s) b)"
 by (simp)
 
-lemma sbtake_insert: "sbTake n\<cdot>b \<equiv> sbMapStream (\<lambda>s. stake n\<cdot>s) b"
+lemma sbtake_insert: "sbTake n\<cdot>b = sbMapStream (\<lambda>s. stake n\<cdot>s) b"
 by(simp add: sbTake_def)
 
 lemma sbtake_zero: "sbTake 0\<cdot>In = ubLeast (ubDom\<cdot>In)"
   by (simp add: sbtake_insert sbMapStream_def ubLeast_def)
 
 lemma sbtake_sbdom[simp]: "ubDom\<cdot>(sbTake n\<cdot>b) = ubDom\<cdot>b"
-  apply (simp add: sbtake_insert)
   by (simp add: sbtake_insert)
 
 lemma sbtake_sbgetch [simp]: assumes "c\<in>ubDom\<cdot>b"
@@ -447,8 +490,7 @@ lemma sbdrop_zero[simp]: "sbDrop 0\<cdot>b = b"
   by(simp add: sbdrop_insert sbMapStream_def)
 
 lemma sbdrop_sbdom[simp]: "ubDom\<cdot>(sbDrop n\<cdot>b) = ubDom\<cdot>b"
-  sorry
-  (*apply (simp add: sbdrop_insert)*)
+  by (simp add: sbdrop_insert)
 
 lemma sbdrop_sbgetch [simp]: assumes "c\<in>ubDom\<cdot>b"
   shows "sbDrop n\<cdot>b . c = sdrop n\<cdot>(b .c)"
@@ -560,12 +602,14 @@ lemma assumes "\<forall>c s. (sdom\<cdot>s\<subseteq>(ctype c) \<longrightarrow>
   subsection \<open>sbFilter\<close>
 (* ----------------------------------------------------------------------- *)
 lemma sbfilter_sbdom [simp]: "ubDom\<cdot>(sbFilter A\<cdot>b) = ubDom\<cdot>b"
-by (smt Abs_cfun_inverse2 cont_Rep_cfun2 sbFilter_def sbfilter_sbdom ubmapstream_cont sbmapstream_dom subsetCE subsetI)
+  by (smt
+      Abs_cfun_inverse2 cont_Rep_cfun2 sbFilter_def sbfilter_sbdom sbmapstream_cont sbmapstream_dom
+      subsetCE subsetI)
 
 lemma sbfilter_sbgetch [simp]: assumes "c\<in>ubDom\<cdot>b"
   shows  "(sbFilter A\<cdot>b) . c = sfilter A\<cdot>(b .c)"
   apply(simp add: sbFilter_def assms)
-by (meson Streams.sbfilter_sbdom assms ubmapstream_ubgetch subsetCE subsetI)
+by (meson Streams.sbfilter_sbdom assms sbmapstream_sbgetch subsetCE subsetI)
 
 (* ----------------------------------------------------------------------- *)
   (* Lemma *)
@@ -579,25 +623,35 @@ using assms apply(simp add: ubWell_def ubgetch_insert ubdom_insert)
 using ubrep_well ubWell_def by blast
 
 lemma if_then_chain[simp]: assumes "chain Y" and "monofun g"
-  shows "chain (\<lambda>i. (sbDom\<cdot>(Y i) = In)\<leadsto>g (Y i))"
-proof(cases "sbDom\<cdot>(Y 0) = In")
+  shows "chain (\<lambda>i. (ubDom\<cdot>(Y i) = In)\<leadsto>g (Y i))"
+proof(cases "ubDom\<cdot>(Y 0) = In")
   case True 
-  hence "\<forall>i. (sbDom\<cdot>(Y i) = In)" using assms(1) ubdom_chain_eq3 by blast
+  hence "\<forall>i. (ubDom\<cdot>(Y i) = In)" using assms(1) ubdom_chain_eq3 by blast
   thus ?thesis
     by (smt assms(1) assms(2) below_option_def monofunE option.sel option.simps(3) po_class.chain_def)
 next
   case False
-  hence "\<forall>i. (sbDom\<cdot>(Y i) \<noteq> In)" using assms(1) ubdom_chain_eq3 by blast
+  hence "\<forall>i. (ubDom\<cdot>(Y i) \<noteq> In)" using assms(1) ubdom_chain_eq3 by blast
   thus ?thesis by (auto) 
 qed
 
 lemma if_then_mono [simp]:  assumes "monofun g"
   shows "monofun (\<lambda>b. (ubDom\<cdot>b = In)\<leadsto>g b)"
-proof(rule monofunI)
-  fix x y :: "'a stream ubundle"
-  assume "x\<sqsubseteq>y"
-  hence "ubDom\<cdot>x = ubDom\<cdot>y" using ubdom_eq by blast 
-  thus "(sbDom\<cdot>x = In)\<leadsto>g x \<sqsubseteq> (sbDom\<cdot>y = In)\<leadsto>g y" by (smt \<open>(x::'a SB) \<sqsubseteq> (y::'a SB)\<close> assms monofunE po_eq_conv some_below) 
+proof -
+  obtain uu :: "('a\<^sup>\<Omega> \<Rightarrow> 'b option) \<Rightarrow> 'a\<^sup>\<Omega>" and uua :: "('a\<^sup>\<Omega> \<Rightarrow> 'b option) \<Rightarrow> 'a\<^sup>\<Omega>" where
+    "\<forall>f. (\<not> monofun f \<or> (\<forall>u ua. u \<notsqsubseteq> ua \<or> f u \<sqsubseteq> f ua)) \<and> (monofun f \<or> uu f \<sqsubseteq> uua f \<and> f (uu f) \<notsqsubseteq> f (uua f))"
+    using monofun_def by moura
+  moreover
+  { assume "(UBundle.ubDom\<cdot> (uu (\<lambda>u. (UBundle.ubDom\<cdot>u = In)\<leadsto>g u)) = In)\<leadsto>g (uu (\<lambda>u. (UBundle.ubDom\<cdot>u = In)\<leadsto>g u)) \<notsqsubseteq> (UBundle.ubDom\<cdot> (uua (\<lambda>u. (UBundle.ubDom\<cdot>u = In)\<leadsto>g u)) = In)\<leadsto>g (uua (\<lambda>u. (UBundle.ubDom\<cdot>u = In)\<leadsto>g u))"
+    { assume "((UBundle.ubDom\<cdot> (uu (\<lambda>u. (UBundle.ubDom\<cdot>u = In)\<leadsto>g u)) = In)\<leadsto>g (uu (\<lambda>u. (UBundle.ubDom\<cdot>u = In)\<leadsto>g u)) \<sqsubseteq> (UBundle.ubDom\<cdot> (uua (\<lambda>u. (UBundle.ubDom\<cdot>u = In)\<leadsto>g u)) = In)\<leadsto>g (uua (\<lambda>u. (UBundle.ubDom\<cdot>u = In)\<leadsto>g u))) \<noteq> (Some (g (uu (\<lambda>u. (UBundle.ubDom\<cdot>u = In)\<leadsto>g u))) \<sqsubseteq> Some (g (uua (\<lambda>u. (UBundle.ubDom\<cdot>u = In)\<leadsto>g u))))"
+      then have "UBundle.ubDom\<cdot> (uu (\<lambda>u. (UBundle.ubDom\<cdot>u = In)\<leadsto>g u)) = UBundle.ubDom\<cdot> (uua (\<lambda>u. (UBundle.ubDom\<cdot>u = In)\<leadsto>g u)) \<longrightarrow> uu (\<lambda>u. (UBundle.ubDom\<cdot>u = In)\<leadsto>g u) \<notsqsubseteq> uua (\<lambda>u. (UBundle.ubDom\<cdot>u = In)\<leadsto>g u) \<or> (UBundle.ubDom\<cdot> (uu (\<lambda>u. (UBundle.ubDom\<cdot>u = In)\<leadsto>g u)) = In)\<leadsto>g (uu (\<lambda>u. (UBundle.ubDom\<cdot>u = In)\<leadsto>g u)) \<sqsubseteq> (UBundle.ubDom\<cdot> (uua (\<lambda>u. (UBundle.ubDom\<cdot>u = In)\<leadsto>g u)) = In)\<leadsto>g (uua (\<lambda>u. (UBundle.ubDom\<cdot>u = In)\<leadsto>g u))"
+        by auto
+      then have "uu (\<lambda>u. (UBundle.ubDom\<cdot>u = In)\<leadsto>g u) \<notsqsubseteq> uua (\<lambda>u. (UBundle.ubDom\<cdot>u = In)\<leadsto>g u) \<or> (UBundle.ubDom\<cdot> (uu (\<lambda>u. (UBundle.ubDom\<cdot>u = In)\<leadsto>g u)) = In)\<leadsto>g (uu (\<lambda>u. (UBundle.ubDom\<cdot>u = In)\<leadsto>g u)) \<sqsubseteq> (UBundle.ubDom\<cdot> (uua (\<lambda>u. (UBundle.ubDom\<cdot>u = In)\<leadsto>g u)) = In)\<leadsto>g (uua (\<lambda>u. (UBundle.ubDom\<cdot>u = In)\<leadsto>g u))"
+        using ubdom_below by blast }
+    then have "uu (\<lambda>u. (UBundle.ubDom\<cdot>u = In)\<leadsto>g u) \<notsqsubseteq> uua (\<lambda>u. (UBundle.ubDom\<cdot>u = In)\<leadsto>g u) \<or> (UBundle.ubDom\<cdot> (uu (\<lambda>u. (UBundle.ubDom\<cdot>u = In)\<leadsto>g u)) = In)\<leadsto>g (uu (\<lambda>u. (UBundle.ubDom\<cdot>u = In)\<leadsto>g u)) \<sqsubseteq> (UBundle.ubDom\<cdot> (uua (\<lambda>u. (UBundle.ubDom\<cdot>u = In)\<leadsto>g u)) = In)\<leadsto>g (uua (\<lambda>u. (UBundle.ubDom\<cdot>u = In)\<leadsto>g u))"
+      using assms monofun_def some_below by blast }
+  ultimately show ?thesis
+    by meson
 qed
 
 lemma if_then_cont [simp]: assumes "cont g"
@@ -646,7 +700,10 @@ proof -
       using assms ubdom_chain_eq2 by fastforce
   qed  
   then show ?thesis
-    by (smt assms ch2ch_Rep_cfunL ch2ch_Rep_cfunR contlub_cfun_arg contlub_cfun_fun fun_below_iff if_then_lub is_ub_thelub lub_eq lub_fun monofun_cfun_arg monofun_cfun_fun po_class.chain_def po_eq_conv ubdom_chain_eq2 some_below)
+    by (smt
+        assms ch2ch_Rep_cfunL ch2ch_Rep_cfunR contlub_cfun_arg contlub_cfun_fun fun_below_iff
+        if_then_lub is_ub_thelub lub_eq lub_fun monofun_cfun_arg monofun_cfun_fun po_class.chain_def
+        po_eq_conv ubdom_chain_eq2 some_below)
 qed  
  
 lemma sbHdElem_cont: "cont (\<lambda> sb::'a stream ubundle. (\<lambda>c. (c \<in> ubDom\<cdot>sb) \<leadsto> (lshd\<cdot>(sb . c))))"  
@@ -655,5 +712,3 @@ lemma sbHdElem_cont: "cont (\<lambda> sb::'a stream ubundle. (\<lambda>c. (c \<i
   using sbHdElem_cont_pre by blast
 
 end
-
-
