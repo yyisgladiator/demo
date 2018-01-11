@@ -163,10 +163,12 @@ proof -
   have f2: "\<And> i tb. ubDom\<cdot>(tsbTTake_abbr_fun  i tb) = ubDom\<cdot>tb"
     by (subst tsbTTake_abb2funE, simp)
   have f3: "\<And>c. c \<in> ubDom\<cdot>(Lub Y) \<Longrightarrow> (\<Squnion>i. tsbTTake_abbr_fun n (Y i)) . c = (\<Squnion>i. tsbTTake_abbr_fun n (Y i) .  c)"
-    (*apply (rule lubgetCh)
-     apply (simp add: assms ch2ch_monofun)
-    by (metis assms monofunE po_class.chain_def tsbChain_dom_eq2 f2 tsbTTake_abbr_fun_mono)*)
-    sorry
+    using f11 contlub_cfun_arg
+  proof -
+    fix c :: channel
+    show "(\<Squnion>na. tsbTTake_abbr_fun n (Y na)) . c = (\<Squnion>na. tsbTTake_abbr_fun n (Y na) . c)"
+      by (metis (no_types) assms contlub_cfun_arg monofun_def po_class.chain_def tsbTTake_abbr_fun_mono)
+  qed
   show ?thesis
     apply (subst (1 2) tsbTTake_abb2fun)
     apply (rule ub_below)
@@ -256,7 +258,7 @@ lemma tsbttakeL_least: "Abs_ubundle (\<lambda>c. (c\<in>ubDom\<cdot>tb) \<leadst
 
 lemma tsbttakeL_inf [simp]: "Abs_ubundle (\<lambda>c. (c\<in>ubDom\<cdot>tb) \<leadsto> (tsTakeL\<cdot>\<infinity>\<cdot>(tb  .  c))) = tb"
   apply (simp only: tstakeL_inf)
-  sorry
+  by(simp add: ub_eq)
 
 lemma tsbttakeL_least_getch [simp]: assumes "c \<in> ubDom\<cdot>tb"
   shows "(Abs_ubundle (\<lambda>c. (c\<in>ubDom\<cdot>tb) \<leadsto> (tsTakeL\<cdot>(Fin 0)\<cdot>(tb  .  c)))) . c = \<bottom>"
@@ -276,7 +278,7 @@ next
   case False
   have f1: "\<And>t. Abs_ubundle (\<lambda>c. (c \<in> ubDom\<cdot> t)\<leadsto>tsTakeL\<cdot>\<infinity>\<cdot> (t . c)) = t"
     apply (simp only: tstakeL_inf)
-    sorry
+    by(simp add: ub_eq)
   then show ?thesis
     using False by auto
 qed
@@ -321,7 +323,7 @@ lemma tsbttake_cont1_pre: assumes "chain Y"
 proof -
   have f1: "\<And>c. c \<in> ubDom\<cdot>tb \<Longrightarrow> (\<Squnion>i. Abs_ubundle (\<lambda>c. (c\<in>ubDom\<cdot>tb) \<leadsto> (tsTakeL\<cdot>(Y i)\<cdot>(tb  .  c)))) . c = (\<Squnion>i. (Abs_ubundle (\<lambda>c. (c\<in>ubDom\<cdot>tb) \<leadsto> (tsTakeL\<cdot>(Y i)\<cdot>(tb  .  c)))) . c)"
     apply (rule lubgetCh, simp only: tsbttake_chain1 assms)
-    sorry
+    using assms tsbttakeL_dom tsbttake_chain1 ubdom_chain_eq2 by blast
   show ?thesis
     apply (rule ub_below)
      apply (subst ubdom_lub, simp_all add: assms)
