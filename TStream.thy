@@ -2799,7 +2799,7 @@ lemma tsconc_mlscons: "ts1\<noteq>\<bottom> \<Longrightarrow> (updis t &&\<surd>
 
 lemma tsconc_delayfun: "(delay ts1) \<bullet>\<surd> ts2 = delay (ts1 \<bullet>\<surd> ts2)"
   by (simp add: delayFun.rep_eq)
-  
+
 (************************************************)
 (************************************************)      
     section \<open>Match definitions\<close>
@@ -3394,6 +3394,40 @@ lemma tsremdups_neq:
   by (metis (no_types, lifting) event.simps(3) tsRemDups_h.simps(2) tslscons_nbot_rev 
       tsmlscons2tslscons tsmlscons_lscons tsremdups_h_mlscons_ndup tsremdups_h_strict 
       tsremdups_insert)
+
+(************************************************)
+  subsection {* tsDropWhile *}   
+(************************************************)
+
+fixrec tsDropWhile :: "'a discr \<rightarrow> 'a tstream \<rightarrow> 'a tstream" where
+"tsDropWhile\<cdot>a\<cdot>\<bottom> = \<bottom>" |
+"tsDropWhile\<cdot>a\<cdot>(tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>ts) = delayFun\<cdot>(tsDropWhile\<cdot>a\<cdot>ts)" |
+"ts \<noteq> \<bottom> \<Longrightarrow> tsDropWhile\<cdot>a\<cdot>(tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>t))\<cdot>ts) = 
+  (if t = a then tsDropWhile\<cdot>a\<cdot>ts else tsMLscons\<cdot>(up\<cdot>t)\<cdot>ts)"
+
+lemma tsdropwhile_tsabs: "sdropwhile (\<lambda>x.  x=a)\<cdot>(tsAbs\<cdot>as) = tsAbs\<cdot>(tsDropWhile\<cdot>(Discr a)\<cdot>as)" 
+  apply (induction as,simp_all)
+  apply (metis delayfun_tslscons tsDropWhile.simps(2) tsabs_delayfun)
+  apply (case_tac "t = a")
+  apply (metis (mono_tags, lifting) lscons_conv sdropwhile_t tsDropWhile.simps(3) tsabs_mlscons tsmlscons_lscons)
+  by (metis (mono_tags, lifting) discr.inject lscons_conv sdropwhile_f tsDropWhile.simps(3) tsabs_mlscons tsmlscons_lscons)
+
+lemma tsdropwhile_tstickcount: "#\<surd> (tsDropWhile\<cdot>a\<cdot>as) = #\<surd> as" 
+  apply (induction as,simp_all)
+  apply (metis delayfun_tslscons tsDropWhile.simps(2) tstickcount_delayfun)
+  by (metis tsDropWhile.simps(3) tsmlscons_lscons tstickcount_mlscons)
+
+lemma tsdropwhile_delayfun: "tsDropWhile\<cdot>a\<cdot>(delayFun\<cdot>as) = delayFun\<cdot>(tsDropWhile\<cdot>a\<cdot>as)"
+  by (simp add: delayfun_tslscons) 
+
+lemma tsdropwhile_t: "tsDropWhile\<cdot>(Discr a)\<cdot>(updis a &&\<surd> as) = tsDropWhile\<cdot>(Discr a)\<cdot>as"
+  by (metis tsDropWhile.simps(3) tsmlscons_lscons tsmlscons_nbot_rev)
+
+lemma tsdropwhile_f: "a \<noteq> b \<Longrightarrow> tsDropWhile\<cdot>(Discr a)\<cdot>(updis b &&\<surd> as) = updis b &&\<surd> as"
+  by (metis discr.inject tsDropWhile.simps(1) tsDropWhile.simps(3) tsmlscons_lscons tsmlscons_nbot_rev)
+
+lemma tsdropwhile_strict: "tsDropWhile\<cdot>a\<cdot>\<bottom> = \<bottom>"
+  by simp 
 
 (************************************************)
   subsection \<open>list2ts\<close>    
