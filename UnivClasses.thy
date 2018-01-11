@@ -44,12 +44,13 @@ class uscl_pcpo = uscl + pcpo +
 begin
 end  
 
-  (*
-class uscl_pcpo = uscl + pcpo + 
-  assumes usOkay_bot: "\<And>c. usOkay c \<bottom>"    (* used for ubLeast wellformed proof *)
+
+class uscl_conc = uscl_pcpo +
+  fixes usConc :: "'a \<Rightarrow> 'a \<rightarrow> 'a"
+  assumes usOkay_conc: "\<And>c. \<And>s1 s2. usOkay c s1 \<Longrightarrow> usOkay c s2 \<Longrightarrow> usOkay c (usConc s1\<cdot>s2)"
 begin
-end  
-*)
+end 
+
 
 (****************************************************)
 section\<open>Universal Stream Bundle\<close>
