@@ -5,7 +5,7 @@
 *)
 
 theory UBundle
-  imports UnivClasses Channel "inc/OptionCpo"
+  imports UnivClasses Channel "inc/OptionCpo" UFun_Comp
 begin
 
   
@@ -62,13 +62,13 @@ text {* @{text "ubDom"} returns the domain of the given bundle *}
 definition ubDom :: "'M\<^sup>\<Omega> \<rightarrow> channel set" where
 "ubDom \<equiv> \<Lambda> b. dom (Rep_ubundle b)"
 
-
+(*
 text {* @{text "ubRestrict"} creates a new bundle with the restricted channel set *}
 definition ubRestrict:: "channel set \<Rightarrow> 'M\<^sup>\<Omega> \<rightarrow> 'M\<^sup>\<Omega>" where
 "ubRestrict cs  \<equiv> \<Lambda> b. Abs_ubundle (Rep_ubundle b |` cs)"
 
 abbreviation ubRestrict_abbr :: "'M\<^sup>\<Omega> \<Rightarrow> channel set \<Rightarrow> 'M\<^sup>\<Omega>" (infix "\<bar>" 65) where 
-"b \<bar> cs \<equiv> ubRestrict cs\<cdot>b"
+"b \<bar> cs \<equiv> ubRestrict cs\<cdot>b" *)
 
 
 text {* @{text "ubGetCh"} returns the element of a given channel  *}
@@ -88,13 +88,13 @@ text {* @{text "ubShift"}  the channel-domains are merged . Thats an easy conver
 definition ubShift :: "('A \<Rightarrow> 'B) \<Rightarrow> 'A\<^sup>\<Omega> \<Rightarrow> 'B\<^sup>\<Omega>" where
 "ubShift f ub = Abs_ubundle (\<lambda>c. ((c\<in>ubDom\<cdot>ub) \<leadsto> f (ub . c)))"
 
-
+(*
 text {* @{text "ubUnion"}  the channel-domains are merged *}
 definition ubUnion :: "'M\<^sup>\<Omega> \<rightarrow> 'M\<^sup>\<Omega> \<rightarrow> 'M\<^sup>\<Omega>"  where 
 "ubUnion \<equiv> \<Lambda> ub1 ub2 . Abs_ubundle ((Rep_ubundle ub1) ++ (Rep_ubundle ub2))"
 
 abbreviation ubunion_abbr :: " 'M\<^sup>\<Omega> \<Rightarrow> 'M\<^sup>\<Omega> \<Rightarrow> 'M\<^sup>\<Omega>" (infixl "\<uplus>" 100) where 
-"b1 \<uplus> b2 \<equiv> ubUnion\<cdot>b1\<cdot>b2"
+"b1 \<uplus> b2 \<equiv> ubUnion\<cdot>b1\<cdot>b2"*)
 
 
 text {* @{text "ubSetCh"} adds a channel or ubReplaces its content *}
