@@ -382,7 +382,11 @@ lemma ubrestrict_ubdom_sup_inter:
   shows "ub \<bar> cs = ub \<bar> (cs \<inter> (ubDom\<cdot>ub))"
   by (metis (no_types, hide_lams) Int_commute inf_le2 ubrestrict_ubdom2 ubrestrict_id ubRestrict_twice)
 
-    
+lemma ubrestrict_below [simp]:  assumes "chain Y" and "cont h"
+      shows "(h (\<Squnion>i. Y i) \<bar> g (ubDom\<cdot>(\<Squnion>i. Y i))) \<sqsubseteq> (\<Squnion>i. (h (Y i) \<bar> g (ubDom\<cdot>(Y i)) ))"
+  by (smt assms(1) assms(2) ch2ch_cont cont2contlubE cont_Rep_cfun2 lub_eq po_eq_conv ubdom_chain_eq2)
+
+
 subsection \<open>ubLen\<close>
 
 
