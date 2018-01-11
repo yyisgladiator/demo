@@ -60,7 +60,7 @@ proof -
     apply rule+
   proof - 
     fix Y:: "nat \<Rightarrow> 'a\<^sup>\<Omega>"
-    assume "chain Y"
+    assume f00: "chain Y"
     have f2: "\<And>i. ubDom\<cdot>(\<Squnion>i::nat. Y i) = ubDom\<cdot>(Y i)"
       by (simp add: \<open>chain (Y::nat \<Rightarrow> 'a\<^sup>\<Omega>)\<close>)
     then have f3: "ubDom\<cdot>(Abs_ubundle (\<lambda>c::channel. Some (usConc (ubUp\<cdot>b1  .  c)\<cdot>(ubUp\<cdot>(\<Squnion>i::nat. Y i)  .  c)))) = UNIV"
@@ -68,7 +68,16 @@ proof -
     have f4: "\<And>i. ubDom\<cdot>(Abs_ubundle (\<lambda>c::channel. Some (usConc (ubUp\<cdot>b1  .  c)\<cdot>(ubUp\<cdot>(Y i)  .  c)))) = UNIV"
       by (simp add: ubdom_ubrep_eq)
     have f50: "chain (\<lambda>i. Abs_ubundle (\<lambda>c::channel. Some (usConc (ubUp\<cdot>b1  .  c)\<cdot>(ubUp\<cdot>(Y i)  .  c))))"
-      using f0 (* proof found by sledgehammer *) sorry
+      apply(simp add: chain_def)
+      apply rule+
+    proof - 
+      fix i
+      have f501: "(Y i) \<sqsubseteq> (Y (Suc i))"
+        by (simp add: f00 po_class.chainE)
+      show "Abs_ubundle (\<lambda>c::channel. Some (usConc (ubUp\<cdot>b1  .  c)\<cdot>(ubUp\<cdot>(Y i)  .  c))) \<sqsubseteq>
+              Abs_ubundle (\<lambda>c::channel. Some (usConc (ubUp\<cdot>b1  .  c)\<cdot>(ubUp\<cdot>(Y (Suc i))  .  c)))"
+       using f0 f501 monofun_def by fastforce
+   qed
     have f5: "ubDom\<cdot>(\<Squnion>i::nat. Abs_ubundle (\<lambda>c::channel. Some (usConc (ubUp\<cdot>b1  .  c)\<cdot>(ubUp\<cdot>(Y i)  .  c)))) = UNIV"
       using f4 f50 ubdom_chain_eq2 by blast 
     have f6: "\<And>c. (usConc (ubUp\<cdot>b1  .  c)\<cdot>(ubUp\<cdot>(Lub Y)  .  c)) \<sqsubseteq> (\<Squnion>i::nat. Abs_ubundle (\<lambda>c::channel. Some (usConc (ubUp\<cdot>b1 . c)\<cdot>(ubUp\<cdot>(Y i) . c)))) . c"
