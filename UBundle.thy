@@ -390,6 +390,7 @@ lemma ubrestrict_below [simp]:  assumes "chain Y" and "cont h"
 subsection \<open>ubLen\<close>
 
 
+(* Missing *)
   
   
 subsection \<open>ubShift\<close>
@@ -480,7 +481,7 @@ lemma ubsetch_insert: assumes "usOkay c s"
   shows "(ubSetCh\<cdot>b) c s = b \<uplus> Abs_ubundle [c \<mapsto> s]"
   by (simp add: ubSetCh_def)
 
-(*    
+    
   subsection \<open>ubRemCh\<close>
 (* ubRemCh *)
 
@@ -494,9 +495,9 @@ lemma ubremch2ubrestrict: "ubRemCh c\<cdot>b = ubRestrict (ubDom\<cdot>b - {c})\
   by (metis (no_types, lifting) diff_eq eta_cfun subset_iff ubrestrict_id ubRestrict_twice)
 
 
-  subsection \<open>ubRenameCh\<close>
-(* ubRenameCh *)
-  thm ubRenameCh_def
+subsection \<open>ubRenameCh\<close>
+
+
 (* a bundle with only one channel based on other bundel is ubWell  *)
 lemma ubWell_single_channel: assumes "c \<in> ubDom\<cdot>ub" shows "ubWell [c \<mapsto> Rep_ubundle ub\<rightharpoonup>c]"
   by (metis (full_types) assms ubrep_ubabs ubsetch_well ubdom_channel_usokay ubWell_empty)
@@ -518,16 +519,16 @@ lemma ubrenamech_ubgetchI1: assumes "ch1 \<in> ubDom\<cdot>ub"
                     and "usOkay ch2 (ub . ch1)"
   shows "(ubRenameCh ub ch1 ch2) . ch2 = ub . ch1"
   apply (simp add: ubRenameCh_def  ubSetCh_def)
-  apply (subst ubunion_ubgetchR)
+  apply (subst ubunion_getchR)
   apply (metis assms(2) dom_empty dom_fun_upd option.simps(3) ubrep_ubabs singletonI ubsetch_well ubdom_ubrep_eq ubWell_empty)
   by (metis assms(1) assms(2) fun_upd_same ubrep_ubabs ubsetch_well ubgetchE ubgetch_insert ubWell_empty)
 
 (* renaming channel doesnt effect other channel in a bundle  *)           
 lemma ubrenamech_ubgetchI2: assumes "ch1 \<in> ubDom\<cdot>ub"  and "usOkay ch2 (ub . ch1)" and "ch3 \<in> ubDom\<cdot>ub" and "ch3 \<noteq> ch2" and "ch3 \<noteq> ch1"
   shows "(ubRenameCh ub ch1 ch2) . ch3 = ub . ch3"
-  apply (simp add: ubRenameCh_def  ubSetCh_def)
-  by (metis ComplI assms(2) assms(4) assms(5) dom_empty dom_fun_upd option.discI ubrep_ubabs singletonD ubsetch_well ubdom_ubrep_eq ubgetch_ubrestrict ubunion_ubgetchL ubWell_empty)
-*)
+  apply (simp add: ubRenameCh_def ubSetCh_def)
+  by (metis ComplI assms(2) assms(4) assms(5) dom_empty dom_fun_upd option.discI ubrep_ubabs singletonD ubsetch_well ubdom_ubrep_eq ubgetch_ubrestrict ubunion_getchL ubWell_empty)
+
 
 
 
