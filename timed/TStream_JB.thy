@@ -7,7 +7,7 @@
 *)
 
 theory TStream_JB
-  imports Channel OptionCpo TStream
+  imports "../Channel" "../inc/OptionCpo" TStream
 
 begin
 
