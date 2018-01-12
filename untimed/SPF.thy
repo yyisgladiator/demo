@@ -1,5 +1,5 @@
 theory SPF
-  imports SB "../UFun_applyIn" UB_ToDo "../inc/CPOFix"
+  imports SB "../UFun_Comp" "../UFun_applyIn" UB_ToDo "../inc/CPOFix"
 begin
 default_sort message
 
