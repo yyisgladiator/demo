@@ -1,5 +1,5 @@
 theory SPF
-  imports SB "../UFun_Comp" "../UFun_applyIn" UB_ToDo "../inc/CPOFix"
+  imports SB "../UFun_Comp" "../UFun_applyIn" "../inc/CPOFix"
 begin
 default_sort message
 
@@ -21,7 +21,7 @@ definition spfStateFix ::"channel set \<Rightarrow> channel set \<Rightarrow>(('
 section \<open>Definitions with spfApplyIn\<close>
 
 (* ToDo: make signature more general, output does not have to be an SB *)
-definition spfRt :: "('m SB \<Rrightarrow> 'm SB) \<rightarrow> ('m SB \<Rrightarrow> 'm SB)" where
+definition spfRt :: "('m SB \<Rrightarrow> 'a::ubcl) \<rightarrow> ('m SB \<Rrightarrow> 'a)" where
 "spfRt \<equiv> ufApplyIn sbRt"
 
 section \<open>Definitions with spfApplyOut\<close>
@@ -81,8 +81,9 @@ lemma spfStateLeast_ran[simp]: "\<forall>x. ufRan\<cdot>(spfStateLeast In Out x)
 lemma spfStateLeast_apply[simp]: 
   assumes "ubDom\<cdot>sb = In"
   shows "spfStateLeast In Out x \<rightleftharpoons> sb = ubLeast Out"
-  by (metis assms option.sel spfStateLeast_def ubDom_ubundle_def ufLeast_def ufleast_rep_abs)
-
+  apply(auto simp add: spfStateLeast_def ufLeast_def ubLeast_ubundle_def assms ubDom_ubundle_def)
+  by (metis (no_types) assms option.sel ubDom_ubundle_def ubLeast_ubundle_def ufleast_rep_abs)
+  
 lemma spfStateLeast_bottom [simp]: assumes "\<forall>x. ufDom\<cdot>(f x) = In" and " \<forall>x. ufRan\<cdot>(f x) = Out"
   shows "(spfStateLeast In Out) \<sqsubseteq> f"
 proof -
@@ -198,18 +199,20 @@ lemma ufapply_in_out:
       and "\<And>sb. ubDom\<cdot>(g\<cdot>sb) =  ubDom\<cdot>sb"
     shows  "ufApplyIn f\<cdot>(ufApplyOut g\<cdot>spf) = ufApplyOut g\<cdot>(ufApplyIn f\<cdot>spf)"
   apply(rule ufun_eqI)
-  using assms by auto
-  
+  using assms apply auto
+  oops
 
 subsection \<open>spfRt lemma\<close>
 lemma spfrt_step[simp]: "(spfRt\<cdot>spf)\<rightleftharpoons>sb = spf\<rightleftharpoons>(sbRt\<cdot>sb)"
-  by(simp add: spfRt_def)
+  apply(simp add: spfRt_def ufApplyIn_def)
+  oops
 
 subsection \<open>spfConc lemma\<close>
 lemma spconc_step[simp]: 
   assumes "ubDom\<cdot>sb = ufDom\<cdot>spf"
   shows "(spfConc sb1\<cdot>spf)\<rightleftharpoons>sb = ubConcEq sb1\<cdot>(spf\<rightleftharpoons>sb)"
-  by(simp add: spfConc_def assms)
+  apply(simp add: spfConc_def assms)
+  oops
 
 
 

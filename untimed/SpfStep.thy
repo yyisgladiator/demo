@@ -591,13 +591,13 @@ lemma spfstep_dom [simp]:assumes "finite cIn" shows"ufDom\<cdot>(spfStep cIn cOu
   by(simp add: spfstep_insert spfDomAbs assms)
 
 lemma ubDom_ubLeast[simp]:"ubDom\<cdot>(ubLeast cIn) = cIn"
-  by (metis ubDom_ubundle_def ubdom_least_cs)
+  by simp
     
 lemma spfstep_ran [simp]:assumes "finite cIn" shows"ufRan\<cdot>(spfStep cIn cOut\<cdot>f) = cOut"
   apply(simp add: spfstep_insert assms)
   apply(unfold ufran_least,simp add: assms)
   apply (simp add: assms spfDomAbs)
-  by (simp add: ubDom_ubundle_def)
+  by (metis assms spfStep_h1_out_dom ubDom_ubundle_def ubdom_least_cs)
 
 lemma sbHdElem_dom[simp]:"dom (sbHdElem\<cdot>sb) = ubDom\<cdot>sb"
   by(simp add: sbHdElem_def sbHdElem_cont)

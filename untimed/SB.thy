@@ -1,26 +1,27 @@
 theory SB
-  imports "../UBundle" Streams
+  imports "../UBundle_Conc" Streams
 begin
 
 default_sort message
 
 type_synonym 'm SB = "'m stream ubundle"
 
-instantiation stream :: (message) uscl_pcpo
+instantiation stream :: (message) uscl_conc
 begin
 
   definition usOkay_stream_def: "usOkay c m \<equiv> sdom\<cdot>m \<subseteq> ctype c"
   
   definition usLen_stream_def: "usLen \<equiv> slen"
-  
+
+  definition usConc_stream: "usConc = sconc"
+
   instance
     apply intro_classes
-    apply (rule admI)
-     apply (simp add: usOkay_stream_def l44)
-    by (simp add: usOkay_stream_def)
-  
-  
-  end
+      apply (rule admI)
+    apply(auto simp add: usOkay_stream_def)
+    using l44 apply blast
+    by (metis (mono_tags, lifting) Un_iff sconc_sdom subset_eq usConc_stream)  
+end
 
 definition sbRt :: "'m SB \<rightarrow> 'm SB" where
 "sbRt \<equiv> \<Lambda> sb. ubMapStream (Rep_cfun srt) sb"
