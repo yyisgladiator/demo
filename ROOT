@@ -3,15 +3,18 @@ session "uClasses" (mustWork) = "HOLCF" +
   theories
     UnivClasses
 
-session "ubundle" (mustWork) = "uClasses" + 
+session "ubundle" (mustWork) = "uClasses" +
   options [quick_and_dirty = true]
   theories
     UBundle
+    UBundle_Conc
 
 session "ufun" (mustWork) = "uClasses" +
   options [quick_and_dirty = true]
   theories
     UFun
+    UFun_applyIn
+    UFun_Comp
 
 session "uspec" (mustWork) = "uClasses" +
   options [quick_and_dirty = true]
