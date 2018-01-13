@@ -90,6 +90,9 @@ class ubcl_comp = ubcl +
   
   assumes ubdom_least: "\<And> x. ubLeast (ubDom\<cdot>x)\<sqsubseteq>x"
   assumes ubdom_least_cs: "\<And> cs. ubDom\<cdot>(ubLeast cs) = cs"
+
+  assumes ubunion_asso:"ubDom\<cdot>f1 \<inter> ubDom\<cdot>f2 = {} \<and> ubDom\<cdot>f2 \<inter> ubDom\<cdot>f3 = {} \<and> ubDom\<cdot>f1 \<inter> ubDom\<cdot>f3 = {} \<longrightarrow> ubUnion\<cdot>(ubUnion\<cdot>f1\<cdot>f2)\<cdot>f3 = ubUnion\<cdot>f1\<cdot>(ubUnion\<cdot>f2\<cdot>f3)"
+  assumes ubunion_commu: "ubDom\<cdot>f1 \<inter> ubDom\<cdot>f2 = {} \<longrightarrow> ubUnion\<cdot>f1\<cdot>f2 = ubUnion\<cdot>f2\<cdot>f1"
 begin
 end  
   
