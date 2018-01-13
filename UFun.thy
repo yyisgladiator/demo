@@ -446,6 +446,11 @@ lemma ufdom_2ufundom [simp]: assumes "(Rep_cufun S) a = Some b"
   shows "ufDom\<cdot>S = ubDom\<cdot>a"
   by (metis assms domI someI_ex ufun_dom2ufundom ufdom_insert)
 
+(*neu*)
+(* tspf_least_in_dom *)
+lemma ufun_least_in_dom: "(ubLeast (ufDom\<cdot>f)) \<in> dom (Rep_cufun f)"
+  by (metis domD rep_ufun_well ubdom_least_cs ufWell_def ufdom_2ufundom)
+
 (* if the function has the same dom then they also have the same dom after rep is applied  *)
 lemma ufdom_2_dom_ctufun: assumes "ufDom\<cdot>f = ufDom\<cdot>g"
   shows "dom (Rep_cufun f) = dom (Rep_cufun g)"  
@@ -527,6 +532,12 @@ lemma ufran_2_ubdom [simp]: assumes "(Rep_cufun F) a = Some b"
   shows "ufRan\<cdot>F = ubDom\<cdot>b"
     by (metis (no_types, lifting) Abs_cfun_inverse2 assms ranI someI_ex ufRan_def 
             ufun_ran2ufundom ufran_cont)
+
+(*neu*)
+(*tspfran_least*)
+lemma ufran_least: "ufRan\<cdot>f = ubDom\<cdot>(f\<rightleftharpoons> (ubLeast (ufDom\<cdot>f)))"
+  apply (simp add: ufRan_def)
+  by (metis domIff option.collapse ufran_2_ubdom ufran_insert ufun_least_in_dom)
 
 (*   *)
 lemma ufran_2_ubdom2: assumes "ubDom\<cdot>tb = ufDom\<cdot>f"
