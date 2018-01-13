@@ -687,16 +687,14 @@ qed
   
 paragraph \<open>commu\<close>  
 
-(*
+(*neu*)
 lemma ufcomph_commu: assumes  "ufRan\<cdot>f1 \<inter> ufRan\<cdot>f2 = {}"
                        and "ubDom\<cdot>ub = (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2)"
                        and "ubDom\<cdot>x = ufCompI f1 f2"
                      shows "(ufCompH f1 f2 x)\<cdot>ub = (ufCompH f2 f1 x)\<cdot>ub"
   apply (simp add: ufCompH_def)
-  by (rule ubunion_commutative)
-*)
-  
-  
+  by (metis (no_types, lifting) Un_Diff_cancel2 assms(1) assms(2) assms(3) le_supI1 sup_ge1 sup_ge2 ubunion_commu ubunion_dom ufCompI_def ufRanRestrict)
+
 subsubsection \<open>iterate ufCompH\<close>  
 
   
@@ -718,7 +716,8 @@ lemma iter_ufCompH_chain[simp]: assumes "ubDom\<cdot>x = ufCompI f1 f2"
 lemma iter_ufCompH_dom[simp]: assumes "ubDom\<cdot>x = ufCompI f1 f2" 
   shows "ubDom\<cdot>(iter_ufCompH f1 f2 i x) = (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2)"
   by (simp add: assms iter_ubfix2_dom ubdom_least_cs)
-(*
+
+(*neu*)
 lemma iter_ufcomph_commu: assumes "ufRan\<cdot>f1 \<inter> ufRan\<cdot>f2 = {}"
                            and "ubDom\<cdot>tb = ufCompI f1 f2" 
                          shows "(iter_ufCompH f1 f2 i tb) = (iter_ufCompH f2 f1 i tb)"
@@ -731,7 +730,6 @@ next
   then show ?case 
     by (metis assms(1) assms(2) iter_ufCompH_dom iterate_Suc ufcomph_commu)
 qed
-*)
     
     
 subsubsection \<open>lub iterate ufCompH\<close> 
@@ -1317,5 +1315,46 @@ next
     by (simp add: ufRestrict_def ufleast_ufRan)
 qed
 
+
+(*neu*\<down>*)
+lemma ufcomp2_lubiter: "ufComp f1 f2 = 
+  Abs_cufun (\<lambda> x. (ubDom\<cdot>x = ufCompI f1 f2) 
+      \<leadsto> (\<Squnion>i. iterate i\<cdot>(ufCompH f1 f2 x)\<cdot>(ubLeast (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2))))"
+  apply (subst ufComp_def, subst ubFix_def)
+  by (simp)
+    
+lemma ufcomp2_iterCompH: "ufComp f1 f2 = 
+  Abs_cufun (\<lambda> x. (ubDom\<cdot>x = ufCompI f1 f2) 
+      \<leadsto> (\<Squnion>i. iter_ufCompH f1 f2 i x))"
+  by (simp add: ufcomp2_lubiter)
+
+lemma ufcomp_commu: assumes "ufRan\<cdot>f1 \<inter> ufRan\<cdot>f2 = {}"
+  shows "ufComp f1 f2 = ufComp f2 f1"
+proof -
+  have f0: "\<And> ub. ubDom\<cdot>ub = ufCompI f1 f2 \<Longrightarrow> 
+                  (\<Squnion> i. iter_ufCompH f1 f2 i ub) = (\<Squnion> i. iter_ufCompH f2 f1 i ub)"
+    by (meson assms iter_ufcomph_commu)
+  have f1: "ufCompI f1 f2 = ufCompI f2 f1"
+    by (simp add: ufcomp_I_commu)
+  have f2: "\<forall> ub. (ubDom\<cdot>ub \<noteq> ufCompI f1 f2) 
+            \<or> (Some (\<Squnion> i. iter_ufCompH f1 f2 i ub) = Some (\<Squnion> i. iter_ufCompH f2 f1 i ub)) "
+    using f0 by blast
+  have f3:"Abs_cufun (\<lambda>t. (ubDom\<cdot>t = ufCompI f2 f1)
+                              \<leadsto>\<Squnion>n. iter_ubfix2 (ufCompH f1 f2) n (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2) t) 
+        = Abs_cufun (\<lambda>t. (ubDom\<cdot>t = ufCompI f2 f1)
+                              \<leadsto>\<Squnion>n. iter_ubfix2 (ufCompH f2 f1) n (ufRan\<cdot>f2 \<union> ufRan\<cdot>f1) t) 
+          \<or> (\<forall>t. ubDom\<cdot>t \<noteq> ufCompI f2 f1 \<or> (ubDom\<cdot>t \<noteq> ufCompI f2 f1 \<or> 
+          Some (\<Squnion>n. iter_ubfix2 (ufCompH f1 f2) n (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2) t) 
+          = Some (\<Squnion>n. iter_ubfix2 (ufCompH f2 f1) n (ufRan\<cdot>f2 \<union> ufRan\<cdot>f1) t)) 
+          \<and> (ubDom\<cdot>t = ufCompI f2 f1 \<or> 
+            None = Some (\<Squnion>n. iter_ubfix2 (ufCompH f2 f1) n (ufRan\<cdot>f2 \<union> ufRan\<cdot>f1) t))) 
+            \<and> (\<forall>t. ubDom\<cdot>t = ufCompI f2 f1 \<or> ubDom\<cdot>t \<noteq> ufCompI f2 f1 
+            \<or> Some (\<Squnion>n. iter_ubfix2 (ufCompH f1 f2) n (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2) t) = None)"
+        using f2 ufcomp_I_commu by blast  
+    show ?thesis
+     apply (subst (1 2) ufcomp2_iterCompH)  
+     apply (subst f1)
+     using f3 by meson
+qed
 
 end
