@@ -905,7 +905,7 @@ apply (metis assms finititeTicks sconc_sdom tsabs_conc tsabs_tsdom)
 proof -
   have "#(Rep_tstream ts1) < \<infinity>" using assms by simp
   hence "sdom\<cdot>((Rep_tstream ts1) \<bullet> (Rep_tstream ts2)) = sdom\<cdot>(Rep_tstream ts1) \<union>  sdom\<cdot>(Rep_tstream ts2)"
-    using infI lnless_def sdom_sconc2un by blast
+    using infI lnless_def sdom_sconc2un by fastforce
   thus "tsDom\<cdot>ts1 \<union> tsDom\<cdot>ts2 \<subseteq> tsDom\<cdot>(ts1 \<bullet>\<surd> ts2)"
   by (smt Abs_tstream_inverse UnCI UnE mem_Collect_eq subsetI ts_well_conc tsconc_insert tsdom_insert) 
 qed
