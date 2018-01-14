@@ -8,8 +8,10 @@ theory UBundle_Pcpo
   imports UBundle
 begin
 
+  
 default_sort uscl_pcpo
 
+  
 (****************************************************)
 section\<open>Definitions\<close>
 (****************************************************)  
@@ -31,13 +33,13 @@ section\<open>Lemmas\<close>
 (****************************************************)
 
   
-(* ubLeast *)
 subsection \<open>ubLeast\<close>
 
-(* the optionLeast of the optionCpo is well-formed  *)
-lemma ubleast_well: "ubWell (optionLeast cs)"
   
-  sorry
+(* the optionLeast of the optionCpo is well-formed  *)
+lemma ubleast_well: "ubWell ((optionLeast cs) :: channel \<Rightarrow> 'a option)"
+  apply(simp add: optionLeast_def ubWell_def)
+  by(simp add: usOkay_bot)
 
 (* our definition of ubLeast is equal optionLeast  *)
 lemma ubleast_optionLeast_eq: "ubLeast cs = Abs_ubundle(optionLeast cs)"
@@ -62,11 +64,7 @@ lemma ubleast_below [simp]: assumes "cs = ubDom\<cdot>ub"
 lemma ubundle_allempty: assumes "chain Y" and "ubLeast {} \<in> range Y"
   shows "\<And>i. (Y i) = ubLeast {}"
   by (metis (no_types, lifting) Abs_cfun_inverse2 Rep_ubundle_inverse assms(1) assms(2) empty_iff f_inv_into_f 
-        part_eq ubdom_chain_eq2 ubDom_def ubdom_cont ubleast_ubdom)
-      
-      
-      
-(* Restrict *)      
+        part_eq ubdom_chain_eq2 ubDom_def ubdom_cont ubleast_ubdom)      
 
 (* if an empty channel set is the first argument, then ubRestrict return the ubLeast with empty channel set  *)
 lemma ubrestrict_ubleast [simp]: "ubRestrict {}\<cdot>ub = ubLeast {}"
@@ -76,16 +74,18 @@ lemma ubrestrict_ubleast [simp]: "ubRestrict {}\<cdot>ub = ubLeast {}"
 lemma ubrestrict_ubleast2[simp]: assumes "cs \<inter> ubDom\<cdot>ub = {}" 
   shows "ubRestrict cs\<cdot>ub = ubLeast {}"
   by (metis Int_commute Int_empty_right assms dom_restrict ex_in_conv part_eq ubdom_insert ubrestrict_insert ubrestrict_ubleast)
- 
+
+lemma ubunion_idR [simp]: "b \<uplus> (ubLeast {}) = b"
+  by (simp add: ubunion_insert ubLeast_def ubWell_empty)    
     
-  subsection \<open>ubUp\<close>
-(* ubUp *)
     
-  thm ubUp_def
+subsection \<open>ubUp\<close>
+
     
 (* the function returns a ubundle  *)
-lemma ubup_well[simp]: "ubWell (\<lambda> c. if c \<in> ubDom\<cdot>b then (Rep_ubundle b)c else Some \<bottom>)"
-  by (smt domIff optionLeast_def ubWell_def ubdom_channel_usokay ubleast_well)
+lemma ubup_well[simp]: "ubWell ((\<lambda> c. if c \<in> ubDom\<cdot>b then (Rep_ubundle b)c else Some \<bottom>) :: channel \<Rightarrow> 'a option)"
+  apply(simp add: ubWell_def)
+  by(simp add: usOkay_bot)
 
 (* helper for the cont proof *)
 lemma ubup_cont_h[simp]: "cont (\<lambda>b. (\<lambda> c. if c \<in> ubDom\<cdot>b then (Rep_ubundle b)c else Some \<bottom>))"
@@ -93,7 +93,7 @@ lemma ubup_cont_h[simp]: "cont (\<lambda>b. (\<lambda> c. if c \<in> ubDom\<cdot
           po_class.chainE po_class.chainI ubrep_lub ubdom_below ubgetchE)
 
 (* cont proof of ubUp *)
-lemma ubup_cont[simp]: "cont (\<lambda>b. Abs_ubundle (\<lambda> c. if (c\<in>ubDom\<cdot>b) then (Rep_ubundle b)c else Some \<bottom>))"
+lemma ubup_cont[simp]: "cont (\<lambda>b. Abs_ubundle ((\<lambda> c. if (c\<in>ubDom\<cdot>b) then (Rep_ubundle b)c else Some \<bottom>) :: channel \<Rightarrow> 'a option))"
   by (simp add: cont_Abs_ubundle)
 
 (* insert rule of ubUp *)
@@ -120,8 +120,25 @@ lemma ubup_ubgetch2[simp]: assumes "c\<notin>ubDom\<cdot>b"
 lemma [simp]: "ubUp\<cdot>(ubLeast cs) . c = \<bottom>"
   using ubup_ubgetch2 by force
     
-    
-    
-    
-    
+
+(****************************************************)
+section\<open>Instantiation\<close>
+(****************************************************) 
+
+
+instantiation ubundle :: (uscl_pcpo) ubcl_comp
+begin
+definition ubLeast_ubundle_def: "UnivClasses.ubLeast \<equiv> ubLeast"
+
+definition ubUnion_ubundle_def: "UnivClasses.ubUnion \<equiv> ubUnion"
+
+definition ubRestrict_ubundle_def: "UnivClasses.ubRestrict \<equiv> ubRestrict"
+
+instance
+  apply intro_classes
+  sorry
+
+end
+
+
 end    

@@ -16,6 +16,7 @@ default_sort pcpo
 section\<open>Message\<close>
 (****************************************************) 
 
+  
 class message = countable +
   fixes ctype :: "channel \<Rightarrow> ('a::type) set" 
 begin
@@ -36,11 +37,19 @@ class uscl = cpo +
   assumes usOkay_adm: "\<And>c. adm (usOkay c)" (* used to instanciate ubundle *)
 begin
 end
-  
+ 
+
 class uscl_pcpo = uscl + pcpo + 
   assumes usOkay_bot: "\<And>c. usOkay c \<bottom>"    (* used for ubLeast wellformed proof *)
 begin
 end  
+
+
+class uscl_conc = uscl_pcpo +
+  fixes usConc :: "'a \<Rightarrow> 'a \<rightarrow> 'a"
+  assumes usOkay_conc: "\<And>c. \<And>s1 s2. usOkay c s1 \<Longrightarrow> usOkay c s2 \<Longrightarrow> usOkay c (usConc s1\<cdot>s2)"
+begin
+end 
 
 
 (****************************************************)
@@ -68,6 +77,17 @@ class ubcl_comp = ubcl +
   fixes ubUnion :: "'a \<rightarrow> 'a \<rightarrow> 'a"
   fixes ubRestrict :: "channel set \<Rightarrow> 'a \<rightarrow> 'a"
   
+  assumes ubunion_dom: "ubDom\<cdot>(ubUnion\<cdot>f1\<cdot>f2) = ubDom\<cdot>f1 \<union> ubDom\<cdot>f2"
+  assumes ubunion_restrict: "ubRestrict cs\<cdot>(ubUnion\<cdot>f1\<cdot>f2) = ubUnion\<cdot>(ubRestrict cs\<cdot>f1)\<cdot>(ubRestrict cs\<cdot>f2)" 
+  assumes ubrestrict_dom: "ubDom\<cdot>(ubRestrict cs\<cdot>b) = ubDom\<cdot>b \<inter> cs"  
+    
+  (* we need this assm to proof the equality between ufComp and ufParComp *)
+  assumes ubunion_restrict_R: "(ubDom\<cdot>y) \<inter> cs = {} \<Longrightarrow> ubRestrict cs\<cdot>(ubUnion\<cdot>x\<cdot>y) = ubRestrict cs\<cdot>x"
+  (* we need this assm to proof the equality between ufComp and ufSerComp *)
+  assumes ubunion_restrict2 :"ubRestrict (ubDom\<cdot>y)\<cdot>(ubUnion\<cdot>x\<cdot>y) = y"
+  assumes ubrestrict_dom_id: "ubRestrict (ubDom\<cdot>x)\<cdot>x = x"
+  assumes ubrestrict_twice: "ubRestrict cs2\<cdot>(ubRestrict cs1\<cdot>ub) = ubRestrict (cs1\<inter>cs2)\<cdot>ub"  
+  
   assumes ubdom_least: "\<And> x. ubLeast (ubDom\<cdot>x)\<sqsubseteq>x"
   assumes ubdom_least_cs: "\<And> cs. ubDom\<cdot>(ubLeast cs) = cs"
   
@@ -91,7 +111,7 @@ section\<open>Universal Stream Processing Function\<close>
 class ufuncl = cpo +
   fixes ufDom :: "'a \<rightarrow> channel set"
   fixes ufRan :: "'a \<rightarrow> channel set"
-  
+
   assumes ufDom_fix: "\<And>x y. x\<sqsubseteq>y \<Longrightarrow> ufDom\<cdot>x = ufDom\<cdot>y" 
   assumes ufRan_fix: "\<And>x y. x\<sqsubseteq>y \<Longrightarrow> ufRan\<cdot>x = ufRan\<cdot>y" 
 begin
