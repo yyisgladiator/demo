@@ -2,6 +2,7 @@ theory USpec_Comp
   imports USpec
 begin
 
+
 (****************************************************)
 section\<open>Definitions\<close>
 (****************************************************)   
