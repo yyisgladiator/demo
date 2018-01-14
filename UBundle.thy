@@ -551,7 +551,6 @@ lemma ubrenamech_ubdom: assumes "ch1 \<in> ubDom\<cdot>ub"  and "usOkay ch2 (ub 
   apply (simp add: ubRenameCh_def  ubSetCh_def)
   by (metis assms(2) diff_eq dom_empty dom_fun_upd insert_is_Un option.simps(3) ubrep_ubabs sup_commute ubsetch_well ubdom_ubrep_eq ubWell_empty)
 
-    (*
 (* after renaming channel ch1 to ch2, old and new bundles have the same element on those channel  *)  
 lemma ubrenamech_ubgetchI1: assumes "ch1 \<in> ubDom\<cdot>ub" 
                     and "usOkay ch2 (ub . ch1)"
@@ -566,8 +565,6 @@ lemma ubrenamech_ubgetchI2: assumes "ch1 \<in> ubDom\<cdot>ub"  and "usOkay ch2 
   shows "(ubRenameCh ub ch1 ch2) . ch3 = ub . ch3"
   apply (simp add: ubRenameCh_def ubSetCh_def)
   by (metis ComplI assms(2) assms(4) assms(5) dom_empty dom_fun_upd option.discI ubrep_ubabs singletonD ubsetch_well ubdom_ubrep_eq ubgetch_ubrestrict ubunion_getchL ubWell_empty)
-
-
 
 
 subsection \<open>ubEqSelected\<close>
@@ -621,9 +618,6 @@ lemma ubeqcommonI: assumes "\<forall> c \<in> (ubDom\<cdot>ub1 \<inter> ubDom\<c
   shows "ubEqCommon ub1 ub2"
   by (simp add: assms ubeqselectedI ubEqCommon_def)
 
-(* ubPrefixSelected *)
-
-(* ubPrefixCommon *)
 
 subsection \<open>ubMapStream\<close>
 
@@ -668,6 +662,7 @@ lemma if_then_ubDom: assumes "d \<in> dom (\<lambda> b. (ubDom\<cdot>b = In) \<l
   shows "ubDom\<cdot>d = In"
   by (smt assms domIff)
 
+(*
 lemma ub_lub [simp]: fixes S :: "nat \<Rightarrow> 'm ubundle" assumes "chain S"
   shows "Abs_ubundle (\<lambda> c. (c \<in> ubDom\<cdot>(S i)) \<leadsto> (\<Squnion>j. (S j) . c)) = (\<Squnion>i. S i)" (is "?L = ?R")
 proof (rule ub_eq)
@@ -683,11 +678,7 @@ proof (rule ub_eq)
       sorry
   qed
 qed
-
-lemma [simp]: "Abs_ubundle (\<lambda> c. (c \<in> ubDom\<cdot>b) \<leadsto> b . c) = b"
-  apply (rule ub_eq)
-  apply auto[1]
-  by auto
+*)
 
 (**)
 (*
