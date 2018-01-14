@@ -109,30 +109,25 @@ begin
 end
 
 class ufuncl_comp = ufuncl +
-  fixes ufunclComp :: "'a \<rightarrow> 'a \<rightarrow> 'a"  (* Here we can put the abbreviation \<otimes> *)
-  fixes ufunclParComp :: "'a \<rightarrow> 'a \<rightarrow> 'a"  
-  fixes ufunclSerComp :: "'a \<rightarrow> 'a \<rightarrow> 'a"  
-  fixes ufunclFeedbackComp :: "'a \<rightarrow> 'a"  
+  fixes ufunclComp :: "'a \<Rightarrow> 'a \<Rightarrow> 'a"  (infixl "\<otimes>" 55) (* Here we can put the abbreviation \<otimes> *)
+  fixes ufunclParComp :: "'a \<Rightarrow> 'a \<Rightarrow> 'a"   (infixl "\<parallel>" 55)
+  fixes ufunclSerComp :: "'a \<Rightarrow> 'a \<Rightarrow> 'a"  (infixl "\<circ>" 55)
+  fixes ufunclFeedbackComp :: "'a \<Rightarrow> 'a"  ("\<mu>" 55)
 
-begin
-end
-
-(* properties of the composition *)
-class ufuncl_comp_props = ufuncl_comp +
   fixes ufunclCompWell:: "'a \<Rightarrow> 'a \<Rightarrow> bool"
   fixes ufunclSerCompWell:: "'a \<Rightarrow> 'a \<Rightarrow> bool"
   fixes ufunclParCompWell:: "'a \<Rightarrow> 'a \<Rightarrow> bool"
 
-  assumes comp_commute: "ufunclCompWell f1 f2 \<Longrightarrow> ufunclComp\<cdot>f1\<cdot>f2 = ufunclComp\<cdot>f2\<cdot>f1"
-  assumes parcomp_commute: "ufunclParCompWell f1 f2 \<Longrightarrow> ufunclParComp\<cdot>f1\<cdot>f2 = ufunclParComp\<cdot>f2\<cdot>f1"
+  assumes comp_commute: "ufunclCompWell f1 f2 \<Longrightarrow> (f1 \<otimes> f2) = (f2 \<otimes> f1)"
+  assumes parcomp_commute: "ufunclParCompWell f1 f2 \<Longrightarrow> (f1 \<parallel> f2) = (f2 \<parallel> f1)"
 
   assumes parcomp_asso: "ufunclParCompWell f1 f2 \<Longrightarrow>
                       ufunclParCompWell f2 f3 \<Longrightarrow> 
-                      ufunclParCompWell f1 f3 \<Longrightarrow>  ufunclParComp\<cdot>f1\<cdot>(ufunclParComp\<cdot>f2\<cdot>f3) = ufunclParComp\<cdot>(ufunclParComp\<cdot>f1\<cdot>f2)\<cdot>f3"
+                      ufunclParCompWell f1 f3 \<Longrightarrow>  f1 \<parallel> (f2 \<parallel> f3) = (f1 \<parallel> f2) \<parallel> f3"
 
   assumes sercomp_asso: "ufunclSerCompWell f1 f2 \<Longrightarrow>
                       ufunclSerCompWell f2 f3 \<Longrightarrow> 
-                      ufRan\<cdot>f1 \<inter> ufRan\<cdot>f3 = {} \<Longrightarrow>  ufunclParComp\<cdot>f1\<cdot>(ufunclParComp\<cdot>f2\<cdot>f3) = ufunclParComp\<cdot>(ufunclParComp\<cdot>f1\<cdot>f2)\<cdot>f3"
+                      ufRan\<cdot>f1 \<inter> ufRan\<cdot>f3 = {} \<Longrightarrow>  f1 \<circ> (f2 \<circ> f3) = (f1 \<circ> f2) \<circ> f3"
 
 begin
 end
