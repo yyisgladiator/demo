@@ -37,8 +37,9 @@ subsection \<open>ubLeast\<close>
 
   
 (* the optionLeast of the optionCpo is well-formed  *)
-lemma ubleast_well: "ubWell (optionLeast cs)"
-  sorry
+lemma ubleast_well: "ubWell ((optionLeast cs) :: channel \<Rightarrow> 'a option)"
+  apply(simp add: optionLeast_def ubWell_def)
+  by(simp add: usOkay_bot)
 
 (* our definition of ubLeast is equal optionLeast  *)
 lemma ubleast_optionLeast_eq: "ubLeast cs = Abs_ubundle(optionLeast cs)"
@@ -112,8 +113,9 @@ subsection \<open>ubUp\<close>
 
     
 (* the function returns a ubundle  *)
-lemma ubup_well[simp]: "ubWell (\<lambda> c. if c \<in> ubDom\<cdot>b then (Rep_ubundle b)c else Some \<bottom>)"
-  by (smt domIff optionLeast_def ubWell_def ubdom_channel_usokay ubleast_well)
+lemma ubup_well[simp]: "ubWell ((\<lambda> c. if c \<in> ubDom\<cdot>b then (Rep_ubundle b)c else Some \<bottom>) :: channel \<Rightarrow> 'a option)"
+  apply(simp add: ubWell_def)
+  by(simp add: usOkay_bot)
 
 (* helper for the cont proof *)
 lemma ubup_cont_h[simp]: "cont (\<lambda>b. (\<lambda> c. if c \<in> ubDom\<cdot>b then (Rep_ubundle b)c else Some \<bottom>))"
@@ -121,7 +123,7 @@ lemma ubup_cont_h[simp]: "cont (\<lambda>b. (\<lambda> c. if c \<in> ubDom\<cdot
           po_class.chainE po_class.chainI ubrep_lub ubdom_below ubgetchE)
 
 (* cont proof of ubUp *)
-lemma ubup_cont[simp]: "cont (\<lambda>b. Abs_ubundle (\<lambda> c. if (c\<in>ubDom\<cdot>b) then (Rep_ubundle b)c else Some \<bottom>))"
+lemma ubup_cont[simp]: "cont (\<lambda>b. Abs_ubundle ((\<lambda> c. if (c\<in>ubDom\<cdot>b) then (Rep_ubundle b)c else Some \<bottom>) :: channel \<Rightarrow> 'a option))"
   by (simp add: cont_Abs_ubundle)
 
 (* insert rule of ubUp *)
