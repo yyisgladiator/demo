@@ -160,9 +160,9 @@ theorem ubrep_ubabs[simp]: assumes "ubWell f" shows "Rep_ubundle (Abs_ubundle f)
 theorem ubabs_ubrep[simp]: shows "Abs_ubundle (Rep_ubundle f) = f"
   by (simp add: Rep_ubundle_inverse)
 
-lemma cont_Abs_UB[simp]: assumes "cont g" and "\<forall>x. ub_well (g x)"
+lemma cont_Abs_UB[simp]: assumes "cont g" and "\<forall>x. ubWell (g x)"
   shows "cont (\<lambda>x. Abs_ubundle (g x))"
-  sorry
+  by (simp add: assms(1) assms(2) cont_Abs_ubundle)
 
 (* a chain of 'M\<^sup>\<Omega>s is also a chain after applying Rep_ubundle *)
 lemma ubrep_chain[simp]: assumes "chain S"
@@ -498,8 +498,7 @@ lemma ubunion_cont [simp]: "cont (\<lambda> b1. \<Lambda> b2. Abs_ubundle (Rep_u
       Rep_ubundle cont_Abs_ubundle mem_Collect_eq ubunion_contL ubunion_well)
 
 lemma ubunion_insert: "(b1 \<uplus> b2) = Abs_ubundle (Rep_ubundle b1 ++ Rep_ubundle b2)"
-  apply (simp add: ubUnion_def)
-  using ubunion_contR ubunion_contL ubunion_cont by (simp add: cont_Abs_ubundle)
+  by (simp add: ubUnion_def)
 
 lemma ubunion_idL [simp]: assumes "ubDom\<cdot>b1 \<subseteq> ubDom\<cdot>b2"
   shows "b1 \<uplus> b2 = b2"
@@ -595,9 +594,6 @@ lemma ubres_ubdom_supset: assumes "ubDom\<cdot>ub \<subseteq> cs" shows "ub \<ba
 lemma ubres_ubdom_supset_inter: "ub \<bar> cs = ub \<bar> (cs \<inter> (ubDom\<cdot>ub))"
   using ubrestrict_ubdom_sup_inter by blast
 
-lemma ub_ubdom: "ubDom\<cdot>(SOME b. b \<in> UB cs) = cs"
-  apply (simp add: UB_def)
-  sorry
 
 subsection \<open>ubRenameCh\<close>
 

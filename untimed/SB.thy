@@ -27,6 +27,8 @@ definition usLen_stream_def: "usLen \<equiv> slen"
 
 instance
   apply intro_classes
+   apply(simp add: usOkay_stream_def)
+  apply (metis IntE sdom_sfilter subsetI)
   apply (rule admI)
   by (simp add: usOkay_stream_def l44)
 

@@ -33,9 +33,20 @@ definition usLen_tstream_def: "usLen \<equiv> tslen"
 
 instance
   apply intro_classes
+  apply(simp add: usOkay_tstream_def)
+    apply(simp add: tsDom_def)
+  apply(subst Abs_cfun_inverse2)
+     using tsdom_cont apply(simp)
+     defer
   apply (rule admI)
-   apply(simp add: subset_cont usOkay_tstream_def)
-  sorry
+       apply(simp add: subset_cont usOkay_tstream_def)
+      apply(simp add: usOkay_tstream_def)
+   proof - 
+     fix c
+     show " \<exists>e. {u::'a. \<M> u \<in> sdom\<cdot>(Rep_tstream e)} \<subseteq> ctype c"
+       apply(rule_tac x = "bottom" in exI)
+       by(simp)
+   qed
 end
 
 
