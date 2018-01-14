@@ -19,8 +19,34 @@ definition uspecWell :: "'m set \<Rightarrow> bool" where
 "uspecWell S \<equiv> \<exists>In Out. \<forall> f\<in>S . (ufDom\<cdot>f = In \<and> ufRan\<cdot>f=Out) "
 (* define a Set of 'm SPF's. all SPS in a set must have the same In/Out channels *)
 
+lemma uspecwell_adm: "adm (\<lambda>x::'m set rev. x \<in> {S::'m set rev. uspecWell (inv Rev S)})"
+proof (rule admI)
+  fix Y::"nat \<Rightarrow> 'm set rev"
+  assume assm1: "chain Y" 
+  assume assm2: "\<forall>i::nat. Y i \<in> {S::'m set rev. uspecWell (inv Rev S)} "
+  obtain lub_x where lub_x_def: "Rev lub_x = Lub Y"
+    by (metis rev.exhaust)
+  obtain x_i where x_i_def: "Rev x_i = Y 0"
+    by (metis rev.exhaust)
+  have f0: "inv Rev (Lub Y) = lub_x"
+    by (metis UNIV_I f_inv_into_f lub_x_def rev.exhaust rev.inject surj_def)
+  have f00: "inv Rev (Y 0) = x_i"
+    by (metis UNIV_I f_inv_into_f x_i_def rev.exhaust rev.inject surj_def)
+  have f5: "\<And> f . f \<in> lub_x \<Longrightarrow> f \<in> x_i"
+    by (metis SetPcpo.less_set_def assm1 below_rev.simps contra_subsetD is_ub_thelub lub_x_def x_i_def)
+  have f8: "inv Rev (Lub Y) \<sqsubseteq> inv Rev (Y 0)"
+    by (simp add: SetPcpo.less_set_def f0 f00 f5 subsetI)
+  have "uspecWell(inv Rev (\<Squnion>i::nat. Y i))"
+    by (metis (full_types) assm2 f0 f00 f5 mem_Collect_eq uspecWell_def)
+  then  show "(\<Squnion>i::nat. Y i) \<in> {S::'m set rev. uspecWell (inv Rev S)}"
+    by simp
+qed
+
 cpodef 'm uspec = "{S :: 'm set rev. uspecWell (inv Rev S) }"
-  sorry
+   apply(simp add: uspecWell_def)
+   apply (rule_tac x="Rev {}" in exI)
+   apply (metis UNIV_I empty_iff f_inv_into_f rev.exhaust rev.inject surj_def)
+  using uspecwell_adm by simp
 
 setup_lifting type_definition_uspec
 
