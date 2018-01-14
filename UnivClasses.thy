@@ -44,12 +44,13 @@ class uscl_pcpo = uscl + pcpo +
 begin
 end  
 
-  (*
-class uscl_pcpo = uscl + pcpo + 
-  assumes usOkay_bot: "\<And>c. usOkay c \<bottom>"    (* used for ubLeast wellformed proof *)
+
+class uscl_conc = uscl_pcpo +
+  fixes usConc :: "'a \<Rightarrow> 'a \<rightarrow> 'a"
+  assumes usOkay_conc: "\<And>c. \<And>s1 s2. usOkay c s1 \<Longrightarrow> usOkay c s2 \<Longrightarrow> usOkay c (usConc s1\<cdot>s2)"
 begin
-end  
-*)
+end 
+
 
 (****************************************************)
 section\<open>Universal Stream Bundle\<close>
@@ -89,6 +90,14 @@ class ubcl_comp = ubcl +
   
   assumes ubdom_least: "\<And> x. ubLeast (ubDom\<cdot>x)\<sqsubseteq>x"
   assumes ubdom_least_cs: "\<And> cs. ubDom\<cdot>(ubLeast cs) = cs"
+  
+  assumes ubunion_ubdom: "ubDom\<cdot>(ubUnion\<cdot>f1\<cdot>f2) = ubDom\<cdot>f1 \<union> ubDom\<cdot>f2"
+  assumes ubunion_ubrestrict: "ubRestrict cs\<cdot>(ubUnion\<cdot>f1\<cdot>f2) = ubUnion\<cdot>(ubRestrict cs\<cdot>f1)\<cdot>(ubRestrict cs\<cdot>f2)" 
+  assumes ubrestrict_ubdom: "ubDom\<cdot>(ubRestrict cs\<cdot>b) = ubDom\<cdot>b \<inter> cs"
+
+  assumes ubunion_asso:"ubDom\<cdot>f1 \<inter> ubDom\<cdot>f2 = {} \<and> ubDom\<cdot>f2 \<inter> ubDom\<cdot>f3 = {} \<and> ubDom\<cdot>f1 \<inter> ubDom\<cdot>f3 = {} \<longrightarrow> ubUnion\<cdot>(ubUnion\<cdot>f1\<cdot>f2)\<cdot>f3 = ubUnion\<cdot>f1\<cdot>(ubUnion\<cdot>f2\<cdot>f3)"
+  assumes ubunion_commu: "ubDom\<cdot>f1 \<inter> ubDom\<cdot>f2 = {} \<longrightarrow> ubUnion\<cdot>f1\<cdot>f2 = ubUnion\<cdot>f2\<cdot>f1"
+  assumes ubunion_test: "(ubRestrict cs2\<cdot>(ubRestrict cs1\<cdot>ub)) = (ubRestrict (cs1\<inter>cs2)\<cdot>ub)"
 begin
 end  
   

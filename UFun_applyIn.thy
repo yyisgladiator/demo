@@ -5,11 +5,11 @@
 
 
 theory UFun_applyIn
-  imports UFun_Comp
+  imports UFun
 begin
 
 
-default_sort ubcl_comp  
+default_sort ubcl  
 
   
 (****************************************************)
@@ -72,9 +72,17 @@ lemma ufapplyout_uf_dom [simp]: assumes "\<And>b. ubDom\<cdot>b = ufDom\<cdot>g 
 (* ran of ufapplyout is the same as the ubDom of the result after applying k and g on input b *)
 lemma ufapplyout_uf_ran [simp]: assumes "\<And>b. ubDom\<cdot>b = ufDom\<cdot>(g::'m \<Rrightarrow> 'm) \<Longrightarrow> ubDom\<cdot>(k\<cdot>(g \<rightleftharpoons> b)) = cs"
   shows "ufRan\<cdot>(Abs_cufun (\<lambda> x. (ubDom\<cdot>x = ufDom\<cdot>g) \<leadsto> k\<cdot>(g \<rightleftharpoons>x))) = cs" (is "ufRan\<cdot>?F = ?cs")
-    apply (subst ufran_least)
-    apply (subst rep_abs_cufun, simp_all add: assms)
-    by (simp add: ubdom_least_cs)
+proof -
+  obtain x::'m  where x_def: "ubDom\<cdot>x = ufDom\<cdot>g" 
+    using ubdom_ex by blast
+  have f1: "ufDom\<cdot>(Abs_cufun (\<lambda> x. (ubDom\<cdot>x = ufDom\<cdot>g) \<leadsto> k\<cdot>(g \<rightleftharpoons>x))) = ufDom\<cdot>g"
+    using assms ufapplyout_uf_dom by blast
+  have f2: "(Abs_cufun ((\<lambda> x. (ubDom\<cdot>x = ufDom\<cdot>g) \<leadsto> k\<cdot>(g \<rightleftharpoons>x))))\<rightleftharpoons>x = k\<cdot>(g \<rightleftharpoons>x)"
+    by (simp add: assms x_def)
+  then show ?thesis
+    by (metis (no_types, lifting) assms f1 ufran_2_ubdom2 x_def)
+qed
+
 
 (* unfolding rule when the input has the right domain  *)
 lemma ufapplyout_uf_apply: assumes "\<And>b. ubDom\<cdot>b = ufDom\<cdot>g \<Longrightarrow> ubDom\<cdot>(k\<cdot>(g \<rightleftharpoons> b)) = cs"
@@ -413,24 +421,14 @@ lemma ufapplyin_uf_dom [simp]:  assumes "\<And>b. ubDom\<cdot>(k\<cdot>b) = ubDo
 lemma ufapplyin_uf_ran [simp]: assumes "\<And>b. ubDom\<cdot>((k:: 'm \<rightarrow> 'm)\<cdot>b) = ubDom\<cdot>b"
   shows "ufRan\<cdot>(Abs_ufun (\<Lambda> x. (ubDom\<cdot>x = ufDom\<cdot>g) \<leadsto> (g \<rightleftharpoons>(k\<cdot>x)))) =  ufRan\<cdot>g" (is "ufRan\<cdot>?F = ufRan\<cdot>?g")
 proof -
-  have f1: "(ubLeast (ufDom\<cdot>?F)) \<in> dom (Rep_cufun ?F)"
-    by (simp add: ufunLeastIDom)
-  have f2: "(Abs_cufun (\<lambda>x::'m. (ubDom\<cdot>x = UFun.ufDom\<cdot>g)\<leadsto>g \<rightleftharpoons> k\<cdot>x))\<rightleftharpoons>(ubLeast (ufDom\<cdot>?F)) = 
-        g \<rightleftharpoons> k\<cdot>(ubLeast (ufDom\<cdot>?F))"
-    apply (subst rep_abs_cufun, simp)
-     apply (rule ufapplyin_uf_wellI)
-     apply (simp add: assms)
-    by (smt assms ufapplyin_eq_pre)
-  then have "ubDom\<cdot>(g \<rightleftharpoons> k\<cdot>(ubLeast (ufDom\<cdot>?F))) = ufRan\<cdot>g"
-  proof -
-    have "\<forall>u. ubDom\<cdot>(ubLeast (UFun.ufDom\<cdot>(u::'m \<Rrightarrow> 'a))::'m) = UFun.ufDom\<cdot>u"
-      by (metis (no_types) domIff not_None_eq ufdom_2ufundom ufunLeastIDom)
-    then show ?thesis
-      by (simp add: assms ufran_2_ubdom2)
-  qed
+  obtain x::'m  where x_def: "ubDom\<cdot>x = ufDom\<cdot>g" 
+    using ubdom_ex by blast
+  have f1: "ufDom\<cdot>(Abs_cufun (\<lambda> x. (ubDom\<cdot>x = ufDom\<cdot>g) \<leadsto> g \<rightleftharpoons>(k\<cdot>x))) = ufDom\<cdot>g"
+    using assms ufapplyin_uf_dom by blast
+  have f2: "(Abs_cufun ((\<lambda> x. (ubDom\<cdot>x = ufDom\<cdot>g) \<leadsto>g \<rightleftharpoons>(k\<cdot>x))))\<rightleftharpoons>x = g \<rightleftharpoons>(k\<cdot>x)"
+    by (simp add: assms x_def)
   then show ?thesis
-    apply (subst ufran_least)
-    by (simp add: f2)
+    by (metis (no_types, lifting) assms f1 ufran_2_ubdom2 x_def)
 qed
 
 (* substitution rules for ufapplyin  *)
