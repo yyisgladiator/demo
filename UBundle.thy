@@ -413,10 +413,62 @@ lemma ubrestrict_below [simp]:  assumes "chain Y" and "cont h"
 
 
 subsection \<open>ubLen\<close>
-
+lemma ublen_monofun:"monofun ubLen"
+proof (rule monofunI)
+  fix x::"'a\<^sup>\<Omega>" and y::"'a\<^sup>\<Omega>"
+  assume a1: "x \<sqsubseteq> y"
+  show "ubLen x \<sqsubseteq> ubLen y"
+  proof (cases "ubDom\<cdot>x = {}")
+    case True
+    then show ?thesis 
+      by (metis a1 eq_imp_below ubLen_def ubdom_below)
+  next
+    case False
+      obtain y_len_set where y_len_set_def: "y_len_set = {usLen\<cdot>(y . c) | c.  c \<in> ubDom\<cdot>y}" 
+        by simp
+      have f2: "(LEAST ln. ln\<in> y_len_set) = ubLen y"
+      proof -
+        have "UBundle.ubDom\<cdot>y \<noteq> {}"
+          by (metis (no_types) False a1 empty_iff ubdom_below ubgetchI)
+        then show ?thesis
+          by (simp add: ubLen_def y_len_set_def)
+      qed
+      have f7: "y_len_set \<noteq> {}"
+      proof - 
+        obtain c where "c \<in> ubDom\<cdot>y" 
+          using False a1 ubdom_below by blast
+        then have "usLen\<cdot>(y . c) \<in> y_len_set"
+          using y_len_set_def by blast
+        then show ?thesis
+          by auto
+      qed
+      have f8: "(LEAST ln. ln\<in> y_len_set) \<in> y_len_set"
+        by (meson LeastI f7 neq_emptyD)
+      obtain y_ln where y_ln_def: "y_ln = (LEAST ln. ln\<in> y_len_set)" by simp
+      have f9: "\<forall> len \<in> y_len_set. \<exists> c \<in> ubDom\<cdot>y. usLen\<cdot>(y . c) = len"  
+        using y_len_set_def by blast
+      then have f10: "y_ln \<in> y_len_set \<and> (\<exists> c \<in> ubDom\<cdot>y. usLen\<cdot>(y . c) = y_ln)"
+        apply rule
+        by (simp add: f8 y_ln_def) +
+      then obtain y_c where y_c_def: "y_c \<in> ubDom\<cdot>y \<and> usLen\<cdot>(y . y_c) = (LEAST ln. ln\<in> y_len_set)"
+        using y_ln_def by blast
+      have f11: "ubLen x \<sqsubseteq> usLen\<cdot>(x . y_c)"
+      proof -
+        have "\<exists>c. usLen\<cdot>(x . y_c) = usLen\<cdot>(x . c) \<and> c \<in> UBundle.ubDom\<cdot>x"
+          using a1 ubdom_below y_c_def by blast
+        then show ?thesis
+          by (simp add: False Least_le ubLen_def)
+      qed
+      have "x . y_c \<sqsubseteq> y . y_c"
+        by (simp add: a1 monofun_cfun_arg)
+      then have "usLen\<cdot>(x . y_c) \<sqsubseteq> usLen\<cdot>(y . y_c)"
+        using monofun_cfun_arg by blast
+      then show ?thesis
+        using f11 f2 y_c_def by auto
+    qed
+  qed
 
 (* Missing *)
-  
   
 subsection \<open>ubShift\<close>
 
@@ -490,6 +542,21 @@ lemma ubunion_eqI: assumes "a = b" and "c = d"
   shows "a \<uplus> c = b \<uplus> d"
   by (simp add: assms)
 
+
+lemma ubunion_restrict [simp]: assumes "ubDom\<cdot>b2 = cs"
+  shows "(b1 \<uplus> b2) \<bar> cs = b2"
+  apply (simp add: ubunion_insert ubrestrict_insert)
+  by (metis assms map_union_restrict2 ubabs_ubrep ubdom_insert)
+
+lemma ubunion_restrict2 [simp]: assumes "ubDom\<cdot>b2 \<inter> cs = {}"
+  shows "(b1 \<uplus> b2) \<bar> cs = b1 \<bar> cs" 
+  apply (simp add: ubunion_insert ubrestrict_insert)
+  by (metis assms map_union_restrict ubdom_insert)
+
+
+lemma ubunion_ubrestrict3: "(a \<uplus> b ) \<bar> cs = (a \<bar> cs)  \<uplus> (b \<bar> cs)"
+  apply (simp add: ubunion_insert ubrestrict_insert)
+  by (metis mapadd2if_then restrict_map_def)
 
 subsection \<open>ubSetCh\<close>
 
@@ -850,12 +917,28 @@ section\<open>Instantiation\<close>
 instantiation ubundle :: (uscl) ubcl
 begin
 definition ubDom_ubundle_def: "UnivClasses.ubDom \<equiv> ubDom"
-
 definition ubLen_ubundle_def: "UnivClasses.ubLen \<equiv> ubLen"
+
+lemma ubundle_ex: "\<And>C::channel set. \<exists>x::'a\<^sup>\<Omega>. ubcl_class.ubDom\<cdot>x = C"
+proof -
+  fix C::"channel set"
+  obtain set_bla::"'a set" where set_bla_def: "set_bla = {a . \<exists> c \<in> C. usOkay c a}"
+    by simp
+  obtain ub where ub_def: "ub = (\<lambda> c. (c \<in> C) \<leadsto> (SOME a. a \<in> set_bla \<and> usOkay c a))"
+    by simp
+  have "ubWell ub"
+    apply (simp add: ubWell_def)
+    by (metis (mono_tags, lifting) bla domIff mem_Collect_eq option.sel set_bla_def tfl_some ub_def)
+  then show "\<exists>x::'a\<^sup>\<Omega>. ubcl_class.ubDom\<cdot>x = C"
+    using ubDom_ubundle_def ub_def ubdom_ubrep_eq by fastforce
+qed
 
 instance
   apply intro_classes
-  sorry
+     apply (simp add: ubDom_ubundle_def ubdom_below)
+    apply (simp add: ubundle_ex)
+   apply (simp add: ubLen_ubundle_def ublen_monofun)
+  by (metis (mono_tags) domIff empty_iff equalityI subsetI ubLen_def ubLen_ubundle_def ubWell_empty ubdom_ubrep_eq)
 
 end
 
