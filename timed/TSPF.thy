@@ -7,7 +7,7 @@
     Description:
 *)
 
-(*
+
 
 theory TSPF
 imports TSB "../UFun" "../UFun_Comp"
@@ -16,96 +16,7 @@ begin
 default_sort message
 
 
-(* ----------------------------------------------------------------------- *)
-section \<open>Datatype Definition\<close>
-(* ----------------------------------------------------------------------- *)
-
-
-(* normal wellformed definition, similar to SPF *)
-(* an 'm TSPF has a fixed input-channel-set and output-set.  *)
-(*definition tspf_type:: "('m TSB \<rightarrow> 'm TSB option) \<Rightarrow> bool" where
-"tspf_type f \<equiv> \<exists>In Out. \<forall>b. (b \<in> dom (Rep_cfun f) \<longleftrightarrow> tsbDom\<cdot>b = In) \<and>
-                            (b \<in> dom (Rep_cfun f) \<longrightarrow> tsbDom\<cdot>(the (f\<cdot>b)) = Out)"*)
-(*
-  (* Proof admissibility on the first part of spf_wellformed *)
-  lemma tspf_type_adm1[simp]: "adm (\<lambda>f. \<exists>In. \<forall>b. (b \<in> dom f) = (tsbDom\<cdot>b = In))"
-  by (smt adm_upward below_cfun_def part_dom_eq)
-
-    (* Proof admissibility on the second part of spf_wellformed *)
-  lemma tspf_type_adm2[simp]: "adm (\<lambda>f. \<exists>Out. \<forall>b. b \<in> dom f \<longrightarrow> tsbDom\<cdot>(f\<rightharpoonup>b) = Out)"
-  apply(rule admI)
-    by (metis part_the_chain part_the_lub tsbChain_dom_eq2 part_dom_lub)
-*)
-(*
-lemma tspf_type_adm1 [simp]: "adm (\<lambda>f. \<exists>In. \<forall>b. (b \<in> dom (Rep_cfun f)) = (ubDom\<cdot>b = In)) "
-  by (smt adm_upward below_cfun_def part_dom_eq)
-
-lemma tspf_type_adm2 [simp]: "adm (\<lambda> f. \<exists>Out. \<forall>b. b \<in> dom (Rep_cfun f) \<longrightarrow> ubDom\<cdot>Rep_cfun f\<rightharpoonup>b = Out)"
-  apply (rule admI)
-  by (smt below_cfun_def ch2ch_Rep_cfunL contlub_cfun_fun op_the_chain op_the_lub
-        part_dom_eq test34 tsbChain_dom_eq2)
-
-lemma tspf_type_adm [simp]: "adm (\<lambda> f. tspf_type f)"
-proof -
-  have f1: "\<And> f. (tspf_type f = ((\<exists>In. \<forall>b. (b \<in> dom (Rep_cfun f)) = (tsbDom\<cdot>b = In))
-  \<and> (\<exists>Out. \<forall>b. b \<in> dom (Rep_cfun f) \<longrightarrow> tsbDom\<cdot>(the (f\<cdot>b)) = Out)))"
-  by (meson tspf_type_def)
-  show ?thesis
-    by (simp add: f1)
-qed
-
-*)
-(*
-definition tspf_welloriginal:: "('m TSB \<rightarrow> 'm TSB option) \<Rightarrow> bool" where
-"tspf_well f \<equiv> tspf_type f \<and>
-              (\<forall>b. (b \<in> dom (Rep_cfun f) \<longrightarrow> #\<surd>tsb b \<le> #\<surd>tsb (the (f\<cdot>b))))"
-
-
-definition tspf_well:: "(('m tstream\<^sup>\<Omega> \<rightarrow> 'm tstream\<^sup>\<Omega>) option) \<Rightarrow> bool" where
-"tspf_well f \<equiv> ufWell f \<and>
-              (\<forall>b. ((b \<in> dom (Rep_ufun f)) \<longrightarrow> (#\<surd> b \<le> #\<surd> (the (f\<cdot>b)))))"
-
-*)
-(*? ? ? ? ?*
-lemma tspf_tick_adm [simp]: "adm (\<lambda> f. \<forall>b. (b \<in> dom (Rep_cfun f) \<longrightarrow> #\<surd>tsb b \<le> #\<surd>tsb (the (f\<cdot>b))) )"
-  apply (rule admI)
-    (* ISAR Proof generateable via sledgehammer *)
-  sledgehammer
-  by (smt below_cfun_def below_trans ch2ch_Rep_cfunL ch2ch_Rep_cfunR contlub_cfun_arg
-          contlub_cfun_fun lnle_def op_the_chain op_the_lub part_dom_eq test34)
-
-text {* There is a cfun from TSB to TSB option which is tspf_well *}  
-lemma tspf_well_exists: "tspf_well (\<Lambda> tb. (tsbDom\<cdot>tb = {c1}) \<leadsto> tb)"
-proof -
-  have f1: "cont (\<lambda> tb. (tsbDom\<cdot>tb = {c1}) \<leadsto> tb)"
-    apply (rule contI2)
-      apply (simp add: below_option_def monofun_def tsbdom_below)
-      by (smt cont2contlubE lub_eq po_class.chain_def po_eq_conv some_cont test34 tsbChain_dom_eq2)
-  show ?thesis
-    apply (simp add: tspf_well_def f1, rule)
-     apply (simp add: tspf_type_def f1)
-     apply(simp only: domIff2)
-     apply(simp add: tsbdom_rep_eq)
-     apply auto[1]
-     by (simp add: domIff)
-qed
-
-text {* tspf_well is admissible *}  
-lemma tspf_well_adm [simp]: "adm (\<lambda> f. tspf_well f)"
- by (simp add: tspf_well_def)
-
-cpodef 'm :: message TSPF = "{f :: 'm TSB \<rightarrow> 'm TSB option. tspf_well f}"
-  using tspf_well_exists apply blast
-  using tspf_well_adm by auto
-
-
-
-
-
-setup_lifting type_definition_TSPF
-*)
-
-
+(* Concept of causality
 (* ----------------------------------------------------------------------- *)
  section \<open>Definition on TSPF\<close>
 (* ----------------------------------------------------------------------- *)
@@ -222,6 +133,7 @@ proof -
     apply(simp add: tsbTickCount_def)
       by blast
 qed  
-  *)           
-end
+  *)
 *)
+
+end
