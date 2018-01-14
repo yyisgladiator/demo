@@ -10,35 +10,26 @@ section\<open>Definitions\<close>
 (* from here on only lemma on composition *)
 default_sort ufuncl_comp
 
-definition uspec_comp_well :: "'m uspec \<Rightarrow> 'm uspec \<Rightarrow> bool" where
-"uspec_comp_well S1 S2 \<equiv> uspecRan S1 \<inter> uspecRan S2 = {}"
+definition uspec_compwell :: "'m uspec \<Rightarrow> 'm uspec \<Rightarrow> bool" where
+"uspec_compwell S1 S2 \<equiv> \<forall> f1 \<in> (Rep_rev_uspec S1). \<forall> f2 \<in> (Rep_rev_uspec S2). ufunclCompWell f1 f2"
 
-
-  (* composite operator on SPS *)
-(* THIS IS JUST A DEMO! there should be many changes *)
 definition uspecComp :: "'m uspec \<Rightarrow>'m uspec \<Rightarrow> 'm uspec" (infixl "\<Otimes>" 50) where
-"uspecComp S1 S2 \<equiv> Abs_uspec (Rev {ufunclComp\<cdot>f1\<cdot>f2 | f1 f2. f1\<in>(Rep_rev_uspec S1) \<and> f2\<in>(Rep_rev_uspec S2)})"
+"uspecComp S1 S2 \<equiv> Abs_uspec (Rev {f1 \<otimes> f2 | f1 f2. f1\<in>(Rep_rev_uspec S1) \<and> f2\<in>(Rep_rev_uspec S2)})"
 
-
-definition uspec_sercomp_well :: "'m uspec \<Rightarrow> 'm uspec \<Rightarrow> bool" where
-"uspec_sercomp_well S1 S2 \<equiv> (uspecRan S1 = uspecDom S2) 
-                        \<and> (uspecDom S1 \<inter> uspecRan S1 = {})
-                        \<and> (uspecDom S2 \<inter> uspecRan S2 = {})
-                        \<and> (uspecDom S1 \<inter> uspecRan S2 = {})"
+definition uspec_sercompwell :: "'m uspec \<Rightarrow> 'm uspec \<Rightarrow> bool" where
+"uspec_sercompwell S1 S2 \<equiv> \<forall> f1 \<in> (Rep_rev_uspec S1). \<forall> f2 \<in> (Rep_rev_uspec S2). ufunclSerCompWell f1 f2"
 
 definition uspecSerComp :: "'m uspec \<Rightarrow>'m uspec \<Rightarrow> 'm uspec" (infixl "\<circle>" 50) where
-"uspecSerComp S1 S2 \<equiv> Abs_rev_uspec {ufunclSerComp\<cdot>f1\<cdot>f2 | f1 f2.  f1\<in>(Rep_rev_uspec S1) \<and> f2\<in>(Rep_rev_uspec S2)}"
+"uspecSerComp S1 S2 \<equiv> Abs_rev_uspec {f1 \<circ> f2 | f1 f2.  f1\<in>(Rep_rev_uspec S1) \<and> f2\<in>(Rep_rev_uspec S2)}"
 
-definition uspec_parcomp_well :: "'m uspec \<Rightarrow> 'm uspec \<Rightarrow> bool" where
-"uspec_parcomp_well S1 S2 \<equiv> ((uspecDom S1 \<union> uspecDom S2) \<inter> (uspecRan S1 \<union> uspecRan S2) = {}) 
-                             \<and> (uspecRan S1 \<inter> uspecRan S2 = {})"  
+definition uspec_parcompwell :: "'m uspec \<Rightarrow> 'm uspec \<Rightarrow> bool" where
+"uspec_parcompwell S1 S2 \<equiv> \<forall> f1 \<in> (Rep_rev_uspec S1). \<forall> f2 \<in> (Rep_rev_uspec S2). ufunclParCompWell f1 f2"  
 
 definition uspecParComp :: "'m uspec \<Rightarrow>'m uspec \<Rightarrow> 'm uspec" (infixl "\<parallel>" 50) where
-"uspecParComp S1 S2 \<equiv> Abs_rev_uspec {ufunclParComp\<cdot>f1\<cdot>f2 | f1 f2.  f1\<in>(Rep_rev_uspec S1) \<and> f2\<in>(Rep_rev_uspec S2)}"
-
+"uspecParComp S1 S2 \<equiv> Abs_rev_uspec {f1 \<parallel> f2 | f1 f2.  f1\<in>(Rep_rev_uspec S1) \<and> f2\<in>(Rep_rev_uspec S2)}"
 
 definition uspecFeedbackComp :: "'m uspec \<Rightarrow> 'm uspec" where
-"uspecFeedbackComp S1 \<equiv> Abs_rev_uspec {ufunclFeedbackComp\<cdot>f1 | f1.  f1\<in>(Rep_rev_uspec S1)}"
+"uspecFeedbackComp S1 \<equiv> Abs_rev_uspec {ufunclFeedbackComp f1 | f1.  f1\<in>(Rep_rev_uspec S1)}"
 
 
 
@@ -46,11 +37,34 @@ definition uspecFeedbackComp :: "'m uspec \<Rightarrow> 'm uspec" where
 section\<open>Lemmas\<close>
 (****************************************************)   
 
-lemma uspec_comp_well_commu: "uspec_comp_well S1 S2 =  uspec_comp_well S2 S1"
-  using uspec_comp_well_def by blast
+lemma uspec_compwell_commu: "uspec_compwell S1 S2 =  uspec_compwell S2 S1"
+  using ufunclCompWell_commute uspec_compwell_def by blast
 
-lemma uspec_parcomp_well_commu: "uspec_parcomp_well S1 S2 = uspec_parcomp_well S2 S1"
-  by (simp add: inf_commute sup_commute uspec_parcomp_well_def)
+lemma uspec_parcompwell_commu: "uspec_parcompwell S1 S2 = uspec_parcompwell S2 S1"
+  using ufunclParCompWell_commute uspec_parcompwell_def by blast
 
+
+lemma uspec_comp_commu: assumes "uspec_compwell S1 S2"
+  shows "(S1 \<Otimes> S2) = (S2 \<Otimes> S1)"
+proof - 
+  have "{f1 \<otimes> f2 |(f1::'a) f2::'a. f1 \<in> Rep_rev_uspec S1 \<and> f2 \<in> Rep_rev_uspec S2} = 
+             {f1 \<otimes> f2 |(f1::'a) f2::'a. f1 \<in> Rep_rev_uspec S2 \<and> f2 \<in> Rep_rev_uspec S1}" (is "?L = ?R")
+    apply auto
+    using  assms comp_commute uspec_compwell_def by metis +
+  then show ?thesis
+    by (simp add: uspecComp_def)
+qed
+
+lemma uspec_parcomp_commu: assumes "uspec_parcompwell S1 S2"
+  shows "(uspecParComp S1 S2) = (uspecParComp S2 S1)"
+proof -
+  have f1: "{f1 \<parallel> f2 |(f1::'a) f2::'a. f1 \<in> Rep_rev_uspec S1 \<and> f2 \<in> Rep_rev_uspec S2} = 
+                {f1 \<parallel> f2 |(f1::'a) f2::'a. f1 \<in> Rep_rev_uspec S2 \<and> f2 \<in> Rep_rev_uspec S1}" (is "?L = ?R")
+    apply auto
+    using assms parcomp_commute uspec_parcompwell_def by metis +
+  show ?thesis
+    apply (simp add: uspecParComp_def)
+    using f1 by auto
+qed
 
 end

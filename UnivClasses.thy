@@ -109,7 +109,7 @@ begin
 end
 
 class ufuncl_comp = ufuncl +
-  fixes ufunclComp :: "'a \<Rightarrow> 'a \<Rightarrow> 'a"  (infixl "\<otimes>" 55) (* Here we can put the abbreviation \<otimes> *)
+  fixes ufunclComp :: "'a \<Rightarrow> 'a \<Rightarrow> 'a"  (infixl "\<otimes>" 55)
   fixes ufunclParComp :: "'a \<Rightarrow> 'a \<Rightarrow> 'a"   (infixl "\<parallel>" 55)
   fixes ufunclSerComp :: "'a \<Rightarrow> 'a \<Rightarrow> 'a"  (infixl "\<circ>" 55)
   fixes ufunclFeedbackComp :: "'a \<Rightarrow> 'a"  ("\<mu>" 55)
@@ -117,6 +117,9 @@ class ufuncl_comp = ufuncl +
   fixes ufunclCompWell:: "'a \<Rightarrow> 'a \<Rightarrow> bool"
   fixes ufunclSerCompWell:: "'a \<Rightarrow> 'a \<Rightarrow> bool"
   fixes ufunclParCompWell:: "'a \<Rightarrow> 'a \<Rightarrow> bool"
+
+  assumes ufunclParCompWell_commute: "ufunclParCompWell f1 f2 = ufunclParCompWell f2 f1"
+  assumes ufunclCompWell_commute: "ufunclCompWell f1 f2 = ufunclCompWell f2 f1"
 
   assumes comp_commute: "ufunclCompWell f1 f2 \<Longrightarrow> (f1 \<otimes> f2) = (f2 \<otimes> f1)"
   assumes parcomp_commute: "ufunclParCompWell f1 f2 \<Longrightarrow> (f1 \<parallel> f2) = (f2 \<parallel> f1)"
