@@ -13,7 +13,7 @@
 chapter {* Timed Streams *}
 
 theory TSB
-imports Channel OptionCpo TStream TStream_JB
+imports "../Channel" "../inc/OptionCpo" TStream TStream_JB
 begin
 
 
