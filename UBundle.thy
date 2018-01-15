@@ -5,7 +5,7 @@
 *)
 
 theory UBundle
-  imports UnivClasses
+  imports UnivClasses Channel "inc/OptionCpo"
 begin
 
   
@@ -122,6 +122,11 @@ definition ubEqCommon:: " 'M\<^sup>\<Omega> => 'M\<^sup>\<Omega> => bool" where
 "ubEqCommon b1 b2\<equiv> ubEqSelected (ubDom\<cdot>b1 \<inter> ubDom\<cdot>b2) b1 b2"
 
 
+text {* @{text "UB"} is the set of bundles over a channel signature}*}
+definition UB :: "channel set \<Rightarrow> 'm ubundle set" where
+  "UB cs = {b. ubDom\<cdot>b = cs}"
+
+
 text {* @{text " ubPrefixSelected"} prefix relation on selected channels *}
 definition ubPrefixSelected:: "channel set \<Rightarrow> 'M\<^sup>\<Omega> \<Rightarrow> 'M\<^sup>\<Omega> \<Rightarrow> bool" where
 "ubPrefixSelected cs b1 b2 \<equiv> (b1\<bar>cs \<sqsubseteq> b2\<bar>cs)"
@@ -135,7 +140,6 @@ definition ubPrefixCommon:: "'M\<^sup>\<Omega> \<Rightarrow> 'M\<^sup>\<Omega> \
 text {* @{text " ubMapStream"} applies function to all streams *}
 definition ubMapStream:: "('M \<Rightarrow> 'M) \<Rightarrow>'M\<^sup>\<Omega> \<Rightarrow> 'M\<^sup>\<Omega>" where
 "ubMapStream f b =  Abs_ubundle (\<lambda>c. (c\<in>ubDom\<cdot>b) \<leadsto> f (b . c))"
-
 
 (****************************************************)
 section\<open>Lemmas\<close>
@@ -155,6 +159,10 @@ theorem ubrep_ubabs[simp]: assumes "ubWell f" shows "Rep_ubundle (Abs_ubundle f)
 
 theorem ubabs_ubrep[simp]: shows "Abs_ubundle (Rep_ubundle f) = f"
   by (simp add: Rep_ubundle_inverse)
+
+lemma cont_Abs_UB[simp]: assumes "cont g" and "\<forall>x. ubWell (g x)"
+  shows "cont (\<lambda>x. Abs_ubundle (g x))"
+  by (simp add: assms(1) assms(2) cont_Abs_ubundle)
 
 (* a chain of 'M\<^sup>\<Omega>s is also a chain after applying Rep_ubundle *)
 lemma ubrep_chain[simp]: assumes "chain S"
@@ -221,7 +229,19 @@ lemma ubwellI: assumes "\<And> c. c \<in> dom f \<Longrightarrow> usOkay c (f\<r
   shows "ubWell f"
   using assms ubWell_def by blast
 
-    
+lemma less_UBI: assumes "dom (Rep_ubundle b1) = dom (Rep_ubundle b2)"
+    and "\<And>c. c \<in> dom (Rep_ubundle b1) \<Longrightarrow> the ((Rep_ubundle b1) c) \<sqsubseteq> the ((Rep_ubundle b2) c)"
+  shows "b1 \<sqsubseteq> b2"
+  using assms(1) assms(2) ubrep_lessI by blast
+
+lemma less_ubLub1: assumes "chain S"
+  shows "the (Rep_ubundle (S i) c) \<sqsubseteq> the (Rep_ubundle (\<Squnion>i. S i) c)"
+  by (simp add: assms ubrep_less_lub1)
+
+lemma less_ubLub2: assumes "chain S" and "range S <| u"
+  shows "the (Rep_ubundle (\<Squnion>i. S i) c) \<sqsubseteq> the (Rep_ubundle u c)"
+  by (simp add: assms(1) assms(2) ubrep_less_lub2)
+
 subsection \<open>ubDom\<close>
 
 
@@ -261,6 +281,8 @@ lemma ubdom_channel_usokay[simp]: assumes "c \<in> ubDom\<cdot>ub"
   shows "usOkay c ((Rep_ubundle ub)\<rightharpoonup>c)"
   using assms ubrep_well ubdom_insert ubWell_def by blast
 
+lemma ubdom_empty [simp]: "ubDom\<cdot>(Abs_ubundle empty) = {}"
+  by (simp add: ubWell_empty ubdom_ubrep_eq)
     
 subsection \<open>ubGetCh\<close>
 
@@ -268,6 +290,9 @@ subsection \<open>ubGetCh\<close>
 (* ubGetCh is cont *)
 lemma ubgetch_cont [simp]: "cont (\<lambda>ub. ((Rep_ubundle ub) \<rightharpoonup> c))"
   by (smt Prelude.contI2 below_ubundle_def fun_below_iff lub_eq ubrep_lub_eval monofun_def not_below2not_eq op_the_mono)
+
+lemma ubgetch_cont2[simp]: "cont (\<lambda>ub uc. the ((Rep_ubundle ub) uc))"
+  by simp
 
 (* the element in a channel is the same when it's lifted  *)
 lemma ubgetch_ubrep_eq: "ubWell ub \<Longrightarrow> (Abs_ubundle ub) . c= ub \<rightharpoonup> c"
@@ -363,7 +388,7 @@ lemma ubRestrict_twice [simp]: "ubRestrict cs2\<cdot>(ubRestrict cs1\<cdot>ub) =
 
 (* the element in the channel after restriction is equal the unrestrict bundle *)
 lemma ubgetch_ubrestrict [simp]: assumes "c \<in> cs"
-  shows "(ubRestrict cs\<cdot>ub) . c= ub . c "
+  shows "(ubRestrict cs\<cdot>ub) . c = ub . c "
   by (metis (no_types, lifting) Abs_cfun_inverse2 assms restrict_in ubGetCh_def ubgetch_cont ubgetch_ubrep_eq ubrestrict_insert ubrestrict_well)
 
 (* the bundles after applying ubRestrict have the same below relation like its second  *)
@@ -388,10 +413,62 @@ lemma ubrestrict_below [simp]:  assumes "chain Y" and "cont h"
 
 
 subsection \<open>ubLen\<close>
-
+lemma ublen_monofun:"monofun ubLen"
+proof (rule monofunI)
+  fix x::"'a\<^sup>\<Omega>" and y::"'a\<^sup>\<Omega>"
+  assume a1: "x \<sqsubseteq> y"
+  show "ubLen x \<sqsubseteq> ubLen y"
+  proof (cases "ubDom\<cdot>x = {}")
+    case True
+    then show ?thesis 
+      by (metis a1 eq_imp_below ubLen_def ubdom_below)
+  next
+    case False
+      obtain y_len_set where y_len_set_def: "y_len_set = {usLen\<cdot>(y . c) | c.  c \<in> ubDom\<cdot>y}" 
+        by simp
+      have f2: "(LEAST ln. ln\<in> y_len_set) = ubLen y"
+      proof -
+        have "UBundle.ubDom\<cdot>y \<noteq> {}"
+          by (metis (no_types) False a1 empty_iff ubdom_below ubgetchI)
+        then show ?thesis
+          by (simp add: ubLen_def y_len_set_def)
+      qed
+      have f7: "y_len_set \<noteq> {}"
+      proof - 
+        obtain c where "c \<in> ubDom\<cdot>y" 
+          using False a1 ubdom_below by blast
+        then have "usLen\<cdot>(y . c) \<in> y_len_set"
+          using y_len_set_def by blast
+        then show ?thesis
+          by auto
+      qed
+      have f8: "(LEAST ln. ln\<in> y_len_set) \<in> y_len_set"
+        by (meson LeastI f7 neq_emptyD)
+      obtain y_ln where y_ln_def: "y_ln = (LEAST ln. ln\<in> y_len_set)" by simp
+      have f9: "\<forall> len \<in> y_len_set. \<exists> c \<in> ubDom\<cdot>y. usLen\<cdot>(y . c) = len"  
+        using y_len_set_def by blast
+      then have f10: "y_ln \<in> y_len_set \<and> (\<exists> c \<in> ubDom\<cdot>y. usLen\<cdot>(y . c) = y_ln)"
+        apply rule
+        by (simp add: f8 y_ln_def) +
+      then obtain y_c where y_c_def: "y_c \<in> ubDom\<cdot>y \<and> usLen\<cdot>(y . y_c) = (LEAST ln. ln\<in> y_len_set)"
+        using y_ln_def by blast
+      have f11: "ubLen x \<sqsubseteq> usLen\<cdot>(x . y_c)"
+      proof -
+        have "\<exists>c. usLen\<cdot>(x . y_c) = usLen\<cdot>(x . c) \<and> c \<in> UBundle.ubDom\<cdot>x"
+          using a1 ubdom_below y_c_def by blast
+        then show ?thesis
+          by (simp add: False Least_le ubLen_def)
+      qed
+      have "x . y_c \<sqsubseteq> y . y_c"
+        by (simp add: a1 monofun_cfun_arg)
+      then have "usLen\<cdot>(x . y_c) \<sqsubseteq> usLen\<cdot>(y . y_c)"
+        using monofun_cfun_arg by blast
+      then show ?thesis
+        using f11 f2 y_c_def by auto
+    qed
+  qed
 
 (* Missing *)
-  
   
 subsection \<open>ubShift\<close>
 
@@ -421,8 +498,7 @@ lemma ubunion_cont [simp]: "cont (\<lambda> b1. \<Lambda> b2. Abs_ubundle (Rep_u
       Rep_ubundle cont_Abs_ubundle mem_Collect_eq ubunion_contL ubunion_well)
 
 lemma ubunion_insert: "(b1 \<uplus> b2) = Abs_ubundle (Rep_ubundle b1 ++ Rep_ubundle b2)"
-  apply (simp add: ubUnion_def)
-  using ubunion_contR ubunion_contL ubunion_cont by (simp add: cont_Abs_ubundle)
+  by (simp add: ubUnion_def)
 
 lemma ubunion_idL [simp]: assumes "ubDom\<cdot>b1 \<subseteq> ubDom\<cdot>b2"
   shows "b1 \<uplus> b2 = b2"
@@ -466,6 +542,21 @@ lemma ubunion_eqI: assumes "a = b" and "c = d"
   by (simp add: assms)
 
 
+lemma ubunion_restrict [simp]: assumes "ubDom\<cdot>b2 = cs"
+  shows "(b1 \<uplus> b2) \<bar> cs = b2"
+  apply (simp add: ubunion_insert ubrestrict_insert)
+  by (metis assms map_union_restrict2 ubabs_ubrep ubdom_insert)
+
+lemma ubunion_restrict2 [simp]: assumes "ubDom\<cdot>b2 \<inter> cs = {}"
+  shows "(b1 \<uplus> b2) \<bar> cs = b1 \<bar> cs" 
+  apply (simp add: ubunion_insert ubrestrict_insert)
+  by (metis assms map_union_restrict ubdom_insert)
+
+
+lemma ubunion_ubrestrict3: "(a \<uplus> b ) \<bar> cs = (a \<bar> cs)  \<uplus> (b \<bar> cs)"
+  apply (simp add: ubunion_insert ubrestrict_insert)
+  by (metis mapadd2if_then restrict_map_def)
+
 subsection \<open>ubSetCh\<close>
 
   
@@ -481,7 +572,7 @@ lemma ubsetch_insert: assumes "usOkay c s"
   shows "(ubSetCh\<cdot>b) c s = b \<uplus> Abs_ubundle [c \<mapsto> s]"
   by (simp add: ubSetCh_def)
 
-    
+
   subsection \<open>ubRemCh\<close>
 (* ubRemCh *)
 
@@ -493,6 +584,15 @@ lemma ubremch_ubdom [simp]: "ubDom\<cdot>(ubRemCh c\<cdot>b) = ubDom\<cdot>b - {
     
 lemma ubremch2ubrestrict: "ubRemCh c\<cdot>b = ubRestrict (ubDom\<cdot>b - {c})\<cdot>b"
   by (metis (no_types, lifting) diff_eq eta_cfun subset_iff ubrestrict_id ubRestrict_twice)
+
+lemma ubres_pref_eq: assumes "(a \<sqsubseteq> b)" shows "(a \<bar> cs) \<sqsubseteq> (b \<bar> cs)"
+  by (simp add: assms ubrestrict_belowI1)
+
+lemma ubres_ubdom_supset: assumes "ubDom\<cdot>ub \<subseteq> cs" shows "ub \<bar> cs = ub \<bar> (ubDom\<cdot>ub)"
+  by (simp add: assms)
+
+lemma ubres_ubdom_supset_inter: "ub \<bar> cs = ub \<bar> (cs \<inter> (ubDom\<cdot>ub))"
+  using ubrestrict_ubdom_sup_inter by blast
 
 
 subsection \<open>ubRenameCh\<close>
@@ -513,7 +613,7 @@ lemma ubrenamech_ubdom: assumes "ch1 \<in> ubDom\<cdot>ub"  and "usOkay ch2 (ub 
   shows "ubDom\<cdot>(ubRenameCh ub ch1 ch2) = (ubDom\<cdot>ub - {ch1}) \<union> {ch2}"
   apply (simp add: ubRenameCh_def  ubSetCh_def)
   by (metis assms(2) diff_eq dom_empty dom_fun_upd insert_is_Un option.simps(3) ubrep_ubabs sup_commute ubsetch_well ubdom_ubrep_eq ubWell_empty)
-  
+
 (* after renaming channel ch1 to ch2, old and new bundles have the same element on those channel  *)  
 lemma ubrenamech_ubgetchI1: assumes "ch1 \<in> ubDom\<cdot>ub" 
                     and "usOkay ch2 (ub . ch1)"
@@ -528,8 +628,6 @@ lemma ubrenamech_ubgetchI2: assumes "ch1 \<in> ubDom\<cdot>ub"  and "usOkay ch2 
   shows "(ubRenameCh ub ch1 ch2) . ch3 = ub . ch3"
   apply (simp add: ubRenameCh_def ubSetCh_def)
   by (metis ComplI assms(2) assms(4) assms(5) dom_empty dom_fun_upd option.discI ubrep_ubabs singletonD ubsetch_well ubdom_ubrep_eq ubgetch_ubrestrict ubunion_getchL ubWell_empty)
-
-
 
 
 subsection \<open>ubEqSelected\<close>
@@ -583,9 +681,6 @@ lemma ubeqcommonI: assumes "\<forall> c \<in> (ubDom\<cdot>ub1 \<inter> ubDom\<c
   shows "ubEqCommon ub1 ub2"
   by (simp add: assms ubeqselectedI ubEqCommon_def)
 
-(* ubPrefixSelected *)
-
-(* ubPrefixCommon *)
 
 subsection \<open>ubMapStream\<close>
 
@@ -625,6 +720,28 @@ qed
 lemma ubMapStream_contI2: assumes "cont f" and "\<forall>c ts. usOkay c ts \<longrightarrow> usOkay c (f ts)"
   shows "cont (ubMapStream f)"
   by (simp add: assms(1) assms(2) ubMapStream_contI1)
+
+lemma if_then_ubDom: assumes "d \<in> dom (\<lambda> b. (ubDom\<cdot>b = In) \<leadsto> (F b))"
+  shows "ubDom\<cdot>d = In"
+  by (smt assms domIff)
+
+(*
+lemma ub_lub [simp]: fixes S :: "nat \<Rightarrow> 'm ubundle" assumes "chain S"
+  shows "Abs_ubundle (\<lambda> c. (c \<in> ubDom\<cdot>(S i)) \<leadsto> (\<Squnion>j. (S j) . c)) = (\<Squnion>i. S i)" (is "?L = ?R")
+proof (rule ub_eq)
+  show "ubDom\<cdot>?L = ubDom\<cdot>?R"
+    sorry
+  fix c
+  assume "c \<in> ubDom\<cdot>?L"
+  show "?L . c = ?R . c"
+  proof -
+    have "?R . c = (\<Squnion>i. (S i) . c)"
+      using assms contlub_cfun_arg by blast
+    thus ?thesis
+      sorry
+  qed
+qed
+*)
 
 (**)
 (*
@@ -796,12 +913,28 @@ section\<open>Instantiation\<close>
 instantiation ubundle :: (uscl) ubcl
 begin
 definition ubDom_ubundle_def: "UnivClasses.ubDom \<equiv> ubDom"
-
 definition ubLen_ubundle_def: "UnivClasses.ubLen \<equiv> ubLen"
+
+lemma ubundle_ex: "\<And>C::channel set. \<exists>x::'a\<^sup>\<Omega>. ubcl_class.ubDom\<cdot>x = C"
+proof -
+  fix C::"channel set"
+  obtain set_bla::"'a set" where set_bla_def: "set_bla = {a . \<exists> c \<in> C. usOkay c a}"
+    by simp
+  obtain ub where ub_def: "ub = (\<lambda> c. (c \<in> C) \<leadsto> (SOME a. a \<in> set_bla \<and> usOkay c a))"
+    by simp
+  have "ubWell ub"
+    apply (simp add: ubWell_def)
+    by (metis (mono_tags, lifting) bla domIff mem_Collect_eq option.sel set_bla_def tfl_some ub_def)
+  then show "\<exists>x::'a\<^sup>\<Omega>. ubcl_class.ubDom\<cdot>x = C"
+    using ubDom_ubundle_def ub_def ubdom_ubrep_eq by fastforce
+qed
 
 instance
   apply intro_classes
-  sorry
+     apply (simp add: ubDom_ubundle_def ubdom_below)
+    apply (simp add: ubundle_ex)
+   apply (simp add: ubLen_ubundle_def ublen_monofun)
+  by (metis (mono_tags) domIff empty_iff equalityI subsetI ubLen_def ubLen_ubundle_def ubWell_empty ubdom_ubrep_eq)
 
 end
 
