@@ -31,7 +31,15 @@ proof -
   have f1: "cont ufun1"
     apply(rule contI2)
      apply (simp add: monofun_def ubdom_fix ufun1_def)
-      by (smt below_option_def is_ub_thelub po_class.chain_def ubdom_fix ufun1_def)
+    apply auto
+  proof -
+    fix Y :: "nat \<Rightarrow> 'in"
+    assume "chain Y"
+    then have "\<And>n. ubDom\<cdot>(Y n) = ubDom\<cdot>(Lub Y)"
+      using is_ub_thelub ubdom_fix by blast
+    then show "ufun1 (\<Squnion>n. Y n) \<sqsubseteq> (\<Squnion>n. ufun1 (Y n))"
+      using ufun1_def by auto
+  qed
   have f2: "(Rep_cfun (Abs_cfun ufun1)) = ufun1"
     using f1 by auto
   have f3: "ufWell (Abs_cfun ufun1)"
