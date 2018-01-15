@@ -6,7 +6,7 @@
 *)
 
 theory ABP_TSPS
-  imports "../../TSPS" Receiver Composition Medium "../../TSPF" "../../TSPF_Comp"
+  imports "../../timed/TSPS" Receiver Composition Medium "../../timed/TSPF" "../../timed/TSPF_Comp" "../../UFun" "../../UBundle"
 
 begin
 
@@ -64,8 +64,8 @@ in (\<lambda> x. (tsbDom\<cdot>x = {dr}) \<leadsto> [ar    \<mapsto> tsMap Bool\
 
 
 subsection \<open>receiver\<close>
-definition recvTSPF :: "'a MABP TSPF" where
-"recvTSPF \<equiv> Abs_CTSPF (\<lambda> x. (tsbDom\<cdot>x = {dr}) \<leadsto> [ar    \<mapsto> (tsMap::(bool \<Rightarrow> 'a MABP) \<Rightarrow> bool tstream \<rightarrow> 'a MABP tstream) Bool\<cdot>(fst ( tsRec\<cdot>((tsMap invBoolPair)\<cdot>(x . dr)))),
+definition recvTSPF :: "('a MABP, 'a MABP) ufun" where
+"recvTSPF \<equiv> Abs_cufun (\<lambda> x. (ubDom\<cdot>x = {dr}) \<leadsto> [ar    \<mapsto> (tsMap::(bool \<Rightarrow> 'a MABP) \<Rightarrow> bool tstream \<rightarrow> 'a MABP tstream) Bool\<cdot>(fst ( tsRec\<cdot>((tsMap invBoolPair)\<cdot>(x . dr)))),
                                         abpOut \<mapsto> (tsMap::('a \<Rightarrow> 'a MABP) \<Rightarrow> 'a tstream \<rightarrow> 'a MABP tstream) Data\<cdot>(snd ( tsRec\<cdot>((tsMap invBoolPair)\<cdot>(x . dr))))]\<Omega>)"
 
 subsection \<open>medium_rs\<close>
@@ -136,10 +136,10 @@ subsection \<open>receiver\<close>
 subsubsection \<open>defs\<close>
 
       (* helper functions to prove cont *)
-definition recvCH1 :: "'a MABP TSB \<Rightarrow> 'a MABP tstream"  where
+definition recvCH1 :: "'a MABP tstream ubundle \<Rightarrow> 'a MABP tstream"  where
 "recvCH1 \<equiv> (\<lambda> x. tsMap Bool\<cdot>(fst (tsRec\<cdot>((tsMap invBoolPair)\<cdot>(x .dr)))))"
 
-definition recvCH2 :: "'a MABP TSB \<Rightarrow> 'a MABP tstream"  where
+definition recvCH2 :: "'a MABP tstream ubundle \<Rightarrow> 'a MABP tstream"  where
 "recvCH2 \<equiv> (\<lambda> x. tsMap Data\<cdot>(snd (tsRec\<cdot>((tsMap invBoolPair)\<cdot>(x .dr)))))"
 
 lemma recvCH1_contlub: assumes "chain Y"
@@ -154,11 +154,11 @@ lemma recvCH2_contlub: assumes "chain Y"
 
 
 lemma to_recvch1: "tsMap Bool\<cdot>(fst (tsRec\<cdot>((tsMap invBoolPair)\<cdot>(x .dr))))
-                    = (recvCH1::'a MABP TSB \<Rightarrow> 'a MABP tstream) x"
+                    = (recvCH1::'a MABP tstream ubundle \<Rightarrow> 'a MABP tstream) x"
   by (simp add: recvCH1_def)
 
 lemma to_recvch2: "tsMap Data\<cdot>(snd (tsRec\<cdot>((tsMap invBoolPair)\<cdot>(x .dr))))
-                    = (recvCH2::'a MABP TSB \<Rightarrow> 'a MABP tstream) x"
+                    = (recvCH2::'a MABP tstream ubundle \<Rightarrow> 'a MABP tstream) x"
   by (simp add: recvCH2_def)
 
 
@@ -166,40 +166,40 @@ lemma to_recvch2: "tsMap Data\<cdot>(snd (tsRec\<cdot>((tsMap invBoolPair)\<cdot
 
 
 lemma recv_tsb_well [simp]:
-  shows "tsb_well [ar \<mapsto> tsMap Bool\<cdot>(fst (tsRec\<cdot>((tsMap invBoolPair)\<cdot>(x . dr)))),
+  shows "ubWell [ar \<mapsto> tsMap Bool\<cdot>(fst (tsRec\<cdot>((tsMap invBoolPair)\<cdot>(x . dr)))),
                                   abpOut \<mapsto> tsMap Data\<cdot>(snd (tsRec\<cdot>((tsMap invBoolPair)\<cdot>(x . dr))))]"
-  apply (rule tsb_wellI)
+  apply (rule ubWellI)
   apply (simp add: tsmap_tsdom_range)
   by blast
 
-lemma recv_tsb_dom: "tsbDom\<cdot>([ar \<mapsto> tsMap Bool\<cdot>(fst (tsRec\<cdot>((tsMap invBoolPair)\<cdot>(x . dr)))),
+lemma recv_tsb_dom: "ubDom\<cdot>([ar \<mapsto> tsMap Bool\<cdot>(fst (tsRec\<cdot>((tsMap invBoolPair)\<cdot>(x . dr)))),
                               abpOut \<mapsto> tsMap Data\<cdot>(snd (tsRec\<cdot>((tsMap invBoolPair)\<cdot>(x . dr))))]\<Omega>)
                      = {ar, abpOut}"
-  apply (simp add: tsbdom_rep_eq)
+  apply (simp add: ubdom_rep_eq)
     by auto
 
 
 
-lemma rec_tsb_mono: "\<And>(x::'a MABP TSB) y::'a MABP TSB. tsbDom\<cdot>x = {dr} \<Longrightarrow> x \<sqsubseteq> y \<Longrightarrow>
+lemma rec_tsb_mono: "\<And>(x::'a MABP tstream ubundle) y::'a MABP tstream ubundle. ubDom\<cdot>x = {dr} \<Longrightarrow> x \<sqsubseteq> y \<Longrightarrow>
           [ar \<mapsto> tsMap Bool\<cdot>(fst (tsRec\<cdot>(tsMap invBoolPair\<cdot>(x  .  dr)))),
           abpOut \<mapsto> tsMap Data\<cdot>(snd (tsRec\<cdot>(tsMap invBoolPair\<cdot>(x  .  dr))))]\<Omega>
           \<sqsubseteq> [ar \<mapsto> tsMap Bool\<cdot>(fst (tsRec\<cdot>(tsMap invBoolPair\<cdot>(y  .  dr)))),
              abpOut \<mapsto> tsMap Data\<cdot>(snd (tsRec\<cdot>(tsMap invBoolPair\<cdot>(y  .  dr))))]\<Omega>"
-      apply (rule tsb_below)
-       apply (simp_all add: tsbdom_below tsbdom_rep_eq tsbgetch_rep_eq)
-       by (simp add: fst_monofun snd_monofun monofun_cfun_arg tsbgetch_below)
+      apply (rule ub_below)
+       apply (simp_all add: ubdom_below ubdom_rep_eq ubgetch_rep_eq)
+       by (simp add: fst_monofun snd_monofun monofun_cfun_arg ubgetch_below)
 
 
-lemma recvTSPF_mono [simp]: "monofun (\<lambda> x. (tsbDom\<cdot>x = {dr}) \<leadsto>
+lemma recvTSPF_mono [simp]: "monofun (\<lambda> x. (ubDom\<cdot>x = {dr}) \<leadsto>
                                     [ar \<mapsto> tsMap Bool\<cdot>(fst (tsRec\<cdot>((tsMap invBoolPair)\<cdot>(x . dr)))),
                                      abpOut \<mapsto> tsMap Data\<cdot>(snd (tsRec\<cdot>((tsMap invBoolPair)\<cdot>(x . dr))))]\<Omega>)"
-  apply (rule tspf_monoI)
-  apply (rule tsb_below)
-   apply (simp_all add: tsbdom_below tsbdom_rep_eq tsbgetch_rep_eq)
-   by (simp add: fst_monofun snd_monofun monofun_cfun_arg tsbgetch_below)
+  apply (rule ufun_monoI)
+  apply (rule ub_below)
+   apply (simp_all add: ubdom_below ubdom_rep_eq ubgetch_rep_eq)
+   by (simp add: fst_monofun snd_monofun monofun_cfun_arg ubgetch_below)
 
 
-lemma recvTSPF_tsb_getc: assumes "chain Y" and "tsbDom\<cdot>(\<Squnion>i. Y i) = {dr}"
+lemma recvTSPF_tsb_getc: assumes "chain Y" and "ubDom\<cdot>(\<Squnion>i. Y i) = {dr}"
   and "c \<in>  {ar, abpOut}"
   shows " (\<Squnion>i.
            [ar \<mapsto> tsMap Bool\<cdot>(fst (tsRec\<cdot>(tsMap invBoolPair\<cdot>(Y i  .  dr)))), abpOut \<mapsto>
@@ -207,90 +207,90 @@ lemma recvTSPF_tsb_getc: assumes "chain Y" and "tsbDom\<cdot>(\<Squnion>i. Y i) 
           = (\<Squnion> i. ([ar \<mapsto> tsMap Bool\<cdot>(fst (tsRec\<cdot>(tsMap invBoolPair\<cdot>(Y i  .  dr)))), abpOut \<mapsto>
             tsMap Data\<cdot>(snd (tsRec\<cdot>(tsMap invBoolPair\<cdot>(Y i  .  dr))))]\<Omega>) . c)"
 proof (rule lubgetCh)
-   have f2: "\<And> i. tsbDom\<cdot>(Y i) =  tsbDom\<cdot>(\<Squnion>i. Y i)"
+   have f2: "\<And> i. ubDom\<cdot>(Y i) =  ubDom\<cdot>(\<Squnion>i. Y i)"
      by (simp add: assms(1))
    show tb_chain: "chain (\<lambda>i::nat. [ar \<mapsto> tsMap Bool\<cdot>(fst (tsRec\<cdot>(tsMap invBoolPair\<cdot>(Y i  .  dr)))),
                              abpOut \<mapsto> tsMap Data\<cdot>(snd (tsRec\<cdot>(tsMap invBoolPair\<cdot>(Y i  .  dr))))]\<Omega>)"
      by (simp add: assms(1) assms(2) po_class.chainE po_class.chainI rec_tsb_mono)
 
-   show " c \<in> tsbDom\<cdot>(\<Squnion>i::nat.
+   show " c \<in> ubDom\<cdot>(\<Squnion>i::nat.
                           [ar \<mapsto> tsMap Bool\<cdot>(fst (tsRec\<cdot>(tsMap invBoolPair\<cdot>(Y i  .  dr)))),
                        abpOut \<mapsto> tsMap Data\<cdot>(snd (tsRec\<cdot>(tsMap invBoolPair\<cdot>(Y i  .  dr))))]\<Omega>)"
-     using assms(3) recv_tsb_dom tb_chain tsbChain_dom_eq2 by blast
+     using assms(3) recv_tsb_dom tb_chain ubChain_dom_eq2 by blast
 qed
 
 
 
   (* show that recTSPF is cont, proof concept taken from TSPF_Template_CaseStudy *)
 lemma recvTSPF_cont [simp]:
-  shows "cont (\<lambda> x. (tsbDom\<cdot>x = {dr}) \<leadsto>
+  shows "cont (\<lambda> x. (ubDom\<cdot>x = {dr}) \<leadsto>
                       [ar \<mapsto> (tsMap::(bool \<Rightarrow> 'a MABP) \<Rightarrow> bool tstream \<rightarrow> 'a MABP tstream)
                             Bool\<cdot>(fst ((tsRec::('a * bool) tstream \<rightarrow> (bool tstream \<times> 'a tstream))\<cdot>
                             ((tsMap invBoolPair)\<cdot>(x . dr)))),
                        abpOut \<mapsto> (tsMap::('a \<Rightarrow> 'a MABP) \<Rightarrow> 'a tstream \<rightarrow> 'a MABP tstream)
                             Data\<cdot>(snd (tsRec\<cdot>((tsMap invBoolPair)\<cdot>(x . dr))))]\<Omega>)"
-  proof (rule tspf_contI)
-    show recv_mono: "\<And>(x::'a MABP TSB) y::'a MABP TSB. tsbDom\<cdot>x = {dr} \<Longrightarrow> x \<sqsubseteq> y \<Longrightarrow>
+  proof (rule ufun_contI)
+    show recv_mono: "\<And>(x::'a MABP tstream ubundle) y::'a MABP tstream ubundle. ubDom\<cdot>x = {dr} \<Longrightarrow> x \<sqsubseteq> y \<Longrightarrow>
           [ar \<mapsto> tsMap Bool\<cdot>(fst (tsRec\<cdot>(tsMap invBoolPair\<cdot>(x  .  dr)))),
           abpOut \<mapsto> tsMap Data\<cdot>(snd (tsRec\<cdot>(tsMap invBoolPair\<cdot>(x  .  dr))))]\<Omega>
           \<sqsubseteq> [ar \<mapsto> tsMap Bool\<cdot>(fst (tsRec\<cdot>(tsMap invBoolPair\<cdot>(y  .  dr)))),
              abpOut \<mapsto> tsMap Data\<cdot>(snd (tsRec\<cdot>(tsMap invBoolPair\<cdot>(y  .  dr))))]\<Omega>"
       by (simp add: rec_tsb_mono)
 
-    have f1: " \<And>Y::nat \<Rightarrow> 'a MABP TSB. chain Y \<Longrightarrow> tsbDom\<cdot>(\<Squnion>i::nat. Y i) = {dr} \<Longrightarrow>
-                tsbDom\<cdot>(\<Squnion>i::nat. [ar \<mapsto> tsMap Bool\<cdot>(fst (tsRec\<cdot>(tsMap invBoolPair\<cdot>(Y i  .  dr)))),
+    have f1: " \<And>Y::nat \<Rightarrow> 'a MABP tstream ubundle. chain Y \<Longrightarrow> ubDom\<cdot>(\<Squnion>i::nat. Y i) = {dr} \<Longrightarrow>
+                ubDom\<cdot>(\<Squnion>i::nat. [ar \<mapsto> tsMap Bool\<cdot>(fst (tsRec\<cdot>(tsMap invBoolPair\<cdot>(Y i  .  dr)))),
                 abpOut \<mapsto> tsMap Data\<cdot>(snd (tsRec\<cdot>(tsMap invBoolPair\<cdot>(Y i  .  dr))))]\<Omega>) = {abpOut, ar}"
      proof -
-      fix Y :: "nat \<Rightarrow> 'a MABP TSB"
+      fix Y :: "nat \<Rightarrow> 'a MABP tstream ubundle"
       assume a1: "chain Y"
-      assume a2: "tsbDom\<cdot>(\<Squnion>i. Y i) = {dr}"
-      have f3: "\<forall>t ta. (tsbDom\<cdot>t \<noteq> {dr} \<or> t \<notsqsubseteq> ta)
+      assume a2: "ubDom\<cdot>(\<Squnion>i. Y i) = {dr}"
+      have f3: "\<forall>t ta. (ubDom\<cdot>t \<noteq> {dr} \<or> t \<notsqsubseteq> ta)
                         \<or> [ar \<mapsto> tsMap Bool\<cdot> (fst (tsRec\<cdot>(tsMap invBoolPair\<cdot>(t . dr)))),
                             abpOut \<mapsto> tsMap Data\<cdot> (snd (tsRec\<cdot> (tsMap invBoolPair\<cdot> (t . dr)))::'a tstream)]\<Omega>
                           \<sqsubseteq> [ar \<mapsto> tsMap Bool\<cdot> (fst (tsRec\<cdot>(tsMap invBoolPair\<cdot>(ta . dr)))),
                               abpOut \<mapsto> tsMap Data\<cdot> (snd (tsRec\<cdot>(tsMap invBoolPair\<cdot>(ta . dr))))]\<Omega>"
         using recv_mono by blast
-      have f4: "\<forall>f n. \<not> chain f \<or> tsbDom\<cdot>(f n::'a MABP TSB) = tsbDom\<cdot>(Lub f)"
-        by (meson tsbChain_dom_eq2)
-      have f5: "\<And> elem_1 .tsbDom\<cdot> ([ar \<mapsto> tsMap Bool\<cdot> (fst (tsRec\<cdot>(tsMap invBoolPair\<cdot>(Y elem_1 . dr))))
+      have f4: "\<forall>f n. \<not> chain f \<or> ubDom\<cdot>(f n::'a MABP tstream ubundle) = ubDom\<cdot>(Lub f)"
+        by (meson ubChain_dom_eq2)
+      have f5: "\<And> elem_1 .ubDom\<cdot> ([ar \<mapsto> tsMap Bool\<cdot> (fst (tsRec\<cdot>(tsMap invBoolPair\<cdot>(Y elem_1 . dr))))
                           , abpOut \<mapsto> tsMap Data\<cdot> (snd (tsRec\<cdot> (tsMap invBoolPair\<cdot>(Y elem_1 . dr))))]\<Omega>)
                           = {ar, abpOut}"
         by (simp add: recv_tsb_dom)
-      have "\<And> v1_0. tsbDom\<cdot> (Y (v1_0 (\<lambda>n. [ar \<mapsto> tsMap Bool\<cdot> (fst (tsRec\<cdot>(tsMap invBoolPair\<cdot>(Y n . dr)))),
+      have "\<And> v1_0. ubDom\<cdot> (Y (v1_0 (\<lambda>n. [ar \<mapsto> tsMap Bool\<cdot> (fst (tsRec\<cdot>(tsMap invBoolPair\<cdot>(Y n . dr)))),
                                            abpOut \<mapsto> tsMap Data\<cdot> (snd (tsRec\<cdot> (tsMap invBoolPair\<cdot>(Y n . dr))))]\<Omega>))) = {dr}"
         using f4 a2 a1 by presburger
       then have "chain (\<lambda>n. [ar \<mapsto> tsMap Bool\<cdot> (fst (tsRec\<cdot>(tsMap invBoolPair\<cdot>(Y n . dr)))),
                              abpOut \<mapsto> tsMap Data\<cdot> (snd (tsRec\<cdot>(tsMap invBoolPair\<cdot>(Y n . dr))))]\<Omega>)"
         using f3 a1 by (simp add: po_class.chain_def)
-      then show "tsbDom\<cdot> (\<Squnion>n. [ar \<mapsto> tsMap Bool\<cdot> (fst (tsRec\<cdot>(tsMap invBoolPair\<cdot>(Y n . dr)))),
+      then show "ubDom\<cdot> (\<Squnion>n. [ar \<mapsto> tsMap Bool\<cdot> (fst (tsRec\<cdot>(tsMap invBoolPair\<cdot>(Y n . dr)))),
                                abpOut \<mapsto> tsMap Data\<cdot> (snd (tsRec\<cdot>(tsMap invBoolPair\<cdot>(Y n . dr))))]\<Omega>) = {abpOut, ar}"
         using f5 f4 by blast
     qed
 
 
-    have f3: "\<And>(Y::nat \<Rightarrow> 'a MABP TSB) c::channel. chain Y \<Longrightarrow> tsbDom\<cdot>(\<Squnion>i::nat. Y i) = {dr}
+    have f3: "\<And>(Y::nat \<Rightarrow> 'a MABP tstream ubundle) c::channel. chain Y \<Longrightarrow> ubDom\<cdot>(\<Squnion>i::nat. Y i) = {dr}
               \<Longrightarrow> c = ar \<or> c = abpOut \<Longrightarrow> c = ar \<longrightarrow>
               (tsMap::(bool \<Rightarrow> 'a MABP) \<Rightarrow> bool tstream \<rightarrow> 'a MABP tstream) Bool\<cdot>(fst (tsRec\<cdot>(tsMap invBoolPair\<cdot>(Lub Y  .  dr))))
               \<sqsubseteq> (\<Squnion>i::nat. tsMap Bool\<cdot>(fst (tsRec\<cdot>(tsMap invBoolPair\<cdot>(Y i  .  dr)))))"
      by (simp add: recvCH1_contlub to_recvch1)
 
-   have f4: "\<And>(Y::nat \<Rightarrow> 'a MABP TSB) c::channel. chain Y \<Longrightarrow> tsbDom\<cdot>(\<Squnion>i::nat. Y i) = {dr}
+   have f4: "\<And>(Y::nat \<Rightarrow> 'a MABP tstream ubundle) c::channel. chain Y \<Longrightarrow> ubDom\<cdot>(\<Squnion>i::nat. Y i) = {dr}
                \<Longrightarrow> c = ar \<or> c = abpOut \<Longrightarrow> c = ar \<longrightarrow>
               tsMap Data\<cdot>(snd (tsRec\<cdot>(tsMap invBoolPair\<cdot>(Lub Y  .  dr))))
                \<sqsubseteq> (\<Squnion>i::nat. tsMap Data\<cdot>(snd (tsRec\<cdot>(tsMap invBoolPair\<cdot>(Y i  .  dr)))))"
     by (simp add: recvCH2_contlub to_recvch2)
 
-    show "\<And>Y::nat \<Rightarrow> 'a MABP TSB.
+    show "\<And>Y::nat \<Rightarrow> 'a MABP tstream ubundle.
        chain Y \<Longrightarrow>
-       tsbDom\<cdot>(\<Squnion>i::nat. Y i) = {dr} \<Longrightarrow>
+       ubDom\<cdot>(\<Squnion>i::nat. Y i) = {dr} \<Longrightarrow>
        [ar \<mapsto> tsMap Bool\<cdot>(fst (tsRec\<cdot>(tsMap invBoolPair\<cdot>((\<Squnion>i::nat. Y i)  .  dr)))), abpOut \<mapsto>
         tsMap Data\<cdot>(snd (tsRec\<cdot>(tsMap invBoolPair\<cdot>((\<Squnion>i::nat. Y i)  .  dr))))]\<Omega> \<sqsubseteq>
        (\<Squnion>i::nat.
            [ar \<mapsto> tsMap Bool\<cdot>(fst (tsRec\<cdot>(tsMap invBoolPair\<cdot>(Y i  .  dr)))), abpOut \<mapsto>
             tsMap Data\<cdot>(snd (tsRec\<cdot>(tsMap invBoolPair\<cdot>(Y i  .  dr))))]\<Omega>)"
-      apply (rule tsb_below)
-       apply (simp_all add: tsbdom_below tsbdom_rep_eq tsbgetch_rep_eq f1)
-      apply (simp add: recvTSPF_tsb_getc tsbdom_rep_eq tsbgetch_rep_eq)
+      apply (rule ub_below)
+       apply (simp_all add: ubdom_below ubdom_rep_eq ubgetch_rep_eq f1)
+      apply (simp add: recvTSPF_tsb_getc ubdom_rep_eq ubgetch_rep_eq)
       using f3 f4 by fastforce
   qed
 
@@ -298,11 +298,11 @@ lemma recvTSPF_cont [simp]:
   subsubsection \<open>tspf_well\<close>
 
  (* show that the recvTSPF fulfills the tickcount property *)
-lemma recvTSPF_tick: assumes "tsbDom\<cdot>b = {dr}" and "(#\<surd>tsb b) = n"
-  shows "n \<le> (#\<surd>tsb ([ar \<mapsto> tsMap Bool\<cdot>(fst (tsRec\<cdot>(tsMap invBoolPair\<cdot>(b  .  dr)))),
+lemma recvTSPF_tick: assumes "ubDom\<cdot>b = {dr}" and "(ubLen b) = n"
+  shows "n \<le> (ubLen ([ar \<mapsto> tsMap Bool\<cdot>(fst (tsRec\<cdot>(tsMap invBoolPair\<cdot>(b  .  dr)))),
                        abpOut \<mapsto> tsMap Data\<cdot>(snd (tsRec\<cdot>(tsMap invBoolPair\<cdot>(b  .  dr))))]\<Omega>))"
 proof -
-  have "(#\<surd>tsb b) = #\<surd>(b . dr)"
+  have "(ubLen b) = #\<surd>(b . dr)"
     apply (rule tsbtick_single_ch2)
      by (simp add: assms(1))
   hence f1: "n = #\<surd>(b . dr)"
@@ -321,31 +321,31 @@ qed
 
   (* recvTSPF is an actual TSPF *)
 lemma recvTSPF_well [simp]:
-  shows "tspf_well (\<Lambda> x. (tsbDom\<cdot>x = {dr}) \<leadsto>
+  shows "ufunWell (\<Lambda> x. (ubDom\<cdot>x = {dr}) \<leadsto>
                       [ar \<mapsto> (tsMap::(bool \<Rightarrow> 'a MABP) \<Rightarrow> bool tstream \<rightarrow> 'a MABP tstream)
                             Bool\<cdot>(fst ((tsRec::('a * bool) tstream \<rightarrow> (bool tstream \<times> 'a tstream))\<cdot>
                             ((tsMap invBoolPair)\<cdot>(x . dr)))),
                        abpOut \<mapsto> (tsMap::('a \<Rightarrow> 'a MABP) \<Rightarrow> 'a tstream \<rightarrow> 'a MABP tstream)
                             Data\<cdot>(snd (tsRec\<cdot>((tsMap invBoolPair)\<cdot>(x . dr))))]\<Omega>)"
-  apply (rule tspf_wellI)
+  apply (rule ufun_wellI)
     apply (simp_all add: domIff2 recv_tsb_dom)
     by (simp add: recvTSPF_tick)
 
-lemma recv_revsubst: "Abs_CTSPF (recvAbb) = recvTSPF"
+lemma recv_revsubst: "Abs_cufun (recvAbb) = recvTSPF"
   by (simp add: recvTSPF_def)
     
-lemma recv_tspfdom: "tspfDom\<cdot>(recvTSPF) = {dr}"
+lemma recv_tspfdom: "ufDom\<cdot>(recvTSPF) = {dr}"
     apply (simp add: recvTSPF_def)
-    apply (simp add: tspf_dom_insert)
+    apply (simp add: ufdom_insert)
     apply (simp add: domIff2)
     by (meson tsbleast_tsdom someI)
    
-lemma recv_tspfran: "tspfRan\<cdot>(recvTSPF) = {ar, abpOut}"   
-    apply (simp add: tspfran_least)
+lemma recv_tspfran: "ufRan\<cdot>(recvTSPF) = {ar, abpOut}"   
+    apply (simp add: ufran_least)
     apply (subst recv_tspfdom)
     apply (simp add: recvTSPF_def)
-    apply (subst tsbdom_rep_eq)
-    apply (simp_all add: tsb_well_def)
+    apply (subst ubdom_rep_eq)
+    apply (simp_all add: ubWell_def)
     by blast
 
 
