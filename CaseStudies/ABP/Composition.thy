@@ -232,7 +232,7 @@ text {*
    p1/p2 = oracle stream
 *}
 
-lemma tsaltbitpro_inp2out:
+lemma tsaltbitpro_inp2out_ninf:
   assumes send_def: "send \<in> tsSender"
     and p1_def: "#({True} \<ominus> p1) = \<infinity>"
     and p2_def: "#({True} \<ominus> p2) = \<infinity>"
@@ -288,6 +288,18 @@ lemma tsaltbitpro_inp2out:
       using dr_def p1_def tsmed_tsabs_slen2tsmed_tsabs i_eq_ds projfst2projsnd ds_eq_dr by force
     thus "tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>dr)) = tsAbs\<cdot>i"
       by (metis ds_def eq_slen_eq_and_less i_ninf i_eq_ds send_def set2tssnd_prefix_inp)
+  oops
+
+lemma tsaltbitpro_inp2out:
+  assumes send_def: "send \<in> tsSender"
+    and p1_def: "#({True} \<ominus> p1) = \<infinity>"
+    and p2_def: "#({True} \<ominus> p2) = \<infinity>"
+    and ds_def: "ds = send\<cdot>i\<cdot>as"
+    and dr_def: "dr = tsMed\<cdot>ds\<cdot>p1"
+    and ar_def: "ar = tsProjSnd\<cdot>dr"
+    (* definition 5 *)
+    and as_def: "as = tsMed\<cdot>ar\<cdot>p2"
+  shows "tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>dr)) = tsAbs\<cdot>i"
   oops
 
 (* ----------------------------------------------------------------------- *)
