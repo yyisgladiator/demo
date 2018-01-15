@@ -22,6 +22,17 @@ session "uspec" (mustWork) = "uClasses" +
     USpec
 
 
+session "sb" (mustWork) = "ubundle" +
+  options [quick_and_dirty = true]
+  theories
+    "untimed/SB"
+
+session "spf" (mustWork) = "ufun" +
+  options [quick_and_dirty = true]
+  theories
+    "untimed/SPF"
+
+
 
 session "ubundle_opt" (canFail) = "uClasses" +
   options [quick_and_dirty = false]
