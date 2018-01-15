@@ -585,7 +585,7 @@ lemma spfDomAbs: assumes "cont (\<lambda> x. (ubDom\<cdot>x = cs ) \<leadsto> f(
                    shows "ufDom\<cdot>(Abs_cufun (\<lambda> x. (ubDom\<cdot>x = cs ) \<leadsto> f(x))) = cs"
 apply(simp add: ufDom_def)
 apply(simp_all add: assms)
-  by (smt Abs_cfun_inverse2 assms(1) assms(2) domIff rep_abs_cufun2 tfl_some ubDom_ubundle_def ufunLeastIDom)
+  by (smt Collect_cong assms(2) dom_def dom_eq_empty_conv map_not_ufun mem_Collect_eq tfl_some ubDom_ubundle_def)
 
 lemma spfstep_dom [simp]:assumes "finite cIn" shows"ufDom\<cdot>(spfStep cIn cOut\<cdot>f) = cIn"
   by(simp add: spfstep_insert spfDomAbs assms)

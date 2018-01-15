@@ -126,7 +126,7 @@ definition autGetNextOutput:: "('s::type, 'm::message) automaton \<Rightarrow> '
 
 (* ToDo: make a bit more readable *)
 lemma h_final: 
-  assumes "sbDom\<cdot>sb = getDom automat"
+  assumes "ubDom\<cdot>sb = getDom automat"
   shows "(h automat s)\<rightleftharpoons>sb = 
   spfConc (autGetNextOutput automat s ((inv convDiscrUp)(sbHdElem\<cdot>sb)))\<cdot>(spfRt\<cdot>(h automat (autGetNextState automat s ((inv convDiscrUp)(sbHdElem\<cdot>sb))))) \<rightleftharpoons>sb"
   unfolding h_step

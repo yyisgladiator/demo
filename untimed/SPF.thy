@@ -5,9 +5,6 @@ default_sort message
 
 type_synonym 'm SPF = "'m SB \<Rrightarrow> 'm SB"
 
-instance ubundle :: (uscl_conc) ubcl_comp
-  sorry
-
 
 subsection \<open>spfStateFix\<close>
 
@@ -65,12 +62,6 @@ qed
 
 
 subsection \<open>spfStateLeast\<close>
-
-lemma spfStateLeast_mono: "monofun (\<lambda>x. spfLeast In Out)"
-  by (simp add: monofunI)
-
-lemma spfStateLeast_cont: "cont (\<lambda>x. spfLeast In Out)"
-  by simp
 
 lemma spfStateLeast_dom [simp]: "\<forall>x. ufDom\<cdot>(spfStateLeast In Out x) = In"
   by (simp add: spfStateLeast_def)
