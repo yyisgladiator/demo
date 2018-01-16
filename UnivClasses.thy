@@ -130,6 +130,12 @@ class ufuncl_comp = ufuncl +
   assumes ufunclParCompWell_commute: "ufunclParCompWell f1 f2 = ufunclParCompWell f2 f1"
   assumes ufunclCompWell_commute: "ufunclCompWell f1 f2 = ufunclCompWell f2 f1"
 
+  assumes ufuncl_parcomp_dom: "ufunclParCompWell f1 f2 \<Longrightarrow> ufDom\<cdot>(f1 \<parallel> f2) = ufDom\<cdot>f1 \<union> ufDom\<cdot>f2"
+  assumes ufuncl_parcomp_ran: "ufunclParCompWell f1 f2 \<Longrightarrow> ufRan\<cdot>(f1 \<parallel> f2) = ufRan\<cdot>f1 \<union> ufRan\<cdot>f2"
+
+  assumes ufuncl_sercomp_dom: "ufunclSerCompWell f1 f2 \<Longrightarrow> ufDom\<cdot>(f1 \<circ> f2) = ufDom\<cdot>f1"
+  assumes ufuncl_sercomp_ran: "ufunclSerCompWell f1 f2 \<Longrightarrow> ufRan\<cdot>(f1 \<circ> f2) = ufRan\<cdot>f2"
+
   assumes comp_commute: "ufunclCompWell f1 f2 \<Longrightarrow> (f1 \<otimes> f2) = (f2 \<otimes> f1)"
   assumes parcomp_commute: "ufunclParCompWell f1 f2 \<Longrightarrow> (f1 \<parallel> f2) = (f2 \<parallel> f1)"
 
@@ -139,7 +145,15 @@ class ufuncl_comp = ufuncl +
 
   assumes sercomp_asso: "ufunclSerCompWell f1 f2 \<Longrightarrow>
                       ufunclSerCompWell f2 f3 \<Longrightarrow> 
-                      ufRan\<cdot>f1 \<inter> ufRan\<cdot>f3 = {} \<Longrightarrow>  f1 \<circ> (f2 \<circ> f3) = (f1 \<circ> f2) \<circ> f3"
+                      ufDom\<cdot>f1 \<inter> ufRan\<cdot>f3 = {} \<Longrightarrow>  f1 \<circ> (f2 \<circ> f3) = (f1 \<circ> f2) \<circ> f3"
+
+
+  assumes parcompwell_asso: "ufunclParCompWell f1 f2 \<Longrightarrow>
+                      ufunclParCompWell f2 f3 \<Longrightarrow> 
+                      ufunclParCompWell f1 f3 \<Longrightarrow> ufunclParCompWell f1 (f2 \<parallel> f3)"
+  assumes sercompwell_asso: "ufunclSerCompWell f1 f2 \<Longrightarrow>
+                      ufunclSerCompWell f2 f3 \<Longrightarrow> 
+                      ufDom\<cdot>f1 \<inter> ufRan\<cdot>f3 = {} \<Longrightarrow>  ufunclSerCompWell f1 (f2 \<circ> f3) \<and> ufunclSerCompWell (f1 \<circ> f2) f3"
 
 begin
 end
