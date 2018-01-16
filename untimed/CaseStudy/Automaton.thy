@@ -22,6 +22,10 @@ section \<open>Backend Signatures\<close>
 
 (* The content is:
   transition function \<times> initial state \<times> initial Output \<times> input domain \<times> output domain *)
+
+definition automaton_well::"(('state \<times>(channel \<rightharpoonup> 'm)) \<Rightarrow> ('state \<times> 'm SB)) \<times> 'state \<times> 'm SB \<times> channel set \<times> channel set \<Rightarrow> bool " where
+"automaton_well automaton = finite (fst(snd(snd(snd automaton))))"
+
 typedef ('state::type, 'm::message) automaton = 
   "{f::(('state \<times>(channel \<rightharpoonup> 'm)) \<Rightarrow> ('state \<times> 'm SB)) \<times> 'state \<times> 'm SB \<times> channel set \<times> channel set. True}"
   by blast
@@ -92,12 +96,6 @@ definition H :: "('s, 'm::message) automaton \<Rightarrow> 'm SPF" where
 
 
 section \<open>stuff i need in spfStep\<close>
-lemma spfstep_dom [simp]: "ufDom\<cdot>(spfStep cIn cOut\<cdot>f) = cIn"
-  sorry
-
-lemma spfstep_ran [simp]: "ufRan\<cdot>(spfStep cIn cOut\<cdot>f) = cOut"
-  sorry
-
 lemma stepstep_step: "spfStep In Out\<cdot>f\<rightleftharpoons>sb = (f ((inv convDiscrUp)(sbHdElem\<cdot>sb)))\<rightleftharpoons>sb"
   sorry
 
@@ -107,16 +105,21 @@ lemma stepstep_step: "spfStep In Out\<cdot>f\<rightleftharpoons>sb = (f ((inv co
 section \<open>Lemma about h\<close>
 
 lemma h_dom [simp]: "ufDom\<cdot>(h automat s) = getDom automat"
-  by (metis (no_types, lifting) Abs_cfun_inverse2 h_cont h_def spfStateFix_fix spfstep_dom spfstep_ran)
+  by (metis (no_types, lifting) Abs_cfun_inverse2 h_cont h_def spfStateFix_fix spfstep_dom spfstep_ran automaton_well_def finite_code) 
 
 lemma h_ran [simp]: "ufRan\<cdot>(h automat s) = getRan automat"
-  by (metis Automaton.spfstep_dom Automaton.spfstep_ran Automaton.stepstep_step ufran_2_ubdom2)
+  by (metis spfstep_dom spfstep_ran Automaton.stepstep_step ufran_2_ubdom2 finite_code)
 
 lemma h_unfolding: "(h automat s) = spfStep (getDom automat) (getRan automat)\<cdot>(helper (getTransition automat) s\<cdot>(h automat))"
-  by (metis (no_types, lifting) Abs_cfun_inverse2 h_cont h_def spfStateFix_fix spfstep_dom spfstep_ran)
+  by (metis (no_types, lifting) Abs_cfun_inverse2 h_cont h_def spfStateFix_fix spfstep_dom spfstep_ran finite_code)
 
-lemma h_step: "(h automat s)\<rightleftharpoons>sb = ((helper (getTransition automat) s\<cdot>(h automat)) ((inv convDiscrUp)(sbHdElem\<cdot>sb))) \<rightleftharpoons>sb"
-  by (simp add: h_unfolding stepstep_step)
+lemma h_step: assumes "ubDom\<cdot>sb = getDom automat" and "\<forall>c\<in>getDom automat. sb  .  c \<noteq> \<epsilon>" 
+              and "ufDom\<cdot>((helper (getTransition automat) s\<cdot>(h automat)) (spfStep_h2 (sbHdElem\<cdot>sb))) = getDom automat \<and>
+                   ufRan\<cdot>((helper (getTransition automat) s\<cdot>(h automat)) (spfStep_h2 (sbHdElem\<cdot>sb))) = getRan automat"
+            shows "(h automat s)\<rightleftharpoons>sb = ((helper (getTransition automat) s\<cdot>(h automat)) ((inv convDiscrUp)(sbHdElem\<cdot>sb))) \<rightleftharpoons>sb"
+  apply (simp add: h_unfolding)
+  apply(rule SpfStep.stepstep_step)
+  by (simp add: assms)+
 
 definition autGetNextState:: "('s::type, 'm::message) automaton \<Rightarrow> 's \<Rightarrow>  ((channel \<rightharpoonup> 'm)) \<Rightarrow> 's" where
 "autGetNextState aut s m = fst ((getTransition aut) (s,m))"
@@ -129,8 +132,8 @@ lemma h_final:
   assumes "ubDom\<cdot>sb = getDom automat"
   shows "(h automat s)\<rightleftharpoons>sb = 
   spfConc (autGetNextOutput automat s ((inv convDiscrUp)(sbHdElem\<cdot>sb)))\<cdot>(spfRt\<cdot>(h automat (autGetNextState automat s ((inv convDiscrUp)(sbHdElem\<cdot>sb))))) \<rightleftharpoons>sb"
-  unfolding h_step
-  by(simp add: helper_def autGetNextOutput_def autGetNextState_def assms spfRt_def)
+  unfolding h_step 
+  by(simp add: helper_def autGetNextOutput_def autGetNextState_def assms spfRt_def )
   
 
 section \<open>Lemma about H\<close>
