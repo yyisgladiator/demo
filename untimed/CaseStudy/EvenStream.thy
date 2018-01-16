@@ -9,7 +9,7 @@
 
 theory EvenStream
 
-imports tsynStream
+imports "../../timesyn/tsynStream"
 
 begin
 
@@ -108,5 +108,20 @@ lemma evenstream_final_h: "sscanlA evenTransition (State ooo n)\<cdot>(nat2even\
 
 lemma evenstream_final: "evenStream\<cdot>(nat2even\<cdot>s) = bool2even\<cdot>(tsynMap even\<cdot>(tsynSum\<cdot>s))"
   by (simp add: evenInitialState_def tsynSum_def evenstream_final_h)
+
+
+
+
+subsection \<open>Rek2evenStream\<close>
+
+(* convert the rekursive definition of the automaton in our nice evenStream function *)
+lemma rek2evenstream: assumes msg: "\<And> ooo summe m xs. f (State ooo summe)\<cdot>(\<up>(Msg (A m)) \<bullet> xs)
+                 = \<up>(Msg (B (even (summe + m)))) \<bullet> (f (State (evenMakeSubstate (even (summe + m)))  (summe + m))\<cdot>xs)"
+      and ticks: "\<And> state xs. f state\<cdot>(\<up>Tick \<bullet> xs) = \<up>Tick \<bullet> (f state\<cdot>xs)"
+      and bot: "\<And>state. f state\<cdot>\<bottom> = \<bottom>"
+  shows "f = sscanlA evenTransition"
+  oops
+
+
 
 end
