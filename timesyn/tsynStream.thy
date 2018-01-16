@@ -55,6 +55,45 @@ definition tsynScanl :: "('b \<Rightarrow> 'a \<Rightarrow> 'b) \<Rightarrow> 'b
 
 section \<open>Lemma\<close>
 
+
+subsection \<open>tsynDom\<close>
+
+(* taken from tstream *)
+lemma tsyndom_monofun [simp]: "monofun (\<lambda>t. {a | a. (Msg a) \<in> sdom\<cdot>t})"
+by (smt contra_subsetD mem_Collect_eq monofunI monofun_cfun_arg set_cpo_simps(1) subsetI) 
+
+(* for any chain Y of tstreams the domain of the lub is contained in the lub of domains of the chain *)
+lemma tsyndom_contlub [simp]: assumes "chain Y" 
+  shows "{a | a. (Msg a) \<in> sdom\<cdot>(\<Squnion>i. Y i)} \<subseteq> (\<Squnion>i. {a | a. (Msg a) \<in> sdom\<cdot>(Y i)})"
+    (is "?F (\<Squnion>i. Y i) \<subseteq> _ ")
+proof 
+  fix a
+  assume "a\<in>?F (\<Squnion>i. Y i)"
+  hence "Msg a \<in> sdom\<cdot>( (\<Squnion>i. Y i))" by (simp add: tsynDom_def)
+  hence "Msg a \<in> (\<Squnion>i. sdom\<cdot>((Y i)))"
+    by (smt adm_def assms contlub_cfun_arg lub_eq mem_Collect_eq po_class.chain_def) 
+  hence "Msg a \<in> (\<Union>i. sdom\<cdot>(Y i))" by (simp add: lub_eq_Union)
+  hence "(a \<in> (\<Squnion>i. {u. Msg u \<in> sdom\<cdot>(Y i)}))" by (simp add: lub_eq_Union)
+  thus "a\<in>(\<Squnion>i. ?F (Y i))" by (metis (mono_tags, lifting) Collect_cong lub_eq)
+qed
+
+lemma tsyndom_cont [simp]:"cont (\<lambda>t. {a | a. (Msg a) \<in> sdom\<cdot>t})"
+apply(rule contI2)
+using tsyndom_monofun apply blast
+by (metis SetPcpo.less_set_def tsyndom_contlub)
+
+lemma tsyndom_insert: "tsynDom\<cdot>t = {a | a. (Msg a) \<in> sdom\<cdot>t}"
+by (metis (mono_tags, lifting) Abs_cfun_inverse2 tsynDom_def tsyndom_cont)
+
+lemma tsyndom_sub: "tsynDom\<cdot>(\<up>x \<bullet> xs) \<subseteq> S \<Longrightarrow> tsynDom\<cdot>xs \<subseteq> S"
+  apply(simp add: tsyndom_insert)
+  by blast
+
+lemma tsyndom_sub2: "tsynDom\<cdot>(\<up>(Msg x) \<bullet> xs) \<subseteq> S \<Longrightarrow> x \<in> S"
+  apply(simp add: tsyndom_insert)
+  by blast
+
+
 subsection \<open>tsynMap\<close>
 lemma tsynmap_len [simp]: "#(tsynMap f\<cdot>s) = #s"
   by (simp add: tsynMap_def)
