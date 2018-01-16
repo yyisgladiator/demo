@@ -17,13 +17,13 @@ section\<open>Definitions\<close>
 (****************************************************)
 
   
-definition ufApplyOut :: "('m \<rightarrow> 'm ) \<Rightarrow> ('m \<Rrightarrow> 'm) \<rightarrow> ('m \<Rrightarrow> 'm)" where
+definition ufApplyOut :: "('m \<rightarrow> 'n ) \<Rightarrow> ('a \<Rrightarrow> 'm) \<rightarrow> ('a \<Rrightarrow> 'n)" where
 "ufApplyOut k \<equiv> (\<Lambda> g. Abs_cufun (\<lambda>x. (ubDom\<cdot>x = ufDom\<cdot>g) \<leadsto> k\<cdot>(g \<rightleftharpoons>x)))"
 
-definition ufApplyIn :: "('m \<rightarrow> 'm ) \<Rightarrow> ('m \<Rrightarrow> 'm) \<rightarrow> ('m \<Rrightarrow> 'm)" where 
+definition ufApplyIn :: "('m \<rightarrow> 'n ) \<Rightarrow> ('n \<Rrightarrow> 'a) \<rightarrow> ('m \<Rrightarrow> 'a)" where 
 "ufApplyIn k \<equiv> \<Lambda> g. Abs_cufun (\<lambda>x. (Rep_cufun g)(k\<cdot>x))" 
 
-definition ufApplyIn2 :: "('m \<rightarrow> 'm ) \<Rightarrow> ('m \<Rrightarrow> 'm) \<rightarrow> ('m \<Rrightarrow> 'm)" where
+definition ufApplyIn2 :: "('m \<rightarrow> 'n ) \<Rightarrow> ('n \<Rrightarrow> 'a) \<rightarrow> ('m \<Rrightarrow> 'a)" where
 "ufApplyIn2 k \<equiv> (\<Lambda> g. Abs_cufun (\<lambda>x. (ubDom\<cdot>(k\<cdot>x) = ufDom\<cdot>g) \<leadsto> (g \<rightleftharpoons>(k\<cdot>x))))"
 
 
@@ -70,7 +70,7 @@ lemma ufapplyout_uf_dom [simp]: assumes "\<And>b. ubDom\<cdot>b = ufDom\<cdot>g 
   by (simp add: assms ufun_ufdom_abs)
 
 (* ran of ufapplyout is the same as the ubDom of the result after applying k and g on input b *)
-lemma ufapplyout_uf_ran [simp]: assumes "\<And>b. ubDom\<cdot>b = ufDom\<cdot>(g::'m \<Rrightarrow> 'm) \<Longrightarrow> ubDom\<cdot>(k\<cdot>(g \<rightleftharpoons> b)) = cs"
+lemma ufapplyout_uf_ran [simp]: assumes "\<And>b. ubDom\<cdot>b = ufDom\<cdot>(g::'m \<Rrightarrow> 'n) \<Longrightarrow> ubDom\<cdot>(k\<cdot>(g \<rightleftharpoons> b)) = cs"
   shows "ufRan\<cdot>(Abs_cufun (\<lambda> x. (ubDom\<cdot>x = ufDom\<cdot>g) \<leadsto> k\<cdot>(g \<rightleftharpoons>x))) = cs" (is "ufRan\<cdot>?F = ?cs")
 proof -
   obtain x::'m  where x_def: "ubDom\<cdot>x = ufDom\<cdot>g" 
@@ -339,7 +339,7 @@ subsection \<open>ufApplyOut Lemmas\<close>
   
 (* insert rules *)
 lemma ufapplyout_insert: assumes "\<And>b. ubDom\<cdot>(k\<cdot>b) = ubDom\<cdot>b" 
-  shows "ufApplyOut k\<cdot>(f::'a \<Rrightarrow> 'a) =  Abs_cufun (\<lambda>x. (ubDom\<cdot>x = ufDom\<cdot>f) \<leadsto> k\<cdot>(f \<rightleftharpoons>x))"
+  shows "ufApplyOut k\<cdot>(f::'a \<Rrightarrow> 'm) =  Abs_cufun (\<lambda>x. (ubDom\<cdot>x = ufDom\<cdot>f) \<leadsto> k\<cdot>(f \<rightleftharpoons>x))"
   by (simp add: ufApplyOut_def assms) 
 
 (* dom of ufApplyOut is the same as the dom of input ufun  *)
@@ -353,7 +353,7 @@ proof -
   then show ?thesis
     by (simp add: f1)
 qed
-
+declare[[show_types]]
 (* ran of ufApplyOut is the same as the ran of input ufun  *)
 lemma ufapplyout_ran: assumes "\<And>b. ubDom\<cdot>(k\<cdot>b) = ubDom\<cdot>b" 
   shows "ufRan\<cdot>(ufApplyOut k\<cdot>f) = ufRan\<cdot>f"
@@ -418,7 +418,7 @@ lemma ufapplyin_uf_dom [simp]:  assumes "\<And>b. ubDom\<cdot>(k\<cdot>b) = ubDo
   by (simp add: assms)
 
 (* ufApplyIn has the same ran as the input ufun *)
-lemma ufapplyin_uf_ran [simp]: assumes "\<And>b. ubDom\<cdot>((k:: 'm \<rightarrow> 'm)\<cdot>b) = ubDom\<cdot>b"
+lemma ufapplyin_uf_ran [simp]: assumes "\<And>b. ubDom\<cdot>((k:: 'm \<rightarrow> 'n)\<cdot>b) = ubDom\<cdot>b"
   shows "ufRan\<cdot>(Abs_ufun (\<Lambda> x. (ubDom\<cdot>x = ufDom\<cdot>g) \<leadsto> (g \<rightleftharpoons>(k\<cdot>x)))) =  ufRan\<cdot>g" (is "ufRan\<cdot>?F = ufRan\<cdot>?g")
 proof -
   obtain x::'m  where x_def: "ubDom\<cdot>x = ufDom\<cdot>g" 
