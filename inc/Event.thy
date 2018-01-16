@@ -32,4 +32,12 @@ syntax
 translations
   "\<surd>"  == "CONST Tick"
 
+
+(* If we get a message, apply the function directly to the message *)
+(* On ticks return tick *)
+fun eventApply :: "('a \<Rightarrow> 'b) \<Rightarrow> 'a event \<Rightarrow> 'b event" where
+"eventApply _ Tick = Tick" |
+"eventApply f (Msg a) = Msg (f a)"
+
+
 end

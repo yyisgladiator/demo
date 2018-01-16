@@ -2514,6 +2514,10 @@ by (metis (no_types) old.prod.case prod.collapse)
     using surj_scons by force
 qed
 
+lemma sscanla_one [simp]: "sscanlA f b\<cdot>(\<up>x) = \<up>(fst (f b x))"
+  apply(simp add: sscanlA_def)
+  by (metis prod.collapse sconc_snd_empty sprojfst_scons strict_sprojfst)
+
 
 (* ----------------------------------------------------------------------- *)
 subsection {* @{term merge} *}
