@@ -1,14 +1,15 @@
 theory Event
-  imports UnivClasses Channel
+  imports HOLCF
 
 begin
-
 default_sort countable
+
+
 (* ----------------------------------------------------------------------- *)
 section {* Type definition *}
 (* ----------------------------------------------------------------------- *)
 
- 
+
 text {* Definition of  datatype  @{text "'m event"}; extends @{text "'m"} with a @{term "Tick"}. *}
 datatype 'm event = Msg 'm ( "\<M> _" 65)| Tick
 
@@ -22,13 +23,6 @@ text {* Prove that datatype event is countable. Needed, since the domain-constru
 instance event :: (countable) countable
 by countable_datatype
 
-(* use a datatype with event direcly as time-syncronus message on streams *)
-instantiation event :: (message) message
-begin
-  definition ctype_event:: "channel \<Rightarrow> 'a event set" where "ctype_event c = {Tick} \<union> (Msg ` (ctype c))"
-
-  instance..
-end
 
 
 text {* Introduce symbol for ticks (@{text "\<surd>"}), marks the end of each time slot. *}
@@ -37,5 +31,13 @@ syntax
 
 translations
   "\<surd>"  == "CONST Tick"
+
+
+(* If we get a message, apply the function directly to the message *)
+(* On ticks return tick *)
+fun eventApply :: "('a \<Rightarrow> 'b) \<Rightarrow> 'a event \<Rightarrow> 'b event" where
+"eventApply _ Tick = Tick" |
+"eventApply f (Msg a) = Msg (f a)"
+
 
 end
