@@ -113,16 +113,6 @@ lemma evenstream_final: "evenStream\<cdot>(nat2even\<cdot>s) = bool2even\<cdot>(
 
 
 subsection \<open>Rek2evenStream\<close>
-lemma tsyn_ind: 
-  assumes adm: "adm P" 
-    and bot: "P \<epsilon>"
-    and msg: "\<And>a s. P s  \<Longrightarrow> P (\<up>(Msg a) \<bullet> s)"
-    and tick: "\<And>s. P s  \<Longrightarrow> P (\<up>Tick \<bullet> s)"
-  shows "P x"
- using assms apply(induction rule: ind [of _x])
-  apply (simp add: adm_def)
-    apply auto
-  by (metis event.exhaust)
 
 (* convert the rekursive definition of the automaton in our nice evenStream function *)
 lemma rek2evenstream: assumes msg: "\<And> ooo summe m xs. f (State ooo summe)\<cdot>(\<up>(Msg (A m)) \<bullet> xs)

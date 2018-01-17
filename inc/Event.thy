@@ -1,5 +1,5 @@
 theory Event
-  imports HOLCF
+  imports HOLCF "../Channel" "../UnivClasses"
 
 begin
 default_sort countable
@@ -22,6 +22,13 @@ text {* Prove that datatype event is countable. Needed, since the domain-constru
  to work for countable types.*}
 instance event :: (countable) countable
 by countable_datatype
+
+instantiation event :: (message) message
+begin
+  definition ctype_event:: "channel \<Rightarrow> 'a event set" where "ctype_event c = {Tick} \<union> (Msg ` (ctype c))"
+
+  instance..
+end
 
 
 
