@@ -54,7 +54,6 @@ lemma[simp]: "tsDom\<cdot>ts = {a} \<Longrightarrow> tsDom\<cdot>(tsDropWhile\<c
 lemma adm_help1: "#(tsAbs\<cdot>ts) \<noteq> \<infinity> \<Longrightarrow> (#\<^sub>t ts) = \<infinity> \<Longrightarrow> (#\<surd> ts) = \<infinity>"
   by (simp add: tsInfTicks tslen_insert)
 
-(* Final Lemma *)
 lemma [simp]: "x \<noteq> a \<Longrightarrow> (tsAbs\<cdot>ts = \<up>a) \<Longrightarrow> tsDropWhile\<cdot>(Discr x)\<cdot>ts = ts"
   apply (induction ts arbitrary: a x, simp_all)
   apply (rule adm_all)+
