@@ -1,20 +1,50 @@
-session "Streams" (mustWork) = "HOLCF" +
+session "uClasses" (mustWork) = "HOLCF" +
   options [quick_and_dirty = false]
   theories
-    Streams
+    UnivClasses
 
-session "TStream" (mustWork) = "Streams" + 
-  options [quick_and_dirty = false]
-  theories
-    TStream
- 
-session "ABPSorry" (mustWork) = "TStream" + 
+session "ubundle" (mustWork) = "uClasses" +
   options [quick_and_dirty = true]
   theories
-    "CaseStudies/ABP/ABP_TSPS"
- 
-session "ABP" (canFail) = "TStream" + 
+    UBundle
+    UBundle_Conc
+
+session "ufun" (mustWork) = "uClasses" +
+  options [quick_and_dirty = true]
+  theories
+    UFun
+    UFun_applyIn
+    UFun_Comp
+
+session "uspec" (mustWork) = "uClasses" +
+  options [quick_and_dirty = true]
+  theories
+    USpec
+
+
+session "sb" (mustWork) = "ubundle" +
+  options [quick_and_dirty = true]
+  theories
+    "untimed/SB"
+
+session "spf" (mustWork) = "ufun" +
+  options [quick_and_dirty = true]
+  theories
+    "untimed/SPF"
+
+
+
+session "ubundle_opt" (canFail) = "uClasses" +
   options [quick_and_dirty = false]
   theories
-    "CaseStudies/ABP/ABP_TSPS"
+    UBundle
 
+session "ufun_opt" (canFail) = "uClasses" +
+  options [quick_and_dirty = false]
+  theories
+    UFun
+
+session "uspec_opt" (canFail) = "uClasses" +
+  options [quick_and_dirty = false]
+  theories
+    USpec
