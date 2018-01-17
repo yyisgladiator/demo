@@ -188,7 +188,15 @@ proof -
       apply (simp only: ufWell_def f2, rule)
        apply (metis domIff option.distinct(1) ufun1_def)
       apply (rule_tac x = "ubDom\<cdot>inf_ub" in exI)
-      by (smt mem_Collect_eq option.distinct(1) option.inject ran_def ufun1_def)
+      apply (rule, rule)
+    proof -
+      fix b :: 'out
+      assume "b \<in> ran ufun1"
+      then have "\<exists>i. ufun1 i = Some b"
+        by (simp add: ran_def)
+      then show "ubDom\<cdot>b = ubDom\<cdot>inf_ub"
+        by (metis option.inject option.simps(3) ufun1_def)
+    qed
     have f31: "Rep_cufun (Abs_cufun ufun1) = ufun1"
       by (simp add: Abs_ufun_inverse f2 f3)
     have f4: "ufIsStrong (Abs_ufun (Abs_cfun ufun1))"
@@ -308,6 +316,7 @@ lemma ufun_contI [simp]: assumes "\<And> x y. ubDom\<cdot>x = In \<Longrightarro
   shows "cont (\<lambda>b. (ubDom\<cdot>b = In)\<leadsto>g b)"
     apply (rule contI2)
    apply (simp only: assms(1) ufun_monoI2)
+  apply (rule, rule)
   by (smt assms(1) assms(2) below_option_def is_ub_thelub lub_eq op_the_lub 
       option.sel option.simps(3) po_class.chain_def ubdom_fix)
 
