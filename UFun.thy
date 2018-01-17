@@ -46,7 +46,14 @@ proof -
     apply (simp only: ufWell_def f2, rule)
     apply (metis domIff option.distinct(1) ufun1_def)
     apply (rule_tac x = "ubDom\<cdot>inf_ub" in exI)
-    by (smt CollectD option.distinct(1) option.sel ran_def ufun1_def)
+    apply rule
+  proof -
+    fix b :: 'out
+    have "(b \<in> ran ufun1 \<longrightarrow> ubDom\<cdot>b = ubDom\<cdot>inf_ub) = (b \<notin> ran ufun1 \<or> ubDom\<cdot>b = ubDom\<cdot>inf_ub)"
+      by meson
+    then show "b \<in> ran ufun1 \<longrightarrow> ubDom\<cdot>b = ubDom\<cdot>inf_ub"
+      by (simp add: ran_def ufun1_def)
+  qed
   thus ?thesis
     by auto
 qed
