@@ -173,7 +173,15 @@ proof -
     have f1: "cont ufun1"
       apply(rule contI2)
        apply (simp add: ufun1_def monofunI ubdom_fix)
-      by (smt is_ub_thelub lub_maximal not_below2not_eq rangeI ub_rangeI ubdom_fix ufun1_def)
+      apply auto
+    proof -
+      fix Y :: "nat \<Rightarrow> 'in"
+      assume "chain Y"
+      then have "\<And>n. ubDom\<cdot>(Y n) = ubDom\<cdot>(Lub Y)"
+        by (meson is_ub_thelub ubdom_fix)
+      then show "ufun1 (\<Squnion>n. Y n) \<sqsubseteq> (\<Squnion>n. ufun1 (Y n))"
+        by (simp add: ufun1_def)
+    qed
     have f2: "(Rep_cfun (Abs_cfun ufun1)) = ufun1"
       using f1 by auto
     have f3: "ufWell (Abs_cfun ufun1)"
