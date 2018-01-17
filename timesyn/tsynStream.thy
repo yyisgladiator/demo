@@ -56,6 +56,18 @@ definition tsynScanl :: "('b \<Rightarrow> 'a \<Rightarrow> 'b) \<Rightarrow> 'b
 section \<open>Lemma\<close>
 
 
+lemma tsyn_ind: 
+  assumes adm: "adm P" 
+    and bot: "P \<epsilon>"
+    and msg: "\<And>a s. P s  \<Longrightarrow> P (\<up>(Msg a) \<bullet> s)"
+    and tick: "\<And>s. P s  \<Longrightarrow> P (\<up>Tick \<bullet> s)"
+  shows "P x"
+ using assms apply(induction rule: ind [of _x])
+  apply (simp add: adm_def)
+    apply auto
+  by (metis event.exhaust)
+
+
 subsection \<open>tsynDom\<close>
 
 (* taken from tstream *)
@@ -92,6 +104,14 @@ lemma tsyndom_sub: "tsynDom\<cdot>(\<up>x \<bullet> xs) \<subseteq> S \<Longrigh
 lemma tsyndom_sub2: "tsynDom\<cdot>(\<up>(Msg x) \<bullet> xs) \<subseteq> S \<Longrightarrow> x \<in> S"
   apply(simp add: tsyndom_insert)
   by blast
+
+lemma tsyndom_conc_sub: "tsynDom\<cdot>ts \<subseteq> S \<Longrightarrow> x\<in>S \<Longrightarrow> tsynDom\<cdot>(\<up>(Msg x) \<bullet> ts) \<subseteq> S"
+  apply(simp add: tsyndom_insert)
+  by blast
+
+lemma tsyndom_conc_tick [simp]: "tsynDom\<cdot>(\<up>Tick \<bullet> ts) = tsynDom\<cdot>ts"
+  by(simp add: tsyndom_insert)
+
 
 
 subsection \<open>tsynMap\<close>
@@ -190,6 +210,23 @@ lemma "tsynSum\<cdot>(\<up> (Msg 0)\<infinity>) = \<up> (Msg 0)\<infinity>"
 
 lemma "tsynSum\<cdot>(\<up>Tick\<infinity>) = \<up>Tick\<infinity>"
   by (metis s2sinftimes sinftimes_unfold tsynSum_def tsynscanl_tick)
-  
+
+lemma tsynsum_even_h: assumes "tsynDom\<cdot>ts \<subseteq> {n. even n}"
+      and "even m"
+  shows "tsynDom\<cdot>(tsynScanl plus m\<cdot>ts) \<subseteq> {n. even n}"
+  using assms apply(induction arbitrary: m rule: tsyn_ind [of _ ts])
+     apply(rule adm_imp)
+      apply simp
+  apply(simp add: adm_def)
+     apply auto[1]
+  apply (smt Collect_mem_eq Collect_mono_iff ch2ch_Rep_cfunR contlub_cfun_arg subset_cont)
+    apply simp
+  apply simp
+   apply (metis dvd_add_right_iff mem_Collect_eq tsyndom_conc_sub tsyndom_sub tsyndom_sub2)
+  by simp
+
+lemma tsynsum_even: assumes "tsynDom\<cdot>ts \<subseteq> {n. even n}"
+  shows "tsynDom\<cdot>(tsynSum\<cdot>ts) \<subseteq> {n. even n}"
+  by (simp add: assms tsynSum_def tsynsum_even_h)
 
 end
