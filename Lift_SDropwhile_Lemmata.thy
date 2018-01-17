@@ -40,11 +40,18 @@ then tsDropWhile produces a TStream containing only ticks*)
 lemma [simp]: "tsAbs\<cdot>ts = (\<up>a) \<Longrightarrow> tsAbs\<cdot>(tsDropWhile\<cdot>(Discr a)\<cdot>ts) = \<epsilon>"
   by (metis (full_types) lscons_conv sdropwhile_t sup'_def tsabs_bot tsdropwhile_strict tsdropwhile_tsabs)
 
+lemma[simp]: "tsDom\<cdot>ts = {a} \<Longrightarrow> tsDom\<cdot>(tsDropWhile\<cdot>(Discr a)\<cdot>ts) = {}"
+  apply(induction ts arbitrary: a, simp_all)
+  apply(rule adm_all)+
+  apply(rule adm_imp, simp_all)+
+  apply(rule admI)
+  sorry
+
 (************************************************)
       text {*fifth lemma *}   
 (************************************************)
 
-lemma adm_help1: "#(tsAbs\<cdot>ts) \<noteq> \<infinity> \<Longrightarrow> #\<^sub>t ts = \<infinity> \<Longrightarrow> #\<surd> ts = \<infinity>"
+lemma adm_help1: "#(tsAbs\<cdot>ts) \<noteq> \<infinity> \<Longrightarrow> (#\<^sub>t ts) = \<infinity> \<Longrightarrow> (#\<surd> ts) = \<infinity>"
   by (simp add: tsInfTicks tslen_insert)
 
 (* Final Lemma *)
@@ -57,5 +64,12 @@ lemma [simp]: "x \<noteq> a \<Longrightarrow> (tsAbs\<cdot>ts = \<up>a) \<Longri
          contlub_cfun_arg inf_chainl4 l42 lscons_conv slen_scons strict_slen sup'_def)
   apply (simp add: tsdropwhile_delayfun)
   by (metis inject_scons lscons_conv sup'_def tsabs_mlscons tsdropwhile_f)
+
+lemma [simp]: "x \<noteq> a \<Longrightarrow> (tsDom\<cdot>ts = {a}) \<Longrightarrow> tsDropwhile\<cdot>(Discr x)\<cdot>ts = ts"
+  apply (induction ts arbitrary: a x, simp_all)
+  apply (rule adm_all)+
+  apply (rule adm_imp, simp_all)+
+  apply (rule admI)
+  sorry
 
 end

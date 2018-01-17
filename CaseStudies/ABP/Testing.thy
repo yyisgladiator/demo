@@ -123,6 +123,18 @@ subsection {* composition *}
 
 (* ToDo: add definitions for oracles p1, p2 and input stream i to cover all possibilities *)
 
+(*case bot: i=\<bottom>, case fin: i=tsAltbitproExampInp, case inf: i=(tsAltbitproExampInp \<bullet>\<surd> tsInfTick)*)
+definition tsAltbitproExampInp :: "nat tstream" where
+"tsAltbitproExampInp = <[Msg 1, Msg 2, \<surd>, Msg 1, \<surd>]>\<surd>"
+
+(*case bot: p1=((\<up>True) \<infinity>), case fin/inf: p1=(tsAltbitproExampOra1 \<infinity>)*)
+definition tsAltbitproExampOra1 :: "bool stream" where
+"tsAltbitproExampOra1 = <[True, False, True, True, True]>"
+
+(*case bot: p2=((\<up>True) \<infinity>), case fin/inf: p2=(tsAltbitproExampOra2 \<infinity>)*)
+definition tsAltbitproExampOra2 :: "bool stream" where
+"tsAltbitproExampOra2 = <[True, False, True, True]>"
+
 lemma tsaltbitpro_test:
   assumes ds_def: "ds = tsSnd\<cdot>i\<cdot>as"
     and dr_def: "dr = tsMed\<cdot>ds\<cdot>p1"
