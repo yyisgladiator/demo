@@ -2514,6 +2514,10 @@ by (metis (no_types) old.prod.case prod.collapse)
     using surj_scons by force
 qed
 
+lemma sscanla_one [simp]: "sscanlA f b\<cdot>(\<up>x) = \<up>(fst (f b x))"
+  apply(simp add: sscanlA_def)
+  by (metis prod.collapse sconc_snd_empty sprojfst_scons strict_sprojfst)
+
 
 (* ----------------------------------------------------------------------- *)
 subsection {* @{term merge} *}
@@ -3453,7 +3457,8 @@ proof(rule ccontr)
   have "f x"
     using \<open>f (sfoot (stwbl f\<cdot>s))\<close> \<open>sfoot (stwbl f\<cdot>s) = x\<close> by blast
   thus False
-    by (smt Fin_02bot \<open>sfoot (stwbl f\<cdot>s) = x\<close> approxl2 assms(1) assms(2) assoc_sconc bottomI lnle_def lnzero_def sconc_fst_empty sconc_snd_empty sdrop_0 sdropwhile_t sfoot1 slen_empty_eq slen_rt_ile_eq split_streaml1 stakewhile_below stakewhile_dom stakewhile_sdropwhilel1 stakewhile_stwbl stream.take_strict strict_stakewhile stwbl_fin stwbl_notEps stwbl_stakewhile surj_scons tdw ub_slen_stake)
+    by (metis approxl2 assms(1) assms(2) inject_sconc sconc_snd_empty sdropwhile_resup stakewhileDropwhile stakewhile_below stakewhile_dom stakewhile_stwbl x_def)
+(*    by (smt Fin_02bot \<open>sfoot (stwbl f\<cdot>s) = x\<close> approxl2 assms(1) assms(2) assoc_sconc bottomI lnle_def lnzero_def sconc_fst_empty sconc_snd_empty sdrop_0 sdropwhile_t sfoot1 slen_empty_eq slen_rt_ile_eq split_streaml1 stakewhile_below stakewhile_dom stakewhile_sdropwhilel1 stakewhile_stwbl stream.take_strict strict_stakewhile stwbl_fin stwbl_notEps stwbl_stakewhile surj_scons tdw ub_slen_stake) *)
 qed
 
 (* stwbl applied to f and stwbl f\<cdot>s returns stwbl f\<cdot>s *)

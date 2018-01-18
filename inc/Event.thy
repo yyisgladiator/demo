@@ -1,5 +1,5 @@
 theory Event
-  imports HOLCF
+  imports HOLCF "../Channel" "../UnivClasses"
 
 begin
 default_sort countable
@@ -23,6 +23,13 @@ text {* Prove that datatype event is countable. Needed, since the domain-constru
 instance event :: (countable) countable
 by countable_datatype
 
+instantiation event :: (message) message
+begin
+  definition ctype_event:: "channel \<Rightarrow> 'a event set" where "ctype_event c = {Tick} \<union> (Msg ` (ctype c))"
+
+  instance..
+end
+
 
 
 text {* Introduce symbol for ticks (@{text "\<surd>"}), marks the end of each time slot. *}
@@ -31,5 +38,13 @@ syntax
 
 translations
   "\<surd>"  == "CONST Tick"
+
+
+(* If we get a message, apply the function directly to the message *)
+(* On ticks return tick *)
+fun eventApply :: "('a \<Rightarrow> 'b) \<Rightarrow> 'a event \<Rightarrow> 'b event" where
+"eventApply _ Tick = Tick" |
+"eventApply f (Msg a) = Msg (f a)"
+
 
 end
