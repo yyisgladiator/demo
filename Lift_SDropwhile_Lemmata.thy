@@ -40,11 +40,14 @@ then tsDropWhile produces a TStream containing only ticks*)
 lemma [simp]: "tsAbs\<cdot>ts = (\<up>a) \<Longrightarrow> tsAbs\<cdot>(tsDropWhile\<cdot>(Discr a)\<cdot>ts) = \<epsilon>"
   by (metis (full_types) lscons_conv sdropwhile_t sup'_def tsabs_bot tsdropwhile_strict tsdropwhile_tsabs)
 
+lemma adm_tsdom_neq [simp]: "\<And>x. adm (\<lambda>xa. tsDom\<cdot>xa \<noteq> {x})"
+  apply (rule admI)
+  apply (simp add: contlub_cfun_fun contlub_cfun_arg lub_eq_Union)
+  apply (simp add: tsdom_insert sdom_def)
+  by (smt Collect_cong Sup_set_def imageE insertI1 mem_Collect_eq mem_simps(9) singletonD)
+
 lemma[simp]: "tsDom\<cdot>ts = {a} \<Longrightarrow> tsAbs\<cdot>(tsDropWhile\<cdot>(Discr a)\<cdot>ts) = \<epsilon>"
   apply (induction ts arbitrary: a, simp_all)
-  apply (rule adm_all)+
-  apply (rule adm_imp, simp_all)+
-  apply (rule admI)
   sorry
 
 (************************************************)
@@ -66,9 +69,6 @@ lemma [simp]: "x \<noteq> a \<Longrightarrow> (tsAbs\<cdot>ts = \<up>a) \<Longri
 
 lemma [simp]: "x \<noteq> a \<Longrightarrow> tsDom\<cdot>ts = {a} \<Longrightarrow> tsDropWhile\<cdot>(Discr x)\<cdot>ts = ts"
   apply (induction ts arbitrary: a x, simp_all)
-  apply (rule adm_all)+
-  apply (rule adm_imp, simp_all)+
-  apply (rule admI)
   sorry
 
 end
