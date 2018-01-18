@@ -18,7 +18,7 @@ lemma tsfilter_dwl1[simp]: "m \<notin> M \<Longrightarrow> tsFilter M\<cdot>(tsD
 (************************************************)
 
 (*the elements kept by tsFilter are a subset of the elements kept by tsDropWhile*)
-lemma tsfilter_dwl2: "m \<notin> M \<Longrightarrow> (tsAbs\<cdot>(tsFilter M\<cdot>ts) \<noteq> \<bottom> \<Longrightarrow> tsAbs\<cdot>(tsDropWhile\<cdot>(Discr m)\<cdot>ts) \<noteq> \<bottom>)"
+lemma tsfilter_dwl2: "m \<notin> M \<Longrightarrow> tsAbs\<cdot>(tsFilter M\<cdot>ts) \<noteq> \<bottom> \<Longrightarrow> tsAbs\<cdot>(tsDropWhile\<cdot>(Discr m)\<cdot>ts) \<noteq> \<bottom>"
   by (metis tsabs_bot tsfilter_dwl1 tsfilter_strict tsfilter_tsabs)
 
 (************************************************)
@@ -40,11 +40,11 @@ then tsDropWhile produces a TStream containing only ticks*)
 lemma [simp]: "tsAbs\<cdot>ts = (\<up>a) \<Longrightarrow> tsAbs\<cdot>(tsDropWhile\<cdot>(Discr a)\<cdot>ts) = \<epsilon>"
   by (metis (full_types) lscons_conv sdropwhile_t sup'_def tsabs_bot tsdropwhile_strict tsdropwhile_tsabs)
 
-lemma[simp]: "tsDom\<cdot>ts = {a} \<Longrightarrow> tsDom\<cdot>(tsDropWhile\<cdot>(Discr a)\<cdot>ts) = {}"
-  apply(induction ts arbitrary: a, simp_all)
-  apply(rule adm_all)+
-  apply(rule adm_imp, simp_all)+
-  apply(rule admI)
+lemma[simp]: "tsDom\<cdot>ts = {a} \<Longrightarrow> tsAbs\<cdot>(tsDropWhile\<cdot>(Discr a)\<cdot>ts) = \<epsilon>"
+  apply (induction ts arbitrary: a, simp_all)
+  apply (rule adm_all)+
+  apply (rule adm_imp, simp_all)+
+  apply (rule admI)
   sorry
 
 (************************************************)
@@ -64,7 +64,7 @@ lemma [simp]: "x \<noteq> a \<Longrightarrow> (tsAbs\<cdot>ts = \<up>a) \<Longri
   apply (simp add: tsdropwhile_delayfun)
   by (metis inject_scons lscons_conv sup'_def tsabs_mlscons tsdropwhile_f)
 
-lemma [simp]: "x \<noteq> a \<Longrightarrow> (tsDom\<cdot>ts = {a}) \<Longrightarrow> tsDropwhile\<cdot>(Discr x)\<cdot>ts = ts"
+lemma [simp]: "x \<noteq> a \<Longrightarrow> tsDom\<cdot>ts = {a} \<Longrightarrow> tsDropWhile\<cdot>(Discr x)\<cdot>ts = ts"
   apply (induction ts arbitrary: a x, simp_all)
   apply (rule adm_all)+
   apply (rule adm_imp, simp_all)+
