@@ -71,7 +71,7 @@ lemma set2tssnd_ack2trans: assumes "send \<in> tsSender"
   shows "tsAbs\<cdot>(tsRemDups\<cdot>as) \<sqsubseteq> tsAbs\<cdot>(tsRemDups\<cdot>(tsProjSnd\<cdot>(send\<cdot>i\<cdot>as))) \<longrightarrow> 
          #\<surd>as = \<infinity> \<longrightarrow> #(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(send\<cdot>i\<cdot>as))))
                         = min (#(tsAbs\<cdot>i)) (lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>as))))"
-  using assms tsSender_def by auto
+    using assms tsSender_def by auto
 
 (* 4th axiom *)
 lemma set2tssnd_nack2inftrans: assumes "send \<in> tsSender"
@@ -147,24 +147,45 @@ lemma tsaltbitpro_inp2out_nmed:
   assumes send_def: "send \<in> tsSender"
     and ds_def: "ds = send\<cdot>i\<cdot>as"
     and as_def: "as = tsProjSnd\<cdot>ds"
-    and i_inf: "#\<surd>i = \<infinity>"
   shows "tsAbs\<cdot>(tsRecSnd\<cdot>ds) = tsAbs\<cdot>i"
-proof -
-  have i_leq_as: "#\<surd>i \<le> #\<surd>as"
-    by (metis (no_types, lifting) as_def ds_def dual_order.strict_trans2 inf_ub min_def neq_iff 
-        send_def set2tssnd_strcausal tsprojsnd_tstickcount)
+proof (cases "#\<surd>as = \<infinity>")
+  case True
+  then have i_leq_as: "#\<surd>i \<le> #\<surd>as"
+    by simp
   hence as_inf: "#\<surd>as = \<infinity>"
-    by (simp add: i_inf)
+    by (simp add: True)
   have "#(tsAbs\<cdot>(tsRemDups\<cdot>as)) = #(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(send\<cdot>i\<cdot>as))))"
     by (metis as_def ds_def tsprojfst_tsabs_slen tsprojsnd_tsabs_slen 
         tssnd_tsprojsnd_tsremdups send_def)
   thus "tsAbs\<cdot>(tsRecSnd\<cdot>ds) = tsAbs\<cdot>i"
-    sorry
-(* adjustments for set2tssnd_ack2trans needed
-    by (metis as_inf ds_def eq_slen_eq_and_less min_rek send_def set2tssnd_ack2trans
-        set2tssnd_prefix_inp tsrecsnd_insert)
-*)
-  oops
+    by (metis as_def as_inf below_refl ds_def eq_slen_eq_and_less min_rek send_def
+        set2tssnd_ack2trans set2tssnd_prefix_inp tsrecsnd_insert)
+next
+  case False
+  then have "tsAbs\<cdot>(tsRecSnd\<cdot>ds) \<sqsubseteq> tsAbs\<cdot>i"
+    by (simp add: ds_def send_def set2tssnd_prefix_inp tsrecsnd_insert)
+  then have "#(tsAbs\<cdot>i) \<ge> #(tsAbs\<cdot>(tsRecSnd\<cdot>ds))"
+    by (simp add: mono_slen)
+  then show ?thesis
+  proof -
+    have f1: "tsProjFst\<cdot>(tsRemDups\<cdot>(send\<cdot>i\<cdot>as)) = tsRecSnd\<cdot>ds"
+      by (simp add: ds_def tsrecsnd_insert)
+    have f2: "\<forall>l. \<not> l < \<infinity> \<or> l < lnsuc\<cdot>l"
+      using ln_less by blast
+    have f3: "send\<cdot>i\<cdot>(tsProjSnd\<cdot>ds) = ds"
+      using as_def ds_def by auto
+    have "\<forall>c t ta. c \<notin> tsSender \<or> tsAbs\<cdot> (tsRemDups\<cdot>(tsProjSnd\<cdot>(c\<cdot>(t::'a tstream)\<cdot>ta))) = tsAbs\<cdot>(tsProjSnd\<cdot>(tsRemDups\<cdot>(c\<cdot>t\<cdot>ta)))"
+      using tssnd_tsprojsnd_tsremdups by blast
+    then have "tsAbs\<cdot>(tsRemDups\<cdot>(tsProjSnd\<cdot>ds)) = tsAbs\<cdot>(tsProjSnd\<cdot>(tsRemDups\<cdot>(send\<cdot>i\<cdot>as)))"
+      using f3 by (metis (no_types) as_def send_def)
+    then show ?thesis
+      using f2 f1 by (metis (no_types) \<open>#(tsAbs\<cdot>(tsRecSnd\<cdot>ds)) \<le> #(tsAbs\<cdot>i)\<close>
+                      \<open>tsAbs\<cdot>(tsRecSnd\<cdot>ds) \<sqsubseteq> tsAbs\<cdot>i\<close> antisym_conv2 as_def below_refl ds_def
+                      eq_slen_eq_and_less inf_less_eq min_rek not_le send_def set2tssnd_ack2trans
+                      set2tssnd_as_inftick tsprojfst_tsabs_slen tsprojsnd_tsabs_slen
+                      tsprojsnd_tstickcount)
+  qed
+qed
 
 lemma tsaltbitpro_inp2out_nmed2:
   assumes send_def: "send \<in> tsSender"
@@ -173,14 +194,23 @@ lemma tsaltbitpro_inp2out_nmed2:
     and ar_def: "ar = tsProjSnd\<cdot>dr"
     (* definition 5 *)
     and as_def: "as = ar"
-    and i_inf: "#\<surd>i = \<infinity>"
   shows "tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>dr)) = tsAbs\<cdot>i"
-  proof -
-    have i_leq_as: "#\<surd>i \<le> #\<surd>as"
-      by (metis ar_def as_def dr_def ds_def i_inf le_less_linear min_def neq_iff send_def
+proof (cases "#\<surd>as = \<infinity>")
+  case True
+  then show ?thesis
+    by (metis ar_def as_def dr_def ds_def send_def tsaltbitpro_inp2out_nmed tsrecsnd_insert)
+next
+  case False
+  then show ?thesis
+    by (metis ar_def as_def dr_def ds_def send_def tsaltbitpro_inp2out_nmed tsrecsnd_insert)
+qed
+
+(*
+  have i_leq_as: "#\<surd>i \<le> #\<surd>as"
+    by (meti ar_def as_def dr_def ds_def i_inf le_less_linear min_def neq_iff send_def
           set2tssnd_strcausal tsprojsnd_tstickcount)
-    hence as_inf: "#\<surd>as = \<infinity>"
-      by (simp add: i_inf)
+  hence as_inf: "#\<surd>as = \<infinity>"
+    by (simp add: i_inf)
     (* #(tsAbs\<cdot>(tsRemDups\<cdot>as)) \<le> #(tsAbs\<cdot>i) *)
     have h1: "#(tsAbs\<cdot>(tsRemDups\<cdot>as)) \<le> #(tsAbs\<cdot>(tsRemDups\<cdot>(tsProjSnd\<cdot>ds)))"
       by (simp add: ar_def as_def dr_def)
@@ -218,7 +248,7 @@ lemma tsaltbitpro_inp2out_nmed2:
     thus "tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>dr)) = tsAbs\<cdot>i"
       by (simp add: ds_def eq_slen_eq_and_less prop6 send_def set2tssnd_prefix_inp)      
   oops
-
+*)
 (* ----------------------------------------------------------------------- *)
 subsection {* complete composition *}
 (* ----------------------------------------------------------------------- *)
