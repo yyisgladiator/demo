@@ -7,7 +7,7 @@
 
 theory Automaton
 
-imports "../SPF" "../../Event" "../SpfStep"
+imports "../../timesyn/tsynBundle" "../SpfStep"
 begin
 default_sort type
 
