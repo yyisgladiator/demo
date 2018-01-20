@@ -6,7 +6,7 @@
 *)
 
 theory ABP_TSPS
-  imports "../../timed/TSPS" Receiver Composition Medium "../../timed/TSPF" "../../UFun_Comp" "../../UFun" "../../UBundle"
+  imports  Receiver Composition Medium "../../timed/TSPF" "../../UFun_Comp" "../../UFun" "../../UBundle" "../../USpec"
 
 begin
 
@@ -188,13 +188,9 @@ lemma rec_tsb_mono: "\<And>(x::'a MABP tstream ubundle) y::'a MABP tstream ubund
 lemma recvTSPF_mono [simp]: "monofun (\<lambda> x. (ubDom\<cdot>x = {dr}) \<leadsto>
                                     Abs_ubundle([ar \<mapsto> tsMap Bool\<cdot>(fst (tsRec\<cdot>((tsMap invBoolPair)\<cdot>(x . dr)))),
                                      abpOut \<mapsto> tsMap Data\<cdot>(snd (tsRec\<cdot>((tsMap invBoolPair)\<cdot>(x . dr))))]))"
-  sorry
-(*
-  apply (rule tspf_monoI)
-  apply (rule ub_below)
-   apply (simp_all add: ubdom_below ubdom_ubrep_eq ubgetch_ubrep_eq)
-   by (simp add: fst_monofun snd_monofun monofun_cfun_arg ubgetch_below)
-*)
+  apply (simp add: monofun_def)
+  apply (simp add: rec_tsb_mono some_below ubdom_below)
+  using ubdom_below by auto
 
 lemma recvTSPF_tsb_getc: assumes "chain Y" and "ubDom\<cdot>(\<Squnion>i. Y i) = {dr}"
   and "c \<in>  {ar, abpOut}"
@@ -322,7 +318,7 @@ qed
 
   (* recvTSPF is an actual TSPF *)
 lemma recvTSPF_well [simp]:
-  shows "ufunWell (\<Lambda> x. (ubDom\<cdot>x = {dr}) \<leadsto>
+  shows "ufWell (\<Lambda> x. (ubDom\<cdot>x = {dr}) \<leadsto>
                       Abs_ubundle([ar \<mapsto> (tsMap::(bool \<Rightarrow> 'a MABP) \<Rightarrow> bool tstream \<rightarrow> 'a MABP tstream)
                             Bool\<cdot>(fst ((tsRec::('a * bool) tstream \<rightarrow> (bool tstream \<times> 'a tstream))\<cdot>
                             ((tsMap invBoolPair)\<cdot>(x . dr)))),
@@ -695,9 +691,9 @@ lemma medsr_tsps_ran2 [simp]: "\<exists>ora::bool stream. f = medSR_TSPF ora \<a
 section \<open>Component Definitions\<close>
 (* ----------------------------------------------------------------------- *)
   
-lift_definition RCV :: "'a MABP TSPS" is "{recvTSPF}"
-  apply (rule tsps_wellI)
-  by simp_all
+lift_definition RCV :: "('a MABP tstream\<^sup>\<Omega> , 'a MABP tstream\<^sup>\<Omega>) ufun uspec" is "Rev {recvTSPF}"
+  apply (simp add: inv_def)
+  by (simp add: uspecWell_def)
     
 lift_definition MEDSR :: "'a MABP TSPS" is "{medSR_TSPF ora | ora. #({True} \<ominus> ora)=\<infinity>}"
   apply (rule tsps_wellI)
