@@ -67,7 +67,7 @@ subsection \<open>receiver\<close>
 definition recvTSPF :: "('a MABP tstream\<^sup>\<Omega>, 'a MABP tstream\<^sup>\<Omega>) ufun" where
 "recvTSPF \<equiv> Abs_cufun (\<lambda> x. (ubDom\<cdot>x = {dr}) \<leadsto> Abs_ubundle([ar    \<mapsto> (tsMap::(bool \<Rightarrow> 'a MABP) \<Rightarrow> bool tstream \<rightarrow> 'a MABP tstream) Bool\<cdot>(fst ( tsRec\<cdot>((tsMap invBoolPair)\<cdot>(x . dr)))),
                                         abpOut \<mapsto> (tsMap::('a \<Rightarrow> 'a MABP) \<Rightarrow> 'a tstream \<rightarrow> 'a MABP tstream) Data\<cdot>(snd ( tsRec\<cdot>((tsMap invBoolPair)\<cdot>(x . dr))))]))"
-
+(* 
 subsection \<open>medium_rs\<close>
   (* medium from receiver to sender *)
   (* input: ar, output: as, transport booleans *)
@@ -101,7 +101,7 @@ definition sender_TSPF :: "'a sender \<Rightarrow> 'a MABP TSPF" where
 "sender_TSPF se \<equiv> Abs_CTSPF (\<lambda> x. (tsbDom\<cdot>x = {as, abpIn})
                 \<leadsto> [ds \<mapsto> tsMap BoolPair\<cdot>(se\<cdot>(tsMap invData\<cdot>(x . abpIn))\<cdot>(tsMap invBool\<cdot>(x . as)))]\<Omega>)"
 
-
+*)
 (* ----------------------------------------------------------------------- *)
 section \<open>lemmata\<close>
 (* ----------------------------------------------------------------------- *)
@@ -221,7 +221,80 @@ lemma recvTSPF_cont [simp]:
                             ((tsMap invBoolPair)\<cdot>(x . dr)))),
                        abpOut \<mapsto> (tsMap::('a \<Rightarrow> 'a MABP) \<Rightarrow> 'a tstream \<rightarrow> 'a MABP tstream)
                             Data\<cdot>(snd (tsRec\<cdot>((tsMap invBoolPair)\<cdot>(x . dr))))]))"
-  sorry
+proof (rule contI2)
+  show "monofun (\<lambda>x::'a MABP tstream\<^sup>\<Omega>. (UBundle.ubDom\<cdot>x = {dr})\<leadsto>
+          Abs_ubundle [ar \<mapsto> tsMap Bool\<cdot>(fst (tsRec\<cdot>(tsMap invBoolPair\<cdot>(x  .  dr)))), 
+            abpOut \<mapsto> tsMap Data\<cdot>(snd (tsRec\<cdot>(tsMap invBoolPair\<cdot>(x  .  dr))))])"
+    by simp
+next
+  show "\<forall>Y::nat \<Rightarrow> 'a MABP tstream\<^sup>\<Omega>.
+       chain Y \<longrightarrow>
+       (UBundle.ubDom\<cdot>(\<Squnion>i::nat. Y i) =
+        {dr})\<leadsto>Abs_ubundle [ar \<mapsto> tsMap Bool\<cdot>(fst (tsRec\<cdot>(tsMap invBoolPair\<cdot>((\<Squnion>i::nat. Y i)  .  dr)))), abpOut \<mapsto> tsMap Data\<cdot>(snd (tsRec\<cdot>(tsMap invBoolPair\<cdot>((\<Squnion>i::nat. Y i)  .  dr))))] \<sqsubseteq>
+       (\<Squnion>i::nat. (UBundle.ubDom\<cdot>(Y i) = {dr})\<leadsto>Abs_ubundle [ar \<mapsto> tsMap Bool\<cdot>(fst (tsRec\<cdot>(tsMap invBoolPair\<cdot>(Y i  .  dr)))), abpOut \<mapsto> tsMap Data\<cdot>(snd (tsRec\<cdot>(tsMap invBoolPair\<cdot>(Y i  .  dr))))])"
+  proof (rule allI, rule impI)
+    fix Y::"nat \<Rightarrow> 'a MABP tstream\<^sup>\<Omega>"
+    assume Y_is_chain: "chain Y"
+    have f1: "(ubDom\<cdot>(\<Squnion>i. Y i)) = (\<Squnion>i. (UBundle.ubDom\<cdot>(Y i)))"
+      using Y_is_chain by auto
+    show "(UBundle.ubDom\<cdot>(\<Squnion>i::nat. Y i) =
+        {dr})\<leadsto>Abs_ubundle [ar \<mapsto> tsMap Bool\<cdot>(fst (tsRec\<cdot>(tsMap invBoolPair\<cdot>((\<Squnion>i::nat. Y i)  .  dr)))), abpOut \<mapsto> tsMap Data\<cdot>(snd (tsRec\<cdot>(tsMap invBoolPair\<cdot>((\<Squnion>i::nat. Y i)  .  dr))))] \<sqsubseteq>
+       (\<Squnion>i::nat. (UBundle.ubDom\<cdot>(Y i) = {dr})\<leadsto>Abs_ubundle [ar \<mapsto> tsMap Bool\<cdot>(fst (tsRec\<cdot>(tsMap invBoolPair\<cdot>(Y i  .  dr)))), abpOut \<mapsto> tsMap Data\<cdot>(snd (tsRec\<cdot>(tsMap invBoolPair\<cdot>(Y i  .  dr))))])"
+    proof (cases "ubDom\<cdot>(\<Squnion>i::nat. Y i) = {dr}")
+      case True
+      have f11: "\<And>i . (UBundle.ubDom\<cdot>(Y i)) = {dr}"
+        by (simp add: True Y_is_chain)
+      have f12: "(UBundle.ubDom\<cdot>(\<Squnion>i::nat. Y i) =
+        {dr})\<leadsto>Abs_ubundle [ar \<mapsto> tsMap Bool\<cdot>(fst (tsRec\<cdot>(tsMap invBoolPair\<cdot>((\<Squnion>i::nat. Y i)  .  dr)))), abpOut \<mapsto> tsMap Data\<cdot>(snd (tsRec\<cdot>(tsMap invBoolPair\<cdot>((\<Squnion>i::nat. Y i)  .  dr))))] = 
+            Some (Abs_ubundle [ar \<mapsto> tsMap Bool\<cdot>(fst (tsRec\<cdot>(tsMap invBoolPair\<cdot>((\<Squnion>i::nat. Y i)  .  dr)))), abpOut \<mapsto> tsMap Data\<cdot>(snd (tsRec\<cdot>(tsMap invBoolPair\<cdot>((\<Squnion>i::nat. Y i)  .  dr))))])"
+        by (simp add: True)
+      have f13: "(\<Squnion>i::nat. (UBundle.ubDom\<cdot>(Y i) = {dr})\<leadsto>Abs_ubundle [ar \<mapsto> tsMap Bool\<cdot>(fst (tsRec\<cdot>(tsMap invBoolPair\<cdot>(Y i  .  dr)))), abpOut \<mapsto> tsMap Data\<cdot>(snd (tsRec\<cdot>(tsMap invBoolPair\<cdot>(Y i  .  dr))))]) = 
+            (\<Squnion>i::nat. Some (Abs_ubundle [ar \<mapsto> tsMap Bool\<cdot>(fst (tsRec\<cdot>(tsMap invBoolPair\<cdot>(Y i  .  dr)))), abpOut \<mapsto> tsMap Data\<cdot>(snd (tsRec\<cdot>(tsMap invBoolPair\<cdot>(Y i  .  dr))))]))"
+        by (simp add: f11)
+      have f14:"Some (\<Squnion>i::nat. (Abs_ubundle [ar \<mapsto> tsMap Bool\<cdot>(fst (tsRec\<cdot>(tsMap invBoolPair\<cdot>(Y i  .  dr)))), abpOut \<mapsto> tsMap Data\<cdot>(snd (tsRec\<cdot>(tsMap invBoolPair\<cdot>(Y i  .  dr))))]))
+          = (\<Squnion>i::nat. Some (Abs_ubundle [ar \<mapsto> tsMap Bool\<cdot>(fst (tsRec\<cdot>(tsMap invBoolPair\<cdot>(Y i  .  dr)))), abpOut \<mapsto> tsMap Data\<cdot>(snd (tsRec\<cdot>(tsMap invBoolPair\<cdot>(Y i  .  dr))))]))"
+        apply (rule some_lub_chain_eq)
+        apply (simp add: chain_def)
+        by (simp add: Y_is_chain f11 po_class.chainE rec_tsb_mono)
+      have f15: "UBundle.ubDom\<cdot>(Abs_ubundle [ar \<mapsto> tsMap Bool\<cdot>(fst (tsRec\<cdot>(tsMap invBoolPair\<cdot>((\<Squnion>i::nat. Y i)  .  dr)))), abpOut \<mapsto> tsMap Data\<cdot>(snd (tsRec\<cdot>(tsMap invBoolPair\<cdot>((\<Squnion>i::nat. Y i)  .  dr))))]) = 
+                ubDom\<cdot>(\<Squnion>i::nat. (Abs_ubundle [ar \<mapsto> tsMap Bool\<cdot>(fst (tsRec\<cdot>(tsMap invBoolPair\<cdot>(Y i  .  dr)))), abpOut \<mapsto> tsMap Data\<cdot>(snd (tsRec\<cdot>(tsMap invBoolPair\<cdot>(Y i  .  dr))))]))"
+        by (metis (mono_tags, lifting) Y_is_chain f11 po_class.chain_def rec_tsb_mono recv_tsb_dom ubdom_chain_eq2)
+      have f17: "\<And> c::channel. (\<Squnion>i::nat. Abs_ubundle [ar \<mapsto> tsMap Bool\<cdot>(fst (tsRec\<cdot>(tsMap invBoolPair\<cdot>(Y i  .  dr)))), abpOut \<mapsto> tsMap Data\<cdot>(snd (tsRec\<cdot>(tsMap invBoolPair\<cdot>(Y i  .  dr))))])  .  c = 
+          (\<Squnion>i::nat. Abs_ubundle [ar \<mapsto> tsMap Bool\<cdot>(fst (tsRec\<cdot>(tsMap invBoolPair\<cdot>(Y i  .  dr)))), abpOut \<mapsto> tsMap Data\<cdot>(snd (tsRec\<cdot>(tsMap invBoolPair\<cdot>(Y i  .  dr))))] . c)"
+        apply (rule cont2contlubE)
+        by (simp add: Y_is_chain f11 po_class.chainE po_class.chainI rec_tsb_mono) +
+      have f16: "\<And>c::channel.
+       c \<in> UBundle.ubDom\<cdot>(Abs_ubundle [ar \<mapsto> tsMap Bool\<cdot>(fst (tsRec\<cdot>(tsMap invBoolPair\<cdot>((\<Squnion>i::nat. Y i)  .  dr)))), abpOut \<mapsto> tsMap Data\<cdot>(snd (tsRec\<cdot>(tsMap invBoolPair\<cdot>((\<Squnion>i::nat. Y i)  .  dr))))]) \<Longrightarrow>
+       Abs_ubundle [ar \<mapsto> tsMap Bool\<cdot>(fst (tsRec\<cdot>(tsMap invBoolPair\<cdot>((\<Squnion>i::nat. Y i)  .  dr)))), abpOut \<mapsto> tsMap Data\<cdot>(snd (tsRec\<cdot>(tsMap invBoolPair\<cdot>((\<Squnion>i::nat. Y i)  .  dr))))]  .  c \<sqsubseteq>
+       (\<Squnion>i::nat. Abs_ubundle [ar \<mapsto> tsMap Bool\<cdot>(fst (tsRec\<cdot>(tsMap invBoolPair\<cdot>(Y i  .  dr)))), abpOut \<mapsto> tsMap Data\<cdot>(snd (tsRec\<cdot>(tsMap invBoolPair\<cdot>(Y i  .  dr))))])  .  c"
+      proof -
+        fix c::channel
+        assume "c \<in> UBundle.ubDom\<cdot>(Abs_ubundle [ar \<mapsto> tsMap Bool\<cdot>(fst (tsRec\<cdot>(tsMap invBoolPair\<cdot>((\<Squnion>i::nat. Y i)  .  dr)))), abpOut \<mapsto> tsMap Data\<cdot>(snd (tsRec\<cdot>(tsMap invBoolPair\<cdot>((\<Squnion>i::nat. Y i)  .  dr))))])"
+        then have f160: "c \<in>  {ar, abpOut}"
+          by (simp add: recv_tsb_dom)
+        show "Abs_ubundle [ar \<mapsto> tsMap Bool\<cdot>(fst (tsRec\<cdot>(tsMap invBoolPair\<cdot>((\<Squnion>i::nat. Y i)  .  dr)))), abpOut \<mapsto> tsMap Data\<cdot>(snd (tsRec\<cdot>(tsMap invBoolPair\<cdot>((\<Squnion>i::nat. Y i)  .  dr))))]  .  c \<sqsubseteq>
+       (\<Squnion>i::nat. Abs_ubundle [ar \<mapsto> tsMap Bool\<cdot>(fst (tsRec\<cdot>(tsMap invBoolPair\<cdot>(Y i  .  dr)))), abpOut \<mapsto> tsMap Data\<cdot>(snd (tsRec\<cdot>(tsMap invBoolPair\<cdot>(Y i  .  dr))))])  .  c"
+          apply (subst f17)
+          apply (simp add: recvTSPF_tsb_getc ubdom_ubrep_eq ubgetch_ubrep_eq)
+          apply (rule conjI)
+           apply (metis (mono_tags, lifting) Y_is_chain eq_imp_below lub_eq recvCH1_contlub to_recvch1)
+          by (simp add: Y_is_chain recvCH2_contlub to_recvch2)
+      qed
+      have f20: "Some (Abs_ubundle [ar \<mapsto> tsMap Bool\<cdot>(fst (tsRec\<cdot>(tsMap invBoolPair\<cdot>((\<Squnion>i::nat. Y i)  .  dr)))), abpOut \<mapsto> tsMap Data\<cdot>(snd (tsRec\<cdot>(tsMap invBoolPair\<cdot>((\<Squnion>i::nat. Y i)  .  dr))))]) \<sqsubseteq>
+       Some (\<Squnion>i::nat. (Abs_ubundle [ar \<mapsto> tsMap Bool\<cdot>(fst (tsRec\<cdot>(tsMap invBoolPair\<cdot>(Y i  .  dr)))), abpOut \<mapsto> tsMap Data\<cdot>(snd (tsRec\<cdot>(tsMap invBoolPair\<cdot>(Y i  .  dr))))]))"
+        apply (rule some_below)
+        apply (rule ub_below)
+         apply (metis (mono_tags, lifting) Y_is_chain f11 po_class.chain_def rec_tsb_mono recv_tsb_dom ubdom_chain_eq2)
+        by (simp add: f16)
+      then show ?thesis 
+        using True f13 f14 by auto
+    next
+      case False
+      then show ?thesis
+        using Y_is_chain by auto 
+    qed
+  qed
+qed
 (* proof (rule ufun_contI)
     show recv_mono: "\<And>(x::'a MABP tstream\<^sup>\<Omega>) y::'a MABP tstream\<^sup>\<Omega>. ubDom\<cdot>x = {dr} \<Longrightarrow> x \<sqsubseteq> y \<Longrightarrow>
           Abs_ubundle([ar \<mapsto> tsMap Bool\<cdot>(fst (tsRec\<cdot>(tsMap invBoolPair\<cdot>(x  .  dr)))),
