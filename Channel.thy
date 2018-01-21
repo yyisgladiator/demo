@@ -7,7 +7,7 @@ text {*This is the total set of channels. While representing an existing network
  one should add here all channels that occur in the whole network.*}
 
 datatype channel = c1 | c2 | c3 | c4 | c5 | c6 | c7 | c8 | c9 | c10
-             (* for ABP Specification*) | as | ds | ar | dr | abpIn | abpOut
+             (* for ABP Specification*) | as | ds | ar | dr | abpIn | abpOut | \<CC> string
 
 default_sort type
 
@@ -107,7 +107,7 @@ by (meson M.inject(2) f_inv_into_f rangeI)
 
 *)
   
-  
+  (*
 instantiation channel :: finite
 begin
   instance
@@ -128,6 +128,6 @@ begin
       by (simp add: f1)  
   qed
 end   
-  
+  *)
   
 end
