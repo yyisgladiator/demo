@@ -185,8 +185,9 @@ lemma ubrep_lub:assumes "chain Y"
 
 (*  *)
 lemma ubrep_cont [simp]: "cont Rep_ubundle"
-  by (smt Abs_ubundle_inject Cont.contI2 Rep_ubundle Rep_ubundle_inverse adm_def below_ubundle_def 
-      lub_eq lub_ubundle mem_Collect_eq monofunI po_eq_conv ubWell_adm)
+  apply (rule contI2)
+  apply (meson below_ubundle_def monofunI)
+  by (simp add: ubrep_lub)
 
 (*   *)
 lemma ubrep_up_lub[simp]: assumes "chain Y"
@@ -247,7 +248,11 @@ subsection \<open>ubDom\<close>
 
 (* the function udom is continuous *)
 lemma ubdom_cont[simp]: "cont (\<lambda> ub. dom (Rep_ubundle ub))"
-  by (smt Cont.contI2 below_ubundle_def is_ub_thelub monofunI not_below2not_eq part_dom_eq)
+  apply (rule contI2)
+   apply (rule monofunI)
+   apply (simp add: below_ubundle_def part_dom_eq)
+  by (simp add: ubrep_chain_lub_dom_eq)
+
 
 (* unfold rule *)
 lemma ubdom_insert: "ubDom\<cdot>ub = dom (Rep_ubundle ub)"
@@ -289,7 +294,9 @@ subsection \<open>ubGetCh\<close>
   
 (* ubGetCh is cont *)
 lemma ubgetch_cont [simp]: "cont (\<lambda>ub. ((Rep_ubundle ub) \<rightharpoonup> c))"
-  by (smt Prelude.contI2 below_ubundle_def fun_below_iff lub_eq ubrep_lub_eval monofun_def not_below2not_eq op_the_mono)
+  apply (rule contI2)
+   apply (metis (no_types, lifting) below_ubundle_def fun_belowD monofun_def op_the_mono)
+  by (simp add: ubrep_lub_eval)
 
 lemma ubgetch_cont2[simp]: "cont (\<lambda>ub uc. the ((Rep_ubundle ub) uc))"
   by simp
@@ -324,10 +331,21 @@ lemma ubgetchI: assumes "ubDom\<cdot>x = ubDom\<cdot>y" and "\<And>c. c\<in>(ubD
 
 (* id function *)
 lemma [simp]: "Abs_ubundle (\<lambda>c. (c \<in> ubDom\<cdot>b)\<leadsto> b . c) = b"
-  apply (rule ubgetchI, subst ubdom_ubrep_eq)
-    apply (smt Rep_ubundle domIff mem_Collect_eq ubgetchE ubWell_def)
-   apply simp
-  by (smt Abs_cfun_inverse2 Abs_ubundle_inverse Rep_ubundle domIff mem_Collect_eq option.sel ubDom_def ubgetchE ubWell_def ubdom_cont)
+proof (rule ubgetchI)
+  have f1: "ubWell (\<lambda>c. (c \<in> ubDom\<cdot>b)\<leadsto> b . c)"
+    by (simp add: ubWell_def ubgetch_insert)
+  show dom_eq: "ubDom\<cdot>(Abs_ubundle (\<lambda>c::channel. (c \<in> ubDom\<cdot>b)\<leadsto>b  .  c)) = ubDom\<cdot>b"
+    by (simp add: f1 ubdom_ubrep_eq)
+  show "\<And>c::channel. c \<in> ubDom\<cdot>(Abs_ubundle (\<lambda>c::channel. (c \<in> ubDom\<cdot>b)\<leadsto>b  .  c)) \<Longrightarrow> Abs_ubundle (\<lambda>c::channel. (c \<in> ubDom\<cdot>b)\<leadsto>b  .  c)  .  c = b  .  c"
+  proof -
+    fix c::channel
+    assume assm1: "c \<in> ubDom\<cdot>(Abs_ubundle (\<lambda>c::channel. (c \<in> ubDom\<cdot>b)\<leadsto>b  .  c))"
+    have f2: "c \<in> ubDom\<cdot>b"
+      using assm1 dom_eq by auto
+    show "Abs_ubundle (\<lambda>c::channel. (c \<in> ubDom\<cdot>b)\<leadsto>b  .  c)  .  c = b  .  c"
+      by (simp add: f1 f2 ubgetch_insert)
+  qed
+qed
 
     
 subsection \<open>eq/below\<close>
@@ -357,10 +375,22 @@ lemma ubRestrict_monofun[simp]: "monofun  (\<lambda>b. Rep_ubundle b |` cs)"
 
 (* the ubRestrict function is continuous  part 1*)
 lemma ubrestrict_cont1[simp]: "cont  (\<lambda>b. ((Rep_ubundle b) |` cs))"
-  apply (rule contI2)
-  apply simp
-  by (smt Abs_ubundle_inverse Rep_ubundle adm_def below_option_def domIff fun_below_iff lub_eq lub_fun lub_ubundle mem_Collect_eq 
-      part_dom_lub po_class.chain_def ubrep_chain restrict_map_def ubdom_chain_eq2 ubWell_adm)
+proof (rule contI2, auto)
+  fix Y::"nat \<Rightarrow> 'a\<^sup>\<Omega>"
+  assume chain_Y: "chain Y"
+  have f00: " chain (\<lambda>(a::nat) b::channel. if b \<in> cs then Rep_ubundle (Y a) b else None)"
+    apply (rule chainI)
+    apply (simp add: fun_below_iff)
+    by (metis below_ubundle_def chain_Y chain_mono_less fun_below_iff lessI)
+  have f1: "\<And> x. (\<Squnion>i::nat. (\<lambda>x::channel. if x \<in> cs then Rep_ubundle (Y i) x else None)) x =
+                (\<Squnion>i::nat. (\<lambda>x::channel. if x \<in> cs then Rep_ubundle (Y i) x else None) x)"      
+    using f00 lub_fun by fastforce
+  show "Rep_ubundle (\<Squnion>i::nat. Y i) |` cs \<sqsubseteq> (\<Squnion>i::nat. Rep_ubundle (Y i) |` cs)"
+    apply (simp add: restrict_map_def)
+    apply (simp add: fun_below_iff, auto)
+    by (subst f1, simp add: chain_Y cont2contlubE lub_fun) +
+qed
+
 
 (* the ubRestrict function is continuous *)
 lemma ubrestrict_cont [simp]: "cont (\<lambda>b. Abs_ubundle (Rep_ubundle b |` cs))"
@@ -409,7 +439,19 @@ lemma ubrestrict_ubdom_sup_inter:
 
 lemma ubrestrict_below [simp]:  assumes "chain Y" and "cont h"
       shows "(h (\<Squnion>i. Y i) \<bar> g (ubDom\<cdot>(\<Squnion>i. Y i))) \<sqsubseteq> (\<Squnion>i. (h (Y i) \<bar> g (ubDom\<cdot>(Y i)) ))"
-  by (smt assms(1) assms(2) ch2ch_cont cont2contlubE cont_Rep_cfun2 lub_eq po_eq_conv ubdom_chain_eq2)
+proof -
+  have f0: "(ubDom\<cdot>(\<Squnion>i. Y i)) = (\<Squnion> i. ubDom\<cdot>(Y i))"
+    using assms(1) by auto
+  have f1: "g (ubDom\<cdot>(\<Squnion>i. Y i)) = (\<Squnion>i. g (ubDom\<cdot>(Y i)))"
+    by (simp add: assms(1))
+  have f2: " cont (\<lambda>a. h a \<bar> g (ubDom\<cdot>a))"
+    apply (rule contI2)
+    apply (rule monofunI)
+     apply (simp add: assms(2) cont2monofunE ubdom_below, auto)
+    by (metis assms(2) below_refl ch2ch_cont cont2contlubE contlub_cfun_arg)
+  then show ?thesis             
+    using assms(1) cont2contlubE eq_imp_below by blast
+qed
 
 
 subsection \<open>ubLen\<close>
@@ -606,7 +648,11 @@ lemma ubWell_single_channel: assumes "c \<in> ubDom\<cdot>ub" shows "ubWell [c \
 lemma ubrenamech_id: assumes "c \<in> ubDom\<cdot>ub"
   shows "ubRenameCh ub c c = ub"
   apply (simp add: ubRenameCh_def ubgetch_insert ubSetCh_def ubremch_insert ubrestrict_insert)
-  by (smt assms diff_eq dom_empty dom_fun_upd fun_upd_triv fun_upd_upd map_add_upd map_union_restrict restrict_complement_singleton_eq ubWell_single_channel ubabs_ubrep ubgetchE ubgetch_insert ubrep_ubabs ubrestrict_well ubunion_insert)
+  apply (simp add: ubunion_insert)
+  apply (subst ubrep_ubabs)
+   apply (simp add: assms ubWell_single_channel)
+  by (metis assms fun_upd_upd map_add_empty map_add_upd map_upd_triv restrict_complement_singleton_eq ubabs_ubrep ubgetchE ubgetch_insert)
+
 
 (* the dom of new bundle after renaming a channel is the union between new channel and the dom of bundle without the renamed channel  *)
 lemma ubrenamech_ubdom: assumes "ch1 \<in> ubDom\<cdot>ub"  and "usOkay ch2 (ub . ch1)"
@@ -708,12 +754,37 @@ lemma ubMapStream_ubGetCh: assumes "fun_well_type f" and "c \<in> ubDom\<cdot>b"
 lemma ubMapStream_contI1: assumes "cont f" and "fun_well_type f"
   shows "cont (ubMapStream f)"
 proof (rule contI2)
-  show "monofun (ubMapStream f)"
-    using monofunI
-    by (smt assms(1) assms(2) monofunE monofun_Rep_cfun2 ubMapStream_ubGetCh ubMapStream_def ubMapStream_ubDom ubMapStream_well ub_below ubdom_below ubgetchE ubrep_ubabs Abs_cfun_inverse2)
+  show mono_proof: "monofun (ubMapStream f)"
+  proof (rule monofunI)
+    fix x::"'a\<^sup>\<Omega>" and y::"'a\<^sup>\<Omega>"
+    assume x_below_y: "x \<sqsubseteq> y"
+    show "ubMapStream f x \<sqsubseteq> ubMapStream f y"
+      apply (rule ub_below)
+       apply (simp add: assms(2) ubMapStream_ubDom ubdom_below x_below_y)
+      by (metis (no_types, lifting) Abs_cfun_inverse2 assms(1) assms(2) monofun_Rep_cfun2 
+              monofun_def ubMapStream_ubDom ubMapStream_ubGetCh ubdom_below x_below_y)
+  qed
   thus "\<forall>Y. chain Y \<longrightarrow> ubMapStream f (\<Squnion>i. Y i) \<sqsubseteq> (\<Squnion>i. ubMapStream f (Y i))"
- (***)  by (smt assms(1) assms(2) cont2contlubE lub_eq monofun_def not_below2not_eq po_class.chain_def ubMapStream_ubDom ubMapStream_ubGetCh ub_below ubdom_insert ubgetch_insert ubrep_chain_lub_dom_eq ubrep_chain_the ubrep_lub_eval)
-(* konnten leider beide nicht per using auf nicht-smt form gebracht werden*) 
+  proof auto
+    fix Y:: "nat \<Rightarrow> 'a\<^sup>\<Omega>"
+    assume chain_Y: "chain Y"
+    have f00: "ubDom\<cdot>(ubMapStream f (\<Squnion>i::nat. Y i)) = ubDom\<cdot>(\<Squnion>i::nat. ubMapStream f (Y i))"
+      by (metis (mono_tags, lifting) assms(2) chain_Y mono_proof monofunE po_class.chain_def ubMapStream_ubDom ubdom_chain_eq2)
+    have f0: "\<forall> c \<in> ubDom\<cdot>(ubMapStream f (\<Squnion>i::nat. Y i)). 
+                      ubMapStream f (\<Squnion>i::nat. Y i)  .  c = f ((\<Squnion>i::nat. Y i)  .  c)"
+      using assms(2) ubMapStream_ubDom ubMapStream_ubGetCh by blast
+    have f1: "\<forall> c \<in> ubDom\<cdot>(ubMapStream f (\<Squnion>i::nat. Y i)).
+                  (\<Squnion>i::nat. ubMapStream f (Y i))  .  c = (\<Squnion>i::nat. ubMapStream f (Y i) . c)"
+      by (simp add: ch2ch_monofun chain_Y contlub_cfun_arg mono_proof)
+    have f2: "\<And> i. \<forall> c  \<in> ubDom\<cdot>(ubMapStream f (\<Squnion>i::nat. Y i)). 
+                  ubMapStream f (Y i) . c = f ((Y i) . c)"
+      by (simp add: assms(2) chain_Y ubMapStream_ubDom ubMapStream_ubGetCh)
+    show "ubMapStream f (\<Squnion>i::nat. Y i) \<sqsubseteq> (\<Squnion>i::nat. ubMapStream f (Y i))"
+      apply (rule ub_below)
+       apply (simp add: f00)
+      apply (subst f0, simp, subst f1, simp, subst f2, simp)
+      by (simp add: assms(1) chain_Y cont2contlubE)
+  qed
 qed
 
 
@@ -723,7 +794,7 @@ lemma ubMapStream_contI2: assumes "cont f" and "\<forall>c ts. usOkay c ts \<lon
 
 lemma if_then_ubDom: assumes "d \<in> dom (\<lambda> b. (ubDom\<cdot>b = In) \<leadsto> (F b))"
   shows "ubDom\<cdot>d = In"
-  by (smt assms domIff)
+  by (metis (mono_tags) assms domIff2)
 
 (*
 lemma ub_lub [simp]: fixes S :: "nat \<Rightarrow> 'm ubundle" assumes "chain S"
