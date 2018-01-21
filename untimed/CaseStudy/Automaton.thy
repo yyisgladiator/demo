@@ -103,7 +103,7 @@ lemma stepstep_step: "spfStep In Out\<cdot>f\<rightleftharpoons>sb = (f ((inv co
 
 
 section \<open>Lemma about h\<close>
-
+(*
 lemma h_dom [simp]: "ufDom\<cdot>(h automat s) = getDom automat"
   by (metis (no_types, lifting) Abs_cfun_inverse2 h_cont h_def spfStateFix_fix spfstep_dom spfstep_ran automaton_well_def finite_code) 
 
@@ -134,7 +134,7 @@ lemma h_final:
   spfConc (autGetNextOutput automat s ((inv convDiscrUp)(sbHdElem\<cdot>sb)))\<cdot>(spfRt\<cdot>(h automat (autGetNextState automat s ((inv convDiscrUp)(sbHdElem\<cdot>sb))))) \<rightleftharpoons>sb"
   unfolding h_step 
   by(simp add: helper_def autGetNextOutput_def autGetNextState_def assms spfRt_def )
-  
+  *)
 
 section \<open>Lemma about H\<close>
 
