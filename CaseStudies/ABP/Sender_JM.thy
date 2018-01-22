@@ -609,10 +609,11 @@ lemma h6: "(\<And>acks is acka n. s = srcdups\<cdot>(tsAbs\<cdot>acks) \<Longrig
        \<up>a \<bullet> s = srcdups\<cdot>(tsAbs\<cdot>as) \<Longrightarrow> #(srcdups\<cdot>(tsAbs\<cdot>as)) = Fin k \<Longrightarrow>
        #(srcdups\<cdot>(tsAbs\<cdot>as)) < #(tsAbs\<cdot>(i::'a tstream)) \<Longrightarrow> #\<surd> as = \<infinity> \<Longrightarrow> #(tsAbs\<cdot>(tsSnd_h\<cdot>i\<cdot>as\<cdot>(Discr ack))) = \<infinity>"
   apply (case_tac "tsAbs\<cdot>as = \<epsilon>",simp_all)
-  apply (simp add: srcdups_step_tsabs tsdropwhile_tsabs)
+  apply (simp add: srcdups_step_tsabs)
+  apply (fold tsdropwhile_tsabs)
   apply (case_tac "k = 0",simp_all)
   apply (simp add: lnsuc_fin [of k])
-  using h4[of i as ack] empty_is_shortest[of k "tsAbs\<cdot>i"]  h6_hh[of s a as k i] by blast
+  using h4[of i as ack] empty_is_shortest h6_hh by blast
 
 lemma tssnd_fmsg2inftrans: assumes "#(srcdups\<cdot>(tsAbs\<cdot>as)) = Fin k" "#(srcdups\<cdot>(tsAbs\<cdot>as)) < #(tsAbs\<cdot>i)" " #\<surd> as = \<infinity>" shows "#(tsAbs\<cdot>(tsSnd_h\<cdot>i\<cdot>as\<cdot>(Discr ack))) = \<infinity>"
   using assms apply(induction "(srcdups\<cdot>(tsAbs\<cdot>as))" arbitrary: i as ack k rule: finind)
