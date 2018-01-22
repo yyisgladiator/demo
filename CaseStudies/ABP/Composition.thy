@@ -68,8 +68,8 @@ lemma tstickcount_inp2infacks:
 
 (* 5th axiom *)     
 lemma set2tssnd_ack2trans: assumes "send \<in> tsSender"
-  shows "tsAbs\<cdot>(tsRemDups\<cdot>as) \<sqsubseteq> tsAbs\<cdot>(tsRemDups\<cdot>(tsProjSnd\<cdot>(send\<cdot>i\<cdot>as))) \<longrightarrow> 
-         #\<surd>as = \<infinity> \<longrightarrow> #(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(send\<cdot>i\<cdot>as))))
+  shows "tsAbs\<cdot>(tsRemDups\<cdot>as) \<sqsubseteq> tsAbs\<cdot>(tsRemDups\<cdot>(tsProjSnd\<cdot>(send\<cdot>i\<cdot>as))) \<longrightarrow> #\<surd>as = \<infinity> \<longrightarrow>
+         #(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(send\<cdot>i\<cdot>as))))
                         = min (#(tsAbs\<cdot>i)) (lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>as))))"
   using assms tsSender_def by auto
 
@@ -142,29 +142,30 @@ text {*
    as = acks stream
    ds = output stream 
 *}
-    
+
+lemma tstickcount_inp2infacks_nmed:
+  assumes send_def: "send \<in> tsSender"
+    and ds_def: "ds = send\<cdot>i\<cdot>as"
+    and as_def: "as = tsProjSnd\<cdot>ds"
+    and i2as: "#(tsAbs\<cdot>i) > #(tsAbs\<cdot>(tsRemDups\<cdot>as))"
+  shows "#\<surd>as = \<infinity>"
+  by (metis as_def ds_def i2as inf_ub less_lnsuc min.absorb2 min.orderE min_rek send_def
+      set2tssnd_as_inftick tsprojsnd_tstickcount)
+
 lemma tsaltbitpro_inp2out_nmed:
   assumes send_def: "send \<in> tsSender"
     and ds_def: "ds = send\<cdot>i\<cdot>as"
     and as_def: "as = tsProjSnd\<cdot>ds"
-    and i_inf: "#\<surd>i = \<infinity>"
   shows "tsAbs\<cdot>(tsRecSnd\<cdot>ds) = tsAbs\<cdot>i"
-proof -
-  have i_leq_as: "#\<surd>i \<le> #\<surd>as"
-    by (metis (no_types, lifting) as_def ds_def dual_order.strict_trans2 inf_ub min_def neq_iff 
-        send_def set2tssnd_strcausal tsprojsnd_tstickcount)
-  hence as_inf: "#\<surd>as = \<infinity>"
-    by (simp add: i_inf)
-  have "#(tsAbs\<cdot>(tsRemDups\<cdot>as)) = #(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(send\<cdot>i\<cdot>as))))"
+  proof -
+  have slen_as: "#(tsAbs\<cdot>(tsRemDups\<cdot>as)) = #(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(send\<cdot>i\<cdot>as))))"
     by (metis as_def ds_def tsprojfst_tsabs_slen tsprojsnd_tsabs_slen 
         tssnd_tsprojsnd_tsremdups send_def)
   thus "tsAbs\<cdot>(tsRecSnd\<cdot>ds) = tsAbs\<cdot>i"
-    sorry
-(* adjustments for set2tssnd_ack2trans needed
-    by (metis as_inf ds_def eq_slen_eq_and_less min_rek send_def set2tssnd_ack2trans
-        set2tssnd_prefix_inp tsrecsnd_insert)
-*)
-  oops
+    by (metis (no_types, lifting) as_def below_refl ds_def eq_slen_eq_and_less le_neq_trans 
+        min_rek mono_slen send_def set2tssnd_ack2trans set2tssnd_prefix_inp tsrecsnd_insert 
+        tstickcount_inp2infacks_nmed)
+  qed
 
 lemma tsaltbitpro_inp2out_nmed2:
   assumes send_def: "send \<in> tsSender"
@@ -173,51 +174,43 @@ lemma tsaltbitpro_inp2out_nmed2:
     and ar_def: "ar = tsProjSnd\<cdot>dr"
     (* definition 5 *)
     and as_def: "as = ar"
-    and i_inf: "#\<surd>i = \<infinity>"
   shows "tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>dr)) = tsAbs\<cdot>i"
   proof -
-    have i_leq_as: "#\<surd>i \<le> #\<surd>as"
-      by (metis ar_def as_def dr_def ds_def i_inf le_less_linear min_def neq_iff send_def
-          set2tssnd_strcausal tsprojsnd_tstickcount)
-    hence as_inf: "#\<surd>as = \<infinity>"
-      by (simp add: i_inf)
     (* #(tsAbs\<cdot>(tsRemDups\<cdot>as)) \<le> #(tsAbs\<cdot>i) *)
-    have h1: "#(tsAbs\<cdot>(tsRemDups\<cdot>as)) \<le> #(tsAbs\<cdot>(tsRemDups\<cdot>(tsProjSnd\<cdot>ds)))"
+    have "#(tsAbs\<cdot>(tsRemDups\<cdot>as)) \<le> #(tsAbs\<cdot>(tsRemDups\<cdot>(tsProjSnd\<cdot>ds)))"
       by (simp add: ar_def as_def dr_def)
-    hence h2: "#(tsAbs\<cdot>(tsRemDups\<cdot>as)) \<le> #(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>ds)))"
+    hence as_leq_ds: "#(tsAbs\<cdot>(tsRemDups\<cdot>as)) \<le> #(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>ds)))"
       by (simp add: ds_def send_def tssnd_tsprojsnd_tsremdups)
-    hence leq: "#(tsAbs\<cdot>(tsRemDups\<cdot>as)) \<le> #(tsAbs\<cdot>i)"
+    hence as_leq_i: "#(tsAbs\<cdot>(tsRemDups\<cdot>as)) \<le> #(tsAbs\<cdot>i)"
       by (metis ar_def as_def dr_def ds_def mono_slen send_def set2tssnd_prefix_inp 
           tsprojfst_tsabs_slen tsprojsnd_tsabs_slen tssnd_tsprojsnd_tsremdups)
     (* #(tsAbs\<cdot>i) \<le> #(tsAbs\<cdot>(tsRemDups\<cdot>as)) *)
-    have h3: "#(tsAbs\<cdot>i) < lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>as)))
+    have as_inf: "#(tsAbs\<cdot>i) > #(tsAbs\<cdot>(tsRemDups\<cdot>as)) \<Longrightarrow> #\<surd>as = \<infinity>"
+      using ar_def as_def dr_def ds_def send_def tstickcount_inp2infacks_nmed by blast
+    have "#(tsAbs\<cdot>i) < lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>as)))
           \<or> #(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>ds))) = lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>as)))"
-      sorry
-(* adjustments for set2tssnd_ack2trans needed
-      by (metis as_inf ds_def le_less_linear min.absorb2 send_def set2tssnd_ack2trans)
-*)
-    hence geq: "#(tsAbs\<cdot>i) \<le> #(tsAbs\<cdot>(tsRemDups\<cdot>as))"
-      by (metis ar_def as_def dr_def ds_def lnat_po_eq_conv lnle2le min_def min_rek send_def 
-          tsprojfst_tsabs_slen tsprojsnd_tsabs_slen tssnd_tsprojsnd_tsremdups)
-    (* equalities *)
-    have eq: "#(tsAbs\<cdot>i) = #(tsAbs\<cdot>(tsRemDups\<cdot>as))"
-      by (simp add: dual_order.antisym geq leq)
-    (* property 6 *)
-    have prop6: "#(tsAbs\<cdot>i) = #(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>ds)))"
-      by (metis ar_def as_def dr_def ds_def eq send_def tsprojfst_tsabs_slen tsprojsnd_tsabs_slen 
+      by (metis ar_def as_def as_inf as_leq_i below_refl dr_def ds_def less_le less_lnsuc min_rek 
+          send_def set2tssnd_ack2trans tsprojfst_tsabs_slen tsprojsnd_tsabs_slen 
           tssnd_tsprojsnd_tsremdups)
+    hence i_geq_as: "#(tsAbs\<cdot>i) \<le> #(tsAbs\<cdot>(tsRemDups\<cdot>as))"
+      by (metis ar_def as_def dr_def ds_def dual_order.strict_iff_order inf_ub ln_less lnle2le 
+          send_def tsprojfst_tsabs_slen tsprojsnd_tsabs_slen tssnd_tsprojsnd_tsremdups)
+    (* property 6 *)
+    have i_eq_ds: "#(tsAbs\<cdot>i) = #(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>ds)))"
+      by (metis ar_def as_def as_leq_i dr_def ds_def i_geq_as min_absorb2 min_def send_def 
+          tsprojfst_tsabs_slen tsprojsnd_tsabs_slen tssnd_tsprojsnd_tsremdups)
     (* property 7 *)
-    have prop7: "#(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>ds))) = #(tsAbs\<cdot>(tsRemDups\<cdot>(tsProjSnd\<cdot>ds)))"
+    have projfst2projsnd: "#(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>ds))) = #(tsAbs\<cdot>(tsRemDups\<cdot>(tsProjSnd\<cdot>ds)))"
       by (simp add: ds_def send_def tssnd_tsprojsnd_tsremdups)
     (* property 8 *)
-    have prop8: "#(tsAbs\<cdot>(tsRemDups\<cdot>(tsProjSnd\<cdot>ds))) = #(tsAbs\<cdot>(tsRemDups\<cdot>(tsProjSnd\<cdot>dr)))"
+    have ds_eq_dr: "#(tsAbs\<cdot>(tsRemDups\<cdot>(tsProjSnd\<cdot>ds))) = #(tsAbs\<cdot>(tsRemDups\<cdot>(tsProjSnd\<cdot>dr)))"
       by (simp add: dr_def)
     (* tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>dr)) = tsAbs\<cdot>i *)
-    have h4: "tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>dr)) = tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>ds))"
+    have "tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>dr)) = tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>ds))"
       by (simp add: dr_def)
     thus "tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>dr)) = tsAbs\<cdot>i"
-      by (simp add: ds_def eq_slen_eq_and_less prop6 send_def set2tssnd_prefix_inp)      
-  oops
+      by (simp add: ds_def eq_slen_eq_and_less i_eq_ds send_def set2tssnd_prefix_inp)
+  qed
 
 (* ----------------------------------------------------------------------- *)
 subsection {* complete composition *}
