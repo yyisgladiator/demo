@@ -123,24 +123,42 @@ subsection {* composition *}
 
 (* ToDo: add definitions for oracles p1, p2 and input stream i to cover all possibilities *)
 
-(*case bot: i=\<bottom>, case fin: i=tsAltbitproExampInp, case inf: i=(tsAltbitproExampInp \<bullet>\<surd> tsInfTick)*)
 definition tsAltbitproExampInp :: "nat tstream" where
 "tsAltbitproExampInp = <[Msg 1, Msg 2, \<surd>, Msg 1, \<surd>]>\<surd>"
 
-(*case bot: p1=((\<up>True) \<infinity>), case fin/inf: p1=(tsAltbitproExampOra1 \<infinity>)*)
 definition tsAltbitproExampOra1 :: "bool stream" where
-"tsAltbitproExampOra1 = <[True, False, True, True, True]>"
+"tsAltbitproExampOra1 = <[True, True, False, True, True, True]>"
 
-(*case bot: p2=((\<up>True) \<infinity>), case fin/inf: p2=(tsAltbitproExampOra2 \<infinity>)*)
 definition tsAltbitproExampOra2 :: "bool stream" where
-"tsAltbitproExampOra2 = <[True, False, True, True]>"
+"tsAltbitproExampOra2 = <[True, True, False, True, True]>"
 
-lemma tsaltbitpro_test:
-  assumes ds_def: "ds = tsSnd\<cdot>i\<cdot>as"
-    and dr_def: "dr = tsMed\<cdot>ds\<cdot>p1"
+(*case bot*)
+lemma tsaltbitpro_test_bot:
+  assumes ds_def: "ds = tsSnd\<cdot>\<bottom>\<cdot>as"
+    and dr_def: "dr = tsMed\<cdot>ds\<cdot>(<[True]> \<infinity>)"
     and ar_def: "ar = tsProjSnd\<cdot>dr"
-    and as_def: "as = tsMed\<cdot>ar\<cdot>p2"
-  shows "tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>dr)) = tsAbs\<cdot>i"
+    and as_def: "as = tsMed\<cdot>ar\<cdot>(<[True]> \<infinity>)"
+  shows "tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>dr)) = tsAbs\<cdot>\<bottom>"
+  using assms
+  apply(simp add: tsSnd_def)
+  by (metis tsabs_bot tsabs_delayfun tsrecsnd_delayfun tsrecsnd_insert tsrecsnd_strict)
+
+(*case finite*)
+lemma tsaltbitpro_test_fin:
+  assumes ds_def: "ds = tsSnd\<cdot>tsAltbitproExampInp\<cdot>as"
+    and dr_def: "dr = tsMed\<cdot>ds\<cdot>(tsAltbitproExampOra1 \<infinity>)"
+    and ar_def: "ar = tsProjSnd\<cdot>dr"
+    and as_def: "as = tsMed\<cdot>ar\<cdot>(tsAltbitproExampOra2 \<infinity>)"
+  shows "tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>dr)) = tsAbs\<cdot>tsAltbitproExampInp"  
+  apply(simp add: ds_def dr_def as_def tsSnd_def tsAltbitproExampOra1_def tsmed_delayfun)
+
+(*case infinite*)
+lemma tsaltbitpro_test_inf:
+  assumes ds_def: "ds = tsSnd\<cdot>(tsAltbitproExampInp \<bullet>\<surd> tsInfTick)\<cdot>as"
+    and dr_def: "dr = tsMed\<cdot>ds\<cdot>(tsAltbitproExampOra1 \<infinity>)"
+    and ar_def: "ar = tsProjSnd\<cdot>dr"
+    and as_def: "as = tsMed\<cdot>ar\<cdot>(tsAltbitproExampOra2 \<infinity>)"
+  shows "tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>dr)) = tsAbs\<cdot>(tsAltbitproExampInp \<bullet>\<surd> tsInfTick)"
   oops
     
 end
