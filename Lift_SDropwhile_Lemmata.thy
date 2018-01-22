@@ -48,7 +48,13 @@ lemma adm_tsdom_neq [simp]: "\<And>x. adm (\<lambda>xa. tsDom\<cdot>xa \<noteq> 
 
 lemma[simp]: "tsDom\<cdot>ts = {a} \<Longrightarrow> tsAbs\<cdot>(tsDropWhile\<cdot>(Discr a)\<cdot>ts) = \<epsilon>"
   apply (induction ts arbitrary: a, simp_all)
-  sorry
+  apply (simp add: tsdom_delayfun tsdropwhile_delayfun)
+  apply(simp add: tsdom_mlscons tsdropwhile_t)
+  apply(case_tac "tsDom\<cdot>ts = {a}")
+  apply blast
+  apply(simp add: subset_singleton_iff)
+  by (metis strict_sdom_rev strict_sdropwhile tsabs_tsdom tsdropwhile_tsabs)
+  
 
 (************************************************)
       text {*fifth lemma *}   
@@ -69,6 +75,7 @@ lemma [simp]: "x \<noteq> a \<Longrightarrow> (tsAbs\<cdot>ts = \<up>a) \<Longri
 
 lemma [simp]: "x \<noteq> a \<Longrightarrow> tsDom\<cdot>ts = {a} \<Longrightarrow> tsDropWhile\<cdot>(Discr x)\<cdot>ts = ts"
   apply (induction ts arbitrary: a x, simp_all)
-  sorry
+  apply (simp add: tsdom_delayfun tsdropwhile_delayfun)
+  by (simp add: tsdom_mlscons tsdropwhile_f)
 
 end
