@@ -1,4 +1,4 @@
-theory Sender_OZ
+theory Sender_JM
 imports Sender 
 
 begin
@@ -284,9 +284,9 @@ lemma h4_2: "#(tsAbs\<cdot>(tsSnd_h\<cdot>i\<cdot>(tsDropWhile\<cdot>(Discr (\<n
   apply (simp add: tsdropwhile_delayfun tssnd_h_delayfun)
   apply (simp add: tsdropwhile_delayfun tssnd_h_delayfun_nack lscons_conv tsabs_mlscons)
   apply (case_tac "t \<noteq> ack")
-  apply (simp add: tsdropwhile_t tsabs_mlscons shd_updis)
+  apply (simp add: tsdropwhile_mlscons_t tsabs_mlscons shd_updis)
   apply (meson dual_order.trans h4_2_h)
-  by (simp add: tsdropwhile_f)
+  by (simp add: tsdropwhile_mlscons_f)
 
 lemma stakewhile_stimes: 
   "#(stakewhile (\<lambda>x. x=t)\<cdot>z) = Fin n \<longrightarrow> stakewhile (\<lambda>x. x=t)\<cdot>z = sntimes n (\<up>t)"
@@ -425,9 +425,9 @@ lemma h4_1_hh_h6: "#(tsAbs\<cdot>(tsSnd_h\<cdot>(tsntimes n (Abs_tstream (\<up>\
   apply (simp add: tsdropwhile_delayfun tsconc_delayfun tssnd_h_delayfun tssnd_h_delayfun_nack tsabs_mlscons lscons_conv)
   using less_lnsuc order.trans apply blast
   apply (case_tac "t = ack",simp_all)
-  apply (simp add: tsdropwhile_t)
+  apply (simp add: tsdropwhile_mlscons_t)
   apply (smt dual_order.trans h4_2_h)
-  apply (simp add: tsdropwhile_f)
+  apply (simp add: tsdropwhile_mlscons_f)
   by (simp add: h4_1_hh_h42)
 
 lemma sconc_scons2: "s1 \<bullet> (s2 \<bullet> s3) = (s1 \<bullet> s2) \<bullet> s3"
@@ -512,9 +512,9 @@ lemma h4_1_hh_h9: "i \<noteq> \<bottom> \<Longrightarrow>as \<noteq> \<bottom> \
   apply (simp add: h4_1_hh_52)
   apply (smt Nat.add_diff_assoc Suc_leI diff_Suc_eq_diff_pred minus_nat.diff_0 tsdropfirstmsg_mlscons tsmlscons_bot2)
   apply (case_tac "t = ack",simp_all)
-  apply (simp add: tsdropwhile_t)
+  apply (simp add: tsdropwhile_mlscons_t)
   using h4_1_hh_h9_h4 apply blast 
-  by(simp add: tsdropwhile_f h4_1_hh_h9hh)
+  by(simp add: tsdropwhile_mlscons_f h4_1_hh_h9hh)
 
 lemma h4_1_hh: assumes "tsAbs\<cdot>i \<noteq> \<epsilon>" "tsAbs\<cdot>as \<noteq> \<epsilon>" shows    
   "#(tsAbs\<cdot>(tsSnd_h\<cdot>(tsntimes n (Abs_tstream (\<up>\<surd>)) \<bullet>\<surd> Abs_tstream (sdrop (Suc n)\<cdot>(Rep_tstream i)))\<cdot>
@@ -575,7 +575,7 @@ lemma h4_1: assumes "tsAbs\<cdot>i \<noteq> \<epsilon>" " #\<surd> as = \<infini
        apply (subst(3) h1)
        apply (subst h2)
        apply (subst(3) h2)
-       apply (simp add: assms(3) h3 h4 tsdropfirstmsg_mlscons tsdropwhile_t)
+       apply (simp add: assms(3) h3 h4 tsdropfirstmsg_mlscons tsdropwhile_mlscons_t)
        using False assms(1) h4_1_hh by blast
   qed
    
@@ -612,7 +612,7 @@ lemma h6: "(\<And>acks is acka n. s = srcdups\<cdot>(tsAbs\<cdot>acks) \<Longrig
   apply (simp add: srcdups_step_tsabs tsdropwhile_tsabs)
   apply (case_tac "k = 0",simp_all)
   apply (simp add: lnsuc_fin [of k])
-  using h4[of i as ack] empty_is_shortest  h6_hh by blast
+  using h4[of i as ack] empty_is_shortest[of k "tsAbs\<cdot>i"]  h6_hh[of s a as k i] by blast
 
 lemma tssnd_fmsg2inftrans: assumes "#(srcdups\<cdot>(tsAbs\<cdot>as)) = Fin k" "#(srcdups\<cdot>(tsAbs\<cdot>as)) < #(tsAbs\<cdot>i)" " #\<surd> as = \<infinity>" shows "#(tsAbs\<cdot>(tsSnd_h\<cdot>i\<cdot>as\<cdot>(Discr ack))) = \<infinity>"
   using assms apply(induction "(srcdups\<cdot>(tsAbs\<cdot>as))" arbitrary: i as ack k rule: finind)
