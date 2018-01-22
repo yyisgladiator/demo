@@ -119,8 +119,48 @@ lemma ubup_well[simp]: "ubWell ((\<lambda> c. if c \<in> ubDom\<cdot>b then (Rep
 
 (* helper for the cont proof *)
 lemma ubup_cont_h[simp]: "cont (\<lambda>b. (\<lambda> c. if c \<in> ubDom\<cdot>b then (Rep_ubundle b)c else Some \<bottom>))"
-  by (smt contI2 below_ubundle_def eq_imp_below fun_below_iff is_ub_thelub lub_eq lub_fun monofunI
-          po_class.chainE po_class.chainI ubrep_lub ubdom_below ubgetchE)
+proof  (rule contI2)
+  show mono_proof: "monofun (\<lambda>(b::'a\<^sup>\<Omega>) c::channel. if c \<in> UBundle.ubDom\<cdot>b then Rep_ubundle b c else Some \<bottom>)"
+  proof (rule monofunI)
+    fix x::"'a\<^sup>\<Omega>" and y::"'a\<^sup>\<Omega>"
+    assume x_le_y: "x \<sqsubseteq> y"
+    show "(\<lambda>c::channel. if c \<in> UBundle.ubDom\<cdot>x then Rep_ubundle x c else Some \<bottom>) \<sqsubseteq> (\<lambda>c::channel. if c \<in> UBundle.ubDom\<cdot>y then Rep_ubundle y c else Some \<bottom>)"
+      apply (simp add: fun_below_iff)
+      by (metis below_ubundle_def fun_belowD ubdom_below x_le_y)
+  qed
+  show "\<forall>Y::nat \<Rightarrow> 'a\<^sup>\<Omega>.
+       chain Y \<longrightarrow>
+       (\<lambda>c::channel. if c \<in> UBundle.ubDom\<cdot>(\<Squnion>i::nat. Y i) then Rep_ubundle (\<Squnion>i::nat. Y i) c else Some \<bottom>) \<sqsubseteq> (\<Squnion>i::nat. (\<lambda>c::channel. if c \<in> UBundle.ubDom\<cdot>(Y i) then Rep_ubundle (Y i) c else Some \<bottom>))"
+  proof auto
+    fix Y::"nat \<Rightarrow> 'a\<^sup>\<Omega>"
+    assume chain_Y: "chain Y"
+    have f1: "\<And> i. ubDom\<cdot>(\<Squnion>i. Y i)  = ubDom\<cdot>(Y i)"
+      by (simp add: chain_Y)
+    have f2: "chain (\<lambda> i. (\<lambda>c::channel. if c \<in> UBundle.ubDom\<cdot>(\<Squnion>j::nat. Y j) then Rep_ubundle (Y i) c else Some \<bottom>))"
+      apply (rule chainI)
+      apply (simp add: fun_below_iff)
+      by (meson below_ubundle_def chain_Y fun_below_iff po_class.chain_def)
+    show "(\<lambda>c::channel. if c \<in> UBundle.ubDom\<cdot>(\<Squnion>i::nat. Y i) then Rep_ubundle (\<Squnion>i::nat. Y i) c else Some \<bottom>) \<sqsubseteq>
+       (\<Squnion>i::nat. (\<lambda>c::channel. if c \<in> UBundle.ubDom\<cdot>(\<Squnion>j::nat. Y j) then Rep_ubundle (Y i) c else Some \<bottom>))"
+    proof (simp add: fun_below_iff, auto)
+      show "\<And>x::channel. x \<in> UBundle.ubDom\<cdot>(Lub Y) \<Longrightarrow> Rep_ubundle (Lub Y) x \<sqsubseteq> (\<Squnion>i::nat. (\<lambda>c::channel. if c \<in> UBundle.ubDom\<cdot>(Lub Y) then Rep_ubundle (Y i) c else Some \<bottom>)) x"
+      proof -
+        fix x:: channel
+        assume x_in_dom:"x \<in> UBundle.ubDom\<cdot>(Lub Y)"
+        have f11: "(\<Squnion>i::nat. (\<lambda>c::channel. if c \<in> UBundle.ubDom\<cdot>(Lub Y) then Rep_ubundle (Y i) c else Some \<bottom>)) x = 
+              (\<Squnion>i::nat. (\<lambda>c::channel. if c \<in> UBundle.ubDom\<cdot>(Lub Y) then Rep_ubundle (Y i) c else Some \<bottom>) x)"
+          using f2 lub_fun by fastforce
+        show "Rep_ubundle (Lub Y) x \<sqsubseteq> (\<Squnion>i::nat. (\<lambda>c::channel. if c \<in> UBundle.ubDom\<cdot>(Lub Y) then Rep_ubundle (Y i) c else Some \<bottom>)) x"
+          apply (subst f11, auto)
+           apply (simp add: x_in_dom)
+          by (metis (mono_tags) below_refl ch2ch_cont chain_Y cont2contlubE lub_fun ubrep_cont)
+      qed
+    next
+      show "\<And>x::channel. x \<notin> UBundle.ubDom\<cdot>(Lub Y) \<Longrightarrow> (Some \<bottom>) \<sqsubseteq> (\<Squnion>i::nat. (\<lambda>c::channel. if c \<in> UBundle.ubDom\<cdot>(Lub Y) then Rep_ubundle (Y i) c else Some \<bottom>)) x"
+        by (simp add: f2 lub_fun)
+    qed
+  qed
+qed
 
 (* cont proof of ubUp *)
 lemma ubup_cont[simp]: "cont (\<lambda>b. Abs_ubundle ((\<lambda> c. if (c\<in>ubDom\<cdot>b) then (Rep_ubundle b)c else Some \<bottom>) :: channel \<Rightarrow> 'a option))"
@@ -132,9 +172,11 @@ lemma ubup_insert: "ubUp\<cdot>b = Abs_ubundle (\<lambda>c. if (c\<in>ubDom\<cdo
 
 (* the dom after applying ubUp is the same as UNIV *)
 lemma ubup_ubdom [simp]: "ubDom\<cdot>(ubUp\<cdot>b) = UNIV"
+  apply auto
   apply(simp add: ubdom_insert)
   apply(simp add: ubup_insert)
-  by (smt CollectD Collect_cong UNIV_def dom_def optionLeast_def optionleast_dom ubdom_insert)
+  apply (simp add: dom_def)
+  by (metis ubgetchE)
 
 (* ubUp doesnt effect existing channel in a bundle *)
 lemma ubup_ubgetch[simp]: assumes "c \<in> ubDom\<cdot>b"
