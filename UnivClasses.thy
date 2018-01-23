@@ -119,10 +119,10 @@ begin
 end
 
 class ufuncl_comp = ufuncl +
-  fixes ufunclComp :: "'a \<rightarrow> 'a \<rightarrow> 'a"  (* Here we can put the abbreviation \<otimes> *)
-  fixes ufunclSerComp :: "'a \<rightarrow> 'a \<rightarrow> 'a"  (* Here we can put the abbreviation \<circ> *) 
-  fixes ufunclParComp :: "'a \<rightarrow> 'a \<rightarrow> 'a"  (* Here we can put the abbreviation \<parallel> *) 
-  fixes ufunclFeedbackComp :: "'a \<rightarrow> 'a"  (* Here we can put the abbreviation \<mu> *) 
+  fixes ufunclComp :: "'a \<Rightarrow> 'a \<Rightarrow> 'a"  (* Here we can put the abbreviation \<otimes> *)
+  fixes ufunclSerComp :: "'a \<Rightarrow> 'a \<Rightarrow> 'a"  (* Here we can put the abbreviation \<circ> *) 
+  fixes ufunclParComp :: "'a \<Rightarrow> 'a \<Rightarrow> 'a"  (* Here we can put the abbreviation \<parallel> *) 
+  fixes ufunclFeedbackComp :: "'a \<Rightarrow> 'a"  (* Here we can put the abbreviation \<mu> *) 
 
 begin
 end
