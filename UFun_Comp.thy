@@ -1060,7 +1060,7 @@ lemma ufSerComp_ran: assumes "sercomp_well f1 f2"
 proof - 
   have f1: "ufRan\<cdot>f1 = ufDom\<cdot>f2"
     using assms by blast
-  have f2: "\<And>b. ubDom\<cdot>b=ufDom\<cdot>f1 \<longrightarrow> (the ((\<lambda>x::'a. (ubDom\<cdot>x = UFun.ufDom\<cdot>f1)\<leadsto>f2 \<rightleftharpoons> (f1 \<rightleftharpoons> x)) b)) \<in> ran (\<lambda>x::'a. (ubDom\<cdot>x = UFun.ufDom\<cdot>f1)\<leadsto>(f2 \<rightleftharpoons> (f1 \<rightleftharpoons> x)))"
+  have f2: "\<And>b. ubDom\<cdot>b=ufDom\<cdot>f1  \<longrightarrow> (the ((\<lambda>x::'a. (ubDom\<cdot>x = UFun.ufDom\<cdot>f1)\<leadsto>f2 \<rightleftharpoons> (f1 \<rightleftharpoons> x)) b)) \<in> ran (\<lambda>x::'a. (ubDom\<cdot>x = UFun.ufDom\<cdot>f1)\<leadsto>(f2 \<rightleftharpoons> (f1 \<rightleftharpoons> x)))"
     by (smt option.sel ranI)
   have f3: "\<And>b. ubDom\<cdot>b=ufDom\<cdot>f1 \<longrightarrow> ubDom\<cdot>(the ((\<lambda>x::'a. (ubDom\<cdot>x = UFun.ufDom\<cdot>f1)\<leadsto>f2 \<rightleftharpoons> (f1 \<rightleftharpoons> x)) b)) = ufRan\<cdot>f2"
     by (simp add: assms ufran_2_ubdom2)

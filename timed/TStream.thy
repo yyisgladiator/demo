@@ -5273,10 +5273,10 @@ lemma add2smap: "add\<cdot>(\<up>x\<infinity>)\<cdot>ys = smap (\<lambda>z. z+x)
 
 instantiation tstream :: (message) uscl
 begin
-  definition usOkay_tstream_def: "usOkay c m \<equiv> tsDom\<cdot>m \<subseteq> ctype c"
-definition usLen_stream_def: "usLen \<equiv> tslen"
+  definition usclOkay_tstream_def: "usclOkay c m \<equiv> tsDom\<cdot>m \<subseteq> ctype c"
+definition usclLen_stream_def: "usclLen \<equiv> tslen"
 
-lemma ts_usOkay_ex: "\<And>c::channel. \<exists>e::'a tstream. tsDom\<cdot>e \<subseteq> ctype c"
+lemma ts_usclOkay_ex: "\<And>c::channel. \<exists>e::'a tstream. tsDom\<cdot>e \<subseteq> ctype c"
   apply (simp add: tsDom_def)
   apply (subst Abs_cfun_inverse2)
   using tsdom_cont apply(simp)
@@ -5284,43 +5284,43 @@ lemma ts_usOkay_ex: "\<And>c::channel. \<exists>e::'a tstream. tsDom\<cdot>e \<s
   by(simp)
 instance
   apply intro_classes
-   apply (simp add: ts_usOkay_ex usOkay_tstream_def)
+   apply (simp add: ts_usclOkay_ex usclOkay_tstream_def)
   apply (rule admI)
-  by (simp add: subset_cont usOkay_tstream_def)
+  by (simp add: subset_cont usclOkay_tstream_def)
 end
 
 instantiation tstream :: (message) uscl_pcpo
 begin
 instance 
   apply intro_classes
-  by (simp add: usOkay_tstream_def)
+  by (simp add: usclOkay_tstream_def)
 end
 
 instantiation tstream:: (message) uscl_conc
 begin
 
-definition usConc_stream_def: "usConc \<equiv> tsConc"
+definition usclConc_stream_def: "usclConc \<equiv> tsConc"
 
-lemma usOkay_tsconc: "\<And>(c::channel) (s1::'a tstream) s2::'a tstream. usOkay c s1 \<Longrightarrow> usOkay c s2 \<Longrightarrow> usOkay c (usConc s1\<cdot>s2)"
+lemma usclOkay_tsconc: "\<And>(c::channel) (s1::'a tstream) s2::'a tstream. usclOkay c s1 \<Longrightarrow> usclOkay c s2 \<Longrightarrow> usclOkay c (usclConc s1\<cdot>s2)"
 proof -
   fix c:: channel and s1:: "'a tstream" and s2::"'a tstream"
-  assume assm1: "usOkay c s1" and assm2: "usOkay c s2"
-  show "usOkay c (usConc s1\<cdot>s2)"
+  assume assm1: "usclOkay c s1" and assm2: "usclOkay c s2"
+  show "usclOkay c (usclConc s1\<cdot>s2)"
   proof (cases "#\<surd>s1 = \<infinity>")
     case True
     then show ?thesis 
-      by (simp add: assm1 local.usConc_stream_def)
+      by (simp add: assm1 local.usclConc_stream_def)
   next
     case False
     have f1: "tsDom\<cdot>(tsConc s1\<cdot>s2) = tsDom\<cdot>s1 \<union> tsDom\<cdot>s2"
       apply (rule tsdom_tsconc)
       using False inf_ub lnle_def lnless_def by blast
     show ?thesis 
-      apply (simp add: usOkay_tstream_def)
-      using assm1 assm2 f1 local.usConc_stream_def usOkay_tstream_def by auto
+      apply (simp add: usclOkay_tstream_def)
+      using assm1 assm2 f1 local.usclConc_stream_def usclOkay_tstream_def by auto
   qed
 qed
 instance
   apply intro_classes
-  by (simp add: usOkay_tsconc)
+  by (simp add: usclOkay_tsconc)
 end

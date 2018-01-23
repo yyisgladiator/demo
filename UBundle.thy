@@ -18,27 +18,27 @@ section\<open>Data type\<close>
   
   
 definition ubWell :: "(channel \<rightharpoonup> ('s::uscl)) \<Rightarrow> bool" where
-"ubWell f \<equiv> \<forall>c \<in> (dom f). (usOkay c (f\<rightharpoonup>c))" 
+"ubWell f \<equiv> \<forall>c \<in> (dom f). (usclOkay c (f\<rightharpoonup>c))" 
 
 lemma ubWell_empty: "ubWell empty"
   by(simp add: ubWell_def)
 
 lemma ubWell_adm: "adm ubWell"
 proof - 
-  have "\<And>(Y :: nat \<Rightarrow> (channel \<Rightarrow> 'a option)). chain Y \<Longrightarrow> (\<forall>i. \<forall>c\<in>dom (Y i). usOkay c Y i\<rightharpoonup>c) \<longrightarrow> (\<forall>c\<in>dom (Lub Y). usOkay c Lub Y\<rightharpoonup>c)"  
+  have "\<And>(Y :: nat \<Rightarrow> (channel \<Rightarrow> 'a option)). chain Y \<Longrightarrow> (\<forall>i. \<forall>c\<in>dom (Y i). usclOkay c Y i\<rightharpoonup>c) \<longrightarrow> (\<forall>c\<in>dom (Lub Y). usclOkay c Lub Y\<rightharpoonup>c)"  
   proof -
     fix Y :: "nat \<Rightarrow> (channel \<Rightarrow> 'a option)"
     assume f0: "chain Y"
     have f1: "\<forall>i. dom (Y i) = dom (Lub Y)"
       using f0 part_dom_lub by blast
-    have f2: "\<And>c. c\<in>dom (Lub Y) \<Longrightarrow> (\<forall>i. usOkay c Y i\<rightharpoonup>c) \<longrightarrow> (usOkay c Lub Y\<rightharpoonup>c)"
+    have f2: "\<And>c. c\<in>dom (Lub Y) \<Longrightarrow> (\<forall>i. usclOkay c Y i\<rightharpoonup>c) \<longrightarrow> (usclOkay c Lub Y\<rightharpoonup>c)"
     proof - 
       fix c
       assume "c\<in>dom (Lub Y)"
-      show "(\<forall>i. usOkay c Y i\<rightharpoonup>c) \<longrightarrow> (usOkay c Lub Y\<rightharpoonup>c)"
-        using usOkay_adm adm_def by (metis (mono_tags, lifting) f0 part_the_chain part_the_lub)
+      show "(\<forall>i. usclOkay c Y i\<rightharpoonup>c) \<longrightarrow> (usclOkay c Lub Y\<rightharpoonup>c)"
+        using usclOkay_adm adm_def by (metis (mono_tags, lifting) f0 part_the_chain part_the_lub)
     qed
-    show "(\<forall>i. \<forall>c\<in>dom (Y i). usOkay c Y i\<rightharpoonup>c) \<longrightarrow> (\<forall>c\<in>dom (Lub Y). usOkay c Lub Y\<rightharpoonup>c)"
+    show "(\<forall>i. \<forall>c\<in>dom (Y i). usclOkay c Y i\<rightharpoonup>c) \<longrightarrow> (\<forall>c\<in>dom (Lub Y). usclOkay c Lub Y\<rightharpoonup>c)"
       by (simp add: f1 f2)
   qed
   then show ?thesis
@@ -80,7 +80,7 @@ abbreviation ubgetch_abbr :: "'M\<^sup>\<Omega> \<Rightarrow> channel \<Rightarr
 
 
 definition ubLen:: "'M\<^sup>\<Omega> \<Rightarrow> lnat " where
-"ubLen b \<equiv> if ubDom\<cdot>b \<noteq> {} then (LEAST ln. ln\<in>{(usLen\<cdot>(b . c)) | c. c \<in> ubDom\<cdot>b}) else \<infinity>"  
+"ubLen b \<equiv> if ubDom\<cdot>b \<noteq> {} then (LEAST ln. ln\<in>{(usclLen\<cdot>(b . c)) | c. c \<in> ubDom\<cdot>b}) else \<infinity>"  
 
 
 text {* @{text "ubShift"}  the channel-domains are merged . Thats an easy converter. For example from "tstream USB" to "stream USB" *}
@@ -220,13 +220,13 @@ lemma ubrep_less_lub2: assumes "chain S"  and "range S <| u"
   shows "the (Rep_ubundle (\<Squnion>i. S i) c) \<sqsubseteq> the (Rep_ubundle u c)"
   by (metis assms(1) assms(2) below_option_def below_refl below_ubundle_def fun_below_iff is_lub_thelub)
 
-(* if the function is ubWell then each element in the stream is usOkay  *)
+(* if the function is ubWell then each element in the stream is usclOkay  *)
 lemma [simp]: assumes "ubWell f" and "c \<in> dom f"
-  shows "usOkay c (f\<rightharpoonup>c)"
+  shows "usclOkay c (f\<rightharpoonup>c)"
   using assms(1) assms(2) ubWell_def by auto
 
-(* if each element in the stream is usOkay then the function is ubWell  *)
-lemma ubwellI: assumes "\<And> c. c \<in> dom f \<Longrightarrow> usOkay c (f\<rightharpoonup>c)"
+(* if each element in the stream is usclOkay then the function is ubWell  *)
+lemma ubwellI: assumes "\<And> c. c \<in> dom f \<Longrightarrow> usclOkay c (f\<rightharpoonup>c)"
   shows "ubWell f"
   using assms ubWell_def by blast
 
@@ -283,7 +283,7 @@ lemma ubdom_lub: assumes "chain Y" and "ubDom\<cdot>(Y i) = cs"
   using assms(1) assms(2) by auto
 
 lemma ubdom_channel_usokay[simp]: assumes "c \<in> ubDom\<cdot>ub"
-  shows "usOkay c ((Rep_ubundle ub)\<rightharpoonup>c)"
+  shows "usclOkay c ((Rep_ubundle ub)\<rightharpoonup>c)"
   using assms ubrep_well ubdom_insert ubWell_def by blast
 
 lemma ubdom_empty [simp]: "ubDom\<cdot>(Abs_ubundle empty) = {}"
@@ -466,7 +466,7 @@ proof (rule monofunI)
       by (metis a1 eq_imp_below ubLen_def ubdom_below)
   next
     case False
-      obtain y_len_set where y_len_set_def: "y_len_set = {usLen\<cdot>(y . c) | c.  c \<in> ubDom\<cdot>y}" 
+      obtain y_len_set where y_len_set_def: "y_len_set = {usclLen\<cdot>(y . c) | c.  c \<in> ubDom\<cdot>y}" 
         by simp
       have f2: "(LEAST ln. ln\<in> y_len_set) = ubLen y"
       proof -
@@ -479,7 +479,7 @@ proof (rule monofunI)
       proof - 
         obtain c where "c \<in> ubDom\<cdot>y" 
           using False a1 ubdom_below by blast
-        then have "usLen\<cdot>(y . c) \<in> y_len_set"
+        then have "usclLen\<cdot>(y . c) \<in> y_len_set"
           using y_len_set_def by blast
         then show ?thesis
           by auto
@@ -487,23 +487,23 @@ proof (rule monofunI)
       have f8: "(LEAST ln. ln\<in> y_len_set) \<in> y_len_set"
         by (meson LeastI f7 neq_emptyD)
       obtain y_ln where y_ln_def: "y_ln = (LEAST ln. ln\<in> y_len_set)" by simp
-      have f9: "\<forall> len \<in> y_len_set. \<exists> c \<in> ubDom\<cdot>y. usLen\<cdot>(y . c) = len"  
+      have f9: "\<forall> len \<in> y_len_set. \<exists> c \<in> ubDom\<cdot>y. usclLen\<cdot>(y . c) = len"  
         using y_len_set_def by blast
-      then have f10: "y_ln \<in> y_len_set \<and> (\<exists> c \<in> ubDom\<cdot>y. usLen\<cdot>(y . c) = y_ln)"
+      then have f10: "y_ln \<in> y_len_set \<and> (\<exists> c \<in> ubDom\<cdot>y. usclLen\<cdot>(y . c) = y_ln)"
         apply rule
         by (simp add: f8 y_ln_def) +
-      then obtain y_c where y_c_def: "y_c \<in> ubDom\<cdot>y \<and> usLen\<cdot>(y . y_c) = (LEAST ln. ln\<in> y_len_set)"
+      then obtain y_c where y_c_def: "y_c \<in> ubDom\<cdot>y \<and> usclLen\<cdot>(y . y_c) = (LEAST ln. ln\<in> y_len_set)"
         using y_ln_def by blast
-      have f11: "ubLen x \<sqsubseteq> usLen\<cdot>(x . y_c)"
+      have f11: "ubLen x \<sqsubseteq> usclLen\<cdot>(x . y_c)"
       proof -
-        have "\<exists>c. usLen\<cdot>(x . y_c) = usLen\<cdot>(x . c) \<and> c \<in> UBundle.ubDom\<cdot>x"
+        have "\<exists>c. usclLen\<cdot>(x . y_c) = usclLen\<cdot>(x . c) \<and> c \<in> UBundle.ubDom\<cdot>x"
           using a1 ubdom_below y_c_def by blast
         then show ?thesis
           by (simp add: False Least_le ubLen_def)
       qed
       have "x . y_c \<sqsubseteq> y . y_c"
         by (simp add: a1 monofun_cfun_arg)
-      then have "usLen\<cdot>(x . y_c) \<sqsubseteq> usLen\<cdot>(y . y_c)"
+      then have "usclLen\<cdot>(x . y_c) \<sqsubseteq> usclLen\<cdot>(y . y_c)"
         using monofun_cfun_arg by blast
       then show ?thesis
         using f11 f2 y_c_def by auto
@@ -605,12 +605,12 @@ subsection \<open>ubSetCh\<close>
 lemma ubsetch_cont [simp]: "cont (\<lambda> ub. (\<lambda> c m. ubUnion\<cdot>ub\<cdot>(Abs_ubundle [c \<mapsto> m])))"
   by simp
 
-lemma ubsetch_well [simp]: assumes "usOkay c s"
+lemma ubsetch_well [simp]: assumes "usclOkay c s"
   shows "ubWell ((Rep_ubundle b) (c \<mapsto> s))"
   by (metis
       assms dom_fun_upd fun_upd_apply insert_iff option.sel option.simps(3) ubrep_well ubWell_def)
 
-lemma ubsetch_insert: assumes "usOkay c s"
+lemma ubsetch_insert: assumes "usclOkay c s"
   shows "(ubSetCh\<cdot>b) c s = b \<uplus> Abs_ubundle [c \<mapsto> s]"
   by (simp add: ubSetCh_def)
 
@@ -655,14 +655,14 @@ lemma ubrenamech_id: assumes "c \<in> ubDom\<cdot>ub"
 
 
 (* the dom of new bundle after renaming a channel is the union between new channel and the dom of bundle without the renamed channel  *)
-lemma ubrenamech_ubdom: assumes "ch1 \<in> ubDom\<cdot>ub"  and "usOkay ch2 (ub . ch1)"
+lemma ubrenamech_ubdom: assumes "ch1 \<in> ubDom\<cdot>ub"  and "usclOkay ch2 (ub . ch1)"
   shows "ubDom\<cdot>(ubRenameCh ub ch1 ch2) = (ubDom\<cdot>ub - {ch1}) \<union> {ch2}"
   apply (simp add: ubRenameCh_def  ubSetCh_def)
   by (metis assms(2) diff_eq dom_empty dom_fun_upd insert_is_Un option.simps(3) ubrep_ubabs sup_commute ubsetch_well ubdom_ubrep_eq ubWell_empty)
 
 (* after renaming channel ch1 to ch2, old and new bundles have the same element on those channel  *)  
 lemma ubrenamech_ubgetchI1: assumes "ch1 \<in> ubDom\<cdot>ub" 
-                    and "usOkay ch2 (ub . ch1)"
+                    and "usclOkay ch2 (ub . ch1)"
   shows "(ubRenameCh ub ch1 ch2) . ch2 = ub . ch1"
   apply (simp add: ubRenameCh_def  ubSetCh_def)
   apply (subst ubunion_getchR)
@@ -670,7 +670,7 @@ lemma ubrenamech_ubgetchI1: assumes "ch1 \<in> ubDom\<cdot>ub"
   by (metis assms(1) assms(2) fun_upd_same ubrep_ubabs ubsetch_well ubgetchE ubgetch_insert ubWell_empty)
 
 (* renaming channel doesnt effect other channel in a bundle  *)           
-lemma ubrenamech_ubgetchI2: assumes "ch1 \<in> ubDom\<cdot>ub"  and "usOkay ch2 (ub . ch1)" and "ch3 \<in> ubDom\<cdot>ub" and "ch3 \<noteq> ch2" and "ch3 \<noteq> ch1"
+lemma ubrenamech_ubgetchI2: assumes "ch1 \<in> ubDom\<cdot>ub"  and "usclOkay ch2 (ub . ch1)" and "ch3 \<in> ubDom\<cdot>ub" and "ch3 \<noteq> ch2" and "ch3 \<noteq> ch1"
   shows "(ubRenameCh ub ch1 ch2) . ch3 = ub . ch3"
   apply (simp add: ubRenameCh_def ubSetCh_def)
   by (metis ComplI assms(2) assms(4) assms(5) dom_empty dom_fun_upd option.discI ubrep_ubabs singletonD ubsetch_well ubdom_ubrep_eq ubgetch_ubrestrict ubunion_getchL ubWell_empty)
@@ -732,9 +732,9 @@ subsection \<open>ubMapStream\<close>
 
 
 abbreviation fun_well_type :: "('M \<Rightarrow> 'M) \<Rightarrow> bool" where
-"fun_well_type f \<equiv> (\<forall> cs s. (usOkay cs s \<longrightarrow> usOkay cs (f s)))"
+"fun_well_type f \<equiv> (\<forall> cs s. (usclOkay cs s \<longrightarrow> usclOkay cs (f s)))"
 
-lemma ubDom_funtype: assumes "\<forall>c ts. usOkay c ts \<longrightarrow> usOkay c (f ts)"
+lemma ubDom_funtype: assumes "\<forall>c ts. usclOkay c ts \<longrightarrow> usclOkay c (f ts)"
   shows "fun_well_type f"
   using assms by blast
 
@@ -788,7 +788,7 @@ proof (rule contI2)
 qed
 
 
-lemma ubMapStream_contI2: assumes "cont f" and "\<forall>c ts. usOkay c ts \<longrightarrow> usOkay c (f ts)"
+lemma ubMapStream_contI2: assumes "cont f" and "\<forall>c ts. usclOkay c ts \<longrightarrow> usclOkay c (f ts)"
   shows "cont (ubMapStream f)"
   by (simp add: assms(1) assms(2) ubMapStream_contI1)
 
@@ -825,12 +825,12 @@ qed
   obtain cc :: "'a\<^sup>\<Omega> \<Rightarrow> 'a\<^sup>\<Omega> \<Rightarrow> channel" where
     f2: "\<forall>x0 x1. (\<exists>v2. v2 \<in> UBundle.ubDom\<cdot>x1 \<and> x1 . v2 \<notsqsubseteq> x0 . v2) = (cc x0 x1 \<in> UBundle.ubDom\<cdot>x1 \<and> x1 . cc x0 x1 \<notsqsubseteq> x0 . cc x0 x1)"
     by moura
-  have "\<forall>f u. (\<exists>c a. usOkay c (a::'a) \<and> \<not> usOkay c (f a)) \<or> UBundle.ubDom\<cdot>(ubMapStream f u) = UBundle.ubDom\<cdot>u"
+  have "\<forall>f u. (\<exists>c a. usclOkay c (a::'a) \<and> \<not> usclOkay c (f a)) \<or> UBundle.ubDom\<cdot>(ubMapStream f u) = UBundle.ubDom\<cdot>u"
     by (metis (no_types) ubMapStream_ubDom)
   then obtain cca :: "('a \<Rightarrow> 'a) \<Rightarrow> channel" and aa :: "('a \<Rightarrow> 'a) \<Rightarrow> 'a" where
-    f3: "\<forall>f u. usOkay (cca f) (aa f) \<and> \<not> usOkay (cca f) (f (aa f)) \<or> UBundle.ubDom\<cdot>(ubMapStream f u) = UBundle.ubDom\<cdot>u"
+    f3: "\<forall>f u. usclOkay (cca f) (aa f) \<and> \<not> usclOkay (cca f) (f (aa f)) \<or> UBundle.ubDom\<cdot>(ubMapStream f u) = UBundle.ubDom\<cdot>u"
     by moura
-  have f4: "\<forall>c a. \<not> usOkay c a \<or> usOkay c (f a)"
+  have f4: "\<forall>c a. \<not> usclOkay c a \<or> usclOkay c (f a)"
     using assms(2) by auto
   then have f5: "UBundle.ubDom\<cdot>(ubMapStream f (uu (ubMapStream f))) = UBundle.ubDom\<cdot>(uu (ubMapStream f))"
     using f3 by metis
@@ -838,7 +838,7 @@ qed
     using f4 f3 by metis
   have f7: "UBundle.ubDom\<cdot>(ubMapStream f (uu (ubMapStream f))) = UBundle.ubDom\<cdot>(uu (ubMapStream f))"
     using f4 f3 by metis
-  have f8: "\<forall>f u. (\<exists>c a. usOkay c (a::'a) \<and> \<not> usOkay c (f a::'a)) \<or> ubWell (\<lambda>c. (c \<in> UBundle.ubDom\<cdot>u)\<leadsto>f (u . c))"
+  have f8: "\<forall>f u. (\<exists>c a. usclOkay c (a::'a) \<and> \<not> usclOkay c (f a::'a)) \<or> ubWell (\<lambda>c. (c \<in> UBundle.ubDom\<cdot>u)\<leadsto>f (u . c))"
     using ubMapStream_well by auto
   then have f9: "ubWell (\<lambda>c. (c \<in> UBundle.ubDom\<cdot> (uu (ubMapStream f)))\<leadsto>f (uu (ubMapStream f) . c))"
     using f4 by blast
@@ -902,7 +902,7 @@ proof -
 obtain cc :: "'a\<^sup>\<Omega> \<Rightarrow> 'a\<^sup>\<Omega> \<Rightarrow> channel" where
 f1: "\<forall>x0 x1. (\<exists>v2. v2 \<in> UBundle.ubDom\<cdot>x1 \<and> x1 . v2 \<notsqsubseteq> x0 . v2) = (cc x0 x1 \<in> UBundle.ubDom\<cdot>x1 \<and> x1 . cc x0 x1 \<notsqsubseteq> x0 . cc x0 x1)"
   by moura
-  have f2: "\<forall>c a. \<not> usOkay c a \<or> usOkay c (f a)"
+  have f2: "\<forall>c a. \<not> usclOkay c a \<or> usclOkay c (f a)"
     using assms(2) by presburger
   then have f3: "cc (\<Squnion>n. ubMapStream f (v0_0 (n::nat))) (ubMapStream f (Lub v0_0)) \<notin> UBundle.ubDom\<cdot> (v0_0 (v2_1 (\<lambda>n. Rep_ubundle (ubMapStream f (v0_0 n))\<rightharpoonup>cc (\<Squnion>n. ubMapStream f (v0_0 n)) (ubMapStream f (Lub v0_0))) (\<lambda>n. f Rep_ubundle (v0_0 n)\<rightharpoonup>cc (\<Squnion>n. ubMapStream f (v0_0 n)) (ubMapStream f (Lub v0_0))))) \<or> ubMapStream f (v0_0 (v2_1 (\<lambda>n. Rep_ubundle (ubMapStream f (v0_0 n))\<rightharpoonup>cc (\<Squnion>n. ubMapStream f (v0_0 n)) (ubMapStream f (Lub v0_0))) (\<lambda>n. f Rep_ubundle (v0_0 n)\<rightharpoonup>cc (\<Squnion>n. ubMapStream f (v0_0 n)) (ubMapStream f (Lub v0_0))))) . cc (\<Squnion>n. ubMapStream f (v0_0 n)) (ubMapStream f (Lub v0_0)) = f (v0_0 (v2_1 (\<lambda>n. Rep_ubundle (ubMapStream f (v0_0 n))\<rightharpoonup>cc (\<Squnion>n. ubMapStream f (v0_0 n)) (ubMapStream f (Lub v0_0))) (\<lambda>n. f Rep_ubundle (v0_0 n)\<rightharpoonup>cc (\<Squnion>n. ubMapStream f (v0_0 n)) (ubMapStream f (Lub v0_0)))) . cc (\<Squnion>n. ubMapStream f (v0_0 n)) (ubMapStream f (Lub v0_0)))"
 using ubMapStream_ubGetCh by blast
@@ -913,10 +913,10 @@ have "\<forall>f fa. (\<exists>n. (f (n::nat)::'a) \<noteq> fa n) \<or> Lub f = 
     by meson
   have f5: "\<forall>f fa. (\<not> cont f \<or> \<not> chain fa) \<or> (f (Lub fa::'a)::'a) = (\<Squnion>n. f (fa n))"
     using cont2contlubE by auto
-  have "\<forall>f u. (\<exists>c a. usOkay c (a::'a) \<and> \<not> usOkay c (f a)) \<or> UBundle.ubDom\<cdot>(ubMapStream f u) = UBundle.ubDom\<cdot>u"
+  have "\<forall>f u. (\<exists>c a. usclOkay c (a::'a) \<and> \<not> usclOkay c (f a)) \<or> UBundle.ubDom\<cdot>(ubMapStream f u) = UBundle.ubDom\<cdot>u"
     by (metis (no_types) ubMapStream_ubDom)
   then obtain cca :: "('a \<Rightarrow> 'a) \<Rightarrow> channel" and aa :: "('a \<Rightarrow> 'a) \<Rightarrow> 'a" where
-    f6: "\<forall>f u. usOkay (cca f) (aa f) \<and> \<not> usOkay (cca f) (f (aa f)) \<or> UBundle.ubDom\<cdot>(ubMapStream f u) = UBundle.ubDom\<cdot>u"
+    f6: "\<forall>f u. usclOkay (cca f) (aa f) \<and> \<not> usclOkay (cca f) (f (aa f)) \<or> UBundle.ubDom\<cdot>(ubMapStream f u) = UBundle.ubDom\<cdot>u"
     by moura
   then have f7: "UBundle.ubDom\<cdot>(ubMapStream f (Lub v0_0)) = UBundle.ubDom\<cdot>(Lub v0_0)"
     using f2 by metis
@@ -989,13 +989,13 @@ definition ubLen_ubundle_def: "UnivClasses.ubLen \<equiv> ubLen"
 lemma ubundle_ex: "\<And>C::channel set. \<exists>x::'a\<^sup>\<Omega>. ubcl_class.ubDom\<cdot>x = C"
 proof -
   fix C::"channel set"
-  obtain set_bla::"'a set" where set_bla_def: "set_bla = {a . \<exists> c \<in> C. usOkay c a}"
+  obtain set_bla::"'a set" where set_bla_def: "set_bla = {a . \<exists> c \<in> C. usclOkay c a}"
     by simp
-  obtain ub where ub_def: "ub = (\<lambda> c. (c \<in> C) \<leadsto> (SOME a. a \<in> set_bla \<and> usOkay c a))"
+  obtain ub where ub_def: "ub = (\<lambda> c. (c \<in> C) \<leadsto> (SOME a. a \<in> set_bla \<and> usclOkay c a))"
     by simp
   have "ubWell ub"
     apply (simp add: ubWell_def)
-    by (metis (mono_tags, lifting) bla domIff mem_Collect_eq option.sel set_bla_def tfl_some ub_def)
+    by (metis (mono_tags, lifting) usclOkay_ex domIff mem_Collect_eq option.sel set_bla_def tfl_some ub_def)
   then show "\<exists>x::'a\<^sup>\<Omega>. ubcl_class.ubDom\<cdot>x = C"
     using ubDom_ubundle_def ub_def ubdom_ubrep_eq by fastforce
 qed

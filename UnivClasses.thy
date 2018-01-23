@@ -30,25 +30,25 @@ section\<open>Universal Stream\<close>
 
 (* This class is just the very basic functions required for an Bundle *)
 class uscl = cpo +
-  fixes usOkay :: "channel \<Rightarrow> 'a \<Rightarrow> bool" (* similar to "ctype" in message *)
-  fixes usLen :: "'a \<rightarrow> lnat"
+  fixes usclOkay :: "channel \<Rightarrow> 'a \<Rightarrow> bool" (* similar to "ctype" in message *)
+  fixes usclLen :: "'a \<rightarrow> lnat"
 
-  assumes usOkay_ex: "\<And>c . \<exists> e. usOkay c e"
-  (*assumes usOkay_bot: "\<And>c. usOkay c \<bottom>"    (* used for ubLeast wellformed proof *)*)
-  assumes usOkay_adm: "\<And>c. adm (usOkay c)" (* used to instanciate ubundle *)
+  assumes usclOkay_ex: "\<And>c . \<exists> e. usclOkay c e"
+  (*assumes usclOkay_bot: "\<And>c. usclOkay c \<bottom>"    (* used for ubLeast wellformed proof *)*)
+  assumes usclOkay_adm: "\<And>c. adm (usclOkay c)" (* used to instanciate ubundle *)
 begin
 end
  
 
 class uscl_pcpo = uscl + pcpo + 
-  assumes usOkay_bot: "\<And>c. usOkay c \<bottom>"    (* used for ubLeast wellformed proof *)
+  assumes usclOkay_bot: "\<And>c. usclOkay c \<bottom>"    (* used for ubLeast wellformed proof *)
 begin
 end  
 
 
 class uscl_conc = uscl_pcpo +
-  fixes usConc :: "'a \<Rightarrow> 'a \<rightarrow> 'a"
-  assumes usOkay_conc: "\<And>c. \<And>s1 s2. usOkay c s1 \<Longrightarrow> usOkay c s2 \<Longrightarrow> usOkay c (usConc s1\<cdot>s2)"
+  fixes usclConc :: "'a \<Rightarrow> 'a \<rightarrow> 'a"
+  assumes usclOkay_conc: "\<And>c. \<And>s1 s2. usclOkay c s1 \<Longrightarrow> usclOkay c s2 \<Longrightarrow> usclOkay c (usclConc s1\<cdot>s2)"
 begin
 end 
 
