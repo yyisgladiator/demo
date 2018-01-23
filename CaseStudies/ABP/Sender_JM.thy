@@ -1,5 +1,5 @@
 theory Sender_JM
-imports Sender 
+imports sdropwhile_OZ 
 
 begin
 
@@ -19,9 +19,6 @@ lemma tssnd_h_tsdropwhiletick: "tsAbs\<cdot>(tsSnd_h\<cdot>i\<cdot>(updis (ack1)
   apply (metis (no_types, hide_lams) delayfun_tslscons tsDropWhileTick.simps(2) tsSnd_h.simps(2) tsSnd_h.simps(6) tsabs_delayfun tsmlscons_bot2 tsmlscons_lscons)
   by (simp add: tsmlscons_lscons)
 
-lemma sdropwhile_all:"\<forall>x. x \<in> sdom\<cdot>(as::'a stream) \<longrightarrow> f x \<Longrightarrow> sdropwhile f\<cdot>as = \<epsilon>"
- sorry  
- 
 lemma stakewhile_sdropwhilel2:"#(stakewhile f\<cdot>x) = \<infinity> \<Longrightarrow> sdropwhile f\<cdot>x = \<epsilon>"
 proof-
  assume "#(stakewhile f\<cdot>x) = \<infinity>"
