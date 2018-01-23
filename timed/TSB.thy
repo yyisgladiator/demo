@@ -14,6 +14,7 @@ chapter {* Timed Streams *}
 
 theory TSB
 imports "../UnivClasses" "../Channel" "../inc/OptionCpo" TStream TStream_JB "../UBundle" "../UBundle_Pcpo"
+
 begin
 
 default_sort message
