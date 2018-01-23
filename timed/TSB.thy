@@ -24,31 +24,6 @@ section \<open>Datatype Definition\<close>
 (* ----------------------------------------------------------------------- *)
 
 
-instantiation tstream :: (message) uscl_pcpo
-begin
-
-definition usOkay_tstream_def: "usOkay c m \<equiv> tsDom\<cdot>m \<subseteq> ctype c"
-
-definition usLen_tstream_def: "usLen \<equiv> tslen"
-
-instance
-  apply intro_classes
-  apply(simp add: usOkay_tstream_def)
-    apply(simp add: tsDom_def)
-  apply(subst Abs_cfun_inverse2)
-     using tsdom_cont apply(simp)
-     defer
-  apply (rule admI)
-       apply(simp add: subset_cont usOkay_tstream_def)
-      apply(simp add: usOkay_tstream_def)
-   proof - 
-     fix c
-     show " \<exists>e. {u::'a. \<M> u \<in> sdom\<cdot>(Rep_tstream e)} \<subseteq> ctype c"
-       apply(rule_tac x = "bottom" in exI)
-       by(simp)
-   qed
-end
-
 
 (* ----------------------------------------------------------------------- *)
 section \<open>Definitions on TSB \<close>
@@ -120,8 +95,8 @@ definition tsbTTake_abbr_fun :: "nat \<Rightarrow> 'm tstream\<^sup>\<Omega> \<R
 "tsbTTake_abbr_fun n tb \<equiv> Abs_ubundle (\<lambda>c. (c \<in> ubDom\<cdot>tb)\<leadsto>tb  .  c \<down> n )"
 
 lemma tsbTTake_well [simp]: "ubWell (\<lambda>c. (c \<in> ubDom\<cdot>tb)\<leadsto> ((tb  .  c) \<down> n ))"
-  apply (simp add: ubWell_def usOkay_tstream_def)
-  by (metis (no_types, lifting) dual_order.trans tsttake_dom ubdom_channel_usokay ubgetch_insert usOkay_tstream_def)
+  apply (simp add: ubWell_def usclOkay_tstream_def)
+  by (metis (no_types, lifting) dual_order.trans tsttake_dom ubdom_channel_usokay ubgetch_insert usclOkay_tstream_def)
                        
 lemma tsbttake_abbr_dom [simp]: "ubDom\<cdot>(tsbTTake_abbr i tb) = ubDom\<cdot>tb"
 proof -
@@ -251,8 +226,8 @@ proof (cases "n \<noteq> \<infinity>")
   obtain j where f2: "n = Fin j"
   by (metis f1 infI neq_iff)
   thus ?thesis
-  apply (simp add: ubWell_def tsTakeL_def usOkay_tstream_def)
-    by (metis (no_types, lifting) dual_order.trans tsttake_dom ubdom_channel_usokay ubgetch_insert usOkay_tstream_def)  
+  apply (simp add: ubWell_def tsTakeL_def usclOkay_tstream_def)
+    by (metis (no_types, lifting) dual_order.trans tsttake_dom ubdom_channel_usokay ubgetch_insert usclOkay_tstream_def)  
 next
   case False
   then show ?thesis

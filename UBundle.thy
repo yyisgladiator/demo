@@ -983,10 +983,10 @@ section\<open>Instantiation\<close>
 
 instantiation ubundle :: (uscl) ubcl
 begin
-definition ubDom_ubundle_def: "UnivClasses.ubDom \<equiv> ubDom"
-definition ubLen_ubundle_def: "UnivClasses.ubLen \<equiv> ubLen"
+definition ubclDom_ubundle_def: "ubclDom \<equiv> ubDom"
+definition ubclLen_ubundle_def: "ubclLen \<equiv> ubLen"
 
-lemma ubundle_ex: "\<And>C::channel set. \<exists>x::'a\<^sup>\<Omega>. ubcl_class.ubDom\<cdot>x = C"
+lemma ubundle_ex: "\<And>C::channel set. \<exists>x::'a\<^sup>\<Omega>. ubclDom\<cdot>x = C"
 proof -
   fix C::"channel set"
   obtain set_bla::"'a set" where set_bla_def: "set_bla = {a . \<exists> c \<in> C. usclOkay c a}"
@@ -996,16 +996,16 @@ proof -
   have "ubWell ub"
     apply (simp add: ubWell_def)
     by (metis (mono_tags, lifting) usclOkay_ex domIff mem_Collect_eq option.sel set_bla_def tfl_some ub_def)
-  then show "\<exists>x::'a\<^sup>\<Omega>. ubcl_class.ubDom\<cdot>x = C"
-    using ubDom_ubundle_def ub_def ubdom_ubrep_eq by fastforce
+  then show "\<exists>x::'a\<^sup>\<Omega>. ubclDom\<cdot>x = C"
+    using ubclDom_ubundle_def ub_def ubdom_ubrep_eq by fastforce
 qed
 
 instance
   apply intro_classes
-     apply (simp add: ubDom_ubundle_def ubdom_below)
+     apply (simp add: ubclDom_ubundle_def ubdom_below)
     apply (simp add: ubundle_ex)
-   apply (simp add: ubLen_ubundle_def ublen_monofun)
-  by (metis (mono_tags) domIff empty_iff equalityI subsetI ubLen_def ubLen_ubundle_def ubWell_empty ubdom_ubrep_eq)
+   apply (simp add: ubclLen_ubundle_def ublen_monofun)
+  by (metis (mono_tags) domIff empty_iff equalityI subsetI ubLen_def ubclLen_ubundle_def ubWell_empty ubdom_ubrep_eq)
 
 end
 

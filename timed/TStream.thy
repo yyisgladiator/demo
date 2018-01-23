@@ -5324,3 +5324,4 @@ instance
   apply intro_classes
   by (simp add: usclOkay_tsconc)
 end
+end
