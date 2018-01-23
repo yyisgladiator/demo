@@ -16,7 +16,7 @@ section\<open>Data type\<close>
 (****************************************************) 
   
 definition uspecWell :: "'m set \<Rightarrow> bool" where
-"uspecWell S \<equiv> \<exists>In Out. \<forall> f\<in>S . (ufDom\<cdot>f = In \<and> ufRan\<cdot>f=Out) "
+"uspecWell S \<equiv> \<exists>In Out. \<forall> f\<in>S . (ufclDom\<cdot>f = In \<and> ufclRan\<cdot>f=Out) "
 (* define a Set of 'm SPF's. all SPS in a set must have the same In/Out channels *)
 
 lemma uspecwell_adm: "adm (\<lambda>x::'m set rev. x \<in> {S::'m set rev. uspecWell (inv Rev S)})"
@@ -65,10 +65,10 @@ abbreviation Abs_rev_uspec:: "'m set \<Rightarrow> 'm uspec" where
 
 
 definition uspecDom :: "'m uspec \<Rightarrow> channel set" where
-"uspecDom S = ufDom\<cdot>(SOME f. f\<in>  ((inv Rev) (Rep_uspec S)))"
+"uspecDom S = ufclDom\<cdot>(SOME f. f\<in>  ((inv Rev) (Rep_uspec S)))"
 
 definition uspecRan :: "'m uspec \<Rightarrow> channel set" where
-"uspecRan S = ufRan\<cdot>(SOME f. f\<in> ((inv Rev) (Rep_uspec S)))"
+"uspecRan S = ufclRan\<cdot>(SOME f. f\<in> ((inv Rev) (Rep_uspec S)))"
 
 
 (****************************************************)
@@ -171,19 +171,19 @@ proof -
 qed
 
 (* all element in uspec have the same dom  *)
-lemma uspec_allDom: "\<exists>In. \<forall>f\<in>inv Rev (Rep_uspec S1). ufDom\<cdot>f=In"
+lemma uspec_allDom: "\<exists>In. \<forall>f\<in>inv Rev (Rep_uspec S1). ufclDom\<cdot>f=In"
   using uspecWell_def by fastforce
 
 (* all element in uspec have the same ran  *)
-lemma uspec_allRan: "\<exists>Out. \<forall>f\<in>inv Rev (Rep_uspec S1). ufRan\<cdot>f=Out"
+lemma uspec_allRan: "\<exists>Out. \<forall>f\<in>inv Rev (Rep_uspec S1). ufclRan\<cdot>f=Out"
   using uspecWell_def by fastforce
 
 (* *)
-lemma uspec_dom_eq: assumes "f \<in> (inv Rev) (Rep_uspec S)" shows "ufDom\<cdot>f = uspecDom S"
+lemma uspec_dom_eq: assumes "f \<in> (inv Rev) (Rep_uspec S)" shows "ufclDom\<cdot>f = uspecDom S"
   by (metis (full_types) assms empty_iff some_in_eq uspec_allDom uspecDom_def)
 
 (* *)
-lemma uspec_ran_eq: assumes "f \<in> (inv Rev) (Rep_uspec S)" shows "ufRan\<cdot>f = uspecRan S"
+lemma uspec_ran_eq: assumes "f \<in> (inv Rev) (Rep_uspec S)" shows "ufclRan\<cdot>f = uspecRan S"
   by (metis (mono_tags, lifting) Quotient_rel_rep Quotient_to_Domainp Quotient_uspec 
       assms some_eq_ex uspec.domain_eq uspec.pcr_cr_eq uspecRan_def uspecWell_def)
 

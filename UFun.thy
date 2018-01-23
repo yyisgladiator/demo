@@ -24,19 +24,19 @@ definition ufWell:: "('in \<rightarrow> 'out option) \<Rightarrow> bool" where
 
 lemma ufWell_exists: "\<exists>x::('in \<rightarrow> 'out option). ufWell x"
 proof - 
-  obtain inf_ub:: "'out"  where inf_ub_ublen: "ubclLen inf_ub = \<infinity>"
-    using ublen_inf_ex by auto
+  obtain inf_ub:: "'out"  where inf_ub_ubcllen: "ubclLen inf_ub = \<infinity>"
+    using ubcllen_inf_ex by auto
   obtain ufun1:: "'in \<Rightarrow> 'out option" where ufun1_def: "ufun1 = (\<lambda> f. if ubclDom\<cdot>f = {} then  Some inf_ub else None)"
     by simp
   have f1: "cont ufun1"
     apply(rule contI2)
-     apply (simp add: monofun_def ubdom_fix ufun1_def)
+     apply (simp add: monofun_def ubcldom_fix ufun1_def)
     apply auto
   proof -
     fix Y :: "nat \<Rightarrow> 'in"
     assume "chain Y"
     then have "\<And>n. ubclDom\<cdot>(Y n) = ubclDom\<cdot>(Lub Y)"
-      using is_ub_thelub ubdom_fix by blast
+      using is_ub_thelub ubcldom_fix by blast
     then show "ufun1 (\<Squnion>n. Y n) \<sqsubseteq> (\<Squnion>n. ufun1 (Y n))"
       using ufun1_def by auto
   qed
@@ -72,11 +72,11 @@ proof (rule admI)
   hence f4: "\<forall>i. \<forall>j\<ge>i. (\<forall>b::'a. b \<in> dom (Rep_cfun (\<Squnion>i. Y i)) \<longrightarrow> (the ((Y i)\<cdot>b)) \<sqsubseteq> (the ((Y j)\<cdot>b)))"
     by (metis f2 chY domIff monofun_cfun_fun option.collapse po_class.chain_mono some_below2)
   hence f4: "\<forall>i. \<forall>j\<ge>i. (\<forall>b::'a. b \<in> dom (Rep_cfun (\<Squnion>i. Y i)) \<longrightarrow> ubclDom\<cdot>(the ((Y i)\<cdot>b)) = ubclDom\<cdot>(the ((Y j)\<cdot>b)))"
-    by (simp add: ubdom_fix)
+    by (simp add: ubcldom_fix)
   then obtain Out where f6: "\<forall>i::nat. (\<forall>b::'a. b \<in> dom (Rep_cfun (\<Squnion>i. Y i)) \<longrightarrow> ubclDom\<cdot>(the ((Y i)\<cdot>b)) = Out)"
     by (metis f01 le_cases)
   hence f7: "(\<forall>b::'a. b \<in> dom (Rep_cfun (\<Squnion>i. Y i)) \<longrightarrow> ubclDom\<cdot>(the ((\<Squnion>i. Y i)\<cdot>b)) = Out)"
-    by (metis cfun_below_iff chY domIff f2 is_ub_thelub option.collapse some_below2 ubdom_fix)
+    by (metis cfun_below_iff chY domIff f2 is_ub_thelub option.collapse some_below2 ubcldom_fix)
   have f8: "\<forall>b. b \<in> ran (Rep_cfun (\<Squnion>i. Y i)) \<longrightarrow> ubclDom\<cdot>b = Out"
   proof (rule, rule)
     fix b :: 'b
@@ -161,7 +161,7 @@ proof (rule admI)
     obtain c where c_def: "Rep_cufun (Y i2) b = Some c"
       by (metis as3 below_cfun_def below_ufun_def chY domD domI is_ub_thelub part_dom_eq)
     show "ubclLen b \<le> ubclLen y"
-      by (metis (no_types, lifting) ublen_mono as2 as3 below_ufun_def c_def cfun_below_iff chY domI is_ub_thelub 
+      by (metis (no_types, lifting) ubcllen_mono as2 as3 below_ufun_def c_def cfun_below_iff chY domI is_ub_thelub 
           lnle_def monofun_def option.sel some_below2 trans_lnle)
   qed
 qed
@@ -173,19 +173,19 @@ lemma ufIsWeak_adm2: "adm (\<lambda>f. ufIsWeak f)"
 (* there is a ufun which has ufIsStrong property *)
 lemma ufistrongk_exist: "\<exists>x::('in,'out) ufun. ufIsStrong x"
 proof -
-   obtain inf_ub:: "'out"  where inf_ub_ublen: "ubclLen inf_ub = \<infinity>"
-      using ublen_inf_ex by auto
+   obtain inf_ub:: "'out"  where inf_ub_ubcllen: "ubclLen inf_ub = \<infinity>"
+      using ubcllen_inf_ex by auto
     obtain ufun1:: "'in \<Rightarrow> 'out option" where ufun1_def: "ufun1 = (\<lambda> f. if ubclDom\<cdot>f = {} then  Some inf_ub else None)"
       by simp
     have f1: "cont ufun1"
       apply(rule contI2)
-       apply (simp add: ufun1_def monofunI ubdom_fix)
+       apply (simp add: ufun1_def monofunI ubcldom_fix)
       apply auto
     proof -
       fix Y :: "nat \<Rightarrow> 'in"
       assume "chain Y"
       then have "\<And>n. ubclDom\<cdot>(Y n) = ubclDom\<cdot>(Lub Y)"
-        by (meson is_ub_thelub ubdom_fix)
+        by (meson is_ub_thelub ubcldom_fix)
       then show "ufun1 (\<Squnion>n. Y n) \<sqsubseteq> (\<Squnion>n. ufun1 (Y n))"
         by (simp add: ufun1_def)
     qed
@@ -214,7 +214,7 @@ proof -
       have f41: "ufun1 b =  Some inf_ub"
         by (metis assm41 option.distinct(1) ufun1_def)
       then show "lnsuc\<cdot>(ubclLen b) \<le> ubclLen y"
-        by (simp add: assm41 inf_ub_ublen)
+        by (simp add: assm41 inf_ub_ubcllen)
       qed
     then show "\<exists>x::('in,'out) ufun. ufIsStrong x"
       by (rule_tac x = "(Abs_ufun (Abs_cfun ufun1))" in exI)
@@ -248,7 +248,7 @@ proof  (rule admI)
     have f3: "c \<sqsubseteq> y"
       by (metis as3 below_USPFw_def below_ufun_def c_def chY is_ub_thelub monofun_cfun_fun some_below2)
     have f4: "ubclLen c \<le> ubclLen y"
-      using ublen_mono f3 lnle_def monofun_def by blast
+      using ubcllen_mono f3 lnle_def monofun_def by blast
     show "lnsuc\<cdot>(ubclLen b) \<le> ubclLen y"
       using f1 f4 by auto
   qed
@@ -315,7 +315,7 @@ subsection \<open>ufun_definition\<close>
 text{*  introduction rules for mono proofs *}
 lemma ufun_monoI2 [simp]: assumes "\<And> x y. ubclDom\<cdot>x = In \<Longrightarrow> x \<sqsubseteq> y \<Longrightarrow> (g x) \<sqsubseteq> (g y)"
   shows "monofun (\<lambda>b. (ubclDom\<cdot>b = In)\<leadsto>g b)"
-  by (simp add: assms monofunI some_below ubdom_fix)
+  by (simp add: assms monofunI some_below ubcldom_fix)
  
 text{* introduction rules for cont proofs *}
 lemma ufun_contI [simp]: assumes "\<And> x y. ubclDom\<cdot>x = In \<Longrightarrow> x \<sqsubseteq> y \<Longrightarrow> (g x) \<sqsubseteq> (g y)"
@@ -328,7 +328,7 @@ proof -
   fix Y::"nat \<Rightarrow> 'a"
   assume chain_Y: "chain Y"
   have f1: "\<And> i. ubclDom\<cdot>(\<Squnion>i::nat. Y i) = ubclDom\<cdot>(Y i)"
-    using chain_Y is_ub_thelub ubdom_fix by blast
+    using chain_Y is_ub_thelub ubcldom_fix by blast
   show "(ubclDom\<cdot>(\<Squnion>i::nat. Y i) = In)\<leadsto>g (\<Squnion>i::nat. Y i) \<sqsubseteq> (\<Squnion>i::nat. (ubclDom\<cdot>(Y i) = In)\<leadsto>g (Y i))"
   proof (cases "ubclDom\<cdot>(\<Squnion>i::nat. Y i) = In")
     case True
@@ -369,7 +369,7 @@ proof(rule contI2)
     fix Y::"nat \<Rightarrow> 'a"
     assume chain_Y: "chain Y"
     have f1: "\<And> i. ubclDom\<cdot>(\<Squnion>i::nat. Y i) = ubclDom\<cdot>(Y i)"
-      using chain_Y is_ub_thelub ubdom_fix by blast
+      using chain_Y is_ub_thelub ubcldom_fix by blast
     show "(ubclDom\<cdot>(\<Squnion>i::nat. Y i) = In)\<leadsto>g (\<Squnion>i::nat. Y i) \<sqsubseteq> (\<Squnion>i::nat. (ubclDom\<cdot>(Y i) = In)\<leadsto>g (Y i))"
     proof (cases "(ubclDom\<cdot>(\<Squnion>i::nat. Y i) = In)")
       case True
@@ -432,7 +432,7 @@ lemma ufun_below_ran: assumes "a\<sqsubseteq>b" and "x \<in> ran (Rep_cufun b)" 
     have "dom (Rep_cufun a) = dom (Rep_cufun b) " 
       by (meson assms(1) below_cfun_def below_ufun_def part_dom_eq)
     thus ?thesis
-      by (metis (no_types, lifting) rep_ufun_well assms(1) assms(3) below_ufun_def cfun_below_iff domD domI ranI some_below2 sx_def ubdom_fix ufWell_def)
+      by (metis (no_types, lifting) rep_ufun_well assms(1) assms(3) below_ufun_def cfun_below_iff domD domI ranI some_below2 sx_def ubcldom_fix ufWell_def)
 qed
 
 (*   *)
@@ -448,7 +448,7 @@ lemma ufun_arg_eqI: assumes "(a = b)"
 (* empty function is not ufWell  *)
 lemma map_not_ufun [simp]: "\<not>(ufWell (Abs_cfun empty))"
   apply (simp add: ufWell_def)
-  using ubdom_ex by auto
+  using ubcldom_ex by auto
 
 (* there is at least one element in a ufun dom *)
 lemma ufdom_not_empty [simp]: 
@@ -465,7 +465,7 @@ lemma if_then_mono:  assumes "monofun g"
 proof(rule monofunI)
   fix x y :: "'a"
   assume "x\<sqsubseteq>y"
-  hence "ubclDom\<cdot>x = ubclDom\<cdot>y" using ubdom_fix by blast 
+  hence "ubclDom\<cdot>x = ubclDom\<cdot>y" using ubcldom_fix by blast 
   thus "(ubclDom\<cdot>x = In)\<leadsto>g x \<sqsubseteq> (ubclDom\<cdot>y = In)\<leadsto>g y" 
     apply auto
     using \<open>(x::'a) \<sqsubseteq> (y::'a)\<close> assms monofun_def some_below by blast
@@ -524,8 +524,8 @@ lemma ufdom_2ufundom [simp]: assumes "(Rep_cufun S) a = Some b"
 
 (*neu*)
 (* tspf_least_in_dom *)
-lemma ufun_least_in_dom: "(ubLeast (ufDom\<cdot>f)) \<in> dom (Rep_cufun f)"
-  by (metis domD rep_ufun_well ubdom_least_cs ufWell_def ufdom_2ufundom)
+lemma ufun_least_in_dom: "(ubclLeast (ufDom\<cdot>f)) \<in> dom (Rep_cufun f)"
+  by (metis domD rep_ufun_well ubcldom_least_cs ufWell_def ufdom_2ufundom)
 
 (* if the function has the same dom then they also have the same dom after rep is applied  *)
 lemma ufdom_2_dom_ctufun: assumes "ufDom\<cdot>f = ufDom\<cdot>g"
@@ -553,7 +553,7 @@ lemma ufun_ufdom_abs: assumes "cont (\<lambda> x. (ubclDom\<cdot>x = cs ) \<lead
   shows "ufDom\<cdot>(Abs_cufun (\<lambda> x. (ubclDom\<cdot>x = cs ) \<leadsto> f(x))) = cs" 
   apply(simp add: assms ufDom_def)
   apply (simp add: domIff)
-  by (meson someI_ex ubdom_ex)
+  by (meson someI_ex ubcldom_ex)
 
 lemma ufun_eqI: assumes "ufDom\<cdot>f = ufDom\<cdot>g"
           and "\<And>x. (ubclDom\<cdot>x = ufDom\<cdot>f \<Longrightarrow> (Rep_cufun f)\<rightharpoonup>x = (Rep_cufun g)\<rightharpoonup>x)"
@@ -605,21 +605,21 @@ lemma ufran_lub_eq: assumes "chain Y"
   using assms is_ub_thelub ufran_below by blast
 
 (*   *)
-lemma ufran_2_ubdom [simp]: assumes "(Rep_cufun F) a = Some b"
+lemma ufran_2_ubcldom [simp]: assumes "(Rep_cufun F) a = Some b"
   shows "ufRan\<cdot>F = ubclDom\<cdot>b"
     by (metis (no_types, lifting) Abs_cfun_inverse2 assms ranI someI_ex ufRan_def 
             ufun_ran2ufundom ufran_cont)
 
 (*neu*)
 (*tspfran_least*)
-lemma ufran_least: "ufRan\<cdot>f = ubclDom\<cdot>(f\<rightleftharpoons> (ubLeast (ufDom\<cdot>f)))"
+lemma ufran_least: "ufRan\<cdot>f = ubclDom\<cdot>(f\<rightleftharpoons> (ubclLeast (ufDom\<cdot>f)))"
   apply (simp add: ufRan_def)
-  by (metis domIff option.collapse ufran_2_ubdom ufran_insert ufun_least_in_dom)
+  by (metis domIff option.collapse ufran_2_ubcldom ufran_insert ufun_least_in_dom)
 
 (*   *)
-lemma ufran_2_ubdom2: assumes "ubclDom\<cdot>tb = ufDom\<cdot>f"
+lemma ufran_2_ubcldom2: assumes "ubclDom\<cdot>tb = ufDom\<cdot>f"
   shows "ubclDom\<cdot>((Rep_cufun f)\<rightharpoonup>tb) = ufRan\<cdot>f"
-  by (metis assms domIff option.exhaust_sel rep_ufun_well ufWell_def ufdom_2ufundom ufdom_not_empty ufran_2_ubdom)
+  by (metis assms domIff option.exhaust_sel rep_ufun_well ufWell_def ufdom_2ufundom ufdom_not_empty ufran_2_ubcldom)
 
 
 
@@ -644,14 +644,14 @@ section\<open>Instantiation\<close>
 instantiation ufun :: (ubcl, ubcl) ufuncl
 begin
 
-definition ufDom_ufun_def: "UnivClasses.ufDom \<equiv> ufDom"
+definition ufclDom_ufun_def: "ufclDom \<equiv> ufDom"
 
-definition ufRan_ufun_def: "UnivClasses.ufRan \<equiv> ufRan"
+definition ufclRan_ufun_def: "ufclRan \<equiv> ufRan"
 
 instance
   apply intro_classes
-  apply (simp add: ufDom_ufun_def ufdom_below_eq)
-  by (simp add: ufRan_ufun_def ufran_below)
+  apply (simp add: ufclDom_ufun_def ufdom_below_eq)
+  by (simp add: ufclRan_ufun_def ufran_below)
 end
 
 end

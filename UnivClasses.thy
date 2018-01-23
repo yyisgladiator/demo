@@ -34,14 +34,14 @@ class uscl = cpo +
   fixes usclLen :: "'a \<rightarrow> lnat"
 
   assumes usclOkay_ex: "\<And>c . \<exists> e. usclOkay c e"
-  (*assumes usclOkay_bot: "\<And>c. usclOkay c \<bottom>"    (* used for ubLeast wellformed proof *)*)
+  (*assumes usclOkay_bot: "\<And>c. usclOkay c \<bottom>"    (* used for ubclLeast wellformed proof *)*)
   assumes usclOkay_adm: "\<And>c. adm (usclOkay c)" (* used to instanciate ubundle *)
 begin
 end
  
 
 class uscl_pcpo = uscl + pcpo + 
-  assumes usclOkay_bot: "\<And>c. usclOkay c \<bottom>"    (* used for ubLeast wellformed proof *)
+  assumes usclOkay_bot: "\<And>c. usclOkay c \<bottom>"    (* used for ubclLeast wellformed proof *)
 begin
 end  
 
@@ -65,40 +65,40 @@ class ubcl = cpo +
   fixes ubclDom :: "'a \<rightarrow> channel set"
   fixes ubclLen :: "'a \<Rightarrow> lnat"  (* Debatable *)
 
-  assumes ubdom_fix: "\<And> x y. x\<sqsubseteq>y \<Longrightarrow> ubclDom\<cdot>x = ubclDom\<cdot>y"
-  assumes ubdom_ex: "\<And>C. \<exists>x. ubclDom\<cdot>x = C"
+  assumes ubcldom_fix: "\<And> x y. x\<sqsubseteq>y \<Longrightarrow> ubclDom\<cdot>x = ubclDom\<cdot>y"
+  assumes ubcldom_ex: "\<And>C. \<exists>x. ubclDom\<cdot>x = C"
     
-  assumes ublen_mono: "monofun ubclLen"
-  assumes ublen_inf_ex: "\<exists>ub. ubclLen ub = \<infinity>"
+  assumes ubcllen_mono: "monofun ubclLen"
+  assumes ubcllen_inf_ex: "\<exists>ub. ubclLen ub = \<infinity>"
 begin
 end
 
 class ubcl_comp = ubcl +
-  fixes ubLeast :: "channel set \<Rightarrow> 'a"
-  fixes ubUnion :: "'a \<rightarrow> 'a \<rightarrow> 'a"
-  fixes ubRestrict :: "channel set \<Rightarrow> 'a \<rightarrow> 'a"
+  fixes ubclLeast :: "channel set \<Rightarrow> 'a"
+  fixes ubclUnion :: "'a \<rightarrow> 'a \<rightarrow> 'a"
+  fixes ubclRestrict :: "channel set \<Rightarrow> 'a \<rightarrow> 'a"
   
-  assumes ubunion_dom: "ubclDom\<cdot>(ubUnion\<cdot>f1\<cdot>f2) = ubclDom\<cdot>f1 \<union> ubclDom\<cdot>f2"
-  assumes ubunion_restrict: "ubRestrict cs\<cdot>(ubUnion\<cdot>f1\<cdot>f2) = ubUnion\<cdot>(ubRestrict cs\<cdot>f1)\<cdot>(ubRestrict cs\<cdot>f2)" 
-  assumes ubrestrict_dom: "ubclDom\<cdot>(ubRestrict cs\<cdot>b) = ubclDom\<cdot>b \<inter> cs"  
+  assumes ubclunion_dom: "ubclDom\<cdot>(ubclUnion\<cdot>f1\<cdot>f2) = ubclDom\<cdot>f1 \<union> ubclDom\<cdot>f2"
+  assumes ubclunion_restrict: "ubclRestrict cs\<cdot>(ubclUnion\<cdot>f1\<cdot>f2) = ubclUnion\<cdot>(ubclRestrict cs\<cdot>f1)\<cdot>(ubclRestrict cs\<cdot>f2)" 
+  assumes ubclrestrict_dom: "ubclDom\<cdot>(ubclRestrict cs\<cdot>b) = ubclDom\<cdot>b \<inter> cs"  
     
   (* we need this assm to proof the equality between ufComp and ufParComp *)
-  assumes ubunion_restrict_R: "(ubclDom\<cdot>y) \<inter> cs = {} \<Longrightarrow> ubRestrict cs\<cdot>(ubUnion\<cdot>x\<cdot>y) = ubRestrict cs\<cdot>x"
+  assumes ubclunion_restrict_R: "(ubclDom\<cdot>y) \<inter> cs = {} \<Longrightarrow> ubclRestrict cs\<cdot>(ubclUnion\<cdot>x\<cdot>y) = ubclRestrict cs\<cdot>x"
   (* we need this assm to proof the equality between ufComp and ufSerComp *)
-  assumes ubunion_restrict2 :"ubRestrict (ubclDom\<cdot>y)\<cdot>(ubUnion\<cdot>x\<cdot>y) = y"
-  assumes ubrestrict_dom_id: "ubRestrict (ubclDom\<cdot>x)\<cdot>x = x"
-  assumes ubrestrict_twice: "ubRestrict cs2\<cdot>(ubRestrict cs1\<cdot>ub) = ubRestrict (cs1\<inter>cs2)\<cdot>ub"  
+  assumes ubclunion_restrict2 :"ubclRestrict (ubclDom\<cdot>y)\<cdot>(ubclUnion\<cdot>x\<cdot>y) = y"
+  assumes ubclrestrict_dom_id: "ubclRestrict (ubclDom\<cdot>x)\<cdot>x = x"
+  assumes ubclrestrict_twice: "ubclRestrict cs2\<cdot>(ubclRestrict cs1\<cdot>ub) = ubclRestrict (cs1\<inter>cs2)\<cdot>ub"  
   
-  assumes ubdom_least: "\<And> x. ubLeast (ubclDom\<cdot>x)\<sqsubseteq>x"
-  assumes ubdom_least_cs: "\<And> cs. ubclDom\<cdot>(ubLeast cs) = cs"
+  assumes ubcldom_least: "\<And> x. ubclLeast (ubclDom\<cdot>x)\<sqsubseteq>x"
+  assumes ubcldom_least_cs: "\<And> cs. ubclDom\<cdot>(ubclLeast cs) = cs"
   
-  assumes ubunion_ubdom: "ubclDom\<cdot>(ubUnion\<cdot>f1\<cdot>f2) = ubclDom\<cdot>f1 \<union> ubclDom\<cdot>f2"
-  assumes ubunion_ubrestrict: "ubRestrict cs\<cdot>(ubUnion\<cdot>f1\<cdot>f2) = ubUnion\<cdot>(ubRestrict cs\<cdot>f1)\<cdot>(ubRestrict cs\<cdot>f2)" 
-  assumes ubrestrict_ubdom: "ubclDom\<cdot>(ubRestrict cs\<cdot>b) = ubclDom\<cdot>b \<inter> cs"
+  assumes ubclunion_ubcldom: "ubclDom\<cdot>(ubclUnion\<cdot>f1\<cdot>f2) = ubclDom\<cdot>f1 \<union> ubclDom\<cdot>f2"
+  assumes ubclunion_ubclrestrict: "ubclRestrict cs\<cdot>(ubclUnion\<cdot>f1\<cdot>f2) = ubclUnion\<cdot>(ubclRestrict cs\<cdot>f1)\<cdot>(ubclRestrict cs\<cdot>f2)" 
+  assumes ubclrestrict_ubcldom: "ubclDom\<cdot>(ubclRestrict cs\<cdot>b) = ubclDom\<cdot>b \<inter> cs"
 
-  assumes ubunion_asso:"ubclDom\<cdot>f1 \<inter> ubclDom\<cdot>f2 = {} \<and> ubclDom\<cdot>f2 \<inter> ubclDom\<cdot>f3 = {} \<and> ubclDom\<cdot>f1 \<inter> ubclDom\<cdot>f3 = {} \<longrightarrow> ubUnion\<cdot>(ubUnion\<cdot>f1\<cdot>f2)\<cdot>f3 = ubUnion\<cdot>f1\<cdot>(ubUnion\<cdot>f2\<cdot>f3)"
-  assumes ubunion_commu: "ubclDom\<cdot>f1 \<inter> ubclDom\<cdot>f2 = {} \<longrightarrow> ubUnion\<cdot>f1\<cdot>f2 = ubUnion\<cdot>f2\<cdot>f1"
-  assumes ubunion_test: "(ubRestrict cs2\<cdot>(ubRestrict cs1\<cdot>ub)) = (ubRestrict (cs1\<inter>cs2)\<cdot>ub)"
+  assumes ubclunion_asso:"ubclDom\<cdot>f1 \<inter> ubclDom\<cdot>f2 = {} \<and> ubclDom\<cdot>f2 \<inter> ubclDom\<cdot>f3 = {} \<and> ubclDom\<cdot>f1 \<inter> ubclDom\<cdot>f3 = {} \<longrightarrow> ubclUnion\<cdot>(ubclUnion\<cdot>f1\<cdot>f2)\<cdot>f3 = ubclUnion\<cdot>f1\<cdot>(ubclUnion\<cdot>f2\<cdot>f3)"
+  assumes ubclunion_commu: "ubclDom\<cdot>f1 \<inter> ubclDom\<cdot>f2 = {} \<longrightarrow> ubclUnion\<cdot>f1\<cdot>f2 = ubclUnion\<cdot>f2\<cdot>f1"
+  assumes ubclunion_test: "(ubclRestrict cs2\<cdot>(ubclRestrict cs1\<cdot>ub)) = (ubclRestrict (cs1\<inter>cs2)\<cdot>ub)"
 begin
 end  
   
@@ -110,11 +110,11 @@ section\<open>Universal Stream Processing Function\<close>
 
 (* First a general class for USPF/USPFw/USPFs *)
 class ufuncl = cpo +
-  fixes ufDom :: "'a \<rightarrow> channel set"
-  fixes ufRan :: "'a \<rightarrow> channel set"
+  fixes ufclDom :: "'a \<rightarrow> channel set"
+  fixes ufclRan :: "'a \<rightarrow> channel set"
 
-  assumes ufDom_fix: "\<And>x y. x\<sqsubseteq>y \<Longrightarrow> ufDom\<cdot>x = ufDom\<cdot>y" 
-  assumes ufRan_fix: "\<And>x y. x\<sqsubseteq>y \<Longrightarrow> ufRan\<cdot>x = ufRan\<cdot>y" 
+  assumes ufclDom_fix: "\<And>x y. x\<sqsubseteq>y \<Longrightarrow> ufclDom\<cdot>x = ufclDom\<cdot>y" 
+  assumes ufclRan_fix: "\<And>x y. x\<sqsubseteq>y \<Longrightarrow> ufclRan\<cdot>x = ufclRan\<cdot>y" 
 begin
 end
 

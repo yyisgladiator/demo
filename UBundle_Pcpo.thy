@@ -215,25 +215,25 @@ section\<open>Instantiation\<close>
 
 instantiation ubundle :: (uscl_pcpo) ubcl_comp
 begin
-definition ubLeast_ubundle_def: "UnivClasses.ubLeast \<equiv> ubLeast"
+definition ubclLeast_ubundle_def: "ubclLeast \<equiv> ubLeast"
 
-definition ubUnion_ubundle_def: "UnivClasses.ubUnion \<equiv> ubUnion"
+definition ubclUnion_ubundle_def: "ubclUnion \<equiv> ubUnion"
 
-definition ubRestrict_ubundle_def: "UnivClasses.ubRestrict \<equiv> ubRestrict"
+definition ubclRestrict_ubundle_def: "ubclRestrict \<equiv> ubRestrict"
 
 instance
   apply intro_classes
-          apply (simp add: ubclDom_ubundle_def ubUnion_ubundle_def)
-         apply (simp add: ubRestrict_ubundle_def ubUnion_ubundle_def ubunion_ubrestrict3)
-        apply (simp add: ubclDom_ubundle_def ubRestrict_ubundle_def)
-       apply (simp add: UBundle_Pcpo.ubUnion_ubundle_def ubclDom_ubundle_def ubRestrict_ubundle_def)
-      apply (simp add: UBundle_Pcpo.ubRestrict_ubundle_def UBundle_Pcpo.ubUnion_ubundle_def ubclDom_ubundle_def)
-     apply (simp add: ubclDom_ubundle_def ubRestrict_ubundle_def)
-    apply (simp add: ubRestrict_ubundle_def)
-   apply (simp add: ubclDom_ubundle_def ubLeast_ubundle_def)
-  apply (simp add: ubclDom_ubundle_def ubLeast_ubundle_def)
-   apply (simp add: UBundle_Pcpo.ubUnion_ubundle_def ubunion_associative)
-  by (metis ubclDom_ubundle_def ubUnion_ubundle_def ubunion_commutative)
+          apply (simp add: ubclDom_ubundle_def ubclUnion_ubundle_def)
+         apply (simp add: ubclRestrict_ubundle_def ubclUnion_ubundle_def ubunion_ubrestrict3)
+        apply (simp add: ubclDom_ubundle_def ubclRestrict_ubundle_def)
+       apply (simp add: UBundle_Pcpo.ubclUnion_ubundle_def ubclDom_ubundle_def ubclRestrict_ubundle_def)
+      apply (simp add: UBundle_Pcpo.ubclRestrict_ubundle_def UBundle_Pcpo.ubclUnion_ubundle_def ubclDom_ubundle_def)
+     apply (simp add: ubclDom_ubundle_def ubclRestrict_ubundle_def)
+    apply (simp add: ubclRestrict_ubundle_def)
+   apply (simp add: ubclDom_ubundle_def ubclLeast_ubundle_def)
+  apply (simp add: ubclDom_ubundle_def ubclLeast_ubundle_def)
+   apply (simp add: UBundle_Pcpo.ubclUnion_ubundle_def ubunion_associative)
+  by (metis ubclDom_ubundle_def ubclUnion_ubundle_def ubunion_commutative)
 end
 
 
