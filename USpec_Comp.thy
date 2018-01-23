@@ -72,7 +72,7 @@ lemma uspec_parcomp_well[simp]: assumes "uspec_parcompwell S1 S2"
   apply (simp add: uspecWell_def)
   apply (rule_tac x="uspecDom S1 \<union> uspecDom S2" in exI)
   apply (rule_tac x="uspecRan S1 \<union> uspecRan S2" in exI)
-  sorry
+  by (metis assms ufuncl_parcomp_dom ufuncl_parcomp_ran uspec_dom_eq uspec_parcompwell_def uspec_ran_eq)
 
 (*   *)
 lemma uspec_parcomp_abs[simp]: assumes "uspec_parcompwell S1 S2"
