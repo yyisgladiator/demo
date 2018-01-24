@@ -953,17 +953,107 @@ proof-
   then show ?thesis
     by (smt a0 a1 a2 a3 a4 fin2stake h0 inf_ub le2lnle order.not_eq_order_implies_strict stake_slen tsprojfst_tsabs_slen tssnd_ack2trans_5)    
 qed
+
+lemma min_lnsuc:"lnsuc\<cdot>x = min (lnsuc\<cdot>y)(lnsuc\<cdot>z) \<Longrightarrow> x = min y z"
+  by (metis inject_lnsuc lnsuc_lnle_emb min_def)
+
+lemma lub_mono_const_leq: "\<lbrakk>chain (X::nat\<Rightarrow>lnat);  \<And>i. X i \<le> y\<rbrakk> \<Longrightarrow> (\<Squnion>i. X i) \<le> y"
+  using lnle_conv lub_below by blast
+
+lemma lub_mono_const_ge: "\<lbrakk>chain (X::nat\<Rightarrow>lnat);  \<And>i. X i > y\<rbrakk> \<Longrightarrow> (\<Squnion>i. X i) > y"
+  by (metis inf_ub l42 leD less_le unique_inf_lub)
+  
+lemma tssnd_ack2trans_32:"(\<And>(i:: 'b tstream) as ack.
+           lshd\<cdot>(tsAbs\<cdot>(tsRemDups\<cdot>as)) = updis ack \<Longrightarrow>
+           Fin k = #(tsAbs\<cdot>i) \<Longrightarrow>
+           #(tsAbs\<cdot>i) < lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>as))) \<Longrightarrow>
+           tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(tsSnd_h\<cdot>i\<cdot>as\<cdot>(Discr ack)))) = stake k\<cdot>(tsAbs\<cdot>i)) \<Longrightarrow>
+       lshd\<cdot>(tsAbs\<cdot>(tsRemDups\<cdot>as)) = updis ack \<Longrightarrow>
+       Fin (Suc k) = #(tsAbs\<cdot>(i:: 'b tstream)) \<Longrightarrow>
+       #(tsAbs\<cdot>i) < lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>as))) \<Longrightarrow>
+       tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(tsSnd_h\<cdot>i\<cdot>as\<cdot>(Discr ack)))) = stake (Suc k)\<cdot>(tsAbs\<cdot>i)"  
+proof(case_tac"#(tsAbs\<cdot>i) \<le> (lnsuc\<cdot>0)")
+  assume a2:" Fin (Suc k) = #(tsAbs\<cdot>i)"
+  assume a3:"#(tsAbs\<cdot>i) < lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>as)))"
+  assume a4:"#(tsAbs\<cdot>i) \<le> lnsuc\<cdot>0 "
+  have h0:" k = 0"
+    using a2 a4 lnle_Fin_0 lnsuc_lnle_emb by fastforce
+  have h1:" Fin (Suc 0) = #(tsAbs\<cdot>i) \<Longrightarrow> #(tsAbs\<cdot>i) < lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>as))) \<Longrightarrow> tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(tsSnd_h\<cdot>i\<cdot>as\<cdot>(Discr ack)))) = stake (Suc 0)\<cdot>(tsAbs\<cdot>i)"
+    by (smt Fin_02bot Zero_not_Suc a4 eq_slen_eq_and_less fin2stake lnle_Fin_0 lnzero_def min.strict_order_iff min_absorb2 min_lnsuc mono_slen not_le_zero_eq slen_empty_eq strict_slen tsdropfirst3_le tsprojfst_tsabs_slen tssnd_h_tsabs_nbot tssnd_prefix_inp)
+  then show ?thesis
+    using a2 a3 h0 by blast
+next
+  assume a0:"(\<And>(i::'b tstream) as ack.
+           lshd\<cdot>(tsAbs\<cdot>(tsRemDups\<cdot>as)) = updis ack \<Longrightarrow>
+           Fin k = #(tsAbs\<cdot>i) \<Longrightarrow>
+           #(tsAbs\<cdot>i) < lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>as))) \<Longrightarrow>
+           tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(tsSnd_h\<cdot>i\<cdot>as\<cdot>(Discr ack)))) = stake k\<cdot>(tsAbs\<cdot>i))"
+  assume a1:"lshd\<cdot>(tsAbs\<cdot>(tsRemDups\<cdot>as)) = updis ack"
+  assume a2:" Fin (Suc k) = #(tsAbs\<cdot>i)"
+  assume a3:"#(tsAbs\<cdot>i) < lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>as)))"
+  assume a4:"\<not>(#(tsAbs\<cdot>i) \<le> lnsuc\<cdot>0)"
+  have h01: "(\<And>(i::'b tstream) ack.
+           lshd\<cdot>(tsAbs\<cdot>(tsRemDups\<cdot>(tsDropWhile2\<cdot>(Discr(shd (tsAbs\<cdot>(tsRemDups\<cdot>as))))\<cdot>as))) = updis ack \<Longrightarrow>
+           Fin k = #(tsAbs\<cdot>i) \<Longrightarrow>
+           #(tsAbs\<cdot>i) < lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>(tsDropWhile2\<cdot>(Discr(shd (tsAbs\<cdot>(tsRemDups\<cdot>as))))\<cdot>as)))) \<Longrightarrow>
+           tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(tsSnd_h\<cdot>i\<cdot>(tsDropWhile2\<cdot>(Discr(shd (tsAbs\<cdot>(tsRemDups\<cdot>as))))\<cdot>as)\<cdot>(Discr ack)))) = stake k\<cdot>(tsAbs\<cdot>i))"
+          by (insert a0)
+  have h0: "
+           lshd\<cdot>(tsAbs\<cdot>(tsRemDups\<cdot>(tsDropWhile2\<cdot>(Discr(shd (tsAbs\<cdot>(tsRemDups\<cdot>as))))\<cdot>as))) = updis ack \<Longrightarrow>
+           Fin k = #(tsAbs\<cdot>(tsDropFirst3\<cdot>i)) \<Longrightarrow>
+           #(tsAbs\<cdot>(tsDropFirst3\<cdot>i)) < lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>(tsDropWhile2\<cdot>(Discr(shd (tsAbs\<cdot>(tsRemDups\<cdot>as))))\<cdot>as)))) \<Longrightarrow>
+           tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(tsSnd_h\<cdot>(tsDropFirst3\<cdot>i)\<cdot>(tsDropWhile2\<cdot>(Discr(shd (tsAbs\<cdot>(tsRemDups\<cdot>as))))\<cdot>as)\<cdot>(Discr ack)))) = stake k\<cdot>(tsAbs\<cdot>(tsDropFirst3\<cdot>i))"
+           by (insert h01 [of "ack" "tsDropFirst3\<cdot>i"], blast)
+  have f5: "Discr (shd (tsAbs\<cdot>(tsRemDups\<cdot>as))) = Discr ack"
+    by (metis a1 lshd_updis stream.sel_rews(3) surj_scons up_defined updis_eq)
+  have f7:"lshd\<cdot>(tsAbs\<cdot>(tsRemDups\<cdot>as)) = updis ack \<Longrightarrow> lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>as))) = Fin (Suc k) \<Longrightarrow> lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>(tsDropWhile2\<cdot>(Discr ack)\<cdot>as)))) = Fin k"
+    using a2 a3 by auto
+  have h2:"\<not> #(tsAbs\<cdot>(tsRemDups\<cdot>as)) \<le> lnsuc\<cdot>0 \<Longrightarrow> lshd\<cdot>(tsAbs\<cdot>(tsRemDups\<cdot>as)) = updis ack \<Longrightarrow>lshd\<cdot>(tsAbs\<cdot>(tsRemDups\<cdot>(tsDropWhile2\<cdot>(Discr (ack))\<cdot>as))) = updis (\<not>ack)"
+    apply (simp add: tsremdups_tsabs)
+    apply (induction as, simp_all)  
+    apply (rule adm_imp,simp_all)
+    apply (rule admI)
+    apply (simp add: contlub_cfun_arg lub_mono_const_leq)
+    apply (simp add: tsdropwhile2_delayfun)
+    apply (case_tac "t=ack")
+    apply (simp add: tsdropwhile2_t)    
+    apply (simp add: tsabs_mlscons lscons_conv)
+    using tssnd_ack2trans_51_h3 apply blast
+    by (metis lscons_conv lshd_updis srcdups_eq tsabs_mlscons tsremdups_h_tsabs tssnd_ack2trans_51_h3)
+  have as1: "lshd\<cdot>(tsAbs\<cdot>(tsRemDups\<cdot>(tsDropWhile2\<cdot>(Discr(shd (tsAbs\<cdot>(tsRemDups\<cdot>as))))\<cdot>as))) = updis (\<not>ack)"
+    using a1 a3 a4 f5 h2 lnle2le trans_lnle by blast
+  have as2: "Fin k = #(tsAbs\<cdot>(tsDropFirst3\<cdot>i))"
+    by (metis Fin_02bot Fin_Suc a2 inject_Fin inject_lnsuc lnzero_def nat.distinct(1) only_empty_has_length_0 tsdropfirst3_le)
+  have as3: "#(tsAbs\<cdot>(tsDropFirst3\<cdot>i)) < lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>(tsDropWhile2\<cdot>(Discr(shd (tsAbs\<cdot>(tsRemDups\<cdot>as))))\<cdot>as))))"
+    by (metis Fin_Suc a1 a2 a3 as2 less_le lnsuc_lnle_emb lshd_updis stream.sel_rews(3) surj_scons tsdropwhile2_le2 up_defined)
+  then show ?thesis
+    using a0 a1 a2 a3 a4 as1 as2
+    by (smt Fin_02bot Fin_Suc eq_slen_eq_and_less f5 fin2stake inject_Fin less2lnleD less_le lnat_po_eq_conv lnzero_def nat.distinct(1) not_le_zero_eq only_empty_has_length_0 tsDropFirst3.simps(1) tsabs_bot tsdropfirst3_le tsdropfirst3_rt tssnd_h_rt tssnd_h_tsabs_nbot tssnd_prefix_inp)
+qed
+  
+lemma tssnd_ack2trans_31:"lshd\<cdot>(tsAbs\<cdot>(tsRemDups\<cdot>as)) = updis ack \<Longrightarrow>  Fin k = #(tsAbs\<cdot>(i::'a tstream)) \<Longrightarrow>
+    (lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>as)))) > #(tsAbs\<cdot>i) \<Longrightarrow> tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(tsSnd_h\<cdot>i\<cdot>as\<cdot>(Discr ack)))) = stake k\<cdot>(tsAbs\<cdot>i)"
+  apply(induction k arbitrary: i as ack,simp_all)
+  apply (metis below_bottom_iff tssnd_prefix_inp)
+  using tssnd_ack2trans_32 by blast
   
 lemma tssnd_ack2trans_3:"lshd\<cdot>(tsAbs\<cdot>(tsRemDups\<cdot>as)) = updis ack \<Longrightarrow>
-    (lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>as)))) > #(tsAbs\<cdot>i) \<Longrightarrow> #(tsAbs\<cdot>(tsRemDups\<cdot>(tsSnd_h\<cdot>i\<cdot>as\<cdot>(Discr ack)))) = #(tsAbs\<cdot>i)"
-  sorry
+    (lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>as)))) > #(tsAbs\<cdot>i) \<Longrightarrow> #(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(tsSnd_h\<cdot>i\<cdot>as\<cdot>(Discr ack))))) = #(tsAbs\<cdot>i)"
+proof-
+  assume a0:"(lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>as)))) > #(tsAbs\<cdot>i)"
+  assume a1:"lshd\<cdot>(tsAbs\<cdot>(tsRemDups\<cdot>as)) = updis ack"
+  have h0:"\<exists>k. #(tsAbs\<cdot>i) = Fin k"
+    by (metis a0 inf_ub lnat_well_h2 min_absorb2 min_def not_le)
+  then show ?thesis
+    by (metis a0 a1 fin2stake tssnd_ack2trans_31)
+qed
   
 lemma tssnd_ack2trans_2:"#\<surd>as = \<infinity> \<Longrightarrow>  lshd\<cdot>(tsAbs\<cdot>(tsRemDups\<cdot>as)) = updis ack \<Longrightarrow>#(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(tsSnd_h\<cdot>i\<cdot>as\<cdot>(Discr ack)))))
      = min (#(tsAbs\<cdot>i)) (lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>as))))"
   apply(case_tac  "(lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>as)))) > #(tsAbs\<cdot>i)",simp_all)
-  apply(simp add: tssnd_ack2trans_3)
+  apply (metis min.strict_order_iff tsprojfst_tsabs_slen tssnd_ack2trans_3)
   apply (simp add: min.strict_order_iff)
-  by (simp add: tssnd_ack2trans_4 min_absorb2)
+  by (metis lnat_po_eq_conv min.absorb_iff2 min_def tssnd_ack2trans_4)
 
 lemma snd7:"tsAbs\<cdot>as = \<epsilon> \<Longrightarrow>
           i \<noteq> \<bottom> \<Longrightarrow> (srcdups\<cdot>(\<up>(t, ack) \<bullet> tsAbs\<cdot>(tsSnd_h\<cdot>(updis t &&\<surd> i)\<cdot>as\<cdot>(Discr ack)))) = \<up>(t, ack) "
