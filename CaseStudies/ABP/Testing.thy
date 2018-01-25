@@ -145,22 +145,32 @@ lemma tsaltbitpro_test_bot:
 (*case finite*)
 lemma tsaltbitpro_test_fin:
   assumes ds_def: "ds = tsSnd\<cdot>tsAltbitproExampInp\<cdot>as"
-    and dr_def: "dr = tsMed\<cdot>ds\<cdot>(tsAltbitproExampOra1 \<infinity>)"
+    and dr_def: "dr = tsMed\<cdot>ds\<cdot>(tsAltbitproExampOra1 \<bullet> tsAltbitproExampOra1 \<bullet> (tsAltbitproExampOra1\<infinity>))"
     and ar_def: "ar = tsProjSnd\<cdot>dr"
-    and as_def: "as = tsMed\<cdot>ar\<cdot>(tsAltbitproExampOra2 \<infinity>)"
+    and as_def: "as = tsMed\<cdot>ar\<cdot>(tsAltbitproExampOra2  \<bullet> tsAltbitproExampOra2 \<bullet>(tsAltbitproExampOra2\<infinity>))"
   shows "tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>dr)) = tsAbs\<cdot>tsAltbitproExampInp"
-(*  
-  apply(simp add: ds_def dr_def as_def
-        tsAltbitproExampOra1_def tsAltbitproExampOra2_def 
+  apply(simp add: ds_def dr_def as_def tsAltbitproExampOra1_def tsAltbitproExampOra2_def tsAltbitproExampInp_def) 
+  apply (subst ar_def)  
+  apply(simp add: ds_def dr_def as_def tsAltbitproExampOra1_def tsAltbitproExampOra2_def tsAltbitproExampInp_def) 
+  apply (subst ar_def)  
+  apply(simp add: ds_def dr_def as_def tsAltbitproExampOra1_def tsAltbitproExampOra2_def tsAltbitproExampInp_def) 
+  apply (subst ar_def)  
+  apply(simp add: ds_def dr_def as_def tsAltbitproExampOra1_def tsAltbitproExampOra2_def tsAltbitproExampInp_def) 
+  apply (subst ar_def)  
+  apply(simp add: ds_def dr_def as_def tsAltbitproExampOra1_def tsAltbitproExampOra2_def tsAltbitproExampInp_def) 
+  apply (subst ar_def)  
+  apply(simp add: ds_def dr_def as_def tsAltbitproExampOra1_def tsAltbitproExampOra2_def tsAltbitproExampInp_def) 
+  apply (subst ar_def)  
+  apply(simp add: ds_def dr_def as_def tsAltbitproExampOra1_def tsAltbitproExampOra2_def tsAltbitproExampInp_def) 
+  by(simp add: 
         tssnd_insert tssnd_h_delayfun_nack tssnd_h_delayfun_bot tssnd_h_mlscons_ack 
         tssnd_h_mlscons_nack tssnd_h_delayfun tssnd_h_delayfun_msg
         tsmed_mlscons_true tsmed_mlscons_false tsmed_delayfun
         tsremdups_insert tsremdups_h_mlscons tsremdups_h_mlscons_dup tsremdups_h_mlscons_ndup 
         tsremdups_h_delayfun
         tsprojsnd_mlscons tsprojsnd_delayfun tsprojfst_mlscons tsprojfst_delayfun tsabs_mlscons
-        tsconc_mlscons tsconc_delayfun, simp add: ar_def dr_def ds_def)
-*)
-  oops
+        tsconc_mlscons tsconc_delayfun)
+
 
 (*case infinite*)
 lemma tsaltbitpro_test_inf:
