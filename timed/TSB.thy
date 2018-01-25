@@ -300,7 +300,7 @@ proof -
       using assms po_class.chainE by blast
   qed
 
-lemma lubgetCh: assumes "chain Y" and "c \<in> ubDom\<cdot>(\<Squnion> i. Y i)"
+lemma lubgetCh: assumes "chain Y" and "c \<in> ubclDom\<cdot>(\<Squnion> i. Y i)"
   shows "(\<Squnion>i. Y i) . c = (\<Squnion>i. (Y i) . c)"
   by (simp add: assms(1) contlub_cfun_arg contlub_cfun_fun)
 
@@ -310,6 +310,7 @@ lemma tsbttake_cont1_pre: assumes "chain Y"
 proof -
   have f1: "\<And>c. c \<in> ubDom\<cdot>tb \<Longrightarrow> (\<Squnion>i. Abs_ubundle (\<lambda>c. (c\<in>ubDom\<cdot>tb) \<leadsto> (tsTakeL\<cdot>(Y i)\<cdot>(tb  .  c)))) . c = (\<Squnion>i. (Abs_ubundle (\<lambda>c. (c\<in>ubDom\<cdot>tb) \<leadsto> (tsTakeL\<cdot>(Y i)\<cdot>(tb  .  c)))) . c)"
     apply (rule lubgetCh, simp only: tsbttake_chain1 assms)
+    apply (simp add: ubclDom_ubundle_def)
     using assms tsbttakeL_dom tsbttake_chain1 ubdom_chain_eq2 by blast
   show ?thesis
     apply (rule ub_below)

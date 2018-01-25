@@ -5274,7 +5274,7 @@ lemma add2smap: "add\<cdot>(\<up>x\<infinity>)\<cdot>ys = smap (\<lambda>z. z+x)
 instantiation tstream :: (message) uscl
 begin
   definition usclOkay_tstream_def: "usclOkay c m \<equiv> tsDom\<cdot>m \<subseteq> ctype c"
-definition usclLen_stream_def: "usclLen \<equiv> tslen"
+definition usclLen_tstream_def: "usclLen \<equiv> tsTickCount"
 
 lemma ts_usclOkay_ex: "\<And>c::channel. \<exists>e::'a tstream. tsDom\<cdot>e \<subseteq> ctype c"
   apply (simp add: tsDom_def)

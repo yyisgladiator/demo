@@ -510,6 +510,44 @@ proof (rule monofunI)
     qed
   qed
 
+lemma ublen_least_in_set: assumes "ubDom\<cdot>tb \<noteq> {}"
+  shows "(LEAST ln. ln\<in>{(usclLen\<cdot>(tb. c)) | c. c \<in> ubDom\<cdot>tb}) \<in> {(usclLen\<cdot>(tb. c)) | c. c \<in> ubDom\<cdot>tb}"
+  by (metis (mono_tags, lifting) LeastI all_not_in_conv assms mem_Collect_eq)
+    
+lemma ublen_min_on_channel: assumes "ubDom\<cdot>tb \<noteq> {}"
+  shows "\<exists> c \<in> ubDom\<cdot>tb. (usclLen\<cdot>(tb. c)) = (LEAST ln. ln\<in>{(usclLen\<cdot>(tb. c)) | c. c \<in> ubDom\<cdot>tb})"
+proof -
+  obtain least where least_def: "least = (LEAST ln. ln\<in>{(usclLen\<cdot>(tb. c)) | c. c \<in> ubDom\<cdot>tb})"
+    by simp
+  have f1: "least \<in> {(usclLen\<cdot>(tb. c)) | c. c \<in> ubDom\<cdot>tb}"
+    using assms least_def ublen_least_in_set by blast
+  show ?thesis
+    using f1 least_def by blast
+qed
+
+lemma uslen_ubLen_ch1: assumes "ubWell [ch \<mapsto> s]"
+  shows "ubLen (Abs_ubundle [ch \<mapsto> s]) = usclLen\<cdot>s"
+proof -
+  
+  have f1: "{ch} = ubDom\<cdot>(Abs_ubundle [ch \<mapsto> s])"
+    by (simp add: assms ubdom_ubrep_eq)
+  show ?thesis
+    by (metis (no_types, lifting) assms f1 fun_upd_same insert_not_empty option.sel 
+        singletonD ubLen_def ubgetch_ubrep_eq ublen_min_on_channel)
+qed
+
+lemma uslen_ubLen_ch2: assumes "ubWell [ch \<mapsto> s]"
+  shows "ubLen (Abs_ubundle [ch \<mapsto> s]) = usclLen\<cdot>((Abs_ubundle [ch \<mapsto> s]) . ch)"
+  by (simp add: assms ubgetch_insert uslen_ubLen_ch1)
+
+lemma uslen_ubLen_ch3: assumes "ubDom\<cdot>b = {ch}"
+  shows "ubLen b = usclLen\<cdot>(b . ch)"
+  by (metis (mono_tags, lifting) assms insert_not_empty singletonD ubLen_def ublen_min_on_channel)
+
+lemma ubLen_geI: assumes "\<forall> c \<in> ubDom\<cdot>tb. n \<le> usclLen\<cdot>(tb . c)"
+  shows "n \<le> ubLen tb"
+  by (metis (no_types, lifting) assms inf_ub ubLen_def ublen_min_on_channel)
+
 (* Missing *)
   
 subsection \<open>ubShift\<close>

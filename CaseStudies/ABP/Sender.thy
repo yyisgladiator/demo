@@ -8,7 +8,7 @@
 chapter {* Sender of the Alternating Bit Protocol *}
                                                             
 theory Sender
-imports "../../TStream"
+imports "../../timed/TStream"
 
 begin
 default_sort countable

@@ -605,7 +605,7 @@ lemma ufran_lub_eq: assumes "chain Y"
   using assms is_ub_thelub ufran_below by blast
 
 (*   *)
-lemma ufran_2_ubcldom [simp]: assumes "(Rep_cufun F) a = Some b"
+lemma ufran_2_ubcldom [simp]: assumes "\<exists> a. (Rep_cufun F) a = Some b"
   shows "ufRan\<cdot>F = ubclDom\<cdot>b"
     by (metis (no_types, lifting) Abs_cfun_inverse2 assms ranI someI_ex ufRan_def 
             ufun_ran2ufundom ufran_cont)
