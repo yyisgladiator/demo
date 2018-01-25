@@ -8,7 +8,7 @@
 chapter {* Alternating Bit Protocol *}       
                                                             
 theory Composition
-imports Medium Receiver
+imports Medium Receiver Sender Sender_OZ Sender_JM
 
 begin
 default_sort countable
@@ -34,6 +34,33 @@ definition tsSender :: "('a sender) set" where
   (#(tsAbs\<cdot>i) > #(tsAbs\<cdot>(tsRemDups\<cdot>as)) \<longrightarrow> lnsuc\<cdot>(#\<surd>as) \<le> #\<surd>(send\<cdot>i\<cdot>as)) \<and>
   (min (#\<surd>i) (#\<surd>as) < \<infinity> \<longrightarrow> min (#\<surd>i) (#\<surd>as) < #\<surd>(send\<cdot>i\<cdot>as))
 }"
+
+lemma tssnd_in_tssender: "tsSnd \<in> tsSender"
+proof-
+  have prefix_inp: "\<And>i as. tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(tsSnd\<cdot>i\<cdot>as))) \<sqsubseteq> tsAbs\<cdot>i"
+    by (metis (no_types, lifting) tsabs_delayfun tsprojfst_tsabs tsremdups_tsabs tssnd_insert 
+        tssnd_prefix_inp)
+  have alt_bit: "\<And>i as. tsAbs\<cdot>(tsRemDups\<cdot>(tsProjSnd\<cdot>(tsRemDups\<cdot>(tsSnd\<cdot>i\<cdot>as)))) 
+                    = tsAbs\<cdot>(tsProjSnd\<cdot>(tsRemDups\<cdot>(tsSnd\<cdot>i\<cdot>as)))"
+    by (metis tssnd_alt_bit tssnd_h_delayfun tssnd_insert)
+  have ack2trans: "\<And>i as. tsAbs\<cdot>(tsRemDups\<cdot>as) \<sqsubseteq> tsAbs\<cdot>(tsRemDups\<cdot>(tsProjSnd\<cdot>(tsSnd\<cdot>i\<cdot>as))) \<Longrightarrow>
+                    #\<surd> as = \<infinity> \<Longrightarrow> #(tsAbs\<cdot>(tsRemDups\<cdot>(tsSnd\<cdot>i\<cdot>as))) 
+                    = min (#(tsAbs\<cdot>i)) (lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>as))))"
+    by (metis (no_types, lifting) tsabs_delayfun tsprojfst_tsabs_slen tsprojsnd_tsabs 
+        tsremdups_tsabs tssnd_ack2trans tssnd_insert)
+  have nack2inftrans: "\<And>i as. #\<surd> as = \<infinity> \<Longrightarrow> #(tsAbs\<cdot>(tsRemDups\<cdot>as)) < #(tsAbs\<cdot>i) 
+                        \<Longrightarrow> #(tsAbs\<cdot>(tsSnd\<cdot>i\<cdot>as)) = \<infinity>"
+    by (simp add: tssnd_insert tssnd_nack2inftrans)
+  have as_inftick: "\<And>i as. #(tsAbs\<cdot>(tsRemDups\<cdot>as)) < #(tsAbs\<cdot>i) \<Longrightarrow> lnsuc\<cdot>(#\<surd> as) \<le> #\<surd> tsSnd\<cdot>i\<cdot>as"
+    by (simp add: tssnd_as_inftick)
+  have tstickcount: " \<And>i as. min (#\<surd> i) (#\<surd> as) < \<infinity> \<Longrightarrow> min (#\<surd> i) (#\<surd> as) < #\<surd> tsSnd\<cdot>i\<cdot>as"
+    by (simp add: tssnd_tstickcount)
+  show ?thesis
+    by (simp add: ack2trans alt_bit as_inftick nack2inftrans prefix_inp tstickcount tsSender_def)
+qed
+
+lemma tssendernempty: "tsSender \<noteq> {}"
+  using tssnd_in_tssender by blast
 
 lemma set2tssnd_strcausal: assumes "send \<in> tsSender"
   shows "min (#\<surd>i) (#\<surd>as) < \<infinity> \<longrightarrow> min (#\<surd>i) (#\<surd>as) < #\<surd>(send\<cdot>i\<cdot>as)"
