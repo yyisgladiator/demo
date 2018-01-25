@@ -8,7 +8,7 @@
 chapter {* Receiver of the Alternating Bit Protocol *}
                                                             
 theory Receiver
-imports "../../TStream"
+imports "../../timed/TStream"
 
 begin
 default_sort countable

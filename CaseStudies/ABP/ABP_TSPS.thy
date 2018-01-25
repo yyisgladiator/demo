@@ -6,15 +6,17 @@
 *)
 
 theory ABP_TSPS
-  imports "../../TSPS" Receiver Composition Medium "../../TSPF" "../../TSPF_Comp"
+  imports "../../timed/TSPS" Receiver Composition Medium "../../timed/TSPF" "../../UFun_Comp" "../../USpec_Comp"
 
 begin
 
   default_sort countable
 
+
 (* ----------------------------------------------------------------------- *)
 section \<open>Datatype Definition\<close>
 (* ----------------------------------------------------------------------- *)
+
 
 datatype 'a::countable MABP = BoolPair "('a * bool)" | Bool bool | Data 'a
 
@@ -23,6 +25,7 @@ begin
 instance
    by (countable_datatype)
 end
+
 
 instantiation MABP ::  (countable) message
 begin
@@ -38,15 +41,30 @@ fun ctype_MABP :: "channel \<Rightarrow> 'a MABP set" where
   instance ..
 end
 
- declare [[show_types]]
-  declare [[show_sorts]]
+(*
+instantiation MABP ::  (countable) message
+begin
+function ctype_MABP :: "channel \<Rightarrow> 'a MABP set" where
+  "ctype_MABP (\<C> ''abpIn'') = range Data" |
+  "ctype_MABP (\<C> ''abpOut'') = range Data" |
+  "other \<noteq> (\<C> ''abpOut'') \<Longrightarrow> other \<noteq> (\<C> ''abpIn'') \<Longrightarrow> ctype_MABP other = undefined"
+        apply simp_all
+  sorry 
+  instance ..
+end*)
+
+declare [[show_types]]
+declare [[show_sorts]]
 declare [[show_consts]]
+
 
 (* ----------------------------------------------------------------------- *)
 section \<open>Helper Definitions\<close>
 (* ----------------------------------------------------------------------- *)
 
+
 subsection \<open>datatype destructors\<close>
+
 abbreviation invBoolPair :: "'a MABP \<Rightarrow> ('a \<times> bool)" where
 "invBoolPair \<equiv> (inv BoolPair)"
 
@@ -56,6 +74,285 @@ abbreviation invBool :: "'a MABP \<Rightarrow> bool" where
 abbreviation invData :: "'a MABP \<Rightarrow> 'a" where
 "invData \<equiv> (inv Data)"
 
+
+(* ----------------------------------------------------------------------- *)
+section \<open>Helper Definitions\<close>
+(* ----------------------------------------------------------------------- *)
+
+
+(* Temporary... Should be in ufun_comp *)
+instantiation ufun :: (ubcl_comp, ubcl_comp) ufuncl_comp
+begin
+
+instance
+  apply intro_classes
+  
+  sorry
+end
+
+
+
+subsection \<open>receiver\<close>
+
+
+definition recvTSPF :: "('a MABP tstream\<^sup>\<Omega>,'a MABP tstream\<^sup>\<Omega>) ufun" where
+"recvTSPF \<equiv> Abs_cufun (\<lambda> x. (ubDom\<cdot>x = {dr}) \<leadsto> Abs_ubundle [ar    \<mapsto> (tsMap::(bool \<Rightarrow> 'a MABP) \<Rightarrow> bool tstream \<rightarrow> 'a MABP tstream) Bool\<cdot>(fst ( tsRec\<cdot>((tsMap invBoolPair)\<cdot>(x . dr)))),
+                                        abpOut \<mapsto> (tsMap::('a \<Rightarrow> 'a MABP) \<Rightarrow> 'a tstream \<rightarrow> 'a MABP tstream) Data\<cdot>(snd ( tsRec\<cdot>((tsMap invBoolPair)\<cdot>(x . dr))))])"
+
+
+subsection \<open>medium_rs\<close>
+  (* medium from receiver to sender *)
+  (* input: ar, output: as, transport booleans *)
+
+
+definition medRS_TSPF :: "bool stream \<Rightarrow> ('a MABP tstream\<^sup>\<Omega>,'a MABP tstream\<^sup>\<Omega>) ufun" where
+"medRS_TSPF bst \<equiv> Abs_cufun (\<lambda> x. (ubDom\<cdot>x = {ar})
+                           \<leadsto> Abs_ubundle [as \<mapsto> (tsMap::(bool \<Rightarrow> 'a MABP) \<Rightarrow> bool tstream \<rightarrow> 'a MABP tstream) Bool\<cdot>(tsMed\<cdot>(tsMap invBool\<cdot>(x . ar))\<cdot>bst)])"
+
+
+subsection \<open>medium_sr\<close>
+  (* medium from sender to receiver *)
+  (* input: ds, output: dr, transport (data, bool) tuples *)
+
+
+definition medSR_TSPF :: "bool stream \<Rightarrow> ('a MABP tstream\<^sup>\<Omega>,'a MABP tstream\<^sup>\<Omega>) ufun" where
+"medSR_TSPF bst\<equiv> Abs_cufun (\<lambda> x. (ubDom\<cdot>x = {ds})
+  \<leadsto> Abs_ubundle [dr \<mapsto> (tsMap:: ('a \<times> bool \<Rightarrow> 'a MABP) \<Rightarrow> ('a \<times> bool) tstream \<rightarrow> 'a MABP tstream) 
+            BoolPair\<cdot>(tsMed\<cdot>(tsMap invBoolPair\<cdot>(x . ds))\<cdot>bst)])"
+
+
+subsection \<open>sender\<close>
+
+
+  (* lift a sender function to a TSPF *)
+definition sender_TSPF :: "'a sender \<Rightarrow> ('a MABP tstream\<^sup>\<Omega>,'a MABP tstream\<^sup>\<Omega>) ufun" where
+"sender_TSPF se \<equiv> Abs_cufun (\<lambda> x. (ubDom\<cdot>x = {as, abpIn})
+                \<leadsto> Abs_ubundle [ds \<mapsto> tsMap BoolPair\<cdot>(se\<cdot>(tsMap invData\<cdot>(x . abpIn))\<cdot>(tsMap invBool\<cdot>(x . as)))])"
+
+
+subsection \<open>id\<close>
+
+
+definition id_TSPF :: "('a MABP tstream\<^sup>\<Omega>,'a MABP tstream\<^sup>\<Omega>) ufun" where
+"id_TSPF \<equiv> Abs_cufun (\<lambda> x. (ubDom\<cdot>x = {abpOut}) \<leadsto> Abs_ubundle [abpOut \<mapsto> x . abpOut])"
+
+
+
+(* ----------------------------------------------------------------------- *)
+section \<open>Components\<close>
+(* ----------------------------------------------------------------------- *)
+
+
+lift_definition SND :: "(('a MABP tstream ubundle,'a MABP tstream ubundle) ufun) uspec" is
+"Rev {sender_TSPF s | s. s \<in> tsSender}"
+  sorry
+
+lift_definition RCV :: "(('a MABP tstream ubundle,'a MABP tstream ubundle) ufun) uspec" is
+"Rev {recvTSPF}"
+  sorry
+
+lift_definition MEDSR :: "(('a MABP tstream ubundle,'a MABP tstream ubundle) ufun) uspec" is
+"Rev {medSR_TSPF ora | ora. #({True} \<ominus> ora)=\<infinity>}"
+  sorry
+
+lift_definition MEDRS :: "(('a MABP tstream ubundle,'a MABP tstream ubundle) ufun) uspec" is
+"Rev {medRS_TSPF ora | ora. #({True} \<ominus> ora)=\<infinity>}"
+  sorry
+
+lift_definition ID :: "(('a MABP tstream ubundle,'a MABP tstream ubundle) ufun) uspec" is
+"Rev {id_TSPF}"
+  sorry
+
+abbreviation gencompABP :: "(('a MABP tstream ubundle,'a MABP tstream ubundle) ufun) uspec" where
+"gencompABP \<equiv> ((SND \<Otimes> MEDSR) \<Otimes> RCV) \<Otimes> MEDRS"
+
+abbreviation speccompABP :: "(('a MABP tstream ubundle,'a MABP tstream ubundle) ufun) uspec" where
+"speccompABP \<equiv> uspecFeedbackComp(((SND \<circle> MEDSR) \<circle> RCV) \<circle> (MEDRS \<parallel> ID))"
+
+
+(* ----------------------------------------------------------------------- *)
+section \<open>Testing of Composition without Medium\<close>
+(* ----------------------------------------------------------------------- *)
+
+
+definition sender_TSPF2 :: "'a sender \<Rightarrow> ('a MABP tstream\<^sup>\<Omega>,'a MABP tstream\<^sup>\<Omega>) ufun" where
+"sender_TSPF2 se \<equiv> Abs_cufun (\<lambda> x. (ubDom\<cdot>x = {ar, abpIn})
+                \<leadsto> Abs_ubundle [dr \<mapsto> tsMap BoolPair\<cdot>(se\<cdot>(tsMap invData\<cdot>(x . abpIn))\<cdot>(tsMap invBool\<cdot>(x . ar)))])"
+
+lemma sender_mono: assumes "se \<in> tsSender" shows "monofun (\<lambda> x. (ubDom\<cdot>x = {ar, abpIn})
+                \<leadsto> Abs_ubundle [dr \<mapsto> tsMap BoolPair\<cdot>(se\<cdot>(tsMap invData\<cdot>(x . abpIn))\<cdot>(tsMap invBool\<cdot>(x . ar)))])"
+  sorry
+
+lemma sender_cont: assumes "se \<in> tsSender" shows "cont (\<lambda> x. (ubDom\<cdot>x = {ar, abpIn})
+                \<leadsto> Abs_ubundle [dr \<mapsto> tsMap BoolPair\<cdot>(se\<cdot>(tsMap invData\<cdot>(x . abpIn))\<cdot>(tsMap invBool\<cdot>(x . ar)))])"
+  sorry
+
+lemma sender_well: assumes "se \<in> tsSender" shows "ufWell (\<Lambda> x. (ubDom\<cdot>x = {ar, abpIn})
+                \<leadsto> Abs_ubundle [dr \<mapsto> tsMap BoolPair\<cdot>(se\<cdot>(tsMap invData\<cdot>(x . abpIn))\<cdot>(tsMap invBool\<cdot>(x . ar)))])"
+  sorry
+
+lift_definition SND2 :: "(('a MABP tstream ubundle,'a MABP tstream ubundle) ufun) uspec" is
+"Rev {sender_TSPF2 s | s. s \<in> tsSender}"
+  sorry
+
+definition recvTSPF2 :: "('a MABP tstream\<^sup>\<Omega>,'a MABP tstream\<^sup>\<Omega>) ufun" where
+"recvTSPF2 \<equiv> Abs_cufun (\<lambda> x. (ubDom\<cdot>x = {dr}) \<leadsto> Abs_ubundle [ar    \<mapsto> (tsMap::(bool \<Rightarrow> 'a MABP) \<Rightarrow> bool tstream \<rightarrow> 'a MABP tstream) Bool\<cdot>(fst ( tsRec\<cdot>((tsMap invBoolPair)\<cdot>(x . dr)))),
+                                        abpOut \<mapsto> (tsMap::('a \<Rightarrow> 'a MABP) \<Rightarrow> 'a tstream \<rightarrow> 'a MABP tstream) Data\<cdot>(snd ( tsRec\<cdot>((tsMap invBoolPair)\<cdot>(x . dr))))])"
+
+lemma recv_mono: "monofun (\<lambda> x. (ubDom\<cdot>x = {dr}) \<leadsto> Abs_ubundle [ar    \<mapsto> (tsMap::(bool \<Rightarrow> 'a MABP) \<Rightarrow> bool tstream \<rightarrow> 'a MABP tstream) Bool\<cdot>(fst ( tsRec\<cdot>((tsMap invBoolPair)\<cdot>(x . dr)))),
+                                        abpOut \<mapsto> (tsMap::('a \<Rightarrow> 'a MABP) \<Rightarrow> 'a tstream \<rightarrow> 'a MABP tstream) Data\<cdot>(snd ( tsRec\<cdot>((tsMap invBoolPair)\<cdot>(x . dr))))])"
+  sorry
+
+lemma recv_cont: "cont (\<lambda> x. (ubDom\<cdot>x = {dr}) \<leadsto> Abs_ubundle [ar    \<mapsto> (tsMap::(bool \<Rightarrow> 'a MABP) \<Rightarrow> bool tstream \<rightarrow> 'a MABP tstream) Bool\<cdot>(fst ( tsRec\<cdot>((tsMap invBoolPair)\<cdot>(x . dr)))),
+                                        abpOut \<mapsto> (tsMap::('a \<Rightarrow> 'a MABP) \<Rightarrow> 'a tstream \<rightarrow> 'a MABP tstream) Data\<cdot>(snd ( tsRec\<cdot>((tsMap invBoolPair)\<cdot>(x . dr))))])"
+  sorry
+
+lemma recv_well: "ufWell (\<Lambda> x. (ubDom\<cdot>x = {dr}) \<leadsto> Abs_ubundle [ar    \<mapsto> (tsMap::(bool \<Rightarrow> 'a MABP) \<Rightarrow> bool tstream \<rightarrow> 'a MABP tstream) Bool\<cdot>(fst ( tsRec\<cdot>((tsMap invBoolPair)\<cdot>(x . dr)))),
+                                        abpOut \<mapsto> (tsMap::('a \<Rightarrow> 'a MABP) \<Rightarrow> 'a tstream \<rightarrow> 'a MABP tstream) Data\<cdot>(snd ( tsRec\<cdot>((tsMap invBoolPair)\<cdot>(x . dr))))])"
+  sorry
+
+lift_definition RCV2 :: "(('a MABP tstream ubundle,'a MABP tstream ubundle) ufun) uspec" is
+"Rev {recvTSPF2}"
+  sorry
+
+abbreviation speccompABP_nmed :: "(('a MABP tstream ubundle,'a MABP tstream ubundle) ufun) uspec" where
+"speccompABP_nmed \<equiv> uspecFeedbackComp(SND \<circle> RCV)"
+
+
+lemma tsaltbitpro_inp2out_nmed:
+  assumes send_def: "send \<in> tsSender"
+    and ds_def: "ds_stream = send\<cdot>i\<cdot>as_stream"
+    and as_def: "as_stream = tsProjSnd\<cdot>ds_stream"
+    and i_inf: "#\<surd>i = \<infinity>"
+  shows "tsAbs\<cdot>(tsRecSnd\<cdot>ds_stream) = tsAbs\<cdot>i"
+  sorry 
+
+lemma h1: assumes "s \<in> tsSender" shows "UFun.ufDom\<cdot>((sender_TSPF2 s) \<circ> recvTSPF2) = {abpIn, ar}"
+  sorry
+
+lemma h2: assumes "s \<in> tsSender" shows "UFun.ufRan\<cdot>((sender_TSPF2 s) \<circ> recvTSPF2) = {abpOut, ar}"
+  sorry
+
+abbreviation abpFixH :: "('a tstream \<rightarrow> bool tstream \<rightarrow> ('a \<times> bool) tstream) \<Rightarrow>  'a MABP tstream ubundle \<Rightarrow> 'a MABP tstream ubundle \<rightarrow> 'a MABP tstream ubundle" where
+"abpFixH s tb \<equiv> (\<Lambda> x. Abs_ubundle[dr \<mapsto> tsMap BoolPair\<cdot>(s\<cdot>(tsMap invData\<cdot>(tb . abpIn))\<cdot>(tsMap invBool\<cdot>(x . ar))),
+                                    ar \<mapsto> (tsMap::(bool \<Rightarrow> 'a MABP) \<Rightarrow> bool tstream \<rightarrow> 'a MABP tstream) Bool\<cdot>(fst ( tsRec\<cdot>((tsMap invBoolPair)\<cdot>(x . dr)))),
+                                    abpOut \<mapsto> (tsMap::('a \<Rightarrow> 'a MABP) \<Rightarrow> 'a tstream \<rightarrow> 'a MABP tstream) Data\<cdot>(snd ( tsRec\<cdot>((tsMap invBoolPair)\<cdot>(x . dr))))
+                                   ])"
+
+lemma abp_speccomp: assumes "f \<in> Rep_rev_uspec speccompABP_nmed"
+                            and "ubDom\<cdot>tb = {abpIn}"
+  shows "tsAbs\<cdot>((f \<rightleftharpoons> tb) . abpOut) = tsAbs\<cdot>(tb . abpIn)"
+proof - 
+  have f1: "\<exists> s \<in> tsSender. (f = (\<mu>((sender_TSPF2 s) \<circ> recvTSPF2)))"
+    (* Cannot be proven until Instatiation *)
+    sorry
+  then obtain s where f12: "s \<in> tsSender \<and> (f = (\<mu>((sender_TSPF2 s) \<circ> recvTSPF2)))"
+    by blast
+  then have f13: "f = (\<mu>((sender_TSPF2 s) \<circ> recvTSPF2))"
+    by blast
+  have f14: "s \<in> tsSender"
+    using f12 by blast
+
+
+  have f20: "ubcl_class.ubDom\<cdot>tb = {abpIn, ar} - {ar}"
+    apply(simp add: ubDom_ubundle_def)
+    using assms by blast                    
+  have f2: "(f \<rightleftharpoons> tb) . abpOut =  ubFix (ufFeedH sender_TSPF2 s\<circ>recvTSPF2 tb) {abpOut, ar}  .  abpOut"
+    apply(subst f13)
+    apply(simp add: ufFeedbackComp_def)
+    apply(simp add: ufFeedbackComp_cont ufFeedbackComp_well)
+    apply(simp add: f12 h1 h2)
+    by(simp add: f20)
+
+
+  have f3: "cont (\<lambda> x. Abs_ubundle[dr \<mapsto> tsMap BoolPair\<cdot>(s\<cdot>(tsMap invData\<cdot>(tb . abpIn))\<cdot>(tsMap invBool\<cdot>(x . ar))),
+                                    ar \<mapsto> (tsMap::(bool \<Rightarrow> 'a MABP) \<Rightarrow> bool tstream \<rightarrow> 'a MABP tstream) Bool\<cdot>(fst ( tsRec\<cdot>((tsMap invBoolPair)\<cdot>(x . dr)))),
+                                    abpOut \<mapsto> (tsMap::('a \<Rightarrow> 'a MABP) \<Rightarrow> 'a tstream \<rightarrow> 'a MABP tstream) Data\<cdot>(snd ( tsRec\<cdot>((tsMap invBoolPair)\<cdot>(x . dr))))
+                                   ])"
+    sorry
+  have f4: "ubFix (ufFeedH ((sender_TSPF2 s)\<circ>recvTSPF2) tb) {abpOut, ar}  .  abpOut
+          = ubFix (abpFixH s tb) {abpOut, ar, dr} . abpOut"
+    (* Should be possible to prove with equality of lubs *)
+    sorry
+  have f5: "ubfun_io_eq (abpFixH s tb) {abpOut, ar, dr}"
+    sorry
+  then have f6: "ubFix (abpFixH s tb) {abpOut, ar, dr} =  (abpFixH s tb)\<cdot>(ubFix (abpFixH s tb) {abpOut, ar, dr})"
+    using ubfix_eq by blast
+
+
+  (* After proving the fixed points propties we can now show the assumptions of the tsaltbitpro_inp2out_nmed lemma *)
+  (*
+    i = (tsMap invData\<cdot>(tb . abpIn))
+    ds_stream = (tsMap invBoolPair\<cdot>((ubFix (abpFixH s tb) {abpOut, ar, dr}) . dr))
+    as_stream = (tsMap invBool\<cdot>((ubFix (abpFixH s tb) {abpOut, ar, dr}) . ar))
+
+  *)
+  have f7: "(tsMap invBoolPair\<cdot>((ubFix (abpFixH s tb) {abpOut, ar, dr}) . dr)) = s\<cdot>(tsMap invData\<cdot>(tb . abpIn))\<cdot>(tsMap invBool\<cdot>((ubFix (abpFixH s tb) {abpOut, ar, dr}) . ar))"
+    sorry
+
+  have f8: "(tsMap invBool\<cdot>((ubFix (abpFixH s tb) {abpOut, ar, dr}) . ar)) = tsProjSnd\<cdot>(tsMap invBoolPair\<cdot>((ubFix (abpFixH s tb) {abpOut, ar, dr}) . dr))"
+    sorry
+
+  (* More assms are necessary for this subgoal*)
+  have f9: "#\<surd>(tsMap invData\<cdot>(tb . abpIn)) = \<infinity>"
+    sorry
+
+  (* Result of tsaltbitpro_inp2out_nmed lemma *)
+  have f10: "tsAbs\<cdot>(tsRecSnd\<cdot>(tsMap invBoolPair\<cdot>((ubFix (abpFixH s tb) {abpOut, ar, dr}) . dr))) = tsAbs\<cdot>(tsMap invData\<cdot>(tb . abpIn))"
+    using f7 f8 f9 f14 by(simp add: tsaltbitpro_inp2out_nmed)
+  
+  
+
+  
+  show ?thesis
+      sorry  
+qed
+
+
+
+
+
+
+(* ----------------------------------------------------------------------- *)
+section \<open>More Lemmas\<close>
+(* ----------------------------------------------------------------------- *)
+
+(*
+lemma tsaltbitpro_inp2out_nmed:
+  assumes send_def: "send \<in> tsSender"
+    and ds_def: "ds = send\<cdot>i\<cdot>as"
+    and as_def: "as = tsProjSnd\<cdot>ds"
+    and i_inf: "#\<surd>i = \<infinity>"
+  shows "tsAbs\<cdot>(tsRecSnd\<cdot>ds) = tsAbs\<cdot>i"
+  sorry    
+
+lemma tsaltbitpro_inp2out:
+  assumes send_def: "send \<in> tsSender"
+    and p1_def: "#({True} \<ominus> p1) = \<infinity>"
+    and p2_def: "#({True} \<ominus> p2) = \<infinity>"
+    and ds_def: "ds = send\<cdot>i\<cdot>as"
+    and dr_def: "dr = tsMed\<cdot>ds\<cdot>p1"
+    and ar_def: "ar = tsProjSnd\<cdot>dr"
+    (* definition 5 *)
+    and as_def: "as = tsMed\<cdot>ar\<cdot>p2"
+    and i_ninf: "#(tsAbs\<cdot>i) \<noteq> \<infinity>"
+  shows "tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>dr)) = tsAbs\<cdot>i"
+  sorry
+*)
+
+
+lemma abp_gencomp_final: assumes "f \<in> Rep_rev_uspec gencompABP"
+                            and "ubDom\<cdot>tb = {abpIn}"
+  shows "tsAbs\<cdot>((f \<rightleftharpoons> tb) . abpOut) = tsAbs\<cdot>(tb . abpIn)"
+  oops  
+
+lemma abp_speccomp_final: assumes "f \<in> Rep_rev_uspec speccompABP"
+                            and "ubDom\<cdot>tb = {abpIn}"
+  shows "tsAbs\<cdot>((f \<rightleftharpoons> tb) . abpOut) = tsAbs\<cdot>(tb . abpIn)"
+  oops 
+
+
+(*
 abbreviation recvAbb where
 "recvAbb \<equiv>
 let recRes = (\<lambda> x. tsRec\<cdot>((tsMap invBoolPair)\<cdot>(x . dr)))
@@ -737,4 +1034,5 @@ lemma abp_gencomp_final: assumes "f \<in> Rep_TSPS gencompABP"
   shows "tsAbs\<cdot>((f \<rightleftharpoons> tb) . abpOut) = tsAbs\<cdot>(tb . abpIn)"
   oops                          
       
-end
+
+*)
