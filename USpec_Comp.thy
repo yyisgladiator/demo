@@ -37,11 +37,9 @@ definition uspecFeedbackComp :: "'m uspec \<Rightarrow> 'm uspec" where
 
 
 
-
 (****************************************************)
 section\<open>Lemmas\<close>
 (****************************************************)   
-
 subsection \<open>UspecComp\<close>
 
 (*   *)
@@ -321,6 +319,5 @@ and "uspec_sercompwell S2 S3"
 and "uspecDom S1 \<inter> uspecRan S3 = {}"
 shows "uspecWell  {f1 \<circ> f2 |f1 f2. f1 \<in> Rep_rev_uspec S1 \<and> f2 \<in> Rep_rev_uspec (S2 \<circle> S3)}"
   by (simp add: assms(1) assms(2) assms(3) uspec_sercompwell_asso_h) 
-
 
 end
