@@ -75,7 +75,8 @@ apply (meson event.distinct(1) map_upd_eqD1)
 apply (meson option.distinct(1))
 by (metis option.simps(3))
 
-lift_definition EvenAutomatonAutomaton :: "(EvenAutomatonState, EvenAutomaton event) automaton" is "(evenAutomatonTransition, State Even 0,(tsynbOneTick c2), {}, {})"
+lift_definition EvenAutomatonAutomaton :: "(EvenAutomatonState, EvenAutomaton event) automaton" is 
+  "(evenAutomatonTransition, State Even 0,(tsynbOneTick c2), {c1}, {c2})"
 by simp
 
 definition EvenAutomatonSPF :: "EvenAutomaton event SPF" where
