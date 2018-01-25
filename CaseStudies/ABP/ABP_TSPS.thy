@@ -227,10 +227,10 @@ lemma tsaltbitpro_inp2out_nmed:
   shows "tsAbs\<cdot>(tsRecSnd\<cdot>ds_stream) = tsAbs\<cdot>i"
   sorry 
 
-lemma h1: assumes "s \<in> tsSender" shows "UFun.ufDom\<cdot>((sender_TSPF2 s) \<circ> recvTSPF2) = {c_abpIn, c_ar}"
-  sorry
+lemma h1: assumes "s \<in> tsSender" shows "UFun.ufDom\<cdot>(ufunclSerComp (sender_TSPF2 s) recvTSPF2) = {c_abpIn, c_ar}"
+  sorry                                                              
 
-lemma h2: assumes "s \<in> tsSender" shows "UFun.ufRan\<cdot>((sender_TSPF2 s) \<circ> recvTSPF2) = {c_abpOut, c_ar}"
+lemma h2: assumes "s \<in> tsSender" shows "UFun.ufRan\<cdot>(ufunclSerComp (sender_TSPF2 s) recvTSPF2) = {c_abpOut, c_ar}"
   sorry
 
 abbreviation abpFixH :: "('a tstream \<rightarrow> bool tstream \<rightarrow> ('a \<times> bool) tstream) \<Rightarrow>  'a MABP tstream ubundle \<Rightarrow> 'a MABP tstream ubundle \<rightarrow> 'a MABP tstream ubundle" where
@@ -243,21 +243,21 @@ lemma abp_speccomp: assumes "f \<in> Rep_rev_uspec speccompABP_nmed"
                             and "ubDom\<cdot>tb = {c_abpIn}"
   shows "tsAbs\<cdot>((f \<rightleftharpoons> tb) . c_abpOut) = tsAbs\<cdot>(tb . c_abpIn)"
 proof - 
-  have f1: "\<exists> s \<in> tsSender. (f = (\<mu>((sender_TSPF2 s) \<circ> recvTSPF2)))"
+  have f1: "\<exists> s \<in> tsSender. (f = (\<mu>(ufunclSerComp (sender_TSPF2 s) recvTSPF2)))"
     (* Cannot be proven until Instatiation *)
     sorry
-  then obtain s where f12: "s \<in> tsSender \<and> (f = (\<mu>((sender_TSPF2 s) \<circ> recvTSPF2)))"
+  then obtain s where f12: "s \<in> tsSender \<and> (f = (\<mu>(ufunclSerComp (sender_TSPF2 s) recvTSPF2)))"
     by blast
-  then have f13: "f = (\<mu>((sender_TSPF2 s) \<circ> recvTSPF2))"
+  then have f13: "f = (\<mu>(ufunclSerComp (sender_TSPF2 s) recvTSPF2))"
     by blast
   have f14: "s \<in> tsSender"
     using f12 by blast
 
 
-  have f20: "ubcl_class.ubDom\<cdot>tb = {c_abpIn, c_ar} - {c_ar}"
-    apply(simp add: ubDom_ubundle_def)
+  have f20: "ubclDom\<cdot>tb = {c_abpIn, c_ar} - {c_ar}"
+    apply(simp add: ubclDom_ubundle_def)
     using assms by blast                    
-  have f2: "(f \<rightleftharpoons> tb) . c_abpOut =  ubFix (ufFeedH sender_TSPF2 s\<circ>recvTSPF2 tb) {c_abpOut, c_ar}  .  c_abpOut"
+  have f2: "(f \<rightleftharpoons> tb) . c_abpOut =  ubFix (ufFeedH (ufunclSerComp (sender_TSPF2 s) recvTSPF2) tb) {c_abpOut, c_ar}  .  c_abpOut"
     apply(subst f13)
     apply(simp add: ufFeedbackComp_def)
     apply(simp add: ufFeedbackComp_cont ufFeedbackComp_well)
@@ -270,7 +270,7 @@ proof -
                                     c_abpOut \<mapsto> (tsMap::('a \<Rightarrow> 'a MABP) \<Rightarrow> 'a tstream \<rightarrow> 'a MABP tstream) Data\<cdot>(snd ( tsRec\<cdot>((tsMap invBoolPair)\<cdot>(x . c_dr))))
                                    ])"
     sorry
-  have f4: "ubFix (ufFeedH ((sender_TSPF2 s)\<circ>recvTSPF2) tb) {c_abpOut, c_ar}  .  c_abpOut
+  have f4: "ubFix (ufFeedH (ufunclSerComp (sender_TSPF2 s) recvTSPF2) tb) {c_abpOut, c_ar}  .  c_abpOut
           = ubFix (abpFixH s tb) {c_abpOut, c_ar, c_dr} . c_abpOut"
     (* Should be possible to prove with equality of lubs *)
     sorry
