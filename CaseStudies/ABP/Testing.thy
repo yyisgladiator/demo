@@ -139,9 +139,8 @@ lemma tsaltbitpro_test_bot:
     and ar_def: "ar = tsProjSnd\<cdot>dr"
     and as_def: "as = tsMed\<cdot>ar\<cdot>(<[True]> \<infinity>)"
   shows "tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>dr)) = tsAbs\<cdot>\<bottom>"
-  using assms
-  apply(simp add: tsSnd_def)
-  by (metis tsabs_bot tsabs_delayfun tsrecsnd_delayfun tsrecsnd_insert tsrecsnd_strict)
+  by (simp add: dr_def ds_def as_def tssnd_insert tsremdups_insert tsremdups_h_delayfun 
+      tsprojfst_delayfun)
 
 (*case finite*)
 lemma tsaltbitpro_test_fin:
@@ -149,8 +148,19 @@ lemma tsaltbitpro_test_fin:
     and dr_def: "dr = tsMed\<cdot>ds\<cdot>(tsAltbitproExampOra1 \<infinity>)"
     and ar_def: "ar = tsProjSnd\<cdot>dr"
     and as_def: "as = tsMed\<cdot>ar\<cdot>(tsAltbitproExampOra2 \<infinity>)"
-  shows "tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>dr)) = tsAbs\<cdot>tsAltbitproExampInp"  
-  apply(simp add: ds_def dr_def as_def tsSnd_def tsAltbitproExampOra1_def tsmed_delayfun)
+  shows "tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>dr)) = tsAbs\<cdot>tsAltbitproExampInp"
+(*  
+  apply(simp add: ds_def dr_def as_def
+        tsAltbitproExampOra1_def tsAltbitproExampOra2_def 
+        tssnd_insert tssnd_h_delayfun_nack tssnd_h_delayfun_bot tssnd_h_mlscons_ack 
+        tssnd_h_mlscons_nack tssnd_h_delayfun tssnd_h_delayfun_msg
+        tsmed_mlscons_true tsmed_mlscons_false tsmed_delayfun
+        tsremdups_insert tsremdups_h_mlscons tsremdups_h_mlscons_dup tsremdups_h_mlscons_ndup 
+        tsremdups_h_delayfun
+        tsprojsnd_mlscons tsprojsnd_delayfun tsprojfst_mlscons tsprojfst_delayfun tsabs_mlscons
+        tsconc_mlscons tsconc_delayfun, simp add: ar_def dr_def ds_def)
+*)
+  oops
 
 (*case infinite*)
 lemma tsaltbitpro_test_inf:
