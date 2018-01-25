@@ -33,7 +33,7 @@ class uscl = cpo +
   fixes usOkay :: "channel \<Rightarrow> 'a \<Rightarrow> bool" (* similar to "ctype" in message *)
   fixes usLen :: "'a \<rightarrow> lnat"
 
-  assumes bla: "\<And>c . \<exists> e. usOkay c e"
+  assumes usOkay_ex: "\<And>c . \<exists> e. usOkay c e"
   (*assumes usOkay_bot: "\<And>c. usOkay c \<bottom>"    (* used for ubLeast wellformed proof *)*)
   assumes usOkay_adm: "\<And>c. adm (usOkay c)" (* used to instanciate ubundle *)
 begin
@@ -119,10 +119,42 @@ begin
 end
 
 class ufuncl_comp = ufuncl +
-  fixes ufunclComp :: "'a \<Rightarrow> 'a \<Rightarrow> 'a"  (* Here we can put the abbreviation \<otimes> *)
-  fixes ufunclSerComp :: "'a \<Rightarrow> 'a \<Rightarrow> 'a"  (* Here we can put the abbreviation \<circ> *) 
-  fixes ufunclParComp :: "'a \<Rightarrow> 'a \<Rightarrow> 'a"  (* Here we can put the abbreviation \<parallel> *) 
-  fixes ufunclFeedbackComp :: "'a \<Rightarrow> 'a"  (* Here we can put the abbreviation \<mu> *) 
+  fixes ufunclComp :: "'a \<Rightarrow> 'a \<Rightarrow> 'a"  (infixl "\<otimes>" 55)
+  fixes ufunclParComp :: "'a \<Rightarrow> 'a \<Rightarrow> 'a"   (infixl "\<parallel>" 55)
+  fixes ufunclSerComp :: "'a \<Rightarrow> 'a \<Rightarrow> 'a"  (infixl "\<circ>" 55)
+  fixes ufunclFeedbackComp :: "'a \<Rightarrow> 'a"  ("\<mu>" 55)
+
+  fixes ufunclCompWell:: "'a \<Rightarrow> 'a \<Rightarrow> bool"
+  fixes ufunclSerCompWell:: "'a \<Rightarrow> 'a \<Rightarrow> bool"
+  fixes ufunclParCompWell:: "'a \<Rightarrow> 'a \<Rightarrow> bool"
+
+  assumes ufunclParCompWell_commute: "ufunclParCompWell f1 f2 = ufunclParCompWell f2 f1"
+  assumes ufunclCompWell_commute: "ufunclCompWell f1 f2 = ufunclCompWell f2 f1"
+
+  assumes ufuncl_parcomp_dom: "ufunclParCompWell f1 f2 \<Longrightarrow> ufDom\<cdot>(f1 \<parallel> f2) = ufDom\<cdot>f1 \<union> ufDom\<cdot>f2"
+  assumes ufuncl_parcomp_ran: "ufunclParCompWell f1 f2 \<Longrightarrow> ufRan\<cdot>(f1 \<parallel> f2) = ufRan\<cdot>f1 \<union> ufRan\<cdot>f2"
+
+  assumes ufuncl_sercomp_dom: "ufunclSerCompWell f1 f2 \<Longrightarrow> ufDom\<cdot>(f1 \<circ> f2) = ufDom\<cdot>f1"
+  assumes ufuncl_sercomp_ran: "ufunclSerCompWell f1 f2 \<Longrightarrow> ufRan\<cdot>(f1 \<circ> f2) = ufRan\<cdot>f2"
+
+  assumes comp_commute: "ufunclCompWell f1 f2 \<Longrightarrow> (f1 \<otimes> f2) = (f2 \<otimes> f1)"
+  assumes parcomp_commute: "ufunclParCompWell f1 f2 \<Longrightarrow> (f1 \<parallel> f2) = (f2 \<parallel> f1)"
+
+  assumes parcomp_asso: "ufunclParCompWell f1 f2 \<Longrightarrow>
+                      ufunclParCompWell f2 f3 \<Longrightarrow> 
+                      ufunclParCompWell f1 f3 \<Longrightarrow>  f1 \<parallel> (f2 \<parallel> f3) = (f1 \<parallel> f2) \<parallel> f3"
+
+  assumes sercomp_asso: "ufunclSerCompWell f1 f2 \<Longrightarrow>
+                      ufunclSerCompWell f2 f3 \<Longrightarrow> 
+                      ufDom\<cdot>f1 \<inter> ufRan\<cdot>f3 = {} \<Longrightarrow>  f1 \<circ> (f2 \<circ> f3) = (f1 \<circ> f2) \<circ> f3"
+
+
+  assumes parcompwell_asso: "ufunclParCompWell f1 f2 \<Longrightarrow>
+                      ufunclParCompWell f2 f3 \<Longrightarrow> 
+                      ufunclParCompWell f1 f3 \<Longrightarrow> ufunclParCompWell f1 (f2 \<parallel> f3)"
+  assumes sercompwell_asso: "ufunclSerCompWell f1 f2 \<Longrightarrow>
+                      ufunclSerCompWell f2 f3 \<Longrightarrow> 
+                      ufDom\<cdot>f1 \<inter> ufRan\<cdot>f3 = {} \<Longrightarrow>  ufunclSerCompWell f1 (f2 \<circ> f3) \<and> ufunclSerCompWell (f1 \<circ> f2) f3"
 
 begin
 end

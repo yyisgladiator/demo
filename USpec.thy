@@ -83,6 +83,7 @@ definition uspecIsConsistent :: "'m uspec \<Rightarrow> bool" where
 section\<open>Lemmas\<close>
 (****************************************************) 
 subsection \<open>General Lemmas\<close>
+
 (* rule to prove the equality of uspec *)
 lemma uspec_eqI: assumes "((inv Rev) (Rep_uspec S1)) = ((inv Rev) (Rep_uspec S2))"
   shows "S1 = S2"
@@ -118,6 +119,10 @@ lemma rep_uspec_belowI: assumes "S1 \<sqsubseteq> S2"
   shows "(Rep_uspec S1) \<sqsubseteq> (Rep_uspec S2)"
   by (meson assms below_uspec_def)
 
+lemma uspec_belowI: assumes "inv Rev (Rep_uspec S2) \<sqsubseteq> inv Rev (Rep_uspec S1)"
+  shows "S1 \<sqsubseteq> S2"
+  by (metis assms below_rev.simps below_uspec_def rev.exhaust surj_def surj_f_inv_f)
+
 (* kill me and change the name of this lemma *)
 lemma inv_rev_rep_upsec_below: assumes "(Rep_uspec S1) \<sqsubseteq> (Rep_uspec S2)"
   shows "inv Rev (Rep_uspec S2) \<sqsubseteq> inv Rev (Rep_uspec S1)"
@@ -132,6 +137,15 @@ lemma abs_rep_simp[simp]: "S1 = Abs_uspec (Rep_uspec S1)"
   by (simp add: Rep_uspec_inverse)
 
 
+lemma rep_abs_rev_simp[simp]: assumes "uspecWell S1"
+  shows "Rep_rev_uspec (Abs_rev_uspec S1) = S1"
+  by (metis UNIV_I assms f_inv_into_f image_iff rep_abs_uspec rev.inject)
+
+
+lemma abs_rep_rev_simp[simp]: "Abs_rev_uspec (Rep_rev_uspec S1) = S1"
+  by (metis UNIV_I abs_rep_simp f_inv_into_f rev.exhaust surj_def)
+
+
 (* if the upper uspec is consistent then the lower uspec is also consistent  *)
 lemma uspec_isconsistent_below: assumes "S1\<sqsubseteq>S2" and "uspecIsConsistent S2"
   shows "uspecIsConsistent S1"
@@ -141,6 +155,17 @@ lemma uspec_isconsistent_below: assumes "S1\<sqsubseteq>S2" and "uspecIsConsiste
 (* simple rule to check the below relation  *)
 lemma uspec_ele_below: assumes "S1\<sqsubseteq>S2"  shows "\<And> f. f\<in>inv Rev (Rep_uspec S2) \<Longrightarrow> f \<in> inv Rev (Rep_uspec S1)"
     by (metis (mono_tags, lifting) SetPcpo.less_set_def assms(1) contra_subsetD inv_rev_rep_upsec_below rep_uspec_belowI)
+
+
+lemma empty_uspecwell[simp]:  "uspecWell {}"
+  by (simp add: uspecWell_def)
+
+lemma empty_max: "\<And> uspec. uspec \<sqsubseteq> (Abs_uspec (Rev {}))"
+  apply (rule uspec_belowI)
+  apply (subst rep_abs_rev_simp, simp)
+  by (simp add: SetPcpo.less_set_def)
+
+subsection \<open>Dom and Ran\<close>
 
 (* dom of of two consitent uspec is eq  *)
 lemma uspecdom_eq: assumes "S1\<sqsubseteq>S2" and "uspecIsConsistent S2"
