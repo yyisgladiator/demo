@@ -932,7 +932,7 @@ lemma ubresrict_dom2: assumes "cs \<subseteq> ubDom\<cdot>ub"
 lemma ufParComp_associativity: assumes "parcomp_well f1 f2"
                                    and "parcomp_well f2 f3"
                                    and "parcomp_well f1 f3"                                  
-                                 shows "((f1\<parallel>f2)\<parallel>f3) = (f1\<parallel>(f2\<parallel>f3))"
+                                 shows "((ufParComp f1 f2) \<parallel> f3) = (f1 \<parallel> ( f2 \<parallel> f3))"
 proof-
   have f1: "\<forall>ub. (ubDom\<cdot>ub \<noteq> ufDom\<cdot>f1 \<union> ufDom\<cdot>f2 \<union> ufDom\<cdot>f3) \<or>
             (((f1 \<parallel> f2) \<rightleftharpoons> (ub \<bar>ufDom\<cdot>(f1 \<parallel> f2))) \<uplus> (f3 \<rightleftharpoons> (ub\<bar>ufDom\<cdot>f3)))
@@ -964,7 +964,7 @@ qed
 
 
 lemma ufParComp_commutativity: assumes "parcomp_well f1 f2"
-                                 shows "f1\<parallel>f2 = f2\<parallel>f1"
+                                 shows "ufParComp f1 f2 = ufParComp f2 f1"
 proof-
   have finp: "ufDom\<cdot>f1 \<union> ufDom\<cdot>f2 = ufDom\<cdot>f2 \<union> ufDom\<cdot>f1"
     by (simp add: sup_commute)
