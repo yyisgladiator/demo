@@ -6,7 +6,7 @@
 *)
 
 theory ABP_TSPS
-  imports  Sender Receiver Composition Medium "../../timed/TSPF" "../../UFun_Comp" "../../UFun" "../../UBundle" "../../USpec"
+  imports "../../timed/TSPS" Receiver Composition Medium "../../timed/TSPF" "../../UFun_Comp" "../../USpec_Comp"
 
 begin
 
