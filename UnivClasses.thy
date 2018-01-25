@@ -33,7 +33,7 @@ class uscl = cpo +
   fixes usOkay :: "channel \<Rightarrow> 'a \<Rightarrow> bool" (* similar to "ctype" in message *)
   fixes usLen :: "'a \<rightarrow> lnat"
 
-  assumes bla: "\<And>c . \<exists> e. usOkay c e"
+  assumes usOkay_ex: "\<And>c . \<exists> e. usOkay c e"
   (*assumes usOkay_bot: "\<And>c. usOkay c \<bottom>"    (* used for ubLeast wellformed proof *)*)
   assumes usOkay_adm: "\<And>c. adm (usOkay c)" (* used to instanciate ubundle *)
 begin
