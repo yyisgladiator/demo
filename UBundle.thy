@@ -924,7 +924,7 @@ proof -
     by simp
   have "ubWell ub"
     apply (simp add: ubWell_def)
-    by (metis (mono_tags, lifting) bla domIff mem_Collect_eq option.sel set_bla_def tfl_some ub_def)
+    by (metis (mono_tags, lifting) usOkay_ex domIff mem_Collect_eq option.sel set_bla_def tfl_some ub_def)
   then show "\<exists>x::'a\<^sup>\<Omega>. ubcl_class.ubDom\<cdot>x = C"
     using ubDom_ubundle_def ub_def ubdom_ubrep_eq by fastforce
 qed

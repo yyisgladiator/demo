@@ -4125,6 +4125,9 @@ lemma add2ID:"add\<cdot>\<up>0\<infinity> = ID"
 by (simp add: add2ID_h cfun_eqI)
 
 
+section\<open>Instantiation\<close>
+
+
 instantiation stream :: (message) uscl
 begin
   definition usOkay_stream_def: "usOkay c m \<equiv> sdom\<cdot>m \<subseteq> ctype c"

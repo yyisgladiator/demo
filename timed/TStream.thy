@@ -5271,6 +5271,9 @@ lemma add2smap: "add\<cdot>(\<up>x\<infinity>)\<cdot>ys = smap (\<lambda>z. z+x)
 *)
 
 
+section\<open>Instantiation\<close>
+
+
 instantiation tstream :: (message) uscl
 begin
   definition usOkay_tstream_def: "usOkay c m \<equiv> tsDom\<cdot>m \<subseteq> ctype c"
