@@ -181,8 +181,17 @@ definition ubRestrict_ubundle_def: "UnivClasses.ubRestrict \<equiv> ubRestrict"
 
 instance
   apply intro_classes
-  sorry
-
+          apply (simp add: ubDom_ubundle_def ubUnion_ubundle_def)
+         apply (simp add: ubRestrict_ubundle_def ubUnion_ubundle_def ubunion_ubrestrict3)
+        apply (simp add: ubDom_ubundle_def ubRestrict_ubundle_def)
+       apply (simp add: UBundle_Pcpo.ubUnion_ubundle_def ubDom_ubundle_def ubRestrict_ubundle_def)
+      apply (simp add: UBundle_Pcpo.ubRestrict_ubundle_def UBundle_Pcpo.ubUnion_ubundle_def ubDom_ubundle_def)
+     apply (simp add: ubDom_ubundle_def ubRestrict_ubundle_def)
+    apply (simp add: ubRestrict_ubundle_def)
+   apply (simp add: ubDom_ubundle_def ubLeast_ubundle_def)
+  apply (simp add: ubDom_ubundle_def ubLeast_ubundle_def)
+   apply (simp add: UBundle_Pcpo.ubUnion_ubundle_def ubunion_associative)
+  by (metis ubDom_ubundle_def ubUnion_ubundle_def ubunion_commutative)
 end
 
 

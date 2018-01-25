@@ -31,14 +31,29 @@ proof -
   have f1: "cont ufun1"
     apply(rule contI2)
      apply (simp add: monofun_def ubdom_fix ufun1_def)
-      by (smt below_option_def is_ub_thelub po_class.chain_def ubdom_fix ufun1_def)
+    apply auto
+  proof -
+    fix Y :: "nat \<Rightarrow> 'in"
+    assume "chain Y"
+    then have "\<And>n. ubDom\<cdot>(Y n) = ubDom\<cdot>(Lub Y)"
+      using is_ub_thelub ubdom_fix by blast
+    then show "ufun1 (\<Squnion>n. Y n) \<sqsubseteq> (\<Squnion>n. ufun1 (Y n))"
+      using ufun1_def by auto
+  qed
   have f2: "(Rep_cfun (Abs_cfun ufun1)) = ufun1"
     using f1 by auto
   have f3: "ufWell (Abs_cfun ufun1)"
     apply (simp only: ufWell_def f2, rule)
     apply (metis domIff option.distinct(1) ufun1_def)
     apply (rule_tac x = "ubDom\<cdot>inf_ub" in exI)
-    by (smt CollectD option.distinct(1) option.sel ran_def ufun1_def)
+    apply rule
+  proof -
+    fix b :: 'out
+    have "(b \<in> ran ufun1 \<longrightarrow> ubDom\<cdot>b = ubDom\<cdot>inf_ub) = (b \<notin> ran ufun1 \<or> ubDom\<cdot>b = ubDom\<cdot>inf_ub)"
+      by meson
+    then show "b \<in> ran ufun1 \<longrightarrow> ubDom\<cdot>b = ubDom\<cdot>inf_ub"
+      by (simp add: ran_def ufun1_def)
+  qed
   thus ?thesis
     by auto
 qed
@@ -158,14 +173,30 @@ proof -
     have f1: "cont ufun1"
       apply(rule contI2)
        apply (simp add: ufun1_def monofunI ubdom_fix)
-      by (smt is_ub_thelub lub_maximal not_below2not_eq rangeI ub_rangeI ubdom_fix ufun1_def)
+      apply auto
+    proof -
+      fix Y :: "nat \<Rightarrow> 'in"
+      assume "chain Y"
+      then have "\<And>n. ubDom\<cdot>(Y n) = ubDom\<cdot>(Lub Y)"
+        by (meson is_ub_thelub ubdom_fix)
+      then show "ufun1 (\<Squnion>n. Y n) \<sqsubseteq> (\<Squnion>n. ufun1 (Y n))"
+        by (simp add: ufun1_def)
+    qed
     have f2: "(Rep_cfun (Abs_cfun ufun1)) = ufun1"
       using f1 by auto
     have f3: "ufWell (Abs_cfun ufun1)"
       apply (simp only: ufWell_def f2, rule)
        apply (metis domIff option.distinct(1) ufun1_def)
       apply (rule_tac x = "ubDom\<cdot>inf_ub" in exI)
-      by (smt mem_Collect_eq option.distinct(1) option.inject ran_def ufun1_def)
+      apply (rule, rule)
+    proof -
+      fix b :: 'out
+      assume "b \<in> ran ufun1"
+      then have "\<exists>i. ufun1 i = Some b"
+        by (simp add: ran_def)
+      then show "ubDom\<cdot>b = ubDom\<cdot>inf_ub"
+        by (metis option.inject option.simps(3) ufun1_def)
+    qed
     have f31: "Rep_cufun (Abs_cufun ufun1) = ufun1"
       by (simp add: Abs_ufun_inverse f2 f3)
     have f4: "ufIsStrong (Abs_ufun (Abs_cfun ufun1))"
@@ -285,6 +316,7 @@ lemma ufun_contI [simp]: assumes "\<And> x y. ubDom\<cdot>x = In \<Longrightarro
   shows "cont (\<lambda>b. (ubDom\<cdot>b = In)\<leadsto>g b)"
     apply (rule contI2)
    apply (simp only: assms(1) ufun_monoI2)
+  apply (rule, rule)
   by (smt assms(1) assms(2) below_option_def is_ub_thelub lub_eq op_the_lub 
       option.sel option.simps(3) po_class.chain_def ubdom_fix)
 

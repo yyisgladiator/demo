@@ -1,44 +1,31 @@
-(*  Title:        SBTheorie
-    Author:       Sebastian Stüber
-    e-mail:       sebastian.stueber@rwth-aachen.de
-
-    Description:  Defines "Stream Bundles" 
-*)
-
 theory SB
-imports "../inc/OptionCpo" "../UnivClasses" "../UBundle" "../UBundle_Pcpo" "../Channel" Streams
-
+  imports "../UBundle_Conc" Streams
 begin
 
 default_sort message
 
+type_synonym 'm SB = "'m stream ubundle"
 
-(* ----------------------------------------------------------------------- *)
-section \<open>Datatype Definition\<close>
-(* ----------------------------------------------------------------------- *)
-
-
-instantiation stream :: (message) uscl
+instantiation stream :: (message) uscl_conc
 begin
 
-definition usOkay_stream_def: "usOkay c m \<equiv> sdom\<cdot>m \<subseteq> ctype c"
+  definition usOkay_stream_def: "usOkay c m \<equiv> sdom\<cdot>m \<subseteq> ctype c"
 
-definition usLen_stream_def: "usLen \<equiv> slen"
+  definition usLen_stream_def: "usLen \<equiv> slen"
+
+  definition usConc_stream: "usConc = sconc"
 
 instance
   apply intro_classes
+   apply(simp add: usOkay_stream_def)
+  apply (metis IntE sdom_sfilter subsetI)
   apply (rule admI)
-  by (simp add: usOkay_stream_def l44)
+  apply(auto simp add: usOkay_stream_def)
+  using l44 apply blast
+  by (metis (mono_tags, lifting) Un_iff sconc_sdom subset_eq usConc_stream)
 
 end
 
-instantiation stream :: (message) uscl_pcpo
-begin
-instance
-  apply intro_classes
-  sorry
-end
-  
 (* ----------------------------------------------------------------------- *)
   section \<open>Function Definition\<close>
 (* ----------------------------------------------------------------------- *)
@@ -50,7 +37,7 @@ definition sbConc:: "'m stream ubundle \<Rightarrow> 'm stream ubundle \<rightar
 abbreviation sbConc_abbr :: " 'm SB \<Rightarrow> 'm SB \<Rightarrow> 'm SB" ("(_ \<bullet> _)" [66,65] 65)
 where "b1 \<bullet> b2 \<equiv> sbConc b1\<cdot>b2"
 *)
-    
+
 
   (* Concatination on common Channels in the 'm SB. *)
 (* definition sbConcCommon:: " 'm stream ubundle \<Rightarrow> 'm stream ubundle \<rightarrow> 'm stream ubundle" where
@@ -83,7 +70,7 @@ definition sbNth:: "nat \<Rightarrow> 'm stream ubundle \<rightarrow> 'm stream 
 (* I tried to make this function cont, look at SBCase_Study *)
   (* Length of the selected stream. *)
 definition sbLen:: " 'm stream ubundle \<rightarrow> lnat " (* ("#_") *)where
-"sbLen \<equiv> \<Lambda> b. if ubDom\<cdot>b \<noteq> {} then LEAST ln. ln \<in> { #(b. c) | c. c \<in> ubDom\<cdot>b} else \<infinity>"  
+"sbLen \<equiv> \<Lambda> b. if ubDom\<cdot>b \<noteq> {} then LEAST ln. ln \<in> { #(b. c) | c. c \<in> ubDom\<cdot>b} else \<infinity>"
 
   (* Iterates the streams n-times. *)
 definition sbNTimes:: "nat \<Rightarrow> 'm stream ubundle \<Rightarrow> 'm stream ubundle" ("_\<star>_" [60,80] 90) where
@@ -125,7 +112,7 @@ definition sbRcdups:: "'m stream ubundle \<rightarrow> 'm stream ubundle" where
 "sbRcdups \<equiv> \<Lambda> sb. sbMapStream (\<lambda>s. srcdups\<cdot>s) sb"
 
 (* Ugly AF, schöner machen\<And>! *)
-(* Ich kann nicht "fix" verwendne da 'm SB kein pcpo ist. 
+(* Ich kann nicht "fix" verwendne da 'm SB kein pcpo ist.
   Statdessen verwende ich "(sbTake 0\<cdot>b)" als künstliches kleinstes element *)
 
 (* primrec myiterate :: "nat \<Rightarrow> 'm stream ubundle set \<Rightarrow> 'm stream ubundle \<Rightarrow> 'm stream ubundle" where
@@ -142,14 +129,14 @@ thm fix_def
 definition sbFilterTupel2:: " 'm stream ubundle set \<Rightarrow> 'm stream ubundle \<Rightarrow> 'm stream ubundle" where
 "sbFilterTupel2 A \<equiv> (\<Lambda> F. \<Squnion>i. iterate i\<cdot>F\<cdot>(\<lambda>s. sbTake 0\<cdot>s))\<cdot>
       (\<Lambda> h. (\<lambda> b. if (sbHd\<cdot>b\<in>A) then sbHd\<cdot>b \<bullet> h (sbRt\<cdot>b) else h (sbRt\<cdot>b)))"*)
-(* \<Squnion>i. iterate i\<cdot>(\<Lambda> f. (\<lambda>b. 
+(* \<Squnion>i. iterate i\<cdot>(\<Lambda> f. (\<lambda>b.
   if (b=sbLeast (sbDom\<cdot>b)) then sbLeast (sbDom\<cdot>b) else
     if (sbHd\<cdot>b\<in>bs) then (sbHd\<cdot>b) \<bullet> f (sbRt\<cdot>b) else f (sbRt\<cdot>b) ))\<cdot>(\<lambda>x. empty \<Omega>)"  *)
 
 subsection \<open>Automaton\<close>
 
 definition sbHdElem :: "'m stream ubundle \<rightarrow> (channel \<rightharpoonup> 'm discr\<^sub>\<bottom>)" where
-"sbHdElem \<equiv> \<Lambda> sb. (\<lambda>c. (c \<in> ubDom\<cdot>sb) \<leadsto> (lshd\<cdot>(sb . c)))" 
+"sbHdElem \<equiv> \<Lambda> sb. (\<lambda>c. (c \<in> ubDom\<cdot>sb) \<leadsto> (lshd\<cdot>(sb . c)))"
 
 definition convDiscrUp :: "(channel \<rightharpoonup> 'm) \<Rightarrow> (channel \<rightharpoonup> 'm discr\<^sub>\<bottom>)" where
 "convDiscrUp sb \<equiv> (\<lambda>c. (c \<in> dom sb) \<leadsto> (Iup (Discr (sb \<rightharpoonup> c))))"
@@ -160,7 +147,7 @@ definition convSB :: "(channel \<rightharpoonup> 'm discr\<^sub>\<bottom>) \<Rig
 (* ----------------------------------------------------------------------- *)
 section \<open>Lemmas\<close>
 (* ----------------------------------------------------------------------- *)
-  
+
 (* ----------------------------------------------------------------------- *)
 subsection \<open>General Lemmas\<close>
 (* ----------------------------------------------------------------------- *)
@@ -273,7 +260,7 @@ proof (rule contI2)
           ub_below)
   qed
   thus "\<forall>Y. chain Y \<longrightarrow> sbMapStream f (\<Squnion>i. Y i) \<sqsubseteq> (\<Squnion>i. sbMapStream f (Y i))"
-    by (smt 
+    by (smt
         assms(1) assms(2) ch2ch_monofun cont2contlubE eq_imp_below ubrep_chain_lub_dom_eq ubrep_chain_the
         less_UBI lub_eq ubrep_lub_eval option.sel ubrep_ubabs ubGetCh_def sbMapStream_def ubdom_insert
         ubgetch_insert sbmapstream_dom sbmapstream_well)
@@ -389,10 +376,10 @@ lemma sbntimes_sbgetch [simp]: assumes "c\<in>ubDom\<cdot>b"
     domIff option.sel sbMapStream_def sbNTimes_def sntimes_sdom1 subset_trans ubWell_def
     ubdom_channel_usokay ubgetch_insert ubgetch_ubrep_eq usOkay_stream_def)
 
-lemma sbntimes_zero [simp]: "0\<star>b = ubLeast (ubDom\<cdot>b)" 
+lemma sbntimes_zero [simp]: "0\<star>b = ubLeast (ubDom\<cdot>b)"
   by (simp add: sbNTimes_def sbMapStream_def sntimes_def ubLeast_def)
 
-lemma sbntimes_one [simp]: fixes b:: "'m stream ubundle" shows "1\<star>b = b" 
+lemma sbntimes_one [simp]: fixes b:: "'m stream ubundle" shows "1\<star>b = b"
   by (simp add: sbNTimes_def sbMapStream_def sntimes_def ubLeast_def)
 
 lemma sbntimes_sbdom [simp]: "ubDom\<cdot>(i\<star>b) = ubDom\<cdot>b"
@@ -405,7 +392,7 @@ proof(rule ub_below)
   fix c
   assume "c\<in>ubDom\<cdot>?L"
   hence "c\<in>ubDom\<cdot>b" by simp
-  thus "?L . c \<sqsubseteq> ?R . c" using sntimes_leq by auto 
+  thus "?L . c \<sqsubseteq> ?R . c" using sntimes_leq by auto
 qed
 
 lemma sbntimes_chain[simp]: fixes b:: "'m stream ubundle"
@@ -417,7 +404,7 @@ lemma sbntimes2sinftimes: assumes "chain Y" and "c\<in>ubDom\<cdot>b"
 proof -
   have "(\<Squnion>i. i\<star>b) . c = (\<Squnion>i. (i\<star>b) . c)" by (simp add: contlub_cfun_arg contlub_cfun_fun)
   hence "(\<Squnion>i. i\<star>b) . c = (\<Squnion> i. sntimes i (b . c))" using assms(2) by auto
-  thus ?thesis by (simp add: sntimesLub) 
+  thus ?thesis by (simp add: sntimesLub)
 qed
 
 (* ----------------------------------------------------------------------- *)
@@ -439,10 +426,10 @@ proof (rule ub_eq)
 
   fix c
   assume "c\<in>ubDom\<cdot>?L"
-  hence "c\<in>ubDom\<cdot>b" using ubdom_chain_eq2 sbntimes_chain sbntimes_sbdom by blast 
+  hence "c\<in>ubDom\<cdot>b" using ubdom_chain_eq2 sbntimes_chain sbntimes_sbdom by blast
   hence "\<And>c. c \<in> ubDom\<cdot>b \<Longrightarrow> (\<Squnion>i. i\<star>b) . c = b\<infinity> . c" by (metis (full_types) sbinftimes_sbgetch sbntimes2sinftimes sbntimes_chain)
   hence "(\<Squnion>i. i\<star>b) . c = (\<Squnion>i. i\<star>(b . c))" by (simp add: \<open>c \<in> ubDom\<cdot>(\<Squnion>i. i\<star>b)\<close> \<open>c \<in> ubDom\<cdot>b\<close> sntimesLub)
-  thus "?L . c = ?R . c" using \<open>c \<in> ubDom\<cdot>b\<close> sntimesLub by force 
+  thus "?L . c = ?R . c" using \<open>c \<in> ubDom\<cdot>b\<close> sntimesLub by force
 qed
 
 (* ----------------------------------------------------------------------- *)
@@ -479,14 +466,14 @@ using ubrep_well ubWell_def by blast
 lemma if_then_chain[simp]: assumes "chain Y" and "monofun g"
   shows "chain (\<lambda>i. (ubDom\<cdot>(Y i) = In)\<leadsto>g (Y i))"
 proof(cases "ubDom\<cdot>(Y 0) = In")
-  case True 
+  case True
   hence "\<forall>i. (ubDom\<cdot>(Y i) = In)" using assms(1) ubdom_chain_eq3 by blast
   thus ?thesis
     by (smt assms(1) assms(2) below_option_def monofunE option.sel option.simps(3) po_class.chain_def)
 next
   case False
   hence "\<forall>i. (ubDom\<cdot>(Y i) \<noteq> In)" using assms(1) ubdom_chain_eq3 by blast
-  thus ?thesis by (auto) 
+  thus ?thesis by (auto)
 qed
 
 lemma if_then_mono [simp]:  assumes "monofun g"
@@ -511,7 +498,7 @@ qed
 lemma if_then_cont [simp]: assumes "cont g"
   shows "cont (\<lambda>b. (ubDom\<cdot>b = In)\<leadsto>g b)"
 proof(rule contI2)
-  show "monofun (\<lambda>b. (ubDom\<cdot>b = In)\<leadsto>g b)" using assms cont2mono if_then_mono by blast 
+  show "monofun (\<lambda>b. (ubDom\<cdot>b = In)\<leadsto>g b)" using assms cont2mono if_then_mono by blast
   thus " \<forall>Y. chain Y \<longrightarrow> (ubDom\<cdot>(\<Squnion>i. Y i) = In)\<leadsto>g (\<Squnion>i. Y i) \<sqsubseteq> (\<Squnion>i. (ubDom\<cdot>(Y i) = In)\<leadsto>g (Y i))"
     by (smt Abs_cfun_inverse2 assms if_then_lub lub_chain_maxelem lub_eq po_eq_conv ubdom_chain_eq2)
 qed
@@ -519,28 +506,28 @@ qed
 lemma if_then_sbDom: assumes "d \<in> dom (\<lambda>b. (ubDom\<cdot>b = In)\<leadsto>(F b))"
   shows "ubDom\<cdot>d = In"
 by (smt assms domIff)
-  
+
 (* ----------------------------------------------------------------------- *)
   subsection \<open>sbHdElem\<close>
-(* ----------------------------------------------------------------------- *)    
+(* ----------------------------------------------------------------------- *)
 
-lemma sbHdElem_mono: "monofun (\<lambda> sb::'a stream ubundle. (\<lambda>c. (c \<in> ubDom\<cdot>sb) \<leadsto> (lshd\<cdot>(sb . c))))"  
-proof(rule monofunI) 
+lemma sbHdElem_mono: "monofun (\<lambda> sb::'a SB. (\<lambda>c. (c \<in> ubDom\<cdot>sb) \<leadsto> (lshd\<cdot>(sb . c))))"
+proof(rule monofunI)
   fix x y ::"'a stream ubundle"
   assume "x \<sqsubseteq> y"
-  then show "(\<lambda> sb::'a stream ubundle. (\<lambda>c. (c \<in> ubDom\<cdot>sb) \<leadsto> (lshd\<cdot>(sb . c)))) x \<sqsubseteq> (\<lambda> sb::'a stream ubundle. (\<lambda>c. (c \<in> ubDom\<cdot>sb) \<leadsto> (lshd\<cdot>(sb . c)))) y"
-    by (smt below_refl fun_below_iff monofun_cfun_arg some_below ubdom_below)
-qed  
-  
+  then show "(\<lambda> sb::'a SB. (\<lambda>c. (c \<in> ubDom\<cdot>sb) \<leadsto> (lshd\<cdot>(sb . c)))) x \<sqsubseteq> (\<lambda> sb::'a SB. (\<lambda>c. (c \<in> ubDom\<cdot>sb) \<leadsto> (lshd\<cdot>(sb . c)))) y"
+    by (smt below_option_def fun_below_iff monofun_cfun_arg option.discI option.sel ubdom_below)
+qed
+
 lemma sbHdElem_cont_pre: assumes "chain Y" shows "(\<lambda>c. (c \<in> ubDom\<cdot>(\<Squnion>i. Y i))\<leadsto>lshd\<cdot>((\<Squnion>i. Y i) . c)) \<sqsubseteq> (\<Squnion>i. (\<lambda>c. (c \<in> ubDom\<cdot>(Y i))\<leadsto>lshd\<cdot>(Y i . c)))"
-proof - 
+proof -
   fix c
   have "(\<lambda>c. (c \<in> ubDom\<cdot>(\<Squnion>i. Y i))\<leadsto>lshd\<cdot>((\<Squnion>i. Y i) . c)) c \<sqsubseteq> (\<Squnion>i. (\<lambda>c. (c \<in> ubDom\<cdot>(Y i))\<leadsto>lshd\<cdot>(Y i . c)) c)"
   proof(cases "c \<in> ubDom\<cdot>(\<Squnion>i. Y i)")
     case True
     have f1: "\<And>i. ubDom\<cdot>(\<Squnion>i. Y i) =  ubDom\<cdot>(Y i)"
       by (simp add: assms ubdom_chain_eq2)
-    then show ?thesis 
+    then show ?thesis
       apply(simp add: True)
     proof -
       have "Some (lshd\<cdot>(\<Squnion>n. Y n . c)) \<sqsubseteq> (\<Squnion>n. Some (lshd\<cdot>(Y n . c)))"
@@ -550,17 +537,17 @@ proof -
     qed
   next
     case False
-    then show ?thesis 
+    then show ?thesis
       using assms ubdom_chain_eq2 by fastforce
-  qed  
+  qed
   then show ?thesis
     by (smt
         assms ch2ch_Rep_cfunL ch2ch_Rep_cfunR contlub_cfun_arg contlub_cfun_fun fun_below_iff
         if_then_lub is_ub_thelub lub_eq lub_fun monofun_cfun_arg monofun_cfun_fun po_class.chain_def
         po_eq_conv ubdom_chain_eq2 some_below)
-qed  
- 
-lemma sbHdElem_cont: "cont (\<lambda> sb::'a stream ubundle. (\<lambda>c. (c \<in> ubDom\<cdot>sb) \<leadsto> (lshd\<cdot>(sb . c))))"  
+qed
+
+lemma sbHdElem_cont: "cont (\<lambda> sb::'a stream ubundle. (\<lambda>c. (c \<in> ubDom\<cdot>sb) \<leadsto> (lshd\<cdot>(sb . c))))"
   apply(rule contI2)
   apply (simp add: sbHdElem_mono)
   using sbHdElem_cont_pre by blast

@@ -5,7 +5,7 @@
 *)
 
 theory UBundle
-  imports UnivClasses Channel "inc/OptionCpo" UFun_Comp
+  imports UnivClasses Channel "inc/OptionCpo"
 begin
 
   
@@ -62,13 +62,13 @@ text {* @{text "ubDom"} returns the domain of the given bundle *}
 definition ubDom :: "'M\<^sup>\<Omega> \<rightarrow> channel set" where
 "ubDom \<equiv> \<Lambda> b. dom (Rep_ubundle b)"
 
-(*
+
 text {* @{text "ubRestrict"} creates a new bundle with the restricted channel set *}
 definition ubRestrict:: "channel set \<Rightarrow> 'M\<^sup>\<Omega> \<rightarrow> 'M\<^sup>\<Omega>" where
 "ubRestrict cs  \<equiv> \<Lambda> b. Abs_ubundle (Rep_ubundle b |` cs)"
 
 abbreviation ubRestrict_abbr :: "'M\<^sup>\<Omega> \<Rightarrow> channel set \<Rightarrow> 'M\<^sup>\<Omega>" (infix "\<bar>" 65) where 
-"b \<bar> cs \<equiv> ubRestrict cs\<cdot>b" *)
+"b \<bar> cs \<equiv> ubRestrict cs\<cdot>b"
 
 
 text {* @{text "ubGetCh"} returns the element of a given channel  *}
@@ -88,13 +88,13 @@ text {* @{text "ubShift"}  the channel-domains are merged . Thats an easy conver
 definition ubShift :: "('A \<Rightarrow> 'B) \<Rightarrow> 'A\<^sup>\<Omega> \<Rightarrow> 'B\<^sup>\<Omega>" where
 "ubShift f ub = Abs_ubundle (\<lambda>c. ((c\<in>ubDom\<cdot>ub) \<leadsto> f (ub . c)))"
 
-(*
+
 text {* @{text "ubUnion"}  the channel-domains are merged *}
 definition ubUnion :: "'M\<^sup>\<Omega> \<rightarrow> 'M\<^sup>\<Omega> \<rightarrow> 'M\<^sup>\<Omega>"  where 
 "ubUnion \<equiv> \<Lambda> ub1 ub2 . Abs_ubundle ((Rep_ubundle ub1) ++ (Rep_ubundle ub2))"
 
 abbreviation ubunion_abbr :: " 'M\<^sup>\<Omega> \<Rightarrow> 'M\<^sup>\<Omega> \<Rightarrow> 'M\<^sup>\<Omega>" (infixl "\<uplus>" 100) where 
-"b1 \<uplus> b2 \<equiv> ubUnion\<cdot>b1\<cdot>b2"*)
+"b1 \<uplus> b2 \<equiv> ubUnion\<cdot>b1\<cdot>b2"
 
 
 text {* @{text "ubSetCh"} adds a channel or ubReplaces its content *}
@@ -160,9 +160,9 @@ theorem ubrep_ubabs[simp]: assumes "ubWell f" shows "Rep_ubundle (Abs_ubundle f)
 theorem ubabs_ubrep[simp]: shows "Abs_ubundle (Rep_ubundle f) = f"
   by (simp add: Rep_ubundle_inverse)
 
-lemma cont_Abs_UB[simp]: assumes "cont g" and "\<forall>x. ub_well (g x)"
+lemma cont_Abs_UB[simp]: assumes "cont g" and "\<forall>x. ubWell (g x)"
   shows "cont (\<lambda>x. Abs_ubundle (g x))"
-  sorry
+  by (simp add: assms(1) assms(2) cont_Abs_ubundle)
 
 (* a chain of 'M\<^sup>\<Omega>s is also a chain after applying Rep_ubundle *)
 lemma ubrep_chain[simp]: assumes "chain S"
@@ -413,10 +413,62 @@ lemma ubrestrict_below [simp]:  assumes "chain Y" and "cont h"
 
 
 subsection \<open>ubLen\<close>
-
+lemma ublen_monofun:"monofun ubLen"
+proof (rule monofunI)
+  fix x::"'a\<^sup>\<Omega>" and y::"'a\<^sup>\<Omega>"
+  assume a1: "x \<sqsubseteq> y"
+  show "ubLen x \<sqsubseteq> ubLen y"
+  proof (cases "ubDom\<cdot>x = {}")
+    case True
+    then show ?thesis 
+      by (metis a1 eq_imp_below ubLen_def ubdom_below)
+  next
+    case False
+      obtain y_len_set where y_len_set_def: "y_len_set = {usLen\<cdot>(y . c) | c.  c \<in> ubDom\<cdot>y}" 
+        by simp
+      have f2: "(LEAST ln. ln\<in> y_len_set) = ubLen y"
+      proof -
+        have "UBundle.ubDom\<cdot>y \<noteq> {}"
+          by (metis (no_types) False a1 empty_iff ubdom_below ubgetchI)
+        then show ?thesis
+          by (simp add: ubLen_def y_len_set_def)
+      qed
+      have f7: "y_len_set \<noteq> {}"
+      proof - 
+        obtain c where "c \<in> ubDom\<cdot>y" 
+          using False a1 ubdom_below by blast
+        then have "usLen\<cdot>(y . c) \<in> y_len_set"
+          using y_len_set_def by blast
+        then show ?thesis
+          by auto
+      qed
+      have f8: "(LEAST ln. ln\<in> y_len_set) \<in> y_len_set"
+        by (meson LeastI f7 neq_emptyD)
+      obtain y_ln where y_ln_def: "y_ln = (LEAST ln. ln\<in> y_len_set)" by simp
+      have f9: "\<forall> len \<in> y_len_set. \<exists> c \<in> ubDom\<cdot>y. usLen\<cdot>(y . c) = len"  
+        using y_len_set_def by blast
+      then have f10: "y_ln \<in> y_len_set \<and> (\<exists> c \<in> ubDom\<cdot>y. usLen\<cdot>(y . c) = y_ln)"
+        apply rule
+        by (simp add: f8 y_ln_def) +
+      then obtain y_c where y_c_def: "y_c \<in> ubDom\<cdot>y \<and> usLen\<cdot>(y . y_c) = (LEAST ln. ln\<in> y_len_set)"
+        using y_ln_def by blast
+      have f11: "ubLen x \<sqsubseteq> usLen\<cdot>(x . y_c)"
+      proof -
+        have "\<exists>c. usLen\<cdot>(x . y_c) = usLen\<cdot>(x . c) \<and> c \<in> UBundle.ubDom\<cdot>x"
+          using a1 ubdom_below y_c_def by blast
+        then show ?thesis
+          by (simp add: False Least_le ubLen_def)
+      qed
+      have "x . y_c \<sqsubseteq> y . y_c"
+        by (simp add: a1 monofun_cfun_arg)
+      then have "usLen\<cdot>(x . y_c) \<sqsubseteq> usLen\<cdot>(y . y_c)"
+        using monofun_cfun_arg by blast
+      then show ?thesis
+        using f11 f2 y_c_def by auto
+    qed
+  qed
 
 (* Missing *)
-  
   
 subsection \<open>ubShift\<close>
 
@@ -446,8 +498,7 @@ lemma ubunion_cont [simp]: "cont (\<lambda> b1. \<Lambda> b2. Abs_ubundle (Rep_u
       Rep_ubundle cont_Abs_ubundle mem_Collect_eq ubunion_contL ubunion_well)
 
 lemma ubunion_insert: "(b1 \<uplus> b2) = Abs_ubundle (Rep_ubundle b1 ++ Rep_ubundle b2)"
-  apply (simp add: ubUnion_def)
-  using ubunion_contR ubunion_contL ubunion_cont by (simp add: cont_Abs_ubundle)
+  by (simp add: ubUnion_def)
 
 lemma ubunion_idL [simp]: assumes "ubDom\<cdot>b1 \<subseteq> ubDom\<cdot>b2"
   shows "b1 \<uplus> b2 = b2"
@@ -491,6 +542,21 @@ lemma ubunion_eqI: assumes "a = b" and "c = d"
   by (simp add: assms)
 
 
+lemma ubunion_restrict [simp]: assumes "ubDom\<cdot>b2 = cs"
+  shows "(b1 \<uplus> b2) \<bar> cs = b2"
+  apply (simp add: ubunion_insert ubrestrict_insert)
+  by (metis assms map_union_restrict2 ubabs_ubrep ubdom_insert)
+
+lemma ubunion_restrict2 [simp]: assumes "ubDom\<cdot>b2 \<inter> cs = {}"
+  shows "(b1 \<uplus> b2) \<bar> cs = b1 \<bar> cs" 
+  apply (simp add: ubunion_insert ubrestrict_insert)
+  by (metis assms map_union_restrict ubdom_insert)
+
+
+lemma ubunion_ubrestrict3: "(a \<uplus> b ) \<bar> cs = (a \<bar> cs)  \<uplus> (b \<bar> cs)"
+  apply (simp add: ubunion_insert ubrestrict_insert)
+  by (metis mapadd2if_then restrict_map_def)
+
 subsection \<open>ubSetCh\<close>
 
   
@@ -528,9 +594,6 @@ lemma ubres_ubdom_supset: assumes "ubDom\<cdot>ub \<subseteq> cs" shows "ub \<ba
 lemma ubres_ubdom_supset_inter: "ub \<bar> cs = ub \<bar> (cs \<inter> (ubDom\<cdot>ub))"
   using ubrestrict_ubdom_sup_inter by blast
 
-lemma ub_ubdom: "ubDom\<cdot>(SOME b. b \<in> UB cs) = cs"
-  apply (simp add: UB_def)
-  sorry
 
 subsection \<open>ubRenameCh\<close>
 
@@ -850,12 +913,28 @@ section\<open>Instantiation\<close>
 instantiation ubundle :: (uscl) ubcl
 begin
 definition ubDom_ubundle_def: "UnivClasses.ubDom \<equiv> ubDom"
-
 definition ubLen_ubundle_def: "UnivClasses.ubLen \<equiv> ubLen"
+
+lemma ubundle_ex: "\<And>C::channel set. \<exists>x::'a\<^sup>\<Omega>. ubcl_class.ubDom\<cdot>x = C"
+proof -
+  fix C::"channel set"
+  obtain set_bla::"'a set" where set_bla_def: "set_bla = {a . \<exists> c \<in> C. usOkay c a}"
+    by simp
+  obtain ub where ub_def: "ub = (\<lambda> c. (c \<in> C) \<leadsto> (SOME a. a \<in> set_bla \<and> usOkay c a))"
+    by simp
+  have "ubWell ub"
+    apply (simp add: ubWell_def)
+    by (metis (mono_tags, lifting) usOkay_ex domIff mem_Collect_eq option.sel set_bla_def tfl_some ub_def)
+  then show "\<exists>x::'a\<^sup>\<Omega>. ubcl_class.ubDom\<cdot>x = C"
+    using ubDom_ubundle_def ub_def ubdom_ubrep_eq by fastforce
+qed
 
 instance
   apply intro_classes
-  sorry
+     apply (simp add: ubDom_ubundle_def ubdom_below)
+    apply (simp add: ubundle_ex)
+   apply (simp add: ubLen_ubundle_def ublen_monofun)
+  by (metis (mono_tags) domIff empty_iff equalityI subsetI ubLen_def ubLen_ubundle_def ubWell_empty ubdom_ubrep_eq)
 
 end
 

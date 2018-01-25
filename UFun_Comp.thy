@@ -1119,29 +1119,9 @@ lemma ufFeedH_cont1: "cont (\<lambda> z. (f\<rightleftharpoons>((x \<uplus> z)\<
   using cont_compose by force   
 
 lemma ufFeedH_cont2: "cont (\<lambda>x. (\<Lambda> z. (f\<rightleftharpoons>((x \<uplus> z)\<bar> (ufDom\<cdot>f)))))"
-proof(rule contI2)
-  have f1: "\<And>x f xa. (\<Lambda> (z::'a). f \<rightleftharpoons> x \<uplus> z\<bar>UFun.ufDom\<cdot>f)\<cdot>xa = (f \<rightleftharpoons> x \<uplus> xa\<bar>UFun.ufDom\<cdot>f)"
-    by (simp add: ufFeedH_cont1)
-  show "monofun (\<lambda>x. (\<Lambda> z. (f\<rightleftharpoons>((x \<uplus> z)\<bar> (ufDom\<cdot>f)))))"
-    apply(rule monofunI)
-    apply(subst cfun_below_iff)
-    apply(subst f1)
-    apply(subst f1)
-    by (metis (full_types) below_option_def below_refl monofun_cfun_arg monofun_cfun_fun)
-  show  "\<forall>Y::nat \<Rightarrow> 'a. chain Y \<longrightarrow> (\<Lambda> (z::'a). f \<rightleftharpoons> (\<Squnion>i::nat. Y i) \<uplus> z\<bar>UFun.ufDom\<cdot>f) \<sqsubseteq> (\<Squnion>i::nat. \<Lambda> (z::'a). f \<rightleftharpoons> Y i \<uplus> z\<bar>UFun.ufDom\<cdot>f)"
-    apply rule+
-  proof - 
-    fix Y :: "nat \<Rightarrow> 'a"
-    assume "chain Y"
-    have f2: "\<And>x f. (\<Squnion>i::nat. \<Lambda> (z::'a). f \<rightleftharpoons> Y i \<uplus> z\<bar>UFun.ufDom\<cdot>f)\<cdot>x = f \<rightleftharpoons> Lub Y \<uplus> x\<bar>UFun.ufDom\<cdot>f"
-      using ufFeedH_cont1 
-      sorry
-    show "(\<Lambda> (z::'a). f \<rightleftharpoons> (\<Squnion>i::nat. Y i) \<uplus> z\<bar>UFun.ufDom\<cdot>f) \<sqsubseteq> (\<Squnion>i::nat. \<Lambda> (z::'a). f \<rightleftharpoons> Y i \<uplus> z\<bar>UFun.ufDom\<cdot>f)"
-      apply(subst cfun_below_iff)
-      apply(subst f1)
-      by(simp add: f2)
-  qed
-qed
+  apply(subst cont2cont_LAM)
+    apply (simp_all add: ufFeedH_cont1)
+  using cont_compose by force
 
 lemma ufFeedH_cont: "cont (ufFeedH f)"
 proof - 
