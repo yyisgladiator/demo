@@ -5271,7 +5271,9 @@ lemma add2smap: "add\<cdot>(\<up>x\<infinity>)\<cdot>ys = smap (\<lambda>z. z+x)
 *)
 
 
-section\<open>Instantiation\<close>
+(* ----------------------------------------------------------------------- *)
+section \<open>Instantiation\<close>
+(* ----------------------------------------------------------------------- *)
 
 
 instantiation tstream :: (message) uscl
@@ -5327,4 +5329,5 @@ instance
   apply intro_classes
   by (simp add: usclOkay_tsconc)
 end
+
 end

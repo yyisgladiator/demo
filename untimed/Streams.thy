@@ -4125,7 +4125,9 @@ lemma add2ID:"add\<cdot>\<up>0\<infinity> = ID"
 by (simp add: add2ID_h cfun_eqI)
 
 
-section\<open>Instantiation\<close>
+(* ----------------------------------------------------------------------- *)
+section \<open>Instantiation\<close>
+(* ----------------------------------------------------------------------- *)
 
 
 instantiation stream :: (message) uscl
@@ -4147,7 +4149,7 @@ instance
   by (simp add: usclOkay_stream_def)
 end
 
-instantiation stream:: (message) uscl_conc
+instantiation stream :: (message) uscl_conc
 begin
   definition usclConc_stream_def: "usclConc \<equiv> sconc"
 instance
@@ -4155,5 +4157,6 @@ instance
   apply (simp add: usclOkay_stream_def)
   by (smt Un_subset_iff contra_subsetD sconc_sdom subsetI usclConc_stream_def)
 end
+
 
 end
