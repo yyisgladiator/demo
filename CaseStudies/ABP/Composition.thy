@@ -350,12 +350,16 @@ lemma tsaltbitpro_inp2out:
           i_ninf inf_ub ln_less min_def p1_def p2_def send_def set2tssnd_ack2trans 
           tstickcount_inp2infacks)
 
-    have "#(tsAbs\<cdot>(tsRemDups\<cdot>as)) \<noteq> \<infinity> \<Longrightarrow> #(tsAbs\<cdot>(tsRemDups\<cdot>ds)) \<le> #(tsAbs\<cdot>(tsRemDups\<cdot>as))"
+    have "#(tsAbs\<cdot>(tsRemDups\<cdot>as)) \<noteq> \<infinity> \<Longrightarrow> #(tsAbs\<cdot>(tsRemDups\<cdot>ds)) \<le> lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>as)))"
       apply (simp add: as_def ar_def dr_def)
       apply (simp add: tsremdups_tsabs tsmed_tsabs tsprojsnd_tsabs p1_inf p2_inf)
       sorry
+    have h1:"#\<surd>as = #\<surd>(send\<cdot>i\<cdot>as)" 
+    apply (subst as_def)
+    apply (simp add: ar_def dr_def ds_def)
+      by (simp add: p1_inf p2_inf)
 
-    have "#(tsAbs\<cdot>(tsRemDups\<cdot>as)) \<noteq> \<infinity> \<Longrightarrow> #(tsAbs\<cdot>(tsRemDups\<cdot>ds)) \<le> #(tsAbs\<cdot>(tsRemDups\<cdot>as))"
+  (*  have "#(tsAbs\<cdot>(tsRemDups\<cdot>as)) \<noteq> \<infinity> \<Longrightarrow> #(tsAbs\<cdot>(tsRemDups\<cdot>ds)) \<le> lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>as)))"
       apply (simp add: tsremdups_tsabs)
       proof (rule ccontr)
         assume a1: "#(srcdups\<cdot>(tsAbs\<cdot>as)) \<noteq> \<infinity>"
@@ -386,13 +390,30 @@ lemma tsaltbitpro_inp2out:
 
         have q9: "#(\<up>(snth n (tsAbs\<cdot>ds))\<infinity>) = \<infinity>"
           by auto
-        thus "False"
-          sorry
-    qed
-
-    hence i_geq_as: "#(tsAbs\<cdot>i) \<le> #(tsAbs\<cdot>(tsRemDups\<cdot>as))"
-      by (metis ack2trans_post as_leq_ds dual_order.antisym inf_ub lnle2le min_def min_rek 
-          tsprojfst_tsabs_slen)
+       
+    qed *)
+    have h2:"lnsuc\<cdot>(#\<surd>as) > #\<surd>(send\<cdot>i\<cdot>as) \<Longrightarrow> #(tsAbs\<cdot>i) \<le> #(tsAbs\<cdot>(tsRemDups\<cdot>as))"
+      by (meson leD le_less_linear send_def set2tssnd_as_inftick)
+    have h3:"#(tsAbs\<cdot>(send\<cdot>i\<cdot>as)) \<noteq> \<infinity> \<Longrightarrow> #\<surd>as = \<infinity> \<Longrightarrow> #(tsAbs\<cdot>i) \<le> #(tsAbs\<cdot>(tsRemDups\<cdot>as))"
+      by (meson leI send_def set2tssnd_nack2inftrans)
+    have h4:"#(tsAbs\<cdot>i) \<noteq> \<infinity> \<Longrightarrow> #(tsAbs\<cdot>(send\<cdot>i\<cdot>as)) \<noteq> \<infinity>"
+      apply (simp add: as_def ar_def dr_def)
+      apply (subst ds_def)
+      sorry
+    have i_geq_as: "#(tsAbs\<cdot>i) \<le> #(tsAbs\<cdot>(tsRemDups\<cdot>as))"
+      apply (case_tac "#\<surd>as =\<infinity>")defer
+      apply (rule h2)
+      apply (fold h1)
+      using inf_less_eq linorder_le_less_linear ln_less apply blast
+      apply (rule h3,simp_all)
+      by (simp add: i_ninf local.h4)
+     (* apply (simp add: as_def ar_def dr_def)
+      apply (subst ds_def)
+      apply (simp add: tsremdups_tsabs p1_inf p2_inf tsmed_tsabs tsprojsnd_tsabs)
+      apply (simp add: sprojsnd_def smed_smap smed2med)
+          
+by (meti ack2trans_post as_leq_ds dual_order.antisym inf_ub lnle2le min_def min_rek 
+          tsprojfst_tsabs_slen) *)
     (* equalities *)
     have i_eq_as: "#(tsAbs\<cdot>i) = #(tsAbs\<cdot>(tsRemDups\<cdot>as))"
       by (simp add: dual_order.antisym i_geq_as as_leq_i)
