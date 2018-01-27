@@ -6,25 +6,6 @@ default_sort message
 
 type_synonym 'm SB = "'m stream ubundle"
 
-instantiation stream :: (message) uscl_conc
-begin
-
-  definition usOkay_stream_def: "usOkay c m \<equiv> sdom\<cdot>m \<subseteq> ctype c"
-
-  definition usLen_stream_def: "usLen \<equiv> slen"
-
-  definition usConc_stream: "usConc = sconc"
-
-instance
-  apply intro_classes
-   apply(simp add: usOkay_stream_def)
-  apply (metis IntE sdom_sfilter subsetI)
-  apply (rule admI)
-  apply(auto simp add: usOkay_stream_def)
-  using l44 apply blast
-  by (metis (mono_tags, lifting) Un_iff sconc_sdom subset_eq usConc_stream)
-
-end
 
 (* ----------------------------------------------------------------------- *)
   section \<open>Function Definition\<close>
@@ -167,7 +148,7 @@ lemma [simp]: "Abs_ubundle (\<lambda>c. (c \<in> ubDom\<cdot>b)\<leadsto>b . c) 
 (* Welltyped is preserved after setting new sb_well channels.*)
 lemma sbset_well [simp]: assumes "sdom\<cdot>s \<subseteq> ctype c"
   shows "ubWell ((Rep_ubundle b) (c \<mapsto> s) )"
-  by (simp add: assms usOkay_stream_def)
+  by (simp add: assms usclOkay_stream_def)
 
 (* ----------------------------------------------------------------------- *)
   subsection \<open>sbRestrict\<close>
@@ -223,20 +204,20 @@ using assms by blast
 
 lemma sbmapstream_well[simp]: assumes "\<forall>c s. (sdom\<cdot>s\<subseteq>(ctype c) \<longrightarrow> sdom\<cdot>(f s)\<subseteq>(ctype c))"
   shows "ubWell (\<lambda>c. (c \<in> ubDom\<cdot>b)\<leadsto>f (b. c))"
-  by (smt assms domIff option.sel ubWell_def ubdom_channel_usokay ubgetch_insert usOkay_stream_def)
+  by (smt assms domIff option.sel ubWell_def ubdom_channel_usokay ubgetch_insert usclOkay_stream_def)
 
 lemma sbmapstream_dom [simp]: assumes "\<forall>c s. (sdom\<cdot>s\<subseteq>(ctype c) \<longrightarrow> sdom\<cdot>(f s)\<subseteq>(ctype c))"
   shows "ubDom\<cdot>(sbMapStream f b) = ubDom\<cdot>b"
 proof -
-  have "\<forall>f u. (\<exists>c s. usOkay c (s::'a stream) \<and> \<not> usOkay c (f s)) \<or> UBundle.ubDom\<cdot>(ubMapStream f u) = UBundle.ubDom\<cdot>u"
+  have "\<forall>f u. (\<exists>c s. usclOkay c (s::'a stream) \<and> \<not> usclOkay c (f s)) \<or> UBundle.ubDom\<cdot>(ubMapStream f u) = UBundle.ubDom\<cdot>u"
     using ubMapStream_ubDom by blast
   then obtain cc :: "('a stream \<Rightarrow> 'a stream) \<Rightarrow> channel" and ss :: "('a stream \<Rightarrow> 'a stream) \<Rightarrow> 'a stream" where
-    f1: "\<forall>f u. usOkay (cc f) (ss f) \<and> \<not> usOkay (cc f) (f (ss f)) \<or> UBundle.ubDom\<cdot>(ubMapStream f u) = UBundle.ubDom\<cdot>u"
+    f1: "\<forall>f u. usclOkay (cc f) (ss f) \<and> \<not> usclOkay (cc f) (f (ss f)) \<or> UBundle.ubDom\<cdot>(ubMapStream f u) = UBundle.ubDom\<cdot>u"
     by moura
   have "ubMapStream f b = sbMapStream f b"
     by (simp add: sbMapStream_def ubMapStream_def)
   then show ?thesis
-    using f1 by (metis (no_types) assms usOkay_stream_def)
+    using f1 by (metis (no_types) assms usclOkay_stream_def)
 qed
 
 lemma sbmapstream_sbgetch [simp]: assumes "\<forall>c s. (sdom\<cdot>s\<subseteq>(ctype c) \<longrightarrow> sdom\<cdot>(f s)\<subseteq>(ctype c))"
@@ -374,7 +355,7 @@ lemma sbntimes_sbgetch [simp]: assumes "c\<in>ubDom\<cdot>b"
   shows "(n\<star>b) . c = sntimes n (b . c)"
   using assms by (smt
     domIff option.sel sbMapStream_def sbNTimes_def sntimes_sdom1 subset_trans ubWell_def
-    ubdom_channel_usokay ubgetch_insert ubgetch_ubrep_eq usOkay_stream_def)
+    ubdom_channel_usokay ubgetch_insert ubgetch_ubrep_eq usclOkay_stream_def)
 
 lemma sbntimes_zero [simp]: "0\<star>b = ubLeast (ubDom\<cdot>b)"
   by (simp add: sbNTimes_def sbMapStream_def sntimes_def ubLeast_def)

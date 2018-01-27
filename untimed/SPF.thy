@@ -36,7 +36,7 @@ lemma ufwellI:  assumes "\<And>b. (b \<in> dom (Rep_cfun f)) \<Longrightarrow> (
   and "(\<And>b. b \<in> dom (Rep_cfun f) \<Longrightarrow> ubDom\<cdot>((Rep_cfun f)\<rightharpoonup>b) = Out)"
   and "\<And>b2. (ubDom\<cdot>b2 = In) \<Longrightarrow> (b2 \<in> dom (Rep_cfun f))"
   shows "ufWell f"
-  by (metis assms(1) assms(2) assms(3) ubDom_ubundle_def ufun_wellI)
+  by (metis assms(1) assms(2) assms(3) ubclDom_ubundle_def ufun_wellI)
 
 
 
@@ -72,8 +72,8 @@ lemma spfStateLeast_ran[simp]: "\<forall>x. ufRan\<cdot>(spfStateLeast In Out x)
 lemma spfStateLeast_apply[simp]:
   assumes "ubDom\<cdot>sb = In"
   shows "spfStateLeast In Out x \<rightleftharpoons> sb = ubLeast Out"
-  apply(auto simp add: spfStateLeast_def ufLeast_def ubLeast_ubundle_def assms ubDom_ubundle_def)
-  by (metis (no_types) assms option.sel ubDom_ubundle_def ubLeast_ubundle_def ufleast_rep_abs)
+  apply(auto simp add: spfStateLeast_def ufLeast_def ubclLeast_ubundle_def assms ubclDom_ubundle_def)
+  by (metis (no_types) assms option.sel ubclDom_ubundle_def ubclLeast_ubundle_def ufleast_rep_abs)
 
 lemma spfStateLeast_bottom [simp]: assumes "\<forall>x. ufDom\<cdot>(f x) = In" and " \<forall>x. ufRan\<cdot>(f x) = Out"
   shows "(spfStateLeast In Out) \<sqsubseteq> f"
@@ -183,7 +183,7 @@ qed
 lemma spf_eq: assumes "ufDom\<cdot>uf1 = ufDom\<cdot>uf2"
   and "\<And>ub. ubDom\<cdot>ub = ufDom\<cdot>uf1 \<Longrightarrow> uf1 \<rightleftharpoons> ub = uf2 \<rightleftharpoons> ub"
 shows "uf1 = uf2"
-  by (metis assms(1) assms(2) ubDom_ubundle_def ufun_eqI)
+  by (metis assms(1) assms(2) ubclDom_ubundle_def ufun_eqI)
 
 lemma ufapply_in_out:
   assumes "\<And>sb. ubDom\<cdot>(f\<cdot>sb) =  ubDom\<cdot>sb"

@@ -7,7 +7,10 @@ text {*This is the total set of channels. While representing an existing network
  one should add here all channels that occur in the whole network.*}
 
 datatype channel = c1 | c2 | c3 | c4 | c5 | c6 | c7 | c8 | c9 | c10
-             (* for ABP Specification*) | as | ds | ar | dr | abpIn | abpOut
+             (* for ABP Specification*) | c_as | c_ds | c_ar | c_dr | c_abpIn | c_abpOut
+(*
+datatype channel = \<C> string
+*)
 
 
 default_sort type
@@ -108,18 +111,18 @@ by (meson M.inject(2) f_inv_into_f rangeI)
 
 *)
   
-(*
+
 instantiation channel :: finite
 begin
   instance
   apply(intro_classes)
   proof - 
-    have f1: "(UNIV :: channel set) = {c1 , c2 , c3 , c4 , c5 , c6 , c7 , c8 , c9 , c10 , as , ds , ar , dr , abpIn , abpOut}"
+    have f1: "(UNIV :: channel set) = {c1 , c2 , c3 , c4 , c5 , c6 , c7 , c8 , c9 , c10 , c_as , c_ds , c_ar , c_dr , c_abpIn , c_abpOut}"
     proof - 
-      have "\<And>a. (a \<in> (UNIV :: channel set)) = (a \<in> {c1 , c2 , c3 , c4 , c5 , c6 , c7 , c8 , c9 , c10 , as , ds , ar , dr , abpIn , abpOut})"
+      have "\<And>a. (a \<in> (UNIV :: channel set)) = (a \<in> {c1 , c2 , c3 , c4 , c5 , c6 , c7 , c8 , c9 , c10 , c_as , c_ds , c_ar , c_dr , c_abpIn , c_abpOut})"
       proof - 
         fix a
-        show "(a \<in> (UNIV :: channel set)) = (a \<in> {c1 , c2 , c3 , c4 , c5 , c6 , c7 , c8 , c9 , c10 , as , ds , ar , dr , abpIn , abpOut})"
+        show "(a \<in> (UNIV :: channel set)) = (a \<in> {c1 , c2 , c3 , c4 , c5 , c6 , c7 , c8 , c9 , c10 , c_as , c_ds , c_ar , c_dr , c_abpIn , c_abpOut})"
           by(simp add: channel.nchotomy)
       qed
       then show ?thesis
@@ -129,6 +132,6 @@ begin
       by (simp add: f1)  
   qed
 end   
-*)  
-  
+
+
 end
