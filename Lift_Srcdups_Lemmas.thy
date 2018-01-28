@@ -3,17 +3,20 @@ theory Lift_Srcdups_Lemmas
 begin 
 
 (*First lemma*)
-lemma tsRemDups_step: "tsRemDups\<cdot>(updis a &&\<surd> as) = updis a &&\<surd> tsRemDups\<cdot>(tsDropWhile\<cdot>(Discr a)\<cdot>as)"
+lemma tsRemDups_step: 
+  "tsRemDups\<cdot>(updis a &&\<surd> as) = updis a &&\<surd> tsRemDups\<cdot>(tsDropWhile\<cdot>(Discr a)\<cdot>as)"
   apply(simp add: tsRemDups_def)
   apply(induction as, simp_all)
   apply (metis (no_types, lifting) tsdropwhile_delayfun tslscons_srt tsmlscons_bot2 tsmlscons_lscons tsremdups_h_delayfun tsremdups_h_mlscons tsremdups_h_strict up_defined)
   by (metis TStream.tsremdups_eq TStream.tsremdups_neq tsdropwhile_f tsdropwhile_t tsremdups_insert)
 
 (*Second lemma*)
-lemma tsremdups_srt_tsabs:"srt\<cdot>(tsAbs\<cdot>(tsRemDups\<cdot>(updis a &&\<surd> as))) = tsAbs\<cdot>(tsRemDups\<cdot>(tsDropWhile\<cdot>(Discr a)\<cdot>as))"
+lemma tsremdups_srt_tsabs:
+  "srt\<cdot>(tsAbs\<cdot>(tsRemDups\<cdot>(updis a &&\<surd> as))) = tsAbs\<cdot>(tsRemDups\<cdot>(tsDropWhile\<cdot>(Discr a)\<cdot>as))"
   by (metis lscons_conv srcdups_srt stream.sel_rews(2) strict_srcdups tsabs_bot tsabs_mlscons tsdropwhile_strict tsdropwhile_tsabs tsmlscons_nbot_rev tsremdups_tsabs)  
 
-lemma tsremdups_srt:"tsRt\<cdot>(tsRemDups\<cdot>(updis a &&\<surd> as)) = tsRemDups\<cdot>(tsDropWhile\<cdot>(Discr a)\<cdot>as)"
+lemma tsremdups_srt:
+  "tsRt\<cdot>(tsRemDups\<cdot>(updis a &&\<surd> as)) = tsRemDups\<cdot>(tsDropWhile\<cdot>(Discr a)\<cdot>as)"
   by (metis tsRemDups_step tslscons_srt tsmlscons_lscons up_defined)
 
 (*Third lemma*)
@@ -44,13 +47,8 @@ lemma tsremdups_tsmap_com_adm [simp]:
   using tsremdups_prefix_neq
   by (metis monofun_cfun_arg)
 
-(*First element is an "a"*)
-lemma tsremdups_tsmap_com_shd:
-  "shd (tsAbs\<cdot>s) = a \<Longrightarrow> tsRemDups\<cdot>(tsMap f\<cdot>(updis a &&\<surd> s)) = tsMap f\<cdot>(tsRemDups\<cdot>(updis a &&\<surd> s))"
-  sorry 
-
 (*timed stream is empty or contains only ticks*)
-lemma tsremdups_tsmap_com_tsabs_bot:
+(*lemma tsremdups_tsmap_com_tsabs_bot:
  "tsAbs\<cdot>s = \<bottom> \<Longrightarrow> tsRemDups\<cdot>(updis (f a) &&\<surd> tsMap f\<cdot>s) = tsMap f\<cdot>(tsRemDups\<cdot>(updis a &&\<surd> s))"
   proof(induction s)
     case adm
@@ -85,11 +83,11 @@ lemma tsremdups_tsmap_com_tsabs_bot:
     case (mlscons s t)
     then show ?case
       using stream.con_rews(2) tsabs_mlscons up_defined by force 
-  qed
+  qed*)
 
 lemma tsremdups_tsmap_com:
   shows "tsRemDups\<cdot>(tsMap f\<cdot>(tsRemDups\<cdot>s)) = tsMap f\<cdot>(tsRemDups\<cdot>s) \<Longrightarrow> tsRemDups\<cdot>(tsMap f\<cdot>s)= tsMap f\<cdot>(tsRemDups\<cdot>s)"
- proof(induction s)
+  proof(induction s)
    case adm
    then show ?case 
      by simp
@@ -103,16 +101,51 @@ lemma tsremdups_tsmap_com:
       by (metis tsmap_delayfun tsremdups_h_delayfun tsremdups_insert tsrt_delayfun)
   next
     case (mlscons s t)  
-    have s_tsabs_bot: "tsAbs\<cdot>s = \<bottom> \<Longrightarrow> tsRemDups\<cdot>(updis (f a) &&\<surd> tsMap f\<cdot>s) = tsMap f\<cdot>(tsRemDups\<cdot>(updis a &&\<surd> s))"
-      by (simp add: tsremdups_tsmap_com_tsabs_bot) 
-    hence f1: "shd (tsAbs\<cdot>s) = a  \<Longrightarrow> ?case"
-      by (smt lscons_conv mlscons.hyps shd1 tsabs_mlscons tsmap_mlscons tsmlscons_nbot tsremdups_eq tsremdups_tsmap_com_shd up_defined) 
-    have f2: "tsAbs\<cdot>s\<noteq>\<bottom> \<Longrightarrow> shd (tsAbs\<cdot>s)\<noteq>a \<Longrightarrow>f (shd (tsAbs\<cdot>s)) \<noteq> f a \<Longrightarrow> ?case"
-      by (smt lscons_conv mlscons.hyps shd1 tsRemDups_step tsabs_mlscons tsdropwhile_t tsmap_mlscons tsmlscons_nbot tsremdups_tsmap_com_shd up_defined)     
-    have f3: "tsAbs\<cdot>s\<noteq>\<bottom> \<Longrightarrow> shd (tsAbs\<cdot>s)\<noteq>a \<Longrightarrow>f (shd (tsAbs\<cdot>s)) = f a \<Longrightarrow> ?case"
-      by (smt lscons_conv mlscons.hyps shd1 tsRemDups_step tsabs_mlscons tsdropwhile_t tsmap_mlscons tsmlscons_nbot tsremdups_tsmap_com_shd up_defined)  
+    have s_bot: "s = \<bottom> \<Longrightarrow> tsRemDups\<cdot>(updis (f t) &&\<surd> tsMap f\<cdot>s) = tsMap f\<cdot>(tsRemDups\<cdot>(updis t &&\<surd> s))"
+        by (simp add: mlscons.hyps)
+    have s_inftick: "s \<noteq> \<bottom> \<Longrightarrow> tsAbs\<cdot>s = \<bottom> \<Longrightarrow> tsRemDups\<cdot>(updis (f t) &&\<surd> tsMap f\<cdot>s) = tsMap f\<cdot>(tsRemDups\<cdot>(updis t &&\<surd> s))"
+      proof(induction s)
+        case adm
+        then show ?case sorry
+      next
+        case bottom
+        then show ?case 
+          by simp
+      next
+        case (delayfun s)
+        then show ?case 
+          apply(simp add: tsremdups_insert)
+          apply(simp add: tsremdups_h_mlscons) 
+          apply(simp add: tsmap_delayfun)
+          apply(simp add: tsremdups_h_delayfun)
+          apply(simp add: tsmap_mlscons)
+          apply(simp add: tsmap_delayfun)
+          sorry
+      next
+        case (mlscons s t)
+        then show ?case
+          using tsabs_mlscons by force 
+      qed
+    hence f1: " tsAbs\<cdot>s \<noteq> \<bottom> \<Longrightarrow> shd (tsAbs\<cdot>s)=t  \<Longrightarrow> ?case"
+      proof(induction s)
+        case adm
+        then show ?case sorry
+      next
+        case bottom
+        then show ?case by simp
+      next
+        case (delayfun s)
+        then show ?case sorry
+      next
+        case (mlscons s t)
+      then show ?case sorry
+      qed 
+    have f2: "tsAbs\<cdot>s\<noteq>\<bottom> \<Longrightarrow> shd (tsAbs\<cdot>s)\<noteq>t \<Longrightarrow>f (shd (tsAbs\<cdot>s)) \<noteq> f t \<Longrightarrow> ?case"
+      sorry    
+    have f3: "tsAbs\<cdot>s\<noteq>\<bottom> \<Longrightarrow> shd (tsAbs\<cdot>s)\<noteq>t \<Longrightarrow>f (shd (tsAbs\<cdot>s)) = f t \<Longrightarrow> ?case"
+      sorry  
     then show ?case
-      by (metis f1 f2 mlscons.hyps tsmap_mlscons tsremdups_tsmap_com_tsabs_bot) 
+      sorry 
   qed
 
 end
