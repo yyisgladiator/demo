@@ -80,15 +80,41 @@ section \<open>Helper Definitions\<close>
 (* ----------------------------------------------------------------------- *)
 
 
-(* Temporary... Should be in ufun_comp *)
-instantiation ufun :: (ubcl_comp, ubcl_comp) ufuncl_comp
+
+instantiation ufun :: (ubcl_comp) ufuncl_comp
 begin
+
+definition ufunclComp_ufun_def: "ufunclComp \<equiv> ufComp"
+definition ufunclParComp_ufun_def: "ufunclParComp \<equiv> ufParComp"
+definition ufunclSerComp_ufun_def: "ufunclSerComp \<equiv> ufSerComp"
+definition ufunclFeedbackComp_ufun_def:"ufunclFeedbackComp = ufFeedbackComp"
+
+definition ufunclCompWell_ufun_def: "ufunclCompWell = comp_well"
+definition ufunclSerCompWell_ufun_def: "ufunclSerCompWell = sercomp_well"
+definition ufunclParCompWell_ufun_def: "ufunclParCompWell = parcomp_well"
 
 instance
   apply intro_classes
-  
-  sorry
+             apply (simp add: inf_sup_aci(1) ufcomp_L_commu ufunclParCompWell_ufun_def)
+            apply (simp add: inf_sup_aci(1) ufunclCompWell_ufun_def)
+           apply (simp add: ufunclParComp_ufun_def ufParComp_dom ufclDom_ufun_def ufunclParCompWell_ufun_def)
+          apply (simp add: ufunclParComp_ufun_def ufParComp_ran ufclRan_ufun_def ufunclParCompWell_ufun_def)
+         apply (simp add: ufunclSerCompWell_ufun_def ufunclSerComp_ufun_def ufclDom_ufun_def ufclRan_ufun_def)
+  using ufSerComp_dom apply auto[1]
+        apply (simp add: ufunclSerCompWell_ufun_def ufunclSerComp_ufun_def ufclDom_ufun_def ufclRan_ufun_def)
+  using ufSerComp_ran apply auto[1]
+       apply (metis ufunclComp_ufun_def ufcomp_commu ufunclCompWell_ufun_def)
+      apply (metis ufunclParComp_ufun_def ufParComp_commutativity ufunclParCompWell_ufun_def)
+     apply (simp add: ufParComp_associativity ufunclParCompWell_ufun_def ufunclParComp_ufun_def)
+    apply (simp add:  ufunclSerComp_ufun_def)
+    apply (subst ufSerComp_asso)
+       apply (meson ufunclSerCompWell_ufun_def) + 
+     apply (simp add: ufclDom_ufun_def ufclRan_ufun_def, simp)
+   apply (simp add: ufunclParComp_ufun_def ufParCompWell_asso ufunclParCompWell_ufun_def)
+  apply (simp add: ufunclSerCompWell_ufun_def ufunclSerComp_ufun_def ufclDom_ufun_def ufclRan_ufun_def)
+  by (metis (no_types, hide_lams) ufSerComp_dom ufSerComp_ran)
 end
+
 
 
 
@@ -101,7 +127,7 @@ in (\<lambda> x. (ubclDom\<cdot>x = {c_dr}) \<leadsto> Abs_ubundle([c_ar    \<ma
 
 
 subsection \<open>receiver\<close>
-definition recvTSPF :: "('a MABP tstream\<^sup>\<Omega>, 'a MABP tstream\<^sup>\<Omega>) ufun" where
+definition recvTSPF :: "('a MABP tstream\<^sup>\<Omega>) ufun" where
 "recvTSPF \<equiv> Abs_cufun (\<lambda> x. (ubclDom\<cdot>x = {c_dr}) \<leadsto> Abs_ubundle([c_ar    \<mapsto> (tsMap::(bool \<Rightarrow> 'a MABP) \<Rightarrow> bool tstream \<rightarrow> 'a MABP tstream) Bool\<cdot>(fst ( tsRec\<cdot>((tsMap invBoolPair)\<cdot>(x . c_dr)))),
                                         c_abpOut \<mapsto> (tsMap::('a \<Rightarrow> 'a MABP) \<Rightarrow> 'a tstream \<rightarrow> 'a MABP tstream) Data\<cdot>(snd ( tsRec\<cdot>((tsMap invBoolPair)\<cdot>(x . c_dr))))]))"
 
@@ -109,7 +135,7 @@ subsection \<open>medium_rs\<close>
   (* medium from receiver to sender *)
   (* input: c_ar, output: c_as, transport booleans *)
 
-definition medRS_TSPF :: "bool stream \<Rightarrow> ('a MABP tstream\<^sup>\<Omega>, 'a MABP tstream\<^sup>\<Omega>) ufun" where
+definition medRS_TSPF :: "bool stream \<Rightarrow> ('a MABP tstream\<^sup>\<Omega>) ufun" where
 "medRS_TSPF bst\<equiv> Abs_cufun (\<lambda> x. (ubclDom\<cdot>x = {c_ar})
                            \<leadsto> Abs_ubundle([c_as \<mapsto> (tsMap::(bool \<Rightarrow> 'a MABP) \<Rightarrow> bool tstream \<rightarrow> 'a MABP tstream) Bool\<cdot>(tsMed\<cdot>(tsMap invBool\<cdot>(x . c_ar))\<cdot>bst)]))"
 
@@ -121,7 +147,7 @@ subsection \<open>medium_sr\<close>
   (* medium from sender to receiver *)
   (* input: c_ds, output: c_dr, transport (data, bool) tuples *)
 
-definition medSR_TSPF :: "bool stream \<Rightarrow> ('a MABP tstream\<^sup>\<Omega>, 'a MABP tstream\<^sup>\<Omega>) ufun" where
+definition medSR_TSPF :: "bool stream \<Rightarrow> ('a MABP tstream\<^sup>\<Omega>) ufun" where
 "medSR_TSPF bst\<equiv> Abs_cufun (\<lambda> x. (ubclDom\<cdot>x = {c_ds})
   \<leadsto> Abs_ubundle([c_dr \<mapsto> (tsMap:: ('a \<times> bool \<Rightarrow> 'a MABP) \<Rightarrow> ('a \<times> bool) tstream \<rightarrow> 'a MABP tstream) 
             BoolPair\<cdot>(tsMed\<cdot>(tsMap invBoolPair\<cdot>(x . c_ds))\<cdot>bst)]))"
@@ -134,7 +160,7 @@ abbreviation medSR_TSPFAbb  :: "bool stream \<Rightarrow> 'a MABP tstream\<^sup>
 subsection \<open>sender\<close>
 
   (* lift a sender function to a TSPF *)
-definition sender_TSPF :: "'a sender \<Rightarrow> ('a MABP tstream\<^sup>\<Omega>, 'a MABP tstream\<^sup>\<Omega>) ufun" where
+definition sender_TSPF :: "'a sender \<Rightarrow> ('a MABP tstream\<^sup>\<Omega>) ufun" where
 "sender_TSPF se \<equiv> Abs_cufun (\<lambda> x. (ubclDom\<cdot>x = {c_as, c_abpIn})
                 \<leadsto> Abs_ubundle([c_ds \<mapsto> tsMap BoolPair\<cdot>(se\<cdot>(tsMap invData\<cdot>(x . c_abpIn))\<cdot>(tsMap invBool\<cdot>(x . c_as)))]))"
 
@@ -143,7 +169,7 @@ definition sender_TSPF :: "'a sender \<Rightarrow> ('a MABP tstream\<^sup>\<Omeg
 subsection \<open>id\<close>
 
 
-definition id_TSPF :: "('a MABP tstream\<^sup>\<Omega>,'a MABP tstream\<^sup>\<Omega>) ufun" where
+definition id_TSPF :: "('a MABP tstream\<^sup>\<Omega>) ufun" where
 "id_TSPF \<equiv> Abs_cufun (\<lambda> x. (ubDom\<cdot>x = {c_abpOut}) \<leadsto> Abs_ubundle [c_abpOut \<mapsto> x . c_abpOut])"
 
 
@@ -153,30 +179,30 @@ section \<open>Components\<close>
 (* ----------------------------------------------------------------------- *)
 
 
-lift_definition SND :: "(('a MABP tstream ubundle,'a MABP tstream ubundle) ufun) uspec" is
+lift_definition SND :: "(('a MABP tstream\<^sup>\<Omega>) ufun) uspec" is
 "Rev {sender_TSPF s | s. s \<in> tsSender}"
   sorry
 
-lift_definition RCV :: "(('a MABP tstream ubundle,'a MABP tstream ubundle) ufun) uspec" is
+lift_definition RCV :: "(('a MABP tstream\<^sup>\<Omega>) ufun) uspec" is
 "Rev {recvTSPF}"
   sorry
 
-lift_definition MEDSR :: "(('a MABP tstream ubundle,'a MABP tstream ubundle) ufun) uspec" is
+lift_definition MEDSR :: "(('a MABP tstream\<^sup>\<Omega>) ufun) uspec" is
 "Rev {medSR_TSPF ora | ora. #({True} \<ominus> ora)=\<infinity>}"
   sorry
 
-lift_definition MEDRS :: "(('a MABP tstream ubundle,'a MABP tstream ubundle) ufun) uspec" is
+lift_definition MEDRS :: "(('a MABP tstream\<^sup>\<Omega>) ufun) uspec" is
 "Rev {medRS_TSPF ora | ora. #({True} \<ominus> ora)=\<infinity>}"
   sorry
 
-lift_definition ID :: "(('a MABP tstream ubundle,'a MABP tstream ubundle) ufun) uspec" is
+lift_definition ID :: "(('a MABP tstream\<^sup>\<Omega>) ufun) uspec" is
 "Rev {id_TSPF}"
   sorry
 
-abbreviation gencompABP :: "(('a MABP tstream ubundle,'a MABP tstream ubundle) ufun) uspec" where
+abbreviation gencompABP :: "(('a MABP tstream\<^sup>\<Omega>) ufun) uspec" where
 "gencompABP \<equiv> ((SND \<Otimes> MEDSR) \<Otimes> RCV) \<Otimes> MEDRS"
 
-abbreviation speccompABP :: "(('a MABP tstream ubundle,'a MABP tstream ubundle) ufun) uspec" where
+abbreviation speccompABP :: "(('a MABP tstream\<^sup>\<Omega>) ufun) uspec" where
 "speccompABP \<equiv> uspecFeedbackComp(((SND \<circle> MEDSR) \<circle> RCV) \<circle> (MEDRS \<parallel> ID))"
 
 
@@ -185,7 +211,7 @@ section \<open>Testing of Composition without Medium\<close>
 (* ----------------------------------------------------------------------- *)
 
 
-definition sender_TSPF2 :: "'a sender \<Rightarrow> ('a MABP tstream\<^sup>\<Omega>,'a MABP tstream\<^sup>\<Omega>) ufun" where
+definition sender_TSPF2 :: "'a sender \<Rightarrow> ('a MABP tstream\<^sup>\<Omega>) ufun" where
 "sender_TSPF2 se \<equiv> Abs_cufun (\<lambda> x. (ubDom\<cdot>x = {c_ar, c_abpIn})
                 \<leadsto> Abs_ubundle [c_dr \<mapsto> tsMap BoolPair\<cdot>(se\<cdot>(tsMap invData\<cdot>(x . c_abpIn))\<cdot>(tsMap invBool\<cdot>(x . c_ar)))])"
 
@@ -201,11 +227,11 @@ lemma sender_well: assumes "se \<in> tsSender" shows "ufWell (\<Lambda> x. (ubDo
                 \<leadsto> Abs_ubundle [c_dr \<mapsto> tsMap BoolPair\<cdot>(se\<cdot>(tsMap invData\<cdot>(x . c_abpIn))\<cdot>(tsMap invBool\<cdot>(x . c_ar)))])"
   sorry
 
-lift_definition SND2 :: "(('a MABP tstream ubundle,'a MABP tstream ubundle) ufun) uspec" is
+lift_definition SND2 :: "(('a MABP tstream\<^sup>\<Omega>) ufun) uspec" is
 "Rev {sender_TSPF2 s | s. s \<in> tsSender}"
   sorry
 
-definition recvTSPF2 :: "('a MABP tstream\<^sup>\<Omega>,'a MABP tstream\<^sup>\<Omega>) ufun" where
+definition recvTSPF2 :: "('a MABP tstream\<^sup>\<Omega>) ufun" where
 "recvTSPF2 \<equiv> Abs_cufun (\<lambda> x. (ubDom\<cdot>x = {c_dr}) \<leadsto> Abs_ubundle [c_ar    \<mapsto> (tsMap::(bool \<Rightarrow> 'a MABP) \<Rightarrow> bool tstream \<rightarrow> 'a MABP tstream) Bool\<cdot>(fst ( tsRec\<cdot>((tsMap invBoolPair)\<cdot>(x . c_dr)))),
                                         c_abpOut \<mapsto> (tsMap::('a \<Rightarrow> 'a MABP) \<Rightarrow> 'a tstream \<rightarrow> 'a MABP tstream) Data\<cdot>(snd ( tsRec\<cdot>((tsMap invBoolPair)\<cdot>(x . c_dr))))])"
 
@@ -221,11 +247,11 @@ lemma recv_well: "ufWell (\<Lambda> x. (ubDom\<cdot>x = {c_dr}) \<leadsto> Abs_u
                                         c_abpOut \<mapsto> (tsMap::('a \<Rightarrow> 'a MABP) \<Rightarrow> 'a tstream \<rightarrow> 'a MABP tstream) Data\<cdot>(snd ( tsRec\<cdot>((tsMap invBoolPair)\<cdot>(x . c_dr))))])"
   sorry
 
-lift_definition RCV2 :: "(('a MABP tstream ubundle,'a MABP tstream ubundle) ufun) uspec" is
+lift_definition RCV2 :: "(('a MABP tstream\<^sup>\<Omega>) ufun) uspec" is
 "Rev {recvTSPF2}"
   sorry
 
-abbreviation speccompABP_nmed :: "(('a MABP tstream ubundle,'a MABP tstream ubundle) ufun) uspec" where
+abbreviation speccompABP_nmed :: "(('a MABP tstream\<^sup>\<Omega>) ufun) uspec" where
 "speccompABP_nmed \<equiv> uspecFeedbackComp(SND \<circle> RCV)"
 
 

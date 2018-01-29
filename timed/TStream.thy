@@ -29,23 +29,31 @@ proof -
   have f1:"\<forall>i. #(Y i) < \<infinity>" using LNat.inf_chainl2 assms(1) assms(2) eq_less_and_fst_inf lnless_def by auto
   hence f2: "#(\<Squnion>i. Y i) = \<infinity>"
     by (simp add: assms(1) assms(2) inf_chainl4)
-  have "\<And>i j. i\<le>j \<Longrightarrow> Y i\<noteq> Y j \<Longrightarrow> #(sfilter {\<surd>}\<cdot>(Y i)) < #(sfilter {\<surd>}\<cdot>(Y j))" 
-  proof -
-    fix i j
-    assume "i\<le>j" and "Y i \<noteq> Y j"
-    hence "Y i\<sqsubseteq> Y j" by (simp add: assms(1) po_class.chain_mono)
-    obtain n where "Fin n = # (Y j)" by (metis f1 lncases lnless_def) 
-    have "#(Y i) < #(Y j)"
-      using \<open>Y i \<noteq> Y j\<close> \<open>Y i \<sqsubseteq> Y j\<close> eq_slen_eq_and_less lnless_def monofun_cfun_arg by blast
-    obtain s where s_def: "Y j =  s \<bullet> \<up>\<surd>" by (metis \<open>Y i \<noteq> Y j\<close> \<open>Y i \<sqsubseteq> Y j\<close> assms(3) bottomI sfoot2)
-    hence "Y i\<sqsubseteq>s" using \<open>Y i \<noteq> Y j\<close> \<open>Y i \<sqsubseteq> Y j\<close> below_conc by auto
-    hence "#({\<surd>} \<ominus> Y i) \<le> #({\<surd>} \<ominus> s)" by (simp add: mono_slen monofun_cfun_arg)
-    have f1:"#({\<surd>} \<ominus> s) \<le> #({\<surd>} \<ominus> (Y j))" by (simp add: mono_slen monofun_cfun_arg s_def) 
-    thus "#({\<surd>} \<ominus> Y i) < #({\<surd>} \<ominus> Y j)"
-      by (smt Fin_neq_inf \<open>#({\<surd>} \<ominus> Y i) \<le> #({\<surd>} \<ominus> s)\<close> \<open>Fin n = #(Y j)\<close> inf_ub less2eq lnle_conv lnless_def s_def sconc_fst_inf sfilter_conc singletonI trans_lnle)
+  have f3: "chain (\<lambda> i. #({\<surd>} \<ominus> Y i))"
+    by (simp add: assms(1))
+  have f4: "\<not> finite_chain (\<lambda> i. #({\<surd>} \<ominus> Y i))"
+    apply (simp add: finite_chain_def, auto)
+  proof (simp add: f3)
+    fix i assume a1: "max_in_chain i (\<lambda>i::nat. #({\<surd>} \<ominus> Y i))"
+    obtain j where j_def: "Y i \<sqsubseteq> Y j" and j_def2: "Y i \<noteq> Y j"
+      using LNat.inf_chainl2 assms(1) assms(2) by blast
+    obtain s t
+      where s_def: "Y j =  s \<bullet> \<up>\<surd>" using assms(3) by blast
+    hence f11: "Y i\<sqsubseteq>s" using below_conc j_def j_def2 by auto
+    hence f12: "#({\<surd>} \<ominus> Y i) \<le> #({\<surd>} \<ominus> s)" by (simp add: mono_slen monofun_cfun_arg)
+    have f13:"#({\<surd>} \<ominus> s) < #({\<surd>} \<ominus> (Y j))" 
+      by (metis assms(3) dual_order.order_iff_strict inf_less_eq insertI1 neq_iff s_def sconc_fst_inf sfilter_conc) 
+    then have f14: "#({\<surd>} \<ominus> Y i) < #({\<surd>} \<ominus> Y j)"
+      using dual_order.strict_trans2 f12 by blast
+    have f15:"i \<le> j"  using assms(1) j_def j_def2 nat_le_linear po_class.chain_mono po_eq_conv by blast
+    show False
+      using a1 f14 f15 max_in_chainD neq_iff by blast
   qed
+  have " #({\<surd>} \<ominus> (\<Squnion>i::nat. Y i)) =  #((\<Squnion>i::nat. {\<surd>} \<ominus>  Y i))"
+    by (simp add: assms(1) contlub_cfun_arg)
   thus ?thesis
-    by (smt f1 f2 assms(1) ch2ch_Rep_cfunR contlub_cfun_arg inf_chainl4 lnless_def lub_eqI lub_finch2 max_in_chainI max_in_chain_def maxinch_is_thelub) 
+    apply (simp add: assms(1) contlub_cfun_arg)
+    by (simp add: f3 f4 unique_inf_lub)
 qed
 
 lemma tstream_well_adm1 [simp]: "adm (\<lambda>s. #(sfilter {\<surd>}\<cdot>s) = \<infinity> \<or> ( #s<\<infinity> \<and> (\<exists>x. s = x\<bullet>\<up>\<surd>)))"
@@ -301,7 +309,14 @@ by (metis sfoot1 sfoot_one sup'_def updis_exists)
 thm tsDom_def
 
 lemma tsdom_monofun [simp]: "monofun (\<lambda>t. {a | a. (Msg a) \<in> sdom\<cdot>(Rep_tstream t)})"
-by (smt below_tstream_def contra_subsetD mem_Collect_eq monofunI monofun_cfun_arg set_cpo_simps(1) subsetI) 
+proof (rule monofunI)
+  fix x :: "'a tstream" and y :: "'a tstream"
+  assume "x \<sqsubseteq> y"
+  then have "sdom\<cdot>(Rep_tstream x) \<subseteq> sdom\<cdot>(Rep_tstream y)"
+    by (metis below_tstream_def monofun_cfun_arg set_cpo_simps(1))
+  then show "{a |a. \<M> a \<in> sdom\<cdot>(Rep_tstream x)} \<sqsubseteq> {a |a. \<M> a \<in> sdom\<cdot>(Rep_tstream y)}"
+    by (simp add: SetPcpo.less_set_def subset_eq)
+qed
 
 (* for any chain Y of tstreams the domain of the lub is contained in the lub of domains of the chain *)
 lemma tsdom_contlub [simp]: assumes "chain Y" 
@@ -312,10 +327,10 @@ proof
   assume "a\<in>?F (\<Squnion>i. Y i)"
   hence "Msg a \<in> sdom\<cdot>(Rep_tstream (\<Squnion>i. Y i))" by (simp add: tsDom_def)
   hence "Msg a \<in> (\<Squnion>i. sdom\<cdot>(Rep_tstream (Y i)))"
-    by (smt Abs_tstream_inverse Rep_tstream adm_def assms below_tstream_def contlub_cfun_arg lub_eq lub_tstream mem_Collect_eq po_class.chain_def tstream_well_adm) 
+    by (simp add: assms cont2contlubE)
   hence "Msg a \<in> (\<Union>i. sdom\<cdot>(Rep_tstream (Y i)))" by (simp add: lub_eq_Union)
   hence "(a \<in> (\<Squnion>i. {u. Msg u \<in> sdom\<cdot>(Rep_tstream (Y i))}))" by (simp add: lub_eq_Union)
-  thus "a\<in>(\<Squnion>i. ?F (Y i))" by (metis (mono_tags, lifting) Collect_cong lub_eq tsDom_def)
+  thus "a\<in>(\<Squnion>i. ?F (Y i))" by auto
 qed
 
 lemma tsdom_cont [simp]:"cont (\<lambda>t. {a | a. (Msg a) \<in> sdom\<cdot>(Rep_tstream t)})"
@@ -389,8 +404,18 @@ by (metis Rep_tstream_inverse Rep_tstream_strict minimal monofun_cfun_arg sconc_
 text {* By appending an event on the left side, a timed stream remains a timed stream. *}
 lemma tstream_scons_eq[simp]: "((\<up>e \<bullet> rs) \<in> {t::'a event stream. #t \<noteq> \<infinity> \<or> #({\<surd>} \<ominus> t) = \<infinity>}) 
                       \<longleftrightarrow> (rs \<in> {t. #t \<noteq> \<infinity> \<or> #({\<surd>} \<ominus> t) = \<infinity>})"
-apply (smt fold_inf lnat.injects mem_Collect_eq sfilter_in sfilter_nin slen_scons)
-done
+proof -
+  have "#({e. e = \<surd> \<or> e \<in> {}} \<ominus> rs) = \<infinity> \<longrightarrow> (#rs \<noteq> \<infinity> \<or> #({\<surd>} \<ominus> rs) = \<infinity>) \<and> (#(\<up>e \<bullet> rs) \<noteq> \<infinity> \<or> #({\<surd>} \<ominus> \<up>e \<bullet> rs) = \<infinity>)"
+    by auto
+  moreover
+  { assume "#({e. e = \<surd> \<or> e \<in> {}} \<ominus> rs) \<noteq> \<infinity>"
+    then have "#({e. e = \<surd> \<or> e \<in> {}} \<ominus> \<up>e \<bullet> rs) \<noteq> \<infinity> \<and> #({e. e = \<surd> \<or> e \<in> {}} \<ominus> rs) \<noteq> \<infinity>"
+      by (metis (lifting) fold_inf lnat.sel_rews(2) sfilter_in sfilter_nin slen_scons)
+    then have "(#rs \<noteq> \<infinity> \<or> #({\<surd>} \<ominus> rs) = \<infinity>) \<and> (#(\<up>e \<bullet> rs) \<noteq> \<infinity> \<or> #({\<surd>} \<ominus> \<up>e \<bullet> rs) = \<infinity>) \<or> (\<up>e \<bullet> rs \<in> {s. #s \<noteq> \<infinity> \<or> #({\<surd>} \<ominus> s) = \<infinity>}) = (rs \<in> {s. #s \<noteq> \<infinity> \<or> #({\<surd>} \<ominus> s) = \<infinity>})"
+      by force }
+  ultimately show ?thesis
+    by blast
+qed
 
 (* appending to a singleton tstream can never yield the empty stream *)
 lemma [simp]: "\<bottom> \<noteq> Abs_tstream(\<up>\<surd>) \<bullet>\<surd> as"
@@ -439,14 +464,24 @@ lemma tsabs_conc: assumes "#(Rep_tstream ts1)<\<infinity>"
 apply(simp add: tsabs_insert tsconc_insert)
 using add_sfilter assms infI lnless_def smap_split by fastforce
 
-lemma tsabs_tsdom [simp]: "sdom\<cdot>(tsAbs\<cdot>ts) = tsDom\<cdot>ts"
-  apply(simp add: tsdom_insert tsabs_insert smap_sdom)
+lemma blub: "{e::'a event. e \<noteq> \<surd>} = UNIV - {\<surd>}"
   apply rule
    apply rule
-   apply (smt IntE event.case(1) event.exhaust imageE mem_Collect_eq)
+  apply auto[1]
   apply rule
-  apply (metis (mono_tags, lifting) Int_iff event.distinct(1) event.simps(4) image_iff mem_Collect_eq)
-done 
+  by simp
+
+lemma bla: "\<M> x \<in> S \<Longrightarrow> x \<in> inversMsg ` S"
+  using image_iff by fastforce
+
+lemma tsabs_tsdom [simp]: "sdom\<cdot>(tsAbs\<cdot>ts) = tsDom\<cdot>ts"
+  apply(simp add: tsdom_insert tsabs_insert smap_sdom)
+  apply (subst blub)
+  apply (simp_all add: image_def, rule, rule, rule)
+   apply (simp add: image_iff)
+   apply (metis (full_types) Diff_iff Int_iff event.exhaust event.simps(4) insertI1)
+  apply (rule, simp add: image_iff)
+  by force
 
 lemma tsabs_bot[simp]: "tsAbs\<cdot>\<bottom>=\<bottom>"
   by(simp add: tsabs_insert)
@@ -673,7 +708,7 @@ lemma ts_well_dropinf [simp]: assumes "ts_well s" and "#s = \<infinity>"
   shows "ts_well (srt\<cdot>s)"
 proof -
   have "#({\<surd>} \<ominus> s) = \<infinity>" by (metis Inf'_neq_0 assms(1) assms(2) lnless_def strict_slen ts_well_def)
-  hence "#({\<surd>} \<ominus> (srt\<cdot>s)) = \<infinity>" by (smt Inf'_neq_0 assms(2) inf_scase inject_scons sfilter_in sfilter_nin slen_empty_eq surj_scons) 
+  hence "#({\<surd>} \<ominus> (srt\<cdot>s)) = \<infinity>" by simp
   thus ?thesis by (meson ts_well_def)  
 qed
 
@@ -904,14 +939,21 @@ by (metis eq_iff finititeTicks inf_ub less_le sdom_sconc tsabs_conc tsabs_tsdom 
 
 lemma tsdom_tsconc: assumes "#\<surd>ts1 < \<infinity>"
   shows "tsDom\<cdot>(ts1 \<bullet>\<surd> ts2) = tsDom\<cdot>ts1 \<union> tsDom\<cdot>ts2"
-apply rule
-apply (metis assms finititeTicks sconc_sdom tsabs_conc tsabs_tsdom)
+  apply rule
+   apply (metis assms finititeTicks sconc_sdom tsabs_conc tsabs_tsdom)
 proof -
   have "#(Rep_tstream ts1) < \<infinity>" using assms by simp
   hence "sdom\<cdot>((Rep_tstream ts1) \<bullet> (Rep_tstream ts2)) = sdom\<cdot>(Rep_tstream ts1) \<union>  sdom\<cdot>(Rep_tstream ts2)"
     by (meson lnat_well_h2 sdom_sconc2un)
   thus "tsDom\<cdot>ts1 \<union> tsDom\<cdot>ts2 \<subseteq> tsDom\<cdot>(ts1 \<bullet>\<surd> ts2)"
-  by (smt Abs_tstream_inverse UnCI UnE mem_Collect_eq subsetI ts_well_conc tsconc_insert tsdom_insert) 
+  proof -
+    have "Rep_tstream (ts1 \<bullet>\<surd> ts2) = Rep_tstream ts1 \<bullet> Rep_tstream ts2"
+      by (metis (no_types) Abs_Rep ts_well_Rep tsconc_rep_eq)
+    then have "{a |a. \<M> a \<in> sdom\<cdot>(Rep_tstream ts2)} \<subseteq> {a |a. \<M> a \<in> sdom\<cdot>(Rep_tstream (ts1 \<bullet>\<surd> ts2))}"
+      using \<open>sdom\<cdot> (Rep_tstream (ts1::'a tstream) \<bullet> Rep_tstream (ts2::'a tstream)) = sdom\<cdot>(Rep_tstream ts1) \<union> sdom\<cdot>(Rep_tstream ts2)\<close> by force
+    then show ?thesis
+      by (metis (no_types) sup.bounded_iff tsdom_conc tsdom_insert)
+  qed
 qed
 
 lemma tsinftickDrop[simp]: assumes "#\<surd>ts = \<infinity>"
@@ -956,27 +998,54 @@ thm tsTake_def
 
 (* transforming the rest of a timed stream using a continuous function na is a continuous function *)
 lemma tstake_cont [simp]:"cont (\<lambda> ts. if ts=\<bottom> then \<bottom> else tsTakeFirst\<cdot>ts \<bullet>\<surd> na\<cdot>(tsDropFirst\<cdot>ts))" (is "cont (?F)")
-apply(rule contI2)
-apply (smt eq_bottom_iff minimal monofunI monofun_cfun_arg tstakefirst_eq)
-apply rule+
+  apply(rule contI2)
+   apply (rule monofunI)
+   apply (case_tac "x = \<bottom>", simp)
+   apply (case_tac "y = \<bottom>", simp +)
+  apply (simp add: monofun_cfun_arg tstakefirst_eq)
+  apply rule+
 proof -
    fix Y :: "nat \<Rightarrow> 'a tstream"
    assume y_chain: "chain Y"
    thus "?F (\<Squnion>i. Y i) \<sqsubseteq> (\<Squnion>i. ?F (Y i))" 
    proof (cases "\<bottom> = (\<Squnion>i. Y i) ")
-    case True thus ?thesis by (simp add: minimal) 
+    case True thus ?thesis by auto 
    next
     case False 
     obtain j where "Y j \<noteq> \<bottom>" by (metis False lub_chain_maxelem minimal) 
-    have "\<And>i. ?F (Y i) \<sqsubseteq> ?F (Y (Suc i))" by (smt below_bottom_iff minimal monofun_cfun_arg po_class.chainE tstakefirst_eq y_chain)
+    have "\<And>i. ?F (Y i) \<sqsubseteq> ?F (Y (Suc i))" 
+    proof -
+      fix i :: nat
+      have f1: "\<forall>n f. (tsTakeFirst\<cdot>(f (Suc n)) = tsTakeFirst\<cdot>(f n) \<or> f n = (\<bottom>::'a tstream)) \<or> \<not> chain f"
+        by (metis po_class.chain_def tstakefirst_eq)
+      have f2: "\<forall>n f. (f (Suc n) = (f n::'a tstream) \<or> \<not> chain f) \<or> f (Suc n) \<notsqsubseteq> f n"
+        using below_antisym po_class.chain_def by blast
+      { assume "Y i \<noteq> \<bottom>"
+        then have "Y (Suc i) \<noteq> \<bottom> \<and> tsTakeFirst\<cdot>(Y i) \<bullet>\<surd> na\<cdot>(tsDropFirst\<cdot>(Y i)) \<sqsubseteq> tsTakeFirst\<cdot>(Y (Suc i)) \<bullet>\<surd> na\<cdot>(tsDropFirst\<cdot>(Y (Suc i)))"
+          using f2 f1 by (metis (no_types) minimal monofun_cfun_arg po_class.chain_def y_chain)
+        then have "(if Y i = \<bottom> then \<bottom> else tsTakeFirst\<cdot>(Y i) \<bullet>\<surd> na\<cdot>(tsDropFirst\<cdot>(Y i))) \<sqsubseteq> (if Y (Suc i) = \<bottom> then \<bottom> else tsTakeFirst\<cdot>(Y (Suc i)) \<bullet>\<surd> na\<cdot>(tsDropFirst\<cdot>(Y (Suc i))))"
+          by simp }
+      then show "(if Y i = \<bottom> then \<bottom> else tsTakeFirst\<cdot>(Y i) \<bullet>\<surd> na\<cdot>(tsDropFirst\<cdot>(Y i))) \<sqsubseteq> (if Y (Suc i) = \<bottom> then \<bottom> else tsTakeFirst\<cdot>(Y (Suc i)) \<bullet>\<surd> na\<cdot>(tsDropFirst\<cdot>(Y (Suc i))))"
+        by fastforce
+    qed
     hence f_chain: "chain (\<lambda>i. ?F (Y i))" by (simp add: po_class.chainI) 
-
     have d_chain: "chain (\<lambda>i. Y (i+j))" (is "chain ?D") by (simp add: chain_shift y_chain) 
     have d_notBot: "\<And>i. ?D i \<noteq> \<bottom>"
       by (metis \<open>(Y::nat \<Rightarrow> 'a tstream) (j::nat) \<noteq> \<bottom>\<close> eq_bottom_iff le_add2 po_class.chain_mono y_chain)
+    have f12: "chain (\<lambda> i. tsTakeFirst\<cdot> (?D i) \<bullet>\<surd> na\<cdot>(tsDropFirst\<cdot> (?D i)))"
+    proof (rule chainI)
+      fix i :: nat
+      have "Y (Suc (i + j)) \<noteq> \<bottom>"
+        by (metis add_Suc d_notBot)
+      then show "tsTakeFirst\<cdot>(Y (i + j)) \<bullet>\<surd> na\<cdot>(tsDropFirst\<cdot>(Y (i + j))) \<sqsubseteq> tsTakeFirst\<cdot>(Y (Suc i + j)) \<bullet>\<surd> na\<cdot>(tsDropFirst\<cdot>(Y (Suc i + j)))"
+        using \<open>\<And>i::nat. (if (Y::nat \<Rightarrow> 'a tstream) i = \<bottom> then \<bottom> else tsTakeFirst\<cdot>(Y i) \<bullet>\<surd> (na::'a tstream \<rightarrow> 'a tstream)\<cdot> (tsDropFirst\<cdot>(Y i))) \<sqsubseteq> (if Y (Suc i) = \<bottom> then \<bottom> else tsTakeFirst\<cdot>(Y (Suc i)) \<bullet>\<surd> na\<cdot>(tsDropFirst\<cdot>(Y (Suc i))))\<close> add_Suc d_notBot by presburger
+    qed
+    have f13: "tsTakeFirst\<cdot> (\<Squnion>i. ?D i) = (\<Squnion>i. tsTakeFirst\<cdot>(?D i))"
+      by (simp add: contlub_cfun_arg d_chain)
     hence "tsTakeFirst\<cdot> (\<Squnion>i. ?D i) \<bullet>\<surd> na\<cdot>(tsDropFirst\<cdot> (\<Squnion>i. ?D i)) = (\<Squnion>i. tsTakeFirst\<cdot> (?D i) \<bullet>\<surd> na\<cdot>(tsDropFirst\<cdot> (?D i)))"
-      by (smt d_chain contlub_cfun_arg is_ub_thelub lub_eq monofun_cfun_arg po_class.chainE po_class.chainI tstakefirst_eq)
-    hence eq: "?F (\<Squnion>i. ?D i) = (\<Squnion>i. ?F (?D i))" using d_notBot d_chain is_ub_thelub by fastforce
+      apply (simp add: contlub_cfun_arg d_chain)
+      by (metis (no_types, lifting) f13 d_chain d_notBot is_ub_thelub lub_eq tstakefirst_eq)
+    hence eq: "?F (\<Squnion>i. ?D i) = (\<Squnion>i. ?F (?D i))" using d_notBot d_chain is_ub_thelub by fastforce                           
     have "(\<Squnion>i. ?F (?D i)) = (\<Squnion>i. ?F (Y i))" using lub_range_shift f_chain by fastforce
     thus ?thesis using eq lub_range_shift y_chain by fastforce 
   qed
@@ -1056,10 +1125,16 @@ by (simp add: tstickcount_insert Rep_tstream_bottom_iff tstakefirst_insert)
 
 lemma tsfirstConclen [simp]: assumes "ts\<noteq>\<bottom>" shows "#\<surd>tsTakeFirst\<cdot>ts \<bullet>\<surd> ts2 = lnsuc\<cdot>(#\<surd>ts2)"
 proof -
-  have "#({\<surd>} \<ominus> (Rep_tstream (tsTakeFirst\<cdot>ts))) = Fin 1"
+  have f1: "#({\<surd>} \<ominus> (Rep_tstream (tsTakeFirst\<cdot>ts))) = Fin 1"
     by (metis assms tstakeFirst_len tstickcount_insert)
   hence "({\<surd>} \<ominus> (Rep_tstream (tsTakeFirst\<cdot>ts))) = \<up>\<surd>"
-    by (smt Fin_02bot Fin_Suc One_nat_def inject_lnsuc lnzero_def lscons_conv sfilter_ne_resup singletonD slen_empty_eq slen_scons sup'_def surj_scons)
+  proof -
+    have f2: "0 = Fin 0" using Fin_02bot bot_is_0 by presburger
+    then show ?thesis
+      by (metis (no_types, lifting) Fin_Suc One_nat_def f1 dual_order.order_iff_strict inject_Fin 
+          inject_lnsuc not_one_le_zero sconc_snd_empty sfilter_ne_resup singletonD slen_empty_eq 
+          srt_decrements_length surj_scons)
+  qed
   hence "{\<surd>} \<ominus> ((Rep_tstream (tsTakeFirst\<cdot>ts)) \<bullet> Rep_tstream ts2) = \<up>\<surd> \<bullet> {\<surd>} \<ominus> Rep_tstream ts2"
     by (simp add: add_sfilter2)
   thus ?thesis by (simp add: tsconc_insert tstickcount_insert) 
@@ -1137,7 +1212,32 @@ lemma tstake2tsnth_eq: "ts1 \<down> n  = ts2 \<down> n \<Longrightarrow> i<n \<L
    apply (simp add: tsNth_def)
    apply (metis Suc_pred below_bottom_iff tsTake_prefix tstake_below tstake_noteq tstakefirst_eq)
   apply(simp add: tsNth_Suc)
-  by (smt Suc_lessE strictI tsConc_notEq tsTake_def2 tsTake_prefix tstakefirst_eq tstakefirst_len)
+proof -
+  fix i::nat and n::nat and ts1::"'a tstream" and ts2::"'a tstream"
+  assume a1: "(\<And>(n::nat) (ts1::'a tstream) ts2::'a tstream. ts1 \<down> n  = ts2 \<down> n  \<Longrightarrow> i < n \<Longrightarrow> tsNth i\<cdot>ts1 = tsNth i\<cdot>ts2)"
+  and a2: "ts1 \<down> n  = ts2 \<down> n" and a3: "Suc i < n"
+  obtain ts1n where ts1n_def: "ts1n = ts1 \<down> n" by simp
+  obtain ts2n where ts2n_def: "ts2n = ts2 \<down> n" by simp
+  have f00: "ts1n \<down> n  = ts2n \<down> n"
+    by (simp add: a2 ts1n_def ts2n_def)
+  have f01: "(tsDropFirst\<cdot>ts1n) \<down> n  = (tsDropFirst\<cdot>ts2n) \<down> n"
+    by (simp add: a2 ts1n_def ts2n_def)
+  have f02: "tsNth i\<cdot>(tsDropFirst\<cdot>ts1n) = tsNth i\<cdot>(tsDropFirst\<cdot>ts2n)"
+    by (simp add: a2 ts1n_def ts2n_def)
+  have f03: "ts1n \<sqsubseteq> ts1 \<and> ts2n \<sqsubseteq> ts2"
+    using a2 ts1n_def ts2n_def tsTake_prefix by fastforce
+  have f04: "tsDropFirst\<cdot>ts1n \<sqsubseteq> tsDropFirst\<cdot>ts1 \<and> tsDropFirst\<cdot>ts2n \<sqsubseteq> tsDropFirst\<cdot>ts2"
+    by (simp add: f03 monofun_cfun_arg)
+  have f05: "ts2n \<sqsubseteq> ts1"
+    using a2 f03 ts1n_def ts2n_def by auto
+  have f06: "ts1n \<sqsubseteq> ts2"
+    by (simp add: a2 ts1n_def)
+  show "tsNth i\<cdot>(tsDropFirst\<cdot>ts1) = tsNth i\<cdot>(tsDropFirst\<cdot>ts2)"
+    apply (case_tac "ts1 = \<bottom>")
+     apply (metis Fin_02bot a2 a3 bot_is_0 bottomI f03 inject_Fin less_Suc_eq_0_disj min_def 
+        not_less_eq ts1n_def tstake_len tstickcount_empty_eq)
+    sorry
+qed
 
 
 lemma tstake_bot: "ts1 \<down> (Suc n) = \<bottom> \<Longrightarrow> ts1 = \<bottom>"
