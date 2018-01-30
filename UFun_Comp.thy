@@ -22,20 +22,20 @@ section\<open>Definitions\<close>
 subsection\<open>abbreviations\<close>
 
 
-abbreviation ubclUnion_abbr :: " 'a \<Rightarrow> 'a \<Rightarrow> 'a" (infixl "\<uplus>" 100) where 
+abbreviation ubclUnion_abbr :: " 'm \<Rightarrow> 'm \<Rightarrow> 'm" (infixl "\<uplus>" 100) where 
 "b1 \<uplus> b2 \<equiv> ubclUnion\<cdot>b1\<cdot>b2"
 
-abbreviation ubclRestrict_abbr :: " 'a \<Rightarrow> channel set \<Rightarrow> 'a" ("(_\<bar>_)" [66,65] 65)
+abbreviation ubclRestrict_abbr :: " 'm \<Rightarrow> channel set \<Rightarrow> 'm" ("(_\<bar>_)" [66,65] 65)
 where "b\<bar>cs \<equiv> ubclRestrict cs\<cdot>b"
 
   
 subsection\<open>definitions\<close>  
 
   
-definition ufLeast :: "channel set \<Rightarrow> channel set \<Rightarrow> ('a ufun)" where
+definition ufLeast :: "channel set \<Rightarrow> channel set \<Rightarrow> 'in ufun" where
 "ufLeast cin cout = Abs_ufun (\<Lambda>  sb.  (ubclDom\<cdot>sb = cin) \<leadsto> ubclLeast cout)"  
 
-definition ufRestrict :: "channel set \<Rightarrow> channel set \<Rightarrow> 'a ufun \<rightarrow> 'a ufun" where
+definition ufRestrict :: "channel set \<Rightarrow> channel set \<Rightarrow> 'm ufun \<rightarrow> 'm ufun" where
   "ufRestrict In Out \<equiv> (\<Lambda> f. if (ufDom\<cdot>f = In \<and> ufRan\<cdot>f = Out) then f else (ufLeast In Out))"
 
   
@@ -43,57 +43,58 @@ subsection\<open>channel sets\<close>
 
   
 text {* the input channels of the composition of f1 and f2 *}
-definition ufCompI :: "('a ufun) \<Rightarrow> ('a ufun) \<Rightarrow> channel set" where
+definition ufCompI :: "'m ufun \<Rightarrow> 'm ufun \<Rightarrow> channel set" where
 "ufCompI f1 f2 \<equiv> (ufDom\<cdot>f1 \<union> ufDom\<cdot>f2) - (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2)"
 
 text {* the internal channels of the composition of f1 and f2 *}
-definition ufCompL :: "('a ufun) \<Rightarrow> ('a ufun) \<Rightarrow> channel set" where
+definition ufCompL :: "'m ufun \<Rightarrow> 'm ufun \<Rightarrow> channel set" where
 "ufCompL f1 f2 \<equiv> (ufDom\<cdot>f1 \<union> ufDom\<cdot>f2) \<inter> (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2)"
 
 text {* the output channels of the composition of f1 and f2 *}
-definition ufCompO :: "('a ufun) \<Rightarrow> ('a ufun) \<Rightarrow> channel set" where
+definition ufCompO :: "'m ufun \<Rightarrow> 'm ufun \<Rightarrow> channel set" where
 "ufCompO f1 f2 \<equiv> (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2)"
 
 text {* all channels of the composition of f1 and f2  *}
-definition ufCompC :: "('a ufun) \<Rightarrow> ('a ufun) \<Rightarrow> channel set" where
+definition ufCompC :: "'m ufun \<Rightarrow> 'm ufun \<Rightarrow> channel set" where
 "ufCompC f1 f2 \<equiv> ufDom\<cdot>f1 \<union> ufDom\<cdot>f2 \<union> ufRan\<cdot>f1 \<union> ufRan\<cdot>f2"
 
 
 subsection \<open>ubFix\<close>
   
   
-definition ubFix :: "('a \<rightarrow> 'a) \<Rightarrow> channel set \<Rightarrow> 'a" where 
+definition ubFix :: "('m \<rightarrow> 'm) \<Rightarrow> channel set \<Rightarrow> 'm" where 
 "ubFix F cs = (\<Squnion>i. iterate i\<cdot>F\<cdot>(ubclLeast cs))"
 
 text {* special case ubFix for cont of the composition *}
-definition ubFix2 :: "('a  \<Rightarrow> 'a  \<rightarrow> 'a ) \<Rightarrow> 'a  \<Rightarrow> channel set \<Rightarrow> 'a " where
+definition ubFix2 :: "('m  \<Rightarrow> 'm  \<rightarrow> 'm ) \<Rightarrow> 'm  \<Rightarrow> channel set \<Rightarrow> 'm " where
 "ubFix2 F x cs \<equiv>  (\<Squnion>i. iterate i\<cdot>(F x)\<cdot>(ubclLeast cs))"
 
-abbreviation iter_ubfix2 :: "('a \<Rightarrow> 'a \<rightarrow> 'a) \<Rightarrow> nat \<Rightarrow> channel set \<Rightarrow> 'a \<Rightarrow> 'a" where
+abbreviation iter_ubfix2 :: "('m \<Rightarrow> 'm \<rightarrow> 'm) \<Rightarrow> nat \<Rightarrow> channel set \<Rightarrow> 'm \<Rightarrow> 'm" where
 "iter_ubfix2 F i cs \<equiv>  (\<lambda> x. iterate i\<cdot>(F x)\<cdot>(ubclLeast cs))"
 
 text {* ubfun_io_eq f cs is true if f applied to the least ub  with domain cs delivers a 
         ub with the same domain *}
-abbreviation ubfun_io_eq :: "('a \<rightarrow> 'a ) \<Rightarrow> channel set \<Rightarrow> bool" where
+abbreviation ubfun_io_eq :: "('m \<rightarrow> 'm ) \<Rightarrow> channel set \<Rightarrow> bool" where
 "ubfun_io_eq f cs \<equiv> ubclDom\<cdot>(f\<cdot>(ubclLeast cs)) = cs"
 
 
 subsection \<open>composition helpers\<close>
 
  
-definition ufCompH :: "('a ufun) \<Rightarrow> ('a ufun) \<Rightarrow> 'a \<Rightarrow> ('a \<rightarrow> 'a)" where
+definition ufCompH :: "'m ufun \<Rightarrow> 'm ufun \<Rightarrow> 'm \<Rightarrow> ('m \<rightarrow> 'm)" where
 "ufCompH f1 f2 x = (\<Lambda> z. (f1\<rightleftharpoons>((x \<uplus> z) \<bar> ufDom\<cdot>f1)) \<uplus>  (f2\<rightleftharpoons>((x \<uplus> z) \<bar> ufDom\<cdot>f2)))"
 
-abbreviation iter_ufCompH :: "('a ufun) \<Rightarrow> ('a ufun) \<Rightarrow> nat \<Rightarrow> 'a  \<Rightarrow> 'a" where
+abbreviation iter_ufCompH :: "'m ufun \<Rightarrow> 'm ufun \<Rightarrow> nat \<Rightarrow> 'm  \<Rightarrow> 'm" where
 "(iter_ufCompH f1 f2 i) \<equiv> (\<lambda> x. iterate i\<cdot>(ufCompH f1 f2 x)\<cdot>(ubclLeast (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2)))" 
 
 
 subsection \<open>composition operators\<close>
 
-abbreviation comp_well :: "('a ufun) \<Rightarrow> ('a ufun) \<Rightarrow> bool" where
+definition comp_well :: "('a ufun) \<Rightarrow> ('a ufun) \<Rightarrow> bool" where
 "comp_well f1 f2 \<equiv> ufRan\<cdot>f1 \<inter> ufRan\<cdot>f2 = {}"
 
-definition ufComp :: "('a ufun) \<Rightarrow> ('a ufun) \<Rightarrow> ('a ufun)" where
+
+definition ufComp :: "'m ufun \<Rightarrow> 'm ufun \<Rightarrow> 'm ufun" where
 "ufComp f1 f2 \<equiv>
 let I = ufCompI f1 f2;
     Oc = (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2)
@@ -101,28 +102,28 @@ in Abs_ufun (Abs_cfun (\<lambda> x. (ubclDom\<cdot>x = I) \<leadsto> ubFix (ufCo
 
 
 (* parcomp *)
-abbreviation parcomp_well :: "('a ufun) \<Rightarrow> ('a ufun) \<Rightarrow> bool" where
+abbreviation parcomp_well :: "'m ufun \<Rightarrow> 'm ufun \<Rightarrow> bool" where
 "parcomp_well f1 f2 \<equiv> (ufCompL f1 f2 = {}) \<and> (ufRan\<cdot>f1 \<inter> ufRan\<cdot>f2 = {})"
 
 
-definition ufParComp :: "('a ufun) \<Rightarrow> ('a ufun) \<Rightarrow> ('a ufun)" ("_\<parallel>_") where
+definition ufParComp :: "'m ufun \<Rightarrow> 'm ufun \<Rightarrow> 'm ufun" ("_\<parallel>_") where
 "ufParComp f1 f2 \<equiv> Abs_ufun (Abs_cfun (\<lambda> x. (ubclDom\<cdot>x = ufDom\<cdot>f1 \<union> ufDom\<cdot>f2 ) \<leadsto> ((f1 \<rightleftharpoons> (x \<bar>ufDom\<cdot>f1)) \<uplus> (f2 \<rightleftharpoons> (x\<bar>ufDom\<cdot>f2)))))"
 
 
-abbreviation sercomp_well :: "('a ufun) \<Rightarrow> ('a ufun) \<Rightarrow> bool" where
+abbreviation sercomp_well :: "'m ufun \<Rightarrow> 'm ufun \<Rightarrow> bool" where
 "sercomp_well f1 f2 \<equiv>  (ufRan\<cdot>f1 = ufDom\<cdot>f2) 
                         \<and> (ufDom\<cdot>f1 \<inter> ufRan\<cdot>f1 = {})
                         \<and> (ufDom\<cdot>f2 \<inter> ufRan\<cdot>f2 = {})
                         \<and> (ufDom\<cdot>f1 \<inter> ufRan\<cdot>f2 = {})"
 
-definition ufSerComp :: "('a ufun) => ('a ufun) => ('a ufun)"  ("_\<circ>_") where
+definition ufSerComp :: "'m ufun => 'm ufun => 'm ufun"  (infixl " \<circ> " 60) where
 "ufSerComp f1 f2 \<equiv> Abs_ufun (Abs_cfun (\<lambda> x. (ubclDom\<cdot>x =  ufDom\<cdot>f1) \<leadsto> (f2 \<rightleftharpoons> (f1 \<rightleftharpoons> x))))"
 
 
-definition ufFeedH:: "('a ufun) \<Rightarrow> 'a \<Rightarrow> 'a  \<rightarrow> 'a" where
+definition ufFeedH:: "'m ufun \<Rightarrow> 'm \<Rightarrow> 'm  \<rightarrow> 'm" where
 "ufFeedH f x \<equiv> (\<Lambda> z. (f\<rightleftharpoons>((x \<uplus> z)\<bar> (ufDom\<cdot>f))))"
 
-definition ufFeedbackComp :: "('a ufun) \<Rightarrow> ('a ufun)" ("\<mu>_" 50) where
+definition ufFeedbackComp :: "'m ufun \<Rightarrow> 'm ufun" ("\<mu>_" 50) where
 "ufFeedbackComp f \<equiv>
 let I  = ufDom\<cdot>f - ufRan\<cdot>f;
     C  = ufRan\<cdot>f
@@ -380,7 +381,7 @@ subsubsection \<open>ubFix\<close>
 
     
 (* ubfix is cont in X *)
-lemma ubfix_contI2 [simp]: fixes F :: "'a \<Rightarrow> 'a \<rightarrow> 'a"
+lemma ubfix_contI2 [simp]: fixes F :: "'m \<Rightarrow> 'm \<rightarrow> 'm"
                             assumes  "cont F" and "\<And> x. (P x) \<Longrightarrow> ubfun_io_eq (F x) cs"
                             and "\<And> x y. ubclDom\<cdot>x = ubclDom\<cdot>y \<Longrightarrow> P x = P y"
                           shows "cont (\<lambda> x. (P x) \<leadsto> ubFix (F x) cs)"
@@ -822,7 +823,23 @@ qed
 
 (* parcomp *)
 subsection\<open>Parallel Composition\<close>
-  
+
+lemma parcomp_well_h1: assumes "parcomp_well f1 f2"
+  shows "ufDom\<cdot>f1 \<inter> ufRan\<cdot>f1 = {}" and "ufDom\<cdot>f2 \<inter> ufRan\<cdot>f2 = {}"
+  apply (metis (no_types, hide_lams) Int_Un_distrib2 assms bot_eq_sup_iff inf_sup_aci(1) ufCompL_def)
+  using assms ufCompL_def by fastforce
+
+lemma parcomp_well_h2: assumes "parcomp_well f1 f2"
+  shows "ufDom\<cdot>f1 \<inter> ufRan\<cdot>f2 = {}" and "ufDom\<cdot>f2 \<inter> ufRan\<cdot>f1 = {}"
+proof -
+  have "(ufDom\<cdot>f1 \<union> ufDom\<cdot>f2) \<inter> ufRan\<cdot>f2 \<union> (ufDom\<cdot>f1 \<union> ufDom\<cdot>f2) \<inter> ufRan\<cdot>f1 = {}"
+    by (metis (no_types) Int_Un_distrib assms inf_sup_aci(5) ufCompL_def)
+  then show "ufDom\<cdot>f1 \<inter> ufRan\<cdot>f2 = {}"
+    by blast
+next
+  show "ufDom\<cdot>f2 \<inter> ufRan\<cdot>f1 = {}"
+    by (metis (no_types, lifting) Int_Un_distrib UFun_Comp.ufran_least Un_empty assms inf_sup_distrib1 inf_sup_distrib2 sup_eq_bot_iff ufCompL_def)
+qed
   
 lemma ufParComp_cont: "cont (\<lambda> x. (ubclDom\<cdot>x = ufDom\<cdot>f1 \<union> ufDom\<cdot>f2 ) 
                                       \<leadsto> ((f1 \<rightleftharpoons> (x \<bar>ufDom\<cdot>f1)) \<uplus> (f2 \<rightleftharpoons> (x\<bar>ufDom\<cdot>f2))))"
@@ -876,8 +893,29 @@ lemma ufParComp_dom: assumes "parcomp_well f1 f2"
   shows "ufDom\<cdot>(ufParComp f1 f2) = (ufDom\<cdot>f1 \<union> ufDom\<cdot>f2)"
   apply (subst ufDom_def, simp add:ufParComp_def)
   apply (subst rep_abs_cufun, simp add: ufParComp_cont)
-   apply (simp add: assms ufParComp_well)
-  by (simp add: domIff ubclDom_h)
+  apply (simp add: assms ufParComp_well)
+  by (smt domIff rep_ufun_well tfl_some ubcldom_least_cs ufWell_def ufdom_2ufundom ufunLeastIDom)
+
+
+lemma ufParComp_ran: assumes "parcomp_well f1 f2"
+  shows "ufRan\<cdot>(ufParComp f1 f2) = (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2)"
+proof-
+  obtain b where b_def: "b \<in> (ran (Rep_cufun (ufParComp f1 f2)))"
+    using ufran_not_empty by blast
+
+  have f2: "ufRan\<cdot>(ufParComp f1 f2) = ubclDom\<cdot>b"
+    by (meson ran2exists ufran_2_ubcldom b_def)
+
+  have f3_1: "\<And>x. ubclDom\<cdot>x = (ufDom\<cdot>f1 \<union> ufDom\<cdot>f2) \<Longrightarrow>
+                             ubclDom\<cdot>((f1 \<rightleftharpoons> x\<bar>ufDom\<cdot>f1) \<uplus> (f2 \<rightleftharpoons> x\<bar>ufDom\<cdot>f2)) = ufRan\<cdot>f1 \<union> ufRan\<cdot>f2"
+    by (simp add: Int_absorb1 ubclrestrict_ubcldom ubclunion_ubcldom ufran_2_ubcldom2)
+
+  have f3: " ubclDom\<cdot>b = ( ufRan\<cdot>f1 \<union> ufRan\<cdot>f2)"
+    by (metis (no_types, lifting) assms f2 option.sel ubcldom_least_cs f3_1 ufParComp_dom ufParComp_repAbs ufran_least)
+
+  show ?thesis
+    by (simp add: f2 f3)
+qed
 
 
 lemma parcomp_func_h: assumes "parcomp_well f1 f2"
@@ -906,46 +944,23 @@ proof -
     by (metis f3 f4 option.sel)
 qed
 
-
 lemma parcomp_func_h2: assumes "parcomp_well f1 f2"
                    and "ufDom\<cdot>f1 \<union> ufDom\<cdot>f2 = ubclDom\<cdot>ub"
                shows "((f1 \<parallel> f2) \<rightleftharpoons> ub) = (f1 \<rightleftharpoons> ub\<bar>ufDom\<cdot>f1) \<uplus> (f2 \<rightleftharpoons> ub\<bar>ufDom\<cdot>f2)"
   by (metis assms(1) assms(2) inf_idem inf_le2 parcomp_func_h ubclrestrict_dom_id ufParComp_dom)  
 
-lemma ufParComp_ran: assumes "parcomp_well f1 f2"
-  shows "ufRan\<cdot>(ufParComp f1 f2) = (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2)"
-  apply (simp add: ufran_least)
-  apply (subst parcomp_func_h2, simp add: assms)
-   apply (simp add: assms ubcldom_least_cs ufParComp_dom)
-  by (metis (no_types, lifting) UFun_Comp.ufran_least assms sup_ge1 sup_ge2 ubcldom_least_cs ubclunion_ubcldom ufParComp_dom ufRanRestrict)
-
 lemma ubresrict_dom2: assumes "cs \<subseteq> ubclDom\<cdot>ub"
   shows "ubclDom\<cdot>(ub \<bar> cs) = cs"
   by (simp add: Int_absorb1 assms ubclrestrict_ubcldom)
 
-lemma ufparcompwell_h1: assumes "parcomp_well f1 f2"
-  shows "ufRan\<cdot>f1 \<inter> ufDom\<cdot>f1 = {}" and "ufDom\<cdot>f2 \<inter> ufRan\<cdot>f1 = {}"
-   apply (metis (no_types, hide_lams) assms bot_eq_sup_iff inf_sup_aci(1) inf_sup_distrib1 ufCompL_def)
-proof -
-  have "\<And>u ua. (ufDom\<cdot>(u::'a ufun) \<union> ufDom\<cdot>ua) \<inter> (ufRan\<cdot>ua \<union> ufRan\<cdot>u) = ufCompL ua u"
-    by (simp add: sup_commute ufCompL_def)
-  then show "ufDom\<cdot>f2 \<inter> ufRan\<cdot>f1 = {}"
-    using assms by blast
-qed
-
-lemma ufParCompWell_asso: assumes "parcomp_well f1 f2"
+lemma ufParCompWell_associativity: assumes "parcomp_well f1 f2"
                                    and "parcomp_well f2 f3"
                                    and "parcomp_well f1 f3"                                  
                                  shows "parcomp_well f1 (f2 \<parallel> f3)"
-  apply rule
    apply (simp add: ufCompL_def)
-   apply (simp add: Int_Un_distrib2 Int_Un_distrib) +
-   apply (rule, (metis assms(1) inf_sup_aci(1) ufparcompwell_h1(1)))
-   apply (rule, simp add: assms(1) assms(2) assms(3) inf_sup_distrib2 ufParComp_dom ufparcompwell_h1(2))
-  apply (rule, simp add: Int_Un_distrib assms(1) assms(2) assms(3) inf_commute ufParComp_ran ufcomp_L_commu ufparcompwell_h1(2))
-  using assms(2) ufCompL_def ufParComp_dom ufParComp_ran apply blast
-  by (simp add: assms(1) assms(2) assms(3) inf_sup_distrib1 ufParComp_ran)
-
+   apply (simp_all add: ufParComp_dom ufParComp_ran assms)
+  apply (simp_all add: Int_Un_distrib2 Int_Un_distrib)
+  by (meson assms(1) assms(2) assms(3) parcomp_well_h1(1) parcomp_well_h1(2) parcomp_well_h2(1) parcomp_well_h2(2))
 
 lemma ufParComp_associativity: assumes "parcomp_well f1 f2"
                                    and "parcomp_well f2 f3"
@@ -1020,7 +1035,7 @@ lemma parcomp_domranf1: assumes "ufCompL f1 f2 = {}"
 (* sercomp *)
 subsection\<open>Serial Composition\<close>
   
-  
+ 
 lemma ufSerComp_cont: "cont (\<lambda> x. (ubclDom\<cdot>x =  ufDom\<cdot>f1) \<leadsto> (f2 \<rightleftharpoons> (f1 \<rightleftharpoons> x)))"
 proof - 
   have "cont (\<lambda>x. (f1 \<rightleftharpoons> x))"
@@ -1113,6 +1128,7 @@ proof -
     by (metis assms(1) f1 f2 f5 ufSerComp_apply ufSerComp_dom)
 qed
 
+
 subsection \<open>Feedback\<close>    
 
   
@@ -1150,10 +1166,37 @@ lemma ufFeedbackComp_cont: "cont (\<lambda> sb. (ubclDom\<cdot>sb = (ufDom\<cdot
 lemma ufFeedbackComp_well: "ufWell (\<Lambda> sb. (ubclDom\<cdot>sb = (ufDom\<cdot>f - ufRan\<cdot>f)) \<leadsto> (ubFix (ufFeedH f sb) (ufRan\<cdot>f)))"
   apply(simp add: ufWell_def)
   apply rule
-   apply (simp add: ufFeedbackComp_cont)
-  apply (simp add: domIff) 
-   apply blast
 proof -
+  { fix aa :: "channel set \<Rightarrow> 'a"
+    have "ubclDom\<cdot>(aa (UFun.ufDom\<cdot>f - UFun.ufRan\<cdot>f)) = UFun.ufDom\<cdot>f - UFun.ufRan\<cdot>f \<or> (\<exists>C. ubclDom\<cdot>(aa C) \<noteq> C \<and> ubclDom\<cdot>(aa C) \<noteq> UFun.ufDom\<cdot>f - UFun.ufRan\<cdot>f)"
+      by metis
+    moreover
+    { assume "ubclDom\<cdot>(aa (UFun.ufDom\<cdot>f - UFun.ufRan\<cdot>f)) = UFun.ufDom\<cdot>f - UFun.ufRan\<cdot>f"
+      moreover
+      { assume "\<exists>C. aa C \<in> dom (\<lambda>a. (ubclDom\<cdot>a = UFun.ufDom\<cdot>f - UFun.ufRan\<cdot> f)\<leadsto>ubFix (ufFeedH f a) (UFun.ufRan\<cdot>f)) \<and> ubclDom\<cdot>(aa C) = C"
+        then have "\<exists>C. cont (\<lambda>a. (ubclDom\<cdot>a = UFun.ufDom\<cdot>f - UFun.ufRan\<cdot> f)\<leadsto>ubFix (ufFeedH f a) (UFun.ufRan\<cdot>f)) \<and> aa C \<in> dom (\<lambda>a. (ubclDom\<cdot>a = UFun.ufDom\<cdot>f - UFun.ufRan\<cdot> f)\<leadsto>ubFix (ufFeedH f a) (UFun.ufRan\<cdot>f)) \<and> ubclDom\<cdot>(aa C) = C"
+          using ufFeedbackComp_cont by blast
+        then have "\<exists>C. ubclDom\<cdot>(aa C) \<noteq> C \<and> aa C \<notin> dom (Rep_cfun (\<Lambda> a. (ubclDom\<cdot>a = UFun.ufDom\<cdot>f - UFun.ufRan\<cdot> f)\<leadsto>ubFix (ufFeedH f a) (UFun.ufRan\<cdot>f))) \<or> aa C \<in> dom (Rep_cfun (\<Lambda> a. (ubclDom\<cdot>a = UFun.ufDom\<cdot>f - UFun.ufRan\<cdot> f)\<leadsto>ubFix (ufFeedH f a) (UFun.ufRan\<cdot>f))) \<and> ubclDom\<cdot>(aa C) = C"
+          by auto }
+      moreover
+      { assume "\<exists>u. UFun.ufDom\<cdot>f - UFun.ufRan\<cdot>f = UFun.ufDom\<cdot>u - UFun.ufRan\<cdot>u \<and> aa (UFun.ufDom\<cdot>f - UFun.ufRan\<cdot>f) \<notin> dom (\<lambda>a. (ubclDom\<cdot>a = UFun.ufDom\<cdot>u - UFun.ufRan\<cdot> u)\<leadsto>ubFix (ufFeedH u a) (UFun.ufRan\<cdot>u))"
+        then have "\<exists>C. ubclDom\<cdot>(aa C) \<noteq> C \<and> ubclDom\<cdot>(aa C) \<noteq> UFun.ufDom\<cdot>f - UFun.ufRan\<cdot>f"
+          by (smt domIff option.distinct(1)) }
+      ultimately have "(\<exists>C. ubclDom\<cdot>(aa C) \<noteq> C \<and> aa C \<notin> dom (Rep_cfun (\<Lambda> a. (ubclDom\<cdot>a = UFun.ufDom\<cdot>f - UFun.ufRan\<cdot> f)\<leadsto>ubFix (ufFeedH f a) (UFun.ufRan\<cdot>f))) \<or> aa C \<in> dom (Rep_cfun (\<Lambda> a. (ubclDom\<cdot>a = UFun.ufDom\<cdot>f - UFun.ufRan\<cdot> f)\<leadsto>ubFix (ufFeedH f a) (UFun.ufRan\<cdot>f))) \<and> ubclDom\<cdot>(aa C) = C) \<or> (\<exists>C. ubclDom\<cdot>(aa C) \<noteq> C \<and> ubclDom\<cdot>(aa C) \<noteq> UFun.ufDom\<cdot>f - UFun.ufRan\<cdot>f)"
+        by blast }
+    moreover
+    { assume "\<exists>C. ubclDom\<cdot>(aa C) \<noteq> C \<and> ubclDom\<cdot>(aa C) \<noteq> UFun.ufDom\<cdot>f - UFun.ufRan\<cdot>f"
+      then have "\<exists>C. aa C \<notin> dom (\<lambda>a. (ubclDom\<cdot>a = UFun.ufDom\<cdot>f - UFun.ufRan\<cdot> f)\<leadsto>ubFix (ufFeedH f a) (UFun.ufRan\<cdot>f)) \<and> ubclDom\<cdot>(aa C) \<noteq> C"
+        by (smt domIff)
+      then have "\<exists>C. cont (\<lambda>a. (ubclDom\<cdot>a = UFun.ufDom\<cdot>f - UFun.ufRan\<cdot> f)\<leadsto>ubFix (ufFeedH f a) (UFun.ufRan\<cdot>f)) \<and> aa C \<notin> dom (\<lambda>a. (ubclDom\<cdot>a = UFun.ufDom\<cdot>f - UFun.ufRan\<cdot> f)\<leadsto>ubFix (ufFeedH f a) (UFun.ufRan\<cdot>f)) \<and> ubclDom\<cdot>(aa C) \<noteq> C"
+        using ufFeedbackComp_cont by blast
+      then have "\<exists>C. ubclDom\<cdot>(aa C) \<noteq> C \<and> aa C \<notin> dom (Rep_cfun (\<Lambda> a. (ubclDom\<cdot>a = UFun.ufDom\<cdot>f - UFun.ufRan\<cdot> f)\<leadsto>ubFix (ufFeedH f a) (UFun.ufRan\<cdot>f))) \<or> aa C \<in> dom (Rep_cfun (\<Lambda> a. (ubclDom\<cdot>a = UFun.ufDom\<cdot>f - UFun.ufRan\<cdot> f)\<leadsto>ubFix (ufFeedH f a) (UFun.ufRan\<cdot>f))) \<and> ubclDom\<cdot>(aa C) = C"
+        by auto }
+    ultimately have "\<exists>C. ubclDom\<cdot>(aa C) \<noteq> C \<and> aa C \<notin> dom (Rep_cfun (\<Lambda> a. (ubclDom\<cdot>a = UFun.ufDom\<cdot>f - UFun.ufRan\<cdot> f)\<leadsto>ubFix (ufFeedH f a) (UFun.ufRan\<cdot>f))) \<or> aa C \<in> dom (Rep_cfun (\<Lambda> a. (ubclDom\<cdot>a = UFun.ufDom\<cdot>f - UFun.ufRan\<cdot> f)\<leadsto>ubFix (ufFeedH f a) (UFun.ufRan\<cdot>f))) \<and> ubclDom\<cdot>(aa C) = C"
+      by fastforce }
+  then show "\<exists>C. \<forall>a. (a \<in> dom (Rep_cfun (\<Lambda> a. (ubclDom\<cdot>a = UFun.ufDom\<cdot>f - UFun.ufRan\<cdot> f)\<leadsto>ubFix (ufFeedH f a) (UFun.ufRan\<cdot>f)))) = (ubclDom\<cdot>a = C)"
+    by meson
+next
   show "\<exists>Out::channel set.
        \<forall>b::'a. b \<in> ran (Rep_cfun (\<Lambda> (sb::'a). (ubclDom\<cdot>sb = UFun.ufDom\<cdot>f - UFun.ufRan\<cdot>f)\<leadsto>ubFix (ufFeedH f sb) (UFun.ufRan\<cdot>f))) \<longrightarrow> ubclDom\<cdot>b = Out"
     apply(simp add: ufFeedbackComp_cont)
@@ -1164,8 +1207,14 @@ lemma ufFeedbackComp_dom: "ufDom\<cdot>(ufFeedbackComp f) = ufDom\<cdot>f - ufRa
   apply(subst ufDom_def , simp add:ufFeedbackComp_def)
   apply(subst rep_abs_cufun, simp add: ufFeedbackComp_cont)
    apply(simp add: ufFeedbackComp_well)
-  apply (simp add: domIff)
-  by (simp add: ubclDom_h)
+  proof -
+    have f1: "\<And>u. UFun.ufDom\<cdot> (Abs_cufun (\<lambda>a. (ubclDom\<cdot>(a::'a) = UFun.ufDom\<cdot>u - UFun.ufRan\<cdot> u)\<leadsto>ubFix (ufFeedH u a) (UFun.ufRan\<cdot>u))) = UFun.ufDom\<cdot>u - UFun.ufRan\<cdot>u"
+      by (simp add: ufFeedbackComp_cont ufFeedbackComp_well ufun_ufdom_abs)
+    have "\<And>f. \<not> cont f \<or> \<not> ufWell (Abs_cfun f) \<or> ubclDom\<cdot>(SOME a. a \<in> dom f) = UFun.ufDom\<cdot>(Abs_cufun f::'m ufun)"
+      by (simp add: rep_abs_cufun ufdom_insert)
+    then show "ubclDom\<cdot> (SOME a. a \<in> dom (\<lambda>a. (ubclDom\<cdot>a = UFun.ufDom\<cdot>f - UFun.ufRan\<cdot> f)\<leadsto>ubFix (ufFeedH f a) (UFun.ufRan\<cdot>f))) = UFun.ufDom\<cdot>f - UFun.ufRan\<cdot>f"
+      using f1 ufFeedbackComp_cont ufFeedbackComp_well by blast
+  qed
 
 lemma ufFeedbackComp_ran: "ufRan\<cdot>(ufFeedbackComp f) = ufRan\<cdot>f"
 proof - 
@@ -1459,5 +1508,40 @@ proof -
      apply (subst f1)
      using f3 by meson
  qed
+
+instantiation ufun:: (ubcl_comp) ufuncl_comp
+begin
+
+definition ufunclComp_ufun_def: "ufunclComp = ufComp"
+definition ufunclParComp_ufun_def: "ufunclParComp = ufParComp"
+definition ufunclSerComp_ufun_def: "ufunclSerComp = ufSerComp"
+definition ufunclFeedbackComp_ufun_def: "ufunclFeedbackComp = ufFeedbackComp"
+
+definition ufunclCompWell_ufun_def: "ufunclCompWell = comp_well"
+definition ufunclSerCompWell_ufun_def: "ufunclSerCompWell = sercomp_well"
+definition ufunclParCompWell_ufun_def: "ufunclParCompWell = parcomp_well"
+
+
+instance 
+  apply intro_classes
+             apply (simp add: inf_sup_aci(1) ufcomp_L_commu ufunclParCompWell_ufun_def)
+            apply (simp add: comp_well_def inf_sup_aci(1) ufunclCompWell_ufun_def)
+           apply (simp add: UFun_Comp.ufunclParComp_ufun_def ufParComp_dom ufclDom_ufun_def ufunclParCompWell_ufun_def)
+          apply (simp add: UFun_Comp.ufunclParComp_ufun_def ufParComp_ran ufclRan_ufun_def ufunclParCompWell_ufun_def)
+         apply (simp add: ufunclSerCompWell_ufun_def ufclDom_ufun_def)
+         using ufSerComp_dom ufunclSerComp_ufun_def apply auto[1]
+               apply (simp add: ufunclSerCompWell_ufun_def ufclRan_ufun_def ufunclSerComp_ufun_def)
+         using ufSerComp_ran apply auto[1]
+              apply (simp add: UFun_Comp.ufunclCompWell_ufun_def UFun_Comp.ufunclComp_ufun_def comp_well_def inf_sup_aci(1) ufcomp_commu)
+             apply (metis ufParComp_commutativity ufunclParCompWell_ufun_def ufunclParComp_ufun_def)
+            apply (simp add: ufParComp_associativity ufunclParCompWell_ufun_def ufunclParComp_ufun_def)
+           defer
+           apply (simp add: ufParCompWell_associativity ufunclParCompWell_ufun_def ufunclParComp_ufun_def)
+          apply (simp add: ufunclSerCompWell_ufun_def ufunclSerComp_ufun_def ufclDom_ufun_def ufclRan_ufun_def) +
+          apply (metis (no_types, lifting) ufSerComp_dom ufSerComp_ran)
+         apply (simp add: ufunclSerComp_ufun_def, rule ufSerComp_asso)
+           apply (meson ufunclSerCompWell_ufun_def) +
+         by (simp add: ufclDom_ufun_def ufclRan_ufun_def)
+end
 
 end
