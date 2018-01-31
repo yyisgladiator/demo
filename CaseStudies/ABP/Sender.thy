@@ -106,10 +106,18 @@ lemma tssnd_h_nbot [simp]: "msg \<noteq> \<bottom> \<Longrightarrow> acks \<note
 (* tstickcount lemma for sender *)
 lemma tssnd_h_tstickcount_hhh:"min (#\<surd> msg) (#\<surd> acks) \<le> #\<surd> tsSnd_h\<cdot>msg\<cdot>(updis a &&\<surd> acks)\<cdot>(Discr ack) 
     \<Longrightarrow> min (lnsuc\<cdot>(#\<surd> msg)) (#\<surd> acks) \<le> lnsuc\<cdot>(#\<surd> tsSnd_h\<cdot>msg\<cdot>(updis a &&\<surd> acks)\<cdot>(Discr ack))"
-apply(case_tac "min (#\<surd> msg) (#\<surd> acks) = (#\<surd> acks)",simp)
-apply (metis (no_types, lifting) leD le_less_trans less_lnsuc lnsuc_lnle_emb min_le_iff_disj 
+  apply(case_tac "min (#\<surd> msg) (#\<surd> acks) = (#\<surd> acks)",simp)
+  apply (metis (no_types, lifting) leD le_less_trans less_lnsuc lnsuc_lnle_emb min_le_iff_disj 
     not_le_imp_less)
-by (smt lnsuc_lnle_emb min.coboundedI1 min_def)
+  apply (simp add: min_def min.coboundedI1)
+  proof -
+    assume a1: "(if #\<surd> msg \<le> #\<surd> acks then #\<surd> msg else #\<surd> acks) \<noteq> #\<surd> acks"
+    assume "(if #\<surd> msg \<le> #\<surd> acks then #\<surd> msg else #\<surd> acks) \<le> #\<surd> tsSnd_h\<cdot>msg\<cdot>(updis a &&\<surd> acks)\<cdot> (Discr ack)"
+    then have "#\<surd> msg \<le> #\<surd> tsSnd_h\<cdot>msg\<cdot>(updis a &&\<surd> acks)\<cdot> (Discr ack)"
+    using a1 by presburger
+    then show "(lnsuc\<cdot>(#\<surd> msg) \<le> #\<surd> acks \<longrightarrow> #\<surd> msg \<le> #\<surd> tsSnd_h\<cdot>msg\<cdot>(updis a &&\<surd> acks)\<cdot> (Discr ack)) \<and> (\<not> lnsuc\<cdot>(#\<surd> msg) \<le> #\<surd> acks \<longrightarrow> #\<surd> acks \<le> lnsuc\<cdot> (#\<surd> tsSnd_h\<cdot>msg\<cdot>(updis a &&\<surd> acks)\<cdot> (Discr ack)))"
+      using a1 by (meson antisym lnle2le not_le_imp_less)
+  qed
   
 lemma tssnd_h_tstickcount_hh:"(\<And>acks ack. min (#\<surd> msg) (#\<surd> acks) \<le> #\<surd> tsSnd_h\<cdot>msg\<cdot>acks\<cdot>(Discr ack)) 
     \<Longrightarrow> msg \<noteq> \<bottom> \<Longrightarrow> min (#\<surd> msg) (#\<surd> as) \<le> #\<surd> tsSnd_h\<cdot>(updis ta &&\<surd> msg)\<cdot>as\<cdot>(Discr ack)"
@@ -129,12 +137,30 @@ next
 next
   case (delayfun as)
   then show ?case
-  apply (simp add: tssnd_h_delayfun_nack tstickcount_delayfun tstickcount_mlscons)
-  by (smt dual_order.trans less_lnsuc lnsuc_lnle_emb min_le_iff_disj)
+  apply (simp add: tssnd_h_delayfun_nack tstickcount_delayfun tstickcount_mlscons min_le_iff_disj)
+  using less_lnsuc trans_lnle by blast
 next
   case (mlscons as t)
   then show ?case
-  by (smt tssnd_h_mlscons_ack tssnd_h_mlscons_nack tstickcount_mlscons)
+  apply (simp add: tstickcount_mlscons tssnd_h_mlscons_ack tssnd_h_mlscons_nack)
+  proof -
+    assume a1: "as \<noteq> \<bottom>"
+    assume a2: "msg \<noteq> \<bottom>"
+    assume a3: "\<And>acks ack. min (#\<surd> msg) (#\<surd> acks) \<le> #\<surd> tsSnd_h\<cdot>msg\<cdot>acks\<cdot>(Discr ack)"
+    assume "\<And>msg ack. \<lbrakk>\<And>acks ack. min (#\<surd> msg) (#\<surd> acks) \<le> #\<surd> tsSnd_h\<cdot>msg\<cdot>acks\<cdot> (Discr ack); msg \<noteq> \<bottom>\<rbrakk> \<Longrightarrow> min (#\<surd> msg) (#\<surd> as) \<le> #\<surd> tsSnd_h\<cdot> (updis ta &&\<surd> msg)\<cdot> as\<cdot> (Discr ack)"
+    then have f4: "\<And>b. min (#\<surd> msg) (#\<surd> as) \<le> #\<surd> tsSnd_h\<cdot>(updis ta &&\<surd> msg)\<cdot>as\<cdot> (Discr b)"
+      using a3 a2 by blast
+    then have "\<exists>b. b \<and> min (#\<surd> msg) (#\<surd> as) \<le> #\<surd> tsSnd_h\<cdot>(updis ta &&\<surd> msg)\<cdot> (updis b &&\<surd> as)\<cdot> (Discr ack)"
+      using a3 a2 a1 by (metis (no_types) tssnd_h_mlscons_ack tssnd_h_mlscons_nack tstickcount_mlscons)
+    moreover
+    { assume "\<not> t"
+      then have "\<exists>b. min (#\<surd> msg) (#\<surd> as) \<le> #\<surd> tsSnd_h\<cdot>(updis ta &&\<surd> msg)\<cdot> (updis b &&\<surd> as)\<cdot> (Discr ack) \<and> \<not> t \<and> \<not> b"
+        using f4 a3 a2 a1 by (metis (no_types) tssnd_h_mlscons_ack tssnd_h_mlscons_nack tstickcount_mlscons)
+      then have "min (#\<surd> msg) (#\<surd> as) \<le> #\<surd> tsSnd_h\<cdot>(updis ta &&\<surd> msg)\<cdot> (updis t &&\<surd> as)\<cdot> (Discr ack)"
+        by force }
+    ultimately show "min (#\<surd> msg) (#\<surd> as) \<le> #\<surd> tsSnd_h\<cdot>(updis ta &&\<surd> msg)\<cdot> (updis t &&\<surd> as)\<cdot> (Discr ack)"
+      by fastforce
+  qed
 qed
 
 text{* Count of ticks in sender output is greater than the minimum of ticks in msg and acks. *}  
@@ -632,7 +658,7 @@ next
   apply(case_tac "as=\<bottom>",simp_all)
   apply(simp add: tssnd_h_delayfun_msg tstickcount_mlscons tsabs_mlscons lscons_conv)
   apply(simp add: delayFun_def)
-  apply(case_tac "i=\<bottom>",simp_all)
+   apply(case_tac "i=\<bottom>",simp_all)
   apply (metis below_bottom_iff lnat.con_rews lnle2le lnle_def lnzero_def slen_scons srcdups_ex)
   by (smt delayfun.prems(2) dual_order.trans less_lnsuc lscons_conv tsabs_mlscons tstickcount_mlscons)
 next
@@ -711,8 +737,8 @@ next
 next
   case (delayfun i)
   then show ?case 
-  apply(simp add: tssnd_h_delayfun_msg)
-  by (smt less_lnsuc trans_lnle tstickcount_delayfun)
+  apply(simp add: tssnd_h_delayfun_msg tstickcount_delayfun)
+  using dual_order.trans less_lnsuc by blast
 next
   case (mlscons i ta)
   then show ?case 
@@ -748,6 +774,10 @@ next
   apply(rule_tac ts= i in tscases,simp_all)
   apply(simp add: tssnd_h_delayfun)
   apply(simp add: delayFun_def)
+  apply(rename_tac m)
+  apply (case_tac "m=\<bottom>")
+  apply (metis bottomI lnle2le lnle_def lnzero_def slen_empty_eq srcdups_nbot srcdupsimposs2_h2 strictI tsabs_bot)
+  (*  "min (#\<surd>msg) (#\<surd>acks) \<le> #\<surd>tsSnd_h\<cdot>msg\<cdot>acks\<cdot>(Discr ack)" *) 
   apply (smt below_bottom_iff lnle2le lnle_def lnsuc_neq_0_rev lnzero_def slen_empty_eq slen_scons srcdups_nbot strict_slen strict_tstickcount tsSnd_h.simps(2) tsabs_bot)
   apply(rename_tac i)
   apply(case_tac "i=\<bottom>",simp_all)
