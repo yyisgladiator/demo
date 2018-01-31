@@ -21,8 +21,8 @@ fun myTransition :: "(State \<times>(channel \<rightharpoonup> nat event)) \<Rig
 "myTransition _ = (myState, tsynbOneTick c1)"
 
 lift_definition myAutomaton :: "(State, nat event) automaton" is "(myTransition, myState, tsynbOneTick c1, {c2}, {c1})"
-  by (simp add: automaton_well_def)
-
+  apply(simp add: automaton_well_def)
+    sorry
 
 
 definition mySPF :: "nat event SPF" where
