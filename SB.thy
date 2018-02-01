@@ -6,10 +6,13 @@
 *)
 
 theory SB
-imports Channel OptionCpo Streams
-
+  imports Channel OptionCpo Streams
 begin
+
 default_sort message
+
+
+
 
 
 (* ----------------------------------------------------------------------- *)
@@ -17,20 +20,22 @@ section \<open>Datatype Definition\<close>
 (* ----------------------------------------------------------------------- *)
 
 
-  (* Definition: Welltyped. "a \<rightharpoonup> b" means "a => b option" *)
-  (* Every Stream may only contain certain elements *)
+
+
+(* Definition: Welltyped. "a \<rightharpoonup> b" means "a => b option" *)
+(* Every Stream may only contain certain elements *)
 definition sb_well :: "(channel \<rightharpoonup> 'm stream) => bool" where
 "sb_well f \<equiv> \<forall>c \<in> dom f. sdom\<cdot>(f\<rightharpoonup>c) \<subseteq> ctype c"
 
-  (* sb_well is admissible, used to define 'm SB with cpodef *)
+(* sb_well is admissible, used to define 'm SB with cpodef *)
 lemma sb_well_adm[simp]: "adm sb_well"
 by (simp add: adm_def sb_well_def part_dom_lub lub_fun the_subset_cont)
 
+(* There is at least one element, that satisfies sb_well *)
 lemma sb_well_exists[simp]: "sb_well empty"
 by (simp add: sb_well_def)
 
-
-  (* Definition: Stream Bundle. *)
+(* Definition: Stream Bundle. *)
 cpodef 'm :: message SB = "{b :: channel \<rightharpoonup> 'm stream . sb_well b}"
   using sb_well_exists apply blast
  by auto
@@ -44,6 +49,8 @@ setup_lifting type_definition_SB
 (* ----------------------------------------------------------------------- *)
   section \<open>Function Definition\<close>
 (* ----------------------------------------------------------------------- *)
+
+
 
 
 (* Syntactic sugar for Abs_SB *)
@@ -100,7 +107,7 @@ definition sbRemCh:: " 'm SB \<rightarrow> channel \<rightarrow> 'm SB" where
 
 
 text {* @{text "sbrenamech"} renaming channels  *}
-(* stream is moved from "ch1" to "ch2" *)
+(* Stream is moved from "ch1" to "ch2" *)
 definition sbRenameCh :: " 'm SB => channel => channel => 'm SB" where
 "sbRenameCh b ch1 ch2 \<equiv> (sbSetCh\<cdot>(sbRemCh\<cdot>b\<cdot>ch1)) ch2 (b .ch1)"
 
@@ -123,7 +130,7 @@ definition sbEqCommon:: " 'm SB => 'm SB => bool" where
 "sbEqCommon b1 b2\<equiv> sbEqSelected (sbDom\<cdot>b1 \<inter> sbDom\<cdot>b2) b1 b2"
 
 
-(*The function 'm SB creates the set of all bundles b with a fixed set of channels C.*)
+  (* The function 'm SB creates the set of all bundles b with a fixed set of channels C.*)
 definition SB :: "channel set \<Rightarrow> 'm SB set" ("_^\<Omega>" [1000] 999) where
 "SB cs = {b. sbDom\<cdot>b = cs}"
 
@@ -240,9 +247,7 @@ definition sbRcdups:: " 'm SB \<rightarrow> 'm SB" where
 
 
 (* Ugly AF, schöner machen\<And>! *)
-(* Ich kann nicht "fix" verwendne da 'm SB kein pcpo ist. 
-  Statdessen verwende ich "(sbTake 0\<cdot>b)" als künstliches kleinstes element *)
-
+(* Custom iterate bc. "fix" requires a PCPO, which 'm SB isn't. Uses "(sbTake 0\<cdot>b)" as artificial \<bottom> *)
 primrec myiterate :: "nat \<Rightarrow> 'm SB set \<Rightarrow> 'm SB \<Rightarrow> 'm SB" where
     "myiterate 0 bs b = sbLeast (sbDom\<cdot>b)"
   | "myiterate (Suc n) bs b = (let rest = (myiterate n bs (sbRt\<cdot>b)) in
@@ -250,10 +255,11 @@ primrec myiterate :: "nat \<Rightarrow> 'm SB set \<Rightarrow> 'm SB \<Rightarr
 
   (* (if (sbHd\<cdot>b\<in>bs) then sbHd\<cdot>b \<bullet>(myiterate n bs (sbRt\<cdot>b)) else (myiterate n bs (sbRt\<cdot>b))) *)
 
+(* Filter SB b by SB set bs of "tuples": delete the parts from b that cannot be constructed with bs *)
 definition sbFilterTupel:: " 'm SB set \<Rightarrow> 'm SB \<Rightarrow> 'm SB" where
 "sbFilterTupel bs b \<equiv> \<Squnion>i. myiterate i bs b"
 
-thm fix_def
+(* TODO macht wahrscheinlich das selbe wie sbFilterTupel, aber ich verstehe F und h nicht *)
 definition sbFilterTupel2:: " 'm SB set \<Rightarrow> 'm SB \<Rightarrow> 'm SB" where
 "sbFilterTupel2 A \<equiv> (\<Lambda> F. \<Squnion>i. iterate i\<cdot>F\<cdot>(\<lambda>s. sbTake 0\<cdot>s))\<cdot>
       (\<Lambda> h. (\<lambda> b. if (sbHd\<cdot>b\<in>A) then sbHd\<cdot>b \<bullet> h (sbRt\<cdot>b) else h (sbRt\<cdot>b)))"
@@ -263,71 +269,85 @@ definition sbFilterTupel2:: " 'm SB set \<Rightarrow> 'm SB \<Rightarrow> 'm SB"
 
 
 
+
+
 (* ----------------------------------------------------------------------- *)
 section \<open>Lemmas\<close>
 (* ----------------------------------------------------------------------- *)
 
 
-
+(* ----------------------------------------------------------------------- *)
 subsection \<open>General Lemmas\<close>
+(* ----------------------------------------------------------------------- *)
 (* Lemmas about Rep_SB, Abs_SB or 'm SBLub *)
 
-(*Streambundles are sb_well by definition*)
+(* Streambundles are sb_well by definition *)
 theorem rep_well[simp]: "sb_well (Rep_SB x)"
 using Rep_SB by auto
 
-(*Rep und Abs - Theorems*)
+(* Rep und Abs - Theorems *)
 theorem rep_abs[simp]: assumes "sb_well f" shows "Rep_SB (Abs_SB f) = f"
 by (simp add: Abs_SB_inverse assms)
 
-(* a chain of 'm SBs is also a chain after applying Rep_SB *)
+(* A chain of 'm SBs is also a chain after applying Rep_SB *)
 lemma rep_chain[simp]: assumes "chain S"
   shows "chain (\<lambda>n. Rep_SB (S n))"
 by (meson assms below_SB_def po_class.chain_def)
 
+(* A chain of 'm SBs is also a chain after applying Rep_SB and fixing a channel*)
 lemma theRep_chain[simp]: assumes "chain S" 
   shows "chain (\<lambda>n. the (Rep_SB (S n) c))"
 using assms part_the_chain rep_chain by fastforce
 
+(* The LUB of the chain after applying Rep_SB is also sb_well *)
 lemma lub_well[simp]: assumes "chain S"
   shows "sb_well (\<Squnion>n. Rep_SB (S n))"
 by (metis rep_chain adm_def sb_well_adm assms rep_well)
 
+(* LUB and Rep_SB are commutative *)
 lemma rep_lub:assumes "chain Y"
   shows "(\<Squnion>i. Rep_SB (Y i)) = Rep_SB (\<Squnion>i.  Y i)"
 using assms lub_SB by fastforce
 
+(* Rep_SB is a continuous function *)
 lemma rep_cont [simp]: "cont Rep_SB"
 by (metis rep_chain contI cpo_lubI rep_lub)
 
+(* "the" and LUB are commutative *)
 lemma rep_SB_up_lub[simp]: assumes "chain Y"
   shows "range (\<lambda>n. the (Rep_SB (Y n) c)) <<| the (\<Squnion>n. Rep_SB (Y n) c)"
 by (metis rep_chain assms cpo_lubI part_the_cont2 theRep_chain)
 
-(* an easy to use introduction rule for "sb_well" *)
+(* An easy to use introduction rule for "sb_well" *)
 lemma sb_wellI[simp]: assumes "\<And>c. c \<in> dom f \<Longrightarrow> sdom\<cdot>(the(f c)) \<subseteq> ctype c"
   shows "sb_well f"
 by (simp add: assms sb_well_def)
 
+(* Abs_SB is a continuous function *)
 lemma cont_Abs_SB[simp]: assumes "cont g" and "\<forall>x. sb_well (g x)"
   shows "cont (\<lambda>x. (g x)\<Omega>)"
 by (simp add: assms(1) assms(2) cont_Abs_SB)
 
+(* Applying Abs_SB to Rep_SB is the identity *)
 lemma [simp]: "(Rep_SB b2)\<Omega> = b2"
 by (simp add: Rep_SB_inverse)
 
+(* If c is in the domain a SB, then this channel is well typed *)
 lemma wt2[simp]: assumes "c \<in> dom (Rep_SB (S k))" 
   shows "sdom\<cdot>(the (Rep_SB (S k) c)) \<subseteq> ctype c"
 using assms rep_well sb_well_def by blast
 
+(* A chain of SBs consists only of SBs with the same domain *)
 lemma l400[simp]: assumes "chain S" and "c \<in> dom (Rep_SB (S k))"
   shows "c\<in>dom (Rep_SB (S j))"
 by (metis assms(1) assms(2) below_SB_def is_ub_thelub part_dom_eq)
 
+(* For all SBs in a chain, all channels within the domain are well typed *)
 lemma l460: assumes "chain S" and "c \<in> dom (Rep_SB (S k))"
   shows "sdom\<cdot>(the (Rep_SB (S i) c)) \<subseteq> ctype c"
 using assms(1) assms(2) l400 rep_well sb_well_def by blast
 
+(* For all SBs in a chain, the LUB of all channels within the domain is well typed *)
 lemma l500: assumes "chain S" and "c \<in> dom (Rep_SB (S k))"
        shows "sdom\<cdot>(\<Squnion>j. the (Rep_SB (S j) c)) \<subseteq> ctype c"
 by (smt assms(1) assms(2) l44 theRep_chain l460 lub_eq)
@@ -506,7 +526,7 @@ using cont_compose part_add_contL rep_cont by blast
 lemma sbunion_contR[simp]: "cont (\<lambda>b2. (Rep_SB b1) ++ (Rep_SB b2))"
 using cont_compose part_add_contR rep_cont by blast
 
-(* sbUnion is an coninuous function *)
+(* sbUnion is an continuous function *)
 lemma sbunion_cont[simp]: "cont (\<lambda> b1. \<Lambda> b2.((Rep_SB b1 ++ Rep_SB b2)\<Omega>))"
 by(simp add: cont2cont_LAM)
 
