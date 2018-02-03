@@ -638,27 +638,20 @@ qed
 
 subsubsection \<open>tspf_well\<close>
 
+lemma ublen_min_eq_2_ch: assumes "ubDom\<cdot>b = {ch1, ch2}"
+  shows "(ubLen b) = min (usclLen\<cdot>(b . ch1)) (usclLen\<cdot>(b . ch2))"
+  apply (simp add: ubLen_def assms(1))
+  apply (rule Least_equality)
+   apply (metis min_def_raw)
+  by auto
+
 lemma senderTSPF_tick: assumes "ubDom\<cdot>b = {c_as, c_abpIn}" and "(ubLen b) = n" and "se \<in> tsSender"
   shows "n \<le> (ubLen (Abs_ubundle([c_ds \<mapsto> tsMap BoolPair\<cdot>((se::('a::countable tstream \<rightarrow> bool tstream \<rightarrow> ('a::countable \<times> bool) tstream))\<cdot>(tsMap invData\<cdot>(b . c_abpIn))\<cdot>(tsMap invBool\<cdot>(b . c_as)))])))"  
 proof -
-  obtain b_len_set where b_len_set_def: "b_len_set = {usclLen\<cdot>(b . c)| c. c \<in> ubDom\<cdot>b}"
-    by simp
-  have f00: "#\<surd> (b . c_abpIn) = #\<surd> (tsMap invData\<cdot>(b  .  c_abpIn))"
-    by simp
-  have f01: "#\<surd> (b . c_as) = #\<surd> (tsMap invBool\<cdot>(b  .  c_as))"
-    by simp
   have f02: "n = ubLen b"
     by (simp add: assms(2))
-  have f06: "\<forall> c \<in> b_len_set. min (usclLen\<cdot>(b . c_abpIn)) (usclLen\<cdot>(b . c_as)) \<le> c"
-    apply rule
-    apply (simp add: b_len_set_def assms(1))
-    by auto
   have f07: "n = min (usclLen\<cdot>(b . c_abpIn)) (usclLen\<cdot>(b . c_as))"
-    apply (subst f02)
-    apply (simp add: ubLen_def assms(1))
-    apply (rule Least_equality)
-     apply (metis min_def_raw)
-    by auto
+    by (simp add: assms(1) f02 min.commute ublen_min_eq_2_ch)
   have f08: "min (usclLen\<cdot>(b  .  c_abpIn)) (usclLen\<cdot>(b  .  c_as)) = 
           min (#\<surd> (tsMap invData\<cdot>(b  .  c_abpIn))) (#\<surd> (tsMap invData\<cdot>(b  .  c_as)))"
     by (simp add: usclLen_tstream_def)
