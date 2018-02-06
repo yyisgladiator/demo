@@ -478,31 +478,36 @@ lemma tsmed2med:
         case 1
         then show ?thesis sorry
       next
-        case (2 as)
-        then show ?thesis 
+        case (2 asa)
+        fix asa :: "bool stream"
+        assume ora1_true: "ora1 = \<up>True \<bullet> as"
+        assume ora2_true: "ora2 = \<up>True \<bullet> asa"
+        then show ?thesis
         proof-
-          fix asa :: "bool stream"
-          assume ora1_true: "ora1 = updis True && as"
-          assume ora2_true: "ora2 = updis True && asa"
-          have h1:  "tsMed\<cdot>(tsMed\<cdot>(updis t &&\<surd> msg)\<cdot>(updis True && as))\<cdot>(updis True && asa) =
+          have h1: "tsMed\<cdot>(tsMed\<cdot>(updis t &&\<surd> msg)\<cdot>(updis True && as))\<cdot>(updis True && asa) =
             tsMed\<cdot>(updis t &&\<surd> msg)\<cdot>(updis True && newOracle\<cdot>as\<cdot>asa)"
-            by (metis (no_types, lifting) ora1_true ora2_true fold_inf inject_lnsuc lscons_conv mlscons.IH
-                mlscons.hyps mlscons.prems(1) mlscons.prems(2) slen_scons tsmed_mlscons_true2
-                tsmed_nbot tsmed_strict(2))
-          from this have h2: "tsMed\<cdot>(tsMed\<cdot>(updis t &&\<surd> msg)\<cdot>(updis True && as))\<cdot>(updis True && asa) =
-            tsMed\<cdot>(updis t &&\<surd> msg)\<cdot>(newOracle\<cdot>(updis True && as)\<cdot>(updis True && asa))"
-            by simp
-          then have "ora2 = \<up>True \<bullet> as \<Longrightarrow>
-            tsMed\<cdot>(tsMed\<cdot>(updis t &&\<surd> msg)\<cdot>ora1)\<cdot>ora2 = tsMed\<cdot>(updis t &&\<surd> msg)\<cdot>(newOracle\<cdot>ora1\<cdot>ora2)"
-            by (simp add: ora1_true ora2_true)    
+            by (metis (no_types, lifting) fold_inf inject_lnsuc lscons_conv mlscons.IH mlscons.hyps 
+                mlscons.prems(1) mlscons.prems(2) ora1_true ora2_true slen_scons 
+                tsmed_mlscons_true2 tsmed_nbot tsmed_strict(2))
+          thus ?thesis
+            by (simp add: lscons_conv ora1_true ora2_true)    
         qed
       next
-        case (3 as)
+        case (3 asa)
+        fix asa :: "bool stream"
+        assume ora1_true: "ora1 = \<up>True \<bullet> as"
+        assume ora2_true: "ora2 = \<up>False \<bullet> asa"
         then show ?thesis
-          by (smt "2" conc2cons fold_inf inject_lnsuc mlscons.IH mlscons.hyps mlscons.prems(1) 
-              mlscons.prems(2) newora_t slen_scons tsmed_mlscons_false2 tsmed_mlscons_true 
-              tsmed_nbot tsmed_strict(2)) 
-      qed       
+        proof-
+          have "tsMed\<cdot>(tsMed\<cdot>(updis t &&\<surd> msg)\<cdot>(updis True && as))\<cdot>(updis False && asa) =
+            tsMed\<cdot>(updis t &&\<surd> msg)\<cdot>(updis False && newOracle\<cdot>as\<cdot>asa)"
+            by (metis (no_types, lifting) ora1_true ora2_true fold_inf inject_lnsuc lscons_conv mlscons.IH mlscons.hyps
+            mlscons.prems(1) mlscons.prems(2) slen_scons tsmed_mlscons_false2 tsmed_mlscons_true 
+            tsmed_nbot tsmed_strict(2))
+          thus ?thesis
+            by (simp add: lscons_conv ora1_true ora2_true)
+        qed 
+      qed
     next
       case (3 as)
       then show ?thesis       
