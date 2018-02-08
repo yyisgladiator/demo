@@ -112,6 +112,18 @@ abbreviation medSR_TSPFAbb  :: "bool stream \<Rightarrow> 'a MABP tstream\<^sup>
             BoolPair\<cdot>(tsMed\<cdot>(tsMap invBoolPair\<cdot>(x . c_ds))\<cdot>bst)]))"
 
 
+subsection\<open>medium\<close>
+
+
+definition med_TSPF :: "bool stream \<Rightarrow> channel \<Rightarrow> channel \<Rightarrow> ('a MABP tstream\<^sup>\<Omega>)ufun" where
+"med_TSPF bst In Out\<equiv> Abs_cufun (\<lambda> x. (ubDom\<cdot>x = {In})
+                           \<leadsto> Abs_ubundle([Out \<mapsto> (tsMap::(bool \<Rightarrow> 'a MABP) \<Rightarrow> bool tstream \<rightarrow> 'a MABP tstream) Bool\<cdot>(tsMed\<cdot>(tsMap invBool\<cdot>(x . In))\<cdot>bst)]))"
+
+abbreviation tsMedAbb  :: "bool stream \<Rightarrow> channel \<Rightarrow> channel \<Rightarrow> 'a MABP tstream\<^sup>\<Omega> \<Rightarrow> ('a MABP tstream\<^sup>\<Omega>) option" where
+"tsMedAbb bst In Out x \<equiv> ((ubDom\<cdot>x = {In})
+                           \<leadsto> Abs_ubundle([Out \<mapsto> (tsMap::(bool \<Rightarrow> 'a MABP) \<Rightarrow> bool tstream \<rightarrow> 'a MABP tstream) Bool\<cdot>(tsMed\<cdot>(tsMap invBool\<cdot>(x . In))\<cdot>bst)]))"
+
+
 subsection \<open>sender\<close>
 
 
@@ -125,7 +137,7 @@ subsection \<open>id\<close>
 
 
 definition idTSPF :: "('a MABP tstream\<^sup>\<Omega>) ufun" where
-"idTSPF \<equiv> Abs_cufun (\<lambda> x. (ubDom\<cdot>x = {c_abpOut}) \<leadsto> Abs_ubundle [c_abpOut \<mapsto> x . c_abpOut])"
+"idTSPF \<equiv> Abs_cufun (\<lambda> x. (ubDom\<cdot>x = {c_abpOut}) \<leadsto> x)"
 
 
 
@@ -553,6 +565,9 @@ subsection \<open>medium\<close>
 subsection\<open>id\<close>
 
 
+subsection\<open>mono/cont\<close>
+
+
 lemma idTSPF_mono: "monofun (\<lambda> x. (ubDom\<cdot>x = {c_abpOut}) \<leadsto> x)"
   by (simp add: monofunI some_below ubdom_below)
 
@@ -560,6 +575,10 @@ lemma idTSPF_cont: "cont (\<lambda> x. (ubDom\<cdot>x = {c_abpOut}) \<leadsto> x
   apply(rule contI2)
    apply(simp add: idTSPF_mono)
   using some_lub_chain_eq by fastforce
+
+
+subsection\<open>ufWell/tickCount\<close>
+
 
 lemma idTSPF_well: "ufWell (\<Lambda> x. (ubDom\<cdot>x = {c_abpOut}) \<leadsto> x)"
   apply(rule ufun_wellI)
@@ -571,12 +590,12 @@ lemma idTSPF_tickCount: "ufIsWeak (Abs_cufun (\<lambda> x. (ubDom\<cdot>x = {c_a
 
 lemma idTSPF_dom: "ufDom\<cdot>idTSPF = {c_abpOut}"
   apply(simp add: idTSPF_def)
-  using idTSPF_mono idTSPF_cont idTSPF_well ufun_ufdom_abs ubclDom_ubundle_def sorry
+  using idTSPF_mono idTSPF_cont idTSPF_well ubclDom_ubundle_def ufun_ufdom_abs
+  by (smt domIff recvTSPF_well rep_abs_cufun ufdom_2ufundom ufunLeastIDom) (* non smt proof found *)
 
 lemma idTSPF_ran: "ufRan\<cdot>idTSPF = {c_abpOut}"
   apply(simp add: idTSPF_def)
-  sorry
-(*proof -
+proof -
 have f1: "\<forall>f. \<not> cont f \<or> \<not> ufWell (Abs_cfun f) \<or> Rep_cufun (Abs_cufun f::('a MABP tstream\<^sup>\<Omega>) ufun) = f"
   by (metis rep_abs_cufun)
   then have f2: "Rep_cufun (Abs_cufun (\<lambda>u. (ubDom\<cdot>(u::'a MABP tstream\<^sup>\<Omega>) = {c_abpOut})\<leadsto>u)) = (\<lambda>u. (ubDom\<cdot>u = {c_abpOut})\<leadsto>u)"
@@ -597,7 +616,7 @@ have f1: "\<forall>f. \<not> cont f \<or> \<not> ufWell (Abs_cfun f) \<or> Rep_c
     using f4 ufdom_2ufundom by blast
   then show "ufRan\<cdot> (Abs_cufun (\<lambda>u. (ubDom\<cdot>(u::'a MABP tstream\<^sup>\<Omega>) = {c_abpOut})\<leadsto>u)) = {c_abpOut}"
     by (metis (no_types) idTSPF_dom idTSPF_def)
-qed*)
+qed
 
 
 (* ----------------------------------------------------------------------- *)
@@ -605,13 +624,21 @@ section \<open>Components\<close>
 (* ----------------------------------------------------------------------- *)
 
 
+lemma h1: "inv Rev (Rev S) = S"
+  by (meson injI inv_f_eq rev.inject)
+
 lift_definition SND :: "(('a MABP tstream\<^sup>\<Omega>) ufun) uspec" is
 "Rev {senderTSPF s | s. s \<in> tsSender}"
-  sorry
+  apply(subst h1)
+  apply(simp add: uspecWell_def)
+  apply(simp add: ufclDom_ufun_def ufclRan_ufun_def)
+  using sender_tspfdom sender_tspfran
+  by metis
 
 lift_definition RCV :: "(('a MABP tstream\<^sup>\<Omega>) ufun) uspec" is
 "Rev {recvTSPF}"
-  sorry
+  apply(subst h1)
+  by(simp add: uspecWell_def)
 
 lift_definition MEDSR :: "(('a MABP tstream\<^sup>\<Omega>) ufun) uspec" is
 "Rev {medSR_TSPF ora | ora. #({True} \<ominus> ora)=\<infinity>}"
@@ -623,7 +650,9 @@ lift_definition MEDRS :: "(('a MABP tstream\<^sup>\<Omega>) ufun) uspec" is
 
 lift_definition ID :: "(('a MABP tstream\<^sup>\<Omega>) ufun) uspec" is
 "Rev {idTSPF}"
-  sorry
+  apply(subst h1)
+  by(simp add: uspecWell_def)
+
 
 abbreviation gencompABP :: "(('a MABP tstream\<^sup>\<Omega>) ufun) uspec" where
 "gencompABP \<equiv> ((SND \<Otimes> MEDSR) \<Otimes> RCV) \<Otimes> MEDRS"
@@ -633,9 +662,113 @@ abbreviation speccompABP :: "(('a MABP tstream\<^sup>\<Omega>) ufun) uspec" wher
 
 
 (* ----------------------------------------------------------------------- *)
-section \<open>Testing of Composition without Medium\<close>
-(* ----------------------------------------------------------------------- 
+section \<open>Composition with special operators\<close>
+(* ----------------------------------------------------------------------- *)
 
+
+abbreviation innerABP where
+"innerABP s ora1 ora2 \<equiv> (ufSerComp (ufSerComp (ufSerComp (senderTSPF s) (medRS_TSPF ora1)) recvTSPF) (ufParComp (medRS_TSPF ora2) idTSPF))"
+
+abbreviation fixABPHelper where
+"fixABPHelper se ora1 ora2 tb \<equiv> (\<lambda> x. Abs_ubundle[
+    c_ds     \<mapsto> tsMap BoolPair\<cdot>(se\<cdot>(tsMap invData\<cdot>(tb . c_abpIn))\<cdot>(tsMap invBool\<cdot>(x . c_as))),
+    c_dr     \<mapsto> tsMap BoolPair\<cdot>(tsMed\<cdot>(tsMap invBoolPair\<cdot>(x . c_ds))\<cdot>ora1),
+    c_ar     \<mapsto> tsMap Bool\<cdot>(fst ( tsRec\<cdot>((tsMap invBoolPair)\<cdot>(x . c_dr)))),
+    c_abpOut \<mapsto> tsMap Data\<cdot>(snd ( tsRec\<cdot>((tsMap invBoolPair)\<cdot>(x . c_dr)))),
+    c_as     \<mapsto> tsMap Bool\<cdot>(tsMed\<cdot>(tsMap invBool\<cdot>(x . c_ar))\<cdot>ora2)
+    ])"
+
+abbreviation fixABPHelperCont where
+"fixABPHelperCont se ora1 ora2 tb \<equiv> (\<Lambda> x. Abs_ubundle[
+    c_ds     \<mapsto> tsMap BoolPair\<cdot>(se\<cdot>(tsMap invData\<cdot>(tb . c_abpIn))\<cdot>(tsMap invBool\<cdot>(x . c_as))),
+    c_dr     \<mapsto> tsMap BoolPair\<cdot>(tsMed\<cdot>(tsMap invBoolPair\<cdot>(x . c_ds))\<cdot>ora1),
+    c_ar     \<mapsto> tsMap Bool\<cdot>(fst ( tsRec\<cdot>((tsMap invBoolPair)\<cdot>(x . c_dr)))),
+    c_abpOut \<mapsto> tsMap Data\<cdot>(snd ( tsRec\<cdot>((tsMap invBoolPair)\<cdot>(x . c_dr)))),
+    c_as     \<mapsto> tsMap Bool\<cdot>(tsMed\<cdot>(tsMap invBool\<cdot>(x . c_ar))\<cdot>ora2)
+    ])"
+
+abbreviation abpFix where
+"abpFix s ora1 ora2 tb \<equiv> ubFix (fixABPHelperCont s ora1 ora2 tb) {c_abpOut, c_ar, c_as, c_dr, c_ds}"
+
+
+
+lemma abp_speccomp_final: assumes "f \<in> Rep_rev_uspec speccompABP"
+                            and "ubDom\<cdot>tb = {c_abpIn}"
+  shows "tsAbs\<cdot>((f \<rightleftharpoons> tb) . c_abpOut) = tsAbs\<cdot>(tb . c_abpIn)"
+proof - 
+  have f1: "\<exists> s \<in> tsSender. \<exists>ora1 ora2. (#({True} \<ominus> ora1) = \<infinity>) \<and> (#({True} \<ominus> ora2) = \<infinity>) \<and>
+     (f =  (\<mu>(ufSerComp (ufSerComp (ufSerComp (senderTSPF s) (medRS_TSPF ora1)) recvTSPF) (ufParComp (medRS_TSPF ora2) idTSPF))))"
+    sorry
+  then obtain s where f12: "(s \<in> tsSender) \<and> (\<exists> ora1 ora2. (#({True} \<ominus> ora1) = \<infinity>) \<and> (#({True} \<ominus> ora2) = \<infinity>) \<and>
+     (f =  (\<mu>(ufSerComp (ufSerComp (ufSerComp (senderTSPF s) (medRS_TSPF ora1)) recvTSPF) (ufParComp (medRS_TSPF ora2) idTSPF)))))"
+    using f1 by blast
+  then obtain ora1  where f13: "(#({True} \<ominus> ora1) = \<infinity>) \<and> (\<exists> ora2. (#({True} \<ominus> ora2) = \<infinity>) \<and>
+     (f =  (\<mu>(ufSerComp (ufSerComp (ufSerComp (senderTSPF s) (medRS_TSPF ora1)) recvTSPF) (ufParComp (medRS_TSPF ora2) idTSPF)))))"
+    using f1 by blast
+  then obtain ora2  where f14: "(#({True} \<ominus> ora2) = \<infinity>) \<and>
+     (f =  (\<mu>(ufSerComp (ufSerComp (ufSerComp (senderTSPF s) (medRS_TSPF ora1)) recvTSPF) (ufParComp (medRS_TSPF ora2) idTSPF))))"
+    using f1 by blast
+  then have f15: "(f =  (\<mu>(ufSerComp (ufSerComp (ufSerComp (senderTSPF s) (medRS_TSPF ora1)) recvTSPF) (ufParComp (medRS_TSPF ora2) idTSPF))))"
+    using f1 by blast
+
+
+  have f20: "ufDom\<cdot>(innerABP s ora1 ora2) - ufRan\<cdot>(innerABP s ora1 ora2) = {c_abpIn}"
+    sorry
+  have f21: "ufRan\<cdot>(innerABP s ora1 ora2) = {c_abpOut, c_ar}"
+    sorry
+  have f2: "(f \<rightleftharpoons> tb) . c_abpOut =  (ubFix (ufFeedH (innerABP s ora1 ora2) tb) {c_abpOut, c_ar})  .  c_abpOut"
+    apply(subst f15)
+    apply(simp add: ufFeedbackComp_def)
+    apply(simp add: ufFeedbackComp_cont ufFeedbackComp_well)
+    apply(simp add: f20 assms ubclDom_ubundle_def)
+    by(simp add: f21)
+
+
+  have f3: "(ubFix (ufFeedH (innerABP s ora1 ora2) tb) {c_abpOut, c_ar})  .  c_abpOut = 
+            (ubFix (fixABPHelperCont s ora1 ora2 tb) {c_abpOut, c_ar})  .  c_abpOut"
+    sorry
+
+  have f40: "ubfun_io_eq (fixABPHelperCont s ora1 ora2 tb) {c_abpOut, c_ar, c_as, c_dr, c_ds}"
+    sorry
+  then have f41: "ubFix (fixABPHelperCont s ora1 ora2 tb) {c_abpOut, c_ar, c_as, c_dr, c_ds} =  (fixABPHelperCont s ora1 ora2 tb)\<cdot>(ubFix (fixABPHelperCont s ora1 ora2 tb) {c_abpOut, c_ar, c_as, c_dr, c_ds})"
+    using ubfix_eq by blast
+
+  (* After proving the fixed points propties we can now show the assumptions of the tsaltbitpro_inp2out lemma
+  
+  lemma tsaltbitpro_inp2out:
+  assumes send_def: "send \<in> tsSender"
+    and p1_def: "#({True} \<ominus> p1) = \<infinity>"
+    and p2_def: "#({True} \<ominus> p2) = \<infinity>"
+    and ds_def: "c_ds = send\<cdot>i\<cdot>c_as"
+    and dr_def: "c_dr = tsMed\<cdot>c_ds\<cdot>p1"
+    and ar_def: "c_ar = tsProjSnd\<cdot>c_dr"
+    (* definition 5 *)
+    and as_def: "c_as = tsMed\<cdot>c_ar\<cdot>p2"
+    and i_ninf: "#(tsAbs\<cdot>i) \<noteq> \<infinity>"
+  shows "tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>c_dr)) = tsAbs\<cdot>i"
+  sorry
+
+    i = (tsMap invData\<cdot>(tb . c_abpIn))
+    ds_stream = (tsMap invBoolPair\<cdot>((ubFix (abpFixH s tb) {c_abpOut, c_ar, c_dr}) . c_dr))
+    as_stream = (tsMap invBool\<cdot>((ubFix (abpFixH s tb) {c_abpOut, c_ar, c_dr}) . c_ar))
+
+  *)
+
+  (* Result *)
+  have f8: "tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(tsMap invBoolPair\<cdot>((abpFix s ora1 ora2 tb) . c_dr)))) = tsAbs\<cdot>(tsMap invData\<cdot>(tb . c_abpIn))"
+    sorry
+
+  show ?thesis
+    
+    sorry
+qed
+
+
+
+(*
+(* ----------------------------------------------------------------------- *)
+section \<open>Testing of Composition without Medium\<close>
+(* ----------------------------------------------------------------------- *)
 
 definition senderTSPF2 :: "'a sender \<Rightarrow> ('a MABP tstream\<^sup>\<Omega>) ufun" where
 "senderTSPF2 se \<equiv> Abs_cufun (\<lambda> x. (ubDom\<cdot>x = {c_ar, c_abpIn})
@@ -776,11 +909,11 @@ qed
 
 
 *)
-
+(*
 (* ----------------------------------------------------------------------- *)
 section \<open>More Lemmas\<close>
 (* ----------------------------------------------------------------------- *)
-
+*)
 (*
 lemma tsaltbitpro_inp2out_nmed:
   assumes send_def: "send \<in> tsSender"
@@ -802,7 +935,7 @@ lemma tsaltbitpro_inp2out:
     and i_ninf: "#(tsAbs\<cdot>i) \<noteq> \<infinity>"
   shows "tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>c_dr)) = tsAbs\<cdot>i"
   sorry
-*)
+
 
 
 lemma abp_gencomp_final: assumes "f \<in> Rep_rev_uspec gencompABP"
@@ -810,15 +943,7 @@ lemma abp_gencomp_final: assumes "f \<in> Rep_rev_uspec gencompABP"
   shows "tsAbs\<cdot>((f \<rightleftharpoons> tb) . c_abpOut) = tsAbs\<cdot>(tb . c_abpIn)"
   oops  
 
-lemma abp_speccomp_final: assumes "f \<in> Rep_rev_uspec speccompABP"
-                            and "ubDom\<cdot>tb = {c_abpIn}"
-  shows "tsAbs\<cdot>((f \<rightleftharpoons> tb) . c_abpOut) = tsAbs\<cdot>(tb . c_abpIn)"
-  oops 
-
-
-
-
-
+*)
 
 (*
   subsection \<open>medium_rs\<close>
