@@ -33,6 +33,7 @@ lift_definition testInSb::"nat event SB" is "([c2 \<mapsto> <[Msg 3]>])"
 
 (* TODO: final lemma over mySPF *) 
 
-lemma "ubGetCh c1\<cdot> (mySPF \<rightleftharpoons> testInSb) = <[\<surd>]>"
+lemma "(mySPF \<rightleftharpoons> testInSb) . c1= <[\<surd>, \<surd> ]>"
+  apply(simp add: mySPF_def testInSb_def H_def)
   sorry
 end
