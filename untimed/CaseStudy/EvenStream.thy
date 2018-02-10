@@ -9,7 +9,7 @@
 
 theory EvenStream
 
-imports "../../timesyn/tsynStream"
+imports "../../timesyn/tsynStream" "EvenAutomaton"
 
 begin
 
@@ -17,36 +17,15 @@ begin
     section \<open>Datentypen\<close>
 (********************************)
 
-(* This are the actual states from MAA *)
-datatype EvenAutomatonSubstate = Odd | Even
-
+(* the datatypes are auto-generated, we only need to make the state countable
+ because "sscanlA" is only taking countable arguments *)
 instance EvenAutomatonSubstate :: countable
   apply(intro_classes)
   by(countable_datatype)
 
-(* And these have also the variables *)
-datatype EvenAutomatonState = State EvenAutomatonSubstate nat
-
 instance EvenAutomatonState :: countable
   apply(intro_classes)
   by(countable_datatype)
-
-fun getSubState :: "EvenAutomatonState \<Rightarrow> EvenAutomatonSubstate" where
-"getSubState (State automaton_s automaton_sum) = automaton_s"
-
-fun getSum :: "EvenAutomatonState \<Rightarrow> nat" where
-"getSum (State automaton_s automaton_sum) = automaton_sum"
-
-
-datatype EvenAutomaton = A  nat | B  bool
-
-instance EvenAutomaton :: countable
-  apply(intro_classes)
-  by(countable_datatype)
-
-
-
-
 
 (********************************)
     section \<open>Even Function\<close>
