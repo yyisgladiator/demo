@@ -24,12 +24,16 @@ lift_definition myAutomaton :: "(State, nat event) automaton" is "(myTransition,
   by simp
 
 
-
 definition mySPF :: "nat event SPF" where
 "mySPF = H myAutomaton"
 
+lift_definition testInSb::"nat event SB" is "([c2 \<mapsto> <[Msg 3]>])"
+  apply(rule ubwellI, auto)
+    sorry
 
 (* TODO: final lemma over mySPF *) 
 
-
+lemma "(mySPF \<rightleftharpoons> testInSb) . c1= <[\<surd>, \<surd> ]>"
+  apply(simp add: mySPF_def testInSb_def H_def)
+  sorry
 end

@@ -158,13 +158,13 @@ proof(rule Cont.contI2,simp)
 qed
 
 
-lemma spfStateFix_apply[simp]: assumes "\<forall>x. ufDom\<cdot>((F\<cdot>(spfStateLeast In Out)) x) = In" and "\<forall>x. ufRan\<cdot>((F\<cdot>(spfStateLeast In Out))x) = Out" shows "spfStateFix In Out\<cdot>F = fixg (spfStateLeast In Out) F"
+lemma spfStateFix_apply: assumes "\<forall>x. ufDom\<cdot>((F\<cdot>(spfStateLeast In Out)) x) = In" and "\<forall>x. ufRan\<cdot>((F\<cdot>(spfStateLeast In Out))x) = Out" shows "spfStateFix In Out\<cdot>F = fixg (spfStateLeast In Out) F"
   by(simp add: spfStateFix_def assms)
 
 (*least Fixpoint*)
 
 lemma spfStateFix_fix: assumes "\<forall>x. ufDom\<cdot>((F\<cdot>(spfStateLeast In Out)) x) = In" and "\<forall>x. ufRan\<cdot>((F\<cdot>(spfStateLeast In Out))x) = Out" shows "spfStateFix In Out\<cdot>F = F\<cdot>(spfStateFix In Out\<cdot>F)"
-proof(simp add: assms,rule fixg_fix, simp add: assms)
+proof(simp add: assms spfStateFix_apply,rule fixg_fix, simp add: assms)
   show "\<forall>y. y \<sqsubseteq> spfStateLeast In Out \<longrightarrow> spfStateLeast In Out = y"
     by (smt fun_below_iff po_eq_conv spfStateLeast_def ufLeast_bottom ufdom_below_eq ufleast_ufRan ufleast_ufdom ufran_below)
 qed
@@ -173,7 +173,7 @@ lemma spfStateFix_least_fix: assumes "\<forall>x. ufDom\<cdot>((F\<cdot>(spfStat
                              and "\<forall>x. ufRan\<cdot>((F\<cdot>(spfStateLeast In Out))x) = Out"
                              and "F\<cdot>y = y" and "\<forall>x. ufDom\<cdot>(y x) = In" and "\<forall>x. ufRan\<cdot>(y x) = Out"
                            shows "spfStateFix In Out\<cdot>F \<sqsubseteq> y"
-proof(simp add: assms, rule fixg_least_fix, simp_all add: assms)
+proof(simp add: assms spfStateFix_apply, rule fixg_least_fix, simp_all add: assms)
   show "\<forall>y. y \<sqsubseteq> spfStateLeast In Out \<longrightarrow> spfStateLeast In Out = y"
     by (smt fun_below_iff po_eq_conv spfStateLeast_def ufLeast_bottom ufdom_below_eq ufleast_ufRan ufleast_ufdom ufran_below)
 qed
