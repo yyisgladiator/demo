@@ -7,7 +7,7 @@
 
 theory Automaton
 
-imports "../../timesyn/tsynBundle" "../SpfStep"
+imports "../SPF" "../../Event" "../SpfStep"
 begin
 default_sort type
 
@@ -103,7 +103,7 @@ lemma stepstep_step: "spfStep In Out\<cdot>f\<rightleftharpoons>sb = (f ((inv co
 
 
 section \<open>Lemma about h\<close>
-(*
+
 lemma h_dom [simp]: "ufDom\<cdot>(h automat s) = getDom automat"
   by (metis (no_types, lifting) Abs_cfun_inverse2 h_cont h_def spfStateFix_fix spfstep_dom spfstep_ran automaton_well_def finite_code) 
 
@@ -134,9 +134,91 @@ lemma h_final:
   spfConc (autGetNextOutput automat s ((inv convDiscrUp)(sbHdElem\<cdot>sb)))\<cdot>(spfRt\<cdot>(h automat (autGetNextState automat s ((inv convDiscrUp)(sbHdElem\<cdot>sb))))) \<rightleftharpoons>sb"
   unfolding h_step 
   by(simp add: helper_def autGetNextOutput_def autGetNextState_def assms spfRt_def )
-  *)
+  
 
 section \<open>Lemma about H\<close>
+
+
+
+
+
+
+
+
+(* From here everything should be automatically transformed from MontiArc-Automaton *)
+section \<open>Automaton Datatypes\<close>
+
+(* Only on idea how the states could be implemented *)
+datatype substate = even | odd  (* This are the actual states from MAA *)
+datatype myState = State substate nat bool (* And these have also the variables *)
+
+fun getVarI :: "myState \<Rightarrow> nat" where
+"getVarI (State _ n _) = n"
+
+fun getSubState :: "myState \<Rightarrow> substate" where
+"getSubState (State s _ _) = s"
+
+
+
+datatype myM = N nat | B bool
+
+instance myM :: countable
+apply(intro_classes)
+by(countable_datatype)
+
+
+instantiation myM :: message
+begin
+  fun ctype_myM :: "channel \<Rightarrow> myM set" where
+  "ctype_myM c1 = range N"  |
+  "ctype_myM c2 = range B"
+
+  instance
+    by(intro_classes)
+end
+
+
+
+section \<open>Automaton Functions\<close>
+
+(* Creates a fitting SB given the right output values *)
+(* Parameter: 
+  nat         \<Rightarrow> maps to channel c1, in MAA called "XXXX"
+  bool        \<Rightarrow> maps to channel c2, in MAA calles "YYYY" *)
+lift_definition createOutput :: "nat \<Rightarrow> bool \<Rightarrow> myM SB" is
+"\<lambda>n b. ([c1 \<mapsto> \<up>(N n), c2 \<mapsto> \<up>(B b)])"
+  apply(auto simp add: ubWell_def)
+  sorry (* fails because stream instantiation is not there *)
+
+function test4 :: "(channel \<rightharpoonup> nat stream) \<Rightarrow> bool" where
+  "test4 [c1 \<mapsto> a] = True" |
+  "dom f \<noteq> {c1} \<Longrightarrow> test4 f = False" 
+  sorry
+
+(* Somehow define the transition function *)
+(* use the createOutput function *)
+function myTransition :: "(myState \<times>(channel \<rightharpoonup> myM)) \<Rightarrow> (myState \<times> myM SB)" where
+"myTransition (State even n b,  [c1 \<mapsto> z])= (case z of N n \<Rightarrow> ((State odd n b), createOutput n True) | _ \<Rightarrow> undefined)" |
+"myTransition (State odd n b, [c1 \<mapsto> z]) = ((State even n b), createOutput 0 False)"  |
+
+"dom f\<noteq> {c1} \<Longrightarrow> myTransition (_,f) = undefined"
+  apply auto
+  apply (smt dom_eq_singleton_conv getSubState.elims myM.exhaust substate.exhaust)
+  using map_upd_eqD1 apply fastforce
+  apply (metis option.simps(3))
+  by (metis option.simps(3))
+
+lift_definition myAutomaton :: "(myState, myM) automaton" is "(myTransition, State even 0 True, ubLeast {}, {}, {})"
+  by blast  (* In the final form of the automaton datatype we will have to proof stuff *)
+
+definition mySPF :: "myM SPF" where
+"mySPF = H myAutomaton"
+
+
+
+
+section \<open>Automaton Lemma\<close>
+
 
 
 
