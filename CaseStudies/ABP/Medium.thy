@@ -52,6 +52,13 @@ lemma neworacle_test:
       by (simp only: list2s_0 list2s_Suc)
   qed
 
+lemma oracases [case_names bottom true false]:
+  assumes bottom: "ts=\<bottom> \<Longrightarrow> P ts"
+    and true: "\<And>as. ts= (\<up>True \<bullet> as) \<Longrightarrow> P ts"
+    and false: "\<And>as. ts=(\<up>False \<bullet> as) \<Longrightarrow> P ts"
+  shows "P ts"
+  by (metis (full_types) bottom false scases true)
+
 text {* Assumption for medium lemmata: #({True} \<ominus> ora)=\<infinity> *}
 lemma tsmed_insert: "tsMed\<cdot>msg\<cdot>ora = tsProjFst\<cdot>(tsFilter {x. snd x}\<cdot>(tsZip\<cdot>msg\<cdot>ora))"
   by (simp add: tsMed_def)
@@ -159,34 +166,40 @@ lemma tsmed_tsabs_slen:
       by (simp add: tsmed_insert) 
   qed
 
-lemma tsmed_tsmap: 
+lemma tsmed_tsmap:
   assumes "#ora=\<infinity>" 
   shows "tsMed\<cdot>(tsMap f\<cdot>msg)\<cdot>ora = tsMap f\<cdot>(tsMed\<cdot>msg\<cdot>ora)"
   using assms
-  proof (induction msg arbitrary: ora, simp_all)
+  proof (induction msg arbitrary: ora)
+    case adm
+    then show ?case 
+      by simp
+  next
+    case bottom
+    then show ?case
+      by simp
+  next
     case (delayfun msg)
     then show ?case 
       by (metis tsmap_delayfun tsmed_delayfun tsmed_strict(2))
   next
     case (mlscons msg t)
     then show ?case
-    proof (rule_tac scases [of ora], simp_all)
-      fix a :: "bool" and s :: "bool stream"
-      assume s_inf: "#s = \<infinity>"
-      assume thesis: "(\<And>ora. #ora = \<infinity> \<Longrightarrow> tsMed\<cdot>(tsMap f\<cdot>msg)\<cdot>ora = tsMap f\<cdot>(tsMed\<cdot>msg\<cdot>ora))"
-      assume msg_nbot: "msg \<noteq> \<bottom>"
-      have ora_true: "ora = \<up>True \<bullet> s \<Longrightarrow>
-        tsMed\<cdot>(tsMap f\<cdot>(updis t &&\<surd> msg))\<cdot>(\<up>True \<bullet> s) = tsMap f\<cdot>(tsMed\<cdot>(updis t &&\<surd> msg)\<cdot>(\<up>True \<bullet> s))"
-        by (metis (no_types, lifting) s_inf  thesis msg_nbot lscons_conv mlscons.hyps 
-            tsmap_mlscons tsmap_strict_rev 
-            tsmed_mlscons_true tsmed_nbot)       
-      have ora_false: "ora = \<up>False \<bullet> s \<Longrightarrow>
-        tsMed\<cdot>(tsMap f\<cdot>(updis t &&\<surd> msg))\<cdot>(\<up>False \<bullet> s) = tsMap f\<cdot>(tsMed\<cdot>(updis t &&\<surd> msg)\<cdot>(\<up>False \<bullet> s))"
-        by (metis s_inf thesis msg_nbot lscons_conv tsmap_mlscons tsmap_nbot tsmed_mlscons_false)
-      show "ora = \<up>a \<bullet> s \<Longrightarrow>
-           tsMed\<cdot>(tsMap f\<cdot>(updis t &&\<surd> msg))\<cdot>(\<up>a \<bullet> s) = tsMap f\<cdot>(tsMed\<cdot>(updis t &&\<surd> msg)\<cdot>(\<up>a \<bullet> s))"
-        by (metis (full_types) ora_false ora_true)
-    qed
+      proof (cases rule: oracases [of ora])
+        case bottom
+        then show ?thesis 
+          by simp
+      next
+        case (true as)
+        then show ?thesis 
+          by (metis (no_types, lifting) fold_inf lnat.injects lscons_conv mlscons.IH mlscons.hyps 
+              mlscons.prems slen_scons tsmap_mlscons tsmap_nbot tsmed_mlscons_true tsmed_nbot)
+      next
+        case (false as)
+        then show ?thesis 
+          by (metis (no_types, lifting) fold_inf lnat.injects lscons_conv mlscons.IH mlscons.hyps 
+              mlscons.prems slen_scons tsmap_mlscons tsmap_nbot tsmed_mlscons_false)
+      qed
   qed
 
 lemma h3:
@@ -307,13 +320,6 @@ lemma tsmed_tsdom:
 section {* additional properties *}
 (* ----------------------------------------------------------------------- *)
 
-lemma oracases:
-  assumes bottom: "ts=\<bottom> \<Longrightarrow> P ts"
-    and true: "\<And>as. ts= (\<up>True \<bullet> as) \<Longrightarrow> P ts"
-    and false: "\<And>as. ts=(\<up>False \<bullet> as) \<Longrightarrow> P ts"
-  shows "P ts"
-  by (metis (full_types) bottom false scases true)  
-
 lemma conc2cons: "\<up>a \<bullet>as = updis a && as"
   by (simp add: lscons_conv)    
     
@@ -396,14 +402,14 @@ lemma smed2med:
     case (3 a s)
     then show ?case 
     proof (cases rule: oracases [of ora1])
-      case 1
+      case bottom
       then show ?thesis by simp
     next
-      case (2 as)
+      case (true as)
       then show ?thesis 
         by (cases rule: oracases [of ora2], auto simp add: "3.IH")
     next
-      case (3 as)
+      case (false as)
       then show ?thesis       
         by (cases rule: oracases [of ora2], auto simp add: "3.IH")
     qed
@@ -450,15 +456,15 @@ lemma tsmed2med:
     case (delayfun msg)
     then show ?case
     proof (cases rule: oracases [of ora1])
-      case 1
+      case bottom
       then show ?thesis by simp
     next
-      case (2 as)
+      case (true as)
       then show ?thesis
         by (metis delayfun.IH delayfun.prems(1) delayfun.prems(2) inf_scase lscons_conv 
             newora_t stream.con_rews(2) tsmed_delayfun up_defined)
     next
-      case (3 as)
+      case (false as)
       then show ?thesis
         by (metis delayfun(2) delayfun(3) delayfun.IH inf_scase lscons_conv newora_f2 
             stream.con_rews(2) tsmed_delayfun up_defined)        
@@ -467,18 +473,18 @@ lemma tsmed2med:
     case (mlscons msg t)
     then show ?case 
     proof (cases rule: oracases [of ora1])
-      case 1
+      case bottom
       then show ?thesis 
         by simp
     next
-      case (2 as)
+      case (true as)
       then show ?thesis
       proof (cases rule: oracases [of ora2])
-        case 1
+        case bottom
         then show ?thesis
           by simp 
       next
-        case (2 asa)
+        case (true asa)
         fix asa :: "bool stream"
         assume ora1_true: "ora1 = \<up>True \<bullet> as"
         assume ora2_true: "ora2 = \<up>True \<bullet> asa"
@@ -493,7 +499,7 @@ lemma tsmed2med:
             by (simp add: lscons_conv ora1_true ora2_true)    
         qed
       next
-        case (3 asa)
+        case (false asa)
         fix asa :: "bool stream"
         assume ora1_true: "ora1 = \<up>True \<bullet> as"
         assume ora2_false: "ora2 = \<up>False \<bullet> asa"
@@ -509,14 +515,14 @@ lemma tsmed2med:
         qed 
       qed
     next
-      case (3 as)
+      case (false as)
       then show ?thesis  
       proof (cases rule: oracases [of ora2])
-        case 1
+        case bottom
         then show ?thesis 
           by simp
       next
-        case (2 asa)
+        case (true asa)
         fix asa :: "bool stream"
         assume ora1_false: "ora1 = \<up>False \<bullet> as"
         assume ora2_true: "ora2 = \<up>True \<bullet> asa"
@@ -531,7 +537,7 @@ lemma tsmed2med:
             by (simp add: lscons_conv ora1_false ora2_true)
         qed
       next
-        case (3 asa)
+        case (false asa)
         fix asa :: "bool stream"
         assume ora1_false: "ora1 = \<up>False \<bullet> as"
         assume ora2_false: "ora2 = \<up>False \<bullet> asa"
@@ -575,21 +581,10 @@ lemma smed_smap: "sMed\<cdot>(smap f\<cdot>msg)\<cdot>ora = smap f\<cdot>(sMed\<
       by simp
   next
     case (3 a s)
-    then show ?case 
-    proof (rule_tac scases [of ora], simp_all)
-      fix aa :: "bool" and sa :: "bool stream"
-      assume ora_lscons: "ora = \<up>aa \<bullet> sa" 
-      assume thesis: "\<And>ora. sMed\<cdot>(smap f\<cdot>s)\<cdot>ora = smap f\<cdot>(sMed\<cdot>s\<cdot>ora)"
-      have aa_true: "aa = True \<Longrightarrow> 
-        sMed\<cdot>(\<up>(f a) \<bullet> smap f\<cdot>s)\<cdot>(\<up>aa \<bullet> sa) = smap f\<cdot>(sMed\<cdot>(\<up>a \<bullet> s)\<cdot>(\<up>aa \<bullet> sa))"
-        by (simp add: "3.hyps")
-      have aa_false: "aa = False \<Longrightarrow> 
-        sMed\<cdot>(\<up>(f a) \<bullet> smap f\<cdot>s)\<cdot>(\<up>aa \<bullet> sa) = smap f\<cdot>(sMed\<cdot>(\<up>a \<bullet> s)\<cdot>(\<up>aa \<bullet> sa))"
-        by (simp add: "3.hyps")
-      show "sMed\<cdot>(\<up>(f a) \<bullet> smap f\<cdot>s)\<cdot>(\<up>aa \<bullet> sa) = smap f\<cdot>(sMed\<cdot>(\<up>a \<bullet> s)\<cdot>(\<up>aa \<bullet> sa))"
-        using aa_false aa_true by blast
-    qed
+    then show ?case
+      by (cases rule: oracases [of ora], simp_all)
   qed
+
 
 (* TODO *)
 lemma sprojsnd_srcdups_slen: "#(srcdups\<cdot>(sprojsnd\<cdot>s)) \<le> #(sprojsnd\<cdot>(srcdups\<cdot>s))"
@@ -603,6 +598,33 @@ lemma sprojsnd_srcdups_slen: "#(srcdups\<cdot>(sprojsnd\<cdot>s)) \<le> #(sprojs
   apply (case_tac "ab=ac", simp_all)
   apply (case_tac "b=ba", simp_all)
   using less_lnsuc trans_lnle by blast
+
+lemma sprojsnd_srcdups_slen: "#(srcdups\<cdot>(sprojsnd\<cdot>s)) \<le> #(sprojsnd\<cdot>(srcdups\<cdot>s))"
+  proof (induction s rule: ind)
+    case 1
+    then show ?case 
+      proof (rule admI)
+        fix Y :: "nat \<Rightarrow> ('b \<times> 'a) stream"
+        assume Y_chain: "chain Y"
+        assume adm_assump: "\<forall>i. #(srcdups\<cdot>(sprojsnd\<cdot>(Y i))) \<le> #(sprojsnd\<cdot>(srcdups\<cdot>(Y i)))"
+        then show "#(srcdups\<cdot>(sprojsnd\<cdot>(\<Squnion>i. Y i))) \<le> #(sprojsnd\<cdot>(srcdups\<cdot>(\<Squnion>i. Y i)))"
+          by (simp add: Y_chain adm_assump contlub_cfun_arg lub_mono2)
+      qed
+  next
+    case 2
+    then show ?case 
+      by simp
+  next
+    case (3 a s)
+    then show ?case 
+      proof (cases rule: scases [of s])
+        case bottom
+        then show ?thesis sorry
+      next
+        case (scons b bs)
+        then show ?thesis sorry
+      qed
+  oops
 
 lemma smed_slen: "#(sMed\<cdot>msg\<cdot>ora) \<le> #msg"
   proof-

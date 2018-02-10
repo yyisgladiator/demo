@@ -440,7 +440,7 @@ apply (subst sconc_def [THEN fix_eq2])
 by (simp add: sconc_scons' sup'_def cont2cont_LAM)
 
 text {* If a predicate P holds for empty and non-empty streams, it holds for all streams *}
-lemma scases: "\<And>x P. \<lbrakk>x = \<epsilon> \<Longrightarrow> P; \<And>a s. x = \<up>a \<bullet> s \<Longrightarrow> P\<rbrakk> \<Longrightarrow> P"
+lemma scases [case_names bottom scons]: "\<And>x P. \<lbrakk>x = \<epsilon> \<Longrightarrow> P; \<And>a s. x = \<up>a \<bullet> s \<Longrightarrow> P\<rbrakk> \<Longrightarrow> P"
 apply (rule_tac y=x in scases', simp+)
 apply (rule_tac p=u in upE, simp+)
 apply (case_tac "xa")
