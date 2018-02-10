@@ -1313,12 +1313,6 @@ lemma medrs3_id_parcomp_well : "uspec_parcompwell MEDRS3 ID"
     have f1: "uspecDom (MEDRS3:: ('a MABP tstream\<^sup>\<Omega>) ufun uspec) 
         = ufclDom\<cdot>((medRS_TSPF::bool stream \<Rightarrow> ('a MABP tstream\<^sup>\<Omega>) ufun) ora)"
       using f_def ora_def uspec_dom_eq by auto
-    have f2: "\<forall> f \<in> Rep_rev_uspec (MEDRS3:: ('a MABP tstream\<^sup>\<Omega>) ufun uspec).
-        ufclDom\<cdot>f = ufclDom\<cdot>((medRS_TSPF::bool stream \<Rightarrow> ('a MABP tstream\<^sup>\<Omega>) ufun) ora)"
-      using False local.f1 medrs_consist_dom by auto
-    have f3: "\<forall> f \<in> Rep_rev_uspec (ID:: ('a MABP tstream\<^sup>\<Omega>) ufun uspec). 
-        ufclDom\<cdot>f  = ufclDom\<cdot>(id_TSPF::('a MABP tstream\<^sup>\<Omega>) ufun)"
-      by (simp add: id_uspec_dom uspec_dom_eq)
     have f4: "parcomp_well ((medRS_TSPF::bool stream \<Rightarrow> ('a MABP tstream\<^sup>\<Omega>) ufun) ora) (id_TSPF::('a MABP tstream\<^sup>\<Omega>) ufun)"
       apply rule
        apply (simp add: ufCompL_def)
@@ -1338,24 +1332,7 @@ lemma medrs3_id_parcomp_well : "uspec_parcompwell MEDRS3 ID"
           ufCompL_def ufclDom_ufun_def ufclRan_ufun_def uspec_allDom uspec_ran_eq)
   qed
 
-  (* Final lemma for general composition operator*)
-lemma abp_gencomp_final: assumes "f \<in> Rep_TSPS gencompABP"
-                            and "tsbDom\<cdot>tb = {c_abpIn}"
-  shows "tsAbs\<cdot>((f \<rightleftharpoons> tb) . c_abpOut) = tsAbs\<cdot>(tb . c_abpIn)"
-  oops  
-
-abbreviation speccompABP3 :: "(('a MABP tstream\<^sup>\<Omega>) ufun) uspec" where
-"speccompABP3 \<equiv> uspecFeedbackComp(((SND3 \<circle> MEDSR3) \<circle> RCV3) \<circle> (MEDRS3 \<parallel> ID))"
-
-
-lemma abpcomp_f_ex: assumes "f \<in> Rep_rev_uspec speccompABP3" 
-  shows "\<exists> s \<in> tsSender. \<exists>ora1 ora2. #({True} \<ominus> ora1)=\<infinity> \<and>  #({True} \<ominus> ora2)=\<infinity> \<and>
-    (f =  (ufunclFeedbackComp (ufunclSerComp (ufunclSerComp (ufunclSerComp (senderTSPF s) (medSR_TSPF ora1)) recvTSPF) 
-          (ufunclParComp (medRS_TSPF ora2) id_TSPF))))"
-proof -
-  have f1: "uspec_parcompwell MEDRS3 (ID:: ('a MABP tstream\<^sup>\<Omega>) ufun uspec)"
-    by (simp add: medrs3_id_parcomp_well)
-  have f2: "uspec_sercompwell SND3 (MEDSR3:: ('a MABP tstream\<^sup>\<Omega>) ufun uspec)"
+lemma snd3_medsr3_sercomp_well: "uspec_sercompwell SND3 (MEDSR3:: ('a MABP tstream\<^sup>\<Omega>) ufun uspec)"
   proof (cases "\<not> uspecIsConsistent (MEDSR3:: ('a MABP tstream\<^sup>\<Omega>) ufun uspec)")
     case True
     then show ?thesis 
@@ -1363,6 +1340,8 @@ proof -
       by (simp add: uspecIsConsistent_def)
   next
     case False
+    have f00: "uspecIsConsistent (MEDSR3:: ('a MABP tstream\<^sup>\<Omega>) ufun uspec)"
+      using False by auto
     then show ?thesis 
     proof (cases "\<not> uspecIsConsistent (SND3:: ('a MABP tstream\<^sup>\<Omega>) ufun uspec)")
       case True
@@ -1371,9 +1350,10 @@ proof -
         by (simp add: uspecIsConsistent_def)
     next
       case False
+      have f01: "uspecIsConsistent (SND3:: ('a MABP tstream\<^sup>\<Omega>) ufun uspec)"
+        using False by auto
       obtain f where f_def: "f \<in> Rep_rev_uspec (MEDSR3:: ('a MABP tstream\<^sup>\<Omega>) ufun uspec)"
-        by (metis assms not_uspec_consisten_empty_eq uspec_consist_f_ex 
-            uspec_feedbackcomp_consistent_iff uspec_sercomp_consistent2 uspec_sercompwell_def)
+        using f00 uspec_consist_f_ex by auto
       obtain g where g_def: "g \<in> Rep_rev_uspec (SND3:: ('a MABP tstream\<^sup>\<Omega>) ufun uspec)"
         using False uspec_consist_f_ex by auto
       have f0: "\<exists> ora. f = medSR_TSPF ora"
@@ -1431,29 +1411,230 @@ proof -
             uspec_dom_eq uspec_ran_eq)
     qed
   qed
+
+lemma snd3_medsr3_rev3_sercomp_well: "uspec_sercompwell (SND3 \<circle> MEDSR3) (RCV3:: ('a MABP tstream\<^sup>\<Omega>) ufun uspec)"
+  proof (cases "\<not> uspecIsConsistent ((SND3 \<circle> MEDSR3):: ('a MABP tstream\<^sup>\<Omega>) ufun uspec)")
+    case True
+    then show ?thesis 
+      apply (simp_all add: uspec_sercompwell_def)
+      by (simp add: uspecIsConsistent_def)
+  next
+    case False
+    have f00: "uspecIsConsistent ((SND3 \<circle> MEDSR3):: ('a MABP tstream\<^sup>\<Omega>) ufun uspec)"
+      using False by auto
+    then show ?thesis 
+      proof (cases "\<not> uspecIsConsistent (RCV3:: ('a MABP tstream\<^sup>\<Omega>) ufun uspec)")
+        case True
+        then show ?thesis
+          apply (simp_all add: uspec_sercompwell_def)
+          by (simp add: RCV3.rep_eq inv_rev_rev uspecIsConsistent_def)
+      next
+        case False
+        have f01: "uspecIsConsistent (RCV3:: ('a MABP tstream\<^sup>\<Omega>) ufun uspec)"
+          using False by auto
+        have f02: "uspecIsConsistent (SND3:: ('a MABP tstream\<^sup>\<Omega>) ufun uspec)"
+          using f00 snd3_medsr3_sercomp_well uspec_sercomp_consistent2 by auto
+        have f02: "uspecIsConsistent (MEDSR3:: ('a MABP tstream\<^sup>\<Omega>) ufun uspec)"
+          using f00 snd3_medsr3_sercomp_well uspec_sercomp_consistent2 by auto
+        obtain f1 f2 where f1_f2_def: "f1 \<in> Rep_rev_uspec (SND3::('a MABP tstream\<^sup>\<Omega>) ufun uspec) 
+              \<and> f2 \<in> Rep_rev_uspec (MEDSR3::('a MABP tstream\<^sup>\<Omega>) ufun uspec)"
+          using f00 snd3_medsr3_sercomp_well uspec_consist_f_ex uspec_sercomp_consistent2 by blast
+        have f03: "ufSerComp f1 f2 \<in> Rep_rev_uspec ((SND3 \<circle> MEDSR3):: ('a MABP tstream\<^sup>\<Omega>) ufun uspec)"
+          by (metis f1_f2_def snd3_medsr3_sercomp_well ufunclSerComp_ufun_def uspec_sercomp_not_empty)
+        obtain g where g_def: "g \<in> Rep_rev_uspec (RCV3:: ('a MABP tstream\<^sup>\<Omega>) ufun uspec)"
+          using False uspec_consist_f_ex by auto
+        have g_eq_recv: "g = recvTSPF"
+          by (metis RCV3.rep_eq g_def inv_rev_rev singletonD)
+        have f04: "\<exists> ora. f2 = medSR_TSPF ora"
+          using f1_f2_def medsr_rev_insert by auto
+        obtain ora where ora_def: "f2 = medSR_TSPF ora"
+          using f04 by auto
+        obtain snd where snd_def: "f1 = senderTSPF snd"
+        proof -
+          assume a1: "\<And>snd. f1 = senderTSPF snd \<Longrightarrow> thesis"
+          have "{u. \<exists>c. (u::('a MABP tstream\<^sup>\<Omega>) ufun) = senderTSPF c \<and> c \<in> tsSender} = Rep_rev_uspec SND3"
+            by (simp add: SND3.rep_eq inv_rev_rev)
+          then have "\<exists>c. f1 = senderTSPF c \<and> c \<in> tsSender"
+            using f1_f2_def by blast
+          then show ?thesis
+            using a1 by blast
+        qed
+        have f05: "uspecDom ((SND3 \<circle> MEDSR3):: ('a MABP tstream\<^sup>\<Omega>) ufun uspec) 
+          = ufclDom\<cdot>(senderTSPF snd)"
+          using f00 f1_f2_def local.snd_def snd3_medsr3_sercomp_well uspec_dom_eq uspec_sercomp_consistent2 uspec_sercomp_dom by blast
+        have f06: "\<forall> f \<in> Rep_rev_uspec ((SND3 \<circle> MEDSR3):: ('a MABP tstream\<^sup>\<Omega>) ufun uspec).
+            ufclDom\<cdot>f = ufclDom\<cdot>(senderTSPF snd)"
+          by (simp add: f05 uspec_dom_eq)
+        have f7: "(senderTSPF snd) \<in> Rep_rev_uspec (SND3::('a MABP tstream\<^sup>\<Omega>) ufun uspec)"
+          using f1_f2_def local.snd_def by auto
+        have f8: "(medSR_TSPF ora) \<in> Rep_rev_uspec (MEDSR3::('a MABP tstream\<^sup>\<Omega>) ufun uspec)"
+          using f1_f2_def ora_def by auto
+        have f09: "sercomp_well (senderTSPF snd) (medSR_TSPF ora)"
+          by (meson snd3_medsr3_sercomp_well f7 f8 ufunclSerCompWell_ufun_def uspec_sercomp_h2)
+        have f08: "sercomp_well (ufSerComp (senderTSPF snd) (medSR_TSPF ora)) g"
+          apply (subst ufSerComp_ran) using f09 apply blast
+          apply (subst medsr_tsps_ran2) using f8 medsr_rev_insert apply blast
+          apply (simp add: g_eq_recv recv_tspfdom)
+          apply (subst ufSerComp_ran) using f09 apply blast
+          apply (subst ufSerComp_dom) using f09 apply blast
+          apply (subst sender_tspfdom)
+          apply (subst medsr_tsps_ran2) using f8 medsr_rev_insert apply blast
+          apply (simp add: g_eq_recv recv_tspfdom recv_tspfran)
+          apply (subst ufSerComp_dom) using f09 apply blast
+          apply (subst sender_tspfdom)
+          apply (subst ufSerComp_dom) using f09 apply blast
+          by (simp add: sender_tspfdom)
+        then show ?thesis 
+          apply (simp add: uspec_sercompwell_def)
+          apply (simp add: ufunclSerCompWell_ufun_def)
+          by (metis f03 g_def local.snd_def ora_def ufclDom_ufun_def ufclRan_ufun_def 
+              uspec_dom_eq uspec_ran_eq)
+      qed
+    qed
+
+lemma snd3_medsr3_rcv3_medrs3_id_sercomp_well: "uspec_sercompwell ((SND3 \<circle> MEDSR3) \<circle> RCV3) (MEDRS3 \<parallel> (ID:: ('a MABP tstream\<^sup>\<Omega>) ufun uspec))"
+  proof (cases "\<not> uspecIsConsistent ((SND3 \<circle> MEDSR3) \<circle> (RCV3:: ('a MABP tstream\<^sup>\<Omega>) ufun uspec))")
+    case True
+    then show ?thesis 
+      by (simp add: uspecIsConsistent_def uspec_sercompwell_def)
+  next
+    case False
+    have f00: "uspecIsConsistent ((SND3 \<circle> MEDSR3) \<circle> (RCV3:: ('a MABP tstream\<^sup>\<Omega>) ufun uspec))"
+      using False by auto
+    then show ?thesis 
+    proof (cases "\<not> uspecIsConsistent (MEDRS3 \<parallel> (ID:: ('a MABP tstream\<^sup>\<Omega>) ufun uspec))")
+      case True
+      then show ?thesis 
+        by (simp add: uspecIsConsistent_def uspec_sercompwell_def)
+    next
+      case False
+      have f01: "uspecIsConsistent (MEDRS3 \<parallel> (ID:: ('a MABP tstream\<^sup>\<Omega>) ufun uspec))"
+        using False by auto
+      have f02: "uspecIsConsistent (MEDRS3:: ('a MABP tstream\<^sup>\<Omega>) ufun uspec)"
+        using False medrs3_id_parcomp_well uspec_parcomp_consistent2 by auto
+      have f02: "uspecIsConsistent (RCV3:: ('a MABP tstream\<^sup>\<Omega>) ufun uspec)"
+        using f00 snd3_medsr3_rev3_sercomp_well uspec_sercomp_consistent2 by auto
+      have f03: "uspecIsConsistent (SND3 \<circle> (MEDSR3:: ('a MABP tstream\<^sup>\<Omega>) ufun uspec))"
+        using f00 snd3_medsr3_rev3_sercomp_well uspec_sercomp_consistent2 by auto
+      have f04: "uspecIsConsistent (MEDSR3:: ('a MABP tstream\<^sup>\<Omega>) ufun uspec)"
+        using f03 snd3_medsr3_sercomp_well uspec_sercomp_consistent2 by auto
+      have f05: "uspecIsConsistent (SND3:: ('a MABP tstream\<^sup>\<Omega>) ufun uspec)"
+        using f03 snd3_medsr3_sercomp_well uspec_sercomp_consistent2 by blast
+      obtain f1 where f1_def: "f1 \<in> Rep_rev_uspec (SND3:: ('a MABP tstream\<^sup>\<Omega>) ufun uspec)"
+        using f05 uspec_consist_f_ex by blast
+      obtain f2 where f2_def: "f2 \<in> Rep_rev_uspec (MEDSR3:: ('a MABP tstream\<^sup>\<Omega>) ufun uspec)"
+        using f04 uspec_consist_f_ex by auto
+      obtain f3 where f3_def: "f3 \<in> Rep_rev_uspec (RCV3:: ('a MABP tstream\<^sup>\<Omega>) ufun uspec)"
+        using f02 uspec_consist_f_ex by auto
+      obtain f4 where f4_def: "f4 \<in> Rep_rev_uspec (MEDRS3:: ('a MABP tstream\<^sup>\<Omega>) ufun uspec)"
+        using False medrs3_id_parcomp_well uspec_consist_f_ex uspec_parcomp_consistent2 by blast
+      obtain f5 where f5_def: "f5 \<in> Rep_rev_uspec (ID:: ('a MABP tstream\<^sup>\<Omega>) ufun uspec)"
+        by (simp add: ID.rep_eq inv_rev_rev)
+      
+      obtain ora1 where ora1_def: "f2 = medSR_TSPF ora1"
+        using f2_def medsr_rev_insert by auto
+      obtain ora2 where ora2_def: "f4 = medRS_TSPF ora2"
+        using f4_def medrs_rev_insert by auto
+      obtain snd where snd_def: "f1 = senderTSPF snd"
+      proof -
+        assume a1: "\<And>snd. f1 = senderTSPF snd \<Longrightarrow> thesis"
+        have "{u. \<exists>c. (u::('a MABP tstream\<^sup>\<Omega>) ufun) = senderTSPF c \<and> c \<in> tsSender} = Rep_rev_uspec SND3"
+          by (simp add: SND3.rep_eq inv_rev_rev)
+        then have "\<exists>c. f1 = senderTSPF c \<and> c \<in> tsSender"
+          using f1_def by auto
+        then show ?thesis
+          using a1 by blast
+      qed
+      have f10: "(senderTSPF snd) \<in> Rep_rev_uspec (SND3::('a MABP tstream\<^sup>\<Omega>) ufun uspec)"
+        using f1_def local.snd_def by auto
+      have f11: "(medSR_TSPF ora1) \<in> Rep_rev_uspec (MEDSR3::('a MABP tstream\<^sup>\<Omega>) ufun uspec)"
+        apply (fold ora1_def)
+        by (simp add: f2_def)
+      have f12: "sercomp_well (senderTSPF snd) (medSR_TSPF ora1)"
+        by (meson snd3_medsr3_sercomp_well f10 f11 ufunclSerCompWell_ufun_def uspec_sercomp_h2)
+      have f13: "(ufSerComp (senderTSPF snd) (medSR_TSPF ora1)) \<in> Rep_rev_uspec (SND3 \<circle> MEDSR3)"
+        by (metis f1_def f2_def local.snd_def ora1_def snd3_medsr3_sercomp_well ufunclSerComp_ufun_def uspec_sercomp_h1)
+      have f14: "sercomp_well (ufSerComp (senderTSPF snd) (medSR_TSPF ora1)) f3"
+        by (meson snd3_medsr3_rev3_sercomp_well f13 f3_def ufunclSerCompWell_ufun_def uspec_sercomp_h2)
+      have f15: "ufSerComp (ufSerComp (senderTSPF snd) (medSR_TSPF ora1)) f3 \<in>  
+        Rep_rev_uspec ((SND3 \<circle> MEDSR3) \<circle> RCV3)"
+        by (metis f13 f3_def snd3_medsr3_rev3_sercomp_well ufunclSerComp_ufun_def uspec_sercomp_not_empty)
+      have f16: "parcomp_well f4 f5"
+        by (meson medrs3_id_parcomp_well f4_def f5_def ufunclParCompWell_ufun_def uspec_parcomp_h2)
+      have f17: "ufParComp f4 f5 \<in> Rep_rev_uspec (MEDRS3 \<parallel> ID)"
+        by (metis f4_def f5_def medrs3_id_parcomp_well ufunclParComp_ufun_def uspec_parcomp_h1)
+      have f18: "f5 = id_TSPF"
+        by (metis ID.rep_eq f5_def inv_rev_rev singletonD)
+      have f19: "f3 = recvTSPF"
+        by (metis RCV3.rep_eq f3_def inv_rev_rev singletonD)
+      have f20: "sercomp_well (ufSerComp (ufSerComp (senderTSPF snd) (medSR_TSPF ora1)) f3) (ufParComp f4 f5)"
+        apply (subst ufSerComp_ran) using f14 apply blast
+        apply (rule)
+        apply (subst ufParComp_dom) using f16 apply blast
+        apply (subst medrs_tsps_dom2) using f4_def medrs_rev_insert apply blast
+        apply (simp add: sender_tspfdom id_tspf_dom id_tspf_ran f18)
+        apply (simp add: f19 recv_tspfdom recv_tspfran)
+         apply (simp add: insert_commute)
+        apply (rule)
+        apply (subst ufSerComp_dom) using f14 apply blast
+        apply (subst ufSerComp_dom) using f12 apply blast
+         apply (subst ufSerComp_ran) using f14 apply blast
+        apply (simp add: sender_tspfdom id_tspf_dom id_tspf_ran f18)
+         apply (simp add: f19 recv_tspfdom recv_tspfran)
+        apply rule
+        apply (subst ufParComp_ran) using f16 apply blast
+        apply (subst ufParComp_dom) using f16 apply blast
+        apply (subst medrs_tsps_ran2) using f4_def medrs_rev_insert apply blast
+        apply (subst medrs_tsps_dom2) using f4_def medrs_rev_insert apply blast
+        apply (simp add: id_tspf_dom id_tspf_ran f18)
+        apply (subst ufSerComp_dom) using f14 apply blast
+        apply (subst ufSerComp_dom) using f12 apply blast
+        apply (subst ufParComp_ran) using f16 apply blast
+        apply (simp add: sender_tspfdom)
+        apply (subst medrs_tsps_ran2) using f4_def medrs_rev_insert apply blast
+        apply (subst f18) +
+        sorry
+      then show ?thesis 
+        apply (simp add: uspec_sercompwell_def)
+        apply (simp add: ufunclSerCompWell_ufun_def)
+        by (metis f15 f17 ufclDom_ufun_def ufclRan_ufun_def uspec_dom_eq uspec_ran_eq)
+    qed
+  qed
+  (* Final lemma for general composition operator*)
+lemma abp_gencomp_final: assumes "f \<in> Rep_TSPS gencompABP"
+                            and "tsbDom\<cdot>tb = {c_abpIn}"
+  shows "tsAbs\<cdot>((f \<rightleftharpoons> tb) . c_abpOut) = tsAbs\<cdot>(tb . c_abpIn)"
+  oops  
+
+abbreviation speccompABP3 :: "(('a MABP tstream\<^sup>\<Omega>) ufun) uspec" where
+"speccompABP3 \<equiv> uspecFeedbackComp(((SND3 \<circle> MEDSR3) \<circle> RCV3) \<circle> (MEDRS3 \<parallel> ID))"
+
+
+lemma abpcomp_f_ex: assumes "f \<in> Rep_rev_uspec speccompABP3" 
+  shows "\<exists> s. \<exists>ora1 ora2. s \<in> tsSender \<and> #({True} \<ominus> ora1)=\<infinity> \<and>  #({True} \<ominus> ora2)=\<infinity> \<and>
+    (f =  (ufunclFeedbackComp (ufunclSerComp (ufunclSerComp (ufunclSerComp (senderTSPF s) (medSR_TSPF ora1)) recvTSPF) 
+          (ufunclParComp (medRS_TSPF ora2) id_TSPF))))"
+proof -
+  have f1: "uspec_parcompwell MEDRS3 (ID:: ('a MABP tstream\<^sup>\<Omega>) ufun uspec)"
+    by (simp add: medrs3_id_parcomp_well)
+  have f2: "uspec_sercompwell SND3 (MEDSR3:: ('a MABP tstream\<^sup>\<Omega>) ufun uspec)"
+    by (simp add: snd3_medsr3_sercomp_well)
   have f20: "uspecWell {ufunclSerComp f1 f2 | f1 f2.  f1\<in>(Rep_rev_uspec (SND3:: ('a MABP tstream\<^sup>\<Omega>) ufun uspec)) \<and> f2\<in>(Rep_rev_uspec MEDSR3)}"
     by (simp add: f2)
   have f21: "uspecSerComp SND3 MEDSR3 = Abs_rev_uspec {ufunclSerComp f1 f2 | f1 f2.  f1\<in>(Rep_rev_uspec SND3) \<and> f2\<in>(Rep_rev_uspec MEDSR3)}"
     by (simp add: uspecSerComp_def)
-  have f3: "uspec_sercompwell (SND3 \<circle> MEDSR3) RCV3"
-    sorry
-  have f30: "uspecWell {ufunclSerComp f1 f2 | f1 f2.  f1\<in>(Rep_rev_uspec (SND3 \<circle> MEDSR3)) \<and> f2\<in>(Rep_rev_uspec RCV3)}"
+  have f3: "uspec_sercompwell (SND3 \<circle> MEDSR3) (RCV3:: ('a MABP tstream\<^sup>\<Omega>) ufun uspec)"
+    by (simp add: snd3_medsr3_rev3_sercomp_well)
+  have f30: "uspecWell {ufunclSerComp f1 f2 | f1 f2.  f1\<in>(Rep_rev_uspec (SND3 \<circle> MEDSR3)) \<and> f2\<in>(Rep_rev_uspec (RCV3:: ('a MABP tstream\<^sup>\<Omega>) ufun uspec))}"
     by (simp add: f3)
   have f31: "uspecSerComp (SND3 \<circle> MEDSR3) RCV3 = 
       Abs_rev_uspec {ufunclSerComp f1 f2 | f1 f2.  f1\<in>(Rep_rev_uspec (SND3 \<circle> MEDSR3)) \<and> f2\<in>(Rep_rev_uspec RCV3)}"
     using uspecSerComp_def by blast
-  have f4: "uspec_parcompwell MEDRS3 ID"
-    sorry
-  have f40: "uspecWell {ufunclParComp f1 f2 | f1 f2.  f1\<in>(Rep_rev_uspec MEDRS3) \<and> f2\<in>(Rep_rev_uspec ID)}"
-    by (simp add: f4)
+  have f40: "uspecWell {ufunclParComp f1 f2 | f1 f2.  f1\<in>(Rep_rev_uspec MEDRS3) \<and> f2\<in>(Rep_rev_uspec (ID:: ('a MABP tstream\<^sup>\<Omega>) ufun uspec))}"
+    by (simp add: f1)
   have f31: "uspecParComp MEDRS3 ID = 
       Abs_rev_uspec {ufunclParComp f1 f2 | f1 f2.  f1\<in>(Rep_rev_uspec MEDRS3) \<and> f2\<in>(Rep_rev_uspec ID)}"
     using uspecParComp_def by blast
-  have f5: "uspec_sercompwell ((SND3 \<circle> MEDSR3) \<circle> RCV3) (MEDRS3 \<parallel> ID)"
-    sorry
-  have f50: "uspecWell {ufunclSerComp f1 f2 | f1 f2.  f1\<in>(Rep_rev_uspec ((SND3 \<circle> MEDSR3) \<circle> RCV3)) 
-      \<and> f2\<in>(Rep_rev_uspec (MEDRS3 \<parallel> ID))}"
-    by (simp add: f5)
   have f51: "uspecSerComp ((SND3 \<circle> MEDSR3) \<circle> RCV3) (MEDRS3 \<parallel> ID) = 
       Abs_rev_uspec {ufunclSerComp f1 f2 | f1 f2.  f1\<in>(Rep_rev_uspec ((SND3 \<circle> MEDSR3) \<circle> RCV3)) 
       \<and> f2\<in>(Rep_rev_uspec (MEDRS3 \<parallel> ID))}"
@@ -1463,7 +1644,7 @@ proof -
   have f61: "uspecFeedbackComp(((SND3 \<circle> MEDSR3) \<circle> RCV3) \<circle> (MEDRS3 \<parallel> ID)) =
     Abs_rev_uspec {(\<mu>) f1 |f1::('a MABP tstream\<^sup>\<Omega>) ufun. f1 \<in> Rep_rev_uspec (SND3 \<circle> MEDSR3 \<circle> RCV3 \<circle> (MEDRS3 \<parallel> ABP_TSPS.ID))}"
     by (simp add: uspecFeedbackComp_def)                                                            
-  have f70: "f \<in> {(\<mu>) f1 |f1::('a MABP tstream\<^sup>\<Omega>) ufun. f1 \<in> Rep_rev_uspec (SND3 \<circle> MEDSR3 \<circle> RCV3 \<circle> (MEDRS3 \<parallel> ABP_TSPS.ID))} "
+  have f70: "f \<in> {(\<mu>) f1 |f1::('a MABP tstream\<^sup>\<Omega>) ufun. f1 \<in> Rep_rev_uspec (SND3 \<circle> MEDSR3 \<circle> RCV3 \<circle> (MEDRS3 \<parallel> ABP_TSPS.ID))}"
     by (metis (no_types, lifting) assms f60 f61 rep_abs_rev_simp)
   have f71: "uspecIsConsistent (speccompABP3::('a MABP tstream\<^sup>\<Omega>) ufun uspec)"
     apply (simp add: uspecIsConsistent_def uspecFeedbackComp_def)
@@ -1473,18 +1654,75 @@ proof -
     using f71 uspec_feedbackcomp_consistent_iff by auto
   have f90: "uspecIsConsistent ((SND3 \<circle> MEDSR3 \<circle> RCV3)::('a MABP tstream\<^sup>\<Omega>) ufun uspec) 
         \<and> uspecIsConsistent ((MEDRS3 \<parallel> ABP_TSPS.ID)::('a MABP tstream\<^sup>\<Omega>) ufun uspec)"
-    using f51 f80 uspec_sercomp_consistent2 f5 by blast
+    using f51 f80 uspec_sercomp_consistent2 by blast
   have f91: "uspecIsConsistent (MEDRS3:: (('a MABP tstream\<^sup>\<Omega>) ufun) uspec) 
         \<and> uspecIsConsistent (ID:: (('a MABP tstream\<^sup>\<Omega>) ufun) uspec)"
-    using f31 f4 uspec_parcomp_consistent2 f90 by blast
+    using f31 f1 uspec_parcomp_consistent2 f90 by blast
   have f92: "uspecIsConsistent ((SND3 \<circle> MEDSR3)::('a MABP tstream\<^sup>\<Omega>) ufun uspec) 
         \<and> uspecIsConsistent (RCV3:: (('a MABP tstream\<^sup>\<Omega>) ufun) uspec)"
     using f31 f3 uspec_sercomp_consistent2 f90 by blast
   have f93: "uspecIsConsistent (SND3:: (('a MABP tstream\<^sup>\<Omega>) ufun) uspec) 
         \<and> uspecIsConsistent (MEDSR3:: (('a MABP tstream\<^sup>\<Omega>) ufun) uspec)"
     using f2 f92 uspec_sercomp_consistent2 by blast
+  obtain f1 where f1_def: "f = ufFeedbackComp f1 \<and> f1 \<in> Rep_rev_uspec (SND3 \<circle> MEDSR3 \<circle> RCV3 \<circle> (MEDRS3 \<parallel> ABP_TSPS.ID))"
+    by (metis assms ufunclFeedbackComp_ufun_def uspec_feedbackcomp_f_ex)
+  obtain f2 f3 where f2_f3_def: "f1 = ufSerComp f2 f3 \<and> f2 \<in> Rep_rev_uspec (SND3 \<circle> MEDSR3 \<circle> RCV3) 
+      \<and> f3 \<in> Rep_rev_uspec (MEDRS3 \<parallel> ABP_TSPS.ID)"
+    by (metis f1_def f80 snd3_medsr3_rcv3_medrs3_id_sercomp_well ufunclSerComp_ufun_def uspec_sercomp_ele_ex)
+  obtain f4 f5 where f4_f5_def: "f2 = ufSerComp f4 f5 \<and> f4 \<in> Rep_rev_uspec (SND3 \<circle> MEDSR3) 
+      \<and> f5 \<in> Rep_rev_uspec RCV3"  
+    by (metis f2_f3_def f3 f90 ufunclSerComp_ufun_def uspec_sercomp_ele_ex)
+  obtain f6 f7 where f6_f7_def: "f3 = ufParComp f6 f7 \<and> f6 \<in> Rep_rev_uspec MEDRS3
+      \<and> f7 \<in> Rep_rev_uspec ID"
+    by (metis f1 f2_f3_def ufunclParComp_ufun_def uspec_parcomp_ele_ex)
+  have f101: " f4 \<in> Rep_rev_uspec (SND3 \<circle> MEDSR3)"
+    by (simp add: f4_f5_def)
+  have f102: "SND3 \<circle> (MEDSR3::('a MABP tstream\<^sup>\<Omega>) ufun uspec) 
+    = Abs_rev_uspec {ufunclSerComp f1 f2 | f1 f2. f1 \<in> Rep_rev_uspec SND3 \<and> f2 \<in> Rep_rev_uspec MEDSR3}"
+    by (simp add: f21)
+  obtain f8 f9 where f8_f9_def: "f4 = ufSerComp f8 f9 \<and> f8 \<in> Rep_rev_uspec SND3 
+      \<and> f9 \<in> Rep_rev_uspec MEDSR3"
+    by (metis f2 f4_f5_def f92 ufunclSerComp_ufun_def uspec_sercomp_ele_ex)
+  obtain snd where snd_def: "f8 = senderTSPF snd \<and> snd \<in> tsSender"
+  proof -
+    assume a1: "\<And>snd. f8 = senderTSPF snd \<and> snd \<in> tsSender \<Longrightarrow> thesis"
+    have "{u. \<exists>c. (u::('a MABP tstream\<^sup>\<Omega>) ufun) = senderTSPF c \<and> c \<in> tsSender} = Rep_rev_uspec SND3"
+      by (simp add: SND3.rep_eq inv_rev_rev)
+    then have "\<exists>c. f8 = senderTSPF c \<and> c \<in> tsSender"
+      using f8_f9_def by blast
+    then show ?thesis
+      using a1 by blast
+  qed
+  have f200: "\<exists>ora::bool stream. f9 = medSR_TSPF ora \<and> #({True} \<ominus> ora) = \<infinity>"
+    using f8_f9_def medsr_rev_insert by blast
+  have f201: "\<exists>ora::bool stream. f6 = medRS_TSPF ora \<and> #({True} \<ominus> ora) = \<infinity>"
+    using f6_f7_def medrs_rev_insert by blast
+  obtain ora1 where ora1_def: "f9 = medSR_TSPF ora1 \<and> #({True} \<ominus> ora1) = \<infinity>"
+    using f200 by auto
+  obtain ora2 where ora2_def: "f6 = medRS_TSPF ora2 \<and> #({True} \<ominus> ora2) = \<infinity>"
+    using f201 by auto
+  have f202: "f5 = recvTSPF"
+    by (metis RCV3.rep_eq f4_f5_def inv_rev_rev singletonD)
+  have f203: "f7 = id_TSPF"
+    by (metis (no_types, lifting) ID.rep_eq ID.rsp Reversed.rev.simps(1) eq_onp_same_args f6_f7_def rep_abs_rev_simp rep_abs_uspec singletonD uspec_eqI)
+  have f204: "f9 = medSR_TSPF ora1"
+    by (simp add: ora1_def)
+  have f205: "f6 = medRS_TSPF ora2"
+    by (simp add: ora2_def)
+  have f206: "f8 = senderTSPF snd"
+    by (simp add: snd_def)
   show ?thesis
-    sorry
+    apply (rule_tac x="snd" in exI)
+    apply (rule_tac x="ora1" in exI)
+    apply (rule_tac x="ora2" in exI)
+    apply (rule, simp add: local.snd_def)
+    apply (simp add: ora1_def ora2_def)
+    apply (fold f202)
+    apply (fold f203)
+    apply (fold f204)
+    apply (fold f205)
+    apply (fold f206)
+    by (simp add: f1_def f2_f3_def f4_f5_def f6_f7_def f8_f9_def ufunclFeedbackComp_ufun_def ufunclParComp_ufun_def ufunclSerComp_ufun_def)
 qed
       
 end
