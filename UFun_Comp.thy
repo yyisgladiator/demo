@@ -894,8 +894,9 @@ lemma ufParComp_dom: assumes "parcomp_well f1 f2"
   apply (subst ufDom_def, simp add:ufParComp_def)
   apply (subst rep_abs_cufun, simp add: ufParComp_cont)
   apply (simp add: assms ufParComp_well)
-  by (smt domIff rep_ufun_well tfl_some ubcldom_least_cs ufWell_def ufdom_2ufundom ufunLeastIDom)
-
+  apply (simp add: domIff)
+  by (simp add: ubclDom_h)
+  
 
 lemma ufParComp_ran: assumes "parcomp_well f1 f2"
   shows "ufRan\<cdot>(ufParComp f1 f2) = (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2)"
@@ -1067,33 +1068,9 @@ lemma ufSerComp_dom: assumes "sercomp_well f1 f2"
   apply(subst ufDom_def, simp add: ufSerComp_def)
   apply(subst rep_abs_cufun, simp add: ufSerComp_cont)
    apply (simp add: assms ufSerComp_well)
-  by (smt domIff rep_ufun_well tfl_some ubcldom_least_cs ufWell_def ufdom_2ufundom ufunLeastIDom)
+  apply (simp add: domIff)
+  by (simp add: ubclDom_h)
   
-lemma ufSerComp_ran: assumes "sercomp_well f1 f2"
-  shows "ufRan\<cdot>(ufSerComp f1 f2) = ufRan\<cdot>f2"
-proof - 
-  have f1: "ufRan\<cdot>f1 = ufDom\<cdot>f2"
-    using assms by blast
-  have f2: "\<And>b. ubclDom\<cdot>b=ufDom\<cdot>f1  \<longrightarrow> (the ((\<lambda>x::'a. (ubclDom\<cdot>x = UFun.ufDom\<cdot>f1)\<leadsto>f2 \<rightleftharpoons> (f1 \<rightleftharpoons> x)) b)) \<in> ran (\<lambda>x::'a. (ubclDom\<cdot>x = UFun.ufDom\<cdot>f1)\<leadsto>(f2 \<rightleftharpoons> (f1 \<rightleftharpoons> x)))"
-    by (smt option.sel ranI)
-  have f3: "\<And>b. ubclDom\<cdot>b=ufDom\<cdot>f1 \<longrightarrow> ubclDom\<cdot>(the ((\<lambda>x::'a. (ubclDom\<cdot>x = UFun.ufDom\<cdot>f1)\<leadsto>f2 \<rightleftharpoons> (f1 \<rightleftharpoons> x)) b)) = ufRan\<cdot>f2"
-    by (simp add: assms ufran_2_ubcldom2)
-  then have f4: "\<forall>b \<in> ran (\<lambda>x::'a. (ubclDom\<cdot>x = UFun.ufDom\<cdot>f1)\<leadsto>(f2 \<rightleftharpoons> (f1 \<rightleftharpoons> x))). ubclDom\<cdot>b = ufRan\<cdot>f2"
-    by (smt option.discI option.sel ran2exists)
-  show ?thesis
-    apply(subst ufRan_def, simp add: ufSerComp_def)
-    apply(subst rep_abs_cufun, simp add: ufSerComp_cont)
-     apply (simp add: assms ufSerComp_well)
-  proof -
-    have "\<exists>a. ubclDom\<cdot>(a::'a) = UFun.ufDom\<cdot>f1"
-      by (metis (lifting) ubcldom_ex)
-    then have "ran (\<lambda>a. (ubclDom\<cdot>a = UFun.ufDom\<cdot> f1)\<leadsto>f2 \<rightleftharpoons> (f1 \<rightleftharpoons> a)) \<noteq> {}"
-      using f2 by force
-    then show "ubclDom\<cdot> (SOME a. a \<in> ran (\<lambda>a. (ubclDom\<cdot>a = UFun.ufDom\<cdot> f1)\<leadsto>f2 \<rightleftharpoons> (f1 \<rightleftharpoons> a))) = UFun.ufRan\<cdot>f2"
-      using f4 some_in_eq by blast
-  qed
-qed
-    
 lemma ufSerComp_repAbs: assumes "sercomp_well f1 f2"
   shows "Rep_cufun (ufSerComp f1 f2) = (\<lambda> x. (ubclDom\<cdot>x = ufDom\<cdot>f1) \<leadsto> (f2 \<rightleftharpoons> (f1 \<rightleftharpoons> x)))"
   apply(simp add: ufSerComp_def, subst rep_abs_cufun)
@@ -1106,6 +1083,16 @@ lemma ufSerComp_apply: assumes "sercomp_well f1 f2" and "ubclDom\<cdot>x = ufDom
   apply (subst ufSerComp_repAbs)
   using assms(1) apply blast
   using assms(1) assms(2) ufSerComp_dom by auto
+
+
+lemma ufSerComp_ran: assumes "sercomp_well f1 f2"
+  shows "ufRan\<cdot>(ufSerComp f1 f2) = ufRan\<cdot>f2"
+  apply (simp add: ufran_least)
+  apply (subst ufSerComp_apply)
+  using assms apply blast
+   apply (simp add: ubcldom_least_cs)
+  by (metis UFun_Comp.ufran_least assms ufSerComp_dom ufran_2_ubcldom2)
+    
 
 lemma ufSerCompWell_asso: assumes "sercomp_well f1 f2" and "sercomp_well f2 f3" and "ufDom\<cdot>f1 \<inter> ufRan\<cdot>f3 = {}"
   shows "sercomp_well f1 (ufSerComp f2 f3) \<and> sercomp_well (ufSerComp f1 f2) f3"
@@ -1532,6 +1519,8 @@ instance
          using ufSerComp_dom ufunclSerComp_ufun_def apply auto[1]
                apply (simp add: ufunclSerCompWell_ufun_def ufclRan_ufun_def ufunclSerComp_ufun_def)
          using ufSerComp_ran apply auto[1]
+                apply (simp add: ufFeedbackComp_dom ufclDom_ufun_def ufclRan_ufun_def ufunclFeedbackComp_ufun_def)
+               apply (simp add: UFun_Comp.ufunclFeedbackComp_ufun_def ufFeedbackComp_ran ufclRan_ufun_def)
               apply (simp add: UFun_Comp.ufunclCompWell_ufun_def UFun_Comp.ufunclComp_ufun_def comp_well_def inf_sup_aci(1) ufcomp_commu)
              apply (metis ufParComp_commutativity ufunclParCompWell_ufun_def ufunclParComp_ufun_def)
             apply (simp add: ufParComp_associativity ufunclParCompWell_ufun_def ufunclParComp_ufun_def)

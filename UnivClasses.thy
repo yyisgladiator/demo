@@ -137,6 +137,9 @@ class ufuncl_comp = ufuncl +
   assumes ufuncl_sercomp_dom: "ufunclSerCompWell f1 f2 \<Longrightarrow> ufclDom\<cdot>(f1 \<circ> f2) = ufclDom\<cdot>f1"
   assumes ufuncl_sercomp_ran: "ufunclSerCompWell f1 f2 \<Longrightarrow> ufclRan\<cdot>(f1 \<circ> f2) = ufclRan\<cdot>f2"
 
+  assumes ufuncl_feedbackcomp_dom: "ufclDom\<cdot>(ufunclFeedbackComp f) = ufclDom\<cdot>f - ufclRan\<cdot>f"
+  assumes ufuncl_feedbackcomp_ran: "ufclRan\<cdot>(ufunclFeedbackComp f) = ufclRan\<cdot>f"
+
   assumes comp_commute: "ufunclCompWell f1 f2 \<Longrightarrow> (f1 \<otimes> f2) = (f2 \<otimes> f1)"
   assumes parcomp_commute: "ufunclParCompWell f1 f2 \<Longrightarrow> (f1 \<parallel> f2) = (f2 \<parallel> f1)"
 
