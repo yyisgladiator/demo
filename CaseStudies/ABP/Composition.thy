@@ -416,11 +416,27 @@ lemma tsaltbitpro_inp2out:
       "#(tsAbs\<cdot>i) < lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>as))) \<Longrightarrow> #(tsAbs\<cdot>i) \<le> #(tsAbs\<cdot>(tsRemDups\<cdot>as))"
       using lnle2le by blast
 
-    have ds_neq_as: "#(tsAbs\<cdot>i) > (#(tsAbs\<cdot>(tsRemDups\<cdot>as))) \<Longrightarrow> #(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>ds))) \<noteq> lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>as)))"
-      sorry
-
+    have ds_ninf:"#(tsAbs\<cdot>i) \<ge> lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>as))) \<Longrightarrow> 
+      #(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>ds))) = lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>as))) \<Longrightarrow> #(tsAbs\<cdot>ds) \<noteq> \<infinity>"
+      proof (rule ccontr)
+        assume as_leq_i: "lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>as))) \<le> #(tsAbs\<cdot>i)"
+        assume ds_eq_as: "#(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>ds))) = lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>as)))"
+        have "#(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>ds))) \<noteq> \<infinity>"
+          using as_leq_i ds_eq_as i_ninf by auto
+        hence ds_srcdups_ninf: "#(srcdups\<cdot>(tsAbs\<cdot>ds)) \<noteq> \<infinity>"
+          by (simp add: tsremdups_tsabs)
+        have ds_inf: "#(tsAbs\<cdot>ds) = \<infinity>"
+          using ar_def as_def as_leq_i dr_def ds_def i_as_le2lnle p1_def p2_def send_def 
+                set2tssnd_nack2inftrans tstickcount_inp2infacks by blast
+        obtain n where ds_split: "tsAbs\<cdot>ds = (stake n\<cdot>(tsAbs\<cdot>ds)) \<bullet> (\<up>(snth n (tsAbs\<cdot>ds))\<infinity>)"
+          using srcdups_split ds_inf ds_srcdups_ninf inf_less_eq leI by blast
+        thus "\<not> #(tsAbs\<cdot>ds) \<noteq> \<infinity> \<Longrightarrow> False"      
+          sorry
+      qed
+      
     hence i_geq_as: "#(tsAbs\<cdot>i) \<le> #(tsAbs\<cdot>(tsRemDups\<cdot>as))"
-      using ack2trans_post i_as_lnle2le not_less by blast      
+      by (metis ack2trans_post ar_def as_def dr_def ds_def i_as_lnle2le le_less_linear p1_def 
+          p2_def send_def set2tssnd_nack2inftrans tstickcount_inp2infacks)
     (* equalities *)
     have i_eq_as: "#(tsAbs\<cdot>i) = #(tsAbs\<cdot>(tsRemDups\<cdot>as))"
       by (simp add: dual_order.antisym i_geq_as as_leq_i)
