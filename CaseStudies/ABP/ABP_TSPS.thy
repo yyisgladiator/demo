@@ -82,46 +82,30 @@ definition recvTSPF :: "('a MABP tstream\<^sup>\<Omega>) ufun" where
                                         c_abpOut \<mapsto> (tsMap::('a \<Rightarrow> 'a MABP) \<Rightarrow> 'a tstream \<rightarrow> 'a MABP tstream) Data\<cdot>(snd ( tsRec\<cdot>((tsMap invBoolPair)\<cdot>(x . c_dr))))]))"
 
 
-subsection \<open>medium_rs\<close>
-  (* medium from receiver to sender *)
-  (* input: c_ar, output: c_as, transport booleans *)
+subsection \<open>medium\<close>
 
 
-definition medRS_TSPF :: "bool stream \<Rightarrow> ('a MABP tstream\<^sup>\<Omega>) ufun" where
-"medRS_TSPF bst\<equiv> Abs_cufun (\<lambda> x. (ubclDom\<cdot>x = {c_ar})
-                           \<leadsto> Abs_ubundle([c_as \<mapsto> (tsMap::(bool \<Rightarrow> 'a MABP) \<Rightarrow> bool tstream \<rightarrow> 'a MABP tstream) Bool\<cdot>(tsMed\<cdot>(tsMap invBool\<cdot>(x . c_ar))\<cdot>bst)]))"
+definition med_TSPF :: "bool stream \<Rightarrow> channel \<Rightarrow> channel \<Rightarrow> ('b \<Rightarrow> 'a MABP) \<Rightarrow> ('a MABP tstream\<^sup>\<Omega>)ufun" where
+"med_TSPF bst In Out f \<equiv> Abs_cufun (\<lambda> x. (ubDom\<cdot>x = {In})
+                           \<leadsto> Abs_ubundle([Out \<mapsto> tsMap f\<cdot>(tsMed\<cdot>(tsMap (inv f)\<cdot>(x . In))\<cdot>bst)]))"
 
-abbreviation tsMedRSAbb  :: "bool stream \<Rightarrow> 'a MABP tstream\<^sup>\<Omega> \<Rightarrow> ('a MABP tstream\<^sup>\<Omega>) option" where
-"tsMedRSAbb bst x \<equiv> ((ubclDom\<cdot>x = {c_ar})
-                            \<leadsto> Abs_ubundle([c_as \<mapsto> (tsMap::(bool \<Rightarrow> 'a MABP) \<Rightarrow> bool tstream \<rightarrow> 'a MABP tstream) Bool\<cdot>(tsMed\<cdot>(tsMap invBool\<cdot>(x . c_ar))\<cdot>bst)]))"
+abbreviation tsMedAbb  :: "bool stream \<Rightarrow> channel \<Rightarrow> channel \<Rightarrow> ('b \<Rightarrow> 'a MABP) \<Rightarrow> 'a MABP tstream\<^sup>\<Omega> \<Rightarrow> ('a MABP tstream\<^sup>\<Omega>) option" where
+"tsMedAbb bst In Out f x \<equiv> ((ubDom\<cdot>x = {In})
+                           \<leadsto> Abs_ubundle([Out \<mapsto> tsMap f\<cdot>(tsMed\<cdot>(tsMap (inv f)\<cdot>(x . In))\<cdot>bst)]))"
 
 
 subsection \<open>medium_sr\<close>
   (* medium from sender to receiver *)
   (* input: c_ds, output: c_dr, transport (data, bool) tuples *)
+abbreviation medSR_TSPF :: "bool stream \<Rightarrow>('a MABP tstream\<^sup>\<Omega>)ufun" where
+"medSR_TSPF bst\<equiv> med_TSPF bst c_ds c_dr BoolPair"
 
 
-definition medSR_TSPF :: "bool stream \<Rightarrow> ('a MABP tstream\<^sup>\<Omega>) ufun" where
-"medSR_TSPF bst\<equiv> Abs_cufun (\<lambda> x. (ubclDom\<cdot>x = {c_ds})
-  \<leadsto> Abs_ubundle([c_dr \<mapsto> (tsMap:: ('a \<times> bool \<Rightarrow> 'a MABP) \<Rightarrow> ('a \<times> bool) tstream \<rightarrow> 'a MABP tstream) 
-            BoolPair\<cdot>(tsMed\<cdot>(tsMap invBoolPair\<cdot>(x . c_ds))\<cdot>bst)]))"
-
-abbreviation medSR_TSPFAbb  :: "bool stream \<Rightarrow> 'a MABP tstream\<^sup>\<Omega> \<Rightarrow> ('a MABP tstream\<^sup>\<Omega>) option" where
-"medSR_TSPFAbb bst x \<equiv> ((ubclDom\<cdot>x = {c_ds})
-  \<leadsto> Abs_ubundle([c_dr \<mapsto> (tsMap:: ('a \<times> bool \<Rightarrow> 'a MABP) \<Rightarrow> ('a \<times> bool) tstream \<rightarrow> 'a MABP tstream) 
-            BoolPair\<cdot>(tsMed\<cdot>(tsMap invBoolPair\<cdot>(x . c_ds))\<cdot>bst)]))"
-
-
-subsection\<open>medium\<close>
-
-
-definition med_TSPF :: "bool stream \<Rightarrow> channel \<Rightarrow> channel \<Rightarrow> ('a MABP tstream\<^sup>\<Omega>)ufun" where
-"med_TSPF bst In Out\<equiv> Abs_cufun (\<lambda> x. (ubDom\<cdot>x = {In})
-                           \<leadsto> Abs_ubundle([Out \<mapsto> (tsMap::(bool \<Rightarrow> 'a MABP) \<Rightarrow> bool tstream \<rightarrow> 'a MABP tstream) Bool\<cdot>(tsMed\<cdot>(tsMap invBool\<cdot>(x . In))\<cdot>bst)]))"
-
-abbreviation tsMedAbb  :: "bool stream \<Rightarrow> channel \<Rightarrow> channel \<Rightarrow> 'a MABP tstream\<^sup>\<Omega> \<Rightarrow> ('a MABP tstream\<^sup>\<Omega>) option" where
-"tsMedAbb bst In Out x \<equiv> ((ubDom\<cdot>x = {In})
-                           \<leadsto> Abs_ubundle([Out \<mapsto> (tsMap::(bool \<Rightarrow> 'a MABP) \<Rightarrow> bool tstream \<rightarrow> 'a MABP tstream) Bool\<cdot>(tsMed\<cdot>(tsMap invBool\<cdot>(x . In))\<cdot>bst)]))"
+subsection \<open>medium_rs\<close>
+  (* medium from receiver to sender *)
+  (* input: c_ar, output: c_as, transport booleans *)
+abbreviation medRS_TSPF :: "bool stream \<Rightarrow>('a MABP tstream\<^sup>\<Omega>)ufun" where
+"medRS_TSPF bst\<equiv> med_TSPF bst c_ar c_as Bool"
 
 
 subsection \<open>sender\<close>
@@ -560,6 +544,442 @@ lemma sender_tspfran: "ufRan\<cdot>(senderTSPF se) = {c_ds}"
 
 subsection \<open>medium\<close>
 
+subsubsection \<open>defs\<close>
+
+definition medH :: "bool stream \<Rightarrow> channel \<Rightarrow> ('b \<Rightarrow> 'a MABP) \<Rightarrow> 'a MABP tstream\<^sup>\<Omega> \<Rightarrow> 'a MABP tstream"  where
+"medH bst In f\<equiv> (\<lambda> x. tsMap f\<cdot>(tsMed\<cdot>(tsMap (inv f)\<cdot>(x  .  In))\<cdot>bst))"
+
+lemma medh_cont [simp]: "cont (medH bst In f)"
+  by (simp add: medH_def)
+
+lemma medh_contlub: assumes "chain Y"
+  shows "(medH bst In f) ((\<Squnion>i. Y i)) = (\<Squnion>i. ((medH bst In f) ((Y i))))"
+  apply (rule cont2contlubE)
+  by (simp_all add: assms)
+
+lemma to_medh: "tsMap f\<cdot>(tsMed\<cdot>(tsMap (inv f)\<cdot>(x  .  In))\<cdot>bst)
+                  = ((medH :: bool stream \<Rightarrow> channel \<Rightarrow> ('b \<Rightarrow> 'a MABP) \<Rightarrow> 'a MABP tstream\<^sup>\<Omega> \<Rightarrow> 'a MABP tstream) bst In f) x"
+  by (simp add: medH_def)
+
+subsubsection \<open>pre\<close>
+
+lemma tsmed_input_cont [simp]: "cont (\<lambda> x. tsMed\<cdot>x\<cdot>bst)"
+  by simp
+
+lemma tsmed_input_mono [simp]: "monofun (\<lambda> x. tsMed\<cdot>x\<cdot>bst)"
+  using cont2mono tsmed_input_cont by blast
+(*
+lemma medrs_tsb_well [simp]: "ubWell [as \<mapsto> tsMap Bool\<cdot>(tsMed\<cdot>(tsMap invBool\<cdot>(x . ar))\<cdot>bst)]"
+  apply (rule ubwellI)
+  apply (simp add: usOkay_tstream_def)
+  by (simp add: tsmap_tsdom_range) (*"tsDom\<cdot>(tsMap f\<cdot>ts) \<subseteq> range f"*)
+  (*by (simp add: tsmap_tsdom_range usOkay_tstream_def)*)*)
+
+lemma med_tsb_well [simp]: assumes "(ctype::channel \<Rightarrow> 'a MABP set) Out = range f"        (*bool \<rightarrow> f*)
+  shows "ubWell [Out \<mapsto> (tsMap f\<cdot>(tsMed\<cdot>(tsMap (inv f)\<cdot>((x . In):: 'a MABP tstream))\<cdot>bst):: 'a MABP tstream)]"
+  apply (rule ubwellI)
+  apply (simp add: usclOkay_tstream_def)
+  by (simp add: assms tsmap_tsdom_range)
+
+
+lemma med_tsb_dom: assumes "(ctype::channel \<Rightarrow> 'a MABP set) Out = range f"
+  shows "ubDom\<cdot>(Abs_ubundle([Out \<mapsto> (tsMap f\<cdot>(tsMed\<cdot>(tsMap (inv f)\<cdot>((x . In):: 'a MABP tstream))\<cdot>bst):: 'a MABP tstream)])) = {Out}"
+  by  (simp add: assms ubdom_ubrep_eq)
+
+
+subsubsection \<open>cont\<close>
+
+  (* prerequirement for the mono proofs of the tspf *)
+lemma med_tsb_mono: assumes "(ctype::channel \<Rightarrow> 'a MABP set) Out = range f"
+  shows "\<And>(x::'a MABP tstream\<^sup>\<Omega>) y::'a MABP tstream\<^sup>\<Omega>.
+       ubDom\<cdot>x = {In} \<Longrightarrow> x \<sqsubseteq> y \<Longrightarrow> Abs_ubundle([Out \<mapsto> (tsMap f\<cdot>(tsMed\<cdot>(tsMap (inv f)\<cdot>((x . In):: 'a MABP tstream))\<cdot>bst):: 'a MABP tstream)]) \<sqsubseteq> Abs_ubundle([Out \<mapsto> (tsMap f\<cdot>(tsMed\<cdot>(tsMap (inv f)\<cdot>((y . In):: 'a MABP tstream))\<cdot>bst):: 'a MABP tstream)])"
+  apply (simp_all add: ubdom_below ubdom_ubrep_eq ubgetch_ubrep_eq)
+  apply (rule ub_below)
+  apply (simp_all add: assms ubdom_below ubdom_ubrep_eq ubgetch_ubrep_eq)
+  by (simp add: monofun_cfun_arg monofun_cfun_fun)
+
+lemma med_mono [simp]: assumes "(ctype::channel \<Rightarrow> 'a MABP set) Out = range f"
+  shows "monofun (\<lambda> x::'a MABP tstream\<^sup>\<Omega>. (ubDom\<cdot>x = {In})
+                           \<leadsto> Abs_ubundle([Out \<mapsto> tsMap
+                                f\<cdot>(tsMed\<cdot>(tsMap (inv f)\<cdot>((x . In):: 'a MABP tstream))\<cdot>bst)]))"
+  by (simp add: assms med_tsb_mono monofun_def some_below ubdom_below)
+
+lemma med_tsb_getc: assumes "chain (Y::nat \<Rightarrow> 'a MABP tstream\<^sup>\<Omega>)" and "ubDom\<cdot>(\<Squnion>i::nat. Y i) = {In}"
+                      and "c = Out" and "(ctype::channel \<Rightarrow> 'a MABP set) Out = range f"
+  shows "(\<Squnion>i::nat. Abs_ubundle([Out \<mapsto> tsMap f\<cdot>(tsMed\<cdot>(tsMap (inv f)\<cdot>(Y i  .  In))\<cdot>bst)]))  .  Out
+          =  (\<Squnion>i::nat. (Abs_ubundle([Out \<mapsto> tsMap f\<cdot>(tsMed\<cdot>(tsMap (inv f)\<cdot>(Y i  .  In))\<cdot>bst)])) . Out)"
+proof -
+  have f1: "\<forall>c f u ca ua s. ((ctype c::'a MABP set) \<noteq> range f \<or> ubDom\<cdot>u \<noteq> {ca} \<or> u \<notsqsubseteq> ua) \<or> Abs_ubundle [c \<mapsto> tsMap f\<cdot> (tsMed\<cdot>(tsMap (inv f)\<cdot>(u . ca)::'b tstream)\<cdot> s)] \<sqsubseteq> Abs_ubundle [c \<mapsto> tsMap f\<cdot>(tsMed\<cdot>(tsMap (inv f)\<cdot>(ua . ca))\<cdot>s)]"
+    using med_tsb_mono by blast
+  obtain nn :: "(nat \<Rightarrow> 'a MABP tstream\<^sup>\<Omega>) \<Rightarrow> nat" where
+    f2: "\<forall>f. (\<not> chain f \<or> (\<forall>n. f n \<sqsubseteq> f (Suc n))) \<and> (chain f \<or> f (nn f) \<notsqsubseteq> f (Suc (nn f)))"
+    using po_class.chain_def by moura
+  then have f3: "\<forall>n. Y n \<sqsubseteq> Y (Suc n)"
+    by (metis (no_types) assms(1))
+  have "ubDom\<cdot> (Y (nn (\<lambda>n. Abs_ubundle [Out \<mapsto> tsMap f\<cdot> (tsMed\<cdot>(tsMap (inv f)\<cdot>(Y n . In))\<cdot> bst)]))) = {In}"
+    by (simp add: assms(1) assms(2))
+  then have "chain (\<lambda>n. Abs_ubundle [Out \<mapsto> tsMap f\<cdot> (tsMed\<cdot>(tsMap (inv f)\<cdot>(Y n . In))\<cdot>bst)])"
+    using f3 f2 f1 by (meson assms(4))
+  then show ?thesis
+    using contlub_cfun_arg by blast
+qed
+(*proof (rule lubgetCh)
+  have f2: "\<And> i. ubDom\<cdot>(Y i) =  ubDom\<cdot>(\<Squnion>i. Y i)"
+    by (simp add: assms(1))
+  show tb_chain: "chain (\<lambda>i::nat. Abs_ubundle([Out \<mapsto> tsMap f\<cdot>(tsMed\<cdot>(tsMap (inv f)\<cdot>(Y i  .  In))\<cdot>bst)]))"
+    by (simp add: assms po_class.chainE po_class.chainI med_tsb_mono)
+  show "Out \<in> ubDom\<cdot>(\<Squnion>i::nat. Abs_ubundle([Out \<mapsto> tsMap f\<cdot>(tsMed\<cdot>(tsMap (inv f)\<cdot>(Y i  .  In))\<cdot>bst)]))"
+    by (metis (mono_tags, lifting) assms(4) insertCI med_tsb_dom tb_chain ubdom_chain_eq2)
+qed*)
+
+lemma med_cont [simp]: assumes "(ctype::channel \<Rightarrow> 'a MABP set) Out = range f"
+  shows "cont (\<lambda> x::'a MABP tstream\<^sup>\<Omega>. (ubDom\<cdot>x = {In})
+                           \<leadsto> Abs_ubundle([Out \<mapsto> (tsMap
+                                f\<cdot>(tsMed\<cdot>(tsMap (inv f)\<cdot>((x . In):: 'a MABP tstream))\<cdot>bst):: 'a MABP tstream)]))"
+proof -
+  have g1: " \<And>Y::nat \<Rightarrow> 'a MABP tstream\<^sup>\<Omega>. chain Y \<Longrightarrow> ubDom\<cdot>(\<Squnion>i::nat. Y i) = {In} \<Longrightarrow>
+       ubDom\<cdot>(\<Squnion>i::nat. Abs_ubundle([Out \<mapsto> tsMap f\<cdot>(tsMed\<cdot>(tsMap (inv f)\<cdot>(Y i  .  In))\<cdot>bst)])) = {Out}"
+  proof -
+    fix Y :: "nat \<Rightarrow> 'a MABP tstream\<^sup>\<Omega>"
+    assume a1: "chain Y"
+    assume a2: "UBundle.ubDom\<cdot>(\<Squnion>i. Y i) = {In}"
+    obtain nn :: "(nat \<Rightarrow> 'a MABP tstream\<^sup>\<Omega>) \<Rightarrow> nat" where
+      f3: "\<forall>f. (\<not> chain f \<or> (\<forall>n. f n \<sqsubseteq> f (Suc n))) \<and> (chain f \<or> f (nn f) \<notsqsubseteq> f (Suc (nn f)))"
+      using po_class.chain_def by moura
+    have f4: "\<forall>c f u ca ua s. ((ctype c::'a MABP set) \<noteq> range f \<or> UBundle.ubDom\<cdot>u \<noteq> {ca} \<or> u \<notsqsubseteq> ua) \<or> Abs_ubundle [c \<mapsto> tsMap f\<cdot> (tsMed\<cdot>(tsMap (inv f)\<cdot>(u . ca)::'b tstream)\<cdot> s)] \<sqsubseteq> Abs_ubundle [c \<mapsto> tsMap f\<cdot>(tsMed\<cdot>(tsMap (inv f)\<cdot>(ua . ca))\<cdot>s)]"
+      using med_tsb_mono by blast
+    have "UBundle.ubDom\<cdot> (Y (nn (\<lambda>n. Abs_ubundle [Out \<mapsto> tsMap f\<cdot> (tsMed\<cdot>(tsMap (inv f)\<cdot>(Y n . In))\<cdot> bst)]))) = {In}"
+      using a2 a1 by simp
+    then have "chain (\<lambda>n. Abs_ubundle [Out \<mapsto> tsMap f\<cdot> (tsMed\<cdot>(tsMap (inv f)\<cdot>(Y n . In))\<cdot>bst)])"
+      using f4 f3 a1 by (meson assms)
+    then show "UBundle.ubDom\<cdot> (\<Squnion>n. Abs_ubundle [Out \<mapsto> tsMap f\<cdot> (tsMed\<cdot>(tsMap (inv f)\<cdot>(Y n . In))\<cdot>bst)]) = {Out}"
+      using assms med_tsb_dom ubdom_chain_eq2 by blast
+  qed
+  (*  by (metis (mono_tags, lifting) assms med_tsb_dom med_tsb_mono po_class.chain_def ubdom_chain_eq2)*) (*geht auch, aber langsam*)
+
+  have g2: "\<And>Y::nat \<Rightarrow> 'a MABP tstream\<^sup>\<Omega>. chain Y \<Longrightarrow> ubDom\<cdot>(\<Squnion>i::nat. Y i) = {In} \<Longrightarrow>
+       Abs_ubundle([Out \<mapsto> tsMap f\<cdot>(tsMed\<cdot>(tsMap (inv f)\<cdot>((\<Squnion>i::nat. Y i)  .  In))\<cdot>bst)]) \<sqsubseteq> (\<Squnion>i::nat. Abs_ubundle([Out \<mapsto> tsMap f\<cdot>(tsMed\<cdot>(tsMap (inv f)\<cdot>(Y i  .  In))\<cdot>bst)]))"
+    apply (rule ub_below)
+    apply (simp_all add: ubdom_below ubdom_ubrep_eq ubgetch_ubrep_eq g1)
+    apply (simp add: assms med_tsb_getc ubdom_ubrep_eq ubgetch_ubrep_eq)
+    apply (simp add: medh_contlub to_medh)
+    proof -
+      fix Y :: "nat \<Rightarrow> 'a MABP tstream\<^sup>\<Omega>" and c :: channel
+      assume a1: "chain Y"
+      assume a2: "UBundle.ubDom\<cdot>(\<Squnion>i. Y i) = {In}"
+      assume a3: "c \<in> UBundle.ubDom\<cdot> (Abs_ubundle [Out \<mapsto> \<Squnion>i. medH bst In f (Y i)])"
+      have f4: "\<forall>f. \<not> ubWell f \<or> Rep_ubundle (Abs_ubundle f::'a MABP tstream\<^sup>\<Omega>) = f"
+        by auto
+      obtain nn :: "(nat \<Rightarrow> 'a MABP tstream) \<Rightarrow> (nat \<Rightarrow> 'a MABP tstream) \<Rightarrow> nat" where
+        f5: "\<forall>f fa. f (nn fa f) \<noteq> fa (nn fa f) \<or> Lub f = Lub fa"
+        by (meson lub_eq)
+      have f6: "\<forall>c f ca u s. (ctype c::'a MABP set) \<noteq> range f \<or> ubWell [c \<mapsto> tsMap f\<cdot> (tsMed\<cdot>(tsMap (inv f)\<cdot>(u . ca)::'b tstream)\<cdot>s)]"
+        by auto
+      then have f7: "ubWell [Out \<mapsto> medH bst In f (Y (nn (\<lambda>n. medH bst In f (Y n)) (\<lambda>n. Abs_ubundle [Out \<mapsto> medH bst In f (Y n)] . Out)))]"
+        by (simp add: assms to_medh)
+      have f8: "\<forall>f n. \<not> chain f \<or> UBundle.ubDom\<cdot>(f n::'a MABP tstream\<^sup>\<Omega>) = UBundle.ubDom\<cdot>(Lub f)"
+        using ubdom_chain_eq2 by blast
+      have f9: "\<forall>c f u ca ua s. ((ctype c::'a MABP set) \<noteq> range f \<or> UBundle.ubDom\<cdot>u \<noteq> {ca} \<or> u \<notsqsubseteq> ua) \<or> Abs_ubundle [c \<mapsto> tsMap f\<cdot> (tsMed\<cdot>(tsMap (inv f)\<cdot>(u . ca)::'b tstream)\<cdot> s)] \<sqsubseteq> Abs_ubundle [c \<mapsto> tsMap f\<cdot>(tsMed\<cdot>(tsMap (inv f)\<cdot>(ua . ca))\<cdot>s)]"
+        using med_tsb_mono by blast
+      obtain nna :: "(nat \<Rightarrow> 'a MABP tstream\<^sup>\<Omega>) \<Rightarrow> nat" where
+        f10: "\<forall>f. (\<not> chain f \<or> (\<forall>n. f n \<sqsubseteq> f (Suc n))) \<and> (chain f \<or> f (nna f) \<notsqsubseteq> f (Suc (nna f)))"
+        using po_class.chain_def by moura
+      then have "Abs_ubundle [Out \<mapsto> medH bst In f (Y (nna (\<lambda>n. Abs_ubundle [Out \<mapsto> medH bst In f (Y n)])))] \<sqsubseteq> Abs_ubundle [Out \<mapsto> medH bst In f (Y (Suc (nna (\<lambda>n. Abs_ubundle [Out \<mapsto> medH bst In f (Y n)]))))]"
+        using f9 a2 a1 by (simp add: assms to_medh)
+      then have f11: "chain (\<lambda>n. Abs_ubundle [Out \<mapsto> medH bst In f (Y n)])"
+        using f10 by auto
+      then have "UBundle.ubDom\<cdot> (Abs_ubundle [Out \<mapsto> medH bst In f (Y (nn (\<lambda>n. medH bst In f (Y n)) (\<lambda>n. Abs_ubundle [Out \<mapsto> medH bst In f (Y n)] . Out)))]) = UBundle.ubDom\<cdot> (\<Squnion>n. Abs_ubundle [Out \<mapsto> medH bst In f (Y n)])"
+        using f8 by meson
+      then have "[Out \<mapsto> medH bst In f (Y (nn (\<lambda>n. medH bst In f (Y n)) (\<lambda>n. Abs_ubundle [Out \<mapsto> medH bst In f (Y n)] . Out)))] Out = Some (Abs_ubundle [Out \<mapsto> medH bst In f (Y (nn (\<lambda>n. medH bst In f (Y n)) (\<lambda>n. Abs_ubundle [Out \<mapsto> medH bst In f (Y n)] . Out)))] . Out)"
+        using f8 f7 ubdom_insert ubgetchE by fastforce
+      then have "Abs_ubundle [Out \<mapsto> medH bst In f (Y (nn (\<lambda>n. medH bst In f (Y n)) (\<lambda>n. Abs_ubundle [Out \<mapsto> medH bst In f (Y n)] . Out)))] . Out = medH bst In f (Y (nn (\<lambda>n. medH bst In f (Y n)) (\<lambda>n. Abs_ubundle [Out \<mapsto> medH bst In f (Y n)] . Out)))"
+        by force
+      then have "(\<Squnion>n. Abs_ubundle [Out \<mapsto> medH bst In f (Y n)] . Out) = (\<Squnion>n. medH bst In f (Y n))"
+        using f5 by meson
+      then have "ubWell [Out \<mapsto> (Rep_ubundle (\<Squnion>n. Abs_ubundle [Out \<mapsto> medH bst In f (Y n)]))\<rightharpoonup>Out] \<longrightarrow> [Out \<mapsto> (Rep_ubundle (\<Squnion>n. Abs_ubundle [Out \<mapsto> medH bst In f (Y n)]))\<rightharpoonup>Out] c = Some (Abs_ubundle [Out \<mapsto> \<Squnion>n. medH bst In f (Y n)] . c)"
+        using f11 f4 a3 by (metis (no_types) contlub_cfun_arg ubgetchE ubgetch_insert)
+      then have f12: "ubWell [Out \<mapsto> (Rep_ubundle (\<Squnion>n. Abs_ubundle [Out \<mapsto> medH bst In f (Y n)]))\<rightharpoonup>Out] \<longrightarrow> c = Out \<and> (((Rep_ubundle (\<Squnion>n. Abs_ubundle [Out \<mapsto> medH bst In f (Y n)]))\<rightharpoonup>Out) = ((Rep_ubundle (Abs_ubundle [Out \<mapsto> \<Squnion>n. medH bst In f (Y n)]))\<rightharpoonup>c)) \<or> c \<noteq> Out \<and> (None = Some ((Rep_ubundle (Abs_ubundle [Out \<mapsto> \<Squnion>n. medH bst In f (Y n)]))\<rightharpoonup>c))"
+        using map_upd_Some_unfold ubgetch_insert by fastforce
+      then have f13: "ubWell [Out \<mapsto> (Rep_ubundle (\<Squnion>n. Abs_ubundle [Out \<mapsto> medH bst In f (Y n)]))\<rightharpoonup>Out] \<longrightarrow> Abs_ubundle [Out \<mapsto> \<Squnion>n. medH bst In f (Y n)] . c = (\<Squnion>n. Abs_ubundle [Out \<mapsto> medH bst In f (Y n)]) . Out"
+        by (metis (no_types) option.simps(3) ubgetch_insert)
+      have f14: "Rep_ubundle (Abs_ubundle [Out \<mapsto> medH bst In f (Y (v2_4 (\<lambda>n. UBundle.ubDom\<cdot> (Abs_ubundle [Out \<mapsto> medH bst In f (Y n)])) (\<lambda>n. UBundle.ubDom\<cdot>(Y n))))]) = [Out \<mapsto> medH bst In f (Y (v2_4 (\<lambda>n. UBundle.ubDom\<cdot> (Abs_ubundle [Out \<mapsto> medH bst In f (Y n)])) (\<lambda>n. UBundle.ubDom\<cdot>(Y n))))]"
+        using f6 by (simp add: assms to_medh)
+      have "dom [Out \<mapsto> medH bst In f (Y (v2_4 (\<lambda>n. UBundle.ubDom\<cdot> (Abs_ubundle [Out \<mapsto> medH bst In f (Y n)])) (\<lambda>n. UBundle.ubDom\<cdot>(Y n))))] = insert Out (dom (Map.empty::channel \<Rightarrow> 'a MABP tstream option))"
+        by force
+      then have "Out \<in> UBundle.ubDom\<cdot> (\<Squnion>n. Abs_ubundle [Out \<mapsto> medH bst In f (Y n)])"
+        using f14 f11 f8 by (metis (no_types) dom_empty singletonI ubdom_insert)
+      then show "Abs_ubundle [Out \<mapsto> \<Squnion>n. medH bst In f (Y n)] . c \<sqsubseteq> (\<Squnion>n. Abs_ubundle [Out \<mapsto> medH bst In f (Y n)]) . c"
+        using f13 f12 by (simp add: ubWell_single_channel)
+    qed
+
+  show ?thesis
+    apply (rule contI2)
+    apply (simp add: assms ub_below)
+    apply (simp add: med_tsb_getc ubdom_ubrep_eq ubgetch_ubrep_eq)
+    apply (simp add: medh_contlub to_medh)
+    proof -
+      have f1: "\<forall>u ua. (u::'a MABP tstream\<^sup>\<Omega>) \<notsqsubseteq> ua \<or> Some u \<sqsubseteq> Some ua"
+        using some_below by blast
+      have f2: "\<forall>fa. (\<not> chain fa \<or> UBundle.ubDom\<cdot>(Lub fa) \<noteq> {In}) \<or> Abs_ubundle [Out \<mapsto> tsMap f\<cdot> (tsMed\<cdot>(tsMap (inv f)\<cdot>(Lub fa . In))\<cdot> bst)] \<sqsubseteq> (\<Squnion>n. Abs_ubundle [Out \<mapsto> tsMap f\<cdot> (tsMed\<cdot>(tsMap (inv f)\<cdot>(fa n . In))\<cdot>bst)])"
+        using g2 by blast
+      obtain nn :: "(nat \<Rightarrow> ('a MABP tstream\<^sup>\<Omega>) option) \<Rightarrow> (nat \<Rightarrow> ('a MABP tstream\<^sup>\<Omega>) option) \<Rightarrow> nat" where
+        f3: "\<forall>f fa. f (nn fa f) \<noteq> fa (nn fa f) \<or> Lub f = Lub fa"
+        by (meson lub_eq)
+      have "Some (Abs_ubundle [Out \<mapsto> medH bst In f (v0_0 (nn (\<lambda>n. Some (Abs_ubundle [Out \<mapsto> tsMap f\<cdot> (tsMed\<cdot>(tsMap (inv f)\<cdot>(v0_0 n . In))\<cdot> bst)])) (\<lambda>n. Some (Abs_ubundle [Out \<mapsto> medH bst In f (v0_0 n)]))))]) = Some (Abs_ubundle [Out \<mapsto> tsMap f\<cdot> (tsMed\<cdot> (tsMap (inv f)\<cdot> (v0_0 (nn (\<lambda>n. Some (Abs_ubundle [Out \<mapsto> tsMap f\<cdot> (tsMed\<cdot> (tsMap (inv f)\<cdot>(v0_0 n . In))\<cdot> bst)])) (\<lambda>n. Some (Abs_ubundle [Out \<mapsto> medH bst In f (v0_0 n)]))) . In))\<cdot> bst)])"
+        by (simp add: to_medh)
+      then have f4: "(\<Squnion>n. Some (Abs_ubundle [Out \<mapsto> medH bst In f (v0_0 n)])) = (\<Squnion>n. Some (Abs_ubundle [Out \<mapsto> tsMap f\<cdot> (tsMed\<cdot>(tsMap (inv f)\<cdot>(v0_0 n . In))\<cdot>bst)]))"
+        using f3 by meson
+      have f5: "\<forall>f. \<not> chain f \<or> (\<Squnion>n. Some (f n::'a MABP tstream\<^sup>\<Omega>)) = Some (Lub f)"
+        using some_lub_chain_eq3 by blast
+      have f6: "\<forall>c f u ca ua s. ((ctype c::'a MABP set) \<noteq> range f \<or> UBundle.ubDom\<cdot>u \<noteq> {ca} \<or> u \<notsqsubseteq> ua) \<or> Abs_ubundle [c \<mapsto> tsMap f\<cdot> (tsMed\<cdot>(tsMap (inv f)\<cdot>(u . ca)::'b tstream)\<cdot> s)] \<sqsubseteq> Abs_ubundle [c \<mapsto> tsMap f\<cdot>(tsMed\<cdot>(tsMap (inv f)\<cdot>(ua . ca))\<cdot>s)]"
+        by (metis (no_types) med_tsb_mono)
+      obtain nna :: "(nat \<Rightarrow> 'a MABP tstream\<^sup>\<Omega>) \<Rightarrow> nat" where
+        f7: "\<forall>f. (\<not> chain f \<or> (\<forall>n. f n \<sqsubseteq> f (Suc n))) \<and> (chain f \<or> f (nna f) \<notsqsubseteq> f (Suc (nna f)))"
+        using po_class.chain_def by moura
+      then have f8: "(\<not> chain (\<lambda>n. Abs_ubundle [Out \<mapsto> tsMap f\<cdot> (tsMed\<cdot>(tsMap (inv f)\<cdot>(v0_0 n . In))\<cdot> bst)]) \<or> (\<forall>n. Abs_ubundle [Out \<mapsto> tsMap f\<cdot> (tsMed\<cdot>(tsMap (inv f)\<cdot>(v0_0 n . In))\<cdot> bst)] \<sqsubseteq> Abs_ubundle [Out \<mapsto> tsMap f\<cdot> (tsMed\<cdot>(tsMap (inv f)\<cdot>(v0_0 (Suc n) . In))\<cdot> bst)])) \<and> (chain (\<lambda>n. Abs_ubundle [Out \<mapsto> tsMap f\<cdot> (tsMed\<cdot>(tsMap (inv f)\<cdot>(v0_0 n . In))\<cdot> bst)]) \<or> Abs_ubundle [Out \<mapsto> tsMap f\<cdot> (tsMed\<cdot> (tsMap (inv f)\<cdot> (v0_0 (nna (\<lambda>n. Abs_ubundle [Out \<mapsto> tsMap f\<cdot> (tsMed\<cdot>(tsMap (inv f)\<cdot>(v0_0 n . In))\<cdot> bst)])) . In))\<cdot> bst)] \<notsqsubseteq> Abs_ubundle [Out \<mapsto> tsMap f\<cdot> (tsMed\<cdot> (tsMap (inv f)\<cdot> (v0_0 (Suc (nna (\<lambda>n. Abs_ubundle [Out \<mapsto> tsMap f\<cdot> (tsMed\<cdot> (tsMap (inv f)\<cdot>(v0_0 n . In))\<cdot> bst)]))) . In))\<cdot> bst)])"
+        by auto
+      { assume "Some (Abs_ubundle [Out \<mapsto> \<Squnion>n. medH bst In f (v0_0 n)]) \<notsqsubseteq> (\<Squnion>n. Some (Abs_ubundle [Out \<mapsto> medH bst In f (v0_0 n)]))"
+        { assume "(Some (Abs_ubundle [Out \<mapsto> \<Squnion>n. medH bst In f (v0_0 n)]) \<sqsubseteq> (\<Squnion>n. Some (Abs_ubundle [Out \<mapsto> medH bst In f (v0_0 n)]))) \<noteq> (Some (Abs_ubundle [Out \<mapsto> tsMap f\<cdot> (tsMed\<cdot>(tsMap (inv f)\<cdot>(Lub v0_0 . In))\<cdot> bst)]) \<sqsubseteq> Some (\<Squnion>n. Abs_ubundle [Out \<mapsto> tsMap f\<cdot> (tsMed\<cdot>(tsMap (inv f)\<cdot>(v0_0 n . In))\<cdot>bst)]))"
+        then have "(\<Squnion>n. Some (Abs_ubundle [Out \<mapsto> medH bst In f (v0_0 n)])) \<noteq> Some (\<Squnion>n. Abs_ubundle [Out \<mapsto> tsMap f\<cdot> (tsMed\<cdot>(tsMap (inv f)\<cdot>(v0_0 n . In))\<cdot>bst)]) \<or> (\<Squnion>n. medH bst In f (v0_0 n)) \<noteq> tsMap f\<cdot> (tsMed\<cdot>(tsMap (inv f)\<cdot>(Lub v0_0 . In))\<cdot>bst)"
+          by auto
+        moreover
+          { assume "(\<Squnion>n. medH bst In f (v0_0 n)) \<noteq> tsMap f\<cdot> (tsMed\<cdot>(tsMap (inv f)\<cdot>(Lub v0_0 . In))\<cdot>bst)"
+          then have "(UBundle.ubDom\<cdot>(Lub v0_0) \<noteq> {In} \<or> \<not> chain v0_0) \<or> Some (Abs_ubundle [Out \<mapsto> \<Squnion>n. medH bst In f (v0_0 n)]) \<sqsubseteq> (\<Squnion>n. Some (Abs_ubundle [Out \<mapsto> medH bst In f (v0_0 n)]))"
+            by (metis (no_types) cont2contlubE medh_cont to_medh)
+          }
+        ultimately have "(UBundle.ubDom\<cdot>(Lub v0_0) \<noteq> {In} \<or> \<not> chain v0_0) \<or> Some (Abs_ubundle [Out \<mapsto> \<Squnion>n. medH bst In f (v0_0 n)]) \<sqsubseteq> (\<Squnion>n. Some (Abs_ubundle [Out \<mapsto> medH bst In f (v0_0 n)]))"
+          using f8 f7 f6 f5 f4 assms by force
+        }
+        then have "(UBundle.ubDom\<cdot>(Lub v0_0) \<noteq> {In} \<or> \<not> chain v0_0) \<or> Some (Abs_ubundle [Out \<mapsto> \<Squnion>n. medH bst In f (v0_0 n)]) \<sqsubseteq> (\<Squnion>n. Some (Abs_ubundle [Out \<mapsto> medH bst In f (v0_0 n)]))"
+          using f2 f1 by meson
+      }
+      then have f9: "(UBundle.ubDom\<cdot>(Lub v0_0) \<noteq> {In} \<or> \<not> chain v0_0) \<or> Some (Abs_ubundle [Out \<mapsto> \<Squnion>n. medH bst In f (v0_0 n)]) \<sqsubseteq> (\<Squnion>n. Some (Abs_ubundle [Out \<mapsto> medH bst In f (v0_0 n)]))"
+        by meson
+      obtain uu :: "nat \<Rightarrow> 'a MABP tstream\<^sup>\<Omega>" where
+        "(\<exists>v0. (UBundle.ubDom\<cdot>(Lub v0) = {In} \<and> chain v0) \<and> Some (Abs_ubundle [Out \<mapsto> \<Squnion>uua. medH bst In f (v0 uua)]) \<notsqsubseteq> (\<Squnion>uua. Some (Abs_ubundle [Out \<mapsto> medH bst In f (v0 uua)]))) = ((UBundle.ubDom\<cdot>(Lub uu) = {In} \<and> chain uu) \<and> Some (Abs_ubundle [Out \<mapsto> \<Squnion>uua. medH bst In f (uu uua)]) \<notsqsubseteq> (\<Squnion>uua. Some (Abs_ubundle [Out \<mapsto> medH bst In f (uu uua)])))"
+        by (metis (no_types))
+      then show "\<forall>fa. UBundle.ubDom\<cdot>(Lub fa) = {In} \<longrightarrow> chain fa \<longrightarrow> Some (Abs_ubundle [Out \<mapsto> \<Squnion>n. medH bst In f (fa n)]) \<sqsubseteq> (\<Squnion>n. Some (Abs_ubundle [Out \<mapsto> medH bst In f (fa n)]))"
+        proof -
+          obtain nnb :: "(nat \<Rightarrow> ('a MABP tstream\<^sup>\<Omega>) option) \<Rightarrow> (nat \<Rightarrow> ('a MABP tstream\<^sup>\<Omega>) option) \<Rightarrow> nat" where
+            f1: "\<forall>f fa. f (nnb fa f) \<noteq> fa (nnb fa f) \<or> Lub f = Lub fa"
+            by (meson lub_eq)
+          have "Some (Abs_ubundle [Out \<mapsto> medH bst In f (v0_0a (nnb (\<lambda>n. Some (Abs_ubundle [Out \<mapsto> tsMap f\<cdot> (tsMed\<cdot> (tsMap (inv f)\<cdot>(v0_0a n . In))\<cdot> bst)])) (\<lambda>n. Some (Abs_ubundle [Out \<mapsto> medH bst In f (v0_0a n)]))))]) = Some (Abs_ubundle [Out \<mapsto> tsMap f\<cdot> (tsMed\<cdot> (tsMap (inv f)\<cdot> (v0_0a (nnb (\<lambda>n. Some (Abs_ubundle [Out \<mapsto> tsMap f\<cdot> (tsMed\<cdot> (tsMap (inv f)\<cdot>(v0_0a n . In))\<cdot> bst)])) (\<lambda>n. Some (Abs_ubundle [Out \<mapsto> medH bst In f (v0_0a n)]))) . In))\<cdot> bst)])"
+            by (simp add: to_medh)
+          then have f2: "(\<Squnion>n. Some (Abs_ubundle [Out \<mapsto> medH bst In f (v0_0a n)])) = (\<Squnion>n. Some (Abs_ubundle [Out \<mapsto> tsMap f\<cdot> (tsMed\<cdot>(tsMap (inv f)\<cdot>(v0_0a n . In))\<cdot>bst)]))"
+            using f1 by meson
+          have f3: "\<forall>c f u ca ua s. (ctype c::'a MABP set) \<noteq> range f \<or> UBundle.ubDom\<cdot>u \<noteq> {ca} \<or> u \<notsqsubseteq> ua \<or> Abs_ubundle [c \<mapsto> tsMap f\<cdot> (tsMed\<cdot>(tsMap (inv f)\<cdot>(u . ca)::'b tstream)\<cdot> s)] \<sqsubseteq> Abs_ubundle [c \<mapsto> tsMap f\<cdot>(tsMed\<cdot>(tsMap (inv f)\<cdot>(ua . ca))\<cdot>s)]"
+            using med_tsb_mono by blast
+          obtain nnc :: "(nat \<Rightarrow> 'a MABP tstream\<^sup>\<Omega>) \<Rightarrow> nat" where
+            f4: "\<forall>f. (\<not> chain f \<or> (\<forall>n. f n \<sqsubseteq> f (Suc n))) \<and> (chain f \<or> f (nnc f) \<notsqsubseteq> f (Suc (nnc f)))"
+            using po_class.chain_def by moura
+          then have f5: "(\<not> chain (\<lambda>n. Abs_ubundle [Out \<mapsto> tsMap f\<cdot> (tsMed\<cdot>(tsMap (inv f)\<cdot>(v0_0a n . In))\<cdot> bst)]) \<or> (\<forall>n. Abs_ubundle [Out \<mapsto> tsMap f\<cdot> (tsMed\<cdot>(tsMap (inv f)\<cdot>(v0_0a n . In))\<cdot> bst)] \<sqsubseteq> Abs_ubundle [Out \<mapsto> tsMap f\<cdot> (tsMed\<cdot>(tsMap (inv f)\<cdot>(v0_0a (Suc n) . In))\<cdot> bst)])) \<and> (chain (\<lambda>n. Abs_ubundle [Out \<mapsto> tsMap f\<cdot> (tsMed\<cdot>(tsMap (inv f)\<cdot>(v0_0a n . In))\<cdot> bst)]) \<or> Abs_ubundle [Out \<mapsto> tsMap f\<cdot> (tsMed\<cdot> (tsMap (inv f)\<cdot> (v0_0a (nnc (\<lambda>n. Abs_ubundle [Out \<mapsto> tsMap f\<cdot> (tsMed\<cdot>(tsMap (inv f)\<cdot>(v0_0a n . In))\<cdot> bst)])) . In))\<cdot> bst)] \<notsqsubseteq> Abs_ubundle [Out \<mapsto> tsMap f\<cdot> (tsMed\<cdot> (tsMap (inv f)\<cdot> (v0_0a (Suc (nnc (\<lambda>n. Abs_ubundle [Out \<mapsto> tsMap f\<cdot> (tsMed\<cdot> (tsMap (inv f)\<cdot>(v0_0a n . In))\<cdot> bst)]))) . In))\<cdot> bst)])"
+            by auto
+          obtain uua :: "nat \<Rightarrow> 'a MABP tstream\<^sup>\<Omega>" where
+            "(\<exists>v0. (UBundle.ubDom\<cdot>(Lub v0) = {In} \<and> chain v0) \<and> Some (Abs_ubundle [Out \<mapsto> \<Squnion>uua. medH bst In f (v0 uua)]) \<notsqsubseteq> (\<Squnion>uua. Some (Abs_ubundle [Out \<mapsto> medH bst In f (v0 uua)]))) = ((UBundle.ubDom\<cdot>(Lub uua) = {In} \<and> chain uua) \<and> Some (Abs_ubundle [Out \<mapsto> \<Squnion>uuaa. medH bst In f (uua uuaa)]) \<notsqsubseteq> (\<Squnion>uuaa. Some (Abs_ubundle [Out \<mapsto> medH bst In f (uua uuaa)])))"
+            by moura
+          moreover
+          { assume "Some (Abs_ubundle [Out \<mapsto> \<Squnion>n. medH bst In f (uua n)]) \<notsqsubseteq> (\<Squnion>n. Some (Abs_ubundle [Out \<mapsto> medH bst In f (uua n)]))"
+            { assume "(Some (Abs_ubundle [Out \<mapsto> \<Squnion>n. medH bst In f (uua n)]) \<sqsubseteq> (\<Squnion>n. Some (Abs_ubundle [Out \<mapsto> medH bst In f (uua n)]))) \<noteq> (Some (Abs_ubundle [Out \<mapsto> tsMap f\<cdot> (tsMed\<cdot>(tsMap (inv f)\<cdot>(Lub uua . In))\<cdot> bst)]) \<sqsubseteq> Some (\<Squnion>n. Abs_ubundle [Out \<mapsto> tsMap f\<cdot> (tsMed\<cdot>(tsMap (inv f)\<cdot>(uua n . In))\<cdot>bst)]))"
+            moreover
+              { assume "(\<Squnion>n. medH bst In f (uua n)) \<noteq> tsMap f\<cdot>(tsMed\<cdot>(tsMap (inv f)\<cdot>(Lub uua . In))\<cdot>bst)"
+              then have "(UBundle.ubDom\<cdot>(Lub uua) \<noteq> {In} \<or> \<not> chain uua) \<or> Some (Abs_ubundle [Out \<mapsto> \<Squnion>n. medH bst In f (uua n)]) \<sqsubseteq> (\<Squnion>n. Some (Abs_ubundle [Out \<mapsto> medH bst In f (uua n)]))"
+                by (metis (no_types) medh_contlub to_medh)
+              }
+              ultimately have "(UBundle.ubDom\<cdot>(Lub uua) \<noteq> {In} \<or> \<not> chain uua) \<or> Some (Abs_ubundle [Out \<mapsto> \<Squnion>n. medH bst In f (uua n)]) \<sqsubseteq> (\<Squnion>n. Some (Abs_ubundle [Out \<mapsto> medH bst In f (uua n)]))"
+                using f5 f4 f3 f2 assms f5 
+                proof -
+                  have f1: "\<forall>f. \<not> chain f \<or> Some (Lub f::'a MABP tstream\<^sup>\<Omega>) = (\<Squnion>n. Some (f n))"
+                    using some_lub_chain_eq by auto
+                  have f2: "\<forall>c f u ca ua s. ((ctype c::'a MABP set) \<noteq> range f \<or> UBundle.ubDom\<cdot>u \<noteq> {ca} \<or> u \<notsqsubseteq> ua) \<or> Abs_ubundle [c \<mapsto> tsMap f\<cdot> (tsMed\<cdot>(tsMap (inv f)\<cdot>(u . ca)::'b tstream)\<cdot> s)] \<sqsubseteq> Abs_ubundle [c \<mapsto> tsMap f\<cdot>(tsMed\<cdot>(tsMap (inv f)\<cdot>(ua . ca))\<cdot>s)]"
+                    by (metis (no_types) med_tsb_mono)
+                  obtain nnd :: "(nat \<Rightarrow> 'a MABP tstream\<^sup>\<Omega>) \<Rightarrow> nat" where
+                    f3: "\<forall>f. (\<not> chain f \<or> (\<forall>n. f n \<sqsubseteq> f (Suc n))) \<and> (chain f \<or> f (nnd f) \<notsqsubseteq> f (Suc (nnd f)))"
+                    using po_class.chain_def by moura
+                  then have f4: "(\<not> chain (\<lambda>n. Abs_ubundle [Out \<mapsto> tsMap f\<cdot> (tsMed\<cdot>(tsMap (inv f)\<cdot>(uua n . In))\<cdot> bst)]) \<or> (\<forall>n. Abs_ubundle [Out \<mapsto> tsMap f\<cdot> (tsMed\<cdot>(tsMap (inv f)\<cdot>(uua n . In))\<cdot> bst)] \<sqsubseteq> Abs_ubundle [Out \<mapsto> tsMap f\<cdot> (tsMed\<cdot>(tsMap (inv f)\<cdot>(uua (Suc n) . In))\<cdot> bst)])) \<and> (chain (\<lambda>n. Abs_ubundle [Out \<mapsto> tsMap f\<cdot> (tsMed\<cdot>(tsMap (inv f)\<cdot>(uua n . In))\<cdot>bst)]) \<or> Abs_ubundle [Out \<mapsto> tsMap f\<cdot> (tsMed\<cdot> (tsMap (inv f)\<cdot> (uua (nnd (\<lambda>n. Abs_ubundle [Out \<mapsto> tsMap f\<cdot> (tsMed\<cdot> (tsMap (inv f)\<cdot>(uua n . In))\<cdot> bst)])) . In))\<cdot> bst)] \<notsqsubseteq> Abs_ubundle [Out \<mapsto> tsMap f\<cdot> (tsMed\<cdot> (tsMap (inv f)\<cdot> (uua (Suc (nnd (\<lambda>n. Abs_ubundle [Out \<mapsto> tsMap f\<cdot> (tsMed\<cdot> (tsMap (inv f)\<cdot>(uua n . In))\<cdot> bst)]))) . In))\<cdot> bst)])"
+                    by meson
+                  obtain nne :: "(nat \<Rightarrow> ('a MABP tstream\<^sup>\<Omega>) option) \<Rightarrow> (nat \<Rightarrow> ('a MABP tstream\<^sup>\<Omega>) option) \<Rightarrow> nat" where
+                    f5: "\<forall>f fa. f (nne fa f) \<noteq> fa (nne fa f) \<or> Lub f = Lub fa"
+                    by (meson lub_eq)
+                  have "Some (Abs_ubundle [Out \<mapsto> medH bst In f (uua (nne (\<lambda>n. Some (Abs_ubundle [Out \<mapsto> tsMap f\<cdot> (tsMed\<cdot> (tsMap (inv f)\<cdot>(uua n . In))\<cdot> bst)])) (\<lambda>n. Some (Abs_ubundle [Out \<mapsto> medH bst In f (uua n)]))))]) = Some (Abs_ubundle [Out \<mapsto> tsMap f\<cdot> (tsMed\<cdot> (tsMap (inv f)\<cdot> (uua (nne (\<lambda>n. Some (Abs_ubundle [Out \<mapsto> tsMap f\<cdot> (tsMed\<cdot> (tsMap (inv f)\<cdot>(uua n . In))\<cdot> bst)])) (\<lambda>n. Some (Abs_ubundle [Out \<mapsto> medH bst In f (uua n)]))) . In))\<cdot> bst)])"
+                    by (simp add: to_medh)
+                  then have f6: "(\<Squnion>n. Some (Abs_ubundle [Out \<mapsto> medH bst In f (uua n)])) = (\<Squnion>n. Some (Abs_ubundle [Out \<mapsto> tsMap f\<cdot> (tsMed\<cdot>(tsMap (inv f)\<cdot>(uua n . In))\<cdot>bst)]))"
+                    using f5 by meson
+                  { assume "Some (Abs_ubundle [Out \<mapsto> tsMap f\<cdot> (tsMed\<cdot>(tsMap (inv f)\<cdot>(Lub uua . In))\<cdot> bst)]) \<sqsubseteq> Some (\<Squnion>n. Abs_ubundle [Out \<mapsto> tsMap f\<cdot> (tsMed\<cdot>(tsMap (inv f)\<cdot>(uua n . In))\<cdot>bst)])"
+                  then have "UBundle.ubDom\<cdot>(Lub uua) \<noteq> {In} \<or> \<not> chain uua \<or> Some (Abs_ubundle [Out \<mapsto> \<Squnion>n. medH bst In f (uua n)]) \<sqsubseteq> (\<Squnion>n. Some (Abs_ubundle [Out \<mapsto> medH bst In f (uua n)]))"
+                    using f6 f4 f3 f2 f1 \<open>(\<Squnion>n::nat. medH (bst::bool stream) (In::channel) (f::'b::countable \<Rightarrow> 'a::countable MABP) ((uua::nat \<Rightarrow> 'a::countable MABP tstream\<^sup>\<Omega>) n)) \<noteq> tsMap f\<cdot> (tsMed\<cdot>(tsMap (inv f)\<cdot>(Lub uua . In))\<cdot> bst) \<Longrightarrow> (UBundle.ubDom\<cdot>(Lub uua) \<noteq> {In} \<or> \<not> chain uua) \<or> Some (Abs_ubundle [Out::channel \<mapsto> \<Squnion>n::nat. medH bst In f (uua n)]) \<sqsubseteq> (\<Squnion>n::nat. Some (Abs_ubundle [Out \<mapsto> medH bst In f (uua n)]))\<close> assms by force
+                  }
+                  then show ?thesis
+                    using \<open>(Some (Abs_ubundle [Out::channel \<mapsto> \<Squnion>n::nat. medH (bst::bool stream) (In::channel) (f::'b::countable \<Rightarrow> 'a::countable MABP) ((uua::nat \<Rightarrow> 'a::countable MABP tstream\<^sup>\<Omega>) n)]) \<sqsubseteq> (\<Squnion>n::nat. Some (Abs_ubundle [Out \<mapsto> medH bst In f (uua n)]))) \<noteq> (Some (Abs_ubundle [Out \<mapsto> tsMap f\<cdot> (tsMed\<cdot>(tsMap (inv f)\<cdot>(Lub uua . In))\<cdot> bst)]) \<sqsubseteq> Some (\<Squnion>n::nat. Abs_ubundle [Out \<mapsto> tsMap f\<cdot> (tsMed\<cdot>(tsMap (inv f)\<cdot>(uua n . In))\<cdot>bst)]))\<close> by linarith
+                qed
+            }
+            then have "(UBundle.ubDom\<cdot>(Lub uua) \<noteq> {In} \<or> \<not> chain uua) \<or> Some (Abs_ubundle [Out \<mapsto> \<Squnion>n. medH bst In f (uua n)]) \<sqsubseteq> (\<Squnion>n. Some (Abs_ubundle [Out \<mapsto> medH bst In f (uua n)]))"
+              using g2 some_below by blast
+          }
+          ultimately show ?thesis
+            by blast
+        qed
+    qed
+qed
+
+
+
+(**************************************************************************************************)
+  subsubsection \<open>tspf_well\<close>
+ (* show that the mediumRSTSPF template  fulfills the tickcount property *)
+lemma med_tick: assumes "ubDom\<cdot>b = {In}" and "(ubLen b) = n" and "#bst=\<infinity>" and "#bst=\<infinity>" and "(ctype::channel \<Rightarrow> 'a MABP set) Out = range f"
+  shows "n \<le> (ubclLen (Abs_ubundle([Out \<mapsto> (tsMap f\<cdot>(tsMed\<cdot>(tsMap (inv f)\<cdot>((b . In):: 'a MABP tstream))\<cdot>bst):: 'a MABP tstream)])))"
+proof -
+  have "(ubLen b) = usclLen (b . c_ar)"
+    sledgehammer
+    apply (simp add: ubLen_def tsTickCount_def ubGetCh_def)
+    apply (simp add: assms(1))
+    apply (simp add: slen_def)
+    
+sorry
+  hence f1: "n = #\<surd>(b . c_ar)"
+    using assms(2) by blast
+  hence f2: "n \<le> #\<surd>(tsMap f\<cdot>(tsMed\<cdot>(tsMap (inv f)\<cdot>(b  .  c_ar))\<cdot>bst))"
+    by (simp add: assms(3))
+  have g2: "ubLen tb = (if ubDom\<cdot>tb \<noteq> {} then 
+                                          (LEAST ln. ln\<in>{(#\<surd>(tb. c)) | c. c \<in> ubDom\<cdot>tb}) else \<infinity>)"
+    apply (simp add: ubLen_def usLen_tstream_def tsTickCount_def tslen_def)
+    apply (simp add:slen_def)
+    apply rule
+    
+    sorry
+
+  have g1: "(\<forall> c \<in> ubDom\<cdot>tb. n \<le> #\<surd>(tb . c)) \<longrightarrow> (n \<le> ubLen tb)"
+  proof -
+    have "\<forall>p. Collect p = {} \<or> p (Least p::lnat)"
+      by (metis (no_types) Collect_cong LeastI bot_set_def empty_iff mem_Collect_eq)
+    then have "{l. l \<in> {#\<surd> tb . c |c. c \<in> UBundle.ubDom\<cdot>tb}} = {} \<or> (\<exists>c. (LEAST l. l \<in> {#\<surd> tb . c |c. c \<in> UBundle.ubDom\<cdot>tb}) = #\<surd> tb . c \<and> c \<in> UBundle.ubDom\<cdot>tb)"
+      
+    proof -
+      { assume "{} \<noteq> {l. l \<in> {#\<surd> tb . c |c. c \<in> UBundle.ubDom\<cdot>tb}}"
+        then have "(LEAST l. l \<in> {#\<surd> tb . c |c. c \<in> UBundle.ubDom\<cdot>tb}) \<in> {#\<surd> tb . c |c. c \<in> UBundle.ubDom\<cdot>tb}"
+          by (metis (lifting) \<open>\<forall>p::lnat \<Rightarrow> bool. Collect p = {} \<or> p (Least p)\<close>)
+then have ?thesis
+  by blast }
+  then show ?thesis
+    by blast
+qed 
+    then show ?thesis
+      using g2 by force
+  qed
+
+
+  show ?thesis
+  apply (simp add: f1)
+    
+    (*
+    apply (rule tsbtick_geI)
+    apply (simp add: medrs_tsb_dom ubgetch_ubrep_eq)
+    using f2 by force
+
+
+lemma tsbtick_geI: assumes "\<forall> c \<in> tsbDom\<cdot>tb. n \<le> #\<surd>(tb . c)"
+  shows "n \<le> #\<surd>tsb tb"
+  by (metis (no_types, lifting) assms inf_ub tsbtick_insert tsbtick_min_on_channel)
+  *)sorry
+qed
+
+
+  (* a medium is a tspf if the oracle bool stream bst is infinitly long*)
+lemma med_well [simp]: assumes "#bst=\<infinity>" and "(ctype::channel \<Rightarrow> 'a MABP set) Out = range f"
+  shows "ufWell (\<Lambda> (x::'a MABP tstream\<^sup>\<Omega>). (ubDom\<cdot>x = {In})
+                           \<leadsto> Abs_ubundle([Out \<mapsto> (tsMap
+                                f\<cdot>(tsMed\<cdot>(tsMap (inv f)\<cdot>((x . In):: 'a MABP tstream))\<cdot>bst):: 'a MABP tstream)]))"
+  apply (rule ufun_wellI)
+  apply (simp_all add: domIff2)
+    apply (simp_all add:  ubclDom_ubundle_def ubDom_def)
+  apply (simp_all add: domIff2)
+  
+
+(*    apply (simp_all add: domIff2 med_tsb_dom)
+    apply (subst tsbtick_single_ch1, simp)
+    by (simp add: assms tsbtick_single_ch2)
+*)
+  
+  sorry
+(**************************************************************************************************)
+
+lemma med_revsubst: "Abs_cufun (tsMedAbb bst In Out f) = (med_TSPF bst In Out f)"
+  by (simp add: med_TSPF_def)
+
+
+lemma med_tspfdom: assumes "#bst =\<infinity>" and "(ctype::channel \<Rightarrow> 'a MABP set) Out = range f"
+  shows "ufDom\<cdot>((med_TSPF :: bool stream \<Rightarrow> channel \<Rightarrow> channel \<Rightarrow> ('b \<Rightarrow> 'a MABP) \<Rightarrow> ('a MABP tstream\<^sup>\<Omega>)ufun) bst In Out f) = {In}"
+  apply (simp add: med_TSPF_def)
+  apply (simp add: ufdom_insert)
+  apply (simp_all add: assms)
+  apply (simp add: domIff)
+  by (metis ubclDom_h ubclDom_ubundle_def)
+
+
+lemma med_tspfran: assumes "#bst =\<infinity>" and "(ctype::channel \<Rightarrow> 'a MABP set) Out = range f"
+  shows "ufRan\<cdot>((med_TSPF :: bool stream \<Rightarrow> channel \<Rightarrow> channel \<Rightarrow> ('b \<Rightarrow> 'a MABP) \<Rightarrow> ('a MABP tstream\<^sup>\<Omega>)ufun) bst In Out f) = {Out}"
+  apply (simp add: med_TSPF_def)
+  apply (simp add: ufran_least med_tspfdom assms)
+  apply (simp add: med_revsubst med_tspfdom assms)
+  by (metis assms(2) med_tsb_dom ubclDom_ubundle_def ubcldom_least_cs)
+
+  (* now special lemmata for TSPS instantiation *)
+
+lemma med_well2 [simp]: assumes "#({True} \<ominus> bst) = \<infinity>" and "(ctype::channel \<Rightarrow> 'a MABP set) Out = range f"
+  shows "ufWell (\<Lambda> (x::'a MABP tstream\<^sup>\<Omega>). (ubDom\<cdot>x = {In})
+                           \<leadsto> Abs_ubundle([Out \<mapsto> (tsMap
+                                f\<cdot>(tsMed\<cdot>(tsMap (inv f)\<cdot>((x . In):: 'a MABP tstream))\<cdot>bst):: 'a MABP tstream)]))"
+proof -
+   have "#bst = \<infinity>"
+     by (simp add: med_ora_length assms(1))
+   thus ?thesis
+     by (simp add: assms(2))
+ qed
+
+lemma med_tspfdom2: assumes "#({True} \<ominus> bst) = \<infinity>" and "(ctype::channel \<Rightarrow> 'a MABP set) Out = range f"
+  shows "ufDom\<cdot>((med_TSPF :: bool stream \<Rightarrow> channel \<Rightarrow> channel \<Rightarrow> ('b \<Rightarrow> 'a MABP) \<Rightarrow> ('a MABP tstream\<^sup>\<Omega>)ufun) bst In Out f) = {In}"
+proof -
+  have "#bst = \<infinity>"
+    by (simp add: med_ora_length assms(1))
+  thus ?thesis
+    by (simp add: assms med_tspfdom)
+qed
+
+lemma med_tspfran2: assumes "#({True} \<ominus> bst) = \<infinity>" and "(ctype::channel \<Rightarrow> 'a MABP set) Out = range f"
+  shows "ufRan\<cdot>((med_TSPF :: bool stream \<Rightarrow> channel \<Rightarrow> channel \<Rightarrow> ('b \<Rightarrow> 'a MABP) \<Rightarrow> ('a MABP tstream\<^sup>\<Omega>)ufun) bst In Out f) = {Out}"
+proof -
+  have "#bst = \<infinity>"
+    by (simp add: med_ora_length assms(1))
+  thus ?thesis
+    by (simp add: assms(2) med_tspfran)
+qed
+
+  (* necessary for TSPS instantiation *)
+lemma med_tsps_dom1 [simp]: assumes "(ctype::channel \<Rightarrow> 'a MABP set) Out = range f" shows
+  "g = (med_TSPF :: bool stream \<Rightarrow> channel \<Rightarrow> channel \<Rightarrow> ('b \<Rightarrow> 'a MABP) \<Rightarrow> ('a MABP tstream\<^sup>\<Omega>)ufun) ora In Out f \<and> #({True} \<ominus> ora) = \<infinity> \<Longrightarrow> ufDom\<cdot>g = {In}"
+  by (simp add: assms med_tspfdom2)
+
+lemma med_tsps_dom2 [simp]: assumes "(ctype::channel \<Rightarrow> 'a MABP set) Out = range f" shows
+  "\<exists>ora::bool stream. g = (med_TSPF :: bool stream \<Rightarrow> channel \<Rightarrow> channel \<Rightarrow> ('b \<Rightarrow> 'a MABP) \<Rightarrow> ('a MABP tstream\<^sup>\<Omega>)ufun) ora In Out f \<and> #({True} \<ominus> ora) = \<infinity> 
+                               \<Longrightarrow> ufDom\<cdot>g = {In}"
+  using assms med_tsps_dom1 by auto
+ 
+lemma med_tsps_ran1 [simp]: assumes "(ctype::channel \<Rightarrow> 'a MABP set) Out = range f" shows
+  "g = (med_TSPF :: bool stream \<Rightarrow> channel \<Rightarrow> channel \<Rightarrow> ('b \<Rightarrow> 'a MABP) \<Rightarrow> ('a MABP tstream\<^sup>\<Omega>)ufun) ora In Out f \<and> #({True} \<ominus> ora) = \<infinity> \<Longrightarrow> ufRan\<cdot>g = {Out}"
+  by (simp add: assms med_tspfran2)
+
+lemma med_tsps_ran2 [simp]: assumes "(ctype::channel \<Rightarrow> 'a MABP set) Out = range f" shows
+  "\<exists>ora::bool stream. g = (med_TSPF :: bool stream \<Rightarrow> channel \<Rightarrow> channel \<Rightarrow> ('b \<Rightarrow> 'a MABP) \<Rightarrow> ('a MABP tstream\<^sup>\<Omega>)ufun) ora In Out f \<and> #({True} \<ominus> ora) = \<infinity> 
+                               \<Longrightarrow> ufRan\<cdot>g = {Out}"
+  using assms med_tsps_ran1 by auto
+
+lemma med_ufIsWeak: assumes "#bst =\<infinity>" and "(ctype::channel \<Rightarrow> 'a MABP set) Out = range f" shows
+  "ufIsWeak (Abs_ufun(\<Lambda> (x::'a MABP tstream\<^sup>\<Omega>). (ubDom\<cdot>x = {In})
+                           \<leadsto> Abs_ubundle([Out \<mapsto> tsMap
+                                f\<cdot>(tsMed\<cdot>(tsMap (inv f)\<cdot>(x . In))\<cdot>bst)])))"
+  apply (simp add: ufIsWeak_def)
+  apply (simp add: assms)
+  by (simp add: assms domIff med_tick ubclLen_ubundle_def)
 
 
 subsection\<open>id\<close>
@@ -640,13 +1060,19 @@ lift_definition RCV :: "(('a MABP tstream\<^sup>\<Omega>) ufun) uspec" is
   apply(subst h1)
   by(simp add: uspecWell_def)
 
-lift_definition MEDSR :: "(('a MABP tstream\<^sup>\<Omega>) ufun) uspec" is
-"Rev {medSR_TSPF ora | ora. #({True} \<ominus> ora)=\<infinity>}"
-  sorry
+lift_definition MEDSR :: "('a MABP tstream\<^sup>\<Omega>) ufun uspec" is "Rev {medSR_TSPF ora | ora. #({True} \<ominus> ora)=\<infinity>}"
+  apply (simp add: inv_def)
+  apply (simp add: uspecWell_def)
+  apply (subst ufclDom_ufun_def)
+  apply (subst  ufclRan_ufun_def)
+  using med_tsps_dom2 med_tsps_ran2 by (metis ctype_MABP.simps(4))
 
-lift_definition MEDRS :: "(('a MABP tstream\<^sup>\<Omega>) ufun) uspec" is
-"Rev {medRS_TSPF ora | ora. #({True} \<ominus> ora)=\<infinity>}"
-  sorry
+lift_definition MEDRS :: "('a MABP tstream\<^sup>\<Omega>) ufun uspec" is "Rev {medRS_TSPF ora | ora. #({True} \<ominus> ora)=\<infinity>}"
+  apply (simp add: inv_def)
+  apply (simp add: uspecWell_def)
+  apply (subst ufclDom_ufun_def)
+  apply (subst  ufclRan_ufun_def)
+  using med_tsps_dom2 med_tsps_ran2 by (metis ctype_MABP.simps(5))
 
 lift_definition ID :: "(('a MABP tstream\<^sup>\<Omega>) ufun) uspec" is
 "Rev {idTSPF}"
