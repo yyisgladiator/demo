@@ -826,62 +826,23 @@ qed
 (**************************************************************************************************)
   subsubsection \<open>tspf_well\<close>
  (* show that the mediumRSTSPF template  fulfills the tickcount property *)
-lemma med_tick: assumes "ubDom\<cdot>b = {In}" and "(ubLen b) = n" and "#bst=\<infinity>" and "#bst=\<infinity>" and "(ctype::channel \<Rightarrow> 'a MABP set) Out = range f"
+lemma med_tick: assumes "ubDom\<cdot>b = {In}" and "(ubLen b) = n" and "#bst=\<infinity>" and "(ctype::channel \<Rightarrow> 'a MABP set) Out = range f"
   shows "n \<le> (ubclLen (Abs_ubundle([Out \<mapsto> (tsMap f\<cdot>(tsMed\<cdot>(tsMap (inv f)\<cdot>((b . In):: 'a MABP tstream))\<cdot>bst):: 'a MABP tstream)])))"
 proof -
-  have "(ubLen b) = usclLen (b . c_ar)"
-    sledgehammer
-    apply (simp add: ubLen_def tsTickCount_def ubGetCh_def)
-    apply (simp add: assms(1))
-    apply (simp add: slen_def)
-    
-sorry
-  hence f1: "n = #\<surd>(b . c_ar)"
+  have "(ubLen b) = usclLen\<cdot>(b . In)"
+    apply (rule uslen_ubLen_ch3)
+    by (metis assms(1) ubclDom_ubundle_def)
+  hence f1: "n = usclLen\<cdot>(b . In)"
     using assms(2) by blast
-  hence f2: "n \<le> #\<surd>(tsMap f\<cdot>(tsMed\<cdot>(tsMap (inv f)\<cdot>(b  .  c_ar))\<cdot>bst))"
-    by (simp add: assms(3))
-  have g2: "ubLen tb = (if ubDom\<cdot>tb \<noteq> {} then 
-                                          (LEAST ln. ln\<in>{(#\<surd>(tb. c)) | c. c \<in> ubDom\<cdot>tb}) else \<infinity>)"
-    apply (simp add: ubLen_def usLen_tstream_def tsTickCount_def tslen_def)
-    apply (simp add:slen_def)
-    apply rule
-    
-    sorry
-
-  have g1: "(\<forall> c \<in> ubDom\<cdot>tb. n \<le> #\<surd>(tb . c)) \<longrightarrow> (n \<le> ubLen tb)"
-  proof -
-    have "\<forall>p. Collect p = {} \<or> p (Least p::lnat)"
-      by (metis (no_types) Collect_cong LeastI bot_set_def empty_iff mem_Collect_eq)
-    then have "{l. l \<in> {#\<surd> tb . c |c. c \<in> UBundle.ubDom\<cdot>tb}} = {} \<or> (\<exists>c. (LEAST l. l \<in> {#\<surd> tb . c |c. c \<in> UBundle.ubDom\<cdot>tb}) = #\<surd> tb . c \<and> c \<in> UBundle.ubDom\<cdot>tb)"
-      
-    proof -
-      { assume "{} \<noteq> {l. l \<in> {#\<surd> tb . c |c. c \<in> UBundle.ubDom\<cdot>tb}}"
-        then have "(LEAST l. l \<in> {#\<surd> tb . c |c. c \<in> UBundle.ubDom\<cdot>tb}) \<in> {#\<surd> tb . c |c. c \<in> UBundle.ubDom\<cdot>tb}"
-          by (metis (lifting) \<open>\<forall>p::lnat \<Rightarrow> bool. Collect p = {} \<or> p (Least p)\<close>)
-then have ?thesis
-  by blast }
-  then show ?thesis
-    by blast
-qed 
-    then show ?thesis
-      using g2 by force
-  qed
-
-
+  hence f2: "n \<le> usclLen\<cdot>(tsMap f\<cdot>(tsMed\<cdot>(tsMap (inv f)\<cdot>(b  .  In))\<cdot>bst))"
+    by (simp add: assms(3) usclLen_tstream_def)
   show ?thesis
-  apply (simp add: f1)
-    
-    (*
-    apply (rule tsbtick_geI)
-    apply (simp add: medrs_tsb_dom ubgetch_ubrep_eq)
-    using f2 by force
-
-
-lemma tsbtick_geI: assumes "\<forall> c \<in> tsbDom\<cdot>tb. n \<le> #\<surd>(tb . c)"
-  shows "n \<le> #\<surd>tsb tb"
-  by (metis (no_types, lifting) assms inf_ub tsbtick_insert tsbtick_min_on_channel)
-  *)sorry
+    apply (simp add: ubclLen_ubundle_def)
+    apply (rule ubLen_geI)
+    apply (simp add: assms med_tsb_dom ubgetch_ubrep_eq)
+    by (simp add: assms f2 ubdom_ubrep_eq)
 qed
+
 
 
   (* a medium is a tspf if the oracle bool stream bst is infinitly long*)
@@ -890,17 +851,8 @@ lemma med_well [simp]: assumes "#bst=\<infinity>" and "(ctype::channel \<Rightar
                            \<leadsto> Abs_ubundle([Out \<mapsto> (tsMap
                                 f\<cdot>(tsMed\<cdot>(tsMap (inv f)\<cdot>((x . In):: 'a MABP tstream))\<cdot>bst):: 'a MABP tstream)]))"
   apply (rule ufun_wellI)
-  apply (simp_all add: domIff2)
-    apply (simp_all add:  ubclDom_ubundle_def ubDom_def)
-  apply (simp_all add: domIff2)
-  
-
-(*    apply (simp_all add: domIff2 med_tsb_dom)
-    apply (subst tsbtick_single_ch1, simp)
-    by (simp add: assms tsbtick_single_ch2)
-*)
-  
-  sorry
+  apply (simp_all add: domIff2 assms)
+  by  (simp_all add: med_tsb_dom assms ubclDom_ubundle_def)
 (**************************************************************************************************)
 
 lemma med_revsubst: "Abs_cufun (tsMedAbb bst In Out f) = (med_TSPF bst In Out f)"
@@ -978,8 +930,12 @@ lemma med_ufIsWeak: assumes "#bst =\<infinity>" and "(ctype::channel \<Rightarro
                            \<leadsto> Abs_ubundle([Out \<mapsto> tsMap
                                 f\<cdot>(tsMed\<cdot>(tsMap (inv f)\<cdot>(x . In))\<cdot>bst)])))"
   apply (simp add: ufIsWeak_def)
-  apply (simp add: assms)
-  by (simp add: assms domIff med_tick ubclLen_ubundle_def)
+  apply (simp add: assms domIff)
+
+  apply (subst med_tick)
+  apply (simp_all add: assms ubclLen_ubundle_def)
+
+sorry
 
 
 subsection\<open>id\<close>
