@@ -822,8 +822,6 @@ proof -
 qed
 
 
-
-(**************************************************************************************************)
   subsubsection \<open>tspf_well\<close>
  (* show that the mediumRSTSPF template  fulfills the tickcount property *)
 lemma med_tick: assumes "ubDom\<cdot>b = {In}" and "(ubLen b) = n" and "#bst=\<infinity>" and "(ctype::channel \<Rightarrow> 'a MABP set) Out = range f"
@@ -853,7 +851,7 @@ lemma med_well [simp]: assumes "#bst=\<infinity>" and "(ctype::channel \<Rightar
   apply (rule ufun_wellI)
   apply (simp_all add: domIff2 assms)
   by  (simp_all add: med_tsb_dom assms ubclDom_ubundle_def)
-(**************************************************************************************************)
+
 
 lemma med_revsubst: "Abs_cufun (tsMedAbb bst In Out f) = (med_TSPF bst In Out f)"
   by (simp add: med_TSPF_def)
@@ -888,6 +886,7 @@ proof -
      by (simp add: assms(2))
  qed
 
+
 lemma med_tspfdom2: assumes "#({True} \<ominus> bst) = \<infinity>" and "(ctype::channel \<Rightarrow> 'a MABP set) Out = range f"
   shows "ufDom\<cdot>((med_TSPF :: bool stream \<Rightarrow> channel \<Rightarrow> channel \<Rightarrow> ('b \<Rightarrow> 'a MABP) \<Rightarrow> ('a MABP tstream\<^sup>\<Omega>)ufun) bst In Out f) = {In}"
 proof -
@@ -896,6 +895,7 @@ proof -
   thus ?thesis
     by (simp add: assms med_tspfdom)
 qed
+
 
 lemma med_tspfran2: assumes "#({True} \<ominus> bst) = \<infinity>" and "(ctype::channel \<Rightarrow> 'a MABP set) Out = range f"
   shows "ufRan\<cdot>((med_TSPF :: bool stream \<Rightarrow> channel \<Rightarrow> channel \<Rightarrow> ('b \<Rightarrow> 'a MABP) \<Rightarrow> ('a MABP tstream\<^sup>\<Omega>)ufun) bst In Out f) = {Out}"
@@ -906,24 +906,29 @@ proof -
     by (simp add: assms(2) med_tspfran)
 qed
 
+
   (* necessary for TSPS instantiation *)
 lemma med_tsps_dom1 [simp]: assumes "(ctype::channel \<Rightarrow> 'a MABP set) Out = range f" shows
   "g = (med_TSPF :: bool stream \<Rightarrow> channel \<Rightarrow> channel \<Rightarrow> ('b \<Rightarrow> 'a MABP) \<Rightarrow> ('a MABP tstream\<^sup>\<Omega>)ufun) ora In Out f \<and> #({True} \<ominus> ora) = \<infinity> \<Longrightarrow> ufDom\<cdot>g = {In}"
   by (simp add: assms med_tspfdom2)
 
+
 lemma med_tsps_dom2 [simp]: assumes "(ctype::channel \<Rightarrow> 'a MABP set) Out = range f" shows
   "\<exists>ora::bool stream. g = (med_TSPF :: bool stream \<Rightarrow> channel \<Rightarrow> channel \<Rightarrow> ('b \<Rightarrow> 'a MABP) \<Rightarrow> ('a MABP tstream\<^sup>\<Omega>)ufun) ora In Out f \<and> #({True} \<ominus> ora) = \<infinity> 
                                \<Longrightarrow> ufDom\<cdot>g = {In}"
   using assms med_tsps_dom1 by auto
- 
+
+
 lemma med_tsps_ran1 [simp]: assumes "(ctype::channel \<Rightarrow> 'a MABP set) Out = range f" shows
   "g = (med_TSPF :: bool stream \<Rightarrow> channel \<Rightarrow> channel \<Rightarrow> ('b \<Rightarrow> 'a MABP) \<Rightarrow> ('a MABP tstream\<^sup>\<Omega>)ufun) ora In Out f \<and> #({True} \<ominus> ora) = \<infinity> \<Longrightarrow> ufRan\<cdot>g = {Out}"
   by (simp add: assms med_tspfran2)
+
 
 lemma med_tsps_ran2 [simp]: assumes "(ctype::channel \<Rightarrow> 'a MABP set) Out = range f" shows
   "\<exists>ora::bool stream. g = (med_TSPF :: bool stream \<Rightarrow> channel \<Rightarrow> channel \<Rightarrow> ('b \<Rightarrow> 'a MABP) \<Rightarrow> ('a MABP tstream\<^sup>\<Omega>)ufun) ora In Out f \<and> #({True} \<ominus> ora) = \<infinity> 
                                \<Longrightarrow> ufRan\<cdot>g = {Out}"
   using assms med_tsps_ran1 by auto
+
 
 lemma med_ufIsWeak: assumes "#bst =\<infinity>" and "(ctype::channel \<Rightarrow> 'a MABP set) Out = range f" shows
   "ufIsWeak (Abs_ufun(\<Lambda> (x::'a MABP tstream\<^sup>\<Omega>). (ubDom\<cdot>x = {In})
@@ -931,11 +936,9 @@ lemma med_ufIsWeak: assumes "#bst =\<infinity>" and "(ctype::channel \<Rightarro
                                 f\<cdot>(tsMed\<cdot>(tsMap (inv f)\<cdot>(x . In))\<cdot>bst)])))"
   apply (simp add: ufIsWeak_def)
   apply (simp add: assms domIff)
-
+  apply (rule, rule)
   apply (subst med_tick)
-  apply (simp_all add: assms ubclLen_ubundle_def)
-
-sorry
+  by (simp_all add: assms ubclLen_ubundle_def)
 
 
 subsection\<open>id\<close>
