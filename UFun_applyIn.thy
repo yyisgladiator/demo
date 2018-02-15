@@ -596,4 +596,114 @@ lemma ufapplyin_cont [simp]: assumes "\<And>b. ubclDom\<cdot>(k\<cdot>b) = ubclD
   by (simp add: assms)
 
 
+section \<open>Lemmas\<close>
+
+lemma f20: "\<And>g. cont (\<lambda> x. Rep_cufun g (k\<cdot>x))"
+    by simp
+
+lemma f21: assumes "\<And>b. ubclDom\<cdot>(k\<cdot>b) = ubclDom\<cdot>b" shows "\<And>g. ufWell (\<Lambda> x. Rep_cufun g (k\<cdot>x))"
+  apply(simp add: ufWell_def)
+  apply rule
+   apply (metis assms(1) domIff rep_ufun_well ufWell_def)
+  using assms(1) ufWell_def rep_ufun_well
+  by (metis (no_types, lifting) ran2exists ufran_2_ubcldom)
+
+lemma f2: assumes "\<And>b. ubclDom\<cdot>(k\<cdot>b) = ubclDom\<cdot>b" shows "cont (\<lambda> g. Abs_cufun (\<lambda>x::'a. Rep_cufun g (k\<cdot>x)))"    
+proof - 
+  have f1: "monofun(\<lambda> g. Abs_cufun (\<lambda>x::'a. Rep_cufun g (k\<cdot>x)))"
+  proof(rule monofunI)
+    fix x :: "'b \<Rrightarrow> 'e" 
+    fix y::"'b \<Rrightarrow> 'e" 
+    assume "x \<sqsubseteq> y"
+    show " Abs_cufun (\<lambda>xa. Rep_cufun x (k\<cdot>xa)) \<sqsubseteq> Abs_cufun (\<lambda>x. Rep_cufun y (k\<cdot>x))"
+      apply(simp add: below_ufun_def)
+      apply(subst rep_abs_cufun2, simp add: f21 assms)
+      apply(subst rep_abs_cufun2, simp add: f21 assms) 
+      using f20
+      by (metis \<open>(x::'b \<Rrightarrow> 'e) \<sqsubseteq> (y::'b \<Rrightarrow> 'e)\<close> below_ufun_def cfun_below_iff monofun_LAM)
+  qed
+  have f2: "\<And>Y. chain Y \<Longrightarrow> Abs_cufun (\<lambda>x::'a. Rep_cufun (\<Squnion>i::nat. Y i) (k\<cdot>x)) \<sqsubseteq> (\<Squnion>i::nat. Abs_cufun (\<lambda>x::'a. Rep_cufun (Y i) (k\<cdot>x)))"
+  proof - 
+    fix Y ::"nat \<Rightarrow> 'b \<Rrightarrow> 'e"
+    assume f200: "chain Y"
+    have f201: "Rep_ufun (\<Squnion>i::nat. Abs_cufun (\<lambda>x::'a. Rep_cufun (Y i) (k\<cdot>x))) = (\<Squnion>i::nat. Abs_cfun (\<lambda>x::'a. Rep_cufun (Y i) (k\<cdot>x)))"
+      using f20 
+      sorry
+    show "Abs_cufun (\<lambda>x::'a. Rep_cufun (\<Squnion>i::nat. Y i) (k\<cdot>x)) \<sqsubseteq> (\<Squnion>i::nat. Abs_cufun (\<lambda>x::'a. Rep_cufun (Y i) (k\<cdot>x)))"
+      apply(simp add: below_ufun_def)
+      apply(subst rep_abs_cufun2, simp add: f21 assms)
+      apply(simp add: f201)
+      using f20
+      
+      sorry
+  qed
+  show ?thesis
+    apply(rule contI2)
+    using f1 apply simp
+    using f2 by blast
+qed
+
+lemma ufapplyin_dom: assumes "\<And>b. ubclDom\<cdot>(k\<cdot>b) = ubclDom\<cdot>b"
+  shows "ufDom\<cdot>(ufApplyIn k\<cdot>f) = ufDom\<cdot>f"
+  apply(simp add: ufApplyIn_def)
+  by (metis (mono_tags, lifting) Abs_cfun_inverse2 assms f2 f20 f21 rep_abs_cufun2 ubcldom_ex ufapplyin_eq_pre ufdom_2ufundom)
+
+lemma ufapplyin_ran2: assumes "\<And>b. ubclDom\<cdot>(k\<cdot>b) = ubclDom\<cdot>b"
+  shows "ufRan\<cdot>(ufApplyIn k\<cdot>f) = ufRan\<cdot>f"
+proof - 
+ have f20: "\<And>g. cont (\<lambda> x. Rep_cufun g (k\<cdot>x))"
+    by simp
+  have f21: "\<And>g. ufWell (\<Lambda> x. Rep_cufun g (k\<cdot>x))"
+    by (simp add: assms f21)
+  have f2: "cont (\<lambda> g. Abs_cufun (\<lambda>x::'a. Rep_cufun g (k\<cdot>x)))"   
+    by (simp add: assms f2)
+  show ?thesis
+    apply(simp add: ufApplyIn_def)
+    (* times out when using global lemmas f2 f20 f21 *)
+    by (smt Abs_cfun_inverse2 assms local.f2 local.f20 local.f21 rep_abs_cufun rep_abs_cufun2 ufapplyin_eq_pre ufapplyin_uf_dom ufdom_insert ufran_2_ubcldom ufran_2_ubcldom2)
+qed
+
+lemma ufApply_eq: assumes "\<And>b. ubclDom\<cdot>(f\<cdot>b) = ubclDom\<cdot>b"
+              and "\<And>b. ubclDom\<cdot>(g\<cdot>b) = ubclDom\<cdot>b"
+            shows "ufApplyIn f\<cdot>(ufApplyOut g\<cdot>h) = ufApplyOut g\<cdot>(ufApplyIn f\<cdot>h)"
+proof - 
+  have f1: "ufDom\<cdot>(ufApplyIn f\<cdot>h) = ufDom\<cdot>h"
+    apply(simp add: ufApplyIn_def)
+    by (metis (mono_tags, lifting) Abs_cfun_inverse2 assms(1) f2 f20 f21 rep_abs_cufun ubcldom_ex ufapplyin_eq_pre ufdom_2ufundom)
+  
+  have f3: "cont (\<lambda> x. (ubclDom\<cdot>x = ufDom\<cdot>h)\<leadsto>g\<cdot>(h \<rightleftharpoons> x))"
+    by simp
+  have f4: "ufWell (\<Lambda> x. (ubclDom\<cdot>x = ufDom\<cdot>h)\<leadsto>g\<cdot>(h \<rightleftharpoons> x))"
+    apply(simp add: ufWell_def)
+    apply rule
+    using f3 apply (smt domI domIff f1)
+    by (smt assms(2) option.inject option.simps(3) ran2exists ufran_2_ubcldom2)
+  
+  have f50: "cont (\<lambda>x::'a. Rep_cufun h (f\<cdot>x))"
+    by simp
+  have f51: "ufWell (\<Lambda> x. Rep_cufun h (f\<cdot>x))"
+    apply(simp add: ufWell_def)
+    apply rule
+    apply (metis assms(1) domIff ufdom_not_empty ufun_dom2ufundom ufun_ufundom2dom)
+    by (meson ran2exists ranI rep_ufun_well ufWell_def)
+  have f5: "\<And>x. (Abs_cufun (\<lambda>x::'a. Rep_cufun h (f\<cdot>x)) \<rightleftharpoons> x) = (h \<rightleftharpoons> f\<cdot>x)"
+    by (simp add: f51)
+
+  show ?thesis
+    apply(simp add: ufApplyOut_def)
+    apply(simp add: ufapplyout_cont assms)
+    apply(simp add: f1)
+    apply(simp add: ufApplyIn_def)
+    apply(simp add: f2 assms)
+    apply(simp add: f3 f4)
+    apply(subst ufApplyIn_def)    
+    apply(subst Abs_cfun_inverse2)
+     apply(simp add: f2 assms)
+    apply(subst f5)
+    using assms
+    by simp
+qed
+
+
+
 end
