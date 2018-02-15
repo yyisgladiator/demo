@@ -352,20 +352,23 @@ lemma l500: assumes "chain S" and "c \<in> dom (Rep_SB (S k))"
        shows "sdom\<cdot>(\<Squnion>j. the (Rep_SB (S j) c)) \<subseteq> ctype c"
 by (smt assms(1) assms(2) l44 theRep_chain l460 lub_eq)
 
-text {* Equivalence of evaluation of 'm SBLub based on lub of function values.*}
+(* LUB and getting the value from an optional ("the" operator) are commutative. *)
 lemma lub_eval: assumes "chain S" 
   shows "the (Rep_SB (\<Squnion>i. S i) c) = (\<Squnion>j. the (Rep_SB (S j) c))"
 using assms part_the_lub rep_chain rep_lub by fastforce
 
+(* The domain of any SB in a chain is the same as the domain of the LUB. *)
 lemma l1: assumes "chain S" 
   shows "dom (Rep_SB (S i)) = dom (Rep_SB (\<Squnion>i. S i))"
 by (meson assms below_SB_def is_ub_thelub part_dom_eq)
 
+(* If SB's b1 and b2 have the same domain and for every channel c b1.c \<sqsubseteq> b2.c holds, b1 \<sqsubseteq> b2. *)
 lemma less_SBI: assumes "dom (Rep_SB b1) = dom (Rep_SB b2)" 
     and "\<And>c. c\<in>dom (Rep_SB b1) \<Longrightarrow>  the ((Rep_SB b1) c) \<sqsubseteq> the ((Rep_SB b2) c)"
   shows "b1 \<sqsubseteq> b2"
 by (metis assms(1) assms(2) below_SB_def below_option_def domIff fun_belowI)
 
+(*  *)
 lemma less_sbLub1: assumes "chain S" 
   shows "the (Rep_SB (S i) c) \<sqsubseteq> the (Rep_SB (\<Squnion>i. S i) c)"
 by (metis assms(1) is_ub_thelub theRep_chain lub_eval)
