@@ -1,4 +1,4 @@
-theory as_func
+theory Miscellaneous
 imports "../../TStream"
 
 begin
