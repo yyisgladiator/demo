@@ -8,7 +8,7 @@
 chapter {* Alternating Bit Protocol *}       
                                                             
 theory Composition
-imports Medium Receiver Sender Sender_OZ Sender_JM
+imports Medium Receiver Sender
 
 begin
 default_sort countable
