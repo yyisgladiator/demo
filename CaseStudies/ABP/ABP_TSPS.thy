@@ -690,6 +690,12 @@ abbreviation fixABPHelperCont where
 abbreviation abpFix where
 "abpFix s ora1 ora2 tb \<equiv> ubFix (fixABPHelperCont s ora1 ora2 tb) {c_abpOut, c_ar, c_as, c_dr, c_ds}"
 
+lemma abpHelper_cont: assumes "#({True} \<ominus> ora1) = \<infinity>"
+  and "#({True} \<ominus> ora2) = \<infinity>"
+  and "se \<in> tsSender"
+  and "ubDom\<cdot>tb = {c_abpIn}"
+shows "cont (fixABPHelper se ora1 ora2 tb)"
+  sorry
 
 
 lemma abp_speccomp_final: assumes "f \<in> Rep_rev_uspec speccompABP"
@@ -725,7 +731,7 @@ proof -
 
 
   have f3: "(ubFix (ufFeedH (innerABP s ora1 ora2) tb) {c_abpOut, c_ar})  .  c_abpOut = 
-            (ubFix (fixABPHelperCont s ora1 ora2 tb) {c_abpOut, c_ar})  .  c_abpOut"
+            (ubFix (fixABPHelperCont s ora1 ora2 tb) {c_abpOut, c_ar, c_as, c_dr, c_ds})  .  c_abpOut"
     sorry
 
   have f40: "ubfun_io_eq (fixABPHelperCont s ora1 ora2 tb) {c_abpOut, c_ar, c_as, c_dr, c_ds}"
@@ -757,10 +763,39 @@ proof -
   (* Result *)
   have f8: "tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(tsMap invBoolPair\<cdot>((abpFix s ora1 ora2 tb) . c_dr)))) = tsAbs\<cdot>(tsMap invData\<cdot>(tb . c_abpIn))"
     sorry
-
-  show ?thesis
+  then have f9: "tsAbs\<cdot>(tsMap Data\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(tsMap invBoolPair\<cdot>((abpFix s ora1 ora2 tb) . c_dr))))) = tsAbs\<cdot>(tb . c_abpIn)"
     
     sorry
+  show ?thesis
+  proof - 
+    have f90: "cont (\<lambda> (x::'a MABP tstream\<^sup>\<Omega>). fixABPHelper s ora1 ora2 tb x)"
+      sorry
+    have f901: "\<And>x. ubWell [
+      c_ds     \<mapsto> tsMap BoolPair\<cdot>(s\<cdot>(tsMap invData\<cdot>(tb . c_abpIn))\<cdot>(tsMap invBool\<cdot>(x . c_as))),
+      c_dr     \<mapsto> tsMap BoolPair\<cdot>(tsMed\<cdot>(tsMap invBoolPair\<cdot>(x . c_ds))\<cdot>ora1),
+      c_ar     \<mapsto> tsMap Bool\<cdot>(fst ( tsRec\<cdot>((tsMap invBoolPair)\<cdot>(x . c_dr)))),
+      c_abpOut \<mapsto> tsMap Data\<cdot>(snd ( tsRec\<cdot>((tsMap invBoolPair)\<cdot>(x . c_dr)))),
+      c_as     \<mapsto> tsMap Bool\<cdot>(tsMed\<cdot>(tsMap invBool\<cdot>(x . c_ar))\<cdot>ora2)
+      ]"
+      sorry
+    have f91: "(abpFix s ora1 ora2 tb) . c_abpOut =
+                tsMap Data\<cdot>(snd ( tsRec\<cdot>((tsMap invBoolPair)\<cdot>(abpFix s ora1 ora2 tb . c_dr))))"
+      apply(subst f41)
+      apply(simp add: f90)
+      apply(simp add: ubGetCh_def)
+      apply(subst ubrep_ubabs)
+       apply (metis (no_types, lifting) f901 ubgetch_insert)
+      by simp
+    have f92: "\<And>x. (snd (tsRec\<cdot>(tsMap invBoolPair\<cdot>x))) = (tsProjFst\<cdot>(tsRemDups\<cdot>(tsMap invBoolPair\<cdot>x)))"
+      by(simp add: tsRec_def tsRecSnd_def)
+    show ?thesis
+      apply(subst f2)
+      apply(subst f3)
+      apply(subst f91)
+      apply(subst f92)
+      apply(subst f9)
+      by simp
+  qed
 qed
 
 
