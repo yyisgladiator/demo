@@ -421,7 +421,7 @@ lemma tsaltbitpro_inp2out:
       proof (rule ccontr)
         assume as_leq_i: "lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>as))) \<le> #(tsAbs\<cdot>i)"
         assume ds_eq_as: "#(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>ds))) = lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>as)))"
-        have "#(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>ds))) \<noteq> \<infinity>"
+        have ds_srcdups_proj_ninf: "#(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>ds))) \<noteq> \<infinity>"
           using as_leq_i ds_eq_as i_ninf by auto
         hence ds_srcdups_ninf: "#(srcdups\<cdot>(tsAbs\<cdot>ds)) \<noteq> \<infinity>"
           by (simp add: tsremdups_tsabs)
@@ -430,7 +430,15 @@ lemma tsaltbitpro_inp2out:
                 set2tssnd_nack2inftrans tstickcount_inp2infacks by blast
         obtain n where ds_split: "tsAbs\<cdot>ds = (stake n\<cdot>(tsAbs\<cdot>ds)) \<bullet> (\<up>(snth n (tsAbs\<cdot>ds))\<infinity>)"
           using srcdups_split ds_inf ds_srcdups_ninf inf_less_eq leI by blast
-        thus "\<not> #(tsAbs\<cdot>ds) \<noteq> \<infinity> \<Longrightarrow> False"      
+        have as_inf: "#(tsAbs\<cdot>as) = \<infinity>"
+          using ar_def as_def dr_def ds_inf p1_def p2_def by force
+        have as_tsremdups_ninf: "#(tsAbs\<cdot>(tsRemDups\<cdot>as)) \<noteq> \<infinity>"
+          using ds_eq_as ds_srcdups_proj_ninf by auto
+        hence as_srcdups_ninf: "#(srcdups\<cdot>(tsAbs\<cdot>as)) \<noteq> \<infinity>"
+          by (simp add: tsremdups_tsabs)
+        obtain m where ds_split: "tsAbs\<cdot>as = (stake m\<cdot>(tsAbs\<cdot>as)) \<bullet> (\<up>(snth m (tsAbs\<cdot>as))\<infinity>)"
+          using srcdups_split as_inf as_srcdups_ninf inf_less_eq leI by blast
+        thus "\<not> #(tsAbs\<cdot>ds) \<noteq> \<infinity> \<Longrightarrow> False"
           sorry
       qed
       
