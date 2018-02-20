@@ -8,7 +8,7 @@
 chapter {* Sender of the Alternating Bit Protocol *}
                                                             
 theory Sender
-imports "../../TStream" as_func
+imports "../../TStream" Miscellaneous
 
 
 begin

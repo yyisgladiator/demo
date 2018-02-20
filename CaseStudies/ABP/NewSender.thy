@@ -1,4 +1,4 @@
-(*  Title:        Sender_DS.thy
+(*  Title:        NewSender.thy
     Author:       Dennis Slotboom
     e-mail:       dennis.slotboom@rwth-aachen.de
 
@@ -7,7 +7,7 @@
 
 chapter {* Sender of the Alternating Bit Protocol *}
                                                             
-theory Sender_DS
+theory NewSender
 imports "../../TStream"
 
 begin
