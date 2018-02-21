@@ -322,6 +322,61 @@ lemma stake_slen:"#i > Fin k \<Longrightarrow>  #(stake k\<cdot>i) = Fin k "
   using stake_slen_h by blast
 
 (* ----------------------------------------------------------------------- *)
+section {* srcdups *}
+(* ----------------------------------------------------------------------- *)
+
+lemma srcdups_slen_leq: "#(srcdups\<cdot>s) \<le> #(srcdups\<cdot>(\<up>t \<bullet> s))"
+  proof(induction s arbitrary: t rule: ind)
+    case 1
+    then show ?case
+    apply (rule adm_all)
+    apply (rule admI)
+    by (simp add: contlub_cfun_arg lub_mono2)
+  next
+    case 2
+    then show ?case
+    by simp
+  next
+    case (3 u s)
+    then show ?case
+    by (metis (no_types, lifting) eq_iff slen_scons2 srcdups_eq srcdups_neq)
+  qed
+
+lemma srcdups_slen_conc_leq: "#(srcdups\<cdot>(\<up>a \<bullet> s)) \<le> #(srcdups\<cdot>(\<up>a \<bullet> \<up>t \<bullet> s))"
+  apply (case_tac "a = t", simp_all)
+  proof(induction s arbitrary: a t rule: ind)
+    case 1
+    then show ?case 
+      apply (rule adm_all)+
+      apply (rule admI)
+      by (simp add: contlub_cfun_arg lub_mono2)
+  next
+    case 2
+    then show ?case
+       by (simp add: srcdups_step)
+  next
+    case (3 b s)
+    then show ?case
+      proof (cases "t=b")
+        case True
+        then show ?thesis
+        using "3.prems" by auto
+      next
+        case False
+        then show ?thesis
+        proof (cases "b=a")
+          case True
+          then show ?thesis
+            by (metis (no_types, lifting) less_lnsuc srcdups_eq srcdups_slen_leq trans_lnle)
+        next
+          case False
+          then show ?thesis
+            using srcdups_slen_leq by force
+        qed
+      qed
+  qed      
+
+(* ----------------------------------------------------------------------- *)
 section {* mlscons *}
 (* ----------------------------------------------------------------------- *)
 
