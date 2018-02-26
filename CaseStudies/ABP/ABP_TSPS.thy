@@ -19,6 +19,7 @@ section \<open>Datatype Definition\<close>
 
 
 datatype 'a::countable MABP = BoolPair "('a * bool)" | Bool bool | Data 'a
+print_theorems
 
 instantiation MABP ::  (countable) countable
 begin
@@ -698,6 +699,8 @@ shows "cont (fixABPHelper se ora1 ora2 tb)"
   sorry
 
 
+
+
 lemma abp_speccomp_final: assumes "f \<in> Rep_rev_uspec speccompABP"
                             and "ubDom\<cdot>tb = {c_abpIn}"
   shows "tsAbs\<cdot>((f \<rightleftharpoons> tb) . c_abpOut) = tsAbs\<cdot>(tb . c_abpIn)"
@@ -762,14 +765,17 @@ proof -
 
   (* Result *)
   have f8: "tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(tsMap invBoolPair\<cdot>((abpFix s ora1 ora2 tb) . c_dr)))) = tsAbs\<cdot>(tsMap invData\<cdot>(tb . c_abpIn))"
-    sorry
-  then have f9: "tsAbs\<cdot>(tsMap Data\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(tsMap invBoolPair\<cdot>((abpFix s ora1 ora2 tb) . c_dr))))) = tsAbs\<cdot>(tb . c_abpIn)"
     
+    sorry
+  
+  have f9: "tsAbs\<cdot>(tsMap Data\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(tsMap invBoolPair\<cdot>((abpFix s ora1 ora2 tb) . c_dr))))) = tsAbs\<cdot>(tb . c_abpIn)"
+    using f8
     sorry
   show ?thesis
   proof - 
-    have f90: "cont (\<lambda> (x::'a MABP tstream\<^sup>\<Omega>). fixABPHelper s ora1 ora2 tb x)"
-      sorry
+    have f90: "cont ( fixABPHelper s ora1 ora2 tb)"
+      apply(subst abpHelper_cont, simp_all add: assms)
+      by(simp_all add: f12 f13 f14)
     have f901: "\<And>x. ubWell [
       c_ds     \<mapsto> tsMap BoolPair\<cdot>(s\<cdot>(tsMap invData\<cdot>(tb . c_abpIn))\<cdot>(tsMap invBool\<cdot>(x . c_as))),
       c_dr     \<mapsto> tsMap BoolPair\<cdot>(tsMed\<cdot>(tsMap invBoolPair\<cdot>(x . c_ds))\<cdot>ora1),
@@ -777,7 +783,9 @@ proof -
       c_abpOut \<mapsto> tsMap Data\<cdot>(snd ( tsRec\<cdot>((tsMap invBoolPair)\<cdot>(x . c_dr)))),
       c_as     \<mapsto> tsMap Bool\<cdot>(tsMed\<cdot>(tsMap invBool\<cdot>(x . c_ar))\<cdot>ora2)
       ]"
-      sorry
+      apply(simp add: ubWell_def)
+      apply(simp add: usclOkay_tstream_def)
+      by (simp_all add: tsmap_tsdom_range)
     have f91: "(abpFix s ora1 ora2 tb) . c_abpOut =
                 tsMap Data\<cdot>(snd ( tsRec\<cdot>((tsMap invBoolPair)\<cdot>(abpFix s ora1 ora2 tb . c_dr))))"
       apply(subst f41)
