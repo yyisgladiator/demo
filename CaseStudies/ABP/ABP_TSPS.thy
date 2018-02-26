@@ -1076,6 +1076,17 @@ abbreviation fixABPHelperCont where
 abbreviation abpFix where
 "abpFix s ora1 ora2 tb \<equiv> ubFix (fixABPHelperCont s ora1 ora2 tb) {c_abpOut, c_ar, c_as, c_dr, c_ds}"
 
+lemma abpHelper_ubWell: "\<And>x. ubWell [
+      c_ds     \<mapsto> tsMap BoolPair\<cdot>(s\<cdot>(tsMap invData\<cdot>(tb . c_abpIn))\<cdot>(tsMap invBool\<cdot>(x . c_as))),
+      c_dr     \<mapsto> tsMap BoolPair\<cdot>(tsMed\<cdot>(tsMap invBoolPair\<cdot>(x . c_ds))\<cdot>ora1),
+      c_ar     \<mapsto> tsMap Bool\<cdot>(fst ( tsRec\<cdot>((tsMap invBoolPair)\<cdot>(x . c_dr)))),
+      c_abpOut \<mapsto> tsMap Data\<cdot>(snd ( tsRec\<cdot>((tsMap invBoolPair)\<cdot>(x . c_dr)))),
+      c_as     \<mapsto> tsMap Bool\<cdot>(tsMed\<cdot>(tsMap invBool\<cdot>(x . c_ar))\<cdot>ora2)
+      ]"
+  apply(simp add: ubWell_def)
+  apply(simp add: usclOkay_tstream_def)
+  by (simp_all add: tsmap_tsdom_range)
+
 lemma abpHelper_cont: assumes "#({True} \<ominus> ora1) = \<infinity>"
   and "#({True} \<ominus> ora2) = \<infinity>"
   and "se \<in> tsSender"
@@ -1084,6 +1095,17 @@ shows "cont (fixABPHelper se ora1 ora2 tb)"
   sorry
 
 
+(* Lemma from Dennis group  *)
+lemma tsaltbitpro_inp2out:
+  assumes send_def: "send \<in> tsSender"
+    and p1_def: "#({True} \<ominus> p1) = \<infinity>"
+    and p2_def: "#({True} \<ominus> p2) = \<infinity>"
+    and ds_def: "ds = send\<cdot>i\<cdot>as"
+    and dr_def: "dr = tsMed\<cdot>ds\<cdot>p1"
+    and ar_def: "ar = tsProjSnd\<cdot>dr"
+    and as_def: "as = tsMed\<cdot>ar\<cdot>p2"
+  shows "tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>dr)) = tsAbs\<cdot>i"
+  sorry
 
 
 lemma abp_speccomp_final: assumes "f \<in> Rep_rev_uspec speccompABP"
@@ -1106,18 +1128,18 @@ proof -
     using f1 by blast
 
 
-  have f20: "ufDom\<cdot>(innerABP s ora1 ora2) - ufRan\<cdot>(innerABP s ora1 ora2) = {c_abpIn}"
+  have f20: "ufDom\<cdot>(innerABP s ora1 ora2) = {c_abpIn, c_ar}"
     sorry
   have f21: "ufRan\<cdot>(innerABP s ora1 ora2) = {c_abpOut, c_ar}"
     sorry
+
   have f2: "(f \<rightleftharpoons> tb) . c_abpOut =  (ubFix (ufFeedH (innerABP s ora1 ora2) tb) {c_abpOut, c_ar})  .  c_abpOut"
     apply(subst f15)
     apply(simp add: ufFeedbackComp_def)
     apply(simp add: ufFeedbackComp_cont ufFeedbackComp_well)
-    apply(simp add: f20 assms ubclDom_ubundle_def)
-    by(simp add: f21)
-
-
+    apply(simp add: f20 f21 assms ubclDom_ubundle_def)
+    by auto
+ 
   have f3: "(ubFix (ufFeedH (innerABP s ora1 ora2) tb) {c_abpOut, c_ar})  .  c_abpOut = 
             (ubFix (fixABPHelperCont s ora1 ora2 tb) {c_abpOut, c_ar, c_as, c_dr, c_ds})  .  c_abpOut"
     sorry
@@ -1127,21 +1149,16 @@ proof -
   then have f41: "ubFix (fixABPHelperCont s ora1 ora2 tb) {c_abpOut, c_ar, c_as, c_dr, c_ds} =  (fixABPHelperCont s ora1 ora2 tb)\<cdot>(ubFix (fixABPHelperCont s ora1 ora2 tb) {c_abpOut, c_ar, c_as, c_dr, c_ds})"
     using ubfix_eq by blast
 
+  have f42: "\<And>x. ubWell [
+      c_ds     \<mapsto> tsMap BoolPair\<cdot>(s\<cdot>(tsMap invData\<cdot>(tb . c_abpIn))\<cdot>(tsMap invBool\<cdot>(x . c_as))),
+      c_dr     \<mapsto> tsMap BoolPair\<cdot>(tsMed\<cdot>(tsMap invBoolPair\<cdot>(x . c_ds))\<cdot>ora1),
+      c_ar     \<mapsto> tsMap Bool\<cdot>(fst ( tsRec\<cdot>((tsMap invBoolPair)\<cdot>(x . c_dr)))),
+      c_abpOut \<mapsto> tsMap Data\<cdot>(snd ( tsRec\<cdot>((tsMap invBoolPair)\<cdot>(x . c_dr)))),
+      c_as     \<mapsto> tsMap Bool\<cdot>(tsMed\<cdot>(tsMap invBool\<cdot>(x . c_ar))\<cdot>ora2)
+      ]"
+    using abpHelper_ubWell by blast
   (* After proving the fixed points propties we can now show the assumptions of the tsaltbitpro_inp2out lemma
   
-  lemma tsaltbitpro_inp2out:
-  assumes send_def: "send \<in> tsSender"
-    and p1_def: "#({True} \<ominus> p1) = \<infinity>"
-    and p2_def: "#({True} \<ominus> p2) = \<infinity>"
-    and ds_def: "c_ds = send\<cdot>i\<cdot>c_as"
-    and dr_def: "c_dr = tsMed\<cdot>c_ds\<cdot>p1"
-    and ar_def: "c_ar = tsProjSnd\<cdot>c_dr"
-    (* definition 5 *)
-    and as_def: "c_as = tsMed\<cdot>c_ar\<cdot>p2"
-    and i_ninf: "#(tsAbs\<cdot>i) \<noteq> \<infinity>"
-  shows "tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>c_dr)) = tsAbs\<cdot>i"
-  sorry
-
     i = (tsMap invData\<cdot>(tb . c_abpIn))
     ds_stream = (tsMap invBoolPair\<cdot>((ubFix (abpFixH s tb) {c_abpOut, c_ar, c_dr}) . c_dr))
     as_stream = (tsMap invBool\<cdot>((ubFix (abpFixH s tb) {c_abpOut, c_ar, c_dr}) . c_ar))
@@ -1152,33 +1169,31 @@ proof -
   have f8: "tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(tsMap invBoolPair\<cdot>((abpFix s ora1 ora2 tb) . c_dr)))) = tsAbs\<cdot>(tsMap invData\<cdot>(tb . c_abpIn))"
     
     sorry
-  
   have f9: "tsAbs\<cdot>(tsMap Data\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(tsMap invBoolPair\<cdot>((abpFix s ora1 ora2 tb) . c_dr))))) = tsAbs\<cdot>(tb . c_abpIn)"
-    using f8
-    sorry
+  proof - 
+    have f90: "\<And>s. invData (Data s) = s"
+      by simp
+    have f91: "tsDom\<cdot>(tb . c_abpIn) \<subseteq> range Data"
+      by (metis assms(2) ctype_MABP.simps(1) insert_iff ubdom_channel_usokay ubgetch_insert usclOkay_tstream_def)
+    then have f92: "\<exists>s. tb . c_abpIn = tsMap Data\<cdot>s"
+      sorry
+    show ?thesis
+      using f8 
+      sorry
+  qed
   show ?thesis
   proof - 
     have f90: "cont ( fixABPHelper s ora1 ora2 tb)"
       apply(subst abpHelper_cont, simp_all add: assms)
       by(simp_all add: f12 f13 f14)
-    have f901: "\<And>x. ubWell [
-      c_ds     \<mapsto> tsMap BoolPair\<cdot>(s\<cdot>(tsMap invData\<cdot>(tb . c_abpIn))\<cdot>(tsMap invBool\<cdot>(x . c_as))),
-      c_dr     \<mapsto> tsMap BoolPair\<cdot>(tsMed\<cdot>(tsMap invBoolPair\<cdot>(x . c_ds))\<cdot>ora1),
-      c_ar     \<mapsto> tsMap Bool\<cdot>(fst ( tsRec\<cdot>((tsMap invBoolPair)\<cdot>(x . c_dr)))),
-      c_abpOut \<mapsto> tsMap Data\<cdot>(snd ( tsRec\<cdot>((tsMap invBoolPair)\<cdot>(x . c_dr)))),
-      c_as     \<mapsto> tsMap Bool\<cdot>(tsMed\<cdot>(tsMap invBool\<cdot>(x . c_ar))\<cdot>ora2)
-      ]"
-      apply(simp add: ubWell_def)
-      apply(simp add: usclOkay_tstream_def)
-      by (simp_all add: tsmap_tsdom_range)
     have f91: "(abpFix s ora1 ora2 tb) . c_abpOut =
                 tsMap Data\<cdot>(snd ( tsRec\<cdot>((tsMap invBoolPair)\<cdot>(abpFix s ora1 ora2 tb . c_dr))))"
       apply(subst f41)
       apply(simp add: f90)
       apply(simp add: ubGetCh_def)
       apply(subst ubrep_ubabs)
-       apply (metis (no_types, lifting) f901 ubgetch_insert)
-      by simp
+      apply (metis (no_types, lifting) f42 ubgetch_insert)   
+       by simp   
     have f92: "\<And>x. (snd (tsRec\<cdot>(tsMap invBoolPair\<cdot>x))) = (tsProjFst\<cdot>(tsRemDups\<cdot>(tsMap invBoolPair\<cdot>x)))"
       by(simp add: tsRec_def tsRecSnd_def)
     show ?thesis
