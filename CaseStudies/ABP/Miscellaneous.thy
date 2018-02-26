@@ -430,6 +430,10 @@ section {* tstickcount *}
 lemma slen_tstickcount: "#\<surd>(ts) < \<infinity> \<Longrightarrow> #(Rep_tstream ts) < \<infinity>"
   by simp
 
+lemma slen_tstickcount_conc:" #\<surd> (updis t &&\<surd> ts) = \<infinity> \<Longrightarrow> #\<surd> ts = \<infinity>"
+  by (simp add: tstickcount_mlscons)
+
+
 (* ----------------------------------------------------------------------- *)
 section {* tsabs *}
 (* ----------------------------------------------------------------------- *)
@@ -603,7 +607,8 @@ lemma tsabs_tstickdrop:"tsAbs\<cdot>(tsTickDrop\<cdot>as) = tsAbs\<cdot>as"
   apply(simp add: tstickdrop_delayfun)
   by(simp add: tstickdrop_mlscons)
 
-lemma tstickdrop_nempty:" lshd\<cdot>(tsAbs\<cdot>(tsRemDups\<cdot>as)) = updis ack \<Longrightarrow>tsTickDrop\<cdot>as = updis(ack)&&\<surd>tsDropFirst2\<cdot>as" 
+lemma tstickdrop_nempty:" lshd\<cdot>(tsAbs\<cdot>(tsRemDups\<cdot>as)) = updis ack 
+      \<Longrightarrow> tsTickDrop\<cdot>as = updis(ack)&&\<surd>tsDropFirst2\<cdot>as" 
   apply(simp add: tsremdups_tsabs tsprojfst_tsabs)
   apply(induction as arbitrary: ack,simp_all)
   apply(simp add: tsdropfirst2_delayfun tstickdrop_delayfun)
