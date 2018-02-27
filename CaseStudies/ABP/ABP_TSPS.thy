@@ -1164,6 +1164,104 @@ proof -
     as_stream = (tsMap invBool\<cdot>((ubFix (abpFixH s tb) {c_abpOut, c_ar, c_dr}) . c_ar))
 
   *)
+  
+  (*abpHelper_ubWell with f42 as x is ubWell*)
+  have monster: "ubWell [c_ds \<mapsto> tsMap BoolPair\<cdot>(s\<cdot>(tsMap invData\<cdot>Rep_ubundle tb\<rightharpoonup>c_abpIn)\<cdot>(tsMap invBool\<cdot>Rep_ubundle
+                       (ubFix (\<Lambda> (x::'a MABP tstream\<^sup>\<Omega>).Abs_ubundle
+                                  [c_ds \<mapsto> tsMap BoolPair\<cdot>(s\<cdot>(tsMap invData\<cdot>Rep_ubundle tb\<rightharpoonup>c_abpIn)\<cdot>(tsMap invBool\<cdot>Rep_ubundle x\<rightharpoonup>c_as)),
+                                   c_dr \<mapsto> tsMap BoolPair\<cdot>(tsMed\<cdot>(tsMap invBoolPair\<cdot>Rep_ubundle x\<rightharpoonup>c_ds)\<cdot>ora1),
+                                   c_ar \<mapsto> tsMap Bool\<cdot>(fst (tsRec\<cdot>(tsMap invBoolPair\<cdot>Rep_ubundle x\<rightharpoonup>c_dr))),
+                                   c_abpOut \<mapsto> tsMap Data\<cdot>(snd (tsRec\<cdot>(tsMap invBoolPair\<cdot>Rep_ubundle x\<rightharpoonup>c_dr))),
+                                   c_as \<mapsto> tsMap Bool\<cdot>(tsMed\<cdot>(tsMap invBool\<cdot>Rep_ubundle x\<rightharpoonup>c_ar)\<cdot>ora2)])
+                       {c_abpOut, c_ar, c_as, c_dr, c_ds})\<rightharpoonup>c_as)),
+            c_dr \<mapsto> tsMap BoolPair\<cdot>(tsMed\<cdot>(tsMap invBoolPair\<cdot>Rep_ubundle
+                       (ubFix (\<Lambda> (x::'a MABP tstream\<^sup>\<Omega>).Abs_ubundle
+                                  [c_ds \<mapsto> tsMap BoolPair\<cdot>(s\<cdot>(tsMap invData\<cdot>Rep_ubundle tb\<rightharpoonup>c_abpIn)\<cdot>(tsMap invBool\<cdot>Rep_ubundle x\<rightharpoonup>c_as)),
+                                   c_dr \<mapsto> tsMap BoolPair\<cdot>(tsMed\<cdot>(tsMap invBoolPair\<cdot>Rep_ubundle x\<rightharpoonup>c_ds)\<cdot>ora1),
+                                   c_ar \<mapsto> tsMap Bool\<cdot>(fst (tsRec\<cdot>(tsMap invBoolPair\<cdot>Rep_ubundle x\<rightharpoonup>c_dr))),
+                                   c_abpOut \<mapsto> tsMap Data\<cdot>(snd (tsRec\<cdot>(tsMap invBoolPair\<cdot>Rep_ubundle x\<rightharpoonup>c_dr))),
+                                   c_as \<mapsto> tsMap Bool\<cdot>(tsMed\<cdot>(tsMap invBool\<cdot>Rep_ubundle x\<rightharpoonup>c_ar)\<cdot>ora2)])
+                       {c_abpOut, c_ar, c_as, c_dr, c_ds})\<rightharpoonup>c_ds)\<cdot>ora1),
+            c_ar \<mapsto> tsMap Bool\<cdot>(fst (tsRec\<cdot>(tsMap invBoolPair\<cdot>Rep_ubundle
+                       (ubFix (\<Lambda> (x::'a MABP tstream\<^sup>\<Omega>).Abs_ubundle
+                                  [c_ds \<mapsto> tsMap BoolPair\<cdot>(s\<cdot>(tsMap invData\<cdot>Rep_ubundle tb\<rightharpoonup>c_abpIn)\<cdot>(tsMap invBool\<cdot>Rep_ubundle x\<rightharpoonup>c_as)),
+                                   c_dr \<mapsto> tsMap BoolPair\<cdot>(tsMed\<cdot>(tsMap invBoolPair\<cdot>Rep_ubundle x\<rightharpoonup>c_ds)\<cdot>ora1),
+                                   c_ar \<mapsto> tsMap Bool\<cdot>(fst (tsRec\<cdot>(tsMap invBoolPair\<cdot>Rep_ubundle x\<rightharpoonup>c_dr))),
+                                   c_abpOut \<mapsto> tsMap Data\<cdot>(snd (tsRec\<cdot>(tsMap invBoolPair\<cdot>Rep_ubundle x\<rightharpoonup>c_dr))),
+                                   c_as \<mapsto> tsMap Bool\<cdot>(tsMed\<cdot>(tsMap invBool\<cdot>Rep_ubundle x\<rightharpoonup>c_ar)\<cdot>ora2)])
+                       {c_abpOut, c_ar, c_as, c_dr, c_ds})\<rightharpoonup>c_dr))),
+            c_abpOut \<mapsto>tsMap Data\<cdot>(snd (tsRec\<cdot>(tsMap invBoolPair\<cdot>Rep_ubundle
+                       (ubFix (\<Lambda> (x::'a MABP tstream\<^sup>\<Omega>).Abs_ubundle
+                                  [c_ds \<mapsto> tsMap BoolPair\<cdot>(s\<cdot>(tsMap invData\<cdot>Rep_ubundle tb\<rightharpoonup>c_abpIn)\<cdot>(tsMap invBool\<cdot>Rep_ubundle x\<rightharpoonup>c_as)),
+                                   c_dr \<mapsto> tsMap BoolPair\<cdot>(tsMed\<cdot>(tsMap invBoolPair\<cdot>Rep_ubundle x\<rightharpoonup>c_ds)\<cdot>ora1),
+                                   c_ar \<mapsto> tsMap Bool\<cdot>(fst (tsRec\<cdot>(tsMap invBoolPair\<cdot>Rep_ubundle x\<rightharpoonup>c_dr))),
+                                   c_abpOut \<mapsto> tsMap Data\<cdot>(snd (tsRec\<cdot>(tsMap invBoolPair\<cdot>Rep_ubundle x\<rightharpoonup>c_dr))),
+                                   c_as \<mapsto> tsMap Bool\<cdot>(tsMed\<cdot>(tsMap invBool\<cdot>Rep_ubundle x\<rightharpoonup>c_ar)\<cdot>ora2)])
+                       {c_abpOut, c_ar, c_as, c_dr, c_ds})\<rightharpoonup>c_dr))),
+            c_as \<mapsto> tsMap Bool\<cdot>(tsMed\<cdot>(tsMap invBool\<cdot>Rep_ubundle
+                       (ubFix (\<Lambda> (x::'a MABP tstream\<^sup>\<Omega>).Abs_ubundle
+                                  [c_ds \<mapsto> tsMap BoolPair\<cdot>(s\<cdot>(tsMap invData\<cdot>Rep_ubundle tb\<rightharpoonup>c_abpIn)\<cdot>(tsMap invBool\<cdot>Rep_ubundle x\<rightharpoonup>c_as)),
+                                   c_dr \<mapsto> tsMap BoolPair\<cdot>(tsMed\<cdot>(tsMap invBoolPair\<cdot>Rep_ubundle x\<rightharpoonup>c_ds)\<cdot>ora1),
+                                   c_ar \<mapsto> tsMap Bool\<cdot>(fst (tsRec\<cdot>(tsMap invBoolPair\<cdot>Rep_ubundle x\<rightharpoonup>c_dr))),
+                                   c_abpOut \<mapsto> tsMap Data\<cdot>(snd (tsRec\<cdot>(tsMap invBoolPair\<cdot>Rep_ubundle x\<rightharpoonup>c_dr))),
+                                   c_as \<mapsto> tsMap Bool\<cdot>(tsMed\<cdot>(tsMap invBool\<cdot>Rep_ubundle x\<rightharpoonup>c_ar)\<cdot>ora2)])
+                       {c_abpOut, c_ar, c_as, c_dr, c_ds})\<rightharpoonup>c_ar)\<cdot>ora2)]"
+  proof -
+  (*ubgetch_def not yet inserted, ubFix (Λ u(*no type*). Abs_ubundle instead of 'a MABP tstream⇧Ω inside of Rep_ubundle*)
+    have "ubWell [c_ds \<mapsto> tsMap BoolPair\<cdot> (s\<cdot>(tsMap invData\<cdot>(tb . c_abpIn))\<cdot> (tsMap invBool\<cdot> (ubFix (\<Lambda> u. Abs_ubundle [c_ds \<mapsto> tsMap BoolPair\<cdot> (s\<cdot> (tsMap invData\<cdot> Rep_ubundle tb\<rightharpoonup>c_abpIn)\<cdot> (tsMap invBool\<cdot>Rep_ubundle u\<rightharpoonup>c_as)), c_dr \<mapsto> tsMap BoolPair\<cdot> (tsMed\<cdot> (tsMap invBoolPair\<cdot> Rep_ubundle u\<rightharpoonup>c_ds)\<cdot> ora1), c_ar \<mapsto> tsMap Bool\<cdot> (fst (tsRec\<cdot> (tsMap invBoolPair\<cdot> Rep_ubundle u\<rightharpoonup>c_dr))), c_abpOut \<mapsto> tsMap Data\<cdot> (snd (tsRec\<cdot> (tsMap invBoolPair\<cdot> Rep_ubundle u\<rightharpoonup>c_dr))), c_as \<mapsto> tsMap Bool\<cdot> (tsMed\<cdot> (tsMap invBool\<cdot>Rep_ubundle u\<rightharpoonup>c_ar)\<cdot> ora2)]) {c_abpOut, c_ar, c_as, c_dr, c_ds} . c_as))), c_dr \<mapsto> tsMap BoolPair\<cdot> (tsMed\<cdot> (tsMap invBoolPair\<cdot> (ubFix (\<Lambda> u. Abs_ubundle [c_ds \<mapsto> tsMap BoolPair\<cdot> (s\<cdot> (tsMap invData\<cdot> Rep_ubundle tb\<rightharpoonup>c_abpIn)\<cdot> (tsMap invBool\<cdot>Rep_ubundle u\<rightharpoonup>c_as)), c_dr \<mapsto> tsMap BoolPair\<cdot> (tsMed\<cdot> (tsMap invBoolPair\<cdot> Rep_ubundle u\<rightharpoonup>c_ds)\<cdot> ora1), c_ar \<mapsto> tsMap Bool\<cdot> (fst (tsRec\<cdot> (tsMap invBoolPair\<cdot> Rep_ubundle u\<rightharpoonup>c_dr))), c_abpOut \<mapsto> tsMap Data\<cdot> (snd (tsRec\<cdot> (tsMap invBoolPair\<cdot> Rep_ubundle u\<rightharpoonup>c_dr))), c_as \<mapsto> tsMap Bool\<cdot> (tsMed\<cdot> (tsMap invBool\<cdot>Rep_ubundle u\<rightharpoonup>c_ar)\<cdot> ora2)]) {c_abpOut, c_ar, c_as, c_dr, c_ds} . c_ds))\<cdot> ora1), c_ar \<mapsto> tsMap Bool\<cdot> (fst (tsRec\<cdot> (tsMap invBoolPair\<cdot> (ubFix (\<Lambda> u. Abs_ubundle [c_ds \<mapsto> tsMap BoolPair\<cdot> (s\<cdot> (tsMap invData\<cdot> Rep_ubundle tb\<rightharpoonup>c_abpIn)\<cdot> (tsMap invBool\<cdot>Rep_ubundle u\<rightharpoonup>c_as)), c_dr \<mapsto> tsMap BoolPair\<cdot> (tsMed\<cdot> (tsMap invBoolPair\<cdot> Rep_ubundle u\<rightharpoonup>c_ds)\<cdot> ora1), c_ar \<mapsto> tsMap Bool\<cdot> (fst (tsRec\<cdot> (tsMap invBoolPair\<cdot> Rep_ubundle u\<rightharpoonup>c_dr))), c_abpOut \<mapsto> tsMap Data\<cdot> (snd (tsRec\<cdot> (tsMap invBoolPair\<cdot> Rep_ubundle u\<rightharpoonup>c_dr))), c_as \<mapsto> tsMap Bool\<cdot> (tsMed\<cdot> (tsMap invBool\<cdot> Rep_ubundle u\<rightharpoonup>c_ar)\<cdot> ora2)]) {c_abpOut, c_ar, c_as, c_dr, c_ds} . c_dr)))), c_abpOut \<mapsto> tsMap Data\<cdot> (snd (tsRec\<cdot> (tsMap invBoolPair\<cdot> (ubFix (\<Lambda> u. Abs_ubundle [c_ds \<mapsto> tsMap BoolPair\<cdot> (s\<cdot> (tsMap invData\<cdot> Rep_ubundle tb\<rightharpoonup>c_abpIn)\<cdot> (tsMap invBool\<cdot>Rep_ubundle u\<rightharpoonup>c_as)), c_dr \<mapsto> tsMap BoolPair\<cdot> (tsMed\<cdot> (tsMap invBoolPair\<cdot> Rep_ubundle u\<rightharpoonup>c_ds)\<cdot> ora1), c_ar \<mapsto> tsMap Bool\<cdot> (fst (tsRec\<cdot> (tsMap invBoolPair\<cdot> Rep_ubundle u\<rightharpoonup>c_dr))), c_abpOut \<mapsto> tsMap Data\<cdot> (snd (tsRec\<cdot> (tsMap invBoolPair\<cdot> Rep_ubundle u\<rightharpoonup>c_dr))), c_as \<mapsto> tsMap Bool\<cdot> (tsMed\<cdot> (tsMap invBool\<cdot> Rep_ubundle u\<rightharpoonup>c_ar)\<cdot> ora2)]) {c_abpOut, c_ar, c_as, c_dr, c_ds} . c_dr)))), c_as \<mapsto> tsMap Bool\<cdot> (tsMed\<cdot> (tsMap invBool\<cdot> (ubFix (\<Lambda> u. Abs_ubundle [c_ds \<mapsto> tsMap BoolPair\<cdot> (s\<cdot> (tsMap invData\<cdot> Rep_ubundle tb\<rightharpoonup>c_abpIn)\<cdot> (tsMap invBool\<cdot>Rep_ubundle u\<rightharpoonup>c_as)), c_dr \<mapsto> tsMap BoolPair\<cdot> (tsMed\<cdot> (tsMap invBoolPair\<cdot> Rep_ubundle u\<rightharpoonup>c_ds)\<cdot> ora1), c_ar \<mapsto> tsMap Bool\<cdot> (fst (tsRec\<cdot> (tsMap invBoolPair\<cdot> Rep_ubundle u\<rightharpoonup>c_dr))), c_abpOut \<mapsto> tsMap Data\<cdot> (snd (tsRec\<cdot> (tsMap invBoolPair\<cdot> Rep_ubundle u\<rightharpoonup>c_dr))), c_as \<mapsto> tsMap Bool\<cdot> (tsMed\<cdot> (tsMap invBool\<cdot>Rep_ubundle u\<rightharpoonup>c_ar)\<cdot> ora2)]) {c_abpOut, c_ar, c_as, c_dr, c_ds} . c_ar))\<cdot> ora2)]"
+      using f42 by blast
+    then show ?thesis
+      by (simp add: ubgetch_insert)
+  qed
+
+  have f90: "cont ( fixABPHelper s ora1 ora2 tb)"
+    apply(subst abpHelper_cont, simp_all add: assms)
+    by(simp_all add: f12 f13 f14)
+
+  have f91: "(abpFix s ora1 ora2 tb) . c_abpOut =
+              tsMap Data\<cdot>(snd ( tsRec\<cdot>((tsMap invBoolPair)\<cdot>(abpFix s ora1 ora2 tb . c_dr))))"
+    apply (subst f41)
+    apply (simp add: f90)
+    apply (simp add: ubGetCh_def)
+    apply (subst ubrep_ubabs) 
+    apply (simp add: monster)
+    by simp
+
+  have eq_c_dr: "(abpFix s ora1 ora2 tb) . c_dr = 
+        tsMap BoolPair\<cdot>(tsMed\<cdot>(tsMap invBoolPair\<cdot>(abpFix s ora1 ora2 tb . c_ds))\<cdot>ora1)"
+    apply (subst f41)
+    apply (simp add: f90)
+    apply (simp add: ubGetCh_def)
+    apply (subst ubrep_ubabs) 
+    apply (simp add: monster)
+    by simp
+
+  have eq_c_as: "(abpFix s ora1 ora2 tb) . c_as =
+        tsMap Bool\<cdot>(tsMed\<cdot>(tsMap invBool\<cdot>(abpFix s ora1 ora2 tb . c_ar))\<cdot>ora2)"
+    apply (subst f41)
+    apply (simp add: f90)
+    apply (simp add: ubGetCh_def)
+    apply (subst ubrep_ubabs) 
+    apply (simp add: monster)
+    by simp
+
+  have eq_c_ds: "(abpFix s ora1 ora2 tb) . c_ds =
+        tsMap BoolPair\<cdot>(s\<cdot>(tsMap invData\<cdot>(tb . c_abpIn))\<cdot>(tsMap invBool\<cdot>(abpFix s ora1 ora2 tb . c_as)))"
+    apply (subst f41)
+    apply (simp add: f90)
+    apply (simp add: ubGetCh_def)
+    apply (subst ubrep_ubabs) 
+    apply (simp add: monster)
+    by simp
+
+  have eq_c_ar: "(abpFix s ora1 ora2 tb) . c_ar =
+        tsMap Bool\<cdot>(fst ( tsRec\<cdot>((tsMap invBoolPair)\<cdot>(abpFix s ora1 ora2 tb . c_dr))))"
+    apply (subst f41)
+    apply (simp add: f90)
+    apply (simp add: ubGetCh_def)
+    apply (subst ubrep_ubabs) 
+    apply (simp add: monster)
+    by simp
 
   (* Result *)
   have f8: "tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(tsMap invBoolPair\<cdot>((abpFix s ora1 ora2 tb) . c_dr)))) = tsAbs\<cdot>(tsMap invData\<cdot>(tb . c_abpIn))"
@@ -1183,17 +1281,6 @@ proof -
   qed
   show ?thesis
   proof - 
-    have f90: "cont ( fixABPHelper s ora1 ora2 tb)"
-      apply(subst abpHelper_cont, simp_all add: assms)
-      by(simp_all add: f12 f13 f14)
-    have f91: "(abpFix s ora1 ora2 tb) . c_abpOut =
-                tsMap Data\<cdot>(snd ( tsRec\<cdot>((tsMap invBoolPair)\<cdot>(abpFix s ora1 ora2 tb . c_dr))))"
-      apply(subst f41)
-      apply(simp add: f90)
-      apply(simp add: ubGetCh_def)
-      apply(subst ubrep_ubabs)
-      apply (metis (no_types, lifting) f42 ubgetch_insert)   
-       by simp   
     have f92: "\<And>x. (snd (tsRec\<cdot>(tsMap invBoolPair\<cdot>x))) = (tsProjFst\<cdot>(tsRemDups\<cdot>(tsMap invBoolPair\<cdot>x)))"
       by(simp add: tsRec_def tsRecSnd_def)
     show ?thesis
