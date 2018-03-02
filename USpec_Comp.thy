@@ -346,24 +346,6 @@ proof -
     by (simp add: uspecSerComp_def)
 qed
 
-
-(* helper to prove that new component after composition of 3 components is uspecwell  *)
-lemma uspec_sercompwell_asso_h: assumes "uspec_sercompwell S1 S2"
-and "uspec_sercompwell S2 S3"
-and "uspecDom S1 \<inter> uspecRan S3 = {}"
-shows "uspec_sercompwell S1 (S2 \<circle> S3) \<and> uspec_sercompwell (S1 \<circle> S2) S3"
-  apply auto
-   apply (simp_all add: uspec_sercompwell_def, auto)
-   apply (metis (no_types, lifting) assms(1) assms(2) assms(3) empty_iff sercompwell_asso uspecIsConsistent_def uspec_dom_eq uspec_ran_eq uspec_sercomp_ele_ex uspec_sercompwell_def) +
-  done
-
-(* the new component is uspecwell  *) 
-lemma uspec_sercompwell_asso: assumes "uspec_sercompwell S1 S2"
-and "uspec_sercompwell S2 S3"
-and "uspecDom S1 \<inter> uspecRan S3 = {}"
-shows "uspecWell  {f1 \<circ> f2 |f1 f2. f1 \<in> Rep_rev_uspec S1 \<and> f2 \<in> Rep_rev_uspec (S2 \<circle> S3)}"
-  by (simp add: assms(1) assms(2) assms(3) uspec_sercompwell_asso_h) 
-
 subsection \<open>UspecFeedbackComp\<close>
 
 lemma uspec_feedbackcomp_well: "uspecWell {ufunclFeedbackComp f1 | f1.  f1\<in>(Rep_rev_uspec S1)}"
