@@ -1149,8 +1149,15 @@ proof -
     sorry
 
   have f40: "ubfun_io_eq (fixABPHelperCont s ora1 ora2 tb) {c_abpOut, c_ar, c_as, c_dr, c_ds}"
-                               
-    sorry
+  proof - 
+    have f401: "ubWell [c_ds \<mapsto> tsMap BoolPair\<cdot>(s\<cdot>(tsMap invData\<cdot>(tb  .  c_abpIn))\<cdot>\<bottom>), c_dr \<mapsto> \<bottom>, c_ar \<mapsto> \<bottom>, c_abpOut \<mapsto> \<bottom>, c_as \<mapsto> \<bottom>]"
+      apply(simp add: ubWell_def usclOkay_tstream_def)
+      using tsmap_tsdom_range by auto
+    show ?thesis
+      apply(simp add: ubclDom_ubundle_def ubclLeast_ubundle_def)
+      apply(simp add:  abpHelper_cont assms f12 f13 f14)
+      using f401 by (simp add: insert_commute ubdom_ubrep_eq)
+  qed
   then have f41: "ubFix (fixABPHelperCont s ora1 ora2 tb) {c_abpOut, c_ar, c_as, c_dr, c_ds} =  (fixABPHelperCont s ora1 ora2 tb)\<cdot>(ubFix (fixABPHelperCont s ora1 ora2 tb) {c_abpOut, c_ar, c_as, c_dr, c_ds})"
     using ubfix_eq by blast
 
