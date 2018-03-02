@@ -1185,7 +1185,7 @@ section \<open>Composition with special operators\<close>
 
 
 abbreviation innerABP where
-"innerABP s ora1 ora2 \<equiv> (ufSerComp (ufSerComp (ufSerComp (senderTSPF s) (medRS_TSPF ora1)) recvTSPF) (ufParComp (medRS_TSPF ora2) idTSPF))"
+"innerABP s ora1 ora2 \<equiv> (ufSerComp (ufSerComp (ufSerComp (senderTSPF s) (medSR_TSPF ora1)) recvTSPF) (ufParComp (medRS_TSPF ora2) idTSPF2))"
 
 abbreviation fixABPHelper where
 "fixABPHelper se ora1 ora2 tb \<equiv> (\<lambda> x. Abs_ubundle[
@@ -1452,7 +1452,6 @@ lemma snd3_medsr3_rev3_sercomp_well: "uspec_sercompwell (SND \<circle> MEDSR) (R
           apply (subst ufSerComp_ran) using f09 apply blast
           apply (subst ufSerComp_ran) using f09 apply blast
           apply (subst ufSerComp_dom) using f09 apply blast
-          apply (subst ufSerComp_dom) using f09 apply blast
           apply (simp only: g_eq_recv recv_tspfdom recv_tspfran sender_tspfdom sender_tspfran)
           apply (simp_all only:  ora_def2 c_dr_boolpair_ctype med_tspfran2)
           by blast
@@ -1542,21 +1541,19 @@ lemma snd3_medsr3_rcv3_medrs3_id_sercomp_well: "uspec_sercompwell ((SND \<circle
         apply (subst ufSerComp_ran) using f14 apply blast
         apply (subst ufSerComp_dom) using f14 apply blast
         apply (subst ufSerComp_dom) using f12 apply blast
-        apply (subst ufSerComp_dom) using f14 apply blast
-        apply (subst ufSerComp_dom) using f12 apply blast
         apply (subst ufParComp_ran) using f16 apply blast
         apply (subst ufParComp_dom) using f16 apply blast
-        apply (subst ufParComp_ran) using f16 apply blast
         apply (subst ufParComp_dom) using f16 apply blast
          apply (simp add: f19 ora2_def f18)
         apply (rule)
          apply (metis ora2_def ora2_def2 ctype_MABP.simps(5) idTSPF2_dom insert_is_Un med_tspfdom2 ora2_def recv_tspfran)
-        apply rule
-         apply (metis f12 f14 f19 ufSerComp_dom)
-        apply rule
-        using f16 f18 ora2_def ufCompL_def apply blast
-        apply (simp only: idTSPF2_ran ora2_def2 c_as_bool_ctype med_tspfran2 sender_tspfdom)
-        sorry
+        apply (simp only: sender_tspfdom)
+        apply (subst med_tspfdom)
+          apply (simp add:  med_ora_length ora2_def2, simp)
+        apply (subst med_tspfran)
+          apply (simp add:  med_ora_length ora2_def2, simp)
+        apply (simp only: recv_tspfran idTSPF2_ran idTSPF2_dom)
+        by blast
       then show ?thesis 
         apply (simp add: uspec_sercompwell_def)
         apply (simp add: ufunclSerCompWell_ufun_def)
@@ -1689,15 +1686,15 @@ proof -
           (ufParComp (medRS_TSPF ora2) idTSPF2))))"
     by (metis abpcomp_f_ex ufunclFeedbackComp_ufun_def ufunclSerComp_ufun_def ufunclParComp_ufun_def assms(1)) 
   then obtain s where f12: "(s \<in> tsSender) \<and> (\<exists> ora1 ora2. (#({True} \<ominus> ora1) = \<infinity>) \<and> (#({True} \<ominus> ora2) = \<infinity>) \<and>
-     (f =  (\<mu>(ufSerComp (ufSerComp (ufSerComp (senderTSPF s) (medRS_TSPF ora1)) recvTSPF) (ufParComp (medRS_TSPF ora2) idTSPF)))))"
+     (f =  (\<mu>(ufSerComp (ufSerComp (ufSerComp (senderTSPF s) (medSR_TSPF ora1)) recvTSPF) (ufParComp (medRS_TSPF ora2) idTSPF2)))))"
     using f1 by blast
   then obtain ora1  where f13: "(#({True} \<ominus> ora1) = \<infinity>) \<and> (\<exists> ora2. (#({True} \<ominus> ora2) = \<infinity>) \<and>
-     (f =  (\<mu>(ufSerComp (ufSerComp (ufSerComp (senderTSPF s) (medRS_TSPF ora1)) recvTSPF) (ufParComp (medRS_TSPF ora2) idTSPF)))))"
+     (f =  (\<mu>(ufSerComp (ufSerComp (ufSerComp (senderTSPF s) (medSR_TSPF ora1)) recvTSPF) (ufParComp (medRS_TSPF ora2) idTSPF2)))))"
     using f1 by blast
   then obtain ora2  where f14: "(#({True} \<ominus> ora2) = \<infinity>) \<and>
-     (f =  (\<mu>(ufSerComp (ufSerComp (ufSerComp (senderTSPF s) (medRS_TSPF ora1)) recvTSPF) (ufParComp (medRS_TSPF ora2) idTSPF))))"
+     (f =  (\<mu>(ufSerComp (ufSerComp (ufSerComp (senderTSPF s) (medSR_TSPF ora1)) recvTSPF) (ufParComp (medRS_TSPF ora2) idTSPF2))))"
     using f1 by blast
-  then have f15: "(f =  (\<mu>(ufSerComp (ufSerComp (ufSerComp (senderTSPF s) (medRS_TSPF ora1)) recvTSPF) (ufParComp (medRS_TSPF ora2) idTSPF))))"
+  then have f15: "(f =  (\<mu>(ufSerComp (ufSerComp (ufSerComp (senderTSPF s) (medSR_TSPF ora1)) recvTSPF) (ufParComp (medRS_TSPF ora2) idTSPF2))))"
     using f1 by blast
 
 
@@ -1705,13 +1702,13 @@ proof -
     sorry
   have f21: "ufRan\<cdot>(innerABP s ora1 ora2) = {c_abpOut, c_ar}"
     sorry
-
+                                                          
   have f2: "(f \<rightleftharpoons> tb) . c_abpOut =  (ubFix (ufFeedH (innerABP s ora1 ora2) tb) {c_abpOut, c_ar})  .  c_abpOut"
     apply(subst f15)
     apply(simp add: ufFeedbackComp_def)
     apply(simp add: ufFeedbackComp_cont ufFeedbackComp_well)
     apply(simp add: f20 f21 assms ubclDom_ubundle_def)
-    by auto
+    by blast
  
   have f3: "(ubFix (ufFeedH (innerABP s ora1 ora2) tb) {c_abpOut, c_ar})  .  c_abpOut = 
             (ubFix (fixABPHelperCont s ora1 ora2 tb) {c_abpOut, c_ar, c_as, c_dr, c_ds})  .  c_abpOut"
