@@ -148,8 +148,7 @@ class ufuncl_comp = ufuncl +
                       ufunclParCompWell f1 f3 \<Longrightarrow>  f1 \<parallel> (f2 \<parallel> f3) = (f1 \<parallel> f2) \<parallel> f3"
 
   assumes sercomp_asso: "ufunclSerCompWell f1 f2 \<Longrightarrow>
-                      ufunclSerCompWell f2 f3 \<Longrightarrow> 
-                      ufclDom\<cdot>f1 \<inter> ufclRan\<cdot>f3 = {} \<Longrightarrow>  f1 \<circ> (f2 \<circ> f3) = (f1 \<circ> f2) \<circ> f3"
+                      ufunclSerCompWell f2 f3 \<Longrightarrow> f1 \<circ> (f2 \<circ> f3) = (f1 \<circ> f2) \<circ> f3"
 
 
   assumes parcompwell_asso: "ufunclParCompWell f1 f2 \<Longrightarrow>
