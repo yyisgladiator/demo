@@ -1161,6 +1161,11 @@ proof -
     by(simp add: f2)
 qed
 
+(* (\<Lambda> z. (f\<rightleftharpoons>((x \<uplus> z)\<bar> (ufDom\<cdot>f)))) *)
+lemma ufFeedH_insert: "(ufFeedH f tb)\<cdot>x = (f\<rightleftharpoons>((tb \<uplus> x)\<bar> (ufDom\<cdot>f)))"
+  by (simp add: ufFeedH_cont1 ufFeedH_def)
+
+
 lemma ufFeedH_dom [simp]: assumes "ubclDom\<cdot>x = ufDom\<cdot>f - ufRan\<cdot>f" 
                            and "ubclDom\<cdot>sb = ufRan\<cdot>f"
 shows "ubclDom\<cdot>((ufFeedH f x)\<cdot>sb) = (ufRan\<cdot>f)"
@@ -1487,6 +1492,13 @@ definition ufunclFeedbackComp_ufun_def: "ufunclFeedbackComp = ufFeedbackComp"
 definition ufunclCompWell_ufun_def: "ufunclCompWell = comp_well"
 definition ufunclSerCompWell_ufun_def: "ufunclSerCompWell = sercomp_well"
 definition ufunclParCompWell_ufun_def: "ufunclParCompWell = parcomp_well"
+
+
+lemma ufunclParCompWell_ufun_eq: "ufunclParCompWell f1 f2 = parcomp_well f1 f2"
+  by (simp add: ufunclParCompWell_ufun_def)
+
+lemma ufunclSerCompWell_ufun_eq: "ufunclSerCompWell f1 f2 = sercomp_well f1 f2"
+  by (simp add: ufunclSerCompWell_ufun_def)
 
 
 instance 
