@@ -1828,7 +1828,7 @@ proof -
     apply(simp add: ubWell_def)
     apply(simp add: usclOkay_tstream_def)
     by (simp_all add: tsmap_tsdom_range)
-  have f101: "ubWell (ABPBundleHelper s ora1 ora2 tb x)"
+  have f1011: "ubWell (ABPBundleHelper s ora1 ora2 tb x)"
     apply (simp add: ubWell_def)
     apply(simp add: usclOkay_tstream_def)
     by (simp_all add: tsmap_tsdom_range)
@@ -1958,47 +1958,76 @@ proof -
     (ubclLeast {c_abpOut, c_ar, c_as, c_dr, c_ds, c_idOut})"
     by simp
   have f502: "iterate (Suc 0)\<cdot>(fixABPHelperCont s ora1 ora2 tb)\<cdot>(ubclLeast {c_abpOut, c_ar, c_as, c_dr, c_ds, c_idOut}) = 
-    Abs_ubundle[
+    Abs_ubundle ([
     c_ds     \<mapsto> tsMap BoolPair\<cdot>(s\<cdot>(tsMap invData\<cdot>(tb . c_abpIn))\<cdot>(tsMap invBool\<cdot>((ubclLeast {c_abpOut, c_ar, c_as, c_dr, c_ds, c_idOut}) . c_as))),
     c_dr     \<mapsto> tsMap BoolPair\<cdot>(tsMed\<cdot>(tsMap invBoolPair\<cdot>((ubclLeast {c_abpOut, c_ar, c_as, c_dr, c_ds, c_idOut}) . c_ds))\<cdot>ora1),
     c_ar     \<mapsto> tsMap Bool\<cdot>(fst ( tsRec\<cdot>((tsMap invBoolPair)\<cdot>((ubclLeast {c_abpOut, c_ar, c_as, c_dr, c_ds, c_idOut}) . c_dr)))),
     c_abpOut \<mapsto> tsMap Data\<cdot>(snd ( tsRec\<cdot>((tsMap invBoolPair)\<cdot>((ubclLeast {c_abpOut, c_ar, c_as, c_dr, c_ds, c_idOut}) . c_dr)))),
     c_as     \<mapsto> tsMap Bool\<cdot>(tsMed\<cdot>(tsMap invBool\<cdot>((ubclLeast {c_abpOut, c_ar, c_as, c_dr, c_ds, c_idOut}) . c_ar))\<cdot>ora2),
     c_idOut  \<mapsto> tsMap Data\<cdot>(tsMap invData\<cdot>((ubclLeast {c_abpOut, c_ar, c_as, c_dr, c_ds, c_idOut}) . c_abpOut))
-    ]"
+    ])"
     apply (simp add: f200 f100)
-    apply (rule ub_eq)
-     apply (simp add: f100 ubdom_ubrep_eq)
-     apply (subst ubdom_ubrep_eq)
-      apply(simp add: ubWell_def)
-      apply(simp add: usclOkay_tstream_def)
-      apply (simp_all add: tsmap_tsdom_range)
-    apply (simp add: f99 f100 ubdom_ubrep_eq)
-    apply auto
-         apply (simp add: f100 ubgetch_ubrep_eq)
-    apply (subst ubgetch_ubrep_eq)
-      apply(simp add: ubWell_def)
-      apply(simp add: usclOkay_tstream_def)
-      apply (simp_all add: tsmap_tsdom_range)
-         apply (simp add: f100 ubgetch_ubrep_eq)
-    apply (subst ubgetch_ubrep_eq)
-      apply(simp add: ubWell_def)
-      apply(simp add: usclOkay_tstream_def)
-         apply (simp_all add: tsmap_tsdom_range)
-    apply (simp add: ubclLeast_ubundle_def)
-         apply (simp add: f100 ubgetch_ubrep_eq)
-    apply (subst ubgetch_ubrep_eq)
-      apply(simp add: ubWell_def)
-      apply(simp add: usclOkay_tstream_def)
-         apply (simp_all add: tsmap_tsdom_range)
-    apply (simp add: ubclLeast_ubundle_def)
-         apply (simp add: f100 ubgetch_ubrep_eq)
-    apply (subst ubgetch_ubrep_eq)
-      apply(simp add: ubWell_def)
-      apply(simp add: usclOkay_tstream_def)
-         apply (simp_all add: tsmap_tsdom_range)
     by (simp add: ubclLeast_ubundle_def)
-  
+
+  have f503: "iterate (Suc 0)\<cdot>(fixABPHelperCont s ora1 ora2 tb)\<cdot>(ubclLeast {c_abpOut, c_ar, c_as, c_dr, c_ds, c_idOut}) . c_idOut= 
+    tsMap Data\<cdot>(tsMap invData\<cdot>((ubclLeast {c_abpOut, c_ar, c_as, c_dr, c_ds, c_idOut}) . c_abpOut))"
+    apply (subst f502)
+    apply (simp add: ubclLeast_ubundle_def)
+    apply (subst ubgetch_ubrep_eq)
+    apply(simp add: ubWell_def)
+    apply(simp add: usclOkay_tstream_def)
+    by (simp_all add: tsmap_tsdom_range)
+
+  have f504: "iterate (Suc (Suc 0))\<cdot>(fixABPHelperCont s ora1 ora2 tb)\<cdot>(ubclLeast {c_abpOut, c_ar, c_as, c_dr, c_ds, c_idOut}) . c_idOut= 
+    tsMap Data\<cdot>(tsMap invData\<cdot>((ubclLeast {c_abpOut, c_ar, c_as, c_dr, c_ds, c_idOut}) . c_abpOut))"
+    apply (simp add: ubclLeast_ubundle_def)
+    apply (simp add: f200)
+    apply (subst ubgetch_ubrep_eq)
+    apply (simp add: ubWell_def)
+    apply (simp add: usclOkay_tstream_def)
+    apply (simp_all add: tsmap_tsdom_range)
+    apply (subst ubgetch_ubrep_eq)
+    apply (simp add: ubWell_def)
+    apply (simp add: usclOkay_tstream_def)
+    by (simp_all add: tsmap_tsdom_range)
+
+  have f505: "iterate (Suc (Suc (Suc  0)))\<cdot>(fixABPHelperCont s ora1 ora2 tb)\<cdot>(ubclLeast {c_abpOut, c_ar, c_as, c_dr, c_ds, c_idOut}) . c_idOut= 
+    tsMap Data\<cdot>(tsMap invData\<cdot>((ubclLeast {c_abpOut, c_ar, c_as, c_dr, c_ds, c_idOut}) . c_abpOut))"
+    apply (simp add: ubclLeast_ubundle_def)
+    apply (simp add: f200)
+    apply (subst ubgetch_ubrep_eq)
+    apply (simp add: ubWell_def)
+    apply (simp add: usclOkay_tstream_def)
+    apply (simp_all add: tsmap_tsdom_range)
+    apply (subst ubgetch_ubrep_eq)
+    apply (simp add: ubWell_def)
+    apply (simp add: usclOkay_tstream_def)
+    apply (simp_all add: tsmap_tsdom_range)
+    apply (subst ubgetch_ubrep_eq)
+    apply (simp add: ubWell_def)
+    apply (simp add: usclOkay_tstream_def)
+    by (simp_all add: tsmap_tsdom_range)
+    
+  have f506: "iterate (Suc (Suc (Suc  (Suc 0))))\<cdot>(fixABPHelperCont s ora1 ora2 tb)\<cdot>(ubclLeast {c_abpOut, c_ar, c_as, c_dr, c_ds, c_idOut}) . c_idOut= 
+    tsMap Data\<cdot>(tsMap invData\<cdot>(tsMap Data\<cdot>(snd (tsRec\<cdot>(tsMap invBoolPair\<cdot>(tsMap BoolPair\<cdot>(tsMed\<cdot>(tsMap invBoolPair\<cdot>(tsMap BoolPair\<cdot>(s\<cdot>(tsMap invData\<cdot>(tb  .  c_abpIn))\<cdot>\<bottom>)))\<cdot>ora1))))))) "
+    apply (simp add: ubclLeast_ubundle_def)
+    apply (simp add: f200)
+    apply (subst ubgetch_ubrep_eq)
+    apply (simp add: ubWell_def)
+    apply (simp add: usclOkay_tstream_def)
+    apply (simp_all add: tsmap_tsdom_range)
+    apply (subst ubgetch_ubrep_eq)
+    apply (simp add: ubWell_def)
+    apply (simp add: usclOkay_tstream_def)
+    apply (simp_all add: tsmap_tsdom_range)
+    apply (subst ubgetch_ubrep_eq)
+    apply (simp add: ubWell_def)
+    apply (simp add: usclOkay_tstream_def)
+    apply (simp_all add: tsmap_tsdom_range)
+    apply (subst ubgetch_ubrep_eq)
+    apply (simp add: ubWell_def)
+    apply (simp add: usclOkay_tstream_def)
+    by (simp_all add: tsmap_tsdom_range)
 (*===============================================================================================*)
 
 
