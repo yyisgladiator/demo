@@ -887,7 +887,6 @@ lemma ufParComp_repAbs: assumes "parcomp_well f1 f2"
   apply (simp add: assms ufParComp_well)
   by auto
 
-
 lemma ufParComp_dom: assumes "parcomp_well f1 f2"
   shows "ufDom\<cdot>(ufParComp f1 f2) = (ufDom\<cdot>f1 \<union> ufDom\<cdot>f2)"
   apply (subst ufDom_def, simp add:ufParComp_def)
@@ -896,6 +895,11 @@ lemma ufParComp_dom: assumes "parcomp_well f1 f2"
   apply (simp add: domIff)
   by (simp add: ubclDom_h)
   
+lemma ufParComp_apply: assumes "parcomp_well f1 f2" and "ubclDom\<cdot>x = ufDom\<cdot>(f1\<parallel>f2)"
+  shows "(f1\<parallel>f2)\<rightleftharpoons>x = ((f1 \<rightleftharpoons> (x \<bar>ufDom\<cdot>f1)) \<uplus> (f2 \<rightleftharpoons> (x\<bar>ufDom\<cdot>f2)))"
+  apply (subst ufParComp_repAbs)
+  using assms(1) apply blast
+  using assms(1) assms(2) ufParComp_dom by auto
 
 lemma ufParComp_ran: assumes "parcomp_well f1 f2"
   shows "ufRan\<cdot>(ufParComp f1 f2) = (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2)"
