@@ -1093,10 +1093,42 @@ lemma abpHelper_cont:
   and "se \<in> tsSender"
   and "ubDom\<cdot>tb = {c_abpIn}"
   shows "cont (fixABPHelper se ora1 ora2 tb)"
+  
   sorry
 
-lemma helper: assumes "tsAbs\<cdot>s = tsAbs\<cdot>(tsMap invData\<cdot>s2)" shows "tsAbs\<cdot>(tsMap Data\<cdot>s) = tsAbs\<cdot>s2"
+lemma helper: assumes "Fin n < #(tsAbs\<cdot>s)" shows "snth n (tsAbs\<cdot>(tsMap f\<cdot>s)) = f (snth n (tsAbs\<cdot>(s)))"
+  using tsmap_tsdom 
   sorry
+
+lemma tsAbs_data_eq: assumes "tsAbs\<cdot>(s) = tsAbs\<cdot>(tsMap invData\<cdot>(s2))" and "tsDom\<cdot>s2 \<subseteq> range Data" shows "tsAbs\<cdot>(tsMap Data\<cdot>s) = tsAbs\<cdot>s2"
+proof - 
+  have f0: "\<And>s. invData(Data s) = s"
+    by simp
+  have f1: " #(tsAbs\<cdot>s) = #(tsAbs\<cdot>s2)"
+    using assms(1) by simp
+  show ?thesis
+    apply(subst snths_eq, simp_all)
+    apply(simp add: f1)
+    apply rule+
+  proof - 
+    fix n
+    assume fin: "Fin n < #(tsAbs\<cdot>s)"
+
+    obtain a where f2: "snth n (tsAbs\<cdot>s2) = Data a"
+      using assms(2) f1 fin
+      by (metis (mono_tags, lifting) f_inv_into_f snth2sdom subset_iff tsabs_tsdom)
+    hence f21: "snth n (tsAbs\<cdot>(tsMap invData\<cdot>(s2))) = a"
+      using helper fin by blast
+    
+    have f3: "snth n (tsAbs\<cdot>s) = a"
+      using f2 assms by (simp add: f21)
+    hence f4: "snth n (tsAbs\<cdot>(tsMap Data\<cdot>s)) = Data a"
+      using helper fin by blast
+
+    show "snth n (tsAbs\<cdot>(tsMap Data\<cdot>s)) = snth n (tsAbs\<cdot>s2)"
+      using f2 f4 by auto
+  qed
+qed
 
 (* Lemma from Dennis group  *)
 lemma tsaltbitpro_inp2out:
@@ -1132,19 +1164,19 @@ proof -
     using f1 by blast
 
 
-  have f20: "ufDom\<cdot>(innerABP s ora1 ora2) = {c_abpIn, c_ar}"
+  have f20: "ufDom\<cdot>(innerABP s ora1 ora2) = {c_abpIn, c_as}"
     sorry
-  have f21: "ufRan\<cdot>(innerABP s ora1 ora2) = {c_abpOut, c_ar}"
+  have f21: "ufRan\<cdot>(innerABP s ora1 ora2) = {c_abpOut, c_as}"
     sorry
 
-  have f2: "(f \<rightleftharpoons> tb) . c_abpOut =  (ubFix (ufFeedH (innerABP s ora1 ora2) tb) {c_abpOut, c_ar})  .  c_abpOut"
+  have f2: "(f \<rightleftharpoons> tb) . c_abpOut =  (ubFix (ufFeedH (innerABP s ora1 ora2) tb) {c_abpOut, c_as})  .  c_abpOut"
     apply(subst f15)
     apply(simp add: ufFeedbackComp_def)
     apply(simp add: ufFeedbackComp_cont ufFeedbackComp_well)
     apply(simp add: f20 f21 assms ubclDom_ubundle_def)
     by auto
  
-  have f3: "(ubFix (ufFeedH (innerABP s ora1 ora2) tb) {c_abpOut, c_ar})  .  c_abpOut = 
+  have f3: "(ubFix (ufFeedH (innerABP s ora1 ora2) tb) {c_abpOut, c_as})  .  c_abpOut = 
             (ubFix (fixABPHelperCont s ora1 ora2 tb) {c_abpOut, c_ar, c_as, c_dr, c_ds})  .  c_abpOut"
     sorry
 
@@ -1311,11 +1343,8 @@ proof -
       by simp
     have f91: "tsDom\<cdot>(tb . c_abpIn) \<subseteq> range Data"
       by (metis assms(2) ctype_MABP.simps(1) insert_iff ubdom_channel_usokay ubgetch_insert usclOkay_tstream_def)
-    then have f92: "\<exists>s. tb . c_abpIn = tsMap Data\<cdot>s"
-      sorry
     show ?thesis
-      using f8 
-      sorry
+      using f8 tsAbs_data_eq using f91 by blast 
   qed
   show ?thesis
   proof - 
