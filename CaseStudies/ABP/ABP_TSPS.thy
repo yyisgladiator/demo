@@ -1096,9 +1096,14 @@ lemma abpHelper_cont:
   
   sorry
 
-lemma helper: assumes "Fin n < #(tsAbs\<cdot>s)" shows "snth n (tsAbs\<cdot>(tsMap f\<cdot>s)) = f (snth n (tsAbs\<cdot>(s)))"
-  using tsmap_tsdom 
-  sorry
+lemma tsabs_map_snth: assumes "Fin n < #(tsAbs\<cdot>s)" shows "snth n (tsAbs\<cdot>(tsMap f\<cdot>s)) = f (snth n (tsAbs\<cdot>(s)))"
+proof - 
+  have "(tsAbs\<cdot>(tsMap f\<cdot>s)) = smap f\<cdot>(tsAbs\<cdot>(s))"
+    apply(simp add: tsabs_insert tsmap_insert)
+    by (simp add: tsmap_h_well tsproj_tsabs_h)
+  thus ?thesis
+    by (simp add: smap_snth_lemma assms)
+qed
 
 lemma tsAbs_data_eq: assumes "tsAbs\<cdot>(s) = tsAbs\<cdot>(tsMap invData\<cdot>(s2))" and "tsDom\<cdot>s2 \<subseteq> range Data" shows "tsAbs\<cdot>(tsMap Data\<cdot>s) = tsAbs\<cdot>s2"
 proof - 
@@ -1118,12 +1123,12 @@ proof -
       using assms(2) f1 fin
       by (metis (mono_tags, lifting) f_inv_into_f snth2sdom subset_iff tsabs_tsdom)
     hence f21: "snth n (tsAbs\<cdot>(tsMap invData\<cdot>(s2))) = a"
-      using helper fin by blast
+      using fin by (simp add: tsabs_map_snth f1)
     
     have f3: "snth n (tsAbs\<cdot>s) = a"
       using f2 assms by (simp add: f21)
     hence f4: "snth n (tsAbs\<cdot>(tsMap Data\<cdot>s)) = Data a"
-      using helper fin by blast
+      using tsabs_map_snth fin by blast
 
     show "snth n (tsAbs\<cdot>(tsMap Data\<cdot>s)) = snth n (tsAbs\<cdot>s2)"
       using f2 f4 by auto
