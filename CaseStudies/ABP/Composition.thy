@@ -22,16 +22,11 @@ fixrec tsTakeTick :: "'a tstream \<rightarrow> 'a tstream" where
 "tsTakeTick\<cdot>(tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>ts) = delayFun\<cdot>(tsTakeTick\<cdot>ts)" |
 "ts \<noteq> \<bottom> \<Longrightarrow> tsTakeTick\<cdot>(tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>t))\<cdot>ts) = \<bottom>"  
 
-fixrec tsTickDrop :: " 'a tstream \<rightarrow> 'a tstream" where
-"tsTickDrop\<cdot>\<bottom> = \<bottom>" |
-"tsTickDrop\<cdot>(tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>ts) = (tsTickDrop\<cdot>ts)" |
-"ts \<noteq> \<bottom> \<Longrightarrow> tsTickDrop\<cdot>(tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>t))\<cdot>ts) = tsMLscons\<cdot>(up\<cdot>t)\<cdot>ts"  
-  
 type_synonym 'a sender = "('a tstream \<rightarrow> bool tstream  \<rightarrow> ('a \<times> bool) tstream)"
 
 definition tsSender :: "('a sender) set" where
 "tsSender = {send :: 'a tstream \<rightarrow> bool tstream \<rightarrow> ('a \<times> bool) tstream.
-  \<forall>i as t.
+  \<forall>i as.
   tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(send\<cdot>i\<cdot>as))) \<sqsubseteq> tsAbs\<cdot>i \<and>
   tsAbs\<cdot>(tsRemDups\<cdot>(tsProjSnd\<cdot>(tsRemDups\<cdot>(send\<cdot>i\<cdot>as)))) = tsAbs\<cdot>(tsProjSnd\<cdot>(tsRemDups\<cdot>(send\<cdot>i\<cdot>as))) \<and>
   (tsAbs\<cdot>(tsRemDups\<cdot>as) \<sqsubseteq> tsAbs\<cdot>(tsRemDups\<cdot>(tsProjSnd\<cdot>(send\<cdot>i\<cdot>as))) \<longrightarrow> 
@@ -42,18 +37,8 @@ definition tsSender :: "('a sender) set" where
   (#(tsAbs\<cdot>as) = \<infinity> \<longrightarrow> #(tsAbs\<cdot>(tsRemDups\<cdot>(send\<cdot>i\<cdot>as))) \<le> #(tsAbs\<cdot>(tsRemDups\<cdot>as))) \<and>
 *)
   (#(tsAbs\<cdot>i) > #(tsAbs\<cdot>(tsRemDups\<cdot>as)) \<longrightarrow> lnsuc\<cdot>(#\<surd>as) \<le> #\<surd>(send\<cdot>i\<cdot>as)) \<and>
-  (min (#\<surd>i) (#\<surd>as) < \<infinity> \<longrightarrow> min (#\<surd>i) (#\<surd>as) < #\<surd>(send\<cdot>i\<cdot>as)) \<and>
-  (#\<surd>(tsTakeTick\<cdot>as) \<ge> Fin t \<longrightarrow> (\<forall>p. p \<le> t \<longrightarrow> shd(tsAbs\<cdot>(send\<cdot>(tsTickDrop\<cdot>i)\<cdot>as)) = snth p (tsAbs\<cdot>(send\<cdot>(tsTickDrop\<cdot>i)\<cdot>as))))\<and>
-  (tsAbs\<cdot>i \<noteq> \<bottom> \<longrightarrow> lshd\<cdot>(tsAbs\<cdot>(send\<cdot>(tsTickDrop\<cdot>i)\<cdot>as)) = lshd\<cdot>(tsAbs\<cdot>(send\<cdot>i\<cdot>as)))
+  (min (#\<surd>i) (#\<surd>as) < \<infinity> \<longrightarrow> min (#\<surd>i) (#\<surd>as) < #\<surd>(send\<cdot>i\<cdot>as))
 }"
-
-lemma set2tssnd_new: assumes "send \<in> tsSender"
-  shows "#\<surd>(tsTakeTick\<cdot>as) \<ge> Fin t \<longrightarrow> (\<forall>p. p \<le> t \<longrightarrow> shd(tsAbs\<cdot>(send\<cdot>(tsTickDrop\<cdot>i)\<cdot>as)) = snth p (tsAbs\<cdot>(send\<cdot>(tsTickDrop\<cdot>i)\<cdot>as)))"
-  sorry
-
-lemma set2tssnd_strcausal: assumes "send \<in> tsSender"
-  shows "min (#\<surd>i) (#\<surd>as) < \<infinity> \<longrightarrow> min (#\<surd>i) (#\<surd>as) < #\<surd>(send\<cdot>i\<cdot>as)"
-  using assms tsSender_def by auto
 
 (* 1st axiom *)
 lemma set2tssnd_prefix_inp: assumes "send \<in> tsSender"
@@ -372,6 +357,47 @@ lemma sdropwhile_sdom_bool:"sdom\<cdot>p1 \<subseteq> {True} \<Longrightarrow> p
 lemma shd_lshd:"a \<noteq> \<bottom> \<Longrightarrow> b \<noteq> \<bottom> \<Longrightarrow> shd a = shd b \<Longrightarrow> lshd\<cdot>a = lshd\<cdot>b"
   by (metis lshd_updis surj_scons)
     
+lemma med_HHHH:"(\<And>(ds::('b \<times> 'a) tstream) p1. #p1 = \<infinity> \<Longrightarrow>
+                 sdrop n\<cdot>p1 = sdropwhile Not\<cdot>p1 \<Longrightarrow>
+                 sMed\<cdot>(sdrop n\<cdot>(tsAbs\<cdot>(tsProjSnd\<cdot>ds)))\<cdot>(sdropwhile Not\<cdot>p1) = tsAbs\<cdot>(tsProjSnd\<cdot>(tsMed\<cdot>ds\<cdot>p1))) \<Longrightarrow>
+       #p1 = \<infinity> \<Longrightarrow>
+       sdrop (Suc n)\<cdot>p1 = sdropwhile Not\<cdot>p1 \<Longrightarrow> sMed\<cdot>(sdrop (Suc n)\<cdot>(tsAbs\<cdot>(tsProjSnd\<cdot>ds)))\<cdot>(sdropwhile Not\<cdot>p1) = tsAbs\<cdot>(tsProjSnd\<cdot>(tsMed\<cdot>ds\<cdot>p1))"
+  proof-
+    assume a0:"(\<And>ds p1. #p1 = \<infinity> \<Longrightarrow>
+                 sdrop n\<cdot>p1 = sdropwhile Not\<cdot>p1 \<Longrightarrow>
+                 sMed\<cdot>(sdrop n\<cdot>(tsAbs\<cdot>(tsProjSnd\<cdot>(ds::('b \<times> 'a) tstream))))\<cdot>(sdropwhile Not\<cdot>p1) = tsAbs\<cdot>(tsProjSnd\<cdot>(tsMed\<cdot>ds\<cdot>p1))) "
+    assume a1:"#p1 = \<infinity>"
+    assume a2:"sdrop (Suc n)\<cdot>p1 = sdropwhile Not\<cdot>p1"
+    have h1:"#(srt\<cdot>p1) = \<infinity>"
+      by (metis (no_types) a1 fair_sdrop fair_sdrop_rev sdrop_forw_rt)
+    have h2:"sdrop (Suc n)\<cdot>p1 = sdrop n\<cdot>(srt\<cdot>p1)"
+      by (simp add: sdrop_forw_rt)
+    have h3:"sdropwhile Not\<cdot>(p1)  = sdropwhile Not\<cdot>(srt\<cdot>p1)"
+      sorry
+    then show ?thesis
+      sorry
+qed  
+  
+  
+lemma med_HHH:"#p1 = \<infinity> \<Longrightarrow> sdrop n\<cdot>p1 = sdropwhile (\<lambda>x. x = False)\<cdot>p1 \<Longrightarrow>sMed\<cdot>(sdrop n\<cdot>(tsAbs\<cdot>(tsProjSnd\<cdot>ds)))\<cdot>(sdrop n\<cdot>p1) = tsAbs\<cdot>(tsProjSnd\<cdot>(tsMed\<cdot>ds\<cdot>p1))"
+  apply(induction n arbitrary: ds p1, simp_all)
+  apply(simp add: tsprojsnd_tsabs tsmed_tsabs sprojsnd_smed)
+  using med_HHHH by blast
+    
+lemma sdrop_all_h:"u \<noteq> \<bottom> \<Longrightarrow> (\<And>n. #i \<le> Fin n \<Longrightarrow> sdrop n\<cdot>i = \<epsilon>) \<Longrightarrow> #(u && i) \<le> Fin n \<Longrightarrow> sdrop n\<cdot>(u && i) = \<epsilon>"  
+  sorry  
+  
+lemma sdrop_all:"#i \<le> Fin n \<Longrightarrow> sdrop n\<cdot>i = \<bottom>"
+  apply(induction i arbitrary: n,simp_all)
+  apply(rule adm_all)
+  apply(rule adm_imp)
+  apply(rule admI)
+  apply (metis inf_chainl4 l42 notinfI3)
+  apply simp
+  using sdrop_all_h by blast  
+    
+    
+      
 lemma tsaltbitpro_inp2out:
   assumes send_def: "send \<in> tsSender"
     and p1_def: "#({True} \<ominus> p1) = \<infinity>"
@@ -473,6 +499,7 @@ lemma tsaltbitpro_inp2out:
       assume a0:"shd p1 \<noteq> True"
       then show ?thesis
       proof(case_tac "tsAbs\<cdot>i \<noteq> \<bottom>")
+        assume a1:"tsAbs\<cdot>i \<noteq> \<bottom>"
         have h0:"\<exists>n. sdrop n\<cdot>p1 = sdropwhile (\<lambda>x. x = False)\<cdot>p1"
         proof-
           have h01:"\<exists>n. #(stakewhile(\<lambda>x. x = False)\<cdot>p1) = Fin n"
@@ -486,17 +513,49 @@ lemma tsaltbitpro_inp2out:
           by (metis Inf'_neq_0_rev \<open>sdrop n\<cdot>p1 = sdropwhile (\<lambda>x. x = False)\<cdot>p1\<close> fair_sdrop only_empty_has_length_0 p1_inf sdropwhile_resup surj_scons)
         have h2:" shd(sdrop n\<cdot>p1) = True"
           using \<open>sdrop n\<cdot>p1 = sdropwhile (\<lambda>x. x = False)\<cdot>p1\<close> h1 by auto
-        have h21:"#(tsAbs\<cdot>ds) > Fin n"
+        have h21:"\<not>(#(tsAbs\<cdot>ds) > Fin n) \<Longrightarrow> \<not>(#\<surd>as = \<infinity> \<longrightarrow> #(tsAbs\<cdot>i) > #(tsAbs\<cdot>(tsRemDups\<cdot>as)) \<longrightarrow> #(tsAbs\<cdot>(send\<cdot>i\<cdot>as)) = \<infinity>)"
         proof-
-          have"#\<surd>as = \<infinity>"
-            sorry
+          assume a2:"\<not>(#(tsAbs\<cdot>ds) > Fin n)"
+          have h01:"#(tsAbs\<cdot>ds) \<le> Fin n"
+            using a2 by simp
+          have h02:"#(tsAbs\<cdot>(tsRemDups\<cdot>as)) =  #(tsAbs\<cdot>(tsRemDups\<cdot>(tsMed\<cdot>(tsProjSnd\<cdot>(tsMed\<cdot>ds\<cdot>p1))\<cdot>p2)))"
+            by(simp add: as_def ar_def dr_def)
+          have h03:"#(tsAbs\<cdot>(tsRemDups\<cdot>as)) \<le> #(tsAbs\<cdot>(tsRemDups\<cdot>ds))"
+            using as_leq_ds by auto
+          have h05:"shd p1 = False"
+            using a0 by simp
+          have h06:"sMed\<cdot>(sdrop n\<cdot>(tsAbs\<cdot>(tsProjSnd\<cdot>ds)))\<cdot>(sdrop n\<cdot>p1) = tsAbs\<cdot>(tsProjSnd\<cdot>(tsMed\<cdot>ds\<cdot>p1))"
+            using \<open>sdrop n\<cdot>p1 = sdropwhile (\<lambda>x. x = False)\<cdot>p1\<close> med_HHH p1_inf by blast
+          have h072:"#(tsAbs\<cdot>(tsProjSnd\<cdot>ds)) \<le> Fin n"
+            by (simp add: h01)
+          have h071:"sdrop n\<cdot>(tsAbs\<cdot>(tsProjSnd\<cdot>ds)) = \<bottom>"
+            by (meson h072 sdrop_all)
+          have h07:"(tsAbs\<cdot>(tsMed\<cdot>(tsProjSnd\<cdot>(tsMed\<cdot>ds\<cdot>p1))\<cdot>p2)) = \<bottom>"
+            by (metis h06 h071 p2_inf smed_bot1 tsmed_tsabs)
+          have h08:"(tsAbs\<cdot>as) = \<bottom>"
+            by (simp add: ar_def as_def dr_def h07)
+          have h0:"#(tsAbs\<cdot>i) > #(tsAbs\<cdot>(tsRemDups\<cdot>as))"
+            by (metis a1 as_leq_i bottomI h08 le_neq_trans lnle_def lnzero_def slen_empty_eq tsremdups_tsabs_slen)
+          have h1:"#\<surd>as = \<infinity>"
+            using ar_def as_def dr_def ds_def h0 p1_def p2_def send_def tstickcount_inp2infacks by blast
           then show ?thesis
-            sorry
-        qed      
+            using ds_def h0 h01 notinfI3 by blast
+        qed
+        have h212:"#(tsAbs\<cdot>ds) > Fin n"
+          using h21 send_def set2tssnd_nack2inftrans by auto
         have h22:"tsAbs\<cdot>ds \<noteq> \<bottom> \<Longrightarrow> tsAbs\<cdot>as = \<bottom> \<Longrightarrow> as\<noteq>\<bottom> \<Longrightarrow> srcdups\<cdot>(tsAbs\<cdot>ds) = \<up>(shd (tsAbs\<cdot>ds))"
           sorry
+        have h32:"\<not>(\<forall>t. t\<le>n+1 \<longrightarrow> updis (snth t (tsAbs\<cdot>ds)) = lshd\<cdot>(tsAbs\<cdot>ds)) \<Longrightarrow> \<not>(tsAbs\<cdot>ds \<noteq> \<bottom> \<longrightarrow> tsAbs\<cdot>as = \<bottom> \<longrightarrow> as\<noteq>\<bottom> \<longrightarrow> srcdups\<cdot>(tsAbs\<cdot>ds) = \<up>(shd (tsAbs\<cdot>ds)))"
+        proof-
+          assume a4:"\<not>(\<forall>t. t\<le>n+1 \<longrightarrow> updis (snth t (tsAbs\<cdot>ds)) = lshd\<cdot>(tsAbs\<cdot>ds))"
+          have h33:"\<exists>t\<le>n+1. updis (snth t (tsAbs\<cdot>ds)) \<noteq> lshd\<cdot>(tsAbs\<cdot>ds)"
+            using a4 by auto
+          then show ?thesis
+            
+            sorry
+        qed        
         then have h31:"\<forall>t. t\<le>n+1 \<longrightarrow> updis (snth t (tsAbs\<cdot>ds)) = lshd\<cdot>(tsAbs\<cdot>ds)"
-          sorry
+          using h22 by blast
         have h3:"lshd\<cdot>(tsAbs\<cdot>ds) = lshd\<cdot>(sdrop n\<cdot>(tsAbs\<cdot>ds))"
           sorry
         have h4:"lshd\<cdot>(sMed\<cdot>(tsAbs\<cdot>ds)\<cdot>p1) = lshd\<cdot>(sMed\<cdot>(sdrop n\<cdot>(tsAbs\<cdot>ds))\<cdot>(sdrop n\<cdot>p1))"
