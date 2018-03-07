@@ -386,13 +386,13 @@ sorry
     apply (subst as_def)
     apply (simp add: ar_def dr_def ds_def)
       by (simp add: p1_inf p2_inf)
-(*    have h45: "#\<surd>i \<noteq> \<infinity> \<Longrightarrow> #(tsAbs\<cdot>i) \<le> #(tsAbs\<cdot>(tsRemDups\<cdot>as))"
+   have h45: "#\<surd>i \<noteq> \<infinity> \<Longrightarrow> #(tsAbs\<cdot>i) \<le> #(tsAbs\<cdot>(tsRemDups\<cdot>as))"
       proof -
         have "#\<surd>as \<noteq> \<infinity>" sorry
         then show ?thesis
           by (metis ar_def as_def dr_def ds_def leI p1_def p2_def send_def tstickcount_inp2infacks)
      qed
-    have i_geq_as: "#(tsAbs\<cdot>i) \<le> #(tsAbs\<cdot>(tsRemDups\<cdot>as))"
+(*    have i_geq_as: "#(tsAbs\<cdot>i) \<le> #(tsAbs\<cdot>(tsRemDups\<cdot>as))"
       proof (cases "#\<surd>i =\<infinity>")
         case False
         then have "#\<surd>as \<noteq> \<infinity>" sorry
@@ -453,12 +453,22 @@ sorry
       by (meson leI send_def set2tssnd_nack2inftrans)
     have h45:"#\<surd>as = \<infinity> \<Longrightarrow> #(tsAbs\<cdot>i) \<noteq> \<infinity> \<Longrightarrow>  #(srcdups\<cdot>(tsAbs\<cdot>(send\<cdot>i\<cdot>as))) \<noteq> \<infinity>"
       by (metis (no_types, lifting) mono_fst_infD send_def set2tssnd_prefix_inp tsprojfst_tsabs_slen tsremdups_tsabs)
-*)  have h103:"#(tsAbs\<cdot>(tsRemDups\<cdot>(tsProjSnd\<cdot>(send\<cdot>i\<cdot>as)))) = #(tsAbs\<cdot>(tsRemDups\<cdot>as))"
+ *)
+  have "#(tsAbs\<cdot>(tsRemDups\<cdot>as)) \<ge> #(tsAbs\<cdot>(tsRemDups\<cdot>(tsProjSnd\<cdot>ds)))"
+    apply (simp add: tsremdups_tsabs as_def ar_def dr_def p2_inf p1_inf tsmed_tsabs tsprojsnd_tsabs sprojsnd_smed smed2med, simp add: ds_def)
+    sorry
+  have halles:"#(tsAbs\<cdot>(tsRemDups\<cdot>as)) = #(tsAbs\<cdot>(tsRemDups\<cdot>(tsProjSnd\<cdot>ds)))"
+    apply (simp add: tsremdups_tsabs as_def ar_def dr_def p2_inf p1_inf tsmed_tsabs tsprojsnd_tsabs sprojsnd_smed smed2med, simp add: ds_def)
+    sorry
+(*  have h1032:"#(tsAbs\<cdot>(tsRemDups\<cdot>(tsProjSnd\<cdot>ds))) \<le> #(tsAbs\<cdot>(tsRemDups\<cdot>as))"
+      apply (simp add: ar_def as_def dr_def p1_def p2_def tsmed2_tsremdups_tsabs_slen)
+ sorry
+  have h103:"#(tsAbs\<cdot>(tsRemDups\<cdot>(tsProjSnd\<cdot>(send\<cdot>i\<cdot>as)))) = #(tsAbs\<cdot>(tsRemDups\<cdot>as))"
       by (metis (no_types, lifting) h20 as_leq_i ds_def i_geq_as less2eq mono_slen send_def set2tssnd_prefix_inp tsprojfst_tsabs_slen tsprojsnd_tsabs_slen tssnd_tsprojsnd_tsremdups)
     have h101: "tsAbs\<cdot>(tsRemDups\<cdot>(tsProjSnd\<cdot>(send\<cdot>i\<cdot>as))) = tsAbs\<cdot>(tsRemDups\<cdot>as)"
       by (metis ack2trans_pre ds_def eq_slen_eq_and_less h103)
     then have h10: "tsAbs\<cdot>(tsProjSnd\<cdot>(tsRemDups\<cdot>(send\<cdot>i\<cdot>as))) = tsAbs\<cdot>(tsRemDups\<cdot>as)"
-      using send_def tssnd_tsprojsnd_tsremdups by fastforce 
+      using send_def tssnd_tsprojsnd_tsremdups by fastforce *)
 (* have h4:"#\<surd> as = \<infinity> \<Longrightarrow> #(tsAbs\<cdot>i) \<noteq> \<infinity> \<Longrightarrow> #(tsAbs\<cdot>(send\<cdot>i\<cdot>as)) \<noteq> \<infinity>"
      
       apply (simp add: as_def ar_def dr_def)
@@ -482,7 +492,8 @@ sorry
     
     
   by (metis ar_def as_def dr_def ds_def i_ninf leI local.h3 local.h4 p1_def p2_def send_def tstickcount_inp2infacks)
-*)  have i_geq_as: "#(tsAbs\<cdot>i) \<le> #(tsAbs\<cdot>(tsRemDups\<cdot>as))"
+*)
+(*  have i_geq_as: "#(tsAbs\<cdot>i) \<le> #(tsAbs\<cdot>(tsRemDups\<cdot>as))"
   (*  using ack2trans_post h6 h7 by blast *)
       apply (case_tac "#\<surd>as =\<infinity>")
       apply (metis ack2trans_post ds_def h10 h6 inf_ub less_le ln_less tsprojfst_tsabs_slen tsprojsnd_tsabs_slen)
@@ -492,7 +503,7 @@ sorry
       apply (rule h2)
       apply (fold h1)
       using inf_less_eq linorder_le_less_linear ln_less by blast
-      
+    *)  
      (* apply (simp add: as_def ar_def dr_def)
       apply (subst ds_def)
       apply (simp add: tsremdups_tsabs p1_inf p2_inf tsmed_tsabs tsprojsnd_tsabs)
@@ -501,19 +512,21 @@ sorry
 by (meti ack2trans_post as_leq_ds dual_order.antisym inf_ub lnle2le min_def min_rek 
           tsprojfst_tsabs_slen) *)
     (* equalities *)
-    have i_eq_as: "#(tsAbs\<cdot>i) = #(tsAbs\<cdot>(tsRemDups\<cdot>as))"
-      by (simp add: dual_order.antisym i_geq_as as_leq_i)
+  (*  have i_eq_as: "#(tsAbs\<cdot>i) = #(tsAbs\<cdot>(tsRemDups\<cdot>as))"
+      by (simp add: dual_order.antisym i_geq_as as_leq_i)*)
     (* property 6 *)
     have i_eq_ds: "#(tsAbs\<cdot>i) = #(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>ds)))"
-      by (metis as_leq_ds ds_def i_eq_as less2eq mono_slen send_def set2tssnd_prefix_inp)
-    (* property 7 *)
+      by (metis ack2trans_post as_leq_i ds_def dual_order.antisym h6 halles min_absorb2 min_rek send_def tsprojfst_tsabs_slen tsprojsnd_tsabs_slen tssnd_tsprojsnd_tsremdups)
+    (*    by (metis as_leq_ds ds_def i_eq_as less2eq mono_slen send_def set2tssnd_prefix_inp)
+  *)  (* property 7 *)
     have projfst2projsnd: "#(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>ds))) = #(tsAbs\<cdot>(tsRemDups\<cdot>(tsProjSnd\<cdot>ds)))"
       by (simp add: ds_def send_def tssnd_tsprojsnd_tsremdups)
     (* property 8 *)
     have ds_eq_dr: "#(tsAbs\<cdot>(tsRemDups\<cdot>(tsProjSnd\<cdot>ds))) = #(tsAbs\<cdot>(tsRemDups\<cdot>(tsProjSnd\<cdot>dr)))"
-      by (metis ar_def as_def dr_def dual_order.antisym i_eq_as p1_def p2_def 
+      by (metis antisym_conv ar_def as_def dr_def halles p1_def p1_inf p2_def projfst2projsnd tsmed_tsprojsnd tsmed_tsremdups_tsabs_slen tsprojfst_tsabs_slen)
+   (*   by (metis ar_def as_def dr_def dual_order.antisym i_eq_as p1_def p2_def 
           tsmed_tsremdups_tsabs_slen i_eq_ds projfst2projsnd sfilterl4 tsmed_tsmap tsprojsnd_insert)
-    (* tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>dr)) = tsAbs\<cdot>i *)
+ *)   (* tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>dr)) = tsAbs\<cdot>i *)
     have "#(tsAbs\<cdot>i) \<noteq> \<infinity> \<Longrightarrow> tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>dr)) = tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>ds))"
       using dr_def p1_def tsmed_tsabs_slen2tsmed_tsabs i_eq_ds projfst2projsnd ds_eq_dr by force
     thus "tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>dr)) = tsAbs\<cdot>i"
