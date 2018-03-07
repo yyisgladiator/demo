@@ -1312,7 +1312,56 @@ lemma ufComp_parallel :assumes "(ufCompL f1 f2 = {}) \<and> (ufRan\<cdot>f1 \<in
   and "ubclDom\<cdot>x = ufCompI f1 f2"
   shows "(iter_ubfix2 (ufCompH f1 f2) (Suc (Suc i)) (UFun.ufRan\<cdot>f1 \<union> UFun.ufRan\<cdot>f2) x)
                   =(f1\<rightleftharpoons>(x \<bar>ufDom\<cdot>f1)) \<uplus> (f2\<rightleftharpoons>(x\<bar>ufDom\<cdot>f2))" (is "?L = ?R")
-  by (smt assms(1) assms(2) bot_eq_sup_iff inf_sup_aci(1) inf_sup_distrib2 iter_ufCompH_dom iterate_Suc ubclunion_restrict_R ufCompL_def ufcomph_insert)
+proof (induction i)
+  have f28: "ubclDom\<cdot>(f2 \<rightleftharpoons> x\<bar>ufDom\<cdot>f2) = ufRan\<cdot>f2"
+    apply (rule ufran_2_ubcldom2)
+    by (metis Un_upper2 assms(1) assms(2) parcomp_dom_i_below ubresrict_dom2)
+  have f29: "ubclDom\<cdot>(f1 \<rightleftharpoons> x\<bar>ufDom\<cdot>f1) = ufRan\<cdot>f1"
+    apply (rule ufran_2_ubcldom2)
+    by (metis assms(1) assms(2) inf_sup_absorb inf_sup_aci(1) parcomp_dom_i_below ubclrestrict_ubcldom)
+  have f30: "x \<uplus> ((f1 \<rightleftharpoons> x\<bar>ufDom\<cdot>f1) \<uplus> (f2 \<rightleftharpoons> x\<bar>ufDom\<cdot>f2))\<bar>ufDom\<cdot>f2 = x\<bar>ufDom\<cdot>f2"
+    apply (rule ubclunion_restrict_R)
+    apply (simp add: ubclunion_ubcldom)
+    apply (simp add: f29 f28)
+    by (metis (no_types, lifting) assms(1) inf_commute inf_sup_aci(1) inf_sup_distrib1 parcomp_well_h1(2) parcomp_well_h2(2)  sup_bot_right)
+  have f40: "x \<uplus> ((f1 \<rightleftharpoons> x\<bar>ufDom\<cdot>f1) \<uplus> (f2 \<rightleftharpoons> x\<bar>ufDom\<cdot>f2))\<bar>ufDom\<cdot>f1 = x\<bar>ufDom\<cdot>f1"
+    apply (rule ubclunion_restrict_R)
+    apply (simp add: ubclunion_ubcldom)
+    apply (simp add: f29 f28)
+    by (metis (mono_tags, lifting) assms(1) inf_commute inf_sup_distrib1 parcomp_well_h1(1) parcomp_well_h2(1) sup_bot_right)
+  have f20: "x \<uplus> ubclLeast (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2)\<bar>ufDom\<cdot>f1 = x\<bar>ufDom\<cdot>f1"
+    apply (rule ubclunion_restrict_R)
+    apply (simp add: ubcldom_least_cs)
+    by (metis (no_types, lifting) assms(1) inf_commute inf_sup_aci(1) 
+          inf_sup_distrib1 parcomp_well_h1(1) parcomp_well_h2(1) sup_idem)
+  have f21: "x \<uplus> ubclLeast (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2)\<bar>ufDom\<cdot>f2 = x\<bar>ufDom\<cdot>f2"
+    apply (rule ubclunion_restrict_R)
+    apply (simp add: ubcldom_least_cs)
+    by (metis (no_types, lifting) Int_commute assms(1) inf_bot_right inf_sup_distrib1 
+        parcomp_well_h1(2) parcomp_well_h2(2) sup_inf_absorb)
+  have f3: "iter_ubfix2 (ufCompH f1 f2) (Suc (Suc 0)) (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2) x = (f1 \<rightleftharpoons> x\<bar>ufDom\<cdot>f1) \<uplus> (f2 \<rightleftharpoons> x\<bar>ufDom\<cdot>f2)"
+    apply (simp add: ufCompH_def)
+    apply (simp add: f20 f21)
+    by (simp add: f30 f40)
+  then show "iter_ubfix2 (ufCompH f1 f2) (Suc (Suc (0::nat))) (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2) x = (f1 \<rightleftharpoons> x\<bar>ufDom\<cdot>f1) \<uplus> (f2 \<rightleftharpoons> x\<bar>ufDom\<cdot>f2)"
+    by blast
+  show "\<And>i::nat. iter_ubfix2 (ufCompH f1 f2) (Suc (Suc i)) (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2) x = (f1 \<rightleftharpoons> x\<bar>ufDom\<cdot>f1) \<uplus> (f2 \<rightleftharpoons> x\<bar>ufDom\<cdot>f2) \<Longrightarrow>
+              iter_ubfix2 (ufCompH f1 f2) (Suc (Suc (Suc i))) (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2) x = (f1 \<rightleftharpoons> x\<bar>ufDom\<cdot>f1) \<uplus> (f2 \<rightleftharpoons> x\<bar>ufDom\<cdot>f2)" 
+  proof -
+    fix i::nat
+    assume a1: "iter_ubfix2 (ufCompH f1 f2) (Suc (Suc i)) (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2) x = (f1 \<rightleftharpoons> x\<bar>ufDom\<cdot>f1) \<uplus> (f2 \<rightleftharpoons> x\<bar>ufDom\<cdot>f2)"
+    have f1: "iter_ubfix2 (ufCompH f1 f2) (Suc (Suc (Suc i))) (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2) x = 
+        ufCompH f1 f2 x\<cdot>(iter_ubfix2 (ufCompH f1 f2) (Suc (Suc i)) (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2) x)"
+      by (simp)
+    show "iter_ubfix2 (ufCompH f1 f2) (Suc (Suc (Suc i))) (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2) x = (f1 \<rightleftharpoons> x\<bar>ufDom\<cdot>f1) \<uplus> (f2 \<rightleftharpoons> x\<bar>ufDom\<cdot>f2)"
+    apply (subst f1)
+    apply (subst a1)
+    apply (simp add: ufCompH_def)
+    by (simp add: f30 f40)
+  qed
+qed
+
+
 
 (* the third iteration returns the fixpoint  *)
 lemma ufComp_parallel_max: assumes "(ufCompL f1 f2 = {}) \<and> (ufRan\<cdot>f1 \<inter> ufRan\<cdot>f2 = {})"

@@ -453,6 +453,10 @@ proof -
     using assms(1) cont2contlubE eq_imp_below by blast
 qed
 
+lemma ubrestrict_lub: assumes "chain Y"
+  shows "(\<Squnion>i. Y i) \<bar> cs = (\<Squnion>i. (Y i) \<bar> cs)"
+  using assms contlub_cfun_arg by auto
+
 
 subsection \<open>ubLen\<close>
 lemma ublen_monofun:"monofun ubLen"
