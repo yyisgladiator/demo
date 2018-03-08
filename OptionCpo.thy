@@ -356,17 +356,20 @@ lemma map_union_restrict2[simp]: "(x ++ y) |` dom y = y"
 
 
 
-(* TODO Nachfragen - up *)
+(* Up partial functions: Instead of mapping to None, map to Some \<bottom> *)
 definition part_up:: "('a \<rightharpoonup> 'b::pcpo) \<Rightarrow> ('a \<rightharpoonup> 'b)" where
 "part_up f \<equiv> \<lambda> a. if a\<in>dom f then f a else Some \<bottom>"
 
+(* Upping preserves chain properties *)
 lemma part_up_chain: assumes "chain Y"
   shows "chain (\<lambda>i. part_up (Y i))"
   by (smt assms part_up_def below_option_def fun_belowD fun_belowI part_dom_eq1 po_class.chain_def)
 
+(* Upping is monotonic *)
 lemma part_up_monofun: "monofun part_up"
   by (smt below_option_def fun_belowD fun_belowI monofunI part_dom_eq part_up_def)
 
+(* Upping is continuous *)
 lemma part_up_cont: "cont part_up"
   by (smt Cont.contI2 cont2cont_lambda is_ub_thelub lub_eq lub_fun mono2mono_fun part_dom_lub part_up_def part_up_monofun po_eq_conv)
 
@@ -377,7 +380,6 @@ lemma part_up_cont: "cont part_up"
 
 
 
-(* TODO Nachfragen, was [ \<mapsto> ] eigentlich darstellt *)
 (* Testing Stuff *)
 
 lemma "monofun (\<lambda>s. [c \<mapsto> s])"
@@ -390,7 +392,7 @@ lemma part_map_chain: assumes "chain S" shows "chain (\<lambda>i. [c \<mapsto> S
 
 
 
-(* TODO Sollte wahrscheinlich eine Subsection sein - Stuff used in SPF *)
+(* Stuff used in SPF *)
 
 (* The mapping from empty to empty is continuous *)
 lemma part_emptys_cont[simp]: "cont [empty \<mapsto> empty]"
@@ -412,7 +414,6 @@ qed
 
 
 
-(* TODO Subsection? - definition optionLeast *)
 (* Converts a set into an indicator function, returning Some \<bottom> for elements in the set and None otherwise *)
 definition optionLeast :: "'a set \<Rightarrow> ('a \<rightharpoonup> 'b :: pcpo)" where
 "optionLeast as \<equiv> \<lambda>a. (a\<in>as) \<leadsto> \<bottom>"
@@ -598,7 +599,6 @@ shows "(\<Squnion>i. (Y i)) = (\<Squnion>i. (Z i))"
   apply (simp only: assms(4))
   using assms(2) assms(3) lub_range_mult by fastforce
   
-(* TODO kann das weg? *)
 lemma lub_mult2_shift_eq: fixes Y:: "nat \<Rightarrow> 'a::cpo" fixes Z:: "nat \<Rightarrow> 'a::cpo" 
   assumes "chain Y" and "chain Z"
   and "\<And> i. Y (i) = Z (2 * i)"
@@ -607,7 +607,7 @@ shows "(\<Squnion>i. (Y i)) = (\<Squnion>i. (Z i))"
   by (metis assms(2) lub_range_mult one_le_numeral)
     
 
-(* TODO subsection? - copied from the HOLCF library *)
+(* Copied from the HOLCF library *)
 
 (* Case distinction for chains *)
 lemma option_chain_cases:
@@ -660,11 +660,11 @@ using assms by (simp add: cont2cont_case_option prod_cont_iff)
 
 subsection \<open>Using option types with Fixrec\<close>
 
-(* TODO Nachfragen *)
+(* Matches None, fails otherwise *)
 definition
   "match_None = (\<Lambda> x k. case x of None \<Rightarrow> k | Some a \<Rightarrow> Fixrec.fail)"
 
-(* TODO Nachfragen *)
+(* Matches Some, fails otherwise *)
 definition
   "match_Some = (\<Lambda> x k. case x of None \<Rightarrow> Fixrec.fail | Some a \<Rightarrow> k\<cdot>a)"
 
@@ -680,7 +680,7 @@ lemma match_Some_simps [simp]:
   "match_Some\<cdot>(Some a)\<cdot>k = k\<cdot>a"
 unfolding match_Some_def by simp_all
 
-(* TODO Nachfragen *)
+(* Setup Fixrec *)
 setup \<open>
   Fixrec.add_matchers
     [ (@{const_name None}, @{const_name match_None}),
