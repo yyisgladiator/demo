@@ -259,7 +259,6 @@ primrec myiterate :: "nat \<Rightarrow> 'm SB set \<Rightarrow> 'm SB \<Rightarr
 definition sbFilterTupel:: " 'm SB set \<Rightarrow> 'm SB \<Rightarrow> 'm SB" where
 "sbFilterTupel bs b \<equiv> \<Squnion>i. myiterate i bs b"
 
-(* TODO macht wahrscheinlich das selbe wie sbFilterTupel, aber ich verstehe F und h nicht *)
 definition sbFilterTupel2:: " 'm SB set \<Rightarrow> 'm SB \<Rightarrow> 'm SB" where
 "sbFilterTupel2 A \<equiv> (\<Lambda> F. \<Squnion>i. iterate i\<cdot>F\<cdot>(\<lambda>s. sbTake 0\<cdot>s))\<cdot>
       (\<Lambda> h. (\<lambda> b. if (sbHd\<cdot>b\<in>A) then sbHd\<cdot>b \<bullet> h (sbRt\<cdot>b) else h (sbRt\<cdot>b)))"
@@ -593,7 +592,7 @@ lemma sbunion_pref_eq2: assumes "(a \<sqsubseteq> b)"
   shows "(x \<uplus> a \<sqsubseteq> x \<uplus> b)"
      by (metis assms monofun_cfun_arg)
 
-(* TODO siehe sbunion_associative (paar Zeilend drüber) ?? *)
+(* sbUnion is associative (other direction) *)
 lemma sbunion_assoc2: "(sb1 \<uplus> sb2) \<uplus> sb3 = sb1 \<uplus> (sb2 \<uplus> sb3)"
   by (simp add: sbunion_associative)
 
@@ -631,6 +630,7 @@ by (metis (no_types, lifting) domIff rep_well restrict_map_def sb_well_def)
 lemma sbrestrict_monofun[simp]: "monofun  (\<lambda>b. Rep_SB b |` cs)"
 by (smt below_SB_def fun_below_iff monofunI not_below2not_eq restrict_map_def )
 
+(* sbRestrict is continuous on the second argument *)
 lemma sbrestrict_cont1[simp]: "cont  (\<lambda>b. ((Rep_SB b) |` cs))"
 apply(rule contI2)
 apply(auto)
@@ -640,31 +640,37 @@ by (smt below_option_def fun_below_iff is_ub_thelub lub_eq lub_fun po_class.chai
 lemma sbrestrict_cont[simp]: "cont  (\<lambda>b. ((Rep_SB b) |` cs)\<Omega>)"
 by (simp)
 
+(* Insert Rule for sbRestrict *)
 lemma sbrestrict_insert: "b \<bar> cs = (Rep_SB b) |` cs \<Omega>"
 by(simp add: sbRestrict_def)
 
+(* The domain of SB b restricted to channel set cs is the intersection of the old domain with cs *)
 lemma sbrestrict_sbdom[simp]: "sbDom\<cdot>(b \<bar> cs) = sbDom\<cdot>b \<inter> cs"
 by (simp add: sbDom_def sbrestrict_insert)
 
+(* Restricting the SB b with a superset of it`s domain is the identity *)
 lemma sbrestrict_id [simp]: assumes "sbDom\<cdot>b \<subseteq> cs" shows "b \<bar> cs = b"
 using assms apply(simp add: sbrestrict_insert sbdom_insert)
 by (metis (no_types, lifting) IntD2 dom_restrict inf.orderE rep_abs restrict_in sbdom_insert sbgetch_insert sbrestrict_well sb_eq)
 
+(* Restricting to the empty channel set yields the smallest SB *)
 lemma sbrestrict_least[simp]: "b \<bar> {} = sbLeast {}"
 by(simp add: sbrestrict_insert sbLeast_def)
 
 lemma sbrestrict_least2[simp]: assumes "cs \<inter>sbDom\<cdot>b = {}" shows "b \<bar> cs = sbLeast {}"
 by (metis assms ex_in_conv inf_commute sbleast_sbdom sbrestrict_sbdom sb_eq)
 
+(* sbGetch works as expected on a SB b rerstricted to a  channel set cs if c is in the cs *)
 lemma sbrestrict2sbgetch[simp]: assumes "c\<in>cs"
   shows "(b\<bar>cs) . c = b. c"
 by(simp add: assms sbgetch_insert sbrestrict_insert)
 
-(* if h is continuous then so is the composition of h with a restriction *)
+(* If h is continuous, then so is the composition of h with a restriction *)
 lemma sbrestrict_below [simp]:  assumes "chain Y" and "cont h"
       shows "(h (\<Squnion>i. Y i) \<bar> g (sbDom\<cdot>(\<Squnion>i. Y i))) \<sqsubseteq> (\<Squnion>i. (h (Y i) \<bar> g (sbDom\<cdot>(Y i)) ))"
 by (smt assms(1) assms(2) ch2ch_cont cont2contlubE contlub_cfun_arg lub_eq po_eq_conv sbChain_dom_eq2)
 
+(* sbUnion favors the second argument, restriction of a union therefore depends on this attribute *)
 lemma sbunion_restrict [simp]: assumes "sbDom\<cdot>b2 = cs"
   shows "(b1 \<uplus> b2) \<bar> cs = b2"
 apply(simp add: sbunion_insert sbrestrict_insert )
@@ -676,6 +682,7 @@ lemma sbunion_restrict2 [simp]: assumes "sbDom\<cdot>b2 \<inter> cs = {}"
    apply (simp add: Int_Un_distrib2 assms)
   using assms sbunion_getchL by fastforce
 
+(* sbUnion and sbRestrict are distributive *)
 lemma sbunion_restrict3: "(b1 \<uplus> b2) \<bar> cs = (b1 \<bar> cs) \<uplus> (b2 \<bar> cs)"
 apply(simp add: sbrestrict_insert sbunion_insert)
 by (metis (full_types) mapadd2if_then restrict_map_def)  
@@ -685,6 +692,7 @@ by (metis (full_types) mapadd2if_then restrict_map_def)
   subsection \<open>sbRemCh\<close>
 (* ----------------------------------------------------------------------- *)
 
+(* sbRemCh is monotonic *)
 lemma sbremch_monofun[simp]:"monofun (\<lambda> b. \<Lambda> c.  b \<bar> -{c})"
 by(simp add: below_cfun_def monofun_cfun_arg fun_belowI monofunI )
 
@@ -700,8 +708,7 @@ proof -
     by (metis (no_types) assms fun_belowI po_eq_conv)
 qed
 
-(* removing the channel c from the lub of the chain Y of SBs is less than or equal to removing c from
-   every element of the chain and then taking the lub *)
+(* sbRemCh and LUB are commutative *)
 lemma sbremch_cont1[simp]: assumes "chain Y"
   shows "(\<Lambda> c. (\<Squnion>i. Y i)\<bar>- {c}) \<sqsubseteq> (\<Squnion>i. \<Lambda> c. Y i\<bar>- {c})"
 proof -
@@ -713,23 +720,27 @@ proof -
     by (metis (no_types, lifting) Abs_cfun_inverse2 below_cfun_def channel_cont eq lub_eq)
 qed
 
+(* sbRemCh is continuous *)
 lemma sbremch_cont[simp]: "cont (\<lambda> b. \<Lambda> c.  b \<bar> -{c})"
 by(rule contI2, auto)
 
-(* insert rule for sbRemCh *)
+(* Insert rule for sbRemCh *)
 lemma sbremch_insert: "sbRemCh\<cdot>b\<cdot>c =  b \<bar> -{c}"
 by (simp add: sbRemCh_def)
 
+(* The domain of an SB b where channel c was removed is the old domain minus c *)
 lemma sbremch_sbdom[simp]: "sbDom\<cdot>(sbRemCh\<cdot>b\<cdot>c) = sbDom\<cdot>b - {c}"
 by(simp add: sbremch_insert diff_eq)
 
+(* From sbRemCh to sbRestrict *)
 lemma sbrem2sbrestrict: "sbRemCh\<cdot>b\<cdot>c = b \<bar> (sbDom\<cdot>b - {c})"
 by (smt Int_absorb1 Int_commute Int_lower2 Set.basic_monos(7) sbremch_insert sbremch_sbdom sbrestrict2sbgetch sbrestrict_sbdom sb_eq)
 
+(* Restricting to the same channel set cs preserves below-relation *)
 lemma sbres_pref_eq: assumes "(a \<sqsubseteq> b)"
   shows "(a \<bar> cs) \<sqsubseteq> (b \<bar> cs)"
   by (metis assms monofun_cfun_arg)
-    
+
 lemma sbres_sbdom_supset: assumes "sbDom\<cdot>sb \<subseteq> cs"
   shows "sb \<bar> cs = sb \<bar> (sbDom\<cdot>sb)"
   by (simp add: assms)
@@ -744,6 +755,8 @@ lemma sbres_sbdom_supset_inter:
 (* ----------------------------------------------------------------------- *)
   subsection \<open>sbRenameCh\<close>
 (* ----------------------------------------------------------------------- *)
+
+(* Renaming a channel to the same name is the identity *)
 lemma sbrenamech_id: assumes "c\<in>sbDom\<cdot>b"
   shows "sbRenameCh b c c = b"
 apply(simp add: sbRenameCh_def sbgetch_insert sbSetCh_def sbremch_insert sbrestrict_insert)
@@ -756,33 +769,40 @@ by (smt Rep_SB_inverse assms dom_empty dom_fun_upd fun_upd_same fun_upd_triv fun
 (* ----------------------------------------------------------------------- *)
   subsection \<open>sbUp\<close>
 (* ----------------------------------------------------------------------- *)
+
+(* Upping (always returning a stream, potentially empty) is a well-defined SB *)
 lemma sbup_well[simp]: "sb_well (\<lambda>c. if c \<in> sbDom\<cdot>b then (Rep_SB b)c else Some \<epsilon>)"
 by (smt domIff rep_well sbleast_well sb_well_def)
- 
-  lemma sbup_cont1[simp]: "cont (\<lambda>b. (\<lambda> c. if (c\<in>sbDom\<cdot>b) then (Rep_SB b)c else Some \<epsilon>))"
-  by (smt Prelude.contI2 below_SB_def eq_imp_below fun_below_iff is_ub_thelub lub_eq lub_fun monofunI po_class.chainE po_class.chainI rep_lub sbdom_eq sbgetchE)
+
+(* Upping is continuous *)
+lemma sbup_cont1[simp]: "cont (\<lambda>b. (\<lambda> c. if (c\<in>sbDom\<cdot>b) then (Rep_SB b)c else Some \<epsilon>))"
+by (smt Prelude.contI2 below_SB_def eq_imp_below fun_below_iff is_ub_thelub lub_eq lub_fun monofunI po_class.chainE po_class.chainI rep_lub sbdom_eq sbgetchE)
 
 lemma sbup_cont[simp]: "cont (\<lambda>b. (\<lambda> c. if (c\<in>sbDom\<cdot>b) then (Rep_SB b)c else Some \<epsilon>)\<Omega>)"
 by simp
 
+(* Insert rule for upping *)
 lemma sbup_insert: "\<up>b = (\<lambda>c. if (c\<in>sbDom\<cdot>b) then (Rep_SB b) c else Some \<bottom>)\<Omega>"
 by(simp add: sbUp_def)
 
 
-
+(* The domain of an upped SB b is the Universe *)
 lemma sbup_sbdom [simp]: "sbDom\<cdot>(\<up>b) = UNIV"
 apply(simp add: sbdom_insert )
 apply(simp add: sbup_insert)
 by (smt CollectD Collect_cong UNIV_def dom_def optionLeast_def optionleast_dom sbdom_insert)
 
+(* sbGetch on an upped SB works as before if the channel c was in the domain before *)
 lemma sbup_sbgetch[simp]: assumes "c\<in>sbDom\<cdot>b"
   shows "\<up>b . c = b .c"
 by (simp add: assms sbgetch_insert sbup_insert)
 
+(* sbGetch on an upped SB returns the empty stream \<epsilon> if the channel c was not in the domain before *)
 lemma sbup_sbgetch2[simp]: assumes "c\<notin>sbDom\<cdot>b"
   shows "\<up>b . c = \<epsilon>"
 by (simp add: assms sbgetch_insert sbup_insert)
 
+(* Upping any sbLeast yields an SB that always returns the empty stream \<epsilon> *)
 lemma [simp]: "\<up>(sbLeast cs) . c = \<epsilon>"
 by (metis sbleast_getch sbleast_sbdom sbup_sbgetch sbup_sbgetch2)
 
@@ -790,6 +810,8 @@ by (metis sbleast_getch sbleast_sbdom sbup_sbgetch sbup_sbgetch2)
 (* ----------------------------------------------------------------------- *)
   subsection \<open>sbEqSelected\<close>
 (* ----------------------------------------------------------------------- *)
+
+(* Restricted to the empty channel set {}, two SBs b1 and b2 are always equal*)
 lemma [simp]: "sbEqSelected {} b1 b2"
 by(simp add: sbEqSelected_def)
 
@@ -798,6 +820,7 @@ by(simp add: sbEqSelected_def)
   subsection \<open>sbEqCommon\<close>
 (* ----------------------------------------------------------------------- *)
 
+(* Two SBs b1 and b2 that have no common channels are always equal on their common channels *)
 lemma assumes "sbDom\<cdot>b1 \<inter> sbDom\<cdot>b2 = {}"
   shows "sbEqCommon b1 b2"
 by(simp add: sbEqCommon_def assms)
@@ -808,13 +831,15 @@ by(simp add: sbEqCommon_def assms)
   subsection \<open>SB\<close>
 (* ----------------------------------------------------------------------- *)
 
+(* sbLeast exists *)
 lemma sb_exists[simp]: "(sbLeast cs)\<in>(cs^\<Omega>)"
 by (simp add: SB_def)
 
-(* all 'm SBs in cs^\<Omega> have the domain cs *)
+(* All 'm SBs in cs^\<Omega> have the domain cs *)
 lemma sb_sbdom[simp]: "sbDom\<cdot>(SOME b. b \<in> cs^\<Omega>) = cs"
 by (metis (mono_tags, lifting) SB_def mem_Collect_eq sb_exists someI_ex)
 
+(* sbLeast {} is the only  SB with empty domain *)
 lemma sb_empty: "{}^\<Omega> = {sbLeast {} }"
 apply(simp add: SB_def sbdom_insert sbLeast_def)
 apply rule
@@ -828,6 +853,8 @@ by auto
 (* ----------------------------------------------------------------------- *)
   subsection \<open>sbConc\<close>
 (* ----------------------------------------------------------------------- *)
+
+(* Concatenation is a well-defined SB *)
 lemma sbconc_well[simp]: "sb_well (\<lambda>c. Some ((\<up>b1. c) \<bullet> (\<up>b2. c))) "
 apply(rule sb_wellI)
 apply(simp add: sbdom_insert )
@@ -838,7 +865,7 @@ lemma sbconct_mono1[simp]: "monofun (\<lambda>b2. (\<lambda>c. Some ((\<up>b1. c
 apply(rule monofunI)
 by (simp add: fun_belowI monofun_cfun_arg monofun_cfun_fun) 
 
-(* helper function to proof coninuity *)
+(* Helper function to proof continuity *)
 lemma channel_insert: assumes "chain Y"
   fixes x:: channel
   shows  "(\<Squnion>n. (\<lambda>c :: channel. Some ((\<up>b1 . c) \<bullet> (\<up>Y n) . c))) x = (\<Squnion>n. Some ((\<up>b1 . x) \<bullet> (\<up>Y n) . x))"
@@ -860,6 +887,7 @@ proof (rule fun_belowI)
     by (simp add: assms channel_insert)  
 qed
 
+(* Concatenation is continuous *)
 lemma sbconct_cont1[simp]: "cont (\<lambda>b2. (\<lambda>c. Some ((\<up>b1. c) \<bullet> (\<up>b2. c))))"
 apply(rule contI2)
 using sbconct_mono1 apply blast
@@ -896,16 +924,17 @@ apply rule+
 apply(rule sbrestrict_below)
 by (simp_all)
 
-(* insert rule for sbConc *)
+(* Insert rule for sbConc *)
 lemma sbconc_insert: "b1 \<bullet> b2 = ((\<lambda>c. Some ((\<up>b1. c) \<bullet> \<up>b2. c))\<Omega>) \<bar> (sbDom\<cdot>b1 \<union> sbDom\<cdot>b2)"
 by (simp add: sbConc_def)
 
+(* Concatenation of SB b1 and b2 results in the domain being the union of the domains of b1 and b2 *)
 lemma sbconc_sbdom[simp]: "sbDom\<cdot>(b1 \<bullet> b2) = sbDom\<cdot>b2 \<union> sbDom\<cdot>b1"
 apply(simp add:  sbconc_insert sbrestrict_sbdom)
 apply(simp add: sbdom_insert)
 by blast
 
-(* helper lemma, used in the lemma below *)
+(* Helper lemma, used in the lemma below *)
 lemma sbup_restrict_id [simp]: assumes "c\<in>sbDom\<cdot>b2"
   shows "(((\<lambda>c. Some (\<up>b2 . c))\<Omega>)\<bar>sbDom\<cdot>b2) . c = b2 . c"
 by (smt Abs_cfun_inverse2 UNIV_I assms rep_abs restrict_in sbDom_def sbdom_cont sbgetchE sbgetch_insert sbrestrict_insert sbrestrict_well sbup_insert sbup_sbdom sbup_well sb_well_def)
@@ -914,7 +943,7 @@ lemma [simp]: assumes "c\<in>sbDom\<cdot>b2"
   shows "((\<lambda>c. Some (\<up>b2 . c))\<Omega>) . c = b2 . c"
 using assms sbup_restrict_id by fastforce
 
-(* the empty 'm SB (with a subset of channels) concatinated to the left is the identity *)
+(* The empty 'm SB (with a subset of channels) concatinated to the left is the identity *)
 lemma sbconc_idL[simp]: assumes "cs\<subseteq> sbDom\<cdot>b2"
   shows "(sbLeast cs) \<bullet> b2 = b2" (is "?L = ?R")
 proof (rule sb_eq)
@@ -926,7 +955,7 @@ proof (rule sb_eq)
   thus "?L . c = b2 . c" using c_def by(simp add: sbconc_insert)
 qed
 
-(* the empty 'm SB (with a subset of channels) concatinated to the right is the identity *)
+(* The empty 'm SB (with a subset of channels) concatinated to the right is the identity *)
 lemma sbconc_idR[simp]: assumes "cs\<subseteq> sbDom\<cdot>b1"
   shows "b1 \<bullet> (sbLeast cs) = b1" (is "?L = ?R")
 proof (rule sb_eq)
