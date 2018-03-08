@@ -58,13 +58,13 @@ abbreviation Abs_abbr :: "(channel \<rightharpoonup> 'm stream) \<Rightarrow> 'm
 "f \<Omega> \<equiv> Abs_SB f"
 
 
-text \<open>@{text "sbDom"} returns the domain of the stream bundle \<close>
+(* Returns the domain of the stream bundle *)
 definition sbDom :: "'m SB \<rightarrow> channel set" where
 "sbDom \<equiv> \<Lambda> b. dom (Rep_SB b)"
 
 
 
-text {* @{text "sbGetCh"} returns the stream flowing on a channel of a stream bundle *}
+(* Returns the stream flowing on a channel of a stream bundle *)
 definition sbGetCh :: "'m SB \<rightarrow> channel \<rightarrow> 'm stream"  where
 "sbGetCh \<equiv> \<Lambda> b c. ((Rep_SB b) \<rightharpoonup> c)"
 
@@ -72,13 +72,11 @@ abbreviation sbGetch_abbr :: "'m SB \<Rightarrow> channel \<Rightarrow> 'm strea
 "b . c \<equiv> sbGetCh\<cdot>b\<cdot>c"
 
 
-text {* For a given channel set, "sbLeast" is the smallest stream bundle with empty streams. *}
+(* For a given channel set, "sbLeast" is the smallest stream bundle with empty streams. *)
 definition sbLeast :: "channel set \<Rightarrow> 'm SB" ("_^\<bottom>" [1000] 999) where
 "sbLeast cs \<equiv> (\<lambda>c. (c \<in> cs) \<leadsto> \<epsilon> )\<Omega>"
 
-
-text {* @{text "sbunion"} the channel-domains are merged *}
-(* the second argument has priority *)
+(* The channel-domains are merged, the second argument has priority *)
 definition sbUnion:: " 'm SB \<rightarrow> 'm SB \<rightarrow> 'm SB" where
 "sbUnion \<equiv> \<Lambda> b1 b2.  (Rep_SB b1 ++ Rep_SB b2)\<Omega>"
 
@@ -86,14 +84,14 @@ abbreviation sbUnion_abbr :: " 'm SB \<Rightarrow> 'm SB \<Rightarrow> 'm SB" (i
 "b1 \<uplus> b2 \<equiv> sbUnion\<cdot>b1\<cdot>b2"
 
 
-text {* @{text "sbsetch"} adds a channel or replaces its content *}
+(* Adds a channel or replaces its content *)
 definition sbSetCh:: " 'm SB \<rightarrow> channel \<Rightarrow> 'm stream \<Rightarrow> 'm SB" where
 "sbSetCh \<equiv> \<Lambda> b. (\<lambda> c s. b \<uplus> ([c \<mapsto> s]\<Omega>))"
 
 
 
 
- (* Channels not in the channel set are set to "None". *)
+(* Channels not in the channel set are set to "None". *)
 definition sbRestrict:: "channel set \<Rightarrow> 'm SB \<rightarrow> 'm SB" where
 "sbRestrict cs  \<equiv> \<Lambda> b. (Rep_SB b |` cs)\<Omega>"
 
@@ -101,19 +99,18 @@ abbreviation sbRestrict_abbr :: " 'm SB \<Rightarrow> channel set \<Rightarrow> 
 where "b\<bar>cs \<equiv> sbRestrict cs\<cdot>b"
 
 
-text {* @{text "sbRemCh"} removes a channel from a stream bundle *}
+(* Removes a channel from a stream bundle *)
 definition sbRemCh:: " 'm SB \<rightarrow> channel \<rightarrow> 'm SB" where
 "sbRemCh \<equiv> \<Lambda> b c.  b \<bar> -{c}" 
 
 
-text {* @{text "sbrenamech"} renaming channels  *}
-(* Stream is moved from "ch1" to "ch2" *)
+(* Renaming channels *)
 definition sbRenameCh :: " 'm SB => channel => channel => 'm SB" where
 "sbRenameCh b ch1 ch2 \<equiv> (sbSetCh\<cdot>(sbRemCh\<cdot>b\<cdot>ch1)) ch2 (b .ch1)"
 
 
 
-  (* Replaces all "None" channels with \<epsilon>. *)
+(* Replaces all "None" channels with \<epsilon>. *)
 definition sbUp:: " 'm SB \<rightarrow> 'm SB"  where
 "sbUp \<equiv> \<Lambda> b . (\<lambda>c. if (c\<in>sbDom\<cdot>b) then (Rep_SB b) c else Some \<epsilon>)\<Omega>"
 
@@ -121,32 +118,32 @@ abbreviation sbUp_abbr:: " 'm SB \<Rightarrow> 'm SB"  ("\<up>_" 70) where
 "\<up>b \<equiv> sbUp\<cdot>b"
 
 
-text {* @{text "sbeqch"} equality on specific channels *}
+(* Equality on specific channels *)
 definition sbEqSelected:: " channel set \<Rightarrow> 'm SB => 'm SB => bool" where
 "sbEqSelected cs b1 b2 \<equiv>  (b1\<bar>cs) = (b2\<bar>cs)"
 
-text {* @{text "sbeq"} equality on common channels *}
+(* Equality on common channels *)
 definition sbEqCommon:: " 'm SB => 'm SB => bool" where
 "sbEqCommon b1 b2\<equiv> sbEqSelected (sbDom\<cdot>b1 \<inter> sbDom\<cdot>b2) b1 b2"
 
 
-  (* The function 'm SB creates the set of all bundles b with a fixed set of channels C.*)
+(* The function 'm SB creates the set of all bundles b with a fixed set of channels C.*)
 definition SB :: "channel set \<Rightarrow> 'm SB set" ("_^\<Omega>" [1000] 999) where
 "SB cs = {b. sbDom\<cdot>b = cs}"
 
 
 
-  (* Prefix relation, but only on selected channels. *)
+(* Prefix relation, but only on selected channels. *)
 definition sbPrefixSelected:: "channel set \<Rightarrow> 'm SB \<Rightarrow> 'm SB \<Rightarrow> bool" where
 "sbPrefixSelected cs b1 b2 \<equiv> (b1\<bar>cs \<sqsubseteq> b2\<bar>cs)" 
 
-  (* Prefix relation, but only on common channels. *)
+(* Prefix relation, but only on common channels. *)
 definition sbPrefixCommon:: " 'm SB \<Rightarrow> 'm SB \<Rightarrow> bool" where
 "sbPrefixCommon b1 b2 \<equiv> sbPrefixSelected (sbDom\<cdot>b1 \<inter> sbDom\<cdot>b2) b1 b2" 
 
 
 
-  (* Concatination on all Channels in the 'm SB. "None" is interpreted as \<epsilon>. *)
+(* Concatination on all Channels in the 'm SB. "None" is interpreted as \<epsilon>. *)
 definition sbConc:: " 'm SB \<Rightarrow> 'm SB \<rightarrow> 'm SB" where
 "sbConc b1 \<equiv> \<Lambda> b2. ((\<lambda>c. Some ((\<up>b1. c) \<bullet> \<up>b2. c))\<Omega>) \<bar> sbDom\<cdot>b1 \<union> sbDom\<cdot>b2"
 
@@ -154,65 +151,65 @@ abbreviation sbConc_abbr :: " 'm SB \<Rightarrow> 'm SB \<Rightarrow> 'm SB" ("(
 where "b1 \<bullet> b2 \<equiv> sbConc b1\<cdot>b2"
 
 
-  (* Concatination on common Channels in the 'm SB. *)
+(* Concatination on common Channels in the 'm SB. *)
 definition sbConcCommon:: " 'm SB \<Rightarrow> 'm SB \<rightarrow> 'm SB" where
 "sbConcCommon b1 \<equiv> \<Lambda> b2. (b1 \<bullet> b2) \<bar>  sbDom\<cdot>b1 \<inter> sbDom\<cdot>b2"
 
 
 
 
-  (* Applies a (Stream-)function to all streams. *)
+(* Applies a (Stream-)function to all streams. *)
 definition sbMapStream:: "('m stream \<Rightarrow> 'm stream) \<Rightarrow> 'm SB \<Rightarrow> 'm SB" where
 "sbMapStream f b =  (\<lambda>c. (c\<in>sbDom\<cdot>b) \<leadsto> f (b .c))\<Omega>"
 
 
-  (* Retrieves the first n Elements of each Stream. *)
+(* Retrieves the first n Elements of each Stream. *)
 definition sbTake:: "nat \<Rightarrow> 'm SB \<rightarrow> 'm SB" where
 "sbTake n \<equiv> \<Lambda> b . sbMapStream (\<lambda>s. stake n\<cdot>s) b"
 
 
-  (* Retrieves the first Element of each Stream. *)
+(* Retrieves the first Element of each Stream. *)
 definition sbHd:: " 'm SB \<rightarrow> 'm SB" where
 "sbHd \<equiv> sbTake 1"
 
 
-  (* Deletes the first n Elements of each Stream *)
+(* Deletes the first n Elements of each Stream *)
 definition sbDrop:: "nat \<Rightarrow> 'm SB \<rightarrow> 'm SB" where
 "sbDrop n \<equiv> \<Lambda> b. sbMapStream (\<lambda>s. sdrop n\<cdot>s) b"
 
 
-  (* Deletes the first Elements of each stream *)
+(* Deletes the first Elements of each stream *)
 definition sbRt:: " 'm SB \<rightarrow> 'm SB" where
 "sbRt \<equiv> sbDrop 1"
 
 
-  (* Retrieves the n-th element of each Stream *)
+(* Retrieves the n-th element of each Stream *)
 definition sbNth:: "nat \<Rightarrow> 'm SB \<rightarrow> 'm SB" where
 "sbNth n \<equiv> \<Lambda> sb.  sbHd\<cdot>(sbDrop n\<cdot>sb)"
 
 
-(* I tried to make this function cont, look at SBCase_Study *)
-  (* Length of the selected stream. *)
+(* Tried to make this function cont, look at SBCase_Study *)
+(* Length of the selected stream. *)
 definition sbLen:: " 'm SB \<Rightarrow> lnat " (* ("#_") *)where
 "sbLen b \<equiv> LEAST ln. ln\<in> {#(b. c) | c. c\<in>sbDom\<cdot>b}"  
 
-  (* Iterates the streams n-times. *)
+(* Iterates the streams n-times. *)
 definition sbNTimes:: "nat \<Rightarrow> 'm SB \<Rightarrow> 'm SB" ("_\<star>_" [60,80] 90) where
 "sbNTimes n b \<equiv> sbMapStream (sntimes n) b"
 
 
-  (* Iterates the streams \<infinity>-times. *)
+(* Iterates the streams \<infinity>-times. *)
 definition sbInfTimes:: " 'm SB \<Rightarrow> 'm SB" ("_\<infinity>") where
 "sbInfTimes sb = sbMapStream sinftimes sb"
 
 
 
-  (* Applies a (Element-)function to each stream. *)
+(* Applies a (Element-)function to each stream. *)
 definition sbMap:: "('m \<Rightarrow> 'm) \<Rightarrow> 'm SB \<rightarrow> 'm SB" where
 "sbMap f \<equiv> \<Lambda> b. sbMapStream (\<lambda>s. smap f\<cdot>s) b"
 
 
-  (* Applies a filter to all Elements in each stream. *)
+(* Applies a filter to all Elements in each stream. *)
 definition sbFilter:: "'m set \<Rightarrow> 'm SB \<rightarrow> 'm SB" where
 "sbFilter f \<equiv> \<Lambda> b. sbMapStream (\<lambda>s. sfilter f\<cdot>s) b "
 
@@ -220,27 +217,27 @@ abbreviation sbfilter_abbr :: "'m set \<Rightarrow> 'm SB \<Rightarrow> 'm SB" (
 where "F \<ominus> s \<equiv> sbFilter F\<cdot>s"
 
 
-  (* Applies a filter to each stream. If the stream is not in the filter it is replaces by "None"  *)
+(* Applies a filter to each stream. If the stream is not in the filter it is replaces by "None"  *)
 definition sbFilterStreams:: "'m stream set \<Rightarrow> 'm SB \<Rightarrow> 'm SB" where
 "sbFilterStreams f b \<equiv> (\<lambda>c. (c\<in>sbDom\<cdot>b \<and> (b. c)\<in>f) \<leadsto> (b .c) )\<Omega> "
 
 
-  (* Applies the function to the first Element in each Streams and returns only the first Element *)
+(* Applies the function to the first Element in each Streams and returns only the first Element *)
 definition sbLookahd:: "('m \<Rightarrow> 'm) \<Rightarrow> 'm SB \<rightarrow> 'm SB" where
 "sbLookahd f \<equiv> \<Lambda> sb. sbMap f\<cdot>(sbHd\<cdot>sb)"
 
 
-  (* Prefix while predicate holds. *)
+(* Prefix while predicate holds. *)
 definition sbTakeWhile:: "('m \<Rightarrow> bool) \<Rightarrow> 'm SB \<rightarrow> 'm SB" where
 "sbTakeWhile f \<equiv> \<Lambda> b. sbMapStream (\<lambda>s. stakewhile f\<cdot>s) b"
 
 
-  (* Drop prefix while predicate holds. *)
+(* Drop prefix while predicate holds. *)
 definition sbDropWhile:: "('m \<Rightarrow> bool) \<Rightarrow> 'm SB \<rightarrow> 'm SB" where
 "sbDropWhile f \<equiv> \<Lambda> b. sbMapStream (\<lambda>s. sdropwhile f\<cdot>s) b"
 
 
-  (* Remove successive duplicate values from each stream. *)
+(* Remove successive duplicate values from each stream. *)
 definition sbRcdups:: " 'm SB \<rightarrow> 'm SB" where
 "sbRcdups \<equiv> \<Lambda> sb. sbMapStream (\<lambda>s. srcdups\<cdot>s) sb"
 
@@ -967,12 +964,14 @@ proof (rule sb_eq)
   thus "?L . c = b1 . c" using c_def by(simp add: sbconc_insert)
 qed
 
+(* Concatenating with the empty SB is the identity *)
 lemma sbconc_idLempty [simp]: "(empty \<Omega>) \<bullet> b2 = b2"
 using sbconc_idL sbleast_empty by (metis empty_subsetI)
 
 lemma sbconc_idRempty [simp]: "b1 \<bullet> (empty \<Omega>) = b1"
 using sbconc_idR sbleast_empty by (metis empty_subsetI)
 
+(* sbGetch is distributive with sbConc if the channel c is part of both domains *)
 lemma sbconc_sbgetch: assumes "c\<in>(sbDom\<cdot>b1 \<inter> sbDom\<cdot>b2)"
   shows "(b1 \<bullet> b2) .c = (b1 .c)\<bullet>(b2. c)"
 using assms sbconc_insert sbconc_well sbgetch_insert sbrestrict2sbgetch sbup_sbgetch 
@@ -982,14 +981,15 @@ using assms sbconc_insert sbconc_well sbgetch_insert sbrestrict2sbgetch sbup_sbg
   subsection \<open>sbConcCommon\<close>
 (* ----------------------------------------------------------------------- *)
 
+(* sbConcCommon is a continuous function *)
 lemma sbconccommon_cont[simp]: "cont (\<lambda> b2. (b1 \<bullet> b2)\<bar>sbDom\<cdot>b1 \<inter> sbDom\<cdot>b2)"
 by (metis (no_types) cont_restrict_sbdom)
 
+(* Insert rule for sbConcCommon *)
 lemma sbconccommon_insert: "sbConcCommon b1\<cdot>b2 =  (b1 \<bullet> b2)\<bar>sbDom\<cdot>b1 \<inter> sbDom\<cdot>b2"
 by(simp add: sbConcCommon_def)
 
-(* sbConcCommon, which concatenates two SBs b1 and b2 and filters the intersection is equivalent to
-   filtering one SB by the other and then concatenating *)
+(* sbConcCommon is equivalent to filtering each SB by the other and then concatenating *)
 lemma sbconccommon_insert2: "sbConcCommon b1\<cdot>b2 =  (b1\<bar>sbDom\<cdot>b2) \<bullet> (b2\<bar>sbDom\<cdot>b1)" (is "?L = ?R")
 proof (rule sb_eq)
   show "sbDom\<cdot>?L = sbDom\<cdot>?R" by (simp add: Int_commute inf_assoc sbconccommon_insert) 
@@ -1011,20 +1011,22 @@ lemma [simp]: assumes "\<forall>s. sdom\<cdot>(f s) \<subseteq> sdom\<cdot>s"
   shows "\<forall>c s. (sdom\<cdot>s\<subseteq>(ctype c) \<longrightarrow> sdom\<cdot>(f s)\<subseteq>(ctype c))"
 using assms by blast
 
+(* sbMapStream is well-typed, if the function f preserves the well-typed property *)
 lemma sbmapstream_well[simp]: assumes "\<forall>c s. (sdom\<cdot>s\<subseteq>(ctype c) \<longrightarrow> sdom\<cdot>(f s)\<subseteq>(ctype c))"
   shows "sb_well (\<lambda>c. (c \<in> sbDom\<cdot>b)\<leadsto>f (b. c))"
 by (smt Abs_cfun_inverse2 assms domIff option.sel rep_well sbDom_def sb_well_def sbdom_cont sbgetch_insert)
 
+(* The domain is identical after sbMapStream, if the function f preserves the well-typed property *)
 lemma sbmapstream_dom [simp]: assumes "\<forall>c s. (sdom\<cdot>s\<subseteq>(ctype c) \<longrightarrow> sdom\<cdot>(f s)\<subseteq>(ctype c))" 
   shows "sbDom\<cdot>(sbMapStream f b) = sbDom\<cdot>b"
 by (smt Abs_cfun_inverse2 Collect_cong assms domI domIff dom_def option.sel rep_abs rep_well sbDom_def sbMapStream_def sb_well_def sbdom_cont sbgetch_insert)
 
+(* Assuming the channel c is in the domain, sbMapStream and sbGetch are commutative *)
 lemma sbmapstream_sbgetch [simp]: assumes"\<forall>c s. (sdom\<cdot>s\<subseteq>(ctype c) \<longrightarrow> sdom\<cdot>(f s)\<subseteq>(ctype c))" and "c\<in>sbDom\<cdot>b"
   shows "(sbMapStream f b) . c = f (b .c)"
 by (simp add: assms(1) assms(2) sbMapStream_def sbgetch_insert)
 
-(* for any continuous function f from stream to stream which preserves the well-typed property,
-   (sbMapStream f) is also continuous *)
+(* sbMapStream is continuous, if the function f preserves the well-typed property *)
 lemma sbmapstream_cont [simp]: assumes "cont f" and "\<forall>c s. (sdom\<cdot>s\<subseteq>(ctype c) \<longrightarrow> sdom\<cdot>(f s)\<subseteq>(ctype c))"
   shows "cont (sbMapStream f)"
 proof (rule contI2)
@@ -1048,32 +1050,42 @@ by (meson assms(1) assms(2) sbmapstream_cont subset_eq)
 (* ----------------------------------------------------------------------- *)
   subsection \<open>sbTake\<close>
 (* ----------------------------------------------------------------------- *)
+
+(* sbTake is continuous *)
 lemma sbtake_cont [simp]:"cont (\<lambda>b. sbMapStream (\<lambda>s. stake n\<cdot>s) b)"
 by (simp)
 
+(* Insert rule for sbTake *)
 lemma sbtake_insert: "sbTake n\<cdot>b \<equiv>  sbMapStream (\<lambda>s. stake n\<cdot>s) b"
 by(simp add: sbTake_def)
 
+(* Taking zero elements yields the smallest SB (sbLeast) with the same domain *)
 lemma sbtake_zero: "sbTake 0\<cdot>In = sbLeast (sbDom\<cdot>In)"
 by(simp add: sbtake_insert sbMapStream_def sbLeast_def)
 
+(* The domain stays the same *)
 lemma sbtake_sbdom[simp]: "sbDom\<cdot>(sbTake n\<cdot>b) = sbDom\<cdot>b"
 by(simp add: sbtake_insert)
 
+(* Assuming the channel c is in the domain of the SB b, sbTake and sbGetCh are commutative *)
 lemma sbtake_sbgetch [simp]: assumes "c\<in>sbDom\<cdot>b"
   shows "sbTake n\<cdot>b . c = stake n\<cdot>(b .c)"
 using assms by(simp add: sbtake_insert)
 
+(* Taking n from SB b yields a smaller (below, \<sqsubseteq>) SB than taking n+1 *)
 lemma sbtake_below [simp]: "sbTake n\<cdot>b \<sqsubseteq> sbTake (Suc n)\<cdot>b"
 by (metis eq_imp_le le_Suc_eq sbtake_sbdom sbtake_sbgetch stake_mono sb_below)
 
+(* Taking increasingly more from an SB b yields a chain of SBs *)
 lemma sbtake_chain [simp]: "chain (\<lambda>n. sbTake n\<cdot>b)"
 by (simp add: po_class.chainI)
 
+(* Assuming the channel c is in the domain of SB b, sbGetch/LUB and sbTake are commutative *)
 lemma sbtake_lub_sbgetch: assumes "c\<in>sbDom\<cdot>b"
   shows "(\<Squnion>n. sbTake n\<cdot>b) . c = (\<Squnion>n. stake n\<cdot>(b . c))"
 by (metis (mono_tags, lifting) assms lub_eq lub_eval po_class.chainI sbgetch_insert sbtake_below sbtake_sbgetch)
 
+(* The LUB of sbTake on an SB b is b itself *)
 lemma sbtake_lub [simp]: "(\<Squnion>n. sbTake n\<cdot>b) = b" (is "?L = b")
 proof(rule sb_eq)
   show "sbDom\<cdot>?L = sbDom\<cdot>b" by (metis po_class.chainI sbChain_dom_eq2 sbtake_below sbtake_sbdom)
@@ -1088,6 +1100,8 @@ qed
 (* ----------------------------------------------------------------------- *)
   subsection \<open>sbHd\<close>
 (* ----------------------------------------------------------------------- *)
+
+(* Applying sbHd yields the same domain as before *)
 lemma sbhd_sbdom[simp]: "sbDom\<cdot>(sbHd\<cdot>b) = sbDom\<cdot>b"
 by(simp add: sbHd_def)
 
@@ -1095,24 +1109,29 @@ by(simp add: sbHd_def)
 (* ----------------------------------------------------------------------- *)
   subsection \<open>sbDrop\<close>
 (* ----------------------------------------------------------------------- *)
+
+(* sbDrop is continuous *)
 lemma sbdrop_cont [simp]:"cont (\<lambda>b. sbMapStream (\<lambda>s. sdrop n\<cdot>s) b)"
 by simp
 
+(* Insert rule for sbDrop *)
 lemma sbdrop_insert: "sbDrop n\<cdot>b = sbMapStream (\<lambda>s. sdrop n\<cdot>s) b"
 by(simp add: sbDrop_def)
 
+(* Dropping zero elements is the identity *)
 lemma sbdrop_zero[simp]: "sbDrop 0\<cdot>b = b"
 by(simp add: sbdrop_insert sbMapStream_def)
 
-
+(* Dropping does not change the domain *)
 lemma sbdrop_sbdom[simp]: "sbDom\<cdot>(sbDrop n\<cdot>b) = sbDom\<cdot>b"
 by(simp add: sbdrop_insert)
 
+(* Assuming the channel c is in the domain of SB b, sbDrop and sbGetch are commutative *)
 lemma sbdrop_sbgetch [simp]: assumes "c\<in>sbDom\<cdot>b"
   shows "sbDrop n\<cdot>b . c = sdrop n\<cdot>(b .c)"
 using assms by(simp add: sbdrop_insert)
 
-
+(* Taking the first n of SB b, then dropping the first n of b and concatenating both yields b *)
 lemma sbtake_sbdrop [simp]: "sbTake n\<cdot>b \<bullet> sbDrop n\<cdot>b = b" (is "?L = b")
 proof(rule sb_eq)
   show "sbDom\<cdot>?L = sbDom\<cdot>b" by(simp)
@@ -1125,7 +1144,7 @@ proof(rule sb_eq)
   thus "?L . c = b . c" by simp
 qed
 
-
+(* Applying sbDrop twice is the same as dropping the sum of the two counts *)
 lemma sbdrop_plus [simp]: "sbDrop n\<cdot>(sbDrop k\<cdot>sb) = sbDrop (n+k)\<cdot>sb"
   apply(rule sb_eq)
    apply simp
@@ -1140,10 +1159,12 @@ lemma sbdrop_plus [simp]: "sbDrop n\<cdot>(sbDrop k\<cdot>sb) = sbDrop (n+k)\<cd
 (* ----------------------------------------------------------------------- *)
   subsection \<open>sbRt\<close>
 (* ----------------------------------------------------------------------- *)
+
+(* sbRt does not change the domain *)
 lemma sbrt_sbdom[simp]: "sbDom\<cdot>(sbRt\<cdot>b) = sbDom\<cdot>b"
 by(simp add: sbRt_def)
 
-
+(* Concatenating sbHd and sbRt is the identity*)
 lemma sbhd_sbrt [simp]: "(sbHd\<cdot>b \<bullet> sbRt\<cdot>b) = b"
 by (simp add: sbHd_def sbRt_def)
 
@@ -1193,13 +1214,16 @@ qed
   subsection \<open>snInfTimes\<close>
 (* ----------------------------------------------------------------------- *)
 
+(* Assuming the channel c is in the domain of SB b, sbInfTimes and sbGetch are commutative *)
 lemma sbinftimes_sbgetch [simp]: assumes "c\<in>sbDom\<cdot>b"
   shows "(sbInfTimes b) . c = sinftimes (b . c)"
 using assms by(simp add: sbInfTimes_def)
 
+(* The domain stays the same *)
 lemma sbinftimes_sbdom [simp]: "sbDom\<cdot>(b\<infinity>) = sbDom\<cdot>b"
 by(simp add: sbInfTimes_def)
 
+(* The LUB of concatenating a SB b with itself n times in sbInfTimes of b *)
 lemma sntimes_lub: fixes b:: "'m SB"
   shows "(\<Squnion>i. i\<star>b) = b\<infinity>" (is "?L = ?R")
 proof (rule sb_eq)
@@ -1219,6 +1243,8 @@ qed
 (* ----------------------------------------------------------------------- *)
   subsection \<open>sbMap\<close>
 (* ----------------------------------------------------------------------- *)
+
+(* Applying f to the SB b does not change the domain, assuming f preserves the well-typedness  *)
 lemma assumes "\<forall>c s. (sdom\<cdot>s\<subseteq>(ctype c) \<longrightarrow> sdom\<cdot>((\<lambda>s. smap f\<cdot>s) s)\<subseteq>(ctype c))"
   shows "sbDom\<cdot>(sbMap f\<cdot>b) = sbDom\<cdot>b"
 by(simp add: sbMap_def assms)
@@ -1228,9 +1254,12 @@ by(simp add: sbMap_def assms)
 (* ----------------------------------------------------------------------- *)
   subsection \<open>sbFilter\<close>
 (* ----------------------------------------------------------------------- *)
+
+(* Filtering does not change the domain *)
 lemma sbfilter_sbdom [simp]: "sbDom\<cdot>(sbFilter A\<cdot>b) = sbDom\<cdot>b"
 by (smt Abs_cfun_inverse2 cont_Rep_cfun2 sbFilter_def sbfilter_sbdom sbmapstream_cont sbmapstream_dom subsetCE subsetI)
 
+(* Assuming the channel c is in the domain of SB b, sbFilter and sbGetch are commutative *)
 lemma sbfilter_sbgetch [simp]: assumes "c\<in>sbDom\<cdot>b"
   shows  "(sbFilter A\<cdot>b) . c = sfilter A\<cdot>(b .c)"
 apply(simp add: sbFilter_def assms)
@@ -1238,23 +1267,19 @@ by (meson Streams.sbfilter_sbdom assms sbmapstream_sbgetch subsetCE subsetI)
 
 
 (* ----------------------------------------------------------------------- *)
-  (* Lemma *)
+  subsection \<open>if_then\<close>
 (* ----------------------------------------------------------------------- *)
 
-
+(* Domain of if-then construct works as expected for constructing SBs *)
 lemma if_then_dom[simp]: "dom (\<lambda>c. (c \<in> cs)\<leadsto>b .c) = cs"
 using dom_def by fastforce
 
+(* The if-then construct yields well-typed SBs, if the channel in the if-condition is in the domain *)
 lemma if_then_well[simp]: assumes "cs\<subseteq>sbDom\<cdot>b" shows "sb_well (\<lambda>c. (c\<in>cs) \<leadsto> (b .c))"
 using assms apply(simp add: sb_well_def sbgetch_insert sbdom_insert)
-using rep_well sb_well_def by blast
+  using rep_well sb_well_def by blast
 
-
-
-
-
-
-
+(* Additionals lemmata concerning continuity, monotonicity, domain and chains *)
 
 lemma if_then_chain[simp]: assumes "chain Y" and "monofun g"
   shows "chain (\<lambda>i. (sbDom\<cdot>(Y i) = In)\<leadsto>g (Y i))"
