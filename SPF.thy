@@ -18,15 +18,13 @@ begin
 section \<open>Datatype Definition\<close>
 (* ----------------------------------------------------------------------- *)
 
-(* an 'm SPF has a fixed input-channel-set and output-set.  *)
-(* it is also an continuous function *)
+(* An 'm SPF is a continuous function which has a fixed input-channel-set and output-set. *)
 definition spf_well:: "('m SB \<rightarrow> 'm SB option) \<Rightarrow> bool" where
 "spf_well f \<equiv> \<exists>In Out. \<forall>b. (b \<in> dom (Rep_cfun f) \<longleftrightarrow> sbDom\<cdot>b = In) \<and> 
     (b \<in> dom (Rep_cfun f) \<longrightarrow> sbDom\<cdot>(the (f\<cdot>b)) = Out)"
 
-(* Show that a function exists which is spf_well *)
-    (* Show that this function ist continuous. *)
-  lemma spf_least_cont[simp]: "cont [sbLeast {} \<mapsto> sbLeast {}]"
+(* Shows that there exists a continuous function which is spf_well *)
+lemma spf_least_cont[simp]: "cont [sbLeast {} \<mapsto> sbLeast {}]"
   proof (rule contI)
   fix Y:: "nat \<Rightarrow> 'm SB"
   assume chY: "chain Y"
@@ -46,24 +44,24 @@ definition spf_well:: "('m SB \<rightarrow> 'm SB option) \<Rightarrow> bool" wh
       qed
   qed 
   
-    (* Show that an wellformed function exists.  Used in cpo_def proof. *)
-  lemma spf_well_exists[simp]: "spf_well (Abs_cfun [sbLeast {} \<mapsto> sbLeast {}])"
+(* Show that a wellformed function exists.  Used in cpo_def proof. *)
+lemma spf_well_exists[simp]: "spf_well (Abs_cfun [sbLeast {} \<mapsto> sbLeast {}])"
   apply(simp add: spf_well_def)
   by (metis empty_iff sbleast_sbdom sb_eq)
   
 
 (* Show that spw_wellformed is admissible *)
-    (* Split the spf_well definition into 2 parts *)
-  lemma spf_well_def2: "spf_well f = ((\<exists>In. \<forall>b. (b \<in> dom (Rep_cfun f)) = (sbDom\<cdot>b = In)) 
+  (* Split the spf_well definition into 2 parts *)
+lemma spf_well_def2: "spf_well f = ((\<exists>In. \<forall>b. (b \<in> dom (Rep_cfun f)) = (sbDom\<cdot>b = In)) 
   \<and> (\<exists>Out. \<forall>b. b \<in> dom (Rep_cfun f) \<longrightarrow> sbDom\<cdot>(the (f\<cdot>b)) = Out))"
   by (meson spf_well_def)
 
   
-    (* Proof admissibility on the first part of spf_well *)
-  lemma spf_well_adm1[simp]: "adm (\<lambda>f. \<exists>In. \<forall>b. (b \<in> dom (Rep_cfun f)) = (sbDom\<cdot>b = In))"
+(* Proof admissibility on the first part of spf_well *)
+lemma spf_well_adm1[simp]: "adm (\<lambda>f. \<exists>In. \<forall>b. (b \<in> dom (Rep_cfun f)) = (sbDom\<cdot>b = In))"
   by (smt adm_upward below_cfun_def part_dom_eq)
   
-    (* Proof admissibility on the second part of spf_well *)
+(* Proof admissibility on the second part of spf_well *)
 lemma spf_well_adm2[simp]: "adm (\<lambda>f. \<exists>Out. \<forall>b. b \<in> dom (Rep_cfun f) 
                                         \<longrightarrow> sbDom\<cdot>(the (f\<cdot>b)) = Out)" (is "adm( ?P )")   
   proof (rule admI)
@@ -99,13 +97,13 @@ lemma spf_well_adm2[simp]: "adm (\<lambda>f. \<exists>Out. \<forall>b. b \<in> d
     qed 
   qed
   
-    (* unite the two admissible proofs. Used in cpo_def proof. *)
-  lemma spf_well_adm[simp]: "adm (\<lambda>f. spf_well f)"
+(* Unite the two admissible proofs. Used in cpo_def proof. *)
+lemma spf_well_adm[simp]: "adm (\<lambda>f. spf_well f)"
   by(simp add: spf_well_def2)
   
 
-  (* Define the type 'm SPF (Stream Processing Functions) as cpo *)
-  cpodef 'm SPF = "{f :: 'm SB \<rightarrow> 'm SB option . spf_well f}"
+(* Define the type 'm SPF (Stream Processing Functions) as cpo *)
+cpodef 'm SPF = "{f :: 'm SB \<rightarrow> 'm SB option . spf_well f}"
    using spf_well_exists apply blast
   using spf_well_adm by auto
 
@@ -127,26 +125,25 @@ abbreviation Rep_CSPF:: "'m SPF \<Rightarrow> ('m SB \<rightharpoonup> 'm SB)" w
 "Rep_CSPF F \<equiv>  Rep_cfun (Rep_SPF F) "
 
 (* Shorter version to get from normal functions to 'm SPF's *)
-  (* of course the argument should be "spf_well" and "cont" *)
 abbreviation Abs_CSPF:: "('m SB \<rightharpoonup> 'm SB) \<Rightarrow> 'm SPF" where
 "Abs_CSPF F \<equiv> Abs_SPF (Abs_cfun F)"
 
 subsection \<open>domain/range\<close>
 
-  (* get input channel set for given 'm SPF *)
+(* Get input channel set for given 'm SPF *)
 definition spfDom :: "'m SPF \<rightarrow> channel set" where
 "spfDom \<equiv> \<Lambda> f. sbDom\<cdot>(SOME b. b \<in> dom (Rep_CSPF f))" 
 
-  (* get output channel set for given 'm SPF *)
+(* Get output channel set for given 'm SPF *)
 definition spfRan :: "'m SPF \<rightarrow> channel set" where
 "spfRan \<equiv> \<Lambda> f.  sbDom\<cdot>(SOME b. b \<in> ran (Rep_CSPF f))"
 
 
-text {* spftype" returns the type of the stream processing function.*}
+(* Returns the type of the stream processing function *)
 definition spfType :: "'m SPF \<rightarrow> (channel set \<times> channel set)" where
 "spfType \<equiv> \<Lambda> f . (spfDom\<cdot>f, spfRan\<cdot>f)"
 
-  (* All 'm SPF's with "In" as Input and "Out" as Output set *)
+(* All 'm SPF's with "In" as Input and "Out" as Output set *)
 definition spfIO :: "channel set \<Rightarrow> channel set \<Rightarrow> 'm SPF set" where
 "spfIO In Out = {f. spfDom\<cdot>f = In \<and> spfRan\<cdot>f = Out}"
 
@@ -154,7 +151,7 @@ definition spfIO :: "channel set \<Rightarrow> channel set \<Rightarrow> 'm SPF 
 
 subsection \<open>apply\<close>
 
-(* harpoon and Rep operation all in one for simpler SPF on SB applications *)
+(* Applying an SPF to an SB. Combines the Rep operator for easier usage. *)
     (* bounds weaker than tsbres *)
 abbreviation theRep_abbrv :: "'a SPF \<Rightarrow> 'a SB \<Rightarrow> 'a SB " (infix "\<rightleftharpoons>" 62) where
 "(f \<rightleftharpoons> s) \<equiv> (Rep_CSPF f)\<rightharpoonup>s"
@@ -162,11 +159,11 @@ abbreviation theRep_abbrv :: "'a SPF \<Rightarrow> 'a SB \<Rightarrow> 'a SB " (
 
 subsection \<open>fix\<close>
 
-  (* fixed point operator for bundle to bundle functions *)
+(* Fixed point operator for bundle to bundle functions *)
 definition sbFix :: "('m SB \<rightarrow> 'm SB) \<Rightarrow> channel set \<Rightarrow> 'm SB" where
 "sbFix F cs \<equiv>  (\<Squnion>i. iterate i\<cdot>F\<cdot>(cs^\<bottom>))"
 
-text {* special case sbFix for cont of the composition *}
+(* Special case sbFix for cont of the composition *)
 definition sbFix2 :: "('m SB \<Rightarrow> 'm SB \<rightarrow> 'm SB) \<Rightarrow> 'm SB  \<Rightarrow> channel set \<Rightarrow> 'm SB" where
 "sbFix2 F x cs \<equiv>  (\<Squnion>i. iterate i\<cdot>(F x)\<cdot>(cs^\<bottom>))"
 
@@ -181,27 +178,26 @@ subsection \<open>composition\<close>
 
 subsubsection \<open>channel sets\<close>
   
-text {* the input channels of the composition of f1 and f2 *}
+(* The input channels of the composition of f1 and f2 *)
 definition spfCompI :: "'m SPF \<Rightarrow> 'm SPF \<Rightarrow> channel set" where
 "spfCompI f1 f2 \<equiv> (spfDom\<cdot>f1 \<union> spfDom\<cdot>f2) - (spfRan\<cdot>f1 \<union> spfRan\<cdot>f2)"
 
-text {* the internal channels of the composition of f1 and f2 *}
+(* The internal channels of the composition of f1 and f2 *)
 definition spfCompL :: "'m SPF \<Rightarrow> 'm SPF \<Rightarrow> channel set" where
 "spfCompL f1 f2 \<equiv> (spfDom\<cdot>f1 \<union> spfDom\<cdot>f2) \<inter> (spfRan\<cdot>f1 \<union> spfRan\<cdot>f2)"
 
-text {* the output channels of the composition of f1 and f2 *}
+(* the output channels of the composition of f1 and f2 *)
 definition spfCompOc :: "'m SPF \<Rightarrow> 'm SPF \<Rightarrow> channel set" where
 "spfCompOc f1 f2 \<equiv> (spfRan\<cdot>f1 \<union> spfRan\<cdot>f2)"
 
-text {* all channels of the composition of f1 and f2  *}
+(* all channels of the composition of f1 and f2 *)
 definition spfCompC :: "'m SPF \<Rightarrow> 'm SPF \<Rightarrow> channel set" where
 "spfCompC f1 f2 \<equiv> spfDom\<cdot>f1 \<union> spfDom\<cdot>f2 \<union> spfRan\<cdot>f1 \<union> spfRan\<cdot>f2"
 
 
 subsubsection \<open>composition helpers\<close>
-  (* basically the composition helpers are parallel composition operators that take an 
-    additional feedback and input bundle x *)
   
+(* Parallel composition operators that take an additional feedback and input bundle x *)  
 definition spfCompH :: "'m SPF \<Rightarrow> 'm SPF \<Rightarrow> 'm SB \<Rightarrow> 'm SB  \<rightarrow> 'm SB" where
 "spfCompH f1 f2 x \<equiv> (\<Lambda> z. (f1\<rightleftharpoons>((x \<uplus> z)  \<bar> spfDom\<cdot>f1)) \<uplus>  (f2\<rightleftharpoons>((x \<uplus> z)  \<bar> spfDom\<cdot>f2)))"
 
@@ -218,7 +214,7 @@ abbreviation iter_spfcompH2 :: "'a SPF \<Rightarrow> 'a SPF \<Rightarrow> nat \<
 
 subsubsection \<open>composition operators\<close>
 
-text {* The general composition operator for SPFs *}
+(* The general composition operator for SPFs *)
 definition spfComp :: "'m SPF \<Rightarrow> 'm SPF \<Rightarrow> 'm SPF" (infixl "\<otimes>" 40) where
 "spfComp f1 f2 \<equiv>
 let I = spfCompI f1 f2;
@@ -226,7 +222,7 @@ let I = spfCompI f1 f2;
 in Abs_CSPF (\<lambda> x. (sbDom\<cdot>x = I) \<leadsto> sbFix (spfCompH f1 f2 x) Oc)"
 
 
-(* alternative versions, only for evaluation of the spfComp *)
+(* Alternative versions, only for evaluation of the spfComp *)
   (* do not use those in production *)
 definition spfCompOld :: "'m SPF \<Rightarrow> 'm SPF \<Rightarrow> 'm SPF"  where
 "spfCompOld f1 f2 \<equiv> 
@@ -255,19 +251,19 @@ in Abs_CSPF (\<lambda> x. (sbDom\<cdot>x = I) \<leadsto> (\<Squnion>i. iterate i
 subsection \<open>spfLift\<close>
   (* example for SPF instantiations can also be found in SPF_Templates *)
 
-text {* "spflift" takes a "simple stream processing function" and two channel 
-         names where the streams flow, and lifts it to a stream bundle processing function.*}
+(* Takes a "simple stream processing function" and two channel 
+         names where the streams flow, and lifts it to a stream bundle processing function. *)
 definition spfLift :: "('m stream \<rightarrow> 'm stream) => channel => channel => 'm SPF" where
 "spfLift f ch1 ch2  \<equiv> Abs_CSPF (\<lambda>b. ( (b\<in>{c1}^\<Omega>) \<leadsto> ([ch2 \<mapsto> f\<cdot>(b . ch1)]\<Omega>)))" 
 
-(* takes a fully defined 'm SPF-function and changes it to an 
-    'm SPF with given In & Out channels *)
+(* Takes a fully defined 'm SPF-function and changes it to an 'm SPF with given In & Out channels *)
 definition spfSbLift:: "('m SB \<rightarrow> 'm SB) \<Rightarrow> channel set \<Rightarrow> channel set \<Rightarrow> 'm SPF" where
 "spfSbLift f In Out \<equiv> Abs_CSPF (\<lambda>b. (sbDom\<cdot>b = In)\<leadsto> (\<up>f\<cdot>b) \<bar> Out)"
 
 
 subsection \<open>hide\<close>
 
+(* Hides the channels defined in the channel set cs from the output SB *)
 definition hide :: "'m SPF \<Rightarrow>  channel set \<Rightarrow> 'm SPF" ("_\<h>_") where
 "hide f cs \<equiv> Abs_CSPF (\<lambda> x. (sbDom\<cdot>x = spfDom\<cdot>f ) \<leadsto> ((f \<rightleftharpoons> x)\<bar>(spfRan\<cdot>f - cs)))"
 
@@ -278,7 +274,7 @@ definition hide :: "'m SPF \<Rightarrow>  channel set \<Rightarrow> 'm SPF" ("_\
 (* ----------------------------------------------------------------------- *)
 
 
-  subsection \<open>Rep_CSPF / Abs_CSPF\<close>
+subsection \<open>Rep_CSPF / Abs_CSPF\<close>
 
 lemma rep_spf_chain [simp]: assumes "chain Y" shows "chain (\<lambda>i. Rep_SPF (Y i))"
   by (meson assms below_SPF_def po_class.chain_def)
@@ -286,7 +282,6 @@ lemma rep_spf_chain [simp]: assumes "chain Y" shows "chain (\<lambda>i. Rep_SPF 
 lemma rep_spf_mono [simp]: shows "monofun Rep_SPF"
   by (meson below_SPF_def monofunI)
 
-(* The newly defined Rep_SPF is a continuous function *)
 lemma rep_spf_cont [simp]: "cont Rep_SPF"
   using cont_Rep_SPF cont_id by blast
 
@@ -309,7 +304,7 @@ lemma rep_abs_cspf [simp]: assumes "cont f" and "spf_well (Abs_cfun f)"
 lemma [simp]: "spf_well f \<Longrightarrow> Rep_SPF (Abs_SPF f) = f"
 by (simp add: Abs_SPF_inverse)
 
-  (* lemmata for reverse substitution *)
+(* lemmata for reverse substitution *)
 lemma abs_cspf_rev: "Abs_SPF (Abs_cfun F) = Abs_CSPF F"
   by simp
     
@@ -320,12 +315,12 @@ lemma rep_cspf_rev: "Rep_cfun (Rep_SPF F) = Rep_CSPF F"
 
 subsection \<open>SPF_definition\<close>
   
-text{*  introduction rules for mono proofs *}
+(* Introduction rules for monotonicity proofs *)
 lemma spf_monoI2 [simp]: assumes "\<And> x y. sbDom\<cdot>x = In \<Longrightarrow> x \<sqsubseteq> y \<Longrightarrow> (g x) \<sqsubseteq> (g y)"
   shows "monofun (\<lambda>b. (sbDom\<cdot>b = In)\<leadsto>g b)"
   by (smt assms below_option_def monofun_def sbdom_eq some_below)
  
-text{* introduction rules for cont proofs *}
+(* Introduction rules for continuity proofs *)
 lemma spf_contI [simp]: assumes "\<And> x y. sbDom\<cdot>x = In \<Longrightarrow> x \<sqsubseteq> y \<Longrightarrow> (g x) \<sqsubseteq> (g y)"
                   and "\<And> Y. chain Y \<Longrightarrow> (sbDom\<cdot>(\<Squnion>i. Y i) = In) \<Longrightarrow> g (\<Squnion>i. Y i)\<sqsubseteq> (\<Squnion>i. (g (Y i)))"
   shows "cont (\<lambda>b. (sbDom\<cdot>b = In)\<leadsto>g b)"
