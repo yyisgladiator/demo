@@ -382,7 +382,7 @@ lemma ran2exists[simp]: assumes "x\<in>(ran f)"
   shows "\<exists> xb. ((f xb) = (Some x))"
   using assms by (simp add: ran_def)
 
-(* only 'm SBs with the same domain are in an 'm SPF *)
+(* 'm SBs that are in an 'm SPF have the same domain *)
 lemma spf_ran2sbdom: assumes "x\<in>ran (Rep_CSPF f)" and "y\<in>ran (Rep_CSPF f)" 
   shows "sbDom\<cdot>x = sbDom\<cdot>y"
   proof -
@@ -394,12 +394,12 @@ qed
 
 
 
-(* if 2 'm SPF's are in a below-relation their Input-Channels are equal *)
+(* if two 'm SPF's are in a below-relation, their Input-Channels are equal *)
 lemma spf_below_sbdom: assumes "a\<sqsubseteq>b" and "x \<in> dom (Rep_CSPF b)" and "y \<in> dom (Rep_CSPF a)"
   shows "sbDom\<cdot>x = sbDom\<cdot>y"
   by (metis assms(1) assms(2) assms(3) below_SPF_def below_cfun_def part_dom_eq spf_dom2sbdom)
 
-(* if 2 'm SPF's are in a below-relation their Output-Channels are equal *)
+(* if two 'm SPF's are in a below-relation, their Output-Channels are equal *)
 lemma spf_below_ran: assumes "a\<sqsubseteq>b" and "x \<in> ran (Rep_CSPF b)" and "y \<in> ran (Rep_CSPF a)"
   shows "sbDom\<cdot>x = sbDom\<cdot>y"
   proof -
@@ -415,10 +415,12 @@ lemma spf_below_ran: assumes "a\<sqsubseteq>b" and "x \<in> ran (Rep_CSPF b)" an
               domI fun_below_iff ranI sbdom_eq some_below2 spf_ran2sbdom sx_def)
 qed
 
+(* An SPF preserves the below relation of two SBs *)
 lemma spf_pref_eq: assumes "(a \<sqsubseteq> b)"
   shows "(f \<rightleftharpoons> a) \<sqsubseteq> (f \<rightleftharpoons> b)"
   by (metis  assms cont2mono monofun_cfun_arg monofun_def op_the_cont)
-    
+
+(* An SPF preserves the equal relation between two SBs*)
 lemma spf_arg_eqI: assumes "(a = b)"
   shows "f\<rightleftharpoons>a = f\<rightleftharpoons>b"
   by (simp add: assms)
@@ -451,16 +453,17 @@ lemma spf_dom_cont [simp]:"cont (\<lambda>f. sbDom\<cdot>(SOME b. b \<in> dom (R
   by(simp add: contI2)
 
   subsubsection \<open>equalities\<close>
-    
+
+(* Insert-rule for spfDom *)
 lemma spfdom_insert: "spfDom\<cdot>f = sbDom\<cdot>(SOME b. b \<in> dom (Rep_CSPF f))"
 by(simp add: spfDom_def)
 
-(* if 2 elements are in a below relation they have the same Input-channel-Set *)
+(* If two elements are in a below relation, they have the same Input-channel-Set *)
 lemma spfdom_eq: assumes "x\<sqsubseteq>y"
   shows "spfDom\<cdot>x = spfDom\<cdot>y"
   by (metis (no_types, lifting) assms someI_ex spf_below_sbdom spf_dom_not_empty spfdom_insert)
 
-(* the lub of an chain has the same input-set as all elements in the chain *)
+(* the lub of a chain has the same input-set as all elements in the chain *)
 lemma spfdom_eq_lub: assumes "chain Y"
   shows "spfDom\<cdot>(\<Squnion>i. Y i) = spfDom\<cdot>(Y i)"
   using assms is_ub_thelub spfdom_eq by blast
