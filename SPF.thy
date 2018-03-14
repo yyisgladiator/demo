@@ -1100,7 +1100,7 @@ subsection \<open>sbFix\<close>
 
 subsubsection \<open>compatibility lemmas\<close>
 
-(* cont in X intro rule for SPFs based on sbFix  *)
+(* Intro rule to show continuity in parameter x for sbFix-based SPFs *)
 lemma sbfix_contI2 [simp]: fixes F :: "'m SB \<Rightarrow> 'm SB \<rightarrow> 'm SB"
                             assumes  "cont F" and "\<And> x. (P x) \<Longrightarrow> sbfun_io_eq (F x) cs"
                             and "\<And> x y. sbDom\<cdot>x = sbDom\<cdot>y \<Longrightarrow> P x = P y"
@@ -1114,7 +1114,7 @@ proof -
     using sbfix_contI assms by blast
 qed
 
-(* the domain is always the same if io_eq holds *)
+(* Iterating does not change the domain if sbfun_io_eq holds *)
 lemma iter_sbfix_dom: assumes "sbfun_io_eq F cs"
   shows "sbDom\<cdot>(iterate i\<cdot>F\<cdot>(sbLeast cs)) = cs"
     proof (induction i)
@@ -1132,7 +1132,7 @@ lemma iter_sbfix_dom: assumes "sbfun_io_eq F cs"
       qed
 qed
 
-  (* if input und output of F is equals cs sbFix of f has the same domain *)
+(* sbfix does not change the domain *)
 lemma sbfix_dom: assumes "sbfun_io_eq (F) cs"
   shows "sbDom\<cdot>(sbFix F cs) =  cs"
 proof -
@@ -1159,7 +1159,7 @@ lemma sbfix_eq: assumes io_eq: "sbfun_io_eq F cs"
       apply (simp add: io_eq sbIterate_chain)
       by simp
 
-  (* the fixed point calculated bs sbFix is smaller than any other fixed point*)
+  (* The fixed point calculated by sbFix is smaller than any other fixed point *)
 lemma sbfix_least_below: assumes "sbfun_io_eq F cs" and "sbDom\<cdot>x = cs"
   shows "F\<cdot>x \<sqsubseteq> x \<Longrightarrow> (sbFix F cs) \<sqsubseteq> x"
   apply (simp add: sbFix_def)
@@ -1281,7 +1281,8 @@ subsection \<open>spfCompH\<close>
 subsubsection \<open>basic properties\<close>
   
 paragraph \<open>cont\<close>
-  
+
+(* Continuity in the argument of the resulting (from composition) SPF *)
 lemma spfCompH_cont[simp]: 
   shows "cont (\<lambda> z. (f1\<rightleftharpoons>((x \<uplus> z)  \<bar> spfDom\<cdot>f1)) \<uplus>  (f2\<rightleftharpoons>((x \<uplus> z)  \<bar> spfDom\<cdot>f2)))"
 proof -
@@ -1300,7 +1301,8 @@ proof -
   thus ?thesis
     by simp
 qed
-  
+
+(* Continuity in the parameter SB (passed in to composition-operation) *)
 lemma spfCompH_cont2[simp]: 
   shows "cont (\<lambda> x. (f1\<rightleftharpoons>((x \<uplus> z)  \<bar> spfDom\<cdot>f1)) \<uplus>  (f2\<rightleftharpoons>((x \<uplus> z)  \<bar> spfDom\<cdot>f2)))"
 proof -
@@ -1332,7 +1334,8 @@ proof -
 qed
    
 paragraph \<open>dom\<close>
-  
+
+(* The domain of composition is the range of the composed SPFs *)
 lemma spfCompH_dom [simp]: assumes "sbDom\<cdot>x = spfCompI f1 f2"
                             and "sbDom\<cdot>sb = (spfRan\<cdot>f1 \<union> spfRan\<cdot>f2)"
                           shows "sbDom\<cdot>((spfCompH f1 f2 x)\<cdot>sb) = (spfRan\<cdot>f1 \<union> spfRan\<cdot>f2)"
@@ -1348,7 +1351,8 @@ proof -
 qed
   
 paragraph \<open>commu\<close>  
-  
+
+(* Assuming the range of SPFs f1 and f2 are distinct, spfCompH is commutative in f1 and f2 *)
 lemma spfcomph_commu: assumes  "spfRan\<cdot>f1 \<inter> spfRan\<cdot>f2 = {}"
                        and "sbDom\<cdot>tb = (spfRan\<cdot>f1 \<union> spfRan\<cdot>f2)"
                        and "sbDom\<cdot>x = spfCompI f1 f2"
@@ -1377,10 +1381,12 @@ qed
 
  
 subsubsection \<open>iterate spfCompH\<close>  
-  
+
+(* Iterating spfCompH is continuous *)
 lemma iter_spfCompH_cont[simp]: "cont (\<lambda>x. iter_spfCompH f1 f2 i x)"
   by simp
-    
+
+(* Iterating spfCompH is monotonic *)
 lemma iter_spfCompH_mono[simp]: "monofun (\<lambda>x. iter_spfCompH f1 f2 i x)"
   by (simp add: cont2mono)
     
@@ -1391,11 +1397,13 @@ lemma iter_spfCompH_mono2:  assumes "x \<sqsubseteq> y"
 lemma iter_spfCompH_chain[simp]: assumes "sbDom\<cdot>x = spfCompI f1 f2"
   shows "chain (\<lambda> i. iter_spfCompH f1 f2 i x)"
   by (simp add: assms sbIterate_chain)
-    
+
+(* The domain of the SB recvd. from iterating the comp. of SPF f1, f2  is the range of f1, f2 *)
 lemma iter_spfCompH_dom[simp]: assumes "sbDom\<cdot>x = spfCompI f1 f2" 
   shows "sbDom\<cdot>(iter_spfCompH f1 f2 i x) = (spfRan\<cdot>f1 \<union> spfRan\<cdot>f2)"
   by (simp add: assms iter_sbfix2_dom)
 
+(* Assuming SPF f1 and f2 have a disctinct range, iterating is commutative in f1 and f2 *)
 lemma iter_spfcomph_commu: assumes "spfRan\<cdot>f1 \<inter> spfRan\<cdot>f2 = {}"
                            and "sbDom\<cdot>tb = spfCompI f1 f2" 
   shows "(iter_spfCompH f1 f2 i tb) = (iter_spfCompH f2 f1 i tb)"
@@ -1413,6 +1421,7 @@ qed
   
 subsubsection \<open>lub iterate spfCompH\<close> 
   
+(* The domain of the SB recvd. from the LUB of the comp. of SPF f1, f2  is the range of f1, f2 *)
 lemma lub_iter_spfCompH_dom[simp]: assumes "sbDom\<cdot>x = spfCompI f1 f2" 
   shows "sbDom\<cdot>(\<Squnion>i. iter_spfCompH f1 f2 i x) = (spfRan\<cdot>f1 \<union> spfRan\<cdot>f2)"
   by (simp add: lub_iter_sbfix2_dom assms) 
