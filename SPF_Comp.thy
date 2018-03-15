@@ -34,9 +34,11 @@ abbreviation iter_spfCompH :: "'a SPF \<Rightarrow> 'a SPF \<Rightarrow> nat \<R
 
 subsection \<open>serial and parallel composition\<close>
 
+(* Parallel comp. is well-def, if there are no internal channels and output channels are distinct *)
 abbreviation parcomp_well :: "'m SPF \<Rightarrow> 'm SPF \<Rightarrow> bool" where
 "parcomp_well f1 f2 \<equiv> (spfCompL f1 f2 = {}) \<and> (spfRan\<cdot>f1 \<inter> spfRan\<cdot>f2 = {})"
-  
+
+(* Serial composition is well-def, if there are no feedback channels and output f1 matched input f2 *)
 abbreviation sercomp_well :: "'m SPF \<Rightarrow> 'm SPF \<Rightarrow> bool" where
 "sercomp_well f1 f2 \<equiv>  (spfRan\<cdot>f1 = spfDom\<cdot>f2) 
                         \<and> (spfDom\<cdot>f1 \<inter> spfRan\<cdot>f1 = {})
