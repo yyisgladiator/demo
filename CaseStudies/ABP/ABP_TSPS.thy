@@ -1145,7 +1145,6 @@ lemma tsaltbitpro_inp2out:
     and ar_def: "ar = tsProjSnd\<cdot>dr"
     and as_def: "as = tsMed\<cdot>ar\<cdot>p2"
   shows "tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>dr)) = tsAbs\<cdot>i"
-  
   sorry
 
 
@@ -1363,6 +1362,79 @@ proof -
       apply(subst f9)
       by simp
   qed
+qed
+
+
+
+section\<open>Composition with general operator\<close>
+
+
+lemma h100: "\<And>bst. #({True} \<ominus> bst) = \<infinity> \<Longrightarrow> #bst =\<infinity>"
+  sorry
+
+lemma abp_gencomp_final: assumes "f \<in> Rep_rev_uspec gencompABP"
+                            and "ubDom\<cdot>tb = {c_abpIn}"
+                          shows "tsAbs\<cdot>((f \<rightleftharpoons> tb) . c_abpOut) = tsAbs\<cdot>(tb . c_abpIn)"
+proof - 
+  have f1: "\<exists>s ora1 ora2. s \<in> tsSender \<and> (#({True} \<ominus> ora1) = \<infinity>) \<and> (#({True} \<ominus> ora2) = \<infinity>) \<and> f = (senderTSPF s) \<otimes> (medSR_TSPF ora1) \<otimes> recvTSPF \<otimes> (medRS_TSPF ora2) "
+    
+    sorry
+  then obtain s where f11: "\<exists>ora1 ora2. s \<in> tsSender \<and> (#({True} \<ominus> ora1) = \<infinity>) \<and> (#({True} \<ominus> ora2) = \<infinity>) \<and> f = (senderTSPF s) \<otimes> (medSR_TSPF ora1) \<otimes> recvTSPF \<otimes> (medRS_TSPF ora2)"
+    by blast
+  then obtain ora1 where f12: "\<exists>ora2. s \<in> tsSender \<and> (#({True} \<ominus> ora1) = \<infinity>) \<and> (#({True} \<ominus> ora2) = \<infinity>) \<and> f = (senderTSPF s) \<otimes> (medSR_TSPF ora1) \<otimes> recvTSPF \<otimes> (medRS_TSPF ora2)"
+    by blast
+  then obtain ora2 where f13: "s \<in> tsSender \<and> (#({True} \<ominus> ora1) = \<infinity>) \<and> (#({True} \<ominus> ora2) = \<infinity>) \<and> f = (senderTSPF s) \<otimes> (medSR_TSPF ora1) \<otimes> recvTSPF \<otimes> (medRS_TSPF ora2)"
+    by blast
+  then have f14: "f = (senderTSPF s) \<otimes> (medSR_TSPF ora1) \<otimes> recvTSPF \<otimes> (medRS_TSPF ora2)"
+    by blast
+
+  have f20: "ufDom\<cdot>(senderTSPF s \<otimes> medSR_TSPF ora1 \<otimes> recvTSPF) = {c_abpIn, c_as}"
+      sorry
+  have f21: "ufRan\<cdot>(senderTSPF s \<otimes> medSR_TSPF ora1 \<otimes> recvTSPF) = {c_abpOut, c_ar}"
+      sorry
+
+  have f4: "(ubFix (ufCompH (senderTSPF s \<otimes> medSR_TSPF ora1 \<otimes> recvTSPF) (medRS_TSPF ora2) tb) {c_abpOut, c_as, c_ar}) . c_abpOut = 
+            (ubFix (fixABPHelperCont s ora1 ora2 tb) {c_abpOut, c_ar, c_as, c_dr, c_ds})  .  c_abpOut" 
+  proof - 
+    have "(ubFix (ufCompH (senderTSPF s \<otimes> medSR_TSPF ora1 \<otimes> recvTSPF) (medRS_TSPF ora2) tb) {c_abpOut, c_as, c_ar}) = 
+          (ubRestrict {c_abpOut, c_as, c_ar}\<cdot>(ubFix (fixABPHelperCont s ora1 ora2 tb) {c_abpOut, c_ar, c_as, c_dr, c_ds}))"
+      
+      
+      sorry
+    thus ?thesis
+      by (smt insertI1 ubgetch_ubrestrict)
+  qed
+
+  have f5: "(f \<rightleftharpoons> tb) . c_abpOut = (ubFix (fixABPHelperCont s ora1 ora2 tb) {c_abpOut, c_ar, c_as, c_dr, c_ds})  .  c_abpOut"
+  proof - 
+    have f51: "ufCompI (senderTSPF s \<otimes> medSR_TSPF ora1 \<otimes> recvTSPF) (medRS_TSPF ora2) = {c_abpIn}"
+      apply(simp add: ufCompI_def)
+      apply(simp add: f20 f21)
+      apply(subst med_tspfdom)
+      using f13 sfilterl4 apply blast
+       apply(simp, subst med_tspfran)
+      using f13 sfilterl4 apply blast
+       apply simp
+      by auto
+    have f52: "(ufRan\<cdot>(senderTSPF s \<otimes> medSR_TSPF ora1 \<otimes> recvTSPF) \<union> ufRan\<cdot>(medRS_TSPF ora2)) = {c_abpOut, c_as, c_ar}"
+      apply(simp add: f21, subst med_tspfran)
+      using f13 sfilterl4 apply blast
+       apply simp
+      by auto
+    show ?thesis
+      apply(subst f14)
+      apply(subst (1) ufunclComp_ufun_def)
+      apply(simp add: ufComp_def)
+      apply(subst rep_abs_cufun)
+       apply(simp add:  ufcomp_cont)
+        apply(subst ufcomp_well)
+         apply (metis Int_emptyI channel.distinct(213) channel.distinct(219) ctype_MABP.simps(5) f13 f21 insert_iff med_tsps_ran1 singletonD)
+          apply(simp)
+      apply(simp add: f51 f52 ubclDom_ubundle_def assms )
+      using f4 by blast
+  qed
+  show ?thesis
+    sorry
 qed
 
 
