@@ -97,7 +97,8 @@ section \<open>general-lemmata\<close>
    (* TODO port general lemmas to corresponding production theories! ! ! *)
  
 subsection \<open>cfun\<close>   
-  
+
+(* Cont rule *)
 lemma mycontI2: assumes "monofun (f::'a::cpo \<Rightarrow> 'b::cpo)" 
                 and "(\<And>Y. chain Y \<Longrightarrow> f (\<Squnion>i. Y i) \<sqsubseteq> (\<Squnion>i. f (Y i)))"
   shows "cont f"
@@ -150,7 +151,7 @@ lemma sb_onech_getch_insert [simp]:"([ch1 \<mapsto> s]\<Omega>) . ch1 = (s:: nat
     
 subsection \<open>subst\<close>  
   
-(* used for substitution *)
+(* Simple rules for natural numbers, used for substitution *)
 lemma two_times_one_insert: "2 * (Suc 0) = Suc(Suc(0))"
   by simp
     
@@ -172,7 +173,8 @@ shows "(spfFeedbackOperator f) = Abs_CSPF (\<lambda> sb. (sbDom\<cdot>sb = (spfD
   apply (simp add: spfFeedbackOperator_def)
   apply (subst spfFeedH_def)
   by simp
-    
+
+(* Output channels are a subset of all channels *)
 lemma spfComp_Oc_sub_C: assumes "c \<in> spfCompOc f1 f2" shows "c \<in> spfCompC f1 f2"
   by (meson assms set_mp spfOc_sub_C)
   
@@ -180,12 +182,13 @@ lemma spfComp_Oc_sub_C: assumes "c \<in> spfCompOc f1 f2" shows "c \<in> spfComp
     
     
 section \<open>general comp\<close>
-  
+
+(* General composition is continuous *)
 lemma spf_gencomp_cont[simp]: 
   shows "cont (\<lambda> x. (sbDom\<cdot>x = spfCompI f1 f2) \<leadsto> sbFix (spfCompH f1 f2 x) (spfRan\<cdot>f1 \<union> spfRan\<cdot>f2) )"
   by simp
 
-    
+(* The resulting SPF of general composition is well-defined *)
 lemma spf_gen_well[simp]: 
   shows "spf_well (\<Lambda> x.  (sbDom\<cdot>x = spfCompI f1 f2) \<leadsto> sbFix (spfCompH f1 f2 x) (spfRan\<cdot>f1 \<union> spfRan\<cdot>f2))"
     apply (simp add: spf_well_def)
@@ -514,15 +517,15 @@ lemma spfComp_domranf1: assumes "sercomp_well f1 f2"
   shows "(sbDom\<cdot>(f1 \<rightleftharpoons> (sb\<bar>spfDom\<cdot>f1))) = spfRan\<cdot>f1"
   using assms(1) assms(2)
   by (metis SPF_Comp.spfComp_test8 equalityE spfRanRestrict)
-    
 
+(* If serial comp. is well-defined, then input channels of the comp. f1, f2 are exactly those of f1 *)
 lemma spfComp_I_domf1_eq: assumes "sercomp_well f1 f2" 
                           and "sbDom\<cdot>sb = spfCompI f1 f2" 
   shows "spfCompI f1 f2 = spfDom\<cdot>f1"
   apply(simp add: spfCompI_def, subst assms(1))
   using assms(1) assms(2) spfCompI_def spfComp_test8 by blast
     
-
+(* Any channel in the range of any SPF f2 is also in the output of the composition f1, f2 *)
 lemma spfComp_getC_Oc[simp]:  assumes "c \<in> spfRan\<cdot>f2" 
   shows "c \<in> spfCompOc f1 f2"
   by (simp add: spfCompOc_def assms(1))
@@ -534,7 +537,8 @@ by simp
 (* ----------------------------------------------------------------------- *)
 subsection \<open>iteration lemmata\<close>
 (* ----------------------------------------------------------------------- *)
-  
+
+(* Serial composable implies composable *)
 lemma sercomp2spfComp[simp]:"sercomp_well f1 f2 \<Longrightarrow> spfComp_well f1 f2 "
   by (simp add: Int_Un_distrib Int_commute spfCompL_def spfComp_well_def)
   
@@ -568,7 +572,8 @@ lemma spfComp_serialf2: assumes "sercomp_well f1 f2"
             le_supI1 sb_eq sbrestrict2sbgetch sbrestrict_sbdom spfCompH2_dom spfComp_domranf1 
             spfCompH2_itDom spfComp_serialf1)
 
-(* this is the core lemma for the equality proofs *)
+(* Core lemma for the equality proofs: Iterate at least 3x so that x passes through all stages of
+    iteration and replaces sbLeast *)
 lemma spfComp_serial : assumes "sercomp_well f1 f2" 
                        and "sbDom\<cdot>x = spfCompI f1 f2"
   shows "(iter_spfcompH2 f1 f2 (Suc (Suc (Suc i))) x) = x \<uplus> (f1 \<rightleftharpoons> (x \<bar>spfDom\<cdot>f1)) 
@@ -588,7 +593,7 @@ lemma spfComp_serial : assumes "sercomp_well f1 f2"
 subsection \<open>lub iteration\<close>
 (* ----------------------------------------------------------------------- *) 
   
-  (* show that the chain has it's maximum at the third chain element *)
+(* The chain has it's maximum at the third chain element (x has displaced sbLeast completely) *)
 lemma spfComp_serial_max: assumes "sercomp_well f1 f2" 
                           and "sbDom\<cdot>x = spfCompI f1 f2"
   shows "max_in_chain 3 (\<lambda>i. iter_spfcompH2 f1 f2 i x)"
