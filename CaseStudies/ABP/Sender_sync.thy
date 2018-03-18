@@ -22,7 +22,7 @@ fixrec tsSnd_h :: "'a tstream \<rightarrow> bool tstream \<rightarrow> bool disc
   (* if an input and ack from the receiver *)
 "msg \<noteq> \<bottom> \<Longrightarrow> acks \<noteq> \<bottom> \<Longrightarrow> tsSnd_h\<cdot>(tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>m))\<cdot>msg)\<cdot>(tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>a))\<cdot>acks)\<cdot>ack = 
   (* ack for the current msg \<Longrightarrow> send next msg *)
-  (if (a = ack) then tsMLscons\<cdot>(upApply2 Pair\<cdot>(up\<cdot>m)\<cdot>(up\<cdot>ack))\<cdot>(tsSnd_h\<cdot>msg\<cdot>acks\<cdot>(Discr (\<not>(undiscr ack))))
+  (if (a = ack) then tsSnd_h\<cdot>msg\<cdot>acks\<cdot>(Discr (\<not>(undiscr ack)))
   (* wrong ack for the current msg \<Longrightarrow> send msg again *)
    else tsMLscons\<cdot>(upApply2 Pair\<cdot>(up\<cdot>m)\<cdot>(up\<cdot>ack))\<cdot>(tsSnd_h\<cdot>(tsMLscons\<cdot>(up\<cdot>m)\<cdot>msg)\<cdot>acks\<cdot>ack))" |
 
@@ -66,7 +66,7 @@ lemma tssnd_h_delayfun_bot:
 
 lemma tssnd_h_mlscons_ack: "msg \<noteq> \<bottom> \<Longrightarrow> acks \<noteq> \<bottom> \<Longrightarrow>
    tsSnd_h\<cdot>(tsMLscons\<cdot>(updis m)\<cdot>msg)\<cdot>(tsMLscons\<cdot>(updis a)\<cdot>acks)\<cdot>(Discr a) 
-     = tsMLscons\<cdot>(updis (m, a))\<cdot>(tsSnd_h\<cdot>msg\<cdot>acks\<cdot>(Discr (\<not>a)))"
+     = tsSnd_h\<cdot>msg\<cdot>acks\<cdot>(Discr (\<not>a))"
   by (simp add: tsmlscons_lscons)
 
 lemma tssnd_h_mlscons_nack: "msg \<noteq> \<bottom> \<Longrightarrow> acks \<noteq> \<bottom> \<Longrightarrow> a \<noteq> ack \<Longrightarrow>
