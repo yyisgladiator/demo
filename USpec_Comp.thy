@@ -40,6 +40,7 @@ definition uspecFeedbackComp :: "'m uspec \<Rightarrow> 'm uspec" where
 (****************************************************)
 section\<open>Lemmas\<close>
 (****************************************************)   
+
 subsection \<open>UspecComp\<close>
 
 (*   *)
@@ -99,6 +100,22 @@ shows "uspecIsConsistent (S1 \<parallel> S2)"
   by (metis assms(1) assms(2) assms(3) emptyE some_in_eq uspecIsConsistent_def uspec_parcomp_not_empty)
 
 (*   *)
+lemma uspec_parcomp_consistent2: assumes "uspec_parcompwell S1 S2" and "uspecIsConsistent (S1 \<parallel> S2)"
+  shows "uspecIsConsistent S1 \<and> uspecIsConsistent S2"
+proof (rule)
+  have f1: "{a \<parallel> aa |a aa. a \<in> Rep_rev_uspec S1 \<and> aa \<in> Rep_rev_uspec S2} \<noteq> {}"
+    using assms(1) assms(2) uspecIsConsistent_def by auto
+  then have "Rep_rev_uspec S1 \<noteq> {}"
+    by blast
+  then show "uspecIsConsistent S1"
+    by (meson uspecIsConsistent_def)
+  have "Rep_rev_uspec S2 \<noteq> {}"
+    using f1 by blast
+  then show "uspecIsConsistent S2"
+    by (meson uspecIsConsistent_def)
+qed
+
+(*   *)
 lemma uspec_parcomp_dom: assumes "uspec_parcompwell S1 S2"
   and "uspecIsConsistent S1" and "uspecIsConsistent S2"
 shows "uspecDom (S1 \<parallel> S2) = uspecDom S1 \<union> uspecDom S2"
@@ -125,9 +142,16 @@ proof -
     using assms(1) f1_def f2_def ufuncl_parcomp_ran uspec_parcompwell_def uspec_ran_eq by blast
 qed
 
+lemma uspec_parcomp_h1: assumes "uspec_parcompwell S1 S2"
+  shows "\<forall> f1 \<in> Rep_rev_uspec S1. \<forall> f2 \<in> Rep_rev_uspec S2. f1 \<parallel> f2 \<in> Rep_rev_uspec (S1 \<parallel> S2)"
+  by (simp add: assms uspec_parcomp_not_empty)
+
+lemma uspec_parcomp_h2: assumes "uspec_parcompwell S1 S2"
+  shows "\<forall> f1 \<in> Rep_rev_uspec S1. \<forall> f2 \<in> Rep_rev_uspec S2. ufunclParCompWell f1 f2"
+  using assms uspec_parcompwell_def by auto
+
 (* if the composition of 2 uspecs is consistent then those uspecs are consistent themselves  *)
 lemma uspec_parcomp_ele_ex: assumes "uspec_parcompwell S1 S2"
-and "uspecIsConsistent (S1 \<parallel> S2)"
 shows "\<forall> f \<in> Rep_rev_uspec (S1 \<parallel> S2). \<exists> f1 \<in> Rep_rev_uspec S1. \<exists> f2 \<in> Rep_rev_uspec S2. f = f1 \<parallel> f2"
   using assms(1) uspec_parcomp_rep by fastforce
 
@@ -227,6 +251,22 @@ shows "uspecIsConsistent (S1 \<circle> S2)"
   by (metis assms(1) assms(2) assms(3) ex_in_conv uspecIsConsistent_def uspec_sercomp_not_empty)
 
 (*   *)
+lemma uspec_sercomp_consistent2: assumes "uspecIsConsistent (S1 \<circle> S2)"
+  shows "uspecIsConsistent S1 \<and> uspecIsConsistent S2"
+proof (rule)
+  have f1: "uspecIsConsistent (Abs_rev_uspec {a \<circ> aa |a aa. a \<in> Rep_rev_uspec S1 \<and> aa \<in> Rep_rev_uspec S2})"
+    by (metis (no_types) assms(1) uspecSerComp_def)
+  then have f2: "\<not> uspecWell {a \<circ> aa |a aa. a \<in> Rep_rev_uspec S1 \<and> aa \<in> Rep_rev_uspec S2} \<or> {a \<circ> aa |a aa. a \<in> Rep_rev_uspec S1 \<and> aa \<in> Rep_rev_uspec S2} \<noteq> {}"
+    by (metis (lifting) rep_abs_rev_simp uspecIsConsistent_def)
+  then have f3: "{a \<circ> aa |a aa. a \<in> Rep_rev_uspec S1 \<and> aa \<in> Rep_rev_uspec S2} \<noteq> {}"
+    by (metis empty_uspecwell)
+  then show "uspecIsConsistent S1"
+    using uspecIsConsistent_def by force
+  show "uspecIsConsistent S2"
+    using f3 uspecIsConsistent_def by auto
+qed
+
+(*   *)
 lemma uspec_sercomp_dom: assumes "uspec_sercompwell S1 S2"
   and "uspecIsConsistent S1" and "uspecIsConsistent S2"
 shows "uspecDom (S1 \<circle> S2) = uspecDom S1"
@@ -259,6 +299,10 @@ shows "\<forall> f \<in> Rep_rev_uspec (S1 \<circle> S2). \<exists> f1 \<in> Rep
 lemma uspec_sercomp_h1: assumes "uspec_sercompwell S1 S2"
   shows "\<forall> f1 \<in> Rep_rev_uspec S1. \<forall> f2 \<in> Rep_rev_uspec S2. f1 \<circ> f2 \<in> Rep_rev_uspec (S1 \<circle> S2)"
   by (simp add: assms uspec_sercomp_not_empty)
+
+lemma uspec_sercomp_h2: assumes "uspec_sercompwell S1 S2"
+  shows "\<forall> f1 \<in> Rep_rev_uspec S1. \<forall> f2 \<in> Rep_rev_uspec S2. ufunclSerCompWell f1 f2"
+  using assms uspec_sercompwell_def by blast
 
 (* sercomp of uspec is associative  *)
 lemma uspec_sercomp_asso: assumes "uspec_sercompwell S1 S2" and "uspec_sercompwell S2 S3"
@@ -302,22 +346,71 @@ proof -
     by (simp add: uspecSerComp_def)
 qed
 
+subsection \<open>UspecFeedbackComp\<close>
 
-(* helper to prove that new component after composition of 3 components is uspecwell  *)
-lemma uspec_sercompwell_asso_h: assumes "uspec_sercompwell S1 S2"
-and "uspec_sercompwell S2 S3"
-and "uspecDom S1 \<inter> uspecRan S3 = {}"
-shows "uspec_sercompwell S1 (S2 \<circle> S3) \<and> uspec_sercompwell (S1 \<circle> S2) S3"
-  apply auto
-   apply (simp_all add: uspec_sercompwell_def, auto)
-   apply (metis (no_types, lifting) assms(1) assms(2) assms(3) empty_iff sercompwell_asso uspecIsConsistent_def uspec_dom_eq uspec_ran_eq uspec_sercomp_ele_ex uspec_sercompwell_def) +
-  done
+lemma uspec_feedbackcomp_well: "uspecWell {ufunclFeedbackComp f1 | f1.  f1\<in>(Rep_rev_uspec S1)}"
+  apply (simp add: uspecWell_def)
+  apply (rule_tac x="uspecDom S1 - uspecRan S1" in exI)
+  apply (rule_tac x="uspecRan S1" in exI)
+  apply (rule, rule)
+  by (metis ufuncl_feedbackcomp_dom ufuncl_feedbackcomp_ran uspec_dom_eq uspec_ran_eq)
 
-(* the new component is uspecwell  *) 
-lemma uspec_sercompwell_asso: assumes "uspec_sercompwell S1 S2"
-and "uspec_sercompwell S2 S3"
-and "uspecDom S1 \<inter> uspecRan S3 = {}"
-shows "uspecWell  {f1 \<circ> f2 |f1 f2. f1 \<in> Rep_rev_uspec S1 \<and> f2 \<in> Rep_rev_uspec (S2 \<circle> S3)}"
-  by (simp add: assms(1) assms(2) assms(3) uspec_sercompwell_asso_h) 
+lemma uspec_feedbackcomp_insert: "uspecFeedbackComp S = Abs_rev_uspec {ufunclFeedbackComp f1 | f1.  f1\<in>(Rep_rev_uspec S)}"
+  by (simp add: uspecFeedbackComp_def)
+
+lemma uspec_feedbackcomp_consistent_iff: "uspecIsConsistent (uspecFeedbackComp S) = uspecIsConsistent S"
+  apply (simp add: uspecIsConsistent_def uspecFeedbackComp_def)
+  apply (subst rep_abs_rev_simp)
+   apply (simp add: uspec_feedbackcomp_well)
+  apply rule
+  by simp+
+
+lemma uspec_feecbackcomp_dom: assumes "uspecIsConsistent S"
+  shows "uspecDom (uspecFeedbackComp S) = uspecDom S - uspecRan S"
+proof -
+  obtain f where f_def: "f \<in> {(\<mu>) a |a. a \<in> Rep_rev_uspec S}"
+    using assms uspecIsConsistent_def by fastforce
+  have f1: "\<exists>a. f = (\<mu>) a \<and> a \<in> Rep_rev_uspec S"
+    using f_def by auto
+  obtain a where a_def: "f = (\<mu>) a \<and> a \<in> Rep_rev_uspec S"
+    using f1 by auto
+  have f2: "ufclDom\<cdot>f = ufclDom\<cdot>a - ufclRan\<cdot>a"
+    by (simp add: a_def ufuncl_feedbackcomp_dom)
+  show ?thesis
+    by (metis (mono_tags, lifting) a_def f2 f_def rep_abs_rev_simp uspecFeedbackComp_def uspec_dom_eq uspec_feedbackcomp_well uspec_ran_eq)
+qed
+
+
+lemma uspec_feecbackcomp_ran: assumes "uspecIsConsistent S"
+  shows "uspecRan (uspecFeedbackComp S) = uspecRan S"
+proof -
+  obtain f where f_def: "f \<in> {(\<mu>) a |a. a \<in> Rep_rev_uspec S}"
+    using assms uspecIsConsistent_def by fastforce
+  have f1: "\<exists>a. f = (\<mu>) a \<and> a \<in> Rep_rev_uspec S"
+    using f_def by auto
+  obtain a where a_def: "f = (\<mu>) a \<and> a \<in> Rep_rev_uspec S"
+    using f1 by auto
+  have f2: "ufclRan\<cdot>f = ufclRan\<cdot>a"
+    by (simp add: a_def ufuncl_feedbackcomp_ran)
+  have f3: "ufclRan\<cdot>a = uspecRan S"
+    by (simp add: a_def uspec_ran_eq)
+  show ?thesis
+    apply (fold f3, fold f2)
+    by (metis (no_types) f_def rep_abs_rev_simp uspecFeedbackComp_def uspec_feedbackcomp_well 
+        uspec_ran_eq)
+qed
+
+lemma uspec_feedbackcomp_f_ex: assumes "f \<in> Rep_rev_uspec (uspecFeedbackComp S)"
+  shows "\<exists> f1 \<in> Rep_rev_uspec S. f = ufunclFeedbackComp f1"
+proof -
+  have "Rep_uspec (Abs_rev_uspec {(\<mu>) a |a. a \<in> Rep_rev_uspec S}) = Rev {(\<mu>) a |a. a \<in> Rep_rev_uspec S}"
+using rep_abs_uspec uspec_feedbackcomp_well by auto
+  then have "{(\<mu>) a |a. a \<in> Rep_rev_uspec S} = Rep_rev_uspec (uspecFeedbackComp S)"
+    by (simp add: inv_rev_rev uspec_feedbackcomp_insert)
+  then have "\<exists>a. f = (\<mu>) a \<and> a \<in> Rep_rev_uspec S"
+    using assms by blast
+  then show ?thesis
+    by blast
+qed
 
 end
