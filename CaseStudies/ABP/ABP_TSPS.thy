@@ -3866,6 +3866,42 @@ section \<open>Composition with general operator\<close>
 (* ----------------------------------------------------------------------- *)
 
 
+subsection\<open>Lemmas\<close>
+
+
+lemma h4: assumes "s \<in> tsSender" and "#({True} \<ominus> ora1) = \<infinity>" and "#({True} \<ominus> ora2) = \<infinity>" and "ubDom\<cdot>tb = {c_abpIn}"
+  shows "(ubFix (ufCompH (senderTSPF s \<otimes> medSR_TSPF ora1 \<otimes> recvTSPF) (medRS_TSPF ora2) tb) {c_abpOut, c_as, c_ar}) . c_abpOut = 
+         (ubFix (fixABPHelperCont s ora1 ora2 tb) {c_abpOut, c_ar, c_as, c_dr, c_ds})  .  c_abpOut" 
+proof - 
+  have f1: "\<And>ub. ubDom\<cdot>ub = {c_abpIn,  c_as} \<Longrightarrow> ((senderTSPF s \<otimes> medSR_TSPF ora1 \<otimes> recvTSPF) \<rightleftharpoons> ub) = 
+           ubUnion\<cdot>(ubUnion\<cdot>(senderTSPF s \<rightleftharpoons> ub)\<cdot>(medSR_TSPF ora1 \<rightleftharpoons> (senderTSPF s \<rightleftharpoons> ub)))\<cdot>(recvTSPF \<rightleftharpoons> (medSR_TSPF ora1 \<rightleftharpoons> (senderTSPF s \<rightleftharpoons> ub)))"
+    sorry
+  obtain abphelper_chain1 :: "nat \<Rightarrow> 'a::countable MABP tstream\<^sup>\<Omega>" where abphelper_chain1_def: "abphelper_chain1 = 
+      (\<lambda>i. iterate i\<cdot>(ufCompH (senderTSPF s \<otimes> medSR_TSPF ora1 \<otimes> recvTSPF) (medRS_TSPF ora2) tb)\<cdot>(ubclLeast {c_abpOut, c_as, c_ar}))"
+    by blast
+
+  obtain abphelper_chain2 :: "nat \<Rightarrow> 'a::countable MABP tstream\<^sup>\<Omega>" where abphelper_chain2_def: "abphelper_chain2 = 
+      (\<lambda>i. iterate i\<cdot>(fixABPHelperCont s ora1 ora2 tb)\<cdot>(ubclLeast {c_abpOut, c_ar, c_as, c_dr, c_ds}))"
+    by blast
+  (* 4*(i + 1) *)
+  have f3: "(abphelper_chain1 1) . c_abpOut = (abphelper_chain2 3) . c_abpOut"
+    apply(simp add: abphelper_chain1_def abphelper_chain2_def)
+    sorry
+  
+  have f8: "(\<Squnion>i::nat. ubclRestrict {c_abpOut, c_as}\<cdot>(abphelper_chain1 i)) = 
+            (\<Squnion>i::nat. ubclRestrict {c_abpOut, c_as}\<cdot>(abphelper_chain2 i)) "
+    apply (rule lub_eq)
+    sorry
+  then have f9: "(\<Squnion>i::nat. (abphelper_chain1 i)) . c_abpOut = 
+                 (\<Squnion>i::nat. (abphelper_chain2 i)) . c_abpOut"
+    using ubclRestrict_ubundle_def
+    sorry
+  thus ?thesis
+    apply(simp add: ubFix_def)
+    by(simp add: abphelper_chain1_def abphelper_chain2_def)
+qed
+
+
 subsection\<open>Result\<close>
 
 
@@ -3891,16 +3927,7 @@ proof -
 
   have f4: "(ubFix (ufCompH (senderTSPF s \<otimes> medSR_TSPF ora1 \<otimes> recvTSPF) (medRS_TSPF ora2) tb) {c_abpOut, c_as, c_ar}) . c_abpOut = 
             (ubFix (fixABPHelperCont s ora1 ora2 tb) {c_abpOut, c_ar, c_as, c_dr, c_ds})  .  c_abpOut" 
-  proof - 
-    have "(ubFix (ufCompH (senderTSPF s \<otimes> medSR_TSPF ora1 \<otimes> recvTSPF) (medRS_TSPF ora2) tb) {c_abpOut, c_as, c_ar}) = 
-          (ubRestrict {c_abpOut, c_as, c_ar}\<cdot>(ubFix (fixABPHelperCont s ora1 ora2 tb) {c_abpOut, c_ar, c_as, c_dr, c_ds}))"
-      
-      
-      sorry
-    thus ?thesis
-      by (smt insertI1 ubgetch_ubrestrict)
-  qed
-
+    by(simp add: h4 assms f13)
   have f5: "(f \<rightleftharpoons> tb) . c_abpOut = (ubFix (fixABPHelperCont s ora1 ora2 tb) {c_abpOut, c_ar, c_as, c_dr, c_ds})  .  c_abpOut"
   proof - 
     have f51: "ufCompI (senderTSPF s \<otimes> medSR_TSPF ora1 \<otimes> recvTSPF) (medRS_TSPF ora2) = {c_abpIn}"
@@ -3917,14 +3944,33 @@ proof -
       using f13 sfilterl4 apply blast
        apply simp
       by auto
+    have f53: "{c_abpIn} = {c_abpIn, c_as, c_ar} - {c_ar, c_as}"
+      by blast
+    have f54: "(ubFix (ufCompH (senderTSPF s \<otimes> medSR_TSPF ora1 \<otimes> recvTSPF) (medRS_TSPF ora2) tb) {c_abpOut, c_ar, c_as})  .  c_abpOut =
+               (ubFix (\<Lambda> (x::'a MABP tstream\<^sup>\<Omega>). Abs_ubundle (ABPBundleHelper s ora1 ora2 tb x)) {c_abpOut, c_ar, c_as, c_dr, c_ds})  .  c_abpOut"
+    proof - 
+      have f541: "{c_abpOut, c_ar, c_as} = {c_abpOut, c_as, c_ar}"
+        by auto
+      have f542: "{c_abpOut, c_ar, c_as, c_dr, c_ds} = {c_abpOut, c_ar, c_as, c_dr, c_ds}"
+        by auto
+      show ?thesis
+        apply(subst f541, subst f542)
+        by(simp add: f4)
+    qed
     show ?thesis
       apply(subst f14)
       apply(subst (1) ufunclComp_ufun_def)
       apply(simp add: ufComp_def)
       apply(subst rep_abs_cufun)
-       apply(simp add:  ufcomp_cont)
+       apply(simp add: ufcomp_cont)
        apply(subst ufcomp_well)
-      sorry
+        apply(simp_all)
+       apply(simp_all add: f21)
+       apply(simp add: med_tspfran f13 med_ora_length)
+      apply(simp add: assms ufCompI_def f20 f21 ubclDom_ubundle_def)
+      apply(simp add: med_tspfran f13 med_ora_length)
+      apply(simp add: med_tspfdom f13 med_ora_length f53)
+      using f54 by simp
   qed
   show ?thesis
     sorry
