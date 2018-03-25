@@ -3834,7 +3834,7 @@ section\<open>Composition with general operator\<close>
 
 
 lemma h100: "\<And>bst. #({True} \<ominus> bst) = \<infinity> \<Longrightarrow> #bst =\<infinity>"
-  sorry
+  using sfilterl4 by auto
 
 lemma abp_gencomp_final: assumes "f \<in> Rep_rev_uspec gencompABP"
                             and "ubDom\<cdot>tb = {c_abpIn}"
@@ -3851,10 +3851,305 @@ proof -
   then have f14: "f = (senderTSPF s) \<otimes> (medSR_TSPF ora1) \<otimes> recvTSPF \<otimes> (medRS_TSPF ora2)"
     by blast
 
+  have s_msr_compI: "ufCompI (senderTSPF s) (medSR_TSPF ora1) = ufDom\<cdot>(senderTSPF s)"
+    apply (simp add: ufCompI_def)
+    by (simp add:  med_tspfran2 med_tspfdom2 f13 sender_tspfran  sender_tspfdom) 
+  have s_msr_compO: "ufCompO (senderTSPF s) (medSR_TSPF ora1) = ufRan\<cdot>(senderTSPF s) \<union> ufRan\<cdot>(medSR_TSPF ora1)"
+    apply (simp add: ufCompO_def)
+    by (simp add:  med_tspfran2 med_tspfdom2 f13 sender_tspfran  sender_tspfdom) 
+  have s_msr_ran_empt: "ufRan\<cdot>(senderTSPF s) \<inter> ufRan\<cdot>(medSR_TSPF ora1) = {}"
+    by (metis (no_types, lifting) Int_empty_right Int_insert_right c_dr_boolpair_ctype channel.distinct(245) 
+        f13 inf_commute inf_sup_aci(1) med_tspfran2 sender_tspfran singletonD)
   have f20: "ufDom\<cdot>(senderTSPF s \<otimes> medSR_TSPF ora1 \<otimes> recvTSPF) = {c_abpIn, c_as}"
-      sorry
-  have f21: "ufRan\<cdot>(senderTSPF s \<otimes> medSR_TSPF ora1 \<otimes> recvTSPF) = {c_abpOut, c_ar}"
-      sorry
+    apply (simp add: ufunclComp_ufun_def)
+    apply (subst ufcomp_dom)
+     apply (simp add: ufcomp_ran s_msr_ran_empt)
+    apply (subst s_msr_compO)
+     apply (simp add: recv_tspfran sender_tspfran med_tspfran2 f13)
+    apply (simp add: ufCompI_def)
+    apply (simp add: ufcomp_dom ufcomp_ran s_msr_ran_empt)
+    apply (subst s_msr_compO)
+    apply (subst s_msr_compI)
+    apply (simp add:  med_tspfran2 med_tspfdom2 f13 sender_tspfran  sender_tspfdom recv_tspfran recv_tspfdom) 
+    by blast
+  have f21: "ufRan\<cdot>(senderTSPF s \<otimes> medSR_TSPF ora1 \<otimes> recvTSPF) = {c_ar, c_abpOut, c_dr, c_ds}"
+    apply (simp add: ufunclComp_ufun_def)
+    apply (subst ufcomp_ran)
+    apply (simp add: ufcomp_ran s_msr_ran_empt)
+    apply (subst s_msr_compO)
+    apply (simp add:  med_tspfran2 med_tspfdom2 f13 sender_tspfran  sender_tspfdom recv_tspfran recv_tspfdom) 
+    apply (simp add: ufCompO_def)
+    apply (simp add: ufcomp_ran s_msr_ran_empt)
+    apply (subst s_msr_compO)
+    by (simp add:  med_tspfran2 med_tspfdom2 f13 sender_tspfran  sender_tspfdom recv_tspfran recv_tspfdom) 
+
+  have s_msr_apply_sercomp_eq: "Rep_cufun (ufComp (senderTSPF s) (medSR_TSPF ora1))
+        = (\<lambda> x. (ubclDom\<cdot>x = ufDom\<cdot>(senderTSPF s)) \<leadsto> (ubUnion\<cdot>((senderTSPF s) \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>(senderTSPF s))\<cdot>x))\<cdot>((medSR_TSPF ora1) \<rightleftharpoons> ((senderTSPF s) \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>(senderTSPF s))\<cdot>x)))))"
+    apply (simp add: ufComp_def)
+    apply (subst rep_abs_cufun)
+    apply simp
+     apply (rule ufcomp_well)
+     apply (simp add:  med_tspfran2 f13 sender_tspfran)
+    apply (simp only: ubFix_def)
+    apply (subst ufcomp_serial_iterconst_eq)
+      apply (simp add:  med_tspfran2 med_tspfdom2 f13 sender_tspfran  sender_tspfdom) +
+    by (simp only: ubclRestrict_ubundle_def ubclUnion_ubundle_def)
+  
+  obtain s_msr_sercomp where s_msr_sercomp_def: "s_msr_sercomp = (ufComp (senderTSPF s) (medSR_TSPF ora1))"
+    by simp
+
+  have s_msr_sercomp_dom: "ufDom\<cdot>s_msr_sercomp = ufDom\<cdot>(senderTSPF s)"
+    apply (simp add: s_msr_sercomp_def) 
+    apply (subst ufcomp_dom)
+     apply (simp add:  med_tspfran2 med_tspfdom2 f13 sender_tspfran  sender_tspfdom) 
+    apply (simp add: ufCompI_def)
+    using s_msr_compI ufCompI_def by blast
+  have s_msr_sercomp_ran: "ufRan\<cdot>s_msr_sercomp = ufRan\<cdot>(senderTSPF s) \<union> ufRan\<cdot>(medSR_TSPF ora1)"
+    apply (simp add: s_msr_sercomp_def)
+    apply (subst ufcomp_ran)
+     apply (simp add:  med_tspfran2 med_tspfdom2 f13 sender_tspfran  sender_tspfdom) 
+    apply (simp add: ufCompO_def)
+    by (simp add:  med_tspfran2 med_tspfdom2 f13 sender_tspfran  sender_tspfdom recv_tspfran) 
+  have s_msr_sercomp_recv_compI: "ufCompI s_msr_sercomp recvTSPF = {c_as, c_abpIn}"
+    apply (simp add: ufCompI_def)
+    apply (simp add: s_msr_sercomp_dom)
+    apply (subst s_msr_sercomp_ran)
+    by (simp add:  med_tspfran2 med_tspfdom2 f13 sender_tspfran  sender_tspfdom recv_tspfran recv_tspfdom) 
+
+  have io_eq_s_msr_recv: "\<And> x. ubclDom\<cdot>x = ufDom\<cdot>(senderTSPF s) \<Longrightarrow> ubfun_io_eq (ufCompH s_msr_sercomp recvTSPF x) (ufRan\<cdot>s_msr_sercomp \<union> ufRan\<cdot>recvTSPF)"
+    apply (subst ufCompH_dom)
+    apply (simp add: s_msr_sercomp_recv_compI sender_tspfdom)
+     apply (simp add: ubcldom_least_cs)
+    by (simp add: recv_tspfran) +
+
+  have sender_dom: "ufDom\<cdot>(senderTSPF s) = {c_as, c_abpIn}"
+    by (simp add: sender_tspfdom)
+
+  have some_eq: "\<And> a b. a = b \<Longrightarrow> Some a = Some b"
+    by simp 
+
+  have f32: "Rep_cufun (ufComp (ufComp (senderTSPF s) (medSR_TSPF ora1)) recvTSPF)
+        = (\<lambda> x. (ubclDom\<cdot>x = ufDom\<cdot>(senderTSPF s)) \<leadsto> (ubUnion\<cdot>(ubUnion\<cdot>((senderTSPF s) \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>(senderTSPF s))\<cdot>x))\<cdot>((medSR_TSPF ora1) \<rightleftharpoons> ((senderTSPF s) \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>(senderTSPF s))\<cdot>x)))))\<cdot>
+                                                                                              (recvTSPF \<rightleftharpoons>((medSR_TSPF ora1) \<rightleftharpoons> ((senderTSPF s) \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>(senderTSPF s))\<cdot>x)))))"
+  proof -
+    have f320: "\<And> x. ubclDom\<cdot>x = ufCompI (senderTSPF s) (medSR_TSPF ora1) \<Longrightarrow> s_msr_sercomp \<rightleftharpoons> x = 
+(ubUnion\<cdot>((senderTSPF s) \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>(senderTSPF s))\<cdot>x))\<cdot>((medSR_TSPF ora1) \<rightleftharpoons> ((senderTSPF s) \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>(senderTSPF s))\<cdot>x))))"
+      apply (simp add: s_msr_sercomp_def)
+      apply (subst s_msr_apply_sercomp_eq)
+      by (simp add: s_msr_compI)
+    have f321: "\<And>x::'a MABP tstream\<^sup>\<Omega>.
+       \<not> ubclDom\<cdot>x \<noteq> ufDom\<cdot>(senderTSPF s) \<Longrightarrow>
+       Rep_cufun (ufComp s_msr_sercomp recvTSPF) x =
+       (ubclDom\<cdot>x = ufDom\<cdot>(senderTSPF s))\<leadsto>(ubUnion\<cdot>(ubUnion\<cdot>((senderTSPF s) \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>(senderTSPF s))\<cdot>x))\<cdot>((medSR_TSPF ora1) \<rightleftharpoons> ((senderTSPF s) \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>(senderTSPF s))\<cdot>x)))))\<cdot>
+                                                                                              (recvTSPF \<rightleftharpoons>((medSR_TSPF ora1) \<rightleftharpoons> ((senderTSPF s) \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>(senderTSPF s))\<cdot>x))))"
+    proof -
+      fix x::"'a MABP tstream\<^sup>\<Omega>"
+      assume a1: "\<not> ubclDom\<cdot>x \<noteq> ufDom\<cdot>(senderTSPF s)"
+      have f32101: " ubDom\<cdot>x = ufDom\<cdot>(senderTSPF s)"
+        by (metis a1 ubclDom_ubundle_def)
+      have x_ubcldom: "ubclDom\<cdot>x = ufDom\<cdot>(senderTSPF s)"
+        using a1 by auto
+      have x_sender_restrict_id: " ubRestrict (ufDom\<cdot>(senderTSPF s))\<cdot>x = x"
+        by (simp add: f32101)
+      have f32102: "(ubclDom\<cdot>x = ufDom\<cdot>(senderTSPF s))\<leadsto>(ubUnion\<cdot>(ubUnion\<cdot>((senderTSPF s) \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>(senderTSPF s))\<cdot>x))\<cdot>((medSR_TSPF ora1) \<rightleftharpoons> ((senderTSPF s) \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>(senderTSPF s))\<cdot>x)))))\<cdot>
+                                                                                              (recvTSPF \<rightleftharpoons>((medSR_TSPF ora1) \<rightleftharpoons> ((senderTSPF s) \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>(senderTSPF s))\<cdot>x)))) = 
+          Some ((ubUnion\<cdot>(ubUnion\<cdot>((senderTSPF s) \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>(senderTSPF s))\<cdot>x))\<cdot>((medSR_TSPF ora1) \<rightleftharpoons> ((senderTSPF s) \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>(senderTSPF s))\<cdot>x)))))\<cdot>
+                                                                                              (recvTSPF \<rightleftharpoons>((medSR_TSPF ora1) \<rightleftharpoons> ((senderTSPF s) \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>(senderTSPF s))\<cdot>x)))))"
+        using a1 by auto
+
+      have s_msr_recv_iter_ubfix2_dom: "\<And> i. ubDom\<cdot>(iter_ubfix2 (ufCompH s_msr_sercomp recvTSPF) i (ufRan\<cdot>s_msr_sercomp \<union> ufRan\<cdot>recvTSPF) x) = ufRan\<cdot>s_msr_sercomp \<union> ufRan\<cdot>recvTSPF"
+        apply (fold ubclDom_ubundle_def)
+        apply (subst iter_ubfix2_dom)
+        using a1 io_eq_s_msr_recv apply blast
+        by (simp add: recv_tspfran ubcldom_least_cs)
+      have f3214: "Rep_cufun (ufComp s_msr_sercomp recvTSPF) x = Some (ubFix (ufCompH s_msr_sercomp recvTSPF x) (ufRan\<cdot>s_msr_sercomp \<union> ufRan\<cdot>recvTSPF))"
+        apply (simp add: ufComp_def)
+        apply (subst rep_abs_cufun)
+          apply simp
+         apply (rule ufcomp_well)
+         apply (subst s_msr_sercomp_ran)
+         apply (simp add:  med_tspfran2 med_tspfdom2 f13 sender_tspfran  sender_tspfdom recv_tspfran) 
+        by (metis a1 s_msr_sercomp_recv_compI s_msr_recv_iter_ubfix2_dom sender_tspfdom)
+      have f32151: "\<And> i. (iter_ubfix2 (ufCompH s_msr_sercomp recvTSPF) (Suc (Suc i)) (ufRan\<cdot>s_msr_sercomp \<union> ufRan\<cdot>recvTSPF) x) = 
+((ufCompH s_msr_sercomp recvTSPF) x)\<cdot>(iter_ubfix2 (ufCompH s_msr_sercomp recvTSPF) (Suc i) (ufRan\<cdot>s_msr_sercomp \<union> ufRan\<cdot>recvTSPF) x)"
+        by (simp add: recv_tspfran)
+      have s_msr_dom_empt: "ubDom\<cdot>(senderTSPF s \<rightleftharpoons> x) \<inter> ubDom\<cdot>(medSR_TSPF ora1 \<rightleftharpoons> (senderTSPF s \<rightleftharpoons> x)) = {}"
+        apply (fold ubclDom_ubundle_def)
+        by (metis a1 c_dr_boolpair_ctype f13 med_tspfdom2 s_msr_ran_empt sender_tspfran ufran_2_ubcldom2)
+      have s_msr_apply: "ufComp (senderTSPF s) (medSR_TSPF ora1) \<rightleftharpoons> x =
+(ubUnion\<cdot>((senderTSPF s) \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>(senderTSPF s))\<cdot>x))\<cdot>((medSR_TSPF ora1) \<rightleftharpoons> ((senderTSPF s) \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>(senderTSPF s))\<cdot>x))))"
+          apply (subst s_msr_apply_sercomp_eq)
+        by (simp add: f32101 ubclDom_ubundle_def)
+      have s_msr_apply2: "ufComp (senderTSPF s) (medSR_TSPF ora1) \<rightleftharpoons> x =
+(ubUnion\<cdot>((medSR_TSPF ora1) \<rightleftharpoons> ((senderTSPF s) \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>(senderTSPF s))\<cdot>x))))\<cdot>((senderTSPF s) \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>(senderTSPF s))\<cdot>x))"
+        apply (subst s_msr_apply_sercomp_eq)
+        apply (simp add: f32101 ubclDom_ubundle_def)
+        apply (simp only: ubclRestrict_ubundle_def)
+        apply (simp only: x_sender_restrict_id)
+        using s_msr_dom_empt ubunion_commutative by blast
+      have x_iter_ubfix2_restrict_union_recv_ran: "\<And>i. ubDom\<cdot>(recvTSPF \<rightleftharpoons> (ubRestrict (ufDom\<cdot>recvTSPF)\<cdot>(ubUnion\<cdot>x\<cdot>(iter_ubfix2 (ufCompH s_msr_sercomp recvTSPF) i (ufRan\<cdot>s_msr_sercomp \<union> ufRan\<cdot>recvTSPF) x)))) = ufRan\<cdot>recvTSPF"
+        apply (fold ubclDom_ubundle_def)
+        apply (fold ubclUnion_ubundle_def)
+        apply (fold ubclRestrict_ubundle_def)
+        apply (subst ufran_2_ubcldom2)
+         apply (simp only: ubclrestrict_dom ubclunion_ubcldom)
+         apply (subst iter_ubfix2_dom)
+        using a1 io_eq_s_msr_recv apply blast
+         apply (subst s_msr_sercomp_ran)
+         apply (simp add:  med_tspfran2 med_tspfdom2 f13 sender_tspfran  sender_tspfdom recv_tspfran recv_tspfdom) 
+        by (simp add: recv_tspfdom recv_tspfran)
+      have s_msr_ran_recv_dom_eq: "ubDom\<cdot>(medSR_TSPF ora1 \<rightleftharpoons> (senderTSPF s \<rightleftharpoons> x)) = ufDom\<cdot>recvTSPF"
+        apply (fold ubclDom_ubundle_def)
+        apply (subst ufran_2_ubcldom2) +
+          apply (simp add: f32101 ubclDom_ubundle_def)
+        by (simp add:  med_tspfran2 med_tspfdom2 f13 sender_tspfran  sender_tspfdom recv_tspfran recv_tspfdom)  +
+      have f3215_iter_2: "\<And> i. ubclRestrict (ufDom\<cdot>recvTSPF)\<cdot>(iter_ubfix2 (ufCompH s_msr_sercomp recvTSPF) (Suc (Suc i)) (ufRan\<cdot>s_msr_sercomp \<union> ufRan\<cdot>recvTSPF) x) =  
+                                              ((medSR_TSPF ora1) \<rightleftharpoons> ((senderTSPF s) \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>(senderTSPF s))\<cdot>x)))"
+      proof -
+        fix i::nat
+        have f3215_iter2_unionL: "ubclRestrict (ufDom\<cdot>s_msr_sercomp)\<cdot>(ubclUnion\<cdot>x\<cdot>(iter_ubfix2 (ufCompH s_msr_sercomp recvTSPF) (Suc i) (ufRan\<cdot>s_msr_sercomp \<union> ufRan\<cdot>recvTSPF) x)) = x"
+          apply (simp add: ubclRestrict_ubundle_def ubclUnion_ubundle_def)
+          apply (subst ubunion_restrict2)
+           apply (fold ubclDom_ubundle_def)
+           apply (subst ufCompH_dom)
+             apply (simp add: s_msr_sercomp_recv_compI sender_tspfdom x_ubcldom)
+            apply (simp add: s_msr_recv_iter_ubfix2_dom ubclDom_ubundle_def)
+           apply (metis Diff_disjoint s_msr_sercomp_dom s_msr_sercomp_recv_compI sender_tspfdom ufCompI_def)
+          by (simp add: s_msr_sercomp_dom x_sender_restrict_id)
+        show "ubclRestrict (ufDom\<cdot>recvTSPF)\<cdot>(iter_ubfix2 (ufCompH s_msr_sercomp recvTSPF) (Suc (Suc i)) (ufRan\<cdot>s_msr_sercomp \<union> ufRan\<cdot>recvTSPF) x) =  ((medSR_TSPF ora1) \<rightleftharpoons> ((senderTSPF s) \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>(senderTSPF s))\<cdot>x)))"
+          apply (subst f32151)
+          apply (simp only: ufcomph_insert)
+          apply (simp only: ubclRestrict_ubundle_def ubclUnion_ubundle_def)
+          apply (subst ubunion_restrict2)
+           apply (subst x_iter_ubfix2_restrict_union_recv_ran)
+           apply (simp add: recv_tspfdom recv_tspfran)
+          apply (simp only: x_sender_restrict_id)
+           apply (fold ubclUnion_ubundle_def)
+          apply (fold ubclRestrict_ubundle_def)
+          apply (subst f3215_iter2_unionL)
+          apply (simp only: s_msr_sercomp_def)
+          apply (subst s_msr_apply)
+          apply (simp only: ubclRestrict_ubundle_def x_sender_restrict_id)
+          apply (subst ubunion_restrict)
+           apply (simp add: s_msr_ran_recv_dom_eq)
+          by simp
+      qed          
+      have max_comp: "\<And> i. (iter_ufCompH s_msr_sercomp recvTSPF (Suc (Suc (Suc i))) x) = 
+    ubclUnion\<cdot>(s_msr_sercomp \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>s_msr_sercomp)\<cdot>x))\<cdot>(recvTSPF \<rightleftharpoons> ubclRestrict (ufDom\<cdot>recvTSPF)\<cdot>(s_msr_sercomp \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>s_msr_sercomp)\<cdot>x)))"
+      proof -
+        fix i::nat
+        obtain iter2 where iter2_def: "iter2 = (iter_ufCompH s_msr_sercomp recvTSPF  (Suc (Suc i)) x)"
+          by simp
+        have f1: "(iter_ufCompH s_msr_sercomp recvTSPF (Suc (Suc (Suc i))) x) = ufCompH s_msr_sercomp recvTSPF x\<cdot>iter2"
+          by (simp add: iter2_def)
+        have f2: "ubRestrict (ufDom\<cdot>recvTSPF)\<cdot>(ubUnion\<cdot>x\<cdot>iter2) = ubRestrict (ufDom\<cdot>recvTSPF)\<cdot>iter2"
+          apply (subst ubunion_commutative)
+          apply (simp only: iter2_def)
+          apply (fold ubclDom_ubundle_def)
+           apply (subst iter_ubfix2_dom)
+          using a1 io_eq_s_msr_recv apply blast
+           apply (metis a1 s_msr_sercomp_recv_compI sender_dom ufCompO_def ufcomp_I_inter_Oc_empty)
+          apply (subst ubunion_restrict2)
+           apply (simp add: f32101 sender_dom recv_tspfdom)
+          by (simp add: recv_tspfdom)
+        have f3: "ubclRestrict (ufDom\<cdot>recvTSPF)\<cdot>(s_msr_sercomp \<rightleftharpoons> x) = ((medSR_TSPF ora1) \<rightleftharpoons> ((senderTSPF s) \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>(senderTSPF s))\<cdot>x)))"
+          apply (simp add: s_msr_sercomp_def)
+          apply (subst s_msr_apply_sercomp_eq)
+          apply (simp add: f32101 ubclDom_ubundle_def)
+          apply (simp only: ubclRestrict_ubundle_def) 
+          apply (simp only: x_sender_restrict_id)
+          apply (subst ubunion_restrict)
+          using s_msr_ran_recv_dom_eq apply blast
+          by simp
+        show "(iter_ufCompH s_msr_sercomp recvTSPF (Suc (Suc (Suc i))) x) = 
+    ubclUnion\<cdot>(s_msr_sercomp \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>s_msr_sercomp)\<cdot>x))\<cdot>(recvTSPF \<rightleftharpoons> ubclRestrict (ufDom\<cdot>recvTSPF)\<cdot>(s_msr_sercomp \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>s_msr_sercomp)\<cdot>x)))"
+          apply (subst f1)
+          apply (simp only: ufcomph_insert)
+          apply (simp only: ubclRestrict_ubundle_def ubclUnion_ubundle_def)
+          apply (subst ubunion_restrict2)
+           apply (simp only: iter2_def)
+          apply (fold ubclDom_ubundle_def)
+           apply (subst iter_ubfix2_dom)
+          using a1 io_eq_s_msr_recv apply blast
+           apply (metis Int_commute s_msr_sercomp_dom s_msr_sercomp_recv_compI sender_dom ufCompO_def ufcomp_I_inter_Oc_empty)
+          apply (simp add: f32101 s_msr_sercomp_dom)
+          apply (subst f2)
+          apply (simp only: iter2_def)
+          apply (fold ubclRestrict_ubundle_def)
+          apply (fold ubclUnion_ubundle_def)
+          apply (subst f3215_iter_2)
+          apply (simp only: ubclRestrict_ubundle_def)
+          apply (simp only: x_sender_restrict_id)
+          apply (fold ubclRestrict_ubundle_def)
+          apply (simp only: f3)
+          by (metis a1 ubclrestrict_dom_id)
+      qed
+      have max_in_chain_s_msr_r: "max_in_chain (Suc (Suc (Suc 0))) (\<lambda>i. iter_ufCompH s_msr_sercomp recvTSPF i x)"
+proof (rule max_in_chainI)
+  fix j
+  assume a1: "Suc (Suc (Suc 0)) \<le> j"
+  have f1: "ufDom\<cdot>s_msr_sercomp \<inter> ufDom\<cdot>recvTSPF = {}"
+    by (simp add: s_msr_sercomp_dom sender_dom recv_tspfdom)
+  obtain k where o1: "j = Suc (Suc (Suc k))"
+    by (metis (no_types) Suc_leD Suc_n_not_le_n a1 not0_implies_Suc)  
+  show "iter_ubfix2 (ufCompH s_msr_sercomp recvTSPF) (Suc (Suc (Suc 0))) (ufRan\<cdot>s_msr_sercomp \<union> ufRan\<cdot>recvTSPF) x =
+     iter_ubfix2 (ufCompH s_msr_sercomp recvTSPF) j (ufRan\<cdot>s_msr_sercomp \<union> ufRan\<cdot>recvTSPF) x"
+    apply (subst o1)
+    by (metis max_comp recv_tspfran)
+qed
+  have lub_max_in_chain_eq: "ubFix (ufCompH s_msr_sercomp recvTSPF x) (ufRan\<cdot>s_msr_sercomp \<union> ufRan\<cdot>recvTSPF) = 
+(iter_ufCompH s_msr_sercomp recvTSPF (Suc (Suc (Suc 0))) x)"
+  proof (simp only: ubFix_def)
+    have f1: "ufRan\<cdot>(recvTSPF::('a MABP tstream\<^sup>\<Omega>) ufun) = ufRan\<cdot>(recvTSPF::('b MABP tstream\<^sup>\<Omega>) ufun)"
+      by (simp add: recv_tspfran)
+    have "chain (\<lambda>n. iter_ubfix2 (ufCompH s_msr_sercomp recvTSPF) n (ufRan\<cdot>s_msr_sercomp \<union> ufRan\<cdot>(recvTSPF::('a MABP tstream\<^sup>\<Omega>) ufun)) x)"
+      by (metis a1 io_eq_s_msr_recv ub_iterate_chain)
+    then show "(\<Squnion>n. iter_ubfix2 (ufCompH s_msr_sercomp recvTSPF) n (ufRan\<cdot>s_msr_sercomp \<union> ufRan\<cdot>(recvTSPF::('b MABP tstream\<^sup>\<Omega>) ufun)) x) = iter_ubfix2 (ufCompH s_msr_sercomp recvTSPF) (Suc (Suc (Suc 0))) (ufRan\<cdot>s_msr_sercomp \<union> ufRan\<cdot>(recvTSPF::('a MABP tstream\<^sup>\<Omega>) ufun)) x"
+      using f1 max_in_chain_s_msr_r maxinch_is_thelub by fastforce
+  qed
+        have f2: " ubRestrict (ufDom\<cdot>(senderTSPF s))\<cdot>x = x"
+          by (simp add: f32101)
+        have f3: " ubRestrict (ufDom\<cdot>recvTSPF)\<cdot>(s_msr_sercomp \<rightleftharpoons> x) = 
+((medSR_TSPF ora1) \<rightleftharpoons> ((senderTSPF s) \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>(senderTSPF s))\<cdot>x)))"
+          apply (simp only: ubclRestrict_ubundle_def)
+          apply (simp only: x_sender_restrict_id)
+          apply (simp add: s_msr_sercomp_def)
+          apply (subst s_msr_apply)
+          apply (simp only: ubclRestrict_ubundle_def)
+          apply (simp only: x_sender_restrict_id)
+          using s_msr_ran_recv_dom_eq ubunion_restrict by blast
+        have f3215: "Some (ubFix (ufCompH s_msr_sercomp recvTSPF x) (ufRan\<cdot>s_msr_sercomp \<union> ufRan\<cdot>recvTSPF)) = Some ((ubUnion\<cdot>(ubUnion\<cdot>((senderTSPF s) \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>(senderTSPF s))\<cdot>x))\<cdot>((medSR_TSPF ora1) \<rightleftharpoons> ((senderTSPF s) \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>(senderTSPF s))\<cdot>x)))))\<cdot>
+                                                                                              (recvTSPF \<rightleftharpoons>((medSR_TSPF ora1) \<rightleftharpoons> ((senderTSPF s) \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>(senderTSPF s))\<cdot>x)))))"
+           apply (rule some_eq)
+          apply (subst lub_max_in_chain_eq)
+          apply (subst max_comp)
+          apply (simp only: s_msr_sercomp_dom)
+          apply (simp only: ubclRestrict_ubundle_def)
+          apply (simp only: x_sender_restrict_id)
+          apply (simp only: s_msr_sercomp_def)
+          apply (subst s_msr_apply)
+          apply (simp only: ubclRestrict_ubundle_def)
+          apply (simp only: x_sender_restrict_id)
+
+          apply (subst s_msr_apply)
+          apply (simp only: ubclRestrict_ubundle_def)
+          apply (simp only: x_sender_restrict_id)
+          apply (subst ubunion_restrict)
+           apply (simp add: s_msr_ran_recv_dom_eq)
+          by (simp add: ubclUnion_ubundle_def)
+      show "Rep_cufun (ufComp s_msr_sercomp recvTSPF) x =
+       (ubclDom\<cdot>x = ufDom\<cdot>(senderTSPF s))\<leadsto>(ubUnion\<cdot>(ubUnion\<cdot>((senderTSPF s) \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>(senderTSPF s))\<cdot>x))\<cdot>((medSR_TSPF ora1) \<rightleftharpoons> ((senderTSPF s) \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>(senderTSPF s))\<cdot>x)))))\<cdot>
+                                                                                              (recvTSPF \<rightleftharpoons>((medSR_TSPF ora1) \<rightleftharpoons> ((senderTSPF s) \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>(senderTSPF s))\<cdot>x))))"
+        by (metis (no_types, lifting) f32102 f3214 f3215)
+    qed
+    show ?thesis
+      apply (fold s_msr_sercomp_def)
+      apply (simp only: fun_eq_iff)
+      apply (rule)
+      apply (case_tac "(ubclDom\<cdot>x \<noteq> ufDom\<cdot>(senderTSPF s))")
+       apply (metis (no_types, hide_lams) f20 insert_commute not_Some_eq s_msr_sercomp_def sender_tspfdom ufdom_2ufundom ufunclComp_ufun_def)
+      by (simp add: f321)
+  qed
 
   have f4: "(ubFix (ufCompH (senderTSPF s \<otimes> medSR_TSPF ora1 \<otimes> recvTSPF) (medRS_TSPF ora2) tb) {c_abpOut, c_as, c_ar}) . c_abpOut = 
             (ubFix (fixABPHelperCont s ora1 ora2 tb) {c_abpOut, c_ar, c_as, c_dr, c_ds})  .  c_abpOut" 
@@ -3873,6 +4168,7 @@ proof -
     have f51: "ufCompI (senderTSPF s \<otimes> medSR_TSPF ora1 \<otimes> recvTSPF) (medRS_TSPF ora2) = {c_abpIn}"
       apply(simp add: ufCompI_def)
       apply(simp add: f20 f21)
+     apply (simp add:  med_tspfran2 med_tspfdom2 f13)
       apply(subst med_tspfdom)
       using f13 sfilterl4 apply blast
        apply(simp, subst med_tspfran)
