@@ -1556,23 +1556,46 @@ lemma ufunclSerCompWell_ufun_eq: "ufunclSerCompWell f1 f2 = sercomp_well f1 f2"
 
 instance 
   apply intro_classes
-             apply (simp add: inf_sup_aci(1) ufcomp_L_commu ufunclParCompWell_ufun_def)
-            apply (simp add: comp_well_def inf_sup_aci(1) ufunclCompWell_ufun_def)
-           apply (simp add: UFun_Comp.ufunclParComp_ufun_def ufParComp_dom ufclDom_ufun_def ufunclParCompWell_ufun_def)
-          apply (simp add: UFun_Comp.ufunclParComp_ufun_def ufParComp_ran ufclRan_ufun_def ufunclParCompWell_ufun_def)
-         apply (simp add: ufunclSerCompWell_ufun_def ufclDom_ufun_def)
-         using ufSerComp_dom ufunclSerComp_ufun_def apply auto[1]
-               apply (simp add: ufunclSerCompWell_ufun_def ufclRan_ufun_def ufunclSerComp_ufun_def)
-         using ufSerComp_ran apply auto[1]
-                apply (simp add: ufFeedbackComp_dom ufclDom_ufun_def ufclRan_ufun_def ufunclFeedbackComp_ufun_def)
-               apply (simp add: UFun_Comp.ufunclFeedbackComp_ufun_def ufFeedbackComp_ran ufclRan_ufun_def)
-              apply (simp add: UFun_Comp.ufunclCompWell_ufun_def UFun_Comp.ufunclComp_ufun_def comp_well_def inf_sup_aci(1) ufcomp_commu)
-            apply (metis ufParComp_commutativity ufunclParCompWell_ufun_def ufunclParComp_ufun_def)
-           apply (simp add: UFun_Comp.ufunclParComp_ufun_def ufParComp_asso ufunclParCompWell_ufun_def)
-          apply (simp add: ufunclSerComp_ufun_def)
-          apply (rule ufSerComp_asso)
-           apply (meson ufunclSerCompWell_ufun_def) +
-         by (simp add: UFun_Comp.ufunclParComp_ufun_def ufParCompWell_associativity ufunclParCompWell_ufun_def)
+  apply (simp add: inf_sup_aci(1) ufcomp_L_commu ufunclParCompWell_ufun_def)
+  apply (simp add: comp_well_def inf_sup_aci(1) ufunclCompWell_ufun_def)
+  apply (simp add: UFun_Comp.ufunclParComp_ufun_def ufParComp_dom ufclDom_ufun_def ufunclParCompWell_ufun_def)
+  apply (simp add: UFun_Comp.ufunclParComp_ufun_def ufParComp_ran ufclRan_ufun_def ufunclParCompWell_ufun_def)
+  apply (simp add: UFun_Comp.ufunclCompWell_ufun_def UFun_Comp.ufunclComp_ufun_def comp_well_def ufCompI_def ufcomp_dom)
+  using ufSerComp_dom ufunclSerComp_ufun_def apply auto[1]
+  apply (simp add: ufunclSerCompWell_ufun_def ufclRan_ufun_def ufunclSerComp_ufun_def)
+  apply (simp add: comp_well_def ufCompO_def ufcomp_ran ufunclCompWell_ufun_def ufunclComp_ufun_def)
+  apply (simp add: comp_well_def ufCompO_def ufclRan_ufun_def ufcomp_ran ufunclCompWell_ufun_def ufunclComp_ufun_def)
+  apply (simp add: comp_well_def ufCompO_def ufclRan_ufun_def ufcomp_ran ufunclCompWell_ufun_def ufunclComp_ufun_def)
+  apply (simp add: UFun_Comp.ufunclParCompWell_ufun_eq UFun_Comp.ufunclParComp_ufun_def ufParComp_dom ufclDom_ufun_def)
+  apply (simp add: UFun_Comp.ufunclParCompWell_ufun_eq ufParComp_ran ufunclParComp_ufun_def)
+  apply (simp add: UFun_Comp.ufunclParCompWell_ufun_def UFun_Comp.ufunclParComp_ufun_def ufParComp_ran ufclRan_ufun_def)
+  defer
+  defer
+  apply (simp add: UFun_Comp.ufunclFeedbackComp_ufun_def ufFeedbackComp_dom ufclDom_ufun_def ufclRan_ufun_def)
+  apply (simp add: ufFeedbackComp_ran ufclRan_ufun_def ufunclFeedbackComp_ufun_def)     
+  apply (metis UFun_Comp.ufunclCompWell_ufun_def UFun_Comp.ufunclComp_ufun_def comp_well_def ufcomp_commu)     
+  apply (metis UFun_Comp.ufunclParCompWell_ufun_eq UFun_Comp.ufunclParComp_ufun_def ufParComp_commutativity)
+  apply (simp add: UFun_Comp.ufunclParComp_ufun_def ufParComp_asso ufunclParCompWell_ufun_def)
+  apply (simp add: ufunclSerComp_ufun_def)
+  using ufSerComp_asso ufunclSerCompWell_ufun_eq apply blast
+  apply (simp add: UFun_Comp.ufunclParCompWell_ufun_eq ufParCompWell_associativity ufunclParComp_ufun_def)
+  proof -
+    fix f1 :: "'a ufun" and f2 :: "'a ufun"
+    assume a1: "ufunclSerCompWell f1 f2"
+    then have "ufRan\<cdot>f1 = ufDom\<cdot>f2"
+      by (meson UFun_Comp.ufunclSerCompWell_ufun_eq)
+    then show "ufclDom\<cdot>(ufunclSerComp f1 f2) = ufclDom\<cdot>f1"
+      using a1 by (simp add: UFun_Comp.ufunclSerCompWell_ufun_eq ufSerComp_dom ufclDom_ufun_def ufunclSerComp_ufun_def)
+ next
+   fix f1 :: "'a ufun" and f2 :: "'a ufun"
+   assume a1: "ufunclSerCompWell f1 f2"
+   then have "ufRan\<cdot>f1 = ufDom\<cdot>f2"
+     by (meson UFun_Comp.ufunclSerCompWell_ufun_eq)
+   then show "ufclRan\<cdot>(ufunclSerComp f1 f2) = ufclRan\<cdot>f2"
+     using a1 by (simp add: UFun_Comp.ufunclSerCompWell_ufun_eq UFun_Comp.ufunclSerComp_ufun_def ufSerComp_ran ufclRan_ufun_def)
+ qed
+     
+
 end
 
 end
