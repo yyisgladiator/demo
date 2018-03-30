@@ -242,9 +242,17 @@ lemma sdropwhile_fair: assumes inf: "#({\<surd>} \<ominus> s) = \<infinity>" and
       using inf slen_sfilter_sdrop by force
   qed
 
+lemma wellcases [case_names bottom inf fin well]:
+  assumes bottom: "ts = \<epsilon> \<Longrightarrow> P ts"
+    and inf: "#({\<surd>} \<ominus> ts) = \<infinity> \<Longrightarrow> P ts"
+    and fin: "#ts < \<infinity> \<and> (\<exists>x. ts = x \<bullet> \<up>\<surd>) \<Longrightarrow> P ts"
+    and well: "ts_well ts"
+  shows "P ts"
+  by (meson bottom fin inf ts_well_def well)
+
 lemma ts_well_sdropwhile_2: assumes tswell: "ts_well as" and notEmpty: "sdropwhile f\<cdot>as \<noteq> \<epsilon>" and
     notInf: "#({\<surd>} \<ominus> sdropwhile f\<cdot>as) \<noteq> \<infinity>" shows "\<exists>xa. sdropwhile f\<cdot>as = xa \<bullet> \<up>\<surd>"
-proof-  
+proof -  
   have wellCases:"as = \<epsilon> \<or> #({\<surd>} \<ominus> as) = \<infinity> \<or> #as < \<infinity> \<and> (\<exists>x. as = x \<bullet> \<up>\<surd>)"
     by (meson tswell ts_well_def)
   have empty:"as = \<epsilon> \<Longrightarrow> (sdropwhile f\<cdot>as) = \<epsilon>"
@@ -253,20 +261,37 @@ proof-
     using sfilterl4 by fastforce
   have infStream: "#({\<surd>} \<ominus> as) = \<infinity> \<Longrightarrow> #({\<surd>} \<ominus> sdropwhile f\<cdot>as) = \<infinity> \<or>
         (sdropwhile f\<cdot>as) = \<epsilon>"
-(*  proof (cases "\<exists>n. \<not> f (snth n as)")
+    proof (cases "\<exists>n. \<not> f (snth n as)")
       case True
-        (*tscases?*)
       then show ?thesis
- sorry
+        proof (cases rule: wellcases [of as])
+          case bottom
+          then show ?thesis 
+            by simp
+        next
+          case inf
+          then show ?thesis 
+            using True sdropwhile_fair by blast
+        next
+          case fin
+          then show ?thesis
+            sorry
+        next
+        case well
+          then show ?case 
+            by (simp add: tswell)
+        qed
     next
       case False
       then show ?thesis 
       by (metis bot_is_0 ex_snth_in_sfilter_nempty lnat.con_rews sdropwhile_all singletonD slen_empty_eq strdw_filter)
-    qed*)
+    qed
+(*
     apply(case_tac "\<exists>n. \<not> f (snth n as)")
     apply(simp add: sdropwhile_fair)
     by (smt ex_snth_in_sfilter_nempty lnat.con_rews lnzero_def sdropwhile_all singletonD 
         slen_empty_eq strdw_filter_h)
+*)
   have h4:"#as < \<infinity> \<and> (\<exists>x. as = x \<bullet> \<up>\<surd>) \<Longrightarrow> \<exists>t. (sdropwhile f\<cdot>as) = t \<bullet> \<up>\<surd> \<or> (sdropwhile f\<cdot>as) = \<epsilon>"
     using sdropwhile_nempty_empty by blast
   then show ?thesis
