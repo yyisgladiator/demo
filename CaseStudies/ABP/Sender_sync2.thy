@@ -1,6 +1,6 @@
 chapter {* Alternating Bit Protocol *}       
                                                             
-theory Sender_sync
+theory Sender_sync2
 imports "../../TStream"
 begin
 default_sort countable
@@ -9,37 +9,29 @@ default_sort countable
 section {* definition of the set of sender *}
 (* ----------------------------------------------------------------------- *)
 
-fixrec tsTakeFirstTick :: "'a tstream \<rightarrow> 'a tstream" where
-"tsTakeFirstTick\<cdot>\<bottom> = \<bottom>" |
-"tsTakeFirstTick\<cdot>(tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>ts) = ts" |
-"ts \<noteq> \<bottom> \<Longrightarrow> tsTakeFirstTick\<cdot>(tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>t))\<cdot>ts) = tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>t))\<cdot>(tsTakeFirstTick\<cdot>ts)"
-
-fixrec tsSnd_h :: "'a tstream \<rightarrow> bool tstream \<rightarrow> bool discr \<rightarrow> ('a \<times> bool) tstream" where
+fixrec tsSnd_h :: "'a tstream \<rightarrow> bool tstream \<rightarrow> 'a stream \<rightarrow> bool discr \<rightarrow> ('a \<times> bool) tstream" where
   (* bottom case *)
-"tsSnd_h\<cdot>\<bottom>\<cdot>acks\<cdot>ack = \<bottom>" |
-"tsSnd_h\<cdot>msg\<cdot>\<bottom>\<cdot>ack = \<bottom>" |
+"tsSnd_h\<cdot>\<bottom>\<cdot>acks\<cdot>buf\<cdot>ack = \<bottom>" |
+"tsSnd_h\<cdot>msg\<cdot>\<bottom>\<cdot>buf\<cdot>ack = \<bottom>" |
 
-  (* if an input and ack from the receiver *)
-"msg \<noteq> \<bottom> \<Longrightarrow> acks \<noteq> \<bottom> \<Longrightarrow> tsSnd_h\<cdot>(tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>m))\<cdot>msg)\<cdot>(tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>a))\<cdot>acks)\<cdot>ack = 
-  (* ack for the current msg \<Longrightarrow> send next msg *)
-  (if (a = ack) then tsSnd_h\<cdot>msg\<cdot>acks\<cdot>(Discr (\<not>(undiscr ack)))
-  (* wrong ack for the current msg \<Longrightarrow> send msg again *)
-   else (tsSnd_h\<cdot>(tsMLscons\<cdot>(up\<cdot>m)\<cdot>msg)\<cdot>acks\<cdot>ack))" |
+"msg \<noteq> \<bottom> \<Longrightarrow>  tsSnd_h\<cdot>(tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>m))\<cdot>msg)\<cdot>acks\<cdot>buf\<cdot>ack = 
+   (tsSnd_h\<cdot>msg\<cdot>acks\<cdot>(buf \<bullet> ((up\<cdot>m)&&\<epsilon>))\<cdot>ack)" |
 
-  (* if an input and ack is a tick \<Longrightarrow> send msg again plus a tick
-     if transmission starts with tick \<Longrightarrow> #\<surd>acks = \<infinity> *)
-"msg \<noteq> \<bottom> \<Longrightarrow> tsSnd_h\<cdot>(tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>m))\<cdot>msg)\<cdot>(tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>acks)\<cdot>ack 
-  = tsMLscons\<cdot>(upApply2 Pair\<cdot>(up\<cdot>m)\<cdot>(up\<cdot>ack))\<cdot>(delayFun\<cdot>(tsSnd_h\<cdot>(tsMLscons\<cdot>(up\<cdot>m)\<cdot>(tsTakeFirstTick\<cdot>msg))\<cdot>acks\<cdot>ack))" |
+"tsSnd_h\<cdot>(tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>msg)\<cdot>(tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>acks)\<cdot>\<epsilon>\<cdot>ack
+   = delayFun\<cdot>(tsSnd_h\<cdot>msg\<cdot>acks\<cdot>\<epsilon>\<cdot>ack)" |
 
-  (* if input is a tick \<Longrightarrow> send tick *)
-"tsSnd_h\<cdot>(tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>msg)\<cdot>(tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>acks)\<cdot>ack
-   = delayFun\<cdot>(tsSnd_h\<cdot>msg\<cdot>acks\<cdot>ack)" |
+"buf \<noteq> \<bottom> \<Longrightarrow> tsSnd_h\<cdot>(tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>msg)\<cdot>(tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>acks)\<cdot>(lscons\<cdot>(up\<cdot>b)\<cdot>buf)\<cdot>ack
+   =  tsMLscons\<cdot>(upApply2 Pair\<cdot>(up\<cdot>b)\<cdot>(up\<cdot>ack))\<cdot>(delayFun\<cdot>(tsSnd_h\<cdot>msg\<cdot>acks\<cdot>(lscons\<cdot>(up\<cdot>b)\<cdot>buf)\<cdot>ack))" |
 
-"acks \<noteq> \<bottom> \<Longrightarrow> tsSnd_h\<cdot>(tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>msg)\<cdot>(tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>a))\<cdot>acks)\<cdot>ack
-  = (tsSnd_h\<cdot>(tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>msg)\<cdot>acks\<cdot>ack)"
+"acks \<noteq> \<bottom> \<Longrightarrow> tsSnd_h\<cdot>(tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>msg)\<cdot>(tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>a))\<cdot>acks)\<cdot>\<epsilon>\<cdot>ack
+  = (tsSnd_h\<cdot>(tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>msg)\<cdot>acks\<cdot>\<epsilon>\<cdot>ack)" |
+
+"acks \<noteq> \<bottom> \<Longrightarrow> tsSnd_h\<cdot>(tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>msg)\<cdot>(tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>a))\<cdot>acks)\<cdot>(lscons\<cdot>(up\<cdot>b)\<cdot>buf)\<cdot>ack
+  = (if (a = ack) then tsSnd_h\<cdot>(tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>msg)\<cdot>acks\<cdot>buf\<cdot>(Discr (\<not>(undiscr ack)))
+   else (tsSnd_h\<cdot>(tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>msg)\<cdot>acks\<cdot>(lscons\<cdot>(up\<cdot>b)\<cdot>buf)\<cdot>ack))" 
 
 definition tsSnd :: "'a tstream \<rightarrow> bool tstream \<rightarrow> ('a \<times> bool) tstream" where
-"tsSnd \<equiv> \<Lambda> msg acks. delay (tsSnd_h\<cdot>msg\<cdot>acks\<cdot>(Discr True))"  
+"tsSnd \<equiv> \<Lambda> msg acks. delay (tsSnd_h\<cdot>msg\<cdot>acks\<cdot>\<epsilon>\<cdot>(Discr True))"  
 
 (* ----------------------------------------------------------------------- *)
 section {* basic properties *}
