@@ -19,7 +19,19 @@ section {* definition *}
 
 definition tsMed :: "'a tstream \<rightarrow> bool stream \<rightarrow> 'a tstream" where
 "tsMed \<equiv> \<Lambda> msg ora. tsProjFst\<cdot>(tsFilter {x. snd x}\<cdot>(tsZip\<cdot>msg\<cdot>ora))"
+(*
+fixrec tsMed :: "'a tstream \<rightarrow> bool stream \<rightarrow> 'a tstream" where
+  (* bottom case *)
+"tsMed\<cdot>\<bottom>\<cdot>ora = \<bottom>" |
+"tsMed\<cdot>msg\<cdot>\<bottom> = \<bottom>" |
 
+"ora \<noteq> \<bottom> \<Longrightarrow> tsMed\<cdot>(tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>msg)\<cdot>ora
+ = delayFun\<cdot>(tsMed\<cdot>msg\<cdot>ora)" |
+
+"msg \<noteq> \<bottom> \<Longrightarrow>  tsMed\<cdot>(tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>m))\<cdot>msg)\<cdot>(lscons\<cdot>(up\<cdot>k)\<cdot>ora) 
+ = (if (undiscr k = False) then tsMed\<cdot>msg\<cdot>ora
+   else (tsMLscons\<cdot>(up\<cdot>m)\<cdot>(tsMed\<cdot>msg\<cdot>ora)))"
+*)
 definition sMed :: "'a stream \<rightarrow> bool stream \<rightarrow> 'a stream" where
 "sMed \<equiv> \<Lambda> msg ora. sprojfst\<cdot>(sfilter {x. snd x}\<cdot>(szip\<cdot>msg\<cdot>ora))"
 

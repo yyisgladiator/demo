@@ -14,21 +14,21 @@ fixrec tsSnd_h :: "'a tstream \<rightarrow> bool tstream \<rightarrow> 'a stream
 "tsSnd_h\<cdot>\<bottom>\<cdot>acks\<cdot>buf\<cdot>ack = \<bottom>" |
 "tsSnd_h\<cdot>msg\<cdot>\<bottom>\<cdot>buf\<cdot>ack = \<bottom>" |
 
-"msg \<noteq> \<bottom> \<Longrightarrow>  tsSnd_h\<cdot>(tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>m))\<cdot>msg)\<cdot>acks\<cdot>buf\<cdot>ack = 
+"msg \<noteq> \<bottom> \<Longrightarrow> tsSnd_h\<cdot>(tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>m))\<cdot>msg)\<cdot>acks\<cdot>buf\<cdot>ack = 
    (tsSnd_h\<cdot>msg\<cdot>acks\<cdot>(buf \<bullet> ((up\<cdot>m)&&\<epsilon>))\<cdot>ack)" |
 
 "tsSnd_h\<cdot>(tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>msg)\<cdot>(tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>acks)\<cdot>\<epsilon>\<cdot>ack
    = delayFun\<cdot>(tsSnd_h\<cdot>msg\<cdot>acks\<cdot>\<epsilon>\<cdot>ack)" |
 
-"buf \<noteq> \<bottom> \<Longrightarrow> tsSnd_h\<cdot>(tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>msg)\<cdot>(tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>acks)\<cdot>(lscons\<cdot>(up\<cdot>b)\<cdot>buf)\<cdot>ack
-   =  tsMLscons\<cdot>(upApply2 Pair\<cdot>(up\<cdot>b)\<cdot>(up\<cdot>ack))\<cdot>(delayFun\<cdot>(tsSnd_h\<cdot>msg\<cdot>acks\<cdot>(lscons\<cdot>(up\<cdot>b)\<cdot>buf)\<cdot>ack))" |
+"tsSnd_h\<cdot>(tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>msg)\<cdot>(tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>acks)\<cdot>(lscons\<cdot>(b)\<cdot>buf)\<cdot>ack
+   =  tsMLscons\<cdot>(upApply2 Pair\<cdot>(b)\<cdot>(up\<cdot>ack))\<cdot>(delayFun\<cdot>(tsSnd_h\<cdot>msg\<cdot>acks\<cdot>(lscons\<cdot>(b)\<cdot>buf)\<cdot>ack))" |
 
 "acks \<noteq> \<bottom> \<Longrightarrow> tsSnd_h\<cdot>(tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>msg)\<cdot>(tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>a))\<cdot>acks)\<cdot>\<epsilon>\<cdot>ack
   = (tsSnd_h\<cdot>(tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>msg)\<cdot>acks\<cdot>\<epsilon>\<cdot>ack)" |
 
-"acks \<noteq> \<bottom> \<Longrightarrow> tsSnd_h\<cdot>(tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>msg)\<cdot>(tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>a))\<cdot>acks)\<cdot>(lscons\<cdot>(up\<cdot>b)\<cdot>buf)\<cdot>ack
+"acks \<noteq> \<bottom> \<Longrightarrow> tsSnd_h\<cdot>(tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>msg)\<cdot>(tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>a))\<cdot>acks)\<cdot>(lscons\<cdot>b\<cdot>buf)\<cdot>ack
   = (if (a = ack) then tsSnd_h\<cdot>(tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>msg)\<cdot>acks\<cdot>buf\<cdot>(Discr (\<not>(undiscr ack)))
-   else (tsSnd_h\<cdot>(tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>msg)\<cdot>acks\<cdot>(lscons\<cdot>(up\<cdot>b)\<cdot>buf)\<cdot>ack))" 
+   else (tsSnd_h\<cdot>(tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>msg)\<cdot>acks\<cdot>(lscons\<cdot>b\<cdot>buf)\<cdot>ack))" 
 
 definition tsSnd :: "'a tstream \<rightarrow> bool tstream \<rightarrow> ('a \<times> bool) tstream" where
 "tsSnd \<equiv> \<Lambda> msg acks. delay (tsSnd_h\<cdot>msg\<cdot>acks\<cdot>\<epsilon>\<cdot>(Discr True))"  
