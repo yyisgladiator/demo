@@ -4082,7 +4082,6 @@ lemma snd_medsr_rcv_medrs_comp_well: "uspec_compwell (SND \<Otimes> MEDSR \<Otim
         apply (simp add: uspec_compwell_def)
         apply (simp add: ufunclCompWell_ufun_def f16)
         apply (simp add: comp_well_def)
-        apply (simp add: f18)
         apply (simp add:  medrs_ran)
         by (metis channel.distinct(231) channel.distinct(235) channel.distinct(239) channel.simps(234) f10 f11 f15 f3_def insertE singleton_iff snd_medsr_rcv_comp_ran ufclRan_ufun_def uspec_ran_eq)
     qed
