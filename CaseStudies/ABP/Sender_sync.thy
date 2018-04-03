@@ -14,32 +14,28 @@ fixrec tsTakeFirstTick :: "'a tstream \<rightarrow> 'a tstream" where
 "tsTakeFirstTick\<cdot>(tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>ts) = ts" |
 "ts \<noteq> \<bottom> \<Longrightarrow> tsTakeFirstTick\<cdot>(tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>t))\<cdot>ts) = tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>t))\<cdot>(tsTakeFirstTick\<cdot>ts)"
 
-fixrec tsSnd_h :: "'a tstream \<rightarrow> bool tstream \<rightarrow> bool discr \<rightarrow> ('a \<times> bool) tstream" where
+fixrec tsSnd_h :: "'a tstream \<rightarrow> bool tstream \<rightarrow> bool discr \<rightarrow> nat discr \<rightarrow> ('a \<times> bool) tstream" where
   (* bottom case *)
-"tsSnd_h\<cdot>\<bottom>\<cdot>acks\<cdot>ack = \<bottom>" |
-"tsSnd_h\<cdot>msg\<cdot>\<bottom>\<cdot>ack = \<bottom>" |
+"tsSnd_h\<cdot>\<bottom>\<cdot>acks\<cdot>ack\<cdot>cnt = \<bottom>" |
+"tsSnd_h\<cdot>msg\<cdot>\<bottom>\<cdot>ack\<cdot>cnt = \<bottom>" |
 
-  (* if an input and ack from the receiver *)
-"msg \<noteq> \<bottom> \<Longrightarrow> acks \<noteq> \<bottom> \<Longrightarrow> tsSnd_h\<cdot>(tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>m))\<cdot>msg)\<cdot>(tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>a))\<cdot>acks)\<cdot>ack = 
-  (* ack for the current msg \<Longrightarrow> send next msg *)
-  (if (a = ack) then tsSnd_h\<cdot>msg\<cdot>acks\<cdot>(Discr (\<not>(undiscr ack)))
-  (* wrong ack for the current msg \<Longrightarrow> send msg again *)
-   else (tsSnd_h\<cdot>(tsMLscons\<cdot>(up\<cdot>m)\<cdot>msg)\<cdot>acks\<cdot>ack))" |
+"msg \<noteq> \<bottom> \<Longrightarrow> acks \<noteq> \<bottom> \<Longrightarrow> tsSnd_h\<cdot>(tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>m))\<cdot>msg)\<cdot>(tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>a))\<cdot>acks)\<cdot>ack\<cdot>cnt
+ = (if (a = ack) then tsSnd_h\<cdot>msg\<cdot>acks\<cdot>(Discr (\<not>(undiscr ack)))\<cdot>(Discr 0)
+    else (tsSnd_h\<cdot>(tsMLscons\<cdot>(up\<cdot>m)\<cdot>msg)\<cdot>acks\<cdot>ack)\<cdot>cnt)" |
 
-  (* if an input and ack is a tick \<Longrightarrow> send msg again plus a tick
-     if transmission starts with tick \<Longrightarrow> #\<surd>acks = \<infinity> *)
-"msg \<noteq> \<bottom> \<Longrightarrow> tsSnd_h\<cdot>(tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>m))\<cdot>msg)\<cdot>(tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>acks)\<cdot>ack 
-  = tsMLscons\<cdot>(upApply2 Pair\<cdot>(up\<cdot>m)\<cdot>(up\<cdot>ack))\<cdot>(delayFun\<cdot>(tsSnd_h\<cdot>(tsMLscons\<cdot>(up\<cdot>m)\<cdot>(tsTakeFirstTick\<cdot>msg))\<cdot>acks\<cdot>ack))" |
+"msg \<noteq> \<bottom> \<Longrightarrow> tsSnd_h\<cdot>(tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>m))\<cdot>msg)\<cdot>(tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>acks)\<cdot>ack\<cdot>cnt
+ = (if (cnt=Discr 0) then (tsMLscons\<cdot>(upApply2 Pair\<cdot>(up\<cdot>m)\<cdot>(up\<cdot>ack))\<cdot>(delayFun\<cdot>(tsSnd_h\<cdot>(tsMLscons\<cdot>(up\<cdot>m)\<cdot>(tsTakeFirstTick\<cdot>msg))\<cdot>acks\<cdot>ack\<cdot>(Discr 2))))
+   else (tsSnd_h\<cdot>(tsMLscons\<cdot>(up\<cdot>m)\<cdot>(tsTakeFirstTick\<cdot>msg))\<cdot>acks\<cdot>ack\<cdot>(Discr ((undiscr cnt) -1))))" |
 
   (* if input is a tick \<Longrightarrow> send tick *)
-"tsSnd_h\<cdot>(tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>msg)\<cdot>(tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>acks)\<cdot>ack
-   = delayFun\<cdot>(tsSnd_h\<cdot>msg\<cdot>acks\<cdot>ack)" |
+"tsSnd_h\<cdot>(tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>msg)\<cdot>(tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>acks)\<cdot>ack\<cdot>cnt
+   = delayFun\<cdot>(tsSnd_h\<cdot>msg\<cdot>acks\<cdot>ack\<cdot>cnt)" |
 
-"acks \<noteq> \<bottom> \<Longrightarrow> tsSnd_h\<cdot>(tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>msg)\<cdot>(tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>a))\<cdot>acks)\<cdot>ack
-  = (tsSnd_h\<cdot>(tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>msg)\<cdot>acks\<cdot>ack)"
+"acks \<noteq> \<bottom> \<Longrightarrow> tsSnd_h\<cdot>(tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>msg)\<cdot>(tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>a))\<cdot>acks)\<cdot>ack\<cdot>cnt
+  = (tsSnd_h\<cdot>(tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>msg)\<cdot>acks\<cdot>ack\<cdot>cnt)"
 
 definition tsSnd :: "'a tstream \<rightarrow> bool tstream \<rightarrow> ('a \<times> bool) tstream" where
-"tsSnd \<equiv> \<Lambda> msg acks. delay (tsSnd_h\<cdot>msg\<cdot>acks\<cdot>(Discr True))"  
+"tsSnd \<equiv> \<Lambda> msg acks. delay (tsSnd_h\<cdot>msg\<cdot>acks\<cdot>(Discr True)\<cdot>(Discr 0))"  
 
 (* ----------------------------------------------------------------------- *)
 section {* basic properties *}
