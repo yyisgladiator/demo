@@ -2201,7 +2201,7 @@ shows "ubDom\<cdot>(ubFix (fixABPHelperCont_ext s ora1 ora2 tb) {c_abpOut, c_ar,
   apply (subst ubdom_lub2)
    apply (simp add: fixABPHelper_ext_chain assms)
   by (simp add: fixABPHelperCont_ext_iter_dom assms)
-
+                          
 paragraph \<open>fixABPHlperCont iter step\<close>
 lemma fixABPHelperCont_ext_iter_1:   assumes "se \<in> tsSender" and "(#({True} \<ominus> ora1) = \<infinity>)"
   and "(#({True} \<ominus> ora2) = \<infinity>)"
@@ -2315,6 +2315,25 @@ proof -
     by simp
 qed
 
+lemma fixABPHelperCont_ext_iter_4_c_as2:   assumes "se \<in> tsSender" and "(#({True} \<ominus> ora1) = \<infinity>)"
+  and "(#({True} \<ominus> ora2) = \<infinity>)"
+shows"(iterate (Suc (Suc (Suc (Suc n))))\<cdot>(fixABPHelperCont_ext se ora1 ora2 tb)\<cdot>x) . c_as = 
+          tsMap (Bool::bool \<Rightarrow> 'a MABP)\<cdot>(tsMed\<cdot>(tsMap invBool\<cdot>((iterate (Suc (Suc (Suc n)))\<cdot>(fixABPHelperCont_ext se ora1 ora2 tb)\<cdot>x) . c_ar))\<cdot>ora2)"
+proof -
+  obtain iterate2 where iterate2_def: "iterate2 =  (iterate (Suc (Suc (Suc n)))\<cdot>(fixABPHelperCont_ext se ora1 ora2 tb)\<cdot>x)"
+    by simp
+  have f1: "(iterate (Suc (Suc (Suc (Suc n))))\<cdot>(fixABPHelperCont_ext se ora1 ora2 tb)\<cdot>x) =
+(fixABPHelperCont_ext se ora1 ora2 tb)\<cdot>iterate2"
+    apply (simp only: iterate2_def)
+    by (simp only:fixABPHelperCont_ext_apply)
+  show ?thesis
+    apply (subst f1)
+    apply (fold iterate2_def)
+    apply (simp add: fixABPHelper_ext_cont assms)
+    apply (simp only: ubgetch_ubrep_eq ABPBundleHelper_ext_ubWell)
+    by simp
+qed
+
 lemma fixABPHelperCont_ext_iter_4_c_as:   assumes "se \<in> tsSender" and "(#({True} \<ominus> ora1) = \<infinity>)"
   and "(#({True} \<ominus> ora2) = \<infinity>)"
 shows"(iterate (Suc (Suc (Suc (Suc n))))\<cdot>(fixABPHelperCont_ext se ora1 ora2 tb)\<cdot>x) . c_as = 
@@ -2381,6 +2400,20 @@ lemma ABPBundleHelper_chain: assumes "chain Y"
   apply (meson assms fst_monofun monofun_cfun_arg po_class.chainE)
   apply rule + apply simp
   by (simp add: assms monofun_cfun_arg po_class.chainE snd_monofun)
+
+lemma ABPBundleHelper_getch: "Abs_ubundle (ABPBundleHelper s ora1 ora2 tb x)  .  c = 
+(ABPBundleHelper s ora1 ora2 tb x)\<rightharpoonup>c"
+proof -
+  obtain helper where helper_def: "helper = (ABPBundleHelper s ora1 ora2 tb x)"
+    by simp
+  have f1: "ubWell helper"
+    apply (simp add: helper_def)
+    by (simp only: ABPBundleHelper_ubWell)
+  show ?thesis
+    apply (fold helper_def)
+    apply (simp add: ubgetch_insert)
+    by (simp add: f1)
+qed
 
 paragraph \<open>fixABPHelper\<close>
 lemma fixABPHelper_dom:  assumes "s \<in> tsSender" and "(#({True} \<ominus> ora1) = \<infinity>)"
@@ -2998,14 +3031,9 @@ Abs_ubundle [
 
   obtain abphelper_chain where abphelper_chain_def: "abphelper_chain = (\<lambda> i. (iterate i\<cdot>(\<Lambda> (x::'a MABP tstream\<^sup>\<Omega>). Abs_ubundle (ABPBundleHelper s ora1 ora2 tb x))\<cdot>(ubclLeast {c_abpOut, c_ar, c_as, c_dr, c_ds})))"
     by simp
-  obtain abphelper_chain_shift where abphelper_chain_shift_def: "abphelper_chain_shift = (\<lambda> i. abphelper_chain (i + 3))"
-    by simp
   have abphelper_chain_ischain: "chain abphelper_chain"
     apply (simp add:  abphelper_chain_def)
     by (simp add: fixABPHelper_chain f12 f13 f14)
-  have abphelper_chain_shift_ischain: "chain abphelper_chain_shift"
-    apply (simp add:  abphelper_chain_shift_def)
-    by (simp add: abphelper_chain_ischain chain_shift)
 (*
   have abphelper_chain_c_abpOut_eq: "Lub abphelper_chain . c_abpOut = Lub (\<lambda> i. iterate i\<cdot>(\<Lambda> (x::'a MABP tstream\<^sup>\<Omega>). Abs_ubundle (ABPBundleHelper s ora1 ora2 tb x))\<cdot>(ubclLeast {c_abpOut, c_ar, c_as, c_dr, c_ds})) . c_abpOut"
     apply (simp add: abphelper_chain_def)
@@ -3029,13 +3057,8 @@ Abs_ubundle [
 *)
   obtain abphelper_ext_chain where abphelper_ext_chain_def: "abphelper_ext_chain = (\<lambda> i. ubclRestrict {c_idOut, c_as}\<cdot>(iterate i\<cdot>(\<Lambda> (x::'a MABP tstream\<^sup>\<Omega>). Abs_ubundle (ABPBundleHelper_ext s ora1 ora2 tb x))\<cdot>(ubclLeast {c_abpOut, c_ar, c_as, c_dr, c_ds, c_idOut})))"
     by simp
-  obtain abphelper_ext_chain2 where abphelper_ext_chain2_def: "abphelper_ext_chain2 = (\<lambda> i. ubclRestrict {c_abpOut, c_ar, c_as, c_dr, c_ds}\<cdot>(iterate i\<cdot>(\<Lambda> (x::'a MABP tstream\<^sup>\<Omega>). Abs_ubundle (ABPBundleHelper_ext s ora1 ora2 tb x))\<cdot>(ubclLeast {c_abpOut, c_ar, c_as, c_dr, c_ds, c_idOut})))"
-    by simp
   obtain abphelper_ext_chain_shift where abphelper_ext_chain_shift_def: "abphelper_ext_chain_shift = (\<lambda> i. abphelper_ext_chain (4 * (Suc i)))"
     by simp
-  obtain abphelper_ext_chain_shift1 where abphelper_ext_chain_shift1_def: "abphelper_ext_chain_shift1 = (\<lambda> i. abphelper_ext_chain (i + 4))"
-    by simp
-
   obtain innerABP_chain where innerABP_chain_def: "innerABP_chain = (\<lambda> i::nat. iter_ubfix2 (ufFeedH (innerABP s ora1 ora2)) i {c_idOut, c_as} tb)"
     by simp
   obtain innerABP_chain_shift where innerABP_chain_shift_def: "innerABP_chain_shift = (\<lambda> i. innerABP_chain (Suc i))"
@@ -3056,23 +3079,7 @@ Abs_ubundle [
     apply (induct_tac i)
      apply simp
     by simp
-  have abphelper_ext_chain2_ischain: "chain abphelper_ext_chain2"
-    apply (simp add: abphelper_ext_chain2_def)
-    apply (simp add: ubclRestrict_ubundle_def)
-    apply (rule chainI)
-    apply (rule ubrestrict_belowI1)
-    apply (rule chainE)
-    apply (subst fixABPHelper_ext_chain)
-    by (simp_all add: f12 f13 f14)
 
-  have abphelper_ext_chain_shift1_ischain: "chain abphelper_ext_chain_shift1"
-    apply (rule chainI)
-    apply (simp add: abphelper_ext_chain_shift1_def)
-    apply (rule chain_mono_less)
-     apply (simp add: abphelper_ext_chain_ischain)
-    apply (induct_tac i)
-     apply simp
-    by simp
   have abphelper_ext_chain_shift_in_range : "\<And> i . abphelper_ext_chain_shift i \<in> range abphelper_ext_chain"
     by (simp add: abphelper_ext_chain_shift_def abphelper_ext_chain_def)
   have abphelper_ext_chain_shift_lub_eq: "Lub abphelper_ext_chain = Lub abphelper_ext_chain_shift"
@@ -3085,10 +3092,6 @@ Abs_ubundle [
       apply (simp add: abphelper_ext_chain_ischain)
      apply (induct_tac i)
     by (simp add: abphelper_ext_chain_ischain abphelper_ext_chain_shift_ischain cpo is_ub_thelub_ex abphelper_ext_chain_shift_in_range lub_below) +
-  have abphelper_ext_chain_shift1_lub_eq: "Lub abphelper_ext_chain_shift1 = Lub abphelper_ext_chain "
-    apply (simp only: abphelper_ext_chain_shift1_def)
-    apply (rule lub_range_shift)
-    by (simp add: abphelper_ext_chain_ischain)
 
   have innerABP_chain_ischain: "chain innerABP_chain"
     apply (simp add: innerABP_chain_def)
@@ -3525,7 +3528,7 @@ ufFeedH (innerABP s ora1 ora2) tb\<cdot>(ufFeedH (innerABP s ora1 ora2) tb\<cdot
 
   have f20001: "(ubFix (fixABPHelperCont_ext s ora1 ora2 tb) {c_abpOut, c_ar, c_as, c_dr, c_ds, c_idOut}) = 
 iterate (Suc (Suc (Suc (Suc 0))))\<cdot>(fixABPHelperCont_ext s ora1 ora2 tb)\<cdot>(ubFix (fixABPHelperCont_ext s ora1 ora2 tb) {c_abpOut, c_ar, c_as, c_dr, c_ds, c_idOut})"
-    apply (subst ubfix_eq, simp add: f20000)
+    apply (subst ubfix_eq, simp add: f20000) 
     apply (subst ubfix_eq, simp add: f20000)
     apply (subst ubfix_eq, simp add: f20000)
     apply (subst ubfix_eq, simp add: f20000)
@@ -3894,7 +3897,8 @@ proof -
     apply (subst ufcomp_serial_iterconst_eq)
       apply (simp add:  med_tspfran2 med_tspfdom2 f13 sender_tspfran  sender_tspfdom) +
     by (simp only: ubclRestrict_ubundle_def ubclUnion_ubundle_def)
-  
+
+paragraph \<open>m_msr_sercomp\<close>
   obtain s_msr_sercomp where s_msr_sercomp_def: "s_msr_sercomp = (ufComp (senderTSPF s) (medSR_TSPF ora1))"
     by simp
 
@@ -3928,6 +3932,163 @@ proof -
   have some_eq: "\<And> a b. a = b \<Longrightarrow> Some a = Some b"
     by simp 
 
+  have s_msr_dom_empt: "\<And> x. ubDom\<cdot>x = ufDom\<cdot>(senderTSPF s) \<Longrightarrow> ubDom\<cdot>(senderTSPF s \<rightleftharpoons> x) \<inter> ubDom\<cdot>(medSR_TSPF ora1 \<rightleftharpoons> (senderTSPF s \<rightleftharpoons> x)) = {}"
+    by (metis f13 ctype_MABP.simps(4) med_tspfdom2 s_msr_ran_empt sender_tspfran ubclDom_ubundle_def ufran_2_ubcldom2)
+  have s_msr_apply: "\<And> x. ubDom\<cdot>x = ufDom\<cdot>(senderTSPF s) \<Longrightarrow> ufComp (senderTSPF s) (medSR_TSPF ora1) \<rightleftharpoons> x =
+(ubUnion\<cdot>((senderTSPF s) \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>(senderTSPF s))\<cdot>x))\<cdot>((medSR_TSPF ora1) \<rightleftharpoons> ((senderTSPF s) \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>(senderTSPF s))\<cdot>x))))"
+    apply (subst s_msr_apply_sercomp_eq)
+    by (simp add: assms ubclDom_ubundle_def)
+  have s_msr_apply2: "\<And> x. ubDom\<cdot>x = ufDom\<cdot>(senderTSPF s) \<Longrightarrow> ufComp (senderTSPF s) (medSR_TSPF ora1) \<rightleftharpoons> x =
+(ubUnion\<cdot>((medSR_TSPF ora1) \<rightleftharpoons> ((senderTSPF s) \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>(senderTSPF s))\<cdot>x))))\<cdot>((senderTSPF s) \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>(senderTSPF s))\<cdot>x))"
+    apply (subst s_msr_apply_sercomp_eq)
+    apply (simp add: assms ubclDom_ubundle_def)
+    apply (simp only: ubclRestrict_ubundle_def)
+    apply (simp only: assms ubrestrict_id)
+    using s_msr_dom_empt ubunion_commutative by blast
+
+  have s_msr_recv_iter_ubfix2_dom: "\<And> i x. ubDom\<cdot>x = ufDom\<cdot>(senderTSPF s) \<Longrightarrow>
+    ubDom\<cdot>(iter_ubfix2 (ufCompH s_msr_sercomp recvTSPF) i (ufRan\<cdot>s_msr_sercomp \<union> ufRan\<cdot>recvTSPF) x) = ufRan\<cdot>s_msr_sercomp \<union> ufRan\<cdot>recvTSPF"
+    apply (fold ubclDom_ubundle_def)
+    apply (subst iter_ubfix2_dom)
+    using assms io_eq_s_msr_recv apply blast
+    by (simp add: recv_tspfran ubcldom_least_cs)
+        
+  have s_msr_ran_recv_dom_eq: "\<And> x. ubDom\<cdot>x = ufDom\<cdot>(senderTSPF s) \<Longrightarrow> ubDom\<cdot>(medSR_TSPF ora1 \<rightleftharpoons> (senderTSPF s \<rightleftharpoons> x)) = ufDom\<cdot>recvTSPF"
+    apply (fold ubclDom_ubundle_def)
+    apply (subst ufran_2_ubcldom2) +
+      apply (simp add: assms ubclDom_ubundle_def)
+    by (simp add:  med_tspfran2 med_tspfdom2 f13 sender_tspfran  sender_tspfdom recv_tspfran recv_tspfdom)  +
+
+  have lub_max_in_chain_eq: "\<And> x. ubDom\<cdot>x = ufDom\<cdot>(senderTSPF s) \<Longrightarrow>
+    ubFix (ufCompH s_msr_sercomp recvTSPF x) (ufRan\<cdot>s_msr_sercomp \<union> ufRan\<cdot>recvTSPF) = 
+ubclUnion\<cdot>(s_msr_sercomp \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>s_msr_sercomp)\<cdot>x))\<cdot>(recvTSPF \<rightleftharpoons> ubclRestrict (ufDom\<cdot>recvTSPF)\<cdot>(s_msr_sercomp \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>s_msr_sercomp)\<cdot>x)))"
+  proof (simp only: ubFix_def)
+    fix x::"'a MABP tstream\<^sup>\<Omega>"
+    assume a1: "ubDom\<cdot>x = ufDom\<cdot>(senderTSPF s)"  
+    have f3215_iter_2: "\<And> i. ubclRestrict (ufDom\<cdot>recvTSPF)\<cdot>(iter_ubfix2 (ufCompH s_msr_sercomp recvTSPF) (Suc (Suc i)) (ufRan\<cdot>s_msr_sercomp \<union> ufRan\<cdot>recvTSPF) x) =  
+                                              ((medSR_TSPF ora1) \<rightleftharpoons> ((senderTSPF s) \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>(senderTSPF s))\<cdot>x)))"
+      proof -
+        fix i::nat
+        have f32151: "\<And> i. (iter_ubfix2 (ufCompH s_msr_sercomp recvTSPF) (Suc (Suc i)) (ufRan\<cdot>s_msr_sercomp \<union> ufRan\<cdot>recvTSPF) x) = 
+((ufCompH s_msr_sercomp recvTSPF) x)\<cdot>(iter_ubfix2 (ufCompH s_msr_sercomp recvTSPF) (Suc i) (ufRan\<cdot>s_msr_sercomp \<union> ufRan\<cdot>recvTSPF) x)"
+          by (simp add: recv_tspfran)
+        have x_iter_ubfix2_restrict_union_recv_ran: "\<And>i. ubDom\<cdot>(recvTSPF \<rightleftharpoons> (ubRestrict (ufDom\<cdot>recvTSPF)\<cdot>(ubUnion\<cdot>x\<cdot>(iter_ubfix2 (ufCompH s_msr_sercomp recvTSPF) i (ufRan\<cdot>s_msr_sercomp \<union> ufRan\<cdot>recvTSPF) x)))) = ufRan\<cdot>recvTSPF"
+          apply (fold ubclDom_ubundle_def)
+          apply (fold ubclUnion_ubundle_def)
+          apply (fold ubclRestrict_ubundle_def)
+          apply (subst ufran_2_ubcldom2)
+           apply (simp only: ubclrestrict_dom ubclunion_ubcldom)
+           apply (subst iter_ubfix2_dom)
+            apply (metis a1 io_eq_s_msr_recv ubclDom_ubundle_def)
+           apply (subst s_msr_sercomp_ran)
+           apply (simp add:  med_tspfran2 med_tspfdom2 f13 sender_tspfran  sender_tspfdom recv_tspfran recv_tspfdom)
+        by (simp add: recv_tspfdom recv_tspfran)
+        have f3215_iter2_unionL: "ubclRestrict (ufDom\<cdot>s_msr_sercomp)\<cdot>(ubclUnion\<cdot>x\<cdot>(iter_ubfix2 (ufCompH s_msr_sercomp recvTSPF) (Suc i) (ufRan\<cdot>s_msr_sercomp \<union> ufRan\<cdot>recvTSPF) x)) = x"
+          apply (simp add: ubclRestrict_ubundle_def ubclUnion_ubundle_def)
+          apply (subst ubunion_restrict2)
+           apply (fold ubclDom_ubundle_def)
+           apply (subst ufCompH_dom)
+             apply (simp add: ubclDom_ubundle_def s_msr_sercomp_recv_compI sender_tspfdom a1)
+            apply (metis iter_ufCompH_dom recv_tspfran s_msr_sercomp_recv_compI sender_tspfdom ubclDom_ubundle_def a1)
+           apply (metis a1 Diff_disjoint s_msr_sercomp_dom s_msr_sercomp_recv_compI sender_tspfdom ufCompI_def)
+          by (simp add: s_msr_sercomp_dom a1)
+        show "ubclRestrict (ufDom\<cdot>recvTSPF)\<cdot>(iter_ubfix2 (ufCompH s_msr_sercomp recvTSPF) (Suc (Suc i)) (ufRan\<cdot>s_msr_sercomp \<union> ufRan\<cdot>recvTSPF) x) =  ((medSR_TSPF ora1) \<rightleftharpoons> ((senderTSPF s) \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>(senderTSPF s))\<cdot>x)))"
+          apply (subst f32151)
+          apply (simp only: ufcomph_insert)
+          apply (simp only: ubclRestrict_ubundle_def ubclUnion_ubundle_def)
+          apply (subst ubunion_restrict2)
+           apply (subst x_iter_ubfix2_restrict_union_recv_ran)
+           apply (simp add: recv_tspfdom recv_tspfran)
+           apply (fold ubclUnion_ubundle_def)
+          apply (fold ubclRestrict_ubundle_def)
+          apply (subst f3215_iter2_unionL)
+          apply (simp only: s_msr_sercomp_def)
+          apply (simp add: a1 s_msr_apply)
+          apply (simp only: ubclRestrict_ubundle_def a1 ubrestrict_id)
+          apply (subst ubunion_restrict)
+           apply (simp add: a1 s_msr_ran_recv_dom_eq)
+          by simp
+      qed          
+    have max_comp: "\<And>i. (iter_ufCompH s_msr_sercomp recvTSPF (Suc (Suc (Suc i))) x) = 
+      ubclUnion\<cdot>(s_msr_sercomp \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>s_msr_sercomp)\<cdot>x))\<cdot>(recvTSPF \<rightleftharpoons> ubclRestrict (ufDom\<cdot>recvTSPF)\<cdot>(s_msr_sercomp \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>s_msr_sercomp)\<cdot>x)))"
+    proof -
+      fix i::nat
+      have f32151: "\<And> i. (iter_ubfix2 (ufCompH s_msr_sercomp recvTSPF) (Suc (Suc i)) (ufRan\<cdot>s_msr_sercomp \<union> ufRan\<cdot>recvTSPF) x) = 
+  ((ufCompH s_msr_sercomp recvTSPF) x)\<cdot>(iter_ubfix2 (ufCompH s_msr_sercomp recvTSPF) (Suc i) (ufRan\<cdot>s_msr_sercomp \<union> ufRan\<cdot>recvTSPF) x)"
+        by (simp add: recv_tspfran)
+      obtain iter2 where iter2_def: "iter2 = (iter_ufCompH s_msr_sercomp recvTSPF  (Suc (Suc i)) x)"
+        by simp
+      have f1: "(iter_ufCompH s_msr_sercomp recvTSPF (Suc (Suc (Suc i))) x) = ufCompH s_msr_sercomp recvTSPF x\<cdot>iter2"
+        by (simp add: iter2_def)
+      have f2: "ubRestrict (ufDom\<cdot>recvTSPF)\<cdot>(ubUnion\<cdot>x\<cdot>iter2) = ubRestrict (ufDom\<cdot>recvTSPF)\<cdot>iter2"
+        apply (subst ubunion_commutative)
+         apply (simp only: iter2_def)
+         apply (fold ubclDom_ubundle_def)
+         apply (subst iter_ubfix2_dom)
+          apply (metis a1 io_eq_s_msr_recv ubclDom_ubundle_def)
+         apply (metis ubclDom_ubundle_def a1 s_msr_sercomp_recv_compI sender_dom ufCompO_def ufcomp_I_inter_Oc_empty)
+        apply (subst ubunion_restrict2)
+         apply (simp add: a1 sender_dom recv_tspfdom)
+        by (simp add: recv_tspfdom)
+      have f3: "ubclRestrict (ufDom\<cdot>recvTSPF)\<cdot>(s_msr_sercomp \<rightleftharpoons> x) = ((medSR_TSPF ora1) \<rightleftharpoons> ((senderTSPF s) \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>(senderTSPF s))\<cdot>x)))"
+        apply (simp add: s_msr_sercomp_def)
+        apply (subst s_msr_apply_sercomp_eq)
+        apply (simp add: a1 ubclDom_ubundle_def)
+        apply (simp only: ubclRestrict_ubundle_def) 
+        apply (simp only: ubrestrict_id a1)
+        apply (subst ubunion_restrict) 
+        using a1 s_msr_ran_recv_dom_eq apply blast
+        by simp
+      show "(iter_ufCompH s_msr_sercomp recvTSPF (Suc (Suc (Suc i))) x) = 
+      ubclUnion\<cdot>(s_msr_sercomp \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>s_msr_sercomp)\<cdot>x))\<cdot>(recvTSPF \<rightleftharpoons> ubclRestrict (ufDom\<cdot>recvTSPF)\<cdot>(s_msr_sercomp \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>s_msr_sercomp)\<cdot>x)))"
+        apply (subst f1)
+        apply (simp only: ufcomph_insert)
+        apply (simp only: ubclRestrict_ubundle_def ubclUnion_ubundle_def)
+        apply (subst ubunion_restrict2)
+         apply (simp only: iter2_def)
+         apply (fold ubclDom_ubundle_def)
+         apply (subst iter_ubfix2_dom)
+          apply (subst io_eq_s_msr_recv)
+           apply (simp add: a1 ubclDom_ubundle_def)
+        using ubclDom_ubundle_def a1 io_eq_s_msr_recv apply blast
+         apply (metis Int_commute s_msr_sercomp_dom s_msr_sercomp_recv_compI sender_dom ufCompO_def ufcomp_I_inter_Oc_empty)
+        apply (simp add: a1 s_msr_sercomp_dom)
+        apply (subst f2)
+        apply (simp only: iter2_def)
+        apply (fold ubclRestrict_ubundle_def)
+        apply (fold ubclUnion_ubundle_def)
+        apply (subst f3215_iter_2)
+        apply (simp only:  ubclRestrict_ubundle_def a1 ubrestrict_id)
+        apply (fold ubclRestrict_ubundle_def)
+        apply (simp only: f3)
+        by (simp only:  ubclRestrict_ubundle_def a1 ubrestrict_id)
+    qed
+    have max_in_chain_s_msr_r: "max_in_chain (Suc (Suc (Suc 0))) (\<lambda>i. iter_ufCompH s_msr_sercomp recvTSPF i x)"
+    proof (rule max_in_chainI)
+      fix j
+      assume a11: "Suc (Suc (Suc 0)) \<le> j"
+      have f1: "ufDom\<cdot>s_msr_sercomp \<inter> ufDom\<cdot>recvTSPF = {}"
+        by (simp add: s_msr_sercomp_dom sender_dom recv_tspfdom)
+      obtain k where o1: "j = Suc (Suc (Suc k))"
+        by (metis (no_types) Suc_leD Suc_n_not_le_n a11 not0_implies_Suc)  
+      show "iter_ubfix2 (ufCompH s_msr_sercomp recvTSPF) (Suc (Suc (Suc 0))) (ufRan\<cdot>s_msr_sercomp \<union> ufRan\<cdot>recvTSPF) x =
+         iter_ubfix2 (ufCompH s_msr_sercomp recvTSPF) j (ufRan\<cdot>s_msr_sercomp \<union> ufRan\<cdot>recvTSPF) x"
+        apply (subst o1)
+        by (metis a1 max_comp recv_tspfran)
+    qed
+    have f1: "ufRan\<cdot>(recvTSPF::('a MABP tstream\<^sup>\<Omega>) ufun) = ufRan\<cdot>(recvTSPF::('b MABP tstream\<^sup>\<Omega>) ufun)"
+      by (simp add: recv_tspfran)
+    have f2: "(iter_ufCompH s_msr_sercomp recvTSPF (Suc (Suc (Suc 0))) x) = 
+      ubclUnion\<cdot>(s_msr_sercomp \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>s_msr_sercomp)\<cdot>x))\<cdot>(recvTSPF \<rightleftharpoons> ubclRestrict (ufDom\<cdot>recvTSPF)\<cdot>(s_msr_sercomp \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>s_msr_sercomp)\<cdot>x)))"
+      using max_comp by blast
+    have "chain (\<lambda>n. iter_ubfix2 (ufCompH s_msr_sercomp recvTSPF) n (ufRan\<cdot>s_msr_sercomp \<union> ufRan\<cdot>(recvTSPF::('a MABP tstream\<^sup>\<Omega>) ufun)) x)"
+      by (metis (no_types, lifting) a1 cont_pref_eq2I io_eq_s_msr_recv iterate_Suc2 po_class.chainI ubclDom_ubundle_def ubcldom_least)
+    then show "(\<Squnion>n. iter_ubfix2 (ufCompH s_msr_sercomp recvTSPF) n (ufRan\<cdot>s_msr_sercomp \<union> ufRan\<cdot>(recvTSPF::('b MABP tstream\<^sup>\<Omega>) ufun)) x) = 
+ubclUnion\<cdot>(s_msr_sercomp \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>s_msr_sercomp)\<cdot>x))\<cdot>(recvTSPF \<rightleftharpoons> ubclRestrict (ufDom\<cdot>recvTSPF)\<cdot>(s_msr_sercomp \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>s_msr_sercomp)\<cdot>x)))"
+      apply (fold f2)
+      using f1 max_in_chain_s_msr_r maxinch_is_thelub by fastforce
+  qed
+
   have f32: "Rep_cufun (ufComp (ufComp (senderTSPF s) (medSR_TSPF ora1)) recvTSPF)
         = (\<lambda> x. (ubclDom\<cdot>x = ufDom\<cdot>(senderTSPF s)) \<leadsto> (ubUnion\<cdot>(ubUnion\<cdot>((senderTSPF s) \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>(senderTSPF s))\<cdot>x))\<cdot>((medSR_TSPF ora1) \<rightleftharpoons> ((senderTSPF s) \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>(senderTSPF s))\<cdot>x)))))\<cdot>
                                                                                               (recvTSPF \<rightleftharpoons>((medSR_TSPF ora1) \<rightleftharpoons> ((senderTSPF s) \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>(senderTSPF s))\<cdot>x)))))"
@@ -3956,12 +4117,6 @@ proof -
           Some ((ubUnion\<cdot>(ubUnion\<cdot>((senderTSPF s) \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>(senderTSPF s))\<cdot>x))\<cdot>((medSR_TSPF ora1) \<rightleftharpoons> ((senderTSPF s) \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>(senderTSPF s))\<cdot>x)))))\<cdot>
                                                                                               (recvTSPF \<rightleftharpoons>((medSR_TSPF ora1) \<rightleftharpoons> ((senderTSPF s) \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>(senderTSPF s))\<cdot>x)))))"
         using a1 by auto
-
-      have s_msr_recv_iter_ubfix2_dom: "\<And> i. ubDom\<cdot>(iter_ubfix2 (ufCompH s_msr_sercomp recvTSPF) i (ufRan\<cdot>s_msr_sercomp \<union> ufRan\<cdot>recvTSPF) x) = ufRan\<cdot>s_msr_sercomp \<union> ufRan\<cdot>recvTSPF"
-        apply (fold ubclDom_ubundle_def)
-        apply (subst iter_ubfix2_dom)
-        using a1 io_eq_s_msr_recv apply blast
-        by (simp add: recv_tspfran ubcldom_least_cs)
       have f3214: "Rep_cufun (ufComp s_msr_sercomp recvTSPF) x = Some (ubFix (ufCompH s_msr_sercomp recvTSPF x) (ufRan\<cdot>s_msr_sercomp \<union> ufRan\<cdot>recvTSPF))"
         apply (simp add: ufComp_def)
         apply (subst rep_abs_cufun)
@@ -3969,173 +4124,35 @@ proof -
          apply (rule ufcomp_well)
          apply (subst s_msr_sercomp_ran)
          apply (simp add:  med_tspfran2 med_tspfdom2 f13 sender_tspfran  sender_tspfdom recv_tspfran) 
-        by (metis a1 s_msr_sercomp_recv_compI s_msr_recv_iter_ubfix2_dom sender_tspfdom)
+        by (simp add: recv_tspfran s_msr_sercomp_recv_compI sender_tspfdom x_ubcldom)
       have f32151: "\<And> i. (iter_ubfix2 (ufCompH s_msr_sercomp recvTSPF) (Suc (Suc i)) (ufRan\<cdot>s_msr_sercomp \<union> ufRan\<cdot>recvTSPF) x) = 
 ((ufCompH s_msr_sercomp recvTSPF) x)\<cdot>(iter_ubfix2 (ufCompH s_msr_sercomp recvTSPF) (Suc i) (ufRan\<cdot>s_msr_sercomp \<union> ufRan\<cdot>recvTSPF) x)"
         by (simp add: recv_tspfran)
-      have s_msr_dom_empt: "ubDom\<cdot>(senderTSPF s \<rightleftharpoons> x) \<inter> ubDom\<cdot>(medSR_TSPF ora1 \<rightleftharpoons> (senderTSPF s \<rightleftharpoons> x)) = {}"
-        apply (fold ubclDom_ubundle_def)
-        by (metis a1 c_dr_boolpair_ctype f13 med_tspfdom2 s_msr_ran_empt sender_tspfran ufran_2_ubcldom2)
-      have s_msr_apply: "ufComp (senderTSPF s) (medSR_TSPF ora1) \<rightleftharpoons> x =
-(ubUnion\<cdot>((senderTSPF s) \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>(senderTSPF s))\<cdot>x))\<cdot>((medSR_TSPF ora1) \<rightleftharpoons> ((senderTSPF s) \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>(senderTSPF s))\<cdot>x))))"
-          apply (subst s_msr_apply_sercomp_eq)
-        by (simp add: f32101 ubclDom_ubundle_def)
-      have s_msr_apply2: "ufComp (senderTSPF s) (medSR_TSPF ora1) \<rightleftharpoons> x =
-(ubUnion\<cdot>((medSR_TSPF ora1) \<rightleftharpoons> ((senderTSPF s) \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>(senderTSPF s))\<cdot>x))))\<cdot>((senderTSPF s) \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>(senderTSPF s))\<cdot>x))"
-        apply (subst s_msr_apply_sercomp_eq)
-        apply (simp add: f32101 ubclDom_ubundle_def)
-        apply (simp only: ubclRestrict_ubundle_def)
-        apply (simp only: x_sender_restrict_id)
-        using s_msr_dom_empt ubunion_commutative by blast
-      have x_iter_ubfix2_restrict_union_recv_ran: "\<And>i. ubDom\<cdot>(recvTSPF \<rightleftharpoons> (ubRestrict (ufDom\<cdot>recvTSPF)\<cdot>(ubUnion\<cdot>x\<cdot>(iter_ubfix2 (ufCompH s_msr_sercomp recvTSPF) i (ufRan\<cdot>s_msr_sercomp \<union> ufRan\<cdot>recvTSPF) x)))) = ufRan\<cdot>recvTSPF"
-        apply (fold ubclDom_ubundle_def)
-        apply (fold ubclUnion_ubundle_def)
-        apply (fold ubclRestrict_ubundle_def)
-        apply (subst ufran_2_ubcldom2)
-         apply (simp only: ubclrestrict_dom ubclunion_ubcldom)
-         apply (subst iter_ubfix2_dom)
-        using a1 io_eq_s_msr_recv apply blast
-         apply (subst s_msr_sercomp_ran)
-         apply (simp add:  med_tspfran2 med_tspfdom2 f13 sender_tspfran  sender_tspfdom recv_tspfran recv_tspfdom) 
-        by (simp add: recv_tspfdom recv_tspfran)
-      have s_msr_ran_recv_dom_eq: "ubDom\<cdot>(medSR_TSPF ora1 \<rightleftharpoons> (senderTSPF s \<rightleftharpoons> x)) = ufDom\<cdot>recvTSPF"
-        apply (fold ubclDom_ubundle_def)
-        apply (subst ufran_2_ubcldom2) +
-          apply (simp add: f32101 ubclDom_ubundle_def)
-        by (simp add:  med_tspfran2 med_tspfdom2 f13 sender_tspfran  sender_tspfdom recv_tspfran recv_tspfdom)  +
-      have f3215_iter_2: "\<And> i. ubclRestrict (ufDom\<cdot>recvTSPF)\<cdot>(iter_ubfix2 (ufCompH s_msr_sercomp recvTSPF) (Suc (Suc i)) (ufRan\<cdot>s_msr_sercomp \<union> ufRan\<cdot>recvTSPF) x) =  
-                                              ((medSR_TSPF ora1) \<rightleftharpoons> ((senderTSPF s) \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>(senderTSPF s))\<cdot>x)))"
-      proof -
-        fix i::nat
-        have f3215_iter2_unionL: "ubclRestrict (ufDom\<cdot>s_msr_sercomp)\<cdot>(ubclUnion\<cdot>x\<cdot>(iter_ubfix2 (ufCompH s_msr_sercomp recvTSPF) (Suc i) (ufRan\<cdot>s_msr_sercomp \<union> ufRan\<cdot>recvTSPF) x)) = x"
-          apply (simp add: ubclRestrict_ubundle_def ubclUnion_ubundle_def)
-          apply (subst ubunion_restrict2)
-           apply (fold ubclDom_ubundle_def)
-           apply (subst ufCompH_dom)
-             apply (simp add: s_msr_sercomp_recv_compI sender_tspfdom x_ubcldom)
-            apply (simp add: s_msr_recv_iter_ubfix2_dom ubclDom_ubundle_def)
-           apply (metis Diff_disjoint s_msr_sercomp_dom s_msr_sercomp_recv_compI sender_tspfdom ufCompI_def)
-          by (simp add: s_msr_sercomp_dom x_sender_restrict_id)
-        show "ubclRestrict (ufDom\<cdot>recvTSPF)\<cdot>(iter_ubfix2 (ufCompH s_msr_sercomp recvTSPF) (Suc (Suc i)) (ufRan\<cdot>s_msr_sercomp \<union> ufRan\<cdot>recvTSPF) x) =  ((medSR_TSPF ora1) \<rightleftharpoons> ((senderTSPF s) \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>(senderTSPF s))\<cdot>x)))"
-          apply (subst f32151)
-          apply (simp only: ufcomph_insert)
-          apply (simp only: ubclRestrict_ubundle_def ubclUnion_ubundle_def)
-          apply (subst ubunion_restrict2)
-           apply (subst x_iter_ubfix2_restrict_union_recv_ran)
-           apply (simp add: recv_tspfdom recv_tspfran)
-          apply (simp only: x_sender_restrict_id)
-           apply (fold ubclUnion_ubundle_def)
-          apply (fold ubclRestrict_ubundle_def)
-          apply (subst f3215_iter2_unionL)
-          apply (simp only: s_msr_sercomp_def)
-          apply (subst s_msr_apply)
-          apply (simp only: ubclRestrict_ubundle_def x_sender_restrict_id)
-          apply (subst ubunion_restrict)
-           apply (simp add: s_msr_ran_recv_dom_eq)
-          by simp
-      qed          
-      have max_comp: "\<And> i. (iter_ufCompH s_msr_sercomp recvTSPF (Suc (Suc (Suc i))) x) = 
-    ubclUnion\<cdot>(s_msr_sercomp \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>s_msr_sercomp)\<cdot>x))\<cdot>(recvTSPF \<rightleftharpoons> ubclRestrict (ufDom\<cdot>recvTSPF)\<cdot>(s_msr_sercomp \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>s_msr_sercomp)\<cdot>x)))"
-      proof -
-        fix i::nat
-        obtain iter2 where iter2_def: "iter2 = (iter_ufCompH s_msr_sercomp recvTSPF  (Suc (Suc i)) x)"
-          by simp
-        have f1: "(iter_ufCompH s_msr_sercomp recvTSPF (Suc (Suc (Suc i))) x) = ufCompH s_msr_sercomp recvTSPF x\<cdot>iter2"
-          by (simp add: iter2_def)
-        have f2: "ubRestrict (ufDom\<cdot>recvTSPF)\<cdot>(ubUnion\<cdot>x\<cdot>iter2) = ubRestrict (ufDom\<cdot>recvTSPF)\<cdot>iter2"
-          apply (subst ubunion_commutative)
-          apply (simp only: iter2_def)
-          apply (fold ubclDom_ubundle_def)
-           apply (subst iter_ubfix2_dom)
-          using a1 io_eq_s_msr_recv apply blast
-           apply (metis a1 s_msr_sercomp_recv_compI sender_dom ufCompO_def ufcomp_I_inter_Oc_empty)
-          apply (subst ubunion_restrict2)
-           apply (simp add: f32101 sender_dom recv_tspfdom)
-          by (simp add: recv_tspfdom)
-        have f3: "ubclRestrict (ufDom\<cdot>recvTSPF)\<cdot>(s_msr_sercomp \<rightleftharpoons> x) = ((medSR_TSPF ora1) \<rightleftharpoons> ((senderTSPF s) \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>(senderTSPF s))\<cdot>x)))"
-          apply (simp add: s_msr_sercomp_def)
-          apply (subst s_msr_apply_sercomp_eq)
-          apply (simp add: f32101 ubclDom_ubundle_def)
-          apply (simp only: ubclRestrict_ubundle_def) 
-          apply (simp only: x_sender_restrict_id)
-          apply (subst ubunion_restrict)
-          using s_msr_ran_recv_dom_eq apply blast
-          by simp
-        show "(iter_ufCompH s_msr_sercomp recvTSPF (Suc (Suc (Suc i))) x) = 
-    ubclUnion\<cdot>(s_msr_sercomp \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>s_msr_sercomp)\<cdot>x))\<cdot>(recvTSPF \<rightleftharpoons> ubclRestrict (ufDom\<cdot>recvTSPF)\<cdot>(s_msr_sercomp \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>s_msr_sercomp)\<cdot>x)))"
-          apply (subst f1)
-          apply (simp only: ufcomph_insert)
-          apply (simp only: ubclRestrict_ubundle_def ubclUnion_ubundle_def)
-          apply (subst ubunion_restrict2)
-           apply (simp only: iter2_def)
-          apply (fold ubclDom_ubundle_def)
-           apply (subst iter_ubfix2_dom)
-          using a1 io_eq_s_msr_recv apply blast
-           apply (metis Int_commute s_msr_sercomp_dom s_msr_sercomp_recv_compI sender_dom ufCompO_def ufcomp_I_inter_Oc_empty)
-          apply (simp add: f32101 s_msr_sercomp_dom)
-          apply (subst f2)
-          apply (simp only: iter2_def)
-          apply (fold ubclRestrict_ubundle_def)
-          apply (fold ubclUnion_ubundle_def)
-          apply (subst f3215_iter_2)
-          apply (simp only: ubclRestrict_ubundle_def)
-          apply (simp only: x_sender_restrict_id)
-          apply (fold ubclRestrict_ubundle_def)
-          apply (simp only: f3)
-          by (metis a1 ubclrestrict_dom_id)
-      qed
-      have max_in_chain_s_msr_r: "max_in_chain (Suc (Suc (Suc 0))) (\<lambda>i. iter_ufCompH s_msr_sercomp recvTSPF i x)"
-proof (rule max_in_chainI)
-  fix j
-  assume a1: "Suc (Suc (Suc 0)) \<le> j"
-  have f1: "ufDom\<cdot>s_msr_sercomp \<inter> ufDom\<cdot>recvTSPF = {}"
-    by (simp add: s_msr_sercomp_dom sender_dom recv_tspfdom)
-  obtain k where o1: "j = Suc (Suc (Suc k))"
-    by (metis (no_types) Suc_leD Suc_n_not_le_n a1 not0_implies_Suc)  
-  show "iter_ubfix2 (ufCompH s_msr_sercomp recvTSPF) (Suc (Suc (Suc 0))) (ufRan\<cdot>s_msr_sercomp \<union> ufRan\<cdot>recvTSPF) x =
-     iter_ubfix2 (ufCompH s_msr_sercomp recvTSPF) j (ufRan\<cdot>s_msr_sercomp \<union> ufRan\<cdot>recvTSPF) x"
-    apply (subst o1)
-    by (metis max_comp recv_tspfran)
-qed
-  have lub_max_in_chain_eq: "ubFix (ufCompH s_msr_sercomp recvTSPF x) (ufRan\<cdot>s_msr_sercomp \<union> ufRan\<cdot>recvTSPF) = 
-(iter_ufCompH s_msr_sercomp recvTSPF (Suc (Suc (Suc 0))) x)"
-  proof (simp only: ubFix_def)
-    have f1: "ufRan\<cdot>(recvTSPF::('a MABP tstream\<^sup>\<Omega>) ufun) = ufRan\<cdot>(recvTSPF::('b MABP tstream\<^sup>\<Omega>) ufun)"
-      by (simp add: recv_tspfran)
-    have "chain (\<lambda>n. iter_ubfix2 (ufCompH s_msr_sercomp recvTSPF) n (ufRan\<cdot>s_msr_sercomp \<union> ufRan\<cdot>(recvTSPF::('a MABP tstream\<^sup>\<Omega>) ufun)) x)"
-      by (metis a1 io_eq_s_msr_recv ub_iterate_chain)
-    then show "(\<Squnion>n. iter_ubfix2 (ufCompH s_msr_sercomp recvTSPF) n (ufRan\<cdot>s_msr_sercomp \<union> ufRan\<cdot>(recvTSPF::('b MABP tstream\<^sup>\<Omega>) ufun)) x) = iter_ubfix2 (ufCompH s_msr_sercomp recvTSPF) (Suc (Suc (Suc 0))) (ufRan\<cdot>s_msr_sercomp \<union> ufRan\<cdot>(recvTSPF::('a MABP tstream\<^sup>\<Omega>) ufun)) x"
-      using f1 max_in_chain_s_msr_r maxinch_is_thelub by fastforce
-  qed
-        have f2: " ubRestrict (ufDom\<cdot>(senderTSPF s))\<cdot>x = x"
+      have f2: " ubRestrict (ufDom\<cdot>(senderTSPF s))\<cdot>x = x"
           by (simp add: f32101)
-        have f3: " ubRestrict (ufDom\<cdot>recvTSPF)\<cdot>(s_msr_sercomp \<rightleftharpoons> x) = 
+      have f3: " ubRestrict (ufDom\<cdot>recvTSPF)\<cdot>(s_msr_sercomp \<rightleftharpoons> x) =
 ((medSR_TSPF ora1) \<rightleftharpoons> ((senderTSPF s) \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>(senderTSPF s))\<cdot>x)))"
           apply (simp only: ubclRestrict_ubundle_def)
           apply (simp only: x_sender_restrict_id)
           apply (simp add: s_msr_sercomp_def)
-          apply (subst s_msr_apply)
+          apply (simp add: f32101 s_msr_apply)
           apply (simp only: ubclRestrict_ubundle_def)
-          apply (simp only: x_sender_restrict_id)
-          using s_msr_ran_recv_dom_eq ubunion_restrict by blast
-        have f3215: "Some (ubFix (ufCompH s_msr_sercomp recvTSPF x) (ufRan\<cdot>s_msr_sercomp \<union> ufRan\<cdot>recvTSPF)) = Some ((ubUnion\<cdot>(ubUnion\<cdot>((senderTSPF s) \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>(senderTSPF s))\<cdot>x))\<cdot>((medSR_TSPF ora1) \<rightleftharpoons> ((senderTSPF s) \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>(senderTSPF s))\<cdot>x)))))\<cdot>
+        apply (simp only: x_sender_restrict_id)
+        by (simp add: f32101 s_msr_ran_recv_dom_eq)
+      have f3215: "Some (ubFix (ufCompH s_msr_sercomp recvTSPF x) (ufRan\<cdot>s_msr_sercomp \<union> ufRan\<cdot>recvTSPF)) = Some ((ubUnion\<cdot>(ubUnion\<cdot>((senderTSPF s) \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>(senderTSPF s))\<cdot>x))\<cdot>((medSR_TSPF ora1) \<rightleftharpoons> ((senderTSPF s) \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>(senderTSPF s))\<cdot>x)))))\<cdot>
                                                                                               (recvTSPF \<rightleftharpoons>((medSR_TSPF ora1) \<rightleftharpoons> ((senderTSPF s) \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>(senderTSPF s))\<cdot>x)))))"
-           apply (rule some_eq)
-          apply (subst lub_max_in_chain_eq)
-          apply (subst max_comp)
+        apply (rule some_eq)
+        apply (subst lub_max_in_chain_eq)
+          apply (simp only: f32101)
           apply (simp only: s_msr_sercomp_dom)
           apply (simp only: ubclRestrict_ubundle_def)
           apply (simp only: x_sender_restrict_id)
           apply (simp only: s_msr_sercomp_def)
-          apply (subst s_msr_apply)
-          apply (simp only: ubclRestrict_ubundle_def)
-          apply (simp only: x_sender_restrict_id)
-
-          apply (subst s_msr_apply)
+          apply (simp add: f32101 s_msr_apply)
           apply (simp only: ubclRestrict_ubundle_def)
           apply (simp only: x_sender_restrict_id)
           apply (subst ubunion_restrict)
-           apply (simp add: s_msr_ran_recv_dom_eq)
+           apply (simp add: f32101 s_msr_ran_recv_dom_eq)
           by (simp add: ubclUnion_ubundle_def)
       show "Rep_cufun (ufComp s_msr_sercomp recvTSPF) x =
        (ubclDom\<cdot>x = ufDom\<cdot>(senderTSPF s))\<leadsto>(ubUnion\<cdot>(ubUnion\<cdot>((senderTSPF s) \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>(senderTSPF s))\<cdot>x))\<cdot>((medSR_TSPF ora1) \<rightleftharpoons> ((senderTSPF s) \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>(senderTSPF s))\<cdot>x)))))\<cdot>
@@ -4150,18 +4167,975 @@ qed
        apply (metis (no_types, hide_lams) f20 insert_commute not_Some_eq s_msr_sercomp_def sender_tspfdom ufdom_2ufundom ufunclComp_ufun_def)
       by (simp add: f321)
   qed
+paragraph \<open>eq proof between abp and abpbundlehelper\<close>
+  obtain s_msr_r_comp where s_msr_r_comp_def: "s_msr_r_comp = (ufComp (ufComp (senderTSPF s) (medSR_TSPF ora1)) recvTSPF)"
+    by simp
+  have s_msr_r_comp_dom: "ufDom\<cdot>s_msr_r_comp = ufDom\<cdot>(senderTSPF s)"
+    apply (simp add: s_msr_r_comp_def)
+    apply (fold s_msr_sercomp_def)
+    apply (subst ufcomp_dom)
+     apply (subst s_msr_sercomp_ran)
+     apply (simp add:  med_tspfran2 med_tspfdom2 f13 sender_tspfran  sender_tspfdom recv_tspfran recv_tspfdom)
+    by (simp add: s_msr_sercomp_recv_compI sender_tspfdom)
+  have s_msr_r_comp_ran: "ufRan\<cdot>s_msr_r_comp = ufRan\<cdot>(senderTSPF s) \<union> ufRan\<cdot>(medSR_TSPF ora1) \<union> ufRan\<cdot>recvTSPF"
+    apply (simp add: s_msr_r_comp_def)
+    apply (fold s_msr_sercomp_def)
+    apply (subst ufcomp_ran)
+     apply (subst s_msr_sercomp_ran)
+     apply (simp add:  med_tspfran2 med_tspfdom2 f13 sender_tspfran  sender_tspfdom recv_tspfran recv_tspfdom)
+    apply (simp add: ufCompO_def)
+    apply (subst s_msr_sercomp_ran)
+    by (simp add: recv_tspfran)
+  have s_msr_r_comp_mrs_compI: "ufCompI s_msr_r_comp (medRS_TSPF ora2) = {c_abpIn}"
+    apply (simp add: ufCompI_def)
+    apply (simp add: s_msr_r_comp_dom)
+    apply (subst s_msr_r_comp_ran)
+    by (simp add:  med_tspfran2 med_tspfdom2 f13 f14 sender_tspfran  sender_tspfdom recv_tspfran recv_tspfdom) 
+  subparagraph \<open>Define chains\<close>
+  obtain innerABP_chain where innerABP_chain_def: "innerABP_chain = (\<lambda> i::nat. iter_ubfix2 (ufCompH (ufComp (ufComp (senderTSPF s) (medSR_TSPF ora1)) recvTSPF) (medRS_TSPF ora2)) i {c_abpOut, c_as, c_ar, c_dr, c_ds} tb)"
+    by simp
+  obtain innerABP_chain_shift where innerABP_chain_shift_def: "innerABP_chain_shift = (\<lambda> i. innerABP_chain (2 * (Suc i)))"
+    by simp
+  subparagraph \<open>chain eq proof\<close>
+  have innerABP_chain_ischain: "chain innerABP_chain"
+    apply (simp add: innerABP_chain_def)
+    apply (rule ub_iterate_chain)
+    apply (simp add: ufCompH_def)
+    apply (simp add:  med_tspfran2 med_tspfdom2 f13 f14 sender_tspfran  sender_tspfdom recv_tspfran recv_tspfdom) 
+    apply (fold s_msr_r_comp_def)
+    apply (simp only: s_msr_r_comp_dom sender_tspfdom)
+    apply (simp add: ubclunion_restrict)
+    apply (simp only: ubclRestrict_ubundle_def ubclUnion_ubundle_def ubclLeast_ubundle_def)
+    apply (subst ubrestrict_id)
+     apply (simp add: assms(2))
+    apply (simp add: ubrestrict_ubleast_inter)
+    apply (fold ubclUnion_ubundle_def)
+    apply (simp add: ubclunion_ubcldom)
+    apply (subst ufran_2_ubcldom2)
+     apply (simp add: s_msr_r_comp_dom sender_tspfdom ubclunion_ubcldom)
+     apply (simp add: assms(2) ubclDom_ubundle_def)
+    apply (subst ufran_2_ubcldom2)
+    apply (simp add:  med_tspfran2 med_tspfdom2 f13 f14 sender_tspfran  sender_tspfdom recv_tspfran recv_tspfdom ubclDom_ubundle_def)
+    apply (subst s_msr_r_comp_ran)
+    apply (simp add:  med_tspfran2 med_tspfdom2 f13 f14 sender_tspfran  sender_tspfdom recv_tspfran recv_tspfdom) 
+    by blast
+  have innerABP_chain_shift_ischain: "chain innerABP_chain_shift"
+    apply (simp add: innerABP_chain_shift_def)
+    apply (rule chainI)
+    apply (rule chain_mono_less)
+     apply (simp add: innerABP_chain_ischain)
+    apply (induct_tac i)
+     apply simp
+    by simp
+  have innerABP_chain_shift_in_range : "\<And> i . innerABP_chain_shift i \<in> range innerABP_chain"
+    by (simp add: innerABP_chain_shift_def)
 
-  have f4: "(ubFix (ufCompH (senderTSPF s \<otimes> medSR_TSPF ora1 \<otimes> recvTSPF) (medRS_TSPF ora2) tb) {c_abpOut, c_as, c_ar}) . c_abpOut = 
-            (ubFix (fixABPHelperCont s ora1 ora2 tb) {c_abpOut, c_ar, c_as, c_dr, c_ds})  .  c_abpOut" 
-  proof - 
-    have "(ubFix (ufCompH (senderTSPF s \<otimes> medSR_TSPF ora1 \<otimes> recvTSPF) (medRS_TSPF ora2) tb) {c_abpOut, c_as, c_ar}) = 
-          (ubRestrict {c_abpOut, c_as, c_ar}\<cdot>(ubFix (fixABPHelperCont s ora1 ora2 tb) {c_abpOut, c_ar, c_as, c_dr, c_ds}))"
-      
-      
-      sorry
-    thus ?thesis
-      by (smt insertI1 ubgetch_ubrestrict)
+  have innerABP_chain_eq: "Lub innerABP_chain = Lub innerABP_chain_shift"
+    apply (subst po_eq_conv) apply rule
+     apply (rule lub_mono)
+       apply (simp_all add: innerABP_chain_ischain innerABP_chain_shift_ischain)
+     apply (simp only: innerABP_chain_shift_def innerABP_chain_def)
+     apply (rule chain_mono)
+      apply (fold innerABP_chain_def)
+      apply (simp add: innerABP_chain_ischain)
+     apply (induct_tac i)
+    by (simp add: innerABP_chain_ischain innerABP_chain_shift_ischain cpo is_ub_thelub_ex innerABP_chain_shift_in_range lub_below) +
+
+
+  have innerABP_chain_dom: "\<And> i. ubDom\<cdot>(iter_ubfix2 (ufCompH (ufComp (ufComp (senderTSPF s) (medSR_TSPF ora1)) recvTSPF) 
+                                                                    (medRS_TSPF ora2)) i {c_abpOut, c_as, c_ar, c_dr, c_ds} tb) =
+                                             {c_abpOut, c_as, c_ar, c_dr, c_ds}"
+    apply (fold s_msr_r_comp_def)
+    apply (fold ubclDom_ubundle_def)
+    apply (rule iter_ubfix_dom)
+     apply (subst ufCompH_dom)
+       apply (simp add: assms(2) s_msr_r_comp_mrs_compI ubclDom_ubundle_def)
+    apply (simp add: ubcldom_least_cs)
+      apply (subst s_msr_r_comp_ran) defer
+      apply (subst s_msr_r_comp_ran) defer
+      apply (simp_all add:  med_tspfran2 med_tspfdom2 f13 f14 sender_tspfran  sender_tspfdom 
+          recv_tspfran recv_tspfdom)
+    by blast +
+  have sender_tb_innerABP_dom: "\<And>i. ubclDom\<cdot>(ubclUnion\<cdot>tb\<cdot>(ubclRestrict {c_as}\<cdot>(innerABP_chain i))) = ufDom\<cdot>(senderTSPF s)"
+    apply (simp add: ubclunion_dom)
+    apply (simp add: ubclrestrict_dom innerABP_chain_def)
+    apply (simp only: ubclDom_ubundle_def)
+    by (simp add: innerABP_chain_dom assms(2) sender_tspfdom)
+  have innerABP_chain_c_ar_medrs: "\<And>i::nat. ubclDom\<cdot>(ubclRestrict {c_ar}\<cdot>(innerABP_chain i)) = ufDom\<cdot>(medRS_TSPF ora2)"
+    apply (simp add:  med_tspfran2 med_tspfdom2 f13 sender_tspfran  sender_tspfdom recv_tspfran recv_tspfdom)
+    apply (simp add: ubclrestrict_ubcldom)
+    apply (simp add: innerABP_chain_def ubclDom_ubundle_def)
+    by (simp add: innerABP_chain_dom)
+
+  have medrs_innerABP_chain_dom: "\<And>i. ubclDom\<cdot>(medRS_TSPF ora2 \<rightleftharpoons> (ubclRestrict {c_ar}\<cdot>(innerABP_chain i))) = {c_as}"
+    apply (subst ufran_2_ubcldom2)
+    apply (simp add: innerABP_chain_c_ar_medrs)
+    by (simp add: med_tspfran2 f13)
+  have medsr_sender_innerABP_chain_dom: "\<And>i. ubclDom\<cdot>(medSR_TSPF ora1 \<rightleftharpoons> (senderTSPF s \<rightleftharpoons> ubclUnion\<cdot>tb\<cdot>(ubclRestrict {c_as}\<cdot>(innerABP_chain i)))) = {c_dr}"
+    apply (subst ufran_2_ubcldom2) +
+       apply (simp add: sender_tb_innerABP_dom)
+    by (simp_all add:  med_tspfran2 med_tspfdom2 f13 f14 sender_tspfran  sender_tspfdom 
+          recv_tspfran recv_tspfdom) 
+  have innerABP_apply_step: "\<And>i. innerABP_chain (Suc i) = 
+    ubclUnion\<cdot>(ubclUnion\<cdot>(ubclUnion\<cdot>(senderTSPF s \<rightleftharpoons> ubclUnion\<cdot>tb\<cdot>(ubclRestrict {c_as}\<cdot>(innerABP_chain i)))\<cdot>
+    (medSR_TSPF ora1 \<rightleftharpoons> (senderTSPF s \<rightleftharpoons> ubclUnion\<cdot>tb\<cdot>(ubclRestrict {c_as}\<cdot>(innerABP_chain i)))))\<cdot>
+    (recvTSPF \<rightleftharpoons> (medSR_TSPF ora1 \<rightleftharpoons> (senderTSPF s \<rightleftharpoons> ubclUnion\<cdot>tb\<cdot>(ubclRestrict {c_as}\<cdot>(innerABP_chain i))))))\<cdot>
+    (medRS_TSPF ora2 \<rightleftharpoons> (ubclRestrict {c_ar}\<cdot>(innerABP_chain i)))"
+  proof -
+    fix i::nat
+    obtain iter_i where iter_i_def: "iter_i = (iter_ubfix2 (ufCompH (ufComp (ufComp (senderTSPF s) (medSR_TSPF ora1)) recvTSPF) 
+                                                                    (medRS_TSPF ora2)) i {c_abpOut, c_as, c_ar, c_dr, c_ds} tb)"
+      by simp
+    have f1: "ubDom\<cdot>(iter_i) = {c_abpOut, c_as, c_ar, c_dr, c_ds}"
+      by (simp add: innerABP_chain_dom iter_i_def)
+    have f2: "(ubclDom\<cdot>(ubclUnion\<cdot>tb\<cdot>(ubclRestrict {c_as}\<cdot>iter_i)) = ufDom\<cdot>(senderTSPF s))"
+      apply (simp add: ubclunion_ubcldom)
+      apply (simp add: ubclrestrict_dom sender_tspfdom)
+      by (simp add: ubclDom_ubundle_def assms(2) f1)
+    have f3: "innerABP_chain i = iter_ubfix2 (ufCompH (ufComp (ufComp (senderTSPF s) (medSR_TSPF ora1)) recvTSPF) (medRS_TSPF ora2)) i
+             {c_abpOut, c_as, c_ar, c_dr, c_ds} tb"
+      by (simp add: innerABP_chain_def)
+    have f4: "ubclRestrict {c_as, c_abpIn}\<cdot>tb = tb"
+      apply (simp add: ubclRestrict_ubundle_def)
+      by (simp add: assms(2))
+    show "innerABP_chain (Suc i) = 
+ubclUnion\<cdot>(ubclUnion\<cdot>(ubclUnion\<cdot>(senderTSPF s \<rightleftharpoons> ubclUnion\<cdot>tb\<cdot>(ubclRestrict {c_as}\<cdot>(innerABP_chain i)))\<cdot>
+    (medSR_TSPF ora1 \<rightleftharpoons> (senderTSPF s \<rightleftharpoons> ubclUnion\<cdot>tb\<cdot>(ubclRestrict {c_as}\<cdot>(innerABP_chain i)))))\<cdot>
+    (recvTSPF \<rightleftharpoons> (medSR_TSPF ora1 \<rightleftharpoons> (senderTSPF s \<rightleftharpoons> ubclUnion\<cdot>tb\<cdot>(ubclRestrict {c_as}\<cdot>(innerABP_chain i))))))\<cdot>
+    (medRS_TSPF ora2 \<rightleftharpoons> (ubclRestrict {c_ar}\<cdot>(innerABP_chain i)))"
+      apply (simp add: innerABP_chain_def)
+      apply (fold iter_i_def)
+      apply (fold s_msr_r_comp_def)
+      apply (simp add: ufCompH_def)
+      apply (simp add:  med_tspfran2 med_tspfdom2 f13 f14 sender_tspfran  sender_tspfdom 
+          recv_tspfran recv_tspfdom s_msr_r_comp_dom)
+      apply (simp add: ubclunion_restrict)
+      apply (simp add: f4)
+      apply (simp only: ubclUnion_ubundle_def ubclRestrict_ubundle_def)
+       apply (simp_all add: assms(2))
+      apply (subst ubrestrict_ubdom_sup_inter)
+      apply (simp only: f1)
+      apply (simp add: s_msr_r_comp_def)
+      apply (fold ubclUnion_ubundle_def)
+      apply (fold ubclRestrict_ubundle_def)
+      apply (subst f32)
+      apply (simp add: f2)
+      apply (simp add: sender_tspfdom)
+      apply (simp add: ubclunion_restrict)
+      apply (simp add: ubclrestrict_twice)
+      apply (simp add: f4)
+      by (simp only: ubclUnion_ubundle_def ubclRestrict_ubundle_def)
   qed
+
+  have innerABP_c_as: "\<And>i. ubclUnion\<cdot>(ubclUnion\<cdot>(ubclUnion\<cdot>(senderTSPF s \<rightleftharpoons> ubclUnion\<cdot>tb\<cdot>(ubclRestrict {c_as}\<cdot>(innerABP_chain i)))\<cdot>
+    (medSR_TSPF ora1 \<rightleftharpoons> (senderTSPF s \<rightleftharpoons> ubclUnion\<cdot>tb\<cdot>(ubclRestrict {c_as}\<cdot>(innerABP_chain i)))))\<cdot>
+    (recvTSPF \<rightleftharpoons> (medSR_TSPF ora1 \<rightleftharpoons> (senderTSPF s \<rightleftharpoons> ubclUnion\<cdot>tb\<cdot>(ubclRestrict {c_as}\<cdot>(innerABP_chain i))))))\<cdot>
+    (medRS_TSPF ora2 \<rightleftharpoons> (ubclRestrict {c_ar}\<cdot>(innerABP_chain i))) . c_as = 
+    (medRS_TSPF ora2 \<rightleftharpoons> (ubclRestrict {c_ar}\<cdot>(innerABP_chain i))) . c_as"
+    apply (simp only: ubclUnion_ubundle_def)
+    apply (rule ubunion_getchR)
+    apply (fold ubclDom_ubundle_def)
+    by (simp add: medrs_innerABP_chain_dom)
+
+  have recv_innerABP_chain_dom: "\<And> i. ubclDom\<cdot>(recvTSPF \<rightleftharpoons> (medSR_TSPF ora1 \<rightleftharpoons> (senderTSPF s \<rightleftharpoons> (ubclUnion\<cdot>tb\<cdot>(ubclRestrict {c_as}\<cdot>(innerABP_chain i)))))) = {c_abpOut, c_ar}"
+    apply (subst ufran_2_ubcldom2) +
+       apply (simp add: sender_tb_innerABP_dom)
+    apply (simp_all add:  med_tspfran2 med_tspfdom2 f13 f14 sender_tspfran  sender_tspfdom 
+          recv_tspfran recv_tspfdom) 
+    by blast
+  have innerABP_c_ar: "\<And>i. ubclUnion\<cdot>(ubclUnion\<cdot>(ubclUnion\<cdot>(senderTSPF s \<rightleftharpoons> ubclUnion\<cdot>tb\<cdot>(ubclRestrict {c_as}\<cdot>(innerABP_chain i)))\<cdot>
+    (medSR_TSPF ora1 \<rightleftharpoons> (senderTSPF s \<rightleftharpoons> ubclUnion\<cdot>tb\<cdot>(ubclRestrict {c_as}\<cdot>(innerABP_chain i)))))\<cdot>
+    (recvTSPF \<rightleftharpoons> (medSR_TSPF ora1 \<rightleftharpoons> (senderTSPF s \<rightleftharpoons> ubclUnion\<cdot>tb\<cdot>(ubclRestrict {c_as}\<cdot>(innerABP_chain i))))))\<cdot>
+    (medRS_TSPF ora2 \<rightleftharpoons> (ubclRestrict {c_ar}\<cdot>(innerABP_chain i))) . c_ar = 
+    (recvTSPF \<rightleftharpoons> (medSR_TSPF ora1 \<rightleftharpoons> (senderTSPF s \<rightleftharpoons> ubclUnion\<cdot>tb\<cdot>(ubclRestrict {c_as}\<cdot>(innerABP_chain i))))) . c_ar"
+    apply (simp only: ubclUnion_ubundle_def)
+    apply (subst ubunion_getchL)
+    apply (fold ubclDom_ubundle_def)
+    apply (simp add: medrs_innerABP_chain_dom)
+    apply (rule ubunion_getchR)
+    using ubclDom_ubundle_def ubclUnion_ubundle_def
+    by (metis insert_iff recv_innerABP_chain_dom)
+  have innerABP_c_abpOut: "\<And>i. ubclUnion\<cdot>(ubclUnion\<cdot>(ubclUnion\<cdot>(senderTSPF s \<rightleftharpoons> ubclUnion\<cdot>tb\<cdot>(ubclRestrict {c_as}\<cdot>(innerABP_chain i)))\<cdot>
+    (medSR_TSPF ora1 \<rightleftharpoons> (senderTSPF s \<rightleftharpoons> ubclUnion\<cdot>tb\<cdot>(ubclRestrict {c_as}\<cdot>(innerABP_chain i)))))\<cdot>
+    (recvTSPF \<rightleftharpoons> (medSR_TSPF ora1 \<rightleftharpoons> (senderTSPF s \<rightleftharpoons> ubclUnion\<cdot>tb\<cdot>(ubclRestrict {c_as}\<cdot>(innerABP_chain i))))))\<cdot>
+    (medRS_TSPF ora2 \<rightleftharpoons> (ubclRestrict {c_ar}\<cdot>(innerABP_chain i))) . c_abpOut = 
+    (recvTSPF \<rightleftharpoons> (medSR_TSPF ora1 \<rightleftharpoons> (senderTSPF s \<rightleftharpoons> ubclUnion\<cdot>tb\<cdot>(ubclRestrict {c_as}\<cdot>(innerABP_chain i))))) . c_abpOut"
+    apply (simp only: ubclUnion_ubundle_def)
+    apply (subst ubunion_getchL)
+    apply (fold ubclDom_ubundle_def)
+     apply (simp add: medrs_innerABP_chain_dom)
+    apply (rule ubunion_getchR)
+    using ubclDom_ubundle_def ubclUnion_ubundle_def
+    by (metis insert_iff recv_innerABP_chain_dom)
+
+  have innerABP_c_ds: "\<And>i. ubclUnion\<cdot>(ubclUnion\<cdot>(ubclUnion\<cdot>(senderTSPF s \<rightleftharpoons> ubclUnion\<cdot>tb\<cdot>(ubclRestrict {c_as}\<cdot>(innerABP_chain i)))\<cdot>
+    (medSR_TSPF ora1 \<rightleftharpoons> (senderTSPF s \<rightleftharpoons> ubclUnion\<cdot>tb\<cdot>(ubclRestrict {c_as}\<cdot>(innerABP_chain i)))))\<cdot>
+    (recvTSPF \<rightleftharpoons> (medSR_TSPF ora1 \<rightleftharpoons> (senderTSPF s \<rightleftharpoons> ubclUnion\<cdot>tb\<cdot>(ubclRestrict {c_as}\<cdot>(innerABP_chain i))))))\<cdot>
+    (medRS_TSPF ora2 \<rightleftharpoons> (ubclRestrict {c_ar}\<cdot>(innerABP_chain i))) . c_ds = 
+    (senderTSPF s \<rightleftharpoons> ubclUnion\<cdot>tb\<cdot>(ubclRestrict {c_as}\<cdot>(innerABP_chain i))) . c_ds"
+    apply (simp only: ubclUnion_ubundle_def)
+    apply (subst ubunion_getchL)
+    apply (fold ubclDom_ubundle_def)
+     apply (simp add: medrs_innerABP_chain_dom)
+    apply (subst ubunion_getchL)
+    apply (fold ubclDom_ubundle_def)
+    apply (fold ubclUnion_ubundle_def)
+    apply (simp add: recv_innerABP_chain_dom)
+    apply (simp add: ubclUnion_ubundle_def)
+    apply (rule ubunion_getchL)
+    using ubclDom_ubundle_def ubclUnion_ubundle_def 
+    by (metis channel.simps(246) medsr_sender_innerABP_chain_dom singletonD)
+
+  have innerABP_c_dr: "\<And>i. ubclUnion\<cdot>(ubclUnion\<cdot>(ubclUnion\<cdot>(senderTSPF s \<rightleftharpoons> ubclUnion\<cdot>tb\<cdot>(ubclRestrict {c_as}\<cdot>(innerABP_chain i)))\<cdot>
+    (medSR_TSPF ora1 \<rightleftharpoons> (senderTSPF s \<rightleftharpoons> ubclUnion\<cdot>tb\<cdot>(ubclRestrict {c_as}\<cdot>(innerABP_chain i)))))\<cdot>
+    (recvTSPF \<rightleftharpoons> (medSR_TSPF ora1 \<rightleftharpoons> (senderTSPF s \<rightleftharpoons> ubclUnion\<cdot>tb\<cdot>(ubclRestrict {c_as}\<cdot>(innerABP_chain i))))))\<cdot>
+    (medRS_TSPF ora2 \<rightleftharpoons> (ubclRestrict {c_ar}\<cdot>(innerABP_chain i))) . c_dr = 
+    (medSR_TSPF ora1 \<rightleftharpoons> (senderTSPF s \<rightleftharpoons> ubclUnion\<cdot>tb\<cdot>(ubclRestrict {c_as}\<cdot>(innerABP_chain i)))) . c_dr"
+    apply (simp only: ubclUnion_ubundle_def)
+    apply (subst ubunion_getchL)
+    apply (fold ubclDom_ubundle_def)
+    apply (simp add: medrs_innerABP_chain_dom)
+    apply (subst ubunion_getchL)
+    apply (fold ubclDom_ubundle_def)
+    apply (fold ubclUnion_ubundle_def)
+    apply (simp add: recv_innerABP_chain_dom)
+    apply (simp add: ubclUnion_ubundle_def)
+    apply (rule ubunion_getchR)
+    using ubclDom_ubundle_def ubclUnion_ubundle_def 
+    by (metis insertI1 medsr_sender_innerABP_chain_dom)
+
+  obtain abphelper_chain where abphelper_chain_def: "abphelper_chain = (\<lambda> i. (iterate i\<cdot>(\<Lambda> (x::'a MABP tstream\<^sup>\<Omega>). Abs_ubundle (ABPBundleHelper s ora1 ora2 tb x))\<cdot>(ubclLeast {c_abpOut, c_ar, c_as, c_dr, c_ds})))"
+    by simp
+  obtain abphelper_chain_shift where abphelper_chain_shift_def: "abphelper_chain_shift = (\<lambda> i. abphelper_chain (4 * (Suc i)))"
+    by simp
+  obtain abphelper_ext_chain1 where abphelper_ext_chain1_def: "abphelper_ext_chain1 = (\<lambda> i. (iterate i\<cdot>(\<Lambda> (x::'a MABP tstream\<^sup>\<Omega>). Abs_ubundle (ABPBundleHelper_ext s ora1 ora2 tb x))\<cdot>(ubclLeast {c_abpOut, c_ar, c_as, c_dr, c_ds, c_idOut})))"
+    by simp
+  obtain abphelper_ext_chain1_shift where abphelper_ext_chain1_shift_def: "abphelper_ext_chain1_shift = (\<lambda> i.  abphelper_ext_chain1 (4 * (Suc i)))"
+    by simp
+  obtain abphelper_ext_chain where abphelper_ext_chain_def: "abphelper_ext_chain = (\<lambda> i. ubclRestrict {c_abpOut, c_as}\<cdot>(iterate i\<cdot>(\<Lambda> (x::'a MABP tstream\<^sup>\<Omega>). Abs_ubundle (ABPBundleHelper_ext s ora1 ora2 tb x))\<cdot>(ubclLeast {c_abpOut, c_ar, c_as, c_dr, c_ds, c_idOut})))"
+    by simp
+  obtain abphelper_ext_chain_shift where abphelper_ext_chain_shift_def: "abphelper_ext_chain_shift = (\<lambda> i. abphelper_ext_chain (4 * (Suc i)))"
+    by simp
+
+  have abphelper_chain_ischain: "chain abphelper_chain"
+    apply (simp add:  abphelper_chain_def)
+    by (simp add: fixABPHelper_chain f12 f13 f14)
+  have abphelper_ext_chain1_ischain: "chain abphelper_ext_chain1"
+    apply (simp add:  abphelper_ext_chain1_def)
+    by (simp add: fixABPHelper_ext_chain f12 f13 f14)
+  have abphelper_ext_chain1_shift_ischain: "chain abphelper_ext_chain1_shift"
+    apply (rule chainI)
+    apply (simp add: abphelper_ext_chain1_shift_def)
+    apply (rule chain_mono_less)
+     apply (simp add: abphelper_ext_chain1_ischain)
+    apply (induct_tac i)
+     apply simp
+    by simp
+  have abphelper_ext_chain1_shift_in_range : "\<And> i . abphelper_ext_chain1_shift i \<in> range abphelper_ext_chain1"
+    by (simp add: abphelper_ext_chain1_shift_def abphelper_ext_chain1_def)
+  have abphelper_chain_shift_ischain: "chain abphelper_chain_shift"
+    apply (rule chainI)
+    apply (simp add: abphelper_chain_shift_def)
+    apply (rule chain_mono_less)
+     apply (simp add: abphelper_chain_ischain)
+    apply (induct_tac i)
+     apply simp
+    by simp
+
+  have abphelper_ext_chain_ischain: "chain abphelper_ext_chain"
+    apply (simp add: abphelper_ext_chain_def)
+    apply (simp add: ubclRestrict_ubundle_def)
+    apply (rule chainI)
+    apply (rule ubrestrict_belowI1)
+    apply (rule chainE)
+    apply (subst fixABPHelper_ext_chain)
+    by (simp_all add: f12 f13 f14)
+
+  have abphelper_ext_chain_shift_ischain: "chain abphelper_ext_chain_shift"
+    apply (rule chainI)
+    apply (simp add: abphelper_ext_chain_shift_def)
+    apply (rule chain_mono_less)
+     apply (simp add: abphelper_ext_chain_ischain)
+    apply (induct_tac i)
+     apply simp
+    by simp
+
+  have four_times_simp_suc: "\<And> i. 4 * (Suc i) = (Suc (Suc (Suc (Suc (4 * i)))))"
+    by simp
+  have four_times_zero: "4 * (0::nat) = 0"
+    by simp
+  have two_times_simp_suc: "\<And> i. 2 * (Suc i) = Suc (Suc (2 * i))"
+    by simp
+  have two_times_zero: "2 * (0::nat) = 0"
+    by simp
+
+  have abphelper_ext_chain_shift_in_range : "\<And> i . abphelper_ext_chain_shift i \<in> range abphelper_ext_chain"
+    by (simp add: abphelper_ext_chain_shift_def abphelper_ext_chain_def)
+  have abphelper_ext_chain_shift_lub_eq: "Lub abphelper_ext_chain = Lub abphelper_ext_chain_shift"
+    apply (subst po_eq_conv) apply rule
+     apply (rule lub_mono)
+       apply (simp_all add: abphelper_ext_chain_shift_ischain abphelper_ext_chain_ischain)
+     apply (simp add: abphelper_ext_chain_shift_def abphelper_ext_chain_def)
+     apply (rule chain_mono)
+      apply (fold abphelper_ext_chain_def)
+      apply (simp add: abphelper_ext_chain_ischain)
+     apply (induct_tac i)
+    by (simp add: abphelper_ext_chain_ischain abphelper_ext_chain_shift_ischain cpo is_ub_thelub_ex abphelper_ext_chain_shift_in_range lub_below) +
+
+  have f4: "(ubFix (ufCompH (senderTSPF s \<otimes> medSR_TSPF ora1 \<otimes> recvTSPF) (medRS_TSPF ora2) tb) {c_abpOut, c_as, c_ar, c_dr, c_ds}) . c_abpOut =
+            (ubFix (fixABPHelperCont s ora1 ora2 tb) {c_abpOut, c_ar, c_as, c_dr, c_ds})  .  c_abpOut" 
+  proof -
+    have f41: "Lub abphelper_chain . c_abpOut = (ubFix (fixABPHelperCont s ora1 ora2 tb) {c_abpOut, c_ar, c_as, c_dr, c_ds})  .  c_abpOut"
+      by (simp add: abphelper_chain_def ubFix_def)
+
+    have ubfun_io_eq_abphelper_ext: "ubfun_io_eq (\<Lambda> (x::'a MABP tstream\<^sup>\<Omega>). Abs_ubundle (ABPBundleHelper s ora1 ora2 tb x(c_idOut \<mapsto> tsMap Data\<cdot>(tsMap invData\<cdot>(x  .  c_abpOut))))) {c_abpOut, c_ar, c_as, c_dr, c_ds, c_idOut}"
+      apply (simp add: ubclDom_ubundle_def)
+       apply (simp add: fixABPHelper_ext_cont f12 f13 f14)
+     apply (simp_all add: ubdom_ubrep_eq ABPBundleHelper_ext_ubWell)
+    by blast
+
+    have f200010: "\<And>i. (ubFix (fixABPHelperCont_ext s ora1 ora2 tb) {c_abpOut, c_ar, c_as, c_dr, c_ds, c_idOut}) =
+      iterate i\<cdot>(fixABPHelperCont_ext s ora1 ora2 tb)\<cdot>(ubFix (fixABPHelperCont_ext s ora1 ora2 tb) {c_abpOut, c_ar, c_as, c_dr, c_ds, c_idOut})"
+      apply (induct_tac i)
+       apply simp
+      apply (simp only: iterate_Suc)
+      apply (rule ubfix_eq)
+      by (simp only: ubfun_io_eq_abphelper_ext)
+    have abp_ex_abpout_idout_eq: "(ubFix (fixABPHelperCont_ext s ora1 ora2 tb) {c_abpOut, c_ar, c_as, c_dr, c_ds, c_idOut}) . c_idOut = 
+      (ubFix (fixABPHelperCont_ext s ora1 ora2 tb) {c_abpOut, c_ar, c_as, c_dr, c_ds, c_idOut}) . c_abpOut"
+    proof -
+      have f20001: "(ubFix (fixABPHelperCont_ext s ora1 ora2 tb) {c_abpOut, c_ar, c_as, c_dr, c_ds, c_idOut}) =
+          iterate (Suc (Suc (Suc (Suc 0))))\<cdot>(fixABPHelperCont_ext s ora1 ora2 tb)\<cdot>(ubFix (fixABPHelperCont_ext s ora1 ora2 tb) {c_abpOut, c_ar, c_as, c_dr, c_ds, c_idOut})"
+        by (simp only: f200010)
+      have f20002: "(ubFix (fixABPHelperCont_ext s ora1 ora2 tb) {c_abpOut, c_ar, c_as, c_dr, c_ds, c_idOut}) =
+          iterate (Suc (Suc (Suc 0)))\<cdot>(fixABPHelperCont_ext s ora1 ora2 tb)\<cdot>(ubFix (fixABPHelperCont_ext s ora1 ora2 tb) {c_abpOut, c_ar, c_as, c_dr, c_ds, c_idOut})"
+        by (simp only: f200010)
+      have f1: "(ubFix (fixABPHelperCont_ext s ora1 ora2 tb) {c_abpOut, c_ar, c_as, c_dr, c_ds, c_idOut}) . c_idOut =
+      iterate (Suc (Suc (Suc (Suc 0))))\<cdot>(fixABPHelperCont_ext s ora1 ora2 tb)\<cdot>(ubFix (fixABPHelperCont_ext s ora1 ora2 tb) {c_abpOut, c_ar, c_as, c_dr, c_ds, c_idOut}) . c_idOut"
+        apply (subst f20001)
+        by simp
+      show ?thesis
+        apply (subst f1)
+        apply (simp only: fixABPHelperCont_ext_iter_4_c_idOut2 f12 f13 f14)
+        apply (fold f20002)
+        apply (rule ubgetch_tsmap_idI)
+          apply (fold ubclDom_ubundle_def)
+          apply (subst ubfix_dom)
+           apply (simp add: ubclDom_ubundle_def)
+        apply (simp add: fixABPHelper_ext_cont f12 f13 f14)
+           apply (simp_all add: ubdom_ubrep_eq ABPBundleHelper_ext_ubWell)
+        by blast +
+    qed
+    have abphelper_N_ext_chain_eq: "Lub abphelper_chain . c_abpOut = (ubFix (fixABPHelperCont_ext s ora1 ora2 tb) {c_abpOut, c_ar, c_as, c_dr, c_ds, c_idOut})  .  c_idOut"
+      proof -
+          have abp_ex_abpout_idout_res_eq: "(ubclRestrict {c_abpOut, c_ar, c_as, c_dr, c_ds}\<cdot>(ubFix (fixABPHelperCont_ext s ora1 ora2 tb) {c_abpOut, c_ar, c_as, c_dr, c_ds, c_idOut}))  .  c_abpOut
+       = (ubFix (fixABPHelperCont_ext s ora1 ora2 tb) {c_abpOut, c_ar, c_as, c_dr, c_ds, c_idOut})  .  c_idOut"
+              apply (unfold abp_ex_abpout_idout_eq)
+              by (simp add: ubclRestrict_ubundle_def)
+          have f100: "Lub abphelper_chain = (ubclRestrict {c_abpOut, c_ar, c_as, c_dr, c_ds}\<cdot>(ubFix (fixABPHelperCont_ext s ora1 ora2 tb) {c_abpOut, c_ar, c_as, c_dr, c_ds, c_idOut}))"
+            apply (simp add: ubFix_def)
+            apply (simp add: ubclRestrict_ubundle_def)
+            apply (subst ubrestrict_lub)
+             apply (simp add: fixABPHelper_ext_chain f12 f13 f14)
+            apply (simp add: abphelper_chain_def)
+            apply (rule lub_eq)
+            apply (induct_tac i)
+             apply (simp add: ubclLeast_ubundle_def ubrestrict_ubleast_inter)
+            apply (fold ubclRestrict_ubundle_def)
+          proof -
+            fix i::nat and n::nat
+            assume a1: "iterate n\<cdot>(\<Lambda> (x::'a MABP tstream\<^sup>\<Omega>). Abs_ubundle (ABPBundleHelper s ora1 ora2 tb x))\<cdot>(ubclLeast {c_abpOut, c_ar, c_as, c_dr, c_ds}) =
+             ubclRestrict {c_abpOut, c_ar, c_as, c_dr, c_ds}\<cdot>(iterate n\<cdot>(\<Lambda> (x::'a MABP tstream\<^sup>\<Omega>). Abs_ubundle (ABPBundleHelper s ora1 ora2 tb x(c_idOut \<mapsto> tsMap Data\<cdot>(tsMap invData\<cdot>(x  .  c_abpOut)))))\<cdot>(ubclLeast {c_abpOut, c_ar, c_as, c_dr, c_ds, c_idOut}))"
+            obtain n_step where n_step_def: "n_step = iterate n\<cdot>(\<Lambda> (x::'a MABP tstream\<^sup>\<Omega>). Abs_ubundle (ABPBundleHelper s ora1 ora2 tb x))\<cdot>(ubclLeast {c_abpOut, c_ar, c_as, c_dr, c_ds})"
+              by simp
+            obtain n_restrict_step where n_restrict_step_def: "n_restrict_step = (iterate n\<cdot>(\<Lambda> (x::'a MABP tstream\<^sup>\<Omega>). Abs_ubundle (ABPBundleHelper s ora1 ora2 tb x(c_idOut \<mapsto> tsMap Data\<cdot>(tsMap invData\<cdot>(x  .  c_abpOut)))))\<cdot>(ubclLeast {c_abpOut, c_ar, c_as, c_dr, c_ds, c_idOut}))"
+              by simp
+            have f299: "ubDom\<cdot>(Abs_ubundle (ABPBundleHelper s ora1 ora2 tb n_step)) = {c_abpOut, c_ar, c_as, c_dr, c_ds}"
+              apply (simp add: ubdom_ubrep_eq ABPBundleHelper_ubWell)
+              by blast
+            have f300: "\<And> c. c \<in> {c_abpOut, c_ar, c_as, c_dr, c_ds} \<Longrightarrow> (ubRestrict {c_abpOut, c_ar, c_as, c_dr, c_ds}\<cdot>n_restrict_step) . c = n_restrict_step . c"
+              by (simp add: n_restrict_step_def)
+            have f301: "n_step= ubclRestrict {c_abpOut, c_ar, c_as, c_dr, c_ds}\<cdot>n_restrict_step"
+              apply (simp add: n_step_def n_restrict_step_def)
+              by (simp add: a1)
+            show "iterate (Suc n)\<cdot>(\<Lambda> (x::'a MABP tstream\<^sup>\<Omega>). Abs_ubundle (ABPBundleHelper s ora1 ora2 tb x))\<cdot>(ubclLeast {c_abpOut, c_ar, c_as, c_dr, c_ds}) =
+             ubclRestrict {c_abpOut, c_ar, c_as, c_dr, c_ds}\<cdot>(iterate (Suc n)\<cdot>(\<Lambda> (x::'a MABP tstream\<^sup>\<Omega>). Abs_ubundle (ABPBundleHelper s ora1 ora2 tb x(c_idOut \<mapsto> tsMap Data\<cdot>(tsMap invData\<cdot>(x  .  c_abpOut)))))\<cdot>(ubclLeast {c_abpOut, c_ar, c_as, c_dr, c_ds, c_idOut}))"
+              apply (simp)
+              apply (fold n_step_def)
+              apply (fold n_restrict_step_def)
+              apply (simp add: fixABPHelper_cont fixABPHelper_ext_cont f12 f13 f14)
+              apply (rule ub_eq)
+               apply (simp_all only: f299)
+              apply (simp add: ubclRestrict_ubundle_def)
+               apply (simp add: ubdom_ubrep_eq ABPBundleHelper_ext_ubWell)
+              apply auto
+                  apply (simp_all add: ubclRestrict_ubundle_def)
+                  apply (simp_all add: ubgetch_ubrep_eq ABPBundleHelper_ubWell ABPBundleHelper_ext_ubWell)
+                  by (simp add: f301 ubclRestrict_ubundle_def) +
+              qed
+      show ?thesis
+        apply (fold abp_ex_abpout_idout_res_eq) 
+        by (simp add: f100)
+    qed
+    have abphelper_ext_gencomp_eq: " ubFix (ufCompH (senderTSPF s \<otimes> medSR_TSPF ora1 \<otimes> recvTSPF) (medRS_TSPF ora2) tb) {c_abpOut, c_as, c_ar, c_dr, c_ds}  .  c_abpOut =
+    ubFix (\<Lambda> (x::'a MABP tstream\<^sup>\<Omega>). Abs_ubundle (ABPBundleHelper_ext s ora1 ora2 tb x)) {c_abpOut, c_ar, c_as, c_dr, c_ds, c_idOut}  .  c_idOut"
+    proof -
+  (*
+      have f0: "ubFix (\<Lambda> (x::'a MABP tstream\<^sup>\<Omega>). Abs_ubundle (ABPBundleHelper_ext s ora1 ora2 tb x)) {c_abpOut, c_ar, c_as, c_dr, c_ds, c_idOut} .  c_idOut = Lub abphelper_ext_chain_shift . c_idOut"
+        apply (fold abphelper_ext_chain_shift_lub_eq)
+        apply (simp add: ubFix_def)
+        apply (subst ubgetch_lub)
+          apply (simp add: fixABPHelper_ext_chain f12 f13 f14)
+        apply (subst ubdom_lub2)
+          apply (simp add: fixABPHelper_ext_chain f12 f13 f14)
+          apply (simp add: fixABPHelperCont_ext_iter_dom f12 f13 f14)
+        apply (subst ubgetch_lub)
+          apply (simp add: abphelper_ext_chain_ischain)
+        apply (subst ubdom_lub2)
+          apply (simp add: abphelper_ext_chain_ischain)
+         apply (simp add: abphelper_ext_chain_def)
+         apply (fold ubclDom_ubundle_def)
+         apply (simp add: ubclrestrict_dom)
+         apply (simp add: ubclDom_ubundle_def)
+         apply (simp add: fixABPHelperCont_ext_iter_dom f12 f13 f14)
+        apply (simp add: abphelper_ext_chain_shift_def abphelper_ext_chain_def)
+        by (simp add: ubclRestrict_ubundle_def)
+*)
+      have f1: "ubFix (ufCompH (senderTSPF s \<otimes> medSR_TSPF ora1 \<otimes> recvTSPF) (medRS_TSPF ora2) tb) {c_abpOut, c_as, c_ar, c_dr, c_ds}  .  c_abpOut = 
+          ubclRestrict {c_as, c_abpOut}\<cdot>(ubFix (ufCompH (senderTSPF s \<otimes> medSR_TSPF ora1 \<otimes> recvTSPF) (medRS_TSPF ora2) tb) {c_abpOut, c_as, c_ar, c_dr, c_ds})  .  c_abpOut" 
+        by (simp add: ubclRestrict_ubundle_def)
+      have f2: "ubFix (\<Lambda> (x::'a MABP tstream\<^sup>\<Omega>). Abs_ubundle (ABPBundleHelper_ext s ora1 ora2 tb x)) {c_abpOut, c_ar, c_as, c_dr, c_ds, c_idOut}  .  c_idOut = 
+ubclRestrict {c_as, c_idOut}\<cdot>(ubFix (\<Lambda> (x::'a MABP tstream\<^sup>\<Omega>).  Abs_ubundle (ABPBundleHelper_ext s ora1 ora2 tb x)) {c_abpOut, c_ar, c_as, c_dr, c_ds, c_idOut})  .  c_idOut"
+        by (simp add: ubclRestrict_ubundle_def)
+      have f4:"ubclRestrict {c_as, c_idOut}\<cdot>(ubFix (\<Lambda> (x::'a MABP tstream\<^sup>\<Omega>).  Abs_ubundle (ABPBundleHelper_ext s ora1 ora2 tb x)) {c_abpOut, c_ar, c_as, c_dr, c_ds, c_idOut})  .  c_idOut = 
+          (ubFix (\<Lambda> (x::'a MABP tstream\<^sup>\<Omega>).  Abs_ubundle (ABPBundleHelper_ext s ora1 ora2 tb x)) {c_abpOut, c_ar, c_as, c_dr, c_ds, c_idOut})  .  c_abpOut"
+        apply (simp add: ubclRestrict_ubundle_def)
+        by (simp add: abp_ex_abpout_idout_eq)
+      have f6: "chain (\<lambda>i::nat. iter_ubfix2 (ufCompH (senderTSPF s \<otimes> medSR_TSPF ora1 \<otimes> recvTSPF) (medRS_TSPF ora2)) i {c_abpOut, c_as, c_ar, c_dr, c_ds} tb)"
+        apply (rule iter_ubfix2_chain)
+        apply (simp only: ufunclComp_ufun_def)
+        apply (fold s_msr_r_comp_def)
+        apply (subst ufCompH_dom)
+          apply (simp add: s_msr_r_comp_mrs_compI)
+          apply (simp add: assms(2) ubclDom_ubundle_def)
+         apply (subst s_msr_r_comp_ran)
+         apply (simp add: ubcldom_least_cs)
+         apply (simp_all add:  med_tspfran2 med_tspfdom2 f13 f14 sender_tspfran  sender_tspfdom recv_tspfran recv_tspfdom)
+         apply blast
+        apply (subst s_msr_r_comp_ran)
+        apply (simp_all add:  med_tspfran2 med_tspfdom2 f13 f14 sender_tspfran  sender_tspfdom recv_tspfran recv_tspfdom) 
+        by blast
+      have f7: "ubfun_io_eq (ufCompH (senderTSPF s \<otimes> medSR_TSPF ora1 \<otimes> recvTSPF) (medRS_TSPF ora2) tb) {c_abpOut, c_as, c_ar, c_dr, c_ds}"
+        proof -
+          have "ubfun_io_eq (ufCompH s_msr_r_comp (medRS_TSPF ora2) tb) (insert c_as (ufRan\<cdot>s_msr_r_comp))"
+            by (metis (no_types) Un_empty_right Un_insert_right assms(2) innerABP_chain_c_ar_medrs medrs_innerABP_chain_dom s_msr_r_comp_mrs_compI ubclDom_ubundle_def ubcldom_least_cs ufCompH_dom ufran_2_ubcldom2)
+          then show "ubfun_io_eq (ufCompH (senderTSPF s \<otimes> medSR_TSPF ora1 \<otimes> recvTSPF) (medRS_TSPF ora2) tb) {c_abpOut, c_as, c_ar, c_dr, c_ds}"
+            by (metis (no_types) f21 insert_commute s_msr_r_comp_def ufunclComp_ufun_def)
+        qed
+        have f80: "\<And>i. ubclDom\<cdot>(ubclRestrict {c_as, c_abpOut}\<cdot>(innerABP_chain_shift i)) = {c_as, c_abpOut}"
+          apply (simp add: ubclRestrict_ubundle_def ubclDom_ubundle_def)
+          apply (simp only: innerABP_chain_shift_def innerABP_chain_def)
+          apply (fold s_msr_r_comp_def)
+          apply (fold ubclDom_ubundle_def)
+          apply (subst iter_ubfix2_dom)
+            apply (subst ufCompH_dom)
+              apply (simp add: s_msr_r_comp_mrs_compI)
+              apply (simp add: ubclDom_ubundle_def  assms(2))
+           apply (subst s_msr_r_comp_ran)
+             apply (simp_all add:  med_tspfran2 med_tspfdom2 f13 f14 sender_tspfran  sender_tspfdom recv_tspfran recv_tspfdom ubcldom_least_cs)
+          apply blast
+           apply (subst s_msr_r_comp_ran)
+            apply (simp_all add:  med_tspfran2 med_tspfdom2 f13 f14 sender_tspfran  sender_tspfdom recv_tspfran recv_tspfdom)
+          by blast
+        have f8: "ubclRestrict {c_as, c_abpOut}\<cdot>(Lub innerABP_chain_shift)  = Lub abphelper_ext_chain_shift "
+          apply (simp add: ubclRestrict_ubundle_def)
+          apply (subst ubrestrict_lub)
+          apply (simp add: innerABP_chain_shift_ischain)
+          apply (rule lub_eq)
+          apply (induct_tac i)
+           apply (rule ub_eq)
+            apply (fold ubclDom_ubundle_def)
+            apply (fold ubclRestrict_ubundle_def)
+            apply (simp_all add: f80)
+            apply (simp only: abphelper_ext_chain_shift_def abphelper_ext_chain_def)
+            apply (simp only: ubclrestrict_dom)
+            apply (simp only: ubclDom_ubundle_def)
+            apply (simp add: fixABPHelperCont_ext_iter_dom f12 f13 f14)
+            apply blast
+           apply auto
+            apply (simp add: ubclRestrict_ubundle_def)
+            apply (simp only: innerABP_chain_shift_def)
+            apply (simp only: two_times_simp_suc two_times_zero)
+
+            apply (subst innerABP_apply_step)
+    apply (simp only: ubclUnion_ubundle_def)
+    apply (subst ubunion_getchR)
+    apply (fold ubclDom_ubundle_def)
+             apply (simp add: medrs_innerABP_chain_dom)
+            apply (subst innerABP_apply_step)
+    apply (simp only: ubclUnion_ubundle_def)
+            apply (simp add: innerABP_chain_def)
+            apply (simp only: ubclLeast_ubundle_def ubclRestrict_ubundle_def)
+            apply (simp add: ubrestrict_ubleast_inter)
+
+            apply (subst ubunion_restrict2)
+             apply (fold ubclDom_ubundle_def)
+    apply (subst ufran_2_ubcldom2)
+    apply (simp_all add:  med_tspfran2 med_tspfdom2 f13 sender_tspfran  sender_tspfdom recv_tspfran recv_tspfdom)
+    apply (fold ubclLeast_ubundle_def)
+             apply (simp add: ubcldom_least_cs)
+
+            apply (subst medrs_tspf_apply)
+          apply simp
+             apply (fold ubclDom_ubundle_def)
+              apply (subst ufran_2_ubcldom2)
+          apply (fold ubclUnion_ubundle_def)
+               apply (simp add: ubclunion_ubcldom)
+               apply (simp add: ubcldom_least_cs)
+               apply (simp_all add: ubclDom_ubundle_def assms(2) sender_tspfdom sender_tspfran)
+             apply (fold ubclDom_ubundle_def)
+              apply (subst ufran_2_ubcldom2) +
+               apply (simp add: ubclunion_ubcldom)
+               apply (simp add: ubcldom_least_cs)
+               apply (simp_all add: ubclDom_ubundle_def assms(2) sender_tspfdom sender_tspfran)
+    apply (simp_all add:  med_tspfran2 med_tspfdom2 f13 sender_tspfran  sender_tspfdom recv_tspfran recv_tspfdom)
+             apply (fold ubclDom_ubundle_def)
+              apply (subst ufran_2_ubcldom2) +
+               apply (simp add: ubclunion_ubcldom)
+               apply (simp add: ubcldom_least_cs)
+               apply (simp_all add: ubclDom_ubundle_def assms(2) sender_tspfdom sender_tspfran)
+                apply (simp_all add:  med_tspfran2 med_tspfdom2 f13 sender_tspfran  sender_tspfdom recv_tspfran recv_tspfdom)
+          using f13 sfilterl4 apply blast
+            apply (subst ubgetch_ubrep_eq)
+             apply (simp add: ubWell_def)
+             apply (simp add: usclOkay_tstream_def)
+             apply (simp add: tsmap_tsdom_range)
+            apply simp
+            apply (simp add: ubclLeast_ubundle_def)
+            apply (simp add: ubclUnion_ubundle_def)
+            apply (subst ubunion_getchR)
+
+             apply (fold ubclDom_ubundle_def)
+              apply (subst ufran_2_ubcldom2) +
+               apply (simp_all add: ubclDom_ubundle_def assms(2) sender_tspfdom sender_tspfran)
+                apply (simp_all add:  med_tspfran2 med_tspfdom2 f13 sender_tspfran  sender_tspfdom recv_tspfran recv_tspfdom)
+
+
+
+
+            apply (simp only: abphelper_ext_chain_shift_def abphelper_ext_chain_def)
+            apply (simp only: four_times_simp_suc four_times_zero)
+            apply (simp only: ubclRestrict_ubundle_def )
+            apply (subst ubgetch_ubrestrict)
+             apply simp
+            apply (simp only: fixABPHelperCont_ext_iter_4_c_as f12 f13 f14)
+            apply (simp add: ubclLeast_ubundle_def)
+            apply (subst senderTSPF_apply)
+              apply (simp add: f13)
+             apply (simp add: ubclUnion_ubundle_def assms(2))
+             apply blast
+            apply (subst medsr_tspf_apply)
+              apply (subst ubdom_ubrep_eq)
+               apply (simp add: ubWell_def)
+               apply (simp add: usclOkay_tstream_def)
+               apply (simp add: tsmap_tsdom_range)
+              apply simp
+          using f13 sfilterl4 apply blast
+            apply (subst recvTSPF_apply)
+          apply (simp add: ubclDom_ubundle_def)
+              apply (subst ubdom_ubrep_eq)
+               apply (simp add: ubWell_def)
+               apply (simp add: usclOkay_tstream_def)
+              apply (simp add: tsmap_tsdom_range)
+             apply simp
+              apply (subst ubgetch_ubrep_eq)
+               apply (simp add: ubWell_def)
+               apply (simp add: usclOkay_tstream_def)
+               apply (simp add: tsmap_tsdom_range)
+              apply (subst ubgetch_ubrep_eq)
+               apply (simp add: ubWell_def)
+               apply (simp add: usclOkay_tstream_def)
+               apply (simp add: tsmap_tsdom_range)
+              apply (subst ubgetch_ubrep_eq)
+               apply (simp add: ubWell_def)
+               apply (simp add: usclOkay_tstream_def)
+               apply (simp add: tsmap_tsdom_range)
+              apply (subst ubgetch_ubrep_eq)
+               apply (simp add: ubWell_def)
+               apply (simp add: usclOkay_tstream_def)
+             apply (simp add: tsmap_tsdom_range)
+          apply simp
+
+
+
+            apply (simp add: ubclRestrict_ubundle_def)
+            apply (simp add: innerABP_chain_shift_def)
+            apply (subst innerABP_apply_step)
+           apply (simp add: innerABP_c_abpOut)
+
+
+            apply (subst senderTSPF_apply)
+              apply (simp add: f13)
+            apply (fold ubclDom_ubundle_def)
+            apply (subst sender_tb_innerABP_dom)
+            apply (simp add: sender_tspfdom)
+          apply blast
+
+            apply (subst medsr_tspf_apply)
+              apply (subst ubdom_ubrep_eq)
+               apply (simp add: ubWell_def)
+               apply (simp add: usclOkay_tstream_def)
+               apply (simp add: tsmap_tsdom_range)
+              apply simp
+          using f13 sfilterl4 apply blast
+            apply (subst recvTSPF_apply)
+          apply (simp add: ubclDom_ubundle_def)
+              apply (subst ubdom_ubrep_eq)
+               apply (simp add: ubWell_def)
+               apply (simp add: usclOkay_tstream_def)
+              apply (simp add: tsmap_tsdom_range)
+             apply simp
+              apply (subst ubgetch_ubrep_eq)
+               apply (simp add: ubWell_def)
+               apply (simp add: usclOkay_tstream_def)
+               apply (simp add: tsmap_tsdom_range)
+              apply (subst ubgetch_ubrep_eq)
+               apply (simp add: ubWell_def)
+               apply (simp add: usclOkay_tstream_def)
+               apply (simp add: tsmap_tsdom_range)
+              apply (subst ubgetch_ubrep_eq)
+               apply (simp add: ubWell_def)
+               apply (simp add: usclOkay_tstream_def)
+               apply (simp add: tsmap_tsdom_range)
+              apply (subst ubgetch_ubrep_eq)
+               apply (simp add: ubWell_def)
+               apply (simp add: usclOkay_tstream_def)
+             apply (simp add: tsmap_tsdom_range)
+           apply simp
+          apply (simp only: ubclUnion_ubundle_def)
+           apply (subst ubunion_getchL)
+          apply (fold ubclDom_ubundle_def)
+            apply (simp add: ubclrestrict_dom innerABP_chain_def)
+           apply (subst ubunion_getchR)       
+          apply (fold ubclDom_ubundle_def)
+            apply (simp only: ubclrestrict_dom innerABP_chain_def)
+            apply (subst iter_ubfix2_dom)
+             apply (fold ufunclComp_ufun_def)
+             apply (simp add: f7)
+            apply blast
+              apply (subst ubgetch_ubrep_eq)
+               apply (simp add: ubWell_def)
+               apply (simp add: usclOkay_tstream_def)
+            apply (simp add: tsmap_tsdom_range)
+          apply simp
+
+           apply (simp only: abphelper_ext_chain_shift_def abphelper_ext_chain_def)
+           apply (simp only: four_times_simp_suc four_times_zero)
+           apply (simp only: ubclRestrict_ubundle_def)
+           apply (subst ubgetch_ubrestrict)
+            apply simp
+           apply (subst ubgetch_ubrestrict)
+            apply simp
+           apply (simp only: fixABPHelperCont_ext_iter_3_c_abpOut f12 f13 f14)
+           apply (simp only: fixABPHelperCont_ext_iter_2 f12 f13 f14)
+           apply (simp only: fixABPHelperCont_ext_iter_1 f12 f13 f14)
+           apply simp
+           apply (simp add: fixABPHelper_ext_cont f12 f13 f14)
+           apply (simp add: ubclLeast_ubundle_def)
+           apply (subst ubgetch_ubrep_eq)
+            apply (simp add: ubWell_def)
+            apply (simp add: usclOkay_tstream_def tsmap_tsdom_range)
+
+           apply (subst innerABP_apply_step)
+           apply (simp add: innerABP_c_as)
+            apply (simp add: innerABP_chain_def)
+            apply (simp add: ubclLeast_ubundle_def ubclRestrict_ubundle_def)
+           apply (simp add: ubrestrict_ubleast_inter)
+           apply (subst medrs_tspf_apply)
+          apply simp
+          using f13 sfilterl4 apply blast
+              apply (subst ubgetch_ubrep_eq)
+               apply (simp add: ubWell_def)
+               apply (simp add: usclOkay_tstream_def)
+           apply (simp add: tsmap_tsdom_range)
+        proof -
+          fix n::nat
+          assume a1: "ubclRestrict {c_as, c_abpOut}\<cdot>(innerABP_chain_shift n) = abphelper_ext_chain_shift n"
+          have s1: "innerABP_chain_shift n = innerABP_chain (Suc (Suc (2 * n)))"
+            apply (simp add: innerABP_chain_shift_def)
+            done
+          have s2: "(abphelper_ext_chain_shift n) . c_as= 
+(iterate (Suc (Suc (Suc (Suc ((4::nat) * n)))))\<cdot>(\<Lambda> (x::'a MABP tstream\<^sup>\<Omega>). Abs_ubundle (ABPBundleHelper s ora1 ora2 tb x(c_idOut \<mapsto> tsMap Data\<cdot>(tsMap invData\<cdot>(x  .  c_abpOut)))))\<cdot>
+                                                             (ubclLeast {c_abpOut, c_ar, c_as, c_dr, c_ds, c_idOut})) . c_as"
+            apply (simp only: abphelper_ext_chain_shift_def abphelper_ext_chain_def)
+            apply (simp only: four_times_simp_suc four_times_zero)
+            apply (simp only: ubclRestrict_ubundle_def)
+            apply (rule ubgetch_ubrestrict)
+            by simp
+          have s3: "ubclRestrict {c_as, c_abpOut}\<cdot>(innerABP_chain_shift n) . c_as = (innerABP_chain_shift n) . c_as"
+            by (simp add: ubclRestrict_ubundle_def)
+          have f4: "(\<Lambda> (x::'a MABP tstream\<^sup>\<Omega>). Abs_ubundle (ABPBundleHelper s ora1 ora2 tb x(c_idOut \<mapsto> tsMap Data\<cdot>(tsMap invData\<cdot>(x  .  c_abpOut)))))\<cdot>(abphelper_ext_chain_shift n) . c_as= 
+(iterate (Suc (Suc (Suc (Suc (Suc ((4::nat) * n))))))\<cdot>(\<Lambda> (x::'a MABP tstream\<^sup>\<Omega>). Abs_ubundle (ABPBundleHelper s ora1 ora2 tb x(c_idOut \<mapsto> tsMap Data\<cdot>(tsMap invData\<cdot>(x  .  c_abpOut))))))\<cdot>
+                                         (ubclLeast {c_abpOut, c_ar, c_as, c_dr, c_ds, c_idOut}) . c_as"
+            apply (simp only: abphelper_ext_chain_shift_def abphelper_ext_chain_def)
+            apply (simp only: four_times_simp_suc)
+            apply (subst iterate_Suc)
+            sorry
+          obtain bla where bla_def: "bla = (iterate (Suc (Suc (Suc (Suc ((4::nat) * n)))))\<cdot>(\<Lambda> (x::'a MABP tstream\<^sup>\<Omega>). Abs_ubundle (ABPBundleHelper s ora1 ora2 tb x(c_idOut \<mapsto> tsMap Data\<cdot>(tsMap invData\<cdot>(x  .  c_abpOut)))))\<cdot>
+                                          (ubclLeast {c_abpOut, c_ar, c_as, c_dr, c_ds, c_idOut}))"
+            by simp
+          show "ubclRestrict {c_as, c_abpOut}\<cdot>(innerABP_chain_shift (Suc n)) = abphelper_ext_chain_shift (Suc n)"
+            apply (rule ub_eq)
+             apply (fold ubclDom_ubundle_def)
+             apply (simp_all add: f80)
+             apply (simp only: abphelper_ext_chain_shift_def)
+            apply (simp only: abphelper_ext_chain_def)
+             apply (simp only: ubclrestrict_dom)
+            apply (simp only: ubclDom_ubundle_def)
+             apply (simp only: fixABPHelperCont_ext_iter_dom f12 f13 f14)
+             apply blast
+            apply auto
+             apply (simp_all add: ubclRestrict_ubundle_def)
+             apply (simp only: innerABP_chain_shift_def)
+            apply (simp only: two_times_simp_suc)
+             apply (subst innerABP_apply_step)
+             apply (subst innerABP_c_as)
+
+
+             apply (subst medrs_tspf_apply)
+            apply (simp add: ubclRestrict_ubundle_def)
+            apply (simp only: innerABP_chain_def)
+               apply (fold ubclDom_ubundle_def)
+               apply (subst iter_ubfix2_dom)
+                apply (fold ufunclComp_ufun_def)
+                apply (simp add: f7)
+               apply blast
+            using f13 sfilterl4 apply blast
+            apply (subst ubgetch_ubrep_eq)
+               apply (simp add: ubWell_def)
+               apply (simp add: usclOkay_tstream_def)
+              apply (simp add: tsmap_tsdom_range)
+             apply simp
+            apply (simp add: ubclRestrict_ubundle_def)
+
+             apply (subst innerABP_apply_step)
+             apply (subst innerABP_c_ar)
+
+            apply (subst recvTSPF_apply)
+              apply (subst ufran_2_ubcldom2) +
+               apply (simp_all add: ubclDom_ubundle_def assms(2) sender_tspfdom sender_tspfran)
+                apply (simp_all add:  med_tspfran2 med_tspfdom2 f13 sender_tspfran  sender_tspfdom recv_tspfran recv_tspfdom)
+              apply (fold ubclDom_ubundle_def)
+              apply (simp add: ubclunion_dom)
+              apply (simp add: ubclrestrict_dom)
+              apply (simp only: innerABP_chain_def)
+               apply (subst iter_ubfix2_dom)
+                apply (fold ufunclComp_ufun_def)
+               apply (simp add: f7)
+              apply (simp add: ubclDom_ubundle_def assms(2))
+            apply (subst ubgetch_ubrep_eq)
+               apply (simp add: ubWell_def)
+               apply (simp add: usclOkay_tstream_def)
+              apply (simp add: tsmap_tsdom_range)
+             apply simp
+             apply (subst medsr_tspf_apply)
+            apply (fold ubclDom_ubundle_def)
+               apply (subst ufran_2_ubcldom2) +
+              apply (simp add: ubclunion_dom)
+              apply (simp add: ubclrestrict_dom)
+              apply (simp only: innerABP_chain_def)
+               apply (subst iter_ubfix2_dom)
+                apply (fold ufunclComp_ufun_def)
+               apply (simp add: f7)
+              apply (simp add: ubclDom_ubundle_def assms(2) sender_tspfdom)
+               apply (simp add: sender_tspfran)
+            using f13 sfilterl4 apply blast
+
+
+            apply (subst ubgetch_ubrep_eq)
+               apply (simp add: ubWell_def)
+               apply (simp add: usclOkay_tstream_def)
+              apply (simp add: tsmap_tsdom_range)
+             apply simp
+             apply (subst senderTSPF_apply)
+               apply (simp add: f13)
+            apply (fold ubclDom_ubundle_def)apply (simp add: ubclunion_dom)
+              apply (simp add: ubclrestrict_dom)
+              apply (simp only: innerABP_chain_def)
+               apply (subst iter_ubfix2_dom)
+                apply (fold ufunclComp_ufun_def)
+               apply (simp add: f7)
+              apply (simp add: ubclDom_ubundle_def assms(2) sender_tspfdom)
+            apply blast
+
+
+            apply (subst ubgetch_ubrep_eq)
+               apply (simp add: ubWell_def)
+               apply (simp add: usclOkay_tstream_def)
+              apply (simp add: tsmap_tsdom_range)
+             apply (fold s1)
+            apply (simp only: ubclUnion_ubundle_def)
+             apply (subst ubunion_getchL)
+              apply (fold ubclDom_ubundle_def)
+            apply (simp add: ubclrestrict_dom)
+             apply (subst ubunion_getchR)
+              apply (fold ubclDom_ubundle_def)
+              apply (simp add: ubclrestrict_dom)
+              apply (simp only: innerABP_chain_shift_def innerABP_chain_def)
+              apply (subst iter_ubfix2_dom)
+               apply (fold ufunclComp_ufun_def)
+               apply (simp add: f7)
+              apply simp +
+             apply (simp only: abphelper_ext_chain_shift_def abphelper_ext_chain_def)
+             apply (simp only: ubclRestrict_ubundle_def)
+             apply (subst ubgetch_ubrestrict)
+            apply simp
+             apply (subst ubgetch_ubrestrict)
+            apply simp
+             apply (simp only: four_times_simp_suc four_times_zero)
+             apply (subst fixABPHelperCont_ext_iter_4_c_as)
+                apply (simp add: f13)
+               apply (simp add: f13)
+              apply (simp add: f13)
+             apply (fold s2) 
+             apply (fold s3)
+             apply (simp add: a1)
+(*=======================================================================================*)
+            apply (simp only: innerABP_chain_shift_def)
+            apply (simp only: two_times_simp_suc)
+            apply (subst innerABP_apply_step)
+            apply (subst innerABP_c_abpOut)
+
+
+            apply (subst recvTSPF_apply)
+              apply (subst ufran_2_ubcldom2) +
+               apply (simp_all add: ubclDom_ubundle_def assms(2) sender_tspfdom sender_tspfran)
+                apply (simp_all add:  med_tspfran2 med_tspfdom2 f13 sender_tspfran  sender_tspfdom recv_tspfran recv_tspfdom)
+              apply (fold ubclDom_ubundle_def)
+              apply (simp add: ubclunion_dom)
+              apply (simp add: ubclrestrict_dom)
+              apply (simp only: innerABP_chain_def)
+               apply (subst iter_ubfix2_dom)
+                apply (fold ufunclComp_ufun_def)
+               apply (simp add: f7)
+              apply (simp add: ubclDom_ubundle_def assms(2))
+            apply (subst ubgetch_ubrep_eq)
+               apply (simp add: ubWell_def)
+               apply (simp add: usclOkay_tstream_def)
+              apply (simp add: tsmap_tsdom_range)
+             apply simp
+             apply (subst medsr_tspf_apply)
+            apply (fold ubclDom_ubundle_def)
+               apply (subst ufran_2_ubcldom2) +
+              apply (simp add: ubclunion_dom)
+              apply (simp add: ubclrestrict_dom)
+              apply (simp only: innerABP_chain_def)
+               apply (subst iter_ubfix2_dom)
+                apply (fold ufunclComp_ufun_def)
+               apply (simp add: f7)
+              apply (simp add: ubclDom_ubundle_def assms(2) sender_tspfdom)
+               apply (simp add: sender_tspfran)
+            using f13 sfilterl4 apply blast
+
+
+            apply (subst ubgetch_ubrep_eq)
+               apply (simp add: ubWell_def)
+               apply (simp add: usclOkay_tstream_def)
+              apply (simp add: tsmap_tsdom_range)
+             apply simp
+             apply (subst senderTSPF_apply)
+               apply (simp add: f13)
+            apply (fold ubclDom_ubundle_def)apply (simp add: ubclunion_dom)
+              apply (simp add: ubclrestrict_dom)
+              apply (simp only: innerABP_chain_def)
+               apply (subst iter_ubfix2_dom)
+                apply (fold ufunclComp_ufun_def)
+               apply (simp add: f7)
+              apply (simp add: ubclDom_ubundle_def assms(2) sender_tspfdom)
+            apply blast
+
+
+            apply (subst ubgetch_ubrep_eq)
+               apply (simp add: ubWell_def)
+               apply (simp add: usclOkay_tstream_def)
+             apply (simp add: tsmap_tsdom_range)
+            apply simp
+            apply (simp only: ubclUnion_ubundle_def)
+            apply (subst ubunion_getchL)
+              apply (fold ubclDom_ubundle_def)
+              apply (simp add: ubclrestrict_dom)
+             apply (subst ubunion_getchR)
+              apply (fold ubclDom_ubundle_def)
+            apply (simp add: ubclrestrict_dom)
+             apply (simp only: innerABP_chain_def)
+             apply (subst iter_ubfix2_dom)
+              apply (fold ufunclComp_ufun_def)
+              apply (simp add: f7)
+             apply simp
+            apply (simp add: ubclRestrict_ubundle_def)
+            apply (subst innerABP_apply_step)
+            apply (subst innerABP_c_as)
+            apply (fold s1)
+
+
+
+            apply (simp only: abphelper_ext_chain_shift_def)
+            apply (simp only: abphelper_ext_chain_def)
+            apply (simp only: ubclRestrict_ubundle_def)
+            apply (simp only: four_times_simp_suc)
+            apply (subst ubgetch_ubrestrict)
+             apply (simp)
+
+            apply (subst fixABPHelperCont_ext_iter_3_c_abpOut)
+               apply (simp add: f13)
+              apply (simp add: f13)
+             apply (simp add: f13)
+            apply (subst fixABPHelperCont_ext_iter_2)
+               apply (simp add: f13)
+              apply (simp add: f13)
+             apply (simp add: f13)
+            apply (subst fixABPHelperCont_ext_iter_1)
+               apply (simp add: f13)
+              apply (simp add: f13)
+             apply (simp add: f13)
+            apply (subst iterate_Suc)
+            apply (fold bla_def)
+            apply (simp add: fixABPHelper_ext_cont f12 f13 f14)
+            apply (subst ubgetch_ubrep_eq)
+             apply (simp add: ABPBundleHelper_ext_ubWell)
+            apply simp
+            apply (subst medrs_tspf_apply)
+              apply simp
+              apply (simp only: innerABP_chain_shift_def innerABP_chain_def)
+            apply (fold ubclDom_ubundle_def)
+              apply (subst iter_ubfix2_dom)
+               apply (fold ufunclComp_ufun_def)
+               apply (simp add: f7)
+              apply blast
+            using f13 sfilterl4 apply blast
+            apply simp
+            apply (subst ubgetch_ubrep_eq)
+               apply (simp add: ubWell_def)
+               apply (simp add: usclOkay_tstream_def)
+             apply (simp add: tsmap_tsdom_range)
+            apply simp
+            apply (simp only: bla_def)
+
+
+            sorry
+        qed
+      show ?thesis
+        apply (subst f0)
+        sorry
+    qed
+    show ?thesis
+      apply (simp add: ubFix_def)
+      apply (fold abphelper_chain_def)
+      apply (subst abphelper_N_ext_chain_eq)
+      apply (fold ubFix_def)
+      by (simp add: abphelper_ext_gencomp_eq)
+    qed 
+  paragraph \<open>proof end\<close>
 
   have f5: "(f \<rightleftharpoons> tb) . c_abpOut = (ubFix (fixABPHelperCont s ora1 ora2 tb) {c_abpOut, c_ar, c_as, c_dr, c_ds})  .  c_abpOut"
   proof - 
@@ -4169,13 +5143,8 @@ qed
       apply(simp add: ufCompI_def)
       apply(simp add: f20 f21)
      apply (simp add:  med_tspfran2 med_tspfdom2 f13)
-      apply(subst med_tspfdom)
-      using f13 sfilterl4 apply blast
-       apply(simp, subst med_tspfran)
-      using f13 sfilterl4 apply blast
-       apply simp
-      by auto
-    have f52: "(ufRan\<cdot>(senderTSPF s \<otimes> medSR_TSPF ora1 \<otimes> recvTSPF) \<union> ufRan\<cdot>(medRS_TSPF ora2)) = {c_abpOut, c_as, c_ar}"
+      using f13 sfilterl4 by blast
+    have f52: "(ufRan\<cdot>(senderTSPF s \<otimes> medSR_TSPF ora1 \<otimes> recvTSPF) \<union> ufRan\<cdot>(medRS_TSPF ora2)) = {c_ar, c_abpOut, c_dr, c_ds, c_as}"
       apply(simp add: f21, subst med_tspfran)
       using f13 sfilterl4 apply blast
        apply simp
@@ -4186,7 +5155,7 @@ qed
       apply(simp add: ufComp_def)
       apply(subst rep_abs_cufun)
        apply(simp add:  ufcomp_cont)
-       apply(subst ufcomp_well)
+       apply(rule ufcomp_well)
       sorry
   qed
   show ?thesis
