@@ -820,6 +820,59 @@ proof -
     by (simp add: f2 f3)
 qed
 
+
+subsubsection\<open>Associativity\<close>
+
+
+lemma ufcomp_asso: assumes "ufRan\<cdot>f1 \<inter> ufRan\<cdot>f2 = {}" and "ufRan\<cdot>f2 \<inter> ufRan\<cdot>f3 = {}" and "ufRan\<cdot>f1 \<inter> ufRan\<cdot>f3 = {}" 
+  shows "ufComp (ufComp f1 f2) f3 = ufComp f1 (ufComp f2 f3)"
+proof - 
+  have f1: "(ufCompI (ufComp f1 f2) f3) = (ufCompI f1 (ufComp f2 f3))"
+    apply(simp add: ufCompI_def)
+    apply(simp add: ufcomp_ran ufcomp_dom assms)
+    apply(simp add: ufCompI_def ufCompO_def)
+    by auto
+  have f2: "\<And>x. ubclDom\<cdot>x = (ufDom\<cdot>(ufComp f1 f2) \<union> ufDom\<cdot>f3 - (ufRan\<cdot>(ufComp f1 f2) \<union> ufRan\<cdot>f3)) \<Longrightarrow>
+      ubFix (ufCompH (ufComp f1 f2) f3 x) (ufRan\<cdot>(ufComp f1 f2) \<union> ufRan\<cdot>f3) =
+      ubFix (ufCompH f1 (ufComp f2 f3) x) (ufRan\<cdot>f1 \<union> ufRan\<cdot>(ufComp f2 f3))"
+  proof -  
+    fix x :: "'a"
+    assume f20: "ubclDom\<cdot>x = (ufDom\<cdot>(ufComp f1 f2) \<union> ufDom\<cdot>f3 - (ufRan\<cdot>(ufComp f1 f2) \<union> ufRan\<cdot>f3))"
+
+    show "ubFix (ufCompH (ufComp f1 f2) f3 x) (ufRan\<cdot>(ufComp f1 f2) \<union> ufRan\<cdot>f3) =
+          ubFix (ufCompH f1 (ufComp f2 f3) x) (ufRan\<cdot>f1 \<union> ufRan\<cdot>(ufComp f2 f3))"
+      apply(subst ufCompH_def, subst ufComp_def)
+      apply(simp)                                                               
+      apply(subst rep_abs_cufun)
+        apply(simp_all add: assms)
+      apply(subst (2) ufCompH_def, subst (4) ufComp_def)
+      apply(simp)
+      apply(subst rep_abs_cufun)
+        apply (simp_all add: assms)
+
+
+      sorry
+  qed
+  show ?thesis
+    apply(subst (2) ufComp_def)
+    apply(simp)
+    apply(subst (4) ufComp_def)
+    apply(simp add: f1)
+    using f2 by (metis (no_types, hide_lams) f1 ufCompI_def)
+qed
+
+
+lemma ufcomp_causal: assumes "ufRan\<cdot>f1 \<inter> ufRan\<cdot>f2 = {}" and "ufIsWeak f1" and "ufIsStrong f2" 
+  shows "ufIsWeak (ufComp f1 f2)"
+proof(cases "ufCompL f1 f2 = {}")
+  case True (* Parallel case *)
+  then show ?thesis sorry
+next
+  case False (* Internal channels *)
+  then show ?thesis sorry
+qed
+
+
 (* parcomp *)
 subsection\<open>Parallel Composition\<close>
 

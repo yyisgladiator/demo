@@ -635,6 +635,75 @@ lemma ufuntype_insert: "ufunType\<cdot>f = (ufDom\<cdot>f, ufRan\<cdot>f)"
   by (simp add: ufunType_def)
   
 
+subsection \<open>monoTick2cont\<close>
+
+
+lemma tspfMono2weak2cont: assumes "monofun f" 
+  and "(\<forall>b. (b \<in> (dom f) \<longrightarrow> ubclLen b \<le> ubclLen (the (f b))))"
+  shows "cont f"    
+proof - 
+  have f1: "\<And>Y. chain Y \<longrightarrow> f (\<Squnion>i. Y i) \<sqsubseteq> (\<Squnion>i. f (Y i))"
+  proof
+    fix Y
+    assume f10: "chain (Y :: nat \<Rightarrow> 'a)"
+    hence f11: "chain (\<lambda>i. f (Y i))"
+      using ch2ch_monofun assms(1) by blast
+    show "f (\<Squnion>i. Y i) \<sqsubseteq> (\<Squnion>i. f (Y i))"
+    proof(cases "finite_chain Y")
+      case True
+      thus ?thesis 
+        using assms(1) eq_imp_below f10 finite_chain_lub by blast
+    next
+      case False
+      hence f21: "\<forall> i. \<exists> j\<ge>i. Y i \<sqsubseteq> Y j \<and> Y i \<noteq> Y j"
+        using f10 finite_chain_def max_in_chainI po_class.chain_mono by blast
+      show ?thesis 
+      proof(cases "f(\<Squnion>i::nat. Y i)")
+        case None
+        thus ?thesis 
+          by (metis (no_types, lifting) assms(1) below_option_def f10 f11 is_ub_thelub monofun_def)
+      next
+        case (Some a)
+        obtain b where f23: "(\<Squnion>i::nat. f (Y i)) = Some b"
+          by (metis (full_types) Some assms(1) below_option_def f10 f11 is_ub_thelub monofun_def not_None_eq)      
+        have f24: "\<forall>i. the (f (Y i)) \<sqsubseteq> the (f(\<Squnion>i::nat. Y i))"
+          by (simp add: assms(1) f10 is_ub_thelub monofunE)
+        have "a \<sqsubseteq> b"
+          proof(cases "ubclLen (\<Squnion>i::nat. Y i) = \<infinity>")
+            case True 
+            then have f25: "ubclLen a = \<infinity>"
+              using Some assms(2) inf_less_eq by auto
+            have f26: "\<forall>i. (\<exists>j\<ge>i. ubclLen (Y i) < ubclLen (Y j)) \<or> ubclLen (Y i) = \<infinity>"
+              
+              sorry
+            then have f27: "\<forall>i. (\<exists>j\<ge>i. ubclLen (the (f (Y i))) < ubclLen (the (f (Y j)))) \<or> ubclLen (the (f (Y i))) = \<infinity>"
+              sorry
+            then have f28: "ubclLen b = \<infinity>"
+             
+              sorry
+            have "b \<sqsubseteq> a"
+              by (metis Some below_option_def f11 f23 f24 is_ub_thelub lub_below option.simps(3) some_below2)
+            then have "a = b"
+              using f25 f28 (* more ubclLen assms in class? *)
+              sorry
+            thus ?thesis 
+             by simp
+          next
+            case False
+            then show ?thesis 
+              sorry
+          qed
+        thus ?thesis 
+          using Some f23 some_below by auto
+      qed
+    qed
+  qed
+  show ?thesis
+    apply (rule contI2)
+    apply(simp add: assms(1))
+    by(simp add: f1)
+qed
+
 
 (****************************************************)
 section\<open>Instantiation\<close>
