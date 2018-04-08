@@ -1410,103 +1410,57 @@ lemma prop0_h2_2:
 lemma prop0_h3_h:"tsMed\<cdot>ts\<cdot>p\<noteq>\<bottom> \<Longrightarrow> tsAbs\<cdot>(updis t &&\<surd> tsMed\<cdot>ts\<cdot>p) = \<up>t \<bullet> (tsAbs\<cdot>(tsMed\<cdot>ts\<cdot>p))"
   by (simp add: lscons_conv tsabs_mlscons)
 
-lemma tsmed_shd_adm_h2:"chain Y \<Longrightarrow> Y i\<noteq>\<epsilon> \<Longrightarrow> shd (Y i) = shd (\<Squnion>i. Y i)"
-  by (simp add: below_shd is_ub_thelub)
-    
-lemma tsmed_shd:
-  "#ora1=\<infinity> \<Longrightarrow> #ora2=\<infinity> 
-  \<Longrightarrow> shd (tsAbs\<cdot>(tsMed\<cdot>ts\<cdot>(updis True && ora1))) = shd (tsAbs\<cdot>(tsMed\<cdot>ts\<cdot>(updis True && ora2)))"
-  proof (induction ts)
-    case adm
-    then show ?case
-    proof(rule adm_imp)
-      show "adm (\<lambda>x. #ora1 \<noteq> \<infinity>)"
-        by simp
-      show "adm (\<lambda>x. #ora2 = \<infinity> \<longrightarrow> 
-        shd (tsAbs\<cdot>(tsMed\<cdot>x\<cdot>(updis True && ora1))) = shd (tsAbs\<cdot>(tsMed\<cdot>x\<cdot>(updis True && ora2))))"
-        proof(rule adm_imp)      
-          show "adm (\<lambda>x. #ora2 \<noteq> \<infinity>)"
-            by simp
-          have "\<And>Y. chain Y \<Longrightarrow>
-            \<forall>i. shd (tsAbs\<cdot>(tsMed\<cdot>(Y i)\<cdot>(updis True && ora1))) =
-            shd (tsAbs\<cdot>(tsMed\<cdot>(Y i)\<cdot>(updis True && ora2))) \<Longrightarrow>
-            shd (\<Squnion>i. tsAbs\<cdot>(tsMed\<cdot>(Y i)\<cdot>(updis True && ora1))) =
-            shd (\<Squnion>i. tsAbs\<cdot>(tsMed\<cdot>(Y i)\<cdot>(updis True && ora2)))"
-             (* proof-
-                fix Y::"nat \<Rightarrow>'a tstream"
-                assume a1: "chain Y"
-                assume a2: "\<forall>i. shd (tsAbs\<cdot>(tsMed\<cdot>(Y i)\<cdot>(updis True && ora1))) 
-                  = shd (tsAbs\<cdot>(tsMed\<cdot>(Y i)\<cdot>(updis True && ora2)))"
-                have c1:"chain (\<lambda>i. tsAbs\<cdot>(tsMed\<cdot>(Y i)\<cdot>(updis True && ora1)))"
-                  by (simp add: a1)
-                have c2:"chain (\<lambda>i. tsAbs\<cdot>(tsMed\<cdot>(Y i)\<cdot>(updis True && ora2)))"
-                  by (simp add: a1)
-                show "shd (\<Squnion>i. tsAbs\<cdot>(tsMed\<cdot>(Y i)\<cdot>(updis True && ora1))) =
-                  shd (\<Squnion>i. tsAbs\<cdot>(tsMed\<cdot>(Y i)\<cdot>(updis True && ora2)))"
-                  by (metis (no_types, lifting) a2 c1 c2 lub_eq_bottom_iff tsmed_shd_adm_h2)
-              qed *)sorry
-          then have "\<And>Y. chain Y \<Longrightarrow>
-             \<forall>i. shd (tsAbs\<cdot>(tsMed\<cdot>(Y i)\<cdot>(updis True && ora1))) = shd (tsAbs\<cdot>(tsMed\<cdot>(Y i)\<cdot>(updis True && ora2))) \<Longrightarrow>
-             shd (tsAbs\<cdot>(tsMed\<cdot>(\<Squnion>i. Y i)\<cdot>(updis True && ora1))) = shd (tsAbs\<cdot>(tsMed\<cdot>(\<Squnion>i. Y i)\<cdot>(updis True && ora2)))"
-             by (simp add: contlub_cfun_arg contlub_cfun_fun)
-          then show "adm (\<lambda>x. shd (tsAbs\<cdot>(tsMed\<cdot>x\<cdot>(updis True && ora1))) =
-                 shd (tsAbs\<cdot>(tsMed\<cdot>x\<cdot>(updis True && ora2))))"
-            by (rule admI)
-        qed
-    qed
-  next
-    case bottom
-    then show ?case 
-      by simp
-  next
-    case (delayfun ts)
-    then show ?case
-      by (metis stream.con_rews(2) tsabs_delayfun tsmed_delayfun)
-  next
-    case (mlscons ts t)
-    then show ?case
-      by (metis prop0_h3_h shd1 tsmed_mlscons_true tsmed_nbot)
-  qed
+lemma chain_lub_shd: assumes Y_chain: "chain Y" and chain_elem_nbot: "Y i \<noteq> \<epsilon>" 
+  shows "shd (Y i) = shd (\<Squnion>i. Y i)"
+  using Y_chain below_shd chain_elem_nbot is_ub_thelub by auto
 
-lemma tsmed_shd:
-  "#ora1=\<infinity> \<Longrightarrow> #ora2=\<infinity> 
-  \<Longrightarrow> shd (tsAbs\<cdot>(tsMed\<cdot>ts\<cdot>(updis True && ora1))) = shd (tsAbs\<cdot>(tsMed\<cdot>ts\<cdot>(updis True && ora2)))"
+lemma tsmed_shd: assumes "#ora1=\<infinity>" and "#ora2=\<infinity>"
+  shows "shd (tsAbs\<cdot>(tsMed\<cdot>ts\<cdot>(updis True && ora1))) = shd (tsAbs\<cdot>(tsMed\<cdot>ts\<cdot>(updis True && ora2)))"
+  using assms
   proof (induction ts)
     case adm
     then show ?case
-      proof (rule adm_imp,auto)+ (*auto entfernen *)
-        show "adm (\<lambda>x. shd (tsAbs\<cdot>(tsMed\<cdot>x\<cdot>(updis True && ora1))) =
-          shd (tsAbs\<cdot>(tsMed\<cdot>x\<cdot>(updis True && ora2))))"
-          proof (rule admI, simp add: contlub_cfun_arg contlub_cfun_fun)
-            show "\<And>Y. chain Y \<Longrightarrow> \<forall>i. shd (tsAbs\<cdot>(tsMed\<cdot>(Y i)\<cdot>(updis True && ora1))) =
-              shd (tsAbs\<cdot>(tsMed\<cdot>(Y i)\<cdot>(updis True && ora2))) \<Longrightarrow>
-              shd (\<Squnion>i. tsAbs\<cdot>(tsMed\<cdot>(Y i)\<cdot>(updis True && ora1))) =
-              shd (\<Squnion>i. tsAbs\<cdot>(tsMed\<cdot>(Y i)\<cdot>(updis True && ora2)))"
-              proof-
-                fix Y::"nat \<Rightarrow>'a tstream"
-                assume a1: "chain Y"
-                assume a2: "\<forall>i. shd (tsAbs\<cdot>(tsMed\<cdot>(Y i)\<cdot>(updis True && ora1))) 
-                  = shd (tsAbs\<cdot>(tsMed\<cdot>(Y i)\<cdot>(updis True && ora2)))"
-                have c1:"chain (\<lambda>i. tsAbs\<cdot>(tsMed\<cdot>(Y i)\<cdot>(updis True && ora1)))"
-                  by (simp add: a1)
-                have c2:"chain (\<lambda>i. tsAbs\<cdot>(tsMed\<cdot>(Y i)\<cdot>(updis True && ora2)))"
-                  by (simp add: a1)
-                (* Frage *)
-                show "shd (\<Squnion>i. tsAbs\<cdot>(tsMed\<cdot>(Y i)\<cdot>(updis True && ora1))) =
-                  shd (\<Squnion>i. tsAbs\<cdot>(tsMed\<cdot>(Y i)\<cdot>(updis True && ora2)))"
-                  by (metis (no_types, lifting) a2 c1 c2 lub_eq_bottom_iff tsmed_shd_adm_h2)
+      proof (rule adm_imp)
+        show "adm (\<lambda>x. #ora1 \<noteq> \<infinity>)"
+          by simp
+      next
+        show "adm (\<lambda>x. #ora2 = \<infinity> \<longrightarrow> 
+              shd (tsAbs\<cdot>(tsMed\<cdot>x\<cdot>(updis True && ora1))) = shd (tsAbs\<cdot>(tsMed\<cdot>x\<cdot>(updis True && ora2))))"
+          proof(rule adm_imp)
+            show "adm (\<lambda>x. #ora2 \<noteq> \<infinity>)"
+              by simp
+          next
+            show "adm (\<lambda>x. shd (tsAbs\<cdot>(tsMed\<cdot>x\<cdot>(updis True && ora1))) 
+                             = shd (tsAbs\<cdot>(tsMed\<cdot>x\<cdot>(updis True && ora2))))"
+              proof (rule admI)
+                fix Y :: "nat \<Rightarrow> 'c tstream"
+                assume Y_chain: "chain Y"
+                assume adm_hyp: "\<forall>i. shd (tsAbs\<cdot>(tsMed\<cdot>(Y i)\<cdot>(updis True && ora1))) 
+                               = shd (tsAbs\<cdot>(tsMed\<cdot>(Y i)\<cdot>(updis True && ora2)))"
+                have tsmed_ora1_chain: "chain (\<lambda>i. tsAbs\<cdot>(tsMed\<cdot>(Y i)\<cdot>(updis True && ora1)))"
+                  by (simp add: Y_chain)
+                have tsmed_ora2_chain: "chain (\<lambda>i. tsAbs\<cdot>(tsMed\<cdot>(Y i)\<cdot>(updis True && ora2)))"
+                  by (simp add: Y_chain)
+                have tsmed_chains_shd_eq: "shd (\<Squnion>i. tsAbs\<cdot>(tsMed\<cdot>(Y i)\<cdot>(updis True && ora1))) 
+                                          = shd (\<Squnion>i. tsAbs\<cdot>(tsMed\<cdot>(Y i)\<cdot>(updis True && ora2)))"
+                  using chain_lub_shd
+                  by (metis (no_types, lifting) adm_hyp lub_eq_bottom_iff tsmed_ora1_chain 
+                      tsmed_ora2_chain)
+                then show "shd (tsAbs\<cdot>(tsMed\<cdot>(\<Squnion>i. Y i)\<cdot>(updis True && ora1))) 
+                             = shd (tsAbs\<cdot>(tsMed\<cdot>(\<Squnion>i. Y i)\<cdot>(updis True && ora2)))"
+                  by (simp add: Y_chain contlub_cfun_fun contlub_cfun_arg)
               qed
           qed
       qed
-  next
+    next    
     case bottom
     then show ?case 
       by simp
-  next
+    next
     case (delayfun ts)
     then show ?case
       by (metis stream.con_rews(2) tsabs_delayfun tsmed_delayfun)
-  next
+    next
     case (mlscons ts t)
     then show ?case
       by (metis prop0_h3_h shd1 tsmed_mlscons_true tsmed_nbot)
