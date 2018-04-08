@@ -3,6 +3,14 @@ imports "../../TStream"
 
 begin
 
+lemma wellcases [case_names bottom inf fin well]:
+  assumes bottom: "ts = \<epsilon> \<Longrightarrow> P ts"
+    and inf: "#({\<surd>} \<ominus> ts) = \<infinity> \<Longrightarrow> P ts"
+    and fin: "#ts < \<infinity> \<and> (\<exists>x. ts = x \<bullet> \<up>\<surd>) \<Longrightarrow> P ts"
+    and well: "ts_well ts"
+  shows "P ts"
+  by (meson bottom fin inf ts_well_def well)
+
 (* ----------------------------------------------------------------------- *)
 section {* le *}
 (* ----------------------------------------------------------------------- *)
@@ -32,11 +40,6 @@ lemma min_lnsuc: assumes "lnsuc\<cdot>x = min (lnsuc\<cdot>y)(lnsuc\<cdot>z)" sh
 (* ----------------------------------------------------------------------- *)
 section {* lub *}
 (* ----------------------------------------------------------------------- *)
-
-(*
-lemma lub_mono_const_leq: assumes "\<lbrakk>chain (X::nat\<Rightarrow>lnat);  \<And>i. X i \<le> y\<rbrakk>" shows "(\<Squnion>i. X i) \<le> y"
-lemma lub_mono_const_ge: assumes "\<lbrakk>chain (X::nat\<Rightarrow>lnat);  \<And>i. X i > y\<rbrakk>" shows "(\<Squnion>i. X i) > y"
- *)
 
 lemma lub_mono_const_leq: "\<lbrakk>chain (X::nat\<Rightarrow>lnat);  \<And>i. X i \<le> y\<rbrakk> \<Longrightarrow> (\<Squnion>i. X i) \<le> y"
   using lnle_conv lub_below by blast
@@ -71,7 +74,7 @@ lemma slen_scons2: "#b \<le> #(a \<bullet> b)"
 section {* sdrop *}
 (* ----------------------------------------------------------------------- *)
 
-(* lntake *)
+(* lntake  sledgehammer Isar for case (Suc n) \<rightarrow> need to work out *)
 lemma sdrop_empty:
   assumes notInf: "#as \<noteq> \<infinity>" and lntakeZero: "lntake n\<cdot>(#as) = (#as)" shows "sdrop n\<cdot>as = \<epsilon>"
   using assms
@@ -81,10 +84,7 @@ lemma sdrop_empty:
       by (simp add: bot_is_0)
   next
     case (Suc n)
-(*      have "as=\<epsilon>" 
-    sorry*)
     then show ?case
-(*      by simp *)
     proof -
       have f1: "#(srt\<cdot>as) \<noteq> \<infinity>"
         by (metis (no_types) Suc.prems(1) fair_sdrop fair_sdrop_rev sdrop_forw_rt)
@@ -167,7 +167,6 @@ lemma sdropwhile_le: assumes notInf: "#as\<noteq>\<infinity>" and notEmp: "as\<n
       by (metis inf_ub le2lnle le_neq_trans lnsuc_lnle_emb notInf sdropwhile_nle sdropwhile_t shd1 shdFun slen_scons)
   qed
 
-(* or okay? *)
 lemma sdropwhile_sfoot_empty: assumes "#s < \<infinity>" shows "sfoot s = sfoot (sdropwhile f\<cdot>s) \<or> sdropwhile f\<cdot>s = \<epsilon>"
   by (metis inf_ub lnless_def order_less_le sconc_fst_inf sfoot_conc slen_sconc_snd_inf 
       stakewhileDropwhile assms)
@@ -176,7 +175,7 @@ lemma sdropwhile_nempty_empty: assumes "#as < \<infinity>" and "(\<exists>x. as 
       shows "\<exists>t. (sdropwhile f\<cdot>as) = t \<bullet> \<up>a \<or> (sdropwhile f\<cdot>as) = \<epsilon>"
   by (metis fold_inf lnsuc_lnle_emb not_le sdropwhile_sfoot_empty sfoot12 sfoot2 slen_lnsuc assms)
 
-(* Formulierung Lemma in Isar? *)
+(* How to formulate lemma in Isar? *)
 lemma sdropwhile_lub: "\<And>Y. chain Y \<Longrightarrow> \<forall>i. sdropwhile f\<cdot>(Y i) = \<epsilon> \<Longrightarrow> sdropwhile f\<cdot>(\<Squnion>i. Y i) = \<epsilon> "
   by(simp add: contlub_cfun_arg contlub_cfun_fun)
 
@@ -187,7 +186,6 @@ lemma sdropwhile_sdrop: assumes "#as \<noteq> \<infinity>" shows "\<exists>n. sd
     then show ?thesis
       using stakewhile_sdropwhilel1 by blast
   qed
-
 
 lemma sdropwhile_all: assumes "\<forall>x. x \<in> sdom\<cdot>(as::'a stream) \<longrightarrow> f x" shows "sdropwhile f\<cdot>as = \<epsilon>"
   using assms
@@ -242,85 +240,6 @@ lemma sdropwhile_fair: assumes inf: "#({\<surd>} \<ominus> s) = \<infinity>" and
       using inf slen_sfilter_sdrop by force
   qed
 
-lemma wellcases [case_names bottom inf fin well]:
-  assumes bottom: "ts = \<epsilon> \<Longrightarrow> P ts"
-    and inf: "#({\<surd>} \<ominus> ts) = \<infinity> \<Longrightarrow> P ts"
-    and fin: "#ts < \<infinity> \<and> (\<exists>x. ts = x \<bullet> \<up>\<surd>) \<Longrightarrow> P ts"
-    and well: "ts_well ts"
-  shows "P ts"
-  by (meson bottom fin inf ts_well_def well)
-
-lemma ts_well_sdropwhile_2: assumes tswell: "ts_well as" and notEmpty: "sdropwhile f\<cdot>as \<noteq> \<epsilon>" and
-    notInf: "#({\<surd>} \<ominus> sdropwhile f\<cdot>as) \<noteq> \<infinity>" shows "\<exists>xa. sdropwhile f\<cdot>as = xa \<bullet> \<up>\<surd>"
-proof -  
-  have wellCases:"as = \<epsilon> \<or> #({\<surd>} \<ominus> as) = \<infinity> \<or> #as < \<infinity> \<and> (\<exists>x. as = x \<bullet> \<up>\<surd>)"
-    by (meson tswell ts_well_def)
-  have empty:"as = \<epsilon> \<Longrightarrow> (sdropwhile f\<cdot>as) = \<epsilon>"
-    by simp
-  have lengthInf:"#({\<surd>} \<ominus> as) = \<infinity> \<Longrightarrow>  #as = \<infinity>"
-    using sfilterl4 by fastforce
-  have infStream: "#({\<surd>} \<ominus> as) = \<infinity> \<Longrightarrow> #({\<surd>} \<ominus> sdropwhile f\<cdot>as) = \<infinity> \<or>
-        (sdropwhile f\<cdot>as) = \<epsilon>"
-    proof (cases "\<exists>n. \<not> f (snth n as)")
-      case True
-      then show ?thesis
-        proof (cases rule: wellcases [of as])
-          case bottom
-          then show ?thesis 
-            by simp
-        next
-          case inf
-          then show ?thesis 
-            using True sdropwhile_fair by blast
-        next
-          case fin
-          then show ?thesis
-            sorry
-        next
-        case well
-          then show ?case 
-            by (simp add: tswell)
-        qed
-    next
-      case False
-      then show ?thesis 
-      by (metis bot_is_0 ex_snth_in_sfilter_nempty lnat.con_rews sdropwhile_all singletonD slen_empty_eq strdw_filter)
-    qed
-(*
-    apply(case_tac "\<exists>n. \<not> f (snth n as)")
-    apply(simp add: sdropwhile_fair)
-    by (smt ex_snth_in_sfilter_nempty lnat.con_rews lnzero_def sdropwhile_all singletonD 
-        slen_empty_eq strdw_filter_h)
-*)
-  have h4:"#as < \<infinity> \<and> (\<exists>x. as = x \<bullet> \<up>\<surd>) \<Longrightarrow> \<exists>t. (sdropwhile f\<cdot>as) = t \<bullet> \<up>\<surd> \<or> (sdropwhile f\<cdot>as) = \<epsilon>"
-    using sdropwhile_nempty_empty by blast
-  then show ?thesis
-    using notEmpty notInf wellCases empty infStream by blast
-qed    
-       
-lemma ts_well_sdropwhile_1:"ts_well as \<Longrightarrow> sdropwhile f\<cdot>as \<noteq> \<epsilon> \<Longrightarrow>
-    #({\<surd>} \<ominus> sdropwhile f\<cdot>as) \<noteq> \<infinity> \<Longrightarrow> #(sdropwhile f\<cdot>as) < \<infinity>"  
-proof-
-  assume a0:"ts_well as"
-  assume a1:"sdropwhile f\<cdot>as \<noteq> \<epsilon>"
-  assume a2:"#({\<surd>} \<ominus> sdropwhile f\<cdot>as) \<noteq> \<infinity>"
-  have h0:"as = \<epsilon> \<or> #({\<surd>} \<ominus> as) = \<infinity> \<or> #as < \<infinity> \<and> (\<exists>x. as = x \<bullet> \<up>\<surd>)"
-    by (meson a0 ts_well_def)
-  have h1:"as = \<epsilon> \<Longrightarrow> (sdropwhile f\<cdot>as) = \<epsilon>"
-    by simp
-  have h2:"#({\<surd>} \<ominus> as) = \<infinity> \<Longrightarrow> #as = \<infinity>"
-    using sfilterl4 by fastforce
-  have h3:"#({\<surd>} \<ominus> as) = \<infinity> \<Longrightarrow>#({\<surd>} \<ominus> sdropwhile f\<cdot>as) = \<infinity> \<or> (sdropwhile f\<cdot>as) = \<epsilon>"
-    apply(case_tac "\<exists>n. \<not>f (snth n as)")
-    apply(simp add: sdropwhile_fair)
-    by (smt ex_snth_in_sfilter_nempty lnat.con_rews lnzero_def sdropwhile_all singletonD 
-        slen_empty_eq strdw_filter_h)
-  have h4:"#as < \<infinity> \<Longrightarrow> #(sdropwhile f\<cdot>as) < \<infinity> "
-    by (meson sdropwhile_nle leD leI trans_lnle)
-  then show ?thesis
-    using a1 a2 h0 h1 h3 by blast
-qed
-
 lemma stakewhile_sdropwhilel2:"#(stakewhile f\<cdot>x) = \<infinity> \<Longrightarrow> sdropwhile f\<cdot>x = \<epsilon>"
 proof-
  assume "#(stakewhile f\<cdot>x) = \<infinity>"
@@ -333,20 +252,14 @@ proof-
  then show ?thesis
    using sdropwhile_all by blast
 qed
-  
-lemma ts_well_sdropwhile: assumes "ts_well as" shows "ts_well(sdropwhile f\<cdot>as)"
-  apply(simp add: ts_well_def,auto)
-  using ts_well_sdropwhile_1 assms apply blast
-  using ts_well_sdropwhile_2 assms by blast
 
-(*
 lemma sdropwhile_well: assumes "ts_well s" shows "ts_well (sdropwhile f\<cdot>s)"
   apply (cases "#(stakewhile f\<cdot>s)" rule: lncases)
   apply (simp add: stakewhile_sdropwhilel2) 
-  by (simp add: assms stakewhile_sdropwhilel1)*)
+  by (simp add: assms stakewhile_sdropwhilel1)
 
 lemma cont_sdopwhile_tsabs:"cont(\<lambda>as. tsAbs\<cdot>(Abs_tstream ((sdropwhile f\<cdot>(Rep_tstream as)))))"
-  by(simp add: ts_well_sdropwhile)
+  by(simp add: sdropwhile_well)
 
 (* helper lemma for sdropwhile_tsabs *)
 lemma cont_h:"chain Y \<Longrightarrow> 
@@ -380,7 +293,7 @@ lemma sfilter_dwl1_inv:
 by simp
 
 lemma cont_srt_sdropwhile:"cont(\<lambda>as. (Abs_tstream (srt\<cdot>(sdropwhile f\<cdot>(Rep_tstream as)))))"
-  by(simp add: ts_well_sdropwhile)  
+  by(simp add: sdropwhile_well)  
 
 (* ----------------------------------------------------------------------- *)
 section {* stakewhile *}
@@ -411,13 +324,15 @@ lemma sconc_scons2: "s1 \<bullet> (s2 \<bullet> s3) = (s1 \<bullet> s2) \<bullet
 section {* stake *}
 (* ----------------------------------------------------------------------- *)
 
-lemma stake_lntake_h:"(\<And>(i::'a stream). #(stake k\<cdot>i) = lntake k\<cdot>(#i)) \<Longrightarrow> #(stake (Suc k)\<cdot>(i::'a stream)) = lntake (Suc k)\<cdot>(#i)"
+lemma stake_lntake_h:"(\<And>(i::'a stream). #(stake k\<cdot>i) = lntake k\<cdot>(#i)) 
+        \<Longrightarrow> #(stake (Suc k)\<cdot>(i::'a stream)) = lntake (Suc k)\<cdot>(#i)"
 proof-
   assume a0:"(\<And>(i::'a stream). #(stake k\<cdot>i) = lntake k\<cdot>(#i))"
   have h0:"#(stake k\<cdot>(srt\<cdot>i)) = lntake k\<cdot>(#(srt\<cdot>i))"
     by (insert a0 [of "(srt\<cdot>i)"], auto)
   then show ?thesis
-    by (metis lnat.take_strict lntake_more lnzero_def slen_scons stake_Suc stream.take_strict strict_slen surj_scons)
+    by (metis lnat.take_strict lntake_more lnzero_def slen_scons stake_Suc stream.take_strict 
+        strict_slen surj_scons)
 qed
   
 lemma stake_lntake:"#(stake k\<cdot>i) = lntake k\<cdot>(#i)"
@@ -434,7 +349,8 @@ proof-
     using nreach_lnat_rev by auto
 qed
 
-lemma stake_slen_h:"(\<And>i::'a stream. Fin k < #i \<Longrightarrow> #(stake k\<cdot>i) = Fin k) \<Longrightarrow> Fin (Suc k) < #(i::'a stream) \<Longrightarrow> #(stake (Suc k)\<cdot>i) = Fin (Suc k)"    
+lemma stake_slen_h:"(\<And>i::'a stream. Fin k < #i \<Longrightarrow> #(stake k\<cdot>i) = Fin k) 
+          \<Longrightarrow> Fin (Suc k) < #(i::'a stream) \<Longrightarrow> #(stake (Suc k)\<cdot>i) = Fin (Suc k)"    
 proof-
   assume a0:"\<And>(i::'a stream). Fin k < #i \<Longrightarrow> #(stake k\<cdot>i) = Fin k"
   assume a2:"Fin (Suc k) < #i"
@@ -640,7 +556,7 @@ lemma tsdropwhiletick_sdropwhile: "tsDropWhileTick\<cdot>ts =
   apply (rule admI)
   apply (simp add: contlub_cfun_arg cont2contlubE)
   apply (smt Abs_tstream_inject Rep_tstream_inverse lub_eq lub_tstream mem_Collect_eq 
-          monofun_cfun_arg po_class.chain_def ts_well_sdropwhile ts_well_Rep) 
+          monofun_cfun_arg po_class.chain_def sdropwhile_well ts_well_Rep) 
   apply (metis (mono_tags, lifting) delayFun.abs_eq delayfun_tslscons eta_cfun sdropwhile_t tick_msg 
           tsDropWhileTick.simps(2) tsconc_rep_eq)
   by (metis (mono_tags, lifting) Abs_Rep event.distinct(1) lscons_conv sdropwhile_f 
@@ -712,9 +628,7 @@ proof-
     by (simp add: cont_srt_sdropwhile)
   then show ?thesis
     by (smt a0 cont2contlubE lub_eq)
-qed    
-
-
+qed
 
 (* ----------------------------------------------------------------------- *)
 section {* tsTickDrop *}
@@ -849,7 +763,7 @@ proof-
 qed
 
 lemma cont_sdropwhile_tsabs2:"cont(\<lambda>as. (Abs_tstream (sdropwhile f\<cdot>(Rep_tstream as))))"
-  by(simp add: ts_well_sdropwhile)    
+  by(simp add: sdropwhile_well)    
     
 lemma tsdropwhile2_sdropwhile_adm_h:"chain Y \<Longrightarrow> 
 (Abs_tstream (sdropwhile (\<lambda>xa::'a event. xa = \<M> x \<or> xa = \<surd>)\<cdot>(Rep_tstream (\<Squnion>i::nat. Y i)))) =
@@ -932,7 +846,7 @@ proof-
   have h2:"#({\<surd>} \<ominus> (Rep_tstream as)) = \<infinity>"
     using a0 tsInfTicks tstreaml1 by blast
   then show ?thesis
-    by (metis (mono_tags, lifting) h0 h1 sdropwhile_fair ts_well_Rep ts_well_sdropwhile tstickcount_rep_eq)
+    by (metis (mono_tags, lifting) h0 h1 sdropwhile_fair ts_well_Rep sdropwhile_well tstickcount_rep_eq)
 qed
 
 end
