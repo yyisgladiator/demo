@@ -378,11 +378,6 @@ lemma tsaltbitpro_inp2out:
       using p1_def p2_def smed2infmed by blast
     have ack2trans_pre_lshd:
       "lshd\<cdot>(srcdups\<cdot>(sMed\<cdot>(sprojsnd\<cdot>(sMed\<cdot>(tsAbs\<cdot>ds)\<cdot>p1))\<cdot>p2)) = lshd\<cdot>(srcdups\<cdot>(sprojsnd\<cdot>(tsAbs\<cdot>ds)))"
-      apply (simp add: smed_sprojsnd smed2med_app srcdups_lshd)
-      apply (cases rule: oracases [of p3])
-      using p3_inf apply auto[1]
-      apply (metis Inf'_neq_0_rev only_empty_has_length_0 p3_inf sfilterl4 shd1 smed_shd_true 
-             tsprojsnd_tsabs)
       sorry
     have ack2trans_pre_leq: 
       "#(srcdups\<cdot>(sMed\<cdot>(sprojsnd\<cdot>(sMed\<cdot>(tsAbs\<cdot>ds)\<cdot>p1))\<cdot>p2)) \<le> #(srcdups\<cdot>(sprojsnd\<cdot>(tsAbs\<cdot>ds)))"
@@ -407,44 +402,8 @@ lemma tsaltbitpro_inp2out:
       by (metis ack2trans_pre ar_def as_def as_leq_i dr_def ds_def dual_order.strict_iff_order 
           i_ninf inf_ub ln_less min_def p1_def p2_def send_def set2tssnd_ack2trans 
           tstickcount_inp2infacks)
-    
-    have i_as_le2lnle: 
-      "#(tsAbs\<cdot>i) \<ge> lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>as))) \<Longrightarrow> #(tsAbs\<cdot>i) > (#(tsAbs\<cdot>(tsRemDups\<cdot>as)))"
-      by (metis as_leq_i i_ninf inf_ub leD le_neq_trans ln_less)
-    
-    have i_as_lnle2le: 
-      "#(tsAbs\<cdot>i) < lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>as))) \<Longrightarrow> #(tsAbs\<cdot>i) \<le> #(tsAbs\<cdot>(tsRemDups\<cdot>as))"
-      using lnle2le by blast
-
-    have ds_ninf:"#(tsAbs\<cdot>i) \<ge> lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>as))) \<Longrightarrow> 
-      #(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>ds))) = lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>as))) \<Longrightarrow> #(tsAbs\<cdot>ds) \<noteq> \<infinity>"
-      proof (rule ccontr)
-        assume as_leq_i: "lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>as))) \<le> #(tsAbs\<cdot>i)"
-        assume ds_eq_as: "#(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>ds))) = lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>as)))"
-        have ds_srcdups_proj_ninf: "#(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>ds))) \<noteq> \<infinity>"
-          using as_leq_i ds_eq_as i_ninf by auto
-        hence ds_srcdups_ninf: "#(srcdups\<cdot>(tsAbs\<cdot>ds)) \<noteq> \<infinity>"
-          by (simp add: tsremdups_tsabs)
-        have ds_inf: "#(tsAbs\<cdot>ds) = \<infinity>"
-          using ar_def as_def as_leq_i dr_def ds_def i_as_le2lnle p1_def p2_def send_def 
-                set2tssnd_nack2inftrans tstickcount_inp2infacks by blast
-        obtain n where ds_split: "tsAbs\<cdot>ds = (stake n\<cdot>(tsAbs\<cdot>ds)) \<bullet> (\<up>(snth n (tsAbs\<cdot>ds))\<infinity>)"
-          using srcdups_split ds_inf ds_srcdups_ninf inf_less_eq leI by blast
-        have as_inf: "#(tsAbs\<cdot>as) = \<infinity>"
-          using ar_def as_def dr_def ds_inf p1_def p2_def by force
-        have as_tsremdups_ninf: "#(tsAbs\<cdot>(tsRemDups\<cdot>as)) \<noteq> \<infinity>"
-          using ds_eq_as ds_srcdups_proj_ninf by auto
-        hence as_srcdups_ninf: "#(srcdups\<cdot>(tsAbs\<cdot>as)) \<noteq> \<infinity>"
-          by (simp add: tsremdups_tsabs)
-        obtain m where ds_split: "tsAbs\<cdot>as = (stake m\<cdot>(tsAbs\<cdot>as)) \<bullet> (\<up>(snth m (tsAbs\<cdot>as))\<infinity>)"
-          using srcdups_split as_inf as_srcdups_ninf inf_less_eq leI by blast
-        thus "\<not> #(tsAbs\<cdot>ds) \<noteq> \<infinity> \<Longrightarrow> False"
-          sorry
-      qed
-      
     hence i_geq_as: "#(tsAbs\<cdot>i) \<le> #(tsAbs\<cdot>(tsRemDups\<cdot>as))"
-      by (metis ack2trans_post ar_def as_def dr_def ds_def i_as_lnle2le le_less_linear p1_def 
-          p2_def send_def set2tssnd_nack2inftrans tstickcount_inp2infacks)
+      sorry
     (* equalities *)
     have i_eq_as: "#(tsAbs\<cdot>i) = #(tsAbs\<cdot>(tsRemDups\<cdot>as))"
       by (simp add: dual_order.antisym i_geq_as as_leq_i)
