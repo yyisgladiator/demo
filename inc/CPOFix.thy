@@ -8,12 +8,8 @@ default_sort type
   
 (* genaral fixpoint over cpo, x is \<sqsubseteq> f x*)  
   
-
-definition fixg_cont::"('a::cpo) \<rightarrow>('a \<rightarrow> 'a) \<rightarrow> 'a" where
-"fixg_cont = (\<Lambda> x F. \<Squnion>i. iterate i\<cdot>F\<cdot>x)"
-
-definition fixg::"('a::cpo) \<Rightarrow> ('a \<rightarrow> 'a) \<Rightarrow> 'a" where
-"fixg = (\<lambda> x F. \<Squnion>i. iterate i\<cdot>F\<cdot>x)"
+definition fixg::"('a::cpo) \<Rightarrow> ('a \<rightarrow> 'a) \<rightarrow> 'a" where
+"fixg = (\<lambda> x. \<Lambda> F. if x \<sqsubseteq> F\<cdot>x then \<Squnion>i. iterate i\<cdot>F\<cdot>x else x)"
 
 lemma iter_fixg_cont[simp]:
  shows "cont (\<lambda> x F . iterate i\<cdot>F\<cdot>x)"
@@ -119,19 +115,6 @@ proof(auto)
   by (simp add: a1 chain_lub_iter_fixg_req)
 qed 
   
-lemma fixg_contI2 [simp]: fixes x :: "'a::cpo" 
-                            assumes"\<And>F. x\<sqsubseteq> F\<cdot>x"
-                            shows "cont (\<lambda> F. fixg x F)"
-proof -
-  have f1: "(\<lambda> F. fixg x F) = (\<lambda> F. \<Squnion>i. iterate i\<cdot>F\<cdot>x)"
-    by (simp add: fixg_def)
-  show ?thesis
-    apply (subst f1)
-    using fixg_contI assms by blast
-qed  
- 
-  
-  
 (*cont (\<lambda> x. fixg x F)*)
   
 lemma lub_iter_fixg_mono_req_2: assumes "x \<sqsubseteq> y" and "x \<sqsubseteq> F\<cdot>x" and "y \<sqsubseteq> F\<cdot>y"
@@ -205,19 +188,6 @@ proof -
     by (simp add: lub_mono assms iter_fixg_mono2 iter_fixg_chain)
 qed  
 
-(*
-lemma fixg_monoI_3 [simp]: assumes "\<And> F. x \<sqsubseteq> F\<cdot>x" and"(\<And>x. x \<sqsubseteq> F\<cdot>x)" and "(\<And>y. y \<sqsubseteq> F\<cdot>y)"
-  shows "monofun (\<lambda>x F. \<Squnion>i.(iterate i\<cdot>F)\<cdot>x)"
-proof -
-  have "\<And>x y F1 F2. F1 \<sqsubseteq> F2 \<Longrightarrow> x \<sqsubseteq> y \<Longrightarrow> x \<sqsubseteq> F1\<cdot>x \<Longrightarrow> y \<sqsubseteq> F2\<cdot>y \<Longrightarrow> ((\<lambda> x F. (\<Squnion>i.(iterate i\<cdot>F)\<cdot>x)) x F1) 
-                              \<sqsubseteq> ((\<lambda> x F. (\<Squnion>i.(iterate i\<cdot>F)\<cdot>x)) y F2)"
-    by (simp add: lub_iter_fixg_mono_req_3)
-  thus ?thesis
-    apply (frule monofunI)
-    using fixg_monoI_2[of x] fixg_monoI[of F] assms apply auto
-    sorry
-qed *)
-
 (* Insertion lemma for cont proofs fixg *)
 lemma fixg_contI_2 [simp]: assumes "\<And> x. x \<sqsubseteq> F\<cdot>x"
   shows "cont (\<lambda> x. (\<Squnion>i.(iterate i\<cdot>F)\<cdot> x) )"
@@ -234,56 +204,109 @@ proof(auto)
   by (simp add: a1 chain_lub_iter_fixg_req_2)
 qed
 
-lemma fixg_contI2_2 [simp]: fixes F :: "'a::cpo \<rightarrow> 'a" 
-                            assumes"\<And>x. x\<sqsubseteq> F\<cdot>x"
-                            shows "cont (\<lambda> x. fixg x F)"
-proof -
-  have f1: "(\<lambda> x. fixg x F) = (\<lambda> x. \<Squnion>i. iterate i\<cdot>F\<cdot>x)"
-    by (simp add: fixg_def)
-  show ?thesis
-    apply (subst f1)
-    using fixg_contI_2 assms by blast
-qed
-  
-(*cont (fixg) maybe not possible like that*) 
-
-lemma fixg_mono: assumes"\<And>F. x \<sqsubseteq> F\<cdot>x" and "\<And>F. y \<sqsubseteq> F\<cdot>y" and "x \<sqsubseteq> y" shows "(\<lambda>F. \<Squnion>i. iterate i\<cdot> F\<cdot>x) \<sqsubseteq> (\<lambda>F. \<Squnion>i. iterate i\<cdot>F\<cdot>y)"
-  apply(insert fixg_monoI_2)
-  by (metis (no_types, lifting) assms fun_belowI iterate_Suc2 lub_mono monofun_cfun_arg po_class.chainI)
-    (*
-lemma fixg_insert:"\<And>x. x \<sqsubseteq> F\<cdot>x \<Longrightarrow> fixg\<cdot>x\<cdot>F = (\<Squnion>i. iterate i\<cdot>F\<cdot>x)"
-  apply(simp add: fixg_def,subst beta_cfun) 
-   apply(rule contI) 
-    apply(simp add: contlub_cfun_arg contlub_cfun_fun)
-  proof-
-  fix Y::"nat \<Rightarrow> 'a::cpo"
-  assume c1: "chain Y"
-  show "range (\<lambda>i. \<Lambda> F. \<Squnion>ia. iterate ia\<cdot>F\<cdot>(Y i)) <<| (\<Lambda> F. \<Squnion>i ia. iterate i\<cdot>F\<cdot>(Y ia))"
-    sorry
+lemma fixg_pre:"x \<sqsubseteq> (if x \<sqsubseteq> F\<cdot>x then \<Squnion>i. iterate i\<cdot>F\<cdot>x else x)" 
+proof(cases "x\<sqsubseteq>F\<cdot>x")
+  case True
+  then show ?thesis
+  proof -
+    have "\<And>n. iterate n\<cdot>F\<cdot>x \<sqsubseteq> (\<Squnion>n. iterate n\<cdot>F\<cdot>x)"
+      using True is_ub_thelub iter_fixg_chain by blast
+    then have "x \<sqsubseteq> (\<Squnion>n. iterate n\<cdot>F\<cdot>x)"
+      by (metis iterate_0)
+    then show ?thesis
+      using True by presburger
+  qed
 next
-  fix F::"'a \<rightarrow> 'a"
-  show "\<And>x. x \<sqsubseteq> F\<cdot>x \<Longrightarrow> (\<Lambda> F. \<Squnion>i. fixg x F i)\<cdot>F = (\<Squnion>i. fixg x F i)"
-  apply(subst beta_cfun,auto)    
-  proof(rule contI)
-    fix Y::"nat \<Rightarrow> 'a::cpo \<rightarrow> 'a"
-    assume c1: "chain Y"
-    then have "\<And>x. chain (\<lambda>i ia. iterate ia\<cdot>(Y i)\<cdot>x)"
-      apply (simp add: chain_def)
-      by (simp add: fun_belowI monofun_cfun)
-    then show "\<And>x. range (\<lambda>i. \<Squnion>ia. iterate ia\<cdot>(Y i)\<cdot>x) <<| (\<Squnion>i. iterate i\<cdot>(\<Squnion>i. Y i)\<cdot>x)"   
-      apply(simp add: lub_fun contlub_cfun_fun contlub_cfun_arg c1)
-        sorry         
+  case False
+  then show ?thesis 
+    by simp
+qed
+
+lemma fixg_mono[simp]:"monofun (\<lambda>F. if x \<sqsubseteq> F\<cdot>x then \<Squnion>i. iterate i\<cdot>F\<cdot>x else x)"
+proof(rule monofunI)
+   fix xa::"'a \<rightarrow> 'a" and y::"'a \<rightarrow> 'a"
+  assume a1:"xa \<sqsubseteq> y"
+  show "(if x \<sqsubseteq> xa\<cdot>x then \<Squnion>i. iterate i\<cdot>xa\<cdot>x else x) \<sqsubseteq> (if x \<sqsubseteq> y\<cdot>x then \<Squnion>i. iterate i\<cdot>y\<cdot>x else x)"
+  proof(cases "x \<sqsubseteq> xa \<cdot>x")
+    case True
+    then have "x \<sqsubseteq> y\<cdot>x"
+      using a1 cfun_below_iff rev_below_trans by blast
+    then show ?thesis 
+      by (simp add: True a1 lub_iter_fixg_mono_req)
+  next
+    case False
+    then show ?thesis
+      by(simp add: fixg_pre)
+  qed
+qed 
+  
+  
+lemma fixg_cont[simp]:assumes "\<And> y z. x\<sqsubseteq>z \<and> y\<sqsubseteq>z \<longrightarrow> x\<sqsubseteq>y" shows "cont (\<lambda>F. if x \<sqsubseteq> F\<cdot>x then \<Squnion>i. iterate i\<cdot>F\<cdot>x else x)"
+proof(rule Cont.contI2, simp)
+fix Y:: "nat \<Rightarrow> ('a \<rightarrow> 'a)"
+  assume a1:"chain Y"
+  assume a2:"chain (\<lambda>i. if x \<sqsubseteq> Y i\<cdot>x then \<Squnion>ia. iterate ia\<cdot>(Y i)\<cdot>x else x)"
+  show "(if x \<sqsubseteq> (\<Squnion>i. Y i)\<cdot>x then \<Squnion>i. iterate i\<cdot>(\<Squnion>i. Y i)\<cdot>x else x) \<sqsubseteq> (\<Squnion>i. if x \<sqsubseteq> Y i\<cdot>x then \<Squnion>ia. iterate ia\<cdot>(Y i)\<cdot>x else x)"
+  proof(cases "x \<sqsubseteq> (\<Squnion>i. Y i)\<cdot>x")
+    case True
+    then show ?thesis
+    proof(cases "\<exists>i. x \<sqsubseteq> (Y i)\<cdot>x")
+      case True
+      then have h1:"\<forall>i. x \<sqsubseteq> Y i \<cdot>x"
+        by (meson a1 assms cfun_below_iff is_ub_thelub rev_below_trans)
+      then have h2:"(\<Squnion>i. if x \<sqsubseteq> Y i\<cdot>x then \<Squnion>ia. iterate ia\<cdot>(Y i)\<cdot>x else x) = (\<Squnion>i.\<Squnion>ia. iterate ia\<cdot>(Y i)\<cdot>x)"
+        by simp
+      have h3:"(if x \<sqsubseteq> (\<Squnion>i. Y i)\<cdot>x then \<Squnion>i. iterate i\<cdot>(\<Squnion>i. Y i)\<cdot>x else x) = (\<Squnion>i. iterate i\<cdot>(\<Squnion>ia. Y ia)\<cdot>x)"
+        by (meson True a1 below_trans cfun_below_iff is_ub_thelub)
+      have h4:"(\<Squnion>i. iterate i\<cdot>(\<Squnion>ia. Y ia)\<cdot>x) = (\<Squnion>i.\<Squnion>ia. iterate i\<cdot>( Y ia)\<cdot>x)"
+        by(simp add: a1 contlub_cfun_fun contlub_cfun_arg)
+      show ?thesis
+      proof-
+        show "(if x \<sqsubseteq> (\<Squnion>i. Y i)\<cdot>x then \<Squnion>i. iterate i\<cdot>(\<Squnion>i. Y i)\<cdot>x else x) \<sqsubseteq> (\<Squnion>i. if x \<sqsubseteq> Y i\<cdot>x then \<Squnion>ia. iterate ia\<cdot>(Y i)\<cdot>x else x)"
+          by(simp_all add: h2 h3  h4 diag_lub a1 h1 iter_fixg_chain)
+      qed
+    next
+      case False
+      have h1:"(\<Squnion>i. Y i)\<cdot>x = x"
+      proof-
+        have "x \<sqsubseteq> (\<Squnion>i. Y i)\<cdot>x"
+          by(simp add: True)
+        have "\<forall>i. Y i\<cdot>x \<sqsubseteq> x"
+          using False True a1 assms cfun_below_iff is_ub_thelub by blast
+        then show "(\<Squnion>i. Y i)\<cdot>x = x"
+          by (metis True a1 below_antisym ch2ch_Rep_cfunL contlub_cfun_fun lub_below_iff)
+      qed     
+      have "\<forall>i. iterate i\<cdot>(\<Squnion>i. Y i)\<cdot>x = x"
+      proof(auto)
+        fix i::nat
+        show "iterate i\<cdot>(\<Squnion>i. Y i)\<cdot>x = x"
+        proof(induction i)
+          case 0
+          then show ?case
+            by simp
+        next
+          case (Suc i)
+          then show ?case
+            by (simp add: h1) 
+        qed
+      qed
+      then have "(\<Squnion>i. iterate i\<cdot>(\<Squnion>i. Y i)\<cdot>x) = x"
+        by auto
+      then show ?thesis
+        using False by auto 
+    qed
+  next
+    case False
+    then show ?thesis
+      using a2 below_lub fixg_pre by fastforce 
   qed
 qed
-   *)
-
-    
-    
+  
 (*fixg gives the least fixpoint, if x \<sqsubseteq> F\<cdot>x*)
 
-lemma fixg_fix:assumes" x \<sqsubseteq> F\<cdot>x " and "\<forall> y. y \<sqsubseteq> x \<longrightarrow> x = y"
-  shows "fixg x F = F\<cdot>(fixg x F)"
-  apply (simp add: fixg_def)
+lemma fixg_fix:assumes" x \<sqsubseteq> F\<cdot>x " and "\<And>y z. x \<sqsubseteq> z \<and> y \<sqsubseteq> z \<longrightarrow> x \<sqsubseteq> y"
+  shows "fixg x\<cdot> F = F\<cdot>(fixg x\<cdot>F)"
+  apply (simp add: fixg_def assms)
   apply (subst lub_range_shift [of _ 1, symmetric])
   apply(rule chainI)
   apply(subst iterate_Suc2)
@@ -294,9 +317,9 @@ lemma fixg_fix:assumes" x \<sqsubseteq> F\<cdot>x " and "\<forall> y. y \<sqsubs
   apply(rule Cfun.monofun_cfun_arg, simp add: assms)
   by simp
     
-lemma fixg_least_below:assumes" x \<sqsubseteq> F\<cdot>x " and "\<forall> y. y \<sqsubseteq> x \<longrightarrow> x = y" and "x \<sqsubseteq> y"
-  shows "F\<cdot>y \<sqsubseteq> y \<Longrightarrow> (fixg x F) \<sqsubseteq> y"
-  apply (simp add: fixg_def)
+lemma fixg_least_below:assumes" x \<sqsubseteq> F\<cdot>x " and "\<And>y z. x \<sqsubseteq> z \<and> y \<sqsubseteq> z \<longrightarrow> x \<sqsubseteq> y" and "x \<sqsubseteq> y"
+  shows "F\<cdot>y \<sqsubseteq> y \<Longrightarrow> (fixg x\<cdot> F) \<sqsubseteq> y"
+  apply (simp add: fixg_def assms)
   apply (rule lub_below)
   apply(rule chainI)
   apply(subst iterate_Suc2)
@@ -308,8 +331,8 @@ lemma fixg_least_below:assumes" x \<sqsubseteq> F\<cdot>x " and "\<forall> y. y 
   by (erule monofun_cfun_arg)
 
 
-lemma fixg_least_fix:assumes"F\<cdot>y = y" and "x \<sqsubseteq> y" and "x \<sqsubseteq> F\<cdot>x" and "\<forall> y. y \<sqsubseteq> x \<longrightarrow> x = y"
-  shows "fixg x F \<sqsubseteq> y"
+lemma fixg_least_fix:assumes"F\<cdot>y = y" and "x \<sqsubseteq> y" and "x \<sqsubseteq> F\<cdot>x" and "\<And>y z. x \<sqsubseteq> z \<and> y \<sqsubseteq> z \<longrightarrow> x \<sqsubseteq> y"
+  shows "fixg x\<cdot> F \<sqsubseteq> y"
   by(subst fixg_least_below, simp_all add: assms)  
     
 end
