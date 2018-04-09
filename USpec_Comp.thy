@@ -47,6 +47,23 @@ subsection \<open>UspecComp\<close>
 lemma uspec_compwell_commu: "uspec_compwell S1 S2 =  uspec_compwell S2 S1"
   using ufunclCompWell_commute uspec_compwell_def by blast
 
+lemma uspec_comp_well[simp]: assumes "uspec_compwell S1 S2"
+  shows "uspecWell {f1 \<otimes> f2 |(f1::'a) f2::'a. f1 \<in> Rep_rev_uspec S1 \<and> f2 \<in> Rep_rev_uspec S2}"
+
+(*fallunterscheidung s1 oder s2 leer*)
+proof (cases "Rep_rev_uspec S1 = {} \<or> Rep_rev_uspec S2 = {}")
+  case True
+  then show ?thesis
+    by auto
+next
+  case False
+  then show ?thesis
+    apply (simp add: uspecWell_def)
+    apply (rule_tac x="(uspecDom S1 \<union> uspecDom S2) - (uspecRan S1 \<union> uspecRan S2)" in exI)
+    apply (rule_tac x="uspecRan S1 \<union> uspecRan S2" in exI)
+    by (metis assms ufuncl_comp_dom ufuncl_comp_ran uspec_compwell_def uspec_dom_eq uspec_ran_eq)
+qed
+
 (*   *)
 lemma uspec_comp_commu: assumes "uspec_compwell S1 S2"
   shows "(S1 \<Otimes> S2) = (S2 \<Otimes> S1)"
@@ -58,6 +75,56 @@ proof -
   then show ?thesis
     by (simp add: uspecComp_def)
 qed
+
+lemma uspec_comp_rep[simp]: assumes "uspec_compwell S1 S2"
+shows "{f1 \<otimes> f2 |(f1::'a) f2::'a. f1 \<in> Rep_rev_uspec S1 \<and> f2 \<in> Rep_rev_uspec S2} 
+          = Rep_rev_uspec (S1 \<Otimes> S2)"
+  apply (simp add: uspecComp_def)
+  using assms(1) rep_abs_rev_simp uspec_comp_well by blast
+
+lemma uspec_comp_ele_ex: assumes "uspec_compwell S1 S2"
+and "uspecIsConsistent (S1 \<Otimes> S2)"
+shows "\<forall> f \<in> Rep_rev_uspec (S1 \<Otimes> S2). \<exists> f1 \<in> Rep_rev_uspec S1. \<exists> f2 \<in> Rep_rev_uspec S2. f = f1 \<otimes> f2"
+  using assms uspec_comp_rep by fastforce
+
+lemma uspec_comp_not_empty:  assumes "uspec_compwell S1 S2"
+"f1 \<in> Rep_rev_uspec S1" and f2_def: "f2 \<in> Rep_rev_uspec S2"
+shows "(f1 \<otimes> f2) \<in> Rep_rev_uspec (S1 \<Otimes> S2)"
+  by (metis (mono_tags, lifting) assms(1) assms(2) f2_def mem_Collect_eq rep_abs_rev_simp uspecComp_def uspec_comp_well)
+
+lemma uspec_comp_consistent2: assumes "uspecIsConsistent (S1 \<Otimes> S2)"
+  shows "uspecIsConsistent S1 \<and> uspecIsConsistent S2"
+proof (rule)
+  have f1: "uspecIsConsistent (Abs_rev_uspec {a \<otimes> aa |a aa. a \<in> Rep_rev_uspec S1 \<and> aa \<in> Rep_rev_uspec S2})"
+    by (metis (no_types) assms(1) uspecComp_def)
+  then have f2: "\<not> uspecWell {a \<otimes> aa |a aa. a \<in> Rep_rev_uspec S1 \<and> aa \<in> Rep_rev_uspec S2} \<or> {a \<otimes> aa |a aa. a \<in> Rep_rev_uspec S1 \<and> aa \<in> Rep_rev_uspec S2} \<noteq> {}"
+    by (metis (lifting) rep_abs_rev_simp uspecIsConsistent_def)
+  then have f3: "{a \<otimes> aa |a aa. a \<in> Rep_rev_uspec S1 \<and> aa \<in> Rep_rev_uspec S2} \<noteq> {}"
+    by (metis empty_uspecwell)
+  then show "uspecIsConsistent S1"
+    using uspecIsConsistent_def by force
+  show "uspecIsConsistent S2"
+    using f3 uspecIsConsistent_def by auto
+qed
+
+lemma uspec_comp_dom: assumes "uspec_compwell S1 S2"
+  and "uspecIsConsistent S1" and "uspecIsConsistent S2"
+shows "uspecDom (S1 \<Otimes> S2) = (uspecDom S1 \<union> uspecDom S2) - (uspecRan S1 \<union> uspecRan S2)" (*UFun_Comp \<rightarrow> dom*)
+proof -
+  obtain f1 and f2 where f1_def: "f1 \<in> Rep_rev_uspec S1" and f2_def: "f2 \<in> Rep_rev_uspec S2"
+    by (meson all_not_in_conv assms(2) assms(3) uspecIsConsistent_def)
+  have "(f1 \<otimes> f2) \<in> Rep_rev_uspec (S1 \<Otimes> S2)"
+    by (metis (mono_tags, lifting) assms(1) f1_def f2_def mem_Collect_eq rep_abs_rev_simp uspecComp_def uspec_comp_well)
+  then show ?thesis
+    apply (simp add: uspecDom_def)   
+    by (metis uspec_ran_eq assms(1) f1_def f2_def ufuncl_comp_dom uspecDom_def uspec_dom_eq uspec_compwell_def ufuncl_comp_dom)
+qed
+
+lemma uspec_comp_h2: assumes "uspec_compwell S1 S2"
+  shows "\<forall> f1 \<in> Rep_rev_uspec S1. \<forall> f2 \<in> Rep_rev_uspec S2. ufunclCompWell f1 f2"
+  using assms uspec_compwell_def by blast
+
+
 
 subsection \<open>UspecParComp\<close>
 
