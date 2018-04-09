@@ -596,7 +596,7 @@ lemma ufapplyin_cont [simp]: assumes "\<And>b. ubclDom\<cdot>(k\<cdot>b) = ubclD
   by (simp add: assms)
 
 
-section \<open>Lemmas\<close>
+section \<open>More Lemmas\<close>
 
 lemma f20: "\<And>g. cont (\<lambda> x. Rep_cufun g (k\<cdot>x))"
   by simp
@@ -637,14 +637,46 @@ proof -
     by (simp add: assms(3) cont_compose)
   have f2053: "cont (\<lambda>x. (Lub Y) (k\<cdot>x))"
     by (simp add: cont_compose f2051)
+  have f20531: "cont (\<Squnion>i::nat. (\<lambda>x. (Y i) (k\<cdot>x)))"
+  proof -
+    have "\<forall>p f. (\<not> adm p \<or> \<not> chain f \<or> (\<exists>n. \<not> p (f n::'a \<Rightarrow> 'c))) \<or> p (Lub f)"
+      using admD by blast
+    then obtain nn :: "(nat \<Rightarrow> 'a \<Rightarrow> 'c) \<Rightarrow> (('a \<Rightarrow> 'c) \<Rightarrow> bool) \<Rightarrow> nat" where
+      f1: "\<forall>p f. (\<not> adm p \<or> \<not> chain f \<or> \<not> p (f (nn f p))) \<or> p (Lub f)"
+      by meson
+    obtain aa :: "(nat \<Rightarrow> 'a \<Rightarrow> 'c) \<Rightarrow> 'a" where
+      f2: "\<forall>f. (\<not> chain f \<or> (\<forall>a. chain (\<lambda>n. f n a))) \<and> (chain f \<or> \<not> chain (\<lambda>n. f n (aa f)))"
+      by (metis (no_types) fun_chain_iff)
+    have "\<forall>b. chain (\<lambda>n. Y n b)"
+      using assms(1) fun_chain_iff by fastforce
+    then have "chain (\<lambda>n a. Y n (k\<cdot>a))"
+      using f2 by meson
+    then show ?thesis
+      using f1 adm_cont f2052 by blast
+  qed
   have f2054: "(\<lambda>x. (Lub Y) (k\<cdot>x)) = (\<Squnion>i::nat. (\<lambda>x. (Y i) (k\<cdot>x))) "
   proof - 
     have f20541: "(\<lambda>x. (Lub Y) (k\<cdot>x)) = (\<lambda>x. (\<Squnion>i::nat. (Y i) (k\<cdot>x)))"
       by (simp add: assms(1) lub_fun)
     show ?thesis
-      apply(simp add: f20541)
-      
-      sorry
+      apply(subst f20541)
+      apply(simp add: fun_eq_iff)
+      apply(rule)
+    proof - 
+      fix x
+      show "(\<Squnion>i::nat. Y i (k\<cdot>x)) = (\<Squnion>i::nat. (\<lambda>x::'a. Y i (k\<cdot>x))) x"
+      proof -
+        obtain aa :: "(nat \<Rightarrow> 'a \<Rightarrow> 'c) \<Rightarrow> 'a" where
+          f1: "\<forall>f. (\<not> chain f \<or> (\<forall>a. chain (\<lambda>n. f n a))) \<and> (chain f \<or> \<not> chain (\<lambda>n. f n (aa f)))"
+          by (metis (no_types) fun_chain_iff)
+        have "\<forall>b. chain (\<lambda>n. Y n b)"
+          using assms(1) fun_chain_iff by fastforce
+        then have "chain (\<lambda>n a. Y n (k\<cdot>a))"
+          using f1 by meson
+        then show ?thesis
+          by (simp add: lub_fun)
+      qed
+    qed
   qed
   show ?thesis
     apply(subst f2054)
