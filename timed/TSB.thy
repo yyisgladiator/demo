@@ -14,6 +14,7 @@ chapter {* Timed Streams *}
 
 theory TSB
 imports "../UnivClasses" "../Channel" "../inc/OptionCpo" TStream TStream_JB "../UBundle" "../UBundle_Pcpo"
+
 begin
 
 default_sort message
@@ -23,31 +24,6 @@ default_sort message
 section \<open>Datatype Definition\<close>
 (* ----------------------------------------------------------------------- *)
 
-
-instantiation tstream :: (message) uscl_pcpo
-begin
-
-definition usOkay_tstream_def: "usOkay c m \<equiv> tsDom\<cdot>m \<subseteq> ctype c"
-
-definition usLen_tstream_def: "usLen \<equiv> tslen"
-
-instance
-  apply intro_classes
-  apply(simp add: usOkay_tstream_def)
-    apply(simp add: tsDom_def)
-  apply(subst Abs_cfun_inverse2)
-     using tsdom_cont apply(simp)
-     defer
-  apply (rule admI)
-       apply(simp add: subset_cont usOkay_tstream_def)
-      apply(simp add: usOkay_tstream_def)
-   proof - 
-     fix c
-     show " \<exists>e. {u::'a. \<M> u \<in> sdom\<cdot>(Rep_tstream e)} \<subseteq> ctype c"
-       apply(rule_tac x = "bottom" in exI)
-       by(simp)
-   qed
-end
 
 
 (* ----------------------------------------------------------------------- *)
@@ -120,8 +96,8 @@ definition tsbTTake_abbr_fun :: "nat \<Rightarrow> 'm tstream\<^sup>\<Omega> \<R
 "tsbTTake_abbr_fun n tb \<equiv> Abs_ubundle (\<lambda>c. (c \<in> ubDom\<cdot>tb)\<leadsto>tb  .  c \<down> n )"
 
 lemma tsbTTake_well [simp]: "ubWell (\<lambda>c. (c \<in> ubDom\<cdot>tb)\<leadsto> ((tb  .  c) \<down> n ))"
-  apply (simp add: ubWell_def usOkay_tstream_def)
-  by (metis (no_types, lifting) dual_order.trans tsttake_dom ubdom_channel_usokay ubgetch_insert usOkay_tstream_def)
+  apply (simp add: ubWell_def usclOkay_tstream_def)
+  by (metis (no_types, lifting) dual_order.trans tsttake_dom ubdom_channel_usokay ubgetch_insert usclOkay_tstream_def)
                        
 lemma tsbttake_abbr_dom [simp]: "ubDom\<cdot>(tsbTTake_abbr i tb) = ubDom\<cdot>tb"
 proof -
@@ -251,8 +227,8 @@ proof (cases "n \<noteq> \<infinity>")
   obtain j where f2: "n = Fin j"
   by (metis f1 infI neq_iff)
   thus ?thesis
-  apply (simp add: ubWell_def tsTakeL_def usOkay_tstream_def)
-    by (metis (no_types, lifting) dual_order.trans tsttake_dom ubdom_channel_usokay ubgetch_insert usOkay_tstream_def)  
+  apply (simp add: ubWell_def tsTakeL_def usclOkay_tstream_def)
+    by (metis (no_types, lifting) dual_order.trans tsttake_dom ubdom_channel_usokay ubgetch_insert usclOkay_tstream_def)  
 next
   case False
   then show ?thesis
@@ -324,7 +300,7 @@ proof -
       using assms po_class.chainE by blast
   qed
 
-lemma lubgetCh: assumes "chain Y" and "c \<in> ubDom\<cdot>(\<Squnion> i. Y i)"
+lemma lubgetCh: assumes "chain Y" and "c \<in> ubclDom\<cdot>(\<Squnion> i. Y i)"
   shows "(\<Squnion>i. Y i) . c = (\<Squnion>i. (Y i) . c)"
   by (simp add: assms(1) contlub_cfun_arg contlub_cfun_fun)
 
@@ -334,6 +310,7 @@ lemma tsbttake_cont1_pre: assumes "chain Y"
 proof -
   have f1: "\<And>c. c \<in> ubDom\<cdot>tb \<Longrightarrow> (\<Squnion>i. Abs_ubundle (\<lambda>c. (c\<in>ubDom\<cdot>tb) \<leadsto> (tsTakeL\<cdot>(Y i)\<cdot>(tb  .  c)))) . c = (\<Squnion>i. (Abs_ubundle (\<lambda>c. (c\<in>ubDom\<cdot>tb) \<leadsto> (tsTakeL\<cdot>(Y i)\<cdot>(tb  .  c)))) . c)"
     apply (rule lubgetCh, simp only: tsbttake_chain1 assms)
+    apply (simp add: ubclDom_ubundle_def)
     using assms tsbttakeL_dom tsbttake_chain1 ubdom_chain_eq2 by blast
   show ?thesis
     apply (rule ub_below)
