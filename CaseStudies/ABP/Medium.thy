@@ -8,7 +8,7 @@
 chapter {* Medium of the Alternating Bit Protocol *}
                                                             
 theory Medium
-imports "../../TStream"
+imports "../../timed/TStream"
 
 begin
 default_sort countable

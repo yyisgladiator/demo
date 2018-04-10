@@ -5270,4 +5270,64 @@ lemma add2smap: "add\<cdot>(\<up>x\<infinity>)\<cdot>ys = smap (\<lambda>z. z+x)
 
 *)
 
+
+(* ----------------------------------------------------------------------- *)
+section \<open>Instantiation\<close>
+(* ----------------------------------------------------------------------- *)
+
+
+instantiation tstream :: (message) uscl
+begin
+  definition usclOkay_tstream_def: "usclOkay c m \<equiv> tsDom\<cdot>m \<subseteq> ctype c"
+definition usclLen_tstream_def: "usclLen \<equiv> tsTickCount"
+
+lemma ts_usclOkay_ex: "\<And>c::channel. \<exists>e::'a tstream. tsDom\<cdot>e \<subseteq> ctype c"
+  apply (simp add: tsDom_def)
+  apply (subst Abs_cfun_inverse2)
+  using tsdom_cont apply(simp)
+  apply(rule_tac x = "bottom" in exI)
+  by(simp)
+instance
+  apply intro_classes
+   apply (simp add: ts_usclOkay_ex usclOkay_tstream_def)
+  apply (rule admI)
+  by (simp add: subset_cont usclOkay_tstream_def)
+end
+
+instantiation tstream :: (message) uscl_pcpo
+begin
+instance 
+  apply intro_classes
+  by (simp add: usclOkay_tstream_def)
+end
+
+instantiation tstream:: (message) uscl_conc
+begin
+
+definition usclConc_stream_def: "usclConc \<equiv> tsConc"
+
+lemma usclOkay_tsconc: "\<And>(c::channel) (s1::'a tstream) s2::'a tstream. usclOkay c s1 \<Longrightarrow> usclOkay c s2 \<Longrightarrow> usclOkay c (usclConc s1\<cdot>s2)"
+proof -
+  fix c:: channel and s1:: "'a tstream" and s2::"'a tstream"
+  assume assm1: "usclOkay c s1" and assm2: "usclOkay c s2"
+  show "usclOkay c (usclConc s1\<cdot>s2)"
+  proof (cases "#\<surd>s1 = \<infinity>")
+    case True
+    then show ?thesis 
+      by (simp add: assm1 local.usclConc_stream_def)
+  next
+    case False
+    have f1: "tsDom\<cdot>(tsConc s1\<cdot>s2) = tsDom\<cdot>s1 \<union> tsDom\<cdot>s2"
+      apply (rule tsdom_tsconc)
+      using False inf_ub lnle_def lnless_def by blast
+    show ?thesis 
+      apply (simp add: usclOkay_tstream_def)
+      using assm1 assm2 f1 local.usclConc_stream_def usclOkay_tstream_def by auto
+  qed
+qed
+instance
+  apply intro_classes
+  by (simp add: usclOkay_tsconc)
+end
+
 end
