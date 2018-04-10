@@ -140,26 +140,42 @@ lemma spfstatefix_ran:"ufRan\<cdot>((spfStateFix In Out\<cdot> f) s) = Out"
 
 (*Sorrys*)
 
-lemma spfRt_dom:"ufDom\<cdot>(spfRt\<cdot>spf) = ufDom\<cdot>spf"
-  sorry
+lemma spfRt_dom [simp] :"ufDom\<cdot>(spfRt\<cdot>spf) = ufDom\<cdot>spf"
+  unfolding spfRt_def
+  by (simp add: ubclDom_ubundle_def ufapplyin_dom)
 
-lemma spfConc_dom:"ufDom\<cdot>(spfConc sb \<cdot>spf) = ufDom\<cdot>spf"
-  sorry
+lemma spfConc_dom[simp]:"ufDom\<cdot>(spfConc sb \<cdot>spf) = ufDom\<cdot>spf"
+  unfolding spfConc_def
+  apply(subst ufapplyout_dom)
+  apply (metis ubclDom_ubundle_def ubconceq_dom)
+  by blast
 
-lemma spfRt_ran:"ufRan\<cdot>(spfRt\<cdot>spf) = ufRan\<cdot>spf"
-  sorry
+lemma spfRt_ran [simp]:"ufRan\<cdot>(spfRt\<cdot>spf) = ufRan\<cdot>spf"
+  unfolding spfRt_def
+  apply(subst ufapplyin_ran2)
+   apply (simp add: ubclDom_ubundle_def)
+  by blast
 
-lemma spfConc_ran:"ufRan\<cdot>(spfConc sb \<cdot>spf) = ufRan\<cdot>spf"
-  sorry
+lemma spfConc_ran [simp]:"ufRan\<cdot>(spfConc sb \<cdot>spf) = ufRan\<cdot>spf"
+  unfolding spfConc_def
+  apply(subst ufapplyout_ran)
+   apply (metis ubclDom_ubundle_def ubconceq_dom)
+  by blast
 
 
+(* Namen geben! *)
 lemma [simp]:"dom (inv convDiscrUp f) = dom f"
   apply(unfold convDiscrUp_def)
   sorry
 
 
 lemma spfRt_spfConc: "(spfRt\<cdot>(spfConc sb \<cdot>spf)) = (spfConc sb \<cdot>(spfRt\<cdot>spf))"
-  sorry
+  unfolding spfConc_def
+  unfolding spfRt_def
+  apply(subst ufapply_eq)
+  apply (simp add: ubclDom_ubundle_def)
+  apply (metis ubclDom_ubundle_def ubconceq_dom)
+  by blast
 
 (*Sorrys ende*)
 
