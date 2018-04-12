@@ -1,17 +1,14 @@
-(*  Title:  SerComp_JB.thy
+(*  Title:  UFun_Templates.thy
     Author: Jens Christoph Bürger, David Duc Duong
     e-mail: jens.buerger@rwth-aachen.de, david.duong@rwth-aachen.de
     
-    additional note: 15.02.2018: instead of ufun we use ufun 
-
-    Description: aggregates commonly used Ufun patterns with constructors
+    Description: Aggregates commonly used Ufun patterns with constructors.
     To instantiate a Ufun use the Ufun1x1, Ufun2x1 definition with an appropriate function which 
-    automatically proves cont, ufun_well, dom, range for your definition
-   
+    automatically proves cont, ufun_well, dom, range for your definition.   
 *)
 
 (* NOTE: This instantiation uses the old cont, mono prove technique, for a more 
-          modern/simplified approach use the ufunContI and ufunMonoI2 lemmata from Ufun.thy *)
+         modern/simplified approach use the ufun_contI and ufun_monoI2 lemmata from Ufun.thy *)
 
 theory UFun_Templates
   imports "timed/TSPS" "timed/TSPF" UFun_Comp
@@ -23,10 +20,10 @@ default_sort uscl_pcpo
 section \<open>Definitions\<close>
 (* ----------------------------------------------------------------------- *)
 
-definition map_io_well:: "(channel \<Rightarrow> 'a::uscl \<Rightarrow> bool) => ('a \<rightarrow> 'a) \<Rightarrow> channel \<Rightarrow> channel \<Rightarrow> bool" 
+definition map_io_well:: "(channel \<Rightarrow> 'a::uscl \<Rightarrow> bool) \<Rightarrow> ('a \<rightarrow> 'a) \<Rightarrow> channel \<Rightarrow> channel \<Rightarrow> bool" 
   where "map_io_well P f ch1 ch2 \<equiv> \<forall> x. P ch1 x = P ch2 (f\<cdot>x)"
 
-(* Identity funciton for nat streams *)  
+(* Identity function for nat streams *)  
 definition ub_id :: "'a \<rightarrow> 'a" where
 "ub_id \<equiv> \<Lambda> x . x"
 
