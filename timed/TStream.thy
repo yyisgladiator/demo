@@ -2636,6 +2636,9 @@ lemma tslen_slen_nbot_leq:"tslen\<cdot>ts \<le> slen\<cdot>s1 \<Longrightarrow> 
   apply (simp add: tslen_def)
   by (metis Rep_tstream_strict strict_slen tslen_insert tslen_nbot_leq)
 
+lemma tslen_tstickcount_inf: "#(tsAbs\<cdot>ts) \<noteq> \<infinity> \<Longrightarrow> (#\<^sub>t ts) = \<infinity> \<Longrightarrow> (#\<surd> ts) = \<infinity>"
+  by (simp add: tsInfTicks tslen_insert)
+
 (* ----------------------------------------------------------------------- *)
 subsection {* delayFun *}
 (* ----------------------------------------------------------------------- *)
@@ -2772,7 +2775,7 @@ lemma tsconc_mlscons: "ts1\<noteq>\<bottom> \<Longrightarrow> (updis t &&\<surd>
 
 lemma tsconc_delayfun: "(delay ts1) \<bullet>\<surd> ts2 = delay (ts1 \<bullet>\<surd> ts2)"
   by (simp add: delayFun.rep_eq)
-  
+
 (************************************************)
 (************************************************)      
     section \<open>Match definitions\<close>
@@ -3002,6 +3005,11 @@ lemma adm_slen_tsabs_nle:"adm (\<lambda>xa. \<not> #(tsAbs\<cdot>xa) < #(tsAbs\<
   apply(simp add: not_less contlub_cfun_arg contlub_cfun_fun)
   by (meson below_lub lnle_def monofun_cfun_arg po_class.chain_def)
   
+lemma adm_tsdom_neq [simp]: "\<And>b. adm (\<lambda>a. tsDom\<cdot>a \<noteq> {b})"
+  apply (rule admI)
+  apply (simp add: contlub_cfun_fun contlub_cfun_arg lub_eq_Union)
+  apply (simp add: tsdom_insert sdom_def)
+  by (smt Collect_cong Sup_set_def imageE insertI1 mem_Collect_eq mem_simps(9) singletonD)
 
 (* ----------------------------------------------------------------------- *)
 section {* tscases *}
@@ -3367,6 +3375,89 @@ lemma tsremdups_neq:
   by (metis (no_types, lifting) event.simps(3) tsRemDups_h.simps(2) tslscons_nbot_rev 
       tsmlscons2tslscons tsmlscons_lscons tsremdups_h_mlscons_ndup tsremdups_h_strict 
       tsremdups_insert)
+
+(* ----------------------------------------------------------------------- *) 
+  subsection {* tsDropWhile *}   
+(* ----------------------------------------------------------------------- *)
+
+fixrec tsDropWhile :: "'a discr \<rightarrow> 'a tstream \<rightarrow> 'a tstream" where
+"tsDropWhile\<cdot>a\<cdot>\<bottom> = \<bottom>" |
+"tsDropWhile\<cdot>a\<cdot>(tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>ts) = delayFun\<cdot>(tsDropWhile\<cdot>a\<cdot>ts)" |
+"ts \<noteq> \<bottom> \<Longrightarrow> tsDropWhile\<cdot>a\<cdot>(tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>t))\<cdot>ts) = 
+  (if t = a then tsDropWhile\<cdot>a\<cdot>ts else tsMLscons\<cdot>(up\<cdot>t)\<cdot>ts)"
+
+lemma tsdropwhile_strict: "tsDropWhile\<cdot>a\<cdot>\<bottom> = \<bottom>"
+  by simp
+
+lemma tsdropwhile_mlscons_t: "tsDropWhile\<cdot>(Discr a)\<cdot>(updis a &&\<surd> as) = tsDropWhile\<cdot>(Discr a)\<cdot>as"
+  by (metis tsDropWhile.simps(3) tsmlscons_lscons tsmlscons_nbot_rev)
+
+lemma tsdropwhile_mlscons_f: "a \<noteq> b \<Longrightarrow> tsDropWhile\<cdot>(Discr a)\<cdot>(updis b &&\<surd> as) = updis b &&\<surd> as"
+  by (metis discr.inject tsDropWhile.simps(1) tsDropWhile.simps(3) tsmlscons_lscons tsmlscons_nbot_rev)
+
+lemma tsdropwhile_delayfun: "tsDropWhile\<cdot>a\<cdot>(delayFun\<cdot>as) = delayFun\<cdot>(tsDropWhile\<cdot>a\<cdot>as)"
+  by (simp add: delayfun_tslscons)
+
+lemma tsdropwhile_tstickcount: "#\<surd> (tsDropWhile\<cdot>a\<cdot>as) = #\<surd> as" 
+  apply (induction as,simp_all)
+  apply (metis delayfun_tslscons tsDropWhile.simps(2) tstickcount_delayfun)
+  by (metis tsDropWhile.simps(3) tsmlscons_lscons tstickcount_mlscons)
+
+lemma tsdropwhile_tsabs: "tsAbs\<cdot>(tsDropWhile\<cdot>(Discr a)\<cdot>as) = sdropwhile (\<lambda>x.  x=a)\<cdot>(tsAbs\<cdot>as)" 
+  apply (induction as,simp_all)
+  apply (metis delayfun_tslscons tsDropWhile.simps(2) tsabs_delayfun)
+  apply (case_tac "t = a")
+  apply (metis (mono_tags, lifting) lscons_conv sdropwhile_t tsDropWhile.simps(3) tsabs_mlscons 
+         tsmlscons_lscons)
+  by (metis (mono_tags, lifting) discr.inject lscons_conv sdropwhile_f tsDropWhile.simps(3) 
+      tsabs_mlscons tsmlscons_lscons)
+
+(* elements removed by tsDropWhile are a subset of the elements removed by tsFilter *)
+lemma tsdropwhile_tsfilter: "m \<notin> M \<Longrightarrow> tsFilter M\<cdot>(tsDropWhile\<cdot>(Discr m)\<cdot>ts) = tsFilter M\<cdot>ts"
+  apply (induction ts, simp_all)
+  apply (simp add: tsdropwhile_delayfun tsfilter_delayfun)
+  by (metis tsdropwhile_mlscons_f tsdropwhile_mlscons_t tsfilter_mlscons_nin)
+
+(* elements kept by tsFilter are a subset of the elements kept by tsDropWhile *)
+lemma tsdropwhile_tsfilter_nbot: 
+  "m \<notin> M \<Longrightarrow> tsAbs\<cdot>(tsFilter M\<cdot>ts) \<noteq> \<bottom> \<Longrightarrow> tsAbs\<cdot>(tsDropWhile\<cdot>(Discr m)\<cdot>ts) \<noteq> \<bottom>"
+  by (metis tsabs_bot tsdropwhile_tsfilter tsfilter_strict tsfilter_tsabs)
+
+(* tsDropWhile is idempotent *)
+lemma tsdropwhile_idem: "tsDropWhile\<cdot>a\<cdot>(tsDropWhile\<cdot>a\<cdot>ts) = tsDropWhile\<cdot>a\<cdot>ts"
+  apply (induction ts, simp_all)
+  apply (simp add: tsdropwhile_delayfun)
+  by (simp add: tsmlscons_lscons)
+
+(* if the only message in a TStream with an arbitrary number of ticks is the argument of 
+   tsDropWhile, then tsDropWhile produces a TStream containing only ticks *)
+lemma tsdopwhile_tsabs_sing_bot: "tsAbs\<cdot>ts = (\<up>a) \<Longrightarrow> tsAbs\<cdot>(tsDropWhile\<cdot>(Discr a)\<cdot>ts) = \<epsilon>"
+  by (metis (full_types) lscons_conv sdropwhile_t sup'_def tsabs_bot tsdropwhile_strict 
+      tsdropwhile_tsabs)
+
+lemma tsdopwhile_sing: "x \<noteq> a \<Longrightarrow> (tsAbs\<cdot>ts = \<up>a) \<Longrightarrow> tsDropWhile\<cdot>(Discr x)\<cdot>ts = ts"
+  apply (induction ts arbitrary: a x, simp_all)
+  apply (rule adm_all)+
+  apply (rule adm_imp, simp_all)+
+  apply (rule admI)
+  apply (metis (mono_tags, lifting) Fin_02bot Fin_Suc Fin_neq_inf bot_is_0 ch2ch_Rep_cfunR 
+         contlub_cfun_arg inf_chainl4 l42 lscons_conv slen_scons strict_slen sup'_def)
+  apply (simp add: tsdropwhile_delayfun)
+  by (metis inject_scons lscons_conv sup'_def tsabs_mlscons tsdropwhile_mlscons_f)
+
+lemma tsdropwhile_tsabs_sing_bot2: "tsDom\<cdot>ts = {a} \<Longrightarrow> tsAbs\<cdot>(tsDropWhile\<cdot>(Discr a)\<cdot>ts) = \<epsilon>"
+  apply (induction ts arbitrary: a, simp_all)
+  apply (simp add: tsdom_delayfun tsdropwhile_delayfun)
+  apply(simp add: tsdom_mlscons tsdropwhile_mlscons_t)
+  apply(case_tac "tsDom\<cdot>ts = {a}")
+  apply blast
+  apply(simp add: subset_singleton_iff)
+  by (metis strict_sdom_rev strict_sdropwhile tsabs_tsdom tsdropwhile_tsabs)
+
+lemma tsdopwhile_sing2: "x \<noteq> a \<Longrightarrow> tsDom\<cdot>ts = {a} \<Longrightarrow> tsDropWhile\<cdot>(Discr x)\<cdot>ts = ts"
+  apply (induction ts arbitrary: a x, simp_all)
+  apply (simp add: tsdom_delayfun tsdropwhile_delayfun)
+  by (simp add: tsdom_mlscons tsdropwhile_mlscons_f)
 
 (************************************************)
   subsection \<open>list2ts\<close>    

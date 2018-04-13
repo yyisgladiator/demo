@@ -97,7 +97,7 @@ by (metis option.simps(3))
 
 lift_definition EvenAutomatonAutomaton :: "(EvenAutomatonState, EvenAutomaton event) automaton" is 
   "(evenAutomatonTransition, State Even 0,(tsynbOneTick c2), {c1}, {c2})"
-by simp
+  sorry
 
 definition EvenAutomatonSPF :: "EvenAutomaton event SPF" where
 "EvenAutomatonSPF = H EvenAutomatonAutomaton"
