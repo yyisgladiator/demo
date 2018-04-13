@@ -20,6 +20,13 @@ default_sort uscl_pcpo
 definition map_io_well:: "(channel \<Rightarrow> 'a::uscl \<Rightarrow> bool) \<Rightarrow> ('a \<rightarrow> 'a) \<Rightarrow> channel \<Rightarrow> channel \<Rightarrow> bool" 
   where "map_io_well P f ch1 ch2 \<equiv> \<forall> x. P ch1 x = P ch2 (f\<cdot>x)"
 
+definition map_io_well_2x1:: "(channel \<Rightarrow> 'a::uscl \<Rightarrow> bool) \<Rightarrow> ('a \<rightarrow> 'a \<rightarrow> 'a) 
+                            \<Rightarrow> channel \<Rightarrow> channel \<Rightarrow> channel \<Rightarrow> bool" 
+  where "map_io_well_2x1 P f ch1 ch2 ch3 \<equiv> \<forall> x y. (P ch1 x \<and> P ch2 y) = P ch3 (f\<cdot>x\<cdot>y)"
+
+(* lemma second_channel: "snd (a, b) = b"
+  by simp *)
+
 (* ----------------------------------------------------------------------- *)
 section \<open>General\<close>
 (* ----------------------------------------------------------------------- *)
@@ -30,6 +37,14 @@ subsection\<open>1x1\<close>
 definition uf_1x1 :: "('a \<rightarrow> 'a) \<Rightarrow> (channel \<times> channel) \<Rightarrow> ('a\<^sup>\<Omega>) ufun" where
 "uf_1x1 f cs \<equiv> Abs_cufun (\<lambda> (sb::('a\<^sup>\<Omega>)). (ubDom\<cdot>sb = {(fst cs)}) 
                              \<leadsto> (Abs_ubundle [(snd cs) \<mapsto> f\<cdot>(sb . (fst cs))]))"
+
+(* TODO: braucht assumptions, aber das geht glaube ich nicht mit lift_definition (?) *)
+(* setup_lifting type_definition_ufun
+
+lift_definition uf_1x1_2 :: "('a \<rightarrow> 'a) \<Rightarrow> channel \<Rightarrow> channel \<Rightarrow> ('a\<^sup>\<Omega>) ufun" is
+"\<lambda> (f::('a \<rightarrow> 'a)) ch1 ch2. (\<Lambda> (ub::('a\<^sup>\<Omega>)). (ubDom\<cdot>ub = {ch1}) 
+                             \<leadsto> (Abs_ubundle [ch2 \<mapsto> f\<cdot>(ub . ch1)]))"
+  by simp *)
 
 subsubsection\<open>Ufun requirements\<close>
 (* Show that our definition of general Ufuns with one input and one output are in fact Ufuns *)
@@ -91,7 +106,6 @@ lemma uf_1x1_lub[simp]:
     shows "chain Y \<Longrightarrow> ubDom\<cdot>(Lub Y) = {ch1} \<Longrightarrow>  (\<Squnion>i. f\<cdot>(Y i . c1)) = f\<cdot>((Lub Y) . c1)"
   by (metis ch2ch_Rep_cfunR contlub_cfun_arg)
 
-
 (* Monotonic & Chain/LUB properties \<Longrightarrow> resulting function from 1x1 construction is continous *)
 lemma uf_1x1_cont[simp] : 
   assumes "map_io_well usclOkay f ch1 ch2"
@@ -151,10 +165,10 @@ lemma uf_1x1_well[simp]:
   apply (simp add: ubdom_insert)
   by (simp add: assms map_io_well2_ubwell2 ubdom_insert)
 
-subsubsection\<open>Properties\<close>
+subsubsection\<open>Properties\<close> 
 (* Show some properties, like dom and range *)
 
-(* The domain is ch1 *))
+(* The domain is ch1 *)
 lemma uf_1x1_dom[simp]: 
   assumes "map_io_well usclOkay f ch1 ch2"
     shows "ufDom\<cdot>(Abs_cufun(\<lambda> sb. (ubDom\<cdot>sb = {ch1}) \<leadsto> (Abs_ubundle [ch2 \<mapsto> f\<cdot>(sb . ch1)]))) = {ch1}"
@@ -178,12 +192,108 @@ lemma uf_1x1_ran[simp]:
   by (metis assms dom_eq_singleton_conv map_io_well2_ubwell2 singletonI 
       ubclDom_ubundle_def ubcldom_least_cs ubdom_ubrep_eq)
 
+(* Equation for Rep_cufun *)
+lemma uf_1x1_rep_eq: 
+  assumes "map_io_well usclOkay f ch1 ch2"
+    shows "Rep_cufun (uf_1x1 f (ch1, ch2)) 
+                                = (\<lambda>b. (ubDom\<cdot>b = {(fst (ch1,ch2))}) 
+                                        \<leadsto> (Abs_ubundle [(snd (ch1,ch2)) \<mapsto> f\<cdot>(b . (fst (ch1,ch2)))]))"
+  apply(simp add: uf_1x1_def)
+  apply(subst Product_Type.snd_conv, subst Product_Type.fst_conv)
+  apply(subst Product_Type.snd_conv, subst Product_Type.fst_conv)
+  by(simp add: assms)
+
+(* Applying uf_1x1 *)
+lemma uf_1x1_apply: 
+  assumes "map_io_well usclOkay f ch1 ch2"
+      and "usclOkay ch1 s"
+    shows "(uf_1x1 f (ch1, ch2)) \<rightleftharpoons> (Abs_ubundle [ch1 \<mapsto> s]) = (Abs_ubundle [ch2 \<mapsto> f\<cdot>s])"
+  apply(simp add: assms(1) uf_1x1_rep_eq ub_eq ubgetch_insert)
+  by(simp add: ubWell_def assms(2) ubdom_ubrep_eq)
+
+subsection\<open>2x1\<close>
+
+(* General 2x1 Ufun constructor with 2 input and 1 output channel *)
+definition uf_2x1 :: "('a \<rightarrow> 'a \<rightarrow> 'a) \<Rightarrow>  (channel \<times> channel \<times> channel)  \<Rightarrow> ('a\<^sup>\<Omega>) ufun" where
+"uf_2x1 f cs \<equiv> Abs_cufun (\<lambda>b. (ubDom\<cdot>b = {(fst cs), (fst (snd cs))}) 
+                          \<leadsto> (Abs_ubundle [(snd (snd cs))\<mapsto>f\<cdot>(b . (fst cs))\<cdot>(b . (fst (snd cs)))]))"
+
+subsection \<open>Ufun prerequirements\<close>
+
+lemma map_io_well2_2x1_ubwell: assumes "map_io_well_2x1 (usclOkay::(channel \<Rightarrow> 'a::uscl \<Rightarrow> bool)) f ch1 ch2 ch3" 
+                               and "usclOkay ch1 x"
+                               and "usclOkay ch2 y"
+                             shows "ubWell [ch3 \<mapsto> f\<cdot>x\<cdot>y]"
+  apply (rule ubwellI)
+  apply (simp add: domIff)
+  by (meson assms(1) assms(2) assms(3) map_io_well_2x1_def)
+
+lemma map_io_well2_2x1_ubwell2: assumes "map_io_well_2x1 (usclOkay::(channel \<Rightarrow> 'a::uscl \<Rightarrow> bool)) f ch1 ch2 ch3" 
+                                and "ch1 \<in> ubDom\<cdot>ub"
+                                and "ch2 \<in> ubDom\<cdot>ub"
+                              shows "ubWell [ch3 \<mapsto> f\<cdot>(ub . ch1)\<cdot>(ub . ch2)]"
+  by (metis assms(1) assms(2) assms(3) map_io_well2_2x1_ubwell ubdom_channel_usokay ubgetch_insert)
+
+(* TODO: Der Beweis ist ein 'ne Katastrophe *)
+lemma uf_2x1_mono[simp]: 
+  assumes "map_io_well_2x1 usclOkay f ch1 ch2 ch3"
+    shows "monofun (\<lambda>b. (ubDom\<cdot>b = {ch1, ch2}) \<leadsto> (Abs_ubundle [ch3 \<mapsto> f\<cdot>(b .ch1)\<cdot>(b .ch2)]))"
+  apply (fold ubclDom_ubundle_def)
+  apply (rule monofunI)
+  apply (case_tac "ubclDom\<cdot>x \<noteq> {ch1}")
+  apply (simp_all add: ubcldom_fix)
+  apply(rule impI)
+defer (* LOL *)
+  apply(rule impI)
+defer
+  proof - 
+    fix x::"'a\<^sup>\<Omega>"
+    fix y::"'a\<^sup>\<Omega>"
+    assume "x \<sqsubseteq> y"
+    moreover assume "ubclDom\<cdot>y = {ch1, ch2}"
+    moreover have "ubclDom\<cdot>x = {ch1, ch2}"
+      using calculation(1) calculation(2) ubcldom_fix by blast
+    moreover have "[ch3 \<mapsto> f\<cdot>(x  .  ch1)\<cdot>(x  .  ch2)] \<sqsubseteq> [ch3 \<mapsto> f\<cdot>(y  .  ch1)\<cdot>(y  .  ch2)]"
+      by (simp add: calculation(1) monofun_cfun part_below)
+    moreover have "ubWell [ch3 \<mapsto> f\<cdot>(x  .  ch1)\<cdot>(x  .  ch2)]"
+      apply(simp add: ubWell_def)
+      by (metis assms calculation(3) insert_iff map_io_well_2x1_def ubclDom_ubundle_def ubdom_channel_usokay ubgetch_insert)
+    ultimately show "Some (Abs_ubundle [ch3 \<mapsto> f\<cdot>(x  .  ch1)\<cdot>(x  .  ch2)]) \<sqsubseteq>
+       Some (Abs_ubundle [ch3 \<mapsto> f\<cdot>(y  .  ch1)\<cdot>(y  .  ch2)])" 
+        proof -
+          have f1: "\<forall>c. usclOkay c (y . c) \<or> c \<notin> {ch1, ch2}"
+            by (metis (full_types) \<open>ubclDom\<cdot>(y::'a\<^sup>\<Omega>) = {ch1::channel, ch2::channel}\<close> ubclDom_ubundle_def ubdom_channel_usokay ubgetch_insert)
+          then have "usclOkay ch2 (y . ch2)"
+            by blast
+          then have "usclOkay ch3 (f\<cdot>(y . ch1)\<cdot>(y . ch2))"
+            using f1 by (meson assms insertI1 map_io_well_2x1_def)
+          then have "ubWell [ch3 \<mapsto> f\<cdot>(y . ch1)\<cdot>(y . ch2)]"
+            by (metis (no_types) ubWell_empty ubrep_ubabs ubsetch_well)
+          then show ?thesis
+            by (simp add: \<open>[ch3::channel \<mapsto> (f::'a \<rightarrow> 'a \<rightarrow> 'a)\<cdot> ((x::'a\<^sup>\<Omega>) . (ch1::channel))\<cdot> (x . (ch2::channel))] \<sqsubseteq> [ch3 \<mapsto> f\<cdot>((y::'a\<^sup>\<Omega>) . ch1)\<cdot>(y . ch2)]\<close> \<open>ubWell [ch3::channel \<mapsto> (f::'a \<rightarrow> 'a \<rightarrow> 'a)\<cdot> ((x::'a\<^sup>\<Omega>) . (ch1::channel))\<cdot> (x . (ch2::channel))]\<close> below_ubundle_def some_below)
+        qed
+  next
+    fix x::"'a\<^sup>\<Omega>"
+    fix y::"'a\<^sup>\<Omega>"
+    assume "x \<sqsubseteq> y"
+    moreover assume "ubclDom\<cdot>y = {ch1}"
+    moreover assume "ch2 = ch1"
+    moreover have "[ch3 \<mapsto> f\<cdot>(x  .  ch1)\<cdot>(x  .  ch2)] \<sqsubseteq> [ch3 \<mapsto> f\<cdot>(y  .  ch1)\<cdot>(y  .  ch2)]"
+      by (simp add: calculation(1) monofun_cfun part_below)
+    moreover have "ubWell [ch3 \<mapsto> f\<cdot>(x  .  ch1)\<cdot>(x  .  ch2)]"
+      apply(simp add: ubWell_def)
+      by (metis (full_types) assms calculation(1) calculation(2) calculation(3) insertI1 map_io_well_2x1_def ubclDom_ubundle_def ubdom_below ubdom_channel_usokay ubgetch_insert)
+    show "Some (Abs_ubundle [ch3 \<mapsto> f\<cdot>(x  .  ch1)\<cdot>(x  .  ch1)]) \<sqsubseteq>
+       Some (Abs_ubundle [ch3 \<mapsto> f\<cdot>(y  .  ch1)\<cdot>(y  .  ch1)])"
+      by (metis \<open>ubWell [ch3::channel \<mapsto> (f::'a \<rightarrow> 'a \<rightarrow> 'a)\<cdot> ((x::'a\<^sup>\<Omega>) . (ch1::channel))\<cdot> (x . (ch2::channel))]\<close> assms below_ubundle_def calculation(2) calculation(3) calculation(4) map_io_well2_2x1_ubwell2 singletonI some_below ubclDom_ubundle_def ubrep_ubabs)
+  qed
+
 subsection\<open>2x2\<close>
 
-(* general 2x2 Ufun constructor with Ics as input and Ocs as output channel *)
-definition Ufun2x2 :: "('a \<rightarrow> 'a \<rightarrow> 'a) \<Rightarrow> ('a \<rightarrow> 'a \<rightarrow> 'a) 
+(* General 2x2 Ufun constructor with Ics as input and Ocs as output channel *)
+definition uf_2x2 :: "('a \<rightarrow> 'a \<rightarrow> 'a) \<Rightarrow> ('a \<rightarrow> 'a \<rightarrow> 'a) 
                       \<Rightarrow>  (channel \<times> channel)  \<Rightarrow>  (channel  \<times> channel)  \<Rightarrow> ('a\<^sup>\<Omega>) ufun" where
-"Ufun2x2 f1 f2 Ics Ocs \<equiv> Abs_cufun (\<lambda> (sb::('a\<^sup>\<Omega>)). (ubDom\<cdot>sb = {(fst Ics), (snd Ics)}) 
+"uf_2x2 f1 f2 Ics Ocs \<equiv> Abs_cufun (\<lambda> (sb::('a\<^sup>\<Omega>)). (ubDom\<cdot>sb = {(fst Ics), (snd Ics)}) 
                           \<leadsto> (Abs_ubundle [(fst Ocs)\<mapsto>f1\<cdot>(sb . (fst Ics))\<cdot>(sb . (snd Ics)),
                                (snd Ocs)\<mapsto>f2\<cdot>(sb . (fst Ics))\<cdot>(sb . (snd Ics))]))"
 
@@ -202,47 +312,7 @@ definition uf_id :: "(channel \<times> channel) \<Rightarrow> ('a\<^sup>\<Omega>
 "uf_id cs \<equiv> uf_1x1 id cs"
 
 end
-
 (*
-lift_definition Ufun1x1_2 :: "('a \<rightarrow> 'a) \<Rightarrow> channel \<Rightarrow> channel \<Rightarrow> ('a\<^sup>\<Omega>) ufun" is
-"\<lambda> (f::('a \<rightarrow> 'a)) ch1 ch2. (\<Lambda> (ub::('a\<^sup>\<Omega>)). (ubDom\<cdot>ub = {ch1}) 
-                             \<leadsto> (Abs_ubundle [ch2 \<mapsto> f\<cdot>(ub . ch1)]))"
-by simp
-      
- 
-subsection \<open>Ufun1x1 constructor lemmata\<close>
-(* As we now know that the general Ufun1x1 is in fact an Ufun we can proof properties for the general
-   Ufun1x1 constructor *)
-  
-lemma second_channel: "snd (a, b) = b"
-  by simp
-  
-lemma Ufun1x1_dom[simp]: "ufunDom\<cdot>(Ufun1x1 f (ch1, ch2)) = {ch1}"
-proof -
-  have "ufunDom\<cdot> (Abs_CUfun (\<lambda>s. (sbDom\<cdot>s = {fst (ch1, ch2)})
-                                            \<leadsto>[snd (ch1, ch2) \<mapsto> f\<cdot>(s . fst (ch1, ch2))]\<Omega>)) = {ch1}"
-    by (metis (no_types) prod.sel(1) uf_1x1_dom)
-  then show ?thesis
-    using Ufun1x1_def by presburger
-qed
-  
-lemma Ufun1x1_ran[simp]: "ufunRan\<cdot>(Ufun1x1 f (ch1, ch2)) = {ch2}"
-  apply(simp add: Ufun1x1_def)
-  by (metis fst_conv uf_1x1_ran second_channel)
-    
-lemma Ufun1x1_rep_eq: "Rep_CUfun (Ufun1x1 f (ch1, ch2)) 
-                                = (\<lambda> (sb::nat SB). (sbDom\<cdot>sb = {(fst (ch1,ch2))}) 
-                                        \<leadsto> ([(snd (ch1,ch2)) \<mapsto> f\<cdot>(sb . (fst (ch1,ch2)))]\<Omega>))"
-  apply(simp add: Ufun1x1_def)
-  apply(subst Product_Type.snd_conv, subst Product_Type.fst_conv)
-  apply(subst Product_Type.snd_conv, subst Product_Type.fst_conv)
-  by simp
-    
-lemma Ufun1x1_apply: "(Ufun1x1 f (ch1, ch2)) \<rightleftharpoons> ([ch1 \<mapsto> s]\<Omega>) = ([ch2 \<mapsto> f\<cdot>(s:: nat stream)]\<Omega>)"
-  apply(simp add:  Ufun1x1_rep_eq  sb_id_def  sbgetch_insert)
-  by(simp add: sbdom_rep_eq)
-    
-
 
 (* ----------------------------------------------------------------------- *)
 section \<open>2x1 Ufun\<close>
