@@ -9,38 +9,11 @@ chapter {* Timed Streams *}
 
 theory TStream
 
-imports Streams OptionCpo
+imports "../untimed/Streams" "../inc/OptionCpo" "../inc/Event"
+
 begin
 default_sort countable
 setup_lifting type_definition_cfun
-
-
-(* ----------------------------------------------------------------------- *)
-section {* Type definition *}
-(* ----------------------------------------------------------------------- *)
-
-
-text {* Definition of  datatype  @{text "'m event"}; extends @{text "'m"} with a @{term "Tick"}. *}
-datatype 'm event = Msg 'm ( "\<M> _" 65)| Tick
-
-text {* Inverse of Msg.*}
-abbreviation
-  inversMsg ::  "'a event \<Rightarrow> 'a"  ("\<M>\<inverse> _")
-    where "inversMsg e \<equiv> (case e of \<M> m \<Rightarrow> m)"
-
-text {* Prove that datatype event is countable. Needed, since the domain-constructor defined
- to work for countable types.*}
-instance event :: (countable) countable
-by countable_datatype
-
-
-
-text {* Introduce symbol for ticks (@{text "\<surd>"}), marks the end of each time slot. *}
-syntax
-  "@Tick"     :: "'a event"       ("\<surd>")
-
-translations
-  "\<surd>"  == "CONST Tick"
 
 
 
@@ -936,7 +909,7 @@ apply (metis assms finititeTicks sconc_sdom tsabs_conc tsabs_tsdom)
 proof -
   have "#(Rep_tstream ts1) < \<infinity>" using assms by simp
   hence "sdom\<cdot>((Rep_tstream ts1) \<bullet> (Rep_tstream ts2)) = sdom\<cdot>(Rep_tstream ts1) \<union>  sdom\<cdot>(Rep_tstream ts2)"
-    using infI lnless_def sdom_sconc2un by blast
+    by (meson lnat_well_h2 sdom_sconc2un)
   thus "tsDom\<cdot>ts1 \<union> tsDom\<cdot>ts2 \<subseteq> tsDom\<cdot>(ts1 \<bullet>\<surd> ts2)"
   by (smt Abs_tstream_inverse UnCI UnE mem_Collect_eq subsetI ts_well_conc tsconc_insert tsdom_insert) 
 qed
@@ -5387,5 +5360,65 @@ lemma add2smap: "add\<cdot>(\<up>x\<infinity>)\<cdot>ys = smap (\<lambda>z. z+x)
 
 
 *)
+
+
+(* ----------------------------------------------------------------------- *)
+section \<open>Instantiation\<close>
+(* ----------------------------------------------------------------------- *)
+
+
+instantiation tstream :: (message) uscl
+begin
+  definition usclOkay_tstream_def: "usclOkay c m \<equiv> tsDom\<cdot>m \<subseteq> ctype c"
+definition usclLen_tstream_def: "usclLen \<equiv> tsTickCount"
+
+lemma ts_usclOkay_ex: "\<And>c::channel. \<exists>e::'a tstream. tsDom\<cdot>e \<subseteq> ctype c"
+  apply (simp add: tsDom_def)
+  apply (subst Abs_cfun_inverse2)
+  using tsdom_cont apply(simp)
+  apply(rule_tac x = "bottom" in exI)
+  by(simp)
+instance
+  apply intro_classes
+   apply (simp add: ts_usclOkay_ex usclOkay_tstream_def)
+  apply (rule admI)
+  by (simp add: subset_cont usclOkay_tstream_def)
+end
+
+instantiation tstream :: (message) uscl_pcpo
+begin
+instance 
+  apply intro_classes
+  by (simp add: usclOkay_tstream_def)
+end
+
+instantiation tstream:: (message) uscl_conc
+begin
+
+definition usclConc_stream_def: "usclConc \<equiv> tsConc"
+
+lemma usclOkay_tsconc: "\<And>(c::channel) (s1::'a tstream) s2::'a tstream. usclOkay c s1 \<Longrightarrow> usclOkay c s2 \<Longrightarrow> usclOkay c (usclConc s1\<cdot>s2)"
+proof -
+  fix c:: channel and s1:: "'a tstream" and s2::"'a tstream"
+  assume assm1: "usclOkay c s1" and assm2: "usclOkay c s2"
+  show "usclOkay c (usclConc s1\<cdot>s2)"
+  proof (cases "#\<surd>s1 = \<infinity>")
+    case True
+    then show ?thesis 
+      by (simp add: assm1 local.usclConc_stream_def)
+  next
+    case False
+    have f1: "tsDom\<cdot>(tsConc s1\<cdot>s2) = tsDom\<cdot>s1 \<union> tsDom\<cdot>s2"
+      apply (rule tsdom_tsconc)
+      using False inf_ub lnle_def lnless_def by blast
+    show ?thesis 
+      apply (simp add: usclOkay_tstream_def)
+      using assm1 assm2 f1 local.usclConc_stream_def usclOkay_tstream_def by auto
+  qed
+qed
+instance
+  apply intro_classes
+  by (simp add: usclOkay_tsconc)
+end
 
 end
