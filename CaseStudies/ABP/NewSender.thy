@@ -1,4 +1,4 @@
-(*  Title:        Sender.thy
+(*  Title:        NewSender.thy
     Author:       Dennis Slotboom
     e-mail:       dennis.slotboom@rwth-aachen.de
 
@@ -7,9 +7,8 @@
 
 chapter {* Sender of the Alternating Bit Protocol *}
                                                             
-theory Sender
+theory NewSender
 imports "../../TStream" Miscellaneous
-
 
 begin
 default_sort countable
@@ -28,24 +27,63 @@ fixrec tsSnd_h :: "'a tstream \<rightarrow> bool tstream \<rightarrow> bool disc
   (* if an input and ack from the receiver *)
 "msg \<noteq> \<bottom> \<Longrightarrow> acks \<noteq> \<bottom> \<Longrightarrow> tsSnd_h\<cdot>(tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>m))\<cdot>msg)\<cdot>(tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>a))\<cdot>acks)\<cdot>ack = 
   (* ack for the current msg \<Longrightarrow> send next msg *)
-  (if (a = ack) then tsMLscons\<cdot>(upApply2 Pair\<cdot>(up\<cdot>m)\<cdot>(up\<cdot>ack))\<cdot>(tsSnd_h\<cdot>msg\<cdot>acks\<cdot>(Discr (\<not>(undiscr ack))))
+  (if (a = ack) then tsSnd_h\<cdot>msg\<cdot>acks\<cdot>(Discr (\<not>(undiscr ack)))
   (* wrong ack for the current msg \<Longrightarrow> send msg again *)
    else tsMLscons\<cdot>(upApply2 Pair\<cdot>(up\<cdot>m)\<cdot>(up\<cdot>ack))\<cdot>(tsSnd_h\<cdot>(tsMLscons\<cdot>(up\<cdot>m)\<cdot>msg)\<cdot>acks\<cdot>ack))" |
 
   (* if an input and ack is a tick \<Longrightarrow> send msg again plus a tick
-     if transmission starts with tick \<Longrightarrow> #\<surd>acks = \<infinity> *)
+     if transmission starts with tick \<Longrightarrow> #\<surd> acks = \<infinity> *)
 "msg \<noteq> \<bottom> \<Longrightarrow> tsSnd_h\<cdot>(tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>m))\<cdot>msg)\<cdot>(tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>acks)\<cdot>ack 
   = tsMLscons\<cdot>(upApply2 Pair\<cdot>(up\<cdot>m)\<cdot>(up\<cdot>ack))\<cdot>(delayFun\<cdot>(tsSnd_h\<cdot>(tsMLscons\<cdot>(up\<cdot>m)\<cdot>msg)\<cdot>acks\<cdot>ack))" |
 
-  (* if input is a tick \<Longrightarrow> send tick *)
+  (* if input and ack is a tick \<Longrightarrow> send one tick *)
 "tsSnd_h\<cdot>(tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>msg)\<cdot>(tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>acks)\<cdot>ack
    = delayFun\<cdot>(tsSnd_h\<cdot>msg\<cdot>acks\<cdot>ack)" |
 
+  (* if input is a tick \<Longrightarrow> send tick and remove wrong ack *)
 "acks \<noteq> \<bottom> \<Longrightarrow> tsSnd_h\<cdot>(tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>msg)\<cdot>(tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>a))\<cdot>acks)\<cdot>ack
-  = delayFun\<cdot>(tsSnd_h\<cdot>msg\<cdot>(tsMLscons\<cdot>(up\<cdot>a)\<cdot>acks)\<cdot>ack)"
+  = delayFun\<cdot>(tsSnd_h\<cdot>msg\<cdot>acks\<cdot>ack)"
 
 definition tsSnd :: "'a tstream \<rightarrow> bool tstream \<rightarrow> ('a \<times> bool) tstream" where
 "tsSnd \<equiv> \<Lambda> msg acks. delay (tsSnd_h\<cdot>msg\<cdot>acks\<cdot>(Discr True))"
+
+(*
+text {* input: msg from the user, acks from the receiver, ack buffer for the expected ack 
+        output: msg and expected ack for the receiver *}
+fixrec tsSnd_h :: "'a tstream \<rightarrow> bool tstream \<rightarrow> bool discr \<rightarrow> nat discr \<rightarrow> ('a \<times> bool) tstream" where
+  (* bottom case *)
+"tsSnd_h\<cdot>\<bottom>\<cdot>acks\<cdot>ack\<cdot>cou = \<bottom>" |
+"tsSnd_h\<cdot>msg\<cdot>\<bottom>\<cdot>ack\<cdot>cou = \<bottom>" |
+
+  (* if an input and ack from the receiver *)
+"msg \<noteq> \<bottom> \<Longrightarrow> acks \<noteq> \<bottom> \<Longrightarrow> tsSnd_h\<cdot>(tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>m))\<cdot>msg)\<cdot>(tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>a))\<cdot>acks)\<cdot>ack\<cdot>cou = 
+  (* ack for the current msg \<Longrightarrow> send next msg *)
+  (if (a = ack) then tsSnd_h\<cdot>msg\<cdot>acks\<cdot>(Discr (\<not>(undiscr ack)))\<cdot>cou
+  (* wrong ack for the current msg \<Longrightarrow> send msg again *)
+   else tsMLscons\<cdot>(upApply2 Pair\<cdot>(up\<cdot>m)\<cdot>(up\<cdot>ack))\<cdot>(tsSnd_h\<cdot>(tsMLscons\<cdot>(up\<cdot>m)\<cdot>msg)\<cdot>acks\<cdot>ack\<cdot>cou))" | 
+
+  (* if an input and ack is a tick \<Longrightarrow> send msg again plus a tick
+     if transmission starts with tick \<Longrightarrow> #\<surd> acks = \<infinity> *)
+"msg \<noteq> \<bottom> \<Longrightarrow> tsSnd_h\<cdot>(tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>m))\<cdot>msg)\<cdot>(tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>acks)\<cdot>ack\<cdot>cou  = 
+  (if (cou = Discr 0) then delayFun\<cdot>(tsSnd_h\<cdot>(tsMLscons\<cdot>(up\<cdot>m)\<cdot>msg)\<cdot>acks\<cdot>ack\<cdot>(Discr 1))
+   else tsMLscons\<cdot>(upApply2 Pair\<cdot>(up\<cdot>m)\<cdot>(up\<cdot>ack))\<cdot>(delayFun\<cdot>(tsSnd_h\<cdot>(tsMLscons\<cdot>(up\<cdot>m)\<cdot>msg)\<cdot>acks\<cdot>ack\<cdot>(Discr ((undiscr cou) - 1)))))" |
+
+  (* if input is a tick \<Longrightarrow> send tick and remove wrong ack *)
+"acks \<noteq> \<bottom> \<Longrightarrow> tsSnd_h\<cdot>(tsLscons\<cdot>(up\<cdot>DiscrTick)\<cdot>msg)\<cdot>(tsLscons\<cdot>(up\<cdot>(uMsg\<cdot>a))\<cdot>acks)\<cdot>ack\<cdot>cou
+  = delayFun\<cdot>(tsSnd_h\<cdot>msg\<cdot>acks\<cdot>ack\<cdot>cou)"
+
+definition tsSnd :: "'a tstream \<rightarrow> bool tstream \<rightarrow> ('a \<times> bool) tstream" where
+"tsSnd \<equiv> \<Lambda> msg acks. delay (tsSnd_h\<cdot>msg\<cdot>acks\<cdot>(Discr True)\<cdot>(Discr 1))"
+
+lemma tssnd_insert: "tsSnd\<cdot>msg\<cdot>acks = delay (tsSnd_h\<cdot>msg\<cdot>acks\<cdot>(Discr True)\<cdot>(Discr 1))"
+  by (simp add: tsSnd_def)
+
+lemma tssnd_h_strict [simp]:
+"tsSnd_h\<cdot>\<bottom>\<cdot>\<bottom>\<cdot>ack\<cdot>cou = \<bottom>"
+"tsSnd_h\<cdot>\<bottom>\<cdot>acks\<cdot>ack\<cdot>cou = \<bottom>"
+"tsSnd_h\<cdot>msg\<cdot>\<bottom>\<cdot>ack\<cdot>cou = \<bottom>"
+  by (fixrec_simp)+
+*)
 
 (* ----------------------------------------------------------------------- *)
 section {* basic properties *}
@@ -72,7 +110,7 @@ lemma tssnd_h_delayfun_bot:
 
 lemma tssnd_h_mlscons_ack: "msg \<noteq> \<bottom> \<Longrightarrow> acks \<noteq> \<bottom> \<Longrightarrow>
    tsSnd_h\<cdot>(tsMLscons\<cdot>(updis m)\<cdot>msg)\<cdot>(tsMLscons\<cdot>(updis a)\<cdot>acks)\<cdot>(Discr a) 
-     = tsMLscons\<cdot>(updis (m, a))\<cdot>(tsSnd_h\<cdot>msg\<cdot>acks\<cdot>(Discr (\<not>a)))"
+     = tsSnd_h\<cdot>msg\<cdot>acks\<cdot>(Discr (\<not>a))"
   by (simp add: tsmlscons_lscons)
 
 lemma tssnd_h_mlscons_nack: "msg \<noteq> \<bottom> \<Longrightarrow> acks \<noteq> \<bottom> \<Longrightarrow> a \<noteq> ack \<Longrightarrow>
@@ -86,7 +124,7 @@ lemma tssnd_h_delayfun:
     
 lemma tssnd_h_delayfun_msg:
   "acks \<noteq> \<bottom> \<Longrightarrow> tsSnd_h\<cdot>(delayFun\<cdot>msg)\<cdot>(tsMLscons\<cdot>(updis m)\<cdot>acks)\<cdot>ack 
-                      = delayFun\<cdot>(tsSnd_h\<cdot>msg\<cdot>(tsMLscons\<cdot>(updis m)\<cdot>acks)\<cdot>ack)"
+                      = delayFun\<cdot>(tsSnd_h\<cdot>msg\<cdot>acks\<cdot>ack)"
   by (simp add: delayfun_tslscons tsmlscons_lscons)
 
 lemma tssnd_h_nbot2 [simp]: "msg \<noteq> \<bottom> \<Longrightarrow> tsSnd_h\<cdot>msg\<cdot>(delayFun\<cdot>acks)\<cdot>(Discr ack) \<noteq> \<bottom>"
@@ -101,7 +139,7 @@ lemma tssnd_h_nbot [simp]: "msg \<noteq> \<bottom> \<Longrightarrow> acks \<note
   apply (rule_tac ts=msg in tscases, simp_all)
   apply (simp add: delayfun_tslscons tsmlscons_lscons)
   apply (case_tac "t=ack", simp_all)
-  apply (metis tsmlscons_bot2 tsmlscons_nbot tssnd_h_mlscons_ack up_defined)
+  apply (metis tsmlscons_bot2 tssnd_h_mlscons_ack)
   by (metis tsmlscons_bot2 tsmlscons_nbot tssnd_h_mlscons_nack up_defined)
 
 (* tstickcount lemma for sender *)
@@ -113,13 +151,15 @@ lemma tssnd_h_tstickcount_hhh:"min (#\<surd> msg) (#\<surd> acks) \<le> #\<surd>
   apply (simp add: min_def min.coboundedI1)
   proof -
     assume a1: "(if #\<surd> msg \<le> #\<surd> acks then #\<surd> msg else #\<surd> acks) \<noteq> #\<surd> acks"
-    assume "(if #\<surd> msg \<le> #\<surd> acks then #\<surd> msg else #\<surd> acks) \<le> #\<surd> tsSnd_h\<cdot>msg\<cdot>(updis a &&\<surd> acks)\<cdot> (Discr ack)"
+    assume "(if #\<surd> msg \<le> #\<surd> acks then #\<surd> msg else #\<surd> acks) \<le> #\<surd> tsSnd_h\<cdot>msg\<cdot>(updis a &&\<surd> acks)
+            \<cdot>(Discr ack)"
     then have "#\<surd> msg \<le> #\<surd> tsSnd_h\<cdot>msg\<cdot>(updis a &&\<surd> acks)\<cdot> (Discr ack)"
     using a1 by presburger
-    then show "(lnsuc\<cdot>(#\<surd> msg) \<le> #\<surd> acks \<longrightarrow> #\<surd> msg \<le> #\<surd> tsSnd_h\<cdot>msg\<cdot>(updis a &&\<surd> acks)\<cdot> (Discr ack)) \<and> (\<not> lnsuc\<cdot>(#\<surd> msg) \<le> #\<surd> acks \<longrightarrow> #\<surd> acks \<le> lnsuc\<cdot> (#\<surd> tsSnd_h\<cdot>msg\<cdot>(updis a &&\<surd> acks)\<cdot> (Discr ack)))"
+    then show "(lnsuc\<cdot>(#\<surd> msg) \<le> #\<surd> acks \<longrightarrow> #\<surd> msg \<le> #\<surd> tsSnd_h\<cdot>msg\<cdot>(updis a &&\<surd> acks)\<cdot> (Discr ack))
+      \<and> (\<not> lnsuc\<cdot>(#\<surd> msg) \<le> #\<surd> acks \<longrightarrow> #\<surd> acks \<le> lnsuc\<cdot> (#\<surd> tsSnd_h\<cdot>msg\<cdot>(updis a &&\<surd> acks)\<cdot> (Discr ack)))"
       using a1 by (meson antisym lnle2le not_le_imp_less)
   qed
-  
+
 lemma tssnd_h_tstickcount_hh:"(\<And>acks ack. min (#\<surd> msg) (#\<surd> acks) \<le> #\<surd> tsSnd_h\<cdot>msg\<cdot>acks\<cdot>(Discr ack)) 
     \<Longrightarrow> msg \<noteq> \<bottom> \<Longrightarrow> min (#\<surd> msg) (#\<surd> as) \<le> #\<surd> tsSnd_h\<cdot>(updis ta &&\<surd> msg)\<cdot>as\<cdot>(Discr ack)"
 proof(induction as arbitrary:msg ack)
@@ -148,21 +188,25 @@ next
     assume a1: "as \<noteq> \<bottom>"
     assume a2: "msg \<noteq> \<bottom>"
     assume a3: "\<And>acks ack. min (#\<surd> msg) (#\<surd> acks) \<le> #\<surd> tsSnd_h\<cdot>msg\<cdot>acks\<cdot>(Discr ack)"
-    assume "\<And>msg ack. \<lbrakk>\<And>acks ack. min (#\<surd> msg) (#\<surd> acks) \<le> #\<surd> tsSnd_h\<cdot>msg\<cdot>acks\<cdot> (Discr ack); msg \<noteq> \<bottom>\<rbrakk> \<Longrightarrow> min (#\<surd> msg) (#\<surd> as) \<le> #\<surd> tsSnd_h\<cdot> (updis ta &&\<surd> msg)\<cdot> as\<cdot> (Discr ack)"
+    assume "\<And>msg ack. \<lbrakk>\<And>acks ack. min (#\<surd> msg) (#\<surd> acks) \<le> #\<surd> tsSnd_h\<cdot>msg\<cdot>acks\<cdot> (Discr ack); msg \<noteq> \<bottom>\<rbrakk> 
+            \<Longrightarrow> min (#\<surd> msg) (#\<surd> as) \<le> #\<surd> tsSnd_h\<cdot> (updis ta &&\<surd> msg)\<cdot> as\<cdot> (Discr ack)"
     then have f4: "\<And>b. min (#\<surd> msg) (#\<surd> as) \<le> #\<surd> tsSnd_h\<cdot>(updis ta &&\<surd> msg)\<cdot>as\<cdot> (Discr b)"
       using a3 a2 by blast
-    then have "\<exists>b. b \<and> min (#\<surd> msg) (#\<surd> as) \<le> #\<surd> tsSnd_h\<cdot>(updis ta &&\<surd> msg)\<cdot> (updis b &&\<surd> as)\<cdot> (Discr ack)"
+    then have "\<exists>b. b \<and> min (#\<surd> msg)(#\<surd> as) \<le> #\<surd> tsSnd_h\<cdot>(updis ta &&\<surd> msg)\<cdot>(updis b &&\<surd> as)\<cdot>(Discr ack)"
       using a3 a2 a1 by (metis (no_types) tssnd_h_mlscons_ack tssnd_h_mlscons_nack tstickcount_mlscons)
     moreover
     { assume "\<not> t"
-      then have "\<exists>b. min (#\<surd> msg) (#\<surd> as) \<le> #\<surd> tsSnd_h\<cdot>(updis ta &&\<surd> msg)\<cdot> (updis b &&\<surd> as)\<cdot> (Discr ack) \<and> \<not> t \<and> \<not> b"
-        using f4 a3 a2 a1 by (metis (no_types) tssnd_h_mlscons_ack tssnd_h_mlscons_nack tstickcount_mlscons)
-      then have "min (#\<surd> msg) (#\<surd> as) \<le> #\<surd> tsSnd_h\<cdot>(updis ta &&\<surd> msg)\<cdot> (updis t &&\<surd> as)\<cdot> (Discr ack)"
+      then have "\<exists>b. min (#\<surd> msg) (#\<surd> as) \<le> #\<surd> tsSnd_h\<cdot>(updis ta &&\<surd> msg)\<cdot>(updis b &&\<surd> as)\<cdot>(Discr ack) 
+                  \<and> \<not> t \<and> \<not> b"
+        using f4 a3 a2 a1 by (metis (no_types) tssnd_h_mlscons_ack tssnd_h_mlscons_nack 
+          tstickcount_mlscons)
+      then have "min (#\<surd> msg) (#\<surd> as) \<le> #\<surd> tsSnd_h\<cdot>(updis ta &&\<surd> msg)\<cdot>(updis t &&\<surd> as)\<cdot>(Discr ack)"
         by force }
-    ultimately show "min (#\<surd> msg) (#\<surd> as) \<le> #\<surd> tsSnd_h\<cdot>(updis ta &&\<surd> msg)\<cdot> (updis t &&\<surd> as)\<cdot> (Discr ack)"
+    ultimately show "min (#\<surd> msg) (#\<surd> as) \<le> #\<surd> tsSnd_h\<cdot>(updis ta &&\<surd> msg)\<cdot>(updis t &&\<surd> as)\<cdot>(Discr ack)"
       by fastforce
   qed
 qed
+
 
 text{* Count of ticks in sender output is greater than the minimum of ticks in msg and acks. *}  
 lemma tssnd_h_tstickcount:
@@ -186,7 +230,7 @@ next
   apply(case_tac "as=\<bottom>",simp_all)
   apply(simp add:tssnd_h_delayfun_msg tstickcount_mlscons)
   apply(simp add: delayFun_def)
-  by (metis (no_types, lifting) tssnd_h_tstickcount_hhh tstickcount_mlscons)
+  by (metis (no_types, lifting) less_lnsuc lnsuc_lnle_emb min.absorb1 min_le_iff_disj)
 next
   case (mlscons msg t)
   then show ?case
@@ -224,7 +268,7 @@ text {* lemmata for sender, see BS01, page 103
 *}
 
 (* ToDo: additional properties lemmata for sender *)
-
+(*
 text {* fds \<sqsubseteq> i where fds = map(\<alpha>.ds, \<Pi>1) 
         fds is a prefix of i *}
 lemma tssnd_prefix_inp_h4:"(\<And>tb ack as. sprojfst\<cdot>(srcdups\<cdot>(\<up>(tb, ack) \<bullet> 
@@ -298,6 +342,7 @@ lemma tssnd_prefix_inp_h4:"(\<And>tb ack as. sprojfst\<cdot>(srcdups\<cdot>(\<up
         by (insert f0 [of "\<not>ack"], auto)
       then have "\<up>tb \<bullet> sprojfst\<cdot> (srcdups\<cdot> ( \<up>(a,  ack) \<bullet> tsAbs\<cdot> (tsSnd_h\<cdot>i\<cdot>as\<cdot>(Discr (\<not> ack))))) 
                  \<sqsubseteq> \<up>tb \<bullet> \<up>a \<bullet> tsAbs\<cdot>i"
+        
         by (simp add: a2 a3 lscons_conv tsabs_mlscons tssnd_h_mlscons_ack)
       then show "\<up>ta \<bullet> \<up>tb \<bullet> sprojfst\<cdot>(srcdups\<cdot>(\<up>(a, ack) \<bullet> tsAbs\<cdot>(tsSnd_h\<cdot>i\<cdot>as\<cdot>(Discr (\<not> ack))))) 
                     \<sqsubseteq> \<up>ta \<bullet> \<up>tb \<bullet> \<up>a \<bullet> tsAbs\<cdot>i"
@@ -439,8 +484,11 @@ lemma tssnd_prefix_inp: "tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(tsSnd_h\
       apply(simp add: tssnd_h_mlscons_nack tsabs_mlscons lscons_conv tssnd_prefix_inp_h1)
       by(simp add: tssnd_h_mlscons_ack tsabs_mlscons tssnd_prefix_inp_h2)
     qed
-  qed  
-    
+  qed
+*)
+
+(*
+
 text {* \<alpha>.fb = fb  where fb = map(\<alpha>.ds, \<Pi>2)
         each new data element from i is assigned a bit different from the bit assigned to 
         the previous one*}
@@ -460,7 +508,7 @@ lemma tssnd_alt_bit_h5:"(\<And>ack t as. srcdups\<cdot>(\<up>ack \<bullet> sproj
     fix as :: "bool tstream"  and ta :: 'a and ack :: bool and i :: "'a tstream"
     assume a1: "\<And>ack t as. srcdups\<cdot> (\<up>ack \<bullet> sprojsnd\<cdot> (srcdups\<cdot> (\<up>(t, \<not> ack) \<bullet> tsAbs\<cdot> (tsSnd_h\<cdot>i\<cdot>as\<cdot>
       (Discr ack))))) = \<up>ack \<bullet> sprojsnd\<cdot> (srcdups\<cdot> (\<up>(t, \<not> ack) \<bullet> tsAbs\<cdot> (tsSnd_h\<cdot>i\<cdot>as\<cdot>(Discr ack))))"
-    then have"srcdups\<cdot> (\<up>(\<not> ack) \<bullet> sprojsnd\<cdot> (srcdups\<cdot> (\<up>(ta, ack) \<bullet> tsAbs\<cdot> (tsSnd_h\<cdot>i\<cdot>as\<cdot> 
+    then have "srcdups\<cdot> (\<up>(\<not> ack) \<bullet> sprojsnd\<cdot> (srcdups\<cdot> (\<up>(ta, ack) \<bullet> tsAbs\<cdot> (tsSnd_h\<cdot>i\<cdot>as\<cdot> 
        (Discr (\<not> ack)))))) = \<up>(\<not> ack) \<bullet> sprojsnd\<cdot> (srcdups\<cdot> (\<up>(ta, ack) \<bullet> tsAbs\<cdot> (tsSnd_h\<cdot>i\<cdot>as\<cdot> 
             (Discr (\<not> ack)))))"
       by (insert a1 [of "\<not>ack"], auto)
@@ -469,6 +517,7 @@ lemma tssnd_alt_bit_h5:"(\<And>ack t as. srcdups\<cdot>(\<up>ack \<bullet> sproj
              (Discr (\<not> ack)))))"
       by simp
   qed
+
 
 lemma tssnd_alt_bit_h4:
           "srcdups\<cdot>(\<up>ack \<bullet> sprojsnd\<cdot>(srcdups\<cdot>(\<up>(t, \<not> ack) \<bullet> tsAbs\<cdot>(tsSnd_h\<cdot>i\<cdot>as\<cdot>(Discr ack))))) 
@@ -501,11 +550,13 @@ lemma tssnd_alt_bit_h4:
     apply(case_tac "a\<noteq>ack", simp_all)
     apply(simp add: tssnd_h_mlscons_nack tsabs_mlscons lscons_conv tssnd_alt_bit_h5)    
     apply(simp add: tssnd_h_mlscons_ack tsabs_mlscons lscons_conv)
+    sorry
+    (*
     proof -
       fix a :: bool and as :: "bool tstream"
       assume a1: "\<And>ack t as. srcdups\<cdot> (\<up>ack \<bullet> sprojsnd\<cdot> (srcdups\<cdot> (\<up>(t, \<not> ack) \<bullet> tsAbs\<cdot> (tsSnd_h\<cdot>iss\<cdot>as\<cdot>
        (Discr ack))))) = \<up>ack \<bullet> sprojsnd\<cdot> (srcdups\<cdot> (\<up>(t, \<not> ack) \<bullet> tsAbs\<cdot> (tsSnd_h\<cdot>iss\<cdot>as\<cdot>(Discr ack))))"
-      then have"srcdups\<cdot> (\<up>(\<not> ack) \<bullet> sprojsnd\<cdot> (srcdups\<cdot> (\<up>(ta, ack) \<bullet> tsAbs\<cdot> (tsSnd_h\<cdot>iss\<cdot>as\<cdot> 
+      then have "srcdups\<cdot> (\<up>(\<not> ack) \<bullet> sprojsnd\<cdot> (srcdups\<cdot> (\<up>(ta, ack) \<bullet> tsAbs\<cdot> (tsSnd_h\<cdot>iss\<cdot>as\<cdot> 
                                (Discr (\<not> ack)))))) =  \<up>(\<not> ack) \<bullet> sprojsnd\<cdot> (srcdups\<cdot> (\<up>(ta, ack) \<bullet> 
                                 tsAbs\<cdot> (tsSnd_h\<cdot>iss\<cdot>as\<cdot> (Discr (\<not> ack)))))"
         by (insert a1 [of "\<not>ack"], auto)
@@ -513,9 +564,43 @@ lemma tssnd_alt_bit_h4:
            (Discr (\<not> ack)))))) = \<up>ack \<bullet> \<up>(\<not> ack) \<bullet> sprojsnd\<cdot> (srcdups\<cdot> (\<up>(ta, ack) \<bullet> 
                            tsAbs\<cdot> (tsSnd_h\<cdot>iss\<cdot>as\<cdot> (Discr (\<not> ack)))))"
       by simp
-    qed
+    qed*)
   qed     
-    
+
+lemma tssnd_alt_bit_h41:
+  "srcdups\<cdot>(\<up>ack \<bullet> sprojsnd\<cdot>(srcdups\<cdot>(\<up>(ta, \<not> ack) \<bullet> tsAbs\<cdot>(tsSnd_h\<cdot>i\<cdot>as\<cdot>(Discr ack))))) =
+       \<up>ack \<bullet> sprojsnd\<cdot>(srcdups\<cdot>(\<up>(ta, \<not> ack) \<bullet> tsAbs\<cdot>(tsSnd_h\<cdot>i\<cdot>as\<cdot>(Discr ack))))"
+proof(induction i arbitrary: ack t as)
+    case adm
+    then show ?case
+    by simp
+  next
+    case bottom
+    then show ?case 
+    by(subst srcdups_def [THEN fix_eq2],simp)
+  next
+    case (delayfun iss)
+    then show ?case
+      apply(rule_tac ts= as in tscases, simp_all)
+      apply(subst srcdups_def [THEN fix_eq2],simp)
+      apply(simp add: tssnd_h_delayfun)
+      apply(case_tac "as=\<bottom>", simp_all)
+      apply(subst srcdups_def [THEN fix_eq2],simp)
+      by(simp add: tssnd_h_delayfun_msg)
+   next
+    case (mlscons iss ta)
+    then show ?case
+    apply(rule_tac ts= as in tscases, simp_all)
+    apply(subst srcdups_def [THEN fix_eq2],simp)
+    apply(simp add: tssnd_h_delayfun_nack tsabs_mlscons lscons_conv tssnd_alt_bit_h5)
+    apply(case_tac "as=\<bottom>", simp)
+    apply(subst srcdups_def [THEN fix_eq2],simp_all)
+    apply(case_tac "a\<noteq>ack", simp_all)
+    using tssnd_alt_bit_h4 tssnd_alt_bit_h5 apply blast
+    apply (simp add: tssnd_alt_bit_h4 tssnd_alt_bit_h5)
+    by (simp add: tssnd_alt_bit_h4)
+qed
+
 lemma tssnd_alt_bit_h3:"i \<noteq> \<bottom> \<Longrightarrow> srcdups\<cdot>
     (\<up>ack \<bullet> sprojsnd\<cdot>
             (srcdups\<cdot>
@@ -527,11 +612,12 @@ lemma tssnd_alt_bit_h3:"i \<noteq> \<bottom> \<Longrightarrow> srcdups\<cdot>
   apply(simp add: tssnd_h_delayfun_nack tsabs_mlscons lscons_conv)
   apply(case_tac "t=ack")
   apply(simp add: tssnd_h_mlscons_nack tsabs_mlscons lscons_conv)
-  by(simp add: tssnd_h_mlscons_ack tsabs_mlscons lscons_conv tssnd_alt_bit_h4)
+  by(simp add: tssnd_h_mlscons_ack tsabs_mlscons lscons_conv tssnd_alt_bit_h41)
 
 lemma tssnd_alt_bit_h2:"
        srcdups\<cdot>(sprojsnd\<cdot>(srcdups\<cdot>(\<up> (t, ack) \<bullet> tsAbs\<cdot>(tsSnd_h\<cdot>i\<cdot>as\<cdot>(Discr (\<not>ack)))))) =
        sprojsnd\<cdot>(srcdups\<cdot>(\<up> (t, ack) \<bullet> tsAbs\<cdot>(tsSnd_h\<cdot>i\<cdot>as\<cdot>(Discr (\<not>ack)))))"
+  
   proof(induction i arbitrary: as ack t )
     case adm
     then show ?case
@@ -556,9 +642,11 @@ lemma tssnd_alt_bit_h2:"
     apply(case_tac "as=\<bottom>",simp_all)
     apply(case_tac "a=(\<not> ack)")
     apply(simp add: tssnd_h_mlscons_ack tsabs_mlscons lscons_conv)
-    using tssnd_alt_bit_h4 apply blast
+   (* using tssnd_alt_bit_h4 apply blast *)
+    defer
     apply(simp add: tssnd_h_mlscons_ack tsabs_mlscons lscons_conv)
-    by (simp add: lscons_conv tsabs_mlscons tssnd_alt_bit_h3 tssnd_h_mlscons_nack)  
+    apply(simp add: lscons_conv tsabs_mlscons tssnd_alt_bit_h3 tssnd_h_mlscons_nack)
+    sorry
   qed
 
 lemma tssnd_alt_bit_h1:"i\<noteq>\<bottom> \<Longrightarrow> srcdups\<cdot>(sprojsnd\<cdot>(srcdups\<cdot>(\<up> (t, ack) \<bullet> tsAbs\<cdot>(tsSnd_h\<cdot>
@@ -589,168 +677,11 @@ lemma tssnd_alt_bit:
     apply(simp add: tssnd_h_delayfun_nack tsabs_mlscons lscons_conv tssnd_alt_bit_h1)
     apply(case_tac "as=\<bottom>",simp_all)
     apply(case_tac "a=ack")
-    apply(simp add: tssnd_h_mlscons_ack tsabs_mlscons lscons_conv tssnd_alt_bit_h2)
+    apply(simp add: tssnd_h_mlscons_ack tsabs_mlscons lscons_conv)
     by(simp add: tssnd_h_mlscons_nack tsabs_mlscons lscons_conv tssnd_alt_bit_h1)
-  qed  
+  qed
 
-text {* #fds = min{#i, #fas+1} where fds = map(\<alpha>.ds, \<Pi>1), fas = \<alpha>.as 
-        when an acknowledgment is received then the next data next data element will eventually
-        be transmitted given that there are more data elements to transmit *}
-lemma tssnd_ack2trans: 
-  "tsAbs\<cdot>(tsRemDups\<cdot>as) \<sqsubseteq> tsAbs\<cdot>(tsRemDups\<cdot>(tsProjSnd\<cdot>(tsSnd_h\<cdot>i\<cdot>as\<cdot>(Discr ack)))) \<Longrightarrow> 
-   #\<surd>as = \<infinity> \<Longrightarrow> #(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(tsSnd_h\<cdot>i\<cdot>as\<cdot>(Discr ack)))))
-                  = min (#(tsAbs\<cdot>i)) (lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>as))))"
-  oops
-
-text {* #i > #fas \<Longrightarrow> #ds = \<infinity> where fas = \<alpha>.as
-        if a data element is never acknowledged despite repetitive transmission by the sender 
-        then the sender never stops transmitting this data element *}
-lemma tssnd_nack2inftrans: "#\<surd>as = \<infinity> \<Longrightarrow> 
-  #(tsAbs\<cdot>i) > #(tsAbs\<cdot>(tsRemDups\<cdot>as)) \<Longrightarrow> #(tsAbs\<cdot>(tsSnd_h\<cdot>i\<cdot>as\<cdot>(Discr ack))) = \<infinity>"
-  oops
-  
-lemma tssnd_as_inftick_h9:"(i::'a tstream) \<noteq> \<bottom> \<Longrightarrow>
-    (\<And>(ack::bool) (i::'a tstream) ta::'a.
-        #(srcdups\<cdot>(\<up>ack \<bullet> tsAbs\<cdot>as)) < lnsuc\<cdot>(lnsuc\<cdot>(#(tsAbs\<cdot>i))) \<Longrightarrow>
-        i \<noteq> \<bottom> \<Longrightarrow> #\<surd> as \<le> lnsuc\<cdot>(#\<surd> tsSnd_h\<cdot>(updis ta &&\<surd> i)\<cdot>as\<cdot>(Discr (\<not> ack)))) \<Longrightarrow>
-    as \<noteq> \<bottom> \<Longrightarrow>#(srcdups\<cdot>(\<up>(\<not> ack) \<bullet> tsAbs\<cdot>as)) < lnsuc\<cdot>(lnsuc\<cdot>(#(tsAbs\<cdot>i))) \<Longrightarrow> 
-    #\<surd> as \<le> lnsuc\<cdot>(#\<surd> tsSnd_h\<cdot>(updis t &&\<surd> i)\<cdot>as\<cdot>(Discr ack))"  
-proof -
-  assume a0:"(i::'a tstream) \<noteq> \<bottom>"
-  assume a1:"(\<And>ack (i::'a tstream) ta.
-        #(srcdups\<cdot>(\<up>ack \<bullet> tsAbs\<cdot>as)) < lnsuc\<cdot>(lnsuc\<cdot>(#(tsAbs\<cdot>i))) \<Longrightarrow>
-        i \<noteq> \<bottom> \<Longrightarrow> #\<surd> as \<le> lnsuc\<cdot>(#\<surd> tsSnd_h\<cdot>(updis ta &&\<surd> i)\<cdot>as\<cdot>(Discr (\<not> ack))))"
-  assume a2:"#(srcdups\<cdot>(\<up>(\<not> ack) \<bullet> tsAbs\<cdot>as)) < lnsuc\<cdot>(lnsuc\<cdot>(#(tsAbs\<cdot>i)))"
-  have h0:"#(srcdups\<cdot>(\<up>(\<not> ack) \<bullet> tsAbs\<cdot>as)) < lnsuc\<cdot>(lnsuc\<cdot>(#(tsAbs\<cdot>(i::'a tstream)))) \<Longrightarrow>i \<noteq> \<bottom> \<Longrightarrow>  #\<surd> as \<le> lnsuc\<cdot>(#\<surd> tsSnd_h\<cdot>(updis t &&\<surd> i)\<cdot>as\<cdot>(Discr ack))"
-    by (insert a1 [of "\<not> ack"], auto)
-  then show ?thesis
-    using a0 a2 by blast
-qed
-      
-lemma tssnd_as_inftick_h8:" (\<And>ack (i::'a tstream) ta.
-        #(srcdups\<cdot>(\<up>ack \<bullet> tsAbs\<cdot>as)) < lnsuc\<cdot>(lnsuc\<cdot>(#(tsAbs\<cdot>i))) \<Longrightarrow>
-        i \<noteq> \<bottom> \<Longrightarrow> #\<surd> as \<le> lnsuc\<cdot>(#\<surd> tsSnd_h\<cdot>(updis ta &&\<surd> i)\<cdot>as\<cdot>(Discr (\<not> ack)))) \<Longrightarrow>
-    as \<noteq> \<bottom> \<Longrightarrow> #(srcdups\<cdot>(\<up>(\<not> ack) \<bullet> tsAbs\<cdot>as)) < lnsuc\<cdot>(#(tsAbs\<cdot>(i::'a tstream))) \<Longrightarrow> i \<noteq> \<bottom> \<Longrightarrow> #\<surd> as \<le> lnsuc\<cdot>(#\<surd> tsSnd_h\<cdot>i\<cdot>as\<cdot>(Discr ack))"
-proof(induction i arbitrary: ack as)
-  case adm
-  then show ?case 
-  apply(rule adm_all)+
-  apply(rule adm_imp,simp)+
-  apply(rule adm_imp)
-  apply(rule admI)
-  apply(simp add: not_less contlub_cfun_arg contlub_cfun_fun)
-  apply(meson lnle_def lub_below monofun_cfun_arg not_le po_class.chain_def)
-  apply(rule adm_imp,simp)
-  apply(rule admI)
-  by(simp add: contlub_cfun_arg contlub_cfun_fun lub_sml_eq)
-next
-  case bottom
-  then show ?case
-  by simp  
-next
-  case (delayfun i)
-  then show ?case 
-  apply(rule_tac ts=as in tscases,simp_all)
-  apply(simp add: tssnd_h_delayfun tssnd_h_delayfun_nack tstickcount_mlscons)
-  apply(simp add: delayFun_def)
-  apply(case_tac "as=\<bottom>", simp_all)
-  apply(case_tac "i=\<bottom>",simp_all)
-  apply (metis below_bottom_iff lnle2le lnle_def lnsuc_neq_0_rev lnzero_def slen_empty_eq slen_scons srcdups_nbot)
-  apply(case_tac "as=\<bottom>",simp_all)
-  apply(simp add: tssnd_h_delayfun_msg tstickcount_mlscons tsabs_mlscons lscons_conv)
-  apply(simp add: delayFun_def)
-   apply(case_tac "i=\<bottom>",simp_all)
-  apply (metis below_bottom_iff lnat.con_rews lnle2le lnle_def lnzero_def slen_scons srcdups_ex)
-  by (smt delayfun.prems(2) dual_order.trans less_lnsuc lscons_conv tsabs_mlscons tstickcount_mlscons)
-next
-  case (mlscons i t)
-  then show ?case
-  apply(simp add: tsabs_mlscons lscons_conv)
-  using tssnd_as_inftick_h9 by blast
-qed
-
-lemma tssnd_as_inftick_h7:"#(srcdups\<cdot>(\<up>ack \<bullet> tsAbs\<cdot>as)) < lnsuc\<cdot>(lnsuc\<cdot>(#(tsAbs\<cdot>i))) \<Longrightarrow>
-    i \<noteq> \<bottom> \<Longrightarrow> as \<noteq> \<bottom> \<Longrightarrow> #\<surd> as \<le> lnsuc\<cdot>(#\<surd> tsSnd_h\<cdot>(updis ta &&\<surd> i)\<cdot>as\<cdot>(Discr (\<not> ack)))"
-proof(induction as arbitrary: i ack ta)
-  case adm
-  then show ?case 
-  apply(rule adm_all)+
-  apply(rule adm_imp)
-  apply(rule admI)
-  apply(simp add: not_less contlub_cfun_arg contlub_cfun_fun)
-  apply(meson below_lub lnle_def monofun_cfun_arg po_class.chain_def)
-  apply(rule adm_imp,simp)
-  apply(rule adm_imp,simp)
-  apply(rule admI)
-  by(simp add: contlub_cfun_arg contlub_cfun_fun lub_mono2)
-next
-  case bottom
-  then show ?case by simp
-next
-  case (delayfun as)
-  then show ?case 
-  apply(simp add: tssnd_h_delayfun_nack tstickcount_mlscons)
-  apply(simp add: delayFun_def)
-  by fastforce  
-next
-  case (mlscons as t)
-  then show ?case
-  apply(case_tac "t=ack",simp_all)
-  apply(simp add: tssnd_h_mlscons_nack tsabs_mlscons tstickcount_mlscons lscons_conv)
-  apply(simp add: tssnd_h_mlscons_ack tsabs_mlscons tstickcount_mlscons lscons_conv)
-  using tssnd_as_inftick_h8 by blast
-qed
-    
-lemma tssnd_as_inftick_h6:"i \<noteq> \<bottom> \<Longrightarrow>
-    #(srcdups\<cdot>(\<up>(\<not> ack) \<bullet> tsAbs\<cdot>as)) < lnsuc\<cdot>(#(tsAbs\<cdot>i)) \<Longrightarrow>
-    (\<And>(ack::bool) i::'a tstream.
-        #(srcdups\<cdot>(\<up>ack \<bullet> tsAbs\<cdot>as)) < lnsuc\<cdot>(#(tsAbs\<cdot>i)) \<Longrightarrow> i \<noteq> \<bottom> \<Longrightarrow> #\<surd> as \<le> #\<surd> tsSnd_h\<cdot>i\<cdot>as\<cdot>(Discr (\<not> ack))) \<Longrightarrow>
-    as \<noteq> \<bottom> \<Longrightarrow> #\<surd> as \<le> lnsuc\<cdot>(#\<surd> tsSnd_h\<cdot>(i::'a tstream)\<cdot>as\<cdot>(Discr ack))"    
-proof(-)
-  assume a0:" i \<noteq> \<bottom> "
-  assume a1:" \<And>ack i::'a tstream. #(srcdups\<cdot>(\<up>ack \<bullet> tsAbs\<cdot>as)) < lnsuc\<cdot>(#(tsAbs\<cdot>i)) \<Longrightarrow> i \<noteq> \<bottom> \<Longrightarrow> #\<surd> as \<le> #\<surd> tsSnd_h\<cdot>i\<cdot>as\<cdot>(Discr (\<not> ack))"
-  assume a2:" #(srcdups\<cdot>(\<up>(\<not> ack) \<bullet> tsAbs\<cdot>as)) < lnsuc\<cdot>(#(tsAbs\<cdot>i))"
-  have h0:"#(srcdups\<cdot>(\<up>(\<not> ack) \<bullet> tsAbs\<cdot>as)) < lnsuc\<cdot>(#(tsAbs\<cdot>i)) \<Longrightarrow> i \<noteq> \<bottom> \<Longrightarrow> #\<surd> as \<le> #\<surd> tsSnd_h\<cdot>i\<cdot>as\<cdot>(Discr ack)"
-    by (insert a1 [of "\<not>ack"], auto)
-  then show ?thesis
-    using a0 a2 less_lnsuc trans_lnle by blast
-qed
-  
-lemma tssnd_as_inftick_h5:"#(srcdups\<cdot>(\<up>ack \<bullet> \<up>t \<bullet> tsAbs\<cdot>as)) < lnsuc\<cdot>(#(tsAbs\<cdot>i)) \<Longrightarrow>
-         (\<And>ack i::'a tstream. #(srcdups\<cdot>(\<up>ack \<bullet> tsAbs\<cdot>as)) < lnsuc\<cdot>(#(tsAbs\<cdot>i)) \<Longrightarrow> i \<noteq> \<bottom> \<Longrightarrow> #\<surd> as \<le> #\<surd> tsSnd_h\<cdot>i\<cdot>as\<cdot>(Discr (\<not> ack))) \<Longrightarrow>
-         as \<noteq> \<bottom> \<Longrightarrow> #\<surd> as \<le> #\<surd> delay (tsSnd_h\<cdot>(i::'a tstream)\<cdot>(updis t &&\<surd> as)\<cdot>(Discr (\<not> ack)))"
-proof(induction i arbitrary: ack t as)
-  case adm
-  then show ?case
-  apply(rule adm_all)+
-  apply(rule adm_imp)
-  apply(rule admI)
-  apply(simp add: not_less contlub_cfun_arg contlub_cfun_fun)
-  apply(meson lnle_def lub_below monofun_cfun_arg not_le po_class.chain_def)
-  apply(rule adm_imp,simp)
-  apply(rule admI)
-  by(simp add: contlub_cfun_arg contlub_cfun_fun lub_sml_eq)
-next
-  case bottom
-  then show ?case
-  apply simp
-  by (metis Fin_02bot Fin_Suc lnat.con_rews lnzero_def neq02Suclnle not_less slen_empty_eq slen_scons srcdups_nbot)  
-next
-  case (delayfun i)
-  then show ?case 
-  apply(simp add: tssnd_h_delayfun_msg tstickcount_delayfun)
-  using dual_order.trans less_lnsuc by blast
-next
-  case (mlscons i ta)
-  then show ?case 
-  apply(case_tac "t=ack",simp_all)
-  apply(simp add: tssnd_h_mlscons_nack)
-  apply(simp add: delayFun_def tstickcount_mlscons tsabs_mlscons lscons_conv)
-  using tssnd_as_inftick_h7 apply blast
-  apply(simp add: tssnd_h_mlscons_ack)
-  apply(simp add: delayFun_def tstickcount_mlscons tsabs_mlscons lscons_conv)
-  using tssnd_as_inftick_h6 by blast
-qed 
+*)
     
 lemma tssnd_as_inftick_h4:"#(srcdups\<cdot>(\<up>ack \<bullet> tsAbs\<cdot>as)) < lnsuc\<cdot>(#(tsAbs\<cdot>i)) \<Longrightarrow>
             i \<noteq> \<bottom> \<Longrightarrow> as \<noteq> \<bottom> \<Longrightarrow> #\<surd> as \<le> #\<surd> tsSnd_h\<cdot>i\<cdot>as\<cdot>(Discr (\<not>ack))"
@@ -777,9 +708,11 @@ next
   apply(simp add: delayFun_def)
   apply(rename_tac m)
   apply (case_tac "m=\<bottom>")
-  apply (metis bottomI lnle2le lnle_def lnzero_def slen_empty_eq srcdups_nbot srcdupsimposs2_h2 strictI tsabs_bot)
+  apply (metis bottomI lnle2le lnle_def lnzero_def slen_empty_eq srcdups_nbot srcdupsimposs2_h2 
+          strictI tsabs_bot)
   (*  "min (#\<surd>msg) (#\<surd>acks) \<le> #\<surd>tsSnd_h\<cdot>msg\<cdot>acks\<cdot>(Discr ack)" *) 
-  apply (smt below_bottom_iff lnle2le lnle_def lnsuc_neq_0_rev lnzero_def slen_empty_eq slen_scons srcdups_nbot strict_slen strict_tstickcount tsSnd_h.simps(2) tsabs_bot)
+  apply (smt below_bottom_iff lnle2le lnle_def lnsuc_neq_0_rev lnzero_def slen_empty_eq slen_scons 
+          srcdups_nbot strict_slen strict_tstickcount tsSnd_h.simps(2) tsabs_bot)
   apply(rename_tac i)
   apply(case_tac "i=\<bottom>",simp_all)
   apply(simp add: tssnd_h_delayfun_nack tstickcount_mlscons)
@@ -797,81 +730,33 @@ next
   apply(simp add: tssnd_h_mlscons_ack tstickcount_mlscons tsabs_mlscons lscons_conv)
   apply fastforce
   apply(rename_tac i)
-  using tssnd_as_inftick_h5 by blast
-qed     
+  apply (simp add: tstickcount_delayfun)
+  proof - 
+    fix b:: "'a tstream"
+    assume a1: "#(srcdups\<cdot>(\<up>ack \<bullet> \<up>t \<bullet> tsAbs\<cdot>as)) < lnsuc\<cdot>(#(tsAbs\<cdot>b))"
+    assume a2: "i = delay b"
+    assume a3: "\<And>ack i. #(srcdups\<cdot>(\<up>ack \<bullet> tsAbs\<cdot>as)) < lnsuc\<cdot>(#(tsAbs\<cdot>i)) \<Longrightarrow> i \<noteq> \<bottom> 
+                \<Longrightarrow> #\<surd> as \<le> #\<surd> tsSnd_h\<cdot>i\<cdot>as\<cdot>(Discr (\<not> ack))"
+    assume a4: "as \<noteq> \<bottom>"
+    have h1: "#(srcdups\<cdot>(\<up>ack \<bullet> tsAbs\<cdot>as)) \<le> #(srcdups\<cdot>(\<up>ack \<bullet> \<up>t \<bullet> tsAbs\<cdot>as))"
+      by (simp add: srcdups_slen_conc_leq)
+    show "#\<surd> as \<le> lnsuc\<cdot>(#\<surd> tsSnd_h\<cdot>b\<cdot>as\<cdot>(Discr (\<not> ack))) "
+    proof -
+      have f1: "#(tsAbs\<cdot>b) \<notsqsubseteq> #(srcdups\<cdot> (sdropwhile (\<lambda>b. b = ack)\<cdot> (\<up>t \<bullet> tsAbs\<cdot>as)))"
+        by (metis a1 leD lnle_def monofun_cfun_arg slen_scons srcdups_step)
+      have "\<bottom> = #(\<epsilon>::'a stream)"
+    by (metis lnzero_def strict_slen)
+        then have "b \<noteq> \<bottom>"
+          using f1 by (metis (no_types) minimal tsabs_bot)
+        then show ?thesis
+    by (meson a1 h1 le_less_trans less_lnsuc mlscons.IH mlscons.hyps order.trans)
+  qed
+qed   
+qed  
     
 lemma tssnd_as_inftick_h3:"#(srcdups\<cdot>(\<up>True \<bullet> tsAbs\<cdot>as)) < lnsuc\<cdot>(#(tsAbs\<cdot>i)) \<Longrightarrow>
             i \<noteq> \<bottom> \<Longrightarrow> as \<noteq> \<bottom> \<Longrightarrow> #\<surd> as \<le> #\<surd> tsSnd_h\<cdot>i\<cdot>as\<cdot>(Discr False)"
 using tssnd_as_inftick_h4 by force
-  
-lemma tssnd_as_inftick_h2:" #(srcdups\<cdot>(\<up>False \<bullet> tsAbs\<cdot>as)) < lnsuc\<cdot>(#(tsAbs\<cdot>i)) \<Longrightarrow>
-            i \<noteq> \<bottom> \<Longrightarrow> as \<noteq> \<bottom> \<Longrightarrow> #\<surd> as \<le> #\<surd> tsSnd_h\<cdot>(updis a &&\<surd> i)\<cdot>as\<cdot>(Discr True)"
-proof(induction as arbitrary: i a)
-  case adm
-  then show ?case 
-  apply(rule adm_all)
-  apply(rule adm_imp)
-  apply(rule admI)
-  apply(simp add: not_less contlub_cfun_arg contlub_cfun_fun)
-  apply(meson below_lub lnle_def monofun_cfun_arg po_class.chain_def)
-  apply(rule adm_imp,simp)
-  apply(rule adm_imp,simp)
-  apply(rule admI)
-  by(simp add: contlub_cfun_arg contlub_cfun_fun lub_mono2)
-next
-  case bottom
-  then show ?case 
-  by simp  
-next
-  case (delayfun as)
-  then show ?case
-  apply(simp add: tssnd_h_delayfun_nack tstickcount_mlscons)
-  apply(simp add: delayFun_def)
-  by fastforce
-next
-  case (mlscons as t)
-  then show ?case 
-  apply(case_tac "t= True",simp_all)
-  apply(simp add: tssnd_h_mlscons_ack tstickcount_mlscons tsabs_mlscons lscons_conv)
-  apply (meson dual_order.trans less_lnsuc not_le tssnd_as_inftick_h3)
-  by(simp add: tssnd_h_mlscons_nack tstickcount_mlscons tsabs_mlscons lscons_conv)
-qed
-    
-lemma tssnd_as_inftick_h:"#(srcdups\<cdot>(\<up>t \<bullet> tsAbs\<cdot>as)) < #(tsAbs\<cdot>i) \<Longrightarrow>
-          as \<noteq> \<bottom> \<Longrightarrow> #\<surd> as \<le> lnsuc\<cdot>(#\<surd> tsSnd_h\<cdot>i\<cdot>(updis t &&\<surd> as)\<cdot>(Discr True))"
-proof(induction i arbitrary: as t)
-  case adm
-  then show ?case 
-  apply(rule adm_all)
-  apply(rule adm_all)
-  apply(rule adm_imp)
-  apply(rule admI)
-  apply(simp add: not_less contlub_cfun_arg contlub_cfun_fun)
-  apply(meson lnle_def lub_below monofun_cfun_arg not_le po_class.chain_def)
-  apply(rule adm_imp,simp)
-  apply(rule admI)
-  by(simp add: contlub_cfun_arg contlub_cfun_fun lub_sml_eq)
-next
-  case bottom
-  then show ?case 
-  apply simp
-  by (metis below_bottom_iff lnless_def lnzero_def)
-next
-  case (delayfun i)
-  then show ?case 
-  apply(simp add: tssnd_h_delayfun_msg)
-  apply(simp add: delayFun_def)
-  using dual_order.trans less_lnsuc by blast
-next
-  case (mlscons i ta)
-  then show ?case 
-  apply(case_tac "i=\<bottom>",simp_all)
-  apply(case_tac "t=True",simp_all)
-  apply(simp add: tssnd_h_mlscons_ack tstickcount_mlscons tsabs_mlscons lscons_conv)
-  apply (meson less_lnsuc trans_lnle tssnd_as_inftick_h3) 
-  apply(simp add: tssnd_h_mlscons_nack tstickcount_mlscons tsabs_mlscons lscons_conv)
-  using less_lnsuc trans_lnle tssnd_as_inftick_h2 by blast    
-qed     
     
 lemma tssnd_as_inftick: "#(tsAbs\<cdot>i) > #(tsAbs\<cdot>(tsRemDups\<cdot>as)) \<Longrightarrow> lnsuc\<cdot>(#\<surd>as) \<le> #\<surd>(tsSnd\<cdot>i\<cdot>as)"
 apply(simp add: tsSnd_def)
@@ -910,16 +795,51 @@ next
   apply(case_tac "as=\<bottom>",simp_all)
   apply(simp add: tssnd_h_delayfun_msg tstickcount_mlscons tsabs_mlscons lscons_conv)
   apply(simp add: delayFun_def)
-  using tssnd_as_inftick_h apply blast
-  apply(case_tac "as=\<bottom>",simp_all)
-  apply(metis below_bottom_iff lnless_def lnzero_def)
-  apply(case_tac "t=True",simp_all)    
-  apply(simp add: tssnd_h_mlscons_ack)
-  apply(simp add: tsabs_mlscons lscons_conv tstickcount_mlscons)
-  using tssnd_as_inftick_h3 apply blast
-  by(simp add: tssnd_h_mlscons_nack tstickcount_mlscons tsabs_mlscons lscons_conv tssnd_as_inftick_h2)
+  proof -
+    fix it :: "'a tstream "
+    assume a1: "#(srcdups\<cdot>(\<up>t \<bullet> tsAbs\<cdot>as)) < #(tsAbs\<cdot>it)"
+    assume a2: "i = Abs_tstream (\<up>\<surd>) \<bullet>\<surd> it"
+    assume a3: "\<And>i. #(srcdups\<cdot>(tsAbs\<cdot>as)) < #(tsAbs\<cdot>i) \<Longrightarrow> #\<surd> as \<le> #\<surd> tsSnd_h\<cdot>i\<cdot>as\<cdot>(Discr True)"
+    assume a4: "as \<noteq> \<bottom>"
+    have h1:"#(srcdups\<cdot>(tsAbs\<cdot>as)) < #(tsAbs\<cdot>it) \<Longrightarrow> #\<surd> as \<le> #\<surd> tsSnd_h\<cdot>it\<cdot>as\<cdot>(Discr True)"
+      by (simp add: mlscons.IH)
+    have h3: "#(srcdups\<cdot>(tsAbs\<cdot>as)) \<le> #(srcdups\<cdot>(\<up>t \<bullet> tsAbs\<cdot>as))"
+      by (simp add: srcdups_slen_leq)
+    thus "#\<surd> as \<le> lnsuc\<cdot>(#\<surd> tsSnd_h\<cdot>it\<cdot>as\<cdot>(Discr True))"
+      by (meson a1 dual_order.trans h1 le_less_trans less_lnsuc)
+  next
+    fix b :: "'a" and bs :: "'a tstream"
+    assume b1: "#(srcdups\<cdot>(tsAbs\<cdot>(updis t &&\<surd> as))) < #(tsAbs\<cdot>(updis b &&\<surd> bs))"
+    assume b2: "i = updis b &&\<surd> bs"
+    assume b3: "\<And>i. #(srcdups\<cdot>(tsAbs\<cdot>as)) < #(tsAbs\<cdot>i) \<Longrightarrow> #\<surd> as \<le> #\<surd> tsSnd_h\<cdot>i\<cdot>as\<cdot>(Discr True)"
+    assume b4: "as \<noteq> \<bottom>"
+    have h1: "#(srcdups\<cdot>(tsAbs\<cdot>as)) \<le> #(srcdups\<cdot>(tsAbs\<cdot>(updis t &&\<surd> as)))"
+      by (simp add: lscons_conv mlscons.hyps srcdups_slen_leq tsabs_mlscons)
+    then show "#\<surd> updis t &&\<surd> as \<le> #\<surd> tsSnd_h\<cdot>(updis b &&\<surd> bs)\<cdot>(updis t &&\<surd> as)\<cdot>(Discr True)"
+      apply (simp add: tstickcount_mlscons)
+    proof -
+      assume "#(srcdups\<cdot>(tsAbs\<cdot>as)) \<le> #(srcdups\<cdot>(tsAbs\<cdot>(updis t &&\<surd> as)))"
+      then have f1: "#(srcdups\<cdot>(tsAbs\<cdot>as)) < #(tsAbs\<cdot>(updis b &&\<surd> bs))"
+        using b1 le_less_trans by blast
+      have "#(tsAbs\<cdot>(updis b &&\<surd> bs)) \<noteq> 0"
+        by (metis b1 bottomI less_le lnle_def lnzero_def)
+      then have "bs \<noteq> \<bottom>"
+        by force
+      moreover
+      { assume "bs \<noteq> \<bottom> \<and> (#(srcdups\<cdot>(tsAbs\<cdot>(updis t &&\<surd> as))) < #(tsAbs\<cdot>(updis b &&\<surd> bs))) 
+          \<noteq> (#(srcdups\<cdot>(\<up>True \<bullet> tsAbs\<cdot>as)) < lnsuc\<cdot>(#(tsAbs\<cdot>bs)))"
+    then have "bs \<noteq> \<bottom> \<and> \<not> t \<or> as = \<bottom>"
+      by (metis (full_types) lscons_conv slen_scons tsabs_mlscons) }
+        ultimately have "#\<surd> as \<le> #\<surd> tsSnd_h\<cdot>(updis b &&\<surd> bs)\<cdot> (updis t &&\<surd> as)\<cdot> (Discr True) 
+                          \<or> bs \<noteq> \<bottom> \<and> \<not> t \<or> as = \<bottom>"
+          using b1 tssnd_as_inftick_h3 tssnd_h_mlscons_ack by fastforce
+        then show "#\<surd> as \<le> #\<surd> tsSnd_h\<cdot>(updis b &&\<surd> bs)\<cdot> (updis t &&\<surd> as)\<cdot> (Discr True)"
+          using f1 by (metis mlscons.IH tsmlscons_bot2 tssnd_h_mlscons_nack tstickcount_mlscons)
+      qed
+    qed
 qed
 
+(*
 (* ----------------------------------------------------------------------- *)
 section {* tssnd_nack2inftrans *}
 (* ----------------------------------------------------------------------- *)
@@ -927,8 +847,9 @@ section {* tssnd_nack2inftrans *}
 lemma tssnd_h_tsdropwhiletick: "tsAbs\<cdot>(tsSnd_h\<cdot>i\<cdot>(updis (ack1) &&\<surd> as)\<cdot>(Discr ack2)) 
       = tsAbs\<cdot>(tsSnd_h\<cdot>(tsDropWhileTick\<cdot>i)\<cdot>(updis (ack1) &&\<surd> as)\<cdot>(Discr ack2))" 
   apply (induction i arbitrary: acka as,simp_all)
-  apply (metis (no_types, hide_lams) delayfun_tslscons tsDropWhileTick.simps(2) tsSnd_h.simps(2) 
-        tsSnd_h.simps(6) tsabs_delayfun tsmlscons_bot2 tsmlscons_lscons)
+  sledgehammer
+(*  apply (metis (no_types, hide_lams) delayfun_tslscons tsDropWhileTick.simps(2) tsSnd_h.simps(2) 
+        tsSnd_h.simps(6) tsabs_delayfun tsmlscons_bot2 tsmlscons_lscons)*)
   by (simp add: tsmlscons_lscons)
  
 lemma tssnd_h_msg_inftick:"i \<noteq> \<bottom> 
@@ -948,7 +869,6 @@ lemma tssnd_h_tsabs: "tsAbs\<cdot>i = \<epsilon> \<Longrightarrow> tsAbs\<cdot>(
         tsprojfst_tsabs tsremdups_tsabs tssnd_prefix_inp)
   by (simp add: tsabs_mlscons)
 
-(* tssnd_nack2inftrans *)
 lemma h4_2_h1: "Fin x \<le> #(stakewhile (\<lambda>x. x = \<surd>)\<cdot>(Rep_tstream as)) \<Longrightarrow>
     #(stakewhile (\<lambda>x. x=\<surd>)\<cdot>(Rep_tstream i)) = Fin x \<Longrightarrow>
     tsAbs\<cdot>(tsSnd_h\<cdot>i\<cdot>as\<cdot>(Discr ack)) =
@@ -1373,11 +1293,13 @@ lemma tssnd_nack2inftrans:
   by (simp add: tssnd_fmsg2inftrans)
 
 
-(* ----------------------------------------------------------------------- *)
-section {* tssnd_ack2trans *}
-(* ----------------------------------------------------------------------- *)
-  
-lemma tssnd_h_tsabs_nbot:"#(tsAbs\<cdot>i) \<noteq> \<bottom> \<Longrightarrow> #(tsAbs\<cdot>(tsRemDups\<cdot>as)) \<noteq> \<bottom> \<Longrightarrow> tsAbs\<cdot>(tsRemDups\<cdot>(tsSnd_h\<cdot>i\<cdot>as\<cdot>(Discr ack))) \<noteq> \<bottom>"  
+declare [[show_types]]
+*)
+
+(*
+
+lemma tssnd_h_tsabs_nbot:"#(tsAbs\<cdot>i) \<noteq> \<bottom> \<Longrightarrow> #(tsAbs\<cdot>(tsRemDups\<cdot>as)) \<noteq> \<bottom> 
+                              \<Longrightarrow> tsAbs\<cdot>(tsRemDups\<cdot>(tsSnd_h\<cdot>i\<cdot>as\<cdot>(Discr ack))) \<noteq> \<bottom>"  
   apply(simp add: tsremdups_tsabs)
   apply(induction i arbitrary: as ack)
   apply(rule adm_imp,simp)
@@ -1391,8 +1313,8 @@ lemma tssnd_h_tsabs_nbot:"#(tsAbs\<cdot>i) \<noteq> \<bottom> \<Longrightarrow> 
   apply(simp add: tssnd_h_delayfun)
   apply(case_tac "asa=\<bottom>",simp)
   apply (simp add: lnzero_def)
-  apply(simp add: tssnd_h_delayfun_msg)
-  apply(rule_tac ts=as in tscases,simp_all)  
+  apply(simp add: tssnd_h_delayfun_msg tsabs_mlscons lscons_conv)defer
+  apply(rule_tac ts=as in tscases,simp_all)
   apply (simp add: lnzero_def)
   apply(case_tac "i=\<bottom>",simp)
   apply(simp add:tssnd_h_delayfun_nack tsabs_mlscons lscons_conv srcdups_nbot)
@@ -1400,9 +1322,11 @@ lemma tssnd_h_tsabs_nbot:"#(tsAbs\<cdot>i) \<noteq> \<bottom> \<Longrightarrow> 
   apply(case_tac "asa=\<bottom>",simp)
   apply (simp add: lnzero_def)
   apply(case_tac "a=ack",simp_all)
-  apply(simp add: tssnd_h_mlscons_ack tsabs_mlscons lscons_conv srcdups_nbot)  
-  by(simp add: tssnd_h_mlscons_nack tsabs_mlscons lscons_conv srcdups_nbot)
-  
+  apply(simp add: tssnd_h_mlscons_ack tsabs_mlscons lscons_conv srcdups_nbot)defer
+  apply(simp add: tssnd_h_mlscons_nack tsabs_mlscons lscons_conv srcdups_nbot)
+
+*)
+(*
 lemma tssnd_h_tickdrop_h:"i \<noteq> \<bottom> \<Longrightarrow> tsAbs\<cdot>as \<noteq> \<epsilon> \<Longrightarrow>
           srcdups\<cdot>(\<up>(t, ack) \<bullet> tsAbs\<cdot>(tsSnd_h\<cdot>(updis t &&\<surd> i)\<cdot>as\<cdot>(Discr ack))) =
           srcdups\<cdot>(tsAbs\<cdot>(tsSnd_h\<cdot>(updis t &&\<surd> i)\<cdot>(tsTickDrop\<cdot>as)\<cdot>(Discr ack)))"
@@ -1424,7 +1348,8 @@ next
   apply(simp add: tstickdrop_mlscons)
   apply(case_tac "a=ack",simp_all)
   apply(simp add: tssnd_h_mlscons_ack tsabs_mlscons lscons_conv)
-  by(simp add: tssnd_h_mlscons_nack tsabs_mlscons lscons_conv)
+  sorry
+(*  apply(simp add: tssnd_h_mlscons_nack tsabs_mlscons lscons_conv)*)
 qed
     
 lemma tssnd_h_tickdrop:"tsAbs\<cdot>as \<noteq> \<bottom> \<Longrightarrow> (tsAbs\<cdot>(tsRemDups\<cdot>(tsSnd_h\<cdot>i\<cdot>as\<cdot>(Discr ack))) = tsAbs\<cdot>(tsRemDups\<cdot>(tsSnd_h\<cdot>(tsTickDrop\<cdot>i)\<cdot>(tsTickDrop\<cdot>as)\<cdot>(Discr ack))))"
@@ -1443,7 +1368,8 @@ next
   apply(rule_tac ts=as in tscases,simp_all)
   apply(simp add: tssnd_h_delayfun tstickdrop_delayfun)
   apply(case_tac "as=\<bottom>",simp)
-  by(simp add: tssnd_h_delayfun_msg tstickdrop_delayfun)
+  apply(simp add: tssnd_h_delayfun_msg tstickdrop_delayfun)
+  sorry
 next
   case (mlscons i t)
   then show ?case
@@ -1451,8 +1377,11 @@ next
   apply(simp add: tstickdrop_mlscons tstickdrop_delayfun tssnd_h_delayfun_nack tsabs_mlscons lscons_conv tssnd_h_tickdrop_h)
   apply(case_tac "as=\<bottom>",simp)
   by(simp add: tstickdrop_mlscons)   
-qed 
-    
+qed
+
+*)
+
+(*
 lemma tssnd_h_rt_h3:"lnsuc\<cdot>0 < #(srcdups\<cdot>(\<up>ack \<bullet> tsAbs\<cdot>as)) \<Longrightarrow> i \<noteq> \<bottom> \<Longrightarrow>
           sprojfst\<cdot>(srcdups\<cdot>(tsAbs\<cdot>(tsSnd_h\<cdot>(updis t &&\<surd> i)\<cdot>(tsDropWhile2\<cdot>(Discr ack)\<cdot>as)\<cdot>(Discr (\<not> ack))))) =
           sprojfst\<cdot>(srcdups\<cdot>(\<up>(t, \<not> ack) \<bullet> tsAbs\<cdot>(tsSnd_h\<cdot>(updis t &&\<surd> i)\<cdot>as\<cdot>(Discr (\<not> ack)))))"
@@ -1478,7 +1407,8 @@ next
   then show ?case 
   apply(case_tac "a=ack",simp_all)
   apply(simp add: tsdropwhile2_t tssnd_h_mlscons_nack tsabs_mlscons lscons_conv)
-  by(simp add: tssnd_h_mlscons_ack tsdropwhile2_f tsabs_mlscons lscons_conv)    
+  apply (simp add: tssnd_h_mlscons_ack tsdropwhile2_f tsabs_mlscons lscons_conv)
+  oops
 qed
   
 lemma tssnd_h_rt_h2:"lnsuc\<cdot>0 < #(srcdups\<cdot>(\<up>ack \<bullet> tsAbs\<cdot>as)) \<Longrightarrow>
@@ -1550,7 +1480,10 @@ next
   by (metis lshd_updis srcdups_ex updis_eq)    
 qed
 
-lemma tssnd_h_rt:"#(tsAbs\<cdot>(tsRemDups\<cdot>as)) > lnsuc\<cdot>0 \<Longrightarrow> lshd\<cdot>(tsAbs\<cdot>(tsRemDups\<cdot>as)) = updis ack \<Longrightarrow> (tsAbs\<cdot>i) \<noteq> \<bottom> \<Longrightarrow>tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(tsSnd_h\<cdot>(tsDropFirst3\<cdot>i)\<cdot>(tsDropWhile2\<cdot>(Discr(ack))\<cdot>as)\<cdot>(Discr (\<not> ack))))) = srt\<cdot>(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(tsSnd_h\<cdot>i\<cdot>as\<cdot>(Discr ack)))))"
+lemma tssnd_h_rt:"#(tsAbs\<cdot>(tsRemDups\<cdot>as)) > lnsuc\<cdot>0 \<Longrightarrow> lshd\<cdot>(tsAbs\<cdot>(tsRemDups\<cdot>as)) = updis ack 
+      \<Longrightarrow> (tsAbs\<cdot>i) \<noteq> \<bottom> 
+      \<Longrightarrow>tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(tsSnd_h\<cdot>(tsDropFirst3\<cdot>i)\<cdot>(tsDropWhile2\<cdot>(Discr(ack))\<cdot>as)\<cdot>(Discr (\<not> ack))))) 
+            = srt\<cdot>(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(tsSnd_h\<cdot>i\<cdot>as\<cdot>(Discr ack)))))"
 apply(simp add: tsremdups_tsabs tsprojfst_tsabs)
 proof(induction i arbitrary: as ack)
   case adm
@@ -1570,9 +1503,10 @@ next
   apply(simp add: tssnd_h_delayfun)
   apply(case_tac "as=\<bottom>",simp)
   apply(case_tac "a=ack",simp_all)
-  apply(simp add: tsdropfirst3_delayfun tssnd_h_delayfun_msg)
+  apply(simp add: tsdropfirst3_delayfun tssnd_h_delayfun_msg) defer
   apply(simp add: tsabs_mlscons lscons_conv)
-  by(metis lshd_updis srcdups_ex updis_eq)    
+  apply(metis lshd_updis srcdups_ex updis_eq)
+  sorry
 next
   case (mlscons i t)
   then show ?case 
@@ -1587,41 +1521,47 @@ next
   by (metis lshd_updis srcdups_ex updis_eq)
 qed  
   
-lemma tssnd_h_hd:"lshd\<cdot>(tsAbs\<cdot>(tsRemDups\<cdot>as)) = updis ack \<Longrightarrow> (tsAbs\<cdot>i) \<noteq> \<bottom> \<Longrightarrow> slookahd\<cdot>(tsAbs\<cdot>i)\<cdot>(\<lambda> a. \<up>a) = slookahd\<cdot>(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(tsSnd_h\<cdot>i\<cdot>as\<cdot>(Discr ack)))))\<cdot>(\<lambda> a. \<up>a)"
-apply(simp only: tsremdups_tsabs tsprojfst_tsabs)
-proof(induction i arbitrary: as ack)
-  case adm
-  then show ?case 
-  apply(rule adm_all)+
-  apply(rule adm_imp,simp)+
-  by simp
-next
-  case bottom
-  then show ?case 
-  by simp
-next
-  case (delayfun i)
-  then show ?case 
-  apply(rule_tac ts=as in tscases,simp_all)
-  apply(simp add: tssnd_h_delayfun)
-  apply(case_tac "as=\<bottom>",simp)    
-  by(simp add: tssnd_h_delayfun_msg)    
-next
-  case (mlscons i t)
-  then show ?case
-  apply(simp add: tsabs_mlscons lscons_conv)
-  apply(rule_tac ts=as in tscases,simp_all)
-  apply(simp add: tssnd_h_delayfun_nack tsabs_mlscons lscons_conv)
-  apply (metis (no_types, lifting) lscons_conv shd1 slookahd_scons sprojfst_scons srcdups_ex stream.con_rews(2) up_defined)    
-  apply(case_tac "as=\<bottom>",simp)
-  apply(case_tac "a=ack",simp_all)
-  apply(simp add: tssnd_h_mlscons_ack tsabs_mlscons lscons_conv)    
-  apply (metis (no_types, lifting) lscons_conv shd1 slookahd_scons sprojfst_scons srcdups_ex stream.con_rews(2) up_defined)    
-  apply(simp add: tsabs_mlscons lscons_conv)
-  by (metis lshd_updis srcdups_ex updis_eq)    
-qed
+lemma tssnd_h_hd:"lshd\<cdot>(tsAbs\<cdot>(tsRemDups\<cdot>as)) = updis ack \<Longrightarrow> (tsAbs\<cdot>i) \<noteq> \<bottom> 
+  \<Longrightarrow> slookahd\<cdot>(tsAbs\<cdot>i)\<cdot>(\<lambda> a. \<up>a) = slookahd\<cdot>(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(tsSnd_h\<cdot>i\<cdot>as\<cdot>(Discr ack)))))\<cdot>(\<lambda> a. \<up>a)"
+  apply(simp only: tsremdups_tsabs tsprojfst_tsabs)
+  proof(induction i arbitrary: as ack)
+    case adm
+    then show ?case 
+    apply(rule adm_all)+
+    apply(rule adm_imp,simp)+
+    by simp
+  next
+    case bottom
+    then show ?case 
+    by simp
+  next
+    case (delayfun i)
+    then show ?case 
+    apply(rule_tac ts=as in tscases,simp_all)
+    apply(simp add: tssnd_h_delayfun)
+    apply(case_tac "as=\<bottom>",simp)    
+    by(simp add: tssnd_h_delayfun_msg)    
+  next
+    case (mlscons i t)
+    then show ?case
+    apply(simp add: tsabs_mlscons lscons_conv)
+    apply(rule_tac ts=as in tscases,simp_all)
+    apply(simp add: tssnd_h_delayfun_nack tsabs_mlscons lscons_conv)
+    apply (metis (no_types, lifting) lscons_conv shd1 slookahd_scons sprojfst_scons srcdups_ex stream.con_rews(2) up_defined)    
+    apply(case_tac "as=\<bottom>",simp)
+    apply(case_tac "a=ack",simp_all)
+    apply(simp add: tssnd_h_mlscons_ack tsabs_mlscons lscons_conv)defer    
+   (* apply (metis (no_types, lifting) lscons_conv shd1 slookahd_scons sprojfst_scons srcdups_ex stream.con_rews(2) up_defined)    *)
+    apply(simp add: tsabs_mlscons lscons_conv)
+    apply (metis lshd_updis srcdups_ex updis_eq)    
+    sorry
+  qed
   
-lemma tssnd_h_shd_i:" #(tsAbs\<cdot>(tsRemDups\<cdot>as)) > lnsuc\<cdot>0 \<Longrightarrow> lshd\<cdot>(tsAbs\<cdot>(tsRemDups\<cdot>as)) = updis ack \<Longrightarrow> (tsAbs\<cdot>i) \<noteq> \<bottom> \<Longrightarrow> \<up>(shd(tsAbs\<cdot>i)) \<bullet> tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(tsSnd_h\<cdot>(tsDropFirst3\<cdot>i)\<cdot>(tsDropWhile2\<cdot>(Discr(shd (tsAbs\<cdot>(tsRemDups\<cdot>as))))\<cdot>as)\<cdot>(Discr (\<not> ack))))) = tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(tsSnd_h\<cdot>i\<cdot>as\<cdot>(Discr ack))))"   
+lemma tssnd_h_shd_i:" #(tsAbs\<cdot>(tsRemDups\<cdot>as)) > lnsuc\<cdot>0 \<Longrightarrow> lshd\<cdot>(tsAbs\<cdot>(tsRemDups\<cdot>as)) = updis ack 
+    \<Longrightarrow> (tsAbs\<cdot>i) \<noteq> \<bottom> 
+    \<Longrightarrow> \<up>(shd(tsAbs\<cdot>i)) \<bullet> tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(tsSnd_h\<cdot>(tsDropFirst3\<cdot>i)\<cdot>(tsDropWhile2\<cdot>(Discr(shd 
+          (tsAbs\<cdot>(tsRemDups\<cdot>as))))\<cdot>as)\<cdot>(Discr (\<not> ack))))) 
+        = tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(tsSnd_h\<cdot>i\<cdot>as\<cdot>(Discr ack))))"   
 proof -
   assume a1: "tsAbs\<cdot>i \<noteq> \<epsilon>"
   assume a2: "lshd\<cdot>(tsAbs\<cdot>(tsRemDups\<cdot>as)) = updis ack"
@@ -1638,34 +1578,39 @@ proof -
     using f5 a3 a2 a1 by (metis (no_types) below_shd surj_scons tssnd_h_rt tssnd_prefix_inp)
 qed 
 
-lemma tssnd_h_nack_msg:"tsDom\<cdot>as \<subseteq> {ack} \<Longrightarrow> sprojfst\<cdot>(srcdups\<cdot>(\<up>(t, \<not> ack) \<bullet> tsAbs\<cdot>(tsSnd_h\<cdot>(updis t &&\<surd> i)\<cdot>as\<cdot>(Discr (\<not> ack))))) = \<up>(t)" 
-proof(induction as arbitrary: i ack)
-  case adm
-  then show ?case 
-  apply(rule adm_all)+
-  apply(rule adm_imp,simp)
-  by simp
-next
-  case bottom
-  then show ?case 
-  by simp  
-next
-  case (delayfun as)
-  then show ?case
-  apply(case_tac "i=\<bottom>",simp)
-  by(simp add: tssnd_h_delayfun_nack tsabs_mlscons lscons_conv tsdom_delayfun)
-next
-  case (mlscons as a)
-  then show ?case
-  apply(case_tac "i=\<bottom>",simp)
-  apply(case_tac "a=ack",simp_all)
-  apply(simp add: tssnd_h_mlscons_nack tsabs_mlscons lscons_conv tsdom_mlscons)
-  by(simp add: tsdom_mlscons)
-qed
+*)
+
+lemma tssnd_h_nack_msg:"tsDom\<cdot>as \<subseteq> {ack} 
+      \<Longrightarrow> sprojfst\<cdot>(srcdups\<cdot>(\<up>(t, \<not> ack) \<bullet> tsAbs\<cdot>(tsSnd_h\<cdot>(updis t &&\<surd> i)\<cdot>as\<cdot>(Discr (\<not> ack))))) = \<up>(t)" 
+  proof(induction as arbitrary: i ack)
+    case adm
+    then show ?case 
+    apply(rule adm_all)+
+    apply(rule adm_imp,simp)
+    by simp
+  next
+    case bottom
+    then show ?case 
+    by simp  
+  next
+    case (delayfun as)
+    then show ?case
+    apply(case_tac "i=\<bottom>",simp)
+    by(simp add: tssnd_h_delayfun_nack tsabs_mlscons lscons_conv tsdom_delayfun)
+  next
+    case (mlscons as a)
+    then show ?case
+    apply(case_tac "i=\<bottom>",simp)
+    apply(case_tac "a=ack",simp_all)
+    apply(simp add: tssnd_h_mlscons_nack tsabs_mlscons lscons_conv tsdom_mlscons)
+    by(simp add: tsdom_mlscons)
+  qed
   
 lemma tssnd_h_acknack_h3:"#\<surd>as = \<infinity> \<Longrightarrow>
           #(srcdups\<cdot>(\<up>ack \<bullet> tsAbs\<cdot>as)) = lnsuc\<cdot>0 \<Longrightarrow>
-          i \<noteq> \<bottom> \<Longrightarrow> as \<noteq> \<bottom> \<Longrightarrow> \<up>t \<bullet> sprojfst\<cdot>(srcdups\<cdot>(\<up>(t, \<not> ack) \<bullet> tsAbs\<cdot>(tsSnd_h\<cdot>(updis t &&\<surd> i)\<cdot>as\<cdot>(Discr (\<not> ack))))) = \<up>t \<bullet> \<up>t"
+          i \<noteq> \<bottom> \<Longrightarrow> as \<noteq> \<bottom> 
+          \<Longrightarrow> \<up>t \<bullet> sprojfst\<cdot>(srcdups\<cdot>(\<up>(t, \<not> ack) \<bullet> tsAbs\<cdot>(tsSnd_h\<cdot>(updis t &&\<surd> i)\<cdot>as\<cdot>(Discr (\<not> ack))))) 
+            = \<up>t \<bullet> \<up>t"
 proof-
   assume a0:"#(srcdups\<cdot>(\<up>ack \<bullet> tsAbs\<cdot>as)) = lnsuc\<cdot>0"
   have h0:"#(srcdups\<cdot>(\<up>ack \<bullet> tsAbs\<cdot>as)) = lnsuc\<cdot>0 \<Longrightarrow> tsDom\<cdot>as \<subseteq> {ack}"
@@ -1683,7 +1628,8 @@ proof-
   then show ?thesis
     by (simp add: a0 tssnd_h_nack_msg)
 qed  
-      
+
+(*      
 lemma tssnd_h_acknack_h2:"#\<surd> as = \<infinity> \<Longrightarrow>#(tsAbs\<cdot>(tsRemDups\<cdot>(updis( ack)&&\<surd>as))) < #(tsAbs\<cdot>(updis(t)&&\<surd>i)) \<Longrightarrow> #(tsAbs\<cdot>(tsRemDups\<cdot>(updis( ack)&&\<surd>as))) = lnsuc\<cdot>0 \<Longrightarrow> 
 tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(tsSnd_h\<cdot>(updis(t)&&\<surd>i)\<cdot>(updis( ack)&&\<surd>as)\<cdot>(Discr ack)))) = stake (Suc (Suc 0))\<cdot>(tsAbs\<cdot>(updis(t)&&\<surd>i))"
   apply(simp add: tsremdups_tsabs tsprojfst_tsabs)
@@ -1716,7 +1662,8 @@ next
   apply(simp add: delayFun_def)
   apply(case_tac "i=\<bottom>",simp)
   apply(case_tac "as=\<bottom>",simp)
-  by(simp add: tssnd_h_delayfun_msg)
+  apply(simp add: tssnd_h_delayfun_msg)
+  sorry
 next
   case (mlscons i t)
   then show ?case 
@@ -1756,528 +1703,49 @@ proof-
   then show ?thesis
     by (metis (no_types, lifting) a2 a3 h1 h3 tsprojfst_tsabs tsremdups_tsabs tstickdrop_nempty)
 qed
-    
-lemma tssnd_h_acknack:"#\<surd>as = \<infinity> \<Longrightarrow>#(tsAbs\<cdot>(tsRemDups\<cdot>as)) < #(tsAbs\<cdot>i) \<Longrightarrow> #(tsAbs\<cdot>(tsRemDups\<cdot>as)) = lnsuc\<cdot>0 \<Longrightarrow>lshd\<cdot>(tsAbs\<cdot>(tsRemDups\<cdot>as)) = updis ack\<Longrightarrow> 
-tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(tsSnd_h\<cdot>(tsTickDrop\<cdot>i)\<cdot>(tsTickDrop\<cdot>as)\<cdot>(Discr ack)))) = stake (Suc (Suc 0))\<cdot>(tsAbs\<cdot>i)"
+*)
+(*    
+lemma tssnd_h_acknack:  "#\<surd>as = \<infinity> \<Longrightarrow>#(tsAbs\<cdot>(tsRemDups\<cdot>as)) < #(tsAbs\<cdot>i) 
+        \<Longrightarrow> #(tsAbs\<cdot>(tsRemDups\<cdot>as)) = lnsuc\<cdot>0 \<Longrightarrow> lshd\<cdot>(tsAbs\<cdot>(tsRemDups\<cdot>as)) = updis ack \<Longrightarrow> 
+        tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(tsSnd_h\<cdot>(tsTickDrop\<cdot>i)\<cdot>(tsTickDrop\<cdot>as)\<cdot>(Discr ack)))) 
+        = stake (Suc (Suc 0))\<cdot>(tsAbs\<cdot>i)"
   apply(simp add: tsremdups_tsabs tsprojfst_tsabs)
-proof(induction i arbitrary: as ack)
-  case adm
-  then show ?case
-  apply(rule adm_all)
-  apply(rule adm_imp,simp)+
-  apply(rule admI)
-  apply(simp add: contlub_cfun_arg contlub_cfun_fun)
-  apply (metis (no_types, lifting) lnle_conv lub_below monofun_cfun_arg not_less po_class.chain_def)
-  apply(rule adm_imp,simp)
-  apply(rule adm_all)
-  apply(rule adm_imp,simp)
-  by simp
-next
-  case bottom
-  then show ?case
-  by simp
-next
-  case (delayfun i)
-  then show ?case 
-  apply(rule_tac ts=as in tscases,simp_all)
-  apply(simp add: tstickdrop_delayfun)
-  apply(simp add: delayFun_def)
-  by(simp add: tstickdrop_delayfun)
-next
-  case (mlscons i t)
-  then show ?case 
-  apply(rule_tac ts=as in tscases,simp_all)
-  apply(simp add: tstickdrop_mlscons tstickdrop_delayfun)
-  apply (simp add: tsremdups_tsabs tssnd_h_acknack_h tstickcount_delayfun)
-  apply(case_tac "a=ack",simp_all)
-  apply(case_tac "as=\<bottom>",simp_all)
-  apply(simp add: tstickdrop_mlscons)
-  apply (metis (no_types, lifting) tsremdups_tsabs tssnd_h_acknack_h tstickdrop_mlscons)
-  apply(simp add: tsabs_mlscons lscons_conv)
-  by (simp add: lscons_conv tsabs_mlscons tsremdups_tsabs tssnd_h_acknack_h tstickdrop_mlscons)
-qed
-  
-lemma tssnd_ack2trans_51_h3:"\<not> #(srcdups\<cdot>(\<up>ack \<bullet> tsAbs\<cdot>as)) \<le> lnsuc\<cdot>0 \<Longrightarrow>
-            lshd\<cdot>(srcdups\<cdot>(\<up>ack \<bullet> tsAbs\<cdot>as)) = updis ack \<Longrightarrow>
-            lshd\<cdot>(srcdups\<cdot>(tsAbs\<cdot>(tsDropWhile2\<cdot>(Discr ack)\<cdot>as))) = updis (\<not> ack)"
-  apply(induction as,simp_all)
-  apply(rule adm_imp,simp)
-  apply(rule admI)
-  apply(simp add: contlub_cfun_arg contlub_cfun_fun)
-  apply (meson lnle_def lub_below monofun_cfun_arg po_class.chain_def)
-  apply(rule adm_imp,simp)
-  apply simp
-  apply(simp add: tsdropwhile2_delayfun)
-  apply(case_tac "t=ack",simp_all)
-  apply(simp add: tsabs_mlscons lscons_conv tsdropwhile2_t)
-  apply(simp add: tsabs_mlscons lscons_conv tsdropwhile2_f)
-  by (metis lshd_updis srcdups_ex)
-    
-lemma tssnd_ack2trans_51_h2:"as \<noteq> \<bottom> \<Longrightarrow>
-            lshd\<cdot>(srcdups\<cdot>(tsAbs\<cdot>(updis ack &&\<surd> as))) = updis ack \<Longrightarrow>
-            #(srcdups\<cdot>(tsAbs\<cdot>(updis ack &&\<surd> as))) = Fin k \<Longrightarrow> lnsuc\<cdot>(#(srcdups\<cdot>(tsAbs\<cdot>(tsDropWhile2\<cdot>(Discr ack)\<cdot>as)))) = Fin k"
-  apply(induction as,simp_all)
-  apply(rule adm_imp,simp)+
-  apply(rule adm_imp)
-  apply(rule admI)
-  apply(simp add: contlub_cfun_arg contlub_cfun_fun)
-  apply (metis (no_types, lifting) Fin_neq_inf l42 monofun_cfun_arg po_class.chain_def unique_inf_lub)
-  apply simp
-  apply(simp add: tsabs_mlscons tsdropwhile2_delayfun)
-  apply(case_tac "as=\<bottom>",simp_all)
-  apply(simp add: lscons_conv)
-  apply auto[1]
-  apply(case_tac "t=ack",simp_all)
-  apply(simp add: tsabs_mlscons lscons_conv tsdropwhile2_t)
-  by(simp add: tsabs_mlscons lscons_conv tsdropwhile2_f)
-  
-lemma tssnd_ack2trans_51_h1:" #\<surd> as = \<infinity> \<Longrightarrow> #(tsAbs\<cdot>(tsRemDups\<cdot>as)) = lnsuc\<cdot>0 \<Longrightarrow> lshd\<cdot>(tsAbs\<cdot>(tsRemDups\<cdot>as)) = updis ack \<Longrightarrow>  #(tsAbs\<cdot>(tsRemDups\<cdot>as)) < #(tsAbs\<cdot>i) \<Longrightarrow> 
-            tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(tsSnd_h\<cdot>i\<cdot>as\<cdot>(Discr ack)))) = stake (Suc (Suc 0))\<cdot>(tsAbs\<cdot>i)"
-proof-
-  assume a0:"#\<surd> as = \<infinity>"
-  assume a1:"#(tsAbs\<cdot>(tsRemDups\<cdot>as)) = lnsuc\<cdot>0"
-  assume a3:"lshd\<cdot>(tsAbs\<cdot>(tsRemDups\<cdot>as)) = updis ack"
-  assume a4:"#(tsAbs\<cdot>(tsRemDups\<cdot>as)) < #(tsAbs\<cdot>i)"
-  then show ?thesis
-    by (smt Fin_02bot Zero_lnless_infty a0 a1 a3 empty_is_shortest le2lnle lnzero_def only_empty_has_length_0 tsprojfst_tsabs tsremdups_tsabs_slen tssnd_h_acknack tssnd_h_tickdrop)
-qed     
-
-lemma tssnd_ack2trans_51:"(\<And>(i::'a tstream) as ack.
-           lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>as))) = Fin k \<Longrightarrow>
-           #\<surd> as = \<infinity> \<Longrightarrow>
-           tsAbs\<cdot>as \<noteq> \<epsilon> \<Longrightarrow>
-           lshd\<cdot>(tsAbs\<cdot>(tsRemDups\<cdot>as)) = updis ack \<Longrightarrow>
-           #(tsAbs\<cdot>(tsRemDups\<cdot>as)) < #(tsAbs\<cdot>i) \<Longrightarrow> tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(tsSnd_h\<cdot>i\<cdot>as\<cdot>(Discr ack)))) = stake k\<cdot>(tsAbs\<cdot>i)) \<Longrightarrow>
-       lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>as))) = Fin (Suc k) \<Longrightarrow>
-       #\<surd> as = \<infinity> \<Longrightarrow>
-       tsAbs\<cdot>as \<noteq> \<epsilon> \<Longrightarrow>
-       lshd\<cdot>(tsAbs\<cdot>(tsRemDups\<cdot>as)) = updis ack \<Longrightarrow>
-       #(tsAbs\<cdot>(tsRemDups\<cdot>as)) < #(tsAbs\<cdot>(i::'a tstream)) \<Longrightarrow> tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(tsSnd_h\<cdot>i\<cdot>as\<cdot>(Discr ack)))) = stake (Suc k)\<cdot>(tsAbs\<cdot>i)"
-proof(case_tac"#(tsAbs\<cdot>(tsRemDups\<cdot>as)) \<le> (lnsuc\<cdot>0)")
-  assume a0:"(\<And>(i::'a tstream) as ack.
-           lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>as))) = Fin k \<Longrightarrow>
-           #\<surd> as = \<infinity> \<Longrightarrow> (tsAbs\<cdot>as) \<noteq> \<bottom> \<Longrightarrow>
-           lshd\<cdot>(tsAbs\<cdot>(tsRemDups\<cdot>as)) = updis ack \<Longrightarrow> 
-           #(tsAbs\<cdot>(tsRemDups\<cdot>as)) < #(tsAbs\<cdot>i) \<Longrightarrow> tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(tsSnd_h\<cdot>i\<cdot>as\<cdot>(Discr ack)))) = stake k\<cdot>(tsAbs\<cdot>i))"
-  assume a1:"lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>as))) = Fin (Suc k)"
-  assume a2:" #\<surd> as = \<infinity> "
-  assume a3:"lshd\<cdot>(tsAbs\<cdot>(tsRemDups\<cdot>as)) = updis ack"
-  assume a4:"(tsAbs\<cdot>as) \<noteq> \<bottom>"
-  assume a5:"#(tsAbs\<cdot>(tsRemDups\<cdot>as)) < #(tsAbs\<cdot>i)"
-  assume a6:" #(tsAbs\<cdot>(tsRemDups\<cdot>as)) \<le> lnsuc\<cdot>0"
-  have h0:"#(tsAbs\<cdot>(tsRemDups\<cdot>as)) = lnsuc\<cdot>0"
-    by (metis Fin_02bot Fin_Suc a3 a6 less2eq less2lnleD lnzero_def not_le_zero_eq slen_empty_eq stream.sel_rews(3) up_defined)
-  have h1:"k = Suc 0"
-    by (metis Fin_0 Fin_Suc a1 h0 lessI less_Suc_eq_0_disj lnat.injects lnsuc_neq_0_rev)
-  then show ?thesis
-    using a2 a3 a5 h0 tssnd_ack2trans_51_h1 by blast
-next
-  assume a0:"(\<And>(i::'a tstream) as ack.
-           lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>as))) = Fin k \<Longrightarrow>
-           #\<surd> as = \<infinity> \<Longrightarrow> (tsAbs\<cdot>as) \<noteq> \<bottom> \<Longrightarrow>
-           lshd\<cdot>(tsAbs\<cdot>(tsRemDups\<cdot>as)) = updis ack \<Longrightarrow> 
-           #(tsAbs\<cdot>(tsRemDups\<cdot>as)) < #(tsAbs\<cdot>i) \<Longrightarrow> tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(tsSnd_h\<cdot>i\<cdot>as\<cdot>(Discr ack)))) = stake k\<cdot>(tsAbs\<cdot>i))"
-  assume a1:"lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>as))) = Fin (Suc k)"
-  assume a2:" #\<surd> as = \<infinity> "
-  assume a3:"lshd\<cdot>(tsAbs\<cdot>(tsRemDups\<cdot>as)) = updis ack"
-  assume a4:"(tsAbs\<cdot>as) \<noteq> \<bottom>"
-  assume a5:"#(tsAbs\<cdot>(tsRemDups\<cdot>as)) < #(tsAbs\<cdot>i)"
-  assume a6:"\<not> #(tsAbs\<cdot>(tsRemDups\<cdot>as)) \<le> lnsuc\<cdot>0"
-  have h01:"(\<And>(i::'a tstream) ack.
-           lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>(tsDropWhile2\<cdot>(Discr(shd (tsAbs\<cdot>(tsRemDups\<cdot>as))))\<cdot>as)))) = Fin k \<Longrightarrow>
-           #\<surd> (tsDropWhile2\<cdot>(Discr(shd (tsAbs\<cdot>(tsRemDups\<cdot>as))))\<cdot>as) = \<infinity> \<Longrightarrow> (tsAbs\<cdot>(tsDropWhile2\<cdot>(Discr(shd (tsAbs\<cdot>(tsRemDups\<cdot>as))))\<cdot>as)) \<noteq> \<bottom> \<Longrightarrow>
-           lshd\<cdot>(tsAbs\<cdot>(tsRemDups\<cdot>(tsDropWhile2\<cdot>(Discr(shd (tsAbs\<cdot>(tsRemDups\<cdot>as))))\<cdot>as))) = updis ack \<Longrightarrow> 
-           #(tsAbs\<cdot>(tsRemDups\<cdot>(tsDropWhile2\<cdot>(Discr(shd (tsAbs\<cdot>(tsRemDups\<cdot>as))))\<cdot>as))) < #(tsAbs\<cdot>i) \<Longrightarrow> tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(tsSnd_h\<cdot>i\<cdot>(tsDropWhile2\<cdot>(Discr(shd (tsAbs\<cdot>(tsRemDups\<cdot>as))))\<cdot>as)\<cdot>(Discr ack)))) = stake k\<cdot>(tsAbs\<cdot>i))"
-    by (insert a0 [of "(tsDropWhile2\<cdot>(Discr(shd (tsAbs\<cdot>(tsRemDups\<cdot>as))))\<cdot>as)"], auto)
-  have h0:"
-           lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>(tsDropWhile2\<cdot>(Discr(shd (tsAbs\<cdot>(tsRemDups\<cdot>as))))\<cdot>as)))) = Fin k \<Longrightarrow>
-           #\<surd> (tsDropWhile2\<cdot>(Discr(shd (tsAbs\<cdot>(tsRemDups\<cdot>as))))\<cdot>as) = \<infinity> \<Longrightarrow> (tsAbs\<cdot>(tsDropWhile2\<cdot>(Discr(shd (tsAbs\<cdot>(tsRemDups\<cdot>as))))\<cdot>as)) \<noteq> \<bottom> \<Longrightarrow>
-           lshd\<cdot>(tsAbs\<cdot>(tsRemDups\<cdot>(tsDropWhile2\<cdot>(Discr(shd (tsAbs\<cdot>(tsRemDups\<cdot>as))))\<cdot>as))) = updis ack \<Longrightarrow> 
-           #(tsAbs\<cdot>(tsRemDups\<cdot>(tsDropWhile2\<cdot>(Discr(shd (tsAbs\<cdot>(tsRemDups\<cdot>as))))\<cdot>as))) < #(tsAbs\<cdot>(tsDropFirst3\<cdot>(i::'a tstream))) \<Longrightarrow> tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(tsSnd_h\<cdot>(tsDropFirst3\<cdot>i)\<cdot>(tsDropWhile2\<cdot>(Discr(shd (tsAbs\<cdot>(tsRemDups\<cdot>as))))\<cdot>as)\<cdot>(Discr ack)))) = stake k\<cdot>(tsAbs\<cdot>(tsDropFirst3\<cdot>i))"
-    by (insert h01 [of "ack"], auto)
-  have f4: "tsAbs\<cdot>(tsRemDups\<cdot>as) \<noteq> \<epsilon>"
-    using a3 by auto
-  then have f5: "Discr (shd (tsAbs\<cdot>(tsRemDups\<cdot>as))) = Discr ack"
-    using a3 by (metis (no_types) lshd_updis surj_scons up_eq)
-  have f7:"lshd\<cdot>(tsAbs\<cdot>(tsRemDups\<cdot>as)) = updis ack \<Longrightarrow> lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>as))) = Fin (Suc k) \<Longrightarrow> lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>(tsDropWhile2\<cdot>(Discr ack)\<cdot>as)))) = Fin k"
-    apply(simp add: tsremdups_tsabs)
-    apply(induction as,simp_all)
-    apply(rule adm_imp,simp)
-    apply(rule adm_imp)
+  proof(induction i arbitrary: as ack)
+    case adm
+    then show ?case
+    apply(rule adm_all)
+    apply(rule adm_imp,simp)+
     apply(rule admI)
     apply(simp add: contlub_cfun_arg contlub_cfun_fun)
-    apply (metis (no_types, lifting) Fin_neq_inf l42 monofun_cfun_arg po_class.chain_def unique_inf_lub)
-    apply simp
-    apply(simp add: tsdropwhile2_delayfun)
-    apply(case_tac "t=ack",simp_all)
-    apply(simp add: tsdropwhile2_t)
-    using tssnd_ack2trans_51_h2 apply blast
+    apply (metis (no_types, lifting) lnle_conv lub_below monofun_cfun_arg not_less po_class.chain_def)
+    apply(rule adm_imp,simp)
+    apply(rule adm_all)
+    apply(rule adm_imp,simp)
+    by simp
+  next
+    case bottom
+    then show ?case
+    by simp
+  next
+    case (delayfun i)
+    then show ?case 
+    apply(rule_tac ts=as in tscases,simp_all)
+    apply(simp add: tstickdrop_delayfun)
+    apply(simp add: delayFun_def)
+    by(simp add: tstickdrop_delayfun)
+  next
+    case (mlscons i t)
+    then show ?case 
+    apply(rule_tac ts=as in tscases,simp_all)
+    apply(simp add: tstickdrop_mlscons tstickdrop_delayfun)
+    apply (simp add: tstickcount_delayfun)
+    apply (simp add: tsremdups_tsabs tssnd_h_acknack_h tstickcount_delayfun)
+    apply(case_tac "a=ack",simp_all)
+    apply(case_tac "as=\<bottom>",simp_all)
+    apply(simp add: tstickdrop_mlscons)
+    apply (metis (no_types, lifting) tsremdups_tsabs tssnd_h_acknack_h tstickdrop_mlscons)
     apply(simp add: tsabs_mlscons lscons_conv)
-    by (metis lshd_updis srcdups_ex updis_eq)
-  have h1:"lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>(tsDropWhile2\<cdot>(Discr(shd (tsAbs\<cdot>(tsRemDups\<cdot>as))))\<cdot>as)))) = Fin k"
-    by (simp add: a1 a3 f5 f7)
-  have h2:"\<not> #(tsAbs\<cdot>(tsRemDups\<cdot>as)) \<le> lnsuc\<cdot>0 \<Longrightarrow> lshd\<cdot>(tsAbs\<cdot>(tsRemDups\<cdot>as)) = updis ack \<Longrightarrow>lshd\<cdot>(tsAbs\<cdot>(tsRemDups\<cdot>(tsDropWhile2\<cdot>(Discr(ack))\<cdot>as))) = updis (\<not>ack)"
-    apply(simp add: tsremdups_tsabs)
-    apply(induction as,simp_all)
-    apply(rule adm_imp,simp)
-    apply(rule admI)
-    apply(simp add: contlub_cfun_arg contlub_cfun_fun)
-    apply (meson lnle_def lub_below monofun_cfun_arg po_class.chain_def)
-    apply(rule adm_imp,simp)
-    apply simp
-    apply(simp add: tsdropwhile2_delayfun)
-    apply(case_tac "t=ack",simp_all)
-    apply(simp add: tsdropwhile2_t tsabs_mlscons lscons_conv)
-    using tssnd_ack2trans_51_h3 apply blast
-    apply(simp add: tsabs_mlscons lscons_conv)
-    by (metis lshd_updis srcdups_ex updis_eq)  
-  have h3:"lshd\<cdot>(tsAbs\<cdot>(tsRemDups\<cdot>(tsDropWhile2\<cdot>(Discr(shd (tsAbs\<cdot>(tsRemDups\<cdot>as))))\<cdot>as))) = updis (\<not>ack)"
-    using a3 a6 f5 local.h2 by blast
-  have h4:"#(tsAbs\<cdot>(tsRemDups\<cdot>(tsDropWhile2\<cdot>(Discr(shd (tsAbs\<cdot>(tsRemDups\<cdot>as))))\<cdot>as))) < #(tsAbs\<cdot>(tsDropFirst3\<cdot>i))"
-    by (smt a1 a3 a5 dual_order.strict_iff_order empty_is_shortest f5 f7 le_less_trans less_lnsuc lnat.injects lnle2le tsdropfirst3_le tsdropwhile2_le2)
-  have h5:"tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(tsSnd_h\<cdot>(tsDropFirst3\<cdot>i)\<cdot>(tsDropWhile2\<cdot>(Discr(shd (tsAbs\<cdot>(tsRemDups\<cdot>as))))\<cdot>as)\<cdot>(Discr (\<not> ack))))) = stake k\<cdot>(tsAbs\<cdot>(tsDropFirst3\<cdot>i))"
-    by (metis (mono_tags, lifting) a0 a2 a3 a6 f5 h1 h3 h4 stream.sel_rews(1) strict_srcdups tsdropwhile2_inftick tsremdups_tsabs up_defined)
-  have h6:"\<up>(shd(tsAbs\<cdot>i)) \<bullet> stake k\<cdot>(tsAbs\<cdot>(tsDropFirst3\<cdot>i)) = stake (Suc k)\<cdot>(tsAbs\<cdot>i)"
-    apply(rule_tac x="(tsAbs\<cdot>i)" in scases,simp_all)
-    using a5 not_le_zero_eq order.asym apply fastforce
-    by(simp add: tsdropfirst3_first)
-  then show ?thesis
-    by (metis a3 a5 a6 h5 leI not_le_zero_eq only_empty_has_length_0 order.asym slen_empty_eq tssnd_h_shd_i)
-qed
-  
-lemma tssnd_ack2trans_5:"lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>as))) = Fin k \<Longrightarrow> #\<surd>as = \<infinity> \<Longrightarrow> (tsAbs\<cdot>as) \<noteq> \<bottom> \<Longrightarrow> lshd\<cdot>(tsAbs\<cdot>(tsRemDups\<cdot>as)) = updis ack \<Longrightarrow> #(tsAbs\<cdot>(i::'a tstream)) > #(tsAbs\<cdot>(tsRemDups\<cdot>as)) \<Longrightarrow> 
-   (tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(tsSnd_h\<cdot>i\<cdot>as\<cdot>(Discr ack))))) = stake k\<cdot>((tsAbs\<cdot>(i)))"
-  apply(induction k arbitrary: i as ack)
-  apply simp
-  using tssnd_ack2trans_51 by blast
-    
-lemma tssnd_h_inf_h2:"(\<And>(i::'a tstream) as ack.
-           lshd\<cdot>(tsAbs\<cdot>(tsRemDups\<cdot>as)) = updis ack \<Longrightarrow>
-           #(tsAbs\<cdot>i) = \<infinity> \<Longrightarrow>
-           #(tsAbs\<cdot>(tsRemDups\<cdot>as)) = \<infinity> \<Longrightarrow>
-           #(stake k\<cdot>(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(tsSnd_h\<cdot>i\<cdot>as\<cdot>(Discr ack)))))) < #(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(tsSnd_h\<cdot>i\<cdot>as\<cdot>(Discr ack)))))) \<Longrightarrow>
-       lshd\<cdot>(tsAbs\<cdot>(tsRemDups\<cdot>as)) = updis ack \<Longrightarrow>
-       #(tsAbs\<cdot>(i::'a tstream)) = \<infinity> \<Longrightarrow>
-       #(tsAbs\<cdot>(tsRemDups\<cdot>as)) = \<infinity> \<Longrightarrow>
-       #(stake (Suc k)\<cdot>(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(tsSnd_h\<cdot>i\<cdot>as\<cdot>(Discr ack)))))) < #(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(tsSnd_h\<cdot>i\<cdot>as\<cdot>(Discr ack)))))"
-proof-
-  assume a0:"(\<And>(i::'a tstream) as ack.
-           lshd\<cdot>(tsAbs\<cdot>(tsRemDups\<cdot>as)) = updis ack \<Longrightarrow>
-           #(tsAbs\<cdot>i) = \<infinity> \<Longrightarrow>
-           #(tsAbs\<cdot>(tsRemDups\<cdot>as)) = \<infinity> \<Longrightarrow>
-           #(stake k\<cdot>(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(tsSnd_h\<cdot>i\<cdot>as\<cdot>(Discr ack)))))) < #(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(tsSnd_h\<cdot>i\<cdot>as\<cdot>(Discr ack))))))"
-  assume a1:"lshd\<cdot>(tsAbs\<cdot>(tsRemDups\<cdot>as)) = updis ack"
-  assume a2:"#(tsAbs\<cdot>i) = \<infinity>"
-  assume a3:"#(tsAbs\<cdot>(tsRemDups\<cdot>as)) = \<infinity>"
-  have h0:"#(tsAbs\<cdot>(tsRemDups\<cdot>as)) > lnsuc\<cdot>0"
-    by (simp add: a3 not_le_imp_less)
-  have h1:"(tsAbs\<cdot>i) \<noteq> \<bottom>"
-    using a2 by auto
-  then have f5: "Discr (shd (tsAbs\<cdot>(tsRemDups\<cdot>as))) = Discr ack"
-    by (metis Inf'_neq_0_rev a1 a3 lshd_updis slen_empty_eq surj_scons updis_eq)
-  have h21:"(lshd\<cdot>(tsAbs\<cdot>(tsRemDups\<cdot>(tsDropWhile2\<cdot>(Discr(shd (tsAbs\<cdot>(tsRemDups\<cdot>as))))\<cdot>as))) = updis ack \<Longrightarrow>
-           #(tsAbs\<cdot>(tsDropFirst3\<cdot>(i::'a tstream))) = \<infinity> \<Longrightarrow>
-           #(tsAbs\<cdot>(tsRemDups\<cdot>(tsDropWhile2\<cdot>(Discr(shd (tsAbs\<cdot>(tsRemDups\<cdot>as))))\<cdot>as))) = \<infinity> \<Longrightarrow>
-           #(stake k\<cdot>(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(tsSnd_h\<cdot>(tsDropFirst3\<cdot>i)\<cdot>(tsDropWhile2\<cdot>(Discr(shd (tsAbs\<cdot>(tsRemDups\<cdot>as))))\<cdot>as)\<cdot>(Discr ack)))))) < #(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(tsSnd_h\<cdot>(tsDropFirst3\<cdot>i)\<cdot>(tsDropWhile2\<cdot>(Discr(shd (tsAbs\<cdot>(tsRemDups\<cdot>as))))\<cdot>as)\<cdot>(Discr ack))))))"
-    by (insert a0 [of "(tsDropWhile2\<cdot>(Discr(shd (tsAbs\<cdot>(tsRemDups\<cdot>as))))\<cdot>as)"], auto)
-  have h22:"\<not> #(tsAbs\<cdot>(tsRemDups\<cdot>as)) \<le> lnsuc\<cdot>0 \<Longrightarrow> lshd\<cdot>(tsAbs\<cdot>(tsRemDups\<cdot>as)) = updis ack \<Longrightarrow>lshd\<cdot>(tsAbs\<cdot>(tsRemDups\<cdot>(tsDropWhile2\<cdot>(Discr(ack))\<cdot>as))) = updis (\<not>ack)"
-    apply(simp add: tsremdups_tsabs)
-    apply(induction as,simp_all)
-    apply(rule adm_imp,simp)
-    apply(rule admI)
-    apply(simp add: contlub_cfun_arg contlub_cfun_fun)
-    apply (meson lnle_def lub_below monofun_cfun_arg po_class.chain_def)
-    apply(rule adm_imp,simp)
-    apply simp
-    apply(simp add: tsdropwhile2_delayfun)
-    apply(case_tac "t=ack",simp_all)
-    apply(simp add: tsdropwhile2_t tsabs_mlscons lscons_conv)
-    using tssnd_ack2trans_51_h3 apply blast
-    apply(simp add: tsabs_mlscons lscons_conv)
-    by (metis lshd_updis srcdups_ex updis_eq)
-  have h23:"#(tsAbs\<cdot>(tsDropFirst3\<cdot>i)) = \<infinity>"
-    using a2 h1 tsdropfirst3_le by fastforce
-  have h24:"#(tsAbs\<cdot>(tsRemDups\<cdot>(tsDropWhile2\<cdot>(Discr(shd (tsAbs\<cdot>(tsRemDups\<cdot>as))))\<cdot>as))) = \<infinity>"
-    using a1 a3 f5 tsdropwhile2_le2 by fastforce
-  have h2:"#(stake k\<cdot>(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(tsSnd_h\<cdot>(tsDropFirst3\<cdot>i)\<cdot>(tsDropWhile2\<cdot>(Discr(ack))\<cdot>as)\<cdot>(Discr (\<not> ack))))))) < #(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(tsSnd_h\<cdot>(tsDropFirst3\<cdot>i)\<cdot>(tsDropWhile2\<cdot>(Discr(ack))\<cdot>as)\<cdot>(Discr (\<not> ack))))))"
-    using a0 a1 f5 h0 h22 h23 h24 leD by blast
-  have h3:"\<up>(shd(tsAbs\<cdot>i)) \<bullet> tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(tsSnd_h\<cdot>(tsDropFirst3\<cdot>i)\<cdot>(tsDropWhile2\<cdot>(Discr(shd (tsAbs\<cdot>(tsRemDups\<cdot>as))))\<cdot>as)\<cdot>(Discr (\<not> ack))))) = tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(tsSnd_h\<cdot>i\<cdot>as\<cdot>(Discr ack))))"
-    by (simp add: a1 h0 h1 tssnd_h_shd_i)
-  have h4:"stake (Suc k)\<cdot>(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(tsSnd_h\<cdot>i\<cdot>as\<cdot>(Discr ack))))) = \<up>(shd(tsAbs\<cdot>i)) \<bullet> (stake k\<cdot>(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(tsSnd_h\<cdot>(tsDropFirst3\<cdot>i)\<cdot>(tsDropWhile2\<cdot>(Discr(ack))\<cdot>as)\<cdot>(Discr (\<not> ack))))))) "
-  proof -
-    have "tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(tsSnd_h\<cdot>i\<cdot>as\<cdot>(Discr ack)))) \<noteq> \<epsilon>"
-      using h3 by force
-    then show ?thesis
-      by (metis (no_types) a1 h0 h1 h3 shd1 stake_Suc surj_scons tssnd_h_rt)
+    by (simp add: lscons_conv tsabs_mlscons tsremdups_tsabs tssnd_h_acknack_h tstickdrop_mlscons)
   qed
-  have h5:"lnsuc\<cdot>(#(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(tsSnd_h\<cdot>(tsDropFirst3\<cdot>i)\<cdot>(tsDropWhile2\<cdot>(Discr(shd (tsAbs\<cdot>(tsRemDups\<cdot>as))))\<cdot>as)\<cdot>(Discr (\<not> ack))))))) = #(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(tsSnd_h\<cdot>i\<cdot>as\<cdot>(Discr ack)))))"
-    by (metis h3 slen_scons)
-  then show ?thesis
-  proof -
-    have "\<not> #(tsAbs\<cdot> (tsProjFst\<cdot> (tsRemDups\<cdot> (tsSnd_h\<cdot>(tsDropFirst3\<cdot>i)\<cdot> (tsDropWhile2\<cdot>(Discr ack)\<cdot>as)\<cdot> (Discr (\<not> ack)))))) < #(stake k\<cdot> (tsAbs\<cdot> (tsProjFst\<cdot> (tsRemDups\<cdot> (tsSnd_h\<cdot>(tsDropFirst3\<cdot>i)\<cdot> (tsDropWhile2\<cdot>(Discr ack)\<cdot>as)\<cdot> (Discr (\<not> ack)))))))"
-      by (meson h2 less_asym')
-    then show ?thesis
-      by (metis (no_types) f5 h2 h4 h5 leI le_imp_less_or_eq lnsuc_lnle_emb neq_iff slen_scons)
-  qed
-qed
-    
-lemma tssnd_h_inf_h:"lshd\<cdot>(tsAbs\<cdot>(tsRemDups\<cdot>as)) = updis ack \<Longrightarrow> #(tsAbs\<cdot>i) = \<infinity> \<Longrightarrow> #(tsAbs\<cdot>(tsRemDups\<cdot>as)) = \<infinity> \<Longrightarrow> #(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(tsSnd_h\<cdot>i\<cdot>as\<cdot>(Discr ack))))) > #(stake k\<cdot>(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(tsSnd_h\<cdot>i\<cdot>as\<cdot>(Discr ack))))))"    
-  apply(induction k arbitrary: i as ack)
-  apply (smt Fin_02bot Fin_Suc Zero_lnless_infty fold_inf gr_0 less2lnleD lnat.sel_rews(2) lnzero_def order_less_le slen_empty_eq slen_scons stake_slen tssnd_h_shd_i)
-  using tssnd_h_inf_h2 by blast
-    
-lemma tssnd_h_inf:"lshd\<cdot>(tsAbs\<cdot>(tsRemDups\<cdot>as)) = updis ack \<Longrightarrow> #(tsAbs\<cdot>i) = \<infinity> \<Longrightarrow> #(tsAbs\<cdot>(tsRemDups\<cdot>as)) = \<infinity> \<Longrightarrow> #(tsAbs\<cdot>(tsRemDups\<cdot>(tsSnd_h\<cdot>i\<cdot>as\<cdot>(Discr ack)))) = \<infinity>"
-  by (metis stake2inf tsprojfst_tsabs_slen tssnd_h_inf_h)
-  
-lemma tssnd_ack2trans_4:"#\<surd> as = \<infinity> \<Longrightarrow>
-    lshd\<cdot>(tsAbs\<cdot>(tsRemDups\<cdot>as)) = updis ack \<Longrightarrow>
-     #(tsAbs\<cdot>i) \<ge> lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>as))) \<Longrightarrow>
-    #(tsAbs\<cdot>(tsRemDups\<cdot>(tsSnd_h\<cdot>i\<cdot>as\<cdot>(Discr ack)))) = (lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>as))))"
-  apply(case_tac"#(tsAbs\<cdot>(tsRemDups\<cdot>as)) = \<infinity>")
-  apply (simp add: tssnd_h_inf)
-  apply(case_tac "(tsAbs\<cdot>as) = \<bottom>")
-  apply (metis leD not_le_zero_eq slen_empty_eq stream.sel_rews(3) tsremdups_tsabs_slen up_defined)
-proof-
-  assume a0:"#\<surd> as = \<infinity>"
-  assume a1:"lshd\<cdot>(tsAbs\<cdot>(tsRemDups\<cdot>as)) = updis ack"
-  assume a2:"lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>as))) \<le> #(tsAbs\<cdot>i)"
-  assume a3:"#(tsAbs\<cdot>(tsRemDups\<cdot>as)) \<noteq> \<infinity>"
-  assume a4:"tsAbs\<cdot>as \<noteq> \<epsilon>"
-  have h0:"\<exists>k. lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>as))) = Fin k"
-    by (metis a3 fold_inf inf_ub le_neq_trans lnat.injects lnat_well_h2)
-  then show ?thesis
-    by (smt a0 a1 a2 a3 a4 fin2stake h0 inf_ub le2lnle order.not_eq_order_implies_strict stake_slen tsprojfst_tsabs_slen tssnd_ack2trans_5)    
-qed
-  
-lemma tssnd_ack2trans_32:"(\<And>(i:: 'b tstream) as ack.
-           lshd\<cdot>(tsAbs\<cdot>(tsRemDups\<cdot>as)) = updis ack \<Longrightarrow>
-           Fin k = #(tsAbs\<cdot>i) \<Longrightarrow>
-           #(tsAbs\<cdot>i) < lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>as))) \<Longrightarrow>
-           tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(tsSnd_h\<cdot>i\<cdot>as\<cdot>(Discr ack)))) = stake k\<cdot>(tsAbs\<cdot>i)) \<Longrightarrow>
-       lshd\<cdot>(tsAbs\<cdot>(tsRemDups\<cdot>as)) = updis ack \<Longrightarrow>
-       Fin (Suc k) = #(tsAbs\<cdot>(i:: 'b tstream)) \<Longrightarrow>
-       #(tsAbs\<cdot>i) < lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>as))) \<Longrightarrow>
-       tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(tsSnd_h\<cdot>i\<cdot>as\<cdot>(Discr ack)))) = stake (Suc k)\<cdot>(tsAbs\<cdot>i)"  
-proof(case_tac"#(tsAbs\<cdot>i) \<le> (lnsuc\<cdot>0)")
-  assume a2:" Fin (Suc k) = #(tsAbs\<cdot>i)"
-  assume a3:"#(tsAbs\<cdot>i) < lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>as)))"
-  assume a4:"#(tsAbs\<cdot>i) \<le> lnsuc\<cdot>0 "
-  have h0:" k = 0"
-    using a2 a4 lnle_Fin_0 lnsuc_lnle_emb by fastforce
-  have h1:" Fin (Suc 0) = #(tsAbs\<cdot>i) \<Longrightarrow> #(tsAbs\<cdot>i) < lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>as))) \<Longrightarrow> tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(tsSnd_h\<cdot>i\<cdot>as\<cdot>(Discr ack)))) = stake (Suc 0)\<cdot>(tsAbs\<cdot>i)"
-    by (smt Fin_02bot Zero_not_Suc a4 eq_slen_eq_and_less fin2stake lnle_Fin_0 lnzero_def min.strict_order_iff min_absorb2 min_lnsuc mono_slen not_le_zero_eq slen_empty_eq strict_slen tsdropfirst3_le tsprojfst_tsabs_slen tssnd_h_tsabs_nbot tssnd_prefix_inp)
-  then show ?thesis
-    using a2 a3 h0 by blast
-next
-  assume a0:"(\<And>(i::'b tstream) as ack.
-           lshd\<cdot>(tsAbs\<cdot>(tsRemDups\<cdot>as)) = updis ack \<Longrightarrow>
-           Fin k = #(tsAbs\<cdot>i) \<Longrightarrow>
-           #(tsAbs\<cdot>i) < lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>as))) \<Longrightarrow>
-           tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(tsSnd_h\<cdot>i\<cdot>as\<cdot>(Discr ack)))) = stake k\<cdot>(tsAbs\<cdot>i))"
-  assume a1:"lshd\<cdot>(tsAbs\<cdot>(tsRemDups\<cdot>as)) = updis ack"
-  assume a2:" Fin (Suc k) = #(tsAbs\<cdot>i)"
-  assume a3:"#(tsAbs\<cdot>i) < lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>as)))"
-  assume a4:"\<not>(#(tsAbs\<cdot>i) \<le> lnsuc\<cdot>0)"
-  have h01: "(\<And>(i::'b tstream) ack.
-           lshd\<cdot>(tsAbs\<cdot>(tsRemDups\<cdot>(tsDropWhile2\<cdot>(Discr(shd (tsAbs\<cdot>(tsRemDups\<cdot>as))))\<cdot>as))) = updis ack \<Longrightarrow>
-           Fin k = #(tsAbs\<cdot>i) \<Longrightarrow>
-           #(tsAbs\<cdot>i) < lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>(tsDropWhile2\<cdot>(Discr(shd (tsAbs\<cdot>(tsRemDups\<cdot>as))))\<cdot>as)))) \<Longrightarrow>
-           tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(tsSnd_h\<cdot>i\<cdot>(tsDropWhile2\<cdot>(Discr(shd (tsAbs\<cdot>(tsRemDups\<cdot>as))))\<cdot>as)\<cdot>(Discr ack)))) = stake k\<cdot>(tsAbs\<cdot>i))"
-          by (insert a0)
-  have h0: "
-           lshd\<cdot>(tsAbs\<cdot>(tsRemDups\<cdot>(tsDropWhile2\<cdot>(Discr(shd (tsAbs\<cdot>(tsRemDups\<cdot>as))))\<cdot>as))) = updis ack \<Longrightarrow>
-           Fin k = #(tsAbs\<cdot>(tsDropFirst3\<cdot>i)) \<Longrightarrow>
-           #(tsAbs\<cdot>(tsDropFirst3\<cdot>i)) < lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>(tsDropWhile2\<cdot>(Discr(shd (tsAbs\<cdot>(tsRemDups\<cdot>as))))\<cdot>as)))) \<Longrightarrow>
-           tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(tsSnd_h\<cdot>(tsDropFirst3\<cdot>i)\<cdot>(tsDropWhile2\<cdot>(Discr(shd (tsAbs\<cdot>(tsRemDups\<cdot>as))))\<cdot>as)\<cdot>(Discr ack)))) = stake k\<cdot>(tsAbs\<cdot>(tsDropFirst3\<cdot>i))"
-           by (insert h01 [of "ack" "tsDropFirst3\<cdot>i"], blast)
-  have f5: "Discr (shd (tsAbs\<cdot>(tsRemDups\<cdot>as))) = Discr ack"
-    by (metis a1 lshd_updis stream.sel_rews(3) surj_scons up_defined updis_eq)
-  have f7:"lshd\<cdot>(tsAbs\<cdot>(tsRemDups\<cdot>as)) = updis ack \<Longrightarrow> lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>as))) = Fin (Suc k) \<Longrightarrow> lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>(tsDropWhile2\<cdot>(Discr ack)\<cdot>as)))) = Fin k"
-    using a2 a3 by auto
-  have h2:"\<not> #(tsAbs\<cdot>(tsRemDups\<cdot>as)) \<le> lnsuc\<cdot>0 \<Longrightarrow> lshd\<cdot>(tsAbs\<cdot>(tsRemDups\<cdot>as)) = updis ack \<Longrightarrow>lshd\<cdot>(tsAbs\<cdot>(tsRemDups\<cdot>(tsDropWhile2\<cdot>(Discr (ack))\<cdot>as))) = updis (\<not>ack)"
-    apply (simp add: tsremdups_tsabs)
-    apply (induction as, simp_all)  
-    apply (rule adm_imp,simp_all)
-    apply (rule admI)
-    apply (simp add: contlub_cfun_arg lub_mono_const_leq)
-    apply (simp add: tsdropwhile2_delayfun)
-    apply (case_tac "t=ack")
-    apply (simp add: tsdropwhile2_t)    
-    apply (simp add: tsabs_mlscons lscons_conv)
-    using tssnd_ack2trans_51_h3 apply blast
-    by (metis lscons_conv lshd_updis srcdups_eq tsabs_mlscons tsremdups_h_tsabs tssnd_ack2trans_51_h3)
-  have as1: "lshd\<cdot>(tsAbs\<cdot>(tsRemDups\<cdot>(tsDropWhile2\<cdot>(Discr(shd (tsAbs\<cdot>(tsRemDups\<cdot>as))))\<cdot>as))) = updis (\<not>ack)"
-    using a1 a3 a4 f5 h2 lnle2le trans_lnle by blast
-  have as2: "Fin k = #(tsAbs\<cdot>(tsDropFirst3\<cdot>i))"
-    by (metis Fin_02bot Fin_Suc a2 inject_Fin inject_lnsuc lnzero_def nat.distinct(1) only_empty_has_length_0 tsdropfirst3_le)
-  have as3: "#(tsAbs\<cdot>(tsDropFirst3\<cdot>i)) < lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>(tsDropWhile2\<cdot>(Discr(shd (tsAbs\<cdot>(tsRemDups\<cdot>as))))\<cdot>as))))"
-    by (metis Fin_Suc a1 a2 a3 as2 less_le lnsuc_lnle_emb lshd_updis stream.sel_rews(3) surj_scons tsdropwhile2_le2 up_defined)
-  then show ?thesis
-    using a0 a1 a2 a3 a4 as1 as2
-    by (smt Fin_02bot Fin_Suc eq_slen_eq_and_less f5 fin2stake inject_Fin less2lnleD less_le lnat_po_eq_conv lnzero_def nat.distinct(1) not_le_zero_eq only_empty_has_length_0 tsDropFirst3.simps(1) tsabs_bot tsdropfirst3_le tsdropfirst3_rt tssnd_h_rt tssnd_h_tsabs_nbot tssnd_prefix_inp)
-qed
-  
-lemma tssnd_ack2trans_31:"lshd\<cdot>(tsAbs\<cdot>(tsRemDups\<cdot>as)) = updis ack \<Longrightarrow>  Fin k = #(tsAbs\<cdot>(i::'a tstream)) \<Longrightarrow>
-    (lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>as)))) > #(tsAbs\<cdot>i) \<Longrightarrow> tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(tsSnd_h\<cdot>i\<cdot>as\<cdot>(Discr ack)))) = stake k\<cdot>(tsAbs\<cdot>i)"
-  apply(induction k arbitrary: i as ack,simp_all)
-  apply (metis below_bottom_iff tssnd_prefix_inp)
-  using tssnd_ack2trans_32 by blast
-  
-lemma tssnd_ack2trans_3:"lshd\<cdot>(tsAbs\<cdot>(tsRemDups\<cdot>as)) = updis ack \<Longrightarrow>
-    (lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>as)))) > #(tsAbs\<cdot>i) \<Longrightarrow> #(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(tsSnd_h\<cdot>i\<cdot>as\<cdot>(Discr ack))))) = #(tsAbs\<cdot>i)"
-proof-
-  assume a0:"(lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>as)))) > #(tsAbs\<cdot>i)"
-  assume a1:"lshd\<cdot>(tsAbs\<cdot>(tsRemDups\<cdot>as)) = updis ack"
-  have h0:"\<exists>k. #(tsAbs\<cdot>i) = Fin k"
-    by (metis a0 inf_ub lnat_well_h2 min_absorb2 min_def not_le)
-  then show ?thesis
-    by (metis a0 a1 fin2stake tssnd_ack2trans_31)
-qed
-  
-lemma tssnd_ack2trans_2:"#\<surd>as = \<infinity> \<Longrightarrow>  lshd\<cdot>(tsAbs\<cdot>(tsRemDups\<cdot>as)) = updis ack \<Longrightarrow>#(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(tsSnd_h\<cdot>i\<cdot>as\<cdot>(Discr ack)))))
-     = min (#(tsAbs\<cdot>i)) (lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>as))))"
-  apply(case_tac  "(lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>as)))) > #(tsAbs\<cdot>i)",simp_all)
-  apply (metis min.strict_order_iff tsprojfst_tsabs_slen tssnd_ack2trans_3)
-  apply (simp add: min.strict_order_iff)
-  by (metis lnat_po_eq_conv min.absorb_iff2 min_def tssnd_ack2trans_4)
-
-lemma snd7:"tsAbs\<cdot>as = \<epsilon> \<Longrightarrow>
-          i \<noteq> \<bottom> \<Longrightarrow> (srcdups\<cdot>(\<up>(t, ack) \<bullet> tsAbs\<cdot>(tsSnd_h\<cdot>(updis t &&\<surd> i)\<cdot>as\<cdot>(Discr ack)))) = \<up>(t, ack) "
-proof(induction as arbitrary: t ack i)
-  case adm
-  then show ?case 
-  apply(rule adm_imp,simp)
-  apply(rule adm_all)+
-  apply(rule adm_imp,simp)
-  by simp
-next
-  case bottom
-  then show ?case 
-  by simp  
-next
-  case (delayfun as)
-  then show ?case
-  by (simp add: tssnd_h_delayfun_nack tsabs_mlscons lscons_conv)  
-next
-  case (mlscons as ta)
-  then show ?case 
-  apply(case_tac "as=\<bottom>",simp_all)
-  using tsabs_mlscons by fastforce
-qed    
-    
-lemma snd6:"#\<surd>as = \<infinity> \<Longrightarrow>
-          tsAbs\<cdot>as = \<epsilon> \<Longrightarrow>
-          i \<noteq> \<bottom> \<Longrightarrow> #(srcdups\<cdot>(\<up>(t, ack) \<bullet> tsAbs\<cdot>(tsSnd_h\<cdot>(updis t &&\<surd> i)\<cdot>as\<cdot>(Discr ack)))) = (lnsuc\<cdot>0)"
-  by (metis only_empty_has_length_0 sconc_snd_empty slen_scons snd7)
-  
-lemma min_lub2:" chain Y \<Longrightarrow> (\<Squnion>i::nat. min (Y i) (x::lnat)) = min (\<Squnion>i::nat. (Y i)) (x)"
-proof -
-  assume a1: "chain Y"
-  have "\<forall>l la. min (l::lnat) la = min la l"
-    by (metis min.commute)
-  then show ?thesis
-    using a1 min_lub by presburger
-qed    
-    
-lemma snd5:"#\<surd>as = \<infinity> \<Longrightarrow>
-    tsAbs\<cdot>i \<noteq> \<epsilon> \<Longrightarrow>
-    tsAbs\<cdot>as = \<epsilon> \<Longrightarrow> #(tsAbs\<cdot>(tsRemDups\<cdot>(tsSnd_h\<cdot>i\<cdot>as\<cdot>(Discr ack)))) = min (#(tsAbs\<cdot>i)) (lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>as))))"
-apply(simp add: tsremdups_tsabs)
-proof(induction i arbitrary: as ack)
-  case adm
-  then show ?case
-  apply(rule adm_all)
-  apply(rule adm_imp,simp)+
-  apply(rule adm_all)
-  apply(rule admI)
-  by(simp add: contlub_cfun_arg contlub_cfun_fun min_lub2)
-next
-  case bottom
-  then show ?case by simp
-next
-  case (delayfun i)
-  then show ?case 
-  apply(rule_tac ts=as in tscases,simp_all)
-  apply(simp add: tssnd_h_delayfun tslen_delayfun)
-  apply(simp add: delayFun_def)
-  apply(case_tac "as=\<bottom>", simp_all)
-  by(simp add: tssnd_h_delayfun_msg)  
-next
-  case (mlscons i t)
-  then show ?case 
-  apply(rule_tac ts=as in tscases,simp_all)
-  apply(case_tac "i=\<bottom>",simp_all)
-  apply(simp add: tssnd_h_delayfun_nack tsabs_mlscons lscons_conv tslen_mlscons tslen_delayfun)
-  apply(simp add: delayFun_def)
-  apply(metis below_bottom_iff  lnle_def lnsuc_lnle_emb lnzero_def min_def snd6)
-  apply(case_tac "as=\<bottom>",simp_all)
-  by(simp add: tsabs_mlscons)
-qed 
- 
-lemma snd4:"tsAbs\<cdot>i = \<epsilon> \<Longrightarrow> tsAbs\<cdot>(tsRemDups\<cdot>(tsSnd_h\<cdot>i\<cdot>as\<cdot>(Discr ack))) = \<epsilon>"
-  by (metis bottomI strict_rev_sprojfst tsprojfst_tsabs tssnd_prefix_inp)    
-    
-lemma snd3:"#(tsAbs\<cdot>i)\<noteq>0 \<Longrightarrow> #\<surd>as = \<infinity>  \<Longrightarrow> lshd\<cdot>(tsAbs\<cdot>(tsRemDups\<cdot>(tsProjSnd\<cdot>(tsSnd_h\<cdot>i\<cdot>as\<cdot>(Discr ack))))) = updis ack"
-apply(simp add: tsremdups_tsabs tsprojsnd_tsabs)
-proof(induction i arbitrary: as ack)
-  case adm
-  then show ?case 
-  apply(rule adm_imp,simp)
-  apply(rule adm_all)
-  apply(rule adm_imp,simp)
-  apply(rule adm_all)
-  apply(rule admI)
-  by(simp add: contlub_cfun_arg contlub_cfun_fun)
-next
-  case bottom
-  then show ?case
-  by simp
-next
-  case (delayfun it)
-  then show ?case 
-  apply(rule_tac ts= as in tscases,simp_all)
-  apply(simp add: tssnd_h_delayfun)
-  apply(simp add: delayFun_def)
-  apply(case_tac "as=\<bottom>",simp_all)
-  by(simp add: tssnd_h_delayfun_msg)
-next
-  case (mlscons it t)
-  then show ?case 
-  apply(rule_tac ts= as in tscases,simp_all)
-  apply(case_tac "it=\<bottom>",simp_all)
-  apply(simp add: tssnd_h_delayfun_nack tsabs_mlscons lscons_conv)
-  apply (metis lshd_updis srcdups_ex)
-  apply(case_tac "as=\<bottom>",simp_all)
-  apply(case_tac "a=ack",simp_all)
-  apply(simp add: tssnd_h_mlscons_ack tsabs_mlscons lscons_conv)
-  apply (metis lshd_updis srcdups_ex)
-  apply(simp add: tssnd_h_mlscons_nack tsabs_mlscons lscons_conv)
-  by (metis lshd_updis srcdups_ex)
-qed
-   
-lemma snd1:"#\<surd>as = \<infinity>  \<Longrightarrow> as \<noteq> \<bottom> \<Longrightarrow> #(tsAbs\<cdot>i)\<noteq>0 \<Longrightarrow> #(tsAbs\<cdot>as)\<noteq>0 \<Longrightarrow> tsAbs\<cdot>(tsRemDups\<cdot>as) \<sqsubseteq> tsAbs\<cdot>(tsRemDups\<cdot>(tsProjSnd\<cdot>(tsSnd_h\<cdot>i\<cdot>as\<cdot>(Discr ack)))) \<Longrightarrow> lshd\<cdot>(tsAbs\<cdot>(tsRemDups\<cdot>as)) = updis ack"
-proof-
-  assume a0:"#(tsAbs\<cdot>i)\<noteq>0"
-  assume a1:"as\<noteq>\<bottom>"
-  assume a2:"#\<surd>as = \<infinity>"
-  assume a3:"tsAbs\<cdot>(tsRemDups\<cdot>as) \<sqsubseteq> tsAbs\<cdot>(tsRemDups\<cdot>(tsProjSnd\<cdot>(tsSnd_h\<cdot>i\<cdot>as\<cdot>(Discr ack))))"
-  assume a4:"#(tsAbs\<cdot>as) \<noteq> 0"
-  have h0:"lshd\<cdot>(tsAbs\<cdot>(tsRemDups\<cdot>(tsProjSnd\<cdot>(tsSnd_h\<cdot>i\<cdot>as\<cdot>(Discr ack))))) = updis ack"
-    using a0 a2 snd3 by blast
-  have h1:"tsAbs\<cdot>as \<noteq> \<bottom>"
-    using a4 by auto
-  then show ?thesis
-    by (metis a3 h0 lshd_below srcdups_nbot tsremdups_tsabs)
-qed
-    
-lemma tssnd_ack2trans:"#\<surd>as = \<infinity>  \<Longrightarrow> tsAbs\<cdot>(tsRemDups\<cdot>as) \<sqsubseteq> tsAbs\<cdot>(tsRemDups\<cdot>(tsProjSnd\<cdot>(tsSnd_h\<cdot>i\<cdot>as\<cdot>(Discr ack)))) \<Longrightarrow>
-   #(tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>(tsSnd_h\<cdot>i\<cdot>as\<cdot>(Discr ack)))))
-     = min (#(tsAbs\<cdot>i)) (lnsuc\<cdot>(#(tsAbs\<cdot>(tsRemDups\<cdot>as))))"
-  apply(case_tac "as=\<bottom>",simp_all)
-  apply(case_tac "#(tsAbs\<cdot>i)\<noteq>0",simp_all)
-  apply(case_tac "#(tsAbs\<cdot>as)\<noteq>0",simp_all)
-  using snd1 tssnd_ack2trans_2 apply fastforce
-  using snd5 apply blast
-  using snd4 by blast
-    
+*)
 end
