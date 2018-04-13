@@ -444,7 +444,7 @@ apply (subst sconc_def [THEN fix_eq2])
 by (simp add: sconc_scons' sup'_def cont2cont_LAM)
 
 text {* If a predicate P holds for empty and non-empty streams, it holds for all streams *}
-lemma scases: "\<And>x P. \<lbrakk>x = \<epsilon> \<Longrightarrow> P; \<And>a s. x = \<up>a \<bullet> s \<Longrightarrow> P\<rbrakk> \<Longrightarrow> P"
+lemma scases [case_names bottom scons]: "\<And>x P. \<lbrakk>x = \<epsilon> \<Longrightarrow> P; \<And>a s. x = \<up>a \<bullet> s \<Longrightarrow> P\<rbrakk> \<Longrightarrow> P"
 apply (rule_tac y=x in scases', simp+)
 apply (rule_tac p=u in upE, simp+)
 apply (case_tac "xa")
@@ -760,6 +760,25 @@ apply (erule_tac x="\<lambda>i. stake i\<cdot>x" in allE, auto)
 apply (simp add: stakeind)
 by (simp add: reach_stream)
 
+lemma finind2: "#s = Fin k \<Longrightarrow> P \<epsilon> \<Longrightarrow> (\<And>t a. #t < \<infinity> \<Longrightarrow> P t \<Longrightarrow> P (\<up>a \<bullet> t)) \<Longrightarrow> P s"
+proof -
+  assume "#s = Fin k" and "P \<epsilon>" and "\<And>t a. #t < \<infinity> \<Longrightarrow> P t \<Longrightarrow> P (\<up>a \<bullet> t)"
+  then show "P s"
+  proof (induction k arbitrary: s)
+    case 0
+    then show ?case
+      by auto
+  next
+    case (Suc k)
+    then obtain a t where "s = \<up>a \<bullet> t" and "#t = Fin k"
+      by (metis Fin_Suc bot_is_0 lnat.con_rews lnat.sel_rews(2) slen_empty_eq srt_decrements_length surj_scons)
+    then show ?case
+      by (simp add: Suc.IH Suc.prems(2) Suc.prems(3))
+  qed
+qed
+
+lemma finind3: "#s < \<infinity> \<Longrightarrow> P \<epsilon> \<Longrightarrow> (\<And>t a. #t < \<infinity> \<Longrightarrow> P t \<Longrightarrow> P (\<up>a \<bullet> t)) \<Longrightarrow> P s"
+  by (metis finind2 less_le ninf2Fin)
 
 (* ----------------------------------------------------------------------- *)
 subsection {* Other properties of @{term stake} *}
@@ -996,7 +1015,37 @@ lemma stream_fin_induct: assumes Bot: "P \<bottom>" and lscons: "(\<And>x xs. x\
 (* if length of s is finite => P holds for s => P is admissible => P holds for s *)  
 lemma stream_infs: "(\<And>s. #s<\<infinity> \<Longrightarrow> P s) \<Longrightarrow> adm P \<Longrightarrow> P s"
   by (metis inf_less_eq leI notinfI3 slen_stake_fst_inf stream.take_induct)
-  
+
+lemma slen_stake: "#s \<ge> Fin n \<Longrightarrow> #(stake n\<cdot>s) = Fin n"
+proof (induction n)
+  case 0
+  then show ?case
+    by simp
+next
+  case (Suc n)
+  assume "#s \<ge> Fin (Suc n)"
+  then have "#s \<ge> Fin n"
+    by (simp add: Suc.prems Fin_leq_Suc_leq)
+  obtain r where "stake (Suc n)\<cdot>s = (stake n\<cdot>s) \<bullet> r"
+    by (metis (no_types) Rep_cfun_strict1 sconc_snd_empty stake_concat stream.take_0)
+  then have "r \<noteq> \<epsilon>"
+    by (metis (mono_tags, lifting) Fin_02bot Fin_Suc One_nat_def Suc.prems \<open>Fin n \<le> #s\<close> bot_is_0 drop_not_all inject_Fin lnle_def lnless_def n_not_Suc_n only_empty_has_length_0 sdropostake slen_scons srt_drop stake_Suc stake_conc strictI surj_scons)
+  have "#((stake n\<cdot>s) \<bullet> r) \<ge> Fin (Suc n)"
+  proof -
+    have f1: "#(stake n\<cdot>s) = Fin n"
+      using Suc.IH \<open>Fin n \<le> #s\<close> by fastforce
+    have f2: "\<forall>s sa. (sa::'a stream) \<sqsubseteq> sa \<bullet> s"
+      by simp
+    have "\<exists>n. stake n\<cdot>s \<bullet> r \<noteq> stake n\<cdot>s \<and> Fin n = Fin n"
+      using f1 by (metis \<open>r \<noteq> \<epsilon>\<close> inject_sconc sconc_snd_empty)
+    then have "#(stake n\<cdot>s \<bullet> r) \<noteq> Fin n"
+      by (metis Suc.IH \<open>Fin n \<le> #s\<close> \<open>r \<noteq> \<epsilon>\<close> fin2stake sdropl6 sdropostake)
+    then show ?thesis
+      using f2 f1 by (metis (no_types) less2lnleD lnless_def monofun_cfun_arg)
+  qed
+  then show ?case
+    by (metis \<open>stake (Suc n)\<cdot>s = stake n\<cdot>s \<bullet> r\<close> dual_order.antisym ub_slen_stake)
+qed
 
 (* ----------------------------------------------------------------------- *)
 section {* Additional lemmas for approximation, chains and continuity *} 
@@ -1158,6 +1207,22 @@ lemma sconc_neq: assumes "s1 \<noteq> s2" and "#a < \<infinity>"
   shows "a \<bullet> s1 \<noteq> a \<bullet> s2"
 using assms(1) assms(2) sconc_neq_h by blast
 
+lemma stake_prefix: "#s < \<infinity> \<Longrightarrow> t \<noteq> \<epsilon> \<Longrightarrow> s = t \<bullet> u \<Longrightarrow> \<exists>k. t = stake (Suc k)\<cdot>s"
+proof -
+  assume "#s < \<infinity>" and "t \<noteq> \<epsilon>" and "s = t \<bullet> u"
+  then obtain k where "t = stake k\<cdot>s"
+    by (metis approxl2 fin2stake inf_less_eq minimal monofun_cfun_arg ninf2Fin not_le sconc_snd_empty)
+  then obtain l where "k = Suc l"
+    by (metis Rep_cfun_strict1 \<open>t \<noteq> \<epsilon>\<close> not0_implies_Suc stream.take_0)
+  thus ?thesis
+    using \<open>t = stake k\<cdot>s\<close> by blast
+qed
+
+lemma stake_prefix2: "#s = Fin n \<Longrightarrow> s = stake n\<cdot>(s \<bullet> t)"
+  by (metis approxl1 minimal monofun_cfun_arg sconc_snd_empty)
+
+lemma slen_conc: "#s < \<infinity> \<Longrightarrow> t \<noteq> \<epsilon> \<Longrightarrow> #s \<ge> Fin n \<Longrightarrow> #(s \<bullet> t) > Fin n"
+  by (metis (no_types, hide_lams) stake_prefix2 infI less_le less_le_trans mono_slen sconc_neq sconc_snd_empty stream.take_below)
 
 (* ----------------------------------------------------------------------- *)
 section {* Lemmas for the remaining definitions *}
@@ -1899,7 +1964,7 @@ apply (rule ind [of _ s], auto)
 by (case_tac "f a", auto)
 
 (* relation between stakewhile and sdropwhile *)
-lemma stakewhileDropwhile[simp]: "stakewhile f\<cdot>s \<bullet> (sdropwhile f\<cdot>s) = s "
+lemma stakewhileDropwhile: "stakewhile f\<cdot>s \<bullet> (sdropwhile f\<cdot>s) = s "
 apply(rule ind [of _s])
 apply (rule admI)
 apply (metis (no_types, lifting) approxl2 inf_chainl4 lub_eqI lub_finch2 sconc_fst_inf split_streaml1 stakewhile_below stakewhile_sdropwhilel1)
@@ -2279,8 +2344,250 @@ qed
 
 lemma srcdups_step: "srcdups\<cdot>(\<up>a \<bullet> s) = \<up>a \<bullet> srcdups\<cdot>(sdropwhile (\<lambda>x. x=a)\<cdot>s)"
   apply(rule ind [of _ s], simp_all)
-  by (metis lscons_conv srcdups_ex srcdups_srt stream.sel_rews(5) up_defined)  
-    
+  by (metis lscons_conv srcdups_ex srcdups_srt stream.sel_rews(5) up_defined) 
+
+lemma snprefix: "\<not>x\<sqsubseteq>y \<Longrightarrow> lshd\<cdot>x=lshd\<cdot>y \<Longrightarrow> \<not>(srt\<cdot>x)\<sqsubseteq>(srt\<cdot>y)"
+  apply auto
+  by (metis lshd_updis monofun_cfun_arg stream.sel_rews(2) stream.sel_rews(3) sup'_def surj_scons)
+
+lemma srcdups_consec_noteq: "Fin (Suc n) < #(srcdups\<cdot>xs) \<Longrightarrow> snth n (srcdups\<cdot>xs) \<noteq> snth (Suc n) (srcdups\<cdot>xs)"
+proof
+  fix n :: nat
+  assume "Fin (Suc n) < #(srcdups\<cdot>xs)" and "snth n (srcdups\<cdot>xs) = snth (Suc n) (srcdups\<cdot>xs)"
+  then obtain a s where "sdrop n\<cdot>(srcdups\<cdot>xs) = \<up>a \<bullet> \<up>a \<bullet> s"
+    by (metis convert_inductive_asm drop_not_all sdrop_back_rt snth_def surj_scons)
+  then have p: "srcdups\<cdot>(sdrop n\<cdot>(srcdups\<cdot>xs)) \<noteq> sdrop n\<cdot>(srcdups\<cdot>xs)"
+    by (simp add: srcdupsimposs2_h2)
+  have not_p: "srcdups\<cdot>(sdrop n\<cdot>(srcdups\<cdot>xs)) = sdrop n\<cdot>(srcdups\<cdot>xs)"
+  proof -
+    have "srcdups\<cdot>(sdrop n\<cdot>(srcdups\<cdot>xs)) = sdrop n\<cdot>(srcdups\<cdot>(srcdups\<cdot>xs))"
+    proof (induction n)
+      case 0
+      then show ?case
+        by simp
+    next
+      case (Suc n)
+      then show ?case
+        by (metis sdrop_back_rt srcdups2srcdups srcdups_srt2 stream.sel_rews(2))
+    qed
+    thus "srcdups\<cdot>(sdrop n\<cdot>(srcdups\<cdot>xs)) = sdrop n\<cdot>(srcdups\<cdot>xs)"
+      by (simp add: srcdups2srcdups)
+  qed
+  thus "False"
+    using p by auto
+qed
+
+lemma bool_stream_snth:
+  fixes s t :: "bool stream" and n :: nat and a :: bool
+  shows "s = \<up>a \<bullet> t \<longrightarrow> Fin n < #(srcdups\<cdot>s) \<longrightarrow> snth n (srcdups\<cdot>s) = (even n = a)"
+proof (induction n)
+  case 0
+  then show ?case
+    by simp
+next
+  case (Suc n)
+  then show ?case
+    using convert_inductive_asm even_Suc srcdups_consec_noteq by blast
+qed
+
+lemma srcdups_snth_stake_fin: "\<And>s n. #s = Fin k \<Longrightarrow> k > (Suc n) \<Longrightarrow> snth n s \<noteq> snth (Suc n) s \<Longrightarrow> srcdups\<cdot>(stake (Suc n)\<cdot>s) \<noteq> srcdups\<cdot>s"
+proof (induction k rule: less_induct)
+  case (less k)
+  then show ?case
+  proof (cases "k \<le> Suc 0")
+    case True
+    then show ?thesis
+      using less.prems(2) by linarith
+  next
+    case False
+    then obtain a b t where "s = \<up>a \<bullet> \<up>b \<bullet> t"
+      by (metis drop_not_all leI le_SucI less.prems(1) less2nat_lemma sdrop_0 sdrop_back_rt surj_scons)
+    obtain l where "k = Suc l"
+      using Suc_less_eq2 less.prems(2) by blast
+    then have "l < k"
+      by simp
+    moreover have "#(\<up>b \<bullet> t) = Fin l"
+      using \<open>k = Suc l\<close> \<open>s = \<up>a \<bullet> \<up>b \<bullet> t\<close> less.prems(1) by auto
+    then show ?thesis
+    proof (cases n)
+      case 0
+      then have "srcdups\<cdot>(stake (Suc n)\<cdot>s) = \<up>a"
+        by (simp add: \<open>s = \<up>a \<bullet> \<up>b \<bullet> t\<close>)
+      moreover have "srcdups\<cdot>s \<noteq> \<up>a"
+      proof -
+        have "snth 0 s \<noteq> snth (Suc 0) s"
+          using "0" less.prems(3) by blast
+        then have "a \<noteq> b"
+          by (simp add: \<open>s = \<up>a \<bullet> \<up>b \<bullet> t\<close>)
+        then have "srcdups\<cdot>s = \<up>a \<bullet> srcdups\<cdot>(\<up>b \<bullet> t)"
+          using \<open>s = \<up>a \<bullet> \<up>b \<bullet> t\<close> srcdups_neq by blast
+        then show ?thesis
+          using srcdups_nbot by force
+      qed
+      ultimately show ?thesis
+        by auto
+    next
+      case (Suc m)
+      have "Suc m < l"
+        using Suc \<open>k = Suc l\<close> less.prems(2) by blast
+      moreover have "snth m (\<up>b \<bullet> t) \<noteq> snth (Suc m) (\<up>b \<bullet> t)"
+      proof -
+        have "\<up>b \<bullet> t = srt\<cdot>s"
+          by (simp add: \<open>s = \<up>a \<bullet> \<up>b \<bullet> t\<close>)
+        then show ?thesis
+          by (metis (no_types) Suc less.prems(3) sdrop_forw_rt snth_def)
+      qed
+      ultimately have "srcdups\<cdot>(stake (Suc m)\<cdot>(\<up>b \<bullet> t)) \<noteq> srcdups\<cdot>(\<up>b \<bullet> t)"
+        using \<open>#(\<up>b \<bullet> t) = Fin l\<close> \<open>l < k\<close> less.IH by blast
+      then have "srcdups\<cdot>(\<up>b \<bullet> (stake m\<cdot>t)) \<noteq> srcdups\<cdot>(\<up>b \<bullet> t)"
+        by simp
+      then have "srcdups\<cdot>s \<noteq> \<up>a \<bullet> (srcdups\<cdot>(\<up>b \<bullet> (stake m\<cdot>t)))"
+        by (metis (no_types, lifting) \<open>s = \<up>a \<bullet> \<up>b \<bullet> t\<close> inject_scons srcdups2srcdups srcdups_eq srcdups_neq srcdups_step)
+      then show ?thesis
+      proof -
+        { assume "a \<noteq> b"
+          then have "srcdups\<cdot>(\<up>a \<bullet> \<up>b \<bullet> stake m\<cdot>t) \<noteq> srcdups\<cdot>s"
+            using \<open>srcdups\<cdot>s \<noteq> \<up>a \<bullet> srcdups\<cdot>(\<up>b \<bullet> stake m\<cdot>t)\<close> by auto
+          then have ?thesis
+            using Suc \<open>s = \<up>a \<bullet> \<up>b \<bullet> t\<close> by force }
+        then show ?thesis
+          using Suc \<open>s = \<up>a \<bullet> \<up>b \<bullet> t\<close> \<open>srcdups\<cdot>(\<up>b \<bullet> stake m\<cdot>t) \<noteq> srcdups\<cdot>(\<up>b \<bullet> t)\<close> by fastforce
+      qed
+    qed
+  qed
+qed
+
+lemma srcdups_end_neq: "#s < \<infinity> \<Longrightarrow> a \<noteq> b \<Longrightarrow> srcdups\<cdot>(s \<bullet> \<up>a \<bullet> \<up>b) = srcdups\<cdot>(s \<bullet> \<up>a) \<bullet> \<up>b"
+proof (rule finind3 [of s], simp+)
+  assume "#s < \<infinity>" and "a \<noteq> b"
+  then show "srcdups\<cdot>(\<up>a \<bullet> \<up>b) = \<up>a \<bullet> \<up>b"
+    by (metis lscons_conv srcdups_neq srcdups_step strict_sdropwhile strict_srcdups sup'_def)
+next
+  fix t :: "'a stream" and c :: 'a
+  assume "#t < \<infinity>" and "srcdups\<cdot>(t \<bullet> \<up>a \<bullet> \<up>b) = srcdups\<cdot>(t \<bullet> \<up>a) \<bullet> \<up>b"
+  then have "srcdups\<cdot>(\<up>c \<bullet> (t \<bullet> \<up>a)) \<bullet> \<up>b = srcdups\<cdot>(\<up>c \<bullet> (t \<bullet> \<up>a \<bullet> \<up>b))"
+  proof (cases "t = \<epsilon>")
+    case True
+    then show ?thesis
+      by (metis (no_types, lifting) \<open>srcdups\<cdot>(t \<bullet> \<up>a \<bullet> \<up>b) = srcdups\<cdot>(t \<bullet> \<up>a) \<bullet> \<up>b\<close> assoc_sconc inject_scons sconc_snd_empty srcdups_eq srcdups_neq)
+  next
+    case False
+    then have not_empty: "t \<noteq> \<epsilon>"
+      by simp
+    then show ?thesis
+    proof (cases "c = shd t")
+      case True
+      then show ?thesis
+        by (metis False \<open>srcdups\<cdot>(t \<bullet> \<up>a \<bullet> \<up>b) = srcdups\<cdot>(t \<bullet> \<up>a) \<bullet> \<up>b\<close> sconc_scons srcdups_eq surj_scons)
+    next
+      case False
+      then have "srcdups\<cdot>(\<up>c \<bullet> (t \<bullet> \<up>a \<bullet> \<up>b)) = \<up>c \<bullet> srcdups\<cdot>(t \<bullet> \<up>a \<bullet> \<up>b)"
+      proof -
+        have "\<up>(shd t) \<bullet> srt\<cdot>t = t"
+          using not_empty surj_scons by blast
+        then show ?thesis
+          by (metis (no_types) False assoc_sconc srcdups_neq)
+      qed
+      then show ?thesis
+      proof -
+        have "\<up>(shd t) \<bullet> srt\<cdot>t = t"
+          by (meson not_empty surj_scons)
+        then show ?thesis
+          by (metis (no_types) False \<open>srcdups\<cdot>(t \<bullet> \<up>a \<bullet> \<up>b) = srcdups\<cdot>(t \<bullet> \<up>a) \<bullet> \<up>b\<close> assoc_sconc srcdups_neq)
+      qed
+    qed
+  qed
+  thus "srcdups\<cdot>((\<up>c \<bullet> t) \<bullet> \<up>a \<bullet> \<up>b) = srcdups\<cdot>((\<up>c \<bullet> t) \<bullet> \<up>a) \<bullet> \<up>b"
+    by simp
+qed
+
+lemma srcdups_end_eq: "srcdups\<cdot>(s \<bullet> \<up>a \<bullet> \<up>a) = srcdups\<cdot>(s \<bullet> \<up>a)"
+proof (cases "#s < \<infinity>")
+  case True
+  then show ?thesis
+  proof (rule finind3, simp)
+    show "srcdups\<cdot>(\<up>a \<bullet> \<up>a) = \<up>a"
+      by (simp add: srcdups_step)
+  next
+    fix t :: "'a stream" and b :: 'a
+    assume "#t < \<infinity>" and "srcdups\<cdot>(t \<bullet> \<up>a \<bullet> \<up>a) = srcdups\<cdot>(t \<bullet> \<up>a)"
+    then show "srcdups\<cdot>((\<up>b \<bullet> t) \<bullet> \<up>a \<bullet> \<up>a) = srcdups\<cdot>((\<up>b \<bullet> t) \<bullet> \<up>a)"
+    proof (cases "t = \<epsilon>")
+      case True
+      then show ?thesis
+        by (metis sconc_snd_empty srcdups_eq srcdups_neq)
+    next
+      case False
+      then have 1: "t \<noteq> \<epsilon>"
+        by simp
+      then show ?thesis
+      proof(cases "shd t = b")
+        case True
+        then show ?thesis
+          by (metis False \<open>srcdups\<cdot>(t \<bullet> \<up>a \<bullet> \<up>a) = srcdups\<cdot>(t \<bullet> \<up>a)\<close> assoc_sconc srcdups_eq surj_scons)
+      next
+        case False
+        have "t \<noteq> \<epsilon>"
+          by (simp add: "1")
+        then have "srcdups\<cdot>(\<up>b \<bullet> t \<bullet> \<up>a \<bullet> \<up>a) = \<up>b \<bullet> srcdups\<cdot>(t \<bullet> \<up>a \<bullet> \<up>a)"
+          by (metis (no_types, lifting) False assoc_sconc srcdups_neq surj_scons)
+        then show ?thesis
+          by (metis (no_types, lifting) "1" False \<open>srcdups\<cdot>(t \<bullet> \<up>a \<bullet> \<up>a) = srcdups\<cdot>(t \<bullet> \<up>a)\<close> sconc_scons srcdups_neq surj_scons)
+      qed
+    qed
+  qed
+next
+  case False
+  then show ?thesis
+    by (simp add: less_le)
+qed
+
+lemma srcdups_sntimes: "n > 0 \<Longrightarrow> srcdups\<cdot>(sntimes n (\<up>a)) = \<up>a"
+proof (induction n)
+  case 0
+  then show ?case
+    by simp
+next
+  case (Suc n)
+  then show ?case
+  proof (cases "n > 0")
+    case True
+    then show ?thesis
+      by (metis Suc.IH gr0_implies_Suc sntimes.simps(2) srcdups_eq)
+  next
+    case False
+    then show ?thesis
+      by auto
+  qed
+qed
+
+lemma srcdups_sntimes_prefix: "n > 0 \<Longrightarrow> srcdups\<cdot>((sntimes n (\<up>a)) \<bullet> s) = \<up>a \<bullet> srcdups\<cdot>(sdropwhile (\<lambda>x. x=a)\<cdot>s)"
+proof (induction n)
+  case 0
+  then show ?case
+    by simp
+next
+  case (Suc n)
+  then show ?case
+  proof (cases "n > 1")
+    case True
+    then obtain m where "n = Suc m" and "m > 0"
+      by (metis One_nat_def Suc_lessE)
+    then have "srcdups\<cdot>((sntimes (Suc n) (\<up>a)) \<bullet> s) = srcdups\<cdot>((sntimes n (\<up>a)) \<bullet> s)"
+      by (simp add: \<open>n = Suc m\<close>)
+    then show ?thesis
+      using Suc.IH \<open>n = Suc m\<close> zero_less_Suc by auto 
+  next
+    case False
+    have "srcdups\<cdot>(\<up>a \<bullet> s) = \<up>a \<bullet> srcdups\<cdot>(sdropwhile (\<lambda>x. x=a)\<cdot>s)"
+      using srcdups_step by blast
+    moreover have "sntimes 1 (\<up>a) = \<up>a"
+      by (simp add: One_nat_def)
+    ultimately show ?thesis
+      by (metis (no_types, lifting) False One_nat_def Suc_lessI assoc_sconc neq0_conv sntimes.simps(2) srcdups_eq)
+  qed
+qed
+
 (* ----------------------------------------------------------------------- *)
 subsection {* @{term sscanl} *}
 (* ----------------------------------------------------------------------- *)
@@ -2934,8 +3241,7 @@ proof -
   thus ?thesis
     by (metis \<open>xs \<noteq> \<epsilon>\<close> lscons_conv minimal monofun_cfun_arg sup'_def surj_scons that xs_def)
   qed
-  
-  
+
 (* ----------------------------------------------------------------------- *)
 section {* @{term sfoot} *}
 (* ----------------------------------------------------------------------- *)
@@ -3033,6 +3339,206 @@ lemma sfood_id: assumes"#s = Fin (Suc n)"
   apply simp
   by (smt Fin_02bot Fin_Suc One_nat_def Rep_cfun_strict1 Zero_not_Suc leI lnat.sel_rews(2) lnle_Fin_0 lnzero_def notinfI3 sconc_snd_empty sfoot_sdrop slen_rt_ile_eq slen_scons stake_Suc stream.take_0 strict_slen surj_scons)
 
+lemma footind: "#s = Fin k \<Longrightarrow> P \<epsilon> \<Longrightarrow> (\<And>t a. #t < \<infinity> \<Longrightarrow> P t \<Longrightarrow> P (t \<bullet> \<up>a)) \<Longrightarrow> P s"
+proof -
+  assume "#s = Fin k" and "P \<epsilon>" and "\<And>t a. #t < \<infinity> \<Longrightarrow> P t \<Longrightarrow> P (t \<bullet> \<up>a)"
+  then show "P s"
+  proof (induction k arbitrary: s rule: less_induct)
+    case (less k)
+    then have IH: "\<And>t. #t < Fin k \<Longrightarrow> P \<epsilon> \<Longrightarrow> (\<And>u b. #u < \<infinity> \<Longrightarrow> P u \<Longrightarrow> P (u \<bullet> \<up>b)) \<Longrightarrow> P t"
+      by (meson lnat_well_h1)
+    then show ?case
+    proof (cases "k = 0")
+      case True
+      then show ?thesis
+        using less.prems(1) less.prems(2) by force
+    next
+      case False
+      then obtain u b where "s = u \<bullet> \<up>b"
+        using less.prems(1) sfoot2 by force
+      then have "#u < Fin k"
+        by (metis fold_inf leI less.prems(1) ln_less lnsuc_lnle_emb notinfI3 slen_lnsuc)
+      then show ?thesis
+        by (metis IH \<open>s = u \<bullet> \<up>b\<close> inf_ub less.prems(2) less.prems(3) less_le not_less)
+    qed
+  qed
+qed
+
+lemma footind2: "#s < \<infinity> \<Longrightarrow> P \<epsilon> \<Longrightarrow> (\<And>t a. #t < \<infinity> \<Longrightarrow> P t \<Longrightarrow> P (t \<bullet> \<up>a)) \<Longrightarrow> P s"
+  by (metis footind infI less_le)
+
+lemma srcdups_sfoot:
+  "s \<noteq> \<epsilon> \<Longrightarrow> #s < \<infinity> \<Longrightarrow> sfoot (srcdups\<cdot>s) = sfoot s"
+proof (rule footind2, simp+)
+  fix t :: "'a stream" and a :: 'a
+  assume "#t < \<infinity>" and "sfoot (srcdups\<cdot>t) = sfoot t"
+  show "sfoot (srcdups\<cdot>(t \<bullet> \<up>a)) = a"
+  proof (rule footind2 [of t], auto, simp add: \<open>#t < \<infinity>\<close>)
+    fix t :: "'a stream" and b :: 'a
+    assume "#t < \<infinity>" and "sfoot (srcdups\<cdot>(t \<bullet> \<up>a)) = a"
+    then show "sfoot (srcdups\<cdot>(t \<bullet> \<up>b \<bullet> \<up>a)) = a"
+    proof -
+      have "\<And>l. l < \<infinity> \<or> l = \<infinity>"
+        by (meson inf_less_eq le_less_linear)
+      then show ?thesis
+        by (metis (no_types) Fin_Suc \<open>#t < \<infinity>\<close> \<open>sfoot (srcdups\<cdot>(t \<bullet> \<up>a)) = a\<close> lnat_well_h2 notinfI3 sfoot12 slen_lnsuc srcdups_end_eq srcdups_end_neq srcdups_slen)
+    qed
+  qed
+qed
+
+lemma sfoot_end:
+  fixes s and a
+  assumes "#s < \<infinity>" and "s \<noteq> \<epsilon>"
+  shows "\<exists>t n. s = t \<bullet> (sntimes n (\<up>(sfoot s))) \<and> (t = \<epsilon> \<or> sfoot s \<noteq> sfoot t)"
+  apply (rule footind2)
+  apply (simp add: assms(1))
+   apply (metis sconc_fst_empty sntimes.simps(1))
+proof -
+  fix t :: "'a stream" and a :: 'a
+  assume "#t < \<infinity>" and "\<exists>ta n. t = ta \<bullet> (sntimes n (\<up>(sfoot t))) \<and> (ta = \<epsilon> \<or> sfoot t \<noteq> sfoot ta)"
+  then obtain u n where "t = u \<bullet> (sntimes n (\<up>(sfoot t)))" and "u = \<epsilon> \<or> sfoot t \<noteq> sfoot u"
+    by blast
+  then have expr: "t \<bullet> \<up>a = u \<bullet> (sntimes n (\<up>(sfoot t))) \<bullet> \<up>a"
+    by (metis assoc_sconc)
+  then show "\<exists>ta n. t \<bullet> \<up>a = ta \<bullet> n\<star>\<up>(sfoot (t \<bullet> \<up>a)) \<and> (ta = \<epsilon> \<or> sfoot (t \<bullet> \<up>a) \<noteq> sfoot ta)"
+  proof (cases "a = sfoot t")
+    case True
+    then have "t \<bullet> \<up>a = u \<bullet> (sntimes (Suc n) (\<up>(sfoot t)))"
+      by (metis expr sntimes_Suc2)
+    then show ?thesis
+      by (metis True \<open>#t < \<infinity>\<close> \<open>u = \<epsilon> \<or> sfoot t \<noteq> sfoot u\<close> sfoot12)
+  next
+    case False
+    then have "t \<bullet> \<up>a = (u \<bullet> (sntimes n (\<up>(sfoot t)))) \<bullet> (sntimes (Suc 0) (\<up>(sfoot (t \<bullet> \<up>a))))"
+      using \<open>#t < \<infinity>\<close> \<open>t = u \<bullet> n\<star>\<up>(sfoot t)\<close> by auto
+    then show ?thesis
+      by (metis False \<open>#t < \<infinity>\<close> \<open>t = u \<bullet> n\<star>\<up>(sfoot t)\<close> sfoot12)
+  qed
+qed
+
+lemma srcdups_split_fin: "#s = Fin k \<Longrightarrow> Suc n < k \<Longrightarrow> snth n s \<noteq> snth (Suc n) s \<Longrightarrow> srcdups\<cdot>s = srcdups\<cdot>(stake (Suc n)\<cdot>s) \<bullet> (srcdups\<cdot>(sdrop (Suc n)\<cdot>s))"
+proof (induction k arbitrary: n s)
+  case 0
+  then show ?case
+    by auto
+next
+  case (Suc k)
+  then obtain a t where "s = \<up>a \<bullet> t"
+    by (metis Fin_0 Suc_neq_Zero strict_slen surj_scons)
+  assume "snth n s \<noteq> snth (Suc n) s"
+  then have "Suc n < Suc k"
+    using Suc.prems(2) by blast
+  then show ?case
+  proof (cases "k > 1")
+    case True
+    then obtain a b t where "s = \<up>a \<bullet> \<up>b \<bullet> t"
+    proof -
+      assume a1: "\<And>a b t. s = \<up>a \<bullet> \<up>b \<bullet> t \<Longrightarrow> thesis"
+      have "#(\<epsilon>::'a stream) = \<bottom>"
+        using bot_is_0 by auto
+      then show ?thesis
+        using a1 by (metis Fin_Suc Suc.prems(1) True inject_lnsuc less2nat_lemma lnat.con_rews lnle_def minimal not_le srt_decrements_length surj_scons)
+    qed
+    then have "t \<noteq> \<epsilon>"
+      using Suc.prems(1) True by force
+    then show ?thesis
+    proof (cases "n = 0")
+      case True
+      then have "a \<noteq> b"
+        using Suc.prems(3) \<open>s = \<up>a \<bullet> \<up>b \<bullet> t\<close> by auto
+      then show ?thesis
+        using True \<open>s = \<up>a \<bullet> \<up>b \<bullet> t\<close> by auto
+    next
+      case False
+      then obtain m where "n = Suc m"
+        using not0_implies_Suc by blast
+      have "#(\<up>b \<bullet> t) = Fin k"
+        using Suc.prems(1) \<open>s = \<up>a \<bullet> \<up>b \<bullet> t\<close> by auto
+      moreover have "snth n s = snth m (\<up>b \<bullet> t)"
+        by (simp add: \<open>n = Suc m\<close> \<open>s = \<up>a \<bullet> \<up>b \<bullet> t\<close>)
+      ultimately have "srcdups\<cdot>(\<up>b \<bullet> t) = srcdups\<cdot>(stake n\<cdot>(\<up>b \<bullet> t)) \<bullet> (srcdups\<cdot>(sdrop n\<cdot>(\<up>b \<bullet> t)))"
+        by (metis Suc.IH Suc.prems(2) Suc.prems(3) Suc_less_SucD \<open>n = Suc m\<close> \<open>s = \<up>a \<bullet> \<up>b \<bullet> t\<close> snth_scons)
+      then show ?thesis
+      proof (cases "srcdups\<cdot>s = srcdups\<cdot>(\<up>b \<bullet> t)")
+        case True
+        then show ?thesis
+        proof -
+          have "a = b"
+            by (metis (no_types) True \<open>s = \<up>a \<bullet> \<up>b \<bullet> t\<close> srcdups_shd)
+          then show ?thesis
+            by (simp add: \<open>n = Suc m\<close> \<open>s = \<up>a \<bullet> \<up>b \<bullet> t\<close> \<open>srcdups\<cdot>(\<up>b \<bullet> t) = srcdups\<cdot> (stake n\<cdot> (\<up>b \<bullet> t)) \<bullet> srcdups\<cdot> (sdrop n\<cdot>(\<up>b \<bullet> t))\<close>)
+        qed
+      next
+        case False
+        then show ?thesis
+        proof -
+          have "a \<noteq> b"
+            using False \<open>s = \<up>a \<bullet> \<up>b \<bullet> t\<close> srcdups_eq2 by blast
+          then show ?thesis
+            by (simp add: \<open>n = Suc m\<close> \<open>s = \<up>a \<bullet> \<up>b \<bullet> t\<close> \<open>srcdups\<cdot>(\<up>b \<bullet> t) = srcdups\<cdot> (stake n\<cdot> (\<up>b \<bullet> t)) \<bullet> srcdups\<cdot> (sdrop n\<cdot>(\<up>b \<bullet> t))\<close>)
+        qed
+      qed
+    qed
+  next
+    case False
+    then have "k \<le> 1"
+      by auto
+    then show ?thesis
+    proof (cases "k = 0")
+      case True
+      then show ?thesis
+        using Suc.prems(2) by blast
+    next
+      case False
+      then have "k = 1"
+        using \<open>k \<le> 1\<close> by auto
+      then obtain a b where "s = \<up>a \<bullet> \<up>b"
+        by (metis One_nat_def Rep_cfun_strict1 Suc.prems(1) \<open>\<And>thesis. (\<And>a t. s = \<up>a \<bullet> t \<Longrightarrow> thesis) \<Longrightarrow> thesis\<close> sconc_snd_empty sfood_id stake_Suc stream.take_0)
+      then have "a \<noteq> b"
+        using Suc.prems(2) Suc.prems(3) \<open>k = 1\<close> by auto
+      then have "srcdups\<cdot>s = \<up>a \<bullet> \<up>b"
+        by (metis \<open>s = \<up>a \<bullet> \<up>b\<close> lscons_conv srcdups_neq srcdups_step strict_sdropwhile strict_srcdups sup'_def)
+      then show ?thesis
+        using Suc.prems(2) \<open>k = 1\<close> \<open>s = \<up>a \<bullet> \<up>b\<close> by auto
+    qed
+  qed
+qed
+
+lemma srcdups_split_inf: "#s = \<infinity> \<Longrightarrow> snth n s \<noteq> snth (Suc n) s \<Longrightarrow> srcdups\<cdot>s = srcdups\<cdot>(stake (Suc n)\<cdot>s) \<bullet> (srcdups\<cdot>(sdrop (Suc n)\<cdot>s))"
+proof (induction n arbitrary: s)
+  case 0
+  then obtain a b t where "s = \<up>a \<bullet> \<up>b \<bullet> t" and "a \<noteq> b"
+    by (metis inf_scase shd1 snth_scons snth_shd)
+  then show ?case
+    by auto
+next
+  case (Suc n)
+  obtain a t where "s = \<up>a \<bullet> t"
+    using Suc.prems(1) inf_scase by blast
+  then have "#t = \<infinity>"
+    using Suc.prems(1) by auto
+  moreover have "snth n t \<noteq> snth (Suc n) t"
+    using Suc.prems(2) \<open>s = \<up>a \<bullet> t\<close> by auto
+  ultimately have "srcdups\<cdot>t = srcdups\<cdot>(stake (Suc n)\<cdot>t) \<bullet> (srcdups\<cdot>(sdrop (Suc n)\<cdot>t))"
+    using Suc.IH by blast
+  then show ?case
+  proof (cases "a = shd t")
+    case True
+    then have "srcdups\<cdot>s = srcdups\<cdot>t"
+      by (metis Inf'_neq_0 \<open>#t = \<infinity>\<close> \<open>s = \<up>a \<bullet> t\<close> slen_empty_eq srcdups_eq surj_scons)
+    then show ?thesis
+      using True \<open>#t = \<infinity>\<close> \<open>s = \<up>a \<bullet> t\<close> \<open>srcdups\<cdot>t = srcdups\<cdot> (stake (Suc n)\<cdot>t) \<bullet> srcdups\<cdot>(sdrop (Suc n)\<cdot>t)\<close> inf_scase by fastforce
+  next
+    case False
+    then have "srcdups\<cdot>s = \<up>a \<bullet> srcdups\<cdot>t"
+      by (metis Inf'_neq_0 \<open>#t = \<infinity>\<close> \<open>s = \<up>a \<bullet> t\<close> slen_empty_eq srcdups_neq surj_scons)
+    then show ?thesis
+      using False \<open>#t = \<infinity>\<close> \<open>s = \<up>a \<bullet> t\<close> \<open>srcdups\<cdot>t = srcdups\<cdot> (stake (Suc n)\<cdot>t) \<bullet> srcdups\<cdot>(sdrop (Suc n)\<cdot>t)\<close> inf_scase by fastforce
+  qed
+qed
+
+lemma srcdups_split2: "Fin (Suc n) < #s \<Longrightarrow> snth n s \<noteq> snth (Suc n) s \<Longrightarrow> srcdups\<cdot>s = srcdups\<cdot>(stake (Suc n)\<cdot>s) \<bullet> (srcdups\<cdot>(sdrop (Suc n)\<cdot>s))"
+  by (metis less2nat ninf2Fin not_le srcdups_split_fin srcdups_split_inf)
 
 (* ----------------------------------------------------------------------- *)
 subsection {* @{term sdom} *}
@@ -3053,6 +3559,65 @@ apply (rule_tac x="x" in spec)
 apply (rule_tac x="y" in spec)
 apply (induct_tac n, auto)
 by (drule lessD, auto)+
+
+lemma slen_snth_prefix: "#s > Fin n \<Longrightarrow> snth n s = snth n (s \<bullet> t)"
+  by (simp add: minimal monofun_cfun_arg snth_less)
+
+lemma srcdups_sconc: 
+  "#xs < \<infinity> \<Longrightarrow> xs \<noteq> \<epsilon> \<Longrightarrow> 
+    srcdups\<cdot>(xs \<bullet> ys) = (srcdups\<cdot>xs) \<bullet> (srcdups\<cdot>(sdropwhile (\<lambda>x. x=sfoot xs)\<cdot>ys))"
+proof -
+  assume "#xs < \<infinity>" and "xs \<noteq> \<epsilon>"
+  then obtain t n where "xs = t \<bullet> (sntimes n (\<up>(sfoot xs)))" and "t = \<epsilon> \<or> sfoot t \<noteq> sfoot xs"
+    using sfoot_end by fastforce
+  then show ?thesis
+  proof (cases "t = \<epsilon>")
+    case True
+    then have "xs \<bullet> ys = (sntimes n (\<up>(sfoot xs))) \<bullet> ys"
+      using \<open>xs = t \<bullet> n\<star>\<up>(sfoot xs)\<close> by auto
+    then have "srcdups\<cdot>(xs \<bullet> ys) = (\<up>(sfoot xs)) \<bullet> srcdups\<cdot>(sdropwhile (\<lambda>x. x=sfoot xs)\<cdot>ys)"
+      by (metis Fin_02bot True \<open>xs = t \<bullet> n\<star>\<up>(sfoot xs)\<close> \<open>xs \<noteq> \<epsilon>\<close> lnzero_def neq0_conv sconc_fst_empty slen_empty_eq sntimes_len srcdups_sntimes_prefix)
+    then show ?thesis
+      by (metis Fin_02bot True \<open>xs = t \<bullet> n\<star>\<up>(sfoot xs)\<close> \<open>xs \<noteq> \<epsilon>\<close> lnzero_def neq0_conv sconc_fst_empty slen_empty_eq sntimes_len srcdups_sntimes)
+  next
+    case False
+    then obtain k where "#t = Fin (Suc k)"
+      by (metis Fin_02bot \<open>t = \<epsilon> \<or> sfoot t \<noteq> sfoot xs\<close> \<open>xs = t \<bullet> n\<star>\<up>(sfoot xs)\<close> bot_is_0 ninf2Fin not0_implies_Suc sconc_fst_inf slen_empty_eq)
+    then show ?thesis
+    proof (cases "ys = \<epsilon>")
+      case True
+      then show ?thesis
+        by simp
+    next
+      case False
+      have "snth k (xs \<bullet> ys) \<noteq> snth (Suc k) (xs \<bullet> ys)"
+      proof
+        assume "snth k (xs \<bullet> ys) = snth (Suc k) (xs \<bullet> ys)"
+        then have "snth k xs = snth (Suc k) xs"
+          by (metis Fin_02bot Fin_Suc Suc_neq_Zero \<open>#t = Fin (Suc k)\<close> \<open>#xs < \<infinity>\<close> \<open>t = \<epsilon> \<or> sfoot t \<noteq> sfoot xs\<close> \<open>xs = t \<bullet> n\<star>\<up>(sfoot xs)\<close> stake_prefix slen_snth_prefix inject_Fin le2lnle leI less_le lnless_def lnzero_def monofun_cfun_arg notinfI3 sfoot_exists2 stream.take_below strict_slen)
+        then show "False"
+          by (metis Fin_02bot Fin_Suc Suc_neq_Zero \<open>#t = Fin (Suc k)\<close> \<open>t = \<epsilon> \<or> sfoot t \<noteq> sfoot xs\<close> \<open>xs = t \<bullet> n\<star>\<up>(sfoot xs)\<close> slen_snth_prefix inject_Fin leI ln_less lnzero_def neq0_conv notinfI3 sconc_snd_empty sdropl6 sfoot_exists2 shd_sntime slen_empty_eq snth_def sntimes_len)
+      qed
+      moreover have "Fin (Suc k) < #(xs \<bullet> ys)"
+        by (metis False \<open>#t = Fin (Suc k)\<close> \<open>#xs < \<infinity>\<close> \<open>xs = t \<bullet> n\<star>\<up>(sfoot xs)\<close> minimal mono_slen monofun_cfun_arg sconc_snd_empty slen_conc)
+      ultimately have "srcdups\<cdot>(xs \<bullet> ys) = srcdups\<cdot>(stake (Suc k)\<cdot>(xs \<bullet> ys)) \<bullet> srcdups\<cdot>(sdrop (Suc k)\<cdot>(xs \<bullet> ys))"
+        using srcdups_split2 by blast
+      then have "srcdups\<cdot>(xs \<bullet> ys) = srcdups\<cdot>t \<bullet> srcdups\<cdot>((sntimes n (\<up>(sfoot xs))) \<bullet> ys)"
+        by (metis \<open>#t = Fin (Suc k)\<close> \<open>xs = t \<bullet> n\<star>\<up>(sfoot xs)\<close> assoc_sconc stake_prefix2 sdropl6)
+      then have "srcdups\<cdot>(xs \<bullet> ys) = srcdups\<cdot>t \<bullet> \<up>(sfoot xs) \<bullet> srcdups\<cdot>(sdropwhile (\<lambda>x. x=sfoot xs)\<cdot>ys)"
+        by (metis \<open>t = \<epsilon> \<or> sfoot t \<noteq> sfoot xs\<close> \<open>xs = t \<bullet> n\<star>\<up>(sfoot xs)\<close> \<open>xs \<noteq> \<epsilon>\<close> neq0_conv sconc_snd_empty sntimes.simps(1) srcdups_sntimes_prefix)
+      moreover have "srcdups\<cdot>xs = srcdups\<cdot>t \<bullet> \<up>(sfoot xs)"
+      proof -
+        have "srcdups\<cdot>xs = srcdups\<cdot>t \<bullet> srcdups\<cdot>(sntimes n (\<up>(sfoot xs)))"
+          by (metis \<open>#t = Fin (Suc k)\<close> \<open>snth k (xs \<bullet> ys) \<noteq> snth (Suc k) (xs \<bullet> ys)\<close> \<open>xs = t \<bullet> n\<star>\<up>(sfoot xs)\<close> convert_inductive_asm slen_snth_prefix stake_prefix2 not_less notinfI3 sconc_snd_empty sdropl6 slen_conc srcdups_split2 strict_srcdups ub_slen_stake)
+        then show ?thesis
+          by (metis \<open>t = \<epsilon> \<or> sfoot t \<noteq> sfoot xs\<close> \<open>xs = t \<bullet> n\<star>\<up>(sfoot xs)\<close> \<open>xs \<noteq> \<epsilon>\<close> neq0_conv sconc_snd_empty sntimes.simps(1) srcdups_sntimes)
+      qed
+      ultimately show ?thesis
+        by simp
+    qed
+  qed
+qed
 
 text {* monotonicity of @{term sdom} *}
 lemma sdom_mono: "monofun (\<lambda>s. {snth n s |n. Fin n < #s})"
@@ -3113,6 +3678,83 @@ by (rule sdom_cont, simp)
 (* continuity of sdom *)
 lemma sdom_cont2: "\<forall>Y. chain Y \<longrightarrow> sdom\<cdot>(\<Squnion> i. Y i) = (\<Squnion> i. sdom\<cdot>(Y i))"
 by (simp add: contlub_cfun_arg)
+
+lemma srcdups_bool_prefix:
+  fixes xs :: "bool stream" and ys :: "bool stream"
+  assumes "lshd\<cdot>(srcdups\<cdot>xs) = lshd\<cdot>(srcdups\<cdot>ys)" and "#(srcdups\<cdot>xs) \<le> #(srcdups\<cdot>ys)"
+  shows "(srcdups\<cdot>xs) \<sqsubseteq> (srcdups\<cdot>ys)"
+proof (rule scases [of xs])
+  assume "xs = \<epsilon>"
+  then have "srcdups\<cdot>xs = \<epsilon>"
+    by simp
+  thus "srcdups\<cdot>xs \<sqsubseteq> srcdups\<cdot>ys"
+    by simp
+next
+  fix a :: bool and s :: "bool stream"
+  assume "xs = \<up>a \<bullet> s"
+  have "lshd\<cdot>(srcdups\<cdot>ys) = updis a"
+    by (metis \<open>xs = \<up>a \<bullet> s\<close> assms(1) lshd_updis srcdups_step)
+  then have "lshd\<cdot>ys = updis a"
+    by (metis lshd_updis srcdups_shd2 stream.sel_rews(3) strict_srcdups surj_scons up_defined)
+  then have "\<forall>n. Fin n < #(srcdups\<cdot>ys) \<longrightarrow> snth n (srcdups\<cdot>ys) = (even n = a)"
+    by (metis (no_types, lifting) bool_stream_snth lshd_updis stream.sel_rews(3) sup'_def surj_scons)
+  then have ys_expr: "\<forall>n. Fin n < #(srcdups\<cdot>xs) \<longrightarrow> snth n (srcdups\<cdot>ys) = (even n = a)"
+    using assms(2) less_le_trans by blast
+  then have first_n_eq: "\<forall>n. Fin n < #(srcdups\<cdot>xs) \<longrightarrow> snth n (srcdups\<cdot>xs) = snth n (srcdups\<cdot>ys)"
+    using \<open>xs = \<up>a \<bullet> s\<close> bool_stream_snth by blast
+  then show "srcdups\<cdot>xs \<sqsubseteq> srcdups\<cdot>ys"
+  proof (cases "#(srcdups\<cdot>xs) < \<infinity>")
+    case False
+    then have "#(srcdups\<cdot>xs) = #(srcdups\<cdot>ys)"
+      using assms(2) less_le by fastforce
+    then have "\<forall>k. snth k (srcdups\<cdot>xs) = snth k (srcdups\<cdot>ys)"
+      by (metis False Fin_neq_inf first_n_eq inf_ub order.not_eq_order_implies_strict)
+    then have "srcdups\<cdot>xs = srcdups\<cdot>ys"
+      by (simp add: \<open>\<forall>k. snth k (srcdups\<cdot>xs) = snth k (srcdups\<cdot>ys)\<close> \<open>#(srcdups\<cdot>xs) = #(srcdups\<cdot>ys)\<close> snths_eq)
+    thus "srcdups\<cdot>xs \<sqsubseteq> srcdups\<cdot>ys"
+      by simp
+  next
+    case True
+    then obtain k where "#(srcdups\<cdot>xs) = Fin k"
+      using lnat_well_h2 by blast
+    then have eq_len: "#(srcdups\<cdot>xs) = #(stake k\<cdot>(srcdups\<cdot>ys))"
+      using assms(2) slen_stake by force
+    have "\<forall>n. Fin n < #(srcdups\<cdot>xs) \<longrightarrow> snth n (srcdups\<cdot>xs) = snth n (stake k\<cdot>(srcdups\<cdot>ys))"
+      by (metis eq_len first_n_eq snth_less stream.take_below)
+    then have "srcdups\<cdot>xs = stake k\<cdot>(srcdups\<cdot>ys)"
+      by (simp add: \<open>\<forall>n. Fin n < #(srcdups\<cdot>xs) \<longrightarrow> snth n (srcdups\<cdot>xs) = snth n (stake k\<cdot>(srcdups\<cdot>ys))\<close> eq_len snths_eq)
+    thus ?thesis
+      by simp
+  qed
+qed
+
+lemma srcdups_snth_stake_inf: "#s = \<infinity> \<Longrightarrow> snth n s \<noteq> snth (Suc n) s \<Longrightarrow> srcdups\<cdot>(stake (Suc n)\<cdot>s) \<noteq> srcdups\<cdot>s"
+proof
+  assume "#s = \<infinity>" and "snth n s \<noteq> snth (Suc n) s" and "srcdups\<cdot>(stake (Suc n)\<cdot>s) = srcdups\<cdot>s"
+  have "#(stake (Suc (Suc n))\<cdot>s) = Fin (Suc (Suc n))"
+    by (simp add: \<open>#s = \<infinity>\<close> slen_stake_fst_inf)
+  moreover have "Suc (Suc n) > Suc n"
+    by simp
+  moreover have "snth n (stake (Suc (Suc n))\<cdot>s) \<noteq> snth (Suc n) (stake (Suc (Suc n))\<cdot>s)"
+    by (metis Fin_leq_Suc_leq Suc_n_not_le_n \<open>snth n s \<noteq> snth (Suc n) s\<close> calculation(1) less2nat_lemma not_le snth_less stream.take_below)
+  ultimately have "srcdups\<cdot>(stake (Suc n)\<cdot>(stake (Suc (Suc n))\<cdot>s)) \<noteq> srcdups\<cdot>(stake (Suc (Suc n))\<cdot>s)"
+    using srcdups_snth_stake_fin by blast
+  then have "srcdups\<cdot>(stake (Suc n)\<cdot>s) \<noteq> srcdups\<cdot>(stake (Suc (Suc n))\<cdot>s)"
+    by (simp add: min_def)
+  moreover have "srcdups\<cdot>(stake (Suc (Suc n))\<cdot>s) = srcdups\<cdot>s"
+  proof (rule ccontr)
+    assume "srcdups\<cdot>(stake (Suc (Suc n))\<cdot>s) \<noteq> srcdups\<cdot>s"
+    moreover have "srcdups\<cdot>(stake (Suc n)\<cdot>s) \<sqsubseteq> srcdups\<cdot>(stake (Suc (Suc n))\<cdot>s)"
+      by (simp add: less_imp_le_nat monofun_cfun_arg stake_mono)
+    ultimately have "srcdups\<cdot>(stake (Suc n)\<cdot>s) \<noteq> srcdups\<cdot>s"
+      by (metis below_antisym monofun_cfun_arg stream.take_below)
+    then show "False"
+      by (simp add: \<open>srcdups\<cdot>(stake (Suc n)\<cdot>s) = srcdups\<cdot>s\<close>)
+  qed
+  ultimately show "False"
+    by (simp add: \<open>srcdups\<cdot>(stake (Suc n)\<cdot>s) = srcdups\<cdot>s\<close>)
+qed
+
 
 text {* Basic properties of @{term sdom} *}
 
@@ -3223,6 +3865,24 @@ by (metis Suc_n_not_le_n assms(1) assms(2) contra_subsetD leI less2nat_lemma sfo
 lemma stakewhile_dom[simp]:assumes "\<not>f a"
   shows "a\<notin>sdom\<cdot>(stakewhile f\<cdot>s)"
 by (smt assms below_antisym lnle_conv lnless_def mem_Collect_eq sdom_def2 snth_less stakewhile_below stakewhile_slen)
+
+lemma srcdups_sconc_duplicates:
+  assumes "#xs < \<infinity>" and "xs \<noteq> \<epsilon>" and "srcdups\<cdot>xs = srcdups\<cdot>(xs \<bullet> ys)"
+  shows "sdom\<cdot>ys \<subseteq> {sfoot xs}"
+proof -
+  have "srcdups\<cdot>(xs \<bullet> ys) = (srcdups\<cdot>xs) \<bullet> (srcdups\<cdot>(sdropwhile (\<lambda>x. x=sfoot xs)\<cdot>ys))"
+    using assms(1) assms(2) srcdups_sconc by blast
+  then have "srcdups\<cdot>xs = srcdups\<cdot>xs \<bullet> (srcdups\<cdot>(sdropwhile (\<lambda>x. x=sfoot xs)\<cdot>ys))"
+    using assms(3) by presburger
+  moreover have "#(srcdups\<cdot>xs) < \<infinity>"
+    by (meson assms(1) leD leI srcdups_slen trans_lnle)
+  ultimately have "srcdups\<cdot>(sdropwhile (\<lambda>x. x=sfoot xs)\<cdot>ys) = \<epsilon>"
+    using sconc_neq_h by fastforce
+  then have "sdropwhile (\<lambda>x. x=sfoot xs)\<cdot>ys = \<epsilon>"
+    using srcdups_nbot by blast
+  then show ?thesis
+    by (metis (full_types) insertI1 sconc_snd_empty stakewhileDropwhile stakewhile_dom subsetI)
+qed
 
 (* if stakewhile changes the stream s, which is a prefix of the stream s', then stakewhile of s and s'
    produce the same result *)
@@ -4083,6 +4743,71 @@ lemma add2smapsuc_helper:" Suc = (\<lambda>z. z+1)"
 by auto
 
 (* relation between add and smap applied to (Suc)\<cdot>sc *)
+lemma inf_srcdups_stake_snth_sdrop:
+  assumes "#s = \<infinity>" and "srcdups\<cdot>s = srcdups\<cdot>(stake k\<cdot>s)"
+  shows "snth n (sdrop k\<cdot>s) = snth k s"
+proof (induction n)
+  case 0
+  then show ?case
+    by (simp add: snth_def)
+next
+  case (Suc n)
+  then have "snth (Suc n) (sdrop k\<cdot>s) \<noteq> snth k s \<Longrightarrow> False"
+  proof -
+    assume "snth (Suc n) (sdrop k\<cdot>s) \<noteq> snth k s"
+    have "#s = \<infinity>"
+      by (simp add: assms(1))
+    moreover have "snth (n + k) s \<noteq> snth (n + k + 1) s"
+      by (metis Suc.IH Suc.prems Suc_eq_plus1 \<open>snth (Suc n) (sdrop k\<cdot>s) \<noteq> snth k s\<close> semiring_normalization_rules(23) snth_sdrop)
+    ultimately have "srcdups\<cdot>(stake (n + k + 1)\<cdot>s) \<noteq> srcdups\<cdot>s"
+      by (metis add2smapsuc_helper srcdups_snth_stake_inf)
+    moreover have "srcdups\<cdot>(stake (n + k + 1)\<cdot>s) = srcdups\<cdot>(stake k\<cdot>s)"
+    proof -
+      have "srcdups\<cdot>(stake k\<cdot>s) \<sqsubseteq> srcdups\<cdot>(stake (n + k + 1)\<cdot>s)"
+      proof -
+        have "k + (1 + n) = n + k + 1"
+          by simp
+        then show ?thesis
+          by (metis (no_types) minimal monofun_cfun_arg sconc_snd_empty stake_add)
+      qed
+      then show ?thesis
+        by (metis assms(2) below_antisym monofun_cfun_arg stream.take_below)
+    qed
+    ultimately show "False"
+      by (simp add: assms(2))
+  qed
+  then show ?case
+    by blast
+qed
+
+lemma srcdups_split:
+  assumes "#(srcdups\<cdot>s) < \<infinity>" and "#s = \<infinity>"
+  obtains n where "s = (stake n\<cdot>s) \<bullet> (\<up>(snth n s)\<infinity>)"
+proof -
+  obtain k where "srcdups\<cdot>s = srcdups\<cdot>(stake k\<cdot>s)"
+    by (meson assms(1) fun_approxl2 lnat_well_h2)
+  then have "sdrop k\<cdot>s \<noteq> srt\<cdot>(sdrop k\<cdot>s) \<Longrightarrow> False"
+  proof -
+    assume "sdrop k\<cdot>s \<noteq> srt\<cdot>(sdrop k\<cdot>s)"
+    moreover have "#(sdrop k\<cdot>s) = #(srt\<cdot>(sdrop k\<cdot>s))"
+      by (metis assms(2) fair_sdrop sdrop_back_rt)
+    ultimately obtain n where "snth n (sdrop k\<cdot>s) \<noteq> snth n (srt\<cdot>(sdrop k\<cdot>s))"
+      using snths_eq by blast
+    moreover have "snth n (srt\<cdot>(sdrop k\<cdot>s)) = snth k s"
+      by (metis \<open>srcdups\<cdot>s = srcdups\<cdot>(stake k\<cdot>s)\<close> assms(2) inf_srcdups_stake_snth_sdrop snth_rt)
+    then show "False"
+      by (metis (no_types) \<open>snth n (srt\<cdot>(sdrop k\<cdot>s)) = snth k s\<close> \<open>srcdups\<cdot>s = srcdups\<cdot>(stake k\<cdot>s)\<close> assms(2) calculation inf_srcdups_stake_snth_sdrop)
+  qed
+  then have "sdrop k\<cdot>s = \<up>(snth k s) \<bullet> (sdrop k\<cdot>s)"
+    by (metis Inf'_neq_0 assms(2) fair_sdrop snth_def strict_slen surj_scons)
+  then have "sdrop k\<cdot>s = (\<up>(snth k s))\<infinity>"
+    using s2sinftimes by blast
+  then have "s = (stake k\<cdot>s) \<bullet> (\<up>(snth k s)\<infinity>)"
+    by (metis split_streaml1)
+  thus ?thesis
+    by (metis that)
+qed
+
 lemma add2smapsuc:"add\<cdot>\<up>1\<infinity>\<cdot>s=smap (Suc)\<cdot>s"
 by(simp add: add2smapsuc_helper add2smap)
 
@@ -4118,6 +4843,5 @@ by(simp add: id_def)
 (* add applied to \<up>0\<infinity> returns the identity *)
 lemma add2ID:"add\<cdot>\<up>0\<infinity> = ID"
 by (simp add: add2ID_h cfun_eqI)
-
 
 end
