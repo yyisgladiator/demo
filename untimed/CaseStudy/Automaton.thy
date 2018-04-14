@@ -30,7 +30,7 @@ section \<open>Backend Signatures\<close>
 fun automaton_well::"((('state \<times>(channel \<rightharpoonup> 'm::message)) \<Rightarrow> ('state \<times> 'm SB)) \<times> 'state \<times> 'm SB \<times> channel set \<times> channel set) \<Rightarrow> bool " where
 "automaton_well (transition, initialState, initialOut, chIn, chOut) = (finite chIn \<and> (\<forall>s f. dom f = chIn \<longrightarrow> ubDom\<cdot>(snd(transition (s,f))) = chOut))"
 
-lemma automaton_wellI: assumes "finite In" and "(\<forall>s f. dom f = In \<longrightarrow> ubDom\<cdot>(snd(transition (s,f))) = Out)" shows "automaton_well (transition, initialState, initialOut, In, Out)"
+lemma automaton_wellI: assumes "finite In" and "\<And>s f. dom f = In \<Longrightarrow> ubDom\<cdot>(snd(transition (s,f))) = Out" shows "automaton_well (transition, initialState, initialOut, In, Out)"
 by(simp add: assms)
 
 
@@ -249,6 +249,23 @@ lemma h_final:
   apply(subst h_step, simp_all add: assms)
   by(simp add: autGetNextOutput_def autGetNextState_def helper_def spfRt_spfConc)
 
+lemma h_bottom_h:"(\<exists>c\<in>getDom automat. sb  .  c = \<epsilon>) \<Longrightarrow> (\<exists>c::channel\<in>getDom automat. sbHdElem\<cdot>sb\<rightharpoonup>c = \<bottom>)"
+  sorry
+    
+lemma ufLeast_apply:assumes "ubDom\<cdot>sb = In" shows "ufLeast In  Out \<rightleftharpoons> sb = ubclLeast Out"
+  sorry
+    
+lemma h_bottom_h2:"(\<exists>c\<in>getDom automat. sb  .  c = \<epsilon>) \<Longrightarrow> \<not>(\<forall>c::channel\<in>getDom automat. sbHdElem\<cdot>sb\<rightharpoonup>c \<noteq> \<bottom>)"
+  by(simp add: h_bottom_h)
+   
+lemma ubclDom2ubDom:"ubclDom\<cdot>sb = ubDom\<cdot>sb"
+  by (simp add: ubclDom_ubundle_def)
+    
+lemma h_bottom: assumes "ubDom\<cdot>sb = getDom automat" and "\<exists>c\<in>getDom automat. sb  .  c = \<epsilon>"
+  shows "(h automat s)\<rightleftharpoons>sb = ubclLeast (getRan automat)"
+  apply(simp add: h_unfolding spfStep_def, subst beta_cfun, subst spfStep_cont, simp_all add: spfStep_h1_def)
+  apply(simp add: assms h_bottom_h h_bottom_h2)
+  by(simp add: assms ubclDom2ubDom ufLeast_apply)
 
 section \<open>Lemma about H\<close>
 
