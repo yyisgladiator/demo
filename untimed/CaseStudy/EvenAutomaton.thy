@@ -101,4 +101,95 @@ lift_definition EvenAutomatonAutomaton :: "(EvenAutomatonState, EvenAutomaton ev
 
 definition EvenAutomatonSPF :: "EvenAutomaton event SPF" where
 "EvenAutomatonSPF = H EvenAutomatonAutomaton"
+
+
+definition EvenStream::"EvenAutomatonState \<Rightarrow> EvenAutomaton event stream \<rightarrow> EvenAutomaton event stream" where
+"EvenStream state \<equiv> (\<Lambda> st. sdrop 1\<cdot>((EvenAutomatonSPF \<rightleftharpoons> (Abs_ubundle [c1 \<mapsto> (\<up>( Msg (A (getSum state))) \<bullet> st)])). c2))"
+
+fun evenMakeSubstate :: "bool \<Rightarrow> EvenAutomatonSubstate" where
+"evenMakeSubstate True = Even" | 
+"evenMakeSubstate False = Odd"
+
+lemma evenStream_insert:"EvenStream state\<cdot>s = sdrop 1\<cdot>((EvenAutomatonSPF \<rightleftharpoons> (Abs_ubundle [c1 \<mapsto> (\<up>( Msg (A (getSum state))) \<bullet> s)])). c2)"
+  apply(simp add: EvenStream_def,rule beta_cfun)
+proof(rule Cont.contI2)
+  show"monofun (\<lambda>x::EvenAutomaton event stream. sdrop (Suc (0::nat))\<cdot>((EvenAutomatonSPF \<rightleftharpoons> Abs_ubundle [c1 \<mapsto> \<up>(\<M> A (getSum state)) \<bullet> x])  .  c2))"
+    sorry
+next
+  fix Y:: "nat \<Rightarrow>EvenAutomaton event stream"
+  assume a1: "chain Y"
+  assume a2:"chain (\<lambda>i::nat. sdrop (Suc (0::nat))\<cdot>((EvenAutomatonSPF \<rightleftharpoons> Abs_ubundle [c1 \<mapsto> \<up>(\<M> A (getSum state)) \<bullet> Y i])  .  c2))"
+  show " sdrop (Suc (0::nat))\<cdot>((EvenAutomatonSPF \<rightleftharpoons> Abs_ubundle [c1 \<mapsto> \<up>(\<M> A (getSum state)) \<bullet> (\<Squnion>i::nat. Y i)])  .  c2) \<sqsubseteq>
+       (\<Squnion>i::nat. sdrop (Suc (0::nat))\<cdot>((EvenAutomatonSPF \<rightleftharpoons> Abs_ubundle [c1 \<mapsto> \<up>(\<M> A (getSum state)) \<bullet> Y i])  .  c2))"
+    sorry
+qed
+  
+
+lemma  msg_assms: "EvenStream (State ooo summe)\<cdot>(\<up>(Msg (A m)) \<bullet> xs)
+                 = \<up>(Msg (B (Parity.even (summe + m)))) \<bullet> (EvenStream (State (evenMakeSubstate (Parity.even (summe + m)))  (summe + m))\<cdot>xs)"
+  sorry
+(*  proof(induction arbitrary: ooo summe rule: tsyn_ind [of _xs])
+    case 1
+    then show ?case by simp
+  next
+    case 2
+    then show ?case sorry
+  next
+    case (3 a s)
+    then show ?case sorry
+  next
+    case (4 s)
+    then show ?case sorry
+  qed*)
+
+lemma tick_assms: "EvenStream state\<cdot>(\<up>Tick \<bullet> xs) = \<up>Tick \<bullet> (f state\<cdot>xs)"
+  sorry
+(*proof(induction rule: tsyn_ind [of _xs])
+  case 1
+  then show ?case by simp
+next
+  case 2
+  then show ?case sorry
+next
+  case (3 a s)
+  then show ?case sorry
+next
+  case (4 s)
+  then show ?case sorry
+qed*)
+    
+lemma spconc_step[simp]:
+  assumes "ubDom\<cdot>sb = ufDom\<cdot>spf"
+  shows "(spfConc sb1\<cdot>spf)\<rightleftharpoons>sb = ubConcEq sb1\<cdot>(spf\<rightleftharpoons>sb)"
+  apply(simp add: spfConc_def assms)
+ sorry
+  
+lemma bot_assms: "EvenStream state\<cdot>\<bottom> = \<bottom>"
+  apply(simp add: evenStream_insert EvenAutomatonSPF_def H_def getInitialOutput_def EvenAutomatonAutomaton.rep_eq)
+  apply(subst spconc_step, simp add: EvenAutomatonAutomaton.rep_eq getDom_def ubDom_def)
+sorry
+      
+(*  
+lemma type_assms: "tsynDom\<cdot>(xs::EvenAutomaton event stream) \<subseteq> range A"
+  proof(induction rule: tsyn_ind [of _xs])
+    case 1
+    then show ?case 
+      by simp
+  next
+    case 2
+    then show ?case
+      by(simp add: tsyndom_insert)
+  next
+    case (3 a s)
+    then show ?case
+      apply(simp add: tsyndom_insert, auto)
+      apply(cases "a")
+      apply simp
+      sorry
+  next
+    case (4 s)
+    then show ?case
+      by(simp add: tsyndom_insert)
+  qed*)
+    
 end
