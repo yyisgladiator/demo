@@ -27,13 +27,26 @@ next
   then show ?case by simp
 qed
 
+(*ToDo*)
+  
+lemma "sdom\<cdot>(nat2even\<cdot>s) \<subseteq> ctype c1"
+    sorry
 
+lemma evenStreamBundle_lub: assumes "chain Y" shows"(Abs_ubundle [c1 \<mapsto> nat2even\<cdot>(\<Squnion>i. Y i)]) = (\<Squnion>i. Abs_ubundle [c1 \<mapsto>  nat2even\<cdot>(Y i)])"
+  sorry
+
+lemma evenStreamBundle_chain:assumes "chain Y" shows"chain (\<lambda>i::nat. Abs_ubundle [c1 \<mapsto> nat2even\<cdot>(Y i)])"
+    sorry
+       
+(*ToDo end*)
+  
+  
 definition EvenStream::"EvenAutomatonState \<Rightarrow> nat event stream \<rightarrow> EvenAutomaton event stream" where
 "EvenStream state \<equiv> (\<Lambda> s. ((h EvenAutomatonAutomaton state) \<rightleftharpoons> (Abs_ubundle [c1 \<mapsto> (nat2even\<cdot>s)])) . c2)"
 
 
 lemma ubclLeast_empty: assumes "c\<in>Dom" shows "ubclLeast Dom  .  c = \<epsilon>"
-        sorry
+  by (simp add: assms ubclLeast_ubundle_def)
 
 lemma evenStream_insert:"EvenStream state\<cdot>s = ((h EvenAutomatonAutomaton state) \<rightleftharpoons> (Abs_ubundle [c1 \<mapsto> (nat2even\<cdot>s)])) . c2"
   apply(simp add: EvenStream_def,rule beta_cfun)
@@ -56,15 +69,9 @@ next
   fix Y:: "nat \<Rightarrow>nat event stream"
   assume a1: "chain Y"
   assume a2:"chain (\<lambda>i::nat. (h EvenAutomatonAutomaton state \<rightleftharpoons> Abs_ubundle [c1 \<mapsto> nat2even\<cdot>(Y i)])  .  c2)"
-  have "\<And>i. sdom\<cdot>(nat2even\<cdot>(Y i)) \<subseteq> ctype c1"
-    sorry
-  have h1:"(Abs_ubundle [c1 \<mapsto> nat2even\<cdot>(\<Squnion>i. Y i)]) = (\<Squnion>i. Abs_ubundle [c1 \<mapsto>  nat2even\<cdot>(Y i)])"
-    sorry
-  have h2:"chain (\<lambda>i::nat. Abs_ubundle [c1 \<mapsto> nat2even\<cdot>(Y i)])"
-    sorry
   show "(h EvenAutomatonAutomaton state \<rightleftharpoons> Abs_ubundle [c1 \<mapsto> nat2even\<cdot>(\<Squnion>i::nat. Y i)])  .  c2 \<sqsubseteq>
        (\<Squnion>i::nat. (h EvenAutomatonAutomaton state \<rightleftharpoons> Abs_ubundle [c1 \<mapsto> nat2even\<cdot>(Y i)])  .  c2)"
-    apply(simp add: h1, subst contlub_cfun_arg, simp add: h2)
+    apply(simp add: a1 evenStreamBundle_lub, subst contlub_cfun_arg, simp add: a1 evenStreamBundle_chain)
     sorry
 qed
   
