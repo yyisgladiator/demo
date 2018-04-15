@@ -1,22 +1,9 @@
 theory EvenAutomaton
 
-imports Automaton
+imports Automaton "../../timesyn/tsynStream" "../../timesyn/tsynBundle"
 
 begin
 
-
-(* BEGIN: tsynBundle *)
-  (* Copied here, because importing leads to an ML-Error *)
-  (* TODO: import it ! ! ! *)
-lift_definition tsynbOneTick:: "channel \<Rightarrow> 'm::message event SB" is
-"\<lambda>c. [c \<mapsto> \<up>Tick]"
-  unfolding ubWell_def
-  unfolding usclOkay_stream_def
-  unfolding ctype_event_def
-  by simp
-
-lemma tsynbonetick_dom [simp]: "ubDom\<cdot>(tsynbOneTick c) = {c}"
-  by (simp add: tsynbOneTick.rep_eq ubdom_insert)
 
 (* END: tsynBundle *)
 
@@ -98,7 +85,8 @@ by (metis option.simps(3))
 lift_definition EvenAutomatonAutomaton :: "(EvenAutomatonState, EvenAutomaton event) automaton" is 
   "(evenAutomatonTransition, State Even 0,(tsynbOneTick c2), {c1}, {c2})"
   sorry
-
+  
 definition EvenAutomatonSPF :: "EvenAutomaton event SPF" where
 "EvenAutomatonSPF = H EvenAutomatonAutomaton"
+
 end
