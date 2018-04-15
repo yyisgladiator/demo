@@ -7,7 +7,7 @@
 
 theory Automaton
 
-imports "../SPF" "../../Event" "../SpfStep"
+imports "../SPF" "../../inc/Event" "../SpfStep"
 begin
 default_sort type
 
