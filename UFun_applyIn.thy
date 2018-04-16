@@ -10,7 +10,7 @@ begin
 
 
 default_sort ubcl  
-
+(*
   
 (****************************************************)
 section\<open>Definitions\<close>
@@ -594,7 +594,7 @@ lemma ufapplyin_cont [simp]: assumes "\<And>b. ubclDom\<cdot>(k\<cdot>b) = ubclD
   apply (rule contI2)
   using assms apply auto[1]
   by (simp add: assms)
-
+*)
 
 section \<open>More Lemmas\<close>
 
