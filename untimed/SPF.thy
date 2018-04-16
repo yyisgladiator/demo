@@ -3,7 +3,7 @@ theory SPF
 begin
 default_sort message
 
-type_synonym 'm SPF = "'m SB \<Rrightarrow> 'm SB"
+type_synonym 'm SPF = "'m SB ufun"
 
 
 subsection \<open>spfStateFix\<close>
@@ -18,7 +18,7 @@ definition spfStateFix ::"channel set \<Rightarrow> channel set \<Rightarrow>(('
 section \<open>Definitions with spfApplyIn\<close>
 
 (* ToDo: make signature more general, output does not have to be an SB *)
-definition spfRt :: "('m SB \<Rrightarrow> 'a::ubcl) \<rightarrow> ('m SB \<Rrightarrow> 'a)" where
+definition spfRt :: "('m SB ufun) \<rightarrow> ('m SB ufun)" where
 "spfRt \<equiv> ufApplyIn sbRt"
 
 section \<open>Definitions with spfApplyOut\<close>

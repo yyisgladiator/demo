@@ -362,11 +362,11 @@ lemma spfStep_h1_ran[simp]:assumes "finite In" shows"ufRan\<cdot>(spfStep_h1 In 
 
 lemma ufLeast_out_ubDom:assumes "ubDom\<cdot>sb = In" shows "ubDom\<cdot>(ufLeast In Out \<rightleftharpoons> sb) = Out"
   apply(simp add: ufLeast_def assms)
-  by (metis assms ubDom_ubundle_def ubdom_least_cs)
+  by (metis assms ubclDom_ubundle_def ubcldom_least_cs)
     
 lemma spfStep_h1_out_dom[simp]:assumes "finite In" and "ubDom\<cdot>sb = In" shows "ubDom\<cdot>(spfStep_h1 In Out\<cdot> h \<cdot> f \<rightleftharpoons> sb) = Out"
   apply(simp add: spfStep_h1_def assms ufLeast_out_ubDom)
-  by (metis assms(2) ubDom_ubundle_def ufRestrict_dom ufRestrict_ran ufran_2_ubdom2)
+  by (metis assms(2) ubclDom_ubundle_def ufRestrict_dom ufRestrict_ran ufran_2_ubcldom2)
 
 lemma spfstep_h1_insert:assumes "finite In" shows"spfStep_h1 In Out\<cdot> h\<cdot>f = (if (In \<subseteq> dom f \<and> (\<forall>c \<in> dom f. (f \<rightharpoonup> c \<noteq> \<bottom>))) then ufRestrict In Out\<cdot>(h (spfStep_h2 f)) else ufLeast In Out)"
   by(simp add:  spfStep_h1_def assms)    
@@ -390,7 +390,7 @@ lemma getSb_in_h:assumes "chain (Y::nat \<Rightarrow> 'a::message SPF)" shows "(
   by(subst contlub_cfun_fun, simp_all add: assms)
     
 lemma spf_ubDom: assumes "ufDom\<cdot>f = In" and "ufRan\<cdot>f = Out" and "ubDom\<cdot>sb= In" shows "ubDom\<cdot>(f \<rightleftharpoons> sb) = Out"
-  by (metis assms(1) assms(2) assms(3) ubDom_ubundle_def ufran_2_ubdom2)
+  by (metis assms(1) assms(2) assms(3) ubclDom_ubundle_def ufran_2_ubcldom2)
 
 (* spfStep inner SPF spf_well and cont*)
 
@@ -400,7 +400,7 @@ lemma spfStep_inSPF_mono[simp]:"monofun (\<lambda>b. spfStep_h1 In Out\<cdot> h\
    
 lemma spf_contI2 [simp]: assumes "cont g"
   shows "cont (\<lambda>b. (ubDom\<cdot>b = In)\<leadsto>g b)"
-  by (metis (no_types) assms if_then_cont ubDom_ubundle_def)
+  by (metis (no_types) assms if_then_cont ubclDom_ubundle_def)
     
 lemma spfStep_inSPF_cont[simp]:assumes "finite In" shows"cont (\<lambda> sb.  (ubDom\<cdot>sb = In) \<leadsto> (spfStep_h1 In Out\<cdot> h)\<cdot>(sbHdElem\<cdot>sb) \<rightleftharpoons> sb)"  
 proof(rule spf_contI2,rule Cont.contI2,auto)
@@ -582,7 +582,7 @@ lemma spfDomAbs: assumes "cont (\<lambda> x. (ubDom\<cdot>x = cs ) \<leadsto> f(
                    shows "ufDom\<cdot>(Abs_cufun (\<lambda> x. (ubDom\<cdot>x = cs ) \<leadsto> f(x))) = cs"
 apply(simp add: ufDom_def)
 apply(simp_all add: assms)
-  by (smt Collect_cong assms(2) dom_def dom_eq_empty_conv map_not_ufun mem_Collect_eq tfl_some ubDom_ubundle_def)
+  by (smt Collect_cong assms(2) dom_def dom_eq_empty_conv map_not_ufun mem_Collect_eq tfl_some ubclDom_ubundle_def)
 
 lemma spfstep_dom[simp]:assumes "finite cIn" shows"ufDom\<cdot>(spfStep cIn cOut\<cdot>f) = cIn"
   by(simp add: spfstep_insert spfDomAbs assms)
@@ -594,7 +594,7 @@ lemma spfstep_ran [simp]:assumes "finite cIn" shows"ufRan\<cdot>(spfStep cIn cOu
   apply(simp add: spfstep_insert assms)
   apply(unfold ufran_least,simp add: assms)
   apply (simp add: assms spfDomAbs)
-  by (metis assms spfStep_h1_out_dom ubDom_ubundle_def ubdom_least_cs)
+  by (metis assms spfStep_h1_out_dom ubclDom_ubundle_def ubcldom_least_cs)
 
 lemma sbHdElem_dom[simp]:"dom (sbHdElem\<cdot>sb) = ubDom\<cdot>sb"
   by(simp add: sbHdElem_def sbHdElem_cont)

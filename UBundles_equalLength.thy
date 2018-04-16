@@ -4,7 +4,7 @@ imports UnivClasses "inc/LNat" Channel UBundle
 begin
 
 definition ub_eqLen :: "'s ubundle \<Rightarrow> bool" where
-"ub_eqLen ub \<equiv> (\<forall> c1 \<in> (ubDom\<cdot>ub). \<forall> c2 \<in> (ubDom\<cdot>ub). usLen\<cdot>(ub . c1) = usLen\<cdot>(ub . c2))"
+"ub_eqLen ub \<equiv> (\<forall> c1 \<in> (ubDom\<cdot>ub). \<forall> c2 \<in> (ubDom\<cdot>ub). usclLen\<cdot>(ub . c1) = usclLen\<cdot>(ub . c2))"
 
 cpodef 's::uscl eqLenBundle = "{b :: 's ubundle. ub_eqLen b}"
   using ubWell_empty
