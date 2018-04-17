@@ -124,7 +124,7 @@ instance rev :: (dpcpo) dpcpo
   by (metis Abs_rev_inverse below_rev.elims(1) maximal mem_Collect_eq)
 *)
 
-
-
+lemma inv_rev_rev: "inv Rev (Rev S) = S"
+  by (meson f_inv_into_f rangeI rev.inject)
 
 end

@@ -108,6 +108,27 @@ qed
 lemma ubunion_idR [simp]: "b \<uplus> (ubLeast {}) = b"
   by (simp add: ubunion_insert ubLeast_def ubWell_empty)    
     
+lemma ubrestrict_ubleast_inter: "ubLeast cs1 \<bar> cs2 = ubLeast (cs1 \<inter> cs2)"
+proof -
+  have f1: "\<forall>u ua. (ubDom\<cdot>u \<noteq> ubDom\<cdot>ua \<or> (\<exists>c. c \<in> ubDom\<cdot>u \<and> (u . c::'a) \<noteq> ua . c)) \<or> u = ua"
+by (meson ubgetchI)
+obtain cc :: "'a\<^sup>\<Omega> \<Rightarrow> 'a\<^sup>\<Omega> \<Rightarrow> channel" where
+  "\<forall>x0 x1. (\<exists>v2. v2 \<in> ubDom\<cdot>x1 \<and> x1 . v2 \<noteq> x0 . v2) = (cc x0 x1 \<in> ubDom\<cdot>x1 \<and> x1 . cc x0 x1 \<noteq> x0 . cc x0 x1)"
+  by moura
+  then have f2: "\<forall>u ua. ubDom\<cdot>u \<noteq> ubDom\<cdot>ua \<or> cc ua u \<in> ubDom\<cdot>u \<and> u . cc ua u \<noteq> ua . cc ua u \<or> u = ua"
+    using f1 by presburger
+have f3: "ubDom\<cdot>((ubLeast cs1::'a\<^sup>\<Omega>) \<bar> cs2) = ubDom\<cdot>(ubLeast (cs1 \<inter> cs2)::'a\<^sup>\<Omega>)"
+  by auto
+  have f4: "\<forall>c. c \<notin> cs1 \<inter> cs2 \<or> c \<in> cs2"
+    by blast
+  have f5: "\<forall>c. c \<notin> cs1 \<inter> cs2 \<or> c \<in> cs1"
+    by (meson inf_sup_ord(1) subset_eq)
+  { assume "((ubLeast cs1 \<bar> cs2) . cc (ubLeast (cs1 \<inter> cs2)) (ubLeast cs1 \<bar> cs2)::'a) \<noteq> ubLeast (cs1 \<inter> cs2) . cc (ubLeast (cs1 \<inter> cs2)) (ubLeast cs1 \<bar> cs2)"
+    then have ?thesis
+      using f5 f4 f3 f2 by (metis (no_types) ubgetch_ubrestrict ubleast_ubdom ubleast_ubgetch) }
+  then show ?thesis
+    using f3 f2 by blast
+qed
     
 subsection \<open>ubUp\<close>
 
