@@ -7,14 +7,16 @@ text {*This is the total set of channels. While representing an existing network
  one should add here all channels that occur in the whole network.*}
 
 datatype channel = c1 | c2 | c3 | c4 | c5 | c6 | c7 | c8 | c9 | c10
-             (* for ABP Specification*) | as | ds | ar | dr | abpIn | abpOut
+             (* for ABP Specification*) | c_as | c_ds | c_ar | c_dr | c_abpIn | c_abpOut | c_idOut
+(*
+datatype channel = \<C> string
+*)
+
 
 default_sort type
 
-class message = countable +
-  fixes ctype :: "channel \<Rightarrow> 'a set" 
-begin
-end
+(* 
+  Example Instantiation  
 
 datatype M = MNat nat | MBool bool
 
@@ -29,8 +31,8 @@ apply(intro_classes)
 by(countable_datatype)
 
 end
-
-
+*)
+(*
 (* Instantiate channel as po, used to instantiate as CPO. *)
 instantiation channel :: po
 begin
@@ -106,4 +108,30 @@ lemma [simp]:"\<inverse>\<bool> (\<bool> x) = x"
 by (meson M.inject(2) f_inv_into_f rangeI)
 
 *)
+
+*)
+  
+
+instantiation channel :: finite
+begin
+  instance
+  apply(intro_classes)
+  proof - 
+    have f1: "(UNIV :: channel set) = {c1 , c2 , c3 , c4 , c5 , c6 , c7 , c8 , c9 , c10 , c_as , c_ds , c_ar , c_dr , c_abpIn , c_abpOut, c_idOut}"
+    proof - 
+      have "\<And>a. (a \<in> (UNIV :: channel set)) = (a \<in> {c1 , c2 , c3 , c4 , c5 , c6 , c7 , c8 , c9 , c10 , c_as , c_ds , c_ar , c_dr , c_abpIn , c_abpOut, c_idOut})"
+      proof - 
+        fix a
+        show "(a \<in> (UNIV :: channel set)) = (a \<in> {c1 , c2 , c3 , c4 , c5 , c6 , c7 , c8 , c9 , c10 , c_as , c_ds , c_ar , c_dr , c_abpIn , c_abpOut, c_idOut})"
+          by(simp add: channel.nchotomy)
+      qed
+      then show ?thesis
+        by auto
+    qed
+    show "finite (UNIV :: channel set)"
+      by (simp add: f1)  
+  qed
+end   
+
+
 end

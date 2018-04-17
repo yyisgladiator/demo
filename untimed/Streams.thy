@@ -1,7 +1,7 @@
 section {* Lazy Streams *} 
 
 theory Streams
-imports LNat SetPcpo
+imports "../inc/LNat" "../inc/SetPcpo" "../UnivClasses"
 begin
 
 section {* The Datatype of Lazy Streams *}
@@ -2821,6 +2821,10 @@ by (metis (no_types) old.prod.case prod.collapse)
     using surj_scons by force
 qed
 
+lemma sscanla_one [simp]: "sscanlA f b\<cdot>(\<up>x) = \<up>(fst (f b x))"
+  apply(simp add: sscanlA_def)
+  by (metis prod.collapse sconc_snd_empty sprojfst_scons strict_sprojfst)
+
 
 (* ----------------------------------------------------------------------- *)
 subsection {* @{term merge} *}
@@ -4113,7 +4117,8 @@ proof(rule ccontr)
   have "f x"
     using \<open>f (sfoot (stwbl f\<cdot>s))\<close> \<open>sfoot (stwbl f\<cdot>s) = x\<close> by blast
   thus False
-    by (smt Fin_02bot \<open>sfoot (stwbl f\<cdot>s) = x\<close> approxl2 assms(1) assms(2) assoc_sconc bottomI lnle_def lnzero_def sconc_fst_empty sconc_snd_empty sdrop_0 sdropwhile_t sfoot1 slen_empty_eq slen_rt_ile_eq split_streaml1 stakewhile_below stakewhile_dom stakewhile_sdropwhilel1 stakewhile_stwbl stream.take_strict strict_stakewhile stwbl_fin stwbl_notEps stwbl_stakewhile surj_scons tdw ub_slen_stake)
+    by (metis approxl2 assms(1) assms(2) inject_sconc sconc_snd_empty sdropwhile_resup stakewhileDropwhile stakewhile_below stakewhile_dom stakewhile_stwbl x_def)
+(*    by (smt Fin_02bot \<open>sfoot (stwbl f\<cdot>s) = x\<close> approxl2 assms(1) assms(2) assoc_sconc bottomI lnle_def lnzero_def sconc_fst_empty sconc_snd_empty sdrop_0 sdropwhile_t sfoot1 slen_empty_eq slen_rt_ile_eq split_streaml1 stakewhile_below stakewhile_dom stakewhile_sdropwhilel1 stakewhile_stwbl stream.take_strict strict_stakewhile stwbl_fin stwbl_notEps stwbl_stakewhile surj_scons tdw ub_slen_stake) *)
 qed
 
 (* stwbl applied to f and stwbl f\<cdot>s returns stwbl f\<cdot>s *)
@@ -4843,5 +4848,38 @@ by(simp add: id_def)
 (* add applied to \<up>0\<infinity> returns the identity *)
 lemma add2ID:"add\<cdot>\<up>0\<infinity> = ID"
 by (simp add: add2ID_h cfun_eqI)
+
+(* ----------------------------------------------------------------------- *)
+section \<open>Instantiation\<close>
+(* ----------------------------------------------------------------------- *)
+
+
+instantiation stream :: (message) uscl
+begin
+  definition usclOkay_stream_def: "usclOkay c m \<equiv> sdom\<cdot>m \<subseteq> ctype c"
+  definition usclLen_stream_def: "usclLen \<equiv> slen"
+instance
+  apply intro_classes
+   apply (meson sdom_sfilter1 subsetI usclOkay_stream_def)
+  apply (rule admI)
+  by (simp add: subset_cont usclOkay_stream_def)
+end
+
+
+instantiation stream :: (message) uscl_pcpo
+begin
+instance 
+  apply intro_classes
+  by (simp add: usclOkay_stream_def)
+end
+
+instantiation stream :: (message) uscl_conc
+begin
+  definition usclConc_stream_def: "usclConc \<equiv> sconc"
+instance
+  apply intro_classes
+  apply (simp add: usclOkay_stream_def)
+  by (smt Un_subset_iff contra_subsetD sconc_sdom subsetI usclConc_stream_def)
+end
 
 end

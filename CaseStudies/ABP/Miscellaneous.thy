@@ -1,5 +1,5 @@
 theory Miscellaneous
-imports "../../TStream"
+imports "../../timed/TStream"
 
 begin
 

@@ -8,7 +8,7 @@
 *)
 
 theory SPF
-imports SB
+imports SB CPOFix
 
 begin
   
@@ -271,7 +271,28 @@ subsection \<open>hide\<close>
 definition hide :: "'m SPF \<Rightarrow>  channel set \<Rightarrow> 'm SPF" ("_\<h>_") where
 "hide f cs \<equiv> Abs_CSPF (\<lambda> x. (sbDom\<cdot>x = spfDom\<cdot>f ) \<leadsto> ((f \<rightleftharpoons> x)\<bar>(spfRan\<cdot>f - cs)))"
 
+subsection \<open>spfLeast\<close>
+  
+definition spfLeast :: "channel set \<Rightarrow> channel set \<Rightarrow> 'm SPF" where
+"spfLeast In Out \<equiv> Abs_CSPF (\<lambda> sb. (sbDom\<cdot>sb = In) \<leadsto> (sbLeast Out))" 
 
+subsection \<open>spfRestrict\<close>
+  
+definition spfRestrict :: "channel set \<Rightarrow> channel set \<Rightarrow> 'm SPF \<rightarrow> 'm SPF" where
+"spfRestrict In Out \<equiv> (\<Lambda> f. if (spfDom\<cdot>f = In \<and> spfRan\<cdot>f = Out) then f else (spfLeast In Out))"
+
+subsection \<open>spfFix\<close>
+
+definition spfFix ::"channel set \<Rightarrow> channel set \<Rightarrow>('m SPF \<rightarrow> 'm SPF) \<rightarrow> 'm SPF" where
+"spfFix In Out \<equiv> (\<Lambda> F.  if (spfDom\<cdot>(F\<cdot>(spfLeast In Out)) = In \<and> spfRan\<cdot>(F\<cdot>(spfLeast In Out)) = Out) then fixg (spfLeast In Out) F else (spfLeast In Out))"
+
+subsection \<open>spfStateFix\<close>
+  
+definition spfStateLeast :: "channel set \<Rightarrow> channel set \<Rightarrow>('s1::type \<Rightarrow> 'm SPF)" where
+"spfStateLeast In Out \<equiv> (\<lambda> x. spfLeast In Out)"
+
+definition spfStateFix ::"channel set \<Rightarrow> channel set \<Rightarrow>(('s1::type \<Rightarrow>'m SPF) \<rightarrow> ('s1 \<Rightarrow>'m SPF)) \<rightarrow> ('s1 \<Rightarrow> 'm SPF)" where
+"spfStateFix In Out \<equiv> (\<Lambda> F.  if \<forall>x. (spfDom\<cdot>((F\<cdot>(spfStateLeast In Out)) x) = In \<and> spfRan\<cdot>((F\<cdot>(spfStateLeast In Out)) x) = Out) then fixg (spfStateLeast In Out) F else (spfStateLeast In Out))"  
 
 (* ----------------------------------------------------------------------- *)
   section \<open>Lemmas on 'm SPF's\<close>
@@ -306,7 +327,7 @@ lemma rep_abs_cspf [simp]: assumes "cont f" and "spf_well (Abs_cfun f)"
   shows "Rep_CSPF (Abs_CSPF f) = f"
   by (simp add: Abs_SPF_inverse  assms(1) assms(2))
 
-lemma [simp]: "spf_well f \<Longrightarrow> Rep_SPF (Abs_SPF f) = f"
+lemma rep_abs_spf [simp]: "spf_well f \<Longrightarrow> Rep_SPF (Abs_SPF f) = f"
 by (simp add: Abs_SPF_inverse)
 
   (* lemmata for reverse substitution *)
@@ -316,7 +337,28 @@ lemma abs_cspf_rev: "Abs_SPF (Abs_cfun F) = Abs_CSPF F"
 lemma rep_cspf_rev: "Rep_cfun (Rep_SPF F) = Rep_CSPF F"
   by simp
 
-
+subsection \<open>SPF_apply_Lub\<close>
+  
+lemma spf_well_lub: assumes "chain Y" and "\<And> i. spf_well (Y i)"
+  shows "spf_well (\<Squnion> i. Y i)"
+  by (simp add: admD assms(1) assms(2))
+    
+lemma spfapply_lub: assumes "chain Y"
+  shows "(\<Squnion> i. Y i) \<rightleftharpoons> sb = (\<Squnion> i. ((Y i)  \<rightleftharpoons> sb))"
+proof -
+  have f1: "chain (\<lambda>n. Rep_SPF (Y n))"
+    by (metis assms rep_spf_chain)
+  hence "spf_well (\<Squnion>n. Rep_SPF (Y n))"
+    using rep_spf_well spf_well_lub by blast
+  hence "Rep_CSPF (Lub Y) = Rep_cfun (\<Squnion>n. Rep_SPF (Y n))"
+    by (simp add: assms lub_SPF)
+  hence "Rep_CSPF (Lub Y) sb = (\<Squnion>n. Rep_CSPF (Y n) sb)"
+    using f1 contlub_cfun_fun by auto
+  hence "(\<Squnion>n. \<lambda>n. Rep_CSPF (Y n) sb\<rightharpoonup>n) = Lub Y \<rightleftharpoons> sb"
+    using f1 by (simp add: op_the_lub)
+  thus ?thesis
+    by auto
+qed
 
 subsection \<open>SPF_definition\<close>
   
@@ -619,6 +661,11 @@ lemma spfsblift_dom [simp]: "(\<exists> d. (d \<in> (dom (\<lambda>b. (sbDom\<cd
   proof
   show "(sbLeast In) \<in> (dom (\<lambda>b. (sbDom\<cdot>b = In)\<leadsto>((\<up>(F\<cdot>b))\<bar>Out)))" by auto
 qed
+
+
+
+
+
 
 
 
@@ -1251,9 +1298,340 @@ lemma sbfix_ind2:  assumes "sbfun_io_eq F cs"
         apply (frule_tac x=nat in spec)
         by (simp add: assms(1) iter_sbfix_dom s2)  
   
-  
           
-  section \<open>Lemmas for Composition\<close>
+subsection \<open>spfLeast\<close>
+        
+lemma spfLeast_mono: "monofun (\<lambda> sb. (sbDom\<cdot>sb = In) \<leadsto> (sbLeast Out))" 
+  by simp  
+  
+lemma spfLeast_cont: "cont (\<lambda> sb. (sbDom\<cdot>sb = In) \<leadsto> (sbLeast Out))" 
+  by simp
+  
+lemma spfLeast_well [simp]: "spf_well (\<Lambda> sb. (sbDom\<cdot>sb = In) \<leadsto> (sbLeast Out))"        
+  apply(simp add: spf_well_def)
+  apply(simp only: domIff2)
+  apply(simp add: sbdom_rep_eq)
+  by(auto)       
+
+lemma spfLeast_dom [simp]: "spfDom\<cdot>(spfLeast In Out) = In"
+  by(simp add: spfLeast_def spfDomAbs spfLeast_cont spfLeast_well)
+
+lemma spfLeast_ran[simp]: "spfRan\<cdot>(spfLeast In Out) = Out"
+proof - 
+  have "sbDom\<cdot>(sbLeast Out) = Out"
+    by simp
+  thus ?thesis
+    apply(simp add: spfLeast_def)
+    apply(simp add: spfRan_def spfLeast_cont spfLeast_well)
+    by (smt option.distinct(1) option.inject ran2exists ranI sbleast_sbdom someI)
+qed
+
+lemma spfLeast_apply[simp]: 
+  assumes "sbDom\<cdot>sb = In"
+  shows "spfLeast In Out \<rightleftharpoons>sb = sbLeast Out"
+  by(simp add: spfLeast_def assms)
+
+lemma spfLeast_bottom [simp]: assumes "spfDom\<cdot>f = In" and "spfRan\<cdot>f = Out"
+  shows "(spfLeast In Out) \<sqsubseteq> f"
+proof - 
+  have f0: "\<And>sb c. sbDom\<cdot>sb = In \<and> c \<in> sbDom\<cdot>(spfLeast In Out \<rightleftharpoons> sb) \<longrightarrow> (spfLeast In Out \<rightleftharpoons> sb) . c = \<epsilon>"
+  proof
+    fix sb
+    fix c
+    assume f01: "sbDom\<cdot>sb = In \<and> c \<in> sbDom\<cdot>(spfLeast In Out \<rightleftharpoons> sb)"
+    show "(spfLeast In Out \<rightleftharpoons> sb) . c = \<epsilon>"
+      apply(simp add: spfLeast_def spfLeast_cont spfLeast_well)
+      by (metis (full_types) f01 sbleast_getch spfLeast_dom spfLeast_ran spf_ran_2_tsbdom2)
+  qed
+  have f1: "\<And>sb. sbDom\<cdot>sb = In \<longrightarrow> (spfLeast In Out)\<rightleftharpoons>sb \<sqsubseteq> f\<rightleftharpoons>sb"
+    apply(subst sb_below)
+     apply (metis assms(1) assms(2) option.collapse spfLeast_dom spfLeast_ran spf_ran_2_tsbdom2 spfdom2sbdom)
+    apply (metis (no_types, lifting) assms(1) assms(2) f0 monofun_cfun_arg monofun_cfun_fun option.collapse po_eq_conv sbleast_getch sbleast_least spfLeast_dom spfLeast_ran spf_ran_2_tsbdom2 spfdom2sbdom)  
+    by simp
+  show ?thesis
+    apply(simp add: spfLeast_def)  
+      by (metis assms(1) f1 spfLeast_def spfLeast_dom spf_belowI)
+qed  
+    
+    
+subsection \<open>spfRestrict\<close>
+  
+lemma spfRestrict_mono: "monofun (\<lambda> f. if (spfDom\<cdot>f = In \<and> spfRan\<cdot>f = Out) then f else (spfLeast In Out))"
+  by (simp add: monofun_def spfdom_eq spfran_eq)
+
+lemma spfRestrict_cont[simp]: "cont (\<lambda> f. if (spfDom\<cdot>f = In \<and> spfRan\<cdot>f = Out) then f else (spfLeast In Out))"
+  by (smt Cont.contI2 lub_eq monofun_def po_eq_conv spfLeast_bottom spfLeast_dom spfLeast_ran spfdom_eq spfdom_eq_lub spfran_eq spfran_eq_lub)    
+  
+lemma spfRestrict_apply[simp]: assumes "spfDom\<cdot>f = In" and "spfRan\<cdot>f = Out" shows "spfRestrict In Out\<cdot>f = f"
+  apply(simp add: spfRestrict_def)  
+  by (simp add: spfRestrict_cont assms)  
+    
+lemma spfRestrict_dom[simp]: "spfDom\<cdot>(spfRestrict In Out\<cdot>f) = In" 
+proof(cases "spfDom\<cdot>f = In \<and> spfRan\<cdot>f = Out")
+  case True
+  then show ?thesis 
+    by (simp add: spfRestrict_apply)
+next
+  case False
+  then show ?thesis 
+    by (simp add: spfLeast_dom spfRestrict_cont spfRestrict_def)
+qed 
+  
+lemma spfRestrict_ran[simp]: "spfRan\<cdot>(spfRestrict In Out\<cdot>f) = Out" 
+proof(cases "spfDom\<cdot>f = In \<and> spfRan\<cdot>f = Out")
+  case True
+  then show ?thesis 
+    by (simp add: spfRestrict_apply)
+next
+  case False
+  then show ?thesis 
+    by (simp add: spfLeast_ran spfRestrict_cont spfRestrict_def)
+qed 
+    
+subsection \<open>spfFix\<close>      
+  
+lemma spfFix_mono[simp]: "monofun (\<lambda> F.  if (spfDom\<cdot>(F\<cdot>(spfLeast In Out)) = In \<and> spfRan\<cdot>(F\<cdot>(spfLeast In Out)) = Out) then fixg (spfLeast In Out) F else (spfLeast In Out))"
+proof(rule monofunI)
+  fix x::"'m SPF \<rightarrow> 'm SPF" and y::"'m SPF \<rightarrow> 'm SPF"
+  assume a1:"x \<sqsubseteq> y"
+  show "(if spfDom\<cdot>(x\<cdot>(spfLeast In Out)) = In \<and> spfRan\<cdot>(x\<cdot>(spfLeast In Out)) = Out then fixg (spfLeast In Out) x else spfLeast In Out) \<sqsubseteq>
+           (if spfDom\<cdot>(y\<cdot>(spfLeast In Out)) = In \<and> spfRan\<cdot>(y\<cdot>(spfLeast In Out)) = Out then fixg (spfLeast In Out) y else spfLeast In Out)"
+  proof(cases "spfDom\<cdot>(x\<cdot>(spfLeast In Out)) = In \<and> spfRan\<cdot>(x\<cdot>(spfLeast In Out)) = Out")
+    case True
+    then  have h1:"spfDom\<cdot>(y\<cdot>(spfLeast In Out)) = In \<and> spfRan\<cdot>(y\<cdot>(spfLeast In Out)) = Out"
+      by (metis cfun_below_iff a1 spfdom_eq spfran_eq)
+    then have "fixg (spfLeast In Out) x \<sqsubseteq> fixg (spfLeast In Out) y"
+      by(simp add: fixg_def lub_iter_fixg_mono_req a1 True)
+    then show ?thesis
+      by (simp add: True h1)
+  next
+    case False
+    then show ?thesis
+      apply simp
+      using a1 cfun_below_iff spfdom_eq spfran_eq by blast
+  qed
+qed
+  
+lemma spfFix_cont[simp]: "cont (\<lambda> F.  if (spfDom\<cdot>(F\<cdot>(spfLeast In Out)) = In \<and> spfRan\<cdot>(F\<cdot>(spfLeast In Out)) = Out) then fixg (spfLeast In Out) F else (spfLeast In Out))"
+proof(rule Cont.contI2,simp)
+  fix Y:: "nat \<Rightarrow> ('m SPF \<rightarrow> 'm SPF)"
+  assume a1:"chain Y"
+  assume a2:"chain (\<lambda>i. if spfDom\<cdot>(Y i\<cdot>(spfLeast In Out)) = In \<and> spfRan\<cdot>(Y i\<cdot>(spfLeast In Out)) = Out then fixg (spfLeast In Out) (Y i) else spfLeast In Out)"
+  show "(if spfDom\<cdot>((\<Squnion>i. Y i)\<cdot>(spfLeast In Out)) = In \<and> spfRan\<cdot>((\<Squnion>i. Y i)\<cdot>(spfLeast In Out)) = Out then fixg (spfLeast In Out) (\<Squnion>i. Y i) else spfLeast In Out) \<sqsubseteq>
+         (\<Squnion>i. if spfDom\<cdot>(Y i\<cdot>(spfLeast In Out)) = In \<and> spfRan\<cdot>(Y i\<cdot>(spfLeast In Out)) = Out then fixg (spfLeast In Out) (Y i) else spfLeast In Out)"
+  proof(cases "spfDom\<cdot>((\<Squnion>i. Y i)\<cdot>(spfLeast In Out)) = In \<and> spfRan\<cdot>((\<Squnion>i. Y i)\<cdot>(spfLeast In Out)) = Out")
+    case True
+      have "\<forall>i. Y i \<sqsubseteq> Y (Suc i)"
+        by (simp add: a1 po_class.chainE)
+      then have h1:"\<forall>i. spfDom\<cdot>((Y i)\<cdot>(spfLeast In Out)) = In \<and> spfRan\<cdot>(Y i\<cdot>(spfLeast In Out)) = Out"
+        using True a1 cfun_below_iff is_ub_thelub spfdom_eq spfran_eq by blast
+    then show ?thesis
+      by(simp add: True h1 fixg_def chain_lub_lub_iter_fixg a1)
+  next
+    case False
+    then show ?thesis
+    proof -
+      have f1: "spfDom\<cdot>(Y elem_6\<cdot>(spfLeast In Out)) = spfDom\<cdot>(Lub Y\<cdot>(spfLeast In Out))"
+        by (meson a1 below_lub cfun_below_iff po_class.chain_def spfdom_eq)
+      have f2: "(if spfDom\<cdot>(Y elem_6\<cdot>(spfLeast In Out)) = In \<and> spfRan\<cdot>(Y elem_6\<cdot>(spfLeast In Out)) = Out then fixg (spfLeast In Out) (Y elem_6) else spfLeast In Out) \<sqsubseteq> (\<Squnion>n. if spfDom\<cdot>(Y n\<cdot>(spfLeast In Out)) = In \<and> spfRan\<cdot>(Y n\<cdot>(spfLeast In Out)) = Out then fixg (spfLeast In Out) (Y n) else spfLeast In Out)"
+        using a2 below_lub by blast
+      have "spfRan\<cdot>(Y elem_6\<cdot>(spfLeast In Out)) = spfRan\<cdot>(Lub Y\<cdot>(spfLeast In Out))"
+        by (meson a1 below_lub cfun_below_iff po_class.chain_def spfran_eq)
+    then show ?thesis
+      using f2 f1 False by presburger
+    qed
+  qed 
+qed
+
+
+lemma spfFix_apply[simp]: assumes "spfDom\<cdot>(F\<cdot>(spfLeast In Out)) = In" and "spfRan\<cdot>(F\<cdot>(spfLeast In Out)) = Out" 
+                          shows "spfFix In Out\<cdot>F = fixg (spfLeast In Out) F"
+  by(simp add: spfFix_def assms)
+    
+(*least Fixpoint*)
+    
+lemma spfFix_fix: assumes "spfDom\<cdot>(F\<cdot>(spfLeast In Out)) = In" and "spfRan\<cdot>(F\<cdot>(spfLeast In Out)) = Out" 
+                  shows "spfFix In Out\<cdot>F = F\<cdot>(spfFix In Out\<cdot>F)"
+proof(simp add: assms,rule fixg_fix, simp add: assms)
+  show "\<forall>y. y \<sqsubseteq> spfLeast In Out \<longrightarrow> spfLeast In Out = y"
+    by (simp add: assms fixg_fix po_eq_conv spfdom_eq spfran_eq)
+qed
+  
+lemma spfFix_least_fix: assumes "spfDom\<cdot>(F\<cdot>(spfLeast In Out)) = In" 
+                        and "spfRan\<cdot>(F\<cdot>(spfLeast In Out)) = Out" 
+                        and "F\<cdot>y = y" and "spfDom\<cdot>y = In" and "spfRan\<cdot>y = Out"
+                        shows "spfFix In Out\<cdot>F \<sqsubseteq> y"
+proof(simp add: assms, rule fixg_least_fix, simp_all add: assms)
+  show "\<forall>y. y \<sqsubseteq> spfLeast In Out \<longrightarrow> spfLeast In Out = y"
+    by (simp add: assms fixg_fix po_eq_conv spfdom_eq spfran_eq)
+qed
+
+  
+(*Test spfFix with id*)
+lemma "spfFix {c1} {c2}\<cdot>(\<Lambda> f. f) = spfLeast {c1} {c2}"
+  proof(subst spfFix_apply,simp,simp)
+    have "(\<Lambda> f. f)\<cdot>(spfLeast {c1} {c2}) = spfLeast {c1} {c2}"
+      by simp
+    then show "fixg (spfLeast {c1} {c2}) (\<Lambda> f. f) = spfLeast {c1} {c2}"
+      by (metis (mono_tags, lifting)  po_eq_conv spfFix_apply spfFix_least_fix spfLeast_bottom spfLeast_dom spfLeast_ran spfdom_eq spfran_eq)
+  qed
+    
+    
+subsection \<open>spfStateLeast\<close>
+        
+lemma spfStateLeast_mono: "monofun (\<lambda>x. spfLeast In Out)" 
+  by (simp add: monofunI)   
+  
+lemma spfStateLeast_cont: "cont (\<lambda>x. spfLeast In Out)"
+  by simp
+
+lemma spfStateLeast_dom [simp]: "\<forall>x. spfDom\<cdot>(spfStateLeast In Out x) = In"
+  by (metis (mono_tags, lifting) spfLeast_dom spfStateLeast_def)
+
+lemma spfStateLeast_ran[simp]: "\<forall>x. spfRan\<cdot>(spfStateLeast In Out x) = Out"
+proof - 
+  have "sbDom\<cdot>(sbLeast Out) = Out"
+    by simp
+  thus ?thesis
+    by(simp add: spfStateLeast_def)
+qed
+
+lemma spfStateLeast_apply[simp]: 
+  assumes "sbDom\<cdot>sb = In"
+  shows "\<forall>x. spfStateLeast In Out x \<rightleftharpoons> sb = sbLeast Out"
+  by(simp add: spfStateLeast_def assms)
+
+lemma spfStateLeast_bottom [simp]: assumes "\<forall>x. spfDom\<cdot>(f x) = In" and " \<forall>x. spfRan\<cdot>(f x) = Out"
+  shows "(spfStateLeast In Out) \<sqsubseteq> f"
+proof -
+  have f1: "\<forall>x. (spfStateLeast In Out x) \<sqsubseteq> f x"
+    by (simp add: assms(1) assms(2) spfStateLeast_def)
+  show ?thesis
+    by(simp add: below_fun_def f1)
+qed  
+
+subsection \<open>spfStateFix\<close>  
+
+lemma spfStateFix_mono[simp]: "monofun (\<lambda> F.  if \<forall>x. (spfDom\<cdot>((F\<cdot>(spfStateLeast In Out)) x) = In \<and> spfRan\<cdot>((F\<cdot>(spfStateLeast In Out)) x) = Out) then fixg (spfStateLeast In Out) F else (spfStateLeast In Out))"
+proof(rule monofunI)
+  fix x::"('s1::type \<Rightarrow> 'm SPF) \<rightarrow> ('s1 \<Rightarrow> 'm SPF)" and y::"('s1 \<Rightarrow>'m SPF) \<rightarrow> ('s1 \<Rightarrow>'m SPF)"
+  assume a1:"x \<sqsubseteq> y"
+  show "(if \<forall>xa. spfDom\<cdot>((x\<cdot>(spfStateLeast In Out)) xa) = In \<and> spfRan\<cdot>((x\<cdot>(spfStateLeast In Out)) xa) = Out then fixg (spfStateLeast In Out) x else spfStateLeast In Out) \<sqsubseteq>
+           (if \<forall>x. spfDom\<cdot>((y\<cdot>(spfStateLeast In Out)) x) = In \<and> spfRan\<cdot>((y\<cdot>(spfStateLeast In Out)) x) = Out then fixg (spfStateLeast In Out) y else spfStateLeast In Out)"
+  proof(cases "\<forall>xa. spfDom\<cdot>((x\<cdot>(spfStateLeast In Out)) xa) = In \<and> spfRan\<cdot>((x\<cdot>(spfStateLeast In Out)) xa) = Out")
+    case True
+    then  have h1:"\<forall>xa. spfDom\<cdot>((y\<cdot>(spfStateLeast In Out)) xa) = In \<and> spfRan\<cdot>((y\<cdot>(spfStateLeast In Out)) xa) = Out"
+      by (metis (mono_tags, lifting) a1 below_fun_def cfun_below_iff spfdom_eq spfran_eq)
+    then have "fixg (spfStateLeast In Out) x \<sqsubseteq> fixg (spfStateLeast In Out) y"
+      by(simp add: fixg_def lub_iter_fixg_mono_req a1 True)
+    then show ?thesis
+      by (simp add: True h1)
+  next
+    case False
+    then have h2: "\<not> (\<forall>xa. spfDom\<cdot>((y\<cdot>(spfStateLeast In Out)) xa) = In \<and> spfRan\<cdot>((y\<cdot>(spfStateLeast In Out)) xa) = Out)"
+      by (metis (mono_tags, lifting) a1 below_fun_def cfun_below_iff spfdom_eq spfran_eq)
+    then show ?thesis
+      by (simp add: h2 False)
+  qed
+qed
+  
+lemma spfStateFix_cont[simp]: "cont (\<lambda> F.  if \<forall>x. (spfDom\<cdot>((F\<cdot>(spfStateLeast In Out)) x) = In \<and> spfRan\<cdot>((F\<cdot>(spfStateLeast In Out)) x) = Out) then fixg (spfStateLeast In Out) F else (spfStateLeast In Out))"
+proof(rule Cont.contI2,simp)
+  fix Y:: "nat \<Rightarrow> (('s1::type \<Rightarrow>'m SPF) \<rightarrow> ('s1 \<Rightarrow>'m SPF))"
+  assume a1:"chain Y"
+  assume a2:"chain (\<lambda>i. if \<forall>x. spfDom\<cdot>((Y i\<cdot>(spfStateLeast In Out)) x) = In \<and> spfRan\<cdot>((Y i\<cdot>(spfStateLeast In Out)) x) = Out then fixg (spfStateLeast In Out) (Y i)
+                    else spfStateLeast In Out)"
+  show "(if \<forall>x. spfDom\<cdot>(((\<Squnion>i. Y i)\<cdot>(spfStateLeast In Out)) x) = In \<and> spfRan\<cdot>(((\<Squnion>i. Y i)\<cdot>(spfStateLeast In Out)) x) = Out then fixg (spfStateLeast In Out) (\<Squnion>i. Y i)
+          else spfStateLeast In Out) \<sqsubseteq>
+         (\<Squnion>i. if \<forall>x. spfDom\<cdot>((Y i\<cdot>(spfStateLeast In Out)) x) = In \<and> spfRan\<cdot>((Y i\<cdot>(spfStateLeast In Out)) x) = Out then fixg (spfStateLeast In Out) (Y i) else spfStateLeast In Out)"
+  proof(cases "\<forall>x. spfDom\<cdot>(((\<Squnion>i. Y i)\<cdot>(spfStateLeast In Out)) x) = In \<and> spfRan\<cdot>(((\<Squnion>i. Y i)\<cdot>(spfStateLeast In Out)) x) = Out")
+    case True
+      have "\<forall>i. Y i \<sqsubseteq> Y (Suc i)"
+        by (simp add: a1 po_class.chainE)
+      have f0:"\<forall>x. chain (\<lambda>i. (Y i\<cdot>(spfStateLeast In Out)) x)"
+        using a1 ch2ch_Rep_cfunL ch2ch_fun by fastforce    
+      then have h1:"\<forall>x i. spfDom\<cdot>((Y i\<cdot>(spfStateLeast In Out)) x) = In \<and> spfRan\<cdot>((Y i\<cdot>(spfStateLeast In Out)) x) = Out"
+        by (smt True a1 cfun_below_iff fun_below_iff is_ub_thelub spfdom_eq spfran_eq)
+    then show ?thesis
+      by(simp add: True h1 fixg_def chain_lub_lub_iter_fixg a1)
+  next
+    case False
+    have f0:"\<forall>x. chain (\<lambda>i. (Y i\<cdot>(spfStateLeast In Out)) x)"
+      using a1 ch2ch_Rep_cfunL ch2ch_fun by fastforce          
+    then have f1: "\<forall>x. spfDom\<cdot>((Y elem_6\<cdot>(spfStateLeast In Out)) x) = spfDom\<cdot>((\<Squnion>i. (Y i \<cdot>(spfStateLeast In Out)))x)"
+      proof -
+        have "chain (\<lambda>n. Y n\<cdot>(spfStateLeast In Out))"
+          by (metis a1 ch2ch_Rep_cfunL)
+        then show ?thesis
+          using f0 lub_fun spfdom_eq_lub by fastforce
+      qed
+    have f2:"\<forall>x. spfRan\<cdot>((Y elem_6\<cdot>(spfStateLeast In Out)) x) = spfRan\<cdot>((\<Squnion>i. Y i\<cdot>(spfStateLeast In Out)) x)"
+      proof -
+        have "\<And>f n s. \<not> chain f \<or> spfRan\<cdot>(f n (s::'s1)::'m SPF) = spfRan\<cdot>(Lub f s)"
+          by (metis (full_types) ch2ch_fun lub_fun spfran_eq_lub)
+        then show ?thesis
+          using a1 ch2ch_Rep_cfunL by blast
+      qed
+    have f3:"\<forall>i. \<not>(\<forall>x. spfDom\<cdot>((Y i\<cdot>(spfStateLeast In Out)) x) = In \<and> spfRan\<cdot>((Y i\<cdot>(spfStateLeast In Out)) x) = Out)"
+      using False spfdom_eq_lub spfdom_eq spfran_eq_lub spfran_eq a1 a2
+    proof -
+      { fix nn :: nat
+        have ff1: "\<And>f fa s. f \<notsqsubseteq> fa \<or> spfRan\<cdot>(f (s::'s1)::'m SPF) = spfRan\<cdot>(fa s)"
+          by (meson fun_below_iff spfran_eq)
+        have ff2: "\<And>f fa s. f \<notsqsubseteq> fa \<or> spfDom\<cdot>(f (s::'s1)::'m SPF) = spfDom\<cdot>(fa s)"
+          by (metis fun_below_iff spfdom_eq)
+        have "\<And>f n fa. \<not> chain f \<or> (f n\<cdot> (fa::'s1 \<Rightarrow> 'm SPF)::'s1 \<Rightarrow> 'm SPF) \<sqsubseteq> Lub f\<cdot>fa"
+          by (metis ch2ch_Rep_cfunL contlub_cfun_fun is_ub_thelub)
+        then have "\<exists>s sa. spfDom\<cdot>((Y nn\<cdot>(spfStateLeast In Out)) s) \<noteq> In \<or> spfRan\<cdot>((Y nn\<cdot>(spfStateLeast In Out)) sa) \<noteq> Out"
+          using ff2 ff1 False a1 by blast }
+      then show ?thesis
+        by meson
+    qed
+    have f4: "\<And>s n. spfRan\<cdot>(\<Squnion>n. (Y n\<cdot>(spfStateLeast In Out)) s) = spfRan\<cdot>((Y n\<cdot>(spfStateLeast In Out)) s)"
+        using f0 spfran_eq_lub by blast
+      have f5: "\<And>s n. spfDom\<cdot>(\<Squnion>n. (Y n\<cdot>(spfStateLeast In Out)) s) = spfDom\<cdot>((Y n\<cdot>(spfStateLeast In Out)) s)"
+        using f0 spfdom_eq_lub by blast
+    show ?thesis
+      by(simp add: f3 False)
+    qed 
+qed
+
+
+lemma spfStateFix_apply[simp]: assumes "\<forall>x. spfDom\<cdot>((F\<cdot>(spfStateLeast In Out)) x) = In" and "\<forall>x. spfRan\<cdot>((F\<cdot>(spfStateLeast In Out))x) = Out" shows "spfStateFix In Out\<cdot>F = fixg (spfStateLeast In Out) F"
+  by(simp add: spfStateFix_def assms)
+    
+(*least Fixpoint*)
+    
+lemma spfStateFix_fix: assumes "\<forall>x. spfDom\<cdot>((F\<cdot>(spfStateLeast In Out)) x) = In" and "\<forall>x. spfRan\<cdot>((F\<cdot>(spfStateLeast In Out))x) = Out" shows "spfStateFix In Out\<cdot>F = F\<cdot>(spfStateFix In Out\<cdot>F)"
+proof(simp add: assms,rule fixg_fix, simp add: assms)
+  show "\<forall>y. y \<sqsubseteq> spfStateLeast In Out \<longrightarrow> spfStateLeast In Out = y"
+    by (smt below_antisym below_fun_def spfLeast_bottom spfStateLeast_def spfStateLeast_dom spfStateLeast_ran spfdom_eq spfran_eq)
+qed
+  
+lemma spfStateFix_least_fix: assumes "\<forall>x. spfDom\<cdot>((F\<cdot>(spfStateLeast In Out)) x) = In" 
+                             and "\<forall>x. spfRan\<cdot>((F\<cdot>(spfStateLeast In Out))x) = Out" 
+                             and "F\<cdot>y = y" and "\<forall>x. spfDom\<cdot>(y x) = In" and "\<forall>x. spfRan\<cdot>(y x) = Out"
+                           shows "spfStateFix In Out\<cdot>F \<sqsubseteq> y"
+proof(simp add: assms, rule fixg_least_fix, simp_all add: assms)
+  show "\<forall>y. y \<sqsubseteq> spfStateLeast In Out \<longrightarrow> spfStateLeast In Out = y"
+    by (smt below_antisym below_fun_def spfLeast_bottom spfStateLeast_def spfStateLeast_dom spfStateLeast_ran spfdom_eq spfran_eq)
+qed
+
+(*Test spfStateFix with id*)
+
+lemma "spfStateFix {c1} {c2}\<cdot>(\<Lambda> f. f) = spfStateLeast {c1} {c2}"
+proof(subst spfStateFix_apply,simp,simp)
+  have f1:"(\<Lambda> f. f)\<cdot>(spfStateLeast {c1} {c2}) = spfStateLeast {c1} {c2}"
+    by(simp)
+  then have f2:"fixg (spfStateLeast {c1} {c2}) (\<Lambda> f. f) \<sqsubseteq> spfStateLeast {c1} {c2}"
+    by (metis spfStateFix_apply spfStateFix_least_fix spfStateLeast_dom spfStateLeast_ran)
+  then have f3:" spfStateLeast {c1} {c2} \<sqsubseteq> fixg (spfStateLeast {c1} {c2})(\<Lambda> f. f)"
+    by (smt fun_below_iff spfLeast_bottom spfStateLeast_def spfStateLeast_dom spfStateLeast_ran spfdom_eq spfran_eq)
+  show "fixg (spfStateLeast {c1} {c2}) (\<Lambda> f. f) = spfStateLeast {c1} {c2}"
+    using f2 f3 below_antisym by auto
+qed
+  
+section \<open>Lemmas for Composition\<close>
   (* this is only a part of the composition related lemmata, see SPF_Comp.thy *)
     
 subsection \<open>spfCompH\<close>
