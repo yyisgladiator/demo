@@ -84,6 +84,14 @@ section\<open>Lemmas\<close>
 (****************************************************) 
 subsection \<open>General Lemmas\<close>
 
+lemma uspec_wellI: assumes "\<forall> f \<in> S. ufclDom\<cdot>f = In" and "\<forall> f \<in> S. ufclRan\<cdot>f = Out"
+  shows "uspecWell S"
+  apply (simp add: uspecWell_def)
+  apply (rule_tac x= "In" in exI)
+  apply (rule_tac x= "Out" in exI)
+  using assms(1) assms(2) by auto
+
+
 (* rule to prove the equality of uspec *)
 lemma uspec_eqI: assumes "((inv Rev) (Rep_uspec S1)) = ((inv Rev) (Rep_uspec S2))"
   shows "S1 = S2"
@@ -165,6 +173,13 @@ lemma empty_max: "\<And> uspec. uspec \<sqsubseteq> (Abs_uspec (Rev {}))"
   apply (subst rep_abs_rev_simp, simp)
   by (simp add: SetPcpo.less_set_def)
 
+lemma not_uspec_consisten_empty_eq: assumes "\<not> uspecIsConsistent S"
+  shows "Rep_rev_uspec S = {}"
+  using assms by (simp add: uspecIsConsistent_def assms)
+
+lemma uspec_consist_f_ex: assumes "uspecIsConsistent S" shows "\<exists> f. f \<in> Rep_rev_uspec S"
+  using assms uspecIsConsistent_def by auto
+
 subsection \<open>Dom and Ran\<close>
 
 (* dom of of two consitent uspec is eq  *)
@@ -207,9 +222,15 @@ lemma uspec_allRan: "\<exists>Out. \<forall>f\<in>inv Rev (Rep_uspec S1). ufclRa
 lemma uspec_dom_eq: assumes "f \<in> (inv Rev) (Rep_uspec S)" shows "ufclDom\<cdot>f = uspecDom S"
   by (metis (full_types) assms empty_iff some_in_eq uspec_allDom uspecDom_def)
 
+lemma uspec_dom_eq2: assumes "uspecIsConsistent S" shows "\<forall> f \<in> Rep_rev_uspec S. ufclDom\<cdot>f = uspecDom S"
+  by (simp add: uspec_dom_eq)
+
 (* *)
 lemma uspec_ran_eq: assumes "f \<in> (inv Rev) (Rep_uspec S)" shows "ufclRan\<cdot>f = uspecRan S"
   by (metis (mono_tags, lifting) Quotient_rel_rep Quotient_to_Domainp Quotient_uspec 
       assms some_eq_ex uspec.domain_eq uspec.pcr_cr_eq uspecRan_def uspecWell_def)
+
+lemma uspec_ran_eq2: assumes "uspecIsConsistent S" shows "\<forall> f \<in> Rep_rev_uspec S. ufclRan\<cdot>f = uspecRan S"
+  by (simp add: uspec_ran_eq)
 
 end

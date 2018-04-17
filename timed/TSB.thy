@@ -197,8 +197,52 @@ lemma tsbttake_below [simp]: fixes tb:: "'m tstream\<^sup>\<Omega>"
 
 lemma tsbttake_lub [simp] : fixes tb:: "'m tstream\<^sup>\<Omega>"
   shows "(\<Squnion>i. (tb \<down> i)) = tb"
-  apply (rule ub_eq)
-  oops
+proof (rule ub_eq)
+  have f0: "chain (\<lambda> i. tb \<down> i)"
+    apply (rule chainI)
+    by (metis tsbttake2ttakeI tsbttake_dom tstake_below ub_below)
+  show "ubDom\<cdot>(\<Squnion>i::nat. (tb \<down> i)) = ubDom\<cdot>tb"
+    using f0 tsbttake_dom ubdom_chain_eq2 by blast
+next 
+  fix c::channel
+  assume a0: "c \<in> ubDom\<cdot>(\<Squnion>i::nat. (tb \<down> i))"
+  obtain Y where Y_def: "Y \<equiv> (\<lambda> i. tb \<down> i)"
+    by simp
+  have f00: "chain Y"
+    apply (rule chainI)
+    by (metis Y_def tsbttake2ttakeI tsbttake_dom tstake_below ub_below)
+  have f01: "chain (\<lambda> i. tb \<down> i)"
+    using Y_def f00 by auto 
+  have f02: "chain (\<lambda> i. (Y i) . c)"
+    by (simp add: f00)
+  have f03: "range (\<lambda> i. (Y i) . c) <| tb . c"
+    by (simp add: Y_def cont_pref_eq1I ub_rangeI)
+  have f04: "\<And> ub. range (\<lambda> i. (Y i) . c) <| ub \<longrightarrow> tb . c \<sqsubseteq> ub"
+  proof (rule, case_tac "#\<surd> (tb . c) = \<infinity>")
+    fix ub :: "'m tstream"
+    assume a1: "range (\<lambda>i. Y i . c) <| ub"
+    assume "#\<surd> tb . c = \<infinity>"
+    have "c \<in> ubDom\<cdot>tb"
+      using a0 f01 tsbttake_dom ubdom_chain_eq2 by blast
+    then have "range (tsTake_abbrv (tb . c)) <| ub"
+      using a1 by (simp add: Y_def)
+    then show "tb . c \<sqsubseteq> ub"
+      using is_lub_thelub by force
+  next
+    fix ub :: "'m tstream"
+    assume a1: "range (\<lambda>i. Y i . c) <| ub"
+    assume "#\<surd> tb . c \<noteq> \<infinity>"
+    have "c \<in> ubDom\<cdot>tb"
+      using a0 f01 tsbttake_dom ubdom_chain_eq2 by blast
+    then have "range (tsTake_abbrv (tb . c)) <| ub"
+      using a1 by (simp add: Y_def)
+    then show "tb . c \<sqsubseteq> ub"
+      by (metis monofun_cfun_arg tsTake2take ts_take_below ub_rangeD)
+  qed
+  show "(\<Squnion>i::nat. (tb \<down> i))  .  c = tb  .  c"
+    apply (simp add: contlub_cfun_arg f01)
+    by (metis (mono_tags, lifting) Y_def f02 f03 f04 is_lub_thelub is_ub_thelub lub_eq po_eq_conv ub_rangeI)
+qed
 
 
 subsubsection \<open>tsbTTakeL\<close>

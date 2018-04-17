@@ -164,6 +164,20 @@ lemma cont_Abs_UB[simp]: assumes "cont g" and "\<forall>x. ubWell (g x)"
   shows "cont (\<lambda>x. Abs_ubundle (g x))"
   by (simp add: assms(1) assms(2) cont_Abs_ubundle)
 
+lemma ubabs_lub[simp]: assumes "chain Y" and "\<And> i. ubWell (Y i)"
+  shows "(\<Squnion> i. Abs_ubundle (Y i)) = Abs_ubundle (\<Squnion> i. Y i)"
+proof -
+  have f0: "ubWell (\<Squnion> i. Y i)"
+    using adm_def assms(1) assms(2) ubWell_adm by blast
+  have f1: "chain (\<lambda> i. Abs_ubundle (Y i))"
+    apply (rule chainI)
+    by (simp add: assms(1) assms(2) below_ubundle_def po_class.chainE)
+  have f2: "Rep_ubundle (\<Squnion> i. Abs_ubundle (Y i)) = Rep_ubundle (Abs_ubundle (\<Squnion> i. Y i))"
+    by (metis (mono_tags, lifting) assms(2) f1 lub_eq lub_ubundle ubrep_ubabs)
+  show ?thesis
+    by (metis f2 ubabs_ubrep)
+qed
+
 (* a chain of 'M\<^sup>\<Omega>s is also a chain after applying Rep_ubundle *)
 lemma ubrep_chain[simp]: assumes "chain S"
   shows "chain (\<lambda>n. Rep_ubundle (S n))"
@@ -281,6 +295,10 @@ lemma ubdom_chain_eq2[simp]: assumes "chain S"
 lemma ubdom_lub: assumes "chain Y" and "ubDom\<cdot>(Y i) = cs"
   shows "ubDom\<cdot>(\<Squnion> i. Y i) = cs"
   using assms(1) assms(2) by auto
+
+lemma ubdom_lub2: assumes "chain Y"
+  shows "ubDom\<cdot>(\<Squnion> i. Y i) = (\<Squnion> i. ubDom\<cdot>(Y i))"
+  using assms by auto
 
 lemma ubdom_channel_usokay[simp]: assumes "c \<in> ubDom\<cdot>ub"
   shows "usclOkay c ((Rep_ubundle ub)\<rightharpoonup>c)"
@@ -452,6 +470,10 @@ proof -
   then show ?thesis             
     using assms(1) cont2contlubE eq_imp_below by blast
 qed
+
+lemma ubrestrict_lub: assumes "chain Y"
+  shows "(\<Squnion>i. Y i) \<bar> cs = (\<Squnion>i. (Y i) \<bar> cs)"
+  using assms contlub_cfun_arg by auto
 
 
 subsection \<open>ubLen\<close>
