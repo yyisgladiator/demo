@@ -533,4 +533,48 @@ lemma sbHdElem_cont: "cont (\<lambda> sb::'a stream ubundle. (\<lambda>c. (c \<i
   apply (simp add: sbHdElem_mono)
   using sbHdElem_cont_pre by blast
 
+(* ----------------------------------------------------------------------- *)
+  subsection \<open>Automaton\<close>
+(* ----------------------------------------------------------------------- *)
+
+lemma convDiscrUp2 : "convDiscrUp \<equiv> \<lambda>sb. (\<lambda>c. (c \<in> dom sb) \<leadsto> (Iup (Discr (sb \<rightharpoonup> c))))"
+  sorry
+
+lemma test_dom: "dom (convDiscrUp g) = dom g"
+  by(simp add: convDiscrUp_def)
+
+lemma test_inj: "inj convDiscrUp"
+  apply(rule injI)
+  apply(simp add: convDiscrUp_def)
+  by (metis (no_types, lifting) Collect_cong dom_def mem_Collect_eq option.distinct(1) option.inject part_eq u.inject undiscr_Discr)
+
+lemma test_iup_surj: "surj Iup"
+  sorry
+
+lemma test_discr_surj: "surj Discr"
+  sorry
+
+lemma test_pre_surj: "surj (\<lambda>sb. \<lambda>c. (c \<in> dom sb) \<leadsto> (sb \<rightharpoonup> c))"
+  sorry
+
+lemma test_surj: "surj convDiscrUp"
+  apply(rule surjI)
+  apply(subst convDiscrUp2)
+  sorry
+
+lemma test_bij: "bij convDiscrUp"
+  by (simp add: bij_betw_def test_inj test_surj)
+
+(* lemma test_inj2: "inj Iup"
+  by (simp add: inj_def)
+
+lemma test_inj3: "inj Discr"
+  by (simp add: inj_def) *)
+
+lemma test_double: "convDiscrUp (inv convDiscrUp f) = f"
+  by (simp add: surj_f_inv_f test_surj)
+
+lemma convdiscrup_inv_dom_eq[simp]: "dom (inv convDiscrUp f) = dom f"
+  by (metis test_dom test_double)
+
 end
