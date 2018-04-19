@@ -121,21 +121,23 @@ proof -
 qed
 
 (*spfStateFix lemmas*)  
-lemma spfsl_below_spfsf:"spfStateLeast In Out \<sqsubseteq> spfStateFix In Out\<cdot>f"
-  proof(simp add: spfStateFix_def, auto)
-    assume a1:"\<forall>x::'a. UFun.ufDom\<cdot>((f\<cdot>(spfStateLeast In Out)) x) = In \<and> UFun.ufRan\<cdot>((f\<cdot>(spfStateLeast In Out)) x) = Out"
-    then have "spfStateLeast In Out \<sqsubseteq> (f\<cdot>(spfStateLeast In Out))"
-      by simp
-    then show"spfStateLeast In Out \<sqsubseteq> fixg (spfStateLeast In Out) f" 
-     by (smt fixg_def below_lub iterate_0 iterate_Suc2 monofunE monofun_Rep_cfun2 po_class.chain_def)
-  qed
-    
+lemma spfsl_below_spfsf: "spfStateLeast In Out \<sqsubseteq> spfStateFix In Out\<cdot>F"
+proof (simp add: spfStateFix_def, simp add: fixg_def)
+  have "\<forall>x0 x1. ((x1::'a \<Rightarrow> 'b stream\<^sup>\<Omega> \<Rrightarrow> 'b stream\<^sup>\<Omega>) \<sqsubseteq> (if x1 \<sqsubseteq> x0\<cdot>x1 then \<Squnion>uub. iterate uub\<cdot>x0\<cdot>x1 else x1)) = (if x1 \<sqsubseteq> x0\<cdot>x1 then x1 \<sqsubseteq> (\<Squnion>uub. iterate uub\<cdot>x0\<cdot>x1) else x1 \<sqsubseteq> x1)"
+    by simp
+  then show "spfStateLeast In Out \<sqsubseteq> F\<cdot>(spfStateLeast In Out) \<longrightarrow> spfStateLeast In Out \<sqsubseteq> (\<Squnion>n. iterate n\<cdot>F\<cdot>(spfStateLeast In Out))"
+    by (metis (no_types) fixg_pre)
+qed
+
+
 lemma spfstatefix_dom:"ufDom\<cdot>((spfStateFix In Out\<cdot> f) s) = In"
-  by (metis below_fun_def spfsl_below_spfsf spfStateLeast_dom ufdom_below_eq)
+  by (metis (mono_tags) below_fun_def spfStateLeast_def spfsl_below_spfsf ufdom_below_eq ufleast_ufdom)
+(*  by (metis below_fun_def spfsl_below_spfsf spfStateLeast_dom ufdom_below_eq) *)
   
     
 lemma spfstatefix_ran:"ufRan\<cdot>((spfStateFix In Out\<cdot> f) s) = Out"
-  by (metis below_fun_def spfsl_below_spfsf spfStateLeast_ran ufran_below)
+  by (metis below_fun_def spfStateLeast_ran spfsl_below_spfsf ufran_below)
+
 (*spfStateFix lemmas end*) 
     
 (*Sorrys*)

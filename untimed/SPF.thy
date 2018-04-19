@@ -12,7 +12,7 @@ definition spfStateLeast :: "channel set \<Rightarrow> channel set \<Rightarrow>
 "spfStateLeast In Out \<equiv> (\<lambda> x. ufLeast In Out)"
 
 definition spfStateFix ::"channel set \<Rightarrow> channel set \<Rightarrow>(('s1::type \<Rightarrow>'m SPF) \<rightarrow> ('s1 \<Rightarrow>'m SPF)) \<rightarrow> ('s1 \<Rightarrow> 'm SPF)" where
-"spfStateFix In Out \<equiv> (\<Lambda> F.  if \<forall>x. (ufDom\<cdot>((F\<cdot>(spfStateLeast In Out)) x) = In \<and> ufRan\<cdot>((F\<cdot>(spfStateLeast In Out)) x) = Out) then fixg (spfStateLeast In Out) F else (spfStateLeast In Out))"
+"spfStateFix In Out \<equiv> (\<Lambda> F.  fixg (spfStateLeast In Out)\<cdot>F)"
 
 
 section \<open>Definitions with spfApplyIn\<close>
@@ -84,100 +84,50 @@ proof -
     by(simp add: below_fun_def f1)
 qed
 
+lemma spfStateLeast_least [simp]: "spfStateLeast In Out \<sqsubseteq> z \<and> y \<sqsubseteq> z \<longrightarrow> spfStateLeast In Out \<sqsubseteq> y"
+proof -
+  fix y :: "'a \<Rightarrow> 'b stream\<^sup>\<Omega> \<Rrightarrow> 'b stream\<^sup>\<Omega>" and z :: "'a \<Rightarrow> 'b stream\<^sup>\<Omega> \<Rrightarrow> 'b stream\<^sup>\<Omega>"
+  obtain aa :: "('a \<Rightarrow> 'b stream\<^sup>\<Omega> \<Rrightarrow> 'b stream\<^sup>\<Omega>) \<Rightarrow> channel set \<Rightarrow> 'a" and aaa :: "('a \<Rightarrow> 'b stream\<^sup>\<Omega> \<Rrightarrow> 'b stream\<^sup>\<Omega>) \<Rightarrow> channel set \<Rightarrow> 'a" where
+    f1: "\<And>f C Ca. UFun.ufRan\<cdot>(f (aa f C)) \<noteq> C \<or> UFun.ufDom\<cdot>(f (aaa f Ca)) \<noteq> Ca \<or> spfStateLeast Ca C \<sqsubseteq> f"
+    by (meson spfStateLeast_bottom)
+  { assume "UFun.ufRan\<cdot>(y (aa y Out)) = Out"
+    then have "(\<exists>a. UFun.ufDom\<cdot>(y a) \<noteq> In) \<or> UFun.ufRan\<cdot>(y (aa y Out)) = Out \<and> UFun.ufDom\<cdot>(y (aaa y In)) = In"
+      by metis
+    then have "(\<exists>a. y a \<notsqsubseteq> z a) \<or> (spfStateLeast In Out \<sqsubseteq> z \<and> y \<sqsubseteq> z \<longrightarrow> spfStateLeast In Out \<sqsubseteq> y)"
+      using f1 by (metis (no_types) fun_belowD spfStateLeast_def ufdom_below_eq ufleast_ufdom) }
+  then show "spfStateLeast In Out \<sqsubseteq> z \<and> y \<sqsubseteq> z \<longrightarrow> spfStateLeast In Out \<sqsubseteq> y"
+    by (metis (no_types) fun_belowD spfStateLeast_def ufleast_ufRan ufran_below)
+qed
+
+
 subsection \<open>spfStateFix\<close>
 
-lemma spfStateFix_mono[simp]: "monofun (\<lambda> F.  if \<forall>x. (ufDom\<cdot>((F\<cdot>(spfStateLeast In Out)) x) = In \<and> ufRan\<cdot>((F\<cdot>(spfStateLeast In Out)) x) = Out) then fixg (spfStateLeast In Out) F else (spfStateLeast In Out))"
-proof(rule monofunI)
-  fix x::"('s1::type \<Rightarrow> 'm SPF) \<rightarrow> ('s1 \<Rightarrow> 'm SPF)" and y::"('s1 \<Rightarrow>'m SPF) \<rightarrow> ('s1 \<Rightarrow>'m SPF)"
-  assume a1:"x \<sqsubseteq> y"
-  show "(if \<forall>xa. ufDom\<cdot>((x\<cdot>(spfStateLeast In Out)) xa) = In \<and> ufRan\<cdot>((x\<cdot>(spfStateLeast In Out)) xa) = Out then fixg (spfStateLeast In Out) x else spfStateLeast In Out) \<sqsubseteq>
-           (if \<forall>x. ufDom\<cdot>((y\<cdot>(spfStateLeast In Out)) x) = In \<and> ufRan\<cdot>((y\<cdot>(spfStateLeast In Out)) x) = Out then fixg (spfStateLeast In Out) y else spfStateLeast In Out)"
-  proof(cases "\<forall>xa. ufDom\<cdot>((x\<cdot>(spfStateLeast In Out)) xa) = In \<and> ufRan\<cdot>((x\<cdot>(spfStateLeast In Out)) xa) = Out")
-    case True
-    then  have h1:"\<forall>xa. ufDom\<cdot>((y\<cdot>(spfStateLeast In Out)) xa) = In \<and> ufRan\<cdot>((y\<cdot>(spfStateLeast In Out)) xa) = Out"
-      by (metis (mono_tags, lifting) a1 cfun_below_iff fun_below_iff ufdom_below_eq ufran_below)
-    then have "fixg (spfStateLeast In Out) x \<sqsubseteq> fixg (spfStateLeast In Out) y"
-      by(simp add: fixg_def lub_iter_fixg_mono_req a1 True)
-    then show ?thesis
-      by (simp add: True h1)
-  next
-    case False
-    then have h2: "\<not> (\<forall>xa. ufDom\<cdot>((y\<cdot>(spfStateLeast In Out)) xa) = In \<and> ufRan\<cdot>((y\<cdot>(spfStateLeast In Out)) xa) = Out)"
-      by (metis (mono_tags, lifting) a1 cfun_below_iff fun_below_iff ufdom_below_eq ufran_below)
-    then show ?thesis
-      by (simp add: h2 False)
-  qed
-qed
+lemma spfStateFix_mono[simp]: "monofun (\<lambda> F.  fixg (spfStateLeast In Out)\<cdot>F)"
+  by (simp add: monofun_Rep_cfun2)
 
-lemma spfStateFix_cont[simp]: "cont (\<lambda> F.  if \<forall>x. (ufDom\<cdot>((F\<cdot>(spfStateLeast In Out)) x) = In \<and> ufRan\<cdot>((F\<cdot>(spfStateLeast In Out)) x) = Out) then fixg (spfStateLeast In Out) F else (spfStateLeast In Out))"
-proof(rule Cont.contI2,simp)
-  fix Y:: "nat \<Rightarrow> (('s1::type \<Rightarrow>'m SPF) \<rightarrow> ('s1 \<Rightarrow>'m SPF))"
-  assume a1:"chain Y"
-  assume a2:"chain (\<lambda>i. if \<forall>x. ufDom\<cdot>((Y i\<cdot>(spfStateLeast In Out)) x) = In \<and> ufRan\<cdot>((Y i\<cdot>(spfStateLeast In Out)) x) = Out then fixg (spfStateLeast In Out) (Y i)
-                    else spfStateLeast In Out)"
-  show "(if \<forall>x. ufDom\<cdot>(((\<Squnion>i. Y i)\<cdot>(spfStateLeast In Out)) x) = In \<and> ufRan\<cdot>(((\<Squnion>i. Y i)\<cdot>(spfStateLeast In Out)) x) = Out then fixg (spfStateLeast In Out) (\<Squnion>i. Y i)
-          else spfStateLeast In Out) \<sqsubseteq>
-         (\<Squnion>i. if \<forall>x. ufDom\<cdot>((Y i\<cdot>(spfStateLeast In Out)) x) = In \<and> ufRan\<cdot>((Y i\<cdot>(spfStateLeast In Out)) x) = Out then fixg (spfStateLeast In Out) (Y i) else spfStateLeast In Out)"
-  proof(cases "\<forall>x. ufDom\<cdot>(((\<Squnion>i. Y i)\<cdot>(spfStateLeast In Out)) x) = In \<and> ufRan\<cdot>(((\<Squnion>i. Y i)\<cdot>(spfStateLeast In Out)) x) = Out")
-    case True
-      have "\<forall>i. Y i \<sqsubseteq> Y (Suc i)"
-        by (simp add: a1 po_class.chainE)
-      have f0:"\<forall>x. chain (\<lambda>i. (Y i\<cdot>(spfStateLeast In Out)) x)"
-        using a1 ch2ch_Rep_cfunL ch2ch_fun by fastforce
-      then have h1:"\<forall>x i. ufDom\<cdot>((Y i\<cdot>(spfStateLeast In Out)) x) = In \<and> ufRan\<cdot>((Y i\<cdot>(spfStateLeast In Out)) x) = Out"
-        by (smt True a1 cfun_below_iff fun_below_iff is_ub_thelub ufdom_below_eq ufran_below)
-    then show ?thesis
-      by(simp add: True h1 fixg_def chain_lub_lub_iter_fixg a1)
-  next
-    case False
-    have f0:"\<forall>x. chain (\<lambda>i. (Y i\<cdot>(spfStateLeast In Out)) x)"
-      using a1 ch2ch_Rep_cfunL ch2ch_fun by fastforce
-    then have f1: "\<forall>x. ufDom\<cdot>((Y elem_6\<cdot>(spfStateLeast In Out)) x) = ufDom\<cdot>((\<Squnion>i. (Y i \<cdot>(spfStateLeast In Out)))x)"
-      proof -
-        have "chain (\<lambda>n. Y n\<cdot>(spfStateLeast In Out))"
-          by (metis a1 ch2ch_Rep_cfunL)
-        then show ?thesis
-          using ch2ch_fun lub_fun ufdom_lub_eq by fastforce
-      qed
-    have f2:"\<forall>x. ufRan\<cdot>((Y elem_6\<cdot>(spfStateLeast In Out)) x) = ufRan\<cdot>((\<Squnion>i. Y i\<cdot>(spfStateLeast In Out)) x)"
-      proof -
-        have "\<And>f n s. \<not> chain f \<or> ufRan\<cdot>(f n (s::'s1)::'m SPF) = ufRan\<cdot>(Lub f s)"
-          by (metis ch2ch_fun is_ub_thelub lub_fun ufran_below)
-        then show ?thesis
-          using a1 ch2ch_Rep_cfunL by blast
-      qed
-    have f3:"\<forall>i. \<not>(\<forall>x. ufDom\<cdot>((Y i\<cdot>(spfStateLeast In Out)) x) = In \<and> ufRan\<cdot>((Y i\<cdot>(spfStateLeast In Out)) x) = Out)"
-      by (smt False a1 fun_belowD is_ub_thelub monofun_cfun_fun ufdom_below_eq ufran_below)
-    have f4: "\<And>s n. ufRan\<cdot>(\<Squnion>n. (Y n\<cdot>(spfStateLeast In Out)) s) = ufRan\<cdot>((Y n\<cdot>(spfStateLeast In Out)) s)"
-      using f0 is_ub_thelub ufran_below by blast
-      have f5: "\<And>s n. ufDom\<cdot>(\<Squnion>n. (Y n\<cdot>(spfStateLeast In Out)) s) = ufDom\<cdot>((Y n\<cdot>(spfStateLeast In Out)) s)"
-        using f0 ufdom_lub_eq by fastforce
-    show ?thesis
-      by(simp add: f3 False)
-    qed
-qed
+lemma spfStateFix_cont[simp]: "cont (\<lambda> F.  fixg (spfStateLeast In Out)\<cdot>F)"
+  by simp
 
 
-lemma spfStateFix_apply: assumes "\<forall>x. ufDom\<cdot>((F\<cdot>(spfStateLeast In Out)) x) = In" and "\<forall>x. ufRan\<cdot>((F\<cdot>(spfStateLeast In Out))x) = Out" shows "spfStateFix In Out\<cdot>F = fixg (spfStateLeast In Out) F"
-  by(simp add: spfStateFix_def assms)
+lemma spfStateFix_apply: "spfStateFix In Out\<cdot>F = fixg (spfStateLeast In Out)\<cdot>F"
+  by(simp add: spfStateFix_def )
 
 (*least Fixpoint*)
 
-lemma spfStateFix_fix: assumes "\<forall>x. ufDom\<cdot>((F\<cdot>(spfStateLeast In Out)) x) = In" and "\<forall>x. ufRan\<cdot>((F\<cdot>(spfStateLeast In Out))x) = Out" shows "spfStateFix In Out\<cdot>F = F\<cdot>(spfStateFix In Out\<cdot>F)"
-proof(simp add: assms spfStateFix_apply,rule fixg_fix, simp add: assms)
-  show "\<forall>y. y \<sqsubseteq> spfStateLeast In Out \<longrightarrow> spfStateLeast In Out = y"
-    by (smt fun_below_iff po_eq_conv spfStateLeast_def ufLeast_bottom ufdom_below_eq ufleast_ufRan ufleast_ufdom ufran_below)
-qed
+lemma spfStateFix_fix:  assumes "spfStateLeast In Out \<sqsubseteq> F\<cdot>(spfStateLeast In Out)"
+  shows "spfStateFix In Out\<cdot>F = F\<cdot>(spfStateFix In Out\<cdot>F)"
+  by (metis (no_types, hide_lams) assms eta_cfun fixg_fix spfStateFix_def spfStateLeast_least)
 
-lemma spfStateFix_least_fix: assumes "\<forall>x. ufDom\<cdot>((F\<cdot>(spfStateLeast In Out)) x) = In"
+
+lemma spfStateFix_least_fix: (* assumes "\<forall>x. ufDom\<cdot>((F\<cdot>(spfStateLeast In Out)) x) = In"
                              and "\<forall>x. ufRan\<cdot>((F\<cdot>(spfStateLeast In Out))x) = Out"
                              and "F\<cdot>y = y" and "\<forall>x. ufDom\<cdot>(y x) = In" and "\<forall>x. ufRan\<cdot>(y x) = Out"
-                           shows "spfStateFix In Out\<cdot>F \<sqsubseteq> y"
-proof(simp add: assms spfStateFix_apply, rule fixg_least_fix, simp_all add: assms)
-  show "\<forall>y. y \<sqsubseteq> spfStateLeast In Out \<longrightarrow> spfStateLeast In Out = y"
-    by (smt fun_below_iff po_eq_conv spfStateLeast_def ufLeast_bottom ufdom_below_eq ufleast_ufRan ufleast_ufdom ufran_below)
-qed
-
+*)  assumes "spfStateLeast In Out \<sqsubseteq> F\<cdot>(spfStateLeast In Out)"
+and "F\<cdot>y = y" and "\<forall>x. ufDom\<cdot>(y x) = In" and "\<forall>x. ufRan\<cdot>(y x) = Out"
+shows "spfStateFix In Out\<cdot>F \<sqsubseteq> y"
+  apply (simp add: spfStateFix_apply)
+  apply (rule fixg_least_fix)
+  by ( simp_all add: assms)
 
 
 lemma spf_eq: assumes "ufDom\<cdot>uf1 = ufDom\<cdot>uf2"
