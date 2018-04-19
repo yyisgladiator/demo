@@ -7,7 +7,7 @@
 
 theory Automaton
 
-imports "../SPF" "../../Event" "../SpfStep"
+imports "../SPF" "../../inc/Event" "../SpfStep"
 begin
 default_sort type
 
@@ -23,12 +23,26 @@ section \<open>Backend Signatures\<close>
 (* The content is:
   transition function \<times> initial state \<times> initial Output \<times> input domain \<times> output domain *)
 
-definition automaton_well::"(('state \<times>(channel \<rightharpoonup> 'm)) \<Rightarrow> ('state \<times> 'm SB)) \<times> 'state \<times> 'm SB \<times> channel set \<times> channel set \<Rightarrow> bool " where
-"automaton_well automaton = finite (fst(snd(snd(snd automaton))))"
+(* Converter function. *)
+  (* definition should be right, but needs to be nicer *)
 
-typedef ('state::type, 'm::message) automaton = 
-  "{f::(('state \<times>(channel \<rightharpoonup> 'm)) \<Rightarrow> ('state \<times> 'm SB)) \<times> 'state \<times> 'm SB \<times> channel set \<times> channel set. True}"
-  by blast
+
+fun automaton_well::"((('state \<times>(channel \<rightharpoonup> 'm::message)) \<Rightarrow> ('state \<times> 'm SB)) \<times> 'state \<times> 'm SB \<times> channel set \<times> channel set) \<Rightarrow> bool " where
+"automaton_well (transition, initialState, initialOut, chIn, chOut) = (finite chIn \<and> (\<forall>s f. dom f = chIn \<longrightarrow> ubDom\<cdot>(snd(transition (s,f))) = chOut))"
+
+lemma automaton_wellI: assumes "finite In" and "\<And>s f. dom f = In \<Longrightarrow> ubDom\<cdot>(snd(transition (s,f))) = Out" shows "automaton_well (transition, initialState, initialOut, In, Out)"
+by(simp add: assms)
+
+
+lemma automaton_ex:"automaton_well ((\<lambda>f. (myState, ubLeast {})), State, ubLeast {}, {}, {})"
+  by(rule automaton_wellI,auto)
+
+
+
+typedef ('state::type, 'm::message) automaton =
+  "{f::(('state \<times>(channel \<rightharpoonup> 'm)) \<Rightarrow> ('state \<times> 'm SB)) \<times> 'state \<times> 'm SB \<times> channel set \<times> channel set. automaton_well f}"
+  using automaton_ex exI automaton_wellI  by fastforce
+
 setup_lifting type_definition_automaton
 
 definition getTransition :: "('s, 'm::message) automaton \<Rightarrow> (('s \<times>(channel \<rightharpoonup> 'm)) \<Rightarrow> ('s \<times> 'm SB))" where
@@ -51,14 +65,14 @@ definition getRan :: "('s, 'm::message) automaton \<Rightarrow> channel set" whe
 (* thm spfStateFix_def *)
 (* definition myFixxer :: "channel set \<Rightarrow> channel set \<Rightarrow> (('s \<Rightarrow> 'm::message SPF)\<rightarrow>('s \<Rightarrow> 'm SPF)) \<rightarrow> ('s \<Rightarrow> 'm SPF)" where
 "myFixxer = undefined" *)
-(* is defined in spfStep.thy 
+(* is defined in spfStep.thy
 definition spfStep :: "channel set\<Rightarrow> channel set \<Rightarrow> ((channel \<Rightarrow> 'm option) \<Rightarrow> 'm SPF) \<rightarrow> 'm SPF" where
 "spfStep = undefined"
 *)
 (* Defined by SWS *)
 (* thm spfApplyIn_def
 thm spfRt_def *)
-(* 
+(*
 definition spfRt :: "'m SPF \<rightarrow> 'm SPF" where
 "spfRt = undefined"
 *)
@@ -71,10 +85,8 @@ definition spfCons :: "'m SB \<Rightarrow> 'm SPF \<rightarrow> 'm SPF" where
 "spfCons = undefined"
 *)
 
-(* Converter function. *)
-  (* definition should be right, but needs to be nicer *)
 definition helper:: "(('s \<times>'e) \<Rightarrow> ('s \<times> 'm::message  SB)) \<Rightarrow> 's \<Rightarrow> ('s \<Rightarrow> 'm SPF) \<rightarrow> ('e \<Rightarrow> 'm SPF)" where
-"helper f s \<equiv> \<Lambda> h. (\<lambda> e. spfRt\<cdot>(spfConc (snd (f (s,e)))\<cdot>(h (fst (f (s,e))))))" 
+"helper f s \<equiv> \<Lambda> h. (\<lambda> e. spfRt\<cdot>(spfConc (snd (f (s,e)))\<cdot>(h (fst (f (s,e))))))"
 
 lemma helper_cont: "cont (\<lambda>h. (\<lambda> e. spfConc (snd (f (s,e)))\<cdot>(h (fst (f (s,e))))))"
   by simp
@@ -95,31 +107,141 @@ definition H :: "('s, 'm::message) automaton \<Rightarrow> 'm SPF" where
 
 
 
-section \<open>stuff i need in spfStep\<close>
-lemma stepstep_step: "spfStep In Out\<cdot>f\<rightleftharpoons>sb = (f ((inv convDiscrUp)(sbHdElem\<cdot>sb)))\<rightleftharpoons>sb"
+
+
+lemma automat_well[simp]:"automaton_well (Rep_automaton automat)"
+  using Rep_automaton by auto
+
+lemma automat_finite_dom[simp]:"finite (getDom automat)"
+proof -
+  have "\<forall>p. \<not> automaton_well p \<or> (\<exists>f a u C Ca. p = (f, a::'a, u::'b stream\<^sup>\<Omega>, C, Ca) \<and> finite C \<and> (\<forall>a fa. dom fa \<noteq> C \<or> UBundle.ubDom\<cdot>(snd (f (a, fa))) = Ca))"
+    by auto
+  then show ?thesis
+    by (metis (no_types) automat_well getDom_def prod.sel(1) prod.sel(2))
+qed
+
+(*spfStateFix lemmas*)
+lemma spfsl_below_spfsf:"spfStateLeast In Out \<sqsubseteq> spfStateFix In Out\<cdot>f"
+  proof(simp add: spfStateFix_def, auto)
+    assume a1:"\<forall>x::'a. UFun.ufDom\<cdot>((f\<cdot>(spfStateLeast In Out)) x) = In \<and> UFun.ufRan\<cdot>((f\<cdot>(spfStateLeast In Out)) x) = Out"
+    then have "spfStateLeast In Out \<sqsubseteq> (f\<cdot>(spfStateLeast In Out))"
+      by simp
+    then show"spfStateLeast In Out \<sqsubseteq> fixg (spfStateLeast In Out) f"
+     by (smt fixg_def below_lub iterate_0 iterate_Suc2 monofunE monofun_Rep_cfun2 po_class.chain_def)
+  qed
+
+lemma spfstatefix_dom:"ufDom\<cdot>((spfStateFix In Out\<cdot> f) s) = In"
+  by (metis below_fun_def spfsl_below_spfsf spfStateLeast_dom ufdom_below_eq)
+
+
+lemma spfstatefix_ran:"ufRan\<cdot>((spfStateFix In Out\<cdot> f) s) = Out"
+  by (metis below_fun_def spfsl_below_spfsf spfStateLeast_ran ufran_below)
+
+(*spfRt and spfConc*)
+
+lemma spfRt_dom [simp] :"ufDom\<cdot>(spfRt\<cdot>spf) = ufDom\<cdot>spf"
+  unfolding spfRt_def
+  by (simp add: ubclDom_ubundle_def ufapplyin_dom)
+
+lemma spfConc_dom[simp]:"ufDom\<cdot>(spfConc sb \<cdot>spf) = ufDom\<cdot>spf"
+  unfolding spfConc_def
+  apply(subst ufapplyout_dom)
+  apply (metis ubclDom_ubundle_def ubconceq_dom)
+  by blast
+
+lemma spfRt_ran [simp]:"ufRan\<cdot>(spfRt\<cdot>spf) = ufRan\<cdot>spf"
+  unfolding spfRt_def
+  apply(subst ufapplyin_ran2)
+   apply (simp add: ubclDom_ubundle_def)
+  by blast
+
+lemma spfConc_ran [simp]:"ufRan\<cdot>(spfConc sb \<cdot>spf) = ufRan\<cdot>spf"
+  unfolding spfConc_def
+  apply(subst ufapplyout_ran)
+   apply (metis ubclDom_ubundle_def ubconceq_dom)
+  by blast
+
+lemma spfRt_spfConc: "(spfRt\<cdot>(spfConc sb \<cdot>spf)) = (spfConc sb \<cdot>(spfRt\<cdot>spf))"
+  unfolding spfConc_def
+  unfolding spfRt_def
+  apply(subst ufapply_eq)
+  apply (simp add: ubclDom_ubundle_def)
+  apply (metis ubclDom_ubundle_def ubconceq_dom)
+  by blast
+    
+(*ToDo*)
+lemma convdiscrup_dom_eq[simp]:"dom (convDiscrUp f) = dom f"
+  by(simp add: convDiscrUp_def)
+    
+lemma convdiscrup_inv_dom_eq[simp]:"dom (inv convDiscrUp f) = dom f"
   sorry
 
+lemma h_bottom_h:"(\<exists>c\<in>Dom. sb  .  c = \<epsilon>) \<Longrightarrow> (\<exists>c::channel\<in>Dom. sbHdElem\<cdot>sb\<rightharpoonup>c = \<bottom>)"
+  sorry
+    
+lemma ufLeast_apply:assumes "ubDom\<cdot>sb = In" shows "ufLeast In  Out \<rightleftharpoons> sb = ubclLeast Out"
+  sorry
+    
+lemma h_bottom_h2:"(\<exists>c\<in>Dom. sb  .  c = \<epsilon>) \<Longrightarrow> \<not>(\<forall>c\<in>Dom. sbHdElem\<cdot>sb\<rightharpoonup>c \<noteq> \<bottom>)"
+  by(simp add: h_bottom_h)
+   
+lemma ubclDom2ubDom:"ubclDom\<cdot>sb = ubDom\<cdot>sb"
+  by (simp add: ubclDom_ubundle_def)
+    
+(*ToDo end*)
+
+section \<open>Lemma about helper\<close>
+  
+lemma helper_dom:"ufDom\<cdot>((helper (getTransition automat) s\<cdot>(h automat)) f) = ufDom\<cdot>((h automat) s)"
+proof(simp add: helper_def)
+  show "ufDom\<cdot>(h automat (fst (getTransition automat (s, f)))) = ufDom\<cdot>((h automat) s)"
+    by(simp add: h_def spfstatefix_dom)
+qed
 
 
+lemma helper_ran:"ufRan\<cdot>((helper (getTransition automat) s\<cdot>(h automat)) f) = ufRan\<cdot>((h automat) s)"
+proof(simp add: helper_def)
+  show "ufRan\<cdot>(h automat (fst (getTransition automat (s, f)))) = ufRan\<cdot>(h automat s)"
+    by(simp add: h_def spfstatefix_ran)
+qed
 
 section \<open>Lemma about h\<close>
 
+lemma[simp]:"ufDom\<cdot>(h automat s) = getDom automat"
+  by(simp add: h_def spfstatefix_dom)
+
+lemma[simp]:"ufRan\<cdot>(h automat s) = getRan automat"
+  by(simp add: h_def spfstatefix_ran)
+
+(*Assumption for spfStep is always true for an automaton*)
+lemma automat_dom_ran_well[simp]:assumes "ubDom\<cdot>sb = getDom automat" 
+  shows "ufDom\<cdot>((helper (getTransition automat) s\<cdot>(h automat)) (spfStep_h2 (sbHdElem\<cdot>sb))) = getDom automat \<and>
+         ufRan\<cdot>((helper (getTransition automat) s\<cdot>(h automat)) (spfStep_h2 (sbHdElem\<cdot>sb))) = getRan automat"
+proof
+  show "ufDom\<cdot>((helper (getTransition automat) s\<cdot>(h automat)) (spfStep_h2 (sbHdElem\<cdot>sb))) = getDom automat"
+    by(simp add: helper_dom)
+next
+  show "ufRan\<cdot>((helper (getTransition automat) s\<cdot>(h automat)) (spfStep_h2 (sbHdElem\<cdot>sb))) = getRan automat"
+    by(simp add: helper_ran)
+qed
+
 lemma h_dom [simp]: "ufDom\<cdot>(h automat s) = getDom automat"
-  by (metis (no_types, lifting) Abs_cfun_inverse2 h_cont h_def spfStateFix_fix spfstep_dom spfstep_ran automaton_well_def finite_code) 
+  apply(simp add: h_def h_cont)
+  by(subst spfStateFix_fix,simp_all)
 
 lemma h_ran [simp]: "ufRan\<cdot>(h automat s) = getRan automat"
-  by (metis spfstep_dom spfstep_ran Automaton.stepstep_step ufran_2_ubdom2 finite_code)
+  apply(simp add: h_def h_cont)
+  by(subst spfStateFix_fix,simp_all)
 
 lemma h_unfolding: "(h automat s) = spfStep (getDom automat) (getRan automat)\<cdot>(helper (getTransition automat) s\<cdot>(h automat))"
-  by (metis (no_types, lifting) Abs_cfun_inverse2 h_cont h_def spfStateFix_fix spfstep_dom spfstep_ran finite_code)
+  apply(simp add: h_def)
+  by(subst spfStateFix_fix,simp_all)
 
-lemma h_step: assumes "ubDom\<cdot>sb = getDom automat" and "\<forall>c\<in>getDom automat. sb  .  c \<noteq> \<epsilon>" 
-              and "ufDom\<cdot>((helper (getTransition automat) s\<cdot>(h automat)) (spfStep_h2 (sbHdElem\<cdot>sb))) = getDom automat \<and>
-                   ufRan\<cdot>((helper (getTransition automat) s\<cdot>(h automat)) (spfStep_h2 (sbHdElem\<cdot>sb))) = getRan automat"
+lemma h_step: assumes "ubDom\<cdot>sb = getDom automat" and "\<forall>c\<in>getDom automat. sb  .  c \<noteq> \<epsilon>"
             shows "(h automat s)\<rightleftharpoons>sb = ((helper (getTransition automat) s\<cdot>(h automat)) ((inv convDiscrUp)(sbHdElem\<cdot>sb))) \<rightleftharpoons>sb"
   apply (simp add: h_unfolding)
   apply(rule SpfStep.stepstep_step)
-  by (simp add: assms)+
+  by (simp_all add: assms)
 
 definition autGetNextState:: "('s::type, 'm::message) automaton \<Rightarrow> 's \<Rightarrow>  ((channel \<rightharpoonup> 'm)) \<Rightarrow> 's" where
 "autGetNextState aut s m = fst ((getTransition aut) (s,m))"
@@ -127,14 +249,20 @@ definition autGetNextState:: "('s::type, 'm::message) automaton \<Rightarrow> 's
 definition autGetNextOutput:: "('s::type, 'm::message) automaton \<Rightarrow> 's \<Rightarrow>  ((channel \<rightharpoonup> 'm)) \<Rightarrow>  'm SB" where
 "autGetNextOutput aut s m = snd ((getTransition aut) (s,m))"
 
+
 (* ToDo: make a bit more readable *)
-lemma h_final: 
-  assumes "ubDom\<cdot>sb = getDom automat"
-  shows "(h automat s)\<rightleftharpoons>sb = 
+lemma h_final:
+  assumes "ubDom\<cdot>sb = getDom automat" and "\<forall>c\<in>getDom automat. sb  .  c \<noteq> \<epsilon>"
+  shows "(h automat s)\<rightleftharpoons>sb =
   spfConc (autGetNextOutput automat s ((inv convDiscrUp)(sbHdElem\<cdot>sb)))\<cdot>(spfRt\<cdot>(h automat (autGetNextState automat s ((inv convDiscrUp)(sbHdElem\<cdot>sb))))) \<rightleftharpoons>sb"
-  unfolding h_step 
-  by(simp add: helper_def autGetNextOutput_def autGetNextState_def assms spfRt_def )
-  
+  apply(subst h_step, simp_all add: assms)
+  by(simp add: autGetNextOutput_def autGetNextState_def helper_def spfRt_spfConc)
+    
+lemma h_bottom: assumes "ubDom\<cdot>sb = getDom automat" and "\<exists>c\<in>getDom automat. sb  .  c = \<epsilon>"
+  shows "(h automat s)\<rightleftharpoons>sb = ubclLeast (getRan automat)"
+  apply(simp add: h_unfolding spfStep_def, subst beta_cfun, subst spfStep_cont, simp_all add: spfStep_h1_def)
+  apply(simp add: assms h_bottom_h h_bottom_h2)
+  by(simp add: assms ubclDom2ubDom ufLeast_apply)
 
 section \<open>Lemma about H\<close>
 
@@ -182,7 +310,7 @@ end
 section \<open>Automaton Functions\<close>
 
 (* Creates a fitting SB given the right output values *)
-(* Parameter: 
+(* Parameter:
   nat         \<Rightarrow> maps to channel c1, in MAA called "XXXX"
   bool        \<Rightarrow> maps to channel c2, in MAA calles "YYYY" *)
 lift_definition createOutput :: "nat \<Rightarrow> bool \<Rightarrow> myM SB" is
@@ -192,7 +320,7 @@ lift_definition createOutput :: "nat \<Rightarrow> bool \<Rightarrow> myM SB" is
 
 function test4 :: "(channel \<rightharpoonup> nat stream) \<Rightarrow> bool" where
   "test4 [c1 \<mapsto> a] = True" |
-  "dom f \<noteq> {c1} \<Longrightarrow> test4 f = False" 
+  "dom f \<noteq> {c1} \<Longrightarrow> test4 f = False"
   sorry
 
 (* Somehow define the transition function *)
@@ -209,21 +337,11 @@ function myTransition :: "(myState \<times>(channel \<rightharpoonup> myM)) \<Ri
   by (metis option.simps(3))
 
 lift_definition myAutomaton :: "(myState, myM) automaton" is "(myTransition, State even 0 True, ubLeast {}, {}, {})"
-  by blast  (* In the final form of the automaton datatype we will have to proof stuff *)
+  sorry  (* In the final form of the automaton datatype we will have to proof stuff *)
 
 definition mySPF :: "myM SPF" where
 "mySPF = H myAutomaton"
 
-
-
-
 section \<open>Automaton Lemma\<close>
-
-
-
-
-
-
-
 
 end

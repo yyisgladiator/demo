@@ -27,7 +27,7 @@ session "sb" (mustWork) = "ubundle" +
   theories
     "untimed/SB"
 
-session "spf" (mustWork) = "sb" + 
+session "spf" (mustWork) = "sb" +
   options [quick_and_dirty = true]
   theories
     "untimed/SPF"

@@ -637,7 +637,7 @@ lemma ufuntype_insert: "ufunType\<cdot>f = (ufDom\<cdot>f, ufRan\<cdot>f)"
 
 subsection \<open>monoTick2cont\<close>
 
-
+(*
 lemma tspfMono2weak2cont: assumes "monofun f" 
   and "(\<forall>b. (b \<in> (dom f) \<longrightarrow> ubclLen b \<le> ubclLen (the (f b))))"
   shows "cont f"    
@@ -702,7 +702,7 @@ proof -
     apply (rule contI2)
     apply(simp add: assms(1))
     by(simp add: f1)
-qed
+qed*)
 
 
 (****************************************************)

@@ -9,7 +9,7 @@
 
 theory EvenStream
 
-imports "../../timesyn/tsynStream"
+imports EvenAutomaton 
 
 begin
 
@@ -17,15 +17,10 @@ begin
     section \<open>Datentypen\<close>
 (********************************)
 
-(* This are the actual states from MAA *)
-datatype EvenAutomatonSubstate = Odd | Even
 
 instance EvenAutomatonSubstate :: countable
   apply(intro_classes)
   by(countable_datatype)
-
-(* And these have also the variables *)
-datatype EvenAutomatonState = State EvenAutomatonSubstate nat
 
 instance EvenAutomatonState :: countable
   apply(intro_classes)
@@ -36,16 +31,6 @@ fun getSubState :: "EvenAutomatonState \<Rightarrow> EvenAutomatonSubstate" wher
 
 fun getSum :: "EvenAutomatonState \<Rightarrow> nat" where
 "getSum (State automaton_s automaton_sum) = automaton_sum"
-
-
-datatype EvenAutomaton = A  nat | B  bool
-
-instance EvenAutomaton :: countable
-  apply(intro_classes)
-  by(countable_datatype)
-
-
-
 
 
 (********************************)
@@ -61,7 +46,7 @@ fun evenMakeSubstate :: "bool \<Rightarrow> EvenAutomatonSubstate" where
 fun evenTransition :: "EvenAutomatonState \<Rightarrow> EvenAutomaton event \<Rightarrow> (EvenAutomaton event \<times> EvenAutomatonState)" where
 "evenTransition s Tick = (Tick, s)" |
 
-"evenTransition (State _ summe) (Msg (A input)) = (Msg (B (even (summe + input))), State (evenMakeSubstate (even (summe + input))) (summe+input)) " 
+"evenTransition (State _ summe) (Msg (A input)) = (Msg (B (Parity.even (summe + input))), State (evenMakeSubstate (Parity.even (summe + input))) (summe+input)) " 
 
 
 
@@ -79,7 +64,7 @@ lemma evenstream_tick: "sscanlA evenTransition state\<cdot>(\<up>Tick \<bullet> 
   by simp
 
 lemma evenstream_msg:  "sscanlA evenTransition (State ooo summe) \<cdot>(\<up>(Msg (A m)) \<bullet> xs) 
-    = \<up>(Msg (B (even (summe + m)))) \<bullet> (sscanlA evenTransition (State (evenMakeSubstate (even (summe + m)))  (summe + m))\<cdot>xs)"
+    = \<up>(Msg (B (Parity.even (summe + m)))) \<bullet> (sscanlA evenTransition (State (evenMakeSubstate (Parity.even (summe + m)))  (summe + m))\<cdot>xs)"
   by simp
 
 
@@ -99,14 +84,14 @@ abbreviation bool2even:: "bool event stream \<rightarrow> EvenAutomaton event st
 lemma "#(evenStream\<cdot>s) = #s"
   by simp
 
-lemma evenstream_final_h: "sscanlA evenTransition (State ooo n)\<cdot>(nat2even\<cdot>s) = bool2even\<cdot>(tsynMap even\<cdot>(tsynScanl plus n\<cdot>s))"
+lemma evenstream_final_h: "sscanlA evenTransition (State ooo n)\<cdot>(nat2even\<cdot>s) = bool2even\<cdot>(tsynMap Parity.even\<cdot>(tsynScanl plus n\<cdot>s))"
   apply(induction arbitrary: n ooo rule: ind [of _ s])
     apply auto
   apply(rename_tac a s n ooo)
   apply(case_tac a)
   by auto
 
-lemma evenstream_final: "evenStream\<cdot>(nat2even\<cdot>s) = bool2even\<cdot>(tsynMap even\<cdot>(tsynSum\<cdot>s))"
+lemma evenstream_final: "evenStream\<cdot>(nat2even\<cdot>s) = bool2even\<cdot>(tsynMap Parity.even\<cdot>(tsynSum\<cdot>s))"
   by (simp add: evenInitialState_def tsynSum_def evenstream_final_h)
 
 
@@ -114,14 +99,39 @@ lemma evenstream_final: "evenStream\<cdot>(nat2even\<cdot>s) = bool2even\<cdot>(
 
 subsection \<open>Rek2evenStream\<close>
 
+(*fourth assumption for Rek2evenStream*)  
+lemma type_assms:"tsynDom\<cdot>(nat2even\<cdot>xs) \<subseteq> range A"
+proof(induction rule: tsyn_ind [of _xs])
+  case 1
+  then show ?case
+      proof(rule admI)
+    fix Y::"nat \<Rightarrow> nat event stream"
+    assume a1: "chain Y"
+    assume a2: "\<forall>i::nat. tsynDom\<cdot>(nat2even\<cdot>(Y i)) \<subseteq> range A"
+    show "tsynDom\<cdot>(nat2even\<cdot>(\<Squnion>i::nat. Y i)) \<subseteq> range A"
+      by (metis a1 a2 ch2ch_Rep_cfunR contlub_cfun_arg subset_cont)
+  qed
+next
+  case 2
+  then show ?case
+    by(simp add: tsyndom_insert)
+next
+  case (3 a s)
+  then show ?case
+    by (simp add: tsyndom_conc_sub)
+next
+  case (4 s)
+  then show ?case 
+    by simp
+qed
+  
 (* convert the rekursive definition of the automaton in our nice evenStream function *)
-lemma rek2evenstream: assumes msg: "\<And> ooo summe m xs. f (State ooo summe)\<cdot>(\<up>(Msg (A m)) \<bullet> xs)
-                 = \<up>(Msg (B (even (summe + m)))) \<bullet> (f (State (evenMakeSubstate (even (summe + m)))  (summe + m))\<cdot>xs)"
+lemma rek2evenstream: assumes msg: "\<And> ooo summe m xs. f (State ooo summe)\<cdot>(\<up>(Msg m) \<bullet> (xs::nat event stream))
+                 = \<up>(Msg (B (Parity.even (summe + m)))) \<bullet> (f (State (evenMakeSubstate (Parity.even (summe + m)))  (summe + m))\<cdot>xs)"
       and tick: "\<And> state xs. f state\<cdot>(\<up>Tick \<bullet> xs) = \<up>Tick \<bullet> (f state\<cdot>xs)"
       and bot: "\<And>state. f state\<cdot>\<bottom> = \<bottom>"
-      and type: "tsynDom\<cdot>xs \<subseteq> range A"
-    shows "f (State ooo summe)\<cdot>xs = sscanlA evenTransition (State ooo summe)\<cdot>xs"
-  using type proof(induction arbitrary: ooo summe rule: tsyn_ind [of _xs])
+    shows "f (State ooo summe)\<cdot>xs = sscanlA evenTransition (State ooo summe)\<cdot>(nat2even\<cdot>xs)"
+  proof(induction arbitrary: ooo summe rule: tsyn_ind [of _xs])
   case 1
   then show ?case by simp
 next
@@ -129,17 +139,13 @@ next
   then show ?case using bot by simp
 next
   case (3 a s)
-  have h1: "tsynDom\<cdot>s \<subseteq> range A"
-    using "3.prems" tsyndom_sub by blast
-  obtain n where n_def: "a = A n"
-    by (meson "3.prems" rangeE tsyndom_sub2)
-  then show ?case by(simp add: n_def msg h1 "3.IH")
+  have h1: "tsynDom\<cdot>(nat2even\<cdot>s) \<subseteq> range A"
+    using "3.prems" tsyndom_sub type_assms by fastforce
+  then show ?case by(simp add: msg h1 "3.IH")
 next
 case (4 s)
 then show ?case
-  by (metis evenstream_tick tick tsyndom_sub)
+  by (simp add: tick)
 qed
-
-
 
 end
