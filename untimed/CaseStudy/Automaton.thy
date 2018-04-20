@@ -61,30 +61,6 @@ definition getRan :: "('s, 'm::message) automaton \<Rightarrow> channel set" whe
 "getRan automat = (snd (snd (snd (snd (Rep_automaton automat)))))"
 
 
-(* HK is defining this. returns the fixpoint *)
-(* thm spfStateFix_def *)
-(* definition myFixxer :: "channel set \<Rightarrow> channel set \<Rightarrow> (('s \<Rightarrow> 'm::message SPF)\<rightarrow>('s \<Rightarrow> 'm SPF)) \<rightarrow> ('s \<Rightarrow> 'm SPF)" where
-"myFixxer = undefined" *)
-(* is defined in spfStep.thy
-definition spfStep :: "channel set\<Rightarrow> channel set \<Rightarrow> ((channel \<Rightarrow> 'm option) \<Rightarrow> 'm SPF) \<rightarrow> 'm SPF" where
-"spfStep = undefined"
-*)
-(* Defined by SWS *)
-(* thm spfApplyIn_def
-thm spfRt_def *)
-(*
-definition spfRt :: "'m SPF \<rightarrow> 'm SPF" where
-"spfRt = undefined"
-*)
-
-
-(* thm spfConc_def *)
-(*
-(* Defined by JCB *)
-definition spfCons :: "'m SB \<Rightarrow> 'm SPF \<rightarrow> 'm SPF" where
-"spfCons = undefined"
-*)
-
 definition helper:: "(('s \<times>'e) \<Rightarrow> ('s \<times> 'm::message  SB)) \<Rightarrow> 's \<Rightarrow> ('s \<Rightarrow> 'm SPF) \<rightarrow> ('e \<Rightarrow> 'm SPF)" where
 "helper f s \<equiv> \<Lambda> h. (\<lambda> e. spfRt\<cdot>(spfConc (snd (f (s,e)))\<cdot>(h (fst (f (s,e))))))"
 
@@ -120,23 +96,6 @@ proof -
     by (metis (no_types) automat_well getDom_def prod.sel(1) prod.sel(2))
 qed
 
-(*spfStateFix lemmas*)
-lemma spfsl_below_spfsf:"spfStateLeast In Out \<sqsubseteq> spfStateFix In Out\<cdot>f"
-  proof(simp add: spfStateFix_def, auto)
-    assume a1:"\<forall>x::'a. UFun.ufDom\<cdot>((f\<cdot>(spfStateLeast In Out)) x) = In \<and> UFun.ufRan\<cdot>((f\<cdot>(spfStateLeast In Out)) x) = Out"
-    then have "spfStateLeast In Out \<sqsubseteq> (f\<cdot>(spfStateLeast In Out))"
-      by simp
-    then show"spfStateLeast In Out \<sqsubseteq> fixg (spfStateLeast In Out) f"
-     by (smt fixg_def below_lub iterate_0 iterate_Suc2 monofunE monofun_Rep_cfun2 po_class.chain_def)
-  qed
-
-lemma spfstatefix_dom:"ufDom\<cdot>((spfStateFix In Out\<cdot> f) s) = In"
-  by (metis below_fun_def spfsl_below_spfsf spfStateLeast_dom ufdom_below_eq)
-
-
-lemma spfstatefix_ran:"ufRan\<cdot>((spfStateFix In Out\<cdot> f) s) = Out"
-  by (metis below_fun_def spfsl_below_spfsf spfStateLeast_ran ufran_below)
-
 (*spfRt and spfConc*)
 
 lemma spfRt_dom [simp] :"ufDom\<cdot>(spfRt\<cdot>spf) = ufDom\<cdot>spf"
@@ -169,6 +128,24 @@ lemma spfRt_spfConc: "(spfRt\<cdot>(spfConc sb \<cdot>spf)) = (spfConc sb \<cdot
   apply (metis ubclDom_ubundle_def ubconceq_dom)
   by blast
     
+(*spfStateFix lemmas*)  
+lemma spfsl_below_spfsf: "spfStateLeast In Out \<sqsubseteq> spfStateFix In Out\<cdot>F"
+proof (simp add: spfStateFix_def, simp add: fixg_def)
+  have "\<forall>x0 x1. ((x1::'a \<Rightarrow> ('b stream\<^sup>\<Omega>) ufun) \<sqsubseteq> (if x1 \<sqsubseteq> x0\<cdot>x1 then \<Squnion>uub. iterate uub\<cdot>x0\<cdot>x1 else x1)) = (if x1 \<sqsubseteq> x0\<cdot>x1 then x1 \<sqsubseteq> (\<Squnion>uub. iterate uub\<cdot>x0\<cdot>x1) else x1 \<sqsubseteq> x1)"
+    by simp
+  then show "spfStateLeast In Out \<sqsubseteq> F\<cdot>(spfStateLeast In Out) \<longrightarrow> spfStateLeast In Out \<sqsubseteq> (\<Squnion>n. iterate n\<cdot>F\<cdot>(spfStateLeast In Out))"
+    by (metis (no_types) fixg_pre)
+qed
+
+
+lemma spfstatefix_dom:"ufDom\<cdot>((spfStateFix In Out\<cdot> f) s) = In"
+  by (metis (mono_tags) below_fun_def spfStateLeast_def spfsl_below_spfsf ufdom_below_eq ufleast_ufdom)
+  
+    
+lemma spfstatefix_ran:"ufRan\<cdot>((spfStateFix In Out\<cdot> f) s) = Out"
+  by (metis below_fun_def spfStateLeast_ran spfsl_below_spfsf ufran_below)
+
+(*spfStateFix lemmas end*)     
 (*ToDo*)
 lemma convdiscrup_dom_eq[simp]:"dom (convDiscrUp f) = dom f"
   by(simp add: convDiscrUp_def)
