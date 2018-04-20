@@ -537,8 +537,8 @@ lemma sbHdElem_cont: "cont (\<lambda> sb::'a stream ubundle. (\<lambda>c. (c \<i
   subsection \<open>Automaton\<close>
 (* ----------------------------------------------------------------------- *)
 
-lemma convDiscrUp2 : "convDiscrUp \<equiv> \<lambda>sb. (\<lambda>c. (c \<in> dom sb) \<leadsto> (Iup (Discr (sb \<rightharpoonup> c))))"
-  sorry
+(* lemma convDiscrUp2 : "convDiscrUp \<equiv> \<lambda>sb. (\<lambda>c. (c \<in> dom sb) \<leadsto> (Iup (Discr (sb \<rightharpoonup> c))))"
+  sorry *)
 
 lemma test_dom: "dom (convDiscrUp g) = dom g"
   by(simp add: convDiscrUp_def)
@@ -548,18 +548,26 @@ lemma test_inj: "inj convDiscrUp"
   apply(simp add: convDiscrUp_def)
   by (metis (no_types, lifting) Collect_cong dom_def mem_Collect_eq option.distinct(1) option.inject part_eq u.inject undiscr_Discr)
 
-lemma test_iup_surj: "surj Iup"
+(* lemma test_iup_surj: "surj Iup"
   sorry
 
 lemma test_discr_surj: "surj Discr"
-  sorry
+  sorry *)
 
-lemma test_pre_surj: "surj (\<lambda>sb. \<lambda>c. (c \<in> dom sb) \<leadsto> (sb \<rightharpoonup> c))"
-  sorry
+(* lemma test_pre_surj: "surj (\<lambda>sb. \<lambda>c. (c \<in> dom sb) \<leadsto> (sb \<rightharpoonup> c))"
+  sorry *)
 
 lemma test_surj: "surj convDiscrUp"
   apply(rule surjI)
-  apply(subst convDiscrUp2)
+  (* proof -
+    fix x::"channel \<Rightarrow> ('a discr\<^sub>\<bottom>) option"
+  
+    have "convDiscrUp (((\<lambda>g::(channel \<Rightarrow> ('a discr\<^sub>\<bottom>) option)). 
+                        \<lambda>ch2::channel. Iup (inv Discr (inv Iup (g ch2)))) x) = x" sorry
+
+    show "convDiscrUp (f x) = x"
+      sorry
+  qed *)
   sorry
 
 lemma test_bij: "bij convDiscrUp"
