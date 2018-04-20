@@ -36,7 +36,10 @@ lemma evenStreamBundle_lub: assumes "chain Y" shows"(Abs_ubundle [c1 \<mapsto> n
   sorry
 
 lemma evenStreamBundle_chain:assumes "chain Y" shows"chain (\<lambda>i::nat. Abs_ubundle [c1 \<mapsto> nat2even\<cdot>(Y i)])"
-    sorry
+  sorry
+
+lemma evenHdElem: assumes"x\<noteq>\<epsilon>" shows "inv convDiscrUp (sbHdElem\<cdot>(Abs_ubundle [c1 \<mapsto> nat2even\<cdot>x])) = [c1 \<mapsto> shd(nat2even\<cdot>x)]"
+  sorry
        
 (*ToDo end*)
   
@@ -48,6 +51,9 @@ definition EvenStream::"EvenAutomatonState \<Rightarrow> nat event stream \<righ
 lemma ubclLeast_empty: assumes "c\<in>Dom" shows "ubclLeast Dom  .  c = \<epsilon>"
   by (simp add: assms ubclLeast_ubundle_def)
 
+lemma evenGet_c1[simp]:"Abs_ubundle [c1 \<mapsto> nat2even\<cdot>x]  .  c1 =  nat2even\<cdot>x"
+  by (metis evenStreamBundle_well fun_upd_same option.sel ubgetch_ubrep_eq)   
+
 lemma evenStream_insert:"EvenStream state\<cdot>s = ((h EvenAutomatonAutomaton state) \<rightleftharpoons> (Abs_ubundle [c1 \<mapsto> (nat2even\<cdot>s)])) . c2"
   apply(simp add: EvenStream_def,rule beta_cfun)
 proof(rule Cont.contI2)
@@ -58,11 +64,35 @@ proof(rule Cont.contI2)
     show "(h EvenAutomatonAutomaton state \<rightleftharpoons> Abs_ubundle [c1 \<mapsto> nat2even\<cdot>x])  .  c2 \<sqsubseteq> (h EvenAutomatonAutomaton state \<rightleftharpoons> Abs_ubundle [c1 \<mapsto> nat2even\<cdot>y])  .  c2"
     proof(cases "\<forall>c::channel\<in>getDom EvenAutomatonAutomaton. Abs_ubundle [c1 \<mapsto> nat2even\<cdot>x]  .  c \<noteq> \<epsilon>")
       case True
-      then show ?thesis sorry
+      then show ?thesis
+       (* proof(insert a1, induction arbitrary: state rule: tsyn_ind [of _x])
+          case 1
+          then show ?case
+            apply(rule adm_imp, auto)+
+              sorry
+        next
+          case 2
+          then show ?case
+            apply(simp add: getDom_def EvenAutomatonAutomaton.rep_eq)
+            by (smt domIff evenStreamBundle_well fun_upd_same option.sel tsynmap_bot ubWell_def ubgetch_ubrep_eq)
+        next
+          case (3 a s)
+          then show ?case sorry
+        next
+          case (4 s)
+          then show ?case sorry
+        qed*)
+       (* apply(subst h_final, simp_all add: getDom_def EvenAutomatonAutomaton.rep_eq ubDom_def autGetNextOutput_def)
+        apply(simp add: getTransition_def EvenAutomatonAutomaton.rep_eq)
+        apply(subst evenHdElem)
+        apply auto[1]
+        sorry*)
+        sorry
     next
       case False
       then show ?thesis
-        by(subst h_bottom, simp_all add: getDom_def getRan_def ubdom_insert EvenAutomatonAutomaton.rep_eq ubclLeast_empty)
+        apply(subst h_bottom, simp_all add: getDom_def getRan_def ubdom_insert EvenAutomatonAutomaton.rep_eq ubclLeast_empty)
+        by (metis dom_eq_singleton_conv evenStreamBundle_well ubrep_ubabs)
     qed    
   qed
 next
