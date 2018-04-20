@@ -176,17 +176,6 @@ lemma convdiscrup_dom_eq[simp]:"dom (convDiscrUp f) = dom f"
 lemma convdiscrup_inv_dom_eq[simp]:"dom (inv convDiscrUp f) = dom f"
   sorry
 
-lemma h_bottom_h:"(\<exists>c\<in>ubDom\<cdot>sb. sb  .  c = \<epsilon>) \<Longrightarrow> (\<exists>c::channel\<in>ubDom\<cdot>sb. sbHdElem\<cdot>sb\<rightharpoonup>c = \<bottom>)"
-proof -
-  assume a1: "\<exists>c \<in> ubDom\<cdot>sb. sb  .  c = \<epsilon>"
-  obtain my_c where my_c_def1: "sb . my_c = \<epsilon>" and my_c_def2: "my_c \<in> ubDom\<cdot>sb"
-    using a1 by auto
-  have f0: " sbHdElem\<cdot>sb\<rightharpoonup>my_c = \<bottom>"
-    apply (simp add: sbHdElem_def sbHdElem_cont)
-    by (simp add: my_c_def1 my_c_def2)
-  then show "(\<exists>c::channel\<in>ubDom\<cdot>sb. sbHdElem\<cdot>sb\<rightharpoonup>c = \<bottom>)"
-    using my_c_def2 by auto
-qed
     
 lemma ufLeast_apply:assumes "ubDom\<cdot>sb = In" shows "ufLeast In  Out \<rightleftharpoons> sb = ubclLeast Out"
   apply (simp add: ufLeast_def)
@@ -194,8 +183,6 @@ lemma ufLeast_apply:assumes "ubDom\<cdot>sb = In" shows "ufLeast In  Out \<right
   unfolding ubclDom_ubundle_def
   by (simp add: assms)
     
-lemma h_bottom_h2:"(\<exists>c\<in>ubDom\<cdot>sb. sb  .  c = \<epsilon>) \<Longrightarrow> \<not>(\<forall>c\<in>ubDom\<cdot>sb. sbHdElem\<cdot>sb\<rightharpoonup>c \<noteq> \<bottom>)"
-  by(simp add: h_bottom_h)
    
 lemma ubclDom2ubDom:"ubclDom\<cdot>sb = ubDom\<cdot>sb"
   by (simp add: ubclDom_ubundle_def)
@@ -273,8 +260,7 @@ lemma h_final:
 lemma h_bottom: assumes "ubDom\<cdot>sb = getDom automat" and "\<exists>c\<in>getDom automat. sb  .  c = \<epsilon>"
   shows "(h automat s)\<rightleftharpoons>sb = ubclLeast (getRan automat)"
   apply(simp add: h_unfolding spfStep_def, subst beta_cfun, subst spfStep_cont, simp_all add: spfStep_h1_def)
-  apply(simp add: assms h_bottom_h h_bottom_h2)
-  using assms(1) assms(2) h_bottom_h ufLeast_apply by blast
+  using assms(1) assms(2) sbHdElem_bottom_exI ufLeast_apply by blast
 
 section \<open>Lemma about H\<close>
 
