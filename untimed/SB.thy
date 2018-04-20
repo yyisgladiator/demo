@@ -533,4 +533,17 @@ lemma sbHdElem_cont: "cont (\<lambda> sb::'a stream ubundle. (\<lambda>c. (c \<i
   apply (simp add: sbHdElem_mono)
   using sbHdElem_cont_pre by blast
 
+lemma sbHdElem_bottom_exI: assumes "(\<exists>c\<in>ubDom\<cdot>sb. sb  .  c = \<epsilon>)"
+  shows "(\<exists>c::channel\<in>ubDom\<cdot>sb. sbHdElem\<cdot>sb\<rightharpoonup>c = \<bottom>)"
+proof -
+  obtain my_c where my_c_def1: "sb . my_c = \<epsilon>" and my_c_def2: "my_c \<in> ubDom\<cdot>sb"
+    using assms by auto
+  have f0: " sbHdElem\<cdot>sb\<rightharpoonup>my_c = \<bottom>"
+    apply (simp add: sbHdElem_def sbHdElem_cont)
+    by (simp add: my_c_def1 my_c_def2)
+  then show "(\<exists>c::channel\<in>ubDom\<cdot>sb. sbHdElem\<cdot>sb\<rightharpoonup>c = \<bottom>)"
+    using my_c_def2 by auto
+qed
+
+
 end
