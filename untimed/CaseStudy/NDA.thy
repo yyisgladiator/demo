@@ -60,18 +60,46 @@ definition ndaRan :: "('s, 'm::message) NDA \<rightarrow> channel set discr" whe
 definition spsFix :: "('a \<rightarrow> 'a) \<rightarrow> 'a" where
 "spsFix = undefined"  (* Die ganze function ist natürlich grober unsinn *)
 
+
+
+
 (* like spfStep, only on SPS *)
 fun spsStep :: "channel set discr \<Rightarrow> channel set discr \<Rightarrow> ((channel\<rightharpoonup>'m::message) \<Rightarrow> 'm SPS) \<rightarrow> 'm SPS" where
 "spsStep (Discr cin) (Discr cout) = undefined"
 
 
+
+
+(* See: https://git.rwth-aachen.de/montibelle/automaton/core/issues/70 *)
+definition spsConc:: "'m SB \<Rightarrow> 'm SPS \<rightarrow> 'm SPS" where
+"spsConc = undefined"
+
+(* See: https://git.rwth-aachen.de/montibelle/automaton/core/issues/70 *)
+definition spsRt:: "'m SPS \<rightarrow> 'm SPS" where
+"spsRt = undefined"
+
+
+
+
 (* ToDo *)
+(* Very Very similar to helper over automaton *)
+thm helper_def
+
+(* Es klappt aber nicht.... Der nichtdeterminismus wird nicht berücksichtigt! 
+  und ich laufe immer wieder in das problem: https://git.rwth-aachen.de/montibelle/automaton/core/issues/68 *)
+
 definition spsHelper:: "'s \<Rightarrow> (('s \<times>'e) \<Rightarrow> ('s \<times> 'm::message SB) set rev) \<rightarrow> ('s \<Rightarrow> 'm SPS) \<rightarrow> ('e \<Rightarrow> 'm SPS)" where
-"spsHelper s \<equiv> undefined (* \<Lambda> h. (\<lambda> e. (h (fst (f (s,e))))) *)"
+"spsHelper s \<equiv> \<Lambda> h. (\<lambda> e. spsRt\<cdot>(spsConc (snd (f (s,e)))\<cdot>(h (fst (f (s,e))))))"
+
+
 
 (* Similar to Rum96 *)
 definition nda_h :: "('s::type, 'm::message) NDA \<rightarrow> ('s \<Rightarrow> 'm SPS)" where
 "nda_h \<equiv>  \<Lambda> nda. spsFix\<cdot>(\<Lambda> h. (\<lambda>s. spsStep (ndaDom\<cdot>nda)(ndaRan\<cdot>nda)\<cdot>(spsHelper s\<cdot>(ndaTransition\<cdot>nda)\<cdot>h)))"
+
+
+
+
 
 definition setrevImage :: "('a \<Rightarrow> 'b) \<Rightarrow> 'a set rev \<rightarrow> 'b set rev" where
 "setrevImage = undefined"
@@ -93,8 +121,8 @@ fun helper:: "('s \<times> 'm::message SB) \<Rightarrow> ('s::type, 'm::message)
 definition nda_H_helper :: "('s, 'm::message) NDA \<rightarrow> 'm SPS set rev" where
 "nda_H_helper \<equiv> \<Lambda> nda. (setrevImage (\<lambda>t. helper t\<cdot>nda)\<cdot>(ndaInitialState\<cdot>nda))"
 
-(* This function also prepends the first SB ... *)
-(* But basically she just calls h *)
+(* Currently I see no way to get from "nda_H_helper" to "nda_H", 
+https://git.rwth-aachen.de/montibelle/automaton/core/issues/68 *)
 definition nda_H :: "('s, 'm::message) NDA \<rightarrow> 'm SPS" where
 "nda_H \<equiv> \<Lambda> nda. Abs_uspec (setrevImage helper\<cdot>(ndaInitialState\<cdot>nda))"
 
