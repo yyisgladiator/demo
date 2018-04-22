@@ -139,14 +139,19 @@ lemma ufapply_in_out:
 subsection \<open>spfRt lemma\<close>
 lemma spfrt_step[simp]: "(spfRt\<cdot>spf)\<rightleftharpoons>sb = spf\<rightleftharpoons>(sbRt\<cdot>sb)"
   apply(simp add: spfRt_def ufApplyIn_def)
-  oops
+  apply (subst Abs_cfun_inverse2)
+   apply (rule ufapplyin_cont_h)
+  by (simp add: ubclDom_ubundle_def ufapplyin_well_h) +
 
 subsection \<open>spfConc lemma\<close>
 lemma spconc_step[simp]:
   assumes "ubDom\<cdot>sb = ufDom\<cdot>spf"
   shows "(spfConc sb1\<cdot>spf)\<rightleftharpoons>sb = ubConcEq sb1\<cdot>(spf\<rightleftharpoons>sb)"
-  apply(simp add: spfConc_def assms)
-  oops
+  apply(simp only: spfConc_def)
+  apply (subst ufapplyout_apply)
+    apply (metis ubclDom_ubundle_def ubconceq_dom)
+   apply (simp add: assms ubclDom_ubundle_def)
+  by simp
 
 
 

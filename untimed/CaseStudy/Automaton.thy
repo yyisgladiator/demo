@@ -232,7 +232,7 @@ lemma h_final:
   shows "(h automat s)\<rightleftharpoons>sb =
   spfConc (autGetNextOutput automat s ((inv convDiscrUp)(sbHdElem\<cdot>sb)))\<cdot>(spfRt\<cdot>(h automat (autGetNextState automat s ((inv convDiscrUp)(sbHdElem\<cdot>sb))))) \<rightleftharpoons>sb"
   apply(subst h_step, simp_all add: assms)
-  by(simp add: autGetNextOutput_def autGetNextState_def helper_def spfRt_spfConc)
+  by (simp add: assms(1) autGetNextOutput_def autGetNextState_def helper_def spfRt_spfConc)
     
 lemma h_bottom: assumes "ubDom\<cdot>sb = getDom automat" and "\<exists>c\<in>getDom automat. sb  .  c = \<epsilon>"
   shows "(h automat s)\<rightleftharpoons>sb = ubclLeast (getRan automat)"
