@@ -30,13 +30,31 @@ qed
 (*ToDo*)
   
 lemma "sdom\<cdot>(nat2even\<cdot>s) \<subseteq> ctype c1"
-    sorry
+  unfolding ctype_event_def
+  apply (rule tsyn_ind [of _ s])
+    apply (rule admI)
+    apply (metis ch2ch_Rep_cfunR contlub_cfun_arg l44)
+  by simp +
 
-lemma evenStreamBundle_lub: assumes "chain Y" shows"(Abs_ubundle [c1 \<mapsto> nat2even\<cdot>(\<Squnion>i. Y i)]) = (\<Squnion>i. Abs_ubundle [c1 \<mapsto>  nat2even\<cdot>(Y i)])"
-  sorry
 
-lemma evenStreamBundle_chain:assumes "chain Y" shows"chain (\<lambda>i::nat. Abs_ubundle [c1 \<mapsto> nat2even\<cdot>(Y i)])"
-  sorry
+lemma evenStreamBundle_chain:assumes "chain Y" 
+  shows"chain (\<lambda>i::nat. Abs_ubundle [c1 \<mapsto> nat2even\<cdot>(Y i)])"
+  apply (rule chainI)
+  apply (rule ub_below)
+  apply (simp add: ubdom_ubrep_eq)
+  apply (simp add: ubgetch_ubrep_eq)
+  by (simp add: assms cont_pref_eq1I po_class.chainE)
+
+lemma evenStreamBundle_lub: assumes "chain Y" 
+  shows"(Abs_ubundle [c1 \<mapsto> nat2even\<cdot>(\<Squnion>i. Y i)]) = (\<Squnion>i. Abs_ubundle [c1 \<mapsto>  nat2even\<cdot>(Y i)])"
+  apply (rule ub_eq)
+   apply (simp add: evenStreamBundle_chain assms ubdom_lub2)
+   apply (simp add: ubdom_ubrep_eq)
+  apply (subst ubgetch_lub)
+    apply (simp add: evenStreamBundle_chain assms)
+   apply (metis (mono_tags) assms dom_eq_singleton_conv evenStreamBundle_chain evenStreamBundle_well ubdom_chain_eq2 ubdom_ubrep_eq)
+  apply (simp add: ubgetch_ubrep_eq)
+  by (simp add: assms contlub_cfun_arg)
 
        
 (*ToDo end*)
