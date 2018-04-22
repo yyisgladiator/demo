@@ -107,18 +107,41 @@ lemma evenVal:"(spfConc (autGetNextOutput EvenAutomatonAutomaton (State ooo summ
 proof -
   have f1: "ubDom\<cdot>(Abs_ubundle [c1 \<mapsto> \<up>(\<M> A m) \<bullet> nat2even\<cdot>xs]) 
     = ufDom\<cdot>(spfRt\<cdot>(h EvenAutomatonAutomaton (fst (evenAutomatonTransition (EvenAutomatonState.State ooo summe, [c1 \<mapsto> \<M> A m])))))"
-    apply (subst ubdom_ubrep_eq)
-    apply simp
-  
-    sorry
+    apply (simp add: ubdom_ubrep_eq)
+    unfolding EvenAutomatonAutomaton_def
+    unfolding getDom_def
+    by (metis EvenAutomatonAutomaton.rep_eq Rep_automaton_inverse fst_conv snd_conv)
+  have f2: "ubDom\<cdot>(autGetNextOutput EvenAutomatonAutomaton (EvenAutomatonState.State ooo summe) [c1 \<mapsto> \<M> A m]) = {c2}"
+    unfolding autGetNextOutput_def
+    unfolding getTransition_def
+    unfolding EvenAutomatonAutomaton_def
+  proof -
+    have "automaton_well (evenAutomatonTransition, EvenAutomatonState.State Even 0, tsynbOneTick c2, {c1}, {c2})"
+      by (meson EvenAutomatonAutomaton.rsp eq_onp_same_args)
+    then show "ubDom\<cdot> (snd (fst (Rep_automaton (Abs_automaton (evenAutomatonTransition, EvenAutomatonState.State Even 0, tsynbOneTick c2, {c1}, {c2}))) (EvenAutomatonState.State ooo summe, [c1 \<mapsto> \<M> A m]))) = {c2}"
+      using EvenAutomatonAutomaton.rep_eq EvenAutomatonAutomaton_def by force
+  qed
   show ?thesis
     apply (subst spconc_step)
-    sorry
+     apply (simp add: f1)
+    apply simp 
+    apply (rule ubrestrict_id)
+    apply (simp add: f2)
+    apply (fold ubclDom_ubundle_def)
+    apply (subst ufran_2_ubcldom2)
+     apply (metis (no_types, lifting) dom_fun_upd evenStreamBundle_well f1 option.distinct(1) spfRt_dom tsynmap_msg ubclDom_ubundle_def ubdom_ubrep_eq)
+    apply (simp add: getRan_def EvenAutomatonAutomaton_def)
+    by (metis EvenAutomatonAutomaton.rep_eq Rep_automaton_inverse insertI1 snd_conv)
 qed
     
-lemma evenVal2:assumes "ubWell[c \<mapsto> x]" shows"(spfConc (autGetNextOutput EvenAutomatonAutomaton state [c \<mapsto> \<surd>])\<cdot>(spfRt\<cdot>(h EvenAutomatonAutomaton state)) \<rightleftharpoons> Abs_ubundle [c \<mapsto> x])
-        = ubConcEq (autGetNextOutput EvenAutomatonAutomaton state [c \<mapsto> \<surd>])\<cdot>((h EvenAutomatonAutomaton state) \<rightleftharpoons> sbRt\<cdot>(Abs_ubundle [c \<mapsto> x]))"
-  sorry
+lemma evenVal2:assumes "ubWell[c1 \<mapsto> x]" shows"(spfConc (autGetNextOutput EvenAutomatonAutomaton state [c1 \<mapsto> \<surd>])\<cdot>(spfRt\<cdot>(h EvenAutomatonAutomaton state)) \<rightleftharpoons> Abs_ubundle [c1 \<mapsto> x])
+        = ubConcEq (autGetNextOutput EvenAutomatonAutomaton state [c1 \<mapsto> \<surd>])\<cdot>((h EvenAutomatonAutomaton state) \<rightleftharpoons> sbRt\<cdot>(Abs_ubundle [c1 \<mapsto> x]))"
+  apply (subst spconc_step)
+   apply (simp add: ubdom_ubrep_eq assms)
+  unfolding EvenAutomatonAutomaton_def
+  unfolding getDom_def
+  using EvenAutomatonAutomaton.rep_eq EvenAutomatonAutomaton_def apply auto[1]
+  by simp
 
     
 (*End*)
