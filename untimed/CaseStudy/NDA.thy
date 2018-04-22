@@ -62,8 +62,35 @@ definition spsFix :: "('a \<rightarrow> 'a) \<rightarrow> 'a" where
 
 
 
+definition setflat :: "'a set set \<rightarrow> 'a set" where
+"setflat = (\<Lambda> S. {K  | Z K. K\<in>Z \<and> Z \<in>S} )"
 
-(* like spfStep, only on SPS *)
+lemma setflat_mono: "monofun (\<lambda> S. {K  | Z K. K\<in>Z \<and> Z \<in>S} )"
+  apply(rule monofunI)
+  apply auto
+  by (smt SetPcpo.less_set_def mem_Collect_eq subsetCE subsetI)
+
+lemma setflat_cont: "cont (\<lambda> S. {K  | Z K. K\<in>Z \<and> Z \<in>S} )"
+  apply(rule contI2)
+  using setflat_mono apply simp
+  apply auto
+  unfolding  SetPcpo.less_set_def
+  unfolding lub_eq_Union
+  by blast
+
+lemma setflat_insert: "setflat\<cdot>S = {K  | Z K. K\<in>Z \<and> Z \<in>S}"
+  unfolding setflat_def
+  by (metis (mono_tags, lifting) Abs_cfun_inverse2 setflat_cont)
+
+(* Test it *)
+lemma "setflat\<cdot>{{1,2::nat},{3,4::nat}} = {1,2,3,4}"
+  unfolding setflat_insert
+  apply blast (* Dauert ein bisschen, lösche das lemma wenn es nervt *)
+  done
+
+
+
+(* like spfStep, copy & pasteonly on SPS *)
 fun spsStep :: "channel set discr \<Rightarrow> channel set discr \<Rightarrow> ((channel\<rightharpoonup>'m::message) \<Rightarrow> 'm SPS) \<rightarrow> 'm SPS" where
 "spsStep (Discr cin) (Discr cout) = undefined"
 
