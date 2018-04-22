@@ -62,7 +62,7 @@ lemma evenStreamBundle_lub: assumes "chain Y"
 (*New TODo*)
     
 (*General and h*)
- lemma evenHdElem: assumes"x\<noteq>\<epsilon>" and "ubWell[c \<mapsto> x]" shows "inv convDiscrUp (sbHdElem\<cdot>(Abs_ubundle [c \<mapsto> x])) = [c1 \<mapsto> shd(x)]" 
+ lemma evenHdElem: assumes"x\<noteq>\<epsilon>" and "ubWell[c \<mapsto> x]" shows "inv convDiscrUp (sbHdElem\<cdot>(Abs_ubundle [c \<mapsto> x])) = [c1 \<mapsto> shd(x)]"
   sorry     
  
 lemma evenAutoEmpty:"(h EvenAutomatonAutomaton state \<rightleftharpoons> Abs_ubundle [c1 \<mapsto> \<epsilon>]) = ubclLeast {c2}"
@@ -74,7 +74,7 @@ lemma [simp]:assumes "ubWell [c \<mapsto> x]" shows "sbRt\<cdot>(Abs_ubundle [c 
 lemma [simp]: "ubWell [c1 \<mapsto> \<up>\<surd> \<bullet> nat2even\<cdot>s]" 
   by (metis evenStreamBundle_well tsynmap_tick)
     
-lemma ubConc2stream:"(ubConc sb1 \<cdot> sb2) . c = (sb1. c) \<bullet> (sb2. c)" 
+lemma ubConc2stream:"(ubConc sb1 \<cdot> sb2) . c = (sb1. c) \<bullet> (sb2. c)"
   sorry    
 
 lemma h_outSb_dom[simp]:assumes "ubDom\<cdot>sb = {c1}" shows"ubDom\<cdot>(h EvenAutomatonAutomaton state \<rightleftharpoons> sb) = {c2}"
@@ -88,7 +88,7 @@ lemma[simp]:"ubWell[c2 \<mapsto> \<up>(\<M> B x)]"
 
 (*Transition function*)
   
-lemma evenTraTick:"evenAutomatonTransition (state, [c1 \<mapsto> \<surd>]) = (state,(tsynbOneTick c2) )" 
+lemma evenTraTick:"evenAutomatonTransition (state, [c1 \<mapsto> \<surd>]) = (state,(tsynbOneTick c2) )"
   sorry  
         
 lemma tran_sum_even: assumes "Parity.even (summe + m)" shows "evenAutomatonTransition (State ooo summe, [c1 \<mapsto> \<M> A m]) = (State Even (summe + m), createC2Output True)"
