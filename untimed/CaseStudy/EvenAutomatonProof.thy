@@ -104,7 +104,17 @@ lemma evenVal:"(spfConc (autGetNextOutput EvenAutomatonAutomaton (State ooo summ
      Abs_ubundle [c1 \<mapsto> \<up>(\<M> A m) \<bullet> nat2even\<cdot>(xs)]) = (ubConc (autGetNextOutput EvenAutomatonAutomaton (State ooo summe) [c1 \<mapsto>\<M> (A m)])\<cdot>
      ((h EvenAutomatonAutomaton (fst (evenAutomatonTransition (State ooo summe, [c1 \<mapsto> \<M> (A m)])))) \<rightleftharpoons>
      Abs_ubundle [c1 \<mapsto> (nat2even\<cdot>(xs))]))"
-  sorry
+proof -
+  have f1: "ubDom\<cdot>(Abs_ubundle [c1 \<mapsto> \<up>(\<M> A m) \<bullet> nat2even\<cdot>xs]) 
+    = ufDom\<cdot>(spfRt\<cdot>(h EvenAutomatonAutomaton (fst (evenAutomatonTransition (EvenAutomatonState.State ooo summe, [c1 \<mapsto> \<M> A m])))))"
+    apply (subst ubdom_ubrep_eq)
+    apply simp
+  
+    sorry
+  show ?thesis
+    apply (subst spconc_step)
+    sorry
+qed
     
 lemma evenVal2:assumes "ubWell[c \<mapsto> x]" shows"(spfConc (autGetNextOutput EvenAutomatonAutomaton state [c \<mapsto> \<surd>])\<cdot>(spfRt\<cdot>(h EvenAutomatonAutomaton state)) \<rightleftharpoons> Abs_ubundle [c \<mapsto> x])
         = ubConcEq (autGetNextOutput EvenAutomatonAutomaton state [c \<mapsto> \<surd>])\<cdot>((h EvenAutomatonAutomaton state) \<rightleftharpoons> sbRt\<cdot>(Abs_ubundle [c \<mapsto> x]))"
