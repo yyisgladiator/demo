@@ -89,4 +89,50 @@ lift_definition EvenAutomatonAutomaton :: "(EvenAutomatonState, EvenAutomaton ev
 definition EvenAutomatonSPF :: "EvenAutomaton event SPF" where
 "EvenAutomatonSPF = H EvenAutomatonAutomaton"
 
+
+
+
+
+
+(* It does not matter if it is input or output, the functions should be general *)
+(* see: createC2Output *)
+lift_definition createC1Bundle :: "nat \<Rightarrow> EvenAutomaton event SB" is
+  "\<lambda>n. [ c1 \<mapsto> \<up>(Msg (A n))]"
+unfolding ubWell_def
+unfolding usclOkay_stream_def
+unfolding ctype_event_def
+by simp
+
+lemma c1bundle_dom [simp]: "ubDom\<cdot>(createC1Bundle n) = {c1}"
+  by (simp add: ubdom_insert createC1Bundle.rep_eq)
+
+
+
+lemma evenaut_h_even_tick_step: assumes "ubDom\<cdot>sb = {c1}"
+  shows "h EvenAutomatonAutomaton (State Even summe) \<rightleftharpoons> (ubConc (tsynbOneTick c2)\<cdot>sb) 
+          = ubConc (tsynbOneTick c2)\<cdot> (h EvenAutomatonAutomaton  (State Even summe) \<rightleftharpoons> sb)"
+  oops
+
+lemma evenaut_h_odd_tick_step: assumes "ubDom\<cdot>sb = {c1}"
+  shows "h EvenAutomatonAutomaton (State Odd summe) \<rightleftharpoons> (ubConc (tsynbOneTick c2)\<cdot>sb) 
+          = ubConc (tsynbOneTick c2)\<cdot> (h EvenAutomatonAutomaton  (State Odd summe) \<rightleftharpoons> sb)"
+  oops
+
+lemma evenaut_h_even_even_step: assumes "ubDom\<cdot>sb = {c1}" and "(n+summe) mod 2 = 0"
+  shows "h EvenAutomatonAutomaton (State Even summe) \<rightleftharpoons> (ubConc (createC1Bundle n)\<cdot>sb) 
+          = ubConc (createC2Output True)\<cdot> (h EvenAutomatonAutomaton  (State Even (n+summe)) \<rightleftharpoons> sb)"
+  oops
+
+lemma evenaut_h_odd_even_step: assumes "ubDom\<cdot>sb = {c1}" and "(n+summe) mod 2 = 0"
+  shows "h EvenAutomatonAutomaton (State Odd summe) \<rightleftharpoons> (ubConc (createC1Bundle n)\<cdot>sb) 
+          = ubConc (createC2Output True)\<cdot> (h EvenAutomatonAutomaton (State Even (n+summe)) \<rightleftharpoons> sb)"
+  oops
+
+
+
+lemma evenaut_H_step: assumes "ubDom\<cdot>sb={c1}"
+  shows "H EvenAutomatonAutomaton \<rightleftharpoons> sb =  ubConc (tsynbOneTick c2)\<cdot>(h EvenAutomatonAutomaton (State Even 0) \<rightleftharpoons> sb)"
+  oops
+
+
 end
