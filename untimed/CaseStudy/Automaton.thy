@@ -208,6 +208,9 @@ lemma h_dom [simp]: "ufDom\<cdot>(h automat s) = getDom automat"
 lemma h_ran [simp]: "ufRan\<cdot>(h automat s) = getRan automat"
   apply(simp add: h_def h_cont)
   by(subst spfStateFix_fix,simp_all)
+ 
+lemma h_out_dom:assumes "ubDom\<cdot>sb = getDom automat" shows " ubDom\<cdot>(h automat state \<rightleftharpoons> sb) = getRan automat"
+  by (simp add: assms spf_ubDom)
 
 lemma h_unfolding: "(h automat s) = spfStep (getDom automat) (getRan automat)\<cdot>(helper (getTransition automat) s\<cdot>(h automat))"
   apply(simp add: h_def)
