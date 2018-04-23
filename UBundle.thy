@@ -338,6 +338,10 @@ lemma ubgetch_below: assumes "x \<sqsubseteq> y"
   shows "\<forall> c. x . c \<sqsubseteq> y . c"
   by (simp add: assms monofun_cfun_arg)
 
+lemma ubgetch_below2: assumes "x \<sqsubseteq> y"
+  shows "x . c \<sqsubseteq> y . c"
+  by (simp add: assms monofun_cfun_arg)
+
 (* the element in a channel is the same when it's unlifted  *)
 lemma ubgetch_insert: "ub . c = (Rep_ubundle ub) \<rightharpoonup> c"
   by (simp add: ubGetCh_def)
