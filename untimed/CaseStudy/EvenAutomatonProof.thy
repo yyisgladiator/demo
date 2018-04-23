@@ -143,14 +143,12 @@ next
     then show ?thesis
       by (simp add: a1 evenStreamBundle_chain op_the_lub)
   qed
+  have f23:"c2 \<in> ubDom\<cdot>(\<Squnion>i. h EvenAutomatonAutomaton state \<rightleftharpoons> Abs_ubundle [c1 \<mapsto> nat2even\<cdot>(Y i)])"
+    by (metis (no_types, lifting) EvenAutomatonAutomaton.rep_eq f21 f22 fst_conv getDom_def getRan_def h_dom h_ran local.f20 singletonI snd_conv ubclDom_ubundle_def ufran_2_ubcldom2)
   show "(h EvenAutomatonAutomaton state \<rightleftharpoons> Abs_ubundle [c1 \<mapsto> nat2even\<cdot>(\<Squnion>i::nat. Y i)])  .  c2 \<sqsubseteq>
        (\<Squnion>i::nat. (h EvenAutomatonAutomaton state \<rightleftharpoons> Abs_ubundle [c1 \<mapsto> nat2even\<cdot>(Y i)])  .  c2)"
-    apply (simp add: contlub_cfun_arg a1)
-    apply (simp add: f21 f22)
-    apply (subst ubgetch_lub)
-      apply (simp add: a1 evenStreamBundle_chain op_the_chain)
-     apply (metis f21 f22 h_outSb_dom insertI1 local.f20)
-    by (simp add: a1)
+    apply (simp add: contlub_cfun_arg a1 f21 f22 )
+    by (simp_all add: ubgetch_lub f23 a1 evenStreamBundle_chain op_the_chain)
 qed
 
 lemma evenStream_insert:"EvenStream state\<cdot>s = ((h EvenAutomatonAutomaton state) \<rightleftharpoons> (Abs_ubundle [c1 \<mapsto> (nat2even\<cdot>s)])) . c2"

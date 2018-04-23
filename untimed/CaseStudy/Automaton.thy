@@ -127,8 +127,7 @@ lemma spfRt_spfConc: "(spfRt\<cdot>(spfConc sb \<cdot>spf)) = (spfConc sb \<cdot
   apply (simp add: ubclDom_ubundle_def)
   apply (metis ubclDom_ubundle_def ubconceq_dom)
   by blast
-    
-<<<<<<< HEAD
+
 (*spfStateFix lemmas*)  
 lemma spfsl_below_spfsf: "spfStateLeast In Out \<sqsubseteq> spfStateFix In Out\<cdot>F"
 proof (simp add: spfStateFix_def, simp add: fixg_def)
@@ -145,17 +144,6 @@ lemma spfstatefix_dom:"ufDom\<cdot>((spfStateFix In Out\<cdot> f) s) = In"
     
 lemma spfstatefix_ran:"ufRan\<cdot>((spfStateFix In Out\<cdot> f) s) = Out"
   by (metis below_fun_def spfStateLeast_ran spfsl_below_spfsf ufran_below)
-
-(*spfStateFix lemmas end*)     
-(*ToDo*)
-lemma convdiscrup_dom_eq[simp]:"dom (convDiscrUp f) = dom f"
-  by(simp add: convDiscrUp_def)
-    
-=======
->>>>>>> mp/convdiscrup_inv_dom_eq
-lemma convdiscrup_inv_dom_eq[simp]:"dom (inv convDiscrUp f) = dom f"
-  sorry
-
     
 lemma ufLeast_apply:assumes "ubDom\<cdot>sb = In" shows "ufLeast In  Out \<rightleftharpoons> sb = ubclLeast Out"
   apply (simp add: ufLeast_def)
@@ -167,8 +155,6 @@ lemma ufLeast_apply:assumes "ubDom\<cdot>sb = In" shows "ufLeast In  Out \<right
 lemma ubclDom2ubDom:"ubclDom\<cdot>sb = ubDom\<cdot>sb"
   by (simp add: ubclDom_ubundle_def)
     
-(*ToDo end*)
-
 section \<open>Lemma about helper\<close>
   
 lemma helper_dom:"ufDom\<cdot>((helper (getTransition automat) s\<cdot>(h automat)) f) = ufDom\<cdot>((h automat) s)"
