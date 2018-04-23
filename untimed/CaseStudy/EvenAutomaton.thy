@@ -112,10 +112,7 @@ lemma test[simp]:"ubConc (tsynbOneTick c1)\<cdot>sb  .  c1 = \<up>\<surd> \<bull
 
 lemma test2[simp]:"ubConc (createC1Bundle n)\<cdot>sb  .  c1 = \<up>(\<M>(A n)) \<bullet> (sb. c1)"
   sorry
- 
-lemma h_out_dom:assumes "ubDom\<cdot>sb = getDom automat" shows " ubDom\<cdot>(h automat state \<rightleftharpoons> sb) = getRan automat"
-  sorry
-    
+     
 lemma sbRt_ubConc_dom[simp]:assumes "ubDom\<cdot>sb = {c1}" shows "sbRt\<cdot>(ubConc (tsynbOneTick c1)\<cdot>sb) = sb"
   sorry
     
@@ -123,13 +120,14 @@ lemma sbRt_ubConc_dom2[simp]:assumes "ubDom\<cdot>sb = {c1}" shows "sbRt\<cdot>(
   sorry
     
 lemma [simp]:"(inv convDiscrUp (sbHdElem\<cdot>(ubConc (tsynbOneTick c1)\<cdot>sb))) = [c1 \<mapsto> \<surd>]"
+  apply(simp add: inv_def convDiscrUp_def)
   sorry
     
 lemma [simp]:"(inv convDiscrUp (sbHdElem\<cdot>(ubConc (createC1Bundle n)\<cdot>sb))) = [c1 \<mapsto> \<M>(A n)]"
   sorry
 
-lemma [simp]:"ubDom\<cdot>(createC2Output True) = {c2}"    
-  sorry
+lemma [simp]:"ubDom\<cdot>(createC2Output True) = {c2}"
+  by(simp add: ubDom_def createC2Output.rep_eq)
     
 (*Transition*)
 lemma evenTraTick[simp]:"evenAutomatonTransition (state, [c1 \<mapsto> \<surd>]) = (state,(tsynbOneTick c2) )"
