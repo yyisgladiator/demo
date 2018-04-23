@@ -169,10 +169,6 @@ lemma spfRt_spfConc: "(spfRt\<cdot>(spfConc sb \<cdot>spf)) = (spfConc sb \<cdot
   apply (metis ubclDom_ubundle_def ubconceq_dom)
   by blast
     
-(*ToDo*)
-lemma convdiscrup_dom_eq[simp]:"dom (convDiscrUp f) = dom f"
-  by(simp add: convDiscrUp_def)
-    
 lemma convdiscrup_inv_dom_eq[simp]:"dom (inv convDiscrUp f) = dom f"
   sorry
 
