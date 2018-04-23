@@ -95,57 +95,66 @@ lemma evenGet_c1[simp]:"Abs_ubundle [c1 \<mapsto> nat2even\<cdot>x]  .  c1 =  na
 definition EvenStream::"EvenAutomatonState \<Rightarrow> nat event stream \<rightarrow> EvenAutomaton event stream" where
 "EvenStream state \<equiv> (\<Lambda> s. ((h EvenAutomatonAutomaton state) \<rightleftharpoons> (Abs_ubundle [c1 \<mapsto> (nat2even\<cdot>s)])) . c2)" 
 
-lemma evenStream_insert:"EvenStream state\<cdot>s = ((h EvenAutomatonAutomaton state) \<rightleftharpoons> (Abs_ubundle [c1 \<mapsto> (nat2even\<cdot>s)])) . c2"
-  apply(simp add: EvenStream_def,rule beta_cfun)
+lemma evenstream_cont[simp]: "cont (\<lambda> s. ((h EvenAutomatonAutomaton state) \<rightleftharpoons> (Abs_ubundle [c1 \<mapsto> (nat2even\<cdot>s)])) . c2)"
 proof(rule Cont.contI2)
   show"monofun (\<lambda>x::nat event stream. (h EvenAutomatonAutomaton state \<rightleftharpoons> Abs_ubundle [c1 \<mapsto> nat2even\<cdot>x])  .  c2)"
   proof(rule monofunI)
     fix x y::"nat event stream"
     assume a1:"x \<sqsubseteq> y"
-    show "(h EvenAutomatonAutomaton state \<rightleftharpoons> Abs_ubundle [c1 \<mapsto> nat2even\<cdot>x])  .  c2 \<sqsubseteq> (h EvenAutomatonAutomaton state \<rightleftharpoons> Abs_ubundle [c1 \<mapsto> nat2even\<cdot>y])  .  c2"
-    proof(cases "\<forall>c::channel\<in>getDom EvenAutomatonAutomaton. Abs_ubundle [c1 \<mapsto> nat2even\<cdot>x]  .  c \<noteq> \<epsilon>")
-      case True
-      then show ?thesis
-       (* proof(insert a1, induction arbitrary: state rule: tsyn_ind [of _x])
-          case 1
-          then show ?case
-            apply(rule adm_imp, auto)+
-              sorry
-        next
-          case 2
-          then show ?case
-            apply(simp add: getDom_def EvenAutomatonAutomaton.rep_eq)
-            by (smt domIff evenStreamBundle_well fun_upd_same option.sel tsynmap_bot ubWell_def ubgetch_ubrep_eq)
-        next
-          case (3 a s)
-          then show ?case sorry
-        next
-          case (4 s)
-          then show ?case sorry
-        qed*)
-       (* apply(subst h_final, simp_all add: getDom_def EvenAutomatonAutomaton.rep_eq ubDom_def autGetNextOutput_def)
-        apply(simp add: getTransition_def EvenAutomatonAutomaton.rep_eq)
-        apply(subst evenHdElem)
-        apply auto[1]
-        sorry*)
-        sorry
-    next
-      case False
-      then show ?thesis
-        apply(subst h_bottom, simp_all add: getDom_def getRan_def ubdom_insert EvenAutomatonAutomaton.rep_eq ubclLeast_empty)
-        by (metis dom_eq_singleton_conv evenStreamBundle_well ubrep_ubabs)
-    qed    
+    have f1: " Abs_ubundle [c1 \<mapsto> nat2even\<cdot>x] \<sqsubseteq>  Abs_ubundle [c1 \<mapsto> nat2even\<cdot>y]"
+    proof -
+      obtain cc :: "EvenAutomaton event stream\<^sup>\<Omega> \<Rightarrow> EvenAutomaton event stream\<^sup>\<Omega> \<Rightarrow> channel" where
+        "\<forall>x0 x1. (\<exists>v2. v2 \<in> ubDom\<cdot>x1 \<and> x1 . v2 \<notsqsubseteq> x0 . v2) = (cc x0 x1 \<in> ubDom\<cdot>x1 \<and> x1 . cc x0 x1 \<notsqsubseteq> x0 . cc x0 x1)"
+        by moura
+      then have f1: "\<forall>u ua. (ubDom\<cdot>u \<noteq> ubDom\<cdot>ua \<or> cc ua u \<in> ubDom\<cdot>u \<and> u . cc ua u \<notsqsubseteq> ua . cc ua u) \<or> u \<sqsubseteq> ua"
+        by (meson ub_below)
+      have "ubDom\<cdot>(Abs_ubundle [c1 \<mapsto> nat2even\<cdot>x]) = ubDom\<cdot>(Abs_ubundle [c1 \<mapsto> nat2even\<cdot>y])"
+        by (simp add: ubdom_ubrep_eq)
+      moreover
+      { assume "(nat2even\<cdot>x \<sqsubseteq> nat2even\<cdot>y) \<noteq> (Abs_ubundle [c1 \<mapsto> nat2even\<cdot>x] . cc (Abs_ubundle [c1 \<mapsto> nat2even\<cdot>y]) (Abs_ubundle [c1 \<mapsto> nat2even\<cdot>x]) \<sqsubseteq> Abs_ubundle [c1 \<mapsto> nat2even\<cdot>y] . cc (Abs_ubundle [c1 \<mapsto> nat2even\<cdot>y]) (Abs_ubundle [c1 \<mapsto> nat2even\<cdot>x]))"
+        then have "cc (Abs_ubundle [c1 \<mapsto> nat2even\<cdot>y]) (Abs_ubundle [c1 \<mapsto> nat2even\<cdot>x]) \<noteq> c1"
+          using evenStreamBundle_well fun_upd_def option.sel ubgetch_ubrep_eq by force
+        then have "cc (Abs_ubundle [c1 \<mapsto> nat2even\<cdot>y]) (Abs_ubundle [c1 \<mapsto> nat2even\<cdot>x]) \<notin> ubDom\<cdot>(Abs_ubundle [c1 \<mapsto> nat2even\<cdot>x]) \<or> Abs_ubundle [c1 \<mapsto> nat2even\<cdot>x] . cc (Abs_ubundle [c1 \<mapsto> nat2even\<cdot>y]) (Abs_ubundle [c1 \<mapsto> nat2even\<cdot>x]) \<sqsubseteq> Abs_ubundle [c1 \<mapsto> nat2even\<cdot>y] . cc (Abs_ubundle [c1 \<mapsto> nat2even\<cdot>y]) (Abs_ubundle [c1 \<mapsto> nat2even\<cdot>x])"
+          by (metis (no_types) dom_empty dom_fun_upd evenStreamBundle_well option.simps(3) singletonD ubdom_ubrep_eq) }
+      ultimately show ?thesis
+        using f1 a1 monofun_cfun_arg by blast
+    qed
+    show "(h EvenAutomatonAutomaton state \<rightleftharpoons> Abs_ubundle [c1 \<mapsto> nat2even\<cdot>x])  .  c2 
+            \<sqsubseteq> (h EvenAutomatonAutomaton state \<rightleftharpoons> Abs_ubundle [c1 \<mapsto> nat2even\<cdot>y])  .  c2"    
+      apply (rule ubgetch_below2)                     
+      by (metis below_option_def below_refl f1 monofun_cfun_arg)
   qed
 next
   fix Y:: "nat \<Rightarrow>nat event stream"
   assume a1: "chain Y"
   assume a2:"chain (\<lambda>i::nat. (h EvenAutomatonAutomaton state \<rightleftharpoons> Abs_ubundle [c1 \<mapsto> nat2even\<cdot>(Y i)])  .  c2)"
+  have f20: "ubDom\<cdot>(Abs_ubundle [c1 \<mapsto> \<Squnion>i::nat. nat2even\<cdot>(Y i)]) = {c1}"
+    by (metis a1 contlub_cfun_arg dom_eq_singleton_conv evenStreamBundle_well ubdom_ubrep_eq)
+  have f21: "Abs_ubundle [c1 \<mapsto> \<Squnion>i::nat. nat2even\<cdot>(Y i)] = (\<Squnion>i::nat. Abs_ubundle [c1 \<mapsto> nat2even\<cdot>(Y i)])"
+    apply (rule ub_eq)
+    apply (simp_all add: f20)
+     apply (metis (no_types) a1 dom_eq_singleton_conv evenStreamBundle_lub evenStreamBundle_well ubdom_ubrep_eq)
+    by (metis a1 contlub_cfun_arg evenStreamBundle_lub)
+  have f22: "(h EvenAutomatonAutomaton state \<rightleftharpoons> (\<Squnion>i::nat. Abs_ubundle [c1 \<mapsto> nat2even\<cdot>(Y i)])) = 
+(\<Squnion>i::nat. h EvenAutomatonAutomaton state \<rightleftharpoons> (Abs_ubundle [c1 \<mapsto> nat2even\<cdot>(Y i)]))"
+  proof -
+    have "\<forall>f c. \<not> chain f \<or> (c\<cdot> (Lub f::EvenAutomaton event stream\<^sup>\<Omega>)::(EvenAutomaton event stream\<^sup>\<Omega>) option) = (\<Squnion>n. c\<cdot>(f n))"
+      using contlub_cfun_arg by blast
+    then show ?thesis
+      by (simp add: a1 evenStreamBundle_chain op_the_lub)
+  qed
   show "(h EvenAutomatonAutomaton state \<rightleftharpoons> Abs_ubundle [c1 \<mapsto> nat2even\<cdot>(\<Squnion>i::nat. Y i)])  .  c2 \<sqsubseteq>
        (\<Squnion>i::nat. (h EvenAutomatonAutomaton state \<rightleftharpoons> Abs_ubundle [c1 \<mapsto> nat2even\<cdot>(Y i)])  .  c2)"
-    apply(simp add: a1 evenStreamBundle_lub, subst contlub_cfun_arg, simp add: a1 evenStreamBundle_chain)
-    sorry
+    apply (simp add: contlub_cfun_arg a1)
+    apply (simp add: f21 f22)
+    apply (subst ubgetch_lub)
+      apply (simp add: a1 evenStreamBundle_chain op_the_chain)
+     apply (metis f21 f22 h_outSb_dom insertI1 local.f20)
+    by (simp add: a1)
 qed
 
+lemma evenStream_insert:"EvenStream state\<cdot>s = ((h EvenAutomatonAutomaton state) \<rightleftharpoons> (Abs_ubundle [c1 \<mapsto> (nat2even\<cdot>s)])) . c2"
+  by(simp add: EvenStream_def)
 
 lemma  msg_assms: "EvenStream (State ooo summe)\<cdot>(\<up>(Msg m) \<bullet> xs)
                  = \<up>(Msg (B (Parity.even (summe + m)))) \<bullet> (EvenStream (State (evenMakeSubstate (Parity.even (summe + m)))  (summe + m))\<cdot>xs)"
