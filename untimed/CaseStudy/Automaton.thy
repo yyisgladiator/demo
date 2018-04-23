@@ -128,6 +128,7 @@ lemma spfRt_spfConc: "(spfRt\<cdot>(spfConc sb \<cdot>spf)) = (spfConc sb \<cdot
   apply (metis ubclDom_ubundle_def ubconceq_dom)
   by blast
     
+<<<<<<< HEAD
 (*spfStateFix lemmas*)  
 lemma spfsl_below_spfsf: "spfStateLeast In Out \<sqsubseteq> spfStateFix In Out\<cdot>F"
 proof (simp add: spfStateFix_def, simp add: fixg_def)
@@ -150,6 +151,8 @@ lemma spfstatefix_ran:"ufRan\<cdot>((spfStateFix In Out\<cdot> f) s) = Out"
 lemma convdiscrup_dom_eq[simp]:"dom (convDiscrUp f) = dom f"
   by(simp add: convDiscrUp_def)
     
+=======
+>>>>>>> mp/convdiscrup_inv_dom_eq
 lemma convdiscrup_inv_dom_eq[simp]:"dom (inv convDiscrUp f) = dom f"
   sorry
 
