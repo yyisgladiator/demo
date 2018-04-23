@@ -106,25 +106,99 @@ by simp
 lemma c1bundle_dom [simp]: "ubDom\<cdot>(createC1Bundle n) = {c1}"
   by (simp add: ubdom_insert createC1Bundle.rep_eq)
 
-(*Stuff*)
-lemma test[simp]:"ubConc (tsynbOneTick c1)\<cdot>sb  .  c1 = \<up>\<surd> \<bullet> (sb .c1)"
-  sorry
+lemma c1bundle_ubgetch[simp]: "(createC1Bundle n) . c1 = \<up>(\<M>(A n))"
+  by (metis c1bundle_dom createC1Bundle.rep_eq fun_upd_same insertI1 option.inject ubgetchE)
 
-lemma test2[simp]:"ubConc (createC1Bundle n)\<cdot>sb  .  c1 = \<up>(\<M>(A n)) \<bullet> (sb. c1)"
-  sorry
+(*Stuff*)
+lemma test[simp]:"ubConc (tsynbOneTick c1)\<cdot>sb  .  c1 = \<up>\<surd> \<bullet> (ubUp\<cdot>sb .c1)"
+  apply (simp only: ubConc_def)
+  apply (simp only:  Abs_cfun_inverse2 ubconc_cont)
+  apply (simp add: ubgetch_ubrep_eq)
+  by (simp add: usclConc_stream_def)
+
+lemma test2[simp]: "ubConc (createC1Bundle n)\<cdot>sb  .  c1 = \<up>(\<M>(A n)) \<bullet> (ubUp\<cdot>sb. c1)"
+  apply (simp only: ubConc_def)
+  apply (simp only:  Abs_cfun_inverse2 ubconc_cont)
+  apply (simp add: ubgetch_ubrep_eq)
+  by (simp add: usclConc_stream_def)
      
-lemma sbRt_ubConc_dom[simp]:assumes "ubDom\<cdot>sb = {c1}" shows "sbRt\<cdot>(ubConc (tsynbOneTick c1)\<cdot>sb) = sb"
-  sorry
+lemma sbRt_ubConc_dom[simp]:assumes "ubDom\<cdot>sb = {c1}" 
+  shows "sbRt\<cdot>(ubConc (tsynbOneTick c1)\<cdot>sb) = sb"
+  apply (rule ub_eq)
+  by (simp add: sbRt_def assms) +
     
-lemma sbRt_ubConc_dom2[simp]:assumes "ubDom\<cdot>sb = {c1}" shows "sbRt\<cdot>(ubConc (createC1Bundle n)\<cdot>sb) = sb"
-  sorry
+lemma sbRt_ubConc_dom2[simp]:assumes "ubDom\<cdot>sb = {c1}" 
+  shows "sbRt\<cdot>(ubConc (createC1Bundle n)\<cdot>sb) = sb"
+  apply (rule ub_eq)
+  by (simp add: sbRt_def assms) +
+lemma convDiscrUp_inj: "inj convDiscrUp"
+  proof (rule injI)
+    fix x::"channel \<Rightarrow> 'b option" and y::"channel \<Rightarrow> 'b option"
+    assume a1: "convDiscrUp x = convDiscrUp y"
+    have f1: "dom x = dom y"
+      by (metis a1 convDiscrUp_dom_eq)
+    have f2: "\<forall> xa \<in> dom x. (Iup (Discr (x \<rightharpoonup> xa))) = (Iup (Discr (y \<rightharpoonup> xa)))"
+      by (metis (full_types) a1 convDiscrUp_def convDiscrUp_dom_eq option.sel)
+    show "x = y"     
+      apply (subst fun_eq_iff)
+      apply rule
+      apply (case_tac "xa \<in> dom x") defer
+       apply (metis a1 convDiscrUp_dom_eq domIff)
+      by (metis discr.inject domD f1 f2 option.sel u.inject)
+  qed
+lemma [simp]:assumes "ubDom\<cdot>sb = {c1}" 
+  shows "(inv convDiscrUp (sbHdElem\<cdot>(ubConc (tsynbOneTick c1)\<cdot>sb))) = [c1 \<mapsto> \<surd>]"
+proof -
+  obtain my_p where my_p_def: "my_p = (\<lambda> x::channel \<Rightarrow> 'a event option. (\<lambda>c::channel. (c \<in> dom x)\<leadsto>Iup (Discr x\<rightharpoonup>c)) = sbHdElem\<cdot>(ubConc (tsynbOneTick c1)\<cdot>sb))"
+    by simp
+  have f1: "(\<exists> x::channel \<Rightarrow> 'a event option. (\<lambda>c::channel. (c \<in> dom x)\<leadsto>Iup (Discr x\<rightharpoonup>c)) = sbHdElem\<cdot>(ubConc (tsynbOneTick c1)\<cdot>sb))"
+    apply (rule_tac x="[c1 \<mapsto> \<surd>]" in exI)
+    apply (subst fun_eq_iff)
+    apply rule +
+    apply (case_tac "x \<in> dom [c1 \<mapsto> \<surd>]")
+     apply simp
+    unfolding sbHdElem_def
+    apply (simp add: sbHdElem_cont)
+    unfolding up_def
+     apply simp
+    by (simp add: sbHdElem_cont assms)
+  have f3: "convDiscrUp (inv convDiscrUp (sbHdElem\<cdot>(ubConc (tsynbOneTick c1)\<cdot>sb))) = 
+            convDiscrUp  [c1 \<mapsto> \<surd>]"
+    apply (subst convdiscrup_inv_eq)
+     apply (metis assms lscons_conv sbHdElem_channel sbHdElem_dom sbRt_ubConc_dom 
+        sbrt_sbdom singletonD stream.con_rews(2) test up_defined)
+    apply (subst fun_eq_iff)
+    apply rule
+    apply (case_tac "x = c1")
+    unfolding sbHdElem_def
+    apply (simp_all add: sbHdElem_cont assms)
+    unfolding convDiscrUp_def
+     apply simp
+     apply (simp add: up_def)
+    by simp
+  show ?thesis
+    by (metis convDiscrUp_inj f3 inv_f_f)
+qed
     
-lemma [simp]:"(inv convDiscrUp (sbHdElem\<cdot>(ubConc (tsynbOneTick c1)\<cdot>sb))) = [c1 \<mapsto> \<surd>]"
-  apply(simp add: inv_def convDiscrUp_def)
-  sorry
-    
-lemma [simp]:"(inv convDiscrUp (sbHdElem\<cdot>(ubConc (createC1Bundle n)\<cdot>sb))) = [c1 \<mapsto> \<M>(A n)]"
-  sorry
+lemma [simp]:assumes "ubDom\<cdot>sb = {c1}" 
+  shows "(inv convDiscrUp (sbHdElem\<cdot>(ubConc (createC1Bundle n)\<cdot>sb))) = [c1 \<mapsto> \<M>(A n)]"
+proof -
+  have f3: "convDiscrUp (inv convDiscrUp (sbHdElem\<cdot>(ubConc (createC1Bundle n)\<cdot>sb))) = 
+            convDiscrUp [c1 \<mapsto> \<M>(A n)]"
+    apply (subst convdiscrup_inv_eq)
+    apply (simp add: assms sbHdElem_channel)
+    apply (subst fun_eq_iff)
+    apply rule
+    apply (case_tac "x = c1")
+    unfolding sbHdElem_def
+    apply (simp_all add: sbHdElem_cont assms)
+    unfolding convDiscrUp_def
+     apply simp
+     apply (simp add: up_def)
+    by simp
+  show ?thesis
+    by (metis convDiscrUp_inj f3 inv_f_f)
+qed
 
 lemma [simp]:"ubDom\<cdot>(createC2Output True) = {c2}"
   by(simp add: ubDom_def createC2Output.rep_eq)
