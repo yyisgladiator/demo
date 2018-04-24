@@ -645,6 +645,25 @@ lemma convdiscrup_inv_eq[simp]: assumes "\<forall>c\<in>dom f. (f \<rightharpoon
 lemma convdiscrup_inv_dom_eq[simp]: assumes "\<forall>c\<in>dom f. (f \<rightharpoonup> c) \<noteq> \<bottom>"
                                       shows "dom (inv convDiscrUp f) = dom f"
   by (metis assms convdiscrup_inv_eq convDiscrUp_dom_eq)
+    
+lemma convDiscrUp_inj: "inj convDiscrUp"
+  proof (rule injI)
+    fix x::"channel \<Rightarrow> 'b option" and y::"channel \<Rightarrow> 'b option"
+    assume a1: "convDiscrUp x = convDiscrUp y"
+    have f1: "dom x = dom y"
+      by (metis a1 convDiscrUp_dom_eq)
+    have f2: "\<forall> xa \<in> dom x. (Iup (Discr (x \<rightharpoonup> xa))) = (Iup (Discr (y \<rightharpoonup> xa)))"
+      by (metis (full_types) a1 convDiscrUp_def convDiscrUp_dom_eq option.sel)
+    show "x = y"     
+      apply (subst fun_eq_iff)
+      apply rule
+      apply (case_tac "xa \<in> dom x") defer
+       apply (metis a1 convDiscrUp_dom_eq domIff)
+      by (metis discr.inject domD f1 f2 option.sel u.inject)
+  qed
+
+lemma convdiscrtup_eqI: "convDiscrUp x = convDiscrUp y \<Longrightarrow> x = y"
+  by (simp add: convDiscrUp_inj inj_eq)
 
 
 end
