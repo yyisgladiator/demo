@@ -19,5 +19,7 @@ lift_definition tsynbOneTick:: "channel \<Rightarrow> 'm event SB" is
 lemma tsynbonetick_dom [simp]: "ubDom\<cdot>(tsynbOneTick c) = {c}"
   by (simp add: tsynbOneTick.rep_eq ubdom_insert)
 
+lemma tsynbonetick_ubgetch[simp]: "tsynbOneTick c1  .  c1 = \<up>Tick"
+  by (metis fun_upd_same option.sel tsynbOneTick.rep_eq tsynbOneTick_def ubgetch_insert)
 
 end
