@@ -103,19 +103,13 @@ unfolding usclOkay_stream_def
 unfolding ctype_event_def
 by simp
 
+(*createOutput lemmata*)  
+
 lemma c1bundle_dom [simp]: "ubDom\<cdot>(createC1Bundle n) = {c1}"
   by (simp add: ubdom_insert createC1Bundle.rep_eq)
 
 lemma c1bundle_ubgetch[simp]: "(createC1Bundle n) . c1 = \<up>(\<M>(A n))"
   by (metis c1bundle_dom createC1Bundle.rep_eq fun_upd_same insertI1 option.inject ubgetchE)
-
-(*Stuff*)
-lemma tsynbonetick_ubconc_tick[simp]:assumes "ubDom\<cdot>sb = {c1}" 
-  shows "ubConc (tsynbOneTick c1)\<cdot>sb  .  c1 = \<up>\<surd> \<bullet> (sb .c1)"
-  apply (simp only: ubConc_def)
-  apply (simp only:  Abs_cfun_inverse2 ubconc_cont)
-  apply (simp add: ubgetch_ubrep_eq)
-  by (simp add: assms usclConc_stream_def)
 
 lemma tsynbonetick_ubconc_msg[simp]: assumes "ubDom\<cdot>sb = {c1}" 
   shows "ubConc (createC1Bundle n)\<cdot>sb  .  c1 = \<up>(\<M>(A n)) \<bullet> (sb. c1)"
@@ -124,35 +118,20 @@ lemma tsynbonetick_ubconc_msg[simp]: assumes "ubDom\<cdot>sb = {c1}"
   apply (simp add: ubgetch_ubrep_eq)
   by (simp add: assms usclConc_stream_def)
      
-lemma sbrt_ubconc_dom[simp]:assumes "ubDom\<cdot>sb = {c1}" 
-  shows "sbRt\<cdot>(ubConc (tsynbOneTick c1)\<cdot>sb) = sb"
-  apply (rule ub_eq)
-  by (simp add: sbRt_def assms) +
     
 lemma sbrt_ubconc_dom2[simp]:assumes "ubDom\<cdot>sb = {c1}" 
   shows "sbRt\<cdot>(ubConc (createC1Bundle n)\<cdot>sb) = sb"
   apply (rule ub_eq)
-  by (simp add: sbRt_def assms) +
+  by (simp add: sbRt_def assms) + 
 
-lemma convDiscrUp_inj: "inj convDiscrUp"
-  proof (rule injI)
-    fix x::"channel \<Rightarrow> 'b option" and y::"channel \<Rightarrow> 'b option"
-    assume a1: "convDiscrUp x = convDiscrUp y"
-    have f1: "dom x = dom y"
-      by (metis a1 convDiscrUp_dom_eq)
-    have f2: "\<forall> xa \<in> dom x. (Iup (Discr (x \<rightharpoonup> xa))) = (Iup (Discr (y \<rightharpoonup> xa)))"
-      by (metis (full_types) a1 convDiscrUp_def convDiscrUp_dom_eq option.sel)
-    show "x = y"     
-      apply (subst fun_eq_iff)
-      apply rule
-      apply (case_tac "xa \<in> dom x") defer
-       apply (metis a1 convDiscrUp_dom_eq domIff)
-      by (metis discr.inject domD f1 f2 option.sel u.inject)
-  qed
 
-lemma convdiscrtup_eqI: "convDiscrUp x = convDiscrUp y \<Longrightarrow> x = y"
-  by (simp add: convDiscrUp_inj inj_eq)
+(* (*useful for proof of h lemmata*)
+lemma createc2output_dom[simp]:"ubDom\<cdot>(createC2Output True) = {c2}"
+  by(simp add: ubDom_def createC2Output.rep_eq)
+  *)  
 
+    
+(*useful for Transition*)
 lemma tsynbonetick_hd_inv_convdiscrtup_tick[simp]:assumes "ubDom\<cdot>sb = {c1}" 
   shows "(inv convDiscrUp (sbHdElem\<cdot>(ubConc (tsynbOneTick c1)\<cdot>sb))) = [c1 \<mapsto> \<surd>]"
   apply (rule  convdiscrtup_eqI)
@@ -182,18 +161,15 @@ lemma tsynbonetick_hd_inv_convdiscrtup_msg[simp]:assumes "ubDom\<cdot>sb = {c1}"
    apply simp
    apply (simp add: up_def)
   by simp
-
-lemma createc2output_dom[simp]:"ubDom\<cdot>(createC2Output True) = {c2}"
-  by(simp add: ubDom_def createC2Output.rep_eq)
     
 (*Transition*)
 lemma evenTraTick[simp]:"evenAutomatonTransition (state, [c1 \<mapsto> \<surd>]) = (state,(tsynbOneTick c2) )"
   sorry  
         
-lemma tran_sum_even[simp]: assumes "Parity.even (summe + m)" shows "evenAutomatonTransition (State ooo summe, [c1 \<mapsto> \<M> A m]) = (State Even (summe + m), createC2Output True)"
+lemma tran_sum_even[simp]: assumes "Parity.even (summe + m)" shows "evenAutomatonTransition (State ooo summe, [c1 \<mapsto> \<M>(A m)]) = (State Even (summe + m), createC2Output True)"
   sorry
     
-lemma tran_sum_odd[simp]: assumes "\<not>Parity.even (summe + m)" shows "evenAutomatonTransition (State ooo summe, [c1 \<mapsto> \<M> A m]) = (State Odd (summe + m), createC2Output False)"
+lemma tran_sum_odd[simp]: assumes "\<not>Parity.even (summe + m)" shows "evenAutomatonTransition (State ooo summe, [c1 \<mapsto> \<M>(A m)]) = (State Odd (summe + m), createC2Output False)"
   sorry   
     
 (*step lemmata*)
@@ -211,16 +187,18 @@ lemma evenaut_h_odd_tick_step: assumes "ubDom\<cdot>sb = {c1}"
 lemma evenaut_h_even_even_step: assumes "ubDom\<cdot>sb = {c1}" and "(n+summe) mod 2 = 0"
   shows "h EvenAutomatonAutomaton (State Even summe) \<rightleftharpoons> (ubConc (createC1Bundle n)\<cdot>sb) 
           = ubConc (createC2Output True)\<cdot> (h EvenAutomatonAutomaton  (State Even (n+summe)) \<rightleftharpoons> sb)"
-  by(simp_all add: h_final getDom_def EvenAutomatonAutomaton.rep_eq h_out_dom assms getRan_def autGetNextOutput_def autGetNextState_def getTransition_def add.commute even_iff_mod_2_eq_zero)
-
+  apply(simp_all add: h_final getDom_def EvenAutomatonAutomaton.rep_eq h_out_dom assms getRan_def autGetNextOutput_def autGetNextState_def getTransition_def add.commute even_iff_mod_2_eq_zero)
+  apply(rule ubrestrict_id)
+  apply(simp add: h_out_dom assms getDom_def EvenAutomatonAutomaton.rep_eq getRan_def)
+  by(subst ubDom_def, simp add: createC2Output.rep_eq)
 
 lemma evenaut_h_odd_even_step: assumes "ubDom\<cdot>sb = {c1}" and "(n+summe) mod 2 = 0"
   shows "h EvenAutomatonAutomaton (State Odd summe) \<rightleftharpoons> (ubConc (createC1Bundle n)\<cdot>sb) 
           = ubConc (createC2Output True)\<cdot> (h EvenAutomatonAutomaton (State Even (n+summe)) \<rightleftharpoons> sb)"
-  by(simp_all add: h_final getDom_def EvenAutomatonAutomaton.rep_eq h_out_dom assms getRan_def autGetNextOutput_def autGetNextState_def getTransition_def add.commute even_iff_mod_2_eq_zero)
-
-
-
+  apply(simp_all add: h_final getDom_def EvenAutomatonAutomaton.rep_eq h_out_dom assms getRan_def autGetNextOutput_def autGetNextState_def getTransition_def add.commute even_iff_mod_2_eq_zero)
+  apply(rule ubrestrict_id)
+  apply(simp add: h_out_dom assms getDom_def EvenAutomatonAutomaton.rep_eq getRan_def)
+  by(subst ubDom_def, simp add: createC2Output.rep_eq)
 
 lemma evenaut_H_step: assumes "ubDom\<cdot>sb={c1}"
   shows "H EvenAutomatonAutomaton \<rightleftharpoons> sb =  ubConc (tsynbOneTick c2)\<cdot>(h EvenAutomatonAutomaton (State Even 0) \<rightleftharpoons> sb)"

@@ -176,6 +176,8 @@ lemma bot_assms: "EvenStream state\<cdot>\<bottom> = \<bottom>"
   apply(simp add: getDom_def EvenAutomatonAutomaton.rep_eq)
   by(simp add: getRan_def EvenAutomatonAutomaton.rep_eq ubclLeast_ubundle_def)
    
-    
+lemma EvenStream_final:"EvenStream (State ooo summe)\<cdot>xs = sscanlA evenTransition (State ooo summe)\<cdot>(nat2even\<cdot>xs)"
+by(rule rek2evenstream, simp add: msg_assms, simp add: tick_assms, simp add: bot_assms)
+  
 end
   
