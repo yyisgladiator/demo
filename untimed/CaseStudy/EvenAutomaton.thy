@@ -61,8 +61,8 @@ function evenAutomatonTransition :: "(EvenAutomatonState \<times> (channel \<rig
  "evenAutomatonTransition (State Odd automaton_sum, [c1 \<mapsto> Msg a]) = (case a of A b
       \<Rightarrow> 
   (
-    if((b+automaton_sum) mod 2 = 1) then ((State Even (b+automaton_sum),(createC2Output True)))
-    else if((b+automaton_sum) mod 2 = 0) then ((State Odd (b+automaton_sum),(createC2Output False)))
+    if((b+automaton_sum) mod 2 = 1) then ((State Odd (b+automaton_sum),(createC2Output False)))
+    else if((b+automaton_sum) mod 2 = 0) then ((State Even (b+automaton_sum),(createC2Output True)))
     else undefined
   )
   | _ \<Rightarrow> undefined)" |
@@ -81,6 +81,7 @@ using map_upd_eqD1 apply fastforce
 apply (meson event.distinct(1) map_upd_eqD1)
 apply (meson option.distinct(1))
 by (metis option.simps(3))
+termination by lexicographic_order
 
 lift_definition EvenAutomatonAutomaton :: "(EvenAutomatonState, EvenAutomaton event) automaton" is 
   "(evenAutomatonTransition, State Even 0,(tsynbOneTick c2), {c1}, {c2})"
