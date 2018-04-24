@@ -25,12 +25,14 @@ section \<open>Backend Signatures\<close>
 
 (* Converter function. *)
   (* definition should be right, but needs to be nicer *)
-
+definition ubElemWell::"(channel \<rightharpoonup> 'm::message) \<Rightarrow> bool" where
+"ubElemWell f \<equiv> \<forall>c\<in> dom f. f\<rightharpoonup>c \<in> ctype c"
 
 fun automaton_well::"((('state \<times>(channel \<rightharpoonup> 'm::message)) \<Rightarrow> ('state \<times> 'm SB)) \<times> 'state \<times> 'm SB \<times> channel set \<times> channel set) \<Rightarrow> bool " where
-"automaton_well (transition, initialState, initialOut, chIn, chOut) = (finite chIn \<and> (\<forall>s f. dom f = chIn \<longrightarrow> ubDom\<cdot>(snd(transition (s,f))) = chOut))"
+"automaton_well (transition, initialState, initialOut, chIn, chOut) = (finite chIn \<and> (\<forall>s f. (dom f = chIn \<and> ubElemWell f) \<longrightarrow> ubDom\<cdot>(snd(transition (s,f))) = chOut))"
 
-lemma automaton_wellI: assumes "finite In" and "\<And>s f. dom f = In \<Longrightarrow> ubDom\<cdot>(snd(transition (s,f))) = Out" shows "automaton_well (transition, initialState, initialOut, In, Out)"
+lemma automaton_wellI: assumes "finite In" and "\<And>s f. (dom f = In \<and> ubElemWell f) \<Longrightarrow> ubDom\<cdot>(snd(transition (s,f))) = Out" 
+                       shows "automaton_well (transition, initialState, initialOut, In, Out)"
 by(simp add: assms)
 
 
@@ -89,12 +91,7 @@ lemma automat_well[simp]:"automaton_well (Rep_automaton automat)"
   using Rep_automaton by auto
 
 lemma automat_finite_dom[simp]:"finite (getDom automat)"
-proof -
-  have "\<forall>p. \<not> automaton_well p \<or> (\<exists>f a u C Ca. p = (f, a::'a, u::'b stream\<^sup>\<Omega>, C, Ca) \<and> finite C \<and> (\<forall>a fa. dom fa \<noteq> C \<or> UBundle.ubDom\<cdot>(snd (f (a, fa))) = Ca))"
-    by auto
-  then show ?thesis
-    by (metis (no_types) automat_well getDom_def prod.sel(1) prod.sel(2))
-qed
+  by simp
 
 (*spfRt and spfConc*)
 
