@@ -361,8 +361,6 @@ lemma sbRt2srt[simp]: assumes "ubWell [c \<mapsto> x]"
       by (simp add: well_r ubdom_ubrep_eq)
     have dom_l: "ubDom\<cdot>?L = {c}"
       by (simp add: assms ubdom_ubrep_eq)
-    moreover have map_getch_assms: "\<forall>c s. (sdom\<cdot>s\<subseteq>(ctype c) \<longrightarrow> sdom\<cdot>((\<lambda>s. sdrop n\<cdot>s) s)\<subseteq>(ctype c))"
-      by auto
     moreover have "?L .c = ?R .c"
       apply(simp add: sbRt_def sbDrop_def assms ubdom_ubrep_eq )
       by (simp add: assms well_r sdrop_forw_rt ubgetch_ubrep_eq)
