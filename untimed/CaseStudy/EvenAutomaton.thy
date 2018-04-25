@@ -61,8 +61,8 @@ function evenAutomatonTransition :: "(EvenAutomatonState \<times> (channel \<rig
  "evenAutomatonTransition (State Odd automaton_sum, [c1 \<mapsto> Msg a]) = (case a of A b
       \<Rightarrow> 
   (
-    if((b+automaton_sum) mod 2 = 1) then ((State Even (b+automaton_sum),(createC2Output True)))
-    else if((b+automaton_sum) mod 2 = 0) then ((State Odd (b+automaton_sum),(createC2Output False)))
+    if((b+automaton_sum) mod 2 = 1) then ((State Odd (b+automaton_sum),(createC2Output False)))
+    else if((b+automaton_sum) mod 2 = 0) then ((State Even (b+automaton_sum),(createC2Output True)))
     else undefined
   )
   | _ \<Rightarrow> undefined)" |
@@ -81,6 +81,7 @@ using map_upd_eqD1 apply fastforce
 apply (meson event.distinct(1) map_upd_eqD1)
 apply (meson option.distinct(1))
 by (metis option.simps(3))
+termination by lexicographic_order
 
 lift_definition EvenAutomatonAutomaton :: "(EvenAutomatonState, EvenAutomaton event) automaton" is 
   "(evenAutomatonTransition, State Even 0,(tsynbOneTick c2), {c1}, {c2})"
@@ -161,16 +162,22 @@ lemma tsynbonetick_hd_inv_convdiscrtup_msg[simp]:assumes "ubDom\<cdot>sb = {c1}"
    apply simp
    apply (simp add: up_def)
   by simp
-    
+   
 (*Transition*)
 lemma evenTraTick[simp]:"evenAutomatonTransition (state, [c1 \<mapsto> \<surd>]) = (state,(tsynbOneTick c2) )"
-  sorry  
+  by (metis (full_types) EvenAutomatonState.exhaust EvenAutomatonSubstate.exhaust evenAutomatonTransition.simps(2) evenAutomatonTransition.simps(4))
         
 lemma tran_sum_even[simp]: assumes "Parity.even (summe + m)" shows "evenAutomatonTransition (State ooo summe, [c1 \<mapsto> \<M>(A m)]) = (State Even (summe + m), createC2Output True)"
-  sorry
+  apply (cases ooo)
+   apply auto
+  using assms by presburger  +
+
     
 lemma tran_sum_odd[simp]: assumes "\<not>Parity.even (summe + m)" shows "evenAutomatonTransition (State ooo summe, [c1 \<mapsto> \<M>(A m)]) = (State Odd (summe + m), createC2Output False)"
-  sorry   
+  apply (cases ooo)
+   apply auto
+  using assms by presburger  +
+   
     
 (*step lemmata*)
 lemma evenaut_h_even_tick_step: assumes "ubDom\<cdot>sb = {c1}"
