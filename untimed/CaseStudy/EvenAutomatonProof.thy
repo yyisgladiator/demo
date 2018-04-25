@@ -55,61 +55,6 @@ lemma evenStreamBundle_lub: assumes "chain Y"
   by (simp add: assms contlub_cfun_arg)
 
 (*New TODo*)
-   
-(* TODO: Name finden und nach SB verschieben *)
-lemma evenHdElem: assumes "x\<noteq>\<epsilon>" 
-                      and "ubWell [c \<mapsto> x]" 
-                    shows "inv convDiscrUp (sbHdElem\<cdot>(Abs_ubundle [c \<mapsto> x])) = [c \<mapsto> shd(x)]" (is "inv convDiscrUp ?L = ?R")
-  proof -
-    have l_dom: "dom ?L = {c}"
-      by (simp add: assms(2) ubdom_ubrep_eq)
-    hence lemma_assms: "\<forall>c\<in> dom ?L. ?L \<rightharpoonup> c \<noteq> \<bottom>"
-      by (metis assms(1) assms(2) fun_upd_same option.sel sbHdElem_channel sbHdElem_dom singletonD ubgetch_ubrep_eq)
-    have r_dom: "dom (convDiscrUp ?R) = {c}"
-      by simp
-    have "?L \<rightharpoonup> c = Iup (Discr (shd x))"
-      proof -
-        have "(\<Lambda> (sb::'a stream\<^sup>\<Omega>). (\<lambda>c::channel. (c \<in> ubDom\<cdot>sb)\<leadsto>lshd\<cdot>(sb .c)))\<cdot>(Abs_ubundle [c \<mapsto> x])\<rightharpoonup>c
-            = lshd\<cdot>((Abs_ubundle [c \<mapsto> x]) .c)" 
-          proof -
-            have f1: "Some (\<Lambda> u. (\<lambda>c. (c \<in> ubDom\<cdot>u)\<leadsto>lshd\<cdot>(u . c)))\<cdot> (Abs_ubundle [c \<mapsto> x])\<rightharpoonup>c = ((\<Lambda> u. (\<lambda>c. (c \<in> ubDom\<cdot>u)\<leadsto>lshd\<cdot>(u . c)))\<cdot> (Abs_ubundle [c \<mapsto> x])) c"
-              by (metis (no_types) domIff l_dom option.collapse sbHdElem_def singletonI)
-            have f2: "(\<Lambda> u. (\<lambda>c. (c \<in> ubDom\<cdot>u)\<leadsto>lshd\<cdot>(u . c)))\<cdot> (Abs_ubundle [c \<mapsto> x]) = (\<lambda>ca. (ca \<in> ubDom\<cdot> (Abs_ubundle [c \<mapsto> x]))\<leadsto>lshd\<cdot> (Abs_ubundle [c \<mapsto> x] . ca))"
-              using beta_cfun sbHdElem_cont by blast
-            have "c \<in> ubDom\<cdot>(Abs_ubundle [c \<mapsto> x])"
-              using l_dom sbHdElem_dom by blast
-            then have "Some (\<Lambda> u. (\<lambda>c. (c \<in> ubDom\<cdot>u)\<leadsto>lshd\<cdot>(u . c)))\<cdot> (Abs_ubundle [c \<mapsto> x])\<rightharpoonup>c = Some (lshd\<cdot>(Abs_ubundle [c \<mapsto> x] . c))"
-              using f2 f1 by presburger
-            then show ?thesis
-              by (meson option.inject)
-          qed
-        then have "sbHdElem\<cdot>(Abs_ubundle [c \<mapsto> x])\<rightharpoonup>c = lshd\<cdot>((Abs_ubundle [c \<mapsto> x]) .c)" 
-          by (simp add: sbHdElem_def)                 
-        moreover have "lshd\<cdot>x = Iup (Discr (shd x))"
-          proof -
-            have "\<exists> a. lshd\<cdot>x = updis a"
-              by (metis assms(1) stream.sel_rews(3) updis_exists)
-            then obtain a where a_def: "lshd\<cdot>x = updis a"
-              by auto
-            then have "shd x = a"
-              by (metis assms(1) lshd_updis surj_scons updis_eq)
-            moreover have "updis a = (Iup (Discr a))"
-              by(simp add: up_def cont_Ifup1)
-            ultimately show ?thesis
-              using a_def by auto
-          qed
-        then have "lshd\<cdot>((Abs_ubundle [c \<mapsto> x]) .c) = Iup (Discr (shd x))"
-          by (simp add: assms(2) ubgetch_ubrep_eq)
-        ultimately show ?thesis
-          by simp
-      qed
-    hence "?L \<rightharpoonup> c = (convDiscrUp ?R) \<rightharpoonup> c"
-      by (simp add: convDiscrUp_def)
-    hence "?L = convDiscrUp ?R"
-      by (metis l_dom part_eq r_dom singletonD)
-    then show ?thesis
-      by (metis convdiscrtup_eqI convdiscrup_inv_eq lemma_assms)
-  qed    
 
 lemma [simp]:assumes "ubWell [c \<mapsto> x]" shows "sbRt\<cdot>(Abs_ubundle [c \<mapsto> x]) = (Abs_ubundle [c \<mapsto> srt\<cdot>x])"
   sorry 
@@ -206,7 +151,7 @@ lemma evenStream_insert:"EvenStream state\<cdot>s = ((h EvenAutomatonAutomaton s
 
 lemma  msg_assms: "EvenStream (State ooo summe)\<cdot>(\<up>(Msg m) \<bullet> xs)
                  = \<up>(Msg (B (Parity.even (summe + m)))) \<bullet> (EvenStream (State (evenMakeSubstate (Parity.even (summe + m)))  (summe + m))\<cdot>xs)"
-  apply(simp_all add:  evenStream_insert h_final ubdom_ubrep_eq getDom_def EvenAutomatonAutomaton.rep_eq h_out_dom evenHdElem autGetNextOutput_def autGetNextState_def getTransition_def)
+  apply(simp_all add:  evenStream_insert h_final ubdom_ubrep_eq getDom_def EvenAutomatonAutomaton.rep_eq h_out_dom convDiscrUp_sbHdElem_eq autGetNextOutput_def autGetNextState_def getTransition_def)
   apply(cases "Parity.even (summe + m)")
   by(simp_all add: getRan_def EvenAutomatonAutomaton.rep_eq createC2Output_def ubConc2stream)
   
@@ -214,7 +159,7 @@ lemma [simp]:"nat2even\<cdot>(\<up>\<surd>) \<noteq> \<epsilon>"
   by (metis (mono_tags, lifting) event.simps(3) inject_scons lscons_conv sconc_fst_empty sup'_def tsynmap_bot tsynmap_tick)
     
 lemma tick_assms: "EvenStream state\<cdot>(\<up>Tick \<bullet> xs) = \<up>Tick \<bullet> (EvenStream state\<cdot>xs)"
-  apply(simp_all add: ubConc2stream evenStream_insert getRan_def tsynbOneTick_def h_final ubdom_ubrep_eq getDom_def EvenAutomatonAutomaton.rep_eq h_out_dom evenHdElem autGetNextOutput_def autGetNextState_def getTransition_def)
+  apply(simp_all add: ubConc2stream evenStream_insert getRan_def tsynbOneTick_def h_final ubdom_ubrep_eq getDom_def EvenAutomatonAutomaton.rep_eq h_out_dom convDiscrUp_sbHdElem_eq autGetNextOutput_def autGetNextState_def getTransition_def)
   by (metis fun_upd_same option.sel tsynbOneTick.abs_eq tsynbOneTick.rep_eq ubgetch_insert)
    
 lemma evenStreamBundle_empty_well[simp]:"ubWell ([c1 \<mapsto> \<epsilon>])"
