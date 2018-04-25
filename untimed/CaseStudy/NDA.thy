@@ -2,15 +2,12 @@
 
 theory NDA
 
-imports Automaton "../../USpec"
+imports Automaton "../../USpec" "../SpsStep"
 
 begin
 
 default_sort type
-type_synonym 'm SPS = "'m SPF uspec"
-
-
-
+  
 section \<open>Non Deterministic Case \<close>
 
 (* FYI: Non-deterministic version *)
@@ -87,16 +84,11 @@ lemma "setflat\<cdot>{{1,2::nat},{3,4::nat}} = {1,2,3,4}"
   unfolding setflat_insert
   apply blast (* Dauert ein bisschen, lösche das lemma wenn es nervt *)
   done
+(*
+"channel set \<Rightarrow> channel set \<Rightarrow> ((channel\<rightharpoonup>'m::message) \<Rightarrow> 'm SPF) \<rightarrow> 'm SPF"
+*)
 
-
-
-(* like spfStep, copy & pasteonly on SPS *)
-fun spsStep :: "channel set discr \<Rightarrow> channel set discr \<Rightarrow> ((channel\<rightharpoonup>'m::message) \<Rightarrow> 'm SPS) \<rightarrow> 'm SPS" where
-"spsStep (Discr cin) (Discr cout) = undefined"
-
-
-
-
+  
 (* See: https://git.rwth-aachen.de/montibelle/automaton/core/issues/70 *)
 definition spsConc:: "'m SB \<Rightarrow> 'm SPS \<rightarrow> 'm SPS" where
 "spsConc = undefined"
@@ -104,8 +96,6 @@ definition spsConc:: "'m SB \<Rightarrow> 'm SPS \<rightarrow> 'm SPS" where
 (* See: https://git.rwth-aachen.de/montibelle/automaton/core/issues/70 *)
 definition spsRt:: "'m SPS \<rightarrow> 'm SPS" where
 "spsRt = undefined"
-
-
 
 
 (* ToDo *)
