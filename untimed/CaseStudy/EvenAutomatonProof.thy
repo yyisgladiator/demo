@@ -167,11 +167,6 @@ lemma evenStreamBundle_lub: assumes "chain Y"
   by (simp add: assms contlub_cfun_arg)
 
 (*New TODo*)
-    
-(*General and h*)
- lemma evenHdElem: assumes"x\<noteq>\<epsilon>" and "ubWell[c \<mapsto> x]" shows "inv convDiscrUp (sbHdElem\<cdot>(Abs_ubundle [c \<mapsto> x])) = [c1 \<mapsto> shd(x)]"
-   sorry     
-    
 
 lemma [simp]:assumes "ubWell [c \<mapsto> x]" shows "sbRt\<cdot>(Abs_ubundle [c \<mapsto> x]) = (Abs_ubundle [c \<mapsto> srt\<cdot>x])"
   sorry 
@@ -268,7 +263,7 @@ lemma evenStream_insert:"EvenStream state\<cdot>s = ((h EvenAutomatonAutomaton s
 
 lemma  msg_assms: "EvenStream (State ooo summe)\<cdot>(\<up>(Msg m) \<bullet> xs)
                  = \<up>(Msg (B (Parity.even (summe + m)))) \<bullet> (EvenStream (State (evenMakeSubstate (Parity.even (summe + m)))  (summe + m))\<cdot>xs)"
-  apply(simp_all add:  evenStream_insert h_final ubdom_ubrep_eq getDom_def EvenAutomatonAutomaton.rep_eq h_out_dom evenHdElem autGetNextOutput_def autGetNextState_def getTransition_def)
+  apply(simp_all add:  evenStream_insert h_final ubdom_ubrep_eq getDom_def EvenAutomatonAutomaton.rep_eq h_out_dom convDiscrUp_sbHdElem_eq autGetNextOutput_def autGetNextState_def getTransition_def)
   apply(cases "Parity.even (summe + m)")
   by(simp_all add: getRan_def EvenAutomatonAutomaton.rep_eq createC2Output_def ubConc2stream)
   
@@ -276,7 +271,7 @@ lemma [simp]:"nat2even\<cdot>(\<up>\<surd>) \<noteq> \<epsilon>"
   by (metis (mono_tags, lifting) event.simps(3) inject_scons lscons_conv sconc_fst_empty sup'_def tsynmap_bot tsynmap_tick)
     
 lemma tick_assms: "EvenStream state\<cdot>(\<up>Tick \<bullet> xs) = \<up>Tick \<bullet> (EvenStream state\<cdot>xs)"
-  apply(simp_all add: ubConc2stream evenStream_insert getRan_def tsynbOneTick_def h_final ubdom_ubrep_eq getDom_def EvenAutomatonAutomaton.rep_eq h_out_dom evenHdElem autGetNextOutput_def autGetNextState_def getTransition_def)
+  apply(simp_all add: ubConc2stream evenStream_insert getRan_def tsynbOneTick_def h_final ubdom_ubrep_eq getDom_def EvenAutomatonAutomaton.rep_eq h_out_dom convDiscrUp_sbHdElem_eq autGetNextOutput_def autGetNextState_def getTransition_def)
   by (metis fun_upd_same option.sel tsynbOneTick.abs_eq tsynbOneTick.rep_eq ubgetch_insert)
    
 lemma evenStreamBundle_empty_well[simp]:"ubWell ([c1 \<mapsto> \<epsilon>])"
