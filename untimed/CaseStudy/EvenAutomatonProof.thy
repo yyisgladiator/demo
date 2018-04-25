@@ -59,32 +59,6 @@ lemma evenStreamBundle_lub: assumes "chain Y"
 (*General and h*)
  lemma evenHdElem: assumes"x\<noteq>\<epsilon>" and "ubWell[c \<mapsto> x]" shows "inv convDiscrUp (sbHdElem\<cdot>(Abs_ubundle [c \<mapsto> x])) = [c1 \<mapsto> shd(x)]"
    sorry     
-
-lemma sbRt_apply[simp]: assumes "ubWell [c \<mapsto> x]"
-                          shows "sbRt\<cdot>(Abs_ubundle [c \<mapsto> x]) = (Abs_ubundle [c \<mapsto> srt\<cdot>x])"
-                            (is "?L = ?R")
-  proof -
-    have srt_sdom: "sdom\<cdot>(srt\<cdot>x) \<subseteq> sdom\<cdot>x"
-      by (metis (full_types) Un_upper2 sdom2un stream.sel_rews(2) subsetI surj_scons)
-    have sdom_ctype: "sdom\<cdot>x \<subseteq> ctype c"
-      apply(fold usclOkay_stream_def)
-      by (metis (full_types) assms dom_eq_singleton_conv fun_upd_same insertI1 option.sel ubWell_def)
-    have srt_ctype: "sdom\<cdot>(srt\<cdot>x) \<subseteq> ctype c"
-      using srt_sdom sdom_ctype by auto
-    have well_r: "ubWell [c \<mapsto> srt\<cdot>x]"
-      by (metis srt_ctype sbset_well ubWell_empty ubrep_ubabs)
-    have dom_r: "ubDom\<cdot>?R = {c}"
-      by (simp add: well_r ubdom_ubrep_eq)
-    have dom_l: "ubDom\<cdot>?L = {c}"
-      by (simp add: assms ubdom_ubrep_eq)
-    moreover have map_getch_assms: "\<forall>c s. (sdom\<cdot>s\<subseteq>(ctype c) \<longrightarrow> sdom\<cdot>((\<lambda>s. sdrop n\<cdot>s) s)\<subseteq>(ctype c))"
-      by auto
-    moreover have "(sbRt\<cdot>(Abs_ubundle [c \<mapsto> x])) .c = (Abs_ubundle [c \<mapsto> srt\<cdot>x]) .c"
-      apply(simp add: sbRt_def sbDrop_def assms ubdom_ubrep_eq )
-      by (simp add: assms well_r sdrop_forw_rt ubgetch_ubrep_eq)
-    ultimately show ?thesis
-      by (metis dom_r dom_l singletonD ubgetchI)
-  qed
         
 lemma [simp]: "ubWell [c1 \<mapsto> \<up>\<surd> \<bullet> nat2even\<cdot>s]" 
   by (metis evenStreamBundle_well tsynmap_tick)
