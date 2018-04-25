@@ -168,8 +168,6 @@ lemma evenStreamBundle_lub: assumes "chain Y"
 
 (*New TODo*)
 
-lemma [simp]:assumes "ubWell [c \<mapsto> x]" shows "sbRt\<cdot>(Abs_ubundle [c \<mapsto> x]) = (Abs_ubundle [c \<mapsto> srt\<cdot>x])"
-  sorry 
         
 lemma [simp]: "ubWell [c1 \<mapsto> \<up>\<surd> \<bullet> nat2even\<cdot>s]" 
   by (metis evenStreamBundle_well tsynmap_tick)
