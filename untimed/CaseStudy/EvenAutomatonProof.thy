@@ -167,8 +167,6 @@ lemma evenStreamBundle_lub: assumes "chain Y"
   by (simp add: assms contlub_cfun_arg)
 
 (*New TODo*)
-    
-(*General and h*)
 
         
 lemma [simp]: "ubWell [c1 \<mapsto> \<up>\<surd> \<bullet> nat2even\<cdot>s]" 
