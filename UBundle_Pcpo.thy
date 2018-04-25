@@ -105,7 +105,7 @@ lemma ubrestrict_below [simp]: assumes "chain Y" and "cont h"
     using not_below2not_eq by blast
 qed
 
-lemma ubunion_idR [simp]: "b \<uplus> (ubLeast {}) = b"
+lemma ubunion_idR [simp]: "ubUnion\<cdot>b\<cdot>(ubLeast {}) = b"
   by (simp add: ubunion_insert ubLeast_def ubWell_empty)    
     
 lemma ubrestrict_ubleast_inter: "ubLeast cs1 \<bar> cs2 = ubLeast (cs1 \<inter> cs2)"
