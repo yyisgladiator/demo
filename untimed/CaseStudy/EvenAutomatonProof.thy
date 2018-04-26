@@ -307,16 +307,10 @@ lemma [simp]:"nat2even\<cdot>(\<up>\<surd>) \<noteq> \<epsilon>"
   by (metis (mono_tags, lifting) event.simps(3) inject_scons lscons_conv sconc_fst_empty sup'_def tsynmap_bot tsynmap_tick)
   
 lemma tick_assms: "EvenStream state\<cdot>(\<up>Tick \<bullet> xs) = \<up>Tick \<bullet> (EvenStream state\<cdot>xs)"
-  apply(simp_all add: ubConc_usclConc_eq evenStream_insert getRan_def tsynbOneTick_def h_final ubdom_ubrep_eq getDom_def EvenAutomatonAutomaton.rep_eq h_out_dom convDiscrUp_sbHdElem_eq autGetNextOutput_def autGetNextState_def getTransition_def)
-  proof -
-    have assms1: "c2 \<in> ubDom\<cdot>(Abs_ubundle [c2 \<mapsto> \<up>\<surd>])"
-      by (metis singletonI tsynbOneTick.abs_eq tsynbonetick_dom)
-    moreover have assms2: "c2 \<in> ubDom\<cdot>(h EvenAutomatonAutomaton state \<rightleftharpoons> Abs_ubundle [c1 \<mapsto> nat2even\<cdot>xs])"
-      by(simp add: h_apply_dom)
-    ultimately show "ubConc (Abs_ubundle [c2 \<mapsto> \<up>\<surd>])\<cdot>(h EvenAutomatonAutomaton state \<rightleftharpoons> Abs_ubundle [c1 \<mapsto> nat2even\<cdot>xs]) .c2 
-                = \<up>\<surd> \<bullet> (h EvenAutomatonAutomaton state \<rightleftharpoons> Abs_ubundle [c1 \<mapsto> nat2even\<cdot>xs]) .c2"
-      by (metis tsynbOneTick.abs_eq tsynbonetick_ubconc_tick)
-  qed
+  apply(simp add: evenStream_insert getRan_def tsynbOneTick_def h_final ubdom_ubrep_eq getDom_def
+                  EvenAutomatonAutomaton.rep_eq h_out_dom convDiscrUp_sbHdElem_eq
+                  autGetNextOutput_def autGetNextState_def getTransition_def)
+  by (metis h_apply_dom tsynbOneTick.abs_eq tsynbonetick_ubconc_tick)  
 
 lemma evenStreamBundle_empty_well[simp]:"ubWell ([c1 \<mapsto> \<epsilon>])"
  by(simp add: ubWell_def usclOkay_stream_def ctype_event_def)
