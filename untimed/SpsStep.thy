@@ -49,10 +49,22 @@ proof(rule monofunI)
     by blast
   then have h1:"{spfStep In Out\<cdot>g |g. g \<in> inv Rev (spsStep_h\<cdot>y)} \<sqsubseteq>{spfStep In Out\<cdot>g |g. g \<in> inv Rev (spsStep_h\<cdot>x)}"
     by (smt Collect_mono SetPcpo.less_set_def)
+  have h2:"\<And>g. ufclDom\<cdot>(spfStep In Out\<cdot>g) = In"
+    by (simp add: ufclDom_ufun_def)
+  have h3:"\<And>g. ufclRan\<cdot>(spfStep In Out\<cdot>g) = Out" 
+    by (simp add: ufclRan_ufun_def)
+  have h4:"\<And>f h. f\<in>{spfStep In Out\<cdot>g |g::(channel \<Rightarrow> 'm option) \<Rightarrow> ('m stream\<^sup>\<Omega>) ufun. g \<in> inv Rev (spsStep_h\<cdot>h)} \<Longrightarrow> \<exists>g. f = spfStep In Out\<cdot>g"
+    by auto
   have h2:"uspecWell {spfStep In Out\<cdot>g |g::(channel \<Rightarrow> 'm option) \<Rightarrow> ('m stream\<^sup>\<Omega>) ufun. g \<in> inv Rev (spsStep_h\<cdot>x)}"
-    sorry
+    apply(simp add: uspecWell_def)
+    apply(rule_tac x="In" in exI)
+    apply(rule_tac x="Out" in exI)
+    using h2 h3 by auto
   have h3:"uspecWell {spfStep In Out\<cdot>g |g::(channel \<Rightarrow> 'm option) \<Rightarrow> ('m stream\<^sup>\<Omega>) ufun. g \<in> inv Rev (spsStep_h\<cdot>y)}"
-    sorry
+    apply(simp add: uspecWell_def)
+    apply(rule_tac x="In" in exI)
+    apply(rule_tac x="Out" in exI)
+    by (metis finite h3 spfstep_dom ufclDom_ufun_def)
   show "Abs_rev_uspec {spfStep In Out\<cdot>g |g. g \<in> inv Rev (spsStep_h\<cdot>x)} \<sqsubseteq>
        Abs_rev_uspec {spfStep In Out\<cdot>g |g. g \<in> inv Rev (spsStep_h\<cdot>y)}"
     by (metis (mono_tags, lifting) h1 h2 h3 rep_abs_rev_simp uspec_belowI)
