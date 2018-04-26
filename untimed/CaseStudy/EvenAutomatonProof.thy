@@ -277,30 +277,36 @@ lemma h_apply_dom: "c2 \<in> ubDom\<cdot>(h EvenAutomatonAutomaton state \<right
 (* TODO bisschen kürzer machen *)
 lemma  msg_assms: "EvenStream (State ooo summe)\<cdot>(\<up>(Msg m) \<bullet> xs)
                  = \<up>(Msg (B (Parity.even (summe + m)))) \<bullet> (EvenStream (State (evenMakeSubstate (Parity.even (summe + m)))  (summe + m))\<cdot>xs)"
-  apply(simp add: evenStream_insert)
-  apply(simp add: evenStream_insert h_final ubdom_ubrep_eq getDom_def EvenAutomatonAutomaton.rep_eq
-                  h_out_dom convDiscrUp_sbHdElem_eq autGetNextOutput_def autGetNextState_def
-                  getTransition_def)
-  apply(cases "Parity.even (summe + m)")
-  apply(simp_all add: evenStream_insert h_final ubdom_ubrep_eq getDom_def h_out_dom 
-                      convDiscrUp_sbHdElem_eq autGetNextOutput_def autGetNextState_def
-                      getTransition_def getRan_def EvenAutomatonAutomaton.rep_eq)
-  proof - 
-    have assms1: "c2 \<in> ubDom\<cdot>(h EvenAutomatonAutomaton (EvenAutomatonState.State Even (summe + m)) \<rightleftharpoons> Abs_ubundle [c1 \<mapsto> nat2even\<cdot>xs])"
-      by(simp add: h_apply_dom)
+  proof (cases "Parity.even (summe + m)") 
+    case True
     have assms2: "c2 \<in> ubDom\<cdot>(createC2Output True)"
       by(simp add: createc2output_dom)
-    show "ubConc (createC2Output True)\<cdot>(h EvenAutomatonAutomaton (EvenAutomatonState.State Even (summe + m)) \<rightleftharpoons> Abs_ubundle [c1 \<mapsto> nat2even\<cdot>xs]) .c2 
+    have f: "ubConc (createC2Output True)\<cdot>(h EvenAutomatonAutomaton (EvenAutomatonState.State Even (summe + m)) \<rightleftharpoons> Abs_ubundle [c1 \<mapsto> nat2even\<cdot>xs]) .c2 
         = \<up>(\<M> EvenAutomaton.B True) \<bullet> (h EvenAutomatonAutomaton (EvenAutomatonState.State Even (summe + m)) \<rightleftharpoons> Abs_ubundle [c1 \<mapsto> nat2even\<cdot>xs]) .c2"
-      by (metis (no_types, lifting) assms1 assms2 createC2Output.rep_eq fun_upd_same map_upd_eqD1 ubConc_usclConc_eq ubgetchE usclConc_stream_def)
+      by (metis (no_types, lifting) h_apply_dom assms2 createC2Output.rep_eq fun_upd_same map_upd_eqD1 ubConc_usclConc_eq ubgetchE usclConc_stream_def)
+    show ?thesis
+      apply(simp add: evenStream_insert h_final ubdom_ubrep_eq getDom_def EvenAutomatonAutomaton.rep_eq
+                  h_out_dom convDiscrUp_sbHdElem_eq autGetNextOutput_def autGetNextState_def
+                  getTransition_def)
+      apply(simp_all add: evenStream_insert h_final ubdom_ubrep_eq getDom_def h_out_dom 
+                      convDiscrUp_sbHdElem_eq autGetNextOutput_def autGetNextState_def
+                      getTransition_def getRan_def EvenAutomatonAutomaton.rep_eq)
+      using True f by auto
   next
-    have assms1: "c2 \<in> ubDom\<cdot>(h EvenAutomatonAutomaton (EvenAutomatonState.State Odd (summe + m)) \<rightleftharpoons> Abs_ubundle [c1 \<mapsto> nat2even\<cdot>xs])"
-      by(simp add: h_apply_dom)
+    case False
     have assms2: "c2 \<in> ubDom\<cdot>(createC2Output False)"
       by(simp add: createc2output_dom)
-    show "ubConc (createC2Output False)\<cdot>(h EvenAutomatonAutomaton (EvenAutomatonState.State Odd (summe + m)) \<rightleftharpoons> Abs_ubundle [c1 \<mapsto> nat2even\<cdot>xs]) .c2
+    have f: "ubConc (createC2Output False)\<cdot>(h EvenAutomatonAutomaton (EvenAutomatonState.State Odd (summe + m)) \<rightleftharpoons> Abs_ubundle [c1 \<mapsto> nat2even\<cdot>xs]) .c2
         = \<up>(\<M> EvenAutomaton.B False) \<bullet> (h EvenAutomatonAutomaton (EvenAutomatonState.State Odd (summe + m)) \<rightleftharpoons> Abs_ubundle [c1 \<mapsto> nat2even\<cdot>xs]) .c2"
-      by (metis (no_types, lifting) assms1 assms2 createC2Output.rep_eq fun_upd_same map_upd_eqD1 ubConc_usclConc_eq ubgetchE usclConc_stream_def)
+      by (metis (no_types, lifting) h_apply_dom assms2 createC2Output.rep_eq fun_upd_same map_upd_eqD1 ubConc_usclConc_eq ubgetchE usclConc_stream_def)
+    show ?thesis
+      apply(simp add: evenStream_insert h_final ubdom_ubrep_eq getDom_def EvenAutomatonAutomaton.rep_eq
+                  h_out_dom convDiscrUp_sbHdElem_eq autGetNextOutput_def autGetNextState_def
+                  getTransition_def)
+      apply(simp_all add: evenStream_insert h_final ubdom_ubrep_eq getDom_def h_out_dom 
+                      convDiscrUp_sbHdElem_eq autGetNextOutput_def autGetNextState_def
+                      getTransition_def getRan_def EvenAutomatonAutomaton.rep_eq)
+      using False f by auto
   qed
   
 lemma [simp]:"nat2even\<cdot>(\<up>\<surd>) \<noteq> \<epsilon>"
