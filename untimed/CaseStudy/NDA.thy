@@ -17,6 +17,9 @@ section \<open>Non Deterministic Case \<close>
 cpodef ('state::type, 'm::message) NDA = 
   "{f::(('state \<times>(channel \<rightharpoonup> 'm)) \<Rightarrow> (('state \<times> 'm SB) set rev)) \<times> ('state \<times> 'm SB) set rev \<times> channel set discr \<times> channel set discr. True}"
   by auto
+
+setup_lifting type_definition_NDA
+
 (*
 (* relation based on transition function and initial set *)
 instantiation NDA :: (type, message) po
@@ -116,7 +119,7 @@ thm helper_def
   und ich laufe immer wieder in das problem: https://git.rwth-aachen.de/montibelle/automaton/core/issues/68 *)
 
 definition spsHelper:: "'s \<Rightarrow> (('s \<times>'e) \<Rightarrow> ('s \<times> 'm::message SB) set rev) \<rightarrow> ('s \<Rightarrow> 'm SPS) \<rightarrow> ('e \<Rightarrow> 'm SPS)" where
-"spsHelper s \<equiv> \<Lambda> h. (\<lambda> e. spsRt\<cdot>(spsConc (snd (f (s,e)))\<cdot>(h (fst (f (s,e))))))"
+"spsHelper s \<equiv> undefined" (* \<Lambda> h. (\<lambda> e. spsRt\<cdot>(spsConc (snd (f (s,e)))\<cdot>(h (fst (f (s,e))))))" *)
 
 
 
@@ -148,10 +151,9 @@ fun helper:: "('s \<times> 'm::message SB) \<Rightarrow> ('s::type, 'm::message)
 definition nda_H_helper :: "('s, 'm::message) NDA \<rightarrow> 'm SPS set rev" where
 "nda_H_helper \<equiv> \<Lambda> nda. (setrevImage (\<lambda>t. helper t\<cdot>nda)\<cdot>(ndaInitialState\<cdot>nda))"
 
-(* Currently I see no way to get from "nda_H_helper" to "nda_H", 
-https://git.rwth-aachen.de/montibelle/automaton/core/issues/68 *)
+(* https://git.rwth-aachen.de/montibelle/automaton/core/issues/68 *)
 definition nda_H :: "('s, 'm::message) NDA \<rightarrow> 'm SPS" where
-"nda_H \<equiv> \<Lambda> nda. Abs_uspec (setrevImage helper\<cdot>(ndaInitialState\<cdot>nda))"
+"nda_H \<equiv> \<Lambda> nda. undefined" (* Abs_uspec (setrevImage helper\<cdot>(ndaInitialState\<cdot>nda))" *)
 
 
 
