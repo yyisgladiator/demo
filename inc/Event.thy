@@ -47,4 +47,11 @@ fun eventApply :: "('a \<Rightarrow> 'b) \<Rightarrow> 'a event \<Rightarrow> 'b
 "eventApply f (Msg a) = Msg (f a)"
 
 
+lemma ctype_eventI: assumes "a \<in> ctype c"
+  shows "Msg a \<in> ctype c"
+  by (simp add: assms ctype_event_def)
+
+lemma ctype_event_iff: "a \<in> ctype c \<longleftrightarrow> Msg a \<in> ctype c"
+  by (simp add: ctype_event_def image_iff)
+
 end

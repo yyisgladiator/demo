@@ -86,16 +86,6 @@ apply (meson option.distinct(1))
 by (metis option.simps(3))
 termination by lexicographic_order
 
-lemma ubElemWellI: assumes "ubElemWell f" and "c \<in> dom f"
-  shows "(f \<rightharpoonup> c) \<in> ctype c"
-  using assms(1) assms(2) ubElemWell_def by auto
-
-lemma ubElemWellI2: assumes "ubElemWell f" and "c \<in> dom f"
-and "(f \<rightharpoonup> c) = a"
-shows "a \<in> ctype c"
-  using assms(1) assms(2) assms(3) ubElemWellI by auto
-
-
 lemma EvenAutomatonAutomaton_h: "\<And>s f. dom f = {c1} \<and> ubElemWell f 
           \<Longrightarrow> ubDom\<cdot>(snd (evenAutomatonTransition (s, f))) = {c2}"
 proof -
@@ -110,16 +100,9 @@ proof -
     assume a2: "f \<rightharpoonup> c1 \<noteq> \<surd>"
     obtain b where b_def: "Msg b = f \<rightharpoonup> c1"
       using a2 f1 by auto
-    have f0: "ctype c1 = {Tick} \<union> (Msg ` (ctype c1))"
-      by (simp add: ctype_event_def)
-    have "Msg b \<in> ctype c1"
-      by (simp add: a1 b_def ubElemWellI)
-    then have "Msg b \<in> (Msg ` (ctype c1))"
-      by (simp add: a2 f0)
-    hence "Msg b \<in> (Msg ` (range A))"
-      by simp
-    hence "b \<in> range A"
-      by blast
+    hence "b \<in> ctype c1"
+      apply (subst ctype_event_iff)
+      by (simp add: a1 ubElemWellI)
     hence "\<exists> n. f = [c1 \<mapsto> Msg (A n)]"
       using b_def f_def by auto
     then obtain my_n where my_n_def: "f = [c1 \<mapsto> Msg (A my_n)]"

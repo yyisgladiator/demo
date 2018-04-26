@@ -28,6 +28,15 @@ section \<open>Backend Signatures\<close>
 definition ubElemWell::"(channel \<rightharpoonup> 'm::message) \<Rightarrow> bool" where
 "ubElemWell f \<equiv> \<forall>c\<in> dom f. f\<rightharpoonup>c \<in> ctype c"
 
+lemma ubElemWellI: assumes "ubElemWell f" and "c \<in> dom f"
+  shows "(f \<rightharpoonup> c) \<in> ctype c"
+  using assms(1) assms(2) ubElemWell_def by auto
+
+lemma ubElemWellI2: assumes "ubElemWell f" and "c \<in> dom f"
+and "(f \<rightharpoonup> c) = a"
+shows "a \<in> ctype c"
+  using assms(1) assms(2) assms(3) ubElemWellI by auto
+
 fun automaton_well::"((('state \<times>(channel \<rightharpoonup> 'm::message)) \<Rightarrow> ('state \<times> 'm SB)) \<times> 'state \<times> 'm SB \<times> channel set \<times> channel set) \<Rightarrow> bool " where
 "automaton_well (transition, initialState, initialOut, chIn, chOut) = (finite chIn \<and> (\<forall>s f. (dom f = chIn \<and> ubElemWell f) \<longrightarrow> ubDom\<cdot>(snd(transition (s,f))) = chOut))"
 
