@@ -44,7 +44,7 @@ unfolding usclOkay_stream_def
 unfolding ctype_event_def
   by simp
 
-lemma createc2output_dom: "ubDom\<cdot>(createC2Output b) = {c2}"
+lemma createc2output_dom[simp]: "ubDom\<cdot>(createC2Output b) = {c2}" (*Can be generated*)
   by (simp add: ubdom_insert createC2Output.rep_eq)
 
 
@@ -85,8 +85,23 @@ apply (meson event.distinct(1) map_upd_eqD1)
 apply (meson option.distinct(1))
 by (metis option.simps(3))
 termination by lexicographic_order
+ 
+(*Transition can be generated*)
+lemma evenTraTick[simp]:"evenAutomatonTransition (state, [c1 \<mapsto> \<surd>]) = (state,(tsynbOneTick c2) )"
+  by (metis (full_types) EvenAutomatonState.exhaust EvenAutomatonSubstate.exhaust evenAutomatonTransition.simps(2) evenAutomatonTransition.simps(4))
+        
+lemma tran_sum_even[simp]: assumes "Parity.even (summe + m)" shows "evenAutomatonTransition (State ooo summe, [c1 \<mapsto> \<M>(A m)]) = (State Even (summe + m), createC2Output True)"
+  apply (cases ooo)
+   apply auto
+  using assms by presburger  +
 
-lemma EvenAutomatonAutomaton_h: "\<And>s f. dom f = {c1} \<and> ubElemWell f 
+    
+lemma tran_sum_odd[simp]: assumes "\<not>Parity.even (summe + m)" shows "evenAutomatonTransition (State ooo summe, [c1 \<mapsto> \<M>(A m)]) = (State Odd (summe + m), createC2Output False)"
+  apply (cases ooo)
+   apply auto
+  using assms by presburger  +    
+
+lemma EvenAutomatonAutomaton_h: "\<And>s f. dom f = {c1} \<and> ubElemWell f  (*Can not be generated right now*)
           \<Longrightarrow> ubDom\<cdot>(snd (evenAutomatonTransition (s, f))) = {c2}"
 proof -
   fix s::EvenAutomatonState and f::"channel \<rightharpoonup> EvenAutomaton event"
@@ -95,7 +110,7 @@ proof -
     using a1 dom_eq_singleton_conv by force
   have f1: "f\<rightharpoonup>c1 \<noteq> \<surd> \<Longrightarrow> (\<exists> b. f\<rightharpoonup>c1 = Msg b)"
     using event.exhaust by auto
-  have f2: "f\<rightharpoonup>c1 \<noteq> \<surd> \<Longrightarrow> ubDom\<cdot>(snd (evenAutomatonTransition (s, f))) = {c2}"
+  have f2: "f\<rightharpoonup>c1 \<noteq> \<surd> \<Longrightarrow> ubDom\<cdot>(snd (evenAutomatonTransition (s, f))) = {c2}" (*f2 is a problem for sledgehammer*)
   proof - 
     assume a2: "f \<rightharpoonup> c1 \<noteq> \<surd>"
     obtain b where b_def: "Msg b = f \<rightharpoonup> c1"
@@ -108,22 +123,16 @@ proof -
     then obtain my_n where my_n_def: "f = [c1 \<mapsto> Msg (A my_n)]"
       by blast
     show "ubDom\<cdot>(snd (evenAutomatonTransition (s, f))) = {c2}"
-      apply (simp add: my_n_def)
-      apply (cases s)
-      apply (case_tac x1)
-      by (simp_all add: createc2output_dom)
+      by (metis EvenAutomaton.getSubState.cases createc2output_dom my_n_def snd_conv tran_sum_even tran_sum_odd)
   qed
   show "ubDom\<cdot>(snd (evenAutomatonTransition (s, f))) = {c2}"
-    apply (cases "(f\<rightharpoonup>c1) = Tick")
-     apply (metis (full_types) EvenAutomaton.getSubState.cases EvenAutomatonSubstate.exhaust 
-        evenAutomatonTransition.simps(2) evenAutomatonTransition.simps(4) 
-        f_def fun_upd_same option.sel snd_conv tsynbonetick_dom)
-    by (simp add: f2)
+    using f2 f_def by fastforce
 qed
-
+  
+  
 lift_definition EvenAutomatonAutomaton :: "(EvenAutomatonState, EvenAutomaton event) automaton" is 
   "(evenAutomatonTransition, State Even 0,(tsynbOneTick c2), {c1}, {c2})"
-  by (simp add: EvenAutomatonAutomaton_h)
+  by (simp add: EvenAutomatonAutomaton_h) (*Can not be generated right now (see lemma EvenAutomatonAutomaton_h)*)
 
 definition EvenAutomatonSPF :: "EvenAutomaton event SPF" where
 "EvenAutomatonSPF = H EvenAutomatonAutomaton"
@@ -141,5 +150,8 @@ unfolding ubWell_def
 unfolding usclOkay_stream_def
 unfolding ctype_event_def
 by simp
+
+lemma createC1output_dom[simp]: "ubDom\<cdot>(createC1Bundle b) = {c1}"  (*Can be generated*)
+  by (simp add: ubdom_insert createC1Bundle.rep_eq)  
 
 end

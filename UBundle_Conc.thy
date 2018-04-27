@@ -131,6 +131,8 @@ lemma ubConc_usclConc_eq: assumes "c \<in> (ubDom\<cdot>sb1)"
       by (metis assms(1) assms(2) ubgetch_insert ubup_ubgetch)
   qed
 
+lemma ubconc_insert: "ubConc b1\<cdot>b2 = (Abs_ubundle (\<lambda>c. Some (usclConc (ubUp\<cdot>b1 . c)\<cdot>(ubUp\<cdot>b2 . c)))) \<bar> (ubDom\<cdot>b1 \<union> ubDom\<cdot>b2)"
+  by(simp add: ubConc_def)
 
 subsection \<open>ubConcEq\<close>
 
