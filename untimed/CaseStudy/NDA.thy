@@ -129,6 +129,13 @@ definition set_snd::"(('s \<times> 'm::message SB) set rev) \<rightarrow> (('m::
 definition set_fst::"(('s \<times> 'm::message SB) set rev) \<rightarrow> ('s set rev)" where
 "set_fst \<equiv> \<Lambda> x. Rev (setmap fst\<cdot>(inv Rev x))"
 
+
+definition test::"(('s \<times>'e) \<Rightarrow> ('s \<times> 'm::message SB) set rev) \<rightarrow> (('s \<times>'e) \<Rightarrow> ('s \<times> 'm::message SB)) set rev" where
+"test = undefined"
+
+definition test2::"('s \<Rightarrow> 'm SPS) \<rightarrow> ('s \<Rightarrow> 'm SPF)set rev"where
+"test2 = undefined"
+
 (* ToDo *)
 (* Very Very similar to helper over automaton *)
 thm helper_def
@@ -136,8 +143,8 @@ thm helper_def
 (* Es klappt aber nicht.... Der nichtdeterminismus wird nicht berücksichtigt! 
   und ich laufe immer wieder in das problem: https://git.rwth-aachen.de/montibelle/automaton/core/issues/68 *)
 
-definition spsHelper:: "'s \<Rightarrow> (('s \<times>'e) \<Rightarrow> ('s \<times> 'm::message SB) set rev) \<rightarrow> ('s set rev \<Rightarrow> 'm SPS) \<rightarrow> ('e \<Rightarrow> 'm SPS)" where
-"spsHelper s \<equiv> \<Lambda> f. \<Lambda> h. (\<lambda> e. spsRt\<cdot>(spsConc_set (set_snd\<cdot> (f (s,e)))\<cdot>(h (set_fst\<cdot>(f (s,e))))))"
+definition spsHelper:: "'s \<Rightarrow> (('s \<times>'e) \<Rightarrow> ('s \<times> 'm::message SB) set rev) \<rightarrow> ('s \<Rightarrow> 'm SPS) \<rightarrow> ('e \<Rightarrow> 'm SPS)" where(*Other Idea*)
+"spsHelper s \<equiv> \<Lambda> f. \<Lambda> h. (\<lambda> e. Abs_rev_uspec(setmap (\<lambda>x. x e)\<cdot>{helper (spf) s\<cdot>x| spf x. spf\<in>(inv Rev (test\<cdot>f)) \<and> x \<in> (inv Rev (test2\<cdot>h))}))"
 
 
 
