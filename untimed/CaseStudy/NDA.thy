@@ -108,8 +108,26 @@ definition spsConc:: "'m SB \<Rightarrow> 'm SPS \<rightarrow> 'm SPS" where
 definition spsRt:: "'m SPS \<rightarrow> 'm SPS" where
 "spsRt = undefined"
 
+definition setmap::"('a \<Rightarrow> 'b) \<Rightarrow> 'a set \<rightarrow> 'b set"where
+"setmap f \<equiv> \<Lambda> u. {f x | x. x \<in> u}"
 
+definition setflat_sps::"'m::message SPS set \<rightarrow> 'm SPS" where
+"setflat_sps = (\<Lambda> spss. Abs_rev_uspec (setflat\<cdot>(setmap Rep_rev_uspec\<cdot>spss)))"
+                                                                              (*One of setflat_sps should be cont*)
+definition setflat_sps_rev:: "'m::message SPS set rev \<rightarrow> 'm SPS" where
+"setflat_sps_rev = (\<Lambda> spss. Abs_rev_uspec (setflat\<cdot>(setmap Rep_rev_uspec\<cdot>(inv Rev spss))))"
+                                                             
+definition spsConc_set::"('m::message SB) set rev \<Rightarrow> 'm SPS \<rightarrow> 'm SPS"where (*or with 'm SB set input and with out inv Rev in function*)
+"spsConc_set s = (\<Lambda> sps. setflat_sps\<cdot>{spsConc sb\<cdot>sps | sb. sb \<in> (inv Rev s)})"
 
+definition spsRt_set:: "'m::message SPS set rev \<rightarrow> 'm SPS" where
+"spsRt_set = (\<Lambda> spss. Abs_rev_uspec (setflat\<cdot>(setmap Rep_rev_uspec\<cdot>(inv Rev spss))))"
+
+definition set_snd::"(('s \<times> 'm::message SB) set rev) \<rightarrow> (('m::message SB) set rev)" where
+"set_snd \<equiv> \<Lambda> x. Rev (setmap snd\<cdot>(inv Rev x))"
+
+definition set_fst::"(('s \<times> 'm::message SB) set rev) \<rightarrow> ('s set rev)" where
+"set_fst \<equiv> \<Lambda> x. Rev (setmap fst\<cdot>(inv Rev x))"
 
 (* ToDo *)
 (* Very Very similar to helper over automaton *)
@@ -118,8 +136,8 @@ thm helper_def
 (* Es klappt aber nicht.... Der nichtdeterminismus wird nicht berücksichtigt! 
   und ich laufe immer wieder in das problem: https://git.rwth-aachen.de/montibelle/automaton/core/issues/68 *)
 
-definition spsHelper:: "'s \<Rightarrow> (('s \<times>'e) \<Rightarrow> ('s \<times> 'm::message SB) set rev) \<rightarrow> ('s \<Rightarrow> 'm SPS) \<rightarrow> ('e \<Rightarrow> 'm SPS)" where
-"spsHelper s \<equiv> undefined" (* \<Lambda> h. (\<lambda> e. spsRt\<cdot>(spsConc (snd (f (s,e)))\<cdot>(h (fst (f (s,e))))))" *)
+definition spsHelper:: "'s \<Rightarrow> (('s \<times>'e) \<Rightarrow> ('s \<times> 'm::message SB) set rev) \<rightarrow> ('s set rev \<Rightarrow> 'm SPS) \<rightarrow> ('e \<Rightarrow> 'm SPS)" where
+"spsHelper s \<equiv> \<Lambda> f. \<Lambda> h. (\<lambda> e. spsRt\<cdot>(spsConc_set (set_snd\<cdot> (f (s,e)))\<cdot>(h (set_fst\<cdot>(f (s,e))))))"
 
 
 
