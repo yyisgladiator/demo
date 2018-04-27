@@ -42,7 +42,10 @@ lift_definition createC2Output :: "bool \<Rightarrow> EvenAutomaton event SB" is
 unfolding ubWell_def
 unfolding usclOkay_stream_def
 unfolding ctype_event_def
-by simp
+  by simp
+
+lemma createc2output_dom: "ubDom\<cdot>(createC2Output b) = {c2}"
+  by (simp add: ubdom_insert createC2Output.rep_eq)
 
 
 (* tsynbOneTick is defined in: timesyn/tsynBundle *)
@@ -83,10 +86,45 @@ apply (meson option.distinct(1))
 by (metis option.simps(3))
 termination by lexicographic_order
 
+lemma EvenAutomatonAutomaton_h: "\<And>s f. dom f = {c1} \<and> ubElemWell f 
+          \<Longrightarrow> ubDom\<cdot>(snd (evenAutomatonTransition (s, f))) = {c2}"
+proof -
+  fix s::EvenAutomatonState and f::"channel \<rightharpoonup> EvenAutomaton event"
+  assume a1: "dom f = {c1} \<and> ubElemWell f"
+  obtain a where f_def: "f = [c1 \<mapsto> a]"
+    using a1 dom_eq_singleton_conv by force
+  have f1: "f\<rightharpoonup>c1 \<noteq> \<surd> \<Longrightarrow> (\<exists> b. f\<rightharpoonup>c1 = Msg b)"
+    using event.exhaust by auto
+  have f2: "f\<rightharpoonup>c1 \<noteq> \<surd> \<Longrightarrow> ubDom\<cdot>(snd (evenAutomatonTransition (s, f))) = {c2}"
+  proof - 
+    assume a2: "f \<rightharpoonup> c1 \<noteq> \<surd>"
+    obtain b where b_def: "Msg b = f \<rightharpoonup> c1"
+      using a2 f1 by auto
+    hence "b \<in> ctype c1"
+      apply (subst ctype_event_iff)
+      by (simp add: a1 ubElemWellI)
+    hence "\<exists> n. f = [c1 \<mapsto> Msg (A n)]"
+      using b_def f_def by auto
+    then obtain my_n where my_n_def: "f = [c1 \<mapsto> Msg (A my_n)]"
+      by blast
+    show "ubDom\<cdot>(snd (evenAutomatonTransition (s, f))) = {c2}"
+      apply (simp add: my_n_def)
+      apply (cases s)
+      apply (case_tac x1)
+      by (simp_all add: createc2output_dom)
+  qed
+  show "ubDom\<cdot>(snd (evenAutomatonTransition (s, f))) = {c2}"
+    apply (cases "(f\<rightharpoonup>c1) = Tick")
+     apply (metis (full_types) EvenAutomaton.getSubState.cases EvenAutomatonSubstate.exhaust 
+        evenAutomatonTransition.simps(2) evenAutomatonTransition.simps(4) 
+        f_def fun_upd_same option.sel snd_conv tsynbonetick_dom)
+    by (simp add: f2)
+qed
+
 lift_definition EvenAutomatonAutomaton :: "(EvenAutomatonState, EvenAutomaton event) automaton" is 
   "(evenAutomatonTransition, State Even 0,(tsynbOneTick c2), {c1}, {c2})"
-  sorry
-  
+  by (simp add: EvenAutomatonAutomaton_h)
+
 definition EvenAutomatonSPF :: "EvenAutomaton event SPF" where
 "EvenAutomatonSPF = H EvenAutomatonAutomaton"
 
