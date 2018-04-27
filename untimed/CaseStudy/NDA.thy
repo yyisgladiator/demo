@@ -110,7 +110,7 @@ definition spsRt:: "'m SPS \<rightarrow> 'm SPS" where
 
 definition setmap::"('a \<Rightarrow> 'b) \<Rightarrow> 'a set \<rightarrow> 'b set"where
 "setmap f \<equiv> \<Lambda> u. {f x | x. x \<in> u}"
-
+(*
 definition setflat_sps::"'m::message SPS set \<rightarrow> 'm SPS" where
 "setflat_sps = (\<Lambda> spss. Abs_rev_uspec (setflat\<cdot>(setmap Rep_rev_uspec\<cdot>spss)))"
                                                                               (*One of setflat_sps should be cont*)
@@ -128,13 +128,14 @@ definition set_snd::"(('s \<times> 'm::message SB) set rev) \<rightarrow> (('m::
 
 definition set_fst::"(('s \<times> 'm::message SB) set rev) \<rightarrow> ('s set rev)" where
 "set_fst \<equiv> \<Lambda> x. Rev (setmap fst\<cdot>(inv Rev x))"
+*)
 
-
+(*Dunno... ist komisch*)
 definition test::"(('s \<times>'e) \<Rightarrow> ('s \<times> 'm::message SB) set rev) \<rightarrow> (('s \<times>'e) \<Rightarrow> ('s \<times> 'm::message SB)) set rev" where
-"test = undefined"
+"test = (\<Lambda> f. (Rev {(\<lambda>e. if e = x then s else (fst(s),ubLeast (ubDom\<cdot>(snd s)))) | s x. s \<in> (inv Rev (f x))}))"
 
-definition test2::"('s \<Rightarrow> 'm SPS) \<rightarrow> ('s \<Rightarrow> 'm SPF)set rev"where
-"test2 = undefined"
+definition test2::"('s \<Rightarrow> 'm::message SPS) \<rightarrow> ('s \<Rightarrow> 'm SPF)set rev"where
+"test2 = (\<Lambda> spsf. (Rev {(\<lambda>e. if e = x then spf else ufLeast (ufDom\<cdot> spf) (ufDom\<cdot> spf)) | spf x. spf \<in> (Rep_rev_uspec (spsf x))}))"
 
 (* ToDo *)
 (* Very Very similar to helper over automaton *)
