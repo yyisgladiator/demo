@@ -241,16 +241,25 @@ definition uspecLeast :: "channel set \<Rightarrow> channel set \<Rightarrow> 'm
 "uspecLeast cin cout = Abs_uspec (Rev {f. ufclDom\<cdot>f = cin \<and> ufclRan\<cdot>f = cout})"
 
 lemma uspecLeast_well: "uspecWell {f. ufclDom\<cdot>f = cin \<and> ufclRan\<cdot>f = cout}"
-  sorry
+  by(simp add: uspecWell_def)
 
-lemma uspecLeast_elem: "ufLeast cin cout \<in> Rep_rev_uspec(uspecLeast cin cout)"
-  sorry
+lemma uspecLeast_contains_ufLeast: "ufLeast cin cout \<in> Rep_rev_uspec(uspecLeast cin cout)"
+  apply(simp add: uspecLeast_def)
+  apply(simp only: uspecLeast_well rep_abs_uspec)
+  apply(simp add: inv_rev_rev)
+  by (simp add: ufclDom_ufun_def ufclRan_ufun_def)
 
 lemma uspecLeast_consistent: "uspecIsConsistent (uspecLeast cin cout)"
-  sorry
-
-lemma ver: "\<forall>f \<in> {f. ufclDom\<cdot>f = cin \<and> ufclRan\<cdot>f = cout}. ufclDom\<cdot>f = cin"
-  by auto
+  proof - 
+    have "ufLeast cin cout \<in> Rep_rev_uspec(uspecLeast cin cout)"
+      by(simp add: uspecLeast_contains_ufLeast)
+    then have "\<exists>a. a \<in> Rep_rev_uspec(uspecLeast cin cout)"
+      sorry
+    then have "Rep_rev_uspec(uspecLeast cin cout) \<noteq> {}"
+      by auto
+    then show ?thesis
+      by(simp add: uspecIsConsistent_def)
+  qed
 
 lemma uspecLeast_dom: "uspecDom (uspecLeast cin cout) = cin" (is "?L = ?R")
   proof -
@@ -259,8 +268,10 @@ lemma uspecLeast_dom: "uspecDom (uspecLeast cin cout) = cin" (is "?L = ?R")
       apply(simp add: uspecLeast_def)
       apply(simp only: uspecLeast_well rep_abs_uspec)
       by(simp add: inv_rev_rev)
-    moreover have "ufclDom\<cdot>(SOME f::'a. ufclDom\<cdot>f = cin \<and> ufclRan\<cdot>f = cout) = ufclDom\<cdot>(ufLeast cin cout)"
-      by (metis (mono_tags, lifting) a1 rep_abs_rev_simp ufclDom_ufun_def ufleast_ufdom uspecLeast_consistent uspecLeast_def uspecLeast_well uspec_consist_f_ex uspec_dom_eq2 ver)
+    moreover have "\<forall>f \<in> {f. ufclDom\<cdot>f = cin \<and> ufclRan\<cdot>f = cout}. ufclDom\<cdot>f = cin"
+      by auto
+    then have "ufclDom\<cdot>(SOME f::'a. ufclDom\<cdot>f = cin \<and> ufclRan\<cdot>f = cout) = ufclDom\<cdot>(ufLeast cin cout)"
+      by (metis (mono_tags, lifting) a1 rep_abs_rev_simp ufclDom_ufun_def ufleast_ufdom uspecLeast_consistent uspecLeast_def uspecLeast_well uspec_consist_f_ex uspec_dom_eq2)
     moreover have "ufclDom\<cdot>(ufLeast cin cout) = cin"
       by (simp add: ufclDom_ufun_def)
     ultimately show ?thesis
