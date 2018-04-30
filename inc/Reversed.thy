@@ -127,4 +127,7 @@ instance rev :: (dpcpo) dpcpo
 lemma inv_rev_rev: "inv Rev (Rev S) = S"
   by (meson f_inv_into_f rangeI rev.inject)
 
+lemma rev_monoI:"\<lbrakk>\<And>x y. x \<sqsubseteq> y \<Longrightarrow> f y \<sqsubseteq> f x\<rbrakk>\<Longrightarrow> monofun (\<lambda>x. Rev (f x))"
+  by(simp add: monofunI)
+              
 end
