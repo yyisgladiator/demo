@@ -127,19 +127,7 @@ instance rev :: (dpcpo) dpcpo
 lemma inv_rev_rev: "inv Rev (Rev S) = S"
   by (meson f_inv_into_f rangeI rev.inject)
 
-lemma rev_monoI:assumes "(\<And>x y. x \<sqsubseteq> y \<and> f y \<sqsubseteq> f x)" shows "monofun (\<lambda>x. Rev (f x))"
-  by(simp add: monofunI assms)
-          
-lemma rev_contI:assumes "\<And>x y. x \<sqsubseteq> y \<and> f y \<sqsubseteq> f x" and "\<And>Y. chain Y \<Longrightarrow> (\<Squnion>i::nat. (f (Y i))) \<sqsubseteq>  (f (\<Squnion>i::nat. Y i))" shows "cont (\<lambda>x. Rev (f x))"
-proof(rule Cont.contI2, simp add: rev_monoI  assms)
-  fix Y::"nat \<Rightarrow> 'a"
-  assume a1:"chain Y"
-  assume a2:"chain (\<lambda>i. Rev (f (Y i)))"
-  have "Rev (f (\<Squnion>i. Y i)) \<sqsubseteq> Rev (\<Squnion>i. (f (Y i)))"
-    by (simp add: a1 assms(2))
-  then show"Rev (f (\<Squnion>i. Y i)) \<sqsubseteq> (\<Squnion>i. Rev (f (Y i)))"
-    by (simp add: a2 admD assms(1))
-qed
-  
-    
+lemma rev_monoI:"\<lbrakk>\<And>x y. x \<sqsubseteq> y \<Longrightarrow> f y \<sqsubseteq> f x\<rbrakk>\<Longrightarrow> monofun (\<lambda>x. Rev (f x))"
+  by(simp add: monofunI)
+              
 end

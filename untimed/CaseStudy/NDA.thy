@@ -163,15 +163,8 @@ definition test::"(('s \<times>'e) \<Rightarrow> ('s \<times> 'm::message SB) se
 "test = (\<Lambda> f. (Rev {(\<lambda>e. if e = x then s else (fst(s),ubLeast (ubDom\<cdot>(snd s)))) | s x. s \<in> (inv Rev (f x))}))"
 
 lemma test_mono[simp]:"monofun (\<lambda> f::(('s \<times>'e) \<Rightarrow> ('s \<times> 'm::message SB) set rev). (Rev {(\<lambda>e. if e = x then s else (fst(s),ubLeast (ubDom\<cdot>(snd s)))) | s x. s \<in> (inv Rev (f x))}))"
-proof(rule monofunI)
-  fix x y ::"('s \<times> 'e \<Rightarrow> ('s \<times> 'm stream\<^sup>\<Omega>) set rev)"
-  assume a1:"x \<sqsubseteq> y"
-  have h1:"\<And>e. inv Rev (y e) \<subseteq> inv Rev (x e)"
-    by (metis SetPcpo.less_set_def a1 below_rev.elims(2) fun_below_iff inv_rev_rev)
-  show "Rev {\<lambda>e::'s \<times> 'e. if e = xa then s else (fst s, ubLeast (ubDom\<cdot>(snd s))) |s xa. s \<in> inv Rev (x xa)} \<sqsubseteq>
-       Rev {\<lambda>e::'s \<times> 'e. if e = x then s else (fst s, ubLeast (ubDom\<cdot>(snd s))) |s x. s \<in> inv Rev (y x)}"
-    by (smt Collect_mono_iff SetPcpo.less_set_def below_rev.simps h1 subsetCE)      
-qed
+  apply(rule rev_monoI)
+  by (smt Collect_mono_iff SetPcpo.less_set_def below_rev.elims(2) fun_below_iff inv_rev_rev subsetCE)
 
 lemma test_cont[simp]:"cont (\<lambda> f::(('s \<times>'e) \<Rightarrow> ('s \<times> 'm::message SB) set rev). (Rev {(\<lambda>e. if e = x then s else (fst(s),ubLeast (ubDom\<cdot>(snd s)))) | s x. s \<in> (inv Rev (f x))}))"
   sorry
@@ -181,15 +174,8 @@ definition test2::"('s \<Rightarrow> 'm::message SPS) \<rightarrow> ('s \<Righta
 "test2 = (\<Lambda> spsf. (Rev {(\<lambda>e. if e = x then spf else ufLeast (ufDom\<cdot> spf) (ufDom\<cdot> spf)) | spf x. spf \<in> (Rep_rev_uspec (spsf x))}))"
 
 lemma test2_mono[simp]:"monofun (\<lambda> spsf::('s \<Rightarrow> 'm::message SPS). (Rev {(\<lambda>e. if e = x then spf else ufLeast (ufDom\<cdot> spf) (ufDom\<cdot> spf)) | spf x. spf \<in> (Rep_rev_uspec (spsf x))}))"
-proof(rule monofunI)
-  fix x y::"('s \<Rightarrow> 'm::message SPS)"
-  assume a1:"x\<sqsubseteq>y"
-  have h1:"\<And>e. (Rep_rev_uspec (y e)) \<subseteq> (Rep_rev_uspec (x e))"
-    by (metis SetPcpo.less_set_def a1 below_fun_def inv_rev_rep_upsec_below rep_uspec_belowI)
-  show" Rev {\<lambda>e::'s. if e = xa then spf else ufLeast (ufDom\<cdot>spf) (ufDom\<cdot>spf) |(spf::('m stream\<^sup>\<Omega>) ufun) xa::'s. spf \<in> Rep_rev_uspec (x xa)} \<sqsubseteq>
-       Rev {\<lambda>e::'s. if e = x then spf else ufLeast (ufDom\<cdot>spf) (ufDom\<cdot>spf) |(spf::('m stream\<^sup>\<Omega>) ufun) x::'s. spf \<in> Rep_rev_uspec (y x)}"
-    by (smt Collect_mono_iff SetPcpo.less_set_def h1 below_rev.simps subsetCE)
-qed
+  apply(rule rev_monoI)
+  by (smt Collect_mono SetPcpo.less_set_def fun_below_iff uspec_ele_below)
   
 lemma test2_cont[simp]:"cont (\<lambda> spsf::('s \<Rightarrow> 'm::message SPS). (Rev {(\<lambda>e. if e = x then spf else ufLeast (ufDom\<cdot> spf) (ufDom\<cdot> spf)) | spf x. spf \<in> (Rep_rev_uspec (spsf x))}))"
   sorry
