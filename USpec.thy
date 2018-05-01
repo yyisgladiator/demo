@@ -6,7 +6,7 @@
 *)
 
 theory USpec
-  imports UnivClasses UFun_Comp (* TODO ufclLeast bräuchte ich, dann kann das UFun weg *)
+  imports UnivClasses
 begin
 
 default_sort ufuncl
@@ -232,50 +232,5 @@ lemma uspec_ran_eq: assumes "f \<in> (inv Rev) (Rep_uspec S)" shows "ufclRan\<cd
 
 lemma uspec_ran_eq2: assumes "uspecIsConsistent S" shows "\<forall> f \<in> Rep_rev_uspec S. ufclRan\<cdot>f = uspecRan S"
   by (simp add: uspec_ran_eq)
-
-
-
-(* TODO Welche Theory und welche Section? *)
-
-definition uspecLeast :: "channel set \<Rightarrow> channel set \<Rightarrow> 'm uspec" where
-"uspecLeast cin cout = Abs_uspec (Rev {f. ufclDom\<cdot>f = cin \<and> ufclRan\<cdot>f = cout})"
-
-lemma uspecLeast_well: "uspecWell {f. ufclDom\<cdot>f = cin \<and> ufclRan\<cdot>f = cout}"
-  by(simp add: uspecWell_def)
-
-lemma uspecLeast_contains_ufLeast: "ufLeast cin cout \<in> Rep_rev_uspec(uspecLeast cin cout)"
-  apply(simp add: uspecLeast_def)
-  apply(simp only: uspecLeast_well rep_abs_uspec)
-  apply(simp add: inv_rev_rev)
-  by (simp add: ufclDom_ufun_def ufclRan_ufun_def)
-
-lemma uspecLeast_consistent: "uspecIsConsistent (uspecLeast cin cout)"
-  proof - 
-    have "ufLeast cin cout \<in> Rep_rev_uspec(uspecLeast cin cout)"
-      by(simp add: uspecLeast_contains_ufLeast)
-    then have "\<exists>a. a \<in> Rep_rev_uspec(uspecLeast cin cout)"
-      sorry
-    then have "Rep_rev_uspec(uspecLeast cin cout) \<noteq> {}"
-      by auto
-    then show ?thesis
-      by(simp add: uspecIsConsistent_def)
-  qed
-
-lemma uspecLeast_dom: "uspecDom (uspecLeast cin cout) = cin" (is "?L = ?R")
-  proof -
-    have a1: "?L = ufclDom\<cdot>(SOME f::'a. ufclDom\<cdot>f = cin \<and> ufclRan\<cdot>f = cout)"
-      apply(simp add: uspecDom_def)
-      apply(simp add: uspecLeast_def)
-      apply(simp only: uspecLeast_well rep_abs_uspec)
-      by(simp add: inv_rev_rev)
-    moreover have "\<forall>f \<in> {f. ufclDom\<cdot>f = cin \<and> ufclRan\<cdot>f = cout}. ufclDom\<cdot>f = cin"
-      by auto
-    then have "ufclDom\<cdot>(SOME f::'a. ufclDom\<cdot>f = cin \<and> ufclRan\<cdot>f = cout) = ufclDom\<cdot>(ufLeast cin cout)"
-      by (metis (mono_tags, lifting) a1 rep_abs_rev_simp ufclDom_ufun_def ufleast_ufdom uspecLeast_consistent uspecLeast_def uspecLeast_well uspec_consist_f_ex uspec_dom_eq2)
-    moreover have "ufclDom\<cdot>(ufLeast cin cout) = cin"
-      by (simp add: ufclDom_ufun_def)
-    ultimately show ?thesis
-      by blast
-  qed
 
 end
