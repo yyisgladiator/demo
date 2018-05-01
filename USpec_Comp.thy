@@ -491,41 +491,13 @@ lemma uspecLeast_well: "uspecWell {f. ufclDom\<cdot>f = cin \<and> ufclRan\<cdot
 lemma uspecLeast_contains_ufLeast: "ufunclLeast cin cout \<in> Rep_rev_uspec(uspecLeast cin cout)"
   apply(simp add: uspecLeast_def)
   apply(simp only: uspecLeast_well rep_abs_uspec)
-  apply(simp add: inv_rev_rev)
-  by (simp add: ufuncldom_least_dom ufuncldom_least_ran)
+  by (simp add: inv_rev_rev ufuncldom_least_dom ufuncldom_least_ran)
 
 lemma uspecLeast_consistent: "uspecIsConsistent (uspecLeast cin cout)"
-  proof - 
-    have "ufunclLeast cin cout \<in> Rep_rev_uspec(uspecLeast cin cout)"
-      by(simp add: uspecLeast_contains_ufLeast)
-    then have "\<exists>a. a \<in> Rep_rev_uspec(uspecLeast cin cout)"
-      by auto
-    then have "Rep_rev_uspec(uspecLeast cin cout) \<noteq> {}"
-      by auto
-    then show ?thesis
-      by(simp add: uspecIsConsistent_def)
-  qed
+  using not_uspec_consisten_empty_eq uspecLeast_contains_ufLeast by auto
 
 lemma uspecLeast_dom: "uspecDom (uspecLeast cin cout) = cin" (is "?L = ?R")
-  proof -
-    have a1: "?L = ufclDom\<cdot>(SOME f::'a. ufclDom\<cdot>f = cin \<and> ufclRan\<cdot>f = cout)"
-      apply(simp add: uspecDom_def)
-      apply(simp add: uspecLeast_def)
-      apply(simp only: uspecLeast_well rep_abs_uspec)
-      by(simp add: inv_rev_rev)
-    moreover have "\<forall>f \<in> {f. ufclDom\<cdot>f = cin \<and> ufclRan\<cdot>f = cout}. ufclDom\<cdot>f = cin"
-      by auto
-    then have "ufclDom\<cdot>(SOME f::'a. ufclDom\<cdot>f = cin \<and> ufclRan\<cdot>f = cout) = ufclDom\<cdot>(ufunclLeast cin cout)"
-      proof -
-        have "ufclDom\<cdot>(ufunclLeast cin cout::'a) = uspecDom (uspecLeast cin cout::'a uspec)"
-          using uspecLeast_consistent uspecLeast_contains_ufLeast uspec_dom_eq2 by blast
-        then show ?thesis
-          by (simp add: calculation ufuncldom_least_dom)
-      qed
-    moreover have "ufclDom\<cdot>(ufunclLeast cin cout) = cin"
-      by (simp add: ufuncldom_least_dom)
-    ultimately show ?thesis
-      by blast
-  qed
+  by (metis (mono_tags, lifting) mem_Collect_eq rep_abs_rev_simp uspecLeast_consistent
+      uspecLeast_contains_ufLeast uspecLeast_def uspecLeast_well uspec_dom_eq2)
 
 end
