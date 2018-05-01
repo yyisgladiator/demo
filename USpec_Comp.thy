@@ -496,8 +496,31 @@ lemma uspecLeast_contains_ufLeast: "ufunclLeast cin cout \<in> Rep_rev_uspec(usp
 lemma uspecLeast_consistent: "uspecIsConsistent (uspecLeast cin cout)"
   using not_uspec_consisten_empty_eq uspecLeast_contains_ufLeast by auto
 
-lemma uspecLeast_dom: "uspecDom (uspecLeast cin cout) = cin" (is "?L = ?R")
+lemma uspecLeast_dom: "uspecDom (uspecLeast cin cout) = cin"
   by (metis (mono_tags, lifting) mem_Collect_eq rep_abs_rev_simp uspecLeast_consistent
       uspecLeast_contains_ufLeast uspecLeast_def uspecLeast_well uspec_dom_eq2)
+
+lemma uspecLeast_ran: "uspecRan (uspecLeast cin cout) = cout"
+  by (metis (mono_tags, lifting) CollectD rep_abs_rev_simp uspecLeast_contains_ufLeast
+      uspecLeast_def uspecLeast_well uspec_ran_eq)
+
+lemma uspecLeast_min: assumes "uspecDom S = In"
+                            and "uspecRan S = Out"
+                          shows "uspecLeast In Out \<sqsubseteq> S"
+  proof -
+    have "\<And>f. f \<in> (Rep_rev_uspec S) \<Longrightarrow> ufclDom\<cdot>f = In \<and> ufclRan\<cdot>f = Out"
+      by (simp add: assms(1) assms(2) uspec_dom_eq uspec_ran_eq)
+    moreover have "\<And>f. ufclDom\<cdot>f = In \<and> ufclRan\<cdot>f = Out \<Longrightarrow> f \<in> Rep_rev_uspec (uspecLeast In Out)"
+      by (metis (mono_tags, lifting) CollectI rep_abs_rev_simp uspecLeast_def uspecLeast_well)
+    ultimately have "\<And>f. f \<in> (Rep_rev_uspec S) \<Longrightarrow> f \<in> Rep_rev_uspec (uspecLeast In Out)"
+      by auto
+    then have "Rep_rev_uspec S \<subseteq> Rep_rev_uspec (uspecLeast In Out)"
+      by(simp add: subsetI)
+    then show ?thesis
+      by (simp add: SetPcpo.less_set_def uspec_belowI)
+  qed
+
+lemma uspecLeast_min2: "(uspecLeast (uspecDom S) (uspecRan S)) \<sqsubseteq> S"
+  using uspecLeast_min by auto
 
 end
