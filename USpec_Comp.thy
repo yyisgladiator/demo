@@ -35,6 +35,9 @@ definition uspecParComp :: "'m uspec \<Rightarrow>'m uspec \<Rightarrow> 'm uspe
 definition uspecFeedbackComp :: "'m uspec \<Rightarrow> 'm uspec" where
 "uspecFeedbackComp S1 \<equiv> Abs_rev_uspec {ufunclFeedbackComp f1 | f1.  f1\<in>(Rep_rev_uspec S1)}"
 
+(* Smallest possible USpec: Smallest means "least specified", i.e. ALL ufuns with I/O property *)
+definition uspecLeast :: "channel set \<Rightarrow> channel set \<Rightarrow> 'm uspec" where
+"uspecLeast cin cout = Abs_uspec (Rev {f. ufclDom\<cdot>f = cin \<and> ufclRan\<cdot>f = cout})"
 
 
 (****************************************************)
@@ -480,10 +483,7 @@ using rep_abs_uspec uspec_feedbackcomp_well by auto
     by blast
 qed
 
-(* TODO Welche Theory und welche Section? *)
-
-definition uspecLeast :: "channel set \<Rightarrow> channel set \<Rightarrow> 'm uspec" where
-"uspecLeast cin cout = Abs_uspec (Rev {f. ufclDom\<cdot>f = cin \<and> ufclRan\<cdot>f = cout})"
+subsection \<open>UspecLeast\<close>
 
 lemma uspecLeast_well: "uspecWell {f. ufclDom\<cdot>f = cin \<and> ufclRan\<cdot>f = cout}"
   by(simp add: uspecWell_def)
