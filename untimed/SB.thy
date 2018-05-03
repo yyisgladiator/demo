@@ -580,8 +580,8 @@ lemma sbHdElem_channel: assumes "ubDom\<cdot>sb = In"  and "c \<in> In" and "sb 
   subsection \<open>Automaton\<close>
 (* ----------------------------------------------------------------------- *)
 
-(* TODO: Moved from Automaton.thy *)
-lemma convDiscrUp_dom_eq[simp]: "dom (convDiscrUp g) = dom g"
+(* convDiscrUp only modifies the range, not the domain *)
+lemma convDiscrUp_dom[simp]: "dom (convDiscrUp f) = dom f"
   by(simp add: convDiscrUp_def)
 
 (* Pseudo-Inverse function of convDiscrUp: Only inverts, if "\<forall>c\<in>dom f. (f \<rightharpoonup> c) \<noteq> \<bottom>" holds *)
@@ -731,21 +731,21 @@ lemma convdiscrup_inv_eq[simp]: assumes "\<forall>c\<in>dom f. (f \<rightharpoon
 (* Under the assumption, that convDiscrUp is pseudo-bijective, the domain stays the same *)
 lemma convdiscrup_inv_dom_eq[simp]: assumes "\<forall>c\<in>dom f. (f \<rightharpoonup> c) \<noteq> \<bottom>"
                                       shows "dom (inv convDiscrUp f) = dom f"
-  by (metis assms convdiscrup_inv_eq convDiscrUp_dom_eq)
+  by (metis assms convdiscrup_inv_eq convDiscrUp_dom)
     
 lemma convDiscrUp_inj: "inj convDiscrUp"
   proof (rule injI)
     fix x::"channel \<Rightarrow> 'b option" and y::"channel \<Rightarrow> 'b option"
     assume a1: "convDiscrUp x = convDiscrUp y"
     have f1: "dom x = dom y"
-      by (metis a1 convDiscrUp_dom_eq)
+      by (metis a1 convDiscrUp_dom)
     have f2: "\<forall> xa \<in> dom x. (Iup (Discr (x \<rightharpoonup> xa))) = (Iup (Discr (y \<rightharpoonup> xa)))"
-      by (metis (full_types) a1 convDiscrUp_def convDiscrUp_dom_eq option.sel)
+      by (metis (full_types) a1 convDiscrUp_def convDiscrUp_dom option.sel)
     show "x = y"     
       apply (subst fun_eq_iff)
       apply rule
       apply (case_tac "xa \<in> dom x") defer
-       apply (metis a1 convDiscrUp_dom_eq domIff)
+       apply (metis a1 convDiscrUp_dom domIff)
       by (metis discr.inject domD f1 f2 option.sel u.inject)
   qed
 
