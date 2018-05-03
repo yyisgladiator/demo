@@ -585,154 +585,102 @@ lemma convDiscrUp_dom[simp]: "dom (convDiscrUp f) = dom f"
   by(simp add: convDiscrUp_def)
 
 (* Pseudo-Inverse function of convDiscrUp: Only inverts, if "\<forall>c\<in>dom f. (f \<rightharpoonup> c) \<noteq> \<bottom>" holds *)
-definition convDiscrUp_inv:: "(channel \<rightharpoonup> 'a discr\<^sub>\<bottom>) \<Rightarrow> (channel \<rightharpoonup> 'a)" where
-"convDiscrUp_inv f \<equiv> \<lambda>c. (c\<in>dom f) \<leadsto> (inv Discr (inv Iup (f \<rightharpoonup> c)))"
+definition invConvDiscrUp :: "(channel \<rightharpoonup> 'a discr\<^sub>\<bottom>) \<Rightarrow> (channel \<rightharpoonup> 'a)" where
+"invConvDiscrUp f \<equiv> \<lambda>c. (c\<in>dom f) \<leadsto> (inv Discr (inv Iup (f \<rightharpoonup> c)))"
 
-(* Domain of convDiscrUp_inv depends entirely on f*)
-lemma convDiscrUp_inv_dom: assumes "\<forall>c\<in>dom f. (f \<rightharpoonup> c) \<noteq> \<bottom>"
-                             shows "dom (convDiscrUp_inv f) = dom f"
+(* Domain of invConvDiscrUp depends entirely on f*)
+lemma invConvDiscrUp_dom: assumes "\<forall>c\<in>dom f. (f \<rightharpoonup> c) \<noteq> \<bottom>"
+                            shows "dom (invConvDiscrUp f) = dom f"
   proof -
-    have "dom (convDiscrUp_inv f) \<subseteq> dom f"
-      by (meson convDiscrUp_inv_def domIff subsetI)
-    moreover have "c \<in> dom f \<Longrightarrow> c \<in> dom (convDiscrUp_inv f)"
-      by (simp add: convDiscrUp_inv_def)
+    have "dom (invConvDiscrUp f) \<subseteq> dom f"
+      by (meson invConvDiscrUp_def domIff subsetI)
+    moreover have "c \<in> dom f \<Longrightarrow> c \<in> dom (invConvDiscrUp f)"
+      by (simp add: invConvDiscrUp_def)
     ultimately show ?thesis
-      by (simp add: Collect_mono_iff convDiscrUp_inv_def)
+      by (simp add: Collect_mono_iff invConvDiscrUp_def)
   qed
 
-(* A substitution rule for convDiscrUp_inv *)
-lemma convDiscrUp_inv_subst: assumes "\<forall>c\<in>dom f. (f \<rightharpoonup> c) \<noteq> \<bottom>"
-                                 and "c \<in> dom f"
-                               shows "(convDiscrUp_inv f) \<rightharpoonup> c = inv Discr (inv Iup (f \<rightharpoonup> c))"
-  by (simp add: assms(2) convDiscrUp_inv_def)
+(* A substitution rule for invConvDiscrUp *)
+lemma invConvDiscrUp_subst: assumes "\<forall>c\<in>dom f. (f \<rightharpoonup> c) \<noteq> \<bottom>"
+                                and "c \<in> dom f"
+                              shows "(invConvDiscrUp f) \<rightharpoonup> c = inv Discr (inv Iup (f \<rightharpoonup> c))"
+  by (simp add: assms(2) invConvDiscrUp_def)
+
+(* Given the assumption, invConvDiscrUp is the pseudo-inverse of convDiscrUp *)
+lemma convDiscrUp_invConvDiscrUp_eq: assumes "\<forall>c\<in>dom f. (f \<rightharpoonup> c) \<noteq> \<bottom>"
+                                       shows "convDiscrUp (invConvDiscrUp f) = f"
+  apply(simp add: convDiscrUp_def)
+  apply(simp add: assms invConvDiscrUp_dom)
+  proof -
+    have h0: "(\<lambda>c::channel. (c \<in> dom f)\<leadsto>Iup (Discr invConvDiscrUp f\<rightharpoonup>c)) 
+            = (\<lambda>c::channel. (c \<in> dom f)\<leadsto>Iup (Discr (inv Discr (inv Iup (f \<rightharpoonup> c)))))"
+      by (metis (full_types, hide_lams) assms invConvDiscrUp_subst)
+    moreover have h1: "(\<lambda>c::channel. (c \<in> dom f)\<leadsto>Iup (Discr (inv Discr (inv Iup (f \<rightharpoonup> c)))))
+                     = (\<lambda>c::channel. (c \<in> dom f)\<leadsto>Iup (inv Iup (f \<rightharpoonup> c)))"
+      by (metis (no_types, hide_lams) Discr_undiscr inv_equality undiscr_Discr)
+    moreover have "\<And>c::channel. (c \<in> dom (f::channel \<Rightarrow> ('a discr\<^sub>\<bottom>) option))\<leadsto>Iup (inv Iup (f \<rightharpoonup> c)) 
+                               = (c \<in> dom f)\<leadsto> (f \<rightharpoonup> c)"
+      proof -
+        fix c::channel
+        show "(c \<in> dom (f::channel \<Rightarrow> ('a discr\<^sub>\<bottom>) option))\<leadsto>Iup (inv Iup (f \<rightharpoonup> c)) 
+            = (c \<in> dom f)\<leadsto> (f \<rightharpoonup> c)"
+          proof (cases "c \<in> dom f")
+            case True
+            then have h0: "(f \<rightharpoonup> c) \<noteq> Ibottom"
+              using True assms inst_up_pcpo by force
+            then have h1: "\<exists>a. (f \<rightharpoonup> c) = Iup a"
+              using h0 u.exhaust by auto
+            then obtain a where a_def: "(f \<rightharpoonup> c) = Iup a"
+              using h1 by blast
+            then have h2: "inv Iup (f \<rightharpoonup> c) = a"
+              apply(subst a_def)
+              by(simp add: inv_def)
+            then have h3: "Iup (inv Iup (f\<rightharpoonup>c)) = Iup a"
+              by (simp add: h2)        
+            then have h4: "Iup (inv Iup (f\<rightharpoonup>c)) = (f\<rightharpoonup>c)"
+              using a_def h3 by auto
+            then have h5: "(c \<in> dom f)\<leadsto>Iup (inv Iup (f\<rightharpoonup>c)) = (c \<in> dom f)\<leadsto>(f\<rightharpoonup>c)"
+              by simp
+            then show ?thesis
+              by simp
+          next
+            case False
+            then show ?thesis
+              by simp
+          qed
+      qed
+    moreover have h2: "(\<lambda>c::channel. (c \<in> dom f)\<leadsto>Iup (inv Iup (f \<rightharpoonup> c)))
+                     = (\<lambda>c::channel. (c \<in> dom f)\<leadsto> (f \<rightharpoonup> c))"
+      by (simp add: calculation(3))
+    moreover have "\<And>c::channel. (c \<in> dom f)\<leadsto> (f \<rightharpoonup> c) = f c"
+      by (simp add: domIff)
+    moreover have h3: "(\<lambda>c::channel. (c \<in> dom f)\<leadsto> (f \<rightharpoonup> c)) = f"
+      by(simp add: calculation)
+    ultimately show "(\<lambda>c::channel. (c \<in> dom f)\<leadsto>Iup (Discr invConvDiscrUp f\<rightharpoonup>c)) = f"
+      apply(subst h0)
+      apply(subst h1)
+      apply(subst h2)
+      apply(subst h3)
+      by blast
+  qed
 
 (* Given the assumption, the inverse of convDiscrUp exists (convDiscrUp is pseudo-invertible) *)
 lemma convdiscrup_inv_ex: assumes "\<forall>c\<in>dom f. (f \<rightharpoonup> c) \<noteq> \<bottom>"
                             shows "\<exists>x. convDiscrUp x = f"
-  apply(rule_tac x="convDiscrUp_inv f" in exI)
-  apply(simp add: convDiscrUp_def)
-  apply(simp add: assms convDiscrUp_inv_dom)
-  proof -
-    have h0: "(\<lambda>c::channel. (c \<in> dom f)\<leadsto>Iup (Discr convDiscrUp_inv f\<rightharpoonup>c)) 
-            = (\<lambda>c::channel. (c \<in> dom f)\<leadsto>Iup (Discr (inv Discr (inv Iup (f \<rightharpoonup> c)))))"
-      by (metis (full_types, hide_lams) assms convDiscrUp_inv_subst)
-    moreover have h1: "(\<lambda>c::channel. (c \<in> dom f)\<leadsto>Iup (Discr (inv Discr (inv Iup (f \<rightharpoonup> c)))))
-                     = (\<lambda>c::channel. (c \<in> dom f)\<leadsto>Iup (inv Iup (f \<rightharpoonup> c)))"
-      by (metis (no_types, hide_lams) Discr_undiscr inv_equality undiscr_Discr)
-    moreover have "\<And>c::channel. (c \<in> dom (f::channel \<Rightarrow> ('a discr\<^sub>\<bottom>) option))\<leadsto>Iup (inv Iup (f \<rightharpoonup> c)) 
-                               = (c \<in> dom f)\<leadsto> (f \<rightharpoonup> c)"
-      proof -
-        fix c::channel
-        show "(c \<in> dom (f::channel \<Rightarrow> ('a discr\<^sub>\<bottom>) option))\<leadsto>Iup (inv Iup (f \<rightharpoonup> c)) 
-            = (c \<in> dom f)\<leadsto> (f \<rightharpoonup> c)"
-          proof (cases "c \<in> dom f")
-            case True
-            then have h0: "(f \<rightharpoonup> c) \<noteq> Ibottom"
-              using True assms inst_up_pcpo by force
-            then have h1: "\<exists>a. (f \<rightharpoonup> c) = Iup a"
-              using h0 u.exhaust by auto
-            then obtain a where a_def: "(f \<rightharpoonup> c) = Iup a"
-              using h1 by blast
-            then have h2: "inv Iup (f \<rightharpoonup> c) = a"
-              apply(subst a_def)
-              by(simp add: inv_def)
-            then have h3: "Iup (inv Iup (f\<rightharpoonup>c)) = Iup a"
-              by (simp add: h2)        
-            then have h4: "Iup (inv Iup (f\<rightharpoonup>c)) = (f\<rightharpoonup>c)"
-              using a_def h3 by auto
-            then have h5: "(c \<in> dom f)\<leadsto>Iup (inv Iup (f\<rightharpoonup>c)) = (c \<in> dom f)\<leadsto>(f\<rightharpoonup>c)"
-              by simp
-            then show ?thesis
-              by simp
-          next
-            case False
-            then show ?thesis
-              by simp
-          qed
-      qed
-    moreover have h2: "(\<lambda>c::channel. (c \<in> dom f)\<leadsto>Iup (inv Iup (f \<rightharpoonup> c)))
-                     = (\<lambda>c::channel. (c \<in> dom f)\<leadsto> (f \<rightharpoonup> c))"
-      by (simp add: calculation(3))
-    moreover have "\<And>c::channel. (c \<in> dom f)\<leadsto> (f \<rightharpoonup> c) = f c"
-      by (simp add: domIff)
-    moreover have h3: "(\<lambda>c::channel. (c \<in> dom f)\<leadsto> (f \<rightharpoonup> c)) = f"
-      by(simp add: calculation)
-    ultimately show "(\<lambda>c::channel. (c \<in> dom f)\<leadsto>Iup (Discr convDiscrUp_inv f\<rightharpoonup>c)) = f"
-      apply(subst h0)
-      apply(subst h1)
-      apply(subst h2)
-      apply(subst h3)
-      by blast
-  qed
+  apply(rule_tac x="invConvDiscrUp f" in exI)
+  by (simp add: assms convDiscrUp_invConvDiscrUp_eq)
 
-(* TODO: Das ist der Copy-paste Beweis von _inv_ex, inv_ex sollte hierrauf basieren *)
-lemma convdiscrup_inv_is: assumes "\<forall>c\<in>dom f. (f \<rightharpoonup> c) \<noteq> \<bottom>"
-                            shows "convDiscrUp (convDiscrUp_inv f) = f"
-  apply(simp add: convDiscrUp_def)
-  apply(simp add: assms convDiscrUp_inv_dom)
-  proof -
-    have h0: "(\<lambda>c::channel. (c \<in> dom f)\<leadsto>Iup (Discr convDiscrUp_inv f\<rightharpoonup>c)) 
-            = (\<lambda>c::channel. (c \<in> dom f)\<leadsto>Iup (Discr (inv Discr (inv Iup (f \<rightharpoonup> c)))))"
-      by (metis (full_types, hide_lams) assms convDiscrUp_inv_subst)
-    moreover have h1: "(\<lambda>c::channel. (c \<in> dom f)\<leadsto>Iup (Discr (inv Discr (inv Iup (f \<rightharpoonup> c)))))
-                     = (\<lambda>c::channel. (c \<in> dom f)\<leadsto>Iup (inv Iup (f \<rightharpoonup> c)))"
-      by (metis (no_types, hide_lams) Discr_undiscr inv_equality undiscr_Discr)
-    moreover have "\<And>c::channel. (c \<in> dom (f::channel \<Rightarrow> ('a discr\<^sub>\<bottom>) option))\<leadsto>Iup (inv Iup (f \<rightharpoonup> c)) 
-                               = (c \<in> dom f)\<leadsto> (f \<rightharpoonup> c)"
-      proof -
-        fix c::channel
-        show "(c \<in> dom (f::channel \<Rightarrow> ('a discr\<^sub>\<bottom>) option))\<leadsto>Iup (inv Iup (f \<rightharpoonup> c)) 
-            = (c \<in> dom f)\<leadsto> (f \<rightharpoonup> c)"
-          proof (cases "c \<in> dom f")
-            case True
-            then have h0: "(f \<rightharpoonup> c) \<noteq> Ibottom"
-              using True assms inst_up_pcpo by force
-            then have h1: "\<exists>a. (f \<rightharpoonup> c) = Iup a"
-              using h0 u.exhaust by auto
-            then obtain a where a_def: "(f \<rightharpoonup> c) = Iup a"
-              using h1 by blast
-            then have h2: "inv Iup (f \<rightharpoonup> c) = a"
-              apply(subst a_def)
-              by(simp add: inv_def)
-            then have h3: "Iup (inv Iup (f\<rightharpoonup>c)) = Iup a"
-              by (simp add: h2)        
-            then have h4: "Iup (inv Iup (f\<rightharpoonup>c)) = (f\<rightharpoonup>c)"
-              using a_def h3 by auto
-            then have h5: "(c \<in> dom f)\<leadsto>Iup (inv Iup (f\<rightharpoonup>c)) = (c \<in> dom f)\<leadsto>(f\<rightharpoonup>c)"
-              by simp
-            then show ?thesis
-              by simp
-          next
-            case False
-            then show ?thesis
-              by simp
-          qed
-      qed
-    moreover have h2: "(\<lambda>c::channel. (c \<in> dom f)\<leadsto>Iup (inv Iup (f \<rightharpoonup> c)))
-                     = (\<lambda>c::channel. (c \<in> dom f)\<leadsto> (f \<rightharpoonup> c))"
-      by (simp add: calculation(3))
-    moreover have "\<And>c::channel. (c \<in> dom f)\<leadsto> (f \<rightharpoonup> c) = f c"
-      by (simp add: domIff)
-    moreover have h3: "(\<lambda>c::channel. (c \<in> dom f)\<leadsto> (f \<rightharpoonup> c)) = f"
-      by(simp add: calculation)
-    ultimately show "(\<lambda>c::channel. (c \<in> dom f)\<leadsto>Iup (Discr convDiscrUp_inv f\<rightharpoonup>c)) = f"
-      apply(subst h0)
-      apply(subst h1)
-      apply(subst h2)
-      apply(subst h3)
-      by blast
-  qed
-
-(* convDiscrUp is pseudo-bijective *)
+(* Given the assumption, convDiscrUp is pseudo-bijective *)
 lemma convdiscrup_inv_eq[simp]: assumes "\<forall>c\<in>dom f. (f \<rightharpoonup> c) \<noteq> \<bottom>"
                                   shows "convDiscrUp (inv convDiscrUp f) = f"
   by (metis assms convdiscrup_inv_ex f_inv_into_f rangeI)
 
-(* Under the assumption, that convDiscrUp is pseudo-bijective, the domain stays the same *)
+(* Given the assumption (convDiscrUp is pseudo-bijective), the domain of the inverse stays the same *)
 lemma convdiscrup_inv_dom_eq[simp]: assumes "\<forall>c\<in>dom f. (f \<rightharpoonup> c) \<noteq> \<bottom>"
                                       shows "dom (inv convDiscrUp f) = dom f"
   by (metis assms convdiscrup_inv_eq convDiscrUp_dom)
-    
+   
+(* convDiscrUp is an injective function *) 
 lemma convDiscrUp_inj: "inj convDiscrUp"
   proof (rule injI)
     fix x::"channel \<Rightarrow> 'b option" and y::"channel \<Rightarrow> 'b option"
@@ -749,8 +697,48 @@ lemma convDiscrUp_inj: "inj convDiscrUp"
       by (metis discr.inject domD f1 f2 option.sel u.inject)
   qed
 
-lemma convdiscrtup_eqI: "convDiscrUp x = convDiscrUp y \<Longrightarrow> x = y"
+lemma convDiscrUp_eqI: "convDiscrUp x = convDiscrUp y \<Longrightarrow> x = y"
   by (simp add: convDiscrUp_inj inj_eq)
+
+(* Substitution rule for the inverse of convDiscrUp *)
+lemma convDiscrUp_inv_subst: assumes "\<forall>c\<in>dom f. (f \<rightharpoonup> c) \<noteq> \<bottom>"
+                                 and "c \<in> dom f"
+                               shows "((inv convDiscrUp) f) \<rightharpoonup> c = inv Discr (inv Iup (f \<rightharpoonup> c))"
+  proof -
+    have "((inv convDiscrUp) f) = (invConvDiscrUp f)"
+      proof -
+        have "convDiscrUp ((inv convDiscrUp) f) = f"
+          by (simp add: assms(1))
+        moreover have "convDiscrUp (invConvDiscrUp f) = f"
+          by (simp add: assms(1) convDiscrUp_invConvDiscrUp_eq)
+        ultimately show ?thesis
+          by (simp add: convDiscrUp_eqI)
+      qed
+    moreover have "(invConvDiscrUp f) \<rightharpoonup> c = inv Discr (inv Iup (f \<rightharpoonup> c))"
+      by (simp add: assms invConvDiscrUp_subst)
+    ultimately show ?thesis
+      by simp
+  qed
+
+(* Substituting sbHdElem with shd *)
+lemma sbHdElem_2_shd: assumes "\<forall>c\<in>(ubDom\<cdot>sb). sb .c \<noteq> \<epsilon>"
+                          and "c \<in> ubDom\<cdot>sb"
+                        shows "(inv convDiscrUp (sbHdElem\<cdot>sb))\<rightharpoonup>c = shd(sb .c)"
+  proof -
+    have h1:"sbHdElem\<cdot>sb\<rightharpoonup>c = lshd\<cdot>(sb .c)"
+      by(simp add: assms sbHdElem_def sbHdElem_cont)
+    then have h2: "(inv convDiscrUp (sbHdElem\<cdot>sb))\<rightharpoonup>c = inv Discr (inv Iup (lshd\<cdot>(sb .c)))" 
+      by (simp add: assms(1) assms(2) convDiscrUp_inv_subst sbHdElem_channel)
+    moreover have h4: "\<exists>a. lshd\<cdot>(sb .c) = Iup (Discr a)"
+      by (metis (no_types, lifting) assms convDiscrUp_def convdiscrup_inv_dom_eq convdiscrup_inv_eq h1 option.sel sbHdElem_channel sbHdElem_dom)
+    then have h5: "lshd\<cdot>(sb .c) = Iup (Discr (shd(sb .c)))"
+      apply(simp add: shd_def up_def)
+      using assms by auto
+    then have "inv Discr (inv Iup (lshd\<cdot>(sb .c))) = shd (sb .c)"
+      by (metis (no_types, lifting) h1 assms convDiscrUp_def convdiscrup_inv_dom_eq convdiscrup_inv_eq discr.inject h2 option.sel sbHdElem_dom sbHdElem_channel u.inject)
+    ultimately show ?thesis
+      by simp
+  qed
 
 (* Equation resolving convDiscrUp on sbHdElem over a simple bundle *)
 lemma convDiscrUp_sbHdElem_eq: assumes "x\<noteq>\<epsilon>" 
@@ -799,27 +787,7 @@ lemma convDiscrUp_sbHdElem_eq: assumes "x\<noteq>\<epsilon>"
     hence "?L = convDiscrUp ?R"
       by (metis l_dom part_eq r_dom singletonD)
     ultimately show ?thesis
-      by (metis convdiscrtup_eqI convdiscrup_inv_eq)
+      by (metis convDiscrUp_eqI convdiscrup_inv_eq)
   qed    
-
-(* TODO: Das hier sollte der eigentliche "subst" sein *)
-lemma convDiscrUp_inverse: assumes "\<forall>c\<in>dom f. (f \<rightharpoonup> c) \<noteq> \<bottom>"
-                               and "c \<in> dom f"
-                             shows "((inv convDiscrUp) f) \<rightharpoonup> c = inv Discr (inv Iup (f \<rightharpoonup> c))"
-  proof -
-    have "((inv convDiscrUp) f) = (convDiscrUp_inv f)"
-      proof -
-        have "convDiscrUp ((inv convDiscrUp) f) = f"
-          by (simp add: assms(1))
-        moreover have "convDiscrUp (convDiscrUp_inv f) = f"
-          by (simp add: assms(1) convdiscrup_inv_is)
-        ultimately show ?thesis
-          by (simp add: convdiscrtup_eqI)
-      qed
-    moreover have "(convDiscrUp_inv f) \<rightharpoonup> c = inv Discr (inv Iup (f \<rightharpoonup> c))"
-      by (simp add: assms(1) assms(2) convDiscrUp_inv_subst)
-    ultimately show ?thesis
-      by simp
-  qed
 
 end

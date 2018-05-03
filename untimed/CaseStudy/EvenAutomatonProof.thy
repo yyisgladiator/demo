@@ -37,10 +37,11 @@ lemma sbrt_ubconc_dom2[simp]:assumes "ubDom\<cdot>sb = {c1}"
   shows "sbRt\<cdot>(ubConc (createC1Bundle n)\<cdot>sb) = sb"
   apply (rule ub_eq)
   by (simp add: sbRt_def assms) +    
+
 (*useful for Transition*)
 lemma tsynbonetick_hd_inv_convdiscrtup_tick[simp]:assumes "ubDom\<cdot>sb = {c1}" 
   shows "(inv convDiscrUp (sbHdElem\<cdot>(ubConc (tsynbOneTick c1)\<cdot>sb))) = [c1 \<mapsto> \<surd>]"
-  apply (rule  convdiscrtup_eqI)
+  apply (rule  convDiscrUp_eqI)
   apply (subst convdiscrup_inv_eq)
    apply (simp add: assms sbHdElem_channel)
   apply (subst fun_eq_iff)
@@ -55,7 +56,7 @@ lemma tsynbonetick_hd_inv_convdiscrtup_tick[simp]:assumes "ubDom\<cdot>sb = {c1}
 
 lemma tsynbonetick_hd_inv_convdiscrtup_msg[simp]:assumes "ubDom\<cdot>sb = {c1}" 
   shows "(inv convDiscrUp (sbHdElem\<cdot>(ubConc (createC1Bundle n)\<cdot>sb))) = [c1 \<mapsto> \<M>(A n)]"
-  apply (rule  convdiscrtup_eqI)
+  apply (rule  convDiscrUp_eqI)
   apply (subst convdiscrup_inv_eq)
    apply (simp add: assms sbHdElem_channel)
   apply (subst fun_eq_iff)
