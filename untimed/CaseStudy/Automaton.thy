@@ -37,6 +37,56 @@ and "(f \<rightharpoonup> c) = a"
 shows "a \<in> ctype c"
   using assms(1) assms(2) assms(3) ubElemWellI by auto
 
+lemma sbHdElem_ubElemWell: assumes "\<forall>c\<in>dom (sbHdElem\<cdot>sb). (sbHdElem\<cdot>sb \<rightharpoonup> c) \<noteq> \<bottom>" (* \<bottom> = \<epsilon> *)
+                             shows "ubElemWell (inv convDiscrUp (sbHdElem\<cdot>sb))"
+  proof -
+    have "\<And>c::channel. c\<in>ubDom\<cdot>sb \<Longrightarrow> inv convDiscrUp (sbHdElem\<cdot>sb)\<rightharpoonup>c \<in> ctype c"
+      proof -
+        fix c::channel
+        assume a1: "c\<in>ubDom\<cdot>sb"
+
+        have h00: "usclOkay c (sb .c)"
+          by (simp add: a1 ubgetch_insert)
+
+        have h0: "sdom\<cdot>(sb .c) \<subseteq> ctype c"
+          using h00 usclOkay_stream_def by blast
+
+        have h1: "sbHdElem\<cdot>sb\<rightharpoonup>c = lshd\<cdot>(sb .c)"
+          by(simp add: sbHdElem_def sbHdElem_cont a1)
+
+        moreover have h2: "inv convDiscrUp (sbHdElem\<cdot>sb)\<rightharpoonup>c = inv Discr (inv Iup (sbHdElem\<cdot>sb \<rightharpoonup> c))"
+          by (simp add: a1 assms convDiscrUp_inverse)
+        then have h3:"inv convDiscrUp (sbHdElem\<cdot>sb)\<rightharpoonup>c = inv Discr (inv Iup (lshd\<cdot>(sb .c)))"
+          by (simp add: h1)
+
+        have h45: "\<And>a. updis a = Iup (Discr a)"
+          by(simp add: up_def)
+  
+        have h46: "\<exists>a::'a. lshd\<cdot>(sb  .  c) = Iup (Discr a)"
+          by (metis (no_types, lifting) a1 assms convDiscrUp_def convdiscrup_inv_dom_eq convdiscrup_inv_eq h1 option.sel sbHdElem_dom)
+
+        have h47: "\<And>a b. Iup (Discr a) = Iup (Discr b) \<Longrightarrow> a = b"
+          by simp
+
+        have h5: "lshd\<cdot>(sb .c) = Iup (Discr (shd(sb .c)))"
+          (* apply(simp add: lshd_def) *)
+          apply(simp add: shd_def)
+          apply(simp add: h45)
+          using a1 assms h47 h46 by auto
+
+        have "inv Discr (inv Iup (lshd\<cdot>(sb .c))) = shd (sb .c)"
+          by (metis (no_types, lifting) h2 a1 assms convDiscrUp_def convdiscrup_inv_dom_eq convdiscrup_inv_eq discr.inject h1 h5 option.sel sbHdElem_dom u.inject)
+
+        moreover have "inv Discr (inv Iup (lshd\<cdot>(sb .c))) \<in> ctype c"
+          by (metis a1 assms calculation(2) h0 h1 sbHdElem_dom sfilter_ne_resup sfilter_sdoml3 stream.sel_rews(1))
+
+        ultimately show "inv convDiscrUp (sbHdElem\<cdot>sb)\<rightharpoonup>c \<in> ctype c" 
+          by (simp add:h3)
+      qed
+    then show ?thesis
+      by(simp add: ubElemWell_def assms)
+  qed
+
 fun automaton_well::"((('state \<times>(channel \<rightharpoonup> 'm::message)) \<Rightarrow> ('state \<times> 'm SB)) \<times> 'state \<times> 'm SB \<times> channel set \<times> channel set) \<Rightarrow> bool " where
 "automaton_well (transition, initialState, initialOut, chIn, chOut) = (finite chIn \<and> (\<forall>s f. (dom f = chIn \<and> ubElemWell f) \<longrightarrow> ubDom\<cdot>(snd(transition (s,f))) = chOut))"
 
