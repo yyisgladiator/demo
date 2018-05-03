@@ -48,30 +48,14 @@ lemma sbHdElem_ubElemWell: assumes "\<forall>c\<in>(ubDom\<cdot>sb). sb .c \<not
       proof -
         fix c::channel
         assume a1: "c\<in>ubDom\<cdot>sb"
-        
-        (* 1. Umformung *)
-        moreover have h2: "sbHdElem\<cdot>sb\<rightharpoonup>c = lshd\<cdot>(sb .c)"
-          by(simp add: sbHdElem_def sbHdElem_cont a1)
-        then have h3: "(inv convDiscrUp (sbHdElem\<cdot>sb))\<rightharpoonup>c = inv Discr (inv Iup (lshd\<cdot>(sb .c)))"
-          by (simp add: a1 convDiscrUp_assms convDiscrUp_inverse)
-  
-        (* 2. Umformung *)
-        moreover have h4: "\<exists>a. lshd\<cdot>(sb .c) = Iup (Discr a)"
-          by (metis (no_types, lifting) a1 convDiscrUp_assms convDiscrUp_def convdiscrup_inv_dom_eq convdiscrup_inv_eq h2 option.sel sbHdElem_dom)
-        then have h5: "lshd\<cdot>(sb .c) = Iup (Discr (shd(sb .c)))"
-          apply(simp add: shd_def up_def)
-          using a1 assms by auto
-        then have "inv Discr (inv Iup (lshd\<cdot>(sb .c))) = shd (sb .c)"
-          by (metis (no_types, lifting) h3 a1 convDiscrUp_assms convDiscrUp_def convdiscrup_inv_dom_eq convdiscrup_inv_eq discr.inject h2 option.sel sbHdElem_dom u.inject)
-
-        (* 3. Umformung *)
+        moreover have "inv convDiscrUp (sbHdElem\<cdot>sb)\<rightharpoonup>c = shd(sb .c)"
+          by(simp add: assms a1 sbHdElem_2_shd)
         moreover have "usclOkay c (sb .c)"
           by (simp add: a1 ubgetch_insert)
         then have "sdom\<cdot>(sb .c) \<subseteq> ctype c"
           using  usclOkay_stream_def by blast
-        then have "shd (sb .c) \<in> ctype c"
+        then have "shd (sb .c) \<in> ctype c" 
           by (metis a1 assms sfilter_ne_resup sfilter_sdoml3)
-
         ultimately show "inv convDiscrUp (sbHdElem\<cdot>sb)\<rightharpoonup>c \<in> ctype c" 
           by simp
       qed
