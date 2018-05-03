@@ -208,7 +208,7 @@ definition nda_H_helper :: "('s, 'm::message) NDA \<rightarrow> 'm SPS set rev" 
 
 (* https://git.rwth-aachen.de/montibelle/automaton/core/issues/68 *)
 definition nda_H :: "('s, 'm::message) NDA \<rightarrow> 'm SPS" where
-"nda_H \<equiv> \<Lambda> nda. setflat_sps_rev\<cdot>(nda_H_helper\<cdot>nda)" 
+"nda_H \<equiv> \<Lambda> nda. setflat_sps_rev(undiscr(ndaDom\<cdot> nda))(undiscr(ndaRan\<cdot> nda))\<cdot>(nda_H_helper\<cdot>nda)" 
 
 
 
