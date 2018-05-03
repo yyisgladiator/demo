@@ -588,7 +588,7 @@ lemma convDiscrUp_dom[simp]: "dom (convDiscrUp f) = dom f"
 definition invConvDiscrUp :: "(channel \<rightharpoonup> 'a discr\<^sub>\<bottom>) \<Rightarrow> (channel \<rightharpoonup> 'a)" where
 "invConvDiscrUp f \<equiv> \<lambda>c. (c\<in>dom f) \<leadsto> (inv Discr (inv Iup (f \<rightharpoonup> c)))"
 
-(* Domain of invConvDiscrUp depends entirely on f*)
+(* Domain of invConvDiscrUp depends entirely on f *)
 lemma invConvDiscrUp_dom: assumes "\<forall>c\<in>dom f. (f \<rightharpoonup> c) \<noteq> \<bottom>"
                             shows "dom (invConvDiscrUp f) = dom f"
   proof -
@@ -720,6 +720,7 @@ lemma convDiscrUp_inv_subst: assumes "\<forall>c\<in>dom f. (f \<rightharpoonup>
       by simp
   qed
 
+(* TODO: Wrong section? Maybe move to sbHdElem (but requires convDiscrUp lemmas!). *)
 (* Substituting sbHdElem with shd *)
 lemma sbHdElem_2_shd: assumes "\<forall>c\<in>(ubDom\<cdot>sb). sb .c \<noteq> \<epsilon>"
                           and "c \<in> ubDom\<cdot>sb"
@@ -740,54 +741,24 @@ lemma sbHdElem_2_shd: assumes "\<forall>c\<in>(ubDom\<cdot>sb). sb .c \<noteq> \
       by simp
   qed
 
+(* TODO: Wrong section? Maybe move to sbHdElem (but requires convDiscrUp lemmas!). *)
 (* Equation resolving convDiscrUp on sbHdElem over a simple bundle *)
 lemma convDiscrUp_sbHdElem_eq: assumes "x\<noteq>\<epsilon>" 
                                    and "ubWell [c \<mapsto> x]" 
                                  shows "inv convDiscrUp (sbHdElem\<cdot>(Abs_ubundle [c\<mapsto>x])) = [c\<mapsto>shd(x)]"
-                                   (is "inv convDiscrUp ?L = ?R")
+                                   (is "?L = ?R")
   proof -
+    have convDiscrUp_assms: "\<forall>c\<in>dom(sbHdElem\<cdot>(Abs_ubundle[c\<mapsto>x])). (sbHdElem\<cdot>(Abs_ubundle[c\<mapsto>x]))\<rightharpoonup>c \<noteq> \<bottom>"
+      by (metis assms dom_fun_upd fun_upd_same option.sel option.simps(3) sbHdElem_channel 
+                sbHdElem_dom singletonD ubWell_empty ubdom_empty ubdom_ubrep_eq ubgetch_ubrep_eq)
     have l_dom: "dom ?L = {c}"
-      by (simp add: assms(2) ubdom_ubrep_eq)
-    hence lemma_assms: "\<forall>c\<in> dom ?L. ?L \<rightharpoonup> c \<noteq> \<bottom>"
-      by (metis assms(1) assms(2) fun_upd_same option.sel sbHdElem_channel sbHdElem_dom singletonD ubgetch_ubrep_eq)
-    moreover have r_dom: "dom (convDiscrUp ?R) = {c}"
+      by (simp add: convDiscrUp_assms assms(2) ubdom_ubrep_eq)
+    moreover have r_dom: "dom ?R = {c}"
       by simp
-    moreover have "?L \<rightharpoonup> c = lshd\<cdot>((Abs_ubundle [c \<mapsto> x]) .c)" 
-      proof -
-        have f1: "Some (\<Lambda> u. (\<lambda>c. (c \<in> ubDom\<cdot>u)\<leadsto>lshd\<cdot>(u . c)))\<cdot> (Abs_ubundle [c \<mapsto> x])\<rightharpoonup>c 
-                    = ((\<Lambda> u. (\<lambda>c. (c \<in> ubDom\<cdot>u)\<leadsto>lshd\<cdot>(u . c)))\<cdot> (Abs_ubundle [c \<mapsto> x])) c"
-          by (metis (no_types) domIff l_dom option.collapse sbHdElem_def singletonI)
-        have f2: "(\<Lambda> u. (\<lambda>c. (c \<in> ubDom\<cdot>u)\<leadsto>lshd\<cdot>(u . c)))\<cdot> (Abs_ubundle [c \<mapsto> x])
-                = (\<lambda>ca. (ca \<in> ubDom\<cdot> (Abs_ubundle [c \<mapsto> x]))\<leadsto>lshd\<cdot> (Abs_ubundle [c \<mapsto> x] . ca))"
-          using beta_cfun sbHdElem_cont by blast
-        have "c \<in> ubDom\<cdot>(Abs_ubundle [c \<mapsto> x])"
-          using l_dom sbHdElem_dom by blast
-        then have "Some (\<Lambda> u. (\<lambda>c. (c \<in> ubDom\<cdot>u)\<leadsto>lshd\<cdot>(u . c)))\<cdot> (Abs_ubundle [c \<mapsto> x])\<rightharpoonup>c 
-                 = Some (lshd\<cdot>(Abs_ubundle [c \<mapsto> x] . c))"
-          using f2 f1 by presburger
-        then have "(\<Lambda> u. (\<lambda>c. (c \<in> ubDom\<cdot>u)\<leadsto>lshd\<cdot>(u . c)))\<cdot> (Abs_ubundle [c \<mapsto> x])\<rightharpoonup>c 
-                  = lshd\<cdot>(Abs_ubundle [c \<mapsto> x] . c)"
-          by blast   
-        then show ?thesis
-          by (simp add: sbHdElem_def)
-      qed                
-    moreover have "lshd\<cdot>x = Iup (Discr (shd x))"
-      proof -
-        have "\<exists> a. lshd\<cdot>x = updis a"
-          by (metis assms(1) stream.sel_rews(3) updis_exists)
-        then obtain a where a_def: "lshd\<cdot>x = updis a"
-          by auto
-        then show ?thesis
-          by(simp add: up_def cont_Ifup1 a_def shd_def)
-      qed
-    hence "?L \<rightharpoonup> c = Iup (Discr (shd x))"
-      by (simp add: calculation assms(2) ubgetch_ubrep_eq)
-    hence "?L \<rightharpoonup> c = (convDiscrUp ?R) \<rightharpoonup> c"
-      by (simp add: convDiscrUp_def)
-    hence "?L = convDiscrUp ?R"
-      by (metis l_dom part_eq r_dom singletonD)
+    moreover have eq_on_dom: "?R \<rightharpoonup> c = ?L \<rightharpoonup> c"
+      by (simp add: assms(1) assms(2) sbHdElem_2_shd ubdom_ubrep_eq ubgetch_ubrep_eq)
     ultimately show ?thesis
-      by (metis convDiscrUp_eqI convdiscrup_inv_eq)
-  qed    
+      by (metis part_eq singletonD)
+  qed
 
 end
