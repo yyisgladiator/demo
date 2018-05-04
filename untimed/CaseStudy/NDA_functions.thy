@@ -77,18 +77,14 @@ proof(rule monofunI)
     then show ?thesis
     proof(cases "\<forall>sps::('m stream\<^sup>\<Omega>) ufun uspec\<in>inv Rev y. uspecDom sps = In \<and> uspecRan sps = Out")
       case True
-      then have "(if \<forall>sps::('m stream\<^sup>\<Omega>) ufun uspec\<in>inv Rev y. uspecDom sps = In \<and> uspecRan sps = Out then Abs_rev_uspec (setflat\<cdot>(Rep_rev_uspec ` inv Rev y)) else uspecLeast In Out) = Abs_rev_uspec (setflat\<cdot>(Rep_rev_uspec ` inv Rev y))"
-        by auto
       have f1:"\<forall>f\<in>(setflat\<cdot>(Rep_rev_uspec ` inv Rev y)). ufclDom\<cdot>f = In \<and> ufclRan\<cdot>f = Out"
         by (smt Abs_cfun_inverse2 True f_inv_into_f inv_into_into mem_Collect_eq setflat_cont setflat_def uspec_dom_eq uspec_ran_eq)
       then have uspecWelly:"uspecWell (setflat\<cdot>(Rep_rev_uspec ` inv Rev y))"
         by(simp add: uspecWell_def)
-      have not_empty:"(setflat\<cdot>(Rep_rev_uspec ` inv Rev y)) \<noteq> {}" (*Have to ensure that at least one SPS is consistens*)
-        sorry
-      have uspecy_dom_ran:"uspecDom (Abs_rev_uspec (setflat\<cdot>(Rep_rev_uspec ` inv Rev y))) = In \<and> uspecRan (Abs_rev_uspec (setflat\<cdot>(Rep_rev_uspec ` inv Rev y))) = Out"
-        by (metis (no_types, lifting) f1 not_empty rep_abs_rev_simp subsetI subset_empty uspecWelly uspec_dom_eq uspec_ran_eq)
       then show ?thesis
-        by (simp add: False uspecLeast_min)
+        apply(cases "(setflat\<cdot>(Rep_rev_uspec ` inv Rev y)) = {}")
+        apply (smt True empty_max)
+        by (smt CollectI False SetPcpo.less_set_def f1 rep_abs_rev_simp subsetI uspecLeast_def uspecLeast_well uspec_belowI)
     next
       case False
       then show ?thesis
