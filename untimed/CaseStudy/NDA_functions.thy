@@ -44,7 +44,7 @@ lemma image_cont[simp]:"cont (\<lambda> S.  f ` S)"
 definition setflat_sps_rev:: "channel set \<Rightarrow> channel set \<Rightarrow> 'm::message SPS set rev \<rightarrow> 'm SPS" where (*Problem if SPS is not consistent*)
 "setflat_sps_rev In Out = (\<Lambda> spss. (if (\<forall>sps\<in>(inv Rev spss). uspecDom sps = In \<and> uspecRan sps = Out) then Abs_rev_uspec (setflat\<cdot>(Rep_rev_uspec ` (inv Rev spss))) else uspecLeast In Out))"
 
-lemma setflat_sps_rev_mono[simp]:assumes "In \<noteq> {}" and "Out\<noteq>{}" shows "monofun(\<lambda> spss::'m::message SPS set rev. (if (\<forall>sps\<in>(inv Rev spss). uspecDom sps = In \<and> uspecRan sps = Out) then Abs_rev_uspec (setflat\<cdot>(Rep_rev_uspec ` (inv Rev spss))) else uspecLeast In Out))" 
+lemma setflat_sps_rev_mono[simp]:"monofun(\<lambda> spss::'m::message SPS set rev. (if (\<forall>sps\<in>(inv Rev spss). uspecDom sps = In \<and> uspecRan sps = Out) then Abs_rev_uspec (setflat\<cdot>(Rep_rev_uspec ` (inv Rev spss))) else uspecLeast In Out))" 
 proof(rule monofunI)
   fix x y:: "'m::message SPS set rev"
   assume a1:"x\<sqsubseteq>y"
