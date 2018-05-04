@@ -101,11 +101,11 @@ lemma tran_sum_odd[simp]: assumes "\<not>Parity.even (summe + m)" shows "evenAut
    apply auto
   using assms by presburger  +    
 
-lemma EvenAutomatonAutomaton_h: "\<And>s f. dom f = {c1} \<and> ubElemWell f  (*Can not be generated right now*)
+lemma EvenAutomatonAutomaton_h: "\<And>s f. dom f = {c1} \<and> sbElemWell f  (*Can not be generated right now*)
           \<Longrightarrow> ubDom\<cdot>(snd (evenAutomatonTransition (s, f))) = {c2}"
 proof -
   fix s::EvenAutomatonState and f::"channel \<rightharpoonup> EvenAutomaton event"
-  assume a1: "dom f = {c1} \<and> ubElemWell f"
+  assume a1: "dom f = {c1} \<and> sbElemWell f"
   obtain a where f_def: "f = [c1 \<mapsto> a]"
     using a1 dom_eq_singleton_conv by force
   have f1: "f\<rightharpoonup>c1 \<noteq> \<surd> \<Longrightarrow> (\<exists> b. f\<rightharpoonup>c1 = Msg b)"
@@ -117,7 +117,7 @@ proof -
       using a2 f1 by auto
     hence "b \<in> ctype c1"
       apply (subst ctype_event_iff)
-      by (simp add: a1 ubElemWellI)
+      by (simp add: a1 sbElemWellI)
     hence "\<exists> n. f = [c1 \<mapsto> Msg (A n)]"
       using b_def f_def by auto
     then obtain my_n where my_n_def: "f = [c1 \<mapsto> Msg (A my_n)]"

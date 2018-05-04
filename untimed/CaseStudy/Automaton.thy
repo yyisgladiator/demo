@@ -23,52 +23,13 @@ section \<open>Backend Signatures\<close>
 (* The content is:
   transition function \<times> initial state \<times> initial Output \<times> input domain \<times> output domain *)
 
-(* Converter function. *)
-  (* definition should be right, but needs to be nicer *)
-definition ubElemWell::"(channel \<rightharpoonup> 'm::message) \<Rightarrow> bool" where
-"ubElemWell f \<equiv> \<forall>c\<in> dom f. f\<rightharpoonup>c \<in> ctype c"
-
-lemma ubElemWellI: assumes "ubElemWell f" and "c \<in> dom f"
-  shows "(f \<rightharpoonup> c) \<in> ctype c"
-  using assms(1) assms(2) ubElemWell_def by auto
-
-lemma ubElemWellI2: assumes "ubElemWell f" and "c \<in> dom f"
-and "(f \<rightharpoonup> c) = a"
-shows "a \<in> ctype c"
-  using assms(1) assms(2) assms(3) ubElemWellI by auto
-
-lemma sbHdElem_ubElemWell: assumes "\<forall>c\<in>(ubDom\<cdot>sb). sb .c \<noteq> \<epsilon>" (* \<bottom> = \<epsilon> *)
-                             shows "ubElemWell (inv convDiscrUp (sbHdElem\<cdot>sb))"
-  proof -
-    (* Assumptions of convDiscrUp-lemmas *)
-    have convDiscrUp_assms: "\<forall>c\<in>dom (sbHdElem\<cdot>sb). (sbHdElem\<cdot>sb \<rightharpoonup> c) \<noteq> \<bottom>"
-      by (simp add: assms sbHdElem_channel)
-    (* Reformulation of the thesis to better match proving technique *)
-    have "\<And>c::channel. c\<in>ubDom\<cdot>sb \<Longrightarrow> inv convDiscrUp (sbHdElem\<cdot>sb)\<rightharpoonup>c \<in> ctype c"
-      proof -
-        fix c::channel
-        assume a1: "c\<in>ubDom\<cdot>sb"
-        moreover have "inv convDiscrUp (sbHdElem\<cdot>sb)\<rightharpoonup>c = shd(sb .c)"
-          by(simp add: assms a1 sbHdElem_2_shd)
-        moreover have "usclOkay c (sb .c)"
-          by (simp add: a1 ubgetch_insert)
-        then have "sdom\<cdot>(sb .c) \<subseteq> ctype c"
-          using  usclOkay_stream_def by blast
-        then have "shd (sb .c) \<in> ctype c" 
-          by (metis a1 assms sfilter_ne_resup sfilter_sdoml3)
-        ultimately show "inv convDiscrUp (sbHdElem\<cdot>sb)\<rightharpoonup>c \<in> ctype c" 
-          by simp
-      qed
-    then show ?thesis
-      by(simp add: ubElemWell_def convDiscrUp_assms)
-  qed
-
 fun automaton_well::"((('state \<times>(channel \<rightharpoonup> 'm::message)) \<Rightarrow> ('state \<times> 'm SB)) \<times> 'state \<times> 'm SB \<times> channel set \<times> channel set) \<Rightarrow> bool " where
-"automaton_well (transition, initialState, initialOut, chIn, chOut) = (finite chIn \<and> (\<forall>s f. (dom f = chIn \<and> ubElemWell f) \<longrightarrow> ubDom\<cdot>(snd(transition (s,f))) = chOut))"
+"automaton_well (transition, initialState, initialOut, chIn, chOut) = (finite chIn \<and> (\<forall>s f. (dom f = chIn \<and> sbElemWell f) \<longrightarrow> ubDom\<cdot>(snd(transition (s,f))) = chOut))"
 
-lemma automaton_wellI: assumes "finite In" and "\<And>s f. (dom f = In \<and> ubElemWell f) \<Longrightarrow> ubDom\<cdot>(snd(transition (s,f))) = Out" 
-                       shows "automaton_well (transition, initialState, initialOut, In, Out)"
-by(simp add: assms)
+lemma automaton_wellI: assumes "finite In" 
+                           and "\<And>s f. (dom f = In \<and> sbElemWell f) \<Longrightarrow> ubDom\<cdot>(snd(transition (s,f))) = Out" 
+                         shows "automaton_well (transition, initialState, initialOut, In, Out)"
+  by(simp add: assms)
 
 
 lemma automaton_ex:"automaton_well ((\<lambda>f. (myState, ubLeast {})), State, ubLeast {}, {}, {})"
