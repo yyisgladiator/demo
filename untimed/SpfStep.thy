@@ -594,13 +594,7 @@ lemma spfstep_ran [simp]:assumes "finite cIn" shows"ufRan\<cdot>(spfStep cIn cOu
   apply(simp add: spfstep_insert assms)
   apply(unfold ufran_least,simp add: assms)
   apply (simp add: assms spfDomAbs)
-  by (metis assms spfStep_h1_out_dom ubclDom_ubundle_def ubcldom_least_cs)
-
-lemma sbHdElem_dom[simp]:"dom (sbHdElem\<cdot>sb) = ubDom\<cdot>sb"
-  by(simp add: sbHdElem_def sbHdElem_cont)
-
-lemma sbHdElem_channel: assumes "ubDom\<cdot>sb = In"  and "c \<in> In" and "sb . c \<noteq> \<bottom>" shows "sbHdElem\<cdot>sb\<rightharpoonup>c \<noteq> \<bottom>"
-    by(simp add: sbHdElem_def sbHdElem_cont assms)    
+  by (metis assms spfStep_h1_out_dom ubclDom_ubundle_def ubcldom_least_cs)   
     
 lemma stepstep_step: assumes "ubDom\<cdot>sb = In" and "\<forall>c\<in>In. sb . c \<noteq> \<bottom>" and "finite In" and "ufDom\<cdot>(f (spfStep_h2 (sbHdElem\<cdot>sb))) = In \<and> ufRan\<cdot>(f (spfStep_h2 (sbHdElem\<cdot>sb))) = Out"shows "spfStep In Out\<cdot>f\<rightleftharpoons>sb = (f ((inv convDiscrUp)(sbHdElem\<cdot>sb)))\<rightleftharpoons>sb"
 proof(simp add: spfstep_insert assms)
