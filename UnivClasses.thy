@@ -119,6 +119,8 @@ begin
 end
 
 class ufuncl_comp = ufuncl +
+  fixes ufunclLeast :: "channel set \<Rightarrow> channel set \<Rightarrow> 'a"
+
   fixes ufunclComp :: "'a \<Rightarrow> 'a \<Rightarrow> 'a"  (infixl "\<otimes>" 55)
   fixes ufunclParComp :: "'a \<Rightarrow> 'a \<Rightarrow> 'a"   (infixl "\<parallel>" 55)
   fixes ufunclSerComp :: "'a \<Rightarrow> 'a \<Rightarrow> 'a"  (infixl "\<circ>" 55)
@@ -127,6 +129,10 @@ class ufuncl_comp = ufuncl +
   fixes ufunclCompWell:: "'a \<Rightarrow> 'a \<Rightarrow> bool"
   fixes ufunclSerCompWell:: "'a \<Rightarrow> 'a \<Rightarrow> bool"
   fixes ufunclParCompWell:: "'a \<Rightarrow> 'a \<Rightarrow> bool"
+  
+  assumes ufuncldom_least: "\<And> x. ufunclLeast (ufclDom\<cdot>x) (ufclRan\<cdot>x)\<sqsubseteq>x"
+  assumes ufuncldom_least_dom: "\<And> cs. ufclDom\<cdot>(ufunclLeast cin cout) = cin"
+  assumes ufuncldom_least_ran: "\<And> cs. ufclRan\<cdot>(ufunclLeast cin cout) = cout"
 
   assumes ufunclParCompWell_commute: "ufunclParCompWell f1 f2 = ufunclParCompWell f2 f1"
   assumes ufunclCompWell_commute: "ufunclCompWell f1 f2 = ufunclCompWell f2 f1"
