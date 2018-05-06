@@ -233,6 +233,22 @@ lemma ub_empty: "UB {} = {ubLeast {}}"
 section\<open>Instantiation\<close>
 (****************************************************) 
 
+lemma ubunion_ubrestrict_minus: assumes "cs2 \<subseteq> ubclDom\<cdot>f2"
+  shows "ubUnion\<cdot>(ubRestrict (cs1 - cs2)\<cdot>f1)\<cdot>f2 = ubUnion\<cdot>(ubRestrict cs1\<cdot>f1)\<cdot>f2"
+  apply (rule ub_eq)
+   apply simp
+   apply (smt Int_Diff Un_Diff_cancel2 sup.absorb_iff1 sup_left_commute ubclDom_ubundle_def assms)
+  by (metis Int_iff UnE diff_eq ubgetch_ubrestrict ubrestrict_ubdom2 ubunionDom ubunion_getchL ubunion_getchR)
+
+lemma ubclunion_ubclrestrict_minus_id: "ubUnion\<cdot>(ubRestrict (cs1 - cs2)\<cdot>ub)\<cdot>(ubRestrict (cs1 \<inter> cs2)\<cdot>ub) = ubRestrict cs1\<cdot>ub"
+  apply (rule ub_eq)
+  by auto
+
+lemma ubunion_ubrestrict_id: assumes "ubDom\<cdot>ub = cs1 \<union> cs2" and "cs1 \<inter> cs2 = {}" 
+  shows "ubUnion\<cdot>(ubRestrict cs1\<cdot>ub)\<cdot>(ubRestrict cs2\<cdot>ub) = ub"
+  apply (rule ub_eq)
+  using assms(1) apply auto
+  by (metis Int_commute Int_iff ubgetch_ubrestrict ubrestrict_ubdom2 ubunion_getchL ubunion_getchR)
 
 instantiation ubundle :: (uscl_pcpo) ubcl_comp
 begin
@@ -244,16 +260,22 @@ definition ubclRestrict_ubundle_def: "ubclRestrict \<equiv> ubRestrict"
 
 instance
   apply intro_classes
-          apply (simp add: ubclDom_ubundle_def ubclUnion_ubundle_def)
-         apply (simp add: ubclRestrict_ubundle_def ubclUnion_ubundle_def ubunion_ubrestrict3)
-        apply (simp add: ubclDom_ubundle_def ubclRestrict_ubundle_def)
-       apply (simp add: UBundle_Pcpo.ubclUnion_ubundle_def ubclDom_ubundle_def ubclRestrict_ubundle_def)
-      apply (simp add: UBundle_Pcpo.ubclRestrict_ubundle_def UBundle_Pcpo.ubclUnion_ubundle_def ubclDom_ubundle_def)
-     apply (simp add: ubclDom_ubundle_def ubclRestrict_ubundle_def)
-    apply (simp add: ubclRestrict_ubundle_def)
-   apply (simp add: ubclDom_ubundle_def ubclLeast_ubundle_def)
-  apply (simp add: ubclDom_ubundle_def ubclLeast_ubundle_def)
-   apply (simp add: UBundle_Pcpo.ubclUnion_ubundle_def ubunion_associative)
+                  apply (simp add: ubclDom_ubundle_def ubclUnion_ubundle_def)
+                 apply (simp add: ubclRestrict_ubundle_def ubclUnion_ubundle_def ubunion_ubrestrict3)
+                apply (simp add: ubclDom_ubundle_def ubclRestrict_ubundle_def)
+               apply (simp add: UBundle_Pcpo.ubclUnion_ubundle_def ubclDom_ubundle_def ubclRestrict_ubundle_def)
+              apply (simp add: UBundle_Pcpo.ubclRestrict_ubundle_def UBundle_Pcpo.ubclUnion_ubundle_def ubclDom_ubundle_def)
+             apply (simp add: UBundle_Pcpo.ubclRestrict_ubundle_def ubclDom_ubundle_def)
+            apply (simp add: UBundle_Pcpo.ubclRestrict_ubundle_def ubclDom_ubundle_def)
+           apply (simp add: ubclRestrict_ubundle_def)
+          apply (simp add: ubclDom_ubundle_def ubclLeast_ubundle_def)
+         apply (simp add: ubclDom_ubundle_def ubclLeast_ubundle_def)
+        apply (simp add: UBundle_Pcpo.ubclRestrict_ubundle_def ubclUnion_ubundle_def ubunion_ubrestrict_minus)
+       apply (simp add: UBundle_Pcpo.ubclunion_ubclrestrict_minus_id ubclRestrict_ubundle_def ubclUnion_ubundle_def)   
+      apply (simp add: UBundle_Pcpo.ubunion_ubrestrict_id ubclRestrict_ubundle_def ubclUnion_ubundle_def ubclDom_ubundle_def)       
+     apply (simp add: UBundle_Pcpo.ubclUnion_ubundle_def ubclDom_ubundle_def ubclRestrict_ubundle_def)
+    apply (simp add: ubclUnion_ubundle_def)
+   apply (simp add: ubclUnion_ubundle_def ubunion_associative)
   by (metis ubclDom_ubundle_def ubclUnion_ubundle_def ubunion_commutative)
 end
 
