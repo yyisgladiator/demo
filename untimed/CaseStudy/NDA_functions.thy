@@ -93,8 +93,57 @@ proof(rule monofunI)
   qed
 qed
   
-lemma setflat_sps_rev_cont[simp]:"cont(\<lambda> spss::'m::message SPS set rev. Abs_rev_uspec (setflat\<cdot>(Rep_rev_uspec `(inv Rev spss))))"  
-  sorry
+lemma setflat_sps_rev_cont_helper:assumes "chain (Y::nat \<Rightarrow> 'm::message SPS set rev)" shows "\<forall>sps\<in>inv Rev (Y n). uspecDom sps = In \<and> uspecRan sps = Out \<Longrightarrow> \<forall>i\<ge>n. \<forall>sps\<in>inv Rev (Y i). uspecDom sps = In \<and> uspecRan sps = Out"
+proof-
+  assume a1:"\<forall>sps\<in>inv Rev (Y n). uspecDom sps = In \<and> uspecRan sps = Out"
+  have "\<forall>i\<ge>n. inv Rev (Y i) \<sqsubseteq> inv Rev (Y n)"
+    by (metis assms below_rev.simps inv_rev_rev po_class.chain_mono rev.exhaust)
+  then have "\<forall>i\<ge>n. inv Rev (Y i) \<subseteq> inv Rev (Y n)"
+    by (simp add: SetPcpo.less_set_def)
+  then show "\<forall>i\<ge>n. \<forall>sps\<in>inv Rev (Y i). uspecDom sps = In \<and> uspecRan sps = Out"
+    by (meson a1 set_mp)
+qed
+  
+  
+lemma setflat_sps_rev_cont[simp]:"cont(\<lambda> spss::'m::message SPS set rev. (if (\<forall>sps\<in>(inv Rev spss). uspecDom sps = In \<and> uspecRan sps = Out) then Abs_rev_uspec (setflat\<cdot>(Rep_rev_uspec ` (inv Rev spss))) else uspecLeast In Out))" 
+proof(rule Cont.contI2, simp)
+  fix Y ::"nat \<Rightarrow> 'm SPS set rev"
+  assume a1:"chain Y"
+  assume a2:"chain (\<lambda>i::nat. if \<forall>sps::('m stream\<^sup>\<Omega>) ufun uspec\<in>inv Rev (Y i). uspecDom sps = In \<and> uspecRan sps = Out then Abs_rev_uspec (setflat\<cdot>(Rep_rev_uspec ` inv Rev (Y i)))
+                       else uspecLeast In Out)"
+  have "\<forall>i. inv Rev (\<Squnion>i.  Y i) \<subseteq> inv Rev (Y i)"
+    by (metis SetPcpo.less_set_def a1 below_rev.elims(2) inv_rev_rev is_ub_thelub)
+  then have a3:"\<exists>i. \<forall>sps\<in>inv Rev (Y i). uspecDom sps = In \<and> uspecRan sps = Out  \<Longrightarrow> \<forall>sps\<in>inv Rev (\<Squnion>i. Y i). uspecDom sps = In \<and> uspecRan sps = Out"
+    by blast
+  show "(if \<forall>sps\<in>inv Rev (\<Squnion>i. Y i). uspecDom sps = In \<and> uspecRan sps = Out then Abs_rev_uspec (setflat\<cdot>(Rep_rev_uspec ` inv Rev (\<Squnion>i. Y i)))
+        else uspecLeast In Out) \<sqsubseteq>
+       (\<Squnion>i. if \<forall>sps\<in>inv Rev (Y i). uspecDom sps = In \<and> uspecRan sps = Out then Abs_rev_uspec (setflat\<cdot>(Rep_rev_uspec ` inv Rev (Y i)))
+                  else uspecLeast In Out)"
+  proof(cases "\<exists>i. \<forall>sps\<in>inv Rev (Y i). uspecDom sps = In \<and> uspecRan sps = Out")
+    case True
+    then have "(if \<forall>sps\<in>inv Rev (\<Squnion>i. Y i). uspecDom sps = In \<and> uspecRan sps = Out then Abs_rev_uspec (setflat\<cdot>(Rep_rev_uspec ` inv Rev (\<Squnion>i::nat. Y i)))
+        else uspecLeast In Out) = Abs_rev_uspec (setflat\<cdot>(Rep_rev_uspec ` inv Rev (\<Squnion>i. Y i)))"
+      using a3 by presburger
+    obtain n where n_def:"\<forall>sps\<in>inv Rev (Y n). uspecDom sps = In \<and> uspecRan sps = Out"
+      using True by auto
+    have h1:"\<forall>i\<ge>n. (if \<forall>sps\<in>inv Rev (Y i). uspecDom sps = In \<and> uspecRan sps = Out then Abs_rev_uspec (setflat\<cdot>(Rep_rev_uspec ` inv Rev (Y i)))
+                  else uspecLeast In Out) = (Abs_rev_uspec (setflat\<cdot>(Rep_rev_uspec ` inv Rev (Y i))))"
+      by (meson a1 n_def setflat_sps_rev_cont_helper)
+    then have "\<forall>i\<ge>n.(if \<forall>sps\<in>inv Rev (Y i). uspecDom sps = In \<and> uspecRan sps = Out then Abs_rev_uspec (setflat\<cdot>(Rep_rev_uspec ` inv Rev (Y i)))
+                  else uspecLeast In Out) \<sqsubseteq> (\<Squnion>i. if \<forall>sps\<in>inv Rev (Y i). uspecDom sps = In \<and> uspecRan sps = Out then Abs_rev_uspec (setflat\<cdot>(Rep_rev_uspec ` inv Rev (Y i)))
+                  else uspecLeast In Out)"
+      using a2 is_ub_thelub by blast
+    then have "\<forall>i\<ge>n. (Abs_rev_uspec (setflat\<cdot>(Rep_rev_uspec ` inv Rev (Y i)))) \<sqsubseteq> (\<Squnion>i. if \<forall>sps\<in>inv Rev (Y i). uspecDom sps = In \<and> uspecRan sps = Out then Abs_rev_uspec (setflat\<cdot>(Rep_rev_uspec ` inv Rev (Y i)))
+                  else uspecLeast In Out)"
+      by (simp add: h1)
+    then show ?thesis
+      sorry
+  next
+    case False
+    then show ?thesis sorry
+  qed
+qed
+  
     
     
 (*                                                             
