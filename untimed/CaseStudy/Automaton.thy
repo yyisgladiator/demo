@@ -23,26 +23,13 @@ section \<open>Backend Signatures\<close>
 (* The content is:
   transition function \<times> initial state \<times> initial Output \<times> input domain \<times> output domain *)
 
-(* Converter function. *)
-  (* definition should be right, but needs to be nicer *)
-definition ubElemWell::"(channel \<rightharpoonup> 'm::message) \<Rightarrow> bool" where
-"ubElemWell f \<equiv> \<forall>c\<in> dom f. f\<rightharpoonup>c \<in> ctype c"
-
-lemma ubElemWellI: assumes "ubElemWell f" and "c \<in> dom f"
-  shows "(f \<rightharpoonup> c) \<in> ctype c"
-  using assms(1) assms(2) ubElemWell_def by auto
-
-lemma ubElemWellI2: assumes "ubElemWell f" and "c \<in> dom f"
-and "(f \<rightharpoonup> c) = a"
-shows "a \<in> ctype c"
-  using assms(1) assms(2) assms(3) ubElemWellI by auto
-
 fun automaton_well::"((('state \<times>(channel \<rightharpoonup> 'm::message)) \<Rightarrow> ('state \<times> 'm SB)) \<times> 'state \<times> 'm SB \<times> channel set \<times> channel set) \<Rightarrow> bool " where
-"automaton_well (transition, initialState, initialOut, chIn, chOut) = (finite chIn \<and> (\<forall>s f. (dom f = chIn \<and> ubElemWell f) \<longrightarrow> ubDom\<cdot>(snd(transition (s,f))) = chOut))"
+"automaton_well (transition, initialState, initialOut, chIn, chOut) = (finite chIn \<and> (\<forall>s f. (dom f = chIn \<and> sbElemWell f) \<longrightarrow> ubDom\<cdot>(snd(transition (s,f))) = chOut))"
 
-lemma automaton_wellI: assumes "finite In" and "\<And>s f. (dom f = In \<and> ubElemWell f) \<Longrightarrow> ubDom\<cdot>(snd(transition (s,f))) = Out" 
-                       shows "automaton_well (transition, initialState, initialOut, In, Out)"
-by(simp add: assms)
+lemma automaton_wellI: assumes "finite In" 
+                           and "\<And>s f. (dom f = In \<and> sbElemWell f) \<Longrightarrow> ubDom\<cdot>(snd(transition (s,f))) = Out" 
+                         shows "automaton_well (transition, initialState, initialOut, In, Out)"
+  by(simp add: assms)
 
 
 lemma automaton_ex:"automaton_well ((\<lambda>f. (myState, ubLeast {})), State, ubLeast {}, {}, {})"

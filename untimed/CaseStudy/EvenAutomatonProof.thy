@@ -37,10 +37,11 @@ lemma sbrt_ubconc_dom2[simp]:assumes "ubDom\<cdot>sb = {c1}"
   shows "sbRt\<cdot>(ubConc (createC1Bundle n)\<cdot>sb) = sb"
   apply (rule ub_eq)
   by (simp add: sbRt_def assms) +    
+
 (*useful for Transition*)
 lemma tsynbonetick_hd_inv_convdiscrtup_tick[simp]:assumes "ubDom\<cdot>sb = {c1}" 
   shows "(inv convDiscrUp (sbHdElem\<cdot>(ubConc (tsynbOneTick c1)\<cdot>sb))) = [c1 \<mapsto> \<surd>]"
-  apply (rule  convdiscrtup_eqI)
+  apply (rule  convDiscrUp_eqI)
   apply (subst convdiscrup_inv_eq)
    apply (simp add: assms sbHdElem_channel)
   apply (subst fun_eq_iff)
@@ -55,7 +56,7 @@ lemma tsynbonetick_hd_inv_convdiscrtup_tick[simp]:assumes "ubDom\<cdot>sb = {c1}
 
 lemma tsynbonetick_hd_inv_convdiscrtup_msg[simp]:assumes "ubDom\<cdot>sb = {c1}" 
   shows "(inv convDiscrUp (sbHdElem\<cdot>(ubConc (createC1Bundle n)\<cdot>sb))) = [c1 \<mapsto> \<M>(A n)]"
-  apply (rule  convdiscrtup_eqI)
+  apply (rule  convDiscrUp_eqI)
   apply (subst convdiscrup_inv_eq)
    apply (simp add: assms sbHdElem_channel)
   apply (subst fun_eq_iff)
@@ -266,7 +267,7 @@ lemma  msg_assms: "EvenStream (State ooo summe)\<cdot>(\<up>(Msg m) \<bullet> xs
       by (metis (no_types, lifting) h_apply_dom assms createC2Output.rep_eq fun_upd_same map_upd_eqD1 ubConc_usclConc_eq ubgetchE usclConc_stream_def)
     show ?thesis
       apply(simp add: evenStream_insert h_final ubdom_ubrep_eq getDom_def h_out_dom 
-                      convDiscrUp_sbHdElem_eq autGetNextOutput_def autGetNextState_def
+                      sbHdElem_2_shd2 autGetNextOutput_def autGetNextState_def
                       getTransition_def getRan_def EvenAutomatonAutomaton.rep_eq)
       using True ubConc_usclConc_eq_apply by auto
   next
@@ -278,7 +279,7 @@ lemma  msg_assms: "EvenStream (State ooo summe)\<cdot>(\<up>(Msg m) \<bullet> xs
       by (metis (no_types, lifting) h_apply_dom assms createC2Output.rep_eq fun_upd_same map_upd_eqD1 ubConc_usclConc_eq ubgetchE usclConc_stream_def)
     show ?thesis
       apply(simp add: evenStream_insert h_final ubdom_ubrep_eq getDom_def h_out_dom 
-                      convDiscrUp_sbHdElem_eq autGetNextOutput_def autGetNextState_def
+                      sbHdElem_2_shd2 autGetNextOutput_def autGetNextState_def
                       getTransition_def getRan_def EvenAutomatonAutomaton.rep_eq)
       using False ubConc_usclConc_eq_apply by auto
   qed
@@ -288,7 +289,7 @@ lemma [simp]:"nat2even\<cdot>(\<up>\<surd>) \<noteq> \<epsilon>"
   
 lemma tick_assms: "EvenStream state\<cdot>(\<up>Tick \<bullet> xs) = \<up>Tick \<bullet> (EvenStream state\<cdot>xs)"
   apply(simp add: evenStream_insert getRan_def tsynbOneTick_def h_final ubdom_ubrep_eq getDom_def
-                  EvenAutomatonAutomaton.rep_eq h_out_dom convDiscrUp_sbHdElem_eq
+                  EvenAutomatonAutomaton.rep_eq h_out_dom sbHdElem_2_shd2
                   autGetNextOutput_def autGetNextState_def getTransition_def)
   by (metis h_apply_dom tsynbOneTick.abs_eq tsynbonetick_ubconc_tick)  
 
