@@ -475,7 +475,10 @@ lemma if_then_cont:  assumes "cont g"
   shows "cont (\<lambda>b. (ubclDom\<cdot>b = In) \<leadsto> g b)"
   apply (rule ufun_contI2)
   by (simp add: assms)
-  
+
+lemma ufunlub_ufun_fun: assumes "chain Y" shows " f\<rightleftharpoons> Lub Y = (\<Squnion>i . f \<rightleftharpoons> Y i)"
+    by (simp add: assms contlub_cfun_arg op_the_lub)
+
   subsection \<open>ufDom\<close>
 
 

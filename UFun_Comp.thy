@@ -981,10 +981,10 @@ lemma parcomp_func_h: assumes "parcomp_well f1 f2"
                shows "((ufParComp f1 f2) \<rightleftharpoons> (ub\<bar>ufDom\<cdot>(ufParComp f1 f2))) = (f1 \<rightleftharpoons> ub\<bar>ufDom\<cdot>f1) \<uplus> (f2 \<rightleftharpoons> ub\<bar>ufDom\<cdot>f2)"
 proof -
   have f3: "((ub\<bar>ufDom\<cdot>(ufParComp f1 f2))\<bar>ufDom\<cdot>f1) = (ub\<bar>ufDom\<cdot>f1)"
-    by (metis assms(1) inf.absorb_iff2 sup_ge1 ubclunion_test ufParComp_dom)
+    by (simp add: assms(1) inf_sup_aci(1) ubclrestrict_twice ufParComp_dom)
 
   have f4: "(ub\<bar>ufDom\<cdot>(ufParComp f1 f2))\<bar>ufDom\<cdot>f2 = (ub\<bar>ufDom\<cdot>f2)"
-    by (metis assms(1) inf.absorb_iff2 sup.cobounded2 ubclunion_test ufParComp_dom)
+    by (simp add: Int_absorb1 assms(1) ubclrestrict_twice ufParComp_dom)
 
   have f1: "ufDom\<cdot>(ufParComp f1 f2) = ufDom\<cdot>f1 \<union> ufDom\<cdot>f2"
     by (simp add: assms(1) ufParComp_dom)
@@ -1155,7 +1155,7 @@ lemma ufSerCompWell_asso: assumes "sercomp_well f1 f2" and "sercomp_well f2 f3"
   shows "sercomp_well f1 (ufSerComp f2 f3) \<and> sercomp_well (ufSerComp f1 f2) f3"
   sorry
 *)
-(*
+
 lemma ufSerComp_asso: assumes "sercomp_well f1 f2" and "sercomp_well f2 f3"
   shows "(ufSerComp f1 (ufSerComp f2 f3)) = (ufSerComp (ufSerComp f1 f2) f3)"
 proof -  
@@ -1179,7 +1179,7 @@ proof -
   then show ?thesis
       by (metis (no_types) f30 ufSerComp_def)
   qed
-*)
+
 (*
 proof -
   have f1: "sercomp_well f1 (ufSerComp f2 f3)" and f2: "sercomp_well (ufSerComp f1 f2) f3"
@@ -1618,30 +1618,6 @@ proof -
     by (simp add: ufCompH_3arg_def)
 qed
 
-
-
-lemma ubclunion_lub_sep: assumes "chain Y1" and "chain Y2"
-  shows "Lub Y1 \<uplus> Lub Y2 = (\<Squnion>i. (Y1 i) \<uplus> (Y2 i))"
-proof -
-  have "(\<Squnion>n. ubclUnion\<cdot>(Y1 n))\<cdot>(Lub Y2) = (\<Squnion>n. Y1 n \<uplus> Y2 n)"
-    by (metis (no_types) assms(1) assms(2) ch2ch_Rep_cfunR lub_APP)
-  then show ?thesis
-    by (simp add: assms(1) contlub_cfun_arg)
-qed
-
-lemma ubclunion_lub_sep2: assumes "chain Y1" and "chain Y2"
-  shows "(\<Squnion>i. (Y1 i) \<uplus> (Y2 i)) = Lub Y1 \<uplus> Lub Y2"
-  by (simp add: assms(1) assms(2) ubclunion_lub_sep)
-
-lemma bla0: "(A \<union> B) - C = A - C \<union> B - C"
-  by (simp add: Un_Diff)
-lemma bla00: "A - C \<union> B - C = (A \<union> B) - C"
-  by (simp add: Un_Diff)
-lemma bla1: "A - B - C = A - (B \<union> C)"
-  by (simp add: Diff_eq inf_assoc)
-lemma bla2: "(A - B) \<inter> C = (A \<inter> C) - B"
-  by auto
-
 lemma ufCompH_3arg_io_eq: assumes "ubclDom\<cdot>x = ufCompI_3arg f1 f2 f3"
   shows "ubfun_io_eq (ufCompH_3arg f1 f2 f3 x) (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2 \<union> ufRan\<cdot>f3)"
 proof -
@@ -1680,6 +1656,7 @@ lemma lub_iter_comph_3arg_dom[simp]:assumes "ubclDom\<cdot>x = ufCompI_3arg f1 f
     = (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2  \<union> ufRan\<cdot>f3)"
   by (metis assms lub_iter_ubfix2_dom ufCompH_3arg_io_eq)
 
+paragraph \<open>ufComp3\<close>
 
 definition ufComp3 :: "'m ufun \<Rightarrow> 'm ufun \<Rightarrow> 'm ufun \<Rightarrow> 'm ufun" where
 "ufComp3 f1 f2 f3\<equiv>
@@ -1705,8 +1682,14 @@ lemma ufcomp3_well[simp]:
     apply (simp_all add: domIff2)
   by (simp add: ubfix_dom ufCompH_3arg_io_eq)
 
-lemma blabla: assumes "chain Y" shows " f\<rightleftharpoons> Lub Y = (\<Squnion>i . f \<rightleftharpoons> Y i)"
-    by (simp add: assms contlub_cfun_arg op_the_lub)
+(*
+lemma Un_Diff0: "A - C \<union> B - C = (A \<union> B) - C"
+  by (simp add: Un_Diff)
+lemma bla1: "A - B - C = A - (B \<union> C)"
+  by (simp add: Diff_eq inf_assoc)
+lemma Int_Diff: "(A - B) \<inter> C = (A \<inter> C) - B"
+  by auto
+*)
 
 lemma ufcomp_asso: assumes "ufRan\<cdot>f1 \<inter> ufRan\<cdot>f2 = {}" and  "ufRan\<cdot>f2 \<inter> ufRan\<cdot>f3 = {}" 
 and  "ufRan\<cdot>f1 \<inter> ufRan\<cdot>f3 = {}"
@@ -1724,13 +1707,18 @@ proof -
        (ufDom\<cdot>f1 \<union> ufDom\<cdot>f2 \<union> ufDom\<cdot>f3) - (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2 \<union> ufRan\<cdot>f3)"
     by (simp add: Un_Diff)
   have f11: "ufDom\<cdot>(ufComp (ufComp f1 f2) f3) = (ufDom\<cdot>f1 \<union> ufDom\<cdot>f2 \<union> ufDom\<cdot>f3) - (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2 \<union> ufRan\<cdot>f3)"
-    by (metis assms(1) bla00 bla1 f0 ufCompI_def ufCompO_def ufcomp_dom ufcomp_ran)
+    apply (simp add: f0 ufcomp_dom)
+    unfolding ufCompI_def
+    apply (simp add: ufcomp_ran ufcomp_dom assms(1))
+    unfolding ufCompO_def
+    apply (subst ufCompI_def)
+    by blast
   have f12: "ufDom\<cdot>(ufComp f1 (ufComp f2 f3)) = (ufDom\<cdot>f1 \<union> ufDom\<cdot>f2 \<union> ufDom\<cdot>f3) - (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2 \<union> ufRan\<cdot>f3)"
     apply (simp add: f1 ufcomp_dom)
     unfolding ufCompI_def
     apply (simp add: ufcomp_ran ufcomp_dom assms(2))
     unfolding ufCompO_def
-    apply (subst bla0)
+    apply (subst Un_Diff)
     unfolding ufCompI_def
     by blast
   have f2: "ufDom\<cdot>(ufComp (ufComp f1 f2) f3) = ufDom\<cdot>(ufComp f1 (ufComp f2 f3))"
@@ -1878,7 +1866,7 @@ proof -
          apply (simp add: chain1_is_chain chain2_is_chain3)
         apply (subst contlub_cfun_arg)
        apply (simp add: chain1_is_chain chain2_is_chain3)
-      apply (subst blabla)
+      apply (subst ufunlub_ufun_fun)
        apply (simp add: chain1_is_chain chain2_is_chain3)
       by (simp add: ubclunion_asso)
     have f305: "f3 \<rightleftharpoons> x \<uplus>  (\<Squnion>i. chain1 i \<uplus> chain2 i i)\<bar>ufDom\<cdot>f3 = (\<Squnion>i::nat. f3 \<rightleftharpoons> x \<uplus> chain1 i \<uplus> chain2 i i\<bar>ufDom\<cdot>f3)"
@@ -1886,7 +1874,7 @@ proof -
          apply (simp add: chain1_is_chain chain2_is_chain3)
         apply (subst contlub_cfun_arg)
        apply (simp add: chain1_is_chain chain2_is_chain3)
-      apply (subst blabla)
+      apply (subst ufunlub_ufun_fun)
        apply (simp add: chain1_is_chain chain2_is_chain3)
       by (simp add: ubclunion_asso)
     have f306: " ( f1 \<rightleftharpoons> x \<uplus> Lub chain1 \<bar>ufDom\<cdot>f1) =  (\<Squnion>i::nat. f1 \<rightleftharpoons> x \<uplus> chain1 i\<bar>ufDom\<cdot>f1)"
@@ -1894,7 +1882,7 @@ proof -
        apply (simp add: chain1_is_chain)
       apply (subst contlub_cfun_arg)
        apply (simp add: chain1_is_chain)
-      apply (subst blabla)
+      apply (subst ufunlub_ufun_fun)
        apply (simp add: chain1_is_chain)
       by simp
     have f307: "(ufDom\<cdot>f1 \<union> ufDom\<cdot>f2 \<union> ufDom\<cdot>f3) \<inter> ufDom\<cdot>f2 = ufDom\<cdot>f2"
@@ -1962,17 +1950,17 @@ proof -
        apply (simp add: f101 ufCompH_3arg_io_eq)
       apply (subst ufCompH_3arg_def)
       apply (simp add: ufCompH_3arg_cont1)
-      apply (subst ubclunion_ubclrestrictR)
+      apply (subst ubclunion_restrict_R)
        apply (metis Un_Diff_cancel2 a1 assms(3) f101 f12 inf_sup_aci(1) 
           le_supI1 sup_ge2 ubclunion_ubcldom ufRanRestrict ufcomp3_well_h)
-      apply (subst ubclunion_ubclrestrictR)
+      apply (subst ubclunion_restrict_R)
        apply (subst ufran_2_ubcldom2)
         apply (simp add: ubclunion_ubclrestrict)
         apply (simp add: ubclunion_ubcldom)
         apply (simp add: ubclrestrict_dom)
       using a1 f12 f308 apply auto[1]
       apply (simp add: assms(1) inf_sup_aci(1))
-      apply (subst ubclrestrict_dom_id2)
+      apply (subst ubclrestrict_dom_idI)
        apply (simp add: a1 f12 f308 le_supI1 ubclunion_ubcldom)
       by simp
     have f418: "ubclDom\<cdot>(x \<uplus> ubFix (ufCompH_3arg f1 f2 f3 x) (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2 \<union> ufRan\<cdot>f3)\<bar>ufCompI f2 f3) = ufCompI f2 f3"
@@ -1990,11 +1978,15 @@ proof -
     qed
     have f417: "(ufRan\<cdot>f2 \<union> ufRan\<cdot>f3) \<inter> ufDom\<cdot>f2 = ufDom\<cdot>f2  \<inter> (ufRan\<cdot>f2 \<union> ufRan\<cdot>f3)"
       by blast
+    have int_compi_f2_f3_f2: "(ufDom\<cdot>f2 \<union> ufDom\<cdot>f3 - (ufRan\<cdot>f2 \<union> ufRan\<cdot>f3)) \<inter> ufDom\<cdot>f2 = ((ufDom\<cdot>f2 \<union> ufDom\<cdot>f3) \<inter> ufDom\<cdot>f2)  - (ufRan\<cdot>f2 \<union> ufRan\<cdot>f3)"
+      by (simp add: Diff_Int2 Diff_Int_distrib2)
+    have int_compi_f2_f3_f3: "(ufDom\<cdot>f2 \<union> ufDom\<cdot>f3 - (ufRan\<cdot>f2 \<union> ufRan\<cdot>f3)) \<inter> ufDom\<cdot>f3 = ((ufDom\<cdot>f2 \<union> ufDom\<cdot>f3) \<inter> ufDom\<cdot>f3)  - (ufRan\<cdot>f2 \<union> ufRan\<cdot>f3)"
+      by (simp add: Diff_Int2 Diff_Int_distrib2)
     have f416: "(((ubFix (ufCompH_3arg f1 f2 f3 x) (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2 \<union> ufRan\<cdot>f3)\<bar>ufDom\<cdot>f2 \<union> ufDom\<cdot>f3 - (ufRan\<cdot>f2 \<union> ufRan\<cdot>f3))\<bar>ufDom\<cdot>f2) \<uplus> ((ubFix (ufCompH_3arg f1 f2 f3 x) (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2 \<union> ufRan\<cdot>f3)\<bar>ufRan\<cdot>f2 \<union> ufRan\<cdot>f3)\<bar>ufDom\<cdot>f2))
  = ubFix (ufCompH_3arg f1 f2 f3 x) (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2 \<union> ufRan\<cdot>f3)\<bar>ufDom\<cdot>f2"
       apply (simp add: ubclrestrict_twice)
       apply (simp add: f417)
-      apply (simp add: bla2)
+      apply (simp add: int_compi_f2_f3_f2)
       apply (simp add: f300)
       by (simp add: ubclunion_ubclrestrict_minus_id)
     have f419: "(x \<uplus> ubFix (ufCompH_3arg f1 f2 f3 x) (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2 \<union> ufRan\<cdot>f3)\<bar>ufCompI f2 f3) \<uplus> (ubFix (ufCompH_3arg f1 f2 f3 x) (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2 \<union> ufRan\<cdot>f3)\<bar>ufRan\<cdot>f2 \<union> ufRan\<cdot>f3)\<bar>ufDom\<cdot>f2
@@ -2015,7 +2007,7 @@ proof -
 = ubFix (ufCompH_3arg f1 f2 f3 x) (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2 \<union> ufRan\<cdot>f3)\<bar>ufDom\<cdot>f3"
       apply (simp add: ubclrestrict_twice)
       apply (simp add: f412)
-      apply (simp add: bla2)
+      apply (simp add: int_compi_f2_f3_f3)
       apply (simp add: f411)
       by (simp add: ubclunion_ubclrestrict_minus_id)
     have f415: "(x \<uplus> ubFix (ufCompH_3arg f1 f2 f3 x) (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2 \<union> ufRan\<cdot>f3)\<bar>ufCompI f2 f3) \<uplus> (ubFix (ufCompH_3arg f1 f2 f3 x) (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2 \<union> ufRan\<cdot>f3)\<bar>ufRan\<cdot>f2 \<union> ufRan\<cdot>f3)\<bar>ufDom\<cdot>f3
@@ -2034,8 +2026,8 @@ proof -
       apply (subst ufCompH_3arg_def)
       apply (simp add: ufCompH_3arg_cont1)
       apply (subst ubclunion_asso)
-      apply (subst ubclunion_ubclrestrictR2) defer
-       apply (rule ubclrestrict_dom_id2)
+      apply (subst ubclunion_ubclrestrict_RI) defer
+       apply (rule ubclrestrict_dom_idI)
        apply (simp_all add: ubclunion_dom)
        apply (subst ufran_2_ubcldom2) defer
         apply (subst ufran_2_ubcldom2) defer
@@ -2233,19 +2225,19 @@ proof -
       apply (subst chain1_alt)
       apply (subst contlub_cfun_arg, simp add: chain1_is_chain chain2_is_chain3)
       apply (subst contlub_cfun_arg, simp add: chain1_is_chain chain2_is_chain3)
-      apply (subst blabla, simp add: chain1_is_chain chain2_is_chain3)
+      apply (subst ufunlub_ufun_fun, simp add: chain1_is_chain chain2_is_chain3)
       by (simp add: ubclunion_asso)
     have lub_f1f2f3_alt_f2: "f2 \<rightleftharpoons> x \<uplus> Lub chain1 \<bar>ufDom\<cdot>f2 = (\<Squnion>i::nat. f2 \<rightleftharpoons> x \<uplus> chain1 i \<uplus> chain2 i i\<bar>ufDom\<cdot>f2)"
       apply (subst chain1_alt)
       apply (subst contlub_cfun_arg, simp add: chain1_is_chain chain2_is_chain3)
       apply (subst contlub_cfun_arg, simp add: chain1_is_chain chain2_is_chain3)
-      apply (subst blabla, simp add: chain1_is_chain chain2_is_chain3)
+      apply (subst ufunlub_ufun_fun, simp add: chain1_is_chain chain2_is_chain3)
       by (simp add: ubclunion_asso)
     have lub_f1f2f3_alt_f3: "f3 \<rightleftharpoons> x \<uplus> Lub chain1 \<bar>ufDom\<cdot>f3 = (\<Squnion>i::nat. f3 \<rightleftharpoons> x \<uplus> chain1 i \<uplus> chain2 i i\<bar>ufDom\<cdot>f3)"
       apply (subst chain1_alt)
       apply (subst contlub_cfun_arg, simp add: chain1_is_chain chain2_is_chain3)
       apply (subst contlub_cfun_arg, simp add: chain1_is_chain chain2_is_chain3)
-      apply (subst blabla, simp add: chain1_is_chain chain2_is_chain3)
+      apply (subst ufunlub_ufun_fun, simp add: chain1_is_chain chain2_is_chain3)
       by (simp add: ubclunion_asso)
 
     have lub_f1f2f3_alt: "ubFix (ufCompH (ufComp f1 f2) f3 x) (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2 \<union> ufRan\<cdot>f3) = (f1 \<rightleftharpoons> x \<uplus> ubFix (ufCompH (ufComp f1 f2) f3 x) (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2 \<union> ufRan\<cdot>f3)\<bar>ufDom\<cdot>f1)
@@ -2310,11 +2302,11 @@ proof -
     have comp3_arg_res_f1_f2: "(ubFix (ufCompH_3arg f1 f2 f3 x) (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2 \<union> ufRan\<cdot>f3)\<bar>(ufRan\<cdot>f1 \<union> ufRan\<cdot>f2)) 
 = (f1 \<rightleftharpoons> x \<uplus> ubFix (ufCompH_3arg f1 f2 f3 x) (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2 \<union> ufRan\<cdot>f3)\<bar>ufDom\<cdot>f1) \<uplus> (f2 \<rightleftharpoons> x \<uplus> ubFix (ufCompH_3arg f1 f2 f3 x) (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2 \<union> ufRan\<cdot>f3)\<bar>ufDom\<cdot>f2)"
       apply (subst comp3_arg_fix_eq)
-      apply (subst ubclunion_ubclrestrictR)
+      apply (subst ubclunion_restrict_R)
        apply (subst ufran_2_ubcldom2)
         apply (metis Un_Diff_cancel2 a1 f12 f2 le_supI1 sup_ge2 ubclunion_ubcldom ubresrict_dom2 ufcomp3_well_h x_dom2)
        apply (simp add: assms(2) assms(3) inf.commute inf_sup_distrib1)
-      apply (rule ubclrestrict_dom_id2)
+      apply (rule ubclrestrict_dom_idI)
       apply (simp add: ubclunion_dom)
       using comp3_arg_x_dom_f1 comp3_arg_x_dom_f2 ufran_2_ubcldom2 by blast
     have ufcomph_3arg_splt: "ubFix (ufCompH_3arg f1 f2 f3 x) (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2 \<union> ufRan\<cdot>f3) = 
@@ -2322,11 +2314,16 @@ proof -
       using comp3_arg_fix_eq comp3_arg_res_f1_f2 by auto
     have x_fix_comp3_dom_f1_f2: "ubclDom\<cdot>(x \<uplus> ubFix (ufCompH_3arg f1 f2 f3 x) (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2 \<union> ufRan\<cdot>f3)\<bar>ufCompI f1 f2) = ufCompI f1 f2"
       by (metis (no_types, lifting) Int_Diff Un_def comp3_arg_x_dom_f1 comp3_arg_x_dom_f2 inf_sup_distrib1 ubclrestrict_ubcldom ufCompI_def)
+
+    have int_compi_f1_f2_f1: "(ufDom\<cdot>f1 \<union> ufDom\<cdot>f2 - (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2)) \<inter> ufDom\<cdot>f1 = ((ufDom\<cdot>f1 \<union> ufDom\<cdot>f2) \<inter> ufDom\<cdot>f1)  - (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2)"
+      by (simp add: Diff_Int2 Diff_Int_distrib2)
+    have int_compi_f1_f2_f2: "(ufDom\<cdot>f1 \<union> ufDom\<cdot>f2 - (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2)) \<inter> ufDom\<cdot>f2 = ((ufDom\<cdot>f1 \<union> ufDom\<cdot>f2) \<inter> ufDom\<cdot>f2)  - (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2)"
+      by (simp add: Diff_Int2 Diff_Int_distrib2)
     have fix_comp3_res_id_f1: "(((ubFix (ufCompH_3arg f1 f2 f3 x) (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2 \<union> ufRan\<cdot>f3)\<bar>ufCompI f1 f2)\<bar>ufDom\<cdot>f1) \<uplus> ((ubFix (ufCompH_3arg f1 f2 f3 x) (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2 \<union> ufRan\<cdot>f3)\<bar>ufRan\<cdot>f1 \<union> ufRan\<cdot>f2)\<bar>ufDom\<cdot>f1)) = 
 ubFix (ufCompH_3arg f1 f2 f3 x) (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2 \<union> ufRan\<cdot>f3)\<bar>ufDom\<cdot>f1"
       apply (simp add: ubclrestrict_twice)
       apply (simp add: ufCompI_def)
-      apply (simp add: bla2)
+      apply (simp add: int_compi_f1_f2_f1)
       apply (simp add: dom_f1_1)
       apply (simp add: inf_sup_aci(1))
       by (simp add: ubclunion_ubclrestrict_minus_id)
@@ -2334,7 +2331,7 @@ ubFix (ufCompH_3arg f1 f2 f3 x) (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2 \<union>
 ubFix (ufCompH_3arg f1 f2 f3 x) (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2 \<union> ufRan\<cdot>f3)\<bar>ufDom\<cdot>f2"
       apply (simp add: ubclrestrict_twice)
       apply (simp add: ufCompI_def)
-      apply (simp add: bla2)
+      apply (simp add: int_compi_f1_f2_f2)
       by (metis Int_absorb1 inf_sup_aci(1) sup_ge2 ubclunion_ubclrestrict_minus_id)
     have x_fix_comp3_f1_simp: "(x \<uplus> ubFix (ufCompH_3arg f1 f2 f3 x) (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2 \<union> ufRan\<cdot>f3)\<bar>ufCompI f1 f2) \<uplus> (ubFix (ufCompH_3arg f1 f2 f3 x) (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2 \<union> ufRan\<cdot>f3)\<bar>ufRan\<cdot>f1 \<union> ufRan\<cdot>f2)\<bar>ufDom\<cdot>f1 = 
 x \<uplus> ubFix (ufCompH_3arg f1 f2 f3 x) (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2 \<union> ufRan\<cdot>f3)\<bar>ufDom\<cdot>f1"
@@ -2387,320 +2384,9 @@ x \<uplus> ubFix (ufCompH_3arg f1 f2 f3 x) (ufRan\<cdot>f1 \<union> ufRan\<cdot>
   show ?thesis
     by (simp add: f100 f200)
 qed
-(*
-  have f3: " \<And>x::'a. ubclDom\<cdot>x = ufDom\<cdot>(ufComp (ufComp f1 f2) f3) \<Longrightarrow> ufComp (ufComp f1 f2) f3 \<rightleftharpoons> x = ufComp f1 (ufComp f2 f3) \<rightleftharpoons> x"
-  proof -
-    fix x::'a
-    assume a1: "ubclDom\<cdot>x = ufDom\<cdot>(ufComp (ufComp f1 f2) f3)"
-    obtain chain1 where chain1_def: "chain1 = (\<lambda> i.   iter_ubfix2 (ufCompH (ufComp f1 f2) f3) i (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2 \<union> ufRan\<cdot>f3) x)"
-      by simp
-    obtain chain1_shift where chain1_shift_def: "chain1_shift = (\<lambda> i. chain1 (i + 1))"
-      by simp
-    obtain chain2::"nat \<Rightarrow> (nat \<Rightarrow> 'a)" where chain2_def: "chain2 = (\<lambda>i ia. iter_ubfix2 (ufCompH f1 f2) ia (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2) (x \<uplus> chain1 i\<bar>ufCompI f1 f2))"
-      by simp
-    obtain chain_shift:: "(nat \<Rightarrow> 'a) \<Rightarrow> (nat \<Rightarrow> 'a)" where chain_shift_def: "chain_shift  = (\<lambda> chain ia. chain (ia + 1))"
-      by simp
-    obtain chain3 where chain3_def: "chain3 = (\<lambda> i. iter_ubfix2 (ufCompH f1 (ufComp f2 f3)) i (ufRan\<cdot>f1 \<union> (ufRan\<cdot>f2 \<union> ufRan\<cdot>f3)) x)"
-      by simp
-    obtain chain4::"nat \<Rightarrow> (nat \<Rightarrow> 'a)"  where chain4_def: "chain4 = (\<lambda> i ia. iter_ubfix2 (ufCompH f2 f3) ia (ufRan\<cdot>f2 \<union> ufRan\<cdot>f3) (x \<uplus> chain3 i\<bar>ufCompI f2 f3))"
-      by simp
-    have f100: "ubclDom\<cdot>x = ufCompI f1 (ufComp f2 f3)"
-      apply (subst a1)
-      apply (subst f2)
-      by (simp add: ufcomp_dom f1)
-    have f101: "ufComp f1 f2 = (Abs_cufun (\<lambda>x::'a. (ubclDom\<cdot>x = ufCompI f1 f2)\<leadsto>ubFix (ufCompH f1 f2 x) (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2)))"
-      by (simp add: ufComp_def)
-    have f102: "ufComp f2 f3 = (Abs_cufun (\<lambda>x::'a. (ubclDom\<cdot>x = ufCompI f2 f3)\<leadsto>ubFix (ufCompH f2 f3 x) (ufRan\<cdot>f2 \<union> ufRan\<cdot>f3)))"
-      by (simp add: ufComp_def)
-    have f200: "\<And>i. iterate (Suc i)\<cdot>(\<Lambda> (z::'a). (ufComp f1 f2 \<rightleftharpoons> x \<uplus> z\<bar>ufCompI f1 f2) \<uplus> (f3 \<rightleftharpoons> x \<uplus> z\<bar>ufDom\<cdot>f3))\<cdot>(ubclLeast (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2 \<union> ufRan\<cdot>f3)) = 
-     (ufComp f1 f2 \<rightleftharpoons> x \<uplus> (iterate i\<cdot>(\<Lambda> (z::'a). (ufComp f1 f2 \<rightleftharpoons> x \<uplus> z\<bar>ufCompI f1 f2) \<uplus> (f3 \<rightleftharpoons> x \<uplus> z\<bar>ufDom\<cdot>f3))\<cdot>(ubclLeast (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2 \<union> ufRan\<cdot>f3)))\<bar>ufCompI f1 f2) \<uplus> (f3 \<rightleftharpoons> x \<uplus> (iterate i\<cdot>(\<Lambda> (z::'a). (ufComp f1 f2 \<rightleftharpoons> x \<uplus> z\<bar>ufCompI f1 f2) \<uplus> (f3 \<rightleftharpoons> x \<uplus> z\<bar>ufDom\<cdot>f3))\<cdot>(ubclLeast (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2 \<union> ufRan\<cdot>f3)))\<bar>ufDom\<cdot>f3)"
-    proof simp
-      fix i :: nat
-      have "\<forall>u a. (\<Lambda> aa. (ufComp f1 f2 \<rightleftharpoons> a \<uplus> aa\<bar>ufCompI f1 f2) \<uplus> (u \<rightleftharpoons> a \<uplus> aa\<bar>ufDom\<cdot>u)) = ufCompH (ufComp f1 f2) u a"
-        by (simp add: assms(1) ufCompH_def ufcomp_dom)
-      then show "(\<Lambda> a. (ufComp f1 f2 \<rightleftharpoons> x \<uplus> a\<bar>ufCompI f1 f2) \<uplus> (f3 \<rightleftharpoons> x \<uplus> a\<bar>ufDom\<cdot>f3))\<cdot> (iterate i\<cdot> (\<Lambda> a. (ufComp f1 f2 \<rightleftharpoons> x \<uplus> a\<bar>ufCompI f1 f2) \<uplus> (f3 \<rightleftharpoons> x \<uplus> a\<bar>ufDom\<cdot>f3))\<cdot> (ubclLeast (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2 \<union> ufRan\<cdot>f3))) = (ufComp f1 f2 \<rightleftharpoons> x \<uplus> iterate i\<cdot> (\<Lambda> a. (ufComp f1 f2 \<rightleftharpoons> x \<uplus> a\<bar>ufCompI f1 f2) \<uplus> (f3 \<rightleftharpoons> x \<uplus> a\<bar>ufDom\<cdot>f3))\<cdot> (ubclLeast (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2 \<union> ufRan\<cdot>f3))\<bar>ufCompI f1 f2) \<uplus> (f3 \<rightleftharpoons> x \<uplus> iterate i\<cdot> (\<Lambda> a. (ufComp f1 f2 \<rightleftharpoons> x \<uplus> a\<bar>ufCompI f1 f2) \<uplus> (f3 \<rightleftharpoons> x \<uplus> a\<bar>ufDom\<cdot>f3))\<cdot> (ubclLeast (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2 \<union> ufRan\<cdot>f3))\<bar>ufDom\<cdot>f3)"
-        by (simp add: assms(1) ufcomp_dom ufcomph_insert)
-    qed
-    have f89: "chain chain1"
-      apply (simp add: chain1_def)
-      apply (rule iter_ubfix2_chain)
-      apply (subst ufCompH_dom)
-        apply (simp add: a1 f0 ufcomp_dom)
-       apply (simp add: assms(1) ubcldom_least_cs ufCompO_def ufcomp_ran)
-      by (simp add: assms(1) ufCompO_def ufcomp_ran)
-    have f90: " Lub chain1_shift = Lub chain1"
-      apply (simp only: chain1_shift_def)
-      apply (rule lub_range_shift)
-      by (simp add: f89)
-    have f91: "\<And>i. chain1 i = iter_ubfix2 (ufCompH (ufComp f1 f2) f3) i (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2 \<union> ufRan\<cdot>f3) x"
-      by (simp add: chain1_def)
-    have f910: "\<And>i ia. chain2 i ia = iter_ubfix2 (ufCompH f1 f2) ia (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2) (x \<uplus> chain1 i\<bar>ufCompI f1 f2)"
-      by (simp add: chain2_def)
-    have f92: "\<And>i. ubclDom\<cdot>((x \<uplus> chain1 i)\<bar>ufCompI f1 f2) = ufCompI f1 f2"
-      apply (simp add: ubclrestrict_dom ubclunion_dom)
-      apply (simp add: f100)
-      apply (simp add: chain1_def)
-      apply (subst iter_ubfix2_dom)
-      apply (subst ufCompH_dom)
-        apply (simp add: a1 f0 ufcomp_dom)
-      apply (simp add: assms(1) ubcldom_least_cs ufCompO_def ufcomp_ran)
-       apply (simp add: assms(1) ufCompO_def ufcomp_ran)
-      unfolding ufCompI_def
-      apply (simp add: ufcomp_dom ufcomp_ran assms(2))
-      unfolding ufCompI_def
-      unfolding ufCompO_def
-      by blast
-    have f93: "\<And>i::nat. chain (\<lambda>ia::nat. iterate ia\<cdot>(\<Lambda> (z::'a). (f1 \<rightleftharpoons> (x \<uplus> chain1 i\<bar>ufCompI f1 f2) \<uplus> z\<bar>ufDom\<cdot>f1) \<uplus> (f2 \<rightleftharpoons> (x \<uplus> chain1 i\<bar>ufCompI f1 f2) \<uplus> z\<bar>ufDom\<cdot>f2))\<cdot>(ubclLeast (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2)))"
-    proof -
-      fix i :: nat
-      have "chain (\<lambda>n. iter_ubfix2 (ufCompH f1 f2) n (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2) (x \<uplus> chain1 i\<bar>ufCompI f1 f2))"
-        by (metis f92 iter_ufCompH_chain)
-      then show "chain (\<lambda>n. iterate n\<cdot> (\<Lambda> a. (f1 \<rightleftharpoons> (x \<uplus> chain1 i\<bar>ufCompI f1 f2) \<uplus> a\<bar>ufDom\<cdot>f1) \<uplus> (f2 \<rightleftharpoons> (x \<uplus> chain1 i\<bar>ufCompI f1 f2) \<uplus> a\<bar>ufDom\<cdot>f2))\<cdot> (ubclLeast (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2)))"
-        by (simp add: ufCompH_def)
-    qed
-    have f95: "\<And>i. chain (chain2 i)"
-      apply (simp add: chain2_def)
-      by (simp add: f93 ufCompH_def)
-    have f950: "\<And>j. chain (\<lambda>i. chain2 i j)"
-      apply (simp add: chain2_def)
-      apply (rule chainI)
-      by (metis a1 assms(1) chain1_def f0 iter_ufCompH_mono2 iterate_Suc2 monofun_cfun_arg ubcldom_least ubcldom_least_cs ufCompH_dom ufCompO_def ufcomp_dom ufcomp_ran)
-    have f951: "chain (\<lambda>i. chain2 i i)"
-      apply (simp add: chain2_def)
-      apply (rule chainI)
-      by (metis chain2_def f95 f950 po_class.chainE rev_below_trans)
-    have f96: "\<And>i. chain (\<lambda>ia::nat. chain2 i (ia + (1::nat)))"
-      apply (simp only: chain2_def)
-      using chain2_def f95 by auto
-    have f97: "\<And>i ia. (chain_shift (chain2 i)) ia \<in> range (chain2 i)"
-      by (simp add: chain_shift_def)
-    have f98: "\<And>i. Lub (chain_shift (chain2 i)) = Lub (chain2 i)"
-      apply (simp only: chain_shift_def)
-      apply (subst po_eq_conv) apply rule defer
-       apply (rule lub_mono)
-         apply (simp add: f95)
-      using f96 apply auto[1]
-       apply (simp add: chain_mono_less f95)
-      by (metis below_refl f95 lub_range_shift2)
-    have f99: "(\<Squnion>i::nat. (\<Squnion>ia::nat. chain2 i ia) \<uplus> (f3 \<rightleftharpoons> x \<uplus> chain1 i\<bar>ufDom\<cdot>f3)) =
-      (\<Squnion>i::nat. (\<Squnion>ia::nat. iter_ubfix2 (ufCompH f1 f2) ia (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2) (x \<uplus> chain1 i\<bar>ufCompI f1 f2)) \<uplus> (f3 \<rightleftharpoons> x \<uplus> chain1 i\<bar>ufDom\<cdot>f3))"
-      by (simp add: chain2_def)
-    have f120: "(\<Squnion>(i::nat) ia::nat.
-        (f1 \<rightleftharpoons> (x \<uplus> chain1 i\<bar>ufCompI f1 f2) \<uplus> (chain2 i ia)\<bar>ufDom\<cdot>f1) \<uplus>
-        (f2 \<rightleftharpoons> (x \<uplus> chain1 i\<bar>ufCompI f1 f2) \<uplus> (chain2 i ia)\<bar>ufDom\<cdot>f2) \<uplus>
-        (f3 \<rightleftharpoons> x \<uplus> chain1 i\<bar>ufDom\<cdot>f3)) = 
-        (\<Squnion>(i::nat) ia::nat.
-        (f1 \<rightleftharpoons> (x \<uplus> chain1 i\<bar>ufCompI f1 f2) \<uplus> iter_ubfix2 (ufCompH f1 f2) ia (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2) (x \<uplus> chain1 i\<bar>ufCompI f1 f2)\<bar>ufDom\<cdot>f1) \<uplus>
-        (f2 \<rightleftharpoons> (x \<uplus> chain1 i\<bar>ufCompI f1 f2) \<uplus> iter_ubfix2 (ufCompH f1 f2) ia (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2) (x \<uplus> chain1 i\<bar>ufCompI f1 f2)\<bar>ufDom\<cdot>f2) \<uplus>
-        (f3 \<rightleftharpoons> x \<uplus> chain1 i\<bar>ufDom\<cdot>f3))"
-      by (simp add: chain2_def)
-
-    have f130: "\<And>i. chain chain3"
-      apply (simp add: chain3_def)
-      apply (rule iter_ubfix2_chain)
-      apply (subst ufCompH_dom)
-        apply (simp add: f100)
-       apply (simp add: assms(2) ubcldom_least_cs ufCompO_def ufcomp_ran)
-      by (simp add: assms(2) ufCompO_def ufcomp_ran)
-    have f131: "\<And>i ia. (chain_shift chain3) ia \<in> range chain3"
-      by (simp add: chain_shift_def)
-    have f132: "\<And>i. Lub (chain_shift chain3) = Lub chain3"
-      apply (simp only: chain_shift_def)
-      apply (subst po_eq_conv) apply rule defer
-       apply (rule lub_mono)
-         apply (simp add: f130)
-        apply (simp add: f130 po_class.chainE po_class.chainI)
-       apply (simp add: chain_mono_less f130)
-      by (metis below_refl f130 lub_range_shift2)
-    have f133: "\<And> ia. chain3 ia = iter_ubfix2 (ufCompH f1 (ufComp f2 f3)) ia (ufRan\<cdot>f1 \<union> (ufRan\<cdot>f2 \<union> ufRan\<cdot>f3)) x"
-      by (simp add: chain3_def)
-    have f140: "\<And>ia. ubclDom\<cdot>((x \<uplus> (chain3 ia))\<bar>ufCompI f2 f3) = ufCompI f2 f3"
-      by (metis Un_Diff_cancel2 assms(2) f100 f133 iter_ufCompH_dom le_supI1 sup_ge2 ubclunion_ubcldom ubresrict_dom2 ufCompI_def ufCompO_def ufcomp_dom ufcomp_ran)
-    have f150: "\<And>i. chain (chain4 i)"
-      apply (simp add: chain4_def)
-      using f140 iter_ufCompH_chain by blast
-    have f1501: "\<And>j. chain (\<lambda>i. chain4 i j)"
-      apply (simp add: chain4_def)
-      apply (rule chainI)
-      by (simp add: f130 iter_ufCompH_mono2 monofun_cfun_arg po_class.chainE)
-    have f1502: "chain (\<lambda>i. chain4 i i)"
-      apply (simp add: chain4_def)
-      apply (rule chainI)
-      by (metis chain4_def f150 f1501 po_class.chainE rev_below_trans)
-    have f151: "\<And>i. chain (\<lambda>ia::nat. chain4 i (ia + (1::nat)))"
-      apply (simp only: chain4_def)
-      using chain4_def f150 by auto
-    have f152: "\<And>i ia. (chain_shift (chain4 i)) ia \<in> range (chain4 i)"
-      by (simp add: chain_shift_def)
-    have f153: "\<And>i. Lub (chain_shift (chain4 i)) = Lub (chain4 i)"
-      apply (simp only: chain_shift_def)
-      apply (subst po_eq_conv) apply rule defer
-       apply (rule lub_mono)
-         apply (simp add: f150)
-      using f151 apply auto[1]
-        apply (simp add: f150 po_class.chainE po_class.chainI)
-      by (metis below_refl f150 lub_range_shift2)
-
-    have f160: "(\<Squnion>ia::nat. (f1 \<rightleftharpoons> x \<uplus> chain3 ia\<bar>ufDom\<cdot>f1) \<uplus> (\<Squnion>i::nat. chain4 ia i)) = 
-(\<Squnion>ia::nat. (f1 \<rightleftharpoons> x \<uplus> chain3 ia\<bar>ufDom\<cdot>f1) \<uplus> (\<Squnion>i::nat. iter_ubfix2 (ufCompH f2 f3) i (ufRan\<cdot>f2 \<union> ufRan\<cdot>f3) (x \<uplus> chain3 ia\<bar>ufCompI f2 f3)))"
-      by (simp add: chain4_def)
-    have f161: "(\<Squnion>ia::nat. (f1 \<rightleftharpoons> x \<uplus> chain3 ia\<bar>ufDom\<cdot>f1) \<uplus>
-                (\<Squnion>iaa::nat. (f2 \<rightleftharpoons> (x \<uplus> chain3 ia\<bar>ufCompI f2 f3) \<uplus> (chain4 ia iaa)\<bar>ufDom\<cdot>f2) \<uplus>
-                             (f3 \<rightleftharpoons> (x \<uplus> chain3 ia\<bar>ufCompI f2 f3) \<uplus> (chain4 ia iaa)\<bar>ufDom\<cdot>f3))) 
-= 
-(\<Squnion>ia::nat. (f1 \<rightleftharpoons> x \<uplus> chain3 ia\<bar>ufDom\<cdot>f1) \<uplus>
-                (\<Squnion>iaa::nat. (f2 \<rightleftharpoons> (x \<uplus> chain3 ia\<bar>ufCompI f2 f3) \<uplus> iter_ubfix2 (ufCompH f2 f3) iaa (ufRan\<cdot>f2 \<union> ufRan\<cdot>f3) (x \<uplus> chain3 ia\<bar>ufCompI f2 f3)\<bar>ufDom\<cdot>f2) \<uplus>
-                             (f3 \<rightleftharpoons> (x \<uplus> chain3 ia\<bar>ufCompI f2 f3) \<uplus> iter_ubfix2 (ufCompH f2 f3) iaa (ufRan\<cdot>f2 \<union> ufRan\<cdot>f3) (x \<uplus> chain3 ia\<bar>ufCompI f2 f3)\<bar>ufDom\<cdot>f3))) "
-      apply (simp add: chain4_def)
-      done
-    have f162: "\<And>i::nat. chain (\<lambda>ia::nat. (f1 \<rightleftharpoons> (x \<uplus> chain1 i\<bar>ufCompI f1 f2) \<uplus> iterate ia\<cdot>(\<Lambda> (z::'a). (f1 \<rightleftharpoons> (x \<uplus> chain1 i\<bar>ufCompI f1 f2) \<uplus> z\<bar>ufDom\<cdot>f1) \<uplus> (f2 \<rightleftharpoons> (x \<uplus> chain1 i\<bar>ufCompI f1 f2) \<uplus> z\<bar>ufDom\<cdot>f2))\<cdot>(ubclLeast (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2))\<bar>ufDom\<cdot>f1) \<uplus>
-                               (f2 \<rightleftharpoons> (x \<uplus> chain1 i\<bar>ufCompI f1 f2) \<uplus> iterate ia\<cdot>(\<Lambda> (z::'a). (f1 \<rightleftharpoons> (x \<uplus> chain1 i\<bar>ufCompI f1 f2) \<uplus> z\<bar>ufDom\<cdot>f1) \<uplus> (f2 \<rightleftharpoons> (x \<uplus> chain1 i\<bar>ufCompI f1 f2) \<uplus> z\<bar>ufDom\<cdot>f2))\<cdot>(ubclLeast (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2))\<bar>ufDom\<cdot>f2))"
-    proof (rule chainI)
-      fix i :: nat and ia :: nat
-      have "ufCompH f1 f2 (x \<uplus> chain1 i\<bar>ufCompI f1 f2)\<cdot> (chain2 i ia) \<sqsubseteq> ufCompH f1 f2 (x \<uplus> chain1 i\<bar>ufCompI f1 f2)\<cdot> (chain2 i (Suc ia))"
-        using ch2ch_Rep_cfunR f95 po_class.chainE by blast
-      then show "(f1 \<rightleftharpoons> (x \<uplus> chain1 i\<bar>ufCompI f1 f2) \<uplus> iterate ia\<cdot> (\<Lambda> a. (f1 \<rightleftharpoons> (x \<uplus> chain1 i\<bar>ufCompI f1 f2) \<uplus> a\<bar>ufDom\<cdot>f1) \<uplus> (f2 \<rightleftharpoons> (x \<uplus> chain1 i\<bar>ufCompI f1 f2) \<uplus> a\<bar>ufDom\<cdot>f2))\<cdot> (ubclLeast (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2))\<bar>ufDom\<cdot>f1) \<uplus> (f2 \<rightleftharpoons> (x \<uplus> chain1 i\<bar>ufCompI f1 f2) \<uplus> iterate ia\<cdot> (\<Lambda> a. (f1 \<rightleftharpoons> (x \<uplus> chain1 i\<bar>ufCompI f1 f2) \<uplus> a\<bar>ufDom\<cdot>f1) \<uplus> (f2 \<rightleftharpoons> (x \<uplus> chain1 i\<bar>ufCompI f1 f2) \<uplus> a\<bar>ufDom\<cdot>f2))\<cdot> (ubclLeast (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2))\<bar>ufDom\<cdot>f2) \<sqsubseteq> (f1 \<rightleftharpoons> (x \<uplus> chain1 i\<bar>ufCompI f1 f2) \<uplus> iterate (Suc ia)\<cdot> (\<Lambda> a. (f1 \<rightleftharpoons> (x \<uplus> chain1 i\<bar>ufCompI f1 f2) \<uplus> a\<bar>ufDom\<cdot>f1) \<uplus> (f2 \<rightleftharpoons> (x \<uplus> chain1 i\<bar>ufCompI f1 f2) \<uplus> a\<bar>ufDom\<cdot>f2))\<cdot> (ubclLeast (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2))\<bar>ufDom\<cdot>f1) \<uplus> (f2 \<rightleftharpoons> (x \<uplus> chain1 i\<bar>ufCompI f1 f2) \<uplus> iterate (Suc ia)\<cdot> (\<Lambda> a. (f1 \<rightleftharpoons> (x \<uplus> chain1 i\<bar>ufCompI f1 f2) \<uplus> a\<bar>ufDom\<cdot>f1) \<uplus> (f2 \<rightleftharpoons> (x \<uplus> chain1 i\<bar>ufCompI f1 f2) \<uplus> a\<bar>ufDom\<cdot>f2))\<cdot> (ubclLeast (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2))\<bar>ufDom\<cdot>f2)"
-        by (simp add: chain2_def ufCompH_def)
-    qed
-    have f163: "\<And>i::nat. chain (\<lambda>ia::nat. ubclUnion\<cdot>((f1 \<rightleftharpoons> (x \<uplus> chain1 i\<bar>ufCompI f1 f2) \<uplus> iterate ia\<cdot>(\<Lambda> (z::'a). (f1 \<rightleftharpoons> (x \<uplus> chain1 i\<bar>ufCompI f1 f2) \<uplus> z\<bar>ufDom\<cdot>f1) \<uplus> (f2 \<rightleftharpoons> (x \<uplus> chain1 i\<bar>ufCompI f1 f2) \<uplus> z\<bar>ufDom\<cdot>f2))\<cdot>(ubclLeast (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2))\<bar>ufDom\<cdot>f1) \<uplus>
-                                          (f2 \<rightleftharpoons> (x \<uplus> chain1 i\<bar>ufCompI f1 f2) \<uplus> iterate ia\<cdot>(\<Lambda> (z::'a). (f1 \<rightleftharpoons> (x \<uplus> chain1 i\<bar>ufCompI f1 f2) \<uplus> z\<bar>ufDom\<cdot>f1) \<uplus> (f2 \<rightleftharpoons> (x \<uplus> chain1 i\<bar>ufCompI f1 f2) \<uplus> z\<bar>ufDom\<cdot>f2))\<cdot>(ubclLeast (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2))\<bar>ufDom\<cdot>f2)))"
-    proof (rule chainI)
-      fix i :: nat and ia :: nat
-      have "ufCompH f1 f2 (x \<uplus> chain1 i\<bar>ufCompI f1 f2)\<cdot> (chain2 i ia) \<sqsubseteq> ufCompH f1 f2 (x \<uplus> chain1 i\<bar>ufCompI f1 f2)\<cdot> (chain2 i (Suc ia))"
-        by (meson f95 monofun_cfun_arg po_class.chainE)
-      then show "ubclUnion\<cdot> ((f1 \<rightleftharpoons> (x \<uplus> chain1 i\<bar>ufCompI f1 f2) \<uplus> iterate ia\<cdot> (\<Lambda> a. (f1 \<rightleftharpoons> (x \<uplus> chain1 i\<bar>ufCompI f1 f2) \<uplus> a\<bar>ufDom\<cdot>f1) \<uplus> (f2 \<rightleftharpoons> (x \<uplus> chain1 i\<bar>ufCompI f1 f2) \<uplus> a\<bar>ufDom\<cdot>f2))\<cdot> (ubclLeast (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2))\<bar>ufDom\<cdot>f1) \<uplus> (f2 \<rightleftharpoons> (x \<uplus> chain1 i\<bar>ufCompI f1 f2) \<uplus> iterate ia\<cdot> (\<Lambda> a. (f1 \<rightleftharpoons> (x \<uplus> chain1 i\<bar>ufCompI f1 f2) \<uplus> a\<bar>ufDom\<cdot>f1) \<uplus> (f2 \<rightleftharpoons> (x \<uplus> chain1 i\<bar>ufCompI f1 f2) \<uplus> a\<bar>ufDom\<cdot>f2))\<cdot> (ubclLeast (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2))\<bar>ufDom\<cdot>f2)) \<sqsubseteq> ubclUnion\<cdot> ((f1 \<rightleftharpoons> (x \<uplus> chain1 i\<bar>ufCompI f1 f2) \<uplus> iterate (Suc ia)\<cdot> (\<Lambda> a. (f1 \<rightleftharpoons> (x \<uplus> chain1 i\<bar>ufCompI f1 f2) \<uplus> a\<bar>ufDom\<cdot>f1) \<uplus> (f2 \<rightleftharpoons> (x \<uplus> chain1 i\<bar>ufCompI f1 f2) \<uplus> a\<bar>ufDom\<cdot>f2))\<cdot> (ubclLeast (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2))\<bar>ufDom\<cdot>f1) \<uplus> (f2 \<rightleftharpoons> (x \<uplus> chain1 i\<bar>ufCompI f1 f2) \<uplus> iterate (Suc ia)\<cdot> (\<Lambda> a. (f1 \<rightleftharpoons> (x \<uplus> chain1 i\<bar>ufCompI f1 f2) \<uplus> a\<bar>ufDom\<cdot>f1) \<uplus> (f2 \<rightleftharpoons> (x \<uplus> chain1 i\<bar>ufCompI f1 f2) \<uplus> a\<bar>ufDom\<cdot>f2))\<cdot> (ubclLeast (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2))\<bar>ufDom\<cdot>f2))"
-        by (simp add: chain2_def monofun_cfun_arg ufCompH_def)
-    qed
-    have f170: "(\<Squnion>i::nat. (f1 \<rightleftharpoons> x \<uplus> chain3 (Suc i)\<bar>ufDom\<cdot>f1) \<uplus> ((f2 \<rightleftharpoons> (x \<uplus> chain3 (Suc i)\<bar>ufCompI f2 f3) \<uplus> chain4 (Suc i) (Suc i)\<bar>ufDom\<cdot>f2) \<uplus> (f3 \<rightleftharpoons> (x \<uplus> chain3 (Suc i)\<bar>ufCompI f2 f3) \<uplus> chain4 (Suc i) (Suc i)\<bar>ufDom\<cdot>f3))) = 
-(\<Squnion>i::nat. (f1 \<rightleftharpoons> x \<uplus> chain3 i\<bar>ufDom\<cdot>f1) \<uplus> ((f2 \<rightleftharpoons> (x \<uplus> chain3 i\<bar>ufCompI f2 f3) \<uplus> chain4 i i\<bar>ufDom\<cdot>f2) \<uplus> (f3 \<rightleftharpoons> (x \<uplus> chain3 i\<bar>ufCompI f2 f3) \<uplus> chain4 i i\<bar>ufDom\<cdot>f3)))"
-      apply (rule lub_suc_shift)
-      by (simp add: f130 f1502 op_the_chain)
-(*==================================================================================*)
-    have 1000: "ufComp (ufComp f1 f2) f3 \<rightleftharpoons> x = ubFix (ufCompH (ufComp f1 f2) f3 x) (ufRan\<cdot>(ufComp f1 f2) \<union> ufRan\<cdot>f3)"
-      by (simp add: a1 f0 ufcomp_dom ufcomp_repabs)
-    have f1001: "ubclDom\<cdot>(x \<uplus> ubFix (ufCompH (ufComp f1 f2) f3 x) (ufRan\<cdot>(ufComp f1 f2) \<union> ufRan\<cdot>f3)\<bar>ufDom\<cdot>(ufComp f1 f2)) 
-                  = ufCompI f1 f2"
-      apply (simp add: ubclrestrict_dom)
-      apply (simp add: ubclunion_dom)
-      apply (simp add: a1)
-      apply (subst ubfix_dom)
-       apply (simp add: a1 f0 ubcldom_least_cs ufcomp_dom)
-      apply (simp_all add: assms ufcomp_ran ufcomp_dom)
-      unfolding ufCompO_def
-      apply (subst ufcomp_dom)
-      apply (simp_all add: assms ufcomp_ran ufcomp_dom)
-      unfolding ufCompO_def
-       apply (simp add: assms(2) assms(3) inf_sup_distrib2)
-      unfolding ufCompI_def
-      apply (simp add: assms ufcomp_ran ufcomp_dom)
-      unfolding ufCompO_def
-      unfolding ufCompI_def
-      by blast
-    obtain bla1 where bla1_def: "bla1 = ubFix (ufCompH (ufComp f1 f2) f3 x) (ufRan\<cdot>(ufComp f1 f2) \<union> ufRan\<cdot>f3)"
-      by simp
-    have f1001: "ubFix (ufCompH (ufComp f1 f2) f3 x) (ufRan\<cdot>(ufComp f1 f2) \<union> ufRan\<cdot>f3) = (ufComp3 f1 f2 f3) \<rightleftharpoons> x"
-      apply (subst ubfix_eq)
-       apply (simp add: a1 f0 ubcldom_least_cs ufcomp_dom)
-      unfolding ufCompH_def
-      apply simp
-      apply (fold ufCompH_def)
-      apply (simp add: ufcomp_repabs assms(1) f1001)
-      apply (fold bla1_def)
-      apply (subst ubfix_eq)
-       apply (simp add: bla1_def f1001 ubcldom_least_cs)
-      unfolding ufCompH_def
-      apply simp
-      apply (subst bla1_def)
-      apply (subst bla1_def)
-      apply (fold ufCompH_def)
-      apply (fold bla1_def)
-      apply (fold ufCompH_def)
-      
-      
-      sorry
-    show "ufComp (ufComp f1 f2) f3 \<rightleftharpoons> x = ufComp f1 (ufComp f2 f3) \<rightleftharpoons> x"
-      apply (simp add: ufComp_def)
-      apply (fold f101)
-      apply (fold f102)
-      apply (simp add: f0 ufcomp_dom a1)
-      apply (simp add: f1 f100)
-      unfolding ubFix_def
-      apply (simp add: assms ufcomp_ran)
-      unfolding ufCompO_def 
-      apply (fold chain1_def)
-      apply (fold f90)
-      apply (simp only: chain1_shift_def chain1_def)
-      apply simp
-      apply (subst ufCompH_def)
-      apply simp
-      apply (fold f91)
-      apply (simp add: assms(1) ufcomp_dom)
-      apply (simp add: ufComp_def)
-      apply (simp add: assms(1) f92)
-      apply (subst ubFix_def)
-      apply (fold f99)
-      apply (fold f98)
-      apply (simp add: chain_shift_def chain2_def)
-      apply (simp add: ufCompH_def)
-      apply (subst contlub_cfun_arg)
-      apply (simp add: f162)
-      apply (subst contlub_cfun_fun) 
-      apply (simp add: f163)
-        apply (fold ufCompH_def)
-      apply (fold f120)
-      
-        apply (fold f102)
-        apply (fold chain3_def)
-        apply (fold f132)
-        apply (simp add: chain_shift_def chain3_def)
-        apply (rule sym)
-        apply (subst ufCompH_def)
-        apply simp
-        apply (fold f133)
-        apply (simp add: ufcomp_dom assms(2))
-        apply (simp add: ufComp_def)
-        apply (simp add: assms(2) f140)
-        apply (subst ubFix_def)
-        apply (fold f160)
-        apply (fold f153)
-        apply (simp add: chain_shift_def chain4_def)
-        apply (subst ufCompH_def)
-        apply (simp add: assms(2))
-        apply (fold f161)
-      apply (subst contlub_cfun_arg) 
-       apply (simp add: f150 op_the_chain)
-(*
-      apply (rule lub_eq) +
-      apply (induct_tac ia)
-      apply (induct_tac i) defer defer
-        apply (induct_tac i)
-      unfolding chain1_def
-      unfolding chain2_def
-      unfolding chain3_def
-      unfolding chain4_def
-        apply simp
-  *)    
-
-      apply (subst diag_lub)
-        apply (simp add: f130 f1501 op_the_chain)
-       apply (simp add: f150 op_the_chain)
-
-      apply (subst diag_lub)    
-        apply (simp add: f89 f950 op_the_chain)
-      apply (simp add: f95 op_the_chain)
-      apply (rule sym)
 
 
 
-      unfolding chain1_def
-      unfolding chain2_def
-      unfolding chain3_def
-      sorry
-  qed
-
-
-
-*)
 instantiation ufun:: (ubcl_comp) ufuncl_comp
 begin
 

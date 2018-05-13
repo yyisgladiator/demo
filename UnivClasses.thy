@@ -87,25 +87,44 @@ class ubcl_comp = ubcl +
   (* we need this assm to proof the equality between ufComp and ufSerComp *)
   assumes ubclunion_restrict2 :"ubclRestrict (ubclDom\<cdot>y)\<cdot>(ubclUnion\<cdot>x\<cdot>y) = y"
   assumes ubclrestrict_dom_id: "ubclRestrict (ubclDom\<cdot>x)\<cdot>x = x"
-  assumes ubclrestrict_dom_id2: "ubclDom\<cdot>x = cs \<Longrightarrow> ubclRestrict cs\<cdot>x = x"
   assumes ubclrestrict_twice: "ubclRestrict cs2\<cdot>(ubclRestrict cs1\<cdot>ub) = ubclRestrict (cs1\<inter>cs2)\<cdot>ub"  
   
   assumes ubcldom_least: "\<And> x. ubclLeast (ubclDom\<cdot>x)\<sqsubseteq>x"
   assumes ubcldom_least_cs: "\<And> cs. ubclDom\<cdot>(ubclLeast cs) = cs"
   
   assumes ubclunion_ubcldom: "ubclDom\<cdot>(ubclUnion\<cdot>f1\<cdot>f2) = ubclDom\<cdot>f1 \<union> ubclDom\<cdot>f2"
+  assumes ubclrestrict_ubcldom: "ubclDom\<cdot>(ubclRestrict cs\<cdot>b) = ubclDom\<cdot>b \<inter> cs"
+
   assumes ubclunion_ubclrestrict: "ubclRestrict cs\<cdot>(ubclUnion\<cdot>f1\<cdot>f2) = ubclUnion\<cdot>(ubclRestrict cs\<cdot>f1)\<cdot>(ubclRestrict cs\<cdot>f2)" 
   assumes ubclunion_ubclrestrict_minus: "cs2 \<subseteq> ubclDom\<cdot>f2 \<Longrightarrow> ubclUnion\<cdot>(ubclRestrict (cs1 - cs2)\<cdot>f1)\<cdot>f2 =  ubclUnion\<cdot>(ubclRestrict cs1\<cdot>f1)\<cdot>f2"
   assumes ubclunion_ubclrestrict_minus_id: "ubclUnion\<cdot>(ubclRestrict (cs1 - cs2)\<cdot>ub)\<cdot>(ubclRestrict (cs1 \<inter> cs2)\<cdot>ub) = ubclRestrict cs1\<cdot>ub "
-  assumes ubclrestrict_ubcldom: "ubclDom\<cdot>(ubclRestrict cs\<cdot>b) = ubclDom\<cdot>b \<inter> cs"
-  assumes ubclunion_ubclrestrict_id: "ubclDom\<cdot>ub = cs1 \<union> cs2 \<Longrightarrow> cs1 \<inter> cs2 = {} \<Longrightarrow> ubclUnion\<cdot>(ubclRestrict cs1\<cdot>ub)\<cdot>(ubclRestrict cs2\<cdot>ub) = ub"
-  assumes ubclunion_ubclrestrictR:"ubclDom\<cdot>ub \<inter> cs = {} \<Longrightarrow> ubclRestrict cs\<cdot>(ubclUnion\<cdot>ub2\<cdot>ub) = ubclRestrict cs\<cdot>ub2"
-  assumes ubclunion_ubclrestrictR2:"ubclDom\<cdot>ub = cs \<Longrightarrow> ubclRestrict cs\<cdot>(ubclUnion\<cdot>ub2\<cdot>ub) = ubclRestrict cs\<cdot>ub"
-  assumes ubclunion_id: "ubclUnion\<cdot>ub1\<cdot>ub1 = ub1"
-  assumes ubclunion_asso:"ubclUnion\<cdot>(ubclUnion\<cdot>f1\<cdot>f2)\<cdot>f3 = ubclUnion\<cdot>f1\<cdot>(ubclUnion\<cdot>f2\<cdot>f3)"
-  assumes ubclunion_commu: "ubclDom\<cdot>f1 \<inter> ubclDom\<cdot>f2 = {} \<longrightarrow> ubclUnion\<cdot>f1\<cdot>f2 = ubclUnion\<cdot>f2\<cdot>f1"
-  assumes ubclunion_test: "(ubclRestrict cs2\<cdot>(ubclRestrict cs1\<cdot>ub)) = (ubclRestrict (cs1\<inter>cs2)\<cdot>ub)"
+  
+  assumes ubclunion_id: "ubclUnion\<cdot>ub\<cdot>ub = ub"
+  assumes ubclunion_asso:"ubclUnion\<cdot>(ubclUnion\<cdot>ub1\<cdot>ub2)\<cdot>ub3 = ubclUnion\<cdot>ub1\<cdot>(ubclUnion\<cdot>ub2\<cdot>ub3)"
+  assumes ubclunion_commu: "ubclDom\<cdot>ub1 \<inter> ubclDom\<cdot>ub2 = {} \<longrightarrow> ubclUnion\<cdot>ub1\<cdot>ub2 = ubclUnion\<cdot>ub2\<cdot>ub1"
 begin
+
+lemma ubclrestrict_dom_idI: "ubclDom\<cdot>x = cs \<Longrightarrow> ubclRestrict cs\<cdot>x = x"
+  using local.ubclrestrict_dom_id by blast
+lemma ubclunion_ubclrestrict_RI:"ubclDom\<cdot>ub = cs \<Longrightarrow> ubclRestrict cs\<cdot>(ubclUnion\<cdot>ub2\<cdot>ub) = ubclRestrict cs\<cdot>ub"
+  using local.ubclunion_restrict2 ubclrestrict_dom_idI by auto
+
+lemma ubclunion_lub_sep: assumes "chain Y1" and "chain Y2"
+  shows "ubclUnion\<cdot>(Lub Y1)\<cdot>(Lub Y2) = (\<Squnion>i. ubclUnion\<cdot>(Y1 i)\<cdot>(Y2 i))"
+proof -
+  have "ubclUnion\<cdot>(Lub Y1)\<cdot>(Lub Y2) = (\<Squnion>n. ubclUnion\<cdot>(Y1 n))\<cdot>(Lub Y2) \<and> chain (\<lambda>n. ubclUnion\<cdot>(Y1 n))"
+    by (simp add: assms(1) contlub_cfun_arg)
+  then show ?thesis
+    by (simp add: assms(2) lub_APP)
+qed
+
+lemma ubclunion_lub_sep2: assumes "chain Y1" and "chain Y2"
+  shows "(\<Squnion>i. ubclUnion\<cdot>(Y1 i)\<cdot>(Y2 i)) = ubclUnion\<cdot>(Lub Y1)\<cdot>(Lub Y2)"
+  by (simp add: assms(1) assms(2) ubclunion_lub_sep)
+
+lemma ubclunion_ubclrestrict_id: "ubclDom\<cdot>ub = cs1 \<union> cs2 \<Longrightarrow> cs1 \<inter> cs2 = {} \<Longrightarrow> ubclUnion\<cdot>(ubclRestrict cs1\<cdot>ub)\<cdot>(ubclRestrict cs2\<cdot>ub) = ub"
+  by (metis Diff_cancel Un_Diff Un_Diff_Int local.ubclrestrict_dom_id local.ubclrestrict_twice local.ubclunion_ubclrestrict_minus_id)
+
 end  
   
 
