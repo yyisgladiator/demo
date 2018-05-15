@@ -79,64 +79,12 @@ definition H :: "('s, 'm::message) automaton \<Rightarrow> 'm SPF" where
 "H automat = spfConc (getInitialOutput automat)\<cdot>(h automat (getInitialState automat))"
 
 
-
-
-
-
 lemma automat_well[simp]:"automaton_well (Rep_automaton automat)"
   using Rep_automaton by auto
 
 lemma automat_finite_dom[simp]:"finite (getDom automat)"
   by simp
 
-(*spfRt and spfConc*)
-
-lemma spfRt_dom [simp] :"ufDom\<cdot>(spfRt\<cdot>spf) = ufDom\<cdot>spf"
-  unfolding spfRt_def
-  by (simp add: ubclDom_ubundle_def ufapplyin_dom)
-
-lemma spfConc_dom[simp]:"ufDom\<cdot>(spfConc sb \<cdot>spf) = ufDom\<cdot>spf"
-  unfolding spfConc_def
-  apply(subst ufapplyout_dom)
-  apply (metis ubclDom_ubundle_def ubconceq_dom)
-  by blast
-
-lemma spfRt_ran [simp]:"ufRan\<cdot>(spfRt\<cdot>spf) = ufRan\<cdot>spf"
-  unfolding spfRt_def
-  apply(subst ufapplyin_ran2)
-   apply (simp add: ubclDom_ubundle_def)
-  by blast
-
-lemma spfConc_ran [simp]:"ufRan\<cdot>(spfConc sb \<cdot>spf) = ufRan\<cdot>spf"
-  unfolding spfConc_def
-  apply(subst ufapplyout_ran)
-   apply (metis ubclDom_ubundle_def ubconceq_dom)
-  by blast
-
-lemma spfRt_spfConc: "(spfRt\<cdot>(spfConc sb \<cdot>spf)) = (spfConc sb \<cdot>(spfRt\<cdot>spf))"
-  unfolding spfConc_def
-  unfolding spfRt_def
-  apply(subst ufapply_eq)
-  apply (simp add: ubclDom_ubundle_def)
-  apply (metis ubclDom_ubundle_def ubconceq_dom)
-  by blast
-
-(*spfStateFix lemmas*)  
-lemma spfsl_below_spfsf: "spfStateLeast In Out \<sqsubseteq> spfStateFix In Out\<cdot>F"
-proof (simp add: spfStateFix_def, simp add: fixg_def)
-  have "\<forall>x0 x1. ((x1::'a \<Rightarrow> ('b stream\<^sup>\<Omega>) ufun) \<sqsubseteq> (if x1 \<sqsubseteq> x0\<cdot>x1 then \<Squnion>uub. iterate uub\<cdot>x0\<cdot>x1 else x1)) = (if x1 \<sqsubseteq> x0\<cdot>x1 then x1 \<sqsubseteq> (\<Squnion>uub. iterate uub\<cdot>x0\<cdot>x1) else x1 \<sqsubseteq> x1)"
-    by simp
-  then show "spfStateLeast In Out \<sqsubseteq> F\<cdot>(spfStateLeast In Out) \<longrightarrow> spfStateLeast In Out \<sqsubseteq> (\<Squnion>n. iterate n\<cdot>F\<cdot>(spfStateLeast In Out))"
-    by (metis (no_types) fixg_pre)
-qed
-
-
-lemma spfstatefix_dom:"ufDom\<cdot>((spfStateFix In Out\<cdot> f) s) = In"
-  by (metis (mono_tags) below_fun_def spfStateLeast_def spfsl_below_spfsf ufdom_below_eq ufleast_ufdom)
-  
-    
-lemma spfstatefix_ran:"ufRan\<cdot>((spfStateFix In Out\<cdot> f) s) = Out"
-  by (metis below_fun_def spfStateLeast_ran spfsl_below_spfsf ufran_below)
     
 lemma ufLeast_apply:assumes "ubDom\<cdot>sb = In" shows "ufLeast In  Out \<rightleftharpoons> sb = ubclLeast Out"
   apply (simp add: ufLeast_def)

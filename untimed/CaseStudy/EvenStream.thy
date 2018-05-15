@@ -81,6 +81,9 @@ abbreviation bool2even:: "bool event stream \<rightarrow> EvenAutomaton event st
 (********************************)
     section \<open>Lemma\<close>
 (********************************)
+
+subsection \<open>evenStream\<close>
+
 lemma "#(evenStream\<cdot>s) = #s"
   by simp
 
@@ -94,7 +97,34 @@ lemma evenstream_final_h: "sscanlA evenTransition (State ooo n)\<cdot>(nat2even\
 lemma evenstream_final: "evenStream\<cdot>(nat2even\<cdot>s) = bool2even\<cdot>(tsynMap Parity.even\<cdot>(tsynSum\<cdot>s))"
   by (simp add: evenInitialState_def tsynSum_def evenstream_final_h)
 
+lemma evenStreamBundle_well[simp]:"ubWell ([c1 \<mapsto> (nat2even\<cdot>s)])"
+  apply(simp add: ubWell_def usclOkay_stream_def ctype_event_def)
+proof(induction rule: tsyn_ind [of _s])
+  case 1
+  then show ?case
+  proof(rule admI)
+    fix Y::"nat \<Rightarrow> nat event stream"
+    assume a1: "chain Y"
+    assume a2: "\<forall>i::nat. sdom\<cdot>(nat2even\<cdot>(Y i)) \<subseteq> insert \<surd> (Msg ` range A)"
+    show "sdom\<cdot>(nat2even\<cdot>(\<Squnion>i::nat. Y i)) \<subseteq> insert \<surd> (Msg ` range A)"
+        by (metis a1 a2 ch2ch_Rep_cfunR contlub_cfun_arg subset_cont)
+    qed
+next
+  case 2
+  then show ?case by simp
+next
+  case (3 a s)
+  then show ?case by simp
+next
+  case (4 s)
+  then show ?case by simp
+qed
 
+lemma evenStreamBundle_tick_well[simp]: "ubWell [c1 \<mapsto> \<up>\<surd> \<bullet> nat2even\<cdot>s]" 
+  by (metis evenStreamBundle_well tsynmap_tick)
+
+lemma evenStreamBundle_msg_well[simp]:"ubWell [c1 \<mapsto> \<up>(\<M> A m) \<bullet> nat2even\<cdot>xs]"
+  by (metis evenStreamBundle_well tsynmap_msg)
 
 
 subsection \<open>Rek2evenStream\<close>

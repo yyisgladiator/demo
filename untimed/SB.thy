@@ -802,4 +802,19 @@ lemma sbHdElem_sbElemWell: assumes "\<forall>c\<in>(ubDom\<cdot>sb). sb .c \<not
   subsection \<open>Automaton\<close>
 (* ----------------------------------------------------------------------- *)
 
+(* Create a simple bundle. Used to shorten parts of automaton transitions, e.g. in EvenAutomaton *)
+lift_definition createBundle :: "'a \<Rightarrow> channel \<Rightarrow> 'a SB" is
+  "\<lambda>a c. if (a \<in> ctype c) then ([c \<mapsto> \<up>a]) else ([c \<mapsto> \<epsilon>]) "
+  unfolding ubWell_def
+  unfolding usclOkay_stream_def
+  by auto
+
+lemma createBundle_dom[simp]: "ubDom\<cdot>(createBundle a c) = {c}"
+  by (simp add: ubdom_insert createBundle.rep_eq)  
+
+lemma createBundle_apply[simp]: assumes "a \<in> ctype c"
+                                  shows "createBundle a c = Abs_ubundle [c \<mapsto> \<up>a]"
+  by (simp add: assms createBundle.abs_eq)
+
+
 end
