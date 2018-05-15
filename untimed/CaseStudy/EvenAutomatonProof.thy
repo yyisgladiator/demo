@@ -145,19 +145,6 @@ lemma[simp]:"ubWell[c2 \<mapsto> \<up>(\<M> B x)]"
   by (metis MsgB_ctype createBundle.rep_eq ubrep_well)
     
 (*End*)
-    
-(* lemma [simp]:"ubDom\<cdot>(ubclLeast cIn) = cIn"
-  by (simp add: ubclLeast_ubundle_def) *)  
-
-(* lemma ubclLeast_empty: assumes "c\<in>Dom" shows "ubclLeast Dom  .  c = \<epsilon>"
-  by (simp add: assms ubclLeast_ubundle_def) *)
-
-(* lemma evenGet_c[simp]:assumes "ubWell[c \<mapsto> x]" shows "Abs_ubundle [c \<mapsto> x]  .  c =  x"
-  by (simp add: assms ubgetch_ubrep_eq) *)
-    
-(* lemma evenGet_c1[simp]:"Abs_ubundle [c1 \<mapsto> nat2even\<cdot>x]  .  c1 =  nat2even\<cdot>x"
-  by (metis evenStreamBundle_well fun_upd_same option.sel ubgetch_ubrep_eq) *)     
-
   
 definition EvenStream::"EvenAutomatonState \<Rightarrow> nat event stream \<rightarrow> EvenAutomaton event stream" where
 "EvenStream state \<equiv> (\<Lambda> s. ((h EvenAutomatonAutomaton state) \<rightleftharpoons> (Abs_ubundle [c1 \<mapsto> (nat2even\<cdot>s)])) . c2)" 
