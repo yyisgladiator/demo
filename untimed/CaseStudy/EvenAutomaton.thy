@@ -74,6 +74,9 @@ lemma createC1Bundle_ubconc_sbrt[simp]:assumes "ubDom\<cdot>sb = {c1}"
   apply (rule ub_eq)
   by (simp add: sbRt_def assms) + 
 
+lemma createC2Bundle_well[simp]: "ubWell[c2 \<mapsto> \<up>(\<M> B b)]"
+  by (metis MsgB_ctype createBundle.rep_eq ubrep_well)
+
 
 (* tsynbOneTick is defined in: timesyn/tsynBundle *)
 function evenAutomatonTransition :: "(EvenAutomatonState \<times> (channel \<rightharpoonup> EvenAutomaton event)) \<Rightarrow> (EvenAutomatonState \<times> EvenAutomaton event SB)" where

@@ -83,29 +83,6 @@ lemma evenaut_H_step: assumes "ubDom\<cdot>sb={c1}"
     
 section \<open>Val start\<close>
   
-lemma evenStreamBundle_well[simp]:"ubWell ([c1 \<mapsto> (nat2even\<cdot>s)])"
-  apply(simp add: ubWell_def usclOkay_stream_def ctype_event_def)
-proof(induction rule: tsyn_ind [of _s])
-  case 1
-  then show ?case
-  proof(rule admI)
-    fix Y::"nat \<Rightarrow> nat event stream"
-    assume a1: "chain Y"
-    assume a2: "\<forall>i::nat. sdom\<cdot>(nat2even\<cdot>(Y i)) \<subseteq> insert \<surd> (Msg ` range A)"
-    show "sdom\<cdot>(nat2even\<cdot>(\<Squnion>i::nat. Y i)) \<subseteq> insert \<surd> (Msg ` range A)"
-        by (metis a1 a2 ch2ch_Rep_cfunR contlub_cfun_arg subset_cont)
-    qed
-next
-  case 2
-  then show ?case by simp
-next
-  case (3 a s)
-  then show ?case by simp
-next
-  case (4 s)
-  then show ?case by simp
-qed
-  
 lemma "sdom\<cdot>(nat2even\<cdot>s) \<subseteq> ctype c1"
   unfolding ctype_event_def
   apply (rule tsyn_ind [of _ s])
@@ -132,19 +109,6 @@ lemma evenStreamBundle_lub: assumes "chain Y"
    apply (metis (mono_tags) assms dom_eq_singleton_conv evenStreamBundle_chain evenStreamBundle_well ubdom_chain_eq2 ubdom_ubrep_eq)
   apply (simp add: ubgetch_ubrep_eq)
   by (simp add: assms contlub_cfun_arg)
-
-(*New TODo*)
-     
-lemma [simp]: "ubWell [c1 \<mapsto> \<up>\<surd> \<bullet> nat2even\<cdot>s]" 
-  by (metis evenStreamBundle_well tsynmap_tick)
-
-lemma[simp]:"ubWell [c1 \<mapsto> \<up>(\<M> A m) \<bullet> nat2even\<cdot>xs]"
-  by (metis evenStreamBundle_well tsynmap_msg)
-
-lemma[simp]:"ubWell[c2 \<mapsto> \<up>(\<M> B x)]"
-  by (metis MsgB_ctype createBundle.rep_eq ubrep_well)
-    
-(*End*)
   
 definition EvenStream::"EvenAutomatonState \<Rightarrow> nat event stream \<rightarrow> EvenAutomaton event stream" where
 "EvenStream state \<equiv> (\<Lambda> s. ((h EvenAutomatonAutomaton state) \<rightleftharpoons> (Abs_ubundle [c1 \<mapsto> (nat2even\<cdot>s)])) . c2)" 
