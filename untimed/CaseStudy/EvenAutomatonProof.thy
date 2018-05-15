@@ -134,8 +134,7 @@ lemma evenStreamBundle_lub: assumes "chain Y"
   by (simp add: assms contlub_cfun_arg)
 
 (*New TODo*)
-
-        
+     
 lemma [simp]: "ubWell [c1 \<mapsto> \<up>\<surd> \<bullet> nat2even\<cdot>s]" 
   by (metis evenStreamBundle_well tsynmap_tick)
 
@@ -147,18 +146,17 @@ lemma[simp]:"ubWell[c2 \<mapsto> \<up>(\<M> B x)]"
     
 (*End*)
     
-    
- lemma [simp]:"ubDom\<cdot>(ubclLeast cIn) = cIn"
-  by (simp add: ubclLeast_ubundle_def)  
+(* lemma [simp]:"ubDom\<cdot>(ubclLeast cIn) = cIn"
+  by (simp add: ubclLeast_ubundle_def) *)  
 
-lemma ubclLeast_empty: assumes "c\<in>Dom" shows "ubclLeast Dom  .  c = \<epsilon>"
-  by (simp add: assms ubclLeast_ubundle_def)
+(* lemma ubclLeast_empty: assumes "c\<in>Dom" shows "ubclLeast Dom  .  c = \<epsilon>"
+  by (simp add: assms ubclLeast_ubundle_def) *)
 
-lemma evenGet_c[simp]:assumes "ubWell[c \<mapsto> x]" shows "Abs_ubundle [c \<mapsto> x]  .  c =  x"
-  by (simp add: assms ubgetch_ubrep_eq)
+(* lemma evenGet_c[simp]:assumes "ubWell[c \<mapsto> x]" shows "Abs_ubundle [c \<mapsto> x]  .  c =  x"
+  by (simp add: assms ubgetch_ubrep_eq) *)
     
-lemma evenGet_c1[simp]:"Abs_ubundle [c1 \<mapsto> nat2even\<cdot>x]  .  c1 =  nat2even\<cdot>x"
-  by (metis evenStreamBundle_well fun_upd_same option.sel ubgetch_ubrep_eq)     
+(* lemma evenGet_c1[simp]:"Abs_ubundle [c1 \<mapsto> nat2even\<cdot>x]  .  c1 =  nat2even\<cdot>x"
+  by (metis evenStreamBundle_well fun_upd_same option.sel ubgetch_ubrep_eq) *)     
 
   
 definition EvenStream::"EvenAutomatonState \<Rightarrow> nat event stream \<rightarrow> EvenAutomaton event stream" where
@@ -182,7 +180,8 @@ proof(rule Cont.contI2)
       moreover
       { assume "(nat2even\<cdot>x \<sqsubseteq> nat2even\<cdot>y) \<noteq> (Abs_ubundle [c1 \<mapsto> nat2even\<cdot>x] . cc (Abs_ubundle [c1 \<mapsto> nat2even\<cdot>y]) (Abs_ubundle [c1 \<mapsto> nat2even\<cdot>x]) \<sqsubseteq> Abs_ubundle [c1 \<mapsto> nat2even\<cdot>y] . cc (Abs_ubundle [c1 \<mapsto> nat2even\<cdot>y]) (Abs_ubundle [c1 \<mapsto> nat2even\<cdot>x]))"
         then have "cc (Abs_ubundle [c1 \<mapsto> nat2even\<cdot>y]) (Abs_ubundle [c1 \<mapsto> nat2even\<cdot>x]) \<noteq> c1"
-          using evenStreamBundle_well fun_upd_def option.sel ubgetch_ubrep_eq by force
+          (* using evenStreamBundle_well fun_upd_def option.sel ubgetch_ubrep_eq by force *)
+          sorry
         then have "cc (Abs_ubundle [c1 \<mapsto> nat2even\<cdot>y]) (Abs_ubundle [c1 \<mapsto> nat2even\<cdot>x]) \<notin> ubDom\<cdot>(Abs_ubundle [c1 \<mapsto> nat2even\<cdot>x]) \<or> Abs_ubundle [c1 \<mapsto> nat2even\<cdot>x] . cc (Abs_ubundle [c1 \<mapsto> nat2even\<cdot>y]) (Abs_ubundle [c1 \<mapsto> nat2even\<cdot>x]) \<sqsubseteq> Abs_ubundle [c1 \<mapsto> nat2even\<cdot>y] . cc (Abs_ubundle [c1 \<mapsto> nat2even\<cdot>y]) (Abs_ubundle [c1 \<mapsto> nat2even\<cdot>x])"
           by (metis (no_types) dom_empty dom_fun_upd evenStreamBundle_well option.simps(3) singletonD ubdom_ubrep_eq) }
       ultimately show ?thesis
@@ -254,7 +253,7 @@ lemma  msg_assms: "EvenStream (State ooo summe)\<cdot>(\<up>(Msg m) \<bullet> xs
     show ?thesis
       apply(simp add: evenStream_insert h_final ubdom_ubrep_eq getDom_def h_out_dom 
                       sbHdElem_2_shd2 autGetNextOutput_def autGetNextState_def
-                      getTransition_def getRan_def EvenAutomatonAutomaton.rep_eq)
+                      getTransition_def getRan_def EvenAutomatonAutomaton.rep_eq ubgetch_ubrep_eq)
       using True ubConc_usclConc_eq_apply by auto
   next
     case False
@@ -268,8 +267,8 @@ lemma  msg_assms: "EvenStream (State ooo summe)\<cdot>(\<up>(Msg m) \<bullet> xs
     show ?thesis
       apply(simp add: evenStream_insert h_final ubdom_ubrep_eq getDom_def h_out_dom 
                       sbHdElem_2_shd2 autGetNextOutput_def autGetNextState_def
-                      getTransition_def getRan_def EvenAutomatonAutomaton.rep_eq)
-      using False ubConc_usclConc_eq_apply by auto
+                      getTransition_def getRan_def EvenAutomatonAutomaton.rep_eq ubgetch_ubrep_eq)
+      using False ubConc_usclConc_eq_apply  by auto
   qed
   
 lemma [simp]:"nat2even\<cdot>(\<up>\<surd>) \<noteq> \<epsilon>"
@@ -278,7 +277,7 @@ lemma [simp]:"nat2even\<cdot>(\<up>\<surd>) \<noteq> \<epsilon>"
 lemma tick_assms: "EvenStream state\<cdot>(\<up>Tick \<bullet> xs) = \<up>Tick \<bullet> (EvenStream state\<cdot>xs)"
   apply(simp add: evenStream_insert getRan_def tsynbOneTick_def h_final ubdom_ubrep_eq getDom_def
                   EvenAutomatonAutomaton.rep_eq h_out_dom sbHdElem_2_shd2
-                  autGetNextOutput_def autGetNextState_def getTransition_def)
+                  autGetNextOutput_def autGetNextState_def getTransition_def ubgetch_ubrep_eq)
   by (metis h_apply_dom tsynbOneTick.abs_eq tsynbonetick_ubconc_tick)  
 
 lemma evenStreamBundle_empty_well[simp]:"ubWell ([c1 \<mapsto> \<epsilon>])"
@@ -287,7 +286,7 @@ lemma evenStreamBundle_empty_well[simp]:"ubWell ([c1 \<mapsto> \<epsilon>])"
 lemma bot_assms: "EvenStream state\<cdot>\<bottom> = \<bottom>"
   apply(simp add: evenStream_insert)
   apply(subst h_bottom, simp add: getDom_def EvenAutomatonAutomaton.rep_eq ubDom_def)
-  apply(simp add: getDom_def EvenAutomatonAutomaton.rep_eq)
+  apply(simp add: getDom_def EvenAutomatonAutomaton.rep_eq ubgetch_ubrep_eq)
   by(simp add: getRan_def EvenAutomatonAutomaton.rep_eq ubclLeast_ubundle_def)
    
 lemma EvenStream_final:"EvenStream (State ooo summe)\<cdot>xs = sscanlA evenTransition (State ooo summe)\<cdot>(nat2even\<cdot>xs)"
