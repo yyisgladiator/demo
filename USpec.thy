@@ -2,7 +2,7 @@
     Author:       Stüber, Jens, Marc
     e-mail:       sebastian.stueber@rwth-aachen.de
 
-    Description:  Defines "universal spezification" 
+    Description:  Defines "universal specification" 
 *)
 
 theory USpec

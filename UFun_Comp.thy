@@ -1590,6 +1590,8 @@ proof -
 instantiation ufun:: (ubcl_comp) ufuncl_comp
 begin
 
+definition ufunclLeast_ufun_def: "ufunclLeast = ufLeast"
+
 definition ufunclComp_ufun_def: "ufunclComp = ufComp"
 definition ufunclParComp_ufun_def: "ufunclParComp = ufParComp"
 definition ufunclSerComp_ufun_def: "ufunclSerComp = ufSerComp"
@@ -1609,6 +1611,9 @@ lemma ufunclSerCompWell_ufun_eq: "ufunclSerCompWell f1 f2 = sercomp_well f1 f2"
 
 instance 
   apply intro_classes
+  apply (simp add: UFun_Comp.ufunclLeast_ufun_def ufclDom_ufun_def ufclRan_ufun_def)
+  apply (simp add: ufclDom_ufun_def ufunclLeast_ufun_def)
+  apply (simp add: UFun_Comp.ufunclLeast_ufun_def ufclRan_ufun_def)
   apply (simp add: inf_sup_aci(1) ufcomp_L_commu ufunclParCompWell_ufun_def)
   apply (simp add: comp_well_def inf_sup_aci(1) ufunclCompWell_ufun_def)
   apply (simp add: UFun_Comp.ufunclParComp_ufun_def ufParComp_dom ufclDom_ufun_def ufunclParCompWell_ufun_def)
