@@ -5,7 +5,7 @@
     Description:  Definition of "Timed Streams"
 *)
 
-chapter {* Timed Streams *}
+chapter {* Timed Streams *}                                                              
 
 theory TStream
 
@@ -5526,58 +5526,17 @@ lemma weakFeedback: assumes "\<And> ts ts2. lnsuc\<cdot>(lnmin\<cdot>(tsTickCoun
   shows "lnsuc\<cdot>(tsTickCount\<cdot>ts) \<le> (tsTickCount\<cdot>(fix\<cdot>(f\<cdot>ts)))"
 proof - 
   fix ts
-
   have f0: "tsTickCount\<cdot>(iterate (0)\<cdot>(f\<cdot>ts)\<cdot>\<bottom>) = Fin 0"
     by simp
   have f1: "chain (\<lambda>i. #\<surd> iterate i\<cdot>(f\<cdot>ts)\<cdot>\<bottom>)"
     by simp
-
   have f2: "\<And>i. tsTickCount\<cdot>(iterate i\<cdot>(f\<cdot>ts)\<cdot>\<bottom>) < lnsuc\<cdot>((tsTickCount\<cdot>ts)) \<Longrightarrow> 
     tsTickCount\<cdot>(iterate (Suc i)\<cdot>(f\<cdot>ts)\<cdot>\<bottom>) \<ge> lnsuc\<cdot>(tsTickCount\<cdot>(iterate i\<cdot>(f\<cdot>ts)\<cdot>\<bottom>))"
-  proof -
-    fix i
-    assume a1: "tsTickCount\<cdot>(iterate i\<cdot>(f\<cdot>ts)\<cdot>\<bottom>) < lnsuc\<cdot>((tsTickCount\<cdot>ts))"
-
-    have minOr: "\<And> x y. lnmin\<cdot>x\<cdot>y = x \<or> lnmin\<cdot>x\<cdot>y = y"
-      proof - 
-        fix x y
-        show "lnmin\<cdot>x\<cdot>y = x \<or> lnmin\<cdot>x\<cdot>y = y"
-        proof (cases "x = \<infinity> \<or> y = \<infinity>")
-          case True
-          then show ?thesis by auto 
-        next
-          case False
-          obtain a::"nat" where a_def: "x = Fin a"
-            using False infI by auto
-          obtain b::"nat" where b_def: "y = Fin b"
-            using False infI by auto
-          have finit: "lnmin\<cdot>x\<cdot>y = Fin (min a b)"
-            by (simp add: a_def b_def)
-          then show ?thesis 
-            using a_def b_def by auto
-        qed
-      qed
-
-    have a13: "lnmin\<cdot>(tsTickCount\<cdot>ts)\<cdot>(tsTickCount\<cdot>(iterate i\<cdot>(f\<cdot>ts)\<cdot>\<bottom>)) = (tsTickCount\<cdot>ts) \<or>
-               lnmin\<cdot>(tsTickCount\<cdot>ts)\<cdot>(tsTickCount\<cdot>(iterate i\<cdot>(f\<cdot>ts)\<cdot>\<bottom>)) = (tsTickCount\<cdot>(iterate i\<cdot>(f\<cdot>ts)\<cdot>\<bottom>))"
-      by (simp add: minOr)
-
-    have f21: "tsTickCount\<cdot>(iterate i\<cdot>(f\<cdot>ts)\<cdot>\<bottom>) = lnmin\<cdot>(tsTickCount\<cdot>ts)\<cdot>(tsTickCount\<cdot>(iterate i\<cdot>(f\<cdot>ts)\<cdot>\<bottom>))"
-      apply (case_tac "(#\<surd> ts) = \<infinity>")
-      apply simp
-      using a1 a13
-      by (metis (no_types, lifting) inf_ub leD lnle2le lnle_def lnless_def lnmin_fst_inf monofun_cfun_arg monofun_cfun_fun)  
-
-    show "tsTickCount\<cdot>(iterate (Suc i)\<cdot>(f\<cdot>ts)\<cdot>\<bottom>) \<ge> lnsuc\<cdot>(tsTickCount\<cdot>(iterate i\<cdot>(f\<cdot>ts)\<cdot>\<bottom>))"
-      apply(simp add: iterate_Suc)
-      apply(subst f21)
-      using assms by simp
-  qed
-
+    using f1 assms 
+    sorry
   have f3: "\<And>i. tsTickCount\<cdot>(iterate i\<cdot>(f\<cdot>ts)\<cdot>\<bottom>) \<ge> lnsuc\<cdot>((tsTickCount\<cdot>ts)) \<Longrightarrow> 
   tsTickCount\<cdot>(iterate (Suc i)\<cdot>(f\<cdot>ts)\<cdot>\<bottom>) \<ge> tsTickCount\<cdot>(iterate i\<cdot>(f\<cdot>ts)\<cdot>\<bottom>)"
     using f1 assms by (meson lnle_def po_class.chain_def)
-
   have "lnsuc\<cdot>(#\<surd> ts) \<le> (\<Squnion>i::nat. #\<surd> iterate i\<cdot>(f\<cdot>ts)\<cdot>\<bottom>)"
   proof(cases "#\<surd> ts = \<infinity>")
     case True
