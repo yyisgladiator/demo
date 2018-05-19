@@ -1,49 +1,112 @@
-(*  Title:  tsynStream
-    Author: Sebastian Stüber
-    e-mail: sebastian.stueber@rwth-aachen.de
+(*  Title:        tsynStream.thy
+    Author:       Sebastian Stüber, Dennis Slotboom
+    E-Mail:       sebastian.stueber@rwth-aachen.de, dennis.slotboom@rwth-aachen.de
 
-    Description: time-syncronus streams. A time-inverval may at most have one message. 
-      No message is described with "Tick"
-      Notice that the time-interpretation is different to "tstream": 
-        <[Msg 1, Tick]> are 2 time-steps, in the first one the message 1 is sent, in the second no
-        message is sent
+    Description:  Time-synchronous streams. Each time-interval may at most have one message.
 *)
 
+chapter {* Time-Synchronous Streams *}
 
 theory tsynStream
-
 imports "../untimed/Streams" "../inc/Event"
 
 begin
 
+(* ----------------------------------------------------------------------- *)
+  section {* Definitions on Time-Synchronous Streams *}
+(* ----------------------------------------------------------------------- *)
 
-(* TODO: move to Event.thy *)
-(* If we get a message, apply the function directly to the message *)
-(* On ticks return tick *)
+text {* Introduce symbol @{text -} for empty time-slots called tick. *}
+syntax "@Tick" :: "'a event" ("-")
+translations "-" == "CONST Tick"
+
+text {* @{term eventApply}: Apply the function direct to the message. *}
 fun eventApply :: "('a \<Rightarrow> 'b) \<Rightarrow> 'a event \<Rightarrow> 'b event" where
-"eventApply _ Tick = Tick" |
-"eventApply f (Msg a) = Msg (f a)"
+  "eventApply _ Tick = Tick" |
+  "eventApply f (Msg a) = Msg (f a)"
 
-
-section \<open>Definitions\<close>
-
-
-(* returns the set with all Msg in t. No ticks *)
+text {* @{term tsynDom}: Obtain the set of all stream messages. *}
 definition tsynDom :: "'a event stream \<rightarrow> 'a set" where
-"tsynDom \<equiv> \<Lambda> ts . {a | a. (Msg a) \<in> sdom\<cdot>ts}"
+  "tsynDom \<equiv> \<Lambda> s. {m | m. (Msg m) \<in> sdom\<cdot>s}"
 
-
-
-thm smap_def
+text {* @{term tsynMap}: Apply a function to all elements of the stream. *}
 definition tsynMap :: "('a \<Rightarrow> 'b) \<Rightarrow> 'a event stream \<rightarrow> 'b event stream" where
-"tsynMap f = smap (eventApply f)"
+  "tsynMap f = smap (eventApply f)"
 
+(* ----------------------------------------------------------------------- *)
+  section {* Lemmata on Time-Synchronous Streams *}
+(* ----------------------------------------------------------------------- *)
+
+text {* Induction rule for infinite time-synchronous streams and admissable predicates. *}
+lemma tsyn_ind [case_names adm bot msg tick]:
+  assumes adm: "adm P"
+    and bot: "P \<epsilon>"
+    and msg: "\<And>m s. P s \<Longrightarrow> P (\<up>(Msg m) \<bullet> s)"
+    and tick: "\<And>s. P s \<Longrightarrow> P (\<up>Tick \<bullet> s)"
+  shows "P x"
+  using assms 
+  apply (induction rule: ind [of _ x])
+  apply (simp_all add: adm bot)
+  by (metis event.exhaust msg tick)
+
+text {* Cases rule for time-synchronous streams. *}
+lemma tsyn_cases [case_names bot msg tick]:
+  assumes bot: "P \<epsilon>"
+    and msg: "\<And>m s. P (\<up>(Msg m) \<bullet> s)"
+    and tick: "\<And> s. P (\<up>Tick \<bullet> s)"
+  shows "P x"
+  using assms
+  apply (cases rule: scases [of x])
+  apply (simp add: bot)
+  by (metis event.exhaust)
+
+(* ----------------------------------------------------------------------- *)
+  section {* tsynDom *}
+(* ----------------------------------------------------------------------- *)
+
+text {* @{term tsynDom} is a monotonous function. *}
+lemma tsyndom_monofun [simp]: "monofun (\<lambda>s. {m | m. (Msg m) \<in> sdom\<cdot>s})"
+  apply (rule monofunI)
+  apply (simp add: set_cpo_simps(1))
+  by (meson Collect_mono sdom_prefix subsetCE)
+
+text {* @{term tsynDom} is a continous function. *}
+lemma tsyndom_cont [simp]: "cont (\<lambda>s. {m | m. (Msg m) \<in> sdom\<cdot>s})"
+  apply (rule contI2)
+  apply (simp only: tsyndom_monofun)
+  apply (rule)+
+  apply (simp add: set_cpo_simps(1))
+  apply (rule subsetI)
+  by (simp add: image_iff lub_eq_Union sdom_cont2)
+
+text {* @{term tsynDom} insertion lemma. *}
+lemma tsyndom_insert: "tsynDom\<cdot>s = {m | m. (Msg m) \<in> sdom\<cdot>s}"
+  by (metis (no_types) Abs_cfun_inverse2 tsynDom_def tsyndom_cont)
+
+text {* If the domain of a stream is subset of another set it is also after removing the first 
+        element. *}
+lemma tsyndom_sconc_msg_sub: "tsynDom\<cdot>(\<up>(Msg x) \<bullet> xs) \<subseteq> S \<Longrightarrow> tsynDom\<cdot>xs \<subseteq> S"
+  by (simp add: subset_eq tsyndom_insert)
+
+text {* If the domain of a stream is subset of another set and it will be concatenated one element 
+        of this superset as first element to the stream it is also is a subset. *}
+lemma tsyndom_sconc_msg_sub2 [simp]: "tsynDom\<cdot>xs \<subseteq> S \<Longrightarrow> x \<in> S \<Longrightarrow> tsynDom\<cdot>(\<up>(Msg x) \<bullet> xs) \<subseteq> S"
+  by (simp add: subset_iff tsyndom_insert)
+
+text {* The empty time-slot is not part of the domain. *}
+lemma tsyndom_sconc_tick [simp]: "tsynDom\<cdot>(\<up>Tick \<bullet> s) = tsynDom\<cdot>s"
+  by (metis (no_types, lifting) Collect_cong Un_insert_left event.distinct(1) insert_iff sdom2un 
+      sup_bot.left_neutral tsyndom_insert)
+
+
+
+
+(* ToDo: adjustments *)
 
 (* Behaves like sscanlA, but on time-syncronus streams *)
 (* Ignore all ticks, do not modify the state and output tick *)
 definition tsynScanlA :: "('s \<Rightarrow>'a \<Rightarrow> ('b \<times>'s)) \<Rightarrow> 's  \<Rightarrow> 'a event stream \<rightarrow> 'b event stream" where
 "tsynScanlA f = sscanlA (\<lambda> s a. case a of (Msg m) \<Rightarrow> (Msg (fst (f s m)), (snd (f s m))) | Tick \<Rightarrow> (Tick, s))"
-
 
 (* Behaves like sscanlA, but on time-syncronus streams *)
 (* Ignore all ticks, do not modify the state and output tick *)
@@ -51,66 +114,6 @@ definition tsynScanl :: "('b \<Rightarrow> 'a \<Rightarrow> 'b) \<Rightarrow> 'b
 "tsynScanl f b0 = tsynScanlA (\<lambda>b a. (f b a,f b a)) b0 "
 
 
-
-
-section \<open>Lemma\<close>
-
-
-lemma tsyn_ind: 
-  assumes adm: "adm P" 
-    and bot: "P \<epsilon>"
-    and msg: "\<And>a s. P s  \<Longrightarrow> P (\<up>(Msg a) \<bullet> s)"
-    and tick: "\<And>s. P s  \<Longrightarrow> P (\<up>Tick \<bullet> s)"
-  shows "P x"
- using assms apply(induction rule: ind [of _x])
-  apply (simp add: adm_def)
-    apply auto
-  by (metis event.exhaust)
-
-
-subsection \<open>tsynDom\<close>
-
-(* taken from tstream *)
-lemma tsyndom_monofun [simp]: "monofun (\<lambda>t. {a | a. (Msg a) \<in> sdom\<cdot>t})"
-by (smt contra_subsetD mem_Collect_eq monofunI monofun_cfun_arg set_cpo_simps(1) subsetI) 
-
-(* for any chain Y of tstreams the domain of the lub is contained in the lub of domains of the chain *)
-lemma tsyndom_contlub [simp]: assumes "chain Y" 
-  shows "{a | a. (Msg a) \<in> sdom\<cdot>(\<Squnion>i. Y i)} \<subseteq> (\<Squnion>i. {a | a. (Msg a) \<in> sdom\<cdot>(Y i)})"
-    (is "?F (\<Squnion>i. Y i) \<subseteq> _ ")
-proof 
-  fix a
-  assume "a\<in>?F (\<Squnion>i. Y i)"
-  hence "Msg a \<in> sdom\<cdot>( (\<Squnion>i. Y i))" by (simp add: tsynDom_def)
-  hence "Msg a \<in> (\<Squnion>i. sdom\<cdot>((Y i)))"
-    by (smt adm_def assms contlub_cfun_arg lub_eq mem_Collect_eq po_class.chain_def) 
-  hence "Msg a \<in> (\<Union>i. sdom\<cdot>(Y i))" by (simp add: lub_eq_Union)
-  hence "(a \<in> (\<Squnion>i. {u. Msg u \<in> sdom\<cdot>(Y i)}))" by (simp add: lub_eq_Union)
-  thus "a\<in>(\<Squnion>i. ?F (Y i))" by (metis (mono_tags, lifting) Collect_cong lub_eq)
-qed
-
-lemma tsyndom_cont [simp]:"cont (\<lambda>t. {a | a. (Msg a) \<in> sdom\<cdot>t})"
-apply(rule contI2)
-using tsyndom_monofun apply blast
-by (metis SetPcpo.less_set_def tsyndom_contlub)
-
-lemma tsyndom_insert: "tsynDom\<cdot>t = {a | a. (Msg a) \<in> sdom\<cdot>t}"
-by (metis (mono_tags, lifting) Abs_cfun_inverse2 tsynDom_def tsyndom_cont)
-
-lemma tsyndom_sub: "tsynDom\<cdot>(\<up>x \<bullet> xs) \<subseteq> S \<Longrightarrow> tsynDom\<cdot>xs \<subseteq> S"
-  apply(simp add: tsyndom_insert)
-  by blast
-
-lemma tsyndom_sub2: "tsynDom\<cdot>(\<up>(Msg x) \<bullet> xs) \<subseteq> S \<Longrightarrow> x \<in> S"
-  apply(simp add: tsyndom_insert)
-  by blast
-
-lemma tsyndom_conc_sub: "tsynDom\<cdot>ts \<subseteq> S \<Longrightarrow> x\<in>S \<Longrightarrow> tsynDom\<cdot>(\<up>(Msg x) \<bullet> ts) \<subseteq> S"
-  apply(simp add: tsyndom_insert)
-  by blast
-
-lemma tsyndom_conc_tick [simp]: "tsynDom\<cdot>(\<up>Tick \<bullet> ts) = tsynDom\<cdot>ts"
-  by(simp add: tsyndom_insert)
 
 
 
@@ -222,7 +225,8 @@ lemma tsynsum_even_h: assumes "tsynDom\<cdot>ts \<subseteq> {n. even n}"
   apply (smt Collect_mem_eq Collect_mono_iff ch2ch_Rep_cfunR contlub_cfun_arg subset_cont)
     apply simp
   apply simp
-   apply (metis dvd_add_right_iff mem_Collect_eq tsyndom_conc_sub tsyndom_sub tsyndom_sub2)
+  apply (smt Un_insert_left event.simps(1) insert_iff mem_Collect_eq odd_add sdom2un subset_iff 
+         sup_bot.left_neutral tsyndom_insert)
   by simp
 
 lemma tsynsum_even: assumes "tsynDom\<cdot>ts \<subseteq> {n. even n}"
