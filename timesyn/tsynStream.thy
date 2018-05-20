@@ -61,7 +61,7 @@ lemma tsyn_cases [case_names bot msg tick]:
   by (metis event.exhaust)
 
 (* ----------------------------------------------------------------------- *)
-  section {* tsynDom *}
+  subsection {* tsynDom *}
 (* ----------------------------------------------------------------------- *)
 
 text {* @{term tsynDom} is a monotonous function. *}
@@ -98,6 +98,29 @@ lemma tsyndom_sconc_tick [simp]: "tsynDom\<cdot>(\<up>Tick \<bullet> s) = tsynDo
   by (metis (no_types, lifting) Collect_cong Un_insert_left event.distinct(1) insert_iff sdom2un 
       sup_bot.left_neutral tsyndom_insert)
 
+(* ----------------------------------------------------------------------- *)
+  subsection {* tsynMap *}
+(* ----------------------------------------------------------------------- *)
+
+text {* @{term tsynMap} insertion lemma. *}
+lemma tsynmap_insert: "tsynMap f\<cdot>s = smap (eventApply f)\<cdot>s"
+  by (simp add: tsynMap_def)
+
+text {* @{term tsynMap} is strict. *}
+lemma tsynmap_strict [simp]: "tsynMap f\<cdot>\<epsilon> = \<epsilon>"
+  by (simp add: tsynmap_insert)
+
+text {* @{term tsynMap} distributes over concatenation. *}
+lemma tsynmap_sconc_msg: "tsynMap f\<cdot>(\<up>(Msg m) \<bullet> s) = \<up>(Msg (f m)) \<bullet> tsynMap f\<cdot>s"
+  by (simp add: tsynmap_insert)
+
+text {* @{term tsynMap} ignores empty time-slots. *}
+lemma tsynmap_sconc_tick: "tsynMap f\<cdot>(\<up>Tick \<bullet> s) = \<up>Tick \<bullet> tsynMap f\<cdot>s"
+  by (simp add: tsynmap_insert)
+
+text {* @{term tsynMap} leaves the length of a stream unchanged. *}
+lemma tsynmap_slen [simp]: "#(tsynMap f\<cdot>s) = #s"
+  by (simp add: tsynmap_insert)
 
 
 
@@ -117,18 +140,7 @@ definition tsynScanl :: "('b \<Rightarrow> 'a \<Rightarrow> 'b) \<Rightarrow> 'b
 
 
 
-subsection \<open>tsynMap\<close>
-lemma tsynmap_len [simp]: "#(tsynMap f\<cdot>s) = #s"
-  by (simp add: tsynMap_def)
 
-lemma tsynmap_bot [simp]: "tsynMap f\<cdot>\<bottom> = \<bottom>"
-  by (simp add: tsynMap_def)
-
-lemma tsynmap_tick [simp]: "tsynMap f\<cdot>(\<up>Tick \<bullet> s) = \<up>Tick \<bullet> tsynMap f\<cdot>s"
-  by (simp add: tsynMap_def)
-
-lemma tsynmap_msg [simp]: "tsynMap f\<cdot>(\<up>(Msg m) \<bullet> s) = \<up>(Msg (f m)) \<bullet> tsynMap f\<cdot>s"
-  by (simp add: tsynMap_def)
 
 
 
