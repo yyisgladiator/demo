@@ -33,6 +33,10 @@ text {* @{term tsynMap}: Apply a function to all elements of the stream. *}
 definition tsynMap :: "('a \<Rightarrow> 'b) \<Rightarrow> 'a event stream \<rightarrow> 'b event stream" where
   "tsynMap f = smap (eventApply f)"
 
+text{*  @{term tsynAbs}: Filter all ticks and return the corrosponding 'a stream *}
+definition tsynAbs:: "'a event stream \<rightarrow> 'a stream" where
+  "tsynAbs \<equiv> \<Lambda> s.  smap (\<lambda>e. case e of Msg m \<Rightarrow> m | Tick \<Rightarrow> undefined)\<cdot>(sfilter {e. e \<noteq> Tick}\<cdot>s)"
+
 (* ----------------------------------------------------------------------- *)
   section {* Lemmata on Time-Synchronous Streams *}
 (* ----------------------------------------------------------------------- *)
@@ -244,5 +248,34 @@ lemma tsynsum_even_h: assumes "tsynDom\<cdot>ts \<subseteq> {n. even n}"
 lemma tsynsum_even: assumes "tsynDom\<cdot>ts \<subseteq> {n. even n}"
   shows "tsynDom\<cdot>(tsynSum\<cdot>ts) \<subseteq> {n. even n}"
   by (simp add: assms tsynSum_def tsynsum_even_h)
+
+(* ----------------------------------------------------------------------- *)
+  subsection {* tsynAbs *}
+(* ----------------------------------------------------------------------- *)
+
+thm tsynAbs_def
+
+lemma tsynabs_insert: "tsynAbs\<cdot>s = smap (\<lambda>e. case e of Msg m \<Rightarrow> m | Tick \<Rightarrow> undefined)\<cdot>
+                                                    (sfilter {e. e \<noteq> Tick}\<cdot>s)"
+  by (simp add: tsynAbs_def)
+
+lemma strict_tsynabs: "tsynAbs\<cdot>\<epsilon>=\<epsilon>"
+  by (simp add: tsynabs_insert)
+
+lemma tsynabs_infTicks: "tsynAbs\<cdot>(\<up>Tick\<infinity>) = \<epsilon>"
+  by (simp add: tsynabs_insert sfilter_sinftimes_nin)
+
+lemma tsynabs_tick: "tsynAbs\<cdot>(\<up>Tick \<bullet> (ts::'a event stream)) = tsynAbs\<cdot>ts"
+  by (simp add: tsynabs_insert)
+
+lemma tsynabs_conc: assumes "#s1<\<infinity>" shows "tsynAbs\<cdot>(s1 \<bullet> s2) = tsynAbs\<cdot>s1 \<bullet> tsynAbs\<cdot>s2"
+  by (simp add: add_sfilter2 assms smap_split tsynabs_insert)
+
+lemma tsynabs_slen_fin: assumes "#s<\<infinity>" shows "#(tsynAbs\<cdot>s)<\<infinity>"
+  by (metis assms inf_less_eq leI sfilterl4 slen_smap tsynabs_insert)
+
+lemma tsynabs_tsdom: "sdom\<cdot>(tsynAbs\<cdot>ts) = tsynDom\<cdot>ts"
+  apply (simp add: tsyndom_insert tsynabs_insert smap_sdom)
+sorry
 
 end
