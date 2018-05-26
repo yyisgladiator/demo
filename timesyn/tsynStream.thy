@@ -125,39 +125,34 @@ text {* @{term tsynAbs} insertion lemma. *}
 lemma tsynabs_insert: "tsynAbs\<cdot>s = smap eventAbs\<cdot>(sfilter {e. e \<noteq> Tick}\<cdot>s)"
   by (simp add: tsynAbs_def)
 
-text {* Test on infinitely many Ticks. *}
-lemma tsynabs_testTicks: "tsynAbs\<cdot>(\<up>Tick\<infinity>) = \<epsilon>"
+text {* @{term tsynAbs} test on infinitely many time-slots. *}
+lemma tsynabs_test_infticks: "tsynAbs\<cdot>(\<up>Tick\<infinity>) = \<epsilon>"
   by (simp add: tsynabs_insert sfilter_sinftimes_nin)
 
-text {* Test on event stream. *}
-lemma tsynabs_testStream: "tsynAbs\<cdot>(<[Msg 1, Msg 2, Tick, Tick, Msg 1, Tick]>) = <[1,2,1]>"
+text {* @{term tsynAbs} test on finite stream. *}
+lemma tsynabs_test_finstream: "tsynAbs\<cdot>(<[Msg 1, Msg 2, Tick, Tick, Msg 1, Tick]>) = <[1,2,1]>"
   by (simp add: tsynabs_insert)
 
-text {* The empty stream is mapped on the empty stream. *}
+text {* @{term tsynAbs} maps the empty stream on the empty stream. *}
 lemma tsynabs_strict [simp]: "tsynAbs\<cdot>\<epsilon> = \<epsilon>"
   by (simp add: tsynabs_insert)
 
-text {* Concatenation of an element and a stream equals the concatenation of the message and
-        @{term tsynAbs} of the rest.  *}
+text {* @{term tsynAbs} distributes over concatenation. *}
 lemma tsynabs_sconc_msg: "tsynAbs\<cdot>(\<up>(Msg a) \<bullet> as) = \<up>a \<bullet> (tsynAbs\<cdot>as)"
   by (simp add: tsynabs_insert)
 
-text {* Concatenated Ticks are ignored. *}
+text {* @{term tsynAbs} ignores empty time-slots. *}
 lemma tsynabs_sconc_tick: "tsynAbs\<cdot>(\<up>Tick \<bullet> s) = tsynAbs\<cdot>s"
   by (simp add: tsynabs_insert)
 
 text {* @{term tsynAbs} of the concatenation of two streams equals the concatenation of 
         @{term tsynAbs} of both streams. *}
-lemma tsynabs_sconc: assumes "#s1<\<infinity>" shows "tsynAbs\<cdot>(s1 \<bullet> s2) = tsynAbs\<cdot>s1 \<bullet> tsynAbs\<cdot>s2"
+lemma tsynabs_sconc: assumes "#as < \<infinity>" shows "tsynAbs\<cdot>(as \<bullet> bs) = tsynAbs\<cdot>as \<bullet> tsynAbs\<cdot>bs"
   by (simp add: add_sfilter2 assms smap_split tsynabs_insert)
 
 text {* Length of @{term tsynAbs} is smaller or equal to the length of the original stream.  *}
 lemma tsynabs_slen: "#(tsynAbs\<cdot>s) \<le> #s"
   by (simp add: slen_sfilterl1 tsynabs_insert)
-
-lemma tsynabs_tsdom: "tsynDom\<cdot>s = sdom\<cdot>(tsynAbs\<cdot>s)"  
-  apply (simp add: tsyndom_insert tsynabs_insert smap_sdom)
-sorry
 
 (* ----------------------------------------------------------------------- *)
   subsection {* tsynMap *}
