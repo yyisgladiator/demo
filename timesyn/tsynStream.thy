@@ -29,9 +29,28 @@ text {* @{term tsynDom}: Obtain the set of all stream messages. *}
 definition tsynDom :: "'a event stream \<rightarrow> 'a set" where
   "tsynDom \<equiv> \<Lambda> s. {m | m. (Msg m) \<in> sdom\<cdot>s}"
 
+text {* @{term eventAbs}: Return the corresponding non event element. *}
+fun eventAbs :: "'a event \<Rightarrow> 'a" where
+  "eventAbs Tick = undefined " |
+  "eventAbs (Msg a) = a"
+
+text {* @{term tsynAbs}: Filter the ticks and return the corresponding stream. *}
+definition tsynAbs:: "'a event stream \<rightarrow> 'a stream" where
+  "tsynAbs \<equiv> \<Lambda> s. smap eventAbs\<cdot>(sfilter {e. e \<noteq> Tick}\<cdot>s)"
+
 text {* @{term tsynMap}: Apply a function to all elements of the stream. *}
 definition tsynMap :: "('a \<Rightarrow> 'b) \<Rightarrow> 'a event stream \<rightarrow> 'b event stream" where
   "tsynMap f = smap (eventApply f)"
+
+text {* @{term eventApply}: Replace elements not inside the set with a emtpy time-slot. *}
+fun eventFilter :: "('a set) \<Rightarrow> 'a event \<Rightarrow> 'a event" where
+  "eventFilter _ Tick = Tick" |
+  "eventFilter A (Msg a) = (if a \<notin> A then Tick else (Msg a))"
+
+text {* @{term tsynFilter}: Remove all elements from the stream which are not included in the given
+                            set. *}
+definition tsynFilter :: "'a set \<Rightarrow> 'a event stream \<rightarrow> 'a event stream" where
+  "tsynFilter A = smap (eventFilter A)"
 
 (* ----------------------------------------------------------------------- *)
   section {* Lemmata on Time-Synchronous Streams *}
