@@ -118,6 +118,48 @@ lemma tsyndom_sconc_tick [simp]: "tsynDom\<cdot>(\<up>Tick \<bullet> s) = tsynDo
       sup_bot.left_neutral tsyndom_insert)
 
 (* ----------------------------------------------------------------------- *)
+  subsection {* tsynAbs *}
+(* ----------------------------------------------------------------------- *)
+
+text {* @{term tsynAbs} insertion lemma. *}
+lemma tsynabs_insert: "tsynAbs\<cdot>s = smap eventAbs\<cdot>(sfilter {e. e \<noteq> Tick}\<cdot>s)"
+  by (simp add: tsynAbs_def)
+
+text {* Test on infinitely many Ticks. *}
+lemma tsynabs_testTicks: "tsynAbs\<cdot>(\<up>Tick\<infinity>) = \<epsilon>"
+  by (simp add: tsynabs_insert sfilter_sinftimes_nin)
+
+text {* Test on event stream. *}
+lemma tsynabs_testStream: "tsynAbs\<cdot>(<[Msg 1, Msg 2, Tick, Tick, Msg 1, Tick]>) = <[1,2,1]>"
+  by (simp add: tsynabs_insert)
+
+text {* The empty stream is mapped on the empty stream. *}
+lemma tsynabs_strict [simp]: "tsynAbs\<cdot>\<epsilon> = \<epsilon>"
+  by (simp add: tsynabs_insert)
+
+text {* Concatenation of an element and a stream equals the concatenation of the message and
+        @{term tsynAbs} of the rest.  *}
+lemma tsynabs_sconc_msg: "tsynAbs\<cdot>(\<up>(Msg a) \<bullet> as) = \<up>a \<bullet> (tsynAbs\<cdot>as)"
+  by (simp add: tsynabs_insert)
+
+text {* Concatenated Ticks are ignored. *}
+lemma tsynabs_sconc_tick: "tsynAbs\<cdot>(\<up>Tick \<bullet> s) = tsynAbs\<cdot>s"
+  by (simp add: tsynabs_insert)
+
+text {* @{term tsynAbs} of the concatenation of two streams equals the concatenation of 
+        @{term tsynAbs} of both streams. *}
+lemma tsynabs_sconc: assumes "#s1<\<infinity>" shows "tsynAbs\<cdot>(s1 \<bullet> s2) = tsynAbs\<cdot>s1 \<bullet> tsynAbs\<cdot>s2"
+  by (simp add: add_sfilter2 assms smap_split tsynabs_insert)
+
+text {* Length of @{term tsynAbs} is smaller or equal to the length of the original stream.  *}
+lemma tsynabs_slen: "#(tsynAbs\<cdot>s) \<le> #s"
+  by (simp add: slen_sfilterl1 tsynabs_insert)
+
+lemma tsynabs_tsdom: "tsynDom\<cdot>s = sdom\<cdot>(tsynAbs\<cdot>s)"  
+  apply (simp add: tsyndom_insert tsynabs_insert smap_sdom)
+sorry
+
+(* ----------------------------------------------------------------------- *)
   subsection {* tsynMap *}
 (* ----------------------------------------------------------------------- *)
 
@@ -263,34 +305,5 @@ lemma tsynsum_even_h: assumes "tsynDom\<cdot>ts \<subseteq> {n. even n}"
 lemma tsynsum_even: assumes "tsynDom\<cdot>ts \<subseteq> {n. even n}"
   shows "tsynDom\<cdot>(tsynSum\<cdot>ts) \<subseteq> {n. even n}"
   by (simp add: assms tsynSum_def tsynsum_even_h)
-
-(* ----------------------------------------------------------------------- *)
-  subsection {* tsynAbs *}
-(* ----------------------------------------------------------------------- *)
-
-thm tsynAbs_def
-
-lemma tsynabs_insert: "tsynAbs\<cdot>s = smap (\<lambda>e. case e of Msg m \<Rightarrow> m | Tick \<Rightarrow> undefined)\<cdot>
-                                                    (sfilter {e. e \<noteq> Tick}\<cdot>s)"
-  by (simp add: tsynAbs_def)
-
-lemma strict_tsynabs: "tsynAbs\<cdot>\<epsilon>=\<epsilon>"
-  by (simp add: tsynabs_insert)
-
-lemma tsynabs_infTicks: "tsynAbs\<cdot>(\<up>Tick\<infinity>) = \<epsilon>"
-  by (simp add: tsynabs_insert sfilter_sinftimes_nin)
-
-lemma tsynabs_tick: "tsynAbs\<cdot>(\<up>Tick \<bullet> (ts::'a event stream)) = tsynAbs\<cdot>ts"
-  by (simp add: tsynabs_insert)
-
-lemma tsynabs_conc: assumes "#s1<\<infinity>" shows "tsynAbs\<cdot>(s1 \<bullet> s2) = tsynAbs\<cdot>s1 \<bullet> tsynAbs\<cdot>s2"
-  by (simp add: add_sfilter2 assms smap_split tsynabs_insert)
-
-lemma tsynabs_slen_fin: assumes "#s<\<infinity>" shows "#(tsynAbs\<cdot>s)<\<infinity>"
-  by (metis assms inf_less_eq leI sfilterl4 slen_smap tsynabs_insert)
-
-lemma tsynabs_tsdom: "sdom\<cdot>(tsynAbs\<cdot>ts) = tsynDom\<cdot>ts"
-  apply (simp add: tsyndom_insert tsynabs_insert smap_sdom)
-sorry
 
 end
