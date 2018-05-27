@@ -66,6 +66,12 @@ text {* @{term tsynAbs}: Filter the nulls and return the corresponding stream. *
 definition tsynAbs:: "'a tsyn stream \<rightarrow> 'a stream" where
   "tsynAbs \<equiv> \<Lambda> s. smap tsynAbsElem\<cdot>(sfilter {e. e \<noteq> Null}\<cdot>s)"
 
+(* ToDo: add abbreviation *)
+
+text {* @{term tsynLen}: Return the number of messages. *}
+definition tsynLen:: "'a tsyn stream \<rightarrow> lnat" where 
+  "tsynLen \<equiv> \<Lambda> s. #(tsynAbs\<cdot>s)"
+
 text {* @{term tsynApplyElem}: Apply the function direct to the message. *}
 fun tsynApplyElem :: "('a \<Rightarrow> 'b) \<Rightarrow> 'a tsyn \<Rightarrow> 'b tsyn" where
   "tsynApplyElem _ Null = Null" |
@@ -75,7 +81,7 @@ text {* @{term tsynMap}: Apply a function to all elements of the stream. *}
 definition tsynMap :: "('a \<Rightarrow> 'b) \<Rightarrow> 'a tsyn stream \<rightarrow> 'b tsyn stream" where
   "tsynMap f = smap (tsynApplyElem f)"
 
-text {* @{term tsynApplyElem}: Replace elements not inside the set with a emtpy time-slot. *}
+text {* @{term tsynFilterElem}: Replace elements not inside the set with a emtpy time-slot. *}
 fun tsynFilterElem :: "('a set) \<Rightarrow> 'a tsyn \<Rightarrow> 'a tsyn" where
   "tsynFilterElem _ Null = Null" |
   "tsynFilterElem A (Msg a) = (if a \<notin> A then Null else (Msg a))"
