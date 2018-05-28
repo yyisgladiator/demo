@@ -62,6 +62,21 @@ fun tsynAbsElem :: "'a tsyn \<Rightarrow> 'a" where
   "tsynAbsElem Null = undefined " |
   "tsynAbsElem (Msg a) = a"
 
+instantiation tsyn :: (countable) cpo
+begin
+  definition below_tsyn_def: "below_tsyn_def \<equiv> below"
+  instance
+    apply (intro_classes)
+    sorry
+end
+
+definition tsynMsg :: "'a tsyn discr \<rightarrow> 'a tsyn" where
+  "tsynMsg \<equiv> \<Lambda> a. case a of Discr (Msg m) \<Rightarrow> (Msg m) | Discr Null \<Rightarrow> Null"
+
+fixrec tsynRemDups :: "'a tsyn stream \<rightarrow> 'a discr option \<rightarrow> 'a tsyn stream" where
+  "tsynRemDups\<cdot>\<epsilon>\<cdot>option = \<epsilon>" |
+  "tsynRemDups\<cdot>(up\<cdot>a && as)\<cdot>option = tsynRemDups\<cdot>as\<cdot>option"
+ 
 text {* @{term tsynAbs}: Filter the nulls and return the corresponding stream. *}
 definition tsynAbs:: "'a tsyn stream \<rightarrow> 'a stream" where
   "tsynAbs \<equiv> \<Lambda> s. smap tsynAbsElem\<cdot>(sfilter {e. e \<noteq> Null}\<cdot>s)"
