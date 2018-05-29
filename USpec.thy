@@ -15,11 +15,19 @@ default_sort ufuncl
 section\<open>Data type\<close>
 (****************************************************) 
   
-definition uspecWell :: "'m set \<Rightarrow> bool" where
-"uspecWell S \<equiv> \<exists>In Out. \<forall> f\<in>S . (ufclDom\<cdot>f = In \<and> ufclRan\<cdot>f=Out) "
+fun uspecWell :: "'m set rev \<Rightarrow> channel set discr \<Rightarrow> channel set discr \<Rightarrow> bool" where
+"uspecWell (Rev S) (Discr csIn) (Discr csOut)  = (\<forall> f\<in>S . (ufclDom\<cdot>f = csIn \<and> ufclRan\<cdot>f=csOut) )"
 (* define a Set of 'm SPF's. all SPS in a set must have the same In/Out channels *)
 
-lemma uspecwell_adm: "adm (\<lambda>x::'m set rev. x \<in> {S::'m set rev. uspecWell (inv Rev S)})"
+lemma uspecwell_exists: "uspecWell (Rev {}) (Discr {}) (Discr {})"
+  by simp
+
+lemma uspecwell_adm: "adm (\<lambda> (S::'m set rev, csIn::channel set discr, csOut::channel set discr). uspecWell S csIn csOut)"
+  apply(rule admI)
+  apply auto
+  sorry
+
+(*lemma uspecwell_admOLD: "adm (\<lambda>x::'m set rev. x \<in> {S::'m set rev. uspecWell (inv Rev S)})"
 proof (rule admI)
   fix Y::"nat \<Rightarrow> 'm set rev"
   assume assm1: "chain Y" 
@@ -41,12 +49,11 @@ proof (rule admI)
   then  show "(\<Squnion>i::nat. Y i) \<in> {S::'m set rev. uspecWell (inv Rev S)}"
     by simp
 qed
+*)
 
-cpodef 'm uspec = "{S :: 'm set rev. uspecWell (inv Rev S) }"
-   apply(simp add: uspecWell_def)
-   apply (rule_tac x="Rev {}" in exI)
-   apply (metis UNIV_I empty_iff f_inv_into_f rev.exhaust rev.inject surj_def)
-  using uspecwell_adm by simp
+cpodef 'm uspec = "{(S::'m set rev, csIn :: channel set discr, csOut::channel set discr). uspecWell S csIn csOut }"
+  using uspecwell_exists apply blast
+  by(simp add: uspecwell_adm)
 
 setup_lifting type_definition_uspec
 
@@ -58,17 +65,30 @@ section\<open>Definitions\<close>
 subsection\<open>abbreviations\<close>
 
 abbreviation Rep_rev_uspec:: "'m uspec \<Rightarrow> 'm set" where
-"Rep_rev_uspec uspec \<equiv> inv Rev (Rep_uspec uspec)"
+"Rep_rev_uspec uspec \<equiv> inv Rev (fst (Rep_uspec uspec))"
 
-abbreviation Abs_rev_uspec:: "'m set \<Rightarrow> 'm uspec" where
-"Abs_rev_uspec spec \<equiv> Abs_uspec (Rev spec)"
+abbreviation Abs_rev_uspec:: "'m set \<Rightarrow> channel set \<Rightarrow> channel set \<Rightarrow> 'm uspec" where
+"Abs_rev_uspec spec csIn csOut \<equiv> Abs_uspec ((Rev spec), Discr csIn, Discr csOut)"
 
 
-definition uspecDom :: "'m uspec \<Rightarrow> channel set" where
-"uspecDom S = ufclDom\<cdot>(SOME f. f\<in>  ((inv Rev) (Rep_uspec S)))"
 
-definition uspecRan :: "'m uspec \<Rightarrow> channel set" where
-"uspecRan S = ufclRan\<cdot>(SOME f. f\<in> ((inv Rev) (Rep_uspec S)))"
+
+definition uspecRevSet :: "'m uspec \<rightarrow> 'm set rev" where
+"uspecRevSet = (\<Lambda> uspec. (fst (Rep_uspec uspec)))"
+
+definition uspecDom :: "'m uspec \<rightarrow> channel set" where
+"uspecDom = (\<Lambda> S. undiscr (fst (snd (Rep_uspec S))))"
+
+lemma "cont (\<lambda> S. undiscr (fst (snd (Rep_uspec S))))"
+  apply(rule contI2)
+   apply(rule monofunI)
+   apply (metis (mono_tags, lifting) below_uspec_def discrete_cpo eq_imp_below snd_monofun)
+  apply auto
+  by (smt below_uspec_def discrete_cpo is_ub_thelub lub_const lub_eq po_eq_conv snd_monofun)
+  
+
+definition uspecRan :: "'m uspec \<rightarrow> channel set" where
+"uspecRan = (\<Lambda> S. undiscr (snd (snd (Rep_uspec S))))"
 
 
 (****************************************************)
@@ -76,7 +96,7 @@ section\<open>Predicates\<close>
 (****************************************************) 
 
 definition uspecIsConsistent :: "'m uspec \<Rightarrow> bool" where
-"uspecIsConsistent S \<equiv> (((inv Rev) (Rep_uspec S)) \<noteq> {})"
+"uspecIsConsistent S \<equiv> ((Rep_rev_uspec S) \<noteq> {})"
 
 
 (****************************************************)
@@ -85,17 +105,16 @@ section\<open>Lemmas\<close>
 subsection \<open>General Lemmas\<close>
 
 lemma uspec_wellI: assumes "\<forall> f \<in> S. ufclDom\<cdot>f = In" and "\<forall> f \<in> S. ufclRan\<cdot>f = Out"
-  shows "uspecWell S"
-  apply (simp add: uspecWell_def)
-  apply (rule_tac x= "In" in exI)
-  apply (rule_tac x= "Out" in exI)
-  using assms(1) assms(2) by auto
+  shows "uspecWell (Rev S) (Discr In) (Discr Out)"
+  by (simp add: assms(1) assms(2))
 
 
 (* rule to prove the equality of uspec *)
-lemma uspec_eqI: assumes "((inv Rev) (Rep_uspec S1)) = ((inv Rev) (Rep_uspec S2))"
+lemma uspec_eqI: assumes "uspecRevSet\<cdot>S1 = uspecRevSet\<cdot>S2"
+  and "uspecDom\<cdot>S1 = uspecDom\<cdot>S2"
+  and "uspecRan\<cdot>S1 = uspecRan\<cdot>S2"
   shows "S1 = S2"
-  by (metis Rep_uspec_inverse UNIV_I assms f_inv_into_f image_eqI rev.exhaust)
+  sorry
 
 lemma uspec_eqI2: assumes "\<And>f1 . f1\<in>((inv Rev) (Rep_uspec S1)) \<Longrightarrow> f1\<in>((inv Rev) (Rep_uspec S2))" 
       and "\<And>f2 . f2\<in>((inv Rev) (Rep_uspec S2)) \<Longrightarrow> f2\<in>((inv Rev) (Rep_uspec S1))"
