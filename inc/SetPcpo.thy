@@ -213,30 +213,31 @@ lemma union_cont:"cont (\<lambda>S2. union S1 S2)"
   unfolding lub_eq_Union 
   by (metis (no_types, lifting) UN_simps(3) Union_is_lub empty_not_UNIV lub_eq lub_eqI)
     
-definition setify_no_rev::"('m \<Rightarrow> 'n set rev) \<Rightarrow> ('m \<Rightarrow> 'n) set" where
-"setify_no_rev f = {g. \<forall>m. \<exists>x. g m = x \<and> x \<in> (inv Rev(f m))}"
-
 definition setify::"('m \<Rightarrow> ('n set rev)) \<rightarrow> ('m \<Rightarrow> 'n) set rev" where
-"setify \<equiv> \<Lambda> f. Rev (setify_no_rev f)"
+"setify \<equiv> \<Lambda> f. Rev {g. \<forall>m. g m \<in> (inv Rev(f m))}"
 
-lemma setify_mono:"monofun (\<lambda>f. Rev (setify_no_rev f))"
+lemma setify_mono:"monofun (\<lambda>f. Rev {g. \<forall>m. g m \<in> (inv Rev(f m))})"
 proof(rule rev_monoI)
   fix f y::"'a \<Rightarrow> 'b set rev"
   assume a1:"f\<sqsubseteq>y"
-  show "setify_no_rev y \<sqsubseteq> setify_no_rev f"
-    apply(simp add: setify_no_rev_def)
+  show "{g::'a \<Rightarrow> 'b. \<forall>m::'a. g m \<in> inv Rev (y m)} \<sqsubseteq> {g::'a \<Rightarrow> 'b. \<forall>m::'a. g m \<in> inv Rev (f m)}"
     by (smt Collect_mono SetPcpo.less_set_def a1 below_rev.elims(2) contra_subsetD fun_below_iff inv_rev_rev)
 qed
-  
-lemma setify_cont:"cont (\<lambda>f. Rev (setify_no_rev f))"
-proof(rule Cont.contI2,simp add: setify_mono)
+ 
+lemma rev_set_below:"(S1::'m set rev) \<sqsubseteq> (S2::'m set rev) \<longleftrightarrow> (inv Rev S2)\<subseteq>(inv Rev S1)"
+  by (metis SetPcpo.less_set_def below_rev.simps rev_inv_rev)
+
+    (*
+lemma setify_cont:"cont (\<lambda>f. Rev {g. \<forall>m. g m \<in> (inv Rev(f m))})"
+proof(rule Cont.contI2, simp add: setify_mono)
   fix Y::"nat \<Rightarrow> 'a \<Rightarrow> 'b set rev"
   assume a1:"chain Y"
-  assume a2:"chain (\<lambda>i::nat. Rev (setify_no_rev (Y i)))"
-  show "Rev (setify_no_rev (\<Squnion>i::nat. Y i)) \<sqsubseteq> (\<Squnion>i::nat. Rev (setify_no_rev (Y i)))"
-    apply(simp add: setify_no_rev_def)
+  assume a2:"chain (\<lambda>i::nat. Rev {g::'a \<Rightarrow> 'b. \<forall>m::'a. g m \<in> inv Rev (Y i m)})"
+  have a3:"\<forall>m. chain (\<lambda>i. Y i m)"
+    by (simp add: a1 ch2ch_fun)
+  show "Rev {g::'a \<Rightarrow> 'b. \<forall>m::'a. g m \<in> inv Rev ((\<Squnion>i::nat. Y i) m)} \<sqsubseteq> (\<Squnion>i::nat. Rev {g::'a \<Rightarrow> 'b. \<forall>m::'a. g m \<in> inv Rev (Y i m)})"
+    apply(subst rev_set_below, simp add: inv_rev_rev)
     sorry
-qed 
-  
+qed*)
                            
 end
