@@ -62,21 +62,6 @@ fun tsynAbsElem :: "'a tsyn \<Rightarrow> 'a" where
   "tsynAbsElem Null = undefined " |
   "tsynAbsElem (Msg a) = a"
 
-instantiation tsyn :: (countable) cpo
-begin
-  definition below_tsyn_def: "below_tsyn_def \<equiv> below"
-  instance
-    apply (intro_classes)
-    sorry
-end
-
-definition tsynMsg :: "'a tsyn discr \<rightarrow> 'a tsyn" where
-  "tsynMsg \<equiv> \<Lambda> a. case a of Discr (Msg m) \<Rightarrow> (Msg m) | Discr Null \<Rightarrow> Null"
-
-fixrec tsynRemDups :: "'a tsyn stream \<rightarrow> 'a discr option \<rightarrow> 'a tsyn stream" where
-  "tsynRemDups\<cdot>\<epsilon>\<cdot>option = \<epsilon>" |
-  "tsynRemDups\<cdot>(up\<cdot>a && as)\<cdot>option = tsynRemDups\<cdot>as\<cdot>option"
- 
 text {* @{term tsynAbs}: Filter the nulls and return the corresponding stream. *}
 definition tsynAbs:: "'a tsyn stream \<rightarrow> 'a stream" where
   "tsynAbs \<equiv> \<Lambda> s. smap tsynAbsElem\<cdot>(sfilter {e. e \<noteq> Null}\<cdot>s)"
@@ -105,6 +90,27 @@ text {* @{term tsynFilter}: Remove all elements from the stream which are not in
                             set. *}
 definition tsynFilter :: "'a set \<Rightarrow> 'a tsyn stream \<rightarrow> 'a tsyn stream" where
   "tsynFilter A = smap (tsynFilterElem A)"
+
+fun tsynElem :: "'a tsyn discr  \<Rightarrow> 'a tsyn" where
+  "tsynElem (Discr (Msg m)) = (Msg m)" |
+  "tsynElem (Discr Null) = Null"
+
+fixrec tsynRemDups :: "'a tsyn stream \<rightarrow> 'a tsyn discr option \<rightarrow> 'a tsyn stream" where
+  "tsynRemDups\<cdot>\<epsilon>\<cdot>option = \<epsilon>" |
+  "tsynRemDups\<cdot>(up\<cdot>a && as)\<cdot>None = (
+     if (tsynElem a) = Null then up\<cdot>a && tsynRemDups\<cdot>as\<cdot>None
+     else up\<cdot>a && tsynRemDups\<cdot>as\<cdot>(Some a)
+  )" |
+  "tsynRemDups\<cdot>(up\<cdot>a && as)\<cdot>(Some b) = (
+     if a = b then up\<cdot>(Discr Null) && tsynRemDups\<cdot>as\<cdot>(Some b)
+     else up\<cdot>a && tsynRemDups\<cdot>as\<cdot>(Some a)
+  )"
+
+lemma "tsynRemDups\<cdot>(\<up>Null \<bullet> as)\<cdot>None = \<up>Null \<bullet> tsynRemDups\<cdot>as\<cdot>None"
+  by (metis lscons_conv tsynElem.simps(2) tsynRemDups.simps(2))
+
+lemma "a \<noteq> Null \<Longrightarrow> tsynRemDups\<cdot>(\<up>(Msg a) \<bullet> as)\<cdot>None = \<up>(Msg a) \<bullet> tsynRemDups\<cdot>as\<cdot>(Some (Discr (Msg a)))"
+  by (metis lscons_conv tsyn.simps(3) tsynElem.simps(1) tsynRemDups.simps(2))  
 
 (* ----------------------------------------------------------------------- *)
   section {* Lemmata on Time-Synchronous Streams *}
