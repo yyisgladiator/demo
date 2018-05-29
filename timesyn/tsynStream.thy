@@ -194,6 +194,39 @@ lemma tsynabs_slen: "#(tsynAbs\<cdot>s) \<le> #s"
   by (simp add: slen_sfilterl1 tsynabs_insert)
 
 (* ----------------------------------------------------------------------- *)
+  subsection {* tsynFilter *}
+(* ----------------------------------------------------------------------- *)
+
+text {* @{term tsynFilter} test on infinitely many time-slots. *}
+lemma tsynFilter_test_infnulls: "(tsynFilter A)\<cdot>(\<up>Null\<infinity>) = \<up>Null\<infinity>"
+  by (simp add: tsynFilter_def)
+
+text {* @{term tsynFilter} test on finite nat tsyn-stream. *}
+lemma tsynFilter_test_finstream: "(tsynFilter {(1::nat),2})\<cdot>(<[Msg 1, Msg 2, Null, Msg 3, Null, Msg 1, Null, Msg 4]>) =<[Msg 1, Msg 2, Null, Null, Null, Msg 1, Null, Null]>"
+  by (simp add: tsynFilter_def)
+
+text {* @{term tsynFilter} maps the empty stream on the empty stream. *}
+lemma tsynFilter_strict [simp]: "(tsynFilter A)\<cdot>\<epsilon> = \<epsilon>"
+  by (simp add: tsynFilter_def)
+
+text {* @{term tsynFilter} distributes over concatenation, having the first Stream consist of one Msg-element. *}
+lemma tsynFilter_sconc_Msg: "(tsynFilter A)\<cdot>(\<up>(Msg m) \<bullet> as) =  \<up>(if m \<notin> A then Null else (Msg m)) \<bullet> (tsynFilter A)\<cdot>as"
+  by (simp add: tsynFilter_def)
+
+text {* @{term tsynFilter} distributes over concatenation, having the first Stream consist of one Null-element. *}
+lemma tsynFilter_sconc_Null: "(tsynFilter A)\<cdot>(\<up>(Null)\<bullet> as) =  \<up>(Null) \<bullet> (tsynFilter A)\<cdot>as"
+  by (simp add: tsynFilter_def)
+
+text {*@{term tsynFilter} of the concatenation of two streams equals the concatenation of 
+        @{term tsynFilter} of both streams. *}
+lemma tsynFilter_sconc: assumes "#a1 < \<infinity>" shows "(tsynFilter A)\<cdot>(a1 \<bullet> a2) =  (tsynFilter A)\<cdot>a1 \<bullet> (tsynFilter A)\<cdot>a2"
+  by (simp add: assms smap_split tsynFilter_def)
+  
+text {* Length of @{term tsynFilter} is equal to the length of the original stream. *}
+lemma tsynFilter_slen: "#((tsynFilter A)\<cdot>s) = #s"
+  by (simp add: tsynFilter_def)
+
+(* ----------------------------------------------------------------------- *)
   subsection {* tsynMap *}
 (* ----------------------------------------------------------------------- *)
 
