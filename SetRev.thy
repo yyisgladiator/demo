@@ -51,7 +51,8 @@ lemma setrevLubEqInter:  "\<And>Y::nat \<Rightarrow> 'a set rev.
   chain Y \<Longrightarrow> (\<Squnion>i. Y i) = Rev (\<Inter>{x. \<exists>i. x = inv Rev (Y i)})"
   using SLEI_help1 SLEI_help2 po_eq_conv by blast   
 
-(* sometime this form is more useful *)
+(* sometimes this form is more useful *)
+
 lemma setrevLubEqInterII: "\<And>Y::nat \<Rightarrow> 'a set rev. 
   chain Y \<Longrightarrow> inv Rev (\<Squnion>i. Y i) = (\<Inter>{x. \<exists>i. x = inv Rev (Y i)})"
   by (metis (mono_tags, lifting) inv_rev_rev setrevLubEqInter) 
@@ -87,6 +88,16 @@ proof -
     (\<Squnion>i::nat. Rev (Set.filter P (inv Rev (Y i))))"
     by presburger
 qed
+
+lemma setrevfilter_mono: "monofun (\<lambda> S::'a set rev. Rev (Set.filter P (inv Rev S)))"
+  apply (rule monofunI)
+  by (metis (full_types) SetPcpo.less_set_def below_rev.elims(2) below_rev.simps inv_rev_rev 
+    member_filter subset_iff)
+
+lemma setrevfilter_cont[simp]:  "cont (\<lambda> S::'a set rev. Rev (Set.filter P (inv Rev S)))"
+  apply (rule Cont.contI2)
+  apply (simp add: setrevfilter_mono)
+  by (simp add: setrevFilter_chain)
 
 
 end
