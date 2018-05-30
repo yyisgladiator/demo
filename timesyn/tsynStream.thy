@@ -28,7 +28,7 @@ abbreviation inversMsg ::  "'a tsyn \<Rightarrow> 'a"  ("\<M>\<inverse> _") wher
   "inversMsg e \<equiv> (case e of \<M> m \<Rightarrow> m)"
 
 text {* Prove that datatype tsyn is countable. Needed, since the domain-constructor defined
- to work for countable types .*}
+        to work for countable types .*}
 instance tsyn :: (countable) countable
   by countable_datatype
 
@@ -87,7 +87,7 @@ fun tsynFilterElem :: "('a set) \<Rightarrow> 'a tsyn \<Rightarrow> 'a tsyn" whe
   "tsynFilterElem A (Msg a) = (if a \<notin> A then Null else (Msg a))"
 
 text {* @{term tsynFilter}: Remove all elements from the stream which are not included in the given
-                            set. *}
+        set. *}
 definition tsynFilter :: "'a set \<Rightarrow> 'a tsyn stream \<rightarrow> 'a tsyn stream" where
   "tsynFilter A = smap (tsynFilterElem A)"
 
@@ -194,47 +194,6 @@ lemma tsynabs_slen: "#(tsynAbs\<cdot>s) \<le> #s"
   by (simp add: slen_sfilterl1 tsynabs_insert)
 
 (* ----------------------------------------------------------------------- *)
-  subsection {* tsynFilter *}
-(* ----------------------------------------------------------------------- *)
-
-text {* @{term tsynAbs} insertion lemma. *}
-lemma tsynfilter_insert: "(tsynFilter A)\<cdot>s =  smap (tsynFilterElem A)\<cdot>s"
-  by (simp add: tsynFilter_def)
-
-text {* @{term tsynFilter} test on infinitely many time-slots.*}
-lemma tsynfilter_test_infstream: assumes "c \<noteq> a \<and> c \<noteq> b" shows "(tsynFilter {a,b})\<cdot>((<[Msg a, Msg c, Null, Msg b]>)\<infinity>) = (<[Msg a, Null, Null, Msg b]>)\<infinity>"
-  by (simp add: assms tsynfilter_insert)
-
-text {* @{term tsynFilter} test on finite nat tsyn-stream. *}
-lemma tsynfilter_test_finstream: "(tsynFilter {(1::nat),2})\<cdot>(<[Msg 1, Msg 2, Null, Msg 3, Null, Msg 1, Null, Msg 4]>) =<[Msg 1, Msg 2, Null, Null, Null, Msg 1, Null, Null]>"
-  by (simp add: tsynfilter_insert)
-
-text {* @{term tsynFilter} maps the empty stream on the empty stream. *}
-lemma tsynfilter_strict [simp]: "(tsynFilter A)\<cdot>\<epsilon> = \<epsilon>"
-  by (simp add: tsynfilter_insert)
-
-text {* @{term tsynFilter} distributes over concatenation, having the first Stream consist of one Msg-element included in the given set. *}
-lemma tsynfilter_sconc_msg_in: assumes "m \<in> A" shows "(tsynFilter A)\<cdot>(\<up>(Msg m) \<bullet> as) =  \<up>(Msg m) \<bullet> (tsynFilter A)\<cdot>as"
-  by (simp add: assms tsynfilter_insert)
-
-text {* @{term tsynFilter} distributes over concatenation, having the first Stream consist of one Msg-element not included in the given set. *}
-lemma tsynfilter_sconc_msg_nin: assumes "m \<notin> A" shows"(tsynFilter A)\<cdot>(\<up>(Msg m) \<bullet> as) =  \<up>(Null) \<bullet> (tsynFilter A)\<cdot>as"
-  by (simp add: assms tsynfilter_insert)
-
-text {* @{term tsynFilter} distributes over concatenation, having the first Stream consist of one Null-element. *}
-lemma tsynfilter_sconc_null: "(tsynFilter A)\<cdot>(\<up>(Null)\<bullet> as) =  \<up>(Null) \<bullet> (tsynFilter A)\<cdot>as"
-  by (simp add: tsynfilter_insert)
-
-text {*@{term tsynFilter} of the concatenation of two streams equals the concatenation of 
-        @{term tsynFilter} of both streams. *}
-lemma tsynfilter_sconc: "(tsynFilter A)\<cdot>(a1 \<bullet> a2) =  (tsynFilter A)\<cdot>a1 \<bullet> (tsynFilter A)\<cdot>a2"
-  by (simp add: smap_split tsynfilter_insert)
-  
-text {* Length of @{term tsynFilter} is equal to the length of the original stream. *}
-lemma tsynfilter_slen: "#((tsynFilter A)\<cdot>s) = #s"
-  by (simp add: tsynfilter_insert)
-
-(* ----------------------------------------------------------------------- *)
   subsection {* tsynMap *}
 (* ----------------------------------------------------------------------- *)
 
@@ -258,6 +217,54 @@ text {* @{term tsynMap} leaves the length of a stream unchanged. *}
 lemma tsynmap_slen [simp]: "#(tsynMap f\<cdot>s) = #s"
   by (simp add: tsynmap_insert)
 
+(* ----------------------------------------------------------------------- *)
+  subsection {* tsynFilter *}
+(* ----------------------------------------------------------------------- *)
+
+text {* @{term tsynAbs} insertion lemma. *}
+lemma tsynfilter_insert: "(tsynFilter A)\<cdot>s =  smap (tsynFilterElem A)\<cdot>s"
+  by (simp add: tsynFilter_def)
+
+text {* @{term tsynFilter} test on infinitely many time-slots.*}
+lemma tsynfilter_test_infstream: assumes "c \<noteq> a \<and> c \<noteq> b" 
+  shows "(tsynFilter {a,b})\<cdot>((<[Msg a, Msg c, Null, Msg b]>)\<infinity>) = (<[Msg a, Null, Null, Msg b]>)\<infinity>"
+  by (simp add: assms tsynfilter_insert)
+
+text {* @{term tsynFilter} test on finite nat tsyn-stream. *}
+lemma tsynfilter_test_finstream: 
+  "(tsynFilter {(1::nat),2})\<cdot>(<[Msg 1, Msg 2, Null, Msg 3, Null, Msg 1, Null, Msg 4]>) 
+     = <[Msg 1, Msg 2, Null, Null, Null, Msg 1, Null, Null]>"
+  by (simp add: tsynfilter_insert)
+
+text {* @{term tsynFilter} maps the empty stream on the empty stream. *}
+lemma tsynfilter_strict [simp]: "(tsynFilter A)\<cdot>\<epsilon> = \<epsilon>"
+  by (simp add: tsynfilter_insert)
+
+text {* @{term tsynFilter} distributes over concatenation, having the first Stream consist of 
+        one Msg-element included in the given set. *}
+lemma tsynfilter_sconc_msg_in: assumes "m \<in> A"
+   shows "(tsynFilter A)\<cdot>(\<up>(Msg m) \<bullet> as) = \<up>(Msg m) \<bullet> (tsynFilter A)\<cdot>as"
+  by (simp add: assms tsynfilter_insert)
+
+text {* @{term tsynFilter} distributes over concatenation, having the first Stream consist of one 
+        Msg-element not included in the given set. *}
+lemma tsynfilter_sconc_msg_nin: assumes "m \<notin> A" 
+  shows"(tsynFilter A)\<cdot>(\<up>(Msg m) \<bullet> as) = \<up>(Null) \<bullet> (tsynFilter A)\<cdot>as"
+  by (simp add: assms tsynfilter_insert)
+
+text {* @{term tsynFilter} distributes over concatenation, having the first Stream consist of one 
+        Null-element. *}
+lemma tsynfilter_sconc_null: "(tsynFilter A)\<cdot>(\<up>(Null)\<bullet> as) = \<up>(Null) \<bullet> (tsynFilter A)\<cdot>as"
+  by (simp add: tsynfilter_insert)
+
+text {*@{term tsynFilter} of the concatenation of two streams equals the concatenation of 
+        @{term tsynFilter} of both streams. *}
+lemma tsynfilter_sconc: "(tsynFilter A)\<cdot>(a1 \<bullet> a2) = (tsynFilter A)\<cdot>a1 \<bullet> (tsynFilter A)\<cdot>a2"
+  by (simp add: smap_split tsynfilter_insert)
+  
+text {* Length of @{term tsynFilter} is equal to the length of the original stream. *}
+lemma tsynfilter_slen: "#((tsynFilter A)\<cdot>s) = #s"
+  by (simp add: tsynfilter_insert)
 
 
 (* ToDo: adjustments. *)
