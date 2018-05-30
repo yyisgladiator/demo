@@ -9,7 +9,7 @@ section \<open>generated lemmata\<close>
   
 (*Transition*)
 lemma evenTraTick[simp]:"evenAutomatonTransition (state, [c1 \<mapsto> \<surd>]) = (state,(tsynbOneTick c2) )"
-  by (metis (full_types) EvenAutomatonState.exhaust EvenAutomatonSubstate.exhaust evenAutomatonTransition.simps(2) evenAutomatonTransition.simps(4))
+  using evenTraTick by blast
         
 lemma tran_sum_even[simp]: assumes "Parity.even (summe + m)" shows "evenAutomatonTransition (State ooo summe, [c1 \<mapsto> \<M>(A m)]) = (State Even (summe + m), createC2Bundle True)"
   apply (cases ooo)
@@ -205,7 +205,9 @@ lemma  msg_assms: "EvenStream (State ooo summe)\<cdot>(\<up>(Msg m) \<bullet> xs
       apply(simp add: evenStream_insert h_final ubdom_ubrep_eq getDom_def h_out_dom 
                       sbHdElem_2_shd2 autGetNextOutput_def autGetNextState_def
                       getTransition_def getRan_def EvenAutomatonAutomaton.rep_eq ubgetch_ubrep_eq)
-      using True ubConc_usclConc_eq_apply by auto
+     using True ubConc_usclConc_eq_apply apply auto
+     by (smt EvenAutomatonSubstate.exhaust True add.commute dvd_imp_mod_0 evenAutomatonTransitionH.simps(1) evenAutomatonTransitionH.simps(3) fst_conv odd_iff_mod_2_eq_one snd_conv)+
+
   next
     case False
     have assms1: "c2 \<in> ubDom\<cdot>(createC2Bundle False)"
@@ -219,7 +221,10 @@ lemma  msg_assms: "EvenStream (State ooo summe)\<cdot>(\<up>(Msg m) \<bullet> xs
       apply(simp add: evenStream_insert h_final ubdom_ubrep_eq getDom_def h_out_dom 
                       sbHdElem_2_shd2 autGetNextOutput_def autGetNextState_def
                       getTransition_def getRan_def EvenAutomatonAutomaton.rep_eq ubgetch_ubrep_eq)
-      using False ubConc_usclConc_eq_apply  by auto
+      using False ubConc_usclConc_eq_apply  apply auto
+           by (smt EvenAutomatonSubstate.exhaust False add.commute evenAutomatonTransitionH.simps(1) evenAutomatonTransitionH.simps(3) fst_conv odd_iff_mod_2_eq_one snd_conv)+
+
+
   qed
   
 lemma [simp]:"nat2even\<cdot>(\<up>\<surd>) \<noteq> \<epsilon>"
@@ -229,7 +234,7 @@ lemma tick_assms: "EvenStream state\<cdot>(\<up>Tick \<bullet> xs) = \<up>Tick \
   apply(simp add: evenStream_insert getRan_def tsynbOneTick_def h_final ubdom_ubrep_eq getDom_def
                   EvenAutomatonAutomaton.rep_eq h_out_dom sbHdElem_2_shd2
                   autGetNextOutput_def autGetNextState_def getTransition_def ubgetch_ubrep_eq)
-  by (metis h_apply_dom tsynbOneTick.abs_eq tsynbonetick_ubconc_tick)  
+ by (smt EvenAutomaton.getSubState.cases EvenAutomatonSubstate.exhaust evenAutomatonTransitionH.simps(2) evenAutomatonTransitionH.simps(4) fst_conv h_apply_dom snd_conv tsynbonetick_ubconc_tick)
 
 lemma evenStreamBundle_empty_well[simp]:"ubWell ([c1 \<mapsto> \<epsilon>])"
  by(simp add: ubWell_def usclOkay_stream_def ctype_event_def)
