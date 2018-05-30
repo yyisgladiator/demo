@@ -216,6 +216,9 @@ lemma union_cont:"cont (\<lambda>S2. union S1 S2)"
 definition setify::"('m \<Rightarrow> ('n set rev)) \<rightarrow> ('m \<Rightarrow> 'n) set rev" where
 "setify \<equiv> \<Lambda> f. Rev {g. \<forall>m. g m \<in> (inv Rev(f m))}"
 
+definition setify_test::"('m \<Rightarrow> ('n set rev)) \<Rightarrow> ('m \<Rightarrow> 'n) set rev" where
+"setify_test \<equiv> \<lambda> f. Rev {g. \<forall>m. g m \<in> (inv Rev(f m))}"
+
 lemma setify_mono:"monofun (\<lambda>f. Rev {g. \<forall>m. g m \<in> (inv Rev(f m))})"
 proof(rule rev_monoI)
   fix f y::"'a \<Rightarrow> 'b set rev"
@@ -227,6 +230,22 @@ qed
 lemma rev_set_below:"(S1::'m set rev) \<sqsubseteq> (S2::'m set rev) \<longleftrightarrow> (inv Rev S2)\<subseteq>(inv Rev S1)"
   by (metis SetPcpo.less_set_def below_rev.simps rev_inv_rev)
 
+lemma setify_empty:"f m = Rev {} \<Longrightarrow> setify_test f = Rev {}"
+  apply(simp add: setify_test_def)
+  by (metis empty_iff inv_rev_rev)
+    
+lemma setify_notempty:assumes "\<forall>m. f m \<noteq> Rev {}" shows" setify_test f \<noteq> Rev {}"
+proof(simp add: setify_test_def)
+  have "\<forall>m. \<exists>x. x\<in>(inv Rev (f m))"
+    by (metis all_not_in_conv assms inv_rev_rev rev.exhaust)
+  then show "\<exists>x::'a \<Rightarrow> 'b. \<forall>m::'a. x m \<in> inv Rev (f m)"
+    sorry
+qed
+  
+    
+lemma setify_final:assumes "\<forall>m. f m \<noteq> Rev {}" and "x \<in> inv Rev (f m)" shows"\<exists>g\<in>(inv Rev (setify_test f)). g m = x"
+  sorry
+  
     (*
 lemma setify_cont:"cont (\<lambda>f. Rev {g. \<forall>m. g m \<in> (inv Rev(f m))})"
 proof(rule Cont.contI2, simp add: setify_mono)
