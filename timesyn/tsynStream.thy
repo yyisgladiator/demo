@@ -91,6 +91,16 @@ text {* @{term tsynFilter}: Remove all elements from the stream which are not in
 definition tsynFilter :: "'a set \<Rightarrow> 'a tsyn stream \<rightarrow> 'a tsyn stream" where
   "tsynFilter A = smap (tsynFilterElem A)"
 
+text{* @{term tsynFst}: Access the first element of a pair.*}
+fun tsynFst :: "('a \<times> 'b) tsyn \<Rightarrow> 'a tsyn" where
+  "tsynFst Null = Null" |
+  "tsynFst (Msg x) = tsynApplyElem fst (Msg x)"
+
+text{* @{term tsynProjFst}: Access the first stream of two zipped streams.*}
+definition tsynProjFst  :: "('a \<times> 'b) tsyn stream \<rightarrow> 'a tsyn stream" where
+"tsynProjFst = smap tsynFst"
+
+
 (* ----------------------------------------------------------------------- *)
   section {* Lemmata on Time-Synchronous Streams *}
 (* ----------------------------------------------------------------------- *)
