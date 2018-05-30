@@ -1,18 +1,18 @@
 theory SetRev
-  imports UnivClasses
+  imports "inc/SetPcpo"
 begin
 
-default_sort ufuncl
+default_sort type
 
 definition setrevFilter::  "('m \<Rightarrow> bool) \<Rightarrow> 'm set rev \<rightarrow> 'm set rev"
   where  "setrevFilter P \<equiv> \<Lambda> S. Rev (Set.filter P (inv Rev S))"
 
 
 (* order is exactly reversed subset *)
-lemma revBelowNeqSubset: "\<And>A:: 'a::ufuncl set rev. \<forall>B:: 'a set rev. A \<sqsubseteq> B \<longleftrightarrow> (inv Rev B \<subseteq> inv Rev A)"
+lemma revBelowNeqSubset: "\<And>A:: 'a set rev. \<forall>B:: 'a set rev. A \<sqsubseteq> B \<longleftrightarrow> (inv Rev B \<subseteq> inv Rev A)"
   by (smt SetPcpo.less_set_def below_rev.elims(2) below_rev.elims(3) inv_rev_rev)
 
-lemma SLEI_help1:  "\<And>Y::nat \<Rightarrow> 'a::ufuncl set rev. 
+lemma SLEI_help1:  "\<And>Y::nat \<Rightarrow> 'a set rev. 
   chain Y \<Longrightarrow> Rev (\<Inter>{x. \<exists>i. x = inv Rev (Y i)}) \<sqsubseteq> (\<Squnion>i. Y i)" 
 proof -
 fix Y :: "nat \<Rightarrow> 'a set rev"
@@ -37,42 +37,32 @@ fix Y :: "nat \<Rightarrow> 'a set rev"
     then have "inv Rev (Lub Y) \<subseteq> \<Inter>{A. \<exists>n. A = inv Rev (Y n)}"
   using f3 f2 by auto }
   then have "inv Rev (Lub Y) \<subseteq> \<Inter>{A. \<exists>n. A = inv Rev (Y n)}"
-using a1 is_ub_thelub revBelowNeqSubset by blast
+    by (metis (no_types, lifting) a1 f2 is_ub_thelub revBelowNeqSubset)
   then show "Rev (\<Inter>{A. \<exists>n. A = inv Rev (Y n)}) \<sqsubseteq> (\<Squnion>n. Y n)"
     by (simp add: inv_rev_rev revBelowNeqSubset)
 qed
 
-lemma SLEI_help2:  "\<And>Y::nat \<Rightarrow> 'a::ufuncl set rev. 
+lemma SLEI_help2:  "\<And>Y::nat \<Rightarrow> 'a set rev. 
   chain Y \<Longrightarrow> (\<Squnion>i. Y i) \<sqsubseteq> Rev (\<Inter>{x. \<exists>i. x = inv Rev (Y i)})"
-proof -
-  have a0: "\<And>Y::nat \<Rightarrow> 'a set rev. 
-  chain Y \<Longrightarrow>{y} \<subseteq> (\<Inter>{x. \<exists>i. x = inv Rev (Y i)}) \<longrightarrow> (\<forall>z. (Y z) \<sqsubseteq> Rev {y})"
-    by (metis (mono_tags, lifting) CollectI revBelowNeqSubset insert_subset inv_rev_rev mem_simps(11)
-      rev_bot_top set_cpo_simps(3))
-  have a1:  "\<And>Y::nat \<Rightarrow> 'a set rev. chain Y \<Longrightarrow> (\<forall>z. (Y z) \<sqsubseteq> Rev {y}) \<longrightarrow> (\<Squnion>i. Y i) \<sqsubseteq> Rev {y}"
-    by (simp add: lub_below)
-  show  "\<And>Y::nat \<Rightarrow> 'a set rev. 
-  chain Y \<Longrightarrow> (\<Squnion>i. Y i) \<sqsubseteq> Rev (\<Inter>{x. \<exists>i. x = inv Rev (Y i)})"
-    by (smt CollectI below_rev.elims(3) inv_rev_rev le_Inf_iff lub_below order_refl set_cpo_simps(1))
-qed
+  by (metis (mono_tags, lifting) Inter_lower inv_rev_rev lub_below mem_Collect_eq revBelowNeqSubset)
 
 (* lub = inter *)
-lemma setrevLubEqInter:  "\<And>Y::nat \<Rightarrow> 'a::ufuncl set rev. 
+lemma setrevLubEqInter:  "\<And>Y::nat \<Rightarrow> 'a set rev. 
   chain Y \<Longrightarrow> (\<Squnion>i. Y i) = Rev (\<Inter>{x. \<exists>i. x = inv Rev (Y i)})"
   using SLEI_help1 SLEI_help2 po_eq_conv by blast   
 
 (* sometime this form is more useful *)
-lemma setrevLubEqInterII: "\<And>Y::nat \<Rightarrow> 'a::ufuncl set rev. 
+lemma setrevLubEqInterII: "\<And>Y::nat \<Rightarrow> 'a set rev. 
   chain Y \<Longrightarrow> inv Rev (\<Squnion>i. Y i) = (\<Inter>{x. \<exists>i. x = inv Rev (Y i)})"
-  by (metis (mono_tags, lifting) Collect_cong inv_rev_rev setrevLubEqInter) 
+  by (metis (mono_tags, lifting) inv_rev_rev setrevLubEqInter) 
 
 
 (* setrevFilter fulfills the 2nd subgoal for contI2 *)
-lemma setrevFilter_chain: "\<And>Y::nat \<Rightarrow> 'a::ufuncl set rev. chain Y \<Longrightarrow>
+lemma setrevFilter_chain: "\<And>Y::nat \<Rightarrow> 'a set rev. chain Y \<Longrightarrow>
        chain (\<lambda>i::nat. Rev (Set.filter P (inv Rev (Y i)))) \<Longrightarrow>
        Rev (Set.filter P (inv Rev (\<Squnion>i::nat. Y i))) \<sqsubseteq> (\<Squnion>i::nat. Rev (Set.filter P (inv Rev (Y i))))"
 proof - 
-  fix Y::"nat \<Rightarrow> 'a::ufuncl set rev"
+  fix Y::"nat \<Rightarrow> 'a set rev"
   assume "chain Y"
   assume "chain (\<lambda>i::nat. Rev (Set.filter P (inv Rev (Y i))))"
   have a0: "\<forall>y \<in> \<Inter>{x. \<exists>i. x = Set.filter P (inv Rev (Y i))}. P y"
@@ -92,7 +82,7 @@ proof -
     by auto
   moreover have a5: "Rev (\<Inter>{x. \<exists>i. x = inv Rev (Rev (Set.filter P (inv Rev (Y i))))}) = 
     Rev (\<Inter>{x. \<exists>i. x = Set.filter P (inv Rev (Y i))})"
-    by (metis Collect_cong inv_rev_rev)
+    by (metis inv_rev_rev)
   ultimately show "Rev (Set.filter P (inv Rev (\<Squnion>i::nat. Y i))) \<sqsubseteq> 
     (\<Squnion>i::nat. Rev (Set.filter P (inv Rev (Y i))))"
     by presburger

@@ -6,7 +6,7 @@
 *)
 
 theory USpec
-  imports UnivClasses
+  imports UnivClasses SetRev
 begin
 
 default_sort ufuncl
