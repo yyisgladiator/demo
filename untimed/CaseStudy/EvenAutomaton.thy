@@ -1,41 +1,42 @@
 theory EvenAutomaton
 
-imports Automaton "../../timesyn/tsynStream" "../../timesyn/tsynBundle"
+imports Automaton "../../timesyn/tsynStream" "../../timesyn/tsynBundle" 
 
 begin
 
-
-(* END: tsynBundle *)
-
-
-
 (* This are the actual states from MAA *)
-datatype EvenAutomatonSubstate = Even | Odd
+datatype EvenAutomatonSubstate = Odd | Even
 
 (* And these have also the variables *)
-datatype EvenAutomatonState = State EvenAutomatonSubstate nat
+datatype EvenAutomatonState = State EvenAutomatonSubstate "nat"
 
 fun getSubState :: "EvenAutomatonState \<Rightarrow> EvenAutomatonSubstate" where
-"getSubState (State automaton_s automaton_sum) = automaton_s"
+    "getSubState (State state_s automaton_sum) = state_s"
 
 fun getSum :: "EvenAutomatonState \<Rightarrow> nat" where
-"getSum (State automaton_s automaton_sum) = automaton_sum"
+"getSum (State _ automaton_sum) = automaton_sum"
+    
 
-
-datatype EvenAutomaton = A  nat | B  bool
+datatype EvenAutomaton = A "nat" | B "bool"
 instance EvenAutomaton :: countable
 apply(intro_classes)
 by(countable_datatype)
 
+abbreviation input_c1_c1 :: "channel" ("\<guillemotright>c1") where
+"\<guillemotright>c1 \<equiv> c1"
+
+abbreviation output_c2_c2 :: "channel" ("c2\<guillemotright>") where
+"c2\<guillemotright> \<equiv> c2"
 
 instantiation EvenAutomaton :: message
 begin
-    fun ctype_EvenAutomaton :: "channel \<Rightarrow> EvenAutomaton set" where
-        "ctype_EvenAutomaton c1 = range A" | 
-        "ctype_EvenAutomaton c2 = range B" 
+fun ctype_EvenAutomaton :: "channel  \<Rightarrow> EvenAutomaton set" where
+    "ctype_EvenAutomaton \<guillemotright>c1 = range A" | 
+    "ctype_EvenAutomaton c2\<guillemotright> = range B" 
 instance
 by(intro_classes)
 end
+
 
 (* Some in and out shortcuts *)
 definition createC1Bundle :: "nat \<Rightarrow> EvenAutomaton event SB" where
@@ -79,51 +80,40 @@ lemma createC2Bundle_well[simp]: "ubWell[c2 \<mapsto> \<up>(\<M> B b)]"
 
 
 (* tsynbOneTick is defined in: timesyn/tsynBundle *)
-function evenAutomatonTransition :: "(EvenAutomatonState \<times> (channel \<rightharpoonup> EvenAutomaton event)) \<Rightarrow> (EvenAutomatonState \<times> EvenAutomaton event SB)" where
-  "evenAutomatonTransition (State Even automaton_sum, [c1 \<mapsto> Msg a]) = (case a of A b
-      \<Rightarrow> 
-  (
-    if((b+automaton_sum) mod 2 = 1) then ((State Odd (b+automaton_sum),(createC2Bundle False)))
-    else if((b+automaton_sum) mod 2 = 0) then ((State Even (b+automaton_sum),(createC2Bundle True)))
-    else undefined
-  )
-  | _ \<Rightarrow> undefined)" |
+fun evenAutomatonTransitionH :: "(EvenAutomatonState \<times> (EvenAutomaton event)) \<Rightarrow> (EvenAutomatonState \<times> EvenAutomaton event SB)" where
+    "evenAutomatonTransitionH (State Even automaton_sum, (Msg (A a))) = 
+       (if((a+automaton_sum) mod 2 = 1) then ((State Odd (a+automaton_sum),(createC2Bundle (False))))
+        else if((a+automaton_sum) mod 2 = 0) then ((State Even (a+automaton_sum),(createC2Bundle (True))))
+        else  undefined)"  |
 
- "evenAutomatonTransition (State Even automaton_sum, [c1 \<mapsto> Tick]) = (State Even (automaton_sum), (tsynbOneTick c2))"  |
+    "evenAutomatonTransitionH (State Even automaton_sum, (\<surd>)) = 
+       (State Even automaton_sum,(tsynbOneTick c2\<guillemotright>))"  |
 
- "evenAutomatonTransition (State Odd automaton_sum, [c1 \<mapsto> Msg a]) = (case a of A b
-      \<Rightarrow> 
-  (
-    if((b+automaton_sum) mod 2 = 1) then ((State Odd (b+automaton_sum),(createC2Bundle False)))
-    else if((b+automaton_sum) mod 2 = 0) then ((State Even (b+automaton_sum),(createC2Bundle True)))
-    else undefined
-  )
-  | _ \<Rightarrow> undefined)" |
+    "evenAutomatonTransitionH (State Odd automaton_sum, (Msg (A a))) = 
+       (if((a+automaton_sum) mod 2 = 1) then ((State Odd (a+automaton_sum),(createC2Bundle (False))))
+       else if((a+automaton_sum) mod 2 = 0) then ((State Even (a+automaton_sum),(createC2Bundle (True))))
+       else undefined)"  |
 
- "evenAutomatonTransition (State Odd automaton_sum, [c1 \<mapsto> Tick]) = (State Odd (automaton_sum), (tsynbOneTick c2))"  |
+    "evenAutomatonTransitionH (State Odd automaton_sum, (\<surd>)) = 
+       (State Odd automaton_sum,(tsynbOneTick c2\<guillemotright>))"  
 
-"dom f\<noteq> {c1} \<Longrightarrow>  evenAutomatonTransition (_,f) = undefined"
-
-apply auto
-apply (smt EvenAutomatonSubstate.exhaust dom_eq_singleton_conv event.exhaust getSubState.cases)
-using fun_upd_eqD apply fastforce
-using map_upd_eqD1 apply force
-apply (meson option.distinct(1))
-apply (metis option.simps(3))
-using map_upd_eqD1 apply fastforce
-apply (meson event.distinct(1) map_upd_eqD1)
-apply (meson option.distinct(1))
-by (metis option.simps(3))
-termination by lexicographic_order
+fun evenAutomatonTransition :: "(EvenAutomatonState \<times> (channel \<rightharpoonup> EvenAutomaton event)) \<Rightarrow> (EvenAutomatonState \<times> EvenAutomaton event SB)" where
+"evenAutomatonTransition (s,f) = (if dom(f) = {\<guillemotright>c1} then evenAutomatonTransitionH (s,(f\<rightharpoonup>\<guillemotright>c1)) else undefined)"
  
 (*Transition can be generated*)
 lemma evenTraTick[simp]:"evenAutomatonTransition (state, [c1 \<mapsto> \<surd>]) = (state,(tsynbOneTick c2) )"
-  by (metis (full_types) EvenAutomatonState.exhaust EvenAutomatonSubstate.exhaust evenAutomatonTransition.simps(2) evenAutomatonTransition.simps(4))
+proof -
+  have "evenAutomatonTransitionH (state, \<surd>) = (state, tsynbOneTick c2\<guillemotright>)"
+    by (metis (full_types) EvenAutomatonState.exhaust EvenAutomatonSubstate.exhaust evenAutomatonTransitionH.simps(2) evenAutomatonTransitionH.simps(4))
+  then show ?thesis
+    by simp
+qed
         
 lemma tran_sum_even[simp]: assumes "Parity.even (summe + m)" shows "evenAutomatonTransition (State ooo summe, [c1 \<mapsto> \<M>(A m)]) = (State Even (summe + m), createC2Bundle True)"
   apply (cases ooo)
    apply auto
   using assms by presburger  +
+
 
     
 lemma tran_sum_odd[simp]: assumes "\<not>Parity.even (summe + m)" shows "evenAutomatonTransition (State ooo summe, [c1 \<mapsto> \<M>(A m)]) = (State Odd (summe + m), createC2Bundle False)"
@@ -156,13 +146,13 @@ proof -
       by (metis EvenAutomaton.getSubState.cases createC2Bundle_dom my_n_def snd_conv tran_sum_even tran_sum_odd)
   qed
   show "ubDom\<cdot>(snd (evenAutomatonTransition (s, f))) = {c2}"
-    using f2 f_def by fastforce
+    using a1 evenTraTick f2 by force
 qed
   
   
 lift_definition EvenAutomatonAutomaton :: "(EvenAutomatonState, EvenAutomaton event) automaton" is 
   "(evenAutomatonTransition, State Even 0,(tsynbOneTick c2), {c1}, {c2})"
-  by (simp add: EvenAutomatonAutomaton_h) (*Can not be generated right now (see lemma EvenAutomatonAutomaton_h)*)
+ using EvenAutomatonAutomaton_h by auto 
 
 definition EvenAutomatonSPF :: "EvenAutomaton event SPF" where
 "EvenAutomatonSPF = H EvenAutomatonAutomaton"
