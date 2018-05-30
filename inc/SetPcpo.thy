@@ -238,13 +238,26 @@ lemma setify_notempty:assumes "\<forall>m. f m \<noteq> Rev {}" shows" setify_te
 proof(simp add: setify_test_def)
   have "\<forall>m. \<exists>x. x\<in>(inv Rev (f m))"
     by (metis all_not_in_conv assms inv_rev_rev rev.exhaust)
+  have "\<forall>m. (\<lambda>e. SOME x. x\<in> inv Rev (f e)) m \<in> inv Rev (f m)"
+    by (metis assms inv_rev_rev rev.exhaust some_in_eq)
   then show "\<exists>x::'a \<Rightarrow> 'b. \<forall>m::'a. x m \<in> inv Rev (f m)"
-    sorry
+    by(rule_tac x="(\<lambda>e. SOME x. x\<in> inv Rev (f e))" in exI, auto)
 qed
   
-    
+lemma setify_notempty_ex:"setify_test f \<noteq> Rev {} \<Longrightarrow> \<exists>g.(\<forall>m. g m \<in> inv Rev (f m))"
+  by(simp add: setify_test_def)
+  
 lemma setify_final:assumes "\<forall>m. f m \<noteq> Rev {}" and "x \<in> inv Rev (f m)" shows"\<exists>g\<in>(inv Rev (setify_test f)). g m = x"
-  sorry
+proof(simp add: setify_test_def inv_rev_rev)
+  have "\<exists>g.(\<forall>m. g m \<in> inv Rev (f m))"
+    by(simp add: setify_notempty setify_notempty_ex assms(1))
+  then obtain g where g_def:"(\<forall>m. g m \<in> inv Rev (f m))"
+    by auto
+  have g2_def:"\<forall>n. (\<lambda>e. if e = m then x else g e) n \<in> inv Rev (f n)"
+    by (simp add: assms(2) g_def)
+  then show "\<exists>g::'a \<Rightarrow> 'b. (\<forall>m::'a. g m \<in> inv Rev (f m)) \<and> g m = x"     
+    by(rule_tac x="(\<lambda>e. if e = m then x else g e)" in exI, auto) 
+qed
   
     (*
 lemma setify_cont:"cont (\<lambda>f. Rev {g. \<forall>m. g m \<in> (inv Rev(f m))})"
