@@ -118,6 +118,21 @@ proof -
     using f1 by blast
 qed
 
+lemma ubConc_usclConc_eq: assumes "c \<in> (ubDom\<cdot>sb1)"
+                              and "c \<in> (ubDom\<cdot>sb2)"
+                            shows "(ubConc sb1 \<cdot> sb2) . c = usclConc (sb1. c) \<cdot> (sb2. c)"
+  proof -
+    have h1: "ubWell (\<lambda>c::channel. Some (usclConc (Rep_ubundle (ubUp\<cdot>sb1)\<rightharpoonup>c) \<cdot> (Rep_ubundle (ubUp\<cdot>sb2)\<rightharpoonup>c)))"
+      apply(simp add: ubWell_def )
+      by (simp add: usclOkay_conc)
+    then show ?thesis
+      apply(simp add: ubConc_def assms)
+      apply(simp add:  ubgetch_insert h1)
+      by (metis assms(1) assms(2) ubgetch_insert ubup_ubgetch)
+  qed
+
+lemma ubconc_insert: "ubConc b1\<cdot>b2 = (Abs_ubundle (\<lambda>c. Some (usclConc (ubUp\<cdot>b1 . c)\<cdot>(ubUp\<cdot>b2 . c)))) \<bar> (ubDom\<cdot>b1 \<union> ubDom\<cdot>b2)"
+  by(simp add: ubConc_def)
 
 subsection \<open>ubConcEq\<close>
 
