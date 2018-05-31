@@ -40,7 +40,7 @@ lemma image_cont[simp]:"cont (\<lambda> S.  f ` S)"
   unfolding  SetPcpo.less_set_def
   unfolding lub_eq_Union
   by blast           
-        
+        (*
 definition setflat_sps_rev:: "channel set \<Rightarrow> channel set \<Rightarrow> 'm::message SPS set rev \<rightarrow> 'm SPS" where (*Problem if SPS is not consistent*)
 "setflat_sps_rev In Out = (\<Lambda> spss. (if (\<forall>sps\<in>(inv Rev spss). uspecDom sps = In \<and> uspecRan sps = Out) then Abs_rev_uspec (setflat\<cdot>(Rep_rev_uspec ` (inv Rev spss))) else uspecLeast In Out))"
 
@@ -142,7 +142,7 @@ proof(rule Cont.contI2, simp)
     case False
     then show ?thesis sorry
   qed
-qed
+qed*)
   
     
     
@@ -158,30 +158,7 @@ definition set_snd::"(('s \<times> 'm::message SB) set rev) \<rightarrow> (('m::
 
 definition set_fst::"(('s \<times> 'm::message SB) set rev) \<rightarrow> ('s set rev)" where
 "set_fst \<equiv> \<Lambda> x. Rev (fst`(inv Rev x))"
-*)
-
-(*Dunno... ist komisch*)
-definition test::"(('s \<times>'e) \<Rightarrow> ('s \<times> 'm::message SB) set rev) \<rightarrow> (('s \<times>'e) \<Rightarrow> ('s \<times> 'm::message SB)) set rev" where
-"test = (\<Lambda> f. (Rev {(\<lambda>e. if e = x then s else (fst(s),ubLeast (ubDom\<cdot>(snd s)))) | s x. s \<in> (inv Rev (f x))}))"
-
-lemma test_mono[simp]:"monofun (\<lambda> f::(('s \<times>'e) \<Rightarrow> ('s \<times> 'm::message SB) set rev). (Rev {(\<lambda>e. if e = x then s else (fst(s),ubLeast (ubDom\<cdot>(snd s)))) | s x. s \<in> (inv Rev (f x))}))"
-  apply(rule rev_monoI)
-  by (smt Collect_mono_iff SetPcpo.less_set_def below_rev.elims(2) fun_below_iff inv_rev_rev subsetCE)
-
-lemma test_cont[simp]:"cont (\<lambda> f::(('s \<times>'e) \<Rightarrow> ('s \<times> 'm::message SB) set rev). (Rev {(\<lambda>e. if e = x then s else (fst(s),ubLeast (ubDom\<cdot>(snd s)))) | s x. s \<in> (inv Rev (f x))}))"
-proof(rule contI,auto)
-  fix Y::"nat \<Rightarrow> 's \<times> 'e \<Rightarrow> ('s \<times> 'm::message stream\<^sup>\<Omega>) set rev" 
-  assume a1:"chain Y"
-  have a2:"range (\<lambda>i::nat. Rev {\<lambda>e::'s \<times> 'e. if e = (aa, ba) then (a, b) else (fst (a, b), ubLeast (ubDom\<cdot>(snd (a, b)))) |(a::'s) (b::'m stream\<^sup>\<Omega>) (aa::'s) ba::'e.
-                            (a, b) \<in> inv Rev (Y i (aa, ba))}) <| Rev {}"
-    by (simp add: SetPcpo.less_set_def ub_rangeI)
-  show "range (\<lambda>i::nat. Rev {\<lambda>e::'s \<times> 'e. if e = (aa, ba) then (a, b) else (fst (a, b), ubLeast (ubDom\<cdot>(snd (a, b)))) |(a::'s) (b::'m stream\<^sup>\<Omega>) (aa::'s) ba::'e.
-                            (a, b) \<in> inv Rev (Y i (aa, ba))}) <<|
-       Rev {\<lambda>e::'s \<times> 'e. if e = (aa, ba) then (a, b) else (fst (a, b), ubLeast (ubDom\<cdot>(snd (a, b)))) |(a::'s) (b::'m stream\<^sup>\<Omega>) (aa::'s) ba::'e.
-            (a, b) \<in> inv Rev (Lub Y (aa, ba))}"
-    sorry
-qed
-  
+*)  
 (*proof(rule Cont.contI2, subst test_mono,auto)
   fix Y::"nat \<Rightarrow> 's \<times> 'e \<Rightarrow> ('s \<times> 'm::message stream\<^sup>\<Omega>) set rev"
   assume a1:"chain Y"
@@ -203,15 +180,12 @@ qed
   
   
 definition test2::"('s \<Rightarrow> 'm::message SPS) \<rightarrow> ('s \<Rightarrow> 'm SPF)set rev"where
-"test2 = (\<Lambda> spsf. (Rev {(\<lambda>e. if e = x then spf else ufLeast (ufDom\<cdot> spf) (ufDom\<cdot> spf)) | spf x. spf \<in> (Rep_rev_uspec (spsf x))}))"
-
+"test2 = (\<Lambda> spsf. setify\<cdot>(\<lambda>e. uspecRevSet\<cdot>(spsf e)))"
+(*
 lemma test2_mono[simp]:"monofun (\<lambda> spsf::('s \<Rightarrow> 'm::message SPS). (Rev {(\<lambda>e. if e = x then spf else ufLeast (ufDom\<cdot> spf) (ufDom\<cdot> spf)) | spf x. spf \<in> (Rep_rev_uspec (spsf x))}))"
   apply(rule rev_monoI)
-  by (smt Collect_mono SetPcpo.less_set_def fun_below_iff uspec_ele_below)
-
-lemma Rev_mono:assumes "cont f" shows "monofun (\<lambda>S. Rev (f (inv Rev S)))"
-  by (smt Abs_cfun_inverse2 assms below_rev.elims(2) below_rev.elims(3) inv_rev_rev monofun_cfun_arg monofun_def)
-    
+  by (smt Collect_mono SetPcpo.less_set_def fun_below_iff )
+ 
     
     
 lemma test2_cont[simp]:"cont (\<lambda> spsf::('s \<Rightarrow> 'm::message SPS). (Rev {(\<lambda>e. if e = x then spf else ufLeast (ufDom\<cdot> spf) (ufDom\<cdot> spf)) | spf x. spf \<in> (Rep_rev_uspec (spsf x))}))"
@@ -229,6 +203,6 @@ proof(rule Cont.contI2,simp)
     apply(simp add: h1)
   sorry
 qed
-  
+  *)
 end
   
