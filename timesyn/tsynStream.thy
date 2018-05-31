@@ -91,26 +91,31 @@ text {* @{term tsynFilter}: Remove all elements from the stream which are not in
 definition tsynFilter :: "'a set \<Rightarrow> 'a tsyn stream \<rightarrow> 'a tsyn stream" where
   "tsynFilter A = smap (tsynFilterElem A)"
 
-fun tsynElem :: "'a tsyn discr  \<Rightarrow> 'a tsyn" where
-  "tsynElem (Discr (Msg m)) = (Msg m)" |
-  "tsynElem (Discr Null) = Null"
+(* ----------------------------------------------------------------------- *)
+  section {* Fixrec-Definitions on Time-Synchronous Streams *}
+(* ----------------------------------------------------------------------- *)
 
-fixrec tsynRemDups :: "'a tsyn stream \<rightarrow> 'a tsyn discr option \<rightarrow> 'a tsyn stream" where
-  "tsynRemDups\<cdot>\<epsilon>\<cdot>option = \<epsilon>" |
-  "tsynRemDups\<cdot>(up\<cdot>a && as)\<cdot>None = (
-     if (tsynElem a) = Null then up\<cdot>a && tsynRemDups\<cdot>as\<cdot>None
-     else up\<cdot>a && tsynRemDups\<cdot>as\<cdot>(Some a)
+(* Fixrec-Example *)
+
+(* ToDo: add description. *)
+
+fixrec tsynRemDups_h :: "'a tsyn stream \<rightarrow> 'a tsyn discr option \<rightarrow> 'a tsyn stream" where
+  "tsynRemDups_h\<cdot>\<epsilon>\<cdot>option = \<epsilon>" |
+  "tsynRemDups_h\<cdot>(up\<cdot>a && as)\<cdot>None = (
+     if (undiscr a) = null then up\<cdot>a && tsynRemDups_h\<cdot>as\<cdot>None
+     else up\<cdot>a && tsynRemDups_h\<cdot>as\<cdot>(Some a)
   )" |
-  "tsynRemDups\<cdot>(up\<cdot>a && as)\<cdot>(Some b) = (
-     if a = b then up\<cdot>(Discr Null) && tsynRemDups\<cdot>as\<cdot>(Some b)
-     else up\<cdot>a && tsynRemDups\<cdot>as\<cdot>(Some a)
+  "tsynRemDups_h\<cdot>(up\<cdot>a && as)\<cdot>(Some b) = (
+     if a = b then up\<cdot>(Discr null) && tsynRemDups_h\<cdot>as\<cdot>(Some b)
+     else up\<cdot>a && tsynRemDups_h\<cdot>as\<cdot>(Some a)
   )"
 
-lemma "tsynRemDups\<cdot>(\<up>Null \<bullet> as)\<cdot>None = \<up>Null \<bullet> tsynRemDups\<cdot>as\<cdot>None"
-  by (metis lscons_conv tsynElem.simps(2) tsynRemDups.simps(2))
+lemma tsynRemDups_h_sconc_msg: assumes "a \<noteq> null"
+  shows " tsynRemDups_h\<cdot>(\<up>(Msg a) \<bullet> as)\<cdot>None = \<up>(Msg a) \<bullet> tsynRemDups_h\<cdot>as\<cdot>(Some (Discr (Msg a)))"
+  by (metis lscons_conv tsyn.distinct(1) tsynRemDups_h.simps(2) undiscr_Discr)
 
-lemma "a \<noteq> Null \<Longrightarrow> tsynRemDups\<cdot>(\<up>(Msg a) \<bullet> as)\<cdot>None = \<up>(Msg a) \<bullet> tsynRemDups\<cdot>as\<cdot>(Some (Discr (Msg a)))"
-  by (metis lscons_conv tsyn.simps(3) tsynElem.simps(1) tsynRemDups.simps(2))  
+lemma tsynRemDups_h_sconc_null: "tsynRemDups_h\<cdot>(\<up>null \<bullet> as)\<cdot>None = \<up>null \<bullet> tsynRemDups_h\<cdot>as\<cdot>None"
+  by (fold lscons_conv, simp)
 
 (* ----------------------------------------------------------------------- *)
   section {* Lemmata on Time-Synchronous Streams *}
