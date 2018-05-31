@@ -180,7 +180,7 @@ qed
   
   
 definition test2::"('s \<Rightarrow> 'm::message SPS) \<rightarrow> ('s \<Rightarrow> 'm SPF)set rev"where
-"test2 = (\<Lambda> spsf. setify\<cdot>(\<lambda>e. uspecRevSet\<cdot>(h e)))"
+"test2 = (\<Lambda> spsf. setify\<cdot>(\<lambda>e. uspecRevSet\<cdot>(spsf e)))"
 (*
 lemma test2_mono[simp]:"monofun (\<lambda> spsf::('s \<Rightarrow> 'm::message SPS). (Rev {(\<lambda>e. if e = x then spf else ufLeast (ufDom\<cdot> spf) (ufDom\<cdot> spf)) | spf x. spf \<in> (Rep_rev_uspec (spsf x))}))"
   apply(rule rev_monoI)
