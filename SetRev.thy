@@ -101,6 +101,13 @@ lemma setrevfilter_cont[simp]:  "cont (\<lambda> S::'a set rev. Rev (Set.filter 
   apply (simp add: setrevfilter_mono)
   by (simp add: setrevFilter_chain)
 
+lemma setrevfilter_condition: "\<And>x. x \<in> (inv Rev (setrevFilter P\<cdot>A)) \<Longrightarrow> P x"
+  by (simp add: inv_rev_rev setrevFilter_def)
+
+lemma setrevfilter_anti_mono: assumes "(P::'a \<Rightarrow> bool) \<sqsubseteq> Q"
+                                shows "setrevFilter Q\<cdot>A \<sqsubseteq> setrevFilter P\<cdot>A"
+  sorry
+
 (*setify*)
     
 
