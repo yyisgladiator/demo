@@ -69,7 +69,7 @@ setup_lifting type_definition_uspec
 section\<open>Definitions\<close>
 (****************************************************) 
   
-  subsection\<open>abbreviations\<close>
+subsection\<open>abbreviations\<close>
 
 abbreviation Rep_rev_uspec:: "'m uspec \<Rightarrow> 'm set" where
 "Rep_rev_uspec uspec \<equiv> inv Rev (fst (Rep_uspec uspec))"
@@ -78,6 +78,7 @@ abbreviation Abs_rev_uspec:: "'m set \<Rightarrow> channel set \<Rightarrow> cha
 "Abs_rev_uspec spec csIn csOut \<equiv> Abs_uspec ((Rev spec), Discr csIn, Discr csOut)"
 
 
+subsection\<open>\<close>
 
 (* Get the set of all ufuns in the uspec *)
 definition uspecRevSet :: "'m uspec \<rightarrow> 'm set rev" where
@@ -91,7 +92,12 @@ definition uspecDom :: "'m uspec \<rightarrow> channel set" where
 definition uspecRan :: "'m uspec \<rightarrow> channel set" where
 "uspecRan = (\<Lambda> S. undiscr (snd (snd (Rep_uspec S))))"
 
-
+definition uspecUnion :: "'m uspec \<rightarrow> 'm uspec \<rightarrow> 'm uspec" where
+"uspecUnion \<equiv> \<Lambda> S1 S2. let dom = uspecDom\<cdot>S1 \<union> uspecDom\<cdot>S2 in
+                        let ran = uspecRan\<cdot>S1 \<union> uspecRan\<cdot>S2 in
+                        let all = Rev ((inv Rev (uspecRevSet\<cdot>S1)) \<union> (inv Rev (uspecRevSet\<cdot>S2))) in
+                        let filtered = setrevFilter (\<lambda>f. ufclDom\<cdot>f = dom \<and> ufclRan\<cdot>f = ran)\<cdot>all
+                        in Abs_uspec (filtered, Discr dom, Discr ran)"
 
 
 (****************************************************)
@@ -220,10 +226,6 @@ lemma uspec_allRan: assumes "f\<in>inv Rev (uspecRevSet\<cdot>S)"
   by (metis (mono_tags, lifting) assms fst_conv inv_rev_rev rep_abs_uspec snd_conv undiscr_Discr uspecWell.simps uspec_obtain uspecran_insert uspecrevset_insert)
   
 
-
-
-
-
 subsection \<open>General Lemma 2\<close>
 
 (* rule to prove the equality of uspec *)
@@ -247,6 +249,73 @@ proof -
   thus ?thesis
     by (metis (no_types, lifting) Abs_cfun_inverse2 assms(2) below_rev.elims(2) eq_bottom_iff fst_conv rep_abs_rev_simp rep_abs_uspec set_cpo_simps(3) uspecIsConsistent_def uspecRevSet_def uspec_obtain uspecrevset_cont)
 qed
+
+
+subsection \<open>uspecUnion\<close>
+
+lemma uspecUnion_sym: "(\<lambda> S1 S2. let dom = uspecDom\<cdot>S1 \<union> uspecDom\<cdot>S2 in
+                        let ran = uspecRan\<cdot>S1 \<union> uspecRan\<cdot>S2 in
+                        let all = Rev ((inv Rev (uspecRevSet\<cdot>S1)) \<union> (inv Rev (uspecRevSet\<cdot>S2))) in
+                        let filtered = setrevFilter (\<lambda>f. ufclDom\<cdot>f = dom \<and> ufclRan\<cdot>f = ran)\<cdot>all
+                        in Abs_uspec (filtered, Discr dom, Discr ran)) =
+                       (\<lambda> S2 S1. let dom = uspecDom\<cdot>S1 \<union> uspecDom\<cdot>S2 in
+                        let ran = uspecRan\<cdot>S1 \<union> uspecRan\<cdot>S2 in
+                        let all = Rev ((inv Rev (uspecRevSet\<cdot>S1)) \<union> (inv Rev (uspecRevSet\<cdot>S2))) in
+                        let filtered = setrevFilter (\<lambda>f. ufclDom\<cdot>f = dom \<and> ufclRan\<cdot>f = ran)\<cdot>all
+                        in Abs_uspec (filtered, Discr dom, Discr ran))"
+  by (simp add: sup_commute)
+
+lemma uspecUnion_sym2: "(\<lambda> S1. \<Lambda> S2. let dom = uspecDom\<cdot>S1 \<union> uspecDom\<cdot>S2 in
+                        let ran = uspecRan\<cdot>S1 \<union> uspecRan\<cdot>S2 in
+                        let all = Rev ((inv Rev (uspecRevSet\<cdot>S1)) \<union> (inv Rev (uspecRevSet\<cdot>S2))) in
+                        let filtered = setrevFilter (\<lambda>f. ufclDom\<cdot>f = dom \<and> ufclRan\<cdot>f = ran)\<cdot>all
+                        in Abs_uspec (filtered, Discr dom, Discr ran)) =
+                       (\<lambda> S2. \<Lambda> S1. let dom = uspecDom\<cdot>S1 \<union> uspecDom\<cdot>S2 in
+                        let ran = uspecRan\<cdot>S1 \<union> uspecRan\<cdot>S2 in
+                        let all = Rev ((inv Rev (uspecRevSet\<cdot>S1)) \<union> (inv Rev (uspecRevSet\<cdot>S2))) in
+                        let filtered = setrevFilter (\<lambda>f. ufclDom\<cdot>f = dom \<and> ufclRan\<cdot>f = ran)\<cdot>all
+                        in Abs_uspec (filtered, Discr dom, Discr ran))"
+  by (simp add: sup_commute)
+
+lemma uspecUnion_mono: "monofun (\<lambda> S1. let dom = uspecDom\<cdot>S1 \<union> uspecDom\<cdot>S2 in
+                        let ran = uspecRan\<cdot>S1 \<union> uspecRan\<cdot>S2 in
+                        let all = Rev ((inv Rev (uspecRevSet\<cdot>S1)) \<union> (inv Rev (uspecRevSet\<cdot>S2))) in
+                        let filtered = setrevFilter (\<lambda>f. ufclDom\<cdot>f = dom \<and> ufclRan\<cdot>f = ran)\<cdot>all
+                        in Abs_uspec (filtered, Discr dom, Discr ran))"
+  apply(rule monofunI)
+  sorry
+
+(* lemma uspecUnion_cont_helper: "\<And>S2. cont (\<lambda> S1. let dom = uspecDom\<cdot>S1 \<union> uspecDom\<cdot>S2 in
+                        let ran = uspecRan\<cdot>S1 \<union> uspecRan\<cdot>S2 in
+                        let all = Rev ((inv Rev (uspecRevSet\<cdot>S1)) \<union> (inv Rev (uspecRevSet\<cdot>S2))) in
+                        let filtered = setrevFilter (\<lambda>f. ufclDom\<cdot>f = dom \<and> ufclRan\<cdot>f = ran)\<cdot>all
+                        in Abs_uspec (filtered, Discr dom, Discr ran))"
+  sorry *)
+
+lemma uspecUnion_cont_helper2: "cont (\<lambda> S1 S2. let dom = uspecDom\<cdot>S1 \<union> uspecDom\<cdot>S2 in
+                        let ran = uspecRan\<cdot>S1 \<union> uspecRan\<cdot>S2 in
+                        let all = Rev ((inv Rev (uspecRevSet\<cdot>S1)) \<union> (inv Rev (uspecRevSet\<cdot>S2))) in
+                        let filtered = setrevFilter (\<lambda>f. ufclDom\<cdot>f = dom \<and> ufclRan\<cdot>f = ran)\<cdot>all
+                        in Abs_uspec (filtered, Discr dom, Discr ran))"
+  sorry
+
+lemma uspecUnion_cont: "cont (\<lambda> S1. \<Lambda> S2. let dom = uspecDom\<cdot>S1 \<union> uspecDom\<cdot>S2 in
+                        let ran = uspecRan\<cdot>S1 \<union> uspecRan\<cdot>S2 in
+                        let all = Rev ((inv Rev (uspecRevSet\<cdot>S1)) \<union> (inv Rev (uspecRevSet\<cdot>S2))) in
+                        let filtered = setrevFilter (\<lambda>f. ufclDom\<cdot>f = dom \<and> ufclRan\<cdot>f = ran)\<cdot>all
+                        in Abs_uspec (filtered, Discr dom, Discr ran))"
+  apply(rule cont2cont_LAM)
+  sorry
+
+lemma uspecUnion_well: "\<And>S1 S2. uspecWell (let dom = uspecDom\<cdot>S1 \<union> uspecDom\<cdot>S2 in
+                                            let ran = uspecRan\<cdot>S1 \<union> uspecRan\<cdot>S2 in
+                                            let all = Rev ((inv Rev (uspecRevSet\<cdot>S1)) \<union> (inv Rev (uspecRevSet\<cdot>S2)))
+                                            in setrevFilter (\<lambda>f. ufclDom\<cdot>f = dom \<and> ufclRan\<cdot>f = ran)\<cdot>all)
+                                          (Discr (uspecDom\<cdot>S1 \<union> uspecDom\<cdot>S2))
+                                          (Discr (uspecRan\<cdot>S1 \<union> uspecRan\<cdot>S2))"
+  sorry
+
+(* TODO apply *)
 
 
 end
