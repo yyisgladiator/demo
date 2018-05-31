@@ -1,131 +1,289 @@
-(*  Title:  tsynStream
-    Author: Sebastian Stüber
-    e-mail: sebastian.stueber@rwth-aachen.de
+(*  Title:        tsynStream.thy
+    Author:       Sebastian Stüber, Dennis Slotboom
+    E-Mail:       sebastian.stueber@rwth-aachen.de, dennis.slotboom@rwth-aachen.de
 
-    Description: time-syncronus streams. A time-inverval may at most have one message. 
-      No message is described with "Tick"
-      Notice that the time-interpretation is different to "tstream": 
-        <[Msg 1, Tick]> are 2 time-steps, in the first one the message 1 is sent, in the second no
-        message is sent
+    Description:  Time-synchronous streams. Each time-interval may at most have one message.
 *)
 
+chapter {* Time-Synchronous Streams *}
 
 theory tsynStream
-
-imports "../untimed/Streams" "../inc/Event"
+imports "../untimed/Streams"
 
 begin
 
+(* ----------------------------------------------------------------------- *)
+  section {* Time-Synchronous Type Definition *}
+(* ----------------------------------------------------------------------- *)
 
-(* TODO: move to Event.thy *)
-(* If we get a message, apply the function directly to the message *)
-(* On ticks return tick *)
-fun eventApply :: "('a \<Rightarrow> 'b) \<Rightarrow> 'a event \<Rightarrow> 'b event" where
-"eventApply _ Tick = Tick" |
-"eventApply f (Msg a) = Msg (f a)"
+text {* Definition of datatype @{text tsyn} that extends with a @{term null}. *}
+datatype 'm tsyn = Msg 'm ( "\<M> _" 65)| null
+
+text {* Introduce symbol @{text -} for empty time-slots called null. *}
+syntax "@null" :: "'a tsyn" ("-")
+translations "-" == "CONST null"
+
+text {* Inverse of Msg.*}
+abbreviation inversMsg ::  "'a tsyn \<Rightarrow> 'a"  ("\<M>\<inverse> _") where 
+  "inversMsg e \<equiv> (case e of \<M> m \<Rightarrow> m)"
+
+text {* Prove that datatype tsyn is countable. Needed, since the domain-constructor defined
+        to work for countable types .*}
+instance tsyn :: (countable) countable
+  by countable_datatype
+
+(* ToDo: add descriptions. *)
+
+instantiation tsyn :: (message) message
+begin
+  definition ctype_tsyn :: "channel \<Rightarrow> 'a tsyn set" where 
+    "ctype_tsyn c = {null} \<union> (Msg ` (ctype c))"
+  instance
+    by (intro_classes)
+end
+
+lemma ctype_tsynI: assumes "a \<in> ctype c"
+  shows "Msg a \<in> ctype c"
+  by (simp add: assms ctype_tsyn_def)
+
+lemma ctype_tsyn_iff: "a \<in> ctype c \<longleftrightarrow> Msg a \<in> ctype c"
+  by (simp add: ctype_tsyn_def image_iff)
+
+(* ----------------------------------------------------------------------- *)
+  section {* Definitions on Time-Synchronous Streams *}
+(* ----------------------------------------------------------------------- *)
+
+text {* @{term tsynDom}: Obtain the set of all stream messages. *}
+definition tsynDom :: "'a tsyn stream \<rightarrow> 'a set" where
+  "tsynDom \<equiv> \<Lambda> s. {m | m. (Msg m) \<in> sdom\<cdot>s}"
+
+text {* @{term tsynAbsElem}: Return the corresponding non tsyn element. *}
+fun tsynAbsElem :: "'a tsyn \<Rightarrow> 'a" where
+  "tsynAbsElem null = undefined " |
+  "tsynAbsElem (Msg a) = a"
+
+text {* @{term tsynAbs}: Filter the nulls and return the corresponding stream. *}
+definition tsynAbs:: "'a tsyn stream \<rightarrow> 'a stream" where
+  "tsynAbs \<equiv> \<Lambda> s. smap tsynAbsElem\<cdot>(sfilter {e. e \<noteq> null}\<cdot>s)"
+
+(* ToDo: add abbreviation *)
+
+text {* @{term tsynLen}: Return the number of messages. *}
+definition tsynLen:: "'a tsyn stream \<rightarrow> lnat" where 
+  "tsynLen \<equiv> \<Lambda> s. #(tsynAbs\<cdot>s)"
+
+text {* @{term tsynApplyElem}: Apply the function direct to the message. *}
+fun tsynApplyElem :: "('a \<Rightarrow> 'b) \<Rightarrow> 'a tsyn \<Rightarrow> 'b tsyn" where
+  "tsynApplyElem _ null = null" |
+  "tsynApplyElem f (Msg a) = Msg (f a)"
+
+text {* @{term tsynMap}: Apply a function to all elements of the stream. *}
+definition tsynMap :: "('a \<Rightarrow> 'b) \<Rightarrow> 'a tsyn stream \<rightarrow> 'b tsyn stream" where
+  "tsynMap f = smap (tsynApplyElem f)"
+
+text {* @{term tsynFilterElem}: Replace elements not inside the set with a emtpy time-slot. *}
+fun tsynFilterElem :: "('a set) \<Rightarrow> 'a tsyn \<Rightarrow> 'a tsyn" where
+  "tsynFilterElem _ null = null" |
+  "tsynFilterElem A (Msg a) = (if a \<notin> A then null else (Msg a))"
+
+text {* @{term tsynFilter}: Remove all elements from the stream which are not included in the given
+        set. *}
+definition tsynFilter :: "'a set \<Rightarrow> 'a tsyn stream \<rightarrow> 'a tsyn stream" where
+  "tsynFilter A = smap (tsynFilterElem A)"
+
+(* ----------------------------------------------------------------------- *)
+  section {* Lemmata on Time-Synchronous Streams *}
+(* ----------------------------------------------------------------------- *)
+
+text {* Induction rule for infinite time-synchronous streams and admissable predicates. *}
+lemma tsyn_ind [case_names adm bot msg null]:
+  assumes adm: "adm P"
+    and bot: "P \<epsilon>"
+    and msg: "\<And>m s. P s \<Longrightarrow> P (\<up>(Msg m) \<bullet> s)"
+    and null: "\<And>s. P s \<Longrightarrow> P (\<up>null \<bullet> s)"
+  shows "P x"
+  using assms 
+  apply (induction rule: ind [of _ x])
+  apply (simp_all add: adm bot)
+  by (metis tsyn.exhaust msg null)
+
+text {* Cases rule for time-synchronous streams. *}
+lemma tsyn_cases [case_names bot msg null]:
+  assumes bot: "P \<epsilon>"
+    and msg: "\<And>m s. P (\<up>(Msg m) \<bullet> s)"
+    and null: "\<And> s. P (\<up>null \<bullet> s)"
+  shows "P x"
+  using assms
+  apply (cases rule: scases [of x])
+  apply (simp add: bot)
+  by (metis tsyn.exhaust)
+
+(* ----------------------------------------------------------------------- *)
+  subsection {* tsynDom *}
+(* ----------------------------------------------------------------------- *)
+
+text {* @{term tsynDom} is a monotonous function. *}
+lemma tsyndom_monofun [simp]: "monofun (\<lambda>s. {m | m. (Msg m) \<in> sdom\<cdot>s})"
+  apply (rule monofunI)
+  apply (simp add: set_cpo_simps(1))
+  by (meson Collect_mono sdom_prefix subsetCE)
+
+text {* @{term tsynDom} is a continous function. *}
+lemma tsyndom_cont [simp]: "cont (\<lambda>s. {m | m. (Msg m) \<in> sdom\<cdot>s})"
+  apply (rule contI2)
+  apply (simp only: tsyndom_monofun)
+  apply (rule)+
+  apply (simp add: set_cpo_simps(1))
+  apply (rule subsetI)
+  by (simp add: image_iff lub_eq_Union sdom_cont2)
+
+text {* @{term tsynDom} insertion lemma. *}
+lemma tsyndom_insert: "tsynDom\<cdot>s = {m | m. (Msg m) \<in> sdom\<cdot>s}"
+  by (metis (no_types) Abs_cfun_inverse2 tsynDom_def tsyndom_cont)
+
+text {* If the domain of a stream is subset of another set it is also after removing the first 
+        element. *}
+lemma tsyndom_sconc_msg_sub: "tsynDom\<cdot>(\<up>(Msg x) \<bullet> xs) \<subseteq> S \<Longrightarrow> tsynDom\<cdot>xs \<subseteq> S"
+  by (simp add: subset_eq tsyndom_insert)
+
+text {* If the domain of a stream is subset of another set and it will be concatenated one element 
+        of this superset as first element to the stream it is also is a subset. *}
+lemma tsyndom_sconc_msg_sub2 [simp]: "tsynDom\<cdot>xs \<subseteq> S \<Longrightarrow> x \<in> S \<Longrightarrow> tsynDom\<cdot>(\<up>(Msg x) \<bullet> xs) \<subseteq> S"
+  by (simp add: subset_iff tsyndom_insert)
+
+text {* The empty time-slot is not part of the domain. *}
+lemma tsyndom_sconc_null [simp]: "tsynDom\<cdot>(\<up>null \<bullet> s) = tsynDom\<cdot>s"
+  by (metis (no_types, lifting) Collect_cong Un_insert_left tsyn.distinct(1) insert_iff sdom2un 
+      sup_bot.left_neutral tsyndom_insert)
+
+(* ----------------------------------------------------------------------- *)
+  subsection {* tsynAbs *}
+(* ----------------------------------------------------------------------- *)
+
+text {* @{term tsynAbs} insertion lemma. *}
+lemma tsynabs_insert: "tsynAbs\<cdot>s = smap tsynAbsElem\<cdot>(sfilter {e. e \<noteq> null}\<cdot>s)"
+  by (simp add: tsynAbs_def)
+
+text {* @{term tsynAbs} test on infinite stream. *}
+lemma tsynabs_test_infstream: "tsynAbs\<cdot>((<[Msg 1, Msg 2, null, Msg 3]>)\<infinity>) = (<[1,2,3]>)\<infinity>"
+  by (simp add: tsynabs_insert)
+
+text {* @{term tsynAbs} test on finite stream. *}
+lemma tsynabs_test_finstream: "tsynAbs\<cdot>(<[Msg 1, Msg 2, null, null, Msg 1, null]>) = <[1,2,1]>"
+  by (simp add: tsynabs_insert)
+
+text {* @{term tsynAbs} maps the empty stream on the empty stream. *}
+lemma tsynabs_strict [simp]: "tsynAbs\<cdot>\<epsilon> = \<epsilon>"
+  by (simp add: tsynabs_insert)
+
+text {* @{term tsynAbs} distributes over concatenation. *}
+lemma tsynabs_sconc_msg: "tsynAbs\<cdot>(\<up>(Msg a) \<bullet> as) = \<up>a \<bullet> (tsynAbs\<cdot>as)"
+  by (simp add: tsynabs_insert)
+
+text {* @{term tsynAbs} ignores empty time-slots. *}
+lemma tsynabs_sconc_null: "tsynAbs\<cdot>(\<up>null \<bullet> s) = tsynAbs\<cdot>s"
+  by (simp add: tsynabs_insert)
+
+text {* @{term tsynAbs} of the concatenation of two streams equals the concatenation of 
+        @{term tsynAbs} of both streams. *}
+lemma tsynabs_sconc: assumes "#as < \<infinity>" shows "tsynAbs\<cdot>(as \<bullet> bs) = tsynAbs\<cdot>as \<bullet> tsynAbs\<cdot>bs"
+  by (simp add: add_sfilter2 assms smap_split tsynabs_insert)
+
+text {* Length of @{term tsynAbs} is smaller or equal to the length of the original stream.  *}
+lemma tsynabs_slen: "#(tsynAbs\<cdot>s) \<le> #s"
+  by (simp add: slen_sfilterl1 tsynabs_insert)
+
+(* ----------------------------------------------------------------------- *)
+  subsection {* tsynMap *}
+(* ----------------------------------------------------------------------- *)
+
+text {* @{term tsynMap} insertion lemma. *}
+lemma tsynmap_insert: "tsynMap f\<cdot>s = smap (tsynApplyElem f)\<cdot>s"
+  by (simp add: tsynMap_def)
+
+text {* @{term tsynMap} is strict. *}
+lemma tsynmap_strict [simp]: "tsynMap f\<cdot>\<epsilon> = \<epsilon>"
+  by (simp add: tsynmap_insert)
+
+text {* @{term tsynMap} distributes over concatenation. *}
+lemma tsynmap_sconc_msg: "tsynMap f\<cdot>(\<up>(Msg m) \<bullet> s) = \<up>(Msg (f m)) \<bullet> tsynMap f\<cdot>s"
+  by (simp add: tsynmap_insert)
+
+text {* @{term tsynMap} ignores empty time-slots. *}
+lemma tsynmap_sconc_null: "tsynMap f\<cdot>(\<up>null \<bullet> s) = \<up>null \<bullet> tsynMap f\<cdot>s"
+  by (simp add: tsynmap_insert)
+
+text {* @{term tsynMap} leaves the length of a stream unchanged. *}
+lemma tsynmap_slen [simp]: "#(tsynMap f\<cdot>s) = #s"
+  by (simp add: tsynmap_insert)
+
+(* ----------------------------------------------------------------------- *)
+  subsection {* tsynFilter *}
+(* ----------------------------------------------------------------------- *)
+
+text {* @{term tsynAbs} insertion lemma. *}
+lemma tsynfilter_insert: "(tsynFilter A)\<cdot>s =  smap (tsynFilterElem A)\<cdot>s"
+  by (simp add: tsynFilter_def)
+
+text {* @{term tsynFilter} test on infinitely many time-slots.*}
+lemma tsynfilter_test_infstream: assumes "c \<noteq> a \<and> c \<noteq> b" 
+  shows "(tsynFilter {a,b})\<cdot>((<[Msg a, Msg c, null, Msg b]>)\<infinity>) = (<[Msg a, null, null, Msg b]>)\<infinity>"
+  by (simp add: assms tsynfilter_insert)
+
+text {* @{term tsynFilter} test on finite nat tsyn-stream. *}
+lemma tsynfilter_test_finstream: 
+  "(tsynFilter {(1::nat),2})\<cdot>(<[Msg 1, Msg 2, null, Msg 3, null, Msg 1, null, Msg 4]>) 
+     = <[Msg 1, Msg 2, null, null, null, Msg 1, null, null]>"
+  by (simp add: tsynfilter_insert)
+
+text {* @{term tsynFilter} maps the empty stream on the empty stream. *}
+lemma tsynfilter_strict [simp]: "(tsynFilter A)\<cdot>\<epsilon> = \<epsilon>"
+  by (simp add: tsynfilter_insert)
+
+text {* @{term tsynFilter} distributes over concatenation, having the first Stream consist of 
+        one Msg-element included in the given set. *}
+lemma tsynfilter_sconc_msg_in: assumes "m \<in> A"
+   shows "(tsynFilter A)\<cdot>(\<up>(Msg m) \<bullet> as) = \<up>(Msg m) \<bullet> (tsynFilter A)\<cdot>as"
+  by (simp add: assms tsynfilter_insert)
+
+text {* @{term tsynFilter} distributes over concatenation, having the first Stream consist of one 
+        Msg-element not included in the given set. *}
+lemma tsynfilter_sconc_msg_nin: assumes "m \<notin> A" 
+  shows"(tsynFilter A)\<cdot>(\<up>(Msg m) \<bullet> as) = \<up>(null) \<bullet> (tsynFilter A)\<cdot>as"
+  by (simp add: assms tsynfilter_insert)
+
+text {* @{term tsynFilter} distributes over concatenation, having the first Stream consist of one 
+        null-element. *}
+lemma tsynfilter_sconc_null: "(tsynFilter A)\<cdot>(\<up>(null)\<bullet> as) = \<up>(null) \<bullet> (tsynFilter A)\<cdot>as"
+  by (simp add: tsynfilter_insert)
+
+text {*@{term tsynFilter} of the concatenation of two streams equals the concatenation of 
+        @{term tsynFilter} of both streams. *}
+lemma tsynfilter_sconc: "(tsynFilter A)\<cdot>(a1 \<bullet> a2) = (tsynFilter A)\<cdot>a1 \<bullet> (tsynFilter A)\<cdot>a2"
+  by (simp add: smap_split tsynfilter_insert)
+  
+text {* Length of @{term tsynFilter} is equal to the length of the original stream. *}
+lemma tsynfilter_slen: "#((tsynFilter A)\<cdot>s) = #s"
+  by (simp add: tsynfilter_insert)
 
 
-section \<open>Definitions\<close>
-
-
-(* returns the set with all Msg in t. No ticks *)
-definition tsynDom :: "'a event stream \<rightarrow> 'a set" where
-"tsynDom \<equiv> \<Lambda> ts . {a | a. (Msg a) \<in> sdom\<cdot>ts}"
-
-
-
-thm smap_def
-definition tsynMap :: "('a \<Rightarrow> 'b) \<Rightarrow> 'a event stream \<rightarrow> 'b event stream" where
-"tsynMap f = smap (eventApply f)"
-
+(* ToDo: adjustments. *)
 
 (* Behaves like sscanlA, but on time-syncronus streams *)
-(* Ignore all ticks, do not modify the state and output tick *)
-definition tsynScanlA :: "('s \<Rightarrow>'a \<Rightarrow> ('b \<times>'s)) \<Rightarrow> 's  \<Rightarrow> 'a event stream \<rightarrow> 'b event stream" where
-"tsynScanlA f = sscanlA (\<lambda> s a. case a of (Msg m) \<Rightarrow> (Msg (fst (f s m)), (snd (f s m))) | Tick \<Rightarrow> (Tick, s))"
-
+(* Ignore all nulls, do not modify the state and output null *)
+definition tsynScanlA :: "('s \<Rightarrow>'a \<Rightarrow> ('b \<times>'s)) \<Rightarrow> 's  \<Rightarrow> 'a tsyn stream \<rightarrow> 'b tsyn stream" where
+"tsynScanlA f = sscanlA (\<lambda> s a. case a of (Msg m) \<Rightarrow> (Msg (fst (f s m)), (snd (f s m))) | null \<Rightarrow> (null, s))"
 
 (* Behaves like sscanlA, but on time-syncronus streams *)
-(* Ignore all ticks, do not modify the state and output tick *)
-definition tsynScanl :: "('b \<Rightarrow> 'a \<Rightarrow> 'b) \<Rightarrow> 'b  \<Rightarrow> 'a event stream \<rightarrow> 'b event stream" where
+(* Ignore all nulls, do not modify the state and output null *)
+definition tsynScanl :: "('b \<Rightarrow> 'a \<Rightarrow> 'b) \<Rightarrow> 'b  \<Rightarrow> 'a tsyn stream \<rightarrow> 'b tsyn stream" where
 "tsynScanl f b0 = tsynScanlA (\<lambda>b a. (f b a,f b a)) b0 "
 
 
 
 
-section \<open>Lemma\<close>
 
 
-lemma tsyn_ind: 
-  assumes adm: "adm P" 
-    and bot: "P \<epsilon>"
-    and msg: "\<And>a s. P s  \<Longrightarrow> P (\<up>(Msg a) \<bullet> s)"
-    and tick: "\<And>s. P s  \<Longrightarrow> P (\<up>Tick \<bullet> s)"
-  shows "P x"
- using assms apply(induction rule: ind [of _x])
-  apply (simp add: adm_def)
-    apply auto
-  by (metis event.exhaust)
-
-
-subsection \<open>tsynDom\<close>
-
-(* taken from tstream *)
-lemma tsyndom_monofun [simp]: "monofun (\<lambda>t. {a | a. (Msg a) \<in> sdom\<cdot>t})"
-by (smt contra_subsetD mem_Collect_eq monofunI monofun_cfun_arg set_cpo_simps(1) subsetI) 
-
-(* for any chain Y of tstreams the domain of the lub is contained in the lub of domains of the chain *)
-lemma tsyndom_contlub [simp]: assumes "chain Y" 
-  shows "{a | a. (Msg a) \<in> sdom\<cdot>(\<Squnion>i. Y i)} \<subseteq> (\<Squnion>i. {a | a. (Msg a) \<in> sdom\<cdot>(Y i)})"
-    (is "?F (\<Squnion>i. Y i) \<subseteq> _ ")
-proof 
-  fix a
-  assume "a\<in>?F (\<Squnion>i. Y i)"
-  hence "Msg a \<in> sdom\<cdot>( (\<Squnion>i. Y i))" by (simp add: tsynDom_def)
-  hence "Msg a \<in> (\<Squnion>i. sdom\<cdot>((Y i)))"
-    by (smt adm_def assms contlub_cfun_arg lub_eq mem_Collect_eq po_class.chain_def) 
-  hence "Msg a \<in> (\<Union>i. sdom\<cdot>(Y i))" by (simp add: lub_eq_Union)
-  hence "(a \<in> (\<Squnion>i. {u. Msg u \<in> sdom\<cdot>(Y i)}))" by (simp add: lub_eq_Union)
-  thus "a\<in>(\<Squnion>i. ?F (Y i))" by (metis (mono_tags, lifting) Collect_cong lub_eq)
-qed
-
-lemma tsyndom_cont [simp]:"cont (\<lambda>t. {a | a. (Msg a) \<in> sdom\<cdot>t})"
-apply(rule contI2)
-using tsyndom_monofun apply blast
-by (metis SetPcpo.less_set_def tsyndom_contlub)
-
-lemma tsyndom_insert: "tsynDom\<cdot>t = {a | a. (Msg a) \<in> sdom\<cdot>t}"
-by (metis (mono_tags, lifting) Abs_cfun_inverse2 tsynDom_def tsyndom_cont)
-
-lemma tsyndom_sub: "tsynDom\<cdot>(\<up>x \<bullet> xs) \<subseteq> S \<Longrightarrow> tsynDom\<cdot>xs \<subseteq> S"
-  apply(simp add: tsyndom_insert)
-  by blast
-
-lemma tsyndom_sub2: "tsynDom\<cdot>(\<up>(Msg x) \<bullet> xs) \<subseteq> S \<Longrightarrow> x \<in> S"
-  apply(simp add: tsyndom_insert)
-  by blast
-
-lemma tsyndom_conc_sub: "tsynDom\<cdot>ts \<subseteq> S \<Longrightarrow> x\<in>S \<Longrightarrow> tsynDom\<cdot>(\<up>(Msg x) \<bullet> ts) \<subseteq> S"
-  apply(simp add: tsyndom_insert)
-  by blast
-
-lemma tsyndom_conc_tick [simp]: "tsynDom\<cdot>(\<up>Tick \<bullet> ts) = tsynDom\<cdot>ts"
-  by(simp add: tsyndom_insert)
-
-
-
-subsection \<open>tsynMap\<close>
-lemma tsynmap_len [simp]: "#(tsynMap f\<cdot>s) = #s"
-  by (simp add: tsynMap_def)
-
-lemma tsynmap_bot [simp]: "tsynMap f\<cdot>\<bottom> = \<bottom>"
-  by (simp add: tsynMap_def)
-
-lemma tsynmap_tick [simp]: "tsynMap f\<cdot>(\<up>Tick \<bullet> s) = \<up>Tick \<bullet> tsynMap f\<cdot>s"
-  by (simp add: tsynMap_def)
-
-lemma tsynmap_msg [simp]: "tsynMap f\<cdot>(\<up>(Msg m) \<bullet> s) = \<up>(Msg (f m)) \<bullet> tsynMap f\<cdot>s"
-  by (simp add: tsynMap_def)
 
 
 
@@ -139,7 +297,7 @@ lemma tsynscanla_bot [simp]: "tsynScanlA f b\<cdot>\<bottom> = \<bottom>"
   unfolding tsynScanlA_def
   by auto
 
-lemma tsynscanla_tick [simp]: "tsynScanlA f b\<cdot>(\<up>Tick \<bullet> s) = \<up>Tick \<bullet> (tsynScanlA f b\<cdot>s)"
+lemma tsynscanla_null [simp]: "tsynScanlA f b\<cdot>(\<up>null \<bullet> s) = \<up>null \<bullet> (tsynScanlA f b\<cdot>s)"
   unfolding tsynScanlA_def
   by auto
 
@@ -147,9 +305,9 @@ lemma tsynscanla_msg [simp]: "tsynScanlA f b\<cdot>(\<up>(Msg m) \<bullet> s) = 
   unfolding tsynScanlA_def
   by auto
 
-lemma tsynscanla_one [simp]: "tsynScanlA f b\<cdot>(\<up>x) = \<up>(eventApply (\<lambda>a. fst (f b a)) x)"
+lemma tsynscanla_one [simp]: "tsynScanlA f b\<cdot>(\<up>x) = \<up>(tsynApplyElem (\<lambda>a. fst (f b a)) x)"
   apply(simp add: tsynScanlA_def)
-  by (metis (mono_tags, lifting) event.exhaust event.simps(4) event.simps(5) eventApply.simps(1) eventApply.simps(2) fst_conv)
+  by (metis (mono_tags, lifting) tsyn.exhaust tsyn.simps(4) tsyn.simps(5) tsynApplyElem.simps(1) tsynApplyElem.simps(2) fst_conv)
 
 subsection \<open>tsynScanl\<close>
 
@@ -161,15 +319,15 @@ lemma tsynscanl_bot [simp]: "tsynScanl f b\<cdot>\<bottom> = \<bottom>"
   unfolding tsynScanl_def
   by auto
 
-lemma tsynscanl_tick [simp]: "tsynScanl f b\<cdot>(\<up>Tick \<bullet> s) = \<up>Tick \<bullet> (tsynScanl f b\<cdot>s)"
+lemma tsynscanl_null [simp]: "tsynScanl f b\<cdot>(\<up>null \<bullet> s) = \<up>null \<bullet> (tsynScanl f b\<cdot>s)"
   unfolding tsynScanl_def
-  using tsynscanla_tick by blast
+  using tsynscanla_null by blast
 
 lemma tsynscanl_msg [simp]: "tsynScanl f b\<cdot>(\<up>(Msg m) \<bullet> s) = \<up>(Msg (f b m)) \<bullet> (tsynScanl f (f b m)\<cdot>s)"
   unfolding tsynScanl_def
   by (simp)
 
-lemma tsynscanl_one [simp]: "tsynScanl f b\<cdot>(\<up>x) = \<up>(eventApply (f b) x)"
+lemma tsynscanl_one [simp]: "tsynScanl f b\<cdot>(\<up>x) = \<up>(tsynApplyElem (f b) x)"
   by(simp add: tsynScanl_def)
 
 
@@ -182,7 +340,7 @@ lemma tsynscanl_map: "tsynScanl f b\<cdot>(\<up>(Msg m) \<bullet> xs) = \<up>(Ms
 
 section \<open>Sum\<close>
 
-definition tsynSum :: "'a::{zero, countable,monoid_add, ab_semigroup_add, plus} event stream \<rightarrow> 'a event stream" where
+definition tsynSum :: "'a::{zero, countable,monoid_add, ab_semigroup_add, plus} tsyn stream \<rightarrow> 'a tsyn stream" where
 "tsynSum = tsynScanl plus 0"
 
 lemma tsynsum_bot [simp]: "tsynSum\<cdot>\<bottom> = \<bottom>"
@@ -208,8 +366,8 @@ lemma "tsynScanl plus n\<cdot>(\<up>(Msg m) \<bullet> xs) = \<up>(Msg (n+m)) \<b
 lemma "tsynSum\<cdot>(\<up> (Msg 0)\<infinity>) = \<up> (Msg 0)\<infinity>"
   by (metis add.right_neutral s2sinftimes sinftimes_unfold tsynSum_def tsynscanl_msg)
 
-lemma "tsynSum\<cdot>(\<up>Tick\<infinity>) = \<up>Tick\<infinity>"
-  by (metis s2sinftimes sinftimes_unfold tsynSum_def tsynscanl_tick)
+lemma "tsynSum\<cdot>(\<up>null\<infinity>) = \<up>null\<infinity>"
+  by (metis s2sinftimes sinftimes_unfold tsynSum_def tsynscanl_null)
 
 lemma tsynsum_even_h: assumes "tsynDom\<cdot>ts \<subseteq> {n. even n}"
       and "even m"
@@ -222,7 +380,8 @@ lemma tsynsum_even_h: assumes "tsynDom\<cdot>ts \<subseteq> {n. even n}"
   apply (smt Collect_mem_eq Collect_mono_iff ch2ch_Rep_cfunR contlub_cfun_arg subset_cont)
     apply simp
   apply simp
-   apply (metis dvd_add_right_iff mem_Collect_eq tsyndom_conc_sub tsyndom_sub tsyndom_sub2)
+  apply (smt Un_insert_left tsyn.simps(1) insert_iff mem_Collect_eq odd_add sdom2un subset_iff 
+         sup_bot.left_neutral tsyndom_insert)
   by simp
 
 lemma tsynsum_even: assumes "tsynDom\<cdot>ts \<subseteq> {n. even n}"
