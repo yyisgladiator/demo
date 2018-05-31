@@ -360,54 +360,45 @@ lemma tsynscanl_slen: "#(tsynScanl f i\<cdot>s) = #s"
 
 (* ToDo: adjustments. *)
 
-(*
-definition tsynSum :: "'a::{zero, countable,monoid_add, ab_semigroup_add, plus} tsyn stream \<rightarrow> 'a tsyn stream" where
-"tsynSum = tsynScanl plus 0"
+definition tsynSum :: 
+  "'a:: {zero, countable, monoid_add, ab_semigroup_add, plus} tsyn stream \<rightarrow> 'a tsyn stream" where
+  "tsynSum = tsynScanl plus 0"
 
-lemma tsynsum_bot [simp]: "tsynSum\<cdot>\<bottom> = \<bottom>"
-  unfolding tsynSum_def
-  by simp
+lemma tsynsum_insert: "tsynSum\<cdot>s =  tsynScanl plus 0\<cdot>s"
+  by (simp add: tsynSum_def)
 
-lemma tsynsum_one [simp]: "tsynSum\<cdot>(\<up>x) = \<up>x"
-  unfolding tsynSum_def
-  apply simp
-  apply(cases x)
-  by auto
+lemma tsynsum_strict [simp]: "tsynSum\<cdot>\<epsilon> = \<epsilon>"
+  by (simp add: tsynsum_insert)
 
-lemma "tsynScanl plus n\<cdot>(\<up>(Msg m) \<bullet> xs) = \<up>(Msg (n+m)) \<bullet> tsynMap (plus m)\<cdot>(tsynScanl plus n\<cdot>xs)"
-  apply (induction xs arbitrary: m n rule: ind)
-    apply simp
-   apply simp
-  apply(rename_tac a s m n)
-  apply(case_tac a)
-  apply auto
+lemma tsynsum_singleton: "tsynSum\<cdot>(\<up>a) = \<up>a"
+  by (cases a, simp_all add: tsynsum_insert tsynscanl_singleton)
+
+lemma "tsynScanl plus n\<cdot>(\<up>(Msg a) \<bullet> as) = \<up>(Msg (n + a)) \<bullet> tsynMap (plus a)\<cdot>(tsynScanl plus n\<cdot>as)"
+  apply (induction as arbitrary: a n rule: tsyn_ind, simp_all)
+  apply (simp add: tsynscanl_singleton)
   oops
 
-  subsection \<open>Testing\<close>
-lemma "tsynSum\<cdot>(\<up> (Msg 0)\<infinity>) = \<up> (Msg 0)\<infinity>"
-  by (metis add.right_neutral s2sinftimes sinftimes_unfold tsynSum_def tsynscanl_msg)
+lemma tsynsum_test_infmsg: "tsynSum\<cdot>(\<up>(Msg 0)\<infinity>) = \<up>(Msg 0)\<infinity>"
+  by (metis add.left_neutral s2sinftimes sinftimes_unfold tsynSum_def tsynscanl_sconc_msg)
 
-lemma "tsynSum\<cdot>(\<up>null\<infinity>) = \<up>null\<infinity>"
-  by (metis s2sinftimes sinftimes_unfold tsynSum_def tsynscanl_null)
+lemma tsynsum_test_infnull: "tsynSum\<cdot>(\<up>null\<infinity>) = \<up>null\<infinity>"
+  by (metis s2sinftimes sinftimes_unfold tsynSum_def tsynscanl_sconc_null)
 
-lemma tsynsum_even_h: assumes "tsynDom\<cdot>ts \<subseteq> {n. even n}"
-      and "even m"
-  shows "tsynDom\<cdot>(tsynScanl plus m\<cdot>ts) \<subseteq> {n. even n}"
-  using assms apply(induction arbitrary: m rule: tsyn_ind [of _ ts])
-     apply(rule adm_imp)
-      apply simp
-  apply(simp add: adm_def)
-     apply auto[1]
-  apply (smt Collect_mem_eq Collect_mono_iff ch2ch_Rep_cfunR contlub_cfun_arg subset_cont)
-    apply simp
-  apply simp
-  apply (smt Un_insert_left tsyn.simps(1) insert_iff mem_Collect_eq odd_add sdom2un subset_iff 
-         sup_bot.left_neutral tsyndom_insert)
-  by simp
+lemma tsynsum_even_h: 
+  assumes "tsynDom\<cdot>s \<subseteq> {n. even n}"
+    and "even m"
+  shows "tsynDom\<cdot>(tsynScanl plus m\<cdot>s) \<subseteq> {n. even n}"
+  using assms 
+  apply (induction s arbitrary: m rule: tsyn_ind)
+  apply (rule adm_imp, simp_all)
+  apply (rule admI)
+  apply (metis ch2ch_Rep_cfunR contlub_cfun_arg subset_cont)
+  apply (simp add: tsyndom_insert tsynscanl_insert tsynscanlext_insert)
+  apply (smt Collect_mono_iff odd_add)
+  by (simp add: tsynscanl_sconc_null)
 
-lemma tsynsum_even: assumes "tsynDom\<cdot>ts \<subseteq> {n. even n}"
-  shows "tsynDom\<cdot>(tsynSum\<cdot>ts) \<subseteq> {n. even n}"
-  by (simp add: assms tsynSum_def tsynsum_even_h)
-*)
+lemma tsynsum_even: assumes "tsynDom\<cdot>s \<subseteq> {n. even n}"
+  shows "tsynDom\<cdot>(tsynSum\<cdot>s) \<subseteq> {n. even n}"
+  by (simp add: assms tsynsum_insert tsynsum_even_h)
 
 end
