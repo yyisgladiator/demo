@@ -23,9 +23,13 @@ text {* Introduce symbol @{text -} for empty time-slots called null. *}
 syntax "@null" :: "'a tsyn" ("-")
 translations "-" == "CONST null"
 
-text {* Inverse of Msg.*}
-abbreviation inversMsg ::  "'a tsyn \<Rightarrow> 'a"  ("\<M>\<inverse> _") where 
-  "inversMsg e \<equiv> (case e of \<M> m \<Rightarrow> m)"
+text {* Inverse of Msg. *}
+fun inverseMsg :: "'a tsyn \<Rightarrow> 'a" where
+  "inverseMsg null = undefined" |
+  "inverseMsg (Msg m) = m"
+
+abbreviation invMsg :: "'a tsyn \<Rightarrow> 'a"  ("\<M>\<inverse> _") where 
+  "invMsg \<equiv> inverseMsg"
 
 text {* Prove that datatype tsyn is countable. Needed, since the domain-constructor defined
         to work for countable types .*}
@@ -90,6 +94,24 @@ text {* @{term tsynFilter}: Remove all elements from the stream which are not in
         set. *}
 definition tsynFilter :: "'a set \<Rightarrow> 'a tsyn stream \<rightarrow> 'a tsyn stream" where
   "tsynFilter A = smap (tsynFilterElem A)"
+
+(* ToDo: add description. *)
+
+fun tsynScanlExt_h :: "('s \<Rightarrow> 'a \<Rightarrow> ('b \<times>'s)) \<Rightarrow> 's \<Rightarrow> 'a tsyn \<Rightarrow> ('b tsyn \<times> 's)" where
+  "tsynScanlExt_h f s (Msg m) = (Msg (fst (f s m)), (snd (f s m)))" |
+  "tsynScanlExt_h f s null = (null, s)"
+
+text {* @{term tsynScanlExt}: Apply a function elementwise to the input stream. Behaves like 
+        @{term tsynMap}, but also takes a state as additional input to the function. For the first 
+        computation an initial state is provided. *}
+definition tsynScanlExt :: "('s \<Rightarrow> 'a \<Rightarrow> ('b \<times> 's)) \<Rightarrow> 's \<Rightarrow> 'a tsyn stream \<rightarrow> 'b tsyn stream" where
+  "tsynScanlExt f = sscanlA (tsynScanlExt_h f)"
+
+text {* @{term tsynScanl}: Apply a function elementwise to the input stream. Behaves like 
+  @{term tsynMap}, but also takes the previously generated output element as additional input to 
+  the function. For the first computation an initial value is provided. *}
+definition tsynScanl :: "('b \<Rightarrow> 'a \<Rightarrow> 'b) \<Rightarrow> 'b \<Rightarrow> 'a tsyn stream \<rightarrow> 'b tsyn stream" where
+  "tsynScanl f i = tsynScanlExt (\<lambda>a b. (f a b, f a b)) i"
 
 (* ----------------------------------------------------------------------- *)
   section {* Fixrec-Definitions on Time-Synchronous Streams *}
@@ -292,80 +314,53 @@ text {* Length of @{term tsynFilter} is equal to the length of the original stre
 lemma tsynfilter_slen: "#((tsynFilter A)\<cdot>s) = #s"
   by (simp add: tsynfilter_insert)
 
+(* ----------------------------------------------------------------------- *)
+  subsection {* tsynScanl *}
+(* ----------------------------------------------------------------------- *)
+
+(* ToDo: add descriptions. *)
+
+lemma tsynscanlext_insert: "tsynScanlExt f i\<cdot>s = sscanlA (tsynScanlExt_h f) i\<cdot>s"
+  by (simp add: tsynScanlExt_def)
+
+lemma tsynscanlext_strict [simp]: "tsynScanlExt f i\<cdot>\<epsilon> = \<epsilon>"
+  by (simp add: tsynscanlext_insert)
+
+lemma tsynscanlext_singleton: "tsynScanlExt f i\<cdot>(\<up>a) = \<up>(tsynApplyElem (\<lambda>x. fst (f i x)) a)"
+  by (cases a, simp_all add: tsynscanlext_insert)
+
+lemma tsynscanlext_sconc_msg: 
+  "tsynScanlExt f i\<cdot>(\<up>(Msg a) \<bullet> as) = \<up>(Msg (fst (f i a))) \<bullet> (tsynScanlExt f (snd (f i a))\<cdot>as)"
+  by (simp add: tsynscanlext_insert)
+
+lemma tsynscanlext_sconc_null: "tsynScanlExt f i\<cdot>(\<up>null \<bullet> s) = \<up>null \<bullet> (tsynScanlExt f i\<cdot>s)"
+  by (simp add: tsynscanlext_insert)
+
+lemma tsynscanlext_slen: "#(tsynScanlExt f i\<cdot>s) = #s"
+  by (simp add: tsynscanlext_insert)
+
+lemma tsynscanl_insert: "tsynScanl f i\<cdot>s = tsynScanlExt (\<lambda>a b. (f a b, f a b)) i\<cdot>s"
+  by (simp add: tsynScanl_def)
+
+lemma tsynscanl_strict [simp]: "tsynScanl f i\<cdot>\<epsilon> = \<epsilon>"
+  by (simp add: tsynscanl_insert)
+
+lemma tsynscanl_singleton: "tsynScanl f i\<cdot>(\<up>a) = \<up>(tsynApplyElem (f i) a)"
+  by (simp add: tsynscanl_insert tsynscanlext_singleton)
+
+lemma tsynscanl_sconc_msg: 
+  "tsynScanl f i\<cdot>(\<up>(Msg a) \<bullet> as) = \<up>(Msg (f i a)) \<bullet> (tsynScanl f (f i a)\<cdot>as)"
+  by (simp add: tsynscanl_insert tsynscanlext_sconc_msg)
+
+lemma tsynscanl_sconc_null: "tsynScanl f i\<cdot>(\<up>null \<bullet> s) = \<up>null \<bullet> (tsynScanl f i\<cdot>s)"
+  by (simp add: tsynscanl_insert tsynscanlext_sconc_null)
+
+lemma tsynscanl_slen: "#(tsynScanl f i\<cdot>s) = #s"
+  by (simp add: tsynscanl_insert tsynscanlext_slen)
 
 (* ToDo: adjustments. *)
 
-(* Behaves like sscanlA, but on time-syncronus streams *)
-(* Ignore all nulls, do not modify the state and output null *)
-definition tsynScanlA :: "('s \<Rightarrow>'a \<Rightarrow> ('b \<times>'s)) \<Rightarrow> 's  \<Rightarrow> 'a tsyn stream \<rightarrow> 'b tsyn stream" where
-"tsynScanlA f = sscanlA (\<lambda> s a. case a of (Msg m) \<Rightarrow> (Msg (fst (f s m)), (snd (f s m))) | null \<Rightarrow> (null, s))"
-
-(* Behaves like sscanlA, but on time-syncronus streams *)
-(* Ignore all nulls, do not modify the state and output null *)
-definition tsynScanl :: "('b \<Rightarrow> 'a \<Rightarrow> 'b) \<Rightarrow> 'b  \<Rightarrow> 'a tsyn stream \<rightarrow> 'b tsyn stream" where
-"tsynScanl f b0 = tsynScanlA (\<lambda>b a. (f b a,f b a)) b0 "
-
-
-
-
-
-
-
-
-
-subsection \<open>tsynScanlA\<close>
-
-lemma tsynscanla_len [simp]: "#(tsynScanlA f b\<cdot>s) = #s"
-  unfolding tsynScanlA_def
-  using sscanla_len by blast
-
-lemma tsynscanla_bot [simp]: "tsynScanlA f b\<cdot>\<bottom> = \<bottom>"
-  unfolding tsynScanlA_def
-  by auto
-
-lemma tsynscanla_null [simp]: "tsynScanlA f b\<cdot>(\<up>null \<bullet> s) = \<up>null \<bullet> (tsynScanlA f b\<cdot>s)"
-  unfolding tsynScanlA_def
-  by auto
-
-lemma tsynscanla_msg [simp]: "tsynScanlA f b\<cdot>(\<up>(Msg m) \<bullet> s) = \<up>(Msg (fst (f b m))) \<bullet> (tsynScanlA f (snd (f b m))\<cdot>s)"
-  unfolding tsynScanlA_def
-  by auto
-
-lemma tsynscanla_one [simp]: "tsynScanlA f b\<cdot>(\<up>x) = \<up>(tsynApplyElem (\<lambda>a. fst (f b a)) x)"
-  apply(simp add: tsynScanlA_def)
-  by (metis (mono_tags, lifting) tsyn.exhaust tsyn.simps(4) tsyn.simps(5) tsynApplyElem.simps(1) tsynApplyElem.simps(2) fst_conv)
-
-subsection \<open>tsynScanl\<close>
-
-lemma tsynscanl_len [simp]: "#(tsynScanl f b\<cdot>s) = #s"
-  unfolding tsynScanl_def
-  by auto
-
-lemma tsynscanl_bot [simp]: "tsynScanl f b\<cdot>\<bottom> = \<bottom>"
-  unfolding tsynScanl_def
-  by auto
-
-lemma tsynscanl_null [simp]: "tsynScanl f b\<cdot>(\<up>null \<bullet> s) = \<up>null \<bullet> (tsynScanl f b\<cdot>s)"
-  unfolding tsynScanl_def
-  using tsynscanla_null by blast
-
-lemma tsynscanl_msg [simp]: "tsynScanl f b\<cdot>(\<up>(Msg m) \<bullet> s) = \<up>(Msg (f b m)) \<bullet> (tsynScanl f (f b m)\<cdot>s)"
-  unfolding tsynScanl_def
-  by (simp)
-
-lemma tsynscanl_one [simp]: "tsynScanl f b\<cdot>(\<up>x) = \<up>(tsynApplyElem (f b) x)"
-  by(simp add: tsynScanl_def)
-
-
-(* Does not hold for all f *)
-lemma tsynscanl_map: "tsynScanl f b\<cdot>(\<up>(Msg m) \<bullet> xs) = \<up>(Msg (f b m)) \<bullet> tsynMap (\<lambda>x. f x m)\<cdot>(tsynScanl f b\<cdot>xs)"
-  oops
-
-
-
-
-section \<open>Sum\<close>
-
+(*
 definition tsynSum :: "'a::{zero, countable,monoid_add, ab_semigroup_add, plus} tsyn stream \<rightarrow> 'a tsyn stream" where
 "tsynSum = tsynScanl plus 0"
 
@@ -413,5 +408,6 @@ lemma tsynsum_even_h: assumes "tsynDom\<cdot>ts \<subseteq> {n. even n}"
 lemma tsynsum_even: assumes "tsynDom\<cdot>ts \<subseteq> {n. even n}"
   shows "tsynDom\<cdot>(tsynSum\<cdot>ts) \<subseteq> {n. even n}"
   by (simp add: assms tsynSum_def tsynsum_even_h)
+*)
 
 end
