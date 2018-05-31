@@ -164,9 +164,9 @@ text {* @{term tsynAbs} insertion lemma. *}
 lemma tsynabs_insert: "tsynAbs\<cdot>s = smap tsynAbsElem\<cdot>(sfilter {e. e \<noteq> null}\<cdot>s)"
   by (simp add: tsynAbs_def)
 
-text {* @{term tsynAbs} test on infinitely many time-slots. *}
-lemma tsynabs_test_infnulls: "tsynAbs\<cdot>(\<up>null\<infinity>) = \<epsilon>"
-  by (simp add: tsynabs_insert sfilter_sinftimes_nin)
+text {* @{term tsynAbs} test on infinite stream. *}
+lemma tsynabs_test_infstream: "tsynAbs\<cdot>((<[Msg 1, Msg 2, null, Msg 3]>)\<infinity>) = (<[1,2,3]>)\<infinity>"
+  by (simp add: tsynabs_insert)
 
 text {* @{term tsynAbs} test on finite stream. *}
 lemma tsynabs_test_finstream: "tsynAbs\<cdot>(<[Msg 1, Msg 2, null, null, Msg 1, null]>) = <[1,2,1]>"
