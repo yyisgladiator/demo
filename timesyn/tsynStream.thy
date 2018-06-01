@@ -358,13 +358,17 @@ lemma tsynscanl_sconc_null: "tsynScanl f i\<cdot>(\<up>null \<bullet> s) = \<up>
 lemma tsynscanl_slen: "#(tsynScanl f i\<cdot>s) = #s"
   by (simp add: tsynscanl_insert tsynscanlext_slen)
 
-(* ToDo: adjustments. *)
+(* ----------------------------------------------------------------------- *)
+  section {* tsynSum - CaseStudy *}
+(* ----------------------------------------------------------------------- *)
+
+(* ToDo: add descriptions. *)
 
 definition tsynSum :: 
-  "'a:: {zero, countable, monoid_add, ab_semigroup_add, plus} tsyn stream \<rightarrow> 'a tsyn stream" where
+  "'a :: {zero, countable, monoid_add, ab_semigroup_add, plus} tsyn stream \<rightarrow> 'a tsyn stream" where
   "tsynSum = tsynScanl plus 0"
 
-lemma tsynsum_insert: "tsynSum\<cdot>s =  tsynScanl plus 0\<cdot>s"
+lemma tsynsum_insert: "tsynSum\<cdot>s = tsynScanl plus 0\<cdot>s"
   by (simp add: tsynSum_def)
 
 lemma tsynsum_strict [simp]: "tsynSum\<cdot>\<epsilon> = \<epsilon>"
@@ -393,6 +397,7 @@ lemma tsynsum_even_h:
   apply (rule adm_imp, simp_all)
   apply (rule admI)
   apply (metis ch2ch_Rep_cfunR contlub_cfun_arg subset_cont)
+  (* ToDo: adjust with tsyndom_sconc_msg *)
   apply (simp add: tsyndom_insert tsynscanl_insert tsynscanlext_insert)
   apply (smt Collect_mono_iff odd_add)
   by (simp add: tsynscanl_sconc_null)
