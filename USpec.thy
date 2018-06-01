@@ -370,6 +370,38 @@ lemma revUnion_mono[simp]: "\<And>S1. monofun (\<lambda>S2. Rev (inv Rev (uspecR
   apply(rule monofunI)
   by (metis SetPcpo.less_set_def below_refl below_rev.simps monofun_cfun_arg rev_inv_rev sup_mono)
 
+lemma "a \<sqsubseteq> b \<Longrightarrow> (inv Rev b) \<sqsubseteq> (inv Rev a)"
+  sledgehammer
+  by (metis below_rev.simps rev_inv_rev)
+
+lemma revUnion_cont[simp]: "\<And>S1. cont (\<lambda>S2. Rev (inv Rev (uspecRevSet\<cdot>S1) \<union> inv Rev (uspecRevSet\<cdot>S2)))"
+  apply(rule contI2)
+  apply simp
+  apply(rule allI)
+  apply(rule impI)
+  proof -
+    fix S::"'a uspec" and Y::"nat \<Rightarrow> 'a uspec"
+    assume a1: "chain Y"
+    have h1: "uspecRevSet\<cdot>(Lub Y) = (\<Squnion>i. uspecRevSet\<cdot>(Y i))"
+      using a1 contlub_cfun_arg by auto
+    have h2: "\<And>x. x \<in> inv Rev (\<Squnion>i. Rev (inv Rev (uspecRevSet\<cdot>S) \<union> inv Rev (uspecRevSet\<cdot>(Y i)))) 
+               \<Longrightarrow> x \<in> (inv Rev (uspecRevSet\<cdot>S) \<union> inv Rev (uspecRevSet\<cdot>(\<Squnion>i. Y i)))"
+      proof -
+        fix x
+        assume a1: "x \<in> inv Rev (\<Squnion>i. Rev (inv Rev (uspecRevSet\<cdot>S) \<union> inv Rev (uspecRevSet\<cdot>(Y i))))"
+        have g1: "x \<in> inv Rev (uspecRevSet\<cdot>S)"
+          sorry
+        show "x \<in> (inv Rev (uspecRevSet\<cdot>S) \<union> inv Rev (uspecRevSet\<cdot>(\<Squnion>i. Y i)))"
+          sorry
+      qed
+    have h3: "inv Rev (\<Squnion>i. Rev (inv Rev (uspecRevSet\<cdot>S) \<union> inv Rev (uspecRevSet\<cdot>(Y i)))) \<sqsubseteq>
+             (inv Rev (uspecRevSet\<cdot>S) \<union> inv Rev (uspecRevSet\<cdot>(\<Squnion>i. Y i)))"
+      by (metis h2 set_cpo_simps(1) subsetI)
+    show "Rev (inv Rev (uspecRevSet\<cdot>S) \<union> inv Rev (uspecRevSet\<cdot>(\<Squnion>i. Y i))) \<sqsubseteq>
+     (\<Squnion>i. Rev (inv Rev (uspecRevSet\<cdot>S) \<union> inv Rev (uspecRevSet\<cdot>(Y i))))"
+      by (metis below_rev.simps h3 rev_inv_rev)
+  qed
+
 lemma uspecUnion_mono[simp]:
 "monofun (\<lambda>S2. Abs_uspec ((setrevFilter (\<lambda>f. ufclDom\<cdot>f = (uspecDom\<cdot>S1 \<union> uspecDom\<cdot>S2)
                                            \<and> ufclRan\<cdot>f = (uspecRan\<cdot>S1 \<union> uspecRan\<cdot>S2))
@@ -448,7 +480,15 @@ lemma uspecUnion_cont1:
       by (simp add: a1 uspecdom_lub_chain uspecran_lub_chain)
 
     have h6: "(Rev (inv Rev (uspecRevSet\<cdot>S1) \<union> inv Rev (uspecRevSet\<cdot>(Lub Y)))) \<sqsubseteq> (\<Squnion>i. Rev (inv Rev (uspecRevSet\<cdot>S1) \<union> inv Rev (uspecRevSet\<cdot>(Y i))))"
-      sorry
+      proof -
+        have s1: "uspecRevSet\<cdot>(Lub Y) = (\<Squnion>i. uspecRevSet\<cdot>(Y i))"
+          using a1 contlub_cfun_arg by auto
+        have s2: "\<And>A. cont (\<lambda>x. (Rev(inv Rev A \<union> inv Rev x)))"
+          apply(rule contI2)
+          apply (smt Un_left_commute Un_upper1 inv_rev_rev monofunI revBelowNeqSubset sup.orderE)
+          sorry (*thesis ist teil von cont Beweis*)
+        show ?thesis sorry
+      qed
 
     show "Abs_uspec
         (setrevFilter (\<lambda>f::'a. ufclDom\<cdot>f = uspecDom\<cdot>S1 \<union> uspecDom\<cdot>(\<Squnion>i::nat. Y i) \<and> ufclRan\<cdot>f = uspecRan\<cdot>S1 \<union> uspecRan\<cdot>(\<Squnion>i::nat. Y i))\<cdot>
