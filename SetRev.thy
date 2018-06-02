@@ -210,7 +210,7 @@ lemma setrevUnion_mono[simp]: "\<And>A. monofun (\<lambda>x. Rev((inv Rev A) \<u
   apply(rule monofunI)
   by (metis SetPcpo.less_set_def Un_mono below_rev.simps order_refl revBelowNeqSubset)
 
-lemma setrevUnion_cont1: "\<And>A. cont (\<lambda>x. Rev((inv Rev A) \<union> (inv Rev x)))"
+lemma setrevUnion_cont1: "cont (\<lambda>x. Rev((inv Rev A) \<union> (inv Rev x)))"
   apply(rule contI2)
   apply simp
   apply(simp add: setrevUnion_chain)
@@ -250,5 +250,14 @@ lemma setrevUnion_cont[simp]: "cont (\<lambda>A. \<Lambda> B. Rev((inv Rev A) \<
   apply(rule easy_cont)
   apply(simp only: setrevUnion_sym)
   using setrevUnion_cont1 by blast
+
+lemma setrevUnion_sym2: "\<And>A B. setrevUnion\<cdot>A\<cdot>B = setrevUnion\<cdot>B\<cdot>A"
+  proof -
+    fix A :: "'a set rev" and B :: "'a set rev"
+    have "\<And>r. (\<Lambda> ra. Rev ((inv Rev r::'a set) \<union> inv Rev ra)) = setrevUnion\<cdot>r"
+      by (simp add: setrevUnion_def)
+    then show "setrevUnion\<cdot>A\<cdot>B = setrevUnion\<cdot>B\<cdot>A"
+      by (metis (no_types) beta_cfun setrevUnion_cont1 setrevUnion_sym)
+  qed
   
 end
