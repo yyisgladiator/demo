@@ -406,8 +406,41 @@ lemma uspecUnion_cont2[simp]: "cont ( \<lambda>S1. \<Lambda> S2. (uspecUnion_gen
   apply(subst uspecUnion_sym)
   by simp+
 
-lemma uspecUnion_apply[simp]: "(\<Lambda> S1 S2. uspecUnion_general S1 S2)\<cdot>A\<cdot>B = (uspecUnion_general A B)"
+lemma uspecUnion_apply: "(\<Lambda> S1 S2. uspecUnion_general S1 S2)\<cdot>A\<cdot>B = (uspecUnion_general A B)"
   by (simp add: uspecUnion_def)
 
+lemma uspecUnion_dom: "\<And>S1 S2. uspecDom\<cdot>(uspecUnion\<cdot>S1\<cdot>S2) = (uspecDom\<cdot>S1 \<union> uspecDom\<cdot>S2)"
+  by (simp add: uspecUnion_def uspecUnion_general_dom)
+
+lemma uspecUnion_ran: "\<And>S1 S2. uspecRan\<cdot>(uspecUnion\<cdot>S1\<cdot>S2) = (uspecRan\<cdot>S1 \<union> uspecRan\<cdot>S2)"
+  by (simp add: uspecUnion_def uspecUnion_general_ran)
+
+lemma uspecUnion_setrev: 
+"\<And>S1 S2. uspecRevSet\<cdot>(uspecUnion\<cdot>S1\<cdot>S2) = (setrevFilter (\<lambda>f. ufclDom\<cdot>f = (uspecDom\<cdot>S1 \<union> uspecDom\<cdot>S2)
+                                                          \<and> ufclRan\<cdot>f = (uspecRan\<cdot>S1 \<union> uspecRan\<cdot>S2))
+                                         \<cdot>(setrevUnion\<cdot>(uspecRevSet\<cdot>S1)\<cdot>(uspecRevSet\<cdot>S2)))"
+  apply(simp add: uspecRevSet_def)
+  apply(simp add: uspecUnion_def)
+  apply(simp add: uspecUnion_general_def)
+  by (simp add: uspecrevset_insert)
+
+lemma uspecUnion_commutative: "\<And>S1 S2 S3. (uspecUnion\<cdot>S1\<cdot>(uspecUnion\<cdot>S2\<cdot>S3)) = (uspecUnion\<cdot>(uspecUnion\<cdot>S1\<cdot>S2)\<cdot>S3)"
+  proof -
+    fix S1::"'a uspec" and S2::"'a uspec" and S3::"'a uspec"
+    have h1: "uspecDom\<cdot>(uspecUnion\<cdot>S1\<cdot>(uspecUnion\<cdot>S2\<cdot>S3)) = uspecDom\<cdot>(uspecUnion\<cdot>(uspecUnion\<cdot>S1\<cdot>S2)\<cdot>S3)"
+      by (simp add: sup_assoc uspecUnion_dom)
+    have h2: "uspecRan\<cdot>(uspecUnion\<cdot>S1\<cdot>(uspecUnion\<cdot>S2\<cdot>S3)) = uspecRan\<cdot>(uspecUnion\<cdot>(uspecUnion\<cdot>S1\<cdot>S2)\<cdot>S3)"
+      by (simp add: sup_assoc uspecUnion_ran)
+    have h3: "uspecRevSet\<cdot>(uspecUnion\<cdot>S1\<cdot>(uspecUnion\<cdot>S2\<cdot>S3)) = uspecRevSet\<cdot>(uspecUnion\<cdot>(uspecUnion\<cdot>S1\<cdot>S2)\<cdot>S3)"
+      apply(simp add: uspecUnion_setrev)
+      apply(simp add: setrevFilter_def)
+      apply(simp add: Set.filter_def)
+      apply(simp add: uspecUnion_dom)
+      apply(simp add: uspecUnion_ran)
+      apply auto
+      sorry
+    show "uspecUnion\<cdot>S1\<cdot>(uspecUnion\<cdot>S2\<cdot>S3) = uspecUnion\<cdot>(uspecUnion\<cdot>S1\<cdot>S2)\<cdot>S3"
+      by (simp add: h1 h2 h3 uspec_eqI)
+  qed
 
 end
