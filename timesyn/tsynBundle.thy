@@ -38,8 +38,5 @@ lemma tsynnullsb_ubconc_sbrt [simp]:
   shows "sbRt\<cdot>(ubConc (tsynNullSB c)\<cdot>sb) = sb"
   apply (rule ub_eq)
   by (simp add: assms sbRt_def)+
-
-
-
     
 end
