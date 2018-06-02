@@ -1,35 +1,42 @@
-theory tsynBundle
+(*  Title:        tsynBundle.thy
+    Author:       Dennis Slotboom
+    E-Mail:       dennis.slotboom@rwth-aachen.de
 
+    Description:  Time-synchronous stream bundles.
+*)
+
+chapter {* Time-Synchronous Stream Bundles *}
+
+theory tsynBundle
 imports tsynStream "../untimed/SB"
 
 begin
 
 default_sort message
 
+(* ----------------------------------------------------------------------- *)
+  section {* tsynNullSB - Automaton *}
+(* ----------------------------------------------------------------------- *)
 
-lift_definition tsynbOneTick:: "channel \<Rightarrow> 'm event SB" is
-"\<lambda>c. [c \<mapsto> \<up>Tick]"
-  unfolding ubWell_def
-  unfolding usclOkay_stream_def
-  unfolding ctype_event_def
-  by simp
+lift_definition tsynNullSB :: "channel \<Rightarrow> 'm tsyn SB" is
+  "\<lambda>c. [c \<mapsto> \<up>null]"
+  by (simp add: ubWell_def usclOkay_stream_def ctype_tsyn_def)
 
+lemma tsynnullsb_ubdom [simp]: "ubDom\<cdot>(tsynNullSB c) = {c}"
+  by (simp add: tsynNullSB.rep_eq ubdom_insert)
 
+lemma tsynnullsb_ubgetch [simp]: "tsynNullSB c  .  c = \<up>null"
+  by (simp add: tsynNullSB.rep_eq ubgetch_insert)
 
-lemma tsynbonetick_dom [simp]: "ubDom\<cdot>(tsynbOneTick c) = {c}"
-  by (simp add: tsynbOneTick.rep_eq ubdom_insert)
-
-lemma tsynbonetick_ubgetch[simp]: "tsynbOneTick c  .  c = \<up>Tick"
-  by (metis fun_upd_same option.sel tsynbOneTick.rep_eq ubgetch_insert)
-
-(* Special case of Ubundle_conc.ubConc_usclConc_eq *)
-lemma tsynbonetick_ubconc_tick[simp]: assumes "c \<in> ubDom\<cdot>sb" 
-                                        shows "ubConc (tsynbOneTick c)\<cdot>sb  .  c = \<up>\<surd> \<bullet> (sb .c)"
+lemma tsynnullsb_ubconc [simp]: 
+  assumes "c \<in> ubDom\<cdot>sb" 
+  shows "ubConc (tsynNullSB c)\<cdot>sb  .  c = \<up>null \<bullet> (sb  .  c)"
   by (simp add: assms ubConc_usclConc_eq usclConc_stream_def)
     
-lemma sbrt_ubconc_dom[simp]:assumes "ubDom\<cdot>sb = {c}" 
-  shows "sbRt\<cdot>(ubConc (tsynbOneTick c)\<cdot>sb) = sb"
+lemma tsynnullsb_ubconc_sbrt [simp]:
+  assumes "ubDom\<cdot>sb = {c}"
+  shows "sbRt\<cdot>(ubConc (tsynNullSB c)\<cdot>sb) = sb"
   apply (rule ub_eq)
-  by (simp add: sbRt_def assms) +
+  by (simp add: assms sbRt_def)+
     
 end
