@@ -92,12 +92,17 @@ definition uspecDom :: "'m uspec \<rightarrow> channel set" where
 definition uspecRan :: "'m uspec \<rightarrow> channel set" where
 "uspecRan = (\<Lambda> S. undiscr (snd (snd (Rep_uspec S))))"
 
+(* Eases the proofs (by removing a lot of the text) *)
+definition uspecUnion_general:: "'m uspec \<Rightarrow> 'm uspec \<Rightarrow> 'm uspec" where
+"uspecUnion_general \<equiv> (\<lambda> S1 S2. Abs_uspec (
+    (setrevFilter (\<lambda>f. ufclDom\<cdot>f = (uspecDom\<cdot>S1 \<union> uspecDom\<cdot>S2)
+                    \<and> ufclRan\<cdot>f = (uspecRan\<cdot>S1 \<union> uspecRan\<cdot>S2))
+                 \<cdot>(setrevUnion\<cdot>(uspecRevSet\<cdot>S1)\<cdot>(uspecRevSet\<cdot>S2))),
+    (Discr (uspecDom\<cdot>S1 \<union> uspecDom\<cdot>S2)),
+    (Discr (uspecRan\<cdot>S1 \<union> uspecRan\<cdot>S2))))"
+
 definition uspecUnion :: "'m uspec \<rightarrow> 'm uspec \<rightarrow> 'm uspec" where
-"uspecUnion \<equiv> \<Lambda> S1 S2. let dom = uspecDom\<cdot>S1 \<union> uspecDom\<cdot>S2;
-                            ran = uspecRan\<cdot>S1 \<union> uspecRan\<cdot>S2;
-                            filtered = setrevFilter (\<lambda>f. ufclDom\<cdot>f = dom \<and> ufclRan\<cdot>f = ran)
-                                                    \<cdot>(setrevUnion\<cdot>(uspecRevSet\<cdot>S1)\<cdot>(uspecRevSet\<cdot>S2))
-                        in Abs_uspec (filtered, Discr dom, Discr ran)"
+"uspecUnion \<equiv> \<Lambda> S1 S2. uspecUnion_general S1 S2"
 
 
 (****************************************************)
@@ -296,15 +301,6 @@ lemma uspec_belowI: assumes "uspecDom\<cdot>x = uspecDom\<cdot>y"
 
 subsection \<open>uspecUnion\<close>
 
-(* Eases the proofs (by removing a lot of the text) *)
-definition uspecUnion_general:: "'m uspec \<Rightarrow> 'm uspec \<Rightarrow> 'm uspec" where
-"uspecUnion_general \<equiv> (\<lambda> S1 S2. Abs_uspec (
-    (setrevFilter (\<lambda>f. ufclDom\<cdot>f = (uspecDom\<cdot>S1 \<union> uspecDom\<cdot>S2)
-                    \<and> ufclRan\<cdot>f = (uspecRan\<cdot>S1 \<union> uspecRan\<cdot>S2))
-                 \<cdot>(setrevUnion\<cdot>(uspecRevSet\<cdot>S1)\<cdot>(uspecRevSet\<cdot>S2))),
-    (Discr (uspecDom\<cdot>S1 \<union> uspecDom\<cdot>S2)),
-    (Discr (uspecRan\<cdot>S1 \<union> uspecRan\<cdot>S2))))"
-
 lemma uspecUnion_general_well[simp]: "\<And>S1 S2. uspecWell
     (setrevFilter (\<lambda>f. ufclDom\<cdot>f = (uspecDom\<cdot>S1 \<union> uspecDom\<cdot>S2)
                      \<and> ufclRan\<cdot>f = (uspecRan\<cdot>S1 \<union> uspecRan\<cdot>S2))
@@ -366,9 +362,9 @@ lemma uspecUnion_mono[simp]: "\<And>S1. monofun (uspecUnion_general S1)"
 lemma uspecUnion_chain:
   assumes "chain Y"
    shows "\<And>S1. chain (\<lambda>i. (uspecUnion_general S1 (Y i)))"
-  using ch2ch_monofun assms uspecUnion_mono by blast
+  using ch2ch_monofun assms uspecUnion_mono by blast  
 
-lemma uspecUnion_cont1: "\<And>S1. cont (uspecUnion_general S1)"
+lemma uspecUnion_cont1[simp]: "\<And>S1. cont (uspecUnion_general S1)"
   apply(rule contI2)
   apply simp
   apply(rule allI, rule impI)
@@ -403,15 +399,15 @@ lemma uspecUnion_cont1: "\<And>S1. cont (uspecUnion_general S1)"
       by (simp add: a1 contlub_cfun_arg)
   qed
 
-lemma uspecUnion_cont2: "cont ( \<lambda>S1. \<Lambda> S2. (uspecUnion_general S1 S2))"
+lemma uspecUnion_cont2[simp]: "cont ( \<lambda>S1. \<Lambda> S2. (uspecUnion_general S1 S2))"
   apply(rule cont2cont_LAM)
   apply(simp only: uspecUnion_cont1)
   apply(rule easy_cont)
-  apply auto
-  sorry
-  using uspecUnion_cont1 by blast
+  apply(subst uspecUnion_sym)
+  by simp+
 
-(* TODO apply *)
+lemma uspecUnion_apply[simp]: "(\<Lambda> S1 S2. uspecUnion_general S1 S2)\<cdot>A\<cdot>B = (uspecUnion_general A B)"
+  by (simp add: uspecUnion_def)
 
 
 end

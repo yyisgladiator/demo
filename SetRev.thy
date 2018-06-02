@@ -4,7 +4,7 @@ begin
 
 default_sort type
 
-(*TODO Wohin damit*)
+(* TODO Wohin damit *)
 lemma easy_cont: assumes "(\<lambda>x y. (f x y)) = (\<lambda>x y. (f y x))"
                      and "\<And>y. cont (\<lambda>x. (f x y))"
                    shows "\<And>x. cont (\<lambda>y. (f x y))"
@@ -210,7 +210,7 @@ lemma setrevUnion_mono[simp]: "\<And>A. monofun (\<lambda>x. Rev((inv Rev A) \<u
   apply(rule monofunI)
   by (metis SetPcpo.less_set_def Un_mono below_rev.simps order_refl revBelowNeqSubset)
 
-lemma setrevUnion_cont1: "cont (\<lambda>x. Rev((inv Rev A) \<union> (inv Rev x)))"
+lemma setrevUnion_cont1[simp]: "cont (\<lambda>x. Rev((inv Rev A) \<union> (inv Rev x)))"
   apply(rule contI2)
   apply simp
   apply(simp add: setrevUnion_chain)
@@ -244,12 +244,12 @@ lemma setrevUnion_cont1: "cont (\<lambda>x. Rev((inv Rev A) \<union> (inv Rev x)
       by auto
   qed
 
-lemma setrevUnion_cont[simp]: "cont (\<lambda>A. \<Lambda> B. Rev((inv Rev A) \<union> (inv Rev B)))"
+lemma setrevUnion_cont2[simp]: "cont (\<lambda>A. \<Lambda> B. Rev((inv Rev A) \<union> (inv Rev B)))"
   apply(rule cont2cont_LAM)
-  apply(simp only: setrevUnion_cont1)
+  apply simp
   apply(rule easy_cont)
   apply(simp only: setrevUnion_sym)
-  using setrevUnion_cont1 by blast
+  by simp
 
 lemma setrevUnion_sym2: "\<And>A B. setrevUnion\<cdot>A\<cdot>B = setrevUnion\<cdot>B\<cdot>A"
   proof -
