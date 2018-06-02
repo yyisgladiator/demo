@@ -136,6 +136,16 @@ lemma setrevfilter_cont[simp]:  "cont (\<lambda> S::'a set rev. Rev (Set.filter 
 lemma setrevfilter_condition: "\<And>x. x \<in> (inv Rev (setrevFilter P\<cdot>A)) \<Longrightarrow> P x"
   by (simp add: inv_rev_rev setrevFilter_def)
 
+lemma setrevfilter_included: "\<And>x. x \<in> (inv Rev (setrevFilter P\<cdot>A)) \<Longrightarrow> x \<in> inv Rev A"
+  by (simp add: inv_rev_rev setrevFilter_def)
+
+lemma setrevfilter_reversed: "\<And>x. P x \<and> x \<in> inv Rev A \<Longrightarrow> x \<in> (inv Rev (setrevFilter P\<cdot>A))"
+  apply(simp add: setrevFilter_def)
+  by(simp add: Set.filter_def inv_rev_rev)
+
+lemma setrevFilter_gdw: "\<And>x. x \<in> (inv Rev (setrevFilter P\<cdot>A)) \<longleftrightarrow> P x \<and> x \<in> inv Rev A"
+  by (meson setrevfilter_condition setrevfilter_included setrevfilter_reversed)
+
 
 subsection \<open>setify\<close>
 
@@ -260,7 +270,7 @@ lemma setrevUnion_sym2: "\<And>A B. setrevUnion\<cdot>A\<cdot>B = setrevUnion\<c
       by (metis (no_types) beta_cfun setrevUnion_cont1 setrevUnion_sym)
   qed
 
-lemma setrevUnion_in: "\<And>A B x. x \<in> inv Rev (setrevUnion\<cdot>A\<cdot>B) \<Longrightarrow> x \<in> inv Rev A \<or> x \<in> inv Rev B"
-  sorry
+lemma setrevUnion_gdw: "\<And>A B x. x \<in> inv Rev (setrevUnion\<cdot>A\<cdot>B) \<longleftrightarrow> (x \<in> inv Rev A \<or> x \<in> inv Rev B)"
+  by (simp add: inv_rev_rev setrevUnion_def)
   
 end

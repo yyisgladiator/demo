@@ -425,15 +425,10 @@ lemma uspecUnion_setrev:
   by (simp add: uspecrevset_insert)
 
 lemma uspecUnion_setrev_condition: "\<And>S1 S2 x. x \<in> inv Rev(uspecRevSet\<cdot>(uspecUnion\<cdot>S1\<cdot>S2))
-                                 = (x \<in> inv Rev (uspecRevSet\<cdot>S1) \<or> x \<in> inv Rev (uspecRevSet\<cdot>S2)
+                                 \<longleftrightarrow> (x \<in> inv Rev (uspecRevSet\<cdot>S1) \<or> x \<in> inv Rev (uspecRevSet\<cdot>S2)
                                   \<and> ufclDom\<cdot>x = uspecDom\<cdot>S1 \<union> uspecDom\<cdot>S2
                                   \<and> ufclRan\<cdot>x = uspecRan\<cdot>S1 \<union> uspecRan\<cdot>S2)"
-  apply(simp add: uspecUnion_setrev)
-  apply auto
-  apply (metis (no_types, lifting) Abs_cfun_inverse2 inv_rev_rev member_filter setrevFilter_def setrevUnion_in setrevfilter_cont)
-  using setrevfilter_condition apply fastforce+
-  defer
-  (* Das ist glaube ich einmal im Kreis *)
+  sledgehammer
   sorry
 
 lemma uspecUnion_commutative: "\<And>S1 S2 S3. (uspecUnion\<cdot>S1\<cdot>(uspecUnion\<cdot>S2\<cdot>S3)) = (uspecUnion\<cdot>(uspecUnion\<cdot>S1\<cdot>S2)\<cdot>S3)"
