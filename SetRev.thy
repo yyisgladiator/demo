@@ -259,5 +259,8 @@ lemma setrevUnion_sym2: "\<And>A B. setrevUnion\<cdot>A\<cdot>B = setrevUnion\<c
     then show "setrevUnion\<cdot>A\<cdot>B = setrevUnion\<cdot>B\<cdot>A"
       by (metis (no_types) beta_cfun setrevUnion_cont1 setrevUnion_sym)
   qed
+
+lemma setrevUnion_in: "\<And>A B x. x \<in> inv Rev (setrevUnion\<cdot>A\<cdot>B) \<Longrightarrow> x \<in> inv Rev A \<or> x \<in> inv Rev B"
+  sorry
   
 end

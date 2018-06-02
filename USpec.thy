@@ -406,7 +406,7 @@ lemma uspecUnion_cont2[simp]: "cont ( \<lambda>S1. \<Lambda> S2. (uspecUnion_gen
   apply(subst uspecUnion_general_sym)
   by simp+
 
-lemma uspecUnion_apply: "(\<Lambda> S1 S2. uspecUnion_general S1 S2)\<cdot>A\<cdot>B = (uspecUnion_general A B)"
+lemma uspecUnion_apply: "\<And>A B. (\<Lambda> S1 S2. uspecUnion_general S1 S2)\<cdot>A\<cdot>B = (uspecUnion_general A B)"
   by (simp add: uspecUnion_def)
 
 lemma uspecUnion_dom: "\<And>S1 S2. uspecDom\<cdot>(uspecUnion\<cdot>S1\<cdot>S2) = (uspecDom\<cdot>S1 \<union> uspecDom\<cdot>S2)"
@@ -424,6 +424,18 @@ lemma uspecUnion_setrev:
   apply(simp add: uspecUnion_general_def)
   by (simp add: uspecrevset_insert)
 
+lemma uspecUnion_setrev_condition: "\<And>S1 S2 x. x \<in> inv Rev(uspecRevSet\<cdot>(uspecUnion\<cdot>S1\<cdot>S2))
+                                 = (x \<in> inv Rev (uspecRevSet\<cdot>S1) \<or> x \<in> inv Rev (uspecRevSet\<cdot>S2)
+                                  \<and> ufclDom\<cdot>x = uspecDom\<cdot>S1 \<union> uspecDom\<cdot>S2
+                                  \<and> ufclRan\<cdot>x = uspecRan\<cdot>S1 \<union> uspecRan\<cdot>S2)"
+  apply(simp add: uspecUnion_setrev)
+  apply auto
+  apply (metis (no_types, lifting) Abs_cfun_inverse2 inv_rev_rev member_filter setrevFilter_def setrevUnion_in setrevfilter_cont)
+  using setrevfilter_condition apply fastforce+
+  defer
+  (* Das ist glaube ich einmal im Kreis *)
+  sorry
+
 lemma uspecUnion_commutative: "\<And>S1 S2 S3. (uspecUnion\<cdot>S1\<cdot>(uspecUnion\<cdot>S2\<cdot>S3)) = (uspecUnion\<cdot>(uspecUnion\<cdot>S1\<cdot>S2)\<cdot>S3)"
   proof -
     fix S1::"'a uspec" and S2::"'a uspec" and S3::"'a uspec"
@@ -431,16 +443,11 @@ lemma uspecUnion_commutative: "\<And>S1 S2 S3. (uspecUnion\<cdot>S1\<cdot>(uspec
       by (simp add: sup_assoc uspecUnion_dom)
     have h2: "uspecRan\<cdot>(uspecUnion\<cdot>S1\<cdot>(uspecUnion\<cdot>S2\<cdot>S3)) = uspecRan\<cdot>(uspecUnion\<cdot>(uspecUnion\<cdot>S1\<cdot>S2)\<cdot>S3)"
       by (simp add: sup_assoc uspecUnion_ran)
-    have h3: "uspecRevSet\<cdot>(uspecUnion\<cdot>S1\<cdot>(uspecUnion\<cdot>S2\<cdot>S3)) = uspecRevSet\<cdot>(uspecUnion\<cdot>(uspecUnion\<cdot>S1\<cdot>S2)\<cdot>S3)"
-      apply(simp add: uspecUnion_setrev)
-      apply(simp add: setrevFilter_def)
-      apply(simp add: Set.filter_def)
-      apply(simp add: uspecUnion_dom)
-      apply(simp add: uspecUnion_ran)
+    have h3: "inv Rev (uspecRevSet\<cdot>(uspecUnion\<cdot>S1\<cdot>(uspecUnion\<cdot>S2\<cdot>S3))) = inv Rev (uspecRevSet\<cdot>(uspecUnion\<cdot>(uspecUnion\<cdot>S1\<cdot>S2)\<cdot>S3))"
       apply auto
-      sorry
+      by (metis (no_types, hide_lams) sup_commute uspecUnion_dom uspecUnion_ran uspecUnion_setrev_condition uspec_allDom uspec_allRan)+
     show "uspecUnion\<cdot>S1\<cdot>(uspecUnion\<cdot>S2\<cdot>S3) = uspecUnion\<cdot>(uspecUnion\<cdot>S1\<cdot>S2)\<cdot>S3"
-      by (simp add: h1 h2 h3 uspec_eqI)
+      by (metis h1 h2 h3 rev_inv_rev uspec_eqI)
   qed
 
 lemma uspecUnion_sym: "\<And>S1 S2. uspecUnion\<cdot>S1\<cdot>S2 = uspecUnion\<cdot>S2\<cdot>S1"
