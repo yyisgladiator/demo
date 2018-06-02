@@ -4,6 +4,18 @@ begin
 
 default_sort type
 
+(*TODO Wohin damit*)
+lemma easy_cont: assumes "(\<lambda>x y. (f x y)) = (\<lambda>x y. (f y x))"
+                     and "\<And>y. cont (\<lambda>x. (f x y))"
+                   shows "\<And>x. cont (\<lambda>y. (f x y))"
+  proof -
+    fix x
+    have h1: "\<And>x y. (f x y) = (f y x)"
+      by (meson assms(1))
+    show "cont (\<lambda>y. (f x y))"
+      apply(simp add: h1)
+      by (simp add: assms(2))
+  qed
 
 section \<open>Definitions\<close>
 
@@ -12,6 +24,9 @@ definition setrevFilter::  "('m \<Rightarrow> bool) \<Rightarrow> 'm set rev \<r
     
 definition setify::"('m \<Rightarrow> ('n set rev)) \<rightarrow> ('m \<Rightarrow> 'n) set rev" where
 "setify \<equiv> \<Lambda> f. Rev {g. \<forall>m. g m \<in> (inv Rev(f m))}"
+
+definition setrevUnion:: "'m set rev \<rightarrow> 'm set rev \<rightarrow> 'm set rev" where
+"setrevUnion \<equiv> (\<Lambda> A B. Rev((inv Rev A) \<union> (inv Rev B)))"
 
 
 section \<open>Lemmas\<close>
@@ -181,20 +196,24 @@ qed
 
 subsection \<open>setrevUnion\<close>
 
-lemma revUnion_chain: assumes "chain Y"
+lemma setrevUnion_sym: "(\<lambda>A B. Rev((inv Rev A) \<union> (inv Rev B))) =
+                        (\<lambda>A B. Rev((inv Rev B) \<union> (inv Rev A)))"
+  by (simp add: sup_commute)
+
+lemma setrevUnion_chain: assumes "chain Y"
                         shows "\<And>A. chain (\<lambda>i. Rev (inv Rev A \<union> inv Rev (Y i)))"
   apply(rule chainI)
   apply(simp add: less_set_def)
   by (metis SetPcpo.less_set_def assms below_rev.simps le_supI2 po_class.chainE rev_inv_rev)
 
-lemma revUnion_mono[simp]: "\<And>A. monofun (\<lambda>x. Rev((inv Rev A) \<union> (inv Rev x)))"
+lemma setrevUnion_mono[simp]: "\<And>A. monofun (\<lambda>x. Rev((inv Rev A) \<union> (inv Rev x)))"
   apply(rule monofunI)
   by (metis SetPcpo.less_set_def Un_mono below_rev.simps order_refl revBelowNeqSubset)
 
-lemma revUnion_cont[simp]: "\<And>A. cont (\<lambda>x. Rev((inv Rev A) \<union> (inv Rev x)))"
+lemma setrevUnion_cont1: "\<And>A. cont (\<lambda>x. Rev((inv Rev A) \<union> (inv Rev x)))"
   apply(rule contI2)
   apply simp
-  apply(simp add: revUnion_chain)
+  apply(simp add: setrevUnion_chain)
   proof -
     fix A::"'a set rev" and Y::"nat \<Rightarrow> 'a set rev"
     assume a1: "chain Y"
@@ -221,8 +240,15 @@ lemma revUnion_cont[simp]: "\<And>A. cont (\<lambda>x. Rev((inv Rev A) \<union> 
           qed
       qed
     show "Rev (inv Rev A \<union> inv Rev (\<Squnion>i. Y i)) \<sqsubseteq> (\<Squnion>i. Rev (inv Rev A \<union> inv Rev (Y i)))"
-      apply(simp add: setrevLubEqInter revUnion_chain a1 inv_rev_rev less_set_def)
+      apply(simp add: setrevLubEqInter setrevUnion_chain a1 inv_rev_rev less_set_def)
       by auto
   qed
+
+lemma setrevUnion_cont[simp]: "cont (\<lambda>A. \<Lambda> B. Rev((inv Rev A) \<union> (inv Rev B)))"
+  apply(rule cont2cont_LAM)
+  apply(simp only: setrevUnion_cont1)
+  apply(rule easy_cont)
+  apply(simp only: setrevUnion_sym)
+  using setrevUnion_cont1 by blast
   
 end
