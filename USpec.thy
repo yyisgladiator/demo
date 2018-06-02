@@ -361,7 +361,7 @@ lemma uspecUnion_rep_ran: "uspecRan\<cdot>(Abs_uspec (setrevFilter (\<lambda>f::
   apply(subst uspecran_insert)
   by simp
 
-lemma revUnion_chain: assumes "chain Y"
+(* lemma revUnion_chain: assumes "chain Y"
                         shows "chain (\<lambda>i. Rev (inv Rev (uspecRevSet\<cdot>S1) \<union> inv Rev (uspecRevSet\<cdot>(Y i))))"
   apply(rule chainI)
   by (metis SetPcpo.less_set_def assms below_rev.simps monofun_cfun_arg order_refl po_class.chain_def rev_inv_rev sup_mono)
@@ -370,9 +370,6 @@ lemma revUnion_mono[simp]: "\<And>S1. monofun (\<lambda>S2. Rev (inv Rev (uspecR
   apply(rule monofunI)
   by (metis SetPcpo.less_set_def below_refl below_rev.simps monofun_cfun_arg rev_inv_rev sup_mono)
 
-lemma "a \<sqsubseteq> b \<Longrightarrow> (inv Rev b) \<sqsubseteq> (inv Rev a)"
-  sledgehammer
-  by (metis below_rev.simps rev_inv_rev)
 
 lemma revUnion_cont[simp]: "\<And>S1. cont (\<lambda>S2. Rev (inv Rev (uspecRevSet\<cdot>S1) \<union> inv Rev (uspecRevSet\<cdot>S2)))"
   apply(rule contI2)
@@ -400,16 +397,16 @@ lemma revUnion_cont[simp]: "\<And>S1. cont (\<lambda>S2. Rev (inv Rev (uspecRevS
     show "Rev (inv Rev (uspecRevSet\<cdot>S) \<union> inv Rev (uspecRevSet\<cdot>(\<Squnion>i. Y i))) \<sqsubseteq>
      (\<Squnion>i. Rev (inv Rev (uspecRevSet\<cdot>S) \<union> inv Rev (uspecRevSet\<cdot>(Y i))))"
       by (metis below_rev.simps h3 rev_inv_rev)
-  qed
+  qed *)
 
 lemma uspecUnion_mono[simp]:
-"monofun (\<lambda>S2. Abs_uspec ((setrevFilter (\<lambda>f. ufclDom\<cdot>f = (uspecDom\<cdot>S1 \<union> uspecDom\<cdot>S2)
+"\<And>S1. monofun (\<lambda>S2. Abs_uspec ((setrevFilter (\<lambda>f. ufclDom\<cdot>f = (uspecDom\<cdot>S1 \<union> uspecDom\<cdot>S2)
                                            \<and> ufclRan\<cdot>f = (uspecRan\<cdot>S1 \<union> uspecRan\<cdot>S2))
                                        \<cdot>(Rev ((inv Rev (uspecRevSet\<cdot>S1)) \<union> (inv Rev (uspecRevSet\<cdot>S2))))),
                                   (Discr (uspecDom\<cdot>S1 \<union> uspecDom\<cdot>S2)),
-                                  (Discr (uspecRan\<cdot>S1 \<union> uspecRan\<cdot>S2))))" (is "monofun ?union")
+                                  (Discr (uspecRan\<cdot>S1 \<union> uspecRan\<cdot>S2))))"
   proof (rule monofunI)
-    fix x::"'a uspec" and y::"'a uspec"
+    fix S1::"'a uspec" and x::"'a uspec" and y::"'a uspec"
     assume a1: "x \<sqsubseteq> y"
     have h1: "uspecDom\<cdot>x = uspecDom\<cdot>y"
       by (simp add: a1)
@@ -418,7 +415,14 @@ lemma uspecUnion_mono[simp]:
     have h3: "(Rev (inv Rev (uspecRevSet\<cdot>S1) \<union> inv Rev (uspecRevSet\<cdot>x)))
             \<sqsubseteq> (Rev (inv Rev (uspecRevSet\<cdot>S1) \<union> inv Rev (uspecRevSet\<cdot>y)))"
       by (metis SetPcpo.less_set_def a1 below_refl below_rev.simps monofun_cfun_arg rev_inv_rev sup_mono)
-    show "?union x \<sqsubseteq> ?union y"
+    show "Abs_uspec
+        (setrevFilter (\<lambda>f::'a. ufclDom\<cdot>f = uspecDom\<cdot>S1 \<union> uspecDom\<cdot>x \<and> ufclRan\<cdot>f = uspecRan\<cdot>S1 \<union> uspecRan\<cdot>x)\<cdot>
+         (Rev (inv Rev (uspecRevSet\<cdot>S1) \<union> inv Rev (uspecRevSet\<cdot>x))),
+         Discr (uspecDom\<cdot>S1 \<union> uspecDom\<cdot>x), Discr (uspecRan\<cdot>S1 \<union> uspecRan\<cdot>x)) \<sqsubseteq>
+       Abs_uspec
+        (setrevFilter (\<lambda>f::'a. ufclDom\<cdot>f = uspecDom\<cdot>S1 \<union> uspecDom\<cdot>y \<and> ufclRan\<cdot>f = uspecRan\<cdot>S1 \<union> uspecRan\<cdot>y)\<cdot>
+         (Rev (inv Rev (uspecRevSet\<cdot>S1) \<union> inv Rev (uspecRevSet\<cdot>y))),
+         Discr (uspecDom\<cdot>S1 \<union> uspecDom\<cdot>y), Discr (uspecRan\<cdot>S1 \<union> uspecRan\<cdot>y))"
       apply(rule uspec_belowI)
       apply(simp add: uspecUnion_rep_dom)
       apply(simp only: h1)
@@ -431,28 +435,33 @@ lemma uspecUnion_mono[simp]:
       using cont_pref_eq1I h3 by blast
   qed
 
+lemma uspecUnion_chain:
+  assumes "chain Y"
+   shows "\<And>S1. chain (\<lambda>i. Abs_uspec (setrevFilter (\<lambda>f::'a. ufclDom\<cdot>f = uspecDom\<cdot>S1 \<union> uspecDom\<cdot>(Y i)
+                                               \<and> ufclRan\<cdot>f = uspecRan\<cdot>S1 \<union> uspecRan\<cdot>(Y i))
+                                        \<cdot>(Rev (inv Rev (uspecRevSet\<cdot>S1) \<union> inv Rev (uspecRevSet\<cdot>(Y i))))
+                          , Discr (uspecDom\<cdot>S1 \<union> uspecDom\<cdot>(Y i))
+                          , Discr (uspecRan\<cdot>S1 \<union> uspecRan\<cdot>(Y i))))"
+  using ch2ch_monofun assms uspecUnion_mono by blast
+
 lemma uspecUnion_cont1: 
-"cont (\<lambda>S2. Abs_uspec ((setrevFilter (\<lambda>f. ufclDom\<cdot>f = (uspecDom\<cdot>S1 \<union> uspecDom\<cdot>S2)
-                                           \<and> ufclRan\<cdot>f = (uspecRan\<cdot>S1 \<union> uspecRan\<cdot>S2))
+"\<And>S1. cont (\<lambda>S2. Abs_uspec ((setrevFilter (\<lambda>f. ufclDom\<cdot>f = (uspecDom\<cdot>S1 \<union> uspecDom\<cdot>S2)
+                                        \<and> ufclRan\<cdot>f = (uspecRan\<cdot>S1 \<union> uspecRan\<cdot>S2))
                                        \<cdot>(Rev ((inv Rev (uspecRevSet\<cdot>S1)) \<union> (inv Rev (uspecRevSet\<cdot>S2))))),
                                   (Discr (uspecDom\<cdot>S1 \<union> uspecDom\<cdot>S2)),
-                                  (Discr (uspecRan\<cdot>S1 \<union> uspecRan\<cdot>S2))))" (is "cont ?union")
+                                  (Discr (uspecRan\<cdot>S1 \<union> uspecRan\<cdot>S2))))"
   apply(rule contI2)
   apply simp
   apply(rule allI, rule impI)
    proof -
-    fix Y::"nat \<Rightarrow> 'a uspec"
+    fix S1::"'a uspec" and Y::"nat \<Rightarrow> 'a uspec"
     assume a1: "chain Y"
 
-    have h0: "chain (\<lambda>i. (setrevFilter (\<lambda>f::'a. ufclDom\<cdot>f = uspecDom\<cdot>S1 \<union> uspecDom\<cdot>(Y i) \<and> ufclRan\<cdot>f = uspecRan\<cdot>S1 \<union> uspecRan\<cdot>(Y i))\<cdot>
-                    (Rev (inv Rev (uspecRevSet\<cdot>S1) \<union> inv Rev (uspecRevSet\<cdot>(Y i)))),
-                    Discr (uspecDom\<cdot>S1 \<union> uspecDom\<cdot>(Y i)), Discr (uspecRan\<cdot>S1 \<union> uspecRan\<cdot>(Y i))))"
-      sorry
-
-    have h1: "chain (\<lambda>i. Abs_uspec
-                (setrevFilter (\<lambda>f::'a. ufclDom\<cdot>f = uspecDom\<cdot>S1 \<union> uspecDom\<cdot>(Y i) \<and> ufclRan\<cdot>f = uspecRan\<cdot>S1 \<union> uspecRan\<cdot>(Y i))\<cdot>
-                 (Rev (inv Rev (uspecRevSet\<cdot>S1) \<union> inv Rev (uspecRevSet\<cdot>(Y i)))),
-                 Discr (uspecDom\<cdot>S1 \<union> uspecDom\<cdot>(Y i)), Discr (uspecRan\<cdot>S1 \<union> uspecRan\<cdot>(Y i))))"
+    have h0: "chain (\<lambda>i. (setrevFilter (\<lambda>f::'a. ufclDom\<cdot>f = uspecDom\<cdot>S1 \<union> uspecDom\<cdot>(Y i)
+                                              \<and> ufclRan\<cdot>f = uspecRan\<cdot>S1 \<union> uspecRan\<cdot>(Y i))
+                                      \<cdot>(Rev (inv Rev (uspecRevSet\<cdot>S1) \<union> inv Rev (uspecRevSet\<cdot>(Y i))))
+                        , Discr (uspecDom\<cdot>S1 \<union> uspecDom\<cdot>(Y i))
+                        , Discr (uspecRan\<cdot>S1 \<union> uspecRan\<cdot>(Y i))))"
       sorry
 
     have h2: "fst (Rep_uspec
@@ -465,7 +474,7 @@ lemma uspecUnion_cont1:
                       (setrevFilter (\<lambda>f::'a. ufclDom\<cdot>f = uspecDom\<cdot>S1 \<union> uspecDom\<cdot>(Y i) \<and> ufclRan\<cdot>f = uspecRan\<cdot>S1 \<union> uspecRan\<cdot>(Y i))\<cdot>
                        (Rev (inv Rev (uspecRevSet\<cdot>S1) \<union> inv Rev (uspecRevSet\<cdot>(Y i)))),
                        Discr (uspecDom\<cdot>S1 \<union> uspecDom\<cdot>(Y i)), Discr (uspecRan\<cdot>S1 \<union> uspecRan\<cdot>(Y i))))))"
-      by (simp add: cont2contlubE h1)
+      by (simp add: cont2contlubE a1 uspecUnion_chain)
 
     have h4: "fst (\<Squnion>i::nat. (setrevFilter (\<lambda>f::'a. ufclDom\<cdot>f = uspecDom\<cdot>S1 \<union> uspecDom\<cdot>(Y i) \<and> ufclRan\<cdot>f = uspecRan\<cdot>S1 \<union> uspecRan\<cdot>(Y i))\<cdot>
                     (Rev (inv Rev (uspecRevSet\<cdot>S1) \<union> inv Rev (uspecRevSet\<cdot>(Y i)))),
@@ -473,7 +482,7 @@ lemma uspecUnion_cont1:
           (\<Squnion>i::nat. fst (setrevFilter (\<lambda>f::'a. ufclDom\<cdot>f = uspecDom\<cdot>S1 \<union> uspecDom\<cdot>(Y i) \<and> ufclRan\<cdot>f = uspecRan\<cdot>S1 \<union> uspecRan\<cdot>(Y i))\<cdot>
                     (Rev (inv Rev (uspecRevSet\<cdot>S1) \<union> inv Rev (uspecRevSet\<cdot>(Y i)))),
                     Discr (uspecDom\<cdot>S1 \<union> uspecDom\<cdot>(Y i)), Discr (uspecRan\<cdot>S1 \<union> uspecRan\<cdot>(Y i))))"
-      by (simp add: h0 lub_prod)
+      using h0 lub_prod by force
 
     have h5: "\<And>i. (\<lambda>f::'a. ufclDom\<cdot>f = uspecDom\<cdot>S1 \<union> uspecDom\<cdot>(Y i) \<and> ufclRan\<cdot>f = uspecRan\<cdot>S1 \<union> uspecRan\<cdot>(Y i)) \<equiv> 
             (\<lambda>f::'a. ufclDom\<cdot>f = uspecDom\<cdot>S1 \<union> uspecDom\<cdot>(Lub Y) \<and> ufclRan\<cdot>f = uspecRan\<cdot>S1 \<union> uspecRan\<cdot>(Lub Y))"
@@ -483,11 +492,9 @@ lemma uspecUnion_cont1:
       proof -
         have s1: "uspecRevSet\<cdot>(Lub Y) = (\<Squnion>i. uspecRevSet\<cdot>(Y i))"
           using a1 contlub_cfun_arg by auto
-        have s2: "\<And>A. cont (\<lambda>x. (Rev(inv Rev A \<union> inv Rev x)))"
-          apply(rule contI2)
-          apply (smt Un_left_commute Un_upper1 inv_rev_rev monofunI revBelowNeqSubset sup.orderE)
-          sorry (*thesis ist teil von cont Beweis*)
-        show ?thesis sorry
+        show ?thesis
+          apply(simp add: s1)
+          sorry
       qed
 
     show "Abs_uspec
@@ -500,9 +507,9 @@ lemma uspecUnion_cont1:
                     Discr (uspecDom\<cdot>S1 \<union> uspecDom\<cdot>(Y i)), Discr (uspecRan\<cdot>S1 \<union> uspecRan\<cdot>(Y i))))"
       apply(rule uspec_belowI)
       apply(simp add: uspecUnion_rep_dom)
-      using a1 h1 uspecUnion_rep_dom uspecdom_lub_chain apply blast
+      using a1 uspecUnion_chain uspecUnion_rep_dom uspecdom_lub_chain apply blast
       apply(simp add: uspecUnion_rep_ran)
-      using a1 h1 uspecUnion_rep_ran uspecran_lub_chain apply blast
+      using a1 uspecUnion_chain uspecUnion_rep_ran uspecran_lub_chain apply blast
       apply(simp add: uspecRevSet_def)
       apply(simp add: a1 rep_rev_revset)
       apply(simp add: h2)

@@ -4,11 +4,19 @@ begin
 
 default_sort type
 
+
+section \<open>Definitions\<close>
+
 definition setrevFilter::  "('m \<Rightarrow> bool) \<Rightarrow> 'm set rev \<rightarrow> 'm set rev"
   where  "setrevFilter P \<equiv> \<Lambda> S. Rev (Set.filter P (inv Rev S))"
     
 definition setify::"('m \<Rightarrow> ('n set rev)) \<rightarrow> ('m \<Rightarrow> 'n) set rev" where
 "setify \<equiv> \<Lambda> f. Rev {g. \<forall>m. g m \<in> (inv Rev(f m))}"
+
+
+section \<open>Lemmas\<close>
+
+subsection \<open>General\<close>
 
 (* order is exactly reversed subset *)
 lemma revBelowNeqSubset: "\<And>A:: 'a set rev. \<forall>B:: 'a set rev. A \<sqsubseteq> B \<longleftrightarrow> (inv Rev B \<subseteq> inv Rev A)"
@@ -59,6 +67,15 @@ lemma setrevLubEqInterII: "\<And>Y::nat \<Rightarrow> 'a set rev.
   chain Y \<Longrightarrow> inv Rev (\<Squnion>i. Y i) = (\<Inter>{x. \<exists>i. x = inv Rev (Y i)})"
   by (metis (mono_tags, lifting) inv_rev_rev setrevLubEqInter) 
 
+lemma setrevLub_lub_eq_all:
+  assumes "chain (Y:: nat \<Rightarrow> 'a set rev)"
+    shows "\<And>x. (x \<in> inv Rev (Lub Y) \<longleftrightarrow> (\<forall>i. x \<in> inv Rev (Y i)))"
+  apply(simp only: setrevLubEqInter assms)
+  apply(simp only: inv_rev_rev)
+  by auto
+
+
+subsection \<open>setrevFilter\<close>
 
 (* setrevFilter fulfills the 2nd subgoal for contI2 *)
 lemma setrevFilter_chain: "\<And>Y::nat \<Rightarrow> 'a set rev. chain Y \<Longrightarrow>
@@ -104,12 +121,8 @@ lemma setrevfilter_cont[simp]:  "cont (\<lambda> S::'a set rev. Rev (Set.filter 
 lemma setrevfilter_condition: "\<And>x. x \<in> (inv Rev (setrevFilter P\<cdot>A)) \<Longrightarrow> P x"
   by (simp add: inv_rev_rev setrevFilter_def)
 
-lemma setrevfilter_anti_mono: assumes "(P::'a \<Rightarrow> bool) \<sqsubseteq> Q"
-                                shows "setrevFilter Q\<cdot>A \<sqsubseteq> setrevFilter P\<cdot>A"
-  sorry
 
-(*setify*)
-    
+subsection \<open>setify\<close>
 
 lemma setify_mono[simp]:"monofun (\<lambda>f. Rev {g. \<forall>m. g m \<in> (inv Rev(f m))})"
 proof(rule rev_monoI)
@@ -165,5 +178,51 @@ proof(simp add: setify_def inv_rev_rev)
     by(rule_tac x="(\<lambda>e. if e = m then x else g e)" in exI, auto) 
 qed
 
+
+subsection \<open>setrevUnion\<close>
+
+lemma revUnion_chain: assumes "chain Y"
+                        shows "\<And>A. chain (\<lambda>i. Rev (inv Rev A \<union> inv Rev (Y i)))"
+  apply(rule chainI)
+  apply(simp add: less_set_def)
+  by (metis SetPcpo.less_set_def assms below_rev.simps le_supI2 po_class.chainE rev_inv_rev)
+
+lemma revUnion_mono[simp]: "\<And>A. monofun (\<lambda>x. Rev((inv Rev A) \<union> (inv Rev x)))"
+  apply(rule monofunI)
+  by (metis SetPcpo.less_set_def Un_mono below_rev.simps order_refl revBelowNeqSubset)
+
+lemma revUnion_cont[simp]: "\<And>A. cont (\<lambda>x. Rev((inv Rev A) \<union> (inv Rev x)))"
+  apply(rule contI2)
+  apply simp
+  apply(simp add: revUnion_chain)
+  proof -
+    fix A::"'a set rev" and Y::"nat \<Rightarrow> 'a set rev"
+    assume a1: "chain Y"
+    have h1: "\<And>x. x \<in> \<Inter>{x::'a set. \<exists>i::nat. x = inv Rev (Rev (inv Rev A \<union> inv Rev (Y i)))} 
+               \<Longrightarrow> x \<in> inv Rev A \<union> inv Rev (Lub Y)"
+      proof -
+        fix x
+        assume a11: "x \<in> \<Inter>{x::'a set. \<exists>i::nat. x = inv Rev (Rev (inv Rev A \<union> inv Rev (Y i)))}"
+        have g1: "\<And>i. x \<in> inv Rev (Rev (inv Rev A \<union> inv Rev (Y i)))"
+          using a11 by fastforce
+        have g2: "\<And>i. x \<in>  (inv Rev A \<union> inv Rev (Y i))"
+          by (metis g1 inv_rev_rev)
+        then show "x \<in> inv Rev A \<union> inv Rev (Lub Y)"
+          proof (cases "x \<in> inv Rev A")
+            case True
+            then show ?thesis
+              by simp
+          next
+            case f: False
+            have f1: "\<forall>i. x \<in> inv Rev (Y i)"
+              using f g2 by auto
+            show ?thesis
+              using a1 f1 setrevLubEqInterII by auto
+          qed
+      qed
+    show "Rev (inv Rev A \<union> inv Rev (\<Squnion>i. Y i)) \<sqsubseteq> (\<Squnion>i. Rev (inv Rev A \<union> inv Rev (Y i)))"
+      apply(simp add: setrevLubEqInter revUnion_chain a1 inv_rev_rev less_set_def)
+      by auto
+  qed
   
 end
