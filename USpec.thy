@@ -321,7 +321,7 @@ assumes "chain Y"
   apply(rule uspec_wellI2)
   by (metis (mono_tags, lifting) setrevfilter_condition)+
 
-lemma uspecUnion_sym: 
+lemma uspecUnion_general_sym: 
 "uspecUnion_general = (\<lambda> S1 S2. (uspecUnion_general S2 S1))"
   by (simp add: uspecUnion_general_def sup_commute setrevUnion_sym2)
         
@@ -403,7 +403,7 @@ lemma uspecUnion_cont2[simp]: "cont ( \<lambda>S1. \<Lambda> S2. (uspecUnion_gen
   apply(rule cont2cont_LAM)
   apply(simp only: uspecUnion_cont1)
   apply(rule easy_cont)
-  apply(subst uspecUnion_sym)
+  apply(subst uspecUnion_general_sym)
   by simp+
 
 lemma uspecUnion_apply: "(\<Lambda> S1 S2. uspecUnion_general S1 S2)\<cdot>A\<cdot>B = (uspecUnion_general A B)"
@@ -442,5 +442,8 @@ lemma uspecUnion_commutative: "\<And>S1 S2 S3. (uspecUnion\<cdot>S1\<cdot>(uspec
     show "uspecUnion\<cdot>S1\<cdot>(uspecUnion\<cdot>S2\<cdot>S3) = uspecUnion\<cdot>(uspecUnion\<cdot>S1\<cdot>S2)\<cdot>S3"
       by (simp add: h1 h2 h3 uspec_eqI)
   qed
+
+lemma uspecUnion_sym: "\<And>S1 S2. uspecUnion\<cdot>S1\<cdot>S2 = uspecUnion\<cdot>S2\<cdot>S1"
+  by (metis uspecUnion_apply uspecUnion_def uspecUnion_general_sym)
 
 end
