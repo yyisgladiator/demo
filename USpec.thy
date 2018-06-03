@@ -104,6 +104,10 @@ definition uspecUnion_general:: "'m uspec \<Rightarrow> 'm uspec \<Rightarrow> '
 definition uspecUnion :: "'m uspec \<rightarrow> 'm uspec \<rightarrow> 'm uspec" where
 "uspecUnion \<equiv> \<Lambda> S1 S2. uspecUnion_general S1 S2"
 
+(* Smallest possible USpec: Smallest means "least specified", i.e. ALL ufuns with I/O property *)
+definition uspecLeast :: "channel set \<Rightarrow> channel set \<Rightarrow> 'm uspec" where
+"uspecLeast cin cout = Abs_rev_uspec {f. ufclDom\<cdot>f = cin \<and> ufclRan\<cdot>f = cout} cin cout"
+
 
 (****************************************************)
 section\<open>Predicates\<close>
@@ -447,5 +451,43 @@ lemma uspecUnion_commutative: "\<And>S1 S2 S3. (uspecUnion\<cdot>S1\<cdot>(uspec
 
 lemma uspecUnion_sym: "\<And>S1 S2. uspecUnion\<cdot>S1\<cdot>S2 = uspecUnion\<cdot>S2\<cdot>S1"
   by (metis uspecUnion_apply uspecUnion_def uspecUnion_general_sym)
+
+
+subsection \<open>uspecLeast\<close>
+
+lemma uspecLeast_well: "uspecWell (Rev {f. ufclDom\<cdot>f = cin \<and> ufclRan\<cdot>f = cout}) (Discr cin) (Discr cout)"
+  by auto
+
+lemma uspecLeast_contains_ufLeast: "ufunclLeast cin cout \<in> Rep_rev_uspec(uspecLeast cin cout)"
+  apply(simp add: uspecLeast_def inv_rev_rev)
+  by (simp add: inv_rev_rev ufuncldom_least_dom ufuncldom_least_ran)
+
+lemma uspecLeast_consistent: "uspecIsConsistent (uspecLeast cin cout)"
+  sorry
+
+lemma uspecLeast_dom: "uspecDom\<cdot>(uspecLeast cin cout) = cin"
+  by (simp add: uspecLeast_def uspecdom_insert)
+
+lemma uspecLeast_ran: "uspecRan\<cdot>(uspecLeast cin cout) = cout"
+  by (simp add: uspecLeast_def uspecran_insert)
+
+lemma uspecLeast_min: assumes "uspecDom\<cdot>S = In"
+                          and "uspecRan\<cdot>S = Out"
+                        shows "uspecLeast In Out \<sqsubseteq> S"
+  proof -
+    have "\<And>f. f \<in> (Rep_rev_uspec S) \<Longrightarrow> ufclDom\<cdot>f = In \<and> ufclRan\<cdot>f = Out"
+      by (simp add: assms rep_rev_revset uspec_allDom uspec_allRan)
+    moreover have "\<And>f. ufclDom\<cdot>f = In \<and> ufclRan\<cdot>f = Out \<Longrightarrow> f \<in> Rep_rev_uspec (uspecLeast In Out)"
+      by (metis (mono_tags, lifting) CollectI rep_abs_rev_simp uspecLeast_def uspecLeast_well)
+    ultimately have "\<And>f. f \<in> (Rep_rev_uspec S) \<Longrightarrow> f \<in> Rep_rev_uspec (uspecLeast In Out)"
+      by auto
+    then have "Rep_rev_uspec S \<subseteq> Rep_rev_uspec (uspecLeast In Out)"
+      by(simp add: subsetI)
+    then show ?thesis
+      by (simp add: assms revBelowNeqSubset uspecLeast_dom uspecLeast_ran uspec_belowI uspecrevset_insert)
+  qed
+
+lemma uspecLeast_min2: "(uspecLeast (uspecDom\<cdot>S) (uspecRan\<cdot>S)) \<sqsubseteq> S"
+  using uspecLeast_min by auto
 
 end
