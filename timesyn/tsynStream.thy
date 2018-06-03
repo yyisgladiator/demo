@@ -300,7 +300,7 @@ lemma tsynremdups_strict: "tsynRemDups\<cdot>\<epsilon> = \<epsilon>"
   by (simp add: tsynRemDups_def)
 
 text {* @{term tsynRemDups} test on infinitely many time-slots. *}
-lemma tsynremdups_test_infstream: "tsynRemDups\<cdot>(sinftimes (<[Msg 1, Msg 2]>)) = sinftimes (<[Msg 1, Msg 2]>)"
+lemma tsynremdups_test_infstream: "tsynRemDups\<cdot>(sinftimes (<[Msg 1, Null]>)) = <[Msg 1]>"
   apply (simp add: tsynremdups_insert)
   oops
 
