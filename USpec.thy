@@ -424,12 +424,74 @@ lemma uspecUnion_setrev:
   apply(simp add: uspecUnion_general_def)
   by (simp add: uspecrevset_insert)
 
+lemma s: "\<And>S1 S2. inv Rev
+             (uspecRevSet\<cdot>
+              (Abs_uspec
+                (setrevFilter
+                  (\<lambda>f::'a. ufclDom\<cdot>f = uspecDom\<cdot>S1 \<union> uspecDom\<cdot>S2 \<and> ufclRan\<cdot>f = uspecRan\<cdot>S1)\<cdot>
+                 (setrevUnion\<cdot>(uspecRevSet\<cdot>S1)\<cdot>(uspecRevSet\<cdot>S2)),
+                 Discr (uspecDom\<cdot>S1 \<union> uspecDom\<cdot>S2), Discr (uspecRan\<cdot>S1))))
+=         inv Rev (setrevFilter
+                  (\<lambda>f::'a. ufclDom\<cdot>f = uspecDom\<cdot>S1 \<union> uspecDom\<cdot>S2 \<and> ufclRan\<cdot>f = uspecRan\<cdot>S1)\<cdot>
+                 (setrevUnion\<cdot>(uspecRevSet\<cdot>S1)\<cdot>(uspecRevSet\<cdot>S2)))"
+  proof -
+    fix S1::"'a uspec" and S2::"'a uspec"
+    have f1: "\<forall>r C Ca. ((\<exists>a. (a::'a) \<in> inv Rev r \<and> ufclDom\<cdot>a \<noteq> C) \<or> (\<exists>a. a \<in> inv Rev r \<and> ufclRan\<cdot>a \<noteq> Ca)) \<or> uspecWell r (Discr C) (Discr Ca)"
+      by (meson uspec_wellI2)
+    obtain aa :: "channel set \<Rightarrow> 'a set rev \<Rightarrow> 'a" where
+      f2: "\<forall>x0 x2. (\<exists>v3. v3 \<in> inv Rev x2 \<and> ufclRan\<cdot>v3 \<noteq> x0) = (aa x0 x2 \<in> inv Rev x2 \<and> ufclRan\<cdot>(aa x0 x2) \<noteq> x0)"
+      by moura
+    obtain aaa :: "channel set \<Rightarrow> 'a set rev \<Rightarrow> 'a" where
+      "\<forall>x1 x2. (\<exists>v3. v3 \<in> inv Rev x2 \<and> ufclDom\<cdot>v3 \<noteq> x1) = (aaa x1 x2 \<in> inv Rev x2 \<and> ufclDom\<cdot>(aaa x1 x2) \<noteq> x1)"
+      by moura
+    then have f3: "\<forall>r C Ca. (aaa C r \<in> inv Rev r \<and> ufclDom\<cdot>(aaa C r) \<noteq> C \<or> aa Ca r \<in> inv Rev r \<and> ufclRan\<cdot>(aa Ca r) \<noteq> Ca) \<or> uspecWell r (Discr C) (Discr Ca)"
+      using f2 f1 by presburger
+    have f4: "\<forall>a p r. (a::'a) \<notin> inv Rev (setrevFilter p\<cdot>r) \<or> p a"
+      by (meson setrevfilter_condition)
+    then have f5: "aa (uspecRan\<cdot>S1) (setrevFilter (\<lambda>a. ufclDom\<cdot>a = uspecDom\<cdot>S1 \<union> uspecDom\<cdot>S2 \<and> ufclRan\<cdot>a = uspecRan\<cdot>S1)\<cdot> (setrevUnion\<cdot>(uspecRevSet\<cdot>S1)\<cdot>(uspecRevSet\<cdot>S2))) \<notin> inv Rev (setrevFilter (\<lambda>a. ufclDom\<cdot>a = uspecDom\<cdot>S1 \<union> uspecDom\<cdot>S2 \<and> ufclRan\<cdot>a = uspecRan\<cdot>S1)\<cdot> (setrevUnion\<cdot>(uspecRevSet\<cdot>S1)\<cdot> (uspecRevSet\<cdot>S2))) \<or> ufclRan\<cdot> (aa (uspecRan\<cdot>S1) (setrevFilter (\<lambda>a. ufclDom\<cdot>a = uspecDom\<cdot>S1 \<union> uspecDom\<cdot>S2 \<and> ufclRan\<cdot>a = uspecRan\<cdot>S1)\<cdot> (setrevUnion\<cdot>(uspecRevSet\<cdot>S1)\<cdot> (uspecRevSet\<cdot>S2)))) = uspecRan\<cdot>S1"
+      by blast
+    have "aaa (uspecDom\<cdot>S1 \<union> uspecDom\<cdot>S2) (setrevFilter (\<lambda>a. ufclDom\<cdot>a = uspecDom\<cdot>S1 \<union> uspecDom\<cdot>S2 \<and> ufclRan\<cdot>a = uspecRan\<cdot>S1)\<cdot> (setrevUnion\<cdot>(uspecRevSet\<cdot>S1)\<cdot>(uspecRevSet\<cdot>S2))) \<notin> inv Rev (setrevFilter (\<lambda>a. ufclDom\<cdot>a = uspecDom\<cdot>S1 \<union> uspecDom\<cdot>S2 \<and> ufclRan\<cdot>a = uspecRan\<cdot>S1)\<cdot> (setrevUnion\<cdot>(uspecRevSet\<cdot>S1)\<cdot> (uspecRevSet\<cdot>S2))) \<or> ufclDom\<cdot> (aaa (uspecDom\<cdot>S1 \<union> uspecDom\<cdot>S2) (setrevFilter (\<lambda>a. ufclDom\<cdot>a = uspecDom\<cdot>S1 \<union> uspecDom\<cdot>S2 \<and> ufclRan\<cdot>a = uspecRan\<cdot>S1)\<cdot> (setrevUnion\<cdot>(uspecRevSet\<cdot>S1)\<cdot> (uspecRevSet\<cdot>S2)))) = uspecDom\<cdot>S1 \<union> uspecDom\<cdot>S2"
+      using f4 by blast
+    then have "uspecWell (setrevFilter (\<lambda>a. ufclDom\<cdot>a = uspecDom\<cdot>S1 \<union> uspecDom\<cdot>S2 \<and> ufclRan\<cdot>a = uspecRan\<cdot>S1)\<cdot> (setrevUnion\<cdot>(uspecRevSet\<cdot>S1)\<cdot>(uspecRevSet\<cdot>S2))) (Discr (uspecDom\<cdot>S1 \<union> uspecDom\<cdot>S2)) (Discr (uspecRan\<cdot>S1))"
+      using f5 f3 by blast
+    then show "inv Rev
+             (uspecRevSet\<cdot>
+              (Abs_uspec
+                (setrevFilter
+                  (\<lambda>f::'a. ufclDom\<cdot>f = uspecDom\<cdot>S1 \<union> uspecDom\<cdot>S2 \<and> ufclRan\<cdot>f = uspecRan\<cdot>S1)\<cdot>
+                 (setrevUnion\<cdot>(uspecRevSet\<cdot>S1)\<cdot>(uspecRevSet\<cdot>S2)),
+                 Discr (uspecDom\<cdot>S1 \<union> uspecDom\<cdot>S2), Discr (uspecRan\<cdot>S1))))
+=         inv Rev (setrevFilter
+                  (\<lambda>f::'a. ufclDom\<cdot>f = uspecDom\<cdot>S1 \<union> uspecDom\<cdot>S2 \<and> ufclRan\<cdot>f = uspecRan\<cdot>S1)\<cdot>
+                 (setrevUnion\<cdot>(uspecRevSet\<cdot>S1)\<cdot>(uspecRevSet\<cdot>S2)))"
+      by (simp add: uspecrevset_insert)
+  qed
+
 lemma uspecUnion_setrev_condition: "\<And>S1 S2 x. x \<in> inv Rev(uspecRevSet\<cdot>(uspecUnion\<cdot>S1\<cdot>S2))
-                                 \<longleftrightarrow> (x \<in> inv Rev (uspecRevSet\<cdot>S1) \<or> x \<in> inv Rev (uspecRevSet\<cdot>S2)
+                                 \<longleftrightarrow> ((x \<in> inv Rev (uspecRevSet\<cdot>S1) \<or> x \<in> inv Rev (uspecRevSet\<cdot>S2))
                                   \<and> ufclDom\<cdot>x = uspecDom\<cdot>S1 \<union> uspecDom\<cdot>S2
                                   \<and> ufclRan\<cdot>x = uspecRan\<cdot>S1 \<union> uspecRan\<cdot>S2)"
-  sledgehammer
-  sorry
+  apply auto
+  apply (metis (no_types, lifting) setrevUnion_gdw setrevfilter_included uspecUnion_setrev)
+  apply (simp add: uspecUnion_dom uspec_allDom)+
+  apply (simp add: uspecUnion_ran uspec_allRan)+
+
+  apply(simp add: uspecUnion_def)
+  apply(simp add: uspecUnion_general_def)
+  apply(subst s)
+  apply (simp add: setrevFilter_gdw setrevUnion_gdw uspec_allRan)
+  apply(simp add: uspecUnion_def)
+  apply(simp add: uspecUnion_general_def)
+  proof -
+    fix S1 :: "'a uspec" and S2 :: "'a uspec" and x :: 'a
+    assume a1: "x \<in> inv Rev (uspecRevSet\<cdot>S2)"
+    assume a2: "ufclDom\<cdot>x = uspecDom\<cdot>S1 \<union> uspecDom\<cdot>S2"
+    assume a3: "ufclRan\<cdot>x = uspecRan\<cdot>S1 \<union> uspecRan\<cdot>S2"
+    have "\<And>r d da. \<not> uspecWell r d da \<or> uspecRevSet\<cdot>(Abs_uspec (r, d, da)::'a uspec) = r"
+      by (simp add: uspecrevset_insert)
+    then show "x \<in> inv Rev (uspecRevSet\<cdot> (Abs_uspec (setrevFilter (\<lambda>a. ufclDom\<cdot>a = uspecDom\<cdot>S1 \<union> uspecDom\<cdot>S2 \<and> ufclRan\<cdot>a = uspecRan\<cdot>S1 \<union> uspecRan\<cdot>S2)\<cdot> (setrevUnion\<cdot>(uspecRevSet\<cdot>S1)\<cdot> (uspecRevSet\<cdot>S2)), Discr (uspecDom\<cdot>S1 \<union> uspecDom\<cdot>S2), Discr (uspecRan\<cdot>S1 \<union> uspecRan\<cdot>S2))))"
+      using a3 a2 a1 by (simp add: setrevUnion_gdw setrevfilter_reversed)
+  qed
 
 lemma uspecUnion_commutative: "\<And>S1 S2 S3. (uspecUnion\<cdot>S1\<cdot>(uspecUnion\<cdot>S2\<cdot>S3)) = (uspecUnion\<cdot>(uspecUnion\<cdot>S1\<cdot>S2)\<cdot>S3)"
   proof -
