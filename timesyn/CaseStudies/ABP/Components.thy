@@ -53,15 +53,6 @@ lemma tsynRemDups_h_sconc_null: "tsynRemDups_h\<cdot>(\<up>null \<bullet> as)\<c
   by (fold lscons_conv, simp)
 *)
 
-fun F :: "'a tsyn \<Rightarrow> 'a tsyn \<Rightarrow> ('a tsyn \<times> 'a tsyn)" where
-"F (Msg x) null = (null, (Msg x))" |
-"F (Msg x) (Msg y) = ((Msg y), (Msg y))"
-print_theorems
-
-lemma blub: "tsynScanlExt F (Msg n)\<cdot>(\<up>(Msg a) \<bullet> as) = \<up>(Msg a) \<bullet> tsynScanlExt F a\<cdot>as"
-  apply (simp add: tsynscanlext_sconc_msg)
-  sorry
-
 fun rec_h :: "bool \<Rightarrow> ('a \<times> bool) tsyn \<Rightarrow> ('a tsyn \<times> bool)" where
   "rec_h b (Msg (msg,b1)) = (if b1 = b then (Msg msg, b1) else (null, b1))" |
   "rec_h b null = (null, b) " 
