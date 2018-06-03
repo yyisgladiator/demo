@@ -104,6 +104,8 @@ fun tsynScanlExt_h :: "('s \<Rightarrow> 'a \<Rightarrow> ('b \<times>'s)) \<Rig
 text {* @{term tsynScanlExt}: Apply a function elementwise to the input stream. Behaves like 
         @{term tsynMap}, but also takes a state as additional input to the function. For the first 
         computation an initial state is provided. *}
+(* tsynScanlExt just ignores empty time-slots; If you want to return empty time-slots lift a
+   function from sscanlA. *)
 definition tsynScanlExt :: "('s \<Rightarrow> 'a \<Rightarrow> ('b \<times> 's)) \<Rightarrow> 's \<Rightarrow> 'a tsyn stream \<rightarrow> 'b tsyn stream" where
   "tsynScanlExt f = sscanlA (tsynScanlExt_h f)"
 
