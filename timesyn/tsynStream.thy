@@ -96,10 +96,25 @@ fun tsynFst :: "('a \<times> 'b) tsyn \<Rightarrow> 'a tsyn" where
   "tsynFst Null = Null" |
   "tsynFst (Msg x) = tsynApplyElem fst (Msg x)"
 
+text{* @{term tsynSnd}: Access the second element of a pair.*}
+fun tsynSnd :: "('a \<times> 'b) tsyn \<Rightarrow> 'b tsyn" where
+  "tsynSnd Null = Null" |
+  "tsynSnd (Msg x) = tsynApplyElem snd (Msg x)"
+
 text{* @{term tsynProjFst}: Access the first stream of two zipped streams.*}
 definition tsynProjFst  :: "('a \<times> 'b) tsyn stream \<rightarrow> 'a tsyn stream" where
 "tsynProjFst = smap tsynFst"
 
+text{* @{term tsynProjSnd}: Access the first stream of two zipped streams.*}
+definition tsynProjSnd  :: "('a \<times> 'b) tsyn stream \<rightarrow> 'b tsyn stream" where
+"tsynProjSnd = smap tsynSnd"
+
+fun tsynRemDups_sscanlA_h :: "'a tsyn \<Rightarrow> 'a tsyn \<Rightarrow> ('a tsyn \<times> 'a tsyn)" where
+"tsynRemDups_sscanlA_h x Null = (Null,x)" |
+"tsynRemDups_sscanlA_h x y = (if x = y then (Null,x) else (y,y))"
+
+definition tsynRemDups :: "'a tsyn stream \<rightarrow> 'a tsyn stream" where 
+"tsynRemDups = sscanlA tsynRemDups_sscanlA_h Null"
 
 (* ----------------------------------------------------------------------- *)
   section {* Lemmata on Time-Synchronous Streams *}
@@ -227,7 +242,67 @@ text {* @{term tsynMap} leaves the length of a stream unchanged. *}
 lemma tsynmap_slen [simp]: "#(tsynMap f\<cdot>s) = #s"
   by (simp add: tsynmap_insert)
 
+(* ----------------------------------------------------------------------- *)
+  subsection {* tsynProjFst *}
+(* ----------------------------------------------------------------------- *)
 
+text {* @{term tsynProjFst} insertion lemma. *}
+lemma tsynprojfst_insert: "tsynProjFst\<cdot>x = smap tsynFst\<cdot>x"
+  by (simp add: tsynProjFst_def)
+
+text {* @{term tsynProjFst} test on infinitely many time-slots. *}
+lemma tsynprojfst_test_infstream: "tsynProjFst\<cdot>(sinftimes (<[ Msg (1,2), Null]>)) = sinftimes (<[Msg 1, Null]>)"
+  by(simp add: tsynprojfst_insert)
+
+text {* @{term tsynProjFst} test on finite stream. *}
+lemma tsynprojfst_test_finstream: "tsynProjFst\<cdot>(<[Msg (1,2), Msg (3,2), Null, Null, Msg (2,1), Null]>) = (<[Msg 1, Msg 3, Null, Null, Msg 2, Null]>)"
+  by (simp add: tsynprojfst_insert)
+
+text {* @{term tsynProjFst} maps the empty stream on the empty stream. *}
+lemma tsynprojfst_strict [simp]: "tsynProjFst\<cdot>\<epsilon> = \<epsilon>"
+  by (simp add: tsynprojfst_insert)
+
+(* ----------------------------------------------------------------------- *)
+  subsection {* tsynProjSnd *}
+(* ----------------------------------------------------------------------- *)
+
+text {* @{term tsynProjSnd} insertion lemma. *}
+lemma tsynprojsnd_insert: "tsynProjSnd\<cdot>x = smap tsynSnd\<cdot>x"
+  by (simp add: tsynProjSnd_def)
+
+text {* @{term tsynProjSnd} test on infinitely many time-slots. *}
+lemma tsynprojsnd_test_infstream: "tsynProjSnd\<cdot>(sinftimes (<[ Msg (1,2), Null]>)) = sinftimes (<[Msg 2, Null]>)"
+  by (simp add: tsynprojsnd_insert)
+
+text {* @{term tsynProjSnd} test on finite stream. *}
+lemma tsynprojsnd_test_finstream: "tsynProjSnd\<cdot>(<[Msg (1,2), Msg (3,2), Null, Null, Msg (2,1), Null]>) = (<[Msg 2, Msg 2, Null, Null, Msg 1, Null]>)"
+  by (simp add: tsynprojsnd_insert)
+
+text {* @{term tsynProjSnd} maps the empty stream on the empty stream. *}
+lemma tsynprojsnd_strict [simp]: "tsynProjSnd\<cdot>\<epsilon> = \<epsilon>"
+  by (simp add: tsynprojsnd_insert)
+
+(* ----------------------------------------------------------------------- *)
+  subsection {* tsynRemDups *}
+(* ----------------------------------------------------------------------- *)
+
+text {* @{term tsynRemDups} insertion lemma. *}
+lemma tsynremdups_insert: "tsynRemDups\<cdot>x = sscanlA tsynRemDups_sscanlA_h Null\<cdot>x"
+  by (simp add: tsynRemDups_def)
+
+text {* @{term tsynRemDups} test on finite stream. *}
+lemma tsynremdups_test_finstream: "tsynRemDups\<cdot>(<[Msg (1 :: nat), Msg 1, Null, Null, Msg 1, Msg 2, Null]>) = 
+  <[Msg 1, Null, Null, Null, Null, Msg 2, Null]>"
+  by (simp add: tsynRemDups_def)
+
+text {* @{term tsynRemDups} is strict. *}
+lemma tsynremdups_strict: "tsynRemDups\<cdot>\<epsilon> = \<epsilon>"
+  by (simp add: tsynRemDups_def)
+
+text {* @{term tsynRemDups} test on infinitely many time-slots. *}
+lemma tsynremdups_test_infstream: "tsynRemDups\<cdot>(sinftimes (<[Msg 1, Msg 2]>)) = sinftimes (<[Msg 1, Msg 2]>)"
+  apply (simp add: tsynremdups_insert)
+  oops
 
 (* ToDo: adjustments. *)
 
