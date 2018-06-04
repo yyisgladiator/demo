@@ -271,14 +271,14 @@ text {* @{term tsynMap} ignores empty time-slots. *}
 lemma tsynmap_sconc_null: "tsynMap f\<cdot>(\<up>null \<bullet> s) = \<up>null \<bullet> tsynMap f\<cdot>s"
   by (simp add: tsynmap_insert)
 
-text {* @{term tsynMap} leaves the length of a stream unchanged. *}
-lemma tsynmap_slen [simp]: "#(tsynMap f\<cdot>s) = #s"
-  by (simp add: tsynmap_insert)
-
 text {* @{term tsynMap} of the concatenation of two streams equals the concatenation of 
         @{term tsynMap} of both streams. *}
 lemma tsynmap_sconc: "tsynMap f\<cdot>(a1 \<bullet> a2) = tsynMap f\<cdot>a1 \<bullet> tsynMap f\<cdot>a2"
   by (simp add: smap_split tsynMap_def)
+
+text {* @{term tsynMap} leaves the length of a stream unchanged. *}
+lemma tsynmap_slen: "#(tsynMap f\<cdot>s) = #s"
+  by (simp add: tsynmap_insert)
 
 (* ----------------------------------------------------------------------- *)
   subsection {* tsynFilter *}
