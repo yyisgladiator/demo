@@ -81,6 +81,24 @@ text {* @{term tsynMap}: Apply a function to all elements of the stream. *}
 definition tsynMap :: "('a \<Rightarrow> 'b) \<Rightarrow> 'a tsyn stream \<rightarrow> 'b tsyn stream" where
   "tsynMap f = smap (tsynApplyElem f)"
 
+text{* @{term tsynFst}: Access the first element of a pair. *}
+fun tsynFst :: "('a \<times> 'b) tsyn \<Rightarrow> 'a tsyn" where
+  "tsynFst Null = Null" |
+  "tsynFst (Msg x) = Msg (fst x)"
+
+text{* @{term tsynSnd}: Access the second element of a pair .*}
+fun tsynSnd :: "('a \<times> 'b) tsyn \<Rightarrow> 'b tsyn" where
+  "tsynSnd Null = Null" |
+  "tsynSnd (Msg x) = Msg (snd x)"
+
+text{* @{term tsynProjFst}: Access the first stream of two zipped streams .*}
+definition tsynProjFst :: "('a \<times> 'b) tsyn stream \<rightarrow> 'a tsyn stream" where
+"tsynProjFst = smap tsynFst"
+
+text{* @{term tsynProjSnd}: Access the first stream of two zipped streams. *}
+definition tsynProjSnd :: "('a \<times> 'b) tsyn stream \<rightarrow> 'b tsyn stream" where
+"tsynProjSnd = smap tsynSnd"
+
 text {* @{term tsynFilterElem}: Replace elements not inside the set with a emtpy time-slot. *}
 fun tsynFilterElem :: "('a set) \<Rightarrow> 'a tsyn \<Rightarrow> 'a tsyn" where
   "tsynFilterElem _ Null = Null" |
@@ -91,27 +109,9 @@ text {* @{term tsynFilter}: Remove all elements from the stream which are not in
 definition tsynFilter :: "'a set \<Rightarrow> 'a tsyn stream \<rightarrow> 'a tsyn stream" where
   "tsynFilter A = smap (tsynFilterElem A)"
 
-text{* @{term tsynFst}: Access the first element of a pair.*}
-fun tsynFst :: "('a \<times> 'b) tsyn \<Rightarrow> 'a tsyn" where
-  "tsynFst Null = Null" |
-  "tsynFst (Msg x) = tsynApplyElem fst (Msg x)"
-
-text{* @{term tsynSnd}: Access the second element of a pair.*}
-fun tsynSnd :: "('a \<times> 'b) tsyn \<Rightarrow> 'b tsyn" where
-  "tsynSnd Null = Null" |
-  "tsynSnd (Msg x) = tsynApplyElem snd (Msg x)"
-
-text{* @{term tsynProjFst}: Access the first stream of two zipped streams.*}
-definition tsynProjFst  :: "('a \<times> 'b) tsyn stream \<rightarrow> 'a tsyn stream" where
-"tsynProjFst = smap tsynFst"
-
-text{* @{term tsynProjSnd}: Access the first stream of two zipped streams.*}
-definition tsynProjSnd  :: "('a \<times> 'b) tsyn stream \<rightarrow> 'b tsyn stream" where
-"tsynProjSnd = smap tsynSnd"
-
 fun tsynRemDups_sscanlA_h :: "'a tsyn \<Rightarrow> 'a tsyn \<Rightarrow> ('a tsyn \<times> 'a tsyn)" where
-"tsynRemDups_sscanlA_h x Null = (Null,x)" |
-"tsynRemDups_sscanlA_h x y = (if x = y then (Null,x) else (y,y))"
+"tsynRemDups_sscanlA_h x Null = (Null, x)" |
+"tsynRemDups_sscanlA_h x y = (if x = y then (Null, x) else (y, y))"
 
 definition tsynRemDups :: "'a tsyn stream \<rightarrow> 'a tsyn stream" where 
 "tsynRemDups = sscanlA tsynRemDups_sscanlA_h Null"
@@ -251,11 +251,14 @@ lemma tsynprojfst_insert: "tsynProjFst\<cdot>x = smap tsynFst\<cdot>x"
   by (simp add: tsynProjFst_def)
 
 text {* @{term tsynProjFst} test on infinitely many time-slots. *}
-lemma tsynprojfst_test_infstream: "tsynProjFst\<cdot>(sinftimes (<[ Msg (1,2), Null]>)) = sinftimes (<[Msg 1, Null]>)"
+lemma tsynprojfst_test_infstream: 
+  "tsynProjFst\<cdot>(sinftimes (<[ Msg (1, 2), Null]>)) = sinftimes (<[Msg 1, Null]>)"
   by(simp add: tsynprojfst_insert)
 
 text {* @{term tsynProjFst} test on finite stream. *}
-lemma tsynprojfst_test_finstream: "tsynProjFst\<cdot>(<[Msg (1,2), Msg (3,2), Null, Null, Msg (2,1), Null]>) = (<[Msg 1, Msg 3, Null, Null, Msg 2, Null]>)"
+lemma tsynprojfst_test_finstream:
+  "tsynProjFst\<cdot>(<[Msg (1, 2), Msg (3, 2), Null, Null, Msg (2, 1), Null]>) 
+     = (<[Msg 1, Msg 3, Null, Null, Msg 2, Null]>)"
   by (simp add: tsynprojfst_insert)
 
 text {* @{term tsynProjFst} maps the empty stream on the empty stream. *}
@@ -271,11 +274,14 @@ lemma tsynprojsnd_insert: "tsynProjSnd\<cdot>x = smap tsynSnd\<cdot>x"
   by (simp add: tsynProjSnd_def)
 
 text {* @{term tsynProjSnd} test on infinitely many time-slots. *}
-lemma tsynprojsnd_test_infstream: "tsynProjSnd\<cdot>(sinftimes (<[ Msg (1,2), Null]>)) = sinftimes (<[Msg 2, Null]>)"
+lemma tsynprojsnd_test_infstream: 
+  "tsynProjSnd\<cdot>(sinftimes (<[ Msg (1, 2), Null]>)) = sinftimes (<[Msg 2, Null]>)"
   by (simp add: tsynprojsnd_insert)
 
 text {* @{term tsynProjSnd} test on finite stream. *}
-lemma tsynprojsnd_test_finstream: "tsynProjSnd\<cdot>(<[Msg (1,2), Msg (3,2), Null, Null, Msg (2,1), Null]>) = (<[Msg 2, Msg 2, Null, Null, Msg 1, Null]>)"
+lemma tsynprojsnd_test_finstream: 
+  "tsynProjSnd\<cdot>(<[Msg (1, 2), Msg (3, 2), Null, Null, Msg (2, 1), Null]>) 
+     = (<[Msg 2, Msg 2, Null, Null, Msg 1, Null]>)"
   by (simp add: tsynprojsnd_insert)
 
 text {* @{term tsynProjSnd} maps the empty stream on the empty stream. *}
