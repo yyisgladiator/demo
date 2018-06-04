@@ -113,6 +113,8 @@ text {* @{term tsynFilter}: Remove all elements from the stream which are not in
 definition tsynFilter :: "'a set \<Rightarrow> 'a tsyn stream \<rightarrow> 'a tsyn stream" where
   "tsynFilter A = smap (tsynFilterElem A)"
 
+(* ToDo: add descriptions. *)
+
 fun tsynRemDups_h :: "'a tsyn \<Rightarrow> 'a tsyn \<Rightarrow> ('a tsyn \<times> 'a tsyn)" where
   "tsynRemDups_h x null = (null, x)" |
   "tsynRemDups_h x y = (if x = y then (null, x) else (y, y))"
