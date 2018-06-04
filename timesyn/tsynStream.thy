@@ -117,7 +117,7 @@ definition tsynScanl :: "('b \<Rightarrow> 'a \<Rightarrow> 'b) \<Rightarrow> 'b
 
 fun tsynZip_sscanlA_h :: "'a stream \<Rightarrow> 'b tsyn \<Rightarrow>( ('a \<times> 'b) tsyn \<times> 'a stream)" where
 "tsynZip_sscanlA_h y null= (null,y)" |
-"tsynZip_sscanlA_h y (Msg m) = (if (y = \<epsilon>) then (null,y) else (Msg ((shd y), m),(srt y))) "
+"tsynZip_sscanlA_h y (Msg m) = (if (y = \<epsilon>) then (null,y) else (Msg ((shd y), m),(srt\<cdot>y))) "
 
 definition tsynZip :: "'a  stream \<Rightarrow> 'b tsyn stream \<rightarrow> ('a \<times> 'b) tsyn stream" where 
 "tsynZip s = sscanlA tsynZip_sscanlA_h s"
