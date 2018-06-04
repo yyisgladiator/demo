@@ -113,16 +113,13 @@ text {* @{term tsynFilter}: Remove all elements from the stream which are not in
 definition tsynFilter :: "'a set \<Rightarrow> 'a tsyn stream \<rightarrow> 'a tsyn stream" where
   "tsynFilter A = smap (tsynFilterElem A)"
 
-(* ToDo: review for stream beginning with null *)
-
-(*
 fun tsynRemDups_h :: "'a tsyn \<Rightarrow> 'a tsyn \<Rightarrow> ('a tsyn \<times> 'a tsyn)" where
 "tsynRemDups_h x null = (null, x)" |
 "tsynRemDups_h x y = (if x = y then (null, x) else (y, y))"
 
 definition tsynRemDups :: "'a tsyn stream \<rightarrow> 'a tsyn stream" where 
 "tsynRemDups = sscanlA tsynRemDups_h null"
-*)
+
 
 (* ToDo: add description. *)
 
@@ -152,7 +149,7 @@ definition tsynScanl :: "('b \<Rightarrow> 'a \<Rightarrow> 'b) \<Rightarrow> 'b
 
 (* ToDo: add description. *)
 
-fixrec tsynRemDups_h :: "'a tsyn stream \<rightarrow> 'a tsyn discr option \<rightarrow> 'a tsyn stream" where
+(* fixrec tsynRemDups_h :: "'a tsyn stream \<rightarrow> 'a tsyn discr option \<rightarrow> 'a tsyn stream" where
   "tsynRemDups_h\<cdot>\<epsilon>\<cdot>option = \<epsilon>" |
   "tsynRemDups_h\<cdot>(up\<cdot>a && as)\<cdot>None = (
      if (undiscr a) = null then up\<cdot>a && tsynRemDups_h\<cdot>as\<cdot>None
@@ -168,7 +165,7 @@ lemma tsynRemDups_h_sconc_msg: assumes "a \<noteq> null"
   by (metis lscons_conv tsyn.distinct(1) tsynRemDups_h.simps(2) undiscr_Discr)
 
 lemma tsynRemDups_h_sconc_null: "tsynRemDups_h\<cdot>(\<up>null \<bullet> as)\<cdot>None = \<up>null \<bullet> tsynRemDups_h\<cdot>as\<cdot>None"
-  by (fold lscons_conv, simp)
+  by (fold lscons_conv, simp)*)
 
 (* ----------------------------------------------------------------------- *)
   section {* Lemmata on Time-Synchronous Streams *}
@@ -361,15 +358,14 @@ lemma tsynprojsnd_strict [simp]: "tsynProjSnd\<cdot>\<epsilon> = \<epsilon>"
   subsection {* tsynRemDups *}
 (* ----------------------------------------------------------------------- *)
 
-(*
 text {* @{term tsynRemDups} insertion lemma. *}
-lemma tsynremdups_insert: "tsynRemDups\<cdot>x = sscanlA tsynRemDups_sscanlA_h null\<cdot>x"
+lemma tsynremdups_insert: "tsynRemDups\<cdot>x = sscanlA tsynRemDups_h null\<cdot>x"
   by (simp add: tsynRemDups_def)
 
 text {* @{term tsynRemDups} test on finite stream. *}
 lemma tsynremdups_test_finstream: 
-  "tsynRemDups\<cdot>(<[Msg (1 :: nat), Msg 1, null, null, Msg 1, Msg 2, null]>) = 
-  <[Msg 1, null, null, null, null, Msg 2, null]>"
+  "tsynRemDups\<cdot>(<[null, Msg (1 :: nat), Msg 1, null, null, Msg 1, Msg 2, null]>) = 
+  <[null, Msg 1, null, null, null, null, Msg 2, null]>"
   by (simp add: tsynRemDups_def)
 
 text {* @{term tsynRemDups} is strict. *}
@@ -380,7 +376,6 @@ text {* @{term tsynRemDups} test on infinitely many time-slots. *}
 lemma tsynremdups_test_infstream: "tsynRemDups\<cdot>(sinftimes (<[Msg 1, Null]>)) = <[Msg 1]>"
   apply (simp add: tsynremdups_insert)
   oops
-*)
 
 (* ----------------------------------------------------------------------- *)
   subsection {* tsynFilter *}
