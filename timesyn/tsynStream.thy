@@ -251,6 +251,14 @@ text {* @{term tsynMap} insertion lemma. *}
 lemma tsynmap_insert: "tsynMap f\<cdot>s = smap (tsynApplyElem f)\<cdot>s"
   by (simp add: tsynMap_def)
 
+text {* @{term tsynMap} test on infinite stream. *}
+lemma tsynMap_test_infstream: "tsynMap (plus 1)\<cdot>((<[Msg 3, Msg 4, Msg 3]>)\<infinity>) = (<[Msg 4, Msg 5, Msg 4]>)\<infinity>"
+  by (simp add: tsynmap_insert)
+
+text {* @{term tsynMap} test on finite stream. *}
+lemma tsynMap_test_finstream: "tsynMap (plus 1)\<cdot>(<[Msg 1, Msg 2, Msg 1, null]>) = <[Msg 2, Msg 3, Msg 2, null]>"
+  by (simp add: tsynMap_def)
+
 text {* @{term tsynMap} is strict. *}
 lemma tsynmap_strict [simp]: "tsynMap f\<cdot>\<epsilon> = \<epsilon>"
   by (simp add: tsynmap_insert)
@@ -266,6 +274,11 @@ lemma tsynmap_sconc_null: "tsynMap f\<cdot>(\<up>null \<bullet> s) = \<up>null \
 text {* @{term tsynMap} leaves the length of a stream unchanged. *}
 lemma tsynmap_slen [simp]: "#(tsynMap f\<cdot>s) = #s"
   by (simp add: tsynmap_insert)
+
+text {* @{term tsynMap} of the concatenation of two streams equals the concatenation of 
+        @{term tsynMap} of both streams. *}
+lemma tsynmap_sconc: "tsynMap f\<cdot>(a1 \<bullet> a2) = tsynMap f\<cdot>a1 \<bullet> tsynMap f\<cdot>a2"
+  by (simp add: smap_split tsynMap_def)
 
 (* ----------------------------------------------------------------------- *)
   subsection {* tsynFilter *}
