@@ -53,12 +53,23 @@ lemma tsynRemDups_h_sconc_null: "tsynRemDups_h\<cdot>(\<up>null \<bullet> as)\<c
   by (fold lscons_conv, simp)
 *)
 
-fun rec_h :: "bool \<Rightarrow> ('a \<times> bool) tsyn \<Rightarrow> ('a tsyn \<times> bool)" where
-  "rec_h b (Msg (msg,b1)) = (if b1 = b then (Msg msg, b1) else (null, b1))" |
-  "rec_h b null = (null, b) " 
 
+fun rec_h :: "bool \<Rightarrow> ('a \<times> bool) tsyn \<Rightarrow> ('a tsyn \<times> bool)" where
+  "rec_h b (Msg (msg,b1)) = (if b1 = b then (Msg msg, \<not>b) else (null, b))" |
+  "rec_h b null = (null, b) " 
 
 definition receiver :: "('a \<times> bool) tsyn stream \<rightarrow> 'a tsyn stream" where
   "receiver \<equiv> \<Lambda> s. sscanlA rec_h True\<cdot>s"
+
+lemma receiver_insert: "receiver \<equiv> \<Lambda> s. sscanlA rec_h True\<cdot>s"
+  by( simp add: receiver_def)
+
+lemma receiver_test_finstream: "receiver\<cdot>(<[Msg(1,False), null, Msg(2,True),Msg(1,False)]>) = <[null, null,Msg 2, Msg 1]> "
+  by (simp add: receiver_insert)
+
+lemma receiver_test_infstream: "receiver\<cdot>((<[Msg(1,False), null, Msg(2,True),Msg(1,False)]>)\<infinity>) 
+        = (<[null, null, Msg 2, Msg 1]>)\<infinity> "
+  apply (simp add: receiver_insert)
+sorry
 
 end
