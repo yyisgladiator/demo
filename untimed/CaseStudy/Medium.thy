@@ -25,17 +25,17 @@ fun getCounter :: "MediumState \<Rightarrow> nat" where
 
 
 (* Zum Testen... die funktion setzt den Channel *)
-definition makeOutput :: "'m::message \<Rightarrow> 'm event SB" where
+definition makeOutput :: "'m::message \<Rightarrow> 'm tsyn SB" where
 "makeOutput = undefined"
 
 
-fun abpMediumTransition:: "((MediumState \<times> 'm::message event) \<Rightarrow> ((MediumState \<times> 'm event SB) set rev))" where
+fun abpMediumTransition:: "((MediumState \<times> 'm::message tsyn) \<Rightarrow> ((MediumState \<times> 'm tsyn SB) set rev))" where
 
   (* Deterministic, never delete Ticks, don't count down for them *)
-"abpMediumTransition (state, Tick)= Rev {(state, tsynbOneTick c2)}" | 
+"abpMediumTransition (state, null)= Rev {(state, tsynbNull c2)}" | 
 
   (* Deterministic, delete Message and count down *)
-"abpMediumTransition (State TheOne (Suc n), (Msg m))= Rev {(State TheOne n, tsynbOneTick c2)}" |
+"abpMediumTransition (State TheOne (Suc n), (Msg m))= Rev {(State TheOne n, tsynbNull c2)}" |
 
   (* NON-Deterministic. Countdown is at 0, let a message through and set the countdown to a random value *)
 "abpMediumTransition (State TheOne 0, (Msg m))= Rev {(State TheOne n, makeOutput m) | n . True}"
@@ -53,7 +53,7 @@ lift_definition abpMedium:: "(MediumState, 'm::message) NDA"  is
 
     (* Interessanter part. Die Startzustands/Ausgabe menge. 
       Am Anfang wird der countdown auf einen zufalls wert gesetzt und ein Tick ausgegeben*)
-  Rev {((State TheOne n), tsynbOneTick c2)| n. True} , 
+  Rev {((State TheOne n), tsynbNull c2)| n. True} , 
 
   (* Input/Output channel set. Der Prefix 'Discr' muss sein *)
   Discr {c1}, Discr {c2})"
