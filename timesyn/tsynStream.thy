@@ -141,6 +141,27 @@ text {* @{term tsynScanl}: Apply a function elementwise to the input stream. Beh
   the function. For the first computation an initial value is provided. *}
 definition tsynScanl :: "('b \<Rightarrow> 'a \<Rightarrow> 'b) \<Rightarrow> 'b \<Rightarrow> 'a tsyn stream \<rightarrow> 'b tsyn stream" where
   "tsynScanl f i = tsynScanlExt (\<lambda>a b. (f a b, f a b)) i"
+  
+definition tsynDropWhile :: "('a tsyn \<Rightarrow> bool) \<Rightarrow> 'a tsyn stream \<rightarrow> 'a tsyn stream" where
+  "tsynDropWhile f \<equiv> fix\<cdot>(\<Lambda> h s. slookahd\<cdot>s\<cdot>(\<lambda> a. if (f a \<or> a = null) then \<up>null \<bullet> (h\<cdot>(srt\<cdot>s)) else s))"
+
+definition lnat2nat   ::  "lnat \<Rightarrow> nat" where
+"lnat2nat k \<equiv> if(k=\<infinity>) then 0 else THE a. Fin a = k"
+
+definition tsynDropWhile2_h::"('a tsyn \<Rightarrow> bool) \<Rightarrow> 'a tsyn stream \<rightarrow> 'a tsyn stream" where
+  "tsynDropWhile2_h f \<equiv> (\<Lambda> s. ((sntimes (lnat2nat(#(stakewhile(\<lambda> a. f a \<or> (a = null)) \<cdot> s))) (\<up>null)) \<bullet> sdropwhile (\<lambda> a. f a \<or> (a = null)) \<cdot> s))"
+  
+definition tsynDropWhile2 :: "('a tsyn \<Rightarrow> bool) \<Rightarrow> 'a tsyn stream \<rightarrow> 'a tsyn stream" where
+  "tsynDropWhile2 f \<equiv> (\<Lambda> s. if (#s = \<infinity> \<and> sdropwhile (\<lambda> a. f a \<or> (a = null)) \<cdot> s = \<epsilon>) then \<up>null\<infinity> 
+       else (tsynDropWhile2_h f \<cdot> s))"
+  
+fun tsynDropWhile3_h::"('a tsyn \<Rightarrow> bool) \<Rightarrow> 'a tsyn \<Rightarrow> 'a tsyn \<Rightarrow> ('a tsyn \<times> 'a tsyn)" where
+  "tsynDropWhile3_h f x null = (null, x)"|
+  "tsynDropWhile3_h f null x = (if f x then (null, null) else (x, x))"|
+  "tsynDropWhile3_h f x y = (y, x)"
+  
+definition tsynDropWhile3 :: "('a tsyn \<Rightarrow> bool) \<Rightarrow> 'a tsyn stream \<rightarrow> 'a tsyn stream" where
+  "tsynDropWhile3 f =  sscanlA (tsynDropWhile3_h f) -"
 
 (* ----------------------------------------------------------------------- *)
   section {* Fixrec-Definitions on Time-Synchronous Streams *}
