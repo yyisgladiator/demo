@@ -272,5 +272,55 @@ lemma setrevUnion_sym2: "\<And>A B. setrevUnion\<cdot>A\<cdot>B = setrevUnion\<c
 
 lemma setrevUnion_gdw: "\<And>A B x. x \<in> inv Rev (setrevUnion\<cdot>A\<cdot>B) \<longleftrightarrow> (x \<in> inv Rev A \<or> x \<in> inv Rev B)"
   by (simp add: inv_rev_rev setrevUnion_def)
+
+
+lemma image_mono_rev:  "monofun (\<lambda> S::'a set rev.  Rev (f ` (inv Rev S)))"
+  apply (rule monofunI)
+  by (simp add: image_mono inv_rev_rev revBelowNeqSubset)
+
+lemma image_cont_rev: assumes "inj f" 
+  shows "cont (\<lambda> S::'a set rev.  Rev (f ` (inv Rev S)))"
+  apply (rule contI2)
+   apply (simp add: image_mono_rev)
+proof -
+  fix Y::"nat \<Rightarrow> 'a set rev"
+  assume a1: "chain Y"
+  have f0: "chain (\<lambda>i::nat. Rev (f ` inv Rev (Y i)))"
+    apply (rule chainI)
+    by (metis Set.image_mono SetPcpo.less_set_def a1 below_rev.simps po_class.chainE revBelowNeqSubset)
+  have f1: "(\<Squnion>i::nat. Rev (f ` inv Rev (Y i))) =  Rev (\<Inter>{x. \<exists>i. x = f ` inv Rev (Y i)})"
+    apply (simp add: f0 setrevLubEqInter)
+    by (simp add: inv_rev_rev)
+  have f2: "\<And>i. \<forall> a \<in> inv Rev (Lub Y). a \<in> inv Rev (Y i)"
+    by (metis (mono_tags, hide_lams) a1 below_rev.simps contra_subsetD is_ub_thelub rev_inv_rev set_cpo_simps(1))
+  have f3: "\<And>i. \<forall> a \<in> inv Rev (Lub Y). f a \<in> f ` inv Rev (Y i)"
+    by (simp add: f2)
+  have f4: "\<forall> b \<in> \<Inter>{x::'b set. \<exists>i::nat. x = f ` inv Rev (Y i)}. (\<forall> i. b \<in> f ` inv Rev (Y i))"
+    by blast
+
+  have f5: "\<forall> b \<in> \<Inter>{x::'b set. \<exists>i::nat. x = f ` inv Rev (Y i)}. \<forall> x y. f x = b \<and> f y = b \<longrightarrow> x = y"
+    by (metis UNIV_I assms inv_into_f_f)
+  have f6: "\<And>x::'b. x \<in> \<Inter>{x::'b set. \<exists>i::nat. x = f ` inv Rev (Y i)} \<Longrightarrow> x \<in> f ` \<Inter>{x::'a set. \<exists>i::nat. x = inv Rev (Y i)}"
+  proof -
+    fix x :: 'b
+    assume a1: "x \<in> \<Inter>{x. \<exists>i. x = f ` inv Rev (Y i)}"
+    obtain aa :: "'a set \<Rightarrow> ('a \<Rightarrow> 'b) \<Rightarrow> 'b \<Rightarrow> 'a" where
+      f2: "\<forall>b f A. aa A f b \<in> A \<and> f (aa A f b) = b \<or> b \<notin> f ` A"
+      by (metis f_inv_into_f inv_into_into)
+    have f4: "\<forall>n. x \<in> f ` inv Rev (Y n)"
+      using a1 by blast
+    then have bla: "\<forall>n. f (aa (inv Rev (Y n)) f x) = x"
+      using f2 by meson
+    then obtain aaa :: "('a \<Rightarrow> 'b) \<Rightarrow> 'b \<Rightarrow> 'a" where
+      f5: "f (aaa f x) = x"
+      by blast
+    show "x \<in> f ` \<Inter>{A. \<exists>n. A = inv Rev (Y n)}"
+      by (smt Inter_iff bla assms f2 f4 f5 image_iff injD mem_Collect_eq rangeI)
+  qed
+  show "Rev (f ` inv Rev (\<Squnion>i::nat. Y i)) \<sqsubseteq> (\<Squnion>i::nat. Rev (f ` inv Rev (Y i)))"
+    apply (subst f1)
+    apply (simp add: a1 setrevLubEqInterII)
+    by (metis (no_types, lifting) SetPcpo.less_set_def f6 subsetI)
+qed 
   
 end
