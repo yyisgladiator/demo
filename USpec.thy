@@ -448,4 +448,16 @@ lemma uspecUnion_commutative: "\<And>S1 S2 S3. (uspecUnion\<cdot>S1\<cdot>(uspec
 lemma uspecUnion_sym: "\<And>S1 S2. uspecUnion\<cdot>S1\<cdot>S2 = uspecUnion\<cdot>S2\<cdot>S1"
   by (metis uspecUnion_apply uspecUnion_def uspecUnion_general_sym)
 
+lemma uspecUnion_consistent: assumes "uspecIsConsistent S1 \<or> uspecIsConsistent S2"
+                                 and "uspecDom\<cdot>S1 = uspecDom\<cdot>S2"
+                                 and "uspecRan\<cdot>S1 = uspecRan\<cdot>S2"
+                               shows "uspecIsConsistent (uspecUnion\<cdot>S1\<cdot>S2)"
+  proof -
+    have "\<exists>x. x \<in> inv Rev(uspecRevSet\<cdot>(uspecUnion\<cdot>S1\<cdot>S2))"
+      apply(simp add: uspecUnion_setrev_condition)
+      by (metis assms rep_rev_revset sup.idem uspec_allDom uspec_allRan uspec_consist_f_ex)
+    then show ?thesis
+      using not_uspec_consisten_empty_eq rep_rev_revset by fastforce
+  qed
+
 end
