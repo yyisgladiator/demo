@@ -71,15 +71,19 @@ lemma SLEI_help2:  "\<And>Y::nat \<Rightarrow> 'a set rev.
   chain Y \<Longrightarrow> (\<Squnion>i. Y i) \<sqsubseteq> Rev (\<Inter>{x. \<exists>i. x = inv Rev (Y i)})"
   by (metis (mono_tags, lifting) Inter_lower inv_rev_rev lub_below mem_Collect_eq revBelowNeqSubset)
 
-(* lub = inter *)
-lemma setrevLubEqInter:  "\<And>Y::nat \<Rightarrow> 'a set rev. 
+lemma SLEI_help3:  "\<And>Y::nat \<Rightarrow> 'a set rev. 
   chain Y \<Longrightarrow> (\<Squnion>i. Y i) = Rev (\<Inter>{x. \<exists>i. x = inv Rev (Y i)})"
-  using SLEI_help1 SLEI_help2 po_eq_conv by blast   
+  using SLEI_help1 SLEI_help2 po_eq_conv by blast 
+
+
+(* lub = inter *)
+lemma setrevLubEqInter: "\<And>Y::nat \<Rightarrow> 'a set rev. 
+  chain Y \<Longrightarrow> (\<Squnion>i. Y i) = Rev (\<Inter>{inv Rev (Y i) | i . True})"
+  by (simp add: SLEI_help3)
 
 (* sometimes this form is more useful *)
-
 lemma setrevLubEqInterII: "\<And>Y::nat \<Rightarrow> 'a set rev. 
-  chain Y \<Longrightarrow> inv Rev (\<Squnion>i. Y i) = (\<Inter>{x. \<exists>i. x = inv Rev (Y i)})"
+  chain Y \<Longrightarrow> inv Rev (\<Squnion>i. Y i) = (\<Inter>{inv Rev (Y i) | i . True})"
   by (metis (mono_tags, lifting) inv_rev_rev setrevLubEqInter) 
 
 lemma setrevLub_lub_eq_all:
