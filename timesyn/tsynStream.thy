@@ -142,26 +142,13 @@ text {* @{term tsynScanl}: Apply a function elementwise to the input stream. Beh
 definition tsynScanl :: "('b \<Rightarrow> 'a \<Rightarrow> 'b) \<Rightarrow> 'b \<Rightarrow> 'a tsyn stream \<rightarrow> 'b tsyn stream" where
   "tsynScanl f i = tsynScanlExt (\<lambda>a b. (f a b, f a b)) i"
   
+fun tsynDropWhile_h::"('a tsyn \<Rightarrow> bool) \<Rightarrow> 'a tsyn \<Rightarrow> 'a tsyn \<Rightarrow> ('a tsyn \<times> 'a tsyn)" where
+  "tsynDropWhile_h f x null = (null, x)"|
+  "tsynDropWhile_h f null x = (if f x then (null, null) else (x, x))"|
+  "tsynDropWhile_h f x y = (y, x)"
+  
 definition tsynDropWhile :: "('a tsyn \<Rightarrow> bool) \<Rightarrow> 'a tsyn stream \<rightarrow> 'a tsyn stream" where
-  "tsynDropWhile f \<equiv> fix\<cdot>(\<Lambda> h s. slookahd\<cdot>s\<cdot>(\<lambda> a. if (f a \<or> a = null) then \<up>null \<bullet> (h\<cdot>(srt\<cdot>s)) else s))"
-
-definition lnat2nat   ::  "lnat \<Rightarrow> nat" where
-"lnat2nat k \<equiv> if(k=\<infinity>) then 0 else THE a. Fin a = k"
-
-definition tsynDropWhile2_h::"('a tsyn \<Rightarrow> bool) \<Rightarrow> 'a tsyn stream \<rightarrow> 'a tsyn stream" where
-  "tsynDropWhile2_h f \<equiv> (\<Lambda> s. ((sntimes (lnat2nat(#(stakewhile(\<lambda> a. f a \<or> (a = null)) \<cdot> s))) (\<up>null)) \<bullet> sdropwhile (\<lambda> a. f a \<or> (a = null)) \<cdot> s))"
-  
-definition tsynDropWhile2 :: "('a tsyn \<Rightarrow> bool) \<Rightarrow> 'a tsyn stream \<rightarrow> 'a tsyn stream" where
-  "tsynDropWhile2 f \<equiv> (\<Lambda> s. if (#s = \<infinity> \<and> sdropwhile (\<lambda> a. f a \<or> (a = null)) \<cdot> s = \<epsilon>) then \<up>null\<infinity> 
-       else (tsynDropWhile2_h f \<cdot> s))"
-  
-fun tsynDropWhile3_h::"('a tsyn \<Rightarrow> bool) \<Rightarrow> 'a tsyn \<Rightarrow> 'a tsyn \<Rightarrow> ('a tsyn \<times> 'a tsyn)" where
-  "tsynDropWhile3_h f x null = (null, x)"|
-  "tsynDropWhile3_h f null x = (if f x then (null, null) else (x, x))"|
-  "tsynDropWhile3_h f x y = (y, x)"
-  
-definition tsynDropWhile3 :: "('a tsyn \<Rightarrow> bool) \<Rightarrow> 'a tsyn stream \<rightarrow> 'a tsyn stream" where
-  "tsynDropWhile3 f =  sscanlA (tsynDropWhile3_h f) -"
+  "tsynDropWhile f =  sscanlA (tsynDropWhile_h f) null"
 
 (* ----------------------------------------------------------------------- *)
   section {* Fixrec-Definitions on Time-Synchronous Streams *}
@@ -493,6 +480,65 @@ lemma tsynscanl_sconc_null: "tsynScanl f i\<cdot>(\<up>null \<bullet> s) = \<up>
 
 lemma tsynscanl_slen: "#(tsynScanl f i\<cdot>s) = #s"
   by (simp add: tsynscanl_insert tsynscanlext_slen)
+  
+(* ----------------------------------------------------------------------- *)
+  section {* tsynDropWhile *}
+(* ----------------------------------------------------------------------- *)
+lemma tsyndropwhile_insert:"tsynDropWhile f\<cdot>s = sscanlA (tsynDropWhile_h f) null\<cdot>s "
+  by(simp add: tsynDropWhile_def)
+    
+lemma strict_tsyndropwhile[simp]: "tsynDropWhile f\<cdot>\<epsilon> = \<epsilon>"
+  by (simp add: tsyndropwhile_insert)
+
+lemma tsyndropwhile_t[simp]: "f a \<or> a = null \<Longrightarrow> tsynDropWhile f\<cdot>(\<up>a \<bullet> s) = \<up>null \<bullet> tsynDropWhile f\<cdot>s"
+  apply (simp add: tsyndropwhile_insert)
+  by (metis (no_types, hide_lams) fst_conv snd_conv tsyn.distinct(1) tsynDropWhile_h.elims)
+
+lemma tsyndropwhile_f_h:"t \<noteq> null \<Longrightarrow> sscanlA (tsynDropWhile_h f) (t)\<cdot>s = s" 
+  proof(induction s arbitrary: f t rule: ind)
+    case 1
+    then show ?case by simp
+  next
+    case 2
+    then show ?case by simp
+  next
+    case (3 a s)
+      assume a1:"(\<And>f a. a \<noteq> - \<Longrightarrow> sscanlA (tsynDropWhile_h f) a\<cdot>s = s)"
+      assume a2:"t \<noteq> -"
+      have h0:"sscanlA (tsynDropWhile_h f) t\<cdot>(\<up>a \<bullet> s) =  \<up>(fst (tsynDropWhile_h f t a)) \<bullet> sscanlA (tsynDropWhile_h f) (snd (tsynDropWhile_h f t a))\<cdot>s"
+        by simp
+      have h1:"\<up>(fst (tsynDropWhile_h f t a)) = \<up>a"
+        by (metis a2 fst_conv tsynDropWhile_h.elims tsynDropWhile_h.simps(1))
+      have h2:"(snd (tsynDropWhile_h f t a)) = t"
+        by (metis a2 snd_conv tsynDropWhile_h.elims)
+      then show ?case
+        by (simp add: a1 a2 h1) 
+  qed
+    
+lemma tsyndropwhile_f[simp]: "\<not>f a \<and> a \<noteq> null \<Longrightarrow> tsynDropWhile f\<cdot>(\<up>a \<bullet> s) = \<up>a \<bullet> s"
+  apply (simp add: tsyndropwhile_insert,auto)
+  by (metis fst_conv snd_conv tsyn.distinct(1) tsynDropWhile_h.elims tsyndropwhile_f_h)
+
+lemma [simp]: "f a \<or> a = null \<Longrightarrow> tsynDropWhile f\<cdot>(\<up>a) = \<up>null"
+  apply (simp add: tsyndropwhile_insert)
+  by (metis (no_types, hide_lams) fst_conv tsyn.distinct(1) tsynDropWhile_h.elims)
+
+lemma [simp]: "\<not>f a \<and> a \<noteq> Tick\<Longrightarrow> tsynDropWhile f\<cdot>(\<up>a) = \<up>a"
+  by (metis lscons_conv strict_tsyndropwhile sup'_def tsyndropwhile_f tsyndropwhile_t)
+
+lemma tsyndropwhile_idem: "tsynDropWhile f\<cdot>(tsynDropWhile f\<cdot>x) = tsynDropWhile f\<cdot>x"
+  apply (rule ind [of _ x], auto)
+  apply (case_tac "f a",auto)
+  by(case_tac "a = null",auto)
+    
+lemma test_tsyndropwhile: "tsynDropWhile (\<lambda> a. inverseMsg a \<noteq> (2::nat))\<cdot>(<[Msg 1,Msg 1,-,Msg 1, Msg 2, Msg 1]>) = <[-,-,-,-,Msg 2, Msg 1]>"
+  by (simp add: tsyndropwhile_insert)
+ 
+lemma test2_tsyndropwhile: "tsynDropWhile (\<lambda> a. inverseMsg a \<noteq> (2::nat))\<cdot>(\<up>(Msg 2)\<infinity>) = (\<up>(Msg 2)\<infinity>)"
+  apply(simp add: tsyndropwhile_insert)
+  by (metis (mono_tags, lifting) inverseMsg.simps(2) sinftimes_unfold tsyn.distinct(1) tsynDropWhile_def tsyndropwhile_f)
+  
+
 
 (* ----------------------------------------------------------------------- *)
   section {* tsynSum - CaseStudy *}
