@@ -532,6 +532,9 @@ lemma uspecLeast_union: "uspecUnion\<cdot>f\<cdot>(uspecLeast (uspecDom\<cdot>f)
   apply(simp add: uspecLeast_consistent)
   apply(simp add: uspecLeast_dom)
   by(simp add: uspecLeast_ran)
+
+lemma uspecLeast_union_consistent: "uspecIsConsistent(uspecUnion\<cdot>f\<cdot>(uspecLeast (uspecDom\<cdot>f) (uspecRan\<cdot>f)))"
+  by(simp add: uspecLeast_union uspecLeast_consistent)
   
 
 end
