@@ -158,25 +158,19 @@ definition tsynDropWhile :: "('a tsyn \<Rightarrow> bool) \<Rightarrow> 'a tsyn 
 
 (* ToDo: add description. *)
 
-(*
-fixrec tsynRemDups_h :: "'a tsyn stream \<rightarrow> 'a tsyn discr option \<rightarrow> 'a tsyn stream" where
-  "tsynRemDups_h\<cdot>\<epsilon>\<cdot>option = \<epsilon>" |
-  "tsynRemDups_h\<cdot>(up\<cdot>a && as)\<cdot>None = (
-     if (undiscr a) = null then up\<cdot>a && tsynRemDups_h\<cdot>as\<cdot>None
-     else up\<cdot>a && tsynRemDups_h\<cdot>as\<cdot>(Some a)
+fixrec tsynRemDups_fix_h :: "'a tsyn stream \<rightarrow> 'a tsyn discr option \<rightarrow> 'a tsyn stream" where
+  "tsynRemDups_fix_h\<cdot>\<epsilon>\<cdot>option = \<epsilon>" |
+  "tsynRemDups_fix_h\<cdot>(up\<cdot>a && as)\<cdot>None = (
+     if (undiscr a) = null then up\<cdot>a && tsynRemDups_fix_h\<cdot>as\<cdot>None
+     else up\<cdot>a && tsynRemDups_fix_h\<cdot>as\<cdot>(Some a)
   )" |
-  "tsynRemDups_h\<cdot>(up\<cdot>a && as)\<cdot>(Some b) = (
-     if a = b then up\<cdot>(Discr null) && tsynRemDups_h\<cdot>as\<cdot>(Some b)
-     else up\<cdot>a && tsynRemDups_h\<cdot>as\<cdot>(Some a)
+  "tsynRemDups_fix_h\<cdot>(up\<cdot>a && as)\<cdot>(Some b) = (
+     if a = b then up\<cdot>(Discr null) && tsynRemDups_fix_h\<cdot>as\<cdot>(Some b)
+     else up\<cdot>a && tsynRemDups_fix_h\<cdot>as\<cdot>(Some a)
   )"
 
-lemma tsynRemDups_h_sconc_msg: assumes "a \<noteq> null"
-  shows " tsynRemDups_h\<cdot>(\<up>(Msg a) \<bullet> as)\<cdot>None = \<up>(Msg a) \<bullet> tsynRemDups_h\<cdot>as\<cdot>(Some (Discr (Msg a)))"
-  by (metis lscons_conv tsyn.distinct(1) tsynRemDups_h.simps(2) undiscr_Discr)
-
-lemma tsynRemDups_h_sconc_null: "tsynRemDups_h\<cdot>(\<up>null \<bullet> as)\<cdot>None = \<up>null \<bullet> tsynRemDups_h\<cdot>as\<cdot>None"
-  by (fold lscons_conv, simp)
-*)
+definition tsynRemDups_fix :: "'a tsyn stream \<rightarrow> 'a tsyn stream" where
+  "tsynRemDups_fix \<equiv> \<Lambda> s. tsynRemDups_fix_h\<cdot>s\<cdot>None"
 
 (* ----------------------------------------------------------------------- *)
   section {* Lemmata on Time-Synchronous Streams *}
@@ -374,7 +368,7 @@ lemma tsynremdups_insert: "tsynRemDups\<cdot>x = sscanlA tsynRemDups_h null\<cdo
   by (simp add: tsynRemDups_def)
 
 text {* @{term tsynRemDups} test on finite stream. *}
-lemma tsynremdups_test_finstream: 
+lemma tsynremdups_test_finstream:
   "tsynRemDups\<cdot>(<[null, Msg (1 :: nat), Msg 1, null, null, Msg 1, Msg 2, null, Msg 2]>) = 
      <[null, Msg 1, null, null, null, null, Msg 2, null, null]>"
   by (simp add: tsynremdups_insert)
@@ -387,6 +381,14 @@ text {* @{term tsynRemDups} test on infinitely many time-slots. *}
 lemma tsynremdups_test_infstream: "tsynRemDups\<cdot>((<[Msg 1, null]>)\<infinity>) = <[Msg 1]> \<bullet> ((<[null]>)\<infinity>)"
   apply (simp add: tsynremdups_insert)
   oops
+
+lemma tsynRemDups_fix_h_sconc_msg:
+  "tsynRemDups_fix_h\<cdot>(\<up>(Msg a) \<bullet> as)\<cdot>None = \<up>(Msg a) \<bullet> tsynRemDups_fix_h\<cdot>as\<cdot>(Some (Discr (Msg a)))"
+  by (metis lscons_conv tsyn.distinct(1) tsynRemDups_fix_h.simps(2) undiscr_Discr)
+
+lemma tsynRemDups_fix_h_sconc_null: 
+  "tsynRemDups_fix_h\<cdot>(\<up>null \<bullet> as)\<cdot>None = \<up>null \<bullet> tsynRemDups_fix_h\<cdot>as\<cdot>None"
+  by (fold lscons_conv, simp)
 
 (* ----------------------------------------------------------------------- *)
   subsection {* tsynFilter *}
