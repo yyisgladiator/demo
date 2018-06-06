@@ -45,14 +45,16 @@ definition receiver :: "('a \<times> bool) tsyn stream \<rightarrow> 'a tsyn str
   "receiver \<equiv> \<Lambda> s. sscanlA rec_h True\<cdot>s"
 
 lemma receiver_insert: "receiver \<equiv> \<Lambda> s. sscanlA rec_h True\<cdot>s"
-  by( simp add: receiver_def)
+  by (simp add: receiver_def)
 
-lemma receiver_test_finstream: "receiver\<cdot>(<[Msg(1,False), null, Msg(2,True),Msg(1,False)]>) = <[null, null,Msg 2, Msg 1]> "
+lemma receiver_test_finstream: 
+  "receiver\<cdot>(<[Msg(1,False), null, Msg(2,True),Msg(1,False)]>) = <[null, null,Msg 2, Msg 1]> "
   by (simp add: receiver_insert)
 
-lemma receiver_test_infstream: "receiver\<cdot>((<[Msg(1,False), null, Msg(2,True),Msg(1,False)]>)\<infinity>) 
-        = (<[null, null, Msg 2, Msg 1]>)\<infinity> "
+lemma receiver_test_infstream: 
+  "receiver\<cdot>((<[Msg(1,False), null, Msg(2,True),Msg(1,False)]>)\<infinity>) 
+     = (<[null, null, Msg 2, Msg 1]>)\<infinity>"
   apply (simp add: receiver_insert)
-sorry
+  oops
 
 end
