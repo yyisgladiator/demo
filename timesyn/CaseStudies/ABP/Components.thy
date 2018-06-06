@@ -8,7 +8,7 @@
 chapter {* ABP Components on Time-synchronous Streams *}
 
 theory Components
-imports "../../tsynStream"
+imports "../../tsynStream" "../../tsynbundle" ReceiverAutomaton
 
 begin
 
@@ -55,5 +55,13 @@ lemma receiver_test_infstream:
      = (<[null, null, Msg 2, Msg 1]>)\<infinity>"
   apply (simp add: receiver_insert)
   oops
+
+fun inverseA :: "Receiver \<Rightarrow> (nat \<times> bool)" where
+  "inverseA (A (n,b)) = (n,b)"
+
+(*
+definition tsynbRec :: "Receiver tsyn stream ubundle \<rightarrow> Receiver tsyn stream ubundle" where 
+  "tsynbRec \<equiv> \<Lambda> sb. (ubclDom\<cdot>sb = {\<guillemotright>dr}) \<leadsto> [ar\<guillemotright> \<mapsto> tsynProjFst\<cdot>(sb  .  \<guillemotright>dr), o\<guillemotright> \<mapsto> receiver\<cdot>(sb  .  \<guillemotright>dr)]"
+*)
 
 end
