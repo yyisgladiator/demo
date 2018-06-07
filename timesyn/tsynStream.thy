@@ -114,14 +114,22 @@ text {* @{term tsynScanl}: Apply a function elementwise to the input stream. Beh
   the function. For the first computation an initial value is provided. *}
 definition tsynScanl :: "('b \<Rightarrow> 'a \<Rightarrow> 'b) \<Rightarrow> 'b \<Rightarrow> 'a tsyn stream \<rightarrow> 'b tsyn stream" where
   "tsynScanl f i = tsynScanlExt (\<lambda>a b. (f a b, f a b)) i"
-
-fun tsynZip_sscanlA_h :: "'a stream \<Rightarrow> 'b tsyn \<Rightarrow>( ('a \<times> 'b) tsyn \<times> 'a stream)" where
+(*
+fun tsynZip_sscanlA_h :: "'a list \<Rightarrow> 'b tsyn \<Rightarrow>( ('a \<times> 'b) tsyn \<times> 'a list)" where
 "tsynZip_sscanlA_h y null= (null,y)" |
-"tsynZip_sscanlA_h y (Msg m) = (if (y = \<epsilon>) then (null,y) else (Msg ((shd y), m),(srt\<cdot>y))) "
+"tsynZip_sscanlA_h y (Msg m) = (if (y = Nil) then (null,y) else (Msg ((last y), m),(butlast y))) "
 
-definition tsynZip :: "'a  stream \<Rightarrow> 'b tsyn stream \<rightarrow> ('a \<times> 'b) tsyn stream" where 
+definition tsynZip :: "'a list \<Rightarrow> 'b tsyn stream \<rightarrow> ('a \<times> 'b) tsyn stream" where 
 "tsynZip s = sscanlA tsynZip_sscanlA_h s"
-
+*)
+text {* @{term tsynZip}: Merge a tysn stream with a stream. *}
+fixrec tsynZip :: "'a tsyn stream \<rightarrow> 'b stream \<rightarrow> ('a \<times> 'b) tsyn stream" where
+  "tsynZip\<cdot>\<epsilon>\<cdot>s = \<epsilon>" |
+  "tsynZip\<cdot>s\<cdot>\<epsilon> = \<epsilon>" |
+  "tsynZip\<cdot>(up\<cdot>a && as)\<cdot>(up\<cdot>b && bs) = (
+     if (undiscr a) = null then \<up>null \<bullet> tsynZip\<cdot>as\<cdot>(up\<cdot>b && bs)
+     else \<up>(Msg ((invMsg (undiscr a)), (undiscr b))) \<bullet> tsynZip\<cdot>as\<cdot>bs )" 
+                   
 (* ----------------------------------------------------------------------- *)
   section {* Fixrec-Definitions on Time-Synchronous Streams *}
 (* ----------------------------------------------------------------------- *)
