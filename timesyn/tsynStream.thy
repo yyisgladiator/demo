@@ -99,7 +99,7 @@ text{* @{term tsynProjFst}: Access the first stream of two zipped streams .*}
 definition tsynProjFst :: "('a \<times> 'b) tsyn stream \<rightarrow> 'a tsyn stream" where
 "tsynProjFst = smap tsynFst"
 
-text{* @{term tsynProjSnd}: Access the first stream of two zipped streams. *}
+text{* @{term tsynProjSnd}: Access the second stream of two zipped streams. *}
 definition tsynProjSnd :: "('a \<times> 'b) tsyn stream \<rightarrow> 'b tsyn stream" where
 "tsynProjSnd = smap tsynSnd"
 
@@ -328,6 +328,24 @@ text {* @{term tsynProjFst} maps the empty stream on the empty stream. *}
 lemma tsynprojfst_strict [simp]: "tsynProjFst\<cdot>\<epsilon> = \<epsilon>"
   by (simp add: tsynprojfst_insert)
 
+text {* @{term tsynProjFst} distributes over concatenation. *}
+lemma tsynprojfst_sconc_msg: assumes "a \<noteq> b" 
+  shows "tsynProjFst\<cdot>(\<up>(Msg (a, b)) \<bullet> as) = \<up>(Msg a) \<bullet> (tsynProjFst\<cdot>as)"
+  sorry
+ 
+text {* @{term tsynProjFst} ignores empty time-slots. *}
+lemma tsynprojfst_sconc_null: "tsynProjFst\<cdot>(\<up>null \<bullet> s) = \<up>null \<bullet> tsynProjFst\<cdot>s"
+  by (simp add: tsynProjFst_def)
+
+text {* @{term tsynProjFst} of the concatenation of two streams equals the concatenation of 
+        @{term tsynProjFst} of both streams. *}
+lemma tsynprojfst_sconc: "tsynProjFst\<cdot>(a1 \<bullet> a2) = tsynProjFst\<cdot>a1 \<bullet> tsynProjFst\<cdot>a2"
+  by (simp add: smap_split tsynProjFst_def)
+
+text {* @{term tsynProjFst} leaves the length of a stream unchanged. *}
+lemma tsynprojfst_slen: "#(tsynProjFst\<cdot>s) = #s"
+  by (simp add: tsynProjFst_def)
+
 (* ----------------------------------------------------------------------- *)
   subsection {* tsynProjSnd *}
 (* ----------------------------------------------------------------------- *)
@@ -350,6 +368,24 @@ lemma tsynprojsnd_test_finstream:
 text {* @{term tsynProjSnd} maps the empty stream on the empty stream. *}
 lemma tsynprojsnd_strict [simp]: "tsynProjSnd\<cdot>\<epsilon> = \<epsilon>"
   by (simp add: tsynprojsnd_insert)
+
+text {* @{term tsynProjSnd} distributes over concatenation. *}
+lemma tsynprojsnd_sconc_msg: assumes "#as < \<infinity>" 
+  shows "tsynProjSnd\<cdot>(\<up>(Msg (a, b)) \<bullet> as) = \<up>(Msg b) \<bullet> (tsynProjSnd\<cdot>as)"
+  sorry
+ 
+text {* @{term tsynProjSnd} ignores empty time-slots. *}
+lemma tsynprojsnd_sconc_null: "tsynProjSnd\<cdot>(\<up>null \<bullet> s) = \<up>null \<bullet> tsynProjSnd\<cdot>s"
+  by (simp add: tsynProjSnd_def)
+
+text {* @{term tsynProjSnd} of the concatenation of two streams equals the concatenation of 
+        @{term tsynProjSnd} of both streams. *}
+lemma tsynprojsnd_sconc: "tsynProjSnd\<cdot>(a1 \<bullet> a2) = tsynProjSnd\<cdot>a1 \<bullet> tsynProjSnd\<cdot>a2"
+  by (simp add: smap_split tsynProjSnd_def)
+
+text {* @{term tsynProjSnd} leaves the length of a stream unchanged. *}
+lemma tsynprojsnd_slen: "#(tsynProjSnd\<cdot>s) = #s"
+  by (simp add: tsynProjSnd_def)
 
 (* ----------------------------------------------------------------------- *)
   subsection {* tsynRemDups *}
