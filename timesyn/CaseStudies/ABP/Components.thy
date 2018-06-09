@@ -8,60 +8,80 @@
 chapter {* ABP Components on Time-synchronous Streams *}
 
 theory Components
-imports "../../tsynStream" "../../tsynbundle" ReceiverAutomaton
+imports ReceiverAutomaton
 
 begin
 
-(* ToDo: not cont.
-fun tsynRecProj :: "('a \<times> bool) tsyn discr \<rightarrow> 'a tsyn discr" where
-  "tsynRecProj (Discr (Msg (m, b))) = Discr (Msg m)" |
-  "tsynRecProj (Discr null) = Discr null"
+(* ----------------------------------------------------------------------- *)
+  section {* Datatype conversion *}
+(* ----------------------------------------------------------------------- *)
 
-fixrec tsynRec_h :: "('a \<times> bool) tsyn stream \<rightarrow> bool \<rightarrow> 'a tsyn stream" where
-  "tsynRec_h\<cdot>\<epsilon>\<cdot>bit = \<epsilon>" |
-  "tsynRec_h\<cdot>(up\<cdot>a && as)\<cdot>bit = (
-     if (undiscr a) = null then (up\<cdot>(Discr null)) && tsynRec_h\<cdot>as\<cdot>bit
-     else (
-       if bit = snd (invMsg (undiscr a)) then up\<cdot>(tsynRecProj a) &&  tsynRec_h\<cdot>as\<cdot>True
-       else tsynRec_h\<cdot>as\<cdot>True
-     )
-  )"
-*)
+fun invA :: "Receiver \<Rightarrow> (nat \<times> bool)" where
+  "invA (A (n,b)) = (n,b)" |
+  "invA n = undefined"
 
-(*
-rec :: bool \<rightarrow> ('a \<times> bool) tsyn stream \<rightarrow> (bool tsyn stream \<times> 'a tsyn stream)
-rec b \<epsilon> = (\<epsilon>, \<epsilon>)
-rec b (- \<bullet> dats) = (- \<bullet> bits, - \<bullet> msgs) where (bits, msgs) = rec(b, dats)
-rec b ((m, b) \<bullet> dats) = (b \<bullet> bits, m \<bullet> msgs) where (bits, msgs) = rec(\<not>b, dats)
-rec b ((m, \<not>b) \<bullet> dats) = (\<not>b \<bullet> bits, - \<bullet> msgs) where (bits, msgs) = rec(b, dats)
-*)
+definition natbool2abp :: "(nat \<times> bool) tsyn stream \<rightarrow> Receiver tsyn stream" where
+  "natbool2abp \<equiv> tsynMap A"
 
-fun rec_h :: "bool \<Rightarrow> ('a \<times> bool) tsyn \<Rightarrow> ('a tsyn \<times> bool)" where
-  "rec_h b (Msg (msg,b1)) = (if b1 = b then (Msg msg, \<not>b) else (null, b))" |
-  "rec_h b null = (null, b) " 
+definition abp2natbool :: "Receiver tsyn stream \<rightarrow> (nat \<times> bool) tsyn stream" where
+  "abp2natbool \<equiv> tsynMap invA"
 
-definition receiver :: "('a \<times> bool) tsyn stream \<rightarrow> 'a tsyn stream" where
-  "receiver \<equiv> \<Lambda> s. sscanlA rec_h True\<cdot>s"
+fun invB :: "Receiver \<Rightarrow> bool" where
+  "invB (B x) = x" |
+  "invB x = undefined"
 
-lemma receiver_insert: "receiver\<cdot>s = sscanlA rec_h True\<cdot>s"
-  by (simp add: receiver_def)
+definition bool2abp :: "bool tsyn stream \<rightarrow> Receiver tsyn stream" where
+  "bool2abp \<equiv> tsynMap B"
 
-lemma receiver_test_finstream:
-  "receiver\<cdot>(<[Msg(1, False), null, Msg(2, True),Msg(1, False)]>) = <[null, null,Msg 2, Msg 1]>"
-  by (simp add: receiver_insert)
+definition abp2bool :: "Receiver tsyn stream \<rightarrow> bool tsyn stream" where
+  "abp2bool \<equiv> tsynMap invB"
+
+fun invC :: "Receiver \<Rightarrow> nat" where
+  "invC (C x) = x" |
+  "invC x = undefined"
+
+definition nat2abp :: "nat tsyn stream \<rightarrow> Receiver tsyn stream" where
+  "nat2abp \<equiv> tsynMap C"
+
+definition abp2nat :: "Receiver tsyn stream \<rightarrow> nat tsyn stream" where
+  "abp2nat \<equiv> tsynMap invC"
+
+(* ----------------------------------------------------------------------- *)
+  section {* Receiver defintion *}
+(* ----------------------------------------------------------------------- *)
+
+fun tsynRec_h :: "bool \<Rightarrow> (nat \<times> bool) tsyn \<Rightarrow> (nat tsyn \<times> bool)" where
+  "tsynRec_h b (Msg (msg,b1)) = (if b1 = b then (Msg msg, \<not>b) else (null, b))" |
+  "tsynRec_h b null = (null, b) " 
+
+definition tsynRec :: "(nat \<times> bool) tsyn stream \<rightarrow> nat tsyn stream" where
+  "tsynRec \<equiv> \<Lambda> s. sscanlA tsynRec_h True\<cdot>s"
+
+definition tsynbRec :: "Receiver tsyn stream ubundle \<rightarrow> Receiver tsyn stream ubundle option" where 
+  "tsynbRec \<equiv> \<Lambda> sb. (ubclDom\<cdot>sb = {\<guillemotright>dr}) \<leadsto> Abs_ubundle 
+              [ar\<guillemotright> \<mapsto> bool2abp\<cdot>(tsynProjSnd\<cdot>(abp2natbool\<cdot>(sb  .  \<guillemotright>dr))), 
+               o\<guillemotright> \<mapsto> nat2abp\<cdot>(tsynRec\<cdot>(abp2natbool\<cdot>(sb  .  \<guillemotright>dr)))]"
+
+(* ----------------------------------------------------------------------- *)
+  section {* Receiver lemma *}
+(* ----------------------------------------------------------------------- *)
+
+lemma tsynrec_insert: "tsynRec\<cdot>s = sscanlA tsynRec_h True\<cdot>s"
+  by (simp add: tsynRec_def)
+
+lemma tsynrec_test_finstream:
+  "tsynRec\<cdot>(<[Msg(1, False), null, Msg(2, True),Msg(1, False)]>) = <[null, null,Msg 2, Msg 1]>"
+  by (simp add: tsynrec_insert)
 
 lemma receiver_test_infstream: 
-  "receiver\<cdot>((<[Msg(1, False), null, Msg(2, True),Msg(1, False)]>)\<infinity>) 
+  "tsynRec\<cdot>((<[Msg(1, False), null, Msg(2, True),Msg(1, False)]>)\<infinity>) 
      = (<[null, null, Msg 2, Msg 1]>)\<infinity>"
-  apply (simp add: receiver_insert)
+  apply (simp add: tsynrec_insert)
   oops
 
-fun inverseA :: "Receiver \<Rightarrow> (nat \<times> bool)" where
-  "inverseA (A (n,b)) = (n,b)"
-
-(*
-definition tsynbRec :: "Receiver tsyn stream ubundle \<rightarrow> Receiver tsyn stream ubundle" where 
-  "tsynbRec \<equiv> \<Lambda> sb. (ubclDom\<cdot>sb = {\<guillemotright>dr}) \<leadsto> [ar\<guillemotright> \<mapsto> tsynProjFst\<cdot>(sb  .  \<guillemotright>dr), o\<guillemotright> \<mapsto> receiver\<cdot>(sb  .  \<guillemotright>dr)]"
-*)
-
+lemma tsynbrec_insert: "tsynbRec\<cdot>sb = (ubclDom\<cdot>sb = {\<guillemotright>dr}) \<leadsto> Abs_ubundle 
+              [ar\<guillemotright> \<mapsto> bool2abp\<cdot>(tsynProjSnd\<cdot>(abp2natbool\<cdot>(sb  .  \<guillemotright>dr))), 
+               o\<guillemotright> \<mapsto> nat2abp\<cdot>(tsynRec\<cdot>(abp2natbool\<cdot>(sb  .  \<guillemotright>dr)))]"
+  apply (simp add: tsynbRec_def)
+  sorry
 end
