@@ -101,16 +101,22 @@ lemma spfStateFix_mono[simp]: "monofun (\<lambda> F.  fixg (spfStateLeast In Out
 lemma spfStateFix_cont[simp]: "cont (\<lambda> F.  fixg (spfStateLeast In Out)\<cdot>F)"
   by simp
 
-
 lemma spfStateFix_apply: "spfStateFix In Out\<cdot>F = fixg (spfStateLeast In Out)\<cdot>F"
   by(simp add: spfStateFix_def )
 
 (*least Fixpoint*)
 
-lemma spfStateFix_fix:  assumes "spfStateLeast In Out \<sqsubseteq> F\<cdot>(spfStateLeast In Out)"
-  shows "spfStateFix In Out\<cdot>F = F\<cdot>(spfStateFix In Out\<cdot>F)"
+lemma spfStateFix_fix: assumes "spfStateLeast In Out \<sqsubseteq> F\<cdot>(spfStateLeast In Out)"
+                         shows "spfStateFix In Out\<cdot>F = F\<cdot>(spfStateFix In Out\<cdot>F)"
   by (metis (no_types, hide_lams) assms eta_cfun fixg_fix spfStateFix_def spfStateLeast_least)
 
+lemma spfsl_below_spfsf: "spfStateLeast In Out \<sqsubseteq> spfStateFix In Out\<cdot>F"
+  proof (simp add: spfStateFix_def, simp add: fixg_def)
+    have "\<forall>x0 x1. ((x1::'a \<Rightarrow> ('b stream\<^sup>\<Omega>) ufun) \<sqsubseteq> (if x1 \<sqsubseteq> x0\<cdot>x1 then \<Squnion>uub. iterate uub\<cdot>x0\<cdot>x1 else x1)) = (if x1 \<sqsubseteq> x0\<cdot>x1 then x1 \<sqsubseteq> (\<Squnion>uub. iterate uub\<cdot>x0\<cdot>x1) else x1 \<sqsubseteq> x1)"
+      by simp
+    then show "spfStateLeast In Out \<sqsubseteq> F\<cdot>(spfStateLeast In Out) \<longrightarrow> spfStateLeast In Out \<sqsubseteq> (\<Squnion>n. iterate n\<cdot>F\<cdot>(spfStateLeast In Out))"
+      by (metis (no_types) fixg_pre)
+  qed
 
 lemma spfStateFix_least_fix: (* assumes "\<forall>x. ufDom\<cdot>((F\<cdot>(spfStateLeast In Out)) x) = In"
                              and "\<forall>x. ufRan\<cdot>((F\<cdot>(spfStateLeast In Out))x) = Out"
@@ -122,6 +128,13 @@ shows "spfStateFix In Out\<cdot>F \<sqsubseteq> y"
   apply (rule fixg_least_fix)
   by ( simp_all add: assms)
 
+lemma spfstatefix_dom:"ufDom\<cdot>((spfStateFix In Out\<cdot> f) s) = In"
+  by (metis (mono_tags) below_fun_def spfStateLeast_def spfsl_below_spfsf ufdom_below_eq ufleast_ufdom)
+    
+lemma spfstatefix_ran:"ufRan\<cdot>((spfStateFix In Out\<cdot> f) s) = Out"
+  by (metis below_fun_def spfStateLeast_ran spfsl_below_spfsf ufran_below)
+
+subsection \<open>ufApplyOut and ufApplyIn\<close>
 
 lemma spf_eq: assumes "ufDom\<cdot>uf1 = ufDom\<cdot>uf2"
   and "\<And>ub. ubDom\<cdot>ub = ufDom\<cdot>uf1 \<Longrightarrow> uf1 \<rightleftharpoons> ub = uf2 \<rightleftharpoons> ub"
@@ -136,14 +149,36 @@ lemma ufapply_in_out:
   using assms apply auto
   oops
 
+
 subsection \<open>spfRt lemma\<close>
+
 lemma spfrt_step[simp]: "(spfRt\<cdot>spf)\<rightleftharpoons>sb = spf\<rightleftharpoons>(sbRt\<cdot>sb)"
   apply(simp add: spfRt_def ufApplyIn_def)
   apply (subst Abs_cfun_inverse2)
    apply (rule ufapplyin_cont_h)
   by (simp add: ubclDom_ubundle_def ufapplyin_well_h) +
 
+lemma spfRt_dom [simp] :"ufDom\<cdot>(spfRt\<cdot>spf) = ufDom\<cdot>spf"
+  unfolding spfRt_def
+  by (simp add: ubclDom_ubundle_def ufapplyin_dom)
+
+lemma spfRt_ran [simp]:"ufRan\<cdot>(spfRt\<cdot>spf) = ufRan\<cdot>spf"
+  unfolding spfRt_def
+  apply(subst ufapplyin_ran2)
+   apply (simp add: ubclDom_ubundle_def)
+  by blast
+
+lemma spfRt_spfConc: "(spfRt\<cdot>(spfConc sb \<cdot>spf)) = (spfConc sb \<cdot>(spfRt\<cdot>spf))"
+  unfolding spfConc_def
+  unfolding spfRt_def
+  apply(subst ufapply_eq)
+  apply (simp add: ubclDom_ubundle_def)
+  apply (metis ubclDom_ubundle_def ubconceq_dom)
+  by blast
+
+
 subsection \<open>spfConc lemma\<close>
+
 lemma spconc_step[simp]:
   assumes "ubDom\<cdot>sb = ufDom\<cdot>spf"
   shows "(spfConc sb1\<cdot>spf)\<rightleftharpoons>sb = ubConcEq sb1\<cdot>(spf\<rightleftharpoons>sb)"
@@ -153,10 +188,17 @@ lemma spconc_step[simp]:
    apply (simp add: assms ubclDom_ubundle_def)
   by simp
 
+lemma spfConc_dom[simp]:"ufDom\<cdot>(spfConc sb \<cdot>spf) = ufDom\<cdot>spf"
+  unfolding spfConc_def
+  apply(subst ufapplyout_dom)
+  apply (metis ubclDom_ubundle_def ubconceq_dom)
+  by blast
 
-
-
-
+lemma spfConc_ran [simp]:"ufRan\<cdot>(spfConc sb \<cdot>spf) = ufRan\<cdot>spf"
+  unfolding spfConc_def
+  apply(subst ufapplyout_ran)
+   apply (metis ubclDom_ubundle_def ubconceq_dom)
+  by blast
 
 
 end

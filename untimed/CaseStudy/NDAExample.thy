@@ -38,15 +38,15 @@ instance
 by(intro_classes)
 end
 
-lift_definition createC2Output :: "bool \<Rightarrow> EvenAutomaton event SB" is
+lift_definition createC2Output :: "bool \<Rightarrow> EvenAutomaton tsyn SB" is
   "\<lambda>b. [ c2 \<mapsto> \<up>(Msg (B b))]"
 unfolding ubWell_def
 unfolding usclOkay_stream_def
-unfolding ctype_event_def
+unfolding ctype_tsyn_def
 by simp
 
 
-function evenAutomatonTransition :: "(EvenAutomatonState \<times> (channel \<rightharpoonup> EvenAutomaton event)) \<Rightarrow> ((EvenAutomatonState \<times> EvenAutomaton event SB) set rev)" where
+function evenAutomatonTransition :: "(EvenAutomatonState \<times> (channel \<rightharpoonup> EvenAutomaton tsyn)) \<Rightarrow> ((EvenAutomatonState \<times> EvenAutomaton tsyn SB) set rev)" where
   "evenAutomatonTransition (State TheOneAndOnly automaton_sum, [c1 \<mapsto> Msg a]) = (case a of A b
       \<Rightarrow> 
   (
@@ -57,7 +57,7 @@ function evenAutomatonTransition :: "(EvenAutomatonState \<times> (channel \<rig
   )
   | _ \<Rightarrow> undefined)" |
 
- "evenAutomatonTransition (State TheOneAndOnly automaton_sum, [c1 \<mapsto> Tick]) = Rev {(State TheOneAndOnly (automaton_sum), (tsynbOneTick c2))}"  |
+ "evenAutomatonTransition (State TheOneAndOnly automaton_sum, [c1 \<mapsto> null]) = Rev {(State TheOneAndOnly (automaton_sum), (tsynbNull c2))}"  |
 
   "dom f\<noteq> {c1} \<Longrightarrow>  evenAutomatonTransition (_,f) = undefined"
   sorry
@@ -65,14 +65,14 @@ function evenAutomatonTransition :: "(EvenAutomatonState \<times> (channel \<rig
 
 
 (* Initial Configuration for the Automaton. The set contains tupel of "(initialState, initialOutput)" *)
-definition EvenAutomatonInitial:: "(EvenAutomatonState \<times> EvenAutomaton event SB) set rev" where
-"EvenAutomatonInitial = Rev {(State TheOneAndOnly 0, (tsynbOneTick c2)), (State TheOneAndOnly 42, (tsynbOneTick c2))}"
+definition EvenAutomatonInitial:: "(EvenAutomatonState \<times> EvenAutomaton tsyn SB) set rev" where
+"EvenAutomatonInitial = Rev {(State TheOneAndOnly 0, (tsynbNull c2)), (State TheOneAndOnly 42, (tsynbNull c2))}"
 
-lift_definition EvenAutomatonAutomaton :: "(EvenAutomatonState, EvenAutomaton event) NDA" is 
+lift_definition EvenAutomatonAutomaton :: "(EvenAutomatonState, EvenAutomaton tsyn) NDA" is 
   "(evenAutomatonTransition, EvenAutomatonInitial, Discr {c1}, Discr {c2})"
   sorry
   
-definition EvenAutomatonSPS :: "EvenAutomaton event SPS" where
+definition EvenAutomatonSPS :: "EvenAutomaton tsyn SPS" where
 "EvenAutomatonSPS = nda_H\<cdot>EvenAutomatonAutomaton"
 
 
