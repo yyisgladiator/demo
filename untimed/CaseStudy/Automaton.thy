@@ -23,26 +23,13 @@ section \<open>Backend Signatures\<close>
 (* The content is:
   transition function \<times> initial state \<times> initial Output \<times> input domain \<times> output domain *)
 
-(* Converter function. *)
-  (* definition should be right, but needs to be nicer *)
-definition ubElemWell::"(channel \<rightharpoonup> 'm::message) \<Rightarrow> bool" where
-"ubElemWell f \<equiv> \<forall>c\<in> dom f. f\<rightharpoonup>c \<in> ctype c"
-
-lemma ubElemWellI: assumes "ubElemWell f" and "c \<in> dom f"
-  shows "(f \<rightharpoonup> c) \<in> ctype c"
-  using assms(1) assms(2) ubElemWell_def by auto
-
-lemma ubElemWellI2: assumes "ubElemWell f" and "c \<in> dom f"
-and "(f \<rightharpoonup> c) = a"
-shows "a \<in> ctype c"
-  using assms(1) assms(2) assms(3) ubElemWellI by auto
-
 fun automaton_well::"((('state \<times>(channel \<rightharpoonup> 'm::message)) \<Rightarrow> ('state \<times> 'm SB)) \<times> 'state \<times> 'm SB \<times> channel set \<times> channel set) \<Rightarrow> bool " where
-"automaton_well (transition, initialState, initialOut, chIn, chOut) = (finite chIn \<and> (\<forall>s f. (dom f = chIn \<and> ubElemWell f) \<longrightarrow> ubDom\<cdot>(snd(transition (s,f))) = chOut))"
+"automaton_well (transition, initialState, initialOut, chIn, chOut) = (finite chIn \<and> (\<forall>s f. (dom f = chIn \<and> sbElemWell f) \<longrightarrow> ubDom\<cdot>(snd(transition (s,f))) = chOut))"
 
-lemma automaton_wellI: assumes "finite In" and "\<And>s f. (dom f = In \<and> ubElemWell f) \<Longrightarrow> ubDom\<cdot>(snd(transition (s,f))) = Out" 
-                       shows "automaton_well (transition, initialState, initialOut, In, Out)"
-by(simp add: assms)
+lemma automaton_wellI: assumes "finite In" 
+                           and "\<And>s f. (dom f = In \<and> sbElemWell f) \<Longrightarrow> ubDom\<cdot>(snd(transition (s,f))) = Out" 
+                         shows "automaton_well (transition, initialState, initialOut, In, Out)"
+  by(simp add: assms)
 
 
 lemma automaton_ex:"automaton_well ((\<lambda>f. (myState, ubLeast {})), State, ubLeast {}, {}, {})"
@@ -92,64 +79,12 @@ definition H :: "('s, 'm::message) automaton \<Rightarrow> 'm SPF" where
 "H automat = spfConc (getInitialOutput automat)\<cdot>(h automat (getInitialState automat))"
 
 
-
-
-
-
 lemma automat_well[simp]:"automaton_well (Rep_automaton automat)"
   using Rep_automaton by auto
 
 lemma automat_finite_dom[simp]:"finite (getDom automat)"
   by simp
 
-(*spfRt and spfConc*)
-
-lemma spfRt_dom [simp] :"ufDom\<cdot>(spfRt\<cdot>spf) = ufDom\<cdot>spf"
-  unfolding spfRt_def
-  by (simp add: ubclDom_ubundle_def ufapplyin_dom)
-
-lemma spfConc_dom[simp]:"ufDom\<cdot>(spfConc sb \<cdot>spf) = ufDom\<cdot>spf"
-  unfolding spfConc_def
-  apply(subst ufapplyout_dom)
-  apply (metis ubclDom_ubundle_def ubconceq_dom)
-  by blast
-
-lemma spfRt_ran [simp]:"ufRan\<cdot>(spfRt\<cdot>spf) = ufRan\<cdot>spf"
-  unfolding spfRt_def
-  apply(subst ufapplyin_ran2)
-   apply (simp add: ubclDom_ubundle_def)
-  by blast
-
-lemma spfConc_ran [simp]:"ufRan\<cdot>(spfConc sb \<cdot>spf) = ufRan\<cdot>spf"
-  unfolding spfConc_def
-  apply(subst ufapplyout_ran)
-   apply (metis ubclDom_ubundle_def ubconceq_dom)
-  by blast
-
-lemma spfRt_spfConc: "(spfRt\<cdot>(spfConc sb \<cdot>spf)) = (spfConc sb \<cdot>(spfRt\<cdot>spf))"
-  unfolding spfConc_def
-  unfolding spfRt_def
-  apply(subst ufapply_eq)
-  apply (simp add: ubclDom_ubundle_def)
-  apply (metis ubclDom_ubundle_def ubconceq_dom)
-  by blast
-
-(*spfStateFix lemmas*)  
-lemma spfsl_below_spfsf: "spfStateLeast In Out \<sqsubseteq> spfStateFix In Out\<cdot>F"
-proof (simp add: spfStateFix_def, simp add: fixg_def)
-  have "\<forall>x0 x1. ((x1::'a \<Rightarrow> ('b stream\<^sup>\<Omega>) ufun) \<sqsubseteq> (if x1 \<sqsubseteq> x0\<cdot>x1 then \<Squnion>uub. iterate uub\<cdot>x0\<cdot>x1 else x1)) = (if x1 \<sqsubseteq> x0\<cdot>x1 then x1 \<sqsubseteq> (\<Squnion>uub. iterate uub\<cdot>x0\<cdot>x1) else x1 \<sqsubseteq> x1)"
-    by simp
-  then show "spfStateLeast In Out \<sqsubseteq> F\<cdot>(spfStateLeast In Out) \<longrightarrow> spfStateLeast In Out \<sqsubseteq> (\<Squnion>n. iterate n\<cdot>F\<cdot>(spfStateLeast In Out))"
-    by (metis (no_types) fixg_pre)
-qed
-
-
-lemma spfstatefix_dom:"ufDom\<cdot>((spfStateFix In Out\<cdot> f) s) = In"
-  by (metis (mono_tags) below_fun_def spfStateLeast_def spfsl_below_spfsf ufdom_below_eq ufleast_ufdom)
-  
-    
-lemma spfstatefix_ran:"ufRan\<cdot>((spfStateFix In Out\<cdot> f) s) = Out"
-  by (metis below_fun_def spfStateLeast_ran spfsl_below_spfsf ufran_below)
     
 lemma ufLeast_apply:assumes "ubDom\<cdot>sb = In" shows "ufLeast In  Out \<rightleftharpoons> sb = ubclLeast Out"
   apply (simp add: ufLeast_def)
