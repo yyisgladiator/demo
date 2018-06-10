@@ -126,4 +126,21 @@ lemma recspf_strict: "RecSPF \<rightleftharpoons> ubclLeast{\<guillemotright>dr}
 
 lemma receiverspf_strict: "ReceiverSPF \<rightleftharpoons> ubclLeast{\<guillemotright>dr} = ubclLeast{ar\<guillemotright>, o\<guillemotright>}"
   sorry
+
+
+
+lemma receiverspf_ufdom: "ufDom\<cdot>ReceiverSPF = {\<guillemotright>dr}"
+  oops
+
+lemma receiverspf_ubdom: "ubDom\<cdot>(ReceiverSPF \<rightleftharpoons> sb) = {\<guillemotright>dr}"
+  oops
+
+lemma recspf_receiverspf_ub_eq: "ReceiverSPF \<rightleftharpoons> sb = RecSPF \<rightleftharpoons> sb"
+  apply (rule ub_eq)
+  oops
+
+lemma recspf_receiverspf_eq: "ReceiverSPF = RecSPF"
+  apply (rule ufun_eqI)
+  oops
+
 end
