@@ -8,7 +8,7 @@
 chapter {* ABP Components on Time-synchronous Streams *}
 
 theory Components
-imports "../../tsynStream"
+imports "../../tsynStream"  ReceiverAutomaton
 
 begin
 
@@ -56,4 +56,62 @@ lemma receiver_test_infstream:
   apply (simp add: receiver_insert)
   oops
 
+(* The ReceiverAutomaton is well formed *)
+
+lemma trans_rt_true: "receiverTransition (State Rt, [\<guillemotright>dr \<mapsto> (Msg (A (a,True)))]) = ((State Rf,(createArOutput True) \<uplus> (createOOutput a)))"
+  by simp
+
+lemma trans_rt_false: "receiverTransition (State Rt, [\<guillemotright>dr \<mapsto> (Msg (A (a,False)))]) = ((State Rt,(createArOutput False) \<uplus> (tsynbNull o\<guillemotright>)))"
+  by simp
+
+lemma trans_rf_true: "receiverTransition (State Rf, [\<guillemotright>dr \<mapsto> (Msg (A (a,True)))]) = ((State Rf,(createArOutput True) \<uplus> (tsynbNull o\<guillemotright>)))"
+  by simp
+
+lemma trans_rf_false: "receiverTransition (State Rf, [\<guillemotright>dr \<mapsto> (Msg (A (a,False)))]) = ((State Rt,(createArOutput False) \<uplus> (createOOutput a)))"
+  by simp
+
+lemma trans_null: "receiverTransition (State s, [\<guillemotright>dr \<mapsto> null]) =  (State s ,(tsynbNull ar\<guillemotright>) \<uplus> (tsynbNull o\<guillemotright>))"
+  by (smt ReceiverSubstate.exhaust dom_empty dom_fun_upd fun_upd_same option.distinct(1) option.sel receiverTransition.simps receiverTransitionH.simps(2) receiverTransitionH.simps(4))
+
+lemma unionub1: "ubDom\<cdot>((createArOutput a) \<uplus> (createOOutput b)) = {ar\<guillemotright>, o\<guillemotright>}"
+  by (smt createArOutput.rep_eq createOOutput.rep_eq dom_empty dom_fun_upd insert_is_Un option.simps(3) ubclDom_ubundle_def ubclunion_dom ubdom_insert)
+
+lemma unionub2: "ubDom\<cdot>((createArOutput a) \<uplus> (tsynbNull o\<guillemotright>)) = {ar\<guillemotright>, o\<guillemotright>}"
+  by (smt createArOutput.rep_eq dom_empty dom_fun_upd insert_is_Un option.simps(3) tsynbnull_ubdom ubclDom_ubundle_def ubclunion_dom ubdom_insert)
+
+lemma receiver_dom: "\<And> s f. dom f = {\<guillemotright>dr} \<and> ubElemWell f \<Longrightarrow> ubDom\<cdot>(snd (receiverTransition (s, f))) = {ar\<guillemotright>, o\<guillemotright>}"
+  proof -
+    fix s:: ReceiverState and f::"channel \<rightharpoonup> Receiver tsyn"
+    assume a1: "dom f = {\<guillemotright>dr} \<and> ubElemWell f"
+    obtain x where f_def: "f = [\<guillemotright>dr \<mapsto> x]"
+      using a1 dom_eq_singleton_conv by force
+    obtain ss where s_def: "s = State ss"
+      using ReceiverAutomaton.getSubState.cases by blast
+    show "ubDom\<cdot>(snd (receiverTransition (s, f))) =  {ar\<guillemotright>, o\<guillemotright>}"
+      proof (cases x)
+        case (Msg x1)
+        hence "x1 \<in> ctype \<guillemotright>dr"
+          apply (subst ctype_event_iff)
+          by (metis a1 ctype_eventI ctype_tsyn_iff f_def fun_upd_same insertI1 option.sel ubElemWellI)   
+        then obtain a where x1_def: "x1 = A a"
+          by auto 
+        then show ?thesis
+          apply(simp add: s_def x1_def)
+          by (metis (full_types) Msg ReceiverSubstate.exhaust \<open>\<And>thesis::bool. (\<And>a::nat \<times> bool. (x1::Receiver) = A a \<Longrightarrow> thesis) \<Longrightarrow> thesis\<close> a1 f_def fun_upd_same option.sel receiverTransitionH.simps(1) receiverTransitionH.simps(3) snd_conv unionub1 unionub2)
+      next
+        case null
+        then show ?thesis
+          apply(simp add: s_def)
+          by (smt ReceiverSubstate.exhaust a1 f_def fun_upd_same insert_is_Un option.sel receiverTransitionH.simps(2) receiverTransitionH.simps(4) snd_conv tsynbnull_ubdom ubclDom_ubundle_def ubclunion_dom) 
+      qed
+  qed
+
+lemma receiver_automaton_well: 
+  "automaton_well (receiverTransition, ReceiverState.State Rt, tsynbNull ar\<guillemotright> \<uplus> tsynbNull o\<guillemotright>, {\<guillemotright>dr}, {ar\<guillemotright>, o\<guillemotright>})"
+  using receiver_dom by auto
+
+lift_definition ReceiverAutomaton :: "(ReceiverState, Receiver tsyn) automaton" is "(receiverTransition, State Rt , (tsynbNull ar\<guillemotright>) \<uplus> (tsynbNull o\<guillemotright>), {c1}, {c2,c3})"
+  using receiver_automaton_well by blast
+  
+  
 end
