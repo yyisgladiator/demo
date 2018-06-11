@@ -24,6 +24,11 @@ where "b1 \<bullet> b2 \<equiv> sbConc b1\<cdot>b2"
 (* definition sbConcCommon:: " 'm stream ubundle \<Rightarrow> 'm stream ubundle \<rightarrow> 'm stream ubundle" where
 "sbConcCommon b1 \<equiv> \<Lambda> b2. (b1 \<bullet> b2) \<bar>  sbDom\<cdot>b1 \<inter> sbDom\<cdot>b2"*)
 
+(* Converter function. *)
+  (* definition should be right, but needs to be nicer *)
+definition sbElemWell::"(channel \<rightharpoonup> 'm::message) \<Rightarrow> bool" where
+"sbElemWell f \<equiv> \<forall>c\<in> dom f. f\<rightharpoonup>c \<in> ctype c"
+
   (* Applies a (Stream-)function to all streams. *)
 definition sbMapStream:: "('m stream \<Rightarrow> 'm stream) \<Rightarrow> 'm stream ubundle \<Rightarrow> 'm stream ubundle" where
 "sbMapStream f b = Abs_ubundle (\<lambda>c. (c\<in>ubDom\<cdot>b) \<leadsto> f (b . c))"
@@ -193,6 +198,158 @@ qed
 lemma sbremch_cont[simp]: "cont (\<lambda> b. \<Lambda> c.  b \<bar> -{c})"
 by(rule contI2, auto)*)
 
+(* ----------------------------------------------------------------------- *)
+  subsection \<open>convDiscrUp\<close>
+(* ----------------------------------------------------------------------- *)
+
+(* convDiscrUp only modifies the range, not the domain *)
+lemma convDiscrUp_dom[simp]: "dom (convDiscrUp f) = dom f"
+  by(simp add: convDiscrUp_def)
+
+(* Pseudo-Inverse function of convDiscrUp: Only inverts, if "\<forall>c\<in>dom f. (f \<rightharpoonup> c) \<noteq> \<bottom>" holds *)
+definition invConvDiscrUp :: "(channel \<rightharpoonup> 'a discr\<^sub>\<bottom>) \<Rightarrow> (channel \<rightharpoonup> 'a)" where
+"invConvDiscrUp f \<equiv> \<lambda>c. (c\<in>dom f) \<leadsto> (inv Discr (inv Iup (f \<rightharpoonup> c)))"
+
+(* Domain of invConvDiscrUp depends entirely on f *)
+lemma invConvDiscrUp_dom: assumes "\<forall>c\<in>dom f. (f \<rightharpoonup> c) \<noteq> \<bottom>"
+                            shows "dom (invConvDiscrUp f) = dom f"
+  proof -
+    have "dom (invConvDiscrUp f) \<subseteq> dom f"
+      by (meson invConvDiscrUp_def domIff subsetI)
+    moreover have "c \<in> dom f \<Longrightarrow> c \<in> dom (invConvDiscrUp f)"
+      by (simp add: invConvDiscrUp_def)
+    ultimately show ?thesis
+      by (simp add: Collect_mono_iff invConvDiscrUp_def)
+  qed
+
+(* A substitution rule for invConvDiscrUp *)
+lemma invConvDiscrUp_subst: assumes "\<forall>c\<in>dom f. (f \<rightharpoonup> c) \<noteq> \<bottom>"
+                                and "c \<in> dom f"
+                              shows "(invConvDiscrUp f) \<rightharpoonup> c = inv Discr (inv Iup (f \<rightharpoonup> c))"
+  by (simp add: assms(2) invConvDiscrUp_def)
+
+(* TODO: Wrong theory *)
+lemma iup_inv_iup: assumes "(x::('a::cpo)\<^sub>\<bottom>) \<noteq> \<bottom>"
+                     shows "Iup (inv Iup x) = x"
+  proof -
+    have h0: "x \<noteq> Ibottom"
+      using assms inst_up_pcpo by force
+    then have h1: "\<exists>a. x = Iup a"
+      using h0 u.exhaust by auto
+    then obtain a where a_def: "x = Iup a"
+      using h1 by blast
+    then have h2: "inv Iup x = a"
+      apply(subst a_def)
+      by(simp add: inv_def)
+    then have h3: "Iup (inv Iup x) = Iup a"
+      by (simp add: h2)        
+    then have h4: "Iup (inv Iup x) = x"
+      using a_def h3 by auto
+    then show ?thesis
+      by simp
+  qed
+
+(* TODO: Wrong theory (+Naming?) *)
+lemma iup_discr_and_back: assumes "(x::'a discr\<^sub>\<bottom>) \<noteq> \<bottom>"
+                            shows "Iup (Discr (inv Discr (inv Iup x))) = x"
+  proof -
+    have "Iup (Discr (inv Discr (inv Iup x))) = Iup (inv Iup x)"
+      by (metis discr.exhaust surj_def surj_f_inv_f)
+    moreover have "Iup (inv Iup x) = x"
+      by (simp add: assms iup_inv_iup)
+    ultimately show ?thesis
+      by simp
+  qed
+
+(* Given the assumption, invConvDiscrUp is the pseudo-inverse of convDiscrUp *)
+lemma convDiscrUp_invConvDiscrUp_eq: assumes "\<forall>c\<in>dom f. (f \<rightharpoonup> c) \<noteq> \<bottom>"
+                                       shows "convDiscrUp (invConvDiscrUp f) = f"
+                                         (is "?L = ?R")
+  proof -
+    have eq_dom: "dom ?L = dom ?R"
+      by (simp add: assms invConvDiscrUp_dom)
+    moreover have eq_on_dom: "\<And>c. c\<in>dom ?L \<Longrightarrow> ?L\<rightharpoonup>c = ?R\<rightharpoonup>c"
+      proof -
+        fix c::channel
+        assume "c\<in>dom ?L"
+        then show "?L\<rightharpoonup>c = ?R\<rightharpoonup>c"
+          apply(simp add: invConvDiscrUp_def convDiscrUp_def)
+          by(simp add: assms iup_discr_and_back)
+      qed
+    ultimately show ?thesis
+      by (meson part_eq)
+  qed
+
+(* Given the assumption, the inverse of convDiscrUp exists (convDiscrUp is pseudo-invertible) *)
+lemma convdiscrup_inv_ex: assumes "\<forall>c\<in>dom f. (f \<rightharpoonup> c) \<noteq> \<bottom>"
+                            shows "\<exists>x. convDiscrUp x = f"
+  apply(rule_tac x="invConvDiscrUp f" in exI)
+  by (simp add: assms convDiscrUp_invConvDiscrUp_eq)
+
+(* Given the assumption, convDiscrUp is pseudo-bijective *)
+lemma convdiscrup_inv_eq[simp]: assumes "\<forall>c\<in>dom f. (f \<rightharpoonup> c) \<noteq> \<bottom>"
+                                  shows "convDiscrUp (inv convDiscrUp f) = f"
+  by (metis assms convdiscrup_inv_ex f_inv_into_f rangeI)
+
+(* Given the assumption (convDiscrUp is pseudo-bijective), the domain of the inverse stays the same *)
+lemma convdiscrup_inv_dom_eq[simp]: assumes "\<forall>c\<in>dom f. (f \<rightharpoonup> c) \<noteq> \<bottom>"
+                                      shows "dom (inv convDiscrUp f) = dom f"
+  by (metis assms convdiscrup_inv_eq convDiscrUp_dom)
+   
+(* convDiscrUp is an injective function *) 
+lemma convDiscrUp_inj: "inj convDiscrUp"
+  proof (rule injI)
+    fix x::"channel \<Rightarrow> 'b option" and y::"channel \<Rightarrow> 'b option"
+    assume a1: "convDiscrUp x = convDiscrUp y"
+    have f1: "dom x = dom y"
+      by (metis a1 convDiscrUp_dom)
+    have f2: "\<forall> xa \<in> dom x. (Iup (Discr (x \<rightharpoonup> xa))) = (Iup (Discr (y \<rightharpoonup> xa)))"
+      by (metis (full_types) a1 convDiscrUp_def convDiscrUp_dom option.sel)
+    show "x = y"     
+      apply (subst fun_eq_iff)
+      apply rule
+      apply (case_tac "xa \<in> dom x") defer
+       apply (metis a1 convDiscrUp_dom domIff)
+      by (metis discr.inject domD f1 f2 option.sel u.inject)
+  qed
+
+lemma convDiscrUp_eqI: "convDiscrUp x = convDiscrUp y \<Longrightarrow> x = y"
+  by (simp add: convDiscrUp_inj inj_eq)
+
+(* Substitution rule for the inverse of convDiscrUp *)
+lemma convDiscrUp_inv_subst: assumes "\<forall>c\<in>dom f. (f \<rightharpoonup> c) \<noteq> \<bottom>"
+                                 and "c \<in> dom f"
+                               shows "((inv convDiscrUp) f) \<rightharpoonup> c = inv Discr (inv Iup (f \<rightharpoonup> c))"
+  proof -
+    have "((inv convDiscrUp) f) = (invConvDiscrUp f)"
+      proof -
+        have "convDiscrUp ((inv convDiscrUp) f) = f"
+          by (simp add: assms(1))
+        moreover have "convDiscrUp (invConvDiscrUp f) = f"
+          by (simp add: assms(1) convDiscrUp_invConvDiscrUp_eq)
+        ultimately show ?thesis
+          by (simp add: convDiscrUp_eqI)
+      qed
+    moreover have "(invConvDiscrUp f) \<rightharpoonup> c = inv Discr (inv Iup (f \<rightharpoonup> c))"
+      by (simp add: assms invConvDiscrUp_subst)
+    ultimately show ?thesis
+      by simp
+  qed
+
+(* ----------------------------------------------------------------------- *)
+  subsection \<open>sbElemWell\<close>
+(* ----------------------------------------------------------------------- *)
+
+lemma sbElemWellI: assumes "sbElemWell f"
+                       and "c \<in> dom f"
+                     shows "(f \<rightharpoonup> c) \<in> ctype c"
+  using assms(1) assms(2) sbElemWell_def by auto
+
+lemma sbElemWellI2: assumes "sbElemWell f"
+                        and "c \<in> dom f"
+                        and "(f \<rightharpoonup> c) = a"
+                      shows "a \<in> ctype c"
+  using assms(1) assms(2) assms(3) sbElemWellI by auto
 
 (* ----------------------------------------------------------------------- *)
   subsection \<open>sbMapStream\<close>
@@ -576,171 +733,88 @@ lemma sbHdElem_dom[simp]:"dom (sbHdElem\<cdot>sb) = ubDom\<cdot>sb"
 lemma sbHdElem_channel: assumes "ubDom\<cdot>sb = In"  and "c \<in> In" and "sb . c \<noteq> \<bottom>" shows "sbHdElem\<cdot>sb\<rightharpoonup>c \<noteq> \<bottom>"
     by(simp add: sbHdElem_def sbHdElem_cont assms) 
 
+(* Substituting sbHdElem with shd *)
+lemma sbHdElem_2_shd: assumes "\<forall>c\<in>(ubDom\<cdot>sb). sb .c \<noteq> \<epsilon>"
+                          and "c \<in> ubDom\<cdot>sb"
+                        shows "(inv convDiscrUp (sbHdElem\<cdot>sb))\<rightharpoonup>c = shd(sb .c)"
+  proof -
+    have h1:"sbHdElem\<cdot>sb\<rightharpoonup>c = lshd\<cdot>(sb .c)"
+      by(simp add: assms sbHdElem_def sbHdElem_cont)
+    then have h2: "(inv convDiscrUp (sbHdElem\<cdot>sb))\<rightharpoonup>c = inv Discr (inv Iup (lshd\<cdot>(sb .c)))" 
+      by (simp add: assms(1) assms(2) convDiscrUp_inv_subst sbHdElem_channel)
+    moreover have h4: "\<exists>a. lshd\<cdot>(sb .c) = Iup (Discr a)"
+      by (metis (no_types, lifting) assms convDiscrUp_def convdiscrup_inv_dom_eq convdiscrup_inv_eq h1 option.sel sbHdElem_channel sbHdElem_dom)
+    then have h5: "lshd\<cdot>(sb .c) = Iup (Discr (shd(sb .c)))"
+      apply(simp add: shd_def up_def)
+      using assms by auto
+    then have "inv Discr (inv Iup (lshd\<cdot>(sb .c))) = shd (sb .c)"
+      by (metis (no_types, lifting) h1 assms convDiscrUp_def convdiscrup_inv_dom_eq convdiscrup_inv_eq discr.inject h2 option.sel sbHdElem_dom sbHdElem_channel u.inject)
+    ultimately show ?thesis
+      by simp
+  qed
+
+(* Substituting sbHdElem with shd over a simple bundle *)
+lemma sbHdElem_2_shd2: assumes "x\<noteq>\<epsilon>" 
+                           and "ubWell [c \<mapsto> x]" 
+                         shows "inv convDiscrUp (sbHdElem\<cdot>(Abs_ubundle [c\<mapsto>x])) = [c\<mapsto>shd(x)]"
+                           (is "?L = ?R")
+  proof -
+    have convDiscrUp_assms: "\<forall>c\<in>dom(sbHdElem\<cdot>(Abs_ubundle[c\<mapsto>x])). (sbHdElem\<cdot>(Abs_ubundle[c\<mapsto>x]))\<rightharpoonup>c \<noteq> \<bottom>"
+      by (metis assms dom_fun_upd fun_upd_same option.sel option.simps(3) sbHdElem_channel 
+                sbHdElem_dom singletonD ubWell_empty ubdom_empty ubdom_ubrep_eq ubgetch_ubrep_eq)
+    have l_dom: "dom ?L = {c}"
+      by (simp add: convDiscrUp_assms assms(2) ubdom_ubrep_eq)
+    moreover have r_dom: "dom ?R = {c}"
+      by simp
+    moreover have eq_on_dom: "?R \<rightharpoonup> c = ?L \<rightharpoonup> c"
+      by (simp add: assms(1) assms(2) sbHdElem_2_shd ubdom_ubrep_eq ubgetch_ubrep_eq)
+    ultimately show ?thesis
+      by (metis part_eq singletonD)
+  qed
+
+lemma sbHdElem_sbElemWell: assumes "\<forall>c\<in>(ubDom\<cdot>sb). sb .c \<noteq> \<epsilon>"
+                             shows "sbElemWell (inv convDiscrUp (sbHdElem\<cdot>sb))"
+  proof -
+    (* Assumptions of convDiscrUp-lemmas *)
+    have convDiscrUp_assms: "\<forall>c\<in>dom (sbHdElem\<cdot>sb). (sbHdElem\<cdot>sb \<rightharpoonup> c) \<noteq> \<bottom>"
+      by (simp add: assms sbHdElem_channel)
+    (* Reformulation of the thesis to better match proving technique *)
+    have "\<And>c::channel. c\<in>ubDom\<cdot>sb \<Longrightarrow> inv convDiscrUp (sbHdElem\<cdot>sb)\<rightharpoonup>c \<in> ctype c"
+      proof -
+        fix c::channel
+        assume a1: "c\<in>ubDom\<cdot>sb"
+        moreover have "inv convDiscrUp (sbHdElem\<cdot>sb)\<rightharpoonup>c = shd(sb .c)"
+          by(simp add: assms a1 sbHdElem_2_shd)
+        moreover have "usclOkay c (sb .c)"
+          by (simp add: a1 ubgetch_insert)
+        then have "sdom\<cdot>(sb .c) \<subseteq> ctype c"
+          using  usclOkay_stream_def by blast
+        then have "shd (sb .c) \<in> ctype c" 
+          by (metis a1 assms sfilter_ne_resup sfilter_sdoml3)
+        ultimately show "inv convDiscrUp (sbHdElem\<cdot>sb)\<rightharpoonup>c \<in> ctype c" 
+          by simp
+      qed
+    then show ?thesis
+      by(simp add: sbElemWell_def convDiscrUp_assms)
+  qed
+
 (* ----------------------------------------------------------------------- *)
   subsection \<open>Automaton\<close>
 (* ----------------------------------------------------------------------- *)
 
-(* TODO: Moved from Automaton.thy *)
-lemma convDiscrUp_dom_eq[simp]: "dom (convDiscrUp g) = dom g"
-  by(simp add: convDiscrUp_def)
+(* Create a simple bundle. Used to shorten parts of automaton transitions, e.g. in EvenAutomaton *)
+lift_definition createBundle :: "'a \<Rightarrow> channel \<Rightarrow> 'a SB" is
+  "\<lambda>a c. if (a \<in> ctype c) then ([c \<mapsto> \<up>a]) else ([c \<mapsto> \<epsilon>]) "
+  unfolding ubWell_def
+  unfolding usclOkay_stream_def
+  by auto
 
-(* Pseudo-Inverse function of convDiscrUp: Only inverts, if "\<forall>c\<in>dom f. (f \<rightharpoonup> c) \<noteq> \<bottom>" holds *)
-definition convDiscrUp_inv:: "(channel \<rightharpoonup> 'a discr\<^sub>\<bottom>) \<Rightarrow> (channel \<rightharpoonup> 'a)" where
-"convDiscrUp_inv f \<equiv> \<lambda>c. (c\<in>dom f) \<leadsto> (inv Discr (inv Iup (f \<rightharpoonup> c)))"
+lemma createBundle_dom[simp]: "ubDom\<cdot>(createBundle a c) = {c}"
+  by (simp add: ubdom_insert createBundle.rep_eq)  
 
-(* Domain of convDiscrUp_inv depends entirely on f*)
-lemma convDiscrUp_inv_dom: assumes "\<forall>c\<in>dom f. (f \<rightharpoonup> c) \<noteq> \<bottom>"
-                             shows "dom (convDiscrUp_inv f) = dom f"
-  proof -
-    have "dom (convDiscrUp_inv f) \<subseteq> dom f"
-      by (meson convDiscrUp_inv_def domIff subsetI)
-    moreover have "c \<in> dom f \<Longrightarrow> c \<in> dom (convDiscrUp_inv f)"
-      by (simp add: convDiscrUp_inv_def)
-    ultimately show ?thesis
-      by (simp add: Collect_mono_iff convDiscrUp_inv_def)
-  qed
+lemma createBundle_apply[simp]: assumes "a \<in> ctype c"
+                                  shows "createBundle a c = Abs_ubundle [c \<mapsto> \<up>a]"
+  by (simp add: assms createBundle.abs_eq)
 
-(* A substitution rule for convDiscrUp_inv *)
-lemma convDiscrUp_inv_subst: assumes "\<forall>c\<in>dom f. (f \<rightharpoonup> c) \<noteq> \<bottom>"
-                                 and "c \<in> dom f"
-                               shows "(convDiscrUp_inv f) \<rightharpoonup> c = inv Discr (inv Iup (f \<rightharpoonup> c))"
-  by (simp add: assms(2) convDiscrUp_inv_def)
-
-(* Given the assumption, the inverse of convDiscrUp exists (convDiscrUp is pseudo-invertible) *)
-lemma convdiscrup_inv_ex: assumes "\<forall>c\<in>dom f. (f \<rightharpoonup> c) \<noteq> \<bottom>"
-                               shows "\<exists>x. convDiscrUp x = f"
-  apply(rule_tac x="convDiscrUp_inv f" in exI)
-  apply(simp add: convDiscrUp_def)
-  apply(simp add: assms convDiscrUp_inv_dom)
-  proof -
-    have h0: "(\<lambda>c::channel. (c \<in> dom f)\<leadsto>Iup (Discr convDiscrUp_inv f\<rightharpoonup>c)) 
-            = (\<lambda>c::channel. (c \<in> dom f)\<leadsto>Iup (Discr (inv Discr (inv Iup (f \<rightharpoonup> c)))))"
-      by (metis (full_types, hide_lams) assms convDiscrUp_inv_subst)
-    moreover have h1: "(\<lambda>c::channel. (c \<in> dom f)\<leadsto>Iup (Discr (inv Discr (inv Iup (f \<rightharpoonup> c)))))
-                     = (\<lambda>c::channel. (c \<in> dom f)\<leadsto>Iup (inv Iup (f \<rightharpoonup> c)))"
-      by (metis (no_types, hide_lams) Discr_undiscr inv_equality undiscr_Discr)
-    moreover have "\<And>c::channel. (c \<in> dom (f::channel \<Rightarrow> ('a discr\<^sub>\<bottom>) option))\<leadsto>Iup (inv Iup (f \<rightharpoonup> c)) 
-                               = (c \<in> dom f)\<leadsto> (f \<rightharpoonup> c)"
-      proof -
-        fix c::channel
-        show "(c \<in> dom (f::channel \<Rightarrow> ('a discr\<^sub>\<bottom>) option))\<leadsto>Iup (inv Iup (f \<rightharpoonup> c)) 
-            = (c \<in> dom f)\<leadsto> (f \<rightharpoonup> c)"
-          proof (cases "c \<in> dom f")
-            case True
-            then have h0: "(f \<rightharpoonup> c) \<noteq> Ibottom"
-              using True assms inst_up_pcpo by force
-            then have h1: "\<exists>a. (f \<rightharpoonup> c) = Iup a"
-              using h0 u.exhaust by auto
-            then obtain a where a_def: "(f \<rightharpoonup> c) = Iup a"
-              using h1 by blast
-            then have h2: "inv Iup (f \<rightharpoonup> c) = a"
-              apply(subst a_def)
-              by(simp add: inv_def)
-            then have h3: "Iup (inv Iup (f\<rightharpoonup>c)) = Iup a"
-              by (simp add: h2)        
-            then have h4: "Iup (inv Iup (f\<rightharpoonup>c)) = (f\<rightharpoonup>c)"
-              using a_def h3 by auto
-            then have h5: "(c \<in> dom f)\<leadsto>Iup (inv Iup (f\<rightharpoonup>c)) = (c \<in> dom f)\<leadsto>(f\<rightharpoonup>c)"
-              by simp
-            then show ?thesis
-              by simp
-          next
-            case False
-            then show ?thesis
-              by simp
-          qed
-      qed
-    moreover have h2: "(\<lambda>c::channel. (c \<in> dom f)\<leadsto>Iup (inv Iup (f \<rightharpoonup> c)))
-                     = (\<lambda>c::channel. (c \<in> dom f)\<leadsto> (f \<rightharpoonup> c))"
-      by (simp add: calculation(3))
-    moreover have "\<And>c::channel. (c \<in> dom f)\<leadsto> (f \<rightharpoonup> c) = f c"
-      by (simp add: domIff)
-    moreover have h3: "(\<lambda>c::channel. (c \<in> dom f)\<leadsto> (f \<rightharpoonup> c)) = f"
-      by(simp add: calculation)
-    ultimately show "(\<lambda>c::channel. (c \<in> dom f)\<leadsto>Iup (Discr convDiscrUp_inv f\<rightharpoonup>c)) = f"
-      apply(subst h0)
-      apply(subst h1)
-      apply(subst h2)
-      apply(subst h3)
-      by blast
-  qed
-
-(* convDiscrUp is pseudo-bijective *)
-lemma convdiscrup_inv_eq[simp]: assumes "\<forall>c\<in>dom f. (f \<rightharpoonup> c) \<noteq> \<bottom>"
-                                  shows "convDiscrUp (inv convDiscrUp f) = f"
-  by (metis assms convdiscrup_inv_ex f_inv_into_f rangeI)
-
-(* Under the assumption, that convDiscrUp is pseudo-bijective, the domain stays the same *)
-lemma convdiscrup_inv_dom_eq[simp]: assumes "\<forall>c\<in>dom f. (f \<rightharpoonup> c) \<noteq> \<bottom>"
-                                      shows "dom (inv convDiscrUp f) = dom f"
-  by (metis assms convdiscrup_inv_eq convDiscrUp_dom_eq)
-    
-lemma convDiscrUp_inj: "inj convDiscrUp"
-  proof (rule injI)
-    fix x::"channel \<Rightarrow> 'b option" and y::"channel \<Rightarrow> 'b option"
-    assume a1: "convDiscrUp x = convDiscrUp y"
-    have f1: "dom x = dom y"
-      by (metis a1 convDiscrUp_dom_eq)
-    have f2: "\<forall> xa \<in> dom x. (Iup (Discr (x \<rightharpoonup> xa))) = (Iup (Discr (y \<rightharpoonup> xa)))"
-      by (metis (full_types) a1 convDiscrUp_def convDiscrUp_dom_eq option.sel)
-    show "x = y"     
-      apply (subst fun_eq_iff)
-      apply rule
-      apply (case_tac "xa \<in> dom x") defer
-       apply (metis a1 convDiscrUp_dom_eq domIff)
-      by (metis discr.inject domD f1 f2 option.sel u.inject)
-  qed
-
-lemma convdiscrtup_eqI: "convDiscrUp x = convDiscrUp y \<Longrightarrow> x = y"
-  by (simp add: convDiscrUp_inj inj_eq)
-
-(* Equation resolving convDiscrUp on sbHdElem over a simple bundle *)
-lemma convDiscrUp_sbHdElem_eq: assumes "x\<noteq>\<epsilon>" 
-                      and "ubWell [c \<mapsto> x]" 
-                    shows "inv convDiscrUp (sbHdElem\<cdot>(Abs_ubundle [c \<mapsto> x])) = [c \<mapsto> shd(x)]" (is "inv convDiscrUp ?L = ?R")
-  proof -
-    have l_dom: "dom ?L = {c}"
-      by (simp add: assms(2) ubdom_ubrep_eq)
-    hence lemma_assms: "\<forall>c\<in> dom ?L. ?L \<rightharpoonup> c \<noteq> \<bottom>"
-      by (metis assms(1) assms(2) fun_upd_same option.sel sbHdElem_channel sbHdElem_dom singletonD ubgetch_ubrep_eq)
-    moreover have r_dom: "dom (convDiscrUp ?R) = {c}"
-      by simp
-    moreover have "?L \<rightharpoonup> c = lshd\<cdot>((Abs_ubundle [c \<mapsto> x]) .c)" 
-      proof -
-        have f1: "Some (\<Lambda> u. (\<lambda>c. (c \<in> ubDom\<cdot>u)\<leadsto>lshd\<cdot>(u . c)))\<cdot> (Abs_ubundle [c \<mapsto> x])\<rightharpoonup>c 
-                    = ((\<Lambda> u. (\<lambda>c. (c \<in> ubDom\<cdot>u)\<leadsto>lshd\<cdot>(u . c)))\<cdot> (Abs_ubundle [c \<mapsto> x])) c"
-          by (metis (no_types) domIff l_dom option.collapse sbHdElem_def singletonI)
-        have f2: "(\<Lambda> u. (\<lambda>c. (c \<in> ubDom\<cdot>u)\<leadsto>lshd\<cdot>(u . c)))\<cdot> (Abs_ubundle [c \<mapsto> x])
-                = (\<lambda>ca. (ca \<in> ubDom\<cdot> (Abs_ubundle [c \<mapsto> x]))\<leadsto>lshd\<cdot> (Abs_ubundle [c \<mapsto> x] . ca))"
-          using beta_cfun sbHdElem_cont by blast
-        have "c \<in> ubDom\<cdot>(Abs_ubundle [c \<mapsto> x])"
-          using l_dom sbHdElem_dom by blast
-        then have "Some (\<Lambda> u. (\<lambda>c. (c \<in> ubDom\<cdot>u)\<leadsto>lshd\<cdot>(u . c)))\<cdot> (Abs_ubundle [c \<mapsto> x])\<rightharpoonup>c 
-                 = Some (lshd\<cdot>(Abs_ubundle [c \<mapsto> x] . c))"
-          using f2 f1 by presburger
-        then have "(\<Lambda> u. (\<lambda>c. (c \<in> ubDom\<cdot>u)\<leadsto>lshd\<cdot>(u . c)))\<cdot> (Abs_ubundle [c \<mapsto> x])\<rightharpoonup>c 
-                  = lshd\<cdot>(Abs_ubundle [c \<mapsto> x] . c)"
-          by blast   
-        then show ?thesis
-          by (simp add: sbHdElem_def)
-      qed                
-    moreover have "lshd\<cdot>x = Iup (Discr (shd x))"
-      proof -
-        have "\<exists> a. lshd\<cdot>x = updis a"
-          by (metis assms(1) stream.sel_rews(3) updis_exists)
-        then obtain a where a_def: "lshd\<cdot>x = updis a"
-          by auto
-        then show ?thesis
-          by(simp add: up_def cont_Ifup1 a_def shd_def)
-      qed
-    hence "?L \<rightharpoonup> c = Iup (Discr (shd x))"
-      by (simp add: calculation assms(2) ubgetch_ubrep_eq)
-    hence "?L \<rightharpoonup> c = (convDiscrUp ?R) \<rightharpoonup> c"
-      by (simp add: convDiscrUp_def)
-    hence "?L = convDiscrUp ?R"
-      by (metis l_dom part_eq r_dom singletonD)
-    ultimately show ?thesis
-      by (metis convdiscrtup_eqI convdiscrup_inv_eq)
-  qed    
 
 end

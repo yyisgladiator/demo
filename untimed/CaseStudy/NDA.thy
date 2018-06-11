@@ -2,15 +2,12 @@
 
 theory NDA
 
-imports Automaton "../../USpec" NDA_functions
+imports Automaton "../../USpec" "../SpsStep" NDA_functions
 
 begin
 
 default_sort type
-type_synonym 'm SPS = "'m SPF uspec"
-
-
-
+  
 section \<open>Non Deterministic Case \<close>
 
 (* FYI: Non-deterministic version *)
@@ -72,16 +69,11 @@ lemma "setflat\<cdot>{{1,2::nat},{3,4::nat}} = {1,2,3,4}"
   unfolding setflat_insert
   apply blast (* Dauert ein bisschen, lösche das lemma wenn es nervt *)
   done
+(*
+"channel set \<Rightarrow> channel set \<Rightarrow> ((channel\<rightharpoonup>'m::message) \<Rightarrow> 'm SPF) \<rightarrow> 'm SPF"
+*)
 
-
-
-(* like spfStep, copy & pasteonly on SPS *)
-fun spsStep :: "channel set discr \<Rightarrow> channel set discr \<Rightarrow> ((channel\<rightharpoonup>'m::message) \<Rightarrow> 'm SPS) \<rightarrow> 'm SPS" where
-"spsStep (Discr cin) (Discr cout) = undefined"
-
-
-
-
+  
 (* See: https://git.rwth-aachen.de/montibelle/automaton/core/issues/70 *)
 definition spsConc:: "'m SB \<Rightarrow> 'm SPS \<rightarrow> 'm SPS" where
 "spsConc = undefined"
@@ -99,91 +91,11 @@ thm helper_def
   und ich laufe immer wieder in das problem: https://git.rwth-aachen.de/montibelle/automaton/core/issues/68 *)
 
 definition spsHelper:: "'s \<Rightarrow> (('s \<times>'e) \<Rightarrow> ('s \<times> 'm::message SB) set rev) \<rightarrow> ('s \<Rightarrow> 'm SPS) \<rightarrow> ('e \<Rightarrow> 'm SPS)" where(*Other Idea*)
-"spsHelper s \<equiv> \<Lambda> f. \<Lambda> h. (\<lambda> e. Abs_rev_uspec((\<lambda>x. x e)`{Automaton.helper (spf) s\<cdot>x| spf x. spf\<in>(inv Rev (test\<cdot>f)) \<and> x \<in> (inv Rev (test2\<cdot>h))}))"
-
-lemma spsHelpter_mono_inner:"monofun(\<lambda> h::('s \<Rightarrow> 'm::message SPS). (\<lambda> e. Abs_rev_uspec((\<lambda>x. x e)`{Automaton.helper (spf) s\<cdot>x| spf x. spf\<in>(inv Rev (test\<cdot>f)) \<and> x \<in> (inv Rev (test2\<cdot>h))})))"
-proof(rule monofunI)
-  fix x y::"('s \<Rightarrow> 'm::message SPS)"
-  assume a1:"x \<sqsubseteq> y"
-  have h1:"\<And>e. uspecWell ((\<lambda>x. x e)`
-                  {helper spf s\<cdot>xa |(spf::'s \<times> 'a \<Rightarrow> 's \<times> 'm stream\<^sup>\<Omega>) xa::'s \<Rightarrow> ('m stream\<^sup>\<Omega>) ufun. spf \<in> inv Rev (test\<cdot>f) \<and> xa \<in> inv Rev (test2\<cdot>x)})"
-    sorry
-  have h2:"\<And>e. uspecWell ((\<lambda>x. x e)`
-                  {helper spf s\<cdot>xa |(spf::'s \<times> 'a \<Rightarrow> 's \<times> 'm stream\<^sup>\<Omega>) xa::'s \<Rightarrow> ('m stream\<^sup>\<Omega>) ufun. spf \<in> inv Rev (test\<cdot>f) \<and> xa \<in> inv Rev (test2\<cdot>y)})"
-    sorry
-  have h3:"inv Rev (test2\<cdot>y)\<subseteq> inv Rev (test2\<cdot>x)"
-    by (smt Abs_cfun_inverse2 SetPcpo.less_set_def a1 below_rev.simps inv_rev_rev monofun_cfun_arg test2_cont test2_def)
-  then have h4:"{helper spf s\<cdot>x |spf x. spf \<in> inv Rev (test\<cdot>f) \<and> x \<in> inv Rev (test2\<cdot>y)} \<sqsubseteq> {helper spf s\<cdot>xa |spf xa. spf \<in> inv Rev (test\<cdot>f) \<and> xa \<in> inv Rev (test2\<cdot>x)}"
-    by (smt Collect_mono SetPcpo.less_set_def subsetCE)    
-  then have h5:"\<And>e. ((\<lambda>x. x e)`
-                  {helper spf s\<cdot>xa |spf xa. spf \<in> inv Rev (test\<cdot>f) \<and> xa \<in> inv Rev (test2\<cdot>y)})\<sqsubseteq> ((\<lambda>x. x e)`
-                  {helper spf s\<cdot>xa |spf xa. spf \<in> inv Rev (test\<cdot>f) \<and> xa \<in> inv Rev (test2\<cdot>x)})"
-    by (simp add: Set.image_mono SetPcpo.less_set_def)
-  show "(\<lambda>e. Abs_rev_uspec
-                 ((\<lambda>x. x e)`
-                  {helper spf s\<cdot>xa |spf xa. spf \<in> inv Rev (test\<cdot>f) \<and> xa \<in> inv Rev (test2\<cdot>x)})) \<sqsubseteq>
-       (\<lambda>e. Abs_rev_uspec
-                 ((\<lambda>x. x e)`
-                  {helper spf s\<cdot>x |spf x. spf \<in> inv Rev (test\<cdot>f) \<and> x \<in> inv Rev (test2\<cdot>y)}))"
-    by (smt fun_below_iff h1 h2 h4 h5 monofun_cfun_arg rep_abs_rev_simp uspec_belowI)
-qed
-  
-  
-    
-
-lemma spsHelpter_cont_inner:"cont(\<lambda> h::('s \<Rightarrow> 'm::message SPS). (\<lambda> e. Abs_rev_uspec((\<lambda>x. x e)`{Automaton.helper (spf) s\<cdot>x| spf x. spf\<in>(inv Rev (test\<cdot>f)) \<and> x \<in> (inv Rev (test2\<cdot>h))})))"
-  sorry
-    
-    
-lemma spsHelpter_mono:"monofun(\<lambda>f::(('s \<times>'e) \<Rightarrow> ('s \<times> 'm::message SB) set rev). \<Lambda> h. (\<lambda> e. Abs_rev_uspec((\<lambda>x. x e)`{Automaton.helper (spf) s\<cdot>x| spf x. spf\<in>(inv Rev (test\<cdot>f)) \<and> x \<in> (inv Rev (test2\<cdot>h))})))"
-proof(rule monofunI)
-  fix x y::"(('s \<times>'e) \<Rightarrow> ('s \<times> 'm::message SB) set rev)"
-  assume a1:"x \<sqsubseteq> y"
-  have "test\<cdot>x \<sqsubseteq> test\<cdot>y"
-    using a1 monofun_cfun_arg by blast
-  then have h0:"inv Rev (test\<cdot>y) \<sqsubseteq> inv Rev (test\<cdot>x)"
-    by (metis (no_types, lifting) below_rev.elims(2) inv_rev_rev)
-  then have h1:"\<And>h f. f `{helper spf s\<cdot>xa |spf xa. spf \<in> inv Rev (test\<cdot>y) \<and> xa \<in> inv Rev (test2\<cdot>h)} \<sqsubseteq> f `{helper spf s\<cdot>xa |spf xa. spf \<in> inv Rev (test\<cdot>x) \<and> xa \<in> inv Rev (test2\<cdot>h)}"
-    by (smt Collect_mono Set.image_mono SetPcpo.less_set_def subset_eq)
-  have h2:"\<And>h e. uspecWell ((\<lambda>x. x e) `
-                      {helper spf s\<cdot>xa |spf xa. spf \<in> inv Rev (test\<cdot>x) \<and> xa \<in> inv Rev (test2\<cdot>h)})"
-    sorry
-  have h3:"\<And>h e. uspecWell ((\<lambda>x. x e)`
-                      {helper spf s\<cdot>xa |spf xa. spf \<in> inv Rev (test\<cdot>y) \<and> xa \<in> inv Rev (test2\<cdot>h)})"
-    sorry
-  have h4:"\<And>h . (\<lambda>e. Abs_rev_uspec
-                     ((\<lambda>x. x e)`
-                      {helper spf s\<cdot>xa |spf xa. spf \<in> inv Rev (test\<cdot>x) \<and> xa \<in> inv Rev (test2\<cdot>h)})) \<sqsubseteq> (\<lambda>e. Abs_rev_uspec
-                     ((\<lambda>x. x e)`
-                      {helper spf s\<cdot>xa |spf xa. spf \<in> inv Rev (test\<cdot>y) \<and> xa \<in> inv Rev (test2\<cdot>h)}))"
-    by (smt fun_belowI h1 h2 h3 rep_abs_rev_simp uspec_belowI)
-  show "(\<Lambda> h.
-           (\<lambda>e. Abs_rev_uspec
-                     ((\<lambda>x. x e)`
-                      {helper spf s\<cdot>xa |spf xa. spf \<in> inv Rev (test\<cdot>x) \<and> xa \<in> inv Rev (test2\<cdot>h)}))) \<sqsubseteq>
-       (\<Lambda> h.
-           (\<lambda>e. Abs_rev_uspec
-                     ((\<lambda>x. x e)`
-                      {helper spf s\<cdot>x |spf x. spf \<in> inv Rev (test\<cdot>y) \<and> x \<in> inv Rev (test2\<cdot>h)})))" 
-    by(rule cfun_belowI, simp add: spsHelpter_cont_inner h4)
-qed
-
-lemma spsHelpter_cont:"cont(\<lambda>f::(('s \<times>'e) \<Rightarrow> ('s \<times> 'm::message SB) set rev). \<Lambda> h. (\<lambda> e. Abs_rev_uspec((\<lambda>x. x e)`{Automaton.helper (spf) s\<cdot>x| spf x. spf\<in>(inv Rev (test\<cdot>f)) \<and> x \<in> (inv Rev (test2\<cdot>h))})))"
-  sorry
-    
-    
-    
+"spsHelper s \<equiv> undefined"     
     
 (* Similar to Rum96 *)
 definition nda_h :: "('s::type, 'm::message) NDA \<rightarrow> ('s \<Rightarrow> 'm SPS)" where
-"nda_h \<equiv>  \<Lambda> nda. spsFix\<cdot>(\<Lambda> h. (\<lambda>s. spsStep (ndaDom\<cdot>nda)(ndaRan\<cdot>nda)\<cdot>(spsHelper s\<cdot>(ndaTransition\<cdot>nda)\<cdot>h)))"
-
-lemma nda_h_mono:"monofun  (\<lambda> nda. spsFix\<cdot>(\<Lambda> h. (\<lambda>s. spsStep (ndaDom\<cdot>nda)(ndaRan\<cdot>nda)\<cdot>(spsHelper s\<cdot>(ndaTransition\<cdot>nda)\<cdot>h))))"
-  sorry
-
-
-lemma nda_h_cont:"cont  (\<lambda> nda. spsFix\<cdot>(\<Lambda> h. (\<lambda>s. spsStep (ndaDom\<cdot>nda)(ndaRan\<cdot>nda)\<cdot>(spsHelper s\<cdot>(ndaTransition\<cdot>nda)\<cdot>h))))"
-  sorry
+"nda_h \<equiv>  \<Lambda> nda. spsFix\<cdot>(\<Lambda> h. (\<lambda>s. spsStep (undiscr(ndaDom\<cdot>nda))(undiscr(ndaRan\<cdot>nda))\<cdot>(spsHelper s\<cdot>(ndaTransition\<cdot>nda)\<cdot>h)))"
     
 definition setrevImage :: "('a \<Rightarrow> 'b) \<Rightarrow> 'a set rev \<rightarrow> 'b set rev" where
 "setrevImage = undefined"
@@ -208,7 +120,7 @@ definition nda_H_helper :: "('s, 'm::message) NDA \<rightarrow> 'm SPS set rev" 
 
 (* https://git.rwth-aachen.de/montibelle/automaton/core/issues/68 *)
 definition nda_H :: "('s, 'm::message) NDA \<rightarrow> 'm SPS" where
-"nda_H \<equiv> \<Lambda> nda. setflat_sps_rev(undiscr(ndaDom\<cdot> nda))(undiscr(ndaRan\<cdot> nda))\<cdot>(nda_H_helper\<cdot>nda)" 
+"nda_H \<equiv> \<Lambda> nda. undefined\<cdot>(nda_H_helper\<cdot>nda)" 
 
 
 
@@ -230,12 +142,12 @@ lemma "cont (\<lambda>nda. fst (Rep_NDA nda))"
   by simp
 
 
-
+(*
 lemma "cont (\<lambda> nda. spsFix\<cdot>(\<Lambda> h. (\<lambda>s. spsStep some suff\<cdot>(spsHelper s\<cdot>(ndaTransition\<cdot>nda)\<cdot>h))))"
   by simp
 
 lemma "cont (\<lambda> h. (\<lambda>s. spsStep (ndaDom\<cdot>nda)(ndaRan\<cdot>nda)\<cdot>(spsHelper s\<cdot>(ndaTransition\<cdot>nda)\<cdot>h)))"
   by simp
-
+*)
 
 end
