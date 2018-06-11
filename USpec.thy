@@ -173,8 +173,6 @@ lemma uspec_obtain:
   by (metis (mono_tags, lifting) Rep_uspec Rep_uspec_inverse mem_Collect_eq old.prod.case uspecWell.cases)
 
 
-
-
 subsection \<open>RevSet\<close>
 
 thm uspecRevSet_def
@@ -184,7 +182,6 @@ lemma uspecrevset_cont: "cont (\<lambda> uspec. fst (Rep_uspec uspec))"
 
 lemma uspecrevset_insert: "uspecRevSet\<cdot>S = fst (Rep_uspec S)"
   by(simp add: uspecRevSet_def)
-
 
 
 subsection \<open>Dom\<close>
@@ -297,6 +294,14 @@ lemma uspec_belowI: assumes "uspecDom\<cdot>x = uspecDom\<cdot>y"
       apply(simp add: below_uspec_def x_def y_def)
       by (metis assms fst_conv snd_conv undiscr_Discr uspecWell.cases uspecdom_insert uspecran_insert uspecrevset_insert x_def y_def)
    qed
+
+
+subsection \<open>RevSet 2\<close>
+
+(* Needs Dom/Ran lemmas *)
+lemma uspecRevSet_condition: assumes "x \<in> inv Rev (uspecRevSet\<cdot>S1)"
+                               shows "ufclDom\<cdot>x = uspecDom\<cdot>S1 \<and> ufclRan\<cdot>x = uspecRan\<cdot>S1"
+  by (simp add: assms uspec_allDom uspec_allRan)
 
 
 subsection \<open>uspecUnion\<close>
@@ -431,6 +436,12 @@ lemma uspecUnion_setrev_condition: "\<And>S1 S2 x. x \<in> inv Rev(uspecRevSet\<
   apply(simp add: uspecUnion_setrev)
   by (metis (mono_tags, lifting) setrevFilter_gdw setrevUnion_gdw)
 
+lemma uspecUnion_setrev_condition2:
+  "\<And>S1 S2 x. x \<in> inv Rev(uspecRevSet\<cdot>(uspecUnion\<cdot>S1\<cdot>S2))
+         \<longleftrightarrow> (x \<in> inv Rev (uspecRevSet\<cdot>S1) \<and> uspecDom\<cdot>S1 \<supseteq> uspecDom\<cdot>S2 \<and> uspecRan\<cdot>S1 \<supseteq> uspecRan\<cdot>S2 
+            \<or> x \<in> inv Rev (uspecRevSet\<cdot>S2) \<and> uspecDom\<cdot>S1 \<subseteq> uspecDom\<cdot>S2 \<and> uspecRan\<cdot>S1 \<subseteq> uspecRan\<cdot>S2)"
+  by (metis subset_Un_eq sup.absorb_iff1 uspecUnion_setrev_condition uspec_allDom uspec_allRan)
+
 lemma uspecUnion_commutative: "\<And>S1 S2 S3. (uspecUnion\<cdot>S1\<cdot>(uspecUnion\<cdot>S2\<cdot>S3)) = (uspecUnion\<cdot>(uspecUnion\<cdot>S1\<cdot>S2)\<cdot>S3)"
   proof -
     fix S1::"'a uspec" and S2::"'a uspec" and S3::"'a uspec"
@@ -440,12 +451,37 @@ lemma uspecUnion_commutative: "\<And>S1 S2 S3. (uspecUnion\<cdot>S1\<cdot>(uspec
       by (simp add: sup_assoc uspecUnion_ran)
     have h3: "inv Rev (uspecRevSet\<cdot>(uspecUnion\<cdot>S1\<cdot>(uspecUnion\<cdot>S2\<cdot>S3))) = inv Rev (uspecRevSet\<cdot>(uspecUnion\<cdot>(uspecUnion\<cdot>S1\<cdot>S2)\<cdot>S3))"
       apply auto
-      by (smt Un_left_commute sup.left_idem sup_commute uspecUnion_dom uspecUnion_ran uspecUnion_setrev_condition uspec_allDom uspec_allRan)+
+      apply(simp add: uspecUnion_setrev_condition2 uspecUnion_dom uspecUnion_ran)
+      apply auto
+      apply(simp add: uspecUnion_setrev_condition2 uspecUnion_dom uspecUnion_ran)
+      by auto
     show "uspecUnion\<cdot>S1\<cdot>(uspecUnion\<cdot>S2\<cdot>S3) = uspecUnion\<cdot>(uspecUnion\<cdot>S1\<cdot>S2)\<cdot>S3"
       by (metis h1 h2 h3 rev_inv_rev uspec_eqI)
   qed
 
 lemma uspecUnion_sym: "\<And>S1 S2. uspecUnion\<cdot>S1\<cdot>S2 = uspecUnion\<cdot>S2\<cdot>S1"
   by (metis uspecUnion_apply uspecUnion_def uspecUnion_general_sym)
+
+lemma uspecUnion_consistent1: assumes "uspecIsConsistent S1"
+                                  and "uspecDom\<cdot>S1 \<supseteq> uspecDom\<cdot>S2 \<and> uspecRan\<cdot>S1 \<supseteq> uspecRan\<cdot>S2"
+                                shows "uspecIsConsistent (uspecUnion\<cdot>S1\<cdot>S2)"
+  proof -
+    have "\<exists>x. x \<in> inv Rev(uspecRevSet\<cdot>(uspecUnion\<cdot>S1\<cdot>S2))"
+      apply(simp add: uspecUnion_setrev_condition2)      
+      by (metis assms rep_rev_revset uspec_consist_f_ex)
+    then show ?thesis
+      using not_uspec_consisten_empty_eq rep_rev_revset by fastforce
+  qed
+
+lemma uspecUnion_consistent2: assumes "uspecIsConsistent S2"
+                                  and "uspecDom\<cdot>S1 \<subseteq> uspecDom\<cdot>S2 \<and> uspecRan\<cdot>S1 \<subseteq> uspecRan\<cdot>S2"
+                                shows "uspecIsConsistent (uspecUnion\<cdot>S1\<cdot>S2)"
+  proof -
+    have "\<exists>x. x \<in> inv Rev(uspecRevSet\<cdot>(uspecUnion\<cdot>S1\<cdot>S2))"
+      apply(simp add: uspecUnion_setrev_condition2)      
+      by (metis assms rep_rev_revset uspec_consist_f_ex)
+    then show ?thesis
+      using not_uspec_consisten_empty_eq rep_rev_revset by fastforce
+  qed
 
 end

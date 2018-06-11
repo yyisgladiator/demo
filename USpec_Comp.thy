@@ -521,4 +521,20 @@ lemma uspecLeast_min: assumes "uspecDom\<cdot>S = In"
 lemma uspecLeast_min2: "(uspecLeast (uspecDom\<cdot>S) (uspecRan\<cdot>S)) \<sqsubseteq> S"
   using uspecLeast_min by auto
 
+lemma uspecLeast_union: "uspecUnion\<cdot>f\<cdot>(uspecLeast (uspecDom\<cdot>f) (uspecRan\<cdot>f)) = (uspecLeast (uspecDom\<cdot>f) (uspecRan\<cdot>f))"
+  apply(rule uspec_eqI2)
+  apply(rule setrev_eqI)
+  apply(rule set_eqI)
+  apply auto
+  apply(metis (mono_tags, lifting) CollectI rep_abs_rev_simp uspecLeast_def uspecLeast_well uspecUnion_setrev_condition uspec_allDom uspec_allRan uspecrevset_insert)
+  apply(simp add: uspecLeast_dom uspecLeast_ran uspecUnion_setrev_condition uspec_allDom uspec_allRan)
+  apply(rule uspecUnion_consistent)
+  apply(simp add: uspecLeast_consistent)
+  apply(simp add: uspecLeast_dom)
+  by(simp add: uspecLeast_ran)
+
+lemma uspecLeast_union_consistent: "uspecIsConsistent(uspecUnion\<cdot>f\<cdot>(uspecLeast (uspecDom\<cdot>f) (uspecRan\<cdot>f)))"
+  by(simp add: uspecLeast_union uspecLeast_consistent)
+  
+
 end
