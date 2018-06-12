@@ -83,7 +83,7 @@ lemma tsynrec_test_infstream:
   apply (simp add: tsynrec_insert)
   oops
 
-lemma tsynbrec_ubcldom: "ubclDom\<cdot>(Abs_ubundle 
+lemma tsynbrec_ubundle_ubdom: "ubDom\<cdot>(Abs_ubundle 
               [ar\<guillemotright> \<mapsto> bool2abp\<cdot>(tsynProjSnd\<cdot>(abp2natbool\<cdot>(sb  .  \<guillemotright>dr))), 
                o\<guillemotright> \<mapsto> nat2abp\<cdot>(tsynRec\<cdot>(abp2natbool\<cdot>(sb  .  \<guillemotright>dr)))]) = {ar\<guillemotright>, o\<guillemotright>}"
   sorry
@@ -116,6 +116,11 @@ lemma recspf_ufdom: "ufDom\<cdot>RecSPF = {\<guillemotright>dr}"
 
 lemma recspf_ufran: "ufRan\<cdot>RecSPF = {ar\<guillemotright>, o\<guillemotright>}"
   sorry
+
+lemma recspf_ubdom: 
+  assumes "ubDom\<cdot>sb = ufDom\<cdot>RecSPF"
+  shows "ubDom\<cdot>(RecSPF \<rightleftharpoons> sb) = {ar\<guillemotright>, o\<guillemotright>}"
+  by (simp add: assms recspf_ufran spf_ubDom)
 
 lemma recspf_strict: "RecSPF \<rightleftharpoons> ubclLeast{\<guillemotright>dr} = ubclLeast{ar\<guillemotright>, o\<guillemotright>}"
   sorry
@@ -212,23 +217,33 @@ lemma receivertransition_automaton_well:
   section {* Automaton Receiver SPF Lemmata *}
 (* ----------------------------------------------------------------------- *)
 
+(* ToDo: add descriptions. *)
+
 lemma receiverspf_strict: "ReceiverSPF \<rightleftharpoons> ubclLeast{\<guillemotright>dr} = ubclLeast{ar\<guillemotright>, o\<guillemotright>}"
   sorry
 
-
-
 lemma receiverspf_ufdom: "ufDom\<cdot>ReceiverSPF = {\<guillemotright>dr}"
-  oops
+  apply (simp add: ReceiverSPF_def H_def ReceiverAutomaton_def getDom_def)
+  using ReceiverAutomaton.abs_eq ReceiverAutomaton.rep_eq by auto
 
-lemma receiverspf_ubdom: "ubDom\<cdot>(ReceiverSPF \<rightleftharpoons> sb) = {\<guillemotright>dr}"
-  oops
+lemma receiverspf_ufran: "ufRan\<cdot>ReceiverSPF = {ar\<guillemotright>, o\<guillemotright>}"
+  sorry
 
-lemma recspf_receiverspf_ub_eq: "ReceiverSPF \<rightleftharpoons> sb = RecSPF \<rightleftharpoons> sb"
+lemma receiverspf_ubdom:
+  assumes "ubDom\<cdot>sb = ufDom\<cdot>ReceiverSPF"
+  shows "ubDom\<cdot>(ReceiverSPF \<rightleftharpoons> sb) = {ar\<guillemotright>, o\<guillemotright>}"
+  by (simp add: assms receiverspf_ufran spf_ubDom)
+
+lemma recspf_receiverspf_ub_eq:
+  assumes "ubDom\<cdot>sb = ufDom\<cdot>ReceiverSPF" 
+  shows "ReceiverSPF \<rightleftharpoons> sb = RecSPF \<rightleftharpoons> sb"
   apply (rule ub_eq)
-  oops
+  apply (simp add: assms receiverspf_ubdom receiverspf_ufdom recspf_ubdom recspf_ufdom)
+  sorry
 
 lemma recspf_receiverspf_eq: "ReceiverSPF = RecSPF"
   apply (rule ufun_eqI)
-  oops
+  apply (simp add: receiverspf_ufdom recspf_ufdom)
+  by (simp add: recspf_receiverspf_ub_eq ubclDom_ubundle_def)
 
 end
