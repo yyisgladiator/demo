@@ -38,11 +38,11 @@ lemma spfStep_innerWell:"ufWell (\<Lambda>  sb.  (ubDom\<cdot>sb = In \<and> sbH
 
 
 
-lemma "cont (\<lambda> h. Abs_ufun (\<Lambda>  sb.  (ubDom\<cdot>sb = In \<and> sbHdElemWell sb) 
+lemma spfStep_cont:"cont (\<lambda> h. Abs_ufun (\<Lambda>  sb.  (ubDom\<cdot>sb = In \<and> sbHdElemWell sb) 
                                               \<leadsto> (ufRestrict In Out\<cdot>(h (Abs_sbElem(inv convDiscrUp (sbHdElem\<cdot>sb)))) \<rightleftharpoons> (sbRt\<cdot>sb))))"
-  oops
+  sorry
 
-lemma "inj (\<lambda> h. Abs_ufun (\<Lambda>  sb.  (ubDom\<cdot>sb = In \<and> sbHdElemWell sb) 
+lemma [simp]:"inj (\<lambda> h. Abs_ufun (\<Lambda>  sb.  (ubDom\<cdot>sb = In \<and> sbHdElemWell sb) 
                                               \<leadsto> (ufRestrict In Out\<cdot>(h (Abs_sbElem(inv convDiscrUp (sbHdElem\<cdot>sb)))) \<rightleftharpoons> (sbRt\<cdot>sb))))" (*h must map to spf with dom = In and Range = Out and not map to ufLeast In Out*)
 proof(rule injI)
   fix x y::"'a sbElem \<Rightarrow> ('a stream\<^sup>\<Omega>) ufun"
@@ -69,11 +69,13 @@ proof(rule injI)
   then show "x = y"
     sorry
 qed
-  
+
+lemma spfStep_inj:"inj (Rep_cfun(spfStep In Out))"  
+  by(simp add: spfStep_def spfStep_cont)
 
 lemma spfstep_insert: "spfStep In Out\<cdot>h= Abs_ufun (\<Lambda>  sb.  (ubDom\<cdot>sb = In \<and> sbHdElemWell sb) 
                                               \<leadsto> (ufRestrict In Out\<cdot>(h (Abs_sbElem(inv convDiscrUp (sbHdElem\<cdot>sb)))) \<rightleftharpoons> (sbRt\<cdot>sb)))"
-  oops
+  by(simp add: spfStep_def spfStep_cont)
 
 lemma spfstep_dom[simp]:s"ufDom\<cdot>(spfStep cIn cOut\<cdot>f) = cIn"
   oops
