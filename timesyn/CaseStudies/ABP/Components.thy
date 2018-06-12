@@ -121,6 +121,94 @@ lemma recspf_strict: "RecSPF \<rightleftharpoons> ubclLeast{\<guillemotright>dr}
   sorry
 
 (* ----------------------------------------------------------------------- *)
+  section {* Automaton Receiver Transition Lemmata *}
+(* ----------------------------------------------------------------------- *)
+
+(* ToDo: add descriptions. *)
+
+lemma receivertransition_rt_true: 
+  "receiverTransition (State Rt, [\<guillemotright>dr \<mapsto> (Msg (A (a, True)))])
+     = ((State Rf,(createArOutput True) \<uplus> (createOOutput a)))"
+  by simp
+
+lemma receivertransition_rt_false: 
+  "receiverTransition (State Rt, [\<guillemotright>dr \<mapsto> (Msg (A (a, False)))])
+     = ((State Rt,(createArOutput False) \<uplus> (tsynbNull o\<guillemotright>)))"
+  by simp
+
+lemma receivertransition_rf_true: 
+  "receiverTransition (State Rf, [\<guillemotright>dr \<mapsto> (Msg (A (a, True)))])
+     = ((State Rf,(createArOutput True) \<uplus> (tsynbNull o\<guillemotright>)))"
+  by simp
+
+lemma receivertransition_rf_false: 
+  "receiverTransition (State Rf, [\<guillemotright>dr \<mapsto> (Msg (A (a, False)))])
+     = ((State Rt,(createArOutput False) \<uplus> (createOOutput a)))"
+  by simp
+
+lemma receivertransition_null: 
+  "receiverTransition (State s, [\<guillemotright>dr \<mapsto> null])
+     = (State s ,(tsynbNull ar\<guillemotright>) \<uplus> (tsynbNull o\<guillemotright>))"
+  by (cases s, simp_all)
+
+lemma createaroutput_createooutput_ubclunion_ubdom: 
+  "ubDom\<cdot>((createArOutput a) \<uplus> (createOOutput b)) = {ar\<guillemotright>, o\<guillemotright>}"
+  by (metis createArOutput.rep_eq createOOutput.rep_eq dom_empty dom_fun_upd insert_is_Un 
+      option.simps(3) ubclUnion_ubundle_def ubdom_insert ubunionDom)
+
+lemma createaroutput_tsynbnullo_ubclunion_ubdom: 
+  "ubDom\<cdot>((createArOutput a) \<uplus> (tsynbNull o\<guillemotright>)) = {ar\<guillemotright>, o\<guillemotright>}"
+  by (metis createArOutput.rep_eq dom_fun_upd insert_is_Un option.simps(3) tsynbNull.rep_eq 
+      tsynbnull_ubdom ubclUnion_ubundle_def ubdom_insert ubunionDom)
+
+lemma tsynbnullar_tsynbnullo_ubclunion_ubdom:
+  "ubDom\<cdot>(tsynbNull ar\<guillemotright> \<uplus> tsynbNull o\<guillemotright>) = {ar\<guillemotright>, o\<guillemotright>}"
+  by (metis insert_is_Un tsynbnull_ubdom ubclUnion_ubundle_def ubunionDom)
+
+lemma receivertransition_ubdom:
+  assumes dom_f: "dom f = {\<guillemotright>dr}" 
+    and ubelemwell_f: "sbElemWell f"
+  shows "ubDom\<cdot>(snd (receiverTransition (s, f))) = {ar\<guillemotright>, o\<guillemotright>}"
+  proof -
+    obtain inp where f_def: "f = [\<guillemotright>dr \<mapsto> inp]"
+      using dom_eq_singleton_conv dom_f by force
+    obtain st where s_def: "s = State st"
+      using ReceiverAutomaton.getSubState.cases by blast
+    have "ubDom\<cdot>(snd (receiverTransitionH (ReceiverState.State st, inp))) = {ar\<guillemotright>, o\<guillemotright>}"
+      proof (cases inp)
+        case (Msg i)
+          hence "i \<in> ctype \<guillemotright>dr"
+          using assms
+          by (simp add: dom_f f_def sbElemWell_def ctype_tsyn_def image_def)
+        then obtain a where i_def: "i = A a"
+          by auto
+        then show ?thesis
+          proof (cases st)
+            case Rf
+            then show ?thesis
+              by (simp add: Msg createaroutput_createooutput_ubclunion_ubdom 
+                  createaroutput_tsynbnullo_ubclunion_ubdom i_def)
+          next
+            case Rt
+            then show ?thesis
+              by (simp add: Msg createaroutput_createooutput_ubclunion_ubdom 
+                  createaroutput_tsynbnullo_ubclunion_ubdom i_def)
+          qed
+      next
+        case null
+        then show ?thesis
+          using receivertransition_null tsynbnullar_tsynbnullo_ubclunion_ubdom by auto
+      qed
+    then show "ubDom\<cdot>(snd (receiverTransition (s, f))) =  {ar\<guillemotright>, o\<guillemotright>}"
+      by (simp add: f_def s_def)
+  qed
+
+lemma receivertransition_automaton_well:
+  "automaton_well (receiverTransition, ReceiverState.State Rt, tsynbNull ar\<guillemotright> \<uplus> tsynbNull o\<guillemotright>, 
+                   {\<guillemotright>dr}, {ar\<guillemotright>, o\<guillemotright>})"
+  using receivertransition_ubdom by auto
+
+(* ----------------------------------------------------------------------- *)
   section {* Automaton Receiver SPF Lemmata *}
 (* ----------------------------------------------------------------------- *)
 
