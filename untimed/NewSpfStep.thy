@@ -28,13 +28,48 @@ definition spfStep :: "channel set \<Rightarrow> channel set \<Rightarrow> ('m::
                                               \<leadsto> (ufRestrict In Out\<cdot>(h (Abs_sbElem(inv convDiscrUp (sbHdElem\<cdot>sb)))) \<rightleftharpoons> (sbRt\<cdot>sb)))"
 
 
+lemma spfStep_innerCont:"cont (\<lambda>  sb.  (ubDom\<cdot>sb = In \<and> sbHdElemWell sb) 
+                                              \<leadsto> (ufRestrict In Out\<cdot>(h (Abs_sbElem(inv convDiscrUp (sbHdElem\<cdot>sb)))) \<rightleftharpoons> (sbRt\<cdot>sb)))"
+  sorry
+
+lemma spfStep_innerWell:"ufWell (\<Lambda>  sb.  (ubDom\<cdot>sb = In \<and> sbHdElemWell sb) 
+                                              \<leadsto> (ufRestrict In Out\<cdot>(h (Abs_sbElem(inv convDiscrUp (sbHdElem\<cdot>sb)))) \<rightleftharpoons> (sbRt\<cdot>sb))) "
+  sorry
+
+
+
 lemma "cont (\<lambda> h. Abs_ufun (\<Lambda>  sb.  (ubDom\<cdot>sb = In \<and> sbHdElemWell sb) 
                                               \<leadsto> (ufRestrict In Out\<cdot>(h (Abs_sbElem(inv convDiscrUp (sbHdElem\<cdot>sb)))) \<rightleftharpoons> (sbRt\<cdot>sb))))"
   oops
 
 lemma "inj (\<lambda> h. Abs_ufun (\<Lambda>  sb.  (ubDom\<cdot>sb = In \<and> sbHdElemWell sb) 
-                                              \<leadsto> (ufRestrict In Out\<cdot>(h (Abs_sbElem(inv convDiscrUp (sbHdElem\<cdot>sb)))) \<rightleftharpoons> (sbRt\<cdot>sb))))"
-  oops
+                                              \<leadsto> (ufRestrict In Out\<cdot>(h (Abs_sbElem(inv convDiscrUp (sbHdElem\<cdot>sb)))) \<rightleftharpoons> (sbRt\<cdot>sb))))" (*h must map to spf with dom = In and Range = Out and not map to ufLeast In Out*)
+proof(rule injI)
+  fix x y::"'a sbElem \<Rightarrow> ('a stream\<^sup>\<Omega>) ufun"
+  assume a1:" Abs_cufun (\<lambda>sb. (ubDom\<cdot>sb = In \<and> sbHdElemWell sb)\<leadsto>ufRestrict In Out\<cdot>(x (Abs_sbElem (inv convDiscrUp (sbHdElem\<cdot>sb)))) \<rightleftharpoons> sbRt\<cdot>sb) =
+              Abs_cufun (\<lambda>sb. (ubDom\<cdot>sb = In \<and> sbHdElemWell sb)\<leadsto>ufRestrict In Out\<cdot>(y (Abs_sbElem (inv convDiscrUp (sbHdElem\<cdot>sb)))) \<rightleftharpoons> sbRt\<cdot>sb)"
+  then have "\<forall>insb. Abs_cufun (\<lambda>sb. (ubDom\<cdot>sb = In \<and> sbHdElemWell sb)\<leadsto>ufRestrict In Out\<cdot>(x (Abs_sbElem (inv convDiscrUp (sbHdElem\<cdot>sb)))) \<rightleftharpoons> sbRt\<cdot>sb) \<rightleftharpoons> insb =
+              Abs_cufun (\<lambda>sb. (ubDom\<cdot>sb = In \<and> sbHdElemWell sb)\<leadsto>ufRestrict In Out\<cdot>(y (Abs_sbElem (inv convDiscrUp (sbHdElem\<cdot>sb)))) \<rightleftharpoons> sbRt\<cdot>sb) \<rightleftharpoons> insb"
+    by simp
+  then have a2:"\<forall> insb. (\<lambda>sb. (ubDom\<cdot>sb = In \<and> sbHdElemWell sb)\<leadsto>ufRestrict In Out\<cdot>(x (Abs_sbElem (inv convDiscrUp (sbHdElem\<cdot>sb)))) \<rightleftharpoons> sbRt\<cdot>sb) insb =
+           (\<lambda>sb. (ubDom\<cdot>sb = In \<and> sbHdElemWell sb)\<leadsto>ufRestrict In Out\<cdot>(y (Abs_sbElem (inv convDiscrUp (sbHdElem\<cdot>sb)))) \<rightleftharpoons> sbRt\<cdot>sb) insb"
+    apply(simp add: spfStep_innerWell spfStep_innerCont)
+    by (smt ufRestrict_dom ufapplyin_eq_pre)
+  have "(\<forall>elem. (x elem) \<noteq> ufLeast In Out \<and> ufDom\<cdot>(x elem) = In \<and> ufRan\<cdot>(x elem) = Out)"
+    sorry
+  then have "(\<lambda>sb. (ubDom\<cdot>sb = In \<and> sbHdElemWell sb)\<leadsto>ufRestrict In Out\<cdot>(x (Abs_sbElem (inv convDiscrUp (sbHdElem\<cdot>sb)))) \<rightleftharpoons> sbRt\<cdot>sb) =
+             (\<lambda>sb. (ubDom\<cdot>sb = In \<and> sbHdElemWell sb)\<leadsto>(x (Abs_sbElem (inv convDiscrUp (sbHdElem\<cdot>sb)))) \<rightleftharpoons> sbRt\<cdot>sb)"
+    by auto
+  moreover have "(\<lambda>sb. (ubDom\<cdot>sb = In \<and> sbHdElemWell sb)\<leadsto>ufRestrict In Out\<cdot>(y (Abs_sbElem (inv convDiscrUp (sbHdElem\<cdot>sb)))) \<rightleftharpoons> sbRt\<cdot>sb) =
+                 (\<lambda>sb. (ubDom\<cdot>sb = In \<and> sbHdElemWell sb)\<leadsto>(y (Abs_sbElem (inv convDiscrUp (sbHdElem\<cdot>sb)))) \<rightleftharpoons> sbRt\<cdot>sb)"
+    sorry
+  ultimately have "(\<lambda>sb. (ubDom\<cdot>sb = In \<and> sbHdElemWell sb)\<leadsto>(x (Abs_sbElem (inv convDiscrUp (sbHdElem\<cdot>sb)))) \<rightleftharpoons> sbRt\<cdot>sb) = 
+                   (\<lambda>sb. (ubDom\<cdot>sb = In \<and> sbHdElemWell sb)\<leadsto>(y (Abs_sbElem (inv convDiscrUp (sbHdElem\<cdot>sb)))) \<rightleftharpoons> sbRt\<cdot>sb)"
+    sorry
+  then show "x = y"
+    sorry
+qed
+  
 
 lemma spfstep_insert: "spfStep In Out\<cdot>h= Abs_ufun (\<Lambda>  sb.  (ubDom\<cdot>sb = In \<and> sbHdElemWell sb) 
                                               \<leadsto> (ufRestrict In Out\<cdot>(h (Abs_sbElem(inv convDiscrUp (sbHdElem\<cdot>sb)))) \<rightleftharpoons> (sbRt\<cdot>sb)))"
@@ -46,7 +81,7 @@ lemma spfstep_dom[simp]:s"ufDom\<cdot>(spfStep cIn cOut\<cdot>f) = cIn"
 lemma spfstep_ran [simp]:"ufRan\<cdot>(spfStep cIn cOut\<cdot>f) = cOut"
   oops 
     
-lemma spfstep_step: assumes "ubDom\<cdot>sb = In" and "\<forall>c\<in>In. sb . c \<noteq> \<bottom>"  shows "spfStep In Out\<cdot>f\<rightleftharpoons>sb = (f (Abs_sbElem(inv convDiscrUp(sbHdElem\<cdot>sb))))\<rightleftharpoons>sb"
+lemma spfstep_step: assumes "ubDom\<cdot>sb = In" and "\<forall>c\<in>In. sb . c \<noteq> \<bottom>"  shows "spfStep In Out\<cdot>f\<rightleftharpoons>sb = (f (Abs_sbElem(inv convDiscrUp(sbHdElem\<cdot>sb))))\<rightleftharpoons>(sbRt\<cdot>sb)"
   oops
 
 end
