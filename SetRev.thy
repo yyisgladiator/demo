@@ -21,7 +21,10 @@ section \<open>Definitions\<close>
 
 definition setrevFilter::  "('m \<Rightarrow> bool) \<Rightarrow> 'm set rev \<rightarrow> 'm set rev"
   where  "setrevFilter P \<equiv> \<Lambda> S. Rev (Set.filter P (inv Rev S))"
-    
+
+definition setrevInter:: "'m set rev \<rightarrow> 'm set rev \<rightarrow> 'm set rev" where
+"setrevInter \<equiv> \<Lambda> S1 S2. Rev (inv Rev S1 \<inter> inv Rev S2)"
+
 definition setify::"('m \<Rightarrow> ('n set rev)) \<rightarrow> ('m \<Rightarrow> 'n) set rev" where
 "setify \<equiv> \<Lambda> f. Rev {g. \<forall>m. g m \<in> (inv Rev(f m))}"
 
@@ -153,6 +156,45 @@ lemma setrevfilter_reversed: "\<And>x. P x \<and> x \<in> inv Rev A \<Longrighta
 lemma setrevFilter_gdw: "\<And>x. x \<in> (inv Rev (setrevFilter P\<cdot>A)) \<longleftrightarrow> P x \<and> x \<in> inv Rev A"
   by (meson setrevfilter_condition setrevfilter_included setrevfilter_reversed)
 
+lemma setrevfilter_insert: "setrevFilter P\<cdot>S = Rev (Set.filter P (inv Rev S))"
+  by (simp add: setrevFilter_def)
+
+(*inter*)
+
+lemma sr_inter_as_filter1: "(\<lambda> S1. Rev (inv Rev S1 \<inter> inv Rev S2)) =
+  (\<lambda> S1. Rev (Set.filter (\<lambda>a. a \<in> inv Rev S2) (inv Rev S1)))"
+  by (metis (no_types) Int_def Set.filter_def inf_commute)
+
+lemma sr_inter_as_filter2: "(\<lambda> S2. Rev (inv Rev S1 \<inter> inv Rev S2)) =
+  (\<lambda> S2. Rev (Set.filter (\<lambda>a. a \<in> inv Rev S1) (inv Rev S2)))"
+  by (metis (no_types) Int_def Set.filter_def inf_commute)
+
+lemma sr_UIC_arg1: "cont (\<lambda> S1. Rev (inv Rev S1 \<inter> inv Rev S2))"
+  by (simp add: sr_inter_as_filter1)
+
+lemma setrevInter_cont1[simp]: "cont (\<lambda> S2. Rev (inv Rev S1 \<inter> inv Rev S2))"
+  by (simp add: sr_inter_as_filter2)
+
+lemma setrevInter_cont2[simp]: "cont (\<lambda> S1. \<Lambda> S2. Rev (inv Rev S1 \<inter> inv Rev S2))"
+  apply (rule cont2cont_LAM)
+  apply simp
+  by (simp add: sr_UIC_arg1)
+
+lemma setrevinter_insert: "setrevInter\<cdot>S1\<cdot>S2 = Rev (inv Rev S1 \<inter> inv Rev S2)"
+  by (simp add: setrevInter_def)
+
+lemma setrevInter_sym: "(\<lambda>A B. Rev((inv Rev A) \<inter> (inv Rev B))) =
+                        (\<lambda>A B. Rev((inv Rev B) \<inter> (inv Rev A)))"
+  by (simp add: inf_commute)
+
+lemma setrevInter_sym2: "\<And>A B. setrevInter\<cdot>A\<cdot>B = setrevInter\<cdot>B\<cdot>A"
+  proof -
+    fix A :: "'a set rev" and B :: "'a set rev"
+    have "\<And>r. (\<Lambda> ra. Rev ((inv Rev r::'a set) \<inter> inv Rev ra)) = setrevInter\<cdot>r"
+      by (simp add: setrevInter_def)
+    then show "setrevInter\<cdot>A\<cdot>B = setrevInter\<cdot>B\<cdot>A"
+      by (metis (no_types) beta_cfun setrevInter_cont1 setrevInter_sym)
+  qed
 
 subsection \<open>setify\<close>
 
