@@ -528,10 +528,7 @@ lemma uspecLeast_union: "uspecUnion\<cdot>f\<cdot>(uspecLeast (uspecDom\<cdot>f)
   apply auto
   apply(metis (mono_tags, lifting) CollectI rep_abs_rev_simp uspecLeast_def uspecLeast_well uspecUnion_setrev_condition uspec_allDom uspec_allRan uspecrevset_insert)
   apply(simp add: uspecLeast_dom uspecLeast_ran uspecUnion_setrev_condition uspec_allDom uspec_allRan)
-  apply(rule uspecUnion_consistent)
-  apply(simp add: uspecLeast_consistent)
-  apply(simp add: uspecLeast_dom)
-  by(simp add: uspecLeast_ran)
+  by (simp add: uspecLeast_consistent uspecLeast_dom uspecLeast_ran uspecUnion_consistent2)
 
 lemma uspecLeast_union_consistent: "uspecIsConsistent(uspecUnion\<cdot>f\<cdot>(uspecLeast (uspecDom\<cdot>f) (uspecRan\<cdot>f)))"
   by(simp add: uspecLeast_union uspecLeast_consistent)
