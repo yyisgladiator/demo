@@ -248,11 +248,11 @@ lemma tsynabs_insert: "tsynAbs\<cdot>s = smap tsynAbsElem\<cdot>(sfilter {e. e \
   by (simp add: tsynAbs_def)
 
 text {* @{term tsynAbs} test on infinite stream. *}
-lemma tsynabs_test_infstream: "tsynAbs\<cdot>((<[Msg 1, Msg 2, null, Msg 3]>)\<infinity>) = (<[1,2,3]>)\<infinity>"
+lemma tsynabs_test_infstream: "tsynAbs\<cdot>((<[Msg 1, Msg 2, null, Msg 3]>)\<infinity>) = (<[1, 2, 3]>)\<infinity>"
   by (simp add: tsynabs_insert)
 
 text {* @{term tsynAbs} test on finite stream. *}
-lemma tsynabs_test_finstream: "tsynAbs\<cdot>(<[Msg 1, Msg 2, null, null, Msg 1, null]>) = <[1,2,1]>"
+lemma tsynabs_test_finstream: "tsynAbs\<cdot>(<[Msg 1, Msg 2, null, null, Msg 1, null]>) = <[1, 2, 1]>"
   by (simp add: tsynabs_insert)
 
 text {* @{term tsynAbs} maps the empty stream on the empty stream. *}
@@ -292,7 +292,7 @@ lemma tsynMap_test_infstream: "tsynMap (plus 1)\<cdot>((<[Msg 3, Msg 4, Msg 3]>)
 text {* @{term tsynMap} test on finite stream. *}
 lemma tsynMap_test_finstream: "tsynMap (plus 1)\<cdot>(<[Msg 1, Msg 2, Msg 1, null]>) 
   = <[Msg 2, Msg 3, Msg 2, null]>"
-  by (simp add: tsynMap_def)
+  by (simp add: tsynmap_insert)
 
 text {* @{term tsynMap} is strict. *}
 lemma tsynmap_strict [simp]: "tsynMap f\<cdot>\<epsilon> = \<epsilon>"
@@ -309,7 +309,7 @@ lemma tsynmap_sconc_null: "tsynMap f\<cdot>(\<up>null \<bullet> s) = \<up>null \
 text {* @{term tsynMap} of the concatenation of two streams equals the concatenation of 
         @{term tsynMap} of both streams. *}
 lemma tsynmap_sconc: "tsynMap f\<cdot>(a1 \<bullet> a2) = tsynMap f\<cdot>a1 \<bullet> tsynMap f\<cdot>a2"
-  by (simp add: smap_split tsynMap_def)
+  by (simp add: smap_split tsynmap_insert)
 
 text {* @{term tsynMap} leaves the length of a stream unchanged. *}
 lemma tsynmap_slen: "#(tsynMap f\<cdot>s) = #s"
@@ -379,7 +379,7 @@ lemma tsynprojsnd_strict [simp]: "tsynProjSnd\<cdot>\<epsilon> = \<epsilon>"
   by (simp add: tsynprojsnd_insert)
 
 text {* @{term tsynProjSnd} distributes over concatenation. *}
-lemma tsynprojsnd_sconc_msg: assumes "#as < \<infinity>" 
+lemma tsynprojsnd_sconc_msg: 
   shows "tsynProjSnd\<cdot>(\<up>(Msg (a, b)) \<bullet> as) = \<up>(Msg b) \<bullet> (tsynProjSnd\<cdot>as)"
   by (simp add: tsynprojsnd_insert)
  
@@ -521,7 +521,7 @@ lemma tsynscanl_slen: "#(tsynScanl f i\<cdot>s) = #s"
   by (simp add: tsynscanl_insert tsynscanlext_slen)
   
 (* ----------------------------------------------------------------------- *)
-  section {* tsynDropWhile *}
+  subsection {* tsynDropWhile *}
 (* ----------------------------------------------------------------------- *)
 
 text {* @{term tsynDropWhile} insertion lemma. *}
