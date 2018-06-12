@@ -350,6 +350,11 @@ lemma sbElemWellI2: assumes "sbElemWell f"
                         and "(f \<rightharpoonup> c) = a"
                       shows "a \<in> ctype c"
   using assms(1) assms(2) assms(3) sbElemWellI by auto
+    
+lemma sbElemWellEx:"\<exists>x::channel \<Rightarrow> 'm option. sbElemWell x"
+  apply(simp add: sbElemWell_def)
+  by fastforce
+
 
 (* ----------------------------------------------------------------------- *)
   subsection \<open>sbMapStream\<close>
