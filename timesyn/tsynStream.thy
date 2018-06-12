@@ -141,13 +141,15 @@ text {* @{term tsynScanl}: Apply a function elementwise to the input stream. Beh
   the function. For the first computation an initial value is provided. *}
 definition tsynScanl :: "('b \<Rightarrow> 'a \<Rightarrow> 'b) \<Rightarrow> 'b \<Rightarrow> 'a tsyn stream \<rightarrow> 'b tsyn stream" where
   "tsynScanl f i = tsynScanlExt (\<lambda>a b. (f a b, f a b)) i"
-  
-fun tsynDropWhile_h::"('a tsyn \<Rightarrow> bool) \<Rightarrow> bool \<Rightarrow> 'a tsyn \<Rightarrow> ('a tsyn \<times> bool)" where
+
+(* ToDo: add description. *)
+
+fun tsynDropWhile_h :: "('a \<Rightarrow> bool) \<Rightarrow> bool \<Rightarrow> 'a tsyn \<Rightarrow> ('a tsyn \<times> bool)" where
   "tsynDropWhile_h f x null = (null, x)"|
-  "tsynDropWhile_h f True x = (if f x then (null, True) else (x, False))"|
-  "tsynDropWhile_h f False x = (x, False)"
+  "tsynDropWhile_h f True (Msg x) = (if f x then (null, True) else ((Msg x), False))" |
+  "tsynDropWhile_h f False (Msg x) = ((Msg x), False)"
   
-definition tsynDropWhile :: "('a tsyn \<Rightarrow> bool) \<Rightarrow> 'a tsyn stream \<rightarrow> 'a tsyn stream" where
+definition tsynDropWhile :: "('a \<Rightarrow> bool) \<Rightarrow> 'a tsyn stream \<rightarrow> 'a tsyn stream" where
   "tsynDropWhile f =  sscanlA (tsynDropWhile_h f) True"
 
 (* ----------------------------------------------------------------------- *)
@@ -527,92 +529,68 @@ lemma tsyndropwhile_insert:"tsynDropWhile f\<cdot>s = sscanlA (tsynDropWhile_h f
   by(simp add: tsynDropWhile_def)
     
 text {* @{term tsynDropWhile} is strict. *}
-lemma strict_tsyndropwhile[simp]: "tsynDropWhile f\<cdot>\<epsilon> = \<epsilon>"
+lemma strict_tsyndropwhile [simp]: "tsynDropWhile f\<cdot>\<epsilon> = \<epsilon>"
   by (simp add: tsyndropwhile_insert)
 
-text {* if the head a passes the predicate f, then the head of the result of @{term tsynDropWhile} 
-     will be \<up>null*}
-lemma tsyndropwhile_t: assumes "f a"  shows "tsynDropWhile f\<cdot>(\<up>a \<bullet> s) = \<up>null \<bullet> tsynDropWhile f\<cdot>s"
-  apply (simp add: tsyndropwhile_insert)
-  by (metis (no_types, hide_lams) assms fst_conv snd_conv tsyn.distinct(1) tsynDropWhile_h.elims)
-
-text {* if the head is null, then the head of the result of @{term tsynDropWhile} will be \<up>null*}    
-lemma tsyndropwhile_null: "tsynDropWhile f\<cdot>(\<up>null \<bullet> s) = \<up>null \<bullet> tsynDropWhile f\<cdot>s"
-  by (simp add: tsyndropwhile_insert)
-
-text {* helplemma for tsyndropwhile_f*}    
-lemma tsyndropwhile_f_h:"t = False \<Longrightarrow> sscanlA (tsynDropWhile_h f) (t)\<cdot>s = s" 
-  proof(induction s arbitrary: f t rule: ind)
-    case 1
-    then show ?case by simp
-  next
-    case 2
-    then show ?case by simp
-  next
-    case (3 a s)
-      assume a1:"(\<And>f a. a = False \<Longrightarrow> sscanlA (tsynDropWhile_h f) a\<cdot>s = s)"
-      assume a2:"t = False"
-      have h0:"sscanlA (tsynDropWhile_h f) t\<cdot>(\<up>a \<bullet> s) =  \<up>(fst (tsynDropWhile_h f t a)) \<bullet> sscanlA (tsynDropWhile_h f) (snd (tsynDropWhile_h f t a))\<cdot>s"
-        by simp
-      have h1:"\<up>(fst (tsynDropWhile_h f t a)) = \<up>a"
-        by (metis a2 fst_conv tsynDropWhile_h.elims tsynDropWhile_h.simps(1))
-      have h2:"(snd (tsynDropWhile_h f t a)) = t"
-        by (metis a2 snd_conv tsynDropWhile_h.elims)
-      then show ?case
-        using a1 a2 h1 by auto
-  qed
+text {* If the head passes the predicate f, then the head of the result of @{term tsynDropWhile} 
+        will be null. *}
+lemma tsyndropwhile_sconc_msg_t: 
+  assumes "f (invMsg a)"
+  shows "tsynDropWhile f\<cdot>(\<up>a \<bullet> s) = \<up>null \<bullet> tsynDropWhile f\<cdot>s"
+  using assms
+  by (cases a, simp_all add: tsyndropwhile_insert)
  
-text {* if the head a fails the predicate f and is not null, then the head of the result of 
-     @{term tsynDropWhile} will start with \<up>a*}
-lemma tsyndropwhile_f: assumes "\<not>f a" and " a \<noteq> null" shows" tsynDropWhile f\<cdot>(\<up>a \<bullet> s) = \<up>a \<bullet> s"
-  apply (simp add: tsyndropwhile_insert)
-  by (metis assms(1) assms(2) fst_conv snd_conv tsyn.exhaust tsynDropWhile_h.simps(2) tsyndropwhile_f_h)
+text {* If the head fails the predicate f and is not null, then the head of the result of 
+        @{term tsynDropWhile} will start with the head of the input. *}
+lemma tsyndropwhile_sconc_msg_f:
+  assumes "\<not>f (invMsg a)" and "a \<noteq> null" 
+  shows" tsynDropWhile f\<cdot>(\<up>a \<bullet> s) = \<up>a \<bullet> s"
+  using assms
+  apply (cases a, simp_all add: tsyndropwhile_insert)
+  apply (induction s arbitrary: f a rule: tsyn_ind, simp_all)
+  using inject_scons by fastforce+
+
+text {* If the head is null, then the head of the result of @{term tsynDropWhile} will be null. *}    
+lemma tsyndropwhile_sconc_null: "tsynDropWhile f\<cdot>(\<up>null \<bullet> s) = \<up>null \<bullet> tsynDropWhile f\<cdot>s"
+  by (simp add: tsyndropwhile_insert)
     
-text {*  if the only element in a singleton stream passes the predicate f, then 
-     @{term tsynDropWhile} will produce the singleton stream \<up>null *}
-lemma tsyndropwhile_singleton_t: assumes "f a" shows " tsynDropWhile f\<cdot>(\<up>a) = \<up>null"
-  apply (simp add: tsyndropwhile_insert)
-  by (metis (no_types, hide_lams) assms fst_conv tsyn.distinct(1) tsynDropWhile_h.elims)
+text {* If the only element in a singleton stream passes the predicate f, then @{term tsynDropWhile} 
+        will produce the singleton stream with null. *}
+lemma tsyndropwhile_singleton_t: 
+  assumes "f (invMsg a)" shows "tsynDropWhile f\<cdot>(\<up>a) = \<up>null"
+  using assms
+  by (cases a, simp_all add: tsyndropwhile_insert)
  
-text {*  if the only element in a singleton stream passes is \<up>null, then 
-     @{term tsynDropWhile} will produce the singleton stream \<up>null *}
+text {* If the only element in a singleton stream passes is null, then @{term tsynDropWhile} 
+        will produce the singleton stream with null. *}
 lemma tsyndropwhile_singleton_null: "tsynDropWhile f\<cdot>(\<up>null) = \<up>null"
   by (simp add: tsyndropwhile_insert)
 
-text {*  if the only element in a singleton stream fails the predicate f, then 
-     @{term tsynDropWhile} will be a no-op *}    
-lemma tsyndropwhile_singleton_f: assumes"\<not>f a" shows "tsynDropWhile f\<cdot>(\<up>a) = \<up>a"
-  by (metis assms(1) lscons_conv sup'_def tsyndropwhile_f tsyndropwhile_singleton_null)
+text {* If the only element in a singleton stream fails the predicate f, then @{term tsynDropWhile} 
+        does not change the stream. *}    
+lemma tsyndropwhile_singleton_f: 
+  assumes"\<not>f (invMsg a)" shows "tsynDropWhile f\<cdot>(\<up>a) = \<up>a"
+  using assms
+  by (cases a, simp_all add: tsyndropwhile_insert)
   
-text {* @{term tsynDropWhile} is idempotent *}    
-lemma tsyndropwhile_idem: "tsynDropWhile f\<cdot>(tsynDropWhile f\<cdot>x) = tsynDropWhile f\<cdot>x"
-  apply (rule tsyn_ind [of _ x],simp_all)
-  apply (metis tsyndropwhile_f tsyndropwhile_null tsyndropwhile_t)
-  by (simp add: tsyndropwhile_null)
+text {* @{term tsynDropWhile} is idempotent. *}    
+lemma tsyndropwhile_idem: "tsynDropWhile f\<cdot>(tsynDropWhile f\<cdot>s) = tsynDropWhile f\<cdot>s"
+  apply (induction s arbitrary: f rule: tsyn_ind, simp_all)
+  apply (metis tsyndropwhile_sconc_msg_f tsyndropwhile_sconc_msg_t tsyndropwhile_sconc_null)
+  by (simp add: tsyndropwhile_sconc_null)
 
 text {* @{term tsynDropWhile} test on finite stream. *}    
-lemma test_tsyndropwhile: "tsynDropWhile (\<lambda> a. \<M>\<inverse> a \<noteq> (2::nat))\<cdot>(<[Msg 1,Msg 1,-,Msg 1, Msg 2, Msg 1]>) = <[-,-,-,-,Msg 2, Msg 1]>"
+lemma tsyndropwhile_test_finstream: 
+  "tsynDropWhile (\<lambda> a. a \<noteq> (2 :: nat))\<cdot>(<[Msg 1, Msg 1, -, Msg 1, Msg 2, Msg 1]>) 
+     = <[-, -, -, -, Msg 2, Msg 1]>"
   by (simp add: tsyndropwhile_insert)
 
 text {* @{term tsynDropWhile} test on infinite stream. *}
-lemma test2_tsyndropwhile: "tsynDropWhile (\<lambda> a. \<M>\<inverse> a \<noteq> (2::nat))\<cdot>(\<up>(Msg 2)\<infinity>) = (\<up>(Msg 2)\<infinity>)"
-proof(simp add: tsyndropwhile_insert)
-  have f1: "\<And>p t. p (t::nat tsyn) \<or> t = - \<or> sscanlA (tsynDropWhile_h p) True\<cdot>\<up>t\<infinity> = \<up>t\<infinity>"
-    by (metis (no_types) sinftimes_unfold tsynDropWhile_def tsyndropwhile_f)
-  have "\<M>\<inverse> \<M> 2::nat = 2 \<and> \<M> 2::nat \<noteq> -"
-    by (meson inverseMsg.simps(2) tsyn.distinct(1))
-  then show "sscanlA (tsynDropWhile_h (\<lambda>t. (\<M>\<inverse> t::nat) \<noteq> 2)) True\<cdot> \<up>(\<M> 2)\<infinity> = \<up>(\<M> 2)\<infinity>"
-    using f1 by (metis (full_types))
-qed
-  
-text {* @{term tsynDropWhile} test on infinite stream. *}
-lemma test3_tsyndropwhile: "tsynDropWhile (\<lambda> a. \<M>\<inverse> a \<noteq> (2::nat))\<cdot>(\<up>(Msg 1)\<infinity>) = (\<up>(null)\<infinity>)"
-proof(simp add: tsyndropwhile_insert)
-  have "\<And>p t. \<not> p (t::nat tsyn) \<or> sscanlA (tsynDropWhile_h p) True\<cdot>\<up>t\<infinity> = \<up>-\<infinity>"
-    by (metis s2sinftimes sinftimes_unfold tsynDropWhile_def tsyndropwhile_t)
-  then show "sscanlA (tsynDropWhile_h (\<lambda>t. \<M>\<inverse> t \<noteq> 2)) True\<cdot> \<up>(\<M> 1::nat)\<infinity> = \<up>-\<infinity>"
-    by force
-qed
+lemma tsyndropwhile_test_infstream: 
+  "tsynDropWhile (\<lambda> a. a \<noteq> (2 :: nat))\<cdot>((<[Msg 1, -, Msg 2]>)\<infinity>) 
+     = <[-, -]> \<bullet> ((<[Msg 2, -, Msg 1]>)\<infinity>)"
+  apply (simp add: tsyndropwhile_insert)
+  oops
   
 (* ----------------------------------------------------------------------- *)
   section {* tsynSum - CaseStudy *}
