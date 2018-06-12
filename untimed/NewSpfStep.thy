@@ -12,13 +12,13 @@ typedef 'm sbElem = "{x :: (channel\<rightharpoonup>'m::message) . sbElemWell x}
    by(simp add: sbElemWellEx)
   
 definition sbHdElemWell::"'m::message SB \<Rightarrow> bool" where
-"sbHdElemWell sb = (\<forall>c \<in> ubDom\<cdot>(sb). (sbHdElem\<cdot>sb)\<rightharpoonup> c \<noteq> \<bottom>)"  
+"sbHdElemWell sb = (\<forall>c \<in> ubDom\<cdot>(sb). sb. c \<noteq> \<epsilon>)"  
 
 lemma sbHdElemWell_inv_ex:"sbHdElemWell sb \<Longrightarrow> \<exists>x. convDiscrUp x = (sbHdElem\<cdot>sb)"
-  using convdiscrup_inv_eq sbHdElemWell_def sbHdElem_dom by blast
+  using convdiscrup_inv_eq sbHdElemWell_def sbHdElem_dom sbHdElem_channel by blast
 
 lemma sbHdElemWell_invConvDiscrUp:"sbHdElemWell sb \<Longrightarrow> \<forall>c\<in>ubDom\<cdot>(sb).((inv convDiscrUp) (sbHdElem\<cdot>sb)) \<rightharpoonup> c = inv Discr (inv Iup ((sbHdElem\<cdot>sb) \<rightharpoonup> c))"
-  by (simp add: convDiscrUp_inv_subst sbHdElemWell_def)
+  by (simp add: convDiscrUp_inv_subst sbHdElemWell_def sbHdElem_channel)
      
 (* updis bijectiv *)
 thm inv_def
@@ -34,6 +34,19 @@ lemma "cont (\<lambda> h. Abs_ufun (\<Lambda>  sb.  (ubDom\<cdot>sb = In \<and> 
 
 lemma "inj (\<lambda> h. Abs_ufun (\<Lambda>  sb.  (ubDom\<cdot>sb = In \<and> sbHdElemWell sb) 
                                               \<leadsto> (ufRestrict In Out\<cdot>(h (Abs_sbElem(inv convDiscrUp (sbHdElem\<cdot>sb)))) \<rightleftharpoons> (sbRt\<cdot>sb))))"
+  oops
+
+lemma spfstep_insert: "spfStep In Out\<cdot>h= Abs_ufun (\<Lambda>  sb.  (ubDom\<cdot>sb = In \<and> sbHdElemWell sb) 
+                                              \<leadsto> (ufRestrict In Out\<cdot>(h (Abs_sbElem(inv convDiscrUp (sbHdElem\<cdot>sb)))) \<rightleftharpoons> (sbRt\<cdot>sb)))"
+  oops
+
+lemma spfstep_dom[simp]:s"ufDom\<cdot>(spfStep cIn cOut\<cdot>f) = cIn"
+  oops
+    
+lemma spfstep_ran [simp]:"ufRan\<cdot>(spfStep cIn cOut\<cdot>f) = cOut"
+  oops 
+    
+lemma spfstep_step: assumes "ubDom\<cdot>sb = In" and "\<forall>c\<in>In. sb . c \<noteq> \<bottom>"  shows "spfStep In Out\<cdot>f\<rightleftharpoons>sb = (f (Abs_sbElem(inv convDiscrUp(sbHdElem\<cdot>sb))))\<rightleftharpoons>sb"
   oops
 
 end
