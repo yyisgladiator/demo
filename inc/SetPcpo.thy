@@ -206,6 +206,11 @@ qed
 instance set :: (type) uprevcpo
   apply(intro_classes)
   by (meson UNIV_I Union_is_lub is_lub_def is_ub_def)
-
-
+    
+lemma union_cont:"cont (\<lambda>S2. union S1 S2)"
+  apply(rule contI)
+  unfolding  SetPcpo.less_set_def
+  unfolding lub_eq_Union 
+  by (metis (no_types, lifting) UN_simps(3) Union_is_lub empty_not_UNIV lub_eq lub_eqI)
+                           
 end
