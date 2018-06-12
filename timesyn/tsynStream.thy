@@ -99,7 +99,7 @@ text{* @{term tsynProjFst}: Access the first stream of two zipped streams .*}
 definition tsynProjFst :: "('a \<times> 'b) tsyn stream \<rightarrow> 'a tsyn stream" where
 "tsynProjFst = smap tsynFst"
 
-text{* @{term tsynProjSnd}: Access the first stream of two zipped streams. *}
+text{* @{term tsynProjSnd}: Access the second stream of two zipped streams. *}
 definition tsynProjSnd :: "('a \<times> 'b) tsyn stream \<rightarrow> 'b tsyn stream" where
 "tsynProjSnd = smap tsynSnd"
 
@@ -141,6 +141,16 @@ text {* @{term tsynScanl}: Apply a function elementwise to the input stream. Beh
   the function. For the first computation an initial value is provided. *}
 definition tsynScanl :: "('b \<Rightarrow> 'a \<Rightarrow> 'b) \<Rightarrow> 'b \<Rightarrow> 'a tsyn stream \<rightarrow> 'b tsyn stream" where
   "tsynScanl f i = tsynScanlExt (\<lambda>a b. (f a b, f a b)) i"
+
+(* ToDo: add description. *)
+
+fun tsynDropWhile_h :: "('a \<Rightarrow> bool) \<Rightarrow> bool \<Rightarrow> 'a tsyn \<Rightarrow> ('a tsyn \<times> bool)" where
+  "tsynDropWhile_h f x null = (null, x)"|
+  "tsynDropWhile_h f True (Msg x) = (if f x then (null, True) else ((Msg x), False))" |
+  "tsynDropWhile_h f False (Msg x) = ((Msg x), False)"
+  
+definition tsynDropWhile :: "('a \<Rightarrow> bool) \<Rightarrow> 'a tsyn stream \<rightarrow> 'a tsyn stream" where
+  "tsynDropWhile f =  sscanlA (tsynDropWhile_h f) True"
 
 (* ----------------------------------------------------------------------- *)
   section {* Fixrec-Definitions on Time-Synchronous Streams *}
@@ -238,11 +248,11 @@ lemma tsynabs_insert: "tsynAbs\<cdot>s = smap tsynAbsElem\<cdot>(sfilter {e. e \
   by (simp add: tsynAbs_def)
 
 text {* @{term tsynAbs} test on infinite stream. *}
-lemma tsynabs_test_infstream: "tsynAbs\<cdot>((<[Msg 1, Msg 2, null, Msg 3]>)\<infinity>) = (<[1,2,3]>)\<infinity>"
+lemma tsynabs_test_infstream: "tsynAbs\<cdot>((<[Msg 1, Msg 2, null, Msg 3]>)\<infinity>) = (<[1, 2, 3]>)\<infinity>"
   by (simp add: tsynabs_insert)
 
 text {* @{term tsynAbs} test on finite stream. *}
-lemma tsynabs_test_finstream: "tsynAbs\<cdot>(<[Msg 1, Msg 2, null, null, Msg 1, null]>) = <[1,2,1]>"
+lemma tsynabs_test_finstream: "tsynAbs\<cdot>(<[Msg 1, Msg 2, null, null, Msg 1, null]>) = <[1, 2, 1]>"
   by (simp add: tsynabs_insert)
 
 text {* @{term tsynAbs} maps the empty stream on the empty stream. *}
@@ -282,7 +292,7 @@ lemma tsynMap_test_infstream: "tsynMap (plus 1)\<cdot>((<[Msg 3, Msg 4, Msg 3]>)
 text {* @{term tsynMap} test on finite stream. *}
 lemma tsynMap_test_finstream: "tsynMap (plus 1)\<cdot>(<[Msg 1, Msg 2, Msg 1, null]>) 
   = <[Msg 2, Msg 3, Msg 2, null]>"
-  by (simp add: tsynMap_def)
+  by (simp add: tsynmap_insert)
 
 text {* @{term tsynMap} is strict. *}
 lemma tsynmap_strict [simp]: "tsynMap f\<cdot>\<epsilon> = \<epsilon>"
@@ -299,7 +309,7 @@ lemma tsynmap_sconc_null: "tsynMap f\<cdot>(\<up>null \<bullet> s) = \<up>null \
 text {* @{term tsynMap} of the concatenation of two streams equals the concatenation of 
         @{term tsynMap} of both streams. *}
 lemma tsynmap_sconc: "tsynMap f\<cdot>(a1 \<bullet> a2) = tsynMap f\<cdot>a1 \<bullet> tsynMap f\<cdot>a2"
-  by (simp add: smap_split tsynMap_def)
+  by (simp add: smap_split tsynmap_insert)
 
 text {* @{term tsynMap} leaves the length of a stream unchanged. *}
 lemma tsynmap_slen: "#(tsynMap f\<cdot>s) = #s"
@@ -310,7 +320,7 @@ lemma tsynmap_slen: "#(tsynMap f\<cdot>s) = #s"
 (* ----------------------------------------------------------------------- *)
 
 text {* @{term tsynProjFst} insertion lemma. *}
-lemma tsynprojfst_insert: "tsynProjFst\<cdot>x = smap tsynFst\<cdot>x"
+lemma tsynprojfst_insert: "tsynProjFst\<cdot>s = smap tsynFst\<cdot>s"
   by (simp add: tsynProjFst_def)
 
 text {* @{term tsynProjFst} test on infinitely many time-slots. *}
@@ -328,12 +338,29 @@ text {* @{term tsynProjFst} maps the empty stream on the empty stream. *}
 lemma tsynprojfst_strict [simp]: "tsynProjFst\<cdot>\<epsilon> = \<epsilon>"
   by (simp add: tsynprojfst_insert)
 
+text {* @{term tsynProjFst} distributes over concatenation. *}
+lemma tsynprojfst_sconc_msg: "tsynProjFst\<cdot>(\<up>(Msg (a, b)) \<bullet> as) = \<up>(Msg a) \<bullet> (tsynProjFst\<cdot>as)"
+  by (simp add: tsynprojfst_insert)
+ 
+text {* @{term tsynProjFst} ignores empty time-slots. *}
+lemma tsynprojfst_sconc_null: "tsynProjFst\<cdot>(\<up>null \<bullet> s) = \<up>null \<bullet> tsynProjFst\<cdot>s"
+  by (simp add: tsynprojfst_insert)
+
+text {* @{term tsynProjFst} of the concatenation of two streams equals the concatenation of 
+        @{term tsynProjFst} of both streams. *}
+lemma tsynprojfst_sconc: "tsynProjFst\<cdot>(a1 \<bullet> a2) = tsynProjFst\<cdot>a1 \<bullet> tsynProjFst\<cdot>a2"
+  by (simp add: smap_split tsynprojfst_insert)
+
+text {* @{term tsynProjFst} leaves the length of a stream unchanged. *}
+lemma tsynprojfst_slen: "#(tsynProjFst\<cdot>s) = #s"
+  by (simp add: tsynprojfst_insert)
+
 (* ----------------------------------------------------------------------- *)
   subsection {* tsynProjSnd *}
 (* ----------------------------------------------------------------------- *)
 
 text {* @{term tsynProjSnd} insertion lemma. *}
-lemma tsynprojsnd_insert: "tsynProjSnd\<cdot>x = smap tsynSnd\<cdot>x"
+lemma tsynprojsnd_insert: "tsynProjSnd\<cdot>s = smap tsynSnd\<cdot>s"
   by (simp add: tsynProjSnd_def)
 
 text {* @{term tsynProjSnd} test on infinitely many time-slots. *}
@@ -349,6 +376,24 @@ lemma tsynprojsnd_test_finstream:
 
 text {* @{term tsynProjSnd} maps the empty stream on the empty stream. *}
 lemma tsynprojsnd_strict [simp]: "tsynProjSnd\<cdot>\<epsilon> = \<epsilon>"
+  by (simp add: tsynprojsnd_insert)
+
+text {* @{term tsynProjSnd} distributes over concatenation. *}
+lemma tsynprojsnd_sconc_msg: 
+  shows "tsynProjSnd\<cdot>(\<up>(Msg (a, b)) \<bullet> as) = \<up>(Msg b) \<bullet> (tsynProjSnd\<cdot>as)"
+  by (simp add: tsynprojsnd_insert)
+ 
+text {* @{term tsynProjSnd} ignores empty time-slots. *}
+lemma tsynprojsnd_sconc_null: "tsynProjSnd\<cdot>(\<up>null \<bullet> s) = \<up>null \<bullet> tsynProjSnd\<cdot>s"
+  by (simp add: tsynprojsnd_insert)
+
+text {* @{term tsynProjSnd} of the concatenation of two streams equals the concatenation of 
+        @{term tsynProjSnd} of both streams. *}
+lemma tsynprojsnd_sconc: "tsynProjSnd\<cdot>(a1 \<bullet> a2) = tsynProjSnd\<cdot>a1 \<bullet> tsynProjSnd\<cdot>a2"
+  by (simp add: smap_split tsynprojsnd_insert)
+
+text {* @{term tsynProjSnd} leaves the length of a stream unchanged. *}
+lemma tsynprojsnd_slen: "#(tsynProjSnd\<cdot>s) = #s"
   by (simp add: tsynprojsnd_insert)
 
 (* ----------------------------------------------------------------------- *)
@@ -474,7 +519,79 @@ lemma tsynscanl_sconc_null: "tsynScanl f i\<cdot>(\<up>null \<bullet> s) = \<up>
 
 lemma tsynscanl_slen: "#(tsynScanl f i\<cdot>s) = #s"
   by (simp add: tsynscanl_insert tsynscanlext_slen)
+  
+(* ----------------------------------------------------------------------- *)
+  subsection {* tsynDropWhile *}
+(* ----------------------------------------------------------------------- *)
 
+text {* @{term tsynDropWhile} insertion lemma. *}
+lemma tsyndropwhile_insert:"tsynDropWhile f\<cdot>s = sscanlA (tsynDropWhile_h f) True\<cdot>s "
+  by(simp add: tsynDropWhile_def)
+    
+text {* @{term tsynDropWhile} is strict. *}
+lemma strict_tsyndropwhile [simp]: "tsynDropWhile f\<cdot>\<epsilon> = \<epsilon>"
+  by (simp add: tsyndropwhile_insert)
+
+text {* If the head passes the predicate f, then the head of the result of @{term tsynDropWhile} 
+        will be null. *}
+lemma tsyndropwhile_sconc_msg_t: 
+  assumes "f (invMsg a)"
+  shows "tsynDropWhile f\<cdot>(\<up>a \<bullet> s) = \<up>null \<bullet> tsynDropWhile f\<cdot>s"
+  using assms
+  by (cases a, simp_all add: tsyndropwhile_insert)
+ 
+text {* If the head fails the predicate f and is not null, then the head of the result of 
+        @{term tsynDropWhile} will start with the head of the input. *}
+lemma tsyndropwhile_sconc_msg_f:
+  assumes "\<not>f (invMsg a)" and "a \<noteq> null" 
+  shows" tsynDropWhile f\<cdot>(\<up>a \<bullet> s) = \<up>a \<bullet> s"
+  using assms
+  apply (cases a, simp_all add: tsyndropwhile_insert)
+  apply (induction s arbitrary: f a rule: tsyn_ind, simp_all)
+  using inject_scons by fastforce+
+
+text {* If the head is null, then the head of the result of @{term tsynDropWhile} will be null. *}    
+lemma tsyndropwhile_sconc_null: "tsynDropWhile f\<cdot>(\<up>null \<bullet> s) = \<up>null \<bullet> tsynDropWhile f\<cdot>s"
+  by (simp add: tsyndropwhile_insert)
+    
+text {* If the only element in a singleton stream passes the predicate f, then @{term tsynDropWhile} 
+        will produce the singleton stream with null. *}
+lemma tsyndropwhile_singleton_t: 
+  assumes "f (invMsg a)" shows "tsynDropWhile f\<cdot>(\<up>a) = \<up>null"
+  using assms
+  by (cases a, simp_all add: tsyndropwhile_insert)
+ 
+text {* If the only element in a singleton stream passes is null, then @{term tsynDropWhile} 
+        will produce the singleton stream with null. *}
+lemma tsyndropwhile_singleton_null: "tsynDropWhile f\<cdot>(\<up>null) = \<up>null"
+  by (simp add: tsyndropwhile_insert)
+
+text {* If the only element in a singleton stream fails the predicate f, then @{term tsynDropWhile} 
+        does not change the stream. *}    
+lemma tsyndropwhile_singleton_f: 
+  assumes"\<not>f (invMsg a)" shows "tsynDropWhile f\<cdot>(\<up>a) = \<up>a"
+  using assms
+  by (cases a, simp_all add: tsyndropwhile_insert)
+  
+text {* @{term tsynDropWhile} is idempotent. *}    
+lemma tsyndropwhile_idem: "tsynDropWhile f\<cdot>(tsynDropWhile f\<cdot>s) = tsynDropWhile f\<cdot>s"
+  apply (induction s arbitrary: f rule: tsyn_ind, simp_all)
+  apply (metis tsyndropwhile_sconc_msg_f tsyndropwhile_sconc_msg_t tsyndropwhile_sconc_null)
+  by (simp add: tsyndropwhile_sconc_null)
+
+text {* @{term tsynDropWhile} test on finite stream. *}    
+lemma tsyndropwhile_test_finstream: 
+  "tsynDropWhile (\<lambda> a. a \<noteq> (2 :: nat))\<cdot>(<[Msg 1, Msg 1, -, Msg 1, Msg 2, Msg 1]>) 
+     = <[-, -, -, -, Msg 2, Msg 1]>"
+  by (simp add: tsyndropwhile_insert)
+
+text {* @{term tsynDropWhile} test on infinite stream. *}
+lemma tsyndropwhile_test_infstream: 
+  "tsynDropWhile (\<lambda> a. a \<noteq> (2 :: nat))\<cdot>((<[Msg 1, -, Msg 2]>)\<infinity>) 
+     = <[-, -]> \<bullet> ((<[Msg 2, -, Msg 1]>)\<infinity>)"
+  apply (simp add: tsyndropwhile_insert)
+  oops
+  
 (* ----------------------------------------------------------------------- *)
   section {* tsynSum - CaseStudy *}
 (* ----------------------------------------------------------------------- *)
