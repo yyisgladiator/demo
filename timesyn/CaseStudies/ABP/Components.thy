@@ -16,53 +16,66 @@ begin
   section {* Datatype Conversion *}
 (* ----------------------------------------------------------------------- *)
 
+text {* Inverse of A. *}
 fun invA :: "Receiver \<Rightarrow> (nat \<times> bool)" where
   "invA (A (n,b)) = (n,b)" |
   "invA n = undefined"
 
+text {* Conversion of a pair (nat,bool) stream into an equivalent receiver stream. *}
 definition natbool2abp :: "(nat \<times> bool) tsyn stream \<rightarrow> Receiver tsyn stream" where
   "natbool2abp \<equiv> tsynMap A"
 
+text {* Conversion of a receiver stream into an equivalent pair (nat,bool) stream. *}
 definition abp2natbool :: "Receiver tsyn stream \<rightarrow> (nat \<times> bool) tsyn stream" where
   "abp2natbool \<equiv> tsynMap invA"
 
+text {* Inverse of B. *}
 fun invB :: "Receiver \<Rightarrow> bool" where
   "invB (B x) = x" |
   "invB x = undefined"
 
+text {* Conversion of a bool stream into an equivalent receiver stream. *}
 definition bool2abp :: "bool tsyn stream \<rightarrow> Receiver tsyn stream" where
   "bool2abp \<equiv> tsynMap B"
 
+text {* Conversion of a receiver stream into an equivalent bool stream. *}
 definition abp2bool :: "Receiver tsyn stream \<rightarrow> bool tsyn stream" where
   "abp2bool \<equiv> tsynMap invB"
 
+text {* Inverse of C. *}
 fun invC :: "Receiver \<Rightarrow> nat" where
   "invC (C x) = x" |
   "invC x = undefined"
 
+text {* Conversion of a nat stream into an equivalent receiver stream. *}
 definition nat2abp :: "nat tsyn stream \<rightarrow> Receiver tsyn stream" where
   "nat2abp \<equiv> tsynMap C"
 
+text {* Conversion of a receiver stream into an equivalent nat stream. *}
 definition abp2nat :: "Receiver tsyn stream \<rightarrow> nat tsyn stream" where
   "abp2nat \<equiv> tsynMap invC"
 
 (* ----------------------------------------------------------------------- *)
-  section {* Receiver SPF Defintion for Verification *}
+  section {* Receiver SPF Definition for Verification *}
 (* ----------------------------------------------------------------------- *)
 
+text {* Helper for @{term tsynRec} deletes elements if bits are not equal. *}
 fun tsynRec_h :: "bool \<Rightarrow> (nat \<times> bool) tsyn \<Rightarrow> (nat tsyn \<times> bool)" where
   "tsynRec_h b (Msg (msg,b1)) = (if b1 = b then (Msg msg, \<not>b) else (null, b))" |
-  "tsynRec_h b null = (null, b) " 
+  "tsynRec_h b null = (null, b)" 
 
+text {* @{term tsynRec}: Applies helper function on each element of the stream. *}
 definition tsynRec :: "(nat \<times> bool) tsyn stream \<rightarrow> nat tsyn stream" where
   "tsynRec \<equiv> \<Lambda> s. sscanlA tsynRec_h True\<cdot>s"
 
+text {* @{term tsynbRec}: Receiver function for Alternating Bit Protocol on stream bundles. *}
 definition tsynbRec :: "Receiver tsyn stream ubundle \<rightarrow> Receiver tsyn stream ubundle option" where 
   "tsynbRec \<equiv> \<Lambda> sb. (ubclDom\<cdot>sb = {\<guillemotright>dr}) \<leadsto> Abs_ubundle [
                      ar\<guillemotright> \<mapsto> bool2abp\<cdot>(tsynProjSnd\<cdot>(abp2natbool\<cdot>(sb  .  \<guillemotright>dr))), 
                      o\<guillemotright> \<mapsto> nat2abp\<cdot>(tsynRec\<cdot>(abp2natbool\<cdot>(sb  .  \<guillemotright>dr)))
                      ]"
 
+text {* @{term tsynbRec}: Receiver function for Alternating Bit Protocol. *}
 definition RecSPF :: "Receiver tsyn SPF" where
   "RecSPF \<equiv> Abs_ufun tsynbRec"
 
@@ -70,13 +83,16 @@ definition RecSPF :: "Receiver tsyn SPF" where
   section {* Receiver SPF Lemmata *}
 (* ----------------------------------------------------------------------- *)
 
+text {* @{term tsynRec} insertion lemma. *}
 lemma tsynrec_insert: "tsynRec\<cdot>s = sscanlA tsynRec_h True\<cdot>s"
   by (simp add: tsynRec_def)
 
+text {* @{term tsynRec} test on finite stream. *}
 lemma tsynrec_test_finstream:
   "tsynRec\<cdot>(<[Msg(1, False), null, Msg(2, True),Msg(1, False)]>) = <[null, null,Msg 2, Msg 1]>"
   by (simp add: tsynrec_insert)
 
+text {* @{term tsynRec} test on infinite stream. *}
 lemma tsynrec_test_infstream: 
   "tsynRec\<cdot>((<[Msg(1, False), null, Msg(2, True),Msg(1, False)]>)\<infinity>) 
      = (<[null, null, Msg 2, Msg 1]>)\<infinity>"
