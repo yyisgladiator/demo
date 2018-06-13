@@ -6,13 +6,13 @@ default_sort message
 type_synonym 'm SPF = "'m SB ufun"
 
 
-subsection \<open>spfStateFix\<close>
+subsection ‹spfStateFix›
 
-definition spfStateLeast :: "channel set \<Rightarrow> channel set \<Rightarrow>('s1::type \<Rightarrow> 'm SPF)" where
-"spfStateLeast In Out \<equiv> (\<lambda> x. ufLeast In Out)"
+definition spfStateLeast :: "channel set ⇒ channel set ⇒('s1::type ⇒ 'm SPF)" where
+"spfStateLeast In Out ≡ (λ x. ufLeast In Out)"
 
-definition spfStateFix ::"channel set \<Rightarrow> channel set \<Rightarrow>(('s1::type \<Rightarrow>'m SPF) \<rightarrow> ('s1 \<Rightarrow>'m SPF)) \<rightarrow> ('s1 \<Rightarrow> 'm SPF)" where
-"spfStateFix In Out \<equiv> (\<Lambda> F.  fixg (spfStateLeast In Out)\<cdot>F)"
+definition spfStateFix ::"channel set ⇒ channel set ⇒(('s1::type ⇒'m SPF) → ('s1 ⇒'m SPF)) → ('s1 ⇒ 'm SPF)" where
+"spfStateFix In Out ≡ (Λ F.  fixg (spfStateLeast In Out)⋅F)"
 
 
 section ‹Definitions with ufApplyIn›
@@ -34,13 +34,13 @@ definition spfRtOut :: "('m SB ufun) → ('m SB ufun)" where
 "spfRtOut ≡ ufApplyOut sbRt"
 
 
-subsection \<open>more general lemma\<close>
-subsection \<open>SPF_apply_Lub\<close>
+subsection ‹more general lemma›
+subsection ‹SPF_apply_Lub›
 
 text{* Intro rule for spf well *}
-lemma ufwellI:  assumes "\<And>b. (b \<in> dom (Rep_cfun f)) \<Longrightarrow> (ubDom\<cdot>b = In)"
-  and "(\<And>b. b \<in> dom (Rep_cfun f) \<Longrightarrow> ubDom\<cdot>((Rep_cfun f)\<rightharpoonup>b) = Out)"
-  and "\<And>b2. (ubDom\<cdot>b2 = In) \<Longrightarrow> (b2 \<in> dom (Rep_cfun f))"
+lemma ufwellI:  assumes "⋀b. (b ∈ dom (Rep_cfun f)) ⟹ (ubDom⋅b = In)"
+  and "(⋀b. b ∈ dom (Rep_cfun f) ⟹ ubDom⋅((Rep_cfun f)⇀b) = Out)"
+  and "⋀b2. (ubDom⋅b2 = In) ⟹ (b2 ∈ dom (Rep_cfun f))"
   shows "ufWell f"
   by (metis assms(1) assms(2) assms(3) ubclDom_ubundle_def ufun_wellI)
 
@@ -48,17 +48,17 @@ lemma ufwellI:  assumes "\<And>b. (b \<in> dom (Rep_cfun f)) \<Longrightarrow> (
 
 (* move this to ufun *)
 lemma spfapply_lub: assumes "chain Y"
-  shows "(\<Squnion> i. Y i) \<rightleftharpoons> sb = (\<Squnion> i. ((Y i)  \<rightleftharpoons> sb))"
+  shows "(⨆ i. Y i) ⇌ sb = (⨆ i. ((Y i)  ⇌ sb))"
 proof -
-  have f1: "chain (\<lambda>n. Rep_ufun (Y n))"
+  have f1: "chain (λn. Rep_ufun (Y n))"
     by (simp add: assms)
-  hence "ufWell (\<Squnion>n. Rep_ufun (Y n))"
+  hence "ufWell (⨆n. Rep_ufun (Y n))"
     by (simp add: admD ufWell_adm2)
-  hence "Rep_cufun (Lub Y) = Rep_cfun (\<Squnion>n. Rep_ufun (Y n))"
+  hence "Rep_cufun (Lub Y) = Rep_cfun (⨆n. Rep_ufun (Y n))"
     by (simp add: assms lub_ufun)
-  hence "Rep_cufun (Lub Y) sb = (\<Squnion>n. Rep_cufun (Y n) sb)"
+  hence "Rep_cufun (Lub Y) sb = (⨆n. Rep_cufun (Y n) sb)"
     using f1 contlub_cfun_fun by auto
-  hence "(\<Squnion>n. \<lambda>n. Rep_cufun (Y n) sb\<rightharpoonup>n) = Lub Y \<rightleftharpoons> sb"
+  hence "(⨆n. λn. Rep_cufun (Y n) sb⇀n) = Lub Y ⇌ sb"
     using f1 by (simp add: op_the_lub)
   thus ?thesis
     by auto
@@ -67,95 +67,95 @@ qed
 
 
 
-subsection \<open>spfStateLeast\<close>
+subsection ‹spfStateLeast›
 
-lemma spfStateLeast_dom [simp]: "\<forall>x. ufDom\<cdot>(spfStateLeast In Out x) = In"
+lemma spfStateLeast_dom [simp]: "∀x. ufDom⋅(spfStateLeast In Out x) = In"
   by (simp add: spfStateLeast_def)
 
-lemma spfStateLeast_ran[simp]: "\<forall>x. ufRan\<cdot>(spfStateLeast In Out x) = Out"
+lemma spfStateLeast_ran[simp]: "∀x. ufRan⋅(spfStateLeast In Out x) = Out"
   by (simp add: spfStateLeast_def)
 
 lemma spfStateLeast_apply[simp]:
-  assumes "ubDom\<cdot>sb = In"
-  shows "spfStateLeast In Out x \<rightleftharpoons> sb = ubLeast Out"
+  assumes "ubDom⋅sb = In"
+  shows "spfStateLeast In Out x ⇌ sb = ubLeast Out"
   apply(auto simp add: spfStateLeast_def ufLeast_def ubclLeast_ubundle_def assms ubclDom_ubundle_def)
   by (metis (no_types) assms option.sel ubclDom_ubundle_def ubclLeast_ubundle_def ufleast_rep_abs)
 
-lemma spfStateLeast_bottom [simp]: assumes "\<forall>x. ufDom\<cdot>(f x) = In" and " \<forall>x. ufRan\<cdot>(f x) = Out"
-  shows "(spfStateLeast In Out) \<sqsubseteq> f"
+lemma spfStateLeast_bottom [simp]: assumes "∀x. ufDom⋅(f x) = In" and " ∀x. ufRan⋅(f x) = Out"
+  shows "(spfStateLeast In Out) ⊑ f"
 proof -
-  have f1: "\<forall>x. (spfStateLeast In Out x) \<sqsubseteq> f x"
+  have f1: "∀x. (spfStateLeast In Out x) ⊑ f x"
     by (simp add: assms(1) assms(2) spfStateLeast_def)
   show ?thesis
     by(simp add: below_fun_def f1)
 qed
 
-lemma spfStateLeast_least [simp]: "spfStateLeast In Out \<sqsubseteq> z \<and> y \<sqsubseteq> z \<longrightarrow> spfStateLeast In Out \<sqsubseteq> y"
+lemma spfStateLeast_least [simp]: "spfStateLeast In Out ⊑ z ∧ y ⊑ z ⟶ spfStateLeast In Out ⊑ y"
 proof -
-  have "(\<exists>a. ufLeast In Out \<notsqsubseteq> z a) \<or> (\<exists>a. y a \<notsqsubseteq> z a) \<or> (spfStateLeast In Out \<sqsubseteq> z \<and> y \<sqsubseteq> z \<longrightarrow> spfStateLeast In Out \<sqsubseteq> y)"
+  have "(∃a. ufLeast In Out \<notsqsubseteq> z a) ∨ (∃a. y a \<notsqsubseteq> z a) ∨ (spfStateLeast In Out ⊑ z ∧ y ⊑ z ⟶ spfStateLeast In Out ⊑ y)"
     by (metis (no_types) spfStateLeast_bottom ufdom_below_eq ufleast_ufRan ufleast_ufdom ufran_below)
   then show ?thesis
     by (simp add: fun_below_iff spfStateLeast_def)
 qed
 
 
-subsection \<open>spfStateFix\<close>
+subsection ‹spfStateFix›
 
-lemma spfStateFix_mono[simp]: "monofun (\<lambda> F.  fixg (spfStateLeast In Out)\<cdot>F)"
+lemma spfStateFix_mono[simp]: "monofun (λ F.  fixg (spfStateLeast In Out)⋅F)"
   by (simp add: monofun_Rep_cfun2)
 
-lemma spfStateFix_cont[simp]: "cont (\<lambda> F.  fixg (spfStateLeast In Out)\<cdot>F)"
+lemma spfStateFix_cont[simp]: "cont (λ F.  fixg (spfStateLeast In Out)⋅F)"
   by simp
 
-lemma spfStateFix_apply: "spfStateFix In Out\<cdot>F = fixg (spfStateLeast In Out)\<cdot>F"
+lemma spfStateFix_apply: "spfStateFix In Out⋅F = fixg (spfStateLeast In Out)⋅F"
   by(simp add: spfStateFix_def )
 
 (*least Fixpoint*)
 
-lemma spfStateFix_fix: assumes "spfStateLeast In Out \<sqsubseteq> F\<cdot>(spfStateLeast In Out)"
-                         shows "spfStateFix In Out\<cdot>F = F\<cdot>(spfStateFix In Out\<cdot>F)"
+lemma spfStateFix_fix: assumes "spfStateLeast In Out ⊑ F⋅(spfStateLeast In Out)"
+                         shows "spfStateFix In Out⋅F = F⋅(spfStateFix In Out⋅F)"
   by (metis (no_types, hide_lams) assms eta_cfun fixg_fix spfStateFix_def spfStateLeast_least)
 
-lemma spfsl_below_spfsf: "spfStateLeast In Out \<sqsubseteq> spfStateFix In Out\<cdot>F"
+lemma spfsl_below_spfsf: "spfStateLeast In Out ⊑ spfStateFix In Out⋅F"
   proof (simp add: spfStateFix_def, simp add: fixg_def)
-    have "\<forall>x0 x1. ((x1::'a \<Rightarrow> ('b stream\<^sup>\<Omega>) ufun) \<sqsubseteq> (if x1 \<sqsubseteq> x0\<cdot>x1 then \<Squnion>uub. iterate uub\<cdot>x0\<cdot>x1 else x1)) = (if x1 \<sqsubseteq> x0\<cdot>x1 then x1 \<sqsubseteq> (\<Squnion>uub. iterate uub\<cdot>x0\<cdot>x1) else x1 \<sqsubseteq> x1)"
+    have "∀x0 x1. ((x1::'a ⇒ ('b stream⇧Ω) ufun) ⊑ (if x1 ⊑ x0⋅x1 then ⨆uub. iterate uub⋅x0⋅x1 else x1)) = (if x1 ⊑ x0⋅x1 then x1 ⊑ (⨆uub. iterate uub⋅x0⋅x1) else x1 ⊑ x1)"
       by simp
-    then show "spfStateLeast In Out \<sqsubseteq> F\<cdot>(spfStateLeast In Out) \<longrightarrow> spfStateLeast In Out \<sqsubseteq> (\<Squnion>n. iterate n\<cdot>F\<cdot>(spfStateLeast In Out))"
+    then show "spfStateLeast In Out ⊑ F⋅(spfStateLeast In Out) ⟶ spfStateLeast In Out ⊑ (⨆n. iterate n⋅F⋅(spfStateLeast In Out))"
       by (metis (no_types) fixg_pre)
   qed
 
-lemma spfStateFix_least_fix: (* assumes "\<forall>x. ufDom\<cdot>((F\<cdot>(spfStateLeast In Out)) x) = In"
-                             and "\<forall>x. ufRan\<cdot>((F\<cdot>(spfStateLeast In Out))x) = Out"
-                             and "F\<cdot>y = y" and "\<forall>x. ufDom\<cdot>(y x) = In" and "\<forall>x. ufRan\<cdot>(y x) = Out"
-*)  assumes "spfStateLeast In Out \<sqsubseteq> F\<cdot>(spfStateLeast In Out)"
-and "F\<cdot>y = y" and "\<forall>x. ufDom\<cdot>(y x) = In" and "\<forall>x. ufRan\<cdot>(y x) = Out"
-shows "spfStateFix In Out\<cdot>F \<sqsubseteq> y"
+lemma spfStateFix_least_fix: (* assumes "∀x. ufDom⋅((F⋅(spfStateLeast In Out)) x) = In"
+                             and "∀x. ufRan⋅((F⋅(spfStateLeast In Out))x) = Out"
+                             and "F⋅y = y" and "∀x. ufDom⋅(y x) = In" and "∀x. ufRan⋅(y x) = Out"
+*)  assumes "spfStateLeast In Out ⊑ F⋅(spfStateLeast In Out)"
+and "F⋅y = y" and "∀x. ufDom⋅(y x) = In" and "∀x. ufRan⋅(y x) = Out"
+shows "spfStateFix In Out⋅F ⊑ y"
   apply (simp add: spfStateFix_apply)
   apply (rule fixg_least_fix)
   by ( simp_all add: assms)
 
-lemma spfstatefix_dom:"ufDom\<cdot>((spfStateFix In Out\<cdot> f) s) = In"
+lemma spfstatefix_dom:"ufDom⋅((spfStateFix In Out⋅ f) s) = In"
   by (metis (mono_tags) below_fun_def spfStateLeast_def spfsl_below_spfsf ufdom_below_eq ufleast_ufdom)
     
-lemma spfstatefix_ran:"ufRan\<cdot>((spfStateFix In Out\<cdot> f) s) = Out"
+lemma spfstatefix_ran:"ufRan⋅((spfStateFix In Out⋅ f) s) = Out"
   by (metis below_fun_def spfStateLeast_ran spfsl_below_spfsf ufran_below)
 
-subsection \<open>ufApplyOut and ufApplyIn\<close>
+subsection ‹ufApplyOut and ufApplyIn›
 
-lemma spf_eq: assumes "ufDom\<cdot>uf1 = ufDom\<cdot>uf2"
-  and "\<And>ub. ubDom\<cdot>ub = ufDom\<cdot>uf1 \<Longrightarrow> uf1 \<rightleftharpoons> ub = uf2 \<rightleftharpoons> ub"
+lemma spf_eq: assumes "ufDom⋅uf1 = ufDom⋅uf2"
+  and "⋀ub. ubDom⋅ub = ufDom⋅uf1 ⟹ uf1 ⇌ ub = uf2 ⇌ ub"
 shows "uf1 = uf2"
   by (metis assms(1) assms(2) ubclDom_ubundle_def ufun_eqI)
 
 lemma ufapply_in_out:
-  assumes "\<And>sb. ubDom\<cdot>(f\<cdot>sb) =  ubDom\<cdot>sb"
-      and "\<And>sb. ubDom\<cdot>(g\<cdot>sb) =  ubDom\<cdot>sb"
-    shows  "ufApplyIn f\<cdot>(ufApplyOut g\<cdot>spf) = ufApplyOut g\<cdot>(ufApplyIn f\<cdot>spf)"
+  assumes "⋀sb. ubDom⋅(f⋅sb) =  ubDom⋅sb"
+      and "⋀sb. ubDom⋅(g⋅sb) =  ubDom⋅sb"
+    shows  "ufApplyIn f⋅(ufApplyOut g⋅spf) = ufApplyOut g⋅(ufApplyIn f⋅spf)"
   apply(rule ufun_eqI)
   using assms apply auto
   oops
-  
-  
+
+
 subsection ‹spfRtIn lemma›
 
 lemma spfRtIn_step[simp]: "(spfRtIn⋅spf)⇌sb = spf⇌(sbRt⋅sb)"
@@ -181,7 +181,7 @@ lemma spfRtIn_spfConcOut: "(spfRtIn⋅(spfConcOut sb ⋅spf)) = (spfConcOut sb �
   apply (simp add: ubclDom_ubundle_def)
   apply (metis ubclDom_ubundle_def ubconceq_dom)
   by blast
-  
+
 
 subsection ‹spfConcIn lemma›
 
