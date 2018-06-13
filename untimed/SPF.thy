@@ -181,6 +181,7 @@ lemma spfRtIn_spfConcOut: "(spfRtIn⋅(spfConcOut sb ⋅spf)) = (spfConcOut sb �
   apply (simp add: ubclDom_ubundle_def)
   apply (metis ubclDom_ubundle_def ubconceq_dom)
   by blast
+  
 
 subsection ‹spfConcIn lemma›
 
@@ -207,6 +208,7 @@ lemma spfConcIn_ran [simp]:"ufRan⋅(spfConcIn sb ⋅spf) = ufRan⋅spf"
   apply(subst ufapplyin_ran2)
    apply (metis ubclDom_ubundle_def ubconceq_dom)
   by blast
+
 
 subsection ‹spfRtOut lemma›
 
