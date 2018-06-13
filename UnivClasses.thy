@@ -163,11 +163,20 @@ class ufuncl_comp = ufuncl +
   assumes parcompwell_asso: "ufunclParCompWell f1 f2 \<Longrightarrow>
                       ufunclParCompWell f2 f3 \<Longrightarrow> 
                       ufunclParCompWell f1 f3 \<Longrightarrow> ufunclParCompWell f1 (f2 \<parallel> f3)"
-(*  assumes sercompwell_asso: "ufunclSerCompWell f1 f2 \<Longrightarrow>
+  assumes sercompwell_asso: "ufunclSerCompWell f1 f2 \<Longrightarrow>
                       ufunclSerCompWell f2 f3 \<Longrightarrow> 
                       ufclDom\<cdot>f1 \<inter> ufclRan\<cdot>f3 = {} \<Longrightarrow>  ufunclSerCompWell f1 (f2 \<circ> f3) \<and> ufunclSerCompWell (f1 \<circ> f2) f3"
-*)
+
 begin
+
+lemma  sercompwell_asso1: "ufunclSerCompWell f1 f2 \<Longrightarrow>
+                      ufunclSerCompWell f2 f3 \<Longrightarrow> 
+                      ufclDom\<cdot>f1 \<inter> ufclRan\<cdot>f3 = {} \<Longrightarrow>  ufunclSerCompWell f1 (f2 \<circ> f3)"
+  by (simp add: local.sercompwell_asso)
+lemma sercompwell_asso2: "ufunclSerCompWell f1 f2 \<Longrightarrow>
+                      ufunclSerCompWell f2 f3 \<Longrightarrow> 
+                      ufclDom\<cdot>f1 \<inter> ufclRan\<cdot>f3 = {} \<Longrightarrow> ufunclSerCompWell (f1 \<circ> f2) f3"
+  by (simp add: local.sercompwell_asso)
 end
 
 
