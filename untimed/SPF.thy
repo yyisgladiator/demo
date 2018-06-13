@@ -181,7 +181,8 @@ lemma spfRt_inj_h: assumes "spfRt\<cdot>x = spfRt\<cdot>y" and "ubDom\<cdot>ub =
 proof - 
   have "ubDom\<cdot>ub = ufDom\<cdot>y"
     by (metis assms(1) assms(2) spfRt_dom)
-  obtain ubNEW where ubNEW_def: "sbRt\<cdot>ubNEW = ub" sorry
+  obtain ubNEW where ubNEW_def: "sbRt\<cdot>ubNEW = ub"
+    using sbrt_conc_hd by blast
   thus ?thesis
     by (metis assms(1) spfrt_step) 
 qed

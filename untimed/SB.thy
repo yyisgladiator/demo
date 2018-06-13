@@ -450,11 +450,17 @@ proof(rule ub_eq)
   thus "?L .c = b .c"  by (simp add: reach_stream)
 qed
 
+
 (* ----------------------------------------------------------------------- *)
   subsection \<open>sbHd\<close>
 (* ----------------------------------------------------------------------- *)
 lemma sbhd_sbdom[simp]: "ubDom\<cdot>(sbHd\<cdot>b) = ubDom\<cdot>b"
   by(simp add: sbHd_def)
+
+lemma sbhd_getch [simp]: assumes "c\<in>ubDom\<cdot>sb"
+  shows "(sbHd\<cdot>sb) . c = stake 1\<cdot>(sb . c)"
+  by(simp add: sbHd_def assms)
+  
 
 (* ----------------------------------------------------------------------- *)
   subsection \<open>sbDrop\<close>
@@ -525,9 +531,20 @@ lemma sbRt2srt[simp]: assumes "ubWell [c \<mapsto> x]"
       by (metis dom_r dom_l singletonD ubgetchI)
   qed
 
-(*lemma sbhd_sbrt [simp]: "(sbHd\<cdot>b \<bullet> sbRt\<cdot>b) = b"
- by (simp add: sbHd_def sbRt_def)
-*)
+lemma sbrt_getch [simp]: assumes "c\<in>ubDom\<cdot>sb"
+  shows "(sbRt\<cdot>sb) . c = srt\<cdot>(sb . c)"
+  apply(simp add: sbRt_def assms)
+  by (simp add: sdrop_forw_rt)
+
+lemma sbrt_conc_hd[simp]: "sbRt\<cdot>(ubConc (sbHd\<cdot>sb)\<cdot>sb) = sb"
+  apply(rule ub_eq)
+   apply simp
+  apply (simp add: usclConc_stream_def)
+  using stake_srt_conc by auto
+
+lemma sbRt_surj: "surj (Rep_cfun sbRt)"
+  by (metis sbrt_conc_hd surj_def)
+
 
 (* ----------------------------------------------------------------------- *)
   subsection \<open>snNtimes\<close>
@@ -797,6 +814,36 @@ lemma sbHdElem_sbElemWell: assumes "\<forall>c\<in>(ubDom\<cdot>sb). sb .c \<not
     then show ?thesis
       by(simp add: sbElemWell_def convDiscrUp_assms)
   qed
+
+
+
+(* ----------------------------------------------------------------------- *)
+  subsection \<open>ubConc on Streams\<close>
+(* ----------------------------------------------------------------------- *)
+
+
+lemma sbconc_inj_h: assumes "\<And>c. c\<in>ubDom\<cdot>sb \<Longrightarrow> # (sb . c) < \<infinity>"
+  and "ubConcEq sb\<cdot>x . c = ubConcEq sb\<cdot>y . c" 
+  and "c \<in> ubDom\<cdot>x" and "c \<in> ubDom\<cdot>y"
+shows "x  .  c = y  .  c"
+  apply(cases "c \<in> ubDom\<cdot>sb")
+  using assms apply (simp add: usclConc_stream_def)
+  using sconc_neq apply blast
+  using assms apply (simp add: usclConc_stream_def ubconc_getch )
+  done
+
+lemma sbconc_inj: assumes "\<And>c. c\<in>ubDom\<cdot>sb \<Longrightarrow> # (sb . c) < \<infinity>"
+  shows "inj (Rep_cfun (ubConcEq sb))"
+  apply rule
+  apply(rule ub_eq)
+   apply (metis ubconceq_dom ubconceq_insert)
+  apply simp
+  by (metis assms sbconc_inj_h ubconceq_dom ubconceq_insert)
+  
+  
+
+
+
 
 (* ----------------------------------------------------------------------- *)
   subsection \<open>Automaton\<close>
