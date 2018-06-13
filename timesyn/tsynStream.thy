@@ -401,23 +401,31 @@ lemma tsynprojsnd_slen: "#(tsynProjSnd\<cdot>s) = #s"
 (* ----------------------------------------------------------------------- *)
 
 text {* @{term tsynRemDups} insertion lemma. *}
-lemma tsynremdups_insert: "tsynRemDups\<cdot>x = sscanlA tsynRemDups_h null\<cdot>x"
+lemma tsynremdups_insert: "tsynRemDups\<cdot>s = sscanlA tsynRemDups_h null\<cdot>s"
   by (simp add: tsynRemDups_def)
 
 text {* @{term tsynRemDups} test on finite stream. *}
 lemma tsynremdups_test_finstream:
-  "tsynRemDups\<cdot>(<[null, Msg (1 :: nat), Msg 1, null, null, Msg 1, Msg 2, null, Msg 2]>) = 
-     <[null, Msg 1, null, null, null, null, Msg 2, null, null]>"
-  by (simp add: tsynremdups_insert)
-
-text {* @{term tsynRemDups} is strict. *}
-lemma tsynremdups_strict: "tsynRemDups\<cdot>\<epsilon> = \<epsilon>"
+  "tsynRemDups\<cdot>(<[null, Msg (1 :: nat), Msg (1 :: nat), null, null, Msg (1 :: nat), Msg (2 :: nat), null, Msg (2 :: nat)]>) = 
+     <[null, Msg (1 :: nat), null, null, null, null, Msg (2 :: nat), null, null]>"
   by (simp add: tsynremdups_insert)
 
 text {* @{term tsynRemDups} test on infinitely many time-slots. *}
-lemma tsynremdups_test_infstream: "tsynRemDups\<cdot>((<[Msg 1, null]>)\<infinity>) = <[Msg 1]> \<bullet> ((<[null]>)\<infinity>)"
-  apply (simp add: tsynremdups_insert)
-  oops
+lemma tsynremdups_test_infstream: "tsynRemDups\<cdot>((<[Msg (1 :: nat), Msg (1 :: nat), null]>)\<infinity>) = <[Msg (1 :: nat)]> \<bullet> ((<[null]>)\<infinity>)"
+  by (simp add: tsynremdups_insert)
+  sorry
+  
+text {* @{term tsynRemDups} is strict. *}
+lemma tsynremdups_strict: "tsynRemDups\<cdot>\<epsilon> = \<epsilon>"
+  by (simp add: tsynremdups_insert)
+ 
+text {* @{term tsynRemDups} ignores empty time-slots. *}
+lemma tsynremdups_sconc_null: "tsynRemDups\<cdot>(\<up>null \<bullet> s) = \<up>null \<bullet> tsynRemDups\<cdot>s"
+  by (simp add: tsynremdups_insert)
+
+text {* @{term tsynRemDups} leaves the length of a stream unchanged. *}
+lemma tsynremdups_slen: "#(tsynRemDups\<cdot>s) = #s"
+  by (simp add: tsynremdups_insert)
 
 lemma tsynRemDups_fix_h_sconc_msg:
   "tsynRemDups_fix_h\<cdot>(\<up>(Msg a) \<bullet> as)\<cdot>None = \<up>(Msg a) \<bullet> tsynRemDups_fix_h\<cdot>as\<cdot>(Some (Discr (Msg a)))"
