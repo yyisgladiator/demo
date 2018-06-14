@@ -604,55 +604,50 @@ text {* @{term tsynLen} maps the empty stream to zero. *}
 lemma tsynlen_strict [simp]: "tsynLen\<cdot>\<epsilon> = 0"
   by (simp add: tsynlen_insert)
 
-text {* @{term tsynLen} distributes over concatenation.*}
+text {* @{term tsynLen} distributes over concatenation. *}
 lemma tsynlen_sconc_msg: "tsynLen\<cdot>(\<up>(Msg a) \<bullet> as) = lnsuc\<cdot>(tsynLen\<cdot>as)"
   by (simp add: tsynabs_sconc_msg tsynlen_insert)
 
-text {* @{term tsynLen} ignores empty time slots*}
-lemma tsynlen_sconc_null:  "tsynLen\<cdot>(\<up>(null) \<bullet> as) = tsynLen\<cdot>as"
+text {* @{term tsynLen} ignores empty time slots. *}
+lemma tsynlen_sconc_null: "tsynLen\<cdot>(\<up>(null) \<bullet> as) = tsynLen\<cdot>as"
   by (simp add: tsynabs_sconc_null tsynlen_insert)
 
-text {*@{term tsynLen} of the concatenation of two streams equals the sum of 
-        @{term tsynLen} of both streams if the number of messages and the first stream are finite. *}
-lemma tsynlen_sconc_all_finite: 
-  "\<forall>as bs n. #as < \<infinity> \<and> tsynLen\<cdot>as = Fin k \<and> tsynLen\<cdot>bs = Fin n \<longrightarrow> tsynLen\<cdot>(as\<bullet>bs) = Fin (k+n)"
+text {* @{term tsynLen} of the concatenation of two streams equals the sum of @{term tsynLen} of 
+        both streams if the number of messages and the first stream are finite. *}
+lemma tsynlen_sconc_finite:
+  assumes "#as < \<infinity>" and "tsynLen\<cdot>as = Fin k" and "tsynLen\<cdot>bs = Fin n"
+  shows "tsynLen\<cdot>(as \<bullet> bs) = Fin (k + n)"
+  using assms
   by (simp add: slen_sconc_all_finite tsynabs_sconc tsynlen_insert)
 
-text {*@{term tsynLen} of the concatenation of two streams with finite many messages is less or equal to the sum of @{term tsynLen} of both streams *}
-lemma  tsynlen_sconc_msg_finite: 
+text {* @{term tsynLen} of the concatenation of two streams with finite many messages is less or 
+        equal to the sum of @{term tsynLen} of both streams *}
+lemma  tsynlen_sconc_infinite:
   assumes "tsynLen\<cdot>as = Fin n" and "tsynLen\<cdot>bs = Fin  m"
-  shows "tsynLen\<cdot>(as \<bullet> bs) \<le> Fin (n  + m)"
-  by (smt assms(1) assms(2) inf_ub le_add1 less2nat less_le lnat_po_eq_conv sconc_fst_inf slen_sconc_all_finite tsynabs_sconc tsynlen_insert)
+  shows "tsynLen\<cdot>(as \<bullet> bs) \<le> Fin (n + m)"
+  using assms leI sconc_fst_inf tsynlen_sconc_finite by fastforce
 
-text {* @{term tsynLen} is less or equal to the length of the stream.  *}
-lemma tsynlen_slen:"tsynLen\<cdot>s \<le> slen\<cdot>s"
+text {* @{term tsynLen} is less or equal to the length of the stream. *}
+lemma tsynlen_slen: "tsynLen\<cdot>s \<le> slen\<cdot>s"
   by (simp add: tsynabs_slen tsynlen_insert)
 
-text {* @{term tsynLen} of the infinte concatenation of a finite stream with more than one message is @{term "\<infinity>"}*}
-lemma tsynLen_inftimes_fin:
-  assumes "#as < \<infinity> " and "tsynLen\<cdot>as > 0" 
+text {* @{term tsynLen} of the infinte concatenation of a finite stream with more than one 
+        message is @{term "\<infinity>"}. *}
+lemma tsynlen_inftimes_finite:
+  assumes "#as < \<infinity> " and "0 < tsynLen\<cdot>as" 
   shows "tsynLen\<cdot>as\<infinity> = \<infinity>"
-  by (metis (no_types, lifting) assms(1) assms(2) neq_iff rek2sinftimes sinftimes_unfold slen_empty_eq slen_sinftimes tsynabs_sconc tsynlen_insert)
+  by (metis (no_types, lifting) assms(1) assms(2) neq_iff rek2sinftimes sinftimes_unfold 
+      slen_empty_eq slen_sinftimes tsynabs_sconc tsynlen_insert)
 
-text {* test for finite tsyn stream *}
-lemma tsynlen_test_finstream: "tsynLen\<cdot>(<[Msg 1, null, Msg 2, null, null, Msg 1]>) = tsynLen\<cdot>(<[Msg 1,Msg 2, Msg 1]>)"
+text {* @{term tsynLen} test for finite tsyn stream. *}
+lemma tsynlen_test_finstream: 
+  "tsynLen\<cdot>(<[Msg 1, null, Msg 2, null, null, Msg 1]>) = tsynLen\<cdot>(<[Msg 1, Msg 2, Msg 1]>)"
   by (metis list2s_0 list2s_Suc lscons_conv tsynlen_sconc_msg tsynlen_sconc_null tsynlen_strict)
 
-text {* test for infinite tsyn stream *}
-lemma tsynlen_test_infstream: "tsynLen\<cdot>(<[null, Msg a]>\<infinity>) = tsynLen\<cdot>(<[Msg a]>\<infinity>)"
-proof -
-  have l1:"tsynLen\<cdot>(<[null, Msg a]>)  > \<bottom>"
-    by (metis bot_is_0 gr_0 list2s_Suc lscons_conv tsynlen_sconc_msg tsynlen_sconc_null)
-  have l2:"#(<[null, Msg a]>) < \<infinity>" by simp
-  from l1 l2 have l:"tsynLen\<cdot>(<[null, Msg a]>\<infinity>) = \<infinity>"
-    using lnzero_def tsynLen_inftimes_fin by force
-  have r1: "tsynLen\<cdot>(<[Msg a]>) > 0"
-    by (metis l1 list2s_Suc lnzero_def lscons_conv tsynlen_sconc_null)
-  have r2: "#(<[Msg a]>) < \<infinity>" by simp
-  from r1 r2 have r: "tsynLen\<cdot>(<[Msg a]>\<infinity>) = \<infinity>"
-    using tsynLen_inftimes_fin by blast
-  from l r show ?thesis by metis
-qed 
+text {* @{term tsynLen} test for infinite tsyn stream. *}
+lemma tsynlen_test_infstream: "tsynLen\<cdot>(<[null, Msg a]>\<infinity>) = \<infinity>"
+  by (metis Fin_neq_inf gr_0 inf_ub less_le list2s_Suc list2streamFin lscons_conv 
+      tsynlen_inftimes_finite tsynlen_sconc_msg tsynlen_sconc_null) 
 
 (* ----------------------------------------------------------------------- *)
   section {* tsynSum - CaseStudy *}
