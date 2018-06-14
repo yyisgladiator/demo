@@ -229,8 +229,9 @@ text {* If the domain of a stream is subset of another set it is also after remo
 lemma tsyndom_sconc_msg_sub: "tsynDom\<cdot>(\<up>(Msg x) \<bullet> xs) \<subseteq> S \<Longrightarrow> tsynDom\<cdot>xs \<subseteq> S"
   by (simp add: subset_eq tsyndom_insert)
 
-text {* If the domain of a stream is subset of another set and it will be concatenated one element 
-        of this superset as first element to the stream it is also is a subset. *}
+text {* If the domain of a stream is subset of another set and one takes an arbitrary element 
+        of this superset, then the domain of the stream with this chosen element as first
+        element is also a subset of the former superset. *}
 lemma tsyndom_sconc_msg_sub2 [simp]: "tsynDom\<cdot>xs \<subseteq> S \<Longrightarrow> x \<in> S \<Longrightarrow> tsynDom\<cdot>(\<up>(Msg x) \<bullet> xs) \<subseteq> S"
   by (simp add: subset_iff tsyndom_insert)
 
@@ -238,6 +239,39 @@ text {* The empty time-slot is not part of the domain. *}
 lemma tsyndom_sconc_null [simp]: "tsynDom\<cdot>(\<up>null \<bullet> s) = tsynDom\<cdot>s"
   by (metis (no_types, lifting) Collect_cong Un_insert_left tsyn.distinct(1) insert_iff sdom2un 
       sup_bot.left_neutral tsyndom_insert)
+
+text {* @{term tsynDom} test on infinite stream. *}
+lemma tsyndom_test_infstream: "tsynDom\<cdot>((<[Msg (1::nat), Msg 2, null, Msg 3]>)\<infinity>) = {1,2,3}"
+  apply (simp add:  tsyndom_insert set_eq_iff) 
+  by blast
+
+text {* @{term tsynDom} test on finite stream. *}
+lemma tsyndom_test_finstream: "tsynDom\<cdot>(<[Msg (1::nat), Msg 2, null, null, Msg 1, null]>) = {1,2}"
+  apply (simp add: tsyndom_insert set_eq_iff) 
+  by blast
+
+text {* @{term tsynDom} maps the empty stream on the empty set. *}
+lemma tsyndom_strict [simp]: "tsynDom\<cdot>\<epsilon> = {}"
+  by (simp add: tsyndom_insert)
+
+text {* @{term tsynDom} of concatenations distributes via union of sets. *}
+lemma tsyndom_sconc_msg: "tsynDom\<cdot>(\<up>(Msg a) \<bullet> as) = {a} \<union> tsynDom\<cdot>as"
+  by (simp add: tsyndom_insert set_eq_iff)
+
+text {* @{term tsynDom} of the concatenation of two streams is equal to the union of 
+        @{term tsynDom} applied to both streams. *}
+lemma tsyndom_sconc: assumes "#(as::'a tsyn stream) < \<infinity>" shows "tsynDom\<cdot>(as \<bullet> bs) = tsynDom\<cdot>as \<union> tsynDom\<cdot>bs"
+proof -
+  have "sdom\<cdot>(as \<bullet> bs) = sdom\<cdot>(as) \<union> sdom\<cdot>(bs)" by (meson assms ninf2Fin lnat_well_h2 sdom_sconc2un)
+  then have "{x::'a. \<M> x \<in> sdom\<cdot>(as \<bullet> bs)} = {x::'a. \<M> x \<in> sdom\<cdot>as \<or> \<M> x \<in> sdom\<cdot>bs}"  by simp
+  then show ?thesis by (metis (no_types, lifting) Abs_cfun_inverse2 Collect_cong Collect_disj_eq tsynDom_def tsyndom_cont)
+qed
+
+(* Cardinality of sets not found...
+text {* Cardinality of the set @{term tsynDom} is smaller or equal to the length of the original stream.  *}
+lemma tsyndom_slen: "card (tsynDom\<cdot>s) \<le> #s"
+*)
+
 
 (* ----------------------------------------------------------------------- *)
   subsection {* tsynAbs *}
