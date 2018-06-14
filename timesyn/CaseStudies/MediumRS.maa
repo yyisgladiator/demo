@@ -1,0 +1,23 @@
+package abp;
+
+import de.montiarcautomaton.isargenerator.Pair;
+
+
+component MediumRS {
+
+  port
+    in Boolean ar,
+    out Boolean as;
+
+
+  automaton Medium {
+    variable Integer c=random(50);
+
+    state Single;
+    initial Single / { as=null};
+
+    Single -> Single {i=null} / {o=null};
+    Single -> Single [c>0]  / {c=c-1};
+    Single -> Single [c=0]  / {c=random(50), o=i};
+  }
+}
