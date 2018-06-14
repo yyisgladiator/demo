@@ -17,9 +17,6 @@ default_sort uscl
 definition ubMaxLen :: "lnat \<Rightarrow> 'M\<^sup>\<Omega> \<Rightarrow> bool" where
 "ubMaxLen n ub  \<equiv> \<forall>c \<in> ubDom\<cdot>ub. usclLen\<cdot>(ub . c) \<le> n"
 
-lemma ubmaxlen_least: "ubMaxLen 0 (ubLeast cs)"
-  sorry
-
 
 (****************************************************)
 section\<open>Induction\<close>
@@ -36,6 +33,10 @@ by (simp add: reach_stream)
 
 default_sort message
 
+
+lemma ubmaxlen_least: "ubMaxLen 0 ((ubLeast cs):: 'a stream\<^sup>\<Omega>)"
+  by(simp add: ubMaxLen_def usclLen_stream_def)
+
 lemma sbcases: "\<And>x :: 'a stream\<^sup>\<Omega>. x = (ubLeast (ubDom\<cdot>x)) \<or> (\<exists>a s. ubDom\<cdot>a = ubDom\<cdot>x \<and> ubDom\<cdot>s = ubDom\<cdot>x \<and> ubMaxLen (Fin 1) a \<and> x = ubConc a\<cdot>s)"
   apply(case_tac "x = (ubLeast (ubDom\<cdot>x))")
    apply(simp_all)
@@ -43,13 +44,24 @@ proof -
   fix x :: "'a stream\<^sup>\<Omega>"
   assume "x \<noteq> ubLeast (ubDom\<cdot>x)"
   show "\<exists>a::'a stream\<^sup>\<Omega>. ubDom\<cdot>a = ubDom\<cdot>x \<and> (\<exists>s::'a stream\<^sup>\<Omega>. ubDom\<cdot>s = ubDom\<cdot>x \<and> ubMaxLen (Fin (Suc (0::nat))) a \<and> x = ubConc a\<cdot>s)"
-    apply(rule_tac x = "sbTake 1\<cdot>x" in exI)
+    apply(rule_tac x = "sbHd\<cdot>x" in exI)
     apply(simp)
     apply(rule_tac x = "sbRt\<cdot>x" in exI)
     apply(simp)
     apply rule
-    
-    sorry
+     apply(simp add: ubMaxLen_def usclLen_stream_def sbHd_def)
+    apply(rule ub_eq)
+    apply (simp add: sbtake_sbdom)
+  proof - 
+    fix c
+    assume c_domx: "c \<in> ubDom\<cdot>x"
+    show "x  .  c = ubConc (sbHd\<cdot>x)\<cdot>(sbRt\<cdot>x)  .  c"
+      apply(subst ubConc_usclConc_eq)
+      using c_domx apply simp
+      using c_domx apply simp
+      apply(simp add: usclConc_stream_def)
+      by (simp add: c_domx sbHd_def sbRt_def)
+  qed
 qed
 
 lemma sbcases2: "\<And>(x :: 'a stream\<^sup>\<Omega>) P. \<lbrakk>x = (ubLeast (ubDom\<cdot>x)) \<Longrightarrow> P; 
@@ -78,11 +90,13 @@ proof -
       by (simp add: a1 sbtake_zero)
   next
     case (Suc n)
-    then show ?case 
+    then have "P (sbTake n\<cdot>x)"
+      by blast
+    show ?case
       apply(rule_tac x=x in sbcases2)
-       apply (metis sbtake_sbdom sbtake_sbgetch stream.take_strict ubgetchI ubleast_ubgetch)
-      apply(simp add: sbcases)
-      using sbcases
+      using a1 apply (metis sbtake_sbdom sbtake_sbgetch stream.take_strict ubgetchI ubleast_ubgetch)
+      
+      
       sorry
   qed
 qed
