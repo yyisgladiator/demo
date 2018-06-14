@@ -559,7 +559,8 @@ lemma uspec_sercomp_h2: assumes "uspec_sercompwell S1 S2"
 
 (* sercomp of uspec is associative  *)
 lemma uspec_sercomp_asso: assumes "uspec_sercompwell S1 S2" and "uspec_sercompwell S2 S3"
-and "uspecDom\<cdot>S1 \<inter> uspecRan\<cdot>S3 = {}"
+and "uspecDom\<cdot>S1 \<inter> uspecRan\<cdot>S2 = {}" 
+and "uspecDom\<cdot>S2 \<inter> uspecRan\<cdot>S3 = {}" 
 shows "((S1 \<circle> S2) \<circle> S3) = (S1 \<circle> (S2 \<circle> S3))"
 proof -
   have f0: "uspec_sercompwell (S1 \<circle> S2) S3"
@@ -574,11 +575,12 @@ proof -
       using assms(1) f3_def f4_def uspec_sercompwell2ufunclsercompwell by blast
     have f2: "ufunclSerCompWell f4 f2"
       using a2 assms(2) f4_def uspec_sercompwell_def by blast
-    have f3: "ufclDom\<cdot>f3 \<inter> ufclRan\<cdot>f2 = {}"
-      using assms(3) f3_def a2 
-      by (metis uspec_allDom uspec_allRan uspecrevset_insert)
+    have f3: "ufclDom\<cdot>f3 \<inter> ufclRan\<cdot>f4 = {}"
+      by (metis assms(3) f3_def f4_def uspec_allDom uspec_allRan uspecrevset_insert)
+    have f4: "ufclDom\<cdot>f4 \<inter> ufclRan\<cdot>f2 = {}"
+      by (metis a2 assms(4) f4_def uspec_allDom uspec_allRan uspecrevset_insert)
     show "ufunclSerCompWell f1 f2"
-      by (simp add: f1 f1_eq_f3_f4 f2 f3 sercompwell_asso2)
+      by (simp add: f1 f1_eq_f3_f4 f2 f3 f4 sercompwell_asso2)
   qed
   have f1: "uspec_sercompwell S1 (S2 \<circle> S3)"
   proof (simp add: uspec_sercompwell_def, auto)
@@ -592,11 +594,12 @@ proof -
       using assms(2) f3_def f4_def uspec_sercompwell_def by auto
     have f2: "ufunclSerCompWell f1 f3"
       using a1 assms(1) f3_def uspec_sercompwell2ufunclsercompwell by blast
-    have f3: "ufclDom\<cdot>f1 \<inter> ufclRan\<cdot>f4 = {}"
-      using assms(3) f4_def a1 
-      by (metis uspec_allDom uspec_allRan uspecrevset_insert)
+    have f3: "ufclDom\<cdot>f1 \<inter> ufclRan\<cdot>f3 = {}"
+      by (metis a1 assms(3) f3_def uspec_allDom uspec_allRan uspecrevset_insert)
+    have f4: "ufclDom\<cdot>f3 \<inter> ufclRan\<cdot>f4 = {}"
+      by (metis assms(4) f3_def f4_def uspec_allDom uspec_allRan uspecrevset_insert)
     show "ufunclSerCompWell f1 f2"
-      by (simp add: f1 f1_eq_f3_f4 f2 f3 sercompwell_asso1)
+      by (simp add: f1 f1_eq_f3_f4 f2 f3 f4 sercompwell_asso1)
   qed
   have f2: "uspecRevSet\<cdot>(S1 \<circle> S2 \<circle> S3) = 
       Rev {f1 \<circ> f2 |f1 f2. f1 \<in> Rep_rev_uspec (S1 \<circle> S2) \<and> f2 \<in> Rep_rev_uspec S3}"
