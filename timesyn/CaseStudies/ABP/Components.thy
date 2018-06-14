@@ -246,4 +246,147 @@ lemma recspf_receiverspf_eq: "ReceiverSPF = RecSPF"
   apply (simp add: receiverspf_ufdom recspf_ufdom)
   by (simp add: recspf_receiverspf_ub_eq ubclDom_ubundle_def)
 
+(* ----------------------------------------------------------------------- *)
+  section {* Automaton Receiver Step Lemmata *}
+(* ----------------------------------------------------------------------- *) 
+
+(*if the domain of the input bundle is {\<guillemotright>dr} then the domain of the output bundle is a subset of {ar\<guillemotright>, o\<guillemotright>} *)
+
+lemma receiveraut_ubdom_h_null:
+  assumes "ubDom\<cdot>sb={\<guillemotright>dr}" 
+  shows "ubDom\<cdot>( ubConc (tsynbNull ar\<guillemotright> \<uplus> tsynbNull o\<guillemotright>)\<cdot>(h ReceiverAutomaton (ReceiverState.State s) \<rightleftharpoons> sb)) \<subseteq> {ar\<guillemotright>, o\<guillemotright>}"
+  apply(simp)
+  apply(rule conjI)
+  apply (simp add: tsynbnullar_tsynbnullo_ubclunion_ubdom)
+  by (simp add: ReceiverAutomaton.rep_eq assms getDom_def getRan_def h_out_dom)
+
+lemma receiveraut_ubdom_h_ar: 
+  assumes "ubDom\<cdot>sb={\<guillemotright>dr}" 
+  shows "ubDom\<cdot>( ubConc ((createArOutput x) \<uplus> (tsynbNull o\<guillemotright>))\<cdot>(h ReceiverAutomaton (ReceiverState.State s) \<rightleftharpoons> sb)) \<subseteq> {ar\<guillemotright>, o\<guillemotright>}"
+  apply(simp)
+  apply(rule conjI)
+  apply (simp add: createaroutput_tsynbnullo_ubclunion_ubdom)
+  by (metis ReceiverAutomaton.abs_eq ReceiverAutomaton.rep_eq ReceiverAutomaton_def assms equalityD1 getDom_def getRan_def h_out_dom prod.sel(1) snd_conv)
+
+lemma receiveraut_ubdom_h_ar_o: 
+  assumes "ubDom\<cdot>sb={\<guillemotright>dr}" 
+  shows "ubDom\<cdot>( ubConc ((createArOutput x) \<uplus> (createOOutput y))\<cdot>(h ReceiverAutomaton (ReceiverState.State s) \<rightleftharpoons> sb)) \<subseteq> {ar\<guillemotright>, o\<guillemotright>}"
+  apply(simp)
+  apply(rule conjI)
+  apply (simp add: createaroutput_createooutput_ubclunion_ubdom)
+  by (simp add: ReceiverAutomaton.rep_eq assms getDom_def getRan_def h_out_dom)
+
+(*Some useful lemmata about createBundle*)
+
+lemma MsgA_ctype: "(Msg (A a)) \<in> ctype \<guillemotright>dr"
+  by (simp add: ctype_tsynI)
+
+lemma createbundle_ubgetch[simp]: "(createBundle (Msg (A a)) \<guillemotright>dr) . \<guillemotright>dr = \<up>(Msg (A a))"
+  apply(simp add: MsgA_ctype)
+  by (metis MsgA_ctype createBundle.rep_eq createBundle_apply fun_upd_same option.sel ubgetch_insert)
+
+lemma createbundle_ubconc[simp]:
+  assumes "ubDom\<cdot>sb = {\<guillemotright>dr}" 
+  shows "ubConc (createBundle (Msg (A a)) \<guillemotright>dr)\<cdot>sb .  \<guillemotright>dr = \<up>(Msg (A a)) \<bullet> (sb.  \<guillemotright>dr)"
+  by(simp add: assms ubConc_usclConc_eq usclConc_stream_def)
+
+lemma createbundle_ubconc_sbrt[simp]:
+  assumes "ubDom\<cdot>sb = {\<guillemotright>dr}" 
+  shows "sbRt\<cdot>(ubConc (createBundle (Msg (A a)) \<guillemotright>dr)\<cdot>sb) = sb"
+  apply (rule ub_eq)
+  by (simp add: sbRt_def assms) + 
+
+(* simplifies expressions that occur in the step lemmata*)
+
+lemma tsynbonetick_hd_inv_convdiscrtup_tick[simp]:
+  assumes "ubDom\<cdot>sb = {\<guillemotright>dr}" 
+  shows "(inv convDiscrUp (sbHdElem\<cdot>(ubConc (tsynbNull \<guillemotright>dr)\<cdot>sb))) = [\<guillemotright>dr \<mapsto> null]"
+  apply (rule  convDiscrUp_eqI)
+  apply (subst convdiscrup_inv_eq)
+  apply (simp add: assms sbHdElem_channel)
+  apply (subst fun_eq_iff)
+  apply rule
+  apply (case_tac "x = \<guillemotright>dr")
+  unfolding sbHdElem_def
+  apply (simp_all add: sbHdElem_cont assms)
+  unfolding convDiscrUp_def
+  apply simp
+  apply (simp add: up_def)
+  by simp
+
+lemma tsynbonetick_hd_inv_convdiscrtup_msg[simp]:
+  assumes "ubDom\<cdot>sb = {\<guillemotright>dr}" 
+  shows "(inv convDiscrUp (sbHdElem\<cdot>(ubConc (createBundle (Msg (A a)) \<guillemotright>dr)\<cdot>sb))) = [\<guillemotright>dr \<mapsto> Msg (A a)]"
+  apply (rule  convDiscrUp_eqI)
+  apply (subst convdiscrup_inv_eq)
+  apply (simp add: assms sbHdElem_channel)
+  apply (subst fun_eq_iff)
+  apply rule
+  apply (case_tac "x = \<guillemotright>dr")
+  unfolding sbHdElem_def
+   apply (simp_all add: sbHdElem_cont assms)
+  unfolding convDiscrUp_def
+   apply (simp add: up_def)
+  by simp   
+
+(* h_step lemma for state rf and input null *)
+lemma receiveraut_h_rf_null_step: 
+  assumes "ubDom\<cdot>sb = {\<guillemotright>dr}"
+  shows "h ReceiverAutomaton (State Rf) \<rightleftharpoons> (ubConc (tsynbNull \<guillemotright>dr)\<cdot>sb) 
+          = ubConc ((tsynbNull ar\<guillemotright>) \<uplus> (tsynbNull o\<guillemotright>))\<cdot>(h ReceiverAutomaton (State Rf) \<rightleftharpoons> sb)"
+  apply (simp_all add: h_final getDom_def ReceiverAutomaton.rep_eq h_out_dom assms getRan_def autGetNextOutput_def autGetNextState_def getTransition_def)
+  using assms receiveraut_ubdom_h_null by auto
+
+(* h_step lemma for state Rt and input null *)
+lemma receiveraut_h_rt_null_step: 
+  assumes "ubDom\<cdot>sb = {\<guillemotright>dr}"
+  shows "h ReceiverAutomaton (State Rt) \<rightleftharpoons> (ubConc (tsynbNull \<guillemotright>dr)\<cdot>sb) 
+          = ubConc ((tsynbNull ar\<guillemotright>) \<uplus> (tsynbNull o\<guillemotright>))\<cdot>(h ReceiverAutomaton (State Rt) \<rightleftharpoons> sb)"
+  apply (simp_all add: h_final getDom_def ReceiverAutomaton.rep_eq h_out_dom assms getRan_def autGetNextOutput_def autGetNextState_def getTransition_def)
+  using assms receiveraut_ubdom_h_null by auto
+
+(* h_step lemma for state Rf and input true *)
+lemma receiveraut_h_rf_true_step: 
+  assumes "ubDom\<cdot>sb = {\<guillemotright>dr}" 
+    and "(snd a) = True"
+  shows "h ReceiverAutomaton (State Rf) \<rightleftharpoons> (ubConc (createBundle (Msg (A a)) \<guillemotright>dr)\<cdot>sb) 
+          = ubConc (createArOutput (snd a) \<uplus> (tsynbNull o\<guillemotright>))\<cdot>(h ReceiverAutomaton (State Rf) \<rightleftharpoons> sb)"
+apply (simp_all add: h_final getDom_def ReceiverAutomaton.rep_eq h_out_dom assms getRan_def autGetNextOutput_def autGetNextState_def getTransition_def)
+  using assms receiveraut_ubdom_h_ar by auto
+
+(* h_step lemma for state Rt and input true *)
+lemma receiveraut_h_rt_true_step: 
+  assumes "ubDom\<cdot>sb = {\<guillemotright>dr}" 
+    and "(snd a) = True"
+  shows "h ReceiverAutomaton (State Rt) \<rightleftharpoons> (ubConc (createBundle (Msg (A a)) \<guillemotright>dr)\<cdot>sb) 
+          = ubConc (createArOutput (snd a) \<uplus> (createOOutput (fst a)))\<cdot>(h ReceiverAutomaton (State Rf) \<rightleftharpoons> sb)"
+apply (simp_all add: h_final getDom_def ReceiverAutomaton.rep_eq h_out_dom assms getRan_def autGetNextOutput_def autGetNextState_def getTransition_def)
+  using assms receiveraut_ubdom_h_ar_o by auto
+
+(* h_step lemma for state Rf and input false *)
+lemma receiveraut_h_rf_false_step: 
+  assumes "ubDom\<cdot>sb = {\<guillemotright>dr}" 
+    and "(snd a) = False"
+  shows "h ReceiverAutomaton (State Rf) \<rightleftharpoons> (ubConc (createBundle (Msg (A a)) \<guillemotright>dr)\<cdot>sb) 
+          = ubConc (createArOutput (snd a) \<uplus> createOOutput (fst a))\<cdot>(h ReceiverAutomaton (State Rt) \<rightleftharpoons> sb)"
+apply (simp_all add: h_final getDom_def ReceiverAutomaton.rep_eq h_out_dom assms getRan_def autGetNextOutput_def autGetNextState_def getTransition_def)
+  using assms receiveraut_ubdom_h_ar_o by auto
+
+(* h_step lemma for state Rt and input false *)
+lemma receiveraut_h_rt_false_step: 
+  assumes "ubDom\<cdot>sb = {\<guillemotright>dr}" 
+    and "(snd a) = False"
+  shows "h ReceiverAutomaton (State Rt) \<rightleftharpoons> (ubConc (createBundle (Msg (A a)) \<guillemotright>dr)\<cdot>sb) 
+          = ubConc (createArOutput (snd a) \<uplus> (tsynbNull o\<guillemotright>))\<cdot>(h ReceiverAutomaton (State Rt) \<rightleftharpoons> sb)"
+apply (simp_all add: h_final getDom_def ReceiverAutomaton.rep_eq h_out_dom assms getRan_def autGetNextOutput_def autGetNextState_def getTransition_def)
+ using assms receiveraut_ubdom_h_ar by auto
+
+(* H_step lemma *)
+lemma evenaut_H_step: 
+  assumes "ubDom\<cdot>sb={\<guillemotright>dr}"
+  shows "H ReceiverAutomaton \<rightleftharpoons> sb = ubConc ((tsynbNull ar\<guillemotright>) \<uplus> (tsynbNull o\<guillemotright>))\<cdot>(h ReceiverAutomaton (State Rt) \<rightleftharpoons> sb)"
+  unfolding H_def
+  apply(simp add: h_out_dom getRan_def getInitialState_def getInitialOutput_def ReceiverAutomaton.rep_eq getDom_def assms)
+  using assms receiveraut_ubdom_h_null by auto
+
 end
