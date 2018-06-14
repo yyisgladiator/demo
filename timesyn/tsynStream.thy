@@ -152,6 +152,15 @@ fun tsynDropWhile_h :: "('a \<Rightarrow> bool) \<Rightarrow> bool \<Rightarrow>
 definition tsynDropWhile :: "('a \<Rightarrow> bool) \<Rightarrow> 'a tsyn stream \<rightarrow> 'a tsyn stream" where
   "tsynDropWhile f =  sscanlA (tsynDropWhile_h f) True"
 
+text {* @{term tsynZip}: Merge a tysn stream with a stream. *}
+fixrec tsynZip :: "'a tsyn stream \<rightarrow> 'b stream \<rightarrow> ('a \<times> 'b) tsyn stream" where
+  "tsynZip\<cdot>\<epsilon>\<cdot>s = \<epsilon>" |
+  "tsynZip\<cdot>s\<cdot>\<epsilon> = \<epsilon>" |
+  "tsynZip\<cdot>(up\<cdot>a && as)\<cdot>(up\<cdot>b && bs) = (
+     if (undiscr a) = null then \<up>null \<bullet> tsynZip\<cdot>as\<cdot>(up\<cdot>b && bs)
+     else \<up>(Msg ((invMsg (undiscr a)), (undiscr b))) \<bullet> tsynZip\<cdot>as\<cdot>bs 
+  )" 
+
 (* ----------------------------------------------------------------------- *)
   section {* Fixrec-Definitions on Time-Synchronous Streams *}
 (* ----------------------------------------------------------------------- *)
@@ -649,6 +658,35 @@ lemma tsynlen_test_infstream: "tsynLen\<cdot>(<[null, Msg a]>\<infinity>) = \<in
   by (metis Fin_neq_inf gr_0 inf_ub less_le list2s_Suc list2streamFin lscons_conv 
       tsynlen_inftimes_finite tsynlen_sconc_msg tsynlen_sconc_null) 
 
+(* ----------------------------------------------------------------------- *)
+  subsection {* tsynZip *}
+(* ----------------------------------------------------------------------- *)
+
+(* ToDo: add descriptions. *)
+
+lemma tsynzip_sconc_msg: 
+  "tsynZip\<cdot>(\<up>(Msg x) \<bullet> xs)\<cdot>(\<up>y \<bullet> ys) = \<up>(Msg (x,y)) \<bullet> tsynZip\<cdot>xs\<cdot>ys"
+  by (metis (no_types, lifting) tsynZip.simps(3) inverseMsg.simps(2) lscons_conv tsyn.distinct(1) 
+      undiscr_Discr)
+
+lemma tsynzip_sconc_null: 
+  "ys \<noteq> \<epsilon> \<Longrightarrow> tsynZip\<cdot>(\<up>null \<bullet> xs)\<cdot>ys = \<up>null \<bullet> tsynZip\<cdot>xs\<cdot>ys"
+  by (metis (no_types, hide_lams) tsynZip.simps(3) lscons_conv scases undiscr_Discr)
+
+lemma tsynzip_test_finstream: 
+  "tsynZip\<cdot>(<[Msg 1, null, Msg 2, Msg 3, null]>)\<cdot>(<[4, 2, 3]>) 
+     = <[Msg (1,4), null, Msg (2,2), Msg (3,3)]>"
+  apply (simp add: tsynzip_sconc_msg tsynzip_sconc_null)
+  by (metis lscons_conv sup'_def tsynZip.simps(2) tsynzip_sconc_msg)
+
+lemma tsynzip_test_infstream: 
+  "tsynZip\<cdot>(<[Msg 1, null]>\<infinity>)\<cdot>(\<up>2\<infinity>) = <[Msg (1,2),null]>\<infinity>"
+  apply (subst rek2sinftimes [of "tsynZip\<cdot>(<[Msg 1, null]>\<infinity>)\<cdot>(\<up>2\<infinity>)" "<[Msg (1,2), null]>"])
+  apply (simp_all)
+  apply (subst sinftimes_unfold, simp)
+  apply (subst sinftimes_unfold [of "\<up>2"])
+  by (simp add: tsynzip_sconc_msg tsynzip_sconc_null)
+ 
 (* ----------------------------------------------------------------------- *)
   section {* tsynSum - CaseStudy *}
 (* ----------------------------------------------------------------------- *)
