@@ -37,6 +37,7 @@ lemma tsynnullsb_ubconc_sbrt [simp]:
   assumes "ubDom\<cdot>sb = {c}"
   shows "sbRt\<cdot>(ubConc (tsynbNull c)\<cdot>sb) = sb"
   apply (rule ub_eq)
-  by (simp add: assms sbRt_def)+
+  apply (simp add: assms sbRt_def)+
+  by (simp add: usclConc_stream_def)
     
 end
