@@ -369,6 +369,26 @@ lemma tsynscanl_slen: "#(tsynScanl f i\<cdot>s) = #s"
   by (simp add: tsynscanl_insert tsynscanlext_slen)
 
 (* ----------------------------------------------------------------------- *)
+  subsection {* tsynZip *}
+(* ----------------------------------------------------------------------- *)
+
+lemma tsynzip_sconc_msg: "tsynZip\<cdot>(\<up>(Msg x) \<bullet> xs)\<cdot>(\<up>(y) \<bullet> ys) = \<up>(Msg (x,y)) \<bullet> tsynZip\<cdot>xs\<cdot>ys"
+  by (metis (no_types, lifting) tsynZip.simps(3) inverseMsg.simps(2) lscons_conv tsyn.distinct(1) undiscr_Discr)
+
+lemma tsynzip_sconc_null: "ys \<noteq> \<epsilon> \<Longrightarrow> tsynZip\<cdot>(\<up>null \<bullet> xs)\<cdot>ys = \<up>null \<bullet> tsynZip\<cdot>xs\<cdot>ys"
+  by (metis (no_types, hide_lams) tsynZip.simps(3) lscons_conv scases undiscr_Discr)
+
+lemma tsynzip_test: "tsynZip\<cdot>(<[Msg 1, null, Msg 2, Msg 3, null]>)\<cdot>(<[4,2,3]>) = <[Msg (1,4),null,Msg (2,2),Msg (3,3)]>"
+  apply (simp add: tsynzip_sconc_msg tsynzip_sconc_null)
+  by (metis lscons_conv sup'_def tsynZip.simps(2) tsynzip_sconc_msg)
+
+lemma tsynzip_test_inf: "tsynZip\<cdot>(<[Msg 1, null]>\<infinity>)\<cdot>(\<up>2\<infinity>) = <[Msg (1,2),null]>\<infinity>"
+  apply (subst rek2sinftimes [of "tsynZip\<cdot>(<[Msg 1, null]>\<infinity>)\<cdot>(\<up>2\<infinity>)" "<[Msg (1,2), null]>"],simp_all)
+  apply (subst sinftimes_unfold,simp)
+  apply (subst sinftimes_unfold [of "\<up>2"])
+  by (simp add: tsynzip_sconc_msg tsynzip_sconc_null)
+ 
+(* ----------------------------------------------------------------------- *)
   section {* tsynSum - CaseStudy *}
 (* ----------------------------------------------------------------------- *)
 
