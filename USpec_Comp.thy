@@ -67,6 +67,12 @@ definition uspecLeast :: "channel set \<Rightarrow> channel set \<Rightarrow> 'm
 definition uspecFix ::"channel set \<Rightarrow> channel set \<Rightarrow> ('a uspec \<rightarrow> 'a uspec) \<rightarrow> 'a uspec" where
 "uspecFix cin cout \<equiv> (\<Lambda> F.  fixg (uspecLeast cin cout)\<cdot>F)"
 
+definition uspecImage::  "('m \<Rightarrow> 'n) \<Rightarrow> 'm uspec \<Rightarrow> 'n uspec" where
+"uspecImage f \<equiv>  \<lambda> S.
+Abs_uspec ((setrevImage f (uspecRevSet\<cdot>S)), 
+  Discr (ufclDom\<cdot> (f (ufunclLeast (uspecDom\<cdot> S) (uspecRan\<cdot> S)))),
+  Discr (ufclRan\<cdot> (f (ufunclLeast (uspecDom\<cdot> S) (uspecRan\<cdot> S)))))"
+
 (****************************************************)
 section\<open>Lemmas\<close>
 (****************************************************)   
@@ -700,5 +706,137 @@ proof -
     by blast
 qed
 
+
+
+lemma  uspecimage_well:
+  assumes "\<And>x y. ((ufclDom\<cdot>x = ufclDom\<cdot>y \<and> ufclRan\<cdot>x = ufclRan\<cdot>y) \<Longrightarrow>
+    (ufclDom\<cdot>(f x) = ufclDom\<cdot>(f y) \<and> ufclRan\<cdot>(f x) = ufclRan\<cdot>(f y)))"
+  shows "uspecWell (setrevImage f (uspecRevSet\<cdot>S)) 
+  (Discr (ufclDom\<cdot> (f (ufunclLeast (uspecDom\<cdot> S) (uspecRan\<cdot> S)))))
+  (Discr (ufclRan\<cdot> (f (ufunclLeast (uspecDom\<cdot> S) (uspecRan\<cdot> S)))))"
+  by (simp add: assms setrevImage_def ufuncldom_least_dom ufuncldom_least_ran uspec_allDom uspec_allRan)
+
+lemma uspecimage_useful_uspecrevset:
+  assumes "\<And>x y. ((ufclDom\<cdot>x = ufclDom\<cdot>y \<and> ufclRan\<cdot>x = ufclRan\<cdot>y) \<Longrightarrow>
+    (ufclDom\<cdot>(f x) = ufclDom\<cdot>(f y) \<and> ufclRan\<cdot>(f x) = ufclRan\<cdot>(f y)))"
+  shows  "\<And>S. setrevImage f (uspecRevSet\<cdot>S) = uspecRevSet\<cdot>(uspecImage f S)"
+  by (smt assms uspecimage_well rep_abs_rev_simp rev_inv_rev setrevImage_def uspecImage_def uspecrevset_insert)
+
+lemma uspecimage_useful_dom:
+  assumes "\<And>x y. ((ufclDom\<cdot>x = ufclDom\<cdot>y \<and> ufclRan\<cdot>x = ufclRan\<cdot>y) \<Longrightarrow>
+    (ufclDom\<cdot>(f x) = ufclDom\<cdot>(f y) \<and> ufclRan\<cdot>(f x) = ufclRan\<cdot>(f y)))"
+  shows  "\<And>S. ufclDom\<cdot> (f (ufunclLeast (uspecDom\<cdot> S) (uspecRan\<cdot> S))) 
+    =  uspecDom\<cdot>(uspecImage f S)"
+ by (smt assms fst_conv uspecimage_well rep_abs_uspec snd_conv undiscr_Discr uspecImage_def uspecdom_insert)
+
+lemma uspecimage_useful_ran:
+  assumes "\<And>x y. ((ufclDom\<cdot>x = ufclDom\<cdot>y \<and> ufclRan\<cdot>x = ufclRan\<cdot>y) \<Longrightarrow>
+    (ufclDom\<cdot>(f x) = ufclDom\<cdot>(f y) \<and> ufclRan\<cdot>(f x) = ufclRan\<cdot>(f y)))"
+  shows "\<And>S. ufclRan\<cdot> (f (ufunclLeast (uspecDom\<cdot> S) (uspecRan\<cdot> S))) 
+    =  uspecRan\<cdot>(uspecImage f S)"
+ by (smt assms fst_conv uspecimage_well rep_abs_uspec snd_conv undiscr_Discr uspecImage_def uspecran_insert)
+
+lemma  uspecimage_mono: 
+  assumes "\<And>x y. ((ufclDom\<cdot>x = ufclDom\<cdot>y \<and> ufclRan\<cdot>x = ufclRan\<cdot>y) \<Longrightarrow>
+    (ufclDom\<cdot>((f::('m::ufuncl_comp \<Rightarrow> 'n::ufuncl_comp)) x) = ufclDom\<cdot>(f y) \<and> ufclRan\<cdot>(f x) = ufclRan\<cdot>(f y)))"
+shows "monofun (uspecImage f)"
+proof (rule monofunI)
+  have b0:  "\<And>(x::'m uspec) y::'m uspec. x \<sqsubseteq> y 
+  \<Longrightarrow> (setrevImage f (uspecRevSet\<cdot>x))  \<sqsubseteq> (setrevImage f (uspecRevSet\<cdot>y))"
+    by (metis image_mono inv_rev_rev monofun_cfun_arg revBelowNeqSubset setrevImage_def)
+  have b1: "\<And>(x::'m uspec) y::'m uspec. x \<sqsubseteq> y 
+  \<Longrightarrow> (uspecRevSet\<cdot>(uspecImage f x)) \<sqsubseteq> (uspecRevSet\<cdot>(uspecImage f y))"
+    by (metis (full_types) assms b0 uspecimage_useful_uspecrevset)
+  show "\<And>(x::'m uspec) y::'m uspec. x \<sqsubseteq> y \<Longrightarrow> uspecImage f x \<sqsubseteq> uspecImage f y"
+    by (smt assms b1 uspecimage_useful_dom uspecimage_useful_ran uspec_belowI uspecdom_eq uspecran_eq)
+qed 
+
+lemma  uspecimage_cont_uspecrevset:
+ assumes "inj (f::('m::ufuncl_comp \<Rightarrow> 'n::ufuncl_comp))"
+  and "\<And>x y. ((ufclDom\<cdot>x = ufclDom\<cdot>y \<and> ufclRan\<cdot>x = ufclRan\<cdot>y) \<Longrightarrow>
+    (ufclDom\<cdot>(f x) = ufclDom\<cdot>(f y) \<and> ufclRan\<cdot>(f x) = ufclRan\<cdot>(f y)))"
+  and "chain Y"
+  and "chain (\<lambda>i::nat. uspecImage f (Y i))"
+shows "uspecRevSet\<cdot>(uspecImage f (\<Squnion>i::nat. Y i)) \<sqsubseteq> uspecRevSet\<cdot>((\<Squnion>i::nat. uspecImage f (Y i)))"
+proof -
+  have b0: "\<And>S. uspecRevSet\<cdot>(uspecImage f S) = setrevImage f (uspecRevSet\<cdot>S)"
+    by (metis assms(2) uspecimage_useful_uspecrevset)
+  have b1: "uspecRevSet\<cdot>(uspecImage f (\<Squnion>i::nat. Y i)) = setrevImage f (uspecRevSet\<cdot>(\<Squnion>i::nat. Y i))"
+    by (simp add: b0)
+  have b2: "setrevImage f (uspecRevSet\<cdot>(\<Squnion>i::nat. Y i)) = setrevImage f (\<Squnion>i::nat. uspecRevSet\<cdot>(Y i))"
+    by (metis assms(3) contlub_cfun_arg)
+  have b3: "setrevImage f (\<Squnion>i::nat. uspecRevSet\<cdot>(Y i)) \<sqsubseteq> (\<Squnion>i::nat. setrevImage f (uspecRevSet\<cdot>(Y i)))"
+    using image_cont_rev assms(1) assms(3) ch2ch_Rep_cfunR cont2contlubE eq_imp_below by blast
+  have b4: "(\<Squnion>i::nat. setrevImage f (uspecRevSet\<cdot>(Y i))) = (\<Squnion>i::nat. uspecRevSet\<cdot>(uspecImage f (Y i)))"
+    using b0 by auto
+  have b5: "(\<Squnion>i::nat. uspecRevSet\<cdot>(uspecImage f (Y i))) = uspecRevSet\<cdot>((\<Squnion>i::nat. uspecImage f (Y i)))"
+    by (simp add: assms(4) cont2contlubE)
+  show ?thesis
+    using b1 b2 b3 b4 b5 by auto
+qed
+
+lemma uspecimage_cont_helper: 
+  assumes "inj (f::('m::ufuncl_comp \<Rightarrow> 'n::ufuncl_comp))"
+  and "\<And>x y. ((ufclDom\<cdot>x = ufclDom\<cdot>y \<and> ufclRan\<cdot>x = ufclRan\<cdot>y) \<Longrightarrow>
+    (ufclDom\<cdot>(f x) = ufclDom\<cdot>(f y) \<and> ufclRan\<cdot>(f x) = ufclRan\<cdot>(f y)))"
+shows "cont (uspecImage f)"
+  apply (rule Cont.contI2)
+  subgoal
+    using assms(1) assms(2) uspecimage_mono by blast
+  subgoal
+  proof -
+    have b0: "\<And>Y. chain Y \<Longrightarrow> chain (\<lambda>i::nat. uspecImage f (Y i)) 
+      \<Longrightarrow> uspecDom\<cdot>(uspecImage f (\<Squnion>i::nat. Y i)) = uspecDom\<cdot>(\<Squnion>i::nat. uspecImage f (Y i))"
+      by (metis (no_types) \<open>monofun (uspecImage (f::'m::ufuncl_comp \<Rightarrow> 'n::ufuncl_comp))\<close> 
+        is_ub_thelub monofun_def uspecdom_eq)
+    have b1: "\<And>Y. chain Y \<Longrightarrow> chain (\<lambda>i::nat. uspecImage f (Y i)) 
+      \<Longrightarrow> uspecRan\<cdot>(uspecImage f (\<Squnion>i::nat. Y i)) = uspecRan\<cdot>(\<Squnion>i::nat. uspecImage f (Y i))"
+      by (metis (no_types) \<open>monofun (uspecImage (f::'m::ufuncl_comp \<Rightarrow> 'n::ufuncl_comp))\<close> 
+        is_ub_thelub monofun_def uspecran_eq)
+    show  "\<And>Y. chain Y \<Longrightarrow> chain (\<lambda>i::nat. uspecImage f (Y i)) 
+      \<Longrightarrow> uspecImage f (\<Squnion>i::nat. Y i) \<sqsubseteq> (\<Squnion>i::nat. uspecImage f (Y i))"
+proof -
+fix Ya :: "nat \<Rightarrow> 'm uspec"
+assume a1: "chain Ya"
+  assume a2: "chain (\<lambda>i. uspecImage f (Ya i))"
+  have "\<forall>f fa. (inj fa \<and> (\<forall>m ma. ufclDom\<cdot>(m::'m) = ufclDom\<cdot>ma \<and> ufclRan\<cdot>m = ufclRan\<cdot>ma \<longrightarrow> ufclDom\<cdot>(fa m::'n) = ufclDom\<cdot>(fa ma) 
+    \<and> ufclRan\<cdot>(fa m) = ufclRan\<cdot>(fa ma)) \<and> chain f \<and> chain (\<lambda>n. uspecImage fa (f n)) \<longrightarrow> uspecRevSet\<cdot>(uspecImage fa (Lub f)) 
+    \<sqsubseteq> uspecRevSet\<cdot>(\<Squnion>n. uspecImage fa (f n))) = ((\<not> inj fa \<or> (\<exists>m ma. (ufclDom\<cdot>m = ufclDom\<cdot>ma \<and> ufclRan\<cdot>m = ufclRan\<cdot>ma) 
+    \<and> (ufclDom\<cdot>(fa m) \<noteq> ufclDom\<cdot>(fa ma) \<or> ufclRan\<cdot>(fa m) \<noteq> ufclRan\<cdot>(fa ma))) \<or> \<not> chain f \<or> \<not> chain (\<lambda>n. uspecImage fa (f n))) 
+    \<or> uspecRevSet\<cdot>(uspecImage fa (Lub f)) \<sqsubseteq> uspecRevSet\<cdot>(\<Squnion>n. uspecImage fa (f n)))"
+  by meson
+  then have f3: "\<forall>f fa. (\<not> inj f \<or> (\<exists>m ma. (ufclDom\<cdot>(m::'m) = ufclDom\<cdot>ma \<and> ufclRan\<cdot>m = ufclRan\<cdot>ma) \<and> (ufclDom\<cdot>(f m::'n) 
+    \<noteq> ufclDom\<cdot>(f ma) \<or> ufclRan\<cdot>(f m) \<noteq> ufclRan\<cdot>(f ma))) \<or> \<not> chain fa \<or> \<not> chain (\<lambda>n. uspecImage f (fa n))) \<or> 
+    uspecRevSet\<cdot>(uspecImage f (Lub fa)) \<sqsubseteq> uspecRevSet\<cdot>(\<Squnion>n. uspecImage f (fa n))"
+    by (metis uspecimage_cont_uspecrevset)
+  have f4: "\<forall>f. ((ufclDom\<cdot>(v2_3 f::'m) \<noteq> ufclDom\<cdot>(v3_2 f) \<or> ufclRan\<cdot>(v2_3 f) \<noteq> ufclRan\<cdot>(v3_2 f)) \<or> ufclDom\<cdot>(f (v2_3 f)::'n) 
+    = ufclDom\<cdot>(f (v3_2 f)) \<and> ufclRan\<cdot>(f (v2_3 f)) = ufclRan\<cdot>(f (v3_2 f))) = ((ufclDom\<cdot>(v2_3 f) \<noteq> ufclDom\<cdot>(v3_2 f) \<or> ufclRan\<cdot>(v2_3 f) 
+    \<noteq> ufclRan\<cdot>(v3_2 f)) \<or> ufclDom\<cdot>(f (v2_3 f)) = ufclDom\<cdot>(f (v3_2 f)) \<and> ufclRan\<cdot>(f (v2_3 f)) = ufclRan\<cdot>(f (v3_2 f)))"
+    by metis
+  obtain nn :: "(nat \<Rightarrow> 'n uspec) \<Rightarrow> nat" where
+    "\<forall>f. (\<not> chain f \<or> (\<forall>n. f n \<sqsubseteq> f (Suc n))) \<and> (chain f \<or> f (nn f) \<notsqsubseteq> f (Suc (nn f)))"
+    using po_class.chain_def by moura
+  then obtain mm :: "('m \<Rightarrow> 'n) \<Rightarrow> 'm" and mma :: "('m \<Rightarrow> 'n) \<Rightarrow> 'm" where
+    f5: "ufclDom\<cdot>(mm f) = ufclDom\<cdot>(mma f) \<and> ufclRan\<cdot>(mm f) = ufclRan\<cdot>(mma f) \<and> (ufclDom\<cdot>(f (mm f)) \<noteq> ufclDom\<cdot>(f (mma f)) 
+    \<or> ufclRan\<cdot>(f (mm f)) \<noteq> ufclRan\<cdot>(f (mma f))) \<or> uspecRevSet\<cdot>(uspecImage f (Lub Ya)) \<sqsubseteq> uspecRevSet\<cdot>(\<Squnion>n. uspecImage f (Ya n))"
+    using f4 f3 a2 a1 by (meson assms(1))
+  have f6: "uspecDom\<cdot>(uspecImage f (Lub Ya)) = uspecDom\<cdot>(\<Squnion>n. uspecImage f (Ya n))"
+    using a2 a1 b0 by presburger
+  have "uspecRevSet\<cdot>(uspecImage f (Lub Ya)) \<sqsubseteq> uspecRevSet\<cdot>(\<Squnion>n. uspecImage f (Ya n))"
+    using f5 by (meson assms(2))
+  then show "uspecImage f (\<Squnion>n. Ya n) \<sqsubseteq> (\<Squnion>n. uspecImage f (Ya n))"
+    using f6 a2 a1 by (metis (no_types) b1 uspec_belowI)
+qed
+
+qed
+done
+
+
+lemma uspecimage_inj_cont: 
+  assumes "inj f"
+      and "\<And>x y. ufclDom\<cdot>x = ufclDom\<cdot>y \<and> ufclRan\<cdot>x = ufclRan\<cdot>y \<Longrightarrow>
+          ufclDom\<cdot>(f x) = ufclDom\<cdot>(f y) \<and> ufclRan\<cdot>(f x) = ufclRan\<cdot>(f y)"
+    shows "cont (uspecImage f)"
+  using assms uspecimage_cont_helper by blast
 
 end
