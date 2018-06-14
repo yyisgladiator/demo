@@ -2,7 +2,7 @@
 
 
 
-
+(* SWS: Falscher Dokument Name *)
 
 theory CounterDataTypes
 imports HOLCF

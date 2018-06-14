@@ -37,7 +37,7 @@ unfolding usclOkay_stream_def
 unfolding ctype_tsyn_def
 by simp
 
-
+(* SWS: es wird etwas lesbarer wenn du die abfrage "b=True" oder "b=False" im pattern matching machst *)
 fun senderTransitionH :: "(SenderState \<times> (Message tsyn \<times> Message tsyn)) \<Rightarrow> (SenderState \<times> Message tsyn SB)" where
     "senderTransitionH (State Sf automaton_buffer, (Msg (nat a), Msg (bool b))) = 
        (if((size automaton_buffer)>1 \<and> b=False) then ((State St ((prepend (butlast automaton_buffer))a),(createDsOutput (Pair (last (butlast automaton_buffer)) True ))))
