@@ -83,12 +83,99 @@ qed
 
 lemma spfStep_innerCont:"cont (\<lambda>  sb.  (ubDom\<cdot>sb = In) 
                                               \<leadsto> (if (sbHdElemWell sb) then ufRestrict In Out\<cdot>(h (Abs_sbElem(inv convDiscrUp (sbHdElem\<cdot>sb)))) \<rightleftharpoons> (sbRt\<cdot>sb) else ubclLeast Out))"
-  sorry
+proof(rule Cont.contI2, simp add: spfStep_innerMono)
+  fix Y::"nat \<Rightarrow> 'a stream\<^sup>\<Omega>"
+  assume a1:"chain Y"
+  assume a2:"chain (\<lambda>i::nat. (ubDom\<cdot>(Y i) = In)\<leadsto>if sbHdElemWell (Y i) then ufRestrict In Out\<cdot>(h (Abs_sbElem (inv convDiscrUp (sbHdElem\<cdot>(Y i))))) \<rightleftharpoons> sbRt\<cdot>(Y i) else ubclLeast Out)"
+  show "(ubDom\<cdot>(\<Squnion>i. Y i) = In)\<leadsto>if sbHdElemWell (\<Squnion>i. Y i) then 
+        ufRestrict In Out\<cdot>(h (Abs_sbElem (inv convDiscrUp (sbHdElem\<cdot>(\<Squnion>i. Y i))))) \<rightleftharpoons> sbRt\<cdot>(\<Squnion>i. Y i) else ubclLeast Out \<sqsubseteq>
+        (\<Squnion>i. (ubDom\<cdot>(Y i) = In)\<leadsto>if sbHdElemWell (Y i) then 
+        ufRestrict In Out\<cdot>(h (Abs_sbElem (inv convDiscrUp (sbHdElem\<cdot>(Y i))))) \<rightleftharpoons> sbRt\<cdot>(Y i) else ubclLeast Out)"
+    sorry
+qed
+  
 
 lemma spfStep_innerWell:"ufWell (\<Lambda>  sb.  (ubDom\<cdot>sb = In) 
                                               \<leadsto> (if (sbHdElemWell sb) then ufRestrict In Out\<cdot>(h (Abs_sbElem(inv convDiscrUp (sbHdElem\<cdot>sb)))) \<rightleftharpoons> (sbRt\<cdot>sb) else ubclLeast Out)) "
+proof(simp add: ufWell_def)
+  fix b::"'a stream\<^sup>\<Omega>"
+  have In:"\<forall>b.(b \<in> dom (Rep_cfun (\<Lambda> (sb::'a stream\<^sup>\<Omega>).
+                                   (ubDom\<cdot>sb = In)\<leadsto>if sbHdElemWell sb then ufRestrict In Out\<cdot>(h (Abs_sbElem (inv convDiscrUp (sbHdElem\<cdot>sb)))) \<rightleftharpoons> sbRt\<cdot>sb else ubclLeast Out))) =
+           (ubclDom\<cdot>b = In)"
+    by (simp add: domIff2 spfStep_innerCont ubclDom_ubundle_def)    
+  have Out:"\<forall>b. b \<in> ran (Rep_cfun (\<Lambda> (sb::'a stream\<^sup>\<Omega>).
+                                  (ubDom\<cdot>sb = In)\<leadsto>if sbHdElemWell sb then ufRestrict In Out\<cdot>(h (Abs_sbElem (inv convDiscrUp (sbHdElem\<cdot>sb)))) \<rightleftharpoons> sbRt\<cdot>sb else ubclLeast Out)) \<longrightarrow>
+           ubclDom\<cdot>b = Out"
   sorry
-
+  show "(\<exists>Ina::channel set.
+        \<forall>b::'a stream\<^sup>\<Omega>.
+           (b \<in> dom (Rep_cfun (\<Lambda> (sb::'a stream\<^sup>\<Omega>).
+                                   (ubDom\<cdot>sb = In)\<leadsto>if sbHdElemWell sb then ufRestrict In Out\<cdot>(h (Abs_sbElem (inv convDiscrUp (sbHdElem\<cdot>sb)))) \<rightleftharpoons> sbRt\<cdot>sb else ubclLeast Out))) =
+           (ubclDom\<cdot>b = Ina)) \<and>
+    (\<exists>Outa::channel set.
+        \<forall>b::'a stream\<^sup>\<Omega>.
+           b \<in> ran (Rep_cfun (\<Lambda> (sb::'a stream\<^sup>\<Omega>).
+                                  (ubDom\<cdot>sb = In)\<leadsto>if sbHdElemWell sb then ufRestrict In Out\<cdot>(h (Abs_sbElem (inv convDiscrUp (sbHdElem\<cdot>sb)))) \<rightleftharpoons> sbRt\<cdot>sb else ubclLeast Out)) \<longrightarrow>
+           ubclDom\<cdot>b = Outa)"
+    using In Out by blast
+qed
+  
+lemma spfStep_mono:"monofun (\<lambda> h. Abs_ufun (\<Lambda>  sb.  (ubDom\<cdot>sb = In) 
+                                              \<leadsto> (if (sbHdElemWell sb) then ufRestrict In Out\<cdot>(h (Abs_sbElem(inv convDiscrUp (sbHdElem\<cdot>sb)))) \<rightleftharpoons> (sbRt\<cdot>sb) else ubclLeast Out)))"
+proof(rule monofunI)
+  fix x y ::"'a sbElem \<Rightarrow> ('a stream\<^sup>\<Omega>) ufun"
+  assume a1:"x\<sqsubseteq>y"
+  show "Abs_cufun (\<lambda>sb. (ubDom\<cdot>sb = In)\<leadsto>if sbHdElemWell sb then ufRestrict In Out\<cdot>(x (Abs_sbElem (inv convDiscrUp (sbHdElem\<cdot>sb)))) \<rightleftharpoons> sbRt\<cdot>sb else ubclLeast Out) \<sqsubseteq>
+        Abs_cufun (\<lambda>sb. (ubDom\<cdot>sb = In)\<leadsto>if sbHdElemWell sb then ufRestrict In Out\<cdot>(y (Abs_sbElem (inv convDiscrUp (sbHdElem\<cdot>sb)))) \<rightleftharpoons> sbRt\<cdot>sb else ubclLeast Out)"
+  proof(rule ufun_belowI)
+    show"ufDom\<cdot>(Abs_cufun (\<lambda>sb::'a stream\<^sup>\<Omega>.
+                         (ubDom\<cdot>sb = In)\<leadsto>if sbHdElemWell sb then ufRestrict In Out\<cdot>(x (Abs_sbElem (inv convDiscrUp (sbHdElem\<cdot>sb)))) \<rightleftharpoons> sbRt\<cdot>sb else ubclLeast Out)) =
+    ufDom\<cdot>(Abs_cufun (\<lambda>sb::'a stream\<^sup>\<Omega>. (ubDom\<cdot>sb = In)\<leadsto>if sbHdElemWell sb then ufRestrict In Out\<cdot>(y (Abs_sbElem (inv convDiscrUp (sbHdElem\<cdot>sb)))) \<rightleftharpoons> sbRt\<cdot>sb else ubclLeast Out))"
+      apply(simp add: spfStep_innerCont spfStep_innerWell ufdom_insert )
+    proof -
+      { fix uu :: "'a stream\<^sup>\<Omega>"
+        have "ubDom\<cdot>uu = In \<longrightarrow> uu \<notin> dom (\<lambda>u. (ubDom\<cdot>u = In)\<leadsto>if sbHdElemWell u then ufRestrict In Out\<cdot> (y (Abs_sbElem (inv convDiscrUp (sbHdElem\<cdot>u)))) \<rightleftharpoons> sbRt\<cdot>u else ubclLeast Out) \<and> uu \<notin> dom (\<lambda>u. (ubDom\<cdot>u = In)\<leadsto>if sbHdElemWell u then ufRestrict In Out\<cdot> (x (Abs_sbElem (inv convDiscrUp (sbHdElem\<cdot>u)))) \<rightleftharpoons> sbRt\<cdot>u else ubclLeast Out) \<or> uu \<in> dom (\<lambda>u. (ubDom\<cdot>u = In)\<leadsto>if sbHdElemWell u then ufRestrict In Out\<cdot> (x (Abs_sbElem (inv convDiscrUp (sbHdElem\<cdot>u)))) \<rightleftharpoons> sbRt\<cdot>u else ubclLeast Out) \<and> uu \<in> dom (\<lambda>u. (ubDom\<cdot>u = In)\<leadsto>if sbHdElemWell u then ufRestrict In Out\<cdot> (y (Abs_sbElem (inv convDiscrUp (sbHdElem\<cdot>u)))) \<rightleftharpoons> sbRt\<cdot>u else ubclLeast Out)"
+          by force
+        moreover
+        { assume "ubDom\<cdot>uu \<noteq> In"
+          have "uu \<notin> dom (\<lambda>u. (ubDom\<cdot>u = In)\<leadsto>if sbHdElemWell u then ufRestrict In Out\<cdot> (y (Abs_sbElem (inv convDiscrUp (sbHdElem\<cdot>u)))) \<rightleftharpoons> sbRt\<cdot>u else ubclLeast Out) \<and> uu \<notin> dom (\<lambda>u. (ubDom\<cdot>u = In)\<leadsto>if sbHdElemWell u then ufRestrict In Out\<cdot> (x (Abs_sbElem (inv convDiscrUp (sbHdElem\<cdot>u)))) \<rightleftharpoons> sbRt\<cdot>u else ubclLeast Out) \<or> uu \<in> dom (\<lambda>u. (ubDom\<cdot>u = In)\<leadsto>if sbHdElemWell u then ufRestrict In Out\<cdot> (x (Abs_sbElem (inv convDiscrUp (sbHdElem\<cdot>u)))) \<rightleftharpoons> sbRt\<cdot>u else ubclLeast Out) \<and> uu \<in> dom (\<lambda>u. (ubDom\<cdot>u = In)\<leadsto>if sbHdElemWell u then ufRestrict In Out\<cdot> (y (Abs_sbElem (inv convDiscrUp (sbHdElem\<cdot>u)))) \<rightleftharpoons> sbRt\<cdot>u else ubclLeast Out)"
+            by (simp add: dom_def) }
+        ultimately have "uu \<notin> dom (\<lambda>u. (ubDom\<cdot>u = In)\<leadsto>if sbHdElemWell u then ufRestrict In Out\<cdot> (y (Abs_sbElem (inv convDiscrUp (sbHdElem\<cdot>u)))) \<rightleftharpoons> sbRt\<cdot>u else ubclLeast Out) \<and> uu \<notin> dom (\<lambda>u. (ubDom\<cdot>u = In)\<leadsto>if sbHdElemWell u then ufRestrict In Out\<cdot> (x (Abs_sbElem (inv convDiscrUp (sbHdElem\<cdot>u)))) \<rightleftharpoons> sbRt\<cdot>u else ubclLeast Out) \<or> uu \<in> dom (\<lambda>u. (ubDom\<cdot>u = In)\<leadsto>if sbHdElemWell u then ufRestrict In Out\<cdot> (x (Abs_sbElem (inv convDiscrUp (sbHdElem\<cdot>u)))) \<rightleftharpoons> sbRt\<cdot>u else ubclLeast Out) \<and> uu \<in> dom (\<lambda>u. (ubDom\<cdot>u = In)\<leadsto>if sbHdElemWell u then ufRestrict In Out\<cdot> (y (Abs_sbElem (inv convDiscrUp (sbHdElem\<cdot>u)))) \<rightleftharpoons> sbRt\<cdot>u else ubclLeast Out)"
+          by linarith }
+      then show "ubclDom\<cdot> (SOME u. u \<in> dom (\<lambda>u. (ubDom\<cdot>u = In)\<leadsto>if sbHdElemWell u then ufRestrict In Out\<cdot> (x (Abs_sbElem (inv convDiscrUp (sbHdElem\<cdot>u)))) \<rightleftharpoons> sbRt\<cdot>u else ubclLeast Out)) = ubclDom\<cdot> (SOME u. u \<in> dom (\<lambda>u. (ubDom\<cdot>u = In)\<leadsto>if sbHdElemWell u then ufRestrict In Out\<cdot> (y (Abs_sbElem (inv convDiscrUp (sbHdElem\<cdot>u)))) \<rightleftharpoons> sbRt\<cdot>u else ubclLeast Out))"
+        by meson
+    qed
+  next
+    fix xa::"'a stream\<^sup>\<Omega>"
+    assume a2:"ubclDom\<cdot>xa =
+       ufDom\<cdot>(Abs_cufun (\<lambda>sb::'a stream\<^sup>\<Omega>.
+                            (ubDom\<cdot>sb = In)\<leadsto>if sbHdElemWell sb then ufRestrict In Out\<cdot>(x (Abs_sbElem (inv convDiscrUp (sbHdElem\<cdot>sb)))) \<rightleftharpoons> sbRt\<cdot>sb else ubclLeast Out))"
+    show"Abs_cufun (\<lambda>sb::'a stream\<^sup>\<Omega>. (ubDom\<cdot>sb = In)\<leadsto>if sbHdElemWell sb then ufRestrict In Out\<cdot>(x (Abs_sbElem (inv convDiscrUp (sbHdElem\<cdot>sb)))) \<rightleftharpoons> sbRt\<cdot>sb else ubclLeast Out) \<rightleftharpoons>
+       xa \<sqsubseteq>
+       Abs_cufun (\<lambda>sb::'a stream\<^sup>\<Omega>. (ubDom\<cdot>sb = In)\<leadsto>if sbHdElemWell sb then ufRestrict In Out\<cdot>(y (Abs_sbElem (inv convDiscrUp (sbHdElem\<cdot>sb)))) \<rightleftharpoons> sbRt\<cdot>sb else ubclLeast Out) \<rightleftharpoons> xa"
+      proof(simp add: spfStep_innerCont spfStep_innerWell, auto)
+        assume a1_2:"sbHdElemWell xa" 
+        assume a2_2:"In = ubDom\<cdot>xa"
+        have xspf_below:"x (Abs_sbElem (inv convDiscrUp (sbHdElem\<cdot>xa))) \<sqsubseteq> y (Abs_sbElem (inv convDiscrUp (sbHdElem\<cdot>xa)))"
+          by (meson a1 fun_below_iff)
+        show "ufRestrict (ubDom\<cdot>xa) Out\<cdot>(x (Abs_sbElem (inv convDiscrUp (sbHdElem\<cdot>xa)))) \<rightleftharpoons> sbRt\<cdot>xa \<sqsubseteq> ufRestrict (ubDom\<cdot>xa) Out\<cdot>(y (Abs_sbElem (inv convDiscrUp (sbHdElem\<cdot>xa)))) \<rightleftharpoons> sbRt\<cdot>xa"
+        proof(cases "ufDom\<cdot>(x (Abs_sbElem (inv convDiscrUp (sbHdElem\<cdot>xa)))) = ubDom\<cdot>xa \<and> ufRan\<cdot>(x (Abs_sbElem (inv convDiscrUp (sbHdElem\<cdot>xa)))) = Out")
+          case True
+          have "ufDom\<cdot>(y (Abs_sbElem (inv convDiscrUp (sbHdElem\<cdot>xa)))) = ubDom\<cdot>xa \<and> ufRan\<cdot>(y (Abs_sbElem (inv convDiscrUp (sbHdElem\<cdot>xa)))) = Out"
+            using True ufdom_below_eq ufran_below xspf_below by blast
+          then show ?thesis
+            by (metis True a2_2 below_option_def below_ufun_def cfun_below_iff not_below2not_eq ufRestrict_apply xspf_below)
+        next
+          case False
+          then have h1:"\<not>(ufDom\<cdot>(y (Abs_sbElem (inv convDiscrUp (sbHdElem\<cdot>xa)))) = ubDom\<cdot>xa \<and> ufRan\<cdot>(y (Abs_sbElem (inv convDiscrUp (sbHdElem\<cdot>xa)))) = Out)"
+            using ufdom_below_eq ufran_below xspf_below by blast 
+          show ?thesis  
+            by(simp add: a2_2 h1 False ufRestrict_def)
+        qed
+      qed
+  qed   
+qed
+  
 
 
 lemma spfStep_cont:"cont (\<lambda> h. Abs_ufun (\<Lambda>  sb.  (ubDom\<cdot>sb = In) 
@@ -116,7 +203,7 @@ lemma spfstep_insert: "spfStep In Out\<cdot>h= Abs_ufun (\<Lambda>  sb.  (ubDom\
                                               \<leadsto> (if (sbHdElemWell sb) then ufRestrict In Out\<cdot>(h (Abs_sbElem(inv convDiscrUp (sbHdElem\<cdot>sb)))) \<rightleftharpoons> (sbRt\<cdot>sb) else ubclLeast Out))"
   by(simp add: spfStep_def spfStep_cont)
 
-lemma spfstep_dom[simp]:s"ufDom\<cdot>(spfStep cIn cOut\<cdot>f) = cIn"
+lemma spfstep_dom[simp]:"ufDom\<cdot>(spfStep cIn cOut\<cdot>f) = cIn"
   oops
     
 lemma spfstep_ran [simp]:"ufRan\<cdot>(spfStep cIn cOut\<cdot>f) = cOut"
