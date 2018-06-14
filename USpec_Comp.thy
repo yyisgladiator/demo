@@ -719,21 +719,19 @@ lemma  uspecimage_well:
 lemma uspecimage_useful_uspecrevset:
   assumes "\<And>x y. ((ufclDom\<cdot>x = ufclDom\<cdot>y \<and> ufclRan\<cdot>x = ufclRan\<cdot>y) \<Longrightarrow>
     (ufclDom\<cdot>(f x) = ufclDom\<cdot>(f y) \<and> ufclRan\<cdot>(f x) = ufclRan\<cdot>(f y)))"
-  shows  "\<And>S. setrevImage f (uspecRevSet\<cdot>S) = uspecRevSet\<cdot>(uspecImage f S)"
+  shows  "uspecRevSet\<cdot>(uspecImage f S) = setrevImage f (uspecRevSet\<cdot>S)"
   by (smt assms uspecimage_well rep_abs_rev_simp rev_inv_rev setrevImage_def uspecImage_def uspecrevset_insert)
 
 lemma uspecimage_useful_dom:
   assumes "\<And>x y. ((ufclDom\<cdot>x = ufclDom\<cdot>y \<and> ufclRan\<cdot>x = ufclRan\<cdot>y) \<Longrightarrow>
     (ufclDom\<cdot>(f x) = ufclDom\<cdot>(f y) \<and> ufclRan\<cdot>(f x) = ufclRan\<cdot>(f y)))"
-  shows  "\<And>S. ufclDom\<cdot> (f (ufunclLeast (uspecDom\<cdot> S) (uspecRan\<cdot> S))) 
-    =  uspecDom\<cdot>(uspecImage f S)"
+  shows  "uspecDom\<cdot>(uspecImage f S) = ufclDom\<cdot> (f (ufunclLeast (uspecDom\<cdot> S) (uspecRan\<cdot> S)))"
  by (smt assms fst_conv uspecimage_well rep_abs_uspec snd_conv undiscr_Discr uspecImage_def uspecdom_insert)
 
 lemma uspecimage_useful_ran:
   assumes "\<And>x y. ((ufclDom\<cdot>x = ufclDom\<cdot>y \<and> ufclRan\<cdot>x = ufclRan\<cdot>y) \<Longrightarrow>
     (ufclDom\<cdot>(f x) = ufclDom\<cdot>(f y) \<and> ufclRan\<cdot>(f x) = ufclRan\<cdot>(f y)))"
-  shows "\<And>S. ufclRan\<cdot> (f (ufunclLeast (uspecDom\<cdot> S) (uspecRan\<cdot> S))) 
-    =  uspecRan\<cdot>(uspecImage f S)"
+  shows "uspecRan\<cdot>(uspecImage f S) = ufclRan\<cdot> (f (ufunclLeast (uspecDom\<cdot> S) (uspecRan\<cdot> S)))"
  by (smt assms fst_conv uspecimage_well rep_abs_uspec snd_conv undiscr_Discr uspecImage_def uspecran_insert)
 
 lemma  uspecimage_mono: 
@@ -838,5 +836,26 @@ lemma uspecimage_inj_cont:
           ufclDom\<cdot>(f x) = ufclDom\<cdot>(f y) \<and> ufclRan\<cdot>(f x) = ufclRan\<cdot>(f y)"
     shows "cont (uspecImage f)"
   using assms uspecimage_cont_helper by blast
+
+lemma uspecimage_helper:
+  assumes "\<And>x. ufclDom\<cdot>x =  ufclDom\<cdot> (f x)"
+    and "\<And>x. ufclRan\<cdot>x =  ufclRan\<cdot> (f x)"
+  shows "ufclDom\<cdot>x = ufclDom\<cdot>y \<and> ufclRan\<cdot>x = ufclRan\<cdot>y \<Longrightarrow>
+          ufclDom\<cdot>(f x) = ufclDom\<cdot>(f y) \<and> ufclRan\<cdot>(f x) = ufclRan\<cdot>(f y)"
+  by (simp add: assms(1) assms(2))
+  
+lemma uspecimage_dom1 [simp]:
+  assumes "\<And>x. ufclDom\<cdot>x =  ufclDom\<cdot> (f x)"
+    and "\<And>x. ufclRan\<cdot>x =  ufclRan\<cdot> (f x)"
+  shows "uspecDom\<cdot>(uspecImage f S) = uspecDom\<cdot>S"
+  using assms
+  by (metis ufuncldom_least_dom uspecimage_useful_dom) 
+
+lemma uspecimage_ran1 [simp]:
+  assumes "\<And>x. ufclDom\<cdot>x =  ufclDom\<cdot> (f x)"
+    and "\<And>x. ufclRan\<cdot>x =  ufclRan\<cdot> (f x)"
+  shows "uspecRan\<cdot>(uspecImage f S) = uspecRan\<cdot>S"
+  using assms
+  by (metis ufuncldom_least_ran uspecimage_useful_ran) 
 
 end
