@@ -31,6 +31,9 @@ definition setify::"('m \<Rightarrow> ('n set rev)) \<rightarrow> ('m \<Rightarr
 definition setrevUnion:: "'m set rev \<rightarrow> 'm set rev \<rightarrow> 'm set rev" where
 "setrevUnion \<equiv> (\<Lambda> A B. Rev((inv Rev A) \<union> (inv Rev B)))"
 
+(* "('m \<Rightarrow> 'n) \<Rightarrow> 'm uspec \<Rightarrow> 'n uspec*)
+definition setrevImage:: "('m \<Rightarrow> 'n) \<Rightarrow> 'm set rev \<Rightarrow> 'n set rev" where
+"setrevImage f \<equiv> \<lambda> S.  Rev (f ` (inv Rev S))"
 
 section \<open>Lemmas\<close>
 
@@ -323,14 +326,15 @@ lemma setrevUnion_gdw: "\<And>A B x. x \<in> inv Rev (setrevUnion\<cdot>A\<cdot>
   by (simp add: inv_rev_rev setrevUnion_def)
 
 
-lemma image_mono_rev:  "monofun (\<lambda> S::'a set rev.  Rev (f ` (inv Rev S)))"
+lemma image_mono_rev:  "monofun (setrevImage f)"
   apply (rule monofunI)
-  by (simp add: image_mono inv_rev_rev revBelowNeqSubset)
+  by (simp add: image_mono inv_rev_rev revBelowNeqSubset setrevImage_def)
 
 lemma image_cont_rev: assumes "inj f" 
-  shows "cont (\<lambda> S::'a set rev.  Rev (f ` (inv Rev S)))"
+  shows "cont (setrevImage f)"
   apply (rule contI2)
    apply (simp add: image_mono_rev)
+  unfolding setrevImage_def
 proof -
   fix Y::"nat \<Rightarrow> 'a set rev"
   assume a1: "chain Y"
@@ -371,5 +375,5 @@ proof -
     apply (simp add: a1 setrevLubEqInterII)
     by (metis (no_types, lifting) SetPcpo.less_set_def f6 subsetI)
 qed 
-  
+
 end
