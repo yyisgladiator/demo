@@ -36,7 +36,14 @@ qed
 (* updis bijectiv *)
 thm inv_def
 (* Returns the SPF that switches depending on input.  (spfStep_h1 In Out\<cdot>h)\<cdot>(sbHdElem\<cdot>sb) computes the SPF which has to be applied to the input sb*)
-definition spfStep :: "channel set \<Rightarrow> channel set \<Rightarrow> ('m::message sbElem \<Rightarrow> 'm SPF) \<rightarrow> 'm SPF" where
+definition spfStep_inj :: "channel set \<Rightarrow> channel set \<Rightarrow> ('m::message sbElem \<Rightarrow> 'm SPF) \<rightarrow> ( 'm SB \<rightarrow>'m SPF)" where
+"spfStep_inj In Out \<equiv> (\<Lambda> h. (\<Lambda> sb. (if (sbHdElemWell sb) then ufRestrict In Out\<cdot>(h (Abs_sbElem(inv convDiscrUp (sbHdElem\<cdot>sb)))) else ufLeast In Out)))"
+
+
+definition spfStep_apply::"channel set \<Rightarrow> channel set \<Rightarrow> ('m::message sbElem \<Rightarrow> 'm SPF) \<rightarrow> 'm SB \<rightarrow> 'm SPF"where
+"spfStep_apply In Out \<equiv> \<Lambda> h. (\<Lambda> sb1. Abs_ufun(\<Lambda> sb2. (ubDom\<cdot>sb2 = In) \<leadsto> ((spfStep_inj In Out\<cdot>h)\<cdot>sb1) \<rightleftharpoons> sb2 ))"
+
+definition spfStep ::"channel set \<Rightarrow> channel set \<Rightarrow> ('m::message sbElem \<Rightarrow> 'm SPF) \<rightarrow> 'm SPF" where
 "spfStep In Out \<equiv> \<Lambda> h. Abs_ufun (\<Lambda>  sb.  (ubDom\<cdot>sb = In) 
                                               \<leadsto> (if (sbHdElemWell sb) then ufRestrict In Out\<cdot>(h (Abs_sbElem(inv convDiscrUp (sbHdElem\<cdot>sb)))) \<rightleftharpoons> (sbRt\<cdot>sb) else ubclLeast Out))"
 
@@ -181,6 +188,9 @@ qed
 lemma spfStep_cont:"cont (\<lambda> h. Abs_ufun (\<Lambda>  sb.  (ubDom\<cdot>sb = In) 
                                               \<leadsto> (if (sbHdElemWell sb) then ufRestrict In Out\<cdot>(h (Abs_sbElem(inv convDiscrUp (sbHdElem\<cdot>sb)))) \<rightleftharpoons> (sbRt\<cdot>sb) else ubclLeast Out)))"
   sorry
+    
+lemma sbElem_surj:"\<exists>sb. sbE=  Abs_sbElem (inv convDiscrUp (sbHdElem\<cdot>sb))"
+  sorry
 
 lemma [simp]:"inj_on (\<lambda> h. Abs_ufun (\<Lambda>  sb.  (ubDom\<cdot>sb = In) 
                                               \<leadsto> (if (sbHdElemWell sb) then ufRestrict In Out\<cdot>(h (Abs_sbElem(inv convDiscrUp (sbHdElem\<cdot>sb)))) \<rightleftharpoons> (sbRt\<cdot>sb) else ubclLeast Out))) {h. \<forall>m. ufDom\<cdot>(h m) = In \<and> ufRan\<cdot>(h m) = Out}" (*h must map to spf with dom = In and Range = Out and not map to ufLeast In Out*)
@@ -193,9 +203,35 @@ proof(rule inj_onI)
   have ya:"(\<forall>elem.  ufDom\<cdot>(y elem) = In \<and> ufRan\<cdot>(y elem) = Out)"
     using ay by auto
   show "x = y"
-    sorry
+  proof(cases "x \<noteq> y")
+    case True
+    then obtain sbE where sbE_def:" x sbE \<noteq> y sbE"
+      by fastforce
+    then obtain sb where sb_def:"(Abs_sbElem (inv convDiscrUp (sbHdElem\<cdot>sb))) =  sbE"
+      using sbElem_surj by metis
+    then have spf_uneq:"(x (Abs_sbElem (inv convDiscrUp (sbHdElem\<cdot>sb)))) \<noteq> (y (Abs_sbElem (inv convDiscrUp (sbHdElem\<cdot>sb))))"
+      by(simp add: sb_def sbE_def)
+    obtain spf1 where spf_1_def:"spf1 = (x (Abs_sbElem (inv convDiscrUp (sbHdElem\<cdot>sb))))"
+      by simp
+    obtain spf2 where spf_2_def:"spf2 = (y (Abs_sbElem (inv convDiscrUp (sbHdElem\<cdot>sb))))"
+      by simp
+    have ufR_uneq:"ufRestrict In Out\<cdot>spf1 \<noteq> ufRestrict In Out\<cdot>spf2"
+      using ax ya spf_uneq spf_1_def spf_2_def by auto
+    have uf_eq:"ufRestrict In Out\<cdot>spf1 = spf1 \<and> ufRestrict In Out\<cdot>spf2 = spf2"
+      using ax spf_1_def spf_2_def ya by auto
+    then have "spf1 \<noteq> spf2"
+      using ufR_uneq by auto
+    then obtain sb2 where sb2_def:"spf1  \<rightleftharpoons> sb2 \<noteq> spf2  \<rightleftharpoons> sb2"
+      by (metis ufRestrict_dom uf_eq ufun_eqI)
+    then show ?thesis sorry
+  next
+    case False
+    then show ?thesis
+      by simp
+  qed
 qed
 
+  
 lemma spfStep_inj:"inj (Rep_cfun(spfStep In Out))"  
   sorry
 
