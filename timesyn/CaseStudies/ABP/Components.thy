@@ -8,7 +8,7 @@
 chapter {* Theory for ABP Component Lemmata on Time-synchronous Streams *}
 
 theory Components
-imports ReceiverAutomaton
+imports ReceiverAutomaton 
 
 begin
 
@@ -261,5 +261,60 @@ lemma recspf_receiverspf_eq: "ReceiverSPF = RecSPF"
   apply (rule ufun_eqI)
   apply (simp add: receiverspf_ufdom recspf_ufdom)
   by (simp add: recspf_receiverspf_ub_eq ubclDom_ubundle_def)
+
+
+(* ----------------------------------------------------------------------- *)
+  section {* Some Receiver tsyn stream ubundle for testing the receiver function *}
+(* ----------------------------------------------------------------------- *)
+
+
+(* Everything works fine: The receiver receives (m1,true),(m2,false)  *)
+definition rec_testinput_1 :: "(nat \<times> bool) tsyn stream" where 
+"rec_testinput_1 \<equiv> list2s [Msg (1,True), Msg (2,False)]"
+
+lift_definition rec_testubundle_1 :: "Receiver tsyn SB" is
+"[\<guillemotright>dr \<mapsto> natbool2abp\<cdot>rec_testinput_1]" 
+unfolding ubWell_def
+  unfolding usclOkay_stream_def
+  unfolding ctype_tsyn_def
+  apply(simp add: rec_testinput_1_def)
+  apply(simp add: natbool2abp_def)
+  by(simp add: tsynMap_def)
+
+ 
+
+
+(*The message starts with the right bit, but the medium loses the acknowledgement bit sent to the sender, so the
+  sender repeats the message. *)
+definition rec_testinput_2 :: "(nat \<times> bool) tsyn stream" where 
+"rec_testinput_2 \<equiv> list2s [Msg (1,True), Msg (1, True), Msg(2, False)]"
+
+lift_definition rec_testubundle_2 :: "Receiver tsyn SB" is
+"[\<guillemotright>dr \<mapsto> natbool2abp\<cdot>rec_testinput_2]" 
+unfolding ubWell_def
+  unfolding usclOkay_stream_def
+  unfolding ctype_tsyn_def
+  apply(simp add: rec_testinput_2_def)
+  apply(simp add: natbool2abp_def)
+  by(simp add: tsynMap_def)
+
+
+
+(*The medium loses the first message from the sender, then receives the right bit.
+  The sender receives the acknowledgement, but the medium loses the following message again. *)
+definition rec_testinput_3 :: "(nat \<times> bool) tsyn stream" where 
+"rec_testinput_3 \<equiv> list2s [null, Msg (1, True), null,Msg (2, False) ]"
+
+lift_definition rec_testubundle_3 :: "Receiver tsyn SB" is
+"[\<guillemotright>dr \<mapsto> natbool2abp\<cdot>rec_testinput_3]" 
+unfolding ubWell_def
+  unfolding usclOkay_stream_def
+  unfolding ctype_tsyn_def
+  apply(simp add: rec_testinput_3_def)
+  apply(simp add: natbool2abp_def)
+  by(simp add: tsynMap_def)
+
+
+
 
 end

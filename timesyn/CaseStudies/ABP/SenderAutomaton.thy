@@ -110,4 +110,77 @@ sorry
 definition SenderSPF :: "Sender tsyn SPF" where
 "SenderSPF = H SenderAutomaton"
 
+
+(* ----------------------------------------------------------------------- *)
+section {* Some Sender tsyn stream ubundle for testing the sender function.
+           Move this section to Components.thy as soon as it imports SenderAutomaton.thy*}
+(* ----------------------------------------------------------------------- *)
+
+(* Everything works fine: Sending two messages while receiving the correct acknowledgement bits  *)
+definition snd_testinput_msg_1 :: "nat tsyn stream" where 
+"snd_testinput_msg_1 \<equiv> list2s [Msg 1, Msg 2, null]"
+
+definition snd_testinput_acks_1 :: "bool tsyn stream" where 
+"snd_testinput_acks_1 \<equiv> list2s [null, Msg True, Msg False]"
+
+lift_definition snd_testubundle_1 :: "Sender tsyn SB" is
+"[\<guillemotright>i \<mapsto> tsynMap A\<cdot>snd_testinput_msg_1, \<guillemotright>as \<mapsto> tsynMap B\<cdot>snd_testinput_acks_1]" 
+  unfolding ubWell_def
+  unfolding usclOkay_stream_def
+  unfolding ctype_tsyn_def
+  apply(simp add: snd_testinput_msg_1_def)
+  apply(simp add: snd_testinput_acks_1_def)
+  apply(simp add: tsynMap_def)
+  by (simp add: rangeI)
+
+
+
+(*Medium 1 or Medium 2 loses the first message *)
+definition snd_testinput_msg_2 :: "nat tsyn stream" where 
+"snd_testinput_msg_2 \<equiv> list2s [Msg 1, null, Msg 2]"
+
+definition snd_testinput_acks_2 :: "bool tsyn stream" where 
+"snd_testinput_acks_2 \<equiv> list2s [null, null, Msg True, Msg False]"
+
+lift_definition snd_testubundle_2 :: "Sender tsyn SB" is
+"[\<guillemotright>i \<mapsto> tsynMap A\<cdot>snd_testinput_msg_2, \<guillemotright>as \<mapsto> tsynMap B\<cdot>snd_testinput_acks_2]" 
+  unfolding ubWell_def
+  unfolding usclOkay_stream_def
+  unfolding ctype_tsyn_def
+  apply(simp add: snd_testinput_msg_2_def)
+  apply(simp add: snd_testinput_acks_2_def)
+  apply(simp add: tsynMap_def)
+  by (simp add: rangeI)
+
+
+(*There are two messages to send and both mediums lose either the ack or the message two times in a row *)
+definition snd_testinput_msg_3 :: "nat tsyn stream" where 
+"snd_testinput_msg_3 \<equiv> list2s [Msg 1, Msg 2, null, null, null]"
+
+definition snd_testinput_acks_3 :: "bool tsyn stream" where 
+"snd_testinput_acks_3 \<equiv> list2s [null, null, null, Msg True, Msg False]"
+
+lift_definition snd_testubundle_3 :: "Sender tsyn SB" is
+"[\<guillemotright>i \<mapsto> tsynMap A\<cdot>snd_testinput_msg_3, \<guillemotright>as \<mapsto> tsynMap B\<cdot>snd_testinput_acks_3]" 
+  unfolding ubWell_def
+  unfolding usclOkay_stream_def
+  unfolding ctype_tsyn_def
+  apply(simp add: snd_testinput_msg_3_def)
+  apply(simp add: snd_testinput_acks_3_def)
+  apply(simp add: tsynMap_def)
+  by (simp add: rangeI)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 end
