@@ -13,6 +13,80 @@ setup_lifting type_definition_ubundle *)
 declare [[show_types]]
 declare [[show_sorts]]
 declare [[show_consts]]
+lemma minOr: "\<And> x y. lnmin\<cdot>x\<cdot>y = x \<or> lnmin\<cdot>x\<cdot>y = y"
+    sorry (*siehe TStream.thy, muss noch nach lnat*)
+
+lemma z1: assumes "ubDom\<cdot>(z::'a\<^sup>\<Omega>) \<noteq> {}" and "ubDom\<cdot>zz \<noteq> {}" and "ubDom\<cdot>(z \<uplus> zz) \<noteq> {}" shows "\<And> (z::'a\<^sup>\<Omega>) zz . ubLen (z \<uplus> zz) = ubLen z \<or> ubLen (z \<uplus> zz) = ubLen zz"
+proof (simp add: ubclUnion_ubundle_def)
+  fix z zz
+  obtain ln1 where "ln1 = ubLen (z::'a\<^sup>\<Omega>)"
+    by simp
+  obtain ln2 where "ln2 = ubLen (zz::'a\<^sup>\<Omega>)"
+    by simp
+  have test1: "ln1 < ln2 \<Longrightarrow> ubLen (ubUnion\<cdot>(z::'a\<^sup>\<Omega>)\<cdot>zz) = ubLen zz"
+    apply (simp add: ubLen_def)
+    apply rule
+
+(*     using assms apply simp *)
+(*     using usclLen_stream_def / tstream apply simp *)
+    sorry
+  show "ubLen (ubUnion\<cdot>z\<cdot>zz) = ubLen z \<or> ubLen (ubUnion\<cdot>z\<cdot>zz) = ubLen zz"
+  proof (cases "ln1 = \<infinity> \<or> ln2 = \<infinity>")
+    case True
+    show ?thesis
+      using assms
+      sorry
+  next
+    case False
+    obtain n1 where "Fin n1 = ln1"
+      using False lncases by auto
+    obtain n2 where "Fin n2 = ln2"
+      using False lncases by auto
+
+    show ?thesis
+    proof (cases "n1 < n2")
+      case True
+      then show ?thesis  sorry
+    next
+      case False
+      then show ?thesis   sorry
+    qed
+      
+  qed
+qed
+
+lemma f1: assumes "ufRan\<cdot>f1 \<inter> ufRan\<cdot>f2 = {}" and "ufIsStrong f1" and "ufIsStrong f2" and "ubLen b > ubLen ub"
+  shows "lnsuc\<cdot>(ubLen ub) \<le> ubLen ((ufCompH f1 f2) b\<cdot>ub)"
+proof -
+  fix b (* ub *)::"'a ubundle"
+  (* fix ub::"'a::uscl_pcpo\<^sup>\<Omega>" *)
+(*   assume a1: "ubLen b = \<infinity>" *)
+
+  obtain n :: lnat where "n = ubLen b"
+    by simp
+  obtain nn :: lnat where "nn = ubLen ub"
+    by simp
+  obtain nnn :: lnat where "nnn = ubLen ((ufCompH f1 f2) b\<cdot>ub)"
+    by simp
+  have n1: "nn \<noteq> \<infinity>"
+    using \<open>(nn::lnat) = ubLen (ub::'a::uscl_pcpo\<^sup>\<Omega>)\<close> assms(4) by auto
+  have n2: "lnsuc\<cdot>nn \<noteq> \<infinity>"
+    by (simp add: n1)
+  have n3: "ubLen ((ufCompH f1 f2) b\<cdot>ub) \<le> \<infinity>"
+    by simp
+
+
+
+  show "lnsuc\<cdot>(ubLen ub) \<le> ubLen ((ufCompH f1 f2) b\<cdot>ub)"
+    apply (simp add: ufCompH_def)
+    apply (simp add: ubclUnion_ubundle_def)
+    using assms z1 minOr 
+  sorry
+qed
+lemma f2: assumes "ufRan\<cdot>f1 \<inter> ufRan\<cdot>f2 = {}" and "ufIsStrong f1" and "ufIsStrong f2" and "ubLen b \<le> ubLen ub"
+  shows"ubLen ((ufCompH f1 f2) b\<cdot>ub) \<ge> ubLen b"
+
+  sorry 
 
 
 lemma ufComp_strongCausal: assumes "ufRan\<cdot>f1 \<inter> ufRan\<cdot>f2 = {}" and "ufIsStrong f1" and "ufIsStrong f2"
@@ -23,6 +97,7 @@ proof -
 
   fix b::"'m ubundle"
   assume a0: "b \<in> dom (Rep_cufun (Abs_cufun (\<lambda>x . (ubclDom\<cdot>x = ufCompI f1 f2)\<leadsto>ubFix (ufCompH f1 f2 x) (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2))))"
+
 
   have z2: "ufWell (\<Lambda>(x::'m\<^sup>\<Omega>). (ubclDom\<cdot>x = ufCompI f1 f2)\<leadsto>ubFix (ufCompH f1 f2 x) (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2))"
     apply (rule ufun_wellI)
@@ -55,8 +130,6 @@ proof -
       fix i
       assume y21: "ubLen (iter_ubfix2 (ufCompH f1 f2) i (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2) b) < lnsuc\<cdot>(ubLen b)"
 
-      have minOr: "\<And> x y. lnmin\<cdot>x\<cdot>y = x \<or> lnmin\<cdot>x\<cdot>y = y"
-        sorry (*siehe TStream.thy, muss noch nach lnat*)
       have sucmin_minsuc: "\<And> x y . lnsuc\<cdot>(lnmin\<cdot>x\<cdot>y) = lnmin\<cdot>(lnsuc\<cdot>x)\<cdot>(lnsuc\<cdot>y)"
         by simp
 
@@ -97,8 +170,8 @@ lnsuc\<cdot>(ubLen (iterate i\<cdot>(\<Lambda> (z::'m\<^sup>\<Omega>). (f1 \<rig
            assume a41: "(ubLen (iter_ubfix2 (ufCompH f1 f2) i (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2) b)) < ubLen b"
            then show "lnsuc\<cdot>(ubLen (iterate i\<cdot>(\<Lambda> (z::'m\<^sup>\<Omega>). (f1 \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>f1)\<cdot>(b \<uplus> z))) \<uplus> (f2 \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>f2)\<cdot>(b \<uplus> z))))\<cdot>(ubclLeast (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2)))) \<le> ubLen ((f1 \<rightleftharpoons> ubclRestrict (ufDom\<cdot>f1)\<cdot>(b \<uplus> iterate i\<cdot>(\<Lambda> (z::'m\<^sup>\<Omega>). (f1 \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>f1)\<cdot>(b \<uplus> z))) \<uplus> (f2 \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>f2)\<cdot>(b \<uplus> z))))\<cdot>(ubclLeast (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2))))
 \<uplus> (f2 \<rightleftharpoons> ubclRestrict (ufDom\<cdot>f2)\<cdot>(b \<uplus> iterate i\<cdot>(\<Lambda> (z::'m\<^sup>\<Omega>). (f1 \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>f1)\<cdot>(b \<uplus> z))) \<uplus> (f2 \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>f2)\<cdot>(b \<uplus> z))))\<cdot>(ubclLeast (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2)))))"
-             
-           sorry
+(*                by (metis (no_types) a41 assms(1) assms(2) assms(3) f1 ufCompH_def ufcomph_insert) *)
+            sorry
        qed
        have y25: "lnmin\<cdot>(lnsuc\<cdot>(ubLen b))\<cdot>(lnsuc\<cdot>(ubLen (iter_ubfix2 (ufCompH f1 f2) i (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2) b))) = lnsuc\<cdot>(ubLen b) \<or>
 lnmin\<cdot>(lnsuc\<cdot>(ubLen b))\<cdot>(lnsuc\<cdot>(ubLen (iter_ubfix2 (ufCompH f1 f2) i (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2) b))) = (lnsuc\<cdot>(ubLen (iter_ubfix2 (ufCompH f1 f2) i (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2) b)))"
@@ -137,55 +210,66 @@ lnmin\<cdot>(lnsuc\<cdot>(ubLen b))\<cdot>(lnsuc\<cdot>(ubLen (iter_ubfix2 (ufCo
  *)
          have zz1: "ubLen (f1 \<rightleftharpoons> ubclRestrict (ufDom\<cdot>f1)\<cdot>(b \<uplus> iterate i\<cdot>(\<Lambda> (z::'m\<^sup>\<Omega>). (f1 \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>f1)\<cdot>(b \<uplus> z))) \<uplus> (f2 \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>f2)\<cdot>(b \<uplus> z))))\<cdot>(ubclLeast (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2))))
 \<ge> lnsuc\<cdot>(ubLen (iterate i\<cdot>(\<Lambda> (z::'m\<^sup>\<Omega>). (f1 \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>f1)\<cdot>(b \<uplus> z))) \<uplus> (f2 \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>f2)\<cdot>(b \<uplus> z))))\<cdot>(ubclLeast (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2))))"
-           apply (simp add: ubclUnion_ubundle_def ubclLeast_ubundle_def)
-           
+           apply (simp add: ubclUnion_ubundle_def ubclLeast_ubundle_def ubclRestrict_ubundle_def ubUnion_def)
+           using assms
            sorry
 
          have zz2: "ubLen (f2 \<rightleftharpoons> ubclRestrict (ufDom\<cdot>f2)\<cdot>(b \<uplus> iterate i\<cdot>(\<Lambda> (z::'m\<^sup>\<Omega>). (f1 \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>f1)\<cdot>(b \<uplus> z))) \<uplus> (f2 \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>f2)\<cdot>(b \<uplus> z))))\<cdot>(ubclLeast (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2))))
  \<ge> lnsuc\<cdot>(ubLen (iterate i\<cdot>(\<Lambda> (z::'m\<^sup>\<Omega>). (f1 \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>f1)\<cdot>(b \<uplus> z))) \<uplus> (f2 \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>f2)\<cdot>(b \<uplus> z))))\<cdot>(ubclLeast (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2))))"
-
            sorry
 
-         have zz3: "\<And> (z::'m\<^sup>\<Omega>) zz . ubLen (z \<uplus> zz) = ubLen z \<or> ubLen (z \<uplus> zz) = ubLen zz"
+         have zz3: "\<And> (z::'a\<^sup>\<Omega>) zz . ubLen (z \<uplus> zz) = ubLen z \<or> ubLen (z \<uplus> zz) = ubLen zz"
          proof -
-           fix z zz
+   fix z zz
            show "ubLen (z \<uplus> zz) = ubLen z \<or> ubLen (z \<uplus> zz) = ubLen zz"
-           proof -
-             obtain  n::nat where zz31: "Fin n = ubLen z" sorry
-             obtain nn::nat where zz32: "Fin n = ubLen zz" sorry
-             show ?thesis
-      proof (cases "ubLen z = \<infinity> \<or> ubLen zz = \<infinity>")
-          case True
-          then show ?thesis
-            using zz31 zz32 by auto
-        next
-          case False
-          then show ?thesis  
-            sorry
-        qed
+           proof (cases "ubLen z = \<infinity> \<or> ubLen zz = \<infinity>")
+             case True
+             obtain  n::lnat where zz31: "n = ubLen z"
+               by simp
+             obtain  nn::lnat where zz32: "nn = ubLen zz"  
+               by simp
+             have zz3T1: "n = \<infinity> \<or> nn = \<infinity>"
+               by (simp add: True zz31 zz32)
+             obtain b::"'b\<^sup>\<Omega>" where zz33: "ubLen b = \<infinity>"
+               by (metis ubclLen_ubundle_def ubcllen_inf_ex)
+             have zz3T2: "ubLen (b \<uplus> zz) = \<infinity>"
+               apply (simp add: ubclUnion_ubundle_def ubunion_insert)
+               sorry
+             show ?thesis  sorry
+           next
+             case False
+             obtain  n::nat where zz31: "Fin n = ubLen z"
+               by (metis False infI)
+              obtain nn::nat where zz32: "Fin nn = ubLen zz" 
+                by (metis False infI)
+             have zz3F1: "(Fin n < \<infinity> \<and> Fin nn < \<infinity>)"
+               by simp
+
+             show "ubLen (z \<uplus> zz) = ubLen z \<or> ubLen (z \<uplus> zz) = ubLen zz"
+                using  zz3F1 zz31 zz32 False 
+               sorry
            qed
-         qed
+
+           qed
 
          have zz11: "ubLen ((f1 \<rightleftharpoons> ubclRestrict (ufDom\<cdot>f1)\<cdot>(b \<uplus> iterate i\<cdot>(\<Lambda> (z::'m\<^sup>\<Omega>). (f1 \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>f1)\<cdot>(b \<uplus> z))) \<uplus> (f2 \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>f2)\<cdot>(b \<uplus> z))))\<cdot>(ubclLeast (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2)))) \<uplus> (f2 \<rightleftharpoons> ubclRestrict (ufDom\<cdot>f2)\<cdot>(b \<uplus> iterate i\<cdot>(\<Lambda> (z::'m\<^sup>\<Omega>). (f1 \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>f1)\<cdot>(b \<uplus> z))) \<uplus> (f2 \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>f2)\<cdot>(b \<uplus> z))))\<cdot>(ubclLeast (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2)))))
 \<ge> lnsuc\<cdot>(ubLen ((iterate i\<cdot>(\<Lambda> (z::'m\<^sup>\<Omega>). (f1 \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>f1)\<cdot>(b \<uplus> z))) \<uplus> (f2 \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>f2)\<cdot>(b \<uplus> z))))\<cdot>(ubclLeast (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2)))\<uplus>(iterate i\<cdot>(\<Lambda> (z::'m\<^sup>\<Omega>). (f1 \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>f1)\<cdot>(b \<uplus> z))) \<uplus> (f2 \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>f2)\<cdot>(b \<uplus> z))))\<cdot>(ubclLeast (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2)))))"
            by (smt zz1 zz2 zz3) (*isar proof available*)
 
-(*          have zz12: "(lnsuc\<cdot>(ubLen b)) \<le> ubLen ((f1 \<rightleftharpoons> ubclRestrict (ufDom\<cdot>f1)\<cdot>(b \<uplus> iterate i\<cdot>(\<Lambda> (z::'m\<^sup>\<Omega>). (f1 \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>f1)\<cdot>(b \<uplus> z))) \<uplus> (f2 \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>f2)\<cdot>(b \<uplus> z))))\<cdot>(ubclLeast (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2))))
-\<uplus> (f2 \<rightleftharpoons> ubclRestrict (ufDom\<cdot>f2)\<cdot>(b \<uplus> iterate i\<cdot>(\<Lambda> (z::'m\<^sup>\<Omega>). (f1 \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>f1)\<cdot>(b \<uplus> z))) \<uplus> (f2 \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>f2)\<cdot>(b \<uplus> z))))\<cdot>(ubclLeast (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2)))))"
-            sledgehammer
-           sorry  *)
-       
+         have zz12: "lnsuc\<cdot> (ubLen (iter_ubfix2 (ufCompH f1 f2) i (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2) b \<uplus> iter_ubfix2 (ufCompH f1 f2) i (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2) b)) \<le> ubLen (iter_ubfix2 (ufCompH f1 f2) (Suc i) (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2) b)"
+    by (simp add: ufCompH_def zz11)
 
-     show "ubLen (iter_ubfix2 (ufCompH f1 f2) (Suc i) (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2) b) \<ge> lnsuc\<cdot>(ubLen (iter_ubfix2 (ufCompH f1 f2) i (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2) b))"
+  show "ubLen (iter_ubfix2 (ufCompH f1 f2) (Suc i) (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2) b) \<ge> lnsuc\<cdot>(ubLen (iter_ubfix2 (ufCompH f1 f2) i (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2) b))"
+      by (metis zz3 zz12)
 
-      apply (subst y23)
-      apply (simp add: ufCompH_def)
-
-      apply (simp only: sucmin_minsuc)
-      
-       using zz1 zz2 zz3 zz11        
-
-      sorry (*austimende proofs gefunden*)
+(* proof -
+  have "lnsuc\<cdot> (ubLen (iter_ubfix2 (ufCompH f1 f2) i (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2) b \<uplus> iter_ubfix2 (ufCompH f1 f2) i (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2) b)) \<le> ubLen ((f1 \<rightleftharpoons> b \<uplus> iter_ubfix2 (ufCompH f1 f2) i (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2) b\<bar>ufDom\<cdot>f1) \<uplus> (f2 \<rightleftharpoons> b \<uplus> iter_ubfix2 (ufCompH f1 f2) i (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2) b\<bar>ufDom\<cdot>f2))"
+    by (simp add: ufCompH_def zz11)
+  then have "lnsuc\<cdot> (ubLen (iter_ubfix2 (ufCompH f1 f2) i (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2) b)) \<le> ubLen ((f1 \<rightleftharpoons> b \<uplus> iter_ubfix2 (ufCompH f1 f2) i (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2) b\<bar>ufDom\<cdot>f1) \<uplus> (f2 \<rightleftharpoons> b \<uplus> iter_ubfix2 (ufCompH f1 f2) i (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2) b\<bar>ufDom\<cdot>f2))"
+    by (metis (no_types) zz3)
+  then show "lnsuc\<cdot> (lnmin\<cdot>(ubLen b)\<cdot> (ubLen (iterate i\<cdot> (\<Lambda> u. (f1 \<rightleftharpoons> b \<uplus> u\<bar>ufDom\<cdot>f1) \<uplus> (f2 \<rightleftharpoons> b \<uplus> u\<bar>ufDom\<cdot>f2))\<cdot> (ubclLeast (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2))))) \<le> ubLen ((f1 \<rightleftharpoons> b \<uplus> iterate i\<cdot> (\<Lambda> u. (f1 \<rightleftharpoons> b \<uplus> u\<bar>ufDom\<cdot>f1) \<uplus> (f2 \<rightleftharpoons> b \<uplus> u\<bar>ufDom\<cdot>f2))\<cdot> (ubclLeast (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2))\<bar>ufDom\<cdot>f1) \<uplus> (f2 \<rightleftharpoons> b \<uplus> iterate i\<cdot> (\<Lambda> u. (f1 \<rightleftharpoons> b \<uplus> u\<bar>ufDom\<cdot>f1) \<uplus> (f2 \<rightleftharpoons> b \<uplus> u\<bar>ufDom\<cdot>f2))\<cdot> (ubclLeast (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2))\<bar>ufDom\<cdot>f2))"
+    by (metis (no_types) ufCompH_def y23)
+qed *)
     qed
 
   have y3: "\<And>i. ubLen (iter_ubfix2 (ufCompH f1 f2) i (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2) b) \<ge> lnsuc\<cdot>(ubLen b) \<Longrightarrow> 
