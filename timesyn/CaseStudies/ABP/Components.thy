@@ -281,7 +281,23 @@ unfolding ubWell_def
   apply(simp add: natbool2abp_def)
   by(simp add: tsynMap_def)
 
- 
+definition rec_testoutput_ack_1 :: "bool tsyn stream" where 
+"rec_testoutput_ack_1 \<equiv> list2s [Msg True, Msg False]"
+
+definition rec_testoutput_msg_1 :: "nat tsyn stream" where 
+"rec_testoutput_msg_1 \<equiv> list2s [Msg 1, Msg 2]"
+
+lift_definition rec_testoutput_1 :: "Receiver tsyn SB" is
+"[o\<guillemotright> \<mapsto> nat2abp\<cdot>rec_testoutput_msg_1, ar\<guillemotright> \<mapsto> bool2abp\<cdot>rec_testoutput_ack_1]"
+  unfolding ubWell_def
+  unfolding usclOkay_stream_def
+  unfolding ctype_tsyn_def
+  apply(simp add: rec_testoutput_ack_1_def)
+  apply(simp add: rec_testoutput_msg_1_def)
+  apply(simp add: bool2abp_def)
+  apply (simp add:nat2abp_def)
+  apply(simp add: tsynMap_def)
+  by (simp add: rangeI)
 
 
 (*The message starts with the right bit, but the medium loses the acknowledgement bit sent to the sender, so the
@@ -297,6 +313,25 @@ unfolding ubWell_def
   apply(simp add: rec_testinput_2_def)
   apply(simp add: natbool2abp_def)
   by(simp add: tsynMap_def)
+
+definition rec_testoutput_ack_2 :: "bool tsyn stream" where 
+"rec_testoutput_ack_2 \<equiv> list2s [Msg True, Msg True, Msg False]"
+
+definition rec_testoutput_msg_2 :: "nat tsyn stream" where 
+"rec_testoutput_msg_2 \<equiv> list2s [Msg 1, null, Msg 2]"
+
+lift_definition rec_testoutput_2 :: "Receiver tsyn SB" is
+"[o\<guillemotright> \<mapsto> nat2abp\<cdot>rec_testoutput_msg_2, ar\<guillemotright> \<mapsto> bool2abp\<cdot>rec_testoutput_ack_2]"
+  unfolding ubWell_def
+  unfolding usclOkay_stream_def
+  unfolding ctype_tsyn_def
+  apply(simp add: rec_testoutput_ack_2_def)
+  apply(simp add: rec_testoutput_msg_2_def)
+  apply(simp add: bool2abp_def)
+  apply (simp add:nat2abp_def)
+  apply(simp add: tsynMap_def)
+  by (simp add: rangeI)
+
 
 
 
@@ -315,6 +350,23 @@ unfolding ubWell_def
   by(simp add: tsynMap_def)
 
 
+definition rec_testoutput_ack_3 :: "bool tsyn stream" where 
+"rec_testoutput_ack_3 \<equiv> list2s [null, Msg True, null, Msg False]"
+
+definition rec_testoutput_msg_3 :: "nat tsyn stream" where 
+"rec_testoutput_msg_3 \<equiv> list2s [null, Msg 1, null, Msg 2]"
+
+lift_definition rec_testoutput_3 :: "Receiver tsyn SB" is
+"[o\<guillemotright> \<mapsto> nat2abp\<cdot>rec_testoutput_msg_3, ar\<guillemotright> \<mapsto> bool2abp\<cdot>rec_testoutput_ack_3]"
+  unfolding ubWell_def
+  unfolding usclOkay_stream_def
+  unfolding ctype_tsyn_def
+  apply(simp add: rec_testoutput_ack_3_def)
+  apply(simp add: rec_testoutput_msg_3_def)
+  apply(simp add: bool2abp_def)
+  apply (simp add:nat2abp_def)
+  apply(simp add: tsynMap_def)
+  by (simp add: rangeI)
 
 
 end

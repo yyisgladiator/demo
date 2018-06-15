@@ -113,7 +113,8 @@ definition SenderSPF :: "Sender tsyn SPF" where
 
 (* ----------------------------------------------------------------------- *)
 section {* Some Sender tsyn stream ubundle for testing the sender function.
-           Move this section to Components.thy as soon as it imports SenderAutomaton.thy*}
+           Move this section to Components.thy as soon as it imports SenderAutomaton.thy
+           TODO: Add corresponding output ubundles as soon as we have the Sender tsyn SPF. *}
 (* ----------------------------------------------------------------------- *)
 
 (* Everything works fine: Sending two messages while receiving the correct acknowledgement bits  *)
@@ -132,7 +133,6 @@ lift_definition snd_testubundle_1 :: "Sender tsyn SB" is
   apply(simp add: snd_testinput_acks_1_def)
   apply(simp add: tsynMap_def)
   by (simp add: rangeI)
-
 
 
 (*Medium 1 or Medium 2 loses the first message *)
