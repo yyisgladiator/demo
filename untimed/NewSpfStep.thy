@@ -189,6 +189,17 @@ lemma spfStep_cont:"cont (\<lambda> h. Abs_ufun (\<Lambda>  sb.  (ubDom\<cdot>sb
                                               \<leadsto> (if (sbHdElemWell sb) then ufRestrict In Out\<cdot>(h (Abs_sbElem(inv convDiscrUp (sbHdElem\<cdot>sb)))) \<rightleftharpoons> (sbRt\<cdot>sb) else ubclLeast Out)))"
   sorry
     
+lemma sbElem_surj_h:" \<exists>sb. f = (inv convDiscrUp (sbHdElem\<cdot>sb))"
+proof-
+  obtain sb where sb_def:"\<forall>c\<in>dom f. shd(sb . c) = f \<rightharpoonup> c"
+    sorry
+  then have "f = inv convDiscrUp (sbHdElem\<cdot>sb)"
+      sorry
+  then show "\<exists>sb::'a stream\<^sup>\<Omega>. f = inv convDiscrUp (sbHdElem\<cdot>sb)"
+    by auto
+  qed
+    
+    
 lemma sbElem_surj:"\<exists>sb. sbE=  Abs_sbElem (inv convDiscrUp (sbHdElem\<cdot>sb))"
   sorry
 
