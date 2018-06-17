@@ -16,7 +16,8 @@ declare [[show_consts]]
 lemma minOr: "\<And> x y. lnmin\<cdot>x\<cdot>y = x \<or> lnmin\<cdot>x\<cdot>y = y"
     sorry (*siehe TStream.thy, muss noch nach lnat*)
 
-lemma z1: assumes "ubDom\<cdot>(z::'a\<^sup>\<Omega>) \<noteq> {}" and "ubDom\<cdot>zz \<noteq> {}" and "ubDom\<cdot>(z \<uplus> zz) \<noteq> {}" shows "\<And> (z::'a\<^sup>\<Omega>) zz . ubLen (z \<uplus> zz) = ubLen z \<or> ubLen (z \<uplus> zz) = ubLen zz"
+
+lemma z1: "\<And> (z::'a\<^sup>\<Omega>) zz . ubLen (z \<uplus> zz) = ubLen z \<or> ubLen (z \<uplus> zz) = ubLen zz"
 proof (simp add: ubclUnion_ubundle_def)
   fix z zz
   obtain ln1 where "ln1 = ubLen (z::'a\<^sup>\<Omega>)"
@@ -27,7 +28,6 @@ proof (simp add: ubclUnion_ubundle_def)
     apply (simp add: ubLen_def)
     apply rule
 
-(*     using assms apply simp *)
 (*     using usclLen_stream_def / tstream apply simp *)
     sorry
   show "ubLen (ubUnion\<cdot>z\<cdot>zz) = ubLen z \<or> ubLen (ubUnion\<cdot>z\<cdot>zz) = ubLen zz"
@@ -55,14 +55,15 @@ proof (simp add: ubclUnion_ubundle_def)
   qed
 qed
 
-lemma f1: assumes "ufRan\<cdot>f1 \<inter> ufRan\<cdot>f2 = {}" and "ufIsStrong f1" and "ufIsStrong f2" and "ubLen b > ubLen ub"
+lemma f1: assumes "ufRan\<cdot>f1 \<inter> ufRan\<cdot>f2 = {}" and "ufIsStrong f1" and "ufIsStrong f2" and "ubLen b > ubLen ub" and "ubDom\<cdot>b = ufCompI f1 f2" and "ubDom\<cdot>ub = ufCompL f1 f2"
   shows "lnsuc\<cdot>(ubLen ub) \<le> ubLen ((ufCompH f1 f2) b\<cdot>ub)"
 proof -
-  fix b (* ub *)::"'a ubundle"
+  fix b ub ::"'a ubundle"
+  assume a1: "ubDom\<cdot>b \<noteq> {}"
   (* fix ub::"'a::uscl_pcpo\<^sup>\<Omega>" *)
 (*   assume a1: "ubLen b = \<infinity>" *)
 
-  obtain n :: lnat where "n = ubLen b"
+(*   obtain n :: lnat where "n = ubLen b"
     by simp
   obtain nn :: lnat where "nn = ubLen ub"
     by simp
@@ -71,18 +72,128 @@ proof -
   have n1: "nn \<noteq> \<infinity>"
     using \<open>(nn::lnat) = ubLen (ub::'a::uscl_pcpo\<^sup>\<Omega>)\<close> assms(4) by auto
   have n2: "lnsuc\<cdot>nn \<noteq> \<infinity>"
-    by (simp add: n1)
-  have n3: "ubLen ((ufCompH f1 f2) b\<cdot>ub) \<le> \<infinity>"
-    by simp
+    by (simp add: n1) *)
 
+
+(*
+"ubLen b \<equiv> if ubDom\<cdot>b \<noteq> {} then (LEAST ln. ln\<in>{(usclLen\<cdot>(b . c)) | c. c \<in> ubDom\<cdot>b}) else \<infinity>"  
+*)
+
+
+  have f10: "ubDom\<cdot>(ubUnion\<cdot>b\<cdot>ub) = ubDom\<cdot>b \<union> ubDom\<cdot>ub"
+    using ubunionDom by blast
+
+  have f11: "ubLen ( b \<uplus> ub) = ubLen ub"
+    apply (simp add: ubclUnion_ubundle_def)
+    apply (simp add: ubLen_def)
+    apply (simp_all add: a1)
+  proof (cases "ubDom\<cdot>ub = {}")
+    case True
+    have c1: "\<nexists> (c::channel) . (c \<in> ubDom\<cdot>ub)"
+      by (simp add: True)
+    have c2: "\<exists> c::channel . c \<in> ubDom\<cdot>b \<and> usclLen\<cdot>(b  .  c) < \<infinity> \<Longrightarrow>  ubDom\<cdot>ub \<noteq> {}"
+      apply rule
+      using assms
+
+      sorry 
+    have c3: "\<forall> c::channel . c \<in> ubDom\<cdot>b \<longrightarrow> usclLen\<cdot>(b  .  c) = \<infinity>"
+      using True c2 inf_ub less_le by blast
+    have f0: "\<forall>u. (\<exists>c. (LEAST l. l \<in> {usclLen\<cdot>(u . c::'a) |c. c \<in> ubDom\<cdot>u}) = usclLen\<cdot>(u . c) \<and> c \<in> ubDom\<cdot>u) \<or> {} = ubDom\<cdot>u"
+      using  ublen_min_on_channel by (metis (mono_tags, lifting))
+    then obtain cc :: "'a\<^sup>\<Omega> \<Rightarrow> channel" where
+      f1: "\<forall>u. (LEAST l. l \<in> {usclLen\<cdot>(u . c) |c. c \<in> ubDom\<cdot>u}) = usclLen\<cdot>(u . cc u) \<and> cc u \<in> ubDom\<cdot>u \<or> {} = ubDom\<cdot>u"
+      by moura
+    show "(ubDom\<cdot>ub \<noteq> {} \<longrightarrow> (LEAST ln::lnat. \<exists>c::channel. ln = usclLen\<cdot>(ubUnion\<cdot>b\<cdot>ub  .  c) \<and> (c \<in> ubDom\<cdot>b \<or> c \<in> ubDom\<cdot>ub)) = (LEAST ln::lnat. \<exists>c::channel. ln = usclLen\<cdot>(ub  .  c) \<and> c \<in> ubDom\<cdot>ub)) \<and> (ubDom\<cdot>ub = {} \<longrightarrow> (LEAST ln::lnat. \<exists>c::channel. ln = usclLen\<cdot>(b  .  c) \<and> c \<in> ubDom\<cdot>b) = \<infinity>)"
+      apply (simp add: True)
+      using a1 f1 f0  c3 by fastforce
+  next
+    case False
+    have c1: "\<exists> c . c \<in> ubDom\<cdot>ub \<longrightarrow> c \<in> ubDom\<cdot>(ubUnion\<cdot>b\<cdot>ub)"
+      by simp
+    show "(ubDom\<cdot>ub \<noteq> {} \<longrightarrow> (LEAST ln::lnat. \<exists>c::channel. ln = usclLen\<cdot>(ubUnion\<cdot>b\<cdot>ub  .  c) \<and> (c \<in> ubDom\<cdot>b \<or> c \<in> ubDom\<cdot>ub)) = (LEAST ln::lnat. \<exists>c::channel. ln = usclLen\<cdot>(ub  .  c) \<and> c \<in> ubDom\<cdot>ub)) \<and> (ubDom\<cdot>ub = {} \<longrightarrow> (LEAST ln::lnat. \<exists>c::channel. ln = usclLen\<cdot>(b  .  c) \<and> c \<in> ubDom\<cdot>b) = \<infinity>)"
+      apply (simp add: False)
+      apply (simp add: ubUnion_def)
+      using c1 False assms ubunionDom
+
+      sorry
+  qed
+
+  have f121: "\<And> x . \<exists>c::channel. ubLen x = ubLen (ubRestrict {c}\<cdot>x)"
+  proof -
+    fix x
+    show "\<exists>c::channel. ubLen x = ubLen (ubRestrict {c}\<cdot>x)"
+      apply rule
+      apply (simp add: ubLen_def)
+      using assms
+
+      sorry
+  qed
+
+  have f122: "\<And> x c . ubLen (ubRestrict c\<cdot>x) \<ge> ubLen x"
+  proof -
+    fix x c
+    show "ubLen (ubRestrict c\<cdot>x) \<ge> ubLen x"
+      apply (simp add: ubLen_def)
+      apply rule+
+      apply auto
+
+      sorry
+  qed
+
+  have f12: "ubLen (ubclRestrict (ufDom\<cdot>f1)\<cdot>(b \<uplus> ub)) \<ge> ubLen ( b \<uplus> ub)"
+    apply (simp add: ubclRestrict_ubundle_def ubclUnion_ubundle_def)
+    using f122 by blast
+
+
+  have f13: "ubLen (ubclRestrict (ufDom\<cdot>f1)\<cdot>(b \<uplus> ub)) \<ge> ubLen ub"
+    using f11 f12 by auto
+
+  have f141: "\<And> f (x :: 'a\<^sup>\<Omega>) . ubLen (f x) \<ge> ubLen x"
+  proof -
+    fix f 
+    fix x
+(* assume a1: "ubDom\<cdot>(f x) \<noteq> {}" *)
+    show "ubLen (f x) \<ge> ubLen x"
+      apply (simp add: ubLen_def)
+    proof (cases "ubDom\<cdot>x = {}")
+      case True
+(* assume a1: "ubDom\<cdot>(f x) \<noteq> {}" *)
+      show "(ubDom\<cdot>x \<noteq> {} \<longrightarrow> ubDom\<cdot>(f x) \<noteq> {} \<longrightarrow> (LEAST ln::lnat. \<exists>c::channel. ln = usclLen\<cdot>(x  .  c) \<and> c \<in> ubDom\<cdot>x) \<le> (LEAST ln::lnat. \<exists>c::channel. ln = usclLen\<cdot>(f x  .  c) \<and> c \<in> ubDom\<cdot>(f x))) \<and>
+    (ubDom\<cdot>x = {} \<longrightarrow> ubDom\<cdot>(f x) \<noteq> {} \<longrightarrow> (LEAST ln::lnat. \<exists>c::channel. ln = usclLen\<cdot>(f x  .  c) \<and> c \<in> ubDom\<cdot>(f x)) = \<infinity>)" 
+        apply (simp add: True)
+        apply rule
+
+        sorry
+    next
+      case False
+      then show "(ubDom\<cdot>x \<noteq> {} \<longrightarrow> ubDom\<cdot>(f x) \<noteq> {} \<longrightarrow> (LEAST ln::lnat. \<exists>c::channel. ln = usclLen\<cdot>(x  .  c) \<and> c \<in> ubDom\<cdot>x) \<le> (LEAST ln::lnat. \<exists>c::channel. ln = usclLen\<cdot>(f x  .  c) \<and> c \<in> ubDom\<cdot>(f x))) \<and>
+    (ubDom\<cdot>x = {} \<longrightarrow> ubDom\<cdot>(f x) \<noteq> {} \<longrightarrow> (LEAST ln::lnat. \<exists>c::channel. ln = usclLen\<cdot>(f x  .  c) \<and> c \<in> ubDom\<cdot>(f x)) = \<infinity>)"
+        apply (simp add: False)
+        
+        sorry
+    qed
+  qed
+
+  have f14: "ubLen (f1 \<rightleftharpoons> ubclRestrict (ufDom\<cdot>f1)\<cdot>(b \<uplus> ub)) \<ge> lnsuc\<cdot>(ubLen (ubclRestrict (ufDom\<cdot>f1)\<cdot>(b \<uplus> ub)))"
+    apply (simp add: ubclRestrict_ubundle_def)
+    by (meson assms(4) f141 leD)
+
+(* ubLen ( b \<uplus> ub) = ubLen ub *)
+(* ubLen (b \<uplus> ub\<bar>ufDom\<cdot>f1 ) \<ge> ubLen  ( b \<uplus> ub) *)
+(* ubLen (f1 \<rightleftharpoons> b \<uplus> ub\<bar>ufDom\<cdot>f1) \<ge> lnsuc\<cdot> ubLen (b \<uplus> ub\<bar>ufDom\<cdot>f1 ) *)
+(* f2*)
+(*union \<ge> lnsuc ubLen ub*)
 
 
   show "lnsuc\<cdot>(ubLen ub) \<le> ubLen ((ufCompH f1 f2) b\<cdot>ub)"
     apply (simp add: ufCompH_def)
-    apply (simp add: ubclUnion_ubundle_def)
+    apply (simp add: ubclUnion_ubundle_def ubclRestrict_ubundle_def)
     using assms z1 minOr 
   sorry
 qed
+
+
+
 lemma f2: assumes "ufRan\<cdot>f1 \<inter> ufRan\<cdot>f2 = {}" and "ufIsStrong f1" and "ufIsStrong f2" and "ubLen b \<le> ubLen ub"
   shows"ubLen ((ufCompH f1 f2) b\<cdot>ub) \<ge> ubLen b"
 
@@ -101,7 +212,7 @@ proof -
 
   have z2: "ufWell (\<Lambda>(x::'m\<^sup>\<Omega>). (ubclDom\<cdot>x = ufCompI f1 f2)\<leadsto>ubFix (ufCompH f1 f2 x) (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2))"
     apply (rule ufun_wellI)
-    apply (simp_all  )
+    apply (simp_all)
     apply (simp_all add: domIff2)
     apply (simp_all add: ubclDom_ubundle_def)
     apply auto
@@ -129,6 +240,9 @@ proof -
     proof -
       fix i
       assume y21: "ubLen (iter_ubfix2 (ufCompH f1 f2) i (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2) b) < lnsuc\<cdot>(ubLen b)"
+      (* show "ubLen (iter_ubfix2 (ufCompH f1 f2) (Suc i) (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2) b) \<ge> lnsuc\<cdot>(ubLen (iter_ubfix2 (ufCompH f1 f2) i (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2) b))"
+        apply simp
+        apply (subst f1) *)
 
       have sucmin_minsuc: "\<And> x y . lnsuc\<cdot>(lnmin\<cdot>x\<cdot>y) = lnmin\<cdot>(lnsuc\<cdot>x)\<cdot>(lnsuc\<cdot>y)"
         by simp
@@ -208,14 +322,17 @@ lnmin\<cdot>(lnsuc\<cdot>(ubLen b))\<cdot>(lnsuc\<cdot>(ubLen (iter_ubfix2 (ufCo
           then show ?thesis  sorry
         qed
  *)
+
          have zz1: "ubLen (f1 \<rightleftharpoons> ubclRestrict (ufDom\<cdot>f1)\<cdot>(b \<uplus> iterate i\<cdot>(\<Lambda> (z::'m\<^sup>\<Omega>). (f1 \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>f1)\<cdot>(b \<uplus> z))) \<uplus> (f2 \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>f2)\<cdot>(b \<uplus> z))))\<cdot>(ubclLeast (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2))))
 \<ge> lnsuc\<cdot>(ubLen (iterate i\<cdot>(\<Lambda> (z::'m\<^sup>\<Omega>). (f1 \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>f1)\<cdot>(b \<uplus> z))) \<uplus> (f2 \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>f2)\<cdot>(b \<uplus> z))))\<cdot>(ubclLeast (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2))))"
-           apply (simp add: ubclUnion_ubundle_def ubclLeast_ubundle_def ubclRestrict_ubundle_def ubUnion_def)
-           using assms
+           apply (simp add: ubclUnion_ubundle_def ubclLeast_ubundle_def ubclRestrict_ubundle_def)
+           
            sorry
 
          have zz2: "ubLen (f2 \<rightleftharpoons> ubclRestrict (ufDom\<cdot>f2)\<cdot>(b \<uplus> iterate i\<cdot>(\<Lambda> (z::'m\<^sup>\<Omega>). (f1 \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>f1)\<cdot>(b \<uplus> z))) \<uplus> (f2 \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>f2)\<cdot>(b \<uplus> z))))\<cdot>(ubclLeast (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2))))
  \<ge> lnsuc\<cdot>(ubLen (iterate i\<cdot>(\<Lambda> (z::'m\<^sup>\<Omega>). (f1 \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>f1)\<cdot>(b \<uplus> z))) \<uplus> (f2 \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>f2)\<cdot>(b \<uplus> z))))\<cdot>(ubclLeast (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2))))"
+           apply (simp add: ubclUnion_ubundle_def ubclLeast_ubundle_def ubclRestrict_ubundle_def ubUnion_def)
+           using assms
            sorry
 
          have zz3: "\<And> (z::'a\<^sup>\<Omega>) zz . ubLen (z \<uplus> zz) = ubLen z \<or> ubLen (z \<uplus> zz) = ubLen zz"
