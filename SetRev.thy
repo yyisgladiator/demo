@@ -44,7 +44,7 @@ lemma setrev_eqI: "inv Rev a = inv Rev b \<Longrightarrow> a = b"
 
 (* order is exactly reversed subset *)
 lemma revBelowNeqSubset: "\<And>A:: 'a set rev. \<forall>B:: 'a set rev. A \<sqsubseteq> B \<longleftrightarrow> (inv Rev B \<subseteq> inv Rev A)"
-  by (smt SetPcpo.less_set_def below_rev.elims(2) below_rev.elims(3) inv_rev_rev)
+  by (metis SetPcpo.less_set_def below_rev.simps inv_rev_rev rev.exhaust)
 
 lemma SLEI_help1:  "\<And>Y::nat \<Rightarrow> 'a set rev. 
   chain Y \<Longrightarrow> Rev (\<Inter>{x. \<exists>i. x = inv Rev (Y i)}) \<sqsubseteq> (\<Squnion>i. Y i)" 
@@ -431,7 +431,6 @@ lemma setflat_rev_mono: "monofun (\<lambda>S. Rev {K  | Z K. K\<in>Z \<and> Z \<
   apply(rule monofunI)
   apply auto
   apply (simp add: less_set_def)
-  apply (subst subset_iff)
   using revBelowNeqSubset by fastforce
 
 (*
