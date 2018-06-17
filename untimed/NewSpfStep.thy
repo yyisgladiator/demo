@@ -192,7 +192,8 @@ proof(simp add: spfStep_inj_def, rule inj_onI)
   qed
 qed
   
-
+lemma spfStep_eq_sb:assumes"sb1 \<sqsubseteq> sb2" and "sbHdElemWell sb1" shows "spfStep_inj In Out\<cdot>h\<cdot>sb1 = spfStep_inj In Out\<cdot>h\<cdot>sb2"
+  sorry
 
 
 
