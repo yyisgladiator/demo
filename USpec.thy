@@ -123,6 +123,16 @@ definition uspecInter :: "'m uspec \<rightarrow> 'm uspec \<rightarrow> 'm uspec
 "uspecInter \<equiv> \<Lambda> S1 S2. uspecInter_general S1 S2"
 
 
+(* Helper for uspecFlatten *)
+definition uspec_set_filter:: "channel set \<Rightarrow> channel set \<Rightarrow> ('m uspec) set rev \<rightarrow> ('m uspec) set rev" where
+"uspec_set_filter In Out = (\<Lambda> uspecs. (setrevFilter (\<lambda> uspec. uspecDom\<cdot>uspec = In \<and> uspecRan\<cdot>uspec = Out)\<cdot>uspecs))"
+
+(* Computes a big Union over all Elements *)
+(* This function is not cont, counterexample here: https://git.rwth-aachen.de/montibelle/automaton/core/issues/77 *)
+definition uspecFlatten:: "channel set \<Rightarrow> channel set \<Rightarrow> ('m uspec) set rev \<Rightarrow> 'm uspec"
+  where "uspecFlatten In Out = (\<lambda> uspecs. Abs_rev_uspec (setflat\<cdot>(Rep_rev_uspec ` (inv Rev (uspec_set_filter In Out\<cdot>uspecs)))) In Out)"
+
+
 (****************************************************)
 section\<open>Predicates\<close>
 (****************************************************) 
@@ -704,11 +714,6 @@ lemma uspecInter_insert: "uspecInter\<cdot>S1\<cdot>S2 = uspecInter_general S1 S
 
 
 section \<open>uspecFlatten\<close>
-abbreviation uspec_in_out_eq:: "channel set \<Rightarrow> channel set \<Rightarrow> 'm uspec \<Rightarrow> bool" where
-"uspec_in_out_eq In Out \<equiv> (\<lambda> uspec. uspecDom\<cdot>uspec = In \<and> uspecRan\<cdot>uspec = Out)"
-
-definition uspec_set_filter:: "channel set \<Rightarrow> channel set \<Rightarrow> ('m uspec) set rev \<rightarrow> ('m uspec) set rev" where
-"uspec_set_filter In Out = (\<Lambda> uspecs. (setrevFilter (uspec_in_out_eq In Out)\<cdot>uspecs))"
 
 lemma uspec_filter_in_out_cont: "cont (\<lambda> uspecs. (setrevFilter (uspec_in_out_eq In Out)\<cdot>uspecs))"
   by simp
@@ -718,9 +723,6 @@ lemma uspec_set_filter_empty: "uspec_set_filter In Out\<cdot>(Rev {}) = Rev {}"
   apply (rule setrev_eqI)
   apply (simp add: inv_rev_rev)
   by (simp add: Set.filter_def inv_rev_rev setrevfilter_insert)
-
-definition uspecFlatten:: "channel set \<Rightarrow> channel set \<Rightarrow> ('m uspec) set rev \<Rightarrow> 'm uspec"
-  where "uspecFlatten In Out = (\<lambda> uspecs. Abs_rev_uspec (setflat\<cdot>(Rep_rev_uspec ` (inv Rev (uspec_set_filter In Out\<cdot>uspecs)))) In Out)"
 
 lemma uspecflatten_well: "uspecWell (Rev (setflat\<cdot>(Rep_rev_uspec ` (inv Rev (uspec_set_filter In Out\<cdot>uspecs))))) (Discr In) (Discr Out)"
   apply (cases "((Rep_rev_uspec ` (inv Rev (uspec_set_filter In Out\<cdot>uspecs)))) = {}")
