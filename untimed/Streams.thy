@@ -976,8 +976,12 @@ apply (induct_tac k, auto)
 apply (rule_tac x=x in scases, auto)
 by (drule inject_scons, auto)
 
+lemma sconc_inj: assumes "#s < \<infinity>" 
+  shows "inj (Rep_cfun (sconc s))"
+  by (meson assms injI inject_sconc lnat_well_h2)
+
 (* x is a prefix of x \<bullet> y*) 
-lemma [simp]: "x \<sqsubseteq> x \<bullet> y"
+lemma sconc_prefix [simp]: "x \<sqsubseteq> x \<bullet> y"
 apply (rule_tac x="#x" in lncases, auto)
 apply (rule finind [of x], auto)
 by (rule monofun_cfun_arg)
@@ -1223,6 +1227,11 @@ lemma stake_prefix2: "#s = Fin n \<Longrightarrow> s = stake n\<cdot>(s \<bullet
 
 lemma slen_conc: "#s < \<infinity> \<Longrightarrow> t \<noteq> \<epsilon> \<Longrightarrow> #s \<ge> Fin n \<Longrightarrow> #(s \<bullet> t) > Fin n"
   by (metis (no_types, hide_lams) stake_prefix2 infI less_le less_le_trans mono_slen sconc_neq sconc_snd_empty stream.take_below)
+
+lemma stake_srt_conc [simp]: "srt\<cdot>((stake 1\<cdot>s)\<bullet>(s)) = s"
+  apply (cases s)
+  apply simp
+  by (metis One_nat_def Rep_cfun_strict1 lscons_conv sconc_snd_empty stake_Suc stream.con_rews(2) stream.sel_rews(5) stream.take_0 surj_scons)
 
 (* ----------------------------------------------------------------------- *)
 section {* Lemmas for the remaining definitions *}
