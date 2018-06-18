@@ -123,6 +123,16 @@ definition uspecInter :: "'m uspec \<rightarrow> 'm uspec \<rightarrow> 'm uspec
 "uspecInter \<equiv> \<Lambda> S1 S2. uspecInter_general S1 S2"
 
 
+(* Helper for uspecFlatten *)
+definition uspec_set_filter:: "channel set \<Rightarrow> channel set \<Rightarrow> ('m uspec) set rev \<rightarrow> ('m uspec) set rev" where
+"uspec_set_filter In Out = (\<Lambda> uspecs. (setrevFilter (\<lambda> uspec. uspecDom\<cdot>uspec = In \<and> uspecRan\<cdot>uspec = Out)\<cdot>uspecs))"
+
+(* Computes a big Union over all Elements *)
+(* This function is not cont, counterexample here: https://git.rwth-aachen.de/montibelle/automaton/core/issues/77 *)
+definition uspecFlatten:: "channel set \<Rightarrow> channel set \<Rightarrow> ('m uspec) set rev \<Rightarrow> 'm uspec"
+  where "uspecFlatten In Out = (\<lambda> uspecs. Abs_rev_uspec (setflat\<cdot>(Rep_rev_uspec ` (inv Rev (uspec_set_filter In Out\<cdot>uspecs)))) In Out)"
+
+
 (****************************************************)
 section\<open>Predicates\<close>
 (****************************************************) 
@@ -701,5 +711,63 @@ lemma uspecInter_cont2[simp]: "cont ( \<lambda>S1. \<Lambda> S2. (uspecInter_gen
 
 lemma uspecInter_insert: "uspecInter\<cdot>S1\<cdot>S2 = uspecInter_general S1 S2"
   by (simp add: uspecInter_def)
+
+
+section \<open>uspecFlatten\<close>
+
+lemma uspec_filter_in_out_cont: "cont (\<lambda> uspecs. (setrevFilter (uspec_in_out_eq In Out)\<cdot>uspecs))"
+  by simp
+
+lemma uspec_set_filter_empty: "uspec_set_filter In Out\<cdot>(Rev {}) = Rev {}"
+  apply (simp add: uspec_set_filter_def)
+  apply (rule setrev_eqI)
+  apply (simp add: inv_rev_rev)
+  by (simp add: Set.filter_def inv_rev_rev setrevfilter_insert)
+
+lemma uspecflatten_well: "uspecWell (Rev (setflat\<cdot>(Rep_rev_uspec ` (inv Rev (uspec_set_filter In Out\<cdot>uspecs))))) (Discr In) (Discr Out)"
+  apply (cases "((Rep_rev_uspec ` (inv Rev (uspec_set_filter In Out\<cdot>uspecs)))) = {}")
+   apply (simp_all add: uspec_set_filter_empty)
+   apply (metis empty_iff setflat_empty)
+proof (rule)
+  fix f::'a
+  assume a1: " inv Rev (uspec_set_filter In Out\<cdot>uspecs) \<noteq> {}"
+  assume a2: "f \<in> setflat\<cdot>(Rep_rev_uspec ` inv Rev (uspec_set_filter In Out\<cdot>uspecs))"
+  have f1: "\<forall> uspec \<in> inv Rev (uspec_set_filter In Out\<cdot>uspecs). uspecDom\<cdot>uspec = In \<and> uspecRan\<cdot>uspec = Out"
+    by (metis (mono_tags, lifting) Cfun.cfun.Rep_cfun_inverse setrevfilter_condition uspec_set_filter_def)
+  have f2: "\<forall> uspec_set \<in> (Rep_rev_uspec ` (inv Rev (uspec_set_filter In Out\<cdot>uspecs))). 
+        uspecWell (Rev uspec_set) (Discr In) (Discr Out)"
+    by (simp add: f1 uspec_allDom uspec_allRan uspecrevset_insert)
+  obtain uspec_set where uspec_set_def: "f \<in> uspec_set" and uspec_set_def2: "uspec_set \<in> Rep_rev_uspec ` inv Rev (uspec_set_filter In Out\<cdot>uspecs)"
+    by (metis a2 setflat_obtain)
+  have f3: "uspecWell (Rev uspec_set) (Discr In) (Discr Out)"
+    using f2 uspec_set_def2 by blast
+  show "ufclDom\<cdot>f = In \<and> ufclRan\<cdot>f = Out"
+    using f3 uspec_set_def by auto
+qed
+
+
+lemma uspecflatten_mono: "monofun (\<lambda> uspecs. Rev (setflat\<cdot>(Rep_rev_uspec ` (inv Rev (uspec_set_filter In Out\<cdot>uspecs)))))"
+proof (rule rev_monoI)
+  fix x::"'a uspec set rev" and y::"'a uspec set rev"
+  assume a1: "x \<sqsubseteq> y"
+  have "uspec_set_filter In Out\<cdot>x \<sqsubseteq> uspec_set_filter In Out\<cdot>y"
+    by (simp add: a1 monofun_cfun_arg)
+  then have " inv Rev (uspec_set_filter In Out\<cdot>y) \<sqsubseteq>  inv Rev (uspec_set_filter In Out\<cdot>x)"
+    by (metis SetPcpo.less_set_def revBelowNeqSubset)
+  then have "(Rep_rev_uspec ` inv Rev (uspec_set_filter In Out\<cdot>y)) \<sqsubseteq> (Rep_rev_uspec ` inv Rev (uspec_set_filter In Out\<cdot>x))"
+    by (simp add: SetPcpo.less_set_def image_mono)
+  thus "setflat\<cdot>(Rep_rev_uspec ` inv Rev (uspec_set_filter In Out\<cdot>y)) \<sqsubseteq> setflat\<cdot>(Rep_rev_uspec ` inv Rev (uspec_set_filter In Out\<cdot>x))"
+    by (simp add: monofun_cfun_arg)
+qed
+
+lemma uspecflatten_dom: "uspecDom\<cdot>(uspecFlatten In Out uspecs) = In"
+  apply (simp add: uspecDom_def uspecFlatten_def)
+  by (metis fst_conv rep_abs_uspec snd_conv undiscr_Discr uspecflatten_well)
+
+lemma uspecflatten_ran: "uspecRan\<cdot>(uspecFlatten In Out uspecs) = Out"
+  apply (simp add: uspecRan_def uspecFlatten_def)
+  by (metis rep_abs_uspec snd_conv undiscr_Discr uspecflatten_well)
+
+
 
 end
