@@ -1,6 +1,6 @@
 theory EvenAutomaton
 
-imports Automaton "../../timesyn/tsynStream" "../../timesyn/tsynBundle" 
+imports dAutomaton "../../timesyn/tsynBundle" 
 
 begin
 
@@ -73,7 +73,8 @@ lemma createC1Bundle_ubconc[simp]:
 lemma createC1Bundle_ubconc_sbrt[simp]:assumes "ubDom\<cdot>sb = {c1}" 
                                shows "sbRt\<cdot>(ubConc (createC1Bundle n)\<cdot>sb) = sb"
   apply (rule ub_eq)
-  by (simp add: sbRt_def assms) + 
+  apply (simp add: sbRt_def assms) +
+  by (simp add: usclConc_stream_def) 
 
 
 
@@ -149,12 +150,12 @@ proof -
 qed
   
   
-lift_definition EvenAutomatonAutomaton :: "(EvenAutomatonState, EvenAutomaton tsyn) automaton" is 
+lift_definition EvenAutomatonAutomaton :: "(EvenAutomatonState, EvenAutomaton tsyn) dAutomaton" is 
   "(evenAutomatonTransition, State Even 0,(tsynbNull c2), {c1}, {c2})"
  using EvenAutomatonAutomaton_h by auto 
 
 definition EvenAutomatonSPF :: "EvenAutomaton tsyn SPF" where
-"EvenAutomatonSPF = H EvenAutomatonAutomaton"
+"EvenAutomatonSPF = da_H EvenAutomatonAutomaton"
 
 
 end
