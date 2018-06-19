@@ -2,7 +2,7 @@
 
 theory NDA
 
-imports Automaton "../../USpec" "../SpsStep" NDA_functions
+imports "../../USpec" "../SpsStep" NDA_functions
 
 begin
 
@@ -85,7 +85,7 @@ definition spsRt:: "'m SPS \<rightarrow> 'm SPS" where
 
 (* ToDo *)
 (* Very Very similar to helper over automaton *)
-thm helper_def
+thm da_helper_def
 
 (* Es klappt aber nicht.... Der nichtdeterminismus wird nicht berücksichtigt! 
   und ich laufe immer wieder in das problem: https://git.rwth-aachen.de/montibelle/automaton/core/issues/68 *)
