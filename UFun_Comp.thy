@@ -1499,6 +1499,9 @@ next
     by (metis ufleast_rep_abs option.sel ubcldom_least ufLeast_def ufleast_ufdom ufran_2_ubcldom2)
 qed
 
+lemma ufleast_apply:assumes "ubclDom\<cdot>sb = In" shows "ufLeast In  Out \<rightleftharpoons> sb = ubclLeast Out"
+  by (simp add: assms ufLeast_def)
+    
 
 subsection \<open>ufRestrict\<close>
 
