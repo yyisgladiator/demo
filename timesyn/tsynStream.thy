@@ -588,6 +588,10 @@ lemma tsyndropwhile_idem: "tsynDropWhile f\<cdot>(tsynDropWhile f\<cdot>s) = tsy
   apply (metis tsyndropwhile_sconc_msg_f tsyndropwhile_sconc_msg_t tsyndropwhile_sconc_null)
   by (simp add: tsyndropwhile_sconc_null)
 
+text {* @{term tsynDropWhile} does not change the length of a stream *}
+lemma tsyndropwhile_slen: "#s = #(tsynDropWhile f\<cdot>s)"
+  by (simp add: tsyndropwhile_insert)
+
 text {* @{term tsynDropWhile} test on finite stream. *}    
 lemma tsyndropwhile_test_finstream: 
   "tsynDropWhile (\<lambda> a. a \<noteq> (2 :: nat))\<cdot>(<[Msg 1, Msg 1, -, Msg 1, Msg 2, Msg 1]>) 
@@ -596,10 +600,20 @@ lemma tsyndropwhile_test_finstream:
 
 text {* @{term tsynDropWhile} test on infinite stream. *}
 lemma tsyndropwhile_test_infstream: 
-  "tsynDropWhile (\<lambda> a. a \<noteq> (2 :: nat))\<cdot>((<[Msg 1, -, Msg 2]>)\<infinity>) 
-     = <[-, -]> \<bullet> ((<[Msg 2, -, Msg 1]>)\<infinity>)"
-  apply (simp add: tsyndropwhile_insert)
-  oops
+  "tsynDropWhile (\<lambda> a. a \<noteq> (2 :: nat))\<cdot>((<[Msg 1, -, Msg 2]>)\<infinity>) = <[-, -, Msg 2]> \<bullet> ((<[Msg 1, -, Msg 2]>)\<infinity>)"
+proof -
+  have 1:"(<[Msg 1, -, Msg 2]>)\<infinity> = \<up>(Msg 1) \<bullet> \<up>- \<bullet> \<up>(Msg 2) \<bullet> (<[Msg 1, -, Msg 2]>\<infinity>)"
+    by (metis (no_types, lifting) list2s_0 list2s_Suc lscons_conv sconc_scons' sinftimes_unfold sup'_def)
+  have 2: " (\<lambda> a. a \<noteq> (2 :: nat)) 1"
+    by simp
+  from 1 2 have 3: "tsynDropWhile (\<lambda> a. a \<noteq> (2 :: nat))\<cdot>((<[Msg 1, -, Msg 2]>)\<infinity>) = \<up>- \<bullet> (tsynDropWhile (\<lambda> a. a \<noteq> (2 :: nat))\<cdot>(\<up>- \<bullet> \<up>(Msg 2) \<bullet> (<[Msg 1, -, Msg 2]>\<infinity>)))"
+    by (metis (mono_tags, lifting) inverseMsg.simps(2) tsyndropwhile_sconc_msg_t)      
+  then have 4:" \<up>- \<bullet> (tsynDropWhile (\<lambda> a. a \<noteq> (2 :: nat))\<cdot>(\<up>- \<bullet> \<up>(Msg 2) \<bullet> (<[Msg 1, -, Msg 2]>\<infinity>))) = \<up>- \<bullet> \<up>- \<bullet>(tsynDropWhile (\<lambda> a. a \<noteq> (2 :: nat))\<cdot>(\<up>(Msg 2) \<bullet> (<[Msg 1, -, Msg 2]>\<infinity>)))"
+    by (simp add: tsyndropwhile_sconc_null)
+  then have 5:" \<up>- \<bullet> \<up>- \<bullet>(tsynDropWhile (\<lambda> a. a \<noteq> (2 :: nat))\<cdot>(\<up>(Msg 2) \<bullet> (<[Msg 1, -, Msg 2]>\<infinity>))) = \<up>- \<bullet> \<up>- \<bullet> \<up>(Msg 2) \<bullet> (<[Msg 1, -, Msg 2]>\<infinity>)"
+    by (simp add: tsyndropwhile_sconc_msg_f)
+  from 3 4 5 show ?thesis by simp
+qed
 
 (* ----------------------------------------------------------------------- *)
   subsection {* tsynLen *}
@@ -686,7 +700,7 @@ lemma tsynzip_test_infstream:
   apply (subst sinftimes_unfold, simp)
   apply (subst sinftimes_unfold [of "\<up>2"])
   by (simp add: tsynzip_sconc_msg tsynzip_sconc_null)
- 
+
 (* ----------------------------------------------------------------------- *)
   section {* tsynSum - CaseStudy *}
 (* ----------------------------------------------------------------------- *)
