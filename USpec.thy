@@ -122,6 +122,11 @@ definition uspecInter_general :: "'m uspec \<Rightarrow> 'm uspec \<Rightarrow> 
 definition uspecInter :: "'m uspec \<rightarrow> 'm uspec \<rightarrow> 'm uspec" where
 "uspecInter \<equiv> \<Lambda> S1 S2. uspecInter_general S1 S2"
 
+definition uspecForall:: "('m::ufuncl \<Rightarrow> bool) \<Rightarrow> 'm uspec \<Rightarrow> bool" where
+"uspecForall P S \<equiv> setrevForall P (uspecRevSet\<cdot>S)"
+
+definition uspecExists:: "('m::ufuncl \<Rightarrow> bool) \<Rightarrow> 'm uspec \<Rightarrow> bool" where
+"uspecExists P S \<equiv> setrevExists P (uspecRevSet\<cdot>S)"
 
 (* Helper for uspecFlatten *)
 definition uspec_set_filter:: "channel set \<Rightarrow> channel set \<Rightarrow> ('m uspec) set rev \<rightarrow> ('m uspec) set rev" where

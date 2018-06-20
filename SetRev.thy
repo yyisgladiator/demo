@@ -31,12 +31,14 @@ definition setify::"('m \<Rightarrow> ('n set rev)) \<rightarrow> ('m \<Rightarr
 definition setrevUnion:: "'m set rev \<rightarrow> 'm set rev \<rightarrow> 'm set rev" where
 "setrevUnion \<equiv> (\<Lambda> A B. Rev((inv Rev A) \<union> (inv Rev B)))"
 
-(* "('m \<Rightarrow> 'n) \<Rightarrow> 'm uspec \<Rightarrow> 'n uspec*)
 definition setrevImage:: "('m \<Rightarrow> 'n) \<Rightarrow> 'm set rev \<Rightarrow> 'n set rev" where
 "setrevImage f \<equiv> \<lambda> S.  Rev (f ` (inv Rev S))"
 
 definition setrevForall:: "('m \<Rightarrow> bool) \<Rightarrow> 'm set rev \<Rightarrow> bool" where
-"setrevForall f \<equiv>"
+"setrevForall P S \<equiv> \<forall>x\<in> (inv Rev S). P x"
+
+definition setrevExists:: "('m \<Rightarrow> bool) \<Rightarrow> 'm set rev \<Rightarrow> bool" where
+"setrevExists P S \<equiv> \<exists>x\<in> (inv Rev S). P x"
 
 section \<open>Lemmas\<close>
 
