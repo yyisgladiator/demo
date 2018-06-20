@@ -787,4 +787,24 @@ lemma uspecflatten_monofun: "monofun (uspecFlatten In Out)"
   apply simp
   by (metis SetPcpo.less_set_def image_mono monofun_cfun_arg revBelowNeqSubset)
 
+subsection \<open>Forall Exists\<close>
+
+lemma uspec_subsetforall: 
+  assumes "uspecForall P S"
+  and "inv Rev (uspecRevSet\<cdot>T) \<subseteq> inv Rev (uspecRevSet\<cdot>S)"
+  shows "uspecForall P T"
+  using assms(1) assms(2) setrev_subsetforall uspecForall_def by blast
+
+lemma uspec_ballI: "(\<And>x. x \<in> inv Rev (uspecRevSet\<cdot>S) \<Longrightarrow> P x) \<Longrightarrow> uspecForall P S"
+  by (simp add: setrev_ballI uspecForall_def)
+
+lemma uspec_bexCI: "uspecForall (\<lambda>x. \<not> P x \<longrightarrow> P a) S \<Longrightarrow> a \<in> inv Rev (uspecRevSet\<cdot>S) \<Longrightarrow> uspecExists P S"
+  apply (simp add: uspecExists_def uspecForall_def)
+  apply (simp add: setrevExists_def setrevForall_def)
+  by auto
+
+lemma uspec_subset_eq: "inv Rev (uspecRevSet\<cdot>A) \<subseteq> inv Rev (uspecRevSet\<cdot>B) 
+  \<longleftrightarrow> uspecForall (\<lambda>x. x \<in> inv Rev (uspecRevSet\<cdot>B)) A"
+  by (simp add: uspecForall_def setrevForall_def subset_eq)
+
 end
