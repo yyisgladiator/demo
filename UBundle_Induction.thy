@@ -1,5 +1,5 @@
 theory UBundle_Induction
-  imports UBundle UBundle_Pcpo UBundle_Conc "untimed/Streams" "untimed/SPF"
+  imports UBundle UBundle_Pcpo UBundle_Conc "untimed/Streams" "untimed/SB"
 begin
 
   
@@ -37,19 +37,27 @@ default_sort message
 lemma ubmaxlen_least: "ubMaxLen 0 ((ubLeast cs):: 'a stream\<^sup>\<Omega>)"
   by(simp add: ubMaxLen_def usclLen_stream_def)
 
-lemma sbcases: "\<And>x :: 'a stream\<^sup>\<Omega>. x = (ubLeast (ubDom\<cdot>x)) \<or> (\<exists>a s. ubDom\<cdot>a = ubDom\<cdot>x \<and> ubDom\<cdot>s = ubDom\<cdot>x \<and> ubMaxLen (Fin 1) a \<and> x = ubConc a\<cdot>s)"
+lemma ubmaxlen_sbtake: "ubMaxLen (Fin n) (sbTake n\<cdot>x)"
+  sorry
+
+lemma ubleast_sbtake: assumes "x \<noteq> ubLeast (ubDom\<cdot>x)" shows "sbHd\<cdot>x \<noteq> ubLeast (ubDom\<cdot>x)"
+  sorry
+
+lemma sbcases: "\<And>x :: 'a stream\<^sup>\<Omega>. x = (ubLeast (ubDom\<cdot>x)) \<or> (\<exists>a s. ubDom\<cdot>a = ubDom\<cdot>x \<and> ubDom\<cdot>s = ubDom\<cdot>x \<and> ubMaxLen (Fin 1) a  \<and> a \<noteq> (ubLeast (ubDom\<cdot>x)) \<and> x = ubConc a\<cdot>s)"
   apply(case_tac "x = (ubLeast (ubDom\<cdot>x))")
    apply(simp_all)
 proof - 
   fix x :: "'a stream\<^sup>\<Omega>"
-  assume "x \<noteq> ubLeast (ubDom\<cdot>x)"
-  show "\<exists>a::'a stream\<^sup>\<Omega>. ubDom\<cdot>a = ubDom\<cdot>x \<and> (\<exists>s::'a stream\<^sup>\<Omega>. ubDom\<cdot>s = ubDom\<cdot>x \<and> ubMaxLen (Fin (Suc (0::nat))) a \<and> x = ubConc a\<cdot>s)"
+  assume a1: "x \<noteq> ubLeast (ubDom\<cdot>x)"
+  show "\<exists>a::'a stream\<^sup>\<Omega>. ubDom\<cdot>a = ubDom\<cdot>x \<and> (\<exists>s::'a stream\<^sup>\<Omega>. ubDom\<cdot>s = ubDom\<cdot>x \<and> ubMaxLen (Fin (Suc (0::nat))) a \<and> a \<noteq> (ubLeast (ubDom\<cdot>x))  \<and> x = ubConc a\<cdot>s)"
     apply(rule_tac x = "sbHd\<cdot>x" in exI)
     apply(simp)
     apply(rule_tac x = "sbRt\<cdot>x" in exI)
     apply(simp)
     apply rule
      apply(simp add: ubMaxLen_def usclLen_stream_def sbHd_def)
+    apply rule
+     apply(simp add: ubleast_sbtake a1)
     apply(rule ub_eq)
     apply (simp add: sbtake_sbdom)
   proof - 
@@ -65,68 +73,38 @@ proof -
 qed
 
 lemma sbcases2: "\<And>(x :: 'a stream\<^sup>\<Omega>) P. \<lbrakk>x = (ubLeast (ubDom\<cdot>x)) \<Longrightarrow> P; 
-                        \<And>a s. ubDom\<cdot>a = ubDom\<cdot>x \<and> ubDom\<cdot>s = ubDom\<cdot>x \<and> ubMaxLen (Fin 1) a \<and> x = ubConc a\<cdot>s \<Longrightarrow> P\<rbrakk> 
+                        \<And>a s. ubDom\<cdot>a = ubDom\<cdot>x \<and> ubDom\<cdot>s = ubDom\<cdot>x \<and> ubMaxLen (Fin 1) a \<and> a \<noteq> (ubLeast (ubDom\<cdot>x)) \<and> x = ubConc a\<cdot>s \<Longrightarrow> P\<rbrakk> 
                         \<Longrightarrow> P"
   using sbcases by blast
 
 
+lemma sbtake_ind2: 
+  "\<forall>x. (P (ubLeast (ubDom\<cdot>x)) \<and> 
+       (\<forall>a s. P s \<and> ubDom\<cdot>a = ubDom\<cdot>x \<and> ubDom\<cdot>s = ubDom\<cdot>x \<and> ubMaxLen (Fin 1) a  \<and> u \<noteq> (ubLeast (ubDom\<cdot>x)) \<longrightarrow> P (ubConc a\<cdot>s))) 
+        \<and> ubMaxLen (Fin n) x
+       \<longrightarrow> P x"
+proof(induct n)
+  case 0
+  then show ?case 
+    
+    sorry
+next
+  case (Suc n)
+  then show ?case 
+    
+    sorry
+qed
+
 lemma sbtake_ind: 
   "\<forall>x. (P (ubLeast (ubDom\<cdot>x)) \<and> 
-       (\<forall>a s. P s \<and> ubDom\<cdot>a = ubDom\<cdot>x \<and> ubDom\<cdot>s = ubDom\<cdot>x \<and> ubMaxLen (Fin 1) a \<longrightarrow> P (ubConc a\<cdot>s))) 
+       (\<forall>a s. P s \<and> ubDom\<cdot>a = ubDom\<cdot>x \<and> ubDom\<cdot>s = ubDom\<cdot>x \<and> ubMaxLen (Fin 1) a \<and> a \<noteq> (ubLeast (ubDom\<cdot>x)) \<longrightarrow> P (ubConc a\<cdot>s))) 
        \<longrightarrow> P (sbTake n\<cdot>x)" 
-  apply rule+
-proof -
-  fix x :: "'a stream\<^sup>\<Omega>"
-  assume a0: "P (ubLeast (ubDom\<cdot>x)) \<and> (\<forall>a s. P s \<and> ubDom\<cdot>a = ubDom\<cdot>x \<and> ubDom\<cdot>s = ubDom\<cdot>x \<and> ubMaxLen (Fin 1) a \<longrightarrow> P (ubConc a\<cdot>s))"
-  
-  hence a01: "P (ubLeast (ubDom\<cdot>x))"
-    by simp
-  have a02: "(\<forall>a s. P s \<and> ubDom\<cdot>a = ubDom\<cdot>x \<and> ubDom\<cdot>s = ubDom\<cdot>x \<and> ubMaxLen (Fin 1) a \<longrightarrow> P (ubConc a\<cdot>s))"
-    using a0 by blast
-
-  show "P (sbTake n\<cdot>x)"
-  proof(induct n)
-    case 0
-    then show ?case 
-      by (simp add: a01 sbtake_zero)
-  next
-    case (Suc n)
-    then have case_suc: "P (sbTake n\<cdot>x)"
-      by blast
-    
-    show ?case
-      apply(rule_tac x=x in sbcases2)
-      using a01 apply (metis sbtake_sbdom sbtake_sbgetch stream.take_strict ubgetchI ubleast_ubgetch)
-    proof - 
-      fix a
-      fix s
-      assume a1: "ubDom\<cdot>a = ubDom\<cdot>x \<and> ubDom\<cdot>s = ubDom\<cdot>x \<and> ubMaxLen (Fin (1::nat)) a \<and> x = ubConc a\<cdot>s"
-      have a11: "ubDom\<cdot>a = ubDom\<cdot>x"
-        using a1 by blast
-      have a12: "ubDom\<cdot>s = ubDom\<cdot>x"
-        using a1 by blast
-      have a13: "ubMaxLen (Fin (1::nat)) a"
-        using a1 by blast
-      have a14: "x = ubConc a\<cdot>s"
-        using a1 by blast
-
-      show "P (sbTake (Suc n)\<cdot>x)"
-        
-        sorry
-    qed
-  qed
-qed
-(*
-  apply(induct_tac n)
-  apply(simp add: sbtake_zero)
-  apply(rule_tac x=x in sbcases2)
-   apply clarsimp
-*)
+  sorry
 
 lemma finind_ub: 
   "\<lbrakk> \<exists>n. ubMaxLen (Fin n) x; 
      P (ubLeast (ubDom\<cdot>x)); 
-     \<And>u ub. P ub \<and> ubDom\<cdot>u = (ubDom\<cdot>x) \<and> ubDom\<cdot>ub = (ubDom\<cdot>x) \<and> ubMaxLen (Fin 1) u \<Longrightarrow> P (ubConc u\<cdot>ub) \<rbrakk>
+     \<And>u ub. P ub \<and> ubDom\<cdot>u = (ubDom\<cdot>x) \<and> ubDom\<cdot>ub = (ubDom\<cdot>x) \<and> ubMaxLen (Fin 1) u \<and> u \<noteq> (ubLeast (ubDom\<cdot>x)) \<Longrightarrow> P (ubConc u\<cdot>ub) \<rbrakk>
      \<Longrightarrow> P (x :: 'a stream ubundle)"
 proof - 
   obtain n where "ubMaxLen (Fin n) x"
@@ -140,7 +118,7 @@ qed
 lemma ind_ub: 
   "\<lbrakk> adm P; 
      P (ubLeast (ubDom\<cdot>x)); 
-     \<And>u ub. P ub \<and> ubDom\<cdot>u = (ubDom\<cdot>x) \<and> ubDom\<cdot>ub = (ubDom\<cdot>x) \<and> ubMaxLen (Fin 1) u \<Longrightarrow> P (ubConc u\<cdot>ub) \<rbrakk>
+     \<And>u ub. P ub \<and> ubDom\<cdot>u = (ubDom\<cdot>x) \<and> ubDom\<cdot>ub = (ubDom\<cdot>x) \<and> ubMaxLen (Fin 1) u \<and> u \<noteq> (ubLeast (ubDom\<cdot>x)) \<Longrightarrow> P (ubConc u\<cdot>ub) \<rbrakk>
      \<Longrightarrow> P (x :: 'a stream ubundle)"
   apply (unfold adm_def)
   apply (erule_tac x="\<lambda>i. sbTake i\<cdot>x" in allE, auto)
