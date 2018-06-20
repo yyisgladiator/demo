@@ -128,7 +128,11 @@ fix Y:: "nat \<Rightarrow> ('a \<rightarrow> 'a)"
       using a2 below_lub fixg_pre by fastforce 
   qed
 qed
-  
+
+lemma fixg_apply: assumes "\<And> y z. x\<sqsubseteq>z \<and> y\<sqsubseteq>z \<longrightarrow> x\<sqsubseteq>y"
+  shows "fixg x\<cdot>F = (if x \<sqsubseteq> F\<cdot>x then \<Squnion>i. iterate i\<cdot>F\<cdot>x else x)"
+  by (simp add: assms fixg_def)
+
 (*fixg gives the least fixpoint, if x \<sqsubseteq> F\<cdot>x*)
 
 lemma fixg_fix:assumes" x \<sqsubseteq> F\<cdot>x " and "\<And>y z. x \<sqsubseteq> z \<and> y \<sqsubseteq> z \<longrightarrow> x \<sqsubseteq> y"
