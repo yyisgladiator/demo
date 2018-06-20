@@ -493,4 +493,22 @@ proof -
 qed
 *)
 
+subsection \<open>ForAll Exists\<close>
+
+lemma setrev_subsetforall: 
+  assumes "setrevForall P S"
+  and "inv Rev T \<subseteq> inv Rev S"
+  shows "setrevForall P T"
+  by (metis assms(1) assms(2) setrevForall_def subset_eq)
+
+lemma setrev_ballI: "(\<And>x. x \<in> inv Rev S \<Longrightarrow> P x) \<Longrightarrow> setrevForall P S"
+  by (simp add: setrevForall_def)
+
+lemma setrev_bexCI: "setrevForall (\<lambda>x. \<not> P x \<longrightarrow> P a) S \<Longrightarrow> a \<in> inv Rev S \<Longrightarrow> setrevExists P S"
+  apply (simp add: setrevExists_def setrevForall_def)
+  by auto
+
+lemma setrev_subset_eq: "inv Rev A \<subseteq> inv Rev B \<longleftrightarrow> setrevForall (\<lambda>x. x \<in> inv Rev B) A"
+  by (simp add: setrevForall_def subset_eq)
+
 end
