@@ -35,6 +35,9 @@ definition setrevUnion:: "'m set rev \<rightarrow> 'm set rev \<rightarrow> 'm s
 definition setrevImage:: "('m \<Rightarrow> 'n) \<Rightarrow> 'm set rev \<Rightarrow> 'n set rev" where
 "setrevImage f \<equiv> \<lambda> S.  Rev (f ` (inv Rev S))"
 
+definition setrevForall:: "('m \<Rightarrow> bool) \<Rightarrow> 'm set rev \<Rightarrow> bool" where
+"setrevForall f \<equiv>"
+
 section \<open>Lemmas\<close>
 
 subsection \<open>General\<close>
