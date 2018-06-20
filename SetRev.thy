@@ -204,6 +204,9 @@ lemma setrevInter_sym2: "\<And>A B. setrevInter\<cdot>A\<cdot>B = setrevInter\<c
       by (metis (no_types) beta_cfun setrevInter_cont1 setrevInter_sym)
   qed
 
+lemma setrevInter_gdw: "\<And>A B x. x \<in> inv Rev (setrevInter\<cdot>A\<cdot>B) \<longleftrightarrow> (x \<in> inv Rev A \<and> x \<in> inv Rev B)"
+  by (metis IntD1 IntD2 IntI inv_rev_rev setrevinter_insert)
+
 subsection \<open>setify\<close>
 
 lemma setify_mono[simp]:"monofun (\<lambda>f. Rev {g. \<forall>m. g m \<in> (inv Rev(f m))})"
@@ -495,6 +498,12 @@ qed
 
 subsection \<open>ForAll Exists\<close>
 
+lemma setrev_for_all_ex:
+  assumes "setrevForall P S"
+  assumes "setrevExists (\<lambda>x. True) S"
+  shows "setrevExists P S"
+  by (meson assms(1) assms(2) setrevExists_def setrevForall_def)
+
 lemma setrev_subsetforall: 
   assumes "setrevForall P S"
   and "inv Rev T \<subseteq> inv Rev S"
@@ -510,5 +519,27 @@ lemma setrev_bexCI: "setrevForall (\<lambda>x. \<not> P x \<longrightarrow> P a)
 
 lemma setrev_subset_eq: "inv Rev A \<subseteq> inv Rev B \<longleftrightarrow> setrevForall (\<lambda>x. x \<in> inv Rev B) A"
   by (simp add: setrevForall_def subset_eq)
+
+lemma setrev_union_forall: 
+  "setrevForall P (setrevUnion\<cdot>A\<cdot>B) \<longleftrightarrow> setrevForall P A \<and> setrevForall P B"
+  by (metis (mono_tags, lifting) setrevForall_def setrevUnion_gdw)
+
+lemma setrev_union_exists: 
+  "setrevExists P (setrevUnion\<cdot>A\<cdot>B) \<longleftrightarrow> setrevExists P A \<or> setrevExists P B"
+  by (metis (mono_tags, lifting) setrevExists_def setrevUnion_gdw)
+
+lemma setrev_inter_forall: 
+  assumes "setrevForall P A \<and> setrevForall P B"
+  shows "setrevForall P (setrevInter\<cdot>A\<cdot>B)"
+  by (metis (no_types, lifting) IntD1 assms inv_rev_rev setrevForall_def setrevinter_insert)
+
+lemma setrev_inter_exists: 
+  assumes "setrevExists P (setrevInter\<cdot>A\<cdot>B)"
+  shows "setrevExists P A \<and> setrevExists P B"
+  by (metis (no_types, lifting) IntD1 IntD2 assms inv_rev_rev setrevExists_def setrevinter_insert)
+
+lemma setrev_filter_forall:
+  "setrevForall P (setrevFilter P\<cdot>A)"
+  by (metis (no_types) setrevFilter_gdw setrev_ballI)
 
 end
