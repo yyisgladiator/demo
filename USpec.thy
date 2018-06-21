@@ -793,10 +793,10 @@ lemma uspecinter_rule1:
  apply (simp add: uspecInter_insert uspecInter_general_def)
  using assms(1) assms(2) assms(3) by auto
 
-lemma inter_incl1: "\<forall>x\<in> inv Rev (uspecRevSet\<cdot>(uspecInter\<cdot>A\<cdot>B)). x \<in>  inv Rev (uspecRevSet\<cdot>A)"
+lemma uspecinter_incl1: "\<forall>x\<in> inv Rev (uspecRevSet\<cdot>(uspecInter\<cdot>A\<cdot>B)). x \<in> inv Rev (uspecRevSet\<cdot>A)"
   by (simp add: setrevInter_gdw uspecInter_setrev)
 
-lemma inter_incl2: "\<forall>x\<in> inv Rev (uspecRevSet\<cdot>(uspecInter\<cdot>A\<cdot>B)). x \<in>  inv Rev (uspecRevSet\<cdot>B)"
+lemma uspecinter_incl2: "\<forall>x\<in> inv Rev (uspecRevSet\<cdot>(uspecInter\<cdot>A\<cdot>B)). x \<in> inv Rev (uspecRevSet\<cdot>B)"
     by (simp add: setrevInter_gdw uspecInter_setrev)
 
 lemma uspec_inter_notfit: 
@@ -804,13 +804,13 @@ lemma uspec_inter_notfit:
   shows "uspecRevSet\<cdot>(uspecInter\<cdot>A\<cdot>B) = Rev {}"
 proof - 
   have b0: "\<forall>x\<in> inv Rev (uspecRevSet\<cdot>(uspecInter\<cdot>A\<cdot>B)). uspecDom\<cdot>A = ufclDom\<cdot>x"
-    using inter_incl1 uspec_allDom by blast
+    using uspecinter_incl1 uspec_allDom by blast
   have b1: "\<forall>x\<in> inv Rev (uspecRevSet\<cdot>(uspecInter\<cdot>A\<cdot>B)). uspecDom\<cdot>B = ufclDom\<cdot>x"
-    using inter_incl2 uspec_allDom by blast
+    using uspecinter_incl2 uspec_allDom by blast
   have b2: "\<forall>x\<in> inv Rev (uspecRevSet\<cdot>(uspecInter\<cdot>A\<cdot>B)). uspecRan\<cdot>A = ufclRan\<cdot>x"
-    using inter_incl1 uspec_allRan by blast
+    using uspecinter_incl1 uspec_allRan by blast
   have b3: "\<forall>x\<in> inv Rev (uspecRevSet\<cdot>(uspecInter\<cdot>A\<cdot>B)). uspecRan\<cdot>B = ufclRan\<cdot>x"
-    using inter_incl2 uspec_allRan by blast
+    using uspecinter_incl2 uspec_allRan by blast
   show ?thesis
     by (metis (no_types, lifting) Abs_cfun_inverse2 assms b0 b1 b2 b3 inv_rev_rev 
       not_uspec_consisten_empty_eq setrev_eqI uspecRevSet_def uspec_consist_f_ex uspecrevset_cont)
