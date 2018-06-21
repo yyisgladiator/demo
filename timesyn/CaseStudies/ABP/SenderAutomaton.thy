@@ -116,7 +116,7 @@ section {* Some Sender tsyn stream ubundle for testing the sender function.
            Move this section to Components.thy as soon as it imports SenderAutomaton.thy
            TODO: Add corresponding output ubundles as soon as we have the Sender tsyn SPF. *}
 (* ----------------------------------------------------------------------- *)
-
+(* verschieben: components *)
 (* Everything works fine: Sending two messages while receiving the correct acknowledgement bits  *)
 definition snd_testinput_msg_1 :: "nat tsyn stream" where 
 "snd_testinput_msg_1 \<equiv> list2s [Msg 1, Msg 2, null]"
