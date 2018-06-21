@@ -517,6 +517,24 @@ lemma setrev_bexCI: "setrevForall (\<lambda>x. \<not> P x \<longrightarrow> P a)
   apply (simp add: setrevExists_def setrevForall_def)
   by auto
 
+lemma setrev_bex_triv_one_point1: "setrevExists (\<lambda>x. x = a) S \<longleftrightarrow> a \<in> inv Rev S"
+  by (simp add: setrevExists_def)
+
+lemma setrev_bex_triv_one_point2: "setrevExists (\<lambda>x. a = x) S \<longleftrightarrow> a \<in> inv Rev S"
+  by (simp add: setrevExists_def)
+
+lemma setrev_bex_one_point1: "setrevExists (\<lambda>x. x = a \<and> P x) S \<longleftrightarrow> a \<in> inv Rev S \<and> P a"
+  by (simp add: setrevExists_def)
+
+lemma setrev_bex_one_point2: "setrevExists (\<lambda>x. a = x \<and> P x) S \<longleftrightarrow> a \<in> inv Rev S \<and> P a"
+  by (simp add: setrevExists_def)
+
+lemma setrev_ball_one_point1: "setrevForall (\<lambda>x. x = a \<longrightarrow> P x) S \<longleftrightarrow> (a \<in> inv Rev S \<longrightarrow> P a)"
+  by (simp add: setrevForall_def)
+
+lemma setrev_ball_one_point2: "setrevForall (\<lambda>x. a = x \<longrightarrow> P x) S \<longleftrightarrow> (a \<in> inv Rev S \<longrightarrow> P a)"
+  by (simp add: setrevForall_def)
+
 lemma setrev_subset_eq: "inv Rev A \<subseteq> inv Rev B \<longleftrightarrow> setrevForall (\<lambda>x. x \<in> inv Rev B) A"
   by (simp add: setrevForall_def subset_eq)
 

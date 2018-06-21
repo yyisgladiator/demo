@@ -907,6 +907,24 @@ lemma uspec_bexCI: "uspecForall (\<lambda>x. \<not> P x \<longrightarrow> P a) S
   apply (simp add: setrevExists_def setrevForall_def)
   by auto
 
+lemma uspec_bex_triv_one_point1: "uspecExists (\<lambda>x. x = a) S \<longleftrightarrow> a \<in> inv Rev (uspecRevSet\<cdot>S)"
+  by (simp add: setrevExists_def uspecExists_def)
+
+lemma setrev_bex_triv_one_point2: "uspecExists (\<lambda>x. a = x) S \<longleftrightarrow> a \<in> inv Rev (uspecRevSet\<cdot>S)"
+  by (simp add: setrevExists_def uspecExists_def)
+
+lemma setrev_bex_one_point1: "uspecExists (\<lambda>x. x = a \<and> P x) S \<longleftrightarrow> a \<in> inv Rev (uspecRevSet\<cdot>S) \<and> P a"
+  by (simp add: setrevExists_def uspecExists_def)
+
+lemma setrev_bex_one_point2: "uspecExists (\<lambda>x. a = x \<and> P x) S \<longleftrightarrow> a \<in> inv Rev (uspecRevSet\<cdot>S) \<and> P a"
+  by (simp add: setrevExists_def uspecExists_def)
+
+lemma setrev_ball_one_point1: "uspecForall (\<lambda>x. x = a \<longrightarrow> P x) S \<longleftrightarrow> (a \<in> inv Rev (uspecRevSet\<cdot>S) \<longrightarrow> P a)"
+  by (simp add: setrevForall_def uspecForall_def uspec_ballI)
+
+lemma setrev_ball_one_point2: "uspecForall (\<lambda>x. a = x \<longrightarrow> P x) S \<longleftrightarrow> (a \<in> inv Rev (uspecRevSet\<cdot>S) \<longrightarrow> P a)"
+  by (simp add: setrevForall_def uspecForall_def uspec_ballI)
+
 lemma uspec_subset_eq: "inv Rev (uspecRevSet\<cdot>A) \<subseteq> inv Rev (uspecRevSet\<cdot>B) 
   \<longleftrightarrow> uspecForall (\<lambda>x. x \<in> inv Rev (uspecRevSet\<cdot>B)) A"
   by (simp add: uspecForall_def setrevForall_def subset_eq)
@@ -965,7 +983,7 @@ lemma uspec_inter_exists:
 lemma uspec_filter_forall:
   "uspecForall P (uspecFilter P\<cdot>A)"
   apply (simp add: uspecfilter_insert uspecForall_def)
-  using setrev_filter_forall
-  by (metis fst_conv rep_abs_uspec uspecFilter_general_def uspecFilter_general_well uspecrevset_insert)
+  by (metis setrev_filter_forall fst_conv rep_abs_uspec uspecFilter_general_def 
+    uspecFilter_general_well uspecrevset_insert)
 
 end
