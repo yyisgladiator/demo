@@ -38,10 +38,20 @@ lemma ubmaxlen_least: "ubMaxLen 0 ((ubLeast cs):: 'a stream\<^sup>\<Omega>)"
   by(simp add: ubMaxLen_def usclLen_stream_def)
 
 lemma ubmaxlen_sbtake: "ubMaxLen (Fin n) (sbTake n\<cdot>x)"
-  sorry
+  by (simp add: ubMaxLen_def sbTake_def usclLen_stream_def)
 
 lemma ubleast_sbtake: assumes "x \<noteq> ubLeast (ubDom\<cdot>x)" shows "sbHd\<cdot>x \<noteq> ubLeast (ubDom\<cdot>x)"
-  sorry
+proof - 
+  obtain my_c where my_c_def1: "x . my_c \<noteq> \<epsilon>" and my_c_def2: "my_c \<in> ubDom\<cdot>x"
+    using assms by (metis ubgetchI ubleast_ubdom ubleast_ubgetch)
+  have "(sbHd\<cdot>x) . my_c \<noteq> \<epsilon>" 
+    apply (simp add: sbHd_def)
+    apply (simp add: my_c_def1 my_c_def2)
+    by (metis my_c_def1 sconc_scons' stake_Suc stream.sel_rews(3) stream.sel_rews(4) sup'_def surj_scons)
+  thus ?thesis 
+    using my_c_def2 by auto
+qed
+  
 
 lemma sbcases: "\<And>x :: 'a stream\<^sup>\<Omega>. x = (ubLeast (ubDom\<cdot>x)) \<or> (\<exists>a s. ubDom\<cdot>a = ubDom\<cdot>x \<and> ubDom\<cdot>s = ubDom\<cdot>x \<and> ubMaxLen (Fin 1) a  \<and> a \<noteq> (ubLeast (ubDom\<cdot>x)) \<and> x = ubConc a\<cdot>s)"
   apply(case_tac "x = (ubLeast (ubDom\<cdot>x))")
@@ -108,6 +118,7 @@ lemma finind_ub:
      \<Longrightarrow> P (x :: 'a stream ubundle)"
 proof - 
   obtain n where "ubMaxLen (Fin n) x"
+    apply (simp add: ubMaxLen_def usclLen_stream_def)
     sorry
   then have "sbTake n\<cdot>x = x"
     sorry
