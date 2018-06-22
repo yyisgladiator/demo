@@ -40,14 +40,36 @@ thm helper_def
 (* Es klappt aber nicht.... Der nichtdeterminismus wird nicht berücksichtigt! 
   und ich laufe immer wieder in das problem: https://git.rwth-aachen.de/montibelle/automaton/core/issues/68 *)
 
-definition spsHelper:: "'s \<Rightarrow> (('s \<times>'e) \<Rightarrow> ('s \<times> 'm::message SB) set rev) \<rightarrow> ('s \<Rightarrow> 'm SPS) \<rightarrow> ('e \<Rightarrow> 'm SPS)" where
-"spsHelper s \<equiv> undefined"     
-    
+
+
+(* thats the equivalent to the deterministic version ... so no nondeterminism *)
+definition ndaHelper:: "'s \<Rightarrow> (('s \<times>'e) \<Rightarrow> ('s \<times> 'm::message SB) (*set rev*)) \<Rightarrow> ('s \<Rightarrow> 'm SPS) \<rightarrow> ('e \<Rightarrow> 'm SPS)" where
+"ndaHelper s transition \<equiv>  \<Lambda> h. (\<lambda>e. spsRtIn\<cdot>(spsConcOut (snd (transition (s,e)))\<cdot>(h (fst (transition (s,e))))))"     
+
+
+(* nondeterministic... but is it cont in h ? *)
+definition ndaHelper2:: "'s \<Rightarrow> (('s \<times>'e) \<Rightarrow> ('s \<times> 'm::message SB) set rev) \<Rightarrow> ('s \<Rightarrow> 'm SPS) \<rightarrow> ('e \<Rightarrow> 'm SPS)" where
+"ndaHelper2 s transition \<equiv>  \<Lambda> h. (\<lambda>e. uspecFlatten undefined undefined (*TODO remove undefined *)
+    (setrevImage (\<lambda>(nextState::'s, nextOut::'m SB). spsRtIn\<cdot>(spsConcOut nextOut\<cdot>(h nextState))::'m SPS) (transition (s,e))))"
+
+
+
+section \<open>lemma over ndaHelper2\<close>
+
+(* definitely not injective... some_h is to general *)
+lemma "inj (\<lambda>(nextState::'s, nextOut::'m::message SB). (spsConcOut nextOut\<cdot>(some_h nextState)))"
+  oops
+
+
+
+
 (* Similar to Rum96 *)
 definition nda_h :: "('s::type, 'm::message) ndAutomaton \<Rightarrow> ('s \<Rightarrow> 'm SPS)" where
 "nda_h nda \<equiv> let dom = (undiscr(ndaDom\<cdot>nda));
                  ran = (undiscr(ndaRan\<cdot>nda)) in 
-  uspecStateFix dom ran\<cdot>(\<Lambda> h. (\<lambda>s. spsStep dom ran\<cdot>(spsHelper s\<cdot>(ndaTransition\<cdot>nda)\<cdot>h)))"
+  uspecStateFix dom ran\<cdot>(\<Lambda> h. (\<lambda>s. spsStep dom ran\<cdot>(ndaHelper2 s (ndaTransition\<cdot>nda)\<cdot>h)))"
+
+
 
 definition nda_H :: "('s, 'm::message) ndAutomaton \<Rightarrow> 'm SPS" where
 "nda_H nda \<equiv> uspecFlatten (undiscr(ndaDom\<cdot>nda))(undiscr(ndaRan\<cdot>nda)) 
