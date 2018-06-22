@@ -991,7 +991,7 @@ lemma uspec_union_exists:
 (*uspec_union_notfit needed for this*)
 lemma uspec_inter_notfit_notex:
   assumes "uspecDom\<cdot>A \<noteq> uspecDom\<cdot>B \<or> uspecRan\<cdot>A \<noteq> uspecRan\<cdot>B"
-  shows "\<And>a. \<not>(uspecExists (\<lambda>x. x = a) (uspecInter\<cdot>A\<cdot>B))"
+  shows "\<And>a. \<not>(uspecExists (\<lambda>x. x = a) (uspecUnion\<cdot>A\<cdot>B))"
 *)
 
 lemma uspec_union_l1:
