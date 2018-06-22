@@ -137,6 +137,8 @@ definition uspec_set_filter:: "channel set \<Rightarrow> channel set \<Rightarro
 definition uspecFlatten:: "channel set \<Rightarrow> channel set \<Rightarrow> ('m uspec) set rev \<Rightarrow> 'm uspec"
   where "uspecFlatten In Out = (\<lambda> uspecs. Abs_rev_uspec (setflat\<cdot>(Rep_rev_uspec ` (inv Rev (uspec_set_filter In Out\<cdot>uspecs)))) In Out)"
 
+abbreviation  uspec_in:: "'m \<Rightarrow> 'm uspec \<Rightarrow> bool" where
+"uspec_in a S \<equiv> a \<in> inv Rev (uspecRevSet\<cdot>S)"
 
 (****************************************************)
 section\<open>Predicates\<close>
@@ -568,6 +570,13 @@ lemma uspecunion_rule1:
   apply (simp add: uspecUnion_def)
   using assms by (simp add: uspecunion_easy_def)
 
+(*
+(* would be nice to prove this! *)
+lemma uspec_union_notfit: 
+  assumes "uspecDom\<cdot>A \<noteq> uspecDom\<cdot>B \<or> uspecRan\<cdot>A \<noteq> uspecRan\<cdot>B"
+  shows "uspecRevSet\<cdot>(uspecUnion\<cdot>A\<cdot>B) = Rev {}"
+  oops
+*)
 
 subsection \<open>uspecFilter\<close> 
 
@@ -651,6 +660,31 @@ lemma uspecFilter_cont[simp]: "cont (\<lambda> S. uspecFilter_general P S)"
 lemma uspecfilter_insert: "uspecFilter P\<cdot>S = uspecFilter_general P S"
   by (simp add: uspecFilter_def)
 
+lemma uspecfilter_condition: "\<And>x. uspec_in x (uspecFilter P\<cdot>A) \<Longrightarrow> P x"
+proof -
+  fix x :: 'a
+  assume a1: "uspec_in x (uspecFilter P\<cdot>A)"
+  have "(\<lambda>u. fst (Rep_uspec (u::'a uspec))) = Rep_cfun uspecRevSet"
+    by (simp add: uspecRevSet_def)
+  then have f2: "\<forall>u p. setrevFilter p\<cdot>(uspecRevSet\<cdot>(u::'a uspec)) = uspecRevSet\<cdot>(uspecFilter_general p u)"
+    by (metis (no_types) fst_conv rep_abs_uspec uspecFilter_general_def uspecFilter_general_well)
+  have "uspec_in x (uspecFilter_general P A)"
+    using a1 by (simp add: uspecfilter_insert)
+  then show "P x"
+    using f2 by (metis setrevFilter_gdw)
+qed
+
+lemma uspecfilter_included: "\<And>x. uspec_in x (uspecFilter P\<cdot>A) \<Longrightarrow> uspec_in x A"
+proof -
+  fix x :: 'a
+  assume a1: "uspec_in x (uspecFilter P\<cdot>A)"
+  have "setrevFilter P\<cdot>(uspecRevSet\<cdot>A) = fst (Rep_uspec (uspecFilter P\<cdot>A))"
+    by (simp add: uspecFilter_general_def uspecfilter_insert)
+  then have "x \<in> inv Rev (setrevFilter P\<cdot>(uspecRevSet\<cdot>A))"
+    using a1 rep_rev_revset by auto
+  then show "uspec_in x A"
+    by (meson uspecFilterSubset)
+qed
 
 subsection \<open>uspecInter\<close> 
 
@@ -887,7 +921,7 @@ lemma uspecflatten_monofun: "monofun (uspecFlatten In Out)"
 
 subsection \<open>Forall Exists\<close>
 
-lemma setrev_for_all_ex:
+lemma uspec_for_all_ex:
   assumes "uspecForall P S"
   assumes "uspecExists (\<lambda>x. True) S"
   shows "uspecExists P S"
@@ -907,22 +941,22 @@ lemma uspec_bexCI: "uspecForall (\<lambda>x. \<not> P x \<longrightarrow> P a) S
   apply (simp add: setrevExists_def setrevForall_def)
   by auto
 
-lemma uspec_bex_triv_one_point1: "uspecExists (\<lambda>x. x = a) S \<longleftrightarrow> a \<in> inv Rev (uspecRevSet\<cdot>S)"
+lemma uspec_bex_triv_one_point1: "uspecExists (\<lambda>x. x = a) S \<longleftrightarrow> uspec_in a S"
   by (simp add: setrevExists_def uspecExists_def)
 
-lemma setrev_bex_triv_one_point2: "uspecExists (\<lambda>x. a = x) S \<longleftrightarrow> a \<in> inv Rev (uspecRevSet\<cdot>S)"
+lemma uspec_bex_triv_one_point2: "uspecExists (\<lambda>x. a = x) S \<longleftrightarrow> uspec_in a S"
   by (simp add: setrevExists_def uspecExists_def)
 
-lemma setrev_bex_one_point1: "uspecExists (\<lambda>x. x = a \<and> P x) S \<longleftrightarrow> a \<in> inv Rev (uspecRevSet\<cdot>S) \<and> P a"
+lemma uspec_bex_one_point1: "uspecExists (\<lambda>x. x = a \<and> P x) S \<longleftrightarrow> uspec_in a S \<and> P a"
   by (simp add: setrevExists_def uspecExists_def)
 
-lemma setrev_bex_one_point2: "uspecExists (\<lambda>x. a = x \<and> P x) S \<longleftrightarrow> a \<in> inv Rev (uspecRevSet\<cdot>S) \<and> P a"
+lemma uspec_bex_one_point2: "uspecExists (\<lambda>x. a = x \<and> P x) S \<longleftrightarrow> uspec_in a S \<and> P a"
   by (simp add: setrevExists_def uspecExists_def)
 
-lemma setrev_ball_one_point1: "uspecForall (\<lambda>x. x = a \<longrightarrow> P x) S \<longleftrightarrow> (a \<in> inv Rev (uspecRevSet\<cdot>S) \<longrightarrow> P a)"
+lemma uspec_ball_one_point1: "uspecForall (\<lambda>x. x = a \<longrightarrow> P x) S \<longleftrightarrow> (uspec_in a S \<longrightarrow> P a)"
   by (simp add: setrevForall_def uspecForall_def uspec_ballI)
 
-lemma setrev_ball_one_point2: "uspecForall (\<lambda>x. a = x \<longrightarrow> P x) S \<longleftrightarrow> (a \<in> inv Rev (uspecRevSet\<cdot>S) \<longrightarrow> P a)"
+lemma uspec_ball_one_point2: "uspecForall (\<lambda>x. a = x \<longrightarrow> P x) S \<longleftrightarrow> (uspec_in a S \<longrightarrow> P a)"
   by (simp add: setrevForall_def uspecForall_def uspec_ballI)
 
 lemma uspec_subset_eq: "inv Rev (uspecRevSet\<cdot>A) \<subseteq> inv Rev (uspecRevSet\<cdot>B) 
@@ -953,6 +987,24 @@ lemma uspec_union_exists:
   using assms uspecrevset_cont uspecRevSet_def setrevUnion_gdw
   by (smt Abs_cfun_inverse2 setrevFilter_gdw setrevUnion_sym2 sup.idem uspec_allDom uspec_allRan)
 
+(*
+(*uspec_union_notfit needed for this*)
+lemma uspec_inter_notfit_notex:
+  assumes "uspecDom\<cdot>A \<noteq> uspecDom\<cdot>B \<or> uspecRan\<cdot>A \<noteq> uspecRan\<cdot>B"
+  shows "\<And>a. \<not>(uspecExists (\<lambda>x. x = a) (uspecInter\<cdot>A\<cdot>B))"
+*)
+
+lemma uspec_union_l1:
+  assumes "uspecDom\<cdot>A = uspecDom\<cdot>B"
+      and "uspecRan\<cdot>A = uspecRan\<cdot>B"
+      and "uspecExists (\<lambda>x. x = a) A \<or> uspecExists (\<lambda>x. x = a) B"
+    shows "uspecExists (\<lambda>x. x = a) (uspecUnion\<cdot>A\<cdot>B)"
+  using assms apply (simp add: uspecExists_def uspecUnion_def)
+  apply (simp add: uspecunion_easy_def)
+  by (smt Abs_cfun_inverse2 fst_conv rep_abs_uspec setrev_union_exists sup.idem 
+    ucpecunion_fit_filtered uspecRevSet_def uspecUnion_general_well uspecrevset_cont)
+
+
 lemma uspec_inter_forall_help1: 
   assumes "uspecDom\<cdot>A = uspecDom\<cdot>B"
       and "uspecRan\<cdot>A = uspecRan\<cdot>B"
@@ -979,6 +1031,36 @@ lemma uspec_inter_exists:
   assumes "uspecExists P (uspecInter\<cdot>A\<cdot>B)"
   shows "uspecExists P A \<and> uspecExists P B"
   by (metis assms setrev_inter_exists uspecExists_def uspecInter_setrev)
+
+lemma uspec_inter_notfit_notex:
+  assumes "uspecDom\<cdot>A \<noteq> uspecDom\<cdot>B \<or> uspecRan\<cdot>A \<noteq> uspecRan\<cdot>B"
+  shows "\<And>a. \<not>(uspecExists (\<lambda>x. x = a) (uspecInter\<cdot>A\<cdot>B))"
+  using uspec_inter_notfit
+  by (metis assms empty_iff inv_rev_rev setrevExists_def uspecExists_def)
+
+lemma uspec_inter_l1_help1:
+  assumes "uspecDom\<cdot>A = uspecDom\<cdot>B"
+      and "uspecRan\<cdot>A = uspecRan\<cdot>B"
+      and "uspecExists (\<lambda>x. x = a) A \<and> uspecExists (\<lambda>x. x = a) B"
+    shows "uspecExists (\<lambda>x. x = a) (uspecInter\<cdot>A\<cdot>B)"
+  apply (rule uspecinter_rule1)
+  apply (simp add: assms(1))
+  apply (simp add: assms(2))
+  apply (simp add: uspecForall_def uspecRevSet_def)
+  by (smt Int_absorb assms fst_conv rep_abs_uspec setrevExists_def setrevInter_gdw setrevInter_sym2 
+    uspecExists_def uspecInter_filtered uspecInter_general_well uspecrevset_insert)
+
+lemma uspec_inter_l1_help2:
+  assumes "uspecDom\<cdot>A \<noteq> uspecDom\<cdot>B \<or> uspecRan\<cdot>A \<noteq> uspecRan\<cdot>B"
+      and "uspecExists (\<lambda>x. x = a) A \<and> uspecExists (\<lambda>x. x = a) B"
+    shows "uspecExists (\<lambda>x. x = a) (uspecInter\<cdot>A\<cdot>B)"
+  by (smt assms uspec_inter_notfit disjoint_iff_not_equal rev.inject setrevExists_def 
+    setrevinter_insert uspecExists_def uspecInter_setrev)
+
+lemma uspec_inter_l1:
+  assumes "uspecExists (\<lambda>x. x = a) A \<and> uspecExists (\<lambda>x. x = a) B"
+  shows "uspecExists (\<lambda>x. x = a) (uspecInter\<cdot>A\<cdot>B)"
+  by (metis assms uspec_inter_l1_help1 uspec_inter_l1_help2)
 
 lemma uspec_filter_forall:
   "uspecForall P (uspecFilter P\<cdot>A)"

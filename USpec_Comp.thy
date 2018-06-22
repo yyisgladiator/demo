@@ -858,4 +858,25 @@ lemma uspecimage_ran1 [simp]:
   using assms
   by (metis ufuncldom_least_ran uspecimage_useful_ran) 
 
+subsection \<open>Forall Exists\<close>
+
+lemma uspecforall_image:
+  assumes "\<And>x y. ((ufclDom\<cdot>x = ufclDom\<cdot>y \<and> ufclRan\<cdot>x = ufclRan\<cdot>y) \<Longrightarrow>
+    (ufclDom\<cdot>(f x) = ufclDom\<cdot>(f y) \<and> ufclRan\<cdot>(f x) = ufclRan\<cdot>(f y)))"
+  shows "\<And>S. uspecForall (\<lambda>x. uspecExists (\<lambda>y. f y = x) S) (uspecImage f S)"
+  apply (simp add: uspecImage_def uspecForall_def uspecExists_def)
+  proof - 
+    have b0:  "\<And>S. uspecRevSet\<cdot>(Abs_uspec
+      (setrevImage f (uspecRevSet\<cdot>S), Discr (ufclDom\<cdot>(f (ufunclLeast (uspecDom\<cdot>S) (uspecRan\<cdot>S)))),
+      Discr (ufclRan\<cdot>(f (ufunclLeast (uspecDom\<cdot>S) (uspecRan\<cdot>S)))))) 
+      = setrevImage f (uspecRevSet\<cdot>S)"
+      by (metis assms uspecImage_def uspecimage_useful_uspecrevset)
+    show "\<And>S::'a uspec. setrevForall (\<lambda>x::'b. setrevExists (\<lambda>y::'a. f y = x) (uspecRevSet\<cdot>S))
+      (uspecRevSet\<cdot>(Abs_uspec
+      (setrevImage f (uspecRevSet\<cdot>S), Discr (ufclDom\<cdot>(f (ufunclLeast (uspecDom\<cdot>S) (uspecRan\<cdot>S)))),
+      Discr (ufclRan\<cdot>(f (ufunclLeast (uspecDom\<cdot>S) (uspecRan\<cdot>S)))))))"
+      apply (subst b0)
+      by (simp add: setrevforall_image)
+  qed
+
 end
