@@ -203,17 +203,22 @@ lemma tsyn_cases [case_names bot msg null]:
 
 
 (* ----------------------------------------------------------------------- *)
-  subsection {* Lemma for Streams: Cardinality restriction for sdom for finite Streams*}
+  subsection {* Lemmata on Streams - Streams Extension *}
 (* ----------------------------------------------------------------------- *)
 
+text {* Cardinality of the set @{term sdom} is smaller or equal to the length of the original 
+        stream. *}
 lemma sdom_slen: assumes "#s = Fin k" shows "card (sdom\<cdot>s) \<le> k"
-proof -
-  have sdom_def2_assm: "sdom\<cdot>(s) = {snth n s |n::nat. n < k}" using assms sdom_def2 
-    by (smt Collect_cong less2nat linorder_not_less)
-  then have "{snth n s |n::nat. n < k} \<subseteq> (\<lambda> n. snth n s) ` {i::nat. i < k}" by blast
-  then have "card {snth n s |n::nat. n < k} \<le> card {i::nat. i < k}" using surj_card_le by blast
-  then show ?thesis by (simp add: card_Collect_less_nat sdom_def2_assm)
-qed
+  proof -
+    have sdom_def_assm: "sdom\<cdot>s = {snth n s | n :: nat. n < k}" 
+      by (simp add: assms sdom_def2)
+    then have "{snth n s | n :: nat. n < k} \<subseteq> (\<lambda> n. snth n s) ` {i :: nat. i < k}" 
+      by blast
+    then have "card {snth n s | n :: nat. n < k} \<le> card {i :: nat. i < k}" 
+      using surj_card_le by blast
+    then show ?thesis 
+      by (simp add: sdom_def_assm)
+  qed
 
 (* ----------------------------------------------------------------------- *)
   subsection {* tsynDom *}
@@ -249,21 +254,6 @@ text {* If the domain of a stream is subset of another set and one takes an arbi
 lemma tsyndom_sconc_msg_sub2: "tsynDom\<cdot>xs \<subseteq> S \<Longrightarrow> x \<in> S \<Longrightarrow> tsynDom\<cdot>(\<up>(Msg x) \<bullet> xs) \<subseteq> S"
   by (simp add: subset_iff tsyndom_insert)
 
-text {* The empty time-slot is not part of the domain. *}
-lemma tsyndom_sconc_null: "tsynDom\<cdot>(\<up>null \<bullet> s) = tsynDom\<cdot>s"
-  by (metis (no_types, lifting) Collect_cong Un_insert_left tsyn.distinct(1) insert_iff sdom2un 
-      sup_bot.left_neutral tsyndom_insert)
-
-text {* @{term tsynDom} test on infinite stream. *}
-lemma tsyndom_test_infstream: "tsynDom\<cdot>((<[Msg (1::nat), Msg 2, null, Msg 3]>)\<infinity>) = {1,2,3}"
-  apply (simp add:  tsyndom_insert set_eq_iff) 
-  by blast
-
-text {* @{term tsynDom} test on finite stream. *}
-lemma tsyndom_test_finstream: "tsynDom\<cdot>(<[Msg (1::nat), Msg 2, null, null, Msg 1, null]>) = {1,2}"
-  apply (simp add: tsyndom_insert set_eq_iff) 
-  by blast
-
 text {* @{term tsynDom} maps the empty stream on the empty set. *}
 lemma tsyndom_strict: "tsynDom\<cdot>\<epsilon> = {}"
   by (simp add: tsyndom_insert)
@@ -272,33 +262,55 @@ text {* @{term tsynDom} of concatenations distributes via union of sets. *}
 lemma tsyndom_sconc_msg: "tsynDom\<cdot>(\<up>(Msg a) \<bullet> as) = {a} \<union> tsynDom\<cdot>as"
   by (simp add: tsyndom_insert set_eq_iff)
 
-text {* @{term tsynDom} of the concatenation of two streams is equal to the union of 
-        @{term tsynDom} applied to both streams. *}
-lemma tsyndom_sconc: assumes "#as < \<infinity>" shows "tsynDom\<cdot>(as \<bullet> bs) = tsynDom\<cdot>as \<union> tsynDom\<cdot>bs"
-proof -
-  have "sdom\<cdot>(as \<bullet> bs) = sdom\<cdot>(as) \<union> sdom\<cdot>(bs)" by (meson assms ninf2Fin lnat_well_h2 sdom_sconc2un)
-  then have "{x. \<M> x \<in> sdom\<cdot>(as \<bullet> bs)} = {x. \<M> x \<in> sdom\<cdot>as \<or> \<M> x \<in> sdom\<cdot>bs}"  by simp
-  then show ?thesis by (metis (no_types, lifting) Abs_cfun_inverse2 Collect_cong
-    Collect_disj_eq tsynDom_def tsyndom_cont)
-qed
+text {* The empty time-slot is not part of the domain. *}
+lemma tsyndom_sconc_null: "tsynDom\<cdot>(\<up>null \<bullet> s) = tsynDom\<cdot>s"
+  by (metis (no_types, lifting) Collect_cong Un_insert_left tsyn.distinct(1) insert_iff sdom2un 
+      sup_bot.left_neutral tsyndom_insert)
 
-text {* Cardinality of the set @{term tsynDom} is smaller or equal to the length
-        of the original stream.*}
+text {* @{term tsynDom} of the concatenation of two streams is equal to the union of @{term tsynDom} 
+        applied to both streams. *}
+lemma tsyndom_sconc: assumes "#as < \<infinity>" shows "tsynDom\<cdot>(as \<bullet> bs) = tsynDom\<cdot>as \<union> tsynDom\<cdot>bs"
+  proof -
+    have "sdom\<cdot>(as \<bullet> bs) = sdom\<cdot>(as) \<union> sdom\<cdot>(bs)" 
+      by (meson assms ninf2Fin lnat_well_h2 sdom_sconc2un)
+    then have "{x. \<M> x \<in> sdom\<cdot>(as \<bullet> bs)} = {x. \<M> x \<in> sdom\<cdot>as \<or> \<M> x \<in> sdom\<cdot>bs}"
+      by simp
+    then show ?thesis 
+      by (metis (no_types, lifting) Abs_cfun_inverse2 Collect_cong Collect_disj_eq tsynDom_def 
+          tsyndom_cont)
+  qed
+
+text {* Cardinality of the set @{term tsynDom} is smaller or equal to the length of the original 
+        stream. *}
 lemma tsyndom_slen: assumes "#s = Fin k" shows "card (tsynDom\<cdot>s) \<le> k"
-proof - 
-  have inj_Message: "inj (\<lambda>x.  \<M> x)" by (meson injI tsyn.inject)
-  then have image_subset_sdom: "(\<lambda>x.  \<M> x) ` {u. \<M> u \<in> sdom\<cdot>s} \<subseteq> sdom\<cdot>s" 
-    by (simp add: image_Collect_subsetI)
-  then have inj_on_Mset: "inj_on (\<lambda>x.  \<M> x) {u. \<M> u \<in> sdom\<cdot>s}" 
-    using inj_Message unfolding inj_on_def by blast
-  then have sdom_is_image: "sdom\<cdot>s = (\<lambda> n. snth n s) ` {i::nat. Fin i < #s}"
-    by (metis (no_types) sdom_def2 setcompr_eq_image)
-  then have "finite (sdom\<cdot>s)" using nat_seg_image_imp_finite assms by simp
-  then have "card ({u. \<M> u \<in> sdom\<cdot>s}) \<le> card (sdom\<cdot>s)" 
-    using inj_on_Mset card_inj_on_le image_subset_sdom by blast 
-  then have "card {u. \<M> u \<in> sdom\<cdot>s} \<le> k" using sdom_slen assms le_trans by blast
-  then show ?thesis by (simp add:tsyndom_insert)
-qed
+  proof -
+    have inj_message: "inj (\<lambda>x. \<M> x)" 
+      by (meson injI tsyn.inject)
+    then have image_subset_sdom: "(\<lambda>x. \<M> x) ` {u. \<M> u \<in> sdom\<cdot>s} \<subseteq> sdom\<cdot>s" 
+      by (simp add: image_Collect_subsetI)
+    then have inj_on_mset: "inj_on (\<lambda>x. \<M> x) {u. \<M> u \<in> sdom\<cdot>s}" 
+      using inj_message inj_on_def by blast
+    then have sdom_is_image: "sdom\<cdot>s = (\<lambda>n. snth n s) ` {i :: nat. Fin i < #s}"
+      by (metis (no_types) sdom_def2 setcompr_eq_image)
+    then have "finite (sdom\<cdot>s)"
+      using nat_seg_image_imp_finite assms by simp
+    then have "card ({u. \<M> u \<in> sdom\<cdot>s}) \<le> card (sdom\<cdot>s)" 
+      using inj_on_mset card_inj_on_le image_subset_sdom by blast 
+    then have "card {u. \<M> u \<in> sdom\<cdot>s} \<le> k"
+      using sdom_slen assms le_trans by blast
+    then show ?thesis 
+      by (simp add: tsyndom_insert)
+  qed
+
+text {* @{term tsynDom} test on finite stream. *}
+lemma tsyndom_test_finstream: "tsynDom\<cdot>(<[Msg (1 :: nat), Msg 2, null, null, Msg 1, null]>) = {1, 2}"
+  apply (simp add: tsyndom_insert set_eq_iff) 
+  by blast
+
+text {* @{term tsynDom} test on infinite stream. *}
+lemma tsyndom_test_infstream: "tsynDom\<cdot>((<[Msg (1 :: nat), Msg 2, null, Msg 3]>)\<infinity>) = {1, 2, 3}"
+  apply (simp add:  tsyndom_insert set_eq_iff)
+  by blast
 
 (* ----------------------------------------------------------------------- *)
   subsection {* tsynAbs *}
