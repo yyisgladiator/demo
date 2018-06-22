@@ -281,9 +281,18 @@ text {* @{term tsynAbs} of the concatenation of two streams equals the concatena
 lemma tsynabs_sconc: assumes "#as < \<infinity>" shows "tsynAbs\<cdot>(as \<bullet> bs) = tsynAbs\<cdot>as \<bullet> tsynAbs\<cdot>bs"
   by (simp add: add_sfilter2 assms smap_split tsynabs_insert)
 
-text {* Length of @{term tsynAbs} is smaller or equal to the length of the original stream.  *}
+text {* Length of @{term tsynAbs} is smaller or equal to the length of the original stream. *}
 lemma tsynabs_slen: "#(tsynAbs\<cdot>s) \<le> #s"
   by (simp add: slen_sfilterl1 tsynabs_insert)
+
+text {* @{term tsynAbs} of a singleton stream with a message is the singleton stream with the 
+        message. *}
+lemma tsynabs_singleton_msg: "tsynAbs\<cdot>(\<up>(Msg a)) = \<up>a"
+  by (simp add: tsynabs_insert)
+
+text {* @{term tsynAbs} of a singleton stream with null is the empty stream. *}
+lemma tsynabs_singleton_null: "tsynAbs\<cdot>(\<up>null) = \<epsilon>"
+  by (simp add: tsynabs_insert)
 
 (* ----------------------------------------------------------------------- *)
   subsection {* tsynMap *}
@@ -565,22 +574,22 @@ lemma tsyndropwhile_sconc_null: "tsynDropWhile f\<cdot>(\<up>null \<bullet> s) =
     
 text {* If the only element in a singleton stream passes the predicate f, then @{term tsynDropWhile} 
         will produce the singleton stream with null. *}
-lemma tsyndropwhile_singleton_t: 
+lemma tsyndropwhile_singleton_msg_t: 
   assumes "f (invMsg a)" shows "tsynDropWhile f\<cdot>(\<up>a) = \<up>null"
   using assms
   by (cases a, simp_all add: tsyndropwhile_insert)
- 
+
+text {* If the only element in a singleton stream fails the predicate f, then @{term tsynDropWhile} 
+        does not change the stream. *}    
+lemma tsyndropwhile_singleton_msg_f:
+  assumes"\<not>f (invMsg a)" shows "tsynDropWhile f\<cdot>(\<up>a) = \<up>a"
+  using assms
+  by (cases a, simp_all add: tsyndropwhile_insert)
+
 text {* If the only element in a singleton stream passes is null, then @{term tsynDropWhile} 
         will produce the singleton stream with null. *}
 lemma tsyndropwhile_singleton_null: "tsynDropWhile f\<cdot>(\<up>null) = \<up>null"
   by (simp add: tsyndropwhile_insert)
-
-text {* If the only element in a singleton stream fails the predicate f, then @{term tsynDropWhile} 
-        does not change the stream. *}    
-lemma tsyndropwhile_singleton_f: 
-  assumes"\<not>f (invMsg a)" shows "tsynDropWhile f\<cdot>(\<up>a) = \<up>a"
-  using assms
-  by (cases a, simp_all add: tsyndropwhile_insert)
   
 text {* @{term tsynDropWhile} is idempotent. *}    
 lemma tsyndropwhile_idem: "tsynDropWhile f\<cdot>(tsynDropWhile f\<cdot>s) = tsynDropWhile f\<cdot>s"
@@ -650,8 +659,8 @@ lemma tsynlen_inftimes_finite:
 
 text {* @{term tsynLen} test for finite tsyn stream. *}
 lemma tsynlen_test_finstream: 
-  "tsynLen\<cdot>(<[Msg 1, null, Msg 2, null, null, Msg 1]>) = tsynLen\<cdot>(<[Msg 1, Msg 2, Msg 1]>)"
-  by (metis list2s_0 list2s_Suc lscons_conv tsynlen_sconc_msg tsynlen_sconc_null tsynlen_strict)
+  "tsynLen\<cdot>(<[Msg 1, null, Msg 2, null, null, Msg 1]>) = Fin 3"
+  by (simp add: tsynlen_insert tsynabs_sconc_msg tsynabs_sconc_null tsynabs_singleton_msg)
 
 text {* @{term tsynLen} test for infinite tsyn stream. *}
 lemma tsynlen_test_infstream: "tsynLen\<cdot>(<[null, Msg a]>\<infinity>) = \<infinity>"
