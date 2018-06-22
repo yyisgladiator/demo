@@ -210,7 +210,6 @@ lemma tsyn_cases [case_names bot msg null]:
   apply (simp add: bot)
   by (metis tsyn.exhaust)
 
-
 (* ----------------------------------------------------------------------- *)
   subsection {* Lemmata on Streams - Streams Extension *}
 (* ----------------------------------------------------------------------- *)
@@ -803,15 +802,13 @@ lemma tsynsum_even_h:
   assumes "tsynDom\<cdot>s \<subseteq> {n. even n}"
     and "even m"
   shows "tsynDom\<cdot>(tsynScanl plus m\<cdot>s) \<subseteq> {n. even n}"
-  using assms 
+  using assms
   apply (induction s arbitrary: m rule: tsyn_ind)
   apply (rule adm_imp, simp_all)
   apply (rule admI)
   apply (metis ch2ch_Rep_cfunR contlub_cfun_arg subset_cont)
-  (* ToDo: adjust with tsyndom_sconc_msg *)
-  apply (simp add: tsyndom_insert tsynscanl_insert tsynscanlext_insert)
-  apply (smt Collect_mono_iff odd_add)
-  by (simp add: tsynscanl_sconc_null)
+  apply (simp add: tsynscanl_sconc_msg tsyndom_sconc_msg)
+  by (simp add: tsynscanl_sconc_null tsyndom_sconc_null)
 
 lemma tsynsum_even: assumes "tsynDom\<cdot>s \<subseteq> {n. even n}"
   shows "tsynDom\<cdot>(tsynSum\<cdot>s) \<subseteq> {n. even n}"
