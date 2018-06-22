@@ -34,7 +34,7 @@ definition map_io_well_2x1 :: "(channel \<Rightarrow> 'a::uscl \<Rightarrow> boo
 definition map_io_well_2x2 :: "(channel \<Rightarrow> 'a::uscl \<Rightarrow> bool) \<Rightarrow> ('a \<rightarrow> 'a \<rightarrow> 'a) \<Rightarrow> ('a \<rightarrow> 'a \<rightarrow> 'a) 
                             \<Rightarrow> channel \<Rightarrow> channel \<Rightarrow> channel \<Rightarrow> channel \<Rightarrow> bool" 
   where "map_io_well_2x2 P f g ch1 ch2 ch3 ch4 \<equiv> \<forall> x y. (P ch1 x \<and> P ch2 y)
-                                                      = (P ch3 (f\<cdot>x\<cdot>y) \<and> P ch4 (g\<cdot>x\<cdot>y))"
+                                                      = (P ch3 (f\<cdot>x\<cdot>y) \<and> P ch4 (g\<cdot>x\<cdot>y)) \<and> ch3 \<noteq> ch4"
 
 
 subsection \<open>Lemmas\<close>
@@ -689,6 +689,24 @@ lemma uf_2x2_cont[simp]:
             then show ?thesis
               using dom ubdom_chain_eq2 by blast
           qed
+        have h60: "ch3 \<noteq> ch4"
+          by (metis assms map_io_well_2x2_def)
+        have h61: "chain (\<lambda>i. Abs_ubundle [ch3 \<mapsto> f1\<cdot>(Y i .ch1)\<cdot>(Y i .ch2), ch4 \<mapsto> f2\<cdot>(Y i .ch1)\<cdot>(Y i .ch2)])"
+          by (simp add: True a1 assms)
+        have h62: "ch3 \<in> ubDom\<cdot>(\<Squnion>i. Abs_ubundle [ch3 \<mapsto> f1\<cdot>(Y i .ch1)\<cdot>(Y i .ch2), ch4 \<mapsto> f2\<cdot>(Y i .ch1)\<cdot>(Y i .ch2)])"
+          using dom_lub by blast
+        have h62b: "ch4 \<in> ubDom\<cdot>(\<Squnion>i. Abs_ubundle [ch3 \<mapsto> f1\<cdot>(Y i .ch1)\<cdot>(Y i .ch2), ch4 \<mapsto> f2\<cdot>(Y i .ch1)\<cdot>(Y i .ch2)])"
+          using dom_lub by blast
+        have h63: "\<And>i. Abs_ubundle [ch3 \<mapsto> f1\<cdot>(Y i .ch1)\<cdot>(Y i .ch2), ch4 \<mapsto> f2\<cdot>(Y i .ch1)\<cdot>(Y i .ch2)] .ch3 = f1\<cdot>(Y i .ch1)\<cdot>(Y i .ch2)"
+          apply (simp add: h31 ubgetch_ubrep_eq)
+          by (metis assms map_io_well_2x2_def)
+        have h63b: "\<And>i. Abs_ubundle [ch3 \<mapsto> f1\<cdot>(Y i .ch1)\<cdot>(Y i .ch2), ch4 \<mapsto> f2\<cdot>(Y i .ch1)\<cdot>(Y i .ch2)] .ch4 = f2\<cdot>(Y i .ch1)\<cdot>(Y i .ch2)"
+          by (simp add: h31 ubgetch_ubrep_eq)
+        from h33 have h64: "Abs_ubundle [ch3 \<mapsto> \<Squnion>i. f1\<cdot>(Y i .ch1)\<cdot>(Y i .ch2), ch4 \<mapsto> \<Squnion>i. f2\<cdot>(Y i .ch1)\<cdot>(Y i .ch2)] .ch3 = (\<Squnion>i. f1\<cdot>(Y i .ch1)\<cdot>(Y i .ch2))"
+          apply (simp add: h33 ubgetch_ubrep_eq)
+          by (metis assms map_io_well_2x2_def)
+        from h33 have h64b: "Abs_ubundle [ch3 \<mapsto> \<Squnion>i. f1\<cdot>(Y i .ch1)\<cdot>(Y i .ch2), ch4 \<mapsto> \<Squnion>i. f2\<cdot>(Y i .ch1)\<cdot>(Y i .ch2)] .ch4 = (\<Squnion>i. f2\<cdot>(Y i .ch1)\<cdot>(Y i .ch2))"
+          by (simp add: h33 ubgetch_ubrep_eq)
         have h6: "(\<Squnion>i. Abs_ubundle [ch3 \<mapsto> f1\<cdot>(Y i .ch1)\<cdot>(Y i .ch2), ch4 \<mapsto> f2\<cdot>(Y i .ch1)\<cdot>(Y i .ch2)])
                 = Abs_ubundle [ch3 \<mapsto> (\<Squnion>i. f1\<cdot>(Y i .ch1)\<cdot>(Y i .ch2)), ch4 \<mapsto> (\<Squnion>i. f2\<cdot>(Y i .ch1)\<cdot>(Y i .ch2))]"
           apply(rule ubgetchI)
@@ -696,27 +714,8 @@ lemma uf_2x2_cont[simp]:
           apply (simp add: h33 insert_commute ubdom_ubrep_eq)
           apply(simp add: dom_lub)
           apply auto
-          subgoal
-          proof -
-            have g1: "chain (\<lambda>i. Abs_ubundle [ch3 \<mapsto> f1\<cdot>(Y i  .  ch1)\<cdot>(Y i  .  ch2), ch4 \<mapsto> f2\<cdot>(Y i  .  ch1)\<cdot>(Y i  .  ch2)])"
-              by (simp add: True a1 assms)
-            have g2: "ch3 \<in> ubDom\<cdot>(\<Squnion>i::nat. Abs_ubundle [ch3 \<mapsto> f1\<cdot>(Y i  .  ch1)\<cdot>(Y i  .  ch2), ch4 \<mapsto> f2\<cdot>(Y i  .  ch1)\<cdot>(Y i  .  ch2)])"
-              using dom_lub by blast
-            show ?thesis
-              apply(simp add: g1 g2 ubgetch_lub) (* TODO smt *)
-              by (smt fun_upd_same fun_upd_twist h31 h33 lub_eq option.sel ubgetch_insert ubrep_ubabs)
-          qed
-          subgoal
-          proof -
-            have g1: "chain (\<lambda>i. Abs_ubundle [ch3 \<mapsto> f1\<cdot>(Y i  .  ch1)\<cdot>(Y i  .  ch2), ch4 \<mapsto> f2\<cdot>(Y i  .  ch1)\<cdot>(Y i  .  ch2)])"
-              by (simp add: True a1 assms)
-            have g2: "ch4 \<in> ubDom\<cdot>(\<Squnion>i::nat. Abs_ubundle [ch3 \<mapsto> f1\<cdot>(Y i  .  ch1)\<cdot>(Y i  .  ch2), ch4 \<mapsto> f2\<cdot>(Y i  .  ch1)\<cdot>(Y i  .  ch2)])"
-              using dom_lub by blast
-            show ?thesis
-              apply(simp add: g1 g2 ubgetch_lub) (* TODO smt *)
-              by (smt fun_upd_same fun_upd_twist h31 h33 lub_eq option.sel ubgetch_insert ubrep_ubabs)
-          qed
-          done
+          apply (simp add:  h61 h62 ubgetch_lub h33 ubgetch_ubrep_eq h60 h63 h64)
+          by (simp add:  h61 h62b ubgetch_lub h31 ubgetch_ubrep_eq h60 h63b h64b)
         show ?thesis 
           apply(simp only: h1 h2 h4 h6)
           proof - (* TODO müsste viel leichter mit _Lub Lemma gehen *)
