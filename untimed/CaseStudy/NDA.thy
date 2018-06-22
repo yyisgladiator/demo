@@ -33,13 +33,6 @@ definition ndaDom :: "('s, 'm::message) ndAutomaton \<rightarrow> channel set di
 definition ndaRan :: "('s, 'm::message) ndAutomaton \<rightarrow> channel set discr" where
 "ndaRan =  (\<Lambda> nda. snd (snd (snd (Rep_ndAutomaton nda))))" 
 
-
-(* See: https://git.rwth-aachen.de/montibelle/automaton/core/issues/59 *)
-definition spsFix :: "('a \<rightarrow> 'a) \<rightarrow> 'a" where
-"spsFix = undefined"  (* Die ganze function ist natürlich grober unsinn *)
-
-
-
 (* ToDo *)
 (* Very Very similar to helper over automaton *)
 thm helper_def
@@ -47,12 +40,14 @@ thm helper_def
 (* Es klappt aber nicht.... Der nichtdeterminismus wird nicht berücksichtigt! 
   und ich laufe immer wieder in das problem: https://git.rwth-aachen.de/montibelle/automaton/core/issues/68 *)
 
-definition spsHelper:: "'s \<Rightarrow> (('s \<times>'e) \<Rightarrow> ('s \<times> 'm::message SB) set rev) \<rightarrow> ('s \<Rightarrow> 'm SPS) \<rightarrow> ('e \<Rightarrow> 'm SPS)" where(*Other Idea*)
+definition spsHelper:: "'s \<Rightarrow> (('s \<times>'e) \<Rightarrow> ('s \<times> 'm::message SB) set rev) \<rightarrow> ('s \<Rightarrow> 'm SPS) \<rightarrow> ('e \<Rightarrow> 'm SPS)" where
 "spsHelper s \<equiv> undefined"     
     
 (* Similar to Rum96 *)
 definition nda_h :: "('s::type, 'm::message) ndAutomaton \<Rightarrow> ('s \<Rightarrow> 'm SPS)" where
-"nda_h nda \<equiv> spsFix\<cdot>(\<Lambda> h. (\<lambda>s. spsStep (undiscr(ndaDom\<cdot>nda))(undiscr(ndaRan\<cdot>nda))\<cdot>(spsHelper s\<cdot>(ndaTransition\<cdot>nda)\<cdot>h)))"
+"nda_h nda \<equiv> let dom = (undiscr(ndaDom\<cdot>nda));
+                 ran = (undiscr(ndaRan\<cdot>nda)) in 
+  uspecStateFix dom ran\<cdot>(\<Lambda> h. (\<lambda>s. spsStep dom ran\<cdot>(spsHelper s\<cdot>(ndaTransition\<cdot>nda)\<cdot>h)))"
 
 definition nda_H :: "('s, 'm::message) ndAutomaton \<Rightarrow> 'm SPS" where
 "nda_H nda \<equiv> uspecFlatten (undiscr(ndaDom\<cdot>nda))(undiscr(ndaRan\<cdot>nda)) 

@@ -67,10 +67,10 @@ definition uspecLeast :: "channel set \<Rightarrow> channel set \<Rightarrow> 'm
 definition uspecFix ::"channel set \<Rightarrow> channel set \<Rightarrow> ('a uspec \<rightarrow> 'a uspec) \<rightarrow> 'a uspec" where
 "uspecFix cin cout \<equiv> (\<Lambda> F.  fixg (uspecLeast cin cout)\<cdot>F)"
 
-definition uspecStateLeast :: "channel set \<Rightarrow> channel set \<Rightarrow>'s \<Rightarrow> 'm uspec" where
+definition uspecStateLeast :: "channel set \<Rightarrow> channel set \<Rightarrow>'s::type \<Rightarrow> 'm uspec" where
 "uspecStateLeast In Out \<equiv> (\<lambda> x. uspecLeast In Out)"
 
-definition uspecStateFix ::"channel set \<Rightarrow> channel set \<Rightarrow> (('s \<Rightarrow> 'm uspec) \<rightarrow> ('s \<Rightarrow> 'm uspec)) \<rightarrow> ('s \<Rightarrow> 'm uspec)" where
+definition uspecStateFix ::"channel set \<Rightarrow> channel set \<Rightarrow> (('s::type \<Rightarrow> 'm uspec) \<rightarrow> ('s \<Rightarrow> 'm uspec)) \<rightarrow> ('s \<Rightarrow> 'm uspec)" where
 "uspecStateFix In Out \<equiv> (\<Lambda> F.  fixg (uspecStateLeast In Out)\<cdot>F)"
 
 definition uspecImage::  "('m \<Rightarrow> 'n) \<Rightarrow> 'm uspec \<Rightarrow> 'n uspec" where
