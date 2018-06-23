@@ -34,32 +34,38 @@ definition ndaRan :: "('s, 'm::message) ndAutomaton \<rightarrow> channel set di
 "ndaRan =  (\<Lambda> nda. snd (snd (snd (Rep_ndAutomaton nda))))" 
 
 (* ToDo *)
-(* Very Very similar to helper over automaton *)
-thm helper_def
 
-(* Es klappt aber nicht.... Der nichtdeterminismus wird nicht berücksichtigt! 
-  und ich laufe immer wieder in das problem: https://git.rwth-aachen.de/montibelle/automaton/core/issues/68 *)
+  (* nondeterministic... but is it cont in h ? *)
+definition ndaToDo:: "channel set \<Rightarrow> channel set \<Rightarrow> ('s \<times> 'm::message SB) set rev \<Rightarrow> ('s \<Rightarrow> 'm SPS) \<rightarrow> 'm SPS" where
+"ndaToDo In Out S \<equiv> \<Lambda> h. uspecFlatten In Out 
+                (setrevImage (\<lambda>(state, sb). spsConcOut sb\<cdot>(h state)) S)"
 
-
-
-(* thats the equivalent to the deterministic version ... so no nondeterminism *)
-definition ndaHelper:: "'s \<Rightarrow> (('s \<times>'e) \<Rightarrow> ('s \<times> 'm::message SB) (*set rev*)) \<Rightarrow> ('s \<Rightarrow> 'm SPS) \<rightarrow> ('e \<Rightarrow> 'm SPS)" where
-"ndaHelper s transition \<equiv>  \<Lambda> h. (\<lambda>e. spsRtIn\<cdot>(spsConcOut (snd (transition (s,e)))\<cdot>(h (fst (transition (s,e))))))"     
-
-
-(* nondeterministic... but is it cont in h ? *)
-definition ndaHelper2:: "'s \<Rightarrow> (('s \<times>'e) \<Rightarrow> ('s \<times> 'm::message SB) set rev) \<Rightarrow> ('s \<Rightarrow> 'm SPS) \<rightarrow> ('e \<Rightarrow> 'm SPS)" where
-"ndaHelper2 s transition \<equiv>  \<Lambda> h. (\<lambda>e. uspecFlatten undefined undefined (*TODO remove undefined *)
-    (setrevImage (\<lambda>(nextState::'s, nextOut::'m SB). spsRtIn\<cdot>(spsConcOut nextOut\<cdot>(h nextState))::'m SPS) (transition (s,e))))"
-
-
-
-section \<open>lemma over ndaHelper2\<close>
-
-(* definitely not injective... some_h is to general *)
-lemma "inj (\<lambda>(nextState::'s, nextOut::'m::message SB). (spsConcOut nextOut\<cdot>(some_h nextState)))"
+(* Goals *)
+lemma (* assumes "\<And>s c. s\<in>((inv Rev) S) \<Longrightarrow> c\<in>ubDom\<cdot>(snd s) \<Longrightarrow> # ((snd s) . c) < \<infinity>" *)
+  shows  "monofun(\<lambda> h. uspecFlatten In Out (setrevImage (\<lambda>(state, sb). spsConcOut sb\<cdot>(h state)) S))"
+  apply(rule monofunI)
   oops
 
+lemma "cont(\<lambda> h. uspecFlatten In Out (setrevImage (\<lambda>(state, sb). spsConcOut sb\<cdot>(h state)) S))"
+  oops
+
+lemma "monofun (\<lambda> S. uspecFlatten In Out (setrevImage (\<lambda>(state, sb). spsConcOut sb\<cdot>(some_h state)) S))"
+  oops
+
+
+
+definition ndaHelper2:: "'s \<Rightarrow> (('s \<times>'e) \<Rightarrow> ('s \<times> 'm::message SB) set rev) \<Rightarrow> ('s \<Rightarrow> 'm SPS) \<rightarrow> ('e \<Rightarrow> 'm SPS)" where
+"ndaHelper2 s transition \<equiv> \<Lambda> h. (\<lambda>e. ndaToDo undefined undefined (transition (s,e))\<cdot>h)"
+
+
+
+(* delete first input element. This is here because "spfStep" does not call "sbRt" and the
+  ndaHelper2 should be injektive and more general *)
+definition ndaAnotherHelper :: "('s \<Rightarrow> 'm::message SPS) \<rightarrow> ('s \<Rightarrow> 'm SPS)" where
+"ndaAnotherHelper \<equiv> (\<Lambda> h. (\<lambda> s. spsRtIn\<cdot>(h s)))"
+
+lemma "cont (\<lambda> h. (\<lambda> s. spsRtIn\<cdot>(h s)))"
+  by simp
 
 
 
@@ -67,13 +73,12 @@ lemma "inj (\<lambda>(nextState::'s, nextOut::'m::message SB). (spsConcOut nextO
 definition nda_h :: "('s::type, 'm::message) ndAutomaton \<Rightarrow> ('s \<Rightarrow> 'm SPS)" where
 "nda_h nda \<equiv> let dom = (undiscr(ndaDom\<cdot>nda));
                  ran = (undiscr(ndaRan\<cdot>nda)) in 
-  uspecStateFix dom ran\<cdot>(\<Lambda> h. (\<lambda>s. spsStep dom ran\<cdot>(ndaHelper2 s (ndaTransition\<cdot>nda)\<cdot>h)))"
+  uspecStateFix dom ran\<cdot>(\<Lambda> h. (\<lambda>s. spsStep dom ran\<cdot>(ndaAnotherHelper\<cdot>(ndaHelper2 s (ndaTransition\<cdot>nda)\<cdot>h))))"
 
 
 
 definition nda_H :: "('s, 'm::message) ndAutomaton \<Rightarrow> 'm SPS" where
-"nda_H nda \<equiv> uspecFlatten (undiscr(ndaDom\<cdot>nda))(undiscr(ndaRan\<cdot>nda)) 
-                (setrevImage (\<lambda>(state, sb). spsConcOut sb\<cdot>(nda_h nda state)) (ndaInitialState\<cdot>nda))" 
+"nda_H nda \<equiv> ndaToDo (undiscr(ndaDom\<cdot>nda))(undiscr(ndaRan\<cdot>nda)) (ndaInitialState\<cdot>nda)\<cdot>(nda_h nda)" 
 
 
 lemma nda_rep_cont[simp]: "cont Rep_ndAutomaton"
