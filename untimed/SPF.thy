@@ -176,6 +176,25 @@ lemma spfRt_spfConc: "(spfRt\<cdot>(spfConc sb \<cdot>spf)) = (spfConc sb \<cdot
   apply (metis ubclDom_ubundle_def ubconceq_dom)
   by blast
 
+lemma spfRt_inj_h: assumes "spfRt\<cdot>x = spfRt\<cdot>y" and "ubDom\<cdot>ub = ufDom\<cdot>x" 
+  shows "x \<rightleftharpoons> ub = y \<rightleftharpoons> ub"
+proof - 
+  have "ubDom\<cdot>ub = ufDom\<cdot>y"
+    by (metis assms(1) assms(2) spfRt_dom)
+  obtain ubNEW where ubNEW_def: "sbRt\<cdot>ubNEW = ub"
+    using sbrt_conc_hd by blast
+  thus ?thesis
+    by (metis assms(1) spfrt_step) 
+qed
+
+lemma spfRt_inj: "inj (Rep_cfun spfRt)"
+  apply rule
+  apply simp
+  apply(rule spf_eq)
+  apply (metis spfRt_dom)
+  using spfRt_inj_h by blast
+  
+
 
 subsection \<open>spfConc lemma\<close>
 
@@ -199,6 +218,13 @@ lemma spfConc_ran [simp]:"ufRan\<cdot>(spfConc sb \<cdot>spf) = ufRan\<cdot>spf"
   apply(subst ufapplyout_ran)
    apply (metis ubclDom_ubundle_def ubconceq_dom)
   by blast
+
+lemma spfconc_surj:
+  assumes "\<And>c. c\<in>ubDom\<cdot>sb \<Longrightarrow> # (sb . c) < \<infinity>"
+  shows "inj (\<lambda>spf. spfConc sb\<cdot>spf)"
+  apply(simp add: spfConc_def)
+  using ufapplyin_inj assms
+  by (metis sbconc_inj ubclDom_ubundle_def ubconceq_dom ufapplyout_inj) 
 
 
 end
