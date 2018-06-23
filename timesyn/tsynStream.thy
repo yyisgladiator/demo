@@ -187,6 +187,18 @@ definition tsynRemDups_fix :: "'a tsyn stream \<rightarrow> 'a tsyn stream" wher
   section {* Lemmata on Time-Synchronous Streams *}
 (* ----------------------------------------------------------------------- *)
 
+text {* Induction rule for finite time-synchronous streams. *}
+lemma tsyn_finind [case_names fin bot msg null]:
+  assumes fin: "#x = Fin n"
+    and bot: "P \<epsilon>"
+    and msg: "\<And>m s. P s \<Longrightarrow> P (\<up>(Msg m) \<bullet> s)"
+    and null: "\<And>s. P s \<Longrightarrow> P (\<up>null \<bullet> s)"
+  shows "P x"
+  using assms
+  apply (induction x rule: finind)
+  apply (simp_all add: bot fin)
+  by (metis bot finind slen_scons tsynAbsElem.cases)
+
 text {* Induction rule for infinite time-synchronous streams and admissable predicates. *}
 lemma tsyn_ind [case_names adm bot msg null]:
   assumes adm: "adm P"
