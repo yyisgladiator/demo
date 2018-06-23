@@ -1,6 +1,6 @@
 theory SpsStep
 
-imports "../USpec" "SpfStep" "NewSpfStep"
+imports "../USpec" "SpfStep" "NewSpfStep" "../USpec_Comp"
 
 begin
 
@@ -14,7 +14,7 @@ definition spsStep_h::"('m::message sbElem \<Rightarrow> 'm SPS)\<rightarrow> ('
 (* new spsStep with NewSpfStep*)
 
 definition spsStep_inj :: "channel set \<Rightarrow> channel set \<Rightarrow> ('m::message sbElem \<Rightarrow> 'm SPS) \<rightarrow> 'm SB \<rightarrow> 'm SPS" where
-"spsStep_inj In Out = (\<Lambda> h. (\<Lambda> sb. Abs_rev_uspec {spfStep_inj In Out\<cdot>g\<cdot>sb | g. g \<in> inv Rev (spsStep_h\<cdot>h)} In Out))"
+"spsStep_inj In Out = (\<Lambda> h. (\<Lambda> sb. if sbHdElemWell sb then Abs_rev_uspec {spfStep_inj In Out\<cdot>g\<cdot>sb | g. g \<in> inv Rev (spsStep_h\<cdot>h)} In Out else uspecLeast In Out))"
 
 
 lemma spsStep_h_mono[simp]:"monofun (\<lambda> h::('m::message sbElem \<Rightarrow> 'm SPS). setify\<cdot>(\<lambda>e. uspecRevSet\<cdot>(h e)))"
@@ -61,10 +61,14 @@ proof(rule monofunI)
       by(simp add: True true_y)
   next
     case False
-    have "\<And>S. uspecLeast In Out \<sqsubseteq> S"
-      sorry
-    then show ?thesis
-      by(simp add: False)
+    have well:"uspecWell (Rev{spfStep_inj In Out\<cdot>g\<cdot>y |g. g \<in> inv Rev (spsStep_h\<cdot>h)}) (Discr In) (Discr Out)"
+        sorry
+    show ?thesis
+      apply (simp add: False)
+      apply auto
+      apply(rule uspecLeast_min)
+      apply(simp_all add:uspecdom_insert uspecran_insert)
+      using well by auto
   qed
 qed
   
