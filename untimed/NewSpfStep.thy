@@ -283,7 +283,7 @@ lemma spfStep_inj_inner_well[simp]:"ufWell(\<Lambda> sb. (ubDom\<cdot>sb = In) \
       by (simp add: domIff)
 qed
 
-lemma spfStep_cont:"cont(\<lambda> h. Abs_ufun(\<Lambda> sb. (ubDom\<cdot>sb = In) \<leadsto> spfStep_inj In Out\<cdot>h\<cdot>sb \<rightleftharpoons> sb))"
+lemma spfStep_cont[simp]:"cont(\<lambda> h. Abs_ufun(\<Lambda> sb. (ubDom\<cdot>sb = In) \<leadsto> spfStep_inj In Out\<cdot>h\<cdot>sb \<rightleftharpoons> sb))"
 proof(rule Cont.contI2)
   show "monofun (\<lambda>h::'a sbElem \<Rightarrow> ('a stream\<^sup>\<Omega>) ufun. Abs_cufun (\<lambda>sb::'a stream\<^sup>\<Omega>. (ubDom\<cdot>sb = In)\<leadsto>spfStep_inj In Out\<cdot>h\<cdot>sb \<rightleftharpoons> sb))"
   proof(rule monofunI)
@@ -363,17 +363,38 @@ next
     by(simp add: below_ufun_def below_cfun_def h1)
 qed
      
-lemma "spfStep In Out\<cdot>h \<rightleftharpoons> sb = spfStep_inj In Out\<cdot>h\<cdot>sb \<rightleftharpoons> sb"
+
+lemma spfstep_dom[simp]:"ufDom\<cdot>(spfStep cIn cOut\<cdot>f) = cIn"
   sorry
+    
+lemma spfstep_ran [simp]:"ufRan\<cdot>(spfStep cIn cOut\<cdot>f) = cOut"
+  sorry
+    
+    
+lemma spfstep_inj_dom[simp]:"ufDom\<cdot>(spfStep_inj cIn cOut\<cdot>f\<cdot>sb) = cIn"
+  sorry
+    
+lemma spfstep_inj_ran [simp]:"ufRan\<cdot>(spfStep_inj cIn cOut\<cdot>f\<cdot>sb) = cOut"
+  sorry
+    
+lemma test2:"ubDom\<cdot>sb \<noteq> In \<Longrightarrow> (ufRestrict In Out\<cdot>spf \<rightleftharpoons> sb) = the None"
+  apply(simp add: ufRestrict_def)
+  by (metis option.exhaust_sel ubclDom_ubundle_def ufdom_2ufundom ufleast_ufdom)
+    
+lemma test2_2:"ubDom\<cdot>sb \<noteq> In \<Longrightarrow> (ufLeast In Out \<rightleftharpoons> sb) = the None"
+  apply(simp add: ufLeast_def)
+  by (simp add: ubclDom_ubundle_def)
+    
   
+lemma "spfStep In Out\<cdot>h \<rightleftharpoons> sb = spfStep_inj In Out\<cdot>h\<cdot>sb \<rightleftharpoons> sb"
+  apply(rule ub_eq)
+  apply (metis (no_types, lifting) option.exhaust_sel spfstep_dom spfstep_inj_dom spfstep_inj_ran spfstep_ran ubclDom_ubundle_def ufdom_2ufundom ufran_2_ubcldom2)
+  apply(simp add: spfStep_def spfStep_inj_def, auto)
+  using test2 test2_2 by fastforce+
+    
   (*TODO
 lemma spfstep_insert 
 
-lemma spfstep_dom[simp]:"ufDom\<cdot>(spfStep cIn cOut\<cdot>f) = cIn"
-  oops
-    
-lemma spfstep_ran [simp]:"ufRan\<cdot>(spfStep cIn cOut\<cdot>f) = cOut"
-  oops 
     
 lemma spfstep_step
 *)
