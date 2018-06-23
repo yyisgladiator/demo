@@ -343,7 +343,7 @@ lemma ufapplyout_insert: assumes "\<And>b. ubclDom\<cdot>(k\<cdot>b) = ubclDom\<
   by (simp add: ufApplyOut_def assms) 
 
 (* dom of ufApplyOut is the same as the dom of input ufun  *)
-lemma ufapplyout_dom: assumes "\<And>b. ubclDom\<cdot>(k\<cdot>b) = ubclDom\<cdot>b" 
+lemma ufapplyout_dom [simp]: assumes "\<And>b. ubclDom\<cdot>(k\<cdot>b) = ubclDom\<cdot>b" 
   shows "ufDom\<cdot>(ufApplyOut k\<cdot>f) = ufDom\<cdot>f"
 proof -
   have f1: "ufApplyOut k\<cdot>f =  Abs_cufun (\<lambda>x. (ubclDom\<cdot>x = ufDom\<cdot>f) \<leadsto> k\<cdot>(f \<rightleftharpoons>x))"
@@ -353,9 +353,9 @@ proof -
   then show ?thesis
     by (simp add: f1)
 qed
-declare[[show_types]]
+
 (* ran of ufApplyOut is the same as the ran of input ufun  *)
-lemma ufapplyout_ran: assumes "\<And>b. ubclDom\<cdot>(k\<cdot>b) = ubclDom\<cdot>b" 
+lemma ufapplyout_ran [simp]: assumes "\<And>b. ubclDom\<cdot>(k\<cdot>b) = ubclDom\<cdot>b" 
   shows "ufRan\<cdot>(ufApplyOut k\<cdot>f) = ufRan\<cdot>f"
 proof -
   have f1: "ufApplyOut k\<cdot>f =  Abs_cufun (\<lambda>x. (ubclDom\<cdot>x = ufDom\<cdot>f) \<leadsto> k\<cdot>(f \<rightleftharpoons>x))"
@@ -367,7 +367,7 @@ proof -
 qed
 
 (* substitution if the arg has the right domain  *)
-lemma ufapplyout_apply:  assumes "\<And>b. ubclDom\<cdot>(k\<cdot>b) = ubclDom\<cdot>b" 
+lemma ufapplyout_apply [simp]:  assumes "\<And>b. ubclDom\<cdot>(k\<cdot>b) = ubclDom\<cdot>b" 
   and "ubclDom\<cdot>ub = ufDom\<cdot>f"
   shows "(ufApplyOut k\<cdot>f) \<rightleftharpoons> ub = k\<cdot>(f\<rightleftharpoons>ub)"
 proof -
@@ -380,6 +380,18 @@ proof -
      apply (simp add: assms)
     by (simp add: assms(1) assms(2) ufran_2_ubcldom2)
 qed
+
+
+lemma ufapplyout_inj [simp]:  
+  assumes "\<And>b. ubclDom\<cdot>(f\<cdot>b) = ubclDom\<cdot>b" 
+  and "inj (Rep_cfun f)"
+shows "inj (Rep_cfun (ufApplyOut f))"
+  apply rule
+  apply(rule ufun_eqI)
+  apply (metis assms(1) ufapplyout_dom)
+  by (metis (mono_tags, lifting) assms(1) assms(2) injD ufapplyout_apply ufapplyout_dom)
+  
+
 
   
 section \<open>ufApplyIn\<close>
@@ -789,6 +801,32 @@ proof -
     by simp
 qed
 
+lemma ufapplyin_inj_h: 
+  fixes f :: "'a \<rightarrow> 'a"
+   assumes "\<And>ub. ubclDom\<cdot>ub = ufDom\<cdot>uf1 \<Longrightarrow> uf1 \<rightleftharpoons> (f\<cdot>ub) = uf2 \<rightleftharpoons> (f\<cdot>ub)"
+  and "\<And>ub. ubclDom\<cdot>(f\<cdot>ub) = ubclDom\<cdot>ub" 
+  and "surj (Rep_cfun f)"
+  and "ubclDom\<cdot>ub = ufDom\<cdot>uf1"
+  shows "uf1 \<rightleftharpoons> ub = uf2 \<rightleftharpoons> ub"
+proof -
+  obtain ub2 where "f\<cdot>ub2 = ub"
+    by (metis assms(3) surj_def)
+  thus ?thesis
+    using assms(1) assms(2) assms(4) by auto
+qed
+
+lemma ufapplyin_apply [simp]: assumes "\<And>b. ubclDom\<cdot>(f\<cdot>b) = ubclDom\<cdot>b"
+  and "ubclDom\<cdot>ub = ufDom\<cdot>uf"
+  shows "ufApplyIn f\<cdot>uf \<rightleftharpoons> ub = uf\<rightleftharpoons>(f\<cdot>ub)"
+  by (simp add: assms(1) ufApplyIn_def ufapplyin_cont_h ufapplyin_well_h)
+
+lemma ufapplyin_inj[simp]: assumes "\<And>b. ubclDom\<cdot>(f\<cdot>b) = ubclDom\<cdot>b" and "surj (Rep_cfun f)"
+  shows "inj (Rep_cfun (ufApplyIn f))"
+  apply rule
+  apply simp
+  apply(rule ufun_eqI)
+  apply (metis assms(1) ufapplyin_dom)
+  by (metis assms(1) assms(2) ufapplyin_dom ufapplyin_inj_h ufapplyin_apply)
 
 
 end

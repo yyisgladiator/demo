@@ -2,86 +2,36 @@
 
 theory NDA
 
-imports Automaton "../../USpec" "../SpsStep" NDA_functions
+imports "../../USpec" "../SpsStep" NDA_functions "../SPS"
 
 begin
 
 default_sort type
-  
-section \<open>Non Deterministic Case \<close>
+
+
+fun ndaWell::"((('state \<times>(channel \<rightharpoonup> 'm)) \<Rightarrow> (('state \<times> 'm SB) set rev)) \<times> ('state \<times> 'm SB) set rev \<times> channel set discr \<times> channel set discr) \<Rightarrow> bool " where
+"ndaWell (transition, initialState, Discr chIn, Discr chOut) = finite chIn"
 
 (* FYI: Non-deterministic version *)
-cpodef ('state::type, 'm::message) NDA = 
-  "{f::(('state \<times>(channel \<rightharpoonup> 'm)) \<Rightarrow> (('state \<times> 'm SB) set rev)) \<times> ('state \<times> 'm SB) set rev \<times> channel set discr \<times> channel set discr. True}"
-  by auto
-
-setup_lifting type_definition_NDA
-
-(*
-(* relation based on transition function and initial set *)
-instantiation NDA :: (type, message) po
-begin
-  fun below_NDA :: "('a, 'b) NDA \<Rightarrow> ('a, 'b) NDA \<Rightarrow> bool" where
-  "below_NDA n1 n2 = ((fst (Rep_NDA n2) \<sqsubseteq>  fst (Rep_NDA n1))  (* Transition function is subset. NOTICE: Reversed *)
-                  \<and>   (fst (snd (Rep_NDA n2)) \<sqsubseteq>  fst (snd (Rep_NDA n1)))  (* Initial states subset. NOTICE: Reversed *)
-                  \<and>   (fst (snd (snd (Rep_NDA n1))) =  fst (snd (snd (Rep_NDA n2))))  (* input domain identical *)
-                  \<and>   (     (snd (snd (snd (Rep_NDA n1)))) =  (snd (snd (snd (Rep_NDA n2))))) )" (* output domain identical *)
-
-instance
-  apply(intro_classes)
-    apply simp
-  apply simp
-  apply (meson below_trans)
-  by (meson Rep_NDA_inject below_NDA.elims(2) below_antisym prod.expand)
-end  
-
-instance NDA :: (type, message) cpo 
-  apply(intro_classes)
-  apply (rule, rule is_lubI)
+cpodef ('state::type, 'm::message) ndAutomaton = 
+  "{f::(('state \<times>(channel \<rightharpoonup> 'm)) \<Rightarrow> (('state \<times> 'm SB) set rev)) \<times> ('state \<times> 'm SB) set rev \<times> channel set discr \<times> channel set discr. ndaWell f}"
   sorry
 
-*)
-
-
-definition ndaTransition :: "('s, 'm::message) NDA \<rightarrow> (('s \<times>(channel \<rightharpoonup> 'm)) \<Rightarrow> (('s \<times> 'm SB) set rev))" where
-"ndaTransition \<equiv> \<Lambda> nda. fst (Rep_NDA nda)"
-
-definition ndaInitialState :: "('s, 'm::message) NDA \<rightarrow> ('s \<times> 'm SB) set rev" where
-"ndaInitialState = (\<Lambda> nda. fst (snd (Rep_NDA nda)))"
-
-definition ndaDom :: "('s, 'm::message) NDA \<rightarrow> channel set discr" where
-"ndaDom = (\<Lambda> nda. fst (snd (snd (Rep_NDA nda))))"
-
-definition ndaRan :: "('s, 'm::message) NDA \<rightarrow> channel set discr" where
-"ndaRan =  (\<Lambda> nda. snd (snd (snd (Rep_NDA nda))))" 
-
-
-(* See: https://git.rwth-aachen.de/montibelle/automaton/core/issues/59 *)
-definition spsFix :: "('a \<rightarrow> 'a) \<rightarrow> 'a" where
-"spsFix = undefined"  (* Die ganze function ist natürlich grober unsinn *)
+setup_lifting type_definition_ndAutomaton
 
 
 
+definition ndaTransition :: "('s, 'm::message) ndAutomaton \<rightarrow> (('s \<times>(channel \<rightharpoonup> 'm)) \<Rightarrow> (('s \<times> 'm SB) set rev))" where
+"ndaTransition \<equiv> \<Lambda> nda. fst (Rep_ndAutomaton nda)"
 
+definition ndaInitialState :: "('s, 'm::message) ndAutomaton \<rightarrow> ('s \<times> 'm SB) set rev" where
+"ndaInitialState = (\<Lambda> nda. fst (snd (Rep_ndAutomaton nda)))"
 
-(* Test it *)
-lemma "setflat\<cdot>{{1,2::nat},{3,4::nat}} = {1,2,3,4}"
-  unfolding setflat_insert
-  apply blast (* Dauert ein bisschen, lösche das lemma wenn es nervt *)
-  done
-(*
-"channel set \<Rightarrow> channel set \<Rightarrow> ((channel\<rightharpoonup>'m::message) \<Rightarrow> 'm SPF) \<rightarrow> 'm SPF"
-*)
+definition ndaDom :: "('s, 'm::message) ndAutomaton \<rightarrow> channel set discr" where
+"ndaDom = (\<Lambda> nda. fst (snd (snd (Rep_ndAutomaton nda))))"
 
-  
-(* See: https://git.rwth-aachen.de/montibelle/automaton/core/issues/70 *)
-definition spsConc:: "'m SB \<Rightarrow> 'm SPS \<rightarrow> 'm SPS" where
-"spsConc = undefined"
-
-(* See: https://git.rwth-aachen.de/montibelle/automaton/core/issues/70 *)
-definition spsRt:: "'m SPS \<rightarrow> 'm SPS" where
-"spsRt = undefined"
-
+definition ndaRan :: "('s, 'm::message) ndAutomaton \<rightarrow> channel set discr" where
+"ndaRan =  (\<Lambda> nda. snd (snd (snd (Rep_ndAutomaton nda))))" 
 
 (* ToDo *)
 (* Very Very similar to helper over automaton *)
@@ -90,55 +40,47 @@ thm helper_def
 (* Es klappt aber nicht.... Der nichtdeterminismus wird nicht berücksichtigt! 
   und ich laufe immer wieder in das problem: https://git.rwth-aachen.de/montibelle/automaton/core/issues/68 *)
 
-definition spsHelper:: "'s \<Rightarrow> (('s \<times>'e) \<Rightarrow> ('s \<times> 'm::message SB) set rev) \<rightarrow> ('s \<Rightarrow> 'm SPS) \<rightarrow> ('e \<Rightarrow> 'm SPS)" where(*Other Idea*)
-"spsHelper s \<equiv> undefined"     
-    
+
+
+(* thats the equivalent to the deterministic version ... so no nondeterminism *)
+definition ndaHelper:: "'s \<Rightarrow> (('s \<times>'e) \<Rightarrow> ('s \<times> 'm::message SB) (*set rev*)) \<Rightarrow> ('s \<Rightarrow> 'm SPS) \<rightarrow> ('e \<Rightarrow> 'm SPS)" where
+"ndaHelper s transition \<equiv>  \<Lambda> h. (\<lambda>e. spsRtIn\<cdot>(spsConcOut (snd (transition (s,e)))\<cdot>(h (fst (transition (s,e))))))"     
+
+
+(* nondeterministic... but is it cont in h ? *)
+definition ndaHelper2:: "'s \<Rightarrow> (('s \<times>'e) \<Rightarrow> ('s \<times> 'm::message SB) set rev) \<Rightarrow> ('s \<Rightarrow> 'm SPS) \<rightarrow> ('e \<Rightarrow> 'm SPS)" where
+"ndaHelper2 s transition \<equiv>  \<Lambda> h. (\<lambda>e. uspecFlatten undefined undefined (*TODO remove undefined *)
+    (setrevImage (\<lambda>(nextState::'s, nextOut::'m SB). spsRtIn\<cdot>(spsConcOut nextOut\<cdot>(h nextState))::'m SPS) (transition (s,e))))"
+
+
+
+section \<open>lemma over ndaHelper2\<close>
+
+(* definitely not injective... some_h is to general *)
+lemma "inj (\<lambda>(nextState::'s, nextOut::'m::message SB). (spsConcOut nextOut\<cdot>(some_h nextState)))"
+  oops
+
+
+
+
 (* Similar to Rum96 *)
-definition nda_h :: "('s::type, 'm::message) NDA \<rightarrow> ('s \<Rightarrow> 'm SPS)" where
-"nda_h \<equiv>  \<Lambda> nda. spsFix\<cdot>(\<Lambda> h. (\<lambda>s. spsStep (undiscr(ndaDom\<cdot>nda))(undiscr(ndaRan\<cdot>nda))\<cdot>(spsHelper s\<cdot>(ndaTransition\<cdot>nda)\<cdot>h)))"
-    
-definition setrevImage :: "('a \<Rightarrow> 'b) \<Rightarrow> 'a set rev \<rightarrow> 'b set rev" where
-"setrevImage = undefined"
-
-(* See: https://git.rwth-aachen.de/montibelle/automaton/core/issues/57 *)
-definition uspecImage:: "('m::ufuncl \<Rightarrow> 'n::ufuncl) \<Rightarrow> 'm uspec \<rightarrow> 'n uspec" where
-"uspecImage = undefined"
-
-  
-(* see: https://git.rwth-aachen.de/montibelle/automaton/core/issues/58 *)
-definition uspecUnion:: "'m uspec \<rightarrow> 'm uspec \<rightarrow> 'm uspec" where
-"uspecUnion = undefined"
-
-
-(* Takes an tupel of the initial-state/output message... and returns the corresponding SPS *)
-fun helper:: "('s \<times> 'm::message SB) \<Rightarrow> ('s::type, 'm::message) NDA \<rightarrow> 'm SPS" where
-"helper (state, output) = (\<Lambda> nda. uspecImage (Rep_cfun (spfConc output))\<cdot>((nda_h\<cdot>nda) state))"
-
-
-definition nda_H_helper :: "('s, 'm::message) NDA \<rightarrow> 'm SPS set rev" where
-"nda_H_helper \<equiv> \<Lambda> nda. (setrevImage (\<lambda>t. helper t\<cdot>nda)\<cdot>(ndaInitialState\<cdot>nda))"
-
-(* https://git.rwth-aachen.de/montibelle/automaton/core/issues/68 *)
-definition nda_H :: "('s, 'm::message) NDA \<rightarrow> 'm SPS" where
-"nda_H \<equiv> \<Lambda> nda. undefined\<cdot>(nda_H_helper\<cdot>nda)" 
+definition nda_h :: "('s::type, 'm::message) ndAutomaton \<Rightarrow> ('s \<Rightarrow> 'm SPS)" where
+"nda_h nda \<equiv> let dom = (undiscr(ndaDom\<cdot>nda));
+                 ran = (undiscr(ndaRan\<cdot>nda)) in 
+  uspecStateFix dom ran\<cdot>(\<Lambda> h. (\<lambda>s. spsStep dom ran\<cdot>(ndaHelper2 s (ndaTransition\<cdot>nda)\<cdot>h)))"
 
 
 
+definition nda_H :: "('s, 'm::message) ndAutomaton \<Rightarrow> 'm SPS" where
+"nda_H nda \<equiv> uspecFlatten (undiscr(ndaDom\<cdot>nda))(undiscr(ndaRan\<cdot>nda)) 
+                (setrevImage (\<lambda>(state, sb). spsConcOut sb\<cdot>(nda_h nda state)) (ndaInitialState\<cdot>nda))" 
 
 
-lemma nda_rep_cont[simp]: "cont Rep_NDA"
-proof -
-  obtain nn :: "(('a, 'b) NDA \<Rightarrow> ('a \<times> (channel \<Rightarrow> 'b option) \<Rightarrow> ('a \<times> 'b stream\<^sup>\<Omega>) set rev) \<times> ('a \<times> 'b stream\<^sup>\<Omega>) set rev \<times> channel set discr \<times> channel set discr) \<Rightarrow> nat \<Rightarrow> ('a, 'b) NDA" where
-    f1: "\<forall>f. chain (nn f) \<and> \<not> range (\<lambda>n. f (nn f n)) <<| f (Lub (nn f)) \<or> cont f"
-using contI by moura
-  have "Rep_NDA (Abs_NDA (\<Squnion>n. Rep_NDA (nn Rep_NDA n))) = (\<Squnion>n. Rep_NDA (nn Rep_NDA n))"
-    using Abs_NDA_inverse by blast
-then show ?thesis
-  using f1 by (metis (no_types) below_NDA_def lub_NDA po_class.chain_def thelubE)
-qed
+lemma nda_rep_cont[simp]: "cont Rep_ndAutomaton"
+  by (simp add: cont_Rep_ndAutomaton)
 
 
-lemma "cont (\<lambda>nda. fst (Rep_NDA nda))"
+lemma "cont (\<lambda>nda. fst (Rep_ndAutomaton nda))"
   by simp
 
 

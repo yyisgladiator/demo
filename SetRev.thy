@@ -21,13 +21,19 @@ section \<open>Definitions\<close>
 
 definition setrevFilter::  "('m \<Rightarrow> bool) \<Rightarrow> 'm set rev \<rightarrow> 'm set rev"
   where  "setrevFilter P \<equiv> \<Lambda> S. Rev (Set.filter P (inv Rev S))"
-    
+
+definition setrevInter:: "'m set rev \<rightarrow> 'm set rev \<rightarrow> 'm set rev" where
+"setrevInter \<equiv> \<Lambda> S1 S2. Rev (inv Rev S1 \<inter> inv Rev S2)"
+
 definition setify::"('m \<Rightarrow> ('n set rev)) \<rightarrow> ('m \<Rightarrow> 'n) set rev" where
 "setify \<equiv> \<Lambda> f. Rev {g. \<forall>m. g m \<in> (inv Rev(f m))}"
 
 definition setrevUnion:: "'m set rev \<rightarrow> 'm set rev \<rightarrow> 'm set rev" where
 "setrevUnion \<equiv> (\<Lambda> A B. Rev((inv Rev A) \<union> (inv Rev B)))"
 
+(* "('m \<Rightarrow> 'n) \<Rightarrow> 'm uspec \<Rightarrow> 'n uspec*)
+definition setrevImage:: "('m \<Rightarrow> 'n) \<Rightarrow> 'm set rev \<Rightarrow> 'n set rev" where
+"setrevImage f \<equiv> \<lambda> S.  Rev (f ` (inv Rev S))"
 
 section \<open>Lemmas\<close>
 
@@ -38,7 +44,7 @@ lemma setrev_eqI: "inv Rev a = inv Rev b \<Longrightarrow> a = b"
 
 (* order is exactly reversed subset *)
 lemma revBelowNeqSubset: "\<And>A:: 'a set rev. \<forall>B:: 'a set rev. A \<sqsubseteq> B \<longleftrightarrow> (inv Rev B \<subseteq> inv Rev A)"
-  by (smt SetPcpo.less_set_def below_rev.elims(2) below_rev.elims(3) inv_rev_rev)
+  by (metis SetPcpo.less_set_def below_rev.simps inv_rev_rev rev.exhaust)
 
 lemma SLEI_help1:  "\<And>Y::nat \<Rightarrow> 'a set rev. 
   chain Y \<Longrightarrow> Rev (\<Inter>{x. \<exists>i. x = inv Rev (Y i)}) \<sqsubseteq> (\<Squnion>i. Y i)" 
@@ -153,6 +159,45 @@ lemma setrevfilter_reversed: "\<And>x. P x \<and> x \<in> inv Rev A \<Longrighta
 lemma setrevFilter_gdw: "\<And>x. x \<in> (inv Rev (setrevFilter P\<cdot>A)) \<longleftrightarrow> P x \<and> x \<in> inv Rev A"
   by (meson setrevfilter_condition setrevfilter_included setrevfilter_reversed)
 
+lemma setrevfilter_insert: "setrevFilter P\<cdot>S = Rev (Set.filter P (inv Rev S))"
+  by (simp add: setrevFilter_def)
+
+(*inter*)
+
+lemma sr_inter_as_filter1: "(\<lambda> S1. Rev (inv Rev S1 \<inter> inv Rev S2)) =
+  (\<lambda> S1. Rev (Set.filter (\<lambda>a. a \<in> inv Rev S2) (inv Rev S1)))"
+  by (metis (no_types) Int_def Set.filter_def inf_commute)
+
+lemma sr_inter_as_filter2: "(\<lambda> S2. Rev (inv Rev S1 \<inter> inv Rev S2)) =
+  (\<lambda> S2. Rev (Set.filter (\<lambda>a. a \<in> inv Rev S1) (inv Rev S2)))"
+  by (metis (no_types) Int_def Set.filter_def inf_commute)
+
+lemma sr_UIC_arg1: "cont (\<lambda> S1. Rev (inv Rev S1 \<inter> inv Rev S2))"
+  by (simp add: sr_inter_as_filter1)
+
+lemma setrevInter_cont1[simp]: "cont (\<lambda> S2. Rev (inv Rev S1 \<inter> inv Rev S2))"
+  by (simp add: sr_inter_as_filter2)
+
+lemma setrevInter_cont2[simp]: "cont (\<lambda> S1. \<Lambda> S2. Rev (inv Rev S1 \<inter> inv Rev S2))"
+  apply (rule cont2cont_LAM)
+  apply simp
+  by (simp add: sr_UIC_arg1)
+
+lemma setrevinter_insert: "setrevInter\<cdot>S1\<cdot>S2 = Rev (inv Rev S1 \<inter> inv Rev S2)"
+  by (simp add: setrevInter_def)
+
+lemma setrevInter_sym: "(\<lambda>A B. Rev((inv Rev A) \<inter> (inv Rev B))) =
+                        (\<lambda>A B. Rev((inv Rev B) \<inter> (inv Rev A)))"
+  by (simp add: inf_commute)
+
+lemma setrevInter_sym2: "\<And>A B. setrevInter\<cdot>A\<cdot>B = setrevInter\<cdot>B\<cdot>A"
+  proof -
+    fix A :: "'a set rev" and B :: "'a set rev"
+    have "\<And>r. (\<Lambda> ra. Rev ((inv Rev r::'a set) \<inter> inv Rev ra)) = setrevInter\<cdot>r"
+      by (simp add: setrevInter_def)
+    then show "setrevInter\<cdot>A\<cdot>B = setrevInter\<cdot>B\<cdot>A"
+      by (metis (no_types) beta_cfun setrevInter_cont1 setrevInter_sym)
+  qed
 
 subsection \<open>setify\<close>
 
@@ -281,14 +326,15 @@ lemma setrevUnion_gdw: "\<And>A B x. x \<in> inv Rev (setrevUnion\<cdot>A\<cdot>
   by (simp add: inv_rev_rev setrevUnion_def)
 
 
-lemma image_mono_rev:  "monofun (\<lambda> S::'a set rev.  Rev (f ` (inv Rev S)))"
+lemma image_mono_rev:  "monofun (setrevImage f)"
   apply (rule monofunI)
-  by (simp add: image_mono inv_rev_rev revBelowNeqSubset)
+  by (simp add: image_mono inv_rev_rev revBelowNeqSubset setrevImage_def)
 
 lemma image_cont_rev: assumes "inj f" 
-  shows "cont (\<lambda> S::'a set rev.  Rev (f ` (inv Rev S)))"
+  shows "cont (setrevImage f)"
   apply (rule contI2)
    apply (simp add: image_mono_rev)
+  unfolding setrevImage_def
 proof -
   fix Y::"nat \<Rightarrow> 'a set rev"
   assume a1: "chain Y"
@@ -329,5 +375,117 @@ proof -
     apply (simp add: a1 setrevLubEqInterII)
     by (metis (no_types, lifting) SetPcpo.less_set_def f6 subsetI)
 qed 
-  
+
+
+section \<open>set flat rev\<close>
+subsection \<open>set flat def N lemmas\<close>
+definition setflat :: "'a set set \<rightarrow> 'a set" where
+"setflat = (\<Lambda> S. {K  | Z K. K\<in>Z \<and> Z \<in>S} )"
+
+lemma setflat_mono: "monofun (\<lambda> S. {K  | Z K. K\<in>Z \<and> Z \<in>S} )"
+  apply(rule monofunI)
+  apply auto
+  apply (simp add: less_set_def)
+  apply (rule subsetI)
+  by auto
+
+
+lemma setflat_cont: "cont (\<lambda> S. {K  | Z K. K\<in>Z \<and> Z \<in>S} )"
+  apply(rule contI2)
+  using setflat_mono apply simp
+  apply auto
+  unfolding  SetPcpo.less_set_def
+  unfolding lub_eq_Union
+  by blast
+
+lemma setflat_insert: "setflat\<cdot>S = {K  | Z K. K\<in>Z \<and> Z \<in>S}"
+  unfolding setflat_def
+  by (metis (mono_tags, lifting) Abs_cfun_inverse2 setflat_cont)  
+    
+lemma setflat_empty:"(setflat\<cdot>S = {}) \<longleftrightarrow> (\<forall>x\<in>S. x = {})"
+  by(simp add: setflat_insert, auto)
+
+lemma setflat_not_empty:"(setflat\<cdot>S \<noteq> {}) \<longleftrightarrow> (\<exists>x\<in>S. x \<noteq> {})"
+  by (simp add: setflat_empty)
+
+lemma setflat_obtain: assumes "f \<in> setflat\<cdot>S"
+  shows "\<exists> Z \<in> S. f \<in> Z"
+proof -
+  have "f \<in> {a. \<exists>A aa. a = aa \<and> aa \<in> A \<and> A \<in> S}"
+    by (metis assms setflat_insert)
+  then show ?thesis
+    by blast
+qed
+
+lemma "\<And> S. setflat\<cdot>S = \<Union>S"
+  apply (simp add: setflat_insert)
+  apply (subst Union_eq)
+  by auto
+
+
+subsection \<open>set flat rev def N lemmas\<close>
+definition setflat_rev :: "'a set set rev \<rightarrow> 'a set rev" where
+"setflat_rev = (\<Lambda> S. Rev {K  | Z K. K\<in>Z \<and> Z \<in> (inv Rev S)} )"
+
+lemma setflat_rev_mono: "monofun (\<lambda>S. Rev {K  | Z K. K\<in>Z \<and> Z \<in> (inv Rev S)} )"
+  apply(rule monofunI)
+  apply auto
+  apply (simp add: less_set_def)
+  using revBelowNeqSubset by fastforce
+
+(*
+lemma setflat_rev_cont: "cont (\<lambda>S. Rev {K  | Z K. K\<in>Z \<and> Z \<in> (inv Rev S)} )"
+    apply (rule contI2)
+  using setflat_rev_mono apply blast
+proof -
+  fix Y:: "nat \<Rightarrow> 'a set set rev"
+  assume a1: "chain Y"
+  have "\<And>i. Y i \<sqsubseteq> Lub Y"
+    by (simp add: a1 is_ub_thelub)
+
+  have f0: "\<And>i. inv Rev (Y (Suc i)) \<subseteq> inv Rev (Y i)"
+    by (meson a1 po_class.chainE revBelowNeqSubset)
+  have f1: "inv Rev (Rev {uu::'a. \<exists>(Z::'a set) K::'a. uu = K \<and> K \<in> Z \<and> Z \<in> inv Rev (Lub Y)}) = 
+              {uu::'a. \<exists>(Z::'a set) K::'a. uu = K \<and> K \<in> Z \<and> Z \<in> inv Rev (Lub Y)}"
+    by (simp add: inv_rev_rev)
+  have f2: "chain (\<lambda>i::nat. Rev {uu::'a. \<exists>Z::'a set. uu \<in> Z \<and> Z \<in> inv Rev (Y i)})"
+    apply (rule chainI)
+    apply (subst revBelowNeqSubset)      
+    apply (simp add: inv_rev_rev)
+    apply rule
+    using f0 by fastforce
+  have f3: "inv Rev (\<Squnion>i. Y i) = (\<Inter>{x. \<exists>i. x = inv Rev (Y i)})"
+    using a1 setrevLubEqInterII by fastforce
+
+  have f4: "\<Inter>{x::'a set. \<exists>i::nat. x = {uu::'a. \<exists>Z::'a set. uu \<in> Z \<and> Z \<in> inv Rev (Y i)}} 
+    \<subseteq> {uu::'a. \<exists>Z::'a set. uu \<in> Z \<and> Z \<in> inv Rev (Lub Y)}" (is "?L \<subseteq> ?R")
+  proof (rule subsetI)
+    fix x
+    assume a1: "x \<in> ?L"
+    have "chain (\<lambda> i. Rev {uu::'a. \<exists>Z::'a set. uu \<in> Z \<and> Z \<in> inv Rev (Y i)})"
+    proof  (rule chainI)
+      fix i
+      show "Rev {uu::'a. \<exists>Z::'a set. uu \<in> Z \<and> Z \<in> inv Rev (Y i)} 
+            \<sqsubseteq> Rev {uu::'a. \<exists>Z::'a set. uu \<in> Z \<and> Z \<in> inv Rev (Y (Suc i))}"
+        apply auto
+        apply (simp add: less_set_def)
+        sorry
+    qed
+    have "\<forall> i. x \<in> {uu::'a. \<exists>Z::'a set. uu \<in> Z \<and> Z \<in> inv Rev (Y i)}"
+      by (metis (mono_tags, lifting) CollectI Inter_iff a1)
+    then have "\<forall> i. \<exists> Z. (x \<in> Z \<and> Z \<in> inv Rev (Y i))"
+      by simp
+    then show "x \<in> ?R"
+      sorry
+  qed
+  show "Rev {uu::'a. \<exists>(Z::'a set) K::'a. uu = K \<and> K \<in> Z \<and> Z \<in> inv Rev (\<Squnion>i::nat. Y i)} 
+      \<sqsubseteq> (\<Squnion>i::nat. Rev {uu::'a. \<exists>(Z::'a set) K::'a. uu = K \<and> K \<in> Z \<and> Z \<in> inv Rev (Y i)})"
+    apply (subst revBelowNeqSubset)
+    apply (simp add: inv_rev_rev)
+    apply (simp add: f2 setrevLubEqInterII inv_rev_rev)
+    apply (subst f3)
+    using f3 f4 by auto
+qed
+*)
+
 end
