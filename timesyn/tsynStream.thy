@@ -508,17 +508,19 @@ lemma tsynremdups_insert: "tsynRemDups\<cdot>s = sscanlA tsynRemDups_h null\<cdo
 
 text {* @{term tsynRemDups} test on finite stream. *}
 lemma tsynremdups_test_finstream:
-  "tsynRemDups\<cdot>(<[null, Msg (1 :: nat), Msg (1 :: nat), null, null, Msg (1 :: nat), Msg (2 :: nat), null, Msg (2 :: nat)]>) = 
-     <[null, Msg (1 :: nat), null, null, null, null, Msg (2 :: nat), null, null]>"
+  "tsynRemDups\<cdot>(<[null, Msg (1 :: nat), Msg (1 :: nat), null, null, Msg (1 :: nat), Msg (2 :: nat),
+   null, Msg (2 :: nat)]>) = 
+   <[null, Msg (1 :: nat), null, null, null, null, Msg (2 :: nat), null, null]>"
   by (simp add: tsynremdups_insert)
 
 text {* @{term tsynRemDups} test on infinitely many time-slots. *}
-lemma tsynremdups_test_infstream: "tsynRemDups\<cdot>((<[Msg (1 :: nat), Msg (1 :: nat), null]>)\<infinity>) = <[Msg (1 :: nat)]> \<bullet> ((<[null]>)\<infinity>)"
-  by (simp add: tsynremdups_insert)
-  sorry
-  
+lemma tsynremdups_test_infstream: "tsynRemDups\<cdot>(<[Msg (1 :: nat), Msg (1 :: nat)]> \<bullet> ((<[null]>)\<infinity>)) 
+  = <[Msg (1 :: nat), null]> \<bullet> ((<[null]>)\<infinity>)"
+  apply (simp add: tsynremdups_insert)
+  oops
+
 text {* @{term tsynRemDups} is strict. *}
-lemma tsynremdups_strict: "tsynRemDups\<cdot>\<epsilon> = \<epsilon>"
+lemma tsynremdups_strict [simp]: "tsynRemDups\<cdot>\<epsilon> = \<epsilon>"
   by (simp add: tsynremdups_insert)
  
 text {* @{term tsynRemDups} ignores empty time-slots. *}
