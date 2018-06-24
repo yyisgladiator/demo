@@ -2408,6 +2408,44 @@ lemma ufunclParCompWell_ufun_eq: "ufunclParCompWell f1 f2 = parcomp_well f1 f2"
 lemma ufunclSerCompWell_ufun_eq: "ufunclSerCompWell f1 f2 = sercomp_well f1 f2"
   by (simp add: ufunclSerCompWell_ufun_def)
 
+lemma ufun_sercompwell_asso: "\<And>(f1::'a ufun) (f2::'a ufun) f3::'a ufun. ufunclSerCompWell f1 f2 \<Longrightarrow> 
+      ufunclSerCompWell f2 f3 \<Longrightarrow> ufclDom\<cdot>f2 \<inter> ufclRan\<cdot>f3 = {} \<Longrightarrow>
+      ufclDom\<cdot>f1 \<inter> ufclRan\<cdot>f2 = {} \<Longrightarrow> ufunclSerCompWell f1 (f2 \<circ> f3) \<and> ufunclSerCompWell (f1 \<circ> f2) f3"
+proof -
+  fix f1::"'a ufun" and f2::"'a ufun" and f3::"'a ufun"
+  assume a1: "ufunclSerCompWell f1 f2"
+  assume a2: "ufunclSerCompWell f2 f3"
+  assume a3: "ufclDom\<cdot>f2 \<inter> ufclRan\<cdot>f3 = {}"
+  assume a4: "ufclDom\<cdot>f1 \<inter> ufclRan\<cdot>f2 = {}"
+  have f1: "sercomp_well f1 f2"
+    using a1 ufunclSerCompWell_ufun_eq by blast
+  have f2: "sercomp_well f2 f3"
+    using a2 ufunclSerCompWell_ufun_eq by blast
+  show "ufunclSerCompWell f1 (f2 \<circ> f3) \<and> ufunclSerCompWell (f1 \<circ> f2) f3"
+    unfolding ufunclSerCompWell_ufun_def ufunclSerComp_ufun_def
+    apply rule
+    apply (subst ufSerComp_ran)
+    using a2 ufunclSerCompWell_ufun_eq apply blast 
+    apply (subst ufSerComp_dom)
+    using a2 ufunclSerCompWell_ufun_eq apply blast 
+    apply (subst ufSerComp_dom)
+    using a2 ufunclSerCompWell_ufun_eq apply blast 
+     apply (simp add: f1)
+     apply rule
+    using f1 apply blast
+     apply (metis a3 ufclDom_ufun_def ufclRan_ufun_def)
+    apply (subst ufSerComp_ran)
+    using f1 apply blast
+    apply (subst ufSerComp_ran)
+    using f1 apply blast
+    apply (subst ufSerComp_dom)
+    using f1 apply blast
+    apply rule
+     apply (simp add: f2)
+    apply rule
+     apply (metis a4 ufclDom_ufun_def ufclRan_ufun_def)
+    by (simp add: f2) 
+qed
 
 instance 
   apply intro_classes
@@ -2436,7 +2474,8 @@ instance
   apply (simp add: UFun_Comp.ufunclParComp_ufun_def ufParComp_asso ufunclParCompWell_ufun_def)
   apply (simp add: ufunclSerComp_ufun_def)
   using ufSerComp_asso ufunclSerCompWell_ufun_eq apply blast
-  apply (simp add: UFun_Comp.ufunclParCompWell_ufun_eq ufParCompWell_associativity ufunclParComp_ufun_def)
+     apply (simp add: UFun_Comp.ufunclParCompWell_ufun_eq ufParCompWell_associativity ufunclParComp_ufun_def)
+  apply (simp add: ufun_sercompwell_asso)
   proof -
     fix f1 :: "'a ufun" and f2 :: "'a ufun"
     assume a1: "ufunclSerCompWell f1 f2"

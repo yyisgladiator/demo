@@ -83,7 +83,7 @@ lemma automat_well[simp]:"automaton_well (Rep_automaton automat)"
   using Rep_automaton by auto
 
 lemma automat_finite_dom[simp]:"finite (getDom automat)"
-  by simp
+  by (metis automat_well automaton_well.simps getDom_def surjective_pairing)
 
     
 lemma ufLeast_apply:assumes "ubDom\<cdot>sb = In" shows "ufLeast In  Out \<rightleftharpoons> sb = ubclLeast Out"
