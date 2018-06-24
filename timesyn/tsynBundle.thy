@@ -46,7 +46,7 @@ lemma tsynbnull_ubconc_sbrt [simp]:
 (* ----------------------------------------------------------------------- *)
 
 definition tsynbAbs :: "'a tsyn stream ubundle \<rightarrow> 'a stream ubundle option" where 
-  "tsynbAbs  \<equiv> \<Lambda> sb. (ubclDom\<cdot>sb = {c1}) \<leadsto> Abs_ubundle [c2 \<mapsto> tsynAbs\<cdot>(sb  .  c1)]"
+  "tsynbAbs  \<equiv> \<Lambda> sb. (ubclDom\<cdot>sb = {c1}) \<leadsto> Abs_ubundle [c1 \<mapsto> tsynAbs\<cdot>(sb  .  c1)]"
 
 (* ----------------------------------------------------------------------- *)
   section {* Definitions of Time-Synchronous Test Bundles *}
@@ -83,7 +83,42 @@ qed
 
 (* ----------------------------------------------------------------------- *)
   section {* Lemmata on Time-Synchronous Stream Bundles *}
-(* ----------------------------------------------------------------------- *)
+(* ----------------------------------------------------------------------- *)    
+    
+lemma sdom_tsynabs1:" - \<in> sdom\<cdot>x \<Longrightarrow>  sdom\<cdot>x = (insert - (Msg ` (sdom\<cdot>(tsynAbs\<cdot>x)))) "
+  sorry
+    
+lemma sdom_tsynabs2:"- \<notin> sdom\<cdot>x \<Longrightarrow> (sdom\<cdot>x = (Msg ` (sdom\<cdot>(tsynAbs\<cdot>x))))"
+  sorry
+    
+lemma usclokay_tsynabs:"ctype c1 = ctype c2 \<Longrightarrow> usclOkay c1 x = usclOkay c2 (tsynAbs\<cdot>x)"
+  apply(simp add: usclOkay_stream_def ctype_tsyn_def)
+    proof(cases "- \<in> sdom\<cdot>x")
+      case True
+      assume a0:"- \<in> sdom\<cdot>x"
+      assume a1:"ctype c1 = ctype c2"
+      have h0:"ctype c1 = ctype c2"
+        sorry
+      have h1:"sdom\<cdot>x = (insert - (Msg ` (sdom\<cdot>(tsynAbs\<cdot>x))))"
+        by(simp add: a0 sdom_tsynabs1)
+      have h2:"(insert - (Msg ` (sdom\<cdot>(tsynAbs\<cdot>x)))) \<subseteq> insert - (Msg ` ctype c1) = (sdom\<cdot>(tsynAbs\<cdot>x) \<subseteq> ctype c2)"
+        using h0 by auto
+      then show "(sdom\<cdot>x \<subseteq> insert - (Msg ` ctype c1)) = (sdom\<cdot>(tsynAbs\<cdot>x) \<subseteq> ctype c2)"
+        by(simp add: h1)  
+    next
+      case False
+      assume a0:"- \<notin> sdom\<cdot>x" 
+      assume a1:"ctype c1 = ctype c2"
+      have h0:"ctype c1 = ctype c2"
+        sorry
+      have h1:"sdom\<cdot>x = (Msg ` (sdom\<cdot>(tsynAbs\<cdot>x)))"
+        using a0 sdom_tsynabs2 by blast
+      have h2:"(insert - (Msg ` (sdom\<cdot>(tsynAbs\<cdot>x)))) \<subseteq> insert - (Msg ` ctype c1) = (sdom\<cdot>(tsynAbs\<cdot>x) \<subseteq> ctype c2)"
+        using h0 by auto
+      then show "(sdom\<cdot>x \<subseteq> insert - (Msg ` ctype c1)) = (sdom\<cdot>(tsynAbs\<cdot>x) \<subseteq> ctype c2)"
+        by (simp add: h1)
+    qed
+  
 lemma tsynbabs_ubwell3: assumes"\<forall> x::'a tsyn stream. usclOkay ch1 x = usclOkay ch2 (tsynAbs\<cdot>x) " 
                             and   "usclOkay ch1 (a::'a tsyn stream) " 
                             shows " usclOkay ch2 (tsynAbs\<cdot>a)"
@@ -101,7 +136,12 @@ lemma tsynbabs_ubwell2: assumes"\<forall> x::'a tsyn stream. usclOkay ch1 x = us
                               shows "ubWell [ch2 \<mapsto> tsynAbs\<cdot>((ub :: 'a tsyn stream\<^sup>\<Omega>) . ch1)]"
   by (metis assms(1) assms(2) tsynbabs_ubwell ubdom_channel_usokay ubgetch_insert)
  
-lemma tsynbabs_ubwell5:"ubWell([c2 \<mapsto> tsynAbs\<cdot>((x:: nat tsyn stream\<^sup>\<Omega>)  .  c1)])"
+lemma tsynbabs_ubwell6:assumes"usclOkay c2 (x . c1)"
+                       shows"ubWell([c2 \<mapsto> tsynAbs\<cdot>(x  .  c1)])"
+  apply(simp add:ubWell_def)
+  oops    
+    
+lemma tsynbabs_ubwell5:"ubWell([c1 \<mapsto> tsynAbs\<cdot>((x:: nat tsyn stream\<^sup>\<Omega>)  .  c1)])"
   apply(simp add:ubWell_def usclOkay_stream_def ctype_tsyn_def ubgetch_insert)
   by (metis subset_UNIV subset_image_iff transfer_int_nat_set_return_embed)
     
@@ -112,22 +152,12 @@ lemma tsynbabs_mono:"monofun (\<lambda> sb:: nat tsyn stream\<^sup>\<Omega> . (u
   apply (simp add: ubdom_ubrep_eq tsynbabs_ubwell5)
   by (simp add: tsynbabs_ubwell5 ubgetch_ubrep_eq monofun_cfun_arg monofun_cfun_fun)
 
-lemma hh:"chain (Y:: nat \<Rightarrow> nat tsyn stream\<^sup>\<Omega>) \<Longrightarrow> ubDom\<cdot>(Abs_ubundle [c2 \<mapsto> tsynAbs\<cdot>(Y  i  .  c1)]) = {c2}"
-  by(simp add: ubdom_insert tsynbabs_ubwell5)
-    
-lemma ubrep_lub1:assumes "chain Y"
-  shows "dom (Rep_ubundle (\<Squnion>i::nat. Abs_ubundle [c2 \<mapsto> tsynAbs\<cdot>(Y i  .  c1)]))
-        = dom (\<Squnion>i::nat. Rep_ubundle ( Abs_ubundle [c2 \<mapsto> tsynAbs\<cdot>(Y i  .  c1)]))"
-  
-  oops
-    
 lemma jnn: assumes "chain Y " and "ubDom\<cdot>(Abs_ubundle [c2 \<mapsto> tsynAbs\<cdot>(Y i  .  c1)]) = {c2}"
             shows" ubDom\<cdot>(\<Squnion>i::nat. Abs_ubundle [c2 \<mapsto> tsynAbs\<cdot>(Y i  .  c1)]) = {c2}"
   apply(simp add: ubdom_insert tsynbabs_ubwell5)
-  apply(simp add:ubrep_lub1)
   oops
     
-lemma tsynbabs_cont2: "cont (\<lambda>sb::nat tsyn stream\<^sup>\<Omega>. (ubclDom\<cdot>sb = {c1}) \<leadsto> (Abs_ubundle [c2 \<mapsto> tsynAbs\<cdot>(sb . c1)]))"  
+lemma tsynbabs_cont2: "cont (\<lambda>sb::nat tsyn stream\<^sup>\<Omega>. (ubclDom\<cdot>sb = {c1}) \<leadsto> (Abs_ubundle [c1 \<mapsto> tsynAbs\<cdot>(sb . c1)]))"  
   apply (rule ufun_contI)
   apply (simp add: ubclDom_ubundle_def)
   apply (rule ub_below)
@@ -234,11 +264,12 @@ qed
     
 
 lemma tsynbabs_cont:
-  "cont (\<lambda> sb. (ubclDom\<cdot>sb = {c1}) \<leadsto> Abs_ubundle [c2 \<mapsto> tsynAbs\<cdot>(sb  .  c1)])"
+  "cont (\<lambda> sb. (ubclDom\<cdot>sb = {c1}) \<leadsto> Abs_ubundle [c1 \<mapsto> tsynAbs\<cdot>(sb  .  c1)])"
+  
   sorry
 
 lemma tsynbabs_insert: 
-  "tsynbAbs\<cdot>sb = (ubclDom\<cdot>sb = {c1}) \<leadsto> Abs_ubundle [c2 \<mapsto> tsynAbs\<cdot>(sb  .  c1)]"
+  "tsynbAbs\<cdot>sb = (ubclDom\<cdot>sb = {c1}) \<leadsto> Abs_ubundle [c1 \<mapsto> tsynAbs\<cdot>(sb  .  c1)]"
   by(simp add: tsynbAbs_def tsynbabs_cont)
     
 lemma tsynbabs_test_finstream:
