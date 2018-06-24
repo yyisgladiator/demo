@@ -746,7 +746,7 @@ proof (rule)
 qed
 
 
-lemma uspecflatten_mono: "monofun (\<lambda> uspecs. Rev (setflat\<cdot>(Rep_rev_uspec ` (inv Rev (uspec_set_filter In Out\<cdot>uspecs)))))"
+lemma uspecflatten_mono_h: "monofun (\<lambda> uspecs. Rev (setflat\<cdot>(Rep_rev_uspec ` (inv Rev (uspec_set_filter In Out\<cdot>uspecs)))))"
 proof (rule rev_monoI)
   fix x::"'a uspec set rev" and y::"'a uspec set rev"
   assume a1: "x \<sqsubseteq> y"
@@ -768,6 +768,18 @@ lemma uspecflatten_ran: "uspecRan\<cdot>(uspecFlatten In Out uspecs) = Out"
   apply (simp add: uspecRan_def uspecFlatten_def)
   by (metis rep_abs_uspec snd_conv undiscr_Discr uspecflatten_well)
 
-
+lemma uspecflatten_monofun: "monofun (uspecFlatten In Out)"
+  unfolding uspecFlatten_def
+  apply (rule monofunI)
+  apply (rule uspec_belowI)
+    apply (metis uspecFlatten_def uspecflatten_dom)
+   apply (metis uspecFlatten_def uspecflatten_ran)
+  apply (simp add: uspecrevset_insert)
+  apply (subst rep_abs_uspec)
+  using uspecflatten_well apply blast
+  apply (subst rep_abs_uspec)
+  using uspecflatten_well apply blast
+  apply simp
+  by (metis SetPcpo.less_set_def image_mono monofun_cfun_arg revBelowNeqSubset)
 
 end
