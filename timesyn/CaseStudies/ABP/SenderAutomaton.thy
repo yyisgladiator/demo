@@ -112,6 +112,4 @@ definition SenderSPF :: "Sender tsyn SPF" where
 
 
 
-
-
 end
