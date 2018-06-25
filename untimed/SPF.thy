@@ -204,7 +204,7 @@ lemma spfRt_inj: "inj (Rep_cfun spfRtIn)"
 
 subsection \<open>spfConcIn lemma\<close>
 
-
+(*
 lemma spfConcIn_step[simp]:
   assumes  "ubDom\<cdot>sb = ufDom\<cdot>spf"
   shows "(spfConcIn sb1\<cdot>spf)\<rightleftharpoons>sb = spf\<rightleftharpoons>(ubConcEq sb1\<cdot>sb)"
@@ -215,7 +215,7 @@ lemma spfConcIn_step[simp]:
    apply (metis ubclDom_ubundle_def ubconceq_dom)
     apply (subst rep_abs_cufun)
   apply simp_all
-  sorry
+  sorry*)
 
 
 lemma spfConcIn_dom[simp]:"ufDom\<cdot>(spfConcIn sb \<cdot>spf) = ufDom\<cdot>spf"

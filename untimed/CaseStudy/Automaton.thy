@@ -60,7 +60,7 @@ definition getRan :: "('s, 'm::message) automaton \<Rightarrow> channel set" whe
 
 
 definition helper:: "(('s \<times>'e) \<Rightarrow> ('s \<times> 'm::message  SB)) \<Rightarrow> 's \<Rightarrow> ('s \<Rightarrow> 'm SPF) \<rightarrow> ('e \<Rightarrow> 'm SPF)" where
-"helper f s \<equiv> \<Lambda> h. (\<lambda> e. spfRtOut\<cdot>(spfConcIn (snd (f (s,e)))\<cdot>(h (fst (f (s,e))))))"
+"helper f s \<equiv> \<Lambda> h. (\<lambda> e. spfRtIn\<cdot>(spfConcOut (snd (f (s,e)))\<cdot>(h (fst (f (s,e))))))"
 
 lemma helper_cont: "cont (\<lambda>h. (\<lambda> e. spfConcIn (snd (f (s,e)))\<cdot>(h (fst (f (s,e))))))"
   by simp
@@ -76,7 +76,7 @@ lemma h_cont: "cont (\<lambda> h. (\<lambda>s. spfStep  (getDom automat) (getRan
 (* This function also prepends the first SB ... *)
 (* But basically she just calls h *)
 definition H :: "('s, 'm::message) automaton \<Rightarrow> 'm SPF" where
-"H automat = spfConcIn (getInitialOutput automat)\<cdot>(h automat (getInitialState automat))"
+"H automat = spfConcOut (getInitialOutput automat)\<cdot>(h automat (getInitialState automat))"
 
 
 lemma automat_well[simp]:"automaton_well (Rep_automaton automat)"
@@ -163,9 +163,9 @@ definition autGetNextOutput:: "('s::type, 'm::message) automaton \<Rightarrow> '
 lemma h_final:
   assumes "ubDom\<cdot>sb = getDom automat" and "\<forall>c\<in>getDom automat. sb  .  c \<noteq> \<epsilon>"
   shows "(h automat s)\<rightleftharpoons>sb =
-  spfConcIn (autGetNextOutput automat s ((inv convDiscrUp)(sbHdElem\<cdot>sb)))\<cdot>(spfRtOut\<cdot>(h automat (autGetNextState automat s ((inv convDiscrUp)(sbHdElem\<cdot>sb))))) \<rightleftharpoons>sb"
+  spfConcOut (autGetNextOutput automat s ((inv convDiscrUp)(sbHdElem\<cdot>sb)))\<cdot>(spfRtIn\<cdot>(h automat (autGetNextState automat s ((inv convDiscrUp)(sbHdElem\<cdot>sb))))) \<rightleftharpoons>sb"
   apply(subst h_step, simp_all add: assms)
-  by (simp add: assms(1) autGetNextOutput_def autGetNextState_def helper_def spfRtOut_spfConcIn)
+  by (simp add: assms(1) autGetNextOutput_def autGetNextState_def helper_def spfRtIn_spfConcOut)
     
 lemma h_bottom: assumes "ubDom\<cdot>sb = getDom automat" and "\<exists>c\<in>getDom automat. sb  .  c = \<epsilon>"
   shows "(h automat s)\<rightleftharpoons>sb = ubclLeast (getRan automat)"
