@@ -118,6 +118,7 @@ definition tsynFilter :: "'a set \<Rightarrow> 'a tsyn stream \<rightarrow> 'a t
 fun tsynRemDups_h :: "'a tsyn \<Rightarrow> 'a tsyn \<Rightarrow> ('a tsyn \<times> 'a tsyn)" where
   "tsynRemDups_h x null = (null, x)" |
   "tsynRemDups_h x y = (if x = y then (null, x) else (y, y))"
+print_theorems
 
 definition tsynRemDups :: "'a tsyn stream \<rightarrow> 'a tsyn stream" where 
   "tsynRemDups = sscanlA tsynRemDups_h null"
@@ -514,13 +515,18 @@ lemma tsynremdups_test_finstream:
   by (simp add: tsynremdups_insert)
 
 text {* @{term tsynRemDups} test on infinitely many time-slots. *}
-lemma tsynremdups_test_infstream: "tsynRemDups\<cdot>(<[Msg (1 :: nat), Msg (1 :: nat)]> \<bullet> ((<[null]>)\<infinity>)) 
+lemma tsynremdups_test_infstream:  "tsynRemDups\<cdot>(<[Msg (1 :: nat), Msg (1 :: nat)]> \<bullet> ((<[null]>)\<infinity>)) 
   = <[Msg (1 :: nat), null]> \<bullet> ((<[null]>)\<infinity>)"
   apply (simp add: tsynremdups_insert)
   oops
 
 text {* @{term tsynRemDups} is strict. *}
 lemma tsynremdups_strict [simp]: "tsynRemDups\<cdot>\<epsilon> = \<epsilon>"
+  by (simp add: tsynremdups_insert)
+
+text {* @{term tsynRemDups} distributes over concatenation. *}
+lemma tsynremdups_sconc_msg: "tsynRemDups\<cdot>(\<up>(Msg a) \<bullet> as) = 
+  \<up>(Msg a) \<bullet> ((sscanlA tsynRemDups_h (Msg a))\<cdot>as)"
   by (simp add: tsynremdups_insert)
  
 text {* @{term tsynRemDups} ignores empty time-slots. *}
