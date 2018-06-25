@@ -507,6 +507,23 @@ text {* @{term tsynRemDups} insertion lemma. *}
 lemma tsynremdups_insert: "tsynRemDups\<cdot>s = sscanlA tsynRemDups_h null\<cdot>s"
   by (simp add: tsynRemDups_def)
 
+text {* @{term tsynRemDups} is strict. *}
+lemma tsynremdups_strict [simp]: "tsynRemDups\<cdot>\<epsilon> = \<epsilon>"
+  by (simp add: tsynremdups_insert)
+
+text {* @{term tsynRemDups} distributes over concatenation. *}
+lemma tsynremdups_sconc_msg:
+  "tsynRemDups\<cdot>(\<up>(Msg a) \<bullet> as) = \<up>(Msg a) \<bullet> sscanlA tsynRemDups_h (Msg a)\<cdot>as"
+  by (simp add: tsynremdups_insert)
+ 
+text {* @{term tsynRemDups} ignores empty time-slots. *}
+lemma tsynremdups_sconc_null: "tsynRemDups\<cdot>(\<up>null \<bullet> s) = \<up>null \<bullet> tsynRemDups\<cdot>s"
+  by (simp add: tsynremdups_insert)
+
+text {* @{term tsynRemDups} leaves the length of a stream unchanged. *}
+lemma tsynremdups_slen: "#(tsynRemDups\<cdot>s) = #s"
+  by (simp add: tsynremdups_insert)
+
 text {* @{term tsynRemDups} test on finite stream. *}
 lemma tsynremdups_test_finstream:
   "tsynRemDups\<cdot>(<[null, Msg (1 :: nat), Msg (1 :: nat), null, null, Msg (1 :: nat), Msg (2 :: nat),
@@ -519,23 +536,6 @@ lemma tsynremdups_test_infstream:  "tsynRemDups\<cdot>(<[Msg (1 :: nat), Msg (1 
   = <[Msg (1 :: nat), null]> \<bullet> ((<[null]>)\<infinity>)"
   apply (simp add: tsynremdups_insert)
   oops
-
-text {* @{term tsynRemDups} is strict. *}
-lemma tsynremdups_strict [simp]: "tsynRemDups\<cdot>\<epsilon> = \<epsilon>"
-  by (simp add: tsynremdups_insert)
-
-text {* @{term tsynRemDups} distributes over concatenation. *}
-lemma tsynremdups_sconc_msg: "tsynRemDups\<cdot>(\<up>(Msg a) \<bullet> as) = 
-  \<up>(Msg a) \<bullet> ((sscanlA tsynRemDups_h (Msg a))\<cdot>as)"
-  by (simp add: tsynremdups_insert)
- 
-text {* @{term tsynRemDups} ignores empty time-slots. *}
-lemma tsynremdups_sconc_null: "tsynRemDups\<cdot>(\<up>null \<bullet> s) = \<up>null \<bullet> tsynRemDups\<cdot>s"
-  by (simp add: tsynremdups_insert)
-
-text {* @{term tsynRemDups} leaves the length of a stream unchanged. *}
-lemma tsynremdups_slen: "#(tsynRemDups\<cdot>s) = #s"
-  by (simp add: tsynremdups_insert)
 
 lemma tsynRemDups_fix_h_sconc_msg:
   "tsynRemDups_fix_h\<cdot>(\<up>(Msg a) \<bullet> as)\<cdot>None = \<up>(Msg a) \<bullet> tsynRemDups_fix_h\<cdot>as\<cdot>(Some (Discr (Msg a)))"
