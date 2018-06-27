@@ -594,49 +594,81 @@ lemma tsynfilter_slen: "#((tsynFilter A)\<cdot>s) = #s"
   by (simp add: tsynfilter_insert)
 
 (* ----------------------------------------------------------------------- *)
-  subsection {* tsynScanl *}
+  subsection {* tsynScanlExt *}
 (* ----------------------------------------------------------------------- *)
 
-(* ToDo: add descriptions. *)
-
+text {* @{term tsynScanlExt} insertion lemma. *}
 lemma tsynscanlext_insert: "tsynScanlExt f i\<cdot>s = sscanlA (tsynScanlExt_h f) i\<cdot>s"
   by (simp add: tsynScanlExt_def)
 
+text {* @{term tsynScanlExt} maps the empty stream on the empty stream. *}
 lemma tsynscanlext_strict [simp]: "tsynScanlExt f i\<cdot>\<epsilon> = \<epsilon>"
   by (simp add: tsynscanlext_insert)
 
+text {* @{term tsynScanlExt} test on finite nat tsyn-stream. *}
+lemma tsynscanlext_test_finstream: 
+  "tsynScanlExt plus null\<cdot>(<[Msg 1, Msg 4]>) = <[Msg 3, Msg 7]>"
+oops
+
+text {* @{term tsynScanl} maps the singleton stram containing message a to the singleton stream
+containing the message received by applying f to a. *}
 lemma tsynscanlext_singleton: "tsynScanlExt f i\<cdot>(\<up>a) = \<up>(tsynApplyElem (\<lambda>x. fst (f i x)) a)"
   by (cases a, simp_all add: tsynscanlext_insert)
 
+text {* @{term tsynScanlExt} distributes over concatenation. *}
 lemma tsynscanlext_sconc_msg: 
   "tsynScanlExt f i\<cdot>(\<up>(Msg a) \<bullet> as) = \<up>(Msg (fst (f i a))) \<bullet> (tsynScanlExt f (snd (f i a))\<cdot>as)"
   by (simp add: tsynscanlext_insert)
 
+text {* @{term tsynScanlExt} ignores empty time-slots. *}
 lemma tsynscanlext_sconc_null: "tsynScanlExt f i\<cdot>(\<up>null \<bullet> s) = \<up>null \<bullet> (tsynScanlExt f i\<cdot>s)"
   by (simp add: tsynscanlext_insert)
 
+text {* @{term tsynScanlExt} leaves the length of a stream unchanged. *}
 lemma tsynscanlext_slen: "#(tsynScanlExt f i\<cdot>s) = #s"
   by (simp add: tsynscanlext_insert)
 
+(* ----------------------------------------------------------------------- *)
+  subsection {* tsynScanl *}
+(* ----------------------------------------------------------------------- *)
+
+text {* @{term tsynScanl} insertion lemma. *}
 lemma tsynscanl_insert: "tsynScanl f i\<cdot>s = tsynScanlExt (\<lambda>a b. (f a b, f a b)) i\<cdot>s"
   by (simp add: tsynScanl_def)
 
+text {* @{term tsynScanl} test on infinite nat tsyn-stream. *}
+lemma tsynscanl_test_infinstream: 
+  "tsynScanl plus 2 \<cdot>(<[Msg 1, Msg 4]> \<bullet> ((<[null]>)\<infinity>)) = <[Msg 3, Msg 7]> \<bullet> ((<[null]>)\<infinity>)"
+  apply (simp add: tsynscanl_insert)
+  oops
+
+text {* @{term tsynScanl} test on finite nat tsyn-stream. *}
+lemma tsynscanl_test_finstream: 
+  "tsynScanl plus 2 \<cdot>(<[Msg 1, Msg 4]>) = <[Msg 3, Msg 7]>"
+  by (simp add: tsynscanl_insert tsynscanlext_sconc_msg tsynscanlext_singleton)
+
+text {* @{term tsynScanl} maps the empty stream on the empty stream. *}
 lemma tsynscanl_strict [simp]: "tsynScanl f i\<cdot>\<epsilon> = \<epsilon>"
   by (simp add: tsynscanl_insert)
 
+text {* @{term tsynScanl} maps the singleton stram containing message a to the singleton stream
+containing the message received by applying f to a. *}
 lemma tsynscanl_singleton: "tsynScanl f i\<cdot>(\<up>a) = \<up>(tsynApplyElem (f i) a)"
   by (simp add: tsynscanl_insert tsynscanlext_singleton)
 
+text {* @{term tsynScanl} distributes over concatenation. *}
 lemma tsynscanl_sconc_msg: 
   "tsynScanl f i\<cdot>(\<up>(Msg a) \<bullet> as) = \<up>(Msg (f i a)) \<bullet> (tsynScanl f (f i a)\<cdot>as)"
   by (simp add: tsynscanl_insert tsynscanlext_sconc_msg)
 
+text {* @{term tsynScanl} ignores empty time-slots. *}
 lemma tsynscanl_sconc_null: "tsynScanl f i\<cdot>(\<up>null \<bullet> s) = \<up>null \<bullet> (tsynScanl f i\<cdot>s)"
   by (simp add: tsynscanl_insert tsynscanlext_sconc_null)
 
+text {* @{term tsynScanl} leaves the length of a stream unchanged. *}
 lemma tsynscanl_slen: "#(tsynScanl f i\<cdot>s) = #s"
   by (simp add: tsynscanl_insert tsynscanlext_slen)
-  
+
 (* ----------------------------------------------------------------------- *)
   subsection {* tsynDropWhile *}
 (* ----------------------------------------------------------------------- *)
