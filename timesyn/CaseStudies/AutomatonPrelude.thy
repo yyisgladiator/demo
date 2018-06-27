@@ -4,7 +4,7 @@
 
 theory AutomatonPrelude
 
-imports "../../untimed/CaseStudy/Automaton" "../tsynStream" "../tsynBundle" "abp/CounterDataTypes"
+imports "../../untimed/CaseStudy/Automaton" "../tsynStream" "../tsynBundle"
 
 begin
 
