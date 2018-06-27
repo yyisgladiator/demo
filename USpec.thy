@@ -850,7 +850,7 @@ proof -
       not_uspec_consisten_empty_eq setrev_eqI uspecRevSet_def uspec_consist_f_ex uspecrevset_cont)
 qed
 
-section \<open>uspecFlatten\<close>
+subsection \<open>uspecFlatten\<close>
 
 lemma uspec_filter_in_out_cont: "cont (\<lambda> uspecs. (setrevFilter (uspec_in_out_eq In Out)\<cdot>uspecs))"
   by simp
