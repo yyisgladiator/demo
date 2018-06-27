@@ -569,16 +569,28 @@ lift_definition snd_testoutput_ubundle_lose_ack_or_msg :: "Receiver tsyn SB" is
 
 
 (*There are two messages to send and both mediums 
-  lose either the ack or the message two times in a row *)
+  lose either the ack or the message two times in a row. 
+  Meanwhile there are two messages in the buffer.*)
 definition snd_testinput_msg_lose_both :: "nat tsyn stream" where 
-  "snd_testinput_msg_lose_both \<equiv> list2s [Msg 1, Msg 2, null, null, null]"
+  "snd_testinput_msg_lose_both \<equiv> list2s [Msg 1, Msg 2, Msg 3, null, null, null]"
 
 definition snd_testinput_acks_lose_both :: "bool tsyn stream" where 
-  "snd_testinput_acks_lose_both \<equiv> list2s [null, null, null, Msg True, Msg False]"
+  "snd_testinput_acks_lose_both \<equiv> list2s [null, null, null, Msg True, Msg False, Msg True]"
 
 lift_definition snd_testubundle_lose_both :: "Sender tsyn SB" is
   "[\<guillemotright>i \<mapsto> tsynMap A\<cdot>snd_testinput_msg_lose_both, \<guillemotright>as \<mapsto> tsynMap B\<cdot>snd_testinput_acks_lose_both]" 
   by(simp add: ubWell_def usclOkay_stream_def ctype_tsyn_def snd_testinput_msg_lose_both_def
      snd_testinput_acks_lose_both_def tsynMap_def rangeI)
+
+
+definition snd_testoutput_lose_both :: "(nat \<times> bool) tsyn stream" where 
+  "snd_testoutput_lose_both \<equiv> list2s [Msg (1, True), Msg (1, True), Msg (1, True), Msg (2, False), Msg (3, True), null ]"
+
+lift_definition snd_testoutput_ubundle_lose_both :: "Receiver tsyn SB" is
+  "[\<guillemotright>dr \<mapsto> natbool2abp\<cdot>snd_testoutput_lose_both]" 
+  by(simp add: ubWell_def usclOkay_stream_def ctype_tsyn_def snd_testoutput_lose_both_def 
+     natbool2abp_def tsynMap_def)
+
+
 
 end
