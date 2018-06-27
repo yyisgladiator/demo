@@ -538,17 +538,17 @@ lemma tsyndropwhile_insert:"tsynDropWhile f\<cdot>s = sscanlA (tsynDropWhile_h f
   by(simp add: tsynDropWhile_def)
     
 text {* @{term tsynDropWhile} is strict. *}
-lemma strict_tsyndropwhile [simp]: "tsynDropWhile f\<cdot>\<epsilon> = \<epsilon>"
+lemma tsyndropwhile_strict [simp]: "tsynDropWhile f\<cdot>\<epsilon> = \<epsilon>"
   by (simp add: tsyndropwhile_insert)
 
 text {* If the head passes the predicate f, then the head of the result of @{term tsynDropWhile} 
         will be null. *}
-lemma tsyndropwhile_sconc_msg_t: 
+lemma tsyndropwhile_sconc_msg_t:
   assumes "f (invMsg a)"
   shows "tsynDropWhile f\<cdot>(\<up>a \<bullet> s) = \<up>null \<bullet> tsynDropWhile f\<cdot>s"
   using assms
   by (cases a, simp_all add: tsyndropwhile_insert)
- 
+
 text {* If the head fails the predicate f and is not null, then the head of the result of 
         @{term tsynDropWhile} will start with the head of the input. *}
 lemma tsyndropwhile_sconc_msg_f:
@@ -570,27 +570,27 @@ lemma tsyndropwhile_singleton_t:
   using assms
   by (cases a, simp_all add: tsyndropwhile_insert)
  
-text {* If the only element in a singleton stream passes is null, then @{term tsynDropWhile} 
-        will produce the singleton stream with null. *}
-lemma tsyndropwhile_singleton_null: "tsynDropWhile f\<cdot>(\<up>null) = \<up>null"
-  by (simp add: tsyndropwhile_insert)
-
 text {* If the only element in a singleton stream fails the predicate f, then @{term tsynDropWhile} 
         does not change the stream. *}    
 lemma tsyndropwhile_singleton_f: 
   assumes"\<not>f (invMsg a)" shows "tsynDropWhile f\<cdot>(\<up>a) = \<up>a"
   using assms
   by (cases a, simp_all add: tsyndropwhile_insert)
+
+text {* If the only element in a singleton stream passes is null, then @{term tsynDropWhile} 
+        will produce the singleton stream with null. *}
+lemma tsyndropwhile_singleton_null: "tsynDropWhile f\<cdot>(\<up>null) = \<up>null"
+  by (simp add: tsyndropwhile_insert)
   
+text {* @{term tsynDropWhile} does not change the length of a stream. *}
+lemma tsyndropwhile_slen: "#(tsynDropWhile f\<cdot>s) = #s "
+  by (simp add: tsyndropwhile_insert)
+
 text {* @{term tsynDropWhile} is idempotent. *}    
 lemma tsyndropwhile_idem: "tsynDropWhile f\<cdot>(tsynDropWhile f\<cdot>s) = tsynDropWhile f\<cdot>s"
   apply (induction s arbitrary: f rule: tsyn_ind, simp_all)
   apply (metis tsyndropwhile_sconc_msg_f tsyndropwhile_sconc_msg_t tsyndropwhile_sconc_null)
   by (simp add: tsyndropwhile_sconc_null)
-
-text {* @{term tsynDropWhile} does not change the length of a stream. *}
-lemma tsyndropwhile_slen: "#(tsynDropWhile f\<cdot>s) = #s "
-  by (simp add: tsyndropwhile_insert)
 
 text {* @{term tsynDropWhile} test on finite stream. *}    
 lemma tsyndropwhile_test_finstream: 
@@ -601,26 +601,27 @@ lemma tsyndropwhile_test_finstream:
 text {* @{term tsynDropWhile} test on infinite stream. *}
 lemma tsyndropwhile_test_infstream: 
   "tsynDropWhile (\<lambda> a. a \<noteq> (2 :: nat))\<cdot>((<[Msg 1, -, Msg 2]>)\<infinity>) = 
-  <[-, -, Msg 2]> \<bullet> ((<[Msg 1, -, Msg 2]>)\<infinity>)"
+     <[-, -, Msg 2]> \<bullet> ((<[Msg 1, -, Msg 2]>)\<infinity>)"
 proof -
-  have split_stream:"(<[Msg 1, -, Msg 2]>)\<infinity> = \<up>(Msg 1) \<bullet> \<up>- \<bullet> \<up>(Msg 2) \<bullet> (<[Msg 1, -, Msg 2]>\<infinity>)"
+  have split_stream: "(<[Msg 1, -, Msg 2]>)\<infinity> = \<up>(Msg 1) \<bullet> \<up>- \<bullet> \<up>(Msg 2) \<bullet> (<[Msg 1, -, Msg 2]>\<infinity>)"
     by (metis (no_types, lifting) list2s_0 list2s_Suc lscons_conv sconc_scons' 
-       sinftimes_unfold sup'_def)
-  have first_elem_t: " (\<lambda> a. a \<noteq> (2 :: nat)) 1"
+        sinftimes_unfold sup'_def)
+  have first_elem_t: "(\<lambda> a. a \<noteq> (2 :: nat)) 1"
     by simp
   from split_stream first_elem_t have drop_first: 
-      "tsynDropWhile (\<lambda> a. a \<noteq> (2 :: nat))\<cdot>((<[Msg 1, -, Msg 2]>)\<infinity>) = 
-      \<up>- \<bullet> (tsynDropWhile (\<lambda> a. a \<noteq> (2 :: nat))\<cdot>(\<up>- \<bullet> \<up>(Msg 2) \<bullet> (<[Msg 1, -, Msg 2]>\<infinity>)))"
+      "tsynDropWhile (\<lambda> a. a \<noteq> (2 :: nat))\<cdot>((<[Msg 1, -, Msg 2]>)\<infinity>) =
+         \<up>- \<bullet> (tsynDropWhile (\<lambda> a. a \<noteq> (2 :: nat))\<cdot>(\<up>- \<bullet> \<up>(Msg 2) \<bullet> (<[Msg 1, -, Msg 2]>\<infinity>)))"
     by (metis (mono_tags, lifting) inverseMsg.simps(2) tsyndropwhile_sconc_msg_t)      
   then have drop_second:
       "\<up>- \<bullet> (tsynDropWhile (\<lambda> a. a \<noteq> (2 :: nat))\<cdot>(\<up>- \<bullet> \<up>(Msg 2) \<bullet> (<[Msg 1, -, Msg 2]>\<infinity>))) =
-       \<up>- \<bullet> \<up>- \<bullet>(tsynDropWhile (\<lambda> a. a \<noteq> (2 :: nat))\<cdot>(\<up>(Msg 2) \<bullet> (<[Msg 1, -, Msg 2]>\<infinity>)))"
+         \<up>- \<bullet> \<up>- \<bullet>(tsynDropWhile (\<lambda> a. a \<noteq> (2 :: nat))\<cdot>(\<up>(Msg 2) \<bullet> (<[Msg 1, -, Msg 2]>\<infinity>)))"
     by (simp add: tsyndropwhile_sconc_null)
   then have drop_third:
       " \<up>- \<bullet> \<up>- \<bullet>(tsynDropWhile (\<lambda> a. a \<noteq> (2 :: nat))\<cdot>(\<up>(Msg 2) \<bullet> (<[Msg 1, -, Msg 2]>\<infinity>))) = 
-        \<up>- \<bullet> \<up>- \<bullet> \<up>(Msg 2) \<bullet> (<[Msg 1, -, Msg 2]>\<infinity>)"
+          \<up>- \<bullet> \<up>- \<bullet> \<up>(Msg 2) \<bullet> (<[Msg 1, -, Msg 2]>\<infinity>)"
     by (simp add: tsyndropwhile_sconc_msg_f)
-  from drop_first drop_second drop_third show ?thesis by simp
+  from drop_first drop_second drop_third show ?thesis 
+    by simp
 qed
 
 (* ----------------------------------------------------------------------- *)
