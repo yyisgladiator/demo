@@ -588,8 +588,8 @@ lemma tsyndropwhile_idem: "tsynDropWhile f\<cdot>(tsynDropWhile f\<cdot>s) = tsy
   apply (metis tsyndropwhile_sconc_msg_f tsyndropwhile_sconc_msg_t tsyndropwhile_sconc_null)
   by (simp add: tsyndropwhile_sconc_null)
 
-text {* @{term tsynDropWhile} does not change the length of a stream *}
-lemma tsyndropwhile_slen: "#s = #(tsynDropWhile f\<cdot>s)"
+text {* @{term tsynDropWhile} does not change the length of a stream. *}
+lemma tsyndropwhile_slen: "#(tsynDropWhile f\<cdot>s) = #s "
   by (simp add: tsyndropwhile_insert)
 
 text {* @{term tsynDropWhile} test on finite stream. *}    
@@ -600,19 +600,27 @@ lemma tsyndropwhile_test_finstream:
 
 text {* @{term tsynDropWhile} test on infinite stream. *}
 lemma tsyndropwhile_test_infstream: 
-  "tsynDropWhile (\<lambda> a. a \<noteq> (2 :: nat))\<cdot>((<[Msg 1, -, Msg 2]>)\<infinity>) = <[-, -, Msg 2]> \<bullet> ((<[Msg 1, -, Msg 2]>)\<infinity>)"
+  "tsynDropWhile (\<lambda> a. a \<noteq> (2 :: nat))\<cdot>((<[Msg 1, -, Msg 2]>)\<infinity>) = 
+  <[-, -, Msg 2]> \<bullet> ((<[Msg 1, -, Msg 2]>)\<infinity>)"
 proof -
-  have 1:"(<[Msg 1, -, Msg 2]>)\<infinity> = \<up>(Msg 1) \<bullet> \<up>- \<bullet> \<up>(Msg 2) \<bullet> (<[Msg 1, -, Msg 2]>\<infinity>)"
-    by (metis (no_types, lifting) list2s_0 list2s_Suc lscons_conv sconc_scons' sinftimes_unfold sup'_def)
-  have 2: " (\<lambda> a. a \<noteq> (2 :: nat)) 1"
+  have split_stream:"(<[Msg 1, -, Msg 2]>)\<infinity> = \<up>(Msg 1) \<bullet> \<up>- \<bullet> \<up>(Msg 2) \<bullet> (<[Msg 1, -, Msg 2]>\<infinity>)"
+    by (metis (no_types, lifting) list2s_0 list2s_Suc lscons_conv sconc_scons' 
+       sinftimes_unfold sup'_def)
+  have first_elem_t: " (\<lambda> a. a \<noteq> (2 :: nat)) 1"
     by simp
-  from 1 2 have 3: "tsynDropWhile (\<lambda> a. a \<noteq> (2 :: nat))\<cdot>((<[Msg 1, -, Msg 2]>)\<infinity>) = \<up>- \<bullet> (tsynDropWhile (\<lambda> a. a \<noteq> (2 :: nat))\<cdot>(\<up>- \<bullet> \<up>(Msg 2) \<bullet> (<[Msg 1, -, Msg 2]>\<infinity>)))"
+  from split_stream first_elem_t have drop_first: 
+      "tsynDropWhile (\<lambda> a. a \<noteq> (2 :: nat))\<cdot>((<[Msg 1, -, Msg 2]>)\<infinity>) = 
+      \<up>- \<bullet> (tsynDropWhile (\<lambda> a. a \<noteq> (2 :: nat))\<cdot>(\<up>- \<bullet> \<up>(Msg 2) \<bullet> (<[Msg 1, -, Msg 2]>\<infinity>)))"
     by (metis (mono_tags, lifting) inverseMsg.simps(2) tsyndropwhile_sconc_msg_t)      
-  then have 4:" \<up>- \<bullet> (tsynDropWhile (\<lambda> a. a \<noteq> (2 :: nat))\<cdot>(\<up>- \<bullet> \<up>(Msg 2) \<bullet> (<[Msg 1, -, Msg 2]>\<infinity>))) = \<up>- \<bullet> \<up>- \<bullet>(tsynDropWhile (\<lambda> a. a \<noteq> (2 :: nat))\<cdot>(\<up>(Msg 2) \<bullet> (<[Msg 1, -, Msg 2]>\<infinity>)))"
+  then have drop_second:
+      "\<up>- \<bullet> (tsynDropWhile (\<lambda> a. a \<noteq> (2 :: nat))\<cdot>(\<up>- \<bullet> \<up>(Msg 2) \<bullet> (<[Msg 1, -, Msg 2]>\<infinity>))) =
+       \<up>- \<bullet> \<up>- \<bullet>(tsynDropWhile (\<lambda> a. a \<noteq> (2 :: nat))\<cdot>(\<up>(Msg 2) \<bullet> (<[Msg 1, -, Msg 2]>\<infinity>)))"
     by (simp add: tsyndropwhile_sconc_null)
-  then have 5:" \<up>- \<bullet> \<up>- \<bullet>(tsynDropWhile (\<lambda> a. a \<noteq> (2 :: nat))\<cdot>(\<up>(Msg 2) \<bullet> (<[Msg 1, -, Msg 2]>\<infinity>))) = \<up>- \<bullet> \<up>- \<bullet> \<up>(Msg 2) \<bullet> (<[Msg 1, -, Msg 2]>\<infinity>)"
+  then have drop_third:
+      " \<up>- \<bullet> \<up>- \<bullet>(tsynDropWhile (\<lambda> a. a \<noteq> (2 :: nat))\<cdot>(\<up>(Msg 2) \<bullet> (<[Msg 1, -, Msg 2]>\<infinity>))) = 
+        \<up>- \<bullet> \<up>- \<bullet> \<up>(Msg 2) \<bullet> (<[Msg 1, -, Msg 2]>\<infinity>)"
     by (simp add: tsyndropwhile_sconc_msg_f)
-  from 3 4 5 show ?thesis by simp
+  from drop_first drop_second drop_third show ?thesis by simp
 qed
 
 (* ----------------------------------------------------------------------- *)
