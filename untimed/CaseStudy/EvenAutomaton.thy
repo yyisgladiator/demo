@@ -73,9 +73,8 @@ lemma createC1Bundle_ubconc[simp]:
 lemma createC1Bundle_ubconc_sbrt[simp]:assumes "ubDom\<cdot>sb = {c1}" 
                                shows "sbRt\<cdot>(ubConc (createC1Bundle n)\<cdot>sb) = sb"
   apply (rule ub_eq)
-  by (simp add: sbRt_def assms) + 
-
-
+  apply(simp add: sbRt_def assms) 
+  by(simp add: sbRt_def assms usclConc_stream_def)
 
 
 (* tsynbNull is defined in: timesyn/tsynBundle *)

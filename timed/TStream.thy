@@ -5521,4 +5521,56 @@ instance
   by (simp add: usclOkay_tsconc)
 end
 
+
+lemma weakFeedback: assumes "\<And> ts ts2. lnsuc\<cdot>(lnmin\<cdot>(tsTickCount\<cdot>ts)\<cdot>(tsTickCount\<cdot>ts2)) \<le> (tsTickCount\<cdot>(f\<cdot>ts\<cdot>ts2))"
+  shows "lnsuc\<cdot>(tsTickCount\<cdot>ts) \<le> (tsTickCount\<cdot>(fix\<cdot>(f\<cdot>ts)))"
+proof - 
+  fix ts
+  have f0: "tsTickCount\<cdot>(iterate (0)\<cdot>(f\<cdot>ts)\<cdot>\<bottom>) = Fin 0"
+    by simp
+  have f1: "chain (\<lambda>i. #\<surd> iterate i\<cdot>(f\<cdot>ts)\<cdot>\<bottom>)"
+    by simp
+  have f2: "\<And>i. tsTickCount\<cdot>(iterate i\<cdot>(f\<cdot>ts)\<cdot>\<bottom>) < lnsuc\<cdot>((tsTickCount\<cdot>ts)) \<Longrightarrow> 
+    tsTickCount\<cdot>(iterate (Suc i)\<cdot>(f\<cdot>ts)\<cdot>\<bottom>) \<ge> lnsuc\<cdot>(tsTickCount\<cdot>(iterate i\<cdot>(f\<cdot>ts)\<cdot>\<bottom>))"
+    using f1 assms 
+    sorry
+  have f3: "\<And>i. tsTickCount\<cdot>(iterate i\<cdot>(f\<cdot>ts)\<cdot>\<bottom>) \<ge> lnsuc\<cdot>((tsTickCount\<cdot>ts)) \<Longrightarrow> 
+  tsTickCount\<cdot>(iterate (Suc i)\<cdot>(f\<cdot>ts)\<cdot>\<bottom>) \<ge> tsTickCount\<cdot>(iterate i\<cdot>(f\<cdot>ts)\<cdot>\<bottom>)"
+    using f1 assms by (meson lnle_def po_class.chain_def)
+  have "lnsuc\<cdot>(#\<surd> ts) \<le> (\<Squnion>i::nat. #\<surd> iterate i\<cdot>(f\<cdot>ts)\<cdot>\<bottom>)"
+  proof(cases "#\<surd> ts = \<infinity>")
+    case True
+    have "\<And>i. tsTickCount\<cdot>(iterate (Suc i)\<cdot>(f\<cdot>ts)\<cdot>\<bottom>) \<ge> lnsuc\<cdot>(tsTickCount\<cdot>(iterate i\<cdot>(f\<cdot>ts)\<cdot>\<bottom>))"
+      using f2 f3 leI by (metis True fold_inf inf_less_eq)
+    then have "(\<Squnion>i::nat. #\<surd> iterate i\<cdot>(f\<cdot>ts)\<cdot>\<bottom>) = \<infinity>"
+      using f1 f3
+      by (metis (mono_tags, lifting) inf_less_eq is_ub_thelub l42 le2lnle leI less_irrefl po_class.chainE po_eq_conv unique_inf_lub) 
+  then show ?thesis    
+      by simp
+  next
+    case False
+    obtain n where f41: "Fin n = #\<surd> ts" by (metis False lncases)
+    have f42: "\<exists>x. tsTickCount\<cdot>(iterate x\<cdot>(f\<cdot>ts)\<cdot>\<bottom>) \<ge> lnsuc\<cdot>(Fin n)"
+    proof (rule ccontr)
+      assume f43: "\<not> (\<exists>x. tsTickCount\<cdot>(iterate x\<cdot>(f\<cdot>ts)\<cdot>\<bottom>) \<ge> lnsuc\<cdot>(Fin n))"
+      then have f44: "\<And>i. tsTickCount\<cdot>(iterate i\<cdot>(f\<cdot>ts)\<cdot>\<bottom>) < lnsuc\<cdot>(Fin n)"
+        using not_less by blast
+      then have "\<And>i. tsTickCount\<cdot>(iterate (Suc i)\<cdot>(f\<cdot>ts)\<cdot>\<bottom>) \<ge> lnsuc\<cdot>(tsTickCount\<cdot>(iterate i\<cdot>(f\<cdot>ts)\<cdot>\<bottom>))"
+        using f2 f41 by auto
+      then have "(\<Squnion>i::nat. #\<surd> iterate i\<cdot>(f\<cdot>ts)\<cdot>\<bottom>) = \<infinity>"
+        using f43 f1 by (metis (mono_tags, lifting) inf_ub is_ub_thelub l42 le2lnle le_less less_irrefl po_class.chainE po_eq_conv unique_inf_lub)
+      then show False
+        using f44 by (metis (no_types, lifting) Fin_Suc Fin_neq_inf f1 inf_ub lnle_def lnless_def lub_below po_eq_conv)    
+    qed
+    have "lnsuc\<cdot>(Fin n) \<le> (\<Squnion>i::nat. #\<surd> iterate i\<cdot>(f\<cdot>ts)\<cdot>\<bottom>)"
+      using below_lub lnle_def f42 f1 by blast 
+    thus ?thesis 
+      using f41 by auto
+  qed
+  thus "lnsuc\<cdot>(tsTickCount\<cdot>ts) \<le> tsTickCount\<cdot>(fix\<cdot>(f\<cdot>ts))"
+    by(simp add: fix_def contlub_cfun_arg)
+qed
+
+
+
 end

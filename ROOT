@@ -50,8 +50,22 @@ session "NDA" (mustWork) = "sps" +
     "untimed/CaseStudy/NDA"
 
 
+session "Streams" (mustWork) = "HOLCF" +
+  options [quick_and_dirty = false]
+  theories
+    "untimed/Streams"
+	
+session "tsynStream" (mustWork) = "Streams" + 
+  options [quick_and_dirty = true]
+  theories
+    "timesyn/tsynStream"
+	"timesyn/tsynBundle"
 
-
+session "ABP" (mustWork) = "tsynStream" +
+  options [quick_and_dirty = true]
+  theories
+    "timesyn/CaseStudies/ABP/Components"
+	
 
 session "ubundle_opt" (canFail) = "uClasses" +
   options [quick_and_dirty = false]

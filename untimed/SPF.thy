@@ -15,17 +15,23 @@ definition spfStateFix ::"channel set \<Rightarrow> channel set \<Rightarrow>(('
 "spfStateFix In Out \<equiv> (\<Lambda> F.  fixg (spfStateLeast In Out)\<cdot>F)"
 
 
-section \<open>Definitions with spfApplyIn\<close>
+section \<open>Definitions with ufApplyIn\<close>
 
 (* ToDo: make signature more general, output does not have to be an SB *)
-definition spfRt :: "('m SB ufun) \<rightarrow> ('m SB ufun)" where
-"spfRt \<equiv> ufApplyIn sbRt"
+definition spfRtIn :: "('m SB ufun) \<rightarrow> ('m SB ufun)" where
+"spfRtIn \<equiv> ufApplyIn sbRt"
 
-section \<open>Definitions with spfApplyOut\<close>
+definition spfConcIn :: "'m SB \<Rightarrow> 'm SPF \<rightarrow> 'm SPF" where
+"spfConcIn sb = ufApplyIn (ubConcEq sb)"
+
+section \<open>Definitions with ufApplyOut\<close>
 
 (* ToDo: make signature more general, input does not have to be an SB *)
-definition spfConc :: "'m SB \<Rightarrow> 'm SPF \<rightarrow> 'm SPF" where
-"spfConc sb = ufApplyOut (ubConcEq sb)"
+definition spfConcOut :: "'m SB \<Rightarrow> 'm SPF \<rightarrow> 'm SPF" where
+"spfConcOut sb = ufApplyOut (ubConcEq sb)"
+
+definition spfRtOut :: "('m SB ufun) \<rightarrow> ('m SB ufun)" where
+"spfRtOut \<equiv> ufApplyOut sbRt"
 
 
 subsection \<open>more general lemma\<close>
@@ -150,79 +156,136 @@ lemma ufapply_in_out:
   oops
 
 
-subsection \<open>spfRt lemma\<close>
+subsection \<open>spfRtIn lemma\<close>
 
-lemma spfrt_step[simp]: "(spfRt\<cdot>spf)\<rightleftharpoons>sb = spf\<rightleftharpoons>(sbRt\<cdot>sb)"
-  apply(simp add: spfRt_def ufApplyIn_def)
+lemma spfRtIn_step[simp]: "(spfRtIn\<cdot>spf)\<rightleftharpoons>sb = spf\<rightleftharpoons>(sbRt\<cdot>sb)"
+  apply(simp add: spfRtIn_def ufApplyIn_def)
   apply (subst Abs_cfun_inverse2)
    apply (rule ufapplyin_cont_h)
   by (simp add: ubclDom_ubundle_def ufapplyin_well_h) +
 
-lemma spfRt_dom [simp] :"ufDom\<cdot>(spfRt\<cdot>spf) = ufDom\<cdot>spf"
-  unfolding spfRt_def
+lemma spfRtIn_dom [simp] :"ufDom\<cdot>(spfRtIn\<cdot>spf) = ufDom\<cdot>spf"
+  unfolding spfRtIn_def
   by (simp add: ubclDom_ubundle_def ufapplyin_dom)
 
-lemma spfRt_ran [simp]:"ufRan\<cdot>(spfRt\<cdot>spf) = ufRan\<cdot>spf"
-  unfolding spfRt_def
+lemma spfRtIn_ran [simp]:"ufRan\<cdot>(spfRtIn\<cdot>spf) = ufRan\<cdot>spf"
+  unfolding spfRtIn_def
   apply(subst ufapplyin_ran2)
    apply (simp add: ubclDom_ubundle_def)
   by blast
 
-lemma spfRt_spfConc: "(spfRt\<cdot>(spfConc sb \<cdot>spf)) = (spfConc sb \<cdot>(spfRt\<cdot>spf))"
-  unfolding spfConc_def
-  unfolding spfRt_def
+lemma spfRtIn_spfConcOut: "(spfRtIn\<cdot>(spfConcOut sb \<cdot>spf)) = (spfConcOut sb \<cdot>(spfRtIn\<cdot>spf))"
+  unfolding spfConcOut_def
+  unfolding spfRtIn_def
   apply(subst ufapply_eq)
   apply (simp add: ubclDom_ubundle_def)
   apply (metis ubclDom_ubundle_def ubconceq_dom)
   by blast
 
-lemma spfRt_inj_h: assumes "spfRt\<cdot>x = spfRt\<cdot>y" and "ubDom\<cdot>ub = ufDom\<cdot>x" 
+
+lemma spfRt_inj_h: assumes "spfRtIn\<cdot>x = spfRtIn\<cdot>y" and "ubDom\<cdot>ub = ufDom\<cdot>x" 
   shows "x \<rightleftharpoons> ub = y \<rightleftharpoons> ub"
 proof - 
   have "ubDom\<cdot>ub = ufDom\<cdot>y"
-    by (metis assms(1) assms(2) spfRt_dom)
+    by (metis assms(1) assms(2) spfRtIn_dom)
   obtain ubNEW where ubNEW_def: "sbRt\<cdot>ubNEW = ub"
     using sbrt_conc_hd by blast
   thus ?thesis
-    by (metis assms(1) spfrt_step) 
+    by (metis assms(1) spfRtIn_step) 
 qed
 
-lemma spfRt_inj: "inj (Rep_cfun spfRt)"
+lemma spfRt_inj: "inj (Rep_cfun spfRtIn)"
   apply rule
   apply simp
   apply(rule spf_eq)
-  apply (metis spfRt_dom)
+  apply (metis spfRtIn_dom)
   using spfRt_inj_h by blast
   
 
+subsection \<open>spfConcIn lemma\<close>
 
-subsection \<open>spfConc lemma\<close>
+(*
+lemma spfConcIn_step[simp]:
+  assumes  "ubDom\<cdot>sb = ufDom\<cdot>spf"
+  shows "(spfConcIn sb1\<cdot>spf)\<rightleftharpoons>sb = spf\<rightleftharpoons>(ubConcEq sb1\<cdot>sb)"
+(* "(spfConcIn sb1\<cdot>spf)\<rightleftharpoons>sb = ubConcEq sb1\<cdot>(spf\<rightleftharpoons>sb)" *)
+  apply(simp only: spfConcIn_def ufApplyIn_def)     
+  apply (subst Abs_cfun_inverse2)
+   apply (rule ufapplyin_cont_h)
+   apply (metis ubclDom_ubundle_def ubconceq_dom)
+    apply (subst rep_abs_cufun)
+  apply simp_all
+  sorry*)
 
-lemma spconc_step[simp]:
+
+lemma spfConcIn_dom[simp]:"ufDom\<cdot>(spfConcIn sb \<cdot>spf) = ufDom\<cdot>spf"
+  unfolding spfConcIn_def
+  apply(subst ufapplyin_dom)
+  apply (metis ubclDom_ubundle_def ubconceq_dom)
+  by blast
+
+lemma spfConcIn_ran [simp]:"ufRan\<cdot>(spfConcIn sb \<cdot>spf) = ufRan\<cdot>spf"
+  unfolding spfConcIn_def
+  apply(subst ufapplyin_ran2)
+   apply (metis ubclDom_ubundle_def ubconceq_dom)
+  by blast
+
+subsection \<open>spfRtOut lemma\<close>
+
+lemma spfRtOut_step[simp]: 
   assumes "ubDom\<cdot>sb = ufDom\<cdot>spf"
-  shows "(spfConc sb1\<cdot>spf)\<rightleftharpoons>sb = ubConcEq sb1\<cdot>(spf\<rightleftharpoons>sb)"
-  apply(simp only: spfConc_def)
+  shows "(spfRtOut\<cdot>spf)\<rightleftharpoons>sb = sbRt\<cdot>(spf\<rightleftharpoons>sb)"
+  apply(simp only: spfRtOut_def)
+  apply (subst ufapplyout_apply)
+    apply (simp add: ubclDom_ubundle_def)
+   apply (simp add: assms ubclDom_ubundle_def)
+  by simp
+
+lemma spfRtOut_dom [simp] :"ufDom\<cdot>(spfRtOut\<cdot>spf) = ufDom\<cdot>spf"
+  unfolding spfRtOut_def
+  by (simp add: ubclDom_ubundle_def ufapplyout_dom)
+
+lemma spfRtOut_ran [simp]:"ufRan\<cdot>(spfRtOut\<cdot>spf) = ufRan\<cdot>spf"
+  unfolding spfRtOut_def
+  apply(subst ufapplyout_ran)
+   apply (simp add: ubclDom_ubundle_def)
+  by blast
+
+lemma spfRtOut_spfConcIn: "(spfRtOut\<cdot>(spfConcIn sb \<cdot>spf)) = (spfConcIn sb \<cdot>(spfRtOut\<cdot>spf))"
+  apply (simp add: spfConcIn_def spfRtOut_def)
+  apply(subst ufapply_eq)
+    apply (metis ubclDom_ubundle_def ubconceq_dom)
+   apply (simp add: ubclDom_ubundle_def)
+  by blast
+
+
+subsection \<open>spfConcOut lemma\<close>
+
+lemma spfConcOut_step[simp]:
+  assumes "ubDom\<cdot>sb = ufDom\<cdot>spf"
+  shows "(spfConcOut sb1\<cdot>spf)\<rightleftharpoons>sb = ubConcEq sb1\<cdot>(spf\<rightleftharpoons>sb)"
+  apply(simp only: spfConcOut_def)
   apply (subst ufapplyout_apply)
     apply (metis ubclDom_ubundle_def ubconceq_dom)
    apply (simp add: assms ubclDom_ubundle_def)
   by simp
 
-lemma spfConc_dom[simp]:"ufDom\<cdot>(spfConc sb \<cdot>spf) = ufDom\<cdot>spf"
-  unfolding spfConc_def
+lemma spfConcOut_dom[simp]:"ufDom\<cdot>(spfConcOut sb \<cdot>spf) = ufDom\<cdot>spf"
+  unfolding spfConcOut_def
   apply(subst ufapplyout_dom)
   apply (metis ubclDom_ubundle_def ubconceq_dom)
   by blast
 
-lemma spfConc_ran [simp]:"ufRan\<cdot>(spfConc sb \<cdot>spf) = ufRan\<cdot>spf"
-  unfolding spfConc_def
+lemma spfConcOut_ran [simp]:"ufRan\<cdot>(spfConcOut sb \<cdot>spf) = ufRan\<cdot>spf"
+  unfolding spfConcOut_def
   apply(subst ufapplyout_ran)
    apply (metis ubclDom_ubundle_def ubconceq_dom)
   by blast
 
 lemma spfconc_surj:
   assumes "\<And>c. c\<in>ubDom\<cdot>sb \<Longrightarrow> # (sb . c) < \<infinity>"
-  shows "inj (\<lambda>spf. spfConc sb\<cdot>spf)"
-  apply(simp add: spfConc_def)
+  shows "inj (\<lambda>spf. spfConcOut sb\<cdot>spf)"
+  apply(simp add: spfConcOut_def)
   using ufapplyin_inj assms
   by (metis sbconc_inj ubclDom_ubundle_def ubconceq_dom ufapplyout_inj) 
 
