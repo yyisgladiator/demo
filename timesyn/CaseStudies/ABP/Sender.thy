@@ -28,7 +28,7 @@ lemma sendertransition_ubdom:
       using dom2exElem dom_f by blast
     obtain st buf where s_def: "s = State st buf"
       using SenderAutomaton.getSubState.cases by blast
-    have "ubDom\<cdot>(snd (senderTransitionH (SenderState.State st buf, inp_i,inp_as ) )) = {ds\<guillemotright>}"
+    have "ubDom\<cdot>(snd (senderTransitionH (SenderState.State st buf, inp_i,inp_as ))) = {ds\<guillemotright>}"
       proof (cases inp_i)
         case (Msg i)
         hence msg_i: "inp_i = Msg i" 
