@@ -56,6 +56,73 @@ definition abp2nat :: "Receiver tsyn stream \<rightarrow> nat tsyn stream" where
   "abp2nat \<equiv> tsynMap invC"
 
 (* ----------------------------------------------------------------------- *)
+  section {* Receiver Test Streams and Bundles *}
+(* ----------------------------------------------------------------------- *)
+
+(* Everything works fine *)
+
+definition recTestInputStreamNoLoss :: "(nat \<times> bool) tsyn stream" where 
+  "recTestInputStreamNoLoss \<equiv> <[Msg (1, True), Msg (2, False)]>"
+
+lift_definition recTestInputUbundleNoLoss :: "Receiver tsyn SB" is
+  "[\<guillemotright>dr \<mapsto> natbool2abp\<cdot>recTestInputStreamNoLoss]" 
+  by (simp add: ubWell_def usclOkay_stream_def ctype_tsyn_def recTestInputStreamNoLoss_def
+      natbool2abp_def tsynMap_def)
+
+definition recTestOutputStreamArNoLoss :: "bool tsyn stream" where 
+  "recTestOutputStreamArNoLoss \<equiv> <[Msg True, Msg False]>"
+
+definition recTestOutputStreamONoLoss :: "nat tsyn stream" where 
+  "recTestOutputStreamONoLoss \<equiv> <[Msg 1, Msg 2]>"
+
+lift_definition recTestOutputUbundleNoLoss :: "Receiver tsyn SB" is
+  "[o\<guillemotright> \<mapsto> nat2abp\<cdot>recTestOutputStreamONoLoss, ar\<guillemotright> \<mapsto> bool2abp\<cdot>recTestOutputStreamArNoLoss]"
+  by (simp add: ubWell_def usclOkay_stream_def ctype_tsyn_def recTestOutputStreamArNoLoss_def
+      recTestOutputStreamONoLoss_def bool2abp_def nat2abp_def tsynMap_def rangeI)
+
+(* Second medium loses first acknowledgement *)
+
+definition recTestInputStreamLoseAck :: "(nat \<times> bool) tsyn stream" where 
+  "recTestInputStreamLoseAck \<equiv> <[Msg (1, True), Msg (1, True), Msg (2, False)]>"
+
+lift_definition recTestInputUbundleLoseAck :: "Receiver tsyn SB" is
+  "[\<guillemotright>dr \<mapsto> natbool2abp\<cdot>recTestInputStreamLoseAck]" 
+  by (simp add: ubWell_def usclOkay_stream_def ctype_tsyn_def recTestInputStreamLoseAck_def
+      natbool2abp_def tsynMap_def)
+
+definition recTestOutputStreamArLoseAck :: "bool tsyn stream" where 
+  "recTestOutputStreamArLoseAck \<equiv> <[Msg True, Msg True, Msg False]>"
+
+definition recTestOutputStreamOLoseAck :: "nat tsyn stream" where 
+  "recTestOutputStreamOLoseAck \<equiv> <[Msg 1, null, Msg 2]>"
+
+lift_definition recTestOutputUbundleLoseAck :: "Receiver tsyn SB" is
+  "[o\<guillemotright> \<mapsto> nat2abp\<cdot>recTestOutputStreamOLoseAck, ar\<guillemotright> \<mapsto> bool2abp\<cdot>recTestOutputStreamArLoseAck]"
+  by (simp add: ubWell_def usclOkay_stream_def ctype_tsyn_def recTestOutputStreamOLoseAck_def
+      recTestOutputStreamArLoseAck_def bool2abp_def nat2abp_def tsynMap_def rangeI)
+
+(* First medium loses the first and second data one time *)
+
+definition recTestInputStreamLoseDat :: "(nat \<times> bool) tsyn stream" where 
+  "recTestInputStreamLoseDat \<equiv> <[null, Msg (1, True), null, Msg (2, False)]>"
+
+lift_definition recTestInputUbundleLoseDat :: "Receiver tsyn SB" is
+  "[\<guillemotright>dr \<mapsto> natbool2abp\<cdot>recTestInputStreamLoseDat]" 
+  by (simp add: ubWell_def usclOkay_stream_def ctype_tsyn_def recTestInputStreamLoseDat_def 
+      natbool2abp_def tsynMap_def)
+
+definition recTestOutputStreamArLoseMsg :: "bool tsyn stream" where 
+  "recTestOutputStreamArLoseMsg \<equiv> <[null, Msg True, null, Msg False]>"
+
+definition recTestOutputStreamOLoseMsg :: "nat tsyn stream" where 
+ "recTestOutputStreamOLoseMsg \<equiv> <[null, Msg 1, null, Msg 2]>"
+
+lift_definition recTestOutputUbundleLoseMsg :: "Receiver tsyn SB" is
+  "[o\<guillemotright> \<mapsto> nat2abp\<cdot>recTestOutputStreamOLoseMsg, ar\<guillemotright> \<mapsto> bool2abp\<cdot>recTestOutputStreamArLoseMsg]"
+  by (simp add: ubWell_def usclOkay_stream_def ctype_tsyn_def recTestOutputStreamArLoseMsg_def
+      recTestOutputStreamOLoseMsg_def bool2abp_def nat2abp_def tsynMap_def rangeI)
+
+(* ----------------------------------------------------------------------- *)
   section {* Receiver SPF Definition for Verification *}
 (* ----------------------------------------------------------------------- *)
 
@@ -408,189 +475,5 @@ lemma recspf_receiverspf_eq: "ReceiverSPF = RecSPF"
   apply (rule ufun_eqI)
   apply (simp add: receiverspf_ufdom recspf_ufdom)
   by (simp add: recspf_receiverspf_ub_eq ubclDom_ubundle_def)
-
-
-(* ----------------------------------------------------------------------- *)
-  section {* Some Receiver tsyn stream ubundle for testing the receiver function *}
-(* ----------------------------------------------------------------------- *)
-
-
-(* Everything works fine: The receiver receives (m1,true),(m2,false)  *)
-definition rec_testinput_no_loss :: "(nat \<times> bool) tsyn stream" where 
-  "rec_testinput_no_loss \<equiv> list2s [Msg (1,True), Msg (2,False)]"
-
-lift_definition rec_testubundle_no_loss :: "Receiver tsyn SB" is
-  "[\<guillemotright>dr \<mapsto> natbool2abp\<cdot>rec_testinput_no_loss]" 
-  by(simp add: ubWell_def usclOkay_stream_def ctype_tsyn_def rec_testinput_no_loss_def
-     natbool2abp_def tsynMap_def)
-  
-
-definition rec_testoutput_ack_no_loss :: "bool tsyn stream" where 
-  "rec_testoutput_ack_no_loss \<equiv> list2s [Msg True, Msg False]"
-
-definition rec_testoutput_msg_no_loss :: "nat tsyn stream" where 
-  "rec_testoutput_msg_no_loss \<equiv> list2s [Msg 1, Msg 2]"
-
-
-lift_definition rec_testoutput_no_loss :: "Receiver tsyn SB" is
-  "[o\<guillemotright> \<mapsto> nat2abp\<cdot>rec_testoutput_msg_no_loss, ar\<guillemotright> \<mapsto> bool2abp\<cdot>rec_testoutput_ack_no_loss]"
-  by(simp add: ubWell_def usclOkay_stream_def ctype_tsyn_def rec_testoutput_ack_no_loss_def
-     rec_testoutput_msg_no_loss_def bool2abp_def nat2abp_def tsynMap_def rangeI )
-  
-
-
-
-(*The message starts with the right bit, but the medium loses the acknowledgement
-   bit sent to the sender, so the  sender repeats the message. *)
-definition rec_testinput_lose_ack :: "(nat \<times> bool) tsyn stream" where 
-  "rec_testinput_lose_ack \<equiv> list2s [Msg (1,True), Msg (1, True), Msg(2, False)]"
-
-lift_definition rec_testubundle_lose_ack :: "Receiver tsyn SB" is
-  "[\<guillemotright>dr \<mapsto> natbool2abp\<cdot>rec_testinput_lose_ack]" 
-  by(simp add: ubWell_def usclOkay_stream_def ctype_tsyn_def rec_testinput_lose_ack_def
-     natbool2abp_def tsynMap_def)
-  
-
-definition rec_testoutput_ack_lose_ack :: "bool tsyn stream" where 
-  "rec_testoutput_ack_lose_ack \<equiv> list2s [Msg True, Msg True, Msg False]"
-
-definition rec_testoutput_msg_lose_ack :: "nat tsyn stream" where 
-  "rec_testoutput_msg_lose_ack \<equiv> list2s [Msg 1, null, Msg 2]"
-
-lift_definition rec_testoutput_lose_ack :: "Receiver tsyn SB" is
-  "[o\<guillemotright> \<mapsto> nat2abp\<cdot>rec_testoutput_msg_lose_ack, ar\<guillemotright> \<mapsto> bool2abp\<cdot>rec_testoutput_ack_lose_ack]"
-  by (simp add: ubWell_def usclOkay_stream_def ctype_tsyn_def rec_testoutput_ack_lose_ack_def
-     rec_testoutput_msg_lose_ack_def bool2abp_def nat2abp_def tsynMap_def rangeI)
-
-
-
-(*The medium loses the first message from the sender, then it receives the right bit.
-  The sender receives the acknowledgement, but the medium loses the following message again. *)
-definition rec_testinput_lose_msg :: "(nat \<times> bool) tsyn stream" where 
-  "rec_testinput_lose_msg \<equiv> list2s [null, Msg (1, True), null,Msg (2, False) ]"
-
-lift_definition rec_testubundle_lose_msg :: "Receiver tsyn SB" is
-  "[\<guillemotright>dr \<mapsto> natbool2abp\<cdot>rec_testinput_lose_msg]" 
-  by(simp add: ubWell_def usclOkay_stream_def ctype_tsyn_def rec_testinput_lose_msg_def 
-     natbool2abp_def tsynMap_def)
-  
-
-definition rec_testoutput_ack_lose_msg :: "bool tsyn stream" where 
-  "rec_testoutput_ack_lose_msg \<equiv> list2s [null, Msg True, null, Msg False]"
-
-definition rec_testoutput_msg_lose_msg :: "nat tsyn stream" where 
- "rec_testoutput_msg_lose_msg \<equiv> list2s [null, Msg 1, null, Msg 2]"
-
-lift_definition rec_testoutput_lose_msg :: "Receiver tsyn SB" is
-  "[o\<guillemotright> \<mapsto> nat2abp\<cdot>rec_testoutput_msg_lose_msg, ar\<guillemotright> \<mapsto> bool2abp\<cdot>rec_testoutput_ack_lose_msg]"
-  by (simp add: ubWell_def usclOkay_stream_def ctype_tsyn_def rec_testoutput_ack_lose_msg_def
-     rec_testoutput_msg_lose_msg_def bool2abp_def nat2abp_def tsynMap_def rangeI)
-
-
-
-
-(* ----------------------------------------------------------------------- *)
-section {* Some Sender tsyn stream ubundle for testing the sender function.
-           Move this section to Components.thy as soon as it imports SenderAutomaton.thy *}
-(* ----------------------------------------------------------------------- *)
-
-
-(*------------------ Copied from SenderAutomaton.thy --------------------*)
-datatype Sender = A "nat" | B "bool" | C "(nat\<times>bool)"
-instance Sender :: countable
-apply(intro_classes)
-by(countable_datatype)
-
-abbreviation input_i_c1 :: "channel" ("\<guillemotright>i") where
-"\<guillemotright>i \<equiv> c1"
-
-abbreviation input_as_c2 :: "channel" ("\<guillemotright>as") where
-"\<guillemotright>as \<equiv> c2"
-
-abbreviation output_ds_c3 :: "channel" ("ds\<guillemotright>") where
-"ds\<guillemotright> \<equiv> c3"
-
-instantiation Sender :: message
-begin
-fun ctype_Sender :: "channel  \<Rightarrow> Sender set" where
-    "ctype_Sender \<guillemotright>i = range A" | 
-    "ctype_Sender \<guillemotright>as = range B" | 
-    "ctype_Sender ds\<guillemotright> = range C" 
-instance
-by(intro_classes)
-end
-
-(* --------------------------------------- *)
-
-(* Everything works fine: Sending two messages while receiving the correct acknowledgement bits
-   + sender changes state  *)
-definition snd_testinput_msg_no_loss :: "nat tsyn stream" where 
-  "snd_testinput_msg_no_loss \<equiv> list2s [Msg 1, Msg 2, Msg 1, null]"
-
-definition snd_testinput_acks_no_loss :: "bool tsyn stream" where 
-  "snd_testinput_acks_no_loss \<equiv> list2s [null, Msg True, Msg False, Msg True]"
-
-lift_definition snd_testubundle_no_loss :: "Sender tsyn SB" is
-  "[\<guillemotright>i \<mapsto> tsynMap A\<cdot>snd_testinput_msg_no_loss, \<guillemotright>as \<mapsto> tsynMap B\<cdot>snd_testinput_acks_no_loss]" 
-  by(simp add: ubWell_def usclOkay_stream_def ctype_tsyn_def snd_testinput_msg_no_loss_def 
-     snd_testinput_acks_no_loss_def tsynMap_def rangeI)
-
-
-definition snd_testoutput_no_loss :: "(nat \<times> bool) tsyn stream" where 
-  "snd_testoutput_no_loss \<equiv> list2s [Msg (1, True), Msg (2, False), Msg (1, True), null ]"
-
-lift_definition snd_testoutput_ubundle_no_loss :: "Receiver tsyn SB" is
-  "[\<guillemotright>dr \<mapsto> natbool2abp\<cdot>snd_testoutput_no_loss]" 
-  by(simp add: ubWell_def usclOkay_stream_def ctype_tsyn_def snd_testoutput_no_loss_def 
-     natbool2abp_def tsynMap_def)
-
-
-(*Medium 1 or Medium 2 loses the first message *)
-definition snd_testinput_msg_lose_ack_or_msg :: "nat tsyn stream" where 
-  "snd_testinput_msg_lose_ack_or_msg \<equiv> list2s [Msg 1, null, Msg 2, null]"
-
-definition snd_testinput_acks_lose_ack_or_msg :: "bool tsyn stream" where 
-  "snd_testinput_acks_lose_ack_or_msg \<equiv> list2s [null, null, Msg True, Msg False]"
-
-lift_definition snd_testubundle_lose_ack_or_msg :: "Sender tsyn SB" is
-  "[\<guillemotright>i \<mapsto> tsynMap A\<cdot>snd_testinput_msg_lose_ack_or_msg,
-    \<guillemotright>as \<mapsto> tsynMap B\<cdot>snd_testinput_acks_lose_ack_or_msg]" 
-  by(simp add: ubWell_def usclOkay_stream_def ctype_tsyn_def snd_testinput_msg_lose_ack_or_msg_def
-     snd_testinput_acks_lose_ack_or_msg_def tsynMap_def rangeI)
-
-definition snd_testoutput_lose_ack_or_msg :: "(nat \<times> bool) tsyn stream" where 
-  "snd_testoutput_lose_ack_or_msg \<equiv> list2s [Msg (1, True), Msg (1, True), Msg (2, False), null ]"
-
-lift_definition snd_testoutput_ubundle_lose_ack_or_msg :: "Receiver tsyn SB" is
-  "[\<guillemotright>dr \<mapsto> natbool2abp\<cdot>snd_testoutput_lose_ack_or_msg]" 
-  by(simp add: ubWell_def usclOkay_stream_def ctype_tsyn_def snd_testoutput_lose_ack_or_msg_def 
-     natbool2abp_def tsynMap_def)
-
-
-
-(*There are two messages to send and both mediums 
-  lose either the ack or the message two times in a row. 
-  Meanwhile there are two messages in the buffer.*)
-definition snd_testinput_msg_lose_both :: "nat tsyn stream" where 
-  "snd_testinput_msg_lose_both \<equiv> list2s [Msg 1, Msg 2, Msg 3, null, null, null]"
-
-definition snd_testinput_acks_lose_both :: "bool tsyn stream" where 
-  "snd_testinput_acks_lose_both \<equiv> list2s [null, null, null, Msg True, Msg False, Msg True]"
-
-lift_definition snd_testubundle_lose_both :: "Sender tsyn SB" is
-  "[\<guillemotright>i \<mapsto> tsynMap A\<cdot>snd_testinput_msg_lose_both, \<guillemotright>as \<mapsto> tsynMap B\<cdot>snd_testinput_acks_lose_both]" 
-  by(simp add: ubWell_def usclOkay_stream_def ctype_tsyn_def snd_testinput_msg_lose_both_def
-     snd_testinput_acks_lose_both_def tsynMap_def rangeI)
-
-
-definition snd_testoutput_lose_both :: "(nat \<times> bool) tsyn stream" where 
-  "snd_testoutput_lose_both \<equiv> list2s [Msg (1, True), Msg (1, True), Msg (1, True), Msg (2, False), Msg (3, True), null ]"
-
-lift_definition snd_testoutput_ubundle_lose_both :: "Receiver tsyn SB" is
-  "[\<guillemotright>dr \<mapsto> natbool2abp\<cdot>snd_testoutput_lose_both]" 
-  by(simp add: ubWell_def usclOkay_stream_def ctype_tsyn_def snd_testoutput_lose_both_def 
-     natbool2abp_def tsynMap_def)
-
-
 
 end
