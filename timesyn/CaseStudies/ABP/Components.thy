@@ -268,23 +268,23 @@ lemma msga_createbundle_ubgetch [simp]: "(createBundle (Msg (A a)) \<guillemotri
   by (simp add: msga_ctype)
 
 lemma msga_createbundle_ubconc [simp]:
-  assumes "ubDom\<cdot>sb = {\<guillemotright>dr}" 
+  assumes "ubDom\<cdot>sb = {\<guillemotright>dr}"
   shows "ubConc (createBundle (Msg (A a)) \<guillemotright>dr)\<cdot>sb .  \<guillemotright>dr = \<up>(Msg (A a)) \<bullet> (sb.  \<guillemotright>dr)"
-  by (simp add: assms ubConc_usclConc_eq usclConc_stream_def msga_createbundle_ubgetch)
+  by (simp add: assms usclConc_stream_def)
 
 lemma msga_createbundle_ubconc_sbrt [simp]:
   assumes "ubDom\<cdot>sb = {\<guillemotright>dr}" 
   shows "sbRt\<cdot>(ubConc (createBundle (Msg (A a)) \<guillemotright>dr)\<cdot>sb) = sb"
   apply (rule ub_eq)
   apply (simp add: assms)
-  by (simp add: assms sbRt_def msga_createbundle_ubgetch msga_createbundle_ubconc)
+  by (simp add: assms sbRt_def usclConc_stream_def)
 
 lemma tsynbnull_eq [simp]:
   assumes "ubDom\<cdot>sb = {\<guillemotright>dr}" 
   shows "inv convDiscrUp (sbHdElem\<cdot>(ubConc (tsynbNull \<guillemotright>dr)\<cdot>sb)) = [\<guillemotright>dr \<mapsto> null]"
   apply (rule convDiscrUp_eqI)
   apply (subst convdiscrup_inv_eq)
-  apply (simp add: assms sbHdElem_def sbHdElem_cont domIff2)+
+  apply (simp add: assms sbHdElem_def sbHdElem_cont domIff2 usclConc_stream_def)+
   apply (subst fun_eq_iff, rule)
   apply (case_tac "x = \<guillemotright>dr")
   apply (simp add: convDiscrUp_def)
@@ -297,7 +297,7 @@ lemma createaroutput_eq [simp]:
   shows "inv convDiscrUp (sbHdElem\<cdot>(ubConc (createBundle (Msg (A a)) \<guillemotright>dr)\<cdot>sb)) = [\<guillemotright>dr \<mapsto> Msg (A a)]"
   apply (rule convDiscrUp_eqI)
   apply (subst convdiscrup_inv_eq)
-  apply (simp add: assms sbHdElem_def sbHdElem_cont domIff2)+
+  apply (simp add: assms sbHdElem_def sbHdElem_cont domIff2 usclConc_stream_def)+
   apply (subst fun_eq_iff, rule)
   apply (case_tac "x = \<guillemotright>dr")
   apply (simp add: convDiscrUp_def)
@@ -311,7 +311,7 @@ lemma receiverautomaton_h_step_rf_null:
   shows "h ReceiverAutomaton (State Rf) \<rightleftharpoons> (ubConc (tsynbNull \<guillemotright>dr)\<cdot>sb) 
            = ubConc ((tsynbNull ar\<guillemotright>) \<uplus> (tsynbNull o\<guillemotright>))\<cdot>(h ReceiverAutomaton (State Rf) \<rightleftharpoons> sb)"
   apply (simp_all add: h_final getDom_def ReceiverAutomaton.rep_eq h_out_dom assms getRan_def 
-         autGetNextOutput_def autGetNextState_def getTransition_def)
+         autGetNextOutput_def autGetNextState_def getTransition_def usclConc_stream_def)
   using assms receiverautomaton_h_step_ubdom_null_null by auto
 
 (* h_step lemma for state Rt and input null *)
@@ -320,7 +320,7 @@ lemma receiverautomaton_h_step_rt_null:
   shows "h ReceiverAutomaton (State Rt) \<rightleftharpoons> (ubConc (tsynbNull \<guillemotright>dr)\<cdot>sb) 
            = ubConc ((tsynbNull ar\<guillemotright>) \<uplus> (tsynbNull o\<guillemotright>))\<cdot>(h ReceiverAutomaton (State Rt) \<rightleftharpoons> sb)"
   apply (simp_all add: h_final getDom_def ReceiverAutomaton.rep_eq h_out_dom assms getRan_def 
-         autGetNextOutput_def autGetNextState_def getTransition_def)
+         autGetNextOutput_def autGetNextState_def getTransition_def usclConc_stream_def)
   using assms receiverautomaton_h_step_ubdom_null_null by auto
 
 (* h_step lemma for state Rf and input true *)
@@ -331,7 +331,7 @@ lemma receiverautomaton_h_step_rf_true:
            = ubConc (createArOutput (snd a) \<uplus> (tsynbNull o\<guillemotright>))
                \<cdot>(h ReceiverAutomaton (State Rf) \<rightleftharpoons> sb)"
   apply (simp_all add: h_final getDom_def ReceiverAutomaton.rep_eq h_out_dom assms getRan_def 
-         autGetNextOutput_def autGetNextState_def getTransition_def)
+         autGetNextOutput_def autGetNextState_def getTransition_def usclConc_stream_def)
   using assms receiverautomaton_h_step_ubdom_ar_null by auto
 
 (* h_step lemma for state Rt and input true *)
@@ -342,7 +342,7 @@ lemma receiverautomaton_h_step_rt_true:
            = ubConc (createArOutput (snd a) \<uplus> (createOOutput (fst a)))
                \<cdot>(h ReceiverAutomaton (State Rf) \<rightleftharpoons> sb)"
   apply (simp_all add: h_final getDom_def ReceiverAutomaton.rep_eq h_out_dom assms getRan_def 
-         autGetNextOutput_def autGetNextState_def getTransition_def)
+         autGetNextOutput_def autGetNextState_def getTransition_def usclConc_stream_def)
   using assms receiverautomaton_h_step_ubdom_ar_o by auto
 
 (* h_step lemma for state Rf and input false *)
@@ -353,7 +353,7 @@ lemma receiverautomaton_h_step_rf_false:
            = ubConc (createArOutput (snd a) \<uplus> createOOutput (fst a))
                \<cdot>(h ReceiverAutomaton (State Rt) \<rightleftharpoons> sb)"
   apply (simp_all add: h_final getDom_def ReceiverAutomaton.rep_eq h_out_dom assms getRan_def 
-         autGetNextOutput_def autGetNextState_def getTransition_def)
+         autGetNextOutput_def autGetNextState_def getTransition_def usclConc_stream_def)
   using assms receiverautomaton_h_step_ubdom_ar_o by auto
 
 (* h_step lemma for state Rt and input false *)
@@ -364,7 +364,7 @@ lemma receiverautomaton_h_step_rt_false:
            = ubConc (createArOutput (snd a) \<uplus> (tsynbNull o\<guillemotright>))
                \<cdot>(h ReceiverAutomaton (State Rt) \<rightleftharpoons> sb)"
   apply (simp_all add: h_final getDom_def ReceiverAutomaton.rep_eq h_out_dom assms getRan_def 
-         autGetNextOutput_def autGetNextState_def getTransition_def)
+         autGetNextOutput_def autGetNextState_def getTransition_def usclConc_stream_def)
   using assms receiverautomaton_h_step_ubdom_ar_null by auto
 
 (* H_step lemma *)
