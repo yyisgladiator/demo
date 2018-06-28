@@ -181,161 +181,59 @@ proof -
     by (metis assms(4) inf_ub not_less ubLen_def)
 
   have y2: "ubLen (b \<uplus> ub) = ubLen ub"
-    proof -
-
-      have g0: "\<forall>b. \<exists>c. ((c \<in> ubDom\<cdot>b \<and> ubLen b = usclLen\<cdot>(b . c)) (* \<or> ubDom\<cdot>b = {} *))"
-        apply rule
-        sorry
-      (* proof -
-        fix b
-        show "\<exists>c. (c \<in> ubDom\<cdot>b \<and> ubLen b = usclLen\<cdot>(b . c))"
-        proof (cases "ubDom\<cdot>b = {}")
-          case True
-          then show ?thesis sledgehamme sorry
-        next
-          case False
-          then show ?thesis
-            by (metis (no_types, lifting) ubLen_def ublen_min_on_channel)
-        qed
-
-        proof (cases "ubLen b = \<infinity>")
-          case True
-          then show ?thesis sledgehamme
-            sorry
-        next
-          case False
-          then show ?thesis
-            by (metis (no_types, lifting) ubLen_def ublen_min_on_channel)
-        qed
-          using  ublen_min_on_channel 
-       assms inf_ub not_less ubLen_def ublen_min_on_channel 
-
-        sorry
-    qed *)
+    proof (cases "ubDom\<cdot>b = {}")
+      case True
+      then show ?thesis
+        by (simp add: ubclUnion_ubundle_def)
+    next
+      case False
       obtain c_b_min where c_b_def: "c_b_min \<in> ubDom\<cdot>b \<and> ubLen b = usclLen\<cdot>(b . c_b_min)"
-        using g0 by blast
-      then have cbmin_channels: "\<forall> c\<in>ubDom\<cdot>b. usclLen\<cdot>(b . c_b_min) \<le>  usclLen\<cdot>(b . c)"
-        proof -
-          have f1: "\<forall>u. ubLen u = (if ubDom\<cdot>u = {} then \<infinity> else LEAST l. l \<in> {usclLen\<cdot>(u . c::'a) |c. c \<in> ubDom\<cdot>u})"
-            by (simp add: ubLen_def)
-          obtain cc :: channel where
-            "(\<exists>v0. v0 \<in> ubDom\<cdot>b \<and> \<not> usclLen\<cdot>(b . c_b_min) \<le> usclLen\<cdot>(b . v0)) = (cc \<in> ubDom\<cdot>b \<and> \<not> usclLen\<cdot>(b . c_b_min) \<le> usclLen\<cdot>(b . cc))"
-            by moura
-          moreover
-          { assume "\<exists>c. usclLen\<cdot>(b . cc) = usclLen\<cdot>(b . c) \<and> c \<in> ubDom\<cdot>b"
-            then have "(LEAST l. l \<in> {usclLen\<cdot>(b . c) |c. c \<in> ubDom\<cdot>b}) \<le> usclLen\<cdot>(b . cc)"
-              by (simp add: Least_le)
-            moreover
-          { assume "(LEAST l. l \<in> {usclLen\<cdot>(b . c) |c. c \<in> ubDom\<cdot>b}) \<noteq> usclLen\<cdot>(b . c_b_min)"
-            then have "ubLen b \<noteq> (LEAST l. l \<in> {usclLen\<cdot>(b . c) |c. c \<in> ubDom\<cdot>b})"
-              using c_b_def by presburger
-            then have "ubDom\<cdot>b = {}"
-              using f1 by meson
-              then have "cc \<notin> ubDom\<cdot>b \<or> usclLen\<cdot>(b . c_b_min) \<le> usclLen\<cdot>(b . cc)"
-                by (metis empty_iff) }
-            ultimately have "cc \<notin> ubDom\<cdot>b \<or> usclLen\<cdot>(b . c_b_min) \<le> usclLen\<cdot>(b . cc)"
-              by fastforce }
-          ultimately show ?thesis
-            by (metis (no_types))
-        qed
-
+        by (metis (no_types, lifting) False ubLen_def ublen_min_on_channel)
       obtain c_ub_min where c_ub_def: "c_ub_min \<in> ubDom\<cdot>ub \<and> ubLen ub = usclLen\<cdot>(ub . c_ub_min)"
-        using g0 by blast
-      then have cubmin_channels: "\<forall> c\<in>ubDom\<cdot>ub. usclLen\<cdot>(ub . c_ub_min) \<le>  usclLen\<cdot>(ub . c)"
-        proof -
-          have f1: "ubLen ub = (LEAST l. l \<in> {usclLen\<cdot>(ub . c) |c. c \<in> ubDom\<cdot>ub})"
-            by (simp add: ubLen_def y1)
-          obtain cc :: channel where
-            "(\<exists>v0. v0 \<in> ubDom\<cdot>ub \<and> \<not> usclLen\<cdot>(ub . c_ub_min) \<le> usclLen\<cdot>(ub . v0)) = (cc \<in> ubDom\<cdot>ub \<and> \<not> usclLen\<cdot>(ub . c_ub_min) \<le> usclLen\<cdot>(ub . cc))"
-            by moura
-          moreover
-          { assume "\<exists>c. usclLen\<cdot>(ub . cc) = usclLen\<cdot>(ub . c) \<and> c \<in> ubDom\<cdot>ub"
-            then have "\<exists>c. usclLen\<cdot>(ub . cc) = usclLen\<cdot>(ub . c) \<and> c \<in> ubDom\<cdot>ub"
-              by fastforce
-            then have "(LEAST l. l \<in> {usclLen\<cdot>(ub . c) |c. c \<in> ubDom\<cdot>ub}) \<le> usclLen\<cdot>(ub . cc)"
-              by (simp add: Least_le)
-            then have "cc \<notin> ubDom\<cdot>ub \<or> usclLen\<cdot>(ub . c_ub_min) \<le> usclLen\<cdot>(ub . cc)"
-              using f1 by (simp add: c_ub_def) }
-          ultimately show ?thesis
-            by blast
-        qed
+        by (metis (no_types, lifting) ubLen_def ublen_min_on_channel y1)
 
-    (* Proof idea:
-       with assms show that (dom b) \<inter> (dom ub) = {}
-       obtain least channel of b and ub
-       because of assms(4) then length of (b \<uplus> ub) is equal to ub
-    *)
+      have f1: "dom (Rep_ubundle (b \<uplus> ub)) \<inter> ubclDom\<cdot>ub = ubDom\<cdot>(ubRestrict (ubclDom\<cdot>ub)\<cdot>(b \<uplus> ub))"
+        using ubdom_insert by auto
+      have f2: "(ubRestrict (ubclDom\<cdot>ub)\<cdot>(b \<uplus> ub)) = ub"
+        by (metis ubclRestrict_ubundle_def ubclunion_restrict2)
+      then have "c_ub_min \<in> dom (Rep_ubundle (b \<uplus> ub)) \<inter> ubclDom\<cdot>ub"
+        using f1 c_ub_def by presburger
+      then have f3: "c_ub_min \<in> dom (Rep_ubundle (b \<uplus> ub)) \<and> c_ub_min \<in> ubclDom\<cdot>ub"
+        by blast
+      have "\<forall>x0 x1. (x1 (x0::lnat) \<longrightarrow> Least x1 \<le> x0) = (\<not> x1 x0 \<or> Least x1 \<le> x0)"
+        by fastforce
+      then have f5: "\<forall>p l. \<not> p (l::lnat) \<or> Least p \<le> l"
+        by (simp add: Least_le)
+      have f6: "c_ub_min \<in> ubDom\<cdot>(b \<uplus> ub)"
+        by (simp add: f3 ubdom_insert)
+      have "\<forall>x0 x1 x2. (x2 \<in> x1 \<longrightarrow> (ubRestrict x1\<cdot>x0) . x2 = (x0 . x2::'a)) = (x2 \<notin> x1 \<or> (ubRestrict x1\<cdot>x0) . x2 = x0 . x2)"
+        by fastforce
+      then have "\<forall>c C u. c \<notin> C \<or> (ubRestrict C\<cdot>u) . c = (u . c::'a)"
+        using ubgetch_ubrestrict by blast
+      then have "\<exists>c. usclLen\<cdot>(ub . c_ub_min) = usclLen\<cdot>(b \<uplus> ub . c) \<and> c \<in> ubDom\<cdot>(b \<uplus> ub)"
+        using f6 f3 f2 by (metis (no_types))
+      then have "\<exists>c. usclLen\<cdot>(ub . c_ub_min) = usclLen\<cdot>(b \<uplus> ub . c) \<and> c \<in> ubDom\<cdot>(b \<uplus> ub)"
+        by fastforce
+      then have "usclLen\<cdot>(ub . c_ub_min) \<in> {usclLen\<cdot>(b \<uplus> ub . c) |c. c \<in> ubDom\<cdot>(b \<uplus> ub)}"
+        by simp
+      then have f7: "(LEAST l. l \<in> {usclLen\<cdot>(b \<uplus> ub . c) |c. c \<in> ubDom\<cdot>(b \<uplus> ub)}) \<le> usclLen\<cdot>(ub . c_ub_min)"
+        using f5 by presburger
 
-              have f1: "dom (Rep_ubundle (b \<uplus> ub)) \<inter> ubclDom\<cdot>ub = ubDom\<cdot>(ubRestrict (ubclDom\<cdot>ub)\<cdot>(b \<uplus> ub))"
-                using ubdom_insert by auto
-              have f2: "(ubRestrict (ubclDom\<cdot>ub)\<cdot>(b \<uplus> ub)) = ub"
-                by (metis ubclRestrict_ubundle_def ubclunion_restrict2)
-              then have "c_ub_min \<in> dom (Rep_ubundle (b \<uplus> ub)) \<inter> ubclDom\<cdot>ub"
-                using f1 c_ub_def by presburger
-              then have f3: "c_ub_min \<in> dom (Rep_ubundle (b \<uplus> ub)) \<and> c_ub_min \<in> ubclDom\<cdot>ub"
-                by blast
-              have "c_b_min \<in> dom (Rep_ubundle (b \<uplus> ub)) \<inter> ubclDom\<cdot>b"
-                by (metis IntI UnCI c_b_def ubclDom_ubundle_def ubclUnion_ubundle_def ubdom_insert ubunionDom)
-              then have f31: "c_b_min \<in> dom (Rep_ubundle (b \<uplus> ub)) \<and> c_b_min \<in> ubclDom\<cdot>b"
-                by blast
-              have "\<forall>x0. (if ubDom\<cdot>x0 \<noteq> {} then LEAST uua. uua \<in> {usclLen\<cdot>(x0 . c::'a) |c. c \<in> ubDom\<cdot>x0} else \<infinity>) = (if ubDom\<cdot>x0 = {} then \<infinity> else LEAST uua. uua \<in> {usclLen\<cdot>(x0 . c) |c. c \<in> ubDom\<cdot>x0})"
-                by meson
-              then have f4: "\<forall>u. ubLen u = (if ubDom\<cdot>u = {} then \<infinity> else LEAST l. l \<in> {usclLen\<cdot>(u . c::'a) |c. c \<in> ubDom\<cdot>u})"
-                by (simp add: ubLen_def)
-              have "\<forall>x0 x1. (x1 (x0::lnat) \<longrightarrow> Least x1 \<le> x0) = (\<not> x1 x0 \<or> Least x1 \<le> x0)"
-                by fastforce
-              then have f5: "\<forall>p l. \<not> p (l::lnat) \<or> Least p \<le> l"
-                by (simp add: Least_le)
-              have f6: "c_ub_min \<in> ubDom\<cdot>(b \<uplus> ub)"
-                by (simp add: f3 ubdom_insert)
-              have f61: "c_b_min \<in> ubDom\<cdot>(b \<uplus> ub)"
-                by (simp add: f31 ubdom_insert)
-              have "\<forall>x0 x1 x2. (x2 \<in> x1 \<longrightarrow> (ubRestrict x1\<cdot>x0) . x2 = (x0 . x2::'a)) = (x2 \<notin> x1 \<or> (ubRestrict x1\<cdot>x0) . x2 = x0 . x2)"
-                by fastforce
-              then have "\<forall>c C u. c \<notin> C \<or> (ubRestrict C\<cdot>u) . c = (u . c::'a)"
-                  using ubgetch_ubrestrict by blast
-              then have "\<exists>c. usclLen\<cdot>(ub . c_ub_min) = usclLen\<cdot>(b \<uplus> ub . c) \<and> c \<in> ubDom\<cdot>(b \<uplus> ub)"
-                using f6 f3 f2 by (metis (no_types))
-              then have "\<exists>c. usclLen\<cdot>(ub . c_ub_min) = usclLen\<cdot>(b \<uplus> ub . c) \<and> c \<in> ubDom\<cdot>(b \<uplus> ub)"
-                by fastforce
-              then have "usclLen\<cdot>(ub . c_ub_min) \<in> {usclLen\<cdot>(b \<uplus> ub . c) |c. c \<in> ubDom\<cdot>(b \<uplus> ub)}"
-                by simp
-              then have f7: "(LEAST l. l \<in> {usclLen\<cdot>(b \<uplus> ub . c) |c. c \<in> ubDom\<cdot>(b \<uplus> ub)}) \<le> usclLen\<cdot>(ub . c_ub_min)"
-                using f5 by presburger
-
-              have "\<exists>c. usclLen\<cdot>(b . c_b_min) = usclLen\<cdot>(b \<uplus> ub . c) \<and> c \<in> ubDom\<cdot>(b \<uplus> ub)"
-                using f6 f3 f2 by (metis c_b_def f61 ubclUnion_ubundle_def ubunion_commutative ubunion_getchR y0)
-              then have "\<exists>c. usclLen\<cdot>(b . c_b_min) = usclLen\<cdot>(b \<uplus> ub . c) \<and> c \<in> ubDom\<cdot>(b \<uplus> ub)"
-                by fastforce
-              then have "usclLen\<cdot>(b . c_b_min) \<in> {usclLen\<cdot>(b \<uplus> ub . c) |c. c \<in> ubDom\<cdot>(b \<uplus> ub)}"
-                by simp
-              then have f71: "(LEAST l. l \<in> {usclLen\<cdot>(b \<uplus> ub . c) |c. c \<in> ubDom\<cdot>(b \<uplus> ub)}) \<le> usclLen\<cdot>(b . c_b_min)"
-                using f5 by presburger
-
-              have "{} \<noteq> dom (Rep_ubundle (b \<uplus> ub))"
-                using f3 by blast
-              then have f8: "ubDom\<cdot>(b \<uplus> ub) \<noteq> {}"
-                using ubdom_insert by blast
+      have f8: "{} \<noteq> dom (Rep_ubundle (b \<uplus> ub))"
+        using f3 by blast
 
     show ?thesis
-      proof(cases "ubLen ub = \<infinity>")
-        case True
-        then show ?thesis
-          using assms(4) by auto
-      next
-        case False
-        then show ?thesis
-          proof -
-            have f1: "\<And>u. ubLen u = (LEAST l. l \<in> {usclLen\<cdot>(u . c::'a) |c. c \<in> ubDom\<cdot>u}) \<or> dom (Rep_ubundle u) = {}"
-              by (simp add: ubLen_def ubdom_insert)
-            { assume "usclLen\<cdot>(ub . c_ub_min) \<le> ubLen (b \<uplus> ub)"
-              then have "(LEAST l. l \<in> {usclLen\<cdot>(b \<uplus> ub . c) |c. c \<in> ubDom\<cdot>(b \<uplus> ub)}) \<le> usclLen\<cdot>(ub . c_ub_min) \<and> usclLen\<cdot>(ub . c_ub_min) \<le> ubLen (b \<uplus> ub) \<and> dom (Rep_ubundle (b \<uplus> ub)) \<noteq> {}"
-                using \<open>{} \<noteq> dom (Rep_ubundle ((b::'a::uscl_pcpo\<^sup>\<Omega>) \<uplus> (ub::'a::uscl_pcpo\<^sup>\<Omega>)))\<close> f7 by blast
-              then have "ubLen (b \<uplus> ub) = usclLen\<cdot>(ub . c_ub_min)"
-                using f1 by force }
-            then show ?thesis
-              by (metis (full_types) assms(4) c_ub_def lnle2le y0 z1)
-          qed
+      proof -
+        have f1: "\<And>u. ubLen u = (LEAST l. l \<in> {usclLen\<cdot>(u . c::'a) |c. c \<in> ubDom\<cdot>u}) \<or> dom (Rep_ubundle u) = {}"
+          by (simp add: ubLen_def ubdom_insert)
+        { assume "usclLen\<cdot>(ub . c_ub_min) \<le> ubLen (b \<uplus> ub)"
+          then have "(LEAST l. l \<in> {usclLen\<cdot>(b \<uplus> ub . c) |c. c \<in> ubDom\<cdot>(b \<uplus> ub)}) \<le> usclLen\<cdot>(ub . c_ub_min) \<and> usclLen\<cdot>(ub . c_ub_min) \<le> ubLen (b \<uplus> ub) \<and> dom (Rep_ubundle (b \<uplus> ub)) \<noteq> {}"
+            using f8 f7 by blast
+          then have "ubLen (b \<uplus> ub) = usclLen\<cdot>(ub . c_ub_min)"
+            using f1 by force
+        }
+      then show ?thesis
+          by (metis (full_types) assms(4) c_ub_def lnle2le y0 z1)
       qed
     qed
 
