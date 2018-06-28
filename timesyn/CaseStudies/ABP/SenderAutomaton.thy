@@ -110,6 +110,4 @@ sorry
 definition SenderSPF :: "Sender tsyn SPF" where
 "SenderSPF = H SenderAutomaton"
 
-
-
 end
