@@ -1,10 +1,11 @@
 package abp;
+
 import de.montiarcautomaton.isargenerator.Pair;
+
 component ABP {
     component MediumRS mediumRs;
     component MediumSR mediumSr;
     component Sender sender;
     component Receiver receiver;
     autoconnect port;
-
 }

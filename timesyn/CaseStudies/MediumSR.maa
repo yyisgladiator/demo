@@ -2,12 +2,11 @@ package abp;
 
 import de.montiarcautomaton.isargenerator.Pair;
 
-component MediumSR {
+<<nonDeterministic>>component MediumSR {
 
   port
     in Pair<Integer,Boolean> ds,
     out Pair<Integer,Boolean> dr;
-
 
   automaton Medium {
     variable Integer c=random(50);

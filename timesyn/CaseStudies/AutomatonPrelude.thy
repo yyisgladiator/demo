@@ -1,37 +1,79 @@
-
-
-
-
+(*
+ * DO NOT MODIFY!
+ * This file was generated and will be overridden when the models change.
+ *
+ * Generated on Jun 29, 2018 5:23:55 PM by transformer 1.0.0
+ *)
 theory AutomatonPrelude
 
-imports "../../untimed/CaseStudy/Automaton" "../tsynStream" "../tsynBundle"
-
+imports "../../untimed/CaseStudy/Automaton" "../tsynStream" "../tsynBundle" 
 begin
 
 fun prepend:: "'a::type list \<Rightarrow> 'a::type \<Rightarrow> 'a::type list" where
-    "prepend xs x= x#xs"
+"prepend xs x= x#xs"
 
-(* SWS: der Datentyp Name (Message) sollte nicht immer gleich sein, sonst hast du schnell mehrere Datentypen die alle gleich heißen *)
-(* SWS: nach konvention ist der Datentyp-Konstruktor groß geschrieben. Also (Bool "bool" | Nat "nat") *)
-(* SWS: auch nach konvention sind datentypen klein geschrieben... also "message"... *)
-(* SWS: das Pair kannst du auch anders codieren: Pair_nat_bool2 "nat" "bool". Nur so als Info, hat nicht wirkliche vorteile *)
-datatype Message = nat "nat" | bool "bool" | Pair_nat_bool "(nat\<times>bool)" (* SWS: Leerzeile :D *)
-instance Message :: countable
-apply(intro_classes)    (* SWS: 2 Leerzeichen einrücken *)
-by(countable_datatype)
+datatype abpMessage = Nat "nat" | Bool "bool" | Pair_nat_bool "(nat\<times>bool)"
 
-instantiation Message :: message
-begin (* SWS: ganze "fun" einrücken" *)
-fun ctype_Message :: "channel  \<Rightarrow> Message set" where (* SWS: coole kommentare! *)
-"ctype_Message c1 = range bool"  (*MediumRS.as -> Sender.as*)| 
-"ctype_Message c2 = range Pair_nat_bool"  (*MediumSR.dr -> Receiver.dr*)| 
-"ctype_Message c3 = range Pair_nat_bool"  (*Sender.ds -> MediumSR.ds*)| 
-"ctype_Message c4 = range bool"  (*Receiver.ar -> MediumRS.ar*)| 
-"ctype_Message c5 = range nat"  (*Receiver.o*)| 
-"ctype_Message c6 = range nat"  (*Sender.i*)    (* SWS: Leerzeile + instance einrücken *)
-instance
-by(intro_classes)
+instance abpMessage :: countable
+  apply(intro_classes)
+  by(countable_datatype)
+
+instantiation abpMessage :: message
+begin
+  fun ctype_abpMessage :: "channel  \<Rightarrow> abpMessage set" where
+  "ctype_abpMessage c = (
+    if c = \<C> ''as'' then range Bool else                 (* MediumRS.as -> Sender.as *)
+    if c = \<C> ''dr'' then range Pair_nat_bool else        (* MediumSR.dr -> Receiver.dr *)
+    if c = \<C> ''ds'' then range Pair_nat_bool else        (* Sender.ds -> MediumSR.ds *)
+    if c = \<C> ''ar'' then range Bool else                 (* Receiver.ar -> MediumRS.ar *)
+    if c = \<C> ''o'' then range Nat else                   (* Receiver.o *)
+    if c = \<C> ''i'' then range Nat else                   (* Sender.i *)
+    {})"
+
+  instance
+    by(intro_classes)
 end
 
+lift_definition createAsBundle :: "bool \<Rightarrow> abpMessage tsyn SB" is
+"\<lambda>x. [ \<C> ''as'' \<mapsto> \<up>(Msg (Bool x))]"
+  unfolding ubWell_def
+  unfolding usclOkay_stream_def
+  unfolding ctype_tsyn_def
+  by simp
+
+lift_definition createDrBundle :: "(nat\<times>bool) \<Rightarrow> abpMessage tsyn SB" is
+"\<lambda>x. [ \<C> ''dr'' \<mapsto> \<up>(Msg (Pair_nat_bool x))]"
+  unfolding ubWell_def
+  unfolding usclOkay_stream_def
+  unfolding ctype_tsyn_def
+  by simp
+
+lift_definition createDsBundle :: "(nat\<times>bool) \<Rightarrow> abpMessage tsyn SB" is
+"\<lambda>x. [ \<C> ''ds'' \<mapsto> \<up>(Msg (Pair_nat_bool x))]"
+  unfolding ubWell_def
+  unfolding usclOkay_stream_def
+  unfolding ctype_tsyn_def
+  by simp
+
+lift_definition createArBundle :: "bool \<Rightarrow> abpMessage tsyn SB" is
+"\<lambda>x. [ \<C> ''ar'' \<mapsto> \<up>(Msg (Bool x))]"
+  unfolding ubWell_def
+  unfolding usclOkay_stream_def
+  unfolding ctype_tsyn_def
+  by simp
+
+lift_definition createOBundle :: "nat \<Rightarrow> abpMessage tsyn SB" is
+"\<lambda>x. [ \<C> ''o'' \<mapsto> \<up>(Msg (Nat x))]"
+  unfolding ubWell_def
+  unfolding usclOkay_stream_def
+  unfolding ctype_tsyn_def
+  by simp
+
+lift_definition createIBundle :: "nat \<Rightarrow> abpMessage tsyn SB" is
+"\<lambda>x. [ \<C> ''i'' \<mapsto> \<up>(Msg (Nat x))]"
+  unfolding ubWell_def
+  unfolding usclOkay_stream_def
+  unfolding ctype_tsyn_def
+  by simp
 
 end

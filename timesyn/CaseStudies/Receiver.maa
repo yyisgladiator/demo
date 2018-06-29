@@ -8,10 +8,7 @@ component Receiver {
     out Boolean ar,
     out Integer o;
 
-
   automaton Receiver {
-
-
     state Rf, Rt;
     initial Rt / { o=null, ar=null};
 

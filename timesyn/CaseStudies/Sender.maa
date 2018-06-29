@@ -7,7 +7,6 @@ component Sender {
     in Boolean as,
     out Pair<Integer,Boolean> ds;
 
-
   automaton Sender {
     variable List<Integer> buffer=new List<>();
 

@@ -1,6 +1,0 @@
-package abp;
-
-classdiagram CounterDataTypes {
-  enum InputEvent {one, two;}
-  enum OutputEvent {timeout;}
-}

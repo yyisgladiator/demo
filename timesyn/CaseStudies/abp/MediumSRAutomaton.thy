@@ -1,8 +1,13 @@
-
-
+(*
+ * DO NOT MODIFY!
+ * This file was generated from MediumSR.maa and will be overridden when changed. To change
+ * permanently, consider changing the model itself.
+ *
+ * Generated on Jun 29, 2018 5:23:56 PM by transformer 1.0.0
+ *)
 theory MediumSRAutomaton
 
-imports "../AutomatonPrelude"
+imports "../AutomatonPrelude" "../../../untimed/CaseStudy/NDA"
 
 begin
 
@@ -10,48 +15,33 @@ begin
 datatype MediumSRSubstate = Single
 
 (* And these have also the variables *)
-datatype MediumSRState = State MediumSRSubstate "nat"
+datatype MediumSRState = State MediumSRSubstate (* c = *) "nat"
 
 fun getSubState :: "MediumSRState \<Rightarrow> MediumSRSubstate" where
-    "getSubState (State state_s automaton_c) = state_s"
+"getSubState (State state_s automaton_c) = state_s"
 
 fun getC :: "MediumSRState \<Rightarrow> nat" where
 "getC (State _ automaton_c) = automaton_c"
     
 
 
-abbreviation input_ds_c3 :: "channel" ("\<guillemotright>ds") where
-"\<guillemotright>ds \<equiv> c3"
+fun mediumSRTransitionH :: "(MediumSRState \<times> (abpMessage tsyn)) \<Rightarrow> ((MediumSRState \<times> abpMessage tsyn SB) set rev)" where
+    "mediumSRTransitionH (State Single automaton_c, ((*ds\<mapsto>*)Msg (Pair_nat_bool a))) = 
+       (if(automaton_c=0) then Rev {(State Single (c),(tsynbNull (\<C> ''dr'')))| (c). (c) < 50}
+       else if(automaton_c>0) then Rev {(State Single (automaton_c-1),(tsynbNull (\<C> ''dr'')))}
+       else if(True) then Rev {(State Single automaton_c,(tsynbNull (\<C> ''dr'')))}
+       else Rev {(State Single automaton_c, ((tsynbNull (\<C> ''dr''))))})"  |
 
-abbreviation output_dr_c2 :: "channel" ("dr\<guillemotright>") where
-"dr\<guillemotright> \<equiv> c2"
+    "mediumSRTransitionH (State Single automaton_c, ((*ds\<mapsto>*)null)) = 
+       (Rev {(State Single automaton_c,(tsynbNull (\<C> ''dr'')))})"  
 
+fun mediumSRTransition :: "(MediumSRState \<times> (channel \<rightharpoonup> abpMessage tsyn)) \<Rightarrow> ((MediumSRState \<times> abpMessage tsyn SB) set rev)" where
+"mediumSRTransition (s,f) = (if dom(f) = {\<C> ''ds''} then mediumSRTransitionH (s,(f\<rightharpoonup>\<C> ''ds'')) else undefined)"
 
-lift_definition createDrOutput :: "(nat\<times>bool) \<Rightarrow> Message tsyn SB" is
-    "\<lambda>b. [ dr\<guillemotright> \<mapsto> \<up>(Msg (Pair_nat_bool b))]"
-unfolding ubWell_def
-unfolding usclOkay_stream_def
-unfolding ctype_tsyn_def
-by simp
+lift_definition MediumSRAutomaton :: "(MediumSRState, abpMessage tsyn) NDA" is "(mediumSRTransition, Rev {(State Single c, (tsynbNull (\<C> ''dr'')))| c. c < 50}, Discr {\<C> ''ds''}, Discr {\<C> ''dr''})"
+  by simp
 
-
-fun mediumSRTransitionH :: "(MediumSRState \<times> (Message tsyn)) \<Rightarrow> (MediumSRState \<times> Message tsyn SB)" where
-    "mediumSRTransitionH (State Single automaton_c, (Msg (Pair_nat_bool a))) = 
-       (if(automaton_c>0) then ((State Single (automaton_c-1),(tsynbNull dr\<guillemotright>)))
-       else if(True) then ((State Single automaton_c,(tsynbNull dr\<guillemotright>)))
-       else if(automaton_c=0) then ((State Single (50),(tsynbNull dr\<guillemotright>)))
-       else  (State Single automaton_c, ((tsynbNull dr\<guillemotright>))))"  |
-
-    "mediumSRTransitionH (State Single automaton_c, (null)) = 
-       (State Single automaton_c,(tsynbNull dr\<guillemotright>))"  
-
-fun mediumSRTransition :: "(MediumSRState \<times> (channel \<rightharpoonup> Message tsyn)) \<Rightarrow> (MediumSRState \<times> Message tsyn SB)" where
-"mediumSRTransition (s,f) = (if dom(f) = {\<guillemotright>ds} then mediumSRTransitionH (s,(f\<rightharpoonup>\<guillemotright>ds)) else undefined)"
-
-lift_definition MediumSRAutomaton :: "(MediumSRState, Message tsyn) automaton" is "(mediumSRTransition, State Single 50, (tsynbNull dr\<guillemotright>), {c3}, {c2})"
-sorry
-
-definition MediumSRSPF :: "Message tsyn SPF" where
-"MediumSRSPF = H MediumSRAutomaton"
+definition MediumSRSPF :: "abpMessage tsyn SPS" where
+"MediumSRSPF = nda_H\<cdot>MediumSRAutomaton"
 
 end
