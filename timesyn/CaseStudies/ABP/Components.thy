@@ -8,7 +8,7 @@
 chapter {* Theory for ABP Component Lemmata on Time-synchronous Streams *}
 
 theory Components
-imports ReceiverAutomaton
+imports ReceiverAutomaton 
 
 begin
 
@@ -54,6 +54,73 @@ definition nat2abp :: "nat tsyn stream \<rightarrow> Receiver tsyn stream" where
 text {* Conversion of a receiver stream into an equivalent nat stream. *}
 definition abp2nat :: "Receiver tsyn stream \<rightarrow> nat tsyn stream" where
   "abp2nat \<equiv> tsynMap invC"
+
+(* ----------------------------------------------------------------------- *)
+  section {* Receiver Test Streams and Bundles *}
+(* ----------------------------------------------------------------------- *)
+
+(* Everything works fine *)
+
+definition recTestInputStreamNoLoss :: "(nat \<times> bool) tsyn stream" where 
+  "recTestInputStreamNoLoss \<equiv> <[Msg (1, True), Msg (2, False)]>"
+
+lift_definition recTestInputUbundleNoLoss :: "Receiver tsyn SB" is
+  "[\<guillemotright>dr \<mapsto> natbool2abp\<cdot>recTestInputStreamNoLoss]" 
+  by (simp add: ubWell_def usclOkay_stream_def ctype_tsyn_def recTestInputStreamNoLoss_def
+      natbool2abp_def tsynMap_def)
+
+definition recTestOutputStreamArNoLoss :: "bool tsyn stream" where 
+  "recTestOutputStreamArNoLoss \<equiv> <[Msg True, Msg False]>"
+
+definition recTestOutputStreamONoLoss :: "nat tsyn stream" where 
+  "recTestOutputStreamONoLoss \<equiv> <[Msg 1, Msg 2]>"
+
+lift_definition recTestOutputUbundleNoLoss :: "Receiver tsyn SB" is
+  "[o\<guillemotright> \<mapsto> nat2abp\<cdot>recTestOutputStreamONoLoss, ar\<guillemotright> \<mapsto> bool2abp\<cdot>recTestOutputStreamArNoLoss]"
+  by (simp add: ubWell_def usclOkay_stream_def ctype_tsyn_def recTestOutputStreamArNoLoss_def
+      recTestOutputStreamONoLoss_def bool2abp_def nat2abp_def tsynMap_def rangeI)
+
+(* Second medium loses first acknowledgement *)
+
+definition recTestInputStreamLoseAck :: "(nat \<times> bool) tsyn stream" where 
+  "recTestInputStreamLoseAck \<equiv> <[Msg (1, True), Msg (1, True), Msg (2, False)]>"
+
+lift_definition recTestInputUbundleLoseAck :: "Receiver tsyn SB" is
+  "[\<guillemotright>dr \<mapsto> natbool2abp\<cdot>recTestInputStreamLoseAck]" 
+  by (simp add: ubWell_def usclOkay_stream_def ctype_tsyn_def recTestInputStreamLoseAck_def
+      natbool2abp_def tsynMap_def)
+
+definition recTestOutputStreamArLoseAck :: "bool tsyn stream" where 
+  "recTestOutputStreamArLoseAck \<equiv> <[Msg True, Msg True, Msg False]>"
+
+definition recTestOutputStreamOLoseAck :: "nat tsyn stream" where 
+  "recTestOutputStreamOLoseAck \<equiv> <[Msg 1, null, Msg 2]>"
+
+lift_definition recTestOutputUbundleLoseAck :: "Receiver tsyn SB" is
+  "[o\<guillemotright> \<mapsto> nat2abp\<cdot>recTestOutputStreamOLoseAck, ar\<guillemotright> \<mapsto> bool2abp\<cdot>recTestOutputStreamArLoseAck]"
+  by (simp add: ubWell_def usclOkay_stream_def ctype_tsyn_def recTestOutputStreamOLoseAck_def
+      recTestOutputStreamArLoseAck_def bool2abp_def nat2abp_def tsynMap_def rangeI)
+
+(* First medium loses the first and second data one time *)
+
+definition recTestInputStreamLoseDat :: "(nat \<times> bool) tsyn stream" where 
+  "recTestInputStreamLoseDat \<equiv> <[null, Msg (1, True), null, Msg (2, False)]>"
+
+lift_definition recTestInputUbundleLoseDat :: "Receiver tsyn SB" is
+  "[\<guillemotright>dr \<mapsto> natbool2abp\<cdot>recTestInputStreamLoseDat]" 
+  by (simp add: ubWell_def usclOkay_stream_def ctype_tsyn_def recTestInputStreamLoseDat_def 
+      natbool2abp_def tsynMap_def)
+
+definition recTestOutputStreamArLoseMsg :: "bool tsyn stream" where 
+  "recTestOutputStreamArLoseMsg \<equiv> <[null, Msg True, null, Msg False]>"
+
+definition recTestOutputStreamOLoseMsg :: "nat tsyn stream" where 
+ "recTestOutputStreamOLoseMsg \<equiv> <[null, Msg 1, null, Msg 2]>"
+
+lift_definition recTestOutputUbundleLoseMsg :: "Receiver tsyn SB" is
+  "[o\<guillemotright> \<mapsto> nat2abp\<cdot>recTestOutputStreamOLoseMsg, ar\<guillemotright> \<mapsto> bool2abp\<cdot>recTestOutputStreamArLoseMsg]"
+  by (simp add: ubWell_def usclOkay_stream_def ctype_tsyn_def recTestOutputStreamArLoseMsg_def
+      recTestOutputStreamOLoseMsg_def bool2abp_def nat2abp_def tsynMap_def rangeI)
 
 (* ----------------------------------------------------------------------- *)
   section {* Receiver SPF Definition for Verification *}
