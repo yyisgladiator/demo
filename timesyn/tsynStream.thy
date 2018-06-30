@@ -338,7 +338,7 @@ lemma tsyndom_test_infstream: "tsynDom\<cdot>((<[Msg (1 :: nat), Msg 2, null, Ms
 
 text {* @{term tsynAbs} insertion lemma. *}
 lemma tsynabs_insert: "tsynAbs\<cdot>s = smap tsynAbsElem\<cdot>(sfilter {e. e \<noteq> null}\<cdot>s)"
-  by (simp add: tsynAbs_def)
+  by (simp add: tsynAbs_def)                            
 
 text {* @{term tsynAbs} test on infinite stream. *}
 lemma tsynabs_test_infstream: "tsynAbs\<cdot>((<[Msg 1, Msg 2, null, Msg 3]>)\<infinity>) = (<[1, 2, 3]>)\<infinity>"
@@ -605,12 +605,15 @@ text {* @{term tsynScanlExt} maps the empty stream on the empty stream. *}
 lemma tsynscanlext_strict [simp]: "tsynScanlExt f i\<cdot>\<epsilon> = \<epsilon>"
   by (simp add: tsynscanlext_insert)
 
+fun ifEqualThenZero :: "(nat \<Rightarrow> nat \<Rightarrow> nat \<times> nat)" where
+  "ifEqualThenZero x y = (if x = y then (0, 0) else (y, y))"
+
 text {* @{term tsynScanlExt} test on finite nat tsyn-stream. *}
 lemma tsynscanlext_test_finstream: 
-  "tsynScanlExt plus null\<cdot>(<[Msg 1, Msg 4]>) = <[Msg 3, Msg 7]>"
-oops
+  "tsynScanlExt ifEqualThenZero 4\<cdot>(<[Msg 5, Msg 3, Msg 3, null]>) = <[Msg 5, Msg 3, Msg 0, null]>"
+  by (simp add: tsynscanlext_insert)
 
-text {* @{term tsynScanl} maps the singleton stram containing message a to the singleton stream
+text {* @{term tsynScanlExt} maps the singleton stream containing message a to the singleton stream
 containing the message received by applying f to a. *}
 lemma tsynscanlext_singleton: "tsynScanlExt f i\<cdot>(\<up>a) = \<up>(tsynApplyElem (\<lambda>x. fst (f i x)) a)"
   by (cases a, simp_all add: tsynscanlext_insert)
@@ -651,7 +654,7 @@ text {* @{term tsynScanl} maps the empty stream on the empty stream. *}
 lemma tsynscanl_strict [simp]: "tsynScanl f i\<cdot>\<epsilon> = \<epsilon>"
   by (simp add: tsynscanl_insert)
 
-text {* @{term tsynScanl} maps the singleton stram containing message a to the singleton stream
+text {* @{term tsynScanl} maps the singleton stream containing message a to the singleton stream
 containing the message received by applying f to a. *}
 lemma tsynscanl_singleton: "tsynScanl f i\<cdot>(\<up>a) = \<up>(tsynApplyElem (f i) a)"
   by (simp add: tsynscanl_insert tsynscanlext_singleton)
