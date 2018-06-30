@@ -166,6 +166,11 @@ lemma tsynrec_test_infstream:
   apply (simp add: tsynrec_insert)
   oops
 
+lemma tsynbrec_ubundle_ubdom: "ubDom\<cdot>(Abs_ubundle 
+              [ar\<guillemotright> \<mapsto> bool2abp\<cdot>(tsynProjSnd\<cdot>(abp2natbool\<cdot>(sb  .  \<guillemotright>dr))), 
+               o\<guillemotright> \<mapsto> nat2abp\<cdot>(tsynRec\<cdot>(abp2natbool\<cdot>(sb  .  \<guillemotright>dr)))]) = {ar\<guillemotright>, o\<guillemotright>}"
+  sorry
+
 lemma tsynbrec_ubwell [simp]:
  "ubWell [ar\<guillemotright> \<mapsto> bool2abp\<cdot>(tsynProjSnd\<cdot>(abp2natbool\<cdot>(x  .  \<guillemotright>dr))),
           o\<guillemotright> \<mapsto> nat2abp\<cdot>(tsynRec\<cdot>(abp2natbool\<cdot>(x  .  \<guillemotright>dr)))]"
@@ -179,16 +184,14 @@ lemma tsynbrec_ubwell [simp]:
   using tsynApplyElem.elims apply blast
   using tsynApplyElem.elims by blast
 
-lemma tsynbrec_ubundle_ubdom: "ubDom\<cdot>(Abs_ubundle 
-              [ar\<guillemotright> \<mapsto> bool2abp\<cdot>(tsynProjSnd\<cdot>(abp2natbool\<cdot>(sb  .  \<guillemotright>dr))), 
-               o\<guillemotright> \<mapsto> nat2abp\<cdot>(tsynRec\<cdot>(abp2natbool\<cdot>(sb  .  \<guillemotright>dr)))]) = {ar\<guillemotright>, o\<guillemotright>}"
-  sorry
-
 lemma tsynbrec_mono [simp]:
-  "monofun (\<lambda> sb. (ubclDom\<cdot>sb = {\<guillemotright>dr}) \<leadsto> Abs_ubundle [
-               ar\<guillemotright> \<mapsto> bool2abp\<cdot>(tsynProjSnd\<cdot>(abp2natbool\<cdot>(sb  .  \<guillemotright>dr))), 
-               o\<guillemotright> \<mapsto> nat2abp\<cdot>(tsynRec\<cdot>(abp2natbool\<cdot>(sb  .  \<guillemotright>dr)))])"
-  sorry
+  "monofun (\<lambda> sb. (ubDom\<cdot>sb = {\<guillemotright>dr}) \<leadsto> Abs_ubundle [
+              ar\<guillemotright> \<mapsto> bool2abp\<cdot>(tsynProjSnd\<cdot>(abp2natbool\<cdot>(sb  .  \<guillemotright>dr))), 
+              o\<guillemotright> \<mapsto> nat2abp\<cdot>(tsynRec\<cdot>(abp2natbool\<cdot>(sb  .  \<guillemotright>dr)))])"
+  apply (fold ubclDom_ubundle_def)
+  apply (rule ufun_monoI2)
+  by (simp add: below_ubundle_def cont_pref_eq1I fun_belowI some_below)
+
 
 lemma tsynbrec_cont [simp]:
   "cont (\<lambda> sb. (ubclDom\<cdot>sb = {\<guillemotright>dr}) \<leadsto> Abs_ubundle [
