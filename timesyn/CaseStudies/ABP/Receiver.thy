@@ -166,6 +166,19 @@ lemma tsynrec_test_infstream:
   apply (simp add: tsynrec_insert)
   oops
 
+lemma tsynbrec_ubwell [simp]:
+ "ubWell [ar\<guillemotright> \<mapsto> bool2abp\<cdot>(tsynProjSnd\<cdot>(abp2natbool\<cdot>(x  .  \<guillemotright>dr))),
+          o\<guillemotright> \<mapsto> nat2abp\<cdot>(tsynRec\<cdot>(abp2natbool\<cdot>(x  .  \<guillemotright>dr)))]"
+  apply (simp add: ubWell_def)
+  apply (simp add: usclOkay_stream_def)
+  apply (simp add: nat2abp_def bool2abp_def)
+  apply (simp add: ctype_tsyn_def tsynMap_def)
+  apply (simp add: smap_sdom)
+  apply (simp add: image_subset_iff image_iff range_eqI)
+  apply (rule)
+  using tsynApplyElem.elims apply blast
+  using tsynApplyElem.elims by blast
+
 lemma tsynbrec_ubundle_ubdom: "ubDom\<cdot>(Abs_ubundle 
               [ar\<guillemotright> \<mapsto> bool2abp\<cdot>(tsynProjSnd\<cdot>(abp2natbool\<cdot>(sb  .  \<guillemotright>dr))), 
                o\<guillemotright> \<mapsto> nat2abp\<cdot>(tsynRec\<cdot>(abp2natbool\<cdot>(sb  .  \<guillemotright>dr)))]) = {ar\<guillemotright>, o\<guillemotright>}"
@@ -189,10 +202,12 @@ lemma tsynbrec_insert: "tsynbRec\<cdot>sb = (ubDom\<cdot>sb = {\<guillemotright>
   sorry
 
 lemma tsynbrec_ufwell [simp]: "ufWell tsynbRec"
-  sorry
+  apply (rule ufun_wellI)
+  apply(simp_all add: tsynbRec_def domIff2)
+  by(simp add: tsynbrec_ubundle_ubdom ubclDom_ubundle_def)
 
 lemma recspf_insert: "RecSPF \<rightleftharpoons> sb = (Abs_ufun tsynbRec) \<rightleftharpoons> sb"
-  sorry
+  by(simp add: RecSPF_def)
 
 lemma recspf_ufdom: "ufDom\<cdot>RecSPF = {\<guillemotright>dr}"
   sorry
