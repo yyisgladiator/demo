@@ -190,9 +190,10 @@ lemma tsynbrec_lub_ubwell:
   sorry
 
 lemma tsynbrec_mono [simp]:
-  "monofun (\<lambda> sb. (ubclDom\<cdot>sb = {\<guillemotright>dr}) \<leadsto> Abs_ubundle [
+  "monofun (\<lambda> sb. (ubDom\<cdot>sb = {\<guillemotright>dr}) \<leadsto> Abs_ubundle [
               ar\<guillemotright> \<mapsto> bool2abp\<cdot>(tsynProjSnd\<cdot>(abp2natbool\<cdot>(sb  .  \<guillemotright>dr))), 
               o\<guillemotright> \<mapsto> nat2abp\<cdot>(tsynRec\<cdot>(abp2natbool\<cdot>(sb  .  \<guillemotright>dr)))])"
+  apply(fold ubclDom_ubundle_def)
   apply (rule ufun_monoI2)
   by (simp add: below_ubundle_def cont_pref_eq1I fun_belowI some_below)
 
@@ -226,9 +227,10 @@ lemma tsynbrec_o_contlub: assumes "chain Y"
   by (simp add: assms contlub_cfun_arg)
 
 lemma tsynbrec_cont [simp]:
-  "cont (\<lambda> sb. (ubclDom\<cdot>sb = {\<guillemotright>dr}) \<leadsto> Abs_ubundle [
+  "cont (\<lambda> sb. (ubDom\<cdot>sb = {\<guillemotright>dr}) \<leadsto> Abs_ubundle [
                ar\<guillemotright> \<mapsto> bool2abp\<cdot>(tsynProjSnd\<cdot>(abp2natbool\<cdot>(sb  .  \<guillemotright>dr))), 
                o\<guillemotright> \<mapsto> nat2abp\<cdot>(tsynRec\<cdot>(abp2natbool\<cdot>(sb  .  \<guillemotright>dr)))])"
+  apply(fold ubclDom_ubundle_def)
   apply (rule ufun_contI)
   apply (rule ub_below)
   apply (simp add: ubdom_ubrep_eq)
@@ -240,15 +242,15 @@ lemma tsynbrec_cont [simp]:
   apply (simp add: ubdom_ubrep_eq ubgetch_lub tsynbrec_ar_contlub tsynbrec_o_contlub tsynbrec_chain)
   by (simp add: ubgetch_insert tsynbrec_lub_ubwell part_the_lub tsynbrec_chain2)
 
-lemma tsynbrec_insert: "tsynbRec\<cdot>sb = (ubclDom\<cdot>sb = {\<guillemotright>dr}) \<leadsto> Abs_ubundle 
+lemma tsynbrec_insert: "tsynbRec\<cdot>sb = (ubDom\<cdot>sb = {\<guillemotright>dr}) \<leadsto> Abs_ubundle 
               [ar\<guillemotright> \<mapsto> bool2abp\<cdot>(tsynProjSnd\<cdot>(abp2natbool\<cdot>(sb  .  \<guillemotright>dr))), 
                o\<guillemotright> \<mapsto> nat2abp\<cdot>(tsynRec\<cdot>(abp2natbool\<cdot>(sb  .  \<guillemotright>dr)))]"
-   by (simp add: tsynbRec_def)
+   by (simp add: tsynbRec_def ubclDom_ubundle_def)
 
 lemma tsynbrec_ufwell [simp]: "ufWell tsynbRec"
   apply (rule ufun_wellI)
-  apply (simp_all add: tsynbRec_def domIff2)
-  by (simp add: tsynbrec_ubundle_ubdom ubclDom_ubundle_def)
+  apply (simp_all add: tsynbRec_def domIff2 ubclDom_ubundle_def)
+  by (simp add: tsynbrec_ubundle_ubdom)
 
 lemma recspf_insert: "RecSPF \<rightleftharpoons> sb = (Abs_ufun tsynbRec) \<rightleftharpoons> sb"
   by (simp add: RecSPF_def)
@@ -263,10 +265,10 @@ lemma recspf_ufdom: "ufDom\<cdot>RecSPF = {\<guillemotright>dr}"
         have "b \<in> dom (Rep_cufun RecSPF) \<Longrightarrow> ubclDom\<cdot>b  = {\<guillemotright>dr}"
       proof -
         assume a1: "b \<in> dom (Rep_cufun RecSPF)"
-        have "ufWell (\<Lambda> u. (ubclDom\<cdot>u = {\<guillemotright>dr})\<leadsto>Abs_ubundle [ar\<guillemotright> \<mapsto> bool2abp\<cdot> (tsynProjSnd\<cdot>(abp2natbool\<cdot>(u . \<guillemotright>dr))), o\<guillemotright> \<mapsto> nat2abp\<cdot> (tsynRec\<cdot>(abp2natbool\<cdot>(u . \<guillemotright>dr)))])"
-          using tsynbRec_def tsynbrec_ufwell by presburger
+          have "ufWell (\<Lambda> u. (ubclDom\<cdot>u = {\<guillemotright>dr})\<leadsto>Abs_ubundle [ar\<guillemotright> \<mapsto> bool2abp\<cdot> (tsynProjSnd\<cdot>(abp2natbool\<cdot>(u . \<guillemotright>dr))), o\<guillemotright> \<mapsto> nat2abp\<cdot> (tsynRec\<cdot>(abp2natbool\<cdot>(u . \<guillemotright>dr)))])"
+            sorry
         then have "Rep_cufun (Abs_cufun (\<lambda>u. (ubclDom\<cdot>u = {\<guillemotright>dr})\<leadsto>Abs_ubundle [ar\<guillemotright> \<mapsto> bool2abp\<cdot> (tsynProjSnd\<cdot>(abp2natbool\<cdot>(u . \<guillemotright>dr))), o\<guillemotright> \<mapsto> nat2abp\<cdot> (tsynRec\<cdot>(abp2natbool\<cdot>(u . \<guillemotright>dr)))])) = (\<lambda>u. (ubclDom\<cdot>u = {\<guillemotright>dr})\<leadsto>Abs_ubundle [ar\<guillemotright> \<mapsto> bool2abp\<cdot> (tsynProjSnd\<cdot>(abp2natbool\<cdot>(u . \<guillemotright>dr))), o\<guillemotright> \<mapsto> nat2abp\<cdot> (tsynRec\<cdot>(abp2natbool\<cdot>(u . \<guillemotright>dr)))])"
-          using rep_abs_cufun tsynbrec_cont by blast
+          using rep_abs_cufun tsynbrec_cont by (simp add: ubclDom2ubDom)
         then have "Rep_cufun RecSPF = (\<lambda>u. (ubclDom\<cdot>u = {\<guillemotright>dr})\<leadsto>Abs_ubundle [ar\<guillemotright> \<mapsto> bool2abp\<cdot> (tsynProjSnd\<cdot>(abp2natbool\<cdot>(u . \<guillemotright>dr))), o\<guillemotright> \<mapsto> nat2abp\<cdot> (tsynRec\<cdot>(abp2natbool\<cdot>(u . \<guillemotright>dr)))])"
           by (simp add: RecSPF_def tsynbRec_def)
         then show ?thesis
