@@ -38,10 +38,20 @@ lemma ubmaxlen_least: "ubMaxLen 0 ((ubLeast cs):: 'a stream\<^sup>\<Omega>)"
   by(simp add: ubMaxLen_def usclLen_stream_def)
 
 lemma ubmaxlen_sbtake: "ubMaxLen (Fin n) (sbTake n\<cdot>x)"
-  sorry
+  by (simp add: ubMaxLen_def sbTake_def usclLen_stream_def)
 
 lemma ubleast_sbtake: assumes "x \<noteq> ubLeast (ubDom\<cdot>x)" shows "sbHd\<cdot>x \<noteq> ubLeast (ubDom\<cdot>x)"
-  sorry
+proof - 
+  obtain my_c where my_c_def1: "x . my_c \<noteq> \<epsilon>" and my_c_def2: "my_c \<in> ubDom\<cdot>x"
+    using assms by (metis ubgetchI ubleast_ubdom ubleast_ubgetch)
+  have "(sbHd\<cdot>x) . my_c \<noteq> \<epsilon>" 
+    apply (simp add: sbHd_def)
+    apply (simp add: my_c_def1 my_c_def2)
+    by (metis my_c_def1 sconc_scons' stake_Suc stream.sel_rews(3) stream.sel_rews(4) sup'_def surj_scons)
+  thus ?thesis 
+    using my_c_def2 by auto
+qed
+  
 
 lemma sbcases: "\<And>x :: 'a stream\<^sup>\<Omega>. x = (ubLeast (ubDom\<cdot>x)) \<or> (\<exists>a s. ubDom\<cdot>a = ubDom\<cdot>x \<and> ubDom\<cdot>s = ubDom\<cdot>x \<and> ubMaxLen (Fin 1) a  \<and> a \<noteq> (ubLeast (ubDom\<cdot>x)) \<and> x = ubConc a\<cdot>s)"
   apply(case_tac "x = (ubLeast (ubDom\<cdot>x))")
@@ -99,7 +109,8 @@ lemma sbtake_ind:
   "\<forall>x. (P (ubLeast (ubDom\<cdot>x)) \<and> 
        (\<forall>a s. P s \<and> ubDom\<cdot>a = ubDom\<cdot>x \<and> ubDom\<cdot>s = ubDom\<cdot>x \<and> ubMaxLen (Fin 1) a \<and> a \<noteq> (ubLeast (ubDom\<cdot>x)) \<longrightarrow> P (ubConc a\<cdot>s))) 
        \<longrightarrow> P (sbTake n\<cdot>x)" 
-  sorry
+  using ubmaxlen_sbtake sbtake_ind2
+  by (metis (full_types) sbtake_sbdom) 
 
 lemma finind_ub: 
   "\<lbrakk> \<exists>n. ubMaxLen (Fin n) x; 
@@ -107,12 +118,40 @@ lemma finind_ub:
      \<And>u ub. P ub \<and> ubDom\<cdot>u = (ubDom\<cdot>x) \<and> ubDom\<cdot>ub = (ubDom\<cdot>x) \<and> ubMaxLen (Fin 1) u \<and> u \<noteq> (ubLeast (ubDom\<cdot>x)) \<Longrightarrow> P (ubConc u\<cdot>ub) \<rbrakk>
      \<Longrightarrow> P (x :: 'a stream ubundle)"
 proof - 
-  obtain n where "ubMaxLen (Fin n) x"
-    sorry
-  then have "sbTake n\<cdot>x = x"
-    sorry
-  then show ?thesis
-    sorry
+fix x :: "'a stream ubundle"
+  assume a0: "\<exists>n. ubMaxLen (Fin n) x"
+  assume a1: "P (ubLeast (ubDom\<cdot>x))"
+  assume a2: "\<And>u ub. P ub \<and> ubDom\<cdot>u = (ubDom\<cdot>x) \<and> ubDom\<cdot>ub = (ubDom\<cdot>x) \<and> ubMaxLen (Fin 1) u \<and> u \<noteq> (ubLeast (ubDom\<cdot>x)) \<Longrightarrow> P (ubConc u\<cdot>ub)"
+  obtain n where n_def:  "ubMaxLen (Fin n) x"
+    using a0 by blast
+  have f2:  "x =  sbTake n\<cdot>x "
+    proof-  
+      have f21: "\<And>c. c\<in>(ubDom\<cdot>x) \<Longrightarrow> #(x . c) \<le>  Fin n"
+        by (metis n_def ubMaxLen_def usclLen_stream_def)
+      have f22: "\<And>c. c\<in>(ubDom\<cdot>x) \<Longrightarrow> #(stake n\<cdot>(x . c)) \<le>  Fin n"
+        using ub_slen_stake by blast
+      have f23: "\<And>c. c\<in>(ubDom\<cdot>x) \<Longrightarrow> (sbTake n\<cdot>x).c = stake n\<cdot>(x . c)"
+        using sbtake_sbgetch by blast
+      have f25: "\<And>c. c\<in>(ubDom\<cdot>x) \<Longrightarrow> stake n\<cdot>(x . c) = x . c"
+        apply (case_tac "#(x . c) = Fin n")
+        using fin2stake apply blast
+        proof -
+          have f251: "\<And>c::channel. c \<in> ubDom\<cdot>x \<Longrightarrow> #(x  .  c) \<noteq> Fin n \<Longrightarrow>  #(x  .  c) < Fin n"
+            by (simp add: f21 le_neq_trans)
+          have f252: "\<And>c::channel. c \<in> ubDom\<cdot>x \<Longrightarrow>  #(x  .  c) < Fin n \<Longrightarrow>  stake n\<cdot>(x . c) = x . c"
+            by (meson dual_order.strict_implies_order fin2stake_lemma lnat_well_h1)
+          show "\<And>c::channel. c \<in> ubDom\<cdot>x \<Longrightarrow> #(x  .  c) \<noteq> Fin n \<Longrightarrow> stake n\<cdot>(x  .  c) = x  .  c"
+            using f251 f252 by blast
+        qed
+      show ?thesis
+         by (simp add: ubgetchI a0 n_def f21 f22 f23 f25)
+    qed
+  show "P x" apply (subst f2) 
+    apply (subst sbtake_ind)
+     apply rule
+      apply (simp add: a1)
+     apply (simp add: a2)
+    by simp
 qed
 
 lemma ind_ub: 
