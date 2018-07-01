@@ -1,86 +1,70 @@
-(* SPS *)
-
 theory SPS
-imports SPF
+
+imports SPF "../USpec_Comp"
+
 begin
 
+default_sort message
+
+type_synonym 'm SPS = "'m SPF uspec"
+
+
+
+section \<open>Definition\<close>
+
+
+definition spsConcOut:: "'m SB \<Rightarrow> 'm SPS \<rightarrow> 'm SPS" where
+"spsConcOut sb = Abs_cfun (uspecImage (Rep_cfun (spfConcOut sb)))"
+
+definition spsRtIn:: "'m SPS \<rightarrow> 'm SPS" where
+"spsRtIn = Abs_cfun (uspecImage (Rep_cfun spfRtIn))"
+
+
+section \<open>Lemma\<close>
+
+  subsection \<open>spsConcOut\<close>
+
+lemma spsconcout_cont: 
+  assumes "\<And>c. c\<in>ubDom\<cdot>sb \<Longrightarrow> # (sb . c) < \<infinity>"
+  shows"cont (uspecImage (Rep_cfun (spfConcOut sb)))"
+  apply(rule uspecimage_inj_cont)
+  using assms spfconc_surj apply blast
+  by (simp add: ufclDom_ufun_def ufclRan_ufun_def)
   
-definition sps_well :: "'m SPF set \<Rightarrow> bool" where
-"sps_well S \<equiv> \<exists>In Out. \<forall> f\<in>S . (spfDom\<cdot>f = In \<and> spfRan\<cdot>f=Out) "
+lemma spsconcout_insert: 
+  assumes "\<And>c. c\<in>ubDom\<cdot>sb \<Longrightarrow> # (sb . c) < \<infinity>"
+  shows"spsConcOut sb\<cdot>sps =  (uspecImage (Rep_cfun (spfConcOut sb)) sps)"
+  apply(simp only: spsConcOut_def)
+  by (simp add: assms spsconcout_cont)
 
-lemma sps_wellI: assumes "\<And>f. f\<in>S \<Longrightarrow> spfDom\<cdot>f = In" and "\<And>f. f\<in>S \<Longrightarrow> spfRan\<cdot>f = Out"
-  shows "sps_well S"
-by (simp add: assms(1) assms(2) sps_well_def)
+lemma spsconcout_dom [simp]: 
+  assumes "\<And>c. c\<in>ubDom\<cdot>sb \<Longrightarrow> # (sb . c) < \<infinity>"
+  shows "uspecDom\<cdot>(spsConcOut sb\<cdot>sps) = uspecDom\<cdot>sps"
+  by (simp add: assms spsconcout_insert ufclDom_ufun_def ufclRan_ufun_def)
 
-lemma sps_dom_eq: assumes "a1\<in>A" and "a2\<in>A" and "sps_well A"
-  shows "spfDom\<cdot>a1 = spfDom\<cdot>a2"
-by (metis assms(1) assms(2) assms(3) sps_well_def)
-
-lemma sps_ran_eq: assumes "a1\<in>A" and "a2\<in>A" and "sps_well A"
-  shows "spfRan\<cdot>a1 = spfRan\<cdot>a2"
-by (metis assms(1) assms(2) assms(3) sps_well_def)
-
-
-lemma tsps_well_adm1: assumes "chain Y" and "Y 0 \<noteq> {}" and "\<And>i. sps_well (Y i)"
-  shows "sps_well (\<Union>i. Y i)"
-proof(rule sps_wellI)
-  fix f
-  assume as_f: "f\<in>(\<Union>i. Y i)"
-  obtain i where i_def: "f\<in>Y i" using as_f by blast
-  thus "spfDom\<cdot>f = spfDom\<cdot>(SOME a. a\<in>(Y 0))"
-    by (metis assms(1) assms(2) assms(3) contra_subsetD le0 po_class.chain_mono set_cpo_simps(1) some_in_eq sps_dom_eq)
-  thus "spfRan\<cdot>f = spfRan\<cdot>(SOME a. a\<in>(Y 0))"
-    by (metis i_def assms(1) assms(2) assms(3) contra_subsetD le0 po_class.chain_mono set_cpo_simps(1) some_in_eq sps_ran_eq)
-qed
+lemma spsconcout_ran [simp]: 
+  assumes "\<And>c. c\<in>ubDom\<cdot>sb \<Longrightarrow> # (sb . c) < \<infinity>"
+  shows "uspecRan\<cdot>(spsConcOut sb\<cdot>sps) = uspecRan\<cdot>sps"
+  by (simp add: assms spsconcout_insert ufclDom_ufun_def ufclRan_ufun_def)
 
 
-(* vergleiche mit TSPS defininition, da wurd die admissibility schon gezeigt *)
-lemma sps_well_adm[simp]: "adm sps_well"
-proof(rule admI)
-  fix Y :: "nat \<Rightarrow> 'a SPF set"
-  assume as1: "chain Y" and as2: "\<forall>i. sps_well (Y i)"
-  hence "sps_well (\<Union>i. Y i)"  
-  proof (cases "(\<Union>i. Y i) = {}")
-    case True thus ?thesis
-      using as2 by auto
-  next
-    case False
-    obtain k where k_def: "Y k\<noteq>{}" using False by auto
-    hence chain_d: "chain (\<lambda>i. Y (i + k))" (is "chain ?D") by (simp add: as1 po_class.chainE po_class.chainI)
-    have "\<And>i. ?D i \<noteq> {}"
-      by (metis as1 empty_subsetI k_def le_add2 po_class.chain_mono set_cpo_simps(1) subset_antisym)
-    hence "sps_well (\<Union>i. ?D i)" using as2 chain_d tsps_well_adm1 by blast
-    thus ?thesis by (metis as1 lub_range_shift set_cpo_simps(2)) 
-  qed
-  thus "sps_well (\<Squnion>i. Y i)" by (metis set_cpo_simps(2)) 
-qed
 
-(* define a Set of 'm SPF's. all SPS in a set must have the same In/Out channels *)
-pcpodef 'm SPS = "{S :: 'm SPF set. sps_well S }"
-   apply (simp add: UU_eq_empty sps_well_def)
-  by simp
+  subsection \<open>spsRtIn\<close>
 
-setup_lifting type_definition_SPS
+lemma spsrtin_cont: "cont (uspecImage (Rep_cfun spfRtIn))"
+  apply(rule uspecimage_inj_cont)
+   apply (simp add: spfRt_inj)
+  by (simp add: ufclDom_ufun_def ufclRan_ufun_def)
 
-  (* composite operator on SPS *)
-  definition spsComp :: "'m SPS \<Rightarrow>'m  SPS \<Rightarrow> 'm SPS" (infixl "\<Otimes>" 50) where
-"spsComp S1 S2 \<equiv> Abs_SPS {f1 \<otimes> f2 | f1 f2. f1\<in>(Rep_SPS S1) \<and> f2\<in>(Rep_SPS S2)}"
+lemma spsrtin_insert: "spsRtIn\<cdot>sps = uspecImage (Rep_cfun spfRtIn) sps"
+  apply(simp add: spsRtIn_def spsrtin_cont)
+  done
 
-definition spsDom :: "'m SPS \<Rightarrow> channel set" where
-"spsDom S = spfDom\<cdot>(SOME f. f\<in> Rep_SPS S)"
+lemma spsrtin_dom [simp]: "uspecDom\<cdot>(spsRtIn\<cdot>sps) = uspecDom\<cdot>sps"
+  by (simp add: spsRtIn_def spsrtin_cont ufclDom_ufun_def ufclRan_ufun_def)
 
-definition spsRan :: "'m SPS \<Rightarrow> channel set" where
-"spsRan S = spfRan\<cdot>(SOME f. f\<in> Rep_SPS S)"
+lemma spsrtin_ran [simp]: "uspecRan\<cdot>(spsRtIn\<cdot>sps) = uspecRan\<cdot>sps"
+  by (simp add: spsRtIn_def spsrtin_cont ufclDom_ufun_def ufclRan_ufun_def)
 
-(* helpful lemmas *)
-
-lemma sps_well_SingleSet[simp]: "sps_well {f :: 'a SPF}"
-  by(simp add: sps_well_def)
-    
-lemma sps_repAbs[simp]: assumes "sps_well S" shows "Rep_SPS (Abs_SPS S) = S"
-  using Abs_SPS_inverse assms by auto
-
-lemma spsWell_subset: assumes "sps_well A" and "a \<subseteq> B" shows "sps_well B"
-  sorry
-    
+  
 end

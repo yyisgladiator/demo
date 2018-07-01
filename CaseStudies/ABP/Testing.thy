@@ -33,22 +33,23 @@ definition tsSndExampOut :: "(nat \<times> bool) tstream" where
   "tsSndExampOut = <[Msg (1, True), \<surd>, Msg (1, True), Msg (2, False), Msg (2, False), \<surd>, 
                      Msg (2, False), \<surd>, Msg (1, True), \<surd>]>\<surd>"
 
-lemma tssnd_test_bot: "tsSnd\<cdot>\<bottom>\<cdot>tsInfTick = \<bottom>" 
+lemma tssnd_test_bot: "tsSnd_h\<cdot>\<bottom>\<cdot>tsInfTick = \<bottom>" 
   by (fixrec_simp)
 
 lemma tssnd_test_fin:
-  "tsSnd\<cdot>tsSndExampInp_1\<cdot>(tsSndExampInp_2 \<bullet>\<surd> tsInfTick)\<cdot>(Discr True) = tsSndExampOut"
+  "tsSnd_h\<cdot>tsSndExampInp_1\<cdot>(tsSndExampInp_2 \<bullet>\<surd> tsInfTick)\<cdot>(Discr True) = tsSndExampOut"
   apply (simp add: tsSndExampInp_1_def tsSndExampInp_2_def tsSndExampOut_def tsconc_mlscons 
-         tsconc_delayfun tssnd_mlscons_ack tssnd_mlscons_nack tssnd_delayfun_nack tssnd_delayfun)
+         tsconc_delayfun tssnd_h_mlscons_ack tssnd_h_mlscons_nack tssnd_h_delayfun_nack 
+         tssnd_h_delayfun)
   apply (subst tsinftick_unfold)
-  by (simp only: tssnd_delayfun, simp)    
+  by (simp only: tssnd_h_delayfun, simp)    
     
 lemma tssnd_test_inf:
-  "tsSnd\<cdot>(tsSndExampInp_1 \<bullet>\<surd> tsInfTick)\<cdot>(tsSndExampInp_2 \<bullet>\<surd> tsInfTick)\<cdot>(Discr True) 
+  "tsSnd_h\<cdot>(tsSndExampInp_1 \<bullet>\<surd> tsInfTick)\<cdot>(tsSndExampInp_2 \<bullet>\<surd> tsInfTick)\<cdot>(Discr True) 
      = tsSndExampOut \<bullet>\<surd> tsInfTick"
   by (simp add: tsSndExampInp_1_def tsSndExampInp_2_def tsSndExampOut_def tsconc_mlscons 
-      tsconc_delayfun tssnd_mlscons_ack tssnd_mlscons_nack tssnd_delayfun_nack tssnd_delayfun
-      tssnd_inftick_inftick)
+      tsconc_delayfun tssnd_h_mlscons_ack tssnd_h_mlscons_nack tssnd_h_delayfun_nack 
+      tssnd_h_delayfun tssnd_h_inftick_inftick)
 
 (* ----------------------------------------------------------------------- *)
 subsection {* medium *}
@@ -115,5 +116,69 @@ lemma tsrec_test_inf2:
       tsrecsnd_insert tsremdups_insert tsconc_mlscons tsconc_delayfun tsprojsnd_mlscons
       tsprojsnd_delayfun tsprojfst_mlscons tsprojfst_delayfun tsremdups_h_mlscons 
       tsremdups_h_mlscons_dup tsremdups_h_mlscons_ndup tsremdups_h_delayfun tsremdups_h_tsinftick)
+
+(* ----------------------------------------------------------------------- *)
+subsection {* composition *}
+(* ----------------------------------------------------------------------- *)
+
+(* ToDo: add definitions for oracles p1, p2 and input stream i to cover all possibilities *)
+
+definition tsAltbitproExampInp :: "nat tstream" where
+"tsAltbitproExampInp = <[Msg 1, Msg 2, \<surd>, Msg 1, \<surd>]>\<surd>"
+
+definition tsAltbitproExampOra1 :: "bool stream" where
+"tsAltbitproExampOra1 = <[True, True, False, True, True, True]>"
+
+definition tsAltbitproExampOra2 :: "bool stream" where
+"tsAltbitproExampOra2 = <[True, True, False, True, True]>"
+
+(*case bot*)
+lemma tsaltbitpro_test_bot:
+  assumes ds_def: "ds = tsSnd\<cdot>\<bottom>\<cdot>as"
+    and dr_def: "dr = tsMed\<cdot>ds\<cdot>(<[True]> \<infinity>)"
+    and ar_def: "ar = tsProjSnd\<cdot>dr"
+    and as_def: "as = tsMed\<cdot>ar\<cdot>(<[True]> \<infinity>)"
+  shows "tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>dr)) = tsAbs\<cdot>\<bottom>"
+  by (simp add: dr_def ds_def as_def tssnd_insert tsremdups_insert tsremdups_h_delayfun 
+      tsprojfst_delayfun)
+
+(*case finite*)
+lemma tsaltbitpro_test_fin:
+  assumes ds_def: "ds = tsSnd\<cdot>tsAltbitproExampInp\<cdot>as"
+    and dr_def: "dr = tsMed\<cdot>ds\<cdot>(tsAltbitproExampOra1 \<bullet> tsAltbitproExampOra1 \<bullet> (tsAltbitproExampOra1\<infinity>))"
+    and ar_def: "ar = tsProjSnd\<cdot>dr"
+    and as_def: "as = tsMed\<cdot>ar\<cdot>(tsAltbitproExampOra2  \<bullet> tsAltbitproExampOra2 \<bullet>(tsAltbitproExampOra2\<infinity>))"
+  shows "tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>dr)) = tsAbs\<cdot>tsAltbitproExampInp"
+  apply(simp add: ds_def dr_def as_def tsAltbitproExampOra1_def tsAltbitproExampOra2_def tsAltbitproExampInp_def) 
+  apply (subst ar_def)  
+  apply(simp add: ds_def dr_def as_def tsAltbitproExampOra1_def tsAltbitproExampOra2_def tsAltbitproExampInp_def) 
+  apply (subst ar_def)  
+  apply(simp add: ds_def dr_def as_def tsAltbitproExampOra1_def tsAltbitproExampOra2_def tsAltbitproExampInp_def) 
+  apply (subst ar_def)  
+  apply(simp add: ds_def dr_def as_def tsAltbitproExampOra1_def tsAltbitproExampOra2_def tsAltbitproExampInp_def) 
+  apply (subst ar_def)  
+  apply(simp add: ds_def dr_def as_def tsAltbitproExampOra1_def tsAltbitproExampOra2_def tsAltbitproExampInp_def) 
+  apply (subst ar_def)  
+  apply(simp add: ds_def dr_def as_def tsAltbitproExampOra1_def tsAltbitproExampOra2_def tsAltbitproExampInp_def) 
+  apply (subst ar_def)  
+  apply(simp add: ds_def dr_def as_def tsAltbitproExampOra1_def tsAltbitproExampOra2_def tsAltbitproExampInp_def) 
+  by(simp add: 
+        tssnd_insert tssnd_h_delayfun_nack tssnd_h_delayfun_bot tssnd_h_mlscons_ack 
+        tssnd_h_mlscons_nack tssnd_h_delayfun tssnd_h_delayfun_msg
+        tsmed_mlscons_true tsmed_mlscons_false tsmed_delayfun
+        tsremdups_insert tsremdups_h_mlscons tsremdups_h_mlscons_dup tsremdups_h_mlscons_ndup 
+        tsremdups_h_delayfun
+        tsprojsnd_mlscons tsprojsnd_delayfun tsprojfst_mlscons tsprojfst_delayfun tsabs_mlscons
+        tsconc_mlscons tsconc_delayfun)
+
+
+(*case infinite*)
+lemma tsaltbitpro_test_inf:
+  assumes ds_def: "ds = tsSnd\<cdot>(tsAltbitproExampInp \<bullet>\<surd> tsInfTick)\<cdot>as"
+    and dr_def: "dr = tsMed\<cdot>ds\<cdot>(tsAltbitproExampOra1 \<infinity>)"
+    and ar_def: "ar = tsProjSnd\<cdot>dr"
+    and as_def: "as = tsMed\<cdot>ar\<cdot>(tsAltbitproExampOra2 \<infinity>)"
+  shows "tsAbs\<cdot>(tsProjFst\<cdot>(tsRemDups\<cdot>dr)) = tsAbs\<cdot>(tsAltbitproExampInp \<bullet>\<surd> tsInfTick)"
+  oops
     
 end
