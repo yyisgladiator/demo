@@ -237,7 +237,7 @@ proof -
       qed
     qed
 
-  have "ubLen ub \<le> ubLen (ubRestrict (ufDom\<cdot>f1)\<cdot>(b \<uplus> ub))"
+  have y21: "ubLen ub \<le> ubLen (ubRestrict (ufDom\<cdot>f1)\<cdot>(b \<uplus> ub))"
     (* restricting a bundle can only increase the length
        Proof idea:
        obtain least channel c of (b \<uplus> ub)
@@ -285,11 +285,16 @@ proof -
   qed
 
   then have y3: "(ubLen ub) <\<^sup>l (ubLen (f1 \<rightleftharpoons> (ubRestrict (ufDom\<cdot>f1)\<cdot>(b \<uplus> ub))))"
-    (* Should follow directly from assm ufIsStrong *)
-    sorry
+  proof -
+    have y1: "(ubRestrict (ufDom\<cdot>f1)\<cdot>(b \<uplus> ub)) \<in> dom (Rep_cufun f1)"
+      by (metis (no_types, lifting) Un_Diff_cancel2 Un_assoc assms(5) assms(6) le_iff_sup sup_left_idem ubclDom_ubundle_def ubclRestrict_ubundle_def ubcldom_least_cs ubclunion_ubcldom ubresrict_dom2 ufCompI_def ufCompO_def ufunLeastIDom ufun_ufundom2dom)
+    then  show ?thesis
+    using assms(2) ufIsStrong_def ubclRestrict_ubundle_def
+    by (smt dual_order.trans lnsuc_lnle_emb ubclLen_ubundle_def y21)
+  qed
 
   (* Same for f2 *)
-  have "ubLen ub \<le> ubLen (ubRestrict (ufDom\<cdot>f2)\<cdot>(b \<uplus> ub))"
+  have y22: "ubLen ub \<le> ubLen (ubRestrict (ufDom\<cdot>f2)\<cdot>(b \<uplus> ub))"
     proof(cases "ubDom\<cdot>(ubRestrict (ufDom\<cdot>f2)\<cdot>(b \<uplus> ub)) = {}")
       case True
       then show ?thesis
@@ -332,7 +337,14 @@ proof -
     qed
 
   then have y4: "(ubLen ub) <\<^sup>l (ubLen (f2 \<rightleftharpoons> (ubRestrict (ufDom\<cdot>f2)\<cdot>(b \<uplus> ub))))"
-    sorry
+  proof -
+    have y1: "(ubRestrict (ufDom\<cdot>f2)\<cdot>(b \<uplus> ub)) \<in> dom (Rep_cufun f2)"
+      using assms(5) assms(6) ufCompI_def
+      by (metis (no_types, lifting) Un_Diff_cancel Un_assoc sup.absorb_iff1 sup.right_idem ubclDom_ubundle_def ubclRestrict_ubundle_def ubclUnion_ubundle_def ubcldom_least_cs ubclunion_ubcldom ubresrict_dom2 ubunion_commutative ufCompO_def ufunLeastIDom ufun_ufundom2dom y0)
+    then show ?thesis
+      using assms(3) ufIsStrong_def ubclRestrict_ubundle_def
+      by (smt dual_order.trans lnsuc_lnle_emb ubclLen_ubundle_def y22)
+  qed
 
   show ?thesis
     apply(simp add: ufCompH_def)
