@@ -109,7 +109,8 @@ lemma sbtake_ind:
   "\<forall>x. (P (ubLeast (ubDom\<cdot>x)) \<and> 
        (\<forall>a s. P s \<and> ubDom\<cdot>a = ubDom\<cdot>x \<and> ubDom\<cdot>s = ubDom\<cdot>x \<and> ubMaxLen (Fin 1) a \<and> a \<noteq> (ubLeast (ubDom\<cdot>x)) \<longrightarrow> P (ubConc a\<cdot>s))) 
        \<longrightarrow> P (sbTake n\<cdot>x)" 
-  sorry
+  using ubmaxlen_sbtake sbtake_ind2
+  by (metis (full_types) sbtake_sbdom) 
 
 lemma finind_ub: 
   "\<lbrakk> \<exists>n. ubMaxLen (Fin n) x; 
@@ -134,15 +135,14 @@ fix x :: "'a stream ubundle"
       have f25: "\<And>c. c\<in>(ubDom\<cdot>x) \<Longrightarrow> stake n\<cdot>(x . c) = x . c"
         apply (case_tac "#(x . c) = Fin n")
         using fin2stake apply blast
-        sorry
-          (* proof -
-            have f251: "\<And>c::channel. c \<in> ubDom\<cdot>x \<Longrightarrow> #(x  .  c) \<noteq> Fin n \<Longrightarrow>  #(x  .  c) < Fin n"
-              by (simp add: f21 le_neq_trans)
-            have f252: "\<And>c::channel. c \<in> ubDom\<cdot>x \<Longrightarrow>  #(x  .  c) < Fin n \<Longrightarrow>  stake n\<cdot>(x . c) = x . c"
-              by (meson dual_order.strict_implies_order fin2stake_lemma lnat_well_h1)
-            have f253: "\<And>c::channel. c \<in> ubDom\<cdot>x \<Longrightarrow> #(x  .  c) \<noteq> Fin n \<Longrightarrow> stake n\<cdot>(x  .  c) = x  .  c"
-              using f251 f252 by blast
-        *)
+        proof -
+          have f251: "\<And>c::channel. c \<in> ubDom\<cdot>x \<Longrightarrow> #(x  .  c) \<noteq> Fin n \<Longrightarrow>  #(x  .  c) < Fin n"
+            by (simp add: f21 le_neq_trans)
+          have f252: "\<And>c::channel. c \<in> ubDom\<cdot>x \<Longrightarrow>  #(x  .  c) < Fin n \<Longrightarrow>  stake n\<cdot>(x . c) = x . c"
+            by (meson dual_order.strict_implies_order fin2stake_lemma lnat_well_h1)
+          show "\<And>c::channel. c \<in> ubDom\<cdot>x \<Longrightarrow> #(x  .  c) \<noteq> Fin n \<Longrightarrow> stake n\<cdot>(x  .  c) = x  .  c"
+            using f251 f252 by blast
+        qed
       show ?thesis
          by (simp add: ubgetchI a0 n_def f21 f22 f23 f25)
     qed
