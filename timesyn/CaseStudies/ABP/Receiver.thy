@@ -256,33 +256,32 @@ lemma recspf_insert: "RecSPF \<rightleftharpoons> sb = (Abs_ufun tsynbRec) \<rig
   by (simp add: RecSPF_def)
 
 lemma recspf_ufdom: "ufDom\<cdot>RecSPF = {\<guillemotright>dr}"
-  unfolding ufDom_def
+  apply(simp add: ufDom_def)
   proof -
-    show "(\<Lambda> (f::(Receiver tsyn stream\<^sup>\<Omega>) ufun). ubclDom\<cdot>(SOME b::Receiver tsyn stream\<^sup>\<Omega>. b \<in> dom (Rep_cufun f)))\<cdot>RecSPF = {\<guillemotright>dr}" proof -
-      have 1: "(\<Lambda> (f::(Receiver tsyn stream\<^sup>\<Omega>) ufun). ubclDom\<cdot>(SOME b::Receiver tsyn stream\<^sup>\<Omega>. b \<in> dom (Rep_cufun f)))\<cdot>RecSPF
-             = ubclDom\<cdot>(SOME b::Receiver tsyn stream\<^sup>\<Omega>. b \<in> dom (Rep_cufun RecSPF))" by simp
-      have 2: "ubclDom\<cdot>(SOME b::Receiver tsyn stream\<^sup>\<Omega>. b \<in> dom (Rep_cufun RecSPF)) =  {\<guillemotright>dr}" proof -
-        have "b \<in> dom (Rep_cufun RecSPF) \<Longrightarrow> ubclDom\<cdot>b  = {\<guillemotright>dr}"
+    show "ubclDom\<cdot>(SOME b::Receiver tsyn stream\<^sup>\<Omega>. b \<in> dom (Rep_cufun RecSPF)) =  {\<guillemotright>dr}" 
       proof -
-        assume a1: "b \<in> dom (Rep_cufun RecSPF)"
-          have "ufWell (\<Lambda> u. (ubclDom\<cdot>u = {\<guillemotright>dr})\<leadsto>Abs_ubundle [ar\<guillemotright> \<mapsto> bool2abp\<cdot> (tsynProjSnd\<cdot>(abp2natbool\<cdot>(u . \<guillemotright>dr))), o\<guillemotright> \<mapsto> nat2abp\<cdot> (tsynRec\<cdot>(abp2natbool\<cdot>(u . \<guillemotright>dr)))])"
-            sorry
-        then have "Rep_cufun (Abs_cufun (\<lambda>u. (ubclDom\<cdot>u = {\<guillemotright>dr})\<leadsto>Abs_ubundle [ar\<guillemotright> \<mapsto> bool2abp\<cdot> (tsynProjSnd\<cdot>(abp2natbool\<cdot>(u . \<guillemotright>dr))), o\<guillemotright> \<mapsto> nat2abp\<cdot> (tsynRec\<cdot>(abp2natbool\<cdot>(u . \<guillemotright>dr)))])) = (\<lambda>u. (ubclDom\<cdot>u = {\<guillemotright>dr})\<leadsto>Abs_ubundle [ar\<guillemotright> \<mapsto> bool2abp\<cdot> (tsynProjSnd\<cdot>(abp2natbool\<cdot>(u . \<guillemotright>dr))), o\<guillemotright> \<mapsto> nat2abp\<cdot> (tsynRec\<cdot>(abp2natbool\<cdot>(u . \<guillemotright>dr)))])"
-          using rep_abs_cufun tsynbrec_cont by (simp add: ubclDom2ubDom)
-        then have "Rep_cufun RecSPF = (\<lambda>u. (ubclDom\<cdot>u = {\<guillemotright>dr})\<leadsto>Abs_ubundle [ar\<guillemotright> \<mapsto> bool2abp\<cdot> (tsynProjSnd\<cdot>(abp2natbool\<cdot>(u . \<guillemotright>dr))), o\<guillemotright> \<mapsto> nat2abp\<cdot> (tsynRec\<cdot>(abp2natbool\<cdot>(u . \<guillemotright>dr)))])"
-          by (simp add: RecSPF_def tsynbRec_def)
-        then show ?thesis
-          using a1 by (meson domIff)
+        have "b \<in> dom (Rep_cufun RecSPF) \<Longrightarrow> ubclDom\<cdot>b  = {\<guillemotright>dr}"
+          proof - 
+            have "ubclDom\<cdot>b  \<noteq> {\<guillemotright>dr} \<Longrightarrow> b \<notin> dom (Rep_cufun RecSPF)" 
+              proof -
+                assume "ubclDom\<cdot>b  \<noteq> {\<guillemotright>dr}"
+                hence "(Rep_ufun RecSPF)\<cdot>b = None" 
+                  proof -
+                    have "tsynbRec\<cdot>b = None" using \<open>ubclDom\<cdot>(b::Receiver tsyn stream\<^sup>\<Omega>) \<noteq> {\<guillemotright>dr}\<close> 
+                      tsynbrec_insert ubclDom2ubDom by auto
+                    thus ?thesis  by (simp add: RecSPF_def)
+                  qed
+                thus "b \<notin> dom (Rep_cufun RecSPF)" by (simp add: domIff)
+              qed
+            thus "b \<in> dom (Rep_cufun RecSPF) \<Longrightarrow> ubclDom\<cdot>b  = {\<guillemotright>dr}" by blast
+          qed
+        thus ?thesis 
+          proof -
+            have "ufDom\<cdot>RecSPF = {\<guillemotright>dr}"
+              by (metis RecSPF_def rep_abs_cufun2 tsynbnull_ubdom tsynbrec_insert tsynbrec_ufwell ubclDom2ubDom ufdom_2ufundom)
+            then show ?thesis by (simp add: ufdom_insert)
+          qed
       qed
-        thus ?thesis proof -
-        have "ufDom\<cdot>RecSPF = {\<guillemotright>dr}"
-          using RecSPF_def tsynbRec_def tsynbrec_cont ufun_ufdom_abs by fastforce
-  then show ?thesis
-    by (simp add: ufdom_insert)
-  qed
-      qed
-      from 1 2 show ?thesis  by simp
-    qed
   qed
 
 lemma recspf_ufran: "ufRan\<cdot>RecSPF = {ar\<guillemotright>, o\<guillemotright>}"
