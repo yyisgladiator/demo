@@ -40,5 +40,13 @@ lemma tsynbnull_ubconc_sbrt [simp]:
   shows "sbRt\<cdot>(ubConc (tsynbNull c)\<cdot>sb) = sb"
   apply (rule ub_eq)
   by (simp add: assms sbRt_def usclConc_stream_def)+
+
+
+
+definition tsynbRemDups :: "'a tsyn stream ubundle \<rightarrow> 'a tsyn stream ubundle option" where 
+  "tsynbRemDups \<equiv> \<Lambda> sb. (ubDom\<cdot>sb = {c1}) \<leadsto> Abs_ubundle [c2 \<mapsto> tsynRemDups\<cdot>(sb  .  c1)]"
+
+
+
     
 end
