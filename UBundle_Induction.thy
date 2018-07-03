@@ -89,28 +89,72 @@ lemma sbcases2: "\<And>(x :: 'a stream\<^sup>\<Omega>) P. \<lbrakk>x = (ubLeast 
 
 
 lemma sbtake_ind2: 
-  "\<forall>x. (P (ubLeast (ubDom\<cdot>x)) \<and> 
-       (\<forall>a s. P s \<and> ubDom\<cdot>a = ubDom\<cdot>x \<and> ubDom\<cdot>s = ubDom\<cdot>x \<and> ubMaxLen (Fin 1) a  \<and> u \<noteq> (ubLeast (ubDom\<cdot>x)) \<longrightarrow> P (ubConc a\<cdot>s))) 
+  "\<forall>x. P (ubLeast (ubDom\<cdot>x)) \<and> 
+       (\<forall>a s. P s \<and> ubDom\<cdot>a = ubDom\<cdot>x \<and> ubDom\<cdot>s = ubDom\<cdot>x \<and> ubMaxLen (Fin 1) a  \<and> a \<noteq> (ubLeast (ubDom\<cdot>x)) \<longrightarrow> P (ubConc a\<cdot>s)) 
         \<and> ubMaxLen (Fin n) x
-       \<longrightarrow> P x"
+       \<longrightarrow> P (x :: 'a stream ubundle)"
+  apply rule+
 proof(induct n)
   case 0
-  then show ?case 
-    
-    sorry
+  have "\<And>x.
+       P (ubLeast (ubDom\<cdot>x)) \<Longrightarrow>
+        (\<forall>a s.
+            P s \<and> ubDom\<cdot>a = ubDom\<cdot>x \<and> ubDom\<cdot>s = ubDom\<cdot>x \<and> ubMaxLen (Fin (1::nat)) a \<and> a \<noteq> ubLeast (ubDom\<cdot>x) \<longrightarrow> P (ubConc a\<cdot>s)) \<Longrightarrow>
+       ubMaxLen (Fin (0::nat)) x \<Longrightarrow>
+       P x"
+  proof -
+    fix x::"'a stream ubundle"
+    assume "P (ubLeast (ubDom\<cdot>x))"
+    assume "(\<forall>a s.
+            P s \<and> ubDom\<cdot>a = ubDom\<cdot>x \<and> ubDom\<cdot>s = ubDom\<cdot>x \<and> ubMaxLen (Fin (1::nat)) a \<and> a \<noteq> ubLeast (ubDom\<cdot>x) \<longrightarrow> P (ubConc a\<cdot>s))"
+    assume "ubMaxLen (Fin (0::nat)) x"
+    show "P x" 
+      sorry
+  qed
+  then show ?case
+    using "0.prems" by blast
 next
   case (Suc n)
-  then show ?case 
-    
-    sorry
+  have "\<And>(n::nat) x.
+       (\<And>x.
+           P (ubLeast (ubDom\<cdot>x)) \<and>
+           (\<forall>a s.
+               P s \<and> ubDom\<cdot>a = ubDom\<cdot>x \<and> ubDom\<cdot>s = ubDom\<cdot>x \<and> ubMaxLen (Fin (1::nat)) a \<and> a \<noteq> ubLeast (ubDom\<cdot>x) \<longrightarrow> P (ubConc a\<cdot>s)) \<and>
+           ubMaxLen (Fin n) x \<Longrightarrow>
+           P x) \<Longrightarrow>
+       P (ubLeast (ubDom\<cdot>x)) \<Longrightarrow>
+       (\<forall>a s.
+           P s \<and> ubDom\<cdot>a = ubDom\<cdot>x \<and> ubDom\<cdot>s = ubDom\<cdot>x \<and> ubMaxLen (Fin (1::nat)) a \<and> a \<noteq> ubLeast (ubDom\<cdot>x) \<longrightarrow> P (ubConc a\<cdot>s)) \<Longrightarrow>
+       ubMaxLen (Fin (Suc n)) x \<Longrightarrow>
+       P x"
+  proof -
+    fix n :: "nat"
+    fix x :: "'a stream\<^sup>\<Omega>"
+    assume a1: "(\<And>x.
+              P (ubLeast (ubDom\<cdot>x)) \<and>
+              (\<forall>a s.
+                  P s \<and> ubDom\<cdot>a = ubDom\<cdot>x \<and> ubDom\<cdot>s = ubDom\<cdot>x \<and> ubMaxLen (Fin (1::nat)) a \<and> a \<noteq> ubLeast (ubDom\<cdot>x) \<longrightarrow> P (ubConc a\<cdot>s)) \<and>
+              ubMaxLen (Fin n) x \<Longrightarrow>
+              P x)"
+    assume "P (ubLeast (ubDom\<cdot>x))"
+    assume "(\<forall>a s.
+            P s \<and> ubDom\<cdot>a = ubDom\<cdot>x \<and> ubDom\<cdot>s = ubDom\<cdot>x \<and> ubMaxLen (Fin (1::nat)) a \<and> a \<noteq> ubLeast (ubDom\<cdot>x) \<longrightarrow> P (ubConc a\<cdot>s))"
+    assume "ubMaxLen (Fin (Suc n)) x"
+    show "P x" 
+      sorry
+  qed
+  then show ?case
+    using Suc.hyps Suc.prems by blast
 qed
 
 lemma sbtake_ind: 
   "\<forall>x. (P (ubLeast (ubDom\<cdot>x)) \<and> 
        (\<forall>a s. P s \<and> ubDom\<cdot>a = ubDom\<cdot>x \<and> ubDom\<cdot>s = ubDom\<cdot>x \<and> ubMaxLen (Fin 1) a \<and> a \<noteq> (ubLeast (ubDom\<cdot>x)) \<longrightarrow> P (ubConc a\<cdot>s))) 
        \<longrightarrow> P (sbTake n\<cdot>x)" 
+  apply rule+
+  apply(subst sbtake_ind2, simp_all)
   using ubmaxlen_sbtake sbtake_ind2
-  by (metis (full_types) sbtake_sbdom) 
+  by auto
 
 lemma finind_ub: 
   "\<lbrakk> \<exists>n. ubMaxLen (Fin n) x; 
