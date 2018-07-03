@@ -862,7 +862,32 @@ lemma uspecimage_ran1 [simp]:
     and "\<And>x. ufclRan\<cdot>x =  ufclRan\<cdot> (f x)"
   shows "uspecRan\<cdot>(uspecImage f S) = uspecRan\<cdot>S"
   using assms
-  by (metis ufuncldom_least_ran uspecimage_useful_ran) 
+  by (metis ufuncldom_least_ran uspecimage_useful_ran)
+
+lemma urs_img_inj:
+  assumes "\<And>x y. ((ufclDom\<cdot>x = ufclDom\<cdot>y \<and> ufclRan\<cdot>x = ufclRan\<cdot>y) \<Longrightarrow>
+    (ufclDom\<cdot>(f x) = ufclDom\<cdot>(f y) \<and> ufclRan\<cdot>(f x) = ufclRan\<cdot>(f y)))"
+      and "inj f"
+      and "uspecRevSet\<cdot>(uspecImage f S1) = uspecRevSet\<cdot>(uspecImage f S2)"
+    shows "uspecRevSet\<cdot>S1 = uspecRevSet\<cdot>S2"
+proof -
+  have f1: "\<forall>a aa. (ufclDom\<cdot>a \<noteq> ufclDom\<cdot>aa \<or> ufclRan\<cdot>a \<noteq> ufclRan\<cdot>aa) \<or> ufclDom\<cdot>(f a) = ufclDom\<cdot>(f aa) 
+    \<and> ufclRan\<cdot>(f a) = ufclRan\<cdot>(f aa)"
+    by (meson assms(1))
+  have "\<forall>f u. (\<exists>a aa. (ufclDom\<cdot>(a::'a) = ufclDom\<cdot>aa \<and> ufclRan\<cdot>a = ufclRan\<cdot>aa) \<and> (ufclDom\<cdot>(f a::'b) 
+    \<noteq> ufclDom\<cdot>(f aa) \<or> ufclRan\<cdot>(f a) \<noteq> ufclRan\<cdot>(f aa))) \<or> uspecRevSet\<cdot>(uspecImage f u) = setrevImage
+    f (uspecRevSet\<cdot>u)"
+    by (meson uspecimage_useful_uspecrevset)
+  then obtain aa :: "('a \<Rightarrow> 'b) \<Rightarrow> 'a" and aaa :: "('a \<Rightarrow> 'b) \<Rightarrow> 'a" where
+    "\<forall>f u. ufclDom\<cdot>(aa f) = ufclDom\<cdot>(aaa f) \<and> ufclRan\<cdot>(aa f) = ufclRan\<cdot>(aaa f) \<and> (ufclDom\<cdot>(f (aa f)) 
+    \<noteq> ufclDom\<cdot>(f (aaa f)) \<or> ufclRan\<cdot>(f (aa f)) \<noteq> ufclRan\<cdot>(f (aaa f))) \<or> uspecRevSet\<cdot>(uspecImage f u) 
+    = setrevImage f (uspecRevSet\<cdot>u)"
+    by moura
+  then have "setrevImage f (uspecRevSet\<cdot>S1) = setrevImage f (uspecRevSet\<cdot>S2)"
+    using f1 by (metis assms(3))
+  then show ?thesis
+    by (meson assms(2) injD setrevimage_inj_inj)
+qed
 
 
 subsection \<open>uspecStateLeast\<close>

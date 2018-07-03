@@ -384,6 +384,11 @@ proof -
     by (metis (no_types, lifting) SetPcpo.less_set_def f6 subsetI)
 qed 
 
+lemma setrevimage_inj_inj:
+  assumes "inj f"
+  shows "inj (setrevImage f)"
+  unfolding setrevImage_def
+  by (metis (no_types, lifting) assms injI inj_image_eq_iff rev.inject setrev_eqI)
 
 section \<open>set flat rev\<close>
 subsection \<open>set flat def N lemmas\<close>
