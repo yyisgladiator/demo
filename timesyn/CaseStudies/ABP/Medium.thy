@@ -24,12 +24,12 @@ definition tsynMed :: "'a tsyn stream \<rightarrow> bool stream \<rightarrow> 'a
 section {* basic properties *}
 (* ----------------------------------------------------------------------- *)
 
-lemma oracases [case_names bottom true false]:
-  assumes bottom: "ts=\<bottom> \<Longrightarrow> P ts"
+lemma oracases [case_names bot true false]:
+  assumes bot: "ts=\<epsilon> \<Longrightarrow> P ts"
     and true: "\<And>as. ts= (\<up>True \<bullet> as) \<Longrightarrow> P ts"
     and false: "\<And>as. ts=(\<up>False \<bullet> as) \<Longrightarrow> P ts"
   shows "P ts"
-  by (metis (full_types) bottom false scases true)
+  by (metis (full_types) bot false scases true)
 
 (* ----------------------------------------------------------------------- *)
 subsection {* basic properties of tsMed *}
@@ -39,6 +39,12 @@ text{* "Lossy" medium that gets messages and an oracle and will transmit the k-t
        the k-th element in the oracle is True, otherwise the message will be discarded. *}
 lemma tsynmed_insert: "tsynMed\<cdot>msg\<cdot>ora = tsynProjFst\<cdot>(tsynFilter {x. snd x}\<cdot>(tsynZip\<cdot>msg\<cdot>ora))"
   by (simp add: tsynMed_def)
+
+lemma tsynmed_strict [simp]: 
+  "tsynMed\<cdot>\<epsilon>\<cdot>\<epsilon> = \<epsilon>"
+  "tsynMed\<cdot>msg\<cdot>\<epsilon> = \<epsilon>"
+  "tsynMed\<cdot>\<epsilon>\<cdot>ora = \<epsilon>"
+  by (simp add: tsynMed_def)+
 
 text{* If the first element in the oracle is True then the current message will be transmitted. *}
 lemma tsynmed_sconc_msg_t:
@@ -55,20 +61,65 @@ lemma tsynmed_sconc_msg_t:
       by (simp add: tsynmed_insert)
   qed
 
-lemma tsynmed_tsyndom: assumes "#ora=\<infinity>" shows "tsynDom\<cdot>(tsynMed\<cdot>msg\<cdot>ora) \<subseteq> tsynDom\<cdot>msg"
-  proof (induction rule: oracases)
-    case bottom
-      then show ?case
-        using assms by simp
-    next
-      case (true as)
-      then show ?case
-        apply (simp add: assms)
-         sorry
-    next
-      case (false as)
-      then show ?case sorry
-    qed
+text{* If the first element in the oracle is False then the current message will not be transmitted. *}
+lemma tsynmed_sconc_msg_f:
+  assumes "msg \<noteq> \<epsilon>" 
+    and " #ora = \<infinity>" 
+  shows "tsynMed\<cdot>(\<up>(Msg m) \<bullet> msg)\<cdot>(\<up>False \<bullet> ora) = tsynMed\<cdot>msg\<cdot>ora"
+sorry
 
+text{* If the first element in the stream is a tick the oracle will not change. *}
+lemma tsynmed_sconc_tick:
+  assumes "msg \<noteq> \<epsilon>" 
+    and " #ora = \<infinity>" 
+  shows "tsynMed\<cdot>(\<up>- \<bullet> msg)\<cdot>ora = \<up>- \<bullet> tsynMed\<cdot>msg\<cdot>ora"
+sorry
+
+lemma tsynmed_tsyndom: assumes ora_inf:"#ora=\<infinity>" shows "tsynDom\<cdot>(tsynMed\<cdot>msg\<cdot>ora) \<subseteq> tsynDom\<cdot>msg"
+  using assms
+  proof (induction msg arbitrary: ora rule: tsyn_ind)
+    case adm
+    then show ?case 
+      by (simp add: adm_def contlub_cfun_arg contlub_cfun_fun lub_eq_Union SUP_subset_mono)
+  next
+    case bot
+    then show ?case 
+      by simp
+  next
+    case (msg m s)
+    then show ?case 
+      proof (cases rule: oracases [of ora])
+        case bot
+        then show ?thesis 
+          using msg.prems by simp
+      next
+        case (true as)
+        then show ?thesis 
+          proof (cases rule: scases [of s])
+            assume ora_t: "ora = \<up>True \<bullet> as"
+            case bottom
+              have tsynzip_bot: "tsynZip\<cdot>(\<up>(Msg m))\<cdot>(\<up>True \<bullet> ora) = (\<up>(Msg (m,True)))\<bullet>tsynZip\<cdot>\<epsilon>\<cdot>ora"
+                by (metis sconc_snd_empty tsynzip_sconc_msg)
+              have tsynfilter_simp: "tsynFilter {x::'a \<times> bool. snd x}\<cdot>(\<up>(Msg (m, True))) = (\<up>(Msg (m, True)))"
+                by (metis mem_Collect_eq sconc_snd_empty snd_conv tsynfilter_sconc_msg_in tsynfilter_strict)
+              have thesis_simp:
+                "tsynProjFst\<cdot>(tsynFilter {x. snd x}\<cdot>(tsynZip\<cdot>(\<up>(Msg m))\<cdot>(\<up>True \<bullet> ora)))
+                 = \<up>(Msg m)"
+                by (simp add: tsynzip_bot tsynfilter_simp tsynprojfst_insert)
+            then show ?thesis 
+              apply (simp add: tsynmed_insert thesis_simp)
+              by (metis bottom sconc_snd_empty set_eq_subset thesis_simp true tsynZip.simps(1) tsynzip_sconc_msg)
+          next
+            case (scons a s)
+            then show ?thesis sorry
+          qed
+      next
+        case (false as)
+        then show ?thesis sorry
+      qed
+  next
+    case (null s)
+    then show ?case sorry
+  qed
 
 end
