@@ -3,11 +3,11 @@
  * This file was generated from MediumRS.maa and will be overridden when changed. To change
  * permanently, consider changing the model itself.
  *
- * Generated on Jul 4, 2018 4:48:25 PM by transformer 1.0.0
+ * Generated on Jul 4, 2018 5:29:57 PM by transformer 1.0.0
  *)
 theory MediumRSAutomaton
 
-imports "../AutomatonPrelude" "../../../untimed/CaseStudy/ndAutomaton"
+imports "../AutomatonPrelude"
 
 begin
 
