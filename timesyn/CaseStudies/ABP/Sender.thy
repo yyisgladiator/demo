@@ -17,42 +17,42 @@ begin
 (* ----------------------------------------------------------------------- *)
 
 text {* Inverse of C. *}
-fun invC :: "Sender \<Rightarrow> (nat \<times> bool)" where
+fun invC :: "abpMessage \<Rightarrow> (nat \<times> bool)" where
   "invC (C (n,b)) = (n,b)" |
   "invC n = undefined"
 
 text {* Conversion of a pair (nat,bool) stream into an equivalent receiver stream. *}
-definition natbool2abp :: "(nat \<times> bool) tsyn stream \<rightarrow> Sender tsyn stream" where
+definition natbool2abp :: "(nat \<times> bool) tsyn stream \<rightarrow> abpMessage tsyn stream" where
   "natbool2abp \<equiv> tsynMap C"
 
 text {* Conversion of a receiver stream into an equivalent pair (nat,bool) stream. *}
-definition abp2natbool :: "Sender tsyn stream \<rightarrow> (nat \<times> bool) tsyn stream" where
+definition abp2natbool :: "abpMessage tsyn stream \<rightarrow> (nat \<times> bool) tsyn stream" where
   "abp2natbool \<equiv> tsynMap invC"
 
 text {* Inverse of B. *}
-fun invB :: "Sender \<Rightarrow> bool" where
+fun invB :: "abpMessage \<Rightarrow> bool" where
   "invB (B x) = x" |
   "invB x = undefined"
 
 text {* Conversion of a bool stream into an equivalent receiver stream. *}
-definition bool2abp :: "bool tsyn stream \<rightarrow> Sender tsyn stream" where
+definition bool2abp :: "bool tsyn stream \<rightarrow> abpMessage tsyn stream" where
   "bool2abp \<equiv> tsynMap B"
 
 text {* Conversion of a receiver stream into an equivalent bool stream. *}
-definition abp2bool :: "Sender tsyn stream \<rightarrow> bool tsyn stream" where
+definition abp2bool :: "abpMessage tsyn stream \<rightarrow> bool tsyn stream" where
   "abp2bool \<equiv> tsynMap invB"
 
 text {* Inverse of C. *}
-fun invA :: "Sender \<Rightarrow> nat" where
+fun invA :: "abpMessage \<Rightarrow> nat" where
   "invA (A x) = x" |
   "invA x = undefined"
 
 text {* Conversion of a nat stream into an equivalent receiver stream. *}
-definition nat2abp :: "nat tsyn stream \<rightarrow> Sender tsyn stream" where
+definition nat2abp :: "nat tsyn stream \<rightarrow> abpMessage tsyn stream" where
   "nat2abp \<equiv> tsynMap A"
 
 text {* Conversion of a receiver stream into an equivalent nat stream. *}
-definition abp2nat :: "Sender tsyn stream \<rightarrow> nat tsyn stream" where
+definition abp2nat :: "abpMessage tsyn stream \<rightarrow> nat tsyn stream" where
   "abp2nat \<equiv> tsynMap invA"
 
 (* ----------------------------------------------------------------------- *)
