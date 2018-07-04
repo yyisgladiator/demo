@@ -7,13 +7,13 @@ package abp;
     out Boolean as;
 
   automaton Medium {
-    variable Integer c=random(50);
+    variable Integer c=random();
 
     state Single;
     initial Single / { as=null};
 
     Single -> Single {ar=null} / {as=null};
     Single -> Single [c>0]  / {c=c-1};
-    Single -> Single [c=0]  / {c=random(50), as=ar};
+    Single -> Single [c=0]  / {c=random(), as=ar};
   }
 }
