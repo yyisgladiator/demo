@@ -3,11 +3,11 @@
  * This file was generated from MediumSR.maa and will be overridden when changed. To change
  * permanently, consider changing the model itself.
  *
- * Generated on Jul 3, 2018 6:22:45 PM by transformer 1.0.0
+ * Generated on Jul 4, 2018 3:32:13 PM by transformer 1.0.0
  *)
 theory MediumSRAutomaton
 
-imports "../AutomatonPrelude" "../../../untimed/CaseStudy/NDA"
+imports "../AutomatonPrelude" "../../../untimed/CaseStudy/ndAutomaton"
 
 begin
 
@@ -38,10 +38,10 @@ fun mediumSRTransitionH :: "(MediumSRState \<times> (abpMessage tsyn)) \<Rightar
 fun mediumSRTransition :: "(MediumSRState \<times> (channel \<rightharpoonup> abpMessage tsyn)) \<Rightarrow> ((MediumSRState \<times> abpMessage tsyn SB) set rev)" where
 "mediumSRTransition (s,f) = (if dom(f) = {\<C> ''ds''} then mediumSRTransitionH (s,(f\<rightharpoonup>\<C> ''ds'')) else undefined)"
 
-lift_definition MediumSRAutomaton :: "(MediumSRState, abpMessage tsyn) NDA" is "(mediumSRTransition, Rev {(State Single c, (tsynbNull (\<C> ''dr'')))| c. c < 50}, Discr {\<C> ''ds''}, Discr {\<C> ''dr''})"
+lift_definition MediumSRAutomaton :: "(MediumSRState, abpMessage tsyn) ndAutomaton" is "(mediumSRTransition, Rev {(State Single c, (tsynbNull (\<C> ''dr'')))| c. c < 50}, Discr {\<C> ''ds''}, Discr {\<C> ''dr''})"
   by simp
 
 definition MediumSRSPF :: "abpMessage tsyn SPS" where
-"MediumSRSPF = nda_H\<cdot>MediumSRAutomaton"
+"MediumSRSPF = nda_H MediumSRAutomaton"
 
 end
