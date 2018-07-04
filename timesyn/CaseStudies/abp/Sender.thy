@@ -16,44 +16,44 @@ begin
   section {* Datatype Conversion *}
 (* ----------------------------------------------------------------------- *)
 
-text {* Inverse of C. *}
-fun invC :: "abpMessage \<Rightarrow> (nat \<times> bool)" where
-  "invC (C (n,b)) = (n,b)" |
-  "invC n = undefined"
+text {* Inverse of a Pair. *}
+fun invPair :: "abpMessage \<Rightarrow> (nat \<times> bool)" where
+  "invPair (Pair_nat_bool (n,b)) = (n,b)" |
+  "invPair n = undefined"
 
 text {* Conversion of a pair (nat,bool) stream into an equivalent receiver stream. *}
 definition natbool2abp :: "(nat \<times> bool) tsyn stream \<rightarrow> abpMessage tsyn stream" where
-  "natbool2abp \<equiv> tsynMap C"
+  "natbool2abp \<equiv> tsynMap Pair_nat_bool"
 
 text {* Conversion of a receiver stream into an equivalent pair (nat,bool) stream. *}
 definition abp2natbool :: "abpMessage tsyn stream \<rightarrow> (nat \<times> bool) tsyn stream" where
-  "abp2natbool \<equiv> tsynMap invC"
+  "abp2natbool \<equiv> tsynMap invPair"
 
-text {* Inverse of B. *}
-fun invB :: "abpMessage \<Rightarrow> bool" where
-  "invB (B x) = x" |
-  "invB x = undefined"
+text {* Inverse of a Bool. *}
+fun invBool :: "abpMessage \<Rightarrow> bool" where
+  "invBool (Bool x) = x" |
+  "invBool x = undefined"
 
 text {* Conversion of a bool stream into an equivalent receiver stream. *}
 definition bool2abp :: "bool tsyn stream \<rightarrow> abpMessage tsyn stream" where
-  "bool2abp \<equiv> tsynMap B"
+  "bool2abp \<equiv> tsynMap Bool"
 
 text {* Conversion of a receiver stream into an equivalent bool stream. *}
 definition abp2bool :: "abpMessage tsyn stream \<rightarrow> bool tsyn stream" where
-  "abp2bool \<equiv> tsynMap invB"
+  "abp2bool \<equiv> tsynMap invBool"
 
-text {* Inverse of C. *}
-fun invA :: "abpMessage \<Rightarrow> nat" where
-  "invA (A x) = x" |
-  "invA x = undefined"
+text {* Inverse of a Nat. *}
+fun invNat :: "abpMessage \<Rightarrow> nat" where
+  "invNat (Nat x) = x" |
+  "invNat x = undefined"
 
 text {* Conversion of a nat stream into an equivalent receiver stream. *}
 definition nat2abp :: "nat tsyn stream \<rightarrow> abpMessage tsyn stream" where
-  "nat2abp \<equiv> tsynMap A"
+  "nat2abp \<equiv> tsynMap Nat"
 
 text {* Conversion of a receiver stream into an equivalent nat stream. *}
 definition abp2nat :: "abpMessage tsyn stream \<rightarrow> nat tsyn stream" where
-  "abp2nat \<equiv> tsynMap invA"
+  "abp2nat \<equiv> tsynMap invNat"
 
 (* ----------------------------------------------------------------------- *)
   section {* Sender Test Streams and Bundles *}
@@ -67,16 +67,16 @@ definition sndTestInputStreamINoLoss :: "nat tsyn stream" where
 definition sndTestInputStreamAsNoLoss :: "bool tsyn stream" where 
   "sndTestInputStreamAsNoLoss \<equiv> <[null, Msg True, Msg False, Msg True]>"
 
-lift_definition sndTestInputUbundleNoLoss :: "Sender tsyn SB" is
-  "[\<guillemotright>i \<mapsto> nat2abp\<cdot>sndTestInputStreamINoLoss, \<guillemotright>as \<mapsto> bool2abp\<cdot>sndTestInputStreamAsNoLoss]" 
+lift_definition sndTestInputUbundleNoLoss :: "abpMessage tsyn SB" is
+  "[\<C> ''i'' \<mapsto> nat2abp\<cdot>sndTestInputStreamINoLoss, \<C> ''as'' \<mapsto> bool2abp\<cdot>sndTestInputStreamAsNoLoss]" 
   by (simp add: ubWell_def usclOkay_stream_def ctype_tsyn_def sndTestInputStreamINoLoss_def 
       sndTestInputStreamAsNoLoss_def bool2abp_def nat2abp_def tsynMap_def rangeI)
 
 definition sndTestOutputStreamNoLoss :: "(nat \<times> bool) tsyn stream" where 
   "sndTestOutputStreamNoLoss \<equiv> <[Msg (1, True), Msg (2, False), Msg (1, True), null]>"
 
-lift_definition sndTestOutputUbundleNoLoss :: "Sender tsyn SB" is
-  "[ds\<guillemotright> \<mapsto> natbool2abp\<cdot>sndTestOutputStreamNoLoss]"
+lift_definition sndTestOutputUbundleNoLoss :: "abpMessage tsyn SB" is
+  "[\<C> ''ds'' \<mapsto> natbool2abp\<cdot>sndTestOutputStreamNoLoss]"
   by (simp add: ubWell_def usclOkay_stream_def ctype_tsyn_def sndTestOutputStreamNoLoss_def 
       natbool2abp_def tsynMap_def)
 
@@ -88,17 +88,17 @@ definition sndTestInputStreamIOneLoss :: "nat tsyn stream" where
 definition sndTestInputStreamAsOneLoss :: "bool tsyn stream" where 
   "sndTestInputStreamAsOneLoss \<equiv> <[null, null, Msg True, Msg False]>"
 
-lift_definition sndTestInputUbundleOneLoss :: "Sender tsyn SB" is
-  "[\<guillemotright>i \<mapsto> tsynMap A\<cdot>sndTestInputStreamIOneLoss,
-    \<guillemotright>as \<mapsto> tsynMap B\<cdot>sndTestInputStreamAsOneLoss]" 
+lift_definition sndTestInputUbundleOneLoss :: "abpMessage tsyn SB" is
+  "[\<C> ''i'' \<mapsto> nat2abp\<cdot>sndTestInputStreamIOneLoss,
+    \<C> ''as'' \<mapsto> bool2abp\<cdot>sndTestInputStreamAsOneLoss]"
   by (simp add: ubWell_def usclOkay_stream_def ctype_tsyn_def sndTestInputStreamAsOneLoss_def
-      sndTestInputStreamIOneLoss_def tsynMap_def rangeI)
+      sndTestInputStreamIOneLoss_def nat2abp_def bool2abp_def tsynMap_def rangeI)
 
 definition sndTestOutputStreamOneLoss :: "(nat \<times> bool) tsyn stream" where 
   "sndTestOutputStreamOneLoss \<equiv> <[Msg (1, True), Msg (1, True), Msg (2, False), null]>"
 
-lift_definition sndTestOutputUbundleOneLoss :: "Sender tsyn SB" is
-  "[ds\<guillemotright> \<mapsto> natbool2abp\<cdot>sndTestOutputStreamOneLoss]"
+lift_definition sndTestOutputUbundleOneLoss :: "abpMessage tsyn SB" is
+  "[\<C> ''ds'' \<mapsto> natbool2abp\<cdot>sndTestOutputStreamOneLoss]"
   by (simp add: ubWell_def usclOkay_stream_def ctype_tsyn_def sndTestOutputStreamOneLoss_def 
       natbool2abp_def tsynMap_def)
 
@@ -109,8 +109,8 @@ definition sndTestInputStreamITwoLoss :: "nat tsyn stream" where
 definition sndTestInputStreamAsTwoLoss :: "bool tsyn stream" where 
   "sndTestInputStreamAsTwoLoss \<equiv> <[null, null, null, Msg True, Msg False, Msg True]>"
 
-lift_definition sndTestInputUbundleTwoLoss :: "Sender tsyn SB" is
-  "[\<guillemotright>i \<mapsto> nat2abp\<cdot>sndTestInputStreamITwoLoss, \<guillemotright>as \<mapsto> bool2abp\<cdot>sndTestInputStreamAsTwoLoss]" 
+lift_definition sndTestInputUbundleTwoLoss :: "abpMessage tsyn SB" is
+  "[\<C> ''i'' \<mapsto> nat2abp\<cdot>sndTestInputStreamITwoLoss, \<C> ''as'' \<mapsto> bool2abp\<cdot>sndTestInputStreamAsTwoLoss]" 
   by (simp add: ubWell_def usclOkay_stream_def ctype_tsyn_def sndTestInputStreamITwoLoss_def
       sndTestInputStreamAsTwoLoss_def nat2abp_def bool2abp_def tsynMap_def rangeI)
 
@@ -118,8 +118,8 @@ definition sndTestOutputStreamTwoLoss :: "(nat \<times> bool) tsyn stream" where
   "sndTestOutputStreamTwoLoss \<equiv> <[Msg (1, True), Msg (1, True), Msg (1, True), Msg (2, False), 
                                   Msg (3, True), null]>"
 
-lift_definition sndTestOutputUbundleTwoLoss :: "Sender tsyn SB" is
-  "[ds\<guillemotright> \<mapsto> natbool2abp\<cdot>sndTestOutputStreamTwoLoss]"
+lift_definition sndTestOutputUbundleTwoLoss :: "abpMessage tsyn SB" is
+  "[\<C> ''ds'' \<mapsto> natbool2abp\<cdot>sndTestOutputStreamTwoLoss]"
   by (simp add: ubWell_def usclOkay_stream_def ctype_tsyn_def sndTestOutputStreamTwoLoss_def 
       natbool2abp_def tsynMap_def)
 
@@ -128,34 +128,37 @@ lift_definition sndTestOutputUbundleTwoLoss :: "Sender tsyn SB" is
 (* ----------------------------------------------------------------------- *)
 
 lemma createdsoutput_ubdom:
-  "ubDom\<cdot>(createDsOutput a) = {ds\<guillemotright>}"
-  by (metis createDsOutput.rep_eq dom_empty dom_fun_upd option.simps(3) ubdom_insert)
+  "ubDom\<cdot>(createDsBundle a) = {\<C> ''ds''}"
+  by (metis createDsBundle.rep_eq dom_empty dom_fun_upd option.simps(3) ubdom_insert)
 
 lemma sendertransition_ubdom:
-  assumes dom_f: "dom f = {\<guillemotright>i, \<guillemotright>as}" and ubelemwell_f: "sbElemWell f"
-  shows "ubDom\<cdot>(snd (senderTransition (s, f))) = {ds\<guillemotright>}"
+  assumes dom_f: "dom f = {\<C> ''i'', \<C> ''as''}" and ubelemwell_f: "sbElemWell f"
+  shows "ubDom\<cdot>(snd (senderTransition (s, f))) = {\<C> ''ds''}"
   proof -
-    obtain inp_i inp_as where f_def: "f = [\<guillemotright>i \<mapsto> inp_i, \<guillemotright>as \<mapsto> inp_as]"
+    obtain inp_i inp_as where f_def: "f = [\<C> ''i'' \<mapsto> inp_i, \<C> ''as'' \<mapsto> inp_as]"
+      sorry
+      (*
       using dom2exElem dom_f by blast
+      *)
     obtain st buf where s_def: "s = State st buf"
       using SenderAutomaton.getSubState.cases by blast
-    have "ubDom\<cdot>(snd (senderTransitionH (SenderState.State st buf, inp_i,inp_as ))) = {ds\<guillemotright>}"
+    have "ubDom\<cdot>(snd (senderTransitionH (SenderState.State st buf, inp_i,inp_as ))) = {\<C> ''ds''}"
       proof (cases inp_i)
         case (Msg i)
         hence msg_i: "inp_i = Msg i" 
           by simp
-        hence "i \<in> ctype \<guillemotright>i"
+        hence "i \<in> ctype (\<C> ''i'')"
           using assms by (simp add: dom_f f_def sbElemWell_def ctype_tsyn_def image_def)
-        then obtain inp where i_def: "i = A inp"
+        then obtain inp where i_def: "i = Nat inp"
           by auto
         then show ?thesis
           proof (cases inp_as)
             case (Msg ack)
             hence msg_as: "inp_as = Msg ack" 
               by simp
-            hence "ack \<in> ctype \<guillemotright>as"
+            hence "ack \<in> ctype (\<C> ''as'')"
               using assms by (simp add: dom_f f_def sbElemWell_def ctype_tsyn_def image_def)
-            then obtain a where as_def: "ack = B a"
+            then obtain a where as_def: "ack = Bool a"
               by auto
             then show ?thesis
               proof (cases st)
@@ -187,9 +190,9 @@ lemma sendertransition_ubdom:
         then show ?thesis
           proof (cases inp_as)
             case (Msg ack)
-            hence "ack \<in> ctype \<guillemotright>as"
+            hence "ack \<in> ctype (\<C> ''as'')"
               using assms by (simp add: dom_f f_def sbElemWell_def ctype_tsyn_def image_def)
-            then obtain a where as_def: "ack = B a"
+            then obtain a where as_def: "ack = Bool a"
               by auto
             then show ?thesis
               proof (cases st)
@@ -217,12 +220,12 @@ lemma sendertransition_ubdom:
               qed
           qed
       qed
-    then show "ubDom\<cdot>(snd (senderTransition (s, f))) = {ds\<guillemotright>}"
+    then show "ubDom\<cdot>(snd (senderTransition (s, f))) = {\<C> ''ds''}"
       using f_def s_def by force
   qed
 
 lemma sendertransition_automaton_well:
-  "automaton_well (senderTransition, SenderState.State Sf [], tsynbNull ds\<guillemotright>, {\<guillemotright>i,\<guillemotright>as }, {ds\<guillemotright>})"
+  "daWell (senderTransition, State Sf [], tsynbNull (\<C> ''ds''), {\<C> ''i'', \<C> ''as''}, {\<C> ''ds''})"
   using sendertransition_ubdom by simp
 
 end
