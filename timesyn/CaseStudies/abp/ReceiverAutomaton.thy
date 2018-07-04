@@ -1,6 +1,13 @@
+(*
+ * DO NOT MODIFY!
+ * This file was generated from Receiver.maa and will be overridden when changed. To change
+ * permanently, consider changing the model itself.
+ *
+ * Generated on Jul 3, 2018 6:22:45 PM by transformer 1.0.0
+ *)
 theory ReceiverAutomaton
 
-imports "../../../untimed/CaseStudy/Automaton" "../../tsynStream" "../../tsynBundle" 
+imports "../AutomatonPrelude"
 
 begin
 
@@ -11,72 +18,34 @@ datatype ReceiverSubstate = Rf | Rt
 datatype ReceiverState = State ReceiverSubstate 
 
 fun getSubState :: "ReceiverState \<Rightarrow> ReceiverSubstate" where
-    "getSubState (State state_s ) = state_s"
+"getSubState (State state_s ) = state_s"
 
 
-datatype Receiver = C "nat" | B "bool" | A "(nat\<times>bool)"
-instance Receiver :: countable
-apply(intro_classes)
-by(countable_datatype)
 
-abbreviation input_dr_c1 :: "channel" ("\<guillemotright>dr") where
-"\<guillemotright>dr \<equiv> c1"
+fun receiverTransitionH :: "(ReceiverState \<times> (abpMessage tsyn)) \<Rightarrow> (ReceiverState \<times> abpMessage tsyn SB)" where
+    "receiverTransitionH (State Rf , ((*dr\<mapsto>*)Msg (Pair_nat_bool a))) = 
+       (if((snd a)=False) then ((State Rt ,(createArBundle ((snd a))) \<uplus> (createOBundle ((fst a)))))
+       else if((snd a)=True) then ((State Rf ,(createArBundle ((snd a))) \<uplus> (tsynbNull (\<C> ''o''))))
+       else  (State Rf , ((tsynbNull (\<C> ''ar'')) \<uplus> (tsynbNull (\<C> ''o'')))))"  |
 
-abbreviation output_ar_c2 :: "channel" ("ar\<guillemotright>") where
-"ar\<guillemotright> \<equiv> c2"
+    "receiverTransitionH (State Rf , ((*dr\<mapsto>*)null)) = 
+       (State Rf ,(tsynbNull (\<C> ''ar'')) \<uplus> (tsynbNull (\<C> ''o'')))"  |
 
-abbreviation output_o_c3 :: "channel" ("o\<guillemotright>") where
-"o\<guillemotright> \<equiv> c3"
+    "receiverTransitionH (State Rt , ((*dr\<mapsto>*)Msg (Pair_nat_bool a))) = 
+       (if((snd a)=True) then ((State Rf ,(createArBundle ((snd a))) \<uplus> (createOBundle ((fst a)))))
+       else if((snd a)=False) then ((State Rt ,(createArBundle ((snd a))) \<uplus> (tsynbNull (\<C> ''o''))))
+       else  (State Rt , ((tsynbNull (\<C> ''ar'')) \<uplus> (tsynbNull (\<C> ''o'')))))"  |
 
-instantiation Receiver :: message
-begin
-fun ctype_Receiver :: "channel  \<Rightarrow> Receiver set" where
-    "ctype_Receiver \<guillemotright>dr = range A" | 
-    "ctype_Receiver ar\<guillemotright> = range B" | 
-    "ctype_Receiver o\<guillemotright> = range C" 
-instance
-by(intro_classes)
-end
+    "receiverTransitionH (State Rt , ((*dr\<mapsto>*)null)) = 
+       (State Rt ,(tsynbNull (\<C> ''ar'')) \<uplus> (tsynbNull (\<C> ''o'')))"  
 
-lift_definition createArOutput :: "bool \<Rightarrow> Receiver tsyn SB" is
-    "\<lambda>b. [ ar\<guillemotright> \<mapsto> \<up>(Msg (B b))]"
-unfolding ubWell_def
-unfolding usclOkay_stream_def
-unfolding ctype_tsyn_def
-by simp
+fun receiverTransition :: "(ReceiverState \<times> (channel \<rightharpoonup> abpMessage tsyn)) \<Rightarrow> (ReceiverState \<times> abpMessage tsyn SB)" where
+"receiverTransition (s,f) = (if dom(f) = {\<C> ''dr''} then receiverTransitionH (s,(f\<rightharpoonup>\<C> ''dr'')) else undefined)"
 
-lift_definition createOOutput :: "nat \<Rightarrow> Receiver tsyn SB" is
-    "\<lambda>b. [ o\<guillemotright> \<mapsto> \<up>(Msg (C b))]"
-unfolding ubWell_def
-unfolding usclOkay_stream_def
-unfolding ctype_tsyn_def
-by simp
+lift_definition ReceiverAutomaton :: "(ReceiverState, abpMessage tsyn) dAutomaton" is "(receiverTransition, State Rt , (tsynbNull (\<C> ''ar'')) \<uplus> (tsynbNull (\<C> ''o'')), {\<C> ''dr''}, {\<C> ''ar'', \<C> ''o''})"
+  by simp
 
-
-fun receiverTransitionH :: "(ReceiverState \<times> (Receiver tsyn)) \<Rightarrow> (ReceiverState \<times> Receiver tsyn SB)" where
-    "receiverTransitionH (State Rf , (Msg (A a))) = 
-       (if((snd a)=False) then ((State Rt ,(createArOutput ((snd a))) \<uplus> (createOOutput ((fst a)))))
-       else if((snd a)=True) then ((State Rf ,(createArOutput ((snd a))) \<uplus> (tsynbNull o\<guillemotright>)))
-       else  (State Rf , ((tsynbNull ar\<guillemotright>) \<uplus> (tsynbNull o\<guillemotright>))))"  |
-
-    "receiverTransitionH (State Rf , (null)) = 
-       (State Rf ,(tsynbNull ar\<guillemotright>) \<uplus> (tsynbNull o\<guillemotright>))"  |
-
-    "receiverTransitionH (State Rt , (Msg (A a))) = 
-       (if((snd a)=False) then ((State Rt ,(createArOutput ((snd a))) \<uplus> (tsynbNull o\<guillemotright>)))
-       else if((snd a)=True) then ((State Rf ,(createArOutput ((snd a))) \<uplus> (createOOutput ((fst a)))))
-       else  (State Rt , ((tsynbNull ar\<guillemotright>) \<uplus> (tsynbNull o\<guillemotright>))))"  |
-
-    "receiverTransitionH (State Rt , (null)) = 
-       (State Rt ,(tsynbNull ar\<guillemotright>) \<uplus> (tsynbNull o\<guillemotright>))"  
-
-fun receiverTransition :: "(ReceiverState \<times> (channel \<rightharpoonup> Receiver tsyn)) \<Rightarrow> (ReceiverState \<times> Receiver tsyn SB)" where
-"receiverTransition (s,f) = (if dom(f) = {\<guillemotright>dr} then receiverTransitionH (s,(f\<rightharpoonup>\<guillemotright>dr)) else undefined)"
-
-lift_definition ReceiverAutomaton :: "(ReceiverState, Receiver tsyn) automaton" is "(receiverTransition, State Rt , (tsynbNull ar\<guillemotright>) \<uplus> (tsynbNull o\<guillemotright>), {c1}, {c2,c3})"
-sorry
-
-definition ReceiverSPF :: "Receiver tsyn SPF" where
-"ReceiverSPF = H ReceiverAutomaton"
+definition ReceiverSPF :: "abpMessage tsyn SPF" where
+"ReceiverSPF = da_H ReceiverAutomaton"
 
 end
