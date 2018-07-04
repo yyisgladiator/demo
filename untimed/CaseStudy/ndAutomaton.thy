@@ -1,6 +1,6 @@
 (* Draft for Non-Deterministic Automaton *)
 
-theory NDA
+theory ndAutomaton
 
 imports "../../USpec" "../SpsStep"  "../SPS" NDA_functions
 
