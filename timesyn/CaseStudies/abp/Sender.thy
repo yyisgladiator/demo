@@ -136,10 +136,9 @@ lemma sendertransition_ubdom:
   shows "ubDom\<cdot>(snd (senderTransition (s, f))) = {\<C> ''ds''}"
   proof -
     obtain inp_i inp_as where f_def: "f = [\<C> ''i'' \<mapsto> inp_i, \<C> ''as'' \<mapsto> inp_as]"
-      sorry
-      (*
-      using dom2exElem dom_f by blast
-      *)
+  (* ToDo: remove smt. *)
+      by (smt assms domD dom_eq_singleton_conv dom_fun_upd fun_upd_def fun_upd_triv fun_upd_twist 
+          fun_upd_upd insertI1 insert_absorb)
     obtain st buf where s_def: "s = State st buf"
       using SenderAutomaton.getSubState.cases by blast
     have "ubDom\<cdot>(snd (senderTransitionH (SenderState.State st buf, inp_i,inp_as ))) = {\<C> ''ds''}"
