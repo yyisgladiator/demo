@@ -300,6 +300,12 @@ lemma tsyndom_sconc: assumes "#as < \<infinity>" shows "tsynDom\<cdot>(as \<bull
           tsyndom_cont)
   qed
 
+lemma tsyndom_singleton_null: "tsynDom\<cdot>(\<up>null) = {}"
+  using tsyndom_sconc_null tsyndom_strict by fastforce
+
+lemma tsyndom_singleton_msg: "tsynDom\<cdot>(\<up>(Msg a)) = {a}"
+  by (metis insert_is_Un lscons_conv sup'_def tsyndom_sconc_msg tsyndom_strict)
+
 text {* Cardinality of the set @{term tsynDom} is smaller or equal to the length of the original 
         stream. *}
 lemma tsyndom_slen: assumes "#s = Fin k" shows "card (tsynDom\<cdot>s) \<le> k"
@@ -365,6 +371,12 @@ text {* @{term tsynAbs} of the concatenation of two streams equals the concatena
 lemma tsynabs_sconc: assumes "#as < \<infinity>" shows "tsynAbs\<cdot>(as \<bullet> bs) = tsynAbs\<cdot>as \<bullet> tsynAbs\<cdot>bs"
   by (simp add: add_sfilter2 assms smap_split tsynabs_insert)
 
+lemma tsynabs_singleton_null: "tsynAbs\<cdot>(\<up>null) = tsynAbs\<cdot>\<epsilon>"
+  by (metis sconc_snd_empty tsynabs_sconc_null)
+
+lemma tsynabs_singleton_msg: "tsynAbs\<cdot>(\<up>(Msg a)) = \<up>a"
+  by (metis lscons_conv sup'_def tsynabs_sconc_msg tsynabs_strict)
+
 text {* Length of @{term tsynAbs} is smaller or equal to the length of the original stream. *}
 lemma tsynabs_slen: "#(tsynAbs\<cdot>s) \<le> #s"
   by (simp add: slen_sfilterl1 tsynabs_insert)
@@ -413,6 +425,12 @@ text {* @{term tsynMap} of the concatenation of two streams equals the concatena
 lemma tsynmap_sconc: "tsynMap f\<cdot>(a1 \<bullet> a2) = tsynMap f\<cdot>a1 \<bullet> tsynMap f\<cdot>a2"
   by (simp add: smap_split tsynmap_insert)
 
+lemma tsynmap_singleton_null: "tsynMap f\<cdot>(\<up>null) = \<up>null"
+  by (simp add: tsynMap_def)
+
+lemma tsynmap_singleton_msg: "tsynMap f\<cdot>(\<up>(Msg a)) = (\<up>(Msg (f a)))"
+  by (simp add: tsynMap_def)
+
 text {* @{term tsynMap} leaves the length of a stream unchanged. *}
 lemma tsynmap_slen: "#(tsynMap f\<cdot>s) = #s"
   by (simp add: tsynmap_insert)
@@ -452,6 +470,12 @@ text {* @{term tsynProjFst} of the concatenation of two streams equals the conca
         @{term tsynProjFst} of both streams. *}
 lemma tsynprojfst_sconc: "tsynProjFst\<cdot>(a1 \<bullet> a2) = tsynProjFst\<cdot>a1 \<bullet> tsynProjFst\<cdot>a2"
   by (simp add: smap_split tsynprojfst_insert)
+
+lemma tsynprojfst_singleton_null: "tsynProjFst \<cdot> (\<up>null) = \<up>null"
+  by (simp add: tsynProjFst_def)
+
+lemma tsynprojfst_singleton_msg: "tsynProjFst \<cdot> (\<up>(Msg a)) = \<up>(Msg (fst a))"
+  by (metis lscons_conv smap_scons strict_smap sup'_def tsynFst.simps(2) tsynProjFst_def)
 
 text {* @{term tsynProjFst} leaves the length of a stream unchanged. *}
 lemma tsynprojfst_slen: "#(tsynProjFst\<cdot>s) = #s"
@@ -494,6 +518,12 @@ text {* @{term tsynProjSnd} of the concatenation of two streams equals the conca
 lemma tsynprojsnd_sconc: "tsynProjSnd\<cdot>(a1 \<bullet> a2) = tsynProjSnd\<cdot>a1 \<bullet> tsynProjSnd\<cdot>a2"
   by (simp add: smap_split tsynprojsnd_insert)
 
+lemma tsynprojsnd_singleton_null: "tsynProjSnd \<cdot> (\<up>null) = \<up>null"
+  by (simp add: tsynProjSnd_def)
+
+lemma tsynprojsnd_singleton_msg: "tsynProjSnd \<cdot> (\<up>(Msg a)) = \<up>(Msg (snd a))"
+  by (metis lscons_conv smap_scons strict_smap sup'_def tsynSnd.simps(2) tsynProjSnd_def)
+
 text {* @{term tsynProjSnd} leaves the length of a stream unchanged. *}
 lemma tsynprojsnd_slen: "#(tsynProjSnd\<cdot>s) = #s"
   by (simp add: tsynprojsnd_insert)
@@ -518,6 +548,12 @@ lemma tsynremdups_sconc_msg:
 text {* @{term tsynRemDups} ignores empty time-slots. *}
 lemma tsynremdups_sconc_null: "tsynRemDups\<cdot>(\<up>null \<bullet> s) = \<up>null \<bullet> tsynRemDups\<cdot>s"
   by (simp add: tsynremdups_insert)
+
+lemma tsynremdups_singleton_null: "tsynRemDups\<cdot>(\<up>null) = \<up>null"
+  by (simp add: tsynRemDups_def)
+
+lemma tsynremdups_singleton_msg: "tsynRemDups\<cdot>(\<up> (Msg a)) = \<up>(Msg a)"
+  by (metis sconc_snd_empty sscanla_bot tsynremdups_sconc_msg)
 
 text {* @{term tsynRemDups} leaves the length of a stream unchanged. *}
 lemma tsynremdups_slen: "#(tsynRemDups\<cdot>s) = #s"
@@ -588,7 +624,13 @@ text {*@{term tsynFilter} of the concatenation of two streams equals the concate
         @{term tsynFilter} of both streams. *}
 lemma tsynfilter_sconc: "(tsynFilter A)\<cdot>(a1 \<bullet> a2) = (tsynFilter A)\<cdot>a1 \<bullet> (tsynFilter A)\<cdot>a2"
   by (simp add: smap_split tsynfilter_insert)
-  
+
+lemma tsynfilter_singleton_null: "(tsynFilter A)\<cdot>(\<up>null) = \<up>null"
+  by (simp add: tsynFilter_def)
+
+lemma tsynfilter_singleton_msg: "(tsynFilter A)\<cdot>(\<up>(Msg a)) \<equiv> if a \<notin> A then (\<up>null) else (\<up>(Msg a))"
+  by (smt sconc_snd_empty smap_scons strict_smap tsynFilterElem.simps(2) tsynFilter_def)
+
 text {* Length of @{term tsynFilter} is equal to the length of the original stream. *}
 lemma tsynfilter_slen: "#((tsynFilter A)\<cdot>s) = #s"
   by (simp add: tsynfilter_insert)
@@ -804,6 +846,13 @@ lemma  tsynlen_sconc_infinite:
   shows "tsynLen\<cdot>(as \<bullet> bs) \<le> Fin (n + m)"
   using assms leI sconc_fst_inf tsynlen_sconc_finite by fastforce
 
+(* why does this lemma proofs itself?! *)
+lemma tsynlen_singleton_null: "tsynLen\<cdot>(\<up>null) = 0"
+  by (simp add: tsynabs_singleton_null tsynlen_insert)
+
+(* why is this lemma not working [operand types] *)
+lemma tsynlen_singleton_msg: "tsynLen\<cdot>(\<up>(Msg a)) = 1" 
+
 text {* @{term tsynLen} is less or equal to the length of the stream. *}
 lemma tsynlen_slen: "tsynLen\<cdot>s \<le> slen\<cdot>s"
   by (simp add: tsynabs_slen tsynlen_insert)
@@ -836,6 +885,15 @@ lemma tsynzip_sconc_msg:
   "tsynZip\<cdot>(\<up>(Msg x) \<bullet> xs)\<cdot>(\<up>y \<bullet> ys) = \<up>(Msg (x,y)) \<bullet> tsynZip\<cdot>xs\<cdot>ys"
   by (metis (no_types, lifting) tsynZip.simps(3) inverseMsg.simps(2) lscons_conv tsyn.distinct(1) 
       undiscr_Discr)
+
+lemma tsynzip_singleton_null: "tsynZip\<cdot>(\<up>null)\<cdot>(\<up>a) = \<up>null"
+proof-
+  have "tsynZip\<cdot>(\<up>null)\<cdot>(\<up>a) = (\<up>null) \<bullet> (tsynZip\<cdot>(\<epsilon>)\<cdot>(\<up>a))" sorry
+  thus ?thesis by auto
+qed
+
+lemma tsynzip_singleton_msg: "tsynZip\<cdot>(\<up>(Msg a))\<cdot>(\<up>b) = \<up>(Msg (a,b))"
+  by (metis lscons_conv sup'_def tsynZip.simps(1) tsynzip_sconc_msg)
 
 lemma tsynzip_sconc_null: 
   "ys \<noteq> \<epsilon> \<Longrightarrow> tsynZip\<cdot>(\<up>null \<bullet> xs)\<cdot>ys = \<up>null \<bullet> tsynZip\<cdot>xs\<cdot>ys"
