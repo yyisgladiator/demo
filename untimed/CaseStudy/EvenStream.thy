@@ -151,11 +151,11 @@ next
 next
   case (msg a s)
   then show ?case
-   by (simp add: msg.IH tsynmap_sconc_msg)
+    by (simp add: tsyndom_sconc_msg_sub2 tsynmap_sconc_msg)
 next
   case (null s)
-  then show ?case 
-    by (simp add: null.IH tsynmap_sconc_null)
+  then show ?case
+    by (simp add: tsyndom_sconc_null tsynmap_sconc_null)
 qed
   
 (* convert the rekursive definition of the automaton in our nice evenStream function *)
@@ -180,6 +180,50 @@ next
 case (null s)
 then show ?case
   by (simp add: a_tick tsynmap_sconc_null)
+qed
+  
+    
+lemma SteGre1:"Parity.even n \<longrightarrow> tsynDom\<cdot>ts \<subseteq> { n | n. (Parity.even n)} \<longrightarrow> 
+              sscanlA evenTransition (State Even n)\<cdot>(nat2even\<cdot>ts) = bool2even\<cdot>(tsynMap (\<lambda> e. True)\<cdot>ts)"
+proof(induction arbitrary: n rule: tsyn_ind [of _ts])
+  case adm
+  then show ?case 
+    by simp
+next
+  case bot
+  then show ?case 
+    by simp
+next
+  case (msg m s)
+  have h1:" semiring_parity_class.even n \<longrightarrow>tsynDom\<cdot>(\<up>(\<M> m) \<bullet> s) \<subseteq> {n |n::nat. semiring_parity_class.even n} \<longrightarrow> 
+            sscanlA evenTransition (EvenAutomatonState.State Even n)\<cdot>(nat2even\<cdot>(\<up>(\<M> m) \<bullet> s)) = 
+            bool2even\<cdot>(\<up>(\<M> True)) \<bullet> sscanlA evenTransition (EvenAutomatonState.State Even (n + m))\<cdot>(nat2even\<cdot>s)"
+  proof(auto)
+    assume a1:" semiring_parity_class.even n"
+    assume a2:"tsynDom\<cdot>(\<up>(\<M> m) \<bullet> s) \<subseteq> Collect semiring_parity_class.even"
+    then have "semiring_parity_class.even m"
+      by(simp add: tsyndom_insert, auto)
+    then show "sscanlA evenTransition (EvenAutomatonState.State Even n)\<cdot>(nat2even\<cdot>(\<up>(\<M> m) \<bullet> s)) =
+               bool2even\<cdot>(\<up>(\<M> True)) \<bullet> sscanlA evenTransition (EvenAutomatonState.State Even (n + m))\<cdot>(nat2even\<cdot>s)"
+      by(simp add: tsynMap_def a1)
+  qed
+  then show ?case
+  proof(auto,subst msg.IH,simp)
+    assume a1:"tsynDom\<cdot>(\<up>(\<M> m) \<bullet> s) \<subseteq> Collect semiring_parity_class.even"
+    then show "semiring_parity_class.even m"
+      by(simp add: tsyndom_insert, auto)
+  next
+    assume a1:"tsynDom\<cdot>(\<up>(\<M> m) \<bullet> s) \<subseteq> Collect semiring_parity_class.even"
+    then show "tsynDom\<cdot>s \<subseteq> {n |n::nat. semiring_parity_class.even n}"
+      by (meson tsyndom_sconc_msg_sub)
+  next
+    show "bool2even\<cdot>(\<up>(\<M> True)) \<bullet> bool2even\<cdot>(tsynMap (\<lambda>e::nat. True)\<cdot>s) = bool2even\<cdot>(tsynMap (\<lambda>e::nat. True)\<cdot>(\<up>(\<M> m) \<bullet> s))"
+      by (metis tsynmap_sconc tsynmap_sconc_msg)
+  qed    
+next
+  case (null s)
+  then show ?case
+    by (simp add: tsyndom_sconc_null tsynmap_sconc_null) 
 qed
 
 end
