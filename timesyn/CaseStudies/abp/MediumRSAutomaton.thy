@@ -3,7 +3,7 @@
  * This file was generated from MediumRS.maa and will be overridden when changed. To change
  * permanently, consider changing the model itself.
  *
- * Generated on Jul 4, 2018 3:32:13 PM by transformer 1.0.0
+ * Generated on Jul 4, 2018 4:48:25 PM by transformer 1.0.0
  *)
 theory MediumRSAutomaton
 
@@ -27,9 +27,8 @@ fun getC :: "MediumRSState \<Rightarrow> nat" where
 
 fun mediumRSTransitionH :: "(MediumRSState \<times> (abpMessage tsyn)) \<Rightarrow> ((MediumRSState \<times> abpMessage tsyn SB) set rev)" where
     "mediumRSTransitionH (State Single automaton_c, ((*ar\<mapsto>*)Msg (Bool a))) = 
-       (if(automaton_c=0) then Rev {(State Single (c),(tsynbNull (\<C> ''as'')))| (c). (c) < 50}
-       else if(automaton_c>0) then Rev {(State Single (automaton_c-1),(tsynbNull (\<C> ''as'')))}
-       else if(True) then Rev {(State Single automaton_c,(tsynbNull (\<C> ''as'')))}
+       (if(automaton_c>0) then Rev {(State Single (automaton_c-1),(tsynbNull (\<C> ''as'')))}
+       else if(automaton_c=0) then Rev {(State Single (c),(createAsBundle (a)))| (c). (c) < 50}
        else Rev {(State Single automaton_c, ((tsynbNull (\<C> ''as''))))})"  |
 
     "mediumRSTransitionH (State Single automaton_c, ((*ar\<mapsto>*)null)) = 
