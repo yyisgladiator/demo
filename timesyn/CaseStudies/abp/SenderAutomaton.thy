@@ -3,7 +3,7 @@
  * This file was generated from Sender.maa and will be overridden when changed. To change
  * permanently, consider changing the model itself.
  *
- * Generated on Jun 29, 2018 5:23:56 PM by transformer 1.0.0
+ * Generated on Jul 3, 2018 6:22:45 PM by transformer 1.0.0
  *)
 theory SenderAutomaton
 
@@ -77,10 +77,10 @@ fun senderTransitionH :: "(SenderState \<times> (abpMessage tsyn \<times> abpMes
 fun senderTransition :: "(SenderState \<times> (channel \<rightharpoonup> abpMessage tsyn)) \<Rightarrow> (SenderState \<times> abpMessage tsyn SB)" where
 "senderTransition (s,f) = (if dom(f) = {\<C> ''i'',\<C> ''as''} then senderTransitionH (s,(f\<rightharpoonup>\<C> ''i'',f\<rightharpoonup>\<C> ''as'')) else undefined)"
 
-lift_definition SenderAutomaton :: "(SenderState, abpMessage tsyn) automaton" is "(senderTransition, State Sf [], (tsynbNull (\<C> ''ds'')), {\<C> ''i'', \<C> ''as''}, {\<C> ''ds''})"
-sorry
+lift_definition SenderAutomaton :: "(SenderState, abpMessage tsyn) dAutomaton" is "(senderTransition, State Sf [], (tsynbNull (\<C> ''ds'')), {\<C> ''i'', \<C> ''as''}, {\<C> ''ds''})"
+  by simp
 
 definition SenderSPF :: "abpMessage tsyn SPF" where
-"SenderSPF = H SenderAutomaton"
+"SenderSPF = da_H SenderAutomaton"
 
 end

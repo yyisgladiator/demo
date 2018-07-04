@@ -1,7 +1,5 @@
 package abp;
 
-import de.montiarcautomaton.isargenerator.Pair;
-
 <<nonDeterministic>>component MediumRS {
 
   port
@@ -14,8 +12,8 @@ import de.montiarcautomaton.isargenerator.Pair;
     state Single;
     initial Single / { as=null};
 
-    Single -> Single {i=null} / {o=null};
+    Single -> Single {ar=null} / {as=null};
     Single -> Single [c>0]  / {c=c-1};
-    Single -> Single [c=0]  / {c=random(50), o=i};
+    Single -> Single [c=0]  / {c=random(50), as=ar};
   }
 }

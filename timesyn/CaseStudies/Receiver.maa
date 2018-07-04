@@ -1,6 +1,5 @@
 package abp;
 
-import de.montiarcautomaton.isargenerator.Pair;
 component Receiver {
 
   port

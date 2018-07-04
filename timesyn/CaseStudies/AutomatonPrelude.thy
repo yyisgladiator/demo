@@ -2,11 +2,12 @@
  * DO NOT MODIFY!
  * This file was generated and will be overridden when the models change.
  *
- * Generated on Jun 29, 2018 5:23:55 PM by transformer 1.0.0
+ * Generated on Jul 4, 2018 5:25:36 PM by transformer 1.0.0
  *)
 theory AutomatonPrelude
 
-imports "../../untimed/CaseStudy/Automaton" "../tsynStream" "../tsynBundle" 
+imports "../../untimed/CaseStudy/dAutomaton" "../../untimed/CaseStudy/ndAutomaton" "../tsynStream" "../tsynBundle" 
+
 begin
 
 fun prepend:: "'a::type list \<Rightarrow> 'a::type \<Rightarrow> 'a::type list" where

@@ -3,7 +3,7 @@
  * This file was generated from Receiver.maa and will be overridden when changed. To change
  * permanently, consider changing the model itself.
  *
- * Generated on Jun 29, 2018 5:23:56 PM by transformer 1.0.0
+ * Generated on Jul 3, 2018 6:22:45 PM by transformer 1.0.0
  *)
 theory ReceiverAutomaton
 
@@ -42,10 +42,10 @@ fun receiverTransitionH :: "(ReceiverState \<times> (abpMessage tsyn)) \<Rightar
 fun receiverTransition :: "(ReceiverState \<times> (channel \<rightharpoonup> abpMessage tsyn)) \<Rightarrow> (ReceiverState \<times> abpMessage tsyn SB)" where
 "receiverTransition (s,f) = (if dom(f) = {\<C> ''dr''} then receiverTransitionH (s,(f\<rightharpoonup>\<C> ''dr'')) else undefined)"
 
-lift_definition ReceiverAutomaton :: "(ReceiverState, abpMessage tsyn) automaton" is "(receiverTransition, State Rt , (tsynbNull (\<C> ''ar'')) \<uplus> (tsynbNull (\<C> ''o'')), {\<C> ''dr''}, {\<C> ''ar'', \<C> ''o''})"
-sorry
+lift_definition ReceiverAutomaton :: "(ReceiverState, abpMessage tsyn) dAutomaton" is "(receiverTransition, State Rt , (tsynbNull (\<C> ''ar'')) \<uplus> (tsynbNull (\<C> ''o'')), {\<C> ''dr''}, {\<C> ''ar'', \<C> ''o''})"
+  by simp
 
 definition ReceiverSPF :: "abpMessage tsyn SPF" where
-"ReceiverSPF = H ReceiverAutomaton"
+"ReceiverSPF = da_H ReceiverAutomaton"
 
 end

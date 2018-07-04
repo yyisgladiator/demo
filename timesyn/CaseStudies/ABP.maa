@@ -1,7 +1,5 @@
 package abp;
 
-import de.montiarcautomaton.isargenerator.Pair;
-
 component ABP {
     component MediumRS mediumRs;
     component MediumSR mediumSr;
