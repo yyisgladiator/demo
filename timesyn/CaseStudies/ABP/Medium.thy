@@ -75,6 +75,7 @@ lemma tsynmed_sconc_null:
   shows "tsynMed\<cdot>(\<up>- \<bullet> msg)\<cdot>ora = \<up>- \<bullet> tsynMed\<cdot>msg\<cdot>ora"
 sorry
 
+text{* The transmitted messages are a subset of the messages that are meant to be transmitted. *}
 lemma tsynmed_tsyndom: assumes ora_inf:"#ora=\<infinity>" shows "tsynDom\<cdot>(tsynMed\<cdot>msg\<cdot>ora) \<subseteq> tsynDom\<cdot>msg"
   using assms
   proof (induction msg arbitrary: ora rule: tsyn_ind)
