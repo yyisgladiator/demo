@@ -61,12 +61,6 @@ session "tsynStream" (mustWork) = "Streams" +
     "timesyn/tsynStream"
 	"timesyn/tsynBundle"
 
-session "ABP" (mustWork) = "tsynStream" +
-  options [quick_and_dirty = true]
-  theories
-    "timesyn/CaseStudies/ABP/Components"
-	
-
 session "ubundle_opt" (canFail) = "uClasses" +
   options [quick_and_dirty = false]
   theories
