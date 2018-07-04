@@ -1,0 +1,19 @@
+package abp;
+
+<<nonDeterministic>>component MediumSR {
+
+  port
+    in Pair<Integer,Boolean> ds,
+    out Pair<Integer,Boolean> dr;
+
+  automaton Medium {
+    variable Integer c=random(50);
+
+    state Single;
+    initial Single / { dr=null};
+
+    Single -> Single {i=null} / {o=null};
+    Single -> Single [c>0]  / {c=c-1};
+    Single -> Single [c=0]  / {c=random(50), o=i};
+  }
+}

@@ -42,7 +42,7 @@ session "sps" (mustWork) = "spf" +
 session "automaton" (mustWork) = "spf" +
   options [quick_and_dirty = true]
   theories
-    "untimed/CaseStudy/Automaton"
+    "untimed/CaseStudy/dAutomaton"
 
 session "NDA" (mustWork) = "sps" +
   options [quick_and_dirty = true]
