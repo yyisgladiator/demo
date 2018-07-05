@@ -1,6 +1,6 @@
 theory SpsStep
 
-imports "../USpec" "SpfStep" "NewSpfStep" "../USpec_Comp"
+imports "../USpec" "NewSpfStep" "../USpec_Comp"
 
 begin
 
@@ -15,8 +15,7 @@ definition spsStep_h::"('m::message sbElem \<Rightarrow> 'm SPS)\<rightarrow> ('
 
 definition spsStep_inj :: "channel set \<Rightarrow> channel set \<Rightarrow> ('m::message sbElem \<Rightarrow> 'm SPS) \<rightarrow> 'm SB \<rightarrow> 'm SPS" where
 "spsStep_inj In Out = (\<Lambda> h. (\<Lambda> sb. if sbHdElemWell sb then Abs_rev_uspec {spfStep_inj In Out\<cdot>g\<cdot>sb | g. g \<in> inv Rev (spsStep_h\<cdot>h)} In Out else uspecLeast In Out))"
-
-
+ 
 lemma spsStep_h_mono[simp]:"monofun (\<lambda> h::('m::message sbElem \<Rightarrow> 'm SPS). setify\<cdot>(\<lambda>e. uspecRevSet\<cdot>(h e)))"
 proof(rule monofunI, simp add: uspecRevSet_def)
   fix x y::"'m sbElem \<Rightarrow> 'm SPS"
@@ -139,6 +138,106 @@ qed
 (* like spfStep, copy & pasteonly on SPS *)
 fun spsStep :: "channel set \<Rightarrow> channel set \<Rightarrow> ('m::message sbElem \<Rightarrow> 'm SPS) \<rightarrow> 'm SPS" where
 "spsStep In Out = (\<Lambda> h. Abs_rev_uspec {spfStep In Out\<cdot>g | g. g \<in> inv Rev (spsStep_h\<cdot>h)} In Out)"
+
+lemma [simp]:"monofun (\<lambda> h. Abs_rev_uspec {spfStep In Out\<cdot>g | g. g \<in> inv Rev (spsStep_h\<cdot>h)} In Out)"
+proof(rule monofunI)
+  fix x y::"'a sbElem \<Rightarrow> ('a stream\<^sup>\<Omega>) ufun uspec"
+   assume a1: "x \<sqsubseteq> y"
+  have "(spsStep_h\<cdot>x) \<sqsubseteq> (spsStep_h\<cdot>y)" 
+    by (simp add: a1 monofun_cfun_arg)
+  then have "inv Rev(spsStep_h\<cdot>y) \<subseteq> inv Rev (spsStep_h\<cdot>x)"
+    by (metis (full_types) SetPcpo.less_set_def below_rev.elims(2) inv_rev_rev)
+  then have "\<And>g. g \<in> inv Rev(spsStep_h\<cdot>y) \<Longrightarrow> g \<in> inv Rev (spsStep_h\<cdot>x)"
+    by blast
+  then have h1:"{spfStep In Out\<cdot>g |g. g \<in> inv Rev (spsStep_h\<cdot>y)} \<sqsubseteq>{spfStep In Out\<cdot>g |g. g \<in> inv Rev (spsStep_h\<cdot>x)}"
+    by (smt Collect_mono SetPcpo.less_set_def)
+  have h2:"\<And>g. ufclDom\<cdot>(spfStep In Out\<cdot>g) = In"
+    by (simp add: ufclDom_ufun_def)
+  have h3:"\<And>g. ufclRan\<cdot>(spfStep In Out\<cdot>g) = Out"
+    by (simp add: ufclRan_ufun_def)
+  have h4:"\<And>f h. f\<in>{spfStep In Out\<cdot>g |g. g \<in> inv Rev (spsStep_h\<cdot>h)} \<Longrightarrow> \<exists>g. f = spfStep In Out\<cdot>g"
+    by auto
+  have h2:"uspecWell (Rev {spfStep In Out\<cdot>g |g. g \<in> inv Rev (spsStep_h\<cdot>x)}) (Discr In) (Discr Out)"
+    using h2 h3 by auto
+  have h3:"uspecWell (Rev {spfStep In Out\<cdot>g |g. g \<in> inv Rev (spsStep_h\<cdot>y)}) (Discr In) (Discr Out)"
+    by (metis (no_types, lifting) SetPcpo.less_set_def h1 h2 subsetCE uspecWell.simps)
+  show "Abs_rev_uspec {spfStep In Out\<cdot>g |g. g \<in> inv Rev (spsStep_h\<cdot>x)} In  Out\<sqsubseteq>
+       Abs_rev_uspec {spfStep In Out\<cdot>g |g. g \<in> inv Rev (spsStep_h\<cdot>y)} In Out"
+    by (metis (no_types, lifting) Pair_below_iff below_refl below_rev.simps below_uspec_def h1 h2 h3 rep_abs_uspec)
+qed
+
+lemma lub_in:assumes "chain Y" shows "(\<Squnion>i. ((Y i)::'m set rev, Discr In,Discr Out)) = (\<Squnion>i. Y i, Discr In, Discr Out)"
+  by (smt Pair_below_iff assms below_refl fstI is_lub_prod lub_const lub_eq lub_eqI po_class.chain_def sndI)
+  
+lemma "cont (\<lambda> h. Abs_rev_uspec {spfStep In Out\<cdot>g | g. g \<in> inv Rev (spsStep_h\<cdot>h)} In Out)"
+proof(rule Cont.contI2,simp)
+  fix Y::"nat \<Rightarrow> 'a sbElem \<Rightarrow> ('a stream\<^sup>\<Omega>) ufun uspec"
+  assume a1:"chain Y"
+  assume a2:"chain (\<lambda>i::nat. Abs_rev_uspec {spfStep In Out\<cdot>g |g::'a sbElem \<Rightarrow> ('a stream\<^sup>\<Omega>) ufun. g \<in> inv Rev (spsStep_h\<cdot>(Y i))} In Out)"
+  have a3:"chain (\<lambda>i::nat. setify\<cdot>(\<lambda>e. uspecRevSet\<cdot>(Y i e)))"
+    by (metis (mono_tags, lifting) a1 fun_below_iff monofun_cfun_arg po_class.chain_def)
+  have a4:"chain (\<lambda>i::nat. Rev {spfStep In Out\<cdot>g |g. g \<in> inv Rev (spsStep_h\<cdot>(Y i))})"
+      apply(simp add: spsStep_h_insert)
+    by (smt Collect_mono SetPcpo.less_set_def a3 below_rev.elims(2) below_rev.simps inv_rev_rev po_class.chain_def subsetCE)
+  have h1:"\<forall>i. uspecWell (Rev {spfStep In Out\<cdot>g |g. g \<in> inv Rev (spsStep_h\<cdot>(Y i))}) (Discr In) (Discr Out)"
+    by (smt finite mem_Collect_eq spfstep_dom spfstep_ran ufclDom_ufun_def ufclRan_ufun_def uspecWell.simps)
+  have h2:"uspecWell (Rev {spfStep In Out\<cdot>g |g. g \<in> inv Rev (\<Squnion>i::nat. spsStep_h\<cdot>(Y i))}) (Discr In) (Discr Out)"
+    by (smt finite mem_Collect_eq spfstep_dom spfstep_ran ufclDom_ufun_def ufclRan_ufun_def uspecWell.simps)
+  have h3:"Rep_uspec (Abs_uspec (\<Squnion>i. (Rev {spfStep In Out\<cdot>g |g. g \<in> inv Rev (spsStep_h\<cdot>(Y i))}, Discr In, Discr Out)))
+        =  (\<Squnion>i::nat. (Rev {spfStep In Out\<cdot>g |g. g \<in> inv Rev (spsStep_h\<cdot>(Y i))}, Discr In, Discr Out))"
+    by (metis (mono_tags, lifting) a2 cont2contlubE h1 lub_eq lub_uspec rep_abs_uspec uspec_rep_cont)
+  have h4:"(\<Squnion>i. (Rev {spfStep In Out\<cdot>g |g. g \<in> inv Rev (spsStep_h\<cdot>(Y i))}, Discr In, Discr Out))
+           = ((\<Squnion>i. Rev {spfStep In Out\<cdot>g |g. g \<in> inv Rev (spsStep_h\<cdot>(Y i))}), Discr In, Discr Out)"
+    by(simp add: lub_in a4)
+  have h5:"\<And>x. \<forall>i. x \<in> {spfStep In Out\<cdot>f |f. \<forall>m. f m \<in> Rep_rev_uspec (Y i m)}
+           \<Longrightarrow> \<exists>g.
+          x = spfStep In Out\<cdot>g \<and> (\<forall>i. g \<in> {f. \<forall>m. f m \<in> Rep_rev_uspec (Y i m)})"
+  proof auto
+    fix x::"('a stream\<^sup>\<Omega>) ufun"
+    show"\<forall>i. \<exists>f. x = spfStep In Out\<cdot>f \<and> (\<forall>m. f m \<in> Rep_rev_uspec (Y i m)) \<Longrightarrow>
+         \<exists>g. x = spfStep In Out\<cdot>g \<and> (\<forall>i m::'a sbElem. g m \<in> Rep_rev_uspec (Y i m))"
+    proof-
+      assume aa1:"\<forall>i. \<exists>f. x = spfStep In Out\<cdot>f \<and> (\<forall>m. f m \<in> Rep_rev_uspec (Y i m))"
+      have h1: "\<And>f e. x = spfStep In Out\<cdot>f \<Longrightarrow> \<exists>sb. f e \<rightleftharpoons> sb = x \<rightleftharpoons> sb"
+      proof(simp add: spfStep_2_spfStep_inj spfStep_inj_def)
+        fix e::"'a sbElem" and f::"'a sbElem \<Rightarrow> ('a stream\<^sup>\<Omega>) ufun"
+        assume aa2:"x = spfStep In Out\<cdot>f"
+        obtain sb where sb_def:"Abs_sbElem (inv convDiscrUp (sbHdElem\<cdot>sb)) = e \<and> sbHdElemWell sb"
+          by (metis sbElem_surj)
+        have "ufRestrict In Out\<cdot>(f e) \<rightleftharpoons> sb = (f e) \<rightleftharpoons> sb"
+          sorry
+        then have"(sbHdElemWell sb \<longrightarrow> f e \<rightleftharpoons> sb = ufRestrict In Out\<cdot>(f (Abs_sbElem (inv convDiscrUp (sbHdElem\<cdot>sb)))) \<rightleftharpoons> sb) \<and> (\<not> sbHdElemWell sb \<longrightarrow> f e \<rightleftharpoons> sb = ufLeast In Out \<rightleftharpoons> sb)"
+          by (simp add: sb_def)
+        then show "\<exists>sb::'a stream\<^sup>\<Omega>.
+          (sbHdElemWell sb \<longrightarrow> f e \<rightleftharpoons> sb = ufRestrict In Out\<cdot>(f (Abs_sbElem (inv convDiscrUp (sbHdElem\<cdot>sb)))) \<rightleftharpoons> sb) \<and> (\<not> sbHdElemWell sb \<longrightarrow> f e \<rightleftharpoons> sb = ufLeast In Out \<rightleftharpoons> sb)"
+          by(rule_tac x="sb" in exI)
+      qed  
+      show "\<exists>g. x = spfStep In Out\<cdot>g \<and> (\<forall>i m. g m \<in> Rep_rev_uspec (Y i m))"
+      proof-
+        obtain g where g_def:"\<forall>sb. x \<rightleftharpoons> sb = g (Abs_sbElem (inv convDiscrUp (sbHdElem\<cdot>sb))) \<rightleftharpoons> sb"
+          sorry
+        show"\<exists>g::'a sbElem \<Rightarrow> ('a stream\<^sup>\<Omega>) ufun. x = spfStep In Out\<cdot>g \<and> (\<forall>(i::nat) m::'a sbElem. g m \<in> Rep_rev_uspec (Y i m))"
+          sorry
+      qed
+    qed
+  qed
+  show "Abs_rev_uspec {spfStep In Out\<cdot>g |g. g \<in> inv Rev (spsStep_h\<cdot>(\<Squnion>i::nat. Y i))} In Out \<sqsubseteq>
+       (\<Squnion>i::nat. Abs_rev_uspec {spfStep In Out\<cdot>g |g. g \<in> inv Rev (spsStep_h\<cdot>(Y i))} In Out)"
+    apply(simp add: a1 contlub_cfun_fun contlub_cfun_arg)
+    apply(simp add: below_uspec_def)
+    apply(simp only: h2 rep_abs_uspec)
+    apply(simp add: lub_uspec a2)
+    apply(simp only: h1 rep_abs_uspec h3)
+    apply(simp add: h4)
+    apply(subst setrevLubEqInterII, simp add: a1)
+    apply(subst setrevLubEqInter, simp add: a4)
+    apply(simp add: spsStep_h_insert setify_def uspecRevSet_def inv_rev_rev rev_inv_rev less_set_def)
+    apply auto
+    using h5
+    by (metis (mono_tags))
+qed
+  
+
 (*
 lemma spsStep_mono[simp]:"monofun (\<lambda>h::(channel \<Rightarrow> 'a::message option) \<Rightarrow> ('a stream\<^sup>\<Omega>) ufun uspec. Abs_rev_uspec {spfStep In Out\<cdot>g |g::(channel \<Rightarrow> 'a option) \<Rightarrow> ('a stream\<^sup>\<Omega>) ufun. g \<in> inv Rev (spsStep_h\<cdot>h)} In Out)"
 
