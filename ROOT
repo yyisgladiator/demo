@@ -39,15 +39,15 @@ session "sps" (mustWork) = "spf" +
   theories
     "untimed/SPS"
 
-session "automaton" (mustWork) = "spf" +
+session "dAutomaton" (mustWork) = "spf" +
   options [quick_and_dirty = true]
   theories
-    "untimed/CaseStudy/Automaton"
+    "untimed/CaseStudy/dAutomaton"
 
-session "NDA" (mustWork) = "sps" +
+session "ndAutomaton" (mustWork) = "sps" +
   options [quick_and_dirty = true]
   theories
-    "untimed/CaseStudy/NDA"
+    "untimed/CaseStudy/ndAutomaton"
 
 
 session "Streams" (mustWork) = "HOLCF" +
@@ -60,12 +60,6 @@ session "tsynStream" (mustWork) = "Streams" +
   theories
     "timesyn/tsynStream"
 	"timesyn/tsynBundle"
-
-session "ABP" (mustWork) = "tsynStream" +
-  options [quick_and_dirty = true]
-  theories
-    "timesyn/CaseStudies/ABP/Components"
-	
 
 session "ubundle_opt" (canFail) = "uClasses" +
   options [quick_and_dirty = false]
