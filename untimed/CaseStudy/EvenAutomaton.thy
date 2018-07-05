@@ -125,5 +125,149 @@ lift_definition EvenAutomatonAutomaton :: "(EvenAutomatonState, EvenAutomaton ts
 definition EvenAutomatonSPF :: "EvenAutomaton tsyn SPF" where
 "EvenAutomatonSPF = da_H EvenAutomatonAutomaton"
 
-
+lemma SteGre2_1:assumes "dom f = {\<guillemotright>c1}" and "f \<rightharpoonup> \<guillemotright>c1 = (Msg (A a))"shows "autGetNextState EvenAutomatonAutomaton (State x y) f \<noteq> State Even (2*n+1)"
+proof(simp add: autGetNextState_def getTransition_def EvenAutomatonAutomaton.rep_eq assms)
+  show"fst (evenAutomatonTransitionH (EvenAutomatonState.State x y, \<M> A a)) \<noteq> EvenAutomatonState.State Even (Suc (2 * n))"
+  proof(cases "Parity.even y")
+    case True
+    then have true_1:"Parity.even y"
+      by simp
+    then show ?thesis
+    proof(cases "Parity.even a")
+      case True
+      then have "Parity.even (y + a)"
+        by(simp add: true_1)
+      then show ?thesis
+        by (smt EvenAutomatonSubstate.exhaust add.commute dvd_triv_left evenAutomatonTransitionH.simps(1) evenAutomatonTransitionH.simps(3) even_Suc even_iff_mod_2_eq_zero fst_conv getSum.simps)
+    next
+      case False
+      then have h1:"\<not>Parity.even (y + a)"
+        by(simp add: true_1)
+      then show ?thesis
+      proof(cases x)
+        case Odd
+        then show ?thesis 
+          apply simp
+          using h1 by presburger
+      next
+        case Even
+        then show ?thesis
+          apply simp
+          using h1 by presburger
+      qed  
+    qed
+  next
+    case False
+    then have false_1:"Parity.odd y"
+      by simp
+    then show ?thesis
+    proof(cases "Parity.even a")
+      case True
+      then have h1:"\<not>Parity.even (y + a)"
+        by(simp add: False)
+      then show ?thesis
+      proof(cases x)
+        case Odd
+        then show ?thesis
+          apply(simp)
+          using h1 by presburger
+      next
+        case Even
+        then show ?thesis
+          apply(simp)
+          using h1 by presburger
+      qed
+    next
+      case False
+      then have "Parity.even (y +a)"
+        by(simp add: false_1)
+      then show ?thesis 
+        by (smt EvenAutomatonSubstate.exhaust add.commute dvd_triv_left evenAutomatonTransitionH.simps even_Suc even_iff_mod_2_eq_zero fst_conv getSum.simps)
+    qed
+  qed
+qed
+  
+    
+lemma SteGre2_2:assumes "dom f = {\<guillemotright>c1}" and "f \<rightharpoonup> \<guillemotright>c1 = (Msg (A a))"shows"autGetNextState EvenAutomatonAutomaton (State x y) f \<noteq> State Odd (2*n)"
+proof(simp add: autGetNextState_def getTransition_def EvenAutomatonAutomaton.rep_eq assms)
+  show"fst (evenAutomatonTransitionH (EvenAutomatonState.State x y, \<M> A a)) \<noteq> EvenAutomatonState.State Odd ((2::nat) * n)"
+  proof(cases "Parity.even y")
+    case True
+    then have true_1:"Parity.even y"
+      by simp
+    then show ?thesis
+    proof(cases "Parity.even a")
+      case True
+      then have h1:"Parity.even (y + a)"
+        by(simp add: true_1)
+      then show ?thesis
+      proof(cases x)
+        case Odd
+        then show ?thesis 
+          apply simp
+          using h1 by presburger
+      next
+        case Even
+        then show ?thesis
+          apply simp
+          using h1 by presburger
+      qed  
+    next
+      case False
+      then have h1:"\<not>Parity.even (y + a)"
+        by(simp add: true_1)
+      then show ?thesis
+      proof(cases x)
+        case Odd
+        then show ?thesis 
+          apply simp
+          using h1 by presburger
+      next
+        case Even
+        then show ?thesis
+          apply simp
+          using h1 by presburger
+      qed  
+    qed
+  next
+    case False
+    then have false_1:"Parity.odd y"
+      by simp
+    then show ?thesis
+    proof(cases "Parity.even a")
+      case True
+      then have h1:"\<not>Parity.even (y + a)"
+        by(simp add: False)
+      then show ?thesis
+      proof(cases x)
+        case Odd
+        then show ?thesis
+          apply(simp)
+          using h1 by presburger
+      next
+        case Even
+        then show ?thesis
+          apply(simp)
+          using h1 by presburger
+      qed
+    next
+      case False
+      then have h1:"Parity.even (y +a)"
+        by(simp add: false_1)
+      then show ?thesis 
+      proof(cases x)
+        case Odd
+        then show ?thesis 
+          apply simp
+          using h1 by presburger
+      next
+        case Even
+        then show ?thesis
+          apply simp
+          using h1 by presburger
+      qed  
+    qed
+  qed
+qed
+  
 end
