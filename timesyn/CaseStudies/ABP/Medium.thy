@@ -75,6 +75,26 @@ lemma tsynmed_sconc_null:
   shows "tsynMed\<cdot>(\<up>- \<bullet> msg)\<cdot>ora = \<up>- \<bullet> tsynMed\<cdot>msg\<cdot>ora"
 sorry
 
+(* ToDo: general sconc lemma possible? *)
+
+(* ToDo: singleton lemma *)
+
+lemma tsynmed_slen: assumes "#ora=\<infinity>" shows "#(tsynMed\<cdot>msg\<cdot>ora) = #msg"
+  by (simp add: assms tsynfilter_slen tsynmed_insert tsynprojfst_slen tsynzip_slen)
+
+text {* Not every message will be transmitted forcibly. *}    
+lemma tsynmed_tsynlen: 
+  assumes "#ora=\<infinity>" 
+  shows "tsynLen\<cdot>(tsynMed\<cdot>msg\<cdot>ora) \<le> tsynLen\<cdot>msg"
+  using assms
+  proof-
+    assume ora_inf: "#ora = \<infinity>" 
+    hence modified_lemma: "#(tsynAbs\<cdot>(tsynFilter (Collect snd)\<cdot>(tsynZip\<cdot>msg\<cdot>ora))) \<le> #(tsynAbs\<cdot>msg)"
+      by (metis tsynfilter_tsynlen tsynlen_insert tsynzip_tsynlen)
+    thus ?thesis
+      by (metis tsynlen_insert tsynmed_insert tsynprojfst_tsynlen)
+  qed
+
 text{* The transmitted messages are a subset of the messages that are meant to be transmitted. *}
 lemma tsynmed_tsyndom: assumes ora_inf:"#ora=\<infinity>" shows "tsynDom\<cdot>(tsynMed\<cdot>msg\<cdot>ora) \<subseteq> tsynDom\<cdot>msg"
   using assms
@@ -154,41 +174,27 @@ lemma tsynmed_tsyndom: assumes ora_inf:"#ora=\<infinity>" shows "tsynDom\<cdot>(
       by (simp add: null.IH null.prems tsyndom_sconc_null)
   qed
 
-lemma tsynfilter_tsynabs_slen: "#(tsynAbs\<cdot>(tsynFilter A\<cdot>s)) \<le> #(tsynAbs\<cdot>s)"
-  sorry
-
-lemma tsynzip_tsynabs_slen: "#xs = \<infinity> \<Longrightarrow> #(tsynAbs\<cdot>(tsynZip\<cdot>s\<cdot>xs)) = #(tsynAbs\<cdot>s)"
-  sorry
-
-text {* Not every message will be transmitted forcibly. *}    
-lemma tsynmed_tsynabs_slen: 
-  assumes "#ora=\<infinity>" 
-  shows " #(tsynAbs\<cdot>(tsynMed\<cdot>msg\<cdot>ora)) \<le> #(tsynAbs\<cdot>msg)"
+text{* If infinitely many messages are sent, infinitely many messages will be transmitted. *}
+lemma tsynmed_tsynlen_inf:
+  assumes "#({True} \<ominus> ora) = \<infinity>" 
+    and "tsynLen\<cdot>msg = \<infinity>"
+  shows "tsynLen\<cdot>(tsynMed\<cdot>msg\<cdot>ora) = \<infinity>"
   using assms
-  proof-
-    assume ora_inf: "#ora = \<infinity>" 
-    hence "#(tsynAbs\<cdot>(tsynFilter (Collect snd)\<cdot>(tsynZip\<cdot>msg\<cdot>ora))) \<le> #(tsynAbs\<cdot>msg)"
-      by (metis tsynfilter_tsynabs_slen tsynzip_tsynabs_slen)
-    have "#(tsynAbs\<cdot>(tsynFilter (Collect snd)\<cdot>(tsynZip\<cdot>msg\<cdot>ora))) = #(tsynAbs\<cdot>(tsynProjFst\<cdot>(tsynFilter (Collect snd)\<cdot>(tsynZip\<cdot>msg\<cdot>ora))))"
-      sorry
-    have "tsynFilter (Collect snd)\<cdot>(tsynZip\<cdot>msg\<cdot>ora) = tsynProjFst\<cdot>(tsynFilter {x::'a \<times> bool. snd x}\<cdot>(tsynZip\<cdot>msg\<cdot>ora))"
-      sorry
-    thus ?thesis
-      apply (simp add: tsynmed_insert)
-      sorry
-
-    have tsynmed_tsynfilter_slen: "#(tsynFilter {x. snd x}\<cdot>(tsynZip\<cdot>msg\<cdot>ora)) = #(tsynZip\<cdot>msg\<cdot>ora)"
-      by (simp add: tsynfilter_slen)
-    have tsynmed_slen: "#(tsynProjFst\<cdot>(tsynFilter {x. snd x}\<cdot>(tsynZip\<cdot>msg\<cdot>ora))) = #(tsynZip\<cdot>msg\<cdot>ora)"
-      by (simp add: tsynmed_tsynfilter_slen tsynprojfst_slen)
-    have tsynabs: "#(tsynAbs\<cdot>(tsynProjFst\<cdot>(tsynFilter {x. snd x}\<cdot>(tsynZip\<cdot>msg\<cdot>ora)))) = #(tsynAbs\<cdot>(tsynZip\<cdot>msg\<cdot>ora))" 
-      sorry
-    have tsynabs_tsynzip: "#(tsynAbs\<cdot>(tsynZip\<cdot>msg\<cdot>ora)) \<le> #(tsynAbs\<cdot>msg)"
-      by (simp add: ora_inf tsynzip_tsynabs_slen)
-    have "#(tsynAbs\<cdot>(tsynProjFst\<cdot>(tsynFilter {x. snd x}\<cdot>(tsynZip\<cdot>msg\<cdot>ora)))) \<le> #(tsynAbs\<cdot>msg)"
-      sorry
-    show ?thesis
-      sorry
+  proof (induction msg arbitrary: ora rule: tsyn_ind)
+    case adm
+    then show ?case 
+sorry
+  next
+    case bot
+    then show ?case sorry
+  next
+    case (msg m s)
+    then show ?case sorry
+  next
+    case (null s)
+    then show ?case sorry
   qed
+
+(* ToDo: Tests *)
 
 end
