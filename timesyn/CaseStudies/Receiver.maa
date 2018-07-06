@@ -1,0 +1,21 @@
+package abp;
+
+component Receiver {
+
+  port
+    in Pair<Integer,Boolean> dr,
+    out Boolean ar,
+    out Integer o;
+
+  automaton Receiver {
+    state Rf, Rt;
+    initial Rt / { o=null, ar=null};
+
+    Rt -> Rf [dr.snd=true]  / {o=dr.fst, ar=dr.snd};
+    Rt -> Rt [dr.snd=false]  / {ar=dr.snd, o=null};
+    Rt -> Rt {dr=null} / {ar=null, o=null};
+    Rf -> Rf {dr=null} / {ar=null, o=null};
+    Rf -> Rf [dr.snd=true]  / {ar=dr.snd, o=null};
+    Rf -> Rt [dr.snd=false]  / {ar=dr.snd, o=dr.fst};
+  }
+}
