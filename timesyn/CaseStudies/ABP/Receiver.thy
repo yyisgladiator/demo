@@ -59,64 +59,85 @@ definition abp2nat :: "Receiver tsyn stream \<rightarrow> nat tsyn stream" where
   section {* Receiver Test Streams and Bundles *}
 (* ----------------------------------------------------------------------- *)
 
-(* Everything works fine *)
+(* ----------------------------------------------------------------------- *)
+  subsection {* Test situation in which no message gets lost. *}
+(* ----------------------------------------------------------------------- *)
 
+text{* Input stream of the Receiver. *}
 definition recTestInputStreamNoLoss :: "(nat \<times> bool) tsyn stream" where 
   "recTestInputStreamNoLoss \<equiv> <[Msg (1, True), Msg (2, False)]>"
 
+text{* Input bundle of the Receiver. *}
 lift_definition recTestInputUbundleNoLoss :: "Receiver tsyn SB" is
   "[\<guillemotright>dr \<mapsto> natbool2abp\<cdot>recTestInputStreamNoLoss]" 
   by (simp add: ubWell_def usclOkay_stream_def ctype_tsyn_def recTestInputStreamNoLoss_def
       natbool2abp_def tsynMap_def)
 
+text{* Output bool stream of the Receiver. *}
 definition recTestOutputStreamArNoLoss :: "bool tsyn stream" where 
   "recTestOutputStreamArNoLoss \<equiv> <[Msg True, Msg False]>"
 
+text{* Output nat stream of the Receiver. *}
 definition recTestOutputStreamONoLoss :: "nat tsyn stream" where 
   "recTestOutputStreamONoLoss \<equiv> <[Msg 1, Msg 2]>"
 
+text{* Output bundle of the Receiver. *}
 lift_definition recTestOutputUbundleNoLoss :: "Receiver tsyn SB" is
   "[o\<guillemotright> \<mapsto> nat2abp\<cdot>recTestOutputStreamONoLoss, ar\<guillemotright> \<mapsto> bool2abp\<cdot>recTestOutputStreamArNoLoss]"
   by (simp add: ubWell_def usclOkay_stream_def ctype_tsyn_def recTestOutputStreamArNoLoss_def
       recTestOutputStreamONoLoss_def bool2abp_def nat2abp_def tsynMap_def rangeI)
 
-(* Second medium loses first acknowledgement *)
+(* ----------------------------------------------------------------------- *)
+  subsection {* The second medium loses the first acknowledgement. *}
+(* ----------------------------------------------------------------------- *)
 
+text{* Input stream of the Receiver. *}
 definition recTestInputStreamLoseAck :: "(nat \<times> bool) tsyn stream" where 
   "recTestInputStreamLoseAck \<equiv> <[Msg (1, True), Msg (1, True), Msg (2, False)]>"
 
+text{* Input bundle of the Receiver. *}
 lift_definition recTestInputUbundleLoseAck :: "Receiver tsyn SB" is
   "[\<guillemotright>dr \<mapsto> natbool2abp\<cdot>recTestInputStreamLoseAck]" 
   by (simp add: ubWell_def usclOkay_stream_def ctype_tsyn_def recTestInputStreamLoseAck_def
       natbool2abp_def tsynMap_def)
 
+text{* Output bool stream of the Receiver. *}
 definition recTestOutputStreamArLoseAck :: "bool tsyn stream" where 
   "recTestOutputStreamArLoseAck \<equiv> <[Msg True, Msg True, Msg False]>"
 
+text{* Output nat stream of the Receiver. *}
 definition recTestOutputStreamOLoseAck :: "nat tsyn stream" where 
   "recTestOutputStreamOLoseAck \<equiv> <[Msg 1, null, Msg 2]>"
 
+text{* Output bundle of the Receiver. *}
 lift_definition recTestOutputUbundleLoseAck :: "Receiver tsyn SB" is
   "[o\<guillemotright> \<mapsto> nat2abp\<cdot>recTestOutputStreamOLoseAck, ar\<guillemotright> \<mapsto> bool2abp\<cdot>recTestOutputStreamArLoseAck]"
   by (simp add: ubWell_def usclOkay_stream_def ctype_tsyn_def recTestOutputStreamOLoseAck_def
       recTestOutputStreamArLoseAck_def bool2abp_def nat2abp_def tsynMap_def rangeI)
 
-(* First medium loses the first and second data one time *)
+(* ----------------------------------------------------------------------- *)
+  subsection {* The first medium loses the first and second data message for one time each. *}
+(* ----------------------------------------------------------------------- *)
 
+text{* Input stream of the Receiver. *}
 definition recTestInputStreamLoseDat :: "(nat \<times> bool) tsyn stream" where 
   "recTestInputStreamLoseDat \<equiv> <[null, Msg (1, True), null, Msg (2, False)]>"
 
+text{* Input bundle of the Receiver. *}
 lift_definition recTestInputUbundleLoseDat :: "Receiver tsyn SB" is
   "[\<guillemotright>dr \<mapsto> natbool2abp\<cdot>recTestInputStreamLoseDat]" 
   by (simp add: ubWell_def usclOkay_stream_def ctype_tsyn_def recTestInputStreamLoseDat_def 
       natbool2abp_def tsynMap_def)
 
+text{* Output bool stream of the Receiver. *}
 definition recTestOutputStreamArLoseMsg :: "bool tsyn stream" where 
   "recTestOutputStreamArLoseMsg \<equiv> <[null, Msg True, null, Msg False]>"
 
+text{* Output nat stream of the Receiver. *}
 definition recTestOutputStreamOLoseMsg :: "nat tsyn stream" where 
  "recTestOutputStreamOLoseMsg \<equiv> <[null, Msg 1, null, Msg 2]>"
 
+text{* Output bundle of the Receiver. *}
 lift_definition recTestOutputUbundleLoseMsg :: "Receiver tsyn SB" is
   "[o\<guillemotright> \<mapsto> nat2abp\<cdot>recTestOutputStreamOLoseMsg, ar\<guillemotright> \<mapsto> bool2abp\<cdot>recTestOutputStreamArLoseMsg]"
   by (simp add: ubWell_def usclOkay_stream_def ctype_tsyn_def recTestOutputStreamArLoseMsg_def
@@ -166,6 +187,7 @@ lemma tsynrec_test_infstream:
   apply (simp add: tsynrec_insert)
   oops
 
+text{* The output bundle of @{term tsynbRec} is well-formed. *}
 lemma tsynbrec_ubwell [simp]:
  "ubWell [ar\<guillemotright> \<mapsto> bool2abp\<cdot>(tsynProjSnd\<cdot>(abp2natbool\<cdot>(x  .  \<guillemotright>dr))),
           o\<guillemotright> \<mapsto> nat2abp\<cdot>(tsynRec\<cdot>(abp2natbool\<cdot>(x  .  \<guillemotright>dr)))]"
@@ -179,6 +201,7 @@ lemma tsynbrec_ubwell [simp]:
   using tsynApplyElem.elims apply blast
   using tsynApplyElem.elims by blast
 
+text{* The domain of the output bundle of @{term tsynbRec}. *}
 lemma tsynbrec_ubundle_ubdom: "ubDom\<cdot>(Abs_ubundle 
               [ar\<guillemotright> \<mapsto> bool2abp\<cdot>(tsynProjSnd\<cdot>(abp2natbool\<cdot>(sb  .  \<guillemotright>dr))), 
                o\<guillemotright> \<mapsto> nat2abp\<cdot>(tsynRec\<cdot>(abp2natbool\<cdot>(sb  .  \<guillemotright>dr)))]) = {ar\<guillemotright>, o\<guillemotright>}"
@@ -189,6 +212,7 @@ lemma tsynbrec_lub_ubwell:
                      o\<guillemotright> \<mapsto> nat2abp\<cdot>(tsynRec\<cdot>(abp2natbool\<cdot>Rep_ubundle (Y i)\<rightharpoonup>\<guillemotright>dr))])"
   sorry
 
+text{* @{term tsynbRec} is monotonous. *}
 lemma tsynbrec_mono [simp]:
   "monofun (\<lambda> sb. (ubDom\<cdot>sb = {\<guillemotright>dr}) \<leadsto> Abs_ubundle [
               ar\<guillemotright> \<mapsto> bool2abp\<cdot>(tsynProjSnd\<cdot>(abp2natbool\<cdot>(sb  .  \<guillemotright>dr))), 
@@ -226,6 +250,7 @@ lemma tsynbrec_o_contlub: assumes "chain Y"
   = (\<Squnion>i. (nat2abp\<cdot>(tsynRec\<cdot>(abp2natbool\<cdot>(((Y i.  \<guillemotright>dr)))))))"
   by (simp add: assms contlub_cfun_arg)
 
+text{* @{term tsynbRec} is continuous. *}
 lemma tsynbrec_cont [simp]:
   "cont (\<lambda> sb. (ubDom\<cdot>sb = {\<guillemotright>dr}) \<leadsto> Abs_ubundle [
                ar\<guillemotright> \<mapsto> bool2abp\<cdot>(tsynProjSnd\<cdot>(abp2natbool\<cdot>(sb  .  \<guillemotright>dr))), 
@@ -242,19 +267,23 @@ lemma tsynbrec_cont [simp]:
   apply (simp add: ubdom_ubrep_eq ubgetch_lub tsynbrec_ar_contlub tsynbrec_o_contlub tsynbrec_chain)
   by (simp add: ubgetch_insert tsynbrec_lub_ubwell part_the_lub tsynbrec_chain2)
 
+text{* @{term tsynbRec} insertion lemma. *}
 lemma tsynbrec_insert: "tsynbRec\<cdot>sb = (ubDom\<cdot>sb = {\<guillemotright>dr}) \<leadsto> Abs_ubundle 
               [ar\<guillemotright> \<mapsto> bool2abp\<cdot>(tsynProjSnd\<cdot>(abp2natbool\<cdot>(sb  .  \<guillemotright>dr))), 
                o\<guillemotright> \<mapsto> nat2abp\<cdot>(tsynRec\<cdot>(abp2natbool\<cdot>(sb  .  \<guillemotright>dr)))]"
    by (simp add: tsynbRec_def ubclDom_ubundle_def)
 
+text{* @{term tsynbRec} is well-formed. *}
 lemma tsynbrec_ufwell [simp]: "ufWell tsynbRec"
   apply (rule ufun_wellI)
   apply (simp_all add: tsynbRec_def domIff2 ubclDom_ubundle_def)
   by (simp add: tsynbrec_ubundle_ubdom)
 
+text{* @{term RecSPF} insertion lemma. *}
 lemma recspf_insert: "RecSPF \<rightleftharpoons> sb = (Abs_ufun tsynbRec) \<rightleftharpoons> sb"
   by (simp add: RecSPF_def)
 
+text{* The domain of @{term RecSPF}. *}
 lemma recspf_ufdom: "ufDom\<cdot>RecSPF = {\<guillemotright>dr}"
   apply(simp add: ufDom_def)
   proof -
@@ -284,11 +313,13 @@ lemma recspf_ufdom: "ufDom\<cdot>RecSPF = {\<guillemotright>dr}"
       qed
   qed
 
+text{* The range of @{term RecSPF}. *}
 lemma recspf_ufran: "ufRan\<cdot>RecSPF = {ar\<guillemotright>, o\<guillemotright>}"
   apply(simp add: ufRan_def)
   proof -
     show "ubclDom\<cdot>(SOME sbout::Receiver tsyn stream\<^sup>\<Omega>. sbout \<in> ran (Rep_cufun RecSPF)) = {ar\<guillemotright>, o\<guillemotright>}" 
       proof -
+        fix  sbout :: "Receiver tsyn stream\<^sup>\<Omega>"
         have "sbout \<in> ran (Rep_cufun RecSPF) \<Longrightarrow> ubclDom\<cdot>sbout = {ar\<guillemotright>, o\<guillemotright>} " 
           proof -
             assume ass:"sbout \<in> ran (Rep_cufun RecSPF)"
@@ -301,7 +332,7 @@ lemma recspf_ufran: "ufRan\<cdot>RecSPF = {ar\<guillemotright>, o\<guillemotrigh
                               tsynbrec_ufwell ubclDom2ubDom ufdom_2ufundom)
             hence "ubclDom\<cdot>(sbout) = {ar\<guillemotright>, o\<guillemotright>}"  
               using \<open>Rep_cufun RecSPF (sbin::Receiver tsyn stream\<^sup>\<Omega>)
-                      = Some (sbout::Receiver tsyn stream\<^sup>\<Omega>)\<close> 
+                      = Some sbout\<close> 
                      tsynbrec_ubundle_ubdom ubclDom2ubDom by auto
             thus ?thesis by blast
           qed
@@ -316,11 +347,13 @@ lemma recspf_ufran: "ufRan\<cdot>RecSPF = {ar\<guillemotright>, o\<guillemotrigh
       qed
   qed
 
+text{* The domain of the output bundle of @{term tsynbRec}. *}
 lemma recspf_ubdom: 
   assumes "ubDom\<cdot>sb = ufDom\<cdot>RecSPF"
   shows "ubDom\<cdot>(RecSPF \<rightleftharpoons> sb) = {ar\<guillemotright>, o\<guillemotright>}"
   by (simp add: assms recspf_ufran spf_ubDom)
 
+text{* @{term RecSPF} is strict. *}
 lemma recspf_strict: "RecSPF \<rightleftharpoons> ubclLeast{\<guillemotright>dr} = ubclLeast{ar\<guillemotright>, o\<guillemotright>}"
   proof -
     have "ubclLeast{\<guillemotright>dr} = ubLeast{\<guillemotright>dr}" by (simp add: ubclLeast_ubundle_def)
@@ -361,9 +394,9 @@ lemma recspf_strict: "RecSPF \<rightleftharpoons> ubclLeast{\<guillemotright>dr}
   section {* Automaton Receiver Transition Lemmata *}
 (* ----------------------------------------------------------------------- *)
 
-(* ToDo: add descriptions. *)
+text{* @{term receiverTransition} maps the old state and bundle on the correct new state and bundle. *}
 
-lemma receivertransition_rt_true: 
+lemma receivertransition_rt_true:
   "receiverTransition (State Rt, [\<guillemotright>dr \<mapsto> (Msg (A (a, True)))])
      = ((State Rf,(createArOutput True) \<uplus> (createOOutput a)))"
   by simp
@@ -440,6 +473,7 @@ lemma receivertransition_ubdom:
       by (simp add: f_def s_def)
   qed
 
+  text{*The Receiver Automaton is well-formed.*}
 lemma receivertransition_automaton_well:
   "automaton_well (receiverTransition, ReceiverState.State Rt, tsynbNull ar\<guillemotright> \<uplus> tsynbNull o\<guillemotright>, 
                    {\<guillemotright>dr}, {ar\<guillemotright>, o\<guillemotright>})"
