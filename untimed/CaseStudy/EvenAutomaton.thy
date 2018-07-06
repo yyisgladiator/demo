@@ -125,8 +125,8 @@ lift_definition EvenAutomatonAutomaton :: "(EvenAutomatonState, EvenAutomaton ts
 definition EvenAutomatonSPF :: "EvenAutomaton tsyn SPF" where
 "EvenAutomatonSPF = da_H EvenAutomatonAutomaton"
 
-lemma SteGre2_1:assumes "dom f = {\<guillemotright>c1}" and "f \<rightharpoonup> \<guillemotright>c1 = (Msg (A a))"shows "autGetNextState EvenAutomatonAutomaton (State x y) f \<noteq> State Even (2*n+1)"
-proof(simp add: autGetNextState_def getTransition_def EvenAutomatonAutomaton.rep_eq assms)
+lemma SteGre2_1:assumes "dom f = {\<guillemotright>c1}" and "f \<rightharpoonup> \<guillemotright>c1 = (Msg (A a))"shows "daNextState EvenAutomatonAutomaton (State x y) f \<noteq> State Even (2*n+1)"
+proof(simp add: daNextState_def daTransition_def EvenAutomatonAutomaton.rep_eq assms)
   show"fst (evenAutomatonTransitionH (EvenAutomatonState.State x y, \<M> A a)) \<noteq> EvenAutomatonState.State Even (Suc (2 * n))"
   proof(cases "Parity.even y")
     case True
@@ -188,8 +188,8 @@ proof(simp add: autGetNextState_def getTransition_def EvenAutomatonAutomaton.rep
 qed
   
     
-lemma SteGre2_2:assumes "dom f = {\<guillemotright>c1}" and "f \<rightharpoonup> \<guillemotright>c1 = (Msg (A a))"shows"autGetNextState EvenAutomatonAutomaton (State x y) f \<noteq> State Odd (2*n)"
-proof(simp add: autGetNextState_def getTransition_def EvenAutomatonAutomaton.rep_eq assms)
+lemma SteGre2_2:assumes "dom f = {\<guillemotright>c1}" and "f \<rightharpoonup> \<guillemotright>c1 = (Msg (A a))"shows"daNextState EvenAutomatonAutomaton (State x y) f \<noteq> State Odd (2*n)"
+proof(simp add: daNextState_def daTransition_def EvenAutomatonAutomaton.rep_eq assms)
   show"fst (evenAutomatonTransitionH (EvenAutomatonState.State x y, \<M> A a)) \<noteq> EvenAutomatonState.State Odd ((2::nat) * n)"
   proof(cases "Parity.even y")
     case True
