@@ -65,7 +65,7 @@ text{* If the first element in the oracle is False then the current message will
 lemma tsynmed_sconc_msg_f:
   assumes "msg \<noteq> \<epsilon>" 
     and " #ora = \<infinity>" 
-  shows "tsynMed\<cdot>(\<up>(Msg m) \<bullet> msg)\<cdot>(\<up>False \<bullet> ora) = tsynMed\<cdot>msg\<cdot>ora"
+  shows "tsynMed\<cdot>(\<up>(Msg m) \<bullet> msg)\<cdot>(\<up>False \<bullet> ora) = \<up>- \<bullet> tsynMed\<cdot>msg\<cdot>ora"
 sorry
 
 text{* If the first element in the stream is null the oracle will not change. *}
@@ -98,17 +98,11 @@ lemma tsynmed_tsyndom: assumes ora_inf:"#ora=\<infinity>" shows "tsynDom\<cdot>(
         then show ?thesis 
           proof (cases rule: scases [of s])
             case bottom
-            have tsynzip_bot: "tsynZip\<cdot>(\<up>(Msg m))\<cdot>(\<up>True \<bullet> ora) = (\<up>(Msg (m,True)))\<bullet>tsynZip\<cdot>\<epsilon>\<cdot>ora"
-              by (metis sconc_snd_empty tsynzip_sconc_msg)
             have tsynfilter_simp: "tsynFilter {x::'a \<times> bool. snd x}\<cdot>(\<up>(Msg (m, True))) = (\<up>(Msg (m, True)))"
               by (metis mem_Collect_eq sconc_snd_empty snd_conv tsynfilter_sconc_msg_in tsynfilter_strict)
-            have thesis_simp:
-              "tsynProjFst\<cdot>(tsynFilter {x. snd x}\<cdot>(tsynZip\<cdot>(\<up>(Msg m))\<cdot>(\<up>True \<bullet> ora)))
-               = \<up>(Msg m)"
-              by (simp add: tsynzip_bot tsynfilter_simp tsynprojfst_insert)
             then show ?thesis 
-              by (metis bottom tsynmed_insert thesis_simp sconc_snd_empty set_eq_subset thesis_simp 
-                  true tsynZip.simps(1) tsynzip_sconc_msg)
+              by (metis bottom order_refl true tsynfilter_sconc tsynmed_insert tsynmed_strict(3) 
+                  tsynprojfst_sconc_msg tsynzip_sconc_msg)
           next
             case (scons a t)
             have s_not_empty: "s \<noteq> \<epsilon>"
@@ -124,19 +118,13 @@ lemma tsynmed_tsyndom: assumes ora_inf:"#ora=\<infinity>" shows "tsynDom\<cdot>(
         then show ?thesis
           proof (cases rule: scases [of s])
             case bottom
-            have tsynzip_bot: "tsynZip\<cdot>(\<up>(Msg m))\<cdot>(\<up>False \<bullet> ora) = (\<up>(Msg (m,False)))\<bullet>tsynZip\<cdot>\<epsilon>\<cdot>ora"
-              by (metis sconc_snd_empty tsynzip_sconc_msg)
             have tsynfilter_simp: "tsynFilter {x::'a \<times> bool. snd x}\<cdot>(\<up>(Msg (m, False))) = \<up>null"
               by (metis (full_types) mem_Collect_eq sconc_snd_empty snd_conv 
                   tsynfilter_sconc_msg_nin tsynfilter_strict)
-            have thesis_simp:
-              "tsynProjFst\<cdot>(tsynFilter {x. snd x}\<cdot>(tsynZip\<cdot>(\<up>(Msg m))\<cdot>(\<up>False \<bullet> ora)))
-               = \<up>null"
-              by (metis lscons_conv sup'_def tsynZip.simps(1) tsynfilter_simp tsynprojfst_sconc_null 
-                  tsynprojfst_strict tsynzip_bot)
             then show ?thesis 
-              by (metis bottom false order_refl sconc_snd_empty tsynZip.simps(1) 
-                  tsyndom_sconc_msg_sub tsyndom_sconc_null tsynmed_insert tsynzip_sconc_msg)
+              by (metis (no_types, hide_lams) bottom false order_refl sconc_snd_empty 
+                  tsynZip.simps(1) tsyndom_sconc_msg_sub tsyndom_sconc_null tsynfilter_strict 
+                  tsynmed_insert tsynmed_strict(3) tsynprojfst_sconc_null tsynzip_sconc_msg)
           next
             case (scons a t)
             have s_not_empty: "s \<noteq> \<epsilon>"
@@ -144,7 +132,8 @@ lemma tsynmed_tsyndom: assumes ora_inf:"#ora=\<infinity>" shows "tsynDom\<cdot>(
             have as_inf: "#as = \<infinity>"
               using msg.prems false by simp
             then show ?thesis
-              using false msg.IH s_not_empty tsyndom_sconc_msg_sub tsynmed_sconc_msg_f by fastforce
+              by (metis (no_types, lifting) dual_order.trans false msg.IH s_not_empty set_eq_subset 
+                  tsyndom_sconc_msg_sub tsyndom_sconc_null tsynmed_sconc_msg_f)
           qed
       qed
   next
@@ -163,6 +152,43 @@ lemma tsynmed_tsyndom: assumes ora_inf:"#ora=\<infinity>" shows "tsynDom\<cdot>(
       qed
     then show ?case
       by (simp add: null.IH null.prems tsyndom_sconc_null)
+  qed
+
+lemma tsynfilter_tsynabs_slen: "#(tsynAbs\<cdot>(tsynFilter A\<cdot>s)) \<le> #(tsynAbs\<cdot>s)"
+  sorry
+
+lemma tsynzip_tsynabs_slen: "#xs = \<infinity> \<Longrightarrow> #(tsynAbs\<cdot>(tsynZip\<cdot>s\<cdot>xs)) = #(tsynAbs\<cdot>s)"
+  sorry
+
+text {* Not every message will be transmitted forcibly. *}    
+lemma tsynmed_tsynabs_slen: 
+  assumes "#ora=\<infinity>" 
+  shows " #(tsynAbs\<cdot>(tsynMed\<cdot>msg\<cdot>ora)) \<le> #(tsynAbs\<cdot>msg)"
+  using assms
+  proof-
+    assume ora_inf: "#ora = \<infinity>" 
+    hence "#(tsynAbs\<cdot>(tsynFilter (Collect snd)\<cdot>(tsynZip\<cdot>msg\<cdot>ora))) \<le> #(tsynAbs\<cdot>msg)"
+      by (metis tsynfilter_tsynabs_slen tsynzip_tsynabs_slen)
+    have "#(tsynAbs\<cdot>(tsynFilter (Collect snd)\<cdot>(tsynZip\<cdot>msg\<cdot>ora))) = #(tsynAbs\<cdot>(tsynProjFst\<cdot>(tsynFilter (Collect snd)\<cdot>(tsynZip\<cdot>msg\<cdot>ora))))"
+      sorry
+    have "tsynFilter (Collect snd)\<cdot>(tsynZip\<cdot>msg\<cdot>ora) = tsynProjFst\<cdot>(tsynFilter {x::'a \<times> bool. snd x}\<cdot>(tsynZip\<cdot>msg\<cdot>ora))"
+      sorry
+    thus ?thesis
+      apply (simp add: tsynmed_insert)
+      sorry
+
+    have tsynmed_tsynfilter_slen: "#(tsynFilter {x. snd x}\<cdot>(tsynZip\<cdot>msg\<cdot>ora)) = #(tsynZip\<cdot>msg\<cdot>ora)"
+      by (simp add: tsynfilter_slen)
+    have tsynmed_slen: "#(tsynProjFst\<cdot>(tsynFilter {x. snd x}\<cdot>(tsynZip\<cdot>msg\<cdot>ora))) = #(tsynZip\<cdot>msg\<cdot>ora)"
+      by (simp add: tsynmed_tsynfilter_slen tsynprojfst_slen)
+    have tsynabs: "#(tsynAbs\<cdot>(tsynProjFst\<cdot>(tsynFilter {x. snd x}\<cdot>(tsynZip\<cdot>msg\<cdot>ora)))) = #(tsynAbs\<cdot>(tsynZip\<cdot>msg\<cdot>ora))" 
+      sorry
+    have tsynabs_tsynzip: "#(tsynAbs\<cdot>(tsynZip\<cdot>msg\<cdot>ora)) \<le> #(tsynAbs\<cdot>msg)"
+      by (simp add: ora_inf tsynzip_tsynabs_slen)
+    have "#(tsynAbs\<cdot>(tsynProjFst\<cdot>(tsynFilter {x. snd x}\<cdot>(tsynZip\<cdot>msg\<cdot>ora)))) \<le> #(tsynAbs\<cdot>msg)"
+      sorry
+    show ?thesis
+      sorry
   qed
 
 end
