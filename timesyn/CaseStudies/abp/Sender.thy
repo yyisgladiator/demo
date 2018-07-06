@@ -8,7 +8,7 @@
 chapter {* Theory for Sender Automaton Lemmata *}
 
 theory Sender
-imports Components 
+imports SenderAutomaton Components
 
 begin
 
