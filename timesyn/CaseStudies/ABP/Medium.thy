@@ -24,6 +24,20 @@ definition tsynMed :: "'a tsyn stream \<rightarrow> bool stream \<rightarrow> 'a
 section {* basic properties *}
 (* ----------------------------------------------------------------------- *)
 
+text {* Induction rule for infinite time-synchronous streams and admissable predicates. *}
+lemma ora_ind [case_names adm bot msg_t msg_f]:
+  assumes adm: "adm P"
+    and bot: "P \<epsilon>"
+    and msg_t: "\<And>s. P s \<Longrightarrow> P (\<up>True \<bullet> s)"
+    and msg_f: "\<And>s. P s \<Longrightarrow> P (\<up>False \<bullet> s)"
+  shows "P (x:: bool stream)"
+  apply (induction x rule: ind)
+  apply (simp add: adm)
+  apply (simp add: bot)
+  apply (case_tac a)
+  apply (simp add: msg_t)
+  by (simp add: msg_f)
+
 lemma oracases [case_names bot true false]:
   assumes bot: "ts=\<epsilon> \<Longrightarrow> P ts"
     and true: "\<And>as. ts= (\<up>True \<bullet> as) \<Longrightarrow> P ts"
@@ -174,6 +188,82 @@ lemma tsynmed_tsyndom: assumes ora_inf:"#ora=\<infinity>" shows "tsynDom\<cdot>(
       by (simp add: null.IH null.prems tsyndom_sconc_null)
   qed
 
+lemma smed_slen_inf [simp]: 
+  assumes msg_inf: "tsynLen\<cdot>msg = \<infinity>"
+  shows "tsynLen\<cdot>(tsynMed\<cdot>msg\<cdot>ora) = #({True} \<ominus> ora)"
+  using assms
+  sorry
+(*  proof (induction ora arbitrary: msg rule: ora_ind)
+        case adm
+        then show ?case 
+          by (simp add: adm_def contlub_cfun_arg contlub_cfun_fun)
+      next
+        case bot
+        then show ?case 
+          by simp
+      next
+        case (msg_t s)
+        then show ?case 
+          proof (cases rule: tsyn_cases [of _ msg])
+              case bot
+              have msg_nbot: "msg \<noteq> \<epsilon>"
+                using msg_t.prems by auto
+              then show "(\<And>msg::'a tsyn stream. tsynLen\<cdot>msg = \<infinity> \<Longrightarrow> tsynLen\<cdot>(tsynMed\<cdot>msg\<cdot>s) = #({True} \<ominus> s)) \<Longrightarrow>
+    tsynLen\<cdot>msg = \<infinity> \<Longrightarrow> tsynLen\<cdot>(tsynMed\<cdot>\<epsilon>\<cdot>(\<up>True \<bullet> s)) = #({True} \<ominus> \<up>True \<bullet> s)"  sorry
+            next
+              case (msg m s)
+              then show ?thesis sorry
+            next
+              case (null s)
+              then show ?thesis sorry
+            qed
+sorry
+      next
+        case (msg_f s)
+        then show ?case sorry
+      qed*)
+
+(*proof (induction ora arbitrary: msg rule: ind)
+      case 1
+      then show ?case 
+        by (simp add: adm_def contlub_cfun_arg contlub_cfun_fun)
+    next
+      case 2
+      then show ?case 
+        by (simp add: tsynmed_strict(2))
+    next
+      case (3 a s)
+      then show ?case 
+        proof (cases "a=True")
+          assume msg_inf: "tsynLen\<cdot>msg = \<infinity>"
+          case True
+          then show ?thesis
+            proof (cases rule: tsyn_cases [of _ msg])                
+                case 1                                
+                have msg_nbot: "msg \<noteq> \<epsilon>"
+                  using msg_inf by auto
+                have case_simp: "msg = \<epsilon> \<Longrightarrow> tsynLen\<cdot>(tsynMed\<cdot>msg\<cdot>(\<up>a \<bullet> s)) = #({True} \<ominus> \<up>a \<bullet> s)"
+                  by (simp add: msg_nbot)
+                show "tsynLen\<cdot>(tsynMed\<cdot>\<epsilon>\<cdot>(\<up>a \<bullet> s)) = #({True} \<ominus> \<up>a \<bullet> s)"
+                  
+ sorry
+              next
+                case (msg m s)
+                then show ?thesis sorry
+              next
+                case (null s)
+                then show ?thesis sorry
+              qed
+
+            
+sorry
+next
+  case False
+  then show ?thesis sorry
+qed
+sorry
+    qed*)
+
 text{* If infinitely many messages are sent, infinitely many messages will be transmitted. *}
 lemma tsynmed_tsynlen_inf:
   assumes "#({True} \<ominus> ora) = \<infinity>" 
@@ -183,6 +273,10 @@ lemma tsynmed_tsynlen_inf:
   proof (induction msg arbitrary: ora rule: tsyn_ind)
     case adm
     then show ?case 
+      apply (rule adm_all)+
+      apply (rule admI)
+      apply (rule)+
+      apply (simp add: contlub_cfun_fun contlub_cfun_arg)
 sorry
   next
     case bot
