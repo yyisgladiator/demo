@@ -464,22 +464,12 @@ lemma ufSerComp_strongCausal: assumes "ufIsStrong f1" and "ufIsStrong f2" and "s
     by (metis (no_types, lifting) f3 f2 f1 assms(1) assms(2) assms(3) rep_ufun_well ubcldom_least_cs ufIsWeak_def ufSerComp_apply ufisstrong_2_ufisweak ufran_2_ubcldom2 ufunLeastIDom)
   qed
 
-(* lemma test: assumes "ufDom\<cdot>(f::'m ubundle ufun) \<inter> ufRan\<cdot>f \<noteq> {}"
-  shows "ufComp f empty = ufFeedbackComp f" *)
-
-(* lift_definition  emptyfun :: "('m\<^sup>\<Omega>) ufun" is
-"(\<Lambda> x. (ubDom\<cdot>x = {})\<leadsto>(Abs_ubundle empty))"
-  apply(rule ufun_wellI)
-  defer
-  sledgehammer
-  apply (simp_all add: domIff2 ubclDom_ubundle_def) *)
-
 
 definition emptyfun :: "('m\<^sup>\<Omega>) ufun" where
 "emptyfun \<equiv> Abs_cufun (\<lambda>x. (ubDom\<cdot>x = {})\<leadsto>(Abs_ubundle empty))"
-lemma emptyfun_mono: "monofun (\<lambda>x. (ubclDom\<cdot>x = {})\<leadsto>(Abs_ubundle empty))"
+lemma emptyfun_mono: "monofun (\<lambda>x. (ubDom\<cdot>x = {})\<leadsto>(Abs_ubundle empty))"
   by (simp add: monofunI some_below ubdom_below)
-lemma emptyfun_cont: "cont (\<lambda>x. (ubclDom\<cdot>x = {})\<leadsto>(Abs_ubundle empty))"
+lemma emptyfun_cont: "cont (\<lambda>x. (ubDom\<cdot>x = {})\<leadsto>(Abs_ubundle empty))"
   apply(rule contI2)
   apply(simp add: emptyfun_mono)
   by (simp add: ubcldom_lub_eq2I some_lub_chain_eq)
@@ -504,13 +494,14 @@ proof -
   show ?thesis
     apply (simp add: ufDom_def ubclDom_ubundle_def)
     proof -
-        obtain CC :: "('a\<^sup>\<Omega> \<rightarrow> ('a\<^sup>\<Omega>) option) \<Rightarrow> channel set" where
-          f7: "\<And>u. ufDom\<cdot>u = CC (Rep_ufun u)"
-          using f4 f3 f1 by (metis (no_types) rep_ufun_well ufWell_def ufunLeastIDom)
-        then have "\<And>u ua. {c. Rep_ubundle (u::'a\<^sup>\<Omega>) c \<noteq> None} \<noteq> Collect bot \<or> Some (ubclLeast (Collect bot)) \<noteq> Some (ua::'a\<^sup>\<Omega>) \<or> CC (Rep_ufun (Abs_cufun (\<lambda>u. (ubDom\<cdot>u = {})\<leadsto>Abs_ubundle Map.empty))) = {c. Rep_ubundle u c \<noteq> None}"
-          using f6 f5 f3 f1 by (metis (no_types) ufleast_rep_abs)
-        then show "(\<Lambda> (f::('a\<^sup>\<Omega>) ufun). ubDom\<cdot>(SOME b::'a\<^sup>\<Omega>. b \<in> dom (Rep_cufun f)))\<cdot>emptyfun = {}"
-          using f7 f4 f1 bot_set_def emptyfun_def ufDom_def by metis
+      obtain CC :: "('a\<^sup>\<Omega> \<rightarrow> ('a\<^sup>\<Omega>) option) \<Rightarrow> channel set" where
+        f7: "\<And>u. ufDom\<cdot>u = CC (Rep_ufun u)"
+        using f4 f3 f1 by (metis (no_types) rep_ufun_well ufWell_def ufunLeastIDom)
+      then have "\<And>u ua. {c. Rep_ubundle (u::'a\<^sup>\<Omega>) c \<noteq> None} \<noteq> Collect bot \<or> Some (ubclLeast (Collect bot)) \<noteq> Some (ua::'a\<^sup>\<Omega>) \<or> CC (Rep_ufun (Abs_cufun (\<lambda>u. (ubDom\<cdot>u = {})\<leadsto>Abs_ubundle Map.empty))) = {c. Rep_ubundle u c \<noteq> None}"
+        using f6 f5 f3 f1 by (metis (no_types) ufleast_rep_abs)
+
+      then show "(\<Lambda> (f::('a\<^sup>\<Omega>) ufun). ubDom\<cdot>(SOME b::'a\<^sup>\<Omega>. b \<in> dom (Rep_cufun f)))\<cdot>emptyfun = {}"
+        using f7 f4 f1 bot_set_def emptyfun_def ufDom_def by metis
     qed
 qed
 
@@ -535,30 +526,41 @@ proof -
     apply (simp add: ufRan_def ubclDom_ubundle_def)
     proof -
       have "Some (ubclLeast (Collect bot)) = Some (Abs_ubundle Map.empty::'a\<^sup>\<Omega>)"
-        by (metis (full_types) bot_set_def f1 f6 ubdom_empty ubdom_insert)
+        by (metis (full_types) bot_set_def f1 f6 ubdom_empty)
+
       then show "(\<Lambda> u. ubDom\<cdot> (SOME ua. (ua::'a\<^sup>\<Omega>) \<in> ran (Rep_cufun u)))\<cdot> emptyfun = {}"
-        by (metis (no_types) emptyfun_def emptyfun_dom f1 option.sel ubdom_empty ubundle_ex ufRan_def ufleast_rep_abs ufran_2_ubcldom2)
+        by (metis (no_types) emptyfun_def emptyfun_dom f1 option.sel ubdom_empty ufRan_def ufleast_rep_abs ufran_2_ubcldom2)
     qed
-  qed
+qed
 
 
 lemma emptyfun_well: "ufWell (\<Lambda> (x::'m\<^sup>\<Omega>). (ubDom\<cdot>x = {})\<leadsto>Abs_ubundle Map.empty)"
-  apply(rule ufun_wellI)
-  apply (simp_all add: ubclDom_ubundle_def)
-  using emptyfun_ran inf_ub rep_ufun_well ubLen_def ubclDom_ubundle_def ubclLen_ubundle_def ubcldom_least_cs ufIsStrong_def ufWell_def ufran_2_ubcldom2 ufunLeastIDom
-using  domIff2 ubclDom_ubundle_def emptyfun_mono emptyfun_cont ubdom_insert ubfix_dom ufCompH_3arg_io_eq 
-  
-  sorry
+    apply (simp add: ufWell_def)
+    apply rule
+    apply (rule_tac x="{}" in exI)
+    apply rule
+    apply (simp add: domIff emptyfun_cont ubclDom_ubundle_def)
+    apply (rule_tac x="{}" in exI)
+    apply rule
+    apply (simp add: emptyfun_cont ubclDom_ubundle_def)
+    proof-
+      fix ba :: "'a\<^sup>\<Omega>"
+      obtain uu :: "('m\<^sup>\<Omega> \<Rightarrow> ('a\<^sup>\<Omega>) option) \<Rightarrow> 'a\<^sup>\<Omega> \<Rightarrow> 'm\<^sup>\<Omega>" where
+        g1: "\<And>u f. u \<notin> ran f \<or> f (uu f u) = Some u"
+        by (meson ran2exists)
+      { assume a2: "dom (Rep_ubundle ba) \<noteq> {}"
+        then have g2: "(ubDom\<cdot> (uu (\<lambda>u. (ubDom\<cdot>u = {})\<leadsto>Abs_ubundle Map.empty) ba) = {})\<leadsto>Abs_ubundle Map.empty \<noteq> Some ba"
+          by (metis (no_types) option.distinct(1) option.sel ubdom_empty ubdom_insert)
+        then have g3: "ba \<in> ran (\<lambda>u. (ubDom\<cdot>(u::'m\<^sup>\<Omega>) = {})\<leadsto>Abs_ubundle Map.empty) \<longrightarrow> ubDom\<cdot>ba = {}"
+          using g1 by blast
+      }
+      then show "ba \<in> ran (\<lambda>u. (ubDom\<cdot>(u::'m\<^sup>\<Omega>) = {})\<leadsto>Abs_ubundle Map.empty) \<longrightarrow> ubDom\<cdot>ba = {}"
+        using ubdom_insert by blast
+    qed
+
 
 lemma feedbackeq: "ufFeedbackComp f = ufComp f emptyfun"
 proof -
-(*   have dom1: "ufDom\<cdot>(ufComp f emptyfun) = ufDom\<cdot>f"
-    apply (simp add: ufcomp_dom emptyfun_ran)
-using ufcomp_dom ufFeedbackComp_dom 
-    sorry
-  have ran1: "ufRan\<cdot>(ufComp f emptyfun) = ufRan\<cdot>f"
-    
-    sorry *)
   have dom2: "ufDom\<cdot>(ufComp f emptyfun) = ufDom\<cdot>(ufFeedbackComp f)"
 (*     by (smt comp_well_def emptyfun_dom emptyfun_ran inf_bot_right sup_bot_left ufCompI_def ufFeedbackComp_dom ufclDom_ufun_def ufclRan_ufun_def ufcomp_I_commu ufunclCompWell_ufun_def ufunclComp_ufun_def ufuncl_comp_dom) *)
   proof -
@@ -588,43 +590,78 @@ using ufcomp_dom ufFeedbackComp_dom
     by (metis (no_types, lifting) ufclRan_ufun_def ufunclComp_ufun_def emptyfun_ran sup_bot.left_neutral sup_commute ufFeedbackComp_ran ufuncl_comp_ran)
   qed
 
-  have int1: "ufCompL f emptyfun \<noteq> {}"
-    
-    sorry
+  have f1: "\<And>sb::'a\<^sup>\<Omega>. ubclDom\<cdot>sb = ufDom\<cdot>(ufFeedbackComp f) \<Longrightarrow> ((ufComp f emptyfun)\<rightleftharpoons>sb) = ((ufFeedbackComp f)\<rightleftharpoons>sb)"
+  proof - 
+    fix sb :: "'a\<^sup>\<Omega>"
+    assume a1: "ubclDom\<cdot>sb = ufDom\<cdot>(ufFeedbackComp f)"
+    then have z1: "ubclDom\<cdot>sb = ufDom\<cdot>f - ufRan\<cdot>f"
+      by (simp add: ufFeedbackComp_dom)
+    have z2: "ufRan\<cdot>f \<inter> ufRan\<cdot>emptyfun = {}"
+      by (simp add: emptyfun_ran)
+    have z3: "\<And>i. (iter_ubfix2 (ufCompH f emptyfun) i (ufRan\<cdot>f) sb) = (iter_ubfix2 (ufFeedH f) i (ufRan\<cdot>f) sb)"
+    proof(induct_tac i)  
+      show "iter_ubfix2 (ufCompH f emptyfun) (0::nat) (ufRan\<cdot>f) sb = iter_ubfix2 (ufFeedH f) (0::nat) (ufRan\<cdot>f) sb"
+        by simp
+      show "\<And>n::nat.
+         iter_ubfix2 (ufCompH f emptyfun) n (ufRan\<cdot>f) sb = iter_ubfix2 (ufFeedH f) n (ufRan\<cdot>f) sb \<Longrightarrow>
+         iter_ubfix2 (ufCompH f emptyfun) (Suc n) (ufRan\<cdot>f) sb = iter_ubfix2 (ufFeedH f) (Suc n) (ufRan\<cdot>f) sb"
+        proof -
+          fix n :: nat
+          assume a1: "iter_ubfix2 (ufCompH f emptyfun) n (ufRan\<cdot>f) sb = iter_ubfix2 (ufFeedH f) n (ufRan\<cdot>f) sb"
+          have "\<And>u ua. ubRestrict (ubclDom\<cdot>u)\<cdot>(Abs_ubundle (Rep_ubundle (ua::'a\<^sup>\<Omega>) ++ Rep_ubundle u)) = u"
+            by (metis ubclDom_ubundle_def ubunion_insert ubunion_restrict)
+          then show "iter_ubfix2 (ufCompH f emptyfun) (Suc n) (ufRan\<cdot>f) sb = iter_ubfix2 (ufFeedH f) (Suc n) (ufRan\<cdot>f) sb"
+            proof -
+              have f1: "\<forall>C. ubDom\<cdot>(ubclLeast C::'a\<^sup>\<Omega>) = C"
+                by (metis ubclLeast_ubundle_def ubleast_ubdom)
+              have f2: "\<forall>u ua. {} \<noteq> ubDom\<cdot>(u::'a\<^sup>\<Omega>) \<inter> ubDom\<cdot>ua \<or> u \<uplus> ua = ua \<uplus> u"
+                by (metis ubclUnion_ubundle_def ubunion_commutative)
+              have f3: "iter_ubfix2 (ufCompH f emptyfun) (Suc n) (ufRan\<cdot>f) sb = ufCompH f emptyfun sb\<cdot>(iter_ubfix2 (ufFeedH f) n (ufRan\<cdot>f) sb)"
+                by (metis a1 iterate_Suc)
+              have "\<forall>u. dom (Rep_ubundle (u::'a\<^sup>\<Omega>)) = ubclDom\<cdot>u"
+                using f1 by (metis (no_types) ubcldom_least ubdom_below ubdom_insert)
+              then show ?thesis
+                using f3 f2 by (metis (no_types) empty_subsetI emptyfun_dom emptyfun_ran inf_bot_left iterate_Suc ubclUnion_ubundle_def ubdom_insert ubunion_idL ufFeedH_insert ufRanRestrict ufcomph_insert)
+            qed
+        qed
+    qed
 
-  show ?thesis
-    
-    sorry
+  show "((ufComp f emptyfun)\<rightleftharpoons>sb) = ((ufFeedbackComp f)\<rightleftharpoons>sb)"
+    apply (simp add: ufComp_def ufFeedbackComp_def)
+    apply (subst rep_abs_cufun)
+    apply (simp_all add: emptyfun_ran)
+    apply (simp add: z1 z2 ufCompI_def emptyfun_dom emptyfun_ran)
+    apply (subst rep_abs_cufun)
+    apply (simp add: ufFeedbackComp_cont)
+    apply (simp add: ufFeedbackComp_well)
+    apply (simp add: z1)
+    apply (simp add: ubFix_def)
+    using z3 by simp
+  qed
+
+show ?thesis
+  by (simp add: f1 dom2 ufun_eqI)
 qed
 
-lemma helper: "ufIsStrong emptyfun"
-  by (metis (no_types, lifting) emptyfun_ran inf_ub rep_ufun_well ubLen_def ubclDom_ubundle_def ubclLen_ubundle_def ubcldom_least_cs ufIsStrong_def ufWell_def ufran_2_ubcldom2 ufunLeastIDom)
 
-lemma test: assumes "ufIsStrong f" shows "ufIsStrong (ufComp f emptyfun)"
-  by (simp add: assms emptyfun_ran helper ufComp_strongCausal)
-
-lemma ufFeedbackComp_strongCausal: assumes "ufIsStrong f" 
+lemma ufFeedbackComp_strongCausal: assumes "ufIsStrong (f::'m ubundle ufun)" 
   shows "ufIsStrong (ufFeedbackComp f)"
-  apply (simp add: feedbackeq helper test)
-  using feedbackeq helper test
-
-  using  domIff2 ubclDom_ubundle_def emptyfun_mono emptyfun_cont ubdom_insert ubfix_dom  
-  using feedbackeq ufIsStrong_def ufFeedbackComp_def 
- sorry
-
-
-(*
-apply assumption
-subst (asm)
-*)
- 
+proof -
+  have f1: "ufIsStrong emptyfun"
+    by (metis (no_types, lifting) emptyfun_ran inf_ub rep_ufun_well ubLen_def ubclDom_ubundle_def ubclLen_ubundle_def ubcldom_least_cs ufIsStrong_def ufWell_def ufran_2_ubcldom2 ufunLeastIDom)
+  have f2: "ufIsStrong (ufComp f emptyfun)"
+    by (simp add: assms emptyfun_ran f1 ufComp_strongCausal)
+  show ?thesis
+    apply (subst feedbackeq)
+    by (simp add: assms f2)
+qed
 
 lemma minOr: "\<And> x y. lnmin\<cdot>x\<cdot>y = x \<or> lnmin\<cdot>x\<cdot>y = y"
     sorry (*siehe TStream.thy, muss noch nach lnat*)
 
 lemma ufParComp_weakCausal: assumes "ufIsWeak f1" and "ufIsWeak f2" and "ufCompL f1 f2 = {}" and "ufRan\<cdot>f1 \<inter> ufRan\<cdot>f2 = {}"
   shows "ufIsWeak (ufParComp f1 (f2::'m ubundle ufun))"
-(* proof -
+proof -
   have dom: "ufDom\<cdot>(ufParComp f1 f2) = ufDom\<cdot>f1 \<union> ufDom\<cdot>f2"
     by (simp add: assms(3) assms(4) ufParComp_dom)
   have ran: "ufRan\<cdot>(ufParComp f1 f2) = ufRan\<cdot>f1 \<union> ufRan\<cdot>f2"
@@ -634,30 +671,40 @@ lemma ufParComp_weakCausal: assumes "ufIsWeak f1" and "ufIsWeak f2" and "ufCompL
       fix b
       have f1: "lnmin\<cdot>(ubLen (f1 \<rightleftharpoons> b))\<cdot>(ubLen (f2 \<rightleftharpoons> b)) = (ubLen (f1 \<rightleftharpoons> b)) \<or> 
                 lnmin\<cdot>(ubLen (f1 \<rightleftharpoons> b))\<cdot>(ubLen (f2 \<rightleftharpoons> b)) = (ubLen (f2 \<rightleftharpoons> b))"
-        sorry
+        by (simp add: minOr)
       show "ubLen ((ufParComp f1 f2) \<rightleftharpoons> b) = lnmin\<cdot>(ubLen (f1 \<rightleftharpoons> b))\<cdot>(ubLen (f2 \<rightleftharpoons> b))"
-        apply (simp add: f1)
         sorry
     qed
+
 
   show "ufIsWeak (ufParComp f1 (f2::'m ubundle ufun))"
   apply (simp add:  ufIsWeak_def)
     apply rule+
-    using dom ran len1
-(* proof -
+
+ proof -
   fix b
-  assume a1: "b \<in> dom (Rep_cufun (Abs_cufun (\<lambda>x::'m\<^sup>\<Omega>. (ubclDom\<cdot>x = ufDom\<cdot>f1 \<union> ufDom\<cdot>f2)\<leadsto>(ubRestrict (ufDom\<cdot>f1)\<cdot>(f1 \<rightleftharpoons> x)) \<uplus> (ubRestrict (ufDom\<cdot>f2)\<cdot>(f2 \<rightleftharpoons> x)))))"
-  show "b \<in> dom (Rep_cufun (Abs_cufun (\<lambda>x::'m\<^sup>\<Omega>. (ubclDom\<cdot>x = ufDom\<cdot>f1 \<union> ufDom\<cdot>f2)\<leadsto>(ubRestrict (ufDom\<cdot>f1)\<cdot>(f1 \<rightleftharpoons> x)) \<uplus> (ubRestrict (ufDom\<cdot>f2)\<cdot>(f2 \<rightleftharpoons> x))))) \<Longrightarrow>
-               ubclLen b \<le> ubclLen (Abs_cufun (\<lambda>x::'m\<^sup>\<Omega>. (ubclDom\<cdot>x = ufDom\<cdot>f1 \<union> ufDom\<cdot>f2)\<leadsto>(ubRestrict (ufDom\<cdot>f1)\<cdot>(f1 \<rightleftharpoons> x)) \<uplus> (ubRestrict (ufDom\<cdot>f2)\<cdot>(f2 \<rightleftharpoons> x))) \<rightleftharpoons> b)" *)
-  using assms ufComp_strongCausal 
-  rep_ufun_well trans_lnle ubcldom_least_cs ufIsStrong_def ufIsWeak_def ufSerComp_apply ufSerComp_dom ufWell_def ufisstrong_2_ufisweak ufran_2_ubcldom2 ufunLeastIDom
-  Abs_cfun_inverse2 domIff option.collapse rep_abs_cufun2 ufSerComp_cont ufSerComp_def ufSerComp_well
-  using assms ufComp_strongCausal ufIsWeak_def
-  rep_ufun_well trans_lnle ubcldom_least_cs ufIsStrong_def ufIsWeak_def ufSerComp_apply ufSerComp_dom ufWell_def ufisstrong_2_ufisweak ufran_2_ubcldom2 ufunLeastIDom
-  rep_ufun_well ubcldom_least_cs ufIsWeak_def ufSerComp_apply ufisstrong_2_ufisweak ufran_2_ubcldom2 ufunLeastIDom  ufun_dom2ufundom sledgehammer
+  assume a1: "b \<in> dom (Rep_cufun (ufParComp f1 f2))"
+  have g1: "ubclDom\<cdot>b = ufDom\<cdot>f1 \<union> ufDom\<cdot>f2"
+    using a1 dom ufdom_2ufundom by auto
+  have g2: "ubDom\<cdot>(ubRestrict (ufDom\<cdot>f1)\<cdot>(f1 \<rightleftharpoons> b)) \<inter> ubDom\<cdot>(ubRestrict (ufDom\<cdot>f2)\<cdot>(f2 \<rightleftharpoons> b)) = {}"
+    (* falsch ? fehlt eine assumption ? *)
+    sorry
+  have g3: "ubLen ((ubRestrict (ufDom\<cdot>f1)\<cdot>(f1 \<rightleftharpoons> b)) \<uplus> (ubRestrict (ufDom\<cdot>f2)\<cdot>(f2 \<rightleftharpoons> b))) = ubLen (ubRestrict (ufDom\<cdot>f1)\<cdot>(f1 \<rightleftharpoons> b)) \<or>
+            ubLen ((ubRestrict (ufDom\<cdot>f1)\<cdot>(f1 \<rightleftharpoons> b)) \<uplus> (ubRestrict (ufDom\<cdot>f2)\<cdot>(f2 \<rightleftharpoons> b))) = ubLen (ubRestrict (ufDom\<cdot>f2)\<cdot>(f2 \<rightleftharpoons> b))"
+    using g2 z1 by blast
+
+  show "ubclLen b \<le> ubclLen (ufParComp f1 f2 \<rightleftharpoons> b)"
+    apply (simp add: ufParComp_def ubclLen_ubundle_def)
+    apply (subst rep_abs_cufun)
+    apply (simp add: ufParComp_cont)
+    apply (simp add: assms(3) assms(4) ufParComp_well)
+    apply (simp add: g1)
+(* warum z1 nicht einsetzbar? *)
   sorry
-qed *)
-sorry
+qed
+qed
+(* lemma z1: assumes "ubDom\<cdot>z \<inter> ubDom\<cdot>zz = {}" shows "ubLen (z \<uplus> zz) = ubLen z \<or> ubLen (z \<uplus> zz) = ubLen zz"
+ *)
 
 
 
