@@ -560,8 +560,88 @@ lemma tsynremdups_fix_h_slen: "#(tsynRemDups_fix_h\<cdot>s\<cdot>None) = #s"
 proof-
   fix s :: "'a tsyn stream"
   fix m
-  assume ass: "#(tsynRemDups_fix_h\<cdot>s\<cdot>None) = #s"
-  have "#(tsynRemDups_fix_h\<cdot>s\<cdot>(Some (Discr (\<M> m)))) = #s" using ass sorry
+  have "#(tsynRemDups_fix_h\<cdot>s\<cdot>(Some (Discr (\<M> m)))) = #s" 
+  proof-
+    show ?thesis
+      apply (induction s rule: tsyn_ind, simp_all)
+    proof -
+      fix ma :: 'a and sb :: "'a tsyn stream"
+      assume a1: "#(tsynRemDups_fix_h\<cdot>sb\<cdot>(Some (Discr (\<M> m)))) = #sb"
+      have f2: "\<forall>s t. #(updis (t::'a tsyn) && s) = lnsuc\<cdot>(#s)"
+        by (metis (no_types) sconc_fst_empty sconc_scons' slen_scons sup'_def)
+      obtain tt :: "'a tsyn stream \<Rightarrow> 'a tsyn" and ss :: "'a tsyn stream \<Rightarrow> 'a tsyn stream" where
+        f3: "\<forall>s. updis (tt s) && ss s = s \<or> s = \<epsilon>"
+        by (metis scases sconc_fst_empty sconc_scons' sup'_def)
+      then have f4: "\<forall>d da s. ((tsynRemDups_fix_h\<cdot>s\<cdot>(Some d) = 
+                    tsynRemDups_fix_h\<cdot>s\<cdot>(Some da) \<or> Discr (tt s) = d) \<or> Discr (tt s) = da) \<or> s = \<epsilon>"
+        by (metis tsynRemDups_fix_h.simps(3))
+      { assume "sb \<noteq> \<epsilon>"
+        moreover
+      { assume "\<exists>d. (Discr (\<M> ma) \<noteq> Discr (\<M> m) \<and> Discr (\<M> m) \<noteq> d) \<and> sb \<noteq> \<epsilon>"
+        then have "Discr (\<M> ma) \<noteq> Discr (\<M> m) \<and> 
+                  lnsuc\<cdot>(#(tsynRemDups_fix_h\<cdot>sb\<cdot>(Some (Discr (\<M> ma))))) = lnsuc\<cdot>(#sb)"
+        using f4 f3 f2 a1 by (metis tsynRemDups_fix_h.simps(3)) }
+      ultimately have "Discr (\<M> ma) \<noteq> Discr (\<M> m) \<and> 
+                    lnsuc\<cdot>(#(tsynRemDups_fix_h\<cdot>sb\<cdot>(Some (Discr (\<M> ma))))) = lnsuc\<cdot>(#sb) \<or> 
+                    #(tsynRemDups_fix_h\<cdot>(updis (\<M> ma) && sb)\<cdot> (Some (Discr (\<M> m)))) = lnsuc\<cdot>(#sb)"
+        using f2 a1 by auto }
+      then have "#(tsynRemDups_fix_h\<cdot>(updis (\<M> ma) && sb)\<cdot> (Some (Discr (\<M> m)))) = lnsuc\<cdot>(#sb)"
+        using f2 by force
+      then show "#(tsynRemDups_fix_h\<cdot>(\<up>(\<M> ma) \<bullet> sb)\<cdot> (Some (Discr (\<M> m)))) = lnsuc\<cdot>(#sb)"
+        by (simp add: sconc_scons' sup'_def)
+    next 
+      fix s :: "'a tsyn stream"
+      show "#(tsynRemDups_fix_h\<cdot>s\<cdot>(Some (Discr (\<M> m)))) = 
+            #s \<Longrightarrow> #(tsynRemDups_fix_h\<cdot>(\<up>- \<bullet> s)\<cdot>(Some (Discr (\<M> m)))) = lnsuc\<cdot>(#s)"
+      proof -
+        assume a1: "#(tsynRemDups_fix_h\<cdot>s\<cdot>(Some (Discr (\<M> m)))) = #s"
+        have f2: "\<forall>s t. #(updis (t::'a tsyn) && s) = lnsuc\<cdot>(#s)"
+          by (metis (no_types) sconc_fst_empty sconc_scons' slen_scons sup'_def)
+        obtain tt :: "'a tsyn stream \<Rightarrow> 'a tsyn" and ss :: "'a tsyn stream \<Rightarrow> 'a tsyn stream" where
+          f3: "\<forall>s. updis (tt s) && ss s = s \<or> s = \<epsilon>"
+          by (metis (no_types) scases sconc_fst_empty sconc_scons' sup'_def)
+        then have f4: "\<forall>d da s. ((tsynRemDups_fix_h\<cdot>s\<cdot>(Some d) = 
+                      tsynRemDups_fix_h\<cdot>s\<cdot>(Some da) \<or> Discr (tt s) = d) \<or> Discr (tt s) = da) \<or> s = \<epsilon>"
+           by (metis tsynRemDups_fix_h.simps(3))
+         have f5: "\<forall>d s. (tsynRemDups_fix_h\<cdot>s\<cdot>(Some d) = updis (tt s) && 
+                  tsynRemDups_fix_h\<cdot>(ss s)\<cdot>(Some (Discr (tt s))) \<or> Discr (tt s) = d) \<or> s = \<epsilon>"
+           using f3 by (metis (no_types) tsynRemDups_fix_h.simps(3))
+        { assume "s \<noteq> \<epsilon>"
+          { assume "Discr (\<M> m) \<noteq> Discr - \<and> s \<noteq> \<epsilon>"
+            moreover
+            { assume "\<exists>d. ((#(tsynRemDups_fix_h\<cdot>s\<cdot>(Some (Discr -))) \<noteq> #s \<and> Discr (\<M> m) \<noteq> 
+                      Discr -) \<and> Discr (-::'a tsyn) \<noteq> d) \<and> s \<noteq> \<epsilon>"
+            moreover
+            { assume "\<exists>d. ((lnsuc\<cdot> (#(tsynRemDups_fix_h\<cdot>(ss s)\<cdot>(Some (Discr -)))) \<noteq>   
+                      #s \<and> Discr (\<M> m) \<noteq> Discr -) \<and> Discr (-::'a tsyn) \<noteq> d) \<and> s \<noteq> \<epsilon>"
+          moreover
+          { assume "\<exists>d. ((lnsuc\<cdot> (#(tsynRemDups_fix_h\<cdot>(ss s)\<cdot> (Some (Discr (tt s))))) \<noteq> 
+                    #s \<and> Discr (\<M> m) \<noteq> Discr -) \<and> Discr (tt s) \<noteq> d) \<and> s \<noteq> \<epsilon>"
+            then have "\<exists>d da. (((#(tsynRemDups_fix_h\<cdot>s\<cdot>(Some d)) \<noteq> #s \<and> Discr (\<M> m) \<noteq>   
+                       Discr -) \<and> Discr (tt s) \<noteq> d) \<and> Discr (-::'a tsyn) \<noteq> da) \<and> s \<noteq> \<epsilon>"
+               using f5 f2 by metis
+            then have "(Discr (tt s) \<noteq> Discr - \<and> Discr (\<M> m) \<noteq> Discr -) \<and> s \<noteq> \<epsilon>"
+              using f3 a1 by (metis (no_types) tsynRemDups_fix_h.simps(3)) }
+          ultimately have "(Discr (tt s) \<noteq> Discr - \<and> Discr (\<M> m) \<noteq> Discr -) \<and> s \<noteq> \<epsilon>"
+            by fastforce }
+        ultimately have "(Discr (tt s) \<noteq> Discr - \<and> Discr (\<M> m) \<noteq> Discr -) \<and> s \<noteq> \<epsilon>"
+          using f3 f2 by (metis (full_types) tsynRemDups_fix_h.simps(3))
+        then have "Discr (\<M> m) \<noteq> Discr - \<and> lnsuc\<cdot>(#(tsynRemDups_fix_h\<cdot>s\<cdot>(Some (Discr -)))) = 
+                  lnsuc\<cdot>(#s)"
+          using f4 f3 f2 a1 by (metis (no_types) tsynRemDups_fix_h.simps(3)) }
+      ultimately have "Discr (\<M> m) \<noteq> Discr - \<and> lnsuc\<cdot>(#(tsynRemDups_fix_h\<cdot>s\<cdot>(Some (Discr -)))) = 
+                      lnsuc\<cdot>(#s)"
+        by auto }
+      then have "Discr (\<M> m) \<noteq> Discr - \<and> lnsuc\<cdot>(#(tsynRemDups_fix_h\<cdot>s\<cdot>(Some (Discr -)))) = 
+            lnsuc\<cdot>(#s) \<or> #(tsynRemDups_fix_h\<cdot>(updis - && s)\<cdot>(Some (Discr (\<M> m)))) = lnsuc\<cdot>(#s)"
+        by fastforce }
+      then have "#(tsynRemDups_fix_h\<cdot>(updis - && s)\<cdot>(Some (Discr (\<M> m)))) = lnsuc\<cdot>(#s)"
+        using f2 by force
+      thus ?thesis
+        by (simp add: sconc_scons' sup'_def)
+      qed
+    qed
+  qed
   thus "#(tsynRemDups_fix_h\<cdot>s\<cdot>None) = #s \<Longrightarrow> #(tsynRemDups_fix_h\<cdot>s\<cdot>(Some (Discr (\<M> m)))) = #s" 
     by blast
   show "#(tsynRemDups_fix_h\<cdot>s\<cdot>None) = #s \<Longrightarrow> #(tsynRemDups_fix_h\<cdot>(\<up>- \<bullet> s)\<cdot>None) = lnsuc\<cdot>(#s)"
