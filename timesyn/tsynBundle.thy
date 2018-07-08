@@ -33,7 +33,7 @@ lemma tsynbnull_ubgetch [simp]: "tsynbNull c  .  c = \<up>null"
 lemma tsynbnull_ubconc [simp]:
   assumes "c \<in> ubDom\<cdot>sb"
   shows "ubConc (tsynbNull c)\<cdot>sb  .  c = \<up>null \<bullet> (sb  .  c)"
-  by (simp add: assms ubConc_usclConc_eq usclConc_stream_def)
+  by (simp add: assms usclConc_stream_def)
     
 lemma tsynbnull_ubconc_sbrt [simp]:
   assumes "ubDom\<cdot>sb = {c}"
@@ -118,7 +118,7 @@ text {* @{term tsynbRemDups} is strict.*}
 lemma tsynbremdups_strict:
   assumes "\<And>s :: 'a tsyn stream. usclOkay c1 s = usclOkay c2 (tsynRemDups\<cdot>s)"
   shows "tsynbRemDups\<cdot>(ubLeast {c1}) = Some (ubLeast {c2})"
-  sorry
+  oops
 (*
 proof -
   have rep_abs_id: "Rep_ubundle ((Abs_ubundle [c1 \<mapsto> \<epsilon>])::'a tsyn stream ubundle) = [c1 \<mapsto> \<epsilon>]" 
