@@ -8,7 +8,7 @@
 chapter {* Time-Synchronous Stream Bundles *}
 
 theory tsynBundle
-imports tsynStream "../untimed/SB" "../UFun_Templates"
+imports tsynStream "../untimed/SB" "../UFun_Templates" "../untimed/SpfStep"
 
 begin
 
@@ -98,7 +98,7 @@ lemma tsynbremdups_ufdom:
   by (simp add: assms map_io_well_def)
 
 text {* Range of @{term tsynbRemDups} is {c2}. *}
-lemma tsynbremdups_ufran [simp]:
+lemma tsynbremdups_ufran:
   assumes "\<And>s :: 'a tsyn stream. usclOkay c1 s = usclOkay c2 (tsynRemDups\<cdot>s)"
   shows "ufRan\<cdot>(Abs_cufun (\<lambda> sb :: 'a tsyn stream\<^sup>\<Omega>. (ubDom\<cdot>sb = {c1}) 
                               \<leadsto> (Abs_ubundle [c2 \<mapsto> tsynRemDups\<cdot>(sb . c1)]))) = {c2}"
@@ -106,13 +106,24 @@ lemma tsynbremdups_ufran [simp]:
   by (simp add: assms map_io_well_def)
 
 text {* Domain of the @{term tsynbRemDups} output bundle is {c2}. *}
-lemma tsynbremdups_ubdom:
+lemma tsynbremdups_ubundle_ubdom:
   assumes "\<And>s :: 'a tsyn stream. usclOkay c1 s = usclOkay c2 (tsynRemDups\<cdot>s)"
     and "c1 \<in> ubDom\<cdot>sb"
   shows "ubDom\<cdot>(Abs_ubundle [c2 \<mapsto> tsynRemDups\<cdot>((sb :: 'a tsyn stream ubundle)  .  c1)]) = {c2}"
   using assms
   by (metis (full_types) dom_eq_singleton_conv fun_upd_upd ubclDom_ubundle_def ubdom_channel_usokay
       ubdom_insert ubdom_ubrep_eq ubgetch_insert ubsetch_well ubundle_ex)
+
+text{* The domain of the output bundle of @{term tsynRemDups} is {c2}. *}
+lemma tsynbremdups_ubdom:
+  assumes "\<And>s :: 'a tsyn stream. usclOkay c1 s = usclOkay c2 (tsynRemDups\<cdot>s)"
+  assumes "ubDom\<cdot>sb = ufDom\<cdot>(Abs_cufun (\<lambda> sb :: 'a tsyn stream\<^sup>\<Omega>. (ubDom\<cdot>sb = {c1}) 
+                              \<leadsto> (Abs_ubundle [c2 \<mapsto> tsynRemDups\<cdot>(sb . c1)])))"
+  shows "ubDom\<cdot>(Abs_cufun (\<lambda> sb :: 'a tsyn stream\<^sup>\<Omega>. (ubDom\<cdot>sb = {c1}) 
+                              \<leadsto> (Abs_ubundle [c2 \<mapsto> tsynRemDups\<cdot>(sb . c1)])) \<rightleftharpoons> sb) = {c2}"
+  apply (subst spf_ubDom [of "Abs_cufun (\<lambda> sb :: 'a tsyn stream\<^sup>\<Omega>. (ubDom\<cdot>sb = {c1})
+                              \<leadsto> (Abs_ubundle [c2 \<mapsto> tsynRemDups\<cdot>(sb . c1)]))" "{c1}" "{c2}"])
+  by (simp_all add: assms tsynbremdups_ufdom tsynbremdups_ufran)
 
 text {* @{term tsynbRemDups} is strict.*}
 lemma tsynbremdups_strict:
