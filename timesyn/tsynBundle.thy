@@ -8,7 +8,7 @@
 chapter {* Time-Synchronous Stream Bundles *}
 
 theory tsynBundle
-imports tsynStream "../untimed/SB"
+imports tsynStream "../untimed/SB" "../UFun_Templates" "../untimed/SpfStep"
 
 begin
 
@@ -33,12 +33,121 @@ lemma tsynbnull_ubgetch [simp]: "tsynbNull c  .  c = \<up>null"
 lemma tsynbnull_ubconc [simp]:
   assumes "c \<in> ubDom\<cdot>sb"
   shows "ubConc (tsynbNull c)\<cdot>sb  .  c = \<up>null \<bullet> (sb  .  c)"
-  by (simp add: assms ubConc_usclConc_eq usclConc_stream_def)
+  by (simp add: assms usclConc_stream_def)
     
 lemma tsynbnull_ubconc_sbrt [simp]:
   assumes "ubDom\<cdot>sb = {c}"
   shows "sbRt\<cdot>(ubConc (tsynbNull c)\<cdot>sb) = sb"
   apply (rule ub_eq)
   by (simp add: assms sbRt_def usclConc_stream_def)+
+
+(* ----------------------------------------------------------------------- *)
+  section {* Definitions on Time-Synchronous Bundles *}
+(* ----------------------------------------------------------------------- *)
+
+text {* @{term tsynbRemDups} removes all duplicates of the time-synchronous stream on channel c1. 
+        The resulting stream is on channel c2. *}
+definition tsynbRemDups :: "'a tsyn stream ubundle \<rightarrow> 'a tsyn stream ubundle option" where 
+  "tsynbRemDups \<equiv> \<Lambda> sb. (ubDom\<cdot>sb = {c1}) \<leadsto> Abs_ubundle [c2 \<mapsto> tsynRemDups\<cdot>(sb  .  c1)]"
+
+(* ----------------------------------------------------------------------- *)
+  section {* Lemmata on Time-Synchronous Bundles *}
+(* ----------------------------------------------------------------------- *)
+
+(* ----------------------------------------------------------------------- *)
+  subsection {* tsynbRemDups *}
+(* ----------------------------------------------------------------------- *)
+
+text {* @{term tsynbRemDups} is monotonic. *}
+lemma tsynbremdups_mono [simp]:
+  assumes "\<And>s :: 'a tsyn stream. usclOkay c1 s = usclOkay c2 (tsynRemDups\<cdot>s)"
+  shows "monofun (\<lambda>sb :: 'a tsyn stream\<^sup>\<Omega>. (ubDom\<cdot>sb = {c1}) 
+                    \<leadsto> Abs_ubundle [c2 \<mapsto> tsynRemDups\<cdot>(sb  .  c1)])"
+  apply (rule uf_1x1_mono)
+  by (simp add: assms map_io_well_def)
+
+text {* @{term tsynbRemDups} is continous. *}
+lemma tsynbremdups_cont [simp]:
+  assumes "\<And>s :: 'a tsyn stream. usclOkay c1 s = usclOkay c2 (tsynRemDups\<cdot>s)"
+  shows "cont (\<lambda>sb :: 'a tsyn stream\<^sup>\<Omega>. (ubDom\<cdot>sb = {c1}) 
+                  \<leadsto> Abs_ubundle [c2 \<mapsto> tsynRemDups\<cdot>(sb  .  c1)])"
+  apply (rule uf_1x1_cont)
+  by (simp add: assms map_io_well_def)
+
+text {* @{term tsynbRemDups} insertion lemma. *}
+lemma tsynbremdups_insert:
+  assumes "\<And>s :: 'a tsyn stream. usclOkay c1 s = usclOkay c2 (tsynRemDups\<cdot>s)"
+  shows "tsynbRemDups\<cdot>(sb ::'a tsyn stream\<^sup>\<Omega>) 
+           = (ubDom\<cdot>sb = {c1}) \<leadsto> Abs_ubundle [c2 \<mapsto> tsynRemDups\<cdot>(sb  .  c1)]"
+  by (simp add: assms tsynbRemDups_def)
+
+text {* @{term tsynbRemDups} satisfies well condition for universal functions. *}
+lemma tsynbremdups_ufwell [simp]:
+  assumes "\<And>s :: 'a tsyn stream. usclOkay c1 s = usclOkay c2 (tsynRemDups\<cdot>s)"
+  shows "ufWell (Abs_cfun (\<lambda>sb :: 'a tsyn stream\<^sup>\<Omega>. (ubDom\<cdot>sb = {c1}) 
+                             \<leadsto> (Abs_ubundle [c2 \<mapsto> tsynRemDups\<cdot>(sb . c1)])))"
+  apply (rule uf_1x1_well)
+  by (simp add: assms map_io_well_def)
+
+text {* Domain of @{term tsynbRemDups} is {c1}. *}
+lemma tsynbremdups_ufdom:
+  assumes "\<And>s :: 'a tsyn stream. usclOkay c1 s = usclOkay c2 (tsynRemDups\<cdot>s)"
+  shows "ufDom\<cdot>(Abs_cufun (\<lambda> sb :: 'a tsyn stream\<^sup>\<Omega>. (ubDom\<cdot>sb = {c1}) 
+                              \<leadsto> (Abs_ubundle [c2 \<mapsto> tsynRemDups\<cdot>(sb . c1)]))) = {c1}"
+  apply (rule uf_1x1_dom)
+  by (simp add: assms map_io_well_def)
+
+text {* Range of @{term tsynbRemDups} is {c2}. *}
+lemma tsynbremdups_ufran:
+  assumes "\<And>s :: 'a tsyn stream. usclOkay c1 s = usclOkay c2 (tsynRemDups\<cdot>s)"
+  shows "ufRan\<cdot>(Abs_cufun (\<lambda> sb :: 'a tsyn stream\<^sup>\<Omega>. (ubDom\<cdot>sb = {c1}) 
+                              \<leadsto> (Abs_ubundle [c2 \<mapsto> tsynRemDups\<cdot>(sb . c1)]))) = {c2}"
+  apply (rule uf_1x1_ran)
+  by (simp add: assms map_io_well_def)
+
+text {* Domain of the @{term tsynbRemDups} output bundle is {c2}. *}
+lemma tsynbremdups_ubundle_ubdom:
+  assumes "\<And>s :: 'a tsyn stream. usclOkay c1 s = usclOkay c2 (tsynRemDups\<cdot>s)"
+    and "c1 \<in> ubDom\<cdot>sb"
+  shows "ubDom\<cdot>(Abs_ubundle [c2 \<mapsto> tsynRemDups\<cdot>((sb :: 'a tsyn stream ubundle)  .  c1)]) = {c2}"
+  using assms
+  by (metis (full_types) dom_eq_singleton_conv fun_upd_upd ubclDom_ubundle_def ubdom_channel_usokay
+      ubdom_insert ubdom_ubrep_eq ubgetch_insert ubsetch_well ubundle_ex)
+
+text{* The domain of the output bundle of @{term tsynRemDups} is {c2}. *}
+lemma tsynbremdups_ubdom:
+  assumes "\<And>s :: 'a tsyn stream. usclOkay c1 s = usclOkay c2 (tsynRemDups\<cdot>s)"
+  assumes "ubDom\<cdot>sb = ufDom\<cdot>(Abs_cufun (\<lambda> sb :: 'a tsyn stream\<^sup>\<Omega>. (ubDom\<cdot>sb = {c1}) 
+                              \<leadsto> (Abs_ubundle [c2 \<mapsto> tsynRemDups\<cdot>(sb . c1)])))"
+  shows "ubDom\<cdot>(Abs_cufun (\<lambda> sb :: 'a tsyn stream\<^sup>\<Omega>. (ubDom\<cdot>sb = {c1}) 
+                              \<leadsto> (Abs_ubundle [c2 \<mapsto> tsynRemDups\<cdot>(sb . c1)])) \<rightleftharpoons> sb) = {c2}"
+  apply (subst spf_ubDom [of "Abs_cufun (\<lambda> sb :: 'a tsyn stream\<^sup>\<Omega>. (ubDom\<cdot>sb = {c1})
+                              \<leadsto> (Abs_ubundle [c2 \<mapsto> tsynRemDups\<cdot>(sb . c1)]))" "{c1}" "{c2}"])
+  by (simp_all add: assms tsynbremdups_ufdom tsynbremdups_ufran)
+
+text {* @{term tsynbRemDups} is strict.*}
+lemma tsynbremdups_strict:
+  assumes "\<And>s :: 'a tsyn stream. usclOkay c1 s = usclOkay c2 (tsynRemDups\<cdot>s)"
+  shows "tsynbRemDups\<cdot>(ubLeast {c1}) = Some (ubLeast {c2})"
+  oops
+(*
+proof -
+  have rep_abs_id: "Rep_ubundle ((Abs_ubundle [c1 \<mapsto> \<epsilon>])::'a tsyn stream ubundle) = [c1 \<mapsto> \<epsilon>]" 
+    by (metis (full_types) ubWell_empty ubrep_ubabs ubsetch_well usclOkay_bot)
+  hence "dom (Rep_ubundle ((Abs_ubundle [c1 \<mapsto> \<epsilon>])::'a tsyn stream ubundle)) = {c1}"  by simp
+  hence "ubDom\<cdot>((Abs_ubundle [c1 \<mapsto> \<epsilon>])::'a tsyn stream ubundle) = {c1}" 
+    by (simp add: ubdom_insert)
+  hence insert_bundle: "tsynbRemDups\<cdot>((Abs_ubundle [c1 \<mapsto> \<epsilon>])::'a tsyn stream ubundle)
+          =Some (Abs_ubundle [c2 \<mapsto> 
+            tsynRemDups\<cdot>(((Abs_ubundle [c1 \<mapsto> \<epsilon>])::'a tsyn stream ubundle).c1)])" 
+    by (simp add: assms tsynbRemDups_insert)
+  have "((Abs_ubundle [c1 \<mapsto> \<epsilon>])::'a tsyn stream ubundle)  .  c1 = \<epsilon>" 
+    using "rep_abs_id" \<open>ubDom\<cdot>(Abs_ubundle [c1 \<mapsto> \<epsilon>]) = {c1}\<close> ubgetchE by fastforce
+  hence "tsynRemDups\<cdot>(((Abs_ubundle [c1 \<mapsto> \<epsilon>])::'a tsyn stream ubundle)  .  c1) =\<epsilon>"  by simp
+  hence "Abs_ubundle [c2 \<mapsto> tsynRemDups\<cdot>(((Abs_ubundle [c1 \<mapsto> \<epsilon>])::'a tsyn stream ubundle)  .  c1)]
+     = Abs_ubundle [c2 \<mapsto> \<epsilon>]"   by simp
+  thus ?thesis by (simp add: insert_bundle)
+qed
+*)
     
 end
