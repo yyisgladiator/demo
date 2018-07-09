@@ -116,7 +116,7 @@ lemma tsynbabs_mono [simp]:
   by (simp add: assms fun_upd_same monofun_cfun_arg ubdom_below ubgetch_ubrep_eq)
     
 text {* The @{term tsynbAbs} output bundle is a chain. *}     
-lemma tsynbabs_chain[simp]: 
+lemma tsynbabs_chain [simp]: 
   assumes "\<And>s :: 'a tsyn stream. usclOkay c1 s = usclOkay c2 (tsynAbs\<cdot>s)"
   shows "chain (Y:: nat \<Rightarrow> 'a tsyn stream\<^sup>\<Omega>) \<Longrightarrow> ubDom\<cdot>(Y 0) = {c1} \<Longrightarrow> 
          chain (\<lambda> i. Abs_ubundle [c2 \<mapsto> tsynAbs\<cdot>(Y i . c1)])"
@@ -131,16 +131,16 @@ text {* @{term tsynbAbs} is continous. *}
 lemma tsynbabs_cont [simp]: 
   assumes "\<And>s :: 'a tsyn stream. usclOkay c1 s = usclOkay c2 (tsynAbs\<cdot>s)"
     shows "cont (\<lambda>sb::'a tsyn stream\<^sup>\<Omega>. (ubDom\<cdot>sb = {c1}) \<leadsto> (Abs_ubundle [c2 \<mapsto> tsynAbs\<cdot>(sb . c1)]))"
-  proof(fold ubclDom_ubundle_def, rule ufun_contI)
+  proof (fold ubclDom_ubundle_def, rule ufun_contI)
     have mono2below:"\<And>(s :: 'a tsyn stream) x y::'a tsyn stream\<^sup>\<Omega>. usclOkay c1 s = 
          usclOkay c2 (tsynAbs\<cdot>s) \<Longrightarrow> monofun (\<lambda>sb :: 'a tsyn stream\<^sup>\<Omega>. (ubDom\<cdot>sb = {c1}) 
-         \<leadsto> Abs_ubundle [c2 \<mapsto> tsynAbs\<cdot>(sb  .  c1)]) \<Longrightarrow>  x \<sqsubseteq> y \<Longrightarrow> 
-         (ubclDom\<cdot>x = {c1})\<leadsto>Abs_ubundle [c2 \<mapsto> tsynAbs\<cdot>(x  .  c1)] \<sqsubseteq> (ubclDom\<cdot>y = {c1})\<leadsto>
-         Abs_ubundle [c2 \<mapsto> tsynAbs\<cdot>(y  .  c1)]"
-    by (metis (no_types, lifting)  monofun_def ubclDom_ubundle_def)
+           \<leadsto> Abs_ubundle [c2 \<mapsto> tsynAbs\<cdot>(sb  .  c1)]) \<Longrightarrow>  x \<sqsubseteq> y \<Longrightarrow> 
+         (ubclDom\<cdot>x = {c1})\<leadsto>Abs_ubundle [c2 \<mapsto> tsynAbs\<cdot>(x  .  c1)] \<sqsubseteq> (ubclDom\<cdot>y = {c1}) 
+           \<leadsto> Abs_ubundle [c2 \<mapsto> tsynAbs\<cdot>(y  .  c1)]"
+      by (metis (no_types, lifting)  monofun_def ubclDom_ubundle_def)
     then have tsynbabs_below:"\<And>x y::'a tsyn stream\<^sup>\<Omega>. x \<sqsubseteq> y \<Longrightarrow> 
-        (ubclDom\<cdot>x = {c1})\<leadsto>Abs_ubundle [c2 \<mapsto> tsynAbs\<cdot>(x  .  c1)] \<sqsubseteq> (ubclDom\<cdot>y = {c1})\<leadsto>
-         Abs_ubundle [c2 \<mapsto> tsynAbs\<cdot>(y  .  c1)]"
+        (ubclDom\<cdot>x = {c1})\<leadsto>Abs_ubundle [c2 \<mapsto> tsynAbs\<cdot>(x  .  c1)] \<sqsubseteq> (ubclDom\<cdot>y = {c1}) 
+           \<leadsto> Abs_ubundle [c2 \<mapsto> tsynAbs\<cdot>(y  .  c1)]"
       by (simp add: assms)
     show"\<And>x y::'a tsyn stream\<^sup>\<Omega>.ubclDom\<cdot>x = {c1} \<Longrightarrow> x \<sqsubseteq> y \<Longrightarrow> 
           Abs_ubundle [c2 \<mapsto> tsynAbs\<cdot>(x  .  c1)] \<sqsubseteq> Abs_ubundle [c2 \<mapsto> tsynAbs\<cdot>(y  .  c1)]"
@@ -158,24 +158,22 @@ lemma tsynbabs_cont [simp]:
        chain Y \<Longrightarrow> ubDom\<cdot>(\<Squnion>i. Y i) = {c1} \<Longrightarrow> chain (\<lambda>i. Abs_ubundle [c2 \<mapsto> tsynAbs\<cdot>((Y i)  .  c1)])"
       by (simp add: assms ubclDom_ubundle_def)    
     have tsynbabs_ubdom_lub: "\<And> (Y::nat \<Rightarrow> 'a tsyn stream\<^sup>\<Omega>). chain Y \<Longrightarrow>
-         ubclDom\<cdot>(\<Squnion>i. Y i) = {c1} \<Longrightarrow>
-         ubDom\<cdot>(Abs_ubundle [c2 \<mapsto> tsynAbs\<cdot>((\<Squnion>i. Y i)  .  c1)]) = {c2}"
+         ubclDom\<cdot>(\<Squnion>i. Y i) = {c1} \<Longrightarrow> ubDom\<cdot>(Abs_ubundle [c2 \<mapsto> tsynAbs\<cdot>((\<Squnion>i. Y i)  .  c1)]) = {c2}"
       by (simp add: assms ubclDom_ubundle_def ubdom_ubrep_eq)
     have tsynbabs_ubdom_lub2: "\<And> (Y::nat \<Rightarrow> 'a tsyn stream\<^sup>\<Omega>). chain Y \<Longrightarrow>
-         ubclDom\<cdot>(\<Squnion>i. Y i) = {c1} \<Longrightarrow>
-         (\<Squnion>i. ubDom\<cdot>(Abs_ubundle [c2 \<mapsto> tsynAbs\<cdot>(Y i  .  c1)])) = {c2}"
+         ubclDom\<cdot>(\<Squnion>i. Y i) = {c1} \<Longrightarrow> (\<Squnion>i. ubDom\<cdot>(Abs_ubundle [c2 \<mapsto> tsynAbs\<cdot>(Y i  .  c1)])) = {c2}"
       by (metis (mono_tags, lifting) assms tsynbabs_chain lub_eq singletonI tsynbabs_ubundle_ubdom 
-         ubclDom_ubundle_def ubdom_chain_eq2 ubdom_lub2)
+          ubclDom_ubundle_def ubdom_chain_eq2 ubdom_lub2)
     have tsynbabs_ubundle_lub: "\<And>(Y::nat \<Rightarrow> 'a tsyn stream\<^sup>\<Omega>). chain Y \<Longrightarrow> ubDom\<cdot>(\<Squnion>i. Y i) = {c1} \<Longrightarrow>
-         (\<Squnion>i. Abs_ubundle [c2 \<mapsto> tsynAbs\<cdot>(Y i  .  c1)])  .  c2 = (\<Squnion>i. tsynAbs\<cdot>(Y i  .  c1))"
-      proof(subst ubgetch_lub)
+           (\<Squnion>i. Abs_ubundle [c2 \<mapsto> tsynAbs\<cdot>(Y i  .  c1)])  .  c2 = (\<Squnion>i. tsynAbs\<cdot>(Y i  .  c1))"
+      proof (subst ubgetch_lub)
         show "\<And>Y::nat \<Rightarrow> 'a tsyn stream\<^sup>\<Omega>. chain Y \<Longrightarrow> ubDom\<cdot>(\<Squnion>i. Y i) = {c1} \<Longrightarrow> 
               chain (\<lambda>i. Abs_ubundle [c2 \<mapsto> tsynAbs\<cdot>(Y i  .  c1)])"
-          by(simp add: tsynbabs_chain)
+          by (simp add: tsynbabs_chain)
         show "\<And>Y::nat \<Rightarrow> 'a tsyn stream\<^sup>\<Omega>. chain Y \<Longrightarrow> ubDom\<cdot>(\<Squnion>i. Y i) = {c1} \<Longrightarrow> 
               c2 \<in> ubDom\<cdot>(\<Squnion>i. Abs_ubundle [c2 \<mapsto> tsynAbs\<cdot>(Y i  .  c1)])"
-          by(metis (mono_tags) contlub_cfun_arg tsynbabs_chain tsynbabs_ubdom_lub2 
-             insertI1 ubclDom_ubundle_def)
+          by (metis (mono_tags) contlub_cfun_arg tsynbabs_chain tsynbabs_ubdom_lub2 
+              insertI1 ubclDom_ubundle_def)
         show"\<And>Y::nat \<Rightarrow> 'a tsyn stream\<^sup>\<Omega>. chain Y \<Longrightarrow> ubDom\<cdot>(\<Squnion>i. Y i) = {c1} \<Longrightarrow>
              (\<Squnion>i. Abs_ubundle [c2 \<mapsto> tsynAbs\<cdot>(Y i  .  c1)]  .  c2) = (\<Squnion>i. tsynAbs\<cdot>(Y i  .  c1))"
           by (simp add: assms ubgetch_ubrep_eq) 
@@ -184,24 +182,26 @@ lemma tsynbabs_cont [simp]:
           c = c2 \<Longrightarrow> tsynAbs\<cdot>((\<Squnion>i. Y i)  .  c1) \<sqsubseteq> (\<Squnion>i. tsynAbs\<cdot>(Y i  .  c1))"
       by (metis below_refl ch2ch_Rep_cfunR contlub_cfun_arg)
     show "\<And>Y::nat \<Rightarrow> 'a tsyn stream\<^sup>\<Omega>. chain Y \<Longrightarrow> ubclDom\<cdot>(\<Squnion>i. Y i) = {c1} \<Longrightarrow>
-    Abs_ubundle [c2 \<mapsto> tsynAbs\<cdot>((\<Squnion>i. Y i)  .  c1)] \<sqsubseteq> (\<Squnion>i. Abs_ubundle [c2 \<mapsto> tsynAbs\<cdot>(Y i  .  c1)])"
+            Abs_ubundle [c2 \<mapsto> tsynAbs\<cdot>((\<Squnion>i. Y i)  .  c1)] 
+              \<sqsubseteq> (\<Squnion>i. Abs_ubundle [c2 \<mapsto> tsynAbs\<cdot>(Y i  .  c1)])"
       proof (rule ub_below)
         show"\<And>Y::nat \<Rightarrow> 'a tsyn stream\<^sup>\<Omega>. chain Y \<Longrightarrow> ubclDom\<cdot>(\<Squnion>i. Y i) = {c1} \<Longrightarrow>
              ubDom\<cdot>(Abs_ubundle [c2 \<mapsto> tsynAbs\<cdot>((\<Squnion>i. Y i)  .  c1)]) = 
              ubDom\<cdot>(\<Squnion>i. Abs_ubundle [c2 \<mapsto> tsynAbs\<cdot>(Y i  .  c1)])"
           by (metis (mono_tags, lifting) tsynbabs_chain tsynbabs_ubdom_lub tsynbabs_ubdom_lub2 
               image_cong ubclDom_ubundle_def ubdom_lub2)
-        show"\<And>(Y::nat \<Rightarrow> 'a tsyn stream\<^sup>\<Omega>) c. chain Y \<Longrightarrow> ubclDom\<cdot>(\<Squnion>i. Y i) = {c1} \<Longrightarrow>
-             c \<in> ubDom\<cdot>(Abs_ubundle [c2 \<mapsto> tsynAbs\<cdot>((\<Squnion>i. Y i)  .  c1)]) \<Longrightarrow>
-             Abs_ubundle [c2 \<mapsto> tsynAbs\<cdot>((\<Squnion>i. Y i)  .  c1)]  .  c 
-             \<sqsubseteq> (\<Squnion>i. Abs_ubundle [c2 \<mapsto> tsynAbs\<cdot>(Y i  .  c1)])  .  c"
+        show "\<And>(Y::nat \<Rightarrow> 'a tsyn stream\<^sup>\<Omega>) c. chain Y \<Longrightarrow> ubclDom\<cdot>(\<Squnion>i. Y i) = {c1} \<Longrightarrow>
+                c \<in> ubDom\<cdot>(Abs_ubundle [c2 \<mapsto> tsynAbs\<cdot>((\<Squnion>i. Y i)  .  c1)]) \<Longrightarrow>
+                    Abs_ubundle [c2 \<mapsto> tsynAbs\<cdot>((\<Squnion>i. Y i)  .  c1)]  .  c 
+                      \<sqsubseteq> (\<Squnion>i. Abs_ubundle [c2 \<mapsto> tsynAbs\<cdot>(Y i  .  c1)])  .  c"
           by (simp add: tsynbabs_below_lub tsynbabs_ubdom_lub ubclDom_ubundle_def assms 
              ubgetch_ubrep_eq tsynbabs_ubundle_lub)
       qed
   qed
   
 text {* @{term tsynbAbs} satisfies well condition for universal functions. *}  
-lemma tsynbabs_ufwell[simp]:assumes "\<And>s :: 'a tsyn stream. usclOkay c1 s = usclOkay c2 (tsynAbs\<cdot>s)"
+lemma tsynbabs_ufwell [simp]:
+  assumes "\<And>s :: 'a tsyn stream. usclOkay c1 s = usclOkay c2 (tsynAbs\<cdot>s)"
   shows "ufWell (tsynbAbs:: 'a tsyn stream\<^sup>\<Omega> \<rightarrow> ('a stream\<^sup>\<Omega>) option)"
   apply(simp add: tsynbAbs_def)
   apply (rule ufun_wellI)
@@ -217,7 +217,7 @@ lemma tsynbabs_insert:
            = (ubDom\<cdot>sb = {c1}) \<leadsto> Abs_ubundle [c2 \<mapsto> tsynAbs\<cdot>(sb  .  c1)]"
   by (simp add: assms tsynbAbs_def)
         
-lemma tsynabs_sdom:"(sdom\<cdot>s \<subseteq> insert - (Msg ` range a)) = (sdom\<cdot>(tsynAbs\<cdot>s) \<subseteq> range a)"
+lemma tsynabs_sdom: "(sdom\<cdot>s \<subseteq> insert - (Msg ` range a)) = (sdom\<cdot>(tsynAbs\<cdot>s) \<subseteq> range a)"
   proof (induction s rule: tsyn_ind)
     case adm
     then show ?case by(rule admI, simp add: contlub_cfun_arg lub_eq_Union UN_subset_iff)
@@ -232,15 +232,15 @@ lemma tsynabs_sdom:"(sdom\<cdot>s \<subseteq> insert - (Msg ` range a)) = (sdom\
     then show ?case by (simp only: tsynabs_sconc_null sdom2un, auto)
   qed
 
-text {* @{term tsynbAbs} is strict.*}
-lemma tsynbabs_strict:
+text {* @{term tsynbAbs} is strict. *}
+lemma tsynbabs_strict [simp]:
   assumes "\<And>s :: 'a tsyn stream. usclOkay c1 s = usclOkay c2 (tsynAbs\<cdot>s)"
   shows "(tsynbAbs:: 'a tsyn stream\<^sup>\<Omega> \<rightarrow> ('a stream\<^sup>\<Omega>) option)\<cdot>(ubLeast {c1}) = Some (ubLeast {c2})"
   apply(simp add: assms tsynbabs_insert)
   apply(simp add: ubLeast_def)
   by (metis (no_types) fun_upd_apply)
 
-text {* test lemma for @{term tsynbAbs}*}    
+text {* Test lemma for @{term tsynbAbs}. *}    
 lemma tsynbabs_test_finstream:
   "tsynbAbs\<cdot>(tsynbabsTestInput) = Some (tsynbabsTestOutput)"
   apply (subst tsynbabs_insert)
@@ -250,6 +250,5 @@ lemma tsynbabs_test_finstream:
   apply (metis tsynbabsTestInput.rep_eq ubrep_well)
   apply (simp add: ubdom_insert tsynabs_insert)
   using tsynbabsTestInput.abs_eq tsynbabsTestInput.rep_eq by auto[1]
-  
  
 end
