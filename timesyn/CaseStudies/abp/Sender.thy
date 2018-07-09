@@ -184,4 +184,43 @@ lemma sendertransition_automaton_well:
   "daWell (senderTransition, State Sf [], tsynbNull (\<C> ''ds''), {\<C> ''i'', \<C> ''as''}, {\<C> ''ds''})"
   using sendertransition_ubdom by simp
 
+
+(* ----------------------------------------------------------------------- *)
+  section {* Automaton Sender Step Lemmata *}
+(* ----------------------------------------------------------------------- *) 
+
+(* h_step lemma for state Sf and - input:(null, null), buffer:empty *)
+lemma senderautomaton_h_step_sf_null_null_empty:
+  assumes "ubDom\<cdot>sb = {\<C> ''i'', \<C> ''as''}"
+  shows "da_h SenderAutomaton (State Sf [])  \<rightleftharpoons> (ubConc (tsynbNull (\<C> ''i'')  \<uplus> tsynbNull (\<C> ''as''))\<cdot>sb)
+       = ubConc (tsynbNull (\<C> ''ds''))\<cdot>(da_h SenderAutomaton (State Sf []) \<rightleftharpoons> sb)"
+  sorry
+
+(* h_step lemma for state Sf and - input:(null, null), buffer:non-empty *)
+lemma senderautomaton_h_step_sf_null_null_non_empty:
+  assumes "ubDom\<cdot>sb = {\<C> ''i'', \<C> ''as''}"
+  and "buffer \<noteq> []"
+  shows "da_h SenderAutomaton (State Sf buffer)  \<rightleftharpoons> (ubConc (tsynbNull (\<C> ''i'')  \<uplus> tsynbNull (\<C> ''as''))\<cdot>sb)
+       = ubConc ((createDsBundle (Pair (last buffer) False )))\<cdot>(da_h SenderAutomaton (State Sf []) \<rightleftharpoons> sb)"
+  sorry
+
+(* h_step lemma for state St and - input:(null, null), buffer:empty *)
+lemma senderautomaton_h_step_st_null_null_empty:
+  assumes "ubDom\<cdot>sb = {\<C> ''i'', \<C> ''as''}"
+  shows "da_h SenderAutomaton (State St [])  \<rightleftharpoons> (ubConc (tsynbNull (\<C> ''i'')  \<uplus> tsynbNull (\<C> ''as''))\<cdot>sb)
+       = ubConc (tsynbNull (\<C> ''ds''))\<cdot>(da_h SenderAutomaton (State St []) \<rightleftharpoons> sb)"
+  sorry
+
+(* h_step lemma for state St and - input:(null, null), buffer:non-empty *)
+lemma senderautomaton_h_step_st_null_null_non_empty:
+  assumes "ubDom\<cdot>sb = {\<C> ''i'', \<C> ''as''}"
+  and "buffer \<noteq> []"
+  shows "da_h SenderAutomaton (State St buffer)  \<rightleftharpoons> (ubConc (tsynbNull (\<C> ''i'')  \<uplus> tsynbNull (\<C> ''as''))\<cdot>sb)
+       = ubConc ((createDsBundle (Pair (last buffer) False )))\<cdot>(da_h SenderAutomaton (State St []) \<rightleftharpoons> sb)"
+  sorry
+
+
+
+
+
 end
