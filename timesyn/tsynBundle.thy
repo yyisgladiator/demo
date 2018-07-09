@@ -117,24 +117,25 @@ lemma tsynbremdups_ubdom:
 text {* @{term tsynbRemDups} is strict.*}
 lemma tsynbremdups_strict [simp]:
   assumes "\<And>s :: 'a tsyn stream. usclOkay c1 s = usclOkay c2 (tsynRemDups\<cdot>s)"
-  shows "tsynbRemDups\<cdot>(ubLeast {c1} ::'a tsyn stream ubundle) 
-         = Some (ubLeast {c2})"
-proof -
-  have "ubDom\<cdot>(ubLeast {c1}) = {c1}" by simp
-  hence insert_bundle: "tsynbRemDups\<cdot>(ubLeast {c1} ::'a tsyn stream ubundle)
-          =Some (Abs_ubundle [c2 \<mapsto> 
-            tsynRemDups\<cdot>(ubLeast {c1} . c1)])" 
-    by (simp add: assms tsynbremdups_insert)
-  have "tsynRemDups\<cdot>(ubLeast {c1} . c1) = \<bottom>" by (simp add: ubdom_insert)
-  hence "Some (Abs_ubundle [c2 \<mapsto> 
-            tsynRemDups\<cdot>(ubLeast {c1} . c1)]) = Some (Abs_ubundle [c2 \<mapsto> \<bottom>])" by simp
-  have "Abs_ubundle [c2 \<mapsto> \<bottom>] = Abs_ubundle (\<lambda>c. (c \<in> {c2}) \<leadsto> \<bottom> )" 
-    by (metis (full_types) fun_upd_apply fun_upd_same insertI1 singletonD)
-  hence "Abs_ubundle [c2 \<mapsto> \<bottom>] = ubLeast {c2}" by (simp add: ubLeast_def)
-  hence "Some (Abs_ubundle [c2 \<mapsto> 
-            tsynRemDups\<cdot>(ubLeast {c1} . c1)]) = Some (ubLeast {c2})" by simp
-  from this show ?thesis by (simp add: insert_bundle)
-qed
-
+  shows "tsynbRemDups\<cdot>(ubLeast {c1} :: 'a tsyn stream ubundle) = Some (ubLeast {c2})"
+  proof -
+    have "ubDom\<cdot>(ubLeast {c1}) = {c1}" 
+      by simp
+    hence insert_bundle: 
+      "tsynbRemDups\<cdot>(ubLeast {c1} ::'a tsyn stream ubundle) 
+         = Some (Abs_ubundle [c2 \<mapsto> tsynRemDups\<cdot>(ubLeast {c1} . c1)])"
+      by (simp add: assms tsynbremdups_insert)
+    have "tsynRemDups\<cdot>(ubLeast {c1} . c1) = \<epsilon>" by (simp add: ubdom_insert)
+    hence "Some (Abs_ubundle [c2 \<mapsto> tsynRemDups\<cdot>(ubLeast {c1} . c1)]) 
+             = Some (Abs_ubundle [c2 \<mapsto> \<epsilon>])" by simp
+    have "Abs_ubundle [c2 \<mapsto> \<epsilon>] = Abs_ubundle (\<lambda>c. (c \<in> {c2}) \<leadsto> \<epsilon>)" 
+      by (metis (full_types) fun_upd_apply fun_upd_same insertI1 singletonD)
+    hence "Abs_ubundle [c2 \<mapsto> \<epsilon>] = ubLeast {c2}" 
+      by (simp add: ubLeast_def)
+    hence "Some (Abs_ubundle [c2 \<mapsto> tsynRemDups\<cdot>(ubLeast {c1} . c1)]) 
+             = Some (ubLeast {c2})" by simp
+    then show ?thesis
+      by (simp add: insert_bundle)
+  qed
     
 end
