@@ -390,6 +390,11 @@ text {* @{term tsynLen} maps the empty stream to zero. *}
 lemma tsynlen_strict [simp]: "tsynLen\<cdot>\<epsilon> = 0"
   by (simp add: tsynlen_insert)
 
+text {* If @{term tsynLen} is infinity the stream cannot be empty. *}
+lemma tsynlen_inf_nbot: assumes "tsynLen\<cdot>s = \<infinity>"
+  shows "s \<noteq> \<epsilon>"
+  using assms by fastforce
+
 text {* @{term tsynLen} distributes over concatenation. *}
 lemma tsynlen_sconc_msg: "tsynLen\<cdot>(\<up>(Msg a) \<bullet> as) = lnsuc\<cdot>(tsynLen\<cdot>as)"
   by (simp add: tsynabs_sconc_msg tsynlen_insert)
@@ -434,6 +439,20 @@ text {* @{term tsynLen} test for infinite tsyn stream. *}
 lemma tsynlen_test_infstream: "tsynLen\<cdot>(<[null, Msg a]>\<infinity>) = \<infinity>"
   by (metis Fin_neq_inf gr_0 inf_ub less_le list2s_Suc list2streamFin lscons_conv 
       tsynlen_inftimes_finite tsynlen_sconc_msg tsynlen_sconc_null) 
+
+(* ----------------------------------------------------------------------- *)
+  subsection {* Induction variants with Length. *}
+(* ----------------------------------------------------------------------- *)
+
+text {* Cases rule for infinite time-synchronous streams. *}
+lemma tsyn_cases_inf [case_names inf msg null]:
+  assumes inf: "tsynLen\<cdot>s = \<infinity>"
+    and msg: "\<And>a as. s= (\<up>(Msg a) \<bullet> as) \<Longrightarrow> P s"
+    and null: "\<And>as. s=(\<up>null \<bullet> as) \<Longrightarrow> P s"
+  shows "P s"
+  using assms
+  apply (cases rule: scases [of s], simp_all)
+  by (metis tsynAbsElem.cases)
 
 (* ----------------------------------------------------------------------- *)
   subsection {* tsynMap *}
