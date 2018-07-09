@@ -115,7 +115,7 @@ lemma tsynbremdups_ubdom:
       ubdom_insert ubdom_ubrep_eq ubgetch_insert ubsetch_well ubundle_ex)
 
 text {* @{term tsynbRemDups} is strict.*}
-lemma tsynbremdups_strict:
+lemma tsynbremdups_strict [simp]:
   assumes "\<And>s :: 'a tsyn stream. usclOkay c1 s = usclOkay c2 (tsynRemDups\<cdot>s)"
   shows "tsynbRemDups\<cdot>(ubLeast {c1} ::'a tsyn stream ubundle) 
          = Some (ubLeast {c2})"
