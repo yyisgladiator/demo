@@ -118,7 +118,7 @@ proof -
     using f1 by blast
 qed
 
-lemma ubConc_usclConc_eq: assumes "c \<in> (ubDom\<cdot>sb1)"
+lemma ubConc_usclConc_eq [simp]: assumes "c \<in> (ubDom\<cdot>sb1)"
                               and "c \<in> (ubDom\<cdot>sb2)"
                             shows "(ubConc sb1 \<cdot> sb2) . c = usclConc (sb1. c) \<cdot> (sb2. c)"
   proof -
@@ -130,6 +130,10 @@ lemma ubConc_usclConc_eq: assumes "c \<in> (ubDom\<cdot>sb1)"
       apply(simp add:  ubgetch_insert h1)
       by (metis assms(1) assms(2) ubgetch_insert ubup_ubgetch)
   qed
+
+lemma ubconc_getch: "c\<in>(ubDom\<cdot>ub1 \<union> ubDom\<cdot>ub2) \<Longrightarrow> (ubConc ub1\<cdot>ub2) . c = usclConc (ubUp\<cdot>ub1 . c)\<cdot>(ubUp\<cdot>ub2 . c)"
+  apply(simp add: ubConc_def)
+  by (simp add: ubWell_def ubgetch_insert usclOkay_conc)
 
 lemma ubconc_insert: "ubConc b1\<cdot>b2 = (Abs_ubundle (\<lambda>c. Some (usclConc (ubUp\<cdot>b1 . c)\<cdot>(ubUp\<cdot>b2 . c)))) \<bar> (ubDom\<cdot>b1 \<union> ubDom\<cdot>b2)"
   by(simp add: ubConc_def)

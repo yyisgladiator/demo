@@ -8,7 +8,7 @@
 chapter {* Time-Synchronous Stream Bundles *}
 
 theory tsynBundle
-imports tsynStream "../untimed/SB" "../UFun_Templates"
+imports tsynStream "../untimed/SB" "../UFun_Templates" "../untimed/SpfStep"
 
 begin
 
@@ -33,20 +33,27 @@ lemma tsynbnull_ubgetch [simp]: "tsynbNull c  .  c = \<up>null"
 lemma tsynbnull_ubconc [simp]:
   assumes "c \<in> ubDom\<cdot>sb"
   shows "ubConc (tsynbNull c)\<cdot>sb  .  c = \<up>null \<bullet> (sb  .  c)"
-  by (simp add: assms ubConc_usclConc_eq usclConc_stream_def)
+  by (simp add: assms usclConc_stream_def)
     
 lemma tsynbnull_ubconc_sbrt [simp]:
   assumes "ubDom\<cdot>sb = {c}"
   shows "sbRt\<cdot>(ubConc (tsynbNull c)\<cdot>sb) = sb"
   apply (rule ub_eq)
-  by (simp add: assms sbRt_def)+
+  by (simp add: assms sbRt_def usclConc_stream_def)+
 
 (* ----------------------------------------------------------------------- *)
   section {* Definitions on Time-Synchronous Stream Bundles *}
 (* ----------------------------------------------------------------------- *)
 
+(* ToDo: add description. *)
+
 definition tsynbAbs :: "'a tsyn stream ubundle \<rightarrow> 'a stream ubundle option" where 
   "tsynbAbs \<equiv> \<Lambda> sb. (ubDom\<cdot>sb = {c1}) \<leadsto> Abs_ubundle [c2 \<mapsto> tsynAbs\<cdot>(sb  .  c1)]"
+
+text {* @{term tsynbRemDups} removes all duplicates of the time-synchronous stream on channel c1. 
+        The resulting stream is on channel c2. *}
+definition tsynbRemDups :: "'a tsyn stream ubundle \<rightarrow> 'a tsyn stream ubundle option" where 
+  "tsynbRemDups \<equiv> \<Lambda> sb. (ubDom\<cdot>sb = {c1}) \<leadsto> Abs_ubundle [c2 \<mapsto> tsynRemDups\<cdot>(sb  .  c1)]"
 
 (* ----------------------------------------------------------------------- *)
   section {* Definitions of Time-Synchronous Test Bundles *}
@@ -76,6 +83,10 @@ lemma tsynbabstestinput_ubdom: "ubDom\<cdot>tsynbabsTestInput = {c1}"
 (* ----------------------------------------------------------------------- *)
   section {* Lemmata on Time-Synchronous Stream Bundles *}
 (* ----------------------------------------------------------------------- *)    
+
+(* ----------------------------------------------------------------------- *)
+  subsection {* tsynbAbs *}
+(* ----------------------------------------------------------------------- *)
 
 text {* @{term tsynAbs} bundle is ubwell. *}    
 lemma tsynbabs_ubwell [simp]:
@@ -114,7 +125,7 @@ lemma tsynbabs_mono [simp]:
   apply (simp add: ubdom_insert)
   apply (simp_all add: assms ubclDom_ubundle_def ubdom_below)
   by (simp add: assms fun_upd_same monofun_cfun_arg ubdom_below ubgetch_ubrep_eq)
-    
+
 text {* The @{term tsynbAbs} output bundle is a chain. *}     
 lemma tsynbabs_chain [simp]: 
   assumes "\<And>s :: 'a tsyn stream. usclOkay c1 s = usclOkay c2 (tsynAbs\<cdot>s)"
@@ -220,27 +231,31 @@ lemma tsynbabs_insert:
 lemma tsynabs_sdom: "(sdom\<cdot>s \<subseteq> insert - (Msg ` range a)) = (sdom\<cdot>(tsynAbs\<cdot>s) \<subseteq> range a)"
   proof (induction s rule: tsyn_ind)
     case adm
-    then show ?case by(rule admI, simp add: contlub_cfun_arg lub_eq_Union UN_subset_iff)
+    then show ?case 
+      by (rule admI, simp add: contlub_cfun_arg lub_eq_Union UN_subset_iff)
   next
     case bot
-    then show ?case by simp
+    then show ?case 
+      by simp
   next
     case (msg m s)
-    then show ?case by (simp only: tsynabs_sconc_msg sdom2un, auto)
+    then show ?case 
+      by (simp only: tsynabs_sconc_msg sdom2un, auto)
   next
     case (null s)
-    then show ?case by (simp only: tsynabs_sconc_null sdom2un, auto)
+    then show ?case 
+      by (simp only: tsynabs_sconc_null sdom2un, auto)
   qed
 
 text {* @{term tsynbAbs} is strict. *}
 lemma tsynbabs_strict [simp]:
   assumes "\<And>s :: 'a tsyn stream. usclOkay c1 s = usclOkay c2 (tsynAbs\<cdot>s)"
-  shows "(tsynbAbs:: 'a tsyn stream\<^sup>\<Omega> \<rightarrow> ('a stream\<^sup>\<Omega>) option)\<cdot>(ubLeast {c1}) = Some (ubLeast {c2})"
+  shows "tsynbAbs\<cdot>(ubLeast {c1} :: 'a tsyn stream\<^sup>\<Omega>) = Some (ubLeast {c2})"
   apply(simp add: assms tsynbabs_insert)
   apply(simp add: ubLeast_def)
   by (metis (no_types) fun_upd_apply)
 
-text {* Test lemma for @{term tsynbAbs}. *}    
+text {* Test lemma for @{term tsynbAbs}. *}
 lemma tsynbabs_test_finstream:
   "tsynbAbs\<cdot>(tsynbabsTestInput) = Some (tsynbabsTestOutput)"
   apply (subst tsynbabs_insert)
@@ -250,5 +265,100 @@ lemma tsynbabs_test_finstream:
   apply (metis tsynbabsTestInput.rep_eq ubrep_well)
   apply (simp add: ubdom_insert tsynabs_insert)
   using tsynbabsTestInput.abs_eq tsynbabsTestInput.rep_eq by auto[1]
+
+(* ----------------------------------------------------------------------- *)
+  subsection {* tsynbRemDups *}
+(* ----------------------------------------------------------------------- *)
+
+text {* Domain of the @{term tsynbRemDups} output bundle is {c2}. *}
+lemma tsynbremdups_ubundle_ubdom:
+  assumes "\<And>s :: 'a tsyn stream. usclOkay c1 s = usclOkay c2 (tsynRemDups\<cdot>s)"
+    and "c1 \<in> ubDom\<cdot>sb"
+  shows "ubDom\<cdot>(Abs_ubundle [c2 \<mapsto> tsynRemDups\<cdot>((sb :: 'a tsyn stream ubundle)  .  c1)]) = {c2}"
+  using assms
+  by (metis (full_types) dom_eq_singleton_conv fun_upd_upd ubclDom_ubundle_def ubdom_channel_usokay
+      ubdom_insert ubdom_ubrep_eq ubgetch_insert ubsetch_well ubundle_ex)
+
+text {* @{term tsynbRemDups} is monotonic. *}
+lemma tsynbremdups_mono [simp]:
+  assumes "\<And>s :: 'a tsyn stream. usclOkay c1 s = usclOkay c2 (tsynRemDups\<cdot>s)"
+  shows "monofun (\<lambda>sb :: 'a tsyn stream\<^sup>\<Omega>. (ubDom\<cdot>sb = {c1}) 
+                    \<leadsto> Abs_ubundle [c2 \<mapsto> tsynRemDups\<cdot>(sb  .  c1)])"
+  apply (rule uf_1x1_mono)
+  by (simp add: assms map_io_well_def)
+
+text {* @{term tsynbRemDups} is continous. *}
+lemma tsynbremdups_cont [simp]:
+  assumes "\<And>s :: 'a tsyn stream. usclOkay c1 s = usclOkay c2 (tsynRemDups\<cdot>s)"
+  shows "cont (\<lambda>sb :: 'a tsyn stream\<^sup>\<Omega>. (ubDom\<cdot>sb = {c1}) 
+                  \<leadsto> Abs_ubundle [c2 \<mapsto> tsynRemDups\<cdot>(sb  .  c1)])"
+  apply (rule uf_1x1_cont)
+  by (simp add: assms map_io_well_def)
+
+text {* @{term tsynbRemDups} insertion lemma. *}
+lemma tsynbremdups_insert:
+  assumes "\<And>s :: 'a tsyn stream. usclOkay c1 s = usclOkay c2 (tsynRemDups\<cdot>s)"
+  shows "tsynbRemDups\<cdot>(sb ::'a tsyn stream\<^sup>\<Omega>) 
+           = (ubDom\<cdot>sb = {c1}) \<leadsto> Abs_ubundle [c2 \<mapsto> tsynRemDups\<cdot>(sb  .  c1)]"
+  by (simp add: assms tsynbRemDups_def)
+
+text {* @{term tsynbRemDups} satisfies well condition for universal functions. *}
+lemma tsynbremdups_ufwell [simp]:
+  assumes "\<And>s :: 'a tsyn stream. usclOkay c1 s = usclOkay c2 (tsynRemDups\<cdot>s)"
+  shows "ufWell (Abs_cfun (\<lambda>sb :: 'a tsyn stream\<^sup>\<Omega>. (ubDom\<cdot>sb = {c1}) 
+                             \<leadsto> (Abs_ubundle [c2 \<mapsto> tsynRemDups\<cdot>(sb . c1)])))"
+  apply (rule uf_1x1_well)
+  by (simp add: assms map_io_well_def)
+
+text {* Domain of @{term tsynbRemDups} is {c1}. *}
+lemma tsynbremdups_ufdom:
+  assumes "\<And>s :: 'a tsyn stream. usclOkay c1 s = usclOkay c2 (tsynRemDups\<cdot>s)"
+  shows "ufDom\<cdot>(Abs_cufun (\<lambda> sb :: 'a tsyn stream\<^sup>\<Omega>. (ubDom\<cdot>sb = {c1}) 
+                              \<leadsto> (Abs_ubundle [c2 \<mapsto> tsynRemDups\<cdot>(sb . c1)]))) = {c1}"
+  apply (rule uf_1x1_dom)
+  by (simp add: assms map_io_well_def)
+
+text {* Range of @{term tsynbRemDups} is {c2}. *}
+lemma tsynbremdups_ufran:
+  assumes "\<And>s :: 'a tsyn stream. usclOkay c1 s = usclOkay c2 (tsynRemDups\<cdot>s)"
+  shows "ufRan\<cdot>(Abs_cufun (\<lambda> sb :: 'a tsyn stream\<^sup>\<Omega>. (ubDom\<cdot>sb = {c1}) 
+                              \<leadsto> (Abs_ubundle [c2 \<mapsto> tsynRemDups\<cdot>(sb . c1)]))) = {c2}"
+  apply (rule uf_1x1_ran)
+  by (simp add: assms map_io_well_def)
+
+text{* The domain of the output bundle of @{term tsynRemDups} is {c2}. *}
+lemma tsynbremdups_ubdom:
+  assumes "\<And>s :: 'a tsyn stream. usclOkay c1 s = usclOkay c2 (tsynRemDups\<cdot>s)"
+  assumes "ubDom\<cdot>sb = ufDom\<cdot>(Abs_cufun (\<lambda> sb :: 'a tsyn stream\<^sup>\<Omega>. (ubDom\<cdot>sb = {c1}) 
+                              \<leadsto> (Abs_ubundle [c2 \<mapsto> tsynRemDups\<cdot>(sb . c1)])))"
+  shows "ubDom\<cdot>(Abs_cufun (\<lambda> sb :: 'a tsyn stream\<^sup>\<Omega>. (ubDom\<cdot>sb = {c1}) 
+                              \<leadsto> (Abs_ubundle [c2 \<mapsto> tsynRemDups\<cdot>(sb . c1)])) \<rightleftharpoons> sb) = {c2}"
+  apply (subst spf_ubDom [of "Abs_cufun (\<lambda> sb :: 'a tsyn stream\<^sup>\<Omega>. (ubDom\<cdot>sb = {c1})
+                              \<leadsto> (Abs_ubundle [c2 \<mapsto> tsynRemDups\<cdot>(sb . c1)]))" "{c1}" "{c2}"])
+  by (simp_all add: assms tsynbremdups_ufdom tsynbremdups_ufran)
+
+text {* @{term tsynbRemDups} is strict.*}
+lemma tsynbremdups_strict [simp]:
+  assumes "\<And>s :: 'a tsyn stream. usclOkay c1 s = usclOkay c2 (tsynRemDups\<cdot>s)"
+  shows "tsynbRemDups\<cdot>(ubLeast {c1} :: 'a tsyn stream ubundle) = Some (ubLeast {c2})"
+  proof -
+    have "ubDom\<cdot>(ubLeast {c1}) = {c1}" 
+      by simp
+    hence insert_bundle: 
+      "tsynbRemDups\<cdot>(ubLeast {c1} ::'a tsyn stream ubundle) 
+         = Some (Abs_ubundle [c2 \<mapsto> tsynRemDups\<cdot>(ubLeast {c1} . c1)])"
+      by (simp add: assms tsynbremdups_insert)
+    have "tsynRemDups\<cdot>(ubLeast {c1} . c1) = \<epsilon>" by (simp add: ubdom_insert)
+    hence "Some (Abs_ubundle [c2 \<mapsto> tsynRemDups\<cdot>(ubLeast {c1} . c1)]) 
+             = Some (Abs_ubundle [c2 \<mapsto> \<epsilon>])" by simp
+    have "Abs_ubundle [c2 \<mapsto> \<epsilon>] = Abs_ubundle (\<lambda>c. (c \<in> {c2}) \<leadsto> \<epsilon>)" 
+      by (metis (full_types) fun_upd_apply fun_upd_same insertI1 singletonD)
+    hence "Abs_ubundle [c2 \<mapsto> \<epsilon>] = ubLeast {c2}" 
+      by (simp add: ubLeast_def)
+    hence "Some (Abs_ubundle [c2 \<mapsto> tsynRemDups\<cdot>(ubLeast {c1} . c1)]) 
+             = Some (ubLeast {c2})" by simp
+    then show ?thesis
+      by (simp add: insert_bundle)
+  qed
  
 end
