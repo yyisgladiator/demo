@@ -8,7 +8,7 @@
 chapter {* Theory for Medium Lemmata *}
 
 theory Medium
-imports "../../tsynStream" 
+imports Components
 
 begin
 
@@ -19,6 +19,11 @@ begin
 text{* Time synchronous medium, that loses messages. *}
 definition tsynMed :: "'a tsyn stream \<rightarrow> bool stream \<rightarrow> 'a tsyn stream" where
   "tsynMed \<equiv> \<Lambda> msg ora. tsynProjFst\<cdot>(tsynFilter {x. snd x}\<cdot>(tsynZip\<cdot>msg\<cdot>ora))"
+
+text {* @{term tsynbMed}: Medium function for Alternating Bit Protocol on stream bundles. *}
+definition tsynbMed :: "abpMessage tsyn stream ubundle \<rightarrow> abpMessage tsyn stream ubundle" where
+  "tsynbMed \<equiv> \<Lambda> sb. (ubclDom\<cdot>sb = {\<C> ''ds'', c5}) \<leadsto> Abs_ubundle [
+                      \<C> ''dr'' \<mapsto> natbool2abp\<cdot>(tsynMed\<cdot>(abp2natbool\<cdot>(sb  .  \<C> ''ds''))\<cdot>(sb  .  c5))]"
 
 (* ----------------------------------------------------------------------- *)
 section {* basic properties *}
@@ -175,7 +180,7 @@ lemma tsynmed_tsyndom: "tsynDom\<cdot>(tsynMed\<cdot>msg\<cdot>ora) \<subseteq> 
       by (simp add: null.IH null.prems tsyndom_sconc_null)
   qed
 
-lemma tsynmed_tsynlen_inf: 
+lemma tsynmed_tsynlen_ora: 
   assumes msg_inf: "tsynLen\<cdot>msg = \<infinity>"
   shows "tsynLen\<cdot>(tsynMed\<cdot>msg\<cdot>ora) = #({True} \<ominus> ora)"
   using assms
@@ -222,24 +227,8 @@ lemma tsynmed_tsynlen_inf:
     and "tsynLen\<cdot>msg = \<infinity>"
   shows "tsynLen\<cdot>(tsynMed\<cdot>msg\<cdot>ora) = \<infinity>"
   using assms
-  proof (induction msg arbitrary: ora rule: tsyn_ind)
-    case adm
-    then show ?case 
-      apply (rule adm_all)+
-      apply (rule admI)
-      apply (rule)+
-      apply (simp add: contlub_cfun_fun contlub_cfun_arg)
-sorry
-  next
-    case bot
-    then show ?case sorry
-  next
-    case (msg m s)
-    then show ?case sorry
-  next
-    case (null s)
-    then show ?case sorry
-  qed
+  (*by (simp add: tsynmed_tsynlen_ora)*)
+  sorry
 
 (* ToDo: Tests *)
 
