@@ -21,9 +21,9 @@ definition tsynMed :: "'a tsyn stream \<rightarrow> bool stream \<rightarrow> 'a
   "tsynMed \<equiv> \<Lambda> msg ora. tsynProjFst\<cdot>(tsynFilter {x. snd x}\<cdot>(tsynZip\<cdot>msg\<cdot>ora))"
 
 text {* @{term tsynbMed}: Medium function for Alternating Bit Protocol on stream bundles. *}
-definition tsynbMed :: "abpMessage tsyn stream ubundle \<rightarrow> abpMessage tsyn stream ubundle" where
-  "tsynbMed \<equiv> \<Lambda> sb. (ubclDom\<cdot>sb = {\<C> ''ds'', c5}) \<leadsto> Abs_ubundle [
-                      \<C> ''dr'' \<mapsto> natbool2abp\<cdot>(tsynMed\<cdot>(abp2natbool\<cdot>(sb  .  \<C> ''ds''))\<cdot>(sb  .  c5))]"
+definition tsynbMed :: "abpMessage tsyn stream ubundle \<rightarrow> abpMessage tsyn stream ubundle option" where
+  "tsynbMed \<equiv> \<Lambda> sb. (ubclDom\<cdot>sb = {\<C> ''ds'',  \<C> ''ora''}) \<leadsto> Abs_ubundle [
+                      \<C> ''dr'' \<mapsto> natbool2abp\<cdot>(tsynMed\<cdot>(abp2natbool\<cdot>(sb  .  \<C> ''ds''))\<cdot>(sb  .   \<C> ''ora''))]"
 
 (* ----------------------------------------------------------------------- *)
 section {* basic properties *}
