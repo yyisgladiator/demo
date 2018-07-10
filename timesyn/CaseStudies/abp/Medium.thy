@@ -17,13 +17,14 @@ begin
 (* ----------------------------------------------------------------------- *)
 
 text{* Time synchronous medium, that loses messages. *}
-definition tsynMed :: "'a tsyn stream \<rightarrow> bool stream \<rightarrow> 'a tsyn stream" where
+definition tsynMed :: "(nat \<times> bool) tsyn stream \<rightarrow> bool stream \<rightarrow> (nat \<times> bool) tsyn stream" where
   "tsynMed \<equiv> \<Lambda> msg ora. tsynProjFst\<cdot>(tsynFilter {x. snd x}\<cdot>(tsynZip\<cdot>msg\<cdot>ora))"
 
 text {* @{term tsynbMed}: Medium function for Alternating Bit Protocol on stream bundles. *}
-definition tsynbMed :: "abpMessage tsyn stream ubundle \<rightarrow> abpMessage tsyn stream ubundle option" where
-  "tsynbMed \<equiv> \<Lambda> sb. (ubclDom\<cdot>sb = {\<C> ''ds'',  \<C> ''ora''}) \<leadsto> Abs_ubundle [
-                      \<C> ''dr'' \<mapsto> natbool2abp\<cdot>(tsynMed\<cdot>(abp2natbool\<cdot>(sb  .  \<C> ''ds''))\<cdot>(sb  .   \<C> ''ora''))]"
+definition tsynbMed :: "bool stream \<Rightarrow> 
+  abpMessage tsyn stream ubundle \<rightarrow> abpMessage tsyn stream ubundle option" where
+  "tsynbMed ora \<equiv> \<Lambda> sb. (ubclDom\<cdot>sb = {\<C> ''ds''}) \<leadsto> Abs_ubundle [
+                      \<C> ''dr'' \<mapsto> natbool2abp\<cdot>(tsynMed\<cdot>(abp2natbool\<cdot>(sb  .  \<C> ''ds''))\<cdot>ora)]"
 
 (* ----------------------------------------------------------------------- *)
 section {* basic properties *}
