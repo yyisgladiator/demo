@@ -619,15 +619,12 @@ lemma tsynremdups_test_infstream:  "tsynRemDups\<cdot>(<[Msg (1 :: nat), Msg (1 
   subsection {* tsynRemDups_fix_h *}
 (* ----------------------------------------------------------------------- *)
 
-text {* @{term tsynRemDups_fix_h} insertion lemma. *}
-lemma tsynremdups_fix_h_insert: "tsynRemDups_fix_h\<cdot>(up\<cdot>a && as)\<cdot>None = 
-  up\<cdot>a && tsynRemDups_fix_h\<cdot>as\<cdot>(Some a)"
-  oops
-
+text {* @{term tsynRemDups_fix} distributes over concatenation. *}
 lemma tsynremdups_fix_h_sconc_msg:
   "tsynRemDups_fix_h\<cdot>(\<up>(Msg a) \<bullet> as)\<cdot>None = \<up>(Msg a) \<bullet> tsynRemDups_fix_h\<cdot>as\<cdot>(Some (Discr (Msg a)))"
   by (metis lscons_conv tsyn.distinct(1) tsynRemDups_fix_h.simps(2) undiscr_Discr)
 
+text {* @{term tsynRemDups_fix_h} ignores empty time-slots. *}
 lemma tsynremdups_fix_h_sconc_null: 
   "tsynRemDups_fix_h\<cdot>(\<up>null \<bullet> as)\<cdot>None = \<up>null \<bullet> tsynRemDups_fix_h\<cdot>as\<cdot>None"
   by (fold lscons_conv, simp)
@@ -738,7 +735,12 @@ text {* @{term tsynRemDups_fix_h} test on infinite stream. *}
 lemma tsynremdups_fix_h_test_infinstream:
   "tsynRemDups_fix_h\<cdot>(<[null, Msg (1 :: nat), Msg (1 :: nat)]> \<bullet> ((<[null]>)\<infinity>))\<cdot>None = 
    <[null, Msg (1 :: nat), null]> \<bullet> ((<[null]>)\<infinity>)"
-  oops
+  apply (subst rek2sinftimes [of "tsynRemDups_fix_h\<cdot>(<[null, Msg (1 :: nat), Msg (1 :: nat)]> \<bullet> 
+        ((<[null]>)\<infinity>))\<cdot>None" "<[null, Msg (1 :: nat), null]> \<bullet> ((<[null]>)\<infinity>)"], simp_all)
+  defer
+  apply (simp add: sinf_inf)
+  by (metis (no_types, lifting) lscons_conv s2sinftimes sinftimes_unfold tsynRemDups_fix_h.simps(3) 
+      tsynremdups_fix_h_sconc_msg tsynremdups_fix_h_sconc_null)
 
 (* ----------------------------------------------------------------------- *)
   subsection {* tsynRemDups_fix *}
@@ -770,6 +772,12 @@ lemma tsynremdups_fix_test_finstream:
   "tsynRemDups_fix\<cdot>(<[null, Msg (1 :: nat), Msg (1 :: nat)]>) = 
    <[null, Msg (1 :: nat), null]>"
   by (metis tsynremdups_fix_h_test_finstream tsynremdups_fix_insert)
+
+text {* @{term tsynRemDups_fix} test on infinite stream. *}
+lemma tsynremdups_fix_test_infinstream:
+  "tsynRemDups_fix\<cdot>(<[null, Msg (1 :: nat), Msg (1 :: nat)]> \<bullet> ((<[null]>)\<infinity>)) = 
+   <[null, Msg (1 :: nat), null]> \<bullet> ((<[null]>)\<infinity>)"
+  by (metis tsynremdups_fix_h_test_infinstream tsynremdups_fix_insert)
 
 (* ----------------------------------------------------------------------- *)
   subsection {* tsynFilter *}
