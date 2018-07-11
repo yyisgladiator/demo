@@ -135,7 +135,7 @@ lemma tsynmed_tsyndom: "tsynDom\<cdot>(tsynMed\<cdot>msg\<cdot>ora) \<subseteq> 
         then show ?thesis 
           proof (cases rule: scases [of s])
             case bottom
-            have tsynfilter_simp: "tsynFilter {x::'a \<times> bool. snd x}\<cdot>(\<up>(Msg (m, True))) = (\<up>(Msg (m, True)))"
+            have tsynfilter_simp: "tsynFilter {x. snd x}\<cdot>(\<up>(Msg (m, True))) = (\<up>(Msg (m, True)))"
               by (metis mem_Collect_eq sconc_snd_empty snd_conv tsynfilter_sconc_msg_in tsynfilter_strict)
             then show ?thesis 
               by (metis bottom order_refl true tsynfilter_sconc tsynmed_insert tsynmed_strict(3) 
@@ -151,7 +151,7 @@ lemma tsynmed_tsyndom: "tsynDom\<cdot>(tsynMed\<cdot>msg\<cdot>ora) \<subseteq> 
         then show ?thesis
           proof (cases rule: scases [of s])
             case bottom
-            have tsynfilter_simp: "tsynFilter {x::'a \<times> bool. snd x}\<cdot>(\<up>(Msg (m, False))) = \<up>null"
+            have tsynfilter_simp: "tsynFilter {x. snd x}\<cdot>(\<up>(Msg (m, False))) = \<up>null"
               by (metis (full_types) mem_Collect_eq sconc_snd_empty snd_conv 
                   tsynfilter_sconc_msg_nin tsynfilter_strict)
             then show ?thesis 
