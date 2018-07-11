@@ -230,6 +230,11 @@ lemma spfConcIn_ran [simp]:"ufRan\<cdot>(spfConcIn sb \<cdot>spf) = ufRan\<cdot>
    apply (metis ubclDom_ubundle_def ubconceq_dom)
   by blast
 
+lemma spfConcIn_weak_ublen_strong[simp]:
+  assumes "ufIsWeak spf" and "ubLen sb = lnsuc\<cdot>0"
+  shows "ufIsStrong (spfConcIn sb\<cdot>spf)"
+  sorry
+
 subsection \<open>spfRtOut lemma\<close>
 
 lemma spfRtOut_step[simp]: 
@@ -288,6 +293,13 @@ lemma spfconc_surj:
   apply(simp add: spfConcOut_def)
   using ufapplyin_inj assms
   by (metis sbconc_inj ubclDom_ubundle_def ubconceq_dom ufapplyout_inj) 
+
+lemma spfConcOut_weak_ublen_strong[simp]:
+  assumes "ufIsWeak spf" and "ubLen sb = lnsuc\<cdot>0"
+  shows "ufIsStrong (spfConcOut sb\<cdot>spf)"
+  sorry
+
+
 
 
 end
