@@ -77,7 +77,7 @@ fun senderTransitionH :: "(SenderState \<times> (abpMessage tsyn \<times> abpMes
 fun senderTransition :: "(SenderState \<times> (channel \<rightharpoonup> abpMessage tsyn)) \<Rightarrow> (SenderState \<times> abpMessage tsyn SB)" where
 "senderTransition (s,f) = (if dom(f) = {\<C> ''i'',\<C> ''as''} then senderTransitionH (s,(f\<rightharpoonup>\<C> ''i'',f\<rightharpoonup>\<C> ''as'')) else undefined)"
 
-lift_definition SenderAutomaton :: "(SenderState, abpMessage tsyn) dAutomaton" is "(senderTransition, State Sf [], (tsynbNull (\<C> ''ds'')), {\<C> ''i'', \<C> ''as''}, {\<C> ''ds''})"
+lift_definition SenderAutomaton :: "(SenderState, abpMessage tsyn) dAutomaton" is "(senderTransition, State St [], (tsynbNull (\<C> ''ds'')), {\<C> ''i'', \<C> ''as''}, {\<C> ''ds''})"
   by simp
 
 definition SenderSPF :: "abpMessage tsyn SPF" where

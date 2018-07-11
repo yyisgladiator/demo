@@ -379,6 +379,82 @@ lemma tsynabs_singleton_null: "tsynAbs\<cdot>(\<up>null) = \<epsilon>"
   by (simp add: tsynabs_insert)
 
 (* ----------------------------------------------------------------------- *)
+  subsection {* tsynLen *}
+(* ----------------------------------------------------------------------- *)
+
+text {* @{term tsynLen} insertion lemma. *}
+lemma tsynlen_insert: "tsynLen\<cdot>s =  #(tsynAbs\<cdot>s)"
+  by (simp add: tsynLen_def)
+
+text {* @{term tsynLen} maps the empty stream to zero. *}
+lemma tsynlen_strict [simp]: "tsynLen\<cdot>\<epsilon> = 0"
+  by (simp add: tsynlen_insert)
+
+text {* If @{term tsynLen} is infinity the stream cannot be empty. *}
+lemma tsynlen_inf_nbot: assumes "tsynLen\<cdot>s = \<infinity>"
+  shows "s \<noteq> \<epsilon>"
+  using assms by fastforce
+
+text {* @{term tsynLen} distributes over concatenation. *}
+lemma tsynlen_sconc_msg: "tsynLen\<cdot>(\<up>(Msg a) \<bullet> as) = lnsuc\<cdot>(tsynLen\<cdot>as)"
+  by (simp add: tsynabs_sconc_msg tsynlen_insert)
+
+text {* @{term tsynLen} ignores empty time slots. *}
+lemma tsynlen_sconc_null: "tsynLen\<cdot>(\<up>(null) \<bullet> as) = tsynLen\<cdot>as"
+  by (simp add: tsynabs_sconc_null tsynlen_insert)
+
+text {* @{term tsynLen} of the concatenation of two streams equals the sum of @{term tsynLen} of 
+        both streams if the number of messages and the first stream are finite. *}
+lemma tsynlen_sconc_finite:
+  assumes "#as < \<infinity>" and "tsynLen\<cdot>as = Fin k" and "tsynLen\<cdot>bs = Fin n"
+  shows "tsynLen\<cdot>(as \<bullet> bs) = Fin (k + n)"
+  using assms
+  by (simp add: slen_sconc_all_finite tsynabs_sconc tsynlen_insert)
+
+text {* @{term tsynLen} of the concatenation of two streams with finite many messages is less or 
+        equal to the sum of @{term tsynLen} of both streams *}
+lemma  tsynlen_sconc_infinite:
+  assumes "tsynLen\<cdot>as = Fin n" and "tsynLen\<cdot>bs = Fin  m"
+  shows "tsynLen\<cdot>(as \<bullet> bs) \<le> Fin (n + m)"
+  using assms leI sconc_fst_inf tsynlen_sconc_finite by fastforce
+
+text {* @{term tsynLen} is less or equal to the length of the stream. *}
+lemma tsynlen_slen: "tsynLen\<cdot>s \<le> slen\<cdot>s"
+  by (simp add: tsynabs_slen tsynlen_insert)
+
+text {* @{term tsynLen} of the infinte concatenation of a finite stream with more than one 
+        message is @{term "\<infinity>"}. *}
+lemma tsynlen_inftimes_finite:
+  assumes "#as < \<infinity> " and "0 < tsynLen\<cdot>as" 
+  shows "tsynLen\<cdot>as\<infinity> = \<infinity>"
+  by (metis (no_types, lifting) assms(1) assms(2) neq_iff rek2sinftimes sinftimes_unfold 
+      slen_empty_eq slen_sinftimes tsynabs_sconc tsynlen_insert)
+
+text {* @{term tsynLen} test for finite tsyn stream. *}
+lemma tsynlen_test_finstream: 
+  "tsynLen\<cdot>(<[Msg 1, null, Msg 2, null, null, Msg 1]>) = Fin 3"
+  by (simp add: tsynlen_insert tsynabs_sconc_msg tsynabs_sconc_null tsynabs_singleton_msg)
+
+text {* @{term tsynLen} test for infinite tsyn stream. *}
+lemma tsynlen_test_infstream: "tsynLen\<cdot>(<[null, Msg a]>\<infinity>) = \<infinity>"
+  by (metis Fin_neq_inf gr_0 inf_ub less_le list2s_Suc list2streamFin lscons_conv 
+      tsynlen_inftimes_finite tsynlen_sconc_msg tsynlen_sconc_null) 
+
+(* ----------------------------------------------------------------------- *)
+  subsection {* Induction variants with Length. *}
+(* ----------------------------------------------------------------------- *)
+
+text {* Cases rule for infinite time-synchronous streams. *}
+lemma tsyn_cases_inf [case_names inf msg null]:
+  assumes inf: "tsynLen\<cdot>s = \<infinity>"
+    and msg: "\<And>a as. s= (\<up>(Msg a) \<bullet> as) \<Longrightarrow> P s"
+    and null: "\<And>as. s=(\<up>null \<bullet> as) \<Longrightarrow> P s"
+  shows "P s"
+  using assms
+  apply (cases rule: scases [of s], simp_all)
+  by (metis tsynAbsElem.cases)
+
+(* ----------------------------------------------------------------------- *)
   subsection {* tsynMap *}
 (* ----------------------------------------------------------------------- *)
 
@@ -456,6 +532,9 @@ lemma tsynprojfst_sconc: "tsynProjFst\<cdot>(a1 \<bullet> a2) = tsynProjFst\<cdo
 text {* @{term tsynProjFst} leaves the length of a stream unchanged. *}
 lemma tsynprojfst_slen: "#(tsynProjFst\<cdot>s) = #s"
   by (simp add: tsynprojfst_insert)
+
+lemma tsynprojfst_tsynlen: "tsynLen\<cdot>(tsynProjFst\<cdot>ts) = tsynLen\<cdot>ts"
+  sorry
 
 (* ----------------------------------------------------------------------- *)
   subsection {* tsynProjSnd *}
@@ -741,6 +820,9 @@ text {* Length of @{term tsynFilter} is equal to the length of the original stre
 lemma tsynfilter_slen: "#((tsynFilter A)\<cdot>s) = #s"
   by (simp add: tsynfilter_insert)
 
+lemma tsynfilter_tsynlen: "tsynLen\<cdot>(tsynFilter A\<cdot>s) \<le> tsynLen\<cdot>s"
+  sorry
+
 (* ----------------------------------------------------------------------- *)
   subsection {* tsynScanlExt *}
 (* ----------------------------------------------------------------------- *)
@@ -918,63 +1000,6 @@ proof -
 qed
 
 (* ----------------------------------------------------------------------- *)
-  subsection {* tsynLen *}
-(* ----------------------------------------------------------------------- *)
-
-text {* @{term tsynLen} insertion lemma. *}
-lemma tsynlen_insert: "tsynLen\<cdot>s =  #(tsynAbs\<cdot>s)"
-  by (simp add: tsynLen_def)
-
-text {* @{term tsynLen} maps the empty stream to zero. *}
-lemma tsynlen_strict [simp]: "tsynLen\<cdot>\<epsilon> = 0"
-  by (simp add: tsynlen_insert)
-
-text {* @{term tsynLen} distributes over concatenation. *}
-lemma tsynlen_sconc_msg: "tsynLen\<cdot>(\<up>(Msg a) \<bullet> as) = lnsuc\<cdot>(tsynLen\<cdot>as)"
-  by (simp add: tsynabs_sconc_msg tsynlen_insert)
-
-text {* @{term tsynLen} ignores empty time slots. *}
-lemma tsynlen_sconc_null: "tsynLen\<cdot>(\<up>(null) \<bullet> as) = tsynLen\<cdot>as"
-  by (simp add: tsynabs_sconc_null tsynlen_insert)
-
-text {* @{term tsynLen} of the concatenation of two streams equals the sum of @{term tsynLen} of 
-        both streams if the number of messages and the first stream are finite. *}
-lemma tsynlen_sconc_finite:
-  assumes "#as < \<infinity>" and "tsynLen\<cdot>as = Fin k" and "tsynLen\<cdot>bs = Fin n"
-  shows "tsynLen\<cdot>(as \<bullet> bs) = Fin (k + n)"
-  using assms
-  by (simp add: slen_sconc_all_finite tsynabs_sconc tsynlen_insert)
-
-text {* @{term tsynLen} of the concatenation of two streams with finite many messages is less or 
-        equal to the sum of @{term tsynLen} of both streams *}
-lemma  tsynlen_sconc_infinite:
-  assumes "tsynLen\<cdot>as = Fin n" and "tsynLen\<cdot>bs = Fin  m"
-  shows "tsynLen\<cdot>(as \<bullet> bs) \<le> Fin (n + m)"
-  using assms leI sconc_fst_inf tsynlen_sconc_finite by fastforce
-
-text {* @{term tsynLen} is less or equal to the length of the stream. *}
-lemma tsynlen_slen: "tsynLen\<cdot>s \<le> slen\<cdot>s"
-  by (simp add: tsynabs_slen tsynlen_insert)
-
-text {* @{term tsynLen} of the infinte concatenation of a finite stream with more than one 
-        message is @{term "\<infinity>"}. *}
-lemma tsynlen_inftimes_finite:
-  assumes "#as < \<infinity> " and "0 < tsynLen\<cdot>as" 
-  shows "tsynLen\<cdot>as\<infinity> = \<infinity>"
-  by (metis (no_types, lifting) assms(1) assms(2) neq_iff rek2sinftimes sinftimes_unfold 
-      slen_empty_eq slen_sinftimes tsynabs_sconc tsynlen_insert)
-
-text {* @{term tsynLen} test for finite tsyn stream. *}
-lemma tsynlen_test_finstream: 
-  "tsynLen\<cdot>(<[Msg 1, null, Msg 2, null, null, Msg 1]>) = Fin 3"
-  by (simp add: tsynlen_insert tsynabs_sconc_msg tsynabs_sconc_null tsynabs_singleton_msg)
-
-text {* @{term tsynLen} test for infinite tsyn stream. *}
-lemma tsynlen_test_infstream: "tsynLen\<cdot>(<[null, Msg a]>\<infinity>) = \<infinity>"
-  by (metis Fin_neq_inf gr_0 inf_ub less_le list2s_Suc list2streamFin lscons_conv 
-      tsynlen_inftimes_finite tsynlen_sconc_msg tsynlen_sconc_null) 
-
-(* ----------------------------------------------------------------------- *)
   subsection {* tsynZip *}
 (* ----------------------------------------------------------------------- *)
 
@@ -1002,6 +1027,12 @@ lemma tsynzip_test_infstream:
   apply (subst sinftimes_unfold, simp)
   apply (subst sinftimes_unfold [of "\<up>2"])
   by (simp add: tsynzip_sconc_msg tsynzip_sconc_null)
+
+lemma tsynzip_slen: "#bs = \<infinity> \<Longrightarrow> #(tsynZip\<cdot>as\<cdot>bs) = #as"
+  sorry
+
+lemma tsynzip_tsynlen: "#bs = \<infinity> \<Longrightarrow> tsynLen\<cdot>(tsynZip\<cdot>as\<cdot>bs) = tsynLen\<cdot>as"
+  sorry
 
 (* ----------------------------------------------------------------------- *)
   section {* tsynSum - CaseStudy *}
