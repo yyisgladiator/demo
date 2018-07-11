@@ -176,8 +176,9 @@ fixrec tsynRemDups_fix_h :: "'a tsyn stream \<rightarrow> 'a tsyn discr option \
      else up\<cdot>a && tsynRemDups_fix_h\<cdot>as\<cdot>(Some a)
   )" |
   "tsynRemDups_fix_h\<cdot>(up\<cdot>a && as)\<cdot>(Some b) = (
-     if a = b then up\<cdot>(Discr null) && tsynRemDups_fix_h\<cdot>as\<cdot>(Some b)
-     else up\<cdot>a && tsynRemDups_fix_h\<cdot>as\<cdot>(Some a)
+     if (undiscr a) = null then up\<cdot>a && tsynRemDups_fix_h\<cdot>as\<cdot>(Some b)
+     else (if a = b then up\<cdot>(Discr null) && tsynRemDups_fix_h\<cdot>as\<cdot>(Some b)
+     else up\<cdot>a && tsynRemDups_fix_h\<cdot>as\<cdot>(Some a))
   )"
 
 definition tsynRemDups_fix :: "'a tsyn stream \<rightarrow> 'a tsyn stream" where
@@ -619,128 +620,65 @@ lemma tsynremdups_test_infstream:  "tsynRemDups\<cdot>(<[Msg (1 :: nat), Msg (1 
   subsection {* tsynRemDups_fix_h *}
 (* ----------------------------------------------------------------------- *)
 
-text {* @{term tsynRemDups_fix} distributes over concatenation. *}
-lemma tsynremdups_fix_h_sconc_msg:
+declare tsynRemDups_fix_h.simps [simp del]
+
+text {* @{term tsynRemDups} is strict. *}
+lemma tsynremdups_fix_h_strict [simp]: "tsynRemDups_fix_h\<cdot>\<epsilon>\<cdot>option = \<epsilon>"
+  by (fixrec_simp)
+
+(* ToDo: add descriptions *)
+
+lemma tsynremdups_fix_h_sconc_msg_none:
   "tsynRemDups_fix_h\<cdot>(\<up>(Msg a) \<bullet> as)\<cdot>None = \<up>(Msg a) \<bullet> tsynRemDups_fix_h\<cdot>as\<cdot>(Some (Discr (Msg a)))"
-  by (metis lscons_conv tsyn.distinct(1) tsynRemDups_fix_h.simps(2) undiscr_Discr)
+  by (fold lscons_conv, fixrec_simp)
+
+lemma tsynremdups_fix_h_sconc_msg_some_eq:
+  "tsynRemDups_fix_h\<cdot>(\<up>(Msg a) \<bullet> as)\<cdot>(Some (Discr (Msg a))) 
+     = \<up>null \<bullet> tsynRemDups_fix_h\<cdot>as\<cdot>(Some (Discr (Msg a)))"
+  by (fold lscons_conv, fixrec_simp)
+
+lemma tsynremdups_fix_h_sconc_msg_some_neq:
+  assumes "a \<noteq> b"
+  shows "tsynRemDups_fix_h\<cdot>(\<up>(Msg a) \<bullet> as)\<cdot>(Some (Discr (Msg b))) 
+           = \<up>(Msg a) \<bullet> tsynRemDups_fix_h\<cdot>as\<cdot>(Some (Discr (Msg a)))"
+  using assms
+  by (fold lscons_conv, fixrec_simp)
 
 text {* @{term tsynRemDups_fix_h} ignores empty time-slots. *}
-lemma tsynremdups_fix_h_sconc_null: 
+lemma tsynremdups_fix_h_sconc_null_none:
   "tsynRemDups_fix_h\<cdot>(\<up>null \<bullet> as)\<cdot>None = \<up>null \<bullet> tsynRemDups_fix_h\<cdot>as\<cdot>None"
-  by (fold lscons_conv, simp)
+  by (fold lscons_conv, fixrec_simp)
 
-text {* @{term tsynRemDups_fix_h} leaves the length of a stream unchanged. *}
-lemma tsynremdups_fix_h_slen: "#(tsynRemDups_fix_h\<cdot>s\<cdot>None) = #s"
+lemma tsynremdups_fix_h_sconc_null_some:
+  "tsynRemDups_fix_h\<cdot>(\<up>null \<bullet> as)\<cdot>(Some (Discr (Msg a))) 
+    = \<up>null \<bullet> tsynRemDups_fix_h\<cdot>as\<cdot>(Some (Discr (Msg a)))"
+  by (fold lscons_conv, fixrec_simp)
+
+lemma tsynremdups_fix_h_slen_some: "#(tsynRemDups_fix_h\<cdot>s\<cdot>(Some (Discr (\<M> m)))) = #s"
+  apply (induction s arbitrary: m rule: tsyn_ind, simp_all)
+  apply (case_tac "ma = m")
+  apply (simp add: tsynremdups_fix_h_sconc_msg_some_eq)
+  apply (simp add: tsynremdups_fix_h_sconc_msg_some_neq)
+  by (simp add: tsynremdups_fix_h_sconc_null_some)
+
+lemma tsynremdups_fix_h_slen_none: "#(tsynRemDups_fix_h\<cdot>s\<cdot>None) = #s"
   apply (induction s rule: tsyn_ind, simp_all)
-  apply (simp add: tsynremdups_fix_h_sconc_msg tsynremdups_fix_h_sconc_null)
-proof-
-  fix s :: "'a tsyn stream"
-  fix m
-  have "#(tsynRemDups_fix_h\<cdot>s\<cdot>(Some (Discr (\<M> m)))) = #s" 
-  proof-
-    show ?thesis
-      apply (induction s rule: tsyn_ind, simp_all)
-    proof -
-      fix ma :: 'a and sb :: "'a tsyn stream"
-      assume a1: "#(tsynRemDups_fix_h\<cdot>sb\<cdot>(Some (Discr (\<M> m)))) = #sb"
-      have f2: "\<forall>s t. #(updis (t::'a tsyn) && s) = lnsuc\<cdot>(#s)"
-        by (metis (no_types) sconc_fst_empty sconc_scons' slen_scons sup'_def)
-      obtain tt :: "'a tsyn stream \<Rightarrow> 'a tsyn" and ss :: "'a tsyn stream \<Rightarrow> 'a tsyn stream" where
-        f3: "\<forall>s. updis (tt s) && ss s = s \<or> s = \<epsilon>"
-        by (metis scases sconc_fst_empty sconc_scons' sup'_def)
-      then have f4: "\<forall>d da s. ((tsynRemDups_fix_h\<cdot>s\<cdot>(Some d) = 
-                    tsynRemDups_fix_h\<cdot>s\<cdot>(Some da) \<or> Discr (tt s) = d) \<or> Discr (tt s) = da) \<or> s = \<epsilon>"
-        by (metis tsynRemDups_fix_h.simps(3))
-      { assume "sb \<noteq> \<epsilon>"
-        moreover
-      { assume "\<exists>d. (Discr (\<M> ma) \<noteq> Discr (\<M> m) \<and> Discr (\<M> m) \<noteq> d) \<and> sb \<noteq> \<epsilon>"
-        then have "Discr (\<M> ma) \<noteq> Discr (\<M> m) \<and> 
-                  lnsuc\<cdot>(#(tsynRemDups_fix_h\<cdot>sb\<cdot>(Some (Discr (\<M> ma))))) = lnsuc\<cdot>(#sb)"
-        using f4 f3 f2 a1 by (metis tsynRemDups_fix_h.simps(3)) }
-      ultimately have "Discr (\<M> ma) \<noteq> Discr (\<M> m) \<and> 
-                    lnsuc\<cdot>(#(tsynRemDups_fix_h\<cdot>sb\<cdot>(Some (Discr (\<M> ma))))) = lnsuc\<cdot>(#sb) \<or> 
-                    #(tsynRemDups_fix_h\<cdot>(updis (\<M> ma) && sb)\<cdot> (Some (Discr (\<M> m)))) = lnsuc\<cdot>(#sb)"
-        using f2 a1 by auto }
-      then have "#(tsynRemDups_fix_h\<cdot>(updis (\<M> ma) && sb)\<cdot> (Some (Discr (\<M> m)))) = lnsuc\<cdot>(#sb)"
-        using f2 by force
-      then show "#(tsynRemDups_fix_h\<cdot>(\<up>(\<M> ma) \<bullet> sb)\<cdot> (Some (Discr (\<M> m)))) = lnsuc\<cdot>(#sb)"
-        by (simp add: sconc_scons' sup'_def)
-    next 
-      fix s :: "'a tsyn stream"
-      show "#(tsynRemDups_fix_h\<cdot>s\<cdot>(Some (Discr (\<M> m)))) = 
-            #s \<Longrightarrow> #(tsynRemDups_fix_h\<cdot>(\<up>- \<bullet> s)\<cdot>(Some (Discr (\<M> m)))) = lnsuc\<cdot>(#s)"
-      proof -
-        assume a1: "#(tsynRemDups_fix_h\<cdot>s\<cdot>(Some (Discr (\<M> m)))) = #s"
-        have f2: "\<forall>s t. #(updis (t::'a tsyn) && s) = lnsuc\<cdot>(#s)"
-          by (metis (no_types) sconc_fst_empty sconc_scons' slen_scons sup'_def)
-        obtain tt :: "'a tsyn stream \<Rightarrow> 'a tsyn" and ss :: "'a tsyn stream \<Rightarrow> 'a tsyn stream" where
-          f3: "\<forall>s. updis (tt s) && ss s = s \<or> s = \<epsilon>"
-          by (metis (no_types) scases sconc_fst_empty sconc_scons' sup'_def)
-        then have f4: "\<forall>d da s. ((tsynRemDups_fix_h\<cdot>s\<cdot>(Some d) = 
-                      tsynRemDups_fix_h\<cdot>s\<cdot>(Some da) \<or> Discr (tt s) = d) \<or> Discr (tt s) = da) \<or> s = \<epsilon>"
-           by (metis tsynRemDups_fix_h.simps(3))
-         have f5: "\<forall>d s. (tsynRemDups_fix_h\<cdot>s\<cdot>(Some d) = updis (tt s) && 
-                  tsynRemDups_fix_h\<cdot>(ss s)\<cdot>(Some (Discr (tt s))) \<or> Discr (tt s) = d) \<or> s = \<epsilon>"
-           using f3 by (metis (no_types) tsynRemDups_fix_h.simps(3))
-        { assume "s \<noteq> \<epsilon>"
-          { assume "Discr (\<M> m) \<noteq> Discr - \<and> s \<noteq> \<epsilon>"
-            moreover
-            { assume "\<exists>d. ((#(tsynRemDups_fix_h\<cdot>s\<cdot>(Some (Discr -))) \<noteq> #s \<and> Discr (\<M> m) \<noteq> 
-                      Discr -) \<and> Discr (-::'a tsyn) \<noteq> d) \<and> s \<noteq> \<epsilon>"
-            moreover
-            { assume "\<exists>d. ((lnsuc\<cdot> (#(tsynRemDups_fix_h\<cdot>(ss s)\<cdot>(Some (Discr -)))) \<noteq>   
-                      #s \<and> Discr (\<M> m) \<noteq> Discr -) \<and> Discr (-::'a tsyn) \<noteq> d) \<and> s \<noteq> \<epsilon>"
-          moreover
-          { assume "\<exists>d. ((lnsuc\<cdot> (#(tsynRemDups_fix_h\<cdot>(ss s)\<cdot> (Some (Discr (tt s))))) \<noteq> 
-                    #s \<and> Discr (\<M> m) \<noteq> Discr -) \<and> Discr (tt s) \<noteq> d) \<and> s \<noteq> \<epsilon>"
-            then have "\<exists>d da. (((#(tsynRemDups_fix_h\<cdot>s\<cdot>(Some d)) \<noteq> #s \<and> Discr (\<M> m) \<noteq>   
-                       Discr -) \<and> Discr (tt s) \<noteq> d) \<and> Discr (-::'a tsyn) \<noteq> da) \<and> s \<noteq> \<epsilon>"
-               using f5 f2 by metis
-            then have "(Discr (tt s) \<noteq> Discr - \<and> Discr (\<M> m) \<noteq> Discr -) \<and> s \<noteq> \<epsilon>"
-              using f3 a1 by (metis (no_types) tsynRemDups_fix_h.simps(3)) }
-          ultimately have "(Discr (tt s) \<noteq> Discr - \<and> Discr (\<M> m) \<noteq> Discr -) \<and> s \<noteq> \<epsilon>"
-            by fastforce }
-        ultimately have "(Discr (tt s) \<noteq> Discr - \<and> Discr (\<M> m) \<noteq> Discr -) \<and> s \<noteq> \<epsilon>"
-          using f3 f2 by (metis (full_types) tsynRemDups_fix_h.simps(3))
-        then have "Discr (\<M> m) \<noteq> Discr - \<and> lnsuc\<cdot>(#(tsynRemDups_fix_h\<cdot>s\<cdot>(Some (Discr -)))) = 
-                  lnsuc\<cdot>(#s)"
-          using f4 f3 f2 a1 by (metis (no_types) tsynRemDups_fix_h.simps(3)) }
-      ultimately have "Discr (\<M> m) \<noteq> Discr - \<and> lnsuc\<cdot>(#(tsynRemDups_fix_h\<cdot>s\<cdot>(Some (Discr -)))) = 
-                      lnsuc\<cdot>(#s)"
-        by auto }
-      then have "Discr (\<M> m) \<noteq> Discr - \<and> lnsuc\<cdot>(#(tsynRemDups_fix_h\<cdot>s\<cdot>(Some (Discr -)))) = 
-            lnsuc\<cdot>(#s) \<or> #(tsynRemDups_fix_h\<cdot>(updis - && s)\<cdot>(Some (Discr (\<M> m)))) = lnsuc\<cdot>(#s)"
-        by fastforce }
-      then have "#(tsynRemDups_fix_h\<cdot>(updis - && s)\<cdot>(Some (Discr (\<M> m)))) = lnsuc\<cdot>(#s)"
-        using f2 by force
-      thus ?thesis
-        by (simp add: sconc_scons' sup'_def)
-      qed
-    qed
-  qed
-  thus "#(tsynRemDups_fix_h\<cdot>s\<cdot>None) = #s \<Longrightarrow> #(tsynRemDups_fix_h\<cdot>s\<cdot>(Some (Discr (\<M> m)))) = #s" 
-    by blast
-  show "#(tsynRemDups_fix_h\<cdot>s\<cdot>None) = #s \<Longrightarrow> #(tsynRemDups_fix_h\<cdot>(\<up>- \<bullet> s)\<cdot>None) = lnsuc\<cdot>(#s)"
-    by (simp add: tsynremdups_fix_h_sconc_null)
-qed
+  apply (simp add: tsynremdups_fix_h_sconc_msg_none tsynremdups_fix_h_slen_some)
+  by (simp add: tsynremdups_fix_h_sconc_null_none)
 
 text {* @{term tsynRemDups_fix_h} test on finite stream. *}
 lemma tsynremdups_fix_h_test_finstream:
-  "tsynRemDups_fix_h\<cdot>(<[null, Msg (1 :: nat), Msg (1 :: nat)]>)\<cdot>None = 
-   <[null, Msg (1 :: nat), null]>"
-  by (metis (no_types, lifting) list2s_0 list2s_Suc tsynRemDups_fix_h.simps(1) 
-      tsynRemDups_fix_h.simps(2) tsynRemDups_fix_h.simps(3) undiscr_Discr)
+  "tsynRemDups_fix_h\<cdot>(<[null, Msg (1 :: nat), null, Msg (1 :: nat)]>)\<cdot>None = 
+   <[null, Msg (1 :: nat), null, null]>"
+  by (metis (no_types, lifting) list2s_0 list2s_Suc lscons_conv sup'_def 
+      tsynremdups_fix_h_sconc_msg_none tsynremdups_fix_h_sconc_msg_some_eq 
+      tsynremdups_fix_h_sconc_null_none tsynremdups_fix_h_sconc_null_some tsynremdups_fix_h_strict)
 
 text {* @{term tsynRemDups_fix_h} test on infinite stream. *}
 lemma tsynremdups_fix_h_test_infinstream:
-  "tsynRemDups_fix_h\<cdot>(<[null, Msg (1 :: nat), Msg (1 :: nat)]> \<bullet> ((<[null]>)\<infinity>))\<cdot>None = 
-   <[null, Msg (1 :: nat), null]> \<bullet> ((<[null]>)\<infinity>)"
-  apply (subst rek2sinftimes [of "tsynRemDups_fix_h\<cdot>(<[null, Msg (1 :: nat), Msg (1 :: nat)]> \<bullet> 
-        ((<[null]>)\<infinity>))\<cdot>None" "<[null, Msg (1 :: nat), null]> \<bullet> ((<[null]>)\<infinity>)"], simp_all)
-  defer
-  apply (simp add: sinf_inf)
-  by (metis (no_types, lifting) lscons_conv s2sinftimes sinftimes_unfold tsynRemDups_fix_h.simps(3) 
-      tsynremdups_fix_h_sconc_msg tsynremdups_fix_h_sconc_null)
+  "tsynRemDups_fix_h\<cdot>(<[null, Msg (1 :: nat), null, Msg (1 :: nat)]>\<infinity>)\<cdot>None = 
+   <[null, Msg (1 :: nat)]> \<bullet> (<[null]>\<infinity>)"
+  sorry
 
 (* ----------------------------------------------------------------------- *)
   subsection {* tsynRemDups_fix *}
@@ -757,26 +695,26 @@ lemma tsynremdups_fix_strict [simp]: "tsynRemDups_fix\<cdot>\<epsilon> = \<epsil
 text {* @{term tsynRemDups_fix} distributes over concatenation. *}
 lemma tsynremdups_fix_sconc_msg:
   "tsynRemDups_fix\<cdot>(\<up>(Msg a) \<bullet> as) = \<up>(Msg a) \<bullet> tsynRemDups_fix_h\<cdot>as\<cdot>(Some (Discr (Msg a)))"
-  by (simp add: tsynremdups_fix_insert tsynremdups_fix_h_sconc_msg)
+  by (simp add: tsynremdups_fix_insert tsynremdups_fix_h_sconc_msg_none)
 
 text {* @{term tsynRemDups_fix} ignores empty time-slots. *}
 lemma tsynremdups_fix_sconc_null: "tsynRemDups_fix\<cdot>(\<up>null \<bullet> s) = \<up>null \<bullet> tsynRemDups_fix_h\<cdot>s\<cdot>None"
-  by (simp add: tsynremdups_fix_insert tsynremdups_fix_h_sconc_null)
+  by (simp add: tsynremdups_fix_insert tsynremdups_fix_h_sconc_null_none)
 
 text {* @{term tsynRemDups_fix} leaves the length of a stream unchanged. *}
 lemma tsynremdups_fix_slen: "#(tsynRemDups_fix\<cdot>s) = #s"
-  by (simp add: tsynremdups_fix_insert tsynremdups_fix_h_slen)
+  by (simp add: tsynremdups_fix_insert tsynremdups_fix_h_slen_none)
 
 text {* @{term tsynRemDups_fix} test on finite stream. *}
 lemma tsynremdups_fix_test_finstream:
-  "tsynRemDups_fix\<cdot>(<[null, Msg (1 :: nat), Msg (1 :: nat)]>) = 
-   <[null, Msg (1 :: nat), null]>"
+  "tsynRemDups_fix\<cdot>(<[null, Msg (1 :: nat), null, Msg (1 :: nat)]>) 
+     = <[null, Msg (1 :: nat), null, null]>"
   by (metis tsynremdups_fix_h_test_finstream tsynremdups_fix_insert)
 
 text {* @{term tsynRemDups_fix} test on infinite stream. *}
 lemma tsynremdups_fix_test_infinstream:
-  "tsynRemDups_fix\<cdot>(<[null, Msg (1 :: nat), Msg (1 :: nat)]> \<bullet> ((<[null]>)\<infinity>)) = 
-   <[null, Msg (1 :: nat), null]> \<bullet> ((<[null]>)\<infinity>)"
+  "tsynRemDups_fix\<cdot>(<[null, Msg (1 :: nat), null, Msg (1 :: nat)]>\<infinity>) 
+     = <[null, Msg (1 :: nat)]> \<bullet> (<[null]>\<infinity>)"
   by (metis tsynremdups_fix_h_test_infinstream tsynremdups_fix_insert)
 
 (* ----------------------------------------------------------------------- *)
