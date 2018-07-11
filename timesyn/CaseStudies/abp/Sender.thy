@@ -189,38 +189,254 @@ lemma sendertransition_automaton_well:
   section {* Automaton Sender Step Lemmata *}
 (* ----------------------------------------------------------------------- *) 
 
-(* h_step lemma for state Sf and - input:(null, null), buffer:empty *)
+(* h_step lemma for -- state:Sf   input:(null, null)   buffer:empty *)
 lemma senderautomaton_h_step_sf_null_null_empty:
   assumes "ubDom\<cdot>sb = {\<C> ''i'', \<C> ''as''}"
-  shows "da_h SenderAutomaton (State Sf [])  \<rightleftharpoons> (ubConc (tsynbNull (\<C> ''i'')  \<uplus> tsynbNull (\<C> ''as''))\<cdot>sb)
-       = ubConc (tsynbNull (\<C> ''ds''))\<cdot>(da_h SenderAutomaton (State Sf []) \<rightleftharpoons> sb)"
+  shows "da_h SenderAutomaton (State Sf [])  
+           \<rightleftharpoons> (ubConc (tsynbNull (\<C> ''i'')  \<uplus> tsynbNull (\<C> ''as''))\<cdot>sb)
+         = ubConc (tsynbNull (\<C> ''ds''))\<cdot>(da_h SenderAutomaton (State Sf []) \<rightleftharpoons> sb)"
   sorry
 
-(* h_step lemma for state Sf and - input:(null, null), buffer:non-empty *)
+(* h_step lemma for -- state:Sf   input:(null, null)   buffer:non-empty *)
 lemma senderautomaton_h_step_sf_null_null_non_empty:
   assumes "ubDom\<cdot>sb = {\<C> ''i'', \<C> ''as''}"
   and "buffer \<noteq> []"
-  shows "da_h SenderAutomaton (State Sf buffer)  \<rightleftharpoons> (ubConc (tsynbNull (\<C> ''i'')  \<uplus> tsynbNull (\<C> ''as''))\<cdot>sb)
-       = ubConc ((createDsBundle (Pair (last buffer) False )))\<cdot>(da_h SenderAutomaton (State Sf []) \<rightleftharpoons> sb)"
+  shows "da_h SenderAutomaton (State Sf buffer)  
+         \<rightleftharpoons> (ubConc (tsynbNull (\<C> ''i'')  \<uplus> tsynbNull (\<C> ''as''))\<cdot>sb)
+       = ubConc ((createDsBundle (Pair (last buffer) False )))
+                 \<cdot>(da_h SenderAutomaton (State Sf []) \<rightleftharpoons> sb)"
   sorry
 
-(* h_step lemma for state St and - input:(null, null), buffer:empty *)
+(* h_step lemma for -- state:St   input:(null, null)   buffer:empty *)
 lemma senderautomaton_h_step_st_null_null_empty:
   assumes "ubDom\<cdot>sb = {\<C> ''i'', \<C> ''as''}"
-  shows "da_h SenderAutomaton (State St [])  \<rightleftharpoons> (ubConc (tsynbNull (\<C> ''i'')  \<uplus> tsynbNull (\<C> ''as''))\<cdot>sb)
-       = ubConc (tsynbNull (\<C> ''ds''))\<cdot>(da_h SenderAutomaton (State St []) \<rightleftharpoons> sb)"
+  shows "da_h SenderAutomaton (State St []) 
+           \<rightleftharpoons> (ubConc (tsynbNull (\<C> ''i'')  \<uplus> tsynbNull (\<C> ''as''))\<cdot>sb)
+         = ubConc (tsynbNull (\<C> ''ds''))\<cdot>(da_h SenderAutomaton (State St []) \<rightleftharpoons> sb)"
   sorry
 
-(* h_step lemma for state St and - input:(null, null), buffer:non-empty *)
+(* h_step lemma for -- state:St   input:(null, null)   buffer:non-empty *)
 lemma senderautomaton_h_step_st_null_null_non_empty:
   assumes "ubDom\<cdot>sb = {\<C> ''i'', \<C> ''as''}"
   and "buffer \<noteq> []"
-  shows "da_h SenderAutomaton (State St buffer)  \<rightleftharpoons> (ubConc (tsynbNull (\<C> ''i'')  \<uplus> tsynbNull (\<C> ''as''))\<cdot>sb)
-       = ubConc ((createDsBundle (Pair (last buffer) False )))\<cdot>(da_h SenderAutomaton (State St []) \<rightleftharpoons> sb)"
+  shows "da_h SenderAutomaton (State St buffer) 
+         \<rightleftharpoons> (ubConc (tsynbNull (\<C> ''i'')  \<uplus> tsynbNull (\<C> ''as''))\<cdot>sb)
+         = ubConc ((createDsBundle (Pair (last buffer) False )))
+                    \<cdot>(da_h SenderAutomaton (State St []) \<rightleftharpoons> sb)"
+  sorry
+
+(* h_step lemma for -- state:St   input:(Nat a, null)   buffer:empty *)
+lemma senderautomaton_h_step_st_i_null_empty:
+  assumes "ubDom\<cdot>sb = {\<C> ''i'', \<C> ''as''}"
+  shows "da_h SenderAutomaton (State St []) 
+           \<rightleftharpoons> (ubConc (createIBundle a  \<uplus> tsynbNull (\<C> ''as''))\<cdot>sb)
+         = ubConc (createDsBundle (a, True))\<cdot>(da_h SenderAutomaton (State St [a]) \<rightleftharpoons> sb)"
+  sorry
+
+(* h_step lemma for -- state:St   input:(Nat a, null)   buffer:non-empty *)
+lemma senderautomaton_h_step_st_i_null_non_empty:
+  assumes "ubDom\<cdot>sb = {\<C> ''i'', \<C> ''as''}"
+  and "buffer \<noteq> []"
+  shows "da_h SenderAutomaton (State St buffer) 
+           \<rightleftharpoons> (ubConc (createIBundle a  \<uplus> tsynbNull (\<C> ''as''))\<cdot>sb)
+         = ubConc (createDsBundle (last buffer, True))
+                   \<cdot>(da_h SenderAutomaton (State St (prepend buffer a)) \<rightleftharpoons> sb)"
+  sorry
+
+(* h_step lemma for -- state:Sf   input:(Nat a, null)   buffer:empty *)
+lemma senderautomaton_h_step_sf_i_null_empty:
+  assumes "ubDom\<cdot>sb = {\<C> ''i'', \<C> ''as''}"
+  shows "da_h SenderAutomaton (State Sf []) 
+           \<rightleftharpoons> (ubConc (createIBundle a  \<uplus> tsynbNull (\<C> ''as''))\<cdot>sb)
+         = ubConc (createDsBundle (a, False))\<cdot>(da_h SenderAutomaton (State Sf [a]) \<rightleftharpoons> sb)"
+  sorry
+
+(* h_step lemma for -- state:Sf   input:(Nat a, null)   buffer:non-empty *)
+lemma senderautomaton_h_step_sf_i_null_non_empty:
+  assumes "ubDom\<cdot>sb = {\<C> ''i'', \<C> ''as''}"
+  and "buffer \<noteq> []"
+  shows "da_h SenderAutomaton (State Sf buffer)
+          \<rightleftharpoons> (ubConc (createIBundle a  \<uplus> tsynbNull (\<C> ''as''))\<cdot>sb)
+        = ubConc (createDsBundle (last buffer, False))
+                  \<cdot>(da_h SenderAutomaton (State Sf (prepend buffer a)) \<rightleftharpoons> sb)"
+  sorry
+
+
+(* h_step lemma for -- state:St   input:(null, True)   buffer:empty *)
+lemma senderautomaton_h_step_st_null_true_empty:
+  assumes "ubDom\<cdot>sb = {\<C> ''i'', \<C> ''as''}"
+  shows "da_h SenderAutomaton (State St [])
+           \<rightleftharpoons> (ubConc (tsynbNull (\<C> ''i'')  \<uplus> createAsBundle True)\<cdot>sb)
+         = ubConc (tsynbNull (\<C> ''ds''))\<cdot>(da_h SenderAutomaton (State St []) \<rightleftharpoons> sb)"
+  sorry
+
+(* h_step lemma for -- state:St   input:(null, True)   buffer:one element *)
+lemma senderautomaton_h_step_st_null_true_one_element:
+  assumes "ubDom\<cdot>sb = {\<C> ''i'', \<C> ''as''}"
+  shows "da_h SenderAutomaton (State St [a])
+           \<rightleftharpoons> (ubConc (tsynbNull (\<C> ''i'')  \<uplus> createAsBundle True)\<cdot>sb)
+          = ubConc (tsynbNull (\<C> ''ds''))\<cdot>(da_h SenderAutomaton (State Sf []) \<rightleftharpoons> sb)"
+  sorry
+
+(* h_step lemma for -- state:St   input:(null, True)   buffer:more than one element *)
+lemma senderautomaton_h_step_st_null_true_more_than_one_element:
+  assumes "ubDom\<cdot>sb = {\<C> ''i'', \<C> ''as''}"
+  and "size buffer > 1"
+  shows "da_h SenderAutomaton (State St buffer)
+           \<rightleftharpoons> (ubConc (tsynbNull (\<C> ''i'')  \<uplus> createAsBundle True)\<cdot>sb)
+         = ubConc (createDsBundle (last (butlast buffer), False))
+                    \<cdot>(da_h SenderAutomaton (State Sf (butlast buffer )) \<rightleftharpoons> sb)"
+  sorry
+
+(* h_step lemma for -- state:St   input:(null, False)   buffer:empty *)
+lemma senderautomaton_h_step_st_null_false_empty:
+  assumes "ubDom\<cdot>sb = {\<C> ''i'', \<C> ''as''}"
+  shows "da_h SenderAutomaton (State St [])
+           \<rightleftharpoons> (ubConc (tsynbNull (\<C> ''i'')  \<uplus> createAsBundle False)\<cdot>sb)
+         = ubConc (tsynbNull (\<C> ''ds''))\<cdot>(da_h SenderAutomaton (State St []) \<rightleftharpoons> sb)"
+  sorry
+
+
+(* h_step lemma for -- state:St   input:(null, False)   buffer:non-empty *)
+lemma senderautomaton_h_step_st_null_false_non_empty:
+  assumes "ubDom\<cdot>sb = {\<C> ''i'', \<C> ''as''}"
+  and "size buffer \<noteq> 0"
+  shows "da_h SenderAutomaton (State St buffer) 
+           \<rightleftharpoons> (ubConc (tsynbNull (\<C> ''i'')  \<uplus> createAsBundle False)\<cdot>sb)
+         = ubConc (createDsBundle (last buffer, True))
+                    \<cdot>(da_h SenderAutomaton (State St buffer) \<rightleftharpoons> sb)"
+  sorry
+
+
+(* h_step lemma for -- state:Sf   input:(null, True)   buffer:empty *)
+lemma senderautomaton_h_step_sf_null_false_empty:
+  assumes "ubDom\<cdot>sb = {\<C> ''i'', \<C> ''as''}"
+  shows "da_h SenderAutomaton (State Sf []) 
+           \<rightleftharpoons> (ubConc (tsynbNull (\<C> ''i'')  \<uplus> createAsBundle False)\<cdot>sb)
+         = ubConc (tsynbNull (\<C> ''ds''))\<cdot>(da_h SenderAutomaton (State Sf []) \<rightleftharpoons> sb)"
+  sorry
+
+
+(* h_step lemma for -- state:Sf   input:(null, False)   buffer:one element *)
+lemma senderautomaton_h_step_sf_null_false_one_element:
+  assumes "ubDom\<cdot>sb = {\<C> ''i'', \<C> ''as''}"
+  shows "da_h SenderAutomaton (State Sf [a])
+           \<rightleftharpoons> (ubConc (tsynbNull (\<C> ''i'')  \<uplus> createAsBundle False)\<cdot>sb)
+         = ubConc (tsynbNull (\<C> ''ds''))\<cdot>(da_h SenderAutomaton (State St []) \<rightleftharpoons> sb)"
+  sorry
+
+(* h_step lemma for -- state:Sf   input:(null, False)   buffer:more than one element *)
+lemma senderautomaton_h_step_sf_null_false_more_than_one_element:
+  assumes "ubDom\<cdot>sb = {\<C> ''i'', \<C> ''as''}"
+  and "size buffer > 1"
+  shows "da_h SenderAutomaton (State Sf buffer) 
+           \<rightleftharpoons> (ubConc (tsynbNull (\<C> ''i'')  \<uplus> createAsBundle False)\<cdot>sb)
+         = ubConc (createDsBundle (last (butlast buffer), True))
+                    \<cdot>(da_h SenderAutomaton (State St (butlast buffer )) \<rightleftharpoons> sb)"
+  sorry
+
+(* h_step lemma for -- state:Sf   input:(null, True)   buffer:empty *)
+lemma senderautomaton_h_step_sf_null_true_empty:
+  assumes "ubDom\<cdot>sb = {\<C> ''i'', \<C> ''as''}"
+  shows "da_h SenderAutomaton (State Sf [])
+           \<rightleftharpoons> (ubConc (tsynbNull (\<C> ''i'')  \<uplus> createAsBundle True)\<cdot>sb)
+         = ubConc (tsynbNull (\<C> ''ds''))\<cdot>(da_h SenderAutomaton (State Sf []) \<rightleftharpoons> sb)"
+  sorry
+
+
+(* h_step lemma for -- state:St   input:(null, False)   buffer:non-empty *)
+lemma senderautomaton_h_step_sf_null_true_non_empty:
+  assumes "ubDom\<cdot>sb = {\<C> ''i'', \<C> ''as''}"
+  and "size buffer \<noteq> 0"
+  shows "da_h SenderAutomaton (State Sf buffer) 
+          \<rightleftharpoons> (ubConc (createIBundle a  \<uplus> createAsBundle True)\<cdot>sb)
+       = ubConc (createDsBundle (last buffer, False))\<cdot>(da_h SenderAutomaton (State Sf buffer) \<rightleftharpoons> sb)"
+  sorry
+
+
+(* h_step lemma for -- state:St   input:(a, True)   buffer:empty *)
+lemma senderautomaton_h_step_st_i_true_empty:
+  assumes "ubDom\<cdot>sb = {\<C> ''i'', \<C> ''as''}"
+  shows "da_h SenderAutomaton (State St [])  \<rightleftharpoons> (ubConc (createIBundle a  \<uplus> createAsBundle True)\<cdot>sb)
+         = ubConc (createDsBundle (a, True))\<cdot>(da_h SenderAutomaton (State St [a]) \<rightleftharpoons> sb)"
+  sorry
+
+(* h_step lemma for -- state:St   input:(a, True)   buffer:one element *)
+lemma senderautomaton_h_step_st_i_true_one_element:
+  assumes "ubDom\<cdot>sb = {\<C> ''i'', \<C> ''as''}"
+  shows "da_h SenderAutomaton (State St [b])  \<rightleftharpoons> (ubConc (createIBundle a  \<uplus> createAsBundle True)\<cdot>sb)
+         = ubConc (createDsBundle (a, False))\<cdot>(da_h SenderAutomaton (State Sf [a]) \<rightleftharpoons> sb)"
+  sorry
+
+(* h_step lemma for -- state:St   input:(a, True)   buffer:more than one element *)
+lemma senderautomaton_h_step_st_i_true_more_than_one_element:
+  assumes "ubDom\<cdot>sb = {\<C> ''i'', \<C> ''as''}"
+  and "size buffer > 1"
+  shows "da_h SenderAutomaton (State St buffer) 
+            \<rightleftharpoons> (ubConc (createIBundle a  \<uplus> createAsBundle True)\<cdot>sb)
+         = ubConc (createDsBundle (last (butlast buffer), False))
+                     \<cdot>(da_h SenderAutomaton (State Sf (prepend (butlast buffer ) a)) \<rightleftharpoons> sb)"
+  sorry
+
+(* h_step lemma for -- state:St   input:(a, False)   buffer:empty *)
+lemma senderautomaton_h_step_st_i_false_empty:
+  assumes "ubDom\<cdot>sb = {\<C> ''i'', \<C> ''as''}"
+  shows "da_h SenderAutomaton (State St [])  \<rightleftharpoons> (ubConc (createIBundle a  \<uplus> createAsBundle False)\<cdot>sb)
+         = ubConc (createDsBundle (a, True))\<cdot>(da_h SenderAutomaton (State St [a]) \<rightleftharpoons> sb)"
+  sorry
+
+(* h_step lemma for -- state:St   input:(a, False)   buffer:non-empty *)
+lemma senderautomaton_h_step_st_i_false_non_empty:
+  assumes "ubDom\<cdot>sb = {\<C> ''i'', \<C> ''as''}"
+  and "size buffer \<noteq> 0"
+  shows "da_h SenderAutomaton (State St buffer) 
+           \<rightleftharpoons> (ubConc (createIBundle a  \<uplus> createAsBundle False)\<cdot>sb)
+         = ubConc (createDsBundle (last buffer, True))
+                  \<cdot>(da_h SenderAutomaton (State St (prepend buffer a)) \<rightleftharpoons> sb)"
   sorry
 
 
 
+
+
+
+(* h_step lemma for -- state:Sf   input:(a, False)   buffer:empty *)
+lemma senderautomaton_h_step_sf_i_false_empty:
+  assumes "ubDom\<cdot>sb = {\<C> ''i'', \<C> ''as''}"
+  shows "da_h SenderAutomaton (State Sf [])  \<rightleftharpoons> (ubConc (createIBundle a  \<uplus> createAsBundle False)\<cdot>sb)
+       = ubConc (createDsBundle (a, False))\<cdot>(da_h SenderAutomaton (State Sf [a]) \<rightleftharpoons> sb)"
+  sorry
+
+(* h_step lemma for -- state:Sf   input:(a, False)   buffer:one element *)
+lemma senderautomaton_h_step_sf_i_false_one_element:
+  assumes "ubDom\<cdot>sb = {\<C> ''i'', \<C> ''as''}"
+  shows "da_h SenderAutomaton (State Sf [b])  \<rightleftharpoons> (ubConc (createIBundle a  \<uplus> createAsBundle False)\<cdot>sb)
+       = ubConc (createDsBundle (a, True))\<cdot>(da_h SenderAutomaton (State St [a]) \<rightleftharpoons> sb)"
+  sorry
+
+(* h_step lemma for -- state:Sf   input:(a, False)   buffer:more than one element *)
+lemma senderautomaton_h_step_sf_i_false_more_than_one_element:
+  assumes "ubDom\<cdot>sb = {\<C> ''i'', \<C> ''as''}"
+  and "size buffer > 1"
+  shows "da_h SenderAutomaton (State Sf buffer)  \<rightleftharpoons> (ubConc (createIBundle a  \<uplus> createAsBundle False)\<cdot>sb)
+       = ubConc (createDsBundle (last (butlast buffer), True))
+         \<cdot>(da_h SenderAutomaton (State St (prepend (butlast buffer ) a)) \<rightleftharpoons> sb)"
+  sorry
+
+(* h_step lemma for -- state:Sf   input:(a, True)   buffer:empty *)
+lemma senderautomaton_h_step_sf_i_true_empty:
+  assumes "ubDom\<cdot>sb = {\<C> ''i'', \<C> ''as''}"
+  shows "da_h SenderAutomaton (State Sf [])  \<rightleftharpoons> (ubConc (createIBundle a  \<uplus> createAsBundle True)\<cdot>sb)
+       = ubConc (createDsBundle (a, False))\<cdot>(da_h SenderAutomaton (State Sf [a]) \<rightleftharpoons> sb)"
+  sorry
+
+(* h_step lemma for -- state:Sf   input:(a, True)   buffer:non-empty *)
+lemma senderautomaton_h_step_sf_i_true_non_empty:
+  assumes "ubDom\<cdot>sb = {\<C> ''i'', \<C> ''as''}"
+  and "size buffer \<noteq> 0"
+  shows "da_h SenderAutomaton (State Sf buffer)  \<rightleftharpoons> (ubConc (createIBundle a  \<uplus> createAsBundle True)\<cdot>sb)
+       = ubConc (createDsBundle (last buffer, False))\<cdot>(da_h SenderAutomaton (State Sf (prepend buffer a)) \<rightleftharpoons> sb)"
+  sorry
 
 
 end
