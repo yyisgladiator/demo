@@ -198,7 +198,12 @@ lemma tsynbnulli_tsynbnullas_ubclunion_ubdom:
   "ubDom\<cdot>(tsynbNull (\<C> ''i'') \<uplus> tsynbNull (\<C> ''as'')) = {\<C> ''i'', \<C> ''as''}"
   by (metis insert_is_Un tsynbnull_ubdom ubclUnion_ubundle_def ubunionDom)
 
-lemma senderautomaton_h_step_ubdom_null_null:
+lemma tsynbnotnulli_tsynbnullas_ubclunion_ubdom:
+  "ubDom\<cdot>(createIBundle a  \<uplus> tsynbNull (\<C> ''as'')) = {\<C> ''i'', \<C> ''as''}"
+  sorry
+
+
+lemma senderautomaton_h_step_ubdom_null_null_out_null:
   assumes "ubDom\<cdot>sb = {\<C> ''i'', \<C> ''as''}"
   shows "ubDom\<cdot>(ubConc (tsynbNull (\<C> ''ds''))
                   \<cdot>(da_h SenderAutomaton (SenderState.State s buffer) \<rightleftharpoons> sb)) = {\<C> ''ds''}"
@@ -207,6 +212,78 @@ lemma senderautomaton_h_step_ubdom_null_null:
   by (simp add: assms daDom_def daRan_def SenderAutomaton.rep_eq insert_commute)+
 
 
+lemma senderautomaton_h_step_ubdom_null_null_out_not_null:
+  assumes "ubDom\<cdot>sb = {\<C> ''i'', \<C> ''as''}"
+  shows "ubDom\<cdot>(ubConc (createDsBundle (a, b))
+                  \<cdot>(da_h SenderAutomaton (SenderState.State s buffer) \<rightleftharpoons> sb)) = {\<C> ''ds''}"
+  apply (simp add: createdsoutput_ubdom)
+  apply (subst da_h_ubdom)
+  by (simp add: assms daDom_def daRan_def SenderAutomaton.rep_eq insert_commute)+
+  
+
+
+
+
+
+
+
+lemma msga_ctype: "Msg (Pair_nat_bool a) \<in> ctype (\<C> ''ds'')"
+  by (simp add: ctype_tsynI) 
+
+
+
+lemma tsynb_null_null_eq [simp]:
+  assumes "ubDom\<cdot>sb = {\<C> ''i'', \<C> ''as''}"
+  shows "inv convDiscrUp (sbHdElem\<cdot>(ubConc (tsynbNull (\<C> ''i'')  \<uplus> tsynbNull (\<C> ''as''))\<cdot>sb))
+          = [\<C> ''i'' \<mapsto> null, \<C> ''as'' \<mapsto> null]"
+  sorry 
+
+
+
+lemma tsynb_i_null_eq [simp]:
+  assumes "ubDom\<cdot>sb = {\<C> ''i'', \<C> ''as''}"
+  shows "inv convDiscrUp (sbHdElem\<cdot>(ubConc (createIBundle a  \<uplus> tsynbNull (\<C> ''as''))\<cdot>sb))
+          = [\<C> ''i'' \<mapsto> Msg (Nat a), \<C> ''as'' \<mapsto> null]"
+  sorry 
+
+
+
+
+lemma tsynbnull_null_null_ubgetch_i[simp]:
+  "tsynbNull (\<C> ''i'') \<uplus> tsynbNull (\<C> ''as'')  .  \<C> ''i'' = \<up>null"
+  by (simp add: ubclUnion_ubundle_def)
+
+lemma tsynbnull_null_null_ubgetch_as[simp]:
+  "tsynbNull (\<C> ''i'') \<uplus> tsynbNull (\<C> ''as'')  .  \<C> ''as'' = \<up>null"
+  by (simp add: ubclUnion_ubundle_def)
+
+(*createIBundle a  \<uplus> tsynbNull (\<C> ''as'') *)
+
+lemma tsynbnull_i_null_ubgetch_i [simp]:
+  "createIBundle a  \<uplus> tsynbNull (\<C> ''as'')  .  \<C> ''i'' = \<up>(Msg(Nat a))"
+  apply (simp add: ubclUnion_ubundle_def createIBundle_def)
+  sorry
+
+lemma tsynbnull_i_null_ubgetch_as[simp]:
+  "createIBundle a  \<uplus> tsynbNull (\<C> ''as'')  .  \<C> ''as'' = \<up>null"
+  by (simp add: ubclUnion_ubundle_def)
+  
+
+
+lemma sbrt_ubconc_null_null [simp]:
+  assumes "ubDom\<cdot>sb = {\<C> ''i'', \<C> ''as''}"
+  shows  "sbRt\<cdot>(ubConc (tsynbNull (\<C> ''i'') \<uplus> tsynbNull (\<C> ''as''))\<cdot>sb) = sb"
+  apply (rule ub_eq)
+  apply (simp add: assms)
+  apply (simp add: insert_commute tsynbnulli_tsynbnullas_ubclunion_ubdom)
+  apply(simp add: assms sbRt_def ubConc_def usclConc_stream_def)
+  sorry
+
+lemma sbrt_ubconc_i_null [simp]:
+  assumes "ubDom\<cdot>sb = {\<C> ''i'', \<C> ''as''}"
+  shows  "sbRt\<cdot>(ubConc (createIBundle a  \<uplus> tsynbNull (\<C> ''as''))\<cdot>sb) = sb"
+  sorry
+
 
 (* h_step lemma for -- state:Sf   input:(null, null)   buffer:empty *)
 lemma senderautomaton_h_step_sf_null_null_empty:
@@ -214,10 +291,13 @@ lemma senderautomaton_h_step_sf_null_null_empty:
   shows "da_h SenderAutomaton (State Sf [])  
            \<rightleftharpoons> (ubConc (tsynbNull (\<C> ''i'')  \<uplus> tsynbNull (\<C> ''as''))\<cdot>sb)
          = ubConc (tsynbNull (\<C> ''ds''))\<cdot>(da_h SenderAutomaton (State Sf []) \<rightleftharpoons> sb)"
-  (*apply (simp_all add: da_h_final daDom_def SenderAutomaton.rep_eq da_h_ubdom assms daRan_def 
-         daNextOutput_def daNextState_def daTransition_def usclConc_stream_def) *)
-  sorry
-  
+  apply (simp_all add: da_h_final daDom_def SenderAutomaton.rep_eq da_h_ubdom assms daRan_def 
+         daNextOutput_def daNextState_def daTransition_def usclConc_stream_def
+         tsynbnulli_tsynbnullas_ubclunion_ubdom)
+  using assms senderautomaton_h_step_ubdom_null_null_out_null by auto
+
+
+
 
 (* h_step lemma for -- state:Sf   input:(null, null)   buffer:non-empty *)
 lemma senderautomaton_h_step_sf_null_null_non_empty:
@@ -226,8 +306,13 @@ lemma senderautomaton_h_step_sf_null_null_non_empty:
   shows "da_h SenderAutomaton (State Sf buffer)  
          \<rightleftharpoons> (ubConc (tsynbNull (\<C> ''i'')  \<uplus> tsynbNull (\<C> ''as''))\<cdot>sb)
        = ubConc ((createDsBundle (Pair (last buffer) False )))
-                 \<cdot>(da_h SenderAutomaton (State Sf []) \<rightleftharpoons> sb)"
-  sorry
+                 \<cdot>(da_h SenderAutomaton (State Sf buffer) \<rightleftharpoons> sb)"
+  apply (simp_all add: da_h_final daDom_def SenderAutomaton.rep_eq da_h_ubdom assms daRan_def 
+         daNextOutput_def daNextState_def daTransition_def usclConc_stream_def
+         tsynbnulli_tsynbnullas_ubclunion_ubdom)
+  using assms senderautomaton_h_step_ubdom_null_null_out_not_null by auto
+
+
 
 (* h_step lemma for -- state:St   input:(null, null)   buffer:empty *)
 lemma senderautomaton_h_step_st_null_null_empty:
@@ -235,7 +320,11 @@ lemma senderautomaton_h_step_st_null_null_empty:
   shows "da_h SenderAutomaton (State St []) 
            \<rightleftharpoons> (ubConc (tsynbNull (\<C> ''i'')  \<uplus> tsynbNull (\<C> ''as''))\<cdot>sb)
          = ubConc (tsynbNull (\<C> ''ds''))\<cdot>(da_h SenderAutomaton (State St []) \<rightleftharpoons> sb)"
-  sorry
+  apply (simp_all add: da_h_final daDom_def SenderAutomaton.rep_eq da_h_ubdom assms daRan_def 
+         daNextOutput_def daNextState_def daTransition_def usclConc_stream_def
+         tsynbnulli_tsynbnullas_ubclunion_ubdom)
+  using assms senderautomaton_h_step_ubdom_null_null_out_null by auto
+
 
 (* h_step lemma for -- state:St   input:(null, null)   buffer:non-empty *)
 lemma senderautomaton_h_step_st_null_null_non_empty:
@@ -243,9 +332,13 @@ lemma senderautomaton_h_step_st_null_null_non_empty:
   and "buffer \<noteq> []"
   shows "da_h SenderAutomaton (State St buffer) 
          \<rightleftharpoons> (ubConc (tsynbNull (\<C> ''i'')  \<uplus> tsynbNull (\<C> ''as''))\<cdot>sb)
-         = ubConc ((createDsBundle (Pair (last buffer) False )))
-                    \<cdot>(da_h SenderAutomaton (State St []) \<rightleftharpoons> sb)"
-  sorry
+         = ubConc ((createDsBundle (Pair (last buffer) True )))
+                    \<cdot>(da_h SenderAutomaton (State St buffer) \<rightleftharpoons> sb)"
+  apply (simp_all add: da_h_final daDom_def SenderAutomaton.rep_eq da_h_ubdom assms daRan_def 
+         daNextOutput_def daNextState_def daTransition_def usclConc_stream_def
+         tsynbnulli_tsynbnullas_ubclunion_ubdom)
+  using assms senderautomaton_h_step_ubdom_null_null_out_not_null by auto
+
 
 (* h_step lemma for -- state:St   input:(Nat a, null)   buffer:empty *)
 lemma senderautomaton_h_step_st_i_null_empty:
@@ -253,7 +346,10 @@ lemma senderautomaton_h_step_st_i_null_empty:
   shows "da_h SenderAutomaton (State St []) 
            \<rightleftharpoons> (ubConc (createIBundle a  \<uplus> tsynbNull (\<C> ''as''))\<cdot>sb)
          = ubConc (createDsBundle (a, True))\<cdot>(da_h SenderAutomaton (State St [a]) \<rightleftharpoons> sb)"
-  sorry
+  apply (simp_all add: da_h_final daDom_def SenderAutomaton.rep_eq da_h_ubdom assms daRan_def 
+         daNextOutput_def daNextState_def daTransition_def usclConc_stream_def
+         tsynbnotnulli_tsynbnullas_ubclunion_ubdom)
+  using assms senderautomaton_h_step_ubdom_null_null_out_not_null by auto
 
 (* h_step lemma for -- state:St   input:(Nat a, null)   buffer:non-empty *)
 lemma senderautomaton_h_step_st_i_null_non_empty:
@@ -263,7 +359,10 @@ lemma senderautomaton_h_step_st_i_null_non_empty:
            \<rightleftharpoons> (ubConc (createIBundle a  \<uplus> tsynbNull (\<C> ''as''))\<cdot>sb)
          = ubConc (createDsBundle (last buffer, True))
                    \<cdot>(da_h SenderAutomaton (State St (prepend buffer a)) \<rightleftharpoons> sb)"
-  sorry
+  apply (simp_all add: da_h_final daDom_def SenderAutomaton.rep_eq da_h_ubdom assms daRan_def 
+         daNextOutput_def daNextState_def daTransition_def usclConc_stream_def
+         tsynbnotnulli_tsynbnullas_ubclunion_ubdom)
+  using assms senderautomaton_h_step_ubdom_null_null_out_not_null by auto
 
 (* h_step lemma for -- state:Sf   input:(Nat a, null)   buffer:empty *)
 lemma senderautomaton_h_step_sf_i_null_empty:
@@ -271,7 +370,11 @@ lemma senderautomaton_h_step_sf_i_null_empty:
   shows "da_h SenderAutomaton (State Sf []) 
            \<rightleftharpoons> (ubConc (createIBundle a  \<uplus> tsynbNull (\<C> ''as''))\<cdot>sb)
          = ubConc (createDsBundle (a, False))\<cdot>(da_h SenderAutomaton (State Sf [a]) \<rightleftharpoons> sb)"
-  sorry
+  apply (simp_all add: da_h_final daDom_def SenderAutomaton.rep_eq da_h_ubdom assms daRan_def 
+         daNextOutput_def daNextState_def daTransition_def usclConc_stream_def
+         tsynbnotnulli_tsynbnullas_ubclunion_ubdom)
+  using assms senderautomaton_h_step_ubdom_null_null_out_not_null by auto
+
 
 (* h_step lemma for -- state:Sf   input:(Nat a, null)   buffer:non-empty *)
 lemma senderautomaton_h_step_sf_i_null_non_empty:
@@ -281,7 +384,10 @@ lemma senderautomaton_h_step_sf_i_null_non_empty:
           \<rightleftharpoons> (ubConc (createIBundle a  \<uplus> tsynbNull (\<C> ''as''))\<cdot>sb)
         = ubConc (createDsBundle (last buffer, False))
                   \<cdot>(da_h SenderAutomaton (State Sf (prepend buffer a)) \<rightleftharpoons> sb)"
-  sorry
+  apply (simp_all add: da_h_final daDom_def SenderAutomaton.rep_eq da_h_ubdom assms daRan_def 
+         daNextOutput_def daNextState_def daTransition_def usclConc_stream_def
+         tsynbnotnulli_tsynbnullas_ubclunion_ubdom)
+  using assms senderautomaton_h_step_ubdom_null_null_out_not_null by auto
 
 
 (* h_step lemma for -- state:St   input:(null, True)   buffer:empty *)
