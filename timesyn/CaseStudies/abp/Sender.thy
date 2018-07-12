@@ -189,6 +189,25 @@ lemma sendertransition_automaton_well:
   section {* Automaton Sender Step Lemmata *}
 (* ----------------------------------------------------------------------- *) 
 
+lemma da_h_ubdom: assumes "ubDom\<cdot>sb = daDom automat" 
+  shows "ubDom\<cdot>(da_h automat state \<rightleftharpoons> sb) = daRan automat"
+  by (simp add: assms spf_ubDom)
+
+
+lemma tsynbnulli_tsynbnullas_ubclunion_ubdom:
+  "ubDom\<cdot>(tsynbNull (\<C> ''i'') \<uplus> tsynbNull (\<C> ''as'')) = {\<C> ''i'', \<C> ''as''}"
+  by (metis insert_is_Un tsynbnull_ubdom ubclUnion_ubundle_def ubunionDom)
+
+lemma senderautomaton_h_step_ubdom_null_null:
+  assumes "ubDom\<cdot>sb = {\<C> ''i'', \<C> ''as''}"
+  shows "ubDom\<cdot>(ubConc (tsynbNull (\<C> ''i'') \<uplus> tsynbNull (\<C> ''as''))
+                  \<cdot>(da_h SenderAutomaton (SenderState.State s []) \<rightleftharpoons> sb)) = {\<C> ''ds''}"
+  apply (simp add: tsynbnulli_tsynbnullas_ubclunion_ubdom)
+  
+  (*apply (subst da_h_ubdom)
+  by (simp add: assms daDom_def daRan_def SenderAutomaton.rep_eq insert_commute)+*)
+
+
 (* h_step lemma for -- state:Sf   input:(null, null)   buffer:empty *)
 lemma senderautomaton_h_step_sf_null_null_empty:
   assumes "ubDom\<cdot>sb = {\<C> ''i'', \<C> ''as''}"
