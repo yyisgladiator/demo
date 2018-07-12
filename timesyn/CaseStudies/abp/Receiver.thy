@@ -8,7 +8,7 @@
 chapter {* Theory for Receiver Lemmata on Time-synchronous Streams *}
 
 theory Receiver
-imports ReceiverAutomaton Components  
+imports ReceiverAutomaton Components 
 
 begin
 
@@ -164,11 +164,6 @@ lemma tsynbrec_ubundle_ubdom: "ubDom\<cdot>(Abs_ubundle
                \<C> ''o'' \<mapsto> nat2abp\<cdot>(tsynRec\<cdot>(abp2natbool\<cdot>(sb  .  \<C> ''dr'')))]) = {\<C> ''ar'', \<C> ''o''}"
   by (simp add: ubDom_def insert_commute)
 
-lemma tsynbrec_lub_ubwell: 
-  "ubWell (\<Squnion>i::nat. [\<C> ''ar'' \<mapsto> bool2abp\<cdot>(tsynProjSnd\<cdot>(abp2natbool\<cdot>Rep_ubundle (Y i)\<rightharpoonup>\<C> ''dr'')), 
-                     \<C> ''o'' \<mapsto> nat2abp\<cdot>(tsynRec\<cdot>(abp2natbool\<cdot>Rep_ubundle (Y i)\<rightharpoonup>\<C> ''dr''))])"
-  sorry
-
 text{* @{term tsynbRec} is monotonous. *}
 lemma tsynbrec_mono [simp]:
   "monofun (\<lambda> sb. (ubDom\<cdot>sb = {\<C> ''dr''}) \<leadsto> Abs_ubundle [
@@ -212,17 +207,14 @@ lemma tsynbrec_cont [simp]:
   "cont (\<lambda> sb. (ubDom\<cdot>sb = {\<C> ''dr''}) \<leadsto> Abs_ubundle [
                \<C> ''ar'' \<mapsto> bool2abp\<cdot>(tsynProjSnd\<cdot>(abp2natbool\<cdot>(sb  .  \<C> ''dr''))), 
                \<C> ''o'' \<mapsto> nat2abp\<cdot>(tsynRec\<cdot>(abp2natbool\<cdot>(sb  .  \<C> ''dr'')))])"
-  apply(fold ubclDom_ubundle_def)
-  apply (rule ufun_contI)
-  apply (rule ub_below)
-  apply (simp add: ubdom_ubrep_eq)
-  apply (simp add: ubgetch_ubrep_eq monofun_cfun_arg)
-  apply (simp add: ubclDom_ubundle_def)
-  apply (rule ub_below)
-  apply (metis (no_types, lifting) tsynbrec_ubundle_chain tsynbrec_ubundle_ubdom ubdom_chain_eq2)
-  apply (simp add: tsynbrec_ubundle_ubdom ubgetch_ubrep_eq)
-  apply (simp add: ubdom_ubrep_eq ubgetch_lub tsynbrec_ar_contlub tsynbrec_o_contlub tsynbrec_chain)
-  by (simp add: ubgetch_insert tsynbrec_lub_ubwell part_the_lub tsynbrec_chain2)
+  apply (fold ubclDom_ubundle_def)
+  apply (rule ufun_contI2)
+  apply (rule cont_Abs_UB)
+  apply (rule contI2)
+  apply (rule monofunI)
+  apply (simp add: below_ubundle_def cont_pref_eq1I fun_belowI some_below)
+  using tsynbrec_chain apply (simp add: contlub_cfun_arg fun_below_iff some_lub_chain_eq lub_fun)
+  using tsynbrec_ubwell by blast
 
 text{* @{term tsynbRec} insertion lemma. *}
 lemma tsynbrec_insert: "tsynbRec\<cdot>sb = (ubDom\<cdot>sb = {\<C> ''dr''}) \<leadsto> Abs_ubundle 
