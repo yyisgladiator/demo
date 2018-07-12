@@ -439,4 +439,12 @@ lemma senderautomaton_h_step_sf_i_true_non_empty:
   sorry
 
 
+(* H_step lemma *)
+lemma senderautomaton_H_step:
+  assumes "ubDom\<cdot>sb = {\<C> ''i'', \<C> ''as''}"
+  shows "da_H SenderAutomaton \<rightleftharpoons> sb 
+           = ubConc (tsynbNull (\<C> ''ds''))\<cdot>(da_h SenderAutomaton (State Sf []) \<rightleftharpoons> sb)"
+  sorry
+
+
 end
