@@ -8,7 +8,7 @@
 chapter {* Theory for Medium Lemmata *}
 
 theory Medium
-imports "../../tsynStream" 
+imports Components
 
 begin
 
@@ -17,8 +17,14 @@ begin
 (* ----------------------------------------------------------------------- *)
 
 text{* Time synchronous medium, that loses messages. *}
-definition tsynMed :: "'a tsyn stream \<rightarrow> bool stream \<rightarrow> 'a tsyn stream" where
+definition tsynMed :: "(nat \<times> bool) tsyn stream \<rightarrow> bool stream \<rightarrow> (nat \<times> bool) tsyn stream" where
   "tsynMed \<equiv> \<Lambda> msg ora. tsynProjFst\<cdot>(tsynFilter {x. snd x}\<cdot>(tsynZip\<cdot>msg\<cdot>ora))"
+
+text {* @{term tsynbMed}: Medium function for Alternating Bit Protocol on stream bundles. *}
+definition tsynbMed :: "bool stream \<Rightarrow> 
+  abpMessage tsyn stream ubundle \<rightarrow> abpMessage tsyn stream ubundle option" where
+  "tsynbMed ora \<equiv> \<Lambda> sb. (ubclDom\<cdot>sb = {\<C> ''ds''}) \<leadsto> Abs_ubundle [
+                      \<C> ''dr'' \<mapsto> natbool2abp\<cdot>(tsynMed\<cdot>(abp2natbool\<cdot>(sb  .  \<C> ''ds''))\<cdot>ora)]"
 
 (* ----------------------------------------------------------------------- *)
 section {* basic properties *}
@@ -61,29 +67,27 @@ lemma tsynmed_strict [simp]:
   by (simp add: tsynMed_def)+
 
 text{* If the first element in the oracle is True then the current message will be transmitted. *}
-lemma tsynmed_sconc_msg_t:
-  assumes "msg \<noteq> \<epsilon>"
-  shows "tsynMed\<cdot>(\<up>(Msg m) \<bullet> msg)\<cdot>(\<up>True \<bullet> ora) = \<up>(Msg m) \<bullet> (tsynMed\<cdot>msg\<cdot>ora)"
-  proof -
-    have thesis_simple:
-      "tsynProjFst\<cdot>(tsynFilter {x. snd x}\<cdot>(tsynZip\<cdot>(\<up>(Msg m) \<bullet> msg)\<cdot>(\<up>True \<bullet> ora)))
-        = \<up>(Msg m) \<bullet> tsynProjFst\<cdot>(tsynFilter {x. snd x}\<cdot>(tsynZip\<cdot>msg\<cdot>ora))"
-        by (simp add: tsynzip_sconc_msg tsynfilter_sconc_msg_in tsynfilter_sconc_null 
-          tsynprojfst_sconc_null tsynprojfst_sconc_msg)
-    then show ?thesis
-      by (simp add: tsynmed_insert)
-  qed
+lemma tsynmed_sconc_msg_t: "tsynMed\<cdot>(\<up>(Msg m) \<bullet> msg)\<cdot>(\<up>True \<bullet> ora) = \<up>(Msg m) \<bullet> (tsynMed\<cdot>msg\<cdot>ora)"
+  by (simp add: tsynmed_insert tsynzip_sconc_msg tsynfilter_sconc_msg_in tsynfilter_sconc_null 
+                tsynprojfst_sconc_null tsynprojfst_sconc_msg)
 
 text{* If the first element in the oracle is False then the current message will not be transmitted. *}
-lemma tsynmed_sconc_msg_f:
-  assumes "msg \<noteq> \<epsilon>" 
-  shows "tsynMed\<cdot>(\<up>(Msg m) \<bullet> msg)\<cdot>(\<up>False \<bullet> ora) = \<up>- \<bullet> tsynMed\<cdot>msg\<cdot>ora"
+lemma tsynmed_sconc_msg_f: "tsynMed\<cdot>(\<up>(Msg m) \<bullet> msg)\<cdot>(\<up>False \<bullet> ora) = \<up>- \<bullet> tsynMed\<cdot>msg\<cdot>ora"
   sorry
 
 text{* If the first element in the stream is null the oracle will not change. *}
 lemma tsynmed_sconc_null:
-  assumes "msg \<noteq> \<epsilon>" 
+  assumes "ora \<noteq> \<epsilon>"
   shows "tsynMed\<cdot>(\<up>- \<bullet> msg)\<cdot>ora = \<up>- \<bullet> tsynMed\<cdot>msg\<cdot>ora"
+  sorry
+
+lemma tsynmed_sconc_singleton_msg_t: "tsynMed\<cdot>(\<up>(\<M> m))\<cdot>(\<up>True \<bullet> ora) = \<up>(\<M> m)"
+  sorry
+
+lemma tsynmed_sconc_singleton_msg_f: "tsynMed\<cdot>(\<up>(\<M> m))\<cdot>(\<up>False \<bullet> ora) = \<up>-"
+  sorry
+
+lemma tsynmed_sconc_singleton_msg_null: assumes "ora \<noteq> \<epsilon>" shows "tsynMed\<cdot>(\<up>-)\<cdot>ora = \<up>-"
   sorry
 
 (* ToDo: general sconc lemma possible? *)
@@ -122,60 +126,24 @@ lemma tsynmed_tsyndom: "tsynDom\<cdot>(tsynMed\<cdot>msg\<cdot>ora) \<subseteq> 
       proof (cases rule: oracases [of ora])
         case bot
         then show ?thesis 
-          by (metis (mono_tags, hide_lams) inject_scons msg.IH sconc_fst_empty sconc_snd_empty 
-              tsynmed_sconc_null tsynmed_strict(2))
+            by (simp add: tsyndom_strict)
       next
         case (true as)
-        then show ?thesis 
-          proof (cases rule: scases [of s])
-            case bottom
-            have tsynfilter_simp: "tsynFilter {x::'a \<times> bool. snd x}\<cdot>(\<up>(Msg (m, True))) = (\<up>(Msg (m, True)))"
-              by (metis mem_Collect_eq sconc_snd_empty snd_conv tsynfilter_sconc_msg_in tsynfilter_strict)
-            then show ?thesis 
-              by (metis bottom order_refl true tsynfilter_sconc tsynmed_insert tsynmed_strict(3) 
-                  tsynprojfst_sconc_msg tsynzip_sconc_msg)
-          next
-            case (scons a t)
-            then show ?thesis 
-              by (metis (mono_tags, hide_lams) inject_scons msg.IH sconc_fst_empty sconc_snd_empty 
-                  tsynmed_sconc_null tsynmed_strict(2))
-          qed
-      next
+        then show ?thesis
+          by (simp add: true tsynmed_sconc_msg_t tsyndom_sconc le_supI2 msg.IH)
+      next 
         case (false as)
         then show ?thesis
-          proof (cases rule: scases [of s])
-            case bottom
-            have tsynfilter_simp: "tsynFilter {x::'a \<times> bool. snd x}\<cdot>(\<up>(Msg (m, False))) = \<up>null"
-              by (metis (full_types) mem_Collect_eq sconc_snd_empty snd_conv 
-                  tsynfilter_sconc_msg_nin tsynfilter_strict)
-            then show ?thesis 
-              by (metis (no_types, hide_lams) bottom false order_refl sconc_snd_empty 
-                  tsynZip.simps(1) tsyndom_sconc_msg_sub tsyndom_sconc_null tsynfilter_strict 
-                  tsynmed_insert tsynmed_strict(3) tsynprojfst_sconc_null tsynzip_sconc_msg)
-          next
-            case (scons a t)
-            then show ?thesis
-              by (metis (mono_tags, hide_lams) inject_scons msg.IH sconc_fst_empty sconc_snd_empty 
-                  tsynmed_sconc_null tsynmed_strict(2))
-          qed
-      qed
+          apply (simp add: false tsynmed_sconc_msg_f tsyndom_sconc)
+          by (metis lscons_conv msg.IH sup'_def sup.coboundedI2 tsyndom_sconc_null tsynmed_strict(2))
+       qed
   next
     case (null s)
-    have tsynmed_null: "tsynMed\<cdot>(\<up>- \<bullet> s)\<cdot>ora = \<up>- \<bullet> tsynMed\<cdot>s\<cdot>ora"
-      proof (cases rule: scases [of s])
-        case bottom
-        then show ?thesis 
-          by (metis tsynmed_sconc_null tsynmed_strict(2) tsynmed_strict(3))
-      next
-        case (scons a s)
-        then show ?thesis 
-        by (simp add: null.prems tsynmed_sconc_null)
-      qed
     then show ?case
-      by (simp add: null.IH null.prems tsyndom_sconc_null)
+      by (metis tsyndom_sconc_null tsynmed_sconc_null tsynmed_strict(2))
   qed
-
-lemma tsynmed_tsynlen_inf: 
+(*
+lemma tsynmed_tsynlen_ora: 
   assumes msg_inf: "tsynLen\<cdot>msg = \<infinity>"
   shows "tsynLen\<cdot>(tsynMed\<cdot>msg\<cdot>ora) = #({True} \<ominus> ora)"
   using assms
@@ -207,13 +175,15 @@ lemma tsynmed_tsynlen_inf:
           next
             case (null as)
             then show ?thesis 
-              by (metis (no_types, lifting) assoc_sconc inject_scons sconc_snd_empty srcdupsimposs 
-                  tsynmed_sconc_null tsynmed_strict(2))
+              apply (simp add: null tsynmed_sconc_null tsynlen_sconc_null)
+              apply (rule_tac x="as" in tsyn_cases)
+            sorry
           qed
       next
         case (msg_f s)
         then show ?case
-          by (metis bot_is_0 lnat.con_rews slen_scons strict_slen tsynmed_sconc_null tsynmed_strict(2))
+(*          by (metis bot_is_0 lnat.con_rews slen_scons strict_slen tsynmed_sconc_null tsynmed_strict(2))*)
+        sorry
       oops
 
 text{* If infinitely many messages are sent, infinitely many messages will be transmitted. *}
@@ -222,24 +192,8 @@ lemma tsynmed_tsynlen_inf:
     and "tsynLen\<cdot>msg = \<infinity>"
   shows "tsynLen\<cdot>(tsynMed\<cdot>msg\<cdot>ora) = \<infinity>"
   using assms
-  proof (induction msg arbitrary: ora rule: tsyn_ind)
-    case adm
-    then show ?case 
-      apply (rule adm_all)+
-      apply (rule admI)
-      apply (rule)+
-      apply (simp add: contlub_cfun_fun contlub_cfun_arg)
-sorry
-  next
-    case bot
-    then show ?case sorry
-  next
-    case (msg m s)
-    then show ?case sorry
-  next
-    case (null s)
-    then show ?case sorry
-  qed
+  (*by (simp add: tsynmed_tsynlen_ora)*)
+  sorry*)
 
 (* ToDo: Tests *)
 
