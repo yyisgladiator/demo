@@ -89,6 +89,7 @@ lemma tsynmed_sconc_msg_f:
 text{* If the first element in the stream is null the oracle will not change. *}
 lemma tsynmed_sconc_null:
   assumes "msg \<noteq> \<epsilon>" 
+  and "ora \<noteq> \<epsilon>"
   shows "tsynMed\<cdot>(\<up>- \<bullet> msg)\<cdot>ora = \<up>- \<bullet> tsynMed\<cdot>msg\<cdot>ora"
   sorry
 
@@ -128,11 +129,12 @@ lemma tsynmed_tsyndom: "tsynDom\<cdot>(tsynMed\<cdot>msg\<cdot>ora) \<subseteq> 
       proof (cases rule: oracases [of ora])
         case bot
         then show ?thesis 
-          by (metis (mono_tags, hide_lams) inject_scons msg.IH sconc_fst_empty sconc_snd_empty 
-              tsynmed_sconc_null tsynmed_strict(2))
+            by (simp add: tsyndom_strict)
       next
         case (true as)
-        then show ?thesis 
+        then show ?thesis
+          apply (simp add: tsynmed_sconc_msg_t)
+(* 
           proof (cases rule: scases [of s])
             case bottom
             have tsynfilter_simp: "tsynFilter {x. snd x}\<cdot>(\<up>(Msg (m, True))) = (\<up>(Msg (m, True)))"
@@ -143,10 +145,11 @@ lemma tsynmed_tsyndom: "tsynDom\<cdot>(tsynMed\<cdot>msg\<cdot>ora) \<subseteq> 
           next
             case (scons a t)
             then show ?thesis 
-              by (metis (mono_tags, hide_lams) inject_scons msg.IH sconc_fst_empty sconc_snd_empty 
-                  tsynmed_sconc_null tsynmed_strict(2))
-          qed
-      next
+(*              by (metis (mono_tags, hide_lams) inject_scons msg.IH sconc_fst_empty sconc_snd_empty 
+                  tsynmed_sconc_null tsynmed_strict(2))*)
+          qed*)
+        sorry
+      next 
         case (false as)
         then show ?thesis
           proof (cases rule: scases [of s])
@@ -161,8 +164,9 @@ lemma tsynmed_tsyndom: "tsynDom\<cdot>(tsynMed\<cdot>msg\<cdot>ora) \<subseteq> 
           next
             case (scons a t)
             then show ?thesis
-              by (metis (mono_tags, hide_lams) inject_scons msg.IH sconc_fst_empty sconc_snd_empty 
-                  tsynmed_sconc_null tsynmed_strict(2))
+(*              by (metis (mono_tags, hide_lams) inject_scons msg.IH sconc_fst_empty sconc_snd_empty 
+                  tsynmed_sconc_null tsynmed_strict(2))*)
+            sorry
           qed
       qed
   next
@@ -171,15 +175,17 @@ lemma tsynmed_tsyndom: "tsynDom\<cdot>(tsynMed\<cdot>msg\<cdot>ora) \<subseteq> 
       proof (cases rule: scases [of s])
         case bottom
         then show ?thesis 
-          by (metis tsynmed_sconc_null tsynmed_strict(2) tsynmed_strict(3))
+(*          by (metis tsynmed_sconc_null tsynmed_strict(2) tsynmed_strict(3))*)
+        sorry
       next
         case (scons a s)
         then show ?thesis 
-        by (simp add: null.prems tsynmed_sconc_null)
+(*        by (simp add: null.prems tsynmed_sconc_null)*)
+        sorry
       qed
     then show ?case
       by (simp add: null.IH null.prems tsyndom_sconc_null)
-  qed
+  oops
 
 lemma tsynmed_tsynlen_ora: 
   assumes msg_inf: "tsynLen\<cdot>msg = \<infinity>"
@@ -213,13 +219,15 @@ lemma tsynmed_tsynlen_ora:
           next
             case (null as)
             then show ?thesis 
-              by (metis (no_types, lifting) assoc_sconc inject_scons sconc_snd_empty srcdupsimposs 
-                  tsynmed_sconc_null tsynmed_strict(2))
+(*              by (metis (no_types, lifting) assoc_sconc inject_scons sconc_snd_empty srcdupsimposs 
+                  tsynmed_sconc_null tsynmed_strict(2))*)
+            sorry
           qed
       next
         case (msg_f s)
         then show ?case
-          by (metis bot_is_0 lnat.con_rews slen_scons strict_slen tsynmed_sconc_null tsynmed_strict(2))
+(*          by (metis bot_is_0 lnat.con_rews slen_scons strict_slen tsynmed_sconc_null tsynmed_strict(2))*)
+        sorry
       oops
 
 text{* If infinitely many messages are sent, infinitely many messages will be transmitted. *}
