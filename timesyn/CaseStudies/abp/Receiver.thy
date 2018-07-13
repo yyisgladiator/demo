@@ -141,8 +141,10 @@ text {* @{term tsynRec} test on infinite stream. *}
 lemma tsynrec_test_infstream: 
   "tsynRec\<cdot>((<[Msg(1, False), null, Msg(2, True),Msg(1, False)]>)\<infinity>) 
      = (<[null, null, Msg 2, Msg 1]>)\<infinity>"
-  apply (simp add: tsynrec_insert)
-  oops
+  apply simp
+  apply (subst rek2sinftimes [of "tsynRec\<cdot>\<up>(\<M> (Suc (0::nat), False)) \<bullet> \<up>- \<bullet> \<up>(\<M> (2::nat, True)) \<bullet> \<up>(\<M> (Suc (0::nat), False))\<infinity>"])
+  apply (subst sinftimes_unfold)
+  by (simp_all add: tsynrec_insert)
 
 text{* The output bundle of @{term tsynbRec} is well-formed. *}
 lemma tsynbrec_ubwell [simp]:
