@@ -81,6 +81,7 @@ lemma tsynmed_sconc_null:
   shows "tsynMed\<cdot>(\<up>- \<bullet> msg)\<cdot>ora = \<up>- \<bullet> tsynMed\<cdot>msg\<cdot>ora"
   sorry
 
+(* singleton lemmata *)
 lemma tsynmed_sconc_singleton_msg_t: "tsynMed\<cdot>(\<up>(\<M> m))\<cdot>(\<up>True \<bullet> ora) = \<up>(\<M> m)"
   sorry
 
@@ -91,8 +92,6 @@ lemma tsynmed_sconc_singleton_msg_null: assumes "ora \<noteq> \<epsilon>" shows 
   sorry
 
 (* ToDo: general sconc lemma possible? *)
-
-(* ToDo: singleton lemma *)
 
 lemma tsynmed_slen: assumes "#ora=\<infinity>" shows "#(tsynMed\<cdot>msg\<cdot>ora) = #msg"
   by (simp add: assms tsynfilter_slen tsynmed_insert tsynprojfst_slen tsynzip_slen)
@@ -142,49 +141,34 @@ lemma tsynmed_tsyndom: "tsynDom\<cdot>(tsynMed\<cdot>msg\<cdot>ora) \<subseteq> 
     then show ?case
       by (metis tsyndom_sconc_null tsynmed_sconc_null tsynmed_strict(2))
   qed
-(*
+
+lemma tsynlen_sconc_fst_inf: "tsynLen\<cdot>x=\<infinity> \<Longrightarrow> x\<bullet>y = x"
+  sorry
+
+lemma tsynlen_inf_sconc: "tsynLen\<cdot>s = \<infinity> \<Longrightarrow> \<exists>a as. s = \<up>a \<bullet> as \<and> tsynLen\<cdot>as = \<infinity>"
+  sorry
+
 lemma tsynmed_tsynlen_ora: 
   assumes msg_inf: "tsynLen\<cdot>msg = \<infinity>"
   shows "tsynLen\<cdot>(tsynMed\<cdot>msg\<cdot>ora) = #({True} \<ominus> ora)"
   using assms
   proof (induction ora arbitrary: msg rule: ora_ind)
-        case adm
-        then show ?case 
-          by (simp add: adm_def contlub_cfun_arg contlub_cfun_fun)
-      next
-        case bot
-        then show ?case 
-          by simp
-      next
-        case (msg_t s)
-        then show ?case 
-          proof (cases rule: tsyn_cases_inf [of msg])
-            case inf
-            then show ?case
-              by (simp add: msg_t.prems)
-          next
-            case (msg a as)
-            have as_inf: "msg = \<up>(Msg a) \<bullet> as \<Longrightarrow> tsynLen\<cdot>as = \<infinity>"
-              by (metis fold_inf lnat.sel_rews(2) msg msg_t.prems tsynlen_sconc_msg)
-            have as_nbot: "msg = \<up>(Msg a) \<bullet> as \<Longrightarrow> as \<noteq> \<epsilon>"
-              by (simp add: as_inf tsynlen_inf_nbot)
-            have tsynmed_lnsuc: "as \<noteq> \<epsilon> \<Longrightarrow> tsynLen\<cdot>(tsynMed\<cdot>(\<up>(Msg a) \<bullet> as)\<cdot>(\<up>True \<bullet> s)) = lnsuc\<cdot>(tsynLen\<cdot>(tsynMed\<cdot>as\<cdot>s))"
-              by (simp add: tsynmed_sconc_msg_t tsynlen_sconc_msg)
-            then show ?thesis 
-              by (simp add: as_inf as_nbot msg msg_t.IH tsynmed_lnsuc)
-          next
-            case (null as)
-            then show ?thesis 
-              apply (simp add: null tsynmed_sconc_null tsynlen_sconc_null)
-              apply (rule_tac x="as" in tsyn_cases)
-            sorry
-          qed
-      next
-        case (msg_f s)
-        then show ?case
-(*          by (metis bot_is_0 lnat.con_rews slen_scons strict_slen tsynmed_sconc_null tsynmed_strict(2))*)
-        sorry
-      oops
+    case adm
+    then show ?case 
+      by (simp add: adm_def contlub_cfun_arg contlub_cfun_fun)
+  next
+    case bot
+    then show ?case 
+      by simp
+  next
+    case (msg_t s)
+    then show ?case
+    sorry
+  next
+    case (msg_f s)
+    then show ?case
+    sorry
+  oops
 
 text{* If infinitely many messages are sent, infinitely many messages will be transmitted. *}
 lemma tsynmed_tsynlen_inf:
@@ -193,7 +177,7 @@ lemma tsynmed_tsynlen_inf:
   shows "tsynLen\<cdot>(tsynMed\<cdot>msg\<cdot>ora) = \<infinity>"
   using assms
   (*by (simp add: tsynmed_tsynlen_ora)*)
-  sorry*)
+  sorry
 
 (* ToDo: Tests *)
 
