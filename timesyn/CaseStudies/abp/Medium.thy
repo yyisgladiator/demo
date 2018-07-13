@@ -142,10 +142,30 @@ lemma tsynmed_tsyndom: "tsynDom\<cdot>(tsynMed\<cdot>msg\<cdot>ora) \<subseteq> 
       by (metis tsyndom_sconc_null tsynmed_sconc_null tsynmed_strict(2))
   qed
 
-lemma tsynlen_sconc_fst_inf: "tsynLen\<cdot>x=\<infinity> \<Longrightarrow> x\<bullet>y = x"
-  sorry
+lemma tsynmed_tsynlen_ora_t:
+  assumes msg_inf: "tsynLen\<cdot>msg = \<infinity>"
+  shows "tsynLen\<cdot>(tsynMed\<cdot>(\<up>null \<bullet> msg)\<cdot>(\<up>True \<bullet> ora)) = #({True} \<ominus> (\<up>True \<bullet> ora))"
+  using assms
+  proof (induction msg arbitrary: ora rule: tsyn_ind)
+    case adm
+    then show ?case 
+      apply (rule admI)
+      apply (simp add: contlub_cfun_fun contlub_cfun_arg)
+sorry
+  next
+    case bot
+    then show ?case sorry
+  next
+    case (msg m s)
+    then show ?case sorry
+  next
+    case (null s)
+    then show ?case sorry
+  qed
 
-lemma tsynlen_inf_sconc: "tsynLen\<cdot>s = \<infinity> \<Longrightarrow> \<exists>a as. s = \<up>a \<bullet> as \<and> tsynLen\<cdot>as = \<infinity>"
+lemma tsynmed_tsynlen_ora_f: 
+  assumes msg_inf: "tsynLen\<cdot>msg = \<infinity>"
+  shows "tsynLen\<cdot>(tsynMed\<cdot>(\<up>null \<bullet> msg)\<cdot>(\<up>False \<bullet> ora)) = #({True} \<ominus> (\<up>False \<bullet> ora))"
   sorry
 
 lemma tsynmed_tsynlen_ora: 
@@ -163,11 +183,35 @@ lemma tsynmed_tsynlen_ora:
   next
     case (msg_t s)
     then show ?case
-    sorry
+       proof (cases rule: tsyn_cases_inf [of msg])
+        case inf
+        then show ?case
+          by (simp add: msg_t.prems)
+      next
+        case (msg a as)
+        then show ?thesis
+          by (metis msg_t.prems tsynlen_sconc_null tsynmed_sconc_null tsynmed_strict(2) tsynmed_tsynlen_ora_t)
+      next
+        case (null as)
+        then show ?thesis 
+          by (metis msg_t.prems tsynlen_sconc_null tsynmed_tsynlen_ora_t)
+      qed
   next
     case (msg_f s)
     then show ?case
-    sorry
+      proof (cases rule: tsyn_cases_inf [of msg])
+        case inf
+        then show ?case
+          by (simp add: msg_f.prems)
+      next
+        case (msg a as)
+        then show ?thesis
+          by (metis msg_f.prems tsynlen_sconc_null tsynmed_sconc_null tsynmed_strict(2) tsynmed_tsynlen_ora_f)
+      next
+        case (null as)
+        then show ?thesis 
+          by (metis msg_f.prems tsynlen_sconc_null tsynmed_tsynlen_ora_f)
+      qed
   oops
 
 text{* If infinitely many messages are sent, infinitely many messages will be transmitted. *}
