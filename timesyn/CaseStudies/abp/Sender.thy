@@ -638,8 +638,6 @@ lemma senderautomaton_h_step_st_i_false_non_empty:
 
 
 
-
-
 (* h_step lemma for -- state:Sf   input:(a, False)   buffer:empty *)
 lemma senderautomaton_h_step_sf_i_false_empty:
   assumes "ubDom\<cdot>sb = {\<C> ''i'', \<C> ''as''}"
@@ -650,6 +648,7 @@ lemma senderautomaton_h_step_sf_i_false_empty:
          tsynbnotnulli_tsynbnotnullas_ubclunion_ubdom)
   using assms senderautomaton_h_step_ubdom_out_not_null by auto
 
+
 (* h_step lemma for -- state:Sf   input:(a, False)   buffer:one element *)
 lemma senderautomaton_h_step_sf_i_false_one_element:
   assumes "ubDom\<cdot>sb = {\<C> ''i'', \<C> ''as''}"
@@ -659,6 +658,7 @@ lemma senderautomaton_h_step_sf_i_false_one_element:
          daNextOutput_def daNextState_def daTransition_def usclConc_stream_def
          tsynbnotnulli_tsynbnotnullas_ubclunion_ubdom)
   using assms senderautomaton_h_step_ubdom_out_not_null by auto
+
 
 (* h_step lemma for -- state:Sf   input:(a, False)   buffer:more than one element *)
 lemma senderautomaton_h_step_sf_i_false_more_than_one_element:
@@ -672,6 +672,7 @@ lemma senderautomaton_h_step_sf_i_false_more_than_one_element:
          tsynbnotnulli_tsynbnotnullas_ubclunion_ubdom)
   using assms senderautomaton_h_step_ubdom_out_not_null by auto
 
+
 (* h_step lemma for -- state:Sf   input:(a, True)   buffer:empty *)
 lemma senderautomaton_h_step_sf_i_true_empty:
   assumes "ubDom\<cdot>sb = {\<C> ''i'', \<C> ''as''}"
@@ -681,6 +682,7 @@ lemma senderautomaton_h_step_sf_i_true_empty:
          daNextOutput_def daNextState_def daTransition_def usclConc_stream_def
          tsynbnotnulli_tsynbnotnullas_ubclunion_ubdom)
   using assms senderautomaton_h_step_ubdom_out_not_null by auto
+
 
 (* h_step lemma for -- state:Sf   input:(a, True)   buffer:non-empty *)
 lemma senderautomaton_h_step_sf_i_true_non_empty:
