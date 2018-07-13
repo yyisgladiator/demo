@@ -36,9 +36,12 @@ definition ufLeast :: "channel set \<Rightarrow> channel set \<Rightarrow> 'in u
 "ufLeast cin cout = Abs_ufun (\<Lambda>  sb.  (ubclDom\<cdot>sb = cin) \<leadsto> ubclLeast cout)"  
 
 definition ufRestrict :: "channel set \<Rightarrow> channel set \<Rightarrow> 'm ufun \<rightarrow> 'm ufun" where
-  "ufRestrict In Out \<equiv> (\<Lambda> f. if (ufDom\<cdot>f = In \<and> ufRan\<cdot>f = Out) then f else (ufLeast In Out))"
+"ufRestrict In Out \<equiv> (\<Lambda> f. if (ufDom\<cdot>f = In \<and> ufRan\<cdot>f = Out) then f else (ufLeast In Out))"
 
-  
+definition ufHide :: "'m ufun \<Rightarrow> channel set \<Rightarrow> 'm ufun" (infixl "\<h>" 100) where
+"ufHide f cs \<equiv> Abs_cufun (\<lambda>x. (ubclDom\<cdot>x = ufDom\<cdot>f ) \<leadsto> ((f\<rightleftharpoons>x) \<bar> (ufRan\<cdot>f - cs)))"
+
+
 subsection\<open>channel sets\<close>
 
   
@@ -133,7 +136,28 @@ in Abs_ufun (Abs_cfun (\<lambda> sb. (ubclDom\<cdot>sb = I) \<leadsto>
 section\<open>Lemmas\<close>
 (****************************************************)  
 
-  
+
+subsection \<open>ufHide\<close>
+
+
+lemma ufhide_cont: "cont (\<lambda>x. (ubclDom\<cdot>x = ufDom\<cdot>f ) \<leadsto> ((f\<rightleftharpoons>x) \<bar> (ufRan\<cdot>f - cs)))"
+  by (simp add: cont_compose)
+
+lemma ufhide_well: "ufWell (\<Lambda> x. (ubclDom\<cdot>x = ufDom\<cdot>f ) \<leadsto> ((f\<rightleftharpoons>x) \<bar> (ufRan\<cdot>f - cs)))"
+  apply(simp add: ufWell_def ufhide_cont)
+  apply rule
+   apply(rule_tac x="ufDom\<cdot>f" in exI)
+   apply (simp add: domIff)
+  apply(rule_tac x="ufRan\<cdot>f - cs" in exI)
+  by (smt Int_Diff option.distinct(1) option.sel ran2exists ubclrestrict_dom_id ubclrestrict_ubcldom ufran_2_ubcldom2)
+
+lemma ufhide_dom: "ufDom\<cdot>(f \<h> cs) = ufDom\<cdot>f"
+  by (smt Abs_cfun_inverse2 domIff rep_abs_cufun2 ubcldom_least_cs ufHide_def ufhide_cont ufhide_well ufun_least_in_dom)
+
+lemma ufhide_ran: "ufRan\<cdot>(f \<h> cs) = ufRan\<cdot>f - cs"
+  by (smt Abs_cfun_inverse2 Int_Diff inf.idem option.sel rep_abs_cufun2 ubcldom_least_cs ubclrestrict_ubcldom ufHide_def ufhide_cont ufhide_dom ufhide_well ufran_least)
+
+
 subsection \<open>ubclLeast\<close>
 
   
@@ -1258,6 +1282,7 @@ lemma ufFeedbackComp_ran: "ufRan\<cdot>(ufFeedbackComp f) = ufRan\<cdot>f"
 
 subsection \<open>Equality\<close>
 
+subsubsection \<open>ufSerComp\<close>
 (* ufcomp ufsercomp  *)
 
 lemma ufcomph_insert: "ufCompH f1 f2 x\<cdot>z = ((f1\<rightleftharpoons>((x \<uplus> z)  \<bar> ufDom\<cdot>f1)) \<uplus>  (f2\<rightleftharpoons>((x \<uplus> z)  \<bar> ufDom\<cdot>f2)))"
@@ -1359,8 +1384,62 @@ proof -
       using f1 by auto
 qed
 
+lemma uf_eq: assumes "\<And>b. Rep_cufun f1 b = Rep_cufun f2 b"
+  shows "f1 = f2"
+  using assms
+  using Rep_ufun_inject cfun_eqI by blast
+
+lemma ufcomp_serial_eq: assumes "sercomp_well f1 f2"
+                            and "(ufDom\<cdot>f1 \<inter> ufRan\<cdot>f2 = {})"
+                          shows "ufHide (ufComp f1 f2) (ufRan\<cdot>f1) = (ufSerComp f1 f2)"  
+proof - 
+  have f1: "cont (\<lambda>x::'a. (ubclDom\<cdot>x = ufDom\<cdot>f1)\<leadsto>(f1 \<rightleftharpoons> x\<bar>ufDom\<cdot>f1) \<uplus> (f2 \<rightleftharpoons> (f1 \<rightleftharpoons> x\<bar>ufDom\<cdot>f1)))"
+  proof -
+    have "cont (\<lambda>x. (f1 \<rightleftharpoons> x\<bar>ufDom\<cdot>f1))"
+      using cont_compose by force
+    moreover have "cont (\<lambda>x. (f2 \<rightleftharpoons> (f1 \<rightleftharpoons> x\<bar>ufDom\<cdot>f1)))"
+      by (metis cont_Rep_cfun2 cont_compose op_the_cont)
+    ultimately have "cont (\<lambda>x. (f1 \<rightleftharpoons> x\<bar>ufDom\<cdot>f1) \<uplus> (f2 \<rightleftharpoons> (f1 \<rightleftharpoons> x\<bar>ufDom\<cdot>f1)))"
+      by simp
+    then show ?thesis
+      using if_then_cont by blast
+  qed
+  have f2: "ufWell (\<Lambda> x. (ubclDom\<cdot>x = ufDom\<cdot>f1)\<leadsto>(f1 \<rightleftharpoons> x\<bar>ufDom\<cdot>f1) \<uplus> (f2 \<rightleftharpoons> (f1 \<rightleftharpoons> x\<bar>ufDom\<cdot>f1)))" 
+    apply(simp add: ufWell_def f1)
+    apply rule
+     apply(rule_tac x="ufDom\<cdot>f1" in exI)
+    apply (simp add: domIff2)
+    apply(rule_tac x="ufRan\<cdot>f1 \<union> ufRan\<cdot>f2" in exI)
+    by (smt Diff_eq_empty_iff Un_Diff Un_Diff_Int assms(1) assms(2) option.distinct(1) option.sel ran2exists sercomp_dom_f1 sercomp_dom_f12 sup_ge1 ubclunion_ubcldom ufCompI_def ufran_2_ubcldom2)
+
+  have f3: "cont (\<lambda>x::'a. (ubclDom\<cdot>x = ufDom\<cdot>f1)\<leadsto>f2 \<rightleftharpoons> (f1 \<rightleftharpoons> x))"
+    by (simp add: ufSerComp_cont)
+  have f4: "ufWell (\<Lambda> x. (ubclDom\<cdot>x = ufDom\<cdot>f1)\<leadsto>f2 \<rightleftharpoons> (f1 \<rightleftharpoons> x))"
+    using assms(1) ufSerComp_well by blast
+
+  have f5: "ufRan\<cdot>(Abs_cufun (\<lambda>x::'a. (ubclDom\<cdot>x = ufDom\<cdot>f1)\<leadsto>(f1 \<rightleftharpoons> x\<bar>ufDom\<cdot>f1) \<uplus> (f2 \<rightleftharpoons> (f1 \<rightleftharpoons> x\<bar>ufDom\<cdot>f1)))) = ufRan\<cdot>f1 \<union> ufRan\<cdot>f2"
+    by (smt UFun_Comp.ufran_least assms(1) domIff f1 f2 option.sel rep_abs_cufun ubclrestrict_dom_idI ubclunion_ubcldom ufran_2_ubcldom2 ufunLeastIDom)
   
+  show ?thesis
+    apply(subst (4) uf_eq, simp_all)
+    apply(simp only: ufComp_def ufSerComp_def ubFix_def)
+    apply(simp add: )
+    apply(subst ufcomp_serial_iterconst_eq)
+    using assms(1) apply blast
+    using assms(2) apply auto[1]
+    apply(subst uf_eq, simp_all)
+     apply(simp add: ufHide_def ufhide_cont ufhide_well f1 f2 f3 f4)
+    apply(case_tac "ubclDom\<cdot>b = ufDom\<cdot>f1")
+     defer
+    apply (simp add: f1 f2 ufun_ufdom_abs)
+    apply (simp add: f5)
+    by (smt Diff_disjoint Un_Diff Un_Diff_Int Un_commute assms(1) domIff f1 f2 inf_sup_absorb inf_sup_aci(1) rep_abs_cufun ubclrestrict_dom_idI ubclunion_restrict2 ufdom_2ufundom ufran_2_ubcldom2 ufunLeastIDom)
+qed
+
+
+subsubsection \<open>ufParComp\<close>
 (* ufcomp ufparcomp  *)
+
 
 (*  *)
 lemma ufComp_parallel :assumes "(ufCompL f1 f2 = {}) \<and> (ufRan\<cdot>f1 \<inter> ufRan\<cdot>f2 = {})"
