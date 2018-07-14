@@ -301,11 +301,7 @@ lemma recspf_strict: "RecSPF \<rightleftharpoons> ubLeast{\<C> ''dr''} = ubLeast
           by (metis singletonI ubLeast_def ubleast_ubgetch)
         hence recspf_is_strict: "RecSPF \<rightleftharpoons> (Abs_ubundle (\<lambda>c. (c \<in> {\<C> ''dr''}) \<leadsto> \<epsilon>)) 
                                    = Abs_ubundle [\<C> ''ar'' \<mapsto> \<epsilon>, \<C> ''o'' \<mapsto> \<epsilon>]"
-          by (metis ar_is_strict eval_recspf o_is_strict)
-        have h1: "Abs_ubundle [\<C> ''ar'' \<mapsto>  \<epsilon>] = Abs_ubundle (\<lambda>c. (c = \<C> ''ar'') \<leadsto> \<epsilon>)"
-          by (metis (no_types, lifting) fun_upd_apply)
-        have h2: "Abs_ubundle [\<C> ''o'' \<mapsto>  \<epsilon>] = Abs_ubundle (\<lambda>c. (c = \<C> ''o'') \<leadsto> \<epsilon>)"
-          by (metis (no_types, lifting) fun_upd_apply)
+          by (metis ar_is_strict eval_recspf o_is_strict)       
         have "Abs_ubundle [\<C> ''ar'' \<mapsto>  \<epsilon>, \<C> ''o'' \<mapsto>  \<epsilon>] =
                 Abs_ubundle (\<lambda>c. (c = \<C> ''ar'' \<or> c = \<C> ''o'') \<leadsto> \<epsilon>)"
           by (metis (no_types, lifting) fun_upd_apply)
@@ -569,7 +565,8 @@ lemma receiverspf_ufdom: "ufDom\<cdot>ReceiverSPF = {\<C> ''dr''}"
   using ReceiverAutomaton.abs_eq ReceiverAutomaton.rep_eq by auto
 
 lemma receiverspf_ufran: "ufRan\<cdot>ReceiverSPF = {\<C> ''ar'', \<C> ''o''}"
-  sorry
+  apply (simp add: ReceiverSPF_def da_H_def ReceiverAutomaton_def daRan_def)
+  using ReceiverAutomaton.abs_eq ReceiverAutomaton.rep_eq by auto
 
 lemma receiverspf_ubdom:
   assumes "ubDom\<cdot>sb = ufDom\<cdot>ReceiverSPF"
