@@ -230,10 +230,59 @@ lemma spfConcIn_ran [simp]:"ufRan\<cdot>(spfConcIn sb \<cdot>spf) = ufRan\<cdot>
    apply (metis ubclDom_ubundle_def ubconceq_dom)
   by blast
 
-lemma spfConcIn_weak_ublen_strong[simp]:
-  assumes "ufIsWeak spf" and "ubLen sb = lnsuc\<cdot>0"
-  shows "ufIsStrong (spfConcIn sb\<cdot>spf)"
+lemma ubDom_subseteq [simp]:
+  assumes "ubDom\<cdot>sb \<subseteq> ufDom\<cdot>spf"
+  shows "sb \<in> dom (Rep_cfun (Rep_ufun spf))"
   sorry
+
+lemma spfConcIn_weak_ublen_strong[simp]:
+  assumes "ufIsWeak spf" and "ubLen sb = lnsuc\<cdot>0" and "ubDom\<cdot>sb \<subseteq> ufDom\<cdot>spf"
+  shows "ufIsStrong (spfConcIn sb\<cdot>spf)"
+  apply (simp add: ufIsStrong_def)
+  apply rule
+  proof -
+    fix b::"'a stream\<^sup>\<Omega>"
+    have h11: "sb \<in> dom (Rep_cfun (Rep_ufun spf))"
+      by (simp add: assms(3))
+    have h22: "ubclDom\<cdot>sb = ubclDom\<cdot>b"
+      by (metis (mono_tags, hide_lams) all_not_in_conv rep_ufun_well subsetI ubDom_subseteq ubcldom_least_cs ufRestrict_dom ufWell_def ufunLeastIDom)
+    have h1: "ssb \<in> dom (Rep_cfun (Rep_ufun spf)) \<Longrightarrow> ubclLen ssb \<le> ubclLen (spf \<rightleftharpoons> ssb)"
+      using h11 assms(1) ufIsWeak_def by auto
+    have h2: "b \<in> dom (Rep_cfun (Rep_ufun (spfConcIn sb\<cdot>spf)))"
+      by (metis h11 h22 spfConcIn_dom ufdom_2_dom_ctufun ufun_ufundom2dom)
+    have h3: "ubclLen b \<le> ubclLen(ubConcEq sb\<cdot>b)"
+      by (metis sbConcEq_Len2 ubclLen_ubundle_def)
+    have h4: "lnsuc\<cdot>(ubclLen b) \<le> ubclLen(ubConcEq sb\<cdot>b)"
+      proof -
+        have f1: "\<exists>c \<in> ubDom\<cdot>sb.(usclLen\<cdot>(sb . c)) = lnsuc\<cdot>0"
+          by (metis (no_types, lifting) Inf'_neq_0 assms(2) fold_inf inject_lnsuc ubLen_def ublen_min_on_channel)
+        have f2: "\<exists>c \<in> ubDom\<cdot>b.(usclLen\<cdot>(b . c)) = ubclLen b"
+          by (smt Inf'_neq_0 assms(2) fold_inf h22 lnat.sel_rews(2) ubLen_def ubclDom_ubundle_def ubclLen_ubundle_def ublen_min_on_channel)
+        have f3: "\<forall>c \<in> ubDom\<cdot>b. lnsuc\<cdot>(usclLen\<cdot>(b . c)) \<le> (usclLen\<cdot>(ubConcEq sb\<cdot>b . c))"
+          apply rule
+          by (metis (mono_tags) domIff empty_iff h2 not_None_eq subsetI ubDom_subseteq ubclDom_ubundle_def ubcldom_least_cs ufdom_2ufundom)
+        have f4: "\<exists>c \<in> ubDom\<cdot>b.(usclLen\<cdot>(ubConcEq sb\<cdot>b . c)) = ubclLen (ubConcEq sb\<cdot>b)"
+          by (metis (no_types, lifting) Inf'_neq_0 h22 assms(2) fold_inf inject_lnsuc ubLen_def ubclDom_ubundle_def ubclLen_ubundle_def ubconceq_dom ublen_min_on_channel)
+        have f5: "\<exists>c \<in> ubDom\<cdot>b. lnsuc\<cdot>(usclLen\<cdot>(b . c)) = ubclLen (ubConcEq sb\<cdot>b)"
+          by (metis (no_types, hide_lams) empty_subsetI f2 fold_inf h11 h22 rep_ufun_well ubDom_subseteq ubLen_def ubclDom_ubundle_def ubclLen_ubundle_def ubconceq_dom ubundle_ex ufWell_def)
+        have f6: "\<exists>c \<in> ubDom\<cdot>b. lnsuc\<cdot>(usclLen\<cdot>(b . c)) = lnsuc\<cdot>(ubclLen b)"
+          using f2 by auto
+        show ?thesis
+          apply (simp add: ubclLen_ubundle_def)
+          by (metis (mono_tags, hide_lams) all_not_in_conv dual_order.antisym empty_subsetI f2 rep_ufun_well ubDom_subseteq ubcldom_least_cs ubrestrict_ubdom ufRestrict_dom ufWell_def ufunLeastIDom)
+
+      qed
+    have equal: "spf \<rightleftharpoons> ubConcEq sb\<cdot>b = (spfConcIn sb\<cdot>spf) \<rightleftharpoons> b"
+      by (metis (no_types, lifting) h11 h22 domIff spfConcIn_def ubclDom_ubundle_def ubconceq_dom ufapplyin_apply ufapplyin_eq_pre ufun_ufundom2dom)
+    have equal2: "ubclLen (spfConcIn sb\<cdot>spf \<rightleftharpoons> b) = ubclLen (spf \<rightleftharpoons> ubConcEq sb\<cdot>b)"
+      using local.equal by auto
+    have h10: "lnsuc\<cdot>(ubclLen b) \<le> ubclLen (spf \<rightleftharpoons> ubConcEq sb\<cdot>b)"
+      by (metis (no_types, lifting) h11 h22 assms(1) dual_order.trans h4 ubclDom_ubundle_def ubconceq_dom ufIsWeak_def ufun_ufundom2dom)
+    show "lnsuc\<cdot>(ubclLen b) \<le> ubclLen (spfConcIn sb\<cdot>spf \<rightleftharpoons> b)"
+      sorry
+    
+    
+  qed
 
 subsection \<open>spfRtOut lemma\<close>
 
@@ -297,6 +346,13 @@ lemma spfconc_surj:
 lemma spfConcOut_weak_ublen_strong[simp]:
   assumes "ufIsWeak spf" and "ubLen sb = lnsuc\<cdot>0"
   shows "ufIsStrong (spfConcOut sb\<cdot>spf)"
+  apply (simp add: ufIsStrong_def)
+  proof -
+    have dom_equal: "sb \<in> dom (Rep_cfun (Rep_ufun spf)) \<Longrightarrow> lnsuc\<cdot>0 \<le> ubclLen(spf \<rightleftharpoons> sb)"
+      by (metis assms(1) assms(2) ubclLen_ubundle_def ufIsWeak_def)
+    have h1: "\<forall>b. (b \<in> dom (Rep_cfun (Rep_ufun (spfConcOut sb\<cdot>spf))) \<longrightarrow> lnsuc\<cdot>0 \<le> ubclLen(spfConcOut sb\<cdot>spf \<rightleftharpoons> b))"
+     
+  qed
   sorry
 
 

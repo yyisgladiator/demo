@@ -545,6 +545,133 @@ lemma sbrt_conc_hd[simp]: "sbRt\<cdot>(ubConc (sbHd\<cdot>sb)\<cdot>sb) = sb"
 lemma sbRt_surj: "surj (Rep_cfun sbRt)"
   by (metis sbrt_conc_hd surj_def)
 
+(* ----------------------------------------------------------------------- *)
+  subsection \<open>sbLen\<close>
+(* ----------------------------------------------------------------------- *)
+
+lemma sbLen_empty_bundle [simp]: assumes "ubclLen sb = 0"
+  shows "\<exists>c\<in>ubclDom\<cdot>sb. (sb . c) = \<epsilon>"
+  apply (simp add: ubclDom_ubundle_def ubclLen_ubundle_def)
+  proof -
+    have dom_not_empty: "ubDom\<cdot>sb \<noteq> {}"
+      using assms
+      apply (simp add: ubclDom_ubundle_def ubclLen_ubundle_def)
+      apply (simp add: ubLen_def)
+      by auto
+    have empty_sb_equal_zero: "\<exists>c::channel\<in>ubDom\<cdot>sb. (usclLen\<cdot>(sb . c) = 0)"
+      by (metis (no_types, lifting) assms dom_not_empty ubLen_def ubclLen_ubundle_def ublen_min_on_channel)
+    show "\<exists>c::channel\<in>ubDom\<cdot>sb. (sb  .  c) = \<epsilon>"
+      using assms
+      apply (simp add: ubclDom_ubundle_def ubclLen_ubundle_def)
+      by (metis empty_sb_equal_zero slen_empty_eq usclLen_stream_def)
+  qed
+
+lemma sbConcEq_Len1 [simp]: assumes "ubDom\<cdot>b1 = ubDom\<cdot>b2"
+  shows "ubLen(b1 :: 'a stream ubundle) \<le> ubLen(ubConcEq b1\<cdot>b2)"
+  proof - 
+    have dom_empty: "ubDom\<cdot>b2 = {} \<Longrightarrow> ubLen b1 \<le> ubLen(ubConcEq b1\<cdot>b2)"
+      by (simp add: ubLen_geI)
+    have dom_not_empty: "ubDom\<cdot>b2 \<noteq> {} \<Longrightarrow> ubLen b1 \<le> ubLen(ubConcEq b1\<cdot>b2)"
+      proof -
+        assume a1: "ubDom\<cdot>b2 \<noteq> {}"
+        have h1: "ubDom\<cdot>b1 \<noteq> {}"
+          by (simp add: a1 assms)
+        have h2: "\<And>c::channel. c \<in> ubDom\<cdot>b2 \<Longrightarrow> c \<in> ubDom\<cdot>b1 \<Longrightarrow> #(b1  .  c) \<le> #((ubUp\<cdot>b1  .  c) \<bullet> ubUp\<cdot>b2  .  c)"
+          apply (case_tac "#(b2  .  c) = \<infinity>")
+          apply (simp add: slen_sconc_snd_inf)
+          apply (case_tac "#(b1  .  c) = \<infinity>")
+          apply simp
+          apply(simp add: ubup_insert ubconc_insert ubgetch_insert)
+          proof - 
+            fix c
+            assume a1: "c \<in> ubDom\<cdot>b2"
+            assume a2: "c \<in> ubDom\<cdot>b1"
+            assume a3: "#Rep_ubundle b2\<rightharpoonup>c \<noteq> \<infinity>"
+            assume a4: "#Rep_ubundle b1\<rightharpoonup>c \<noteq> \<infinity>"
+            obtain k1 where k1_def: "#Rep_ubundle b1\<rightharpoonup>c = Fin k1"
+              by (metis a4 lncases)
+            obtain k2 where k2_def: "#Rep_ubundle b2\<rightharpoonup>c = Fin k2"
+              by (metis a3 lncases)
+            show "#Rep_ubundle b1\<rightharpoonup>c \<le> #(Rep_ubundle b1\<rightharpoonup>c \<bullet> Rep_ubundle b2\<rightharpoonup>c)"
+              using k1_def k2_def
+              by (simp add: slen_sconc_all_finite)
+          qed
+        have h3: "\<forall>c\<in>ubDom\<cdot>b1. ubLen b1 \<le> usclLen\<cdot>(usclConc(ubUp\<cdot>b1  .  c)\<cdot>(ubUp\<cdot>b2  .  c)) "
+          apply (simp add: ubLen_def)
+          by (metis (mono_tags, lifting) Least_le h1 assms dual_order.trans h2 ubup_ubgetch usclConc_stream_def usclLen_stream_def)
+        have h4: "\<exists>c\<in>ubDom\<cdot>b1. usclLen\<cdot>(usclConc(ubUp\<cdot>b1  .  c)\<cdot>(ubUp\<cdot>b2  .  c)) = ubLen(ubConcEq b1\<cdot>b2)"
+          by (metis (no_types, lifting) Un_absorb Un_upper2 a1 assms ubLen_def ubconc_dom ubconc_getch ubconceq_dom ubconceq_insert ublen_min_on_channel ubrestrict_id)
+        show ?thesis
+          using h3 h4 by auto          
+      qed
+    then show ?thesis
+      using dom_empty by blast
+  qed
+
+lemma sbConcEq_Len2 [simp]: "ubLen(b2 :: 'a stream ubundle) \<le> ubLen(ubConcEq b1\<cdot>b2)"
+  proof -
+    have dom_empty: "ubDom\<cdot>b2 = {} \<Longrightarrow> ubLen b2 \<le> ubLen(ubConcEq b1\<cdot>b2)"
+      by (simp add: ubLen_def)
+    have dom_not_empty1: "ubDom\<cdot>b2 \<noteq> {} \<Longrightarrow> ubDom\<cdot>b1 = {} \<Longrightarrow> ubLen b2 \<le> ubLen(ubConcEq b1\<cdot>b2)"
+      proof -
+        assume a1: "ubDom\<cdot>b2 \<noteq> {}"
+        assume a2: "ubDom\<cdot>b1 = {}"
+        have h1: "(ubDom\<cdot>b1 \<union> ubDom\<cdot>b2) = ubDom\<cdot>b2"
+          using a2 by auto
+        have h21: "\<forall>c. Some (usclConc (ubUp\<cdot>b1 . c)\<cdot>(ubUp\<cdot>b2 . c)) = Some (ubUp\<cdot>b2 . c)"
+          by (simp add: a2 usclConc_stream_def)
+        have h2: "b2 = ubConc b1\<cdot>b2"
+          by (metis (no_types, lifting) h1 h21 option.inject ubconc_dom ubconc_getch ubgetchI ubup_ubgetch)
+        have h3: "b2 = ubConcEq b1\<cdot>b2"
+          using h2 by auto
+        show ?thesis
+          using h3 by auto
+      qed
+    have dom_not_empty2: "ubDom\<cdot>b2 \<noteq> {} \<Longrightarrow> ubDom\<cdot>b1 \<noteq> {} \<Longrightarrow> ubLen b2 \<le> ubLen(ubConcEq b1\<cdot>b2)"
+      proof -
+        assume a1: "ubDom\<cdot>b2 \<noteq> {}"
+        assume a2: "ubDom\<cdot>b1 \<noteq> {}"
+        have h1: "(ubDom\<cdot>b1 \<union> ubDom\<cdot>b2) \<inter> ubDom\<cdot>b2 = ubDom\<cdot>b2"
+          using a1 by blast
+        have h21: "\<And>c::channel. c \<in> ubDom\<cdot>b2 \<Longrightarrow> c \<in> ubDom\<cdot>b1 \<Longrightarrow> #(b2  .  c) \<le> #((ubUp\<cdot>b1  .  c) \<bullet> ubUp\<cdot>b2  .  c)"
+          apply (case_tac "#(b2  .  c) = \<infinity>")
+          apply (simp add: slen_sconc_snd_inf)
+          apply (case_tac "#(b1  .  c) = \<infinity>")
+          apply simp
+          apply(simp add: ubup_insert ubconc_insert ubgetch_insert)
+          proof - 
+            fix c
+            assume a1: "c \<in> ubDom\<cdot>b2"
+            assume a2: "c \<in> ubDom\<cdot>b1"
+            assume a3: "#Rep_ubundle b2\<rightharpoonup>c \<noteq> \<infinity>"
+            assume a4: "#Rep_ubundle b1\<rightharpoonup>c \<noteq> \<infinity>"
+            obtain k1 where k1_def: "#Rep_ubundle b1\<rightharpoonup>c = Fin k1"
+              by (metis a4 lncases)
+            obtain k2 where k2_def: "#Rep_ubundle b2\<rightharpoonup>c = Fin k2"
+              by (metis a3 lncases)
+            show "#Rep_ubundle b2\<rightharpoonup>c \<le> #(Rep_ubundle b1\<rightharpoonup>c \<bullet> Rep_ubundle b2\<rightharpoonup>c)"
+              using k1_def k2_def
+              by (simp add: slen_sconc_all_finite)
+          qed
+        have h2: "\<forall>c\<in>ubDom\<cdot>b2. usclLen\<cdot>(b2 . c) \<le> usclLen\<cdot>(usclConc(ubUp\<cdot>b1  .  c)\<cdot>(ubUp\<cdot>b2  .  c))"
+          apply (simp only: usclConc_stream_def usclLen_stream_def)
+          apply rule
+          apply (case_tac "c\<in>ubDom\<cdot>b1")
+          using h21 apply blast
+          by simp
+        have h3: "\<forall>c\<in>ubDom\<cdot>b2. (LEAST ln. ln\<in>{(usclLen\<cdot>(b2. c)) | c. c \<in> ubDom\<cdot>b2}) \<le> usclLen\<cdot>(usclConc(ubUp\<cdot>b1  .  c)\<cdot>(ubUp\<cdot>b2  .  c))"
+          by (metis (mono_tags, lifting) Least_le dual_order.trans h2 mem_Collect_eq)         
+        have h4: "\<forall>c\<in>ubDom\<cdot>b2. ubLen b2 \<le> usclLen\<cdot>(usclConc(ubUp\<cdot>b1  .  c)\<cdot>(ubUp\<cdot>b2  .  c)) "
+          apply (simp add: ubLen_def)
+          using h3 by auto          
+        have h5: "\<exists>c\<in>ubDom\<cdot>b2. usclLen\<cdot>(usclConc(ubUp\<cdot>b1  .  c)\<cdot>(ubUp\<cdot>b2  .  c)) = ubLen(ubConcEq b1\<cdot>b2)"
+          by (metis (no_types, lifting) IntE a1 h1 ubLen_def ubconc_getch ubconceq_dom ubconceq_insert ubgetch_ubrestrict ublen_min_on_channel)
+        show ?thesis
+          using h4 h5 by auto
+      qed
+    then show ?thesis
+      using dom_empty dom_not_empty1 by blast
+  qed
 
 (* ----------------------------------------------------------------------- *)
   subsection \<open>snNtimes\<close>
