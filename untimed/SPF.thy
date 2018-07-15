@@ -230,26 +230,95 @@ lemma spfConcIn_ran [simp]:"ufRan\<cdot>(spfConcIn sb \<cdot>spf) = ufRan\<cdot>
    apply (metis ubclDom_ubundle_def ubconceq_dom)
   by blast
 
-lemma ubDom_subseteq [simp]:
-  assumes "ubDom\<cdot>sb \<subseteq> ufDom\<cdot>spf"
-  shows "sb \<in> dom (Rep_cfun (Rep_ufun spf))"
-  sorry
-
 lemma spfConcIn_weak_ublen_strong[simp]:
-  assumes "ufIsWeak spf" and "ubLen sb = lnsuc\<cdot>0" and "ubDom\<cdot>sb \<subseteq> ufDom\<cdot>spf"
+  assumes "ufIsWeak spf" and "ubLen sb = lnsuc\<cdot>0" and "ufDom\<cdot>spf \<subseteq> ubDom\<cdot>sb"
   shows "ufIsStrong (spfConcIn sb\<cdot>spf)"
   apply (simp add: ufIsStrong_def)
-  apply rule
+  apply rule+
   proof -
     fix b::"'a stream\<^sup>\<Omega>"
-    have h11: "sb \<in> dom (Rep_cfun (Rep_ufun spf))"
-      by (simp add: assms(3))
-    have h22: "ubclDom\<cdot>sb = ubclDom\<cdot>b"
-      by (metis (mono_tags, hide_lams) all_not_in_conv rep_ufun_well subsetI ubDom_subseteq ubcldom_least_cs ufRestrict_dom ufWell_def ufunLeastIDom)
-    have h1: "ssb \<in> dom (Rep_cfun (Rep_ufun spf)) \<Longrightarrow> ubclLen ssb \<le> ubclLen (spf \<rightleftharpoons> ssb)"
-      using h11 assms(1) ufIsWeak_def by auto
+    assume a1: " b \<in> dom (Rep_cufun (spfConcIn sb\<cdot>spf))"
+    have dom_empty: "ubclDom\<cdot>b = {} \<Longrightarrow> ufDom\<cdot>spf = {} \<Longrightarrow> lnsuc\<cdot>(ubclLen b) \<le> ubclLen (spfConcIn sb\<cdot>spf \<rightleftharpoons> b)"
+      by (smt a1 assms(1) assms(3) inf.absorb_iff2 inf_ub lnat_po_eq_conv spfConcIn_def spfConcIn_dom ubLen_def ubclDom_ubundle_def ubclLen_ubundle_def ubconceq_dom ubconceq_insert ubrestrict_id ubrestrict_ubleast2 ufIsWeak_def ufapplyin_apply ufdom_2_dom_ctufun)
+    have dom_not_empty: "ubclDom\<cdot>b \<noteq> {} \<Longrightarrow> ufDom\<cdot>spf \<noteq> {} "
+      using a1 ufdom_2ufundom by fastforce
+    have dom_not_empty2: "ubclDom\<cdot>b \<noteq> {} \<Longrightarrow> lnsuc\<cdot>(ubclLen b) \<le> ubclLen (spfConcIn sb\<cdot>spf \<rightleftharpoons> b)"
+      proof -
+        assume a2: "ubclDom\<cdot>b \<noteq> {}"
+        have h1: "ubclDom\<cdot>b \<subseteq> ubclDom\<cdot>sb"
+          by (metis a1 assms(3) domD spfConcIn_dom ubclDom_ubundle_def ufdom_2ufundom)
+        have h2: "ubclLen b \<le> ubclLen(ubConcEq sb\<cdot>b)"
+          by (metis sbConcEq_Len2 ubclLen_ubundle_def)
+        have h3: "ubLen sb = lnsuc\<cdot>0 \<Longrightarrow> \<forall>c \<in> ubclDom\<cdot>sb. lnsuc\<cdot>0 \<le> usclLen\<cdot>(sb . c)"
+          by (smt Inf'_neq_0 fold_inf inject_lnsuc mem_Collect_eq ubLen_def ubclDom_ubundle_def wellorder_Least_lemma(2))
+        have h4: "\<And>c::channel. c \<in> ubDom\<cdot>b \<Longrightarrow> c \<in> ubDom\<cdot>sb \<Longrightarrow> lnsuc\<cdot>(#(b  .  c)) \<le> #((ubUp\<cdot>sb  .  c) \<bullet> ubUp\<cdot>b  .  c)"
+          apply (case_tac "#(b  .  c) = \<infinity>")
+          apply (simp add: slen_sconc_snd_inf)
+          apply (case_tac "#(sb  .  c) = \<infinity>")
+          apply simp
+          apply(simp add: ubup_insert ubconc_insert ubgetch_insert)
+          proof - 
+            fix c
+            assume a1: "c \<in> ubDom\<cdot>b"
+            assume a2: "c \<in> ubDom\<cdot>sb"
+            assume a3: "#Rep_ubundle b\<rightharpoonup>c \<noteq> \<infinity>"
+            assume a4: "#Rep_ubundle sb\<rightharpoonup>c \<noteq> \<infinity>"
+            obtain k1 where k1_def: "#Rep_ubundle sb\<rightharpoonup>c = Fin k1"
+              by (metis a4 lncases)
+            obtain k2 where k2_def: "#Rep_ubundle b\<rightharpoonup>c = Fin k2"
+              by (metis a3 lncases)
+            have f1: "lnsuc\<cdot>0 \<le> Fin k1"
+              using h3 k1_def
+              by (metis a2 assms(2) ubclDom_ubundle_def ubgetch_insert usclLen_stream_def)
+            have f2: "#(Rep_ubundle sb\<rightharpoonup>c \<bullet> Rep_ubundle b\<rightharpoonup>c) = Fin (k1+k2)"
+              by (simp add: k1_def k2_def slen_sconc_all_finite)
+            have f3: "lnsuc\<cdot>(Fin k2) \<le> Fin (k1+k2)"
+              using f1 not_less_eq_eq by fastforce
+            show "lnsuc\<cdot>(#Rep_ubundle b\<rightharpoonup>c) \<le> #(Rep_ubundle sb\<rightharpoonup>c \<bullet> Rep_ubundle b\<rightharpoonup>c)"
+              using k1_def k2_def
+              using f2 f3 by auto
+          qed
+        have h5: "lnsuc\<cdot>(ubclLen b) \<le> ubclLen(ubConcEq sb\<cdot>b)"
+          proof-
+            have f1: "\<exists>c \<in> ubDom\<cdot>b.(usclLen\<cdot>(b . c)) = ubclLen b"
+              by (metis (no_types, lifting) a2 ubLen_def ubclDom_ubundle_def ubclLen_ubundle_def ublen_min_on_channel)
+            have f2: "\<forall>c \<in> ubclDom\<cdot>b. lnsuc\<cdot>(usclLen\<cdot>(b . c)) \<le> (usclLen\<cdot>(ubConcEq sb\<cdot>b . c))"
+              apply rule
+              proof - 
+                fix c
+                assume a1: "c \<in> ubclDom\<cdot>b"
+                have g1: "ubclDom\<cdot>sb \<noteq> {}"
+                  using a2 h1 by blast
+                have g2: "c \<in> ubclDom\<cdot>sb"
+                  using a1 h1 by auto
+                show "lnsuc\<cdot>(usclLen\<cdot>(b  .  c)) \<le> usclLen\<cdot>(ubConcEq sb\<cdot>b  .  c)"
+                  by (metis (no_types, lifting) a1 g2 h4 ubConc_usclConc_eq ubclDom_ubundle_def ubconceq_insert ubgetch_ubrestrict ubup_ubgetch usclConc_stream_def usclLen_stream_def)
+              qed
+            have f5: "\<exists>c \<in> ubDom\<cdot>b. lnsuc\<cdot>(usclLen\<cdot>(b . c)) \<le> ubclLen (ubConcEq sb\<cdot>b)"
+              by (metis (no_types, lifting) a2 f2 ubLen_def ubclDom_ubundle_def ubclLen_ubundle_def ubconceq_dom ublen_min_on_channel)
+            have f6: "\<exists>c \<in> ubDom\<cdot>b. lnsuc\<cdot>(usclLen\<cdot>(b . c)) = lnsuc\<cdot>(ubclLen b)"
+              by (simp add: f1)
+            show ?thesis
+              sorry
+          qed
+        show "lnsuc\<cdot>(ubclLen b) \<le> ubclLen (spfConcIn sb\<cdot>spf \<rightleftharpoons> b)"
+          by (smt a1 assms(1) dual_order.trans h5 option.collapse spfConcIn_def spfConcIn_dom ubclDom_ubundle_def ubconceq_dom ufIsWeak_def ufapplyin_apply ufdom_2_dom_ctufun ufdom_2ufundom ufun_ufundom2dom)
+      qed
+    show "lnsuc\<cdot>(ubclLen b) \<le> ubclLen (spfConcIn sb\<cdot>spf \<rightleftharpoons> b)"
+      using a1 dom_not_empty2 local.dom_empty ufdom_2ufundom by fastforce
+  qed
+
+lemma spfConcIn_weak_ublen_strong2[simp]:
+  assumes "ufIsWeak spf" and "ubLen sb = lnsuc\<cdot>0" and "ufDom\<cdot>spf \<subseteq> ubDom\<cdot>sb"
+  shows "ufIsStrong (spfConcIn sb\<cdot>spf)"
+  apply (simp add: ufIsStrong_def)
+  apply rule+
+  proof -
+    fix b::"'a stream\<^sup>\<Omega>"
+    have h22: "ubclDom\<cdot>b \<subseteq> ubclDom\<cdot>sb"
+      sorry
     have h2: "b \<in> dom (Rep_cfun (Rep_ufun (spfConcIn sb\<cdot>spf)))"
-      by (metis h11 h22 spfConcIn_dom ufdom_2_dom_ctufun ufun_ufundom2dom)
+      sorry
     have h3: "ubclLen b \<le> ubclLen(ubConcEq sb\<cdot>b)"
       by (metis sbConcEq_Len2 ubclLen_ubundle_def)
     have h4: "lnsuc\<cdot>(ubclLen b) \<le> ubclLen(ubConcEq sb\<cdot>b)"
@@ -270,7 +339,6 @@ lemma spfConcIn_weak_ublen_strong[simp]:
         show ?thesis
           apply (simp add: ubclLen_ubundle_def)
           by (metis (mono_tags, hide_lams) all_not_in_conv dual_order.antisym empty_subsetI f2 rep_ufun_well ubDom_subseteq ubcldom_least_cs ubrestrict_ubdom ufRestrict_dom ufWell_def ufunLeastIDom)
-
       qed
     have equal: "spf \<rightleftharpoons> ubConcEq sb\<cdot>b = (spfConcIn sb\<cdot>spf) \<rightleftharpoons> b"
       by (metis (no_types, lifting) h11 h22 domIff spfConcIn_def ubclDom_ubundle_def ubconceq_dom ufapplyin_apply ufapplyin_eq_pre ufun_ufundom2dom)
@@ -279,9 +347,7 @@ lemma spfConcIn_weak_ublen_strong[simp]:
     have h10: "lnsuc\<cdot>(ubclLen b) \<le> ubclLen (spf \<rightleftharpoons> ubConcEq sb\<cdot>b)"
       by (metis (no_types, lifting) h11 h22 assms(1) dual_order.trans h4 ubclDom_ubundle_def ubconceq_dom ufIsWeak_def ufun_ufundom2dom)
     show "lnsuc\<cdot>(ubclLen b) \<le> ubclLen (spfConcIn sb\<cdot>spf \<rightleftharpoons> b)"
-      sorry
-    
-    
+      using h10 local.equal by auto
   qed
 
 subsection \<open>spfRtOut lemma\<close>
