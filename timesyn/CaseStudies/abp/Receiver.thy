@@ -132,17 +132,51 @@ text {* @{term tsynRec} insertion lemma. *}
 lemma tsynrec_insert: "tsynRec\<cdot>s = sscanlA tsynRec_h True\<cdot>s"
   by (simp add: tsynRec_def)
 
+text {* @{term tsynRec} maps the empty (nat x bool ) tsyn stream on the empty nat tsyn stream. *}
+lemma tsynrec_strict[simp]: "tsynRec\<cdot>\<epsilon> = \<epsilon>"
+  by (simp add: tsynrec_insert)
+
+text {* @{term tsynRec} does not distribute directly over concatenation, when the first element 
+  is a message with True bit.*}
+lemma tsynrec_sconc_msg_True: " tsynRec\<cdot>(\<up>(Msg (m,True)) \<bullet> s) =
+  \<up>(Msg (m))\<bullet> (sscanlA tsynRec_h False\<cdot>s)"
+  by (simp add: tsynrec_insert)
+
+text {* @{term tsynRec} distributes over concatenation, when the first element 
+  is a message with False bit.*}
+lemma tsynrec_sconc_msg_False: " tsynRec\<cdot>(\<up>(Msg (m,False)) \<bullet> s) = \<up>(null)\<bullet> tsynRec\<cdot>s"
+  by (simp add: tsynrec_insert)
+
+text {* @{term tsynRec} distributes over concatenation, when concatenating a null.*}
+lemma tsynrec_sconc_null: " tsynRec\<cdot>(\<up>(null) \<bullet> s) = \<up>(null) \<bullet> tsynRec\<cdot>s"
+  by (simp add: tsynrec_insert)
+
+text {* @{term tsynRec} leaves the length of a stream unchanged. *}
+lemma tsynrec_slen: "#(tsynRec\<cdot>s) = #s"
+  by (simp add: tsynrec_insert)
+
 text {* @{term tsynRec} test on finite stream. *}
 lemma tsynrec_test_finstream:
-  "tsynRec\<cdot>(<[Msg(1, False), null, Msg(2, True),Msg(1, False)]>) = <[null, null,Msg 2, Msg 1]>"
+  "tsynRec\<cdot>(<[\<M>(1, False), null, \<M>(2, True),\<M>(1, False)]>) = <[null, null,\<M> 2, \<M> 1]>"
   by (simp add: tsynrec_insert)
 
 text {* @{term tsynRec} test on infinite stream. *}
 lemma tsynrec_test_infstream: 
-  "tsynRec\<cdot>((<[Msg(1, False), null, Msg(2, True),Msg(1, False)]>)\<infinity>) 
-     = (<[null, null, Msg 2, Msg 1]>)\<infinity>"
-  apply (simp add: tsynrec_insert)
-  oops
+  "tsynRec\<cdot>((<[\<M>(1, False), null, \<M>(2, True),\<M>(1, False)]>)\<infinity>) 
+     = (<[null, null, \<M> 2, \<M> 1]>)\<infinity>"
+proof -
+  have inf_unfold:"tsynRec\<cdot>((<[\<M>(1, False), null, \<M>(2, True),\<M>(1, False)]>) \<bullet> 
+       ((<[\<M>(1, False), null, \<M>(2, True),\<M>(1, False)]>)\<infinity>))
+       = <[null, null,\<M> 2, \<M> 1]> \<bullet> tsynRec\<cdot>((<[\<M>(1, False), null, \<M>(2, True),\<M>(1, False)]>)\<infinity>)" 
+    by (simp add: tsynrec_insert)
+  have "((<[\<M>(1, False), null, \<M>(2, True),\<M>(1, False)]>) \<bullet> 
+       ((<[\<M>(1, False), null, \<M>(2, True),\<M>(1, False)]>)\<infinity>)) =
+       ((<[\<M>(1, False), null, \<M>(2, True),\<M>(1, False)]>)\<infinity>) " using sinftimes_unfold by metis
+  hence "tsynRec\<cdot>((<[\<M>(1, False), null, \<M>(2, True),\<M>(1, False)]>)\<infinity>)
+       = <[null, null,\<M> 2, \<M> 1]> \<bullet> tsynRec\<cdot>((<[\<M>(1, False), null, \<M>(2, True),\<M>(1, False)]>)\<infinity>)" 
+    using inf_unfold by metis
+  thus ?thesis by (simp add: rek2sinftimes)
+qed
 
 text{* The output bundle of @{term tsynbRec} is well-formed. *}
 lemma tsynbrec_ubwell [simp]:
