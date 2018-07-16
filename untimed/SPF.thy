@@ -200,7 +200,54 @@ lemma spfRt_inj: "inj (Rep_cfun spfRtIn)"
   apply(rule spf_eq)
   apply (metis spfRtIn_dom)
   using spfRt_inj_h by blast
-  
+
+
+(*************************************************)
+(* ublen sbdrop n b = ublen b - n *)
+lemma sbthy_sbDrop_Len: "lnsuc\<cdot>(ubLen (sbDrop (Suc n)\<cdot>b)) = ubLen (sbDrop n\<cdot>b)"
+  proof (cases "ubDom\<cdot>b = {}")
+    case True
+    then show ?thesis
+      by (simp add: ubLen_def)
+  next
+    case False
+    show ?thesis
+      apply (induct_tac n)
+      sorry
+(*       defer
+      proof -
+        fix n
+        assume a1: "lnsuc\<cdot>(ubLen (sbDrop (Suc n)\<cdot>b)) = ubLen (sbDrop n\<cdot>b)"
+        show "lnsuc\<cdot>(ubLen (sbDrop (Suc (Suc n))\<cdot>b)) = ubLen (sbDrop (Suc n)\<cdot>b)"
+*)
+  qed
+(*************************************************)
+
+
+lemma spfRtIn_strongF_isweak: assumes "ufIsStrong spf" shows "ufIsWeak (spfRtIn\<cdot>spf)"
+  apply (simp add: ufIsWeak_def ubclLen_ubundle_def)
+  apply rule+
+  proof -
+    fix b::"'a stream\<^sup>\<Omega>"
+    assume a1: "b \<in> dom (Rep_cufun (spfRtIn\<cdot>spf))"
+    show "ubLen b \<le> ubLen (spf \<rightleftharpoons> sbRt\<cdot>b)"
+    proof (cases "ubDom\<cdot>b = {}")
+      case True
+      then show ?thesis
+        by (metis (no_types, lifting) a1 assms empty_iff sbrt_sbdom spfRtIn_dom ubgetchI ufIsWeak_def ufdom_2_dom_ctufun ufisstrong_2_ufisweak ubclLen_ubundle_def)
+    next
+      case False
+      have len1: "lnsuc\<cdot>(ubLen (sbRt\<cdot>b)) = ubLen b "
+        unfolding sbRt_def
+        by (simp add: sbthy_sbDrop_Len)
+      have len2: "(ubLen b) \<le> ubLen (spf \<rightleftharpoons> sbRt\<cdot>b)"
+        by (metis (no_types, lifting) assms a1 len1 sbrt_sbdom spfRtIn_dom ubclDom_ubundle_def ubclLen_ubundle_def ufIsStrong_def ufdom_2_dom_ctufun ufun_ufundom2dom)
+
+      show ?thesis
+        by (simp add: len2)
+    qed
+  qed
+
 
 subsection \<open>spfConcIn lemma\<close>
 
@@ -257,6 +304,75 @@ lemma spfRtOut_spfConcIn: "(spfRtOut\<cdot>(spfConcIn sb \<cdot>spf)) = (spfConc
     apply (metis ubclDom_ubundle_def ubconceq_dom)
    apply (simp add: ubclDom_ubundle_def)
   by blast
+
+lemma spfRtOut_strongF_isweak: assumes "ufIsStrong spf" shows "ufIsWeak (spfRtOut\<cdot>spf)"
+  apply (simp add: ufIsWeak_def ubclLen_ubundle_def)
+  apply rule+
+  proof -
+    fix b::"'a stream\<^sup>\<Omega>"
+    assume a1: "b \<in> dom (Rep_cufun (spfRtOut\<cdot>spf))"
+
+      have len1: "lnsuc\<cdot>(ubLen (sbRt\<cdot>b)) \<le> ubLen b "
+        unfolding sbRt_def
+        by (simp add: sbthy_sbDrop_Len)
+      have len11: "lnsuc\<cdot>(ubLen (sbRt\<cdot>b)) = ubLen b "
+        unfolding sbRt_def
+        by (simp add: sbthy_sbDrop_Len)
+      have len2: "(ubLen b) \<le> ubLen (spf \<rightleftharpoons> sbRt\<cdot>b)"
+        by (metis (no_types, lifting) assms a1 len11 sbrt_sbdom spfRtOut_dom ubclDom_ubundle_def ubclLen_ubundle_def ufIsStrong_def ufdom_2_dom_ctufun ufun_ufundom2dom)
+      have len3: "lnsuc\<cdot>(ubLen (sbRt\<cdot>b)) \<le> ubLen (spf \<rightleftharpoons> sbRt\<cdot>b)"
+        by (simp add: len11 len2)
+
+    show "ubLen b \<le> ubLen (spfRtOut\<cdot>spf \<rightleftharpoons> b)"
+    proof (cases "ubDom\<cdot>b = {}")
+      case True
+      have eq1: "ubLen b = ubLen (sbRt\<cdot>b)"
+        by (metis True empty_iff sbrt_sbdom ubgetchI)
+      have len1: "lnsuc\<cdot>(ubLen b) \<le> ubLen (spf \<rightleftharpoons> b)"
+        by (metis (mono_tags, hide_lams) True empty_iff inf_ub len2 lnat_po_eq_conv sbrt_sbdom ubLen_def ubgetchI)
+      show ?thesis
+        unfolding spfRtOut_def
+
+
+        proof (cases "ufDom\<cdot>spf = {}")
+          case True
+          have llLen1: "ubLen b = \<infinity>"
+            by (metis antisym_conv2 dual_order.refl eq1 inf_ub len11 ln_less)
+          have llDom1: "ufDom\<cdot>(spfRtOut\<cdot>spf) = {}"
+            by (simp add: True)
+          have llLen3: "ubLen (ufApplyOut sbRt\<cdot>spf \<rightleftharpoons> b) = \<infinity>"
+            sorry
+          show "ubLen b \<le> ubLen (ufApplyOut sbRt\<cdot>spf \<rightleftharpoons> b)"
+(* case b dom leer, spf dom leer*)
+            by (simp add: llLen1 llLen3)
+        next
+          case False
+          then show "ubLen b \<le> ubLen (ufApplyOut sbRt\<cdot>spf \<rightleftharpoons> b)"
+            by (metis True a1 domIff option.collapse spfRtOut_dom ubclDom_ubundle_def ufdom_2ufundom)
+        qed
+
+
+    next
+      case False
+
+      then show ?thesis
+        unfolding spfRtOut_def
+
+      proof (cases "ufDom\<cdot>spf = {}")
+        case True
+        then show "ubLen b \<le> ubLen (ufApplyOut sbRt\<cdot>spf \<rightleftharpoons> b)"
+          by (metis False a1 domIff option.collapse spfRtOut_dom ubclDom_ubundle_def ufdom_2ufundom)
+      next
+        case False
+        then show "ubLen b \<le> ubLen (ufApplyOut sbRt\<cdot>spf \<rightleftharpoons> b)" 
+(* case b dom nichtleer, spf dom nichtleer*)
+          sorry
+      qed
+
+
+
+    qed
+  qed
 
 
 subsection \<open>spfConcOut lemma\<close>
