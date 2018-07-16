@@ -146,6 +146,7 @@ lemma tsynmed_tsyndom: "tsynDom\<cdot>(tsynMed\<cdot>msg\<cdot>ora) \<subseteq> 
       by (metis tsyndom_sconc_null tsynmed_sconc_null tsynmed_strict(2))
   qed
 
+text{* A tick does not consume an ora-element. *}
 lemma tsynmed_tsynlen_ora_t:
   assumes msg_inf: "tsynLen\<cdot>msg = \<infinity>"
   shows "tsynLen\<cdot>(tsynMed\<cdot>(\<up>null \<bullet> msg)\<cdot>(\<up>True \<bullet> ora)) = #({True} \<ominus> (\<up>True \<bullet> ora))"
@@ -155,7 +156,7 @@ lemma tsynmed_tsynlen_ora_t:
     then show ?case 
       apply (rule admI)
       apply (simp add: contlub_cfun_fun contlub_cfun_arg tsynmed_sconc_null tsynlen_sconc_null)
-sorry
+      sorry
   next
     case bot
     then show ?case
@@ -164,7 +165,7 @@ sorry
     case (msg m s)
     then show ?case 
       apply (simp add: tsynmed_sconc_null tsynlen_sconc_null tsynmed_sconc_msg_t tsynlen_sconc_msg)
-sorry
+      sorry
   next
     case (null s)
     then show ?case
@@ -176,6 +177,7 @@ lemma tsynmed_tsynlen_ora_f:
   shows "tsynLen\<cdot>(tsynMed\<cdot>(\<up>null \<bullet> msg)\<cdot>(\<up>False \<bullet> ora)) = #({True} \<ominus> (\<up>False \<bullet> ora))"
   sorry
 
+text{* The number of transmitted messages equals the number of True in ora. *}
 lemma tsynmed_tsynlen_ora: 
   assumes msg_inf: "tsynLen\<cdot>msg = \<infinity>"
   shows "tsynLen\<cdot>(tsynMed\<cdot>msg\<cdot>ora) = #({True} \<ominus> ora)"
@@ -198,7 +200,8 @@ lemma tsynmed_tsynlen_ora:
       next
         case (msg a as)
         then show ?thesis
-          by (metis msg_t.prems tsynlen_sconc_null tsynmed_sconc_null tsynmed_strict(2) tsynmed_tsynlen_ora_t)
+          by (metis msg_t.prems tsynlen_sconc_null tsynmed_sconc_null tsynmed_strict(2) 
+              tsynmed_tsynlen_ora_t)
       next
         case (null as)
         then show ?thesis 
@@ -214,7 +217,8 @@ lemma tsynmed_tsynlen_ora:
       next
         case (msg a as)
         then show ?thesis
-          by (metis msg_f.prems tsynlen_sconc_null tsynmed_sconc_null tsynmed_strict(2) tsynmed_tsynlen_ora_f)
+          by (metis msg_f.prems tsynlen_sconc_null tsynmed_sconc_null tsynmed_strict(2) 
+              tsynmed_tsynlen_ora_f)
       next
         case (null as)
         then show ?thesis 
@@ -231,7 +235,23 @@ lemma tsynmed_tsynlen_inf:
   (*by (simp add: tsynmed_tsynlen_ora)*)
   sorry
 
-(* ToDo: Tests *)
+text {* @{term tsynMed} test on finite stream with ticks. *}
+lemma tsynmed_test_finstream_null:
+  "tsynMed\<cdot>(<[null, null, Msg (2,False), Msg (1, True)]>)\<cdot>(<[True, False, False, True]>) 
+    = <[null, null, Msg (2,False), null]>"
+  sorry
+
+text {* @{term tsynMed} test on finite stream without ticks. *}
+lemma tsynmed_test_finstream:
+  "tsynMed\<cdot>(<[Msg (5,False), Msg (3, True), Msg (2,False), Msg (1, True)]>)\<cdot>(<[True, False, False, True]>) 
+    = <[Msg (5,False), null, null, Msg (1, True)]>"
+  sorry
+
+text {* @{term tsynMed} test on infinite stream. *}
+lemma tsynrec_test_infstream:
+  "tsynMed\<cdot>((<[Msg(3, False), null, Msg(2, True),Msg(1, False)]>)\<infinity>)\<cdot>((<[True, False, True]>)\<infinity>)
+    =(<[Msg(3, False), null, null,Msg(1, False)]>)\<infinity>"
+  sorry
 
 (* ----------------------------------------------------------------------- *)
 subsection {* basic properties of tsynbMed *}
