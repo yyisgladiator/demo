@@ -8,7 +8,7 @@
 chapter {* Theory for Medium Lemmata *}
 
 theory Medium
-imports Components
+imports Components "../../../untimed/SPS"
 
 begin
 
@@ -23,8 +23,12 @@ definition tsynMed :: "(nat \<times> bool) tsyn stream \<rightarrow> bool stream
 text {* @{term tsynbMed}: Medium function for Alternating Bit Protocol on stream bundles. *}
 definition tsynbMed :: "bool stream \<Rightarrow> 
   abpMessage tsyn stream ubundle \<rightarrow> abpMessage tsyn stream ubundle option" where
-  "tsynbMed ora \<equiv> \<Lambda> sb. (ubclDom\<cdot>sb = {\<C> ''ds''}) \<leadsto> Abs_ubundle [
+  "tsynbMed ora \<equiv> \<Lambda> sb. (ubDom\<cdot>sb = {\<C> ''ds''}) \<leadsto> Abs_ubundle [
                       \<C> ''dr'' \<mapsto> natbool2abp\<cdot>(tsynMed\<cdot>(abp2natbool\<cdot>(sb  .  \<C> ''ds''))\<cdot>ora)]"
+
+text {* @{term tsynbMed}: Medium function for Alternating Bit Protocol. *}
+definition MedSPF :: "bool stream \<Rightarrow> abpMessage tsyn SPF" where
+  "MedSPF ora \<equiv> Abs_ufun (tsynbMed ora)"
 
 (* ----------------------------------------------------------------------- *)
 section {* basic properties *}
@@ -52,7 +56,7 @@ lemma oracases [case_names bot true false]:
   by (metis (full_types) bot false scases true)
 
 (* ----------------------------------------------------------------------- *)
-subsection {* basic properties of tsMed *}
+subsection {* basic properties of tsynMed *}
 (* ----------------------------------------------------------------------- *)
 
 text{* "Lossy" medium that gets messages and an oracle and will transmit the k-th message if
@@ -81,6 +85,8 @@ lemma tsynmed_sconc_null:
   shows "tsynMed\<cdot>(\<up>- \<bullet> msg)\<cdot>ora = \<up>- \<bullet> tsynMed\<cdot>msg\<cdot>ora"
   sorry
 
+(* ToDo: general sconc lemma possible? *)
+
 (* singleton lemmata *)
 lemma tsynmed_sconc_singleton_msg_t: "tsynMed\<cdot>(\<up>(\<M> m))\<cdot>(\<up>True \<bullet> ora) = \<up>(\<M> m)"
   sorry
@@ -90,8 +96,6 @@ lemma tsynmed_sconc_singleton_msg_f: "tsynMed\<cdot>(\<up>(\<M> m))\<cdot>(\<up>
 
 lemma tsynmed_sconc_singleton_msg_null: assumes "ora \<noteq> \<epsilon>" shows "tsynMed\<cdot>(\<up>-)\<cdot>ora = \<up>-"
   sorry
-
-(* ToDo: general sconc lemma possible? *)
 
 lemma tsynmed_slen: assumes "#ora=\<infinity>" shows "#(tsynMed\<cdot>msg\<cdot>ora) = #msg"
   by (simp add: assms tsynfilter_slen tsynmed_insert tsynprojfst_slen tsynzip_slen)
@@ -150,17 +154,21 @@ lemma tsynmed_tsynlen_ora_t:
     case adm
     then show ?case 
       apply (rule admI)
-      apply (simp add: contlub_cfun_fun contlub_cfun_arg)
+      apply (simp add: contlub_cfun_fun contlub_cfun_arg tsynmed_sconc_null tsynlen_sconc_null)
 sorry
   next
     case bot
-    then show ?case sorry
+    then show ?case
+      by simp
   next
     case (msg m s)
-    then show ?case sorry
+    then show ?case 
+      apply (simp add: tsynmed_sconc_null tsynlen_sconc_null tsynmed_sconc_msg_t tsynlen_sconc_msg)
+sorry
   next
     case (null s)
-    then show ?case sorry
+    then show ?case
+      by (simp add: tsynmed_sconc_null tsynlen_sconc_null)
   qed
 
 lemma tsynmed_tsynlen_ora_f: 
@@ -224,5 +232,85 @@ lemma tsynmed_tsynlen_inf:
   sorry
 
 (* ToDo: Tests *)
+
+(* ----------------------------------------------------------------------- *)
+subsection {* basic properties of tsynbMed *}
+(* ----------------------------------------------------------------------- *)
+
+text{* The output bundle of @{term tsynbRec} is well-formed. *}
+lemma tsynbmed_ubwell [simp]: "ubWell [\<C> ''dr'' \<mapsto> natbool2abp\<cdot>(tsynMed\<cdot>(abp2natbool\<cdot>(sb  .  \<C> ''ds''))\<cdot>ora)]"
+  apply (simp add: ubWell_def usclOkay_stream_def natbool2abp_def abp2natbool_def ctype_tsyn_def
+          tsynmap_insert smap_sdom image_subset_iff)
+  by (metis image_eqI range_eqI tsynApplyElem.elims)
+
+text{* The domain of the output bundle of @{term tsynbMed}. *}
+lemma tsynbmed_ubundle_ubdom: "ubDom\<cdot>(Abs_ubundle 
+  [\<C> ''dr'' \<mapsto> natbool2abp\<cdot>(tsynMed\<cdot>(abp2natbool\<cdot>(sb  .  \<C> ''ds''))\<cdot>ora)]) = {\<C> ''dr''}"
+  by (simp add: ubdom_insert)
+
+text{* @{term tsynbMed} is monotonous. *}
+lemma tsynbmed_mono [simp]:
+  "monofun (\<lambda> sb. (ubDom\<cdot>sb = {\<C> ''ds''}) \<leadsto> Abs_ubundle [
+                      \<C> ''dr'' \<mapsto> natbool2abp\<cdot>(tsynMed\<cdot>(abp2natbool\<cdot>(sb  .  \<C> ''ds''))\<cdot>ora)])"
+  apply (fold ubclDom_ubundle_def)
+  apply (rule ufun_monoI2)
+  apply (simp add: below_ubundle_def)
+  apply (subst fun_belowI)
+  apply (simp add: cont_pref_eq1I)
+  apply (subst some_below)
+  apply (subst monofun_cfun_arg, simp_all)
+  sorry
+
+lemma tsynbmed_chain: "chain Y \<Longrightarrow> 
+      chain (\<lambda>i::nat.[\<C> ''dr'' \<mapsto> natbool2abp\<cdot>(tsynMed\<cdot>(abp2natbool\<cdot>(Y i  .  \<C> ''ds''))\<cdot>ora)])"
+  by (simp add: chain_def fun_below_iff monofun_cfun_arg monofun_cfun_fun po_class.chainE some_below)
+
+text{* @{term tsynbMed} is continuous. *}
+lemma tsynbmed_cont [simp]:
+  "cont (\<lambda> sb. (ubDom\<cdot>sb = {\<C> ''ds''}) \<leadsto> Abs_ubundle [
+                      \<C> ''dr'' \<mapsto> natbool2abp\<cdot>(tsynMed\<cdot>(abp2natbool\<cdot>(sb  .  \<C> ''ds''))\<cdot>ora)])"
+  apply (fold ubclDom_ubundle_def)
+  apply (rule ufun_contI2)
+  apply (rule cont_Abs_UB)
+  apply (rule contI2)
+  apply (rule monofunI, simp_all)
+  apply (simp add: fun_belowI monofun_cfun_arg monofun_cfun_fun some_below)
+  using tsynbmed_chain 
+  by (simp add: contlub_cfun_arg contlub_cfun_fun fun_below_iff some_lub_chain_eq lub_fun)
+
+text{* @{term tsynbMed} insertion lemma. *}
+lemma tsynbrec_insert: "tsynbMed ora\<cdot>sb = (ubDom\<cdot>sb = {\<C> ''ds''}) \<leadsto> Abs_ubundle [
+                      \<C> ''dr'' \<mapsto> natbool2abp\<cdot>(tsynMed\<cdot>(abp2natbool\<cdot>(sb  .  \<C> ''ds''))\<cdot>ora)]"
+  by (simp add: tsynbMed_def ubclDom_ubundle_def)
+
+text{* @{term tsynbMed} is well-formed. *}
+lemma tsynbmed_ufwell [simp]: "ufWell (tsynbMed ora)"
+  sorry
+
+(* ----------------------------------------------------------------------- *)
+subsection {* basic properties of MedSPF *}
+(* ----------------------------------------------------------------------- *)
+
+text{* @{term MedSPF} insertion lemma. *}
+lemma recspf_insert: "(MedSPF ora) \<rightleftharpoons> sb = (Abs_ufun (tsynbMed ora)) \<rightleftharpoons> sb"
+  sorry
+
+text{* The domain of @{term MedSPF}. *}
+lemma medspf_ufdom: "ufDom\<cdot>(MedSPF ora) = {\<C> ''ds''}"
+  sorry
+
+text{* The range of @{term MedSPF}. *}
+lemma recspf_ufran: "ufRan\<cdot>(MedSPF ora) = {\<C> ''dr''}"
+  sorry
+
+text{* The domain of the output bundle of @{term tsynbMed}. *}
+lemma medspf_ubdom:
+  assumes "ubDom\<cdot>sb = ufDom\<cdot>(MedSPF ora)"
+  shows "ubDom\<cdot>((MedSPF ora) \<rightleftharpoons> sb) = {\<C> ''dr''}"
+  sorry
+
+text{* @{term MedSPF} is strict. *}
+lemma recspf_strict: "(MedSPF ora) \<rightleftharpoons> ubclLeast{\<C> ''ds''} = ubclLeast{\<C> ''dr''}"
+  sorry
 
 end
