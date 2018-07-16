@@ -65,7 +65,6 @@ class uscl_ind = uscl_conc  +
   assumes usclTake_len_le :"\<And>x k m. usclLen\<cdot>x = Fin k \<Longrightarrow> Fin k < Fin m \<Longrightarrow>  usclLen\<cdot>(usclTake m\<cdot>x) = Fin k" 
   assumes usclTake_eq : "\<And>x. usclLen\<cdot>x \<le> Fin n \<Longrightarrow> usclTake n\<cdot>x = x"
   assumes usclTake_well : "\<And> cs s n. (usclOkay cs s \<Longrightarrow> usclOkay cs (usclTake n \<cdot> s))"
-  assumes usclTake_bot : "\<And> x. usclTake 0 \<cdot> x = \<bottom>"
   assumes usclTake_below : "\<And>x n. usclTake n\<cdot> x \<sqsubseteq> usclTake (Suc n) \<cdot> x"
   assumes usclTake_lub : "(\<Squnion>i. usclTake i\<cdot>s) = s"
 
