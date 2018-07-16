@@ -300,13 +300,13 @@ lemma tsyndom_sconc: assumes "#as < \<infinity>" shows "tsynDom\<cdot>(as \<bull
           tsyndom_cont)
   qed
 
-text {* @{term tsynDom} is empty if stream is null. *}
-lemma tsyndom_singleton_null: "tsynDom\<cdot>(\<up>null) = {}"
-  using tsyndom_sconc_null tsyndom_strict by fastforce
-
 text {* @{term tsynDom} is only a singleton set if the stream just contains one element. *}
 lemma tsyndom_singleton_msg: "tsynDom\<cdot>(\<up>(Msg a)) = {a}"
   by (metis insert_is_Un lscons_conv sup'_def tsyndom_sconc_msg tsyndom_strict)
+
+text {* @{term tsynDom} is empty if stream is null. *}
+lemma tsyndom_singleton_null: "tsynDom\<cdot>(\<up>null) = {}"
+  using tsyndom_sconc_null tsyndom_strict by fastforce
 
 text {* Cardinality of the set @{term tsynDom} is smaller or equal to the length of the original 
         stream. *}
@@ -421,13 +421,13 @@ text {* @{term tsynMap} of the concatenation of two streams equals the concatena
 lemma tsynmap_sconc: "tsynMap f\<cdot>(a1 \<bullet> a2) = tsynMap f\<cdot>a1 \<bullet> tsynMap f\<cdot>a2"
   by (simp add: smap_split tsynmap_insert)
 
-text {* @{term tsynMap} is null-stream if stream was null. *}
-lemma tsynmap_singleton_null: "tsynMap f\<cdot>(\<up>null) = \<up>null"
-  by (simp add: tsynMap_def)
-
 text {* @{term tsynMap} of a stream containing only one element, is just the stream 
           with the function applied to that element. *}
 lemma tsynmap_singleton_msg: "tsynMap f\<cdot>(\<up>(Msg a)) = (\<up>(Msg (f a)))"
+  by (simp add: tsynMap_def)
+
+text {* @{term tsynMap} is null-stream if stream was null. *}
+lemma tsynmap_singleton_null: "tsynMap f\<cdot>(\<up>null) = \<up>null"
   by (simp add: tsynMap_def)
 
 text {* @{term tsynMap} leaves the length of a stream unchanged. *}
@@ -470,14 +470,14 @@ text {* @{term tsynProjFst} of the concatenation of two streams equals the conca
 lemma tsynprojfst_sconc: "tsynProjFst\<cdot>(a1 \<bullet> a2) = tsynProjFst\<cdot>a1 \<bullet> tsynProjFst\<cdot>a2"
   by (simp add: smap_split tsynprojfst_insert)
 
+text {* @{term tsynProjFst} creates a new one element stream where only the first message component
+        is used. *}
+lemma tsynprojfst_singleton_msg: "tsynProjFst\<cdot>(\<up>(Msg a)) = \<up>(Msg (fst a))"
+  by (metis lscons_conv smap_scons strict_smap sup'_def tsynFst.simps(2) tsynProjFst_def)
+
 text {* @{term tsynProjFst} does nothing on empty time slots. *}
 lemma tsynprojfst_singleton_null: "tsynProjFst\<cdot>(\<up>null) = \<up>null"
   by (simp add: tsynProjFst_def)
-
-text {* @{term tsynProjFst} creates a new one element stream where only the first message component
-      is used. *}
-lemma tsynprojfst_singleton_msg: "tsynProjFst\<cdot>(\<up>(Msg a)) = \<up>(Msg (fst a))"
-  by (metis lscons_conv smap_scons strict_smap sup'_def tsynFst.simps(2) tsynProjFst_def)
 
 text {* @{term tsynProjFst} leaves the length of a stream unchanged. *}
 lemma tsynprojfst_slen: "#(tsynProjFst\<cdot>s) = #s"
@@ -520,15 +520,14 @@ text {* @{term tsynProjSnd} of the concatenation of two streams equals the conca
 lemma tsynprojsnd_sconc: "tsynProjSnd\<cdot>(a1 \<bullet> a2) = tsynProjSnd\<cdot>a1 \<bullet> tsynProjSnd\<cdot>a2"
   by (simp add: smap_split tsynprojsnd_insert)
 
+text {* @{term tsynProjFst} creates a new one element stream where only the first message component
+        is used. *}
+lemma tsynprojsnd_singleton_msg: "tsynProjSnd\<cdot>(\<up>(Msg a)) = \<up>(Msg (snd a))"
+  by (metis lscons_conv smap_scons strict_smap sup'_def tsynSnd.simps(2) tsynProjSnd_def)
+
 text {* @{term tsynProjFst} ignores empty time slots. *}
 lemma tsynprojsnd_singleton_null: "tsynProjSnd\<cdot>(\<up>null) = \<up>null"
   by (simp add: tsynProjSnd_def)
-
-
-text {* @{term tsynProjFst} creates a new one element stream where only the first message component
-      is used. *}
-lemma tsynprojsnd_singleton_msg: "tsynProjSnd\<cdot>(\<up>(Msg a)) = \<up>(Msg (snd a))"
-  by (metis lscons_conv smap_scons strict_smap sup'_def tsynSnd.simps(2) tsynProjSnd_def)
 
 text {* @{term tsynProjSnd} leaves the length of a stream unchanged. *}
 lemma tsynprojsnd_slen: "#(tsynProjSnd\<cdot>s) = #s"
@@ -555,13 +554,13 @@ text {* @{term tsynRemDups} ignores empty time-slots. *}
 lemma tsynremdups_sconc_null: "tsynRemDups\<cdot>(\<up>null \<bullet> s) = \<up>null \<bullet> tsynRemDups\<cdot>s"
   by (simp add: tsynremdups_insert)
 
-text {* @{term tsynRemDups} ignores empty time-slots. *}
-lemma tsynremdups_singleton_null: "tsynRemDups\<cdot>(\<up>null) = \<up>null"
-  by (simp add: tsynRemDups_def)
-
 text {* @{term tsynRemDups} does nothing on a singleton stream as there can't be a duplicate. *}
 lemma tsynremdups_singleton_msg: "tsynRemDups\<cdot>(\<up>(Msg a)) = \<up>(Msg a)"
   by (metis sconc_snd_empty sscanla_bot tsynremdups_sconc_msg)
+
+text {* @{term tsynRemDups} ignores empty time-slots. *}
+lemma tsynremdups_singleton_null: "tsynRemDups\<cdot>(\<up>null) = \<up>null"
+  by (simp add: tsynRemDups_def)
 
 text {* @{term tsynRemDups} leaves the length of a stream unchanged. *}
 lemma tsynremdups_slen: "#(tsynRemDups\<cdot>s) = #s"
@@ -633,10 +632,6 @@ text {*@{term tsynFilter} of the concatenation of two streams equals the concate
 lemma tsynfilter_sconc: "(tsynFilter A)\<cdot>(a1 \<bullet> a2) = (tsynFilter A)\<cdot>a1 \<bullet> (tsynFilter A)\<cdot>a2"
   by (simp add: smap_split tsynfilter_insert)
 
-text {* @{term tsynFilter} ignores empty time slots. *}
-lemma tsynfilter_singleton_null: "(tsynFilter A)\<cdot>(\<up>null) = \<up>null"
-  by (simp add: tsynFilter_def)
-
 text {* @{term tsynFilter} If singleton element is in the filter condition, just do nothing. *}
 lemma tsynfilter_singleton_msg_in: assumes "a \<in> A"
   shows "(tsynFilter A)\<cdot>(\<up>(Msg a)) = (\<up>(Msg a))"
@@ -647,6 +642,10 @@ text {* @{term tsynFilter} If singleton element is not in the filter condition,
 lemma tsynfilter_singleton_msg_nin:assumes "a \<notin> A"
   shows "(tsynFilter A)\<cdot>(\<up>(Msg a)) = (\<up>null)"
   by (simp add: assms tsynFilter_def)
+
+text {* @{term tsynFilter} ignores empty time slots. *}
+lemma tsynfilter_singleton_null: "(tsynFilter A)\<cdot>(\<up>null) = \<up>null"
+  by (simp add: tsynFilter_def)
 
 text {* Length of @{term tsynFilter} is equal to the length of the original stream. *}
 lemma tsynfilter_slen: "#((tsynFilter A)\<cdot>s) = #s"
@@ -863,13 +862,13 @@ lemma  tsynlen_sconc_infinite:
   shows "tsynLen\<cdot>(as \<bullet> bs) \<le> Fin (n + m)"
   using assms leI sconc_fst_inf tsynlen_sconc_finite by fastforce
 
-text {* @{term tsynLen} Empty slots have length zero. *}
-lemma tsynlen_singleton_null: "tsynLen\<cdot>(\<up>null) = 0"
-  by (simp add: tsynabs_singleton_null tsynlen_insert)
-
 text {* @{term tsynLen} Non-empty singleton streams have length 1. *}
 lemma tsynlen_singleton_msg: "tsynLen\<cdot>(\<up>(Msg a)) = Fin 1"
   by (simp add: tsynlen_insert tsynabs_singleton_msg)
+
+text {* @{term tsynLen} Empty slots have length zero. *}
+lemma tsynlen_singleton_null: "tsynLen\<cdot>(\<up>null) = 0"
+  by (simp add: tsynabs_singleton_null tsynlen_insert)
 
 text {* @{term tsynLen} is less or equal to the length of the stream. *}
 lemma tsynlen_slen: "tsynLen\<cdot>s \<le> slen\<cdot>s"
