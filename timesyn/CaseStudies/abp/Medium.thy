@@ -320,7 +320,7 @@ lemma medspf_ufdom: "ufDom\<cdot>(MedSPF ora) = {\<C> ''ds''}"
   sorry
 
 text{* The range of @{term MedSPF}. *}
-lemma recspf_ufran: "ufRan\<cdot>(MedSPF ora) = {\<C> ''dr''}"
+lemma medspf_ufran: "ufRan\<cdot>(MedSPF ora) = {\<C> ''dr''}"
   sorry
 
 text{* The domain of the output bundle of @{term tsynbMed}. *}
@@ -330,7 +330,7 @@ lemma medspf_ubdom:
   sorry
 
 text{* @{term MedSPF} is strict. *}
-lemma recspf_strict: "(MedSPF ora) \<rightleftharpoons> ubclLeast{\<C> ''ds''} = ubclLeast{\<C> ''dr''}"
+lemma medspf_strict: "(MedSPF ora) \<rightleftharpoons> ubclLeast{\<C> ''ds''} = ubclLeast{\<C> ''dr''}"
   sorry
 
 end
