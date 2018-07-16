@@ -133,18 +133,17 @@ lemma tsynrec_insert: "tsynRec\<cdot>s = sscanlA tsynRec_h True\<cdot>s"
   by (simp add: tsynRec_def)
 
 text {* @{term tsynRec} maps the empty (nat x bool ) tsyn stream on the empty nat tsyn stream. *}
-lemma tsynrec_strict[simp]: "tsynRec\<cdot>\<epsilon> = \<epsilon>"
+lemma tsynrec_strict [simp]: "tsynRec\<cdot>\<epsilon> = \<epsilon>"
   by (simp add: tsynrec_insert)
 
 text {* @{term tsynRec} does not distribute directly over concatenation, when the first element 
   is a message with True bit.*}
-lemma tsynrec_sconc_msg_True: " tsynRec\<cdot>(\<up>(Msg (m,True)) \<bullet> s) =
-  \<up>(Msg (m))\<bullet> (sscanlA tsynRec_h False\<cdot>s)"
+lemma tsynrec_sconc_msg_t: " tsynRec\<cdot>(\<up>(Msg (m, True)) \<bullet> s) = \<up>(Msg m)\<bullet> (sscanlA tsynRec_h False\<cdot>s)"
   by (simp add: tsynrec_insert)
 
 text {* @{term tsynRec} distributes over concatenation, when the first element 
   is a message with False bit.*}
-lemma tsynrec_sconc_msg_False: " tsynRec\<cdot>(\<up>(Msg (m,False)) \<bullet> s) = \<up>(null)\<bullet> tsynRec\<cdot>s"
+lemma tsynrec_sconc_msg_f: " tsynRec\<cdot>(\<up>(Msg (m, False)) \<bullet> s) = \<up>(null)\<bullet> tsynRec\<cdot>s"
   by (simp add: tsynrec_insert)
 
 text {* @{term tsynRec} distributes over concatenation, when concatenating a null.*}
