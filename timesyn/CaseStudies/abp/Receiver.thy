@@ -445,6 +445,7 @@ lemma msga_createbundle_ubconc_sbrt [simp]:
   apply (simp add: assms)
   by (simp add: assms sbRt_def usclConc_stream_def)
 
+text{* Simplify the input bundle in case of a null. *}
 lemma tsynbnull_eq [simp]:
   assumes "ubDom\<cdot>sb = {\<C> ''dr''}"
   shows "inv convDiscrUp (sbHdElem\<cdot>(ubConc (tsynbNull (\<C> ''dr''))\<cdot>sb)) = [\<C> ''dr'' \<mapsto> null]"
@@ -458,6 +459,7 @@ lemma tsynbnull_eq [simp]:
   apply (simp_all add: assms usclConc_stream_def up_def)
   by (metis convDiscrUp_dom domIff fun_upd_apply)
 
+text{* Simplify the input bundle in case of a single message. *}
 lemma createaroutput_eq [simp]:
   assumes "ubDom\<cdot>sb = {\<C> ''dr''}" 
   shows "inv convDiscrUp (sbHdElem\<cdot>(ubConc (createBundle (Msg (Pair_nat_bool a)) (\<C> ''dr''))\<cdot>sb)) 
@@ -472,7 +474,9 @@ lemma createaroutput_eq [simp]:
   apply (simp_all add: assms usclConc_stream_def up_def)
   by (metis convDiscrUp_dom domIff fun_upd_apply)
 
-(* h_step lemma for state rf and input null *)
+text {*For every state and input one step of @{term da_h} is executed correctly *}
+
+text{* State Rf and input null.*}
 lemma receiverautomaton_h_step_rf_null:
   assumes "ubDom\<cdot>sb = {\<C> ''dr''}"
   shows "da_h ReceiverAutomaton (State Rf) \<rightleftharpoons> (ubConc (tsynbNull (\<C> ''dr''))\<cdot>sb) 
@@ -481,7 +485,7 @@ lemma receiverautomaton_h_step_rf_null:
          daNextOutput_def daNextState_def daTransition_def usclConc_stream_def)
   using assms receiverautomaton_h_step_ubdom_null_null by auto
 
-(* h_step lemma for state Rt and input null *)
+text{* State Rt and input null.*}
 lemma receiverautomaton_h_step_rt_null: 
   assumes "ubDom\<cdot>sb = {\<C> ''dr''}"
   shows "da_h ReceiverAutomaton (State Rt) \<rightleftharpoons> (ubConc (tsynbNull (\<C> ''dr''))\<cdot>sb) 
@@ -490,7 +494,7 @@ lemma receiverautomaton_h_step_rt_null:
          daNextOutput_def daNextState_def daTransition_def usclConc_stream_def)
   using assms receiverautomaton_h_step_ubdom_null_null by auto
 
-(* h_step lemma for state Rf and input true *)
+text{* State Rf and input true.*}
 lemma receiverautomaton_h_step_rf_true:
   assumes "ubDom\<cdot>sb = {\<C> ''dr''}" 
     and "(snd a) = True"
@@ -501,7 +505,7 @@ lemma receiverautomaton_h_step_rf_true:
          daNextOutput_def daNextState_def daTransition_def usclConc_stream_def)
   using assms receiverautomaton_h_step_ubdom_ar_null by auto
 
-(* h_step lemma for state Rt and input true *)
+text{* State Rt and input null.*}
 lemma receiverautomaton_h_step_rt_true: 
   assumes "ubDom\<cdot>sb = {\<C> ''dr''}" 
     and "(snd a) = True"
@@ -512,7 +516,7 @@ lemma receiverautomaton_h_step_rt_true:
          daNextOutput_def daNextState_def daTransition_def usclConc_stream_def)
   using assms receiverautomaton_h_step_ubdom_ar_o by auto
 
-(* h_step lemma for state Rf and input false *)
+text{* State Rf and input false.*}
 lemma receiverautomaton_h_step_rf_false: 
   assumes "ubDom\<cdot>sb = {\<C> ''dr''}" 
     and "(snd a) = False"
@@ -523,7 +527,7 @@ lemma receiverautomaton_h_step_rf_false:
          daNextOutput_def daNextState_def daTransition_def usclConc_stream_def)
   using assms receiverautomaton_h_step_ubdom_ar_o by auto
 
-(* h_step lemma for state Rt and input false *)
+text{* State Rt and input null.*}
 lemma receiverautomaton_h_step_rt_false: 
   assumes "ubDom\<cdot>sb = {\<C> ''dr''}"
     and "(snd a) = False"
@@ -534,7 +538,7 @@ lemma receiverautomaton_h_step_rt_false:
          daNextOutput_def daNextState_def daTransition_def usclConc_stream_def)
   using assms receiverautomaton_h_step_ubdom_ar_null by auto
 
-(* H_step lemma *)
+text{* The SPF generated from @{term ReceiverAutomaton} executes the first step correctly.*}
 lemma receiverautomaton_H_step:
   assumes "ubDom\<cdot>sb = {\<C> ''dr''}"
   shows "da_H ReceiverAutomaton \<rightleftharpoons> sb 
@@ -547,24 +551,27 @@ lemma receiverautomaton_H_step:
   section {* Automaton Receiver SPF Lemmata *}
 (* ----------------------------------------------------------------------- *)
 
-(* ToDo: add descriptions. *)
-
+text{* @{term ReceiverSPF} is strict. *}
 lemma receiverspf_strict: "ReceiverSPF \<rightleftharpoons> ubclLeast{\<C> ''dr''} = ubclLeast{\<C> ''ar'', \<C> ''o''}"
   sorry
 
+text{* The domain of @{term ReceiverSPF}. *}
 lemma receiverspf_ufdom: "ufDom\<cdot>ReceiverSPF = {\<C> ''dr''}"
   apply (simp add: ReceiverSPF_def da_H_def ReceiverAutomaton_def daDom_def)
   using ReceiverAutomaton.abs_eq ReceiverAutomaton.rep_eq by auto
 
+text{* The range of @{term ReceiverSPF}. *}
 lemma receiverspf_ufran: "ufRan\<cdot>ReceiverSPF = {\<C> ''ar'', \<C> ''o''}"
   apply (simp add: ReceiverSPF_def da_H_def ReceiverAutomaton_def daRan_def)
   using ReceiverAutomaton.abs_eq ReceiverAutomaton.rep_eq by auto
 
+text{* The domain of the output bundle of @{term ReceiverSPF}. *}
 lemma receiverspf_ubdom:
   assumes "ubDom\<cdot>sb = ufDom\<cdot>ReceiverSPF"
   shows "ubDom\<cdot>(ReceiverSPF \<rightleftharpoons> sb) = {\<C> ''ar'', \<C> ''o''}"
   by (simp add: assms receiverspf_ufran spf_ubDom)
 
+text{* If @{term ReceiverSPF} and @{term RecSPF} get the same input, they yield the same result . *}
 lemma recspf_receiverspf_ub_eq:
   assumes "ubDom\<cdot>sb = ufDom\<cdot>ReceiverSPF" 
   shows "ReceiverSPF \<rightleftharpoons> sb = RecSPF \<rightleftharpoons> sb"
@@ -572,6 +579,7 @@ lemma recspf_receiverspf_ub_eq:
   apply (simp add: assms receiverspf_ubdom receiverspf_ufdom recspf_ubdom recspf_ufdom)
   sorry
 
+text{* @{term ReceiverSPF} is equal to @{term RecSPF}. *}
 lemma recspf_receiverspf_eq: "ReceiverSPF = RecSPF"
   apply (rule ufun_eqI)
   apply (simp add: receiverspf_ufdom recspf_ufdom)
