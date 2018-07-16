@@ -13,6 +13,9 @@ begin
       
 default_sort uscl_ind
 
+lemma usclTake_bot[simp] : "\<And> x. usclTake 0 \<cdot> x = \<bottom>"
+  by (simp add: usclLen_zero usclTake_len)
+
 (* ----------------------------------------------------------------------- *)
 section\<open>ubTake, ubHd, ubDrop, ubRt\<close>
 (* ----------------------------------------------------------------------- *)
@@ -386,113 +389,16 @@ instance
   apply simp_all
   apply (simp add: usclOkay_stream_def usclConc_stream_def usclTake_stream_def usclDrop_stream_def)
   apply (simp add: usclTake_stream_def usclLen_stream_def slen_stake)
-  apply(simp add: usclLen_stream_def usclDrop_stream_def)
+  apply (simp add: usclLen_stream_def usclDrop_stream_def)
   apply (simp add: slen_stake usclLen_stream_def usclTake_stream_def)
-  apply (simp add: General_UBundle_Induction.usclTake_stream_def)
-  apply (metis (mono_tags, lifting) dual_order.strict_implies_order fin2stake_lemma  usclLen_stream_def)
+  apply (metis (mono_tags, lifting) dual_order.strict_implies_order fin2stake_lemma  usclLen_stream_def General_UBundle_Induction.usclTake_stream_def)
   apply (metis fin2stake_lemma le_less lnat_well_h1 General_UBundle_Induction.usclTake_stream_def usclLen_stream_def)   
-  apply (metis (mono_tags, lifting) dual_order.trans sdom_prefix stream.take_below usclOkay_stream_def usclTake_stream_def)
-  using usclTake_stream_def apply auto[1]
+  apply (metis (mono_tags, lifting) dual_order.trans sdom_prefix stream.take_below usclOkay_stream_def usclTake_stream_def) 
   apply (simp add: stake_mono usclTake_stream_def)
   apply (simp add: reach_stream usclTake_stream_def)
-  apply (simp add: usclLen_stream_def)
-  apply (simp add: sdrop_forw_rt slen_rt_ile_eq usclDrop_stream_def)
+  apply (simp add: sdrop_forw_rt slen_rt_ile_eq usclDrop_stream_def usclLen_stream_def)
   apply (simp add: usclDrop_stream_def)
   by(metis (mono_tags, lifting) dual_order.trans sdrop_sdom usclDrop_stream_def usclOkay_stream_def)
-
-
-(*
-          have f251: "\<And>c. c \<in> ubDom\<cdot>x \<Longrightarrow> usclLen\<cdot>(x  .  c) \<noteq> Fin n \<Longrightarrow>  usclLen\<cdot>(x  .  c) < Fin n"
-            by (simp add: f21 le_neq_trans)
-          have f252: "\<And>c.  c \<in> ubDom\<cdot>x \<Longrightarrow>  usclLen\<cdot>(x  .  c) < Fin n \<Longrightarrow>  usclTake n\<cdot>(x . c) = x . c"
-            apply (rule ub_eq)
-          show "\<And>c::channel. c \<in> ubDom\<cdot>x \<Longrightarrow> usclLen\<cdot>(x  .  c) \<noteq> Fin n \<Longrightarrow> usclTake n\<cdot>(x  .  c) = x  .  c"
-            using f251 f252 by blast
-          show "\<And>c::channel. c \<in> ubDom\<cdot>x \<Longrightarrow> usclLen\<cdot>(x  .  c) = Fin n \<Longrightarrow> usclTake n\<cdot>(x  .  c) = x  .  c"
-          proof - 
-            fix c 
-            assume a0: "c \<in> ubDom\<cdot>x"
-            show "usclLen\<cdot>(x  .  c) = Fin n \<Longrightarrow> usclTake n\<cdot>(x  .  c) = x  .  c"
-            proof -
-              have "usclLen\<cdot>(x  .  c) = Fin n \<Longrightarrow> usclLen\<cdot>(x  .  c) \<ge> Fin n"
-                by simp
-              have "usclLen\<cdot>(x  .  c) \<ge> Fin n
-              show ?thesis using usclTake_len sledgehammer
-          qed       
-        qed
-*) 
-
-(*
-
-lemma sdrop_forw_rt: "sdrop (Suc n)\<cdot>s = sdrop n\<cdot>(srt\<cdot>s)"
-(#x \<le> Fin (Suc n)) = (#(srt\<cdot>x) \<le> Fin n
-
-
-proof -
-  fix x::"'a\<^sup>\<Omega>"
-  assume a0: "ubMaxLen (Fin (Suc n)) x"
-  show "ubMaxLen (Fin n) (ubRt\<cdot>x)"
-  proof - 
-    obtain n where n_def: "ubMaxLen (Fin (Suc n)) x"
-      using a0 by auto
-    have f1: "\<And>c. c \<in> ubDom\<cdot>x \<Longrightarrow>  usclLen\<cdot>(x . c) \<le> Fin (Suc n)" using n_def ubMaxLen_def by blast
-    have f1a: "\<And>c. c \<in> ubDom\<cdot>x \<Longrightarrow>  usclLen\<cdot>(x . c) < Fin (Suc n) \<or>  usclLen\<cdot>(x . c) = Fin (Suc n)"
-      using f1 le_neq_trans by blast
-  obtain c_eq where c_set_eq_def: "c_eq \<in> ubDom\<cdot>x \<and> usclLen\<cdot>(x . c) = Fin (Suc n)"
-    sledgehammer
-  obtain c_le where c_set_le_def: "c_set_le = {c |c .  c \<in> ubDom\<cdot>x \<and> usclLen\<cdot>(x . c) < Fin (Suc n)}"
-    by simp
-
-    have f2: "ubDom\<cdot>x = ubDom\<cdot>(ubRt\<cdot>x)" by auto
-    have f3: "\<And>c. c \<in> ubDom\<cdot>(ubRt\<cdot>x) \<Longrightarrow>  usclLen\<cdot>((ubRt\<cdot>x) . c) \<le> Fin n" using n_def ubMaxLen_def usclDrop_len f1 f2 
-*)
-(*
-lemma sdrop_forw_rt: "sdrop (Suc n)\<cdot>s = sdrop n\<cdot>(srt\<cdot>s)"
-(#x \<le> Fin (Suc n)) = (#(srt\<cdot>x) \<le> Fin n
-
-proof - 
-  fix c x
-  assume 
-
-
-  obtain c_set_eq where c_set_eq_def: "c_set_eq = {c |c .  c \<in> ubDom\<cdot>x \<and> usclLen\<cdot>(x . c) = Fin (Suc n)}"
-    by simp
-  obtain c_set_le where c_set_le_def: "c_set_le = {c |c .  c \<in> ubDom\<cdot>x \<and> usclLen\<cdot>(x . c) < Fin (Suc n)}"
-    by simp
-  have f3a : "ubDom\<cdot>x = {c | c. c \<in> ubDom\<cdot>x \<and> usclLen\<cdot>(x . c) \<le> Fin (Suc n)}"
-    using f1 sledgehammer
-  have f3: "ubDom\<cdot>x = c_set_eq \<union> c_set_le" using c_set_eq_def c_set_le_def f1 sorry
-  have f4: "\<And>c. c \<in> c_set_eq \<Longrightarrow> usclLen\<cdot>((ubRt\<cdot>x) . c) = Fin n" using f3 c_set_eq_def f1 f2 usclDrop_len 
-    mem_Collect_eq ubRt_def ubdrop_ubgetch 
-    by smt
-  have f5: "\<And>c. c \<in> c_set_le \<Longrightarrow> usclLen\<cdot>((ubRt\<cdot>x) . c) < Fin n" using c_set_le_def f1 f2 f3 usclDrop_len ubRt_def ubdrop_ubgetch sorry
-  have f6: "\<And>c. c \<in> ubDom\<cdot>(ubRt\<cdot>x) \<Longrightarrow>  usclLen\<cdot>((ubRt\<cdot>x) . c) \<le> Fin n" 
-    by (metis UnE eq_refl f2 f3 f4 f5 less_imp_le)
-  proof - 
-    fix x 
-    fix c
-    assume a0:  "c \<in> ubDom\<cdot>(ubRt\<cdot>x)"
-    show "usclLen\<cdot>((ubRt\<cdot>x) . c) \<le> Fin n"
-      apply(simp add: ubRt_def ubDrop_def)
-    proof -
-      have f3: "ubDom\<cdot>x = ubDom\<cdot>(ubRt\<cdot>x)" 
-        by auto
-      have f4: "usclLen\<cdot> (x . c) \<le> Fin (Suc n)" using f1 a0 f3 ubMaxLen_def
-
-   
-(*
-    by (metis f1 sdrop_0 sdrop_forw_rt slen_rt_ile_eq usclLen_stream_def) *)
-  show ?thesis 
-    using f2 ubMaxLen_def by blast
-qed
-
-lemma sbdrop_plus [simp]: "ubDrop n\<cdot>(ubDrop k\<cdot>sb) = ubDrop (n+k)\<cdot>sb"
-  apply(rule ub_eq)
-  apply simp
-  apply(simp add: ubDrop_def)
-
-  sorry
-*)
 
 
 
