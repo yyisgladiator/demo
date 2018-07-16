@@ -494,6 +494,10 @@ text {* @{term tsynMap} leaves the length of a stream unchanged. *}
 lemma tsynmap_slen: "#(tsynMap f\<cdot>s) = #s"
   by (simp add: tsynmap_insert)
 
+text {* Abstraction of @{term tsynMap} equals sMap executed on abstracted stream. *}
+lemma tsynmap_tsynabs: "tsynAbs\<cdot>(tsynMap f\<cdot>s) = smap f\<cdot>(tsynAbs\<cdot>s)"
+  oops
+
 (* ----------------------------------------------------------------------- *)
   subsection {* tsynProjFst *}
 (* ----------------------------------------------------------------------- *)
@@ -534,8 +538,13 @@ text {* @{term tsynProjFst} leaves the length of a stream unchanged. *}
 lemma tsynprojfst_slen: "#(tsynProjFst\<cdot>s) = #s"
   by (simp add: tsynprojfst_insert)
 
+text {* @{term tsynProjFst} leaves the length of a time abstracted stream unchanged. *}
 lemma tsynprojfst_tsynlen: "tsynLen\<cdot>(tsynProjFst\<cdot>ts) = tsynLen\<cdot>ts"
   sorry
+
+text {* Abstraction of @{term tsynProjFst} equals sprojfst executed on abstracted stream. *}
+lemma tsynprojfst_tsynabs: "tsynAbs\<cdot>(tsynProjFst\<cdot>s) = sprojfst\<cdot>(tsynAbs\<cdot>s)"
+  oops
 
 (* ----------------------------------------------------------------------- *)
   subsection {* tsynProjSnd *}

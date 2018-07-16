@@ -237,20 +237,14 @@ lemma tsynmed_tsynlen_inf:
 
 text {* @{term tsynMed} test on finite stream with ticks. *}
 lemma tsynmed_test_finstream_null:
-  "tsynMed\<cdot>(<[null, null, Msg (2,False), Msg (1, True)]>)\<cdot>(<[True, False, False, True]>) 
-    = <[null, null, Msg (2,False), null]>"
-  sorry
-
-text {* @{term tsynMed} test on finite stream without ticks. *}
-lemma tsynmed_test_finstream:
-  "tsynMed\<cdot>(<[Msg (5,False), Msg (3, True), Msg (2,False), Msg (1, True)]>)\<cdot>(<[True, False, False, True]>) 
-    = <[Msg (5,False), null, null, Msg (1, True)]>"
+  "tsynMed\<cdot>(<[null, null, Msg (2,False), Msg (1, True), Msg (3, True)]>)\<cdot>(<[True, False, True]>) 
+    = <[null, null, Msg (2,False), null, Msg (3, True)]>"
   sorry
 
 text {* @{term tsynMed} test on infinite stream. *}
 lemma tsynrec_test_infstream:
   "tsynMed\<cdot>((<[Msg(3, False), null, Msg(2, True),Msg(1, False)]>)\<infinity>)\<cdot>((<[True, False, True]>)\<infinity>)
-    =(<[Msg(3, False), null, null,Msg(1, False)]>)\<infinity>"
+    =(<[Msg(3, False), null, null, Msg(1, False)]>)\<infinity>"
   sorry
 
 (* ----------------------------------------------------------------------- *)
@@ -273,13 +267,10 @@ lemma tsynbmed_mono [simp]:
   "monofun (\<lambda> sb. (ubDom\<cdot>sb = {\<C> ''ds''}) \<leadsto> Abs_ubundle [
                       \<C> ''dr'' \<mapsto> natbool2abp\<cdot>(tsynMed\<cdot>(abp2natbool\<cdot>(sb  .  \<C> ''ds''))\<cdot>ora)])"
   apply (fold ubclDom_ubundle_def)
-  apply (rule ufun_monoI2)
+  apply (rule ufun_monoI3)
+  apply (rule monofunI)
   apply (simp add: below_ubundle_def)
-  apply (subst fun_belowI)
-  apply (simp add: cont_pref_eq1I)
-  apply (subst some_below)
-  apply (subst monofun_cfun_arg, simp_all)
-  sorry
+  by (simp add: below_ubundle_def cont_pref_eq1I fun_below_iff monofun_cfun_fun some_below)
 
 lemma tsynbmed_chain: "chain Y \<Longrightarrow> 
       chain (\<lambda>i::nat.[\<C> ''dr'' \<mapsto> natbool2abp\<cdot>(tsynMed\<cdot>(abp2natbool\<cdot>(Y i  .  \<C> ''ds''))\<cdot>ora)])"
@@ -299,38 +290,51 @@ lemma tsynbmed_cont [simp]:
   by (simp add: contlub_cfun_arg contlub_cfun_fun fun_below_iff some_lub_chain_eq lub_fun)
 
 text{* @{term tsynbMed} insertion lemma. *}
-lemma tsynbrec_insert: "tsynbMed ora\<cdot>sb = (ubDom\<cdot>sb = {\<C> ''ds''}) \<leadsto> Abs_ubundle [
+lemma tsynbmed_insert: "tsynbMed ora\<cdot>sb = (ubDom\<cdot>sb = {\<C> ''ds''}) \<leadsto> Abs_ubundle [
                       \<C> ''dr'' \<mapsto> natbool2abp\<cdot>(tsynMed\<cdot>(abp2natbool\<cdot>(sb  .  \<C> ''ds''))\<cdot>ora)]"
   by (simp add: tsynbMed_def ubclDom_ubundle_def)
 
 text{* @{term tsynbMed} is well-formed. *}
 lemma tsynbmed_ufwell [simp]: "ufWell (tsynbMed ora)"
-  sorry
+  apply (rule ufun_wellI [of "tsynbMed ora" "{\<C> ''ds''}" "{\<C> ''dr''}"])
+  apply (simp_all add: ubclDom_ubundle_def domIff tsynbmed_insert)
+  apply (meson option.distinct(1))
+  by (metis option.distinct(1) tsynbmed_ubundle_ubdom)
 
 (* ----------------------------------------------------------------------- *)
 subsection {* basic properties of MedSPF *}
 (* ----------------------------------------------------------------------- *)
 
 text{* @{term MedSPF} insertion lemma. *}
-lemma recspf_insert: "(MedSPF ora) \<rightleftharpoons> sb = (Abs_ufun (tsynbMed ora)) \<rightleftharpoons> sb"
-  sorry
+lemma medspf_insert: "(MedSPF ora) \<rightleftharpoons> sb = (Abs_ufun (tsynbMed ora)) \<rightleftharpoons> sb"
+  by (simp add: MedSPF_def)
 
 text{* The domain of @{term MedSPF}. *}
 lemma medspf_ufdom: "ufDom\<cdot>(MedSPF ora) = {\<C> ''ds''}"
-  sorry
+  apply (simp add: ufDom_def)
+  apply (simp add: ubclDom_ubundle_def MedSPF_def tsynbMed_def)
+  apply (subst rep_abs_cufun2)
+  using tsynbMed_def tsynbmed_ufwell apply simp
+  apply (simp add: domIff)
+  by (meson someI tsynbnull_ubdom)
 
 text{* The range of @{term MedSPF}. *}
 lemma medspf_ufran: "ufRan\<cdot>(MedSPF ora) = {\<C> ''dr''}"
-  sorry
+  apply (simp add: ufran_least)
+  apply (simp add: ubclLeast_ubundle_def medspf_ufdom ubclDom_ubundle_def)
+  apply (simp add: MedSPF_def tsynbmed_insert tsynbmed_ubundle_ubdom)
+  apply (simp add: ubdom_insert)
+  apply (subst ubrep_ubabs, simp_all)
+  by (simp add: ubWell_def usclOkay_stream_def natbool2abp_def abp2natbool_def)
 
 text{* The domain of the output bundle of @{term tsynbMed}. *}
 lemma medspf_ubdom:
   assumes "ubDom\<cdot>sb = ufDom\<cdot>(MedSPF ora)"
   shows "ubDom\<cdot>((MedSPF ora) \<rightleftharpoons> sb) = {\<C> ''dr''}"
-  sorry
+  by (simp add: assms medspf_ufran spf_ubDom)
 
 text{* @{term MedSPF} is strict. *}
-lemma medspf_strict: "(MedSPF ora) \<rightleftharpoons> ubclLeast{\<C> ''ds''} = ubclLeast{\<C> ''dr''}"
+lemma medspf_strict: "(MedSPF ora) \<rightleftharpoons> ubLeast{\<C> ''ds''} = ubLeast{\<C> ''dr''}"
   sorry
 
 end
