@@ -75,15 +75,17 @@ lemma tsynmed_sconc_msg_t: "tsynMed\<cdot>(\<up>(Msg m) \<bullet> msg)\<cdot>(\<
   by (simp add: tsynmed_insert tsynzip_sconc_msg tsynfilter_sconc_msg_in tsynfilter_sconc_null 
                 tsynprojfst_sconc_null tsynprojfst_sconc_msg)
 
-text{* If the first element in the oracle is False then the current message will not be transmitted. *}
+text{* If the first element in the oracle is False then the current message will not be 
+transmitted. *}
 lemma tsynmed_sconc_msg_f: "tsynMed\<cdot>(\<up>(Msg m) \<bullet> msg)\<cdot>(\<up>False \<bullet> ora) = \<up>- \<bullet> tsynMed\<cdot>msg\<cdot>ora"
-  sorry
+  by (simp add: tsynmed_insert tsynzip_sconc_msg tsynfilter_sconc_msg_nin tsynprojfst_sconc_null)
 
 text{* If the first element in the stream is null the oracle will not change. *}
 lemma tsynmed_sconc_null:
   assumes "ora \<noteq> \<epsilon>"
   shows "tsynMed\<cdot>(\<up>- \<bullet> msg)\<cdot>ora = \<up>- \<bullet> tsynMed\<cdot>msg\<cdot>ora"
-  sorry
+  by (simp add: assms tsynmed_insert tsynfilter_sconc_null tsynprojfst_sconc_null 
+      tsynzip_sconc_null)
 
 (* ToDo: general sconc lemma possible? *)
 
