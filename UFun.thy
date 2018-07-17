@@ -310,6 +310,9 @@ proof -
     using f2 f1 by (metis (no_types) assms contlub_cfun_fun eta_cfun lub_eq op_the_lub rep_cufun_lub)
 qed
 
+lemma rep_cufun_lub_apply2: assumes "chain Y" shows "ufun \<rightleftharpoons> Lub Y = (\<Squnion> i. ufun \<rightleftharpoons> (Y i))"
+  by (simp add: assms contlub_cfun_arg op_the_lub)
+
 (* Rep_cufun produces a ufwell function  *)
 lemma rep_cufun_well [simp]: "ufWell (Abs_cfun (Rep_cufun x))"
   by (simp add: Cfun.cfun.Rep_cfun_inverse)

@@ -641,20 +641,27 @@ next
         using f2 op_the_chain the_chain by fastforce
       then have "(spfStep_inj In Out h (Y n) \<rightleftharpoons> Y n) \<sqsubseteq> (\<Squnion>i::nat. spfStep_inj In Out h (Y i) \<rightleftharpoons> Y i)"
         using below_lub by blast
-      then have "ufRestrict In Out\<cdot>(h (Abs_sbElem (inv convDiscrUp (sbHdElem\<cdot>(Y n))))) \<rightleftharpoons> (Y n) \<sqsubseteq>
-             (\<Squnion>i::nat. spfStep_inj In Out h (Y i) \<rightleftharpoons> Y i)"
-        by (simp add: n_def spfStep_inj_def)
-      have lub_shift: "(\<Squnion>i::nat. spfStep_inj In Out h (Y i) \<rightleftharpoons> Y i) = (\<Squnion>i::nat. spfStep_inj In Out h (Y (i + n)) \<rightleftharpoons> Y  (i + n))"
-        apply (subst lub_range_shift [where j=n])
-         apply (simp add: da_chain)
-        by simp
-      then have "(\<Squnion>i::nat. spfStep_inj In Out h (Y i) \<rightleftharpoons> Y i) = 
-          (\<Squnion>i::nat.  ufRestrict In Out\<cdot>(h (Abs_sbElem (inv convDiscrUp (sbHdElem\<cdot>(Y i))))) \<rightleftharpoons> Y i)"
-        apply (simp add: lub_shift)
-        sorry
-      then show "spfStep_inj In Out h (Lub Y) \<rightleftharpoons> Lub Y \<sqsubseteq> 
-                    (\<Squnion>i::nat. spfStep_inj In Out h (Y i) \<rightleftharpoons> Y i)"
+      have sbHdEq:"\<And>i. sbHdElemWell (Y i) \<Longrightarrow> (Abs_sbElem (inv convDiscrUp (sbHdElem\<cdot>(\<Squnion>i. Y i)))) = (Abs_sbElem (inv convDiscrUp (sbHdElem\<cdot>(Y i))))"
+        by (metis chain_y is_ub_thelub sbHdElemWell_def sbHdElem_eq)
+      have bla_blub: "spfStep_inj In Out h (Lub Y) = 
+            ufRestrict In Out\<cdot>(h (Abs_sbElem (inv convDiscrUp (sbHdElem\<cdot>(Y n)))))"
         apply (simp add: spfStep_inj_def True)
+        apply (subst sbHdEq[of n])
+        by (simp_all add: n_def)
+      have da_shift: "(\<Squnion>i::nat. spfStep_inj In Out h (Y i) \<rightleftharpoons> Y i) = 
+              (\<Squnion>i::nat. spfStep_inj In Out h (Y (i + n)) \<rightleftharpoons> (Y (i + n )))"
+        by (subst lub_range_shift [where j=n], simp_all add: da_chain)  
+      show "spfStep_inj In Out h (Lub Y) \<rightleftharpoons> Lub Y \<sqsubseteq> 
+                    (\<Squnion>i::nat. spfStep_inj In Out h (Y i) \<rightleftharpoons> Y i)"
+        apply (simp add: bla_blub)
+        apply (simp add: chain_y rep_cufun_lub_apply2 sbelemwell_n)
+        apply (subst da_shift)
+        apply (rule lub_mono)
+         apply (rule chainI)
+          apply (metis (no_types) ch2ch_Rep_cfunR chain_y op_the_chain po_class.chain_def)
+         apply (rule chainI)
+         apply (metis (no_types, lifting) add_Suc da_chain po_class.chain_def)
+        apply (simp add: spfStep_inj_def sbelemwell_n)
         sorry
     next
       case False
