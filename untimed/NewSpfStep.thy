@@ -854,12 +854,18 @@ next
     (Abs_cufun
       (\<lambda>sb::'a stream\<^sup>\<Omega>.
           (ubDom\<cdot>sb = In)\<leadsto>spfStep_inj In Out (\<Squnion>i::nat. Y i) sb \<rightleftharpoons> sb)) = In"
-    sorry
+    apply (fold ubclDom_ubundle_def)
+    apply (rule ufun_ufdom_abs)
+    by (simp_all add: assms ubclDom_ubundle_def) 
   have dom_R: "ufDom\<cdot>
     (\<Squnion>i::nat.
         Abs_cufun
          (\<lambda>sb::'a stream\<^sup>\<Omega>. (ubDom\<cdot>sb = In)\<leadsto>spfStep_inj In Out (Y i) sb \<rightleftharpoons> sb)) = In"
-    sorry
+    apply (subst ufdom_lub_eq)
+    apply (simp add: cufun_chain)
+    apply (fold ubclDom_ubundle_def)
+    apply (rule ufun_ufdom_abs)
+    by (simp_all add: assms ubclDom_ubundle_def)
   show "Abs_cufun (\<lambda>sb::'a stream\<^sup>\<Omega>. (ubDom\<cdot>sb = In)\<leadsto>spfStep_inj In Out (\<Squnion>i::nat. Y i) sb \<rightleftharpoons> sb) \<sqsubseteq>
        (\<Squnion>i::nat. Abs_cufun (\<lambda>sb::'a stream\<^sup>\<Omega>. (ubDom\<cdot>sb = In)\<leadsto>spfStep_inj In Out (Y i) sb \<rightleftharpoons> sb))"
     apply (rule ufun_belowI)
