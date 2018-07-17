@@ -30,6 +30,9 @@ text {* @{term tsynbMed}: Medium function for Alternating Bit Protocol. *}
 definition MedSPF :: "bool stream \<Rightarrow> abpMessage tsyn SPF" where
   "MedSPF ora \<equiv> Abs_ufun (tsynbMed ora)"
 
+definition MedSPS :: "(abpMessage tsyn stream\<^sup>\<Omega>) ufun uspec" where 
+  "MedSPS = Abs_uspec (Rev {(MedSPF ora) | ora. #({True} \<ominus> ora)=\<infinity>}, Discr {\<C> ''ds''}, Discr {\<C> ''dr''})"
+
 (* ----------------------------------------------------------------------- *)
 section {* basic properties *}
 (* ----------------------------------------------------------------------- *)
@@ -327,7 +330,7 @@ lemma medspf_ufran: "ufRan\<cdot>(MedSPF ora) = {\<C> ''dr''}"
   apply (subst ubrep_ubabs, simp_all)
   by (simp add: ubWell_def usclOkay_stream_def natbool2abp_def abp2natbool_def)
 
-text{* The domain of the output bundle of @{term tsynbMed}. *}
+text{* The domain of the output bundle of @{term MedSPF}. *}
 lemma medspf_ubdom:
   assumes "ubDom\<cdot>sb = ufDom\<cdot>(MedSPF ora)"
   shows "ubDom\<cdot>((MedSPF ora) \<rightleftharpoons> sb) = {\<C> ''dr''}"
@@ -336,5 +339,24 @@ lemma medspf_ubdom:
 text{* @{term MedSPF} is strict. *}
 lemma medspf_strict: "(MedSPF ora) \<rightleftharpoons> ubLeast{\<C> ''ds''} = ubLeast{\<C> ''dr''}"
   sorry
+
+(* ----------------------------------------------------------------------- *)
+subsection {* Basic Properties of MedSPS *}
+(* ----------------------------------------------------------------------- *)
+
+lemma medsps_uspecwell: "uspecWell (Rev {(MedSPF ora) | ora. #({True} \<ominus> ora)=\<infinity>}) (Discr {\<C> ''ds''}) (Discr {\<C> ''dr''})"
+  apply (rule uspec_wellI)
+  apply (simp add: ufclDom_ufun_def)
+  using medspf_ufdom apply blast
+  apply (simp add: ufclRan_ufun_def)
+  using medspf_ufran by blast
+
+lemma medsps_uspecdom: "uspecDom\<cdot>MedSPS = {\<C> ''ds''}"
+  apply (simp add: uspecDom_def MedSPS_def)
+  using medsps_uspecwell by simp
+
+lemma medsps_uspecran: "uspecRan\<cdot>MedSPS = {\<C> ''dr''}"
+  apply (simp add: uspecRan_def MedSPS_def)
+  using medsps_uspecwell by simp
 
 end
