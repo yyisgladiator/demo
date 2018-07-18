@@ -13,34 +13,6 @@ typedef 'm sbElem = "{x :: (channel\<rightharpoonup>'m::message) . sbElemWell x}
   
 definition sbHdElemWell::"'m::message SB \<Rightarrow> bool" where
 "sbHdElemWell  \<equiv> \<lambda> sb. (\<forall>c \<in> ubDom\<cdot>(sb). sb. c \<noteq> \<epsilon>)"  
-
-lemma sbHdElemWell_mono[simp]:"monofun (\<lambda> sb. (\<forall>c \<in> ubDom\<cdot>(sb). sb. c \<noteq> \<epsilon>))"
-  apply(rule monofunI, simp add: less_bool_def)
-  by (metis bottomI ubdom_below ubgetch_below)    
-
-lemma sbHdElemWell_inv_ex:"sbHdElemWell sb \<Longrightarrow> \<exists>x. convDiscrUp x = (sbHdElem\<cdot>sb)"
-  by (metis convdiscrup_inv_eq sbHdElem_channel sbHdElem_dom sbHdElemWell_def)
-
-lemma sbHdElemWell_invConvDiscrUp:"sbHdElemWell sb \<Longrightarrow> \<forall>c\<in>ubDom\<cdot>(sb).((inv convDiscrUp) (sbHdElem\<cdot>sb)) \<rightharpoonup> c = inv Discr (inv Iup ((sbHdElem\<cdot>sb) \<rightharpoonup> c))"
-  by (simp add: convDiscrUp_inv_subst sbHdElem_channel sbHdElemWell_def)
-    
-lemma sbHdElem_eq:"\<forall>c\<in>(ubDom\<cdot>sb1). sb1. c \<noteq>\<epsilon> \<Longrightarrow> sb1\<sqsubseteq>sb2 \<Longrightarrow> sbHdElem\<cdot>sb1 = sbHdElem\<cdot>sb2"
-proof
-  fix x::channel
-  assume a1:"\<forall>c\<in>(ubDom\<cdot>sb1). sb1. c \<noteq>\<epsilon>"
-  assume a2:"sb1\<sqsubseteq>sb2"
-  have a3:"ubDom\<cdot>sb1 = ubDom\<cdot>sb2"
-    using a2 ubdom_below by auto
-  show "(sbHdElem\<cdot>sb1) x = (sbHdElem\<cdot>sb2) x"
-    apply(simp add:sbHdElem_def sbHdElem_cont a3)
-    using a1 a2 a3 lshd_eq ubgetch_below by blast
-qed
-
-lemma sbHdElem_below:"sbHdElemWell sb1  \<Longrightarrow> sb1\<sqsubseteq>sb2 \<Longrightarrow>  sbHdElemWell sb2"
-  sorry
-
-(* updis bijectiv *)
-thm inv_def
 (* Returns the SPF that switches depending on input.  (spfStep_h1 In Out\<cdot>h)\<cdot>(sbHdElem\<cdot>sb) computes the SPF which has to be applied to the input sb*)
 
 (*
@@ -51,42 +23,69 @@ definition spfStep_inj :: "channel set \<Rightarrow> channel set \<Rightarrow> (
 definition spfStep_inj :: "channel set \<Rightarrow> channel set \<Rightarrow> ('m::message sbElem \<Rightarrow> 'm SPF) \<Rightarrow> 'm SB \<Rightarrow> 'm SPF" where
 "spfStep_inj In Out \<equiv> (\<lambda> h sb. (if (sbHdElemWell sb) then ufRestrict In Out\<cdot>(h (Abs_sbElem(inv convDiscrUp (sbHdElem\<cdot>sb)))) else ufLeast In Out))"
 
-(*inj_on*)
+(* ----------------------------------------------------------------------- *)
+section \<open>sbhdelemwell\<close>
+(* ----------------------------------------------------------------------- *)
+lemma sbHdElemWell_mono[simp]:"monofun (\<lambda> sb. (\<forall>c \<in> ubDom\<cdot>(sb). sb. c \<noteq> \<epsilon>))"
+  apply(rule monofunI, simp add: less_bool_def)
+  by (metis bottomI ubdom_below ubgetch_below)    
 
-lemma spfStep_inj_mono_h[simp]:"monofun (\<lambda> sb. (if (sbHdElemWell sb) then ufRestrict In Out\<cdot>(h (Abs_sbElem(inv convDiscrUp (sbHdElem\<cdot>sb)))) else ufLeast In Out))"
-proof(rule monofunI)
-  fix x y::"'a stream\<^sup>\<Omega>"
-  assume a1:"x \<sqsubseteq> y"
-  show "(if sbHdElemWell x then ufRestrict In Out\<cdot>(h (Abs_sbElem (inv convDiscrUp (sbHdElem\<cdot>x)))) else ufLeast In Out) \<sqsubseteq>
-       (if sbHdElemWell y then ufRestrict In Out\<cdot>(h (Abs_sbElem (inv convDiscrUp (sbHdElem\<cdot>y)))) else ufLeast In Out)"
-  proof(cases "sbHdElemWell x")
-    case True
-    then have true_y:"sbHdElemWell y"
-      by (metis a1 bottomI ubdom_below ubgetch_below sbHdElemWell_def)
-    have a3:"sbHdElem\<cdot>x = sbHdElem\<cdot>y"
-        apply(rule sbHdElem_eq)
-        apply (meson True sbHdElemWell_def) 
-        using True a1 by blast
-    have "ufRestrict In Out\<cdot>(h (Abs_sbElem (inv convDiscrUp (sbHdElem\<cdot>x)))) \<sqsubseteq> ufRestrict In Out\<cdot>(h (Abs_sbElem (inv convDiscrUp (sbHdElem\<cdot>y))))"
-        by (smt a1 a3 below_option_def po_eq_conv spfrt_step ufun_rel_eq)
-    then show ?thesis
-      by(simp add: True true_y)  
-  next
-    case False
-    then show ?thesis
-      by auto
-  qed
+lemma sbHdElemWell_inv_ex:"sbHdElemWell sb \<Longrightarrow> \<exists>x. convDiscrUp x = (sbHdElem\<cdot>sb)"
+  by (metis convdiscrup_inv_eq sbHdElem_channel sbHdElem_dom sbHdElemWell_def)
+
+lemma sbHdElemWell_invConvDiscrUp:"sbHdElemWell sb \<Longrightarrow> \<forall>c\<in>ubDom\<cdot>(sb).((inv convDiscrUp) (sbHdElem\<cdot>sb)) \<rightharpoonup> c = inv Discr (inv Iup ((sbHdElem\<cdot>sb) \<rightharpoonup> c))"
+  by (simp add: convDiscrUp_inv_subst sbHdElem_channel sbHdElemWell_def)
+
+lemma sbElem_surj:
+  shows "\<And> sbE. \<exists>sb. sbE =  Abs_sbElem (inv convDiscrUp (sbHdElem\<cdot>sb)) 
+                    \<and> sbHdElemWell sb \<and> ubDom\<cdot>sb = dom (Rep_sbElem sbE)"
+proof -
+  fix sbE ::"'a sbElem"
+  obtain daFun where daFun_def: "daFun  = Rep_sbElem sbE"
+    by (metis Rep_sbElem_inverse)
+  have f0: "sbElemWell (Rep_sbElem sbE)"
+    using Rep_sbElem by auto
+  have f1: "sbElemWell daFun"
+    by (simp add: daFun_def f0)
+  have f2: "\<forall>c\<in> dom daFun. daFun\<rightharpoonup>c \<in> ctype c"
+    using f1 sbElemWell_def by auto
+  have f3: "dom daFun = dom (Rep_sbElem sbE)"
+    by (simp add: daFun_def)
+  obtain daBundle where daBundle_def: "daBundle = convSB (convDiscrUp daFun)"
+    by simp
+  have daDom_eq: "ubDom\<cdot>daBundle = dom daFun"
+    apply (simp add: daBundle_def)
+    by (simp add: f1 convsb_dom)
+  have daBundle_elem_wel: "sbHdElemWell daBundle"
+    apply (simp add: sbHdElemWell_def)
+  proof rule
+    fix c::channel
+    assume c_in_dom: "c \<in> ubDom\<cdot>daBundle"
+    have c_in_dom_2: "c \<in> dom daFun"
+      using c_in_dom daDom_eq by auto
+    show "daBundle  .  c \<noteq> \<epsilon>"
+      apply (simp add: daBundle_def)
+      by (simp add: convsb_apply f1 c_in_dom_2)
+  qed    
+  have f111: "sbHdElem\<cdot>daBundle = convDiscrUp daFun"
+    apply (simp add: daBundle_def)
+    apply (simp add: sbHdElem_cont sbHdElem_def)
+    apply (rule part_eq)
+    using daBundle_def daDom_eq apply auto[1]
+    apply simp
+    apply (subst daFun_def)
+    apply (subst convSB_def)
+    apply (subst ubgetch_ubrep_eq)
+     apply (simp add: convsb_ubwell f1)
+    using convsb_ubwell convsb_dom daFun_def f1 by auto
+  show "\<exists>sb. sbE =  Abs_sbElem (inv convDiscrUp (sbHdElem\<cdot>sb)) 
+    \<and> sbHdElemWell sb \<and> ubDom\<cdot>sb = dom (Rep_sbElem sbE)"
+    apply (rule_tac x="daBundle" in exI)
+    apply rule defer
+     apply (simp add: daBundle_elem_wel daDom_eq f3)
+    apply (subst f111)
+    by (simp add: Rep_sbElem_inverse convDiscrUp_inj daFun_def)
 qed
-
-lemma discr_u_below_eq:assumes "(x::'a discr\<^sub>\<bottom>)\<sqsubseteq>y" and "x\<noteq>\<bottom>" shows "x = y"
-  proof(insert assms(1), simp add: below_up_def assms)
-    have "x \<noteq> Ibottom"
-      using assms(2) inst_up_pcpo by auto
-    then have "y \<noteq>Ibottom"
-      by (metis assms(1) inst_up_pcpo bottomI)
-    then show "case x of Ibottom \<Rightarrow> True | Iup a \<Rightarrow> case y of Ibottom \<Rightarrow> False | Iup x \<Rightarrow> a \<sqsubseteq> x \<Longrightarrow> x = y"
-      by (metis assms(2) discrete_cpo inst_up_pcpo u.exhaust u.simps(5))
-  qed
 
 lemma sbhdelemwell_neg_adm_fin_h: assumes "chain Y" and "\<forall> i.  \<not> sbHdElemWell (Y i)"
   and "finite (ubDom\<cdot>(Lub Y))" shows "\<exists> c \<in>  (ubDom\<cdot>(Lub Y)). (\<forall> i. (Y i) . c = \<epsilon>)"
@@ -290,8 +289,7 @@ qed
 lemma sbhdelemwell_neg_adm_fin: assumes "chain Y" and "\<And> i.  \<not> sbHdElemWell (Y i)"
   and "finite (ubDom\<cdot>(Lub Y))" 
 shows "\<not> sbHdElemWell (Lub Y)"
-  apply (rule ccontr, simp)
-proof -
+proof (rule ccontr, simp)
   assume a1: "sbHdElemWell (Lub Y)"
   obtain c where c_def1: " (\<And> i. (Y i) . c = \<epsilon>)" and c_def2: "c \<in> ubDom\<cdot>(Lub Y)"
     using assms(1) assms(2) assms(3) sbhdelemwell_neg_adm_fin_h by blast
@@ -304,6 +302,57 @@ lemma sbhdelemwell_lub_n_exI:assumes "chain Y" and "ubDom\<cdot>(Y i) = In" and 
   shows "\<exists> i. sbHdElemWell (Y i)"
   using assms(1) assms(2) assms(3) assms(4) sbhdelemwell_neg_adm_fin by fastforce
 
+(* ----------------------------------------------------------------------- *)
+section \<open>sbHdElem\<close>
+(* ----------------------------------------------------------------------- *)
+lemma sbHdElem_eq:"\<forall>c\<in>(ubDom\<cdot>sb1). sb1. c \<noteq>\<epsilon> \<Longrightarrow> sb1\<sqsubseteq>sb2 \<Longrightarrow> sbHdElem\<cdot>sb1 = sbHdElem\<cdot>sb2"
+proof
+  fix x::channel
+  assume a1:"\<forall>c\<in>(ubDom\<cdot>sb1). sb1. c \<noteq>\<epsilon>"
+  assume a2:"sb1\<sqsubseteq>sb2"
+  have a3:"ubDom\<cdot>sb1 = ubDom\<cdot>sb2"
+    using a2 ubdom_below by auto
+  show "(sbHdElem\<cdot>sb1) x = (sbHdElem\<cdot>sb2) x"
+    apply(simp add:sbHdElem_def sbHdElem_cont a3)
+    using a1 a2 a3 lshd_eq ubgetch_below by blast
+qed
+
+lemma sbHdElem_below:"sbHdElemWell sb1  \<Longrightarrow> sb1\<sqsubseteq>sb2 \<Longrightarrow>  sbHdElemWell sb2"
+  by (metis bottomI sbHdElemWell_def ubdom_below ubgetch_below)
+
+(* updis bijectiv *)
+thm inv_def
+(*inj_on*)
+(* ----------------------------------------------------------------------- *)
+section \<open>spfStep_inj simple if\<close>
+(* ----------------------------------------------------------------------- *)
+
+lemma spfStep_inj_mono_h[simp]:"monofun (\<lambda> sb. (if (sbHdElemWell sb) then ufRestrict In Out\<cdot>(h (Abs_sbElem(inv convDiscrUp (sbHdElem\<cdot>sb)))) else ufLeast In Out))"
+proof(rule monofunI)
+  fix x y::"'a stream\<^sup>\<Omega>"
+  assume a1:"x \<sqsubseteq> y"
+  show "(if sbHdElemWell x then ufRestrict In Out\<cdot>(h (Abs_sbElem (inv convDiscrUp (sbHdElem\<cdot>x)))) else ufLeast In Out) \<sqsubseteq>
+       (if sbHdElemWell y then ufRestrict In Out\<cdot>(h (Abs_sbElem (inv convDiscrUp (sbHdElem\<cdot>y)))) else ufLeast In Out)"
+  proof(cases "sbHdElemWell x")
+    case True
+    then have true_y:"sbHdElemWell y"
+      by (metis a1 bottomI ubdom_below ubgetch_below sbHdElemWell_def)
+    have a3:"sbHdElem\<cdot>x = sbHdElem\<cdot>y"
+        apply(rule sbHdElem_eq)
+        apply (meson True sbHdElemWell_def) 
+        using True a1 by blast
+    have "ufRestrict In Out\<cdot>(h (Abs_sbElem (inv convDiscrUp (sbHdElem\<cdot>x)))) \<sqsubseteq> ufRestrict In Out\<cdot>(h (Abs_sbElem (inv convDiscrUp (sbHdElem\<cdot>y))))"
+        by (smt a1 a3 below_option_def po_eq_conv spfrt_step ufun_rel_eq)
+    then show ?thesis
+      by(simp add: True true_y)  
+  next
+    case False
+    then show ?thesis
+      by auto
+  qed
+qed
+
+section \<open>spfStep_inj strength if\<close>
 lemma spfStep_inj_mono_h2[simp]:"monofun (\<lambda> sb. (if (sbHdElemWell sb \<and> ubDom\<cdot>sb = In) then ufRestrict In Out\<cdot>(h (Abs_sbElem(inv convDiscrUp (sbHdElem\<cdot>sb)))) else ufLeast In Out))"
 proof(rule monofunI)
   fix x y::"'a stream\<^sup>\<Omega>"
@@ -415,95 +464,9 @@ qed
 
 thm Rep_sbElem_inverse
 
-(*
-definition convSB :: "(channel \<rightharpoonup> 'm discr\<^sub>\<bottom>) \<Rightarrow> 'm stream ubundle" where
-"convSB sb \<equiv> Abs_ubundle (\<lambda>c. (c \<in> dom sb) \<leadsto> (lscons\<cdot>(sb \<rightharpoonup> c)\<cdot>\<epsilon>))"
-*)
-
-lemma bla: assumes "sbElemWell (sb)" 
-  shows "ubWell (\<lambda>c. (c \<in> dom sb) \<leadsto> (lscons\<cdot>((convDiscrUp sb) \<rightharpoonup> c)\<cdot>\<epsilon>))"
-  apply (rule ubwellI) 
-  apply (simp add: domIff2)
-  unfolding usclOkay_stream_def
-proof - 
-  fix c
-  assume c_in_dom: "c \<in> dom sb"
-  have f0: "sb\<rightharpoonup>c \<in> ctype c"
-    by (simp add: assms c_in_dom sbElemWellI)
-  have f1: "updis(sb\<rightharpoonup>c) && \<epsilon> = convDiscrUp sb\<rightharpoonup>c && \<epsilon>"
-    by (simp add: c_in_dom convDiscrUp_def up_def)
-  have f2: "updis(sb\<rightharpoonup>c) && \<epsilon> = \<up>(sb\<rightharpoonup>c)"
-    by (simp add: sup'_def)
-  have f3: "sdom\<cdot>(convDiscrUp sb\<rightharpoonup>c && \<epsilon>) = sdom\<cdot>(\<up>sb\<rightharpoonup>c)"
-    using f1 f2 by auto
-  have f4: "sdom\<cdot>(\<up>sb\<rightharpoonup>c) = {sb\<rightharpoonup>c}"
-    by simp
-  show "sdom\<cdot>(convDiscrUp sb\<rightharpoonup>c && \<epsilon>) \<subseteq> ctype c"
-    by (simp add: f0 f3)
-qed
-
-lemma bla_dom: assumes "sbElemWell (sb)" shows "ubDom\<cdot>(convSB (convDiscrUp sb)) = dom sb"
-  apply (simp add: convSB_def)
-  apply (subst ubdom_ubrep_eq)
-   apply (simp add: assms bla)
-  by simp
-
-lemma bla_apply: assumes "sbElemWell (sb)" and "c \<in> dom sb" 
-  shows " (convSB (convDiscrUp sb)) . c = \<up>(sb \<rightharpoonup>c)"
-  apply (simp add: convSB_def)
-  apply (simp add: ubgetch_ubrep_eq assms bla)
-  by (simp add: assms(2) convDiscrUp_def sup'_def up_def)
-
-lemma sbElem_surj:
-  shows "\<And> sbE. \<exists>sb. sbE =  Abs_sbElem (inv convDiscrUp (sbHdElem\<cdot>sb)) 
-                    \<and> sbHdElemWell sb \<and> ubDom\<cdot>sb = dom (Rep_sbElem sbE)"
-proof -
-  fix sbE ::"'a sbElem"
-  obtain daFun where daFun_def: "daFun  = Rep_sbElem sbE"
-    by (metis Rep_sbElem_inverse)
-  have f0: "sbElemWell (Rep_sbElem sbE)"
-    using Rep_sbElem by auto
-  have f1: "sbElemWell daFun"
-    by (simp add: daFun_def f0)
-  have f2: "\<forall>c\<in> dom daFun. daFun\<rightharpoonup>c \<in> ctype c"
-    using f1 sbElemWell_def by auto
-  have f3: "dom daFun = dom (Rep_sbElem sbE)"
-    by (simp add: daFun_def)
-  obtain daBundle where daBundle_def: "daBundle = convSB (convDiscrUp daFun)"
-    by simp
-  have daDom_eq: "ubDom\<cdot>daBundle = dom daFun"
-    apply (simp add: daBundle_def)
-    by (simp add: f1 bla_dom)
-  have daBundle_elem_wel: "sbHdElemWell daBundle"
-    apply (simp add: sbHdElemWell_def)
-  proof rule
-    fix c::channel
-    assume c_in_dom: "c \<in> ubDom\<cdot>daBundle"
-    have c_in_dom_2: "c \<in> dom daFun"
-      using c_in_dom daDom_eq by auto
-    show "daBundle  .  c \<noteq> \<epsilon>"
-      apply (simp add: daBundle_def)
-      by (simp add: bla_apply f1 c_in_dom_2)
-  qed    
-  have f111: "sbHdElem\<cdot>daBundle = convDiscrUp daFun"
-    apply (simp add: daBundle_def)
-    apply (simp add: sbHdElem_cont sbHdElem_def)
-    apply (rule part_eq)
-    using daBundle_def daDom_eq apply auto[1]
-    apply simp
-    apply (subst daFun_def)
-    apply (subst convSB_def)
-    apply (subst ubgetch_ubrep_eq)
-     apply (simp add: bla f1)
-    using bla bla_dom daFun_def f1 by auto
-  show "\<exists>sb. sbE =  Abs_sbElem (inv convDiscrUp (sbHdElem\<cdot>sb)) 
-    \<and> sbHdElemWell sb \<and> ubDom\<cdot>sb = dom (Rep_sbElem sbE)"
-    apply (rule_tac x="daBundle" in exI)
-    apply rule defer
-     apply (simp add: daBundle_elem_wel daDom_eq f3)
-    apply (subst f111)
-    by (simp add: Rep_sbElem_inverse convDiscrUp_inj daFun_def)
-qed
+(* ----------------------------------------------------------------------- *)
+section \<open>sbelem spfStep_inj_on\<close>
+(* ----------------------------------------------------------------------- *)
     
 lemma spfStep_inj_on[simp]:assumes "finite In" 
   shows "inj_on (spfStep_inj In Out) {h. \<forall>m. ufDom\<cdot>(h m) = In \<and> ufRan\<cdot>(h m) = Out}"
@@ -569,88 +532,11 @@ lemma spf_contI2 [simp]: assumes "cont g"
   shows "cont (\<lambda>b. (ubDom\<cdot>b = In)\<leadsto>g b)"
   by (simp add: assms)
 
-
+(* ----------------------------------------------------------------------- *)
+section \<open>spfStep\<close>
+(* ----------------------------------------------------------------------- *)
 definition spfStep::"channel set \<Rightarrow> channel set \<Rightarrow> ('m::message sbElem \<Rightarrow> 'm SPF)\<rightarrow>'m SPF" where
 "spfStep In Out = (\<Lambda> h. Abs_ufun(\<Lambda> sb. (ubDom\<cdot>sb = In) \<leadsto> spfStep_inj In Out h sb \<rightleftharpoons> sb))"
-
-(*
-
-
-lemma spfStep_inj_cont_h[simp]:"cont (\<lambda> sb. (if (sbHdElemWell sb) then ufRestrict In Out\<cdot>(h (Abs_sbElem(inv convDiscrUp (sbHdElem\<cdot>sb)))) else ufLeast In Out))"(*Maybe In has to be finite for cont*)
-proof(rule Cont.contI2, simp)
-  fix Y::"nat \<Rightarrow> 'a stream\<^sup>\<Omega>"
-  assume a1:"chain Y"
-  assume a2:"chain (\<lambda>i. if sbHdElemWell (Y i) then ufRestrict In Out\<cdot>(h (Abs_sbElem (inv convDiscrUp (sbHdElem\<cdot>(Y i))))) else ufLeast In Out)"
-  have dom:"ufDom\<cdot>(\<Squnion>i::nat. if sbHdElemWell (Y i) then ufRestrict In Out\<cdot>(h (Abs_sbElem (inv convDiscrUp (sbHdElem\<cdot>(Y i))))) else ufLeast In Out) = In"
-    by (smt a2 ufRestrict_dom ufdom_lub_eq ufleast_ufdom)
-  have ran:"ufRan\<cdot>(\<Squnion>i::nat. if sbHdElemWell (Y i) then ufRestrict In Out\<cdot>(h (Abs_sbElem (inv convDiscrUp (sbHdElem\<cdot>(Y i))))) else ufLeast In Out) = Out"
-    by (smt a2 ufRestrict_ran ufleast_ufRan ufran_lub_eq)  
-  have sbHdEq:"\<And>i. sbHdElemWell (Y i) \<Longrightarrow> (Abs_sbElem (inv convDiscrUp (sbHdElem\<cdot>(\<Squnion>i. Y i)))) = (Abs_sbElem (inv convDiscrUp (sbHdElem\<cdot>(Y i))))"
-    by (metis a1 is_ub_thelub sbHdElemWell_def sbHdElem_eq)
-  show "(if sbHdElemWell (\<Squnion>i. Y i) then ufRestrict In Out\<cdot>(h (Abs_sbElem (inv convDiscrUp (sbHdElem\<cdot>(\<Squnion>i. Y i))))) else ufLeast In Out) \<sqsubseteq>
-       (\<Squnion>i. if sbHdElemWell (Y i) then ufRestrict In Out\<cdot>(h (Abs_sbElem (inv convDiscrUp (sbHdElem\<cdot>(Y i))))) else ufLeast In Out)"
-  proof(cases "sbHdElemWell (\<Squnion>i. Y i)")
-    case True
-    obtain n where n_def:"sbHdElemWell (Y n)"
-      sorry
-    then have h1:"(if sbHdElemWell (\<Squnion>i. Y i) then ufRestrict In Out\<cdot>(h (Abs_sbElem (inv convDiscrUp (sbHdElem\<cdot>(\<Squnion>i. Y i))))) else ufLeast In Out) = (ufRestrict In Out\<cdot>(h (Abs_sbElem (inv convDiscrUp (sbHdElem\<cdot>( Y n))))))"
-      by(subst sbHdEq[of n], simp_all add: True n_def)
-    then have h2:"ufRestrict In Out\<cdot>(h (Abs_sbElem (inv convDiscrUp (sbHdElem\<cdot>(Y n)))))\<sqsubseteq> (\<Squnion>i. (if sbHdElemWell (Y i) then ufRestrict In Out\<cdot>(h (Abs_sbElem (inv convDiscrUp (sbHdElem\<cdot>(Y i))))) else ufLeast In Out))"
-        using a2 below_lub n_def by fastforce
-    then show ?thesis
-      by (simp add: h1)
-  next
-    case False
-    then show ?thesis
-      using dom ran by auto
-  qed
-qed
-  
-lemma spfStep_inj_mono[simp]:"monofun (\<lambda> h. (\<Lambda> sb. (if (sbHdElemWell sb) then ufRestrict In Out\<cdot>(h (Abs_sbElem(inv convDiscrUp (sbHdElem\<cdot>sb)))) else ufLeast In Out)))"
-proof(rule monofunI)
-  fix x y ::"'a sbElem \<Rightarrow> 'b ufun"
-  assume a1:"x \<sqsubseteq> y"
-  show "(\<Lambda> sb. if sbHdElemWell sb then ufRestrict In Out\<cdot>(x (Abs_sbElem (inv convDiscrUp (sbHdElem\<cdot>sb)))) else ufLeast In Out) \<sqsubseteq>
-       (\<Lambda> sb. if sbHdElemWell sb then ufRestrict In Out\<cdot>(y (Abs_sbElem (inv convDiscrUp (sbHdElem\<cdot>sb)))) else ufLeast In Out)"
-  proof(rule cfun_belowI,auto)
-    fix xa::"'a stream\<^sup>\<Omega>"
-    assume a2:"sbHdElemWell xa"
-    show "ufRestrict In Out\<cdot>(x (Abs_sbElem (inv convDiscrUp (sbHdElem\<cdot>xa)))) \<sqsubseteq> ufRestrict In Out\<cdot>(y (Abs_sbElem (inv convDiscrUp (sbHdElem\<cdot>xa))))"
-      by (simp add: a1 cont_pref_eq1I fun_belowD)
-  qed
-qed
-    
-
-lemma spfStep_inj_cont[simp]:"cont (\<lambda> h. (\<Lambda> sb. (if (sbHdElemWell sb) then ufRestrict In Out\<cdot>(h (Abs_sbElem(inv convDiscrUp (sbHdElem\<cdot>sb)))) else ufLeast In Out)))"
-proof(rule Cont.contI2, simp)
-  fix Y::"nat \<Rightarrow> 'a sbElem \<Rightarrow> 'b ufun"
-  assume a1: "chain Y"
-  assume a2: "chain (\<lambda>i::nat. \<Lambda> (sb::'a stream\<^sup>\<Omega>). if sbHdElemWell sb then ufRestrict In Out\<cdot>(Y i (Abs_sbElem (inv convDiscrUp (sbHdElem\<cdot>sb)))) else ufLeast In Out)"
-  have cont_lub:"\<And>x::'a stream\<^sup>\<Omega>. cont (\<lambda>x::'a stream\<^sup>\<Omega>. \<Squnion>i::nat. if sbHdElemWell x then ufRestrict In Out\<cdot>(Y i (Abs_sbElem (inv convDiscrUp (sbHdElem\<cdot>x)))) else ufLeast In Out)"
-  proof(rule cont2cont_lub, simp_all add: a2)
-    fix sb::"'a stream\<^sup>\<Omega>"
-    show "chain (\<lambda>i. if sbHdElemWell sb then ufRestrict In Out\<cdot>(Y i (Abs_sbElem (inv convDiscrUp (sbHdElem\<cdot>sb)))) else ufLeast In Out)"
-    proof(cases "sbHdElemWell sb")
-      case True
-      then show ?thesis 
-        by (simp add: a1 ch2ch_fun)
-    next
-      case False
-      then show ?thesis
-        by simp
-    qed
-  qed
-  show "(\<Lambda> sb. if sbHdElemWell sb then ufRestrict In Out\<cdot>((\<Squnion>i::nat. Y i) (Abs_sbElem (inv convDiscrUp (sbHdElem\<cdot>sb)))) else ufLeast In Out) \<sqsubseteq>
-       (\<Squnion>i. \<Lambda> sb. if sbHdElemWell sb then ufRestrict In Out\<cdot>(Y i (Abs_sbElem (inv convDiscrUp (sbHdElem\<cdot>sb)))) else ufLeast In Out)"
-    apply(subst lub_cfun, simp add: a2)
-    apply(simp only: below_cfun_def below_fun_def)
-    apply(subst beta_cfun, simp)
-    apply(subst beta_cfun)
-    apply simp
-    apply(subst beta_cfun, simp only: cont_lub)
-    by (simp add: a1 ch2ch_fun cont2contlubE lub_fun)
-qed
-*)
 
 
 lemma spfStep_inner_cont[simp]:assumes "finite In" 
@@ -866,6 +752,11 @@ next
     apply (fold ubclDom_ubundle_def)
     apply (rule ufun_ufdom_abs)
     by (simp_all add: assms ubclDom_ubundle_def)
+  have f1: "\<And>x. (\<Squnion>i::nat. spfStep_inj In Out (Y i) x \<rightleftharpoons> x) =   (\<Squnion>i::nat. spfStep_inj In Out (Y i) x) \<rightleftharpoons> x"
+    apply (subst rep_cufun_lub_apply)
+     apply (rule chainI)
+     apply (simp add: fun_belowD monofun_cfun_arg po_class.chainE spfStep_inj_def y_chain)
+    by simp
   show "Abs_cufun (\<lambda>sb::'a stream\<^sup>\<Omega>. (ubDom\<cdot>sb = In)\<leadsto>spfStep_inj In Out (\<Squnion>i::nat. Y i) sb \<rightleftharpoons> sb) \<sqsubseteq>
        (\<Squnion>i::nat. Abs_cufun (\<lambda>sb::'a stream\<^sup>\<Omega>. (ubDom\<cdot>sb = In)\<leadsto>spfStep_inj In Out (Y i) sb \<rightleftharpoons> sb))"
     apply (rule ufun_belowI)
@@ -875,11 +766,15 @@ next
     apply simp
     apply (simp add: rep_cufun_lub_apply ubclDom_ubundle_def cufun_chain)
     apply (simp add: assms ubclDom_ubundle_def)
+    apply (simp add: f1)
     apply (case_tac "sbHdElemWell x") defer
      apply (simp_all add: spfStep_inj_def)
-    sorry
+    by (simp add: y_chain ch2ch_fun cont2contlubE lub_fun)
 qed
-     
+
+(* ----------------------------------------------------------------------- *)
+subsection \<open>spfStep utils\<close>
+(* ----------------------------------------------------------------------- *)
 
 lemma spfstep_dom[simp]:assumes "finite cIn" shows "ufDom\<cdot>(spfStep cIn cOut\<cdot>f) = cIn"
   apply (simp add: spfStep_def assms)
@@ -892,7 +787,6 @@ lemma spfstep_ran [simp]:assumes "finite cIn" shows "ufRan\<cdot>(spfStep cIn cO
   apply (simp add: assms)
   apply (simp add: spfStep_def assms)
   by (metis ubclDom_ubundle_def ubcldom_least_cs)
-    
     
 lemma spfstep_inj_dom[simp]:assumes "finite cIn" shows "ufDom\<cdot>(spfStep_inj cIn cOut f sb) = cIn"
   by (simp add:  assms spfStep_inj_def)
@@ -925,7 +819,6 @@ proof -
     by (simp add: test2)
 qed
 (* lemma spfstep_insert  *)
-
     
 lemma spfstep_step: assumes "ubDom\<cdot>sb = In" 
   and "sbHdElemWell sb" and "finite In" 
@@ -933,5 +826,6 @@ lemma spfstep_step: assumes "ubDom\<cdot>sb = In"
       \<and> ufRan\<cdot>(f (Abs_sbElem(inv convDiscrUp (sbHdElem\<cdot>sb)))) = Out"
 shows "spfStep In Out\<cdot>f \<rightleftharpoons> sb = (f (Abs_sbElem(inv convDiscrUp (sbHdElem\<cdot>sb))))\<rightleftharpoons>sb"
   by (simp add:spfStep_2_spfStep_inj  spfStep_inj_def assms)
+
 
 end

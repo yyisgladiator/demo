@@ -335,7 +335,6 @@ lemma convDiscrUp_inv_subst: assumes "\<forall>c\<in>dom f. (f \<rightharpoonup>
     ultimately show ?thesis
       by simp
   qed
-
 (* ----------------------------------------------------------------------- *)
   subsection \<open>sbElemWell\<close>
 (* ----------------------------------------------------------------------- *)
@@ -355,6 +354,43 @@ lemma sbElemWellEx:"\<exists>x::channel \<Rightarrow> 'm option. sbElemWell x"
   apply(simp add: sbElemWell_def)
   by fastforce
 
+(* ----------------------------------------------------------------------- *)
+  subsection \<open>convSB\<close>
+(* ----------------------------------------------------------------------- *)
+
+lemma convsb_ubwell: assumes "sbElemWell (sb)" 
+  shows "ubWell (\<lambda>c. (c \<in> dom sb) \<leadsto> (lscons\<cdot>((convDiscrUp sb) \<rightharpoonup> c)\<cdot>\<epsilon>))"
+  apply (rule ubwellI) 
+  apply (simp add: domIff2)
+  unfolding usclOkay_stream_def
+proof - 
+  fix c
+  assume c_in_dom: "c \<in> dom sb"
+  have f0: "sb\<rightharpoonup>c \<in> ctype c"
+    by (simp add: assms c_in_dom sbElemWellI)
+  have f1: "updis(sb\<rightharpoonup>c) && \<epsilon> = convDiscrUp sb\<rightharpoonup>c && \<epsilon>"
+    by (simp add: c_in_dom convDiscrUp_def up_def)
+  have f2: "updis(sb\<rightharpoonup>c) && \<epsilon> = \<up>(sb\<rightharpoonup>c)"
+    by (simp add: sup'_def)
+  have f3: "sdom\<cdot>(convDiscrUp sb\<rightharpoonup>c && \<epsilon>) = sdom\<cdot>(\<up>sb\<rightharpoonup>c)"
+    using f1 f2 by auto
+  have f4: "sdom\<cdot>(\<up>sb\<rightharpoonup>c) = {sb\<rightharpoonup>c}"
+    by simp
+  show "sdom\<cdot>(convDiscrUp sb\<rightharpoonup>c && \<epsilon>) \<subseteq> ctype c"
+    by (simp add: f0 f3)
+qed
+
+lemma convsb_dom: assumes "sbElemWell (sb)" shows "ubDom\<cdot>(convSB (convDiscrUp sb)) = dom sb"
+  apply (simp add: convSB_def)
+  apply (subst ubdom_ubrep_eq)
+   apply (simp add: assms convsb_ubwell)
+  by simp
+
+lemma convsb_apply: assumes "sbElemWell (sb)" and "c \<in> dom sb" 
+  shows " (convSB (convDiscrUp sb)) . c = \<up>(sb \<rightharpoonup>c)"
+  apply (simp add: convSB_def)
+  apply (simp add: ubgetch_ubrep_eq assms convsb_ubwell)
+  by (simp add: assms(2) convDiscrUp_def sup'_def up_def)
 
 (* ----------------------------------------------------------------------- *)
   subsection \<open>sbMapStream\<close>
