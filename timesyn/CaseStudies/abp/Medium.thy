@@ -31,7 +31,8 @@ definition MedSPF :: "bool stream \<Rightarrow> abpMessage tsyn SPF" where
   "MedSPF ora \<equiv> Abs_ufun (tsynbMed ora)"
 
 definition MedSPS :: "(abpMessage tsyn stream\<^sup>\<Omega>) ufun uspec" where 
-  "MedSPS = Abs_uspec (Rev {(MedSPF ora) | ora. #({True} \<ominus> ora)=\<infinity>}, Discr {\<C> ''ds''}, Discr {\<C> ''dr''})"
+  "MedSPS = Abs_uspec (Rev {(MedSPF ora) | ora. #({True} \<ominus> ora) = \<infinity>}, 
+                             Discr {\<C> ''ds''}, Discr {\<C> ''dr''})"
 
 (* ----------------------------------------------------------------------- *)
 section {* basic properties *}
@@ -52,9 +53,9 @@ lemma ora_ind [case_names adm bot msg_t msg_f]:
   by (simp add: msg_f)
 
 lemma oracases [case_names bot true false]:
-  assumes bot: "s=\<epsilon> \<Longrightarrow> P s"
-    and true: "\<And>as. s= (\<up>True \<bullet> as) \<Longrightarrow> P s"
-    and false: "\<And>as. s=(\<up>False \<bullet> as) \<Longrightarrow> P s"
+  assumes bot: "s = \<epsilon> \<Longrightarrow> P s"
+    and true: "\<And>as. s = (\<up>True \<bullet> as) \<Longrightarrow> P s"
+    and false: "\<And>as. s = (\<up>False \<bullet> as) \<Longrightarrow> P s"
   shows "P s"
   by (metis (full_types) bot false scases true)
 
@@ -257,7 +258,8 @@ subsection {* basic properties of tsynbMed *}
 (* ----------------------------------------------------------------------- *)
 
 text{* The output bundle of @{term tsynbRec} is well-formed. *}
-lemma tsynbmed_ubwell [simp]: "ubWell [\<C> ''dr'' \<mapsto> natbool2abp\<cdot>(tsynMed\<cdot>(abp2natbool\<cdot>(sb  .  \<C> ''ds''))\<cdot>ora)]"
+lemma tsynbmed_ubwell [simp]: 
+  "ubWell [\<C> ''dr'' \<mapsto> natbool2abp\<cdot>(tsynMed\<cdot>(abp2natbool\<cdot>(sb  .  \<C> ''ds''))\<cdot>ora)]"
   apply (simp add: ubWell_def usclOkay_stream_def natbool2abp_def abp2natbool_def ctype_tsyn_def
           tsynmap_insert smap_sdom image_subset_iff)
   by (metis image_eqI range_eqI tsynApplyElem.elims)
@@ -279,7 +281,8 @@ lemma tsynbmed_mono [simp]:
 
 lemma tsynbmed_chain: "chain Y \<Longrightarrow> 
       chain (\<lambda>i::nat.[\<C> ''dr'' \<mapsto> natbool2abp\<cdot>(tsynMed\<cdot>(abp2natbool\<cdot>(Y i  .  \<C> ''ds''))\<cdot>ora)])"
-  by (simp add: chain_def fun_below_iff monofun_cfun_arg monofun_cfun_fun po_class.chainE some_below)
+  by (simp add: chain_def fun_below_iff monofun_cfun_arg monofun_cfun_fun po_class.chainE 
+                some_below)
 
 text{* @{term tsynbMed} is continuous. *}
 lemma tsynbmed_cont [simp]:
@@ -346,7 +349,8 @@ lemma medspf_strict: "(MedSPF ora) \<rightleftharpoons> ubLeast{\<C> ''ds''} = u
 subsection {* Basic Properties of MedSPS *}
 (* ----------------------------------------------------------------------- *)
 
-lemma medsps_uspecwell: "uspecWell (Rev {(MedSPF ora) | ora. #({True} \<ominus> ora)=\<infinity>}) (Discr {\<C> ''ds''}) (Discr {\<C> ''dr''})"
+lemma medsps_uspecwell: 
+  "uspecWell (Rev {(MedSPF ora) | ora. #({True} \<ominus> ora)=\<infinity>}) (Discr {\<C> ''ds''}) (Discr {\<C> ''dr''})"
   apply (rule uspec_wellI)
   apply (simp add: ufclDom_ufun_def)
   using medspf_ufdom apply blast
