@@ -207,13 +207,13 @@ lemma tsynbrec_mono [simp]:
   by (simp add: below_ubundle_def cont_pref_eq1I fun_belowI some_below)
 
 text{* Creating a chain on the two output channels. *}
+
 lemma tsynbrec_chain: "chain Y \<Longrightarrow>
   chain (\<lambda>i::nat. [\<C> ''ar'' \<mapsto> bool2abp\<cdot>(tsynProjSnd\<cdot>(abp2natbool\<cdot>(Y i  .  \<C> ''dr''))), 
                    \<C> ''o'' \<mapsto> nat2abp\<cdot>(tsynRec\<cdot>(abp2natbool\<cdot>(Y i  .  \<C> ''dr'')))])"
   apply (rule chainI)
   by (simp add: fun_below_iff monofun_cfun_arg po_class.chainE some_below)
 
-text{* Creating a chain on the two output channels. *}
 lemma tsynbrec_ubundle_chain: "chain Y \<Longrightarrow>
   chain (\<lambda>i::nat. Abs_ubundle 
         [\<C> ''ar'' \<mapsto> bool2abp\<cdot>(tsynProjSnd\<cdot>(abp2natbool\<cdot>(Y i  .  \<C> ''dr''))),
@@ -222,19 +222,18 @@ lemma tsynbrec_ubundle_chain: "chain Y \<Longrightarrow>
   apply (simp add: below_ubundle_def)
   by (simp add: fun_below_iff monofun_cfun_arg po_class.chainE some_below)
 
-text{* Creating a chain on the two output channels. *}
 lemma tsynbrec_chain2: " chain Y \<Longrightarrow>
   chain (\<lambda>i::nat. [\<C> ''ar'' \<mapsto> bool2abp\<cdot>(tsynProjSnd\<cdot>(abp2natbool\<cdot>Rep_ubundle (Y i)\<rightharpoonup>\<C> ''dr'')), 
                    \<C> ''o'' \<mapsto> nat2abp\<cdot>(tsynRec\<cdot>(abp2natbool\<cdot>Rep_ubundle (Y i)\<rightharpoonup>\<C> ''dr''))])"
   by (metis (no_types, lifting) po_class.chain_def tsynbrec_chain ubgetch_insert)
 
 text{* Extracting the lub doesn't change the term.*}
+
 lemma tsynbrec_ar_contlub: assumes "chain Y"
   shows "bool2abp\<cdot>(tsynProjSnd\<cdot>(abp2natbool\<cdot>(\<Squnion>i. Y i  .  \<C> ''dr''))) 
   = (\<Squnion>i. (bool2abp\<cdot>(tsynProjSnd\<cdot>(abp2natbool\<cdot>(((Y i.  \<C> ''dr'')))))))"
   by (simp add: assms contlub_cfun_arg)
 
-text{* Extracting the lub doesn't change the term.*}
 lemma tsynbrec_o_contlub: assumes "chain Y"
   shows "nat2abp\<cdot>(tsynRec\<cdot>(abp2natbool\<cdot>(\<Squnion>i. Y i  .  \<C> ''dr''))) 
   = (\<Squnion>i. (nat2abp\<cdot>(tsynRec\<cdot>(abp2natbool\<cdot>(((Y i.  \<C> ''dr'')))))))"
@@ -485,7 +484,7 @@ lemma msga_createbundle_ubconc [simp]:
            = \<up>(Msg (Pair_nat_bool a)) \<bullet> (sb.  \<C> ''dr'')"
   by (simp add: assms usclConc_stream_def)
 
-text{*The rest of the concatenation of a simple bundle with another bundle is the latter. *}
+text{* The rest of the concatenation of a simple bundle with another bundle is the latter. *}
 lemma msga_createbundle_ubconc_sbrt [simp]:
   assumes "ubDom\<cdot>sb = {\<C> ''dr''}" 
   shows "sbRt\<cdot>(ubConc (createBundle (Msg (Pair_nat_bool a)) (\<C> ''dr''))\<cdot>sb) = sb"
@@ -635,16 +634,8 @@ lemma recspf_receiverspf_ub_eq:
   apply(simp add: contlub_cfun_arg)
     defer
   apply(simp add: assms receiverspf_ubdom receiverspf_ufdom recspf_ubdom recspf_ufdom recspf_strict receiverspf_strict)
- apply(simp add: ubconc_insert)
   sorry
 
-
-lemma h1: "ubDom\<cdot>u = ubDom\<cdot>ub \<Longrightarrow> ReceiverSPF \<rightleftharpoons> ubConc u\<cdot>ub = 
-  ubConc (ReceiverSPF \<rightleftharpoons> u)\<cdot>((da_h ReceiverAutomaton (State Rt)) \<rightleftharpoons> ub)"
-  apply(simp add: ReceiverSPF_def da_H_def)
-
-
-lemma h2: "ubDom\<cdot>u = ubDom\<cdot>ub \<Longrightarrow> RecSPF \<rightleftharpoons> ubConc u\<cdot>ub = 1" 
 
 text{* @{term ReceiverSPF} is equal to @{term RecSPF}. *}
 lemma recspf_receiverspf_eq: "ReceiverSPF = RecSPF"
