@@ -141,8 +141,7 @@ text {* @{term tsynRec} test on infinite stream. *}
 lemma tsynrec_test_infstream: 
   "tsynRec\<cdot>((<[Msg(1, False), null, Msg(2, True),Msg(1, False)]>)\<infinity>) 
      = (<[null, null, Msg 2, Msg 1]>)\<infinity>"
-  apply simp
-  apply (subst rek2sinftimes [of "tsynRec\<cdot>\<up>(\<M> (Suc (0::nat), False)) \<bullet> \<up>- \<bullet> \<up>(\<M> (2::nat, True)) \<bullet> \<up>(\<M> (Suc (0::nat), False))\<infinity>"])
+  apply (subst rek2sinftimes)
   apply (subst sinftimes_unfold)
   by (simp_all add: tsynrec_insert)
 
@@ -365,6 +364,8 @@ lemma recspf_strict: "RecSPF \<rightleftharpoons> ubclLeast{\<C> ''dr''} = ubclL
               = Abs_ubundle (\<lambda>c::channel. (c \<in> {\<C> ''ar'', \<C> ''o''})\<leadsto>\<epsilon>)\<close> ubLeast_def ubclLeast_ubundle_def)
       qed
   qed
+
+
 
 (* ----------------------------------------------------------------------- *)
   section {* Automaton Receiver Transition Lemmata *}
@@ -613,6 +614,7 @@ lemma receiverautomaton_H_step:
 (* ToDo: add descriptions. *)
 
 lemma receiverspf_strict: "ReceiverSPF \<rightleftharpoons> ubclLeast{\<C> ''dr''} = ubclLeast{\<C> ''ar'', \<C> ''o''}"
+  apply (simp add: 
   sorry
 
 lemma receiverspf_ufdom: "ufDom\<cdot>ReceiverSPF = {\<C> ''dr''}"
@@ -638,5 +640,62 @@ lemma recspf_receiverspf_eq: "ReceiverSPF = RecSPF"
   apply (rule ufun_eqI)
   apply (simp add: receiverspf_ufdom recspf_ufdom)
   by (simp add: recspf_receiverspf_ub_eq ubclDom_ubundle_def)
+
+lemma h2: "ubDom\<cdot>(Abs_ubundle [\<C> ''dr'' \<mapsto> natbool2abp\<cdot>(\<up>(\<M> (Suc (0::nat), False)) \<bullet> \<up>- 
+          \<bullet> \<up>(\<M> (2::nat, True)) \<bullet> \<up>(\<M> (Suc (0::nat), False)))]) =  {\<C> ''dr''}"
+  apply (simp add: ubDom_def)
+  apply (subst Abs_ubundle_inverse)
+  by (simp_all add: ubWell_def usclOkay_stream_def natbool2abp_def ctype_tsyn_def tsynMap_def smap_sdom)
+
+lemma h3_h: "abp2natbool\<cdot>(natbool2abp\<cdot>x) = x"
+  sorry
+
+lemma h3: "(tsynProjSnd\<cdot>(abp2natbool\<cdot>(Abs_ubundle [\<C> ''dr'' \<mapsto> natbool2abp\<cdot>(\<up>(\<M> (Suc (0::nat), False)) 
+            \<bullet> \<up>- \<bullet> \<up>(\<M> (2::nat, True)) \<bullet> \<up>(\<M> (Suc (0::nat), False)))]  . \<C> ''dr''))) 
+          = (\<up>(\<M> False) \<bullet> \<up>- \<bullet> \<up>(\<M> True) \<bullet> \<up>(\<M> False))"
+proof -
+  have "(Abs_ubundle [\<C> ''dr'' \<mapsto> natbool2abp\<cdot>(\<up>(\<M> (Suc (0::nat), False)) \<bullet> \<up>- \<bullet> 
+        \<up>(\<M> (2::nat, True)) \<bullet> \<up>(\<M> (Suc (0::nat), False)))]  . \<C> ''dr'') = 
+        natbool2abp\<cdot>(\<up>(\<M> (Suc (0::nat), False)) \<bullet> \<up>- \<bullet> \<up>(\<M> (2::nat, True)) 
+        \<bullet> \<up>(\<M> (Suc (0::nat), False)))" 
+
+    sorry
+  then show ?thesis 
+    apply (simp add: h3_h)
+    by (metis sconc_snd_empty tsynprojsnd_sconc_msg tsynprojsnd_sconc_null tsynprojsnd_strict)
+qed
+
+lemma h4: "tsynRec\<cdot>(abp2natbool\<cdot>(Abs_ubundle [\<C> ''dr'' \<mapsto> natbool2abp\<cdot>(\<up>(\<M> (Suc (0::nat), False)) 
+        \<bullet> \<up>- \<bullet> \<up>(\<M> (2::nat, True)) \<bullet> \<up>(\<M> (Suc (0::nat), False)))]  . \<C> ''dr'')) 
+        =  (\<up>- \<bullet> \<up>- \<bullet> \<up>(\<M> 2::nat) \<bullet> \<up>(\<M> Suc (0::nat)))"
+proof -
+  have "(Abs_ubundle [\<C> ''dr'' \<mapsto> natbool2abp\<cdot>(\<up>(\<M> (Suc (0::nat), False)) 
+        \<bullet> \<up>- \<bullet> \<up>(\<M> (2::nat, True)) \<bullet> \<up>(\<M> (Suc (0::nat), False)))]  . \<C> ''dr'') = 
+        natbool2abp\<cdot>(\<up>(\<M> (Suc (0::nat), False)) 
+        \<bullet> \<up>- \<bullet> \<up>(\<M> (2::nat, True)) \<bullet> \<up>(\<M> (Suc (0::nat), False)))"
+    sorry
+  then show ?thesis 
+    apply (simp add: h3_h)
+    by (simp add: tsynrec_insert)
+qed
+
+lemma receiverspf_test: "ReceiverSPF \<rightleftharpoons> 
+   Abs_ubundle ([\<C> ''dr''\<mapsto> natbool2abp\<cdot>(<[Msg(1, False), null, Msg(2, True),Msg(1, False)]>)] ) = 
+   Abs_ubundle [\<C> ''ar'' \<mapsto> bool2abp\<cdot>(<[Msg(False), null, Msg(True),Msg(False)]>), 
+                \<C> ''o'' \<mapsto> nat2abp\<cdot>(<[null, null, Msg(2),Msg(1)]>)]" 
+(*  apply (simp add: ReceiverSPF_def ReceiverAutomaton_def da_H_def)
+  apply (simp add: da_h_unfolding daInitialOutput_def spfConcOut_def)
+  using receivertransition_automaton_well
+  apply (simp add: Abs_dAutomaton_inverse)
+  apply (subst ufapplyout_apply)
+  apply (metis ubclDom_ubundle_def ubconceq_dom)
+  defer 
+  apply simp
+  apply (simp add: ubconc_insert) 
+  apply (simp add: stepstep_step)
+  sorry
+*)
+  apply (simp add: recspf_receiverspf_eq recspf_insert tsynbrec_insert)
+  by (simp add: h2 h3 h4)
 
 end
