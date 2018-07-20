@@ -335,50 +335,16 @@ lemma medspf_ubdom:
 
 text{* @{term MedSPF} is strict. *}
 lemma medspf_strict: "(MedSPF ora) \<rightleftharpoons> ubLeast{\<C> ''ds''} = ubLeast{\<C> ''dr''}"
-  apply(simp add: medspf_insert tsynbMed_def ubLeast_def)
-proof-
-  have ubWell_ds_eps:"ubWell (\<lambda>c::channel. (c = \<C> ''ds'')\<leadsto>\<epsilon>)" 
-    apply(simp add:ubWell_def)
-    using usclOkay_bot by force
-  hence ubDom_ds: "ubDom\<cdot>(Abs_ubundle (\<lambda>c::channel. (c = \<C> ''ds'')\<leadsto>\<epsilon>)) = {\<C> ''ds''}" 
-    apply(simp add:ubDom_def)   
-    apply (subst ubrep_ubabs, simp_all) 
-    using dom_def by fastforce
-  have cont_func: "cont (\<lambda>sb::abpMessage tsyn stream\<^sup>\<Omega>. (ubDom\<cdot>sb = {\<C> ''ds''})\<leadsto>
-    Abs_ubundle [\<C> ''dr'' \<mapsto> natbool2abp\<cdot>(tsynMed\<cdot>(abp2natbool\<cdot>(sb  .  \<C> ''ds''))\<cdot>ora)])" 
-    by (simp add:cont_def)
-  hence ufWell_func: "ufWell (Abs_cfun (\<lambda>sb::abpMessage tsyn stream\<^sup>\<Omega>. (ubDom\<cdot>sb = {\<C> ''ds''})\<leadsto>
-    Abs_ubundle [\<C> ''dr'' \<mapsto> natbool2abp\<cdot>(tsynMed\<cdot>(abp2natbool\<cdot>(sb  .  \<C> ''ds''))\<cdot>ora)]))"
-    apply(simp add: ufWell_def)
-    apply(rule)
-    apply (rule_tac x="{\<C> ''ds''}" in exI)
-    apply (simp add: domIff ubclDom_ubundle_def)
-    apply (rule_tac x="{\<C> ''dr''}" in exI)
-    apply(simp add: tsynbmed_ubundle_ubdom ubclDom_ubundle_def )
-  (*  by (smt option.distinct(1) option.sel ran2exists tsynbmed_ubundle_ubdom)*)
-  proof 
-    fix b::"abpMessage tsyn stream\<^sup>\<Omega>"
-    show " b \<in> ran (\<lambda>sb::abpMessage tsyn stream\<^sup>\<Omega>. (ubDom\<cdot>sb = {\<C> ''ds''})\<leadsto>
-       Abs_ubundle [\<C> ''dr'' \<mapsto> natbool2abp\<cdot>(tsynMed\<cdot>(abp2natbool\<cdot>(sb  .  \<C> ''ds''))\<cdot>ora)]) \<longrightarrow>
-       ubDom\<cdot>b = {\<C> ''dr''}"
-    proof
-      assume assm:" b \<in> ran (\<lambda>sb::abpMessage tsyn stream\<^sup>\<Omega>.(ubDom\<cdot>sb = {\<C> ''ds''})
-         \<leadsto>Abs_ubundle [\<C> ''dr'' \<mapsto> natbool2abp\<cdot>(tsynMed\<cdot>(abp2natbool\<cdot>(sb  .  \<C> ''ds''))\<cdot>ora)])"
-      then obtain sb::"abpMessage tsyn stream\<^sup>\<Omega>" where bild:"(\<lambda>sb::abpMessage tsyn stream\<^sup>\<Omega>.
-        (ubDom\<cdot>sb = {\<C> ''ds''})\<leadsto>Abs_ubundle [\<C> ''dr'' \<mapsto> natbool2abp\<cdot>(tsynMed\<cdot>(abp2natbool\<cdot>(sb  . 
-        \<C> ''ds''))\<cdot>ora)]) sb = Some b" using ran_def by fastforce
-      thus "ubDom\<cdot>b = {\<C> ''dr''}" using assm 
-        by (metis (no_types, lifting) option.inject option.simps(3) tsynbmed_ubundle_ubdom) 
-    qed
-  qed
-  have prop1: "Abs_ubundle (\<lambda>c::channel. (c = \<C> ''ds'')\<leadsto>\<epsilon>)  .  \<C> ''ds'' = \<epsilon>"
-    by(simp add: ubGetCh_def ubWell_ds_eps)
-  hence insert:"natbool2abp\<cdot>(tsynMed\<cdot>(abp2natbool\<cdot>(Abs_ubundle (\<lambda>c::channel. (c = \<C> ''ds'')\<leadsto>\<epsilon>)  
-    .  \<C> ''ds''))\<cdot>ora) = \<epsilon>"  by (simp add: prop1 abp2natbool_def natbool2abp_def)
-  thus "Abs_cufun (\<lambda>sb::abpMessage tsyn stream\<^sup>\<Omega>. (ubDom\<cdot>sb = {\<C> ''ds''})\<leadsto>
-    Abs_ubundle [\<C> ''dr'' \<mapsto> natbool2abp\<cdot>(tsynMed\<cdot>(abp2natbool\<cdot>(sb  .  \<C> ''ds''))\<cdot>ora)]) \<rightleftharpoons>
-    Abs_ubundle (\<lambda>c::channel. (c = \<C> ''ds'')\<leadsto>\<epsilon>) = Abs_ubundle (\<lambda>c::channel. (c = \<C> ''dr'')\<leadsto>\<epsilon>)"
-    apply(simp add: cont_func ufWell_func ubDom_ds) by (metis fun_upd_apply)
-qed 
+proof -
+  have eq_perp:" natbool2abp\<cdot> (tsynMed\<cdot>(abp2natbool\<cdot>(ubLeast {\<C> ''ds''} . 
+      \<C> ''ds''))\<cdot> ora) =  \<bottom>" by (simp add: abp2natbool_def natbool2abp_def)
+  have partial_eq:" [\<C> ''dr'' \<mapsto> \<bottom> ] =  (\<lambda>a. (a \<in> {\<C> ''dr''}) \<leadsto> \<bottom>)" 
+     by (simp add: fun_upd_def)
+  hence "Abs_ubundle [\<C> ''dr'' \<mapsto> \<bottom> ] = ubLeast {\<C> ''dr''}" 
+    by (simp add: partial_eq ubLeast_def)
+  hence "Rep_cfun (tsynbMed ora)\<rightharpoonup>ubLeast {\<C> ''ds''} = ubLeast {\<C> ''dr''}" 
+     using tsynbMed_def eq_perp by simp 
+  thus ?thesis by (simp add: medspf_insert)
+qed
 
 end
