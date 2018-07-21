@@ -76,7 +76,7 @@ lemma "cont (\<lambda> h. (\<lambda> s. spsRtIn\<cdot>(h s)))"
 definition nda_h :: "('s::type, 'm::message) ndAutomaton \<Rightarrow> ('s \<Rightarrow> 'm SPS)" where
 "nda_h nda \<equiv> let dom = (ndaDom\<cdot>nda);
                  ran = (ndaRan\<cdot>nda) in 
-  uspecStateFix dom ran\<cdot>(\<Lambda> h. (\<lambda>s. undefined dom ran\<cdot>(ndaAnotherHelper\<cdot>(ndaHelper2 s (ndaTransition\<cdot>nda)\<cdot>h))))"
+  uspecStateFix dom ran\<cdot>(\<Lambda> h. (\<lambda>s. spsStep dom ran\<cdot>(ndaAnotherHelper\<cdot>(ndaHelper2 s (ndaTransition\<cdot>nda)\<cdot>h))))"
 
 
 
