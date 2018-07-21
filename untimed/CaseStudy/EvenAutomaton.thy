@@ -1,6 +1,6 @@
 theory EvenAutomaton
 
-imports Automaton "../../timesyn/tsynStream" "../../timesyn/tsynBundle" 
+imports dAutomaton "../../timesyn/tsynBundle" 
 
 begin
 
@@ -73,10 +73,8 @@ lemma createC1Bundle_ubconc[simp]:
 lemma createC1Bundle_ubconc_sbrt[simp]:assumes "ubDom\<cdot>sb = {c1}" 
                                shows "sbRt\<cdot>(ubConc (createC1Bundle n)\<cdot>sb) = sb"
   apply (rule ub_eq)
-  by (simp add: sbRt_def assms) + 
-
-
-
+  apply(simp add: sbRt_def assms)  +
+  by(simp add: sbRt_def assms usclConc_stream_def)
 
 (* tsynbNull is defined in: timesyn/tsynBundle *)
 fun evenAutomatonTransitionH :: "(EvenAutomatonState \<times> (EvenAutomaton tsyn)) \<Rightarrow> (EvenAutomatonState \<times> EvenAutomaton tsyn SB)" where
@@ -118,43 +116,158 @@ lemma tran_sum_even[simp]: assumes "Parity.even (summe + m)" shows "evenAutomato
 lemma tran_sum_odd[simp]: assumes "\<not>Parity.even (summe + m)" shows "evenAutomatonTransition (State ooo summe, [c1 \<mapsto> \<M>(A m)]) = (State Odd (summe + m), createC2Bundle False)"
   apply (cases ooo)
    apply auto
-  using assms by presburger  +    
-
-lemma EvenAutomatonAutomaton_h: "\<And>s f. dom f = {c1} \<and> sbElemWell f  (*Can not be generated right now*)
-          \<Longrightarrow> ubDom\<cdot>(snd (evenAutomatonTransition (s, f))) = {c2}"
-proof -
-  fix s::EvenAutomatonState and f::"channel \<rightharpoonup> EvenAutomaton tsyn"
-  assume a1: "dom f = {c1} \<and> sbElemWell f"
-  obtain a where f_def: "f = [c1 \<mapsto> a]"
-    using a1 dom_eq_singleton_conv by force
-  have f1: "f\<rightharpoonup>c1 \<noteq> null \<Longrightarrow> (\<exists> b. f\<rightharpoonup>c1 = Msg b)"
-    using tsyn.exhaust by auto
-  have f2: "f\<rightharpoonup>c1 \<noteq> null \<Longrightarrow> ubDom\<cdot>(snd (evenAutomatonTransition (s, f))) = {c2}" (*f2 is a problem for sledgehammer*)
-  proof - 
-    assume a2: "f \<rightharpoonup> c1 \<noteq> null"
-    obtain b where b_def: "Msg b = f \<rightharpoonup> c1"
-      using a2 f1 by auto
-    hence "b \<in> ctype c1"
-      apply (subst ctype_tsyn_iff)
-      by (simp add: a1 sbElemWellI)
-    hence "\<exists> n. f = [c1 \<mapsto> Msg (A n)]"
-      using b_def f_def by auto
-    then obtain my_n where my_n_def: "f = [c1 \<mapsto> Msg (A my_n)]"
-      by blast
-    show "ubDom\<cdot>(snd (evenAutomatonTransition (s, f))) = {c2}"
-      by (metis EvenAutomaton.getSubState.cases createC2Bundle_dom my_n_def snd_conv tran_sum_even tran_sum_odd)
-  qed
-  show "ubDom\<cdot>(snd (evenAutomatonTransition (s, f))) = {c2}"
-    using a1 evenTraTick f2 by force
-qed
+  using assms by presburger  +      
   
-  
-lift_definition EvenAutomatonAutomaton :: "(EvenAutomatonState, EvenAutomaton tsyn) automaton" is 
+lift_definition EvenAutomatonAutomaton :: "(EvenAutomatonState, EvenAutomaton tsyn) dAutomaton" is 
   "(evenAutomatonTransition, State Even 0,(tsynbNull c2), {c1}, {c2})"
- using EvenAutomatonAutomaton_h by auto 
+  by simp
 
 definition EvenAutomatonSPF :: "EvenAutomaton tsyn SPF" where
-"EvenAutomatonSPF = H EvenAutomatonAutomaton"
+"EvenAutomatonSPF = da_H EvenAutomatonAutomaton"
 
-
+lemma SteGre2_1:assumes "dom f = {\<guillemotright>c1}" and "f \<rightharpoonup> \<guillemotright>c1 = (Msg (A a))"shows "daNextState EvenAutomatonAutomaton (State x y) f \<noteq> State Even (2*n+1)"
+proof(simp add: daNextState_def daTransition_def EvenAutomatonAutomaton.rep_eq assms)
+  show"fst (evenAutomatonTransitionH (EvenAutomatonState.State x y, \<M> A a)) \<noteq> EvenAutomatonState.State Even (Suc (2 * n))"
+  proof(cases "Parity.even y")
+    case True
+    then have true_1:"Parity.even y"
+      by simp
+    then show ?thesis
+    proof(cases "Parity.even a")
+      case True
+      then have "Parity.even (y + a)"
+        by(simp add: true_1)
+      then show ?thesis
+        by (smt EvenAutomatonSubstate.exhaust add.commute dvd_triv_left evenAutomatonTransitionH.simps(1) evenAutomatonTransitionH.simps(3) even_Suc even_iff_mod_2_eq_zero fst_conv getSum.simps)
+    next
+      case False
+      then have h1:"\<not>Parity.even (y + a)"
+        by(simp add: true_1)
+      then show ?thesis
+      proof(cases x)
+        case Odd
+        then show ?thesis 
+          apply simp
+          using h1 by presburger
+      next
+        case Even
+        then show ?thesis
+          apply simp
+          using h1 by presburger
+      qed  
+    qed
+  next
+    case False
+    then have false_1:"Parity.odd y"
+      by simp
+    then show ?thesis
+    proof(cases "Parity.even a")
+      case True
+      then have h1:"\<not>Parity.even (y + a)"
+        by(simp add: False)
+      then show ?thesis
+      proof(cases x)
+        case Odd
+        then show ?thesis
+          apply(simp)
+          using h1 by presburger
+      next
+        case Even
+        then show ?thesis
+          apply(simp)
+          using h1 by presburger
+      qed
+    next
+      case False
+      then have "Parity.even (y +a)"
+        by(simp add: false_1)
+      then show ?thesis 
+        by (smt EvenAutomatonSubstate.exhaust add.commute dvd_triv_left evenAutomatonTransitionH.simps even_Suc even_iff_mod_2_eq_zero fst_conv getSum.simps)
+    qed
+  qed
+qed
+  
+    
+lemma SteGre2_2:assumes "dom f = {\<guillemotright>c1}" and "f \<rightharpoonup> \<guillemotright>c1 = (Msg (A a))"shows"daNextState EvenAutomatonAutomaton (State x y) f \<noteq> State Odd (2*n)"
+proof(simp add: daNextState_def daTransition_def EvenAutomatonAutomaton.rep_eq assms)
+  show"fst (evenAutomatonTransitionH (EvenAutomatonState.State x y, \<M> A a)) \<noteq> EvenAutomatonState.State Odd ((2::nat) * n)"
+  proof(cases "Parity.even y")
+    case True
+    then have true_1:"Parity.even y"
+      by simp
+    then show ?thesis
+    proof(cases "Parity.even a")
+      case True
+      then have h1:"Parity.even (y + a)"
+        by(simp add: true_1)
+      then show ?thesis
+      proof(cases x)
+        case Odd
+        then show ?thesis 
+          apply simp
+          using h1 by presburger
+      next
+        case Even
+        then show ?thesis
+          apply simp
+          using h1 by presburger
+      qed  
+    next
+      case False
+      then have h1:"\<not>Parity.even (y + a)"
+        by(simp add: true_1)
+      then show ?thesis
+      proof(cases x)
+        case Odd
+        then show ?thesis 
+          apply simp
+          using h1 by presburger
+      next
+        case Even
+        then show ?thesis
+          apply simp
+          using h1 by presburger
+      qed  
+    qed
+  next
+    case False
+    then have false_1:"Parity.odd y"
+      by simp
+    then show ?thesis
+    proof(cases "Parity.even a")
+      case True
+      then have h1:"\<not>Parity.even (y + a)"
+        by(simp add: False)
+      then show ?thesis
+      proof(cases x)
+        case Odd
+        then show ?thesis
+          apply(simp)
+          using h1 by presburger
+      next
+        case Even
+        then show ?thesis
+          apply(simp)
+          using h1 by presburger
+      qed
+    next
+      case False
+      then have h1:"Parity.even (y +a)"
+        by(simp add: false_1)
+      then show ?thesis 
+      proof(cases x)
+        case Odd
+        then show ?thesis 
+          apply simp
+          using h1 by presburger
+      next
+        case Even
+        then show ?thesis
+          apply simp
+          using h1 by presburger
+      qed  
+    qed
+  qed
+qed
+  
 end

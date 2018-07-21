@@ -1,6 +1,6 @@
 theory DoubleOutputAutomaton
 
-imports Automaton "../../timesyn/tsynStream" "../../timesyn/tsynBundle" 
+imports dAutomaton  "../../timesyn/tsynBundle" 
 
 begin
 
@@ -113,11 +113,11 @@ lemma doubleOutputMsgTick_Down[simp]:"doubleOutputTransition (State Down, [\<gui
 lemma doubleOutputTickMsg_Down[simp]:"doubleOutputTransition (State Down, [\<guillemotright>i1 \<mapsto> null, \<guillemotright>i2 \<mapsto> \<M>(A b)]) = (State Up,( (createO1Output (b))\<uplus> tsynbNull o2\<guillemotright>)  )"
  by auto
 
-lift_definition DoubleOutputAutomaton :: "(DoubleOutputState, DoubleOutput tsyn) automaton" is "(doubleOutputTransition, State Up , (tsynbNull o1\<guillemotright>) \<uplus> (tsynbNull o2\<guillemotright>), {\<guillemotright>i1,\<guillemotright>i2}, {o1\<guillemotright>,o2\<guillemotright>})"
+lift_definition DoubleOutputAutomaton :: "(DoubleOutputState, DoubleOutput tsyn) dAutomaton" is "(doubleOutputTransition, State Up , (tsynbNull o1\<guillemotright>) \<uplus> (tsynbNull o2\<guillemotright>), {\<guillemotright>i1,\<guillemotright>i2}, {o1\<guillemotright>,o2\<guillemotright>})"
 sorry
 
 definition DoubleOutputSPF :: "DoubleOutput tsyn SPF" where
-"DoubleOutputSPF = H DoubleOutputAutomaton"
+"DoubleOutputSPF = da_H DoubleOutputAutomaton"
 
 lift_definition createC1Output :: "nat \<Rightarrow> DoubleOutput tsyn SB" is
     "\<lambda>b. [ \<guillemotright>i1 \<mapsto> \<up>(Msg (A b))]"
@@ -134,42 +134,42 @@ unfolding ctype_tsyn_def
 by simp
 
 (*step lemmata*)
-lemma doubleOutput_h_Up_tick_step: assumes "ubDom\<cdot>sb = getDom DoubleOutputAutomaton" and "x\<noteq> y"
+lemma doubleOutput_h_Up_tick_step: assumes "ubDom\<cdot>sb = daDom DoubleOutputAutomaton" and "x\<noteq> y"
   shows "h DoubleOutputAutomaton (State x) \<rightleftharpoons> (ubConc (tsynbNull \<guillemotright>i1  \<uplus> tsynbNull \<guillemotright>i2)\<cdot>sb) 
           = ubConc (tsynbNull o1\<guillemotright> \<uplus> tsynbNull o2\<guillemotright>)\<cdot> (h DoubleOutputAutomaton  (State y) \<rightleftharpoons> sb)"
     sorry
 
-lemma doubleOutput_h_Up_MsgTick_step: assumes "ubDom\<cdot>sb = getDom DoubleOutputAutomaton"
+lemma doubleOutput_h_Up_MsgTick_step: assumes "ubDom\<cdot>sb = daDom DoubleOutputAutomaton"
   shows "h DoubleOutputAutomaton (State Up) \<rightleftharpoons> (ubConc (createC1Output a  \<uplus> tsynbNull \<guillemotright>i2)\<cdot>sb) 
           = ubConc (createO1Output a  \<uplus> tsynbNull \<guillemotright>i2)\<cdot> (h DoubleOutputAutomaton  (State Down) \<rightleftharpoons> sb)"
   sorry
     
-lemma doubleOutput_h_Up_TickMsg_step: assumes "ubDom\<cdot>sb = getDom DoubleOutputAutomaton"
+lemma doubleOutput_h_Up_TickMsg_step: assumes "ubDom\<cdot>sb = daDom DoubleOutputAutomaton"
   shows "h DoubleOutputAutomaton (State Up) \<rightleftharpoons> (ubConc ( tsynbNull \<guillemotright>i1  \<uplus> createC2Output a )\<cdot>sb) 
           = ubConc ( tsynbNull o1\<guillemotright>  \<uplus> createO2Output a )\<cdot> (h DoubleOutputAutomaton  (State Down) \<rightleftharpoons> sb)"
   sorry
     
-lemma doubleOutput_h_Up_Msg_step: assumes "ubDom\<cdot>sb = getDom DoubleOutputAutomaton"
+lemma doubleOutput_h_Up_Msg_step: assumes "ubDom\<cdot>sb = daDom DoubleOutputAutomaton"
   shows "h DoubleOutputAutomaton (State Up) \<rightleftharpoons> (ubConc ( createC1Output a  \<uplus> createC2Output b )\<cdot>sb) 
           = ubConc ( createO1Output a  \<uplus> createO2Output b )\<cdot> (h DoubleOutputAutomaton  (State Up) \<rightleftharpoons> sb)"
   sorry
 
-lemma doubleOutput_h_Down_MsgTick_step: assumes "ubDom\<cdot>sb = getDom DoubleOutputAutomaton"
+lemma doubleOutput_h_Down_MsgTick_step: assumes "ubDom\<cdot>sb = daDom DoubleOutputAutomaton"
   shows "h DoubleOutputAutomaton (State Down) \<rightleftharpoons> (ubConc (createC1Output a  \<uplus> tsynbNull \<guillemotright>i2)\<cdot>sb) 
           = ubConc ( tsynbNull o1\<guillemotright> \<uplus> createO2Output a )\<cdot> (h DoubleOutputAutomaton  (State Up) \<rightleftharpoons> sb)"
   sorry
     
-lemma doubleOutput_h_Down_TickMsg_step: assumes "ubDom\<cdot>sb = getDom DoubleOutputAutomaton"
+lemma doubleOutput_h_Down_TickMsg_step: assumes "ubDom\<cdot>sb = daDom DoubleOutputAutomaton"
   shows "h DoubleOutputAutomaton (State Down) \<rightleftharpoons> (ubConc ( tsynbNull \<guillemotright>i1  \<uplus> createC2Output a )\<cdot>sb) 
           = ubConc (createO1Output a  \<uplus>  tsynbNull o2\<guillemotright> )\<cdot> (h DoubleOutputAutomaton  (State Up) \<rightleftharpoons> sb)"
   sorry
     
-lemma doubleOutput_h_Down_Msg_step: assumes "ubDom\<cdot>sb = getDom DoubleOutputAutomaton"
+lemma doubleOutput_h_Down_Msg_step: assumes "ubDom\<cdot>sb = daDom DoubleOutputAutomaton"
   shows "h DoubleOutputAutomaton (State Down) \<rightleftharpoons> (ubConc ( createC1Output a  \<uplus> createC2Output b )\<cdot>sb) 
           = ubConc ( createO1Output b  \<uplus> createO2Output a )\<cdot> (h DoubleOutputAutomaton  (State Down) \<rightleftharpoons> sb)"
   sorry
 
-lemma doubleOutput_H_step: assumes "ubDom\<cdot>sb=getDom DoubleOutputAutomaton"
+lemma doubleOutput_H_step: assumes "ubDom\<cdot>sb=daDom DoubleOutputAutomaton"
   shows "H DoubleOutputAutomaton \<rightleftharpoons> sb =  ubConc (tsynbNull o1\<guillemotright>  \<uplus> tsynbNull o2\<guillemotright>)\<cdot>(h DoubleOutputAutomaton (State Up) \<rightleftharpoons> sb)"
   sorry
   

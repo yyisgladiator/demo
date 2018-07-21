@@ -34,9 +34,14 @@ definition invsetify::"('m \<Rightarrow> 'n) set rev \<rightarrow> ('m \<Rightar
 definition setrevUnion:: "'m set rev \<rightarrow> 'm set rev \<rightarrow> 'm set rev" where
 "setrevUnion \<equiv> (\<Lambda> A B. Rev((inv Rev A) \<union> (inv Rev B)))"
 
-(* "('m \<Rightarrow> 'n) \<Rightarrow> 'm uspec \<Rightarrow> 'n uspec*)
 definition setrevImage:: "('m \<Rightarrow> 'n) \<Rightarrow> 'm set rev \<Rightarrow> 'n set rev" where
 "setrevImage f \<equiv> \<lambda> S.  Rev (f ` (inv Rev S))"
+
+definition setrevForall:: "('m \<Rightarrow> bool) \<Rightarrow> 'm set rev \<Rightarrow> bool" where
+"setrevForall P S \<equiv> \<forall>x\<in> (inv Rev S). P x"
+
+definition setrevExists:: "('m \<Rightarrow> bool) \<Rightarrow> 'm set rev \<Rightarrow> bool" where
+"setrevExists P S \<equiv> \<exists>x\<in> (inv Rev S). P x"
 
 section \<open>Lemmas\<close>
 
@@ -201,6 +206,9 @@ lemma setrevInter_sym2: "\<And>A B. setrevInter\<cdot>A\<cdot>B = setrevInter\<c
     then show "setrevInter\<cdot>A\<cdot>B = setrevInter\<cdot>B\<cdot>A"
       by (metis (no_types) beta_cfun setrevInter_cont1 setrevInter_sym)
   qed
+
+lemma setrevInter_gdw: "\<And>A B x. x \<in> inv Rev (setrevInter\<cdot>A\<cdot>B) \<longleftrightarrow> (x \<in> inv Rev A \<and> x \<in> inv Rev B)"
+  by (metis IntD1 IntD2 IntI inv_rev_rev setrevinter_insert)
 
 subsection \<open>setify\<close>
 
@@ -403,6 +411,11 @@ proof -
     by (metis (no_types, lifting) SetPcpo.less_set_def f6 subsetI)
 qed 
 
+lemma setrevimage_inj_inj:
+  assumes "inj f"
+  shows "inj (setrevImage f)"
+  unfolding setrevImage_def
+  by (metis (no_types, lifting) assms injI inj_image_eq_iff rev.inject setrev_eqI)
 
 section \<open>set flat rev\<close>
 subsection \<open>set flat def N lemmas\<close>
@@ -514,5 +527,113 @@ proof -
     using f3 f4 by auto
 qed
 *)
+
+subsection \<open>ForAll Exists\<close>
+
+lemma setrev_for_all_ex:
+  assumes "setrevForall P S"
+  assumes "setrevExists (\<lambda>x. True) S"
+  shows "setrevExists P S"
+  by (meson assms(1) assms(2) setrevExists_def setrevForall_def)
+
+lemma setrev_subsetforall: 
+  assumes "setrevForall P S"
+  and "inv Rev T \<subseteq> inv Rev S"
+  shows "setrevForall P T"
+  by (metis assms(1) assms(2) setrevForall_def subset_eq)
+
+lemma setrev_ballI: "(\<And>x. x \<in> inv Rev S \<Longrightarrow> P x) \<Longrightarrow> setrevForall P S"
+  by (simp add: setrevForall_def)
+
+lemma setrev_bexCI: "setrevForall (\<lambda>x. \<not> P x \<longrightarrow> P a) S \<Longrightarrow> a \<in> inv Rev S \<Longrightarrow> setrevExists P S"
+  apply (simp add: setrevExists_def setrevForall_def)
+  by auto
+
+lemma setrev_bex_triv_one_point1: "setrevExists (\<lambda>x. x = a) S \<longleftrightarrow> a \<in> inv Rev S"
+  by (simp add: setrevExists_def)
+
+lemma setrev_bex_triv_one_point2: "setrevExists (\<lambda>x. a = x) S \<longleftrightarrow> a \<in> inv Rev S"
+  by (simp add: setrevExists_def)
+
+lemma setrev_bex_one_point1: "setrevExists (\<lambda>x. x = a \<and> P x) S \<longleftrightarrow> a \<in> inv Rev S \<and> P a"
+  by (simp add: setrevExists_def)
+
+lemma setrev_bex_one_point2: "setrevExists (\<lambda>x. a = x \<and> P x) S \<longleftrightarrow> a \<in> inv Rev S \<and> P a"
+  by (simp add: setrevExists_def)
+
+lemma setrev_ball_one_point1: "setrevForall (\<lambda>x. x = a \<longrightarrow> P x) S \<longleftrightarrow> (a \<in> inv Rev S \<longrightarrow> P a)"
+  by (simp add: setrevForall_def)
+
+lemma setrev_ball_one_point2: "setrevForall (\<lambda>x. a = x \<longrightarrow> P x) S \<longleftrightarrow> (a \<in> inv Rev S \<longrightarrow> P a)"
+  by (simp add: setrevForall_def)
+
+lemma setrev_subset_eq: "inv Rev A \<subseteq> inv Rev B \<longleftrightarrow> setrevForall (\<lambda>x. x \<in> inv Rev B) A"
+  by (simp add: setrevForall_def subset_eq)
+
+lemma setrev_union_forall: 
+  "setrevForall P (setrevUnion\<cdot>A\<cdot>B) \<longleftrightarrow> setrevForall P A \<and> setrevForall P B"
+  by (metis (mono_tags, lifting) setrevForall_def setrevUnion_gdw)
+
+lemma setrev_union_exists: 
+  "setrevExists P (setrevUnion\<cdot>A\<cdot>B) \<longleftrightarrow> setrevExists P A \<or> setrevExists P B"
+  by (metis (mono_tags, lifting) setrevExists_def setrevUnion_gdw)
+
+lemma setrev_union_l1:
+  assumes "setrevExists (\<lambda>x. x = a) A \<or> setrevExists (\<lambda>x. x = a) B"
+  shows "setrevExists (\<lambda>x. x = a) (setrevUnion\<cdot>A\<cdot>B)"
+  using assms by (simp add: setrevExists_def setrevUnion_gdw)
+
+lemma setrev_inter_forall: 
+  assumes "setrevForall P A \<and> setrevForall P B"
+  shows "setrevForall P (setrevInter\<cdot>A\<cdot>B)"
+  by (metis (no_types, lifting) IntD1 assms inv_rev_rev setrevForall_def setrevinter_insert)
+
+lemma setrev_inter_exists: 
+  assumes "setrevExists P (setrevInter\<cdot>A\<cdot>B)"
+  shows "setrevExists P A \<and> setrevExists P B"
+  by (metis (no_types, lifting) IntD1 IntD2 assms inv_rev_rev setrevExists_def setrevinter_insert)
+
+lemma setrev_inter_l1:
+  assumes "setrevExists  (\<lambda>x. x = a) A \<and> setrevExists (\<lambda>x. x = a) B"
+  shows "setrevExists  (\<lambda>x. x = a) (setrevInter\<cdot>A\<cdot>B)"
+  using assms by (simp add: setrevExists_def setrevInter_gdw)
+
+lemma setrev_filter_forall: "setrevForall P (setrevFilter P\<cdot>A)"
+  by (metis (no_types) setrevFilter_gdw setrev_ballI)
+
+lemma setrevforall_image:
+"setrevForall (\<lambda>x. setrevExists (\<lambda>y. f y = x) S) (setrevImage f S)"
+proof -
+obtain aa :: "('a \<Rightarrow> bool) \<Rightarrow> 'a set rev \<Rightarrow> 'a" where
+  "\<forall>x0 x1. (\<exists>v2. v2 \<in> inv Rev x1 \<and> \<not> x0 v2) = (aa x0 x1 \<in> inv Rev x1 \<and> \<not> x0 (aa x0 x1))"
+    by moura
+  then have f1: "\<forall>r p. aa p r \<in> inv Rev r \<and> \<not> p (aa p r) \<or> setrevForall p r"
+    by (metis setrev_ballI)
+  have f2: "f ` inv Rev S = inv Rev (setrevImage f S)"
+    by (simp add: inv_rev_rev setrevImage_def)
+  obtain bb :: "'b set \<Rightarrow> ('b \<Rightarrow> 'a) \<Rightarrow> 'a \<Rightarrow> 'b" where
+    "\<forall>x0 x1 x2. (\<exists>v3. v3 \<in> x0 \<and> x2 = x1 v3) = (bb x0 x1 x2 \<in> x0 \<and> x2 = x1 (bb x0 x1 x2))"
+    by moura
+  then have f3: "(aa (\<lambda>a. setrevExists (\<lambda>b. f b = a) S) (setrevImage f S) \<notin> f ` inv Rev S \<or>
+    bb (inv Rev S) f (aa (\<lambda>a. setrevExists (\<lambda>b. f b = a) S) (setrevImage f S)) \<in> inv Rev S \<and>
+    aa (\<lambda>a. setrevExists (\<lambda>b. f b = a) S) (setrevImage f S) = f (bb (inv Rev S) f (aa 
+    (\<lambda>a. setrevExists (\<lambda>b. f b = a) S) (setrevImage f S)))) \<and> (aa (\<lambda>a. setrevExists (\<lambda>b. f b = a) S) 
+    (setrevImage f S) \<in> f ` inv Rev S \<or> (\<forall>b. b \<notin> inv Rev S \<or> aa (\<lambda>a. setrevExists (\<lambda>b. f b = a) S) 
+    (setrevImage f S) \<noteq> f b))"
+    by blast
+  have "f (bb (inv Rev S) f (aa (\<lambda>a. setrevExists (\<lambda>b. f b = a) S) (setrevImage f S))) = aa 
+    (\<lambda>a. setrevExists (\<lambda>b. f b = a) S) (setrevImage f S) \<or> bb (inv Rev S) f (aa (\<lambda>a. setrevExists 
+    (\<lambda>b. f b = a) S) (setrevImage f S)) \<notin> inv Rev S \<or> aa (\<lambda>a. setrevExists (\<lambda>b. f b = a) S) 
+    (setrevImage f S) \<noteq> f (bb (inv Rev S) f (aa (\<lambda>a. setrevExists (\<lambda>b. f b = a) S) (setrevImage f S)))"
+    by auto
+  then have "setrevForall (\<lambda>a. setrevExists (\<lambda>b. f b = a) S) (setrevImage f S) \<or> bb (inv Rev S) f 
+    (aa (\<lambda>a. setrevExists (\<lambda>b. f b = a) S) (setrevImage f S)) \<notin> inv Rev S \<or> aa (\<lambda>a. setrevExists 
+    (\<lambda>b. f b = a) S) (setrevImage f S) \<noteq> f (bb (inv Rev S) f (aa (\<lambda>a. setrevExists (\<lambda>b. f b = a) S) 
+    (setrevImage f S)))"
+    using f1 by (meson setrevExists_def)
+  then show ?thesis
+    using f3 f2 f1 by (metis (no_types))
+qed
+  
 
 end

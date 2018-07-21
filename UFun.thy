@@ -103,6 +103,7 @@ cpodef 'a ufun = "{f :: 'a \<rightarrow> 'a option . ufWell f}"
   apply (simp add: ufWell_exists)
   using ufWell_adm2 by auto
 
+setup_lifting type_definition_ufun
     
 (* Shorter version to get to normal functions from 'a ufun's *)
 abbreviation Rep_cufun:: "'a ufun \<Rightarrow> ('a \<Rightarrow> 'a option)" where
@@ -230,6 +231,8 @@ cpodef 'a  USPFw = "{f ::  'a ufun. ufIsWeak f}"
   using ufisstrong_2_ufisweak ufistrongk_exist apply auto[1]
   using ufIsWeak_adm2 by auto
 
+setup_lifting type_definition_USPFw
+
 (* ufIsStrong is adm  *)
 lemma ufIsStrong_adm2: "adm (\<lambda>f. ufIsStrong (Rep_USPFw f))" (is "adm( ?P )")
 proof  (rule admI)
@@ -258,6 +261,8 @@ qed
 cpodef 'a USPFs = "{f :: 'a USPFw. ufIsStrong (Rep_USPFw f)}"
    apply (metis Rep_USPFw_cases mem_Collect_eq ufisstrong_2_ufisweak ufistrongk_exist)
   using ufIsStrong_adm2 by auto
+
+setup_lifting type_definition_USPFs
 
 
 (****************************************************)
@@ -500,7 +505,10 @@ lemma if_then_cont:  assumes "cont g"
   shows "cont (\<lambda>b. (ubclDom\<cdot>b = In) \<leadsto> g b)"
   apply (rule ufun_contI2)
   by (simp add: assms)
-  
+
+lemma ufunlub_ufun_fun: assumes "chain Y" shows " f\<rightleftharpoons> Lub Y = (\<Squnion>i . f \<rightleftharpoons> Y i)"
+    by (simp add: assms contlub_cfun_arg op_the_lub)
+
   subsection \<open>ufDom\<close>
 
 
