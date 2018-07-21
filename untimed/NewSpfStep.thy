@@ -342,7 +342,7 @@ proof(rule monofunI)
         apply (meson True sbHdElemWell_def) 
         using True a1 by blast
     have "ufRestrict In Out\<cdot>(h (Abs_sbElem (inv convDiscrUp (sbHdElem\<cdot>x)))) \<sqsubseteq> ufRestrict In Out\<cdot>(h (Abs_sbElem (inv convDiscrUp (sbHdElem\<cdot>y))))"
-        by (smt a1 a3 below_option_def po_eq_conv spfrt_step ufun_rel_eq)
+      by (simp add: a3)
     then show ?thesis
       by(simp add: True true_y)  
   next
@@ -368,7 +368,7 @@ proof(rule monofunI)
         apply (meson True sbHdElemWell_def) 
         using True a1 by blast
     have "ufRestrict In Out\<cdot>(h (Abs_sbElem (inv convDiscrUp (sbHdElem\<cdot>x)))) \<sqsubseteq> ufRestrict In Out\<cdot>(h (Abs_sbElem (inv convDiscrUp (sbHdElem\<cdot>y))))"
-        by (smt a1 a3 below_option_def po_eq_conv spfrt_step ufun_rel_eq)
+        by (simp add: a3)
       then show ?thesis
         using a1 true_y ubdom_below by auto
   next

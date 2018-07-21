@@ -10,19 +10,19 @@ begin
 default_sort type
 
 
-fun ndaWell::"((('state \<times>(channel \<rightharpoonup> 'm)) \<Rightarrow> (('state \<times> 'm SB) set rev)) \<times> ('state \<times> 'm SB) set rev \<times> channel set discr \<times> channel set discr) \<Rightarrow> bool " where
+fun ndaWell::"((('state \<times> 'm sbElem) \<Rightarrow> (('state \<times> 'm SB) set rev)) \<times> ('state \<times> 'm SB) set rev \<times> channel set discr \<times> channel set discr) \<Rightarrow> bool " where
 "ndaWell (transition, initialState, Discr chIn, Discr chOut) = finite chIn"
 
 (* FYI: Non-deterministic version *)
 cpodef ('state::type, 'm::message) ndAutomaton = 
-  "{f::(('state \<times>(channel \<rightharpoonup> 'm)) \<Rightarrow> (('state \<times> 'm SB) set rev)) \<times> ('state \<times> 'm SB) set rev \<times> channel set discr \<times> channel set discr. ndaWell f}"
+  "{f::(('state \<times>'m sbElem) \<Rightarrow> (('state \<times> 'm SB) set rev)) \<times> ('state \<times> 'm SB) set rev \<times> channel set discr \<times> channel set discr. ndaWell f}"
   sorry
 
 setup_lifting type_definition_ndAutomaton
 
 
 
-definition ndaTransition :: "('s, 'm::message) ndAutomaton \<rightarrow> (('s \<times>(channel \<rightharpoonup> 'm)) \<Rightarrow> (('s \<times> 'm SB) set rev))" where
+definition ndaTransition :: "('s, 'm::message) ndAutomaton \<rightarrow> (('s \<times>'m sbElem) \<Rightarrow> (('s \<times> 'm SB) set rev))" where
 "ndaTransition \<equiv> \<Lambda> nda. fst (Rep_ndAutomaton nda)"
 
 definition ndaInitialState :: "('s, 'm::message) ndAutomaton \<rightarrow> ('s \<times> 'm SB) set rev" where
@@ -76,7 +76,7 @@ lemma "cont (\<lambda> h. (\<lambda> s. spsRtIn\<cdot>(h s)))"
 definition nda_h :: "('s::type, 'm::message) ndAutomaton \<Rightarrow> ('s \<Rightarrow> 'm SPS)" where
 "nda_h nda \<equiv> let dom = (ndaDom\<cdot>nda);
                  ran = (ndaRan\<cdot>nda) in 
-  uspecStateFix dom ran\<cdot>(\<Lambda> h. (\<lambda>s. spsStep dom ran\<cdot>(ndaAnotherHelper\<cdot>(ndaHelper2 s (ndaTransition\<cdot>nda)\<cdot>h))))"
+  uspecStateFix dom ran\<cdot>(\<Lambda> h. (\<lambda>s. undefined dom ran\<cdot>(ndaAnotherHelper\<cdot>(ndaHelper2 s (ndaTransition\<cdot>nda)\<cdot>h))))"
 
 
 

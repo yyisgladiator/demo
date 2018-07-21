@@ -9,7 +9,7 @@ type_synonym 'm SPS = "'m SPF uspec"
   
   
  
-
+(*
 lemma lub_in:assumes "chain Y" shows "(\<Squnion>i. ((Y i)::'m set rev, Discr In,Discr Out)) = (\<Squnion>i. Y i, Discr In, Discr Out)"
   by (smt Pair_below_iff assms below_refl fstI is_lub_prod lub_const lub_eq lub_eqI po_class.chain_def sndI)
     
@@ -583,6 +583,6 @@ proof(rule Cont.contI2, simp add: assms)
     apply auto
     by(simp add: h4)
 qed*)
-  
+  *)
 end
   
