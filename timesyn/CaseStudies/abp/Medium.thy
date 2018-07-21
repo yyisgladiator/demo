@@ -335,16 +335,17 @@ lemma medspf_ubdom:
 
 text{* @{term MedSPF} is strict. *}
 lemma medspf_strict: "(MedSPF ora) \<rightleftharpoons> ubLeast{\<C> ''ds''} = ubLeast{\<C> ''dr''}"
-proof -
-  have eq_perp:" natbool2abp\<cdot> (tsynMed\<cdot>(abp2natbool\<cdot>(ubLeast {\<C> ''ds''} . 
-      \<C> ''ds''))\<cdot> ora) =  \<bottom>" by (simp add: abp2natbool_def natbool2abp_def)
-  have partial_eq:" [\<C> ''dr'' \<mapsto> \<bottom> ] =  (\<lambda>a. (a \<in> {\<C> ''dr''}) \<leadsto> \<bottom>)" 
-     by (simp add: fun_upd_def)
-  hence "Abs_ubundle [\<C> ''dr'' \<mapsto> \<bottom> ] = ubLeast {\<C> ''dr''}" 
-    by (simp add: partial_eq ubLeast_def)
-  hence "Rep_cfun (tsynbMed ora)\<rightharpoonup>ubLeast {\<C> ''ds''} = ubLeast {\<C> ''dr''}" 
-     using tsynbMed_def eq_perp by simp 
-  thus ?thesis by (simp add: medspf_insert)
-qed
+  proof -
+    have eq_empty: "natbool2abp\<cdot>(tsynMed\<cdot>(abp2natbool\<cdot>(ubLeast {\<C> ''ds''} . 
+        \<C> ''ds''))\<cdot>ora) =  \<bottom>" 
+      by (simp add: abp2natbool_def natbool2abp_def)
+    have partial_eq:" [\<C> ''dr'' \<mapsto> \<bottom>] =  (\<lambda>a. (a \<in> {\<C> ''dr''}) \<leadsto> \<bottom>)" 
+      by (simp add: fun_upd_def)
+    hence "Abs_ubundle [\<C> ''dr'' \<mapsto> \<bottom>] = ubLeast {\<C> ''dr''}" 
+      by (simp add: partial_eq ubLeast_def)
+    hence "Rep_cfun (tsynbMed ora) \<rightharpoonup> ubLeast {\<C> ''ds''} = ubLeast {\<C> ''dr''}" 
+      using tsynbMed_def eq_empty by simp 
+    thus ?thesis by (simp add: medspf_insert)
+  qed
 
 end
