@@ -1,4 +1,4 @@
-theory ufComp_strongCausal
+theory Composition_Causalities
   imports UFun_Comp UBundle_Pcpo
 begin
 
@@ -8,7 +8,7 @@ declare [[show_types]]
 declare [[show_sorts]]
 declare [[show_consts]]
 
-
+(*merge to lnat.thy*)
 abbreviation lnatGreater :: "lnat \<Rightarrow> lnat \<Rightarrow> bool" (infix ">\<^sup>l" 65) where
 "n >\<^sup>l m \<equiv>  n \<ge> lnsuc\<cdot>m"
 
@@ -656,8 +656,128 @@ proof -
     by (simp add: assms f2)
 qed
 
-lemma minOr: "\<And> x y. lnmin\<cdot>x\<cdot>y = x \<or> lnmin\<cdot>x\<cdot>y = y"
-    sorry (*siehe TStream.thy, muss noch nach lnat*)
+lemma ufParComp_weakstrong_weakCausal: assumes "ufIsWeak f1" and "ufIsStrong f2" and "ufCompL f1 f2 = {}" and "ufRan\<cdot>f1 \<inter> ufRan\<cdot>f2 = {}"
+  shows "ufIsWeak (ufParComp f1 (f2::'m ubundle ufun))"
+  by (metis assms(1) assms(2) assms(3) assms(4) parallelOperatorEq ufcomp_causal)
+
+lemma ufParComp_strongweak_weakCausal: assumes "ufIsStrong f1" and "ufIsWeak f2" and "ufCompL f1 f2 = {}" and "ufRan\<cdot>f1 \<inter> ufRan\<cdot>f2 = {}"
+  shows "ufIsWeak (ufParComp f1 (f2::'m ubundle ufun))"
+  by (metis assms(1) assms(2) assms(3) assms(4) inf_commute ufParComp_commutativity ufParComp_weakstrong_weakCausal ufcomp_L_commu)
+
+lemma ufSerComp_strongweak_strongCausal: assumes "ufIsStrong f1" and "ufIsWeak f2" and "sercomp_well f1 f2" and "ufDom\<cdot>f1 \<inter> ufRan\<cdot>f2 = {}"
+  shows "ufIsStrong (ufSerComp f1 (f2::'m ubundle ufun))"
+proof -
+have "\<forall>l la lb. (\<not> (l::lnat) \<le> la \<or> \<not> lb \<le> l) \<or> lb \<le> la"
+  by auto
+  then have f1: "\<forall>l la lb. \<not> (l::lnat) \<le> la \<or> \<not> lb \<le> l \<or> lb \<le> la"
+    by meson
+  have "\<forall>u. ufIsStrong u = (\<forall>ua. (ua::'m\<^sup>\<Omega>) \<notin> dom (Rep_cufun u) \<or> ubclLen ua <\<^sup>l ubclLen (u \<rightleftharpoons> ua))"
+    by (simp add: ufIsStrong_def)
+  then obtain uu :: "('m\<^sup>\<Omega>) ufun \<Rightarrow> 'm\<^sup>\<Omega>" where
+    f2: "\<forall>u. (\<not> ufIsStrong u \<or> (\<forall>ua. ua \<notin> dom (Rep_cufun u) \<or> ubclLen ua <\<^sup>l ubclLen (u \<rightleftharpoons> ua))) \<and> (ufIsStrong u \<or> uu u \<in> dom (Rep_cufun u) \<and> \<not> ubclLen (uu u) <\<^sup>l ubclLen (u \<rightleftharpoons> uu u))"
+    by (metis (no_types))
+  have f3: "\<forall>u ua ub. (u::'m\<^sup>\<Omega>) \<notin> dom (Rep_cufun ua) \<or> ub \<notin> dom (Rep_cufun ua) \<or> ubclDom\<cdot>u = ubclDom\<cdot>ub"
+    by (meson ufun_dom2ufundom)
+  obtain uua :: "('m\<^sup>\<Omega>) ufun \<Rightarrow> 'm\<^sup>\<Omega>" where
+    f4: "\<forall>u. uua u \<in> dom (Rep_cufun u)"
+    by (meson ufdom_not_empty)
+  have f5: "\<forall>c. ufWell c = ((\<exists>C. \<forall>u. ((u::'m\<^sup>\<Omega>) \<in> dom (Rep_cfun c)) = (ubclDom\<cdot>u = C)) \<and> (\<exists>C. \<forall>u. (u::'m\<^sup>\<Omega>) \<notin> ran (Rep_cfun c) \<or> ubclDom\<cdot>u = C))"
+    by (simp add: ufWell_def)
+  obtain CC :: "('m\<^sup>\<Omega> \<rightarrow> ('m\<^sup>\<Omega>) option) \<Rightarrow> channel set" where
+    f6: "\<forall>x0. (\<exists>v1. \<forall>v2. v2 \<notin> ran (Rep_cfun x0) \<or> ubclDom\<cdot>v2 = v1) = (\<forall>v2. v2 \<notin> ran (Rep_cfun x0) \<or> ubclDom\<cdot>v2 = CC x0)"
+    by moura
+  obtain uub :: "channel set \<Rightarrow> ('m\<^sup>\<Omega> \<rightarrow> ('m\<^sup>\<Omega>) option) \<Rightarrow> 'm\<^sup>\<Omega>" where
+    f8: "\<forall>x0 x1. (\<exists>v2. v2 \<in> ran (Rep_cfun x1) \<and> ubclDom\<cdot>v2 \<noteq> x0) = (uub x0 x1 \<in> ran (Rep_cfun x1) \<and> ubclDom\<cdot>(uub x0 x1) \<noteq> x0)"
+    by moura
+  obtain uuc :: "channel set \<Rightarrow> ('m\<^sup>\<Omega> \<rightarrow> ('m\<^sup>\<Omega>) option) \<Rightarrow> 'm\<^sup>\<Omega>" where
+    "\<forall>x0 x1. (\<exists>v2. (v2 \<in> dom (Rep_cfun x1)) \<noteq> (ubclDom\<cdot>v2 = x0)) = ((uuc x0 x1 \<in> dom (Rep_cfun x1)) \<noteq> (ubclDom\<cdot>(uuc x0 x1) = x0))"
+    by moura
+  then have "\<forall>c. ((\<forall>C. \<exists>u. (u \<in> dom (Rep_cfun c)) \<noteq> (ubclDom\<cdot>u = C)) \<or> (\<forall>C. \<exists>u. u \<in> ran (Rep_cfun c) \<and> ubclDom\<cdot>u \<noteq> C)) = ((\<forall>C. (uuc C c \<in> dom (Rep_cfun c)) \<noteq> (ubclDom\<cdot>(uuc C c) = C)) \<or> (\<forall>C. uub C c \<in> ran (Rep_cfun c) \<and> ubclDom\<cdot>(uub C c) \<noteq> C))"
+    using f8 by auto
+  have "\<forall>x0 x1. ((uuc x0 x1 \<in> dom (Rep_cfun x1)) \<noteq> (ubclDom\<cdot>(uuc x0 x1) = x0)) = ((uuc x0 x1 \<notin> dom (Rep_cfun x1)) = (ubclDom\<cdot>(uuc x0 x1) = x0))"
+    by meson
+  have "ubclDom\<cdot>(ubclLeast (ufDom\<cdot>f1)::'m\<^sup>\<Omega>) = ubclDom\<cdot>(uua f1)"
+    using f4 f3 by (metis ufunLeastIDom)
+  have "\<forall>u. ufIsWeak u = (\<forall>ua. (ua::'m\<^sup>\<Omega>) \<notin> dom (Rep_cufun u) \<or> ubclLen ua \<le> ubclLen (u \<rightleftharpoons> ua))"
+    by (simp add: ufIsWeak_def)
+  then have f12: "\<forall>u. u \<notin> dom (Rep_cufun f2) \<or> ubclLen u \<le> ubclLen (f2 \<rightleftharpoons> u)"
+    using assms(2) by blast
+  have f13: "ubclDom\<cdot>(ubclLeast (ufDom\<cdot>f2)::'m\<^sup>\<Omega>) = ubclDom\<cdot>(uua f2)"
+    using f4 f3 by (metis ufunLeastIDom)
+  have "\<forall>x0 x1 x2. (ufRan\<cdot>(x2::('m\<^sup>\<Omega>) ufun) = ufDom\<cdot>x1 \<and> ufDom\<cdot>x2 \<inter> ufRan\<cdot>x2 = {} \<and> ufDom\<cdot>x1 \<inter> ufRan\<cdot>x1 = {} \<and> ubclDom\<cdot>(x0::'m\<^sup>\<Omega>) = ufDom\<cdot>(ufSerComp x2 x1)) = (ufRan\<cdot>x2 = ufDom\<cdot>x1 \<and> ufDom\<cdot>x2 \<inter> ufRan\<cdot>x2 = {} \<and> ufDom\<cdot>x1 \<inter> ufRan\<cdot>x1 = {} \<and> ubclDom\<cdot>x0 = ufDom\<cdot>(ufSerComp x2 x1))"
+    by auto
+  then have f14: "ubclDom\<cdot>(uu (ufSerComp f1 f2)) \<noteq> ufDom\<cdot>(ufSerComp f1 f2) \<or> ufSerComp f1 f2 \<rightleftharpoons> uu (ufSerComp f1 f2) = f2 \<rightleftharpoons> (f1 \<rightleftharpoons> uu (ufSerComp f1 f2))"
+    by (meson assms(3) ufSerComp_apply)
+  have "ufDom\<cdot>(ufSerComp f1 f2) = ufDom\<cdot>f1"
+    by (meson assms(3) ufSerComp_dom)
+  moreover
+  { assume "\<not> ubclLen (uu (ufSerComp f1 f2)) <\<^sup>l ubclLen (f2 \<rightleftharpoons> (f1 \<rightleftharpoons> uu (ufSerComp f1 f2)))"
+    then have "\<not> ubclLen (f1 \<rightleftharpoons> uu (ufSerComp f1 f2)) \<le> ubclLen (f2 \<rightleftharpoons> (f1 \<rightleftharpoons> uu (ufSerComp f1 f2))) \<or> \<not> ubclLen (uu (ufSerComp f1 f2)) <\<^sup>l ubclLen (f1 \<rightleftharpoons> uu (ufSerComp f1 f2))"
+      using f1 by meson
+    then have "ubclDom\<cdot>(uu (ufSerComp f1 f2)) = ufDom\<cdot>f1 \<longrightarrow> uu (ufSerComp f1 f2) \<notin> dom (Rep_cufun (ufSerComp f1 f2)) \<or> ubclLen (uu (ufSerComp f1 f2)) <\<^sup>l ubclLen (ufSerComp f1 f2 \<rightleftharpoons> uu (ufSerComp f1 f2))"
+      by (metis assms(1) assms(3) f12 f2 ubcldom_least_cs ufran_2_ubcldom2 ufunLeastIDom ufun_ufundom2dom) }
+  ultimately have "uu (ufSerComp f1 f2) \<notin> dom (Rep_cufun (ufSerComp f1 f2)) \<or> ubclLen (uu (ufSerComp f1 f2)) <\<^sup>l ubclLen (ufSerComp f1 f2 \<rightleftharpoons> uu (ufSerComp f1 f2))"
+    using f14 by (metis (no_types) assms(3) domIff ufSerComp_repAbs)
+  then show ?thesis
+    using f2 by blast
+qed
+
+lemma ufSerComp_weakstrong_strongCausal: assumes "ufIsWeak f1" and "ufIsStrong f2" and "sercomp_well f1 f2" and "ufDom\<cdot>f1 \<inter> ufRan\<cdot>f2 = {}"
+  shows "ufIsStrong (ufSerComp f1 (f2::'m ubundle ufun))"
+proof -
+obtain uu :: "('m\<^sup>\<Omega>) ufun \<Rightarrow> 'm\<^sup>\<Omega>" where
+  f1: "\<forall>u. (\<not> ufIsStrong u \<or> (\<forall>ua. ua \<notin> dom (Rep_cufun u) \<or> ubclLen ua <\<^sup>l ubclLen (u \<rightleftharpoons> ua))) \<and> (ufIsStrong u \<or> uu u \<in> dom (Rep_cufun u) \<and> \<not> ubclLen (uu u) <\<^sup>l ubclLen (u \<rightleftharpoons> uu u))"
+  by (metis (no_types) ufIsStrong_def)
+  have f2: "\<forall>l la lb. \<not> (l::lnat) \<le> la \<or> \<not> lb \<le> l \<or> lb \<le> la"
+    by force
+  have f3: "ubclDom\<cdot>(uu (ufSerComp f1 f2)) \<noteq> ufDom\<cdot>(ufSerComp f1 f2) \<or> ufSerComp f1 f2 \<rightleftharpoons> uu (ufSerComp f1 f2) = f2 \<rightleftharpoons> (f1 \<rightleftharpoons> uu (ufSerComp f1 f2))"
+    using assms(3) ufSerComp_apply by blast
+  have f4: "ufDom\<cdot>(ufSerComp f1 f2) = ufDom\<cdot>f1"
+using assms(3) ufSerComp_dom by auto
+  have f5: "\<forall>u. u \<notin> dom (Rep_cufun f2) \<or> ubclLen u \<le> ubclLen (f2 \<rightleftharpoons> u)"
+    using assms(2) ufIsWeak_def ufisstrong_2_ufisweak by auto
+  { assume "\<not> ubclLen (uu (ufSerComp f1 f2)) <\<^sup>l ubclLen (ufSerComp f1 f2 \<rightleftharpoons> uu (ufSerComp f1 f2))"
+    { assume "\<not> ubclLen (f1 \<rightleftharpoons> uu (ufSerComp f1 f2)) <\<^sup>l ubclLen (uu (ufSerComp f1 f2))"
+      moreover
+      { assume "\<not> ubclLen (f1 \<rightleftharpoons> uu (ufSerComp f1 f2)) <\<^sup>l ubclLen (f2 \<rightleftharpoons> (f1 \<rightleftharpoons> uu (ufSerComp f1 f2)))"
+        then have "f1 \<rightleftharpoons> uu (ufSerComp f1 f2) \<notin> dom (Rep_cufun f2)"
+          using f1 assms(2) by auto
+        then have "ubclDom\<cdot>(f1 \<rightleftharpoons> uu (ufSerComp f1 f2)) \<noteq> ubclDom\<cdot>(ubclLeast (ufDom\<cdot>f2)::'m\<^sup>\<Omega>)"
+          by (metis (no_types) ufunLeastIDom ufun_ufundom2dom) }
+ultimately have "\<not> ubclLen (f2 \<rightleftharpoons> (f1 \<rightleftharpoons> uu (ufSerComp f1 f2))) \<le> ubclLen (uu (ufSerComp f1 f2)) \<or> ubclDom\<cdot>(f1 \<rightleftharpoons> uu (ufSerComp f1 f2)) \<noteq> ubclDom\<cdot>(ubclLeast (ufDom\<cdot>f2)::'m\<^sup>\<Omega>)"
+  using f2 by blast }
+  moreover
+  { assume "ubclLen (uu (ufSerComp f1 f2)) <\<^sup>l ubclLen (ufSerComp f1 f2 \<rightleftharpoons> uu (ufSerComp f1 f2)) \<noteq> ubclLen (f1 \<rightleftharpoons> uu (ufSerComp f1 f2)) <\<^sup>l ubclLen (uu (ufSerComp f1 f2))"
+    moreover
+    { assume "ubclLen (ufSerComp f1 f2 \<rightleftharpoons> uu (ufSerComp f1 f2)) \<noteq> ubclLen (uu (ufSerComp f1 f2))"
+      moreover
+      { assume "ubclLen (ufSerComp f1 f2 \<rightleftharpoons> uu (ufSerComp f1 f2)) \<noteq> ubclLen (f1 \<rightleftharpoons> uu (ufSerComp f1 f2))"
+        then have "ubclLen (f2 \<rightleftharpoons> (f1 \<rightleftharpoons> uu (ufSerComp f1 f2))) \<noteq> ubclLen (f1 \<rightleftharpoons> uu (ufSerComp f1 f2)) \<or> ufSerComp f1 f2 \<rightleftharpoons> uu (ufSerComp f1 f2) \<noteq> f2 \<rightleftharpoons> (f1 \<rightleftharpoons> uu (ufSerComp f1 f2))"
+          by auto
+        then have "\<not> ubclLen (f1 \<rightleftharpoons> uu (ufSerComp f1 f2)) \<le> ubclLen (f2 \<rightleftharpoons> (f1 \<rightleftharpoons> uu (ufSerComp f1 f2))) \<or> uu (ufSerComp f1 f2) \<notin> dom (Rep_cufun f1) \<or> \<not> ubclLen (f2 \<rightleftharpoons> (f1 \<rightleftharpoons> uu (ufSerComp f1 f2))) \<le> ubclLen (uu (ufSerComp f1 f2)) \<or> ufSerComp f1 f2 \<rightleftharpoons> uu (ufSerComp f1 f2) \<noteq> f2 \<rightleftharpoons> (f1 \<rightleftharpoons> uu (ufSerComp f1 f2))"
+          using f2 by (meson assms(1) lnat_po_eq_conv ufIsWeak_def) }
+      ultimately have "ubclLen (f1 \<rightleftharpoons> uu (ufSerComp f1 f2)) \<noteq> ubclLen (uu (ufSerComp f1 f2)) \<or> \<not> ubclLen (f1 \<rightleftharpoons> uu (ufSerComp f1 f2)) \<le> ubclLen (f2 \<rightleftharpoons> (f1 \<rightleftharpoons> uu (ufSerComp f1 f2))) \<or> uu (ufSerComp f1 f2) \<notin> dom (Rep_cufun f1) \<or> \<not> ubclLen (f2 \<rightleftharpoons> (f1 \<rightleftharpoons> uu (ufSerComp f1 f2))) \<le> ubclLen (uu (ufSerComp f1 f2)) \<or> ufSerComp f1 f2 \<rightleftharpoons> uu (ufSerComp f1 f2) \<noteq> f2 \<rightleftharpoons> (f1 \<rightleftharpoons> uu (ufSerComp f1 f2))"
+        by force }
+    moreover
+    { assume "ubclLen (f1 \<rightleftharpoons> uu (ufSerComp f1 f2)) \<noteq> ubclLen (uu (ufSerComp f1 f2))"
+      then have "\<not> ubclLen (f1 \<rightleftharpoons> uu (ufSerComp f1 f2)) \<le> ubclLen (uu (ufSerComp f1 f2)) \<or> \<not> ubclLen (uu (ufSerComp f1 f2)) \<le> ubclLen (f1 \<rightleftharpoons> uu (ufSerComp f1 f2))"
+        by force
+      then have "\<not> ubclLen (f1 \<rightleftharpoons> uu (ufSerComp f1 f2)) \<le> ubclLen (f2 \<rightleftharpoons> (f1 \<rightleftharpoons> uu (ufSerComp f1 f2))) \<or> uu (ufSerComp f1 f2) \<notin> dom (Rep_cufun f1) \<or> \<not> ubclLen (f2 \<rightleftharpoons> (f1 \<rightleftharpoons> uu (ufSerComp f1 f2))) \<le> ubclLen (uu (ufSerComp f1 f2))"
+        using f2 assms(1) ufIsWeak_def by blast }
+    ultimately have "ubclDom\<cdot>(uu (ufSerComp f1 f2)) = ufDom\<cdot>f1 \<and> ubclDom\<cdot>(f1 \<rightleftharpoons> uu (ufSerComp f1 f2)) = ubclDom\<cdot>(ubclLeast (ufDom\<cdot>f2)::'m\<^sup>\<Omega>) \<and> ufSerComp f1 f2 \<rightleftharpoons> uu (ufSerComp f1 f2) = f2 \<rightleftharpoons> (f1 \<rightleftharpoons> uu (ufSerComp f1 f2)) \<and> ubclLen (f2 \<rightleftharpoons> (f1 \<rightleftharpoons> uu (ufSerComp f1 f2))) \<le> ubclLen (uu (ufSerComp f1 f2)) \<longrightarrow> uu (ufSerComp f1 f2) \<notin> dom (Rep_cufun (ufSerComp f1 f2)) \<or> ubclLen (uu (ufSerComp f1 f2)) <\<^sup>l ubclLen (ufSerComp f1 f2 \<rightleftharpoons> uu (ufSerComp f1 f2))"
+      using f5 by (metis (no_types) ubcldom_least_cs ufunLeastIDom ufun_ufundom2dom) }
+  moreover
+  { assume "ufSerComp f1 f2 \<rightleftharpoons> uu (ufSerComp f1 f2) \<noteq> f2 \<rightleftharpoons> (f1 \<rightleftharpoons> uu (ufSerComp f1 f2))"
+    then have "ubclDom\<cdot>(uu (ufSerComp f1 f2)) \<noteq> ufDom\<cdot>f1"
+      using f4 f3 by presburger }
+  ultimately have "ubclDom\<cdot>(uu (ufSerComp f1 f2)) = ufDom\<cdot>f1 \<longrightarrow> uu (ufSerComp f1 f2) \<notin> dom (Rep_cufun (ufSerComp f1 f2)) \<or> ubclLen (uu (ufSerComp f1 f2)) <\<^sup>l ubclLen (ufSerComp f1 f2 \<rightleftharpoons> uu (ufSerComp f1 f2))"
+    by (metis (no_types) assms(3) lnle2le not_le_imp_less ubcldom_least_cs ufran_2_ubcldom2)
+then have "uu (ufSerComp f1 f2) \<notin> dom (Rep_cufun (ufSerComp f1 f2)) \<or> ubclLen (uu (ufSerComp f1 f2)) <\<^sup>l ubclLen (ufSerComp f1 f2 \<rightleftharpoons> uu (ufSerComp f1 f2))"
+  by (meson assms(3) domIff ufSerComp_repAbs) }
+  then show ?thesis
+    using f1 by (metis (no_types))
+qed
+
 
 lemma ufParComp_weakCausal: assumes "ufIsWeak f1" and "ufIsWeak f2" and "ufCompL f1 f2 = {}" and "ufRan\<cdot>f1 \<inter> ufRan\<cdot>f2 = {}"
   shows "ufIsWeak (ufParComp f1 (f2::'m ubundle ufun))"
@@ -854,9 +974,6 @@ show "ufIsWeak (ufParComp f1 (f2::'m ubundle ufun))"
     by (metis ubclRestrict_ubundle_def z1 g2 g3 g4)
   qed
 qed
-(* lemma z1: assumes "ubDom\<cdot>z \<inter> ubDom\<cdot>zz = {}" shows "ubLen (z \<uplus> zz) = ubLen z \<or> ubLen (z \<uplus> zz) = ubLen zz"
- *)
-
 
 
 lemma ufSerComp_weakCausal: assumes "ufIsWeak f1" and "ufIsWeak f2" and "sercomp_well f1 f2" and "ufDom\<cdot>f1 \<inter> ufRan\<cdot>f2 = {}"
@@ -914,4 +1031,4 @@ lemma ufSerComp_weakCausal: assumes "ufIsWeak f1" and "ufIsWeak f2" and "sercomp
       by linarith
   then show ?thesis
     using f1 by (metis (no_types))
-  qed
+qed
