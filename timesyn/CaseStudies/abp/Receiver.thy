@@ -536,6 +536,12 @@ lemma createaroutput_eq [simp]:
   apply (simp_all add: assms usclConc_stream_def up_def)
   by (metis convDiscrUp_dom domIff fun_upd_apply)
 
+(* h_step lemma for empty input *)
+lemma receiverautomaton_h_step_epsilon: 
+   "da_h ReceiverAutomaton (State r) \<rightleftharpoons> ubLeast {\<C> ''dr''} 
+           = ubclLeast {\<C> ''ar'',\<C> ''o''} "
+  by (simp add: da_h_bottom daDom_def ReceiverAutomaton.rep_eq daRan_def)
+
 (* h_step lemma for state rf and input null *)
 lemma receiverautomaton_h_step_rf_null:
   assumes "ubDom\<cdot>sb = {\<C> ''dr''}"
@@ -586,14 +592,6 @@ lemma receiverautomaton_h_step_rf_false:
   apply (simp_all add: da_h_final daDom_def ReceiverAutomaton.rep_eq da_h_ubdom assms daRan_def 
          daNextOutput_def daNextState_def daTransition_def usclConc_stream_def)
   using assms receiverautomaton_h_step_ubdom_ar_o by auto
-
-lemma receiverautomaton_h_step_rf_false2: 
-  assumes "(snd a) = False"
-  shows "da_h ReceiverAutomaton (State Rf) \<rightleftharpoons> (createBundle (Msg (Pair_nat_bool a)) (\<C> ''dr'')) 
-           = (createArBundle (snd a) \<uplus> createOBundle (fst a))"
-  apply (simp_all add: da_h_final daDom_def ReceiverAutomaton.rep_eq da_h_ubdom assms daRan_def 
-         daNextOutput_def daNextState_def daTransition_def usclConc_stream_def)
-  using assms receiverautomaton_h_step_ubdom_ar_o sorry
 
 (* h_step lemma for state Rt and input false *)
 lemma receiverautomaton_h_step_rt_false: 
@@ -698,54 +696,6 @@ lemma recspf_test: "RecSPF \<rightleftharpoons>
   apply (simp add: recspf_insert tsynbrec_insert)
   by (simp add: h2 h3 h4)
 
-lemma h8: "ubDom\<cdot>(Abs_ubundle [\<C> ''dr'' \<mapsto> natbool2abp\<cdot>(s)]) = {\<C> ''dr''}"
-  by (simp add: h1 ubdom_ubrep_eq)
-
-lemma trans1: "Abs_ubundle [\<C> ''dr'' \<mapsto> natbool2abp\<cdot>(\<up>(\<M> a) \<bullet> s)] = 
-(ubConc (createBundle (Msg (Pair_nat_bool a)) (\<C> ''dr''))\<cdot> (Abs_ubundle [\<C> ''dr'' \<mapsto> natbool2abp\<cdot>(s)])) "
-  apply (simp add: ubconc_insert h8 ubrestrict_insert)
-
-  apply (subst fun_eq_iff, rule)
-  apply (case_tac "x = \<C> ''dr''")
-  sorry
-
-lemma trans2: "Abs_ubundle [\<C> ''dr'' \<mapsto> natbool2abp\<cdot>(\<up>(null) \<bullet> s)] = 
- (ubConc (tsynbNull (\<C> ''dr''))\<cdot>(Abs_ubundle [\<C> ''dr'' \<mapsto> natbool2abp\<cdot>(s)])) "
-    apply (simp add: ubconc_insert h8)
-  apply (simp add: ubup_insert)
-  sorry
-
-lemma trans3: "Abs_ubundle [\<C> ''dr'' \<mapsto> natbool2abp\<cdot>(\<up>(\<M> a))] = 
- (createBundle (Msg (Pair_nat_bool a)) (\<C> ''dr''))"
-  
-  sorry
-
-lemma trans4: "Abs_ubundle [\<C> ''ar'' \<mapsto> bool2abp\<cdot>(\<up>- \<bullet> s1), \<C> ''o'' \<mapsto>  nat2abp\<cdot>(\<up>- \<bullet> s2 )] = 
-  ubConc (tsynbNull (\<C> ''ar'') \<uplus> tsynbNull (\<C> ''o''))\<cdot> (Abs_ubundle [\<C> ''ar'' \<mapsto> bool2abp\<cdot>(s1), \<C> ''o'' \<mapsto>  nat2abp\<cdot>(s2)]) "
-  sorry
-
-lemma trans5: "Abs_ubundle [\<C> ''ar'' \<mapsto> bool2abp\<cdot>(\<up>(\<M> m1) \<bullet> s1), \<C> ''o'' \<mapsto> nat2abp\<cdot>(\<up>- \<bullet> s2)] = 
-  ubConc (createArBundle m1 \<uplus> tsynbNull (\<C> ''o''))\<cdot>(Abs_ubundle [\<C> ''ar'' \<mapsto> bool2abp\<cdot>(s1), \<C> ''o'' \<mapsto> nat2abp\<cdot>(s2)])"
-  sorry
-
-lemma trans6: "Abs_ubundle [\<C> ''ar'' \<mapsto> bool2abp\<cdot>(\<up>(\<M> m1) \<bullet> s1), \<C> ''o'' \<mapsto> nat2abp\<cdot>(\<up>(\<M> m2) \<bullet> s2)] = 
-  ubConc (createArBundle m1 \<uplus> createOBundle m2)\<cdot>(Abs_ubundle [\<C> ''ar'' \<mapsto> bool2abp\<cdot>(s1), \<C> ''o'' \<mapsto> nat2abp\<cdot>(s2)])"
-  sorry
-
-lemma trans62: "Abs_ubundle [\<C> ''ar'' \<mapsto> bool2abp\<cdot>(\<up>(\<M> m1)), \<C> ''o'' \<mapsto> nat2abp\<cdot>(\<up>(\<M> m2))] = 
-  createArBundle m1 \<uplus> createOBundle m2"
-  sorry
-
-lemma receiverspf_test: "ReceiverSPF \<rightleftharpoons> 
-   Abs_ubundle ([\<C> ''dr''\<mapsto> natbool2abp\<cdot>(<[Msg(1, False), null, Msg(2, True),Msg(1, False)]>)] ) = 
-   Abs_ubundle [\<C> ''ar'' \<mapsto> bool2abp\<cdot>(<[null, Msg(False), null, Msg(True),Msg(False)]>), 
-                \<C> ''o'' \<mapsto> nat2abp\<cdot>(<[null, null, null, Msg(2),Msg(1)]>)]" 
-  apply (simp add: ReceiverSPF_def h2 receiverautomaton_H_step)
-  apply (simp add: trans1 ubDom_def insert_commute h1 receiverautomaton_h_step_rt_false)
-  apply (simp add: trans2 ubDom_def insert_commute h1 receiverautomaton_h_step_rt_null)
-  apply (simp add: trans1 ubDom_def insert_commute h1 receiverautomaton_h_step_rt_true)
-  by (simp add: trans3 trans4 trans5 trans6 trans62 receiverautomaton_h_step_rf_false2)
-
 lemma receiverspf_test2:
   "spfConcIn (ubConc (createBundle (\<M> Pair_nat_bool (Suc (0::nat), False)) (\<C> ''dr''))\<cdot>
              (ubConc (tsynbNull (\<C> ''dr''))\<cdot>
@@ -758,6 +708,16 @@ lemma receiverspf_test2:
                        (createArBundle False \<uplus> createOBundle (Suc (0::nat)))))))\<cdot>ReceiverSPF"
    sorry
 
+lemma ubconc_ubleast: "(createBundle (m) (ch)) = (ubConc (createBundle (m) (ch))\<cdot>(ubLeast {ch}))"
+  by (metis (no_types, lifting) createBundle_dom insert_absorb2 insert_is_Un sconc_snd_empty 
+      ubConc_usclConc_eq ub_eq ubconc_dom ubleast_ubdom ubleast_ubgetch usclConc_stream_def)
+
+lemma ubconc_ubleast2: "ubConc (createArBundle m1 \<uplus> createOBundle m2)\<cdot>(ubLeast {\<C> ''ar'', \<C> ''o''}) =
+                        createArBundle m1 \<uplus> createOBundle m2"
+  by (metis (no_types, lifting) createaroutput_createooutput_ubclunion_ubdom receiverautomaton_h_step_epsilon 
+      receiverautomaton_h_step_ubdom_ar_o sconc_snd_empty ubConc_usclConc_eq ub_eq ubclLeast_ubundle_def 
+      ubleast_ubdom ubleast_ubgetch usclConc_stream_def)
+
 lemma receiverspf_test3:
   "ReceiverSPF \<rightleftharpoons> (ubConc (createBundle (\<M> Pair_nat_bool (Suc (0::nat), False)) (\<C> ''dr''))\<cdot>
                   (ubConc (tsynbNull (\<C> ''dr''))\<cdot>
@@ -768,7 +728,9 @@ lemma receiverspf_test3:
                   (ubConc (tsynbNull (\<C> ''ar'') \<uplus> tsynbNull (\<C> ''o''))\<cdot>
                   (ubConc (createArBundle True \<uplus> createOBundle (2::nat))\<cdot>
                           (createArBundle False \<uplus> createOBundle (Suc (0::nat)))))))"
-  by (simp add: ReceiverSPF_def receiverautomaton_H_step receiverautomaton_h_step_rt_false 
-  receiverautomaton_h_step_rt_null receiverautomaton_h_step_rt_true receiverautomaton_h_step_rf_false2)
+  apply (simp add: ReceiverSPF_def receiverautomaton_H_step receiverautomaton_h_step_rt_false 
+  receiverautomaton_h_step_rt_null receiverautomaton_h_step_rt_true)
+  apply (subst ubconc_ubleast)
+  by (simp add: ubconc_ubleast2 ubclLeast_ubundle_def receiverautomaton_h_step_rf_false receiverautomaton_h_step_epsilon)
 
 end
