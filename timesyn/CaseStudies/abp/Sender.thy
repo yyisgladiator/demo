@@ -183,5 +183,37 @@ lemma sendertransition_ubdom:
 lemma sendertransition_automaton_well:
   "daWell (senderTransition, State Sf [], tsynbNull (\<C> ''ds''), {\<C> ''i'', \<C> ''as''}, {\<C> ''ds''})"
   using sendertransition_ubdom by simp
+  
+lemma senderspf_ufdom: "ufDom\<cdot>SenderSPF = {\<C> ''i'', \<C> ''as''}"
+  apply (simp add: SenderSPF_def da_H_def SenderAutomaton_def daDom_def)
+  using SenderAutomaton.abs_eq SenderAutomaton.rep_eq by auto
 
+lemma senderspf_ufran: "ufRan\<cdot>SenderSPF = {\<C> ''ds''}"
+  apply (simp add: SenderSPF_def da_H_def SenderAutomaton_def daRan_def)
+  using SenderAutomaton.abs_eq SenderAutomaton.rep_eq by auto
+
+lemma senderspf_ubdom:
+  assumes "ubDom\<cdot>sb = ufDom\<cdot>SenderSPF"
+  shows "ubDom\<cdot>(SenderSPF \<rightleftharpoons> sb) = {\<C> ''ds''}"
+  by (simp add: assms senderspf_ufran spf_ubDom)
+  
+lemma daran_senderautomaton:"daRan SenderAutomaton =  {\<C> ''ds''}"
+  apply (simp add: daRan_def SenderAutomaton_def)
+  using SenderAutomaton.abs_eq SenderAutomaton.rep_eq by auto[1] 
+    
+lemma initialoutput_sender:"(daInitialOutput SenderAutomaton) = (tsynbNull (\<C> ''ds''))"
+  apply(simp add: daInitialOutput_def SenderAutomaton_def)
+  using SenderAutomaton.abs_eq SenderAutomaton.rep_eq by auto[1]
+
+lemma senderspf_strict: "SenderSPF \<rightleftharpoons> ubclLeast{\<C> ''i'', \<C> ''as''} = tsynbNull (\<C> ''ds'')"
+  apply (simp add: SenderSPF_def)
+  apply (subst da_H_bottom)
+  apply (simp add: ubclLeast_ubundle_def SenderAutomaton_def daDom_def)
+  using SenderAutomaton.abs_eq SenderAutomaton.rep_eq apply auto[1] 
+  apply (simp add: ubclLeast_ubundle_def SenderAutomaton_def daDom_def)
+  using SenderAutomaton.abs_eq SenderAutomaton.rep_eq apply auto[1] 
+  apply (metis (no_types, lifting) daran_senderautomaton initialoutput_sender tsynbnull_ubdom)
+  apply (simp add: ubclLeast_ubundle_def SenderAutomaton_def daInitialOutput_def)
+  using SenderAutomaton.abs_eq SenderAutomaton.rep_eq by auto[1]
+  
 end
