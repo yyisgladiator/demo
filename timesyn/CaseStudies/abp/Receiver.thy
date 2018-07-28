@@ -523,7 +523,7 @@ lemma createaroutput_eq [simp]:
 
 text {*For every state and input one step of @{term da_h} is executed correctly *}
 
-text{* State Rf and input null.*}
+text{* State Rf and input null. *}
 lemma receiverautomaton_h_step_rf_null:
   assumes "ubDom\<cdot>sb = {\<C> ''dr''}"
   shows "da_h ReceiverAutomaton (State Rf) \<rightleftharpoons> (ubConc (tsynbNull (\<C> ''dr''))\<cdot>sb) 
@@ -532,7 +532,7 @@ lemma receiverautomaton_h_step_rf_null:
          daNextOutput_def daNextState_def daTransition_def usclConc_stream_def)
   using assms receiverautomaton_h_step_ubdom_null_null by auto
 
-text{* State Rt and input null.*}
+text{* State Rt and input null. *}
 lemma receiverautomaton_h_step_rt_null: 
   assumes "ubDom\<cdot>sb = {\<C> ''dr''}"
   shows "da_h ReceiverAutomaton (State Rt) \<rightleftharpoons> (ubConc (tsynbNull (\<C> ''dr''))\<cdot>sb) 
@@ -541,7 +541,7 @@ lemma receiverautomaton_h_step_rt_null:
          daNextOutput_def daNextState_def daTransition_def usclConc_stream_def)
   using assms receiverautomaton_h_step_ubdom_null_null by auto
 
-text{* State Rf and input true.*}
+text{* State Rf and input true. *}
 lemma receiverautomaton_h_step_rf_true:
   assumes "ubDom\<cdot>sb = {\<C> ''dr''}" 
     and "(snd a) = True"
@@ -563,7 +563,7 @@ lemma receiverautomaton_h_step_rt_true:
          daNextOutput_def daNextState_def daTransition_def usclConc_stream_def)
   using assms receiverautomaton_h_step_ubdom_ar_o by auto
 
-text{* State Rf and input false.*}
+text{* State Rf and input false. *}
 lemma receiverautomaton_h_step_rf_false: 
   assumes "ubDom\<cdot>sb = {\<C> ''dr''}" 
     and "(snd a) = False"
@@ -618,8 +618,6 @@ lemma recspfdelayout_insert: "recspfDelayOut = (tsynbNull (\<C> ''ar'') \<uplus>
 
 lemma recspfdelayout_ubdom: "ubDom\<cdot>recspfDelayOut = {\<C> ''ar'', \<C> ''o''}"
   by (simp add: recspfDelayOut_def tsynbnullar_tsynbnullo_ubclunion_ubdom)
-
-
 text{* Application of @{term ubLeast} on @{term ReceiverSPF} yields only the initial output. *}
 lemma receiverspf_strict: "ReceiverSPF \<rightleftharpoons> ubLeast{\<C> ''dr''} = (tsynbNull (\<C> ''ar'') \<uplus> tsynbNull (\<C> ''o''))"
   sorry
@@ -656,22 +654,25 @@ lemma recspf_receiverspf_ub_eq:
   shows "ReceiverSPF \<rightleftharpoons> sb = ubConc recspfDelayOut\<cdot>(RecSPF \<rightleftharpoons> sb)"
   (*apply (rule ub_eq)
   apply (simp add: assms receiverspf_ubdom receiverspf_ufdom recspf_ubdom recspf_ufdom recspfdelayout_ubdom)
- *) apply(induction sb rule: ind_ub)
-    defer
-    defer
+ *) 
+  apply (induction sb rule: ind_ub)
+  apply (rule admI)
+  using ufunlub_ufun_fun
+  apply(simp add: ch2ch_Rep_cfunR contlub_cfun_arg op_the_chain op_the_lub)
   (*apply(simp add: assms receiverspf_ubdom receiverspf_ufdom recspf_ubdom recspf_ufdom recspf_strict receiverspf_strict recspfdelayout_insert ubconc_getch usclConc_stream_def)*)
-    apply(rule_tac x = u in tsynb_simple_cases)
+  defer
+  apply(rule_tac x = u in tsynb_simple_cases)
   apply simp
   apply simp
-      apply(simp add: assms receiverspf_ufdom)
-  oops
-
+  apply(simp add: assms receiverspf_ufdom)
+  sorry
 
 (* Needs to be changed.*)
 text{* @{term ReceiverSPF} is equal to @{term RecSPF}. *}
-(*lemma recspf_receiverspf_eq: "ReceiverSPF = RecSPF"
-  apply (rule ufun_eqI)
+lemma recspf_receiverspf_eq: "ReceiverSPF = RecSPF"
+(*apply (rule ufun_eqI)
   apply (simp add: receiverspf_ufdom recspf_ufdom)
   by (simp add: recspf_receiverspf_ub_eq ubclDom_ubundle_def)*)
+  sorry
 
 end
