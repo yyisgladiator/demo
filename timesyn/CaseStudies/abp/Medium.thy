@@ -376,4 +376,20 @@ lemma medsps_uspecran: "uspecRan\<cdot>MedSPS = {\<C> ''dr''}"
   apply (simp add: uspecRan_def MedSPS_def)
   using medsps_uspecwell by simp
 
+
+(*
+(* counter not null, drop every message and count one down *)
+lemma "spsConcIn (makeInput m) (h_MED (State TheOne (Suc n))) = spsConcOut (makeNull (\<C> ''dr''))\<cdot>(h_MED (State TheOne (Suc n)))"
+  oops
+
+(* If a "null" comes in send it out and stay in the same state *) 
+lemma "spsConcIn (makeNull (\<C> ''ds'')) (h_MED state) = spsConcOut (makeNull (\<C> ''dr''))\<cdot>(h_MED state)"
+  oops
+
+(* Counter hit zero, so pass the message and reset the countdown to a random value *)
+lemma "spsConcIn (makeInput m) (h_MED (State TheOne 0)) = spsConcOut (makeOutput m)\<cdot>(spsFlatten {h_MED (State TheOne n) |  n. True})"
+  oops
+*)
+
+
 end
