@@ -537,7 +537,7 @@ lemma createaroutput_eq [simp]:
   by (metis convDiscrUp_dom domIff fun_upd_apply)
 
 (* h_step lemma for empty input *)
-lemma receiverautomaton_h_step_epsilon: 
+lemma receiverautomaton_h_strict: 
    "da_h ReceiverAutomaton (State r) \<rightleftharpoons> ubLeast {\<C> ''dr''} 
            = ubclLeast {\<C> ''ar'',\<C> ''o''} "
   by (simp add: da_h_bottom daDom_def ReceiverAutomaton.rep_eq daRan_def)
