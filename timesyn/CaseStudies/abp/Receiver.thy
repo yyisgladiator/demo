@@ -340,8 +340,6 @@ lemma recspf_strict: "RecSPF \<rightleftharpoons> ubLeast{\<C> ''dr''} = ubLeast
         by(simp add: ubLeast_def)
   qed
 
-
-
 (* ----------------------------------------------------------------------- *)
   section {* Automaton Receiver Transition Lemmata *}
 (* ----------------------------------------------------------------------- *)
@@ -525,7 +523,7 @@ lemma createaroutput_eq [simp]:
 
 text {*For every state and input one step of @{term da_h} is executed correctly *}
 
-(* empty input *)
+text{* empty input *}
 lemma receiverautomaton_h_strict: 
    "da_h ReceiverAutomaton (State r) \<rightleftharpoons> ubLeast {\<C> ''dr''} 
            = ubclLeast {\<C> ''ar'',\<C> ''o''} "
@@ -606,11 +604,6 @@ lemma receiverautomaton_H_step:
   section {* Automaton Receiver SPF Lemmata *}
 (* ----------------------------------------------------------------------- *)
 
-text{* @{term ReceiverSPF} is strict. *}
-lemma receiverspf_strict: "ReceiverSPF \<rightleftharpoons> ubLeast{\<C> ''dr''} = ubLeast{\<C> ''ar'', \<C> ''o''}"
-  apply (simp add: 
-  sorry
-
 text{* The domain of @{term ReceiverSPF}. *}
 lemma receiverspf_ufdom: "ufDom\<cdot>ReceiverSPF = {\<C> ''dr''}"
   apply (simp add: ReceiverSPF_def da_H_def ReceiverAutomaton_def daDom_def)
@@ -644,67 +637,6 @@ lemma recspf_receiverspf_eq: "ReceiverSPF = RecSPF"
   apply (rule ufun_eqI)
   apply (simp add: receiverspf_ufdom recspf_ufdom)
   by (simp add: recspf_receiverspf_ub_eq ubclDom_ubundle_def)
-
-lemma h1: "ubWell [\<C> ''dr'' \<mapsto> natbool2abp\<cdot>(s1)]"
-  apply (simp add: ubWell_def usclOkay_stream_def natbool2abp_def ctype_tsyn_def tsynMap_def smap_sdom)
-  by (smt image_iff image_subset_iff insertCI range_eqI tsynApplyElem.elims)
-
-lemma h2: "ubDom\<cdot>(Abs_ubundle [\<C> ''dr'' \<mapsto> natbool2abp\<cdot>(\<up>(\<M> (Suc (0::nat), False)) \<bullet> \<up>- 
-          \<bullet> \<up>(\<M> (2::nat, True)) \<bullet> \<up>(\<M> (Suc (0::nat), False)))]) =  {\<C> ''dr''}"
-  by (simp add: ubDom_def h1)
-
-lemma h3_h: "abp2natbool\<cdot>(natbool2abp\<cdot>x) = x"
-  apply (induct x rule: tsyn_ind,simp)
-  apply (simp add: natbool2abp_def abp2natbool_def)
-  apply (case_tac m)
-  apply(simp add: natbool2abp_def abp2natbool_def tsynMap_def smaps2smap)
-  by(simp add: natbool2abp_def abp2natbool_def tsynMap_def smaps2smap)
- 
-lemma h3: "(tsynProjSnd\<cdot>(abp2natbool\<cdot>(Abs_ubundle [\<C> ''dr'' \<mapsto> natbool2abp\<cdot>(\<up>(\<M> (Suc (0::nat), False)) 
-            \<bullet> \<up>- \<bullet> \<up>(\<M> (2::nat, True)) \<bullet> \<up>(\<M> (Suc (0::nat), False)))]  . \<C> ''dr''))) 
-          = (\<up>(\<M> False) \<bullet> \<up>- \<bullet> \<up>(\<M> True) \<bullet> \<up>(\<M> False))"
-proof -
-  have "(Abs_ubundle [\<C> ''dr'' \<mapsto> natbool2abp\<cdot>(\<up>(\<M> (Suc (0::nat), False)) \<bullet> \<up>- \<bullet> 
-        \<up>(\<M> (2::nat, True)) \<bullet> \<up>(\<M> (Suc (0::nat), False)))]  . \<C> ''dr'') = 
-        natbool2abp\<cdot>(\<up>(\<M> (Suc (0::nat), False)) \<bullet> \<up>- \<bullet> \<up>(\<M> (2::nat, True)) 
-        \<bullet> \<up>(\<M> (Suc (0::nat), False)))"
-    by (simp add: h1 ubgetch_ubrep_eq) 
-  then show ?thesis 
-    apply (simp add: h3_h)
-    by (metis sconc_snd_empty tsynprojsnd_sconc_msg tsynprojsnd_sconc_null tsynprojsnd_strict)
-qed
-
-lemma h4: "tsynRec\<cdot>(abp2natbool\<cdot>(Abs_ubundle [\<C> ''dr'' \<mapsto> natbool2abp\<cdot>(\<up>(\<M> (Suc (0::nat), False)) 
-        \<bullet> \<up>- \<bullet> \<up>(\<M> (2::nat, True)) \<bullet> \<up>(\<M> (Suc (0::nat), False)))]  . \<C> ''dr'')) 
-        =  (\<up>- \<bullet> \<up>- \<bullet> \<up>(\<M> 2::nat) \<bullet> \<up>(\<M> Suc (0::nat)))"
-proof -
-  have "(Abs_ubundle [\<C> ''dr'' \<mapsto> natbool2abp\<cdot>(\<up>(\<M> (Suc (0::nat), False)) 
-        \<bullet> \<up>- \<bullet> \<up>(\<M> (2::nat, True)) \<bullet> \<up>(\<M> (Suc (0::nat), False)))]  . \<C> ''dr'') = 
-        natbool2abp\<cdot>(\<up>(\<M> (Suc (0::nat), False)) 
-        \<bullet> \<up>- \<bullet> \<up>(\<M> (2::nat, True)) \<bullet> \<up>(\<M> (Suc (0::nat), False)))"
-    by (simp add: h1 ubgetch_ubrep_eq) 
-  then show ?thesis 
-    by (simp add: h3_h tsynrec_insert)
-qed
-
-lemma recspf_test: "RecSPF \<rightleftharpoons> 
-   Abs_ubundle ([\<C> ''dr''\<mapsto> natbool2abp\<cdot>(<[Msg(1, False), null, Msg(2, True),Msg(1, False)]>)] ) = 
-   Abs_ubundle [\<C> ''ar'' \<mapsto> bool2abp\<cdot>(<[Msg(False), null, Msg(True),Msg(False)]>), 
-                \<C> ''o'' \<mapsto> nat2abp\<cdot>(<[null, null, Msg(2),Msg(1)]>)]" 
-  apply (simp add: recspf_insert tsynbrec_insert)
-  by (simp add: h2 h3 h4)
-
-lemma receiverspf_test2:
-  "spfConcIn (ubConc (createBundle (\<M> Pair_nat_bool (Suc (0::nat), False)) (\<C> ''dr''))\<cdot>
-             (ubConc (tsynbNull (\<C> ''dr''))\<cdot>
-             (ubConc (createBundle (\<M> Pair_nat_bool (2::nat, True)) (\<C> ''dr''))\<cdot>
-                     (createBundle (\<M> Pair_nat_bool (Suc (0::nat), False)) (\<C> ''dr'')))))\<cdot>ReceiverSPF =
-   spfConcOut  (ubConc (tsynbNull (\<C> ''ar'') \<uplus> tsynbNull (\<C> ''o''))\<cdot>
-               (ubConc (createArBundle False \<uplus> tsynbNull (\<C> ''o''))\<cdot>
-               (ubConc (tsynbNull (\<C> ''ar'') \<uplus> tsynbNull (\<C> ''o''))\<cdot>
-               (ubConc (createArBundle True \<uplus> createOBundle (2::nat))\<cdot>
-                       (createArBundle False \<uplus> createOBundle (Suc (0::nat)))))))\<cdot>ReceiverSPF"
-   sorry
 
 lemma ubconc_ubleast: "(createBundle (m) (ch)) = (ubConc (createBundle (m) (ch))\<cdot>(ubLeast {ch}))"
   by (metis (no_types, lifting) createBundle_dom insert_absorb2 insert_is_Un sconc_snd_empty 
