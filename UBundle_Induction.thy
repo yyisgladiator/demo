@@ -48,8 +48,8 @@ proof -
     apply (simp add: sbHd_def)
     apply (simp add: my_c_def1 my_c_def2)
     by (metis my_c_def1 sconc_scons' stake_Suc stream.sel_rews(3) stream.sel_rews(4) sup'_def surj_scons)
-  thus ?thesis 
-    using my_c_def2 by auto
+  thus ?thesis
+    using my_c_def2 by fastforce 
 qed
 
 lemma ubmaxlen_least_only: assumes "ubMaxLen (Fin 0) (x::'a stream\<^sup>\<Omega>)"
@@ -84,7 +84,7 @@ next
          apply(subst ubConc_usclConc_eq)
          apply simp+
          apply(simp add: usclConc_stream_def)
-         by (simp add:  sbHd_def sbRt_def)
+         by (metis One_nat_def assoc_sconc sdrop_forw_rt split_streaml1 stake_suc)
        show ?thesis using f1 
          by (simp add: ubgetchI)
      qed
