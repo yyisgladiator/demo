@@ -152,12 +152,12 @@ lemma tsynmed_tsyndom: "tsynDom\<cdot>(tsynMed\<cdot>msg\<cdot>ora) \<subseteq> 
       by (metis tsyndom_sconc_null tsynmed_sconc_null tsynmed_strict(2))
   qed
 
-lemma helper: "ora \<noteq> \<epsilon> \<Longrightarrow> tsynMed\<cdot>((sntimes k (\<up>null)) \<bullet> s)\<cdot>ora = (sntimes k (\<up>null)) \<bullet> tsynMed\<cdot>s\<cdot>ora"
+lemma tsynmed_sntimes_null: "ora \<noteq> \<epsilon> \<Longrightarrow> tsynMed\<cdot>((sntimes k (\<up>null)) \<bullet> s)\<cdot>ora = (sntimes k (\<up>null)) \<bullet> tsynMed\<cdot>s\<cdot>ora"
   apply (induct k, simp_all)
   apply (cases rule:oracases,simp)
   using tsynmed_sconc_null by auto
 
-lemma helper2: "tsynLen\<cdot>(k\<star>\<up>- \<bullet> s) = tsynLen\<cdot>s"
+lemma tsynlen_sntimes_null: "tsynLen\<cdot>(k\<star>\<up>- \<bullet> s) = tsynLen\<cdot>s"
   apply(induct k,simp)
   by (simp add: tsynlen_sconc_null)
 
@@ -176,25 +176,34 @@ lemma tsynmed_tsynlen_ora:
       by simp
   next
     case msg:(3 a s)
-    moreover obtain k where h1: " msg =(sntimes k (\<up>null))  \<bullet> (sdropwhile (\<lambda>x. x=null)\<cdot>msg)"
-      sorry
-    moreover have "(sdropwhile (\<lambda>x. x=null)\<cdot>msg) \<noteq> \<epsilon>"
-      using msg.prems apply (induct msg rule: tsyn_ind)
-         apply (rule admI)
-         apply (simp add: contlub_cfun_arg contlub_cfun_fun)
-      sorry
-    moreover then obtain b where "shd  (sdropwhile (\<lambda>x. x=null)\<cdot>msg) = Msg b"
-      apply (cases "(sdropwhile (\<lambda>x. x=null)\<cdot>msg)" rule: scases,simp)
-      by (metis (full_types) sdropwhile_resup shd1 tsynSnd.cases)
-    moreover have "tsynLen\<cdot>(srt\<cdot>(sdropwhile (\<lambda>x::(nat \<times> bool) tsyn. x = -)\<cdot>msg)) = \<infinity>"
-      sorry
+    obtain k1 where "snth k1 msg \<noteq> null"
+      using msg.prems apply (simp add: tsynlen_insert tsynabs_insert)
+      by (metis (mono_tags, lifting) Inf'_neq_0 ex_snth_in_sfilter_nempty mem_Collect_eq slen_empty_eq)
+    then obtain n where h1:"#(stakewhile (\<lambda>x. x = -)\<cdot>msg) = Fin n"
+      by (metis (full_types) lncases notinfI3 stakewhile_slen)
+    then have h2:"(sdropwhile (\<lambda>x. x=null)\<cdot>msg) \<noteq> \<epsilon>"
+      using msg.prems apply (simp add: tsynlen_insert tsynabs_insert)
+      by (metis Fin_neq_inf sconc_snd_empty sfilterl4 stakewhileDropwhile)
+    from h1 have "(sntimes n (\<up>null)) = (stakewhile (\<lambda>x. x = -)\<cdot>msg)"
+      apply (induct msg arbitrary: n rule: tsyn_ind)
+      apply (rule admI)
+      apply (smt Fin_neq_inf ch2ch_Rep_cfunR contlub_cfun_arg inf_chainl4 l42 lub_eq)
+      apply simp_all
+      by (metis (mono_tags) Fin_0 Fin_Suc gr0_implies_Suc gr_0 lnat.sel_rews(2) lnat_well_h1 sntimes.simps(2))
+    then have h3: " msg =(sntimes n (\<up>null))  \<bullet> (sdropwhile (\<lambda>x. x=null)\<cdot>msg)"
+      by (simp add: stakewhileDropwhile)
+    from h2 obtain b where "shd (sdropwhile (\<lambda>x. x=null)\<cdot>msg) = Msg b"
+      by (metis (full_types) scases sdropwhile_resup shd1 tsynSnd.cases)
+    moreover have "tsynLen\<cdot>(srt\<cdot>(sdropwhile (\<lambda>x. x = -)\<cdot>msg)) = \<infinity>"
+      using msg.prems
+      by (simp add: tsynlen_insert tsynabs_insert h1 stakewhile_sdropwhilel1 slen_sfilter_sdrop)
     ultimately show ?case
-      apply (subst h1)
-      apply (subst helper,simp)
-      apply (simp add: helper2)
+      apply (subst h3)
+      apply (subst tsynmed_sntimes_null,simp)
+      apply (simp add: tsynlen_sntimes_null)
       apply (cases a,simp_all)
-      apply (metis tsynlen_sconc_msg tsynmed_sconc_msg_t surj_scons)
-      by (metis tsynlen_sconc_null tsynmed_sconc_msg_f surj_scons)
+      apply (metis (no_types, lifting) h2 msg.IH surj_scons tsynlen_sconc_msg tsynmed_sconc_msg_t)
+      by (metis h2 msg.IH tsynlen_sconc_null tsynmed_sconc_msg_f surj_scons)
    qed
 
 text{* If infinitely many messages are sent, infinitely many messages will be transmitted. *}
