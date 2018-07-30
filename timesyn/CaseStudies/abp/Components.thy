@@ -55,4 +55,38 @@ text {* Conversion of a receiver stream into an equivalent nat stream. *}
 definition abp2nat :: "abpMessage tsyn stream \<rightarrow> nat tsyn stream" where
   "abp2nat \<equiv> tsynMap invNat"
 
+(* ----------------------------------------------------------------------- *)
+  section {* Datatype Conversion Lemmata *}
+(* ----------------------------------------------------------------------- *)
+
+lemma test1: "invPair (Pair_nat_bool n) = n"
+  by (metis invPair.simps(1) old.prod.exhaust)
+
+lemma test2: "tsynMap f\<cdot>(tsynMap g\<cdot>s) = tsynMap (\<lambda> x. f (g x))\<cdot>s"
+  apply (simp add: tsynmap_insert)
+  sorry
+
+lemma natbool2abp2natbool: "abp2natbool\<cdot>(natbool2abp\<cdot>s) = s"
+  apply (simp add: abp2natbool_def natbool2abp_def)
+  apply (simp add: test2)
+  apply (simp add: tsynmap_insert)
+  sorry
+
+lemma abp2natbool2abp: "natbool2abp\<cdot>(abp2natbool\<cdot>s) = s"
+  sorry
+
+lemma bool2abp2bool: "abp2bool\<cdot>(bool2abp\<cdot>s) = s"
+  sorry
+
+lemma abp2bool2abp: "bool2abp\<cdot>(abp2bool\<cdot>s) = s"
+  sorry
+
+lemma nat2abp2nat: "abp2nat\<cdot>(nat2abp\<cdot>s) = s"
+  sorry
+
+lemma abp2nat2abp: "nat2abp\<cdot>(abp2nat\<cdot>s) = s"
+  sorry  
+
+
+
 end
