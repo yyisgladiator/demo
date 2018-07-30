@@ -176,12 +176,12 @@ lemma tsynmed_tsynlen_ora_t:
     case (null s)
     then show ?case
       by (simp add: tsynmed_sconc_null tsynlen_sconc_null)
-  qed
+    oops
 
 lemma tsynmed_tsynlen_ora_f: 
   assumes msg_inf: "tsynLen\<cdot>msg = \<infinity>"
   shows "tsynLen\<cdot>(tsynMed\<cdot>(\<up>null \<bullet> msg)\<cdot>(\<up>False \<bullet> ora)) = #({True} \<ominus> (\<up>False \<bullet> ora))"
-  sorry
+  oops
 
 text{* The number of transmitted messages equals the number of True in ora. *}
 lemma tsynmed_tsynlen_ora: 
@@ -198,22 +198,15 @@ lemma tsynmed_tsynlen_ora:
       by simp
   next
     case (msg_t s)
+    then obtain k a where h1: " msg =(sntimes k (\<up>null))  \<bullet> (sdrop k\<cdot>msg) 
+\<and> shd  (sdrop k\<cdot>msg) = Msg a" sorry
     then show ?case
-       proof (cases rule: tsyn_cases_inf [of msg])
-        case inf
-        then show ?case
-          by (simp add: msg_t.prems)
-      next
-        case (msg a as)
-        then show ?thesis
-          by (metis msg_t.prems tsynlen_sconc_null tsynmed_sconc_null tsynmed_strict(2) 
-              tsynmed_tsynlen_ora_t)
-      next
-        case (null as)
-        then show ?thesis 
-          by (metis msg_t.prems tsynlen_sconc_null tsynmed_tsynlen_ora_t)
-      qed
-  next
+      apply (simp add: msg_t.prems)
+      apply (cases rule: tsyn_cases_inf [of msg])
+      apply simp
+      apply (simp add: tsynlen_sconc_msg tsynmed_sconc_msg_t)
+      apply (simp add: tsynlen_sconc_null tsynmed_sconc_null)
+    next
     case (msg_f s)
     then show ?case
       proof (cases rule: tsyn_cases_inf [of msg])
@@ -230,16 +223,14 @@ lemma tsynmed_tsynlen_ora:
         then show ?thesis 
           by (metis msg_f.prems tsynlen_sconc_null tsynmed_tsynlen_ora_f)
       qed
-  oops
+    qed
 
 text{* If infinitely many messages are sent, infinitely many messages will be transmitted. *}
 lemma tsynmed_tsynlen_inf:
   assumes "#({True} \<ominus> ora) = \<infinity>" 
     and "tsynLen\<cdot>msg = \<infinity>"
   shows "tsynLen\<cdot>(tsynMed\<cdot>msg\<cdot>ora) = \<infinity>"
-  using assms
-  (*by (simp add: tsynmed_tsynlen_ora)*)
-  sorry
+  using assms by (simp add: tsynmed_tsynlen_ora)
 
 text {* @{term tsynMed} test on finite stream with ticks. *}
 lemma tsynmed_test_finstream_null:
