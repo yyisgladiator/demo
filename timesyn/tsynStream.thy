@@ -494,6 +494,27 @@ text {* @{term tsynMap} leaves the length of a stream unchanged. *}
 lemma tsynmap_slen: "#(tsynMap f\<cdot>s) = #s"
   by (simp add: tsynmap_insert)
 
+(* Show from here *)
+lemma tsynmap_sfilternulls_slen: "#(sfilter {null}\<cdot>(tsynMap f\<cdot>ts)) = #(sfilter {null}\<cdot>ts)"
+  sorry
+
+lemma tsynabs_sfilternull_slen:
+  assumes "#(sfilter {null}\<cdot>ts1) = #(sfilter {null}\<cdot>ts2)"
+      and "#ts1 = #ts2"
+    shows "#(tsynAbs\<cdot>ts1) = #(tsynAbs\<cdot>ts2)"
+  sorry
+
+text {* @{term tsynMap} leaves the length of a tsyn stream unchanged. *}
+lemma tsynmap_tsynlen: "tsynLen\<cdot>(tsynMap f\<cdot>ts) = tsynLen\<cdot>ts"
+  apply(simp add: tsynLen_def)
+  apply(rule tsynabs_sfilternull_slen)  
+  apply(simp add: tsynmap_sfilternulls_slen)
+  by(simp add: tsynmap_slen)
+
+(* what the problems are *)
+
+
+
 (* ----------------------------------------------------------------------- *)
   subsection {* tsynProjFst *}
 (* ----------------------------------------------------------------------- *)
@@ -534,8 +555,24 @@ text {* @{term tsynProjFst} leaves the length of a stream unchanged. *}
 lemma tsynprojfst_slen: "#(tsynProjFst\<cdot>s) = #s"
   by (simp add: tsynprojfst_insert)
 
+
 lemma tsynprojfst_tsynlen: "tsynLen\<cdot>(tsynProjFst\<cdot>ts) = tsynLen\<cdot>ts"
-  sorry
+  apply (simp add: tsynLen_def tsynprojfst_slen tsynAbs_def)
+  apply (induction ts rule: tsyn_ind, simp_all)
+  apply (simp add: tsynProjFst_def smap_def slookahd_def) 
+
+(* ISAR Variant
+proof (induction ts)
+  case adm
+  then show ?case sorry
+next
+  case bottom
+  then show ?case by simp
+next
+  case (lscons u ts)
+  then show ?case sorry
+qed
+*)
 
 (* ----------------------------------------------------------------------- *)
   subsection {* tsynProjSnd *}
@@ -578,6 +615,9 @@ text {* @{term tsynProjSnd} leaves the length of a stream unchanged. *}
 lemma tsynprojsnd_slen: "#(tsynProjSnd\<cdot>s) = #s"
   by (simp add: tsynprojsnd_insert)
 
+lemma tsynprojsnd_tsynlen: "tsynLen\<cdot>(tsynProjSnd\<cdot>ts) = tsynLen\<cdot>ts"
+  sorry
+
 (* ----------------------------------------------------------------------- *)
   subsection {* tsynRemDups *}
 (* ----------------------------------------------------------------------- *)
@@ -602,6 +642,10 @@ lemma tsynremdups_sconc_null: "tsynRemDups\<cdot>(\<up>null \<bullet> s) = \<up>
 text {* @{term tsynRemDups} leaves the length of a stream unchanged. *}
 lemma tsynremdups_slen: "#(tsynRemDups\<cdot>s) = #s"
   by (simp add: tsynremdups_insert)
+
+text {* @{term tsynRemDups} leaves the length of a tsyn-stream unchanged. *}
+lemma tsynremdups_tsynlen: "tsynLen \<cdot> (tsynRemDups\<cdot>ts) = tsynLen \<cdot>ts"
+  sorry
 
 text {* @{term tsynRemDups} test on finite stream. *}
 lemma tsynremdups_test_finstream:
@@ -770,8 +814,9 @@ lemma tsynfilter_slen: "#((tsynFilter A)\<cdot>s) = #s"
   by (simp add: tsynfilter_insert)
 
 lemma tsynfilter_tsynlen: "tsynLen\<cdot>(tsynFilter A\<cdot>s) \<le> tsynLen\<cdot>s"
-  sorry
-
+proof-
+  show ?thesis sorry
+qed
 (* ----------------------------------------------------------------------- *)
   subsection {* tsynScanlExt *}
 (* ----------------------------------------------------------------------- *)
