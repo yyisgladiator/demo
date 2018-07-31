@@ -95,13 +95,13 @@ lemma tsynmed_sconc_null:
 
 (* singleton lemmata *)
 lemma tsynmed_sconc_singleton_msg_t: "tsynMed\<cdot>(\<up>(\<M> m))\<cdot>(\<up>True \<bullet> ora) = \<up>(\<M> m)"
-  sorry
+  by (metis lscons_conv sup'_def tsynmed_sconc_msg_t tsynmed_strict(3))
 
 lemma tsynmed_sconc_singleton_msg_f: "tsynMed\<cdot>(\<up>(\<M> m))\<cdot>(\<up>False \<bullet> ora) = \<up>-"
-  sorry
+  by (metis lscons_conv sup'_def tsynmed_sconc_msg_f tsynmed_strict(3))
 
 lemma tsynmed_sconc_singleton_msg_null: assumes "ora \<noteq> \<epsilon>" shows "tsynMed\<cdot>(\<up>-)\<cdot>ora = \<up>-"
-  sorry
+  by (metis assms lscons_conv sup'_def tsynmed_sconc_null tsynmed_strict(3))
 
 lemma tsynmed_slen: assumes "#ora=\<infinity>" shows "#(tsynMed\<cdot>msg\<cdot>ora) = #msg"
   by (simp add: assms tsynfilter_slen tsynmed_insert tsynprojfst_slen tsynzip_slen)
