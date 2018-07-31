@@ -608,14 +608,40 @@ lemma receiverautomaton_H_step:
 
 (* TODO *)
 text {* Cases rule for simple time-synchronous bundles. *}
-lemma tsynb_simple_cases [case_names msg null]:
-  assumes len: "ubMaxLen (Fin (1::nat)) x" 
+lemma tsynb_cases [case_names max_len not_ubleast numb_channel msg null]:
+  assumes max_len: "ubMaxLen (Fin (1::nat)) x" 
     and not_ubleast: "x \<noteq> ubLeast (ubDom\<cdot>x)"
     and numb_channel: "(ubDom\<cdot>x) = {c}"
     and msg: "\<And>m. P (createBundle (Msg m) c)"
     and null: "P (tsynbNull c)"
   shows "P x"
-  sorry
+proof - 
+  obtain my_x where my_x_dom: "(ubDom\<cdot>(my_x::'a tsyn stream\<^sup>\<Omega>)) = {c}" and my_x_len: "ubMaxLen (Fin (1::nat)) my_x" 
+    and my_x_notleast: "my_x \<noteq> ubLeast (ubDom\<cdot>my_x)" using assms by blast
+  have my_x_not_empty: "my_x . c \<noteq> \<epsilon>" 
+    by (metis my_x_dom my_x_notleast singletonD ubDom_ubLeast ubgetchI ubleast_ubgetch)
+  have my_x_dom_eq_createbundle: "\<And>m. ubDom\<cdot>my_x = ubDom\<cdot>(createBundle (Msg m) c)" 
+    by (simp add: my_x_dom)
+  have my_x_dom_eq_tsynbnull: "ubDom\<cdot>my_x = ubDom\<cdot>(tsynbNull c)" 
+    by (simp add: my_x_dom)
+  have createbundle_stream_eq: "\<And>c m. c\<in>(ubDom\<cdot>(createBundle (Msg m) c)) \<Longrightarrow> (Msg m) \<in> ctype c \<Longrightarrow> (createBundle (Msg m) c) . c = \<up>(Msg m)"
+    by (metis createBundle.rep_eq fun_upd_same option.sel ubgetch_insert)
+  have tsynbnull_stream_eq: "\<And>c. c\<in> ubDom\<cdot>(tsynbNull c) \<Longrightarrow> (tsynbNull c) . c =  \<up>null"
+    by simp
+(*   have f3b: "\<And> c m. c\<in> (ubDom\<cdot>my_x) \<Longrightarrow>  my_x . c \<noteq> \<up>(Msg m) \<Longrightarrow> my_x . c = \<up>null"
+    using f1 sorry      using f3b by blast*)
+  have my_x_cases: "(my_x . c = \<up>(Msg m))  \<or> (my_x . c = \<up>null)"
+    using my_x_dom my_x_len sorry
+  have my_x_ctype: "my_x . c = \<up>(Msg m) \<Longrightarrow> (Msg m) \<in> ctype c"
+    sorry
+  have my_x_bundle_c_eq: "\<And>c. c\<in>(ubDom\<cdot>my_x) \<Longrightarrow> ((my_x . c = (createBundle (Msg m) c) . c) \<or> (my_x . c = (tsynbNull c) . c))"
+  using  my_x_not_empty my_x_dom_eq_createbundle my_x_dom_eq_tsynbnull createbundle_stream_eq tsynbnull_stream_eq my_x_cases my_x_ctype by (metis my_x_dom singletonD)
+  have tsynb_one_cases: "(my_x = (createBundle (Msg m) c)) \<or> (my_x = (tsynbNull c))"
+    using my_x_dom_eq_createbundle my_x_dom_eq_tsynbnull ubgetchI by (metis my_x_bundle_c_eq my_x_dom singletonD)  
+  have my_x_p: "P my_x" using tsynb_one_cases msg null by blast 
+  thus ?thesis sorry
+qed
+
 
 text{* Application of @{term ubLeast} on @{term ReceiverSPF} yields only the initial output. *}
 lemma receiverspf_strict: 
