@@ -521,8 +521,8 @@ lemma tsynmap_slen: "#(tsynMap f\<cdot>s) = #s"
 
 text {* Abstraction of @{term tsynMap} equals sMap executed on abstracted stream. *}
 lemma tsynmap_tsynabs: "tsynAbs\<cdot>(tsynMap f\<cdot>s) = smap f\<cdot>(tsynAbs\<cdot>s)"
-  oops
-
+  by (simp add: tsynAbs_def tsynmap_insert, induction s rule: tsyn_ind, simp_all)
+  
 (* ----------------------------------------------------------------------- *)
   subsection {* tsynProjFst *}
 (* ----------------------------------------------------------------------- *)
@@ -574,11 +574,11 @@ lemma tsynprojfst_slen: "#(tsynProjFst\<cdot>s) = #s"
 
 text {* @{term tsynProjFst} leaves the length of a time abstracted stream unchanged. *}
 lemma tsynprojfst_tsynlen: "tsynLen\<cdot>(tsynProjFst\<cdot>ts) = tsynLen\<cdot>ts"
-  sorry
+  oops
 
 text {* Abstraction of @{term tsynProjFst} equals sprojfst executed on abstracted stream. *}
 lemma tsynprojfst_tsynabs: "tsynAbs\<cdot>(tsynProjFst\<cdot>s) = sprojfst\<cdot>(tsynAbs\<cdot>s)"
-  oops
+  by (simp add: tsynAbs_def tsynprojfst_insert, induction s rule: tsyn_ind, simp_all, auto)
 
 (* ----------------------------------------------------------------------- *)
   subsection {* tsynProjSnd *}
@@ -630,6 +630,10 @@ text {* @{term tsynProjSnd} leaves the length of a stream unchanged. *}
 lemma tsynprojsnd_slen: "#(tsynProjSnd\<cdot>s) = #s"
   by (simp add: tsynprojsnd_insert)
 
+text {* Abstraction of @{term tsynProjSnd} equals sprojsnd executed on abstracted stream. *}
+lemma tsynprojsnd_tsynabs: "tsynAbs\<cdot>(tsynProjSnd\<cdot>s) = sprojsnd\<cdot>(tsynAbs\<cdot>s)"
+  by (simp add: tsynAbs_def tsynprojsnd_insert, induction s rule: tsyn_ind, simp_all, auto)
+
 (* ----------------------------------------------------------------------- *)
   subsection {* tsynRemDups *}
 (* ----------------------------------------------------------------------- *)
@@ -676,6 +680,12 @@ lemma tsynremdups_test_infstream:  "tsynRemDups\<cdot>(<[Msg (1 :: nat), Msg (1 
   apply (simp add: tsynremdups_insert)
   oops
 
+text {* Abstraction of @{term tsynRemDups} equals srcdups executed on abstracted stream. *}
+lemma tsynremdups_tsynabs: "tsynAbs\<cdot>(tsynRemDups\<cdot>s) = srcdups\<cdot>(tsynAbs\<cdot>s)"
+  apply (simp add: tsynAbs_def tsynremdups_insert) 
+  apply (induction s rule: tsyn_ind, simp_all)
+  oops
+   
 (* ----------------------------------------------------------------------- *)
   subsection {* tsynRemDups_fix_h *}
 (* ----------------------------------------------------------------------- *)
@@ -780,6 +790,12 @@ lemma tsynremdups_fix_test_infinstream:
   by (metis tsynremdups_fix_h_test_infinstream tsynremdups_fix_insert)
   *)
 
+text {* Abstraction of @{term tsynRemDups_fix} equals srcdups executed on abstracted stream. *}
+lemma tsynremdups_fix_tsynabs: "tsynAbs\<cdot>(tsynRemDups_fix\<cdot>s) = srcdups\<cdot>(tsynAbs\<cdot>s)"
+  apply (simp add: tsynAbs_def tsynremdups_fix_insert) 
+  apply (induction s rule: tsyn_ind, simp_all)
+  oops
+
 (* ----------------------------------------------------------------------- *)
   subsection {* tsynFilter *}
 (* ----------------------------------------------------------------------- *)
@@ -847,6 +863,10 @@ lemma tsynfilter_slen: "#((tsynFilter A)\<cdot>s) = #s"
 lemma tsynfilter_tsynlen: "tsynLen\<cdot>(tsynFilter A\<cdot>s) \<le> tsynLen\<cdot>s"
   sorry
 
+text {* Abstraction of @{term tsynFilter} equals sfilter executed on abstracted stream. *}
+lemma tsynfilter_tsynabs: "tsynAbs\<cdot>(tsynFilter A\<cdot>s) = sfilter A\<cdot>(tsynAbs\<cdot>s)"
+  by (simp add: tsynAbs_def tsynfilter_insert, induction s rule: tsyn_ind, simp_all) 
+
 (* ----------------------------------------------------------------------- *)
   subsection {* tsynScanlExt *}
 (* ----------------------------------------------------------------------- *)
@@ -886,6 +906,11 @@ text {* @{term tsynScanlExt} test on finite nat tsyn-stream. *}
 lemma tsynscanlext_test_finstream:
   "tsynScanlExt ifEqualThenZero 0\<cdot>(<[Msg 5, Msg 3, Msg 3, null]>) = <[Msg 5, Msg 3, Msg 0, null]>"
   by (simp add: tsynscanlext_insert)
+
+text {* Abstraction of @{term tsynScanlExt} equals sscanlA executed on abstracted stream. *}
+lemma tsynscanlext_tsynabs: "tsynAbs\<cdot>(tsynScanlExt f i\<cdot>s) = sscanlA f i\<cdot>(tsynAbs\<cdot>s)"
+  apply (simp add: tsynAbs_def tsynscanlext_insert, induction s rule: tsyn_ind, simp_all)
+  oops
 
 (* ----------------------------------------------------------------------- *)
   subsection {* tsynScanl *}
@@ -928,6 +953,11 @@ lemma tsynscanl_test_infinstream:
   apply (simp add: tsynscanl_insert)
   oops
 
+text {* Abstraction of @{term tsynScanl} equals sscanl executed on abstracted stream. *}
+lemma tsynscanl_tsynabs: "tsynAbs\<cdot>(tsynScanl f i\<cdot>s) = sscanl f i\<cdot>(tsynAbs\<cdot>s)"
+  apply (simp add: tsynAbs_def tsynscanl_insert, induction s arbitrary: s rule: tsyn_ind, simp_all)
+  oops
+  
 (* ----------------------------------------------------------------------- *)
   subsection {* tsynDropWhile *}
 (* ----------------------------------------------------------------------- *)
@@ -1023,6 +1053,11 @@ proof -
     by simp
 qed
 
+text {* Abstraction of @{term tsynDropWhile} equals sdropwhile executed on abstracted stream. *}
+lemma tsyndropwhile_tsynabs: "tsynAbs\<cdot>(tsynDropWhile f\<cdot>s) = sdropwhile f\<cdot>(tsynAbs\<cdot>s)"
+  apply (simp add: tsynAbs_def tsyndropwhile_insert, induction s arbitrary: s, simp_all)
+  oops
+
 (* ----------------------------------------------------------------------- *)
   subsection {* tsynZip *}
 (* ----------------------------------------------------------------------- *)
@@ -1067,6 +1102,10 @@ lemma tsynzip_slen: "#bs = \<infinity> \<Longrightarrow> #(tsynZip\<cdot>as\<cdo
 lemma tsynzip_tsynlen: "#bs = \<infinity> \<Longrightarrow> tsynLen\<cdot>(tsynZip\<cdot>as\<cdot>bs) = tsynLen\<cdot>as"
   sorry
 
+text {* Abstraction of @{term tsynZip} equals szip executed on abstracted stream. *}
+lemma tsynzip_tsynabs: "tsynAbs\<cdot>(tsynZip\<cdot>as\<cdot>bs) = szip\<cdot>(tsynAbs\<cdot>as)\<cdot>bs"
+  oops
+ 
 (* ----------------------------------------------------------------------- *)
   section {* tsynSum - CaseStudy *}
 (* ----------------------------------------------------------------------- *)
