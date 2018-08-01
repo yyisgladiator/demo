@@ -616,30 +616,69 @@ lemma tsynb_cases [case_names max_len not_ubleast numb_channel msg null]:
     and null: "P (tsynbNull c)"
   shows "P x"
 proof - 
-  obtain my_x where my_x_dom: "(ubDom\<cdot>(my_x::'a tsyn stream\<^sup>\<Omega>)) = {c}" and my_x_len: "ubMaxLen (Fin (1::nat)) my_x" 
-    and my_x_notleast: "my_x \<noteq> ubLeast (ubDom\<cdot>my_x)" using assms by blast
-  have my_x_not_empty: "my_x . c \<noteq> \<epsilon>" 
-    by (metis my_x_dom my_x_notleast singletonD ubDom_ubLeast ubgetchI ubleast_ubgetch)
-  have my_x_dom_eq_createbundle: "\<And>m. ubDom\<cdot>my_x = ubDom\<cdot>(createBundle (Msg m) c)" 
-    by (simp add: my_x_dom)
-  have my_x_dom_eq_tsynbnull: "ubDom\<cdot>my_x = ubDom\<cdot>(tsynbNull c)" 
-    by (simp add: my_x_dom)
-  have createbundle_stream_eq: "\<And>c m. c\<in>(ubDom\<cdot>(createBundle (Msg m) c)) \<Longrightarrow> (Msg m) \<in> ctype c \<Longrightarrow> (createBundle (Msg m) c) . c = \<up>(Msg m)"
-    by (metis createBundle.rep_eq fun_upd_same option.sel ubgetch_insert)
-  have tsynbnull_stream_eq: "\<And>c. c\<in> ubDom\<cdot>(tsynbNull c) \<Longrightarrow> (tsynbNull c) . c =  \<up>null"
+  have x_not_empty: "x . c \<noteq> \<epsilon>" 
+     by (metis not_ubleast numb_channel singletonD ubDom_ubLeast ubgetchI ubleast_ubgetch) 
+  have x_dom_eq_createbundle: "\<And>m. ubDom\<cdot>x = ubDom\<cdot>(createBundle (Msg m) c)" 
+    by (simp add: numb_channel)
+  have x_dom_eq_tsynbnull: "ubDom\<cdot>x = ubDom\<cdot>(tsynbNull c)" 
+    by (simp add: numb_channel)
+  have createbundle_stream_eq: "\<And>m.  (Msg m) \<in> ctype c \<Longrightarrow> (createBundle (Msg m) c) . c = \<up>(Msg m)" 
+    by (metis createBundle.rep_eq fun_upd_same option.sel ubgetch_insert) 
+  have tsynbnull_stream_eq: "(tsynbNull c) . c =  \<up>null"
     by simp
-(*   have f3b: "\<And> c m. c\<in> (ubDom\<cdot>my_x) \<Longrightarrow>  my_x . c \<noteq> \<up>(Msg m) \<Longrightarrow> my_x . c = \<up>null"
-    using f1 sorry      using f3b by blast*)
-  have my_x_cases: "(my_x . c = \<up>(Msg m))  \<or> (my_x . c = \<up>null)"
-    using my_x_dom my_x_len sorry
-  have my_x_ctype: "my_x . c = \<up>(Msg m) \<Longrightarrow> (Msg m) \<in> ctype c"
-    sorry
-  have my_x_bundle_c_eq: "\<And>c. c\<in>(ubDom\<cdot>my_x) \<Longrightarrow> ((my_x . c = (createBundle (Msg m) c) . c) \<or> (my_x . c = (tsynbNull c) . c))"
-  using  my_x_not_empty my_x_dom_eq_createbundle my_x_dom_eq_tsynbnull createbundle_stream_eq tsynbnull_stream_eq my_x_cases my_x_ctype by (metis my_x_dom singletonD)
-  have tsynb_one_cases: "(my_x = (createBundle (Msg m) c)) \<or> (my_x = (tsynbNull c))"
-    using my_x_dom_eq_createbundle my_x_dom_eq_tsynbnull ubgetchI by (metis my_x_bundle_c_eq my_x_dom singletonD)  
-  have my_x_p: "P my_x" using tsynb_one_cases msg null by blast 
-  thus ?thesis sorry
+  have x_singleton: "usclLen\<cdot>(x . c) = Fin 1" 
+  proof - 
+    have x_smaller: "usclLen\<cdot>(x . c) \<le> Fin 1" using max_len 
+      by (simp add: numb_channel ubMaxLen_def)
+    have empty_zero: "usclLen\<cdot>(\<epsilon>::'a tsyn stream) = Fin 0" 
+      by (simp add: usclLen_stream_def)
+    hence x_not_zero: "usclLen\<cdot>(x . c) \<noteq> Fin 0" using x_not_empty
+      by (simp add: usclLen_stream_def)
+    thus ?thesis using x_smaller
+      by (simp add: One_nat_def antisym_conv neq02Suclnle)
+  qed
+  obtain s where s_def: "x . c = s" using assms 
+    by metis
+  have s_ubundle_eq_x: "x = Abs_ubundle ([c \<mapsto> s])"
+    by (metis (mono_tags, lifting) dom_eq_singleton_conv fun_upd_same numb_channel s_def singletonI ubWell_single_channel ubdom_insert ubgetchE ubgetchI ubgetch_insert ubrep_ubabs)
+  have len_one_only: "usclLen\<cdot>s = Fin 1 \<Longrightarrow> (\<exists>m. s = (\<up>(Msg m))) \<or>  (s = (\<up>null))" apply (simp add: usclLen_stream_def)
+  proof - 
+    assume len_one: "#s = Fin (Suc (0::nat))"
+    show "(\<exists>m. s = (\<up>(Msg m))) \<or>  (s = (\<up>null))"
+    proof - 
+      have len_msg: "\<And>m. #(\<up>(Msg m)) = Fin 1" by auto
+      have len_null: "#(\<up>null) = Fin 1" by auto
+      have len_greater_msg: "\<And>a m. #(\<up>a\<bullet>\<up>(Msg m)) > Fin 1" 
+        by simp
+      have len_greater_null: "\<And>a. #(\<up>a\<bullet>\<up>null) > Fin 1" by simp
+      have all_greater: "\<And>aas. #aas > Fin 1 \<Longrightarrow> \<exists>a as.  aas = \<up>a\<bullet>as"
+        by (metis drop_not_all strict_sdrop surj_scons)
+      show ?thesis using len_msg len_null len_greater_msg len_greater_null all_greater strict_slen tsyn.exhaust len_one sorry
+    qed
+  qed
+  have s_cases: "(\<exists>m. s = \<up>(Msg m)) \<or> (s = \<up>null)"
+    using s_def assms x_singleton x_not_empty len_one_only by blast
+ (*  have s3: "\<exists>m.  s = \<up>(Msg m) \<and> (Msg m) \<in> ctype c" using s_def s2 sledgehammer*)
+  have s_eq: "(\<exists>m. s = (createBundle (Msg m) c) . c ) \<or> (s = (tsynbNull c) . c)" 
+    apply (case_tac "\<exists>m. s = \<up>(Msg m)")
+     defer 
+    using s_cases apply auto[1]
+  proof - 
+    assume a0: " \<exists>m::'a. s = \<up>(\<M> m)"
+    show " (\<exists>m::'a. s = createBundle (\<M> m) c  .  c) \<or> s = tsynbNull c  .  c"
+    proof - 
+      obtain m where m_def: "s = \<up>(\<M> m)" 
+        using a0 by blast
+      have m_in_ctype: "(\<M> m) \<in> ctype c" using s_ubundle_eq_x s_def sorry
+      have s4: "s = (createBundle (\<M> m) c) . c " 
+        using createbundle_stream_eq m_def m_in_ctype by force
+      show ?thesis using s4 
+        by blast
+ (*   using s_cases s3 by (metis createbundle_stream_eq) *)
+    qed 
+  qed
+  have x_eq: "(\<exists>m. x = (createBundle (Msg m) c)) \<or> (x = (tsynbNull c))" using s_cases s_def assms s_eq by (metis singletonD ubgetchI x_dom_eq_createbundle x_dom_eq_tsynbnull)
+  show ?thesis using x_eq msg null by blast
 qed
 
 
