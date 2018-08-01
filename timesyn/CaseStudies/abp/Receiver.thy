@@ -606,7 +606,25 @@ lemma receiverautomaton_H_step:
   section {* Automaton Receiver SPF Lemmata *}
 (* ----------------------------------------------------------------------- *)
 
-(* TODO *)
+(* should probably be stated in Streams.thy *)
+lemma len_one_stream: "#s = Fin 1 \<Longrightarrow> \<exists>m. s = \<up>m"
+proof-
+  assume a0: "#s = Fin 1"
+  show "\<exists>m::'a. s = \<up>m"
+  proof-
+    have empty_or_long: "\<nexists>m::'a. s = \<up>m \<Longrightarrow> s = \<epsilon> \<or> (\<exists> as a. s = \<up>a \<bullet> as)"
+      by (metis surj_scons)
+    have not_eq_one: "\<nexists>m::'a. s = \<up>m \<Longrightarrow> #s = Fin 0 \<or> #s > Fin 1" 
+      using empty_or_long 
+      by (metis Fin_02bot Fin_Suc One_nat_def a0 leI lnzero_def notinfI3 only_empty_has_length_0 sconc_snd_empty slen_conc slen_scons)
+    have not_eq_one2: "\<exists>m. s = \<up>m" using a0 
+      using not_eq_one by auto
+    show ?thesis using not_eq_one2 
+      by simp
+  qed
+qed
+
+(* TODO: eliminate ctype problem *)
 text {* Cases rule for simple time-synchronous bundles. *}
 lemma tsynb_cases [case_names max_len not_ubleast numb_channel msg null]:
   assumes max_len: "ubMaxLen (Fin (1::nat)) x" 
@@ -641,23 +659,17 @@ proof -
     by metis
   have s_ubundle_eq_x: "x = Abs_ubundle ([c \<mapsto> s])"
     by (metis (mono_tags, lifting) dom_eq_singleton_conv fun_upd_same numb_channel s_def singletonI ubWell_single_channel ubdom_insert ubgetchE ubgetchI ubgetch_insert ubrep_ubabs)
-  have len_one_only: "usclLen\<cdot>s = Fin 1 \<Longrightarrow> (\<exists>m. s = (\<up>(Msg m))) \<or>  (s = (\<up>null))" apply (simp add: usclLen_stream_def)
+  have len_one_cases: "usclLen\<cdot>s = Fin 1 \<Longrightarrow> (\<exists>m. s = (\<up>(Msg m))) \<or>  (s = (\<up>null))" apply (simp add: usclLen_stream_def)
   proof - 
     assume len_one: "#s = Fin (Suc (0::nat))"
     show "(\<exists>m. s = (\<up>(Msg m))) \<or>  (s = (\<up>null))"
     proof - 
-      have len_msg: "\<And>m. #(\<up>(Msg m)) = Fin 1" by auto
-      have len_null: "#(\<up>null) = Fin 1" by auto
-      have len_greater_msg: "\<And>a m. #(\<up>a\<bullet>\<up>(Msg m)) > Fin 1" 
-        by simp
-      have len_greater_null: "\<And>a. #(\<up>a\<bullet>\<up>null) > Fin 1" by simp
-      have all_greater: "\<And>aas. #aas > Fin 1 \<Longrightarrow> \<exists>a as.  aas = \<up>a\<bullet>as"
-        by (metis drop_not_all strict_sdrop surj_scons)
-      show ?thesis using len_msg len_null len_greater_msg len_greater_null all_greater strict_slen tsyn.exhaust len_one sorry
+      show ?thesis using tsyn.exhaust len_one len_one_stream
+        by (metis One_nat_def)
     qed
   qed
   have s_cases: "(\<exists>m. s = \<up>(Msg m)) \<or> (s = \<up>null)"
-    using s_def assms x_singleton x_not_empty len_one_only by blast
+    using s_def assms x_singleton x_not_empty len_one_cases by blast
  (*  have s3: "\<exists>m.  s = \<up>(Msg m) \<and> (Msg m) \<in> ctype c" using s_def s2 sledgehammer*)
   have s_eq: "(\<exists>m. s = (createBundle (Msg m) c) . c ) \<or> (s = (tsynbNull c) . c)" 
     apply (case_tac "\<exists>m. s = \<up>(Msg m)")
