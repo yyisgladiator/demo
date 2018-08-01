@@ -1027,13 +1027,16 @@ qed
   subsection {* tsynZip *}
 (* ----------------------------------------------------------------------- *)
 
-(* ToDo: add descriptions. *)
+declare tsynZip.simps [simp del]
 
+text {* @{term tsynZip} distributes over concatenation. *}
 lemma tsynzip_sconc_msg: 
   "tsynZip\<cdot>(\<up>(Msg x) \<bullet> xs)\<cdot>(\<up>y \<bullet> ys) = \<up>(Msg (x,y)) \<bullet> tsynZip\<cdot>xs\<cdot>ys"
   by (metis (no_types, lifting) tsynZip.simps(3) inverseMsg.simps(2) lscons_conv tsyn.distinct(1) 
       undiscr_Discr)
 
+text {* @{term tsynZip} distributes over concatenation, having the first Stream consist of one
+        null-element and the second stream is non-empty.  *}
 lemma tsynzip_sconc_null: 
   "ys \<noteq> \<epsilon> \<Longrightarrow> tsynZip\<cdot>(\<up>null \<bullet> xs)\<cdot>ys = \<up>null \<bullet> tsynZip\<cdot>xs\<cdot>ys"
   by (metis (no_types, hide_lams) tsynZip.simps(3) lscons_conv scases undiscr_Discr)
@@ -1045,14 +1048,16 @@ lemma tsynzip_singleton_msg: "tsynZip\<cdot>(\<up>(Msg a))\<cdot>(\<up>b) = \<up
 
 text {* @{term tsynZip} Empty singleton streams are zipping to null. *}
 lemma tsynzip_singleton_null: "tsynZip\<cdot>(\<up>null)\<cdot>(\<up>a) = \<up>null"
-  by (simp add: sup'_def)
+  by (metis (no_types, lifting) inject_scons lscons_conv sup'_def tsyn.distinct(1) tsynZip.simps(1) tsynZip.simps(3) tsynzip_sconc_null)
 
+text {* @{term tsynZip} test on finite streams. *}
 lemma tsynzip_test_finstream: 
   "tsynZip\<cdot>(<[Msg 1, null, Msg 2, Msg 3, null]>)\<cdot>(<[4, 2, 3]>) 
      = <[Msg (1,4), null, Msg (2,2), Msg (3,3)]>"
   apply (simp add: tsynzip_sconc_msg tsynzip_sconc_null)
   by (metis lscons_conv sup'_def tsynZip.simps(2) tsynzip_sconc_msg)
 
+text {* @{term tsynZip} test on infinite streams. *}
 lemma tsynzip_test_infstream: 
   "tsynZip\<cdot>(<[Msg 1, null]>\<infinity>)\<cdot>(\<up>2\<infinity>) = <[Msg (1,2),null]>\<infinity>"
   apply (subst rek2sinftimes [of "tsynZip\<cdot>(<[Msg 1, null]>\<infinity>)\<cdot>(\<up>2\<infinity>)" "<[Msg (1,2), null]>"])
@@ -1060,6 +1065,12 @@ lemma tsynzip_test_infstream:
   apply (subst sinftimes_unfold, simp)
   apply (subst sinftimes_unfold [of "\<up>2"])
   by (simp add: tsynzip_sconc_msg tsynzip_sconc_null)
+
+text {* @{term tsynZip} is strict. *}
+lemma tsynzip_strict [simp]: "tsynZip\<cdot>\<epsilon>\<cdot>s = \<epsilon>"
+  by (simp add: tsynZip.simps(1))
+
+(* ToDo: add descriptions. *)
 
 lemma tsynzip_slen: "#bs = \<infinity> \<Longrightarrow> #(tsynZip\<cdot>as\<cdot>bs) = #as"
   sorry
