@@ -94,12 +94,15 @@ lemma tsynmed_sconc_null:
 (* ToDo: general sconc lemma possible? *)
 
 (* singleton lemmata *)
+text {* If the first element in the oracle is True, the only message will be transmitted. *}
 lemma tsynmed_sconc_singleton_msg_t: "tsynMed\<cdot>(\<up>(\<M> m))\<cdot>(\<up>True \<bullet> ora) = \<up>(\<M> m)"
   by (metis lscons_conv sup'_def tsynmed_sconc_msg_t tsynmed_strict(3))
 
+text {* If the first element in the oracle is False, the only message will not be transmitted. *}
 lemma tsynmed_sconc_singleton_msg_f: "tsynMed\<cdot>(\<up>(\<M> m))\<cdot>(\<up>False \<bullet> ora) = \<up>-"
   by (metis lscons_conv sup'_def tsynmed_sconc_msg_f tsynmed_strict(3))
 
+text {* If the stream only contains null and the oracle is not empty, no message will be transmitted. *}
 lemma tsynmed_sconc_singleton_msg_null: assumes "ora \<noteq> \<epsilon>" shows "tsynMed\<cdot>(\<up>-)\<cdot>ora = \<up>-"
   by (metis assms lscons_conv sup'_def tsynmed_sconc_null tsynmed_strict(3))
 
