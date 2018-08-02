@@ -45,15 +45,14 @@ lemma tsynbnull_ubconc_sbrt [simp]:
   section {* Definitions on Time-Synchronous Stream Bundles *}
 (* ----------------------------------------------------------------------- *)
 
-(* ToDo: add description. *)
-
-definition tsynbAbs :: "'a tsyn stream ubundle \<rightarrow> 'a stream ubundle option" where 
-  "tsynbAbs \<equiv> \<Lambda> sb. (ubDom\<cdot>sb = {c1}) \<leadsto> Abs_ubundle [c2 \<mapsto> tsynAbs\<cdot>(sb  .  c1)]"
+text {* @{term tsynbAbs}: Filter the nulls on each stream of the bundle and return the corresponding bundle. *}
+definition tsynbAbs :: "'a tsyn stream ubundle \<rightarrow> 'a stream ubundle" where 
+  "tsynbAbs \<equiv> \<Lambda> sb. Abs_ubundle (\<lambda>c. (c\<in>ubDom\<cdot>sb) \<leadsto> (tsynAbs\<cdot>(sb . c)))"
 
 text {* @{term tsynbRemDups} removes all duplicates of the time-synchronous stream on channel c1. 
         The resulting stream is on channel c2. *}
-definition tsynbRemDups :: "'a tsyn stream ubundle \<rightarrow> 'a tsyn stream ubundle option" where 
-  "tsynbRemDups \<equiv> \<Lambda> sb. (ubDom\<cdot>sb = {c1}) \<leadsto> Abs_ubundle [c2 \<mapsto> tsynRemDups\<cdot>(sb  .  c1)]"
+definition tsynbRemDups :: "'a tsyn stream ubundle \<rightarrow> 'a tsyn stream ubundle" where 
+  "tsynbRemDups \<equiv> \<Lambda> sb. Abs_ubundle (\<lambda>c. (c\<in>ubDom\<cdot>sb) \<leadsto> (tsynRemDups\<cdot>(sb . c)))"
 
 (* ----------------------------------------------------------------------- *)
   section {* Definitions of Time-Synchronous Test Bundles *}
