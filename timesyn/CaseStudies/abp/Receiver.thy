@@ -608,11 +608,11 @@ lemma receiverautomaton_H_step:
 
 (* TODO *)
 text {* Cases rule for simple time-synchronous bundles. *}
-lemma tsynb_simple_cases [case_names msg null]:
+lemma tsynb_cases [case_names len not_ubleast single_ch msg null]:
   assumes len: "ubMaxLen (Fin (1::nat)) x" 
     and not_ubleast: "x \<noteq> ubLeast (ubDom\<cdot>x)"
-    and numb_channel: "(ubDom\<cdot>x) = {c}"
-    and msg: "\<And>m. P (createBundle (Msg m) c)"
+    and single_ch: "(ubDom\<cdot>x) = {c}"
+    and msg: "\<And>m. P (createBundle (Msg (Pair_nat_bool m)) c)"
     and null: "P (tsynbNull c)"
   shows "P x"
   sorry
@@ -665,6 +665,21 @@ lemma recspf_ubconc_false:
  = ubConc (createArBundle (snd a) \<uplus> tsynbNull (\<C> ''o''))\<cdot>(RecSPF \<rightleftharpoons> sb)"
   sorry
 
+lemma h1:
+ "\<And>(u::abpMessage tsyn stream\<^sup>\<Omega>) (ub::abpMessage tsyn stream\<^sup>\<Omega>) m::nat \<times> bool.
+       ubConc (tsynbNull (\<C> ''ar'') \<uplus> tsynbNull (\<C> ''o''))\<cdot>
+       (da_h ReceiverAutomaton (State Rt) \<rightleftharpoons> ub) =
+       ubConc (tsynbNull (\<C> ''ar'') \<uplus> tsynbNull (\<C> ''o''))\<cdot>(RecSPF \<rightleftharpoons> ub) \<and>
+       ubDom\<cdot>u = {\<C> ''dr''} \<and>
+       ubDom\<cdot>ub = {\<C> ''dr''} \<and> ubMaxLen (Fin (Suc (0::nat))) u \<and> u \<noteq> ubLeast {\<C> ''dr''} \<Longrightarrow>
+       ubConc (tsynbNull (\<C> ''ar'') \<uplus> tsynbNull (\<C> ''o''))\<cdot>
+       (da_h ReceiverAutomaton (State Rt) \<rightleftharpoons>
+        ubConc (createBundle (\<M> Pair_nat_bool m) (\<C> ''dr''))\<cdot>ub) =
+       ubConc (tsynbNull (\<C> ''ar'') \<uplus> tsynbNull (\<C> ''o''))\<cdot>
+       (RecSPF \<rightleftharpoons> ubConc (createBundle (\<M> Pair_nat_bool m) (\<C> ''dr''))\<cdot>ub) \<and> ((snd  m) = True)"
+ apply(simp add: receiverautomaton_h_step_rt_true recspf_ubconc_true receiverspf_ufdom)
+
+
 text{* If @{term ReceiverSPF} and @{term RecSPF} get the same input, they yield the same result. *}
 lemma recspf_receiverspf_ub_eq:
   assumes "ubDom\<cdot>sb = ufDom\<cdot>ReceiverSPF" 
@@ -678,7 +693,7 @@ lemma recspf_receiverspf_ub_eq:
   apply (simp add: assms receiverautomaton_h_strict receiverspf_ufdom recspf_strict 
          ubclLeast_ubundle_def)
   apply (simp add: assms receiverautomaton_h_strict receiverspf_ufdom recspf_strict)
-  apply (rule_tac x = u in tsynb_simple_cases)
+  apply (rule_tac x = u in tsynb_cases)
   apply simp
   apply simp
   apply(simp add: assms receiverspf_ufdom)
