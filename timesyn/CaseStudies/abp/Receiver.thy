@@ -606,17 +606,6 @@ lemma receiverautomaton_H_step:
   section {* Automaton Receiver SPF Lemmata *}
 (* ----------------------------------------------------------------------- *)
 
-(* ToDo *)
-text {* Cases rule for simple time-synchronous bundles. *}
-lemma tsynb_simple_cases [case_names msg null]:
-  assumes len: "ubMaxLen (Fin (1::nat)) x" 
-    and not_ubleast: "x \<noteq> ubLeast (ubDom\<cdot>x)"
-    and numb_channel: "(ubDom\<cdot>x) = {c}"
-    and msg: "\<And>m. P (createBundle (Msg m) c)"
-    and null: "P (tsynbNull c)"
-  shows "P x"
-  sorry
-
 (* ToDo: add descriptions. *)
 
 lemma dadom_receiverautomaton: 
@@ -653,7 +642,7 @@ lemma receiverspf_ubdom:
   by (simp add: assms receiverspf_ufran spf_ubDom)
 
 (* Examples for the different cases in the induction step.*)
-(* TODO *)
+(* ToDo *)
 
 lemma recspf_ubconc_null: 
   assumes "ubDom\<cdot>sb = {\<C> ''dr''}"
@@ -681,7 +670,7 @@ lemma recspf_ubconc_false:
 
 text{* If @{term ReceiverSPF} and @{term RecSPF} get the same input, they yield the same result. *}
 lemma recspf_receiverspf_ub_eq:
-  assumes "ubDom\<cdot>sb = ufDom\<cdot>ReceiverSPF" 
+  assumes "ubDom\<cdot>sb = ufDom\<cdot>ReceiverSPF"
   shows "ReceiverSPF \<rightleftharpoons> sb = ubConc (tsynbNull (\<C> ''ar'') \<uplus> tsynbNull (\<C> ''o''))\<cdot>(RecSPF \<rightleftharpoons> sb)"
   apply (simp add: ReceiverSPF_def)
   apply (simp add: assms receiverspf_ufdom receiverautomaton_H_step)
@@ -692,7 +681,7 @@ lemma recspf_receiverspf_ub_eq:
   apply (simp add: assms receiverautomaton_h_strict receiverspf_ufdom recspf_strict 
          ubclLeast_ubundle_def)
   apply (simp add: assms receiverautomaton_h_strict receiverspf_ufdom recspf_strict)
-  apply (rule_tac x = u in tsynb_simple_cases)
+  apply (rule_tac x = u in tsynb_cases)
   apply simp
   apply simp
   apply(simp add: assms receiverspf_ufdom)
