@@ -2,11 +2,11 @@
  * DO NOT MODIFY!
  * This file was generated and will be overridden when the models change.
  *
- * Generated on Jul 3, 2018 7:05:58 PM by transformer 1.0.0
+ * Generated on Jul 4, 2018 5:25:36 PM by transformer 1.0.0
  *)
 theory AutomatonPrelude
 
-imports "../../untimed/CaseStudy/dAutomaton" "../tsynStream" "../tsynBundle" 
+imports "../../untimed/CaseStudy/dAutomaton" "../../untimed/CaseStudy/ndAutomaton" "../tsynStream" "../tsynBundle" 
 
 begin
 
