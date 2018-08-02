@@ -58,14 +58,14 @@ definition tsynbRemDups :: "'a tsyn stream ubundle \<rightarrow> 'a tsyn stream 
 (* ----------------------------------------------------------------------- *)
   section {* Definitions of Time-Synchronous Test Bundles *}
 (* ----------------------------------------------------------------------- *)
-
+(* Already in UFun_Templates.thy
 instantiation nat :: message
 begin
   fun ctype_nat :: "channel \<Rightarrow> nat set" where 
   "ctype_nat c = range nat" 
   instance
     by (intro_classes)
-end
+end*)
  
 lift_definition tsynbabsTestInput :: "nat tsyn stream ubundle " is 
   "[c1 \<mapsto> <[Msg (1 :: nat), null, Msg 2, Msg 1]>]"
@@ -285,7 +285,7 @@ lemma tsynbremdups_mono [simp]:
   shows "monofun (\<lambda>sb :: 'a tsyn stream\<^sup>\<Omega>. (ubDom\<cdot>sb = {c1}) 
                     \<leadsto> Abs_ubundle [c2 \<mapsto> tsynRemDups\<cdot>(sb  .  c1)])"
   apply (rule uf_1x1_mono)
-  by (simp add: assms map_io_well_def)
+  by (simp add: assms map_io_well_1x1_def)
 
 text {* @{term tsynbRemDups} is continous. *}
 lemma tsynbremdups_cont [simp]:
@@ -293,7 +293,7 @@ lemma tsynbremdups_cont [simp]:
   shows "cont (\<lambda>sb :: 'a tsyn stream\<^sup>\<Omega>. (ubDom\<cdot>sb = {c1}) 
                   \<leadsto> Abs_ubundle [c2 \<mapsto> tsynRemDups\<cdot>(sb  .  c1)])"
   apply (rule uf_1x1_cont)
-  by (simp add: assms map_io_well_def)
+  by (simp add: assms map_io_well_1x1_def)
 
 text {* @{term tsynbRemDups} insertion lemma. *}
 lemma tsynbremdups_insert:
@@ -308,23 +308,23 @@ lemma tsynbremdups_ufwell [simp]:
   shows "ufWell (Abs_cfun (\<lambda>sb :: 'a tsyn stream\<^sup>\<Omega>. (ubDom\<cdot>sb = {c1}) 
                              \<leadsto> (Abs_ubundle [c2 \<mapsto> tsynRemDups\<cdot>(sb . c1)])))"
   apply (rule uf_1x1_well)
-  by (simp add: assms map_io_well_def)
+  by (simp add: assms map_io_well_1x1_def)
 
 text {* Domain of @{term tsynbRemDups} is {c1}. *}
 lemma tsynbremdups_ufdom:
   assumes "\<And>s :: 'a tsyn stream. usclOkay c1 s = usclOkay c2 (tsynRemDups\<cdot>s)"
   shows "ufDom\<cdot>(Abs_cufun (\<lambda> sb :: 'a tsyn stream\<^sup>\<Omega>. (ubDom\<cdot>sb = {c1}) 
                               \<leadsto> (Abs_ubundle [c2 \<mapsto> tsynRemDups\<cdot>(sb . c1)]))) = {c1}"
-  apply (rule uf_1x1_dom)
-  by (simp add: assms map_io_well_def)
+  apply (rule uf_1x1_rep_dom)
+  by (simp add: assms map_io_well_1x1_def)
 
 text {* Range of @{term tsynbRemDups} is {c2}. *}
 lemma tsynbremdups_ufran:
   assumes "\<And>s :: 'a tsyn stream. usclOkay c1 s = usclOkay c2 (tsynRemDups\<cdot>s)"
   shows "ufRan\<cdot>(Abs_cufun (\<lambda> sb :: 'a tsyn stream\<^sup>\<Omega>. (ubDom\<cdot>sb = {c1}) 
                               \<leadsto> (Abs_ubundle [c2 \<mapsto> tsynRemDups\<cdot>(sb . c1)]))) = {c2}"
-  apply (rule uf_1x1_ran)
-  by (simp add: assms map_io_well_def)
+  apply (rule uf_1x1_rep_ran)
+  by (simp add: assms map_io_well_1x1_def)
 
 text{* The domain of the output bundle of @{term tsynRemDups} is {c2}. *}
 lemma tsynbremdups_ubdom:
