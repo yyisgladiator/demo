@@ -151,13 +151,55 @@ lemma da_h_final:
 lemma da_h_bottom: assumes "ubDom\<cdot>sb = daDom automat" and "\<exists>c\<in>daDom automat. sb  .  c = \<epsilon>"
   shows "(da_h automat s)\<rightleftharpoons>sb = ubclLeast (daRan automat)"
   apply(simp add: da_h_unfolding spfStep_def, subst beta_cfun, subst spfStep_cont, simp_all add: spfStep_h1_def)
-  using assms(1) assms(2) sbHdElem_bottom_exI by (metis ubclDom_ubundle_def ufleast_apply) 
+  using assms(1) assms(2) sbHdElem_bottom_exI by (metis ubclDom_ubundle_def ufleast_apply)
+    
+section \<open>Lemma about H\<close>
+  
+lemma da_H_unfolding:
+  "da_H automat = spfConcOut (daInitialOutput automat)\<cdot>(da_h automat (daInitialState automat))"
+  by (simp add: da_H_def)
+    
+lemma ubundle_if_eq:
+  "Abs_ubundle (\<lambda>x::channel. if x \<in> dom sb then sb x else None) = Abs_ubundle sb"
+  by (metis domIff)
 
-
-
-
-  section \<open>Lemma about H\<close>
-
-
+lemma ubconceq_ubleast:
+  assumes "ubDom\<cdot>(sb::('m::message  SB)) = c" 
+  shows "ubConcEq (sb)\<cdot>(ubclLeast c) =  sb"
+  proof-
+    have ubdom_intersec:"(ubDom\<cdot>sb \<union> c) \<inter> c = c"
+      by auto
+    have if_if:" (\<lambda>x::channel. if x \<in> ubDom\<cdot>sb then if x \<in> ubDom\<cdot>sb then Rep_ubundle sb x else Some \<epsilon> else None) = 
+            (\<lambda>x::channel. if x \<in> ubDom\<cdot>sb then Rep_ubundle sb x else None)"
+      by auto
+    have ubundle_if_eq2:"Abs_ubundle (\<lambda>x::channel. if x \<in> ubDom\<cdot>sb then Rep_ubundle sb x else None) = sb"    
+      by (metis (no_types) assms ubundle_if_eq ubabs_ubrep ubdom_insert)
+    have ubundle_if_eq3:"Abs_ubundle (\<lambda>x::channel. if x \<in> c then if x \<in> ubDom\<cdot>sb then Rep_ubundle sb x else Some \<epsilon> else None) = sb"
+      by (fold assms, simp add: if_if ubundle_if_eq2)
+    have if_bundle_neq:"\<And>x::channel. (if x \<in> ubDom\<cdot>sb then Rep_ubundle sb x else Some \<epsilon>) \<noteq> None"
+      by (metis assms option.simps(3) ubgetchE)
+    have bundle_restrict_eq:"Abs_ubundle ((\<lambda>c::channel. Some Rep_ubundle (ubUp\<cdot>sb)\<rightharpoonup>c) |` c) = sb"
+      by (simp add: ubup_insert restrict_map_def, subst option.collapse,  
+          simp add: if_bundle_neq, simp add: ubundle_if_eq3)
+    have bundle_restrict_eq2:"Abs_ubundle (Rep_ubundle (Abs_ubundle (\<lambda>c::channel. Some (ubUp\<cdot>sb  .  c))) |` c) = sb"
+      by (simp add: ubWell_def ubgetch_insert ubrestrict_insert bundle_restrict_eq)
+    show ?thesis
+      by (simp add: ubclLeast_ubundle_def ubconc_insert ubdom_intersec
+         ubrestrict_insert usclConc_stream_def bundle_restrict_eq2)
+  qed
+    
+lemma da_H_bottom:
+  assumes dadom_automat: "daDom automat = c"
+    and datom_automat_nempty: "\<exists>c::channel. c \<in> daDom automat" 
+    and "ubDom\<cdot>(daInitialOutput automat) = daRan automat"
+  shows "da_H automat \<rightleftharpoons> ubclLeast c = daInitialOutput automat"
+  apply (simp add: da_H_unfolding)
+  apply (subst spfConcOut_step)
+  apply (simp add: ubclLeast_ubundle_def assms)
+  apply (subst da_h_bottom)
+  apply (simp add: ubclLeast_ubundle_def assms)
+  apply (simp add: ubclLeast_ubundle_def assms)
+  apply (fold dadom_automat, simp add: datom_automat_nempty)
+  by (subst ubconceq_ubleast,simp_all add: assms)
 
 end
