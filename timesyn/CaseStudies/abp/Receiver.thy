@@ -624,72 +624,73 @@ proof-
   qed
 qed
 
-(* TODO: eliminate ctype problem *)
 text {* Cases rule for simple time-synchronous bundles. *}
 lemma tsynb_cases [case_names max_len not_ubleast numb_channel msg null]:
   assumes max_len: "ubMaxLen (Fin (1::nat)) x" 
-    and not_ubleast: "x \<noteq> ubLeast (ubDom\<cdot>x)"
-    and numb_channel: "(ubDom\<cdot>x) = {c}"
-    and msg: "\<And>m. P (createBundle (Msg m) c)"
+    and not_ubleast: "x ≠ ubLeast (ubDom⋅x)"
+    and numb_channel: "(ubDom⋅x) = {c}"
+    and msg: "⋀m. P (createBundle (Msg m) c)"
     and null: "P (tsynbNull c)"
   shows "P x"
 proof - 
-  have x_not_empty: "x . c \<noteq> \<epsilon>" 
+  have x_not_empty: "x . c ≠ ε" 
      by (metis not_ubleast numb_channel singletonD ubDom_ubLeast ubgetchI ubleast_ubgetch) 
-  have x_dom_eq_createbundle: "\<And>m. ubDom\<cdot>x = ubDom\<cdot>(createBundle (Msg m) c)" 
+  have x_dom_eq_createbundle: "⋀m. ubDom⋅x = ubDom⋅(createBundle (Msg m) c)" 
     by (simp add: numb_channel)
-  have x_dom_eq_tsynbnull: "ubDom\<cdot>x = ubDom\<cdot>(tsynbNull c)" 
+  have x_dom_eq_tsynbnull: "ubDom⋅x = ubDom⋅(tsynbNull c)" 
     by (simp add: numb_channel)
-  have createbundle_stream_eq: "\<And>m.  (Msg m) \<in> ctype c \<Longrightarrow> (createBundle (Msg m) c) . c = \<up>(Msg m)" 
+  have createbundle_stream_eq: "⋀m.  (Msg m) ∈ ctype c ⟹ (createBundle (Msg m) c) . c = ↑(Msg m)" 
     by (metis createBundle.rep_eq fun_upd_same option.sel ubgetch_insert) 
-  have tsynbnull_stream_eq: "(tsynbNull c) . c =  \<up>null"
+  have tsynbnull_stream_eq: "(tsynbNull c) . c =  ↑null"
     by simp
-  have x_singleton: "usclLen\<cdot>(x . c) = Fin 1" 
+  have x_singleton: "usclLen⋅(x . c) = Fin 1" 
   proof - 
-    have x_smaller: "usclLen\<cdot>(x . c) \<le> Fin 1" using max_len 
+    have x_smaller: "usclLen⋅(x . c) ≤ Fin 1" using max_len 
       by (simp add: numb_channel ubMaxLen_def)
-    have empty_zero: "usclLen\<cdot>(\<epsilon>::'a tsyn stream) = Fin 0" 
+    have empty_zero: "usclLen⋅(ε::'a tsyn stream) = Fin 0" 
       by (simp add: usclLen_stream_def)
-    hence x_not_zero: "usclLen\<cdot>(x . c) \<noteq> Fin 0" using x_not_empty
+    hence x_not_zero: "usclLen⋅(x . c) ≠ Fin 0" using x_not_empty
       by (simp add: usclLen_stream_def)
     thus ?thesis using x_smaller
       by (simp add: One_nat_def antisym_conv neq02Suclnle)
   qed
   obtain s where s_def: "x . c = s" using assms 
     by metis
-  have s_ubundle_eq_x: "x = Abs_ubundle ([c \<mapsto> s])"
+  have s_ubundle_eq_x: "x = Abs_ubundle ([c ↦ s])"
     by (metis (mono_tags, lifting) dom_eq_singleton_conv fun_upd_same numb_channel s_def singletonI ubWell_single_channel ubdom_insert ubgetchE ubgetchI ubgetch_insert ubrep_ubabs)
-  have len_one_cases: "usclLen\<cdot>s = Fin 1 \<Longrightarrow> (\<exists>m. s = (\<up>(Msg m))) \<or>  (s = (\<up>null))" apply (simp add: usclLen_stream_def)
+  have len_one_cases: "usclLen⋅s = Fin 1 ⟹ (∃m. s = (↑(Msg m))) ∨  (s = (↑null))" apply (simp add: usclLen_stream_def)
   proof - 
     assume len_one: "#s = Fin (Suc (0::nat))"
-    show "(\<exists>m. s = (\<up>(Msg m))) \<or>  (s = (\<up>null))"
+    show "(∃m. s = (↑(Msg m))) ∨  (s = (↑null))"
     proof - 
       show ?thesis using tsyn.exhaust len_one len_one_stream
         by (metis One_nat_def)
     qed
   qed
-  have s_cases: "(\<exists>m. s = \<up>(Msg m)) \<or> (s = \<up>null)"
+  have s_cases: "(∃m. s = ↑(Msg m)) ∨ (s = ↑null)"
     using s_def assms x_singleton x_not_empty len_one_cases by blast
- (*  have s3: "\<exists>m.  s = \<up>(Msg m) \<and> (Msg m) \<in> ctype c" using s_def s2 sledgehammer*)
-  have s_eq: "(\<exists>m. s = (createBundle (Msg m) c) . c ) \<or> (s = (tsynbNull c) . c)" 
-    apply (case_tac "\<exists>m. s = \<up>(Msg m)")
+  have s_eq: "(∃m. s = (createBundle (Msg m) c) . c ) ∨ (s = (tsynbNull c) . c)" 
+    apply (case_tac "∃m. s = ↑(Msg m)")
      defer 
     using s_cases apply auto[1]
   proof - 
-    assume a0: " \<exists>m::'a. s = \<up>(\<M> m)"
-    show " (\<exists>m::'a. s = createBundle (\<M> m) c  .  c) \<or> s = tsynbNull c  .  c"
+    assume a0: " ∃m::'a. s = ↑(ℳ m)"
+    show " (∃m::'a. s = createBundle (ℳ m) c  .  c) ∨ s = tsynbNull c  .  c"
     proof - 
-      obtain m where m_def: "s = \<up>(\<M> m)" 
+      obtain m where m_def: "s = ↑(ℳ m)" 
         using a0 by blast
-      have m_in_ctype: "(\<M> m) \<in> ctype c" using s_ubundle_eq_x s_def sorry
-      have s4: "s = (createBundle (\<M> m) c) . c " 
+      have m_shd: "(ℳ m) = shd (x . c)"
+        by (simp add: m_def s_def)
+      have m_in_ctype: "(ℳ m) ∈ ctype c" 
+        using numb_channel usclOkay_stream_def UnI1 contra_subsetD s_ubundle_eq_x sdom2un singletonI surj_scons ubdom_channel_usokay ubgetch_insert x_not_empty
+        by (metis (no_types, lifting) m_shd)
+      have s4: "s = (createBundle (ℳ m) c) . c " 
         using createbundle_stream_eq m_def m_in_ctype by force
       show ?thesis using s4 
         by blast
- (*   using s_cases s3 by (metis createbundle_stream_eq) *)
     qed 
   qed
-  have x_eq: "(\<exists>m. x = (createBundle (Msg m) c)) \<or> (x = (tsynbNull c))" using s_cases s_def assms s_eq by (metis singletonD ubgetchI x_dom_eq_createbundle x_dom_eq_tsynbnull)
+  have x_eq: "(∃m. x = (createBundle (Msg m) c)) ∨ (x = (tsynbNull c))" using s_cases s_def assms s_eq by (metis singletonD ubgetchI x_dom_eq_createbundle x_dom_eq_tsynbnull)
   show ?thesis using x_eq msg null by blast
 qed
 
