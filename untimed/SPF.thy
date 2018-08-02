@@ -200,7 +200,153 @@ lemma spfRt_inj: "inj (Rep_cfun spfRtIn)"
   apply(rule spf_eq)
   apply (metis spfRtIn_dom)
   using spfRt_inj_h by blast
-  
+
+
+(*assms*)
+lemma sbRtLen: assumes "ubLen x = Fin ( Suc(y))" 
+  shows "ubLen (sbRt\<cdot>x) = Fin y"
+  sorry
+(*nach SB.thy ? *)
+lemma sbRt_inf: assumes "ubLen ub = \<infinity>" shows "ubLen (sbRt\<cdot>ub) = \<infinity>"
+  proof (cases "ubDom\<cdot>ub = {}")
+    case True
+    have a1: "ubDom\<cdot>(sbRt\<cdot>ub) = {}"
+      by (simp add: True)
+    show ?thesis
+      unfolding ubLen_def
+      apply (simp only: a1)
+      by (simp add: ubLen_def)
+  next
+    case False
+    have ch_inf: "\<And> c . c \<in> ubDom\<cdot>ub \<Longrightarrow> usclLen\<cdot>(ub  .  c) = \<infinity>"
+    proof -
+      fix c :: channel
+      assume "c \<in> ubDom\<cdot>ub"
+      then have f1: "c \<in> dom (Rep_ubundle ub)"
+        by (metis (full_types, lifting) ubdom_insert)
+      then have f5: "dom (Rep_ubundle ub) \<noteq> {} \<or> \<not> ({} \<noteq> ubDom\<cdot>(ubLeast (dom (Rep_ubundle ub))::'a stream\<^sup>\<Omega>))"
+        by (metis (full_types, lifting) ubleast_ubdom)
+      have f7: "\<not> (dom (Rep_ubundle ub) \<noteq> {}) \<or> ({} \<noteq> ubDom\<cdot>(ubLeast (dom (Rep_ubundle ub))::'a stream\<^sup>\<Omega>))"
+        using f5 by auto
+      have f75: "dom (Rep_ubundle ub) = {} \<or> \<not> ({} = ubDom\<cdot>(ubLeast (dom (Rep_ubundle ub))::'a stream\<^sup>\<Omega>))"
+        by (metis ubleast_ubdom)
+      then have f8: "\<not> (c \<in> dom (Rep_ubundle ub)) \<or> \<not> ({} = ubDom\<cdot>(ubLeast (dom (Rep_ubundle ub))::'a stream\<^sup>\<Omega>))"
+        by blast
+      
+      have f15: "\<not> (\<infinity> = Fin (sK1 \<infinity>))"
+        by (metis (full_types) not_less not_less_iff_gr_or_eq notinfI3)
+      have f151: "(\<forall>n p. \<infinity> \<noteq> Least p \<or> \<not> p (Fin n))"
+        by (metis (no_types) Least_le notinfI3)
+      then have "(\<forall>u n. \<infinity> \<noteq> ubLen u \<or> Fin n \<notin> {usclLen\<cdot>(u . c::'a stream) |c. c \<in> ubDom\<cdot>u} \<or> {} = ubDom\<cdot>u)"
+        using ubLen_def by (metis (mono_tags, lifting))
+      then have f16: "(\<forall>n c. Fin n \<noteq> usclLen\<cdot>(ub . c) \<or> c \<notin> ubDom\<cdot>ub) \<or> \<not> (dom (Rep_ubundle ub) \<noteq> {})"
+        by (metis (mono_tags, lifting) empty_iff f151 ubLen_def assms mem_Collect_eq ubdom_insert)
+      have "\<not> (\<infinity> \<noteq> usclLen\<cdot>Rep_ubundle ub\<rightharpoonup>c) \<or> \<not> (dom (Rep_ubundle ub) \<noteq> {}) \<or> \<not> (\<exists>ca. usclLen\<cdot>Rep_ubundle ub\<rightharpoonup>c = usclLen\<cdot>(ub . ca) \<and> ca \<in> ubDom\<cdot>ub) \<or> \<not> spl107_759"
+        using f16 by (metis (no_types) lncases)
+      then have "\<infinity> = usclLen\<cdot>Rep_ubundle ub\<rightharpoonup>c"
+        proof -
+          obtain cc :: channel where
+            f1: "usclLen\<cdot>Rep_ubundle ub\<rightharpoonup>c = usclLen\<cdot>(ub . cc) \<and> cc \<in> ubDom\<cdot>ub"
+            by (metis f1 ubdom_insert ubgetch_insert)
+          then have f2: "\<exists>c. usclLen\<cdot>(ub . cc) = usclLen\<cdot>(ub . c) \<and> c \<in> ubDom\<cdot>ub"
+            by blast
+          have f3: "ubLen ub = (LEAST l. l \<in> {usclLen\<cdot>(ub . c) |c. c \<in> ubDom\<cdot>ub})"
+            by (simp add: False ubLen_def)
+          have "(LEAST l. l \<in> {usclLen\<cdot>(ub . c) |c. c \<in> ubDom\<cdot>ub}) \<le> usclLen\<cdot>(ub . cc)"
+            using f2 by (simp add: Least_le)
+          then show ?thesis
+            using f3 f1 by (simp add: assms)
+        qed
+      then show "usclLen\<cdot>(ub . c) = \<infinity>"
+        by (metis (full_types, lifting) ubgetch_insert)
+    qed
+
+    have chrt_inf: "\<And> c . c \<in> ubDom\<cdot>ub \<Longrightarrow> usclLen\<cdot>(sbRt\<cdot>ub  .  c) = \<infinity>"
+    proof -
+      fix c::channel
+      assume a2: "c \<in> ubDom\<cdot>ub"
+      then have f1: "c \<in> dom (Rep_ubundle ub)"
+        by (metis (full_types, lifting) ubdom_insert)
+      have f161: "\<not> (\<infinity> \<noteq> usclLen\<cdot>Rep_ubundle ub\<rightharpoonup>c) \<or> \<not> (dom (Rep_ubundle ub) \<noteq> {}) \<or> \<not> (\<exists>ca. usclLen\<cdot>Rep_ubundle ub\<rightharpoonup>c = usclLen\<cdot>(ub . ca) \<and> ca \<in> ubDom\<cdot>ub) \<or> \<not> spl107_759"
+        using ch_inf by auto
+      then have f162: "\<infinity> = usclLen\<cdot>Rep_ubundle ub\<rightharpoonup>c"
+        proof -
+          obtain cc :: channel where
+            f1: "usclLen\<cdot>Rep_ubundle ub\<rightharpoonup>c = usclLen\<cdot>(ub . cc) \<and> cc \<in> ubDom\<cdot>ub"
+            by (metis f1 ubdom_insert ubgetch_insert)
+          then have f2: "\<exists>c. usclLen\<cdot>(ub . cc) = usclLen\<cdot>(ub . c) \<and> c \<in> ubDom\<cdot>ub"
+            by blast
+          have f3: "ubLen ub = (LEAST l. l \<in> {usclLen\<cdot>(ub . c) |c. c \<in> ubDom\<cdot>ub})"
+            by (simp add: False ubLen_def)
+          have "(LEAST l. l \<in> {usclLen\<cdot>(ub . c) |c. c \<in> ubDom\<cdot>ub}) \<le> usclLen\<cdot>(ub . cc)"
+            using f2 by (simp add: Least_le)
+          then show ?thesis
+            using f3 f1 by (simp add: assms)
+        qed
+    show "usclLen\<cdot>(sbRt\<cdot>ub  .  c) = \<infinity>"
+      unfolding sbRt_def
+      unfolding sbDrop_def
+      by (metis f1 fair_sdrop f162 sbDrop_def sbdrop_sbgetch ubdom_insert ubgetch_insert usclLen_stream_def)
+  qed
+
+
+    show ?thesis
+      using inf_less_eq chrt_inf sbrt_sbdom ubLen_geI by blast
+  qed
+
+
+lemma spfRtIn_strongF_isweak: assumes "ufIsStrong spf" shows "ufIsWeak (spfRtIn\<cdot>spf)"
+  apply (simp add: ufIsWeak_def ubclLen_ubundle_def)
+  apply rule+
+  proof -
+    fix b::"'a stream\<^sup>\<Omega>"
+    assume a1: "b \<in> dom (Rep_cufun (spfRtIn\<cdot>spf))"
+    show "ubLen b \<le> ubLen (spf \<rightleftharpoons> sbRt\<cdot>b)"
+    proof (cases "ubDom\<cdot>b = {}")
+      case True
+      then show ?thesis
+        by (metis (no_types, lifting) a1 assms empty_iff sbrt_sbdom spfRtIn_dom ubgetchI ufIsWeak_def ufdom_2_dom_ctufun ufisstrong_2_ufisweak ubclLen_ubundle_def)
+    next
+      case False
+      have case1: "ubDom\<cdot>(b::'a stream\<^sup>\<Omega>) \<noteq> {}" by (simp add: False)
+      show ?thesis
+      proof (cases "ubLen b = \<infinity>")
+        case True
+        have x: "sbRt\<cdot>b \<in> dom (Rep_cufun spf)"
+          by (metis (no_types) a1 domI domIff sbrt_conc_hd sbrt_sbdom spfRtIn_dom ubclDom_ubundle_def ufapplyin_eq_pre)
+        have f0: "ubLen b = \<infinity>"
+          using True by simp
+        then have f1: "ubLen (sbRt\<cdot>b) = \<infinity>"
+          unfolding sbRt_def
+          by (metis sbRt_def sbRt_inf)
+        have f01: "(ubLen (sbRt\<cdot>b)) = ubLen b"
+          by (simp add: f0 f1)
+        show ?thesis
+          by (metis assms f01 ubclLen_ubundle_def ufIsWeak_def ufisstrong_2_ufisweak x)
+      next
+        case False
+        have test0: " ubLen b \<noteq> \<infinity>"
+          by (simp add: False)
+        show ?thesis
+        proof (cases "ubLen b = 0")
+          case True
+          then show ?thesis
+            by simp
+        next
+          case False
+          have len1: "lnsuc\<cdot>(ubLen (sbRt\<cdot>b)) = ubLen b"
+            unfolding sbRt_def
+            using  sbRtLen
+            by (metis False Fin_02bot Fin_Suc lncases lnzero_def old.nat.exhaust sbRt_def test0)
+          have len2: "(ubLen b) \<le> ubLen (spf \<rightleftharpoons> sbRt\<cdot>b)"
+            by (metis (no_types, lifting) assms a1 len1 sbrt_sbdom spfRtIn_dom ubclDom_ubundle_def ubclLen_ubundle_def ufIsStrong_def ufdom_2_dom_ctufun ufun_ufundom2dom)
+          then show ?thesis
+            by (simp add: len2)
+        qed
+      qed
+    qed
+  qed
+
 
 subsection \<open>spfConcIn lemma\<close>
 
@@ -328,6 +474,60 @@ lemma spfRtOut_spfConcIn: "(spfRtOut\<cdot>(spfConcIn sb \<cdot>spf)) = (spfConc
     apply (metis ubclDom_ubundle_def ubconceq_dom)
    apply (simp add: ubclDom_ubundle_def)
   by blast
+
+lemma spfRtOut_strongF_isweak: assumes "ufIsStrong spf" shows "ufIsWeak (spfRtOut\<cdot>spf)"
+  apply (simp add: ufIsWeak_def ubclLen_ubundle_def)
+  apply rule+
+  proof -
+    fix b::"'a stream\<^sup>\<Omega>"
+    assume a1: "b \<in> dom (Rep_cufun (spfRtOut\<cdot>spf))"
+    show "ubLen b \<le> ubLen (spfRtOut\<cdot>spf \<rightleftharpoons> b)"
+    proof (cases "ubLen b = \<infinity>")
+      case True
+      have lLen1: "ubLen b = \<infinity>"
+        by (simp add: True)
+      have eq1: "ubLen b = ubLen (sbRt\<cdot>b)"
+        by (simp add: sbRt_inf True ubgetchI)
+      have lLen2: "ubLen (sbRt\<cdot>b) = \<infinity>"
+        using eq1 lLen1 by auto
+      have lLen25: "ubLen (spf \<rightleftharpoons> b) = \<infinity>"
+        by (metis assms a1 fold_inf inf_less_eq lLen1 spfRtOut_dom ubclLen_ubundle_def ufIsStrong_def ufdom_2_dom_ctufun)
+      have llLen3: "ubLen (spfRtOut\<cdot>spf \<rightleftharpoons> b) = \<infinity>"
+        unfolding spfRtOut_def
+        by (metis (no_types, lifting) lLen25 spfRtOut_def spfRtOut_dom spfRtOut_step sbRt_inf ubclDom_ubundle_def option.collapse ufdom_2ufundom)
+      show ?thesis
+        by (simp add: llLen3)
+    next
+      case False
+      have a2: "ubDom\<cdot>b \<noteq> {}"
+        by (meson ubLen_def False)
+      have a3: "ufDom\<cdot>spf \<noteq> {}"
+        by (metis a2 a1 domD spfRtOut_dom ubclDom_ubundle_def ufdom_2ufundom)
+      have a4: "ubDom\<cdot>b = ufDom\<cdot>spf"
+        by (metis a1 domD spfRtOut_dom ubclDom_ubundle_def ufdom_2ufundom)
+      have a5: "b \<in> dom (Rep_cufun spf)"
+        using a1 spfRtOut_dom ufdom_2_dom_ctufun by blast
+      show ?thesis
+      proof (cases "ubLen (spf \<rightleftharpoons> b) = \<infinity>")
+        case True
+        then show ?thesis
+          by (simp add: a4 sbRt_inf)
+      next
+        case False
+        obtain n where n_def: "ubLen b = (Fin n)"
+          by (metis False infI a1 assms inf_less_eq spfRtOut_dom ubclLen_ubundle_def ufIsWeak_def ufdom_2_dom_ctufun ufisstrong_2_ufisweak)
+        obtain m where m_def: "ubLen (spf \<rightleftharpoons> b) = (Fin m)"
+          using False infI by blast
+        have f0: "lnsuc\<cdot>(ubLen b) \<le> ubLen (spf \<rightleftharpoons> b)"
+          using assms by (simp add: a5 ubclLen_ubundle_def ufIsStrong_def)
+        have f1: "m > n"
+          using f0 by (simp add: m_def n_def)
+        show ?thesis 
+          unfolding spfRtOut_def
+          by (metis (no_types, lifting) f1 Suc_leI Suc_le_D Suc_le_mono a4 less2nat m_def n_def sbRtLen spfRtOut_def spfRtOut_step)
+      qed
+    qed
+  qed
 
 
 subsection \<open>spfConcOut lemma\<close>
