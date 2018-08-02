@@ -8,7 +8,7 @@
 chapter {* Theory for ABP Component Lemmata on Time-synchronous Streams *}
 
 theory Components
-imports ReceiverAutomaton
+imports "../AutomatonPrelude" "../../../UBundle_Induction"
 
 begin
 
@@ -16,397 +16,132 @@ begin
   section {* Datatype Conversion *}
 (* ----------------------------------------------------------------------- *)
 
-text {* Inverse of A. *}
-fun invA :: "Receiver \<Rightarrow> (nat \<times> bool)" where
-  "invA (A (n,b)) = (n,b)" |
-  "invA n = undefined"
+text {* Inverse of a Pair. *}
+fun invPair :: "abpMessage \<Rightarrow> (nat \<times> bool)" where
+  "invPair (Pair_nat_bool (n,b)) = (n,b)" |
+  "invPair n = undefined"
 
 text {* Conversion of a pair (nat,bool) stream into an equivalent receiver stream. *}
-definition natbool2abp :: "(nat \<times> bool) tsyn stream \<rightarrow> Receiver tsyn stream" where
-  "natbool2abp \<equiv> tsynMap A"
+definition natbool2abp :: "(nat \<times> bool) tsyn stream \<rightarrow> abpMessage tsyn stream" where
+  "natbool2abp \<equiv> tsynMap Pair_nat_bool"
 
 text {* Conversion of a receiver stream into an equivalent pair (nat,bool) stream. *}
-definition abp2natbool :: "Receiver tsyn stream \<rightarrow> (nat \<times> bool) tsyn stream" where
-  "abp2natbool \<equiv> tsynMap invA"
+definition abp2natbool :: "abpMessage tsyn stream \<rightarrow> (nat \<times> bool) tsyn stream" where
+  "abp2natbool \<equiv> tsynMap invPair"
 
-text {* Inverse of B. *}
-fun invB :: "Receiver \<Rightarrow> bool" where
-  "invB (B x) = x" |
-  "invB x = undefined"
+text {* Inverse of a Bool. *}
+fun invBool :: "abpMessage \<Rightarrow> bool" where
+  "invBool (Bool x) = x" |
+  "invBool x = undefined"
 
 text {* Conversion of a bool stream into an equivalent receiver stream. *}
-definition bool2abp :: "bool tsyn stream \<rightarrow> Receiver tsyn stream" where
-  "bool2abp \<equiv> tsynMap B"
+definition bool2abp :: "bool tsyn stream \<rightarrow> abpMessage tsyn stream" where
+  "bool2abp \<equiv> tsynMap Bool"
 
 text {* Conversion of a receiver stream into an equivalent bool stream. *}
-definition abp2bool :: "Receiver tsyn stream \<rightarrow> bool tsyn stream" where
-  "abp2bool \<equiv> tsynMap invB"
+definition abp2bool :: "abpMessage tsyn stream \<rightarrow> bool tsyn stream" where
+  "abp2bool \<equiv> tsynMap invBool"
 
-text {* Inverse of C. *}
-fun invC :: "Receiver \<Rightarrow> nat" where
-  "invC (C x) = x" |
-  "invC x = undefined"
+text {* Inverse of a Nat. *}
+fun invNat :: "abpMessage \<Rightarrow> nat" where
+  "invNat (Nat x) = x" |
+  "invNat x = undefined"
 
 text {* Conversion of a nat stream into an equivalent receiver stream. *}
-definition nat2abp :: "nat tsyn stream \<rightarrow> Receiver tsyn stream" where
-  "nat2abp \<equiv> tsynMap C"
+definition nat2abp :: "nat tsyn stream \<rightarrow> abpMessage tsyn stream" where
+  "nat2abp \<equiv> tsynMap Nat"
 
 text {* Conversion of a receiver stream into an equivalent nat stream. *}
-definition abp2nat :: "Receiver tsyn stream \<rightarrow> nat tsyn stream" where
-  "abp2nat \<equiv> tsynMap invC"
+definition abp2nat :: "abpMessage tsyn stream \<rightarrow> nat tsyn stream" where
+  "abp2nat \<equiv> tsynMap invNat"
 
-(* ----------------------------------------------------------------------- *)
-  section {* Receiver SPF Definition for Verification *}
-(* ----------------------------------------------------------------------- *)
-
-text {* Helper for @{term tsynRec} deletes elements if bits are not equal. *}
-fun tsynRec_h :: "bool \<Rightarrow> (nat \<times> bool) tsyn \<Rightarrow> (nat tsyn \<times> bool)" where
-  "tsynRec_h b (Msg (msg,b1)) = (if b1 = b then (Msg msg, \<not>b) else (null, b))" |
-  "tsynRec_h b null = (null, b)" 
-
-text {* @{term tsynRec}: Applies helper function on each element of the stream. *}
-definition tsynRec :: "(nat \<times> bool) tsyn stream \<rightarrow> nat tsyn stream" where
-  "tsynRec \<equiv> \<Lambda> s. sscanlA tsynRec_h True\<cdot>s"
-
-text {* @{term tsynbRec}: Receiver function for Alternating Bit Protocol on stream bundles. *}
-definition tsynbRec :: "Receiver tsyn stream ubundle \<rightarrow> Receiver tsyn stream ubundle option" where 
-  "tsynbRec \<equiv> \<Lambda> sb. (ubclDom\<cdot>sb = {\<guillemotright>dr}) \<leadsto> Abs_ubundle [
-                     ar\<guillemotright> \<mapsto> bool2abp\<cdot>(tsynProjSnd\<cdot>(abp2natbool\<cdot>(sb  .  \<guillemotright>dr))), 
-                     o\<guillemotright> \<mapsto> nat2abp\<cdot>(tsynRec\<cdot>(abp2natbool\<cdot>(sb  .  \<guillemotright>dr)))
-                     ]"
-
-text {* @{term tsynbRec}: Receiver function for Alternating Bit Protocol. *}
-definition RecSPF :: "Receiver tsyn SPF" where
-  "RecSPF \<equiv> Abs_ufun tsynbRec"
-
-(* ----------------------------------------------------------------------- *)
-  section {* Receiver SPF Lemmata *}
-(* ----------------------------------------------------------------------- *)
-
-text {* @{term tsynRec} insertion lemma. *}
-lemma tsynrec_insert: "tsynRec\<cdot>s = sscanlA tsynRec_h True\<cdot>s"
-  by (simp add: tsynRec_def)
-
-text {* @{term tsynRec} test on finite stream. *}
-lemma tsynrec_test_finstream:
-  "tsynRec\<cdot>(<[Msg(1, False), null, Msg(2, True),Msg(1, False)]>) = <[null, null,Msg 2, Msg 1]>"
-  by (simp add: tsynrec_insert)
-
-text {* @{term tsynRec} test on infinite stream. *}
-lemma tsynrec_test_infstream: 
-  "tsynRec\<cdot>((<[Msg(1, False), null, Msg(2, True),Msg(1, False)]>)\<infinity>) 
-     = (<[null, null, Msg 2, Msg 1]>)\<infinity>"
-  apply (simp add: tsynrec_insert)
-  oops
-
-lemma tsynbrec_ubundle_ubdom: "ubDom\<cdot>(Abs_ubundle 
-              [ar\<guillemotright> \<mapsto> bool2abp\<cdot>(tsynProjSnd\<cdot>(abp2natbool\<cdot>(sb  .  \<guillemotright>dr))), 
-               o\<guillemotright> \<mapsto> nat2abp\<cdot>(tsynRec\<cdot>(abp2natbool\<cdot>(sb  .  \<guillemotright>dr)))]) = {ar\<guillemotright>, o\<guillemotright>}"
-  sorry
-
-lemma tsynbrec_mono [simp]:
-  "monofun (\<lambda> sb. (ubclDom\<cdot>sb = {\<guillemotright>dr}) \<leadsto> Abs_ubundle [
-               ar\<guillemotright> \<mapsto> bool2abp\<cdot>(tsynProjSnd\<cdot>(abp2natbool\<cdot>(sb  .  \<guillemotright>dr))), 
-               o\<guillemotright> \<mapsto> nat2abp\<cdot>(tsynRec\<cdot>(abp2natbool\<cdot>(sb  .  \<guillemotright>dr)))])"
-  sorry
-
-lemma tsynbrec_cont [simp]:
-  "cont (\<lambda> sb. (ubclDom\<cdot>sb = {\<guillemotright>dr}) \<leadsto> Abs_ubundle [
-               ar\<guillemotright> \<mapsto> bool2abp\<cdot>(tsynProjSnd\<cdot>(abp2natbool\<cdot>(sb  .  \<guillemotright>dr))), 
-               o\<guillemotright> \<mapsto> nat2abp\<cdot>(tsynRec\<cdot>(abp2natbool\<cdot>(sb  .  \<guillemotright>dr)))])"
-  sorry
-
-lemma tsynbrec_insert: "tsynbRec\<cdot>sb = (ubDom\<cdot>sb = {\<guillemotright>dr}) \<leadsto> Abs_ubundle 
-              [ar\<guillemotright> \<mapsto> bool2abp\<cdot>(tsynProjSnd\<cdot>(abp2natbool\<cdot>(sb  .  \<guillemotright>dr))), 
-               o\<guillemotright> \<mapsto> nat2abp\<cdot>(tsynRec\<cdot>(abp2natbool\<cdot>(sb  .  \<guillemotright>dr)))]"
-  sorry
-
-lemma tsynbrec_ufwell [simp]: "ufWell tsynbRec"
-  sorry
-
-lemma recspf_insert: "RecSPF \<rightleftharpoons> sb = (Abs_ufun tsynbRec) \<rightleftharpoons> sb"
-  sorry
-
-lemma recspf_ufdom: "ufDom\<cdot>RecSPF = {\<guillemotright>dr}"
-  sorry
-
-lemma recspf_ufran: "ufRan\<cdot>RecSPF = {ar\<guillemotright>, o\<guillemotright>}"
-  sorry
-
-lemma recspf_ubdom: 
-  assumes "ubDom\<cdot>sb = ufDom\<cdot>RecSPF"
-  shows "ubDom\<cdot>(RecSPF \<rightleftharpoons> sb) = {ar\<guillemotright>, o\<guillemotright>}"
-  by (simp add: assms recspf_ufran spf_ubDom)
-
-lemma recspf_strict: "RecSPF \<rightleftharpoons> ubclLeast{\<guillemotright>dr} = ubclLeast{ar\<guillemotright>, o\<guillemotright>}"
-  sorry
-
-(* ----------------------------------------------------------------------- *)
-  section {* Automaton Receiver Transition Lemmata *}
-(* ----------------------------------------------------------------------- *)
-
-(* ToDo: add descriptions. *)
-
-lemma receivertransition_rt_true: 
-  "receiverTransition (State Rt, [\<guillemotright>dr \<mapsto> (Msg (A (a, True)))])
-     = ((State Rf,(createArOutput True) \<uplus> (createOOutput a)))"
-  by simp
-
-lemma receivertransition_rt_false: 
-  "receiverTransition (State Rt, [\<guillemotright>dr \<mapsto> (Msg (A (a, False)))])
-     = ((State Rt,(createArOutput False) \<uplus> (tsynbNull o\<guillemotright>)))"
-  by simp
-
-lemma receivertransition_rf_true: 
-  "receiverTransition (State Rf, [\<guillemotright>dr \<mapsto> (Msg (A (a, True)))])
-     = ((State Rf,(createArOutput True) \<uplus> (tsynbNull o\<guillemotright>)))"
-  by simp
-
-lemma receivertransition_rf_false: 
-  "receiverTransition (State Rf, [\<guillemotright>dr \<mapsto> (Msg (A (a, False)))])
-     = ((State Rt,(createArOutput False) \<uplus> (createOOutput a)))"
-  by simp
-
-lemma receivertransition_null: 
-  "receiverTransition (State s, [\<guillemotright>dr \<mapsto> null])
-     = (State s ,(tsynbNull ar\<guillemotright>) \<uplus> (tsynbNull o\<guillemotright>))"
-  by (cases s, simp_all)
-
-lemma createaroutput_createooutput_ubclunion_ubdom: 
-  "ubDom\<cdot>((createArOutput a) \<uplus> (createOOutput b)) = {ar\<guillemotright>, o\<guillemotright>}"
-  by (metis createArOutput.rep_eq createOOutput.rep_eq dom_empty dom_fun_upd insert_is_Un 
-      option.simps(3) ubclUnion_ubundle_def ubdom_insert ubunionDom)
-
-lemma createaroutput_tsynbnullo_ubclunion_ubdom: 
-  "ubDom\<cdot>((createArOutput a) \<uplus> (tsynbNull o\<guillemotright>)) = {ar\<guillemotright>, o\<guillemotright>}"
-  by (metis createArOutput.rep_eq dom_fun_upd insert_is_Un option.simps(3) tsynbNull.rep_eq 
-      tsynbnull_ubdom ubclUnion_ubundle_def ubdom_insert ubunionDom)
-
-lemma tsynbnullar_tsynbnullo_ubclunion_ubdom:
-  "ubDom\<cdot>(tsynbNull ar\<guillemotright> \<uplus> tsynbNull o\<guillemotright>) = {ar\<guillemotright>, o\<guillemotright>}"
-  by (metis insert_is_Un tsynbnull_ubdom ubclUnion_ubundle_def ubunionDom)
-
-lemma receivertransition_ubdom:
-  assumes dom_f: "dom f = {\<guillemotright>dr}" 
-    and ubelemwell_f: "sbElemWell f"
-  shows "ubDom\<cdot>(snd (receiverTransition (s, f))) = {ar\<guillemotright>, o\<guillemotright>}"
-  proof -
-    obtain inp where f_def: "f = [\<guillemotright>dr \<mapsto> inp]"
-      using dom_eq_singleton_conv dom_f by force
-    obtain st where s_def: "s = State st"
-      using ReceiverAutomaton.getSubState.cases by blast
-    have "ubDom\<cdot>(snd (receiverTransitionH (ReceiverState.State st, inp))) = {ar\<guillemotright>, o\<guillemotright>}"
-      proof (cases inp)
-        case (Msg i)
-          hence "i \<in> ctype \<guillemotright>dr"
-          using assms
-          by (simp add: dom_f f_def sbElemWell_def ctype_tsyn_def image_def)
-        then obtain a where i_def: "i = A a"
-          by auto
-        then show ?thesis
-          proof (cases st)
-            case Rf
-            then show ?thesis
-              by (simp add: Msg createaroutput_createooutput_ubclunion_ubdom 
-                  createaroutput_tsynbnullo_ubclunion_ubdom i_def)
-          next
-            case Rt
-            then show ?thesis
-              by (simp add: Msg createaroutput_createooutput_ubclunion_ubdom 
-                  createaroutput_tsynbnullo_ubclunion_ubdom i_def)
-          qed
-      next
-        case null
-        then show ?thesis
-          using receivertransition_null tsynbnullar_tsynbnullo_ubclunion_ubdom by auto
-      qed
-    then show "ubDom\<cdot>(snd (receiverTransition (s, f))) =  {ar\<guillemotright>, o\<guillemotright>}"
-      by (simp add: f_def s_def)
+(* should probably be stated in Streams.thy *)
+lemma len_one_stream: "#s = Fin 1 \<Longrightarrow> \<exists>m. s = \<up>m"
+proof-
+  assume a0: "#s = Fin 1"
+  show "\<exists>m::'a. s = \<up>m"
+  proof-
+    have empty_or_long: "\<nexists>m::'a. s = \<up>m \<Longrightarrow> s = \<epsilon> \<or> (\<exists> as a. s = \<up>a \<bullet> as)"
+      by (metis surj_scons)
+    have not_eq_one: "\<nexists>m::'a. s = \<up>m \<Longrightarrow> #s = Fin 0 \<or> #s > Fin 1" 
+      using empty_or_long 
+      by (metis Fin_02bot Fin_Suc One_nat_def a0 leI lnzero_def notinfI3 only_empty_has_length_0 sconc_snd_empty slen_conc slen_scons)
+    have not_eq_one2: "\<exists>m. s = \<up>m" using a0 
+      using not_eq_one by auto
+    show ?thesis using not_eq_one2 
+      by simp
   qed
+qed
 
-lemma receivertransition_automaton_well:
-  "automaton_well (receiverTransition, ReceiverState.State Rt, tsynbNull ar\<guillemotright> \<uplus> tsynbNull o\<guillemotright>, 
-                   {\<guillemotright>dr}, {ar\<guillemotright>, o\<guillemotright>})"
-  using receivertransition_ubdom by auto
+text {* Cases rule for simple time-synchronous bundles. *}
+lemma tsynb_cases [case_names max_len not_ubleast numb_channel msg null]:
+  assumes max_len: "ubMaxLen (Fin (1::nat)) x" 
+    and not_ubleast: "x \<noteq> ubLeast (ubDom\<cdot>x)"
+    and numb_channel: "(ubDom\<cdot>x) = {c}"
+    and msg: "\<And>m. P (createBundle (Msg m) c)"
+    and null: "P (tsynbNull c)"
+  shows "P x"
+proof - 
+  have x_not_empty: "x . c \<noteq> \<epsilon>" 
+     by (metis not_ubleast numb_channel singletonD ubDom_ubLeast ubgetchI ubleast_ubgetch) 
+  have x_dom_eq_createbundle: "\<And>m. ubDom\<cdot>x = ubDom\<cdot>(createBundle (Msg m) c)" 
+    by (simp add: numb_channel)
+  have x_dom_eq_tsynbnull: "ubDom\<cdot>x = ubDom\<cdot>(tsynbNull c)" 
+    by (simp add: numb_channel)
+  have createbundle_stream_eq: "\<And>m.  (Msg m) \<in> ctype c \<Longrightarrow> (createBundle (Msg m) c) . c = \<up>(Msg m)" 
+    by (metis createBundle.rep_eq fun_upd_same option.sel ubgetch_insert) 
+  have tsynbnull_stream_eq: "(tsynbNull c) . c =  \<up>null"
+    by simp
+  have x_singleton: "usclLen\<cdot>(x . c) = Fin 1" 
+  proof - 
+    have x_smaller: "usclLen\<cdot>(x . c) \<le> Fin 1" using max_len 
+      by (simp add: numb_channel ubMaxLen_def)
+    have empty_zero: "usclLen\<cdot>(\<epsilon>::'a tsyn stream) = Fin 0" 
+      by (simp add: usclLen_stream_def)
+    hence x_not_zero: "usclLen\<cdot>(x . c) \<noteq> Fin 0" using x_not_empty
+      by (simp add: usclLen_stream_def)
+    thus ?thesis using x_smaller
+      by (simp add: One_nat_def antisym_conv neq02Suclnle)
+  qed
+  obtain s where s_def: "x . c = s" using assms 
+    by metis
+  have s_ubundle_eq_x: "x = Abs_ubundle ([c \<mapsto> s])"
+    by (metis (mono_tags, lifting) dom_eq_singleton_conv fun_upd_same numb_channel s_def singletonI ubWell_single_channel ubdom_insert ubgetchE ubgetchI ubgetch_insert ubrep_ubabs)
+  have len_one_cases: "usclLen\<cdot>s = Fin 1 \<Longrightarrow> (\<exists>m. s = (\<up>(Msg m))) \<or>  (s = (\<up>null))" apply (simp add: usclLen_stream_def)
+  proof - 
+    assume len_one: "#s = Fin (Suc (0::nat))"
+    show "(\<exists>m. s = (\<up>(Msg m))) \<or>  (s = (\<up>null))"
+    proof - 
+      show ?thesis using tsyn.exhaust len_one len_one_stream
+        by (metis One_nat_def)
+    qed
+  qed
+  have s_cases: "(\<exists>m. s = \<up>(Msg m)) \<or> (s = \<up>null)"
+    using s_def assms x_singleton x_not_empty len_one_cases by blast
+  have s_eq: "(\<exists>m. s = (createBundle (Msg m) c) . c ) \<or> (s = (tsynbNull c) . c)" 
+    apply (case_tac "\<exists>m. s = \<up>(Msg m)")
+     defer 
+    using s_cases apply auto[1]
+  proof - 
+    assume a0: " \<exists>m::'a. s = \<up>(\<M> m)"
+    show " (\<exists>m::'a. s = createBundle (\<M> m) c  .  c) \<or> s = tsynbNull c  .  c"
+    proof - 
+      obtain m where m_def: "s = \<up>(\<M> m)" 
+        using a0 by blast
+      have m_shd: "(\<M> m) = shd (x . c)"
+        by (simp add: m_def s_def)
+      have m_in_ctype: "(\<M> m) \<in> ctype c" 
+        using numb_channel usclOkay_stream_def UnI1 contra_subsetD s_ubundle_eq_x sdom2un singletonI surj_scons ubdom_channel_usokay ubgetch_insert x_not_empty
+        by (metis (no_types, lifting) m_shd)
+      have s4: "s = (createBundle (\<M> m) c) . c " 
+        using createbundle_stream_eq m_def m_in_ctype by force
+      show ?thesis using s4 
+        by blast
+    qed 
+  qed
+  have x_eq: "(\<exists>m. x = (createBundle (Msg m) c)) \<or> (x = (tsynbNull c))" using s_cases s_def assms s_eq by (metis singletonD ubgetchI x_dom_eq_createbundle x_dom_eq_tsynbnull)
+  show ?thesis using x_eq msg null by blast
+qed
 
-(* ----------------------------------------------------------------------- *)
-  section {* Automaton Receiver Step Lemmata *}
-(* ----------------------------------------------------------------------- *) 
-
-lemma receiverautomaton_h_step_ubdom_null_null:
-  assumes "ubDom\<cdot>sb = {\<guillemotright>dr}"
-  shows "ubDom\<cdot>(ubConc (tsynbNull ar\<guillemotright> \<uplus> tsynbNull o\<guillemotright>)
-                  \<cdot>(h ReceiverAutomaton (ReceiverState.State s) \<rightleftharpoons> sb)) = {ar\<guillemotright>, o\<guillemotright>}"
-  apply (simp add: tsynbnullar_tsynbnullo_ubclunion_ubdom)
-  apply (subst h_out_dom)
-  apply (simp add: assms getDom_def ReceiverAutomaton.rep_eq)
-  by (simp add: assms ReceiverAutomaton.rep_eq  getRan_def insert_commute)
-
-lemma receiverautomaton_h_step_ubdom_ar_null:
-  assumes "ubDom\<cdot>sb = {\<guillemotright>dr}"
-  shows "ubDom\<cdot>(ubConc ((createArOutput x) \<uplus> (tsynbNull o\<guillemotright>))
-                  \<cdot>(h ReceiverAutomaton (ReceiverState.State s) \<rightleftharpoons> sb)) = {ar\<guillemotright>, o\<guillemotright>}"
-  apply (simp add: createaroutput_tsynbnullo_ubclunion_ubdom)
-  apply (subst h_out_dom)
-  apply (simp add: assms getDom_def ReceiverAutomaton.rep_eq)
-  by (simp add: assms ReceiverAutomaton.rep_eq  getRan_def insert_commute)
-
-lemma receiverautomaton_h_step_ubdom_ar_o: 
-  assumes "ubDom\<cdot>sb = {\<guillemotright>dr}"
-  shows "ubDom\<cdot>(ubConc ((createArOutput x) \<uplus> (createOOutput y))
-                  \<cdot>(h ReceiverAutomaton (ReceiverState.State s) \<rightleftharpoons> sb)) = {ar\<guillemotright>, o\<guillemotright>}"
-  apply (simp add: createaroutput_createooutput_ubclunion_ubdom)
-  apply (subst h_out_dom)
-  apply (simp add: assms getDom_def ReceiverAutomaton.rep_eq)
-  by (simp add: assms ReceiverAutomaton.rep_eq  getRan_def insert_commute)
-
-lemma msga_ctype: "Msg (A a) \<in> ctype \<guillemotright>dr"
-  by (simp add: ctype_tsynI)
-
-lemma msga_createbundle_ubgetch [simp]: "(createBundle (Msg (A a)) \<guillemotright>dr) . \<guillemotright>dr = \<up>(Msg (A a))"
-  apply (simp add: ubgetch_insert createBundle.rep_eq)
-  by (simp add: msga_ctype)
-
-lemma msga_createbundle_ubconc [simp]:
-  assumes "ubDom\<cdot>sb = {\<guillemotright>dr}"
-  shows "ubConc (createBundle (Msg (A a)) \<guillemotright>dr)\<cdot>sb .  \<guillemotright>dr = \<up>(Msg (A a)) \<bullet> (sb.  \<guillemotright>dr)"
-  by (simp add: assms usclConc_stream_def)
-
-lemma msga_createbundle_ubconc_sbrt [simp]:
-  assumes "ubDom\<cdot>sb = {\<guillemotright>dr}" 
-  shows "sbRt\<cdot>(ubConc (createBundle (Msg (A a)) \<guillemotright>dr)\<cdot>sb) = sb"
-  apply (rule ub_eq)
-  apply (simp add: assms)
-  by (simp add: assms sbRt_def usclConc_stream_def)
-
-lemma tsynbnull_eq [simp]:
-  assumes "ubDom\<cdot>sb = {\<guillemotright>dr}" 
-  shows "inv convDiscrUp (sbHdElem\<cdot>(ubConc (tsynbNull \<guillemotright>dr)\<cdot>sb)) = [\<guillemotright>dr \<mapsto> null]"
-  apply (rule convDiscrUp_eqI)
-  apply (subst convdiscrup_inv_eq)
-  apply (simp add: assms sbHdElem_def sbHdElem_cont domIff2 usclConc_stream_def)+
-  apply (subst fun_eq_iff, rule)
-  apply (case_tac "x = \<guillemotright>dr")
-  apply (simp add: convDiscrUp_def)
-  apply (subst ubConc_usclConc_eq)
-  apply (simp_all add: assms usclConc_stream_def up_def)
-  by (metis convDiscrUp_dom domIff fun_upd_apply)
-
-lemma createaroutput_eq [simp]:
-  assumes "ubDom\<cdot>sb = {\<guillemotright>dr}" 
-  shows "inv convDiscrUp (sbHdElem\<cdot>(ubConc (createBundle (Msg (A a)) \<guillemotright>dr)\<cdot>sb)) = [\<guillemotright>dr \<mapsto> Msg (A a)]"
-  apply (rule convDiscrUp_eqI)
-  apply (subst convdiscrup_inv_eq)
-  apply (simp add: assms sbHdElem_def sbHdElem_cont domIff2 usclConc_stream_def)+
-  apply (subst fun_eq_iff, rule)
-  apply (case_tac "x = \<guillemotright>dr")
-  apply (simp add: convDiscrUp_def)
-  apply (subst ubConc_usclConc_eq)
-  apply (simp_all add: assms usclConc_stream_def up_def)
-  by (metis convDiscrUp_dom domIff fun_upd_apply)
-
-(* h_step lemma for state rf and input null *)
-lemma receiverautomaton_h_step_rf_null: 
-  assumes "ubDom\<cdot>sb = {\<guillemotright>dr}"
-  shows "h ReceiverAutomaton (State Rf) \<rightleftharpoons> (ubConc (tsynbNull \<guillemotright>dr)\<cdot>sb) 
-           = ubConc ((tsynbNull ar\<guillemotright>) \<uplus> (tsynbNull o\<guillemotright>))\<cdot>(h ReceiverAutomaton (State Rf) \<rightleftharpoons> sb)"
-  apply (simp_all add: h_final getDom_def ReceiverAutomaton.rep_eq h_out_dom assms getRan_def 
-         autGetNextOutput_def autGetNextState_def getTransition_def usclConc_stream_def)
-  using assms receiverautomaton_h_step_ubdom_null_null by auto
-
-(* h_step lemma for state Rt and input null *)
-lemma receiverautomaton_h_step_rt_null: 
-  assumes "ubDom\<cdot>sb = {\<guillemotright>dr}"
-  shows "h ReceiverAutomaton (State Rt) \<rightleftharpoons> (ubConc (tsynbNull \<guillemotright>dr)\<cdot>sb) 
-           = ubConc ((tsynbNull ar\<guillemotright>) \<uplus> (tsynbNull o\<guillemotright>))\<cdot>(h ReceiverAutomaton (State Rt) \<rightleftharpoons> sb)"
-  apply (simp_all add: h_final getDom_def ReceiverAutomaton.rep_eq h_out_dom assms getRan_def 
-         autGetNextOutput_def autGetNextState_def getTransition_def usclConc_stream_def)
-  using assms receiverautomaton_h_step_ubdom_null_null by auto
-
-(* h_step lemma for state Rf and input true *)
-lemma receiverautomaton_h_step_rf_true:
-  assumes "ubDom\<cdot>sb = {\<guillemotright>dr}" 
-    and "(snd a) = True"
-  shows "h ReceiverAutomaton (State Rf) \<rightleftharpoons> (ubConc (createBundle (Msg (A a)) \<guillemotright>dr)\<cdot>sb) 
-           = ubConc (createArOutput (snd a) \<uplus> (tsynbNull o\<guillemotright>))
-               \<cdot>(h ReceiverAutomaton (State Rf) \<rightleftharpoons> sb)"
-  apply (simp_all add: h_final getDom_def ReceiverAutomaton.rep_eq h_out_dom assms getRan_def 
-         autGetNextOutput_def autGetNextState_def getTransition_def usclConc_stream_def)
-  using assms receiverautomaton_h_step_ubdom_ar_null by auto
-
-(* h_step lemma for state Rt and input true *)
-lemma receiverautomaton_h_step_rt_true: 
-  assumes "ubDom\<cdot>sb = {\<guillemotright>dr}" 
-    and "(snd a) = True"
-  shows "h ReceiverAutomaton (State Rt) \<rightleftharpoons> (ubConc (createBundle (Msg (A a)) \<guillemotright>dr)\<cdot>sb)
-           = ubConc (createArOutput (snd a) \<uplus> (createOOutput (fst a)))
-               \<cdot>(h ReceiverAutomaton (State Rf) \<rightleftharpoons> sb)"
-  apply (simp_all add: h_final getDom_def ReceiverAutomaton.rep_eq h_out_dom assms getRan_def 
-         autGetNextOutput_def autGetNextState_def getTransition_def usclConc_stream_def)
-  using assms receiverautomaton_h_step_ubdom_ar_o by auto
-
-(* h_step lemma for state Rf and input false *)
-lemma receiverautomaton_h_step_rf_false: 
-  assumes "ubDom\<cdot>sb = {\<guillemotright>dr}" 
-    and "(snd a) = False"
-  shows "h ReceiverAutomaton (State Rf) \<rightleftharpoons> (ubConc (createBundle (Msg (A a)) \<guillemotright>dr)\<cdot>sb) 
-           = ubConc (createArOutput (snd a) \<uplus> createOOutput (fst a))
-               \<cdot>(h ReceiverAutomaton (State Rt) \<rightleftharpoons> sb)"
-  apply (simp_all add: h_final getDom_def ReceiverAutomaton.rep_eq h_out_dom assms getRan_def 
-         autGetNextOutput_def autGetNextState_def getTransition_def usclConc_stream_def)
-  using assms receiverautomaton_h_step_ubdom_ar_o by auto
-
-(* h_step lemma for state Rt and input false *)
-lemma receiverautomaton_h_step_rt_false: 
-  assumes "ubDom\<cdot>sb = {\<guillemotright>dr}"
-    and "(snd a) = False"
-  shows "h ReceiverAutomaton (State Rt) \<rightleftharpoons> (ubConc (createBundle (Msg (A a)) \<guillemotright>dr)\<cdot>sb) 
-           = ubConc (createArOutput (snd a) \<uplus> (tsynbNull o\<guillemotright>))
-               \<cdot>(h ReceiverAutomaton (State Rt) \<rightleftharpoons> sb)"
-  apply (simp_all add: h_final getDom_def ReceiverAutomaton.rep_eq h_out_dom assms getRan_def 
-         autGetNextOutput_def autGetNextState_def getTransition_def usclConc_stream_def)
-  using assms receiverautomaton_h_step_ubdom_ar_null by auto
-
-(* H_step lemma *)
-lemma receiverautomaton_H_step:
-  assumes "ubDom\<cdot>sb = {\<guillemotright>dr}"
-  shows "H ReceiverAutomaton \<rightleftharpoons> sb 
-           = ubConc ((tsynbNull ar\<guillemotright>) \<uplus> (tsynbNull o\<guillemotright>))\<cdot>(h ReceiverAutomaton (State Rt) \<rightleftharpoons> sb)"
-  apply (simp add: H_def h_out_dom getRan_def getInitialState_def getInitialOutput_def 
-         ReceiverAutomaton.rep_eq getDom_def assms)
-  using assms receiverautomaton_h_step_ubdom_null_null by auto
-
-(* ----------------------------------------------------------------------- *)
-  section {* Automaton Receiver SPF Lemmata *}
-(* ----------------------------------------------------------------------- *)
-
-(* ToDo: add descriptions. *)
-
-lemma receiverspf_strict: "ReceiverSPF \<rightleftharpoons> ubclLeast{\<guillemotright>dr} = ubclLeast{ar\<guillemotright>, o\<guillemotright>}"
-  sorry
-
-lemma receiverspf_ufdom: "ufDom\<cdot>ReceiverSPF = {\<guillemotright>dr}"
-  apply (simp add: ReceiverSPF_def H_def ReceiverAutomaton_def getDom_def)
-  using ReceiverAutomaton.abs_eq ReceiverAutomaton.rep_eq by auto
-
-lemma receiverspf_ufran: "ufRan\<cdot>ReceiverSPF = {ar\<guillemotright>, o\<guillemotright>}"
-  sorry
-
-lemma receiverspf_ubdom:
-  assumes "ubDom\<cdot>sb = ufDom\<cdot>ReceiverSPF"
-  shows "ubDom\<cdot>(ReceiverSPF \<rightleftharpoons> sb) = {ar\<guillemotright>, o\<guillemotright>}"
-  by (simp add: assms receiverspf_ufran spf_ubDom)
-
-lemma recspf_receiverspf_ub_eq:
-  assumes "ubDom\<cdot>sb = ufDom\<cdot>ReceiverSPF" 
-  shows "ReceiverSPF \<rightleftharpoons> sb = RecSPF \<rightleftharpoons> sb"
-  apply (rule ub_eq)
-  apply (simp add: assms receiverspf_ubdom receiverspf_ufdom recspf_ubdom recspf_ufdom)
-  sorry
-
-lemma recspf_receiverspf_eq: "ReceiverSPF = RecSPF"
-  apply (rule ufun_eqI)
-  apply (simp add: receiverspf_ufdom recspf_ufdom)
-  by (simp add: recspf_receiverspf_ub_eq ubclDom_ubundle_def)
 
 end

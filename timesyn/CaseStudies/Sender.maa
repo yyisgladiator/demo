@@ -11,7 +11,7 @@ component Sender {
     variable List<Integer> buffer=new List<>();
 
     state St, Sf;
-    initial Sf / {ds=null};
+    initial St / {ds=null};
 
     Sf -> Sf [buffer.size()=0] {i=null, as!=null} / {ds=null};
     Sf -> St [buffer.size()=1 && as=false] {i=null, as!=null} / {buffer=buffer.butlast(), ds=null};
