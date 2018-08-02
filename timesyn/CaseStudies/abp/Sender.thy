@@ -184,7 +184,40 @@ lemma sendertransition_automaton_well:
   "daWell (senderTransition, State Sf [], tsynbNull (\<C> ''ds''), {\<C> ''i'', \<C> ''as''}, {\<C> ''ds''})"
   using sendertransition_ubdom by simp
 
+(* ----------------------------------------------------------------------- *)
+  section {* Automaton Sender SPF Lemmata *}
+(* ----------------------------------------------------------------------- *)
 
+(* ToDo: add descriptions. *)
+
+lemma dadom_senderautomaton:"daDom SenderAutomaton = {\<C> ''i'', \<C> ''as''}"
+  by (simp add: daDom_def SenderAutomaton.rep_eq)
+
+lemma daran_senderautomaton:"daRan SenderAutomaton = {\<C> ''ds''}"
+  by (simp add: daRan_def SenderAutomaton.rep_eq)
+    
+lemma dainitialoutput_senderautomaton:
+  "daInitialOutput SenderAutomaton = tsynbNull (\<C> ''ds'')"
+  by(simp add: daInitialOutput_def SenderAutomaton.rep_eq)
+
+lemma senderspf_ufdom: "ufDom\<cdot>SenderSPF = {\<C> ''i'', \<C> ''as''}"
+  by (simp add: SenderSPF_def da_H_def SenderAutomaton.rep_eq daDom_def)
+
+lemma senderspf_ufran: "ufRan\<cdot>SenderSPF = {\<C> ''ds''}"
+  by (simp add: SenderSPF_def da_H_def SenderAutomaton.rep_eq daRan_def)
+
+lemma senderspf_ubdom:
+  assumes "ubDom\<cdot>sb = ufDom\<cdot>SenderSPF"
+  shows "ubDom\<cdot>(SenderSPF \<rightleftharpoons> sb) = {\<C> ''ds''}"
+  by (simp add: assms senderspf_ufran spf_ubDom)
+  
+lemma senderspf_strict: "SenderSPF \<rightleftharpoons> ubLeast{\<C> ''i'', \<C> ''as''} = tsynbNull (\<C> ''ds'')"
+  apply (fold ubclLeast_ubundle_def)
+  apply (simp add: SenderSPF_def)
+  apply (subst da_H_bottom)
+  apply (simp_all add: dadom_senderautomaton dainitialoutput_senderautomaton daran_senderautomaton)+
+  by blast
+                                                             
 (* ----------------------------------------------------------------------- *)
   section {* Automaton Sender Step Lemmata *}
 (* ----------------------------------------------------------------------- *) 
@@ -703,6 +736,5 @@ lemma senderautomaton_H_step:
            = ubConc (tsynbNull (\<C> ''ds''))\<cdot>(da_h SenderAutomaton (State St []) \<rightleftharpoons> sb)"
   by (simp add: da_H_def da_h_ubdom daRan_def daInitialState_def daInitialOutput_def 
          SenderAutomaton.rep_eq daDom_def assms)
-  
 
 end

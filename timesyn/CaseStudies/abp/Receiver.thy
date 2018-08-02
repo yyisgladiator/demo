@@ -606,7 +606,7 @@ lemma receiverautomaton_H_step:
   section {* Automaton Receiver SPF Lemmata *}
 (* ----------------------------------------------------------------------- *)
 
-(* TODO *)
+(* ToDo *)
 text {* Cases rule for simple time-synchronous bundles. *}
 lemma tsynb_cases [case_names len not_ubleast single_ch msg null]:
   assumes len: "ubMaxLen (Fin (1::nat)) x" 
@@ -617,20 +617,34 @@ lemma tsynb_cases [case_names len not_ubleast single_ch msg null]:
   shows "P x"
   sorry
 
+(* ToDo: add descriptions. *)
+
+lemma dadom_receiverautomaton: 
+  "daDom ReceiverAutomaton = {\<C> ''dr''}"
+  by (simp add: daDom_def ReceiverAutomaton.rep_eq)
+
+lemma daran_receiverautomaton: 
+  "daRan ReceiverAutomaton = {\<C> ''ar'', \<C> ''o''}"
+  by (simp add: daRan_def ReceiverAutomaton.rep_eq)
+    
+lemma dainitialoutput_receiverautomaton:
+  "daInitialOutput ReceiverAutomaton = tsynbNull (\<C> ''ar'') \<uplus> tsynbNull (\<C> ''o'')"
+  by (simp add: daInitialOutput_def ReceiverAutomaton.rep_eq)
+
 text{* Application of @{term ubLeast} on @{term ReceiverSPF} yields only the initial output. *}
-lemma receiverspf_strict: 
-  "ReceiverSPF \<rightleftharpoons> ubLeast{\<C> ''dr''} = (tsynbNull (\<C> ''ar'') \<uplus> tsynbNull (\<C> ''o''))"
-  sorry
+lemma receiverspf_strict:
+  "ReceiverSPF \<rightleftharpoons> ubLeast{\<C> ''dr''} = tsynbNull (\<C> ''ar'') \<uplus> tsynbNull (\<C> ''o'')"
+  apply (fold ubclLeast_ubundle_def)
+  by (simp add: ReceiverSPF_def da_H_bottom dadom_receiverautomaton daran_receiverautomaton 
+                dainitialoutput_receiverautomaton tsynbnullar_tsynbnullo_ubclunion_ubdom)
 
 text{* The domain of @{term ReceiverSPF}. *}
 lemma receiverspf_ufdom: "ufDom\<cdot>ReceiverSPF = {\<C> ''dr''}"
-  apply (simp add: ReceiverSPF_def da_H_def ReceiverAutomaton_def daDom_def)
-  using ReceiverAutomaton.abs_eq ReceiverAutomaton.rep_eq by auto
+  by (simp add: ReceiverSPF_def da_H_def ReceiverAutomaton.rep_eq daDom_def)
 
 text{* The range of @{term ReceiverSPF}. *}
 lemma receiverspf_ufran: "ufRan\<cdot>ReceiverSPF = {\<C> ''ar'', \<C> ''o''}"
-  apply (simp add: ReceiverSPF_def da_H_def ReceiverAutomaton_def daRan_def)
-  using ReceiverAutomaton.abs_eq ReceiverAutomaton.rep_eq by auto
+  by (simp add: ReceiverSPF_def da_H_def ReceiverAutomaton.rep_eq daRan_def)
 
 text{* The domain of the output bundle of @{term ReceiverSPF}. *}
 lemma receiverspf_ubdom:
