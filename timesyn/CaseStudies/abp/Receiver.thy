@@ -665,11 +665,13 @@ lemma recspf_ubconc_null:
   apply(simp add: tsynbnullar_tsynbnullo_ubclunion_ubdom insert_absorb)
   sorry
 
+(* wrong, needs to be changed *)
 lemma recspf_ubconc_true: 
   assumes "ubDom\<cdot>sb = {\<C> ''dr''}"
   and "(snd a) = True "
   shows "RecSPF \<rightleftharpoons> ubConc (createBundle (Msg (Pair_nat_bool a)) (\<C> ''dr''))\<cdot>sb 
  = ubConc (createArBundle (snd a) \<uplus> (createOBundle (fst a)))\<cdot>(RecSPF \<rightleftharpoons> sb)"
+  apply(simp add: recspf_insert tsynbrec_insert tsynrec_insert)
   sorry
 
 lemma recspf_ubconc_false: 
@@ -679,20 +681,46 @@ lemma recspf_ubconc_false:
  = ubConc (createArBundle (snd a) \<uplus> tsynbNull (\<C> ''o''))\<cdot>(RecSPF \<rightleftharpoons> sb)"
   sorry
 
-lemma h1:
- "\<And>(u::abpMessage tsyn stream\<^sup>\<Omega>) (ub::abpMessage tsyn stream\<^sup>\<Omega>) m::nat \<times> bool.
-       ubConc (tsynbNull (\<C> ''ar'') \<uplus> tsynbNull (\<C> ''o''))\<cdot>
-       (da_h ReceiverAutomaton (State Rt) \<rightleftharpoons> ub) =
-       ubConc (tsynbNull (\<C> ''ar'') \<uplus> tsynbNull (\<C> ''o''))\<cdot>(RecSPF \<rightleftharpoons> ub) \<and>
-       ubDom\<cdot>u = {\<C> ''dr''} \<and>
-       ubDom\<cdot>ub = {\<C> ''dr''} \<and> ubMaxLen (Fin (Suc (0::nat))) u \<and> u \<noteq> ubLeast {\<C> ''dr''} \<Longrightarrow>
-       ubConc (tsynbNull (\<C> ''ar'') \<uplus> tsynbNull (\<C> ''o''))\<cdot>
-       (da_h ReceiverAutomaton (State Rt) \<rightleftharpoons>
-        ubConc (createBundle (\<M> Pair_nat_bool m) (\<C> ''dr''))\<cdot>ub) =
-       ubConc (tsynbNull (\<C> ''ar'') \<uplus> tsynbNull (\<C> ''o''))\<cdot>
-       (RecSPF \<rightleftharpoons> ubConc (createBundle (\<M> Pair_nat_bool m) (\<C> ''dr''))\<cdot>ub) \<and> ((snd  m) = True)"
- apply(simp add: receiverautomaton_h_step_rt_true recspf_ubconc_true receiverspf_ufdom)
+lemma ubconc_eq_fst: 
+" b2 = b3 \<Longrightarrow> ubConc b1\<cdot>b2 = ubConc b1\<cdot>b3"
+  by simp
 
+lemma eq_conc_false:
+  assumes "ubDom\<cdot>sb = {\<C> ''dr''}"
+  and "(snd a) = False"
+  and "(da_h ReceiverAutomaton (State Rt) \<rightleftharpoons> sb) = (RecSPF \<rightleftharpoons> sb)"
+shows "da_h ReceiverAutomaton (State Rt) \<rightleftharpoons> (ubConc (createBundle (Msg (Pair_nat_bool a)) (\<C> ''dr''))\<cdot>sb) 
+       = RecSPF \<rightleftharpoons> ubConc (createBundle (Msg (Pair_nat_bool a)) (\<C> ''dr''))\<cdot>sb"
+  by(simp add: assms recspf_ubconc_false receiverautomaton_h_step_rt_false)
+
+(* doesn't work like this, need to unfold RecSPF *)
+lemma eq_conc_true:
+  assumes "ubDom\<cdot>sb = {\<C> ''dr''}"
+  and "(snd a) = True"
+  and "(da_h ReceiverAutomaton (State Rt) \<rightleftharpoons> sb) = (RecSPF \<rightleftharpoons> sb)"
+shows "da_h ReceiverAutomaton (State Rt) \<rightleftharpoons> (ubConc (createBundle (Msg (Pair_nat_bool a)) (\<C> ''dr''))\<cdot>sb) 
+       = RecSPF \<rightleftharpoons> ubConc (createBundle (Msg (Pair_nat_bool a)) (\<C> ''dr''))\<cdot>sb"
+  apply(simp add: assms recspf_ubconc_true receiverautomaton_h_step_rt_true)
+  apply(rule  ubconc_eq_fst)
+  apply (induction sb rule: ind_ub)
+  apply (rule admI)
+  using ufunlub_ufun_fun 
+  apply (simp add: ch2ch_Rep_cfunR contlub_cfun_arg op_the_chain op_the_lub)
+  apply (simp add: assms receiverautomaton_h_strict recspf_strict ubclLeast_ubundle_def)
+  apply(simp add: assms)  
+  apply (rule_tac x = u in tsynb_cases)
+  apply(simp)
+  apply(simp)
+  apply(simp)
+   defer
+   apply(simp add:receiverautomaton_h_step_rf_null recspf_ubconc_null)
+  sorry
+
+lemma recspf2tsynrec_h:
+  assumes "ubDom\<cdot>sb = {\<C> ''dr''}"
+  shows "Abs_ubundle [\<C> ''ar'' \<mapsto> bool2abp\<cdot>(tsynProjSnd\<cdot>(abp2natbool\<cdot>(sb  .  \<C> ''dr''))), \<C> ''o'' \<mapsto>
+      nat2abp\<cdot>(sscanlA tsynRec_h True\<cdot>(abp2natbool\<cdot>(sb  .  \<C> ''dr'')))] = (RecSPF \<rightleftharpoons> sb)"
+  by(simp add: assms recspf_insert tsynbrec_insert tsynrec_insert) 
 
 text{* If @{term ReceiverSPF} and @{term RecSPF} get the same input, they yield the same result. *}
 lemma recspf_receiverspf_ub_eq:
@@ -700,11 +728,13 @@ lemma recspf_receiverspf_ub_eq:
   shows "ReceiverSPF \<rightleftharpoons> sb = ubConc (tsynbNull (\<C> ''ar'') \<uplus> tsynbNull (\<C> ''o''))\<cdot>(RecSPF \<rightleftharpoons> sb)"
   apply (simp add: ReceiverSPF_def)
   apply (simp add: assms receiverspf_ufdom receiverautomaton_H_step)
+  apply (rule ubconc_eq_fst)
+  (*apply (simp add: assms receiverspf_ufdom recspf_insert tsynbrec_insert tsynrec_insert)*) 
   apply (induction sb rule: ind_ub)
   apply (rule admI)
   using ufunlub_ufun_fun
   apply (simp add: ch2ch_Rep_cfunR contlub_cfun_arg op_the_chain op_the_lub)
-  apply (simp add: assms receiverautomaton_h_strict receiverspf_ufdom recspf_strict 
+  apply (simp add:  assms receiverautomaton_h_strict receiverspf_ufdom recspf_strict 
          ubclLeast_ubundle_def)
   apply (simp add: assms receiverautomaton_h_strict receiverspf_ufdom recspf_strict)
   apply (rule_tac x = u in tsynb_cases)
@@ -713,7 +743,34 @@ lemma recspf_receiverspf_ub_eq:
   apply(simp add: assms receiverspf_ufdom)
   defer
   apply(simp add: assms receiverautomaton_h_step_rt_null recspf_ubconc_null receiverspf_ufdom)
-  sorry
+  sorry  
+(*proof-
+  have false: "\<And>(u::abpMessage tsyn stream\<^sup>\<Omega>) (ub::abpMessage tsyn stream\<^sup>\<Omega>) m::nat \<times> bool.
+       da_h ReceiverAutomaton (State Rt) \<rightleftharpoons> ub = RecSPF \<rightleftharpoons> ub \<and>
+       (snd m) = False \<and>
+       ubDom\<cdot>ub = {\<C> ''dr''} \<Longrightarrow>
+       da_h ReceiverAutomaton (State Rt) \<rightleftharpoons>
+       ubConc (createBundle (\<M> Pair_nat_bool m) (\<C> ''dr''))\<cdot>ub =
+       RecSPF \<rightleftharpoons> ubConc (createBundle (\<M> Pair_nat_bool m) (\<C> ''dr''))\<cdot>ub"
+    by (simp add: eq_conc_false)
+  have true: "\<And>(u::abpMessage tsyn stream\<^sup>\<Omega>) (ub::abpMessage tsyn stream\<^sup>\<Omega>) m::nat \<times> bool.
+       da_h ReceiverAutomaton (State Rt) \<rightleftharpoons> ub = RecSPF \<rightleftharpoons> ub \<and>
+       (snd m) = True \<and>
+       ubDom\<cdot>ub = {\<C> ''dr''} \<Longrightarrow>
+       da_h ReceiverAutomaton (State Rt) \<rightleftharpoons>
+       ubConc (createBundle (\<M> Pair_nat_bool m) (\<C> ''dr''))\<cdot>ub =
+       RecSPF \<rightleftharpoons> ubConc (createBundle (\<M> Pair_nat_bool m) (\<C> ''dr''))\<cdot>ub"
+    by (simp add: eq_conc_true)
+  show "\<And>(u::abpMessage tsyn stream\<^sup>\<Omega>) (ub::abpMessage tsyn stream\<^sup>\<Omega>) m::nat \<times> bool.
+       da_h ReceiverAutomaton (State Rt) \<rightleftharpoons> ub = RecSPF \<rightleftharpoons> ub \<and>
+       ubDom\<cdot>u = {\<C> ''dr''} \<and>
+       ubDom\<cdot>ub = {\<C> ''dr''} \<and> ubMaxLen (Fin (Suc (0::nat))) u \<and> u \<noteq> ubLeast {\<C> ''dr''} \<Longrightarrow>
+       da_h ReceiverAutomaton (State Rt) \<rightleftharpoons>
+       ubConc (createBundle (\<M> Pair_nat_bool m) (\<C> ''dr''))\<cdot>ub =
+       RecSPF \<rightleftharpoons> ubConc (createBundle (\<M> Pair_nat_bool m) (\<C> ''dr''))\<cdot>ub"
+    using true false
+    by blast
+qed*)
 
 (* Needs to be changed.*)
 text{* @{term ReceiverSPF} is equal to @{term RecSPF}. *}
