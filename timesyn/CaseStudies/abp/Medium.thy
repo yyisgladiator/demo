@@ -172,26 +172,25 @@ lemma tsynlen_sntimes_null: "tsynLen\<cdot>((k \<star> \<up>null) \<bullet> s) =
 
 (* Reviewed until here *)
 
-(* nach tsynStream *)
-lemma slen_stakewhile_fin: 
-  assumes "tsynLen\<cdot>as > 0" 
-  obtains n where "#(stakewhile (\<lambda>x. x = null)\<cdot>as) = Fin n"
+(* ToDo: add descriptions and move to tsynStream *)
+lemma stakewhile_null_slen_fin: 
+  assumes "0 < tsynLen\<cdot>as" 
+  shows "#(stakewhile (\<lambda>x. x = null)\<cdot>as) < \<infinity>"
   proof -
     obtain k where "snth k as \<noteq> null"
       using assms
-      apply (simp add: tsynlen_insert tsynabs_insert)
-      by (metis (mono_tags, lifting) ex_snth_in_sfilter_nempty lnsuc_neq_0 mem_Collect_eq slen_empty_eq)
+      by (metis (full_types) empty_is_shortest ex_snth_in_sfilter_nempty linorder_neq_iff 
+          mem_Collect_eq tsynabs_insert tsynlen_insert tsynlen_strict)
     then show ?thesis
-      by (metis (full_types) lncases notinfI3 stakewhile_slen that)
+      by (metis (full_types) inf_ub neq_iff not_le notinfI3 stakewhile_slen)
   qed
 
-(* nach tsynStream *)
 lemma split_leading_null:
-  assumes "tsynLen\<cdot>as > 0"
-  obtains n where "as = (sntimes n (\<up>null)) \<bullet> (sdropwhile (\<lambda>x. x = null)\<cdot>as)"
+  assumes "0 < tsynLen\<cdot>as"
+  obtains n where "as = (sntimes n (\<up>null)) \<bullet> sdropwhile (\<lambda>x. x = null)\<cdot>as"
   proof -
     obtain k where k_def: "#(stakewhile (\<lambda>x. x = null)\<cdot>as) = Fin k"
-      using assms slen_stakewhile_fin by blast
+      by (metis assms inf_ub lncases not_le stakewhile_null_slen_fin)
     then have "(sntimes k (\<up>null)) = (stakewhile (\<lambda>x. x = null)\<cdot>as)"
       proof (induction as arbitrary: k rule: tsyn_ind)
         case adm
@@ -208,7 +207,7 @@ lemma split_leading_null:
           by simp
       next
         case (null s)
-        then show ?case 
+        then show ?case
           using infI slen_sconc_snd_inf slen_scons sntimes.simps(2) by fastforce
       qed
     then show ?thesis
@@ -216,7 +215,7 @@ lemma split_leading_null:
   qed
 
 text{* The number of transmitted messages equals the number of True in ora. *}
-lemma tsynmed_tsynlen_ora: 
+lemma tsynmed_tsynlen_ora:
   assumes msg_inf: "tsynLen\<cdot>msg = \<infinity>"
   shows "tsynLen\<cdot>(tsynMed\<cdot>msg\<cdot>ora) = #({True} \<ominus> ora)"
   using assms
@@ -229,49 +228,41 @@ lemma tsynmed_tsynlen_ora:
     then show ?case 
       by simp
   next
-    case msg:(3 a s)
+    case (3 a s)
     have tsynlen_nzero: "tsynLen\<cdot>msg > 0"
-      using Zero_lnless_infty msg.prems by simp
-    then obtain n where msg_def: "msg = (sntimes n (\<up>null)) \<bullet> (sdropwhile (\<lambda>x. x = null)\<cdot>msg)"
+      using Zero_lnless_infty "3.prems" by auto
+    then obtain n where msg_def: "msg = (sntimes n (\<up>null)) \<bullet> sdropwhile (\<lambda>x. x = null)\<cdot>msg"
       using split_leading_null by blast
-    then have slen_stakewhile_msg_fin: "#(stakewhile (\<lambda>x. x = null)\<cdot>msg) < \<infinity>"
-      by (metis Fin_neq_inf Zero_lnless_infty inf_less_eq leI msg.prems slen_stakewhile_fin)
-    have sdropwhile_nbot: "(sdropwhile (\<lambda>x. x = null)\<cdot>msg) \<noteq> \<epsilon>"
-      using msg.prems 
-      apply (simp add: tsynlen_insert tsynabs_insert slen_stakewhile_fin)
-      by (metis Fin_neq_inf tsynlen_nzero sconc_snd_empty sfilterl4 slen_stakewhile_fin 
-          stakewhileDropwhile)
-    from sdropwhile_nbot obtain b where b_def: "shd (sdropwhile (\<lambda>x. x = null)\<cdot>msg) = Msg b"
+    have sdropwhile_null_nbot: "sdropwhile (\<lambda>x. x = null)\<cdot>msg \<noteq> \<epsilon>"
+      by (metis Inf'_neq_0 msg_def "3.prems" tsynlen_sntimes_null tsynlen_strict)
+    from sdropwhile_null_nbot obtain m where m_def: "shd (sdropwhile (\<lambda>x. x = null)\<cdot>msg) = Msg m"
       by (metis (full_types) scases sdropwhile_resup shd1 tsynSnd.cases)
-    moreover have tsynlen_inf: "tsynLen\<cdot>(srt\<cdot>(sdropwhile (\<lambda>x. x = null)\<cdot>msg)) = \<infinity>"
-      apply (simp add: tsynlen_insert tsynabs_insert)
-      apply (subst stakewhile_sdropwhilel1)
-(*      apply (simp add: slen_stakewhile_msg_fin)
-      apply (simp add: tsynlen_nzero slen_stakewhile_fin stakewhile_sdropwhilel1 slen_sfilter_sdrop)*)
-      sorry
-    ultimately show ?case
+    have tsynlen_srt_sdropwhile_null_inf: "tsynLen\<cdot>(srt\<cdot>(sdropwhile (\<lambda>x. x = null)\<cdot>msg)) = \<infinity>"
+      by (metis m_def fold_inf lnat.sel_rews(2) msg_def "3.prems" sdropwhile_null_nbot surj_scons 
+          tsynlen_sconc_msg tsynlen_sntimes_null)
+    have tsynmed_consume_tick:
+      "tsynLen\<cdot>(tsynMed\<cdot>((sntimes n (\<up>null)) \<bullet> sdropwhile (\<lambda>x. x = null)\<cdot>msg)\<cdot>(\<up>a \<bullet> s))
+         = tsynLen\<cdot>(tsynMed\<cdot>(sdropwhile (\<lambda>x. x = null)\<cdot>msg)\<cdot>(\<up>a \<bullet> s))"
+      by (simp add: tsynmed_sntimes_null tsynlen_sntimes_null)
+    show ?case
       proof -
         have thesis_msg: "tsynLen\<cdot>(tsynMed\<cdot>msg\<cdot>(\<up>a \<bullet> s)) 
           = tsynLen\<cdot>(tsynMed\<cdot>((sntimes n (\<up>null)) \<bullet> (sdropwhile (\<lambda>x. x = null))\<cdot>msg)\<cdot>(\<up>a \<bullet> s))"
           using msg_def by simp
-        then have thesis_msg_consume_tick: 
-          "tsynLen\<cdot>(tsynMed\<cdot>(n\<star>\<up>- \<bullet> sdropwhile (\<lambda>x::(nat \<times> bool) tsyn. x = -)\<cdot>msg)\<cdot>(\<up>a \<bullet> s))
-          = tsynLen\<cdot>(tsynMed\<cdot>(sdropwhile (\<lambda>x. x = -)\<cdot>msg)\<cdot>(\<up>a \<bullet> s))"
-          by (simp add: tsynmed_sntimes_null tsynlen_sntimes_null)
         then show ?thesis
           proof (cases a)
             case True
             then show ?thesis
-              using thesis_msg thesis_msg_consume_tick
+              using thesis_msg tsynmed_consume_tick
               apply (simp add: True)
-              by (metis b_def msg.IH sdropwhile_nbot surj_scons tsynlen_inf tsynlen_sconc_msg 
+              by (metis m_def "3.IH" sdropwhile_null_nbot surj_scons tsynlen_srt_sdropwhile_null_inf tsynlen_sconc_msg 
                   tsynmed_sconc_msg_t)
           next
             case False
             then show ?thesis 
-              using thesis_msg thesis_msg_consume_tick
+              using thesis_msg tsynmed_consume_tick
               apply (simp add: False)
-              by (metis b_def msg.IH sdropwhile_nbot surj_scons tsynlen_inf tsynlen_sconc_null 
+              by (metis m_def "3.IH" sdropwhile_null_nbot surj_scons tsynlen_srt_sdropwhile_null_inf tsynlen_sconc_null 
                   tsynmed_sconc_msg_f)
           qed
       qed
