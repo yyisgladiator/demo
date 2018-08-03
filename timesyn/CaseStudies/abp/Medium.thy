@@ -187,7 +187,7 @@ lemma tsynmed_tsynlen_ora:
     from h1 have "(sntimes n (\<up>null)) = (stakewhile (\<lambda>x. x = -)\<cdot>msg)"
       apply (induct msg arbitrary: n rule: tsyn_ind)
       apply (rule admI)
-      apply (smt Fin_neq_inf ch2ch_Rep_cfunR contlub_cfun_arg inf_chainl4 l42 lub_eq)
+      apply (smt ch2ch_Rep_cfunR contlub_cfun_arg finChainapprox lub_eq)
       apply simp_all
       by (metis (mono_tags) Fin_0 Fin_Suc gr0_implies_Suc gr_0 lnat.sel_rews(2) lnat_well_h1 sntimes.simps(2))
     then have h3: " msg =(sntimes n (\<up>null))  \<bullet> (sdropwhile (\<lambda>x. x=null)\<cdot>msg)"
