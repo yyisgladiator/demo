@@ -656,16 +656,16 @@ lemma recspf_ubconc_null:
 
 lemma recspf_ubconc_true: 
   assumes "ubDom\<cdot>sb = {\<C> ''dr''}"
-  and "(snd a) = True"
+    and "(snd a) = True"
   shows "RecSPF True \<rightleftharpoons> ubConc (createBundle (Msg (Pair_nat_bool a)) (\<C> ''dr''))\<cdot>sb 
- = ubConc (createArBundle (snd a) \<uplus> tsynbNull (\<C> ''o''))\<cdot>(RecSPF False \<rightleftharpoons> sb)"
+           = ubConc (createArBundle (snd a) \<uplus> tsynbNull (\<C> ''o''))\<cdot>(RecSPF False \<rightleftharpoons> sb)"
   sorry
 
 lemma recspf_ubconc_false: 
   assumes "ubDom\<cdot>sb = {\<C> ''dr''}"
-  and "(snd a) = False"
+    and "(snd a) = False"
   shows "RecSPF True \<rightleftharpoons> ubConc (createBundle (Msg (Pair_nat_bool a)) (\<C> ''dr''))\<cdot>sb 
- = ubConc (createArBundle (snd a) \<uplus> tsynbNull (\<C> ''o''))\<cdot>(RecSPF True \<rightleftharpoons> sb)"
+           = ubConc (createArBundle (snd a) \<uplus> tsynbNull (\<C> ''o''))\<cdot>(RecSPF True \<rightleftharpoons> sb)"
   sorry
 
 lemma ubconc_eq_fst: 
@@ -674,18 +674,20 @@ lemma ubconc_eq_fst:
 
 lemma eq_conc_rt_false:
   assumes "ubDom\<cdot>sb = {\<C> ''dr''}"
-  and "(snd a) = False"
-  and "(da_h ReceiverAutomaton (ReceiverState Rt) \<rightleftharpoons> sb) = (RecSPF True \<rightleftharpoons> sb)"
-shows "da_h ReceiverAutomaton (ReceiverState Rt) \<rightleftharpoons> (ubConc (createBundle (Msg (Pair_nat_bool a)) (\<C> ''dr''))\<cdot>sb) 
-       = (RecSPF True) \<rightleftharpoons> ubConc (createBundle (Msg (Pair_nat_bool a)) (\<C> ''dr''))\<cdot>sb"
+    and "(snd a) = False"
+    and "(da_h ReceiverAutomaton (ReceiverState Rt) \<rightleftharpoons> sb) = (RecSPF True \<rightleftharpoons> sb)"
+  shows "da_h ReceiverAutomaton (ReceiverState Rt) 
+           \<rightleftharpoons> (ubConc (createBundle (Msg (Pair_nat_bool a)) (\<C> ''dr''))\<cdot>sb) 
+            = RecSPF True \<rightleftharpoons> ubConc (createBundle (Msg (Pair_nat_bool a)) (\<C> ''dr''))\<cdot>sb"
   by(simp add: assms recspf_ubconc_false receiverautomaton_h_step_rt_false)
 
 lemma eq_conc_rt_true:
   assumes "ubDom\<cdot>sb = {\<C> ''dr''}"
-  and "(snd a) = True"
-  and "(da_h ReceiverAutomaton (ReceiverState Rt) \<rightleftharpoons> sb) = (RecSPF True \<rightleftharpoons> sb)"
-shows "da_h ReceiverAutomaton (ReceiverState Rt) \<rightleftharpoons> (ubConc (createBundle (Msg (Pair_nat_bool a)) (\<C> ''dr''))\<cdot>sb) 
-       = RecSPF True \<rightleftharpoons> ubConc (createBundle (Msg (Pair_nat_bool a)) (\<C> ''dr''))\<cdot>sb"
+    and "(snd a) = True"
+    and "(da_h ReceiverAutomaton (ReceiverState Rt) \<rightleftharpoons> sb) = (RecSPF True \<rightleftharpoons> sb)"
+  shows "da_h ReceiverAutomaton (ReceiverState Rt) 
+            \<rightleftharpoons> (ubConc (createBundle (Msg (Pair_nat_bool a)) (\<C> ''dr''))\<cdot>sb) 
+              = RecSPF True \<rightleftharpoons> ubConc (createBundle (Msg (Pair_nat_bool a)) (\<C> ''dr''))\<cdot>sb"
   sorry
 
 (* Wrong *)
@@ -723,16 +725,18 @@ lemma recspf_receiverspf_ub_eq:
     obtain a where "m = (Pair_nat_bool a)"
       apply (case_tac m, simp_all)
       sorry
-    assume "da_h ReceiverAutomaton (ReceiverState Rt) \<rightleftharpoons> ub = RecSPF True \<rightleftharpoons> ub \<and>
-       ubDom\<cdot>u = {\<C> ''dr''} \<and> ubDom\<cdot>ub = {\<C> ''dr''} \<and> ubMaxLen (Fin (Suc (0::nat))) u \<and> u \<noteq> ubLeast {\<C> ''dr''}"
-    show "da_h ReceiverAutomaton (ReceiverState Rt) \<rightleftharpoons> ubConc (createBundle (\<M> m) (\<C> ''dr''))\<cdot>ub =
-       RecSPF True \<rightleftharpoons> ubConc (createBundle (\<M> m) (\<C> ''dr''))\<cdot>ub"
+    assume "da_h ReceiverAutomaton (ReceiverState Rt) \<rightleftharpoons> ub = RecSPF True \<rightleftharpoons> ub 
+              \<and> ubDom\<cdot>u = {\<C> ''dr''} \<and> ubDom\<cdot>ub = {\<C> ''dr''} 
+                \<and> ubMaxLen (Fin (Suc (0::nat))) u \<and> u \<noteq> ubLeast {\<C> ''dr''}"
+    show "da_h ReceiverAutomaton (ReceiverState Rt) \<rightleftharpoons> ubConc (createBundle (\<M> m) (\<C> ''dr''))\<cdot>ub 
+            = RecSPF True \<rightleftharpoons> ubConc (createBundle (\<M> m) (\<C> ''dr''))\<cdot>ub"
       sorry
-    show "da_h ReceiverAutomaton (ReceiverState Rt) \<rightleftharpoons> ubConc (tsynbNull (\<C> ''dr''))\<cdot>ub = RecSPF True \<rightleftharpoons> ubConc (tsynbNull (\<C> ''dr''))\<cdot>ub"
+    show "da_h ReceiverAutomaton (ReceiverState Rt) \<rightleftharpoons> ubConc (tsynbNull (\<C> ''dr''))\<cdot>ub 
+            = RecSPF True \<rightleftharpoons> ubConc (tsynbNull (\<C> ''dr''))\<cdot>ub"
       sorry
   qed
 
-(* Needs to be changed.*)
+(* Needs to be changed. *)
 text{* @{term ReceiverSPF} is equal to @{term RecSPF}. *}
 lemma recspf_receiverspf_eq: "ReceiverSPF = RecSPF True"
 (*apply (rule ufun_eqI)
