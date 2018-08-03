@@ -155,94 +155,66 @@ lemma tsynmed_tsyndom: "tsynDom\<cdot>(tsynMed\<cdot>msg\<cdot>ora) \<subseteq> 
       by (metis tsyndom_sconc_null tsynmed_sconc_null tsynmed_strict(2))
   qed
 
-text{* A tick does not consume an ora-element. *}
-lemma tsynmed_tsynlen_ora_t:
-  assumes msg_inf: "tsynLen\<cdot>msg = \<infinity>"
-  shows "tsynLen\<cdot>(tsynMed\<cdot>(\<up>null \<bullet> msg)\<cdot>(\<up>True \<bullet> ora)) = #({True} \<ominus> (\<up>True \<bullet> ora))"
-  using assms
-  proof (induction msg arbitrary: ora rule: tsyn_ind)
-    case adm
-    then show ?case 
-      apply (rule admI)
-      apply (simp add: contlub_cfun_fun contlub_cfun_arg tsynmed_sconc_null tsynlen_sconc_null)
-      sorry
-  next
-    case bot
-    then show ?case
-      by simp
-  next
-    case (msg m s)
-    then show ?case 
-      apply (simp add: tsynmed_sconc_null tsynlen_sconc_null tsynmed_sconc_msg_t tsynlen_sconc_msg)
-      sorry
-  next
-    case (null s)
-    then show ?case
-      by (simp add: tsynmed_sconc_null tsynlen_sconc_null)
-  qed
+lemma tsynmed_sntimes_null: "ora \<noteq> \<epsilon> \<Longrightarrow> tsynMed\<cdot>((sntimes k (\<up>null)) \<bullet> s)\<cdot>ora = (sntimes k (\<up>null)) \<bullet> tsynMed\<cdot>s\<cdot>ora"
+  apply (induct k, simp_all)
+  apply (cases rule:oracases,simp)
+  using tsynmed_sconc_null by auto
 
-lemma tsynmed_tsynlen_ora_f: 
-  assumes msg_inf: "tsynLen\<cdot>msg = \<infinity>"
-  shows "tsynLen\<cdot>(tsynMed\<cdot>(\<up>null \<bullet> msg)\<cdot>(\<up>False \<bullet> ora)) = #({True} \<ominus> (\<up>False \<bullet> ora))"
-  sorry
+lemma tsynlen_sntimes_null: "tsynLen\<cdot>(k\<star>\<up>- \<bullet> s) = tsynLen\<cdot>s"
+  apply(induct k,simp)
+  by (simp add: tsynlen_sconc_null)
 
 text{* The number of transmitted messages equals the number of True in ora. *}
 lemma tsynmed_tsynlen_ora: 
   assumes msg_inf: "tsynLen\<cdot>msg = \<infinity>"
   shows "tsynLen\<cdot>(tsynMed\<cdot>msg\<cdot>ora) = #({True} \<ominus> ora)"
   using assms
-  proof (induction ora arbitrary: msg rule: ora_ind)
-    case adm
+  proof (induction ora arbitrary: msg rule: ind)
+    case 1
     then show ?case 
       by (simp add: adm_def contlub_cfun_arg contlub_cfun_fun)
   next
-    case bot
+    case 2
     then show ?case 
       by simp
   next
-    case (msg_t s)
-    then show ?case
-       proof (cases rule: tsyn_cases_inf [of msg])
-        case inf
-        then show ?case
-          by (simp add: msg_t.prems)
-      next
-        case (msg a as)
-        then show ?thesis
-          by (metis msg_t.prems tsynlen_sconc_null tsynmed_sconc_null tsynmed_strict(2) 
-              tsynmed_tsynlen_ora_t)
-      next
-        case (null as)
-        then show ?thesis 
-          by (metis msg_t.prems tsynlen_sconc_null tsynmed_tsynlen_ora_t)
-      qed
-  next
-    case (msg_f s)
-    then show ?case
-      proof (cases rule: tsyn_cases_inf [of msg])
-        case inf
-        then show ?case
-          by (simp add: msg_f.prems)
-      next
-        case (msg a as)
-        then show ?thesis
-          by (metis msg_f.prems tsynlen_sconc_null tsynmed_sconc_null tsynmed_strict(2) 
-              tsynmed_tsynlen_ora_f)
-      next
-        case (null as)
-        then show ?thesis 
-          by (metis msg_f.prems tsynlen_sconc_null tsynmed_tsynlen_ora_f)
-      qed
-  oops
+    case msg:(3 a s)
+    obtain k1 where "snth k1 msg \<noteq> null"
+      using msg.prems apply (simp add: tsynlen_insert tsynabs_insert)
+      by (metis (mono_tags, lifting) Inf'_neq_0 ex_snth_in_sfilter_nempty mem_Collect_eq slen_empty_eq)
+    then obtain n where h1:"#(stakewhile (\<lambda>x. x = -)\<cdot>msg) = Fin n"
+      by (metis (full_types) lncases notinfI3 stakewhile_slen)
+    then have h2:"(sdropwhile (\<lambda>x. x=null)\<cdot>msg) \<noteq> \<epsilon>"
+      using msg.prems apply (simp add: tsynlen_insert tsynabs_insert)
+      by (metis Fin_neq_inf sconc_snd_empty sfilterl4 stakewhileDropwhile)
+    from h1 have "(sntimes n (\<up>null)) = (stakewhile (\<lambda>x. x = -)\<cdot>msg)"
+      apply (induct msg arbitrary: n rule: tsyn_ind)
+      apply (rule admI)
+      apply (smt ch2ch_Rep_cfunR contlub_cfun_arg finChainapprox lub_eq)
+      apply simp_all
+      by (metis (mono_tags) Fin_0 Fin_Suc gr0_implies_Suc gr_0 lnat.sel_rews(2) lnat_well_h1 sntimes.simps(2))
+    then have h3: " msg =(sntimes n (\<up>null))  \<bullet> (sdropwhile (\<lambda>x. x=null)\<cdot>msg)"
+      by (simp add: stakewhileDropwhile)
+    from h2 obtain b where "shd (sdropwhile (\<lambda>x. x=null)\<cdot>msg) = Msg b"
+      by (metis (full_types) scases sdropwhile_resup shd1 tsynSnd.cases)
+    moreover have "tsynLen\<cdot>(srt\<cdot>(sdropwhile (\<lambda>x. x = -)\<cdot>msg)) = \<infinity>"
+      using msg.prems
+      by (simp add: tsynlen_insert tsynabs_insert h1 stakewhile_sdropwhilel1 slen_sfilter_sdrop)
+    ultimately show ?case
+      apply (subst h3)
+      apply (subst tsynmed_sntimes_null,simp)
+      apply (simp add: tsynlen_sntimes_null)
+      apply (cases a,simp_all)
+      apply (metis (no_types, lifting) h2 msg.IH surj_scons tsynlen_sconc_msg tsynmed_sconc_msg_t)
+      by (metis h2 msg.IH tsynlen_sconc_null tsynmed_sconc_msg_f surj_scons)
+   qed
 
 text{* If infinitely many messages are sent, infinitely many messages will be transmitted. *}
 lemma tsynmed_tsynlen_inf:
   assumes "#({True} \<ominus> ora) = \<infinity>" 
     and "tsynLen\<cdot>msg = \<infinity>"
   shows "tsynLen\<cdot>(tsynMed\<cdot>msg\<cdot>ora) = \<infinity>"
-  using assms
-  (*by (simp add: tsynmed_tsynlen_ora)*)
-  sorry
+  using assms by (simp add: tsynmed_tsynlen_ora)
 
 text {* @{term tsynMed} test on finite stream with ticks. *}
 lemma tsynmed_test_finstream_null:
