@@ -2,10 +2,10 @@
     Author:       Annika Savelsberg
     E-Mail:       annika.savelsberg@rwth-aachen.de
 
-    Description:  Theory for Medium Lemmata.
+    Description:  Theory for Medium Definitions and Lemmata.
 *)
 
-chapter {* Theory for Medium Lemmata *}
+chapter {* Theory for Medium Definitions and Lemmata *}
 
 theory Medium
 imports Components "../../../untimed/SPS"
@@ -13,32 +13,35 @@ imports Components "../../../untimed/SPS"
 begin
 
 (* ----------------------------------------------------------------------- *)
-  section {* Medium SPF Definition for Verification *}
+  section {* Medium Definition for Verification *}
 (* ----------------------------------------------------------------------- *)
 
-text{* Time synchronous medium, that loses messages. *}
+text{* @{term tsynMed}: Lossy medium on time-synchronous streams that gets messages and an oracle
+       and will transmit the k-th message if the k-th element in the oracle is True, otherwise the 
+       message will be discarded. *}
 definition tsynMed :: "(nat \<times> bool) tsyn stream \<rightarrow> bool stream \<rightarrow> (nat \<times> bool) tsyn stream" where
   "tsynMed \<equiv> \<Lambda> msg ora. tsynProjFst\<cdot>(tsynFilter {x. snd x}\<cdot>(tsynZip\<cdot>msg\<cdot>ora))"
 
-text {* @{term tsynbMed}: Medium function for Alternating Bit Protocol on stream bundles. *}
+text {* @{term tsynbMed}: Lossy medium function on time-synchonous stream bundles. *}
 definition tsynbMed :: "bool stream \<Rightarrow> 
   abpMessage tsyn stream ubundle \<rightarrow> abpMessage tsyn stream ubundle option" where
   "tsynbMed ora \<equiv> \<Lambda> sb. (ubDom\<cdot>sb = {\<C> ''ds''}) \<leadsto> Abs_ubundle [
                       \<C> ''dr'' \<mapsto> natbool2abp\<cdot>(tsynMed\<cdot>(abp2natbool\<cdot>(sb  .  \<C> ''ds''))\<cdot>ora)]"
 
-text {* @{term tsynbMed}: Medium function for Alternating Bit Protocol. *}
+text {* @{term MedSPF}: Lossy medium function for the Alternating Bit Protocol. *}
 definition MedSPF :: "bool stream \<Rightarrow> abpMessage tsyn SPF" where
   "MedSPF ora \<equiv> Abs_ufun (tsynbMed ora)"
 
+(* ToDo: add description *)
 definition MedSPS :: "(abpMessage tsyn stream\<^sup>\<Omega>) ufun uspec" where 
   "MedSPS = Abs_uspec (Rev {(MedSPF ora) | ora. #({True} \<ominus> ora) = \<infinity>}, 
                              Discr {\<C> ''ds''}, Discr {\<C> ''dr''})"
 
 (* ----------------------------------------------------------------------- *)
-section {* basic properties *}
+section {* Basic Properties *}
 (* ----------------------------------------------------------------------- *)
 
-text {* Induction rule for infinite time-synchronous streams and admissable predicates. *}
+text {* Induction rule for infinite time-synchronous bool streams and admissable predicates. *}
 lemma ora_ind [case_names adm bot msg_t msg_f]:
   assumes adm: "adm P"
     and bot: "P \<epsilon>"
@@ -46,12 +49,12 @@ lemma ora_ind [case_names adm bot msg_t msg_f]:
     and msg_f: "\<And>s. P s \<Longrightarrow> P (\<up>False \<bullet> s)"
   shows "P (x:: bool stream)"
   apply (induction x rule: ind)
-  apply (simp add: adm)
-  apply (simp add: bot)
-  apply (case_tac a)
-  apply (simp add: msg_t)
-  by (simp add: msg_f)
+  apply (simp_all add: adm bot)
+  apply (rename_tac x y)
+  apply (case_tac x)
+  by (simp_all add: msg_t msg_f)
 
+(* ToDo: add description *)
 lemma oracases [case_names bot true false]:
   assumes bot: "s = \<epsilon> \<Longrightarrow> P s"
     and true: "\<And>as. s = (\<up>True \<bullet> as) \<Longrightarrow> P s"
@@ -60,11 +63,10 @@ lemma oracases [case_names bot true false]:
   by (metis (full_types) bot false scases true)
 
 (* ----------------------------------------------------------------------- *)
-subsection {* basic properties of tsynMed *}
+subsection {* Basic Properties of tsynMed *}
 (* ----------------------------------------------------------------------- *)
 
-text{* "Lossy" medium that gets messages and an oracle and will transmit the k-th message if
-       the k-th element in the oracle is True, otherwise the message will be discarded. *}
+(* ToDo: add descriptions *)
 lemma tsynmed_insert: "tsynMed\<cdot>msg\<cdot>ora = tsynProjFst\<cdot>(tsynFilter {x. snd x}\<cdot>(tsynZip\<cdot>msg\<cdot>ora))"
   by (simp add: tsynMed_def)
 
@@ -79,8 +81,8 @@ lemma tsynmed_sconc_msg_t: "tsynMed\<cdot>(\<up>(Msg m) \<bullet> msg)\<cdot>(\<
   by (simp add: tsynmed_insert tsynzip_sconc_msg tsynfilter_sconc_msg_in tsynfilter_sconc_null 
                 tsynprojfst_sconc_null tsynprojfst_sconc_msg)
 
-text{* If the first element in the oracle is False then the current message will not be 
-transmitted. *}
+text{* If the first element in the oracle is False then the current message will not be t
+       transmitted. *}
 lemma tsynmed_sconc_msg_f: "tsynMed\<cdot>(\<up>(Msg m) \<bullet> msg)\<cdot>(\<up>False \<bullet> ora) = \<up>- \<bullet> tsynMed\<cdot>msg\<cdot>ora"
   by (simp add: tsynmed_insert tsynzip_sconc_msg tsynfilter_sconc_msg_nin tsynprojfst_sconc_null)
 
@@ -91,9 +93,6 @@ lemma tsynmed_sconc_null:
   by (simp add: assms tsynmed_insert tsynfilter_sconc_null tsynprojfst_sconc_null 
       tsynzip_sconc_null)
 
-(* ToDo: general sconc lemma possible? *)
-
-(* singleton lemmata *)
 text {* If the first element in the oracle is True, the only message will be transmitted. *}
 lemma tsynmed_sconc_singleton_msg_t: "tsynMed\<cdot>(\<up>(\<M> m))\<cdot>(\<up>True \<bullet> ora) = \<up>(\<M> m)"
   by (metis lscons_conv sup'_def tsynmed_sconc_msg_t tsynmed_strict(3))
@@ -102,27 +101,29 @@ text {* If the first element in the oracle is False, the only message will not b
 lemma tsynmed_sconc_singleton_msg_f: "tsynMed\<cdot>(\<up>(\<M> m))\<cdot>(\<up>False \<bullet> ora) = \<up>-"
   by (metis lscons_conv sup'_def tsynmed_sconc_msg_f tsynmed_strict(3))
 
-text {* If the stream only contains null and the oracle is not empty, no message will be transmitted. *}
+text {* If the stream only contains null and the oracle is not empty, no message will be 
+        transmitted. *}
 lemma tsynmed_sconc_singleton_msg_null: assumes "ora \<noteq> \<epsilon>" shows "tsynMed\<cdot>(\<up>-)\<cdot>ora = \<up>-"
   by (metis assms lscons_conv sup'_def tsynmed_sconc_null tsynmed_strict(3))
 
-lemma tsynmed_slen: assumes "#ora=\<infinity>" shows "#(tsynMed\<cdot>msg\<cdot>ora) = #msg"
+(* ToDo: add description *)
+lemma tsynmed_slen: assumes "#ora = \<infinity>" shows "#(tsynMed\<cdot>msg\<cdot>ora) = #msg"
   by (simp add: assms tsynfilter_slen tsynmed_insert tsynprojfst_slen tsynzip_slen)
 
-text {* Not every message will be transmitted forcibly. *}    
+text {* Not every message will be transmitted. *}    
 lemma tsynmed_tsynlen: 
-  assumes "#ora=\<infinity>" 
+  assumes "#ora = \<infinity>" 
   shows "tsynLen\<cdot>(tsynMed\<cdot>msg\<cdot>ora) \<le> tsynLen\<cdot>msg"
   using assms
   proof-
-    assume ora_inf: "#ora = \<infinity>" 
-    hence modified_lemma: "#(tsynAbs\<cdot>(tsynFilter (Collect snd)\<cdot>(tsynZip\<cdot>msg\<cdot>ora))) \<le> #(tsynAbs\<cdot>msg)"
-      by (metis tsynfilter_tsynlen tsynlen_insert tsynzip_tsynlen)
+    assume ora_inf: "#ora = \<infinity>"
+    hence "tsynLen\<cdot>(tsynProjFst\<cdot>(tsynFilter (Collect snd)\<cdot>(tsynZip\<cdot>msg\<cdot>ora))) \<le> tsynLen\<cdot>msg"
+      by (metis tsynfilter_tsynlen tsynprojfst_tsynlen tsynzip_tsynlen)
     thus ?thesis
-      by (metis tsynlen_insert tsynmed_insert tsynprojfst_tsynlen)
+      by (simp add: tsynmed_insert)
   qed
 
-text{* The transmitted messages are a subset of the messages that are meant to be transmitted. *}
+text{* The transmitted messages are a subset of the messages that are provided for transmittion. *}
 lemma tsynmed_tsyndom: "tsynDom\<cdot>(tsynMed\<cdot>msg\<cdot>ora) \<subseteq> tsynDom\<cdot>msg"
   proof (induction msg arbitrary: ora rule: tsyn_ind)
     case adm
@@ -146,8 +147,8 @@ lemma tsynmed_tsyndom: "tsynDom\<cdot>(tsynMed\<cdot>msg\<cdot>ora) \<subseteq> 
       next 
         case (false as)
         then show ?thesis
-          apply (simp add: false tsynmed_sconc_msg_f tsyndom_sconc)
-          by (metis lscons_conv msg.IH sup'_def sup.coboundedI2 tsyndom_sconc_null tsynmed_strict(2))
+          by (metis (no_types, hide_lams) dual_order.trans msg.IH order_refl tsyndom_sconc_msg_sub 
+              tsyndom_sconc_null tsynmed_sconc_msg_f)
        qed
   next
     case (null s)
@@ -155,16 +156,21 @@ lemma tsynmed_tsyndom: "tsynDom\<cdot>(tsynMed\<cdot>msg\<cdot>ora) \<subseteq> 
       by (metis tsyndom_sconc_null tsynmed_sconc_null tsynmed_strict(2))
   qed
 
+(* ToDo: add description *)
 lemma tsynmed_sntimes_null: 
-  "ora \<noteq> \<epsilon> \<Longrightarrow> tsynMed\<cdot>((k\<star>(\<up>null)) \<bullet> s)\<cdot>ora = (k\<star>(\<up>null)) \<bullet> tsynMed\<cdot>s\<cdot>ora"
-  apply (induct k, simp_all)
-  apply (cases rule:oracases, simp)
-  using tsynmed_sconc_null by auto
+  assumes "ora \<noteq> \<epsilon>"
+  shows "tsynMed\<cdot>((k \<star> \<up>null) \<bullet> msg)\<cdot>ora = (k \<star> \<up>null) \<bullet> tsynMed\<cdot>msg\<cdot>ora"
+  using assms
+  apply (induction k, simp_all)
+  apply (cases rule: oracases [of ora])
+  by (simp_all add: tsynmed_sconc_null)
 
-(* nach tsynStream *)
-lemma tsynlen_sntimes_null: "tsynLen\<cdot>(k\<star>\<up>- \<bullet> s) = tsynLen\<cdot>s"
-  apply (induct k, simp)
-  by (simp add: tsynlen_sconc_null)
+(* ToDo: add description and move to tsynStream *)
+lemma tsynlen_sntimes_null: "tsynLen\<cdot>((k \<star> \<up>null) \<bullet> s) = tsynLen\<cdot>s"
+  apply (induction k)
+  by (simp_all add: tsynlen_sconc_null)
+
+(* Reviewed until here *)
 
 (* nach tsynStream *)
 lemma slen_stakewhile_fin: 
