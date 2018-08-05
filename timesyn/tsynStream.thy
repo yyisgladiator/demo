@@ -76,6 +76,9 @@ text {* @{term tsynLen}: Return the number of messages. *}
 definition tsynLen:: "'a tsyn stream \<rightarrow> lnat" where 
   "tsynLen \<equiv> \<Lambda> s. #(tsynAbs\<cdot>s)"
 
+abbreviation tsynLen_abbr :: "'a tsyn stream \<Rightarrow> lnat" ("#\<^sub>-_" [1000] 999)
+where "#\<^sub>-s == tsynLen\<cdot>s"
+
 text {* @{term tsynApplyElem}: Apply the function direct to the message. *}
 fun tsynApplyElem :: "('a \<Rightarrow> 'b) \<Rightarrow> 'a tsyn \<Rightarrow> 'b tsyn" where
   "tsynApplyElem _ null = null" |
@@ -112,6 +115,9 @@ text {* @{term tsynFilter}: Remove all elements from the stream which are not in
         set. *}
 definition tsynFilter :: "'a set \<Rightarrow> 'a tsyn stream \<rightarrow> 'a tsyn stream" where
   "tsynFilter A = smap (tsynFilterElem A)"
+
+abbreviation tsynFilter_abbr :: "'a set \<Rightarrow> 'a tsyn stream \<Rightarrow> 'a tsyn stream" ("(_ \<ominus>\<^sub>- _)" [66,65] 65)
+where "F \<ominus>\<^sub>- s \<equiv> tsynFilter F\<cdot>s"
 
 (* ToDo: add descriptions. *)
 
