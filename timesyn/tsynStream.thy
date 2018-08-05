@@ -1000,7 +1000,9 @@ lemma tsynscanl_test_infinstream:
 
 text {* Abstraction of @{term tsynScanl} equals sscanl executed on abstracted stream. *}
 lemma tsynscanl_tsynabs: "tsynAbs\<cdot>(tsynScanl f i\<cdot>s) = sscanl f i\<cdot>(tsynAbs\<cdot>s)"
-  oops
+  apply (induction s arbitrary: i rule: tsyn_ind, simp_all)
+  apply (simp add: tsynscanl_sconc_msg tsynabs_sconc_msg)
+  by (simp add: tsynscanl_sconc_null tsynabs_sconc_null)
   
 (* ----------------------------------------------------------------------- *)
   subsection {* tsynDropWhile *}
