@@ -28,11 +28,11 @@ definition ndaTransition :: "('s, 'm::message) ndAutomaton \<rightarrow> (('s \<
 definition ndaInitialState :: "('s, 'm::message) ndAutomaton \<rightarrow> ('s \<times> 'm SB) set rev" where
 "ndaInitialState = (\<Lambda> nda. fst (snd (Rep_ndAutomaton nda)))"
 
-definition ndaDom :: "('s, 'm::message) ndAutomaton \<rightarrow> channel set discr" where
-"ndaDom = (\<Lambda> nda. fst (snd (snd (Rep_ndAutomaton nda))))"
+definition ndaDom :: "('s, 'm::message) ndAutomaton \<rightarrow> channel set" where
+"ndaDom = (\<Lambda> nda. undiscr(fst (snd (snd (Rep_ndAutomaton nda)))))"
 
-definition ndaRan :: "('s, 'm::message) ndAutomaton \<rightarrow> channel set discr" where
-"ndaRan =  (\<Lambda> nda. snd (snd (snd (Rep_ndAutomaton nda))))" 
+definition ndaRan :: "('s, 'm::message) ndAutomaton \<rightarrow> channel set" where
+"ndaRan =  (\<Lambda> nda. undiscr(snd (snd (snd (Rep_ndAutomaton nda)))))" 
 
 (* ToDo *)
 (* Very Very similar to helper over automaton *)
@@ -74,14 +74,14 @@ lemma "cont (\<lambda> h. (\<lambda> s. spsRtIn\<cdot>(h s)))"
 
 (* Similar to Rum96 *)
 definition nda_h :: "('s::type, 'm::message) ndAutomaton \<Rightarrow> ('s \<Rightarrow> 'm SPS)" where
-"nda_h nda \<equiv> let dom = (undiscr(ndaDom\<cdot>nda));
-                 ran = (undiscr(ndaRan\<cdot>nda)) in 
+"nda_h nda \<equiv> let dom = (ndaDom\<cdot>nda);
+                 ran = (ndaRan\<cdot>nda) in 
   uspecStateFix dom ran\<cdot>(\<Lambda> h. (\<lambda>s. spsStep dom ran\<cdot>(ndaAnotherHelper\<cdot>(ndaHelper2 s (ndaTransition\<cdot>nda)\<cdot>h))))"
 
 
 
 definition nda_H :: "('s, 'm::message) ndAutomaton \<Rightarrow> 'm SPS" where
-"nda_H nda \<equiv> ndaToDo (undiscr(ndaDom\<cdot>nda))(undiscr(ndaRan\<cdot>nda)) (ndaInitialState\<cdot>nda)\<cdot>(nda_h nda)" 
+"nda_H nda \<equiv> ndaToDo (ndaDom\<cdot>nda)(ndaRan\<cdot>nda) (ndaInitialState\<cdot>nda)\<cdot>(nda_h nda)" 
 
 
 lemma nda_rep_cont[simp]: "cont Rep_ndAutomaton"
