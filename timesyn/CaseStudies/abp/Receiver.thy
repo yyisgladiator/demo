@@ -347,6 +347,35 @@ lemma recspf_strict: "(RecSPF b) \<rightleftharpoons> ubLeast{\<C> ''dr''} = ubL
   sorry
 
 (* ----------------------------------------------------------------------- *)
+  section {* Receiver SPF Test Lemmata *}
+(* ----------------------------------------------------------------------- *)
+
+text{* @{term tsynRec} test on @{term recTestInputStreamLoseDat}. *}
+lemma tsynrec_test_inputstreamlosedat:
+  "tsynRec True\<cdot>recTestInputStreamLoseDat = recTestOutputStreamOLoseMsg" 
+  by(simp add: recTestInputStreamLoseDat_def  recTestOutputStreamOLoseMsg_def  tsynRec_def)
+
+text{* @{term tsynRec} test on @{term recTestInputUbundleLoseDat}. *}
+lemma tsynbrec_test_inputstreamlosedat: 
+  "tsynbRec True\<cdot>recTestInputUbundleLoseDat = Some recTestOutputUbundleLoseMsg"
+  apply(simp add: tsynbrec_insert ubdom_insert)
+  apply(simp add: recTestOutputUbundleLoseMsg_def)
+  apply(simp add: ubGetCh_def recTestInputUbundleLoseDat.rep_eq)
+  apply(simp add: recTestInputStreamLoseDat_def)
+  apply(simp add:recTestOutputStreamArLoseMsg_def recTestOutputStreamOLoseMsg_def)
+  apply(simp add: natbool2abp_def tsynmap_insert abp2natbool_def tsynMap_def)
+  apply(simp add: tsynProjSnd_def bool2abp_def tsynmap_insert)
+  apply(insert tsynrec_test_inputstreamlosedat)
+  apply(simp add:  recTestInputStreamLoseDat_def recTestOutputStreamOLoseMsg_def)
+  apply(simp add: nat2abp_def tsynMap_def)
+  by (simp add: fun_upd_twist)
+
+text{* @{term RecSPF} test on @{term recTestInputStreamLoseDat}. *}
+lemma recspf_test_inputstreamlosedat: 
+  "RecSPF True \<rightleftharpoons> recTestInputUbundleLoseDat = recTestOutputUbundleLoseMsg" 
+  by(simp add: recspf_insert tsynbrec_test_inputstreamlosedat)
+
+(* ----------------------------------------------------------------------- *)
   section {* Automaton Receiver Transition Lemmata *}
 (* ----------------------------------------------------------------------- *)
 
