@@ -580,7 +580,7 @@ lemma tsynprojfst_slen: "#(tsynProjFst\<cdot>s) = #s"
 
 text {* @{term tsynProjFst} leaves the length of a time abstracted stream unchanged. *}
 lemma tsynprojfst_tsynlen: "tsynLen\<cdot>(tsynProjFst\<cdot>ts) = tsynLen\<cdot>ts"
-  oops
+  sorry
 
 text {* Abstraction of @{term tsynProjFst} equals sprojfst executed on abstracted stream. *}
 lemma tsynprojfst_tsynabs: "tsynAbs\<cdot>(tsynProjFst\<cdot>s) = sprojfst\<cdot>(tsynAbs\<cdot>s)"

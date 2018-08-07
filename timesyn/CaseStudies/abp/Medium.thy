@@ -54,7 +54,8 @@ lemma ora_ind [case_names adm bot msg_t msg_f]:
   apply (case_tac x)
   by (simp_all add: msg_t msg_f)
 
-(* ToDo: add description *)
+text {* If a predicate P holds for empty streams, true and false predicates, 
+        it holds for all ora-streams *}
 lemma oracases [case_names bot true false]:
   assumes bot: "s = \<epsilon> \<Longrightarrow> P s"
     and true: "\<And>as. s = (\<up>True \<bullet> as) \<Longrightarrow> P s"
@@ -66,10 +67,11 @@ lemma oracases [case_names bot true false]:
 subsection {* Basic Properties of tsynMed *}
 (* ----------------------------------------------------------------------- *)
 
-(* ToDo: add descriptions *)
+text {* @{term tsynMed} insertion lemma. *}
 lemma tsynmed_insert: "tsynMed\<cdot>msg\<cdot>ora = tsynProjFst\<cdot>(tsynFilter {x. snd x}\<cdot>(tsynZip\<cdot>msg\<cdot>ora))"
   by (simp add: tsynMed_def)
 
+text {* @{term tsynMed} is strict for both arguments. *}
 lemma tsynmed_strict [simp]: 
   "tsynMed\<cdot>\<epsilon>\<cdot>\<epsilon> = \<epsilon>"
   "tsynMed\<cdot>msg\<cdot>\<epsilon> = \<epsilon>"
@@ -106,7 +108,8 @@ text {* If the stream only contains null and the oracle is not empty, no message
 lemma tsynmed_sconc_singleton_msg_null: assumes "ora \<noteq> \<epsilon>" shows "tsynMed\<cdot>(\<up>-)\<cdot>ora = \<up>-"
   by (metis assms lscons_conv sup'_def tsynmed_sconc_null tsynmed_strict(3))
 
-(* ToDo: add description *)
+text {* If the ora stream has infinite length, the output of @{term tsynMed} has the same length as 
+        the msg stream. *}
 lemma tsynmed_slen: assumes "#ora = \<infinity>" shows "#(tsynMed\<cdot>msg\<cdot>ora) = #msg"
   by (simp add: assms tsynfilter_slen tsynmed_insert tsynprojfst_slen tsynzip_slen)
 
@@ -123,7 +126,7 @@ lemma tsynmed_tsynlen:
       by (simp add: tsynmed_insert)
   qed
 
-text{* The transmitted messages are a subset of the messages that are provided for transmittion. *}
+text{* The transmitted messages are a subset of the messages that are provided for transmission. *}
 lemma tsynmed_tsyndom: "tsynDom\<cdot>(tsynMed\<cdot>msg\<cdot>ora) \<subseteq> tsynDom\<cdot>msg"
   proof (induction msg arbitrary: ora rule: tsyn_ind)
     case adm
@@ -156,7 +159,7 @@ lemma tsynmed_tsyndom: "tsynDom\<cdot>(tsynMed\<cdot>msg\<cdot>ora) \<subseteq> 
       by (metis tsyndom_sconc_null tsynmed_sconc_null tsynmed_strict(2))
   qed
 
-(* ToDo: add description *)
+text {* If msg starts with k ticks, the output of @{term tsynMed} will do as well.  *}
 lemma tsynmed_sntimes_null: 
   assumes "ora \<noteq> \<epsilon>"
   shows "tsynMed\<cdot>((k \<star> \<up>null) \<bullet> msg)\<cdot>ora = (k \<star> \<up>null) \<bullet> tsynMed\<cdot>msg\<cdot>ora"
@@ -165,7 +168,8 @@ lemma tsynmed_sntimes_null:
   apply (cases rule: oracases [of ora])
   by (simp_all add: tsynmed_sconc_null)
 
-(* ToDo: add description and move to tsynStream *)
+(* Move to tsynStream? *)
+text {* @{term tsynLen} will consume leading ticks. *}
 lemma tsynlen_sntimes_null: "tsynLen\<cdot>((k \<star> \<up>null) \<bullet> s) = tsynLen\<cdot>s"
   apply (induction k)
   by (simp_all add: tsynlen_sconc_null)
@@ -173,6 +177,7 @@ lemma tsynlen_sntimes_null: "tsynLen\<cdot>((k \<star> \<up>null) \<bullet> s) =
 (* Reviewed until here *)
 
 (* ToDo: add descriptions and move to tsynStream *)
+text {* If @{term tsynLen} is not 0, it cannot contain infinitely many ticks. *}
 lemma stakewhile_null_slen_fin: 
   assumes "0 < tsynLen\<cdot>as" 
   shows "#(stakewhile (\<lambda>x. x = null)\<cdot>as) < \<infinity>"
@@ -185,6 +190,7 @@ lemma stakewhile_null_slen_fin:
       by (metis (full_types) inf_ub neq_iff not_le notinfI3 stakewhile_slen)
   qed
 
+text {* If @{term tsynLen} is not 0, we can extract the number of leading ticks. *}
 lemma split_leading_null:
   assumes "0 < tsynLen\<cdot>as"
   obtains n where "as = (sntimes n (\<up>null)) \<bullet> sdropwhile (\<lambda>x. x = null)\<cdot>as"
@@ -291,7 +297,7 @@ lemma tsynrec_test_infstream:
 subsection {* basic properties of tsynbMed *}
 (* ----------------------------------------------------------------------- *)
 
-text{* The output bundle of @{term tsynbRec} is well-formed. *}
+text{* The output bundle of @{term tsynbMed} is well-formed. *}
 lemma tsynbmed_ubwell [simp]: 
   "ubWell [\<C> ''dr'' \<mapsto> natbool2abp\<cdot>(tsynMed\<cdot>(abp2natbool\<cdot>(sb  .  \<C> ''ds''))\<cdot>ora)]"
   apply (simp add: ubWell_def usclOkay_stream_def natbool2abp_def abp2natbool_def ctype_tsyn_def
@@ -313,6 +319,7 @@ lemma tsynbmed_mono [simp]:
   apply (simp add: below_ubundle_def)
   by (simp add: below_ubundle_def cont_pref_eq1I fun_below_iff monofun_cfun_fun some_below)
 
+text{* Chain on the output bundle of @{term tsynbMed}. *}
 lemma tsynbmed_chain: "chain Y \<Longrightarrow> 
       chain (\<lambda>i::nat.[\<C> ''dr'' \<mapsto> natbool2abp\<cdot>(tsynMed\<cdot>(abp2natbool\<cdot>(Y i  .  \<C> ''ds''))\<cdot>ora)])"
   by (simp add: chain_def fun_below_iff monofun_cfun_arg monofun_cfun_fun po_class.chainE 
@@ -394,6 +401,7 @@ lemma medspf_strict: "(MedSPF ora) \<rightleftharpoons> ubLeast{\<C> ''ds''} = u
 subsection {* Basic Properties of MedSPS *}
 (* ----------------------------------------------------------------------- *)
 
+text{* @{term MedSPS} is well-formed. *}
 lemma medsps_uspecwell: 
   "uspecWell (Rev {(MedSPF ora) | ora. #({True} \<ominus> ora)=\<infinity>}) (Discr {\<C> ''ds''}) (Discr {\<C> ''dr''})"
   apply (rule uspec_wellI)
@@ -402,10 +410,12 @@ lemma medsps_uspecwell:
   apply (simp add: ufclRan_ufun_def)
   using medspf_ufran by blast
 
+text{* The domain of @{term MedSPS}. *}
 lemma medsps_uspecdom: "uspecDom\<cdot>MedSPS = {\<C> ''ds''}"
   apply (simp add: uspecDom_def MedSPS_def)
   using medsps_uspecwell by simp
 
+text{* The range of @{term MedSPS}. *}
 lemma medsps_uspecran: "uspecRan\<cdot>MedSPS = {\<C> ''dr''}"
   apply (simp add: uspecRan_def MedSPS_def)
   using medsps_uspecwell by simp
