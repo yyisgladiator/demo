@@ -420,8 +420,12 @@ lemma medsps_uspecran: "uspecRan\<cdot>MedSPS = {\<C> ''dr''}"
   apply (simp add: uspecRan_def MedSPS_def)
   using medsps_uspecwell by simp
 
-
+(* If a "null" comes in send it out and stay in the same state *)
+lemma "spsConcIn (tsynbNull(\<C> ''ds''))\<cdot>MedSPS = spsConcOut (tsynbNull (\<C> ''dr''))\<cdot>MedSPS"
+  
 (*
+lemma "spsConcIn"
+
 (* counter not null, drop every message and count one down *)
 lemma "spsConcIn (makeInput m) (h_MED (State TheOne (Suc n))) = spsConcOut (makeNull (\<C> ''dr''))\<cdot>(h_MED (State TheOne (Suc n)))"
   oops
