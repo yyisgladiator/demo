@@ -736,12 +736,21 @@ lemma recspf_receiverspf_ub_eq:
       sorry
   qed
 
-(* Needs to be changed. *)
 text{* @{term ReceiverSPF} is equal to @{term RecSPF}. *}
-lemma recspf_receiverspf_eq: "ReceiverSPF = RecSPF True"
-(*apply (rule ufun_eqI)
-  apply (simp add: receiverspf_ufdom recspf_ufdom)
-  by (simp add: recspf_receiverspf_ub_eq ubclDom_ubundle_def)*)
-  sorry
+lemma recspf_receiverspf_eq: 
+  "ReceiverSPF = spfConcOut (tsynbNull (\<C> ''ar'') \<uplus> tsynbNull (\<C> ''o''))\<cdot>(RecSPF True)"
+  proof (rule ufun_eqI)
+    show "ufDom\<cdot>ReceiverSPF 
+          = ufDom\<cdot>(spfConcOut (tsynbNull (\<C> ''ar'') \<uplus> tsynbNull (\<C> ''o''))\<cdot>(RecSPF True))"
+      by (simp add: receiverspf_ufdom recspf_ufdom)
+  next 
+    fix x :: "abpMessage tsyn stream\<^sup>\<Omega>"
+    assume dom: "ubclDom\<cdot>x = ufDom\<cdot>ReceiverSPF"
+    show "ReceiverSPF \<rightleftharpoons> x 
+            = spfConcOut (tsynbNull (\<C> ''ar'') \<uplus> tsynbNull (\<C> ''o''))\<cdot>(RecSPF True) \<rightleftharpoons> x"
+      by (metis dom insert_absorb2 receiverspf_ubdom receiverspf_ufdom recspf_receiverspf_ub_eq 
+          recspf_ubdom recspf_ufdom spfConcOut_step subset_insertI ubclDom_ubundle_def 
+          ubconceq_insert ubrestrict_id)
+  qed
 
 end
