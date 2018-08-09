@@ -138,16 +138,16 @@ lemma tsynrec_strict [simp]: "tsynRec b\<cdot>\<epsilon> = \<epsilon>"
 
 text {* @{term tsynRec} does not distribute directly over concatenation, when the first element 
   is a message with True bit.*}
-lemma tsynrec_sconc_msg_t: " tsynRec b\<cdot>(\<up>(Msg (m, b)) \<bullet> s) = \<up>(Msg m)\<bullet> (sscanlA tsynRec_h (\<not>b)\<cdot>s)"
+lemma tsynrec_sconc_msg_t: "tsynRec b\<cdot>(\<up>(Msg (m, b)) \<bullet> s) = \<up>(Msg m)\<bullet> (sscanlA tsynRec_h (\<not>b)\<cdot>s)"
   by (simp add: tsynrec_insert)
 
 text {* @{term tsynRec} distributes over concatenation, when the first element 
   is a message with False bit.*}
-lemma tsynrec_sconc_msg_f: " tsynRec b\<cdot>(\<up>(Msg (m, \<not>b)) \<bullet> s) = \<up>(null)\<bullet> tsynRec b\<cdot>s"
+lemma tsynrec_sconc_msg_f: "tsynRec b\<cdot>(\<up>(Msg (m, \<not>b)) \<bullet> s) = \<up>(null)\<bullet> tsynRec b\<cdot>s"
   by (simp add: tsynrec_insert)
 
 text {* @{term tsynRec} distributes over concatenation, when concatenating a null.*}
-lemma tsynrec_sconc_null: " tsynRec b\<cdot>(\<up>(null) \<bullet> s) = \<up>(null) \<bullet> tsynRec b\<cdot>s"
+lemma tsynrec_sconc_null: "tsynRec b\<cdot>(\<up>(null) \<bullet> s) = \<up>(null) \<bullet> tsynRec b\<cdot>s"
   by (simp add: tsynrec_insert)
 
 text {* @{term tsynRec} leaves the length of a stream unchanged. *}
@@ -353,27 +353,43 @@ lemma recspf_strict: "(RecSPF b) \<rightleftharpoons> ubLeast{\<C> ''dr''} = ubL
 text{* @{term tsynRec} test on @{term recTestInputStreamLoseDat}. *}
 lemma tsynrec_test_inputstreamlosedat:
   "tsynRec True\<cdot>recTestInputStreamLoseDat = recTestOutputStreamOLoseMsg" 
-  by(simp add: recTestInputStreamLoseDat_def  recTestOutputStreamOLoseMsg_def  tsynRec_def)
+  by (simp add: recTestInputStreamLoseDat_def recTestOutputStreamOLoseMsg_def 
+                tsynrec_sconc_msg_t tsynrec_sconc_null)
 
 text{* @{term tsynRec} test on @{term recTestInputUbundleLoseDat}. *}
 lemma tsynbrec_test_inputstreamlosedat: 
   "tsynbRec True\<cdot>recTestInputUbundleLoseDat = Some recTestOutputUbundleLoseMsg"
-  apply(simp add: tsynbrec_insert ubdom_insert)
-  apply(simp add: recTestOutputUbundleLoseMsg_def)
-  apply(simp add: ubGetCh_def recTestInputUbundleLoseDat.rep_eq)
-  apply(simp add: recTestInputStreamLoseDat_def)
-  apply(simp add:recTestOutputStreamArLoseMsg_def recTestOutputStreamOLoseMsg_def)
-  apply(simp add: natbool2abp_def tsynmap_insert abp2natbool_def tsynMap_def)
-  apply(simp add: tsynProjSnd_def bool2abp_def tsynmap_insert)
-  apply(insert tsynrec_test_inputstreamlosedat)
-  apply(simp add:  recTestInputStreamLoseDat_def recTestOutputStreamOLoseMsg_def)
-  apply(simp add: nat2abp_def tsynMap_def)
+  apply (simp add: tsynbrec_insert ubdom_insert)
+  apply (simp add: recTestOutputUbundleLoseMsg_def)
+  apply (simp add: ubGetCh_def recTestInputUbundleLoseDat.rep_eq)
+  apply (simp add: recTestInputStreamLoseDat_def)
+  apply (simp add: recTestOutputStreamArLoseMsg_def recTestOutputStreamOLoseMsg_def)
+  apply (simp add: natbool2abp_def tsynmap_insert abp2natbool_def tsynMap_def)
+  apply (simp add: tsynProjSnd_def bool2abp_def tsynmap_insert)
+  apply (insert tsynrec_test_inputstreamlosedat)
+  apply (simp add:  recTestInputStreamLoseDat_def recTestOutputStreamOLoseMsg_def)
+  apply (simp add: nat2abp_def tsynMap_def)
   by (simp add: fun_upd_twist)
 
 text{* @{term RecSPF} test on @{term recTestInputStreamLoseDat}. *}
 lemma recspf_test_inputstreamlosedat: 
   "RecSPF True \<rightleftharpoons> recTestInputUbundleLoseDat = recTestOutputUbundleLoseMsg" 
-  by(simp add: recspf_insert tsynbrec_test_inputstreamlosedat)
+  by (simp add: recspf_insert tsynbrec_test_inputstreamlosedat)
+
+(* ToDo: add descriptions. *)
+
+lemma tsynrec_test_inputstreamloseack:
+  "tsynRec True\<cdot>recTestInputStreamLoseAck = recTestOutputStreamOLoseAck"
+  by (simp add: recTestInputStreamLoseAck_def recTestOutputStreamOLoseAck_def 
+                tsynrec_sconc_msg_t)
+
+lemma tsynbrec_test_inputstreamloseack: 
+  "tsynbRec True\<cdot>recTestInputUbundleLoseAck = Some recTestOutputUbundleLoseAck"
+  sorry
+
+lemma recspf_test_inputstreamloseack:
+  "RecSPF True \<rightleftharpoons> recTestInputUbundleLoseAck = recTestOutputUbundleLoseAck"
+  by (simp add: recspf_insert tsynbrec_test_inputstreamloseack)
 
 (* ----------------------------------------------------------------------- *)
   section {* Automaton Receiver Transition Lemmata *}
