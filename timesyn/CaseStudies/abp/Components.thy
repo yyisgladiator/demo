@@ -55,27 +55,61 @@ text {* Conversion of a receiver stream into an equivalent nat stream. *}
 definition abp2nat :: "abpMessage tsyn stream \<rightarrow> nat tsyn stream" where
   "abp2nat \<equiv> tsynMap invNat"
 
-(* should probably be stated in Streams.thy *)
+(* ----------------------------------------------------------------------- *)
+  section {* Datatype Conversion Lemmata *}
+(* ----------------------------------------------------------------------- *)
+
+(* ToDo: add descriptions and move to tsynStream. *)
+
+lemma tsynmap_tsynmap: "tsynMap f\<cdot>(tsynMap g\<cdot>s) = tsynMap (\<lambda> x. f (g x))\<cdot>s"
+  apply (induction s rule: tsyn_ind, simp_all)
+  apply (simp add: tsynmap_sconc_msg)
+  by (simp add: tsynmap_sconc_null)
+
+lemma tsynmap_id: "tsynMap (\<lambda>x. x)\<cdot>s = s"
+  apply (induction s rule: tsyn_ind, simp_all)
+  apply (simp add: tsynmap_sconc_msg)
+  by (simp add: tsynmap_sconc_null)
+
+(* ToDo: add descriptions and inverse lemmata. *)
+
+lemma pair_invpair_inv: "invPair (Pair_nat_bool m) = m"
+  by (metis invPair.simps(1) surj_pair)
+
+lemma natbool2abp_abp2natbool_inv: "abp2natbool\<cdot>(natbool2abp\<cdot>s) = s"
+  by (simp add: abp2natbool_def natbool2abp_def tsynmap_tsynmap pair_invpair_inv tsynmap_id)
+
+lemma nat2abp_abp2nat_inv: "abp2nat\<cdot>(nat2abp\<cdot>s) = s"
+  by (simp add: abp2nat_def nat2abp_def tsynmap_tsynmap tsynmap_id)
+
+lemma bool2abp_abp2bool_inv: "abp2bool\<cdot>(bool2abp\<cdot>s) = s"
+  by (simp add: abp2bool_def bool2abp_def tsynmap_tsynmap tsynmap_id)
+
+(* ToDo: add descriptions and move to Streams. *)
+
 lemma len_one_stream: "#s = Fin 1 \<Longrightarrow> \<exists>m. s = \<up>m"
-proof-
-  assume a0: "#s = Fin 1"
-  show "\<exists>m::'a. s = \<up>m"
-  proof-
-    have empty_or_long: "\<nexists>m::'a. s = \<up>m \<Longrightarrow> s = \<epsilon> \<or> (\<exists> as a. s = \<up>a \<bullet> as)"
-      by (metis surj_scons)
-    have not_eq_one: "\<nexists>m::'a. s = \<up>m \<Longrightarrow> #s = Fin 0 \<or> #s > Fin 1" 
-      using empty_or_long 
-      by (metis Fin_02bot Fin_Suc One_nat_def a0 leI lnzero_def notinfI3 only_empty_has_length_0 sconc_snd_empty slen_conc slen_scons)
-    have not_eq_one2: "\<exists>m. s = \<up>m" using a0 
-      using not_eq_one by auto
-    show ?thesis using not_eq_one2 
-      by simp
+  proof -
+    assume a0: "#s = Fin 1"
+    show "\<exists>m::'a. s = \<up>m"
+      proof -
+        have empty_or_long: "\<nexists>m::'a. s = \<up>m \<Longrightarrow> s = \<epsilon> \<or> (\<exists> as a. s = \<up>a \<bullet> as)"
+          by (metis surj_scons)
+        have not_eq_one: "\<nexists>m::'a. s = \<up>m \<Longrightarrow> #s = Fin 0 \<or> #s > Fin 1" 
+          using empty_or_long 
+          by (metis Fin_02bot Fin_Suc One_nat_def a0 leI lnzero_def notinfI3 only_empty_has_length_0 
+              sconc_snd_empty slen_conc slen_scons)
+        have not_eq_one2: "\<exists>m. s = \<up>m" using a0 
+          using not_eq_one by auto
+        show ?thesis 
+          using not_eq_one2 by simp
+      qed
   qed
-qed
+
+(* ToDo: move to tsynBundle. *)
 
 text {* Cases rule for simple time-synchronous bundles. *}
 lemma tsynb_cases [case_names max_len not_ubleast numb_channel msg null]:
-  assumes max_len: "ubMaxLen (Fin (1::nat)) x" 
+  assumes max_len: "ubMaxLen (Fin (1 :: nat)) x"
     and not_ubleast: "x \<noteq> ubLeast (ubDom\<cdot>x)"
     and numb_channel: "(ubDom\<cdot>x) = {c}"
     and msg: "\<And>m. (Msg m) \<in> ctype c \<Longrightarrow> P (createBundle (Msg m) c)"
