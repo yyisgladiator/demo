@@ -47,35 +47,25 @@ lemma tsynbnull_ubconc_sbrt [simp]:
 
 text {* @{term tsynbAbs}: Filter the nulls on each stream of the bundle and return the corresponding bundle. *}
 definition tsynbAbs :: "'a tsyn stream ubundle \<rightarrow> 'a stream ubundle" where 
-  "tsynbAbs \<equiv> \<Lambda> sb. Abs_ubundle (\<lambda>c. (c\<in>ubDom\<cdot>sb) \<leadsto> (tsynAbs\<cdot>(sb . c)))"
+  "tsynbAbs \<equiv> \<Lambda> sb. Abs_ubundle (\<lambda>c. (c \<in> ubDom\<cdot>sb) \<leadsto> tsynAbs\<cdot>(sb . c))"
 
 text {* @{term tsynbRemDups} removes all duplicates of the time-synchronous stream on every channel of the bundle. *}
 definition tsynbRemDups :: "'a tsyn stream ubundle \<rightarrow> 'a tsyn stream ubundle" where 
-  "tsynbRemDups \<equiv> \<Lambda> sb. Abs_ubundle (\<lambda>c. (c\<in>ubDom\<cdot>sb) \<leadsto> (tsynRemDups\<cdot>(sb . c)))"
+  "tsynbRemDups \<equiv> \<Lambda> sb. Abs_ubundle (\<lambda>c. (c \<in> ubDom\<cdot>sb) \<leadsto> tsynRemDups\<cdot>(sb . c))"
 
 (* ----------------------------------------------------------------------- *)
   section {* Definitions of Time-Synchronous Test Bundles *}
 (* ----------------------------------------------------------------------- *)
-(* Already in UFun_Templates.thy
-instantiation nat :: message
-begin
-  fun ctype_nat :: "channel \<Rightarrow> nat set" where 
-  "ctype_nat c = range nat" 
-  instance
-    by (intro_classes)
-end*)
  
 lift_definition tsynbabsTestInput :: "nat tsyn stream ubundle " is 
   "[c1 \<mapsto> <[Msg (1 :: nat), null, Msg 2, Msg 1]>]"
   apply (simp add: ubWell_def usclOkay_stream_def ctype_tsyn_def)
   by (metis image_eqI nat_1 nat_2 numeral_2_eq_2 range_eqI)
-print_theorems
 
 lift_definition tsynbabsTestOutput :: "nat stream ubundle " is 
   "[c1 \<mapsto> <[(1 :: nat), 2, 1]>]"
   apply (simp add: ubWell_def usclOkay_stream_def)
   by (metis nat_1 nat_2 numeral_2_eq_2 range_eqI)
-print_theorems
 
 lemma tsynbabstestinput_ubdom: "ubDom\<cdot>tsynbabsTestInput = {c1}"
   by (simp add: ubDom_def tsynbabsTestInput.rep_eq)
@@ -91,54 +81,35 @@ lemma tsynbabstestoutput_ubdom: "ubDom\<cdot>tsynbabsTestOutput = {c1}"
   subsection {* tsynbAbs *}
 (* ----------------------------------------------------------------------- *)
 
-text {* @{term tsynAbs} channel is usclOkay. *}   
-lemma tsynAbs_dom: "\<And>s c. usclOkay c s = usclOkay c (tsynAbs\<cdot>s)"
-  apply(rule tsyn_ind)
-  apply(simp add: usclOkay_stream_def adm_def)
-  defer
-  apply(simp add: ctype_tsyn_def usclOkay_stream_def)
-  apply(simp add: ctype_tsyn_def usclOkay_stream_def tsynabs_sconc_msg)
-  apply auto[1]
-  apply(simp add: ctype_tsyn_def usclOkay_stream_def tsynabs_sconc_null)
-  using chain_monofun contlub_cfun_arg dual_order.trans l44 sdom_chain2lub
-  by smt
+text {* @{term tsynAbs} channel is usclOkay. *}
+lemma tsynabs_sdom: assumes "sdom\<cdot>s \<subseteq> ctype c" shows "sdom\<cdot>(tsynAbs\<cdot>s) \<subseteq> ctype c"
+  using assms
+  apply (induction s rule: tsyn_ind, simp_all)
+  apply (rule admI)
+  apply (metis (no_types, lifting) ch2ch_Rep_cfunR contlub_cfun_arg l44 sdom_chain2lub subset_trans)
+  apply (simp_all add: tsynabs_sconc_msg tsynabs_sconc_null)
+  using ctype_tsyn_iff by auto
 
 text {* @{term tsynbAbs} bundle is ubwell. *}   
-lemma tsynbabs_ubwell [simp]: "ubWell (\<lambda>c. (c\<in>ubDom\<cdot>sb) \<leadsto> (tsynAbs\<cdot>(sb . c)))"
-  (*by (smt domIff option.sel tsynAbs_dom ubWell_def ubdom_channel_usokay ubgetch_insert)*)
-  proof -
-    obtain cc :: "(channel \<Rightarrow> 'a stream option) \<Rightarrow> channel" where
-      f1: "\<forall>f. cc f \<in> dom f \<and> \<not> usclOkay (cc f) f\<rightharpoonup>cc f \<or> ubWell f"
-        by (metis ubwellI)
-    { assume "usclOkay (cc (\<lambda>c. (c \<in> ubDom\<cdot>sb)\<leadsto>tsynAbs\<cdot>(sb . c))) (tsynAbs\<cdot> Rep_ubundle sb\<rightharpoonup>cc (\<lambda>c. (c \<in> ubDom\<cdot> sb)\<leadsto>tsynAbs\<cdot>(sb . c)))"
-      moreover
-      { assume "tsynAbs\<cdot> Rep_ubundle sb\<rightharpoonup>cc (\<lambda>c. (c \<in> ubDom\<cdot> sb)\<leadsto>tsynAbs\<cdot> (sb . c)) \<noteq> \<lambda>c. (c \<in> ubDom\<cdot> sb)\<leadsto>tsynAbs\<cdot> (sb . c)\<rightharpoonup>cc (\<lambda>c. (c \<in> ubDom\<cdot>sb)\<leadsto>tsynAbs\<cdot>(sb . c))"
-        then have "\<lambda>c. (c \<in> ubDom\<cdot> sb)\<leadsto>tsynAbs\<cdot> (sb . c)\<rightharpoonup>cc (\<lambda>c. (c \<in> ubDom\<cdot> sb)\<leadsto>tsynAbs\<cdot>(sb . c)) \<noteq> tsynAbs\<cdot> (sb . cc (\<lambda>c. (c \<in> ubDom\<cdot>sb)\<leadsto>tsynAbs\<cdot>(sb . c)))"
-          by (simp add: ubgetch_insert)
-  then have "cc (\<lambda>c. (c \<in> ubDom\<cdot>sb)\<leadsto>tsynAbs\<cdot>(sb . c)) \<in> ubDom\<cdot>sb \<longrightarrow> cc (\<lambda>c. (c \<in> ubDom\<cdot>sb)\<leadsto>tsynAbs\<cdot>(sb . c)) \<notin> dom (\<lambda>c. (c \<in> ubDom\<cdot> sb)\<leadsto>tsynAbs\<cdot>(sb . c)) \<or> usclOkay (cc (\<lambda>c. (c \<in> ubDom\<cdot>sb)\<leadsto>tsynAbs\<cdot>(sb . c))) \<lambda>c. (c \<in> ubDom\<cdot> sb)\<leadsto>tsynAbs\<cdot> (sb . c)\<rightharpoonup>cc (\<lambda>c. (c \<in> ubDom\<cdot>sb)\<leadsto>tsynAbs\<cdot>(sb . c))"
-    by force }
-      ultimately have "cc (\<lambda>c. (c \<in> ubDom\<cdot>sb)\<leadsto>tsynAbs\<cdot>(sb . c)) \<in> ubDom\<cdot>sb \<longrightarrow> (cc (\<lambda>c. (c \<in> ubDom\<cdot>sb)\<leadsto>tsynAbs\<cdot>(sb . c)) \<notin> dom (\<lambda>c. (c \<in> ubDom\<cdot> sb)\<leadsto>tsynAbs\<cdot>(sb . c)) \<or> usclOkay (cc (\<lambda>c. (c \<in> ubDom\<cdot>sb)\<leadsto>tsynAbs\<cdot>(sb . c))) \<lambda>c. (c \<in> ubDom\<cdot> sb)\<leadsto>tsynAbs\<cdot> (sb . c)\<rightharpoonup>cc (\<lambda>c. (c \<in> ubDom\<cdot> sb)\<leadsto>tsynAbs\<cdot>(sb . c))) \<or> ubWell (\<lambda>c. (c \<in> ubDom\<cdot>sb)\<leadsto>tsynAbs\<cdot>(sb . c))"
-        by force }
-    then have "cc (\<lambda>c. (c \<in> ubDom\<cdot>sb)\<leadsto>tsynAbs\<cdot>(sb . c)) \<in> ubDom\<cdot>sb \<longrightarrow> (cc (\<lambda>c. (c \<in> ubDom\<cdot>sb)\<leadsto>tsynAbs\<cdot>(sb . c)) \<notin> dom (\<lambda>c. (c \<in> ubDom\<cdot> sb)\<leadsto>tsynAbs\<cdot>(sb . c)) \<or> usclOkay (cc (\<lambda>c. (c \<in> ubDom\<cdot>sb)\<leadsto>tsynAbs\<cdot>(sb . c))) \<lambda>c. (c \<in> ubDom\<cdot> sb)\<leadsto>tsynAbs\<cdot> (sb . c)\<rightharpoonup>cc (\<lambda>c. (c \<in> ubDom\<cdot> sb)\<leadsto>tsynAbs\<cdot>(sb . c))) \<or> ubWell (\<lambda>c. (c \<in> ubDom\<cdot>sb)\<leadsto>tsynAbs\<cdot>(sb . c))"
-      using tsynAbs_dom ubdom_channel_usokay by blast
-    then have "ubWell (\<lambda>c. (c \<in> ubDom\<cdot>sb)\<leadsto>tsynAbs\<cdot>(sb . c)) \<or> cc (\<lambda>c. (c \<in> ubDom\<cdot>sb)\<leadsto>tsynAbs\<cdot>(sb . c)) \<notin> dom (\<lambda>c. (c \<in> ubDom\<cdot> sb)\<leadsto>tsynAbs\<cdot>(sb . c)) \<or> usclOkay (cc (\<lambda>c. (c \<in> ubDom\<cdot>sb)\<leadsto>tsynAbs\<cdot>(sb . c))) \<lambda>c. (c \<in> ubDom\<cdot> sb)\<leadsto>tsynAbs\<cdot> (sb . c)\<rightharpoonup>cc (\<lambda>c. (c \<in> ubDom\<cdot>sb)\<leadsto>tsynAbs\<cdot>(sb . c))"
-      by fastforce
-    then show ?thesis
-      using f1 by meson
-  qed
+lemma tsynbabs_ubwell [simp]: "ubWell (\<lambda>c. (c \<in> ubDom\<cdot>sb) \<leadsto> (tsynAbs\<cdot>(sb . c)))"
+  by (simp add: tsynabs_sdom)
 
-text {* Domain of the @{term tsynbAbs} output bundle is ubDom\<cdot>sb. *}    
-lemma tsynbabs_ubundle_ubdom: "ubDom\<cdot>(sb::'a tsyn stream ubundle) = ubDom\<cdot>(Abs_ubundle (\<lambda>c. (c\<in>ubDom\<cdot>sb) \<leadsto> (tsynAbs\<cdot>(sb . c)))) "
+text {* Domain of the @{term tsynbAbs} output bundle is the same as the input bundle domain. *}    
+lemma tsynbabs_ubundle_ubdom:
+  "ubDom\<cdot>(Abs_ubundle (\<lambda>c. (c \<in> ubDom\<cdot>sb) \<leadsto> tsynAbs\<cdot>(sb . c))) = ubDom\<cdot>sb"
   by (simp add: ubdom_ubrep_eq)
 
 text {* @{term tsynbAbs} is monotonic. *}    
-lemma tsynbabs_mono [simp]: "monofun (\<lambda> sb. Abs_ubundle (\<lambda>c. (c\<in>ubDom\<cdot>sb) \<leadsto> (tsynAbs\<cdot>(sb . c))))"
+lemma tsynbabs_mono [simp]: "monofun (\<lambda> sb. Abs_ubundle (\<lambda>c. (c\<in>ubDom\<cdot>sb) \<leadsto> tsynAbs\<cdot>(sb . c)))"
   apply (rule monofunI)
-  apply (simp add: ubdom_below)
-  apply (simp add: ubdom_insert)
-  using below_option_def below_ubundle_def domIff fun_below_iff monofun_cfun_arg option.sel option.simps(3) tsynAbs_dom ubWell_def ubgetch_insert ubrep_ubabs ubrep_well
-  by smt
+  apply (simp add: ubdom_insert below_ubundle_def)
+  apply (subst ubrep_ubabs, metis (no_types) tsynbabs_ubwell ubdom_insert)+
+  apply (simp add: fun_below_iff)
+  apply (rule)+
+  apply (metis monofun_cfun_arg some_below some_below2 ubdom_insert ubgetchE)
+  by (metis below_option_def domIff)+
 
+text {* @{term tsynbAbs} is continous. *}  
 lemma tsynbabs_cont [simp]: "cont (\<lambda> sb. Abs_ubundle (\<lambda>c. (c\<in>ubDom\<cdot>sb) \<leadsto> (tsynAbs\<cdot>(sb . c))))"
   proof (rule contI2, auto)
     fix Y::"nat \<Rightarrow> 'a tsyn stream\<^sup>\<Omega>"
@@ -223,56 +194,43 @@ lemma tsynbabs_cont [simp]: "cont (\<lambda> sb. Abs_ubundle (\<lambda>c. (c\<in
   qed
 
 text {* @{term tsynbAbs} insertion lemma. *}
-lemma tsynbabs_insert: "tsynbAbs\<cdot>(sb ::'a tsyn stream\<^sup>\<Omega>) = Abs_ubundle (\<lambda>c. (c\<in>ubDom\<cdot>sb) \<leadsto> (tsynAbs\<cdot>(sb . c)))"
+lemma tsynbabs_insert: 
+  "tsynbAbs\<cdot>sb = Abs_ubundle (\<lambda>c. (c\<in>ubDom\<cdot>sb) \<leadsto> tsynAbs\<cdot>(sb . c))"
   by (simp add: tsynbAbs_def)
 
-text {* @{term tsynbAbs} getchannel lemma. *}
-lemma tsynbabs_sbgetch [simp]: assumes "c\<in>ubDom\<cdot>sb"
+text {* @{term tsynbAbs} get channel lemma. *}
+lemma tsynbabs_ubgetch: 
+  assumes "c \<in> ubDom\<cdot>sb"
   shows "(tsynbAbs\<cdot>sb) . c = tsynAbs\<cdot>(sb . c)"
   by (simp add: assms tsynbabs_insert ubgetch_ubrep_eq)
 
-text {* @{term tsynbAbs} not sure why it is here. *}
-lemma tsynabs_sdom: "(sdom\<cdot>s \<subseteq> insert - (Msg ` range a)) = (sdom\<cdot>(tsynAbs\<cdot>s) \<subseteq> range a)"
-  proof (induction s rule: tsyn_ind)
-    case adm
-    then show ?case 
-      by (rule admI, simp add: contlub_cfun_arg lub_eq_Union UN_subset_iff)
-  next
-    case bot
-    then show ?case 
-      by simp
-  next
-    case (msg m s)
-    then show ?case 
-      by (simp only: tsynabs_sconc_msg sdom2un, auto)
-  next
-    case (null s)
-    then show ?case 
-      by (simp only: tsynabs_sconc_null sdom2un, auto)
-  qed
-
 text {* @{term tsynbAbs} is strict. *}
-lemma tsynbabs_strict [simp]: "tsynbAbs\<cdot>(ubLeast {c} :: 'a tsyn stream\<^sup>\<Omega>) = ubLeast {c}"
-  apply(simp add: tsynbabs_insert)
-  apply(simp add: ubLeast_def)
-  by (metis (no_types, hide_lams) singletonI tsynabs_strict ubleast_ubgetch)
+lemma tsynbabs_strict [simp]: "tsynbAbs\<cdot>(ubLeast {c})  = ubLeast {c}"
+  apply (rule ub_eq)
+  apply (metis (no_types, lifting) tsynbabs_insert tsynbabs_ubundle_ubdom ubleast_ubdom)
+  by (metis (no_types, lifting) Abs_cfun_inverse2 tsynabs_strict tsynbAbs_def tsynbabs_cont 
+      tsynbabs_ubgetch tsynbabs_ubundle_ubdom ubleast_ubdom ubleast_ubgetch)
 
 text {* Test lemma for @{term tsynbAbs}. *}
 lemma tsynbabs_test_finstream:
   "tsynbAbs\<cdot>(tsynbabsTestInput) = tsynbabsTestOutput"
   proof (rule ub_eq)
-    have input_ubdom: "ubDom\<cdot>(tsynbAbs\<cdot>tsynbabsTestInput) = {c1}"
+    have tsynbabs_tsynbabstestinput_ubdom: "ubDom\<cdot>(tsynbAbs\<cdot>tsynbabsTestInput) = {c1}"
       by (metis (no_types) tsynbabs_insert tsynbabs_ubundle_ubdom tsynbabstestinput_ubdom)
     show "ubDom\<cdot>(tsynbAbs\<cdot>tsynbabsTestInput) = ubDom\<cdot>tsynbabsTestOutput"
-      by (simp add: input_ubdom tsynbabstestoutput_ubdom)
-    have tsynabs_res: "tsynAbs\<cdot>(<[Msg (1 :: nat), null, Msg 2, Msg 1]>) = <[(1 :: nat), 2, 1]>"
+      by (simp add: tsynbabs_tsynbabstestinput_ubdom tsynbabstestoutput_ubdom)
+    fix c :: "channel"
+    have tsynabs_result: "tsynAbs\<cdot>(<[Msg (1 :: nat), null, Msg 2, Msg 1]>) = <[(1 :: nat), 2, 1]>"
       by (simp add: tsynabs_insert)
-    have c1_tsynabs: "tsynAbs\<cdot>(tsynbabsTestInput . c1)= <[(1 :: nat), 2, 1]>"
-      by (metis fun_upd_same option.sel tsynabs_res tsynbabsTestInput.rep_eq ubgetch_insert)
-    have c1_res: "tsynbAbs\<cdot>tsynbabsTestInput  .  c1 = tsynbabsTestOutput  .  c1"
-      by (metis c1_tsynabs fun_upd_same option.sel singletonI tsynbabsTestOutput.rep_eq tsynbabs_sbgetch tsynbabstestinput_ubdom ubgetch_insert)
-    show "\<And>c::channel. c \<in> ubDom\<cdot>(tsynbAbs\<cdot>tsynbabsTestInput) \<Longrightarrow> tsynbAbs\<cdot>tsynbabsTestInput  .  c = tsynbabsTestOutput  .  c"
-      using c1_res input_ubdom by auto
+    have tsynabs_tsynbabstestinput_result: "tsynAbs\<cdot>(tsynbabsTestInput . c1)= <[(1 :: nat), 2, 1]>"
+      by (metis fun_upd_same option.sel tsynabs_result tsynbabsTestInput.rep_eq ubgetch_insert)
+    have tsynbabs_tsynbabstestinput_result:
+      "tsynbAbs\<cdot>tsynbabsTestInput  .  c1 = tsynbabsTestOutput  .  c1"
+      by (metis (full_types) fun_upd_apply insert_iff option.sel tsynabs_tsynbabstestinput_result 
+          tsynbabsTestOutput.rep_eq tsynbabs_ubgetch tsynbabstestinput_ubdom ubgetch_insert)
+    assume "c \<in> ubDom\<cdot>(tsynbAbs\<cdot>tsynbabsTestInput)"
+    then show "tsynbAbs\<cdot>tsynbabsTestInput  .  c = tsynbabsTestOutput  .  c"
+      using tsynbabs_tsynbabstestinput_result tsynbabs_tsynbabstestinput_ubdom by auto
   qed
 
 (* ----------------------------------------------------------------------- *)
@@ -287,7 +245,7 @@ lemma tsynRemDups_dom: "usclOkay c s = usclOkay c (tsynRemDups\<cdot>s)"
   apply auto[1]
   defer
   apply(simp add: ctype_tsyn_def usclOkay_stream_def tsynremdups_sconc_null)
-  apply(simp add: ctype_tsyn_def usclOkay_stream_def)
+  apply(simp add: ctype_tsyn_def usclOkay_stream_def tsynremdups_sconc_msg)
   sorry
 
 text {* @{term tsynbRemDups} bundle is ubwell. *}   
