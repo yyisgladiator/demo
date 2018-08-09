@@ -32,7 +32,7 @@ text {* @{term MedSPF}: Lossy medium function for the Alternating Bit Protocol. 
 definition MedSPF :: "bool stream \<Rightarrow> abpMessage tsyn SPF" where
   "MedSPF ora \<equiv> Abs_ufun (tsynbMed ora)"
 
-(* ToDo: add description *)
+text {* @{term MedSPS}: Lossy medium function set for the Alternating Bit Protocol. *}
 definition MedSPS :: "(abpMessage tsyn stream\<^sup>\<Omega>) ufun uspec" where 
   "MedSPS = Abs_uspec (Rev {(MedSPF ora) | ora. #({True} \<ominus> ora) = \<infinity>}, 
                              Discr {\<C> ''ds''}, Discr {\<C> ''dr''})"
@@ -55,7 +55,7 @@ lemma ora_ind [case_names adm bot msg_t msg_f]:
   by (simp_all add: msg_t msg_f)
 
 text {* If a predicate P holds for empty streams, true and false predicates, 
-        it holds for all ora-streams *}
+        it holds for all ora-streams. *}
 lemma oracases [case_names bot true false]:
   assumes bot: "s = \<epsilon> \<Longrightarrow> P s"
     and true: "\<And>as. s = (\<up>True \<bullet> as) \<Longrightarrow> P s"
@@ -159,7 +159,7 @@ lemma tsynmed_tsyndom: "tsynDom\<cdot>(tsynMed\<cdot>msg\<cdot>ora) \<subseteq> 
       by (metis tsyndom_sconc_null tsynmed_sconc_null tsynmed_strict(2))
   qed
 
-text {* If msg starts with k ticks, the output of @{term tsynMed} will do as well.  *}
+text {* If msg starts with k ticks, the output of @{term tsynMed} will do as well. *}
 lemma tsynmed_sntimes_null: 
   assumes "ora \<noteq> \<epsilon>"
   shows "tsynMed\<cdot>((k \<star> \<up>null) \<bullet> msg)\<cdot>ora = (k \<star> \<up>null) \<bullet> tsynMed\<cdot>msg\<cdot>ora"
@@ -420,14 +420,21 @@ lemma medsps_uspecran: "uspecRan\<cdot>MedSPS = {\<C> ''dr''}"
   apply (simp add: uspecRan_def MedSPS_def)
   using medsps_uspecwell by simp
 
-(* If a "null" comes in send it out and stay in the same state *)
-lemma "spsConcIn (tsynbNull(\<C> ''ds''))\<cdot>MedSPS = spsConcOut (tsynbNull (\<C> ''dr''))\<cdot>MedSPS"
-  
-(*
-lemma "spsConcIn"
+(* ----------------------------------------------------------------------- *)
+subsection {* Medium State Lemmata *}
+(* ----------------------------------------------------------------------- *)
 
+text{* The nth element of ora will be true. *}
+lemma snth_ora_true: assumes "#({True} \<ominus> ora) = \<infinity>" obtains n where "snth n ora = True"
+  by (metis Inf'_neq_0_rev assms ex_snth_in_sfilter_nempty singleton_iff slen_empty_eq)
+
+(* If a "null" comes in, send it out and stay in the same state. *)
+lemma "spsConcIn (tsynbNull(\<C> ''ds''))\<cdot>MedSPS = spsConcOut (tsynbNull (\<C> ''dr''))\<cdot>MedSPS"
+sorry
+
+(*
 (* counter not null, drop every message and count one down *)
-lemma "spsConcIn (makeInput m) (h_MED (State TheOne (Suc n))) = spsConcOut (makeNull (\<C> ''dr''))\<cdot>(h_MED (State TheOne (Suc n)))"
+lemma "spsConcIn (makeInput m) (h_MED (State TheOne (Suc n))) = spsConcOut (makeNull (\<C> ''dr''))\<cdot>(h_MED (State TheOne n))"
   oops
 
 (* If a "null" comes in send it out and stay in the same state *) 
@@ -438,6 +445,4 @@ lemma "spsConcIn (makeNull (\<C> ''ds'')) (h_MED state) = spsConcOut (makeNull (
 lemma "spsConcIn (makeInput m) (h_MED (State TheOne 0)) = spsConcOut (makeOutput m)\<cdot>(spsFlatten {h_MED (State TheOne n) |  n. True})"
   oops
 *)
-
-
 end
