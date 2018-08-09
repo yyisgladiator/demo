@@ -69,11 +69,13 @@ lift_definition tsynbabsTestInput :: "nat tsyn stream ubundle " is
   "[c1 \<mapsto> <[Msg (1 :: nat), null, Msg 2, Msg 1]>]"
   apply (simp add: ubWell_def usclOkay_stream_def ctype_tsyn_def)
   by (metis image_eqI nat_1 nat_2 numeral_2_eq_2 range_eqI)
+print_theorems
 
 lift_definition tsynbabsTestOutput :: "nat stream ubundle " is 
   "[c1 \<mapsto> <[(1 :: nat), 2, 1]>]"
   apply (simp add: ubWell_def usclOkay_stream_def)
   by (metis nat_1 nat_2 numeral_2_eq_2 range_eqI)
+print_theorems
 
 lemma tsynbabstestinput_ubdom: "ubDom\<cdot>tsynbabsTestInput = {c1}"
   by (simp add: ubDom_def tsynbabsTestInput.rep_eq)
@@ -258,15 +260,34 @@ lemma tsynbabs_strict [simp]: "tsynbAbs\<cdot>(ubLeast {c} :: 'a tsyn stream\<^s
 text {* Test lemma for @{term tsynbAbs}. *}
 lemma tsynbabs_test_finstream:
   "tsynbAbs\<cdot>(tsynbabsTestInput) = tsynbabsTestOutput"
-  sorry
+  proof (rule ub_eq)
+    have input_ubdom: "ubDom\<cdot>(tsynbAbs\<cdot>tsynbabsTestInput) = {c1}"
+      by (metis (no_types) tsynbabs_insert tsynbabs_ubundle_ubdom tsynbabstestinput_ubdom)
+    show "ubDom\<cdot>(tsynbAbs\<cdot>tsynbabsTestInput) = ubDom\<cdot>tsynbabsTestOutput"
+      by (simp add: input_ubdom tsynbabstestoutput_ubdom)
+    have tsynabs_res: "tsynAbs\<cdot>(<[Msg (1 :: nat), null, Msg 2, Msg 1]>) = <[(1 :: nat), 2, 1]>"
+      by (simp add: tsynabs_insert)
+    have c1_tsynabs: "tsynAbs\<cdot>(tsynbabsTestInput . c1)= <[(1 :: nat), 2, 1]>"
+      by (metis fun_upd_same option.sel tsynabs_res tsynbabsTestInput.rep_eq ubgetch_insert)
+    have c1_res: "tsynbAbs\<cdot>tsynbabsTestInput  .  c1 = tsynbabsTestOutput  .  c1"
+      by (metis c1_tsynabs fun_upd_same option.sel singletonI tsynbabsTestOutput.rep_eq tsynbabs_sbgetch tsynbabstestinput_ubdom ubgetch_insert)
+    show "\<And>c::channel. c \<in> ubDom\<cdot>(tsynbAbs\<cdot>tsynbabsTestInput) \<Longrightarrow> tsynbAbs\<cdot>tsynbabsTestInput  .  c = tsynbabsTestOutput  .  c"
+      using c1_res input_ubdom by auto
+  qed
 
 (* ----------------------------------------------------------------------- *)
   subsection {* tsynbRemDups *}
 (* ----------------------------------------------------------------------- *)
 
 text {* @{term tsynRemDups} channel is usclOkay. *}   
-lemma tsynRemDups_dom: "\<And>s c. usclOkay c s = usclOkay c (tsynRemDups\<cdot>s)"
-  apply(rule tsyn_ind)
+lemma tsynRemDups_dom: "usclOkay c s = usclOkay c (tsynRemDups\<cdot>s)"
+  apply(induction s arbitrary: c rule: tsyn_ind)
+  apply(simp add: usclOkay_stream_def adm_def)
+  apply(smt ch2ch_Rep_cfunR contlub_cfun_arg l44 order_trans sdom_chain2lub subset_trans)
+  apply auto[1]
+  defer
+  apply(simp add: ctype_tsyn_def usclOkay_stream_def tsynremdups_sconc_null)
+  apply(simp add: ctype_tsyn_def usclOkay_stream_def)
   sorry
 
 text {* @{term tsynbRemDups} bundle is ubwell. *}   
