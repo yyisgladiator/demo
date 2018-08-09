@@ -168,7 +168,7 @@ lemma tsynmed_sntimes_null:
   apply (cases rule: oracases [of ora])
   by (simp_all add: tsynmed_sconc_null)
 
-(* Move to tsynStream? *)
+(* Move to tsynStream. *)
 text {* @{term tsynLen} will consume leading ticks. *}
 lemma tsynlen_sntimes_null: "tsynLen\<cdot>((k \<star> \<up>null) \<bullet> s) = tsynLen\<cdot>s"
   apply (induction k)
@@ -176,7 +176,7 @@ lemma tsynlen_sntimes_null: "tsynLen\<cdot>((k \<star> \<up>null) \<bullet> s) =
 
 (* Reviewed until here *)
 
-(* ToDo: add descriptions and move to tsynStream *)
+(* Move to tsynStream. *)
 text {* If @{term tsynLen} is not 0, it cannot contain infinitely many ticks. *}
 lemma stakewhile_null_slen_fin: 
   assumes "0 < tsynLen\<cdot>as" 
@@ -201,8 +201,15 @@ lemma split_leading_null:
       proof (induction as arbitrary: k rule: tsyn_ind)
         case adm
         then show ?case 
-          apply (rule admI)
-          by (metis (no_types, lifting) Fin_neq_inf ch2ch_Rep_cfunR contlub_cfun_arg inf_chainl4 l42)
+          proof (rule admI)
+            fix Y :: "nat \<Rightarrow> 'a tsyn stream"
+            assume chain_Y: "chain Y" 
+            assume adm_hyp: "\<forall> i x. #(stakewhile (\<lambda>x. x = -)\<cdot>(Y i)) = Fin x
+                               \<longrightarrow> x\<star>\<up>- = stakewhile (\<lambda>x::'a tsyn. x = -)\<cdot>(Y i)"
+            thus "\<forall>x. #(stakewhile (\<lambda>x. x = -)\<cdot>(\<Squnion>i. Y i)) = Fin x 
+                    \<longrightarrow> x\<star>\<up>- = stakewhile (\<lambda>x. x = -)\<cdot>(\<Squnion>i. Y i)"
+            by (metis (no_types, lifting) ch2ch_Rep_cfunR chain_Y contlub_cfun_arg finChainapprox)
+          qed
       next
         case bot
         then show ?case
@@ -258,18 +265,32 @@ lemma tsynmed_tsynlen_ora:
         then show ?thesis
           proof (cases a)
             case True
+            have sdropwhile_true: "#\<^sub>-(tsynMed\<cdot>msg\<cdot>(\<up>True \<bullet> s)) 
+              = #\<^sub>-(tsynMed\<cdot>(sdropwhile (\<lambda>x. x = null)\<cdot>msg)\<cdot>(\<up>True \<bullet> s))"
+              using True thesis_msg tsynmed_consume_tick by auto
+            then have snth_tick: "#\<^sub>-(tsynMed\<cdot>(sdropwhile (\<lambda>x. x = -)\<cdot>msg)\<cdot>(\<up>True \<bullet> s)) =
+              #\<^sub>-(tsynMed\<cdot>(n\<star>\<up>- \<bullet> sdropwhile (\<lambda>x. x = null)\<cdot>msg)\<cdot>(\<up>True \<bullet> s))"
+              using msg_def by auto
+            then have tsynmed_snth_tick: 
+              "#\<^sub>-(tsynMed\<cdot>(n\<star>\<up>- \<bullet> sdropwhile (\<lambda>x. x = null)\<cdot>msg)\<cdot>(\<up>True \<bullet> s)) = lnsuc\<cdot>(#({True} \<ominus> s))"
+              by (metis "3.IH" m_def sdropwhile_null_nbot surj_scons tsynlen_sconc_msg 
+                  tsynlen_srt_sdropwhile_null_inf tsynmed_sconc_msg_t)
             then show ?thesis
-              using thesis_msg tsynmed_consume_tick
-              apply (simp add: True)
-              by (metis m_def "3.IH" sdropwhile_null_nbot surj_scons tsynlen_srt_sdropwhile_null_inf tsynlen_sconc_msg 
-                  tsynmed_sconc_msg_t)
+              using True msg_def by auto
           next
             case False
-            then show ?thesis 
-              using thesis_msg tsynmed_consume_tick
-              apply (simp add: False)
-              by (metis m_def "3.IH" sdropwhile_null_nbot surj_scons tsynlen_srt_sdropwhile_null_inf tsynlen_sconc_null 
-                  tsynmed_sconc_msg_f)
+            have sdropwhile_false: "#\<^sub>-(tsynMed\<cdot>msg\<cdot>(\<up>False \<bullet> s)) 
+              = #\<^sub>-(tsynMed\<cdot>(sdropwhile (\<lambda>x. x = -)\<cdot>msg)\<cdot>(\<up>False \<bullet> s))"
+              using False thesis_msg tsynmed_consume_tick by auto
+            have snth_tick: "#\<^sub>-(tsynMed\<cdot>(sdropwhile (\<lambda>x. x = -)\<cdot>msg)\<cdot>(\<up>False \<bullet> s)) =
+              #\<^sub>-(tsynMed\<cdot>(n\<star>\<up>- \<bullet> sdropwhile (\<lambda>x. x = -)\<cdot>msg)\<cdot>(\<up>False \<bullet> s))"
+              using False tsynmed_consume_tick by auto
+            have tsynmed_snth_tick: 
+              "#\<^sub>-(tsynMed\<cdot>(n\<star>\<up>- \<bullet> sdropwhile (\<lambda>x. x = -)\<cdot>msg)\<cdot>(\<up>False \<bullet> s)) = #({True} \<ominus> s)"
+              by (metis "3.IH" m_def msg_def sdropwhile_false sdropwhile_null_nbot surj_scons 
+                  tsynlen_sconc_null tsynlen_srt_sdropwhile_null_inf tsynmed_sconc_msg_f)
+            then show ?thesis
+              using False thesis_msg by auto
           qed
       qed
    qed
