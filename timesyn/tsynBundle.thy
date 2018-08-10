@@ -237,32 +237,34 @@ lemma tsynbabs_test_finstream:
   subsection {* tsynbRemDups *}
 (* ----------------------------------------------------------------------- *)
 
-text {* @{term tsynRemDups} channel is usclOkay. *}   
-lemma tsynRemDups_dom: "usclOkay c s = usclOkay c (tsynRemDups\<cdot>s)"
-  apply(induction s arbitrary: c rule: tsyn_ind)
-  apply(simp add: usclOkay_stream_def adm_def)
-  apply(smt ch2ch_Rep_cfunR contlub_cfun_arg l44 order_trans sdom_chain2lub subset_trans)
-  apply auto[1]
-  defer
-  apply(simp add: ctype_tsyn_def usclOkay_stream_def tsynremdups_sconc_null)
-  apply(simp add: ctype_tsyn_def usclOkay_stream_def tsynremdups_sconc_msg)
-  sorry
+  text {* @{term tsynRemDups} channel is usclOkay. *}  
+lemma tsynremdups_sdom: assumes "sdom\<cdot>s \<subseteq> ctype c" shows "sdom\<cdot>(tsynRemDups\<cdot>s) \<subseteq> ctype c"
+  using assms
+  apply (induction s rule: tsyn_ind, simp_all)
+  apply (rule admI)
+    apply (metis (no_types, lifting) ch2ch_Rep_cfunR contlub_cfun_arg l44 sdom_chain2lub subset_trans)
+   apply (simp_all add: tsynremdups_sconc_msg tsynremdups_sconc_null)
+
+  using ctype_tsyn_iff sorry
 
 text {* @{term tsynbRemDups} bundle is ubwell. *}   
 lemma tsynbremdups_ubwell [simp]: "ubWell (\<lambda>c. (c\<in>ubDom\<cdot>sb) \<leadsto> (tsynRemDups\<cdot>(sb . c)))"
-  using tsynRemDups_dom ubMapStream_well by blast
+  by (simp add: tsynremdups_sdom)
 
-text {* Domain of the @{term tsynbRemDups} output bundle is ubDom\<cdot>sb. *}    
-lemma tsynbremdups_ubundle_ubdom: "ubDom\<cdot>(sb::'a tsyn stream ubundle) = ubDom\<cdot>(Abs_ubundle (\<lambda>c. (c\<in>ubDom\<cdot>sb) \<leadsto> (tsynRemDups\<cdot>(sb . c)))) "
+text {* Domain of the @{term tsynbRemDups} output bundle is the same as the input bundle domain. *}    
+lemma tsynbremdups_ubundle_ubdom: 
+  "ubDom\<cdot>(Abs_ubundle (\<lambda>c. (c\<in>ubDom\<cdot>sb) \<leadsto> (tsynRemDups\<cdot>(sb . c)))) = ubDom\<cdot>sb"
   by (simp add: ubdom_ubrep_eq)
 
 text {* @{term tsynbRemDups} is monotonic. *}
 lemma tsynbremdups_mono [simp]: "monofun (\<lambda>sb. Abs_ubundle(\<lambda>c. (c\<in>ubDom\<cdot>sb) \<leadsto> (tsynRemDups\<cdot>(sb . c))))"
   apply (rule monofunI)
-  apply (simp add: ubdom_below)
-  apply (simp add: ubdom_insert)
-  using below_option_def below_ubundle_def domIff fun_below_iff monofun_cfun_arg option.sel option.simps(3) tsynRemDups_dom ubWell_def ubgetch_insert ubrep_ubabs ubrep_well
-  by smt
+  apply (simp add: ubdom_insert below_ubundle_def)
+  apply (subst ubrep_ubabs, metis (no_types) tsynbremdups_ubwell ubdom_insert)+
+  apply (simp add: fun_below_iff)
+  apply (rule)+
+  apply (metis monofun_cfun_arg some_below some_below2 ubdom_insert ubgetchE)
+  by (metis below_option_def domIff)+
 
 text {* @{term tsynbRemDups} is continous. *}
 lemma tsynbremdups_cont [simp]: "cont (\<lambda>sb. Abs_ubundle(\<lambda>c. (c\<in>ubDom\<cdot>sb) \<leadsto> (tsynRemDups\<cdot>(sb . c))))"
@@ -346,11 +348,18 @@ lemma tsynbremdups_cont [simp]: "cont (\<lambda>sb. Abs_ubundle(\<lambda>c. (c\<
   qed
 
 text {* @{term tsynbRemDups} insertion lemma. *}
-lemma tsynbremdups_insert: "tsynbRemDups\<cdot>sb = Abs_ubundle (\<lambda>c. (c\<in>ubDom\<cdot>sb) \<leadsto> (tsynRemDups\<cdot>(sb . c)))"
+lemma tsynbremdups_insert: 
+  "tsynbRemDups\<cdot>sb = Abs_ubundle (\<lambda>c. (c\<in>ubDom\<cdot>sb) \<leadsto> (tsynRemDups\<cdot>(sb . c)))"
   by (simp add: tsynbRemDups_def)
 
+text {* @{term tsynbAbs} get channel lemma. *}
+lemma tsynbremdups_ubgetch: 
+  assumes "c \<in> ubDom\<cdot>sb"
+  shows "(tsynbRemDups\<cdot>sb) . c = tsynRemDups\<cdot>(sb . c)"
+  by (simp add: assms tsynbremdups_insert ubgetch_ubrep_eq)
+
 text {* @{term tsynbRemDups} is strict.*}
-lemma tsynbremdups_strict [simp]: "tsynbRemDups\<cdot>(ubLeast {c} :: 'a tsyn stream ubundle) = ubLeast {c}"
+lemma tsynbremdups_strict [simp]: "tsynbRemDups\<cdot>(ubLeast {c}) = ubLeast {c}"
   apply(simp add: tsynbremdups_insert)
   apply(simp add: ubLeast_def)
   by (metis (no_types, hide_lams) singletonI tsynremdups_strict ubleast_ubgetch)
