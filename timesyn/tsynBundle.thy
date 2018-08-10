@@ -109,6 +109,30 @@ lemma tsynbabs_mono [simp]: "monofun (\<lambda> sb. Abs_ubundle (\<lambda>c. (c\
   apply (metis monofun_cfun_arg some_below some_below2 ubdom_insert ubgetchE)
   by (metis below_option_def domIff)+
 
+(*lemma tsynbabs_chain: assumes "chain Y"
+  shows "chain (\<lambda>i. (Abs_ubundle (\<lambda>c::channel. (c \<in> ubDom\<cdot>(Lub Y))\<leadsto>tsynAbs\<cdot>(Y i  .  c))))"
+  proof -
+    fix Y::"nat \<Rightarrow> 'a tsyn stream\<^sup>\<Omega>"
+    assume a1: "chain Y"
+    have chain_help: "chain (\<lambda>i. (Abs_ubundle (\<lambda>c::channel. (c \<in> ubDom\<cdot>(Lub Y))\<leadsto>tsynAbs\<cdot>(Y i  .  c))))"
+      proof (rule chainI)
+        have chain_tsyn_stream: "\<And>i. (Y i) \<sqsubseteq> (Y (Suc i))"
+          by (simp add: a1 po_class.chainE)
+        have chain_mono: "\<forall>x y. x \<sqsubseteq> y \<longrightarrow> (Abs_ubundle (\<lambda>c. (c \<in> ubDom\<cdot>x)\<leadsto>tsynAbs\<cdot>(x  .  c)) \<sqsubseteq>
+          Abs_ubundle (\<lambda>c. (c \<in> ubDom\<cdot>y)\<leadsto>tsynAbs\<cdot>(y  .  c)))"
+          using monofun_def by fastforce
+        have ubdom_eq: "(\<And>i. ubDom\<cdot>(Lub Y) = ubDom\<cdot>(Y i))"
+          by (simp add: a1)
+        have chain_dom: "\<And>i. Abs_ubundle (\<lambda>c. (c \<in> ubDom\<cdot>(Y i))\<leadsto>tsynAbs\<cdot>(Y i  .  c)) \<sqsubseteq>
+            Abs_ubundle (\<lambda>c. (c \<in> ubDom\<cdot>(Y (Suc i)))\<leadsto>tsynAbs\<cdot>(Y (Suc i)  .  c))"
+          by (simp add: chain_tsyn_stream local.chain_mono)
+        show "\<And>i::nat. Abs_ubundle (\<lambda>c::channel. (c \<in> ubDom\<cdot>(Lub Y))\<leadsto>tsynAbs\<cdot>(Y i  .  c)) \<sqsubseteq>
+                  Abs_ubundle (\<lambda>c::channel. (c \<in> ubDom\<cdot>(Lub Y))\<leadsto>tsynAbs\<cdot>(Y (Suc i)  .  c))"
+          using chain_dom ubdom_eq by auto
+      qed
+    show ?thesis
+  qed*)
+  
 text {* @{term tsynbAbs} is continous. *}  
 lemma tsynbabs_cont [simp]: "cont (\<lambda> sb. Abs_ubundle (\<lambda>c. (c\<in>ubDom\<cdot>sb) \<leadsto> (tsynAbs\<cdot>(sb . c))))"
   proof (rule contI2, auto)
@@ -116,39 +140,32 @@ lemma tsynbabs_cont [simp]: "cont (\<lambda> sb. Abs_ubundle (\<lambda>c. (c\<in
     assume a1: "chain Y"
     have "Abs_ubundle (\<lambda>c. (c \<in> ubDom\<cdot>(\<Squnion>i. Y i))\<leadsto>tsynAbs\<cdot>((\<Squnion>i. Y i)  .  c)) = (\<Squnion>i. Abs_ubundle (\<lambda>c. (c \<in> ubDom\<cdot>(\<Squnion>j. Y j))\<leadsto>tsynAbs\<cdot>(Y i  .  c)))"
       proof(rule ub_eq)
-        have tsynbabs_chain: "chain (\<lambda>i. (Abs_ubundle (\<lambda>c::channel. (c \<in> ubDom\<cdot>(Lub Y))\<leadsto>tsynAbs\<cdot>(Y i  .  c))))"
+        have tsyn_stream_below: "\<And>i. Y i \<sqsubseteq> Y (Suc i)"
+          by (simp add: a1 po_class.chainE)
+        have tsynbabs_chain: "chain (\<lambda>i. (Abs_ubundle (\<lambda>c. (c \<in> ubDom\<cdot>(Lub Y))\<leadsto>tsynAbs\<cdot>(Y i  .  c))))"
           proof (rule chainI)
-            have chain_tsyn_stream: "\<And>i::nat. (Y i::'a tsyn stream\<^sup>\<Omega>) \<sqsubseteq> (Y (Suc i)::'a tsyn stream\<^sup>\<Omega>)"
-              by (simp add: a1 po_class.chainE)
-            have chain_mono: "\<forall>x y.(x::'a tsyn stream\<^sup>\<Omega>) \<sqsubseteq> (y::'a tsyn stream\<^sup>\<Omega>) \<longrightarrow> (Abs_ubundle (\<lambda>c::channel. (c \<in> ubDom\<cdot>x)\<leadsto>tsynAbs\<cdot>(x  .  c)) \<sqsubseteq>
-              Abs_ubundle (\<lambda>c::channel. (c \<in> ubDom\<cdot>y)\<leadsto>tsynAbs\<cdot>(y  .  c)))"
-              using monofun_def by fastforce
-            have ubdom_eq: "(\<And>i::nat. ubDom\<cdot>(Lub Y) = ubDom\<cdot>(Y i))"
-              by (simp add: a1)
-            have chain_dom: "\<And>i::nat. Abs_ubundle (\<lambda>c::channel. (c \<in> ubDom\<cdot>(Y i))\<leadsto>tsynAbs\<cdot>(Y i  .  c)) \<sqsubseteq>
-                Abs_ubundle (\<lambda>c::channel. (c \<in> ubDom\<cdot>(Y (Suc i)))\<leadsto>tsynAbs\<cdot>(Y (Suc i)  .  c))"
-              by (simp add: chain_tsyn_stream local.chain_mono)
-            show "\<And>i::nat. Abs_ubundle (\<lambda>c::channel. (c \<in> ubDom\<cdot>(Lub Y))\<leadsto>tsynAbs\<cdot>(Y i  .  c)) \<sqsubseteq>
-              Abs_ubundle (\<lambda>c::channel. (c \<in> ubDom\<cdot>(Lub Y))\<leadsto>tsynAbs\<cdot>(Y (Suc i)  .  c))"
-              using chain_dom ubdom_eq by auto
+            have chain_dom: "\<And>i. Abs_ubundle (\<lambda>c::channel. (c \<in> ubDom\<cdot>(Y i))\<leadsto>tsynAbs\<cdot>(Y i  .  c)) \<sqsubseteq>
+                Abs_ubundle (\<lambda>c. (c \<in> ubDom\<cdot>(Y (Suc i)))\<leadsto>tsynAbs\<cdot>(Y (Suc i)  .  c))"
+              using tsyn_stream_below tsynbabs_mono monofun_def by fastforce
+            show "\<And>i. Abs_ubundle (\<lambda>c. (c \<in> ubDom\<cdot>(Lub Y))\<leadsto>tsynAbs\<cdot>(Y i  .  c)) \<sqsubseteq>
+              Abs_ubundle (\<lambda>c. (c \<in> ubDom\<cdot>(Lub Y))\<leadsto>tsynAbs\<cdot>(Y (Suc i)  .  c))"
+              using chain_dom a1 by auto
           qed
-        have tsynbabs_lub_dom: "\<And>i. ubDom\<cdot>(\<Squnion>i::nat. Abs_ubundle (\<lambda>c::channel. (c \<in> ubDom\<cdot>(Lub Y))\<leadsto>tsynAbs\<cdot>(Y i  .  c))) =
-                      ubDom\<cdot>(Abs_ubundle (\<lambda>c::channel. (c \<in> ubDom\<cdot>(Lub Y))\<leadsto>tsynAbs\<cdot>(Y i  .  c)))"
+        have tsynbabs_lub_dom: "\<And>i. ubDom\<cdot>(\<Squnion>i. Abs_ubundle (\<lambda>c. (c \<in> ubDom\<cdot>(Lub Y))\<leadsto>tsynAbs\<cdot>(Y i  .  c))) =
+                      ubDom\<cdot>(Abs_ubundle (\<lambda>c. (c \<in> ubDom\<cdot>(Lub Y))\<leadsto>tsynAbs\<cdot>(Y i  .  c)))"
           using ubdom_below tsynbabs_chain  ubdom_chain_eq2 by fastforce
-        show ubdom_lub_eq: "ubDom\<cdot>(Abs_ubundle (\<lambda>c::channel. (c \<in> ubDom\<cdot>(Lub Y))\<leadsto>tsynAbs\<cdot>((\<Squnion>i::nat. Y i)  .  c))) =
-                        ubDom\<cdot>(\<Squnion>i::nat. Abs_ubundle (\<lambda>c::channel. (c \<in> ubDom\<cdot>(Lub Y))\<leadsto>tsynAbs\<cdot>(Y i  .  c)))"
+        show ubdom_lub_eq: "ubDom\<cdot>(Abs_ubundle (\<lambda>c. (c \<in> ubDom\<cdot>(Lub Y))\<leadsto>tsynAbs\<cdot>((\<Squnion>i. Y i)  .  c))) =
+                        ubDom\<cdot>(\<Squnion>i. Abs_ubundle (\<lambda>c. (c \<in> ubDom\<cdot>(Lub Y))\<leadsto>tsynAbs\<cdot>(Y i  .  c)))"
           proof -
-            have ubdom_lub: "ubDom\<cdot>(Lub Y) = ubDom\<cdot>(\<Squnion>i::nat. Abs_ubundle (\<lambda>c::channel. (c \<in> ubDom\<cdot>(Lub Y))\<leadsto>tsynAbs\<cdot>(Y i  .  c)))"
+            have ubdom_lub: "ubDom\<cdot>(Lub Y) = ubDom\<cdot>(\<Squnion>i. Abs_ubundle (\<lambda>c. (c \<in> ubDom\<cdot>(Lub Y))\<leadsto>tsynAbs\<cdot>(Y i  .  c)))"
               proof -
-                have h1: "\<And>n. ubDom\<cdot> (Lub Y) = ubDom\<cdot>(Y n)"
-                  by (simp add: a1)
-                then have "\<And>n. ubDom\<cdot> (Abs_ubundle (\<lambda>c. (c \<in> ubDom\<cdot> (Lub Y))\<leadsto>tsynAbs\<cdot>(Y n . c))) = ubDom\<cdot>(Y n)"
+                have "\<And>n. ubDom\<cdot> (Abs_ubundle (\<lambda>c. (c \<in> ubDom\<cdot> (Lub Y))\<leadsto>tsynAbs\<cdot>(Y n . c))) = ubDom\<cdot>(Y n)"
                   proof -
                     fix n :: nat
-                    have "\<exists>na. ubDom\<cdot> (Abs_ubundle (\<lambda>c. (c \<in> ubDom\<cdot>(Y na))\<leadsto>tsynAbs\<cdot>(Y n . c))) = ubDom\<cdot>(Y n)"
-                      using tsynbabs_ubundle_ubdom by blast
+                    have "ubDom\<cdot>(Lub Y) = ubDom\<cdot>(Y n)"
+                      using a1 ubdom_chain_eq2 by blast
                     then show "ubDom\<cdot> (Abs_ubundle (\<lambda>c. (c \<in> ubDom\<cdot>(Lub Y))\<leadsto>tsynAbs\<cdot>(Y n . c))) = ubDom\<cdot>(Y n)"
-                      using h1 by auto
+                      by (metis (no_types) tsynbabs_ubundle_ubdom)
                   qed
                 then show ?thesis
                   using a1 tsynbabs_lub_dom by auto
@@ -161,35 +178,25 @@ lemma tsynbabs_cont [simp]: "cont (\<lambda> sb. Abs_ubundle (\<lambda>c. (c\<in
          (\<Squnion>i. Abs_ubundle (\<lambda>c. (c \<in> ubDom\<cdot>(Lub Y))\<leadsto>tsynAbs\<cdot>(Y i  .  c)))  .  c"
           proof - 
             fix c
-            assume a2: "c \<in> ubDom\<cdot>(Abs_ubundle (\<lambda>c::channel. (c \<in> ubDom\<cdot>(Lub Y))\<leadsto>tsynAbs\<cdot>((\<Squnion>i::nat. Y i)  .  c)))"
+            assume a2: "c \<in> ubDom\<cdot>(Abs_ubundle (\<lambda>c. (c \<in> ubDom\<cdot>(Lub Y))\<leadsto>tsynAbs\<cdot>((\<Squnion>i. Y i)  .  c)))"
             then have a3: "c \<in> ubDom\<cdot>(Lub Y)"
               using tsynbabs_ubundle_ubdom by auto
-            have f1: "(\<Squnion>i::nat. Abs_ubundle (\<lambda>c::channel. (c \<in> ubDom\<cdot>(Lub Y))\<leadsto>tsynAbs\<cdot>(Y i  .  c)))  .  c =
-                  (\<Squnion>i::nat. Abs_ubundle (\<lambda>c::channel. (c \<in> ubDom\<cdot>(Lub Y))\<leadsto>tsynAbs\<cdot>(Y i  .  c)) . c)"
-              using contlub_cfun_arg tsynbabs_chain by blast
-            have f2: "tsynAbs\<cdot>(Lub Y  .  c) = (\<Squnion>i::nat. tsynAbs\<cdot>(Y i  .  c))"
-              by (simp add: contlub_cfun_arg a1)
-            have f3: "\<And>i::nat. ubWell (\<lambda>c::channel. (c \<in> ubDom\<cdot>(Lub Y))\<leadsto>tsynAbs\<cdot>(Y i  .  c))"
-              proof -
-                fix i :: nat
-                have "\<exists>n. ubWell (\<lambda>c. (c \<in> ubDom\<cdot>(Y n))\<leadsto>tsynAbs\<cdot>(Y i . c))"
-                  using tsynbabs_ubwell by blast
-                then show "ubWell (\<lambda>c. (c \<in> ubDom\<cdot>(Lub Y))\<leadsto>tsynAbs\<cdot>(Y i . c))"
-                  using a1 by auto
-              qed
-            have f4: "tsynAbs\<cdot>(Lub Y  .  c) = ((\<Squnion>i::nat. (Rep_ubundle (Abs_ubundle (\<lambda>c. (c \<in> ubDom\<cdot>(Lub Y))\<leadsto>tsynAbs\<cdot>(Y i  .  c)))))\<rightharpoonup>c)"
-              using ubrep_ubabs f3 f2 a2 a3 f1 lub_eq option.inject tsynbabs_chain tsynbabs_lub_dom ubdom_lub_eq ubgetchE ubgetch_insert ubrep_lub
-              by smt
-            have f5: "tsynAbs\<cdot>(Lub Y  .  c) = (\<Squnion>i::nat. Abs_ubundle (\<lambda>c::channel. (c \<in> ubDom\<cdot>(Lub Y))\<leadsto>tsynAbs\<cdot>(Y i  .  c)))  .  c"
-              by (metis (no_types, lifting) lub_eq f4 tsynbabs_chain ubgetch_insert ubrep_lub)
-            have f6: "tsynAbs\<cdot>(Lub Y  .  c) = Abs_ubundle (\<lambda>c::channel. (c \<in> ubDom\<cdot>(Lub Y))\<leadsto>tsynAbs\<cdot>((\<Squnion>i::nat. Y i)  .  c))  .  c"
-              by (simp add: a3 ubgetch_insert)
-            show "Abs_ubundle (\<lambda>c::channel. (c \<in> ubDom\<cdot>(Lub Y))\<leadsto>tsynAbs\<cdot>((\<Squnion>i::nat. Y i)  .  c))  .  c =
-                  (\<Squnion>i::nat. Abs_ubundle (\<lambda>c::channel. (c \<in> ubDom\<cdot>(Lub Y))\<leadsto>tsynAbs\<cdot>(Y i  .  c)))  .  c"
-              using f5 f6 by auto
+            have tsynbabs_ubrep_ubabs_h: "\<And>i. ubWell (\<lambda>c. (c \<in> ubDom\<cdot>(Lub Y))\<leadsto>tsynAbs\<cdot>(Y i  .  c))"
+              using tsynbabs_ubwell a1
+              by (metis (no_types, lifting) domIff ubWell_def ubdom_chain_eq2)
+            have tsynbabs_ubrep_ubabs: "tsynAbs\<cdot>(Lub Y  .  c) = ((\<Squnion>i. (Rep_ubundle (Abs_ubundle (\<lambda>c. (c \<in> ubDom\<cdot>(Lub Y))\<leadsto>tsynAbs\<cdot>(Y i  .  c)))))\<rightharpoonup>c)"
+              using ubrep_ubabs tsynbabs_ubrep_ubabs_h a3 Rep_ubundle_inject a1 contlub_cfun_arg image_cong option.sel tsynbabs_chain ubgetch_insert ubrep_chain_the ubrep_lub ubrep_lub_eval
+              by smt 
+            have thesis_h: "tsynAbs\<cdot>(Lub Y  .  c) = (\<Squnion>i. Abs_ubundle (\<lambda>c. (c \<in> ubDom\<cdot>(Lub Y))\<leadsto>tsynAbs\<cdot>(Y i  .  c)))  .  c"
+              using ubgetch_insert tsynbabs_ubrep_ubabs
+              by (simp add: ubgetch_insert tsynbabs_chain ubrep_lub)
+            show "Abs_ubundle (\<lambda>c. (c \<in> ubDom\<cdot>(Lub Y))\<leadsto>tsynAbs\<cdot>((\<Squnion>i. Y i)  .  c))  .  c =
+                  (\<Squnion>i. Abs_ubundle (\<lambda>c::channel. (c \<in> ubDom\<cdot>(Lub Y))\<leadsto>tsynAbs\<cdot>(Y i  .  c)))  .  c"
+              using thesis_h a3 ubgetch_insert
+              by (simp add: ubgetch_ubrep_eq)
           qed
       qed
-    then show  "Abs_ubundle (\<lambda>c. (c \<in> ubDom\<cdot>(\<Squnion>i. Y i))\<leadsto>tsynAbs\<cdot>((\<Squnion>i. Y i)  .  c)) \<sqsubseteq> (\<Squnion>i. Abs_ubundle (\<lambda>c. (c \<in> ubDom\<cdot>(\<Squnion>j. Y j))\<leadsto>tsynAbs\<cdot>(Y i  .  c)))"
+    then show "Abs_ubundle (\<lambda>c. (c \<in> ubDom\<cdot>(\<Squnion>i. Y i))\<leadsto>tsynAbs\<cdot>((\<Squnion>i. Y i)  .  c)) \<sqsubseteq> (\<Squnion>i. Abs_ubundle (\<lambda>c. (c \<in> ubDom\<cdot>(\<Squnion>j. Y j))\<leadsto>tsynAbs\<cdot>(Y i  .  c)))"
       by simp
   qed
 
@@ -237,15 +244,18 @@ lemma tsynbabs_test_finstream:
   subsection {* tsynbRemDups *}
 (* ----------------------------------------------------------------------- *)
 
-  text {* @{term tsynRemDups} channel is usclOkay. *}  
-lemma tsynremdups_sdom: assumes "sdom\<cdot>s \<subseteq> ctype c" shows "sdom\<cdot>(tsynRemDups\<cdot>s) \<subseteq> ctype c"
+text {* @{term tsynRemDups_h} channel is usclOkay. *}  
+lemma tsynremdupsh_sdom: assumes "sdom\<cdot>s \<subseteq> ctype c" 
+  shows "sdom\<cdot>((sscanlA tsynRemDups_h state)\<cdot>s) \<subseteq> ctype c"
   using assms
-  apply (induction s rule: tsyn_ind, simp_all)
+  apply (induction s arbitrary: state rule: tsyn_ind, simp_all)
   apply (rule admI)
-    apply (metis (no_types, lifting) ch2ch_Rep_cfunR contlub_cfun_arg l44 sdom_chain2lub subset_trans)
-   apply (simp_all add: tsynremdups_sconc_msg tsynremdups_sconc_null)
+  apply (metis (no_types, lifting) ch2ch_Rep_cfunR contlub_cfun_arg l44 sdom_chain2lub subset_trans)
+  by (simp add: ctype_tsyn_def)
 
-  using ctype_tsyn_iff sorry
+text {* @{term tsynRemDups} channel is usclOkay. *}  
+lemma tsynremdups_sdom: assumes "sdom\<cdot>s \<subseteq> ctype c" shows "sdom\<cdot>(tsynRemDups\<cdot>s) \<subseteq> ctype c"
+  by (simp add: assms tsynRemDups_def tsynremdupsh_sdom)
 
 text {* @{term tsynbRemDups} bundle is ubwell. *}   
 lemma tsynbremdups_ubwell [simp]: "ubWell (\<lambda>c. (c\<in>ubDom\<cdot>sb) \<leadsto> (tsynRemDups\<cdot>(sb . c)))"
