@@ -297,36 +297,25 @@ text{* @{term RecSPF} insertion lemma. *}
 lemma recspf_insert: "RecSPF b \<rightleftharpoons> sb = (Abs_ufun (tsynbRec b)) \<rightleftharpoons> sb"
   by (simp add: RecSPF_def)
 
+text{* @{term RecSPF} is strict. *}
+lemma recspf_strict: "RecSPF b \<rightleftharpoons> ubLeast{\<C> ''dr''} = ubLeast{\<C> ''ar'', \<C> ''o''}"
+  by(simp add: recspf_insert tsynbrec_strict)
+
 text{* The domain of @{term RecSPF}. *}
 lemma recspf_ufdom: "ufDom\<cdot>(RecSPF b) = {\<C> ''dr''}"
   by (metis RecSPF_def rep_abs_cufun2 tsynbnull_ubdom tsynbrec_insert tsynbrec_ufwell 
       ubclDom_ubundle_def ufdom_2ufundom)
-  
+
 text{* The range of @{term RecSPF}. *}
 lemma recspf_ufran: "ufRan\<cdot>(RecSPF b) = {\<C> ''ar'', \<C> ''o''}"
-  proof -
-    have  "\<forall> sb. ubDom\<cdot>Rep_cfun (tsynbRec b) \<rightharpoonup> sb = {\<C> ''ar'', \<C> ''o''} \<or> ubDom\<cdot>sb \<noteq> {\<C> ''dr''}"
-      by (simp add: tsynbrec_insert tsynbrec_ubundle_ubdom ubclDom_ubundle_def)
-    hence "ubclDom\<cdot>(SOME sbout::abpMessage tsyn stream\<^sup>\<Omega>. sbout \<in> ran (Rep_cufun (RecSPF b))) 
-             = {\<C> ''ar'', \<C> ''o''}"
-      sorry
-(*
-      by (metis (no_types) RecSPF_def recspf_ufdom rep_abs_cufun2 spf_ubDom tsynbrec_ufwell
-          ubclDom_ubundle_def ufdom_insert ufran_insert)
-*)
-    thus ?thesis
-      by (simp add: ufRan_def)
-  qed
+  apply(subst ufran_least)
+  by (simp add: recspf_ufdom ubclDom_ubundle_def  ubclLeast_ubundle_def recspf_strict)
 
 text{* The domain of the output bundle of @{term tsynbRec}. *}
 lemma recspf_ubdom:
   assumes "ubDom\<cdot>sb = ufDom\<cdot>(RecSPF b)"
   shows "ubDom\<cdot>((RecSPF b) \<rightleftharpoons> sb) = {\<C> ''ar'', \<C> ''o''}"
   by (simp add: assms recspf_ufran spf_ubDom)
-
-text{* @{term RecSPF} is strict. *}
-lemma recspf_strict: "(RecSPF b) \<rightleftharpoons> ubLeast{\<C> ''dr''} = ubLeast{\<C> ''ar'', \<C> ''o''}"
-  by(simp add: recspf_insert tsynbrec_strict)
 
 (* ----------------------------------------------------------------------- *)
   section {* Automaton Receiver Transition Lemmata *}
