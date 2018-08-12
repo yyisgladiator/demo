@@ -451,15 +451,28 @@ lemma snth_ora_true: assumes "#({True} \<ominus> ora) = \<infinity>" obtains n w
 
 (* If a "null" comes in, send it out and stay in the same state. *)
 lemma "spsConcIn (tsynbNull(\<C> ''ds''))\<cdot>MedSPS = spsConcOut (tsynbNull (\<C> ''dr''))\<cdot>MedSPS"
+  apply (simp add: spsConcIn_def spsConcOut_def)
+sorry
+
+lemma "spsConcIn (createBundle (Msg m) (\<C> ''ds''))\<cdot>
+  (Abs_rev_uspec {MedSPF (false \<bullet> ora) |ora. #({True} \<ominus> ora) = \<infinity>} {\<C> ''ds''} {\<C> ''dr''}) 
+  = spsConcOut (tsynbNull(\<C> ''dr''))\<cdot>
+  (Abs_rev_uspec {MedSPF ora |ora. #({True} \<ominus> ora) = \<infinity>} {\<C> ''ds''} {\<C> ''dr''})"
+sorry
+
+lemma "spsConcIn (createBundle (Msg m) (\<C> ''ds''))\<cdot>
+  (Abs_rev_uspec {MedSPF (true \<bullet> ora) |ora. #({True} \<ominus> ora) = \<infinity>} {\<C> ''ds''} {\<C> ''dr''}) 
+  = spsConcOut (createBundle (Msg m) (\<C> ''ds''))\<cdot>
+  (Abs_rev_uspec {MedSPF ora |ora. #({True} \<ominus> ora) = \<infinity>} {\<C> ''ds''} {\<C> ''dr''})"
 sorry
 
 (*
-(* counter not null, drop every message and count one down *)
-lemma "spsConcIn (makeInput m) (h_MED (State TheOne (Suc n))) = spsConcOut (makeNull (\<C> ''dr''))\<cdot>(h_MED (State TheOne n))"
-  oops
-
 (* If a "null" comes in send it out and stay in the same state *) 
 lemma "spsConcIn (makeNull (\<C> ''ds'')) (h_MED state) = spsConcOut (makeNull (\<C> ''dr''))\<cdot>(h_MED state)"
+  oops
+
+(* counter not null, drop every message and count one down *)
+lemma "spsConcIn (makeInput m) (h_MED (State TheOne (Suc n))) = spsConcOut (makeNull (\<C> ''dr''))\<cdot>(h_MED (State TheOne n))"
   oops
 
 (* Counter hit zero, so pass the message and reset the countdown to a random value *)
