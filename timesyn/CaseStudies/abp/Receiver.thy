@@ -322,7 +322,7 @@ lemma tsynbrec_test_inputstreamlosedat:
   apply (simp add: natbool2abp_def tsynmap_insert abp2natbool_def tsynMap_def)
   apply (simp add: tsynProjSnd_def bool2abp_def tsynmap_insert)
   apply (insert tsynrec_test_inputstreamlosedat)
-  apply (simp add:  recTestInputStreamLoseDat_def recTestOutputStreamOLoseMsg_def)
+  apply (simp add: recTestInputStreamLoseDat_def recTestOutputStreamOLoseMsg_def)
   apply (simp add: nat2abp_def tsynMap_def)
   by (simp add: fun_upd_twist)
 
@@ -454,6 +454,8 @@ lemma da_h_ubdom: assumes "ubDom\<cdot>sb = daDom automat"
 
 text{* The domain of the output bundle after executing one step of @{term da_h} for all cases. *}
 
+(* ToDo: rename the lemmata with da_h instead of h. *)
+
 lemma receiverautomaton_h_step_ubdom_null_null:
   assumes "ubDom\<cdot>sb = {\<C> ''dr''}"
   shows "ubDom\<cdot>(ubConc (tsynbNull (\<C> ''ar'') \<uplus> tsynbNull (\<C> ''o''))
@@ -481,9 +483,11 @@ lemma receiverautomaton_h_step_ubdom_ar_o:
   apply (subst da_h_ubdom)
   by (simp add: assms daDom_def daRan_def ReceiverAutomaton.rep_eq insert_commute)+
 
-text{* The datatype is allowed on  the channel. *}
+text{* The datatype is allowed on the channel. *}
 lemma msga_ctype: "Msg (Pair_nat_bool a) \<in> ctype (\<C> ''dr'')"
   by (simp add: ctype_tsynI)
+
+(* ToDo: generalize and simplify next five lemmata. *)
 
 text{* After creating a bundle from a simple message m the contained message is m.  *}
 lemma msga_createbundle_ubgetch [simp]: 
@@ -501,7 +505,7 @@ lemma msga_createbundle_ubconc [simp]:
 
 text{* The rest of the concatenation of a simple bundle with another bundle is the latter. *}
 lemma msga_createbundle_ubconc_sbrt [simp]:
-  assumes "ubDom\<cdot>sb = {\<C> ''dr''}" 
+  assumes "ubDom\<cdot>sb = {\<C> ''dr''}"
   shows "sbRt\<cdot>(ubConc (createBundle (Msg (Pair_nat_bool a)) (\<C> ''dr''))\<cdot>sb) = sb"
   apply (rule ub_eq)
   apply (simp add: assms)
@@ -538,11 +542,13 @@ lemma createaroutput_eq [simp]:
 
 text {* For every state and input one step of @{term da_h} is executed correctly. *}
 
+(* ToDo: rename with da_h/H instead of h. *)
+
 text{* Empty Input. *}
 lemma receiverautomaton_h_strict:
   "da_h ReceiverAutomaton (ReceiverState r) \<rightleftharpoons> ubLeast {\<C> ''dr''} 
-     = ubclLeast {\<C> ''ar'',\<C> ''o''}"
-  by (simp add: da_h_bottom daDom_def ReceiverAutomaton.rep_eq daRan_def)
+     = ubLeast {\<C> ''ar'', \<C> ''o''}"
+  by (simp add: ReceiverAutomaton.rep_eq daDom_def daRan_def da_h_bottom ubclLeast_ubundle_def)
 
 text{* ReceiverState Rf and input null. *}
 lemma receiverautomaton_h_step_rf_null:
@@ -612,7 +618,7 @@ lemma receiverautomaton_h_step_rt_false:
          daNextOutput_def daNextState_def daTransition_def usclConc_stream_def)
   using assms receiverautomaton_h_step_ubdom_ar_null by auto
 
-text{* The SPF generated from @{term ReceiverAutomaton} executes the first step correctly.*}
+text{* The SPF generated from @{term ReceiverAutomaton} executes the first step correctly. *}
 lemma receiverautomaton_H_step:
   assumes "ubDom\<cdot>sb = {\<C> ''dr''}"
   shows "da_H ReceiverAutomaton \<rightleftharpoons> sb 
