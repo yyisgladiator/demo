@@ -228,25 +228,6 @@ lemma tsynbabs_insert:
            = (ubDom\<cdot>sb = {c1}) \<leadsto> Abs_ubundle [c2 \<mapsto> tsynAbs\<cdot>(sb  .  c1)]"
   by (simp add: assms tsynbAbs_def)
         
-lemma tsynabs_sdom: "(sdom\<cdot>s \<subseteq> insert - (Msg ` range a)) = (sdom\<cdot>(tsynAbs\<cdot>s) \<subseteq> range a)"
-  proof (induction s rule: tsyn_ind)
-    case adm
-    then show ?case 
-      by (rule admI, simp add: contlub_cfun_arg lub_eq_Union UN_subset_iff)
-  next
-    case bot
-    then show ?case 
-      by simp
-  next
-    case (msg m s)
-    then show ?case 
-      by (simp only: tsynabs_sconc_msg sdom2un, auto)
-  next
-    case (null s)
-    then show ?case 
-      by (simp only: tsynabs_sconc_null sdom2un, auto)
-  qed
-
 text {* @{term tsynbAbs} is strict. *}
 lemma tsynbabs_strict [simp]:
   assumes "\<And>s :: 'a tsyn stream. usclOkay c1 s = usclOkay c2 (tsynAbs\<cdot>s)"
@@ -259,7 +240,7 @@ text {* Test lemma for @{term tsynbAbs}. *}
 lemma tsynbabs_test_finstream:
   "tsynbAbs\<cdot>(tsynbabsTestInput) = Some (tsynbabsTestOutput)"
   apply (subst tsynbabs_insert)
-  apply (simp add: usclOkay_stream_def ctype_tsyn_def tsynabs_sdom)
+  apply (simp add: usclOkay_stream_def ctype_tsyn_def tsynabs_sdom_subset_eq)
   apply (simp only: tsynbabsTestInput_def tsynbabsTestOutput_def)
   apply (subst ubgetch_ubrep_eq)
   apply (metis tsynbabsTestInput.rep_eq ubrep_well)

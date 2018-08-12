@@ -192,8 +192,8 @@ lemma tsynbrec_ubwell [simp]:
   apply (simp add: usclOkay_stream_def ctype_tsyn_def)
   apply (rename_tac y)
   apply (case_tac "y = \<C> ''o''", simp_all)
-  apply (simp add: nat2abp_def tsynabs_sdom tsynmap_tsynabs)
-  by (simp add: bool2abp_def tsynabs_sdom tsynmap_tsynabs)
+  apply (simp add: nat2abp_def tsynabs_sdom_subset_eq tsynmap_tsynabs)
+  by (simp add: bool2abp_def tsynabs_sdom_subset_eq tsynmap_tsynabs)
 
 text{* The domain of the output bundle of @{term tsynbRec}. *}
 lemma tsynbrec_ubundle_ubdom: 
