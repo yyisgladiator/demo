@@ -99,23 +99,18 @@ lemma tsynbabs_ubundle_ubdom:
   "ubDom\<cdot>(Abs_ubundle (\<lambda>c. (c \<in> ubDom\<cdot>sb) \<leadsto> tsynAbs\<cdot>(sb . c))) = ubDom\<cdot>sb"
   by (simp add: ubdom_ubrep_eq)
 
-text {* @{term tsynbAbs} is monotonic. *}    
-lemma tsynbabs_mono [simp]: "monofun (\<lambda> sb. Abs_ubundle (\<lambda>c. (c\<in>ubDom\<cdot>sb) \<leadsto> tsynAbs\<cdot>(sb . c)))"
-  apply (rule monofunI)
-  apply (simp add: ubdom_insert below_ubundle_def)
-  apply (subst ubrep_ubabs, metis (no_types) tsynbabs_ubwell ubdom_insert)+
-  apply (simp add: fun_below_iff)
-  apply (rule)+
-  apply (metis monofun_cfun_arg some_below some_below2 ubdom_insert ubgetchE)
-  by (metis below_option_def domIff)+
-
 text {* @{term tsynbAbs} is continous. *}  
 lemma tsynbabs_cont [simp]: "cont (\<lambda> sb. Abs_ubundle (\<lambda>c. (c\<in>ubDom\<cdot>sb) \<leadsto> (tsynAbs\<cdot>(sb . c))))"
   apply (rule cont_Abs_UB, simp_all)
   apply (rule contI2)
   apply (rule monofunI)
   apply (simp add: below_option_def fun_below_iff monofun_cfun_arg ubdom_below)
-  sorry
+  apply auto
+  apply (simp only: fun_below_iff)
+  by (smt contlub_cfun_arg contlub_lambda is_ub_thelub lub_eq monofun_cfun_arg not_below2not_eq po_class.chain_def some_below some_lub_chain_eq)
+  (*apply auto
+  apply (smt contlub_cfun_arg contlub_lambda lub_mono monofun_cfun_arg po_class.chain_def po_eq_conv some_below some_lub_chain_eq)
+  by (smt contlub_lambda is_ub_thelub monofun_cfun_arg po_class.chain_def po_eq_conv some_below)*)
 
 text {* @{term tsynbAbs} insertion lemma. *}
 lemma tsynbabs_insert: 
