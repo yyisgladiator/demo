@@ -391,6 +391,25 @@ text {* Length of @{term tsynAbs} is smaller or equal to the length of the origi
 lemma tsynabs_slen: "#(tsynAbs\<cdot>s) \<le> #s"
   by (simp add: slen_sfilterl1 tsynabs_insert)
 
+lemma tsynabs_sdom_subset_eq: "(sdom\<cdot>s \<subseteq> insert - (Msg ` range a)) = (sdom\<cdot>(tsynAbs\<cdot>s) \<subseteq> range a)"
+  proof (induction s rule: tsyn_ind)
+    case adm
+    then show ?case 
+      by (rule admI, simp add: contlub_cfun_arg lub_eq_Union UN_subset_iff)
+  next
+    case bot
+    then show ?case 
+      by simp
+  next
+    case (msg m s)
+    then show ?case 
+      by (simp only: tsynabs_sconc_msg sdom2un, auto)
+  next
+    case (null s)
+    then show ?case 
+      by (simp only: tsynabs_sconc_null sdom2un, auto)
+  qed
+
 (* ----------------------------------------------------------------------- *)
   subsection {* tsynLen *}
 (* ----------------------------------------------------------------------- *)
