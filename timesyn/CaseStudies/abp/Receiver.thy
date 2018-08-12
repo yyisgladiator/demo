@@ -188,15 +188,12 @@ text{* The output bundle of @{term tsynbRec} is well-formed. *}
 lemma tsynbrec_ubwell [simp]:
  "ubWell [\<C> ''ar'' \<mapsto> bool2abp\<cdot>(tsynProjSnd\<cdot>(abp2natbool\<cdot>(x  .  \<C> ''dr''))),
           \<C> ''o'' \<mapsto> nat2abp\<cdot>(tsynRec b\<cdot>(abp2natbool\<cdot>(x  .  \<C> ''dr'')))]"
-  apply (simp add: ubWell_def)
-  apply (simp add: usclOkay_stream_def)
-  apply (simp add: nat2abp_def bool2abp_def)
-  apply (simp add: ctype_tsyn_def tsynMap_def)
-  apply (simp add: smap_sdom)
-  apply (simp add: image_subset_iff image_iff range_eqI)
-  apply (rule)
-  using tsynApplyElem.elims apply blast
-  using tsynApplyElem.elims by blast
+  apply (rule ubwellI)
+  apply (simp add: usclOkay_stream_def ctype_tsyn_def)
+  apply (rename_tac y)
+  apply (case_tac "y = \<C> ''o''", simp_all)
+  apply (simp add: nat2abp_def tsynabs_sdom tsynmap_tsynabs)
+  by (simp add: bool2abp_def tsynabs_sdom tsynmap_tsynabs)
 
 text{* The domain of the output bundle of @{term tsynbRec}. *}
 lemma tsynbrec_ubundle_ubdom: 
@@ -208,58 +205,33 @@ lemma tsynbrec_ubundle_ubdom:
 text{* @{term tsynbRec} is monotonous. *}
 lemma tsynbrec_mono [simp]:
   "monofun (\<lambda> sb. (ubDom\<cdot>sb = {\<C> ''dr''}) \<leadsto> Abs_ubundle [
-              \<C> ''ar'' \<mapsto> bool2abp\<cdot>(tsynProjSnd\<cdot>(abp2natbool\<cdot>(sb  .  \<C> ''dr''))), 
-              \<C> ''o'' \<mapsto> nat2abp\<cdot>(tsynRec b\<cdot>(abp2natbool\<cdot>(sb  .  \<C> ''dr'')))])"
+                     \<C> ''ar'' \<mapsto> bool2abp\<cdot>(tsynProjSnd\<cdot>(abp2natbool\<cdot>(sb  .  \<C> ''dr''))), 
+                     \<C> ''o'' \<mapsto> nat2abp\<cdot>(tsynRec b\<cdot>(abp2natbool\<cdot>(sb  .  \<C> ''dr'')))])"
   apply (fold ubclDom_ubundle_def)
   apply (rule ufun_monoI2)
   by (simp add: below_ubundle_def cont_pref_eq1I fun_belowI some_below)
 
-text{* Creating a chain on the two output channels. *}
+(* ToDo: add description. *)
 
-lemma tsynbrec_chain: "chain Y \<Longrightarrow>
-  chain (\<lambda>i::nat. [\<C> ''ar'' \<mapsto> bool2abp\<cdot>(tsynProjSnd\<cdot>(abp2natbool\<cdot>(Y i  .  \<C> ''dr''))), 
-                   \<C> ''o'' \<mapsto> nat2abp\<cdot>(tsynRec b\<cdot>(abp2natbool\<cdot>(Y i  .  \<C> ''dr'')))])"
+lemma tsynbrec_chain:
+  assumes "chain Y"
+  shows "chain (\<lambda>i. [\<C> ''ar'' \<mapsto> bool2abp\<cdot>(tsynProjSnd\<cdot>(abp2natbool\<cdot>(Y i  .  \<C> ''dr''))),
+                     \<C> ''o'' \<mapsto> nat2abp\<cdot>(tsynRec b\<cdot>(abp2natbool\<cdot>(Y i  .  \<C> ''dr'')))])"
   apply (rule chainI)
-  by (simp add: fun_below_iff monofun_cfun_arg po_class.chainE some_below)
-
-lemma tsynbrec_ubundle_chain: "chain Y \<Longrightarrow>
-  chain (\<lambda>i::nat. Abs_ubundle 
-        [\<C> ''ar'' \<mapsto> bool2abp\<cdot>(tsynProjSnd\<cdot>(abp2natbool\<cdot>(Y i  .  \<C> ''dr''))),
-         \<C> ''o'' \<mapsto> nat2abp\<cdot>(tsynRec b\<cdot>(abp2natbool\<cdot>(Y i  .  \<C> ''dr'')))])"
-  apply (rule chainI)
-  apply (simp add: below_ubundle_def)
-  by (simp add: fun_below_iff monofun_cfun_arg po_class.chainE some_below)
-
-lemma tsynbrec_chain2: " chain Y \<Longrightarrow>
-  chain (\<lambda>i::nat. [\<C> ''ar'' \<mapsto> bool2abp\<cdot>(tsynProjSnd\<cdot>(abp2natbool\<cdot>Rep_ubundle (Y i)\<rightharpoonup>\<C> ''dr'')), 
-                   \<C> ''o'' \<mapsto> nat2abp\<cdot>(tsynRec b\<cdot>(abp2natbool\<cdot>Rep_ubundle (Y i)\<rightharpoonup>\<C> ''dr''))])"
-  by (metis (no_types, lifting) po_class.chain_def tsynbrec_chain ubgetch_insert)
-
-text{* Extracting the lub doesn't change the term.*}
-
-lemma tsynbrec_ar_contlub: assumes "chain Y"
-  shows "bool2abp\<cdot>(tsynProjSnd\<cdot>(abp2natbool\<cdot>(\<Squnion>i. Y i  .  \<C> ''dr''))) 
-  = (\<Squnion>i. (bool2abp\<cdot>(tsynProjSnd\<cdot>(abp2natbool\<cdot>(((Y i.  \<C> ''dr'')))))))"
-  by (simp add: assms contlub_cfun_arg)
-
-lemma tsynbrec_o_contlub: assumes "chain Y"
-  shows "nat2abp\<cdot>(tsynRec b\<cdot>(abp2natbool\<cdot>(\<Squnion>i. Y i  .  \<C> ''dr''))) 
-  = (\<Squnion>i. (nat2abp\<cdot>(tsynRec b\<cdot>(abp2natbool\<cdot>(((Y i.  \<C> ''dr'')))))))"
-  by (simp add: assms contlub_cfun_arg)
+  by (simp add: assms fun_below_iff monofun_cfun_arg po_class.chainE some_below)
 
 text{* @{term tsynbRec} is continuous. *}
 lemma tsynbrec_cont [simp]:
   "cont (\<lambda> sb. (ubDom\<cdot>sb = {\<C> ''dr''}) \<leadsto> Abs_ubundle [
-               \<C> ''ar'' \<mapsto> bool2abp\<cdot>(tsynProjSnd\<cdot>(abp2natbool\<cdot>(sb  .  \<C> ''dr''))), 
-               \<C> ''o'' \<mapsto> nat2abp\<cdot>(tsynRec b\<cdot>(abp2natbool\<cdot>(sb  .  \<C> ''dr'')))])"
+                  \<C> ''ar'' \<mapsto> bool2abp\<cdot>(tsynProjSnd\<cdot>(abp2natbool\<cdot>(sb  .  \<C> ''dr''))), 
+                  \<C> ''o'' \<mapsto> nat2abp\<cdot>(tsynRec b\<cdot>(abp2natbool\<cdot>(sb  .  \<C> ''dr'')))])"
   apply (fold ubclDom_ubundle_def)
   apply (rule ufun_contI2)
   apply (rule cont_Abs_UB)
   apply (rule contI2)
   apply (rule monofunI)
   apply (simp add: below_ubundle_def cont_pref_eq1I fun_belowI some_below)
-  using tsynbrec_chain apply (simp add: contlub_cfun_arg fun_below_iff some_lub_chain_eq lub_fun)
-  using tsynbrec_ubwell by blast
+  by (simp_all add: tsynbrec_chain contlub_cfun_arg fun_below_iff some_lub_chain_eq lub_fun)
 
 text{* @{term tsynbRec} insertion lemma. *}
 lemma tsynbrec_insert: 
@@ -295,7 +267,7 @@ lemma tsynbrec_getch_o:
   by (simp add: tsynbrec_insert assms ubgetch_ubrep_eq)
 
 text{* @{term tsynbRec} is strict. *}
-lemma tsynbrec_strict: "(Rep_cfun (tsynbRec b)) \<rightharpoonup>ubLeast {\<C> ''dr''} = ubLeast {\<C> ''ar'', \<C> ''o''}"
+lemma tsynbrec_strict: "(Rep_cfun (tsynbRec b)) \<rightharpoonup> ubLeast {\<C> ''dr''} = ubLeast {\<C> ''ar'', \<C> ''o''}"
   apply (rule ub_eq)
   apply (simp_all add: tsynbrec_ubdom)
   apply (rename_tac x)
@@ -312,9 +284,13 @@ lemma recspf_strict: "RecSPF b \<rightleftharpoons> ubLeast{\<C> ''dr''} = ubLea
 
 text{* The domain of @{term RecSPF}. *}
 lemma recspf_ufdom: "ufDom\<cdot>(RecSPF b) = {\<C> ''dr''}"
-  by (metis RecSPF_def rep_abs_cufun2 tsynbnull_ubdom tsynbrec_insert tsynbrec_ufwell 
-      ubclDom_ubundle_def ufdom_2ufundom)
-
+  proof -
+    have "ufDom\<cdot>(Abs_ufun (tsynbRec b)) = ubclDom\<cdot>(ubLeast {\<C> ''dr''} :: abpMessage tsyn stream\<^sup>\<Omega>)"
+      by (simp add: tsynbrec_insert)
+    then show ?thesis
+      by (simp add: RecSPF_def ubclDom_ubundle_def)
+  qed
+  
 text{* The range of @{term RecSPF}. *}
 lemma recspf_ufran: "ufRan\<cdot>(RecSPF b) = {\<C> ''ar'', \<C> ''o''}"
   by (simp add: ufran_least recspf_ufdom ubclDom_ubundle_def ubclLeast_ubundle_def recspf_strict)
