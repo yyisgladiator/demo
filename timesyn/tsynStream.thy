@@ -70,11 +70,12 @@ text {* @{term tsynAbs}: Filter the nulls and return the corresponding stream. *
 definition tsynAbs:: "'a tsyn stream \<rightarrow> 'a stream" where
   "tsynAbs \<equiv> \<Lambda> s. smap tsynAbsElem\<cdot>(sfilter {e. e \<noteq> null}\<cdot>s)"
 
-(* ToDo: add abbreviation *)
-
 text {* @{term tsynLen}: Return the number of messages. *}
 definition tsynLen:: "'a tsyn stream \<rightarrow> lnat" where 
   "tsynLen \<equiv> \<Lambda> s. #(tsynAbs\<cdot>s)"
+
+abbreviation tsynLen_abbr :: "'a tsyn stream \<Rightarrow> lnat" ("#\<^sub>-_" [1000] 999) where
+  "#\<^sub>-s == tsynLen\<cdot>s"
 
 text {* @{term tsynApplyElem}: Apply the function direct to the message. *}
 fun tsynApplyElem :: "('a \<Rightarrow> 'b) \<Rightarrow> 'a tsyn \<Rightarrow> 'b tsyn" where
@@ -112,6 +113,9 @@ text {* @{term tsynFilter}: Remove all elements from the stream which are not in
         set. *}
 definition tsynFilter :: "'a set \<Rightarrow> 'a tsyn stream \<rightarrow> 'a tsyn stream" where
   "tsynFilter A = smap (tsynFilterElem A)"
+
+abbreviation tsynFilter_abbr :: "'a set \<Rightarrow> 'a tsyn stream \<Rightarrow> 'a tsyn stream" 
+  ("(_ \<ominus>\<^sub>- _)" [66, 65] 65) where "F \<ominus>\<^sub>- s \<equiv> tsynFilter F\<cdot>s"
 
 (* ToDo: add descriptions. *)
 
@@ -521,8 +525,10 @@ lemma tsynmap_slen: "#(tsynMap f\<cdot>s) = #s"
 
 text {* Abstraction of @{term tsynMap} equals sMap executed on abstracted stream. *}
 lemma tsynmap_tsynabs: "tsynAbs\<cdot>(tsynMap f\<cdot>s) = smap f\<cdot>(tsynAbs\<cdot>s)"
-  oops
-
+  apply (induction s rule: tsyn_ind, simp_all)
+  apply (simp add: tsynmap_sconc_msg tsynabs_sconc_msg)
+  by (simp add: tsynmap_sconc_null tsynabs_sconc_null)
+  
 (* ----------------------------------------------------------------------- *)
   subsection {* tsynProjFst *}
 (* ----------------------------------------------------------------------- *)
@@ -578,7 +584,27 @@ lemma tsynprojfst_tsynlen: "tsynLen\<cdot>(tsynProjFst\<cdot>ts) = tsynLen\<cdot
 
 text {* Abstraction of @{term tsynProjFst} equals sprojfst executed on abstracted stream. *}
 lemma tsynprojfst_tsynabs: "tsynAbs\<cdot>(tsynProjFst\<cdot>s) = sprojfst\<cdot>(tsynAbs\<cdot>s)"
-  oops
+  proof (induction s rule: tsyn_ind)
+    case adm
+    then show ?case 
+      by simp
+  next
+    case bot
+    then show ?case 
+      by simp
+  next
+    case (msg m s)
+    obtain a where pair_def: "\<exists>b. m = (a, b)"
+      by (meson surj_pair)
+    obtain b where m_def: "m = (a, b)"
+      using pair_def by blast
+    then show ?case
+      by (simp add: m_def tsynprojfst_sconc_msg tsynabs_sconc_msg msg.IH)
+  next
+    case (null s)
+    then show ?case
+      by (simp add: tsynprojfst_sconc_null tsynabs_sconc_null)
+  qed
 
 (* ----------------------------------------------------------------------- *)
   subsection {* tsynProjSnd *}
@@ -630,6 +656,30 @@ text {* @{term tsynProjSnd} leaves the length of a stream unchanged. *}
 lemma tsynprojsnd_slen: "#(tsynProjSnd\<cdot>s) = #s"
   by (simp add: tsynprojsnd_insert)
 
+text {* Abstraction of @{term tsynProjSnd} equals sprojsnd executed on abstracted stream. *}
+lemma tsynprojsnd_tsynabs: "tsynAbs\<cdot>(tsynProjSnd\<cdot>s) = sprojsnd\<cdot>(tsynAbs\<cdot>s)"
+  proof (induction s rule: tsyn_ind)
+    case adm
+    then show ?case 
+      by simp
+  next
+    case bot
+    then show ?case 
+      by simp
+  next
+    case (msg m s)
+    obtain a where pair_def: "\<exists>b. m = (a, b)"
+      by (meson surj_pair)
+    obtain b where m_def: "m = (a, b)"
+      using pair_def by blast
+    then show ?case
+      by (simp add: m_def tsynprojsnd_sconc_msg tsynabs_sconc_msg msg.IH)
+  next
+    case (null s)
+    then show ?case
+      by (simp add: tsynprojsnd_sconc_null tsynabs_sconc_null)
+  qed
+
 (* ----------------------------------------------------------------------- *)
   subsection {* tsynRemDups *}
 (* ----------------------------------------------------------------------- *)
@@ -676,6 +726,10 @@ lemma tsynremdups_test_infstream:  "tsynRemDups\<cdot>(<[Msg (1 :: nat), Msg (1 
   apply (simp add: tsynremdups_insert)
   oops
 
+text {* Abstraction of @{term tsynRemDups} equals srcdups executed on abstracted stream. *}
+lemma tsynremdups_tsynabs: "tsynAbs\<cdot>(tsynRemDups\<cdot>s) = srcdups\<cdot>(tsynAbs\<cdot>s)"
+  oops
+   
 (* ----------------------------------------------------------------------- *)
   subsection {* tsynRemDups_fix_h *}
 (* ----------------------------------------------------------------------- *)
@@ -716,7 +770,8 @@ lemma tsynremdups_fix_h_sconc_null_some:
 
 lemma tsynremdups_fix_h_slen_some: "#(tsynRemDups_fix_h\<cdot>s\<cdot>(Some (Discr (\<M> m)))) = #s"
   apply (induction s arbitrary: m rule: tsyn_ind, simp_all)
-  apply (case_tac "ma = m")
+  apply (rename_tac x y z)
+  apply (case_tac "x = z")
   apply (simp add: tsynremdups_fix_h_sconc_msg_some_eq)
   apply (simp add: tsynremdups_fix_h_sconc_msg_some_neq)
   by (simp add: tsynremdups_fix_h_sconc_null_some)
@@ -779,6 +834,10 @@ lemma tsynremdups_fix_test_infinstream:
   (*
   by (metis tsynremdups_fix_h_test_infinstream tsynremdups_fix_insert)
   *)
+
+text {* Abstraction of @{term tsynRemDups_fix} equals srcdups executed on abstracted stream. *}
+lemma tsynremdups_fix_tsynabs: "tsynAbs\<cdot>(tsynRemDups_fix\<cdot>s) = srcdups\<cdot>(tsynAbs\<cdot>s)" 
+  oops
 
 (* ----------------------------------------------------------------------- *)
   subsection {* tsynFilter *}
@@ -847,6 +906,15 @@ lemma tsynfilter_slen: "#((tsynFilter A)\<cdot>s) = #s"
 lemma tsynfilter_tsynlen: "tsynLen\<cdot>(tsynFilter A\<cdot>s) \<le> tsynLen\<cdot>s"
   sorry
 
+text {* Abstraction of @{term tsynFilter} equals sfilter executed on abstracted stream. *}
+lemma tsynfilter_tsynabs: "tsynAbs\<cdot>(tsynFilter A\<cdot>s) = sfilter A\<cdot>(tsynAbs\<cdot>s)"
+  apply (induction s rule: tsyn_ind, simp_all)
+  apply (rename_tac x y)
+  apply (case_tac "x \<in> A")
+  apply (simp add: tsynfilter_sconc_msg_in tsynabs_sconc_msg)
+  apply (simp add: tsynfilter_sconc_msg_nin tsynabs_sconc_msg tsynabs_sconc_null)
+  by (simp add: tsynfilter_sconc_null tsynabs_sconc_null)
+
 (* ----------------------------------------------------------------------- *)
   subsection {* tsynScanlExt *}
 (* ----------------------------------------------------------------------- *)
@@ -886,6 +954,12 @@ text {* @{term tsynScanlExt} test on finite nat tsyn-stream. *}
 lemma tsynscanlext_test_finstream:
   "tsynScanlExt ifEqualThenZero 0\<cdot>(<[Msg 5, Msg 3, Msg 3, null]>) = <[Msg 5, Msg 3, Msg 0, null]>"
   by (simp add: tsynscanlext_insert)
+
+text {* Abstraction of @{term tsynScanlExt} equals sscanlA executed on abstracted stream. *}
+lemma tsynscanlext_tsynabs: "tsynAbs\<cdot>(tsynScanlExt f i\<cdot>s) = sscanlA f i\<cdot>(tsynAbs\<cdot>s)"
+  apply (induction s arbitrary: i rule: tsyn_ind, simp_all)
+  apply (simp add: tsynscanlext_sconc_msg tsynabs_sconc_msg)
+  by (simp add: tsynscanlext_sconc_null tsynabs_sconc_null)
 
 (* ----------------------------------------------------------------------- *)
   subsection {* tsynScanl *}
@@ -928,12 +1002,18 @@ lemma tsynscanl_test_infinstream:
   apply (simp add: tsynscanl_insert)
   oops
 
+text {* Abstraction of @{term tsynScanl} equals sscanl executed on abstracted stream. *}
+lemma tsynscanl_tsynabs: "tsynAbs\<cdot>(tsynScanl f i\<cdot>s) = sscanl f i\<cdot>(tsynAbs\<cdot>s)"
+  apply (induction s arbitrary: i rule: tsyn_ind, simp_all)
+  apply (simp add: tsynscanl_sconc_msg tsynabs_sconc_msg)
+  by (simp add: tsynscanl_sconc_null tsynabs_sconc_null)
+  
 (* ----------------------------------------------------------------------- *)
   subsection {* tsynDropWhile *}
 (* ----------------------------------------------------------------------- *)
 
 text {* @{term tsynDropWhile} insertion lemma. *}
-lemma tsyndropwhile_insert:"tsynDropWhile f\<cdot>s = sscanlA (tsynDropWhile_h f) True\<cdot>s "
+lemma tsyndropwhile_insert: "tsynDropWhile f\<cdot>s = sscanlA (tsynDropWhile_h f) True\<cdot>s "
   by(simp add: tsynDropWhile_def)
     
 text {* @{term tsynDropWhile} is strict. *}
@@ -943,18 +1023,18 @@ lemma tsyndropwhile_strict [simp]: "tsynDropWhile f\<cdot>\<epsilon> = \<epsilon
 text {* If the head passes the predicate f, then the head of the result of @{term tsynDropWhile} 
         will be null. *}
 lemma tsyndropwhile_sconc_msg_t:
-  assumes "f (invMsg a)"
-  shows "tsynDropWhile f\<cdot>(\<up>a \<bullet> s) = \<up>null \<bullet> tsynDropWhile f\<cdot>s"
+  assumes "f a"
+  shows "tsynDropWhile f\<cdot>(\<up>(Msg a) \<bullet> s) = \<up>null \<bullet> tsynDropWhile f\<cdot>s"
   using assms
-  by (cases a, simp_all add: tsyndropwhile_insert)
+  by (simp add: tsyndropwhile_insert)
 
 text {* If the head fails the predicate f and is not null, then the head of the result of 
         @{term tsynDropWhile} will start with the head of the input. *}
 lemma tsyndropwhile_sconc_msg_f:
-  assumes "\<not>f (invMsg a)" and "a \<noteq> null" 
-  shows" tsynDropWhile f\<cdot>(\<up>a \<bullet> s) = \<up>a \<bullet> s"
+  assumes "\<not>f a"
+  shows "tsynDropWhile f\<cdot>(\<up>(Msg a) \<bullet> s) = \<up>(Msg a) \<bullet> s"
   using assms
-  apply (cases a, simp_all add: tsyndropwhile_insert)
+  apply (simp add: tsyndropwhile_insert)
   apply (induction s arbitrary: f a rule: tsyn_ind, simp_all)
   using inject_scons by fastforce+
 
@@ -965,16 +1045,16 @@ lemma tsyndropwhile_sconc_null: "tsynDropWhile f\<cdot>(\<up>null \<bullet> s) =
 text {* If the only element in a singleton stream passes the predicate f, then @{term tsynDropWhile} 
         will produce the singleton stream with null. *}
 lemma tsyndropwhile_singleton_msg_t: 
-  assumes "f (invMsg a)" shows "tsynDropWhile f\<cdot>(\<up>a) = \<up>null"
+  assumes "f a" shows "tsynDropWhile f\<cdot>(\<up>(Msg a)) = \<up>null"
   using assms
-  by (cases a, simp_all add: tsyndropwhile_insert)
+  by (simp add: tsyndropwhile_insert)
 
 text {* If the only element in a singleton stream fails the predicate f, then @{term tsynDropWhile} 
         does not change the stream. *}    
 lemma tsyndropwhile_singleton_msg_f:
-  assumes"\<not>f (invMsg a)" shows "tsynDropWhile f\<cdot>(\<up>a) = \<up>a"
+  assumes "\<not>f a" shows "tsynDropWhile f\<cdot>(\<up>(Msg a)) = \<up>(Msg a)"
   using assms
-  by (cases a, simp_all add: tsyndropwhile_insert)
+  by (simp add: tsyndropwhile_insert)
 
 text {* If the only element in a singleton stream passes is null, then @{term tsynDropWhile} 
         will produce the singleton stream with null. *}
@@ -1023,6 +1103,15 @@ proof -
     by simp
 qed
 
+text {* Abstraction of @{term tsynDropWhile} equals sdropwhile executed on abstracted stream. *}
+lemma tsyndropwhile_tsynabs: "tsynAbs\<cdot>(tsynDropWhile f\<cdot>s) = sdropwhile f\<cdot>(tsynAbs\<cdot>s)"
+  apply (induction s rule: tsyn_ind, simp_all)
+  apply (rename_tac x y)
+  apply (case_tac "f x")
+  apply (simp add: tsyndropwhile_sconc_msg_t tsynabs_sconc_msg tsynabs_sconc_null)
+  apply (simp add: tsyndropwhile_sconc_msg_f tsynabs_sconc_msg)
+  by (simp add: tsyndropwhile_sconc_null tsynabs_sconc_null)
+
 (* ----------------------------------------------------------------------- *)
   subsection {* tsynZip *}
 (* ----------------------------------------------------------------------- *)
@@ -1067,6 +1156,16 @@ lemma tsynzip_slen: "#bs = \<infinity> \<Longrightarrow> #(tsynZip\<cdot>as\<cdo
 lemma tsynzip_tsynlen: "#bs = \<infinity> \<Longrightarrow> tsynLen\<cdot>(tsynZip\<cdot>as\<cdot>bs) = tsynLen\<cdot>as"
   sorry
 
+text {* Abstraction of @{term tsynZip} equals szip executed on abstracted stream. *}
+lemma tsynzip_tsynabs: "tsynAbs\<cdot>(tsynZip\<cdot>as\<cdot>bs) = szip\<cdot>(tsynAbs\<cdot>as)\<cdot>bs"
+  apply (induction as arbitrary: bs rule: tsyn_ind, simp_all)
+  apply (rename_tac x y z)
+  apply (rule_tac x = z in scases, simp_all)
+  apply (simp add: tsynzip_sconc_msg tsynabs_sconc_msg)
+  apply (rename_tac x y)
+  apply (case_tac "y = \<epsilon>", simp_all)
+  by (simp add: tsynzip_sconc_null tsynabs_sconc_null)
+ 
 (* ----------------------------------------------------------------------- *)
   section {* tsynSum - CaseStudy *}
 (* ----------------------------------------------------------------------- *)
