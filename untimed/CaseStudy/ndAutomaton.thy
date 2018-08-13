@@ -53,7 +53,12 @@ lemma "cont(\<lambda> h. uspecFlatten In Out (setrevImage (\<lambda>(state, sb).
   oops
 
 lemma "monofun (\<lambda> S. uspecFlatten In Out (setrevImage (\<lambda>(state, sb). spsConcOut sb\<cdot>(some_h state)) S))"
-  oops
+proof -
+  have b0:  "monofun (\<lambda> S. (setrevImage (\<lambda>(state, sb). spsConcOut sb\<cdot>(some_h state)) S))"
+    by (simp add: image_mono_rev monofunE)
+  show ?thesis
+    by (metis (no_types, lifting) b0 monofun_def uspecflatten_monofun)
+qed
 
 
 
