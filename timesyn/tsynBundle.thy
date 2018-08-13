@@ -50,7 +50,7 @@ text {* @{term tsynbAbs}: Filter the nulls on each stream of the ubundle. *}
 definition tsynbAbs :: "'a tsyn stream ubundle \<rightarrow> 'a stream ubundle" where 
   "tsynbAbs \<equiv> \<Lambda> sb. Abs_ubundle (\<lambda>c. (c \<in> ubDom\<cdot>sb) \<leadsto> tsynAbs\<cdot>(sb . c))"
 
-text {* @{term tsynbRemDups} Removes all duplicates on each stream of the ubundle. *}
+text {* @{term tsynbRemDups}: Removes all duplicates on each stream of the ubundle. *}
 definition tsynbRemDups :: "'a tsyn stream ubundle \<rightarrow> 'a tsyn stream ubundle" where 
   "tsynbRemDups \<equiv> \<Lambda> sb. Abs_ubundle (\<lambda>c. (c \<in> ubDom\<cdot>sb) \<leadsto> tsynRemDups\<cdot>(sb . c))"
 
