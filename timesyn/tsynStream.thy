@@ -231,6 +231,26 @@ lemma tsyn_cases [case_names bot msg null]:
   subsection {* Lemmata on Streams - Streams Extension *}
 (* ----------------------------------------------------------------------- *)
 
+(* ToDo: add descriptions and move to Streams. *)
+
+lemma len_one_stream: "#s = Fin 1 \<Longrightarrow> \<exists>m. s = \<up>m"
+  proof -
+    assume a0: "#s = Fin 1"
+    show "\<exists>m::'a. s = \<up>m"
+      proof -
+        have empty_or_long: "\<nexists>m::'a. s = \<up>m \<Longrightarrow> s = \<epsilon> \<or> (\<exists> as a. s = \<up>a \<bullet> as)"
+          by (metis surj_scons)
+        have not_eq_one: "\<nexists>m::'a. s = \<up>m \<Longrightarrow> #s = Fin 0 \<or> #s > Fin 1" 
+          using empty_or_long 
+          by (metis Fin_02bot Fin_Suc One_nat_def a0 leI lnzero_def notinfI3 only_empty_has_length_0 
+              sconc_snd_empty slen_conc slen_scons)
+        have not_eq_one2: "\<exists>m. s = \<up>m" using a0 
+          using not_eq_one by auto
+        show ?thesis 
+          using not_eq_one2 by simp
+      qed
+  qed
+
 text {* Cardinality of the set @{term sdom} is smaller or equal to the length of the original 
         stream. *}
 lemma sdom_slen: assumes "#s = Fin k" shows "card (sdom\<cdot>s) \<le> k"
