@@ -148,9 +148,37 @@ lemma[simp]:"(\<Squnion>i. Abs_uspec (setrevImage (\<lambda>h. Abs_cufun (\<lamb
   sorry
     
 definition setrevImage_inj_on::"('m \<Rightarrow> 'n) \<Rightarrow> 'm set rev \<rightarrow> 'n set rev" where
-"setrevImage_inj_on f \<equiv> \<Lambda> S.  if inj_on f (inv Rev S) then Rev (f ` (inv Rev S)) else undefined"
+"setrevImage_inj_on f \<equiv> \<Lambda> S.  if inj_on f (inv Rev S) then Rev (f ` (inv Rev S)) else Rev {}"
 
+lemma image_mono_rev_inj_on: "monofun (\<lambda> S.  if inj_on f (inv Rev S) then Rev (f ` (inv Rev S)) else Rev UNIV)"
+  apply (rule monofunI)
+  by (simp add: image_mono inv_rev_rev revBelowNeqSubset subset_inj_on)
 
+lemma rev_rule:"inv Rev x \<sqsubseteq> inv Rev y \<Longrightarrow> y \<sqsubseteq> x"
+  by (metis below_rev.simps rev_inv_rev) 
+        
+lemma image_cont_rev_inj_on: "cont (\<lambda> S.  if inj_on f (inv Rev S) then Rev (f ` (inv Rev S)) else Rev UNIV)"
+  apply (rule contI2)
+  apply(simp add: image_mono_rev_inj_on)
+proof
+  fix Y::"nat \<Rightarrow> 'a set rev"
+  show "chain Y \<longrightarrow>
+       (if inj_on f (inv Rev (\<Squnion>i::nat. Y i)) then Rev (f ` inv Rev (\<Squnion>i::nat. Y i)) else Rev UNIV) \<sqsubseteq>
+       (\<Squnion>i::nat. if inj_on f (inv Rev (Y i)) then Rev (f ` inv Rev (Y i)) else Rev UNIV)"
+  proof(cases "inj_on f (inv Rev (\<Squnion>i::nat. Y i))")
+    case True
+    then show ?thesis sorry
+  next
+    case False
+    have "chain Y \<Longrightarrow> \<forall>i. (inv Rev (\<Squnion>i::nat. Y i)) \<subseteq> (inv Rev (Y i))"
+      by (meson is_ub_thelub revBelowNeqSubset)
+    then have "chain Y \<Longrightarrow> \<forall>i. \<not>(inj_on f (inv Rev (Y i)))"
+      using False inj_on_subset by blast
+    then show ?thesis
+      by (simp add: False)
+  qed
+qed
+  
 (*Probably have to use setrevImage_inj_on instead of setrevImage*)
 lemma newSpsStep_cont:"cont (\<lambda> H. Abs_uspec ((setrevImage (\<lambda> h. Abs_cufun (\<lambda>sb. Rep_cufun (h sb)  sb)) 
                                       (setrevImage (\<lambda> h. spfStep_inj In Out h) 
