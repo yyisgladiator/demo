@@ -12,7 +12,7 @@ component Sender {
     variable List<Integer> buffer=new List<>();
     variable Integer c=0;
 
-    state Sf, St;
+    state St, Sf;
     initial St / {ds=null};
 
     St -> St [buffer.size()=0] {as!=null, i=null} / {ds=null};
