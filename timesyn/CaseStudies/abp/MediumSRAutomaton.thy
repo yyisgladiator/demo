@@ -3,7 +3,7 @@
  * This file was generated from MediumSR.maa and will be overridden when changed. To change
  * permanently, consider changing the model itself.
  *
- * Generated on Jul 9, 2018 2:08:06 PM by transformer 1.0.0
+ * Generated on Aug 15, 2018 3:13:07 PM by isartransformer 1.0.0
  *)
 theory MediumSRAutomaton
 
@@ -26,7 +26,7 @@ fun getC :: "MediumSRState \<Rightarrow> nat" where
 
 
 fun mediumSRTransitionH :: "(MediumSRState \<times> (abpMessage tsyn)) \<Rightarrow> ((MediumSRState \<times> abpMessage tsyn SB) set rev)" where
-    "mediumSRTransitionH (MediumSRState Single automaton_c, ((*ds\<mapsto>*)Msg (Pair_nat_bool a))) = 
+    "mediumSRTransitionH (MediumSRState Single automaton_c, ((*ds\<mapsto>*)Msg (ABPPair_nat_bool a))) = 
        (if(automaton_c>0) then Rev {(MediumSRState Single (automaton_c-1),(tsynbNull (\<C> ''dr'')))}
        else if(automaton_c=0) then Rev {(MediumSRState Single (c),(createDrBundle (a)))| (c). True}
        else Rev {(MediumSRState Single automaton_c, ((tsynbNull (\<C> ''dr''))))})"  |
