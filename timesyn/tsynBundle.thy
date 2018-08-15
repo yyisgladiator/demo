@@ -225,65 +225,73 @@ lemma tsynbremdups_strict [simp]: "tsynbRemDups\<cdot>(ubLeast {c}) = ubLeast {c
   subsection {* tsynbCases *}
 (* ----------------------------------------------------------------------- *)
 
-text {* Singleton streams if ubMaxlen 1 and x not equal to ubLeast on all its channels *}
-lemma uscllen_ubmaxlen_ubleast: 
-assumes "ubMaxLen (Fin (1::nat)) x"
-and "\<And>c. c\<in>ubDom\<cdot>x \<Longrightarrow> x . c \<noteq> ubLeast (ubDom\<cdot>x) . c"  
-shows  "\<And>c. c\<in>ubDom\<cdot>x \<Longrightarrow> usclLen\<cdot>(x . c) = Fin 1" 
-proof- 
-  have x_nbottom: "\<And>c. c\<in>ubDom\<cdot>x \<Longrightarrow> x . c \<noteq> \<bottom>"
-    using assms ubMaxLen_def by simp
-  have x_smaller: "\<And>c. c\<in>ubDom\<cdot>x \<Longrightarrow> usclLen\<cdot>(x . c) \<le> Fin 1" using assms
-    by (simp add:  ubMaxLen_def)
-  have empty_zero: "usclLen\<cdot>\<epsilon> = Fin 0" 
-    by (simp add: usclLen_stream_def)
-  hence x_not_zero: "\<And>c. c\<in>ubDom\<cdot>x \<Longrightarrow> usclLen\<cdot>(x . c) \<noteq> Fin 0" 
-    using usclLen_zero x_nbottom  by auto
-  show "\<And>c::channel. c \<in> ubDom\<cdot>x \<Longrightarrow> usclLen\<cdot>(x  .  c) = Fin (1::nat)"
-    using neq02Suclnle usclLen_zero x_nbottom x_smaller by fastforce
-qed
-
+text {* If the max len of the ubundle is one and none of the channel is empty then the len of every 
+        channel is one. *}
+lemma ubundle_ubgetch_uscllen_one:
+  assumes "ubMaxLen (Fin (1 :: nat)) x"
+    and "\<And>c. c \<in> ubDom\<cdot>x \<Longrightarrow> x . c \<noteq> \<epsilon>"
+  shows  "\<And>c. c \<in> ubDom\<cdot>x \<Longrightarrow> usclLen\<cdot>(x . c) = Fin 1"
+  proof -
+    have x_leq_one: "\<And>c. c\<in>ubDom\<cdot>x \<Longrightarrow> usclLen\<cdot>(x . c) \<le> Fin 1" 
+      using assms ubMaxLen_def by auto
+    have eps_len_zero: "usclLen\<cdot>\<epsilon> = Fin 0"
+      by (simp add: usclLen_stream_def)
+    hence x_not_zero: "\<And>c. c\<in>ubDom\<cdot>x \<Longrightarrow> usclLen\<cdot>(x . c) \<noteq> Fin 0" 
+      using usclLen_zero assms by auto
+    show "\<And>c::channel. c \<in> ubDom\<cdot>x \<Longrightarrow> usclLen\<cdot>(x  .  c) = Fin (1::nat)"
+      using neq02Suclnle x_leq_one x_not_zero by fastforce
+  qed
 
 text {* Cases rule for simple time-synchronous bundles. *}
 lemma tsynb_cases [case_names max_len not_ubleast numb_channel msg null]:
-  assumes max_len: "ubMaxLen (Fin (1::nat)) x" 
+  assumes max_len: "ubMaxLen (Fin (1 :: nat)) x" 
     and not_ubleast: "x \<noteq> ubLeast (ubDom\<cdot>x)"
     and numb_channel: "(ubDom\<cdot>x) = {c}"
     and msg: "\<And>m. (Msg m) \<in> ctype c \<Longrightarrow> P (createBundle (Msg m) c)"
     and null: "P (tsynbNull c)"
   shows "P x"
-proof - 
-  have x_not_empty: "x . c \<noteq> \<epsilon>" 
-    by (metis not_ubleast numb_channel singletonD ubgetchI ubleast_ubdom ubleast_ubgetch)
-  have x_dom_eq_createbundle: "\<And>m. ubDom\<cdot>x = ubDom\<cdot>(createBundle (Msg m) c)" 
-    by (simp add: numb_channel)
-  have x_dom_eq_tsynbnull: "ubDom\<cdot>x = ubDom\<cdot>(tsynbNull c)" 
-    by (simp add: numb_channel)
-  have createbundle_stream_eq: "\<And>m.  (Msg m) \<in> ctype c \<Longrightarrow> (createBundle (Msg m) c) . c = \<up>(Msg m)" 
-    by (metis createBundle.rep_eq fun_upd_same option.sel ubgetch_insert) 
-  have tsynbnull_stream_eq: "(tsynbNull c) . c =  \<up>null"
-    by simp
-  have x_singleton: "usclLen\<cdot>(x . c) = Fin 1" 
-    using uscllen_ubmaxlen_ubleast max_len numb_channel x_not_empty by fastforce
-  obtain s where s_def: "x . c = s" using assms 
-    by metis
-  have s_ubundle_eq_x: "x = Abs_ubundle ([c \<mapsto> s])"
-    by (metis (mono_tags, lifting) dom_eq_singleton_conv fun_upd_same numb_channel s_def singletonI ubWell_single_channel ubdom_insert ubgetchE ubgetchI ubgetch_insert ubrep_ubabs)
-  have len_one_cases: "usclLen\<cdot>s = Fin 1 \<Longrightarrow> (\<exists>m. s = (\<up>(Msg m))) \<or>  (s = (\<up>null))" using tsyn.exhaust One_nat_def len_one_stream usclLen_stream_def sledgehammer
-    by metis  
-  have s_cases: "(\<exists>m. s = \<up>(Msg m)) \<or> (s = \<up>null)"
-    using s_def assms x_singleton x_not_empty len_one_cases by blast
-  have s_eq: "(\<exists>m. s = (createBundle (Msg m) c) . c ) \<or> (s = (tsynbNull c) . c)" 
-  proof(case_tac "\<exists>m. s = \<up>(Msg m)")
-    show "\<exists>m::'a. s = \<up>(\<M> m) \<Longrightarrow> (\<exists>m::'a. s = createBundle (\<M> m) c  .  c) \<or> s = tsynbNull c  .  c"
-      by (metis contra_subsetD createbundle_stream_eq insertI1 insert_is_Un lscons_conv numb_channel s_def sdom2un sup'_def ubdom_channel_usokay ubgetch_insert usclOkay_stream_def)
-    show "\<nexists>m::'a. s = \<up>(\<M> m) \<Longrightarrow> (\<exists>m::'a. s = createBundle (\<M> m) c  .  c) \<or> s = tsynbNull c  .  c" 
-      using s_cases by simp
+  proof -
+    have x_not_empty: "x . c \<noteq> \<epsilon>"
+      by (metis not_ubleast numb_channel singletonD ubgetchI ubleast_ubdom ubleast_ubgetch)
+    have x_dom_eq_createbundle: "\<And>m. ubDom\<cdot>x = ubDom\<cdot>(createBundle (Msg m) c)" 
+      by (simp add: numb_channel)
+    have x_dom_eq_tsynbnull: "ubDom\<cdot>x = ubDom\<cdot>(tsynbNull c)" 
+      by (simp add: numb_channel)
+    have createbundle_stream_eq: 
+      "\<And>m. (Msg m) \<in> ctype c \<Longrightarrow> (createBundle (Msg m) c) . c = \<up>(Msg m)" 
+      by (metis createBundle.rep_eq fun_upd_same option.sel ubgetch_insert) 
+    have tsynbnull_stream_eq: "(tsynbNull c) . c =  \<up>null"
+      by simp
+    have x_singleton: "usclLen\<cdot>(x . c) = Fin 1"
+      using ubundle_ubgetch_uscllen_one max_len numb_channel x_not_empty by fastforce
+    obtain s where s_def: "x . c = s"
+      by simp
+    have s_ubundle_eq_x: "x = Abs_ubundle ([c \<mapsto> s])"
+      by (metis dom_eq_singleton_conv fun_upd_same numb_channel s_def singletonI ubabs_ubrep 
+          ubdom_insert ubgetchE)
+    have len_one_s_cases: "usclLen\<cdot>s = Fin 1 \<Longrightarrow> (\<exists>m. s = (\<up>(Msg m))) \<or> (s = (\<up>null))"
+      by (metis len_one_stream tsyn.exhaust usclLen_stream_def)
+    have s_cases: "(\<exists>m. s = \<up>(Msg m)) \<or> (s = \<up>null)"
+      using s_def assms x_singleton x_not_empty len_one_s_cases by blast
+    have s_bundle_scases: "(\<exists>m. s = (createBundle (Msg m) c) . c) \<or> (s = (tsynbNull c) . c)"
+      proof (case_tac "\<exists>m. s = \<up>(Msg m)")
+        assume m_exists: "\<exists>m. s = \<up>(\<M> m)"
+        then show "(\<exists>m. s = createBundle (\<M> m) c  .  c) \<or> s = tsynbNull c  .  c"          
+          by (metis contra_subsetD createbundle_stream_eq insertI1 insert_is_Un lscons_conv 
+              numb_channel s_def sdom2un sup'_def ubdom_channel_usokay ubgetch_insert 
+              usclOkay_stream_def)
+      next
+        assume m_nexists: "\<nexists>m::'a. s = \<up>(\<M> m)"
+        then show "(\<exists>m::'a. s = createBundle (\<M> m) c  .  c) \<or> s = tsynbNull c  .  c" 
+          using s_cases by auto
+      qed
+    have x_bundle_cases: "(\<exists>m. x = (createBundle (Msg m) c)) \<or> (x = (tsynbNull c))" 
+      by (metis numb_channel s_def s_bundle_scases singletonD ubgetchI x_dom_eq_createbundle 
+          x_dom_eq_tsynbnull)
+    show ?thesis 
+      by (metis createBundle.rep_eq fun_upd_same msg null option.sel ubgetch_insert x_bundle_cases 
+          x_not_empty)
   qed
-  have x_eq: "(\<exists>m. x = (createBundle (Msg m) c)) \<or> (x = (tsynbNull c))" using s_cases s_def assms s_eq by (metis singletonD ubgetchI x_dom_eq_createbundle x_dom_eq_tsynbnull)
-  show ?thesis using x_eq msg null
-    by (metis createBundle.rep_eq fun_upd_same option.sel ubgetch_insert x_not_empty)
-qed
 
 text {* Equality of two-channel stream ubundles its Abs_ubundle counterpart *}
 lemma absubundle_ubmaxlen: assumes "ubDom\<cdot>x = {c,cc}"
@@ -375,9 +383,9 @@ proof-
   have x_cc_not_empty: "x . cc \<noteq> \<epsilon>" 
     using not_ubleast_2c by (simp add: two_channel)
   have x_c_singleton: "usclLen\<cdot>(x . c) = Fin 1" 
-    using max_len_2c not_ubleast_2c two_channel uscllen_ubmaxlen_ubleast by fastforce
+    using max_len_2c not_ubleast_2c two_channel ubundle_ubgetch_uscllen_one by fastforce
   have x_cc_singleton: "usclLen\<cdot>(x . cc) = Fin 1" 
-    using max_len_2c not_ubleast_2c two_channel uscllen_ubmaxlen_ubleast by fastforce
+    using max_len_2c not_ubleast_2c two_channel ubundle_ubgetch_uscllen_one by fastforce
   have x_dom_eq_msg_msg: "\<And>m1 m2. ubDom\<cdot>x = ubDom\<cdot>((createBundle (Msg m1) c) \<uplus> (createBundle (Msg m2) cc))"
     by (metis createBundle_dom insert_is_Un two_channel ubclDom_ubundle_def ubclunion_ubcldom)
   have x_dom_eq_null_msg: "\<And>m2. ubDom\<cdot>x = ubDom\<cdot> ((tsynbNull c) \<uplus> (createBundle (Msg m2) cc))"
