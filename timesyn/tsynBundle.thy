@@ -42,6 +42,9 @@ lemma tsynbnull_ubconc_sbrt [simp]:
   apply (rule ub_eq)
   by (simp add: assms sbRt_def usclConc_stream_def)+
 
+lemma tsynbnull_eq_createbundle: "tsynbNull c = createBundle - c"
+  by (simp add: ctype_tsyn_def tsynbNull.abs_eq)
+
 (* ----------------------------------------------------------------------- *)
   section {* Definitions on Time-Synchronous Stream Bundles *}
 (* ----------------------------------------------------------------------- *)
@@ -293,36 +296,42 @@ lemma tsynb_cases [case_names max_len not_ubleast numb_channel msg null]:
           x_not_empty)
   qed
 
-text {* Equality of two-channel stream ubundles with its Abs_ubundle counterpart *}
-lemma absubundle_ubmaxlen: assumes "ubDom\<cdot>x = {c,cc}"
-and "x . c = s1"
-and "x . cc = s2"
-shows "x = Abs_ubundle [c \<mapsto> s1, cc \<mapsto> s2]" 
-proof-
-  obtain s1 where s1_def: "x . c = s1" using assms
-   by metis
-  obtain s2 where s2_def: "x . cc = s2" using assms
-    by metis
-  have dom_eq: "ubDom\<cdot>x = ubDom\<cdot>(Abs_ubundle ([c \<mapsto> s1, cc \<mapsto> s2]))"
-        by (metis (mono_tags, lifting) dom_empty dom_fun_upd insertI1 insert_commute option.discI 
-           s1_def s2_def assms(1) ubWell_single_channel ubdom_channel_usokay ubdom_insert 
-           ubgetch_insert ubrep_ubabs ubsetch_well)
-  hence "\<And>ccc. ccc\<in>ubDom\<cdot>x \<Longrightarrow> x . ccc = (Abs_ubundle ([c \<mapsto> s1, cc \<mapsto> s2])) . ccc"
-  proof- 
-    have x_eq_absubundle_cc: "x . cc = (Abs_ubundle ([c \<mapsto> s1, cc \<mapsto> s2])) . cc" 
-      by (metis (mono_tags, lifting) fun_upd_same insertI1 insert_commute s1_def s2_def assms(1) 
-          ubWell_single_channel ubdom_channel_usokay ubgetchE ubgetch_insert ubrep_ubabs ubsetch_well)
-    have x_c: "(Abs_ubundle ([c \<mapsto> s1, cc \<mapsto> s2])) . c = s1" 
-      by (metis fun_upd_same fun_upd_twist insert_iff s1_def s2_def assms(1)  ubWell_single_channel 
-          ubdom_channel_usokay ubgetchE ubgetch_insert ubrep_ubabs ubsetch_well)
-    have x_eq_absubundle_c: "x . c = (Abs_ubundle ([c \<mapsto> s1, cc \<mapsto> s2])) . c"
-      by (simp add: s1_def x_c x_eq_absubundle_cc) 
-    show "\<And>ccc::channel. ccc \<in> ubDom\<cdot>x \<Longrightarrow> ubDom\<cdot>x = ubDom\<cdot>(Abs_ubundle [c \<mapsto> s1, cc \<mapsto> s2]) \<Longrightarrow> 
-                          x . ccc = Abs_ubundle [c \<mapsto> s1, cc \<mapsto> s2] . ccc"
-    using x_eq_absubundle_c x_eq_absubundle_cc assms(1) by fastforce
-    qed
-  thus ?thesis using ubgetchI dom_eq assms(2) assms(3) s1_def s2_def by blast
-qed
+text {* Create ubundle with given channels. *}
+lemma create_ubundle_two_channel:
+  assumes "ubDom\<cdot>x = {c, cc}"
+    and "x . c = s1"
+    and "x . cc = s2"
+  shows "x = Abs_ubundle [c \<mapsto> s1, cc \<mapsto> s2]" 
+  proof -
+    obtain s1 where s1_def: "x . c = s1" 
+      by simp
+    obtain s2 where s2_def: "x . cc = s2" 
+      by simp
+    have dom_eq: "ubDom\<cdot>x = ubDom\<cdot>(Abs_ubundle ([c \<mapsto> s1, cc \<mapsto> s2]))"
+      by (metis (mono_tags, lifting) assms dom_empty dom_fun_upd insertI1 insert_commute 
+          option.discI s1_def s2_def ubWell_single_channel ubdom_channel_usokay ubdom_insert 
+          ubgetch_insert ubrep_ubabs ubsetch_well)
+    hence "\<And>ccc. ccc \<in> ubDom\<cdot>x \<Longrightarrow> x . ccc = (Abs_ubundle ([c \<mapsto> s1, cc \<mapsto> s2])) . ccc"
+      proof - 
+        have x_eq_ubundle_cc: "x . cc = (Abs_ubundle ([c \<mapsto> s1, cc \<mapsto> s2])) . cc"
+          by (metis assms fun_upd_same insertI1 insert_commute s1_def s2_def ubWell_single_channel 
+              ubdom_channel_usokay ubgetchE ubgetch_insert ubrep_ubabs ubsetch_well)
+        have x_eq_ubundle_c: "x . c = (Abs_ubundle ([c \<mapsto> s1, cc \<mapsto> s2])) . c"
+          proof -
+            have "\<forall>a c. usclOkay c a \<or> \<not> ubWell [c \<mapsto> a]"
+              by (simp add: ubWell_def)
+            then show ?thesis
+              by (metis (no_types) assms fun_upd_apply insertI1 insert_commute option.sel s1_def 
+                  s2_def ubWell_single_channel ubabs_ubrep ubgetch_ubrep_eq ubrep_ubabs ubrep_well 
+                  ubsetch_well)
+          qed
+        show "\<And>ccc::channel. ccc \<in> ubDom\<cdot>x \<Longrightarrow> ubDom\<cdot>x = ubDom\<cdot>(Abs_ubundle [c \<mapsto> s1, cc \<mapsto> s2]) 
+                               \<Longrightarrow> x . ccc = Abs_ubundle [c \<mapsto> s1, cc \<mapsto> s2] . ccc"
+          using assms x_eq_ubundle_c x_eq_ubundle_cc by auto
+      qed
+    then show ?thesis
+      using assms dom_eq s1_def s2_def ubgetchI by blast
+  qed
 
 text {* Equality of two-channel stream ubundles with createBundle and ubUnion *}
 lemma createbundle_ubunion: assumes two_channel: "ubDom\<cdot>x = {c,cc}"
@@ -360,13 +369,11 @@ proof -
         singletonD two_channel ubgetchI x_dom_eq )
 qed
 
-lemma createbundle_tsynbnull: "createBundle - c = tsynbNull c"
-  by (metis contra_subsetD createBundle_apply insertI1 insert_is_Un lscons_conv sdom2un sup'_def 
-      tsynbNull.abs_eq tsynbnull_ubdom tsynbnull_ubgetch ubdom_channel_usokay ubgetch_insert usclOkay_stream_def)
+
 
 text {* Cases rule for simple time-synchronous bundles with two non-empty channels. *}
 lemma tsynb_cases_ext [case_names max_len_2c not_ubleast_2c two_channel msg_msg null_msg msg_null null_null]:
-  assumes max_len_2c: "ubMaxLen (Fin (1::nat)) x" 
+  assumes max_len_2c: "ubMaxLen (Fin (1::nat)) x"
     and not_ubleast_2c: "\<And>c. c\<in>ubDom\<cdot>x \<Longrightarrow> x . c \<noteq> ubLeast (ubDom\<cdot>x) . c" 
     and two_channel: "(ubDom\<cdot>x) = {c,cc}"
     and msg_msg: "\<And>m1 m2. (Msg m1) \<in> ctype c \<Longrightarrow> (Msg m2) \<in> ctype cc \<Longrightarrow> 
@@ -397,7 +404,7 @@ proof-
   obtain s2 where s2_def: "x . cc = s2" using assms
     by metis
   have s1_ubundle_eq_x: "x = Abs_ubundle ([c \<mapsto> s1, cc \<mapsto> s2])"
-    using absubundle_ubmaxlen s1_def s2_def assms by blast
+    using create_ubundle_two_channel s1_def s2_def assms by blast
   have len_one_cases_c: "usclLen\<cdot>s1 = Fin 1 \<Longrightarrow> (\<exists>m. s1 = (\<up>(Msg m))) \<or>  (s1 = (\<up>null))" 
     using One_nat_def len_one_stream tsyn.exhaust usclLen_stream_def by metis 
   have len_one_cases_cc: "usclLen\<cdot>s2 = Fin 1 \<Longrightarrow> (\<exists>m. s2 = (\<up>(Msg m))) \<or>  (s2 = (\<up>null))" 
@@ -437,7 +444,7 @@ proof-
     have null_null: "s1 = \<up>-  \<Longrightarrow>  s2 = \<up>- \<Longrightarrow> x = ((createBundle - c) \<uplus> (createBundle - cc))"
       using createbundle_ubunion max_len_2c not_ubleast_2c s1_def s2_def two_channel by blast
     have create2tsynb: "x = ((createBundle - c) \<uplus> (createBundle - cc)) \<Longrightarrow> x = ((tsynbNull c) \<uplus> (tsynbNull cc))"
-      by (simp add: createbundle_tsynbnull)
+      by (simp add: tsynbnull_eq_createbundle)
     show "s1 = \<up>-  \<Longrightarrow>  s2 = \<up>- \<Longrightarrow> x = ((tsynbNull c) \<uplus> (tsynbNull cc))" 
       using null_null create2tsynb by blast
   qed
@@ -449,7 +456,7 @@ proof-
       using createbundle_ubunion max_len_2c not_ubleast_2c s1_def s2_def two_channel by blast
     have create2tsynb: "\<exists>m1. x = ((createBundle (Msg m1) c) \<uplus> (createBundle - cc)) \<Longrightarrow> 
                         \<exists>m1. x =  ((createBundle (Msg m1) c) \<uplus> (tsynbNull cc))"
-      by (simp add: createbundle_tsynbnull)
+      by (simp add: tsynbnull_eq_createbundle)
     show "\<exists>m1. s1 = \<up>(Msg m1) \<Longrightarrow> s2 = \<up>- \<Longrightarrow> 
                           \<exists>m1 . x =  ((createBundle (Msg m1) c) \<uplus> (tsynbNull cc))" 
       using msg_null create2tsynb by blast
@@ -462,7 +469,7 @@ proof-
       using createbundle_ubunion max_len_2c not_ubleast_2c s1_def s2_def two_channel by blast
     have create2tsynb: "\<exists>m2. x = ((createBundle - c) \<uplus> (createBundle (Msg m2) cc)) \<Longrightarrow> 
                         \<exists>m2. x =  ((tsynbNull c) \<uplus> (createBundle (Msg m2) cc))"
-      by (simp add: createbundle_tsynbnull)
+      by (simp add: tsynbnull_eq_createbundle)
     show "s1 = \<up>- \<Longrightarrow> \<exists>m2.  s2 = \<up>(Msg m2) \<Longrightarrow> 
                       \<exists>m2. x =  ((tsynbNull c) \<uplus> (createBundle (Msg m2) cc))" 
       using msg_null create2tsynb by blast
