@@ -285,10 +285,8 @@ proof -
     by (metis createBundle.rep_eq fun_upd_same option.sel ubgetch_insert x_not_empty)
 qed
 
-text {* Equality of two-channel stream ubundles its Abs_ubundle counterpart *}
+text {* Equality of two-channel stream ubundles with its Abs_ubundle counterpart *}
 lemma absubundle_ubmaxlen: assumes "ubDom\<cdot>x = {c,cc}"
-and "ubMaxLen (Fin (1::nat)) x"
-and "\<And>c. c\<in>ubDom\<cdot>x \<Longrightarrow> x . c \<noteq> ubLeast (ubDom\<cdot>x) . c"  
 and "x . c = s1"
 and "x . cc = s2"
 shows "x = Abs_ubundle [c \<mapsto> s1, cc \<mapsto> s2]" 
@@ -315,7 +313,7 @@ proof-
                           x . ccc = Abs_ubundle [c \<mapsto> s1, cc \<mapsto> s2] . ccc"
     using x_eq_absubundle_c x_eq_absubundle_cc assms(1) by fastforce
     qed
-  thus ?thesis using ubgetchI dom_eq assms(4) assms(5) s1_def s2_def by blast
+  thus ?thesis using ubgetchI dom_eq assms(2) assms(3) s1_def s2_def by blast
 qed
 
 text {* Equality of two-channel stream ubundles with createBundle and ubUnion *}
