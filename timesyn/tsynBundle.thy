@@ -333,186 +333,195 @@ lemma create_ubundle_two_channel:
       using assms dom_eq s1_def s2_def ubgetchI by blast
   qed
 
-text {* Equality of two-channel stream ubundles with createBundle and ubUnion *}
-lemma createbundle_ubunion: assumes two_channel: "ubDom\<cdot>x = {c,cc}"
-and max_len_2c: "ubMaxLen (Fin (1::nat)) x"
-and not_ubleast_2c: "\<And>c. c\<in>ubDom\<cdot>x \<Longrightarrow> x . c \<noteq> ubLeast (ubDom\<cdot>x) . c"  
-and xc_eq: "x . c = \<up>m1"
-and xcc_eq: "x . cc = \<up>m2"
-shows "x = ((createBundle m1 c) \<uplus> (createBundle m2 cc))"
-proof -
-  obtain m1 where m1_def: "x . c = \<up>m1" using xc_eq  by blast
-  obtain m2 where m2_def: "x . cc = \<up>m2" using xcc_eq by blast
-  have x_dom_eq: "ubDom\<cdot>x = ubDom\<cdot>((createBundle m1 c) \<uplus> (createBundle m2 cc))"
-    by (metis createBundle_dom insert_is_Un two_channel ubclDom_ubundle_def ubclunion_ubcldom)
-  have m1_shd: "m1 = shd (x . c)" 
-    using m1_def by auto
-  have m1_ctype: "m1 \<in> ctype c"
-    by (metis (no_types, lifting) UnI1 contra_subsetD insertI1 m1_shd not_ubleast_2c sdom2un 
-        surj_scons two_channel ubdom_channel_usokay ubgetch_insert ubleast_ubgetch usclOkay_stream_def)
-  have m2_shd: "m2 = shd (x . cc)" 
-    using m2_def by auto
-  have m2_ctype: "m2 \<in> ctype cc"
-    by (metis contra_subsetD insertI1 insert_commute insert_is_Un lscons_conv m2_def sdom2un 
-        sup'_def two_channel ubdom_channel_usokay ubgetch_insert usclOkay_stream_def)
-  have create_c: "(createBundle m1 c) . c = \<up>m1"
-    by (metis createBundle.rep_eq fun_upd_same m1_ctype option.sel ubgetch_insert)
-  have create_cc: "(createBundle m2 cc) . cc = \<up>m2"
-    by (metis createBundle.rep_eq fun_upd_same m2_ctype option.sel ubgetch_insert)
-  have ubunion_create_eq_c: "((createBundle m1 c) \<uplus> (createBundle m2 cc)) . c = \<up>m1"
-    by (metis createBundle_dom create_c create_cc m1_def m2_def singletonD ubclUnion_ubundle_def 
-        ubunion_getchL ubunion_getchR)
-  have ubunion_create_eq_cc: "((createBundle m1 c) \<uplus> (createBundle m2 cc)) . cc = \<up>m2"
-    using ubunion_getchR by (simp add: create_cc ubclUnion_ubundle_def)
-  thus ?thesis 
-    by (metis shd1 xc_eq xcc_eq ubunion_create_eq_c ubunion_create_eq_cc insert_iff m1_def m2_def 
-        singletonD two_channel ubgetchI x_dom_eq )
-qed
-
-
+text {* Create ubundle from given channels with only one element. *}
+lemma createbundle_ubclunion:
+  assumes two_channel: "ubDom\<cdot>x = {c, cc}"
+    and max_len_one: "ubMaxLen (Fin (1 :: nat)) x"
+    and not_empty: "\<And>c. c \<in> ubDom\<cdot>x \<Longrightarrow> x . c \<noteq> \<epsilon>"  
+    and x_c_eq: "x . c = \<up>m1"
+    and x_cc_eq: "x . cc = \<up>m2"
+  shows "x = ((createBundle m1 c) \<uplus> (createBundle m2 cc))"
+  proof -
+    obtain m1 where m1_def: "x . c = \<up>m1" 
+      by (simp add: x_c_eq)
+    obtain m2 where m2_def: "x . cc = \<up>m2" 
+      by (simp add: x_cc_eq)
+    have x_dom_eq: "ubDom\<cdot>x = ubDom\<cdot>((createBundle m1 c) \<uplus> (createBundle m2 cc))"
+      by (metis createBundle_dom insert_is_Un two_channel ubclDom_ubundle_def ubclunion_dom)
+    have m1_ctype: "m1 \<in> ctype c"
+      by (metis contra_subsetD insertI1 insert_is_Un lscons_conv m1_def sdom2un sup'_def 
+          two_channel ubdom_channel_usokay ubgetch_insert usclOkay_stream_def)
+    have m2_ctype: "m2 \<in> ctype cc"
+      by (metis contra_subsetD insertI1 insert_commute insert_is_Un lscons_conv m2_def sdom2un 
+          sup'_def two_channel ubdom_channel_usokay ubgetch_insert usclOkay_stream_def)
+    have create_c: "(createBundle m1 c) . c = \<up>m1"
+      by (metis createBundle.rep_eq fun_upd_same m1_ctype option.sel ubgetch_insert)
+    have create_cc: "(createBundle m2 cc) . cc = \<up>m2"
+      by (metis createBundle.rep_eq fun_upd_same m2_ctype option.sel ubgetch_insert)
+    have ubunion_create_eq_c: "((createBundle m1 c) \<uplus> (createBundle m2 cc)) . c = \<up>m1"
+      by (metis createBundle_dom create_c create_cc m1_def m2_def singletonD ubclUnion_ubundle_def 
+          ubunion_getchL ubunion_getchR)
+    have ubunion_create_eq_cc: "((createBundle m1 c) \<uplus> (createBundle m2 cc)) . cc = \<up>m2"
+      by (simp add: create_cc ubclUnion_ubundle_def)
+    then show ?thesis 
+      by (metis insert_iff m1_def m2_def not_empty sfilter_ne_resup sfilter_sinftimes_in 
+          sinf_notEps singletonD two_channel ubgetchI ubunion_create_eq_c x_c_eq x_cc_eq x_dom_eq)
+  qed
 
 text {* Cases rule for simple time-synchronous bundles with two non-empty channels. *}
-lemma tsynb_cases_ext [case_names max_len_2c not_ubleast_2c two_channel msg_msg null_msg msg_null null_null]:
-  assumes max_len_2c: "ubMaxLen (Fin (1::nat)) x"
-    and not_ubleast_2c: "\<And>c. c\<in>ubDom\<cdot>x \<Longrightarrow> x . c \<noteq> ubLeast (ubDom\<cdot>x) . c" 
-    and two_channel: "(ubDom\<cdot>x) = {c,cc}"
-    and msg_msg: "\<And>m1 m2. (Msg m1) \<in> ctype c \<Longrightarrow> (Msg m2) \<in> ctype cc \<Longrightarrow> 
-                           P ((createBundle (Msg m1) c) \<uplus> (createBundle (Msg m2) cc))"
+lemma tsynb_cases_ext 
+  [case_names max_len not_empty numb_channel msg_msg null_msg msg_null null_null]:
+  assumes max_len: "ubMaxLen (Fin (1 :: nat)) x"
+    and not_empty: "\<And>c. c \<in> ubDom\<cdot>x \<Longrightarrow> x . c \<noteq> \<epsilon>" 
+    and numb_channel: "(ubDom\<cdot>x) = {c, cc}"
+    and msg_msg: "\<And>m1 m2. (Msg m1) \<in> ctype c \<Longrightarrow> (Msg m2) \<in> ctype cc 
+                             \<Longrightarrow> P ((createBundle (Msg m1) c) \<uplus> (createBundle (Msg m2) cc))"
     and null_msg: "\<And>m2. (Msg m2) \<in> ctype cc \<Longrightarrow> P ((tsynbNull c) \<uplus> (createBundle (Msg m2) cc))"
     and msg_null: "\<And>m2. (Msg m2) \<in> ctype c \<Longrightarrow> P ((createBundle (Msg m2) c) \<uplus> (tsynbNull cc))"
     and null_null: "P ((tsynbNull c) \<uplus> (tsynbNull cc))"
   shows "P x"
-proof- 
-  have x_c_not_empty: "x . c \<noteq> \<epsilon>"
-    using not_ubleast_2c by (simp add: two_channel)
-  have x_cc_not_empty: "x . cc \<noteq> \<epsilon>" 
-    using not_ubleast_2c by (simp add: two_channel)
-  have x_c_singleton: "usclLen\<cdot>(x . c) = Fin 1" 
-    using max_len_2c not_ubleast_2c two_channel ubundle_ubgetch_uscllen_one by fastforce
-  have x_cc_singleton: "usclLen\<cdot>(x . cc) = Fin 1" 
-    using max_len_2c not_ubleast_2c two_channel ubundle_ubgetch_uscllen_one by fastforce
-  have x_dom_eq_msg_msg: "\<And>m1 m2. ubDom\<cdot>x = ubDom\<cdot>((createBundle (Msg m1) c) \<uplus> (createBundle (Msg m2) cc))"
-    by (metis createBundle_dom insert_is_Un two_channel ubclDom_ubundle_def ubclunion_ubcldom)
-  have x_dom_eq_null_msg: "\<And>m2. ubDom\<cdot>x = ubDom\<cdot> ((tsynbNull c) \<uplus> (createBundle (Msg m2) cc))"
-    by (metis createBundle_dom insert_is_Un tsynbnull_ubdom two_channel ubclDom_ubundle_def ubclunion_ubcldom)
-  have x_dom_eq_msg_null: "\<And>m2. ubDom\<cdot>x = ubDom\<cdot> ((createBundle (Msg m2) c)  \<uplus> (tsynbNull cc))"
-    by (metis createBundle_dom insert_is_Un tsynbnull_ubdom two_channel ubclDom_ubundle_def ubclunion_ubcldom)
-  have x_dom_eq_null_null: "ubDom\<cdot>x = ubDom\<cdot> ((tsynbNull c)  \<uplus> (tsynbNull cc))"
-    by (metis insert_is_Un tsynbnull_ubdom two_channel ubclDom_ubundle_def ubclunion_ubcldom)
-  obtain s1 where s1_def: "x . c = s1" using assms
-   by metis
-  obtain s2 where s2_def: "x . cc = s2" using assms
-    by metis
-  have s1_ubundle_eq_x: "x = Abs_ubundle ([c \<mapsto> s1, cc \<mapsto> s2])"
-    using create_ubundle_two_channel s1_def s2_def assms by blast
-  have len_one_cases_c: "usclLen\<cdot>s1 = Fin 1 \<Longrightarrow> (\<exists>m. s1 = (\<up>(Msg m))) \<or>  (s1 = (\<up>null))" 
-    using One_nat_def len_one_stream tsyn.exhaust usclLen_stream_def by metis 
-  have len_one_cases_cc: "usclLen\<cdot>s2 = Fin 1 \<Longrightarrow> (\<exists>m. s2 = (\<up>(Msg m))) \<or>  (s2 = (\<up>null))" 
-    using One_nat_def len_one_stream tsyn.exhaust usclLen_stream_def by metis 
-  have s1_cases: "(\<exists>m. s1 = \<up>(Msg m)) \<or> (s1 = \<up>null)"
-    using s1_def assms x_c_singleton x_c_not_empty len_one_cases_c by blast
-  have s2_cases: "(\<exists>m. s2 = \<up>(Msg m)) \<or> (s2 = \<up>null)"
-    using s2_def assms x_cc_singleton x_cc_not_empty len_one_cases_cc by blast
-  have s1_eq: "(\<exists>m. s1 = (createBundle (Msg m) c) . c ) \<or> (s1 = (tsynbNull c) . c)" 
-    proof(case_tac "\<exists>m. s1 = \<up>(Msg m)")
-      show "\<exists>m::'a. s1 = \<up>(\<M> m) \<Longrightarrow> (\<exists>m::'a. s1 = createBundle (\<M> m) c  .  c) \<or> s1 = tsynbNull c . c"
-        by (metis contra_subsetD createBundle.rep_eq fun_upd_same insertI1 insert_is_Un lscons_conv 
-           option.sel s1_def sdom2un sup'_def two_channel ubdom_channel_usokay ubgetch_insert 
-           usclOkay_stream_def)
-      show "\<nexists>m::'a. s1 = \<up>(\<M> m) \<Longrightarrow> (\<exists>m::'a. s1 = createBundle (\<M> m) c  .  c) \<or> s1 = tsynbNull c . c" 
-        using s1_cases by auto
-    qed
-  have s2_eq: "(\<exists>m. s2 = (createBundle (Msg m) cc) . cc ) \<or> (s2 = (tsynbNull cc) . cc)" 
-    proof(case_tac "\<exists>m. s2 = \<up>(Msg m)")
-      show "\<exists>m::'a. s2 = \<up>(\<M> m) \<Longrightarrow> (\<exists>m::'a. s2 = createBundle (\<M> m) cc  .  cc) \<or> s2 = tsynbNull cc . cc"
-        by (metis contra_subsetD createBundle.rep_eq fun_upd_same insertI1 insert_is_Un lscons_conv 
-           option.sel s2_def sdom2un sup'_def two_channel ubdom_channel_usokay ubgetch_insert 
-           usclOkay_stream_def insert_commute)
-      show "\<nexists>m::'a. s2 = \<up>(\<M> m) \<Longrightarrow> (\<exists>m::'a. s2 = createBundle (\<M> m) cc  .  cc) \<or> s2 = tsynbNull cc . cc" 
-        using s2_cases by auto
-    qed
-  have x_cases: "(\<exists>m1 m2. x = Abs_ubundle ([c \<mapsto> \<up>(Msg m1), cc \<mapsto> \<up>(Msg m2)])) \<or> 
-                 (\<exists>m1. x = Abs_ubundle ([c \<mapsto> \<up>(Msg m1), cc \<mapsto> \<up>-])) \<or> 
-                 (\<exists>m2. x = Abs_ubundle ([c \<mapsto> \<up>-, cc \<mapsto> \<up>(Msg m2)])) \<or>
-                 (x = Abs_ubundle ([c \<mapsto> \<up>-, cc \<mapsto> \<up>-]))" 
-    using s1_eq s2_eq s1_cases s2_cases s1_def s2_def s1_ubundle_eq_x by metis
-  have x_case_msg_msg: "\<exists>m1. s1 = \<up>(Msg m1) \<Longrightarrow> \<exists>m2.  s2 = \<up>(Msg m2) \<Longrightarrow> 
-                        \<exists>m1 m2. x =  ((createBundle (Msg m1) c) \<uplus> (createBundle (Msg m2) cc))" 
-    using createbundle_ubunion max_len_2c not_ubleast_2c s1_def s2_def two_channel by blast
-  have x_case_null_null: "s1 = \<up>-  \<Longrightarrow>  s2 = \<up>- \<Longrightarrow> x = ((tsynbNull c) \<uplus> (tsynbNull cc))"
-  proof- 
-    have null_null: "s1 = \<up>-  \<Longrightarrow>  s2 = \<up>- \<Longrightarrow> x = ((createBundle - c) \<uplus> (createBundle - cc))"
-      using createbundle_ubunion max_len_2c not_ubleast_2c s1_def s2_def two_channel by blast
-    have create2tsynb: "x = ((createBundle - c) \<uplus> (createBundle - cc)) \<Longrightarrow> x = ((tsynbNull c) \<uplus> (tsynbNull cc))"
-      by (simp add: tsynbnull_eq_createbundle)
-    show "s1 = \<up>-  \<Longrightarrow>  s2 = \<up>- \<Longrightarrow> x = ((tsynbNull c) \<uplus> (tsynbNull cc))" 
-      using null_null create2tsynb by blast
-  qed
-  have x_case_msg_null: "\<exists>m1. s1 = \<up>(Msg m1) \<Longrightarrow> s2 = \<up>- \<Longrightarrow> 
-                          \<exists>m1 . x =  ((createBundle (Msg m1) c) \<uplus> (tsynbNull cc))"
-  proof-
-    have msg_null: "\<exists>m1. s1 = \<up>(Msg m1) \<Longrightarrow> s2 = \<up>- \<Longrightarrow> 
-                    \<exists>m1 . x =  ((createBundle (Msg m1) c) \<uplus> (createBundle - cc))"
-      using createbundle_ubunion max_len_2c not_ubleast_2c s1_def s2_def two_channel by blast
-    have create2tsynb: "\<exists>m1. x = ((createBundle (Msg m1) c) \<uplus> (createBundle - cc)) \<Longrightarrow> 
-                        \<exists>m1. x =  ((createBundle (Msg m1) c) \<uplus> (tsynbNull cc))"
-      by (simp add: tsynbnull_eq_createbundle)
-    show "\<exists>m1. s1 = \<up>(Msg m1) \<Longrightarrow> s2 = \<up>- \<Longrightarrow> 
-                          \<exists>m1 . x =  ((createBundle (Msg m1) c) \<uplus> (tsynbNull cc))" 
-      using msg_null create2tsynb by blast
-  qed
-  have x_case_null_msg:  "s1 = \<up>- \<Longrightarrow> \<exists>m2.  s2 = \<up>(Msg m2) \<Longrightarrow> 
-                          \<exists>m2. x =  ((tsynbNull c) \<uplus> (createBundle (Msg m2) cc))"
-  proof-
-    have msg_null: "s1 = \<up>- \<Longrightarrow> \<exists>m2.  s2 = \<up>(Msg m2) \<Longrightarrow> 
-                          \<exists>m2. x =  ((createBundle - c) \<uplus> (createBundle (Msg m2) cc))"
-      using createbundle_ubunion max_len_2c not_ubleast_2c s1_def s2_def two_channel by blast
-    have create2tsynb: "\<exists>m2. x = ((createBundle - c) \<uplus> (createBundle (Msg m2) cc)) \<Longrightarrow> 
-                        \<exists>m2. x =  ((tsynbNull c) \<uplus> (createBundle (Msg m2) cc))"
-      by (simp add: tsynbnull_eq_createbundle)
-    show "s1 = \<up>- \<Longrightarrow> \<exists>m2.  s2 = \<up>(Msg m2) \<Longrightarrow> 
-                      \<exists>m2. x =  ((tsynbNull c) \<uplus> (createBundle (Msg m2) cc))" 
-      using msg_null create2tsynb by blast
-  qed
-  have px: "P (Abs_ubundle ([c \<mapsto> s1, cc \<mapsto> s2]))"
-    proof(case_tac "\<exists>m1. s1 = \<up>(\<M> m1)")
-      show "\<exists>m1. s1 = \<up>(\<M> m1) \<Longrightarrow> P (Abs_ubundle [c \<mapsto> s1, cc \<mapsto> s2])"
-        proof(case_tac "\<exists>m2. s2 = \<up>(\<M> m2)")
-          show "\<exists>m1. s1 = \<up>(\<M> m1) \<Longrightarrow> \<exists>m2. s2 = \<up>(\<M> m2) \<Longrightarrow> P (Abs_ubundle [c \<mapsto> s1, cc \<mapsto> s2])" 
-            proof- 
-              assume a0: "\<exists>m1. s1 = \<up>(\<M> m1)"
-              assume a1: " \<exists>m2. s2 = \<up>(\<M> m2)" 
-              show " P (Abs_ubundle [c \<mapsto> s1, cc \<mapsto> s2])"
-                proof -
-                  obtain m1 where m1_def: "s1 = \<up>(\<M> m1)" using a0 by blast
-                  obtain m2 where m2_def: "s2 = \<up>(\<M> m2)" using a1 by blast
-                  have pcreate: "P (((createBundle (\<M> m1) c) \<uplus> (createBundle (\<M> m2) cc)))"
-                    by (metis createBundle.rep_eq fun_upd_same inject_scons m1_def m2_def msg_msg 
-                       option.sel s1_def s1_eq s2_def s2_eq tsyn.distinct(1) tsynbnull_ubgetch 
-                       ubgetch_insert x_c_not_empty x_cc_not_empty)
-                  have f2: "x = ((createBundle (\<M> m1) c) \<uplus> (createBundle (\<M> m2) cc))"
-                    using createbundle_ubunion m1_def m2_def max_len_2c not_ubleast_2c s1_def s2_def two_channel by blast
-                thus ?thesis
-                  using pcreate s1_ubundle_eq_x by auto
+  proof - 
+    have x_c_singleton: "usclLen\<cdot>(x . c) = Fin 1"
+      using max_len not_empty numb_channel ubundle_ubgetch_uscllen_one by fastforce
+    have x_cc_singleton: "usclLen\<cdot>(x . cc) = Fin 1" 
+      using max_len not_empty numb_channel ubundle_ubgetch_uscllen_one by fastforce
+    have x_dom_eq_msg_msg: 
+      "\<And>m1 m2. ubDom\<cdot>x = ubDom\<cdot>((createBundle (Msg m1) c) \<uplus> (createBundle (Msg m2) cc))"
+      by (metis createBundle_dom insert_is_Un numb_channel ubclDom_ubundle_def ubclunion_ubcldom)
+    have x_dom_eq_null_msg: "\<And>m2. ubDom\<cdot>x = ubDom\<cdot> ((tsynbNull c) \<uplus> (createBundle (Msg m2) cc))"
+      by (metis createBundle_dom insert_is_Un numb_channel tsynbnull_ubdom ubclDom_ubundle_def 
+          ubclunion_ubcldom)
+    have x_dom_eq_msg_null: "\<And>m2. ubDom\<cdot>x = ubDom\<cdot> ((createBundle (Msg m2) c)  \<uplus> (tsynbNull cc))"
+      by (metis createBundle_dom insert_is_Un numb_channel tsynbnull_ubdom ubclDom_ubundle_def 
+          ubclunion_ubcldom)
+    have x_dom_eq_null_null: "ubDom\<cdot>x = ubDom\<cdot> ((tsynbNull c)  \<uplus> (tsynbNull cc))"
+      by (metis insert_is_Un numb_channel tsynbnull_ubdom ubclUnion_ubundle_def ubunionDom)
+    obtain s1 where s1_def: "x . c = s1" 
+      by simp
+    obtain s2 where s2_def: "x . cc = s2" 
+      by simp
+    have create_ubundle: "x = Abs_ubundle ([c \<mapsto> s1, cc \<mapsto> s2])"
+      by (simp add: create_ubundle_two_channel numb_channel s1_def s2_def)
+    have len_one_cases_c: "usclLen\<cdot>s1 = Fin 1 \<Longrightarrow> (\<exists>m. s1 = (\<up>(Msg m))) \<or>  (s1 = (\<up>null))"
+      by (metis len_one_stream tsyn.exhaust usclLen_stream_def) 
+    have len_one_cases_cc: "usclLen\<cdot>s2 = Fin 1 \<Longrightarrow> (\<exists>m. s2 = (\<up>(Msg m))) \<or>  (s2 = (\<up>null))" 
+      by (metis len_one_stream tsyn.exhaust usclLen_stream_def)
+    have s1_cases: "(\<exists>m. s1 = \<up>(Msg m)) \<or> (s1 = \<up>null)"
+      using len_one_cases_c s1_def x_c_singleton by blast
+    have s2_cases: "(\<exists>m. s2 = \<up>(Msg m)) \<or> (s2 = \<up>null)"
+      using len_one_cases_cc s2_def x_cc_singleton by blast
+    have s1_bundle_scases: "(\<exists>m. s1 = (createBundle (Msg m) c) . c ) \<or> (s1 = (tsynbNull c) . c)" 
+      proof (case_tac "\<exists>m. s1 = \<up>(Msg m)")
+        assume "\<exists>m::'a. s1 = \<up>(\<M> m)"
+        then show "(\<exists>m::'a. s1 = createBundle (\<M> m) c  .  c) \<or> s1 = tsynbNull c . c"
+          by (metis contra_subsetD createBundle.rep_eq fun_upd_same insertI1 insert_is_Un 
+              lscons_conv option.sel s1_def sdom2un sup'_def numb_channel ubdom_channel_usokay 
+              ubgetch_insert usclOkay_stream_def)
+      next
+        assume "\<nexists>m. s1 = \<up>(\<M> m)"
+        then show "(\<exists>m. s1 = createBundle (\<M> m) c  .  c) \<or> s1 = tsynbNull c . c"
+          using s1_cases by auto
+      qed
+    have s2_bundle_scases: "(\<exists>m. s2 = (createBundle (Msg m) cc) . cc ) \<or> (s2 = (tsynbNull cc) . cc)" 
+      proof (case_tac "\<exists>m. s2 = \<up>(Msg m)")
+        assume "\<exists>m. s2 = \<up>(\<M> m)"
+        then show "(\<exists>m. s2 = createBundle (\<M> m) cc  .  cc) \<or> s2 = tsynbNull cc . cc"
+          by (metis contra_subsetD createBundle.rep_eq fun_upd_same insertI1 insert_is_Un 
+              lscons_conv option.sel s2_def sdom2un sup'_def numb_channel ubdom_channel_usokay 
+              ubgetch_insert usclOkay_stream_def insert_commute)
+      next
+        assume "\<nexists>m. s2 = \<up>(\<M> m)"
+        then show "(\<exists>m::'a. s2 = createBundle (\<M> m) cc  .  cc) \<or> s2 = tsynbNull cc . cc" 
+          using s2_cases by auto
+      qed
+    have x_cases: "(\<exists>m1 m2. x = Abs_ubundle ([c \<mapsto> \<up>(Msg m1), cc \<mapsto> \<up>(Msg m2)])) \<or> 
+                   (\<exists>m1. x = Abs_ubundle ([c \<mapsto> \<up>(Msg m1), cc \<mapsto> \<up>-])) \<or> 
+                   (\<exists>m2. x = Abs_ubundle ([c \<mapsto> \<up>-, cc \<mapsto> \<up>(Msg m2)])) \<or>
+                   (x = Abs_ubundle ([c \<mapsto> \<up>-, cc \<mapsto> \<up>-]))"
+      using create_ubundle s1_cases s2_cases by blast
+    have x_case_msg_msg: 
+      "\<exists>m1. s1 = \<up>(Msg m1) \<Longrightarrow> \<exists>m2.  s2 = \<up>(Msg m2) 
+           \<Longrightarrow> \<exists>m1 m2. x =  ((createBundle (Msg m1) c) \<uplus> (createBundle (Msg m2) cc))" 
+      using createbundle_ubclunion max_len not_empty numb_channel s1_def s2_def by blast
+    have x_case_null_null: "s1 = \<up>-  \<Longrightarrow>  s2 = \<up>- \<Longrightarrow> x = ((tsynbNull c) \<uplus> (tsynbNull cc))"
+      by (metis (no_types, lifting) createbundle_ubclunion max_len not_empty numb_channel s1_def 
+          s2_def tsynbnull_eq_createbundle)
+    have x_case_msg_null: 
+      "\<exists>m1. s1 = \<up>(Msg m1) \<Longrightarrow> s2 = \<up>- \<Longrightarrow> \<exists>m1 . x =  ((createBundle (Msg m1) c) \<uplus> (tsynbNull cc))"
+      by (metis (no_types, lifting) createbundle_ubclunion max_len not_empty numb_channel s1_def 
+          s2_def tsynbnull_eq_createbundle)
+    have x_case_null_msg:  
+      "s1 = \<up>- \<Longrightarrow> \<exists>m2.  s2 = \<up>(Msg m2) \<Longrightarrow> \<exists>m2. x =  ((tsynbNull c) \<uplus> (createBundle (Msg m2) cc))"
+      by (metis (no_types, lifting) createbundle_ubclunion max_len not_empty numb_channel s1_def 
+          s2_def tsynbnull_eq_createbundle)
+    have p_x: "P (Abs_ubundle ([c \<mapsto> s1, cc \<mapsto> s2]))"
+      proof (case_tac "\<exists>m1. s1 = \<up>(\<M> m1)")
+        assume m1_exists: "\<exists>m1. s1 = \<up>(\<M> m1)"
+        obtain m1 where m1_def: "s1 = \<up>(\<M> m1)" 
+          using m1_exists by auto
+        have m1_ctype: "\<M> m1 \<in> ctype c"
+          by (metis createBundle.rep_eq fun_upd_same insertI1 m1_def not_empty numb_channel 
+              option.sel s1_bundle_scases s1_def tsyn.set_cases tsyn.simps(14) tsyn.simps(15) 
+              tsyn.simps(3) tsynbnull_ubgetch tsyndom_singleton_msg tsyndom_singleton_null 
+              ubgetch_insert)
+        show "P (Abs_ubundle [c \<mapsto> s1, cc \<mapsto> s2])"
+          proof (case_tac "\<exists>m2. s2 = \<up>(\<M> m2)")
+            assume m2_exists: "\<exists>m2. s2 = \<up>(\<M> m2)"
+            obtain m2 where m2_def: "s2 = \<up>(\<M> m2)" 
+              using m2_exists by auto
+            have m2_ctype: "\<M> m2 \<in> ctype cc"
+              by (smt createBundle.rep_eq createBundle_dom fun_upd_same insertI1 insert_commute 
+                  m2_def not_empty numb_channel option.inject s2_bundle_scases s2_def tsyn.set_cases 
+                  tsyn.simps(14) tsyn.simps(15) tsyn.simps(3) tsynbnull_ubgetch 
+                  tsyndom_singleton_msg tsyndom_singleton_null ubgetchE)
+            show "P (Abs_ubundle [c \<mapsto> s1, cc \<mapsto> s2])"
+              proof - 
+                have p_createbundle: "P ((createBundle (\<M> m1) c) \<uplus> (createBundle (\<M> m2) cc))"
+                  using m1_ctype m2_ctype msg_msg by auto  
+                have x_createbundle: "x = ((createBundle (\<M> m1) c) \<uplus> (createBundle (\<M> m2) cc))"
+                  using createbundle_ubclunion m1_def m2_def max_len not_empty numb_channel 
+                        s1_def s2_def by blast   
+                then show ?thesis
+                  by (simp add: create_ubundle p_createbundle)
+             qed
+          next
+             assume m2_nexists: "\<nexists>m2::'a. s2 = \<up>(\<M> m2)"
+             show "P (Abs_ubundle [c \<mapsto> s1, cc \<mapsto> s2])"
+              proof -
+                have f1: "\<forall>f c z ca. if (ca::channel) = c then (f(c := z::'a tsyn stream option)) ca = z else (f(c := z)) ca = f ca"
+                  by force
+                have "c \<notin> ubDom\<cdot>(tsynbNull cc::'a tsyn stream\<^sup>\<Omega>)"
+                  using m1_def m2_nexists s1_def s2_def by fastforce
+                then show ?thesis
+                  using f1 by (metis (no_types) createBundle.rep_eq create_ubundle domIff dom_empty dom_fun_upd m1_exists m2_nexists msg_null not_empty numb_channel option.sel option.simps(3) s2_cases ubclUnion_ubundle_def ubgetch_insert ubunion_getchL x_case_msg_null)
               qed
-           qed
-           show "\<exists>m1::'a. s1 = \<up>(\<M> m1) \<Longrightarrow> \<nexists>m2::'a. s2 = \<up>(\<M> m2) \<Longrightarrow> P (Abs_ubundle [c \<mapsto> s1, cc \<mapsto> s2])" 
-             by (metis createBundle.rep_eq fun_upd_same msg_null option.sel s1_def s1_ubundle_eq_x 
-                 s2_cases s2_def singletonD tsynbnull_ubdom ubclUnion_ubundle_def ubgetch_insert 
-                 ubunion_getchL x_c_not_empty x_case_msg_null)
-        qed
-        show "\<nexists>m1::'a. s1 = \<up>(\<M> m1) \<Longrightarrow> P (Abs_ubundle [c \<mapsto> s1, cc \<mapsto> s2])"
-          proof(case_tac "\<exists>m2. s2 = \<up>(Msg m2)")
-            show "\<nexists>m1::'a. s1 = \<up>(\<M> m1) \<Longrightarrow> \<exists>m2::'a. s2 = \<up>(\<M> m2) \<Longrightarrow> P (Abs_ubundle [c \<mapsto> s1, cc \<mapsto> s2])"
-              by (metis (mono_tags, lifting) createBundle.rep_eq createBundle_dom insertI1 
-                  map_upd_Some_unfold null_msg s1_cases s1_ubundle_eq_x ubclUnion_ubundle_def 
-                  ubgetchE ubunion_getchR x_case_null_msg x_cc_not_empty)
-            show " \<nexists>m1::'a. s1 = \<up>(\<M> m1) \<Longrightarrow> \<nexists>m2::'a. s2 = \<up>(\<M> m2) \<Longrightarrow> P (Abs_ubundle [c \<mapsto> s1, cc \<mapsto> s2])"
-              using null_null s1_cases s1_ubundle_eq_x s2_cases x_case_null_null by auto
           qed
-        qed
-  show ?thesis
-    by (simp add: px s1_ubundle_eq_x)
-qed
+      next
+        assume m1_nexists: "\<nexists>m1. s1 = \<up>(\<M> m1)"
+        show "P (Abs_ubundle [c \<mapsto> s1, cc \<mapsto> s2])"
+          proof (case_tac "\<exists>m2. s2 = \<up>(Msg m2)")
+            assume m2_exists: "\<exists>m2. s2 = \<up>(\<M> m2)"
+            obtain m2 where m2_def: "s2 = \<up>(\<M> m2)" 
+              using m2_exists by auto
+            have m2_ctype: "\<M> m2 \<in> ctype cc"
+              by (smt createBundle.rep_eq createBundle_dom fun_upd_same insertI1 insert_commute 
+                  m2_def not_empty numb_channel option.inject s2_bundle_scases s2_def tsyn.set_cases 
+                  tsyn.simps(14) tsyn.simps(15) tsyn.simps(3) tsynbnull_ubgetch 
+                  tsyndom_singleton_msg tsyndom_singleton_null ubgetchE)
+            show "P (Abs_ubundle [c \<mapsto> s1, cc \<mapsto> s2])"
+              by (metis (no_types, lifting) createBundle.rep_eq createBundle_dom create_ubundle 
+                  fun_upd_same insertI1 insert_commute m1_nexists m2_exists not_empty null_msg 
+                  numb_channel option.sel s1_cases s2_def ubclUnion_ubundle_def ubgetchE 
+                  ubunion_getchR x_case_null_msg)
+          next    
+            assume m2_nexists: "\<nexists>m2::'a. s2 = \<up>(\<M> m2)"
+            show "P (Abs_ubundle [c \<mapsto> s1, cc \<mapsto> s2])"
+              using create_ubundle m1_nexists m2_nexists null_null s1_cases s2_cases 
+                    x_case_null_null by auto
+          qed
+      qed
+    show ?thesis
+      by (simp add: create_ubundle p_x)
+  qed
 
 end
