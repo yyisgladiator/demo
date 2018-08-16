@@ -337,14 +337,18 @@ lemma tsynrec_test_inputstreamloseack:
   "tsynRec True\<cdot>recTestInputStreamLoseAck = recTestOutputStreamOLoseAck"
   by(simp add: recTestInputStreamLoseAck_def recTestOutputStreamOLoseAck_def tsynrec_insert)
 
+(* ToDo: add description. *)
+
+lemma tsynprojsnd_test_inputstreamloseack: 
+  "tsynProjSnd\<cdot>recTestInputStreamLoseAck = recTestOutputStreamArLoseAck"
+  by (simp add: recTestInputStreamLoseAck_def recTestOutputStreamArLoseAck_def tsynprojsnd_insert)
+
 text{* @{term tsynbRec} test on @{term recTestInputUbundleLoseAck}. *}
 lemma tsynbrec_test_inputubundleloseack: 
   "tsynbRec True\<cdot>recTestInputUbundleLoseAck = Some recTestOutputUbundleLoseAck"
-  apply (simp add: tsynbrec_insert ubdom_insert recTestInputUbundleLoseAck.rep_eq)
-  apply (simp add: ubgetch_insert recTestInputUbundleLoseAck.rep_eq natbool2abp_abp2natbool_inv)
-  apply (insert tsynrec_test_inputstreamloseack)
-  apply (simp add: recTestInputStreamLoseAck_def tsynprojsnd_insert)
-  by (simp add: recTestOutputUbundleLoseAck.abs_eq recTestOutputStreamArLoseAck_def fun_upd_twist)
+  by (simp add: tsynbrec_insert ubdom_insert ubgetch_insert natbool2abp_abp2natbool_inv 
+                tsynrec_test_inputstreamloseack tsynprojsnd_test_inputstreamloseack 
+                recTestInputUbundleLoseAck.rep_eq recTestOutputUbundleLoseAck.abs_eq fun_upd_twist)
 
 text{* @{term RecSPF} test on @{term recTestUbundleLoseAck}. *}
 lemma recspf_test_inputubundleloseack:
