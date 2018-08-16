@@ -305,46 +305,74 @@ lemma recspf_ubdom:
   section {* Receiver SPF Test Lemmata *}
 (* ----------------------------------------------------------------------- *)
 
+(* ----------------------------------------------------------------------- *)
+  subsection {* Test situation in which no message gets lost. *}
+(* ----------------------------------------------------------------------- *)
+  
+text{* @{term tsynRec} test on @{term recTestInputStreamNoLoss}. *}
+lemma tsynrec_test_inputstreamnoloss:
+  "tsynRec True\<cdot>recTestInputStreamNoLoss = recTestOutputStreamONoLoss"
+  by (simp add: tsynrec_insert recTestInputStreamNoLoss_def recTestOutputStreamONoLoss_def)
+
+text{* @{term tsynbRec} test on @{term recTestInputUbundleNoLoss}. *}
+lemma tsynbrec_test_inputubundlenoloss:
+  "tsynbRec True\<cdot>recTestInputUbundleNoLoss = Some recTestOutputUbundleNoLoss"
+  apply (simp add: tsynbrec_insert ubdom_insert recTestInputUbundleNoLoss.rep_eq)
+  apply (simp add: ubgetch_insert recTestInputUbundleNoLoss.rep_eq natbool2abp_abp2natbool_inv)
+  apply (insert tsynrec_test_inputstreamnoloss)
+  apply (simp add: recTestInputStreamNoLoss_def tsynprojsnd_insert)
+  by (simp add: recTestOutputUbundleNoLoss.abs_eq recTestOutputStreamArNoLoss_def fun_upd_twist)
+
+text{* @{term RecSPF} test on @{term recTestInputUbundleNoLoss}. *}
+lemma recspf_test_inputubundlenoloss:
+  "RecSPF True \<rightleftharpoons> recTestInputUbundleNoLoss = recTestOutputUbundleNoLoss"
+  by (simp add: RecSPF_def tsynbrec_test_inputubundlenoloss)
+
+(* ----------------------------------------------------------------------- *)
+  subsection {* The second medium loses the first acknowledgement. *}
+(* ----------------------------------------------------------------------- *)
+
+text{* @{term tsynRec} test on @{term recTestInputStreamLoseAck}. *}
+lemma tsynrec_test_inputstreamloseack:
+  "tsynRec True\<cdot>recTestInputStreamLoseAck = recTestOutputStreamOLoseAck"
+  by(simp add: recTestInputStreamLoseAck_def recTestOutputStreamOLoseAck_def tsynrec_insert)
+
+text{* @{term tsynbRec} test on @{term recTestInputUbundleLoseAck}. *}
+lemma tsynbrec_test_inputubundleloseack: 
+  "tsynbRec True\<cdot>recTestInputUbundleLoseAck = Some recTestOutputUbundleLoseAck"
+  apply (simp add: tsynbrec_insert ubdom_insert recTestInputUbundleLoseAck.rep_eq)
+  apply (simp add: ubgetch_insert recTestInputUbundleLoseAck.rep_eq natbool2abp_abp2natbool_inv)
+  apply (insert tsynrec_test_inputstreamloseack)
+  apply (simp add: recTestInputStreamLoseAck_def tsynprojsnd_insert)
+  by (simp add: recTestOutputUbundleLoseAck.abs_eq recTestOutputStreamArLoseAck_def fun_upd_twist)
+
+text{* @{term RecSPF} test on @{term recTestUbundleLoseAck}. *}
+lemma recspf_test_inputubundleloseack:
+  "RecSPF True \<rightleftharpoons> recTestInputUbundleLoseAck = recTestOutputUbundleLoseAck"
+  by (simp add: recspf_insert tsynbrec_test_inputubundleloseack)
+
+(* ----------------------------------------------------------------------- *)
+  subsection {* The first medium loses the first and second data message for one time each. *}
+(* ----------------------------------------------------------------------- *)
+
 text{* @{term tsynRec} test on @{term recTestInputStreamLoseDat}. *}
 lemma tsynrec_test_inputstreamlosedat:
   "tsynRec True\<cdot>recTestInputStreamLoseDat = recTestOutputStreamOLoseMsg" 
-  by (simp add: recTestInputStreamLoseDat_def recTestOutputStreamOLoseMsg_def 
-                tsynrec_sconc_msg_t tsynrec_sconc_null)
+  by (simp add: recTestInputStreamLoseDat_def recTestOutputStreamOLoseMsg_def tsynrec_insert)
 
 text{* @{term tsynRec} test on @{term recTestInputUbundleLoseDat}. *}
-lemma tsynbrec_test_inputstreamlosedat: 
+lemma tsynbrec_test_inputubundlelosedat: 
   "tsynbRec True\<cdot>recTestInputUbundleLoseDat = Some recTestOutputUbundleLoseMsg"
-  apply (simp add: tsynbrec_insert ubdom_insert)
-  apply (simp add: recTestOutputUbundleLoseMsg_def)
-  apply (simp add: ubGetCh_def recTestInputUbundleLoseDat.rep_eq)
-  apply (simp add: recTestInputStreamLoseDat_def)
-  apply (simp add: recTestOutputStreamArLoseMsg_def recTestOutputStreamOLoseMsg_def)
-  apply (simp add: natbool2abp_def tsynmap_insert abp2natbool_def tsynMap_def)
-  apply (simp add: tsynProjSnd_def bool2abp_def tsynmap_insert)
+  apply (simp add: tsynbrec_insert ubdom_insert recTestInputUbundleLoseDat.rep_eq)
+  apply (simp add: ubgetch_insert recTestInputUbundleLoseDat.rep_eq natbool2abp_abp2natbool_inv)
   apply (insert tsynrec_test_inputstreamlosedat)
-  apply (simp add: recTestInputStreamLoseDat_def recTestOutputStreamOLoseMsg_def)
-  apply (simp add: nat2abp_def tsynMap_def)
-  by (simp add: fun_upd_twist)
+  apply (simp add: recTestInputStreamLoseDat_def tsynprojsnd_insert)
+  by (simp add: recTestOutputUbundleLoseMsg.abs_eq recTestOutputStreamArLoseMsg_def fun_upd_twist)
 
 text{* @{term RecSPF} test on @{term recTestInputStreamLoseDat}. *}
-lemma recspf_test_inputstreamlosedat: 
+lemma recspf_test_inputubundlelosedat: 
   "RecSPF True \<rightleftharpoons> recTestInputUbundleLoseDat = recTestOutputUbundleLoseMsg" 
-  by (simp add: recspf_insert tsynbrec_test_inputstreamlosedat)
-
-(* ToDo: add descriptions. *)
-
-lemma tsynrec_test_inputstreamloseack:
-  "tsynRec True\<cdot>recTestInputStreamLoseAck = recTestOutputStreamOLoseAck"
-  by (simp add: recTestInputStreamLoseAck_def recTestOutputStreamOLoseAck_def 
-                tsynrec_sconc_msg_t)
-
-lemma tsynbrec_test_inputstreamloseack: 
-  "tsynbRec True\<cdot>recTestInputUbundleLoseAck = Some recTestOutputUbundleLoseAck"
-  sorry
-
-lemma recspf_test_inputstreamloseack:
-  "RecSPF True \<rightleftharpoons> recTestInputUbundleLoseAck = recTestOutputUbundleLoseAck"
-  by (simp add: recspf_insert tsynbrec_test_inputstreamloseack)
+  by (simp add: recspf_insert tsynbrec_test_inputubundlelosedat)
 
 (* ----------------------------------------------------------------------- *)
   section {* Automaton Receiver Transition Lemmata *}
