@@ -360,6 +360,20 @@ lemma tsynrec_test_inputstreamlosedat:
   "tsynRec True\<cdot>recTestInputStreamLoseDat = recTestOutputStreamOLoseMsg" 
   by (simp add: recTestInputStreamLoseDat_def recTestOutputStreamOLoseMsg_def tsynrec_insert)
 
+lemma tsynbrec_in_out_eq: 
+  assumes ub_in:"ubDom\<cdot>input = {\<C> ''dr''}" 
+      and ub_out:"ubDom\<cdot>output= {\<C> ''ar'', \<C> ''o''}"
+      and ar_eq:"bool2abp\<cdot>(tsynProjSnd\<cdot>(abp2natbool\<cdot>(input . \<C> ''dr''))) = output . \<C> ''ar''" 
+      and o_eq: "nat2abp\<cdot>(tsynRec True\<cdot>(abp2natbool\<cdot>(input . \<C> ''dr''))) = output . \<C> ''o''"
+    shows " tsynbRec True\<cdot>input = Some output"
+  sorry
+
+lemma   "tsynbRec True\<cdot>recTestInputUbundleLoseDat = Some recTestOutputUbundleLoseMsg"
+  apply(rule tsynbrec_in_out_eq)
+  apply(simp_all add: ubgetch_insert ubDom_def recTestInputUbundleLoseDat.rep_eq recTestOutputUbundleLoseMsg.rep_eq  natbool2abp_abp2natbool_inv)
+  apply(simp add: recTestInputStreamLoseDat_def tsynprojsnd_insert recTestOutputStreamArLoseMsg_def) 
+  by (simp add: tsynrec_test_inputstreamlosedat)
+  
 text{* @{term tsynRec} test on @{term recTestInputUbundleLoseDat}. *}
 lemma tsynbrec_test_inputubundlelosedat: 
   "tsynbRec True\<cdot>recTestInputUbundleLoseDat = Some recTestOutputUbundleLoseMsg"
