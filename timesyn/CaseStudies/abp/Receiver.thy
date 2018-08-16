@@ -430,10 +430,16 @@ lemma createaroutput_createooutput_ubclunion_ubdom:
   apply (simp add: ubclUnion_ubundle_def ubdom_insert ubUnion_def)
   by (simp add: createArBundle.rep_eq createOBundle.rep_eq)
 
+lemma ubclunion_dom:"dom (Rep_ubundle (ubclUnion\<cdot>sb\<cdot>tb)) = dom (Rep_ubundle sb) \<union> dom(Rep_ubundle tb)"
+  sorry 
+
+lemma createarbundle_ubdom: "ubDom\<cdot>(createArBundle a)= {\<C> ''ar''}"
+  by(simp add: ubDom_def createArBundle.rep_eq)
+
 lemma createaroutput_tsynbnullo_ubclunion_ubdom: 
   "ubDom\<cdot>((createArBundle a) \<uplus> (tsynbNull (\<C> ''o''))) = {\<C> ''ar'', \<C> ''o''}"
-  apply (simp add: ubclUnion_ubundle_def ubdom_insert ubUnion_def)
-  by (simp add: createArBundle.rep_eq tsynbNull.rep_eq)
+  by(simp add: ubclUnion_ubundle_def createarbundle_ubdom insert_commute)
+ (* by (simp add: ubdom_insert ubUnion_def ubclunion_dom tsynbNull.rep_eq createArBundle.rep_eq insert_commute)*)
 
 lemma tsynbnullar_tsynbnullo_ubclunion_ubdom:
   "ubDom\<cdot>(tsynbNull (\<C> ''ar'') \<uplus> tsynbNull (\<C> ''o'')) = {\<C> ''ar'', \<C> ''o''}"
@@ -603,7 +609,9 @@ lemma receiverautomaton_h_step_rf_null:
                \<cdot>(da_h ReceiverAutomaton (ReceiverState Rf) \<rightleftharpoons> sb)"
   apply (simp_all add: da_h_final daDom_def ReceiverAutomaton.rep_eq da_h_ubdom assms daRan_def 
          daNextOutput_def daNextState_def daTransition_def usclConc_stream_def)
-  using assms receiverautomaton_h_step_ubdom_null_null by auto
+  (*using assms receiverautomaton_h_step_ubdom_null_null by auto*)
+  apply(rule ubrestrict_id)
+  by (simp only: assms receiverautomaton_h_step_ubdom_null_null)
 
 text{* ReceiverState Rt and input null. *}
 lemma receiverautomaton_h_step_rt_null: 
