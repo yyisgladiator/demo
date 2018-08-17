@@ -451,7 +451,7 @@ lemma ufun_arg_eqI: assumes "(a = b)"
   by (simp add: assms)
 
 (* empty function is not ufWell  *)
-lemma map_not_ufun [simp]: "\<not>(ufWell (Abs_cfun empty))"
+lemma map_not_ufun [simp]: "\<not>(ufWell (Abs_cfun Map.empty))"
   apply (simp add: ufWell_def)
   using ubcldom_ex by auto
 

@@ -374,18 +374,18 @@ lemma part_map_chain: assumes "chain S" shows "chain (\<lambda>i. [c \<mapsto> S
 
 
 (* Stuff used in SPF *)
-lemma part_emptys_cont[simp]: "cont [empty \<mapsto> empty]"
+lemma part_emptys_cont[simp]: "cont [Map.empty \<mapsto> Map.empty]"
 proof (rule contI)
   fix Y:: "nat \<Rightarrow> ('a \<rightharpoonup> 'b)"
   assume chY: "chain Y"
   thus "range (\<lambda>i. [Map.empty \<mapsto> Map.empty] (Y i)) <<| [Map.empty \<mapsto> Map.empty] (\<Squnion>i. Y i)"
-  proof (cases "empty \<in> range (Y)")
+  proof (cases "Map.empty \<in> range (Y)")
     case True
     thus ?thesis by (simp add: chY is_lub_maximal lub_maximal part_allempty po_eq_conv rangeI ub_rangeI)
   next
     case False
     hence "\<forall>i. (dom(Y i) \<noteq> {})" by (smt dom_eq_empty_conv rangeI)
-    hence "(\<Squnion>i. Y i) \<noteq> empty" by (simp add: chY part_dom_lub)
+    hence "(\<Squnion>i. Y i) \<noteq> Map.empty" by (simp add: chY part_dom_lub)
     thus ?thesis by (smt False fun_upd_apply image_cong image_iff is_lub_const)
   qed
 qed 

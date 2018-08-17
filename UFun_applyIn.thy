@@ -288,10 +288,9 @@ proof -
                           = (\<lambda>x. (ubclDom\<cdot>x = ufDom\<cdot>(Lub Y))\<leadsto>(\<Squnion>i::nat. k\<cdot>(Y i \<rightleftharpoons> x))) x"
     apply (simp)
     apply rule
-     apply (smt ch2ch_fun f60 image_cong lub_fun option.collapse option.discI option.inject 
-                          option_chain_cases part_the_lub some_lub_chain_eq)
-    by (smt Abs_cfun_inverse2 below_option_def cfun_below_iff f10 f12 f14 image_cong
-                    is_ub_thelub rep_cfun_cont)
+     apply auto
+    apply (smt ch2ch_fun f60 lub_eq lub_fun option.sel option.simps(3) option_chain_cases some_lub_chain_eq)
+    by (smt Abs_cfun_inverse2 below_option_def cfun_below_iff f10 f12 f14 is_ub_thelub lub_eq option.distinct(1) rep_cfun_cont)+
   have f51: "(\<Squnion>i::nat. (\<lambda>x. (ubclDom\<cdot>x = ufDom\<cdot>(Lub Y))\<leadsto>k\<cdot>(Y i \<rightleftharpoons> x))) 
                       = (\<lambda>x. (ubclDom\<cdot>x = ufDom\<cdot>(Lub Y))\<leadsto>(\<Squnion>i::nat. k\<cdot>(Y i \<rightleftharpoons> x)))"
     using f100 by auto 

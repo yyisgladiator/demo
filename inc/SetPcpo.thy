@@ -1,7 +1,7 @@
 chapter {* Set and bool as a pointed cpo. *}
 
 theory SetPcpo
-imports "~~/src/HOL/HOLCF/Adm" Reversed
+imports HOLCF Reversed
 begin
 
 text {*PCPO on sets and bools. The @{text "\<sqsubseteq>"} operator of the order is defined as the @{text "\<subseteq>"} operator on sets
@@ -15,7 +15,7 @@ section {* Order on sets. *}
 text {* {text "\<sqsubseteq>"} operator as the @{text "\<subseteq>"} operator on sets -> partial order. *}
 instantiation set :: (type) po
 begin
-  definition less_set_def: "(op \<sqsubseteq>) = (op \<subseteq>)"
+  definition less_set_def: "(\<sqsubseteq>) = (\<subseteq>)"
 instance
 apply intro_classes
 apply (simp add: less_set_def)
@@ -68,7 +68,7 @@ text {* If one defines the @{text "\<sqsubseteq>"} operator as the @{text "\<lon
   one obtains a partial order. *}
 instantiation bool :: po
 begin
-  definition less_bool_def: "(op \<sqsubseteq>) = (op \<longrightarrow>)"
+  definition less_bool_def: "(\<sqsubseteq>) = (\<longrightarrow>)"
 instance
 apply intro_classes
 apply (simp add: less_bool_def)

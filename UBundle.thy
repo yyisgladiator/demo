@@ -20,7 +20,7 @@ section\<open>Data type\<close>
 definition ubWell :: "(channel \<rightharpoonup> ('s::uscl)) \<Rightarrow> bool" where
 "ubWell f \<equiv> \<forall>c \<in> (dom f). (usclOkay c (f\<rightharpoonup>c))" 
 
-lemma ubWell_empty: "ubWell empty"
+lemma ubWell_empty: "ubWell Map.empty"
   by(simp add: ubWell_def)
 
 lemma ubWell_adm: "adm ubWell"
@@ -301,7 +301,7 @@ lemma ubdom_channel_usokay[simp]: assumes "c \<in> ubDom\<cdot>ub"
   shows "usclOkay c ((Rep_ubundle ub)\<rightharpoonup>c)"
   using assms ubrep_well ubdom_insert ubWell_def by blast
 
-lemma ubdom_empty [simp]: "ubDom\<cdot>(Abs_ubundle empty) = {}"
+lemma ubdom_empty [simp]: "ubDom\<cdot>(Abs_ubundle Map.empty) = {}"
   by (simp add: ubWell_empty ubdom_ubrep_eq)
     
 subsection \<open>ubGetCh\<close>
