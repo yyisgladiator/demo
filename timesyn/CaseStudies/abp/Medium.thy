@@ -37,6 +37,11 @@ definition MedSPS :: "(abpMessage tsyn stream\<^sup>\<Omega>) ufun uspec" where
   "MedSPS = Abs_uspec (Rev {(MedSPF ora) | ora. #({True} \<ominus> ora) = \<infinity>}, 
                              Discr {\<C> ''ds''}, Discr {\<C> ''dr''})"
 
+text {* @{term MedSPS}: Lossy medium function set for the Alternating Bit Protocol. *}
+definition MedSPSspec :: "nat \<Rightarrow> abpMessage tsyn SPS" where 
+  "MedSPSspec n = Abs_uspec (Rev {(MedSPF ora) | ora. (#({True} \<ominus> ora) = \<infinity> \<and> snth n ora
+   \<and> (\<forall>k. k<n \<and> \<not>snth k ora))}, Discr {\<C> ''ds''}, Discr {\<C> ''dr''})"
+
 (* ----------------------------------------------------------------------- *)
 section {* Basic Properties *}
 (* ----------------------------------------------------------------------- *)
@@ -440,6 +445,29 @@ text{* The range of @{term MedSPS}. *}
 lemma medsps_uspecran: "uspecRan\<cdot>MedSPS = {\<C> ''dr''}"
   apply (simp add: uspecRan_def MedSPS_def)
   using medsps_uspecwell by simp
+
+(* ----------------------------------------------------------------------- *)
+subsection {* Basic Properties of MedSPSspec *}
+(* ----------------------------------------------------------------------- *)
+
+text{* @{term MedSPSspec} is well-formed. *}
+lemma medspsspec_uspecwell: 
+  "uspecWell (Rev {(MedSPF ora) | ora. (#({True} \<ominus> ora) = \<infinity> \<and> snth n ora
+   \<and> (\<forall>k. k<n \<and> \<not>snth k ora))}) (Discr {\<C> ''ds''}) (Discr {\<C> ''dr''})"
+  using CollectD uspec_wellI by fastforce
+
+text{* The domain of @{term MedSPSspec}. *}
+lemma medspsspec_uspecdom: "uspecDom\<cdot>(MedSPSspec n) = {\<C> ''ds''}"
+  apply (induction n)
+  apply (simp add: uspecDom_def MedSPSspec_def)
+  apply (simp add: MedSPSspec_def)
+  sorry
+
+text{* The range of @{term MedSPSspec}. *}
+lemma medspsspec_uspecran: "uspecRan\<cdot>(MedSPSspec n) = {\<C> ''dr''}"
+  apply (induction n)
+  apply (simp add: uspecRan_def MedSPSspec_def)
+  sorry
 
 (* ----------------------------------------------------------------------- *)
 subsection {* Medium State Lemmata *}
