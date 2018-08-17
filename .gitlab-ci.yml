@@ -51,6 +51,7 @@ stages:
 dependency:
   stage: dependency
   script:
+    - isabelle version
     - isabelle build -D . -j2 -n -v || if [ $? -eq 1 ]; then exit 0; else exit $?; fi
 
 
@@ -62,6 +63,7 @@ dependency:
 mustWork:
   stage: mustWork
   script:
+    - isabelle version
     - isabelle build -d . -j2 -v -b -g mustWork
 
 
@@ -74,4 +76,5 @@ canFail:
   stage: canFail
   allow_failure: true   #for now, sorrys are allowed
   script:
+    - isabelle version
     - isabelle build -d . -j2 -v -b -g canFail
