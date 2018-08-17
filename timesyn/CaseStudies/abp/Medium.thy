@@ -450,17 +450,17 @@ lemma snth_ora_true: assumes "#({True} \<ominus> ora) = \<infinity>" obtains n w
   by (metis Inf'_neq_0_rev assms ex_snth_in_sfilter_nempty singleton_iff slen_empty_eq)
 
 (* If a "null" comes in, send it out and stay in the same state. *)
-lemma "spsConcIn (tsynbNull(\<C> ''ds''))\<cdot>MedSPS = spsConcOut (tsynbNull (\<C> ''dr''))\<cdot>MedSPS"
+lemma "spsConcIn (tsynbNull(\<C> ''ds'')) MedSPS = spsConcOut (tsynbNull (\<C> ''dr''))\<cdot>MedSPS"
   apply (simp add: spsConcIn_def spsConcOut_def)
 sorry
 
-lemma "spsConcIn (createBundle (Msg m) (\<C> ''ds''))\<cdot>
+lemma "spsConcIn (createBundle (Msg m) (\<C> ''ds''))
   (Abs_rev_uspec {MedSPF (false \<bullet> ora) |ora. #({True} \<ominus> ora) = \<infinity>} {\<C> ''ds''} {\<C> ''dr''}) 
   = spsConcOut (tsynbNull(\<C> ''dr''))\<cdot>
   (Abs_rev_uspec {MedSPF ora |ora. #({True} \<ominus> ora) = \<infinity>} {\<C> ''ds''} {\<C> ''dr''})"
 sorry
 
-lemma "spsConcIn (createBundle (Msg m) (\<C> ''ds''))\<cdot>
+lemma "spsConcIn (createBundle (Msg m) (\<C> ''ds''))
   (Abs_rev_uspec {MedSPF (true \<bullet> ora) |ora. #({True} \<ominus> ora) = \<infinity>} {\<C> ''ds''} {\<C> ''dr''}) 
   = spsConcOut (createBundle (Msg m) (\<C> ''ds''))\<cdot>
   (Abs_rev_uspec {MedSPF ora |ora. #({True} \<ominus> ora) = \<infinity>} {\<C> ''ds''} {\<C> ''dr''})"
