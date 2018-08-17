@@ -314,7 +314,7 @@ lemma tsynrec_test_inputstreamnoloss:
   "tsynRec True\<cdot>recTestInputStreamNoLoss = recTestOutputStreamONoLoss"
   by (simp add: tsynrec_insert recTestInputStreamNoLoss_def recTestOutputStreamONoLoss_def)
 
-text{* @{term tsynProjSnd} of @{term recTestInputStreamNoLoss}}. *}
+text{* @{term tsynProjSnd} of @{term recTestInputStreamNoLoss}. *}
 lemma tsynprojsnd_test_inputstreamnoloss: 
   "tsynProjSnd\<cdot>recTestInputStreamNoLoss = recTestOutputStreamArNoLoss"
   by (simp add: recTestInputStreamNoLoss_def recTestOutputStreamArNoLoss_def tsynprojsnd_insert)
@@ -340,7 +340,7 @@ lemma tsynrec_test_inputstreamloseack:
   "tsynRec True\<cdot>recTestInputStreamLoseAck = recTestOutputStreamOLoseAck"
   by(simp add: recTestInputStreamLoseAck_def recTestOutputStreamOLoseAck_def tsynrec_insert)
 
-text{* @{term tsynProjSnd} of @{term recTestInputStreamLoseAck}}. *}
+text{* @{term tsynProjSnd} of @{term recTestInputStreamLoseAck}. *}
 lemma tsynprojsnd_test_inputstreamloseack: 
   "tsynProjSnd\<cdot>recTestInputStreamLoseAck = recTestOutputStreamArLoseAck"
   by (simp add: recTestInputStreamLoseAck_def recTestOutputStreamArLoseAck_def tsynprojsnd_insert)
@@ -366,25 +366,17 @@ lemma tsynrec_test_inputstreamlosedat:
   "tsynRec True\<cdot>recTestInputStreamLoseDat = recTestOutputStreamOLoseMsg" 
   by (simp add: recTestInputStreamLoseDat_def recTestOutputStreamOLoseMsg_def tsynrec_insert)
 
-text{* @{term tsynProjSnd} of @{term recTestInputStreamLoseDat}}. *}
+text{* @{term tsynProjSnd} of @{term recTestInputStreamLoseDat}. *}
 lemma tsynprojsnd_test_inputstreamlosedat: 
   "tsynProjSnd\<cdot>recTestInputStreamLoseDat = recTestOutputStreamArLoseMsg"
   by (simp add: recTestInputStreamLoseDat_def recTestOutputStreamArLoseMsg_def tsynprojsnd_insert)
 
 text{* @{term tsynbRec} test on @{term recTestInputUbundleLoseDat}. *}
-lemma   "tsynbRec True\<cdot>recTestInputUbundleLoseDat = Some recTestOutputUbundleLoseMsg"
+lemma tsynbrec_test_inputubundlelosedat: 
+  "tsynbRec True\<cdot>recTestInputUbundleLoseDat = Some recTestOutputUbundleLoseMsg"
     by (simp add: tsynbrec_insert ubdom_insert ubgetch_insert natbool2abp_abp2natbool_inv 
                 tsynrec_test_inputstreamlosedat tsynprojsnd_test_inputstreamlosedat 
                 recTestInputUbundleLoseDat.rep_eq recTestOutputUbundleLoseMsg.abs_eq fun_upd_twist)
-  
-text{* @{term tsynRec} test on @{term recTestInputUbundleLoseDat}. *}
-lemma tsynbrec_test_inputubundlelosedat: 
-  "tsynbRec True\<cdot>recTestInputUbundleLoseDat = Some recTestOutputUbundleLoseMsg"
-  apply (simp add: tsynbrec_insert ubdom_insert recTestInputUbundleLoseDat.rep_eq)
-  apply (simp add: ubgetch_insert recTestInputUbundleLoseDat.rep_eq natbool2abp_abp2natbool_inv)
-  apply (insert tsynrec_test_inputstreamlosedat)
-  apply (simp add: recTestInputStreamLoseDat_def tsynprojsnd_insert)
-  by (simp add: recTestOutputUbundleLoseMsg.abs_eq recTestOutputStreamArLoseMsg_def fun_upd_twist)
 
 text{* @{term RecSPF} test on @{term recTestInputStreamLoseDat}. *}
 lemma recspf_test_inputubundlelosedat: 
@@ -430,16 +422,12 @@ lemma createaroutput_createooutput_ubclunion_ubdom:
   apply (simp add: ubclUnion_ubundle_def ubdom_insert ubUnion_def)
   by (simp add: createArBundle.rep_eq createOBundle.rep_eq)
 
-lemma ubclunion_dom:"dom (Rep_ubundle (ubclUnion\<cdot>sb\<cdot>tb)) = dom (Rep_ubundle sb) \<union> dom(Rep_ubundle tb)"
-  sorry 
-
 lemma createarbundle_ubdom: "ubDom\<cdot>(createArBundle a)= {\<C> ''ar''}"
   by(simp add: ubDom_def createArBundle.rep_eq)
 
 lemma createaroutput_tsynbnullo_ubclunion_ubdom: 
   "ubDom\<cdot>((createArBundle a) \<uplus> (tsynbNull (\<C> ''o''))) = {\<C> ''ar'', \<C> ''o''}"
   by(simp add: ubclUnion_ubundle_def createarbundle_ubdom insert_commute)
- (* by (simp add: ubdom_insert ubUnion_def ubclunion_dom tsynbNull.rep_eq createArBundle.rep_eq insert_commute)*)
 
 lemma tsynbnullar_tsynbnullo_ubclunion_ubdom:
   "ubDom\<cdot>(tsynbNull (\<C> ''ar'') \<uplus> tsynbNull (\<C> ''o'')) = {\<C> ''ar'', \<C> ''o''}"
@@ -507,6 +495,11 @@ text{* The domain of the output bundle after executing one step of @{term da_h} 
 
 (* ToDo: rename the lemmata with da_h instead of h. *)
 
+lemma receiverautomaton_da_h_ubdom:
+  assumes "ubDom\<cdot>sb = {\<C> ''dr''}"
+  shows "ubDom\<cdot>(da_h ReceiverAutomaton (ReceiverState.ReceiverState s) \<rightleftharpoons> sb) = {\<C> ''ar'', \<C> ''o''}"
+  sorry
+
 lemma receiverautomaton_h_step_ubdom_null_null:
   assumes "ubDom\<cdot>sb = {\<C> ''dr''}"
   shows "ubDom\<cdot>(ubConc (tsynbNull (\<C> ''ar'') \<uplus> tsynbNull (\<C> ''o''))
@@ -546,6 +539,12 @@ lemma msga_createbundle_ubgetch [simp]:
   apply (simp add: ubgetch_insert createBundle.rep_eq)
   by (simp add: msga_ctype)
 
+ (* assumption needed for generalization? *)
+lemma createbundle_ubgetch:
+  assumes "a\<in> ctype c"
+  shows "createBundle a c . c = \<up>a"
+  sorry
+
 text{* The concatenation of two bundles with the same domain is the concatenation of the contained 
        messages. *}
 lemma msga_createbundle_ubconc [simp]:
@@ -554,16 +553,27 @@ lemma msga_createbundle_ubconc [simp]:
            = \<up>(Msg (Pair_nat_bool a)) \<bullet> (sb.  \<C> ''dr'')"
   by (simp add: assms usclConc_stream_def)
 
+lemma createbundle_ubconc:
+  assumes "c\<in> ubDom\<cdot>sb" and "a \<in> ctype c"
+  shows "(ubConc (createBundle a c)\<cdot>sb) . c = \<up>a \<bullet> (sb . c)"
+  sorry
+ 
+
 text{* The rest of the concatenation of a simple bundle with another bundle is the latter. *}
-lemma msga_createbundle_ubconc_sbrt [simp]:
+lemma msga_createbundle_ubconc_sbrt[simp]:
   assumes "ubDom\<cdot>sb = {\<C> ''dr''}"
   shows "sbRt\<cdot>(ubConc (createBundle (Msg (Pair_nat_bool a)) (\<C> ''dr''))\<cdot>sb) = sb"
   apply (rule ub_eq)
   apply (simp add: assms)
   by (simp add: assms sbRt_def usclConc_stream_def)
 
+lemma createbundle_ubconc_sbrt:
+  assumes "c \<in> ubDom\<cdot>sb"
+  shows "sbRt\<cdot>(ubConc (createBundle a c)\<cdot>sb) = sb"
+  sorry
+
 text{* Simplify the input bundle in case of a null. *}
-lemma tsynbnull_eq [simp]:
+lemma tsynbnull_eq[simp]:
   assumes "ubDom\<cdot>sb = {\<C> ''dr''}"
   shows "inv convDiscrUp (sbHdElem\<cdot>(ubConc (tsynbNull (\<C> ''dr''))\<cdot>sb)) = [\<C> ''dr'' \<mapsto> null]"
   apply (rule convDiscrUp_eqI)
@@ -576,8 +586,13 @@ lemma tsynbnull_eq [simp]:
   apply (simp_all add: assms usclConc_stream_def up_def)
   by (metis convDiscrUp_dom domIff fun_upd_apply)
 
+lemma tsynbnull_eqII:
+  assumes "ubDom\<cdot>sb = {c}"
+  shows "inv convDiscrUp (sbHdElem\<cdot>(ubConc (tsynbNull c)\<cdot>sb)) = [c \<mapsto> -]"
+  sorry
+
 text{* Simplify the input bundle in case of a single message. *}
-lemma createaroutput_eq [simp]:
+lemma createaroutput_eq[simp]: 
   assumes "ubDom\<cdot>sb = {\<C> ''dr''}" 
   shows "inv convDiscrUp (sbHdElem\<cdot>(ubConc (createBundle (Msg (Pair_nat_bool a)) (\<C> ''dr''))\<cdot>sb)) 
            = [\<C> ''dr'' \<mapsto> Msg (Pair_nat_bool a)]"
@@ -590,6 +605,11 @@ lemma createaroutput_eq [simp]:
   apply (subst ubConc_usclConc_eq)
   apply (simp_all add: assms usclConc_stream_def up_def)
   by (metis convDiscrUp_dom domIff fun_upd_apply)
+
+lemma createoutput_eq:
+  assumes "a \<in> ctype c" and "ubDom\<cdot>sb = {c}"
+  shows "inv convDiscrUp (sbHdElem\<cdot>(ubConc (createBundle a c)\<cdot>sb)) = [c \<mapsto> a]"
+  sorry
 
 text {* For every state and input one step of @{term da_h} is executed correctly. *}
 
@@ -610,8 +630,9 @@ lemma receiverautomaton_h_step_rf_null:
   apply (simp_all add: da_h_final daDom_def ReceiverAutomaton.rep_eq da_h_ubdom assms daRan_def 
          daNextOutput_def daNextState_def daTransition_def usclConc_stream_def)
   (*using assms receiverautomaton_h_step_ubdom_null_null by auto*)
-  apply(rule ubrestrict_id)
-  by (simp only: assms receiverautomaton_h_step_ubdom_null_null)
+  by(simp add: assms receiverautomaton_da_h_ubdom tsynbnullar_tsynbnullo_ubclunion_ubdom)
+ (* apply(rule ubrestrict_id)
+  by (simp only: assms receiverautomaton_h_step_ubdom_null_null)*)
 
 text{* ReceiverState Rt and input null. *}
 lemma receiverautomaton_h_step_rt_null: 
