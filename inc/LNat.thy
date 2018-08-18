@@ -761,7 +761,6 @@ lemma lnat_plus_lnsuc: "ln1 + (lnsuc\<cdot>ln2) = (lnsuc\<cdot>ln1) + ln2"
       using f2 by (metis (no_types) natl2)
   qed
   
-end
 
 lemma min_adm[simp]: fixes y::lnat
   shows "adm (\<lambda>x. min y (g\<cdot>x) \<sqsubseteq> h\<cdot>x)"
