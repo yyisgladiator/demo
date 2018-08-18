@@ -765,9 +765,17 @@ lemma tsynremdups_test_infstream:  "tsynRemDups\<cdot>(<[Msg (1 :: nat), Msg (1 
   apply (simp add: tsynremdups_insert)
   oops
 
+text {* Abstraction of @{term tsynRemDups_h} on the state (\<M> m) equals srcdups executed on abstracted stream stepping with m. *}  
+lemma tsynremdups_h_m_tsynabs: "tsynAbs\<cdot>(sscanlA tsynRemDups_h (\<M> m)\<cdot>s) = srcdups\<cdot>(sdropwhile (\<lambda>x::'a. x = m)\<cdot>(tsynAbs\<cdot>s))"
+  apply (induction s arbitrary: m rule: tsyn_ind, simp_all)
+  apply (simp_all add: tsynabs_sconc_null tsynremdups_sconc_null tsynabs_sconc_msg tsynremdups_sconc_msg)
+  by (simp add: srcdups_step)
+
 text {* Abstraction of @{term tsynRemDups} equals srcdups executed on abstracted stream. *}
 lemma tsynremdups_tsynabs: "tsynAbs\<cdot>(tsynRemDups\<cdot>s) = srcdups\<cdot>(tsynAbs\<cdot>s)"
-  oops
+  apply (induction s rule: tsyn_ind, simp_all)
+  apply (simp_all add: tsynabs_sconc_null tsynremdups_sconc_null tsynabs_sconc_msg tsynremdups_sconc_msg)
+  by (simp add: srcdups_step tsynremdups_h_m_tsynabs)
    
 (* ----------------------------------------------------------------------- *)
   subsection {* tsynRemDups_fix_h *}
