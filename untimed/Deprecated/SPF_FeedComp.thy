@@ -16,10 +16,11 @@ begin
 section \<open>general-lemmas\<close>
 (* ----------------------------------------------------------------------- *)
 
-
+(* Insert rule for SBs with a single channel *)
 lemma sb_onech_getch_insert :"([ch1 \<mapsto> s]\<Omega>) . ch1 = (s:: nat stream)"
   by(simp add: sbgetch_rep_eq)
 
+(* Insert rule for iterating spfCompH i+1 times *)
 lemma iter_spfCompOldh3_suc_insert: "iter_spfCompH f1 f2 (Suc i) sb
                         = ((f1 \<rightleftharpoons>((sb \<uplus> (iter_spfCompH f1 f2 i sb))  \<bar> spfDom\<cdot>f1))
                             \<uplus> (f2 \<rightleftharpoons>((sb \<uplus> (iter_spfCompH f1 f2 (i) sb))  \<bar> spfDom\<cdot>f2)))"
@@ -31,7 +32,8 @@ lemma iter_spfCompOldh3_suc_insert: "iter_spfCompH f1 f2 (Suc i) sb
 (* lemma test [simp]: "sb_well [ch \<mapsto> sb . ch]"
   sorry
 *)
-     
+
+(* Repackaging by restricting an SB to one channel c that is in the domain *)
 lemma nat_sb_repackage: assumes "ch \<in> sbDom\<cdot>sb"
   shows "(sb::nat SB) \<bar> {ch} = [ch \<mapsto> sb . ch]\<Omega>"
   apply (rule sb_eq)
@@ -58,12 +60,13 @@ lemma two_suc_suc_eq_insert: "2 = Suc(Suc(0))"
 section \<open>definitions\<close>
 (* ----------------------------------------------------------------------- *)
 
-  (* generalization of sum4 *)
+(* Fixpoint for f1 f2 (generalization of sum4) *)
 abbreviation gen_fix :: "(nat stream \<rightarrow> nat stream \<rightarrow> nat stream)
                         \<Rightarrow> (nat stream \<rightarrow> nat stream)
                         \<Rightarrow> (nat stream \<rightarrow> nat stream)" where
 "gen_fix f1 f2 \<equiv> (\<Lambda> x. \<Squnion>i. iterate i\<cdot>(\<Lambda> z. f1\<cdot>x\<cdot>(f2\<cdot>z ))\<cdot>\<bottom>)"
 
+(* Feedback iteration: f2 feeds into f1, f1 also takes x *)
 abbreviation spf_feed_sb_inout2_iter :: "(nat stream \<rightarrow> nat stream  \<rightarrow> nat stream)
                                          \<Rightarrow> (nat stream \<rightarrow> nat stream)
                                          \<Rightarrow> channel \<Rightarrow> channel \<Rightarrow> channel
@@ -72,6 +75,7 @@ abbreviation spf_feed_sb_inout2_iter :: "(nat stream \<rightarrow> nat stream  \
 "spf_feed_sb_inout2_iter f1 f2 ch1 ch2 ch3 x i \<equiv>
 iterate (i)\<cdot>(\<Lambda> z. ([ch3 \<mapsto> f1\<cdot>(x . ch1)\<cdot>(f2\<cdot>(z . ch3))]\<Omega>) \<uplus> ([ch2 \<mapsto> f2\<cdot>(z . ch3)]\<Omega>))\<cdot>({ch2, ch3}^\<bottom>)"
 
+(* Feedback iteration: Similar to above, except f2 does not directly feed f1, but through feedback *)
 abbreviation spf_feed_sb_inout3_iter :: "(nat stream \<rightarrow> nat stream  \<rightarrow> nat stream)
                                           \<Rightarrow> (nat stream \<rightarrow> nat stream)
                                           \<Rightarrow> channel \<Rightarrow> channel \<Rightarrow> channel
@@ -85,6 +89,7 @@ iterate (i)\<cdot>(\<Lambda> z. ([ch3 \<mapsto> f1\<cdot>(x . ch1)\<cdot>(z . ch
 section \<open>more general feedback\<close>
 (* ----------------------------------------------------------------------- *)
 
+(* The fixpoint is cont *)
 lemma gen_fix_cont[simp]: fixes f1 :: "nat stream \<rightarrow> nat stream \<rightarrow> nat stream"
                           fixes f2 :: "nat stream \<rightarrow> nat stream"
   shows "cont  (\<lambda> x. \<Squnion>i. iterate i\<cdot>(\<Lambda> z. f1\<cdot>x\<cdot>(f2\<cdot>z ))\<cdot>\<bottom>)"
@@ -92,6 +97,7 @@ lemma gen_fix_cont[simp]: fixes f1 :: "nat stream \<rightarrow> nat stream \<rig
 
 subsection \<open>step2\<close>
 
+(* Rule for gen_fix with an SB containing only the channel ch1 *)
 lemma spf_feed_sb_in_eq: fixes f1 :: "nat stream \<rightarrow> nat stream \<rightarrow> nat stream"
                          fixes f2 :: "nat stream \<rightarrow> nat stream"
                          assumes "sb = ([ch1 \<mapsto> s]\<Omega>)"
@@ -101,6 +107,7 @@ lemma spf_feed_sb_in_eq: fixes f1 :: "nat stream \<rightarrow> nat stream \<righ
 
 subsection \<open>step3\<close>
 
+(* The first inner statement in spf_feed_sb_inout2_iter is monotonic *)
 lemma spf_feed_sb_inout1_inner_mono [simp]: fixes f1 :: "nat stream \<rightarrow> nat stream \<rightarrow> nat stream"
                                             fixes f2 :: "nat stream \<rightarrow> nat stream"
   shows "monofun (\<lambda> z. [ch1 \<mapsto> f1\<cdot>x\<cdot>(f2\<cdot>(z . ch2))]\<Omega> )"
@@ -110,6 +117,7 @@ lemma spf_feed_sb_inout1_inner_mono [simp]: fixes f1 :: "nat stream \<rightarrow
     apply (simp add: sbdom_rep_eq sbgetch_rep_eq)
    by (meson monofun_cfun monofun_cfun_arg monofun_cfun_fun)
 
+(* ... and retains chain properties, i.e. transforms a chain of SBs into a new one *)
 lemma spf_feed_sb_inout1_inner_chain1 [simp]: fixes f1 :: "nat stream \<rightarrow> nat stream \<rightarrow> nat stream"
                                               fixes f2 :: "nat stream \<rightarrow> nat stream"
   shows "chain Y  \<Longrightarrow> chain (\<lambda> i. [ch3\<mapsto>  f1\<cdot>(x)\<cdot>(f2\<cdot>((Y i) . ch2))]\<Omega>)"
@@ -121,7 +129,7 @@ lemma spf_feed_sb_inout1_inner_chain1 [simp]: fixes f1 :: "nat stream \<rightarr
 
 
 
-
+(* LUB and inner statement are commutative *)
 lemma spf_feed_sb_inout1_inner_lub: fixes f1 :: "nat stream \<rightarrow> nat stream \<rightarrow> nat stream"
                                     fixes f2 :: "nat stream \<rightarrow> nat stream"
   shows "chain Y \<Longrightarrow> (\<Squnion>i. f\<cdot>x\<cdot>(f2\<cdot>(Y i . ch2))) = f\<cdot>x\<cdot>(f2\<cdot>((Lub Y). ch2))"
@@ -133,7 +141,7 @@ proof -
     using a1 by (metis ch2ch_Rep_cfunL ch2ch_Rep_cfunR contlub_cfun_arg)
 qed
 
-
+(* The domain of the LUB of the new chain of SBs is the channel ch1 *)
 lemma spf_feed_sb_inout1_inner_lub_dom: fixes f :: "nat stream \<rightarrow> nat stream \<rightarrow> nat stream"
                                         fixes f2 :: "nat stream \<rightarrow> nat stream"
 shows "chain Y \<Longrightarrow> {ch1} = sbDom\<cdot>(\<Squnion>i. [ch1 \<mapsto> f\<cdot>x\<cdot>(f2\<cdot>(Y i . ch2))]\<Omega>)"
@@ -150,7 +158,7 @@ proof -
 qed
 
 
-
+(* The first inner statement of spf_feed_sb_inout2_iter is cont *)
 lemma spf_feed_sb_inout1_inner_cont [simp]: fixes f :: "nat stream \<rightarrow> nat stream  \<rightarrow> nat stream"
                                             fixes f2 :: "nat stream \<rightarrow> nat stream"
   shows "cont (\<lambda> z. [ch1 \<mapsto> f\<cdot>x\<cdot>(f2\<cdot>(z . ch2))]\<Omega> )"
@@ -167,6 +175,7 @@ lemma spf_feed_sb_inout1_inner_cont [simp]: fixes f :: "nat stream \<rightarrow>
       using a1 by (metis ch2ch_Rep_cfunR contlub_cfun_fun po_eq_conv spf_feed_sb_inout1_inner_lub)
   qed
 
+(* Working with nat streams directly equals working with SBs and then getting the channel  *)
 lemma spf_feed_sb_inout1_iter_eq: fixes f1 :: "nat stream \<rightarrow> nat stream  \<rightarrow> nat stream"
                                   fixes f2 :: "nat stream \<rightarrow> nat stream"
   shows "(iterate i\<cdot>(\<Lambda> z. [ch3 \<mapsto> f1\<cdot>(x)\<cdot>(f2\<cdot>(z . ch3))]\<Omega>)\<cdot>({ch3}^\<bottom>)) .ch3
@@ -182,7 +191,7 @@ next
     by (simp add: Suc.IH sbgetch_rep_eq)
 qed
 
-
+(* LUB and sbGetCh are commutative *)
 lemma spf_feed_sb_inout1_lub_getch:  fixes f1 :: "nat stream \<rightarrow> nat stream  \<rightarrow> nat stream"
                                      fixes f2 :: "nat stream \<rightarrow> nat stream"
   shows "(\<Squnion>i. iterate i\<cdot>(\<Lambda> z. [ch3 \<mapsto> f1\<cdot>s\<cdot>(f2\<cdot>(z . ch3))]\<Omega>)\<cdot>({ch3}^\<bottom>)) . ch3
@@ -191,7 +200,7 @@ lemma spf_feed_sb_inout1_lub_getch:  fixes f1 :: "nat stream \<rightarrow> nat s
   apply(rule sbIterate_chain)
   by (simp add: sbdom_rep_eq)
 
-    (* resulting lemma of step3 *)
+(* Result step 3: gen_fix for an SB with sole channel ch1 corresponds to inout1 *)
 lemma spf_feed_sb_inout1_eq: fixes f1 :: "nat stream \<rightarrow> nat stream  \<rightarrow> nat stream"
                              fixes f2 :: "nat stream \<rightarrow> nat stream"
   assumes "sb = ([ch1 \<mapsto> s]\<Omega>)"
@@ -202,10 +211,12 @@ lemma spf_feed_sb_inout1_eq: fixes f1 :: "nat stream \<rightarrow> nat stream  \
 
 subsection \<open>step4\<close>
 
+(* The second inner statement in spf_feed_sb_inout2_iter is cont *)
 lemma contfun_contHelp[simp]: fixes f2 :: "nat stream \<rightarrow> nat stream"
   shows "cont (\<lambda> z. (f2\<cdot>(z . ch3)))"
   by simp
 
+(* The second inner statement in spf_feed_sb_inout2_iter is monotonic *)
 lemma contfun_monofun[simp]: fixes f2 :: "nat stream \<rightarrow> nat stream"
 shows "monofun (\<lambda> z. ([ch2 \<mapsto> (f2\<cdot>(z . ch3))]\<Omega>))"
     apply(rule monofunI)
@@ -214,6 +225,7 @@ shows "monofun (\<lambda> z. ([ch2 \<mapsto> (f2\<cdot>(z . ch3))]\<Omega>))"
       apply (simp add: sbdom_rep_eq sbgetch_rep_eq)
   by (meson monofun_cfun monofun_cfun_arg monofun_cfun_fun)
 
+(* The second inner statementin spf_feed_sb_inout2_iter preserves chain properties *)
 lemma contfun_chain[simp]: fixes f2 :: "nat stream \<rightarrow> nat stream"
   shows "chain Y \<Longrightarrow> chain (\<lambda> i. ([ch2 \<mapsto> (f2\<cdot>((Y i) . ch3))]\<Omega>))"
     apply (rule chainI)
@@ -222,7 +234,7 @@ lemma contfun_chain[simp]: fixes f2 :: "nat stream \<rightarrow> nat stream"
       apply (simp add: sbdom_rep_eq sbgetch_rep_eq)
   by (simp add: monofun_cfun po_class.chainE)
 
-
+(* LUB and the second inner statement are commutative *)
 lemma contfun_innerLub: fixes f2 :: "nat stream \<rightarrow> nat stream"
   shows "chain Y \<Longrightarrow> (\<Squnion> i. (f2\<cdot>((Y i) . ch3))) = f2\<cdot>((Lub Y) . ch3)"
 proof -
@@ -233,6 +245,7 @@ proof -
     using a1 by (metis ch2ch_Rep_cfunL ch2ch_Rep_cfunR contlub_cfun_arg)
 qed
 
+(* The chain of SBs resulting from applying the 2nd inner statement to a chain has domain ch2 *)
 lemma contfun_innerLub_dom: fixes f2 :: "nat stream \<rightarrow> nat stream"
   shows "chain Y \<Longrightarrow> {ch2} = sbDom\<cdot>(\<Squnion>i. ([ch2 \<mapsto> (f2\<cdot>((Y i) . ch3))]\<Omega>))"
 proof -
@@ -247,6 +260,7 @@ proof -
     using f1 f2 sbChain_dom_eq2 by blast
 qed
 
+(* The SB resulting from the second inner statement in spf_feed_sb_inout2_iter is cont *)
 lemma contfun_getch_cont [simp]: fixes f2 :: "nat stream \<rightarrow> nat stream"
   shows "cont (\<lambda> z. ([ch2 \<mapsto> (f2\<cdot>(z . ch3))]\<Omega>))"
   apply (rule mycontI2, simp only: contfun_monofun)
@@ -255,13 +269,14 @@ lemma contfun_getch_cont [simp]: fixes f2 :: "nat stream \<rightarrow> nat strea
                         contfun_innerLub_dom)
     using ch2ch_Rep_cfunL ch2ch_Rep_cfunR contlub_cfun_arg po_eq_conv by blast
 
-
+(* inout2 is cont *)
 lemma spf_feed_sb_inout2_iterable_cont[simp]: fixes f1 :: "nat stream \<rightarrow> nat stream  \<rightarrow> nat stream"
                                                fixes f2 :: "nat stream \<rightarrow> nat stream"
   shows "cont (\<lambda> z. ([ch3 \<mapsto> f1\<cdot>(x . ch1)\<cdot>(f2\<cdot>(z . ch3))]\<Omega>)
                       \<uplus> ([ch2 \<mapsto> (f2\<cdot>(z . ch3))]\<Omega>))"
   by simp
 
+(* inout2's domain is {ch2, ch3}  *)
 lemma spf_feed_sb_inout2_dom: fixes f1 :: "nat stream \<rightarrow> nat stream  \<rightarrow> nat stream"
                               fixes f2 :: "nat stream \<rightarrow> nat stream"
   shows "sbDom\<cdot>((\<Lambda> z.([ch3 \<mapsto> f1\<cdot>(x . ch1)\<cdot>(f2\<cdot>(z . ch3))]\<Omega>)
@@ -277,6 +292,7 @@ proof -
     by simp
 qed
 
+(* Shortening inout2 if we are only interested in ch3 *)
 lemma spf_feed_inout2_iter_eq: fixes f1 :: "nat stream \<rightarrow> nat stream  \<rightarrow> nat stream"
                                fixes f2 :: "nat stream \<rightarrow> nat stream"
   assumes "ch2 \<noteq> ch3"
@@ -313,7 +329,8 @@ lemma gen_fix_insert: "(\<Lambda> x. \<Squnion>i. iterate i\<cdot>(\<Lambda> z. 
 
 
 
-    (* resulting lemma of step 4 *)
+
+(* Result step 4: gen_fix for an SB with sole channel ch1 corresponds to inout2 *)
 lemma spf_feed_sb_inout2_eq: fixes f1 :: "nat stream \<rightarrow> nat stream  \<rightarrow> nat stream"
                              fixes f2 :: "nat stream \<rightarrow> nat stream"
   assumes "sb = ([ch1 \<mapsto> s]\<Omega>)" and "ch2 \<noteq> ch3"
@@ -336,6 +353,7 @@ qed
 
 subsection \<open>step5\<close>
 
+(* inout3 is cont *)
 lemma spf_feed_sb_inout3_iterable_cont[simp]: fixes f1 :: "nat stream \<rightarrow> nat stream  \<rightarrow> nat stream"
                                               fixes f2 :: "nat stream \<rightarrow> nat stream"
   shows "cont (\<lambda> z.  ([ch3 \<mapsto> f1\<cdot>(x . ch1)\<cdot>(z . ch2)]\<Omega>) \<uplus> ([ch2 \<mapsto> f2\<cdot>(z . ch3)]\<Omega>))"
@@ -344,17 +362,19 @@ lemma spf_feed_sb_inout3_iterable_cont[simp]: fixes f1 :: "nat stream \<rightarr
 
 
 
-
+(* Iteration insert rule for i+1 iterations of inout2 *)
 lemma spf_feed_sb_inout2_iter_suc_insert: "spf_feed_sb_inout2_iter f1 f2 ch1 ch2 ch3 x (Suc i)
   = (([ch3 \<mapsto> f1\<cdot>(x . ch1)\<cdot>(f2\<cdot>((spf_feed_sb_inout2_iter f1 f2 ch1 ch2 ch3 x i) . ch3))]\<Omega>)
       \<uplus> ([ch2 \<mapsto> f2\<cdot>((spf_feed_sb_inout2_iter f1 f2 ch1 ch2 ch3 x i) . ch3)]\<Omega>))"
   by simp
 
+(* Iteration insert rule for i+1 iterations of inout3 *)
 lemma spf_feed_sb_inout3_iter_suc_insert: "spf_feed_sb_inout3_iter f1 f2 ch1 ch2 ch3 x (Suc i)
   = (([ch3 \<mapsto> f1\<cdot>(x . ch1)\<cdot>((spf_feed_sb_inout3_iter f1 f2 ch1 ch2 ch3 x i) . ch2)]\<Omega>)
       \<uplus> ([ch2 \<mapsto> f2\<cdot>((spf_feed_sb_inout3_iter f1 f2 ch1 ch2 ch3 x i) . ch3)]\<Omega>))"
   by simp
 
+(* Iteration insert rule for 2*(i+1) iterations of inout3 *)
 lemma spf_feed_sb_inout3_iter_two_suc_insert:
   shows "spf_feed_sb_inout3_iter f1 f2 ch1 ch2 ch3 x ((2::nat) *  (Suc i))
    = (\<Lambda> z. ([ch3 \<mapsto> f1\<cdot>(x . ch1)\<cdot>(z . ch2)]\<Omega>)
@@ -423,7 +443,8 @@ lemma spf_feed_iter_new_ch_eq: fixes f1 :: "nat stream \<rightarrow> nat stream 
          by (simp add: sbgetch_rep_eq)
      qed
 
-(* this lemma is very hacky written because simp goes wild *)
+(* this lemma is written very hackily because simp goes wild *)
+(* inout2 and inout3 do the same, though inout2 only needs half the steps *)
 lemma spf_feed_step5_lub_iter_eq_req: fixes f1 :: "nat stream \<rightarrow> nat stream  \<rightarrow> nat stream"
                                       fixes f2 :: "nat stream \<rightarrow> nat stream"
   assumes "ch2 \<noteq> ch3" and "\<forall>sb . f1\<cdot>(sb . ch1)\<cdot>\<epsilon> = \<epsilon>"
@@ -489,6 +510,7 @@ next
     using False by blast
 qed
 
+(* LUB of inout2 and inout3 are the same *)
 lemma spf_feed_step5_lub_iter_eq: fixes f1 :: "nat stream \<rightarrow> nat stream  \<rightarrow> nat stream"
                                   fixes f2 :: "nat stream \<rightarrow> nat stream"
   assumes "ch2 \<noteq> ch3" and "\<forall>sb . f1\<cdot>(sb . ch1)\<cdot>\<epsilon> = \<epsilon>"
@@ -499,7 +521,7 @@ lemma spf_feed_step5_lub_iter_eq: fixes f1 :: "nat stream \<rightarrow> nat stre
    apply (rule sbIterate_chain, simp add: sbdom_rep_eq)
   using spf_feed_step5_lub_iter_eq_req2 assms by simp
 
-  (** resulting lemma of step 5 *)
+(* Resulting lemma of step 5: gen_fix is the LUB of inout3 *)
 lemma spf_feed_sb_in_out_eq: fixes f1 :: "nat stream \<rightarrow> nat stream  \<rightarrow> nat stream"
                              fixes f2 :: "nat stream \<rightarrow> nat stream"
   assumes "sb = ([ch1 \<mapsto> s]\<Omega>)" and "ch2 \<noteq> ch3" and "\<forall>sb . f1\<cdot>(sb . ch1)\<cdot>\<epsilon> = \<epsilon>"
@@ -515,7 +537,7 @@ qed
 
 subsection \<open>step6\<close>
 
-
+(* Domain of inout3 is {ch2, ch3} *)
 lemma spf_feed_sb_inout3_iter_dom: fixes f1 :: "nat stream \<rightarrow> nat stream  \<rightarrow> nat stream"
                                    fixes f2 :: "nat stream \<rightarrow> nat stream"
   shows "sbDom\<cdot>(spf_feed_sb_inout3_iter f1 f2 ch1 ch2 ch3 sb i) = {ch2,ch3}"
@@ -530,17 +552,19 @@ next
       by (simp add: sbdom_rep_eq)
   qed
 
+(* Reverse definition of SPF2x1 *)
 lemma SPF2x1_apply_rev: assumes "ch1 \<noteq> ch2"
   shows "([ch3 \<mapsto> (f\<cdot>s1\<cdot>s2)]\<Omega>)
         = (SPF2x1 f (ch1, ch2, ch3)) \<rightleftharpoons> ([ch1 \<mapsto> (s1:: nat stream), ch2  \<mapsto> (s2:: nat stream)]\<Omega>) "
   apply(simp add: SPF2x1_rep_eq sb_id_def sbgetch_insert)
   by(auto simp add: sbdom_rep_eq assms)
 
-    
+
+(* Shorthand for iterating SBs *)
 abbreviation iter_sbfix:: "('m SB \<Rightarrow> 'm SB \<rightarrow> 'm SB) \<Rightarrow> nat \<Rightarrow> channel set \<Rightarrow> 'm SB \<Rightarrow> 'm SB" where
 "iter_sbfix F i cs \<equiv> (\<lambda> x. iterate i\<cdot>(F x)\<cdot>(cs^\<bottom>))"
     
-    
+(* iterCompH can be expressed using inout3 *)
 lemma spf_feed_SPF_eq:  fixes f1 :: "nat stream \<rightarrow> nat stream  \<rightarrow> nat stream"
                         fixes f2 :: "nat stream \<rightarrow> nat stream"
                         assumes "sbDom\<cdot>sb = {ch1}" and "ch1 \<noteq> ch2" and "ch1 \<noteq> ch3" and "ch2 \<noteq> ch3"
@@ -585,7 +609,7 @@ next
 qed
 
 
-(* result of step 6 *)
+(* Result of step 6: gen_fix is the same as the LUB of spfCompH *)
 lemma gen_fix_iter_spfComp_eq:  fixes f1 :: "nat stream \<rightarrow> nat stream  \<rightarrow> nat stream"
                                 fixes f2 :: "nat stream \<rightarrow> nat stream"
                                 assumes "sb = ([ch1 \<mapsto> s]\<Omega>)"
