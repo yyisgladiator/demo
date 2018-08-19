@@ -1,34 +1,11 @@
-# load docker image with isabelle-support
 image: jecb96/isabelle:2018
 
-
-
-
-#####################################
-## Setup Stuff
-#####################################
-
-## run this bevore every stage
-
-before_script:
-  - if [ ! -z "$(ls -A cache)" ]; then mv cache/* /home/isabelle/.isabelle; fi
-  - find /home/isabelle/.isabelle
-
-  # run after every stage
-after_script:
-  - find /home/isabelle/.isabelle
-  - mv /home/isabelle/.isabelle/* cache/
-
-
 cache:
-  key: "$CI_COMMIT_REF_NAME"  # cache per branch
+  key: "$CI_COMMIT_REF_SLUG"  # cache per branch
   paths:
-    - cache/
-#    - /home/isabelle/.isabelle
+    - /home/isabelle/.isabelle/
 
 
-
-# stages are run one after another, it the previous stage is successful
 stages:
   - dependency
   - mustWork
@@ -36,10 +13,8 @@ stages:
 
 
 
-
-
 #####################################
-## Main Tests
+## Test Jobs
 #####################################
 
 ## Look in the "ROOT" file to see the sessions and add files
@@ -51,8 +26,7 @@ stages:
 dependency:
   stage: dependency
   script:
-    - isabelle version
-    - isabelle build -D . -j2 -n -v || if [ $? -eq 1 ]; then exit 0; else exit $?; fi
+    - isabelle build -D . -j3 -o timeout_scale=1.4 -n -v || if [ $? -eq 1 ]; then exit 0; else exit $?; fi
 
 
 
@@ -63,8 +37,8 @@ dependency:
 mustWork:
   stage: mustWork
   script:
-    - isabelle version
-    - isabelle build -d . -j2 -v -b -g mustWork
+    - find /home/isabelle/.isabelle
+    - isabelle build -d . -j3 -o timeout_scale=1.4 -v -b -g mustWork
 
 
 
@@ -76,5 +50,4 @@ canFail:
   stage: canFail
   allow_failure: true   #for now, sorrys are allowed
   script:
-    - isabelle version
-    - isabelle build -d . -j2 -v -b -g canFail
+    - isabelle build -d . -j3 -o timeout_scale=1.4 -v -b -g canFail
