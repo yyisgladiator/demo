@@ -305,46 +305,83 @@ lemma recspf_ubdom:
   section {* Receiver SPF Test Lemmata *}
 (* ----------------------------------------------------------------------- *)
 
+(* ----------------------------------------------------------------------- *)
+  subsection {* Test situation in which no message gets lost. *}
+(* ----------------------------------------------------------------------- *)
+  
+text{* @{term tsynRec} test on @{term recTestInputStreamNoLoss}. *}
+lemma tsynrec_test_inputstreamnoloss:
+  "tsynRec True\<cdot>recTestInputStreamNoLoss = recTestOutputStreamONoLoss"
+  by (simp add: tsynrec_insert recTestInputStreamNoLoss_def recTestOutputStreamONoLoss_def)
+
+text{* @{term tsynProjSnd} of @{term recTestInputStreamNoLoss}. *}
+lemma tsynprojsnd_test_inputstreamnoloss: 
+  "tsynProjSnd\<cdot>recTestInputStreamNoLoss = recTestOutputStreamArNoLoss"
+  by (simp add: recTestInputStreamNoLoss_def recTestOutputStreamArNoLoss_def tsynprojsnd_insert)
+
+text{* @{term tsynbRec} test on @{term recTestInputUbundleNoLoss}. *}
+lemma tsynbrec_test_inputubundlenoloss:
+  "tsynbRec True\<cdot>recTestInputUbundleNoLoss = Some recTestOutputUbundleNoLoss"
+   by (simp add: tsynbrec_insert ubdom_insert ubgetch_insert natbool2abp_abp2natbool_inv 
+                tsynrec_test_inputstreamnoloss tsynprojsnd_test_inputstreamnoloss 
+                recTestInputUbundleNoLoss.rep_eq recTestOutputUbundleNoLoss.abs_eq fun_upd_twist)
+
+text{* @{term RecSPF} test on @{term recTestInputUbundleNoLoss}. *}
+lemma recspf_test_inputubundlenoloss:
+  "RecSPF True \<rightleftharpoons> recTestInputUbundleNoLoss = recTestOutputUbundleNoLoss"
+  by (simp add: RecSPF_def tsynbrec_test_inputubundlenoloss)
+
+(* ----------------------------------------------------------------------- *)
+  subsection {* The second medium loses the first acknowledgement. *}
+(* ----------------------------------------------------------------------- *)
+
+text{* @{term tsynRec} test on @{term recTestInputStreamLoseAck}. *}
+lemma tsynrec_test_inputstreamloseack:
+  "tsynRec True\<cdot>recTestInputStreamLoseAck = recTestOutputStreamOLoseAck"
+  by(simp add: recTestInputStreamLoseAck_def recTestOutputStreamOLoseAck_def tsynrec_insert)
+
+text{* @{term tsynProjSnd} of @{term recTestInputStreamLoseAck}. *}
+lemma tsynprojsnd_test_inputstreamloseack: 
+  "tsynProjSnd\<cdot>recTestInputStreamLoseAck = recTestOutputStreamArLoseAck"
+  by (simp add: recTestInputStreamLoseAck_def recTestOutputStreamArLoseAck_def tsynprojsnd_insert)
+
+text{* @{term tsynbRec} test on @{term recTestInputUbundleLoseAck}. *}
+lemma tsynbrec_test_inputubundleloseack: 
+  "tsynbRec True\<cdot>recTestInputUbundleLoseAck = Some recTestOutputUbundleLoseAck"
+  by (simp add: tsynbrec_insert ubdom_insert ubgetch_insert natbool2abp_abp2natbool_inv 
+                tsynrec_test_inputstreamloseack tsynprojsnd_test_inputstreamloseack 
+                recTestInputUbundleLoseAck.rep_eq recTestOutputUbundleLoseAck.abs_eq fun_upd_twist)
+
+text{* @{term RecSPF} test on @{term recTestInputUbundleLoseAck}. *}
+lemma recspf_test_inputubundleloseack:
+  "RecSPF True \<rightleftharpoons> recTestInputUbundleLoseAck = recTestOutputUbundleLoseAck"
+  by (simp add: recspf_insert tsynbrec_test_inputubundleloseack)
+
+(* ----------------------------------------------------------------------- *)
+  subsection {* The first medium loses the first and second data message for one time each. *}
+(* ----------------------------------------------------------------------- *)
+
 text{* @{term tsynRec} test on @{term recTestInputStreamLoseDat}. *}
 lemma tsynrec_test_inputstreamlosedat:
   "tsynRec True\<cdot>recTestInputStreamLoseDat = recTestOutputStreamOLoseMsg" 
-  by (simp add: recTestInputStreamLoseDat_def recTestOutputStreamOLoseMsg_def 
-                tsynrec_sconc_msg_t tsynrec_sconc_null)
+  by (simp add: recTestInputStreamLoseDat_def recTestOutputStreamOLoseMsg_def tsynrec_insert)
 
-text{* @{term tsynRec} test on @{term recTestInputUbundleLoseDat}. *}
-lemma tsynbrec_test_inputstreamlosedat: 
+text{* @{term tsynProjSnd} of @{term recTestInputStreamLoseDat}. *}
+lemma tsynprojsnd_test_inputstreamlosedat: 
+  "tsynProjSnd\<cdot>recTestInputStreamLoseDat = recTestOutputStreamArLoseMsg"
+  by (simp add: recTestInputStreamLoseDat_def recTestOutputStreamArLoseMsg_def tsynprojsnd_insert)
+
+text{* @{term tsynbRec} test on @{term recTestInputUbundleLoseDat}. *}
+lemma tsynbrec_test_inputubundlelosedat: 
   "tsynbRec True\<cdot>recTestInputUbundleLoseDat = Some recTestOutputUbundleLoseMsg"
-  apply (simp add: tsynbrec_insert ubdom_insert)
-  apply (simp add: recTestOutputUbundleLoseMsg_def)
-  apply (simp add: ubGetCh_def recTestInputUbundleLoseDat.rep_eq)
-  apply (simp add: recTestInputStreamLoseDat_def)
-  apply (simp add: recTestOutputStreamArLoseMsg_def recTestOutputStreamOLoseMsg_def)
-  apply (simp add: natbool2abp_def tsynmap_insert abp2natbool_def tsynMap_def)
-  apply (simp add: tsynProjSnd_def bool2abp_def tsynmap_insert)
-  apply (insert tsynrec_test_inputstreamlosedat)
-  apply (simp add: recTestInputStreamLoseDat_def recTestOutputStreamOLoseMsg_def)
-  apply (simp add: nat2abp_def tsynMap_def)
-  by (simp add: fun_upd_twist)
+    by (simp add: tsynbrec_insert ubdom_insert ubgetch_insert natbool2abp_abp2natbool_inv 
+                tsynrec_test_inputstreamlosedat tsynprojsnd_test_inputstreamlosedat 
+                recTestInputUbundleLoseDat.rep_eq recTestOutputUbundleLoseMsg.abs_eq fun_upd_twist)
 
 text{* @{term RecSPF} test on @{term recTestInputStreamLoseDat}. *}
-lemma recspf_test_inputstreamlosedat: 
+lemma recspf_test_inputubundlelosedat:
   "RecSPF True \<rightleftharpoons> recTestInputUbundleLoseDat = recTestOutputUbundleLoseMsg" 
-  by (simp add: recspf_insert tsynbrec_test_inputstreamlosedat)
-
-(* ToDo: add descriptions. *)
-
-lemma tsynrec_test_inputstreamloseack:
-  "tsynRec True\<cdot>recTestInputStreamLoseAck = recTestOutputStreamOLoseAck"
-  by (simp add: recTestInputStreamLoseAck_def recTestOutputStreamOLoseAck_def 
-                tsynrec_sconc_msg_t)
-
-lemma tsynbrec_test_inputstreamloseack: 
-  "tsynbRec True\<cdot>recTestInputUbundleLoseAck = Some recTestOutputUbundleLoseAck"
-  sorry
-
-lemma recspf_test_inputstreamloseack:
-  "RecSPF True \<rightleftharpoons> recTestInputUbundleLoseAck = recTestOutputUbundleLoseAck"
-  by (simp add: recspf_insert tsynbrec_test_inputstreamloseack)
+  by (simp add: recspf_insert tsynbrec_test_inputubundlelosedat)
 
 (* ----------------------------------------------------------------------- *)
   section {* Automaton Receiver Transition Lemmata *}
@@ -380,15 +417,23 @@ lemma receivertransition_null:
 
 text{* The domain of the union of all possible simple bundles on the two output channels. *}
 
-lemma createaroutput_createooutput_ubclunion_ubdom: 
+(* ToDo: remove after generation. *)
+
+lemma createarbundle_ubdom: "ubDom\<cdot>(createArBundle a)= {\<C> ''ar''}"
+  by (simp add: ubDom_def createArBundle.rep_eq)
+
+lemma createobundle_ubdom: "ubDom\<cdot>(createOBundle a)= {\<C> ''o''}"
+  by (simp add: ubDom_def createOBundle.rep_eq)
+
+lemma createaroutput_createooutput_ubclunion_ubdom:
   "ubDom\<cdot>((createArBundle a) \<uplus> (createOBundle b)) = {\<C> ''ar'', \<C> ''o''}"
-  apply (simp add: ubclUnion_ubundle_def ubdom_insert ubUnion_def)
-  by (simp add: createArBundle.rep_eq createOBundle.rep_eq)
+  by (metis (no_types, lifting) createarbundle_ubdom createobundle_ubdom insert_is_Un 
+      ubclDom_ubundle_def ubclunion_ubcldom)
 
 lemma createaroutput_tsynbnullo_ubclunion_ubdom: 
   "ubDom\<cdot>((createArBundle a) \<uplus> (tsynbNull (\<C> ''o''))) = {\<C> ''ar'', \<C> ''o''}"
-  apply (simp add: ubclUnion_ubundle_def ubdom_insert ubUnion_def)
-  by (simp add: createArBundle.rep_eq tsynbNull.rep_eq)
+  by (metis (no_types, lifting) createarbundle_ubdom insert_is_Un tsynbnull_ubdom 
+      ubclDom_ubundle_def ubclunion_ubcldom)
 
 lemma tsynbnullar_tsynbnullo_ubclunion_ubdom:
   "ubDom\<cdot>(tsynbNull (\<C> ''ar'') \<uplus> tsynbNull (\<C> ''o'')) = {\<C> ''ar'', \<C> ''o''}"
@@ -444,6 +489,21 @@ lemma receivertransition_automaton_well:
   section {* Automaton Receiver Step Lemmata *}
 (* ----------------------------------------------------------------------- *) 
 
+text{* The domain of the @{term ReceiverAutomaton}. *}
+lemma receiverautomaton_dadom: 
+  "daDom ReceiverAutomaton = {\<C> ''dr''}"
+  by (simp add: daDom_def ReceiverAutomaton.rep_eq)
+
+text{* The range of the @{term ReceiverAutomaton}. *}
+lemma receiverautomaton_daran: 
+  "daRan ReceiverAutomaton = {\<C> ''ar'', \<C> ''o''}"
+  by (simp add: daRan_def ReceiverAutomaton.rep_eq)
+
+text{* Initial output of the @{term ReceiverAutomaton}. *}
+lemma receiverautomaton_dainitialoutput:
+  "daInitialOutput ReceiverAutomaton = tsynbNull (\<C> ''ar'') \<uplus> tsynbNull (\<C> ''o'')"
+  by (simp add: daInitialOutput_def ReceiverAutomaton.rep_eq)
+
 (* ToDo: move to dAutomaton. *)
 
 text{* After applying @{term da_h} to an automaton the domain of the output bundle is the range of 
@@ -456,32 +516,10 @@ text{* The domain of the output bundle after executing one step of @{term da_h} 
 
 (* ToDo: rename the lemmata with da_h instead of h. *)
 
-lemma receiverautomaton_h_step_ubdom_null_null:
+lemma receiverautomaton_da_h_ubdom:
   assumes "ubDom\<cdot>sb = {\<C> ''dr''}"
-  shows "ubDom\<cdot>(ubConc (tsynbNull (\<C> ''ar'') \<uplus> tsynbNull (\<C> ''o''))
-                  \<cdot>(da_h ReceiverAutomaton (ReceiverState.ReceiverState s) \<rightleftharpoons> sb)) 
-           = {\<C> ''ar'', \<C> ''o''}"
-  apply (simp add: tsynbnullar_tsynbnullo_ubclunion_ubdom)
-  apply (subst da_h_ubdom)
-  by (simp add: assms daDom_def daRan_def ReceiverAutomaton.rep_eq insert_commute)+
-
-lemma receiverautomaton_h_step_ubdom_ar_null:
-  assumes "ubDom\<cdot>sb = {\<C> ''dr''}"
-  shows "ubDom\<cdot>(ubConc ((createArBundle x) \<uplus> (tsynbNull (\<C> ''o'')))
-                  \<cdot>(da_h ReceiverAutomaton (ReceiverState.ReceiverState s) \<rightleftharpoons> sb)) 
-           = {\<C> ''ar'', \<C> ''o''}"
-  apply (simp add: createaroutput_tsynbnullo_ubclunion_ubdom)
-  apply (subst da_h_ubdom)
-  by (simp add: assms daDom_def daRan_def ReceiverAutomaton.rep_eq insert_commute)+
-
-lemma receiverautomaton_h_step_ubdom_ar_o: 
-  assumes "ubDom\<cdot>sb = {\<C> ''dr''}"
-  shows "ubDom\<cdot>(ubConc ((createArBundle x) \<uplus> (createOBundle y))
-                  \<cdot>(da_h ReceiverAutomaton (ReceiverState.ReceiverState s) \<rightleftharpoons> sb)) 
-           = {\<C> ''ar'', \<C> ''o''}"
-  apply (simp add: createaroutput_createooutput_ubclunion_ubdom)
-  apply (subst da_h_ubdom)
-  by (simp add: assms daDom_def daRan_def ReceiverAutomaton.rep_eq insert_commute)+
+  shows "ubDom\<cdot>(da_h ReceiverAutomaton (ReceiverState.ReceiverState s) \<rightleftharpoons> sb) = {\<C> ''ar'', \<C> ''o''}"
+  by (simp add: assms da_h_ubdom receiverautomaton_dadom receiverautomaton_daran)
 
 text{* The datatype is allowed on the channel. *}
 lemma msga_ctype: "Msg (Pair_nat_bool a) \<in> ctype (\<C> ''dr'')"
@@ -495,6 +533,12 @@ lemma msga_createbundle_ubgetch [simp]:
   apply (simp add: ubgetch_insert createBundle.rep_eq)
   by (simp add: msga_ctype)
 
+ (* assumption needed for generalization? *)
+lemma createbundle_ubgetch:
+  assumes "a\<in> ctype c"
+  shows "createBundle a c . c = \<up>a"
+  oops
+
 text{* The concatenation of two bundles with the same domain is the concatenation of the contained 
        messages. *}
 lemma msga_createbundle_ubconc [simp]:
@@ -503,16 +547,27 @@ lemma msga_createbundle_ubconc [simp]:
            = \<up>(Msg (Pair_nat_bool a)) \<bullet> (sb.  \<C> ''dr'')"
   by (simp add: assms usclConc_stream_def)
 
+lemma createbundle_ubconc:
+  assumes "c\<in> ubDom\<cdot>sb" and "a \<in> ctype c"
+  shows "(ubConc (createBundle a c)\<cdot>sb) . c = \<up>a \<bullet> (sb . c)"
+  oops
+ 
+
 text{* The rest of the concatenation of a simple bundle with another bundle is the latter. *}
-lemma msga_createbundle_ubconc_sbrt [simp]:
+lemma msga_createbundle_ubconc_sbrt[simp]:
   assumes "ubDom\<cdot>sb = {\<C> ''dr''}"
   shows "sbRt\<cdot>(ubConc (createBundle (Msg (Pair_nat_bool a)) (\<C> ''dr''))\<cdot>sb) = sb"
   apply (rule ub_eq)
   apply (simp add: assms)
   by (simp add: assms sbRt_def usclConc_stream_def)
 
+lemma createbundle_ubconc_sbrt:
+  assumes "c \<in> ubDom\<cdot>sb"
+  shows "sbRt\<cdot>(ubConc (createBundle a c)\<cdot>sb) = sb"
+  oops
+
 text{* Simplify the input bundle in case of a null. *}
-lemma tsynbnull_eq [simp]:
+lemma tsynbnull_eq[simp]:
   assumes "ubDom\<cdot>sb = {\<C> ''dr''}"
   shows "inv convDiscrUp (sbHdElem\<cdot>(ubConc (tsynbNull (\<C> ''dr''))\<cdot>sb)) = [\<C> ''dr'' \<mapsto> null]"
   apply (rule convDiscrUp_eqI)
@@ -525,8 +580,13 @@ lemma tsynbnull_eq [simp]:
   apply (simp_all add: assms usclConc_stream_def up_def)
   by (metis convDiscrUp_dom domIff fun_upd_apply)
 
+lemma tsynbnull_eqII:
+  assumes "ubDom\<cdot>sb = {c}"
+  shows "inv convDiscrUp (sbHdElem\<cdot>(ubConc (tsynbNull c)\<cdot>sb)) = [c \<mapsto> -]"
+  oops
+
 text{* Simplify the input bundle in case of a single message. *}
-lemma createaroutput_eq [simp]:
+lemma createaroutput_eq[simp]: 
   assumes "ubDom\<cdot>sb = {\<C> ''dr''}" 
   shows "inv convDiscrUp (sbHdElem\<cdot>(ubConc (createBundle (Msg (Pair_nat_bool a)) (\<C> ''dr''))\<cdot>sb)) 
            = [\<C> ''dr'' \<mapsto> Msg (Pair_nat_bool a)]"
@@ -539,6 +599,11 @@ lemma createaroutput_eq [simp]:
   apply (subst ubConc_usclConc_eq)
   apply (simp_all add: assms usclConc_stream_def up_def)
   by (metis convDiscrUp_dom domIff fun_upd_apply)
+
+lemma createoutput_eq:
+  assumes "a \<in> ctype c" and "ubDom\<cdot>sb = {c}"
+  shows "inv convDiscrUp (sbHdElem\<cdot>(ubConc (createBundle a c)\<cdot>sb)) = [c \<mapsto> a]"
+  oops
 
 text {* For every state and input one step of @{term da_h} is executed correctly. *}
 
@@ -556,9 +621,9 @@ lemma receiverautomaton_h_step_rf_null:
   shows "da_h ReceiverAutomaton (ReceiverState Rf) \<rightleftharpoons> (ubConc (tsynbNull (\<C> ''dr''))\<cdot>sb) 
            = ubConc ((tsynbNull (\<C> ''ar'')) \<uplus> (tsynbNull (\<C> ''o'')))
                \<cdot>(da_h ReceiverAutomaton (ReceiverState Rf) \<rightleftharpoons> sb)"
-  apply (simp_all add: da_h_final daDom_def ReceiverAutomaton.rep_eq da_h_ubdom assms daRan_def 
-         daNextOutput_def daNextState_def daTransition_def usclConc_stream_def)
-  using assms receiverautomaton_h_step_ubdom_null_null by auto
+  by (simp add: assms da_h_final receiverautomaton_dadom receiverautomaton_daran da_h_ubdom
+      ReceiverAutomaton.rep_eq daNextOutput_def daNextState_def daTransition_def usclConc_stream_def
+      ubclUnion_ubundle_def receiverautomaton_da_h_ubdom)
 
 text{* ReceiverState Rt and input null. *}
 lemma receiverautomaton_h_step_rt_null: 
@@ -566,9 +631,9 @@ lemma receiverautomaton_h_step_rt_null:
   shows "da_h ReceiverAutomaton (ReceiverState Rt) \<rightleftharpoons> (ubConc (tsynbNull (\<C> ''dr''))\<cdot>sb) 
            = ubConc ((tsynbNull (\<C> ''ar'')) \<uplus> (tsynbNull (\<C> ''o'')))
                \<cdot>(da_h ReceiverAutomaton (ReceiverState Rt) \<rightleftharpoons> sb)"
-  apply (simp_all add: da_h_final daDom_def ReceiverAutomaton.rep_eq da_h_ubdom assms daRan_def 
-         daNextOutput_def daNextState_def daTransition_def usclConc_stream_def)
-  using assms receiverautomaton_h_step_ubdom_null_null by auto
+  by (simp add: assms da_h_final receiverautomaton_dadom receiverautomaton_daran da_h_ubdom
+      ReceiverAutomaton.rep_eq daNextOutput_def daNextState_def daTransition_def usclConc_stream_def
+      ubclUnion_ubundle_def receiverautomaton_da_h_ubdom)
 
 text{* ReceiverState Rf and input true. *}
 lemma receiverautomaton_h_step_rf_true:
@@ -578,9 +643,9 @@ lemma receiverautomaton_h_step_rf_true:
            \<rightleftharpoons> (ubConc (createBundle (Msg (Pair_nat_bool a)) (\<C> ''dr''))\<cdot>sb) 
               = ubConc (createArBundle (snd a) \<uplus> (tsynbNull (\<C> ''o'')))
                   \<cdot>(da_h ReceiverAutomaton (ReceiverState Rf) \<rightleftharpoons> sb)"
-  apply (simp_all add: da_h_final daDom_def ReceiverAutomaton.rep_eq da_h_ubdom assms daRan_def 
-         daNextOutput_def daNextState_def daTransition_def usclConc_stream_def)
-  using assms receiverautomaton_h_step_ubdom_ar_null by auto
+  by (simp add: assms da_h_final receiverautomaton_dadom receiverautomaton_daran da_h_ubdom
+      ReceiverAutomaton.rep_eq daNextOutput_def daNextState_def daTransition_def usclConc_stream_def
+      ubclUnion_ubundle_def receiverautomaton_da_h_ubdom createarbundle_ubdom)
 
 text{* ReceiverState Rt and input true. *}
 lemma receiverautomaton_h_step_rt_true: 
@@ -590,9 +655,9 @@ lemma receiverautomaton_h_step_rt_true:
            \<rightleftharpoons> (ubConc (createBundle (Msg (Pair_nat_bool a)) (\<C> ''dr''))\<cdot>sb)
              = ubConc (createArBundle (snd a) \<uplus> (createOBundle (fst a)))
                  \<cdot>(da_h ReceiverAutomaton (ReceiverState Rf) \<rightleftharpoons> sb)"
-  apply (simp_all add: da_h_final daDom_def ReceiverAutomaton.rep_eq da_h_ubdom assms daRan_def 
-         daNextOutput_def daNextState_def daTransition_def usclConc_stream_def)
-  using assms receiverautomaton_h_step_ubdom_ar_o by auto
+  by (simp add: assms da_h_final receiverautomaton_dadom receiverautomaton_daran da_h_ubdom
+      ReceiverAutomaton.rep_eq daNextOutput_def daNextState_def daTransition_def usclConc_stream_def
+      ubclUnion_ubundle_def receiverautomaton_da_h_ubdom createarbundle_ubdom createobundle_ubdom)
 
 text{* ReceiverState Rf and input false. *}
 lemma receiverautomaton_h_step_rf_false: 
@@ -602,9 +667,9 @@ lemma receiverautomaton_h_step_rf_false:
            \<rightleftharpoons> (ubConc (createBundle (Msg (Pair_nat_bool a)) (\<C> ''dr''))\<cdot>sb) 
               = ubConc (createArBundle (snd a) \<uplus> createOBundle (fst a))
                   \<cdot>(da_h ReceiverAutomaton (ReceiverState Rt) \<rightleftharpoons> sb)"
-  apply (simp_all add: da_h_final daDom_def ReceiverAutomaton.rep_eq da_h_ubdom assms daRan_def 
-         daNextOutput_def daNextState_def daTransition_def usclConc_stream_def)
-  using assms receiverautomaton_h_step_ubdom_ar_o by auto
+  by (simp add: assms da_h_final receiverautomaton_dadom receiverautomaton_daran da_h_ubdom
+      ReceiverAutomaton.rep_eq daNextOutput_def daNextState_def daTransition_def usclConc_stream_def
+      ubclUnion_ubundle_def receiverautomaton_da_h_ubdom createarbundle_ubdom createobundle_ubdom)
 
 text{* ReceiverState Rt and input false. *}
 lemma receiverautomaton_h_step_rt_false: 
@@ -614,45 +679,30 @@ lemma receiverautomaton_h_step_rt_false:
            \<rightleftharpoons> (ubConc (createBundle (Msg (Pair_nat_bool a)) (\<C> ''dr''))\<cdot>sb) 
               = ubConc (createArBundle (snd a) \<uplus> (tsynbNull (\<C> ''o'')))
                   \<cdot>(da_h ReceiverAutomaton (ReceiverState Rt) \<rightleftharpoons> sb)"
-  apply (simp_all add: da_h_final daDom_def ReceiverAutomaton.rep_eq da_h_ubdom assms daRan_def 
-         daNextOutput_def daNextState_def daTransition_def usclConc_stream_def)
-  using assms receiverautomaton_h_step_ubdom_ar_null by auto
+  by (simp add: assms da_h_final receiverautomaton_dadom receiverautomaton_daran da_h_ubdom
+      ReceiverAutomaton.rep_eq daNextOutput_def daNextState_def daTransition_def usclConc_stream_def
+      ubclUnion_ubundle_def receiverautomaton_da_h_ubdom createarbundle_ubdom createobundle_ubdom)
 
 text{* The SPF generated from @{term ReceiverAutomaton} executes the first step correctly. *}
 lemma receiverautomaton_H_step:
   assumes "ubDom\<cdot>sb = {\<C> ''dr''}"
-  shows "da_H ReceiverAutomaton \<rightleftharpoons> sb 
+  shows "da_H ReceiverAutomaton \<rightleftharpoons> sb
            = ubConc ((tsynbNull (\<C> ''ar'')) \<uplus> (tsynbNull (\<C> ''o'')))
                \<cdot>(da_h ReceiverAutomaton (ReceiverState Rt) \<rightleftharpoons> sb)"
-  apply (simp add: da_H_def da_h_ubdom daRan_def daInitialState_def daInitialOutput_def 
-         ReceiverAutomaton.rep_eq daDom_def assms)
-  using assms receiverautomaton_h_step_ubdom_null_null by auto
+  by (simp add: assms da_H_def da_h_ubdom receiverautomaton_dadom receiverautomaton_daran
+      daInitialState_def daInitialOutput_def ReceiverAutomaton.rep_eq receiverautomaton_da_h_ubdom 
+      tsynbnullar_tsynbnullo_ubclunion_ubdom)
 
 (* ----------------------------------------------------------------------- *)
   section {* Automaton Receiver SPF Lemmata *}
 (* ----------------------------------------------------------------------- *)
 
-text{* The domain of the @{term ReceiverAutomaton}. *}
-lemma dadom_receiverautomaton: 
-  "daDom ReceiverAutomaton = {\<C> ''dr''}"
-  by (simp add: daDom_def ReceiverAutomaton.rep_eq)
-
-text{* The range of the @{term ReceiverAutomaton}. *}
-lemma daran_receiverautomaton: 
-  "daRan ReceiverAutomaton = {\<C> ''ar'', \<C> ''o''}"
-  by (simp add: daRan_def ReceiverAutomaton.rep_eq)
-
-text{* Initial output of the @{term ReceiverAutomaton}. *}
-lemma dainitialoutput_receiverautomaton:
-  "daInitialOutput ReceiverAutomaton = tsynbNull (\<C> ''ar'') \<uplus> tsynbNull (\<C> ''o'')"
-  by (simp add: daInitialOutput_def ReceiverAutomaton.rep_eq)
-
 text{* Application of @{term ubLeast} on @{term ReceiverSPF} yields only the initial output. *}
 lemma receiverspf_strict:
   "ReceiverSPF \<rightleftharpoons> ubLeast{\<C> ''dr''} = tsynbNull (\<C> ''ar'') \<uplus> tsynbNull (\<C> ''o'')"
   apply (fold ubclLeast_ubundle_def)
-  by (simp add: ReceiverSPF_def da_H_bottom dadom_receiverautomaton daran_receiverautomaton 
-                dainitialoutput_receiverautomaton tsynbnullar_tsynbnullo_ubclunion_ubdom)
+  by (simp add: ReceiverSPF_def da_H_bottom receiverautomaton_dadom receiverautomaton_daran 
+                receiverautomaton_dainitialoutput tsynbnullar_tsynbnullo_ubclunion_ubdom)
 
 text{* The domain of @{term ReceiverSPF}. *}
 lemma receiverspf_ufdom: "ufDom\<cdot>ReceiverSPF = {\<C> ''dr''}"
