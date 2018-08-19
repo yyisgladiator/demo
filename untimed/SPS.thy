@@ -58,11 +58,11 @@ lemma spsconcin_insert:
   shows "spsConcIn sb sps = (uspecImage (Rep_cfun (spfConcIn sb)) sps)"
   by (simp add: spsConcIn_def)
 
-lemma spsconcin_dom [simp]: assumes "\<And>c. c\<in>ubDom\<cdot>sb \<Longrightarrow> # (sb . c) < \<infinity>"
+lemma spsconcin_dom: assumes "\<And>c. c\<in>ubDom\<cdot>sb \<Longrightarrow> # (sb . c) < \<infinity>"
   shows "uspecDom\<cdot>(spsConcIn sb sps) = uspecDom\<cdot>sps"
   by (simp add: spsConcIn_def ufclDom_ufun_def ufclRan_ufun_def)
 
-lemma spsconcin_ran [simp]: 
+lemma spsconcin_ran: 
   assumes "\<And>c. c\<in>ubDom\<cdot>sb \<Longrightarrow> # (sb . c) < \<infinity>"
   shows "uspecRan\<cdot>(spsConcIn sb sps) = uspecRan\<cdot>sps"
   by (simp add: spsConcIn_def ufclDom_ufun_def ufclRan_ufun_def)

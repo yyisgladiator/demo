@@ -37,10 +37,10 @@ definition MedSPS :: "(abpMessage tsyn stream\<^sup>\<Omega>) ufun uspec" where
   "MedSPS = Abs_uspec (Rev {(MedSPF ora) | ora. #({True} \<ominus> ora) = \<infinity>}, 
                              Discr {\<C> ''ds''}, Discr {\<C> ''dr''})"
 
-text {* @{term MedSPS}: Lossy medium function set for the Alternating Bit Protocol. *}
+text {* @{term MedSPSspec}: Lossy medium function set for the Alternating Bit Protocol. *}
 definition MedSPSspec :: "nat \<Rightarrow> abpMessage tsyn SPS" where 
   "MedSPSspec n = Abs_uspec (Rev {(MedSPF ora) | ora. (#({True} \<ominus> ora) = \<infinity> \<and> snth n ora
-   \<and> (\<forall>k. k<n \<and> \<not>snth k ora))}, Discr {\<C> ''ds''}, Discr {\<C> ''dr''})"
+   \<and> (\<forall>k<n. \<not>snth k ora))}, Discr {\<C> ''ds''}, Discr {\<C> ''dr''})"
 
 (* ----------------------------------------------------------------------- *)
 section {* Basic Properties *}
@@ -451,17 +451,31 @@ subsection {* Basic Properties of MedSPSspec *}
 (* ----------------------------------------------------------------------- *)
 
 text{* @{term MedSPSspec} is well-formed. *}
-lemma medspsspec_uspecwell: 
+lemma medspsspec_uspecwell [simp]: 
   "uspecWell (Rev {(MedSPF ora) | ora. (#({True} \<ominus> ora) = \<infinity> \<and> snth n ora
-   \<and> (\<forall>k. k<n \<and> \<not>snth k ora))}) (Discr {\<C> ''ds''}) (Discr {\<C> ''dr''})"
-  using CollectD uspec_wellI by fastforce
+   \<and> (\<forall>k<n. \<not>snth k ora))}) (Discr {\<C> ''ds''}) (Discr {\<C> ''dr''})"
+  apply (rule uspec_wellI)
+  apply (simp add: ufclDom_ufun_def)
+  using medspf_ufdom apply blast
+  apply (simp add: ufclRan_ufun_def)
+  using medspf_ufran by blast
 
 text{* The domain of @{term MedSPSspec}. *}
 lemma medspsspec_uspecdom: "uspecDom\<cdot>(MedSPSspec n) = {\<C> ''ds''}"
-  apply (induction n)
-  apply (simp add: uspecDom_def MedSPSspec_def)
-  apply (simp add: MedSPSspec_def)
-  sorry
+  proof (induction n)
+    case 0
+    have set_eq: "{MedSPF ora | ora::bool stream. #({True} \<ominus> ora) = \<infinity> \<and> shd ora} 
+      = {(MedSPF ora) | ora. (#({True} \<ominus> ora) = \<infinity> \<and> snth 0 ora \<and> (\<forall>k<0. \<not>snth k ora))}"
+      by simp
+    then have uspecwell: "uspecWell (Rev {MedSPF ora | ora::bool stream. #({True} \<ominus> ora) = \<infinity> 
+      \<and> shd ora}) (Discr {\<C> ''ds''}) (Discr{\<C> ''dr''})"
+      using medspsspec_uspecwell by presburger
+    then show ?case 
+      by (simp add: MedSPSspec_def uspecDom_def)
+  next
+    case (Suc n)
+    then show ?case sorry
+  qed
 
 text{* The range of @{term MedSPSspec}. *}
 lemma medspsspec_uspecran: "uspecRan\<cdot>(MedSPSspec n) = {\<C> ''dr''}"
