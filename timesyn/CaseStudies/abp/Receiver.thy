@@ -352,7 +352,7 @@ lemma tsynbrec_test_inputubundleloseack:
                 tsynrec_test_inputstreamloseack tsynprojsnd_test_inputstreamloseack 
                 recTestInputUbundleLoseAck.rep_eq recTestOutputUbundleLoseAck.abs_eq fun_upd_twist)
 
-text{* @{term RecSPF} test on @{term recTestUbundleLoseAck}. *}
+text{* @{term RecSPF} test on @{term recTestInputUbundleLoseAck}. *}
 lemma recspf_test_inputubundleloseack:
   "RecSPF True \<rightleftharpoons> recTestInputUbundleLoseAck = recTestOutputUbundleLoseAck"
   by (simp add: recspf_insert tsynbrec_test_inputubundleloseack)
@@ -379,7 +379,7 @@ lemma tsynbrec_test_inputubundlelosedat:
                 recTestInputUbundleLoseDat.rep_eq recTestOutputUbundleLoseMsg.abs_eq fun_upd_twist)
 
 text{* @{term RecSPF} test on @{term recTestInputStreamLoseDat}. *}
-lemma recspf_test_inputubundlelosedat: 
+lemma recspf_test_inputubundlelosedat:
   "RecSPF True \<rightleftharpoons> recTestInputUbundleLoseDat = recTestOutputUbundleLoseMsg" 
   by (simp add: recspf_insert tsynbrec_test_inputubundlelosedat)
 
