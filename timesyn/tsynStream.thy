@@ -1187,6 +1187,70 @@ lemma tsynzip_sconc_null:
   shows "tsynZip\<cdot>(\<up>null \<bullet> xs)\<cdot>ys = \<up>null \<bullet> tsynZip\<cdot>xs\<cdot>ys"
   by (metis (no_types, hide_lams) assms tsynZip.simps(3) lscons_conv scases undiscr_Discr)
 
+text {* If the last element of a tsyn stream is a message, tsynLen is greater than 0 *}
+lemma tsynlen_sfoot_msg_geq: 
+  assumes "s \<noteq> \<epsilon>" 
+    and "#s = Fin n" 
+    and "sfoot s = (\<M> m)" 
+  shows "tsynLen\<cdot>s \<ge> Fin 1"
+  using assms 
+  apply(induction s arbitrary: n m rule: tsyn_finind, simp_all)
+  apply(metis One_nat_def lnat.con_rews lnzero_def neq02Suclnle tsynlen_sconc_msg)
+  by (metis Fin_02bot fold_inf leI lnat_well_h2 lnsuc_lnle_emb lnzero_def notinfI3 only_empty_has_length_0 sconc_snd_empty sfoot_conc sfoot_one slen_scons tsyn.distinct(1) tsynlen_sconc_null)
+
+text {*@{term tsynZip} of the concatenation of two streams equals the concatenation of 
+        @{term tsynZip} of both streams if the first stream is finite and its last element is a message
+        or it's empty. *}
+lemma tsynzip_sconc: 
+  assumes "#as = Fin n"
+    and "sfoot as = (\<M> a) \<or> as = \<epsilon>" 
+    and "tsynLen\<cdot>as = #bs" 
+  shows "tsynZip\<cdot>(as \<bullet> xs)\<cdot>(bs \<bullet> ys) = tsynZip\<cdot>as\<cdot>bs \<bullet> tsynZip\<cdot>xs\<cdot>ys"
+  using assms 
+  apply(induction as arbitrary: n a bs xs ys rule: tsyn_finind, simp_all)
+proof-
+  fix m :: 'a
+  fix s xs :: "'a tsyn stream"
+  fix bsa ys :: "'b stream"
+  fix na :: nat
+  fix aa :: 'a
+  assume ind_ass: "\<And>(n::nat) (a::'a) (bs::'b stream) (xs::'a tsyn stream) ys::'b stream.
+           #s = Fin n \<Longrightarrow> sfoot s = (\<M> a) \<or> s = \<epsilon> \<Longrightarrow>
+           tsynLen\<cdot>s = #bs  \<Longrightarrow> tsynZip\<cdot>(s \<bullet> xs)\<cdot>(bs \<bullet> ys) = tsynZip\<cdot>s\<cdot>bs \<bullet> tsynZip\<cdot>xs\<cdot>ys"
+    and sconc_msg_s_sfoot_eq_msg: "sfoot (\<up>(\<M> m) \<bullet> s) = \<M> aa" 
+    and tsynLen_slen_bsa_ass: "tsynLen\<cdot>(\<up>(\<M> m) \<bullet> s) = #bsa" 
+    and slen_lnsuc_s_fin: "lnsuc\<cdot>(#s) = Fin na"
+  then obtain b bss where bsa_below_def: "bsa = \<up>b \<bullet> bss"
+    by (metis lnat.con_rews lnzero_def slen_empty_eq surj_scons tsynlen_sconc_msg)
+  hence tsynlen_s_slen_bss_eq: "tsynLen\<cdot>s = #bss"
+    by (metis bsa_below_def inject_lnsuc slen_scons tsynLen_slen_bsa_ass tsynlen_sconc_msg)
+  hence sfoot_neq_null_or_empty: "sfoot s = (\<M> aa) \<or> s = \<epsilon>"
+    by (metis Fin_02bot Fin_Suc inf_less_eq leI lnzero_def notinfI3 only_empty_has_length_0 sconc_msg_s_sfoot_eq_msg sconc_snd_empty sfoot_conc slen_lnsuc_s_fin slen_sconc_snd_inf slen_scons)
+  hence "tsynZip\<cdot>(s \<bullet> xs)\<cdot>(bss \<bullet> ys) = tsynZip\<cdot>s\<cdot>bss \<bullet> tsynZip\<cdot>xs\<cdot>ys" using ind_ass
+    by (metis fold_inf leI lnat_well_h2 lnsuc_lnle_emb notinfI3 slen_lnsuc_s_fin tsynlen_s_slen_bss_eq)
+  thus "tsynZip\<cdot>(\<up>(\<M> m) \<bullet> s \<bullet> xs)\<cdot>(bsa \<bullet> ys) = tsynZip\<cdot>(\<up>(\<M> m) \<bullet> s)\<cdot>bsa \<bullet> tsynZip\<cdot>xs\<cdot>ys"
+    by (simp add: bsa_below_def tsynzip_sconc_msg)
+next
+  fix s xs :: "'a tsyn stream"
+  fix bsa ys :: "'b stream"
+  fix na :: nat
+  fix aa :: 'a
+  assume ind_ass: "\<And>(n::nat) (a::'a) (bs::'b stream) (xs::'a tsyn stream) ys::'b stream.
+           #s = Fin n \<Longrightarrow> sfoot s = (\<M> a) \<or> s = \<epsilon> \<Longrightarrow>
+           tsynLen\<cdot>s = #bs \<Longrightarrow> tsynZip\<cdot>(s \<bullet> xs)\<cdot>(bs \<bullet> ys) = tsynZip\<cdot>s\<cdot>bs \<bullet> tsynZip\<cdot>xs\<cdot>ys"
+          and sconc_null_s_sfoot_eq_msg: "sfoot (\<up>- \<bullet> s) = \<M> aa" 
+          and tsynLen_slen_bsa_ass: "tsynLen\<cdot>(\<up>- \<bullet> s) = #bsa" 
+          and slen_lnsuc_s_fin: "lnsuc\<cdot>(#s) = Fin na" 
+  hence sconc_sfoot_eq: "sfoot (\<up>- \<bullet> s) = sfoot s"
+    by (metis Fin_02bot fold_inf leI lnsuc_lnle_emb lnzero_def notinfI3 only_empty_has_length_0 sconc_snd_empty sfoot_conc sfoot_one slen_scons tsyn.distinct(1))
+  hence bsa_neq_empty: "bsa \<noteq> \<epsilon>"
+    by (metis Fin_02bot One_nat_def Suc_n_not_le_n less2nat_lemma lnat.con_rews lnzero_def sconc_null_s_sfoot_eq_msg tsynlen_sfoot_msg_geq slen_lnsuc_s_fin slen_scons strict_slen tsynLen_slen_bsa_ass)
+  hence "tsynZip\<cdot>(\<up>- \<bullet> s \<bullet> xs)\<cdot>(bsa \<bullet> ys) = \<up>- \<bullet> tsynZip\<cdot>(s \<bullet> xs)\<cdot>(bsa \<bullet> ys)"
+    by (metis sconc_snd_empty strictI tsynzip_sconc_null)
+  thus "tsynZip\<cdot>(\<up>- \<bullet> s \<bullet> xs)\<cdot>(bsa \<bullet> ys) = tsynZip\<cdot>(\<up>- \<bullet> s)\<cdot>bsa \<bullet> tsynZip\<cdot>xs\<cdot>ys"
+    by (metis (no_types, lifting) bsa_neq_empty fold_inf ind_ass leI lnat_well_h2 lnsuc_lnle_emb notinfI3 sconc_null_s_sfoot_eq_msg sconc_scons sconc_sfoot_eq slen_lnsuc_s_fin tsynLen_slen_bsa_ass tsynlen_sconc_null tsynzip_sconc_null)
+qed
+
 text {* @{term tsynZip} zips a non-empty singleton stream to a pair with the first element
         of the second stream. *}
 lemma tsynzip_singleton_msg_first: "tsynZip\<cdot>(\<up>(Msg a))\<cdot>(\<up>b \<bullet> bs) = \<up>(Msg (a, b))"
