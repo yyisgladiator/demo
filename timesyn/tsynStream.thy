@@ -1289,12 +1289,12 @@ lemma tsynzip_tsynabs: "tsynAbs\<cdot>(tsynZip\<cdot>as\<cdot>bs) = szip\<cdot>(
   by (simp add: tsynzip_sconc_null tsynabs_sconc_null)
 
 lemma tsynzip_tsynprojfst: 
-  assumes "tsynLen\<cdot>as = #bs"
+  assumes "#as \<le> #bs" (* or the same assumptions as tsynzip_sconc *)
   shows "tsynProjFst\<cdot>(tsynZip\<cdot>as\<cdot>bs) = as"
   oops
 
 lemma tsynzip_tsynprojsnd_tsynabs: 
-  assumes "tsynLen\<cdot>as = #bs" 
+  assumes "tsynLen\<cdot>as \<ge> #bs" 
   shows "tsynAbs\<cdot>(tsynProjSnd\<cdot>(tsynZip\<cdot>as\<cdot>bs)) = bs"
   oops                         
 
