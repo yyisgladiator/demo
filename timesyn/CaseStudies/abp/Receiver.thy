@@ -323,8 +323,8 @@ text{* @{term tsynbRec} test on @{term recTestInputUbundleNoLoss}. *}
 lemma tsynbrec_test_inputubundlenoloss:
   "tsynbRec True\<cdot>recTestInputUbundleNoLoss = Some recTestOutputUbundleNoLoss"
    by (simp add: tsynbrec_insert ubdom_insert ubgetch_insert natbool2abp_abp2natbool_inv 
-                tsynrec_test_inputstreamnoloss tsynprojsnd_test_inputstreamnoloss 
-                recTestInputUbundleNoLoss.rep_eq recTestOutputUbundleNoLoss.abs_eq fun_upd_twist)
+       tsynrec_test_inputstreamnoloss tsynprojsnd_test_inputstreamnoloss 
+       recTestInputUbundleNoLoss.rep_eq recTestOutputUbundleNoLoss.abs_eq fun_upd_twist)
 
 text{* @{term RecSPF} test on @{term recTestInputUbundleNoLoss}. *}
 lemma recspf_test_inputubundlenoloss:
@@ -349,8 +349,8 @@ text{* @{term tsynbRec} test on @{term recTestInputUbundleLoseAck}. *}
 lemma tsynbrec_test_inputubundleloseack: 
   "tsynbRec True\<cdot>recTestInputUbundleLoseAck = Some recTestOutputUbundleLoseAck"
   by (simp add: tsynbrec_insert ubdom_insert ubgetch_insert natbool2abp_abp2natbool_inv 
-                tsynrec_test_inputstreamloseack tsynprojsnd_test_inputstreamloseack 
-                recTestInputUbundleLoseAck.rep_eq recTestOutputUbundleLoseAck.abs_eq fun_upd_twist)
+      tsynrec_test_inputstreamloseack tsynprojsnd_test_inputstreamloseack 
+      recTestInputUbundleLoseAck.rep_eq recTestOutputUbundleLoseAck.abs_eq fun_upd_twist)
 
 text{* @{term RecSPF} test on @{term recTestInputUbundleLoseAck}. *}
 lemma recspf_test_inputubundleloseack:
@@ -374,9 +374,9 @@ lemma tsynprojsnd_test_inputstreamlosedat:
 text{* @{term tsynbRec} test on @{term recTestInputUbundleLoseDat}. *}
 lemma tsynbrec_test_inputubundlelosedat: 
   "tsynbRec True\<cdot>recTestInputUbundleLoseDat = Some recTestOutputUbundleLoseMsg"
-    by (simp add: tsynbrec_insert ubdom_insert ubgetch_insert natbool2abp_abp2natbool_inv 
-                tsynrec_test_inputstreamlosedat tsynprojsnd_test_inputstreamlosedat 
-                recTestInputUbundleLoseDat.rep_eq recTestOutputUbundleLoseMsg.abs_eq fun_upd_twist)
+  by (simp add: tsynbrec_insert ubdom_insert ubgetch_insert natbool2abp_abp2natbool_inv 
+      tsynrec_test_inputstreamlosedat tsynprojsnd_test_inputstreamlosedat
+      recTestInputUbundleLoseDat.rep_eq recTestOutputUbundleLoseMsg.abs_eq fun_upd_twist)
 
 text{* @{term RecSPF} test on @{term recTestInputStreamLoseDat}. *}
 lemma recspf_test_inputubundlelosedat:
