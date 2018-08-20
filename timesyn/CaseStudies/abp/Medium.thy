@@ -478,15 +478,35 @@ text{* The nth element of ora will be true. *}
 lemma snth_ora_true: assumes "#({True} \<ominus> ora) = \<infinity>" obtains n where "snth n ora = True"
   by (metis Inf'_neq_0_rev assms ex_snth_in_sfilter_nempty singleton_iff slen_empty_eq)
 
-(* If a "null" comes in, send it out and stay in the same state. *)
-lemma "spsConcIn (tsynbNull(\<C> ''ds'')) (MedSPSspec n) = spsConcOut (tsynbNull (\<C> ''dr''))\<cdot>(MedSPSspec n)"
-  apply (simp add: spsConcIn_def spsConcOut_def)
-sorry
-
 lemma slen_createbundle_getch: "#(createBundle (\<M> m) c  .  c) < \<infinity>"
   apply (simp add: ubgetch_insert createBundle_def)
   by (metis Fin_02bot Fin_Suc Fin_neq_inf bot_is_0 createBundle.rep_eq fun_upd_same inf_ub 
     lscons_conv option.sel order_less_le slen_scons strict_slen sup'_def ubabs_ubrep)
+
+lemma medsps_0_uspecwell: 
+  "uspecWell (Rev{MedSPF ora |ora::bool stream. #({True} \<ominus> ora) = \<infinity> \<and> shd ora}) (Discr{\<C> ''ds''}) 
+  (Discr{\<C> ''dr''})"
+  using medspsspec_uspecwell
+  proof -
+    have "{MedSPF ora |ora::bool stream. #({True} \<ominus> ora) = \<infinity> \<and> shd ora} 
+      = {(MedSPF ora) | ora. (#({True} \<ominus> ora) = \<infinity> \<and> snth 0 ora \<and> (\<forall>k<0. \<not>snth k ora))}"
+    by simp
+    then show ?thesis
+    using medspsspec_uspecwell by presburger
+  qed
+
+(* If a "null" comes in, send it out and stay in the same state. *)
+lemma "spsConcIn (tsynbNull(\<C> ''ds'')) (MedSPSspec n) = spsConcOut (tsynbNull (\<C> ''dr''))\<cdot>(MedSPSspec n)"
+  apply (subst spsconcin_insert)
+  apply (case_tac "c=(\<C> ''dr'')", simp_all)
+  apply (subst spsconcout_insert, simp)
+  apply (simp add: spfConcIn_def spfConcOut_def)
+  apply (induction n)
+  apply (simp add: uspecImage_def medspsspec_uspecran medspsspec_uspecdom ufclDom_ufun_def ufclRan_ufun_def)
+  apply (simp add: MedSPSspec_def)
+  using medsps_0_uspecwell
+  apply (simp add: uspecrevset_insert)
+sorry
 
 lemma "spsConcIn (createBundle (Msg m) (\<C> ''ds'')) (MedSPSspec (Suc n))
   = spsConcOut (tsynbNull(\<C> ''dr''))\<cdot>(MedSPSspec n)"
@@ -494,10 +514,12 @@ lemma "spsConcIn (createBundle (Msg m) (\<C> ''ds'')) (MedSPSspec (Suc n))
   apply (case_tac "c=(\<C> ''dr'')", simp_all)
   apply (simp add: slen_createbundle_getch)
   apply (subst spsconcout_insert, simp)
-(*  apply (simp add: uspecImage_def medspsspec_uspecdom medspsspec_uspecran ufclDom_ufun_def ufclRan_ufun_def)
-  apply (simp add: MedSPSspec_def uspecrevset_insert)
-  using medspsspec_uspecwell apply simp
-  apply (simp add: setrevImage_def inv_rev_rev)  *)
+  apply (simp add: uspecImage_def medspsspec_uspecdom medspsspec_uspecran ufclDom_ufun_def ufclRan_ufun_def)
+  apply (simp add: spfConcIn_def spfConcOut_def)
+  apply (simp add: uspecrevset_insert MedSPSspec_def)
+  using medspsspec_uspecwell
+  apply (simp add: setrevImage_def inv_rev_rev)
+  apply (simp add: MedSPF_def)
 sorry
 
 lemma "spsConcIn (createBundle (Msg m) (\<C> ''ds'')) (MedSPSspec 0) 
