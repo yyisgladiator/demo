@@ -194,15 +194,25 @@ definition tsynRemDups_fix :: "'a tsyn stream \<rightarrow> 'a tsyn stream" wher
 
 text {* Induction rule for finite time-synchronous streams. *}
 lemma tsyn_finind [case_names fin bot msg null]:
-  assumes fin: "#x = Fin n"
+  assumes fin: "#x < \<infinity>"
     and bot: "P \<epsilon>"
     and msg: "\<And>m s. P s \<Longrightarrow> P (\<up>(Msg m) \<bullet> s)"
     and null: "\<And>s. P s \<Longrightarrow> P (\<up>null \<bullet> s)"
   shows "P x"
   using assms
-  apply (induction x rule: finind)
-  apply (simp_all add: bot fin)
-  by (metis bot finind slen_scons tsynAbsElem.cases)
+  proof (induction x rule: ind)
+    case 1
+    then show ?case 
+      by simp
+  next
+    case 2
+    then show ?case 
+      by simp
+  next
+    case (3 a s)
+    then show ?case 
+      by (metis fold_inf inf_ub less_le slen_scons tsyn.exhaust)
+  qed
 
 text {* Induction rule for infinite time-synchronous streams and admissable predicates. *}
 lemma tsyn_ind [case_names adm bot msg null]:
@@ -1189,25 +1199,62 @@ lemma tsynzip_sconc_null:
 
 text {* If the last element of a tsyn stream is a message, tsynLen is greater than 0 *}
 lemma tsynlen_sfoot_msg_geq: 
-  assumes "s \<noteq> \<epsilon>" 
-    and "#s = Fin n" 
+  assumes "#s < \<infinity>"
+    and "s \<noteq> \<epsilon>"
     and "sfoot s = (\<M> m)" 
-  shows "tsynLen\<cdot>s \<ge> Fin 1"
-  using assms 
-  apply(induction s arbitrary: n m rule: tsyn_finind, simp_all)
-  apply(metis One_nat_def lnat.con_rews lnzero_def neq02Suclnle tsynlen_sconc_msg)
-  by (metis Fin_02bot fold_inf leI lnat_well_h2 lnsuc_lnle_emb lnzero_def notinfI3 only_empty_has_length_0 sconc_snd_empty sfoot_conc sfoot_one slen_scons tsyn.distinct(1) tsynlen_sconc_null)
+  shows "Fin 1 \<le> tsynLen\<cdot>s"
+  using assms
+  apply(induction s arbitrary: m rule: tsyn_finind, simp_all)
+  apply (metis Fin_02bot One_nat_def gr_0 less2lnleD lnzero_def tsynlen_sconc_msg)
+  by (metis Fin_02bot Fin_Suc Fin_neq_inf inf_ub less_le lnzero_def only_empty_has_length_0 
+      sconc_snd_empty sfoot_conc sfoot_one slen_sconc_snd_inf slen_scons strict_slen 
+      tsyn.distinct(1) tsynlen_sconc_null)
 
 text {*@{term tsynZip} of the concatenation of two streams equals the concatenation of 
         @{term tsynZip} of both streams if the first stream is finite and its last element is a message
         or it's empty. *}
-lemma tsynzip_sconc: 
-  assumes "#as = Fin n"
-    and "sfoot as = (\<M> a) \<or> as = \<epsilon>" 
-    and "tsynLen\<cdot>as = #bs" 
+lemma tsynzip_sconc:
+  assumes "#as < \<infinity>"
+    and "as \<noteq> \<epsilon>"
+    and "sfoot as = (\<M> a)"
+    and "tsynLen\<cdot>as = #bs"
   shows "tsynZip\<cdot>(as \<bullet> xs)\<cdot>(bs \<bullet> ys) = tsynZip\<cdot>as\<cdot>bs \<bullet> tsynZip\<cdot>xs\<cdot>ys"
   using assms 
-  apply(induction as arbitrary: n a bs xs ys rule: tsyn_finind, simp_all)
+  proof (induction as arbitrary: a bs xs ys rule: tsyn_finind)
+    case fin
+    then show ?case 
+      by (simp add: assms)
+  next
+    case bot
+    then show ?case 
+      by (simp add: assms)
+  next
+    case (msg m s)
+    then show ?case 
+      proof (cases rule: scases [of bs])
+        case bottom
+        then show ?thesis 
+          by (metis lnat.con_rews lnzero_def msg.prems(4) only_empty_has_length_0 tsynlen_sconc_msg)
+      next
+        case (scons a t)
+        then show ?thesis 
+          sorry
+      qed
+  next
+    case (null s)
+    then show ?case 
+      proof (cases rule: scases [of bs])
+        case bottom
+        then show ?thesis 
+          sorry
+      next
+        case (scons a t)
+        then show ?thesis 
+          sorry
+      qed
+  qed
+
+(*
 proof-
   fix m :: 'a
   fix s xs :: "'a tsyn stream"
@@ -1250,6 +1297,7 @@ next
   thus "tsynZip\<cdot>(\<up>- \<bullet> s \<bullet> xs)\<cdot>(bsa \<bullet> ys) = tsynZip\<cdot>(\<up>- \<bullet> s)\<cdot>bsa \<bullet> tsynZip\<cdot>xs\<cdot>ys"
     by (metis (no_types, lifting) bsa_neq_empty fold_inf ind_ass leI lnat_well_h2 lnsuc_lnle_emb notinfI3 sconc_null_s_sfoot_eq_msg sconc_scons sconc_sfoot_eq slen_lnsuc_s_fin tsynLen_slen_bsa_ass tsynlen_sconc_null tsynzip_sconc_null)
 qed
+*)
 
 text {* @{term tsynZip} zips a non-empty singleton stream to a pair with the first element
         of the second stream. *}
