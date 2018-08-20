@@ -1341,14 +1341,15 @@ lemma tsynzip_tsynprojfst:
   shows "tsynProjFst\<cdot>(tsynZip\<cdot>as\<cdot>bs) = as"
   using assms
   apply (induction as arbitrary: bs rule: tsyn_ind, simp_all)
-     apply (rule adm_all)
-     apply (rule adm_imp, simp_all)
-     apply (rule admI)
-     apply (metis dual_order.antisym inf_chainl4 inf_ub l42)
-   apply (rename_tac xs ys)
+  apply (rule adm_all)
+  apply (rule adm_imp, simp_all)
+  apply (rule admI)
+  apply (metis dual_order.antisym inf_chainl4 inf_ub l42)
+  apply (rename_tac xs ys)
   apply (case_tac "ys = \<epsilon>", simp_all)
-  apply (metis lnsuc_lnle_emb srt_decrements_length surj_scons tsynprojfst_sconc_msg tsynzip_sconc_msg)
-   apply(rename_tac xs ys)
+  apply (metis lnsuc_lnle_emb srt_decrements_length surj_scons tsynprojfst_sconc_msg 
+         tsynzip_sconc_msg)
+  apply (rename_tac xs ys)
   apply (case_tac "ys = \<epsilon>", simp_all)
   by (metis (no_types, lifting) less_lnsuc trans_lnle tsynprojfst_sconc_null tsynzip_sconc_null)
 
