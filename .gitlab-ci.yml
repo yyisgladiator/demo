@@ -1,3 +1,8 @@
+variables:
+  ISABELLE_HOME_USER_DIR: "/home/isabelle/.isabelle"
+  TIMEOUT_SCALE: "1.8"
+  NUMBER_SIMULT_SESSIONS: "2"
+
 image: jecb96/isabelle:2018
 
 cache:
@@ -12,13 +17,13 @@ stages:
 
 
 before_script:
-  - if [ ! -z "$(ls -A cache)" ]; then mv cache/* /home/isabelle/.isabelle; fi
-  - find /home/isabelle/.isabelle
+  - if [ ! -z "$(ls -A cache)" ]; then mv cache/* $ISABELLE_HOME_USER_DIR; fi
+  - find $ISABELLE_HOME_USER_DIR
 
 after_script:
-  - find /home/isabelle/.isabelle
+  - find $ISABELLE_HOME_USER_DIR
   - rm -rf cache/*
-  - mv /home/isabelle/.isabelle/* cache/
+  - mv $ISABELLE_HOME_USER_DIR/* cache/
 
 
 
@@ -32,18 +37,26 @@ after_script:
 dependency:
   stage: dependency
   script:
-    - isabelle build -D . -j2 -o timeout_scale=1.8 -n -v || if [ $? -eq 1 ]; then exit 0; else exit $?; fi
+    - isabelle build -S -D . -j$NUMBER_SIMULT_SESSIONS -o timeout_scale=$TIMEOUT_SCALE -n -v || if [ $? -eq 1 ]; then exit 0; else exit $?; fi
+  tags:
+    - docker
+    - private
 
 
 mustWork:
   stage: mustWork
   script:
-    - find /home/isabelle/.isabelle
-    - isabelle build -d . -j2 -o timeout_scale=1.8 -v -b -g mustWork
+    - isabelle build -S -d . -j$NUMBER_SIMULT_SESSIONS -o timeout_scale=$TIMEOUT_SCALE -v -b -g mustWork
+  tags:
+    - docker
+    - private
 
 
 canFail:
   stage: canFail
-  allow_failure: true   #for now, sorrys are allowed
+  allow_failure: true   # for now, sorrys are allowed
   script:
-    - isabelle build -d . -j2 -o timeout_scale=1.8 -v -b -g canFail
+    - isabelle build -S -d . -j$NUMBER_SIMULT_SESSIONS -o timeout_scale=$TIMEOUT_SCALE -v -b -g canFail
+  tags:
+    - docker
+    - private
