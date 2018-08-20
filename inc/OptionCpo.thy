@@ -283,14 +283,7 @@ qed
 lemma map_add_lessL: fixes Y :: "nat \<Rightarrow> ('a \<rightharpoonup> 'b :: cpo)"
   assumes "chain Y"
   shows "(\<Squnion>i. Y i)++a \<sqsubseteq> (\<Squnion>i. Y i ++ a)" (is "?L \<sqsubseteq> ?R")
-  proof (rule part_below)
-   show "dom ?L = dom ?R" by (metis assms dom_map_add monofunE part_add_monofunL part_dom_lub po_class.chain_def)
-  next
-  fix c
-  assume "c\<in> dom ?L"
-  thus "the (((\<Squnion>i. Y i) ++ a) c) \<sqsubseteq> the ((\<Squnion>i. Y i ++ a) c)"
-  by (smt assms part_the_lub is_ub_thelub lub_eq map_add_dom_app_simps(1) map_add_dom_app_simps(3) monofunE not_below2not_eq part_add_monofunL part_dom_lub po_class.chain_def)
-qed
+  by (smt assms below_lub dom_map_add lub_eq mapadd2if_then not_below2not_eq part_below part_dom_lub part_the_chain part_the_lub po_class.chain_def)
 
 
 (* Finally show that both sides are cont *)
