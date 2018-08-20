@@ -1,15 +1,24 @@
 image: jecb96/isabelle:2018
 
 cache:
-  key: "$CI_COMMIT_REF_SLUG"  # cache per branch
+  key: "$CI_COMMIT_REF_SLUG"
   paths:
-    - /home/isabelle/.isabelle/
-
+    - cache/
 
 stages:
   - dependency
   - mustWork
   - canFail
+
+
+before_script:
+  - if [ ! -z "$(ls -A cache)" ]; then mv cache/* /home/isabelle/.isabelle; fi
+  - find /home/isabelle/.isabelle
+
+after_script:
+  - find /home/isabelle/.isabelle
+  - rm -rf cache/*
+  - mv /home/isabelle/.isabelle/* cache/
 
 
 
@@ -20,20 +29,12 @@ stages:
 ## Look in the "ROOT" file to see the sessions and add files
 
 
-  # check for ALL sessions in ROOT if the dependencies are working
-  # -D .  loads all sessions in directory
-  # -n    checks imports
 dependency:
   stage: dependency
   script:
     - isabelle build -D . -j2 -o timeout_scale=1.8 -n -v || if [ $? -eq 1 ]; then exit 0; else exit $?; fi
 
 
-
-  # run everything in the group "mustWork" (as defined in ROOT)
-  # -d .      make sessions addable (but do not load them)
-  # -g sorry  load all "sorry" sessions
-  # -b        save heap files
 mustWork:
   stage: mustWork
   script:
@@ -41,11 +42,6 @@ mustWork:
     - isabelle build -d . -j2 -o timeout_scale=1.8 -v -b -g mustWork
 
 
-
-  # run everything in the group "canFail" (as defined in ROOT)
-  # -d .          make sessions addable (but do not load them)
-  # -g verified   load all "verified" sessions
-  # -b            save heap files
 canFail:
   stage: canFail
   allow_failure: true   #for now, sorrys are allowed
