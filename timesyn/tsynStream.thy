@@ -1337,9 +1337,20 @@ lemma tsynzip_tsynabs: "tsynAbs\<cdot>(tsynZip\<cdot>as\<cdot>bs) = szip\<cdot>(
   by (simp add: tsynzip_sconc_null tsynabs_sconc_null)
 
 lemma tsynzip_tsynprojfst: 
-  assumes "#as \<le> #bs" (* or the same assumptions as tsynzip_sconc *)
+  assumes "#as \<le> #bs"
   shows "tsynProjFst\<cdot>(tsynZip\<cdot>as\<cdot>bs) = as"
-  oops
+  using assms
+  apply (induction as arbitrary: bs rule: tsyn_ind, simp_all)
+     apply (rule adm_all)
+     apply (rule adm_imp, simp_all)
+     apply (rule admI)
+     apply (metis dual_order.antisym inf_chainl4 inf_ub l42)
+   apply (rename_tac xs ys)
+  apply (case_tac "ys = \<epsilon>", simp_all)
+  apply (metis lnsuc_lnle_emb srt_decrements_length surj_scons tsynprojfst_sconc_msg tsynzip_sconc_msg)
+   apply(rename_tac xs ys)
+  apply (case_tac "ys = \<epsilon>", simp_all)
+  by (metis (no_types, lifting) less_lnsuc trans_lnle tsynprojfst_sconc_null tsynzip_sconc_null)
 
 lemma tsynzip_tsynprojsnd_tsynabs: 
   assumes "tsynLen\<cdot>as \<ge> #bs" 
