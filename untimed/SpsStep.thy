@@ -84,7 +84,7 @@ proof-
   thus ?thesis
     using image_mono_rev monofunE by auto
 qed
-
+  
 lemma newSpsStep_uspecWell:"uspecWell
         (setrevImage (\<lambda>h. Abs_cufun (\<lambda>sb. Rep_cufun (h sb) sb))
           (setrevImage (spfStep_inj In Out)
@@ -97,7 +97,7 @@ proof
                       (setrevImage (spfStep_inj In Out)
                         (setrevImage (\<lambda> h sbEl. spfRtIn\<cdot>(h sbEl)) (setrevFilter (spsStep_P In Out)\<cdot>(spsStep_h\<cdot>h)))))"
   then show"ufclDom\<cdot>f = In"
-    apply(simp_all add: spsStep_P_def)
+    apply(simp_all add: spsStep_P_def setrevImage_def setrevFilter_def inv_rev_rev)
     sorry
 next
   show "\<forall>f::('a stream\<^sup>\<Omega>) ufun\<in>inv Rev (setrevImage (\<lambda>h::'a stream\<^sup>\<Omega> \<Rightarrow> ('a stream\<^sup>\<Omega>) ufun. Abs_cufun (\<lambda>sb::'a stream\<^sup>\<Omega>. Rep_cufun (h sb) sb))
@@ -109,7 +109,8 @@ next
     assume a1:"f \<in> inv Rev (setrevImage (\<lambda>h::'a stream\<^sup>\<Omega> \<Rightarrow> ('a stream\<^sup>\<Omega>) ufun. Abs_cufun (\<lambda>sb::'a stream\<^sup>\<Omega>. Rep_cufun (h sb) sb))
                       (setrevImage (spfStep_inj In Out)
                         (setrevImage (\<lambda>(h::'a sbElem \<Rightarrow> ('a stream\<^sup>\<Omega>) ufun) sbEl::'a sbElem. spfRtIn\<cdot>(h sbEl)) (setrevFilter (spsStep_P In Out)\<cdot>(spsStep_h\<cdot>h)))))"
-    show "ufclRan\<cdot>f = Out"
+    then show "ufclRan\<cdot>f = Out"
+      apply(simp_all add: spsStep_P_def setrevImage_def setrevFilter_def inv_rev_rev)
       sorry
   qed
 qed
@@ -134,18 +135,8 @@ proof(rule monofunI)
             (setrevImage (\<lambda> h sbEl. spfRtIn\<cdot>(h sbEl)) (setrevFilter (spsStep_P In Out)\<cdot>(spsStep_h\<cdot>y)))),
          Discr In, Discr Out)"
     by(simp add: below_uspec_def newSpsStep_uspecWell newSpsStep_mono_h a1)
-qed
-  
-  
-lemma[simp]:"(\<Squnion>i. Abs_uspec (setrevImage (\<lambda>h. Abs_cufun (\<lambda>sb. Rep_cufun (h sb) sb))
-                              (setrevImage (spfStep_inj In Out)
-                                (setrevImage (\<lambda> h sbEl. spfRtIn\<cdot>(h sbEl)) (setrevFilter (spsStep_P In Out)\<cdot>(spsStep_h\<cdot>(Y i))))),
-                             Discr In, Discr Out)) =
-              ( Abs_uspec (\<Squnion>i. setrevImage (\<lambda>h. Abs_cufun (\<lambda>sb. Rep_cufun (h sb) sb))
-                              (setrevImage (spfStep_inj In Out)
-                                (setrevImage (\<lambda> h sbEl. spfRtIn\<cdot>(h sbEl)) (setrevFilter (spsStep_P In Out)\<cdot>(spsStep_h\<cdot>(Y i))))),
-                             Discr In, Discr Out))"
-  sorry
+qed    
+    (*
     
 definition setrevImage_inj_on::"('m \<Rightarrow> 'n) \<Rightarrow> 'm set rev \<rightarrow> 'n set rev" where
 "setrevImage_inj_on f \<equiv> \<Lambda> S.  if inj_on f (inv Rev S) then Rev (f ` (inv Rev S)) else Rev {}"
@@ -158,29 +149,18 @@ lemma rev_rule:"inv Rev x \<sqsubseteq> inv Rev y \<Longrightarrow> y \<sqsubset
   by (metis below_rev.simps rev_inv_rev) 
         
 lemma image_cont_rev_inj_on: "cont (\<lambda> S.  if inj_on f (inv Rev S) then Rev (f ` (inv Rev S)) else Rev UNIV)"
-  apply (rule contI2)
-  apply(simp add: image_mono_rev_inj_on)
-proof
-  fix Y::"nat \<Rightarrow> 'a set rev"
-  show "chain Y \<longrightarrow>
-       (if inj_on f (inv Rev (\<Squnion>i::nat. Y i)) then Rev (f ` inv Rev (\<Squnion>i::nat. Y i)) else Rev UNIV) \<sqsubseteq>
-       (\<Squnion>i::nat. if inj_on f (inv Rev (Y i)) then Rev (f ` inv Rev (Y i)) else Rev UNIV)"
-  proof(cases "inj_on f (inv Rev (\<Squnion>i::nat. Y i))")
-    case True
-    then show ?thesis sorry
-  next
-    case False
-    have "chain Y \<Longrightarrow> \<forall>i. (inv Rev (\<Squnion>i::nat. Y i)) \<subseteq> (inv Rev (Y i))"
-      by (meson is_ub_thelub revBelowNeqSubset)
-    then have "chain Y \<Longrightarrow> \<forall>i. \<not>(inj_on f (inv Rev (Y i)))"
-      using False inj_on_subset by blast
-    then show ?thesis
-      by (simp add: False)
-  qed
-qed
-  
+ *)
+
+lemma inj_on_adm_set_rev:"adm (\<lambda>S. inj_on f (inv Rev S))"
+  oops
+
+
+lemma setreImage_lub_inj_on: assumes"chain Y" and "\<forall>i. inj_on f (inv Rev (Y i))" shows "setrevImage f (\<Squnion>i. Y i) = (\<Squnion>i. setrevImage f (Y i))" (*main lemma for cont proof spsStep*)
+  sorry
+    
+
 (*Probably have to use setrevImage_inj_on instead of setrevImage*)
-lemma newSpsStep_cont:"cont (\<lambda> H. Abs_uspec ((setrevImage (\<lambda> h. Abs_cufun (\<lambda>sb. Rep_cufun (h sb)  sb)) 
+lemma newSpsStep_cont:assumes "finite In" shows "cont (\<lambda> H. Abs_uspec ((setrevImage (\<lambda> h. Abs_cufun (\<lambda>sb. Rep_cufun (h sb)  sb)) 
                                       (setrevImage (\<lambda> h. spfStep_inj In Out h) 
                                       (setrevImage (\<lambda> h sbEl. spfRtIn\<cdot>(h sbEl)) 
                                       (setrevFilter (spsStep_P In Out)\<cdot>(spsStep_h\<cdot>H))))),Discr  In, Discr Out))"
@@ -196,25 +176,75 @@ proof(rule Cont.contI2, simp add: newSpsStep_mono)
           (setrevImage (spfStep_inj In Out)
             (setrevImage (\<lambda>h sbEl. spfRtIn\<cdot>(h sbEl)) (setrevFilter (spsStep_P In Out)\<cdot>(spsStep_h\<cdot>(\<Squnion>i. Y i))))))
          (Discr In) (Discr Out)"
-    sorry
+    by (simp add: newSpsStep_uspecWell)
   have h2:"uspecWell (\<Squnion>i. setrevImage (\<lambda>h. Abs_cufun (\<lambda>sb. Rep_cufun (h sb) sb))
                               (setrevImage (spfStep_inj In Out)
                                 (setrevImage (\<lambda> h sbEl. spfRtIn\<cdot>(h sbEl)) (setrevFilter (spsStep_P In Out)\<cdot>(spsStep_h\<cdot>(Y i))))))
                              (Discr In) (Discr Out)"
     sorry
   (*Inj*)    (*inj has to be exchanged with inj_on and the Inputset*)
-  have inj1:"inj (\<lambda> h sbEl. spfRtIn\<cdot>(h sbEl))"
-    sorry
-  have inj2:"inj (spfStep_inj In Out)"
-    sorry
-  have inj3:"inj (\<lambda>h::'a stream\<^sup>\<Omega> \<Rightarrow> ('a stream\<^sup>\<Omega>) ufun. Abs_cufun (\<lambda>sb::'a stream\<^sup>\<Omega>. Rep_cufun (h sb) sb))"
-    sorry
+  have inj1:"\<forall>i. inj_on (\<lambda>h sbEl. spfRtIn\<cdot>(h sbEl)) (inv Rev (setrevFilter (spsStep_P In Out)\<cdot>(spsStep_h\<cdot>(Y i))))"
+  proof(auto)
+    fix i::nat
+    show "inj_on (\<lambda>h sbEl. spfRtIn\<cdot>(h sbEl)) (inv Rev (setrevFilter (spsStep_P In Out)\<cdot>(spsStep_h\<cdot>(Y i))))"
+    proof(rule inj_onI)
+      fix x y::"'a sbElem \<Rightarrow> ('a stream\<^sup>\<Omega>) ufun"
+      assume a3:"(\<lambda>sbEl. spfRtIn\<cdot>(x sbEl)) = (\<lambda>sbEl. spfRtIn\<cdot>(y sbEl))"
+      then show "x = y"
+        apply(subst fun_eq_iff, simp add: a3)
+        by (metis a3 spfRtIn_dom spfRt_inj_h spf_eq)
+    qed
+  qed
+  have inj2:"\<forall>i::nat. inj_on (spfStep_inj In Out)
+              (inv Rev (setrevImage (\<lambda>h sbEl. spfRtIn\<cdot>(h sbEl)) (setrevFilter (spsStep_P In Out)\<cdot>(spsStep_h\<cdot>(Y i)))))"
+  proof(auto)
+    fix i::nat
+    show "inj_on (spfStep_inj In Out)
+               (inv Rev (setrevImage (\<lambda>(h::'a sbElem \<Rightarrow> ('a stream\<^sup>\<Omega>) ufun) sbEl::'a sbElem. spfRtIn\<cdot>(h sbEl)) (setrevFilter (spsStep_P In Out)\<cdot>(spsStep_h\<cdot>(Y i)))))"
+    proof(rule inj_onI)
+      fix x y::"'a sbElem \<Rightarrow> ('a stream\<^sup>\<Omega>) ufun"
+      assume a1:"x \<in> inv Rev (setrevImage (\<lambda> h sbEl. spfRtIn\<cdot>(h sbEl)) (setrevFilter (spsStep_P In Out)\<cdot>(spsStep_h\<cdot>(Y i))))"
+      assume a2:"y \<in> inv Rev (setrevImage (\<lambda> h sbEl. spfRtIn\<cdot>(h sbEl)) (setrevFilter (spsStep_P In Out)\<cdot>(spsStep_h\<cdot>(Y i))))"
+      assume a3:" spfStep_inj In Out x = spfStep_inj In Out y"
+      have "\<forall>g\<in>(inv Rev (setrevImage (\<lambda> h sbEl. spfRtIn\<cdot>(h sbEl)) (setrevFilter (spsStep_P In Out)\<cdot>(spsStep_h\<cdot>(Y i))))). \<forall>m. ufDom\<cdot>(g m) = In \<and> ufRan\<cdot>(g m) = Out"
+        by(simp add: spsStep_P_def setrevImage_def setrevFilter_def inv_rev_rev)
+      then have "(inv Rev (setrevImage (\<lambda> h sbEl. spfRtIn\<cdot>(h sbEl)) (setrevFilter (spsStep_P In Out)\<cdot>(spsStep_h\<cdot>(Y i))))) \<subseteq> {h. \<forall>m. ufDom\<cdot>(h m) = In \<and> ufRan\<cdot>(h m) = Out}"
+        by auto
+      then have "inj_on (spfStep_inj In Out) (inv Rev (setrevImage (\<lambda> h sbEl. spfRtIn\<cdot>(h sbEl)) (setrevFilter (spsStep_P In Out)\<cdot>(spsStep_h\<cdot>(Y i)))))"
+        by (metis (mono_tags, lifting) assms inj_on_subset spfStep_inj_on)
+      then show "x = y"
+        by (metis a1 a2 a3 inj_on_eq_iff)
+    qed
+  qed
+  have inj3:"\<forall>i::nat. inj_on (\<lambda>h::'a stream\<^sup>\<Omega> \<Rightarrow> ('a stream\<^sup>\<Omega>) ufun. Abs_cufun (\<lambda>sb::'a stream\<^sup>\<Omega>. Rep_cufun (h sb) sb))
+              (inv Rev (setrevImage (spfStep_inj In Out)
+                         (setrevImage (\<lambda>(h::'a sbElem \<Rightarrow> ('a stream\<^sup>\<Omega>) ufun) sbEl::'a sbElem. spfRtIn\<cdot>(h sbEl)) (setrevFilter (spsStep_P In Out)\<cdot>(spsStep_h\<cdot>(Y i))))))"
+  proof(auto)
+    fix i::nat
+    show"inj_on (\<lambda>h::'a stream\<^sup>\<Omega> \<Rightarrow> ('a stream\<^sup>\<Omega>) ufun. Abs_cufun (\<lambda>sb::'a stream\<^sup>\<Omega>. Rep_cufun (h sb) sb))
+               (inv Rev (setrevImage (spfStep_inj In Out)
+                          (setrevImage (\<lambda>(h::'a sbElem \<Rightarrow> ('a stream\<^sup>\<Omega>) ufun) sbEl::'a sbElem. spfRtIn\<cdot>(h sbEl)) (setrevFilter (spsStep_P In Out)\<cdot>(spsStep_h\<cdot>(Y i))))))"
+    proof(rule inj_onI)
+      fix x y::"'a stream\<^sup>\<Omega> \<Rightarrow> ('a stream\<^sup>\<Omega>) ufun"
+      assume a1:"x \<in> inv Rev (setrevImage (spfStep_inj In Out)
+                      (setrevImage (\<lambda> h sbEl. spfRtIn\<cdot>(h sbEl)) (setrevFilter (spsStep_P In Out)\<cdot>(spsStep_h\<cdot>(Y i)))))"
+      assume a2:"y \<in> inv Rev (setrevImage (spfStep_inj In Out)
+                      (setrevImage (\<lambda> h sbEl. spfRtIn\<cdot>(h sbEl)) (setrevFilter (spsStep_P In Out)\<cdot>(spsStep_h\<cdot>(Y i)))))"
+      assume a3:"Abs_cufun (\<lambda>sb. Rep_cufun (x sb) sb) = Abs_cufun (\<lambda>sb. Rep_cufun (y sb) sb)" (*don't know*)
+      show "x = y"
+        sorry
+    qed
+  qed
   (*Chain*)
+  have chain0:"chain (\<lambda>i::nat. setrevFilter (spsStep_P In Out)\<cdot>(spsStep_h\<cdot>(Y i)))"
+    by (simp add: a1 cont_pref_eq1I po_class.chainE)
   have chain1:"chain (\<lambda>i::nat. setrevImage (\<lambda>(h::'a sbElem \<Rightarrow> ('a stream\<^sup>\<Omega>) ufun) sbEl::'a sbElem. spfRtIn\<cdot>(h sbEl)) (setrevFilter (spsStep_P In Out)\<cdot>(spsStep_h\<cdot>(Y i))))"
-    sorry
+    apply(rule ch2ch_monofun[of"setrevImage (\<lambda>(h::'a sbElem \<Rightarrow> ('a stream\<^sup>\<Omega>) ufun) sbEl::'a sbElem. spfRtIn\<cdot>(h sbEl))"])
+    by (simp_all add: image_mono_rev chain0)
   have chain2:"chain (\<lambda>i::nat. setrevImage (spfStep_inj In Out)
                      (setrevImage (\<lambda>(h::'a sbElem \<Rightarrow> ('a stream\<^sup>\<Omega>) ufun) sbEl::'a sbElem. spfRtIn\<cdot>(h sbEl)) (setrevFilter (spsStep_P In Out)\<cdot>(spsStep_h\<cdot>(Y i)))))"
-    sorry
+    apply(rule ch2ch_monofun[of "setrevImage (spfStep_inj In Out)"])
+    by (simp_all add: image_mono_rev chain1)
   have h3:"setrevImage (\<lambda>h::'a stream\<^sup>\<Omega> \<Rightarrow> ('a stream\<^sup>\<Omega>) ufun. Abs_cufun (\<lambda>sb::'a stream\<^sup>\<Omega>. Rep_cufun (h sb) sb))
      (setrevImage (spfStep_inj In Out)
        (setrevImage (\<lambda>(h::'a sbElem \<Rightarrow> ('a stream\<^sup>\<Omega>) ufun) sbEl::'a sbElem. spfRtIn\<cdot>(h sbEl)) (setrevFilter (spsStep_P In Out)\<cdot>(spsStep_h\<cdot>(\<Squnion>i. Y i))))) \<sqsubseteq>
@@ -222,14 +252,23 @@ proof(rule Cont.contI2, simp add: newSpsStep_mono)
                 (setrevImage (spfStep_inj In Out)
                   (setrevImage (\<lambda>(h::'a sbElem \<Rightarrow> ('a stream\<^sup>\<Omega>) ufun) sbEl::'a sbElem. spfRtIn\<cdot>(h sbEl)) (setrevFilter (spsStep_P In Out)\<cdot>(spsStep_h\<cdot>(Y i))))))"
     apply(simp add: a1 a2 contlub_cfun_arg contlub_cfun_fun)
-    apply(subst cont2contlubE[of "setrevImage (\<lambda>(h::'a sbElem \<Rightarrow> ('a stream\<^sup>\<Omega>) ufun) sbEl::'a sbElem. spfRtIn\<cdot>(h sbEl))"])
-    apply(simp add: image_cont_rev inj1 , simp add: a1)
-    apply(subst cont2contlubE [of "setrevImage (spfStep_inj In Out)"]) 
-    apply(simp add: inj2 image_cont_rev, simp add: chain1)
-    apply(subst cont2contlubE [of "setrevImage (\<lambda>h. Abs_cufun (\<lambda>sb. Rep_cufun (h sb) sb))"])
-    apply(simp add: image_cont_rev inj3, simp add: chain2)
+    apply(subst setreImage_lub_inj_on, simp add: chain0, simp add: inj1)
+    apply(subst setreImage_lub_inj_on, simp add: chain1, simp add: inj2)
+    apply(subst setreImage_lub_inj_on, simp add: chain2, simp add: inj3)
     by(simp)
-  show "Abs_uspec
+  have "(\<Squnion>i. Abs_uspec (setrevImage (\<lambda>h. Abs_cufun (\<lambda>sb. Rep_cufun (h sb) sb))
+                              (setrevImage (spfStep_inj In Out)
+                                (setrevImage (\<lambda> h sbEl. spfRtIn\<cdot>(h sbEl)) (setrevFilter (spsStep_P In Out)\<cdot>(spsStep_h\<cdot>(Y i))))),
+                             Discr In, Discr Out)) = (Abs_uspec (\<Squnion>i. setrevImage (\<lambda>h. Abs_cufun (\<lambda>sb. Rep_cufun (h sb) sb))
+                              (setrevImage (spfStep_inj In Out)
+                                (setrevImage (\<lambda> h sbEl. spfRtIn\<cdot>(h sbEl)) (setrevFilter (spsStep_P In Out)\<cdot>(spsStep_h\<cdot>(Y i))))),
+                             Discr In, Discr Out))"
+    apply(subst lub_uspec, simp add: a2)
+    apply(subst rep_abs_uspec)
+    apply (simp add: newSpsStep_uspecWell)
+    apply(subst lub_in, simp_all)
+    by (metis (mono_tags, lifting) a1 newSpsStep_mono_h po_class.chain_def)
+  then show "Abs_uspec
         (setrevImage (\<lambda>h. Abs_cufun (\<lambda>sb. Rep_cufun (h sb) sb))
           (setrevImage (spfStep_inj In Out)
             (setrevImage (\<lambda>h sbEl. spfRtIn\<cdot>(h sbEl)) (setrevFilter (spsStep_P In Out)\<cdot>(spsStep_h\<cdot>(\<Squnion>i. Y i))))),
