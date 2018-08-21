@@ -1326,7 +1326,7 @@ lemma tsynzip_tsynprojfst:
   apply (case_tac "ys = \<epsilon>", simp_all)
   by (metis (no_types, lifting) less_lnsuc trans_lnle tsynprojfst_sconc_null tsynzip_sconc_null)
 
-lemma tsynzip_tsynprojfst_tsynlen_tsynabs:
+lemma tsynzip_tsynprojfst_tsynabs:
   assumes "tsynLen\<cdot>as \<le> #bs"
   shows "tsynAbs\<cdot>(tsynProjFst\<cdot>(tsynZip\<cdot>as\<cdot>bs)) = tsynAbs\<cdot>as"
   using assms
