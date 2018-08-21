@@ -718,41 +718,125 @@ lemma receiverspf_ubdom:
   shows "ubDom\<cdot>(ReceiverSPF \<rightleftharpoons> sb) = {\<C> ''ar'', \<C> ''o''}"
   by (simp add: assms receiverspf_ufran spf_ubDom)
 
+
+(* help lemmata for step lemmata *)
+lemma createarbundle_ubgetch: "createArBundle m . \<C> ''ar'' = \<up> (\<M> (Bool m))"
+  by (simp add: ubgetch_insert createArBundle.rep_eq)
+
+lemma createobundle_ubgetch: "createOBundle m . \<C> ''o'' = \<up>(\<M> (Nat m))"
+  by (simp add: ubgetch_insert createOBundle.rep_eq)
+
+(* further lemmata to aviod different assumption *)
+lemma tsynrec_h_msg_t_fst: 
+  assumes "snd a = b"
+  shows "fst (tsynRec_h b (\<M> a)) = \<M> (fst a)"
+  by (metis assms prod.collapse prod.inject tsynRec_h.simps(1))
+
+lemma tsynrec_h_msg_t_snd: 
+  assumes "snd a = b"
+  shows "snd (tsynRec_h b (\<M> a)) = (\<not> b)"
+  by (metis assms eq_snd_iff tsynRec_h.simps(1))
+
+lemma tsynrec_h_msg_f_fst: 
+  assumes "snd a \<noteq> b"
+  shows "fst (tsynRec_h b (\<M> a)) = -"
+  by (metis Pair_eqD1 assms prod.collapse tsynRec_h.simps(1))
+
+lemma tsynrec_h_msg_f_snd: 
+  assumes "snd a \<noteq> b"
+  shows "snd (tsynRec_h b (\<M> a)) = b"
+  by (metis Pair_eqD2 assms prod.collapse tsynRec_h.simps(1))
+
+lemma tsynrec_sconc_msg_t_alt: 
+  assumes "snd a = b"
+  shows "tsynRec b\<cdot>(\<up>(Msg a) \<bullet> s) = \<up>(Msg (fst a)) \<bullet> (tsynRec (\<not>b)\<cdot>s)"
+  by(simp add: tsynRec_def tsynrec_h_msg_t_fst tsynrec_h_msg_t_snd assms)
+
+lemma tsynrec_sconc_msg_f_alt:
+  assumes "snd a \<noteq> b"
+  shows "tsynRec b\<cdot>(\<up>(Msg a) \<bullet> s) = \<up>(null) \<bullet> tsynRec b\<cdot>s"
+  by(simp add: tsynRec_def tsynrec_h_msg_f_fst tsynrec_h_msg_f_snd assms)
+
 (* Step lemmata for RecSPF *)
 lemma recspf_ubconc_null: 
   assumes "ubDom\<cdot>sb = {\<C> ''dr''}"
   shows "RecSPF b \<rightleftharpoons> ubConc (tsynbNull (\<C> ''dr''))\<cdot>sb 
            = ubConc (tsynbNull (\<C> ''ar'') \<uplus> (tsynbNull (\<C> ''o'')))\<cdot>(RecSPF b \<rightleftharpoons> sb)"
-  sorry
+  apply (rule ub_eq)
+  apply (simp_all add: recspf_insert tsynbNull.rep_eq tsynbrec_ubdom insert_commute  assms) 
+  apply auto 
+  by (simp_all add: ubclUnion_ubundle_def tsynbrec_ubdom usclConc_stream_def assms
+                    tsynbrec_getch_ar tsynbrec_getch_o tsynrec_sconc_null abp2natbool_def 
+                    tsynmap_insert tsynprojsnd_sconc_null bool2abp_def nat2abp_def)
+
+lemma recspf_true_ubconc_true_alt : 
+  assumes "ubDom\<cdot>sb = {\<C> ''dr''}"
+    and " a = (m, True)" (* change assumption *)
+  shows "RecSPF True \<rightleftharpoons> ubConc (createBundle (Msg (Pair_nat_bool a)) (\<C> ''dr''))\<cdot>sb 
+           = ubConc (createArBundle (snd a) \<uplus> createOBundle (fst a))\<cdot>(RecSPF False \<rightleftharpoons> sb)"
+  apply (rule ub_eq)
+  apply(simp_all add: recspf_insert tsynbrec_ubdom assms  ubclUnion_ubundle_def createarbundle_ubdom 
+                      createobundle_ubdom insert_commute)
+  apply auto
+  by (simp_all add: tsynbrec_getch_o tsynbrec_getch_ar usclConc_stream_def assms abp2natbool_def 
+                    tsynmap_sconc_msg tsynRec_def nat2abp_def bool2abp_def tsynprojsnd_sconc_msg 
+                    createobundle_ubdom createarbundle_ubgetch createobundle_ubgetch)
 
 lemma recspf_true_ubconc_true: 
   assumes "ubDom\<cdot>sb = {\<C> ''dr''}"
-    and "(snd a) = True"
+    and "snd a = True"
   shows "RecSPF True \<rightleftharpoons> ubConc (createBundle (Msg (Pair_nat_bool a)) (\<C> ''dr''))\<cdot>sb 
            = ubConc (createArBundle (snd a) \<uplus> createOBundle (fst a))\<cdot>(RecSPF False \<rightleftharpoons> sb)"
-  sorry
+  apply (rule ub_eq)
+  apply(simp_all add: recspf_insert tsynbrec_ubdom assms  ubclUnion_ubundle_def createarbundle_ubdom 
+                      createobundle_ubdom insert_commute)
+  apply auto
+  by (simp_all add: tsynbrec_getch_o tsynbrec_getch_ar assms usclConc_stream_def abp2natbool_def 
+                    tsynmap_sconc_msg pair_invpair_inv tsynrec_sconc_msg_t_alt nat2abp_def 
+                    bool2abp_def tsynProjSnd_def createobundle_ubdom createobundle_ubgetch 
+                    createarbundle_ubgetch)
 
 lemma recspf_true_ubconc_false: 
   assumes "ubDom\<cdot>sb = {\<C> ''dr''}"
-    and "(snd a) = False"
+    and "snd a = False"
   shows "RecSPF True \<rightleftharpoons> ubConc (createBundle (Msg (Pair_nat_bool a)) (\<C> ''dr''))\<cdot>sb 
            = ubConc (createArBundle (snd a) \<uplus> tsynbNull (\<C> ''o''))\<cdot>(RecSPF True \<rightleftharpoons> sb)"
-  sorry
+  apply (rule ub_eq)
+   apply (simp_all add: recspf_insert tsynbrec_ubdom assms  ubclUnion_ubundle_def 
+                        createarbundle_ubdom insert_commute)
+  apply auto
+  by (simp_all add: tsynbrec_getch_o tsynbrec_getch_ar usclConc_stream_def assms abp2natbool_def 
+                    tsynProjSnd_def tsynmap_sconc_msg pair_invpair_inv tsynrec_sconc_msg_f_alt  
+                    nat2abp_def bool2abp_def tsynmap_sconc_null  createarbundle_ubgetch)
 
 lemma recspf_false_ubconc_true: 
   assumes "ubDom\<cdot>sb = {\<C> ''dr''}"
     and "(snd a) = True"
   shows "RecSPF False \<rightleftharpoons> ubConc (createBundle (Msg (Pair_nat_bool a)) (\<C> ''dr''))\<cdot>sb 
            = ubConc (createArBundle (snd a) \<uplus> (tsynbNull (\<C> ''o'')))\<cdot>(RecSPF False \<rightleftharpoons> sb)"
-  sorry
-
+  apply (rule ub_eq)
+  apply (simp_all add: recspf_insert tsynbrec_ubdom assms ubclUnion_ubundle_def createarbundle_ubdom 
+                       insert_commute)
+  apply auto
+  by(simp_all add: tsynbrec_getch_o tsynbrec_getch_ar usclConc_stream_def assms
+                   abp2natbool_def tsynProjSnd_def tsynmap_sconc_msg pair_invpair_inv 
+                   tsynrec_sconc_msg_f_alt nat2abp_def bool2abp_def tsynmap_sconc_null 
+                   createarbundle_ubgetch)
+                                      
 lemma recspf_false_ubconc_false: 
   assumes "ubDom\<cdot>sb = {\<C> ''dr''}"
     and "(snd a) = False"
   shows "RecSPF False \<rightleftharpoons> ubConc (createBundle (Msg (Pair_nat_bool a)) (\<C> ''dr''))\<cdot>sb 
            = ubConc (createArBundle (snd a) \<uplus> createOBundle (fst a))\<cdot>(RecSPF True \<rightleftharpoons> sb)"
-  sorry
-
+  apply (rule ub_eq)
+  apply (simp_all add: recspf_insert tsynbrec_ubdom assms ubclUnion_ubundle_def createarbundle_ubdom 
+                       createobundle_ubdom insert_commute)
+  apply auto
+  by (simp_all add: tsynbrec_getch_o tsynbrec_getch_ar assms usclConc_stream_def abp2natbool_def 
+                    tsynmap_sconc_msg tsynProjSnd_def pair_invpair_inv tsynrec_sconc_msg_t_alt  
+                    createobundle_ubdom createobundle_ubgetch createarbundle_ubgetch nat2abp_def 
+                    bool2abp_def)
+  
 (* the assumption is different here *)
 lemma eq_conc_rf_false:
   assumes "ubDom\<cdot>sb = {\<C> ''dr''}"
