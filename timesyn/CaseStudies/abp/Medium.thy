@@ -210,9 +210,9 @@ lemma split_leading_null:
             fix Y :: "nat \<Rightarrow> 'a tsyn stream"
             assume chain_Y: "chain Y" 
             assume adm_hyp: "\<forall> i x. #(stakewhile (\<lambda>x. x = -)\<cdot>(Y i)) = Fin x
-                               \<longrightarrow> x\<star>\<up>- = stakewhile (\<lambda>x::'a tsyn. x = -)\<cdot>(Y i)"
+                                      \<longrightarrow> x\<star>\<up>- = stakewhile (\<lambda>x::'a tsyn. x = -)\<cdot>(Y i)"
             thus "\<forall>x. #(stakewhile (\<lambda>x. x = -)\<cdot>(\<Squnion>i. Y i)) = Fin x 
-                    \<longrightarrow> x\<star>\<up>- = stakewhile (\<lambda>x. x = -)\<cdot>(\<Squnion>i. Y i)"
+                        \<longrightarrow> x\<star>\<up>- = stakewhile (\<lambda>x. x = -)\<cdot>(\<Squnion>i. Y i)"
             by (metis (no_types, lifting) ch2ch_Rep_cfunR chain_Y contlub_cfun_arg finChainapprox)
           qed
       next
@@ -247,7 +247,7 @@ lemma tsynmed_tsynlen_ora:
       by simp
   next
     case (3 a s)
-    have tsynlen_nzero: "tsynLen\<cdot>msg > 0"
+    have tsynlen_nzero: "0 < tsynLen\<cdot>msg"
       using Zero_lnless_infty "3.prems" by auto
     then obtain n where msg_def: "msg = (sntimes n (\<up>null)) \<bullet> sdropwhile (\<lambda>x. x = null)\<cdot>msg"
       using split_leading_null by blast
@@ -270,11 +270,12 @@ lemma tsynmed_tsynlen_ora:
         then show ?thesis
           proof (cases a)
             case True
-            have sdropwhile_true: "#\<^sub>-(tsynMed\<cdot>msg\<cdot>(\<up>True \<bullet> s)) 
-              = #\<^sub>-(tsynMed\<cdot>(sdropwhile (\<lambda>x. x = null)\<cdot>msg)\<cdot>(\<up>True \<bullet> s))"
+            have sdropwhile_true: 
+              "#\<^sub>-(tsynMed\<cdot>msg\<cdot>(\<up>True \<bullet> s)) = #\<^sub>-(tsynMed\<cdot>(sdropwhile (\<lambda>x. x = null)\<cdot>msg)\<cdot>(\<up>True \<bullet> s))"
               using True thesis_msg tsynmed_consume_tick by auto
-            then have snth_tick: "#\<^sub>-(tsynMed\<cdot>(sdropwhile (\<lambda>x. x = -)\<cdot>msg)\<cdot>(\<up>True \<bullet> s)) =
-              #\<^sub>-(tsynMed\<cdot>(n\<star>\<up>- \<bullet> sdropwhile (\<lambda>x. x = null)\<cdot>msg)\<cdot>(\<up>True \<bullet> s))"
+            then have snth_tick: 
+              "#\<^sub>-(tsynMed\<cdot>(sdropwhile (\<lambda>x. x = -)\<cdot>msg)\<cdot>(\<up>True \<bullet> s)) 
+                 = #\<^sub>-(tsynMed\<cdot>(n\<star>\<up>- \<bullet> sdropwhile (\<lambda>x. x = null)\<cdot>msg)\<cdot>(\<up>True \<bullet> s))"
               using msg_def by auto
             then have tsynmed_snth_tick: 
               "#\<^sub>-(tsynMed\<cdot>(n\<star>\<up>- \<bullet> sdropwhile (\<lambda>x. x = null)\<cdot>msg)\<cdot>(\<up>True \<bullet> s)) = lnsuc\<cdot>(#({True} \<ominus> s))"
@@ -284,8 +285,8 @@ lemma tsynmed_tsynlen_ora:
               using True msg_def by auto
           next
             case False
-            have sdropwhile_false: "#\<^sub>-(tsynMed\<cdot>msg\<cdot>(\<up>False \<bullet> s)) 
-              = #\<^sub>-(tsynMed\<cdot>(sdropwhile (\<lambda>x. x = -)\<cdot>msg)\<cdot>(\<up>False \<bullet> s))"
+            have sdropwhile_false: 
+              "#\<^sub>-(tsynMed\<cdot>msg\<cdot>(\<up>False \<bullet> s)) = #\<^sub>-(tsynMed\<cdot>(sdropwhile (\<lambda>x. x = -)\<cdot>msg)\<cdot>(\<up>False \<bullet> s))"
               using False thesis_msg tsynmed_consume_tick by auto
             have snth_tick: "#\<^sub>-(tsynMed\<cdot>(sdropwhile (\<lambda>x. x = -)\<cdot>msg)\<cdot>(\<up>False \<bullet> s)) =
               #\<^sub>-(tsynMed\<cdot>(n\<star>\<up>- \<bullet> sdropwhile (\<lambda>x. x = -)\<cdot>msg)\<cdot>(\<up>False \<bullet> s))"
