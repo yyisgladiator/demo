@@ -823,19 +823,20 @@ lemma recspf_false_ubconc_true:
                    tsynrec_sconc_msg_f_alt nat2abp_def bool2abp_def tsynmap_sconc_null 
                    createarbundle_ubgetch)
                                       
-lemma recspf_false_ubconc_false: 
+lemma recspf_false_ubconc_false:
   assumes "ubDom\<cdot>sb = {\<C> ''dr''}"
     and "(snd a) = False"
   shows "RecSPF False \<rightleftharpoons> ubConc (createBundle (Msg (Pair_nat_bool a)) (\<C> ''dr''))\<cdot>sb 
            = ubConc (createArBundle (snd a) \<uplus> createOBundle (fst a))\<cdot>(RecSPF True \<rightleftharpoons> sb)"
   apply (rule ub_eq)
-  apply (simp_all add: recspf_insert tsynbrec_ubdom assms ubclUnion_ubundle_def createarbundle_ubdom 
-                       createobundle_ubdom insert_commute)
-  apply auto
-  by (simp_all add: tsynbrec_getch_o tsynbrec_getch_ar assms usclConc_stream_def abp2natbool_def 
-                    tsynmap_sconc_msg tsynProjSnd_def pair_invpair_inv tsynrec_sconc_msg_t_alt  
-                    createobundle_ubdom createobundle_ubgetch createarbundle_ubgetch nat2abp_def 
-                    bool2abp_def)
+  apply (simp add: assms recspf_insert tsynbrec_ubdom ubclUnion_ubundle_def createarbundle_ubdom 
+                   createobundle_ubdom insert_commute)
+  apply (rename_tac x)
+  apply (case_tac "x = \<C> ''o''")
+  by (simp add: assms recspf_insert tsynbrec_ubdom ubclUnion_ubundle_def createarbundle_ubdom 
+      createobundle_ubdom insert_commute tsynbrec_getch_o tsynbrec_getch_ar usclConc_stream_def 
+      createobundle_ubgetch createarbundle_ubgetch nat2abp_def bool2abp_def abp2natbool_def 
+      tsynmap_sconc_msg pair_invpair_inv tsynrec_sconc_msg_t_alt tsynprojsnd_insert)+
   
 (* the assumption is different here *)
 lemma eq_conc_rf_false:
