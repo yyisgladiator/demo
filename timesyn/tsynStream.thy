@@ -1349,10 +1349,41 @@ lemma tsynzip_tsynprojfst_tsynabs:
   apply (simp add: tsynlen_insert)
   by (simp add: tsynabs_sconc_null tsynlen_sconc_null tsynprojfst_tsynabs tsynzip_tsynabs)
 
+lemma szip_sprojsnd:
+  assumes "#xs \<ge> #ys"
+  shows "sprojsnd\<cdot>(szip\<cdot>xs\<cdot>ys) = ys"
+  using assms
+  apply(induction ys arbitrary: xs rule: ind, simp_all)
+  apply(rule adm_all)
+  apply(rule adm_imp, simp_all)
+  apply(rule admI)
+  apply (metis dual_order.antisym inf_chainl4 inf_ub l42)
+proof-
+  fix y :: 'a
+  fix ys :: "'a stream"
+  fix xs :: "'b stream"
+  assume ind_hyp: "\<And>xs::'b stream. #ys \<le> #xs \<Longrightarrow> sprojsnd\<cdot>(szip\<cdot>xs\<cdot>ys) = ys" 
+    and lnsuc_ys_xs_leq: "lnsuc\<cdot>(#ys) \<le> #xs"
+  then obtain x xss where xs_below_def: "xs = \<up>x \<bullet> xss"
+    by (metis eq_bottom_iff lnat.con_rews lnle_def lnzero_def strict_slen surj_scons)
+  hence "#ys \<le> #xss" 
+    using lnsuc_ys_xs_leq by simp
+  hence "sprojsnd\<cdot>(szip\<cdot>xss\<cdot>ys) = ys" 
+    using ind_hyp by blast
+  thus "sprojsnd\<cdot>(szip\<cdot>xs\<cdot>(\<up>y \<bullet> ys)) = \<up>y \<bullet> ys" 
+    by (simp add: xs_below_def)
+qed
+
 lemma tsynzip_tsynprojsnd_tsynabs:
-  assumes "tsynLen\<cdot>as \<ge> #bs" 
+  assumes "tsynLen\<cdot>as \<ge> #bs"
   shows "tsynAbs\<cdot>(tsynProjSnd\<cdot>(tsynZip\<cdot>as\<cdot>bs)) = bs"
-  oops                         
+  using assms
+  apply(induction bs arbitrary: as rule: ind, simp_all)
+  apply(rule adm_all)
+  apply(rule adm_imp, simp_all)
+  apply(rule admI)
+  apply (metis dual_order.antisym inf_chainl4 inf_ub l42)
+  by (simp add: tsynprojsnd_tsynabs tsynzip_tsynabs szip_sprojsnd tsynlen_insert)
 
 text {* @{term tsynZip} test on finite streams. *}
 lemma tsynzip_test_finstream: 
