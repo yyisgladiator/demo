@@ -501,7 +501,7 @@ lemma ufdom_contlub [simp]: assumes "chain Y"
   shows "ubclDom\<cdot>(SOME b. b \<in> dom (Rep_cufun (\<Squnion>i. Y i))) 
          \<sqsubseteq> (\<Squnion>i. ubclDom\<cdot>(SOME b. b \<in> dom (Rep_cufun (Y i))))"
 proof -
-  have "\<And>f n. \<not> chain f \<or> dom (Rep_cufun (f n::('in, 'out) ufun)) = dom (Rep_cufun (Lub f))"
+  have "\<And>f n. \<not> chain f \<or> dom (Rep_cufun (f n::('a, 'b) ufun)) = dom (Rep_cufun (Lub f))"
     by (meson below_cfun_def below_ufun_def is_ub_thelub part_dom_eq)
   then show ?thesis
     using assms by force
