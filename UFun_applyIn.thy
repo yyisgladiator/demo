@@ -17,17 +17,17 @@ section\<open>Definitions\<close>
 (****************************************************)
 
   
-definition ufApplyOut :: "('m \<rightarrow> 'm ) \<Rightarrow> ('m ufun) \<rightarrow> ('m ufun)" where
+definition ufApplyOut :: "('m \<rightarrow> 'm ) \<Rightarrow> ('m,'m) ufun \<rightarrow> ('m,'m) ufun" where
 "ufApplyOut k \<equiv> (\<Lambda> g. Abs_cufun (\<lambda>x. (ubclDom\<cdot>x = ufDom\<cdot>g) \<leadsto> k\<cdot>(g \<rightleftharpoons>x)))"
 
-definition ufApplyIn :: "('m \<rightarrow> 'm ) \<Rightarrow> ('m ufun) \<rightarrow> ('m ufun)" where 
+definition ufApplyIn :: "('m \<rightarrow> 'm ) \<Rightarrow> ('m,'m) ufun \<rightarrow> ('m,'m) ufun" where 
 "ufApplyIn k \<equiv> \<Lambda> g. Abs_cufun (\<lambda>x. (Rep_cufun g)(k\<cdot>x))" 
 
-definition ufApplyIn2 :: "('m \<rightarrow> 'm ) \<Rightarrow> ('m ufun) \<rightarrow> ('m ufun)" where
+definition ufApplyIn2 :: "('m \<rightarrow> 'm ) \<Rightarrow> ('m,'m) ufun \<rightarrow> ('m,'m) ufun" where
 "ufApplyIn2 k \<equiv> (\<Lambda> g. Abs_cufun (\<lambda>x. (ubclDom\<cdot>(k\<cdot>x) = ufDom\<cdot>g) \<leadsto> (g \<rightleftharpoons>(k\<cdot>x))))"
 
 
-subsection \<open>some rules\<close>
+subsection \<open>some rules\<close>                                    
   
   
 (* unfolding rule  *)
@@ -70,7 +70,7 @@ lemma ufapplyout_uf_dom [simp]: assumes "\<And>b. ubclDom\<cdot>b = ufDom\<cdot>
   by (simp add: assms ufun_ufdom_abs)
 
 (* ran of ufapplyout is the same as the ubclDom of the result after applying k and g on input b *)
-lemma ufapplyout_uf_ran [simp]: assumes "\<And>b. ubclDom\<cdot>b = ufDom\<cdot>(g::'m ufun) \<Longrightarrow> ubclDom\<cdot>(k\<cdot>(g \<rightleftharpoons> b)) = cs"
+lemma ufapplyout_uf_ran [simp]: assumes "\<And>b. ubclDom\<cdot>b = ufDom\<cdot>(g::('m,'m) ufun) \<Longrightarrow> ubclDom\<cdot>(k\<cdot>(g \<rightleftharpoons> b)) = cs"
   shows "ufRan\<cdot>(Abs_cufun (\<lambda> x. (ubclDom\<cdot>x = ufDom\<cdot>g) \<leadsto> k\<cdot>(g \<rightleftharpoons>x))) = cs" (is "ufRan\<cdot>?F = ?cs")
 proof -
   obtain x::'m  where x_def: "ubclDom\<cdot>x = ufDom\<cdot>g" 
@@ -339,7 +339,7 @@ subsection \<open>ufApplyOut Lemmas\<close>
   
 (* insert rules *)
 lemma ufapplyout_insert: assumes "\<And>b. ubclDom\<cdot>(k\<cdot>b) = ubclDom\<cdot>b" 
-  shows "ufApplyOut k\<cdot>(f::'m ufun) =  Abs_cufun (\<lambda>x. (ubclDom\<cdot>x = ufDom\<cdot>f) \<leadsto> k\<cdot>(f \<rightleftharpoons>x))"
+  shows "ufApplyOut k\<cdot>(f::('m,'m) ufun) =  Abs_cufun (\<lambda>x. (ubclDom\<cdot>x = ufDom\<cdot>f) \<leadsto> k\<cdot>(f \<rightleftharpoons>x))"
   by (simp add: ufApplyOut_def assms) 
 
 (* dom of ufApplyOut is the same as the dom of input ufun  *)
@@ -554,7 +554,7 @@ proof -
 
   have f52: "\<And> x. (\<Squnion>i. (Y i) \<rightleftharpoons> (k\<cdot>x)) = ((\<Squnion>i. Y i) \<rightleftharpoons> k\<cdot>x)"
   proof -
-    fix x :: "'a"
+    fix x :: "'c"
     have f0: "chain (\<lambda>n. Rep_ufun (Y n))"
       by (simp add: assms(1))
     then have f1: "ufWell (\<Squnion>n. Rep_ufun (Y n))"
@@ -686,19 +686,19 @@ lemma ufapplyin_cont_h: assumes "\<And>b. ubclDom\<cdot>(k\<cdot>b) = ubclDom\<c
 proof - 
   have f1: "monofun(\<lambda> g. Abs_cufun (\<lambda>x::'a. Rep_cufun g (k\<cdot>x)))"
   proof(rule monofunI)
-    fix x :: "'a ufun" 
-    fix y::"'a ufun" 
+    fix x :: "('b,'d) ufun" 
+    fix y::"('b,'d) ufun" 
     assume "x \<sqsubseteq> y"
     show " Abs_cufun (\<lambda>xa. Rep_cufun x (k\<cdot>xa)) \<sqsubseteq> Abs_cufun (\<lambda>x. Rep_cufun y (k\<cdot>x))"
       apply(simp add: below_ufun_def)
       apply(subst rep_abs_cufun2, simp add: ufapplyin_well_h assms)
       apply(subst rep_abs_cufun2, simp add: ufapplyin_well_h assms) 
       using f20
-      by (metis \<open>(x::'a ufun) \<sqsubseteq> (y::'a ufun)\<close> below_ufun_def cfun_below_iff monofun_LAM)
+      by (metis \<open>(x::('b,'d) ufun) \<sqsubseteq> (y::('b,'d) ufun)\<close> below_ufun_def cfun_below_iff monofun_LAM)
   qed
   have f2: "\<And>Y. chain Y \<Longrightarrow> Abs_cufun (\<lambda>x::'a. Rep_cufun (\<Squnion>i::nat. Y i) (k\<cdot>x)) \<sqsubseteq> (\<Squnion>i::nat. Abs_cufun (\<lambda>x::'a. Rep_cufun (Y i) (k\<cdot>x)))"
   proof - 
-    fix Y ::"nat \<Rightarrow> 'a ufun"
+    fix Y ::"nat \<Rightarrow> ('b,'d) ufun"
     assume f200: "chain Y"
     have f2000: "\<And>i. cont (\<lambda>x::'a. Rep_cufun (Y i) (k\<cdot>x))"
       by simp
