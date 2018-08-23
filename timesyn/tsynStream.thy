@@ -1309,6 +1309,8 @@ lemma tsynzip_tsynabs: "tsynAbs\<cdot>(tsynZip\<cdot>as\<cdot>bs) = szip\<cdot>(
   apply (case_tac "y = \<epsilon>", simp_all)
   by (simp add: tsynzip_sconc_null tsynabs_sconc_null)
 
+text {* @{term tsynProjFst} of @{term tsynZip} equals the first stream, if the length of it is
+        less than or equal to the length of the second stream. *}
 lemma tsynzip_tsynprojfst: 
   assumes "#as \<le> #bs"
   shows "tsynProjFst\<cdot>(tsynZip\<cdot>as\<cdot>bs) = as"
@@ -1326,6 +1328,9 @@ lemma tsynzip_tsynprojfst:
   apply (case_tac "ys = \<epsilon>", simp_all)
   by (metis (no_types, lifting) less_lnsuc trans_lnle tsynprojfst_sconc_null tsynzip_sconc_null)
 
+text {* Abstraction of @{term tsynProjFst} of @{term tsynZip} equals the abstraction of the first 
+        stream if the number of messages of the first stream is less than or equal to the length of 
+        the second stream. *}
 lemma tsynzip_tsynprojfst_tsynabs:
   assumes "tsynLen\<cdot>as \<le> #bs"
   shows "tsynAbs\<cdot>(tsynProjFst\<cdot>(tsynZip\<cdot>as\<cdot>bs)) = tsynAbs\<cdot>as"
@@ -1343,6 +1348,8 @@ lemma tsynzip_tsynprojfst_tsynabs:
   apply (simp add: tsynlen_insert)
   by (simp add: tsynabs_sconc_null tsynlen_sconc_null tsynprojfst_tsynabs tsynzip_tsynabs)
 
+text {* @{term sprojsnd} of @{term szip} equals the second stream if its length is less or equal
+        the length of the first stream. *}
 lemma szip_sprojsnd:
   assumes "#ys \<le> #xs"
   shows "sprojsnd\<cdot>(szip\<cdot>xs\<cdot>ys) = ys"
@@ -1354,6 +1361,8 @@ lemma szip_sprojsnd:
   apply (rename_tac a as bs)
   by (rule_tac x = bs in scases, simp_all)
 
+text {* Abstraction of @{term tsynProjSnd} of @{term tsynZip} equals the second stream if its length
+        is less than or equal to the number of messages in the second stream. *} 
 lemma tsynzip_tsynprojsnd_tsynabs:
   assumes "#bs \<le> tsynLen\<cdot>as"
   shows "tsynAbs\<cdot>(tsynProjSnd\<cdot>(tsynZip\<cdot>as\<cdot>bs)) = bs"
