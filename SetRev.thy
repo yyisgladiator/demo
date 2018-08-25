@@ -1,5 +1,5 @@
 theory SetRev
-  imports "inc/SetPcpo"
+  imports "inc/SetPcpo" "inc/LNat"
 begin
 
 default_sort type
@@ -607,6 +607,20 @@ obtain aa :: "('a \<Rightarrow> bool) \<Rightarrow> 'a set rev \<Rightarrow> 'a"
   then show ?thesis
     using f3 f2 f1 by (metis (no_types))
 qed
-  
+
+
+subsection \<open>size\<close>
+
+inductive setSize_helper :: "'a set \<Rightarrow> lnat \<Rightarrow> bool"
+  where
+    "setSize_helper {} (Fin 0)"
+  |  "setSize_helper A (Fin X) \<and> a \<notin> A \<Longrightarrow> setSize_helper (insert a A) (Fin (Suc X))"
+
+definition setSize :: "'a set \<Rightarrow> lnat \<Rightarrow> bool"
+  where
+  "setSize X Y \<equiv> if (finite X) then (setSize_helper X Y) else (Y = \<infinity>)"
+
+definition setrevSize :: "'a set rev \<Rightarrow> lnat \<Rightarrow> bool" where
+ "setrevSize X Y \<equiv> setSize (inv Rev X) Y"
 
 end
