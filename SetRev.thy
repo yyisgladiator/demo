@@ -1,5 +1,5 @@
 theory SetRev
-  imports "inc/SetPcpo" "inc/LNat"
+  imports "inc/SetPcpo"
 begin
 
 default_sort type
@@ -281,7 +281,7 @@ lemma setrevUnion_mono[simp]: "\<And>A. monofun (\<lambda>x. Rev((inv Rev A) \<u
   by (metis SetPcpo.less_set_def Un_mono below_rev.simps order_refl revBelowNeqSubset)
 
 lemma setrevUnion_cont1[simp]: "cont (\<lambda>x. Rev((inv Rev A) \<union> (inv Rev x)))"
-  apply(rule contI2)
+  apply(rule Cont.contI2)
   apply simp
   apply(simp add: setrevUnion_chain)
   proof -
@@ -340,7 +340,7 @@ lemma image_mono_rev:  "monofun (setrevImage f)"
 
 lemma image_cont_rev: assumes "inj f" 
   shows "cont (setrevImage f)"
-  apply (rule contI2)
+  apply (rule Cont.contI2)
    apply (simp add: image_mono_rev)
   unfolding setrevImage_def
 proof -
@@ -609,18 +609,7 @@ obtain aa :: "('a \<Rightarrow> bool) \<Rightarrow> 'a set rev \<Rightarrow> 'a"
 qed
 
 
-subsection \<open>size\<close>
-
-inductive setSize_helper :: "'a set \<Rightarrow> lnat \<Rightarrow> bool"
-  where
-    "setSize_helper {} (Fin 0)"
-  |  "setSize_helper A (Fin X) \<and> a \<notin> A \<Longrightarrow> setSize_helper (insert a A) (Fin (Suc X))"
-
-definition setSize :: "'a set \<Rightarrow> lnat \<Rightarrow> bool"
-  where
-  "setSize X Y \<equiv> if (finite X) then (setSize_helper X Y) else (Y = \<infinity>)"
-
-definition setrevSize :: "'a set rev \<Rightarrow> lnat \<Rightarrow> bool" where
- "setrevSize X Y \<equiv> setSize (inv Rev X) Y"
+definition setrevSize :: "'a set rev \<Rightarrow> lnat" where
+ "setrevSize X = setSize (inv Rev X)"
 
 end
