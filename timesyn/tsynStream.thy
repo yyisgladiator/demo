@@ -275,6 +275,19 @@ lemma sdom_slen: assumes "#s = Fin k" shows "card (sdom\<cdot>s) \<le> k"
       by (simp add: sdom_def_assm)
   qed
 
+text {* @{term sprojsnd} of @{term szip} equals the second stream if its length is less or equal
+        the length of the first stream. *}
+lemma szip_sprojsnd:
+  assumes "#ys \<le> #xs"
+  shows "sprojsnd\<cdot>(szip\<cdot>xs\<cdot>ys) = ys"
+  using assms
+  apply (induction ys arbitrary: xs rule: ind, simp_all)
+  apply (rule adm_all, rule adm_imp, simp_all)
+  apply (rule admI)
+  apply (metis dual_order.antisym inf_chainl4 inf_ub l42)
+  apply (rename_tac a as bs)
+  by (rule_tac x = bs in scases, simp_all)
+
 (* ----------------------------------------------------------------------- *)
   subsection {* tsynDom *}
 (* ----------------------------------------------------------------------- *)
@@ -1346,19 +1359,6 @@ lemma tsynzip_tsynprojfst_tsynabs:
   apply (case_tac "ys = \<epsilon>")
   apply (simp add: tsynlen_insert)
   by (simp add: tsynabs_sconc_null tsynlen_sconc_null tsynprojfst_tsynabs tsynzip_tsynabs)
-
-text {* @{term sprojsnd} of @{term szip} equals the second stream if its length is less or equal
-        the length of the first stream. *}
-lemma szip_sprojsnd:
-  assumes "#ys \<le> #xs"
-  shows "sprojsnd\<cdot>(szip\<cdot>xs\<cdot>ys) = ys"
-  using assms
-  apply (induction ys arbitrary: xs rule: ind, simp_all)
-  apply (rule adm_all, rule adm_imp, simp_all)
-  apply (rule admI)
-  apply (metis dual_order.antisym inf_chainl4 inf_ub l42)
-  apply (rename_tac a as bs)
-  by (rule_tac x = bs in scases, simp_all)
 
 text {* Abstraction of @{term tsynProjSnd} of @{term tsynZip} equals the second stream if its length
         is less than or equal to the number of messages in the second stream. *} 
