@@ -361,7 +361,7 @@ lemma tsyndom_slen: assumes "#s = Fin k" shows "card (tsynDom\<cdot>s) \<le> k"
       using inj_on_mset card_inj_on_le image_subset_sdom by blast 
     then have "card {u. \<M> u \<in> sdom\<cdot>s} \<le> k"
       using sdom_slen assms le_trans by blast
-    then show ?thesis 
+    then show ?thesis
       by (simp add: tsyndom_insert)
   qed
 
@@ -499,6 +499,19 @@ lemma tsynlen_singleton_msg: "tsynLen\<cdot>(\<up>(Msg a)) = Fin 1"
 text {* @{term tsynLen} Empty slots have length zero. *}
 lemma tsynlen_singleton_null: "tsynLen\<cdot>(\<up>null) = 0"
   by (simp add: tsynabs_singleton_null tsynlen_insert)
+
+text {* If the last element of a tsyn stream is a message, tsynLen is greater than 0 *}
+lemma tsynlen_sfoot_msg_geq:
+  assumes "#s < \<infinity>"
+    and "s \<noteq> \<epsilon>"
+    and "sfoot s = (\<M> m)" 
+  shows "Fin 1 \<le> tsynLen\<cdot>s"
+  using assms
+  apply (induction s arbitrary: m rule: tsyn_finind, simp_all)
+  apply (metis Fin_02bot One_nat_def gr_0 less2lnleD lnzero_def tsynlen_sconc_msg)
+  by (metis Fin_02bot Fin_Suc Fin_neq_inf inf_ub less_le lnzero_def only_empty_has_length_0 
+      sconc_snd_empty sfoot_conc sfoot_one slen_sconc_snd_inf slen_scons strict_slen 
+      tsyn.distinct(1) tsynlen_sconc_null)
 
 text {* @{term tsynLen} test for finite tsyn stream. *}
 lemma tsynlen_test_finstream: 
@@ -1197,22 +1210,8 @@ lemma tsynzip_sconc_null:
   shows "tsynZip\<cdot>(\<up>null \<bullet> xs)\<cdot>ys = \<up>null \<bullet> tsynZip\<cdot>xs\<cdot>ys"
   by (metis (no_types, hide_lams) assms tsynZip.simps(3) lscons_conv scases undiscr_Discr)
 
-text {* If the last element of a tsyn stream is a message, tsynLen is greater than 0 *}
-lemma tsynlen_sfoot_msg_geq: 
-  assumes "#s < \<infinity>"
-    and "s \<noteq> \<epsilon>"
-    and "sfoot s = (\<M> m)" 
-  shows "Fin 1 \<le> tsynLen\<cdot>s"
-  using assms
-  apply(induction s arbitrary: m rule: tsyn_finind, simp_all)
-  apply (metis Fin_02bot One_nat_def gr_0 less2lnleD lnzero_def tsynlen_sconc_msg)
-  by (metis Fin_02bot Fin_Suc Fin_neq_inf inf_ub less_le lnzero_def only_empty_has_length_0 
-      sconc_snd_empty sfoot_conc sfoot_one slen_sconc_snd_inf slen_scons strict_slen 
-      tsyn.distinct(1) tsynlen_sconc_null)
-
 text {*@{term tsynZip} of the concatenation of two streams equals the concatenation of 
-        @{term tsynZip} of both streams if the first stream is finite and its last element is a message
-        or it's empty. *}
+       @{term tsynZip} of both streams. *}
 lemma tsynzip_sconc:
   assumes "#as < \<infinity>"
     and "as \<noteq> \<epsilon>"
@@ -1367,9 +1366,9 @@ lemma tsynzip_tsynprojsnd_tsynabs:
   assumes "#bs \<le> tsynLen\<cdot>as"
   shows "tsynAbs\<cdot>(tsynProjSnd\<cdot>(tsynZip\<cdot>as\<cdot>bs)) = bs"
   using assms
-  apply(induction bs arbitrary: as rule: ind, simp_all)
-  apply(rule adm_all, rule adm_imp, simp_all)
-  apply(rule admI)
+  apply (induction bs arbitrary: as rule: ind, simp_all)
+  apply (rule adm_all, rule adm_imp, simp_all)
+  apply (rule admI)
   apply (metis dual_order.antisym inf_chainl4 inf_ub l42)
   by (simp add: szip_sprojsnd tsynlen_insert tsynprojsnd_tsynabs tsynzip_tsynabs)
 
