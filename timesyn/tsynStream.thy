@@ -453,6 +453,14 @@ lemma tsynabs_sdom_subset_eq: "(sdom\<cdot>s \<subseteq> insert - (Msg ` range a
       by (simp only: tsynabs_sconc_null sdom2un, auto)
   qed
 
+text {* The set of messages of a stream equals the set of values of @{term tsynAbs} of the 
+        stream. *}
+lemma tsynabs_tsyndom: "tsynDom\<cdot>s = sdom\<cdot>(tsynAbs\<cdot>s)"
+  apply (induction s rule: tsyn_ind, simp_all)
+  apply (simp add: tsyndom_strict)
+  apply (simp add: tsynabs_sconc_msg tsyndom_sconc_msg)
+  by (simp add: tsyndom_sconc_null tsynabs_sconc_null)
+
 (* ----------------------------------------------------------------------- *)
   subsection {* tsynLen *}
 (* ----------------------------------------------------------------------- *)
@@ -603,6 +611,10 @@ lemma tsynmap_tsynabs: "tsynAbs\<cdot>(tsynMap f\<cdot>s) = smap f\<cdot>(tsynAb
   apply (induction s rule: tsyn_ind, simp_all)
   apply (simp add: tsynmap_sconc_msg tsynabs_sconc_msg)
   by (simp add: tsynmap_sconc_null tsynabs_sconc_null)
+
+text {* Every message produced by @{term tsynMap} of f is in the image of the function f *}
+lemma tsynmap_tsyndom: "tsynDom\<cdot>(tsynMap f\<cdot>s) = f ` tsynDom\<cdot>s"
+  by (simp add: tsynmap_tsynabs tsynabs_tsyndom smap_sdom)
   
 (* ----------------------------------------------------------------------- *)
   subsection {* tsynProjFst *}
