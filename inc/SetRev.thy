@@ -1,5 +1,5 @@
 theory SetRev
-  imports "inc/SetPcpo"
+  imports SetPcpo
 begin
 
 default_sort type

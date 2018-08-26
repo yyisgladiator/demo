@@ -1,3 +1,36 @@
+session "inc" (mustWork) = "HOLCF" +
+  options [quick_and_dirty = false]
+  theories
+    "inc/Channel"
+    "inc/LNat"
+    "inc/SetPcpo"
+    "inc/SetRev"
+    "inc/Prelude"
+    "inc/OptionCpo"
+    "inc/UnivClasses"
+    "inc/CPOFix"
+
+
+session "stream" (mustWork) = "inc" +
+  options [quick_and_dirty = false]
+  theories
+    "stream/Streams"
+    "stream/tsynStream"
+
+session "bundle" (mustWork) = "stream" + 
+  options [quick_and_dirty = false]
+  theories
+    "bundle/SB"
+    "bundle/UBundle_Induction"
+
+session "fun" (mustWork) = "bundle" + 
+  options [quick_and_dirty = false]
+  theories
+    "fun/SPF"
+
+
+
+
 session "uClasses" (mustWork) = "HOLCF" +
   options [quick_and_dirty = false]
   theories

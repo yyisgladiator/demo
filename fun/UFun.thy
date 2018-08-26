@@ -6,7 +6,7 @@
 *)
 
 theory UFun
-  imports UnivClasses
+  imports inc.UnivClasses
 begin
 
   

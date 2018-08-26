@@ -1,5 +1,5 @@
 theory USpec_Comp
-  imports USpec  "inc/CPOFix"
+  imports USpec  inc.CPOFix
 begin
 
 (****************************************************)

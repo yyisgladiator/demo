@@ -8,7 +8,7 @@
 chapter {* Time-Synchronous Streams *}
 
 theory tsynStream
-imports "../untimed/Streams"
+imports Streams
 
 begin
 

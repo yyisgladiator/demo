@@ -5,7 +5,7 @@
 *)
 
 theory UBundle
-  imports UnivClasses Channel "inc/OptionCpo"
+  imports inc.UnivClasses inc.Channel inc.OptionCpo
 begin
 
   
