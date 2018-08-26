@@ -502,11 +502,7 @@ lemma "spsConcIn (tsynbNull(\<C> ''ds'')) (MedSPSspec n) = spsConcOut (tsynbNull
   apply (case_tac "c=(\<C> ''dr'')", simp_all)
   apply (subst spsconcout_insert, simp)
   apply (simp add: spfConcIn_def spfConcOut_def)
-  apply (induction n)
   apply (simp add: uspecImage_def medspsspec_uspecran medspsspec_uspecdom ufclDom_ufun_def ufclRan_ufun_def)
-  apply (simp add: MedSPSspec_def)
-  using medsps_0_uspecwell
-  apply (simp add: uspecrevset_insert)
 sorry
 
 lemma "spsConcIn (createBundle (Msg m) (\<C> ''ds'')) (MedSPSspec (Suc n))
@@ -523,11 +519,45 @@ lemma "spsConcIn (createBundle (Msg m) (\<C> ''ds'')) (MedSPSspec (Suc n))
   apply (simp add: MedSPF_def)
 sorry
 
+lemma "\<And>x::(abpMessage tsyn stream\<^sup>\<Omega>) ufun.
+       (x \<in> Rep_cfun (spfConcIn (createBundle (\<M> m) (\<C> ''ds''))) ` Rep_rev_uspec (MedSPSspec (0::nat))) =
+       (x \<in> Rep_cfun (spfConcOut (createBundle (\<M> m) (\<C> ''dr''))) ` Rep_rev_uspec (MedSPSspec n))"
+  apply (simp add: image_def spfConcIn_def spfConcOut_def)
+  apply (simp add: MedSPSspec_def)
+  apply (subst rep_abs_rev_simp)
+  using medsps_0_uspecwell apply blast
+  apply (subst rep_abs_rev_simp)
+  using medspsspec_uspecwell apply blast
+  proof -
+    obtain xa where "xa \<in> {MedSPF ora |ora. #({True} \<ominus> ora) = \<infinity> \<and> shd ora}"    
+  oops
+
 lemma "spsConcIn (createBundle (Msg m) (\<C> ''ds'')) (MedSPSspec 0) 
-  = spsConcOut (createBundle (Msg m) (\<C> ''ds''))\<cdot>(MedSPSspec n)"
-sorry
+  = spsConcOut (createBundle (Msg m) (\<C> ''dr''))\<cdot>(MedSPSspec n)"
+  apply (subst spsconcin_insert)
+  apply (simp add: slen_createbundle_getch)
+  apply (subst spsconcout_insert)
+  apply (simp add: slen_createbundle_getch)
+  apply (simp add: uspecImage_def medspsspec_uspecdom medspsspec_uspecran ufclDom_ufun_def ufclRan_ufun_def)
+  apply (rule uspec_eqI)
+  defer
+  apply (smt medspsspec_uspecdom medspsspec_uspecran spfConcIn_dom spfConcIn_ran spfConcOut_dom 
+    spfConcOut_ran ufclDom_ufun_def ufclRan_ufun_def uspecImage_def uspecimage_useful_dom)
+  apply (smt medspsspec_uspecdom medspsspec_uspecran spfConcIn_dom spfConcIn_ran spfConcOut_dom 
+    spfConcOut_ran ufclDom_ufun_def ufclRan_ufun_def uspecImage_def uspecimage_useful_ran)
+  apply (simp add: uspecrevset_insert)
+  apply (rule setrev_eqI)
+  apply (simp add: setrevImage_def inv_rev_rev)
+  apply (subst rep_abs_rev_simp)
+  defer
+  apply (subst rep_abs_rev_simp)
+  defer
+  apply (simp add: set_eq_iff)
+
 
 (*
+apply (rule set_eq_iff)
+
 (* If a "null" comes in send it out and stay in the same state *) 
 lemma "spsConcIn (makeNull (\<C> ''ds'')) (h_MED state) = spsConcOut (makeNull (\<C> ''dr''))\<cdot>(h_MED state)"
   oops
