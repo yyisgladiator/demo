@@ -1,5 +1,5 @@
 theory USpec_Comp
-  imports USpec  "inc/CPOFix"
+  imports USpec  "inc/CPOFix" UFun_Comp
 begin
 
 (****************************************************)
@@ -8,53 +8,54 @@ section\<open>Definitions\<close>
   
 
 (* from here on only lemma on composition *)
-default_sort ufuncl_comp
+default_sort ubcl_comp
 
 (* General Composition  *)
-definition uspec_compwell :: "'m uspec \<Rightarrow> 'm uspec \<Rightarrow> bool" where
-"uspec_compwell S1 S2 \<equiv> \<forall> f1 \<in> (Rep_rev_uspec S1). \<forall> f2 \<in> (Rep_rev_uspec S2). ufunclCompWell f1 f2"
+definition uspec_compwell :: "('m,'m) ufun uspec \<Rightarrow> ('m,'m) ufun uspec \<Rightarrow> bool" where
+"uspec_compwell S1 S2 \<equiv> \<forall> f1 \<in> (Rep_rev_uspec S1). \<forall> f2 \<in> (Rep_rev_uspec S2). comp_well f1 f2"
 
-abbreviation uspecCompDom:: "'m uspec \<Rightarrow>'m uspec \<Rightarrow> channel set" where
+abbreviation uspecCompDom:: "('m,'m) ufun uspec \<Rightarrow> ('m,'m) ufun uspec \<Rightarrow> channel set" where
 "uspecCompDom S1 S2 \<equiv> (uspecDom\<cdot>S1 \<union> uspecDom\<cdot>S2) - (uspecRan\<cdot>S1 \<union> uspecRan\<cdot>S2)"
 
-abbreviation uspecRanUnion:: "'m uspec \<Rightarrow>'m uspec \<Rightarrow> channel set" where
+abbreviation uspecRanUnion:: "('m,'m) ufun uspec \<Rightarrow> ('m,'m) ufun uspec \<Rightarrow> channel set" where
 "uspecRanUnion S1 S2 \<equiv> uspecRan\<cdot>S1 \<union> uspecRan\<cdot>S2"
 
-abbreviation uspecDomUnion:: "'m uspec \<Rightarrow>'m uspec \<Rightarrow> channel set" where
+abbreviation uspecDomUnion:: "('m,'m) ufun uspec \<Rightarrow> ('m,'m) ufun uspec \<Rightarrow> channel set" where
 "uspecDomUnion S1 S2 \<equiv> uspecDom\<cdot>S1 \<union> uspecDom\<cdot>S2"
 
-definition uspecComp :: "'m uspec \<Rightarrow>'m uspec \<Rightarrow> 'm uspec" (infixl "\<Otimes>" 50) where
+definition uspecComp :: "('m,'m) ufun uspec \<Rightarrow> ('m,'m) ufun uspec \<Rightarrow> ('m,'m) ufun uspec" (infixl "\<Otimes>" 50) where
 "uspecComp S1 S2 \<equiv> 
-let Comp_set = {f1 \<otimes> f2 | f1 f2. f1\<in>(Rep_rev_uspec S1) \<and> f2\<in>(Rep_rev_uspec S2)};
+let Comp_set = {ufComp f1 f2 | f1 f2. f1\<in>(Rep_rev_uspec S1) \<and> f2\<in>(Rep_rev_uspec S2)};
     Cin = (uspecDom\<cdot>S1 \<union> uspecDom\<cdot>S2) - (uspecRan\<cdot>S1 \<union> uspecRan\<cdot>S2);
     Cout = uspecRan\<cdot>S1 \<union> uspecRan\<cdot>S2
 in Abs_rev_uspec Comp_set Cin Cout"
 
 (* Parallel Composition *)
-definition uspec_parcompwell :: "'m uspec \<Rightarrow> 'm uspec \<Rightarrow> bool" where
-"uspec_parcompwell S1 S2 \<equiv> \<forall> f1 \<in> (Rep_rev_uspec S1). \<forall> f2 \<in> (Rep_rev_uspec S2). ufunclParCompWell f1 f2"  
+definition uspec_parcompwell :: "('m,'n) ufun uspec \<Rightarrow> ('m,'n) ufun uspec \<Rightarrow> bool" where
+"uspec_parcompwell S1 S2 \<equiv> \<forall> f1 \<in> (Rep_rev_uspec S1). \<forall> f2 \<in> (Rep_rev_uspec S2). parcomp_well f1 f2"  
 
-definition uspecParComp :: "'m uspec \<Rightarrow>'m uspec \<Rightarrow> 'm uspec" (infixl "\<parallel>" 50) where
+definition uspecParComp :: "('m,'n) ufun uspec \<Rightarrow> ('m,'n) ufun uspec \<Rightarrow> ('m,'n) ufun uspec" (infixl "\<parallel>" 50) where
 "uspecParComp S1 S2 \<equiv>
-let Comp_set = {f1 \<parallel> f2 | f1 f2.  f1\<in>(Rep_rev_uspec S1) \<and> f2\<in>(Rep_rev_uspec S2)};
+let Comp_set = {ufParComp f1 f2 | f1 f2.  f1\<in>(Rep_rev_uspec S1) \<and> f2\<in>(Rep_rev_uspec S2)};
     Cin = (uspecDom\<cdot>S1 \<union> uspecDom\<cdot>S2);
     Cout = uspecRan\<cdot>S1 \<union> uspecRan\<cdot>S2
 in Abs_rev_uspec Comp_set Cin Cout"
-(* Serial Composition *)
-definition uspec_sercompwell :: "'m uspec \<Rightarrow> 'm uspec \<Rightarrow> bool" where
-"uspec_sercompwell S1 S2 \<equiv> \<forall> f1 \<in> (Rep_rev_uspec S1). \<forall> f2 \<in> (Rep_rev_uspec S2). ufunclSerCompWell f1 f2"
 
-definition uspecSerComp :: "'m uspec \<Rightarrow>'m uspec \<Rightarrow> 'm uspec" (infixl "\<circle>" 50) where
+(* Serial Composition *)
+definition uspec_sercompwell :: "('in,'m) ufun uspec \<Rightarrow> ('m,'out) ufun uspec \<Rightarrow> bool" where
+"uspec_sercompwell S1 S2 \<equiv> \<forall> f1 \<in> (Rep_rev_uspec S1). \<forall> f2 \<in> (Rep_rev_uspec S2). sercomp_well f1 f2"
+
+definition uspecSerComp :: "('in,'m) ufun uspec \<Rightarrow> ('m,'out) ufun uspec \<Rightarrow> ('in,'out) ufun uspec" (infixl "\<circle>" 50) where
 "uspecSerComp S1 S2 \<equiv>
-let Comp_set = {f1 \<circ> f2 | f1 f2.  f1\<in>(Rep_rev_uspec S1) \<and> f2\<in>(Rep_rev_uspec S2)};
+let Comp_set = {ufSerComp f1 f2 | f1 f2.  f1\<in>(Rep_rev_uspec S1) \<and> f2\<in>(Rep_rev_uspec S2)};
     Cin = uspecDom\<cdot>S1;
     Cout = uspecRan\<cdot>S2
 in Abs_rev_uspec Comp_set Cin Cout"
 
 (* Feedback Composition *)
-definition uspecFeedbackComp :: "'m uspec \<Rightarrow> 'm uspec" where
+definition uspecFeedbackComp :: "('m,'m) ufun uspec \<Rightarrow> ('m,'m) ufun uspec" where
 "uspecFeedbackComp S1 \<equiv> 
-let Comp_set = {ufunclFeedbackComp f1 | f1.  f1\<in>(Rep_rev_uspec S1)};
+let Comp_set = {ufFeedbackComp f1 | f1.  f1\<in>(Rep_rev_uspec S1)};
     Cin = uspecDom\<cdot>S1 - uspecRan\<cdot>S1;
     Cout = uspecRan\<cdot>S1
 in Abs_rev_uspec Comp_set Cin Cout"

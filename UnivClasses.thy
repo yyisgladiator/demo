@@ -167,6 +167,7 @@ class ufuncl = cpo +
 begin
 end
 
+(*
 class ufuncl_comp = ufuncl +
   fixes ufunclLeast :: "channel set \<Rightarrow> channel set \<Rightarrow> 'a"
 
@@ -227,6 +228,6 @@ lemma sercompwell_asso2: "ufunclSerCompWell f1 f2 \<Longrightarrow>
                       ufclDom\<cdot>f1 \<inter> ufclRan\<cdot>f2 = {} \<Longrightarrow> ufclDom\<cdot>f2 \<inter> ufclRan\<cdot>f3 = {} \<Longrightarrow> ufunclSerCompWell (f1 \<circ> f2) f3"
   by (simp add: local.sercompwell_asso)
 end
-
+*)
 
 end
