@@ -693,6 +693,10 @@ lemma tsynprojfst_tsynabs: "tsynAbs\<cdot>(tsynProjFst\<cdot>s) = sprojfst\<cdot
       by (simp add: tsynprojfst_sconc_null tsynabs_sconc_null)
   qed
 
+text {* Every message produced by @{term tsynProjFst} is in the image of @{term fst} *}
+lemma tsynprojfst_tsyndom: "tsynDom\<cdot>(tsynProjFst\<cdot>s) = fst ` tsynDom\<cdot>s"
+  by (simp add: tsynabs_tsyndom tsynprojfst_tsynabs sprojfst_def smap_sdom)
+
 (* ----------------------------------------------------------------------- *)
   subsection {* tsynProjSnd *}
 (* ----------------------------------------------------------------------- *)
@@ -766,6 +770,10 @@ lemma tsynprojsnd_tsynabs: "tsynAbs\<cdot>(tsynProjSnd\<cdot>s) = sprojsnd\<cdot
     then show ?case
       by (simp add: tsynprojsnd_sconc_null tsynabs_sconc_null)
   qed
+
+text {* Every message produced by @{term tsynProjSnd} is in the image of @{term snd} *}
+lemma tsynprojsnd_tsyndom: "tsynDom\<cdot>(tsynProjSnd\<cdot>s) = snd ` tsynDom\<cdot>s"
+  by (simp add: tsynabs_tsyndom tsynprojsnd_tsynabs sprojsnd_def smap_sdom)
 
 (* ----------------------------------------------------------------------- *)
   subsection {* tsynRemDups *}
