@@ -167,6 +167,16 @@ class ufuncl = cpo +
 begin
 end
 
+
+class ufuncl_comp = ufuncl +
+  fixes ufunclLeast :: "channel set \<Rightarrow> channel set \<Rightarrow> 'a"
+  
+  assumes ufuncldom_least: "\<And> x. ufunclLeast (ufclDom\<cdot>x) (ufclRan\<cdot>x)\<sqsubseteq>x"
+  assumes ufuncldom_least_dom: "\<And> cs. ufclDom\<cdot>(ufunclLeast cin cout) = cin"
+  assumes ufuncldom_least_ran: "\<And> cs. ufclRan\<cdot>(ufunclLeast cin cout) = cout"
+
+begin
+end
 (*
 class ufuncl_comp = ufuncl +
   fixes ufunclLeast :: "channel set \<Rightarrow> channel set \<Rightarrow> 'a"
