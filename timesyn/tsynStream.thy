@@ -557,22 +557,23 @@ lemma tsynprojfst_slen: "#(tsynProjFst\<cdot>s) = #s"
 
 
 lemma tsynprojfst_tsynlen: "tsynLen\<cdot>(tsynProjFst\<cdot>ts) = tsynLen\<cdot>ts"
-  apply (simp add: tsynLen_def tsynprojfst_slen tsynAbs_def)
-  apply (induction ts rule: tsyn_ind, simp_all)
-  apply (simp add: tsynProjFst_def smap_def slookahd_def) 
-
-(* ISAR Variant
-proof (induction ts)
+proof (induction ts rule: tsyn_ind)
   case adm
-  then show ?case sorry
-next
-  case bottom
   then show ?case by simp
 next
-  case (lscons u ts)
-  then show ?case sorry
+  case bot
+  then show ?case by simp
+next
+  case (msg m s)
+  obtain a  where "\<exists>b. m = (a, b)" by fastforce
+  obtain b where m_def: "m=(a,b)" 
+    using \<open>\<exists>b::'b. (m::'a \<times> 'b) = (a::'a, b)\<close> by blast
+  then show ?case 
+    by (simp add: m_def tsynprojfst_sconc_msg tsynlen_sconc_msg msg.IH)
+next
+  case (null s)
+  then show ?case by (simp add: tsynlen_sconc_null tsynprojfst_sconc_null)
 qed
-*)
 
 (* ----------------------------------------------------------------------- *)
   subsection {* tsynProjSnd *}
@@ -599,7 +600,7 @@ lemma tsynprojsnd_strict [simp]: "tsynProjSnd\<cdot>\<epsilon> = \<epsilon>"
 
 text {* @{term tsynProjSnd} distributes over concatenation. *}
 lemma tsynprojsnd_sconc_msg: 
-  shows "tsynProjSnd\<cdot>(\<up>(Msg (a, b)) \<bullet> as) = \<up>(Msg b) \<bullet> (tsynProjSnd\<cdot>as)"
+   "tsynProjSnd\<cdot>(\<up>(Msg (a, b)) \<bullet> as) = \<up>(Msg b) \<bullet> (tsynProjSnd\<cdot>as)"
   by (simp add: tsynprojsnd_insert)
  
 text {* @{term tsynProjSnd} ignores empty time-slots. *}
@@ -616,7 +617,22 @@ lemma tsynprojsnd_slen: "#(tsynProjSnd\<cdot>s) = #s"
   by (simp add: tsynprojsnd_insert)
 
 lemma tsynprojsnd_tsynlen: "tsynLen\<cdot>(tsynProjSnd\<cdot>ts) = tsynLen\<cdot>ts"
-  sorry
+proof (induction ts rule: tsyn_ind)
+  case adm
+  then show ?case by simp
+next
+  case bot
+  then show ?case by simp
+next
+  case (msg m s)
+  obtain b  where "\<exists>a. m = (a, b)" by (meson surj_pair)
+  obtain a where m_def: "m=(a,b)" using \<open>\<exists>a::'b. (m::'b \<times> 'a) = (a, b::'a)\<close> by blast
+  then show ?case 
+    by (simp add: m_def tsynprojsnd_sconc_msg tsynlen_sconc_msg msg.IH)
+next
+  case (null s)
+  then show ?case by (simp add: tsynlen_sconc_null tsynprojsnd_sconc_null)
+qed
 
 (* ----------------------------------------------------------------------- *)
   subsection {* tsynRemDups *}
@@ -645,7 +661,19 @@ lemma tsynremdups_slen: "#(tsynRemDups\<cdot>s) = #s"
 
 text {* @{term tsynRemDups} leaves the length of a tsyn-stream unchanged. *}
 lemma tsynremdups_tsynlen: "tsynLen \<cdot> (tsynRemDups\<cdot>ts) = tsynLen \<cdot>ts"
-  sorry
+proof (induction ts rule: tsyn_ind)
+  case adm
+  then show ?case by simp
+next
+  case bot
+  then show ?case by simp
+next
+  case (null s)
+  then show ?case by (simp add: tsynlen_sconc_null tsynremdups_sconc_null)
+next
+  case (msg m s)
+  then show ?case by (simp add: tsynlentsynremdups_sconc_msg tsynremdups_sconc_null tsynlen_sconc_msg msg.IH)
+qed
 
 text {* @{term tsynRemDups} test on finite stream. *}
 lemma tsynremdups_test_finstream:
@@ -814,9 +842,21 @@ lemma tsynfilter_slen: "#((tsynFilter A)\<cdot>s) = #s"
   by (simp add: tsynfilter_insert)
 
 lemma tsynfilter_tsynlen: "tsynLen\<cdot>(tsynFilter A\<cdot>s) \<le> tsynLen\<cdot>s"
-proof-
-  show ?thesis sorry
+proof (induction s rule: tsyn_ind)
+  case adm
+  then show ?case sorry
+next
+  case bot
+  then show ?case by simp
+next
+  case (null s)
+  then show ?case by (simp add: tsynfilter_sconc_null tsynlen_sconc_null)
+next
+  case (msg m s)
+  then show ?case by (smt dual_order.trans less_lnsuc lnsuc_lnle_emb tsynfilter_sconc_msg_in 
+                      tsynfilter_sconc_msg_nin tsynlen_sconc_msg tsynlen_sconc_null)
 qed
+
 (* ----------------------------------------------------------------------- *)
   subsection {* tsynScanlExt *}
 (* ----------------------------------------------------------------------- *)
