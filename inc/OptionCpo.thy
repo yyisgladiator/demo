@@ -300,14 +300,7 @@ lemma map_add_lessR: fixes Y :: "nat \<Rightarrow> ('a \<rightharpoonup> 'b :: c
 lemma map_add_lessL: fixes Y :: "nat \<Rightarrow> ('a \<rightharpoonup> 'b :: cpo)"
   assumes "chain Y"
   shows "(\<Squnion>i. Y i)++a \<sqsubseteq> (\<Squnion>i. Y i ++ a)" (is "?L \<sqsubseteq> ?R")
-  proof (rule part_below)
-    show "dom ?L = dom ?R" by (metis assms dom_map_add monofunE part_add_monofunL part_dom_lub po_class.chain_def)
-  next
-    fix c
-    assume "c\<in> dom ?L"
-    thus "the (((\<Squnion>i. Y i) ++ a) c) \<sqsubseteq> the ((\<Squnion>i. Y i ++ a) c)"
-    by (smt assms part_the_lub is_ub_thelub lub_eq map_add_dom_app_simps(1) map_add_dom_app_simps(3) monofunE not_below2not_eq part_add_monofunL part_dom_lub po_class.chain_def)
-  qed
+by (smt assms below_lub dom_map_add lub_eq mapadd2if_then not_below2not_eq part_below part_dom_lub part_the_chain part_the_lub po_class.chain_def)
 
 (* Both sides are continuous *)
 lemma part_add_contR [simp]: "cont (\<lambda>b. a ++ b)"
@@ -395,18 +388,18 @@ lemma part_map_chain: assumes "chain S" shows "chain (\<lambda>i. [c \<mapsto> S
 (* Stuff used in SPF *)
 
 (* The mapping from empty to empty is continuous *)
-lemma part_emptys_cont[simp]: "cont [empty \<mapsto> empty]"
+lemma part_emptys_cont[simp]: "cont [Map.empty \<mapsto> Map.empty]"
 proof (rule contI)
   fix Y:: "nat \<Rightarrow> ('a \<rightharpoonup> 'b)"
   assume chY: "chain Y"
   thus "range (\<lambda>i. [Map.empty \<mapsto> Map.empty] (Y i)) <<| [Map.empty \<mapsto> Map.empty] (\<Squnion>i. Y i)"
-  proof (cases "empty \<in> range (Y)")
+  proof (cases "Map.empty \<in> range (Y)")
     case True
     thus ?thesis by (simp add: chY is_lub_maximal lub_maximal part_allempty po_eq_conv rangeI ub_rangeI)
   next
     case False
     hence "\<forall>i. (dom(Y i) \<noteq> {})" by (smt dom_eq_empty_conv rangeI)
-    hence "(\<Squnion>i. Y i) \<noteq> empty" by (simp add: chY part_dom_lub)
+    hence "(\<Squnion>i. Y i) \<noteq> Map.empty" by (simp add: chY part_dom_lub)
     thus ?thesis by (smt False fun_upd_apply image_cong image_iff is_lub_const)
   qed
 qed 

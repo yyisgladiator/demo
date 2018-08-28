@@ -1,6 +1,6 @@
 theory NDA_functions
   
-imports dAutomaton "../../USpec" "../../USpec_Comp"
+imports dAutomaton spec.USpec spec.USpec_Comp
     
 begin
   

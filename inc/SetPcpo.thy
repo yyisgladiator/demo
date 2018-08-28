@@ -1,7 +1,7 @@
 chapter {* Set and bool as a pointed cpo. *}
 
 theory SetPcpo
-imports "~~/src/HOL/HOLCF/Adm" Reversed
+imports HOLCF
 begin
 
 text {*PCPO on sets and bools. The @{text "\<sqsubseteq>"} operator of the order is defined as the @{text "\<subseteq>"} operator on sets
@@ -15,7 +15,7 @@ section {* Order on sets. *}
 text {* {text "\<sqsubseteq>"} operator as the @{text "\<subseteq>"} operator on sets -> partial order. *}
 instantiation set :: (type) po
 begin
-  definition less_set_def: "(op \<sqsubseteq>) = (op \<subseteq>)"
+  definition less_set_def: "(\<sqsubseteq>) = (\<subseteq>)"
 instance
 apply intro_classes
 apply (simp add: less_set_def)
@@ -68,7 +68,7 @@ text {* If one defines the @{text "\<sqsubseteq>"} operator as the @{text "\<lon
   one obtains a partial order. *}
 instantiation bool :: po
 begin
-  definition less_bool_def: "(op \<sqsubseteq>) = (op \<longrightarrow>)"
+  definition less_bool_def: "(\<sqsubseteq>) = (\<longrightarrow>)"
 instance
 apply intro_classes
 apply (simp add: less_bool_def)
@@ -190,23 +190,6 @@ apply (rule compact_empty)
 apply (erule compact_insert)
 done
 
-instance set :: (type) revcpo
-proof(intro_classes)
-  fix S:: "nat \<Rightarrow> 'a set"
-  assume "chain (\<lambda>i::nat. Rev (S i))"
-  have rev_below:"\<And>a b:: 'a set . Rev a \<sqsubseteq> Rev b \<longleftrightarrow> b \<subseteq> a"
-    by (simp add: SetPcpo.less_set_def)
-  hence "range (\<lambda>i::nat. Rev (S i)) <<| Rev (\<Inter> range S)" 
-    apply(auto simp add: is_lub_def is_ub_def)
-    by (metis below_rev.elims(2) le_INF_iff rev_below)
-  thus "\<exists>x::'a set. range (\<lambda>i::nat. Rev (S i)) <<| Rev x"
-    by blast
-qed
-
-instance set :: (type) uprevcpo
-  apply(intro_classes)
-  by (meson UNIV_I Union_is_lub is_lub_def is_ub_def)
-    
 lemma union_cont:"cont (\<lambda>S2. union S1 S2)"
   apply(rule contI)
   unfolding  SetPcpo.less_set_def

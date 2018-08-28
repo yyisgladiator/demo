@@ -7,7 +7,7 @@
 *)
 
 theory dAutomaton
-  imports "../SPF"  "../SpfStep"
+  imports fun.SPF SpfStep
 
 begin
 

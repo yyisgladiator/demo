@@ -1,77 +1,48 @@
-session "uClasses" (mustWork) = "HOLCF" +
+session "inc" (mustWork) = "HOLCF" +
   options [quick_and_dirty = false]
   theories
-    UnivClasses
+    "inc/Channel"
+    "inc/LNat"
+    "inc/SetPcpo"
+    "inc/Reversed"
+    "inc/Prelude"
+    "inc/OptionCpo"
+    "inc/UnivClasses"
+    "inc/CPOFix"
 
-session "ubundle" (mustWork) = "uClasses" +
-  options [quick_and_dirty = false]
-  theories
-    UBundle
-    UBundle_Conc
-    UBundle_Pcpo
 
-session "ufun" (mustWork) = "uClasses" +
+session "stream" (mustWork) = "inc" +
   options [quick_and_dirty = true]
   theories
-    UFun
-    UFun_applyIn
-    UFun_Comp
+    "stream/Streams"
+    "stream/tsynStream"
 
-session "uspec" (mustWork) = "uClasses" +
+session "bundle" (mustWork) = "stream" + 
   options [quick_and_dirty = true]
   theories
-    USpec
-    USpec_Comp
+    "bundle/SB"
+    "bundle/UBundle_Induction"
+    "bundle/tsynBundle"
 
-
-session "sb" (mustWork) = "ubundle" +
+session "fun" (mustWork) = "bundle" + 
   options [quick_and_dirty = true]
   theories
-    "untimed/SB"
+    "fun/SPF"
 
-session "spf" (mustWork) = "sb" +
+session "spec" (mustWork) = "fun" + 
   options [quick_and_dirty = true]
   theories
-    "untimed/SPF"
+    "spec/SPS"
 
-session "sps" (mustWork) = "spf" +
+session "automat" (mustWork) = "spec" + 
   options [quick_and_dirty = true]
   theories
-    "untimed/SPS"
+    "automat/SpfStep"
+    "automat/dAutomaton"
+    "automat/SpsStep"
+    "automat/ndAutomaton"
 
-session "dAutomaton" (mustWork) = "spf" +
+session "abp" (canFail) = "automat" + 
   options [quick_and_dirty = true]
   theories
-    "untimed/CaseStudy/dAutomaton"
-
-session "ndAutomaton" (mustWork) = "sps" +
-  options [quick_and_dirty = true]
-  theories
-    "untimed/CaseStudy/ndAutomaton"
-
-
-session "Streams" (mustWork) = "HOLCF" +
-  options [quick_and_dirty = false]
-  theories
-    "untimed/Streams"
-	
-session "tsynStream" (mustWork) = "Streams" + 
-  options [quick_and_dirty = true]
-  theories
-    "timesyn/tsynStream"
-	"timesyn/tsynBundle"
-
-session "ubundle_opt" (canFail) = "uClasses" +
-  options [quick_and_dirty = false]
-  theories
-    UBundle
-
-session "ufun_opt" (canFail) = "uClasses" +
-  options [quick_and_dirty = false]
-  theories
-    UFun
-
-session "uspec_opt" (canFail) = "uClasses" +
-  options [quick_and_dirty = false]
-  theories
-    USpec
+    "abp/Receiver"

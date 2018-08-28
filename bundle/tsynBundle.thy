@@ -8,8 +8,7 @@
 chapter {* Time-Synchronous Stream Bundles *}
 
 theory tsynBundle
-imports tsynStream "../untimed/SB" "../UFun_Templates" "../untimed/SpfStep" 
-        "../UBundle_Induction"
+imports stream.tsynStream SB UBundle_Induction
 
 begin
 
@@ -56,28 +55,6 @@ definition tsynbAbs :: "'a tsyn stream ubundle \<rightarrow> 'a stream ubundle" 
 text {* @{term tsynbRemDups}: Removes all duplicates on each stream of the ubundle. *}
 definition tsynbRemDups :: "'a tsyn stream ubundle \<rightarrow> 'a tsyn stream ubundle" where 
   "tsynbRemDups \<equiv> \<Lambda> sb. Abs_ubundle (\<lambda>c. (c \<in> ubDom\<cdot>sb) \<leadsto> tsynRemDups\<cdot>(sb . c))"
-
-(* ----------------------------------------------------------------------- *)
-  section {* Definitions of Time-Synchronous Test Bundles *}
-(* ----------------------------------------------------------------------- *)
-
-(* ToDo: add tsynbRemDups test. *)
-
-lift_definition tsynbabsTestInput :: "nat tsyn stream ubundle " is 
-  "[c1 \<mapsto> <[Msg (1 :: nat), null, Msg 2, Msg 1]>]"
-  apply (simp add: ubWell_def usclOkay_stream_def ctype_tsyn_def)
-  by (metis image_eqI nat_1 nat_2 numeral_2_eq_2 range_eqI)
-
-lift_definition tsynbabsTestOutput :: "nat stream ubundle " is 
-  "[c1 \<mapsto> <[(1 :: nat), 2, 1]>]"
-  apply (simp add: ubWell_def usclOkay_stream_def)
-  by (metis nat_1 nat_2 numeral_2_eq_2 range_eqI)
-
-lemma tsynbabstestinput_ubdom: "ubDom\<cdot>tsynbabsTestInput = {c1}"
-  by (simp add: ubDom_def tsynbabsTestInput.rep_eq)
-
-lemma tsynbabstestoutput_ubdom: "ubDom\<cdot>tsynbabsTestOutput = {c1}"
-  by (simp add: tsynbabsTestOutput.rep_eq ubDom_def)
 
 (* ----------------------------------------------------------------------- *)
   section {* Lemmata on Time-Synchronous Stream Bundles *}
@@ -135,28 +112,6 @@ lemma tsynbabs_strict [simp]: "tsynbAbs\<cdot>(ubLeast {c})  = ubLeast {c}"
   apply (metis (no_types, lifting) tsynbabs_insert tsynbabs_ubundle_ubdom ubleast_ubdom)
   by (metis (no_types, lifting) Abs_cfun_inverse2 tsynabs_strict tsynbAbs_def tsynbabs_cont 
       tsynbabs_ubgetch tsynbabs_ubundle_ubdom ubleast_ubdom ubleast_ubgetch)
-
-text {* Test lemma for @{term tsynbAbs}. *}
-lemma tsynbabs_test_finstream:
-  "tsynbAbs\<cdot>(tsynbabsTestInput) = tsynbabsTestOutput"
-  proof (rule ub_eq)
-    have tsynbabs_tsynbabstestinput_ubdom: "ubDom\<cdot>(tsynbAbs\<cdot>tsynbabsTestInput) = {c1}"
-      by (metis (no_types) tsynbabs_insert tsynbabs_ubundle_ubdom tsynbabstestinput_ubdom)
-    show "ubDom\<cdot>(tsynbAbs\<cdot>tsynbabsTestInput) = ubDom\<cdot>tsynbabsTestOutput"
-      by (simp add: tsynbabs_tsynbabstestinput_ubdom tsynbabstestoutput_ubdom)
-    fix c :: "channel"
-    have tsynabs_result: "tsynAbs\<cdot>(<[Msg (1 :: nat), null, Msg 2, Msg 1]>) = <[(1 :: nat), 2, 1]>"
-      by (simp add: tsynabs_insert)
-    have tsynabs_tsynbabstestinput_result: "tsynAbs\<cdot>(tsynbabsTestInput . c1)= <[(1 :: nat), 2, 1]>"
-      by (metis fun_upd_same option.sel tsynabs_result tsynbabsTestInput.rep_eq ubgetch_insert)
-    have tsynbabs_tsynbabstestinput_result:
-      "tsynbAbs\<cdot>tsynbabsTestInput  .  c1 = tsynbabsTestOutput  .  c1"
-      by (metis (full_types) fun_upd_apply insert_iff option.sel tsynabs_tsynbabstestinput_result 
-          tsynbabsTestOutput.rep_eq tsynbabs_ubgetch tsynbabstestinput_ubdom ubgetch_insert)
-    assume "c \<in> ubDom\<cdot>(tsynbAbs\<cdot>tsynbabsTestInput)"
-    then show "tsynbAbs\<cdot>tsynbabsTestInput  .  c = tsynbabsTestOutput  .  c"
-      using tsynbabs_tsynbabstestinput_result tsynbabs_tsynbabstestinput_ubdom by auto
-  qed
 
 (* ----------------------------------------------------------------------- *)
   subsection {* tsynbRemDups *}
@@ -300,13 +255,13 @@ lemma createbundle_ubclunion:
     and not_empty: "\<And>c. c \<in> ubDom\<cdot>x \<Longrightarrow> x . c \<noteq> \<epsilon>"  
     and x_c_eq: "x . c = \<up>m1"
     and x_cc_eq: "x . cc = \<up>m2"
-  shows "x = ((createBundle m1 c) \<uplus> (createBundle m2 cc))"
+  shows "x = (ubclUnion\<cdot>(createBundle m1 c)\<cdot>(createBundle m2 cc))" (is "x = ?U")
   proof -
     obtain m1 where m1_def: "x . c = \<up>m1" 
       by (simp add: x_c_eq)
     obtain m2 where m2_def: "x . cc = \<up>m2" 
       by (simp add: x_cc_eq)
-    have x_dom_eq: "ubDom\<cdot>x = ubDom\<cdot>((createBundle m1 c) \<uplus> (createBundle m2 cc))"
+    have x_dom_eq: "ubDom\<cdot>x = ubDom\<cdot>?U"
       by (metis createBundle_dom insert_is_Un two_channel ubclDom_ubundle_def ubclunion_dom)
     have m1_ctype: "m1 \<in> ctype c"
       by (metis contra_subsetD insertI1 insert_is_Un lscons_conv m1_def sdom2un sup'_def 
@@ -318,14 +273,15 @@ lemma createbundle_ubclunion:
       by (metis createBundle.rep_eq fun_upd_same m1_ctype option.sel ubgetch_insert)
     have create_cc: "(createBundle m2 cc) . cc = \<up>m2"
       by (metis createBundle.rep_eq fun_upd_same m2_ctype option.sel ubgetch_insert)
-    have ubunion_create_eq_c: "((createBundle m1 c) \<uplus> (createBundle m2 cc)) . c = \<up>m1"
+    have ubunion_create_eq_c: "(ubUnion\<cdot>(createBundle m1 c)\<cdot>(createBundle m2 cc)) . c = \<up>m1"
       by (metis createBundle_dom create_c create_cc m1_def m2_def singletonD ubclUnion_ubundle_def 
           ubunion_getchL ubunion_getchR)
-    have ubunion_create_eq_cc: "((createBundle m1 c) \<uplus> (createBundle m2 cc)) . cc = \<up>m2"
+    have ubunion_create_eq_cc: "(ubUnion\<cdot>(createBundle m1 c)\<cdot>(createBundle m2 cc)) . cc = \<up>m2"
       by (simp add: create_cc ubclUnion_ubundle_def)
-    then show ?thesis 
-      by (metis insert_iff m1_def m2_def not_empty sfilter_ne_resup sfilter_sinftimes_in 
-          sinf_notEps singletonD two_channel ubgetchI ubunion_create_eq_c x_c_eq x_cc_eq x_dom_eq)
+    hence "x = (ubUnion\<cdot>(createBundle m1 c)\<cdot>(createBundle m2 cc))"
+      by (smt assms(1) createBundle_dom insert_iff insert_is_Un m1_def m2_def singletonD ub_eq ubunionDom ubunion_create_eq_c)
+    then show ?thesis
+      by (metis inject_scons m1_def m2_def ubclUnion_ubundle_def x_c_eq x_cc_eq)
   qed
 
 text {* Cases rule for simple time-synchronous bundles with two non-empty channels. *}
@@ -335,10 +291,10 @@ lemma tsynb_cases_ext
     and not_empty: "\<And>c. c \<in> ubDom\<cdot>x \<Longrightarrow> x . c \<noteq> \<epsilon>" 
     and numb_channel: "(ubDom\<cdot>x) = {c, cc}"
     and msg_msg: "\<And>m1 m2. (Msg m1) \<in> ctype c \<Longrightarrow> (Msg m2) \<in> ctype cc 
-                             \<Longrightarrow> P ((createBundle (Msg m1) c) \<uplus> (createBundle (Msg m2) cc))"
-    and null_msg: "\<And>m2. (Msg m2) \<in> ctype cc \<Longrightarrow> P ((tsynbNull c) \<uplus> (createBundle (Msg m2) cc))"
-    and msg_null: "\<And>m2. (Msg m2) \<in> ctype c \<Longrightarrow> P ((createBundle (Msg m2) c) \<uplus> (tsynbNull cc))"
-    and null_null: "P ((tsynbNull c) \<uplus> (tsynbNull cc))"
+                             \<Longrightarrow> P (ubclUnion\<cdot>(createBundle (Msg m1) c)\<cdot>(createBundle (Msg m2) cc))"
+    and null_msg: "\<And>m2. (Msg m2) \<in> ctype cc \<Longrightarrow> P (ubclUnion\<cdot>(tsynbNull c)\<cdot>(createBundle (Msg m2) cc))"
+    and msg_null: "\<And>m2. (Msg m2) \<in> ctype c \<Longrightarrow> P (ubclUnion\<cdot>(createBundle (Msg m2) c)\<cdot>(tsynbNull cc))"
+    and null_null: "P (ubclUnion\<cdot>(tsynbNull c)\<cdot>(tsynbNull cc))"
   shows "P x"
   proof - 
     have x_c_singleton: "usclLen\<cdot>(x . c) = Fin 1"
@@ -367,7 +323,7 @@ lemma tsynb_cases_ext
             assume m2_exists: "\<exists>m2. s2 = \<up>(\<M> m2)"
             obtain m2 where m2_def: "s2 = \<up>(\<M> m2)" 
               using m2_exists by auto
-            have "x = ((createBundle (Msg m1) c) \<uplus> (createBundle (Msg m2) cc))"
+            have "x = (ubclUnion\<cdot>(createBundle (Msg m1) c)\<cdot>(createBundle (Msg m2) cc))"
               using createbundle_ubclunion m1_def m2_def max_len not_empty numb_channel s1_def
                     s2_def by blast
             then show "P x"
@@ -376,7 +332,7 @@ lemma tsynb_cases_ext
                   ubclUnion_ubundle_def ubgetch_insert ubunion_getchL ubunion_getchR)
           next 
             assume m2_nexists: "\<nexists>m2. s2 = \<up>(\<M> m2)"
-            have "x = ((createBundle (Msg m1) c) \<uplus> (tsynbNull cc))"
+            have "x = (ubclUnion\<cdot>(createBundle (Msg m1) c)\<cdot>(tsynbNull cc))"
               by (metis (no_types, lifting) createbundle_ubclunion m1_def m2_nexists max_len 
                   not_empty numb_channel s1_def s2_cases s2_def tsynbnull_eq_createbundle)
             then show "P x"
@@ -391,7 +347,7 @@ lemma tsynb_cases_ext
             assume m2_exists: "\<exists>m2. s2 = \<up>(\<M> m2)"
             obtain m2 where m2_def: "s2 = \<up>(\<M> m2)" 
               using m2_exists by auto
-            have "x = ((tsynbNull c) \<uplus> (createBundle (Msg m2) cc))"
+            have "x = (ubclUnion\<cdot>(tsynbNull c)\<cdot>(createBundle (Msg m2) cc))"
               by (metis (no_types, lifting) createbundle_ubclunion m1_nexists m2_def max_len 
                   not_empty numb_channel s1_cases s1_def s2_def tsynbnull_eq_createbundle)
             then show "P x"
@@ -400,7 +356,7 @@ lemma tsynb_cases_ext
                   ubunion_getchR)
           next
             assume m2_nexists: "\<nexists>m2. s2 = \<up>(\<M> m2)"
-            have "x = ((tsynbNull c) \<uplus> (tsynbNull cc))"
+            have "x = (ubclUnion\<cdot>(tsynbNull c)\<cdot>(tsynbNull cc))"
               by (metis (no_types, hide_lams) createbundle_ubclunion m1_nexists m2_nexists 
                   max_len not_empty numb_channel s1_cases s1_def s2_cases s2_def 
                   tsynbnull_eq_createbundle)

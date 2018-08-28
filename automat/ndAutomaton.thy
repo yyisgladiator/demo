@@ -2,7 +2,7 @@
 
 theory ndAutomaton
 
-imports "../../USpec" "../SpsStep"  "../SPS" NDA_functions
+imports spec.SPS SpsStep NDA_functions
 
 
 begin

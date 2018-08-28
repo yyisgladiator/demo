@@ -1,5 +1,5 @@
 theory UBundle_Induction
-  imports UBundle UBundle_Pcpo UBundle_Conc "untimed/Streams" "untimed/SB"
+  imports UBundle UBundle_Pcpo UBundle_Conc SB
 begin
 
   
@@ -411,5 +411,5 @@ instance
 
 end
 
-end
 
+end

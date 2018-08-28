@@ -1,5 +1,5 @@
 theory SB
-  imports "../UBundle_Conc" Streams
+  imports UBundle_Conc stream.Streams
 begin
 
 default_sort message

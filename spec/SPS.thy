@@ -1,6 +1,6 @@
 theory SPS
 
-imports SPF "../USpec_Comp"
+imports fun.SPF USpec_Comp
 
 begin
 

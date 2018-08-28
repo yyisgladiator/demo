@@ -7,7 +7,7 @@
  *)
 theory ReceiverAutomaton
 
-imports "../AutomatonPrelude"
+imports AutomatonPrelude
 
 begin
 

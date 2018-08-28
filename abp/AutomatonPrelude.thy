@@ -6,7 +6,7 @@
  *)
 theory AutomatonPrelude
 
-imports "../../untimed/CaseStudy/dAutomaton" "../../untimed/CaseStudy/ndAutomaton" "../tsynStream" "../tsynBundle" 
+imports automat.dAutomaton automat.ndAutomaton bundle.tsynBundle
 
 begin
 

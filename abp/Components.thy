@@ -8,7 +8,7 @@
 chapter {* Theory for ABP Component Lemmata on Time-synchronous Streams *}
 
 theory Components
-imports "../AutomatonPrelude"
+imports AutomatonPrelude
 
 begin
 

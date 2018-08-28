@@ -5,7 +5,7 @@
 *)
 
 theory UnivClasses
-  imports "inc/LNat" "inc/OptionCpo" Channel
+  imports LNat OptionCpo Channel
 begin
   
 

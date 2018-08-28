@@ -1,6 +1,6 @@
 theory SpsStep
 
-imports "../USpec" "SpfStep"
+imports spec.USpec SpfStep
 
 begin
 
