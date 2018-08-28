@@ -35,9 +35,14 @@ session "spec" (mustWork) = "fun" +
     "spec/SPS"
 
 session "automat" (mustWork) = "spec" + 
+  options [quick_and_dirty = true]
   theories
     "automat/SpfStep"
     "automat/dAutomaton"
     "automat/SpsStep"
     "automat/ndAutomaton"
 
+session "abp" (canFail) = "automat" + 
+  options [quick_and_dirty = true]
+  theories
+    "abp/Receiver"

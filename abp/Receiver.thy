@@ -8,7 +8,7 @@
 chapter {* Theory for Receiver Lemmata on Time-synchronous Streams *}
 
 theory Receiver
-imports ReceiverAutomaton Components "../../../UBundle_Induction" Adm
+imports bundle.UBundle_Induction ReceiverAutomaton Components
 
 begin
 
