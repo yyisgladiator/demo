@@ -17,13 +17,13 @@ section\<open>Definitions\<close>
 (****************************************************)
 
   
-definition ufApplyOut :: "('m \<rightarrow> 'm ) \<Rightarrow> ('m,'m) ufun \<rightarrow> ('m,'m) ufun" where
+definition ufApplyOut :: "('m \<rightarrow> 'n) \<Rightarrow> ('a,'m) ufun \<rightarrow> ('a,'n) ufun" where
 "ufApplyOut k \<equiv> (\<Lambda> g. Abs_cufun (\<lambda>x. (ubclDom\<cdot>x = ufDom\<cdot>g) \<leadsto> k\<cdot>(g \<rightleftharpoons>x)))"
 
-definition ufApplyIn :: "('m \<rightarrow> 'm ) \<Rightarrow> ('m,'m) ufun \<rightarrow> ('m,'m) ufun" where 
+definition ufApplyIn :: "('m \<rightarrow> 'n ) \<Rightarrow> ('n,'a) ufun \<rightarrow> ('m,'a) ufun" where 
 "ufApplyIn k \<equiv> \<Lambda> g. Abs_cufun (\<lambda>x. (Rep_cufun g)(k\<cdot>x))" 
 
-definition ufApplyIn2 :: "('m \<rightarrow> 'm ) \<Rightarrow> ('m,'m) ufun \<rightarrow> ('m,'m) ufun" where
+definition ufApplyIn2 :: "('m \<rightarrow> 'n ) \<Rightarrow> ('n,'a) ufun \<rightarrow> ('m,'a) ufun" where
 "ufApplyIn2 k \<equiv> (\<Lambda> g. Abs_cufun (\<lambda>x. (ubclDom\<cdot>(k\<cdot>x) = ufDom\<cdot>g) \<leadsto> (g \<rightleftharpoons>(k\<cdot>x))))"
 
 
@@ -339,7 +339,7 @@ subsection \<open>ufApplyOut Lemmas\<close>
   
 (* insert rules *)
 lemma ufapplyout_insert: assumes "\<And>b. ubclDom\<cdot>(k\<cdot>b) = ubclDom\<cdot>b" 
-  shows "ufApplyOut k\<cdot>(f::('m,'m) ufun) =  Abs_cufun (\<lambda>x. (ubclDom\<cdot>x = ufDom\<cdot>f) \<leadsto> k\<cdot>(f \<rightleftharpoons>x))"
+  shows "ufApplyOut k\<cdot>f =  Abs_cufun (\<lambda>x. (ubclDom\<cdot>x = ufDom\<cdot>f) \<leadsto> k\<cdot>(f \<rightleftharpoons>x))"
   by (simp add: ufApplyOut_def assms) 
 
 (* dom of ufApplyOut is the same as the dom of input ufun  *)
@@ -361,7 +361,7 @@ proof -
   have f1: "ufApplyOut k\<cdot>f =  Abs_cufun (\<lambda>x. (ubclDom\<cdot>x = ufDom\<cdot>f) \<leadsto> k\<cdot>(f \<rightleftharpoons>x))"
     by (simp add: assms ufapplyout_insert)
   have "ufRan\<cdot>(Abs_cufun (\<lambda>x. (ubclDom\<cdot>x = ufDom\<cdot>f) \<leadsto> k\<cdot>(f \<rightleftharpoons>x))) = ufRan\<cdot>f"
-    by (simp add: assms ufran_2_ubcldom2)
+    using assms ufran_2_ubcldom2 sorry
   then show ?thesis
     by (simp add: f1)
 qed

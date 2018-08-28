@@ -97,7 +97,7 @@ definition comp_well :: "('m,'m) ufun \<Rightarrow> ('m,'m) ufun \<Rightarrow> b
 "comp_well f1 f2 \<equiv> ufRan\<cdot>f1 \<inter> ufRan\<cdot>f2 = {}"
                                        
 
-definition ufComp :: "('m,'m) ufun \<Rightarrow> ('m,'m) ufun \<Rightarrow> ('m,'m) ufun" where
+definition ufComp :: "('m,'m) ufun \<Rightarrow> ('m,'m) ufun \<Rightarrow> ('m,'m) ufun" (infixl "\<otimes>" 50) where
 "ufComp f1 f2 \<equiv>
 let I = ufCompI f1 f2;
     Oc = (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2)
@@ -108,7 +108,7 @@ abbreviation parcomp_well :: "('in,'out) ufun \<Rightarrow> ('in,'out) ufun \<Ri
 "parcomp_well f1 f2 \<equiv> (ufCompL f1 f2 = {}) \<and> (ufRan\<cdot>f1 \<inter> ufRan\<cdot>f2 = {})"
 
 
-definition ufParComp :: "('in,'out) ufun \<Rightarrow> ('in,'out) ufun \<Rightarrow> ('in,'out) ufun" where
+definition ufParComp :: "('in,'out) ufun \<Rightarrow> ('in,'out) ufun \<Rightarrow> ('in,'out) ufun" (infixl "\<parallel>" 50) where
 "ufParComp f1 f2 \<equiv> Abs_ufun (Abs_cfun (\<lambda> x. (ubclDom\<cdot>x = ufDom\<cdot>f1 \<union> ufDom\<cdot>f2 ) \<leadsto> ((f1 \<rightleftharpoons> (x \<bar>ufDom\<cdot>f1)) \<uplus> (f2 \<rightleftharpoons> (x\<bar>ufDom\<cdot>f2)))))"
 
 
@@ -117,7 +117,7 @@ abbreviation sercomp_well :: "('in,'m) ufun \<Rightarrow> ('m,'out) ufun \<Right
                         \<and> (ufDom\<cdot>f1 \<inter> ufRan\<cdot>f1 = {})
                         \<and> (ufDom\<cdot>f2 \<inter> ufRan\<cdot>f2 = {})"
 
-definition ufSerComp :: "('in,'m) ufun \<Rightarrow> ('m,'out) ufun \<Rightarrow> ('in,'out) ufun" where
+definition ufSerComp :: "('in,'m) ufun \<Rightarrow> ('m,'out) ufun \<Rightarrow> ('in,'out) ufun" (infixl "\<circ>" 50) where
 "ufSerComp f1 f2 \<equiv> Abs_ufun (Abs_cfun (\<lambda> x. (ubclDom\<cdot>x =  ufDom\<cdot>f1) \<leadsto> (f2 \<rightleftharpoons> (f1 \<rightleftharpoons> x))))"
 
 
