@@ -4,6 +4,7 @@ session "inc" (mustWork) = "HOLCF" +
     "inc/Channel"
     "inc/LNat"
     "inc/SetPcpo"
+    "inc/Reversed"
     "inc/Prelude"
     "inc/OptionCpo"
     "inc/UnivClasses"
