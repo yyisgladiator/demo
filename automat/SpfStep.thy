@@ -4,7 +4,7 @@
 *)
 
 theory SpfStep
-imports SPF
+imports fun.SPF
 begin
 default_sort type
 
