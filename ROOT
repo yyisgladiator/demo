@@ -22,6 +22,7 @@ session "bundle" (mustWork) = "stream" +
   theories
     "bundle/SB"
     "bundle/UBundle_Induction"
+    "bundle/tsynBundle"
 
 session "fun" (mustWork) = "bundle" + 
   options [quick_and_dirty = true]

@@ -34,9 +34,11 @@ abbreviation iter_spfCompH :: "'a SPF \<Rightarrow> 'a SPF \<Rightarrow> nat \<R
 
 subsection \<open>serial and parallel composition\<close>
 
+(* Parallel comp. is well-def, if there are no internal channels and output channels are distinct *)
 abbreviation parcomp_well :: "'m SPF \<Rightarrow> 'm SPF \<Rightarrow> bool" where
 "parcomp_well f1 f2 \<equiv> (spfCompL f1 f2 = {}) \<and> (spfRan\<cdot>f1 \<inter> spfRan\<cdot>f2 = {})"
-  
+
+(* Serial composition is well-def, if there are no feedback channels and output f1 matched input f2 *)
 abbreviation sercomp_well :: "'m SPF \<Rightarrow> 'm SPF \<Rightarrow> bool" where
 "sercomp_well f1 f2 \<equiv>  (spfRan\<cdot>f1 = spfDom\<cdot>f2) 
                         \<and> (spfDom\<cdot>f1 \<inter> spfRan\<cdot>f1 = {})
@@ -95,7 +97,8 @@ section \<open>general-lemmata\<close>
    (* TODO port general lemmas to corresponding production theories! ! ! *)
  
 subsection \<open>cfun\<close>   
-  
+
+(* Cont rule *)
 lemma mycontI2: assumes "monofun (f::'a::cpo \<Rightarrow> 'b::cpo)" 
                 and "(\<And>Y. chain Y \<Longrightarrow> f (\<Squnion>i. Y i) \<sqsubseteq> (\<Squnion>i. f (Y i)))"
   shows "cont f"
@@ -148,7 +151,7 @@ lemma sb_onech_getch_insert [simp]:"([ch1 \<mapsto> s]\<Omega>) . ch1 = (s:: nat
     
 subsection \<open>subst\<close>  
   
-(* used for substitution *)
+(* Simple rules for natural numbers, used for substitution *)
 lemma two_times_one_insert: "2 * (Suc 0) = Suc(Suc(0))"
   by simp
     
@@ -170,7 +173,8 @@ shows "(spfFeedbackOperator f) = Abs_CSPF (\<lambda> sb. (sbDom\<cdot>sb = (spfD
   apply (simp add: spfFeedbackOperator_def)
   apply (subst spfFeedH_def)
   by simp
-    
+
+(* Output channels are a subset of all channels *)
 lemma spfComp_Oc_sub_C: assumes "c \<in> spfCompOc f1 f2" shows "c \<in> spfCompC f1 f2"
   by (meson assms set_mp spfOc_sub_C)
   
@@ -178,12 +182,13 @@ lemma spfComp_Oc_sub_C: assumes "c \<in> spfCompOc f1 f2" shows "c \<in> spfComp
     
     
 section \<open>general comp\<close>
-  
+
+(* General composition is continuous *)
 lemma spf_gencomp_cont[simp]: 
   shows "cont (\<lambda> x. (sbDom\<cdot>x = spfCompI f1 f2) \<leadsto> sbFix (spfCompH f1 f2 x) (spfRan\<cdot>f1 \<union> spfRan\<cdot>f2) )"
   by simp
 
-    
+(* The resulting SPF of general composition is well-defined *)
 lemma spf_gen_well[simp]: 
   shows "spf_well (\<Lambda> x.  (sbDom\<cdot>x = spfCompI f1 f2) \<leadsto> sbFix (spfCompH f1 f2 x) (spfRan\<cdot>f1 \<union> spfRan\<cdot>f2))"
     apply (simp add: spf_well_def)
@@ -512,15 +517,15 @@ lemma spfComp_domranf1: assumes "sercomp_well f1 f2"
   shows "(sbDom\<cdot>(f1 \<rightleftharpoons> (sb\<bar>spfDom\<cdot>f1))) = spfRan\<cdot>f1"
   using assms(1) assms(2)
   by (metis SPF_Comp.spfComp_test8 equalityE spfRanRestrict)
-    
 
+(* If serial comp. is well-defined, then input channels of the comp. f1, f2 are exactly those of f1 *)
 lemma spfComp_I_domf1_eq: assumes "sercomp_well f1 f2" 
                           and "sbDom\<cdot>sb = spfCompI f1 f2" 
   shows "spfCompI f1 f2 = spfDom\<cdot>f1"
   apply(simp add: spfCompI_def, subst assms(1))
   using assms(1) assms(2) spfCompI_def spfComp_test8 by blast
     
-
+(* Any channel in the range of any SPF f2 is also in the output of the composition f1, f2 *)
 lemma spfComp_getC_Oc[simp]:  assumes "c \<in> spfRan\<cdot>f2" 
   shows "c \<in> spfCompOc f1 f2"
   by (simp add: spfCompOc_def assms(1))
@@ -532,7 +537,8 @@ by simp
 (* ----------------------------------------------------------------------- *)
 subsection \<open>iteration lemmata\<close>
 (* ----------------------------------------------------------------------- *)
-  
+
+(* Serial composable implies composable *)
 lemma sercomp2spfComp[simp]:"sercomp_well f1 f2 \<Longrightarrow> spfComp_well f1 f2 "
   by (simp add: Int_Un_distrib Int_commute spfCompL_def spfComp_well_def)
   
@@ -566,7 +572,8 @@ lemma spfComp_serialf2: assumes "sercomp_well f1 f2"
             le_supI1 sb_eq sbrestrict2sbgetch sbrestrict_sbdom spfCompH2_dom spfComp_domranf1 
             spfCompH2_itDom spfComp_serialf1)
 
-(* this is the core lemma for the equality proofs *)
+(* Core lemma for the equality proofs: Iterate at least 3x so that x passes through all stages of
+    iteration and replaces sbLeast *)
 lemma spfComp_serial : assumes "sercomp_well f1 f2" 
                        and "sbDom\<cdot>x = spfCompI f1 f2"
   shows "(iter_spfcompH2 f1 f2 (Suc (Suc (Suc i))) x) = x \<uplus> (f1 \<rightleftharpoons> (x \<bar>spfDom\<cdot>f1)) 
@@ -586,7 +593,7 @@ lemma spfComp_serial : assumes "sercomp_well f1 f2"
 subsection \<open>lub iteration\<close>
 (* ----------------------------------------------------------------------- *) 
   
-  (* show that the chain has it's maximum at the third chain element *)
+(* The chain has it's maximum at the third chain element (x has displaced sbLeast completely) *)
 lemma spfComp_serial_max: assumes "sercomp_well f1 f2" 
                           and "sbDom\<cdot>x = spfCompI f1 f2"
   shows "max_in_chain 3 (\<lambda>i. iter_spfcompH2 f1 f2 i x)"
@@ -634,7 +641,7 @@ subsection \<open>iter const\<close>
 (* Use the lub equality to simplify the inner expression and show that the composition is a 
    well defined spf *)
           
-(* show that spfCompOld can be simplified to SPF without iterate if the assumtion hold *)
+(* spfCompOld can be simplified to an SPF without iterating if the composition is a serial comp. *)
 lemma spfComp_iterconst_eq[simp]: assumes "sercomp_well f1 f2"  
 shows "(\<lambda>x. (sbDom\<cdot>x = spfCompI f1 f2)\<leadsto>(\<Squnion>i. iter_spfcompH2 f1 f2 i x)\<bar>spfCompOc f1 f2)
   = (\<lambda>x. (sbDom\<cdot>x = spfCompI f1 f2)\<leadsto>(x \<uplus> (f1 \<rightleftharpoons> (x \<bar>spfDom\<cdot>f1)) \<uplus> (f2 \<rightleftharpoons> (f1 \<rightleftharpoons> (x\<bar>spfDom\<cdot>f1))))\<bar>spfCompOc f1 f2)"
@@ -700,6 +707,8 @@ lemma serial_iterconst_well2: assumes "sbDom\<cdot>sb = spfCompI f1 f2"
 (* ----------------------------------------------------------------------- *)
 subsection \<open>result\<close>
 (* ----------------------------------------------------------------------- *)     
+
+(* sbGetCh works as expected on a serial composition *)
 lemma spfCompSeriellGetch: assumes "sercomp_well f1 f2"
                    and "sbDom\<cdot>sb = spfCompI f1 f2"
                    and "c \<in> spfRan\<cdot>f2"
@@ -727,31 +736,37 @@ section \<open>parallel-composition\<close>
     
     
 subsection\<open>parcomp channel domain lemmata\<close>     
-    
+
+(* If channel c is in the range of f1, then it never is in the input to the comp. of f1, f2 *)
 lemma [simp]: assumes "c \<in> spfRan\<cdot>f1"
   shows "c \<notin> spfCompI f1 f2"
 by (simp add: spfCompI_def assms(1))
 
+(* If parallel comnposition is well-defined, a channel c cannot be in range of both f1 and f2 *)
 lemma [simp]: assumes "c \<in> spfRan\<cdot>f1"
                   and "parcomp_well f1 f2"
   shows "c \<notin> spfRan\<cdot>f2"
 using assms(1) assms(2) by auto
 
+(* If there are no internal channels and channel c is in range of f1, then c cannot be in the domain *)
 lemma [simp]: assumes "c \<in> spfRan\<cdot>f1"
                   and "spfCompL f1 f2 = {}"
   shows "c \<notin> spfDom\<cdot>f1 \<and> c \<notin> spfDom\<cdot>f2"
 using spfCompL_def assms(1) assms(2) by blast
 
+(* If there are no internal channels, then composition can only make the domain larger *)
 lemma [simp]: assumes "spfCompL f1 f2 = {}"
   shows "spfDom\<cdot>f1 \<subseteq> spfCompI f1 f2"
 apply(auto simp add: spfCompI_def)
 using spfCompL_def assms apply fastforce
 using spfCompL_def assms by fastforce
 
+(* No internal channels implies that the domain of the comp. is the composition of the domains *)
 lemma  spfComp_I_domf1f2_eq[simp]: assumes "spfCompL f1 f2 = {}" 
   shows "spfCompI f1 f2 = spfDom\<cdot>f1 \<union> spfDom\<cdot>f2"
 by (metis Diff_triv spfCompI_def spfCompL_def assms)
 
+(* Sandwich lemma for union and sbGetCh *)
 lemma sbunion_getchM: assumes "c \<notin> sbDom\<cdot>b1"
                           and "c \<notin> sbDom\<cdot>b3"
   shows "b1\<uplus>b2\<uplus>b3 . c = b2 . c"
@@ -769,6 +784,7 @@ by (simp add: assms(1) assms(2))
     
 subsection \<open>lub iteration\<close>        
 
+(* Iterating at least twice suffices to substitute the iteration if the comp. is parallel *)
 lemma spfComp_parallelf1 : assumes"parcomp_well f1 f2"
                               and "sbDom\<cdot>x = spfCompI f1 f2"
                               and "c \<in> spfRan\<cdot>f1" 
@@ -801,8 +817,8 @@ lemma spfComp_parallelf2 : assumes"parcomp_well f1 f2"
        sbunion_getchR spfComp_I_domf1f2_eq spfCompH2_itDom spfComp_well_def spfRanRestrict 
        subsetCE sup.bounded_iff sup_ge1)
  
-lemma spfComp_parallel : assumes" parcomp_well f1 f2"
-                            and "sbDom\<cdot>x = spfCompI f1 f2"
+lemma spfComp_parallel : assumes "parcomp_well f1 f2"
+                             and "sbDom\<cdot>x = spfCompI f1 f2"
   shows "(iterate (Suc (Suc i))\<cdot>(spfCompH2 f1 f2 x)\<cdot>(sbLeast (spfCompC f1 f2)))
                   = x \<uplus> ((Rep_CSPF f1) \<rightharpoonup> (x \<bar>spfDom\<cdot>f1)) \<uplus> ((Rep_CSPF f2) \<rightharpoonup> (x\<bar>spfDom\<cdot>f2))" (is "?L = ?R")
   apply(rule sb_eq)
@@ -835,6 +851,7 @@ by (metis One_nat_def Suc_1 assms(1) assms(2)
     
 subsection \<open>iter const\<close>
 
+(* Iterating at least twice suffices to substitute the iteration if the comp. is parallel *)
 lemma spfComp_parallel_iterconst_eq1 [simp]:  assumes "parcomp_well f1 f2" shows
 "(\<lambda>x. (sbDom\<cdot>x = spfCompI f1 f2)\<leadsto>(\<Squnion>i. iterate i\<cdot>(spfCompH2 f1 f2 x)\<cdot>(sbLeast (spfCompC f1 f2)))\<bar>spfCompOc f1 f2)
               = (\<lambda>x. (sbDom\<cdot>x = spfCompI f1 f2)\<leadsto>(  x \<uplus> ((Rep_CSPF f1) \<rightharpoonup> (x \<bar>spfDom\<cdot>f1)) \<uplus> ((Rep_CSPF f2) \<rightharpoonup> (x\<bar>spfDom\<cdot>f2)) )\<bar>spfCompOc f1 f2)"
@@ -871,7 +888,8 @@ shows "spf_well (Abs_cfun (\<lambda>x. (sbDom\<cdot>x = spfDom\<cdot>f1 \<union>
     by auto
   
 subsection \<open>result\<close>    
-  
+
+(* For parallel comp., if  c is in the range of one of the 2 SPFs, evaluating that SPF suffices *)
 lemma spfCompParallelGetch1: assumes "parcomp_well f1 f2"
                                 and "sbDom\<cdot>sb = spfCompI f1 f2"
                                 and "c \<in> spfRan\<cdot>f1" 
@@ -897,28 +915,32 @@ lemma spfCompParallelGetch2: assumes "parcomp_well f1 f2"
 section \<open>special serial and parallel operators\<close>
   (* Proof by MW *) 
 
+(* The definition of spfCompI matches the domain of the resulting SPF from composition *)
 lemma spfComp_dom_I: assumes "spfComp_well f1 f2" shows "spfDom\<cdot>(spfCompOld f1 f2) = spfCompI f1 f2"
-apply(simp add: spfCompOld_tospfH2, subst spfDomAbs)
-by(simp_all add: assms) 
+  apply(simp add: spfCompOld_tospfH2, subst spfDomAbs)
+  by(simp_all add: assms) 
 
 lemma spfDomHelp: assumes "spfDom\<cdot>f1 \<subseteq> sbDom\<cdot>sb" shows "sbDom\<cdot>(f1\<rightleftharpoons>sb\<bar>spfDom\<cdot>f1) = spfRan\<cdot>f1"
-by (simp add: assms)
+  by (simp add: assms)
 
+(* The domain of spfCompH2 depends on the SPFs f1, f2 and the "helper" SB sb1, NOT arg. sb2 *)
 lemma sbDomH2: assumes "spfDom\<cdot>f1 \<union> spfDom\<cdot>f2 \<subseteq> sbDom\<cdot>sb2" shows "sbDom\<cdot>((spfCompH2 f1 f2 sb1)\<cdot>sb2) = sbDom\<cdot>sb1 \<union> spfRan\<cdot>f1 \<union> spfRan\<cdot>f2"
-apply(simp add: spfCompH2_def)
-apply(subst spfDomHelp)
-using assms apply auto[1]
-apply(subst spfDomHelp)
-using assms apply auto[1]
-by simp
+  apply(simp add: spfCompH2_def)
+  apply(subst spfDomHelp)
+  using assms apply auto[1]
+  apply(subst spfDomHelp)
+  using assms apply auto[1]
+  by simp
 
+(* The definition of spfCompOc matches the range of the resulting SPF from composition *)
 lemma spfComp_ran_Oc: assumes "spfComp_well f1 f2" shows "spfRan\<cdot>(spfCompOld f1 f2) = spfCompOc f1 f2"
   apply(simp add: spfCompOld_tospfH2)
   apply(simp only:  spfran_least)
   by(subst spfDomAbs, simp_all add: assms inf.absorb2)  
 
+(* The resulting SPF from Restricting an SPF to its domain is continuous *)
 lemma contSPFRestrict: assumes "cont (Rep_CSPF f)" and "spfDom\<cdot>f = cs" shows "cont (\<lambda> z. (f\<rightleftharpoons>(z\<bar>cs)))"
-by (metis  cont_Rep_cfun2 cont_compose op_the_cont)    
+  by (metis  cont_Rep_cfun2 cont_compose op_the_cont)    
     
 subsection \<open>parallel\<close>
   
@@ -927,6 +949,7 @@ lemma LtopL: "spfCompL f1 f2 = {} \<Longrightarrow> pspfCompL f1 f2 = {}"
   using spfpl_sub_L by blast
 *)
 
+(* If the cs that the SBs are restricted to only intersects with some, the others are redundant *)
 lemma unionRestrictCh: assumes "sbDom\<cdot>sb1 \<inter> cs = {}"
                            and "sbDom\<cdot>sb2 \<union> sbDom\<cdot>sb3 = cs"
                            and "c \<in> cs"
@@ -938,33 +961,38 @@ lemma unionRestrict: assumes "sbDom\<cdot>sb1 \<inter> cs = {}"
    shows "sb1 \<uplus> sb2 \<uplus> sb3 \<bar> cs = sb2 \<uplus> sb3"
   by (metis assms(2) sbunionDom sbunion_associative sbunion_restrict)
 
+(* Subst. rule for parallel composition removing the iteration of spfCompH2 *)
 lemma parCompHelp2Eq: assumes "parcomp_well f1 f2"
                           and "sbDom\<cdot>x = spfDom\<cdot>f1 \<union> spfDom\<cdot>f2"    
    shows "(\<Squnion>i. iterate i\<cdot>(spfCompH2 f1 f2 x)\<cdot>(sbLeast (spfCompC f1 f2)))\<bar>spfCompOc f1 f2 = (f1\<rightleftharpoons>(x\<bar>spfDom\<cdot>f1)) \<uplus> (f2\<rightleftharpoons>(x\<bar>spfDom\<cdot>f2))" 
-apply(subst spfComp_parallel_itconst2, simp_all add: assms spfComp_well_def)
-apply(simp add: spfCompOc_def)
-apply(subst unionRestrict)
-apply(simp_all add: assms)
-by (metis spfCompL_def assms(1))
+  apply(subst spfComp_parallel_itconst2, simp_all add: assms spfComp_well_def)
+  apply(simp add: spfCompOc_def)
+  apply(subst unionRestrict)
+  apply(simp_all add: assms)
+  by (metis spfCompL_def assms(1))
 
 lemma parCompHelp2Eq2: assumes "parcomp_well f1 f2" 
    shows " (sbDom\<cdot>x = spfDom\<cdot>f1 \<union> spfDom\<cdot>f2) \<leadsto> ((\<Squnion>i. iterate i\<cdot>(spfCompH2 f1 f2 x)\<cdot>(sbLeast (spfCompC f1 f2)))\<bar>spfCompOc f1 f2)
          = (sbDom\<cdot>x = spfDom\<cdot>f1 \<union> spfDom\<cdot>f2) \<leadsto> ((f1\<rightleftharpoons>(x\<bar>spfDom\<cdot>f1)) \<uplus> (f2\<rightleftharpoons>(x\<bar>spfDom\<cdot>f2)))"
 using assms(1) parCompHelp2Eq by fastforce
 
+(* Subst. rule replacing the general composition with parallel composition, if parcomp_well holds *)
 lemma parallelOperatorEq: assumes "parcomp_well f1 f2"  
    shows "spfCompOld f1 f2 = (f1 \<parallel> f2)"
-apply (simp add: parcomp_def spfCompOld_tospfH2)
-apply(subst spfComp_I_domf1f2_eq, simp_all add: assms)
-apply(subst parCompHelp2Eq2)
-by(simp_all add: assms)
+  apply (simp add: parcomp_def spfCompOld_tospfH2)
+  apply(subst spfComp_I_domf1f2_eq, simp_all add: assms)
+  apply(subst parCompHelp2Eq2)
+  by(simp_all add: assms)
 
+(* Domains stay the same after the substitution *)
 lemma parCompDom: assumes "parcomp_well f1 f2" shows "spfDom\<cdot>(f1 \<parallel> f2) = spfDom\<cdot>(spfCompOld f1 f2)"
   by (simp add: assms(1) parallelOperatorEq)
 
+(* Range stay the same after the substitution *)
 lemma parCompRan: assumes "parcomp_well f1 f2" shows "spfRan\<cdot>(f1 \<parallel> f2) = spfRan\<cdot>(spfCompOld f1 f2)"
   by (simp add: assms(1) parallelOperatorEq)
 
+(* Parallel composition leads to a continuous function *)
 lemma parcomp_cont[simp]: "cont (\<lambda> x. (sbDom\<cdot>x = spfDom\<cdot>f1 \<union> spfDom\<cdot>f2 ) \<leadsto> ((f1 \<rightleftharpoons> (x \<bar>spfDom\<cdot>f1)) \<uplus> (f2 \<rightleftharpoons> (x\<bar>spfDom\<cdot>f2))))"
 proof - 
   have  "cont (\<lambda>s. (Rep_cfun (Rep_SPF f1))\<rightharpoonup>(s\<bar>spfDom\<cdot>f1))"
@@ -986,7 +1014,8 @@ proof -
     apply(subst if_then_cont)
     by (simp_all add: f3)
 qed
-  
+
+(* Parallel composition indeed leads to another SPF *)
 lemma parcomp_spf_well[simp]: "spf_well (\<Lambda> x. (sbDom\<cdot>x = spfDom\<cdot>f1 \<union> spfDom\<cdot>f2 ) \<leadsto> ((f1 \<rightleftharpoons> (x \<bar>spfDom\<cdot>f1)) \<uplus> (f2 \<rightleftharpoons> (x\<bar>spfDom\<cdot>f2))))"  
   apply(simp add: spf_well_def)
   apply(simp only: domIff2)
@@ -1001,7 +1030,8 @@ lemma pLEmptyNoSelfloops: assumes "pspfCompL f1 f2 = {}"
   apply(simp add: no_selfloops_def)
   using assms pL_def by auto
 *)
-    
+
+(* In serial composition, the domain depends on the first SPF *)
 lemma spfComp_I_domf1_eq2: assumes "sercomp_well f1 f2"
   shows "spfCompI f1 f2 = spfDom\<cdot>f1"
 proof -
@@ -1017,7 +1047,8 @@ lemma spfComp_serial_itconst2 [simp]: assumes "sercomp_well f1 f2"
   shows "(\<Squnion>i. iter_spfcompH2 f1 f2 i x) = x \<uplus> (f1 \<rightleftharpoons> (x \<bar>spfDom\<cdot>f1)) 
                                              \<uplus> (f2 \<rightleftharpoons> (f1 \<rightleftharpoons> (x\<bar>spfDom\<cdot>f1)))"
 *)  
-  
+
+(* Subst. rule to get rid of iterating spfCompH in serial composition *)
 lemma serCompHelp2Eq: assumes "sercomp_well f1 f2"
                           and "sbDom\<cdot>x = spfDom\<cdot>f1" 
    shows "(\<Squnion>i. iterate i\<cdot>(spfCompH2 f1 f2 x)\<cdot>(sbLeast (spfCompC f1 f2)))\<bar> spfCompOc f1 f2 = ((f1 \<rightleftharpoons> x)) \<uplus> (f2 \<rightleftharpoons> (f1 \<rightleftharpoons> x))" 
@@ -1034,6 +1065,7 @@ lemma serCompHelp2Eq2: assumes "sercomp_well f1 f2"
          = (sbDom\<cdot>x = spfDom\<cdot>f1) \<leadsto> ((f1 \<rightleftharpoons> x) \<uplus> (f2 \<rightleftharpoons> (f1 \<rightleftharpoons> x)))"
   by (metis (mono_tags, lifting) assms(1) lub_eq serCompHelp2Eq)
 
+(* In case sercomp_well holds, serial composition is the same as general composition with hiding *)
 lemma serialOperatorEq: assumes "sercomp_well f1 f2"
                             and "sbDom\<cdot>sb = spfDom\<cdot>f1"
    shows "((spfCompOld f1 f2) \<h> spfRan\<cdot>f1) \<rightleftharpoons> sb = (f1 \<circ> f2) \<rightleftharpoons> sb"
@@ -1046,6 +1078,7 @@ proof -
     sorry
 qed
 
+(* resulting function from serial comp. is cont *)
 lemma sercomp_cont[simp]: "cont (\<lambda> x. (sbDom\<cdot>x =  spfDom\<cdot>f1) \<leadsto> (f2 \<rightleftharpoons> (f1 \<rightleftharpoons> x)))"
 proof -
   have "cont (the::'a SB option \<Rightarrow> _) \<and> cont (\<lambda>s. Rep_SPF f2\<cdot>Rep_cfun (Rep_SPF f1)\<rightharpoonup>s)"
@@ -1057,13 +1090,15 @@ proof -
   then show ?thesis
     by (metis (no_types) )
 qed
-  
+
+(* Resulting function is indeed an SPF *)
 lemma sercomp_spf_well[simp]: assumes "spfRan\<cdot>f1 = spfDom\<cdot>f2" shows "spf_well (\<Lambda> x. (sbDom\<cdot>x =  spfDom\<cdot>f1) \<leadsto> (f2 \<rightleftharpoons> (f1 \<rightleftharpoons> x)))"  
   apply(simp add: spf_well_def)
   apply(simp only: domIff2)
   apply(simp add: sbdom_rep_eq)
   by (metis (full_types) assms hidespfwell_helper) 
 
+(* Domain of serial composition *)
 lemma serCompDom: assumes "sercomp_well f1 f2" shows "spfDom\<cdot>(f1 \<circ> f2) = spfDom\<cdot>f1"
   apply(simp add: sercomp_def)
   by(simp add: spfDomAbs assms)   

@@ -409,8 +409,7 @@ instance
   apply (simp add: usclDrop_stream_def)
   by(metis (mono_tags, lifting) dual_order.trans sdrop_sdom usclDrop_stream_def usclOkay_stream_def)
 
-
-
 end
+
 
 end

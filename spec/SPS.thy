@@ -8,38 +8,40 @@ default_sort message
 
 type_synonym 'm SPS = "'m SPF uspec"
 
-
-
 section \<open>Definition\<close>
-
 
 definition spsConcOut:: "'m SB \<Rightarrow> 'm SPS \<rightarrow> 'm SPS" where
 "spsConcOut sb = Abs_cfun (uspecImage (Rep_cfun (spfConcOut sb)))"
 
+definition spsConcIn:: "'m SB \<Rightarrow> 'm SPS \<rightarrow> 'm SPS" where
+"spsConcIn sb = Abs_cfun (uspecImage (Rep_cfun (spfConcIn sb)))"
+
 definition spsRtIn:: "'m SPS \<rightarrow> 'm SPS" where
 "spsRtIn = Abs_cfun (uspecImage (Rep_cfun spfRtIn))"
 
-
 section \<open>Lemma\<close>
 
-  subsection \<open>spsConcOut\<close>
+(* ----------------------------------------------------------------------- *)
+subsection \<open>spsConcOut\<close>
+(* ----------------------------------------------------------------------- *)
 
 lemma spsconcout_cont: 
   assumes "\<And>c. c\<in>ubDom\<cdot>sb \<Longrightarrow> # (sb . c) < \<infinity>"
-  shows"cont (uspecImage (Rep_cfun (spfConcOut sb)))"
+  shows "cont (uspecImage (Rep_cfun (spfConcOut sb)))"
   apply(rule uspecimage_inj_cont)
   using assms spfconc_surj apply blast
   by (simp add: ufclDom_ufun_def ufclRan_ufun_def)
   
 lemma spsconcout_insert: 
   assumes "\<And>c. c\<in>ubDom\<cdot>sb \<Longrightarrow> # (sb . c) < \<infinity>"
-  shows"spsConcOut sb\<cdot>sps =  (uspecImage (Rep_cfun (spfConcOut sb)) sps)"
+  shows "spsConcOut sb\<cdot>sps = (uspecImage (Rep_cfun (spfConcOut sb)) sps)"
   apply(simp only: spsConcOut_def)
   by (simp add: assms spsconcout_cont)
 
 lemma spsconcout_dom [simp]: 
   assumes "\<And>c. c\<in>ubDom\<cdot>sb \<Longrightarrow> # (sb . c) < \<infinity>"
   shows "uspecDom\<cdot>(spsConcOut sb\<cdot>sps) = uspecDom\<cdot>sps"
+  apply (simp add: spsconcout_insert assms)
   by (simp add: assms spsconcout_insert ufclDom_ufun_def ufclRan_ufun_def)
 
 lemma spsconcout_ran [simp]: 
@@ -47,18 +49,64 @@ lemma spsconcout_ran [simp]:
   shows "uspecRan\<cdot>(spsConcOut sb\<cdot>sps) = uspecRan\<cdot>sps"
   by (simp add: assms spsconcout_insert ufclDom_ufun_def ufclRan_ufun_def)
 
+(* ----------------------------------------------------------------------- *)
+subsection \<open>spsConcIn\<close>
+(* ----------------------------------------------------------------------- *)
 
+lemma sbconc_surj: "surj (Rep_cfun (ubConcEq (sb :: 'a stream\<^sup>\<Omega>)))"
+  apply (simp add: surj_def)
+(*apply (rule, simp_all)
+  apply (simp add: ubConcEq_def)
+  apply (subst UNIV_def)*)
+oops
 
-  subsection \<open>spsRtIn\<close>
+lemma spfconcin_inj:
+  assumes "\<And>c. c\<in>ubDom\<cdot>sb \<Longrightarrow> # (sb . c) < \<infinity>"
+  shows "inj (\<lambda>spf. spfConcIn sb\<cdot>spf)"
+(*  apply (rule injI)
+  apply (rule spf_eq)
+  apply (metis spfConcIn_dom)*)
+  apply (simp add: spfConcIn_def)
+  apply (subst ufapplyin_inj, simp_all)
+  apply (simp add: ubclDom_ubundle_def inf_commute sup_commute sbconc_inj)
+  (* by (simp add: assms sbconc_surj) *)
+oops
+
+lemma spsconcin_cont: assumes "\<And>c. c\<in>ubDom\<cdot>sb \<Longrightarrow> # (sb . c) < \<infinity>"
+  shows "cont (uspecImage (Rep_cfun (spfConcIn sb)))"
+  apply (rule uspecimage_inj_cont)
+  (* apply (simp add: spfconcin_inj assms) 
+  by (simp add: ufclDom_ufun_def ufclRan_ufun_def)*)
+oops
+
+lemma spsconcin_insert: 
+  assumes "\<And>c. c\<in>ubDom\<cdot>sb \<Longrightarrow> # (sb . c) < \<infinity>"
+  shows "spsConcIn sb\<cdot>sps = (uspecImage (Rep_cfun (spfConcIn sb)) sps)"
+  (* by (simp add: spsConcIn_def assms spsconcin_cont)*)
+oops
+
+lemma spsconcin_dom [simp]: assumes "\<And>c. c\<in>ubDom\<cdot>sb \<Longrightarrow> # (sb . c) < \<infinity>"
+  shows "uspecDom\<cdot>(spsConcIn sb\<cdot>sps) = uspecDom\<cdot>sps"
+  (* by (simp add: spsconcin_insert assms ufclDom_ufun_def ufclRan_ufun_def)*)
+oops
+
+lemma spsconcin_ran [simp]: 
+  assumes "\<And>c. c\<in>ubDom\<cdot>sb \<Longrightarrow> # (sb . c) < \<infinity>"
+  shows "uspecRan\<cdot>(spsConcIn sb\<cdot>sps) = uspecRan\<cdot>sps"
+  (*by (simp add: assms spsconcin_insert ufclDom_ufun_def ufclRan_ufun_def)*)
+oops
+
+(* ----------------------------------------------------------------------- *)
+subsection \<open>spsRtIn\<close>
+(* ----------------------------------------------------------------------- *)
 
 lemma spsrtin_cont: "cont (uspecImage (Rep_cfun spfRtIn))"
   apply(rule uspecimage_inj_cont)
-   apply (simp add: spfRt_inj)
+  apply (simp add: spfRt_inj)
   by (simp add: ufclDom_ufun_def ufclRan_ufun_def)
 
 lemma spsrtin_insert: "spsRtIn\<cdot>sps = uspecImage (Rep_cfun spfRtIn) sps"
-  apply(simp add: spsRtIn_def spsrtin_cont)
-  done
+  by(simp add: spsRtIn_def spsrtin_cont)
 
 lemma spsrtin_dom [simp]: "uspecDom\<cdot>(spsRtIn\<cdot>sps) = uspecDom\<cdot>sps"
   by (simp add: spsRtIn_def spsrtin_cont ufclDom_ufun_def ufclRan_ufun_def)
@@ -66,13 +114,12 @@ lemma spsrtin_dom [simp]: "uspecDom\<cdot>(spsRtIn\<cdot>sps) = uspecDom\<cdot>s
 lemma spsrtin_ran [simp]: "uspecRan\<cdot>(spsRtIn\<cdot>sps) = uspecRan\<cdot>sps"
   by (simp add: spsRtIn_def spsrtin_cont ufclDom_ufun_def ufclRan_ufun_def)
 
-
 lemma spsconcout_inj: 
   assumes "\<And>c. c\<in>ubDom\<cdot>sb \<Longrightarrow> # (sb . c) < \<infinity>"
   shows "inj (\<lambda>sps. spsConcOut sb\<cdot>sps)"
 proof -
   have f1: "\<forall>c. c \<notin> ubDom\<cdot>sb \<or> #(sb . c) < \<infinity>"
-by (meson assms)
+    by (meson assms)
   have f2: "\<forall>f u ua. ((\<exists>u ua. (ufclDom\<cdot>(u::('a stream\<^sup>\<Omega>) ufun) = ufclDom\<cdot>ua \<and> ufclRan\<cdot>u = ufclRan\<cdot>ua) 
     \<and> (ufclDom\<cdot>(f u::('a stream\<^sup>\<Omega>) ufun) \<noteq> ufclDom\<cdot>(f ua) \<or> ufclRan\<cdot>(f u) \<noteq> ufclRan\<cdot>(f ua))) \<or> 
     \<not> inj f \<or> uspecDom\<cdot>u \<noteq> uspecDom\<cdot>ua \<or> uspecRan\<cdot>u \<noteq> uspecRan\<cdot>ua \<or> uspecRevSet\<cdot>(uspecImage f u) 
@@ -90,8 +137,8 @@ by (meson assms)
     \<or> uspecDom\<cdot>u \<noteq> uspecDom\<cdot>ua \<or> uspecRan\<cdot>u \<noteq> uspecRan\<cdot>ua \<or> uspecRevSet\<cdot>(uspecImage f u) \<noteq> 
     uspecRevSet\<cdot>(uspecImage f ua)) \<or> u = ua"
     using f2 by presburger
-have "\<forall>f. (\<exists>u ua. (f (u::('a stream\<^sup>\<Omega>) ufun uspec)::('a stream\<^sup>\<Omega>) ufun uspec) = f ua \<and> u \<noteq> ua) \<or> inj f"
-by (meson injI)
+  have "\<forall>f. (\<exists>u ua. (f (u::('a stream\<^sup>\<Omega>) ufun uspec)::('a stream\<^sup>\<Omega>) ufun uspec) = f ua \<and> u \<noteq> ua) \<or> inj f"
+    by (meson injI)
   then obtain uub :: "(('a stream\<^sup>\<Omega>) ufun uspec \<Rightarrow> ('a stream\<^sup>\<Omega>) ufun uspec) \<Rightarrow> ('a stream\<^sup>\<Omega>) ufun uspec" 
     and uuc :: "(('a stream\<^sup>\<Omega>) ufun uspec \<Rightarrow> ('a stream\<^sup>\<Omega>) ufun uspec) \<Rightarrow> ('a stream\<^sup>\<Omega>) ufun uspec" where
     f4: "\<forall>f. f (uub f) = f (uuc f) \<and> uub f \<noteq> uuc f \<or> inj f"
