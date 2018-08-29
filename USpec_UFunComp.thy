@@ -74,7 +74,8 @@ lemma uspec_compwell2ufunclcompwell: assumes "uspec_compwell S1 S2"
 lemma uspec_comp_well[simp]: assumes "uspec_compwell S1 S2"
   shows "uspecWell (Rev {ufComp f1 f2 |(f1::('m,'m) ufun) (f2::('m,'m) ufun). f1 \<in> Rep_rev_uspec S1 \<and> f2 \<in> Rep_rev_uspec S2})
               (Discr (uspecCompDom S1 S2)) (Discr (uspecRanUnion S1 S2))"
-  apply (rule uspec_wellI)                
+  apply (rule uspec_wellI) 
+  using ufclDom_ufun_def assms ufcomp_dom uspec_allDom uspec_allRan uspec_compwell2ufunclcompwell
    (*using CollectD assms ufcomp_dom uspec_allDom uspec_allRan uspec_compwell2ufunclcompwell uspecrevset_insert ufCompI_def
   by (smt CollectD assms ufuncl_comp_ran uspec_allRan uspec_compwell2ufunclcompwell uspecrevset_insert)
    *) sorry
@@ -86,7 +87,8 @@ proof -
   have "{ufComp f1 f2 |(f1::('a,'a) ufun) (f2::('a,'a) ufun). f1 \<in> Rep_rev_uspec S1 \<and> f2 \<in> Rep_rev_uspec S2} = 
              {ufComp f1 f2 |(f1::('a,'a) ufun) (f2::('a,'a) ufun). f1 \<in> Rep_rev_uspec S2 \<and> f2 \<in> Rep_rev_uspec S1}" (is "?L = ?R")
     apply auto
-    using assms uspec_compwell_def sorry
+    apply (meson comp_well_def ufcomp_commu assms uspec_compwell_def)
+    by (metis assms comp_well_def ufcomp_commu uspec_compwell2ufunclcompwell)
   then show ?thesis
     unfolding uspecComp_def apply simp
     apply (rule uspec_eqI)
@@ -127,21 +129,24 @@ subsection \<open>UspecParComp\<close>
 
 (*   *)
 lemma uspec_parcompwell_commu: "uspec_parcompwell S1 S2 = uspec_parcompwell S2 S1"
-  using uspec_parcompwell_def sorry
+  using uspec_parcompwell_def
+  by (metis inf_commute ufcomp_L_commu)
 
 (*   *)
 lemma uspec_parcompwell2ufunclparcompwell: assumes "uspec_parcompwell S1 S2"
   shows "\<forall> f1 \<in> Rep_rev_uspec S1. \<forall> f2 \<in> Rep_rev_uspec S2. parcomp_well f1 f2"
-  using assms uspec_parcompwell_def sorry
+  using assms uspec_parcompwell_def 
+  by blast
 
 (*   *)
 lemma uspec_parcomp_well[simp]: assumes "uspec_parcompwell S1 S2"
   shows "uspecWell (Rev {ufParComp f1 f2 |(f1::('a,'b) ufun) (f2::('a,'b) ufun). f1 \<in> Rep_rev_uspec S1 \<and> f2 \<in> Rep_rev_uspec S2})
               (Discr (uspecDomUnion S1 S2)) (Discr (uspecRanUnion S1 S2))"
-  apply (rule uspec_wellI) (*
-   apply (smt CollectD assms ufuncl_parcomp_dom uspec_allDom uspec_parcompwell2ufunclparcompwell uspecrevset_insert) 
-  by (smt CollectD assms ufuncl_parcomp_ran uspec_allRan uspec_parcompwell2ufunclparcompwell uspecrevset_insert)
-  *) sorry
+  apply (rule uspec_wellI) 
+  using ufclDom_ufun_def
+  apply (smt Abs_cfun_inverse2 CollectD assms ufParComp_dom uspecRevSet_def uspec_allDom uspec_parcompwell2ufunclparcompwell uspecrevset_cont)
+  using ufclDom_ufun_def
+  by (smt Abs_cfun_inverse2 CollectD assms ufParComp_ran ufclRan_ufun_def uspecRevSet_def uspec_allRan uspec_parcompwell2ufunclparcompwell uspecrevset_cont)
 
 (*   *)
 lemma uspec_parcomp_rep[simp]: assumes "uspec_parcompwell S1 S2"
@@ -154,8 +159,7 @@ shows "{ufParComp f1 f2 |(f1::('a,'b) ufun) (f2::('a,'b) ufun). f1 \<in> Rep_rev
 lemma uspec_parcomp_not_empty:  assumes "uspec_parcompwell S1 S2"
 "f1 \<in> Rep_rev_uspec S1" and f2_def: "f2 \<in> Rep_rev_uspec S2"
 shows "(ufParComp f1 f2) \<in> Rep_rev_uspec (S1 \<parallel> S2)"
-  (*by (metis (mono_tags, lifting) assms(1) assms(2) f2_def mem_Collect_eq rep_abs_rev_simp 
-      uspecParComp_def uspec_parcomp_well)*) sorry
+  using assms(1) assms(2) f2_def uspec_parcomp_rep by fastforce  
 
 (*   *)
 lemma uspec_parcomp_consistent: assumes "uspec_parcompwell S1 S2"
@@ -168,7 +172,8 @@ lemma uspec_parcomp_consistent2: assumes "uspec_parcompwell S1 S2" and "uspecIsC
   shows "uspecIsConsistent S1 \<and> uspecIsConsistent S2"
 proof (rule)
   have f1: "{ufParComp a aa |a aa. a \<in> Rep_rev_uspec S1 \<and> aa \<in> Rep_rev_uspec S2} \<noteq> {}"
-    using assms(1) assms(2) uspecIsConsistent_def sorry      
+    using assms(1) assms(2) uspecIsConsistent_def
+    by auto      
   then have "Rep_rev_uspec S1 \<noteq> {}"
     by blast
   then show "uspecIsConsistent S1"
@@ -201,7 +206,8 @@ lemma uspec_parcomp_h1: assumes "uspec_parcompwell S1 S2"
 
 lemma uspec_parcomp_h2: assumes "uspec_parcompwell S1 S2"
   shows "\<forall> f1 \<in> Rep_rev_uspec S1. \<forall> f2 \<in> Rep_rev_uspec S2. parcomp_well f1 f2"
-  using assms uspec_parcompwell_def sorry
+  using assms uspec_parcompwell_def
+  by blast
 
 (* if the composition of 2 uspecs is consistent then those uspecs are consistent themselves  *)
 lemma uspec_parcomp_ele_ex: assumes "uspec_parcompwell S1 S2"
@@ -215,7 +221,8 @@ proof -
   have f1: "{f1 \<parallel> f2 |f1 f2. f1 \<in> Rep_rev_uspec S1 \<and> f2 \<in> Rep_rev_uspec S2} = 
                 {f1 \<parallel> f2 |f1 f2. f1 \<in> Rep_rev_uspec S2 \<and> f2 \<in> Rep_rev_uspec S1}" (is "?L = ?R")
     apply auto
-    using assms uspec_parcompwell_def sorry
+     apply (meson assms uspec_parcompwell_def ufParComp_commutativity)
+    sorry
   show ?thesis
     apply (rule uspec_eqI)
       apply (simp add: uspecParComp_def)
@@ -232,16 +239,21 @@ shows "uspecParComp (uspecParComp S1 S2) S3 = uspecParComp S1 (uspecParComp S2 S
 proof -
   have f0: "uspec_parcompwell (S1 \<parallel> S2) S3"
     apply (simp add: uspec_parcompwell_def, auto)
-    using assms(1) assms(2) assms(3) 
-        uspec_parcomp_ele_ex uspec_parcompwell2ufunclparcompwell uspec_parcompwell_def sorry
+    using assms(1) assms(2) assms(3) uspec_parcomp_ele_ex uspec_parcompwell2ufunclparcompwell uspec_parcompwell_def
+     apply (smt empty_iff ufParCompWell_associativity uspec_parcompwell_commu)
+    by (smt assms(1) assms(2) assms(3) disjoint_iff_not_equal ufParCompWell_associativity uspec_parcomp_ele_ex uspec_parcompwell2ufunclparcompwell uspec_parcompwell_commu)
   have f1: "uspec_parcompwell S1 (S2 \<parallel> S3)"
     apply (simp add: uspec_parcompwell_def, auto)
-    using  assms(1) assms(2) assms(3) uspec_parcomp_ele_ex uspec_parcompwell2ufunclparcompwell sorry
+    using  assms(1) assms(2) assms(3) uspec_parcomp_ele_ex uspec_parcompwell2ufunclparcompwell
+     apply (smt empty_iff ufParCompWell_associativity) 
+    by (smt Un_iff assms(1) assms(2) assms(3) disjoint_iff_not_equal ufParComp_ran uspec_parcomp_ele_ex uspec_parcompwell2ufunclparcompwell)
   have f2: "uspecRevSet\<cdot>((S1 \<parallel> S2) \<parallel> S3) = 
       Rev {f1 \<parallel> f2 |f1 f2. f1 \<in> Rep_rev_uspec (S1 \<parallel> S2) \<and> f2 \<in> Rep_rev_uspec S3}"
     apply (simp add: uspecrevset_insert)
     apply (subst uspec_parcomp_rep)
-    using assms(1) assms(2) assms(3) uspec_parcomp_ele_ex uspec_parcompwell2ufunclparcompwell uspec_parcompwell_def sorry
+    using assms(1) assms(2) assms(3) uspec_parcomp_ele_ex uspec_parcompwell2ufunclparcompwell uspec_parcompwell_def 
+    using f0 apply blast
+    by (simp add: rev_inv_rev)
   have f3: "uspecRevSet\<cdot>(S1 \<parallel> (S2 \<parallel> S3)) = 
       Rev {f1 \<parallel> f2 |f1 f2. f1 \<in> Rep_rev_uspec S1 \<and> f2 \<in> Rep_rev_uspec (S2 \<parallel> S3)}"
     apply (simp add: uspecrevset_insert)
@@ -282,15 +294,24 @@ proof -
     by (simp add: assms(1) assms(3) f0 f1 sup_assoc uspec_parcomp_ran)
 qed*)
     sorry
+  have f11: "uspecRevSet\<cdot>(S1 \<parallel> S2 \<parallel> S3) = uspecRevSet\<cdot>(S1 \<parallel> (S2 \<parallel> S3))"
+    apply (subst f2)
+    apply (subst f3)
+    by (simp add: f10)
   show ?thesis
-    sorry
+    apply (rule uspec_eqI)
+    apply (simp add: f11)
+    apply (simp add: assms(1) assms(3) f0 f1 sup_assoc uspec_parcomp_dom)
+    by (simp add: assms(1) assms(3) f0 f1 sup_assoc uspec_parcomp_ran)
 qed
 
 (*   *)
 lemma uspec_parcompwell_asso_h: assumes "uspec_parcompwell S1 S2" and "uspec_parcompwell S1 S3"
 and "uspec_parcompwell S2 S3" shows "uspec_parcompwell S1 (S2 \<parallel> S3)"
   apply (simp add: uspec_parcompwell_def, auto)
-  using assms(1) assms(2) assms(3) uspec_parcomp_ele_ex uspec_parcompwell2ufunclparcompwell sorry
+  using assms(1) assms(2) assms(3) uspec_parcomp_ele_ex uspec_parcompwell2ufunclparcompwell 
+   apply (smt empty_iff ufParCompWell_associativity)
+  by (smt Un_iff assms(1) assms(2) assms(3) disjoint_iff_not_equal ufParComp_ran uspec_parcomp_ele_ex uspec_parcompwell2ufunclparcompwell)
 
 (* the new component is uspecwell  *) 
 lemma uspec_parcompwell_asso: assumes "uspec_parcompwell S1 S2" and "uspec_parcompwell S1 S3"
@@ -308,8 +329,10 @@ lemma uspec_sercomp_well[simp]: assumes "uspec_sercompwell S1 S2"
   shows "uspecWell (Rev {f1 \<circ> f2 |f1 f2. f1 \<in> Rep_rev_uspec S1 \<and> f2 \<in> Rep_rev_uspec S2})
          (Discr (uspecDom\<cdot>S1)) (Discr (uspecRan\<cdot>S2))"
   apply (rule uspec_wellI)
-   (*apply (smt CollectD assms ufuncl_sercomp_dom uspec_allDom uspec_sercompwell_def uspecrevset_insert)
-  by (smt CollectD assms ufuncl_sercomp_ran uspec_allRan uspec_sercompwell_def uspecrevset_insert)*) sorry
+  using ufclDom_ufun_def
+  apply (smt CollectD assms ufSerComp_dom uspec_allDom uspec_sercompwell_def uspecrevset_insert)
+  using ufclRan_ufun_def 
+  by (smt CollectD assms ufSerComp_ran uspec_allRan uspec_sercompwell_def uspecrevset_insert)
 
 lemma uspec_sercompwell2ufunclsercompwell: assumes "uspec_sercompwell S1 S2"
   shows "\<forall> f1 \<in> Rep_rev_uspec S1. \<forall> f2 \<in> Rep_rev_uspec S2. sercomp_well f1 f2"
@@ -320,7 +343,8 @@ lemma uspec_sercomp_rep[simp]: assumes "uspec_sercompwell S1 S2"
 shows "{f1 \<circ> f2 |f1 f2. f1 \<in> Rep_rev_uspec S1 \<and> f2 \<in> Rep_rev_uspec S2} 
           = Rep_rev_uspec (S1 \<circle> S2)"
   apply (simp add: uspecSerComp_def)
-  using assms mem_Collect_eq rep_abs_rev_simp uspecWell.simps uspec_sercomp_well sorry
+  using assms mem_Collect_eq rep_abs_rev_simp uspecWell.simps uspec_sercomp_well 
+  by smt
 
 (*   *)
 lemma uspec_sercomp_not_empty:  assumes "uspec_sercompwell S1 S2"
@@ -474,7 +498,8 @@ subsection \<open>UspecFeedbackComp\<close>
 lemma uspec_feedbackcomp_well: "uspecWell (Rev {ufFeedbackComp f1 | f1.  f1\<in>(Rep_rev_uspec S1)})
   (Discr (uspecDom\<cdot>S1 - uspecRan\<cdot>S1)) (Discr (uspecRan\<cdot>S1))"
   apply (rule uspec_wellI)
-   (*apply (smt CollectD ufuncl_feedbackcomp_dom uspec_allDom uspec_allRan uspecrevset_insert)
+  using ufclDom_ufun_def 
+(*apply (smt CollectD ufuncl_feedbackcomp_dom uspec_allDom uspec_allRan uspecrevset_insert)
   by (smt CollectD ufuncl_feedbackcomp_ran uspec_allRan uspecrevset_insert)*) sorry
 
 lemma uspec_feedbackcomp_insert: "uspecFeedbackComp S1 = 
