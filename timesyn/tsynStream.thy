@@ -38,6 +38,7 @@ instance tsyn :: (countable) countable
 
 (* ToDo: add descriptions. *)
 
+text {* Instantiation of tsyn message. *}
 instantiation tsyn :: (message) message
 begin
   definition ctype_tsyn :: "channel \<Rightarrow> 'a tsyn set" where 
@@ -46,10 +47,12 @@ begin
     by (intro_classes)
 end
 
+text {* If element a is of type ctype c, then Msg a is also of type ctype c. *}
 lemma ctype_tsynI: assumes "a \<in> ctype c"
   shows "Msg a \<in> ctype c"
   by (simp add: assms ctype_tsyn_def)
 
+text {* The reverse also holds. *}
 lemma ctype_tsyn_iff: "a \<in> ctype c \<longleftrightarrow> Msg a \<in> ctype c"
   by (simp add: ctype_tsyn_def image_iff)
 
@@ -74,6 +77,7 @@ text {* @{term tsynLen}: Return the number of messages. *}
 definition tsynLen:: "'a tsyn stream \<rightarrow> lnat" where 
   "tsynLen \<equiv> \<Lambda> s. #(tsynAbs\<cdot>s)"
 
+text {* Abbrevation of tsynLen. *}
 abbreviation tsynLen_abbr :: "'a tsyn stream \<Rightarrow> lnat" ("#\<^sub>-_" [1000] 999) where
   "#\<^sub>-s == tsynLen\<cdot>s"
 
@@ -114,20 +118,20 @@ text {* @{term tsynFilter}: Remove all elements from the stream which are not in
 definition tsynFilter :: "'a set \<Rightarrow> 'a tsyn stream \<rightarrow> 'a tsyn stream" where
   "tsynFilter A = smap (tsynFilterElem A)"
 
+text {* Abbrevation of tsynFilter. *}
 abbreviation tsynFilter_abbr :: "'a set \<Rightarrow> 'a tsyn stream \<Rightarrow> 'a tsyn stream" 
   ("(_ \<ominus>\<^sub>- _)" [66, 65] 65) where "F \<ominus>\<^sub>- s \<equiv> tsynFilter F\<cdot>s"
 
-(* ToDo: add descriptions. *)
-
+text {* Auxiliary function for @{term tsynRemDups}. *}
 fun tsynRemDups_h :: "'a tsyn \<Rightarrow> 'a tsyn \<Rightarrow> ('a tsyn \<times> 'a tsyn)" where
   "tsynRemDups_h x null = (null, x)" |
   "tsynRemDups_h x y = (if x = y then (null, x) else (y, y))"
 
+text {* @{term tsynRemDups}: Remove all duplicates from the stream. *}
 definition tsynRemDups :: "'a tsyn stream \<rightarrow> 'a tsyn stream" where 
   "tsynRemDups = sscanlA tsynRemDups_h null"
 
-(* ToDo: add description. *)
-
+text {* Auxiliary function for @{term tsynScanlExt}. *}
 fun tsynScanlExt_h :: "('s \<Rightarrow> 'a \<Rightarrow> ('b \<times>'s)) \<Rightarrow> 's \<Rightarrow> 'a tsyn \<Rightarrow> ('b tsyn \<times> 's)" where
   "tsynScanlExt_h f s (Msg m) = (Msg (fst (f s m)), (snd (f s m)))" |
   "tsynScanlExt_h f s null = (null, s)"
@@ -146,13 +150,13 @@ text {* @{term tsynScanl}: Apply a function elementwise to the input stream. Beh
 definition tsynScanl :: "('b \<Rightarrow> 'a \<Rightarrow> 'b) \<Rightarrow> 'b \<Rightarrow> 'a tsyn stream \<rightarrow> 'b tsyn stream" where
   "tsynScanl f i = tsynScanlExt (\<lambda>a b. (f a b, f a b)) i"
 
-(* ToDo: add description. *)
-
+text {* Auxiliary function for @{term tsynDropWhile}. *}
 fun tsynDropWhile_h :: "('a \<Rightarrow> bool) \<Rightarrow> bool \<Rightarrow> 'a tsyn \<Rightarrow> ('a tsyn \<times> bool)" where
   "tsynDropWhile_h f x null = (null, x)"|
   "tsynDropWhile_h f True (Msg x) = (if f x then (null, True) else ((Msg x), False))" |
   "tsynDropWhile_h f False (Msg x) = ((Msg x), False)"
-  
+
+text {* @{term tsynDropWhile}: Check each element of the stream and remove elements satisfying f. *}
 definition tsynDropWhile :: "('a \<Rightarrow> bool) \<Rightarrow> 'a tsyn stream \<rightarrow> 'a tsyn stream" where
   "tsynDropWhile f =  sscanlA (tsynDropWhile_h f) True"
 
@@ -171,8 +175,7 @@ fixrec tsynZip :: "'a tsyn stream \<rightarrow> 'b stream \<rightarrow> ('a \<ti
 
 (* Fixrec-Example *)
 
-(* ToDo: add description. *)
-
+text {* Auxiliary function for @{term tsynRemDups_fix}. *}
 fixrec tsynRemDups_fix_h :: "'a tsyn stream \<rightarrow> 'a tsyn discr option \<rightarrow> 'a tsyn stream" where
   "tsynRemDups_fix_h\<cdot>\<epsilon>\<cdot>option = \<epsilon>" |
   "tsynRemDups_fix_h\<cdot>(up\<cdot>a && as)\<cdot>None = (
@@ -185,6 +188,7 @@ fixrec tsynRemDups_fix_h :: "'a tsyn stream \<rightarrow> 'a tsyn discr option \
      else up\<cdot>a && tsynRemDups_fix_h\<cdot>as\<cdot>(Some a))
   )"
 
+text {* @{term tsynRemDups_fix}: Fixrec definition of @{term tsynRemDups}. *}
 definition tsynRemDups_fix :: "'a tsyn stream \<rightarrow> 'a tsyn stream" where
   "tsynRemDups_fix \<equiv> \<Lambda> s. tsynRemDups_fix_h\<cdot>s\<cdot>None"
 
@@ -821,21 +825,22 @@ lemma tsynremdups_tsynabs: "tsynAbs\<cdot>(tsynRemDups\<cdot>s) = srcdups\<cdot>
 
 declare tsynRemDups_fix_h.simps [simp del]
 
-text {* @{term tsynRemDups} is strict. *}
+text {* @{term tsynRemDups_fix} is strict. *}
 lemma tsynremdups_fix_h_strict [simp]: "tsynRemDups_fix_h\<cdot>\<epsilon>\<cdot>option = \<epsilon>"
   by (fixrec_simp)
 
-(* ToDo: add descriptions *)
-
+text {* @{term tsynRemDups_fix} without option ignores message. *}
 lemma tsynremdups_fix_h_sconc_msg_none:
   "tsynRemDups_fix_h\<cdot>(\<up>(Msg a) \<bullet> as)\<cdot>None = \<up>(Msg a) \<bullet> tsynRemDups_fix_h\<cdot>as\<cdot>(Some (Discr (Msg a)))"
   by (fold lscons_conv, fixrec_simp)
 
+text {* @{term tsynRemDups_fix} removes message if it is equal to the given option. *}
 lemma tsynremdups_fix_h_sconc_msg_some_eq:
   "tsynRemDups_fix_h\<cdot>(\<up>(Msg a) \<bullet> as)\<cdot>(Some (Discr (Msg a))) 
      = \<up>null \<bullet> tsynRemDups_fix_h\<cdot>as\<cdot>(Some (Discr (Msg a)))"
   by (fold lscons_conv, fixrec_simp)
 
+text {* @{term tsynRemDups_fix} ignores message if it is not equal to the given option. *}
 lemma tsynremdups_fix_h_sconc_msg_some_neq:
   assumes "a \<noteq> b"
   shows "tsynRemDups_fix_h\<cdot>(\<up>(Msg a) \<bullet> as)\<cdot>(Some (Discr (Msg b))) 
@@ -848,11 +853,13 @@ lemma tsynremdups_fix_h_sconc_null_none:
   "tsynRemDups_fix_h\<cdot>(\<up>null \<bullet> as)\<cdot>None = \<up>null \<bullet> tsynRemDups_fix_h\<cdot>as\<cdot>None"
   by (fold lscons_conv, fixrec_simp)
 
+text {* @{term tsynRemDups_fix_h} ignores empty time-slots even with a given option. *}
 lemma tsynremdups_fix_h_sconc_null_some:
   "tsynRemDups_fix_h\<cdot>(\<up>null \<bullet> as)\<cdot>(Some (Discr (Msg a))) 
     = \<up>null \<bullet> tsynRemDups_fix_h\<cdot>as\<cdot>(Some (Discr (Msg a)))"
   by (fold lscons_conv, fixrec_simp)
 
+text {* @{term tsynRemDups_fix_h} leaves the length of the stream unchanged. *}
 lemma tsynremdups_fix_h_slen_some: "#(tsynRemDups_fix_h\<cdot>s\<cdot>(Some (Discr (\<M> m)))) = #s"
   apply (induction s arbitrary: m rule: tsyn_ind, simp_all)
   apply (rename_tac x y z)
@@ -861,6 +868,7 @@ lemma tsynremdups_fix_h_slen_some: "#(tsynRemDups_fix_h\<cdot>s\<cdot>(Some (Dis
   apply (simp add: tsynremdups_fix_h_sconc_msg_some_neq)
   by (simp add: tsynremdups_fix_h_sconc_null_some)
 
+text {* @{term tsynRemDups_fix_h} leaves the length of the stream unchanged. *}
 lemma tsynremdups_fix_h_slen_none: "#(tsynRemDups_fix_h\<cdot>s\<cdot>None) = #s"
   apply (induction s rule: tsyn_ind, simp_all)
   apply (simp add: tsynremdups_fix_h_sconc_msg_none tsynremdups_fix_h_slen_some)
@@ -988,6 +996,7 @@ text {* Length of @{term tsynFilter} is equal to the length of the original stre
 lemma tsynfilter_slen: "#((tsynFilter A)\<cdot>s) = #s"
   by (simp add: tsynfilter_insert)
 
+text {* @{term tsynFilter} leaves the length of the stream unchanged. *}
 lemma tsynfilter_tsynlen: "tsynLen\<cdot>(tsynFilter A\<cdot>s) \<le> tsynLen\<cdot>s"
   sorry
 
@@ -1305,9 +1314,11 @@ text{* @{term tsynZip} zips a tsyn stream beginning with null to a pair of null 
 lemma tsynzip_singleton_null_second: "tsynZip\<cdot>(\<up>- \<bullet> as)\<cdot>(\<up>b) = \<up>- \<bullet> tsynZip\<cdot>as\<cdot>(\<up>b)"
   by (simp add: tsynzip_sconc_null)
 
+text {* @{term tsynZyp} keeps the length of the finite stream. *}
 lemma tsynzip_slen: "#bs = \<infinity> \<Longrightarrow> #(tsynZip\<cdot>as\<cdot>bs) = #as"
   sorry
 
+text {* @{term tsynZyp} keeps the length of the finite stream. *}
 lemma tsynzip_tsynlen: "#bs = \<infinity> \<Longrightarrow> tsynLen\<cdot>(tsynZip\<cdot>as\<cdot>bs) = tsynLen\<cdot>as"
   sorry
 
@@ -1394,16 +1405,20 @@ lemma tsynzip_test_infstream:
 
 (* ToDo: add descriptions. *)
 
+text {* @{term tsynSum} maps a stream to a stream containing the sum of read messages. *}
 definition tsynSum :: 
   "'a :: {zero, countable, monoid_add, ab_semigroup_add, plus} tsyn stream \<rightarrow> 'a tsyn stream" where
   "tsynSum = tsynScanl plus 0"
 
+text {* @{term tsynSum} insertion lemma. *}
 lemma tsynsum_insert: "tsynSum\<cdot>s = tsynScanl plus 0\<cdot>s"
   by (simp add: tsynSum_def)
 
+text {* @{term tsynSum} is strict. *}
 lemma tsynsum_strict [simp]: "tsynSum\<cdot>\<epsilon> = \<epsilon>"
   by (simp add: tsynsum_insert)
 
+text {* @{term tsynSum} maps the stream containing only a singleton to the singleton. *}
 lemma tsynsum_singleton: "tsynSum\<cdot>(\<up>a) = \<up>a"
   by (cases a, simp_all add: tsynsum_insert tsynscanl_singleton)
 
@@ -1412,12 +1427,15 @@ lemma "tsynScanl plus n\<cdot>(\<up>(Msg a) \<bullet> as) = \<up>(Msg (n + a)) \
   apply (simp add: tsynscanl_singleton)         
   oops
 
+text {* @{term tsynSum} test on infinite stream. *}
 lemma tsynsum_test_infmsg: "tsynSum\<cdot>(\<up>(Msg 0)\<infinity>) = \<up>(Msg 0)\<infinity>"
   by (metis add.left_neutral s2sinftimes sinftimes_unfold tsynSum_def tsynscanl_sconc_msg)
 
+text {* @{term tsynSum} test on infinite stream containing no messages. *}
 lemma tsynsum_test_infnull: "tsynSum\<cdot>(\<up>null\<infinity>) = \<up>null\<infinity>"
   by (metis s2sinftimes sinftimes_unfold tsynSum_def tsynscanl_sconc_null)
 
+text {* Auxiliary function for @{term tsynsum_even}. *}
 lemma tsynsum_even_h: 
   assumes "tsynDom\<cdot>s \<subseteq> {n. even n}"
     and "even m"
@@ -1430,6 +1448,7 @@ lemma tsynsum_even_h:
   apply (simp add: tsynscanl_sconc_msg tsyndom_sconc_msg)
   by (simp add: tsynscanl_sconc_null tsyndom_sconc_null)
 
+text {* @{term tsynSum} leaves the domain unchanged if the stream contains only even messages. *}
 lemma tsynsum_even: assumes "tsynDom\<cdot>s \<subseteq> {n. even n}"
   shows "tsynDom\<cdot>(tsynSum\<cdot>s) \<subseteq> {n. even n}"
   by (simp add: assms tsynsum_insert tsynsum_even_h)
