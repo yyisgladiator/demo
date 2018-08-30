@@ -1020,6 +1020,9 @@ lemma tsynfilter_tsynabs: "tsynAbs\<cdot>(tsynFilter A\<cdot>s) = sfilter A\<cdo
   apply (simp add: tsynfilter_sconc_msg_nin tsynabs_sconc_msg tsynabs_sconc_null)
   by (simp add: tsynfilter_sconc_null tsynabs_sconc_null)
 
+lemma tsynfilter_tsyndom: "tsynDom\<cdot>(tsynFilter A\<cdot>s) \<subseteq> tsynDom\<cdot>s"
+  by (simp add: tsynabs_tsyndom tsynfilter_tsynabs)
+
 (* ----------------------------------------------------------------------- *)
   subsection {* tsynScanlExt *}
 (* ----------------------------------------------------------------------- *)
@@ -1217,6 +1220,15 @@ lemma tsyndropwhile_tsynabs: "tsynAbs\<cdot>(tsynDropWhile f\<cdot>s) = sdropwhi
   apply (simp add: tsyndropwhile_sconc_msg_f tsynabs_sconc_msg)
   by (simp add: tsyndropwhile_sconc_null tsynabs_sconc_null)
 
+lemma sdropwhile_sdom: "sdom\<cdot>(sdropwhile f\<cdot>s) \<subseteq> sdom\<cdot>s"
+  apply (induction s rule: ind, simp_all)
+  apply (rename_tac a s)
+  apply (case_tac "f a")
+  by (rule subset_insertI2, simp_all)
+
+lemma tsyndropwhile_tsyndom: "tsynDom\<cdot>(tsynDropWhile f\<cdot>s) \<subseteq> tsynDom\<cdot>s" 
+  by (simp add: sdropwhile_sdom tsynabs_tsyndom tsyndropwhile_tsynabs)
+   
 (* ----------------------------------------------------------------------- *)
   subsection {* tsynZip *}
 (* ----------------------------------------------------------------------- *)
@@ -1407,6 +1419,16 @@ lemma tsynzip_test_infstream:
   apply (subst sinftimes_unfold, simp)
   apply (subst sinftimes_unfold [of "\<up>2"])
   by (simp add: tsynzip_sconc_msg tsynzip_sconc_null)
+
+lemma tsynzip_tsyndom_msg: "tsynDom\<cdot>(tsynZip\<cdot>as\<cdot>bs) \<subseteq> tsynDom\<cdot>(tsynZip\<cdot>(\<up>(\<M> a) \<bullet> as)\<cdot>(\<up>b \<bullet> bs))"
+  apply (simp add: tsynzip_sconc_msg tsyndom_sconc_msg)
+  by blast
+
+lemma tsynzip_tsyndom_null: "tsynDom\<cdot>(tsynZip\<cdot>as\<cdot>bs) = tsynDom\<cdot>(tsynZip\<cdot>(\<up>- \<bullet> as)\<cdot>bs)"
+  by (simp add: tsynabs_tsyndom tsynzip_tsynabs tsynabs_sconc_null)
+
+lemma tsynzip_tsyndom: "tsynDom\<cdot>(tsynZip\<cdot>as\<cdot>bs) \<subseteq> (tsynDom\<cdot>as \<times> sdom\<cdot>bs)"
+  oops
 
 (* ----------------------------------------------------------------------- *)
   section {* tsynSum - CaseStudy *}
