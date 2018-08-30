@@ -928,7 +928,7 @@ lemma tsynremdups_fix_tsynabs: "tsynAbs\<cdot>(tsynRemDups_fix\<cdot>s) = srcdup
   subsection {* tsynFilter *}
 (* ----------------------------------------------------------------------- *)
 
-text {* @{term tsynAbs} insertion lemma. *}
+text {* @{term tsynFilter} insertion lemma. *}
 lemma tsynfilter_insert: "(tsynFilter A)\<cdot>s =  smap (tsynFilterElem A)\<cdot>s"
   by (simp add: tsynFilter_def)
 
