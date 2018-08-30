@@ -834,6 +834,10 @@ lemma tsynremdups_tsynabs: "tsynAbs\<cdot>(tsynRemDups\<cdot>s) = srcdups\<cdot>
   apply (induction s rule: tsyn_ind, simp_all)
   by (simp_all add: tsynabs_sconc_null tsynremdups_sconc_null tsynabs_sconc_msg 
       tsynremdups_sconc_msg srcdups_step tsynremdups_h_tsynabs)
+
+text {* @{term tsynRemDups } doesn't change the @{term tsynDom} of a stream *}
+lemma tsynremdups_tsyndom: "tsynDom\<cdot>(tsynRemDups\<cdot>s) = tsynDom\<cdot>s"
+  by (simp add: tsynabs_tsyndom tsynremdups_tsynabs)
    
 (* ----------------------------------------------------------------------- *)
   subsection {* tsynRemDups_fix_h *}
