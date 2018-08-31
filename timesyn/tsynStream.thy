@@ -1033,6 +1033,8 @@ lemma tsynfilter_tsynabs: "tsynAbs\<cdot>(tsynFilter A\<cdot>s) = sfilter A\<cdo
   apply (simp add: tsynfilter_sconc_msg_nin tsynabs_sconc_msg tsynabs_sconc_null)
   by (simp add: tsynfilter_sconc_null tsynabs_sconc_null)
 
+text {* @{term tsynDom} of @{term tsynFilter} is subset of @{term tsynDom} of 
+        the original stream. *}
 lemma tsynfilter_tsyndom: "tsynDom\<cdot>(tsynFilter A\<cdot>s) \<subseteq> tsynDom\<cdot>s"
   by (simp add: tsynabs_tsyndom tsynfilter_tsynabs)
 
@@ -1239,6 +1241,8 @@ lemma sdropwhile_sdom: "sdom\<cdot>(sdropwhile f\<cdot>s) \<subseteq> sdom\<cdot
   apply (case_tac "f a")
   by (rule subset_insertI2, simp_all)
 
+text {* @{term tsynDom} of @{term tsynDropWhile} is subset of @{term tsynDom} of 
+        the original stream. *}
 lemma tsyndropwhile_tsyndom: "tsynDom\<cdot>(tsynDropWhile f\<cdot>s) \<subseteq> tsynDom\<cdot>s" 
   by (simp add: sdropwhile_sdom tsynabs_tsyndom tsyndropwhile_tsynabs)
    
@@ -1433,13 +1437,17 @@ lemma tsynzip_test_infstream:
   apply (subst sinftimes_unfold [of "\<up>2"])
   by (simp add: tsynzip_sconc_msg tsynzip_sconc_null)
 
+text {* @{term tsynDom} of @{term tsynZip} is subset of @{term tsynDom} if both streams drop a
+        message. *}
 lemma tsynzip_tsyndom_msg: "tsynDom\<cdot>(tsynZip\<cdot>as\<cdot>bs) \<subseteq> tsynDom\<cdot>(tsynZip\<cdot>(\<up>(\<M> a) \<bullet> as)\<cdot>(\<up>b \<bullet> bs))"
-  apply (simp add: tsynzip_sconc_msg tsyndom_sconc_msg)
-  by blast
+  by (simp add: tsynzip_sconc_msg tsyndom_sconc_msg, blast)
 
+text {* @{term tsynDom} ignores null in the first stream *}
 lemma tsynzip_tsyndom_null: "tsynDom\<cdot>(tsynZip\<cdot>as\<cdot>bs) = tsynDom\<cdot>(tsynZip\<cdot>(\<up>- \<bullet> as)\<cdot>bs)"
   by (simp add: tsynabs_tsyndom tsynzip_tsynabs tsynabs_sconc_null)
 
+text {* @{term tsynDom} of @{term tsynZip} is subset of the Cartesian product of @{term tsynDom}
+        of the first stream and @{term sdom} of the second stream. *}
 lemma tsynzip_tsyndom: "tsynDom\<cdot>(tsynZip\<cdot>as\<cdot>bs) \<subseteq> (tsynDom\<cdot>as \<times> sdom\<cdot>bs)"
   by (simp add: szip_sdom tsynabs_tsyndom tsynzip_tsynabs)
 
