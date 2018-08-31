@@ -4,7 +4,13 @@ imports tsynStream
 
 begin
 
-(*tsynDom*)
+lemma tsyndom_sdom: "tsynDom\<cdot>s = inverseMsg ` (sdom\<cdot>s)"
+  apply (induction rule: tsyn_ind, simp_all)
+  apply (rule admI)
+  apply (smt ch2ch_Rep_cfunR contlub_cfun_arg lub_eq smap_sdom)
+    apply (simp add: tsyndom_strict)
+  apply (simp add: tsyndom_sconc_msg)
+  sorry
 
 lemma tsynabs_sdom: "sdom\<cdot>(tsynAbs\<cdot>s) = tsynDom\<cdot>s"
   apply (induction rule: tsyn_ind, simp_all)
@@ -28,11 +34,20 @@ lemma tsynProjSnd_sdom: "sdom\<cdot>(tsynProjSnd\<cdot>s) = tsynSnd ` (sdom\<cdo
   by (simp add: smap_sdom tsynprojsnd_insert)+
 
 lemma tsynremdups_h_sdom: "sdom\<cdot>((sscanlA tsynRemDups_h state)\<cdot>s) = sdom\<cdot>s"
-  apply (induction s arbitrary: state rule: tsyn_ind)
+  apply (induction s arbitrary: state rule: tsyn_ind, simp_all)
+  apply rule+
   sorry
 
 lemma tsynremdups_sdom: "sdom\<cdot>(tsynRemDups\<cdot>s) = sdom\<cdot>s"
   by (simp add: tsynremdups_insert tsynremdups_h_sdom)
+
+lemma tsynFilter_sdom: "sdom\<cdot>((tsynFilter A)\<cdot>s) \<subseteq> sdom\<cdot>s"
+  apply (induction s arbitrary: A rule: tsyn_ind, simp_all)
+  defer
+   apply (metis insert_is_Un insert_mono sdom2un tsynfilter_sconc_null)
+  apply rule+
+  apply (simp add: tsynfilter_insert)
+  sorry
 
 (*lemma tsynFilter_sdom: "sdom\<cdot>((tsynFilter A)\<cdot>s) \<subseteq> sdom\<cdot>s"
   proof (induction s rule: tsyn_ind)
@@ -67,9 +82,9 @@ lemma tsynremdups_sdom: "sdom\<cdot>(tsynRemDups\<cdot>s) = sdom\<cdot>s"
 
 (*tsynScanl*)
 
-(*tsynDropWhile*)
+(*lemma tsynDropWhile_sdom: "sdom\<cdot>((tsynDropWhile f)\<cdot>s) = (tsynDropWhile_h f) ` (sdom\<cdot>s)"*)
 
-(*lemma tsynZip_sdom: "sdom\<cdot>(tsynZip\<cdot>as\<cdot>bs) = sdom\<cdot>(szip\<cdot>(tsynAbs\<cdot>as)\<cdot>(tsynAbs\<cdot>bs))"*)
+(*lemma tsynZip_sdom: "sdom\<cdot>(tsynZip\<cdot>as\<cdot>(bs::?'b tsyn stream)) = Pair ` ((sdom\<cdot>as) (sdom\<cdot>bs))"*)
 
 end
 
