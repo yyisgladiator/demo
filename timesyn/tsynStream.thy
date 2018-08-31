@@ -288,6 +288,15 @@ lemma szip_sprojsnd:
   apply (rename_tac a as bs)
   by (rule_tac x = bs in scases, simp_all)
 
+text {* @{term sdom} of @{term szip} is subset of the Cartesian product of the sets of values of
+        the zipped streams. *}
+lemma szip_sdom: "sdom\<cdot>(szip\<cdot>as\<cdot>bs) \<subseteq> (sdom\<cdot>as \<times> sdom\<cdot>bs)"
+  apply (induction as arbitrary: bs rule: ind, simp_all)
+  apply (rule adm_all, rule admI)
+  apply (simp add: contlub_cfun_arg contlub_cfun_fun lub_eq_Union, blast)
+  apply (rename_tac a s bs)
+  by (rule_tac x = bs in scases, simp_all,  blast)
+
 (* ----------------------------------------------------------------------- *)
   subsection {* tsynDom *}
 (* ----------------------------------------------------------------------- *)
@@ -1432,7 +1441,7 @@ lemma tsynzip_tsyndom_null: "tsynDom\<cdot>(tsynZip\<cdot>as\<cdot>bs) = tsynDom
   by (simp add: tsynabs_tsyndom tsynzip_tsynabs tsynabs_sconc_null)
 
 lemma tsynzip_tsyndom: "tsynDom\<cdot>(tsynZip\<cdot>as\<cdot>bs) \<subseteq> (tsynDom\<cdot>as \<times> sdom\<cdot>bs)"
-  oops
+  by (simp add: szip_sdom tsynabs_tsyndom tsynzip_tsynabs)
 
 (* ----------------------------------------------------------------------- *)
   section {* tsynSum - CaseStudy *}
