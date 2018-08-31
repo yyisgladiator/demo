@@ -4891,4 +4891,55 @@ instance
   by (smt Un_subset_iff contra_subsetD sconc_sdom subsetI usclConc_stream_def)
 end
 
+(* ----------------------------------------------------------------------- *)
+  subsection {* Lemmata on Streams - Streams Extension *}
+(* ----------------------------------------------------------------------- *)
+
+(* ToDo: add descriptions and move to Streams. *)
+
+lemma len_one_stream: "#s = Fin 1 \<Longrightarrow> \<exists>m. s = \<up>m"
+  proof -
+    assume a0: "#s = Fin 1"
+    show "\<exists>m::'a. s = \<up>m"
+      proof -
+        have empty_or_long: "\<nexists>m::'a. s = \<up>m \<Longrightarrow> s = \<epsilon> \<or> (\<exists> as a. s = \<up>a \<bullet> as)"
+          by (metis surj_scons)
+        have not_eq_one: "\<nexists>m::'a. s = \<up>m \<Longrightarrow> #s = Fin 0 \<or> #s > Fin 1" 
+          using empty_or_long 
+          by (metis Fin_02bot Fin_Suc One_nat_def a0 leI lnzero_def notinfI3 only_empty_has_length_0 
+              sconc_snd_empty slen_conc slen_scons)
+        have not_eq_one2: "\<exists>m. s = \<up>m" using a0 
+          using not_eq_one by auto
+        show ?thesis 
+          using not_eq_one2 by simp
+      qed
+  qed
+
+text {* Cardinality of the set @{term sdom} is smaller or equal to the length of the original 
+        stream. *}
+lemma sdom_slen: assumes "#s = Fin k" shows "card (sdom\<cdot>s) \<le> k"
+  proof -
+    have sdom_def_assm: "sdom\<cdot>s = {snth n s | n :: nat. n < k}" 
+      by (simp add: assms sdom_def2)
+    then have "{snth n s | n :: nat. n < k} \<subseteq> (\<lambda> n. snth n s) ` {i :: nat. i < k}" 
+      by blast
+    then have "card {snth n s | n :: nat. n < k} \<le> card {i :: nat. i < k}" 
+      using surj_card_le by blast
+    then show ?thesis 
+      by (simp add: sdom_def_assm)
+  qed
+
+text {* @{term sprojsnd} of @{term szip} equals the second stream if its length is less or equal
+        the length of the first stream. *}
+lemma szip_sprojsnd:
+  assumes "#ys \<le> #xs"
+  shows "sprojsnd\<cdot>(szip\<cdot>xs\<cdot>ys) = ys"
+  using assms
+  apply (induction ys arbitrary: xs rule: ind, simp_all)
+  apply (rule adm_all, rule adm_imp, simp_all)
+  apply (rule admI)
+  apply (metis dual_order.antisym inf_chainl4 inf_ub l42)
+  apply (rename_tac a as bs)
+  by (rule_tac x = bs in scases, simp_all)
+
 end
