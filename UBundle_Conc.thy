@@ -157,12 +157,12 @@ lemma ubconceq_dom [simp]: "ubDom\<cdot>(ubConcEq b1\<cdot>b2) = ubDom\<cdot>b2"
 (*idee: min streams in beiden müssen im selben channel liegen *)
 (*allgemeiner fall ähnlich zu Composition_Causalities.z1? *)
 (*ubdom_one assms nötig? *)
-lemma test1: assumes ubdom_one: "ubDom\<cdot>b2 = {c}" and ubdom_eq: "ubDom\<cdot>b1 = ubDom\<cdot>b2" 
-shows "ubLen (ubConcEq b1\<cdot>b2) = (ubLen b1) + (ubLen b2)"
+lemma ubconc_ublen2: assumes ubdom_one: "ubDom\<cdot>b2 = {c}" and ubdom_eq: "ubDom\<cdot>b1 = ubDom\<cdot>b2" 
+  shows "ubLen (ubConc b1\<cdot>b2) = (ubLen b1) + (ubLen b2)"
 proof (cases "ubDom\<cdot>b1 = {}")
   case True
-  then show ?thesis  
-    by (metis True plus_lnatInf_l ubLen_def ubconceq_dom ubdom_eq)
+  then show ?thesis
+    using ubdom_eq ubdom_one by auto
 next
   case False
 
@@ -232,95 +232,91 @@ next
 
 
   show ?thesis
-    apply (simp add: assms)
 
 
     sorry
 qed
 
-(*idee: alle channel aus cs werden von ubleast zu Abs_ubundle [c \<mapsto> \<bottom>]) = {c}, wenn das also 0 lang ist, ist ubleast 0 lang *)
-lemma test2: assumes "cs \<noteq> {}" shows "ubLen (ubLeast cs) = 0"
-proof -
-  have notempty: "ubDom\<cdot>(ubLeast cs) = cs"
-    by simp
+lemma ubconceq_ublen2: assumes ubdom_one: "ubDom\<cdot>b2 = {c}" and ubdom_eq: "ubDom\<cdot>b1 = ubDom\<cdot>b2" 
+  shows "ubLen (ubConcEq b1\<cdot>b2) = (ubLen b1) + (ubLen b2)"
+  by (simp add: ubconc_ublen2 ubdom_eq ubdom_one)
 
-(*   have null: "usclLen\<cdot>\<bottom> = 0"
-    using uslen_ubLen_ch1  *)
 
-  have well1337: "\<And> c . ubWell [c \<mapsto> \<bottom>]"
+lemma ubleast_len: assumes "cs \<noteq> {}" shows "ubLen (ubLeast cs) = 0"
+proof (simp add: ubLen_def assms)
+
+  have null: "usclLen\<cdot>\<bottom> = 0"
     sorry
-  have test: "\<And> c . ubDom\<cdot>(Abs_ubundle [c \<mapsto> \<bottom>]) = {c}"
+
+  have ubleast_all_null: "\<And> c . c\<in>cs \<Longrightarrow> usclLen\<cdot>((ubLeast cs) . c) = 0"
   proof -
     fix c
-    show "ubDom\<cdot>(Abs_ubundle [c \<mapsto> \<bottom>]) = {c}"
-      apply (simp add: ubDom_def)
-      apply (subst ubrep_ubabs)
-      apply (simp add: ubWell_def)
-    defer
-    apply simp
-    (*fehlt hier ne assumption oder sowas ?*)
-      sorry
+    assume a1: "c\<in>cs"
+    show "usclLen\<cdot>((ubLeast cs) . c) = 0"
+    by (simp add: a1 null)
   qed
-  have singlenotempty: "\<And> c. ubDom\<cdot>(Abs_ubundle [c \<mapsto> \<bottom>]) \<noteq> {}"
-    by (simp add: test)
 
+  obtain ch:: channel where ch_def: "ch\<in>cs"
+    using assms by auto
+  then have ch_def_is_null: "usclLen\<cdot>((ubLeast cs) . ch) = 0"
+    using ubleast_all_null by auto
 
-  have single: "\<And> c . ubLen (Abs_ubundle [c \<mapsto> \<bottom>]) = 0"
-  proof- 
-    fix c
-    show "ubLen (Abs_ubundle [c \<mapsto> \<bottom>]) = 0"
-    apply (simp add: ubLen_def)
-    apply rule+
-    apply (simp_all add: singlenotempty)
-      apply (simp add: test)
-      apply (simp add: ubgetch_insert)
-      apply (subst ubrep_ubabs)
-      apply (simp add: well1337)
-      
+(*   have exist_ch: "\<exists>c. 0 = usclLen\<cdot>(ubLeast cs . c::'b) \<and> c \<in> cs"
+    by (metis ch_def_is_null ch_def) *)
+(* dieses lemma sorgt _hier_ im show darunter für "Pending sort hypotheses: uscl_conc" *)
+(*innerhalb des ISAR Proofs der jetzt im show steht, geht aber nichts kaputt... ? *)
 
-      sorry
-  qed
-  have notinf: "ubLen (ubLeast cs) \<noteq> \<infinity>"
-    apply (simp add: ubLen_def assms)
-    apply (simp add: ubLeast_def)
-    sorry
-
-
-  show "ubLen (ubLeast cs) = 0"
-    apply (simp add: ubLen_def assms)
-    apply (simp add: ubLeast_def)
-    apply (simp add: ubgetch_insert)
-    apply (subst ubrep_ubabs)
-    apply (smt domIff notempty optionLeast_def optionleast_getch ubdom_channel_usokay ubgetch_insert ubleast_ubgetch ubwellI) (* ubwell ubleast proof *)
-    apply auto
-    
-    sorry
+  show "(LEAST ln::lnat. \<exists>c::channel. ln = usclLen\<cdot>(ubLeast cs  .  c) \<and> c \<in> cs) = (0::lnat)"
+(*     by (smt LeastI ch_def ch_def_is_null lnzero_def ubleast_all_null) *)
+    proof -
+      have f1: "\<forall>p. Least p = (0::lnat) \<or> \<not> p 0"
+        by (metis (no_types) Least_equality lnle_def lnzero_def minimal)
+      have "\<exists>c. 0 = usclLen\<cdot>(ubLeast cs . c::'b) \<and> c \<in> cs"
+        by (metis ch_def_is_null ch_def)
+      then show ?thesis
+        using f1 by blast
+    qed
 qed
 
 (* idee: kA, aber im Moment ist es auf jeden Fall zu tief aufgedröselt*)
-lemma test3: assumes ubdom_eq: "ubDom\<cdot>a = cs" 
-  shows "ubConcEq a\<cdot>(ubLeast cs) = a"
-proof -
+lemma ubconc_with_ubleast_same_ublen: "ubConc a\<cdot>(ubLeast (ubDom\<cdot>a)) = a"
+  proof -
 
-  have "ubLen a = ubLen (ubConcEq a\<cdot>(ubLeast cs))"
-    apply (subst test1)
-      defer
-    apply (simp add: ubdom_eq)
-     apply (metis add.right_neutral plus_lnatInf_r test2 ubLen_def ubdom_eq)
-(* ? *)
-  sorry
+    have a_dom: "ubDom\<cdot>a = ubDom\<cdot>(ubConc a\<cdot>(ubLeast (ubDom\<cdot>a)))"
+      by simp
+    have ubleast_dom: "ubDom\<cdot>(ubLeast (ubDom\<cdot>a)) = ubDom\<cdot>a"
+      by simp
+
+
+    have "ubLen a = ubLen (ubConc a\<cdot>(ubLeast (ubDom\<cdot>a)))"
+    proof (cases "ubDom\<cdot>a = {}")
+      case True
+      then show ?thesis 
+        by (simp add: ubLen_def)
+    next
+      case False
+      then show ?thesis 
+        apply (subst ubconc_ublen2)
+          defer
+        apply simp
+        apply (metis add.right_neutral plus_lnatInf_r ubleast_len ubLen_def)
+(*?*)
+        sorry
+    qed
 
   show ?thesis
-    apply (simp add: ubConcEq_def assms)
     apply (simp add: ubConc_def)
     apply (simp add: ubgetch_insert)
-    apply (simp add: assms)
     apply (simp add: ubRestrict_def)
     apply (subst ubrep_ubabs)
-    apply (metis (no_types, lifting) UNIV_I option.sel ubWell_def ubdom_channel_usokay ubgetch_insert ubleast_ubdom ubleast_ubgetch ubup_ubdom usclOkay_conc)
+     apply (metis (no_types, lifting) UNIV_I option.sel ubWell_def ubdom_channel_usokay ubgetch_insert ubleast_ubdom ubleast_ubgetch ubup_ubdom usclOkay_conc)
     apply (simp add: ubUp_def)
     
     sorry
 qed
 
-end    
+lemma ubconceq_with_ubleast_same_ublen: "ubConcEq a\<cdot>(ubLeast (ubDom\<cdot>a)) = a"
+  by (simp add: ubconc_with_ubleast_same_ublen)
+
+
+end
