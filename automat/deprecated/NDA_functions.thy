@@ -7,6 +7,7 @@ begin
 default_sort type
 type_synonym 'm SPS = "'m SPF uspec"
 
+(* ToDo: Move to SetPcpo *)
 definition setflat :: "'a set set \<rightarrow> 'a set" where
 "setflat = (\<Lambda> S. {K  | Z K. K\<in>Z \<and> Z \<in>S} )"
 

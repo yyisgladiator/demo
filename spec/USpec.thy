@@ -897,11 +897,11 @@ proof (rule rev_monoI)
     by (simp add: monofun_cfun_arg)
 qed
 
-lemma uspecflatten_dom: "uspecDom\<cdot>(uspecFlatten In Out uspecs) = In"
+lemma uspecflatten_dom [simp]: "uspecDom\<cdot>(uspecFlatten In Out uspecs) = In"
   apply (simp add: uspecDom_def uspecFlatten_def)
   by (metis fst_conv rep_abs_uspec snd_conv undiscr_Discr uspecflatten_well)
 
-lemma uspecflatten_ran: "uspecRan\<cdot>(uspecFlatten In Out uspecs) = Out"
+lemma uspecflatten_ran [simp]: "uspecRan\<cdot>(uspecFlatten In Out uspecs) = Out"
   apply (simp add: uspecRan_def uspecFlatten_def)
   by (metis rep_abs_uspec snd_conv undiscr_Discr uspecflatten_well)
 
@@ -918,6 +918,36 @@ lemma uspecflatten_monofun: "monofun (uspecFlatten In Out)"
   using uspecflatten_well apply blast
   apply simp
   by (metis SetPcpo.less_set_def image_mono monofun_cfun_arg revBelowNeqSubset)
+
+
+(* Every Element in S1 has a LARGER element in S2 *)
+lemma uspecflatten_mono2: assumes "(\<And>b. b\<in>((inv Rev) S2) \<Longrightarrow>( \<exists>c. c\<in>((inv Rev) (S1)) \<and> c\<sqsubseteq>b))"
+  shows "uspecFlatten In Out S1 \<sqsubseteq> uspecFlatten In Out S2"
+proof (rule uspec_belowI) 
+  have "(\<And>b. b\<in>((inv Rev) (uspec_set_filter In Out\<cdot>S2)) \<Longrightarrow>( \<exists>c. c\<in>((inv Rev)  (uspec_set_filter In Out\<cdot>S1)) \<and> c\<sqsubseteq>b))"
+    by (metis (no_types, lifting) Abs_cfun_inverse2 assms setrevFilter_def setrevFilter_gdw setrevfilter_cont uspec_set_filter_def uspecdom_eq uspecran_eq)
+  hence "(\<And>b. b\<in>(Rep_rev_uspec ` (inv Rev (uspec_set_filter In Out\<cdot>S2))) \<Longrightarrow>( \<exists>c. c\<in> ((Rep_rev_uspec ` (inv Rev (uspec_set_filter In Out\<cdot>S1)))) \<and> b \<subseteq> c))"
+    by (smt fst_monofun image_iff rep_uspec_belowI revBelowNeqSubset)
+  hence "(setflat\<cdot>(Rep_rev_uspec ` (inv Rev (uspec_set_filter In Out\<cdot>S2)))) \<subseteq> (setflat\<cdot>(Rep_rev_uspec ` (inv Rev (uspec_set_filter In Out\<cdot>S1))))"
+    by (simp add: setflatten_mono2)
+    
+  thus "uspecRevSet\<cdot>(uspecFlatten In Out S1) \<sqsubseteq> uspecRevSet\<cdot>(uspecFlatten In Out S2)"
+    unfolding uspecFlatten_def unfolding uspecRevSet_def apply simp
+    by (smt Abs_cfun_inverse2 setflat_def SetRev.setflat_cont SetRev.setflat_insert rep_abs_rev_simp revBelowNeqSubset uspecflatten_well)
+  show "uspecDom\<cdot>(uspecFlatten In Out S1) = uspecDom\<cdot>(uspecFlatten In Out S2)" by simp
+  show "uspecRan\<cdot>(uspecFlatten In Out S1) = uspecRan\<cdot>(uspecFlatten In Out S2)" by simp
+qed
+
+lemma uspecflatten_image_monofun: 
+  shows  "monofun(\<lambda> f. uspecFlatten In Out (setrevImage f S))" (is "monofun ?f")
+proof(rule monofunI)
+  fix x y :: "'a::type \<Rightarrow> 'b uspec"
+  assume "x \<sqsubseteq> y"
+  hence "\<And> b. b \<in> ((inv Rev) (setrevImage y S)) \<Longrightarrow>  \<exists>c. c\<in>((inv Rev) (setrevImage x S)) \<and> c\<sqsubseteq>b"
+    using setrevimage_mono_obtain2 by blast
+  thus "?f x \<sqsubseteq> ?f y"
+    by (simp add: uspecflatten_mono2) 
+qed
 
 subsection \<open>Forall Exists\<close>
 
