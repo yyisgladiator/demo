@@ -4,13 +4,9 @@ imports tsynStream
 
 begin
 
+(* Try to use set equality after using tsyndom and image definition. *)
 lemma tsyndom_sdom: "tsynDom\<cdot>s = inverseMsg ` (sdom\<cdot>s)"
-  apply (induction rule: tsyn_ind, simp_all)
-  apply (rule admI)
-  apply (smt ch2ch_Rep_cfunR contlub_cfun_arg lub_eq smap_sdom)
-    apply (simp add: tsyndom_strict)
-  apply (simp add: tsyndom_sconc_msg)
-  sorry
+  oops
 
 lemma tsynabs_sdom: "sdom\<cdot>(tsynAbs\<cdot>s) = tsynDom\<cdot>s"
   apply (induction rule: tsyn_ind, simp_all)
@@ -18,73 +14,38 @@ lemma tsynabs_sdom: "sdom\<cdot>(tsynAbs\<cdot>s) = tsynDom\<cdot>s"
   apply (simp add: tsynabs_sconc_msg tsyndom_sconc_msg)
   by (simp add: tsynabs_sconc_null tsyndom_sconc_null)
 
-lemma tsynmap_sdom: "sdom\<cdot>(tsynMap f\<cdot>s) = (tsynApplyElem f) ` (sdom\<cdot>s)"
+lemma tsynmap_sdom: "sdom\<cdot>(tsynMap f\<cdot>s) = tsynApplyElem f ` sdom\<cdot>s"
   apply (induction s arbitrary: f rule: tsyn_ind, simp_all)
   apply (rule admI)
   by (simp add: smap_sdom tsynmap_insert)+
 
-lemma tsynProjFst_sdom: "sdom\<cdot>(tsynProjFst\<cdot>s) = tsynFst ` (sdom\<cdot>s)"
+lemma tsynprojfst_sdom: "sdom\<cdot>(tsynProjFst\<cdot>s) = tsynFst ` sdom\<cdot>s"
   apply (induction rule: tsyn_ind, simp_all)
   apply (rule admI)
   by (simp add: smap_sdom tsynprojfst_insert)+
 
-lemma tsynProjSnd_sdom: "sdom\<cdot>(tsynProjSnd\<cdot>s) = tsynSnd ` (sdom\<cdot>s)"
+lemma tsynprojsnd_sdom: "sdom\<cdot>(tsynProjSnd\<cdot>s) = tsynSnd ` sdom\<cdot>s"
   apply (induction rule: tsyn_ind, simp_all)
   apply (rule admI)
   by (simp add: smap_sdom tsynprojsnd_insert)+
 
-lemma tsynremdups_h_sdom: "sdom\<cdot>((sscanlA tsynRemDups_h state)\<cdot>s) = sdom\<cdot>s"
-  apply (induction s arbitrary: state rule: tsyn_ind, simp_all)
-  apply rule+
-  sorry
-
+(* What happens if no null is contained in the stream? *)
 lemma tsynremdups_sdom: "sdom\<cdot>(tsynRemDups\<cdot>s) = sdom\<cdot>s"
-  by (simp add: tsynremdups_insert tsynremdups_h_sdom)
+  oops
 
-lemma tsynFilter_sdom: "sdom\<cdot>((tsynFilter A)\<cdot>s) \<subseteq> sdom\<cdot>s"
-  apply (induction s arbitrary: A rule: tsyn_ind, simp_all)
-  defer
-   apply (metis insert_is_Un insert_mono sdom2un tsynfilter_sconc_null)
-  apply rule+
-  apply (simp add: tsynfilter_insert)
-  sorry
+(* What happens if all elements are not in the set and no null is contained in the stream? *)
+lemma tsynfilter_sdom: "sdom\<cdot>(tsynFilter A\<cdot>s) \<subseteq> sdom\<cdot>s"
+  oops
 
-(*lemma tsynFilter_sdom: "sdom\<cdot>((tsynFilter A)\<cdot>s) \<subseteq> sdom\<cdot>s"
-  proof (induction s rule: tsyn_ind)
-    case adm
-    then show ?case 
-      by simp
-  next
-    case bot
-    then show ?case 
-      by simp
-  next
-    case (msg m s)
-    have h2: "m \<notin> A \<Longrightarrow> sdom\<cdot>(A \<ominus>\<^sub>- \<up>(\<M> m) \<bullet> s) = sdom\<cdot>(\<up>null \<bullet> s)"
-      sledgehammer
-      by tsynfilter_sconc_msg_nin
-      sorry
-    then show ?case
-      by (metis (no_types, lifting) insert_mono msg.IH srcdups_dom srcdups_dom_h tsynfilter_sconc_msg_in)
-      using h1 by blast
-  next
-    case (null s)
-    then show ?case
-      by (metis (no_types, hide_lams) insert_mono srcdups_dom srcdups_dom_h tsynfilter_sconc_null)
-  qed
-  *)
+(* Try to prove something like that. *)
+lemma tsyndropwhile_sdom: "sdom\<cdot>(tsynDropWhile f\<cdot>s) \<subseteq> sdom\<cdot>s"
+  oops
 
-(*lemma tsynScanlExt_sdom: "sdom\<cdot>(tsynScanlExt f i\<cdot>s) = (sscanlA (tsynScalExt_h f) i)\<cdot>(sdom\<cdot>s)"
-  apply (induction s arbitrary: f i rule: tsyn_ind, simp_all)
-    apply (rule admI)
-*)
+(* Try to prove something like that. *)
+lemma tsynzip_sdom: "sdom\<cdot>(tsynZip\<cdot>as\<cdot>bs) = Msg ` (tsynDom\<cdot>as \<times> sdom\<cdot>bs)"
+  oops
 
-
-(*tsynScanl*)
-
-(*lemma tsynDropWhile_sdom: "sdom\<cdot>((tsynDropWhile f)\<cdot>s) = (tsynDropWhile_h f) ` (sdom\<cdot>s)"*)
-
-(*lemma tsynZip_sdom: "sdom\<cdot>(tsynZip\<cdot>as\<cdot>(bs::?'b tsyn stream)) = Pair ` ((sdom\<cdot>as) (sdom\<cdot>bs))"*)
+(* Skip tsynScanl, tsynScanlExt for now. *)
 
 end
 
