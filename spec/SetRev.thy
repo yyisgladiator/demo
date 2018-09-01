@@ -357,6 +357,7 @@ lemma setrevUnion_gdw: "\<And>A B x. x \<in> inv Rev (setrevUnion\<cdot>A\<cdot>
   by (simp add: inv_rev_rev setrevUnion_def)
 
 
+subsection \<open>setrevImage\<close>
 lemma image_mono_rev:  "monofun (setrevImage f)"
   apply (rule monofunI)
   by (simp add: image_mono inv_rev_rev revBelowNeqSubset setrevImage_def)
@@ -413,7 +414,32 @@ lemma setrevimage_inj_inj:
   unfolding setrevImage_def
   by (metis (no_types, lifting) assms injI inj_image_eq_iff rev.inject setrev_eqI)
 
+lemma setrevimage_mono_obtain: assumes "f \<sqsubseteq> g" and "a\<in>((inv Rev) (setrevImage f S))"
+  obtains b where "b\<in>((inv Rev) (setrevImage g S))" and "a\<sqsubseteq>b"
+proof -
+  obtain s where s_in: "s\<in> (inv Rev)S" and s_a: "f s = a"
+    by (metis assms(2) image_iff inv_rev_rev setrevImage_def)
+  have "g s \<in> ((inv Rev) (setrevImage g S))"
+    by (simp add: s_in inv_rev_rev setrevImage_def)
+  thus ?thesis
+    using assms(1) fun_belowD s_a that by fastforce
+qed
+
+lemma setrevimage_mono_obtain2: assumes "f \<sqsubseteq> g" and "a\<in>((inv Rev) (setrevImage g S))"
+  obtains b where "b\<in>((inv Rev) (setrevImage f S))" and "b\<sqsubseteq>a"
+proof -
+  obtain s where s_in: "s\<in> (inv Rev)S" and s_a: "g s = a"
+    by (metis assms(2) image_iff inv_rev_rev setrevImage_def)
+  have "f s \<in> ((inv Rev) (setrevImage f S))"
+    by (simp add: s_in inv_rev_rev setrevImage_def)
+  thus ?thesis
+    using assms(1) fun_belowD s_a that by fastforce
+qed
+
+
+
 section \<open>set flat rev\<close>
+(* ToDo: Copy to SetPcpo *)
 subsection \<open>set flat def N lemmas\<close>
 definition setflat :: "'a set set \<rightarrow> 'a set" where
 "setflat = (\<Lambda> S. {K  | Z K. K\<in>Z \<and> Z \<in>S} )"
@@ -457,6 +483,10 @@ lemma "\<And> S. setflat\<cdot>S = \<Union>S"
   apply (simp add: setflat_insert)
   apply (subst Union_eq)
   by auto
+
+lemma setflatten_mono2: assumes "\<And>b. b\<in>S1 \<Longrightarrow>( \<exists>c. c\<in>S2 \<and> b \<subseteq> c)"
+  shows "setflat\<cdot>S1 \<subseteq> setflat\<cdot> S2"
+  by (smt Abs_cfun_inverse2 setflat_def SetRev.setflat_cont assms mem_Collect_eq subsetCE subsetI)
 
 
 subsection \<open>set flat rev def N lemmas\<close>
