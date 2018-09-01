@@ -146,7 +146,7 @@ proof -
   have a1: "\<forall>y \<in> \<Inter>{x. \<exists>i. x = Set.filter P (inv Rev (Y i))}. (\<forall>i. y \<in> (inv Rev (Y i)))"
     by (simp add: full_SetCompr_eq)
   then have a2: "\<forall>y \<in> \<Inter>{x. \<exists>i. x = Set.filter P (inv Rev (Y i))}. y \<in> (inv Rev (\<Squnion>i::nat. Y i))"
-    by (smt Inter_iff \<open>chain (Y::nat \<Rightarrow> 'a set rev)\<close> inv_rev_rev mem_Collect_eq setrevLubEqInter)
+    by (simp add: \<open>chain (Y::nat \<Rightarrow> 'a set rev)\<close> setrevLub_lub_eq_all)
   then have a3: "Rev (Set.filter P (inv Rev (\<Squnion>i::nat. Y i))) \<sqsubseteq>
     Rev (\<Inter>{x. \<exists>i. x = Set.filter P (inv Rev (Y i))})"
     by (simp add: a0 SetPcpo.less_set_def subset_eq)
