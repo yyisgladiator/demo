@@ -304,7 +304,7 @@ lemma setrevUnion_mono[simp]: "\<And>A. monofun (\<lambda>x. Rev((inv Rev A) \<u
   by (metis SetPcpo.less_set_def Un_mono below_rev.simps order_refl revBelowNeqSubset)
 
 lemma setrevUnion_cont1[simp]: "cont (\<lambda>x. Rev((inv Rev A) \<union> (inv Rev x)))"
-  apply(rule contI2)
+  apply(rule Cont.contI2)
   apply simp
   apply(simp add: setrevUnion_chain)
   proof -
@@ -363,7 +363,7 @@ lemma image_mono_rev:  "monofun (setrevImage f)"
 
 lemma image_cont_rev: assumes "inj f" 
   shows "cont (setrevImage f)"
-  apply (rule contI2)
+  apply (rule Cont.contI2)
    apply (simp add: image_mono_rev)
   unfolding setrevImage_def
 proof -
@@ -630,6 +630,9 @@ obtain aa :: "('a \<Rightarrow> bool) \<Rightarrow> 'a set rev \<Rightarrow> 'a"
   then show ?thesis
     using f3 f2 f1 by (metis (no_types))
 qed
-  
+
+
+definition setrevSize :: "'a set rev \<Rightarrow> lnat" where
+ "setrevSize X = setSize (inv Rev X)"
 
 end

@@ -140,6 +140,9 @@ definition uspecFlatten:: "channel set \<Rightarrow> channel set \<Rightarrow> (
 abbreviation  uspec_in:: "'m \<Rightarrow> 'm uspec \<Rightarrow> bool" where
 "uspec_in a S \<equiv> a \<in> inv Rev (uspecRevSet\<cdot>S)"
 
+definition uspecSize :: "'a uspec \<Rightarrow> lnat" where
+ "uspecSize X = setrevSize (uspecRevSet\<cdot>X)"
+
 (****************************************************)
 section\<open>Predicates\<close>
 (****************************************************) 

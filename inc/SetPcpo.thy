@@ -1,7 +1,7 @@
 chapter {* Set and bool as a pointed cpo. *}
 
 theory SetPcpo
-imports HOLCF
+imports HOLCF Reversed LNat
 begin
 
 text {*PCPO on sets and bools. The @{text "\<sqsubseteq>"} operator of the order is defined as the @{text "\<subseteq>"} operator on sets
@@ -195,5 +195,15 @@ lemma union_cont:"cont (\<lambda>S2. union S1 S2)"
   unfolding  SetPcpo.less_set_def
   unfolding lub_eq_Union 
   by (metis (no_types, lifting) UN_simps(3) Union_is_lub empty_not_UNIV lub_eq lub_eqI)
+
+
+inductive setSize_helper :: "'a set \<Rightarrow> lnat \<Rightarrow> bool"
+  where
+    "setSize_helper {} (Fin 0)"
+  |  "setSize_helper A (Fin X) \<and> a \<notin> A \<Longrightarrow> setSize_helper (insert a A) (Fin (Suc X))"
+
+definition setSize :: "'a set \<Rightarrow> lnat"
+  where
+  "setSize X \<equiv> if (finite X) then (THE Y. setSize_helper X Y) else \<infinity>"
                            
 end
