@@ -642,9 +642,13 @@ lemma tsynmap_tsynabs: "tsynAbs\<cdot>(tsynMap f\<cdot>s) = smap f\<cdot>(tsynAb
   apply (simp add: tsynmap_sconc_msg tsynabs_sconc_msg)
   by (simp add: tsynmap_sconc_null tsynabs_sconc_null)
 
-text {* Every message produced by @{term tsynMap} of f is in the image of the function f *}
+text {* Every message produced by @{term tsynMap} of the function f is in @{term image} of f *}
 lemma tsynmap_tsyndom: "tsynDom\<cdot>(tsynMap f\<cdot>s) = f ` tsynDom\<cdot>s"
   by (simp add: tsynmap_tsynabs tsynabs_tsyndom smap_sdom)
+
+text {* Every message produced by @{term tsynMap} of the function f is in @{term range} of f *}
+lemma tsynmap_tsyndom_range: "tsynDom\<cdot>(tsynMap f\<cdot>s) \<subseteq> range f"
+  by (simp add: tsynabs_tsyndom tsynmap_tsynabs)
   
 (* ----------------------------------------------------------------------- *)
   subsection {* tsynProjFst *}
