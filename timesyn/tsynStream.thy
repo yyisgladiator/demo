@@ -297,6 +297,27 @@ lemma szip_sdom: "sdom\<cdot>(szip\<cdot>as\<cdot>bs) \<subseteq> (sdom\<cdot>as
   apply (rename_tac a s bs)
   by (rule_tac x = bs in scases, simp_all,  blast)
 
+text {* Each element of @{term sdom} of @{term sscanl} is in the range of f *}
+lemma sscanl_sdom: "sdom\<cdot>(sscanl f i\<cdot>s) \<subseteq> { f i s | i s. True}"
+  apply (induction s rule: ind, simp_all)
+  apply (rule admI)
+  apply (metis (no_types, lifting) ch2ch_Rep_cfunR contlub_cfun_arg l44)
+  apply (rename_tac a s)
+  apply (rule conjI)
+  apply (rule_tac x="i" in exI)
+  apply (rule_tac x="a" in exI, simp)
+  apply (rule subsetI)
+  apply (simp add: sdom_def2)
+  apply (erule exE)
+  apply (rename_tac n)
+  apply (case_tac "n > 0")
+  apply (rule_tac x="snth (n - 1) (sscanl f (f i a)\<cdot>s)" in exI)
+  apply (rule_tac x="snth n s" in exI)
+  apply (metis (no_types, lifting) Suc_pred' sscanl_snth)
+  apply (rule_tac x="f i a" in exI)
+  apply (rule_tac x="shd s" in exI)
+  by (metis empty_is_shortest gr0I snth_shd sscanl_shd)
+
 (* ----------------------------------------------------------------------- *)
   subsection {* tsynDom *}
 (* ----------------------------------------------------------------------- *)
@@ -1245,6 +1266,10 @@ text {* @{term tsynDom} of @{term tsynDropWhile} is subset of @{term tsynDom} of
         the original stream. *}
 lemma tsyndropwhile_tsyndom: "tsynDom\<cdot>(tsynDropWhile f\<cdot>s) \<subseteq> tsynDom\<cdot>s" 
   by (simp add: sdropwhile_sdom tsynabs_tsyndom tsyndropwhile_tsynabs)
+
+text {* Each element of @{term tsynDom} of @{term tsynScanl} is in the range of f *}
+lemma tsynscanl_tsyndom: "tsynDom\<cdot>(tsynScanl f i\<cdot>s) \<subseteq> { f i s | i s. True}"
+  by (metis (mono_tags, lifting) tsynabs_tsyndom tsynscanl_tsynabs sscanl_sdom)
    
 (* ----------------------------------------------------------------------- *)
   subsection {* tsynZip *}
