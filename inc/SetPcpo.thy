@@ -205,5 +205,28 @@ inductive setSize_helper :: "'a set \<Rightarrow> lnat \<Rightarrow> bool"
 definition setSize :: "'a set \<Rightarrow> lnat"
   where
   "setSize X \<equiv> if (finite X) then (THE Y. setSize_helper X Y) else \<infinity>"
-                           
+
+
+lemma setSizeEx: assumes "finite X" shows "\<exists> Y. setSize_helper X Y"
+  apply (rule finite_induct)
+  apply (simp add: assms)
+  using setSize_helper.intros(1) apply auto[1]
+  by (metis setSize_helper.simps)
+
+
+lemma setSizeBack: assumes "finite F" 
+  shows "setSize_helper (insert x F) (Fin (Suc A)) \<and> x \<notin> F \<longrightarrow> setSize_helper F (Fin A)"
+  apply (rule finite_induct)
+  apply (simp add: assms)
+  apply (metis Suc_inject inject_Fin insert_eq_iff insert_not_empty setSize_helper.simps)
+  oops
+
+lemma setSizeonlyOne: 
+  assumes "finite X" 
+  shows "\<forall>Y. \<forall>Z. setSize_helper X Y \<and> Z \<noteq> Y \<longrightarrow> \<not> (setSize_helper X Z)"
+  apply (rule finite_induct)
+  apply (simp add: assms)
+  apply (metis insert_not_empty setSize_helper.simps)
+  oops
+
 end
