@@ -32,15 +32,13 @@ text {* @{term MedSPF}: Lossy medium function for the Alternating Bit Protocol. 
 definition MedSPF :: "bool stream \<Rightarrow> abpMessage tsyn SPF" where
   "MedSPF ora \<equiv> Abs_ufun (tsynbMed ora)"
 
-text {* @{term MedSPS}: Lossy medium function set for the Alternating Bit Protocol. *}
-definition MedSPS :: "(abpMessage tsyn stream\<^sup>\<Omega>) ufun uspec" where 
-  "MedSPS = Abs_uspec (Rev {(MedSPF ora) | ora. #({True} \<ominus> ora) = \<infinity>}, 
-                             Discr {\<C> ''ds''}, Discr {\<C> ''dr''})"
+definition oraFun :: "nat \<Rightarrow> bool stream set" where
+  "oraFun n = { ora. (#({True} \<ominus> ora) = \<infinity> \<and> snth n ora \<and> (\<forall>k<n. \<not>snth k ora))}"
 
-text {* @{term MedSPSspec}: Lossy medium function set for the Alternating Bit Protocol. *}
-definition MedSPSspec :: "nat \<Rightarrow> abpMessage tsyn SPS" where 
-  "MedSPSspec n = Abs_uspec (Rev {(MedSPF ora) | ora. (#({True} \<ominus> ora) = \<infinity> \<and> snth n ora
-   \<and> (\<forall>k<n. \<not>snth k ora))}, Discr {\<C> ''ds''}, Discr {\<C> ''dr''})"
+text {* @{term MedSPS}: Lossy medium function set for the Alternating Bit Protocol. *}
+definition MedSPS :: "nat \<Rightarrow> abpMessage tsyn SPS" where 
+  "MedSPS n = Abs_uspec (Rev {(MedSPF ora) | ora. ora \<in> (oraFun n)}, Discr {\<C> ''ds''}, 
+  Discr {\<C> ''dr''})"
 
 (* ----------------------------------------------------------------------- *)
 section {* Basic Properties *}
@@ -425,34 +423,11 @@ lemma medspf_strict: "(MedSPF ora) \<rightleftharpoons> ubLeast{\<C> ''ds''} = u
   qed
 
 (* ----------------------------------------------------------------------- *)
-subsection {* Basic Properties of MedSPS *}
-(* ----------------------------------------------------------------------- *)
-
-text{* @{term MedSPS} is well-formed. *}
-lemma medsps_uspecwell: 
-  "uspecWell (Rev {(MedSPF ora) | ora. #({True} \<ominus> ora)=\<infinity>}) (Discr {\<C> ''ds''}) (Discr {\<C> ''dr''})"
-  apply (rule uspec_wellI)
-  apply (simp add: ufclDom_ufun_def)
-  using medspf_ufdom apply blast
-  apply (simp add: ufclRan_ufun_def)
-  using medspf_ufran by blast
-
-text{* The domain of @{term MedSPS}. *}
-lemma medsps_uspecdom: "uspecDom\<cdot>MedSPS = {\<C> ''ds''}"
-  apply (simp add: uspecDom_def MedSPS_def)
-  using medsps_uspecwell by simp
-
-text{* The range of @{term MedSPS}. *}
-lemma medsps_uspecran: "uspecRan\<cdot>MedSPS = {\<C> ''dr''}"
-  apply (simp add: uspecRan_def MedSPS_def)
-  using medsps_uspecwell by simp
-
-(* ----------------------------------------------------------------------- *)
 subsection {* Basic Properties of MedSPSspec *}
 (* ----------------------------------------------------------------------- *)
 
-text{* @{term MedSPSspec} is well-formed. *}
-lemma medspsspec_uspecwell [simp]: 
+text{* @{term MedSPS} is well-formed. *}
+lemma medsps_uspecwell [simp]: 
   "uspecWell (Rev {(MedSPF ora) | ora. (#({True} \<ominus> ora) = \<infinity> \<and> snth n ora
    \<and> (\<forall>k<n. \<not>snth k ora))}) (Discr {\<C> ''ds''}) (Discr {\<C> ''dr''})"
   apply (rule uspec_wellI)
@@ -461,15 +436,15 @@ lemma medspsspec_uspecwell [simp]:
   apply (simp add: ufclRan_ufun_def)
   using medspf_ufran by blast
 
-text{* The domain of @{term MedSPSspec}. *}
-lemma medspsspec_uspecdom: "uspecDom\<cdot>(MedSPSspec n) = {\<C> ''ds''}"
-  using medspsspec_uspecwell
-  by (simp add: MedSPSspec_def uspecdom_insert)
+text{* The domain of @{term MedSPS}. *}
+lemma medsps_uspecdom: "uspecDom\<cdot>(MedSPS n) = {\<C> ''ds''}"
+  using medsps_uspecwell
+  by (simp add: MedSPS_def uspecdom_insert oraFun_def)
 
-text{* The range of @{term MedSPSspec}. *}
-lemma medspsspec_uspecran: "uspecRan\<cdot>(MedSPSspec n) = {\<C> ''dr''}"
-  using medspsspec_uspecwell 
-  by (simp add: MedSPSspec_def uspecran_insert)
+text{* The range of @{term MedSPS}. *}
+lemma medsps_uspecran: "uspecRan\<cdot>(MedSPS n) = {\<C> ''dr''}"
+  using medsps_uspecwell 
+  by (simp add: MedSPS_def uspecran_insert oraFun_def)
 
 (* ----------------------------------------------------------------------- *)
 subsection {* Medium State Lemmata *}
@@ -487,63 +462,63 @@ lemma slen_createbundle_getch: "#(createBundle (\<M> m) c  .  c) < \<infinity>"
 lemma medsps_0_uspecwell: 
   "uspecWell (Rev{MedSPF ora |ora::bool stream. #({True} \<ominus> ora) = \<infinity> \<and> shd ora}) (Discr{\<C> ''ds''}) 
   (Discr{\<C> ''dr''})"
-  using medspsspec_uspecwell
+  using medsps_uspecwell
   proof -
     have "{MedSPF ora |ora::bool stream. #({True} \<ominus> ora) = \<infinity> \<and> shd ora} 
       = {(MedSPF ora) | ora. (#({True} \<ominus> ora) = \<infinity> \<and> snth 0 ora \<and> (\<forall>k<0. \<not>snth k ora))}"
     by simp
     then show ?thesis
-    using medspsspec_uspecwell by presburger
+    using medsps_uspecwell by presburger
   qed
 
 (* If a "null" comes in, send it out and stay in the same state. *)
-lemma "spsConcIn (tsynbNull(\<C> ''ds'')) (MedSPSspec n) = spsConcOut (tsynbNull (\<C> ''dr''))\<cdot>(MedSPSspec n)"
+lemma "spsConcIn (tsynbNull(\<C> ''ds'')) (MedSPS n) = spsConcOut (tsynbNull (\<C> ''dr''))\<cdot>(MedSPS n)"
   apply (subst spsconcin_insert)
   apply (case_tac "c=(\<C> ''dr'')", simp_all)
   apply (subst spsconcout_insert, simp)
   apply (simp add: spfConcIn_def spfConcOut_def)
-  apply (simp add: uspecImage_def medspsspec_uspecran medspsspec_uspecdom ufclDom_ufun_def ufclRan_ufun_def)
+  apply (simp add: uspecImage_def medsps_uspecran medsps_uspecdom ufclDom_ufun_def ufclRan_ufun_def)
 sorry
 
-lemma "spsConcIn (createBundle (Msg m) (\<C> ''ds'')) (MedSPSspec (Suc n))
-  = spsConcOut (tsynbNull(\<C> ''dr''))\<cdot>(MedSPSspec n)"
+lemma "spsConcIn (createBundle (Msg m) (\<C> ''ds'')) (MedSPS (Suc n))
+  = spsConcOut (tsynbNull(\<C> ''dr''))\<cdot>(MedSPS n)"
   apply (subst spsconcin_insert)
   apply (case_tac "c=(\<C> ''dr'')", simp_all)
   apply (simp add: slen_createbundle_getch)
   apply (subst spsconcout_insert, simp)
-  apply (simp add: uspecImage_def medspsspec_uspecdom medspsspec_uspecran ufclDom_ufun_def ufclRan_ufun_def)
+  apply (simp add: uspecImage_def medsps_uspecdom medsps_uspecran ufclDom_ufun_def ufclRan_ufun_def)
   apply (simp add: spfConcIn_def spfConcOut_def)
-  apply (simp add: uspecrevset_insert MedSPSspec_def)
-  using medspsspec_uspecwell
+  apply (simp add: uspecrevset_insert MedSPS_def)
+  using medsps_uspecwell
   apply (simp add: setrevImage_def inv_rev_rev)
   apply (simp add: MedSPF_def)
 sorry
 
 lemma "\<And>x::(abpMessage tsyn stream\<^sup>\<Omega>) ufun.
-       (x \<in> Rep_cfun (spfConcIn (createBundle (\<M> m) (\<C> ''ds''))) ` Rep_rev_uspec (MedSPSspec (0::nat))) =
-       (x \<in> Rep_cfun (spfConcOut (createBundle (\<M> m) (\<C> ''dr''))) ` Rep_rev_uspec (MedSPSspec n))"
+       (x \<in> Rep_cfun (spfConcIn (createBundle (\<M> m) (\<C> ''ds''))) ` Rep_rev_uspec (MedSPS (0::nat))) =
+       (x \<in> Rep_cfun (spfConcOut (createBundle (\<M> m) (\<C> ''dr''))) ` Rep_rev_uspec (MedSPS n))"
   apply (simp add: image_def spfConcIn_def spfConcOut_def)
-  apply (simp add: MedSPSspec_def)
+  apply (simp add: MedSPS_def)
   apply (subst rep_abs_rev_simp)
-  using medsps_0_uspecwell apply blast
+  apply (smt CollectD medspf_ufdom medspf_ufran ufclDom_ufun_def ufclRan_ufun_def uspec_wellI)
   apply (subst rep_abs_rev_simp)
-  using medspsspec_uspecwell apply blast
+  apply (smt CollectD medspf_ufdom medspf_ufran ufclDom_ufun_def ufclRan_ufun_def uspec_wellI)
   proof -
     obtain xa where "xa \<in> {MedSPF ora |ora. #({True} \<ominus> ora) = \<infinity> \<and> shd ora}"    
   oops
 
-lemma "spsConcIn (createBundle (Msg m) (\<C> ''ds'')) (MedSPSspec 0) 
-  = spsConcOut (createBundle (Msg m) (\<C> ''dr''))\<cdot>(MedSPSspec n)"
+lemma "spsConcIn (createBundle (Msg m) (\<C> ''ds'')) (MedSPS 0) 
+  = spsConcOut (createBundle (Msg m) (\<C> ''dr''))\<cdot>(MedSPS n)"
   apply (subst spsconcin_insert)
   apply (simp add: slen_createbundle_getch)
   apply (subst spsconcout_insert)
   apply (simp add: slen_createbundle_getch)
-  apply (simp add: uspecImage_def medspsspec_uspecdom medspsspec_uspecran ufclDom_ufun_def ufclRan_ufun_def)
+  apply (simp add: uspecImage_def medsps_uspecdom medsps_uspecran ufclDom_ufun_def ufclRan_ufun_def)
   apply (rule uspec_eqI)
   defer
-  apply (smt medspsspec_uspecdom medspsspec_uspecran spfConcIn_dom spfConcIn_ran spfConcOut_dom 
+  apply (smt medsps_uspecdom medsps_uspecran spfConcIn_dom spfConcIn_ran spfConcOut_dom 
     spfConcOut_ran ufclDom_ufun_def ufclRan_ufun_def uspecImage_def uspecimage_useful_dom)
-  apply (smt medspsspec_uspecdom medspsspec_uspecran spfConcIn_dom spfConcIn_ran spfConcOut_dom 
+  apply (smt medsps_uspecdom medsps_uspecran spfConcIn_dom spfConcIn_ran spfConcOut_dom 
     spfConcOut_ran ufclDom_ufun_def ufclRan_ufun_def uspecImage_def uspecimage_useful_ran)
   apply (simp add: uspecrevset_insert)
   apply (rule setrev_eqI)
@@ -553,7 +528,7 @@ lemma "spsConcIn (createBundle (Msg m) (\<C> ''ds'')) (MedSPSspec 0)
   apply (subst rep_abs_rev_simp)
   defer
   apply (simp add: set_eq_iff)
-
+sorry
 
 (*
 apply (rule set_eq_iff)
