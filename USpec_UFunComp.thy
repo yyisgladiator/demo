@@ -75,10 +75,10 @@ lemma uspec_comp_well[simp]: assumes "uspec_compwell S1 S2"
   shows "uspecWell (Rev {ufComp f1 f2 |(f1::('m,'m) ufun) (f2::('m,'m) ufun). f1 \<in> Rep_rev_uspec S1 \<and> f2 \<in> Rep_rev_uspec S2})
               (Discr (uspecCompDom S1 S2)) (Discr (uspecRanUnion S1 S2))"
   apply (rule uspec_wellI) 
-  using ufclDom_ufun_def assms ufcomp_dom uspec_allDom uspec_allRan uspec_compwell2ufunclcompwell
-   (*using CollectD assms ufcomp_dom uspec_allDom uspec_allRan uspec_compwell2ufunclcompwell uspecrevset_insert ufCompI_def
-  by (smt CollectD assms ufuncl_comp_ran uspec_allRan uspec_compwell2ufunclcompwell uspecrevset_insert)
-   *) sorry
+  using assms ufclDom_ufun_def ufclRan_ufun_def ufcomp_dom
+   apply (smt CollectD comp_well_def rep_rev_revset ufCompI_def uspec_allDom uspec_allRan uspec_compwell2ufunclcompwell)
+  using assms ufclDom_ufun_def ufclRan_ufun_def ufcomp_ran
+  by (smt CollectD comp_well_def rep_rev_revset ufCompO_def uspec_allRan uspec_compwell2ufunclcompwell)
 
 (*   *)
 lemma uspec_comp_commu: assumes "uspec_compwell S1 S2"
@@ -222,7 +222,7 @@ proof -
                 {f1 \<parallel> f2 |f1 f2. f1 \<in> Rep_rev_uspec S2 \<and> f2 \<in> Rep_rev_uspec S1}" (is "?L = ?R")
     apply auto
      apply (meson assms uspec_parcompwell_def ufParComp_commutativity)
-    sorry
+    using assms uspec_parcompwell_def ufParComp_commutativity by metis
   show ?thesis
     apply (rule uspec_eqI)
       apply (simp add: uspecParComp_def)
@@ -261,7 +261,19 @@ proof -
     by (simp add: rev_inv_rev)
   have f10: "{f1 \<parallel> f2 |f1 f2. f1 \<in> Rep_rev_uspec (S1 \<parallel> S2) \<and> f2 \<in> Rep_rev_uspec S3} =
                {f1 \<parallel> f2 |f1 f2. f1 \<in> Rep_rev_uspec S1 \<and> f2 \<in> Rep_rev_uspec (S2 \<parallel> S3)}"
-  (*proof (auto)
+  proof(auto)
+    show "\<And>(f1::'a\<Rrightarrow> 'b) f2::'a\<Rrightarrow> 'b.
+       f1 \<in> Rep_rev_uspec (S1 \<parallel> S2) \<Longrightarrow>
+       f2 \<in> Rep_rev_uspec S3 \<Longrightarrow> \<exists>(f1a::'a\<Rrightarrow> 'b) f2a::'a\<Rrightarrow> 'b. (f1 \<parallel> f2) = (f1a \<parallel> f2a) \<and> f1a \<in> Rep_rev_uspec S1 \<and> f2a \<in> Rep_rev_uspec (S2 \<parallel> S3)"
+      sorry
+  next
+    show "\<And>(f1::'a\<Rrightarrow> 'b) f2::'a\<Rrightarrow> 'b.
+       f1 \<in> Rep_rev_uspec S1 \<Longrightarrow>
+       f2 \<in> Rep_rev_uspec (S2 \<parallel> S3) \<Longrightarrow>
+       \<exists>(f1a::'a\<Rrightarrow> 'b) f2a::'a\<Rrightarrow> 'b. (f1 \<parallel> f2) = (f1a \<parallel> f2a) \<and> f1a \<in> Rep_rev_uspec (S1 \<parallel> S2) \<and> f2a \<in> Rep_rev_uspec S3"
+      sorry
+  qed
+(*proof (auto)
     show "\<And>f1 f2. f1 \<in> Rep_rev_uspec (S1 \<parallel> S2) \<Longrightarrow> f2 \<in> Rep_rev_uspec S3 \<Longrightarrow> \<exists>f1a f2a. f1 \<parallel> f2 = (ufParComp f1a f2a) \<and> f1a \<in> Rep_rev_uspec S1 \<and> f2a \<in> Rep_rev_uspec (S2 \<parallel> S3)"
     proof -
       fix f1::"('a,'b) ufun" and f2::"('a,'b) ufun"
@@ -293,7 +305,6 @@ proof -
      apply (simp add: assms(1) assms(3) f0 f1 sup_assoc uspec_parcomp_dom)
     by (simp add: assms(1) assms(3) f0 f1 sup_assoc uspec_parcomp_ran)
 qed*)
-    sorry
   have f11: "uspecRevSet\<cdot>(S1 \<parallel> S2 \<parallel> S3) = uspecRevSet\<cdot>(S1 \<parallel> (S2 \<parallel> S3))"
     apply (subst f2)
     apply (subst f3)
@@ -398,44 +409,63 @@ lemma uspec_sercomp_asso: assumes "uspec_sercompwell S1 S2" and "uspec_sercompwe
 and "uspecDom\<cdot>S1 \<inter> uspecRan\<cdot>S2 = {}" 
 and "uspecDom\<cdot>S2 \<inter> uspecRan\<cdot>S3 = {}" 
 shows "((S1 \<circle> S2) \<circle> S3) = (S1 \<circle> (S2 \<circle> S3))"
-(*proof -
+proof -
   have f0: "uspec_sercompwell (S1 \<circle> S2) S3"
-  proof (simp add: uspec_sercompwell_def, auto)
-    fix f1::'a and f2::'a 
+  proof (simp add: uspec_sercompwell_def, rule, rule)
+    fix f1::"('a,'c) ufun" and f2::"('c,'d) ufun"
     assume a1: "f1 \<in> Rep_rev_uspec (S1 \<circle> S2)"
     assume a2: "f2 \<in> Rep_rev_uspec S3"
-    obtain f3 f4 where f3_def: "f3 \<in> Rep_rev_uspec S1" and f4_def: "f4 \<in> Rep_rev_uspec S2" 
-        and f1_eq_f3_f4: "f1 = f3 \<circ> f4"
+    obtain f3 f4 where f3_def: "(f3 ::('a,'b) ufun) \<in> Rep_rev_uspec S1" and f4_def: "(f4 ::('b,'c) ufun) \<in> Rep_rev_uspec S2" 
+        and f1_eq_f3_f4: "f1 = (f3 \<circ> f4)"
       by (metis assms(1) empty_iff a1 uspecIsConsistent_def uspec_sercomp_ele_ex)
-    have f1: "ufunclSerCompWell f3 f4"
+    have f1: "sercomp_well f3 f4"
       using assms(1) f3_def f4_def uspec_sercompwell2ufunclsercompwell by blast
-    have f2: "ufunclSerCompWell f4 f2"
+    have f2: "sercomp_well f4 f2"
       using a2 assms(2) f4_def uspec_sercompwell_def by blast
     have f3: "ufclDom\<cdot>f3 \<inter> ufclRan\<cdot>f4 = {}"
       by (metis assms(3) f3_def f4_def uspec_allDom uspec_allRan uspecrevset_insert)
     have f4: "ufclDom\<cdot>f4 \<inter> ufclRan\<cdot>f2 = {}"
       by (metis a2 assms(4) f4_def uspec_allDom uspec_allRan uspecrevset_insert)
-    show "ufunclSerCompWell f1 f2"
-      by (simp add: f1 f1_eq_f3_f4 f2 f3 f4 sercompwell_asso2)
+    show "sercomp_well f1 f2"
+      apply(simp add: f1 f1_eq_f3_f4 f2 f3 f4 assms uspec_allDom uspec_allRan)
+      apply rule
+       apply(subst ufSerComp_ran)
+      using f1 apply blast
+       apply (simp add: f2)
+      apply(subst ufSerComp_ran)
+      using f1 apply blast
+      apply(subst ufSerComp_dom)
+      using f1 apply blast
+      by (metis f3 ufclDom_ufun_def ufclRan_ufun_def)
   qed
   have f1: "uspec_sercompwell S1 (S2 \<circle> S3)"
-  proof (simp add: uspec_sercompwell_def, auto)
-    fix f1::'a and f2::'a 
+  proof (simp add: uspec_sercompwell_def, rule, rule)
+    fix f1::"('a,'b) ufun" and f2::"('b,'d) ufun" 
     assume a1: "f1 \<in> Rep_rev_uspec S1"
     assume a2: "f2 \<in> Rep_rev_uspec (S2 \<circle> S3)"
-    obtain f3 f4 where f3_def: "f3 \<in> Rep_rev_uspec S2" and f4_def: "f4 \<in> Rep_rev_uspec S3" 
-        and f1_eq_f3_f4: "f2 = f3 \<circ> f4"
+    obtain f3 f4 where f3_def: "(f3 :: ('b,'c) ufun) \<in> Rep_rev_uspec S2" and f4_def: "(f4 :: ('c,'d) ufun) \<in> Rep_rev_uspec S3" 
+        and f1_eq_f3_f4: "f2 = ufSerComp f3 f4"
         using assms(2) a2 uspec_sercomp_rep by blast
-    have f1: "ufunclSerCompWell f3 f4"
-      using assms(2) f3_def f4_def uspec_sercompwell_def by auto
-    have f2: "ufunclSerCompWell f1 f3"
+    have f1: "sercomp_well f3 f4"
+      using assms(2) f3_def f4_def uspec_sercompwell_def
+      by blast
+    have f2: "sercomp_well f1 f3"
       using a1 assms(1) f3_def uspec_sercompwell2ufunclsercompwell by blast
     have f3: "ufclDom\<cdot>f1 \<inter> ufclRan\<cdot>f3 = {}"
       by (metis a1 assms(3) f3_def uspec_allDom uspec_allRan uspecrevset_insert)
     have f4: "ufclDom\<cdot>f3 \<inter> ufclRan\<cdot>f4 = {}"
       by (metis assms(4) f3_def f4_def uspec_allDom uspec_allRan uspecrevset_insert)
-    show "ufunclSerCompWell f1 f2"
-      by (simp add: f1 f1_eq_f3_f4 f2 f3 f4 sercompwell_asso1)
+    show "sercomp_well f1 f2"
+      apply (simp add: f1 f1_eq_f3_f4 f2 f3 f4)
+      apply rule
+       apply(subst ufSerComp_dom)
+      using f1 apply blast
+       apply simp
+      apply(subst ufSerComp_ran)
+      using f1 apply blast
+      apply(subst ufSerComp_dom)
+      using f1 apply blast
+      by (metis f2 f4 ufclDom_ufun_def ufclRan_ufun_def)
   qed
   have f2: "uspecRevSet\<cdot>(S1 \<circle> S2 \<circle> S3) = 
       Rev {f1 \<circ> f2 |f1 f2. f1 \<in> Rep_rev_uspec (S1 \<circle> S2) \<and> f2 \<in> Rep_rev_uspec S3}"
@@ -489,7 +519,7 @@ shows "((S1 \<circle> S2) \<circle> S3) = (S1 \<circle> (S2 \<circle> S3))"
       apply (simp add: f11)
      apply (simp add: assms(1) f0 f1 uspec_sercomp_dom)
     by (simp add: assms(2) f0 f1 uspec_sercomp_ran)
-qed*) sorry
+qed
 
 
 subsection \<open>UspecFeedbackComp\<close>
@@ -498,9 +528,10 @@ subsection \<open>UspecFeedbackComp\<close>
 lemma uspec_feedbackcomp_well: "uspecWell (Rev {ufFeedbackComp f1 | f1.  f1\<in>(Rep_rev_uspec S1)})
   (Discr (uspecDom\<cdot>S1 - uspecRan\<cdot>S1)) (Discr (uspecRan\<cdot>S1))"
   apply (rule uspec_wellI)
-  using ufclDom_ufun_def 
-(*apply (smt CollectD ufuncl_feedbackcomp_dom uspec_allDom uspec_allRan uspecrevset_insert)
-  by (smt CollectD ufuncl_feedbackcomp_ran uspec_allRan uspecrevset_insert)*) sorry
+  using ufclDom_ufun_def ufFeedbackComp_dom
+   apply (smt mem_Collect_eq ufclRan_ufun_def uspecRevSet_condition uspecrevset_insert) 
+  using ufclRan_ufun_def ufFeedbackComp_ran
+  by (smt mem_Collect_eq uspecRevSet_condition uspecrevset_insert)
 
 lemma uspec_feedbackcomp_insert: "uspecFeedbackComp S1 = 
   Abs_rev_uspec  {ufFeedbackComp f1 | f1.  f1\<in>(Rep_rev_uspec S1)}

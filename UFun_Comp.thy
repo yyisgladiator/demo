@@ -2467,6 +2467,24 @@ x \<uplus> ubFix (ufCompH_3arg f1 f2 f3 x) (ufRan\<cdot>f1 \<union> ufRan\<cdot>
     by (simp add: f100 f200)
 qed
 
+
+
+
+
+instantiation ufun:: (ubcl_comp,ubcl_comp) ufuncl_comp
+begin
+
+definition ufunclLeast_ufun_def: "ufunclLeast = ufLeast"
+
+instance 
+  apply intro_classes
+  apply (simp add: UFun_Comp.ufunclLeast_ufun_def ufclDom_ufun_def ufclRan_ufun_def)
+  apply (simp add: ufclDom_ufun_def ufunclLeast_ufun_def)
+  apply (simp add: UFun_Comp.ufunclLeast_ufun_def ufclRan_ufun_def)
+  done
+end
+
+
 (*
 
 instantiation ufun:: (ubcl_comp,ubcl_comp) ufuncl_comp

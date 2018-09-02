@@ -3,34 +3,34 @@ theory SPF
 begin
 default_sort message
 
-type_synonym 'm SPF = "'m SB ufun"
+type_synonym ('m,'n) SPF = "('m SB, 'n SB) ufun"
 
 
 subsection \<open>spfStateFix\<close>
 
-definition spfStateLeast :: "channel set \<Rightarrow> channel set \<Rightarrow>('s1::type \<Rightarrow> 'm SPF)" where
+definition spfStateLeast :: "channel set \<Rightarrow> channel set \<Rightarrow>('s1::type \<Rightarrow> ('m,'m) SPF)" where
 "spfStateLeast In Out \<equiv> (\<lambda> x. ufLeast In Out)"
 
-definition spfStateFix ::"channel set \<Rightarrow> channel set \<Rightarrow>(('s1::type \<Rightarrow>'m SPF) \<rightarrow> ('s1 \<Rightarrow>'m SPF)) \<rightarrow> ('s1 \<Rightarrow> 'm SPF)" where
+definition spfStateFix ::"channel set \<Rightarrow> channel set \<Rightarrow>(('s1::type \<Rightarrow> ('m,'m) SPF) \<rightarrow> ('s1 \<Rightarrow> ('m,'m) SPF)) \<rightarrow> ('s1 \<Rightarrow> ('m,'m) SPF)" where
 "spfStateFix In Out \<equiv> (\<Lambda> F.  fixg (spfStateLeast In Out)\<cdot>F)"
 
 
 section \<open>Definitions with ufApplyIn\<close>
 
 (* ToDo: make signature more general, output does not have to be an SB *)
-definition spfRtIn :: "('m SB ufun) \<rightarrow> ('m SB ufun)" where
+definition spfRtIn :: "(('m,'n) SPF) \<rightarrow> (('m,'n) SPF)" where
 "spfRtIn \<equiv> ufApplyIn sbRt"
 
-definition spfConcIn :: "'m SB \<Rightarrow> 'm SPF \<rightarrow> 'm SPF" where
+definition spfConcIn :: "'m SB \<Rightarrow> ('m,'n) SPF \<rightarrow> ('m,'n) SPF" where
 "spfConcIn sb = ufApplyIn (ubConcEq sb)"
 
 section \<open>Definitions with ufApplyOut\<close>
 
 (* ToDo: make signature more general, input does not have to be an SB *)
-definition spfConcOut :: "'m SB \<Rightarrow> 'm SPF \<rightarrow> 'm SPF" where
+definition spfConcOut :: "'n SB \<Rightarrow> ('m,'n) SPF \<rightarrow> ('m,'n) SPF" where
 "spfConcOut sb = ufApplyOut (ubConcEq sb)"
 
-definition spfRtOut :: "('m SB ufun) \<rightarrow> ('m SB ufun)" where
+definition spfRtOut :: "(('m,'n) SPF) \<rightarrow> (('m,'n) SPF)" where
 "spfRtOut \<equiv> ufApplyOut sbRt"
 
 
@@ -118,7 +118,7 @@ lemma spfStateFix_fix: assumes "spfStateLeast In Out \<sqsubseteq> F\<cdot>(spfS
 
 lemma spfsl_below_spfsf: "spfStateLeast In Out \<sqsubseteq> spfStateFix In Out\<cdot>F"
   proof (simp add: spfStateFix_def, simp add: fixg_def)
-    have "\<forall>x0 x1. ((x1::'a \<Rightarrow> ('b stream\<^sup>\<Omega>) ufun) \<sqsubseteq> (if x1 \<sqsubseteq> x0\<cdot>x1 then \<Squnion>uub. iterate uub\<cdot>x0\<cdot>x1 else x1)) = (if x1 \<sqsubseteq> x0\<cdot>x1 then x1 \<sqsubseteq> (\<Squnion>uub. iterate uub\<cdot>x0\<cdot>x1) else x1 \<sqsubseteq> x1)"
+    have "\<forall>x0 x1. ((x1::'a \<Rightarrow> ('b stream\<^sup>\<Omega>, 'b stream\<^sup>\<Omega>) ufun) \<sqsubseteq> (if x1 \<sqsubseteq> x0\<cdot>x1 then \<Squnion>uub. iterate uub\<cdot>x0\<cdot>x1 else x1)) = (if x1 \<sqsubseteq> x0\<cdot>x1 then x1 \<sqsubseteq> (\<Squnion>uub. iterate uub\<cdot>x0\<cdot>x1) else x1 \<sqsubseteq> x1)"
       by simp
     then show "spfStateLeast In Out \<sqsubseteq> F\<cdot>(spfStateLeast In Out) \<longrightarrow> spfStateLeast In Out \<sqsubseteq> (\<Squnion>n. iterate n\<cdot>F\<cdot>(spfStateLeast In Out))"
       by (metis (no_types) fixg_pre)

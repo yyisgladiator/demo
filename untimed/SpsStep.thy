@@ -5,9 +5,9 @@ imports "../USpec" "SpfStep"
 begin
 
 default_sort type
-type_synonym 'm SPS = "'m SPF uspec"
+type_synonym 'm SPS = "('m,'m) SPF uspec"
     
-definition spsStep_h::"((channel\<rightharpoonup>'m::message) \<Rightarrow> 'm SPS)\<rightarrow> ((channel\<rightharpoonup>'m::message) \<Rightarrow> 'm SPF) set rev"where
+definition spsStep_h::"((channel\<rightharpoonup>'m::message) \<Rightarrow> 'm SPS)\<rightarrow> ((channel\<rightharpoonup>'m::message) \<Rightarrow> ('m,'m) SPF) set rev"where
 "spsStep_h= (\<Lambda> h. setify\<cdot>(\<lambda>e. uspecRevSet\<cdot>(h e)))"
 
 lemma spsStep_h_mono[simp]:"monofun (\<lambda> h::((channel\<rightharpoonup>'m::message) \<Rightarrow> 'm SPS). setify\<cdot>(\<lambda>e. uspecRevSet\<cdot>(h e)))"
@@ -41,7 +41,7 @@ lemma spsStep_h_insert:"spsStep_h\<cdot>f = setify\<cdot>(\<lambda>e. uspecRevSe
 fun spsStep :: "channel set \<Rightarrow> channel set \<Rightarrow> ((channel\<rightharpoonup>'m::message) \<Rightarrow> 'm SPS) \<rightarrow> 'm SPS" where
 "spsStep In Out = (\<Lambda> h. Abs_rev_uspec {spfStep In Out\<cdot>g | g. g \<in> inv Rev (spsStep_h\<cdot>h)} In Out)"
 
-lemma spsStep_mono[simp]:assumes "finite In" shows"monofun (\<lambda>h::(channel \<Rightarrow> 'a::message option) \<Rightarrow> ('a stream\<^sup>\<Omega>) ufun uspec. Abs_rev_uspec {spfStep In Out\<cdot>g |g::(channel \<Rightarrow> 'a option) \<Rightarrow> ('a stream\<^sup>\<Omega>) ufun. g \<in> inv Rev (spsStep_h\<cdot>h)} In Out)"
+lemma spsStep_mono[simp]:assumes "finite In" shows"monofun (\<lambda>h::(channel \<Rightarrow> 'a::message option) \<Rightarrow> ('a stream\<^sup>\<Omega>, 'a stream\<^sup>\<Omega>) ufun uspec. Abs_rev_uspec {spfStep In Out\<cdot>g |g::(channel \<Rightarrow> 'a option) \<Rightarrow> ('a stream\<^sup>\<Omega>,'a stream\<^sup>\<Omega>) ufun. g \<in> inv Rev (spsStep_h\<cdot>h)} In Out)"
 proof(rule monofunI)
   fix x y::"(channel \<Rightarrow> 'm::message option) \<Rightarrow> 'm SPS" 
   assume a1: "x \<sqsubseteq> y"
