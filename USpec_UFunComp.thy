@@ -479,9 +479,11 @@ proof -
     apply (subst uspec_sercomp_rep)
      apply (simp add: f1)
     by (simp add: rev_inv_rev)
-  have f10: "{f1 \<circ> f2 |(f1::'a) f2::'a. f1 \<in> Rep_rev_uspec (S1 \<circle> S2) \<and> f2 \<in> Rep_rev_uspec S3} =
-              {f1 \<circ> f2 |(f1::'a) f2::'a. f1 \<in> Rep_rev_uspec S1 \<and> f2 \<in> Rep_rev_uspec (S2 \<circle> S3)}"
-    apply (rule subset_antisym)
+  have f10: "{ ufSerComp f1 f2 |(f1::('a,'c) ufun) (f2::('c,'d) ufun). f1 \<in> (Rep_rev_uspec (S1 \<circle> S2)) \<and> (f2 \<in> Rep_rev_uspec S3)} =
+              { ufSerComp f1 f2 |(f1::('a,'b) ufun) (f2::('b,'d) ufun). f1 \<in> (Rep_rev_uspec S1) \<and> f2 \<in> (Rep_rev_uspec (S2 \<circle> S3))}"
+    
+    sorry
+(*  apply (rule subset_antisym)
      apply (rule subsetI)
   proof auto
     show "\<And>(f1::'a) f2::'a. f1 \<in> Rep_rev_uspec (S1 \<circle> S2) \<Longrightarrow> f2 \<in> Rep_rev_uspec S3 \<Longrightarrow> \<exists>(f1a::'a) f2a::'a. f1 \<circ> f2 = f1a \<circ> f2a \<and> f1a \<in> Rep_rev_uspec S1 \<and> f2a \<in> Rep_rev_uspec (S2 \<circle> S3)"
@@ -511,7 +513,7 @@ proof -
       then show "\<exists>(f1a::'a) f2a::'a. f1 \<circ> f2 = f1a \<circ> f2a \<and> f1a \<in> Rep_rev_uspec (S1 \<circle> S2) \<and> f2a \<in> Rep_rev_uspec S3"
         using assms(1) f1_def f3_def f4_def uspec_sercomp_not_empty by blast
     qed
-  qed
+  qed*)
   have f11: "uspecRevSet\<cdot>(S1 \<circle> S2 \<circle> S3) = uspecRevSet\<cdot>(S1 \<circle> (S2 \<circle> S3))"
     by (simp add: f10 f2 f3)
   show ?thesis
