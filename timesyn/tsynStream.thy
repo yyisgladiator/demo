@@ -1155,6 +1155,10 @@ lemma tsynscanl_tsynabs: "tsynAbs\<cdot>(tsynScanl f i\<cdot>s) = sscanl f i\<cd
   apply (induction s arbitrary: i rule: tsyn_ind, simp_all)
   apply (simp add: tsynscanl_sconc_msg tsynabs_sconc_msg)
   by (simp add: tsynscanl_sconc_null tsynabs_sconc_null)
+
+text {* Each element of @{term tsynDom} of @{term tsynScanl} is in the range of f *}
+lemma tsynscanl_tsyndom: "tsynDom\<cdot>(tsynScanl f i\<cdot>s) \<subseteq> { f i s | i s. True}"
+  by (metis (mono_tags, lifting) tsynabs_tsyndom tsynscanl_tsynabs sscanl_sdom)
   
 (* ----------------------------------------------------------------------- *)
   subsection {* tsynDropWhile *}
@@ -1270,10 +1274,6 @@ text {* @{term tsynDom} of @{term tsynDropWhile} is subset of @{term tsynDom} of
         the original stream. *}
 lemma tsyndropwhile_tsyndom: "tsynDom\<cdot>(tsynDropWhile f\<cdot>s) \<subseteq> tsynDom\<cdot>s" 
   by (simp add: sdropwhile_sdom tsynabs_tsyndom tsyndropwhile_tsynabs)
-
-text {* Each element of @{term tsynDom} of @{term tsynScanl} is in the range of f *}
-lemma tsynscanl_tsyndom: "tsynDom\<cdot>(tsynScanl f i\<cdot>s) \<subseteq> { f i s | i s. True}"
-  by (metis (mono_tags, lifting) tsynabs_tsyndom tsynscanl_tsynabs sscanl_sdom)
    
 (* ----------------------------------------------------------------------- *)
   subsection {* tsynZip *}
