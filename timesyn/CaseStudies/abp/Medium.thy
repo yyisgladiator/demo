@@ -32,6 +32,7 @@ text {* @{term MedSPF}: Lossy medium function for the Alternating Bit Protocol. 
 definition MedSPF :: "bool stream \<Rightarrow> abpMessage tsyn SPF" where
   "MedSPF ora \<equiv> Abs_ufun (tsynbMed ora)"
 
+text{* @{term oraFun}: Function to create ora streams with True at position n.*}
 definition oraFun :: "nat \<Rightarrow> bool stream set" where
   "oraFun n = { ora. (#({True} \<ominus> ora) = \<infinity> \<and> snth n ora \<and> (\<forall>k<n. \<not>snth k ora))}"
 
@@ -39,6 +40,7 @@ text {* @{term MedSPS}: Lossy medium function set for the Alternating Bit Protoc
 definition MedSPS :: "nat \<Rightarrow> abpMessage tsyn SPS" where 
   "MedSPS n = Abs_uspec (Rev {(MedSPF ora) | ora. ora \<in> (oraFun n)}, Discr {\<C> ''ds''}, 
   Discr {\<C> ''dr''})"
+
 
 (* ----------------------------------------------------------------------- *)
 section {* Basic Properties *}
@@ -421,6 +423,46 @@ lemma medspf_strict: "(MedSPF ora) \<rightleftharpoons> ubLeast{\<C> ''ds''} = u
       using tsynbMed_def eq_empty by simp 
     thus ?thesis by (simp add: medspf_insert)
   qed
+
+(* ----------------------------------------------------------------------- *)
+subsection {* MedSPF step lemmata *}
+(* ----------------------------------------------------------------------- *)
+
+(*lemma copied can be deleted *)
+lemma spfConcIn_step[simp]:
+  assumes  "ubDom\<cdot>sb = ufDom\<cdot>spf"
+  shows "(spfConcIn sb1\<cdot>spf) \<rightleftharpoons> sb = spf \<rightleftharpoons> (ubConcEq sb1\<cdot>sb)" 
+  by (simp_all add: assms spfConcIn_def ubclDom_ubundle_def Int_absorb1)
+
+lemma snthorafun: "ora \<in> oraFun n \<Longrightarrow> snth n ora"
+  by (simp add: oraFun_def)
+
+lemma assumes "ora \<in> oraFun n"  
+  shows "spfConcIn (tsynbNull(\<C> ''ds''))\<cdot>(MedSPF ora) = spfConcOut (tsynbNull(\<C> ''dr''))\<cdot>(MedSPF ora)"
+  apply (rule spf_eq)
+  apply (simp add: medspf_ufdom)+
+  apply (subst medspf_ubdom)
+  apply (simp add: medspf_ufdom)
+  apply (rule ub_eq)
+  apply (simp add: medspf_ubdom medspf_ufdom)+
+sorry
+
+lemma assumes "ora1 \<in> oraFun n" obtains "ora2 \<in> oraFun n" 
+  and "spfConcIn (tsynbNull(\<C> ''ds''))\<cdot>(MedSPF ora1) = spfConcOut (tsynbNull(\<C> ''dr''))\<cdot>(MedSPF ora2)"
+  using assms
+  proof -
+    assume o1: "ora1 \<in> oraFun n"
+    have ufdomeq: "ufDom\<cdot>(spfConcIn (tsynbNull(\<C> ''ds''))\<cdot>(MedSPF ora1)) = ufDom\<cdot>(spfConcOut (tsynbNull(\<C> ''dr''))\<cdot>(MedSPF ora2))"
+      by (simp add: medspf_ufdom)
+    have ubdomeq: "\<And>ub. ubDom\<cdot>ub = ufDom\<cdot>(spfConcIn (tsynbNull(\<C> ''ds''))\<cdot>(MedSPF ora1))
+      \<Longrightarrow> (spfConcIn (tsynbNull(\<C> ''ds''))\<cdot>(MedSPF ora1)) \<rightleftharpoons> ub = (spfConcOut (tsynbNull(\<C> ''dr''))\<cdot>(MedSPF ora2)) \<rightleftharpoons> ub"
+      apply (simp add: medspf_ufdom medspf_ubdom)
+      sorry
+  oops
+
+(* lemma spf_eq: assumes "ufDom\<cdot>uf1 = ufDom\<cdot>uf2"
+  and "\<And>ub. ubDom\<cdot>ub = ufDom\<cdot>uf1 \<Longrightarrow> uf1 \<rightleftharpoons> ub = uf2 \<rightleftharpoons> ub"
+shows "uf1 = uf2"*)
 
 (* ----------------------------------------------------------------------- *)
 subsection {* Basic Properties of MedSPSspec *}
