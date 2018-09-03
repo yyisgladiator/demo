@@ -118,7 +118,8 @@ lemma po_chain_total: assumes "chain K" shows "K a \<sqsubseteq> K b  \<or>  K b
   proof -
     have "\<forall>C. (C\<in>Chains {(x,y) | x y. x\<sqsubseteq>y \<and>x\<in>S \<and> y\<in>S} \<longrightarrow> (\<exists>u\<in>S. \<forall>a\<in>C. a \<sqsubseteq> u))"
       using assms chains2longchains by blast
-    thus ?thesis using po_class.own_zorn2 sorry
+    thus ?thesis 
+      using po_class.own_zorn2 by blast
   qed
 
 (* Zorn lemma über abzählbare ketten *)
@@ -181,17 +182,17 @@ proof -
   have c_cpo: "\<And>S. longChain S \<Longrightarrow> S \<subseteq> C \<Longrightarrow> \<exists>x\<in>C. S <<| x"
     by (simp add: assms(3) p3) (* CPO-condition *)
 
-  have "\<And>S. longChain S \<Longrightarrow> S \<subseteq> ?Z \<Longrightarrow> lub S \<in> ?Z"
+  have lub_in_z: "\<And>S. longChain S \<Longrightarrow> S \<subseteq> ?Z \<Longrightarrow> lub S \<in> ?Z"
   proof
     fix S
     assume s_chain: "longChain S" and s_in: "S \<subseteq> ?Z"
     have "\<And>s x. s\<in>S \<Longrightarrow> x\<in>?F \<Longrightarrow> s\<sqsubseteq>x"
       using s_in by auto
-    hence "\<And>x. x\<in>?F \<Longrightarrow> lub S \<sqsubseteq> x"
+    hence lub_f:"\<And>x. x\<in>?F \<Longrightarrow> lub S \<sqsubseteq> x"
       using c_cpo is_lub_thelub_ex is_ub_def s_chain s_in by fastforce
 
     let ?Kr = "f`S"
-    have "longChain ?Kr"
+    have kr_chain: "longChain ?Kr"
       using longchain_mono monof s_chain by blast
     hence "lub S \<sqsubseteq> f (lub S)"
     proof -
@@ -201,15 +202,20 @@ proof -
       using s_in holmf_below_lub by (smt Ball_Collect \<open>longChain (f ` S)\<close> c_cpo goodFormed_def goodf image_subset_iff)  (* ToDo: kein SMT/schneller *)
       hence "lub S \<sqsubseteq> (lub ?Kr)"
         by (metis (mono_tags) Collect_mem_eq c_cpo conj_subset_def is_lub_thelub_ex is_ub_def s_chain s_in)
-      thus ?thesis sorry
+      hence "lub ?Kr  \<sqsubseteq> f (lub S)"  using s_chain kr_chain assms(1) is_ub_thelub lub_below_iff holmf_below_iff monofunE 
+        by (smt Ball_Collect c_cpo goodFormed_def goodf imageE is_ub_thelub_ex s_in subsetI) (* ToDo kein SMT/schneller *)
+
+      thus ?thesis using \<open>lub S \<sqsubseteq> lub (f ` S)\<close> rev_below_trans by blast
     qed
     
-    have "lub S \<in> C"
-      using c_cpo lub_eqI s_chain s_in sorry (* by fastforce *)
-    thus "lub S \<sqsubseteq> f (lub S) \<and> (\<forall>x\<in>{x. x = f x \<and> x \<in> C}. lub S \<sqsubseteq> x) \<and> lub S \<in> C" sorry
+    moreover have "lub S \<in> C"
+      using c_cpo lub_eqI s_chain s_in by blast 
+    ultimately show "lub S \<sqsubseteq> f (lub S) \<and> (\<forall>x\<in>{x. x = f x \<and> x \<in> C}. lub S \<sqsubseteq> x) \<and> lub S \<in> C" using lub_f by blast
   qed
+  have "\<And>C x. longChain C \<Longrightarrow> C\<subseteq>?Z \<Longrightarrow> \<forall>a\<in>C. a\<sqsubseteq>lub C"
+    by (metis (no_types, lifting) Ball_Collect c_cpo is_ub_thelub_ex subset_iff)
   hence "\<And>C. longChain C \<Longrightarrow> C\<subseteq>?Z \<Longrightarrow> \<exists>u\<in>?Z. \<forall>a\<in>C. a \<sqsubseteq> u"
-    sorry
+    using lub_in_z by force
 
   hence "\<exists>m\<in>?Z. \<forall>a\<in>?Z. (m\<sqsubseteq>a \<longrightarrow> a=m)" by(subst own_zorn3, auto)
 
@@ -232,7 +238,7 @@ proof -
     using w_def w_z by fastforce
 
   thus ?thesis
-    using w_z sorry (* by auto *)
+    using w_z by auto
   oops
 
 

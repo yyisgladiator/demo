@@ -20,6 +20,10 @@ lemma longchain_mono: assumes "longChain S" and "monofun f"
 lemma holmf_below_lub: "\<lbrakk>longChain S;\<exists>x. S <<| x; s\<in>S;x \<sqsubseteq> s\<rbrakk> \<Longrightarrow> x \<sqsubseteq> lub S"
   using box_below is_ub_thelub_ex by blast
 
+lemma holmf_below_iff: "longChain S \<Longrightarrow> \<exists>x. S <<| x \<Longrightarrow> lub S \<sqsubseteq> x \<longleftrightarrow> (\<forall>s\<in>S. s \<sqsubseteq> x)"
+  using is_lub_below_iff is_ub_def lub_eqI by blast
+
+
 lemma assumes  "s\<in>S" and "\<exists>x\<in>C. S <<| x"
   shows "s \<sqsubseteq> lub S"
   using assms(1) assms(2) is_ub_thelub_ex by blast

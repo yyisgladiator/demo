@@ -60,6 +60,7 @@ lemma uspecmax_max: assumes "spec \<in> USPEC In Out"
 
 lemma uspec_cpo: assumes "longChain S" and "S \<subseteq> USPEC In Out"
   shows "\<exists>x\<in>USPEC In Out. S <<| x"
+  apply(simp add: is_lub_def)
   sorry
 
 
@@ -80,16 +81,30 @@ lemma uspec_cpo2: fixes S :: "'m uspec set"
   shows "\<exists>x. S <<| x"
   by (metis (mono_tags) USPEC_def assms longChain_def lub_eqI mem_Collect_eq subsetI uspec_cpo)
 
+
+definition setify::"('m::type \<Rightarrow> ('n::type set)) \<Rightarrow> ('m \<Rightarrow> 'n) set" where
+"setify = undefined"
+
+
+definition test::"'b::type set set \<Rightarrow> (('a::type \<Rightarrow> ('b set)) set)" where
+"test Ab = setify (\<lambda>a. Ab)"
+
+instantiation "fun" :: (type, ppcpo) ppcpo
+begin
+  definition A_fun_def: "A_fun \<equiv> (setify ` (test A))::('a \<Rightarrow> 'b) set set"    (* TODO ! for nda_h *)
+
+instance 
+  apply(intro_classes)
+  sorry
+end
+
 instantiation uspec:: (ufuncl) ppcpo
 begin
 definition A_uspec_def: "A_uspec \<equiv> { USPEC In Out | In Out . True  }"
 instance
-proof(intro_classes)
-  have "(A::'a uspec set set)\<noteq>{}"
-    using A_uspec_def by blast
-  oops
-end 
-  
+  sorry
+
+end
 
 
 end
