@@ -2,7 +2,7 @@
 
 theory KnasterTarski
 
-imports HOLCF
+imports HOLCF HOLMF
 
 begin
 
@@ -15,17 +15,17 @@ begin
 end
 
 class ppcpo = A_class +  cpo + 
-  assumes "A \<noteq> {} " and  "A \<noteq> { {} } "    (* A is not empty *) 
+  assumes p0: "A \<noteq> {} "  (* A is not empty *) 
   (* assumes "setflat\<cdot>A = UNIV" *)
 
     (* every division has its own bottom element *)
   assumes p1: "\<And>a. a\<in>A \<Longrightarrow> \<exists>bot\<in>a. \<forall>b\<in>a. bot \<sqsubseteq>b"  (* ToDo: Name + schöner aufschreiben *)
 
     (* Elements from different divisions are never in a below-relation *)
-  assumes p2: "\<And>a b. a\<in>A \<Longrightarrow> b\<in>A \<Longrightarrow> \<exists>aa bb. aa\<in>a \<and> bb\<in>b \<Longrightarrow> a = b" (* ToDo: Name + schöner aufschreiben *)
+ (* assumes p2: "\<And>a b. a\<in>A \<Longrightarrow> b\<in>A \<Longrightarrow> \<exists>aa bb. aa\<in>a \<and> bb\<in>b \<Longrightarrow> a = b" (* ToDo: Name + schöner aufschreiben *) *)
 
     (* every set is a cpo *)
-  assumes p3: "\<And>K i a. a\<in>A \<Longrightarrow> chain K \<Longrightarrow> K i\<in>a \<Longrightarrow> (\<Squnion>i. K i) \<in> a" (* ToDo: Name + schöner aufschreiben *)
+  assumes p3: "\<And>S a. a\<in>A \<Longrightarrow> longChain S \<Longrightarrow> S\<subseteq>a \<Longrightarrow> \<exists>x\<in>a. S <<| x" (* ToDo: Name + schöner aufschreiben *)
 begin
 
 end
@@ -89,6 +89,7 @@ lemma po_chain_total: assumes "chain K" shows "K a \<sqsubseteq> K b  \<or>  K b
   using assms local.chain_mono nat_le_linear by blast
 
 
+(* Zorn lemma über über-abzählbaren ketten *)
   lemma own_zorn2: 
     assumes "\<And>C. C\<in>Chains {(x,y) | x y. x\<sqsubseteq>y \<and>x\<in>S \<and> y\<in>S} \<Longrightarrow> \<exists>u\<in>S. \<forall>a\<in>C. a \<sqsubseteq> u"
   shows "\<exists>m\<in>S. \<forall>a\<in>S. (m\<sqsubseteq>a \<longrightarrow> a=m)"
@@ -106,6 +107,21 @@ lemma po_chain_total: assumes "chain K" shows "K a \<sqsubseteq> K b  \<or>  K b
       by (smt DomainE Domain_unfold Field_def Range_def Range_iff Un_iff mem_Collect_eq snd_conv)
   qed
 
+  lemma chains2longchains: 
+    shows "Chains {(x,y) | x y. x\<sqsubseteq>y \<and>x\<in>S \<and> y\<in>S} = {C. longChain C\<and>C\<subseteq>S}"
+    apply rule+
+    by(auto simp add: Chains_def longChain_def)
+
+  lemma own_zorn3: 
+    assumes "\<And>C. longChain C \<Longrightarrow> C\<subseteq>S \<Longrightarrow> \<exists>u\<in>S. \<forall>a\<in>C. a \<sqsubseteq> u"
+    shows "\<exists>m\<in>S. \<forall>a\<in>S. (m\<sqsubseteq>a \<longrightarrow> a=m)"
+  proof -
+    have "\<forall>C. (C\<in>Chains {(x,y) | x y. x\<sqsubseteq>y \<and>x\<in>S \<and> y\<in>S} \<longrightarrow> (\<exists>u\<in>S. \<forall>a\<in>C. a \<sqsubseteq> u))"
+      using assms chains2longchains by blast
+    thus ?thesis using po_class.own_zorn2 sorry
+  qed
+
+(* Zorn lemma über abzählbare ketten *)
   lemma own_zorn: 
     assumes "\<And>C. chain C \<Longrightarrow> (\<forall>i. C i\<in>S) \<Longrightarrow> \<exists>a\<in>S. (\<forall>i. C i \<sqsubseteq> a)"
     and "S \<noteq> {}"  (* Delete assumption? *)
@@ -161,12 +177,41 @@ proof -
   qed
 
   let ?r = "{(x,y) | x y. x\<sqsubseteq>y \<and>x\<in>?Z \<and> y\<in>?Z}"
-  have "\<And>C. C\<in>Chains ?r \<Longrightarrow> lub C \<in> ?Z" (* lub ist aus HOLCF, Chains aus HOL/Zorn ... no lemma at all *)
-      (* And worse! CPO is defined with the HOLCF-Chain. Thats weaker! *)
+
+  have c_cpo: "\<And>S. longChain S \<Longrightarrow> S \<subseteq> C \<Longrightarrow> \<exists>x\<in>C. S <<| x"
+    by (simp add: assms(3) p3) (* CPO-condition *)
+
+  have "\<And>S. longChain S \<Longrightarrow> S \<subseteq> ?Z \<Longrightarrow> lub S \<in> ?Z"
+  proof
+    fix S
+    assume s_chain: "longChain S" and s_in: "S \<subseteq> ?Z"
+    have "\<And>s x. s\<in>S \<Longrightarrow> x\<in>?F \<Longrightarrow> s\<sqsubseteq>x"
+      using s_in by auto
+    hence "\<And>x. x\<in>?F \<Longrightarrow> lub S \<sqsubseteq> x"
+      using c_cpo is_lub_thelub_ex is_ub_def s_chain s_in by fastforce
+
+    let ?Kr = "f`S"
+    have "longChain ?Kr"
+      using longchain_mono monof s_chain by blast
+    hence "lub S \<sqsubseteq> f (lub S)"
+    proof -
+      have "\<And>s. s\<in>S \<Longrightarrow> \<exists>x\<in>?Kr. s\<sqsubseteq>x"
+        using s_in by auto
+      hence f1: "\<And>s. s\<in>S \<Longrightarrow> s  \<sqsubseteq> lub ?Kr"
+      using s_in holmf_below_lub by (smt Ball_Collect \<open>longChain (f ` S)\<close> c_cpo goodFormed_def goodf image_subset_iff)  (* ToDo: kein SMT/schneller *)
+      hence "lub S \<sqsubseteq> (lub ?Kr)"
+        by (metis (mono_tags) Collect_mem_eq c_cpo conj_subset_def is_lub_thelub_ex is_ub_def s_chain s_in)
+      thus ?thesis sorry
+    qed
+    
+    have "lub S \<in> C"
+      using c_cpo lub_eqI s_chain s_in sorry (* by fastforce *)
+    thus "lub S \<sqsubseteq> f (lub S) \<and> (\<forall>x\<in>{x. x = f x \<and> x \<in> C}. lub S \<sqsubseteq> x) \<and> lub S \<in> C" sorry
+  qed
+  hence "\<And>C. longChain C \<Longrightarrow> C\<subseteq>?Z \<Longrightarrow> \<exists>u\<in>?Z. \<forall>a\<in>C. a \<sqsubseteq> u"
     sorry
-  hence "\<And>C. C\<in>Chains ?r \<Longrightarrow> \<exists>u\<in>?Z. \<forall>a\<in>C. a \<sqsubseteq> u"
-    sorry
-  hence "\<exists>m\<in>?Z. \<forall>a\<in>?Z. (m\<sqsubseteq>a \<longrightarrow> a=m)" by(subst own_zorn2, auto)
+
+  hence "\<exists>m\<in>?Z. \<forall>a\<in>?Z. (m\<sqsubseteq>a \<longrightarrow> a=m)" by(subst own_zorn3, auto)
 
   from this obtain w where w_def: "\<And>z. z\<in>?Z \<Longrightarrow> w \<sqsubseteq> z \<Longrightarrow> w = z" and w_z: "w\<in>?Z"
     by auto
@@ -187,7 +232,7 @@ proof -
     using w_def w_z by fastforce
 
   thus ?thesis
-    using w_z by auto
+    using w_z sorry (* by auto *)
   oops
 
 
@@ -242,7 +287,7 @@ proof -
     using f1 by (meson K_ch below_trans lub_below)
   qed
   moreover have "(\<Squnion>i. K i) \<in> C"
-    using K_Z K_ch assms(3) p3 by fastforce
+    using K_Z K_ch assms(3) p3 sorry (* by fastforce *)
 
     (* 3. *)
   ultimately have  "(\<Squnion>i. K i) \<in> ?Z"
