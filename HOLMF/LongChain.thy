@@ -1,13 +1,16 @@
-theory HOLMF
+theory LongChain
 
 imports HOLCF
 
 begin
-default_sort po
 
+default_sort po
 
 definition longChain :: "'a set \<Rightarrow> bool" where
 "longChain S \<equiv> \<forall>a b. (a\<in>S \<and> b\<in>S) \<longrightarrow> (a\<sqsubseteq>b \<or> b\<sqsubseteq>a)"
+
+
+
 
 lemma longchainI: "(\<And>a b. a\<in>S \<Longrightarrow> b\<in>S \<Longrightarrow> (a\<sqsubseteq>b \<or> b\<sqsubseteq>a)) \<Longrightarrow> longChain S"
   by (simp add: longChain_def)
@@ -31,4 +34,5 @@ lemma assumes  "s\<in>S" and "\<exists>x\<in>C. S <<| x"
 lemma assumes "S\<noteq>{}" and "S \<subseteq> C" and "\<exists>x. S <<| x"
   shows "lub S \<in> C"
   oops
+
 end

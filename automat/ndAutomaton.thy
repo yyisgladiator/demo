@@ -2,7 +2,7 @@
 
 theory ndAutomaton
 
-imports spec.SPS SpsStep KnasterTarski
+imports spec.SPS SpsStep
 
 
 begin
@@ -106,12 +106,18 @@ lemma nda_h_inner_monofun: "monofun (nda_h_inner nda)"
   by (simp add: fun_belowI monofunE monofun_Rep_cfun2 ndaHelper2_monofun)
 
 
+
+
+definition lfp :: "('a \<Rightarrow> 'a) \<Rightarrow> 'a" where
+"lfp = undefined" (* SWS working on it in HOLMF/*)
+
 (* Similar to Rum96 *)
 definition nda_h :: "('s::type, 'm::message) ndAutomaton \<Rightarrow> ('s \<Rightarrow> 'm SPS)" where
 "nda_h nda \<equiv> lfp (nda_h_inner nda)"
 
 lemma nda_h_fixpoint: "nda_h nda = nda_h_inner nda (nda_h nda)"
-  by (simp add: lfp_condition nda_h_def nda_h_inner_monofun)
+  sorry
+  (*  by (simp add: lfp_condition nda_h_def nda_h_inner_monofun) *)
 
 
 definition nda_H :: "('s, 'm::message) ndAutomaton \<Rightarrow> 'm SPS" where

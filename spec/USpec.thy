@@ -92,6 +92,19 @@ definition uspecDom :: "'m uspec \<rightarrow> channel set" where
 definition uspecRan :: "'m uspec \<rightarrow> channel set" where
 "uspecRan = (\<Lambda> S. undiscr (snd (snd (Rep_uspec S))))"
 
+(* Set of all uspecs with the given dom/ran *)
+definition USPEC :: "channel set \<Rightarrow> channel set \<Rightarrow> 'm uspec set" where
+"USPEC In Out = {spec. uspecDom\<cdot>spec = In \<and> uspecRan\<cdot>spec = Out}"
+
+lift_definition uspecLeast :: "channel set \<Rightarrow> channel set \<Rightarrow> 'm uspec" is
+"\<lambda>In Out. (Rev (Set.filter (\<lambda>x. ufclDom\<cdot>x = In \<and> ufclRan\<cdot>x=Out) UNIV), Discr In, Discr Out)"
+  by simp
+
+lift_definition uspecMax :: "channel set \<Rightarrow> channel set \<Rightarrow> 'm uspec" is
+"\<lambda>In Out. (Rev {}, Discr In, Discr Out)"
+  by simp
+
+
 (* Eases the proofs (by removing a lot of the text) *)
 definition uspecUnion_general:: "'m uspec \<Rightarrow> 'm uspec \<Rightarrow> 'm uspec" where
 "uspecUnion_general \<equiv> (\<lambda> S1 S2. Abs_uspec (
@@ -337,6 +350,43 @@ subsection \<open>RevSet 2\<close>
 lemma uspecRevSet_condition: assumes "x \<in> inv Rev (uspecRevSet\<cdot>S1)"
                                shows "ufclDom\<cdot>x = uspecDom\<cdot>S1 \<and> ufclRan\<cdot>x = uspecRan\<cdot>S1"
   by (simp add: assms uspec_allDom uspec_allRan)
+
+
+subsection \<open>uspecLeast\<close>
+
+lemma uspecleast_dom[simp]: "uspecDom\<cdot>(uspecLeast In Out) = In"
+  by (simp add: uspecdom_insert uspecLeast.rep_eq)
+
+lemma uspecleast_ran[simp]: "uspecRan\<cdot>(uspecLeast In Out) = Out"
+  by (simp add: uspecran_insert uspecLeast.rep_eq)
+
+lemma uspecleast_least: assumes "spec \<in> USPEC In Out"
+  shows "uspecLeast In Out \<sqsubseteq> spec"
+  apply(rule uspec_belowI)
+  apply (simp_all add: USPEC_def)
+  using USPEC_def assms apply blast
+  using USPEC_def assms apply force
+  apply(simp add: uspecRevSet_def uspecLeast.rep_eq)
+  by (metis (no_types, lifting) UNIV_I USPEC_def assms inv_rev_rev mem_Collect_eq member_filter revBelowNeqSubset subsetI uspec_allDom uspec_allRan uspecrevset_insert)
+
+
+subsection \<open>uspecMax\<close>
+
+lemma uspecmax_dom[simp]: "uspecDom\<cdot>(uspecMax In Out) = In"
+  by (simp add: uspecdom_insert uspecMax.rep_eq)
+
+lemma uspecmax_ran[simp]: "uspecRan\<cdot>(uspecMax In Out) = Out"
+  by (simp add: uspecran_insert uspecMax.rep_eq)
+
+lemma uspecmax_max: assumes "spec \<in> USPEC In Out"
+  shows "spec \<sqsubseteq> uspecMax In Out"
+  apply(rule uspec_belowI)
+  apply (metis (no_types) assms uspecdom_eq uspecleast_dom uspecleast_least uspecmax_dom)
+  apply (metis (no_types) assms uspecleast_least uspecleast_ran uspecmax_ran uspecran_eq)
+  by (simp add: inv_rev_rev revBelowNeqSubset uspecMax.rep_eq uspecrevset_insert)
+
+
+
 
 
 subsection \<open>uspecUnion\<close>
