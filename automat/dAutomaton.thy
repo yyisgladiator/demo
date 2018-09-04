@@ -7,11 +7,7 @@
 *)
 
 theory dAutomaton
-<<<<<<< HEAD:untimed/CaseStudy/dAutomaton.thy
-  imports "../SPF"  "../NewSpfStep"
-=======
-  imports fun.SPF SpfStep
->>>>>>> develop:automat/dAutomaton.thy
+  imports fun.SPF NewSpfStep
 
 begin
 
@@ -154,21 +150,11 @@ lemma da_h_final:
     
 lemma da_h_bottom: assumes "ubDom\<cdot>sb = daDom automat" and "\<exists>c\<in>daDom automat. sb  .  c = \<epsilon>"
   shows "(da_h automat s)\<rightleftharpoons>sb = ubclLeast (daRan automat)"
-<<<<<<< HEAD:untimed/CaseStudy/dAutomaton.thy
   apply(simp add: da_h_unfolding spfStep_def assms)
   apply (simp add: spfStep_inj_def sbHdElemWell_def)
   by (metis assms(1) assms(2) ubclDom_ubundle_def ufleast_apply) 
 
 
-
-
-  section \<open>Lemma about H\<close>
-
-
-=======
-  apply(simp add: da_h_unfolding spfStep_def, subst beta_cfun, subst spfStep_cont, simp_all add: spfStep_h1_def)
-  using assms(1) assms(2) sbHdElem_bottom_exI by (metis ubclDom_ubundle_def ufleast_apply)
-    
 section \<open>Lemma about H\<close>
   
 lemma da_H_unfolding:
@@ -217,6 +203,5 @@ lemma da_H_bottom:
   apply (simp add: ubclLeast_ubundle_def assms)
   apply (fold dadom_automat, simp add: datom_automat_nempty)
   by (subst ubconceq_ubleast,simp_all add: assms)
->>>>>>> develop:automat/dAutomaton.thy
 
 end
