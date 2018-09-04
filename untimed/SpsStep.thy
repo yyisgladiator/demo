@@ -155,18 +155,8 @@ lemma image_cont_rev_inj_on: "cont (\<lambda> S.  if inj_on f (inv Rev S) then R
 lemma inj_on_adm_set_rev:"adm (\<lambda>S. inj_on f (inv Rev S))"
   oops
 
-lemma bla: assumes "chain Y" and "\<And> x. \<exists> i. x \<notin> inv Rev (Y i)"
-  shows "Lub Y = Rev {}"
-  by (metis all_not_in_conv assms(1) assms(2) inv_rev_rev rev.exhaust setrevLub_lub_eq_all)
-
-lemma bla2: assumes "chain Y" and "Lub Y = Rev {}"
-  shows "\<And> x. \<exists> i. x \<notin> inv Rev (Y i)"
-  by (metis assms(1) assms(2) emptyE inv_rev_rev setrevLub_lub_eq_all)
 
 
-lemma setrev_eqI: assumes "(A:: 'a set rev) \<sqsubseteq> B" and "B \<sqsubseteq> A"
-  shows "A = B"
-  by (simp add: assms(1) assms(2) po_eq_conv)
 
 lemma setreImage_lub_inj_on: assumes"chain Y" and "\<forall>i. inj_on f (inv Rev (Y i))" 
   shows "setrevImage f (\<Squnion>i. Y i) = (\<Squnion>i. setrevImage f (Y i))" (*main lemma for cont proof spsStep*)
@@ -174,7 +164,7 @@ proof (cases "(\<Squnion>i. Y i) = Rev {}")
   case True
   have "(\<Squnion>i::nat. Rev (f ` inv Rev (Y i))) = Rev (f ` {})"
     apply simp
-    apply (rule bla)
+    apply (rule setrev_lub_emptyI)
      apply (metis (mono_tags, lifting) assms(1) image_mono inv_rev_rev po_class.chainI po_class.chain_def revBelowNeqSubset)
     apply (simp add: inv_rev_rev)
     apply (case_tac "x \<notin> f ` inv Rev (Y 0)")
@@ -186,7 +176,7 @@ proof (cases "(\<Squnion>i. Y i) = Rev {}")
     obtain x where y_def_1: "y = f x "  and y_def_2: "x \<in> inv Rev (Y (0::nat))"
       using a1 by blast
     obtain da_i where "x \<notin> inv Rev (Y da_i)"
-      by (meson True assms(1) bla2)
+      by (meson True assms(1) setrev_lub_emptyD)
     have "y \<notin> f ` inv Rev (Y da_i)"
     proof (rule ccontr, simp)
       assume a2: "y \<in> f ` inv Rev (Y da_i)"
@@ -338,14 +328,14 @@ proof(rule Cont.contI2, simp add: newSpsStep_mono)
           by (smt a2 setrevExists_def setrevForall_def setrevforall_image)
         have "da_x \<noteq> da_y"
           using \<open>(x::'a stream\<^sup>\<Omega> \<Rightarrow> ('a stream\<^sup>\<Omega>) ufun) = spfStep_inj (In::channel set) (Out::channel set) (\<lambda>sbEl::'a sbElem. spfRtIn\<cdot> ((da_x::'a sbElem \<Rightarrow> ('a stream\<^sup>\<Omega>) ufun) sbEl))\<close> \<open>(y::'a stream\<^sup>\<Omega> \<Rightarrow> ('a stream\<^sup>\<Omega>) ufun) = spfStep_inj (In::channel set) (Out::channel set) (\<lambda>sbEl::'a sbElem. spfRtIn\<cdot> ((da_y::'a sbElem \<Rightarrow> ('a stream\<^sup>\<Omega>) ufun) sbEl))\<close> a111 by blast
-        then obtain ele where "da_x ele \<noteq> da_y ele"
+        then obtain ele where ele_def: "da_x ele \<noteq> da_y ele"
           by (meson  ext)
-        have "ufDom\<cdot>(da_x ele) = In \<and> ufRan\<cdot>(da_x ele ) = Out"
+        have da_x_ele_dom_ran: "ufDom\<cdot>(da_x ele) = In \<and> ufRan\<cdot>(da_x ele ) = Out"
           by (metis (mono_tags, lifting) Abs_cfun_inverse2 \<open>(da_x::'a sbElem \<Rightarrow> ('a stream\<^sup>\<Omega>) ufun) \<in> inv Rev (setrevFilter (spsStep_P (In::channel set) (Out::channel set))\<cdot> (spsStep_h\<cdot> ((Y::nat \<Rightarrow> 'a sbElem \<Rightarrow> ('a stream\<^sup>\<Omega>) ufun uspec) (i::nat))))\<close> inv_rev_rev member_filter setrevFilter_def setrevfilter_cont spsStep_P_def)
         have "ufDom\<cdot>(da_y ele) = In \<and> ufRan\<cdot>(da_y ele ) = Out"
           by (metis (mono_tags, lifting) Abs_cfun_inverse2 \<open>(da_y::'a sbElem \<Rightarrow> ('a stream\<^sup>\<Omega>) ufun) \<in> inv Rev (setrevFilter (spsStep_P (In::channel set) (Out::channel set))\<cdot> (spsStep_h\<cdot> ((Y::nat \<Rightarrow> 'a sbElem \<Rightarrow> ('a stream\<^sup>\<Omega>) ufun uspec) (i::nat))))\<close> inv_rev_rev member_filter setrevFilter_def setrevfilter_cont spsStep_P_def)
         then obtain da_sb where da_sb_def: "da_x ele \<rightleftharpoons> da_sb \<noteq> da_y ele  \<rightleftharpoons> da_sb"
-          by (metis \<open>(da_x::'a sbElem \<Rightarrow> ('a stream\<^sup>\<Omega>) ufun) (ele::'a sbElem) \<noteq> (da_y::'a sbElem \<Rightarrow> ('a stream\<^sup>\<Omega>) ufun) ele\<close> \<open>ufDom\<cdot> ((da_x::'a sbElem \<Rightarrow> ('a stream\<^sup>\<Omega>) ufun) (ele::'a sbElem)) = (In::channel set) \<and> ufRan\<cdot>(da_x ele) = (Out::channel set)\<close> ufun_eqI)
+          by (metis da_x_ele_dom_ran ele_def ufun_eqI)
         have "ubDom\<cdot>da_sb = In"
           by (metis \<open>ufDom\<cdot> ((da_x::'a sbElem \<Rightarrow> ('a stream\<^sup>\<Omega>) ufun) (ele::'a sbElem)) = (In::channel set) \<and> ufRan\<cdot>(da_x ele) = (Out::channel set)\<close> \<open>ufDom\<cdot> ((da_y::'a sbElem \<Rightarrow> ('a stream\<^sup>\<Omega>) ufun) (ele::'a sbElem)) = (In::channel set) \<and> ufRan\<cdot>(da_y ele) = (Out::channel set)\<close> da_sb_def option.exhaust_sel ubclDom_ubundle_def ufdom_2ufundom)
         obtain sb where sb_def:"((inv convDiscrUp (sbHdElem\<cdot>sb))) =  (Rep_sbElem ele) 
@@ -372,25 +362,6 @@ proof(rule Cont.contI2, simp add: newSpsStep_mono)
         qed
       qed
     qed
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
