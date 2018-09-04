@@ -30,10 +30,14 @@ lemma holmf_below_iff: "longChain S \<Longrightarrow> \<exists>x. S <<| x \<Long
 
 thm max_in_chain_def
 lemma lc_finite: assumes "S\<noteq>{}" and "longChain S" and "finite S"
-  obtains l where "l\<in>S" and "\<And>x. x\<in>S \<Longrightarrow> x\<sqsubseteq>l"
+  shows  "S\<noteq>{} \<longrightarrow> longChain S\<longrightarrow> (\<exists>l. l\<in>S \<and> (\<forall>x\<in>S. x\<sqsubseteq>l))"
+  apply(rule finite_induct [of S])
+  apply (simp add: assms(3))
+   apply blast
+  apply rule+
   sorry
 
-lemma  "S\<noteq>{} \<Longrightarrow> longChain S \<Longrightarrow> finite S \<Longrightarrow> lub S \<in>S"
+lemma lc_finite_lub: "S\<noteq>{} \<Longrightarrow> longChain S \<Longrightarrow> finite S \<Longrightarrow> lub S \<in>S"
   by (metis is_ub_def lc_finite lub_maximal)
 
 
