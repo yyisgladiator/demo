@@ -10,7 +10,7 @@ begin
 default_sort cpo
 
 class A_class = 
-  fixes A :: "'a set set"
+  fixes A :: "'a set set" (* Rename: Division *)
 begin
 end
 
@@ -237,6 +237,8 @@ proof -
   hence "f w = w"
     using w_def w_z by fastforce
 
+  have "\<And>x. x\<in>?f \<Longrightarrow> w\<sqsubseteq>x"
+
   thus ?thesis
     using w_z by auto
   oops
@@ -346,6 +348,10 @@ lemma lfp_condition: assumes "monofun f"
   shows "f (lfp f) = lfp f"
   apply(simp add: lfp_def)
   by (meson assms knaster_tarski someI)
+
+
+lemma "f\<sqsubseteq>g \<Longrightarrow> lfp f \<sqsubseteq> lfp g"
+  sorry
 
 (* We are going to use this for refinement. Does not hold like this, the input might not be monofun *)
 lemma lfp_monofun: "monofun lfp"
