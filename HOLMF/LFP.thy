@@ -19,7 +19,8 @@ lemma lfp_condition:
     and "C \<in> DIV"
   shows "\<exists>!x. (f x = x \<and> x\<in>C \<and> (\<forall>y\<in>C. f y = y \<longrightarrow> x\<sqsubseteq>y))"
   apply(subst knaster_tarski)
-  using assms goodFormed_def by (auto simp add: div_cpo div_pcpo)
+  using assms goodFormed_def by (auto simp add: div_cpo_g div_pcpo)
+  
 
 
 lemma lfp_all: assumes "monofun f"

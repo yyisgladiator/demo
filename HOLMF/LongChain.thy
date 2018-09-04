@@ -27,6 +27,16 @@ lemma holmf_below_iff: "longChain S \<Longrightarrow> \<exists>x. S <<| x \<Long
   using is_lub_below_iff is_ub_def lub_eqI by blast
 
 
+
+thm max_in_chain_def
+lemma lc_finite: assumes "S\<noteq>{}" and "longChain S" and "finite S"
+  obtains l where "l\<in>S" and "\<And>x. x\<in>S \<Longrightarrow> x\<sqsubseteq>l"
+  sorry
+
+lemma  "S\<noteq>{} \<Longrightarrow> longChain S \<Longrightarrow> finite S \<Longrightarrow> lub S \<in>S"
+  by (metis is_ub_def lc_finite lub_maximal)
+
+
 lemma assumes  "s\<in>S" and "\<exists>x\<in>C. S <<| x"
   shows "s \<sqsubseteq> lub S"
   using assms(1) assms(2) is_ub_thelub_ex by blast
