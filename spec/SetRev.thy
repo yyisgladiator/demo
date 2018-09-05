@@ -51,6 +51,9 @@ definition setrevInter:: "'m set rev \<rightarrow> 'm set rev \<rightarrow> 'm s
 definition setify::"('m \<Rightarrow> ('n set rev)) \<rightarrow> ('m \<Rightarrow> 'n) set rev" where
 "setify \<equiv> \<Lambda> f. Rev {g. \<forall>m. g m \<in> (inv Rev(f m))}"
 
+definition invsetify::"('m \<Rightarrow> 'n) set rev \<rightarrow> ('m \<Rightarrow> 'n set rev)" where
+"invsetify \<equiv> \<Lambda> f. (\<lambda>m. Rev {g m |g.  g\<in> (inv Rev f)})"
+
 definition setrevUnion:: "'m set rev \<rightarrow> 'm set rev \<rightarrow> 'm set rev" where
 "setrevUnion \<equiv> (\<Lambda> A B. Rev((inv Rev A) \<union> (inv Rev B)))"
 
@@ -130,6 +133,13 @@ lemma setrevLub_lub_eq_all:
   apply(simp only: inv_rev_rev)
   by auto
 
+lemma setrev_lub_emptyI: assumes "chain Y" and "\<And> x. \<exists> i. x \<notin> inv Rev (Y i)"
+  shows "Lub Y = Rev {}"
+  by (metis all_not_in_conv assms(1) assms(2) inv_rev_rev rev.exhaust setrevLub_lub_eq_all)
+
+lemma setrev_lub_emptyD: assumes "chain Y" and "Lub Y = Rev {}"
+  shows "\<And> x. \<exists> i. x \<notin> inv Rev (Y i)"
+  by (metis assms(1) assms(2) emptyE inv_rev_rev setrevLub_lub_eq_all)
 
 subsection \<open>setrevFilter\<close>
 
@@ -255,7 +265,31 @@ qed
 
 lemma setify_insert:"setify\<cdot>f = Rev {g. \<forall>m. g m \<in> (inv Rev(f m))}"
   by(simp add: setify_def)
-  
+ 
+lemma invsetify_mono[simp]:"monofun (\<lambda> f. (\<lambda>m. Rev {g m |g.  g\<in> (inv Rev f)}))"
+proof(rule monofunI)
+  fix x y::"('a \<Rightarrow> 'b) set rev"
+  assume a1:"x\<sqsubseteq>y"
+  show "(\<lambda>m. Rev {g m |g. g \<in> inv Rev x}) \<sqsubseteq> (\<lambda>m. Rev {g m |g. g \<in> inv Rev y})"
+    apply(simp add: below_fun_def)
+    by (smt Collect_mono SetPcpo.less_set_def a1 revBelowNeqSubset subsetCE)
+qed
+(*
+lemma invsetify_cont[simp]:"cont(\<lambda> f. (\<lambda>m. Rev {g m |g.  g\<in> (inv Rev f)}))"
+proof(rule Cont.contI2, simp)
+  fix Y::"nat \<Rightarrow> ('a \<Rightarrow> 'b) set rev"
+  assume a1:"chain Y"
+  assume a2:"chain (\<lambda>(i::nat) m::'a. Rev {g m |g::'a \<Rightarrow> 'b. g \<in> inv Rev (Y i)})"
+  show "(\<lambda>m::'a. Rev {g m |g::'a \<Rightarrow> 'b. g \<in> inv Rev (\<Squnion>i::nat. Y i)}) \<sqsubseteq> (\<Squnion>i::nat. (\<lambda>m::'a. Rev {g m |g::'a \<Rightarrow> 'b. g \<in> inv Rev (Y i)}))"
+  proof(simp add:lub_fun a2  below_fun_def, auto)
+    fix x::'a
+    show"Rev {g x |g. g \<in> inv Rev (Lub Y)} \<sqsubseteq> (\<Squnion>i::nat. Rev {g x |g. g \<in> inv Rev (Y i)})"
+      apply(subst setrevLubEqInterII, simp add: a1)
+      apply(subst setrevLubEqInter)
+      apply (smt Collect_mono a1 inv_rev_rev po_class.chain_def revBelowNeqSubset subsetCE)
+      apply(simp add: less_set_def inv_rev_rev, auto)
+        sorry
+qed*)
   
 lemma setify_empty:"f m = Rev {} \<Longrightarrow> setify\<cdot>f = Rev {}"
   apply(simp add: setify_def)

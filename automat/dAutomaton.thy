@@ -7,14 +7,14 @@
 *)
 
 theory dAutomaton
-  imports fun.SPF SpfStep
+  imports fun.SPF NewSpfStep
 
 begin
 
   default_sort type
 
 (* VERY Basic automaton wellformed condition *)
-fun daWell::"((('state \<times>(channel \<rightharpoonup> 'm::message)) \<Rightarrow> ('state \<times> 'm SB)) \<times> 'state \<times> 'm SB \<times> channel set \<times> channel set) \<Rightarrow> bool " where
+fun daWell::"((('state \<times>'m sbElem) \<Rightarrow> ('state \<times> 'm SB)) \<times> 'state \<times> 'm SB \<times> channel set \<times> channel set) \<Rightarrow> bool " where
 "daWell (transition, initialState, initialOut, chIn, chOut) = (finite chIn (* \<and> (\<forall>s f. (dom f = chIn \<and> sbElemWell f) \<longrightarrow> ubDom\<cdot>(snd(transition (s,f))) = chOut)*))"
 
 lemma dawellI: assumes "finite In" 
@@ -32,7 +32,7 @@ lemma automaton_ex:"daWell ((\<lambda>f. (myState, ubLeast {})), State, ubLeast 
 (* The content is:
   transition function \<times> initial state \<times> initial Output \<times> input domain \<times> output domain *)
 typedef ('state::type, 'm::message) dAutomaton =
-  "{f::(('state \<times>(channel \<rightharpoonup> 'm)) \<Rightarrow> ('state \<times> 'm SB)) \<times> 'state \<times> 'm SB \<times> channel set \<times> channel set. daWell f}"
+  "{f::(('state \<times>'m sbElem) \<Rightarrow> ('state \<times> 'm SB)) \<times> 'state \<times> 'm SB \<times> channel set \<times> channel set. daWell f}"
   by auto
 
 setup_lifting type_definition_dAutomaton
@@ -45,7 +45,7 @@ setup_lifting type_definition_dAutomaton
   section \<open>Definitions\<close>
 (*******************************************************************)
 
-definition daTransition :: "('s, 'm::message) dAutomaton \<Rightarrow> (('s \<times>(channel \<rightharpoonup> 'm)) \<Rightarrow> ('s \<times> 'm SB))" where
+definition daTransition :: "('s, 'm::message) dAutomaton \<Rightarrow> (('s \<times>'m sbElem) \<Rightarrow> ('s \<times> 'm SB))" where
 "daTransition automat = fst (Rep_dAutomaton automat)"
 
 definition daInitialState :: "('s, 'm::message) dAutomaton \<Rightarrow> 's" where
@@ -62,11 +62,11 @@ definition daRan :: "('s, 'm::message) dAutomaton \<Rightarrow> channel set" whe
 
 
 (* Given a state and an input it returns the next state *)
-definition daNextState:: "('s::type, 'm::message) dAutomaton \<Rightarrow> 's \<Rightarrow>  ((channel \<rightharpoonup> 'm)) \<Rightarrow> 's" where
+definition daNextState:: "('s::type, 'm::message) dAutomaton \<Rightarrow> 's \<Rightarrow>  ('m sbElem) \<Rightarrow> 's" where
 "daNextState aut s m = fst ((daTransition aut) (s,m))"
 
 (* Given a state and an input it returns the next output *)
-definition daNextOutput:: "('s::type, 'm::message) dAutomaton \<Rightarrow> 's \<Rightarrow>  ((channel \<rightharpoonup> 'm)) \<Rightarrow>  'm SB" where
+definition daNextOutput:: "('s::type, 'm::message) dAutomaton \<Rightarrow> 's \<Rightarrow>  ('m sbElem) \<Rightarrow>  'm SB" where
 "daNextOutput aut s m = snd ((daTransition aut) (s,m))"
 
 
@@ -134,25 +134,27 @@ lemma da_h_unfolding: "(da_h automat s) = spfStep (daDom automat) (daRan automat
   by(subst spfStateFix_fix,simp_all)
 
 lemma da_h_step: assumes "ubDom\<cdot>sb = daDom automat" and "\<forall>c\<in>daDom automat. sb  .  c \<noteq> \<epsilon>"
-            shows "(da_h automat s)\<rightleftharpoons>sb = ((da_helper (daTransition automat) s\<cdot>(da_h automat)) ((inv convDiscrUp)(sbHdElem\<cdot>sb))) \<rightleftharpoons>sb"
+            shows "(da_h automat s)\<rightleftharpoons>sb = ((da_helper (daTransition automat) s\<cdot>(da_h automat)) (Abs_sbElem((inv convDiscrUp)(sbHdElem\<cdot>sb)))) \<rightleftharpoons>sb"
   apply (simp add: da_h_unfolding)
-  apply(rule SpfStep.stepstep_step)
-  by (simp_all add: assms)
+  apply(rule NewSpfStep.spfstep_step)
+  by (simp_all add: assms sbHdElemWell_def da_helper_ran)
 
 (* ToDo: make a bit more readable *)
 lemma da_h_final:
   assumes "ubDom\<cdot>sb = daDom automat" 
       and "\<forall>c\<in>daDom automat. sb  .  c \<noteq> \<epsilon>"
   shows "(da_h automat s)\<rightleftharpoons>sb =
-  spfConcOut (daNextOutput automat s ((inv convDiscrUp)(sbHdElem\<cdot>sb)))\<cdot>(spfRtIn\<cdot>(da_h automat (daNextState automat s ((inv convDiscrUp)(sbHdElem\<cdot>sb))))) \<rightleftharpoons>sb"
+  spfConcOut (daNextOutput automat s (Abs_sbElem((inv convDiscrUp)(sbHdElem\<cdot>sb))))\<cdot>(spfRtIn\<cdot>(da_h automat (daNextState automat s (Abs_sbElem((inv convDiscrUp)(sbHdElem\<cdot>sb)))))) \<rightleftharpoons>sb"
   apply(subst da_h_step, simp_all add: assms)
   by (simp add: assms(1) daNextOutput_def daNextState_def da_helper_def spfRtIn_spfConcOut)
     
 lemma da_h_bottom: assumes "ubDom\<cdot>sb = daDom automat" and "\<exists>c\<in>daDom automat. sb  .  c = \<epsilon>"
   shows "(da_h automat s)\<rightleftharpoons>sb = ubclLeast (daRan automat)"
-  apply(simp add: da_h_unfolding spfStep_def, subst beta_cfun, subst spfStep_cont, simp_all add: spfStep_h1_def)
-  using assms(1) assms(2) sbHdElem_bottom_exI by (metis ubclDom_ubundle_def ufleast_apply)
-    
+  apply(simp add: da_h_unfolding spfStep_def assms)
+  apply (simp add: spfStep_inj_def sbHdElemWell_def)
+  by (metis assms(1) assms(2) ubclDom_ubundle_def ufleast_apply) 
+
+
 section \<open>Lemma about H\<close>
   
 lemma da_H_unfolding:

@@ -388,7 +388,7 @@ shows "inj (Rep_cfun (ufApplyOut f))"
   apply rule
   apply(rule ufun_eqI)
   apply (metis assms(1) ufapplyout_dom)
-  by (metis (mono_tags, lifting) assms(1) assms(2) inj_def ufapplyout_apply ufapplyout_dom)
+  by (metis (mono_tags, lifting) assms(1) assms(2) injD ufapplyout_apply ufapplyout_dom)
   
 
 

@@ -10,12 +10,12 @@ begin
 default_sort type
 
 
-fun ndaWell::"((('state \<times>(channel \<rightharpoonup> 'm)) \<Rightarrow> (('state \<times> 'm SB) set rev)) \<times> ('state \<times> 'm SB) set rev \<times> channel set discr \<times> channel set discr) \<Rightarrow> bool " where
+fun ndaWell::"((('state \<times> 'm sbElem) \<Rightarrow> (('state \<times> 'm SB) set rev)) \<times> ('state \<times> 'm SB) set rev \<times> channel set discr \<times> channel set discr) \<Rightarrow> bool " where
 "ndaWell (transition, initialState, Discr chIn, Discr chOut) = finite chIn"
 
 (* FYI: Non-deterministic version *)
 cpodef ('state::type, 'm::message) ndAutomaton = 
-  "{f::(('state \<times>(channel \<rightharpoonup> 'm)) \<Rightarrow> (('state \<times> 'm SB) set rev)) \<times> ('state \<times> 'm SB) set rev \<times> channel set discr \<times> channel set discr. ndaWell f}"
+  "{f::(('state \<times>'m sbElem) \<Rightarrow> (('state \<times> 'm SB) set rev)) \<times> ('state \<times> 'm SB) set rev \<times> channel set discr \<times> channel set discr. ndaWell f}"
     sorry
 
 setup_lifting type_definition_ndAutomaton
@@ -32,8 +32,12 @@ lemma nda_rep_cont[simp]: "cont Rep_ndAutomaton"
 
     section \<open>Definitions\<close>
 
-
+(*
 lift_definition ndaTransition :: "('s, 'm::message) ndAutomaton \<rightarrow> (('s \<times>(channel \<rightharpoonup> 'm)) \<Rightarrow> (('s \<times> 'm SB) set rev))" is
+"\<lambda>nda. fst (Rep_ndAutomaton nda)"
+  by (simp add: cfun_def)
+*) 
+lift_definition ndaTransition :: "('s, 'm::message) ndAutomaton \<rightarrow> (('s \<times>'m sbElem) \<Rightarrow> (('s \<times> 'm SB) set rev))" is
 "\<lambda>nda. fst (Rep_ndAutomaton nda)"
   by (simp add: cfun_def)
 
@@ -75,8 +79,8 @@ proof -
 qed
 
 
-
-definition ndaHelper2:: "channel set \<Rightarrow> channel set \<Rightarrow> 's \<Rightarrow> (('s \<times>'e) \<Rightarrow> ('s \<times> 'm::message SB) set rev) \<Rightarrow> ('s \<Rightarrow> 'm SPS) \<Rightarrow> ('e \<Rightarrow> 'm SPS)" where
+definition ndaHelper2:: "channel set \<Rightarrow> channel set \<Rightarrow> 
+  's \<Rightarrow> (('s \<times>'e) \<Rightarrow> ('s \<times> 'm::message SB) set rev) \<Rightarrow> ('s \<Rightarrow> 'm SPS) \<Rightarrow> ('e \<Rightarrow> 'm SPS)" where
 "ndaHelper2 In Out s transition \<equiv> \<lambda> h. (\<lambda>e. ndaToDo In Out (transition (s,e)) h)"
 
 
