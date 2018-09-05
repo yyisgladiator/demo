@@ -63,6 +63,9 @@ definition setrevForall:: "('m \<Rightarrow> bool) \<Rightarrow> 'm set rev \<Ri
 definition setrevExists:: "('m \<Rightarrow> bool) \<Rightarrow> 'm set rev \<Rightarrow> bool" where
 "setrevExists P S \<equiv> \<exists>x\<in> (inv Rev S). P x"
 
+definition setrevSize :: "'a set rev \<Rightarrow> lnat" where
+ "setrevSize X = setSize (inv Rev X)"
+
 section \<open>Lemmas\<close>
 
 subsection \<open>General\<close>
@@ -631,8 +634,23 @@ obtain aa :: "('a \<Rightarrow> bool) \<Rightarrow> 'a set rev \<Rightarrow> 'a"
     using f3 f2 f1 by (metis (no_types))
 qed
 
+subsection \<open>Size\<close>
 
-definition setrevSize :: "'a set rev \<Rightarrow> lnat" where
- "setrevSize X = setSize (inv Rev X)"
+lemma setrev_size_suc: 
+  assumes "finite X" and "z \<notin> X" 
+  shows "setrevSize (Rev (insert z X)) = lnsuc\<cdot>(setSize X)"
+  by (simp add: assms(1) assms(2) inv_rev_rev setSizeSuc setrevSize_def)
+
+lemma setrev_size_empty: "setrevSize (Rev {}) = Fin 0"
+  by (simp add: inv_rev_rev setSizeEmpty setrevSize_def)
+
+lemma setrev_size_singleton: "setrevSize (Rev {x}) = lnsuc\<cdot>(Fin 0)"
+  by (simp add: inv_rev_rev setSizeSingleton setrevSize_def)
+
+lemma setrev_size_union: 
+  "setrevSize (setrevUnion\<cdot>X\<cdot>Y) + setrevSize (setrevInter\<cdot>X\<cdot>Y) = setrevSize X + setrevSize Y"
+  apply (simp add: setrevUnion_def setrevInter_def)
+  by (simp add: inv_rev_rev setrevSize_def setsize_union)
+
 
 end

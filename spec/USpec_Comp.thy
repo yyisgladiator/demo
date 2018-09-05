@@ -992,7 +992,14 @@ lemma uspecforall_image:
       by (simp add: setrevforall_image)
   qed
 
+subsection \<open>Size\<close>
 
-
+lemma uspec_least_infinite: "uspecSize (uspecLeast X Y) = \<infinity>"
+  apply (simp add: uspecLeast_def)
+  apply (simp add: uspecSize_def)
+  apply (simp add: uspecRevSet_def)
+  apply (simp add: setrevSize_def inv_rev_rev)
+  apply (simp add: setSize_def)
+  oops
 
 end

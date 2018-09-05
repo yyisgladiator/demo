@@ -250,11 +250,16 @@ lemma setSizeonlyOne: assumes "finite X" shows "\<exists>! Y. setSize_helper X Y
   apply (metis empty_not_insert setSize_helper.simps)
   by (metis insert_not_empty setSizeBack setSize_helper.intros(2) setSize_helper.simps)
 
-
 lemma setSizeSuc: assumes "finite X" and "z \<notin> X" shows "setSize (insert z X) = lnsuc\<cdot>(setSize X)"
   apply (simp add: setSize_def)
   using assms setSizeonlyOne
   by (metis (mono_tags, lifting) Diff_insert_absorb finite.insertI insertI1 setSize_remove theI_unique)
+
+lemma setSizeEmpty: "setSize {} = Fin 0"
+  by (metis finite.emptyI setSize_def setSize_helper.intros(1) setSizeonlyOne theI_unique)
+
+lemma setSizeSingleton: "setSize {x} = lnsuc\<cdot>(Fin 0)"
+  by (simp add: setSizeEmpty setSizeSuc)
 
 lemma setsize_union_helper1: 
   assumes "finite F"
@@ -311,5 +316,6 @@ qed
 
 lemma setsize_union: "setSize (X \<union> Y) + setSize (X \<inter> Y) = setSize X + setSize Y"
   by (meson setsize_union_helper3 setsize_union_helper4)
+
 
 end

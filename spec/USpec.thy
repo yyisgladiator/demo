@@ -1071,4 +1071,34 @@ lemma uspec_filter_forall:
   by (metis setrev_filter_forall fst_conv rep_abs_uspec uspecFilter_general_def 
     uspecFilter_general_well uspecrevset_insert)
 
+subsection \<open>Size\<close>
+
+lemma uspec_size_empty: 
+  assumes "\<not> uspecIsConsistent X"
+  shows "uspecSize X = Fin 0"
+  using assms
+  apply (simp add: uspecIsConsistent_def uspecSize_def)
+  apply (simp add: uspecRevSet_def)
+  by (simp add: setSizeEmpty setrevSize_def)
+
+lemma uspec_size_singleton: 
+  assumes "uspecRevSet\<cdot>X = Rev {x}"
+  shows "uspecSize X = lnsuc\<cdot>(Fin 0)"
+  using assms
+  by (simp add: uspecSize_def uspecRevSet_def setrev_size_singleton)
+
+
+lemma uspec_size_union: 
+  assumes "uspecDom\<cdot>X = uspecDom\<cdot>Y"
+      and "uspecRan\<cdot>X = uspecRan\<cdot>Y"
+    shows "uspecSize (uspecUnion\<cdot>X\<cdot>Y) + uspecSize (uspecInter\<cdot>X\<cdot>Y) = uspecSize X + uspecSize Y"
+  apply (simp add: uspecUnion_def uspecInter_def uspecSize_def)
+  apply (simp add: uspecUnion_general_def uspecInter_general_def)
+  apply (subst ucpecunion_fit_filtered)
+  apply (simp add: assms)
+  apply (simp add: assms)
+  by (smt assms(1) assms(2) fst_conv rep_abs_uspec setrev_size_union ucpecunion_fit_filtered 
+    uspecInter_filtered uspecInter_general_well uspecUnion_general_well uspecrevset_insert)
+
+
 end
