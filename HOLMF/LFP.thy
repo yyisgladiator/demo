@@ -66,8 +66,7 @@ lemma lfp_least_below: assumes "monofun f"
   shows "lfp C f \<sqsubseteq> x"
 proof (rule ccontr) 
   assume "\<not>lfp C f \<sqsubseteq> x"
-  have "lfp C f \<sqsubseteq> f x" sorry
-  thus False oops
+  have "lfp C f \<sqsubseteq> f x" oops
 
   
 
