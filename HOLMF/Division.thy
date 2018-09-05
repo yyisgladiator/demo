@@ -131,16 +131,20 @@ end
 
 section \<open>fun div_pcpo\<close>
 
-
 instance "fun" :: (type, div_pcpo) div_pcpo
 proof(intro_classes)
   fix a ::"('a::type \<Rightarrow> 'b::div_pcpo) set"
   assume "a\<in>DIV"
  from this obtain DD where dd_def: "a = setify DD" and dd_in: "DD\<in>setify (\<lambda>a. DIV)"
    by (metis DIV_fun_def imageE)  
-  hence "\<And>s. \<exists>bot\<in>DD s. \<forall>b\<in>DD s. bot\<sqsubseteq>b"
+  hence bot_exist: "\<And>s. \<exists>bot\<in>DD s. \<forall>b\<in>DD s. bot\<sqsubseteq>b"
     by (simp add: SetPcpo.setify_def div_pcpo)
-  thus "\<exists>bot\<in>a. \<forall>b\<in>a. bot \<sqsubseteq> b" sorry
+  let ?bot = "\<lambda>s. SOME bot. (bot\<in>DD s \<and> (\<forall>b\<in>DD s. bot\<sqsubseteq>b))"
+  have "?bot \<in> a"
+    by (smt SetPcpo.setify_def bot_exist dd_def mem_Collect_eq someI_ex)
+  moreover have "\<forall>b\<in>a. ?bot \<sqsubseteq> b" apply(simp add: below_fun_def, auto)
+    by (smt SetPcpo.setify_def bot_exist dd_def mem_Collect_eq someI_ex)
+  ultimately show "\<exists>bot\<in>a. \<forall>b\<in>a. bot \<sqsubseteq> b" by blast
 qed
 
 
