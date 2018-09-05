@@ -2,7 +2,7 @@
 
 theory ndAutomaton
 
-imports spec.SPS SpsStep
+imports spec.SPS SpsStep HOLMF.LFP
 
 
 begin
@@ -103,6 +103,14 @@ definition nda_h_inner::"('s::type, 'm::message) ndAutomaton \<Rightarrow> ('s \
                           ran = (ndaRan\<cdot>nda) in 
      (\<lambda>s. spsStep dom ran\<cdot>(ndaAnotherHelper\<cdot>(ndaHelper2 dom ran s (ndaTransition\<cdot>nda) h)))"
 
+lemma nda_h_inner_dom [simp]: "uspecDom\<cdot>(nda_h_inner nda h s) = ndaDom\<cdot>nda"
+  unfolding nda_h_inner_def Let_def
+  sorry
+
+lemma nda_h_inner_ran [simp]: "uspecRan\<cdot>(nda_h_inner nda h s) = ndaRan\<cdot>nda"
+  unfolding nda_h_inner_def Let_def
+  sorry
+
 lemma nda_h_inner_monofun: "monofun (nda_h_inner nda)"
   unfolding nda_h_inner_def
   apply(simp only: Let_def)
@@ -112,16 +120,33 @@ lemma nda_h_inner_monofun: "monofun (nda_h_inner nda)"
 
 
 
-definition lfp :: "('a \<Rightarrow> 'a) \<Rightarrow> 'a" where
-"lfp = undefined" (* SWS working on it in HOLMF/*)
-
 (* Similar to Rum96 *)
 definition nda_h :: "('s::type, 'm::message) ndAutomaton \<Rightarrow> ('s \<Rightarrow> 'm SPS)" where
-"nda_h nda \<equiv> lfp (nda_h_inner nda)"
+"nda_h nda \<equiv> lfp (SetPcpo.setify (\<lambda>a. USPEC (ndaDom\<cdot>nda) (ndaRan\<cdot>nda))) (nda_h_inner nda)"
+
+lemma nda_inner_good: "goodFormed (SetPcpo.setify (\<lambda>a. USPEC (ndaDom\<cdot>nda) (ndaRan\<cdot>nda))) (nda_h_inner nda)"
+  unfolding goodFormed_def 
+    unfolding SetPcpo.setify_def
+  apply auto
+    using USPEC_def by fastforce
+
+
+(* ToDo: Move to SetPcpo *)
+lemma setify_consts: "P\<in>S \<Longrightarrow> (\<lambda>a. P) \<in> SetPcpo.setify (\<lambda>a. S)"
+  by (simp add: SetPcpo.setify_def)
+
+lemma nda_h_valid_domain_h:
+  "(\<lambda>a::'a. USPEC (ndaDom\<cdot>nda) (ndaRan\<cdot>nda)) \<in> SetPcpo.setify (\<lambda>a::'a. {USPEC In Out |(In::channel set) Out::channel set. True})"
+  apply auto
+  apply(rule setify_consts)
+  by blast
+
+lemma nda_h_valid_domain: "(SetPcpo.setify (\<lambda>a. USPEC (ndaDom\<cdot>nda) (ndaRan\<cdot>nda))) \<in> DIV"
+  unfolding DIV_fun_def DIV_uspec_def
+  using nda_h_valid_domain_h by fastforce
 
 lemma nda_h_fixpoint: "nda_h nda = nda_h_inner nda (nda_h nda)"
-  sorry
-  (*  by (simp add: lfp_condition nda_h_def nda_h_inner_monofun) *)
+  by (metis lfp_fix nda_h_def nda_h_inner_monofun nda_h_valid_domain nda_inner_good)
 
 
 definition nda_H :: "('s, 'm::message) ndAutomaton \<Rightarrow> 'm SPS" where

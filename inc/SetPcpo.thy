@@ -195,5 +195,68 @@ lemma union_cont:"cont (\<lambda>S2. union S1 S2)"
   unfolding  SetPcpo.less_set_def
   unfolding lub_eq_Union 
   by (metis (no_types, lifting) UN_simps(3) Union_is_lub empty_not_UNIV lub_eq lub_eqI)
-                           
+
+
+
+
+
+(* ToDo: make cont/move the SetPcpo *)
+definition setify::"('m::type \<Rightarrow> ('n::type set)) \<Rightarrow> ('m \<Rightarrow> 'n) set" where
+"setify \<equiv> \<lambda> f. {g. \<forall>m. g m \<in> (f m)}"
+
+
+lemma setify_mono[simp]:"monofun (\<lambda>f. {g. \<forall>m. g m \<in> (f m)})"
+  apply(rule monofunI)
+  by (smt Collect_mono SetPcpo.less_set_def below_fun_def subsetCE)
+
+lemma setify_cont[simp]:"cont (\<lambda>f. {g. \<forall>m. g m \<in> ((f m))})"
+proof(rule Cont.contI2, simp)
+  fix Y::"nat \<Rightarrow> 'a \<Rightarrow> 'b set"
+  assume a1:"chain Y"
+  assume a2:"chain (\<lambda>i::nat. {g::'a \<Rightarrow> 'b. \<forall>m::'a. g m \<in> (Y i m)})"
+  have a3:"\<forall>m. chain (\<lambda>i. Y i m)"
+    by (simp add: a1 ch2ch_fun)
+  then have "\<forall>m.((\<Squnion>i::nat. Y i) m) = (\<Squnion>i::nat. Y i m)"
+    by (simp add: a1 lub_fun)
+  show "{g::'a \<Rightarrow> 'b. \<forall>m::'a. g m \<in> ((\<Squnion>i::nat. Y i) m)} \<sqsubseteq> (\<Squnion>i::nat. {g::'a \<Rightarrow> 'b. \<forall>m::'a. g m \<in>  (Y i m)})"
+    apply(simp add: lub_eq_Union less_set_def)
+    apply auto
+    oops
+
+(*
+lemma setify_insert:"setify\<cdot>f = Rev {g. \<forall>m. g m \<in> (inv Rev(f m))}"
+  by(simp add: setify_def)
+  *)
+lemma setify_empty:"f m = {} \<Longrightarrow> setify f = {}"
+  apply(simp add: setify_def)
+  by (metis empty_iff)
+    
+lemma setify_notempty:assumes "\<forall>m. f m \<noteq> {}" shows" setify f \<noteq> {}"
+proof(simp add: setify_def)
+  have "\<forall>m. \<exists>x. x\<in>((f m))"
+    by (metis all_not_in_conv assms)
+  have "\<forall>m. (\<lambda>e. SOME x. x\<in> (f e)) m \<in> (f m)"
+    by (metis assms some_in_eq)
+  then show "\<exists>x::'a \<Rightarrow> 'b. \<forall>m::'a. x m \<in> (f m)"
+    by(rule_tac x="(\<lambda>e. SOME x. x\<in> (f e))" in exI, auto)
+qed
+  
+lemma setify_notempty_ex:"setify f \<noteq> {} \<Longrightarrow> \<exists>g.(\<forall>m. g m \<in> (f m))"
+  by(simp add: setify_def)
+  
+lemma setify_final:assumes "\<forall>m. f m \<noteq> {}" and "x \<in> (f m)" shows"\<exists>g\<in>((setify f)). g m = x"
+proof(simp add: setify_def)
+  have "\<exists>g.(\<forall>m. g m \<in> (f m))"
+    by(simp add: setify_notempty setify_notempty_ex assms(1))
+  then obtain g where g_def:"(\<forall>m. g m \<in> (f m))"
+    by auto
+  have g2_def:"\<forall>n. (\<lambda>e. if e = m then x else g e) n \<in> (f n)"
+    by (simp add: assms(2) g_def)
+  then show "\<exists>g::'a \<Rightarrow> 'b. (\<forall>m::'a. g m \<in> (f m)) \<and> g m = x"     
+    by(rule_tac x="(\<lambda>e. if e = m then x else g e)" in exI, auto) 
+qed
+
+
+
+
 end

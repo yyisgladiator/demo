@@ -19,7 +19,8 @@ lemma lfp_condition:
     and "C \<in> DIV"
   shows "\<exists>!x. (f x = x \<and> x\<in>C \<and> (\<forall>y\<in>C. f y = y \<longrightarrow> x\<sqsubseteq>y))"
   apply(subst knaster_tarski)
-  using assms goodFormed_def by (auto simp add: div_cpo div_pcpo)
+  using assms goodFormed_def by (auto simp add: div_cpo_g div_pcpo)
+  
 
 
 lemma lfp_all: assumes "monofun f"
@@ -55,7 +56,6 @@ lemma lfp_least: assumes "monofun f"
 
 
 
-(* ToDo: required fore refinement
 
 thm fix_least_below (* ! ! ! *)
 lemma lfp_least_below: assumes "monofun f"
@@ -66,9 +66,8 @@ lemma lfp_least_below: assumes "monofun f"
   shows "lfp C f \<sqsubseteq> x"
 proof (rule ccontr) 
   assume "\<not>lfp C f \<sqsubseteq> x"
-  have "lfp C f \<sqsubseteq> f x" sorry
-  thus False sorry
-qed
+  have "lfp C f \<sqsubseteq> f x" oops
+
   
 
 lemma lfp_monofun: assumes "f\<sqsubseteq>g"
@@ -76,8 +75,9 @@ lemma lfp_monofun: assumes "f\<sqsubseteq>g"
     and "goodFormed C f" and "goodFormed C g"
     and "C \<in> DIV"
   shows "lfp C f \<sqsubseteq> lfp C g"
-  by (metis (mono_tags, lifting) assms(1) assms(2) assms(3) assms(4) assms(5) assms(6) fun_belowD lfp_div lfp_fix lfp_least_below)
-*)
+  oops
+  (* by (metis (mono_tags, lifting) assms(1) assms(2) assms(3) assms(4) assms(5) assms(6) fun_belowD lfp_div lfp_fix lfp_least_below) *)
+  
 
 
 end

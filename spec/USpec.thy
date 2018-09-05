@@ -6,7 +6,7 @@
 *)
 
 theory USpec
-  imports inc.UnivClasses SetRev
+  imports inc.UnivClasses SetRev HOLMF.Division
 begin
 
 default_sort ufuncl
@@ -352,6 +352,15 @@ lemma uspecRevSet_condition: assumes "x \<in> inv Rev (uspecRevSet\<cdot>S1)"
   by (simp add: assms uspec_allDom uspec_allRan)
 
 
+
+subsection \<open>USPEC\<close>
+
+lemma uspec_dom[simp]: "s\<in>USPEC In Out \<Longrightarrow> uspecDom\<cdot>s = In"
+  by (simp add: USPEC_def)
+
+lemma uspec_ran[simp]: "s\<in>USPEC In Out \<Longrightarrow> uspecRan\<cdot>s= Out"
+  by (metis (mono_tags) USPEC_def mem_Collect_eq)
+
 subsection \<open>uspecLeast\<close>
 
 lemma uspecleast_dom[simp]: "uspecDom\<cdot>(uspecLeast In Out) = In"
@@ -363,9 +372,8 @@ lemma uspecleast_ran[simp]: "uspecRan\<cdot>(uspecLeast In Out) = Out"
 lemma uspecleast_least: assumes "spec \<in> USPEC In Out"
   shows "uspecLeast In Out \<sqsubseteq> spec"
   apply(rule uspec_belowI)
-  apply (simp_all add: USPEC_def)
-  using USPEC_def assms apply blast
-  using USPEC_def assms apply force
+  using assms uspec_dom uspecleast_dom apply blast
+  using assms uspec_ran uspecleast_ran apply blast
   apply(simp add: uspecRevSet_def uspecLeast.rep_eq)
   by (metis (no_types, lifting) UNIV_I USPEC_def assms inv_rev_rev mem_Collect_eq member_filter revBelowNeqSubset subsetI uspec_allDom uspec_allRan uspecrevset_insert)
 
@@ -385,6 +393,10 @@ lemma uspecmax_max: assumes "spec \<in> USPEC In Out"
   apply (metis (no_types) assms uspecleast_least uspecleast_ran uspecmax_ran uspecran_eq)
   by (simp add: inv_rev_rev revBelowNeqSubset uspecMax.rep_eq uspecrevset_insert)
 
+
+lemma uspec_exists: "USPEC In Out \<noteq> {}"
+  unfolding USPEC_def
+  by (metis (mono_tags, lifting) Collect_empty_eq_bot bot_empty_eq empty_iff uspecmax_dom uspecmax_ran)
 
 
 
@@ -1147,5 +1159,86 @@ lemma uspec_filter_forall:
   apply (simp add: uspecfilter_insert uspecForall_def)
   by (metis setrev_filter_forall fst_conv rep_abs_uspec uspecFilter_general_def 
     uspecFilter_general_well uspecrevset_insert)
+
+
+
+
+
+
+section \<open>instance div_pcpo\<close>
+
+lemma uspec_ub: "S\<noteq>{} \<Longrightarrow>S \<subseteq> USPEC In Out \<Longrightarrow> S <| x \<Longrightarrow> x\<in>USPEC In Out"
+  unfolding USPEC_def
+  unfolding is_ub_def
+  by (metis (mono_tags, lifting) bot.extremum_uniqueI contra_subsetD mem_Collect_eq subset_emptyI uspecdom_eq uspecran_eq)
+
+lemma uspec_cpo: assumes  "S \<subseteq> USPEC In Out" and "S\<noteq>{}"
+  shows "\<exists>x\<in>USPEC In Out. S <<| x"
+proof -
+  let ?A = "(Rep_rev_uspec ` S)"
+  let ?lub = "(Rev (\<Inter>?A), Discr In, Discr Out)"
+  have "\<And>a. a\<in>(\<Inter>?A) \<Longrightarrow> ufclDom\<cdot>a = In"
+    by (metis (mono_tags) INT_E assms(1) assms(2) contra_subsetD ex_in_conv uspec_allDom uspec_dom uspecrevset_insert)
+  moreover have "\<And>a. a\<in>(\<Inter>?A) \<Longrightarrow> ufclRan\<cdot>a = Out"
+    using assms(1) assms(2) rep_rev_revset uspec_allRan by fastforce
+  ultimately have "uspecWell (Rev (\<Inter>?A)) (Discr In) (Discr Out)" by(simp)
+  hence lub_rep_abs: "Rep_uspec (Abs_uspec ?lub) = ?lub"
+    using rep_abs_uspec by blast
+  have "\<And>s. s\<in>S \<Longrightarrow> s\<sqsubseteq>(Abs_uspec ?lub)"
+    apply(rule uspec_belowI)
+    apply(simp_all add: uspecdom_insert uspecran_insert lub_rep_abs uspecrevset_insert)
+    using assms uspec_dom uspecdom_insert apply fastforce
+    using assms uspec_ran uspecran_insert apply fastforce
+    by (metis INF_lower inv_rev_rev revBelowNeqSubset)
+  hence "S <| Abs_uspec ?lub"
+    using is_ubI by blast
+  moreover have "\<And>u. S <| u \<Longrightarrow> (Abs_uspec ?lub) \<sqsubseteq> u"
+    apply(rule uspec_belowI)
+    apply(simp_all add: uspecdom_insert uspecran_insert lub_rep_abs uspecrevset_insert)
+    apply (metis assms(1) assms(2) uspec_dom uspec_ub uspecdom_insert)
+    apply (metis (full_types) assms(1) assms(2) uspec_ran uspec_ub uspecran_insert)
+    by (metis (no_types, lifting) INF_greatest fst_monofun inv_rev_rev is_ubD rep_uspec_belowI revBelowNeqSubset)
+  ultimately show ?thesis
+    using assms is_lubI uspec_ub by blast
+qed
+
+
+lemma uspec_chain_field: assumes "longChain S"
+  and "a\<in>S" and "b\<in>S"
+shows "uspecDom\<cdot>a = uspecDom\<cdot>b" and "uspecRan\<cdot>a = uspecRan\<cdot>b"
+  apply (metis assms(1) assms(2) assms(3) longChain_def uspecdom_eq)
+  by (metis (no_types) assms(1) assms(2) assms(3) longChain_def uspecran_eq)
+
+lemma uspec_chain_field2: assumes "longChain S" 
+  shows "\<exists>In Out. S \<subseteq> USPEC In Out"
+  apply(cases "S={}")
+  apply simp
+proof (rule ccontr)
+  assume "S\<noteq>{}" and "\<nexists>(In::channel set) Out::channel set. S \<subseteq> USPEC In Out"
+  from this obtain a b where "a\<in>S" and "b\<in>S" and "uspecDom\<cdot>a\<noteq>uspecDom\<cdot>b \<or> uspecRan\<cdot>a\<noteq>uspecRan\<cdot>b"
+    by (smt USPEC_def assms mem_Collect_eq order_refl subsetI subset_emptyI uspec_chain_field(1) uspec_chain_field(2))
+  thus False
+    by (meson assms(1) uspec_chain_field(1) uspec_chain_field(2)) 
+qed
+
+lemma uspec_cpo2: fixes S :: "'m::ufuncl uspec set"
+  assumes "longChain S"
+  shows "\<exists>x. S <<| x"
+  by (metis assms empty_iff finite.simps lc_finite_lub uspec_chain_field2 uspec_cpo)
+
+instantiation uspec:: (ufuncl) div_pcpo
+begin
+definition DIV_uspec_def: "DIV_uspec \<equiv> { USPEC In Out | In Out . True  }"
+instance
+  apply(intro_classes)
+  apply(auto simp add: DIV_uspec_def)
+  apply (simp add: uspec_exists)
+  apply (simp add: infinite_imp_nonempty uspec_cpo)
+  by (metis (mono_tags, lifting) USPEC_def mem_Collect_eq uspecleast_dom uspecleast_least uspecleast_ran)
+end
+
+
+
+
 
 end

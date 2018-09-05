@@ -11,6 +11,13 @@ session "inc" (mustWork) = "HOLCF" +
     "inc/CPOFix"
 
 
+session "HOLMF" (mustWork) = "inc" +
+  options [quick_and_dirty = false]
+  theories
+    "HOLMF/LongChain"
+    "HOLMF/Division"
+    "HOLMF/LFP"
+
 session "stream" (mustWork) = "inc" +
   options [quick_and_dirty = true]
   theories
@@ -31,6 +38,8 @@ session "fun" (mustWork) = "bundle" +
 
 session "spec" (mustWork) = "fun" + 
   options [quick_and_dirty = true]
+  sessions
+    "HOLMF"
   theories
     "spec/SPS"
 

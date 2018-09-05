@@ -133,6 +133,7 @@ lemma setrevLub_lub_eq_all:
   apply(simp only: inv_rev_rev)
   by auto
 
+
 lemma setrev_lub_emptyI: assumes "chain Y" and "\<And> x. \<exists> i. x \<notin> inv Rev (Y i)"
   shows "Lub Y = Rev {}"
   by (metis all_not_in_conv assms(1) assms(2) inv_rev_rev rev.exhaust setrevLub_lub_eq_all)
@@ -140,6 +141,20 @@ lemma setrev_lub_emptyI: assumes "chain Y" and "\<And> x. \<exists> i. x \<notin
 lemma setrev_lub_emptyD: assumes "chain Y" and "Lub Y = Rev {}"
   shows "\<And> x. \<exists> i. x \<notin> inv Rev (Y i)"
   by (metis assms(1) assms(2) emptyE inv_rev_rev setrevLub_lub_eq_all)
+
+text {* The least upper bound on sets corresponds to the @{text "Intersection"} operator. *}
+lemma setrev_inter_lub: "A <<| Rev (\<Inter> ((inv Rev) ` A))"
+apply (simp add: is_lub_def)
+apply (simp add: is_ub_def)
+  by (simp add: INF_greatest INF_lower inv_rev_rev revBelowNeqSubset)
+
+text {* Another needed variant of the fact that lub on sets corresponds to intersection. *}
+lemma setrev_lub_eq_inter: "lub = (\<lambda>A. Rev (\<Inter> ((inv Rev) ` A)))"
+apply (rule ext)
+apply (rule lub_eqI [OF setrev_inter_lub])
+done
+
+
 
 subsection \<open>setrevFilter\<close>
 
