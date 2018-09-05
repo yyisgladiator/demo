@@ -21,6 +21,26 @@ lemma longchain_mono: assumes "longChain S" and "monofun f"
   apply (metis (no_types, lifting) assms(1) assms(2) image_iff longChain_def monofunE)
   using assms(1) longChain_def by auto
 
+
+lemma mono_lub_below: assumes "monofun f" and "longChain S"
+      and cpo: "\<And>S. longChain S \<Longrightarrow> S\<noteq>{} \<Longrightarrow> S\<subseteq>C \<Longrightarrow> \<exists>x\<in>C. S <<| x"
+      and goodf: "\<And>a. a\<in>C \<Longrightarrow> f a\<in>C" 
+      and "S \<subseteq> C"
+  shows "lub (f`S) \<sqsubseteq> f (lub S)"
+proof -
+  have "longChain (f`S)"
+    by (simp add: assms(1) assms(2) longchain_mono)
+  have "\<And>s. s\<in>S \<Longrightarrow> s\<sqsubseteq>lub S"
+    using assms(2) assms(5) is_ub_thelub_ex local.cpo by fastforce
+  hence "\<And>s. s\<in>S \<Longrightarrow> f s\<sqsubseteq> f(lub S)"
+    by (simp add: assms(1) monofunE)
+  hence "f ` S <| f (lub S)"
+    using ub_imageI by blast
+  thus ?thesis
+    by (metis \<open>longChain (f ` S)\<close> assms(5) goodf image_mono image_subsetI is_lub_thelub_ex local.cpo longChain_def subset_trans)
+qed
+
+
 lemma holmf_below_lub: "\<lbrakk>longChain S;\<exists>x. S <<| x; s\<in>S;x \<sqsubseteq> s\<rbrakk> \<Longrightarrow> x \<sqsubseteq> lub S"
   using box_below is_ub_thelub_ex by blast
 

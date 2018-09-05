@@ -63,6 +63,12 @@ lemma po_chain_total: assumes "chain K" shows "K a \<sqsubseteq> K b  \<or>  K b
 
 end
 
+lemma long_chain_bigger:
+  assumes "longChain S" and "longChain K" and "S \<subseteq> C" and "K\<subseteq>C"
+    and "\<And>S. longChain S \<Longrightarrow> S\<subseteq>C \<Longrightarrow> \<exists>x\<in>C. S <<| x"
+  and "\<And>s. s\<in>S \<Longrightarrow> \<exists>k\<in>K. s\<sqsubseteq>k"
+shows "lub S \<sqsubseteq> lub K"
+  by (meson assms holmf_below_iff holmf_below_lub)
 
 
 (* Proof follows closely the proof from Greber, see "SA_Greber" *)
@@ -101,19 +107,20 @@ proof -
     let ?Kr = "f`S"
     have kr_chain: "longChain ?Kr"
       using longchain_mono monof s_chain by blast
+    have kr_subst: "?Kr \<subseteq> C"
+      using goodf s_in by force
     hence "lub S \<sqsubseteq> f (lub S)"
     proof -
-      have "\<And>s. s\<in>S \<Longrightarrow> \<exists>x\<in>?Kr. s\<sqsubseteq>x"
+      have kr_bigger: "\<And>s. s\<in>S \<Longrightarrow> \<exists>x\<in>?Kr. s\<sqsubseteq>x"
         using s_in by auto
-      hence f1: "\<And>s. s\<in>S \<Longrightarrow> s  \<sqsubseteq> lub ?Kr"
-        by (smt Ball_Collect goodf holmf_below_lub image_is_empty image_subsetI kr_chain local.cpo s_empty s_in)
-(*      using s_in holmf_below_lub by (smt Ball_Collect \<open>longChain (f ` S)\<close> c_cpo goodf image_subset_iff)  (* ToDo: kein SMT/schneller *) *)
-      hence "lub S \<sqsubseteq> (lub ?Kr)"
-        by (metis (mono_tags) Collect_mem_eq cpo s_empty conj_subset_def is_lub_thelub_ex is_ub_def s_chain s_in)
-      hence "lub ?Kr  \<sqsubseteq> f (lub S)"  using s_chain kr_chain assms(1) is_ub_thelub lub_below_iff holmf_below_iff monofunE 
-        by (smt Ball_Collect below_refl goodf image_iff image_is_empty local.cpo s_empty s_in subsetI) 
-     (*   by (smt Ball_Collect s_empty cpo goodf imageE is_ub_thelub_ex s_in subsetI) (* ToDo kein SMT/schneller *) *)
-
+        have "lub S \<sqsubseteq> (lub ?Kr)" 
+          apply(rule long_chain_bigger [of _ _ C]) 
+          using s_in apply(auto simp add: kr_chain kr_subst s_chain  )
+          by (simp add: local.cpo longChain_def) 
+        have "lub ?Kr  \<sqsubseteq> f (lub S)" 
+          apply(rule mono_lub_below [of _ _ C])
+          apply (simp_all add: monof s_chain local.cpo goodf)
+          using s_in by blast
       thus ?thesis using \<open>lub S \<sqsubseteq> lub (f ` S)\<close> rev_below_trans by blast
     qed
     
