@@ -3,49 +3,48 @@ package abp;
 component Sender {
 
   ports
-    in Boolean as,
-    in Integer i,
-    out Pair<Integer,Boolean> ds;
-
+    in boolean as,
+    in int i,
+    out Pair<int,boolean> ds;
 
   automaton Sender {
-    variable List<Integer> buffer=new List<>();
+    variable List<int> buffer=new List<>();
     variable Integer c=0;
 
-    state St, Sf;
-    initial St / {ds=null};
+    state Sf, St;
+    initial St;
 
-    St -> St [buffer.size()=0] {as!=null, i=null} / {ds=null};
-    St -> Sf [buffer.size()>1 && as=true] {as!=null, i=null} / {buffer=buffer.butlast(), c=3, ds=new Pair<>(buffer.butlast().last(),false)};
-    St -> St [buffer.size()=0] {as=null, i=null} / {ds=null};
-    St -> St [buffer.size()>0 && c>0 && as=false] {as!=null, i=null} / {c=c-1, ds=null};
-    St -> St [buffer.size()>0 && c>0] {as=null, i=null} / {c=c-1, ds=null};
-    St -> St [buffer.size()>0 && c=0 && as=false] {as!=null, i=null} / {c=3, ds=new Pair<>(buffer.last(),true)};
-    St -> St [buffer.size()>0 && c=0] {as=null, i=null} / {c=3, ds=new Pair<>(buffer.last(),true)};
-    St -> Sf [buffer.size()=1 && as=true] {as!=null, i=null} / {buffer=buffer.butlast(), ds=null};
-    St -> St [buffer.size()=0] {as!=null, i!=null} / {buffer=buffer.prepend(i), c=3, ds=new Pair<>(i,true)};
-    St -> St [buffer.size()=0] {as=null, i!=null} / {buffer=buffer.prepend(i), c=3, ds=new Pair<>(i,true)};
-    St -> Sf [buffer.size()>1 && as=true] {as!=null, i!=null} / {buffer=buffer.butlast().prepend(i), c=3, ds=new Pair<>(buffer.butlast().last(),false)};
-    St -> St [buffer.size()>0 && c>0 && as=false] {as!=null, i!=null} / {buffer=buffer.prepend(i), c=c-1, ds=null};
-    St -> St [buffer.size()>0 && c>0] {as=null, i!=null} / {buffer=buffer.prepend(i), c=c-1, ds=null};
-    St -> St [buffer.size()>0 && c=0 && as=false] {as!=null, i!=null} / {buffer=buffer.prepend(i), c=3, ds=new Pair<>(buffer.last(),true)};
-    St -> St [buffer.size()>0 && c=0] {as=null, i!=null} / {buffer=buffer.prepend(i), c=3, ds=new Pair<>(buffer.last(),true)};
-    St -> Sf [buffer.size()=1 && as=true] {as!=null, i!=null} / {buffer=buffer.butlast().prepend(i), c=3, ds=new Pair<>(i,false)};
-    Sf -> St [buffer.size()>1 && as=false] {as!=null, i!=null} / {buffer=buffer.butlast().prepend(i), c=3, ds=new Pair<>(buffer.butlast().last(),true)};
-    Sf -> St [buffer.size()>1 && as=false] {as!=null, i=null} / {buffer=buffer.butlast(), c=3, ds=new Pair<>(buffer.butlast().last(),true)};
-    Sf -> St [buffer.size()=1 && as=false] {as!=null, i!=null} / {buffer=buffer.butlast().prepend(i), c=3, ds=new Pair<>(i,true)};
-    Sf -> St [buffer.size()=1 && as=false] {as!=null, i=null} / {buffer=buffer.butlast(), ds=null};
-    Sf -> Sf [buffer.size()=0] {as=null, i=null} / {ds=null};
-    Sf -> Sf [buffer.size()=0] {as!=null, i=null} / {ds=null};
-    Sf -> Sf [buffer.size()>0 && c>0] {as=null, i=null} / {c=c-1, ds=null};
-    Sf -> Sf [buffer.size()>0 && c>0 && as=true] {as!=null, i=null} / {c=c-1, ds=null};
-    Sf -> Sf [buffer.size()>0 && c=0 && as=true] {as!=null, i=null} / {c=3, ds=new Pair<>(buffer.last(),false)};
-    Sf -> Sf [buffer.size()>0 && c=0] {as=null, i=null} / {c=3, ds=new Pair<>(buffer.last(),false)};
-    Sf -> Sf [buffer.size()=0] {as!=null, i!=null} / {buffer=buffer.prepend(i), c=3, ds=new Pair<>(i,false)};
-    Sf -> Sf [buffer.size()=0] {as=null, i!=null} / {buffer=buffer.prepend(i), c=3, ds=new Pair<>(i,false)};
-    Sf -> Sf [buffer.size()>0 && c>0 && as=true] {as!=null, i!=null} / {buffer=buffer.prepend(i), c=c-1, ds=null};
-    Sf -> Sf [buffer.size()>0 && c>0] {as=null, i!=null} / {buffer=buffer.prepend(i), c=c-1, ds=null};
-    Sf -> Sf [buffer.size()>0 && c=0 && as=true] {as!=null, i!=null} / {buffer=buffer.prepend(i), c=3, ds=new Pair<>(buffer.last(),false)};
-    Sf -> Sf [buffer.size()>0 && c=0] {as=null, i!=null} / {buffer=buffer.prepend(i), c=3, ds=new Pair<>(buffer.last(),false)};
+    St -> St [buffer.size()=0 && as!=null]           {i==null};
+    St -> Sf [buffer.size()>1]                       {as==true, i==null}   / {buffer=buffer.butlast(), c=3, ds=new Pair<>(buffer.butlast().last(),false)};
+    St -> St [buffer.size()=0]                       {as==null, i==null};
+    St -> St [buffer.size()>0 && c>0]                {as==false, i==null}  / {c=c-1};
+    St -> St [buffer.size()>0 && c>0]                {as==null, i==null}   / {c=c-1};
+    St -> St [buffer.size()>0 && c=0]                {as==false, i==null}  / {c=3, ds=new Pair<>(buffer.last(),true)};
+    St -> St [buffer.size()>0 && c=0]                {as==null, i==null}   / {c=3, ds=new Pair<>(buffer.last(),true)};
+    St -> Sf [buffer.size()=1]                       {as==true, i==null}   / {buffer=buffer.butlast()};
+    St -> St [buffer.size()=0 && as!=null && i!=null]                      / {buffer=buffer.prepend(i), c=3, ds=new Pair<>(i,true)};
+    St -> St [buffer.size()=0 && i!=null]            {as==null}            / {buffer=buffer.prepend(i), c=3, ds=new Pair<>(i,true)};
+    St -> Sf [buffer.size()>1 && i!=null]            {as==true}            / {buffer=buffer.butlast().prepend(i), c=3, ds=new Pair<>(buffer.butlast().last(),false)};
+    St -> St [buffer.size()>0 && c>0 && i!=null]     {as==false}           / {buffer=buffer.prepend(i), c=c-1};
+    St -> St [buffer.size()>0 && c>0 && i!=null]     {as==null}            / {buffer=buffer.prepend(i), c=c-1};
+    St -> St [buffer.size()>0 && c=0 && i!=null]     {as==false}           / {buffer=buffer.prepend(i), c=3, ds=new Pair<>(buffer.last(),true)};
+    St -> St [buffer.size()>0 && c=0 && i!=null]     {as==null}            / {buffer=buffer.prepend(i), c=3, ds=new Pair<>(buffer.last(),true)};
+    St -> Sf [buffer.size()=1 && i!=null]            {as==true}            / {buffer=buffer.butlast().prepend(i), c=3, ds=new Pair<>(i,false)};
+    Sf -> St [buffer.size()>1 && i!=null]            {as==false}           / {buffer=buffer.butlast().prepend(i), c=3, ds=new Pair<>(buffer.butlast().last(),true)};
+    Sf -> St [buffer.size()>1]                       {as==false, i==null}  / {buffer=buffer.butlast(), c=3, ds=new Pair<>(buffer.butlast().last(),true)};
+    Sf -> St [buffer.size()=1 && i!=null]            {as==false}           / {buffer=buffer.butlast().prepend(i), c=3, ds=new Pair<>(i,true)};
+    Sf -> St [buffer.size()=1]                       {as==false, i==null}  / {buffer=buffer.butlast()};
+    Sf -> Sf [buffer.size()=0]                       {as==null, i==null};
+    Sf -> Sf [buffer.size()=0 && as!=null]           {i==null};
+    Sf -> Sf [buffer.size()>0 && c>0]                {as==null, i==null};
+    Sf -> Sf [buffer.size()>0 && c>0]                {as==true, i==null}   / {c=c-1};
+    Sf -> Sf [buffer.size()>0 && c=0]                {as==true, i==null}   / {c=3, ds=new Pair<>(buffer.last(),false)};
+    Sf -> Sf [buffer.size()>0 && c=0]                {as==null, i==null}   / {c=3, ds=new Pair<>(buffer.last(),false)};
+    Sf -> Sf [buffer.size()=0 && as!=null && i!=null]                      / {buffer=buffer.prepend(i), c=3, ds=new Pair<>(i,false)};
+    Sf -> Sf [buffer.size()=0 && i!=null]            {as==null}            / {buffer=buffer.prepend(i), c=3, ds=new Pair<>(i,false)};
+    Sf -> Sf [buffer.size()>0 && c>0 && i!=null]     {as==true}            / {buffer=buffer.prepend(i), c=c-1};
+    Sf -> Sf [buffer.size()>0 && c>0 && i!=null]     {as==null}            / {buffer=buffer.prepend(i), c=c-1};
+    Sf -> Sf [buffer.size()>0 && c=0 && i!=null]     {as==true}            / {buffer=buffer.prepend(i), c=3, ds=new Pair<>(buffer.last(),false)};
+    Sf -> Sf [buffer.size()>0 && c=0 && i!=null]     {as==null}            / {buffer=buffer.prepend(i), c=3, ds=new Pair<>(buffer.last(),false)};
   }
 }
