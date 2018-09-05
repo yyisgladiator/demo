@@ -51,17 +51,12 @@ lemma po_chain_total: assumes "chain K" shows "K a \<sqsubseteq> K b  \<or>  K b
       by (smt DomainE Domain_unfold Field_def Range_def Range_iff Un_iff mem_Collect_eq snd_conv)
   qed
 
-  lemma chains2longchains: 
-    shows "Chains {(x,y) | x y. x\<sqsubseteq>y \<and>x\<in>S \<and> y\<in>S} = {C. longChain C\<and>C\<subseteq>S}"
-    apply rule+
-    by(auto simp add: Chains_def longChain_def)
-
   lemma own_zorn3: 
     assumes "\<And>C. longChain C \<Longrightarrow> C\<noteq>{} \<Longrightarrow> C\<subseteq>S \<Longrightarrow> \<exists>u\<in>S. \<forall>a\<in>C. a \<sqsubseteq> u" and "S\<noteq>{}"
     shows "\<exists>m\<in>S. \<forall>a\<in>S. (m\<sqsubseteq>a \<longrightarrow> a=m)"
   proof -
     have "\<forall>C. (C\<in>Chains {(x,y) | x y. x\<sqsubseteq>y \<and>x\<in>S \<and> y\<in>S} \<longrightarrow> (\<exists>u\<in>S. \<forall>a\<in>C. a \<sqsubseteq> u))"
-      using assms(1) assms(2) chains2longchains by auto
+      using assms  by (auto simp add: longChain_def Chains_def) 
     thus ?thesis 
       using po_class.own_zorn2 by blast
   qed

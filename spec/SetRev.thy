@@ -130,6 +130,19 @@ lemma setrevLub_lub_eq_all:
   apply(simp only: inv_rev_rev)
   by auto
 
+text {* The least upper bound on sets corresponds to the @{text "Intersection"} operator. *}
+lemma setrev_inter_lub: "A <<| Rev (\<Inter> ((inv Rev) ` A))"
+apply (simp add: is_lub_def)
+apply (simp add: is_ub_def)
+  by (simp add: INF_greatest INF_lower inv_rev_rev revBelowNeqSubset)
+
+
+text {* Another needed variant of the fact that lub on sets corresponds to intersection. *}
+lemma setrev_lub_eq_inter: "lub = (\<lambda>A. Rev (\<Inter> ((inv Rev) ` A)))"
+apply (rule ext)
+apply (rule lub_eqI [OF setrev_inter_lub])
+done
+
 
 subsection \<open>setrevFilter\<close>
 

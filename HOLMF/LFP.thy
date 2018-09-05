@@ -56,7 +56,6 @@ lemma lfp_least: assumes "monofun f"
 
 
 
-(* ToDo: required fore refinement
 
 thm fix_least_below (* ! ! ! *)
 lemma lfp_least_below: assumes "monofun f"
@@ -68,8 +67,8 @@ lemma lfp_least_below: assumes "monofun f"
 proof (rule ccontr) 
   assume "\<not>lfp C f \<sqsubseteq> x"
   have "lfp C f \<sqsubseteq> f x" sorry
-  thus False sorry
-qed
+  thus False oops
+
   
 
 lemma lfp_monofun: assumes "f\<sqsubseteq>g"
@@ -77,8 +76,9 @@ lemma lfp_monofun: assumes "f\<sqsubseteq>g"
     and "goodFormed C f" and "goodFormed C g"
     and "C \<in> DIV"
   shows "lfp C f \<sqsubseteq> lfp C g"
-  by (metis (mono_tags, lifting) assms(1) assms(2) assms(3) assms(4) assms(5) assms(6) fun_belowD lfp_div lfp_fix lfp_least_below)
-*)
+  oops
+  (* by (metis (mono_tags, lifting) assms(1) assms(2) assms(3) assms(4) assms(5) assms(6) fun_belowD lfp_div lfp_fix lfp_least_below) *)
+  
 
 
 end
