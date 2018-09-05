@@ -22,9 +22,9 @@ class div_cpo = division + po +
   assumes div_cpo: "\<And>S a. a\<in>DIV \<Longrightarrow> \<not>finite S \<Longrightarrow> longChain S \<Longrightarrow> S\<subseteq>a \<Longrightarrow> \<exists>x\<in>a. S <<| x" (* ToDo: Name + schöner aufschreiben *)
 begin
 
-lemma div_cpo_g: "a\<in>DIV \<Longrightarrow> S\<noteq>{} \<Longrightarrow> longChain S \<Longrightarrow> S\<subseteq>a \<Longrightarrow> \<exists>x\<in>a. S <<| x"
+lemma div_cpo_g: "a\<in>DIV \<Longrightarrow> longChain S \<Longrightarrow> S\<subseteq>a \<Longrightarrow> \<exists>x\<in>a. S <<| x"
   apply(cases "finite S")
-  apply (meson is_lub_maximal is_ubI lc_finite subset_iff)
+  apply (metis is_lub_maximal is_ubI lc_finite longChain_def subset_eq)
   by (simp add: local.div_cpo)
 
 end
@@ -33,7 +33,7 @@ class div_pcpo = div_cpo +
     (* every division has its own bottom element *)
   assumes div_pcpo: "\<And>a. a\<in>DIV \<Longrightarrow> \<exists>bot\<in>a. \<forall>b\<in>a. bot \<sqsubseteq>b"  (* ToDo: Name + schöner aufschreiben *)
 begin
-lemma div_cpo_full: "\<And>a. a\<in>DIV \<Longrightarrow>  a\<noteq>{}"
+lemma div_pcpo_full: "\<And>a. a\<in>DIV \<Longrightarrow>  a\<noteq>{}"
   using local.div_pcpo by auto
 
 end

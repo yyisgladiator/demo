@@ -16,12 +16,13 @@ instantiation "fun" :: (type, div_cpo) div_cpo
 begin
   definition DIV_fun_def: "DIV_fun \<equiv> (setify ` (setify (\<lambda>a. DIV)))::('a \<Rightarrow> 'b) set set"    (* TODO ! for nda_h *)
 
-
 lemma fixes S::"('s::type \<Rightarrow> 'p::div_cpo) set"
-  assumes "D\<in>DIV" and "S\<subseteq>D" and "S\<noteq>{}"
+  assumes "D\<in>DIV" and "S\<subseteq>D" and "longChain S"
   shows "S <<| (\<lambda>a. lub {s a | s. s\<in>S})"
 proof(rule is_lubI)
   have "\<And>a. \<exists>d\<in>DIV. {s a | s. s\<in>S} \<subseteq> d" sorry
+  hence "\<And>a. longChain {s a | s. s\<in>S}" sorry
+  hence "\<And>a. \<exists>x.  {s a | s. s\<in>S} <<| x" sorry
   hence "\<And>a s. s\<in>S \<Longrightarrow> s a \<sqsubseteq> lub {ss a | ss. ss\<in>S}" oops
 
 instance 
@@ -95,7 +96,7 @@ qed
 lemma uspec_chain_field: assumes "longChain S"
   and "a\<in>S" and "b\<in>S"
 shows "uspecDom\<cdot>a = uspecDom\<cdot>b" and "uspecRan\<cdot>a = uspecRan\<cdot>b"
-  using assms(1) assms(2) assms(3) longChain_def uspecdom_eq apply blast
+  apply (metis assms(1) assms(2) assms(3) longChain_def uspecdom_eq)
   by (metis (no_types) assms(1) assms(2) assms(3) longChain_def uspecran_eq)
 
 lemma uspec_chain_field2: assumes "longChain S" 
@@ -111,9 +112,9 @@ proof (rule ccontr)
 qed
 
 lemma uspec_cpo2: fixes S :: "'m::ufuncl uspec set"
-  assumes "longChain S" and  "S\<noteq>{}"
+  assumes "longChain S"
   shows "\<exists>x. S <<| x"
-  using assms(1) assms(2) uspec_chain_field2 uspec_cpo by blast
+  by (metis assms empty_iff finite.simps lc_finite_lub uspec_chain_field2 uspec_cpo)
 
 
 instantiation uspec:: (ufuncl) div_pcpo
