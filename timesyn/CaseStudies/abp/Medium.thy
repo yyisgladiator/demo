@@ -377,6 +377,13 @@ lemma tsynbmed_ufwell [simp]: "ufWell (tsynbMed ora)"
   apply (meson option.distinct(1))
   by (metis option.distinct(1) tsynbmed_ubundle_ubdom)
 
+text {* The output stream of @{term tsynbMed}} on channel dr. *}
+lemma tsynbmed_getch_dr:
+  assumes "ubDom\<cdot>sb = {\<C> ''ds''}"
+  shows "((Rep_cfun (tsynbMed ora)) \<rightharpoonup> sb) . \<C> ''dr'' 
+    =  natbool2abp\<cdot>(tsynMed\<cdot>(abp2natbool\<cdot>(sb  .  \<C> ''ds''))\<cdot>ora)"
+  by (simp add: tsynbmed_insert assms ubgetch_ubrep_eq)
+
 (* ----------------------------------------------------------------------- *)
 subsection {* basic properties of MedSPF *}
 (* ----------------------------------------------------------------------- *)
@@ -434,10 +441,13 @@ lemma spfConcIn_step[simp]:
   shows "(spfConcIn sb1\<cdot>spf) \<rightleftharpoons> sb = spf \<rightleftharpoons> (ubConcEq sb1\<cdot>sb)" 
   by (simp_all add: assms spfConcIn_def ubclDom_ubundle_def Int_absorb1)
 
-lemma snthorafun: "ora \<in> oraFun n \<Longrightarrow> snth n ora"
+lemma orafun_snth: "ora \<in> oraFun n \<Longrightarrow> snth n ora"
   by (simp add: oraFun_def)
 
-lemma assumes "ora \<in> oraFun n"  
+lemma orafun_nbot: "ora \<in> oraFun n \<Longrightarrow> ora \<noteq> \<epsilon>"
+  using oraFun_def by force
+
+lemma medspf_spfconc_null: assumes "ora \<in> oraFun n"  
   shows "spfConcIn (tsynbNull(\<C> ''ds''))\<cdot>(MedSPF ora) = spfConcOut (tsynbNull(\<C> ''dr''))\<cdot>(MedSPF ora)"
   apply (rule spf_eq)
   apply (simp add: medspf_ufdom)+
@@ -445,24 +455,9 @@ lemma assumes "ora \<in> oraFun n"
   apply (simp add: medspf_ufdom)
   apply (rule ub_eq)
   apply (simp add: medspf_ubdom medspf_ufdom)+
-sorry
-
-lemma assumes "ora1 \<in> oraFun n" obtains "ora2 \<in> oraFun n" 
-  and "spfConcIn (tsynbNull(\<C> ''ds''))\<cdot>(MedSPF ora1) = spfConcOut (tsynbNull(\<C> ''dr''))\<cdot>(MedSPF ora2)"
   using assms
-  proof -
-    assume o1: "ora1 \<in> oraFun n"
-    have ufdomeq: "ufDom\<cdot>(spfConcIn (tsynbNull(\<C> ''ds''))\<cdot>(MedSPF ora1)) = ufDom\<cdot>(spfConcOut (tsynbNull(\<C> ''dr''))\<cdot>(MedSPF ora2))"
-      by (simp add: medspf_ufdom)
-    have ubdomeq: "\<And>ub. ubDom\<cdot>ub = ufDom\<cdot>(spfConcIn (tsynbNull(\<C> ''ds''))\<cdot>(MedSPF ora1))
-      \<Longrightarrow> (spfConcIn (tsynbNull(\<C> ''ds''))\<cdot>(MedSPF ora1)) \<rightleftharpoons> ub = (spfConcOut (tsynbNull(\<C> ''dr''))\<cdot>(MedSPF ora2)) \<rightleftharpoons> ub"
-      apply (simp add: medspf_ufdom medspf_ubdom)
-      sorry
-  oops
-
-(* lemma spf_eq: assumes "ufDom\<cdot>uf1 = ufDom\<cdot>uf2"
-  and "\<And>ub. ubDom\<cdot>ub = ufDom\<cdot>uf1 \<Longrightarrow> uf1 \<rightleftharpoons> ub = uf2 \<rightleftharpoons> ub"
-shows "uf1 = uf2"*)
+  by (simp add: medspf_insert tsynbmed_getch_dr usclConc_stream_def abp2natbool_def natbool2abp_def
+  tsynmap_sconc_null orafun_nbot tsynmed_sconc_null)
 
 (* ----------------------------------------------------------------------- *)
 subsection {* Basic Properties of MedSPSspec *}
