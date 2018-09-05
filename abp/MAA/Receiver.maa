@@ -9,13 +9,13 @@ component Receiver {
 
   automaton Receiver {
     state Rf, Rt;
-    initial Rt / { o=null, ar=null};
+    initial Rt / {o=null, ar=null};
 
-    Rt -> Rf [dr.snd=true]  / {o=dr.fst, ar=dr.snd};
-    Rt -> Rt [dr.snd=false]  / {ar=dr.snd, o=null};
-    Rt -> Rt {dr=null} / {ar=null, o=null};
-    Rf -> Rf {dr=null} / {ar=null, o=null};
-    Rf -> Rf [dr.snd=true]  / {ar=dr.snd, o=null};
-    Rf -> Rt [dr.snd=false]  / {ar=dr.snd, o=dr.fst};
+    Rt -> Rf [dr.snd=true]             / {o=dr.fst, ar=true};
+    Rt -> Rt [dr.snd=false]            / {ar=false};
+    Rt -> Rt                {dr==null};
+    Rf -> Rf                {dr==null};
+    Rf -> Rf [dr.snd=true]             / {ar=true};
+    Rf -> Rt [dr.snd=false]            / {ar=false, o=dr.fst};
   }
 }
