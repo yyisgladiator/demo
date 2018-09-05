@@ -84,8 +84,8 @@ subsection\<open>\<close>
 definition uspecRevSet :: "'m uspec \<rightarrow> 'm set rev" where
 "uspecRevSet = (\<Lambda> uspec. (fst (Rep_uspec uspec)))"
 
-definition uspecSet :: "'m uspec \<rightarrow> 'm set" where
-  "uspecSet = (\<Lambda> uspec.((inv Rev) (uspecRevSet\<cdot>uspec)))"
+definition uspecSet :: "'m uspec \<Rightarrow> 'm set" where
+  "uspecSet = (\<lambda> uspec.((inv Rev) (uspecRevSet\<cdot>uspec)))"
 
 (* The domain. Notice this also works on empty uspecs *)
 definition uspecDom :: "'m uspec \<rightarrow> channel set" where
