@@ -282,28 +282,77 @@ lemma tsynb_null_null_eq [simp]:
   assumes "ubDom\<cdot>sb = {\<C> ''i'', \<C> ''as''}"
   shows "inv convDiscrUp (sbHdElem\<cdot>(ubConc (tsynbNull (\<C> ''i'')  \<uplus> tsynbNull (\<C> ''as''))\<cdot>sb))
           = [\<C> ''i'' \<mapsto> null, \<C> ''as'' \<mapsto> null]"
-  sorry 
-
+  apply(simp add: sbHdElem_def sbHdElem_cont)
+  apply (rule convDiscrUp_eqI, subst convdiscrup_inv_eq)
+  apply(simp add: domIff2 ubclUnion_ubundle_def dom_def usclConc_stream_def assms)+
+  apply (subst fun_eq_iff,rule)
+  apply(case_tac "x = \<C> ''i'' \<or> x = \<C> ''as''")
+  apply(subst ubConc_usclConc_eq)
+  apply(simp add: tsynbnulli_tsynbnullas_ubclunion_ubdom assms)+
+  apply(simp add: ubclUnion_ubundle_def usclConc_stream_def convDiscrUp_def up_def)
+  apply auto[1]
+  by (simp add: convDiscrUp_def tsynbnulli_tsynbnullas_ubclunion_ubdom)
 
 lemma tsynb_i_null_eq [simp]:
   assumes "ubDom\<cdot>sb = {\<C> ''i'', \<C> ''as''}"
   shows "inv convDiscrUp (sbHdElem\<cdot>(ubConc (createIBundle a  \<uplus> tsynbNull (\<C> ''as''))\<cdot>sb))
-          = [\<C> ''i'' \<mapsto> Msg (Nat a), \<C> ''as'' \<mapsto> null]"
-  sorry
-
+          = [\<C> ''i'' \<mapsto> Msg (Nat a), \<C> ''as'' \<mapsto> null]"   
+  apply(simp add: sbHdElem_def sbHdElem_cont)
+  apply (rule convDiscrUp_eqI)                   
+  apply (subst convdiscrup_inv_eq)
+  apply(simp add: domIff2 ubclUnion_ubundle_def assms dom_def usclConc_stream_def ibundle_ubdom)
+  apply(simp add: createIBundle.rep_eq ubgetch_insert assms)+
+  apply (subst fun_eq_iff,rule)
+  apply(case_tac "x = \<C> ''i'' \<or> x = \<C> ''as''")
+  apply(subst ubConc_usclConc_eq)
+  apply(simp add: tsynbnotnulli_tsynbnullas_ubclunion_ubdom assms)+
+  apply(simp add: ubclUnion_ubundle_def usclConc_stream_def convDiscrUp_def)
+  apply(simp add: ubgetch_insert createIBundle.rep_eq up_def)
+  apply auto[1]
+  by (simp add: convDiscrUp_def tsynbnotnulli_tsynbnullas_ubclunion_ubdom)
+                                                                                          
 lemma tsynb_null_as_eq [simp]:
   assumes "ubDom\<cdot>sb = {\<C> ''i'', \<C> ''as''}"
   shows "inv convDiscrUp (sbHdElem\<cdot>(ubConc (tsynbNull (\<C> ''i'')  \<uplus> createAsBundle b)\<cdot>sb))
           = [\<C> ''i'' \<mapsto> null, \<C> ''as'' \<mapsto> Msg (Bool b)]"
-  sorry
+  apply(simp add: sbHdElem_def sbHdElem_cont)
+  apply (rule convDiscrUp_eqI)                   
+  apply (subst convdiscrup_inv_eq)
+  apply(simp add: domIff2 ubclUnion_ubundle_def assms dom_def usclConc_stream_def asbundle_ubdom)
+  apply(simp add: createAsBundle.rep_eq ubgetch_insert assms)+
+  apply (subst fun_eq_iff,rule)
+  apply(case_tac "x = \<C> ''i'' \<or> x = \<C> ''as''")
+  apply(subst ubConc_usclConc_eq)
+  apply(simp add: tsynbnulli_tsynbnotnullas_ubclunion_ubdom assms)+
+  apply(simp add: ubclUnion_ubundle_def  usclConc_stream_def convDiscrUp_def )
+  apply(simp add: ubunion_insert tsynbNull.rep_eq createAsBundle.rep_eq ubgetch_insert) 
+  apply (subst ubrep_ubabs)
+  apply(simp add: ubWell_def usclOkay_stream_def ctype_tsyn_def up_def)+
+  apply auto[1]
+  by (simp add: convDiscrUp_def tsynbnulli_tsynbnotnullas_ubclunion_ubdom)
 
 
 lemma tsynb_i_as_eq [simp]:
   assumes "ubDom\<cdot>sb = {\<C> ''i'', \<C> ''as''}"
   shows "inv convDiscrUp (sbHdElem\<cdot>(ubConc (createIBundle a  \<uplus> createAsBundle b)\<cdot>sb))
           = [\<C> ''i'' \<mapsto> Msg (Nat a), \<C> ''as'' \<mapsto> Msg (Bool b)]"
-  sorry
-
+  apply(simp add: sbHdElem_def sbHdElem_cont)
+  apply (rule convDiscrUp_eqI)                   
+  apply (subst convdiscrup_inv_eq)
+  apply(simp add: domIff2 ubclUnion_ubundle_def assms dom_def usclConc_stream_def
+        ibundle_ubdom asbundle_ubdom)
+  apply(simp add: createIBundle.rep_eq createAsBundle.rep_eq ubgetch_insert assms)+
+  apply (subst fun_eq_iff,rule)
+  apply(case_tac "x = \<C> ''i'' \<or> x = \<C> ''as''")
+  apply(subst ubConc_usclConc_eq)
+  apply(simp add: tsynbnotnulli_tsynbnotnullas_ubclunion_ubdom assms)+
+  apply(simp add: ubclUnion_ubundle_def usclConc_stream_def convDiscrUp_def)
+  apply(simp add: ubunion_insert createIBundle.rep_eq createAsBundle.rep_eq ubgetch_insert)
+  apply (subst ubrep_ubabs)+
+  apply(simp add: ubWell_def usclOkay_stream_def ctype_tsyn_def)+
+  apply (simp add: up_def)
+  apply auto[1]
+  by (simp add: convDiscrUp_def tsynbnotnulli_tsynbnotnullas_ubclunion_ubdom)
 
 lemma tsynb_null_null_ubgetch_i[simp]:
   "tsynbNull (\<C> ''i'') \<uplus> tsynbNull (\<C> ''as'')  .  \<C> ''i'' = \<up>null"
@@ -316,8 +365,10 @@ lemma tsynb_null_null_ubgetch_as[simp]:
 
 lemma rep_ubundle_i_null: "Rep_ubundle (createIBundle a \<uplus> tsynbNull (\<C> ''as'')) 
                = [\<C> ''i'' \<mapsto> \<up>(Msg (Nat a)), \<C> ''as'' \<mapsto> \<up>(null)]"
-  sorry
-
+  apply(simp add: ubclUnion_ubundle_def ubunion_insert createIBundle.rep_eq tsynbNull.rep_eq)
+  apply(subst ubrep_ubabs)
+  apply(simp add: ubWell_def usclOkay_stream_def ctype_tsyn_def)
+  by auto
 
 lemma tsynb_i_null_ubgetch_i [simp]:
   "createIBundle a  \<uplus> tsynbNull (\<C> ''as'')  .  \<C> ''i'' = \<up>(Msg(Nat a))"
@@ -331,9 +382,11 @@ lemma tsynb_i_null_ubgetch_as[simp]:
 
 lemma rep_ubundle_null_as: "Rep_ubundle (tsynbNull (\<C> ''i'') \<uplus> createAsBundle b) 
                = [\<C> ''i'' \<mapsto> \<up>null, \<C> ''as'' \<mapsto> \<up>(Msg(Bool b))]"
-  sorry
+  apply(simp add: ubclUnion_ubundle_def ubunion_insert tsynbNull.rep_eq createAsBundle.rep_eq)
+  apply(subst ubrep_ubabs)
+  apply(simp add: ubWell_def usclOkay_stream_def ctype_tsyn_def)
+  by auto
   
-
 lemma tsynb_null_as_ubgetch_i[simp]:
   "tsynbNull (\<C> ''i'')  \<uplus> createAsBundle b  .  \<C> ''i'' = \<up>null"
   apply (simp add: ubgetch_insert createBundle.rep_eq)
@@ -347,7 +400,10 @@ lemma tsynb_null_as_ubgetch_as[simp]:
 
 lemma rep_ubundle_i_as: "Rep_ubundle (createIBundle a \<uplus> createAsBundle b) 
                = [\<C> ''i'' \<mapsto> \<up>(Msg(Nat a)), \<C> ''as'' \<mapsto> \<up>(Msg(Bool b))]"
-  sorry
+  apply(simp add: ubclUnion_ubundle_def ubunion_insert createIBundle.rep_eq createAsBundle.rep_eq)
+  apply(subst ubrep_ubabs)
+  apply(simp add: ubWell_def usclOkay_stream_def ctype_tsyn_def)
+  by auto
 
 lemma tsynb_i_as_ubgetch_as[simp]:
   "createIBundle a  \<uplus> createAsBundle b  .  \<C> ''as'' = \<up>(Msg (Bool b))"
@@ -359,29 +415,33 @@ lemma tsynb_i_as_ubgetch_i[simp]:
   apply (simp add: ubgetch_insert createBundle.rep_eq)
   by(simp add: rep_ubundle_i_as)
 
-
-
-
 lemma sbrt_ubconc_null_null [simp]:
   assumes "ubDom\<cdot>sb = {\<C> ''i'', \<C> ''as''}"
   shows  "sbRt\<cdot>(ubConc (tsynbNull (\<C> ''i'') \<uplus> tsynbNull (\<C> ''as''))\<cdot>sb) = sb"
-  sorry
+  apply (rule ub_eq)
+  apply (simp add: assms tsynbnulli_tsynbnullas_ubclunion_ubdom  usclConc_stream_def)+
+  by auto
 
 lemma sbrt_ubconc_i_null [simp]:
   assumes "ubDom\<cdot>sb = {\<C> ''i'', \<C> ''as''}"
   shows  "sbRt\<cdot>(ubConc (createIBundle a  \<uplus> tsynbNull (\<C> ''as''))\<cdot>sb) = sb"
-  sorry
+  apply (rule ub_eq)
+  apply (simp add: assms tsynbnotnulli_tsynbnullas_ubclunion_ubdom  usclConc_stream_def)+
+  by auto
 
 lemma sbrt_ubconc_null_as [simp]:
   assumes "ubDom\<cdot>sb = {\<C> ''i'', \<C> ''as''}"
   shows  "sbRt\<cdot>(ubConc (tsynbNull (\<C> ''i'')  \<uplus> createAsBundle b )\<cdot>sb) = sb"
-  sorry
+  apply (rule ub_eq)
+  apply (simp add: assms tsynbnulli_tsynbnotnullas_ubclunion_ubdom  usclConc_stream_def)+
+  by auto
 
 lemma sbrt_ubconc_i_as [simp]:
   assumes "ubDom\<cdot>sb = {\<C> ''i'', \<C> ''as''}"
   shows  "sbRt\<cdot>(ubConc (createIBundle a  \<uplus> createAsBundle b )\<cdot>sb) = sb"
-  sorry
-
+  apply (rule ub_eq)
+  apply (simp add: assms tsynbnotnulli_tsynbnotnullas_ubclunion_ubdom  usclConc_stream_def)+
+  by auto
 
 (* h_step lemma for -- state:Sf   input:(null, null)   buffer:empty *)
 lemma senderautomaton_h_step_sf_null_null_empty:
