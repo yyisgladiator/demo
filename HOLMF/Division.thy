@@ -13,17 +13,14 @@ begin
 end
 
 class div_cpo = division + po + 
- (*  assumes p0: "DIV \<noteq> {} "  (* A is not empty *)  *)
-
-    (* Elements from different divisions are never in a below-relation *)
- (* assumes p2: "\<And>a b. a\<in>A \<Longrightarrow> b\<in>A \<Longrightarrow> \<exists>aa bb. aa\<in>a \<and> bb\<in>b \<Longrightarrow> a = b" (* ToDo: Name + schöner aufschreiben *) *)
 
   assumes div_non_empty: "DIV \<noteq> {}"
+
   assumes div_inner_non_empty: "\<And>a. a\<in>DIV  \<Longrightarrow> a \<noteq> {}"
 
 
     (* every set is a cpo *)
-  assumes div_cpo: "\<And>S a. a\<in>DIV \<Longrightarrow> \<not>finite S \<Longrightarrow> longChain S \<Longrightarrow> S\<subseteq>a \<Longrightarrow> \<exists>x\<in>a. S <<| x" (* ToDo: Name + schöner aufschreiben *)
+  assumes div_cpo: "\<And>S a. a\<in>DIV \<Longrightarrow> \<not>finite S \<Longrightarrow> longChain S \<Longrightarrow> S\<subseteq>a \<Longrightarrow> \<exists>x\<in>a. S <<| x"
 begin
 
 lemma div_cpo_g: "a\<in>DIV \<Longrightarrow> longChain S \<Longrightarrow> S\<subseteq>a \<Longrightarrow> \<exists>x\<in>a. S <<| x"
@@ -40,8 +37,6 @@ class div_pcpo = div_cpo +
     (* every division has its own bottom element *)
   assumes div_pcpo: "\<And>a. a\<in>DIV \<Longrightarrow> \<exists>bot\<in>a. \<forall>b\<in>a. bot \<sqsubseteq>b"  (* ToDo: Name + schöner aufschreiben *)
 begin
-lemma div_pcpo_full: "\<And>a. a\<in>DIV \<Longrightarrow>  a\<noteq>{}"
-  using local.div_pcpo by auto
 
 end
 
@@ -57,11 +52,11 @@ section \<open>fun div_cpo\<close>
 instantiation "fun" :: (type, div_cpo) div_cpo
 begin
 definition DIV_fun:: "('s::type \<Rightarrow> 'm::div_cpo) set set" where
-"DIV_fun = (setify ` (setify (\<lambda>a. DIV)))"    (* TODO ! for nda_h *)
+"DIV_fun = (setify ` (setify (\<lambda>a. DIV)))"   
 
 lemma div_fun_s: fixes f g::"'s::type \<Rightarrow> 'm::div_cpo"
   assumes "D\<in>(DIV::('s \<Rightarrow> 'm) set set)" and "f\<in>D"
-  shows "(\<exists>d2\<in>DIV::'m set set. f a\<in>d2)(* \<and> g a\<in>d2 *)"
+  shows "(\<exists>d2\<in>DIV::'m set set. f a\<in>d2)"
     using assms apply(simp add:  DIV_fun_def)
   unfolding DIV_fun_def
   by (smt setify_def bex_imageD mem_Collect_eq)
