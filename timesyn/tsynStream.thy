@@ -298,24 +298,22 @@ lemma szip_sdom: "sdom\<cdot>(szip\<cdot>as\<cdot>bs) \<subseteq> (sdom\<cdot>as
   by (rule_tac x = bs in scases, simp_all,  blast)
 
 text {* Each element of @{term sdom} of @{term sscanl} is in the range of f *}
-lemma sscanl_sdom: "sdom\<cdot>(sscanl f i\<cdot>s) \<subseteq> { f i s | i s. True}"
+lemma sscanl_sdom: "sdom\<cdot>(sscanl f i\<cdot>s) \<subseteq> {f i s | i s. True}"
   apply (induction s rule: ind, simp_all)
   apply (rule admI)
   apply (metis (no_types, lifting) ch2ch_Rep_cfunR contlub_cfun_arg l44)
   apply (rename_tac a s)
   apply (rule conjI)
-  apply (rule_tac x="i" in exI)
-  apply (rule_tac x="a" in exI, simp)
-  apply (rule subsetI)
+  apply auto
   apply (simp add: sdom_def2)
   apply (erule exE)
   apply (rename_tac n)
   apply (case_tac "n > 0")
-  apply (rule_tac x="snth (n - 1) (sscanl f (f i a)\<cdot>s)" in exI)
-  apply (rule_tac x="snth n s" in exI)
+  apply (rule_tac x = "snth (n - 1) (sscanl f (f i a)\<cdot>s)" in exI)
+  apply (rule_tac x = "snth n s" in exI)
   apply (metis (no_types, lifting) Suc_pred' sscanl_snth)
-  apply (rule_tac x="f i a" in exI)
-  apply (rule_tac x="shd s" in exI)
+  apply (rule_tac x = "f i a" in exI)
+  apply (rule_tac x = "shd s" in exI)
   by (metis empty_is_shortest gr0I snth_shd sscanl_shd)
 
 (* ----------------------------------------------------------------------- *)
@@ -353,7 +351,7 @@ lemma tsyndom_sconc_msg_sub2: "tsynDom\<cdot>xs \<subseteq> S \<Longrightarrow> 
   by (simp add: subset_iff tsyndom_insert)
 
 text {* @{term tsynDom} maps the empty stream on the empty set. *}
-lemma tsyndom_strict: "tsynDom\<cdot>\<epsilon> = {}"
+lemma tsyndom_strict [simp]: "tsynDom\<cdot>\<epsilon> = {}"
   by (simp add: tsyndom_insert)
 
 text {* @{term tsynDom} of concatenations distributes via union of sets. *}
@@ -487,7 +485,6 @@ text {* The set of messages of a stream equals the set of values of @{term tsynA
         stream. *}
 lemma tsynabs_tsyndom: "tsynDom\<cdot>s = sdom\<cdot>(tsynAbs\<cdot>s)"
   apply (induction s rule: tsyn_ind, simp_all)
-  apply (simp add: tsyndom_strict)
   apply (simp add: tsynabs_sconc_msg tsyndom_sconc_msg)
   by (simp add: tsyndom_sconc_null tsynabs_sconc_null)
 
@@ -1157,7 +1154,7 @@ lemma tsynscanl_tsynabs: "tsynAbs\<cdot>(tsynScanl f i\<cdot>s) = sscanl f i\<cd
   by (simp add: tsynscanl_sconc_null tsynabs_sconc_null)
 
 text {* Each element of @{term tsynDom} of @{term tsynScanl} is in the range of f *}
-lemma tsynscanl_tsyndom: "tsynDom\<cdot>(tsynScanl f i\<cdot>s) \<subseteq> { f i s | i s. True}"
+lemma tsynscanl_tsyndom: "tsynDom\<cdot>(tsynScanl f i\<cdot>s) \<subseteq> {f i s | i s. True}"
   by (metis (mono_tags, lifting) tsynabs_tsyndom tsynscanl_tsynabs sscanl_sdom)
   
 (* ----------------------------------------------------------------------- *)
