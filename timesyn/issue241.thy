@@ -71,4 +71,3 @@ lemma tsynzip_sdom: "sdom\<cdot>(tsynZip\<cdot>as\<cdot>bs) \<subseteq> Msg ` (t
 (* Skip tsynScanl, tsynScanlExt for now. *)
 
 end
-
