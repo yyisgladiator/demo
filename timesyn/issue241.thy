@@ -4,7 +4,6 @@ imports tsynStream
 
 begin
 
-(* Try to use set equality after using tsyndom and image definition. *)
 lemma tsyndom_sdom: "tsynDom\<cdot>s = inverseMsg ` ((sdom\<cdot>s) - {null})"
   apply (simp add: tsyndom_insert)
   apply (simp add: image_def)
@@ -32,22 +31,31 @@ lemma tsynprojsnd_sdom: "sdom\<cdot>(tsynProjSnd\<cdot>s) = tsynSnd ` sdom\<cdot
   apply (rule admI)
   by (simp add: smap_sdom tsynprojsnd_insert)+
 
+lemma tsynremdups_sdom2: "sdom\<cdot>(sscanlA tsynRemDups_h (\<M> m)\<cdot>s) \<subseteq> sdom\<cdot>s \<union> {null}"
+  apply (induction s arbitrary: m rule: tsyn_ind, simp_all)
+   apply (rule admI)
+  using dual_order.trans insert_mono l44 sdom_chain2lub contlub_cfun_arg
+  sorry
+
+
 (* What happens if no null is contained in the stream? *)
 lemma tsynremdups_sdom: "sdom\<cdot>(tsynRemDups\<cdot>s) \<subseteq> sdom\<cdot>s \<union> {null}"
   apply (induction rule: tsyn_ind, simp_all)
     apply (rule admI)
+
     apply (smt ch2ch_Rep_cfunR contlub_cfun_arg insert_mono l44 order_subst1 sdom_chain2lub)
+   defer
+   apply (simp add: tsynremdups_sconc_null)
   
   oops
 
-(* What happens if all elements are not in the set and no null is contained in the stream? *)
-lemma tsynfilter_sdom: "sdom\<cdot>(tsynFilter A\<cdot>s) \<subseteq> sdom\<cdot>s \<union> {null}"
+lemma tsynfilter_sdom: "sdom\<cdot>(tsynFilter A\<cdot>s) \<subseteq> tsynFilterElem A ` sdom\<cdot>s"
+  apply (simp add: tsynfilter_insert)
   apply (induction s arbitrary: A rule: tsyn_ind, simp_all)
   apply (rule admI)
-  apply (smt ch2ch_Rep_cfunR contlub_cfun_arg insert_mono l44 order_subst1 sdom_chain2lub)
-  using tsynfilter_sconc_msg_in tsynfilter_sconc_msg_nin
-  apply (smt insertI1 insert_commute insert_mono order_subst1 sfilterEq2sdom_h sfilter_in sfilter_sdoml3 subset_insertI)
-  by (simp add: tsynfilter_sconc_null)
+  apply (simp add: smap_sdom)
+  apply (simp add: smap_sdom subset_insertI)
+  by (simp add: subset_insertI2)
 
 (* Try to prove something like that. *)
 lemma tsyndropwhile_sdom: "sdom\<cdot>(tsynDropWhile f\<cdot>s) \<subseteq> sdom\<cdot>s \<union> {null}"
@@ -60,8 +68,9 @@ lemma tsyndropwhile_sdom: "sdom\<cdot>(tsynDropWhile f\<cdot>s) \<subseteq> sdom
 
 (* Try to prove something like that. *)
 lemma tsynzip_sdom: "sdom\<cdot>(tsynZip\<cdot>as\<cdot>bs) = Msg ` (tsynDom\<cdot>as \<times> sdom\<cdot>bs)"
+  apply (induction as arbitrary: bs rule: tsyn_ind, simp_all)
+     apply (rule admI)
   oops
-
 (* Skip tsynScanl, tsynScanlExt for now. *)
 
 end
