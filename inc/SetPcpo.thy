@@ -317,5 +317,38 @@ qed
 lemma setsize_union: "setSize (X \<union> Y) + setSize (X \<inter> Y) = setSize X + setSize Y"
   by (meson setsize_union_helper3 setsize_union_helper4)
 
+lemma set_union_ins: "\<And> F G x. setSize (F \<union> G) \<le> setSize (F \<union> (insert x G))"
+  by (metis Fin_Suc Fin_leq_Suc_leq  Un_insert_right finite_insert insert_absorb lnat_po_eq_conv 
+  setSizeSuc setSize_def)
+
+lemma setsize_mono_union_helper1: 
+  assumes "finite F" and "finite G"
+  shows "setSize F \<le> setSize (F \<union> G)"
+proof -
+  have b0:  "\<And>P. P = (\<lambda>G. setSize F \<le> setSize (F \<union> G)) \<Longrightarrow> P G"
+    by (metis assms(2) finite_induct order_refl set_union_ins sup_bot.right_neutral trans_lnle)
+  have b1: "(\<lambda>G. setSize F \<le> setSize (F \<union> G)) G"
+    using b0 by auto
+  show "setSize F \<le> setSize (F \<union> G)"
+    by (simp add: b1)
+qed
+
+lemma setsize_mono_union_helper2: 
+  assumes "infinite F \<or> infinite G"
+  shows "setSize F \<le> setSize (F \<union> G)"
+proof -
+  have b0: "setSize (F \<union> G) = \<infinity>"
+    by (meson assms infinite_Un setSize_def)
+  show ?thesis
+    by (simp add: b0)
+qed
+
+lemma setsize_mono_union: "setSize F \<le> setSize (F \<union> G)"
+  by (meson setsize_mono_union_helper1 setsize_mono_union_helper2)
+
+lemma setsize_mono: 
+  assumes "F \<subseteq> G"
+  shows "setSize F \<le> setSize G"
+  by (metis Un_absorb1 assms setsize_mono_union)
 
 end
