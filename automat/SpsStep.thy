@@ -16,9 +16,9 @@ definition spsStep_h::"('m::message sbElem \<Rightarrow> 'm SPS)\<rightarrow> ('
 "spsStep_h= (\<Lambda> h. setify\<cdot>(\<lambda>e. uspecRevSet\<cdot>(h e)))"
 
 definition spsStep_P:: "channel set \<Rightarrow> channel set \<Rightarrow> ('m::message sbElem \<Rightarrow> 'm SPF)  \<Rightarrow> bool" where
-"spsStep_P In Out \<equiv> \<lambda> g. (\<forall>m. ufDom\<cdot>(g m) = In \<and> ufRan\<cdot>(g m) = Out)"
-(* "spsStep_P In Out \<equiv> \<lambda> g. (\<forall>m. ((dom (Rep_sbElem m) = In ) \<longrightarrow> ufDom\<cdot>(g m) = In \<and> ufRan\<cdot>(g m) = Out) 
-\<and> ((dom (Rep_sbElem m) \<noteq> In ) \<longrightarrow> (g m) = ufLeast In Out))" *)
+(* "spsStep_P In Out \<equiv> \<lambda> g. (\<forall>m. ufDom\<cdot>(g m) = In \<and> ufRan\<cdot>(g m) = Out)" *)
+"spsStep_P In Out \<equiv> \<lambda> g. (\<forall>m. ((dom (Rep_sbElem m) = In ) \<longrightarrow> ufDom\<cdot>(g m) = In \<and> ufRan\<cdot>(g m) = Out) 
+\<and> ((dom (Rep_sbElem m) \<noteq> In ) \<longrightarrow> (g m) = ufLeast In Out))" 
 
 definition newSpsStep:: "channel set \<Rightarrow> channel set \<Rightarrow> ('m::message sbElem \<Rightarrow> 'm SPS) \<rightarrow> 'm SPS" where
 "newSpsStep In Out \<equiv> \<Lambda> H. Abs_uspec ((setrevImage (\<lambda> h. Abs_cufun (\<lambda>sb. Rep_cufun (h sb)  sb)) 
@@ -86,7 +86,7 @@ proof rule
   have f1: "spsStep_P In Out g"
     by (metis a1 setrevFilter_gdw)
   then show "\<forall>m::'a sbElem. ufDom\<cdot>(g m) = In \<and> ufRan\<cdot>(g m) = Out"
-    by (simp add: spsStep_P_def)
+    by (metis (no_types, lifting) spsStep_P_def ufleast_ufRan ufleast_ufdom)
 qed
 
 lemma spsStep_P_uspecwell_h2: 
@@ -102,9 +102,9 @@ proof rule
   have f1: "spsStep_P In Out h"
     by (metis h_def_2 setrevFilter_gdw)
   then have f2: "spsStep_P In Out  (\<lambda> sbEl. spfRtIn\<cdot>(h sbEl))"
-    by (simp add: spsStep_P_def)
+    by (simp add: spfrt_ufleast spsStep_P_def)
   then show "\<forall>m::'a sbElem. ufDom\<cdot>(g m) = In \<and> ufRan\<cdot>(g m) = Out"
-    by (simp add: h_def spsStep_P_def)
+    using h_def h_def_2 spfRtIn_dom spfRtIn_ran spsStep_P_uspecwell_h by blast
 qed
 
 lemma spsStep_P_uspecwell_h3: 
@@ -199,37 +199,113 @@ proof (rule Cont.contI2, simp add: assms spsStep_mono)
       using assm_x assm_y spsStep_P_uspecwell_h by blast
     obtain sbEl where sbEl_def: "x sbEl \<noteq> y sbEl"
       by (meson assm_dif ext)
+    have sbEl_dom: "dom (Rep_sbElem sbEl) = In"
+      by (metis (no_types, hide_lams) assm_x assm_y sbEl_def setrevFilter_gdw spsStep_P_def)
     obtain da_sb where da_sb_def: "x sbEl \<rightleftharpoons> da_sb \<noteq> y sbEl  \<rightleftharpoons> da_sb"
       by (metis sbEl_def spf_eq x_y_dom_ran)
     obtain the_sb where the_sb_def:"((inv convDiscrUp (sbHdElem\<cdot>the_sb))) =  (Rep_sbElem sbEl) 
                                                 \<and> sbHdElemWell the_sb 
                                                 \<and> ubDom\<cdot>the_sb = dom (Rep_sbElem sbEl)"
       by (metis (full_types) Abs_sbElem_inverse mem_Collect_eq sbElem_surj sbHdElemWell_def sbHdElem_sbElemWell)
-    have "(\<lambda>sbEl::'a sbElem. spfRtIn\<cdot>(x sbEl)) \<noteq> (\<lambda>sbEl::'a sbElem. spfRtIn\<cdot>(y sbEl))"
-      apply rule
-      sorry
-    show False
-      sorry
+    have the_sb_dom: "ubDom\<cdot>the_sb = In"
+      by (simp add: sbEl_dom the_sb_def)
+    have da_sb_dom: "ubDom\<cdot>da_sb =In"
+    proof (rule ccontr)
+      assume dom_not: "ubDom\<cdot>da_sb \<noteq> In"
+      then have "x sbEl \<rightleftharpoons> da_sb = y sbEl \<rightleftharpoons> da_sb"
+        by (metis test2 ufRestrict_apply x_y_dom_ran)
+      then show False
+        using da_sb_def by auto
+    qed
+    have x_y_spfrt_dif: "(\<lambda>sbEl::'a sbElem. spfRtIn\<cdot>(x sbEl)) \<noteq> 
+                              (\<lambda>sbEl::'a sbElem. spfRtIn\<cdot>(y sbEl))"
+      by (metis da_sb_def sbrt_conc_hd spfRtIn_step)
+    have the_sb_hd_well: "sbHdElemWell ((sbHd\<cdot>the_sb))"
+    proof (simp add: sbHdElemWell_def, rule)
+      fix c::channel
+      assume c_in_dom: "c \<in> ubDom\<cdot>the_sb"
+      have "the_sb . c \<noteq> \<epsilon>"
+        by (meson c_in_dom sbHdElemWell_def the_sb_def)
+      then show " stake (Suc (0::nat))\<cdot>(the_sb  .  c) \<noteq> \<epsilon>"
+        by (metis stream.con_rews(2) stream.exhaust stream.take_rews)
+    qed
+    have f1: "(ubRestrict ( ubDom\<cdot>da_sb)\<cdot>(ubConc (sbHd\<cdot>the_sb)\<cdot>da_sb))= (ubConc (sbHd\<cdot>the_sb)\<cdot>da_sb)"
+      by (simp add: da_sb_dom the_sb_dom)
+    have da_conc_sbhdel_well: "sbHdElemWell (ubConcEq (sbHd\<cdot>the_sb)\<cdot>da_sb)"
+      apply (simp add: sbHdElemWell_def, rule)
+      apply (simp add: the_sb_dom da_sb_dom)
+      by (metis One_nat_def sbHdElemWell_def sbhd_getch sbhd_sbdom sconc_snd_empty strictI 
+          the_sb_dom the_sb_hd_well usclConc_stream_def)
+    have da_conc_sbhdel_well2: "sbHdElemWell (ubConc (sbHd\<cdot>the_sb)\<cdot>da_sb)"
+      using da_conc_sbhdel_well f1 by auto
+    have da_conc_hd: "sbHd\<cdot>(ubConcEq (sbHd\<cdot>the_sb)\<cdot>da_sb) = sbHd\<cdot>the_sb"
+    proof -
+      have the_dom: " ubDom\<cdot>(sbHd\<cdot>(ubConcEq (sbHd\<cdot>the_sb)\<cdot>da_sb)) = In"
+        using da_sb_dom by auto
+
+      show ?thesis
+        apply (rule ub_eq)
+         apply (simp add: da_sb_dom the_sb_dom)
+        apply (simp only: the_dom)
+        apply (subst sbHd_def)
+        apply (simp add: f1)
+        apply (subst sbtake_sbgetch)
+         apply (simp add: the_sb_dom)
+        apply (simp add: sbHd_def)
+        apply (subst ubConc_usclConc_eq)
+          apply (simp add: the_sb_dom)
+         apply (simp add: da_sb_dom)
+        by (smt One_nat_def sbHdElemWell_def sbHd_def sbtake_sbdom sbtake_sbgetch sconc_snd_empty sdrop_0 sdrop_back_rt sdropostake stake_Suc surj_scons the_sb_dom the_sb_hd_well usclConc_stream_def)
+    qed
+
+    have da_conc_hd2: "sbHd\<cdot>(ubConc (sbHd\<cdot>the_sb)\<cdot>da_sb) = sbHd\<cdot>the_sb"
+      using da_conc_hd f1 by auto
+    have da_conc_rt: "sbRt\<cdot>(ubConcEq (sbHd\<cdot>the_sb)\<cdot>da_sb) = da_sb"
+      apply (simp add: f1)
+      apply(rule ub_eq)
+       apply (simp_all add: da_sb_dom the_sb_dom) 
+      by (smt One_nat_def Rep_cfun_strict1 \<open>sbHd\<cdot> (ubConcEq (sbHd\<cdot>(the_sb::'a stream\<^sup>\<Omega>))\<cdot> (da_sb::'a stream\<^sup>\<Omega>)) = sbHd\<cdot>the_sb\<close> da_sb_dom f1 inject_scons sbHdElemWell_def sbhd_getch sbhd_sbdom sconc_snd_empty stake_Suc 
+          stream.take_0 strictI surj_scons the_sb_dom the_sb_hd_well ubConc_usclConc_eq ubconceq_insert usclConc_stream_def)
+    have da_conc_rt2: "sbRt\<cdot>(ubConc (sbHd\<cdot>the_sb)\<cdot>da_sb) = da_sb"
+      using da_conc_rt f1 by auto
+    have "inv convDiscrUp (sbHdElem\<cdot>(ubConc (sbHd\<cdot>the_sb)\<cdot>da_sb)) = Rep_sbElem sbEl"
+    proof -
+      have "\<And> x. x \<in> dom (Rep_sbElem sbEl) \<Longrightarrow> 
+            (inv convDiscrUp (sbHdElem\<cdot>(ubConc (sbHd\<cdot>the_sb)\<cdot>da_sb)))\<rightharpoonup>x = (Rep_sbElem sbEl) \<rightharpoonup> x"
+      proof -
+        fix x
+        assume assms_x_in_dom: "x \<in> dom (Rep_sbElem sbEl)"
+        have "x \<in> dom (inv convDiscrUp (sbHdElem\<cdot>(ubConc (sbHd\<cdot>the_sb)\<cdot>da_sb)))"
+          by (metis assms_x_in_dom convdiscrup_inv_dom_eq da_conc_hd2 da_conc_sbhdel_well2 
+              sbHdElemWell_def sbHdElem_channel sbHdElem_dom sbhd_sbdom the_sb_def)
+        show "(inv convDiscrUp (sbHdElem\<cdot>(ubConc (sbHd\<cdot>the_sb)\<cdot>da_sb)))\<rightharpoonup>x = (Rep_sbElem sbEl) \<rightharpoonup> x"
+          apply (subst sbHdElem_2_shd)
+            apply (meson da_conc_sbhdel_well2 sbHdElemWell_def)
+           apply (simp add: assms_x_in_dom the_sb_def)
+          by (metis (no_types, lifting) One_nat_def assms_x_in_dom da_conc_hd2 da_conc_sbhdel_well2 
+              sbHdElemWell_def sbHdElem_2_shd sbhd_getch sbhd_sbdom shd1 stake_Suc surj_scons the_sb_def)
+      qed
+      then show ?thesis 
+        by (metis convdiscrup_inv_dom_eq da_conc_hd2 da_conc_sbhdel_well2 part_eq sbHdElemWell_def 
+            sbHdElem_channel sbHdElem_dom sbhd_sbdom the_sb_def)
+    qed
+    then have "(Abs_sbElem (inv convDiscrUp (sbHdElem\<cdot>(ubConc (sbHd\<cdot>the_sb)\<cdot>da_sb)))) = sbEl"
+      by (simp add: Rep_sbElem_inverse the_sb_def)
+    then  have spfStep_dif: "spfStep In Out\<cdot>(\<lambda>sbEl::'a sbElem. spfRtIn\<cdot>(x sbEl)) \<rightleftharpoons> (ubConcEq (sbHd\<cdot>the_sb)\<cdot>da_sb) \<noteq> 
+                    spfStep In Out\<cdot>(\<lambda>sbEl::'a sbElem. spfRtIn\<cdot>(y sbEl)) \<rightleftharpoons> (ubConcEq (sbHd\<cdot>the_sb)\<cdot>da_sb)"
+      apply (simp add: spfStep_2_spfStep_inj assms the_sb_dom da_sb_dom)
+      apply (simp add: spfStep_inj_def da_conc_sbhdel_well2)
+      apply (subst ufRestrict_apply)
+        apply (simp add: x_y_dom_ran) +
+      apply (simp add: da_conc_rt2)
+      by (simp add: da_sb_def)
+    then have "spfStep In Out\<cdot>(\<lambda>sbEl::'a sbElem. spfRtIn\<cdot>(x sbEl)) \<noteq> 
+                    spfStep In Out\<cdot>(\<lambda>sbEl::'a sbElem. spfRtIn\<cdot>(y sbEl))"
+      apply (simp add: spfStep_def assms)
+      using assm_result_eq spfStep_dif by auto
+    then show False
+      by (simp add: assm_result_eq)
   qed
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
   (* chain *)
   have setfilter_chain: "chain (\<lambda> i. ?H (Y i))"
     apply (rule chainI)

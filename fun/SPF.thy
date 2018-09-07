@@ -201,6 +201,10 @@ lemma spfRt_inj: "inj (Rep_cfun spfRtIn)"
   apply (metis spfRtIn_dom)
   using spfRt_inj_h by blast
 
+lemma spfrt_ufleast: "spfRtIn\<cdot>(ufLeast In Out) = ufLeast In Out"
+  apply (rule ufun_eqI)
+   apply (simp_all add: ufclDom_ufun_def ubclDom_ubundle_def)
+  by (simp add: ubclDom_ubundle_def ufleast_apply)
 
 (*assms*)
 lemma sbRtLen: assumes "ubLen x = Fin ( Suc(y))" 
