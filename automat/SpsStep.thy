@@ -133,6 +133,137 @@ proof rule
     by (simp add: assms h_def)
 qed
 
+lemma bla: assumes "finite In" shows
+"\<And> H. uspecWell (setrevImage (\<lambda> h. spfStep In Out\<cdot>h)
+                        (setrevImage (\<lambda> h sbEl. spfRtIn\<cdot>(h sbEl)) 
+                          (setrevFilter (spsStep_P In Out)\<cdot>(spsStep_h\<cdot>H)))) (Discr In) (Discr Out)"
+  apply (rule uspec_wellI2)
+   apply (simp add: assms spsStep_P_uspecwell_h4 ufclDom_ufun_def)
+  by (metis assms spsStep_P_uspecwell_h4 ufclRan_ufun_def)
+
+subsection \<open>injectivity\<close>
+
+lemma spsStep_image_simp: "setrevImage (\<lambda> h. spfStep In Out\<cdot>h)
+                        (setrevImage (\<lambda> h sbEl. spfRtIn\<cdot>(h sbEl)) H)= 
+setrevImage (\<lambda> h. spfStep In Out\<cdot>((\<lambda> h sbEl. spfRtIn\<cdot>(h sbEl)) h)) H"
+  using setrevimage_image by auto
+
+lemma spsStep_uspecWell_h: assumes "finite In" shows
+"uspecWell (setrevImage (\<lambda> h. spfStep In Out\<cdot>((\<lambda> h sbEl. spfRtIn\<cdot>(h sbEl)) h)) H) (Discr In) (Discr Out)"
+  by (simp add: assms setrevImage_def ufclDom_ufun_def ufclRan_ufun_def)
+
+lemma spsStep_uspecWell: assumes "finite In" shows
+"uspecWell (setrevImage (\<lambda> h. spfStep In Out\<cdot>((\<lambda> h sbEl. spfRtIn\<cdot>(h sbEl)) h)) (setrevFilter (spsStep_P In Out)\<cdot>(spsStep_h\<cdot>H))) (Discr In) (Discr Out)"
+  by (simp add: assms setrevImage_def ufclDom_ufun_def ufclRan_ufun_def)
+
+
+lemma spsStep_mono_h: assumes "x \<sqsubseteq> y" shows "setrevImage (\<lambda> h. spfStep In Out\<cdot>((\<lambda> h sbEl. spfRtIn\<cdot>(h sbEl)) h)) x \<sqsubseteq>
+setrevImage (\<lambda> h. spfStep In Out\<cdot>((\<lambda> h sbEl. spfRtIn\<cdot>(h sbEl)) h)) y"
+  by (simp add: assms image_mono_rev monofunE)
+
+lemma spsStep_mono_h2: assumes "finite In" shows
+"monofun (\<lambda> H. Abs_uspec 
+((setrevImage (\<lambda> h. spfStep In Out\<cdot>((\<lambda> h sbEl. spfRtIn\<cdot>(h sbEl)) h)) H), Discr  In, Discr Out))"
+  apply (rule monofunI)
+  apply (simp add: below_uspec_def)
+  by (simp add: assms spsStep_mono_h spsStep_uspecWell_h)
+
+lemma spsStep_mono: assumes "finite In" shows
+"monofun
+     (\<lambda>H . Abs_uspec (setrevImage (\<lambda>h . spfStep In Out\<cdot>(\<lambda>sbEl. spfRtIn\<cdot>(h sbEl))) (setrevFilter (spsStep_P In Out)\<cdot>(spsStep_h\<cdot>H)), Discr In, Discr Out))"
+  apply (rule monofunI)
+  apply (simp add: below_uspec_def assms spsStep_uspecWell)
+  by (simp add: monofun_cfun_arg spsStep_mono_h)
+
+lemma spsStep_cont: assumes "finite In" shows
+"cont (\<lambda> H. Abs_uspec 
+((setrevImage (\<lambda> h. spfStep In Out\<cdot>((\<lambda> h sbEl. spfRtIn\<cdot>(h sbEl)) h)) 
+    (setrevFilter (spsStep_P In Out)\<cdot>(spsStep_h\<cdot>H))), Discr  In, Discr Out))"
+proof (rule Cont.contI2, simp add: assms spsStep_mono)
+  fix Y::"nat \<Rightarrow> 'a sbElem \<Rightarrow> ('a stream\<^sup>\<Omega>) ufun uspec"
+
+  let ?H = "(\<lambda> H. (setrevFilter (spsStep_P In Out)\<cdot>(spsStep_h\<cdot>H)))"
+
+  assume a1: "chain Y"
+  assume a2: "chain (\<lambda>i::nat. Abs_uspec (setrevImage (\<lambda>h::'a sbElem \<Rightarrow> ('a stream\<^sup>\<Omega>) ufun. spfStep In Out\<cdot>(\<lambda>sbEl::'a sbElem. spfRtIn\<cdot>(h sbEl))) (?H (Y i)), Discr In, Discr Out))"
+  have inj_on_i: "\<forall>i::nat. inj_on (\<lambda>h::'a sbElem \<Rightarrow> ('a stream\<^sup>\<Omega>) ufun. spfStep In Out\<cdot>(\<lambda>sbEl::'a sbElem. spfRtIn\<cdot>(h sbEl))) (inv Rev (?H (Y i)))"
+  proof (rule, rule inj_onI, rule ccontr)
+    fix i ::nat
+    fix x::"'a sbElem \<Rightarrow> ('a stream\<^sup>\<Omega>) ufun"
+    fix y::"'a sbElem \<Rightarrow> ('a stream\<^sup>\<Omega>) ufun"
+    assume assm_x: "x \<in> inv Rev (?H (Y i))"
+    assume assm_y: "y \<in> inv Rev (?H (Y i))"
+    assume assm_result_eq: "spfStep In Out\<cdot>(\<lambda>sbEl::'a sbElem. spfRtIn\<cdot>(x sbEl)) = spfStep In Out\<cdot>(\<lambda>sbEl::'a sbElem. spfRtIn\<cdot>(y sbEl))"
+    assume assm_dif: "x \<noteq> y"
+    then have x_y_dom_ran: "\<And> m.  ufDom\<cdot>(x m) = In \<and> ufDom\<cdot>(y m) = In \<and> ufRan\<cdot>(x m) = Out \<and> ufRan\<cdot>(y m) = Out"
+      using assm_x assm_y spsStep_P_uspecwell_h by blast
+    obtain sbEl where sbEl_def: "x sbEl \<noteq> y sbEl"
+      by (meson assm_dif ext)
+    obtain da_sb where da_sb_def: "x sbEl \<rightleftharpoons> da_sb \<noteq> y sbEl  \<rightleftharpoons> da_sb"
+      by (metis sbEl_def spf_eq x_y_dom_ran)
+    obtain the_sb where the_sb_def:"((inv convDiscrUp (sbHdElem\<cdot>the_sb))) =  (Rep_sbElem sbEl) 
+                                                \<and> sbHdElemWell the_sb 
+                                                \<and> ubDom\<cdot>the_sb = dom (Rep_sbElem sbEl)"
+      by (metis (full_types) Abs_sbElem_inverse mem_Collect_eq sbElem_surj sbHdElemWell_def sbHdElem_sbElemWell)
+    have "(\<lambda>sbEl::'a sbElem. spfRtIn\<cdot>(x sbEl)) \<noteq> (\<lambda>sbEl::'a sbElem. spfRtIn\<cdot>(y sbEl))"
+      apply rule
+      sorry
+    show False
+      sorry
+  qed
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  (* chain *)
+  have setfilter_chain: "chain (\<lambda> i. ?H (Y i))"
+    apply (rule chainI)
+    by (simp add: a1 monofun_cfun_arg po_class.chainE)
+  have setfilter_lub: "?H (Lub Y) = (\<Squnion> i. ?H (Y i))"
+    by (simp add: a1 contlub_cfun_arg)
+  have chain_big: "chain (\<lambda> i::nat. Abs_uspec (setrevImage (\<lambda>h::'a sbElem \<Rightarrow> ('a stream\<^sup>\<Omega>) ufun. spfStep In Out\<cdot>(\<lambda>sbEl::'a sbElem. spfRtIn\<cdot>(h sbEl))) (?H (Y i)), Discr In, Discr Out))"
+    apply (rule chainI)
+    by (metis (no_types, lifting) a2 po_class.chain_def)
+  have rep_lub: "Rep_uspec (\<Squnion>i::nat. Abs_uspec (setrevImage (\<lambda>h::'a sbElem \<Rightarrow> ('a stream\<^sup>\<Omega>) ufun. spfStep In Out\<cdot>(\<lambda>sbEl::'a sbElem. spfRtIn\<cdot>(h sbEl))) (?H (Y i)), Discr In, Discr Out)) = 
+     (\<Squnion>i::nat. (setrevImage (\<lambda>h::'a sbElem \<Rightarrow> ('a stream\<^sup>\<Omega>) ufun. spfStep In Out\<cdot>(\<lambda>sbEl::'a sbElem. spfRtIn\<cdot>(h sbEl))) (?H (Y i)), Discr In, Discr Out))"
+    apply (simp add: chain_big cont2contlubE)
+    by (simp add: assms spsStep_uspecWell)
+  have pair_lub_rev: "(\<Squnion>i::nat. (setrevImage (\<lambda>h::'a sbElem \<Rightarrow> ('a stream\<^sup>\<Omega>) ufun. spfStep In Out\<cdot>(\<lambda>sbEl::'a sbElem. spfRtIn\<cdot>(h sbEl))) (?H (Y i)), Discr In, Discr Out)) = 
+((\<Squnion>i::nat. (setrevImage (\<lambda>h::'a sbElem \<Rightarrow> ('a stream\<^sup>\<Omega>) ufun. spfStep In Out\<cdot>(\<lambda>sbEl::'a sbElem. spfRtIn\<cdot>(h sbEl))) (?H (Y i)))), (Discr In), (Discr Out))"
+  proof (subst lub_Pair, simp_all)
+    have "\<forall>n. setrevFilter (spsStep_P In Out)\<cdot> (spsStep_h\<cdot>(Y n)) \<sqsubseteq> setrevFilter (spsStep_P In Out)\<cdot>(spsStep_h\<cdot>(Y (Suc n)))"
+      by (metis (no_types) po_class.chain_def setfilter_chain)
+    then show "chain (\<lambda>n. setrevImage (\<lambda>f. spfStep In Out\<cdot>(\<lambda>s. spfRtIn\<cdot>(f s))) (setrevFilter (spsStep_P In Out)\<cdot>(spsStep_h\<cdot>(Y n))))"
+      using po_class.chain_def spsStep_mono_h by blast
+  qed
+  show "Abs_uspec (setrevImage (\<lambda>h::'a sbElem \<Rightarrow> ('a stream\<^sup>\<Omega>) ufun. spfStep In Out\<cdot>(\<lambda>sbEl::'a sbElem. spfRtIn\<cdot>(h sbEl))) (setrevFilter (spsStep_P In Out)\<cdot>(spsStep_h\<cdot>(\<Squnion>i::nat. Y i))), Discr In, Discr Out) \<sqsubseteq>
+       (\<Squnion>i::nat. Abs_uspec (setrevImage (\<lambda>h::'a sbElem \<Rightarrow> ('a stream\<^sup>\<Omega>) ufun. spfStep In Out\<cdot>(\<lambda>sbEl::'a sbElem. spfRtIn\<cdot>(h sbEl))) (setrevFilter (spsStep_P In Out)\<cdot>(spsStep_h\<cdot>(Y i))), Discr In, Discr Out))"
+    apply (simp add: below_uspec_def)
+    apply (simp add: assms spsStep_uspecWell)
+    apply (subst rep_lub)
+    apply (simp add: pair_lub_rev setfilter_lub)
+    apply (subst setreImage_lub_inj_on)
+    by (simp_all add: a1 inj_on_i)
+qed
+
+
+subsection \<open>others\<close>
+
 lemma newSpsStep_mono_h:assumes "x \<sqsubseteq> y" shows "setrevImage (\<lambda>h. Abs_cufun (\<lambda>sb. Rep_cufun (h sb) sb))
      (setrevImage (spfStep_inj In Out) (setrevImage (\<lambda>h sbEl. spfRtIn\<cdot>(h sbEl)) (setrevFilter (spsStep_P In Out)\<cdot>(spsStep_h\<cdot>x)))) \<sqsubseteq>
     setrevImage (\<lambda>h. Abs_cufun (\<lambda>sb. Rep_cufun (h sb) sb))
@@ -220,92 +351,6 @@ lemma inj_on_adm_set_rev:"adm (\<lambda>S. inj_on f (inv Rev S))"
 
 
 
-
-lemma setreImage_lub_inj_on: assumes"chain Y" and "\<forall>i. inj_on f (inv Rev (Y i))" 
-  shows "setrevImage f (\<Squnion>i. Y i) = (\<Squnion>i. setrevImage f (Y i))" (*main lemma for cont proof spsStep*)
-proof (cases "(\<Squnion>i. Y i) = Rev {}")
-  case True
-  have "(\<Squnion>i::nat. Rev (f ` inv Rev (Y i))) = Rev (f ` {})"
-    apply simp
-    apply (rule setrev_lub_emptyI)
-     apply (metis (mono_tags, lifting) assms(1) image_mono inv_rev_rev po_class.chainI po_class.chain_def revBelowNeqSubset)
-    apply (simp add: inv_rev_rev)
-    apply (case_tac "x \<notin> f ` inv Rev (Y 0)")
-     apply auto[1]
-    apply simp
-  proof - 
-    fix y::'b
-    assume a1: " y \<in> f ` inv Rev (Y (0::nat))"
-    obtain x where y_def_1: "y = f x "  and y_def_2: "x \<in> inv Rev (Y (0::nat))"
-      using a1 by blast
-    obtain da_i where "x \<notin> inv Rev (Y da_i)"
-      by (meson True assms(1) setrev_lub_emptyD)
-    have "y \<notin> f ` inv Rev (Y da_i)"
-    proof (rule ccontr, simp)
-      assume a2: "y \<in> f ` inv Rev (Y da_i)"
-      then obtain da_x where "y =  f da_x" and "da_x \<in> inv Rev (Y da_i)"
-        by blast
-      have "Y 0 \<sqsubseteq> Y da_i"
-        by (simp add: assms(1) po_class.chain_mono)
-      then have "\<And>x. x \<in> inv Rev (Y da_i) \<Longrightarrow> x \<in> inv Rev (Y 0)"
-        by (meson revBelowNeqSubset subsetCE)
-      then have "da_x \<in> inv Rev (Y 0)"
-        using \<open>(da_x::'a) \<in> inv Rev ((Y::nat \<Rightarrow> 'a set rev) (da_i::nat))\<close> by auto
-      then have "x = da_x"
-        using \<open>(y::'b) = (f::'a \<Rightarrow> 'b) (da_x::'a)\<close> assms(2) inj_onD y_def_1 y_def_2 by fastforce
-      show "False"
-        using \<open>(da_x::'a) \<in> inv Rev ((Y::nat \<Rightarrow> 'a set rev) (da_i::nat))\<close> \<open>(x::'a) = (da_x::'a)\<close> \<open>(x::'a) \<notin> inv Rev ((Y::nat \<Rightarrow> 'a set rev) (da_i::nat))\<close> by auto
-    qed
-    then show "\<exists>i::nat. y \<notin> f ` inv Rev (Y i)"
-      by blast
-  qed
-  then show ?thesis 
-    apply (simp add: setrevImage_def)
-    by (simp add: True inv_rev_rev)
-next
-  case False
-  have f1: "(\<Squnion>i::nat. Rev (f ` inv Rev (Y i))) = 
-    Rev (\<Inter>{uu::'b set. \<exists>i::nat. uu = f ` inv Rev (Y i)})"
-    apply (subst setrevLubEqInter)
-     apply (metis (mono_tags, lifting) assms(1) image_mono inv_rev_rev po_class.chain_def revBelowNeqSubset)
-    by (simp add: inv_rev_rev)
-  show ?thesis
-    apply (simp add: setrevImage_def)
-    apply (subst po_eq_conv, rule)
-     apply (simp add: f1) defer
-     apply (simp add: f1) 
-    apply (simp_all add: less_set_def)
-    using assms(1) setrevLub_lub_eq_all apply fastforce
-  proof 
-    fix y::'b 
-    assume a11: "y \<in> \<Inter>{uu::'b set. \<exists>i::nat. uu = f ` inv Rev (Y i)}"
-    then have "\<And>i. y \<in> f ` inv Rev (Y i)"
-      by blast
-    then have " y \<in> f ` inv Rev (Y 0)"
-      by simp
-    then obtain x where "y = f x" and "x \<in> inv Rev (Y 0)"
-      by blast
-    have "\<forall> i. x \<in> inv Rev (Y i)"
-    proof (rule ccontr, simp)
-      assume a111: "\<exists>i::nat. x \<notin> inv Rev (Y i) "
-      obtain da_i where "x \<notin> inv Rev (Y da_i)"
-        using a111 by auto
-      have "y \<in> f ` inv Rev (Y da_i)"
-        by (simp add: \<open>\<And>i::nat. (y::'b) \<in> (f::'a \<Rightarrow> 'b) ` inv Rev ((Y::nat \<Rightarrow> 'a set rev) i)\<close>)
-      obtain da_x where "y = f da_x" and "da_x \<in> inv Rev (Y da_i)"
-        using \<open>(y::'b) \<in> (f::'a \<Rightarrow> 'b) ` inv Rev ((Y::nat \<Rightarrow> 'a set rev) (da_i::nat))\<close> by blast
-      then have "da_x \<in> inv Rev (Y 0)"
-        by (meson assms(1) contra_subsetD po_class.chain_mono revBelowNeqSubset zero_le)
-      then have "x = da_x"
-        using \<open>(x::'a) \<in> inv Rev ((Y::nat \<Rightarrow> 'a set rev) (0::nat))\<close> \<open>(y::'b) = (f::'a \<Rightarrow> 'b) (da_x::'a)\<close> \<open>(y::'b) = (f::'a \<Rightarrow> 'b) (x::'a)\<close> assms(2) inj_on_eq_iff by fastforce
-      show False
-        using \<open>(da_x::'a) \<in> inv Rev ((Y::nat \<Rightarrow> 'a set rev) (da_i::nat))\<close> \<open>(x::'a) = (da_x::'a)\<close> \<open>(x::'a) \<notin> inv Rev ((Y::nat \<Rightarrow> 'a set rev) (da_i::nat))\<close> by auto
-    qed
-    show "y \<in> f ` inv Rev (Lub Y)"
-      by (simp add: \<open>(y::'b) = (f::'a \<Rightarrow> 'b) (x::'a)\<close> 
-          \<open>\<forall>i::nat. (x::'a) \<in> inv Rev ((Y::nat \<Rightarrow> 'a set rev) i)\<close> assms(1) setrevLub_lub_eq_all)
-  qed
-qed
 
 (*Probably have to use setrevImage_inj_on instead of setrevImage*)
 lemma newSpsStep_cont:assumes "finite In" shows "cont (\<lambda> H. Abs_uspec ((setrevImage (\<lambda> h. Abs_cufun (\<lambda>sb. Rep_cufun (h sb)  sb)) 
