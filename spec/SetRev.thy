@@ -485,6 +485,10 @@ proof -
     using assms(1) fun_belowD s_a that by fastforce
 qed
 
+lemma setrevimage_mono_obtain3: assumes "a\<in>((inv Rev) (setrevImage g S))"
+  obtains b where "b\<in>((inv Rev) S)" and "a = g b"
+  by (metis assms image_iff inv_rev_rev setrevImage_def)
+
 
 
 section \<open>set flat rev\<close>
