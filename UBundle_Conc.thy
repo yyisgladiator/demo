@@ -183,6 +183,77 @@ lemma ubconc_uscllen_one2: "\<And> c . c \<in> ubDom\<cdot>b2 \<Longrightarrow> 
 lemma ubconc_uscllen_both: "\<And> c . c \<in> ubDom\<cdot>b1 \<Longrightarrow> c \<in> ubDom\<cdot>b2 \<Longrightarrow> usclLen\<cdot>((ubConc b1\<cdot>b2) . c) = usclLen\<cdot>(b1 . c) + usclLen\<cdot>(b2 . c)"
   by (simp add: maybe_newassms4)
 
+(*muss nach lnat.thy*)
+lemma lessequal_addition: assumes "a \<le> b" and "c \<le> d" shows "a + c \<le> b + (d :: lnat)"
+proof -
+  have "b = \<infinity> \<Longrightarrow> a + c \<le> b + d"
+    by (simp add: plus_lnatInf_r)
+  moreover
+  have "d = \<infinity> \<Longrightarrow> a + c \<le> b + d"
+    by (simp add: plus_lnatInf_r)
+  moreover
+  have "a = \<infinity> \<Longrightarrow> a + c \<le> b + d"
+    using assms(1) plus_lnatInf_r by auto
+  moreover
+  have "c = \<infinity> \<Longrightarrow> a + c \<le> b + d"
+    using assms(2) plus_lnatInf_r by auto
+  moreover
+  have "a \<noteq> \<infinity> \<Longrightarrow> b \<noteq> \<infinity> \<Longrightarrow> c \<noteq> \<infinity> \<Longrightarrow> d \<noteq> \<infinity> \<Longrightarrow> a + c \<le> b + d"
+  proof -
+    assume "a \<noteq> \<infinity>"
+    then obtain m where m_def: "Fin m = a"
+      using infI by force
+    assume "b \<noteq> \<infinity>"
+    then obtain n where n_def: "Fin n = b"
+      using infI by force
+    assume "c \<noteq> \<infinity>"
+    then obtain x where x_def: "Fin x = c"
+      using infI by force
+    assume "d \<noteq> \<infinity>"
+    then obtain y where y_def: "Fin y = d"
+      using infI by force
+    show ?thesis
+      using assms m_def n_def x_def y_def by auto
+    qed
+  then show "a + c \<le> b + d"
+    using calculation by blast
+qed
+
+lemma assumes ubconc_ubcllen_equalDom: "ubclDom\<cdot>ub1 = ubclDom\<cdot>ub2"
+  shows "(ubclLen ub1) + (ubclLen ub2) \<le> ubclLen (ubConc ub1\<cdot>ub2)"
+proof (simp add: ubclLen_ubundle_def, cases "ubclDom\<cdot>ub1 = {}")
+  case True
+  then have ub2leer: "ubclDom\<cdot>ub2 = {}"
+    using assms by simp
+  then have "ubDom\<cdot>(ubConc ub1\<cdot>ub2) = {}"
+    by (metis True sup.idem ubclDom_ubundle_def ubconc_dom)
+  then have "ubLen (ubConc ub1\<cdot>ub2) = \<infinity>"
+    by (simp add: ubLen_def)
+  then show "ubLen ub1 + ubLen ub2 \<le> ubLen (ubConc ub1\<cdot>ub2)"
+    by simp
+next
+  case False
+  then have nicht_ub1leer: "ubDom\<cdot>ub1 \<noteq> {}"
+    by (simp add: ubclDom_ubundle_def)
+  then have nicht_ub2leer: "ubDom\<cdot>ub2 \<noteq> {}"
+    by (metis assms ubclDom_ubundle_def)
+  then have "ubDom\<cdot>(ubConc ub1\<cdot>ub2) \<noteq> {}"
+    by simp
+  obtain c where c_def: "c \<in> ubDom\<cdot>(ubConc ub1\<cdot>ub2) \<and> usclLen\<cdot>((ubConc ub1\<cdot>ub2) . c) = ubLen (ubConc ub1\<cdot>ub2)"
+    by (metis (no_types, lifting) Un_iff nicht_ub2leer empty_iff ubLen_def ubconc_dom ublen_min_on_channel)
+  have ub1min_smallereq_concminch_in_b1: "ubLen ub1 \<le> usclLen\<cdot>(ub1 . c)"
+    by (metis Un_iff assms c_def ubLen_smallereq_all ubclDom_ubundle_def ubconc_dom)
+  have ub2min_smallereq_concminch_in_b2: "ubLen ub2 \<le> usclLen\<cdot>(ub2 . c)"
+    by (metis Un_iff assms c_def ubLen_smallereq_all ubclDom_ubundle_def ubconc_dom)
+  have addition_smaller: "ubLen ub1 + ubLen ub2 \<le> usclLen\<cdot>(ub1 . c) + usclLen\<cdot>(ub2 . c)"
+    using ub1min_smallereq_concminch_in_b1 ub2min_smallereq_concminch_in_b2 by (simp add: lessequal_addition)
+  have concminch_in_b1plussb2_is_ubLenconc: "usclLen\<cdot>(ub1 . c) + usclLen\<cdot>(ub2 . c) = ubLen (ubConc ub1\<cdot>ub2)"
+    by (metis Un_absorb assms c_def ubclDom_ubundle_def ubconc_dom ubconc_uscllen_both)
+
+  show "ubLen ub1 + ubLen ub2 \<le> ubLen (ubConc ub1\<cdot>ub2)"
+    using addition_smaller concminch_in_b1plussb2_is_ubLenconc by auto
+qed
+
 
 lemma ubconc_ublen2: assumes "ubclDom\<cdot>b1 \<subseteq> ubclDom\<cdot>b2 \<or> ubclDom\<cdot>b2 \<subseteq> ubclDom\<cdot>b1" shows "ubLen (ubConc b1\<cdot>b2) \<le> (ubLen b1) + (ubLen b2)"
 proof -
@@ -284,11 +355,9 @@ proof (simp add: ubConcEq_def)
 qed
 
 
-lemma ubleast_len: "cs \<noteq> {} \<Longrightarrow> usclLen\<cdot>(\<bottom> :: 'a) = 0 \<Longrightarrow> ubLen (ubLeast cs :: 'a ubundle) = 0"
+lemma ubleast_len: assumes cs_nempty: "cs \<noteq> {}" and len_zero: "usclLen\<cdot>(\<bottom> :: 'a) = 0"
+  shows "ubLen (ubLeast cs :: 'a ubundle) = 0"
 proof -
-  fix cs :: "channel set"
-  assume cs_nempty: "cs \<noteq> {}"
-  assume len_zero: "usclLen\<cdot>(\<bottom> :: 'a) = 0"
   obtain c where c_def: "c \<in> cs"
     using cs_nempty by blast
   have "usclLen\<cdot>((ubLeast cs :: 'a ubundle)  .  c) = 0"
