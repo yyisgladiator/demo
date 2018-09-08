@@ -56,6 +56,23 @@ end
 
 
 
+section \<open>set div_pcpo\<close>
+
+instantiation set:: (div_cpo) div_pcpo
+begin
+definition DIV_set:: "'a::div_cpo set set set" where
+"DIV_set = (Pow ` DIV)"
+
+instance
+  apply(intro_classes)
+  apply (simp add: DIV_set_def div_non_empty)
+  using DIV_set_def apply auto[1]
+  apply (metis DIV_set_def PowI Union_Pow_eq Union_is_lub Union_mono f_inv_into_f)
+  by (metis DIV_set_def Pow_bottom SetPcpo.less_set_def empty_subsetI f_inv_into_f)
+
+end
+
+
 
 
 
