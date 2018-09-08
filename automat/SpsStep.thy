@@ -130,7 +130,7 @@ lemma spsStep_uspecWell_h: assumes "finite In" shows
 "uspecWell (setrevImage (\<lambda> h. spfStep In Out\<cdot>((\<lambda> h sbEl. spfRtIn\<cdot>(h sbEl)) h)) H) (Discr In) (Discr Out)"
   by (simp add: assms setrevImage_def ufclDom_ufun_def ufclRan_ufun_def)
 
-lemma spsStep_uspecWell: assumes "finite In" shows
+lemma spsStep_uspecWell[simp]: assumes "finite In" shows
 "uspecWell (setrevImage (\<lambda> h. spfStep In Out\<cdot>((\<lambda> h sbEl. spfRtIn\<cdot>(h sbEl)) h)) (setrevFilter (spsStep_P In Out)\<cdot>(spsStep_h\<cdot>H))) (Discr In) (Discr Out)"
   by (simp add: assms setrevImage_def ufclDom_ufun_def ufclRan_ufun_def)
 
@@ -153,9 +153,8 @@ lemma spsStep_mono: assumes "finite In" shows
   apply (simp add: below_uspec_def assms spsStep_uspecWell)
   by (simp add: monofun_cfun_arg spsStep_mono_h)
 
-lemma spsStep_m_cont: assumes "finite In" shows
-"cont (\<lambda> H. Abs_uspec 
-((setrevImage (\<lambda> h. spfStep In Out\<cdot>((\<lambda> h sbEl. spfRtIn\<cdot>(h sbEl)) h)) 
+lemma spsStep_m_cont[simp]: assumes "finite In" shows
+"cont (\<lambda> H. Abs_uspec ((setrevImage (\<lambda> h. spfStep In Out\<cdot>((\<lambda> h sbEl. spfRtIn\<cdot>(h sbEl)) h)) 
     (setrevFilter (spsStep_P In Out)\<cdot>(spsStep_h\<cdot>H))), Discr  In, Discr Out))"
 proof (rule Cont.contI2, simp add: assms spsStep_mono)
   fix Y::"nat \<Rightarrow> 'a sbElem \<Rightarrow> ('a stream\<^sup>\<Omega>) ufun uspec"
@@ -315,7 +314,34 @@ proof (rule Cont.contI2, simp add: assms spsStep_mono)
     by (simp_all add: a1 inj_on_i)
 qed
 
+lemma spsStep_cont[simp]: assumes "finite In" 
+  shows "cont (\<lambda> h. spsStep_m In Out h)"
+  by (simp add: spsStep_m_def assms)
+
 (*NewSpsStep Lemma End*)
   
+subsection \<open>spsStep utils\<close>
+
+lemma spstep_dom[simp]: assumes "finite In" shows "uspecDom\<cdot>(spsStep In Out\<cdot>H) = In"
+  by (simp add: spsStep_def spsStep_m_def uspecdom_insert assms)
+
+lemma spstep_ran[simp]: assumes "finite In" shows "uspecRan\<cdot>(spsStep In Out\<cdot>H) = Out"
+  by (simp add: spsStep_def spsStep_m_def uspecran_insert assms)
+
+lemma spstep_m_dom[simp]: assumes "finite In" shows "uspecDom\<cdot>(spsStep_m In Out H) = In"
+  by (simp add: spsStep_m_def assms uspecdom_insert)
+
+lemma spstep_m_ran[simp]: assumes "finite In" shows "uspecRan\<cdot>(spsStep_m In Out H) = Out"
+  by (simp add: spsStep_def spsStep_m_def  uspecran_insert assms)
+
+lemma spsstep_2_spsstep_m: assumes "finite In" 
+  shows "spsStep In Out\<cdot>H = spsStep_m In Out H"
+  by (simp add: spsStep_def assms)
+
+lemma spsstep_insert: assumes "finite In"
+  shows "spsStep In Out\<cdot>H = Abs_uspec ((setrevImage (\<lambda> h. spfStep In Out\<cdot>((\<lambda> h sbEl. spfRtIn\<cdot>(h sbEl)) h)) 
+    (setrevFilter (spsStep_P In Out)\<cdot>(spsStep_h\<cdot>H))), Discr  In, Discr Out)"
+  by (simp add: assms spsStep_m_def spsstep_2_spsstep_m)
+
 end
   
