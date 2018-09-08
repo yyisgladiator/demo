@@ -317,6 +317,14 @@ qed
 lemma setsize_union: "setSize (X \<union> Y) + setSize (X \<inter> Y) = setSize X + setSize Y"
   by (meson setsize_union_helper3 setsize_union_helper4)
 
+lemma setsize_union_disjoint: assumes "X \<inter> Y = {}"
+  shows "setSize (X \<union> Y) = setSize X + setSize Y"
+  by (metis Fin_02bot add.left_neutral assms bot_is_0 lnat_plus_commu setSizeEmpty setsize_union)
+
+lemma setsize_subset_union: assumes "X \<subseteq> Y"
+  shows "setSize (X \<union> Y) = setSize Y"
+  by (simp add: assms sup.absorb2)
+
 lemma set_union_ins: "\<And> F G x. setSize (F \<union> G) \<le> setSize (F \<union> (insert x G))"
   by (metis Fin_Suc Fin_leq_Suc_leq  Un_insert_right finite_insert insert_absorb lnat_po_eq_conv 
   setSizeSuc setSize_def)
@@ -345,6 +353,7 @@ qed
 
 lemma setsize_mono_union: "setSize F \<le> setSize (F \<union> G)"
   by (meson setsize_mono_union_helper1 setsize_mono_union_helper2)
+
 
 lemma setsize_mono: 
   assumes "F \<subseteq> G"

@@ -652,5 +652,19 @@ lemma setrev_size_union:
   apply (simp add: setrevUnion_def setrevInter_def)
   by (simp add: inv_rev_rev setrevSize_def setsize_union)
 
+lemma setrev_size_union_disjoint: assumes "setrevInter\<cdot>X\<cdot>Y = Rev {}"
+  shows "setrevSize (setrevUnion\<cdot>X\<cdot>Y) = setrevSize X + setrevSize Y"
+  apply (insert assms)
+  by (simp add: setrevUnion_def setrevInter_def setrevSize_def inv_rev_rev setsize_union_disjoint)
+
+lemma setrev_size_mono_union: "setrevSize X \<le> setrevSize (setrevUnion\<cdot>X\<cdot>Y)"
+  by (simp add: setrevSize_def setrevUnion_def inv_rev_rev setsize_mono_union)
+
+lemma setrev_size_mono: 
+  assumes "F \<sqsubseteq> G"
+  shows "setrevSize G \<le> setrevSize F"
+  apply (insert assms)
+  by (simp add: setrevSize_def revBelowNeqSubset setsize_mono)
+
 
 end

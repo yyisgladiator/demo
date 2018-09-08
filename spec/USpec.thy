@@ -1100,5 +1100,37 @@ lemma uspec_size_union:
   by (smt assms(1) assms(2) fst_conv rep_abs_uspec setrev_size_union ucpecunion_fit_filtered 
     uspecInter_filtered uspecInter_general_well uspecUnion_general_well uspecrevset_insert)
 
+lemma uspec_size_union_disjoint: 
+  assumes "uspecDom\<cdot>X = uspecDom\<cdot>Y"
+      and "uspecRan\<cdot>X = uspecRan\<cdot>Y"
+      and "uspecRevSet\<cdot>(uspecInter\<cdot>X\<cdot>Y) = Rev {}"
+    shows "uspecSize (uspecUnion\<cdot>X\<cdot>Y) = uspecSize X + uspecSize Y"
+proof -
+  have b0: "Fin 0 = uspecSize (uspecInter\<cdot>X\<cdot>Y)"
+    by (simp add: assms setrev_size_empty uspecSize_def)
+  have b1: "uspecSize (uspecUnion\<cdot>X\<cdot>Y) + Fin 0 = uspecSize X + uspecSize Y"
+    apply (subst b0)
+    using assms(1) assms(2) uspec_size_union by blast
+  show ?thesis
+    using b1 by auto
+qed
+
+lemma uspec_size_mono_union: 
+  assumes "uspecDom\<cdot>X = uspecDom\<cdot>Y"
+      and "uspecRan\<cdot>X = uspecRan\<cdot>Y"
+    shows "uspecSize X \<le> uspecSize (uspecUnion\<cdot>X\<cdot>Y)"
+  apply (simp add: uspecUnion_def uspecSize_def)
+  apply (simp add: uspecUnion_general_def)
+  apply (subst ucpecunion_fit_filtered)
+  apply (simp add: assms)
+  apply (simp add: assms)
+  by (metis (no_types, lifting) assms(1) assms(2) fstI rep_abs_uspec setrev_size_mono_union 
+  ucpecunion_fit_filtered uspecUnion_general_well uspecrevset_insert)
+
+lemma uspec_size_mono: 
+  assumes "F \<sqsubseteq> G"
+  shows "uspecSize G \<le> uspecSize F"
+  apply (simp add: uspecSize_def)
+  by (simp add: assms monofun_cfun_arg setrev_size_mono)
 
 end
