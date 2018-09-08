@@ -1137,9 +1137,13 @@ lemma tsynscanlext_tsynabs: "tsynAbs\<cdot>(tsynScanlExt f i\<cdot>s) = sscanlA 
   apply (simp add: tsynscanlext_sconc_msg tsynabs_sconc_msg)
   by (simp add: tsynscanlext_sconc_null tsynabs_sconc_null)
 
+text {* Each element of @{term tsynDom} of @{term tsynScanlExt} is in the range of 
+        @{term fst} of f *}
 lemma tsynscanlext_tsyndom: "tsynDom\<cdot>(tsynScanlExt f i\<cdot>s) \<subseteq> { fst(f i s) | i s. True}"
   by (metis (mono_tags, lifting) sscanla_sdom tsynabs_tsyndom tsynscanlext_tsynabs)
 
+text {* Each element of @{term tsynDom} of @{term tsynScanlExt} is in the range of 
+        @{term fst} of f (second variant) *}
 lemma tsynscanlext_tsyndom_range: "tsynDom\<cdot>(tsynScanlExt f i\<cdot>s) \<subseteq> range(\<lambda>(i,s). fst(f i s))"
   apply (simp add: image_def)
   by (metis (mono_tags, lifting) tsyndom_insert tsynscanlext_tsyndom)
