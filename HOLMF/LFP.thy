@@ -100,18 +100,23 @@ lemma longiterate_step: assumes  "C\<in>DIV" and "goodFormed C f"
 lemma longiterate_bot: assumes "C\<in>DIV" and "goodFormed C f"
     shows "div_bot C \<in> (longIterate C f)"
   by(subst longiterate_step, auto simp add: assms)
-  
+
+
+lemma longiterate_subset: assumes "C\<in>DIV" and "goodFormed C f" shows "longIterate C f \<subseteq> C"
+  using DIV_set_def assms(1) assms(2) lfp_div longIterate_def longiterate_good longiterate_mono by fastforce
 
 lemma longiterate_chain: assumes "monofun f" and "C\<in>DIV" and "goodFormed C f"
   shows "longChain (longIterate C f)"
+  apply(rule longchainI)
   apply(simp add: longChain_def, auto)
   using assms(1) assms(2) assms(3) longiterate_bot apply auto[1]
   sorry
 
-lemma longiterate_subset: "longIterate C f \<subseteq> C"
+
+lemma longiterate_lfp: assumes "monofun f" and "C\<in>DIV" and "goodFormed C f"
+  shows "lub (longIterate C f) = lfp C f"
   sorry
-lemma longiterate_lfp: "lub (longIterate C f) = lfp C f"
-  sorry
+
 
 lemma lfp_induction: assumes "goodFormed C f" and "C \<in> DIV"
   and "longAdm P"

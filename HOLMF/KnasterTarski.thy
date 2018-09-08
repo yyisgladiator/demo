@@ -153,6 +153,9 @@ proof -
   hence w_fix: "f w = w"
     using w_def w_z by fastforce
 
+  have "\<And>y. y\<in>?Z \<Longrightarrow> y\<sqsubseteq>w"
+    using w_fix w_z by auto
+
   have "?P w"
     using w_fix w_z by auto    
   moreover hence "\<And>x. ?P x \<Longrightarrow> x = w"
