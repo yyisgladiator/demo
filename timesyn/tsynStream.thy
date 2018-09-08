@@ -1159,6 +1159,10 @@ lemma tsynscanl_tsynabs: "tsynAbs\<cdot>(tsynScanl f i\<cdot>s) = sscanl f i\<cd
 text {* Each element of @{term tsynDom} of @{term tsynScanl} is in the range of f *}
 lemma tsynscanl_tsyndom: "tsynDom\<cdot>(tsynScanl f i\<cdot>s) \<subseteq> { f i s | i s. True}"
   by (metis (mono_tags, lifting) tsynabs_tsyndom tsynscanl_tsynabs sscanl_sdom)
+
+text {* Each element of @{term tsynDom} of @{term tsynScanl} is in the range of f (second variant) *}
+lemma tsynscanl_tsyndom_range: "tsynDom\<cdot>(tsynScanl f i\<cdot>s) \<subseteq> range((\<lambda>(i,s). f i s))"
+  by (simp add: image_def, metis (mono_tags, lifting) tsyndom_insert tsynscanl_tsyndom)
   
 (* ----------------------------------------------------------------------- *)
   subsection {* tsynDropWhile *}
