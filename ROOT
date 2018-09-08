@@ -56,6 +56,7 @@ session "automatCaseStudy" (mustWork) in "automat/CaseStudy" = "automat" +
   theories
     medFairStep
     medUnfairStep
+    medsBelow
 
 session "abp" (canFail) in abp = "automat" + 
   options [quick_and_dirty = true]

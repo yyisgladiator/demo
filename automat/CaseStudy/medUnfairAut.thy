@@ -25,4 +25,14 @@ definition medUnfair :: "medState \<Rightarrow> 'a medMessage tsyn SPS" where
 
 
 
+
+
+lemma medunfairaut_dom[simp]: "ndaDom\<cdot>medUnfairAut = medInDom"
+  by (simp add: medUnfairAut.rep_eq ndaDom.rep_eq)
+
+lemma medunfairaut_ran[simp]: "ndaRan\<cdot>medUnfairAut = medOutDom"
+  by (simp add: medUnfairAut.rep_eq ndaRan.rep_eq)
+
+
+
 end

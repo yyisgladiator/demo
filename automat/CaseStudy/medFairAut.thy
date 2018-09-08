@@ -25,4 +25,13 @@ definition medFair :: "medState \<Rightarrow> 'a medMessage tsyn SPS" where
 
 
 
+
+
+lemma medfairaut_dom[simp]: "ndaDom\<cdot>medFairAut = medInDom"
+  by (simp add: medFairAut.rep_eq ndaDom.rep_eq)
+
+lemma medfairaut_ran[simp]: "ndaRan\<cdot>medFairAut = medOutDom"
+  by (simp add: medFairAut.rep_eq ndaRan.rep_eq)
+
+
 end

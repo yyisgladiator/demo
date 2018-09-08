@@ -165,4 +165,19 @@ lemma "cont (\<lambda> h. (\<lambda>s. spsStep (ndaDom\<cdot>nda)(ndaRan\<cdot>n
   by simp
 *)
 
+
+
+lemma nda_belowI: assumes "ndaDom\<cdot>nda1 = ndaDom\<cdot>nda2"
+  and "ndaRan\<cdot>nda1 = ndaRan\<cdot>nda2"
+  and "ndaInitialState\<cdot>nda1 \<sqsubseteq> ndaInitialState\<cdot>nda2"
+  and "ndaTransition\<cdot>nda1 \<sqsubseteq> ndaTransition\<cdot>nda2"
+shows "nda1 \<sqsubseteq> nda2"
+  apply(auto simp add: below_ndAutomaton_def below_prod_def)
+  apply (metis assms(4) ndaTransition.rep_eq)
+    apply (metis assms(3) ndaInitialState.rep_eq)
+  using assms(1) assms(2) apply(auto simp add: below_discr_def ndaDom.rep_eq ndaRan.rep_eq)
+   apply (metis Discr_undiscr)+
+  done
+
+
 end
