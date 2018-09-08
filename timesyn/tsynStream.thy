@@ -318,15 +318,17 @@ lemma sscanl_sdom: "sdom\<cdot>(sscanl f i\<cdot>s) \<subseteq> { f i s | i s. T
   apply (rule_tac x="shd s" in exI)
   by (metis empty_is_shortest gr0I snth_shd sscanl_shd)
 
+text {* Each element of @{term sdom} of @{term sscanlA} is in the range of @{term fst} of f *}
 lemma sscanla_sdom: "sdom\<cdot>(sscanlA f i\<cdot>s) \<subseteq> { fst(f i a) | i a. True }"
   apply (induction s rule: ind, simp_all)
   apply (rule admI)
   apply (metis (no_types, lifting) ch2ch_Rep_cfunR contlub_cfun_arg l44)
   apply (rule conjI)
-  apply (rule_tac x="i" in exI)
-  apply (rule_tac x="a" in exI, simp)
+  apply (rename_tac a s)
+  apply (rule_tac x = "i" in exI)
+  apply (rule_tac x = "a" in exI, simp)
   apply (rule subsetI)
-  apply (simp add: sdom_def2 sscanlA_def sprojfst_def)
+  apply (simp add: sdom_def2 sscanlA_def sprojfst_def smap_sdom)
   apply (erule exE)
   apply (rename_tac a s x n)
   apply (case_tac "n > 0")
@@ -334,15 +336,15 @@ lemma sscanla_sdom: "sdom\<cdot>(sscanlA f i\<cdot>s) \<subseteq> { fst(f i a) |
   apply (simp add: gr0_conv_Suc)
   apply (erule exE)
   apply (rename_tac m)
-  apply (rule_tac x="snd (snth (m) (sscanl (\<lambda>(u::'a, y::'c). f y) (undefined, snd (f i a))\<cdot>s))" 
+  apply (rule_tac x = "snd (snth m (sscanl (\<lambda>(u::'a, y::'c). f y) (undefined, snd (f i a))\<cdot>s))" 
          in exI)
-  apply (rule_tac x="snth n s" in exI)
-  apply (smt Abs_cfun_inverse2 cont_Rep_cfun2 fair_sscanl gr0_implies_Suc prod.case_eq_if 
-         slen_sprojfst smap_snth_lemma sprojfst_def sscanl_snth)
-  apply (rule_tac x="snd (f i a)" in exI)
-  apply (rule_tac x="shd s" in exI)
-  by (smt empty_is_shortest fair_sscanl gr_zeroI old.prod.case smap_snth_lemma snth_shd sscanl_shd)
-
+  apply (rule_tac x = "snth n s" in exI)
+  apply auto
+  apply (simp add: case_prod_beta' sscanl_snth)
+  apply (rule_tac x = "snd (f i a)" in exI)
+  apply (rule_tac x = "shd s" in exI)
+  by (metis (no_types, lifting) case_prod_conv fair_sscanl lnsuc_neq_0 shd1 slen_empty_eq 
+      smap_hd_rst sscanl_shd)
 
 (* ----------------------------------------------------------------------- *)
   subsection {* tsynDom *}
