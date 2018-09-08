@@ -318,6 +318,32 @@ lemma sscanl_sdom: "sdom\<cdot>(sscanl f i\<cdot>s) \<subseteq> { f i s | i s. T
   apply (rule_tac x="shd s" in exI)
   by (metis empty_is_shortest gr0I snth_shd sscanl_shd)
 
+lemma sscanla_sdom: "sdom\<cdot>(sscanlA f i\<cdot>s) \<subseteq> { fst(f i a) | i a. True }"
+  apply (induction s rule: ind, simp_all)
+  apply (rule admI)
+  apply (metis (no_types, lifting) ch2ch_Rep_cfunR contlub_cfun_arg l44)
+  apply (rule conjI)
+  apply (rule_tac x="i" in exI)
+  apply (rule_tac x="a" in exI, simp)
+  apply (rule subsetI)
+  apply (simp add: sdom_def2 sscanlA_def sprojfst_def)
+  apply (erule exE)
+  apply (rename_tac a s x n)
+  apply (case_tac "n > 0")
+  apply (simp add: smap_snth_lemma)
+  apply (simp add: gr0_conv_Suc)
+  apply (erule exE)
+  apply (rename_tac m)
+  apply (rule_tac x="snd (snth (m) (sscanl (\<lambda>(u::'a, y::'c). f y) (undefined, snd (f i a))\<cdot>s))" 
+         in exI)
+  apply (rule_tac x="snth n s" in exI)
+  apply (smt Abs_cfun_inverse2 cont_Rep_cfun2 fair_sscanl gr0_implies_Suc prod.case_eq_if 
+         slen_sprojfst smap_snth_lemma sprojfst_def sscanl_snth)
+  apply (rule_tac x="snd (f i a)" in exI)
+  apply (rule_tac x="shd s" in exI)
+  by (smt empty_is_shortest fair_sscanl gr_zeroI old.prod.case smap_snth_lemma snth_shd sscanl_shd)
+
+
 (* ----------------------------------------------------------------------- *)
   subsection {* tsynDom *}
 (* ----------------------------------------------------------------------- *)
@@ -1108,6 +1134,13 @@ lemma tsynscanlext_tsynabs: "tsynAbs\<cdot>(tsynScanlExt f i\<cdot>s) = sscanlA 
   apply (induction s arbitrary: i rule: tsyn_ind, simp_all)
   apply (simp add: tsynscanlext_sconc_msg tsynabs_sconc_msg)
   by (simp add: tsynscanlext_sconc_null tsynabs_sconc_null)
+
+lemma tsynscanlext_tsyndom: "tsynDom\<cdot>(tsynScanlExt f i\<cdot>s) \<subseteq> { fst(f i s) | i s. True}"
+  by (metis (mono_tags, lifting) sscanla_sdom tsynabs_tsyndom tsynscanlext_tsynabs)
+
+lemma tsynscanlext_tsyndom_range: "tsynDom\<cdot>(tsynScanlExt f i\<cdot>s) \<subseteq> range(\<lambda>(i,s). fst(f i s))"
+  apply (simp add: image_def)
+  by (metis (mono_tags, lifting) tsyndom_insert tsynscanlext_tsyndom)
 
 (* ----------------------------------------------------------------------- *)
   subsection {* tsynScanl *}
