@@ -9,7 +9,8 @@ default_sort po
 definition longChain :: "'a set \<Rightarrow> bool" where
 "longChain S \<equiv> S\<noteq>{} \<and> (\<forall>a b. (a\<in>S \<and> b\<in>S) \<longrightarrow> (a\<sqsubseteq>b \<or> b\<sqsubseteq>a))"
 
-
+definition longAdm :: "('a::cpo \<Rightarrow> bool) \<Rightarrow> bool"
+  where "longAdm P \<longleftrightarrow> (\<forall>Y. longChain Y \<longrightarrow> (\<forall>y\<in>Y. P y) \<longrightarrow> P (lub Y))"
 
 
 lemma longchainI: "(\<And>a b. a\<in>S \<Longrightarrow> b\<in>S \<Longrightarrow> (a\<sqsubseteq>b \<or> b\<sqsubseteq>a)) \<Longrightarrow> S\<noteq>{} \<Longrightarrow> longChain S"

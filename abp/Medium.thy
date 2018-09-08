@@ -32,10 +32,15 @@ text {* @{term MedSPF}: Lossy medium function for the Alternating Bit Protocol. 
 definition MedSPF :: "bool stream \<Rightarrow> abpMessage tsyn SPF" where
   "MedSPF ora \<equiv> Abs_ufun (tsynbMed ora)"
 
-(* ToDo: add description *)
-definition MedSPS :: "(abpMessage tsyn stream\<^sup>\<Omega>) ufun uspec" where 
-  "MedSPS = Abs_uspec (Rev {(MedSPF ora) | ora. #({True} \<ominus> ora) = \<infinity>}, 
-                             Discr {\<C> ''ds''}, Discr {\<C> ''dr''})"
+text{* @{term oraFun}: Function to create ora streams with True at position n.*}
+definition oraFun :: "nat \<Rightarrow> bool stream set" where
+  "oraFun n = { ora. (#({True} \<ominus> ora) = \<infinity> \<and> snth n ora \<and> (\<forall>k<n. \<not>snth k ora))}"
+
+text {* @{term MedSPS}: Lossy medium function set for the Alternating Bit Protocol. *}
+definition MedSPS :: "nat \<Rightarrow> abpMessage tsyn SPS" where 
+  "MedSPS n = Abs_uspec (Rev {(MedSPF ora) | ora. ora \<in> (oraFun n)}, Discr {\<C> ''ds''}, 
+  Discr {\<C> ''dr''})"
+
 
 (* ----------------------------------------------------------------------- *)
 section {* Basic Properties *}
@@ -54,7 +59,8 @@ lemma ora_ind [case_names adm bot msg_t msg_f]:
   apply (case_tac x)
   by (simp_all add: msg_t msg_f)
 
-(* ToDo: add description *)
+text {* If a predicate P holds for empty streams, true and false predicates, 
+        it holds for all ora-streams. *}
 lemma oracases [case_names bot true false]:
   assumes bot: "s = \<epsilon> \<Longrightarrow> P s"
     and true: "\<And>as. s = (\<up>True \<bullet> as) \<Longrightarrow> P s"
@@ -66,10 +72,11 @@ lemma oracases [case_names bot true false]:
 subsection {* Basic Properties of tsynMed *}
 (* ----------------------------------------------------------------------- *)
 
-(* ToDo: add descriptions *)
+text {* @{term tsynMed} insertion lemma. *}
 lemma tsynmed_insert: "tsynMed\<cdot>msg\<cdot>ora = tsynProjFst\<cdot>(tsynFilter {x. snd x}\<cdot>(tsynZip\<cdot>msg\<cdot>ora))"
   by (simp add: tsynMed_def)
 
+text {* @{term tsynMed} is strict for both arguments. *}
 lemma tsynmed_strict [simp]: 
   "tsynMed\<cdot>\<epsilon>\<cdot>\<epsilon> = \<epsilon>"
   "tsynMed\<cdot>msg\<cdot>\<epsilon> = \<epsilon>"
@@ -106,7 +113,8 @@ text {* If the stream only contains null and the oracle is not empty, no message
 lemma tsynmed_sconc_singleton_msg_null: assumes "ora \<noteq> \<epsilon>" shows "tsynMed\<cdot>(\<up>-)\<cdot>ora = \<up>-"
   by (metis assms lscons_conv sup'_def tsynmed_sconc_null tsynmed_strict(3))
 
-(* ToDo: add description *)
+text {* If the ora stream has infinite length, the output of @{term tsynMed} has the same length as 
+        the msg stream. *}
 lemma tsynmed_slen: assumes "#ora = \<infinity>" shows "#(tsynMed\<cdot>msg\<cdot>ora) = #msg"
   by (simp add: assms tsynfilter_slen tsynmed_insert tsynprojfst_slen tsynzip_slen)
 
@@ -123,7 +131,7 @@ lemma tsynmed_tsynlen:
       by (simp add: tsynmed_insert)
   qed
 
-text{* The transmitted messages are a subset of the messages that are provided for transmittion. *}
+text{* The transmitted messages are a subset of the messages that are provided for transmission. *}
 lemma tsynmed_tsyndom: "tsynDom\<cdot>(tsynMed\<cdot>msg\<cdot>ora) \<subseteq> tsynDom\<cdot>msg"
   proof (induction msg arbitrary: ora rule: tsyn_ind)
     case adm
@@ -156,7 +164,7 @@ lemma tsynmed_tsyndom: "tsynDom\<cdot>(tsynMed\<cdot>msg\<cdot>ora) \<subseteq> 
       by (metis tsyndom_sconc_null tsynmed_sconc_null tsynmed_strict(2))
   qed
 
-(* ToDo: add description *)
+text {* If msg starts with k ticks, the output of @{term tsynMed} will do as well. *}
 lemma tsynmed_sntimes_null: 
   assumes "ora \<noteq> \<epsilon>"
   shows "tsynMed\<cdot>((k \<star> \<up>null) \<bullet> msg)\<cdot>ora = (k \<star> \<up>null) \<bullet> tsynMed\<cdot>msg\<cdot>ora"
@@ -165,14 +173,16 @@ lemma tsynmed_sntimes_null:
   apply (cases rule: oracases [of ora])
   by (simp_all add: tsynmed_sconc_null)
 
-(* ToDo: add description and move to tsynStream *)
+(* Move to tsynStream. *)
+text {* @{term tsynLen} will consume leading ticks. *}
 lemma tsynlen_sntimes_null: "tsynLen\<cdot>((k \<star> \<up>null) \<bullet> s) = tsynLen\<cdot>s"
   apply (induction k)
   by (simp_all add: tsynlen_sconc_null)
 
 (* Reviewed until here *)
 
-(* ToDo: add descriptions and move to tsynStream *)
+(* Move to tsynStream. *)
+text {* If @{term tsynLen} is not 0, it cannot contain infinitely many ticks. *}
 lemma stakewhile_null_slen_fin: 
   assumes "0 < tsynLen\<cdot>as" 
   shows "#(stakewhile (\<lambda>x. x = null)\<cdot>as) < \<infinity>"
@@ -185,6 +195,7 @@ lemma stakewhile_null_slen_fin:
       by (metis (full_types) inf_ub neq_iff not_le notinfI3 stakewhile_slen)
   qed
 
+text {* If @{term tsynLen} is not 0, we can extract the number of leading ticks. *}
 lemma split_leading_null:
   assumes "0 < tsynLen\<cdot>as"
   obtains n where "as = (sntimes n (\<up>null)) \<bullet> sdropwhile (\<lambda>x. x = null)\<cdot>as"
@@ -195,8 +206,15 @@ lemma split_leading_null:
       proof (induction as arbitrary: k rule: tsyn_ind)
         case adm
         then show ?case 
-          apply (rule admI)
-          by (metis (no_types, lifting) Fin_neq_inf ch2ch_Rep_cfunR contlub_cfun_arg inf_chainl4 l42)
+          proof (rule admI)
+            fix Y :: "nat \<Rightarrow> 'a tsyn stream"
+            assume chain_Y: "chain Y" 
+            assume adm_hyp: "\<forall> i x. #(stakewhile (\<lambda>x. x = -)\<cdot>(Y i)) = Fin x
+                                      \<longrightarrow> x\<star>\<up>- = stakewhile (\<lambda>x::'a tsyn. x = -)\<cdot>(Y i)"
+            thus "\<forall>x. #(stakewhile (\<lambda>x. x = -)\<cdot>(\<Squnion>i. Y i)) = Fin x 
+                        \<longrightarrow> x\<star>\<up>- = stakewhile (\<lambda>x. x = -)\<cdot>(\<Squnion>i. Y i)"
+            by (metis (no_types, lifting) ch2ch_Rep_cfunR chain_Y contlub_cfun_arg finChainapprox)
+          qed
       next
         case bot
         then show ?case
@@ -229,7 +247,7 @@ lemma tsynmed_tsynlen_ora:
       by simp
   next
     case (3 a s)
-    have tsynlen_nzero: "tsynLen\<cdot>msg > 0"
+    have tsynlen_nzero: "0 < tsynLen\<cdot>msg"
       using Zero_lnless_infty "3.prems" by auto
     then obtain n where msg_def: "msg = (sntimes n (\<up>null)) \<bullet> sdropwhile (\<lambda>x. x = null)\<cdot>msg"
       using split_leading_null by blast
@@ -252,18 +270,33 @@ lemma tsynmed_tsynlen_ora:
         then show ?thesis
           proof (cases a)
             case True
+            have sdropwhile_true: 
+              "#\<^sub>-(tsynMed\<cdot>msg\<cdot>(\<up>True \<bullet> s)) = #\<^sub>-(tsynMed\<cdot>(sdropwhile (\<lambda>x. x = null)\<cdot>msg)\<cdot>(\<up>True \<bullet> s))"
+              using True thesis_msg tsynmed_consume_tick by auto
+            then have snth_tick: 
+              "#\<^sub>-(tsynMed\<cdot>(sdropwhile (\<lambda>x. x = -)\<cdot>msg)\<cdot>(\<up>True \<bullet> s)) 
+                 = #\<^sub>-(tsynMed\<cdot>(n\<star>\<up>- \<bullet> sdropwhile (\<lambda>x. x = null)\<cdot>msg)\<cdot>(\<up>True \<bullet> s))"
+              using msg_def by auto
+            then have tsynmed_snth_tick: 
+              "#\<^sub>-(tsynMed\<cdot>(n\<star>\<up>- \<bullet> sdropwhile (\<lambda>x. x = null)\<cdot>msg)\<cdot>(\<up>True \<bullet> s)) = lnsuc\<cdot>(#({True} \<ominus> s))"
+              by (metis "3.IH" m_def sdropwhile_null_nbot surj_scons tsynlen_sconc_msg 
+                  tsynlen_srt_sdropwhile_null_inf tsynmed_sconc_msg_t)
             then show ?thesis
-              using thesis_msg tsynmed_consume_tick
-              apply (simp add: True)
-              by (metis m_def "3.IH" sdropwhile_null_nbot surj_scons tsynlen_srt_sdropwhile_null_inf tsynlen_sconc_msg 
-                  tsynmed_sconc_msg_t)
+              using True msg_def by auto
           next
             case False
-            then show ?thesis 
-              using thesis_msg tsynmed_consume_tick
-              apply (simp add: False)
-              by (metis m_def "3.IH" sdropwhile_null_nbot surj_scons tsynlen_srt_sdropwhile_null_inf tsynlen_sconc_null 
-                  tsynmed_sconc_msg_f)
+            have sdropwhile_false: 
+              "#\<^sub>-(tsynMed\<cdot>msg\<cdot>(\<up>False \<bullet> s)) = #\<^sub>-(tsynMed\<cdot>(sdropwhile (\<lambda>x. x = -)\<cdot>msg)\<cdot>(\<up>False \<bullet> s))"
+              using False thesis_msg tsynmed_consume_tick by auto
+            have snth_tick: "#\<^sub>-(tsynMed\<cdot>(sdropwhile (\<lambda>x. x = -)\<cdot>msg)\<cdot>(\<up>False \<bullet> s)) =
+              #\<^sub>-(tsynMed\<cdot>(n\<star>\<up>- \<bullet> sdropwhile (\<lambda>x. x = -)\<cdot>msg)\<cdot>(\<up>False \<bullet> s))"
+              using False tsynmed_consume_tick by auto
+            have tsynmed_snth_tick: 
+              "#\<^sub>-(tsynMed\<cdot>(n\<star>\<up>- \<bullet> sdropwhile (\<lambda>x. x = -)\<cdot>msg)\<cdot>(\<up>False \<bullet> s)) = #({True} \<ominus> s)"
+              by (metis "3.IH" m_def msg_def sdropwhile_false sdropwhile_null_nbot surj_scons 
+                  tsynlen_sconc_null tsynlen_srt_sdropwhile_null_inf tsynmed_sconc_msg_f)
+            then show ?thesis
+              using False thesis_msg by auto
           qed
       qed
    qed
@@ -291,7 +324,7 @@ lemma tsynrec_test_infstream:
 subsection {* basic properties of tsynbMed *}
 (* ----------------------------------------------------------------------- *)
 
-text{* The output bundle of @{term tsynbRec} is well-formed. *}
+text{* The output bundle of @{term tsynbMed} is well-formed. *}
 lemma tsynbmed_ubwell [simp]: 
   "ubWell [\<C> ''dr'' \<mapsto> natbool2abp\<cdot>(tsynMed\<cdot>(abp2natbool\<cdot>(sb  .  \<C> ''ds''))\<cdot>ora)]"
   apply (simp add: ubWell_def usclOkay_stream_def natbool2abp_def abp2natbool_def ctype_tsyn_def
@@ -313,6 +346,7 @@ lemma tsynbmed_mono [simp]:
   apply (simp add: below_ubundle_def)
   by (simp add: below_ubundle_def cont_pref_eq1I fun_below_iff monofun_cfun_fun some_below)
 
+text{* Chain on the output bundle of @{term tsynbMed}. *}
 lemma tsynbmed_chain: "chain Y \<Longrightarrow> 
       chain (\<lambda>i::nat.[\<C> ''dr'' \<mapsto> natbool2abp\<cdot>(tsynMed\<cdot>(abp2natbool\<cdot>(Y i  .  \<C> ''ds''))\<cdot>ora)])"
   by (simp add: chain_def fun_below_iff monofun_cfun_arg monofun_cfun_fun po_class.chainE 
@@ -342,6 +376,13 @@ lemma tsynbmed_ufwell [simp]: "ufWell (tsynbMed ora)"
   apply (simp_all add: ubclDom_ubundle_def domIff tsynbmed_insert)
   apply (meson option.distinct(1))
   by (metis option.distinct(1) tsynbmed_ubundle_ubdom)
+
+text {* The output stream of @{term tsynbMed}} on channel dr. *}
+lemma tsynbmed_getch_dr:
+  assumes "ubDom\<cdot>sb = {\<C> ''ds''}"
+  shows "((Rep_cfun (tsynbMed ora)) \<rightharpoonup> sb) . \<C> ''dr'' 
+    =  natbool2abp\<cdot>(tsynMed\<cdot>(abp2natbool\<cdot>(sb  .  \<C> ''ds''))\<cdot>ora)"
+  by (simp add: tsynbmed_insert assms ubgetch_ubrep_eq)
 
 (* ----------------------------------------------------------------------- *)
 subsection {* basic properties of MedSPF *}
@@ -391,39 +432,154 @@ lemma medspf_strict: "(MedSPF ora) \<rightleftharpoons> ubLeast{\<C> ''ds''} = u
   qed
 
 (* ----------------------------------------------------------------------- *)
-subsection {* Basic Properties of MedSPS *}
+subsection {* MedSPF step lemmata *}
 (* ----------------------------------------------------------------------- *)
 
-lemma medsps_uspecwell: 
-  "uspecWell (Rev {(MedSPF ora) | ora. #({True} \<ominus> ora)=\<infinity>}) (Discr {\<C> ''ds''}) (Discr {\<C> ''dr''})"
+(*lemma copied can be deleted *)
+lemma spfConcIn_step[simp]:
+  assumes  "ubDom\<cdot>sb = ufDom\<cdot>spf"
+  shows "(spfConcIn sb1\<cdot>spf) \<rightleftharpoons> sb = spf \<rightleftharpoons> (ubConcEq sb1\<cdot>sb)" 
+  by (simp_all add: assms spfConcIn_def ubclDom_ubundle_def Int_absorb1)
+
+lemma orafun_snth: "ora \<in> oraFun n \<Longrightarrow> snth n ora"
+  by (simp add: oraFun_def)
+
+lemma orafun_nbot: "ora \<in> oraFun n \<Longrightarrow> ora \<noteq> \<epsilon>"
+  using oraFun_def by force
+
+lemma medspf_spfconc_null: assumes "ora \<in> oraFun n"  
+  shows "spfConcIn (tsynbNull(\<C> ''ds''))\<cdot>(MedSPF ora) = spfConcOut (tsynbNull(\<C> ''dr''))\<cdot>(MedSPF ora)"
+  apply (rule spf_eq)
+  apply (simp add: medspf_ufdom)+
+  apply (subst medspf_ubdom)
+  apply (simp add: medspf_ufdom)
+  apply (rule ub_eq)
+  apply (simp add: medspf_ubdom medspf_ufdom)+
+  using assms
+  by (simp add: medspf_insert tsynbmed_getch_dr usclConc_stream_def abp2natbool_def natbool2abp_def
+  tsynmap_sconc_null orafun_nbot tsynmed_sconc_null)
+
+(* ----------------------------------------------------------------------- *)
+subsection {* Basic Properties of MedSPSspec *}
+(* ----------------------------------------------------------------------- *)
+
+text{* @{term MedSPS} is well-formed. *}
+lemma medsps_uspecwell [simp]: 
+  "uspecWell (Rev {(MedSPF ora) | ora. (#({True} \<ominus> ora) = \<infinity> \<and> snth n ora
+   \<and> (\<forall>k<n. \<not>snth k ora))}) (Discr {\<C> ''ds''}) (Discr {\<C> ''dr''})"
   apply (rule uspec_wellI)
   apply (simp add: ufclDom_ufun_def)
   using medspf_ufdom apply blast
   apply (simp add: ufclRan_ufun_def)
   using medspf_ufran by blast
 
-lemma medsps_uspecdom: "uspecDom\<cdot>MedSPS = {\<C> ''ds''}"
-  apply (simp add: uspecDom_def MedSPS_def)
-  using medsps_uspecwell by simp
+text{* The domain of @{term MedSPS}. *}
+lemma medsps_uspecdom: "uspecDom\<cdot>(MedSPS n) = {\<C> ''ds''}"
+  using medsps_uspecwell
+  by (simp add: MedSPS_def uspecdom_insert oraFun_def)
 
-lemma medsps_uspecran: "uspecRan\<cdot>MedSPS = {\<C> ''dr''}"
-  apply (simp add: uspecRan_def MedSPS_def)
-  using medsps_uspecwell by simp
+text{* The range of @{term MedSPS}. *}
+lemma medsps_uspecran: "uspecRan\<cdot>(MedSPS n) = {\<C> ''dr''}"
+  using medsps_uspecwell 
+  by (simp add: MedSPS_def uspecran_insert oraFun_def)
 
+(* ----------------------------------------------------------------------- *)
+subsection {* Medium State Lemmata *}
+(* ----------------------------------------------------------------------- *)
+
+text{* The nth element of ora will be true. *}
+lemma snth_ora_true: assumes "#({True} \<ominus> ora) = \<infinity>" obtains n where "snth n ora = True"
+  by (metis Inf'_neq_0_rev assms ex_snth_in_sfilter_nempty singleton_iff slen_empty_eq)
+
+lemma slen_createbundle_getch: "#(createBundle (\<M> m) c  .  c) < \<infinity>"
+  apply (simp add: ubgetch_insert createBundle_def)
+  by (metis Fin_02bot Fin_Suc Fin_neq_inf bot_is_0 createBundle.rep_eq fun_upd_same inf_ub 
+    lscons_conv option.sel order_less_le slen_scons strict_slen sup'_def ubabs_ubrep)
+
+lemma medsps_0_uspecwell: 
+  "uspecWell (Rev{MedSPF ora |ora::bool stream. #({True} \<ominus> ora) = \<infinity> \<and> shd ora}) (Discr{\<C> ''ds''}) 
+  (Discr{\<C> ''dr''})"
+  using medsps_uspecwell
+  proof -
+    have "{MedSPF ora |ora::bool stream. #({True} \<ominus> ora) = \<infinity> \<and> shd ora} 
+      = {(MedSPF ora) | ora. (#({True} \<ominus> ora) = \<infinity> \<and> snth 0 ora \<and> (\<forall>k<0. \<not>snth k ora))}"
+    by simp
+    then show ?thesis
+    using medsps_uspecwell by presburger
+  qed
+
+(* If a "null" comes in, send it out and stay in the same state. *)
+lemma "spsConcIn (tsynbNull(\<C> ''ds'')) (MedSPS n) = spsConcOut (tsynbNull (\<C> ''dr''))\<cdot>(MedSPS n)"
+  apply (subst spsconcin_insert)
+  apply (case_tac "c=(\<C> ''dr'')", simp_all)
+  apply (subst spsconcout_insert, simp)
+  apply (simp add: spfConcIn_def spfConcOut_def)
+  apply (simp add: uspecImage_def medsps_uspecran medsps_uspecdom ufclDom_ufun_def ufclRan_ufun_def)
+sorry
+
+lemma "spsConcIn (createBundle (Msg m) (\<C> ''ds'')) (MedSPS (Suc n))
+  = spsConcOut (tsynbNull(\<C> ''dr''))\<cdot>(MedSPS n)"
+  apply (subst spsconcin_insert)
+  apply (case_tac "c=(\<C> ''dr'')", simp_all)
+  apply (simp add: slen_createbundle_getch)
+  apply (subst spsconcout_insert, simp)
+  apply (simp add: uspecImage_def medsps_uspecdom medsps_uspecran ufclDom_ufun_def ufclRan_ufun_def)
+  apply (simp add: spfConcIn_def spfConcOut_def)
+  apply (simp add: uspecrevset_insert MedSPS_def)
+  using medsps_uspecwell
+  apply (simp add: setrevImage_def inv_rev_rev)
+  apply (simp add: MedSPF_def)
+sorry
+
+lemma "\<And>x::(abpMessage tsyn stream\<^sup>\<Omega>) ufun.
+       (x \<in> Rep_cfun (spfConcIn (createBundle (\<M> m) (\<C> ''ds''))) ` Rep_rev_uspec (MedSPS (0::nat))) =
+       (x \<in> Rep_cfun (spfConcOut (createBundle (\<M> m) (\<C> ''dr''))) ` Rep_rev_uspec (MedSPS n))"
+  apply (simp add: image_def spfConcIn_def spfConcOut_def)
+  apply (simp add: MedSPS_def)
+  apply (subst rep_abs_rev_simp)
+  apply (smt CollectD medspf_ufdom medspf_ufran ufclDom_ufun_def ufclRan_ufun_def uspec_wellI)
+  apply (subst rep_abs_rev_simp)
+  apply (smt CollectD medspf_ufdom medspf_ufran ufclDom_ufun_def ufclRan_ufun_def uspec_wellI)
+  proof -
+    obtain xa where "xa \<in> {MedSPF ora |ora. #({True} \<ominus> ora) = \<infinity> \<and> shd ora}"    
+  oops
+
+lemma "spsConcIn (createBundle (Msg m) (\<C> ''ds'')) (MedSPS 0) 
+  = spsConcOut (createBundle (Msg m) (\<C> ''dr''))\<cdot>(MedSPS n)"
+  apply (subst spsconcin_insert)
+  apply (simp add: slen_createbundle_getch)
+  apply (subst spsconcout_insert)
+  apply (simp add: slen_createbundle_getch)
+  apply (simp add: uspecImage_def medsps_uspecdom medsps_uspecran ufclDom_ufun_def ufclRan_ufun_def)
+  apply (rule uspec_eqI)
+  defer
+  apply (smt medsps_uspecdom medsps_uspecran spfConcIn_dom spfConcIn_ran spfConcOut_dom 
+    spfConcOut_ran ufclDom_ufun_def ufclRan_ufun_def uspecImage_def uspecimage_useful_dom)
+  apply (smt medsps_uspecdom medsps_uspecran spfConcIn_dom spfConcIn_ran spfConcOut_dom 
+    spfConcOut_ran ufclDom_ufun_def ufclRan_ufun_def uspecImage_def uspecimage_useful_ran)
+  apply (simp add: uspecrevset_insert)
+  apply (rule setrev_eqI)
+  apply (simp add: setrevImage_def inv_rev_rev)
+  apply (subst rep_abs_rev_simp)
+  defer
+  apply (subst rep_abs_rev_simp)
+  defer
+  apply (simp add: set_eq_iff)
+sorry
 
 (*
-(* counter not null, drop every message and count one down *)
-lemma "spsConcIn (makeInput m) (h_MED (State TheOne (Suc n))) = spsConcOut (makeNull (\<C> ''dr''))\<cdot>(h_MED (State TheOne (Suc n)))"
-  oops
+apply (rule set_eq_iff)
 
 (* If a "null" comes in send it out and stay in the same state *) 
 lemma "spsConcIn (makeNull (\<C> ''ds'')) (h_MED state) = spsConcOut (makeNull (\<C> ''dr''))\<cdot>(h_MED state)"
+  oops
+
+(* counter not null, drop every message and count one down *)
+lemma "spsConcIn (makeInput m) (h_MED (State TheOne (Suc n))) = spsConcOut (makeNull (\<C> ''dr''))\<cdot>(h_MED (State TheOne n))"
   oops
 
 (* Counter hit zero, so pass the message and reset the countdown to a random value *)
 lemma "spsConcIn (makeInput m) (h_MED (State TheOne 0)) = spsConcOut (makeOutput m)\<cdot>(spsFlatten {h_MED (State TheOne n) |  n. True})"
   oops
 *)
-
-
 end

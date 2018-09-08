@@ -38,9 +38,39 @@ class div_pcpo = div_cpo +
   assumes div_pcpo: "\<And>a. a\<in>DIV \<Longrightarrow> \<exists>bot\<in>a. \<forall>b\<in>a. bot \<sqsubseteq>b"  (* ToDo: Name + schöner aufschreiben *)
 begin
 
+definition div_bot::"'b::div_pcpo set \<Rightarrow> 'b" where
+"div_bot C = (THE bott.  bott\<in>C \<and> (\<forall>x\<in>C. bott\<sqsubseteq>x))"
+
+lemma div_pcpo_bott: assumes "C\<in>DIV" shows "\<exists>!bott. bott\<in>C \<and> (\<forall>x\<in>C. bott\<sqsubseteq>x)"
+  by (meson assms local.div_pcpo po_eq_conv)
+
+lemma div_bot: 
+  fixes C ::"'b::div_pcpo set"
+  assumes "C\<in>DIV" shows "(div_bot C)\<in>C \<and> (\<forall>x\<in>C. (div_bot C)\<sqsubseteq>x)"
+  apply(simp add: div_bot_def)
+  apply(rule theI' [of _ ])
+  by (simp add: assms div_pcpo_class.div_pcpo_bott)
+
 end
 
 
+
+
+section \<open>set div_pcpo\<close>
+
+instantiation set:: (div_cpo) div_pcpo
+begin
+definition DIV_set:: "'a::div_cpo set set set" where
+"DIV_set = (Pow ` DIV)"
+
+instance
+  apply(intro_classes)
+  apply (simp add: DIV_set_def div_non_empty)
+  using DIV_set_def apply auto[1]
+  apply (metis DIV_set_def PowI Union_Pow_eq Union_is_lub Union_mono f_inv_into_f)
+  by (metis DIV_set_def Pow_bottom SetPcpo.less_set_def empty_subsetI f_inv_into_f)
+
+end
 
 
 
