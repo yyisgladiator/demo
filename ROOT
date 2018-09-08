@@ -1,57 +1,63 @@
-session "inc" (mustWork) = "HOLCF" +
+session "inc" (mustWork) in inc = "HOLCF" +
   options [quick_and_dirty = false]
   theories
-    "inc/Channel"
-    "inc/LNat"
-    "inc/SetPcpo"
-    "inc/Reversed"
-    "inc/Prelude"
-    "inc/OptionCpo"
-    "inc/UnivClasses"
-    "inc/CPOFix"
+    Channel
+    LNat
+    SetPcpo
+    Reversed
+    Prelude
+    OptionCpo
+    UnivClasses
+    CPOFix
 
 
-session "HOLMF" (mustWork) = "inc" +
+session "HOLMF" (mustWork) in HOLMF = "inc" +
   options [quick_and_dirty = false]
   theories
-    "HOLMF/LongChain"
-    "HOLMF/Division"
-    "HOLMF/LFP"
+    LongChain
+    Division
+    LFP
 
-session "stream" (mustWork) = "inc" +
+session "stream" (mustWork) in stream = "inc" +
   options [quick_and_dirty = true]
   theories
-    "stream/Streams"
-    "stream/tsynStream"
+    Streams
+    tsynStream
 
-session "bundle" (mustWork) = "stream" + 
+session "bundle" (mustWork) in bundle = "stream" + 
   options [quick_and_dirty = true]
   theories
-    "bundle/SB"
-    "bundle/UBundle_Induction"
-    "bundle/tsynBundle"
+    SB
+    UBundle_Induction
+    tsynBundle
 
-session "fun" (mustWork) = "bundle" + 
+session "fun" (mustWork) in fun = "bundle" + 
   options [quick_and_dirty = true]
   theories
-    "fun/SPF"
+    SPF
 
-session "spec" (mustWork) = "fun" + 
+session "spec" (mustWork) in spec = "fun" + 
   options [quick_and_dirty = true]
   sessions
-    "HOLMF"
+    HOLMF
   theories
-    "spec/SPS"
+    SPS
 
-session "automat" (mustWork) = "spec" + 
+session "automat" (mustWork) in automat = "spec" + 
   options [quick_and_dirty = true]
   theories
-    "automat/SpfStep"
-    "automat/dAutomaton"
-    "automat/SpsStep"
-    "automat/ndAutomaton"
+    SpfStep
+    dAutomaton
+    SpsStep
+    ndAutomaton
 
-session "abp" (canFail) = "automat" + 
+session "automatCaseStudy" (mustWork) in "automat/CaseStudy" = "automat" + 
   options [quick_and_dirty = true]
   theories
-    "abp/Receiver"
+    medFairStep
+    medUnfairStep
+
+session "abp" (canFail) in abp = "automat" + 
+  options [quick_and_dirty = true]
+  theories
+    Receiver
