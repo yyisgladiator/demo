@@ -168,6 +168,10 @@ section\<open>Lemmas\<close>
 (****************************************************) 
 subsection \<open>General Lemmas\<close>
 
+lemma uspec_lub_in: assumes "chain Y" shows "(\<Squnion>i. ((Y i)::'m set rev, Discr In,Discr Out)) = (\<Squnion>i. Y i, Discr In, Discr Out)"
+  by (smt Pair_below_iff assms below_refl fstI is_lub_prod lub_const lub_eq lub_eqI po_class.chain_def sndI)
+
+
 lemma uspec_wellI: assumes "\<forall> f \<in> S. ufclDom\<cdot>f = In" and "\<forall> f \<in> S. ufclRan\<cdot>f = Out"
   shows "uspecWell (Rev S) (Discr In) (Discr Out)"
   by (simp add: assms(1) assms(2))
