@@ -13,8 +13,8 @@ section \<open>Definition\<close>
 definition spsConcOut:: "'m SB \<Rightarrow> 'm SPS \<rightarrow> 'm SPS" where
 "spsConcOut sb = Abs_cfun (uspecImage (Rep_cfun (spfConcOut sb)))"
 
-definition spsConcIn:: "'m SB \<Rightarrow> 'm SPS \<rightarrow> 'm SPS" where
-"spsConcIn sb = Abs_cfun (uspecImage (Rep_cfun (spfConcIn sb)))"
+definition spsConcIn:: "'m SB \<Rightarrow> 'm SPS \<Rightarrow> 'm SPS" where
+"spsConcIn sb = uspecImage (Rep_cfun (spfConcIn sb))"
 
 definition spsRtIn:: "'m SPS \<rightarrow> 'm SPS" where
 "spsRtIn = Abs_cfun (uspecImage (Rep_cfun spfRtIn))"
@@ -53,48 +53,19 @@ lemma spsconcout_ran [simp]:
 subsection \<open>spsConcIn\<close>
 (* ----------------------------------------------------------------------- *)
 
-lemma sbconc_surj: "surj (Rep_cfun (ubConcEq (sb :: 'a stream\<^sup>\<Omega>)))"
-  apply (simp add: surj_def)
-(*apply (rule, simp_all)
-  apply (simp add: ubConcEq_def)
-  apply (subst UNIV_def)*)
-oops
-
-lemma spfconcin_inj:
-  assumes "\<And>c. c\<in>ubDom\<cdot>sb \<Longrightarrow> # (sb . c) < \<infinity>"
-  shows "inj (\<lambda>spf. spfConcIn sb\<cdot>spf)"
-(*  apply (rule injI)
-  apply (rule spf_eq)
-  apply (metis spfConcIn_dom)*)
-  apply (simp add: spfConcIn_def)
-  apply (subst ufapplyin_inj, simp_all)
-  apply (simp add: ubclDom_ubundle_def inf_commute sup_commute sbconc_inj)
-  (* by (simp add: assms sbconc_surj) *)
-oops
-
-lemma spsconcin_cont: assumes "\<And>c. c\<in>ubDom\<cdot>sb \<Longrightarrow> # (sb . c) < \<infinity>"
-  shows "cont (uspecImage (Rep_cfun (spfConcIn sb)))"
-  apply (rule uspecimage_inj_cont)
-  (* apply (simp add: spfconcin_inj assms) 
-  by (simp add: ufclDom_ufun_def ufclRan_ufun_def)*)
-oops
-
 lemma spsconcin_insert: 
   assumes "\<And>c. c\<in>ubDom\<cdot>sb \<Longrightarrow> # (sb . c) < \<infinity>"
-  shows "spsConcIn sb\<cdot>sps = (uspecImage (Rep_cfun (spfConcIn sb)) sps)"
-  (* by (simp add: spsConcIn_def assms spsconcin_cont)*)
-oops
+  shows "spsConcIn sb sps = (uspecImage (Rep_cfun (spfConcIn sb)) sps)"
+  by (simp add: spsConcIn_def)
 
-lemma spsconcin_dom [simp]: assumes "\<And>c. c\<in>ubDom\<cdot>sb \<Longrightarrow> # (sb . c) < \<infinity>"
-  shows "uspecDom\<cdot>(spsConcIn sb\<cdot>sps) = uspecDom\<cdot>sps"
-  (* by (simp add: spsconcin_insert assms ufclDom_ufun_def ufclRan_ufun_def)*)
-oops
+lemma spsconcin_dom: assumes "\<And>c. c\<in>ubDom\<cdot>sb \<Longrightarrow> # (sb . c) < \<infinity>"
+  shows "uspecDom\<cdot>(spsConcIn sb sps) = uspecDom\<cdot>sps"
+  by (simp add: spsConcIn_def ufclDom_ufun_def ufclRan_ufun_def)
 
-lemma spsconcin_ran [simp]: 
+lemma spsconcin_ran: 
   assumes "\<And>c. c\<in>ubDom\<cdot>sb \<Longrightarrow> # (sb . c) < \<infinity>"
-  shows "uspecRan\<cdot>(spsConcIn sb\<cdot>sps) = uspecRan\<cdot>sps"
-  (*by (simp add: assms spsconcin_insert ufclDom_ufun_def ufclRan_ufun_def)*)
-oops
+  shows "uspecRan\<cdot>(spsConcIn sb sps) = uspecRan\<cdot>sps"
+  by (simp add: spsConcIn_def ufclDom_ufun_def ufclRan_ufun_def)
 
 (* ----------------------------------------------------------------------- *)
 subsection \<open>spsRtIn\<close>
