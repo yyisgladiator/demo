@@ -77,9 +77,9 @@ lemma knaster_tarski: fixes f :: "'a::po \<Rightarrow>'a"
     and goodf: "\<And>a. a\<in>C \<Longrightarrow> f a\<in>C" 
     and cpo: "\<And>S. longChain S \<Longrightarrow> S\<noteq>{} \<Longrightarrow> S\<subseteq>C \<Longrightarrow> \<exists>x\<in>C. S <<| x"
     and pcpo: "\<exists>bot\<in>C. \<forall>b\<in>C. bot \<sqsubseteq>b"
-  shows "\<exists>!x. f x = x \<and> x\<in>C \<and> (\<forall>y\<in>C. f y = y \<longrightarrow> x\<sqsubseteq>y)" (is "\<exists>!x. ?P x")
+  shows "\<exists>!x. f x = x \<and> x\<in>C \<and> (\<forall>y\<in>C. f y \<sqsubseteq>y \<longrightarrow> x\<sqsubseteq>y)" (is "\<exists>!x. ?P x")
 proof -
-  let ?F = "{x. x = f x \<and> x\<in>C}"  (* Set of all fixpoints in the division *)
+  let ?F = "{x. f x\<sqsubseteq> x \<and> x\<in>C}"  
   let ?Z = "{y. y \<sqsubseteq> f y \<and> (\<forall>x\<in>?F. y\<sqsubseteq>x) \<and> y \<in>C}"
 
   (* Teil A *)
@@ -126,7 +126,7 @@ proof -
     
     moreover have "lub S \<in> C"
       using cpo s_empty lub_eqI s_chain s_in by blast 
-    ultimately show "lub S \<sqsubseteq> f (lub S) \<and> (\<forall>x\<in>{x. x = f x \<and> x \<in> C}. lub S \<sqsubseteq> x) \<and> lub S \<in> C" using lub_f by blast
+    ultimately show "lub S \<sqsubseteq> f (lub S) \<and> (\<forall>x\<in>{x. f x\<sqsubseteq> x \<and> x \<in> C}. lub S \<sqsubseteq> x) \<and> lub S \<in> C" using lub_f by blast
   qed
   have "\<And>C x. longChain C \<Longrightarrow> C\<noteq>{}\<Longrightarrow>C\<subseteq>?Z \<Longrightarrow> \<forall>a\<in>C. a\<sqsubseteq>lub C"
     by (metis (no_types, lifting) Ball_Collect  cpo is_ub_thelub_ex subset_iff)
@@ -145,13 +145,16 @@ proof -
 
     (* 2. *)
   hence "\<And>x. x\<in>?F \<Longrightarrow> (f w) \<sqsubseteq> x"
-    using monof monofunE by fastforce
+    using monof monofunE rev_below_trans by fastforce
 
   hence w_in:"f w \<in> ?Z"
     using goodf monof monofun_def w_z by fastforce
 
   hence w_fix: "f w = w"
     using w_def w_z by fastforce
+
+  have "\<And>y. y\<in>?Z \<Longrightarrow> y\<sqsubseteq>w"
+    using w_fix w_z by auto
 
   have "?P w"
     using w_fix w_z by auto    

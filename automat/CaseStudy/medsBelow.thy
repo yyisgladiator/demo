@@ -19,6 +19,7 @@ lemma meds_aut_below: "medUnfairAut \<sqsubseteq> medFairAut"
   using meds_transition_h_below by fastforce
 
 lemma meds_below: "medUnfair s \<sqsubseteq> medFair s"
-  sorry (* requires ... more. eg lfp-monofun *)
+  unfolding medUnfair_def medFair_def
+  by (simp add: fun_belowD meds_aut_below monofunE nda_h_mono)
 
 end
