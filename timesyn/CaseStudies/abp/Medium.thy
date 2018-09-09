@@ -465,7 +465,7 @@ lemma createdsbundle_ubdom: "ubDom\<cdot>(createDsBundle a)= {\<C> ''ds''}"
 lemma createdsbundle_ubgetch: "createDsBundle m . \<C> ''ds'' = \<up> (\<M> (Pair_nat_bool m))"
   by (simp add: ubgetch_insert createDsBundle.rep_eq)
 
-lemma medspf_spfconc_msg_nzero: assumes "ora1 \<in> oraFun (Suc n)" obtains "ora2 \<in> oraFun n"
+lemma medspf_spfconc_msg_nzero: assumes "ora1 \<in> oraFun (Suc n)" obtains ora2 where "ora2 \<in> oraFun n"
   and "spfConcIn (createDsBundle m)\<cdot>(MedSPF ora1) = spfConcOut (tsynbNull(\<C> ''dr''))\<cdot>(MedSPF ora2)"
   using assms
   proof -
@@ -479,7 +479,7 @@ lemma medspf_spfconc_msg_nzero: assumes "ora1 \<in> oraFun (Suc n)" obtains "ora
       using assms ora2def orafun_snth snth_scons by blast
     have ora2_f: "(\<forall>k<n. \<not> snth k ora2)"
       by (metis (no_types, lifting) CollectD Suc_less_eq assms ora2def oraFun_def snth_scons)
-    have "ora2 \<in> oraFun n"
+    have ora2_orafun: "ora2 \<in> oraFun n"
       by (simp add: ora2_f ora2_fair ora2_snth oraFun_def)
     have "spfConcIn (createDsBundle m)\<cdot>(MedSPF ora1) = spfConcOut (tsynbNull(\<C> ''dr''))\<cdot>(MedSPF ora2)"
       apply (rule spf_eq)
@@ -492,6 +492,13 @@ lemma medspf_spfconc_msg_nzero: assumes "ora1 \<in> oraFun (Suc n)" obtains "ora
       by (simp add: medspf_insert tsynbmed_getch_dr usclConc_stream_def abp2natbool_def 
         natbool2abp_def ora2def createdsbundle_ubdom createdsbundle_ubgetch tsynmap_sconc_msg 
         tsynmed_sconc_msg_f tsynmap_sconc_null)
+   then show ?thesis
+     using ora2_orafun that by simp
+  qed           
+
+lemma medspf_spfconc_msg_zero: assumes "ora1 \<in> oraFun 0" obtains "ora2 \<in> oraFun n"
+  and "spfConcIn (createDsBundle m)\<cdot>(MedSPF ora1) = spfConcOut (createDrBundle m)\<cdot>(MedSPF ora2)"
+sorry
 
 (* ----------------------------------------------------------------------- *)
 subsection {* Basic Properties of MedSPSspec *}
