@@ -1128,15 +1128,14 @@ lemma tsynscanlext_tsynabs: "tsynAbs\<cdot>(tsynScanlExt f i\<cdot>s) = sscanlA 
   by (simp add: tsynscanlext_sconc_null tsynabs_sconc_null)
 
 text {* Each element of @{term tsynDom} of @{term tsynScanlExt} is in the range of 
-        @{term fst} of f *}
-lemma tsynscanlext_tsyndom: "tsynDom\<cdot>(tsynScanlExt f i\<cdot>s) \<subseteq> { fst(f i s) | i s. True}"
+        @{term fst} of f. *}
+lemma tsynscanlext_tsyndom: "tsynDom\<cdot>(tsynScanlExt f i\<cdot>s) \<subseteq> {fst(f i s) | i s. True}"
   by (metis (mono_tags, lifting) sscanla_sdom tsynabs_tsyndom tsynscanlext_tsynabs)
 
 text {* Each element of @{term tsynDom} of @{term tsynScanlExt} is in the range of 
-        @{term fst} of f (second variant) *}
+        @{term fst} of f (second variant). *}
 lemma tsynscanlext_tsyndom_range: "tsynDom\<cdot>(tsynScanlExt f i\<cdot>s) \<subseteq> range(\<lambda>(i,s). fst(f i s))"
-  apply (simp add: image_def)
-  by (metis (mono_tags, lifting) tsyndom_insert tsynscanlext_tsyndom)
+  using mem_Collect_eq tsynscanlext_tsyndom by fastforce
 
 (* ----------------------------------------------------------------------- *)
   subsection {* tsynScanl *}
@@ -1185,13 +1184,13 @@ lemma tsynscanl_tsynabs: "tsynAbs\<cdot>(tsynScanl f i\<cdot>s) = sscanl f i\<cd
   apply (simp add: tsynscanl_sconc_msg tsynabs_sconc_msg)
   by (simp add: tsynscanl_sconc_null tsynabs_sconc_null)
 
-text {* Each element of @{term tsynDom} of @{term tsynScanl} is in the range of f *}
+text {* Each element of @{term tsynDom} of @{term tsynScanl} is in the range of f. *}
 lemma tsynscanl_tsyndom: "tsynDom\<cdot>(tsynScanl f i\<cdot>s) \<subseteq> {f i s | i s. True}"
   by (metis (mono_tags, lifting) tsynabs_tsyndom tsynscanl_tsynabs sscanl_sdom)
 
-text {* Each element of @{term tsynDom} of @{term tsynScanl} is in the range of f (second variant) *}
-lemma tsynscanl_tsyndom_range: "tsynDom\<cdot>(tsynScanl f i\<cdot>s) \<subseteq> range((\<lambda>(i,s). f i s))"
-  by (simp add: image_def, metis (mono_tags, lifting) tsyndom_insert tsynscanl_tsyndom)
+text {* Each element of @{term tsynDom} of @{term tsynScanl} is in the range of f. *}
+lemma tsynscanl_tsyndom_range: "tsynDom\<cdot>(tsynScanl f i\<cdot>s) \<subseteq> range(\<lambda>(i,s). f i s)"
+  using mem_Collect_eq tsynscanl_tsyndom by fastforce
   
 (* ----------------------------------------------------------------------- *)
   subsection {* tsynDropWhile *}
@@ -1543,7 +1542,7 @@ lemma tsynsum_test_infmsg: "tsynSum\<cdot>(\<up>(Msg 0)\<infinity>) = \<up>(Msg 
 lemma tsynsum_test_infnull: "tsynSum\<cdot>(\<up>null\<infinity>) = \<up>null\<infinity>"
   by (metis s2sinftimes sinftimes_unfold tsynSum_def tsynscanl_sconc_null)
 
-lemma tsynsum_even_h: 
+lemma tsynsum_even_h:
   assumes "tsynDom\<cdot>s \<subseteq> {n. even n}"
     and "even m"
   shows "tsynDom\<cdot>(tsynScanl plus m\<cdot>s) \<subseteq> {n. even n}"
