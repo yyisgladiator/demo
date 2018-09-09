@@ -1,7 +1,7 @@
 chapter {* Set and bool as a pointed cpo. *}
 
 theory SetPcpo
-imports HOLCF
+imports HOLCF Reversed LNat
 begin
 
 text {*PCPO on sets and bools. The @{text "\<sqsubseteq>"} operator of the order is defined as the @{text "\<subseteq>"} operator on sets
@@ -258,5 +258,167 @@ qed
 
 
 
+inductive setSize_helper :: "'a set \<Rightarrow> nat \<Rightarrow> bool"
+  where
+    "setSize_helper {} 0"
+  |  "setSize_helper A X \<and> a \<notin> A \<Longrightarrow> setSize_helper (insert a A) (Suc X)"
+
+definition setSize :: "'a set \<Rightarrow> lnat"
+  where
+  "setSize X \<equiv> if (finite X) then Fin (THE Y. setSize_helper X Y) else \<infinity>"
+
+
+lemma setSizeEx: assumes "finite X" shows "\<exists> Y. setSize_helper X Y"
+  apply (rule finite_induct)
+  apply (simp add: assms)
+  using setSize_helper.intros(1) apply auto[1]
+  by (metis setSize_helper.simps)
+
+lemma setSize_remove: "y \<in> F \<and> setSize_helper (F - {y}) A \<longrightarrow> setSize_helper F (Suc A)"
+  by (metis Diff_insert_absorb Set.set_insert setSize_helper.intros(2))
+
+
+lemma setSizeBack_helper:  
+  assumes "\<forall>(F::'a set) x::'a. (finite F \<and> setSize_helper (insert x F) (Suc A) \<and> x \<notin> F) \<longrightarrow> setSize_helper F A"
+  shows "\<forall>(F::'a set) x::'a. (finite F \<and> setSize_helper (insert x F) (Suc (Suc A)) \<and> x \<notin> F) \<longrightarrow> setSize_helper F (Suc A)"
+proof -
+have b0: "\<And>A::nat. \<forall>(F::'a set) x::'a. ((setSize_helper (insert x F) (Suc (Suc A)) \<and> x \<notin> F) 
+  \<longrightarrow> (\<exists> y. y \<in> (insert x F) \<and> setSize_helper ((insert x F) - {y}) (Suc A)))"
+    by (metis Diff_insert_absorb add_diff_cancel_left' insertI1 insert_not_empty plus_1_eq_Suc setSize_helper.simps)
+have b1: "\<forall>(F::'a set) (x::'a) y::'a. ((finite F \<and> setSize_helper (insert x (F - {y})) (Suc A) \<and> x \<notin> F)
+  \<longrightarrow> setSize_helper (F - {y}) A)"
+  using assms by auto
+have b2: "\<forall>(F::'a set) x::'a. (setSize_helper (insert x F) (Suc (Suc A)) \<and> x \<notin> F) 
+  \<longrightarrow> ((\<exists> y. (y\<noteq>x \<and> y \<in> F \<and> setSize_helper (insert x (F - {y})) (Suc A))) \<or> setSize_helper F (Suc A))"
+  by (metis Diff_insert_absorb b0 empty_iff insert_Diff_if insert_iff)
+have b3: "\<forall>(F::'a set) x::'a. (setSize_helper (insert x F) (Suc (Suc A)) \<and> x \<notin> F \<and> finite F) 
+  \<longrightarrow> ((\<exists> y. (y\<noteq>x \<and> y \<in> F \<and> setSize_helper (F - {y}) A)) \<or> setSize_helper F (Suc A))"
+  by (meson b1 b2)
+show "\<forall>(F::'a set) x::'a. (finite F \<and> setSize_helper (insert x F) (Suc (Suc A)) \<and> x \<notin> F) \<longrightarrow> setSize_helper F (Suc A)"
+  by (meson b3 setSize_remove)
+qed
+
+
+lemma setSizeBack: "\<And> F x. (finite F \<and> setSize_helper (insert x F) (Suc A) \<and> x \<notin> F) \<Longrightarrow> setSize_helper F A"
+  apply (induction A)
+  apply (metis Suc_inject empty_iff insertI1 insert_eq_iff nat.distinct(1) setSize_helper.simps)
+  using setSizeBack_helper by blast
+
+
+lemma setSizeonlyOne: assumes "finite X" shows "\<exists>! Y. setSize_helper X Y"
+  apply (rule finite_induct)
+  apply (simp add: assms)
+  apply (metis empty_not_insert setSize_helper.simps)
+  by (metis insert_not_empty setSizeBack setSize_helper.intros(2) setSize_helper.simps)
+
+lemma setSizeSuc: assumes "finite X" and "z \<notin> X" shows "setSize (insert z X) = lnsuc\<cdot>(setSize X)"
+  apply (simp add: setSize_def)
+  using assms setSizeonlyOne
+  by (metis (mono_tags, lifting) Diff_insert_absorb finite.insertI insertI1 setSize_remove theI_unique)
+
+lemma setSizeEmpty: "setSize {} = Fin 0"
+  by (metis finite.emptyI setSize_def setSize_helper.intros(1) setSizeonlyOne theI_unique)
+
+lemma setSizeSingleton: "setSize {x} = lnsuc\<cdot>(Fin 0)"
+  by (simp add: setSizeEmpty setSizeSuc)
+
+lemma setsize_union_helper1: 
+  assumes "finite F"
+      and "x \<notin> F"
+      and "x \<notin> X"
+    shows "setSize (X \<union> F) + setSize (X \<inter> F) = setSize X + setSize F \<Longrightarrow>
+       setSize (X \<union> insert x F) + setSize (X \<inter> insert x F) = setSize X + setSize (insert x F)"
+proof - 
+  assume a0: "setSize (X \<union> F) + setSize (X \<inter> F) = setSize X + setSize F"
+  have b0: "X \<union> insert x F = insert x (X \<union> F)"
+    by simp
+  have b1: "setSize (X \<union> insert x F) = lnsuc\<cdot>(setSize (X \<union> F))"
+    by (metis Un_iff Un_infinite assms(1) assms(2) assms(3) b0 finite_UnI fold_inf setSizeSuc setSize_def sup_commute)
+  have b2: "setSize (X \<inter> insert x F) = setSize (X \<inter> F)"
+    by (simp add: assms(3)) 
+  show "setSize (X \<union> insert x F) + setSize (X \<inter> insert x F) = setSize X + setSize (insert x F)"
+    by (metis (no_types, lifting) a0 ab_semigroup_add_class.add_ac(1) add.commute assms(1) assms(2) 
+      b1 b2 lnat_plus_suc setSizeSuc)
+qed
+
+lemma setsize_union_helper2: 
+  assumes "finite F"
+      and "x \<notin> F"
+      and "x \<in> X"
+    shows "setSize (X \<union> F) + setSize (X \<inter> F) = setSize X + setSize F \<Longrightarrow>
+       setSize (X \<union> insert x F) + setSize (X \<inter> insert x F) = setSize X + setSize (insert x F)"
+proof -
+  assume a0: "setSize (X \<union> F) + setSize (X \<inter> F) = setSize X + setSize F"
+  have b0: "setSize (X \<union> insert x F) = setSize (X \<union> F)"
+    by (metis Un_Diff_cancel assms(3) insert_Diff1)
+  have b1: "setSize (X \<inter> insert x F) =  lnsuc\<cdot>(setSize (X \<inter> F))"
+    by (simp add: assms(1) assms(2) assms(3) setSizeSuc)
+  show "setSize (X \<union> insert x F) + setSize (X \<inter> insert x F) = setSize X + setSize (insert x F)"
+    by (metis a0 ab_semigroup_add_class.add_ac(1) assms(1) assms(2) b0 b1 lnat_plus_suc setSizeSuc)
+qed
+
+lemma setsize_union_helper3: assumes "finite X" and "finite Y"
+  shows "setSize (X \<union> Y) + setSize (X \<inter> Y) = setSize X + setSize Y"
+  apply (rule finite_induct)
+  apply (simp add: assms)
+  apply simp
+  by (meson setsize_union_helper1 setsize_union_helper2)
+
+lemma setsize_union_helper4: assumes "infinite X \<or> infinite Y"
+  shows "setSize (X \<union> Y) + setSize (X \<inter> Y) = setSize X + setSize Y"
+proof -
+  have b0: "setSize (X \<union> Y) = \<infinity>"
+    by (metis (full_types) assms infinite_Un setSize_def)
+  have b1: "setSize X = \<infinity> \<or> setSize Y = \<infinity>"
+    by (meson assms setSize_def)
+  show ?thesis
+    using b0 b1 plus_lnatInf_r by auto
+qed
+
+lemma setsize_union: "setSize (X \<union> Y) + setSize (X \<inter> Y) = setSize X + setSize Y"
+  by (meson setsize_union_helper3 setsize_union_helper4)
+
+lemma setsize_union_disjoint: assumes "X \<inter> Y = {}"
+  shows "setSize (X \<union> Y) = setSize X + setSize Y"
+  by (metis Fin_02bot add.left_neutral assms bot_is_0 lnat_plus_commu setSizeEmpty setsize_union)
+
+lemma setsize_subset_union: assumes "X \<subseteq> Y"
+  shows "setSize (X \<union> Y) = setSize Y"
+  by (simp add: assms sup.absorb2)
+
+lemma set_union_ins: "\<And> F G x. setSize (F \<union> G) \<le> setSize (F \<union> (insert x G))"
+  by (metis Fin_Suc Fin_leq_Suc_leq  Un_insert_right finite_insert insert_absorb lnat_po_eq_conv 
+  setSizeSuc setSize_def)
+
+lemma setsize_mono_union_helper1: 
+  assumes "finite F" and "finite G"
+  shows "setSize F \<le> setSize (F \<union> G)"
+proof -
+  have b0:  "\<And>P. P = (\<lambda>G. setSize F \<le> setSize (F \<union> G)) \<Longrightarrow> P G"
+    by (metis assms(2) finite_induct order_refl set_union_ins sup_bot.right_neutral trans_lnle)
+  have b1: "(\<lambda>G. setSize F \<le> setSize (F \<union> G)) G"
+    using b0 by auto
+  show "setSize F \<le> setSize (F \<union> G)"
+    by (simp add: b1)
+qed
+
+lemma setsize_mono_union_helper2: 
+  assumes "infinite F \<or> infinite G"
+  shows "setSize F \<le> setSize (F \<union> G)"
+proof -
+  have b0: "setSize (F \<union> G) = \<infinity>"
+    by (meson assms infinite_Un setSize_def)
+  show ?thesis
+    by (simp add: b0)
+qed
+
+lemma setsize_mono_union: "setSize F \<le> setSize (F \<union> G)"
+  by (meson setsize_mono_union_helper1 setsize_mono_union_helper2)
+
+
+lemma setsize_mono: 
+  assumes "F \<subseteq> G"
+  shows "setSize F \<le> setSize G"
+  by (metis Un_absorb1 assms setsize_mono_union)
 
 end

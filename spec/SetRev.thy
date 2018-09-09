@@ -66,6 +66,9 @@ definition setrevForall:: "('m \<Rightarrow> bool) \<Rightarrow> 'm set rev \<Ri
 definition setrevExists:: "('m \<Rightarrow> bool) \<Rightarrow> 'm set rev \<Rightarrow> bool" where
 "setrevExists P S \<equiv> \<exists>x\<in> (inv Rev S). P x"
 
+definition setrevSize :: "'a set rev \<Rightarrow> lnat" where
+ "setrevSize X = setSize (inv Rev X)"
+
 section \<open>Lemmas\<close>
 
 subsection \<open>General\<close>
@@ -171,7 +174,7 @@ proof -
   have a1: "\<forall>y \<in> \<Inter>{x. \<exists>i. x = Set.filter P (inv Rev (Y i))}. (\<forall>i. y \<in> (inv Rev (Y i)))"
     by (simp add: full_SetCompr_eq)
   then have a2: "\<forall>y \<in> \<Inter>{x. \<exists>i. x = Set.filter P (inv Rev (Y i))}. y \<in> (inv Rev (\<Squnion>i::nat. Y i))"
-    by (smt Inter_iff \<open>chain (Y::nat \<Rightarrow> 'a set rev)\<close> inv_rev_rev mem_Collect_eq setrevLubEqInter)
+    by (simp add: \<open>chain (Y::nat \<Rightarrow> 'a set rev)\<close> setrevLub_lub_eq_all)
   then have a3: "Rev (Set.filter P (inv Rev (\<Squnion>i::nat. Y i))) \<sqsubseteq>
     Rev (\<Inter>{x. \<exists>i. x = Set.filter P (inv Rev (Y i))})"
     by (simp add: a0 SetPcpo.less_set_def subset_eq)
@@ -353,7 +356,7 @@ lemma setrevUnion_mono[simp]: "\<And>A. monofun (\<lambda>x. Rev((inv Rev A) \<u
   by (metis SetPcpo.less_set_def Un_mono below_rev.simps order_refl revBelowNeqSubset)
 
 lemma setrevUnion_cont1[simp]: "cont (\<lambda>x. Rev((inv Rev A) \<union> (inv Rev x)))"
-  apply(rule contI2)
+  apply(rule Cont.contI2)
   apply simp
   apply(simp add: setrevUnion_chain)
   proof -
@@ -413,7 +416,7 @@ lemma image_mono_rev:  "monofun (setrevImage f)"
 
 lemma image_cont_rev: assumes "inj f" 
   shows "cont (setrevImage f)"
-  apply (rule contI2)
+  apply (rule Cont.contI2)
    apply (simp add: image_mono_rev)
   unfolding setrevImage_def
 proof -
@@ -800,6 +803,38 @@ obtain aa :: "('a \<Rightarrow> bool) \<Rightarrow> 'a set rev \<Rightarrow> 'a"
   then show ?thesis
     using f3 f2 f1 by (metis (no_types))
 qed
-  
+
+subsection \<open>Size\<close>
+
+lemma setrev_size_suc: 
+  assumes "finite X" and "z \<notin> X" 
+  shows "setrevSize (Rev (insert z X)) = lnsuc\<cdot>(setSize X)"
+  by (simp add: assms(1) assms(2) inv_rev_rev setSizeSuc setrevSize_def)
+
+lemma setrev_size_empty: "setrevSize (Rev {}) = Fin 0"
+  by (simp add: inv_rev_rev setSizeEmpty setrevSize_def)
+
+lemma setrev_size_singleton: "setrevSize (Rev {x}) = lnsuc\<cdot>(Fin 0)"
+  by (simp add: inv_rev_rev setSizeSingleton setrevSize_def)
+
+lemma setrev_size_union: 
+  "setrevSize (setrevUnion\<cdot>X\<cdot>Y) + setrevSize (setrevInter\<cdot>X\<cdot>Y) = setrevSize X + setrevSize Y"
+  apply (simp add: setrevUnion_def setrevInter_def)
+  by (simp add: inv_rev_rev setrevSize_def setsize_union)
+
+lemma setrev_size_union_disjoint: assumes "setrevInter\<cdot>X\<cdot>Y = Rev {}"
+  shows "setrevSize (setrevUnion\<cdot>X\<cdot>Y) = setrevSize X + setrevSize Y"
+  apply (insert assms)
+  by (simp add: setrevUnion_def setrevInter_def setrevSize_def inv_rev_rev setsize_union_disjoint)
+
+lemma setrev_size_mono_union: "setrevSize X \<le> setrevSize (setrevUnion\<cdot>X\<cdot>Y)"
+  by (simp add: setrevSize_def setrevUnion_def inv_rev_rev setsize_mono_union)
+
+lemma setrev_size_mono: 
+  assumes "F \<sqsubseteq> G"
+  shows "setrevSize G \<le> setrevSize F"
+  apply (insert assms)
+  by (simp add: setrevSize_def revBelowNeqSubset setsize_mono)
+
 
 end
