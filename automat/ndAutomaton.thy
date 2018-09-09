@@ -61,6 +61,19 @@ definition ndaToDo:: "channel set \<Rightarrow> channel set \<Rightarrow> ('s \<
 "ndaToDo In Out S \<equiv> \<lambda> h. uspecFlatten In Out 
                 (setrevImage (\<lambda>(state, sb). spsConcOut sb\<cdot>(h state)) S)"
 
+(* ----------------------------------------------------------------------- *)
+ section \<open>Lemma\<close>
+(* ----------------------------------------------------------------------- *)
+ subsection \<open>ndaDom\<close>
+
+lemma rep_nda_ndawell[simp]: "ndaWell (Rep_ndAutomaton nda)"
+  using Rep_ndAutomaton by auto
+
+lemma nddom_finite[simp]:  "finite (ndaDom\<cdot>nda)"
+  apply (simp add: ndaDom_def)  
+  by (smt Rep_ndAutomaton fst_conv mem_Collect_eq ndaDom.abs_eq 
+      ndaDom.rep_eq ndaWell.elims(2) snd_conv undiscr_Discr)
+
 lemma ndatodo_monofun: "monofun (ndaToDo In Out S)" (is "monofun ?f")
 proof (rule monofunI)                 
   fix x y :: "'a \<Rightarrow> 'b SPS"
@@ -69,6 +82,7 @@ proof (rule monofunI)
     by (simp add: below_fun_def cont_pref_eq1I) 
   thus "?f x \<sqsubseteq> ?f y" by (metis (no_types) h monofun_def ndaToDo_def uspecflatten_image_monofun)
  qed
+
 
 lemma ndatodo_monofun2: "monofun (\<lambda> S. uspecFlatten In Out (setrevImage (\<lambda>(state, sb). spsConcOut sb\<cdot>(some_h state)) S))"
 proof -
@@ -79,7 +93,15 @@ proof -
 qed
 
 lemma ndatodo_monofun3: "S1 \<sqsubseteq> S2 \<Longrightarrow> h1 \<sqsubseteq> h2 \<Longrightarrow> (ndaToDo In Out S1 h1) \<sqsubseteq> (ndaToDo In Out S2 h2)"
-  by (smt below_refl below_trans monofun_def ndaToDo_def ndatodo_monofun ndatodo_monofun2)
+proof -
+  assume a1: "h1 \<sqsubseteq> h2"
+  assume "S1 \<sqsubseteq> S2"
+  then have "uspecFlatten In Out (setrevImage (\<lambda>(a, u). spsConcOut u\<cdot>(h1 a)) S1) \<sqsubseteq> uspecFlatten In Out (setrevImage (\<lambda>(a, u). spsConcOut u\<cdot>(h1 a)) S2)"
+    by (metis (no_types) monofun_def ndatodo_monofun2)
+  then show ?thesis
+    using a1 by (metis (no_types) HOLCF_trans_rules(1) monofun_def ndaToDo_def ndatodo_monofun)
+qed
+
 
 
 definition ndaHelper2:: "channel set \<Rightarrow> channel set \<Rightarrow> 
@@ -112,15 +134,11 @@ definition nda_h_inner::"('s::type, 'm::message) ndAutomaton \<Rightarrow> ('s \
                           ran = (ndaRan\<cdot>nda) in 
      (\<lambda>s. spsStep dom ran\<cdot>(ndaAnotherHelper\<cdot>(ndaHelper2 dom ran s (ndaTransition\<cdot>nda) h)))"
 
-lemma nda_h_inner_dom [simp]: assumes "finite (ndaDom\<cdot>nda)" 
-    shows "uspecDom\<cdot>(nda_h_inner nda h s) = ndaDom\<cdot>nda"
-  unfolding nda_h_inner_def Let_def
-  by (simp add: assms)
+lemma nda_h_inner_dom [simp]: "uspecDom\<cdot>(nda_h_inner nda h s) = ndaDom\<cdot>nda"
+  unfolding nda_h_inner_def Let_def  by simp
 
-lemma nda_h_inner_ran [simp]: assumes "finite (ndaDom\<cdot>nda)" 
-    shows "uspecRan\<cdot>(nda_h_inner nda h s) = ndaRan\<cdot>nda"
-  unfolding nda_h_inner_def Let_def
-  by (simp add: assms)
+lemma nda_h_inner_ran [simp]: "uspecRan\<cdot>(nda_h_inner nda h s) = ndaRan\<cdot>nda"
+  unfolding nda_h_inner_def Let_def by simp
 
 lemma nda_h_inner_monofun: "monofun (nda_h_inner nda)"
   unfolding nda_h_inner_def
@@ -151,15 +169,13 @@ lemma nda_h_inner_monofun2: "monofun (nda_h_inner)"
 
 (* Similar to Rum96 *)
 definition nda_h :: "('s::type, 'm::message) ndAutomaton \<Rightarrow> ('s \<Rightarrow> 'm SPS)" where
-"nda_h nda \<equiv> if finite (ndaDom\<cdot>nda) then lfp (SetPcpo.setify (\<lambda>a. USPEC (ndaDom\<cdot>nda) (ndaRan\<cdot>nda))) (nda_h_inner nda)
-                else uspecStateLeast (ndaDom\<cdot>nda) (ndaRan\<cdot>nda)"
+"nda_h nda \<equiv> lfp (SetPcpo.setify (\<lambda>a. USPEC (ndaDom\<cdot>nda) (ndaRan\<cdot>nda))) (nda_h_inner nda)"
 
-lemma nda_inner_good: assumes "finite (ndaDom\<cdot>nda)" 
-    shows  "goodFormed (SetPcpo.setify (\<lambda>a. USPEC (ndaDom\<cdot>nda) (ndaRan\<cdot>nda))) (nda_h_inner nda)"
+lemma nda_inner_good: "goodFormed (SetPcpo.setify (\<lambda>a. USPEC (ndaDom\<cdot>nda) (ndaRan\<cdot>nda))) (nda_h_inner nda)"
   unfolding goodFormed_def 
     unfolding SetPcpo.setify_def
     apply auto
-    using USPEC_def assms by fastforce
+    using USPEC_def by fastforce
 
 
 (* ToDo: Move to SetPcpo *)
@@ -176,15 +192,13 @@ lemma nda_h_valid_domain: "(SetPcpo.setify (\<lambda>a. USPEC (ndaDom\<cdot>nda)
   unfolding DIV_fun_def DIV_uspec_def
   using nda_h_valid_domain_h by fastforce
 
-lemma nda_h_fixpoint:  assumes "finite (ndaDom\<cdot>nda)" 
-  shows "nda_h nda = nda_h_inner nda (nda_h nda)"
-  by (metis (no_types) assms lfp_fix nda_h_def nda_h_inner_monofun nda_h_valid_domain nda_inner_good)
+lemma nda_h_fixpoint:"nda_h nda = nda_h_inner nda (nda_h nda)"
+  by (metis (no_types) nddom_finite lfp_fix nda_h_def nda_h_inner_monofun nda_h_valid_domain nda_inner_good)
 
 lemma nda_h_mono:  "monofun nda_h"
   apply(rule monofunI)
   unfolding nda_h_def
   apply(simp add: ndadom_below_eq ndaran_below_eq)
-  apply rule
   apply(rule lfp_monofun)
   apply (simp add: monofunE nda_h_inner_monofun2)
       apply (simp_all add: nda_h_inner_monofun nda_inner_good nda_h_valid_domain)
@@ -198,8 +212,7 @@ definition nda_H :: "('s, 'm::message) ndAutomaton \<Rightarrow> 'm SPS" where
 lemma "cont (\<lambda>nda. fst (Rep_ndAutomaton nda))"
   by simp
 
-lemma nda_H_monofun: assumes "finite (ndaDom\<cdot>nda)" 
-    shows "monofun nda_H"
+lemma nda_H_monofun: "monofun nda_H"
   apply(rule monofunI)
   unfolding nda_H_def
   apply(simp add: ndadom_below_eq ndaran_below_eq)
