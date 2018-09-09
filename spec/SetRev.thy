@@ -488,7 +488,98 @@ proof -
     using assms(1) fun_belowD s_a that by fastforce
 qed
 
+lemma setrevimage_mono_obtain3: assumes "a\<in>((inv Rev) (setrevImage g S))"
+  obtains b where "b\<in>((inv Rev) S)" and "a = g b"
+  by (metis assms image_iff inv_rev_rev setrevImage_def)
 
+lemma setrevimage_image: "setrevImage f (setrevImage g S) = setrevImage (\<lambda> h. f (g h)) S"
+  by (simp add: image_image inv_rev_rev setrevImage_def)
+
+lemma setreImage_lub_inj_on: assumes"chain Y" and "\<forall>i. inj_on f (inv Rev (Y i))" 
+  shows "setrevImage f (\<Squnion>i. Y i) = (\<Squnion>i. setrevImage f (Y i))" (*main lemma for cont proof spsStep*)
+proof (cases "(\<Squnion>i. Y i) = Rev {}")
+  case True
+  have "(\<Squnion>i::nat. Rev (f ` inv Rev (Y i))) = Rev (f ` {})"
+    apply simp
+    apply (rule setrev_lub_emptyI)
+     apply (metis (mono_tags, lifting) assms(1) image_mono inv_rev_rev po_class.chainI po_class.chain_def revBelowNeqSubset)
+    apply (simp add: inv_rev_rev)
+    apply (case_tac "x \<notin> f ` inv Rev (Y 0)")
+     apply auto[1]
+    apply simp
+  proof - 
+    fix y::'b
+    assume a1: " y \<in> f ` inv Rev (Y (0::nat))"
+    obtain x where y_def_1: "y = f x "  and y_def_2: "x \<in> inv Rev (Y (0::nat))"
+      using a1 by blast
+    obtain da_i where "x \<notin> inv Rev (Y da_i)"
+      by (meson True assms(1) setrev_lub_emptyD)
+    have "y \<notin> f ` inv Rev (Y da_i)"
+    proof (rule ccontr, simp)
+      assume a2: "y \<in> f ` inv Rev (Y da_i)"
+      then obtain da_x where "y =  f da_x" and "da_x \<in> inv Rev (Y da_i)"
+        by blast
+      have "Y 0 \<sqsubseteq> Y da_i"
+        by (simp add: assms(1) po_class.chain_mono)
+      then have "\<And>x. x \<in> inv Rev (Y da_i) \<Longrightarrow> x \<in> inv Rev (Y 0)"
+        by (meson revBelowNeqSubset subsetCE)
+      then have "da_x \<in> inv Rev (Y 0)"
+        using \<open>(da_x::'a) \<in> inv Rev ((Y::nat \<Rightarrow> 'a set rev) (da_i::nat))\<close> by auto
+      then have "x = da_x"
+        using \<open>(y::'b) = (f::'a \<Rightarrow> 'b) (da_x::'a)\<close> assms(2) inj_onD y_def_1 y_def_2 by fastforce
+      show "False"
+        using \<open>(da_x::'a) \<in> inv Rev ((Y::nat \<Rightarrow> 'a set rev) (da_i::nat))\<close> \<open>(x::'a) = (da_x::'a)\<close> \<open>(x::'a) \<notin> inv Rev ((Y::nat \<Rightarrow> 'a set rev) (da_i::nat))\<close> by auto
+    qed
+    then show "\<exists>i::nat. y \<notin> f ` inv Rev (Y i)"
+      by blast
+  qed
+  then show ?thesis 
+    apply (simp add: setrevImage_def)
+    by (simp add: True inv_rev_rev)
+next
+  case False
+  have f1: "(\<Squnion>i::nat. Rev (f ` inv Rev (Y i))) = 
+    Rev (\<Inter>{uu::'b set. \<exists>i::nat. uu = f ` inv Rev (Y i)})"
+    apply (subst setrevLubEqInter)
+     apply (metis (mono_tags, lifting) assms(1) image_mono inv_rev_rev po_class.chain_def revBelowNeqSubset)
+    by (simp add: inv_rev_rev)
+  show ?thesis
+    apply (simp add: setrevImage_def)
+    apply (subst po_eq_conv, rule)
+     apply (simp add: f1) defer
+     apply (simp add: f1) 
+    apply (simp_all add: less_set_def)
+    using assms(1) setrevLub_lub_eq_all apply fastforce
+  proof 
+    fix y::'b 
+    assume a11: "y \<in> \<Inter>{uu::'b set. \<exists>i::nat. uu = f ` inv Rev (Y i)}"
+    then have "\<And>i. y \<in> f ` inv Rev (Y i)"
+      by blast
+    then have " y \<in> f ` inv Rev (Y 0)"
+      by simp
+    then obtain x where "y = f x" and "x \<in> inv Rev (Y 0)"
+      by blast
+    have "\<forall> i. x \<in> inv Rev (Y i)"
+    proof (rule ccontr, simp)
+      assume a111: "\<exists>i::nat. x \<notin> inv Rev (Y i) "
+      obtain da_i where "x \<notin> inv Rev (Y da_i)"
+        using a111 by auto
+      have "y \<in> f ` inv Rev (Y da_i)"
+        by (simp add: \<open>\<And>i::nat. (y::'b) \<in> (f::'a \<Rightarrow> 'b) ` inv Rev ((Y::nat \<Rightarrow> 'a set rev) i)\<close>)
+      obtain da_x where "y = f da_x" and "da_x \<in> inv Rev (Y da_i)"
+        using \<open>(y::'b) \<in> (f::'a \<Rightarrow> 'b) ` inv Rev ((Y::nat \<Rightarrow> 'a set rev) (da_i::nat))\<close> by blast
+      then have "da_x \<in> inv Rev (Y 0)"
+        by (meson assms(1) contra_subsetD po_class.chain_mono revBelowNeqSubset zero_le)
+      then have "x = da_x"
+        using \<open>(x::'a) \<in> inv Rev ((Y::nat \<Rightarrow> 'a set rev) (0::nat))\<close> \<open>(y::'b) = (f::'a \<Rightarrow> 'b) (da_x::'a)\<close> \<open>(y::'b) = (f::'a \<Rightarrow> 'b) (x::'a)\<close> assms(2) inj_on_eq_iff by fastforce
+      show False
+        using \<open>(da_x::'a) \<in> inv Rev ((Y::nat \<Rightarrow> 'a set rev) (da_i::nat))\<close> \<open>(x::'a) = (da_x::'a)\<close> \<open>(x::'a) \<notin> inv Rev ((Y::nat \<Rightarrow> 'a set rev) (da_i::nat))\<close> by auto
+    qed
+    show "y \<in> f ` inv Rev (Lub Y)"
+      by (simp add: \<open>(y::'b) = (f::'a \<Rightarrow> 'b) (x::'a)\<close> 
+          \<open>\<forall>i::nat. (x::'a) \<in> inv Rev ((Y::nat \<Rightarrow> 'a set rev) i)\<close> assms(1) setrevLub_lub_eq_all)
+  qed
+qed
 
 section \<open>set flat rev\<close>
 (* ToDo: Copy to SetPcpo *)
