@@ -219,7 +219,7 @@ proof -
     using calculation by blast
 qed
 
-lemma assumes ubconc_ubcllen_equalDom: "ubclDom\<cdot>ub1 = ubclDom\<cdot>ub2"
+lemma ubconc_ubcllen_equalDom: assumes "ubclDom\<cdot>ub1 = ubclDom\<cdot>ub2"
   shows "(ubclLen ub1) + (ubclLen ub2) \<le> ubclLen (ubConc ub1\<cdot>ub2)"
 proof (simp add: ubclLen_ubundle_def, cases "ubclDom\<cdot>ub1 = {}")
   case True
@@ -366,40 +366,26 @@ proof -
     by (metis bot_is_0 c_def dual_order.antisym lnle_def minimal ubLen_smallereq_all ubleast_ubdom)
 qed
 
-lemma ubconc_with_ubleast_same_ublen: "ubConc a\<cdot>(ubLeast (ubDom\<cdot>a)) = a"
+
+lemma ubconc_ubleast:
+  assumes "\<And> x. usclConc x\<cdot>(\<bottom> :: 'a) = x"
+  shows "ubConc (a :: 'a ubundle)\<cdot>(ubLeast (ubDom\<cdot>a)) = a"
   proof -
     have a_dom: "ubDom\<cdot>a = ubDom\<cdot>(ubConc a\<cdot>(ubLeast (ubDom\<cdot>a)))"
       by simp
-    have ubleast_dom: "ubDom\<cdot>(ubLeast (ubDom\<cdot>a)) = ubDom\<cdot>a"
-      by simp
-
-    have for_each: "\<And>c::channel. c \<in> ubDom\<cdot>(ubConc a\<cdot>(ubLeast (ubDom\<cdot>a))) \<Longrightarrow> ubConc a\<cdot>(ubLeast (ubDom\<cdot>a))  .  c = a  .  c"
-    proof -
-      fix c
-      assume a1:  "c \<in> ubDom\<cdot>(ubConc a\<cdot>(ubLeast (ubDom\<cdot>a)))"
-      then have a2: "c \<in> ubDom\<cdot>a"
-        by auto
-      show "ubConc a\<cdot>(ubLeast (ubDom\<cdot>a))  .  c = a  .  c"
-      proof (cases "ubDom\<cdot>a = {}")
-        case True
-        then show ?thesis 
-          using a1 a_dom by blast
-      next
-        case False
-        then show ?thesis
-          by (simp add: a2 maybe_newassms2)
-      qed
-    qed
+    have "\<And>c. c \<in> ubDom\<cdot>(ubConc (a :: 'a ubundle)\<cdot>(ubLeast (ubDom\<cdot>a))) 
+                \<Longrightarrow> ubConc a\<cdot>(ubLeast (ubDom\<cdot>a))  .  c = a  .  c"
+      using assms by auto
+    then show ?thesis
+      using a_dom ubgetchI by blast
+  qed
 
 (*     have "ubLen a = ubLen (ubConc a\<cdot>(ubLeast (ubDom\<cdot>a)))"
       by (metis a_dom for_each ubgetchI) *)
 
-    show ?thesis
-      using a_dom for_each ubgetchI by blast
-qed
-
-lemma ubconceq_with_ubleast_same_ublen: "ubConcEq a\<cdot>(ubLeast (ubDom\<cdot>a)) = a"
-  by (simp add: ubconc_with_ubleast_same_ublen)
-
+lemma ubconceq_ubleast:
+  assumes "\<And> x. usclConc x\<cdot>(\<bottom> :: 'a) = x"
+  shows "ubConcEq (a :: 'a ubundle)\<cdot>(ubLeast (ubDom\<cdot>a)) = a"
+  by (simp add: assms ubconc_ubleast)
 
 end    
