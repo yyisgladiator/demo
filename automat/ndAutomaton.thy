@@ -152,7 +152,7 @@ lemma nda_h_inner_monofun2: "monofun (nda_h_inner)"
 (* Similar to Rum96 *)
 definition nda_h :: "('s::type, 'm::message) ndAutomaton \<Rightarrow> ('s \<Rightarrow> 'm SPS)" where
 "nda_h nda \<equiv> if finite (ndaDom\<cdot>nda) then lfp (SetPcpo.setify (\<lambda>a. USPEC (ndaDom\<cdot>nda) (ndaRan\<cdot>nda))) (nda_h_inner nda)
-                else (\<lambda> s. uspecLeast  (ndaDom\<cdot>nda) (ndaRan\<cdot>nda))"
+                else uspecStateLeast (ndaDom\<cdot>nda) (ndaRan\<cdot>nda)"
 
 lemma nda_inner_good: assumes "finite (ndaDom\<cdot>nda)" 
     shows  "goodFormed (SetPcpo.setify (\<lambda>a. USPEC (ndaDom\<cdot>nda) (ndaRan\<cdot>nda))) (nda_h_inner nda)"
@@ -177,8 +177,8 @@ lemma nda_h_valid_domain: "(SetPcpo.setify (\<lambda>a. USPEC (ndaDom\<cdot>nda)
   using nda_h_valid_domain_h by fastforce
 
 lemma nda_h_fixpoint:  assumes "finite (ndaDom\<cdot>nda)" 
-    shows "nda_h nda = nda_h_inner nda (nda_h nda)"
-  by (metis assms lfp_fix nda_h_def nda_h_inner_monofun nda_h_valid_domain nda_inner_good)
+  shows "nda_h nda = nda_h_inner nda (nda_h nda)"
+  by (metis (no_types) assms lfp_fix nda_h_def nda_h_inner_monofun nda_h_valid_domain nda_inner_good)
 
 lemma nda_h_mono:  "monofun nda_h"
   apply(rule monofunI)
