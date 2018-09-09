@@ -88,7 +88,7 @@ lemma tsynmed_sconc_msg_t: "tsynMed\<cdot>(\<up>(Msg m) \<bullet> msg)\<cdot>(\<
   by (simp add: tsynmed_insert tsynzip_sconc_msg tsynfilter_sconc_msg_in tsynfilter_sconc_null 
                 tsynprojfst_sconc_null tsynprojfst_sconc_msg)
 
-text{* If the first element in the oracle is False then the current message will not be t
+text{* If the first element in the oracle is False then the current message will not be
        transmitted. *}
 lemma tsynmed_sconc_msg_f: "tsynMed\<cdot>(\<up>(Msg m) \<bullet> msg)\<cdot>(\<up>False \<bullet> ora) = \<up>- \<bullet> tsynMed\<cdot>msg\<cdot>ora"
   by (simp add: tsynmed_insert tsynzip_sconc_msg tsynfilter_sconc_msg_nin tsynprojfst_sconc_null)
@@ -458,6 +458,40 @@ lemma medspf_spfconc_null: assumes "ora \<in> oraFun n"
   using assms
   by (simp add: medspf_insert tsynbmed_getch_dr usclConc_stream_def abp2natbool_def natbool2abp_def
   tsynmap_sconc_null orafun_nbot tsynmed_sconc_null)
+
+lemma createdsbundle_ubdom: "ubDom\<cdot>(createDsBundle a)= {\<C> ''ds''}"
+  by (simp add: ubDom_def createDsBundle.rep_eq)
+
+lemma createdsbundle_ubgetch: "createDsBundle m . \<C> ''ds'' = \<up> (\<M> (Pair_nat_bool m))"
+  by (simp add: ubgetch_insert createDsBundle.rep_eq)
+
+lemma medspf_spfconc_msg_nzero: assumes "ora1 \<in> oraFun (Suc n)" obtains "ora2 \<in> oraFun n"
+  and "spfConcIn (createDsBundle m)\<cdot>(MedSPF ora1) = spfConcOut (tsynbNull(\<C> ''dr''))\<cdot>(MedSPF ora2)"
+  using assms
+  proof -
+    have ora1_shd_f: "\<not>(snth 0 ora1)"
+      by (metis (no_types, lifting) CollectD assms oraFun_def zero_less_Suc)
+    obtain ora2 where ora2def: "ora1 = \<up>False \<bullet> ora2"
+      by (metis (full_types) ora1_shd_f assms orafun_nbot snth_shd surj_scons)
+    have ora2_fair: "#({True} \<ominus> ora2) = \<infinity>"
+      using assms ora2def oraFun_def by simp
+    have ora2_snth: "snth n ora2"
+      using assms ora2def orafun_snth snth_scons by blast
+    have ora2_f: "(\<forall>k<n. \<not> snth k ora2)"
+      by (metis (no_types, lifting) CollectD Suc_less_eq assms ora2def oraFun_def snth_scons)
+    have "ora2 \<in> oraFun n"
+      by (simp add: ora2_f ora2_fair ora2_snth oraFun_def)
+    have "spfConcIn (createDsBundle m)\<cdot>(MedSPF ora1) = spfConcOut (tsynbNull(\<C> ''dr''))\<cdot>(MedSPF ora2)"
+      apply (rule spf_eq)
+      apply (simp add: medspf_ufdom)+
+      apply (subst medspf_ubdom)
+      apply (simp add: medspf_ufdom)
+      apply (rule ub_eq)
+      apply (simp add: medspf_ubdom medspf_ufdom)+
+      using assms
+      by (simp add: medspf_insert tsynbmed_getch_dr usclConc_stream_def abp2natbool_def 
+        natbool2abp_def ora2def createdsbundle_ubdom createdsbundle_ubgetch tsynmap_sconc_msg 
+        tsynmed_sconc_msg_f tsynmap_sconc_null)
 
 (* ----------------------------------------------------------------------- *)
 subsection {* Basic Properties of MedSPSspec *}
