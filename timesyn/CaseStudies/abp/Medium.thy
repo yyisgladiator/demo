@@ -12,6 +12,9 @@ imports Components "../../../untimed/SPS"
 
 begin
 
+(* deletes the Rule "1 = Suc 0" *)
+ declare One_nat_def[simp del]
+
 (* ----------------------------------------------------------------------- *)
   section {* Medium Definition for Verification *}
 (* ----------------------------------------------------------------------- *)
@@ -34,7 +37,7 @@ definition MedSPF :: "bool stream \<Rightarrow> abpMessage tsyn SPF" where
 
 text{* @{term oraFun}: Function to create ora streams with True at position n.*}
 definition oraFun :: "nat \<Rightarrow> bool stream set" where
-  "oraFun n = { ora. (#({True} \<ominus> ora) = \<infinity> \<and> snth n ora \<and> (\<forall>k<n. \<not>snth k ora))}"
+  "oraFun n = {ora. (#({True} \<ominus> ora) = \<infinity> \<and> snth n ora \<and> (\<forall>k<n. \<not>snth k ora))}"
 
 text {* @{term MedSPS}: Lossy medium function set for the Alternating Bit Protocol. *}
 definition MedSPS :: "nat \<Rightarrow> abpMessage tsyn SPS" where 
@@ -447,6 +450,22 @@ lemma orafun_snth: "ora \<in> oraFun n \<Longrightarrow> snth n ora"
 lemma orafun_nbot: "ora \<in> oraFun n \<Longrightarrow> ora \<noteq> \<epsilon>"
   using oraFun_def by force
 
+lemma orafun_nempty: "oraFun n \<noteq> {}"
+  proof -
+  obtain ora where ora_def: "ora = (((n-1) \<star> \<up>False) \<bullet> ((\<up>True)\<infinity>))"
+    by simp
+  have sdrop_empty: "sdrop n\<cdot>(n - (1::nat)\<star>\<up>False) = \<bottom>"
+    by (metis One_nat_def Suc_pred diff_le_self linorder_not_le neq0_conv sconc_snd_empty sdropl6 
+      sntimes_len srt_drop stream.sel_rews(2))
+  then have sdrop_empty: "sdrop n\<cdot>ora = \<up>True\<infinity>"
+    by (metis One_nat_def Suc_pred diff_le_self le_zero_eq neq0_conv ora_def sdropl6 sntimes_len 
+      srt_drop srt_sinf)
+  then have snth_true: "snth n ora = True"
+    by (simp add: snth_def)
+  have "ora \<in> oraFun n"
+    apply (simp add: oraFun_def)
+  oops
+
 lemma medspf_spfconc_null: assumes "ora \<in> oraFun n"  
   shows "spfConcIn (tsynbNull(\<C> ''ds''))\<cdot>(MedSPF ora) = spfConcOut (tsynbNull(\<C> ''dr''))\<cdot>(MedSPF ora)"
   apply (rule spf_eq)
@@ -496,9 +515,12 @@ lemma medspf_spfconc_msg_nzero: assumes "ora1 \<in> oraFun (Suc n)" obtains ora2
      using ora2_orafun that by simp
   qed           
 
-lemma medspf_spfconc_msg_zero: assumes "ora1 \<in> oraFun 0" obtains "ora2 \<in> oraFun n"
+lemma medspf_spfconc_msg_zero: assumes "ora1 \<in> oraFun 0" obtains ora2 where "ora2 \<in> oraFun n"
   and "spfConcIn (createDsBundle m)\<cdot>(MedSPF ora1) = spfConcOut (createDrBundle m)\<cdot>(MedSPF ora2)"
-sorry
+  using assms
+  proof -
+    obtain ora2 where ora2def: "ora2 \<in> oraFun n"
+oops
 
 (* ----------------------------------------------------------------------- *)
 subsection {* Basic Properties of MedSPSspec *}
