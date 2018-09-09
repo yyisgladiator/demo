@@ -452,19 +452,27 @@ lemma orafun_nbot: "ora \<in> oraFun n \<Longrightarrow> ora \<noteq> \<epsilon>
 
 lemma orafun_nempty: "oraFun n \<noteq> {}"
   proof -
-  obtain ora where ora_def: "ora = (((n-1) \<star> \<up>False) \<bullet> ((\<up>True)\<infinity>))"
+  obtain ora where ora_def: "ora = ((n \<star> \<up>False) \<bullet> ((\<up>True)\<infinity>))"
     by simp
-  have sdrop_empty: "sdrop n\<cdot>(n - (1::nat)\<star>\<up>False) = \<bottom>"
-    by (metis One_nat_def Suc_pred diff_le_self linorder_not_le neq0_conv sconc_snd_empty sdropl6 
-      sntimes_len srt_drop stream.sel_rews(2))
+  have ora_fair: "#({True} \<ominus> ora) = \<infinity>"
+    using insert_not_empty ora_def by simp
+  have sdrop_empty: "sdrop n\<cdot>(n\<star>\<up>False) = \<bottom>"
+    by (simp add: sdropostake sntimes_stake)
   then have sdrop_empty: "sdrop n\<cdot>ora = \<up>True\<infinity>"
-    by (metis One_nat_def Suc_pred diff_le_self le_zero_eq neq0_conv ora_def sdropl6 sntimes_len 
-      srt_drop srt_sinf)
-  then have snth_true: "snth n ora = True"
+    by (simp add: ora_def sdropl6)
+  then have snth_true: "snth n ora"
     by (simp add: snth_def)
+  have sdrop_k: "\<And>k. k<n \<Longrightarrow> sdrop k\<cdot>(n\<star>\<up>False) = (n-k)\<star>\<up>False"
+    by (metis (no_types, lifting) add_diff_inverse_nat less_Suc_eq not_less_eq sdropl6 sdrops_sinf 
+      sntimes_len sntimes_stake stake_add)
+  then have snth_false: "\<forall>k<n. \<not> snth k ora"
+    by (metis less2nat linorder_not_le ora_def shd_sntime slen_snth_prefix snth_def sntimes_len 
+    zero_less_diff)
   have "ora \<in> oraFun n"
-    apply (simp add: oraFun_def)
-  oops
+    by (simp add: oraFun_def ora_fair snth_false snth_true)
+  then show ?thesis
+    by blast
+  qed
 
 lemma medspf_spfconc_null: assumes "ora \<in> oraFun n"  
   shows "spfConcIn (tsynbNull(\<C> ''ds''))\<cdot>(MedSPF ora) = spfConcOut (tsynbNull(\<C> ''dr''))\<cdot>(MedSPF ora)"
@@ -520,6 +528,7 @@ lemma medspf_spfconc_msg_zero: assumes "ora1 \<in> oraFun 0" obtains ora2 where 
   using assms
   proof -
     obtain ora2 where ora2def: "ora2 \<in> oraFun n"
+      by (meson orafun_nempty subsetI subset_empty)
 oops
 
 (* ----------------------------------------------------------------------- *)
