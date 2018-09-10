@@ -4,14 +4,9 @@
 *)
 
 theory NewSpfStep
-imports fun.SPF
+imports fun.SPF bundle.SBElem
 begin
 default_sort type
-
-typedef 'm sbElem = "{x :: (channel\<rightharpoonup>'m::message) . sbElemWell x}"
-   by(simp add: sbElemWellEx)
-
-setup_lifting type_definition_sbElem
 
 definition sbHdElemWell::"'m::message SB \<Rightarrow> bool" where
 "sbHdElemWell  \<equiv> \<lambda> sb. (\<forall>c \<in> ubDom\<cdot>(sb). sb. c \<noteq> \<epsilon>)"  
