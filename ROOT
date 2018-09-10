@@ -30,6 +30,7 @@ session "bundle" (mustWork) in bundle = "stream" +
     SB
     UBundle_Induction
     tsynBundle
+    SBElem
 
 session "fun" (mustWork) in fun = "bundle" + 
   options [quick_and_dirty = true]
