@@ -47,6 +47,23 @@ fun medMessageTransform :: "'a medMessage tsyn \<Rightarrow> 'a tsyn" where
 
 
 
+
+section\<open>General\<close>
+(* Move this somewhere else... *)
+lift_definition tsynNullElem :: "channel set \<Rightarrow> 'a::message tsyn sbElem" is
+"\<lambda>cs. (\<lambda>c. (c\<in>cs) \<leadsto> -)"
+ unfolding sbElemWell_def
+  unfolding usclOkay_stream_def
+  unfolding ctype_tsyn_def
+  by simp
+
+lift_definition sbElem2SB::"'a::message sbElem \<Rightarrow> 'a SB" is
+"\<lambda> elem. (\<lambda>c. (c\<in>dom (Rep_sbElem elem)) \<leadsto> \<up>(Rep_sbElem elem)\<rightharpoonup>c)"
+  unfolding ubWell_def
+  unfolding usclOkay_stream_def
+  apply simp
+  using sbElemWellI Rep_sbElem by blast
+
 section \<open>MedIn\<close>
 
   subsection\<open>Definitions\<close>
@@ -88,6 +105,19 @@ section \<open>MedOut\<close>
 
 definition medOutDom :: "channel set" where
 "medOutDom = { \<C> ''out'' }"
+
+lift_definition medOutMsgElem :: "'a \<Rightarrow> 'a medMessage tsyn sbElem" is
+"\<lambda>x. [ (\<C> ''out'') \<mapsto> (Msg (medData x))]"
+  unfolding sbElemWell_def
+  unfolding usclOkay_stream_def
+  unfolding ctype_tsyn_def
+  by simp
+
+fun medOutElem ::"'a tsyn \<Rightarrow> 'a medMessage tsyn sbElem" where
+"medOutElem (Msg m) = medOutMsgElem m" |
+"medOutElem   -     = tsynNullElem medOutDom"
+
+
 
 lift_definition medOutMsg :: "'a \<Rightarrow> 'a medMessage tsyn SB" is
 "\<lambda>x. [ \<C> ''out'' \<mapsto> \<up>(Msg (medData x))]"

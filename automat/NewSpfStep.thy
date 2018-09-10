@@ -10,7 +10,9 @@ default_sort type
 
 typedef 'm sbElem = "{x :: (channel\<rightharpoonup>'m::message) . sbElemWell x}"
    by(simp add: sbElemWellEx)
-  
+
+setup_lifting type_definition_sbElem
+
 definition sbHdElemWell::"'m::message SB \<Rightarrow> bool" where
 "sbHdElemWell  \<equiv> \<lambda> sb. (\<forall>c \<in> ubDom\<cdot>(sb). sb. c \<noteq> \<epsilon>)"  
 (* Returns the SPF that switches depending on input.  (spfStep_h1 In Out\<cdot>h)\<cdot>(sbHdElem\<cdot>sb) computes the SPF which has to be applied to the input sb*)
