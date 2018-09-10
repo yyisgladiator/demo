@@ -887,17 +887,6 @@ qed
 *)
 
 
-lemma ufcomp_causal: assumes "ufRan\<cdot>f1 \<inter> ufRan\<cdot>f2 = {}" and "ufIsWeak f1" and "ufIsStrong f2" 
-  shows "ufIsWeak (ufComp f1 f2)"
-proof(cases "ufCompL f1 f2 = {}")
-  case True (* Parallel case *)
-  then show ?thesis sorry
-next
-  case False (* Internal channels *)
-  then show ?thesis sorry
-qed
-
-
 (* parcomp *)
 subsection\<open>Parallel Composition\<close>
 

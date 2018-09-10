@@ -1,4 +1,4 @@
-theory Composition_Causalities
+theory UFun_Comp_Causalities
   imports UFun_Comp UBundle_Pcpo
 begin
 
