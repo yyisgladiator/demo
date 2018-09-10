@@ -1,5 +1,5 @@
 theory UFun_Comp_Causalities
-  imports UFun_Comp UBundle_Pcpo
+  imports UFun_Comp bundle.UBundle_Pcpo
 begin
 
 default_sort uscl_pcpo
@@ -466,10 +466,12 @@ lemma ufSerComp_strongCausal: assumes "ufIsStrong f1" and "ufIsStrong f2" and "s
 
 
 definition emptyfun :: "('m\<^sup>\<Omega>) ufun" where
-"emptyfun \<equiv> Abs_cufun (\<lambda>x. (ubDom\<cdot>x = {})\<leadsto>(Abs_ubundle empty))"
-lemma emptyfun_mono: "monofun (\<lambda>x. (ubDom\<cdot>x = {})\<leadsto>(Abs_ubundle empty))"
+"emptyfun \<equiv> Abs_cufun (\<lambda>x. (ubDom\<cdot>x = {})\<leadsto>(Abs_ubundle Map.empty))"
+
+lemma emptyfun_mono: "monofun (\<lambda>x. (ubDom\<cdot>x = {})\<leadsto>(Abs_ubundle Map.empty))"
   by (simp add: monofunI some_below ubdom_below)
-lemma emptyfun_cont: "cont (\<lambda>x. (ubDom\<cdot>x = {})\<leadsto>(Abs_ubundle empty))"
+
+lemma emptyfun_cont: "cont (\<lambda>x. (ubDom\<cdot>x = {})\<leadsto>(Abs_ubundle Map.empty))"
   apply(rule contI2)
   apply(simp add: emptyfun_mono)
   by (simp add: ubcldom_lub_eq2I some_lub_chain_eq)
@@ -658,7 +660,7 @@ qed
 
 lemma ufParComp_weakstrong_weakCausal: assumes "ufIsWeak f1" and "ufIsStrong f2" and "ufCompL f1 f2 = {}" and "ufRan\<cdot>f1 \<inter> ufRan\<cdot>f2 = {}"
   shows "ufIsWeak (ufParComp f1 (f2::'m ubundle ufun))"
-  by (metis assms(1) assms(2) assms(3) assms(4) parallelOperatorEq ufcomp_causal)
+  sorry
 
 lemma ufParComp_strongweak_weakCausal: assumes "ufIsStrong f1" and "ufIsWeak f2" and "ufCompL f1 f2 = {}" and "ufRan\<cdot>f1 \<inter> ufRan\<cdot>f2 = {}"
   shows "ufIsWeak (ufParComp f1 (f2::'m ubundle ufun))"

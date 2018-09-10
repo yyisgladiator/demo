@@ -1,5 +1,5 @@
 theory UBundle_Induction
-  imports UBundle UBundle_Pcpo UBundle_Conc SB
+  imports UBundle UBundle_Pcpo UBundle_Conc stream.Streams
 begin
 
   

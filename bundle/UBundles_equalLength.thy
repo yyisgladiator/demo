@@ -1,5 +1,5 @@
 theory UBundles_equalLength
-imports UnivClasses "inc/LNat" Channel UBundle 
+imports inc.UnivClasses UBundle
 
 begin
 

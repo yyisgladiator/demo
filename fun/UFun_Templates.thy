@@ -11,7 +11,7 @@
          modern/simplified approach use the ufun_contI and ufun_monoI2 lemmata from Ufun.thy *)
 
 theory UFun_Templates
-  imports UBundle_Pcpo UFun_Comp "untimed/Streams"
+  imports  UFun_Comp stream.Streams bundle.UBundle_Pcpo
 
 begin
 
