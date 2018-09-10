@@ -1,7 +1,7 @@
 section {* The Datatype of Lazy Natural Numbers *} 
 
 theory LNat
-imports Prelude Nat
+imports Prelude
 begin
 
 (* ----------------------------------------------------------------------- *)
