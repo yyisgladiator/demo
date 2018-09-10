@@ -8,7 +8,7 @@
 chapter {* Theory for Medium Definitions and Lemmata *}
 
 theory Medium
-imports Components "../../../untimed/SPS"
+imports Components spec.SPS
 
 begin
 
