@@ -30,7 +30,9 @@ lemma nda_rep_cont[simp]: "cont Rep_ndAutomaton"
 
 
 
+(*******************************************************************)
     section \<open>Definitions\<close>
+(*******************************************************************)
 
 (*
 lift_definition ndaTransition :: "('s, 'm::message) ndAutomaton \<rightarrow> (('s \<times>(channel \<rightharpoonup> 'm)) \<Rightarrow> (('s \<times> 'm SB) set rev))" is
@@ -59,7 +61,23 @@ lift_definition ndaRan :: "('s, 'm::message) ndAutomaton \<rightarrow> channel s
   (* Only monofun, not cont *)
 definition ndaConcOutFlatten:: "channel set \<Rightarrow> channel set \<Rightarrow> ('s \<times> 'm::message SB) set rev \<Rightarrow> ('s \<Rightarrow> 'm SPS) \<Rightarrow> 'm SPS" where
 "ndaConcOutFlatten In Out S \<equiv> \<lambda> h. uspecFlatten In Out 
-                (setrevImage (\<lambda>(state, sb). spsConcOut sb\<cdot>(h state)) S)"
+                (setrevImage (\<lambda>(s, sb). spsConcOut sb\<cdot>(h s)) S)"
+
+definition ndaHelper2:: "channel set \<Rightarrow> channel set \<Rightarrow> 
+  's \<Rightarrow> (('s \<times>'e) \<Rightarrow> ('s \<times> 'm::message SB) set rev) \<Rightarrow> ('s \<Rightarrow> 'm SPS) \<Rightarrow> ('e \<Rightarrow> 'm SPS)" where
+"ndaHelper2 In Out s transition \<equiv> \<lambda> h. (\<lambda>e. ndaConcOutFlatten In Out (transition (s,e)) h)"
+
+definition nda_h_inner::"('s::type, 'm::message) ndAutomaton \<Rightarrow> ('s \<Rightarrow> 'm SPS) \<Rightarrow> ('s \<Rightarrow> 'm SPS)" where
+"nda_h_inner nda h \<equiv>  let dom = (ndaDom\<cdot>nda);
+                          ran = (ndaRan\<cdot>nda) in 
+     (\<lambda>s. spsStep dom ran\<cdot>(ndaHelper2 dom ran s (ndaTransition\<cdot>nda) h))"
+
+(* Similar to Rum96 *)
+definition nda_h :: "('s::type, 'm::message) ndAutomaton \<Rightarrow> ('s \<Rightarrow> 'm SPS)" where
+"nda_h nda \<equiv> lfp (SetPcpo.setify (\<lambda>a. USPEC (ndaDom\<cdot>nda) (ndaRan\<cdot>nda))) (nda_h_inner nda)"
+
+definition nda_H :: "('s, 'm::message) ndAutomaton \<Rightarrow> 'm SPS" where
+"nda_H nda \<equiv> ndaConcOutFlatten (ndaDom\<cdot>nda)(ndaRan\<cdot>nda) (ndaInitialState\<cdot>nda) (nda_h nda)"
 
 definition uspecIsStrict :: "'a::ubcl_comp ufun uspec \<Rightarrow> bool" where
 "uspecIsStrict = uspecForall ufIsStrict"
@@ -107,9 +125,6 @@ qed
 
 
 
-definition ndaHelper2:: "channel set \<Rightarrow> channel set \<Rightarrow> 
-  's \<Rightarrow> (('s \<times>'e) \<Rightarrow> ('s \<times> 'm::message SB) set rev) \<Rightarrow> ('s \<Rightarrow> 'm SPS) \<Rightarrow> ('e \<Rightarrow> 'm SPS)" where
-"ndaHelper2 In Out s transition \<equiv> \<lambda> h. (\<lambda>e. ndaConcOutFlatten In Out (transition (s,e)) h)"
 
 
 lemma ndaHelper2_monofun: "monofun (ndaHelper2 In Out s transition)"
@@ -122,10 +137,6 @@ lemma ndaHelper2_monofun2: "monofun (ndaHelper2 In Out s)"
   apply(auto simp add: below_fun_def)
   by (metis (mono_tags, lifting) monofun_def ndaConcOutFlatten_def ndatodo_monofun2)
 
-definition nda_h_inner::"('s::type, 'm::message) ndAutomaton \<Rightarrow> ('s \<Rightarrow> 'm SPS) \<Rightarrow> ('s \<Rightarrow> 'm SPS)" where
-"nda_h_inner nda h \<equiv>  let dom = (ndaDom\<cdot>nda);
-                          ran = (ndaRan\<cdot>nda) in 
-     (\<lambda>s. spsStep dom ran\<cdot>(ndaHelper2 dom ran s (ndaTransition\<cdot>nda) h))"
 
 lemma nda_h_inner_dom [simp]: "uspecDom\<cdot>(nda_h_inner nda h s) = ndaDom\<cdot>nda"
   unfolding nda_h_inner_def Let_def  by simp
@@ -158,11 +169,6 @@ lemma nda_h_inner_monofun2: "monofun (nda_h_inner)"
   apply(simp add: ndadom_below_eq ndaran_below_eq)
   apply(auto simp add: below_fun_def)
   using nda_helper2_h2 by (simp add: nda_helper2_h2 monofun_cfun_arg)
-
-
-(* Similar to Rum96 *)
-definition nda_h :: "('s::type, 'm::message) ndAutomaton \<Rightarrow> ('s \<Rightarrow> 'm SPS)" where
-"nda_h nda \<equiv> lfp (SetPcpo.setify (\<lambda>a. USPEC (ndaDom\<cdot>nda) (ndaRan\<cdot>nda))) (nda_h_inner nda)"
 
 lemma nda_inner_good: "goodFormed (SetPcpo.setify (\<lambda>a. USPEC (ndaDom\<cdot>nda) (ndaRan\<cdot>nda))) (nda_h_inner nda)"
   unfolding goodFormed_def 
@@ -197,11 +203,6 @@ lemma nda_h_mono:  "monofun nda_h"
       apply (simp_all add: nda_h_inner_monofun nda_inner_good nda_h_valid_domain)
   by (metis (no_types) nda_inner_good ndadom_below_eq ndaran_below_eq)
 
-
-definition nda_H :: "('s, 'm::message) ndAutomaton \<Rightarrow> 'm SPS" where
-"nda_H nda \<equiv> ndaConcOutFlatten (ndaDom\<cdot>nda)(ndaRan\<cdot>nda) (ndaInitialState\<cdot>nda) (nda_h nda)" 
-
-
 lemma "cont (\<lambda>nda. fst (Rep_ndAutomaton nda))"
   by simp
 
@@ -234,6 +235,13 @@ lemma nda_h_final: assumes "sbedom sbe = ndaDom\<cdot>nda"
   sorry
 
 lemma nda_h_bottom: "uspecIsStrict (nda_h nda state)"
+  apply (subst nda_h_fixpoint)
+  apply (simp add: nda_h_inner_def)
+  apply (simp add: Let_def)
+  apply (simp add: ndaHelper2_def ndaConcOutFlatten_def)
+  apply (simp add: uspecIsStrict_def)
+  apply (rule uspec_ballI)
+  apply (rule ufisstrictI)
   sorry
 
 end

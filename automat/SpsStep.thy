@@ -320,7 +320,9 @@ lemma spsStep_cont[simp]: assumes "finite In"
 
 (*NewSpsStep Lemma End*)
   
+(*******************************************************************)
 subsection \<open>spsStep utils\<close>
+(*******************************************************************)
 
 lemma spstep_dom[simp]: assumes "finite In" shows "uspecDom\<cdot>(spsStep In Out\<cdot>H) = In"
   by (simp add: spsStep_def spsStep_m_def uspecdom_insert assms)

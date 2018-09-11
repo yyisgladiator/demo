@@ -668,7 +668,15 @@ lemma ufuntype_cont: "cont (\<lambda>f. (ufDom\<cdot>f, ufRan\<cdot>f))"
 (* insert rule for ufuntype *)
 lemma ufuntype_insert: "ufunType\<cdot>f = (ufDom\<cdot>f, ufRan\<cdot>f)"
   by (simp add: ufunType_def)
-  
+
+
+subsection \<open>ufIsStrict\<close>
+
+thm ufIsStrict_def
+lemma ufisstrictI: assumes "\<And>sb. ubclDom\<cdot>sb=ufDom\<cdot>uf \<Longrightarrow> ubclLen sb = 0 \<Longrightarrow> ((uf\<rightleftharpoons>sb) = ubclLeast (ufRan\<cdot>uf))"
+  shows "ufIsStrict uf"
+  by (simp add: assms ufIsStrict_def)
+
 
 subsection \<open>monoTick2cont\<close>
 
