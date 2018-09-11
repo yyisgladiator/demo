@@ -33,31 +33,28 @@ lemma medspf_insert: "(MedSPF ora) \<rightleftharpoons> sb = (Abs_ufun (tsynbMed
   by (simp add: MedSPF_def)
 
 text{* The domain of @{term MedSPF}. *}
-lemma medspf_ufdom: "ufDom\<cdot>(MedSPF ora) = {\<C> ''ds''}"
+lemma medspf_ufdom: "ufDom\<cdot>(MedSPF ora) = medInDom"
   apply (simp add: ufDom_def)
   apply (simp add: ubclDom_ubundle_def MedSPF_def tsynbMed_def)
   apply (subst rep_abs_cufun2)
-  using tsynbMed_def tsynbmed_ufwell apply simp
+  apply (metis (no_types) tsynbMed_def tsynbmed_ufwell)
   apply (simp add: domIff)
-  by (meson someI tsynbnull_ubdom)
+  by (meson medin_dom someI_ex)
 
 text{* The range of @{term MedSPF}. *}
-lemma medspf_ufran: "ufRan\<cdot>(MedSPF ora) = {\<C> ''dr''}"
+lemma medspf_ufran: "ufRan\<cdot>(MedSPF ora) = medOutDom"
   apply (simp add: ufran_least)
   apply (simp add: ubclLeast_ubundle_def medspf_ufdom ubclDom_ubundle_def)
-  apply (simp add: MedSPF_def tsynbmed_insert tsynbmed_ubundle_ubdom)
-  apply (simp add: ubdom_insert)
-  apply (subst ubrep_ubabs, simp_all)
-  by (simp add: ubWell_def usclOkay_stream_def natbool2abp_def abp2natbool_def)
+  by (simp add: MedSPF_def tsynbmed_insert tsynbmed_ubundle_ubdom)
 
 text{* The domain of the output bundle of @{term MedSPF}. *}
 lemma medspf_ubdom:
   assumes "ubDom\<cdot>sb = ufDom\<cdot>(MedSPF ora)"
-  shows "ubDom\<cdot>((MedSPF ora) \<rightleftharpoons> sb) = {\<C> ''dr''}"
-  by (simp add: assms medspf_ufran spf_ubDom)
+  shows "ubDom\<cdot>((MedSPF ora) \<rightleftharpoons> sb) = medOutDom"
+  by (metis assms medspf_ufdom medspf_ufran ubclDom_ubundle_def ufran_2_ubcldom2)
 
 text{* @{term MedSPF} is strict. *}
-lemma medspf_strict: "(MedSPF ora) \<rightleftharpoons> ubLeast{\<C> ''ds''} = ubLeast{\<C> ''dr''}"
+lemma medspf_strict: "(MedSPF ora) \<rightleftharpoons> ubLeast(medInDom) = ubLeast(medOutDom)"
   proof -
     have eq_empty: "natbool2abp\<cdot>(tsynMed\<cdot>(abp2natbool\<cdot>(ubLeast {\<C> ''ds''} . 
         \<C> ''ds''))\<cdot>ora) =  \<bottom>" 
@@ -109,6 +106,7 @@ lemma orafun_nempty: "oraFun n \<noteq> {}"
 subsection {* MedSPF step lemmata *}
 (* ----------------------------------------------------------------------- *)
 
+(*
 lemma createdsbundle_ubdom: "ubDom\<cdot>(createDsBundle a)= {\<C> ''ds''}"
   by (simp add: ubDom_def createDsBundle.rep_eq)
 
@@ -120,6 +118,7 @@ lemma createdrbundle_ubdom: "ubDom\<cdot>(createDrBundle a)= {\<C> ''dr''}"
 
 lemma createdrbundle_ubgetch: "createDrBundle m . \<C> ''dr'' = \<up> (\<M> (Pair_nat_bool m))"
   by (simp add: ubgetch_insert createDrBundle.rep_eq)
+*)
 
 (*lemma copied can be deleted *)
 lemma spfConcIn_step[simp]:

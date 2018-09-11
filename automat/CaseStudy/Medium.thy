@@ -310,64 +310,53 @@ lemma tsynmed_test_infstream:
 subsection {* basic properties of tsynbMed *}
 (* ----------------------------------------------------------------------- *)
 
-text{* The output bundle of @{term tsynbMed} is well-formed. *}
-lemma tsynbmed_ubwell [simp]: 
-  "ubWell [\<C> ''dr'' \<mapsto> natbool2abp\<cdot>(tsynMed\<cdot>(abp2natbool\<cdot>(sb  .  \<C> ''ds''))\<cdot>ora)]"
-  apply (simp add: ubWell_def usclOkay_stream_def natbool2abp_def abp2natbool_def ctype_tsyn_def
-          tsynmap_insert smap_sdom image_subset_iff)
-(*  by (metis image_eqI range_eqI tsynApplyElem.elims)*)
-sorry
+(* tsynbMed ist implizit immer ubWell, da über medOutSetstream_h definiert. *)
 
 text{* The domain of the output bundle of @{term tsynbMed}. *}
-lemma tsynbmed_ubundle_ubdom: "ubDom\<cdot>(medOutSetStream\<cdot>(tsynMed\<cdot>(medInGetStream\<cdot>sb)\<cdot>ora)) = medInDom"
-sorry
+lemma tsynbmed_ubundle_ubdom: "ubDom\<cdot>(medOutSetStream\<cdot>(tsynMed\<cdot>(medInGetStream\<cdot>sb)\<cdot>ora)) = medOutDom"
+  by (simp add: ubdom_insert medOutSetStream.rep_eq medOutSetStream_h.rep_eq medOutDom_def)
+
+(*text {* @{term tsynbMed}: Lossy medium function on time-synchonous stream bundles. *}
+definition tsynbMed :: "bool stream \<Rightarrow> 'a medMessage tsyn stream ubundle 
+  \<rightarrow> 'a medMessage tsyn stream ubundle option" where
+  "tsynbMed ora \<equiv> \<Lambda> sb. (ubDom\<cdot>sb = medInDom) \<leadsto> (medOutSetStream\<cdot>(tsynMed\<cdot>(medInGetStream\<cdot>sb)\<cdot>ora))"*)
 
 text{* @{term tsynbMed} is monotonous. *}
 lemma tsynbmed_mono [simp]:
-  "monofun (\<lambda> sb. (ubDom\<cdot>sb = {\<C> ''ds''}) \<leadsto> Abs_ubundle [
-                      \<C> ''dr'' \<mapsto> natbool2abp\<cdot>(tsynMed\<cdot>(abp2natbool\<cdot>(sb  .  \<C> ''ds''))\<cdot>ora)])"
+  "monofun (\<lambda> sb. (ubDom\<cdot>sb = medInDom) \<leadsto> (medOutSetStream\<cdot>(tsynMed\<cdot>(medInGetStream\<cdot>sb)\<cdot>ora)))"
   apply (fold ubclDom_ubundle_def)
   apply (rule ufun_monoI3)
   apply (rule monofunI)
-  apply (simp add: below_ubundle_def)
+  apply (simp add: below_ubundle_def medOutSetStream.rep_eq medOutSetStream_h.rep_eq)
   by (simp add: below_ubundle_def cont_pref_eq1I fun_below_iff monofun_cfun_fun some_below)
 
 text{* Chain on the output bundle of @{term tsynbMed}. *}
 lemma tsynbmed_chain: "chain Y \<Longrightarrow> 
-      chain (\<lambda>i::nat.[\<C> ''dr'' \<mapsto> natbool2abp\<cdot>(tsynMed\<cdot>(abp2natbool\<cdot>(Y i  .  \<C> ''ds''))\<cdot>ora)])"
-  by (simp add: chain_def fun_below_iff monofun_cfun_arg monofun_cfun_fun po_class.chainE 
-                some_below)
+      chain (\<lambda>i::nat.(medOutSetStream\<cdot>(tsynMed\<cdot>(medInGetStream\<cdot>(Y i))\<cdot>ora)))"
+  by simp
 
 text{* @{term tsynbMed} is continuous. *}
 lemma tsynbmed_cont [simp]:
-  "cont (\<lambda> sb. (ubDom\<cdot>sb = {\<C> ''ds''}) \<leadsto> Abs_ubundle [
-                      \<C> ''dr'' \<mapsto> natbool2abp\<cdot>(tsynMed\<cdot>(abp2natbool\<cdot>(sb  .  \<C> ''ds''))\<cdot>ora)])"
-  apply (fold ubclDom_ubundle_def)
-  apply (rule ufun_contI2)
-  apply (rule cont_Abs_UB)
-  apply (rule contI2)
-  apply (rule monofunI, simp_all)
-  apply (simp add: fun_belowI monofun_cfun_arg monofun_cfun_fun some_below)
-  using tsynbmed_chain 
-  by (simp add: contlub_cfun_arg contlub_cfun_fun fun_below_iff some_lub_chain_eq lub_fun)
+  "cont (\<lambda> sb. (ubDom\<cdot>sb = medInDom) \<leadsto> (medOutSetStream\<cdot>(tsynMed\<cdot>(medInGetStream\<cdot>sb)\<cdot>ora)))"
+  by simp
 
 text{* @{term tsynbMed} insertion lemma. *}
-lemma tsynbmed_insert: "tsynbMed ora\<cdot>sb = (ubDom\<cdot>sb = {\<C> ''ds''}) \<leadsto> Abs_ubundle [
-                      \<C> ''dr'' \<mapsto> natbool2abp\<cdot>(tsynMed\<cdot>(abp2natbool\<cdot>(sb  .  \<C> ''ds''))\<cdot>ora)]"
+lemma tsynbmed_insert: "tsynbMed ora\<cdot>sb = (ubDom\<cdot>sb = medInDom) 
+  \<leadsto> (medOutSetStream\<cdot>(tsynMed\<cdot>(medInGetStream\<cdot>sb)\<cdot>ora))"
   by (simp add: tsynbMed_def ubclDom_ubundle_def)
 
 text{* @{term tsynbMed} is well-formed. *}
 lemma tsynbmed_ufwell [simp]: "ufWell (tsynbMed ora)"
-  apply (rule ufun_wellI [of "tsynbMed ora" "{\<C> ''ds''}" "{\<C> ''dr''}"])
+  apply (rule ufun_wellI [of "tsynbMed ora" "medInDom" "medOutDom"])
   apply (simp_all add: ubclDom_ubundle_def domIff tsynbmed_insert)
   apply (meson option.distinct(1))
   by (metis option.distinct(1) tsynbmed_ubundle_ubdom)
 
 text {* The output stream of @{term tsynbMed}} on channel dr. *}
 lemma tsynbmed_getch_dr:
-  assumes "ubDom\<cdot>sb = {\<C> ''ds''}"
+  assumes "ubDom\<cdot>sb = medInDom"
   shows "((Rep_cfun (tsynbMed ora)) \<rightharpoonup> sb) . \<C> ''dr'' 
     =  natbool2abp\<cdot>(tsynMed\<cdot>(abp2natbool\<cdot>(sb  .  \<C> ''ds''))\<cdot>ora)"
-  by (simp add: tsynbmed_insert assms ubgetch_ubrep_eq)
+  sorry
 
 end
