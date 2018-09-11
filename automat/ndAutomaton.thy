@@ -119,20 +119,10 @@ lemma ndaHelper2_monofun2: "monofun (ndaHelper2 In Out s)"
   apply(auto simp add: below_fun_def)
   by (metis (mono_tags, lifting) monofun_def ndaToDo_def ndatodo_monofun2)
 
-
-(* delete first input element. This is here because "spfStep" does not call "sbRt" and the
-  ndaHelper2 should be injektive and more general *)
-definition ndaAnotherHelper :: "('s \<Rightarrow> 'm::message SPS) \<rightarrow> ('s \<Rightarrow> 'm SPS)" where
-"ndaAnotherHelper \<equiv> (\<Lambda> h. (\<lambda> s. spsRtIn\<cdot>(h s)))"
-
-lemma "cont (\<lambda> h. (\<lambda> s. spsRtIn\<cdot>(h s)))"
-  by simp
-
-
 definition nda_h_inner::"('s::type, 'm::message) ndAutomaton \<Rightarrow> ('s \<Rightarrow> 'm SPS) \<Rightarrow> ('s \<Rightarrow> 'm SPS)" where
 "nda_h_inner nda h \<equiv>  let dom = (ndaDom\<cdot>nda);
                           ran = (ndaRan\<cdot>nda) in 
-     (\<lambda>s. spsStep dom ran\<cdot>(ndaAnotherHelper\<cdot>(ndaHelper2 dom ran s (ndaTransition\<cdot>nda) h)))"
+     (\<lambda>s. spsStep dom ran\<cdot>(ndaHelper2 dom ran s (ndaTransition\<cdot>nda) h))"
 
 lemma nda_h_inner_dom [simp]: "uspecDom\<cdot>(nda_h_inner nda h s) = ndaDom\<cdot>nda"
   unfolding nda_h_inner_def Let_def  by simp
