@@ -900,6 +900,9 @@ lemma sbHdElem_cont: "cont (\<lambda> sb::'a stream ubundle. (\<lambda>c. (c \<i
   apply (simp add: sbHdElem_mono)
   using sbHdElem_cont_pre by blast
 
+lemma sbhdelem_insert: "sbHdElem\<cdot>sb = (\<lambda>c. (c \<in> ubDom\<cdot>sb) \<leadsto> (lshd\<cdot>(sb . c)))"
+  by(simp add: sbHdElem_def sbHdElem_cont)
+
 lemma sbHdElem_bottom_exI: assumes "(\<exists>c\<in>ubDom\<cdot>sb. sb  .  c = \<epsilon>)"
   shows "(\<exists>c::channel\<in>ubDom\<cdot>sb. sbHdElem\<cdot>sb\<rightharpoonup>c = \<bottom>)"
 proof -
