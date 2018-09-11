@@ -17,7 +17,7 @@ begin
 (* ----------------------------------------------------------------------- *)
 
 text {* @{term MedSPS}: Lossy medium function set for the Alternating Bit Protocol. *}
-definition MedSPS :: "nat \<Rightarrow> abpMessage tsyn SPS" where 
+definition MedSPS :: "nat \<Rightarrow> 'a medMessage tsyn SPS" where 
   "MedSPS n = Abs_uspec (Rev {(MedSPF ora) | ora. ora \<in> (oraFun n)}, Discr {\<C> ''ds''}, 
   Discr {\<C> ''dr''})"
 

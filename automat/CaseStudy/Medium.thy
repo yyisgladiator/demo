@@ -22,12 +22,12 @@ begin
 text{* @{term tsynMed}: Lossy medium on time-synchronous streams that gets messages and an oracle
        and will transmit the k-th message if the k-th element in the oracle is True, otherwise the 
        message will be discarded. *}
-definition tsynMed :: "(nat \<times> bool) tsyn stream \<rightarrow> bool stream \<rightarrow> (nat \<times> bool) tsyn stream" where
+definition tsynMed :: "'a tsyn stream \<rightarrow> bool stream \<rightarrow> 'a tsyn stream" where
   "tsynMed \<equiv> \<Lambda> msg ora. tsynProjFst\<cdot>(tsynFilter {x. snd x}\<cdot>(tsynZip\<cdot>msg\<cdot>ora))"
 
 text {* @{term tsynbMed}: Lossy medium function on time-synchonous stream bundles. *}
-definition tsynbMed :: "bool stream \<Rightarrow> (nat \<times> bool) medMessage tsyn stream ubundle 
-  \<rightarrow> (nat \<times> bool) medMessage tsyn stream ubundle option" where
+definition tsynbMed :: "bool stream \<Rightarrow> 'a medMessage tsyn stream ubundle 
+  \<rightarrow> 'a medMessage tsyn stream ubundle option" where
   "tsynbMed ora \<equiv> \<Lambda> sb. (ubDom\<cdot>sb = medInDom) \<leadsto> (medOutSetStream\<cdot>(tsynMed\<cdot>(medInGetStream\<cdot>sb)\<cdot>ora))"
 
 (* ----------------------------------------------------------------------- *)
@@ -240,7 +240,7 @@ lemma tsynmed_tsynlen_ora:
     have sdropwhile_null_nbot: "sdropwhile (\<lambda>x. x = null)\<cdot>msg \<noteq> \<epsilon>"
       by (metis Inf'_neq_0 msg_def "3.prems" tsynlen_sntimes_null tsynlen_strict)
     from sdropwhile_null_nbot obtain m where m_def: "shd (sdropwhile (\<lambda>x. x = null)\<cdot>msg) = Msg m"
-      by (metis (full_types) scases sdropwhile_resup shd1 tsynSnd.cases)
+      by (metis (full_types) scases sdropwhile_resup shd1 tsyn.exhaust)
     have tsynlen_srt_sdropwhile_null_inf: "tsynLen\<cdot>(srt\<cdot>(sdropwhile (\<lambda>x. x = null)\<cdot>msg)) = \<infinity>"
       by (metis m_def fold_inf lnat.sel_rews(2) msg_def "3.prems" sdropwhile_null_nbot surj_scons 
           tsynlen_sconc_msg tsynlen_sntimes_null)
@@ -301,7 +301,7 @@ lemma tsynmed_test_finstream_null:
   sorry
 
 text {* @{term tsynMed} test on infinite stream. *}
-lemma tsynrec_test_infstream:
+lemma tsynmed_test_infstream:
   "tsynMed\<cdot>((<[Msg(3, False), null, Msg(2, True),Msg(1, False)]>)\<infinity>)\<cdot>((<[True, False, True]>)\<infinity>)
     =(<[Msg(3, False), null, null, Msg(1, False)]>)\<infinity>"
   sorry

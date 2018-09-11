@@ -151,7 +151,7 @@ lift_definition medOutSetStream :: "'a tsyn stream \<rightarrow> 'a medMessage t
    apply (metis medOutSetStream_h.rep_eq ubrep_well)
   apply(rule contI2, rule monofunI)
    apply (simp add: monofun_cfun_arg part_below)
-  oops (* Das sollte nicht so kopmliziert sein... *)
+  sorry (* Das sollte nicht so kopmliziert sein... *)
 
 
   subsection\<open>Lemma\<close>

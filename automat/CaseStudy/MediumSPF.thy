@@ -17,7 +17,7 @@ begin
 (* ----------------------------------------------------------------------- *)
 
 text {* @{term MedSPF}: Lossy medium function for the Alternating Bit Protocol. *}
-definition MedSPF :: "bool stream \<Rightarrow> abpMessage tsyn SPF" where
+definition MedSPF :: "bool stream \<Rightarrow> 'a medMessage tsyn SPF" where
   "MedSPF ora \<equiv> Abs_ufun (tsynbMed ora)"
 
 text{* @{term oraFun}: Function to create ora streams with True at position n.*}
