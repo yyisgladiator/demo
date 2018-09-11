@@ -68,8 +68,29 @@ fun medInElem ::"'a tsyn \<Rightarrow> 'a medMessage tsyn sbElem" where
 "medInElem   -     = sbeNull medInDom"
 declare medInElem.simps[simp del]
 
-fun medIn ::"'a tsyn \<Rightarrow> 'a medMessage tsyn SB" where
+definition medIn ::"'a tsyn \<Rightarrow> 'a medMessage tsyn SB" where
 "medIn m = sbe2SB(medInElem m)"
+
+
+lift_definition medInGetStream :: "'a medMessage tsyn SB \<rightarrow> 'a tsyn stream" is
+"\<lambda>sb. tsynMap (inv medData)\<cdot>(sb . (\<C> ''in''))"
+  by(simp add: cfun_def)
+
+lift_definition medInSetStream_h :: "'a tsyn stream \<Rightarrow> 'a medMessage tsyn SB" is 
+"\<lambda> s. [(\<C> ''in'') \<mapsto> (tsynMap (medData)\<cdot>s)]"
+  unfolding ubWell_def usclOkay_stream_def ctype_tsyn_def
+  apply auto
+  by (metis imageI medMessageTransform.cases range_eqI)
+
+lift_definition medInSetStream :: "'a tsyn stream \<rightarrow> 'a medMessage tsyn SB" is
+"medInSetStream_h"
+  apply(auto simp add: cfun_def medInSetStream_h_def map_fun_def comp_def )
+  apply(rule cont_Abs_UB)
+  defer
+   apply (metis medInSetStream_h.rep_eq ubrep_well)
+  apply(rule contI2, rule monofunI)
+   apply (simp add: monofun_cfun_arg part_below)
+  oops (* Das sollte nicht so kopmliziert sein... *)
 
   subsection\<open>Lemma\<close>
 
@@ -81,7 +102,7 @@ lemma medinelem_dom[simp]: "sbeDom (medInElem a) = medInDom"
   by (auto simp add: medInElem.simps)
 
 lemma medin_dom[simp]: "ubDom\<cdot>(medIn a) = medInDom"
-  by(cases a, simp_all add: medInDom_def)
+  by (simp add: medIn_def)
 
 
 
@@ -109,8 +130,29 @@ fun medOutElem ::"'a tsyn \<Rightarrow> 'a medMessage tsyn sbElem" where
 "medOutElem   -     = sbeNull medOutDom"
 declare medOutElem.simps[simp del]
 
-fun medOut ::"'a tsyn \<Rightarrow> 'a medMessage tsyn SB" where
+definition medOut ::"'a tsyn \<Rightarrow> 'a medMessage tsyn SB" where
 "medOut m = sbe2SB(medOutElem m)"
+
+lift_definition medOutGetStream :: "'a medMessage tsyn SB \<rightarrow> 'a tsyn stream" is
+"\<lambda>sb. tsynMap (inv medData)\<cdot>(sb . (\<C> ''out''))"
+  by(simp add: cfun_def)
+
+lift_definition medOutSetStream_h :: "'a tsyn stream \<Rightarrow> 'a medMessage tsyn SB" is 
+"\<lambda> s. [(\<C> ''out'') \<mapsto> (tsynMap (medData)\<cdot>s)]"
+  unfolding ubWell_def usclOkay_stream_def ctype_tsyn_def
+  apply auto
+  by (metis imageI medMessageTransform.cases range_eqI)
+
+lift_definition medOutSetStream :: "'a tsyn stream \<rightarrow> 'a medMessage tsyn SB" is
+"medOutSetStream_h"
+  apply(auto simp add: cfun_def medOutSetStream_h_def map_fun_def comp_def )
+  apply(rule cont_Abs_UB)
+  defer
+   apply (metis medOutSetStream_h.rep_eq ubrep_well)
+  apply(rule contI2, rule monofunI)
+   apply (simp add: monofun_cfun_arg part_below)
+  oops (* Das sollte nicht so kopmliziert sein... *)
+
 
   subsection\<open>Lemma\<close>
 
@@ -122,7 +164,7 @@ lemma medoutelem_dom[simp]: "sbeDom (medOutElem a) = medOutDom"
   by (auto simp add: medOutElem.simps)
 
 lemma medout_dom[simp]: "ubDom\<cdot>(medOut a) = medOutDom"
-  by(cases a, simp_all add: medInDom_def)
+  by (simp add: medOut_def)
 
 
 end
