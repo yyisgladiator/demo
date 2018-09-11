@@ -166,9 +166,6 @@ section\<open>Predicates\<close>
 definition uspecIsConsistent :: "'m uspec \<Rightarrow> bool" where
 "uspecIsConsistent S \<equiv> ((Rep_rev_uspec S) \<noteq> {})"
 
-
-
-
 (****************************************************)
 section\<open>Lemmas\<close>
 (****************************************************) 

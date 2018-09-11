@@ -135,6 +135,8 @@ definition ufunIO :: "channel set \<Rightarrow> channel set \<Rightarrow> 'a ufu
 abbreviation theRep_abbrv :: "'a ufun \<Rightarrow> 'a \<Rightarrow> 'a " (infix "\<rightleftharpoons>" 62) where
 "(f \<rightleftharpoons> s) \<equiv> (Rep_cufun f)\<rightharpoonup>s"
 
+definition ufIsStrict :: "'a::ubcl_comp ufun \<Rightarrow> bool" where
+"ufIsStrict uf = (\<forall>sb. ubclDom\<cdot>sb=ufDom\<cdot>uf \<longrightarrow> ubclLen sb = 0 \<longrightarrow> ((uf\<rightleftharpoons>sb) = ubclLeast (ufRan\<cdot>uf)))"
 
 (****************************************************)
 section\<open>Subtype\<close>

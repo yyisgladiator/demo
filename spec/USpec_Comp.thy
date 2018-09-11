@@ -726,7 +726,12 @@ lemma uspecimage_useful_uspecrevset:
   assumes "\<And>x y. ((ufclDom\<cdot>x = ufclDom\<cdot>y \<and> ufclRan\<cdot>x = ufclRan\<cdot>y) \<Longrightarrow>
     (ufclDom\<cdot>(f x) = ufclDom\<cdot>(f y) \<and> ufclRan\<cdot>(f x) = ufclRan\<cdot>(f y)))"
   shows  "uspecRevSet\<cdot>(uspecImage f S) = setrevImage f (uspecRevSet\<cdot>S)"
-  by (smt assms uspecimage_well rep_abs_rev_simp rev_inv_rev setrevImage_def uspecImage_def uspecrevset_insert)
+  apply (rule setrev_eqI)
+  apply (simp add: uspecRevSet_def)
+  apply (simp add: uspecImage_def)
+  apply (subst rep_abs_uspec, simp_all)
+  using assms uspecimage_well apply blast
+  by (simp add: uspecrevset_insert)
 
 lemma uspecimage_useful_dom:
   assumes "\<And>x y. ((ufclDom\<cdot>x = ufclDom\<cdot>y \<and> ufclRan\<cdot>x = ufclRan\<cdot>y) \<Longrightarrow>
