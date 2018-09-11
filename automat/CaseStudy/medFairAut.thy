@@ -12,7 +12,7 @@ fun medFairTransitionH :: "medState \<Rightarrow> 'a tsyn \<Rightarrow> (medStat
 "medFairTransitionH    0    (Msg m) = { (  n  , (Msg m)) | n . True }"
 
 fun medFairTransition :: "(medState \<times> 'a medMessage tsyn sbElem) \<Rightarrow> ((medState \<times> 'a medMessage tsyn SB) set rev)" where
-"medFairTransition (s,f) = (if dom(Rep_sbElem f) = medInDom then 
+"medFairTransition (s,f) = (if sbeDom f = medInDom then 
     Rev ((\<lambda>(s,out). (s, medOut out)) ` (medFairTransitionH s (medMessageTransform ((Rep_sbElem f)\<rightharpoonup>(\<C> ''in''))))) 
   else undefined)"
 
@@ -33,5 +33,14 @@ lemma medfairaut_dom[simp]: "ndaDom\<cdot>medFairAut = medInDom"
 lemma medfairaut_ran[simp]: "ndaRan\<cdot>medFairAut = medOutDom"
   by (simp add: medFairAut.rep_eq ndaRan.rep_eq)
 
+
+lemma medfair_transition_tick [simp]: "medFairTransition (state, (medInElem -)) = Rev {(state, medOut -)}"
+  by(simp add: sbeNull.rep_eq medInDom_def medInElem.simps)
+
+lemma medfair_transition_msg_suc [simp]: "medFairTransition (Suc n, (medInElem (Msg m))) = Rev {(n, medOut -)}"
+  by(simp add: medInMsgElem.rep_eq medInDom_def medInElem.simps)
+
+lemma medfair_transition_msg_0 [simp]: "medFairTransition (0, (medInElem (Msg m))) = Rev {(n, medOut (Msg m)) | n. True}"
+  by(auto simp add: medInMsgElem.rep_eq medInDom_def image_iff medInElem.simps)
 
 end
