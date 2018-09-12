@@ -345,5 +345,48 @@ lemma spsstep_insert: assumes "finite In"
     (setrevFilter (spsStep_P In Out)\<cdot>(spsStep_h\<cdot>H))), Discr  In, Discr Out)"
   by (simp add: assms spsStep_m_def spsstep_2_spsstep_m)
 
+                                                    
+lemma spsstep_ele: "\<And> H f. finite In \<Longrightarrow> f \<in> (inv Rev (spsStep_h\<cdot>H)) \<Longrightarrow> spsStep_P In Out f \<Longrightarrow>
+  uspec_in ((\<lambda> h. spfStep In Out\<cdot>((\<lambda> h sbEl. spfRtIn\<cdot>(h sbEl)) h)) f) (spsStep In Out\<cdot>H)"
+proof - 
+  fix H::"'a sbElem \<Rightarrow> ('a stream\<^sup>\<Omega>) ufun uspec"
+  fix f::"'a sbElem \<Rightarrow> ('a stream\<^sup>\<Omega>) ufun"
+  assume a1: "finite In"
+  assume a2: "f \<in> (inv Rev (spsStep_h\<cdot>H))"
+  assume a3: "spsStep_P In Out f"
+  have f1: "f \<in> (inv Rev (setrevFilter (spsStep_P In Out)\<cdot>(spsStep_h\<cdot>H)))"
+    by (simp add: a2 a3 setrevfilter_reversed)
+  show "uspec_in ((\<lambda> h. spfStep In Out\<cdot>((\<lambda> h sbEl. spfRtIn\<cdot>(h sbEl)) h)) f) (spsStep In Out\<cdot>H)"
+    apply (simp add: spsstep_insert a1)
+    apply (simp add: uspecrevset_insert a1)
+    by (simp add: f1 inv_rev_rev setrevImage_def)
+qed
+
+lemma spsstep_ele_rev:  "\<And> H f. finite In \<Longrightarrow> 
+uspec_in g (spsStep In Out\<cdot>H) \<Longrightarrow>
+\<exists> f \<in> (inv Rev (spsStep_h\<cdot>H)). spsStep_P In Out f 
+  \<and> g = ((\<lambda> h. spfStep In Out\<cdot>((\<lambda> h sbEl. spfRtIn\<cdot>(h sbEl)) h)) f) "
+proof -
+  fix H :: "'a sbElem \<Rightarrow> ('a stream\<^sup>\<Omega>) ufun uspec" and f :: 'b
+  assume a1: "uspec_in g (spsStep In Out\<cdot>H)"
+  assume a2: "finite In"
+  obtain uu :: "('a sbElem \<Rightarrow> ('a stream\<^sup>\<Omega>) ufun) set \<Rightarrow> (('a sbElem \<Rightarrow> ('a stream\<^sup>\<Omega>) ufun) \<Rightarrow> ('a stream\<^sup>\<Omega>) ufun) \<Rightarrow> ('a stream\<^sup>\<Omega>) ufun \<Rightarrow> 'a sbElem \<Rightarrow> ('a stream\<^sup>\<Omega>) ufun" where
+    f3: "\<forall>x0 x1 x2. (\<exists>v3. x2 = x1 v3 \<and> v3 \<in> x0) = (x2 = x1 (uu x0 x1 x2) \<and> uu x0 x1 x2 \<in> x0)"
+    by moura
+  have f4: "Set.filter (spsStep_P In Out) (inv Rev (spsStep_h\<cdot>H)) = inv Rev (setrevFilter (spsStep_P In Out)\<cdot>(spsStep_h\<cdot>H))"
+    by (simp add: inv_rev_rev setrevfilter_insert)
+  have "spsStep In Out\<cdot>H = Abs_uspec (setrevImage (\<lambda>f. spfStep In Out\<cdot>(\<lambda>s. spfRtIn\<cdot>(f s))) (setrevFilter (spsStep_P In Out)\<cdot>(spsStep_h\<cdot>H)), Discr In, Discr Out)"
+    using a2 by (simp add: spsstep_insert)
+  then have "g \<in> (\<lambda>f. spfStep In Out\<cdot>(\<lambda>s. spfRtIn\<cdot>(f s))) ` Set.filter (spsStep_P In Out) (inv Rev (spsStep_h\<cdot>H))"
+    using f4 a2 a1 by (metis (no_types) rep_abs_rev_simp setrevImage_def spsStep_uspecWell_h uspecrevset_insert)
+  then have f5: "g = spfStep In Out\<cdot> (\<lambda>s. spfRtIn\<cdot> (uu (Set.filter (spsStep_P In Out) (inv Rev (spsStep_h\<cdot>H))) (\<lambda>f. spfStep In Out\<cdot>(\<lambda>s. spfRtIn\<cdot>(f s))) g s)) \<and> uu (Set.filter (spsStep_P In Out) (inv Rev (spsStep_h\<cdot>H))) (\<lambda>f. spfStep In Out\<cdot>(\<lambda>s. spfRtIn\<cdot>(f s))) g \<in> Set.filter (spsStep_P In Out) (inv Rev (spsStep_h\<cdot>H))"
+using f3 by (meson imageE)
+have "\<forall>f p F. ((f::'a sbElem \<Rightarrow> ('a stream\<^sup>\<Omega>) ufun) \<in> Set.filter p F) = (f \<in> F \<and> p f)"
+  using member_filter by blast
+then show "\<exists>f\<in>inv Rev (spsStep_h\<cdot>H). spsStep_P In Out f \<and> g = spfStep In Out\<cdot>(\<lambda>s. spfRtIn\<cdot>(f s))"
+    using f5 by meson
+qed
+
+
 end
   

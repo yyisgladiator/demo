@@ -228,20 +228,45 @@ shows "nda1 \<sqsubseteq> nda2"
    apply (metis Discr_undiscr)+
   done
 
+lemma ubcllen_0_not_elemwell: "ubclLen sb = (0::lnat) \<Longrightarrow>  \<not> sbHdElemWell sb"
+  by (metis sbHdElemWell_def sbLen_empty_bundle ubclDom_ubundle_def)
 
-lemma nda_h_final: assumes "sbedom sbe = ndaDom\<cdot>nda"
+
+lemma nda_h_final: assumes "sbeDom sbe = ndaDom\<cdot>nda"
   shows "spsConcIn (sbe2SB sbe) (nda_h nda state) = 
   uspecFlatten (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) (setrevImage (\<lambda>(s, sb). spsConcOut sb\<cdot>(nda_h nda s)) ((ndaTransition\<cdot>nda) (s,sbe)))"
   sorry
 
-lemma nda_h_bottom: "uspecIsStrict (nda_h nda state)"
-  apply (subst nda_h_fixpoint)
-  apply (simp add: nda_h_inner_def)
-  apply (simp add: Let_def)
-  apply (simp add: ndaHelper2_def ndaConcOutFlatten_def)
+lemma nda_h_bottom_h: "uspecIsStrict (spsStep (ndaDom\<cdot>nda) (ndaRan\<cdot>nda)\<cdot>
+  (ndaHelper2 (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) state (ndaTransition\<cdot>nda) (nda_h nda)))"
   apply (simp add: uspecIsStrict_def)
   apply (rule uspec_ballI)
   apply (rule ufisstrictI)
+proof -
+  fix x::"('a stream\<^sup>\<Omega>) ufun"
+  fix sb::"'a stream\<^sup>\<Omega>"
+  assume a1: "uspec_in x (spsStep (ndaDom\<cdot>nda) (ndaRan\<cdot>nda)\<cdot>(ndaHelper2 (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) state (ndaTransition\<cdot>nda) (nda_h nda)))"
+  assume a2: "ubclDom\<cdot>sb = ufDom\<cdot>x"
+  assume a3: "ubclLen sb = (0::lnat)"
+  obtain y where y_def_1: " y \<in> (inv Rev (spsStep_h\<cdot>(ndaHelper2 (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) state (ndaTransition\<cdot>nda) (nda_h nda))))"
+              and y_def_2: "spsStep_P (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) y"
+   and y_def_3: "x = spfStep (ndaDom\<cdot>nda) (ndaRan\<cdot>nda)\<cdot>(\<lambda>sbEl::'a sbElem. spfRtIn\<cdot>(y sbEl))"
+    using a1 nddom_finite spsstep_ele_rev by blast
+  have f1: "\<not> sbHdElemWell sb"
+    by (simp add: a3 ubcllen_0_not_elemwell)
+  show "x \<rightleftharpoons> sb = ubclLeast (ufRan\<cdot>x)"
+    apply (subst y_def_3)
+    by (simp add: a2 f1 spfStep_2_spfStep_inj spfStep_inj_def ufleast_apply y_def_3)
+qed
+
+lemma nda_h_bottom: "uspecIsStrict (nda_h nda state)"
+  by (metis nda_h_bottom_h nda_h_fixpoint nda_h_inner_def)
+
+lemma nda_h_final_back: assumes "\<And>state sbe. sbeDom sbe = ndaDom\<cdot>nda \<Longrightarrow> spsConcIn (sbe2SB sbe) (other state) = 
+  uspecFlatten (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) (setrevImage (\<lambda>(s, sb). spsConcOut sb\<cdot>(other s)) ((ndaTransition\<cdot>nda) (s,sbe)))"
+  and "\<And> state. uspecDom\<cdot>(other state) = ndaDom\<cdot>nda" and "\<And> state. uspecRan\<cdot>(other state) = ndaRan\<cdot>nda"
+shows "other = nda_h nda" 
   sorry
+
 
 end
