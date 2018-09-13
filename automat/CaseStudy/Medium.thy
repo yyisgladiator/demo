@@ -352,11 +352,17 @@ lemma tsynbmed_ufwell [simp]: "ufWell (tsynbMed ora)"
   apply (meson option.distinct(1))
   by (metis option.distinct(1) tsynbmed_ubundle_ubdom)
 
-text {* The output stream of @{term tsynbMed}} on channel dr. *}
-lemma tsynbmed_getch_dr:
+text {* Medium output stream of @{term tsynbMed}}. *}
+lemma tsynbmed_medoutgetstream:
   assumes "ubDom\<cdot>sb = medInDom"
-  shows "((Rep_cfun (tsynbMed ora)) \<rightharpoonup> sb) . \<C> ''dr'' 
-    =  natbool2abp\<cdot>(tsynMed\<cdot>(abp2natbool\<cdot>(sb  .  \<C> ''ds''))\<cdot>ora)"
-  sorry
+  shows "medOutGetStream\<cdot>((Rep_cfun (tsynbMed ora)) \<rightharpoonup> sb)
+    = tsynMed\<cdot>(medInGetStream\<cdot>sb)\<cdot>ora"
+  by (simp add: tsynbmed_insert assms medoutgetstream_medoutsetstream)
+
+text {* The output stream of @{term tsynbMed}} on channel out. *}
+lemma tsynbmed_getch_out: assumes "ubDom\<cdot>sb = medInDom"
+  shows "((Rep_cfun (tsynbMed ora))\<rightharpoonup>sb)  .  \<C> ''out'' 
+    = tsynMap (medData)\<cdot>(tsynMed\<cdot>(medInGetStream\<cdot>sb)\<cdot>ora)"
+  by (simp add: tsynbmed_insert assms medOutSetStream_def medOutSetStream_h_def tsynmap_medData)
 
 end

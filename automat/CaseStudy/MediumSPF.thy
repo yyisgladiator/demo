@@ -106,20 +106,6 @@ lemma orafun_nempty: "oraFun n \<noteq> {}"
 subsection {* MedSPF step lemmata *}
 (* ----------------------------------------------------------------------- *)
 
-(*
-lemma createdsbundle_ubdom: "ubDom\<cdot>(createDsBundle a)= {\<C> ''ds''}"
-  by (simp add: ubDom_def createDsBundle.rep_eq)
-
-lemma createdsbundle_ubgetch: "createDsBundle m . \<C> ''ds'' = \<up> (\<M> (Pair_nat_bool m))"
-  by (simp add: ubgetch_insert createDsBundle.rep_eq)
-
-lemma createdrbundle_ubdom: "ubDom\<cdot>(createDrBundle a)= {\<C> ''dr''}"
-  by (simp add: ubDom_def createDrBundle.rep_eq)
-
-lemma createdrbundle_ubgetch: "createDrBundle m . \<C> ''dr'' = \<up> (\<M> (Pair_nat_bool m))"
-  by (simp add: ubgetch_insert createDrBundle.rep_eq)
-*)
-
 (*lemma copied can be deleted *)
 lemma spfConcIn_step[simp]:
   assumes  "ubDom\<cdot>sb = ufDom\<cdot>spf"
@@ -127,7 +113,7 @@ lemma spfConcIn_step[simp]:
   by (simp_all add: assms spfConcIn_def ubclDom_ubundle_def Int_absorb1)
 
 lemma medspf_spfconc_null: assumes "ora \<in> oraFun n"  
-  shows "spfConcIn (tsynbNull(\<C> ''ds''))\<cdot>(MedSPF ora) = spfConcOut (tsynbNull(\<C> ''dr''))\<cdot>(MedSPF ora)"
+  shows "spfConcIn (medIn -)\<cdot>(MedSPF ora) = spfConcOut (medOut -)\<cdot>(MedSPF ora)"
   apply (rule spf_eq)
   apply (simp add: medspf_ufdom)+
   apply (subst medspf_ubdom)
@@ -135,11 +121,13 @@ lemma medspf_spfconc_null: assumes "ora \<in> oraFun n"
   apply (rule ub_eq)
   apply (simp add: medspf_ubdom medspf_ufdom)+
   using assms
-  by (simp add: medspf_insert tsynbmed_getch_dr usclConc_stream_def abp2natbool_def natbool2abp_def
-    tsynmap_sconc_null orafun_nbot tsynmed_sconc_null)
+  by (simp add: medspf_insert usclConc_stream_def medOutDom_def tsynbmed_getch_out 
+    medingetstream_ubconc_null orafun_nbot tsynmed_sconc_null tsynmap_sconc medout_null 
+    tsynmap_singleton_null)
 
 lemma medspf_spfconc_msg_nzero: assumes "ora1 \<in> oraFun (Suc n)" obtains ora2 where "ora2 \<in> oraFun n"
-  and "spfConcIn (createDsBundle m)\<cdot>(MedSPF ora1) = spfConcOut (tsynbNull(\<C> ''dr''))\<cdot>(MedSPF ora2)"
+  and "spfConcIn (medIn m)\<cdot>(MedSPF ora1) = spfConcOut (medOut -)\<cdot>(MedSPF ora2)"
+(*TODO*)
   using assms
   proof -
     have ora1_shd_f: "\<not>(snth 0 ora1)"
@@ -170,7 +158,8 @@ lemma medspf_spfconc_msg_nzero: assumes "ora1 \<in> oraFun (Suc n)" obtains ora2
   qed           
 
 lemma medspf_spfconc_msg_zero: assumes "ora1 \<in> oraFun 0" obtains ora2 where "ora2 \<in> oraFun n"
-  and "spfConcIn (createDsBundle m)\<cdot>(MedSPF ora1) = spfConcOut (createDrBundle m)\<cdot>(MedSPF ora2)"
+  and "spfConcIn (medIn m)\<cdot>(MedSPF ora1) = spfConcOut (medOut m)\<cdot>(MedSPF ora2)"
+(*TODO*)
   using assms
   proof -
     obtain ora2 where ora2_def: "ora2 \<in> oraFun n"
