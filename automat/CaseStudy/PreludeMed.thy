@@ -66,7 +66,6 @@ lift_definition medInMsgElem :: "'a \<Rightarrow> 'a medMessage tsyn sbElem" is
 fun medInElem ::"'a tsyn \<Rightarrow> 'a medMessage tsyn sbElem" where
 "medInElem (Msg m) = medInMsgElem m" |
 "medInElem   -     = sbeNull medInDom"
-print_theorems
 declare medInElem.simps[simp del]
 
 definition medIn ::"'a tsyn \<Rightarrow> 'a medMessage tsyn SB" where

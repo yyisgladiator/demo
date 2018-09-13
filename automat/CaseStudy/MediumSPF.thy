@@ -56,16 +56,15 @@ lemma medspf_ubdom:
 text{* @{term MedSPF} is strict. *}
 lemma medspf_strict: "(MedSPF ora) \<rightleftharpoons> ubLeast(medInDom) = ubLeast(medOutDom)"
   proof -
-    have eq_empty: "natbool2abp\<cdot>(tsynMed\<cdot>(abp2natbool\<cdot>(ubLeast {\<C> ''ds''} . 
-        \<C> ''ds''))\<cdot>ora) =  \<bottom>" 
-      by (simp add: abp2natbool_def natbool2abp_def)
-    have partial_eq:" [\<C> ''dr'' \<mapsto> \<bottom>] =  (\<lambda>a. (a \<in> {\<C> ''dr''}) \<leadsto> \<bottom>)" 
+    have partial_eq:" [\<C> ''out'' \<mapsto> \<bottom>] =  (\<lambda>a. (a \<in> {\<C> ''out''}) \<leadsto> \<bottom>)" 
       by (simp add: fun_upd_def)
-    hence "Abs_ubundle [\<C> ''dr'' \<mapsto> \<bottom>] = ubLeast {\<C> ''dr''}" 
+    hence "Abs_ubundle [\<C> ''out'' \<mapsto> \<bottom>] = ubLeast {\<C> ''out''}" 
       by (simp add: partial_eq ubLeast_def)
-    hence "Rep_cfun (tsynbMed ora) \<rightharpoonup> ubLeast {\<C> ''ds''} = ubLeast {\<C> ''dr''}" 
-      using tsynbMed_def eq_empty by simp 
-    thus ?thesis by (simp add: medspf_insert)
+    hence "Rep_cfun (tsynbMed ora) \<rightharpoonup> ubLeast {\<C> ''in''} = ubLeast {\<C> ''out''}" 
+      by (simp add: medInDom_def medInGetStream.rep_eq medOutSetStream.rep_eq 
+        medOutSetStream_h.abs_eq tsynbmed_insert)
+    thus ?thesis 
+      by (simp add: MedSPF_def medInDom_def medOutDom_def)
   qed
 
 (* ----------------------------------------------------------------------- *)
@@ -142,7 +141,7 @@ lemma medspf_spfconc_msg_nzero: assumes "ora1 \<in> oraFun (Suc n)" obtains ora2
       by (metis (no_types, lifting) CollectD Suc_less_eq assms ora2def oraFun_def snth_scons)
     have ora2_orafun: "ora2 \<in> oraFun n"
       by (simp add: ora2_f ora2_fair ora2_snth oraFun_def)
-    have "spfConcIn (createDsBundle m)\<cdot>(MedSPF ora1) = spfConcOut (tsynbNull(\<C> ''dr''))\<cdot>(MedSPF ora2)"
+    have "spfConcIn (medIn m)\<cdot>(MedSPF ora1) = spfConcOut (medOut -)\<cdot>(MedSPF ora2)"
       apply (rule spf_eq)
       apply (simp add: medspf_ufdom)+
       apply (subst medspf_ubdom)
@@ -150,9 +149,9 @@ lemma medspf_spfconc_msg_nzero: assumes "ora1 \<in> oraFun (Suc n)" obtains ora2
       apply (rule ub_eq)
       apply (simp add: medspf_ubdom medspf_ufdom)+
       using assms
-      by (simp add: medspf_insert tsynbmed_getch_dr usclConc_stream_def abp2natbool_def 
-        natbool2abp_def ora2def createdsbundle_ubdom createdsbundle_ubgetch tsynmap_sconc_msg 
-        tsynmed_sconc_msg_f tsynmap_sconc_null)
+      apply (simp add: medspf_insert tsynbmed_getch_out usclConc_stream_def 
+         ora2def tsynmap_sconc_msg tsynmed_sconc_msg_f tsynmap_sconc_null)
+      sorry
    then show ?thesis
      using ora2_orafun that by simp
   qed           
@@ -168,7 +167,7 @@ lemma medspf_spfconc_msg_zero: assumes "ora1 \<in> oraFun 0" obtains ora2 where 
       using assms orafun_snth snth_shd by blast
     obtain ora where ora_def: "ora1 = \<up>True \<bullet> ora"
       by (metis (full_types) assms ora1_shd_t orafun_nbot surj_scons)
-    have "spfConcIn (createDsBundle m)\<cdot>(MedSPF ora1) = spfConcOut (createDrBundle m)\<cdot>(MedSPF ora2)"
+    have "spfConcIn (medIn m)\<cdot>(MedSPF ora1) = spfConcOut (medOut m)\<cdot>(MedSPF ora2)"
       apply (rule spf_eq)
       apply (simp add: medspf_ufdom)+
       apply (subst medspf_ubdom)
@@ -176,9 +175,8 @@ lemma medspf_spfconc_msg_zero: assumes "ora1 \<in> oraFun 0" obtains ora2 where 
       apply (rule ub_eq)
       apply (simp add: medspf_ubdom medspf_ufdom)+
       using assms
-      apply (simp add: medspf_insert createdsbundle_ubdom createdsbundle_ubgetch tsynbmed_getch_dr
-        usclConc_stream_def ora_def tsynmap_sconc_msg abp2natbool_def natbool2abp_def 
-        tsynmed_sconc_msg_t pair_invpair_inv)
+      apply (simp add: medspf_insert tsynbmed_getch_out usclConc_stream_def ora_def tsynmap_sconc_msg
+        tsynmed_sconc_msg_t)
 oops
 
 end
