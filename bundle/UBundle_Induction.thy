@@ -87,6 +87,22 @@ proof(rule ub_eq)
   thus "?L .c = b .c" using usclTake_lub by simp
 qed
 
+lemma ubTakeLen: assumes "ubDom\<cdot>x \<noteq> {}"
+  shows "(ubLen (ubTake a\<cdot>x)) \<le> Fin a"
+  using assms
+proof (induction a)
+  case 0
+  then show ?case
+    by (metis (mono_tags, lifting) Fin_02bot lnat_po_eq_conv lnzero_def ubLen_def ubleast_ubgetch 
+        ublen_min_on_channel ubtake_ubdom ubtake_zero usclLen_bot)
+next
+  case (Suc a)
+  have "\<And>c. c \<in> ubDom\<cdot>x \<Longrightarrow> usclLen\<cdot>((ubTake (Suc a)\<cdot>x) . c) \<le> Fin (Suc a)"
+    by (metis le_cases ubtake_ubgetch usclTake_eq usclTake_len)
+  then show ?case 
+    by (metis (no_types, lifting) assms ubLen_def ublen_min_on_channel ubtake_ubdom)
+qed
+
 
 (* ----------------------------------------------------------------------- *)
   subsection \<open>ubHd\<close>
