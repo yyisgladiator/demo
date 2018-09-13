@@ -89,17 +89,10 @@ qed
 
 lemma ubTakeLen: assumes "ubDom\<cdot>x \<noteq> {}"
   shows "(ubLen (ubTake a\<cdot>x)) \<le> Fin a"
-  using assms
-proof (induction a)
-  case 0
-  then show ?case
-    by (metis (mono_tags, lifting) Fin_02bot lnat_po_eq_conv lnzero_def ubLen_def ubleast_ubgetch 
-        ublen_min_on_channel ubtake_ubdom ubtake_zero usclLen_bot)
-next
-  case (Suc a)
-  have "\<And>c. c \<in> ubDom\<cdot>x \<Longrightarrow> usclLen\<cdot>((ubTake (Suc a)\<cdot>x) . c) \<le> Fin (Suc a)"
+proof-
+  have "\<And>c. c \<in> ubDom\<cdot>x \<Longrightarrow> usclLen\<cdot>((ubTake a\<cdot>x) . c) \<le> Fin a"
     by (metis le_cases ubtake_ubgetch usclTake_eq usclTake_len)
-  then show ?case 
+  thus ?thesis
     by (metis (no_types, lifting) assms ubLen_def ublen_min_on_channel ubtake_ubdom)
 qed
 
@@ -153,6 +146,9 @@ lemma ubRt2usclrt[simp]: assumes "ubWell [c \<mapsto> x]"
                         shows "ubRt\<cdot>(Abs_ubundle [c \<mapsto> x]) = (Abs_ubundle [c \<mapsto> usclDrop 1 \<cdot>x])"
   by (smt assms dom_empty dom_fun_upd fun_upd_same option.discI option.sel singletonD ubMapStream_ubGetCh ubRt_def ubWell_def ubdom_ubrep_eq ubdrop_insert ubdrop_ubdom ubgetchI ubgetch_insert ubrep_ubabs usclDrop_well)
 
+lemma ubRtLen: "lnsuc\<cdot>(ubLen (ubRt\<cdot>x)) = ubLen x"
+  oops
+  
 
 (* ----------------------------------------------------------------------- *)
   subsection\<open>MaxLen\<close>
