@@ -112,6 +112,10 @@ qed
 lemma ubhd_ubdom[simp]: "ubDom\<cdot>(ubHd\<cdot>b) = ubDom\<cdot>b"
   by(simp add: ubHd_def)
 
+lemma ubHdLen: assumes "ubDom\<cdot>x \<noteq> {}" 
+  shows "ubLen (ubHd\<cdot>x) \<le> Fin (Suc(0))"
+  by (simp add: assms ubHd_def ubTakeLen)
+
 
 (* ----------------------------------------------------------------------- *)
   subsection \<open>ubDrop\<close>
