@@ -712,7 +712,7 @@ proof -
     by blast
 qed
 
-
+subsection \<open>uspecImage\<close>
 
 lemma  uspecimage_well:
   assumes "\<And>x y. ((ufclDom\<cdot>x = ufclDom\<cdot>y \<and> ufclRan\<cdot>x = ufclRan\<cdot>y) \<Longrightarrow>
@@ -894,6 +894,29 @@ proof -
     by (meson assms(2) injD setrevimage_inj_inj)
 qed
 
+lemma uspecimage_ele: assumes "uspec_in y (uspecImage f H)"
+  and "\<And>x y. ((ufclDom\<cdot>x = ufclDom\<cdot>y \<and> ufclRan\<cdot>x = ufclRan\<cdot>y) \<Longrightarrow>
+    (ufclDom\<cdot>(f x) = ufclDom\<cdot>(f y) \<and> ufclRan\<cdot>(f x) = ufclRan\<cdot>(f y)))"
+obtains x where "uspec_in x H" and "y = f x"
+proof -
+  assume a1: "\<And>x. \<lbrakk>uspec_in x H; y = f x\<rbrakk> \<Longrightarrow> thesis"
+  have "\<forall>f u. (\<exists>b ba. (ufclDom\<cdot>(b::'b) = ufclDom\<cdot>ba \<and> ufclRan\<cdot>b = ufclRan\<cdot>ba) \<and> (ufclDom\<cdot>(f b::'a) \<noteq> ufclDom\<cdot>(f ba) \<or> ufclRan\<cdot>(f b) \<noteq> ufclRan\<cdot>(f ba))) \<or> uspecRevSet\<cdot>(uspecImage f u) = setrevImage f (uspecRevSet\<cdot>u)"
+    by (meson uspecimage_useful_uspecrevset)
+  then obtain bb :: "('b \<Rightarrow> 'a) \<Rightarrow> 'b" and bba :: "('b \<Rightarrow> 'a) \<Rightarrow> 'b" where
+    f2: "\<forall>f u. (ufclDom\<cdot>(bb f) = ufclDom\<cdot>(bba f) \<and> ufclRan\<cdot>(bb f) = ufclRan\<cdot>(bba f)) \<and> (ufclDom\<cdot>(f (bb f)) \<noteq> ufclDom\<cdot>(f (bba f)) \<or> ufclRan\<cdot>(f (bb f)) \<noteq> ufclRan\<cdot>(f (bba f))) \<or> uspecRevSet\<cdot>(uspecImage f u) = setrevImage f (uspecRevSet\<cdot>u)"
+    by moura
+  obtain bbb :: "'b set rev \<Rightarrow> ('b \<Rightarrow> 'a) \<Rightarrow> 'a \<Rightarrow> 'b" where
+    f3: "\<forall>x0 x1 x2. (\<exists>v3. v3 \<in> inv Rev x0 \<and> x2 = x1 v3) = (bbb x0 x1 x2 \<in> inv Rev x0 \<and> x2 = x1 (bbb x0 x1 x2))"
+    by moura
+  have "uspecRevSet\<cdot>(uspecImage f H) = setrevImage f (uspecRevSet\<cdot>H)"
+    using f2 by (meson assms(2))
+  then have "y \<in> inv Rev (setrevImage f (uspecRevSet\<cdot>H))"
+    using assms(1) by force
+  then have "uspec_in (bbb (uspecRevSet\<cdot>H) f y) H \<and> y = f (bbb (uspecRevSet\<cdot>H) f y)"
+    using f3 by (meson setrevimage_mono_obtain3)
+  then show ?thesis
+    using a1 by blast
+qed 
 
 subsection \<open>uspecStateLeast\<close>
 

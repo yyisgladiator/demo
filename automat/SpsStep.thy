@@ -59,6 +59,10 @@ qed
   
 lemma spsStep_h_insert:"spsStep_h\<cdot>f = setify\<cdot>(\<lambda>e. uspecRevSet\<cdot>(f e))"
   by(simp add: spsStep_h_def)
+
+lemma spsstep_h_ele: assumes "g \<in> inv Rev (spsStep_h\<cdot>H)"
+  shows "\<And> sbe. uspec_in (g sbe) (H sbe)"
+  by (metis (no_types, lifting) assms equalityCE mem_Collect_eq rev.inject rev_inv_rev setify_insert spsStep_h_insert)
     
 (*NewSpsStep Lemma*)    
     
