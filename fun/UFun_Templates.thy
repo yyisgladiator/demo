@@ -98,18 +98,18 @@ section \<open>Definitions\<close>
 (* --------------------------------------------------------------------------------------------- *)
 
 (* General 1x1 Ufun constructor with 1 input and 1 output channel *)
-definition uf_1x1 :: "('a \<rightarrow> 'a) \<Rightarrow> (channel \<times> channel) \<Rightarrow> ('a\<^sup>\<Omega>) ufun" where
+definition uf_1x1 :: "('a \<rightarrow> 'a) \<Rightarrow> (channel \<times> channel) \<Rightarrow> ('a\<^sup>\<Omega>,'a\<^sup>\<Omega>) ufun" where
 "uf_1x1 f cs \<equiv> Abs_cufun (\<lambda> (sb::('a\<^sup>\<Omega>)). (ubDom\<cdot>sb = {(fst cs)}) 
                              \<leadsto> (Abs_ubundle [(snd cs) \<mapsto> f\<cdot>(sb . (fst cs))]))"
 
 (* General 2x1 Ufun constructor with 2 input and 1 output channel *)
-definition uf_2x1 :: "('a \<rightarrow> 'a \<rightarrow> 'a) \<Rightarrow>  (channel \<times> channel \<times> channel)  \<Rightarrow> ('a\<^sup>\<Omega>) ufun" where
+definition uf_2x1 :: "('a \<rightarrow> 'a \<rightarrow> 'a) \<Rightarrow>  (channel \<times> channel \<times> channel)  \<Rightarrow> ('a\<^sup>\<Omega>,'a\<^sup>\<Omega>) ufun" where
 "uf_2x1 f cs \<equiv> Abs_cufun (\<lambda>b. (ubDom\<cdot>b = {(fst cs), (fst (snd cs))}) 
                           \<leadsto> (Abs_ubundle [(snd (snd cs))\<mapsto>f\<cdot>(b . (fst cs))\<cdot>(b . (fst (snd cs)))]))"
 
 (* General 2x2 Ufun constructor with 2 input and 2 output channels *)
 definition uf_2x2 :: "('a \<rightarrow> 'a \<rightarrow> 'a) \<Rightarrow> ('a \<rightarrow> 'a \<rightarrow> 'a)
-                      \<Rightarrow> (channel \<times> channel) \<Rightarrow> (channel \<times> channel) \<Rightarrow> ('a\<^sup>\<Omega>) ufun" where
+                      \<Rightarrow> (channel \<times> channel) \<Rightarrow> (channel \<times> channel) \<Rightarrow> ('a\<^sup>\<Omega>,'a\<^sup>\<Omega>) ufun" where
 "uf_2x2 f1 f2 Ics Ocs \<equiv> Abs_cufun (\<lambda> (sb::('a\<^sup>\<Omega>)). (ubDom\<cdot>sb = {(fst Ics), (snd Ics)}) 
                           \<leadsto> (Abs_ubundle [(fst Ocs)\<mapsto>f1\<cdot>(sb . (fst Ics))\<cdot>(sb . (snd Ics)),
                                (snd Ocs)\<mapsto>f2\<cdot>(sb . (fst Ics))\<cdot>(sb . (snd Ics))]))"
@@ -885,7 +885,7 @@ section \<open>Predefined UFuns\<close>
 subsection \<open>Definitions\<close>
 
 (* 1x1 -- Universal identity function *)
-definition uf_id :: "(channel \<times> channel) \<Rightarrow> ('a\<^sup>\<Omega>) ufun" where
+definition uf_id :: "(channel \<times> channel) \<Rightarrow> ('a\<^sup>\<Omega>,'a\<^sup>\<Omega>) ufun" where
 "uf_id cs \<equiv> uf_1x1 ID cs"
 
 (* 2x1 -- Universal function adding two streams *)
@@ -896,7 +896,7 @@ begin
   instance ..
 end
 
-definition uf_add :: "(channel \<times> channel \<times> channel) \<Rightarrow> (nat stream\<^sup>\<Omega>) ufun" where
+definition uf_add :: "(channel \<times> channel \<times> channel) \<Rightarrow> (nat stream\<^sup>\<Omega>,nat stream\<^sup>\<Omega>) ufun" where
 "uf_add cs \<equiv> uf_2x1 add cs"
 
 (* 2x2 -- Universal function swapping two channels around *)
@@ -906,7 +906,7 @@ definition swap1 :: "'a \<rightarrow> 'a \<rightarrow> 'a" where
 definition swap2 :: "'a \<rightarrow> 'a \<rightarrow> 'a" where
 "swap2 \<equiv> \<Lambda> a b. b"
 
-definition uf_swap :: "(channel \<times> channel) \<Rightarrow> ('a\<^sup>\<Omega>) ufun" where
+definition uf_swap :: "(channel \<times> channel) \<Rightarrow> ('a\<^sup>\<Omega>,'a\<^sup>\<Omega>) ufun" where
 "uf_swap cs \<equiv> uf_2x2 (swap1::'a \<rightarrow> 'a \<rightarrow> 'a) (swap2::'a \<rightarrow> 'a \<rightarrow> 'a) cs (snd cs, fst cs)"
 
 
@@ -915,16 +915,16 @@ subsection \<open>Lemmas\<close>
 subsubsection \<open>uf_id\<close>
 
 lemma uf_id_dom: assumes "map_io_well_1x1 usclOkay (ID::'a \<rightarrow> 'a) ch1 ch2"
-                   shows "ufDom\<cdot>((uf_id::(channel \<times> channel) \<Rightarrow> ('a\<^sup>\<Omega>) ufun) (ch1, ch2)) = {ch1}"
+                   shows "ufDom\<cdot>((uf_id::(channel \<times> channel) \<Rightarrow> ('a\<^sup>\<Omega>,'a\<^sup>\<Omega>) ufun) (ch1, ch2)) = {ch1}"
   by(simp add: uf_id_def assms)
 
 lemma uf_id_ran: assumes "map_io_well_1x1 usclOkay (ID::'a \<rightarrow> 'a) ch1 ch2"
-                   shows "ufRan\<cdot>((uf_id::(channel \<times> channel) \<Rightarrow> ('a\<^sup>\<Omega>) ufun) (ch1, ch2)) = {ch2}"
+                   shows "ufRan\<cdot>((uf_id::(channel \<times> channel) \<Rightarrow> ('a\<^sup>\<Omega>,'a\<^sup>\<Omega>) ufun) (ch1, ch2)) = {ch2}"
   by(simp add: uf_id_def assms)
 
 lemma uf_id_apply: assumes "map_io_well_1x1 usclOkay (ID::'a \<rightarrow> 'a) ch1 ch2"
                        and "usclOkay ch1 s"
-                     shows "((uf_id::(channel \<times> channel) \<Rightarrow> ('a\<^sup>\<Omega>) ufun) (ch1, ch2))
+                     shows "((uf_id::(channel \<times> channel) \<Rightarrow> ('a\<^sup>\<Omega>,'a\<^sup>\<Omega>) ufun) (ch1, ch2))
                                              \<rightleftharpoons> (Abs_ubundle [ch1 \<mapsto> s]) = (Abs_ubundle [ch2 \<mapsto> s])"
   by(simp add: uf_id_def assms uf_1x1_apply)
 
@@ -933,12 +933,12 @@ subsubsection \<open>uf_add\<close>
 
 lemma uf_add_dom:
   assumes "map_io_well_2x1 usclOkay (add::nat stream \<rightarrow> nat stream \<rightarrow> nat stream) ch1 ch2 ch3"
-    shows "ufDom\<cdot>((uf_add::(channel\<times>channel\<times>channel)\<Rightarrow>(nat stream\<^sup>\<Omega>) ufun) (ch1,ch2,ch3)) = {ch1,ch2}"
+    shows "ufDom\<cdot>((uf_add::(channel\<times>channel\<times>channel)\<Rightarrow>(nat stream\<^sup>\<Omega>,nat stream\<^sup>\<Omega>) ufun) (ch1,ch2,ch3)) = {ch1,ch2}"
   by(simp add: uf_add_def assms)
 
 lemma uf_add_ran:
   assumes "map_io_well_2x1 usclOkay (add::nat stream \<rightarrow> nat stream \<rightarrow> nat stream) ch1 ch2 ch3"
-    shows "ufRan\<cdot>((uf_add::(channel\<times>channel\<times>channel) \<Rightarrow> (nat stream\<^sup>\<Omega>) ufun) (ch1,ch2,ch3)) = {ch3}"
+    shows "ufRan\<cdot>((uf_add::(channel\<times>channel\<times>channel) \<Rightarrow> (nat stream\<^sup>\<Omega>,nat stream\<^sup>\<Omega>) ufun) (ch1,ch2,ch3)) = {ch3}"
   by(simp add: uf_add_def assms)
 
 lemma uf_add_apply:
@@ -946,7 +946,7 @@ lemma uf_add_apply:
       and "usclOkay ch1 s1"
       and "usclOkay ch2 s2"
       and "ch1 \<noteq> ch2"
-    shows "((uf_add::(channel \<times> channel \<times> channel) \<Rightarrow> (nat stream\<^sup>\<Omega>) ufun) (ch1, ch2, ch3))
+    shows "((uf_add::(channel \<times> channel \<times> channel) \<Rightarrow> (nat stream\<^sup>\<Omega>,nat stream\<^sup>\<Omega>) ufun) (ch1, ch2, ch3))
                            \<rightleftharpoons> (Abs_ubundle [ch1 \<mapsto> s1, ch2 \<mapsto> s2]) = (Abs_ubundle [ch3 \<mapsto> add\<cdot>s1\<cdot>s2])"
   by(simp add: uf_add_def assms uf_2x1_apply)
 
@@ -954,7 +954,7 @@ lemma uf_add_apply2:
   assumes "map_io_well_2x1 usclOkay (add::nat stream \<rightarrow> nat stream \<rightarrow> nat stream) ch1 ch2 ch3"
       and "usclOkay ch1 s"
       and "ch1 = ch2"
-    shows "((uf_add::(channel \<times> channel \<times> channel) \<Rightarrow> (nat stream\<^sup>\<Omega>) ufun) (ch1, ch2, ch3))
+    shows "((uf_add::(channel \<times> channel \<times> channel) \<Rightarrow> (nat stream\<^sup>\<Omega>,nat stream\<^sup>\<Omega>) ufun) (ch1, ch2, ch3))
                            \<rightleftharpoons> (Abs_ubundle [ch1 \<mapsto> s]) = (Abs_ubundle [ch3 \<mapsto> add\<cdot>s\<cdot>s])"
   apply(simp add: uf_add_def)
   using assms uf_2x1_apply2 by auto
@@ -964,12 +964,12 @@ subsection \<open>uf_swap\<close>
 
 lemma uf_swap_dom:
   assumes "map_io_well_2x2 usclOkay (swap1::'a \<rightarrow> 'a \<rightarrow> 'a) (swap2::'a \<rightarrow> 'a \<rightarrow> 'a) ch1 ch2 ch2 ch1"
-    shows "ufDom\<cdot>((uf_swap::(channel\<times>channel)\<Rightarrow>('a\<^sup>\<Omega>) ufun) (ch1,ch2)) = {ch1,ch2}"
+    shows "ufDom\<cdot>((uf_swap::(channel\<times>channel)\<Rightarrow>('a\<^sup>\<Omega>,'a\<^sup>\<Omega>) ufun) (ch1,ch2)) = {ch1,ch2}"
   by(simp add: uf_swap_def assms uf_2x2_dom)
 
 lemma uf_swap_ran:
   assumes "map_io_well_2x2 usclOkay (swap1::'a \<rightarrow> 'a \<rightarrow> 'a) (swap2::'a \<rightarrow> 'a \<rightarrow> 'a) ch1 ch2 ch2 ch1"
-    shows "ufRan\<cdot>((uf_swap::(channel\<times>channel)\<Rightarrow>('a\<^sup>\<Omega>) ufun) (ch1,ch2)) = {ch2,ch1}"
+    shows "ufRan\<cdot>((uf_swap::(channel\<times>channel)\<Rightarrow>('a\<^sup>\<Omega>,'a\<^sup>\<Omega>) ufun) (ch1,ch2)) = {ch2,ch1}"
   by(simp add: uf_swap_def assms uf_2x2_ran)
 
 lemma uf_swap_apply:
@@ -977,7 +977,7 @@ lemma uf_swap_apply:
       and "usclOkay ch1 s1"
       and "usclOkay ch2 s2"
       and "ch1 \<noteq> ch2"
-    shows "((uf_swap::(channel\<times>channel)\<Rightarrow>('a\<^sup>\<Omega>) ufun) (ch1,ch2))
+    shows "((uf_swap::(channel\<times>channel)\<Rightarrow>('a\<^sup>\<Omega>,'a\<^sup>\<Omega>) ufun) (ch1,ch2))
            \<rightleftharpoons> (Abs_ubundle [ch1 \<mapsto> s1, ch2 \<mapsto> s2]) = (Abs_ubundle [ch2 \<mapsto> s1, ch1 \<mapsto> s2])"
   proof -
     have h1: "uf_2x2 swap1 swap2 (ch1, ch2) (ch2, ch1) \<rightleftharpoons> Abs_ubundle [ch1 \<mapsto> s1, ch2 \<mapsto> s2]
