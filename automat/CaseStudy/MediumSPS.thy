@@ -36,16 +36,16 @@ lemma medsps_uspecwell [simp]:
   using medspf_ufran by blast
 
 text{* The domain of @{term MedSPS}. *}
-(*smt*)
 lemma medsps_uspecdom: "uspecDom\<cdot>(MedSPS n) = medInDom"
-  by (smt CollectD MedSPS_def medspf_ufdom medspf_ufran prod.sel(1) prod.sel(2) rep_abs_uspec 
-    ufclDom_ufun_def ufclRan_ufun_def undiscr_Discr uspecWell.simps uspecdom_insert)
+  apply (simp add: MedSPS_def uspecdom_insert oraFun_def)
+  apply (subst rep_abs_uspec, simp_all)
+  by (metis medspf_ufdom medspf_ufran ufclDom_ufun_def ufclRan_ufun_def)
 
 text{* The range of @{term MedSPS}. *}
-(*smt*)
 lemma medsps_uspecran: "uspecRan\<cdot>(MedSPS n) = medOutDom"
-  by (smt CollectD MedSPS_def medspf_ufdom medspf_ufran prod.sel(2) rep_abs_uspec ufclDom_ufun_def 
-    ufclRan_ufun_def undiscr_Discr uspecWell.simps uspecran_insert)
+  apply (simp add: MedSPS_def uspecran_insert oraFun_def)
+  apply (subst rep_abs_uspec, simp_all)
+  by (metis medspf_ufdom medspf_ufran ufclDom_ufun_def ufclRan_ufun_def)
 
 (* ----------------------------------------------------------------------- *)
 subsection {* Medium State Lemmata *}
@@ -61,17 +61,10 @@ lemma slen_createbundle_getch: "#(createBundle (\<M> m) c  .  c) < \<infinity>"
     lscons_conv option.sel order_less_le slen_scons strict_slen sup'_def ubabs_ubrep)
 
 lemma medsps_0_uspecwell: 
-(*smt*)
   "uspecWell (Rev{MedSPF ora |ora::bool stream. #({True} \<ominus> ora) = \<infinity> \<and> shd ora}) (Discr medInDom) 
-  (Discr medOutDom)"
-  proof -
-    have "{MedSPF ora |ora::bool stream. #({True} \<ominus> ora) = \<infinity> \<and> shd ora} 
-      = {(MedSPF ora) | ora. (#({True} \<ominus> ora) = \<infinity> \<and> snth 0 ora \<and> (\<forall>k<0. \<not>snth k ora))}"
-      by simp
-    then show ?thesis
-      by (smt CollectD medInDom_def medspf_ufdom medspf_ufran ufclDom_ufun_def ufclRan_ufun_def 
-        uspecWell.simps)
-  qed
+    (Discr medOutDom)"    
+  apply (simp add: ufclDom_ufun_def ufclRan_ufun_def)
+  using medspf_ufdom medspf_ufran by blast
 
 (* If a "null" comes in, send it out and stay in the same state. *)
 lemma "spsConcIn (tsynbNull(\<C> ''ds'')) (MedSPS n) = spsConcOut (tsynbNull (\<C> ''dr''))\<cdot>(MedSPS n)"

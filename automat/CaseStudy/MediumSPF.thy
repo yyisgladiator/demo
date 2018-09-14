@@ -110,6 +110,7 @@ lemma spfConcIn_step[simp]:
   assumes  "ubDom\<cdot>sb = ufDom\<cdot>spf"
   shows "(spfConcIn sb1\<cdot>spf) \<rightleftharpoons> sb = spf \<rightleftharpoons> (ubConcEq sb1\<cdot>sb)" 
   by (simp_all add: assms spfConcIn_def ubclDom_ubundle_def Int_absorb1)
+(**)
 
 lemma medspf_spfconc_null: assumes "ora \<in> oraFun n"  
   shows "spfConcIn (medIn -)\<cdot>(MedSPF ora) = spfConcOut (medOut -)\<cdot>(MedSPF ora)"
@@ -125,8 +126,7 @@ lemma medspf_spfconc_null: assumes "ora \<in> oraFun n"
     tsynmap_singleton_null)
 
 lemma medspf_spfconc_msg_nzero: assumes "ora1 \<in> oraFun (Suc n)" obtains ora2 where "ora2 \<in> oraFun n"
-  and "spfConcIn (medIn m)\<cdot>(MedSPF ora1) = spfConcOut (medOut -)\<cdot>(MedSPF ora2)"
-(*TODO*)
+  and "spfConcIn (medIn (Msg m))\<cdot>(MedSPF ora1) = spfConcOut (medOut -)\<cdot>(MedSPF ora2)"
   using assms
   proof -
     have ora1_shd_f: "\<not>(snth 0 ora1)"
@@ -141,7 +141,7 @@ lemma medspf_spfconc_msg_nzero: assumes "ora1 \<in> oraFun (Suc n)" obtains ora2
       by (metis (no_types, lifting) CollectD Suc_less_eq assms ora2def oraFun_def snth_scons)
     have ora2_orafun: "ora2 \<in> oraFun n"
       by (simp add: ora2_f ora2_fair ora2_snth oraFun_def)
-    have "spfConcIn (medIn m)\<cdot>(MedSPF ora1) = spfConcOut (medOut -)\<cdot>(MedSPF ora2)"
+    have "spfConcIn (medIn (Msg m))\<cdot>(MedSPF ora1) = spfConcOut (medOut -)\<cdot>(MedSPF ora2)"
       apply (rule spf_eq)
       apply (simp add: medspf_ufdom)+
       apply (subst medspf_ubdom)
@@ -149,15 +149,14 @@ lemma medspf_spfconc_msg_nzero: assumes "ora1 \<in> oraFun (Suc n)" obtains ora2
       apply (rule ub_eq)
       apply (simp add: medspf_ubdom medspf_ufdom)+
       using assms
-      apply (simp add: medspf_insert tsynbmed_getch_out usclConc_stream_def 
-         ora2def tsynmap_sconc_msg tsynmed_sconc_msg_f tsynmap_sconc_null)
-      sorry
+      by (simp add: medspf_insert usclConc_stream_def medOutDom_def tsynbmed_getch_out ora2def 
+        medingetstream_ubconc_msg tsynmed_sconc_msg_f tsynmap_sconc_null medout_null)
    then show ?thesis
      using ora2_orafun that by simp
   qed           
 
 lemma medspf_spfconc_msg_zero: assumes "ora1 \<in> oraFun 0" obtains ora2 where "ora2 \<in> oraFun n"
-  and "spfConcIn (medIn m)\<cdot>(MedSPF ora1) = spfConcOut (medOut m)\<cdot>(MedSPF ora2)"
+  and "spfConcIn (medIn (Msg m))\<cdot>(MedSPF ora1) = spfConcOut (medOut (Msg m))\<cdot>(MedSPF ora2)"
 (*TODO*)
   using assms
   proof -
@@ -167,7 +166,7 @@ lemma medspf_spfconc_msg_zero: assumes "ora1 \<in> oraFun 0" obtains ora2 where 
       using assms orafun_snth snth_shd by blast
     obtain ora where ora_def: "ora1 = \<up>True \<bullet> ora"
       by (metis (full_types) assms ora1_shd_t orafun_nbot surj_scons)
-    have "spfConcIn (medIn m)\<cdot>(MedSPF ora1) = spfConcOut (medOut m)\<cdot>(MedSPF ora2)"
+    have "spfConcIn (medIn (Msg m))\<cdot>(MedSPF ora1) = spfConcOut (medOut (Msg m))\<cdot>(MedSPF ora2)"
       apply (rule spf_eq)
       apply (simp add: medspf_ufdom)+
       apply (subst medspf_ubdom)
@@ -175,8 +174,8 @@ lemma medspf_spfconc_msg_zero: assumes "ora1 \<in> oraFun 0" obtains ora2 where 
       apply (rule ub_eq)
       apply (simp add: medspf_ubdom medspf_ufdom)+
       using assms
-      apply (simp add: medspf_insert tsynbmed_getch_out usclConc_stream_def ora_def tsynmap_sconc_msg
-        tsynmed_sconc_msg_t)
+      apply (simp add: medspf_insert usclConc_stream_def ora_def medOutDom_def tsynbmed_getch_out 
+        medout_msg medingetstream_ubconc_msg tsynmed_sconc_msg_t tsynmap_sconc_msg)
 oops
 
 end

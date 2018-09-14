@@ -198,8 +198,14 @@ lemma medoutgetstream_medoutsetstream: "medOutGetStream\<cdot>(medOutSetStream\<
 lemma medin_null: "medIn - . \<C> ''in'' = \<up>-"
   by (simp add: medIn_def medInElem.simps(2) medInDom_def sbe2sb_getch sbeNull.rep_eq)
 
+lemma medin_msg: "medIn (Msg m) . \<C> ''in'' = \<up>(Msg(medData m))"
+  by (simp add: medIn_def medInDom_def sbe2sb_getch medInElem.simps(1) medInMsgElem.rep_eq)
+
 lemma medout_null: "medOut - . \<C> ''out'' = \<up>-"
   by (simp add: medOut_def medOutElem.simps(2) medOutDom_def sbe2sb_getch sbeNull.rep_eq)
+
+lemma medout_msg: "medOut (Msg m) . \<C> ''out'' = \<up>(Msg(medData m))"
+  by (simp add: medOut_def medOutDom_def sbe2sb_getch medOutElem.simps(1) medOutMsgElem.rep_eq)
 
 lemma medingetstream_ubconc_null: assumes "ubDom\<cdot>ub = medInDom"
   shows "medInGetStream\<cdot>(ubConc (medIn -)\<cdot>ub) = \<up>- \<bullet> (medInGetStream\<cdot>ub)"
@@ -213,6 +219,21 @@ lemma medingetstream_ubconc_null: assumes "ubDom\<cdot>ub = medInDom"
     then show "tsynMap (inv medData)\<cdot>(medIn -  .  \<C> ''in'') \<bullet> tsynMap (inv medData)\<cdot>(ub  .  \<C> ''in'') 
       = \<up>- \<bullet> tsynMap (inv medData)\<cdot>(ub  .  \<C> ''in'')"
     by (simp add: tsynmap_medin_null)
+  qed
+
+lemma medingetstream_ubconc_msg: assumes "ubDom\<cdot>ub = medInDom"
+  shows "medInGetStream\<cdot>(ubConc (medIn (Msg m))\<cdot>ub) = \<up>(Msg m) \<bullet> (medInGetStream\<cdot>ub)"
+  apply (simp add: medInGetStream_def)
+  apply (subst ubConc_usclConc_eq)
+  apply (simp add: medInDom_def assms)+
+  apply (simp add: usclConc_stream_def tsynmap_sconc)
+  proof -
+    have tsynmap_medin_msg: "tsynMap (inv medData)\<cdot>(medIn (Msg m)  .  \<C> ''in'') = \<up>(Msg m)"
+      apply (simp add: medin_msg tsynmap_singleton_msg)
+      by (meson f_inv_into_f medMessage.inject rangeI)
+    then show "tsynMap (inv medData)\<cdot>(medIn (Msg m)  .  \<C> ''in'') \<bullet> tsynMap (inv medData)\<cdot>(ub  .  \<C> ''in'') 
+      = \<up>(Msg m) \<bullet> tsynMap (inv medData)\<cdot>(ub  .  \<C> ''in'')"
+    by (simp add: tsynmap_medin_msg)
   qed
 
 end
