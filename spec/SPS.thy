@@ -13,7 +13,7 @@ section \<open>Definition\<close>
 definition spsConcOut:: "'n SB \<Rightarrow> ('m,'n) SPS \<rightarrow> ('m,'n) SPS" where
 "spsConcOut sb = (Abs_cfun (uspecImage (Rep_cfun (spfConcOut sb))))"
 
-definition spsConcIn:: "'m SB \<Rightarrow> 'm SPS \<Rightarrow> 'm SPS" where
+definition spsConcIn:: "'m SB \<Rightarrow> ('m,'n) SPS \<Rightarrow> ('m,'n) SPS" where
 "spsConcIn sb = uspecImage (Rep_cfun (spfConcIn sb))"
 
 definition spsRtIn:: "('m,'n) SPS \<rightarrow> ('m,'n) SPS" where
