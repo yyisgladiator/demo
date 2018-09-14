@@ -12,6 +12,8 @@ imports PreludeMed spec.SPS
 
 begin
 
+default_sort countable
+
 (* deletes the Rule "1 = Suc 0" *)
  declare One_nat_def[simp del]
 

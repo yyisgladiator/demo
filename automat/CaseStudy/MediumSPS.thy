@@ -8,32 +8,26 @@
 chapter {* Theory for MediumSPS Definitions and Lemmata *}
 
 theory MediumSPS
-imports MediumSPF spec.SPS
+imports MediumSPF
 
 begin
+
+default_sort countable
 
 (* ----------------------------------------------------------------------- *)
   section {* MediumSPS Definition for Verification *}
 (* ----------------------------------------------------------------------- *)
 
 text {* @{term MedSPS}: Lossy medium function set for the Alternating Bit Protocol. *}
-definition MedSPS :: "nat \<Rightarrow> 'a medMessage tsyn SPS" where 
-  "MedSPS n = Abs_uspec (Rev {(MedSPF ora) | ora. ora \<in> (oraFun n)}, Discr medInDom, 
+lift_definition MedSPS :: "nat \<Rightarrow> 'a medMessage tsyn SPS" is 
+  "\<lambda> n. (Rev {(MedSPF ora) | ora. ora \<in> (oraFun n)}, Discr medInDom, 
   Discr medOutDom)"
+  apply (simp add: ufclDom_ufun_def ufclRan_ufun_def)
+  using medspf_ufdom medspf_ufran by blast
 
 (* ----------------------------------------------------------------------- *)
 subsection {* Basic Properties of MedSPS *}
 (* ----------------------------------------------------------------------- *)
-
-text{* @{term MedSPS} is well-formed. *}
-lemma medsps_uspecwell [simp]: 
-  "uspecWell (Rev {(MedSPF ora) | ora. (#({True} \<ominus> ora) = \<infinity> \<and> snth n ora
-   \<and> (\<forall>k<n. \<not>snth k ora))}) (Discr medInDom) (Discr medOutDom)"
-  apply (rule uspec_wellI)
-  apply (simp add: ufclDom_ufun_def)
-  using medspf_ufdom apply blast
-  apply (simp add: ufclRan_ufun_def)
-  using medspf_ufran by blast
 
 text{* The domain of @{term MedSPS}. *}
 lemma medsps_uspecdom: "uspecDom\<cdot>(MedSPS n) = medInDom"
