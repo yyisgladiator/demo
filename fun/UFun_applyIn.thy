@@ -825,7 +825,8 @@ lemma ufapplyin_inj[simp]: assumes "\<And>b. ubclDom\<cdot>(f\<cdot>b) = ubclDom
   apply simp
   apply(rule ufun_eqI)
   apply (metis assms(1) ufapplyin_dom)
-  by (metis assms(1) assms(2) ufapplyin_dom ufapplyin_inj_h ufapplyin_apply)
+  using assms(1) assms(2) ufapplyin_dom ufapplyin_inj_h ufapplyin_apply
+  by (smt surj_def)
 
 
 end
