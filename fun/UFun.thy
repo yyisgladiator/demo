@@ -300,7 +300,8 @@ have f1: "\<forall>F f. \<not> F <<| (f::'a \<Rightarrow> 'a option) \<or> lub F
   have "range (\<lambda>n. Rep_cufun (Y n)) <<| Rep_cufun (Lub Y)"
     using assms cont_def by force
 then show ?thesis
-    using f1 by presburger
+    using f1
+    using lub_eqI by fastforce
 qed
 
 lemma rep_cufun_lub_apply: assumes "chain Y" shows "(Lub Y) \<rightleftharpoons> x = (\<Squnion> i. ( Y i)  \<rightleftharpoons> x)"
@@ -312,7 +313,8 @@ proof -
   have "\<forall>f. \<not> chain f \<or> (Lub f::'a \<rightarrow> 'a option) = Abs_cfun (\<Squnion>n. Rep_cfun (f n))"
     using cfun.lub_cfun by blast
   then show ?thesis
-    using f2 f1 by (metis (no_types) assms contlub_cfun_fun eta_cfun lub_eq op_the_lub rep_cufun_lub)
+    using f2 f1 assms contlub_cfun_fun eta_cfun lub_eq op_the_lub rep_cufun_lub cfun.lub_cfun
+    by smt
 qed
 
 lemma rep_cufun_lub_apply2: assumes "chain Y" shows "ufun \<rightleftharpoons> Lub Y = (\<Squnion> i. ufun \<rightleftharpoons> (Y i))"
