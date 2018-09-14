@@ -84,5 +84,8 @@ lemma sbe2sb_rt[simp]:"ubDom\<cdot>sb = sbeDom sbe \<Longrightarrow> sbRt\<cdot>
 lemma sbedom_null[simp]: "sbeDom (sbeNull cs) = cs"
   by(simp add: sbeDom_def sbeNull.rep_eq)
 
+lemma sbe_ch_len: "\<And>c. c\<in> ubDom\<cdot>(sbe2SB sbe) \<Longrightarrow> # ((sbe2SB sbe) . c) = 1"
+  by (simp add: one_lnat_def sbe2SB.rep_eq ubgetch_insert)
+
 
 end

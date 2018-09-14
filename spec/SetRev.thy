@@ -76,6 +76,9 @@ subsection \<open>General\<close>
 lemma setrev_eqI: "inv Rev a = inv Rev b \<Longrightarrow> a = b"
   by (metis rev_inv_rev)
 
+lemma setrev_eqI2: "inv Rev a \<subseteq> inv Rev b \<Longrightarrow> inv Rev b \<subseteq> inv Rev a \<Longrightarrow> a = b"
+  by (simp add: setrev_eqI)
+
 (* order is exactly reversed subset *)
 lemma revBelowNeqSubset: "\<And>A:: 'a set rev. \<forall>B:: 'a set rev. A \<sqsubseteq> B \<longleftrightarrow> (inv Rev B \<subseteq> inv Rev A)"
   by (metis SetPcpo.less_set_def below_rev.simps inv_rev_rev rev.exhaust)
