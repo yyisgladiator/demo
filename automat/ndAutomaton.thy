@@ -339,7 +339,8 @@ proof (rule setrev_eqI2)
     \<subseteq> inv Rev (uspecRevSet\<cdot>(uspecImage (Rep_cfun (spfConcIn (sbe2SB sbe))) (nda_h nda state)))" 
   proof rule
     fix x::"('a stream\<^sup>\<Omega>) ufun"
-    assume a100: "uspec_in x (uspecFlatten ?In ?Out (setrevImage (\<lambda>(s::'b, sb::'a stream\<^sup>\<Omega>). spsConcOut sb\<cdot>(nda_h nda s)) (?transition (state, sbe))))"
+    let ?L = " \<lambda> sbe. (uspecFlatten ?In ?Out (setrevImage (\<lambda>(s::'b, sb::'a stream\<^sup>\<Omega>). spsConcOut sb\<cdot>(nda_h nda s)) (?transition (state, sbe))))"
+    assume a100: "uspec_in x (?L sbe)"
     obtain Z where z_def_1: "Z \<in> inv Rev (setrevImage (\<lambda>(s::'b, sb::'a stream\<^sup>\<Omega>). spsConcOut sb\<cdot>(nda_h nda s)) (?transition (state, sbe)))" and 
                    z_def_2: "uspec_in x Z"
       using a100 uspecflatten_elen by blast
@@ -351,7 +352,7 @@ proof (rule setrev_eqI2)
       using s1_sbe1_def w_def_2 z_def_2 by auto
     have "(spsConcOut sbe1\<cdot>(nda_h nda s1)) \<in> inv Rev (setrevImage (\<lambda>(s::'b, sb::'a stream\<^sup>\<Omega>). spsConcOut sb\<cdot>(nda_h nda s)) (?transition (state, sbe)))"
       using s1_sbe1_def w_def_2 z_def_1 by auto
-    
+
     have f100: "uspec_in x (uspecImage (Rep_cfun (spfConcIn (sbe2SB sbe))) (spsStep ?In ?Out\<cdot>(ndaHelper2 ?In ?Out state ?transition (nda_h nda))))"
       apply (simp add: ndaHelper2_def ndaConcOutFlatten_def)
       sorry
