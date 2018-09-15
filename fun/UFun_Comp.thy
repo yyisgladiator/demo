@@ -32,13 +32,13 @@ where "b\<bar>cs \<equiv> ubclRestrict cs\<cdot>b"
 subsection\<open>definitions\<close>  
 
   
-definition ufLeast :: "channel set \<Rightarrow> channel set \<Rightarrow> 'in ufun" where
+definition ufLeast :: "channel set \<Rightarrow> channel set \<Rightarrow> ('in,'out) ufun" where
 "ufLeast cin cout = Abs_ufun (\<Lambda>  sb.  (ubclDom\<cdot>sb = cin) \<leadsto> ubclLeast cout)"  
 
-definition ufRestrict :: "channel set \<Rightarrow> channel set \<Rightarrow> 'm ufun \<rightarrow> 'm ufun" where
+definition ufRestrict :: "channel set \<Rightarrow> channel set \<Rightarrow> ('in,'out) ufun \<rightarrow> ('in,'out) ufun" where
 "ufRestrict In Out \<equiv> (\<Lambda> f. if (ufDom\<cdot>f = In \<and> ufRan\<cdot>f = Out) then f else (ufLeast In Out))"
 
-definition ufHide :: "'m ufun \<Rightarrow> channel set \<Rightarrow> 'm ufun" (infixl "\<h>" 100) where
+definition ufHide :: "('in,'out) ufun \<Rightarrow> channel set \<Rightarrow> ('in,'out) ufun" (infixl "\<h>" 100) where
 "ufHide f cs \<equiv> Abs_cufun (\<lambda>x. (ubclDom\<cdot>x = ufDom\<cdot>f ) \<leadsto> ((f\<rightleftharpoons>x) \<bar> (ufRan\<cdot>f - cs)))"
 
 
@@ -46,19 +46,19 @@ subsection\<open>channel sets\<close>
 
   
 text {* the input channels of the composition of f1 and f2 *}
-definition ufCompI :: "'m ufun \<Rightarrow> 'm ufun \<Rightarrow> channel set" where
+definition ufCompI :: "('in,'out) ufun \<Rightarrow> ('in,'out) ufun \<Rightarrow> channel set" where
 "ufCompI f1 f2 \<equiv> (ufDom\<cdot>f1 \<union> ufDom\<cdot>f2) - (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2)"
 
 text {* the internal channels of the composition of f1 and f2 *}
-definition ufCompL :: "'m ufun \<Rightarrow> 'm ufun \<Rightarrow> channel set" where
+definition ufCompL :: "('in,'out) ufun \<Rightarrow> ('in,'out) ufun \<Rightarrow> channel set" where
 "ufCompL f1 f2 \<equiv> (ufDom\<cdot>f1 \<union> ufDom\<cdot>f2) \<inter> (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2)"
 
 text {* the output channels of the composition of f1 and f2 *}
-definition ufCompO :: "'m ufun \<Rightarrow> 'm ufun \<Rightarrow> channel set" where
+definition ufCompO :: "('in,'out) ufun \<Rightarrow> ('in,'out) ufun \<Rightarrow> channel set" where
 "ufCompO f1 f2 \<equiv> (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2)"
 
 text {* all channels of the composition of f1 and f2  *}
-definition ufCompC :: "'m ufun \<Rightarrow> 'm ufun \<Rightarrow> channel set" where
+definition ufCompC :: "('in,'out) ufun \<Rightarrow> ('in,'out) ufun \<Rightarrow> channel set" where
 "ufCompC f1 f2 \<equiv> ufDom\<cdot>f1 \<union> ufDom\<cdot>f2 \<union> ufRan\<cdot>f1 \<union> ufRan\<cdot>f2"
 
 
@@ -84,47 +84,47 @@ abbreviation ubfun_io_eq :: "('m \<rightarrow> 'm ) \<Rightarrow> channel set \<
 subsection \<open>composition helpers\<close>
 
  
-definition ufCompH :: "'m ufun \<Rightarrow> 'm ufun \<Rightarrow> 'm \<Rightarrow> ('m \<rightarrow> 'm)" where
+definition ufCompH :: "('m,'m) ufun \<Rightarrow> ('m,'m) ufun \<Rightarrow> 'm \<Rightarrow> ('m \<rightarrow> 'm)" where
 "ufCompH f1 f2 x = (\<Lambda> z. (f1\<rightleftharpoons>((x \<uplus> z) \<bar> ufDom\<cdot>f1)) \<uplus>  (f2\<rightleftharpoons>((x \<uplus> z) \<bar> ufDom\<cdot>f2)))"
 
-abbreviation iter_ufCompH :: "'m ufun \<Rightarrow> 'm ufun \<Rightarrow> nat \<Rightarrow> 'm  \<Rightarrow> 'm" where
+abbreviation iter_ufCompH :: "('m,'m) ufun \<Rightarrow> ('m,'m) ufun \<Rightarrow> nat \<Rightarrow> 'm  \<Rightarrow> 'm" where
 "(iter_ufCompH f1 f2 i) \<equiv> (\<lambda> x. iterate i\<cdot>(ufCompH f1 f2 x)\<cdot>(ubclLeast (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2)))" 
 
 
 subsection \<open>composition operators\<close>
 
-definition comp_well :: "('a ufun) \<Rightarrow> ('a ufun) \<Rightarrow> bool" where
+definition comp_well :: "('m,'m) ufun \<Rightarrow> ('m,'m) ufun \<Rightarrow> bool" where
 "comp_well f1 f2 \<equiv> ufRan\<cdot>f1 \<inter> ufRan\<cdot>f2 = {}"
+                                       
 
-
-definition ufComp :: "'m ufun \<Rightarrow> 'm ufun \<Rightarrow> 'm ufun" where
+definition ufComp :: "('m,'m) ufun \<Rightarrow> ('m,'m) ufun \<Rightarrow> ('m,'m) ufun" (infixl "\<otimes>" 50) where
 "ufComp f1 f2 \<equiv>
 let I = ufCompI f1 f2;
     Oc = (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2)
 in Abs_ufun (Abs_cfun (\<lambda> x. (ubclDom\<cdot>x = I) \<leadsto> ubFix (ufCompH f1 f2 x) Oc))" 
 
 (* parcomp *)
-abbreviation parcomp_well :: "'m ufun \<Rightarrow> 'm ufun \<Rightarrow> bool" where
+abbreviation parcomp_well :: "('in,'out) ufun \<Rightarrow> ('in,'out) ufun \<Rightarrow> bool" where
 "parcomp_well f1 f2 \<equiv> (ufCompL f1 f2 = {}) \<and> (ufRan\<cdot>f1 \<inter> ufRan\<cdot>f2 = {})"
 
 
-definition ufParComp :: "'m ufun \<Rightarrow> 'm ufun \<Rightarrow> 'm ufun" where
+definition ufParComp :: "('in,'out) ufun \<Rightarrow> ('in,'out) ufun \<Rightarrow> ('in,'out) ufun" (infixl "\<parallel>" 50) where
 "ufParComp f1 f2 \<equiv> Abs_ufun (Abs_cfun (\<lambda> x. (ubclDom\<cdot>x = ufDom\<cdot>f1 \<union> ufDom\<cdot>f2 ) \<leadsto> ((f1 \<rightleftharpoons> (x \<bar>ufDom\<cdot>f1)) \<uplus> (f2 \<rightleftharpoons> (x\<bar>ufDom\<cdot>f2)))))"
 
 
-abbreviation sercomp_well :: "'m ufun \<Rightarrow> 'm ufun \<Rightarrow> bool" where
+abbreviation sercomp_well :: "('in,'m) ufun \<Rightarrow> ('m,'out) ufun \<Rightarrow> bool" where
 "sercomp_well f1 f2 \<equiv>  (ufRan\<cdot>f1 = ufDom\<cdot>f2) 
                         \<and> (ufDom\<cdot>f1 \<inter> ufRan\<cdot>f1 = {})
                         \<and> (ufDom\<cdot>f2 \<inter> ufRan\<cdot>f2 = {})"
 
-definition ufSerComp :: "'m ufun => 'm ufun => 'm ufun" where
+definition ufSerComp :: "('in,'m) ufun \<Rightarrow> ('m,'out) ufun \<Rightarrow> ('in,'out) ufun" (infixl "\<circ>" 50) where
 "ufSerComp f1 f2 \<equiv> Abs_ufun (Abs_cfun (\<lambda> x. (ubclDom\<cdot>x =  ufDom\<cdot>f1) \<leadsto> (f2 \<rightleftharpoons> (f1 \<rightleftharpoons> x))))"
 
 
-definition ufFeedH:: "'m ufun \<Rightarrow> 'm \<Rightarrow> 'm  \<rightarrow> 'm" where
+definition ufFeedH:: "('m,'m) ufun \<Rightarrow> 'm \<Rightarrow> 'm  \<rightarrow> 'm" where
 "ufFeedH f x \<equiv> (\<Lambda> z. (f\<rightleftharpoons>((x \<uplus> z)\<bar> (ufDom\<cdot>f))))"
 
-definition ufFeedbackComp :: "'m ufun \<Rightarrow> 'm ufun" where
+definition ufFeedbackComp :: "('m,'m) ufun \<Rightarrow> ('m,'m) ufun" where
 "ufFeedbackComp f \<equiv>
 let I  = ufDom\<cdot>f - ufRan\<cdot>f;
     C  = ufRan\<cdot>f
@@ -887,17 +887,6 @@ qed
 *)
 
 
-lemma ufcomp_causal: assumes "ufRan\<cdot>f1 \<inter> ufRan\<cdot>f2 = {}" and "ufIsWeak f1" and "ufIsStrong f2" 
-  shows "ufIsWeak (ufComp f1 f2)"
-proof(cases "ufCompL f1 f2 = {}")
-  case True (* Parallel case *)
-  then show ?thesis sorry
-next
-  case False (* Internal channels *)
-  then show ?thesis sorry
-qed
-
-
 (* parcomp *)
 subsection\<open>Parallel Composition\<close>
 
@@ -1137,7 +1126,7 @@ lemma ufSerComp_well: assumes "ufRan\<cdot>f1 = ufDom\<cdot>f2" shows "ufWell (\
    apply rule
   apply (simp add: domIff ufSerComp_cont)
 proof -
-  have f1: "\<forall>b::'a. b \<in> ran (\<lambda>x::'a. (ubclDom\<cdot>x = UFun.ufDom\<cdot>f1)\<leadsto>f2 \<rightleftharpoons> (f1 \<rightleftharpoons> x)) \<longrightarrow> ubclDom\<cdot>b = ufRan\<cdot>f2"
+  have f1: "\<forall>b::'c. b \<in> ran (\<lambda>x::'a. (ubclDom\<cdot>x = UFun.ufDom\<cdot>f1)\<leadsto>f2 \<rightleftharpoons> (f1 \<rightleftharpoons> x)) \<longrightarrow> ubclDom\<cdot>b = ufRan\<cdot>f2"
     by (smt CollectD assms option.distinct(1) option.sel ran_def ufran_2_ubcldom2)
   show "\<exists>Out. \<forall>b. (b \<in> ran (Rep_cfun (\<Lambda> (x::'a). (ubclDom\<cdot>x = ufDom\<cdot>f1)\<leadsto>f2 \<rightleftharpoons> (f1 \<rightleftharpoons> x)))) \<longrightarrow> (ubclDom\<cdot>b = Out)"
     apply(simp add: ufSerComp_cont)
@@ -1671,14 +1660,14 @@ proof -
      using f3 by meson
  qed
 
-definition ufCompI_3arg :: "'m ufun \<Rightarrow> 'm ufun \<Rightarrow> 'm ufun \<Rightarrow> channel set" where
+definition ufCompI_3arg :: "('in,'out) ufun \<Rightarrow> ('in,'out) ufun \<Rightarrow> ('in,'out) ufun \<Rightarrow> channel set" where
 "ufCompI_3arg f1 f2 f3 \<equiv> (ufDom\<cdot>f1 \<union> ufDom\<cdot>f2 \<union> ufDom\<cdot>f3) - (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2 \<union> ufRan\<cdot>f3)"
 
 
-definition ufCompH_3arg :: "'m ufun \<Rightarrow> 'm ufun \<Rightarrow> 'm ufun \<Rightarrow> 'm \<Rightarrow> ('m \<rightarrow> 'm)" where
+definition ufCompH_3arg :: "('m,'m) ufun \<Rightarrow> ('m,'m) ufun \<Rightarrow> ('m,'m) ufun \<Rightarrow> 'm \<Rightarrow> ('m \<rightarrow> 'm)" where
 "ufCompH_3arg f1 f2 f3 x = (\<Lambda> z. (f1\<rightleftharpoons>((x \<uplus> z) \<bar> ufDom\<cdot>f1)) \<uplus>  (f2\<rightleftharpoons>((x \<uplus> z) \<bar> ufDom\<cdot>f2)) \<uplus>  (f3\<rightleftharpoons>((x \<uplus> z) \<bar> ufDom\<cdot>f3)))"
 
-abbreviation iter_ufCompH_3arg :: "'m ufun \<Rightarrow> 'm ufun \<Rightarrow> 'm ufun \<Rightarrow> nat \<Rightarrow> 'm  \<Rightarrow> 'm" where
+abbreviation iter_ufCompH_3arg :: "('m,'m) ufun \<Rightarrow> ('m,'m) ufun \<Rightarrow> ('m,'m) ufun \<Rightarrow> nat \<Rightarrow> 'm  \<Rightarrow> 'm" where
 "(iter_ufCompH_3arg f1 f2 f3 i) \<equiv> (\<lambda> x. iterate i\<cdot>(ufCompH_3arg f1 f2 f3 x)\<cdot>(ubclLeast (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2 \<union> ufRan\<cdot>f3)))" 
 
 lemma ufCompH_3arg_cont1: "cont (\<lambda> z. (f1\<rightleftharpoons>((x \<uplus> z) \<bar> ufDom\<cdot>f1)) \<uplus>  (f2\<rightleftharpoons>((x \<uplus> z) \<bar> ufDom\<cdot>f2)) \<uplus>  (f3\<rightleftharpoons>((x \<uplus> z) \<bar> ufDom\<cdot>f3)))"
@@ -1740,7 +1729,7 @@ lemma lub_iter_comph_3arg_dom[simp]:assumes "ubclDom\<cdot>x = ufCompI_3arg f1 f
 
 paragraph \<open>ufComp3\<close>
 
-definition ufComp3 :: "'m ufun \<Rightarrow> 'm ufun \<Rightarrow> 'm ufun \<Rightarrow> 'm ufun" where
+definition ufComp3 :: "('m,'m) ufun \<Rightarrow> ('m,'m) ufun \<Rightarrow> ('m,'m) ufun \<Rightarrow> ('m,'m) ufun" where
 "ufComp3 f1 f2 f3\<equiv>
 let I = ufCompI_3arg f1 f2 f3;
     Oc = (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2 \<union> ufRan\<cdot>f3)
@@ -2469,7 +2458,25 @@ qed
 
 
 
-instantiation ufun:: (ubcl_comp) ufuncl_comp
+
+
+instantiation ufun:: (ubcl_comp,ubcl_comp) ufuncl_comp
+begin
+
+definition ufunclLeast_ufun_def: "ufunclLeast = ufLeast"
+
+instance 
+  apply intro_classes
+  apply (simp add: UFun_Comp.ufunclLeast_ufun_def ufclDom_ufun_def ufclRan_ufun_def)
+  apply (simp add: ufclDom_ufun_def ufunclLeast_ufun_def)
+  apply (simp add: UFun_Comp.ufunclLeast_ufun_def ufclRan_ufun_def)
+  done
+end
+
+
+(*
+
+instantiation ufun:: (ubcl_comp,ubcl_comp) ufuncl_comp
 begin
 
 definition ufunclLeast_ufun_def: "ufunclLeast = ufLeast"
@@ -2576,5 +2583,7 @@ instance
      
 
 end
+*)
+
 
 end

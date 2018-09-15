@@ -167,6 +167,17 @@ class ufuncl = cpo +
 begin
 end
 
+
+class ufuncl_comp = ufuncl +
+  fixes ufunclLeast :: "channel set \<Rightarrow> channel set \<Rightarrow> 'a"
+  
+  assumes ufuncldom_least: "\<And> x. ufunclLeast (ufclDom\<cdot>x) (ufclRan\<cdot>x)\<sqsubseteq>x"
+  assumes ufuncldom_least_dom: "\<And> cs. ufclDom\<cdot>(ufunclLeast cin cout) = cin"
+  assumes ufuncldom_least_ran: "\<And> cs. ufclRan\<cdot>(ufunclLeast cin cout) = cout"
+
+begin
+end
+(*
 class ufuncl_comp = ufuncl +
   fixes ufunclLeast :: "channel set \<Rightarrow> channel set \<Rightarrow> 'a"
 
@@ -227,6 +238,6 @@ lemma sercompwell_asso2: "ufunclSerCompWell f1 f2 \<Longrightarrow>
                       ufclDom\<cdot>f1 \<inter> ufclRan\<cdot>f2 = {} \<Longrightarrow> ufclDom\<cdot>f2 \<inter> ufclRan\<cdot>f3 = {} \<Longrightarrow> ufunclSerCompWell (f1 \<circ> f2) f3"
   by (simp add: local.sercompwell_asso)
 end
-
+*)
 
 end
