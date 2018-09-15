@@ -136,7 +136,7 @@ abbreviation theRep_abbrv :: "('in, 'out) ufun \<Rightarrow> 'in \<Rightarrow> '
 "(f \<rightleftharpoons> s) \<equiv> (Rep_cufun f)\<rightharpoonup>s"
 
 
-definition ufIsStrict :: "('a::ubcl_comp, 'a) ufun \<Rightarrow> bool" where
+definition ufIsStrict :: "('a::ubcl_comp, 'b::ubcl_comp) ufun \<Rightarrow> bool" where
 "ufIsStrict uf = (\<forall>sb. ubclDom\<cdot>sb=ufDom\<cdot>uf \<longrightarrow> ubclLen sb = 0 \<longrightarrow> ((uf\<rightleftharpoons>sb) = ubclLeast (ufRan\<cdot>uf)))"
 
 

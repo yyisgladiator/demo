@@ -80,7 +80,7 @@ definition nda_H :: "('s, 'm::message) ndAutomaton \<Rightarrow> 'm SPS" where
 "nda_H nda \<equiv> ndaConcOutFlatten (ndaDom\<cdot>nda)(ndaRan\<cdot>nda) (ndaInitialState\<cdot>nda) (nda_h nda)"
 
 
-definition uspecIsStrict :: "('a::ubcl_comp, 'a) ufun uspec \<Rightarrow> bool" where
+definition uspecIsStrict :: "('a::ubcl_comp, 'b::ubcl_comp) ufun uspec \<Rightarrow> bool" where
 "uspecIsStrict = uspecForall ufIsStrict"
 
 
@@ -239,10 +239,12 @@ lemma sbhdwell_ubconceq: assumes "ubDom\<cdot>(sbe2SB sbe) = ubDom\<cdot>us"
   apply rule
   by (metis (no_types, lifting) assms sbHdElem_bottom_exI sbHdElem_channel sbe2sb_dom sbe2sb_hdelem_conc sbe2sb_nbot ubconceq_dom)
 
-(*
+
 lemma nda_h_final_h:assumes "sbeDom sbe = ndaDom\<cdot>nda"
   shows "uspecRevSet\<cdot>(uspecImage (Rep_cfun (spfConcIn (sbe2SB sbe))) (nda_h nda state)) =
     uspecRevSet\<cdot>(uspecFlatten (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) (setrevImage (\<lambda>(s, sb). spsConcOut sb\<cdot>(nda_h nda s)) ((ndaTransition\<cdot>nda) (state, sbe))))"
+  oops
+(*
 proof (rule setrev_eqI2)
   let ?H  = "(ndaHelper2 (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) state (ndaTransition\<cdot>nda) (nda_h nda))"
   let ?In = "(ndaDom\<cdot>nda)"
@@ -364,11 +366,13 @@ proof (rule setrev_eqI2)
       by (metis f100 nda_h_fixpoint nda_h_inner_def)
   qed
 qed
-
+*)
 
 lemma nda_h_final: assumes "sbeDom sbe = ndaDom\<cdot>nda"
   shows "spsConcIn (sbe2SB sbe) (nda_h nda state) = 
   uspecFlatten (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) (setrevImage (\<lambda>(s, sb). spsConcOut sb\<cdot>(nda_h nda s)) ((ndaTransition\<cdot>nda) (state,sbe)))"
+  oops
+(*
   apply (rule uspec_eqI)  defer
     apply (subst spsconcin_dom)
      apply (simp add: one_lnat_def sbe_ch_len)
@@ -378,6 +382,7 @@ lemma nda_h_final: assumes "sbeDom sbe = ndaDom\<cdot>nda"
    apply (metis (no_types, lifting) nda_h_fixpoint nda_h_inner_ran uspecflatten_ran)
   apply (simp add: spsConcIn_def)
   by (simp add: assms nda_h_final_h)
+*)
 
 
 lemma nda_h_bottom_h: "uspecIsStrict (spsStep (ndaDom\<cdot>nda) (ndaRan\<cdot>nda)\<cdot>
@@ -409,9 +414,7 @@ lemma nda_h_final_back: assumes "\<And>state sbe. sbeDom sbe = ndaDom\<cdot>nda 
   uspecFlatten (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) (setrevImage (\<lambda>(s, sb). spsConcOut sb\<cdot>(other s)) ((ndaTransition\<cdot>nda) (s,sbe)))"
   and "\<And> state. uspecDom\<cdot>(other state) = ndaDom\<cdot>nda" and "\<And> state. uspecRan\<cdot>(other state) = ndaRan\<cdot>nda"
 shows "other = nda_h nda" 
-  sorry
-
-*)
+  oops
 
 
 end
