@@ -25,6 +25,11 @@ section \<open>Lemma\<close>
 subsection \<open>spsConcOut\<close>
 (* ----------------------------------------------------------------------- *)
 
+lemma spsconcout_mono: "monofun (uspecImage (Rep_cfun (spfConcOut sb)))"
+  apply (rule uspecimage_mono)
+  by (simp add: ufclDom_ufun_def ufclRan_ufun_def)
+
+
 lemma spsconcout_cont: 
   assumes "\<And>c. c\<in>ubDom\<cdot>sb \<Longrightarrow> # (sb . c) < \<infinity>"
   shows "cont (uspecImage (Rep_cfun (spfConcOut sb)))"
@@ -44,6 +49,10 @@ lemma spsconcout_dom [simp]:
 lemma spsconcout_ran [simp]: 
   "uspecRan\<cdot>(spsConcOut sb sps) = uspecRan\<cdot>sps"
   by (simp add: spsconcout_insert ufclDom_ufun_def ufclRan_ufun_def)
+
+lemma spsconcout_obtain: assumes "uspec_in g (spsConcOut sb sps)"
+  shows "\<exists> f. uspec_in f sps \<and> g = spfConcOut sb\<cdot>f"
+  by (metis (no_types, lifting) assms spfConcOut_dom spfConcOut_ran spsconcout_insert ufclDom_ufun_def ufclRan_ufun_def uspecimage_obtain)
 
 (* ----------------------------------------------------------------------- *)
 subsection \<open>spsConcIn\<close>
@@ -83,7 +92,7 @@ lemma spsrtin_ran [simp]: "uspecRan\<cdot>(spsRtIn\<cdot>sps) = uspecRan\<cdot>s
 
 lemma spsconcout_inj: 
   assumes "\<And>c. c\<in>ubDom\<cdot>sb \<Longrightarrow> # (sb . c) < \<infinity>"
-  shows "inj (\<lambda>sps. spsConcOut sb\<cdot>sps)"
+  shows "inj (\<lambda>sps. spsConcOut sb sps)"
 proof -   
   have f1: "\<forall>c. c \<notin> ubDom\<cdot>sb \<or> #(sb . c) < \<infinity>"
     by (meson assms)
