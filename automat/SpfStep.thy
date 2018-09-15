@@ -16,7 +16,7 @@ definition spfStep_h2::"(channel\<rightharpoonup>'m::message discr\<^sub>\<botto
 "spfStep_h2 = (\<lambda>f. (inv convDiscrUp f))"
 
 (* If the conditions are correct then we use imput h to compute a SPF. After that check if the SPF has the right dom and ran*)
-definition spfStep_h1::"channel set \<Rightarrow> channel set \<Rightarrow>((channel\<rightharpoonup>'m::message) \<Rightarrow> 'm SPF) \<rightarrow>((channel\<rightharpoonup>'m discr\<^sub>\<bottom>)\<rightarrow> 'm SPF)" where
+definition spfStep_h1::"channel set \<Rightarrow> channel set \<Rightarrow>((channel\<rightharpoonup>'m::message) \<Rightarrow> ('m,'m) SPF) \<rightarrow>((channel\<rightharpoonup>'m discr\<^sub>\<bottom>)\<rightarrow> ('m,'m) SPF)" where
 "spfStep_h1 In Out= (\<Lambda> h. (\<Lambda> f. if (In = dom f \<and> (\<forall>c \<in> dom f. (f \<rightharpoonup> c \<noteq> \<bottom>))) then ufRestrict In Out\<cdot>(h (spfStep_h2 f)) else ufLeast In Out))"
 
 lemma[simp]: "ufDom\<cdot>((\<lambda> f. if (In \<subseteq> dom f \<and> (\<forall>c \<in> dom f. (f \<rightharpoonup> c \<noteq> \<bottom>))) then ufRestrict In Out\<cdot>(h (spfStep_h2 f)) else ufLeast In Out)f) = In"
@@ -357,7 +357,7 @@ lemma spfstep_h1_insert:assumes "finite In" shows"spfStep_h1 In Out\<cdot> h\<cd
 (*spfStep_h1 mono cont end*)     
       
 (* Returns the SPF that switches depending on input.  (spfStep_h1 In Out\<cdot>h)\<cdot>(sbHdElem\<cdot>sb) computes the SPF which has to be applied to the input sb*)
-definition spfStep :: "channel set \<Rightarrow> channel set \<Rightarrow> ((channel\<rightharpoonup>'m::message) \<Rightarrow> 'm SPF) \<rightarrow> 'm SPF" where
+definition spfStep :: "channel set \<Rightarrow> channel set \<Rightarrow> ((channel\<rightharpoonup>'m::message) \<Rightarrow> ('m,'m) SPF) \<rightarrow> ('m,'m) SPF" where
 "spfStep In Out \<equiv> \<Lambda> h. Abs_ufun (\<Lambda>  sb.  (ubDom\<cdot>sb = In) \<leadsto> (spfStep_h1 In Out\<cdot>h)\<cdot>(sbHdElem\<cdot>sb) \<rightleftharpoons> sb)"
 
 
@@ -369,7 +369,7 @@ lemma spf_pref_eq_2: assumes "(f \<sqsubseteq> g)"
   by (metis assms below_ufun_def below_option_def cfun_below_iff po_eq_conv)
 
 
-lemma getSb_in_h:assumes "chain (Y::nat \<Rightarrow> 'a::message SPF)" shows "(\<Squnion>i. Rep_ufun (Y i))\<cdot> sb = (\<Squnion>i. (Rep_ufun (Y i) \<cdot> sb))"
+lemma getSb_in_h:assumes "chain (Y::nat \<Rightarrow> ('a::message,'a) SPF)" shows "(\<Squnion>i. Rep_ufun (Y i))\<cdot> sb = (\<Squnion>i. (Rep_ufun (Y i) \<cdot> sb))"
   by(subst contlub_cfun_fun, simp_all add: assms)
     
 lemma spf_ubDom: assumes "ufDom\<cdot>f = In" and "ufRan\<cdot>f = Out" and "ubDom\<cdot>sb= In" shows "ubDom\<cdot>(f \<rightleftharpoons> sb) = Out"
@@ -439,7 +439,7 @@ qed
     
 lemma spfStep_mono[simp]:assumes"finite In" shows"monofun (\<lambda> h. Abs_ufun (\<Lambda>  sb.  (ubDom\<cdot>sb = In) \<leadsto> (spfStep_h1 In Out\<cdot> h)\<cdot>(sbHdElem\<cdot>sb) \<rightleftharpoons> sb))"
 proof(rule monofunI, simp add: below_ufun_def below_cfun_def assms)
-  fix x y::"((channel\<rightharpoonup>'m::message) \<Rightarrow> 'm SPF)"
+  fix x y::"((channel\<rightharpoonup>'m::message) \<Rightarrow> ('m,'m) SPF)"
   assume a1:"x \<sqsubseteq> y"
   have h1:"(\<lambda>sb. spfStep_h1 In Out\<cdot>x\<cdot>(sbHdElem\<cdot>sb)) \<sqsubseteq> (\<lambda>sb. spfStep_h1 In Out\<cdot>y\<cdot>(sbHdElem\<cdot>sb))"
     apply(simp add: below_fun_def)
@@ -459,7 +459,7 @@ qed
     
 lemma spfStep_cont:assumes "finite In" shows"cont (\<lambda> h. Abs_ufun (\<Lambda>  sb.  (ubDom\<cdot>sb = In) \<leadsto> (spfStep_h1 In Out\<cdot> h)\<cdot>(sbHdElem\<cdot>sb) \<rightleftharpoons> sb))"
 proof(rule Cont.contI2, simp add: assms)
-  fix Y::"nat \<Rightarrow> ((channel\<rightharpoonup>'m::message) \<Rightarrow> 'm SPF)"
+  fix Y::"nat \<Rightarrow> ((channel\<rightharpoonup>'m::message) \<Rightarrow> ('m,'m) SPF)"
   assume a1: "chain Y"
   assume a2: "chain (\<lambda>i. Abs_cufun (\<lambda>sb. (ubDom\<cdot>sb = In)\<leadsto>spfStep_h1 In Out\<cdot>(Y i)\<cdot>(sbHdElem\<cdot>sb) \<rightleftharpoons> sb))"
   have chain_1:"chain (\<lambda>i. spfStep_h1 In Out\<cdot>(Y i))"
