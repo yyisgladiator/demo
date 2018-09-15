@@ -765,6 +765,45 @@ lemma tsynremdups_fix_h_slen_none: "#(tsynRemDups_fix_h\<cdot>s\<cdot>None) = #s
   apply (simp add: tsynremdups_fix_h_sconc_msg_none tsynremdups_fix_h_slen_some)
   by (simp add: tsynremdups_fix_h_sconc_null_none)
 
+lemma tsynremdups_fix_h_tsynlen_some: "tsynLen\<cdot>(tsynRemDups_fix_h\<cdot>s\<cdot>(Some (Discr (\<M> m)))) <= tsynLen\<cdot>s"
+proof(induction s arbitrary: m rule: tsyn_ind)
+case adm
+  then show ?case 
+    apply (rule admI)
+    by (simp add: contlub_cfun_fun contlub_cfun_arg lub_mono2)
+next
+  case bot
+  then show ?case by simp
+next
+  case (msg m s)
+  then show ?case by (metis (no_types, lifting) dual_order.strict_implies_order inf_ub le2lnle
+ lnsuc_lnle_emb order.not_eq_order_implies_strict tsynlen_sconc_msg tsynlen_sconc_null
+           tsynremdups_fix_h_sconc_msg_some_eq tsynremdups_fix_h_sconc_msg_some_neq)
+next
+case (null s)
+  then show ?case by (simp add: tsynlen_sconc_null tsynremdups_fix_h_sconc_null_some)
+qed
+
+lemma tsynremdups_fix_h_tsynlen_none: "tsynLen\<cdot>(tsynRemDups_fix_h\<cdot>s\<cdot>None) <= tsynLen\<cdot>s"
+proof (induction s rule: tsyn_ind)
+  case adm
+  then show ?case 
+    apply (rule admI)
+    by (simp add: contlub_cfun_fun contlub_cfun_arg lub_mono2)
+next
+  case bot
+  then show ?case by simp
+next
+  case (msg m s)
+  then show ?case by (simp add: tsynlen_sconc_msg tsynremdups_fix_h_sconc_msg_none
+                      tsynremdups_fix_h_tsynlen_some)
+next
+  case (null s)
+  then show ?case by (simp add: tsynlen_sconc_null tsynremdups_fix_h_sconc_null_none)
+qed
+  
+
+
 text {* @{term tsynRemDups_fix_h} test on finite stream. *}
 lemma tsynremdups_fix_h_test_finstream:
   "tsynRemDups_fix_h\<cdot>(<[null, Msg (1 :: nat), null, Msg (1 :: nat)]>)\<cdot>None = 
@@ -804,10 +843,12 @@ text {* @{term tsynRemDups_fix} leaves the length of a stream unchanged. *}
 lemma tsynremdups_fix_slen: "#(tsynRemDups_fix\<cdot>s) = #s"
   by (simp add: tsynremdups_fix_insert tsynremdups_fix_h_slen_none)
 
-lemma tsynremdups_fix_tsynlen: "tsynLen\<cdot>(tsynRemDups_fix\<cdot>s) = tsynLen\<cdot>s"
+lemma tsynremdups_fix_tsynlen: "tsynLen\<cdot>(tsynRemDups_fix\<cdot>s) <= tsynLen\<cdot>s"
 proof (induction s rule: tsyn_ind)
   case adm
-  then show ?case by simp
+  then show ?case 
+    apply (rule admI)
+    by (simp add: contlub_cfun_fun contlub_cfun_arg lub_mono2)
 next
   case bot
   then show ?case by simp
@@ -815,12 +856,12 @@ next
   case (msg m s)
   then show ?case 
     apply (simp add: tsynremdups_fix_sconc_msg tsynlen_sconc_msg)
-    sledgehammer
+    by (simp add: tsynremdups_fix_insert tsynremdups_fix_h_tsynlen_none tsynremdups_fix_h_tsynlen_some)
 next
   case (null s)
   then show ?case 
     apply (simp add : tsynremdups_fix_sconc_null tsynlen_sconc_null)
-    by (simp add: tsynremdups_fix_insert)
+    by (simp add: tsynremdups_fix_h_tsynlen_none)
 qed
 
 
@@ -1153,7 +1194,7 @@ lemma tsynzip_test_infstream:
   by (simp add: tsynzip_sconc_msg tsynzip_sconc_null)
 
 lemma tsynzip_slen: "#bs = \<infinity> \<Longrightarrow> #(tsynZip\<cdot>as\<cdot>bs) = #as"
-proof (induction as rule: tsyn_ind)
+proof (induction as arbitrary: bs rule: tsyn_ind)
   case adm
   then show ?case 
     apply (rule admI)
@@ -1166,9 +1207,11 @@ next
   then show ?case by (simp add: only_empty_has_length_0 tsynzip_sconc_null)
 next
   case (msg m s)
-  then show ?case 
+  then show ?case
+    apply (case_tac "#(\<up>(Msg m) \<bullet> s) \<noteq> \<infinity>")
     apply (rule_tac x=bs in scases, simp)
-    apply (simp add: tsynzip_sconc_msg )
+     apply (simp add: tsynzip_sconc_msg)
+    (* both infinite case is missing*)
     oops
 qed
 
@@ -1187,9 +1230,11 @@ next
   then show ?case by (metis Inf'_neq_0 strict_slen tsynlen_sconc_null tsynzip_sconc_null)
 next
   case (msg m s)
-  then show ?case 
+  then show ?case
+    apply (case_tac "tsynLen\<cdot>(\<up>(Msg m) \<bullet> s) \<noteq> \<infinity>")
     apply (rule_tac x=bs in scases, simp)
     apply (simp add: tsynzip_sconc_msg tsynlen_sconc_msg)
+    apply 
     oops
 qed
 
