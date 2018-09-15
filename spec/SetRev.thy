@@ -83,6 +83,9 @@ lemma setrev_eqI2: "inv Rev a \<subseteq> inv Rev b \<Longrightarrow> inv Rev b 
 lemma revBelowNeqSubset: "\<And>A:: 'a set rev. \<forall>B:: 'a set rev. A \<sqsubseteq> B \<longleftrightarrow> (inv Rev B \<subseteq> inv Rev A)"
   by (metis SetPcpo.less_set_def below_rev.simps inv_rev_rev rev.exhaust)
 
+lemma setrev_belowI: "inv Rev a \<subseteq> inv Rev b \<Longrightarrow> b \<sqsubseteq> a"
+  by (simp add: revBelowNeqSubset)
+
 lemma SLEI_help1:  "\<And>Y::nat \<Rightarrow> 'a set rev. 
   chain Y \<Longrightarrow> Rev (\<Inter>{x. \<exists>i. x = inv Rev (Y i)}) \<sqsubseteq> (\<Squnion>i. Y i)" 
 proof -
@@ -583,6 +586,15 @@ next
           \<open>\<forall>i::nat. (x::'a) \<in> inv Rev ((Y::nat \<Rightarrow> 'a set rev) i)\<close> assms(1) setrevLub_lub_eq_all)
   qed
 qed
+
+lemma setrevimage_empty: assumes "H = Rev {}"
+  shows " setrevImage f H = Rev {}"
+  apply (simp add: setrevImage_def)
+  by (simp add: assms inv_rev_rev)
+                                                    
+lemma setrevimage_not_empty: assumes "f \<in> inv Rev (setrevImage g H)"
+  shows "H \<noteq>  Rev {}"
+  by (metis assms ex_in_conv inv_rev_rev setrevimage_empty)
 
 section \<open>set flat rev\<close>
 (* ToDo: Copy to SetPcpo *)

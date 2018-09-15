@@ -10,8 +10,8 @@ type_synonym ('m,'n) SPS = "('m,'n) SPF uspec"
 
 section \<open>Definition\<close>
 
-definition spsConcOut:: "'n SB \<Rightarrow> ('m,'n) SPS \<rightarrow> ('m,'n) SPS" where
-"spsConcOut sb = (Abs_cfun (uspecImage (Rep_cfun (spfConcOut sb))))"
+definition spsConcOut:: "'n SB \<Rightarrow> ('m,'n) SPS \<Rightarrow> ('m,'n) SPS" where
+"spsConcOut sb = (uspecImage (Rep_cfun (spfConcOut sb)))"
 
 definition spsConcIn:: "'m SB \<Rightarrow> ('m,'n) SPS \<Rightarrow> ('m,'n) SPS" where
 "spsConcIn sb = uspecImage (Rep_cfun (spfConcIn sb))"
@@ -33,21 +33,17 @@ lemma spsconcout_cont:
   by (simp add: ufclDom_ufun_def ufclRan_ufun_def)
   
 lemma spsconcout_insert: 
-  assumes "\<And>c. c\<in>ubDom\<cdot>sb \<Longrightarrow> # (sb . c) < \<infinity>"
-  shows "spsConcOut sb\<cdot>sps = (uspecImage (Rep_cfun (spfConcOut sb)) sps)"
-  apply(simp only: spsConcOut_def)
-  by (simp add: assms spsconcout_cont)
+  "spsConcOut sb sps = (uspecImage (Rep_cfun (spfConcOut sb)) sps)"
+  by (simp only: spsConcOut_def)
 
 lemma spsconcout_dom [simp]: 
-  assumes "\<And>c. c\<in>ubDom\<cdot>sb \<Longrightarrow> # (sb . c) < \<infinity>"
-  shows "uspecDom\<cdot>(spsConcOut sb\<cdot>sps) = uspecDom\<cdot>sps"
-  apply (simp add: spsconcout_insert assms)
-  by (simp add: assms spsconcout_insert ufclDom_ufun_def ufclRan_ufun_def)
+  "uspecDom\<cdot>(spsConcOut sb sps) = uspecDom\<cdot>sps"
+  apply (simp add: spsconcout_insert)
+  by (simp add: spsconcout_insert ufclDom_ufun_def ufclRan_ufun_def)
 
 lemma spsconcout_ran [simp]: 
-  assumes "\<And>c. c\<in>ubDom\<cdot>sb \<Longrightarrow> # (sb . c) < \<infinity>"
-  shows "uspecRan\<cdot>(spsConcOut sb\<cdot>sps) = uspecRan\<cdot>sps"
-  by (simp add: assms spsconcout_insert ufclDom_ufun_def ufclRan_ufun_def)
+  "uspecRan\<cdot>(spsConcOut sb sps) = uspecRan\<cdot>sps"
+  by (simp add: spsconcout_insert ufclDom_ufun_def ufclRan_ufun_def)
 
 (* ----------------------------------------------------------------------- *)
 subsection \<open>spsConcIn\<close>
