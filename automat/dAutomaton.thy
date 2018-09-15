@@ -72,17 +72,17 @@ definition daNextOutput:: "('s::type, 'm::message) dAutomaton \<Rightarrow> 's \
 
 
 
-definition da_helper:: "(('s \<times>'e) \<Rightarrow> ('s \<times> 'm::message  SB)) \<Rightarrow> 's \<Rightarrow> ('s \<Rightarrow> 'm SPF) \<rightarrow> ('e \<Rightarrow> 'm SPF)" where
+definition da_helper:: "(('s \<times>'e) \<Rightarrow> ('s \<times> 'm::message  SB)) \<Rightarrow> 's \<Rightarrow> ('s \<Rightarrow> ('m,'m) SPF) \<rightarrow> ('e \<Rightarrow> ('m,'m) SPF)" where
 "da_helper f s \<equiv> \<Lambda> h. (\<lambda> e. spfRtIn\<cdot>(spfConcOut (snd (f (s,e)))\<cdot>(h (fst (f (s,e))))))"
 
 (* As defined in Rum96 *)
-definition da_h :: "('s::type, 'm::message) dAutomaton \<Rightarrow> ('s \<Rightarrow> 'm SPF)" where
+definition da_h :: "('s::type, 'm::message) dAutomaton \<Rightarrow> ('s \<Rightarrow> ('m,'m) SPF)" where
 "da_h automat = spfStateFix (daDom automat)(daRan automat)\<cdot>
      (\<Lambda> h. (\<lambda>s. spfStep  (daDom automat) (daRan automat)\<cdot>(da_helper (daTransition automat) s\<cdot>h)))"
 
 (* This function also prepends the first SB ... *)
 (* But basically she just calls h *)
-definition da_H :: "('s, 'm::message) dAutomaton \<Rightarrow> 'm SPF" where
+definition da_H :: "('s, 'm::message) dAutomaton \<Rightarrow> ('m,'m) SPF" where
 "da_H automat = spfConcOut (daInitialOutput automat)\<cdot>(da_h automat (daInitialState automat))"
 
 
