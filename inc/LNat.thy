@@ -49,6 +49,12 @@ definition lnmin ::  "lnat \<rightarrow> lnat \<rightarrow> lnat" where
 "lnmin \<equiv> fix\<cdot>(\<Lambda> h. strictify\<cdot>(\<Lambda> m. strictify\<cdot>(\<Lambda> n. 
                      lnsuc\<cdot>(h\<cdot>(lnpred\<cdot>m)\<cdot>(lnpred\<cdot>n)))))"
 
+abbreviation lnatGreater :: "lnat \<Rightarrow> lnat \<Rightarrow> bool" (infix ">\<^sup>l" 65) where
+"n >\<^sup>l m \<equiv>  n \<ge> lnsuc\<cdot>m"
+
+abbreviation lnatLess :: "lnat \<Rightarrow> lnat \<Rightarrow> bool" (infix "<\<^sup>l" 65) where
+"n <\<^sup>l m \<equiv>  lnsuc\<cdot>n \<le> m"
+
 instantiation lnat :: plus
 begin  
   definition plus_lnat:: "lnat \<Rightarrow> lnat \<Rightarrow> lnat"  where 
@@ -846,6 +852,88 @@ text{* Twisted version of lub_min_mono: \<le> rel. between two chains in minimum
 lemma lub_min_mono2: "\<lbrakk>chain (X::nat\<Rightarrow>lnat); chain (Y::nat\<Rightarrow>lnat); \<And>i. min (X i) y \<le> Y i\<rbrakk>
     \<Longrightarrow> min (\<Squnion>i. X i) y \<le> (\<Squnion>i. Y i)"
   by (metis dual_order.trans is_ub_thelub lnle_def lub_mono2 min_le_iff_disj)
+
+
+lemma lessequal_addition: assumes "a \<le> b" and "c \<le> d" shows "a + c \<le> b + (d :: lnat)"
+proof -
+  have "b = \<infinity> \<Longrightarrow> a + c \<le> b + d"
+    by (simp add: plus_lnatInf_r)
+  moreover
+  have "d = \<infinity> \<Longrightarrow> a + c \<le> b + d"
+    by (simp add: plus_lnatInf_r)
+  moreover
+  have "a = \<infinity> \<Longrightarrow> a + c \<le> b + d"
+    using assms(1) plus_lnatInf_r by auto
+  moreover
+  have "c = \<infinity> \<Longrightarrow> a + c \<le> b + d"
+    using assms(2) plus_lnatInf_r by auto
+  moreover
+  have "a \<noteq> \<infinity> \<Longrightarrow> b \<noteq> \<infinity> \<Longrightarrow> c \<noteq> \<infinity> \<Longrightarrow> d \<noteq> \<infinity> \<Longrightarrow> a + c \<le> b + d"
+  proof -
+    assume "a \<noteq> \<infinity>"
+    then obtain m where m_def: "Fin m = a"
+      using infI by force
+    assume "b \<noteq> \<infinity>"
+    then obtain n where n_def: "Fin n = b"
+      using infI by force
+    assume "c \<noteq> \<infinity>"
+    then obtain x where x_def: "Fin x = c"
+      using infI by force
+    assume "d \<noteq> \<infinity>"
+    then obtain y where y_def: "Fin y = d"
+      using infI by force
+    show ?thesis
+      using assms m_def n_def x_def y_def by auto
+    qed
+  then show "a + c \<le> b + d"
+    using calculation by blast
+qed
+
+lemma lnmin_eqasmthmin: assumes "a = b" and "a \<le> c" shows "a = lnmin\<cdot>b\<cdot>c"
+proof -
+  have "a = \<infinity> \<Longrightarrow> a = lnmin\<cdot>b\<cdot>c"
+    using assms by auto
+  moreover
+  have "b = \<infinity> \<Longrightarrow> a = lnmin\<cdot>b\<cdot>c"
+    using assms by auto
+  moreover
+  have "c = \<infinity> \<Longrightarrow> a = lnmin\<cdot>b\<cdot>c"
+    using assms by auto
+  moreover
+  have "a \<noteq> \<infinity> \<Longrightarrow> b \<noteq> \<infinity> \<Longrightarrow> c \<noteq> \<infinity> \<Longrightarrow>  a = lnmin\<cdot>b\<cdot>c"
+    by (metis assms less2nat lncases lnmin_fin min.order_iff)
+
+  then show ?thesis
+    using calculation by blast
+qed
+
+lemma lnmin_asso: "lnmin\<cdot>x\<cdot>y = lnmin\<cdot>y\<cdot>x"
+proof -
+  have "x = \<infinity> \<Longrightarrow> lnmin\<cdot>x\<cdot>y = lnmin\<cdot>y\<cdot>x"
+    by simp
+  moreover
+  have "y = \<infinity> \<Longrightarrow> lnmin\<cdot>x\<cdot>y = lnmin\<cdot>y\<cdot>x"
+    by simp
+  moreover
+  have "x \<noteq> \<infinity> \<Longrightarrow> y \<noteq> \<infinity> \<Longrightarrow> lnmin\<cdot>x\<cdot>y = lnmin\<cdot>y\<cdot>x"
+    by (metis (full_types) lncases lnmin_fin min.commute)
+  then show ?thesis
+    using calculation by blast
+qed
+
+lemma lnmin_smaller_addition: "lnmin\<cdot>x\<cdot>y \<le> x + y"
+proof -
+  have "x = \<infinity> \<Longrightarrow> lnmin\<cdot>x\<cdot>y \<le> x + y"
+    by (simp add: plus_lnatInf_r)
+  moreover
+  have "y = \<infinity> \<Longrightarrow> lnmin\<cdot>x\<cdot>y \<le> x + y"
+    by simp
+  moreover
+  have "x \<noteq> \<infinity> \<Longrightarrow> y \<noteq> \<infinity> \<Longrightarrow> lnmin\<cdot>x\<cdot>y \<le> x + y"
+    by (metis bot_is_0 lessequal_addition linear lnle_def lnmin_asso lnmin_eqasmthmin minimal plus_lnat0_l)
+  then show ?thesis
+    using calculation by blast
+qed
 
 
 end

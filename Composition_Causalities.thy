@@ -8,13 +8,6 @@ declare [[show_types]]
 declare [[show_sorts]]
 declare [[show_consts]]
 
-(*merge to lnat.thy*)
-abbreviation lnatGreater :: "lnat \<Rightarrow> lnat \<Rightarrow> bool" (infix ">\<^sup>l" 65) where
-"n >\<^sup>l m \<equiv>  n \<ge> lnsuc\<cdot>m"
-
-abbreviation lnatLess :: "lnat \<Rightarrow> lnat \<Rightarrow> bool" (infix "<\<^sup>l" 65) where
-"n <\<^sup>l m \<equiv>  lnsuc\<cdot>n \<le> m"
-
 
 lemma z1: assumes "ubDom\<cdot>z \<inter> ubDom\<cdot>zz = {}" shows "ubLen (z \<uplus> zz) = ubLen z \<or> ubLen (z \<uplus> zz) = ubLen zz"
   apply (simp add: ubclUnion_ubundle_def)
@@ -36,43 +29,13 @@ proof -
     using a0 ublen_min_on_channel
     by (metis (no_types, lifting) ubLen_def)
   then have c1_min: "\<forall> c\<in>ubDom\<cdot>z. usclLen\<cdot>(z . c1) \<le> usclLen\<cdot>(z . c)"
-    proof -
-      have f1: "\<forall>p l. \<not> p (l::lnat) \<or> Least p \<le> l"
-        using Least_le by auto
-      have f2: "ubLen z = (LEAST l. l \<in> {usclLen\<cdot>(z . c) |c. c \<in> ubDom\<cdot>z})"
-        by (simp add: a0 ubLen_def)
-      { assume "\<exists>c. usclLen\<cdot>(z . v0_1) = usclLen\<cdot>(z . c) \<and> c \<in> ubDom\<cdot>z"
-        then have "(LEAST l. l \<in> {usclLen\<cdot>(z . c) |c. c \<in> ubDom\<cdot>z}) \<le> usclLen\<cdot>(z . v0_1)"
-          using f1 by simp
-        then have "v0_1 \<notin> ubDom\<cdot>z \<or> usclLen\<cdot>(z . c1) \<le> usclLen\<cdot>(z . v0_1)"
-          using f2 c1_def by force }
-      then have f3: "v0_1 \<notin> ubDom\<cdot>z \<or> usclLen\<cdot>(z . c1) \<le> usclLen\<cdot>(z . v0_1)"
-        by force
-      obtain cc :: channel where
-        "(\<exists>v0. v0 \<in> ubDom\<cdot>z \<and> \<not> usclLen\<cdot>(z . c1) \<le> usclLen\<cdot>(z . v0)) = (cc \<in> ubDom\<cdot>z \<and> \<not> usclLen\<cdot>(z . c1) \<le> usclLen\<cdot>(z . cc))"
-        by moura
-      then show ?thesis
-        by (metis (mono_tags, lifting) c1_def f1 f2 f3 mem_Collect_eq)
-    qed
+    using usclLen_all_channel_bigger by blast
+
   obtain c2 where c2_def: "c2 \<in> ubDom\<cdot>zz \<and> ubLen zz = usclLen\<cdot>(zz . c2)"
     using a1 ublen_min_on_channel
     by (metis (no_types, lifting) ubLen_def)
   then have c2_min: "\<forall> c\<in>ubDom\<cdot>zz. usclLen\<cdot>(zz . c2) \<le> usclLen\<cdot>(zz . c)"
-    proof -
-      have f1: "ubLen zz = (LEAST l. l \<in> {usclLen\<cdot>(zz . c) |c. c \<in> ubDom\<cdot>zz})"
-        by (simp add: a1 ubLen_def)
-      obtain cc :: channel where
-        "(\<exists>v0. v0 \<in> ubDom\<cdot>zz \<and> \<not> usclLen\<cdot>(zz . c2) \<le> usclLen\<cdot>(zz . v0)) = (cc \<in> ubDom\<cdot>zz \<and> \<not> usclLen\<cdot>(zz . c2) \<le> usclLen\<cdot>(zz . cc))"
-        by moura
-      moreover
-      { assume "\<exists>c. usclLen\<cdot>(zz . cc) = usclLen\<cdot>(zz . c) \<and> c \<in> ubDom\<cdot>zz"
-        then have "(LEAST l. l \<in> {usclLen\<cdot>(zz . c) |c. c \<in> ubDom\<cdot>zz}) \<le> usclLen\<cdot>(zz . cc)"
-          by (simp add: Least_le)
-        then have "cc \<notin> ubDom\<cdot>zz \<or> usclLen\<cdot>(zz . c2) \<le> usclLen\<cdot>(zz . cc)"
-          using f1 c2_def by fastforce }
-      ultimately show ?thesis
-        by blast
-    qed
+    using usclLen_all_channel_bigger by blast
 
   show "ubLen (ubUnion\<cdot>z\<cdot>zz) = ubLen z \<or> ubLen (ubUnion\<cdot>z\<cdot>zz) = ubLen zz"
   proof(cases "usclLen\<cdot>(z . c1) \<le> usclLen\<cdot>(zz . c2)")

@@ -138,86 +138,65 @@ lemma ubconc_getch: "c\<in>(ubDom\<cdot>ub1 \<union> ubDom\<cdot>ub2) \<Longrigh
 lemma ubconc_insert: "ubConc b1\<cdot>b2 = (Abs_ubundle (\<lambda>c. Some (usclConc (ubUp\<cdot>b1 . c)\<cdot>(ubUp\<cdot>b2 . c)))) \<bar> (ubDom\<cdot>b1 \<union> ubDom\<cdot>b2)"
   by(simp add: ubConc_def)
 
-subsection \<open>ubConcEq\<close>
-
-
-lemma ubconceq_cont [simp]: "cont (\<lambda> b2.  (ubConc b1\<cdot>b2) \<bar> ubDom\<cdot>b2)"
-  apply(rule contI)
-  by (smt ch2ch_Rep_cfunR contlub_cfun_arg cpo_lubI image_cong ubdom_chain_eq2)
-
-lemma ubconceq_insert [simp]: "ubConcEq b1\<cdot>b2 = (ubConc b1\<cdot>b2) \<bar> ubDom\<cdot>b2"
-  by(simp add: ubConcEq_def)
-
-lemma ubconceq_dom [simp]: "ubDom\<cdot>(ubConcEq b1\<cdot>b2) = ubDom\<cdot>b2"
-  by auto
-
-
-(* lnatGreater / lnatLess abbrev aus Composition_Causalities in lnat übernehmen*)
-
-lemma maybe_newassms1: "usclLen\<cdot>\<bottom> = 0"
-  sorry
-lemma maybe_newassms2: "\<And> x . usclConc x\<cdot>\<bottom> = x"
-  sorry
-lemma maybe_newassms3: "\<And> x . usclConc \<bottom>\<cdot>x = x"
-  sorry
-lemma maybe_newassms4: "usclLen\<cdot>(usclConc s1\<cdot>s2) = usclLen\<cdot>s1 + usclLen\<cdot>s2"
-  sorry
-lemma usclLen_all_channel_bigger: assumes "cLen \<in> ubDom\<cdot>b \<and> ubLen b = usclLen\<cdot>(b  .  cLen)" shows "\<And>c::channel. c \<in> ubDom\<cdot>b \<Longrightarrow> usclLen\<cdot>(b  .  cLen) \<le> usclLen\<cdot>(b  .  c)"
-(*in comp_caus bewiesen*)
-(*wohin? nach ubundle.thy?*)
-  sorry
-
-
-lemma ubLen_smallereq_all: "\<And> c . c \<in> ubDom\<cdot>ub \<Longrightarrow> ubLen ub \<le> usclLen\<cdot>(ub . c)"
-proof -
-  fix c
-  assume cindom: "c \<in> ubDom\<cdot>ub"
-  show "ubLen ub \<le> usclLen\<cdot>(ub . c)"
-    by (metis (no_types, lifting) cindom empty_iff ubLen_def ublen_min_on_channel usclLen_all_channel_bigger)
-qed
-
-lemma ubconc_uscllen_one1: "\<And> c . c \<in> ubDom\<cdot>b1 \<Longrightarrow> c \<notin> ubDom\<cdot>b2 \<Longrightarrow> usclLen\<cdot>((ubConc b1\<cdot>b2) . c) = usclLen\<cdot>(b1 . c)"
-  by (simp add: maybe_newassms2 ubconc_getch)
-lemma ubconc_uscllen_one2: "\<And> c . c \<in> ubDom\<cdot>b2 \<Longrightarrow> c \<notin> ubDom\<cdot>b1 \<Longrightarrow> usclLen\<cdot>((ubConc b1\<cdot>b2) . c) = usclLen\<cdot>(b2 . c)"
-  by (simp add: maybe_newassms3 ubconc_getch)
-lemma ubconc_uscllen_both: "\<And> c . c \<in> ubDom\<cdot>b1 \<Longrightarrow> c \<in> ubDom\<cdot>b2 \<Longrightarrow> usclLen\<cdot>((ubConc b1\<cdot>b2) . c) = usclLen\<cdot>(b1 . c) + usclLen\<cdot>(b2 . c)"
-  by (simp add: maybe_newassms4)
-
-(*muss nach lnat.thy*)
-lemma lessequal_addition: assumes "a \<le> b" and "c \<le> d" shows "a + c \<le> b + (d :: lnat)"
-proof -
-  have "b = \<infinity> \<Longrightarrow> a + c \<le> b + d"
-    by (simp add: plus_lnatInf_r)
-  moreover
-  have "d = \<infinity> \<Longrightarrow> a + c \<le> b + d"
-    by (simp add: plus_lnatInf_r)
-  moreover
-  have "a = \<infinity> \<Longrightarrow> a + c \<le> b + d"
-    using assms(1) plus_lnatInf_r by auto
-  moreover
-  have "c = \<infinity> \<Longrightarrow> a + c \<le> b + d"
-    using assms(2) plus_lnatInf_r by auto
-  moreover
-  have "a \<noteq> \<infinity> \<Longrightarrow> b \<noteq> \<infinity> \<Longrightarrow> c \<noteq> \<infinity> \<Longrightarrow> d \<noteq> \<infinity> \<Longrightarrow> a + c \<le> b + d"
+lemma ubconc_ubleast:
+  shows "ubConc (a :: 'a ubundle)\<cdot>(ubLeast (ubDom\<cdot>a)) = a"
   proof -
-    assume "a \<noteq> \<infinity>"
-    then obtain m where m_def: "Fin m = a"
-      using infI by force
-    assume "b \<noteq> \<infinity>"
-    then obtain n where n_def: "Fin n = b"
-      using infI by force
-    assume "c \<noteq> \<infinity>"
-    then obtain x where x_def: "Fin x = c"
-      using infI by force
-    assume "d \<noteq> \<infinity>"
-    then obtain y where y_def: "Fin y = d"
-      using infI by force
-    show ?thesis
-      using assms m_def n_def x_def y_def by auto
-    qed
-  then show "a + c \<le> b + d"
-    using calculation by blast
+    have a_dom: "ubDom\<cdot>a = ubDom\<cdot>(ubConc a\<cdot>(ubLeast (ubDom\<cdot>a)))"
+      by simp
+    have "\<And>c. c \<in> ubDom\<cdot>(ubConc (a :: 'a ubundle)\<cdot>(ubLeast (ubDom\<cdot>a))) 
+                \<Longrightarrow> ubConc a\<cdot>(ubLeast (ubDom\<cdot>a))  .  c = a  .  c"
+      using usclConc_rightbottom by auto
+    then show ?thesis
+      using a_dom ubgetchI by blast
+  qed
+
+lemma ubconc_uscllen_justub1: "\<And> c . c \<in> ubclDom\<cdot>b1 \<Longrightarrow> c \<notin> ubclDom\<cdot>b2 \<Longrightarrow> usclLen\<cdot>((ubConc b1\<cdot>b2) . c) = usclLen\<cdot>(b1 . c)"
+  by (simp add: usclConc_rightbottom ubconc_getch ubclDom_ubundle_def)
+lemma ubconc_uscllen_justub2: "\<And> c . c \<in> ubclDom\<cdot>b2 \<Longrightarrow> c \<notin> ubclDom\<cdot>b1 \<Longrightarrow> usclLen\<cdot>((ubConc b1\<cdot>b2) . c) = usclLen\<cdot>(b2 . c)"
+  by (simp add: usclConc_leftbottom ubconc_getch ubclDom_ubundle_def)
+lemma ubconc_uscllen_both: "\<And> c . c \<in> ubclDom\<cdot>b1 \<Longrightarrow> c \<in> ubclDom\<cdot>b2 \<Longrightarrow> usclLen\<cdot>((ubConc b1\<cdot>b2) . c) = usclLen\<cdot>(b1 . c) + usclLen\<cdot>(b2 . c)"
+  by (simp add: usclLen_usclConc ubclDom_ubundle_def)
+
+lemma ubconc_emptyright: assumes "ubclDom\<cdot>b2 = {}" shows "ubConc b1\<cdot>b2 = b1"
+proof -
+  have "\<And> c. (ubUp\<cdot>b2  .  c) = \<bottom>"
+    by (metis assms empty_iff ubclDom_ubundle_def ubup_ubgetch2)
+  then have allCinb1: "\<And> c. (usclConc (ubUp\<cdot>b1  .  c)\<cdot>(ubUp\<cdot>b2  .  c)) = (ubUp\<cdot>b1  .  c)"
+    by (simp add: usclConc_rightbottom)
+  have concdom_b1dom: "(ubDom\<cdot>b1 \<union> ubDom\<cdot>b2) = ubDom\<cdot>b1"
+    by (metis Un_empty_right assms ubclDom_ubundle_def)
+  show ?thesis
+  proof (cases "ubDom\<cdot>b1 = {}")
+    case True
+    then show ?thesis
+      by (metis assms empty_iff sup_bot.right_neutral ubclDom_ubundle_def ubconc_dom ubgetchI)
+  next
+    case False
+    then show ?thesis
+      by (metis ubconc_dom ubconc_getch ubgetchI ubup_ubgetch concdom_b1dom allCinb1)
+  qed
 qed
+
+lemma ubconc_emptyleft: assumes "ubclDom\<cdot>b1 = {}" shows "ubConc b1\<cdot>b2 = b2"
+proof -
+  have "\<And> c. (ubUp\<cdot>b1  .  c) = \<bottom>"
+    by (metis assms empty_iff ubclDom_ubundle_def ubup_ubgetch2)
+  then have allCinb2: "\<And> c. (usclConc (ubUp\<cdot>b1  .  c)\<cdot>(ubUp\<cdot>b2  .  c)) = (ubUp\<cdot>b2  .  c)"
+    by (simp add: usclConc_leftbottom)
+  have concdom_b2dom: "(ubDom\<cdot>b1 \<union> ubDom\<cdot>b2) = ubDom\<cdot>b2"
+    by (metis assms sup_bot.left_neutral ubclDom_ubundle_def)
+  show ?thesis
+  proof (cases "ubDom\<cdot>b2 = {}")
+    case True
+    then show ?thesis
+      by (metis assms ubconc_emptyright ubclDom_ubundle_def ubclRestrict_ubundle_def ubclrestrict_dom_id ubrestrict_ubleast)
+  next
+    case False
+    then show ?thesis
+  by (metis allCinb2 concdom_b2dom ubconc_dom ubconc_getch ubgetchI ubup_ubgetch)
+  qed
+qed
+
 
 lemma ubconc_ubcllen_equalDom: assumes "ubclDom\<cdot>ub1 = ubclDom\<cdot>ub2"
   shows "(ubclLen ub1) + (ubclLen ub2) \<le> ubclLen (ubConc ub1\<cdot>ub2)"
@@ -255,137 +234,170 @@ next
 qed
 
 
-lemma ubconc_ublen2: assumes "ubclDom\<cdot>b1 \<subseteq> ubclDom\<cdot>b2 \<or> ubclDom\<cdot>b2 \<subseteq> ubclDom\<cdot>b1" shows "ubLen (ubConc b1\<cdot>b2) \<le> (ubLen b1) + (ubLen b2)"
-proof -
-  have "ubDom\<cdot>b1 = {} \<Longrightarrow> ubLen (ubConc b1\<cdot>b2) \<le> ubLen b1 + ubLen b2"
-    by (simp add: plus_lnatInf_r ubLen_def)
-  moreover
-  have "ubDom\<cdot>b2 = {} \<Longrightarrow> ubLen (ubConc b1\<cdot>b2) \<le> ubLen b1 + ubLen b2"
-    by (simp add: plus_lnatInf_r ubLen_def)
-  moreover
-
-  have "ubDom\<cdot>b1 \<noteq> {} \<Longrightarrow> ubDom\<cdot>b2 \<noteq> {} \<Longrightarrow> ubLen (ubConc b1\<cdot>b2) \<le> ubLen b1 + ubLen b2"
-  proof -
-    assume b1notempty: "ubDom\<cdot>b1 \<noteq> {}"
-    assume b2notempty: "ubDom\<cdot>b2 \<noteq> {}"
-
-    obtain c0minLen where c0minLen_def: "c0minLen \<in> ubDom\<cdot>(ubConc b1\<cdot>b2) \<and> ubLen (ubConc b1\<cdot>b2) = usclLen\<cdot>((ubConc b1\<cdot>b2) . c0minLen)"
-      by (metis (no_types, lifting) Un_iff b2notempty empty_iff ubLen_def ubconc_dom ublen_min_on_channel)
-    then have c0minLen_min: "\<forall> c \<in> ubDom\<cdot>(ubConc b1\<cdot>b2) . usclLen\<cdot>((ubConc b1\<cdot>b2) . c0minLen) \<le> usclLen\<cdot>((ubConc b1\<cdot>b2) . c)"
-      using usclLen_all_channel_bigger by blast
-
-    have "ubclDom\<cdot>b1 \<subseteq> ubclDom\<cdot>b2 \<Longrightarrow> ubLen (ubConc b1\<cdot>b2) \<le> ubLen b1 + ubLen b2"
-(*c0minLen \<notin> ubclDom\<cdot>b1 \<Longrightarrow> ubLen (ubConc b1\<cdot>b2) = ubLen b2"*)
-      sorry
-
-    moreover
-
-    have "ubclDom\<cdot>b2 \<subseteq> ubclDom\<cdot>b1 \<Longrightarrow> ubLen (ubConc b1\<cdot>b2) \<le> ubLen b1 + ubLen b2"
-(*c0minLen \<notin> ubclDom\<cdot>b2 \<Longrightarrow> ubLen (ubConc b1\<cdot>b2) = ubLen b1"*)
-      sorry
-
-    then show ?thesis
-      using assms calculation by blast
-  qed
-
-  then show ?thesis
-    using calculation by blast
-qed
-
-lemma ubconc_dom2: "(ubDom\<cdot>b1 \<subseteq> ubDom\<cdot>(ubConc b1\<cdot>b2)) \<and> (ubDom\<cdot>b2 \<subseteq> ubDom\<cdot>(ubConc b1\<cdot>b2))"
-  by simp
-lemma ubconc_dom3: "\<And> b2 . ubDom\<cdot>b1 \<subseteq> ubDom\<cdot>(ubConc b1\<cdot>b2)"
-  by simp
-lemma ubconc_dom4: "\<And> b1 . ubDom\<cdot>b2 \<subseteq> ubDom\<cdot>(ubConc b1\<cdot>b2)"
-  by simp
-
-lemma ubconceq_ublen2: assumes "ubclDom\<cdot>b1 \<subseteq> ubclDom\<cdot>b2 \<or> ubclDom\<cdot>b2 \<subseteq> ubclDom\<cdot>b1" shows "ubLen (ubConcEq b1\<cdot>b2) \<le> (ubLen b1) + (ubLen b2)"
-proof (simp add: ubConcEq_def)
-  have "ubDom\<cdot>b2 = {} \<Longrightarrow> ubLen ((ubConc b1\<cdot>b2) \<bar> ubDom\<cdot>b2) \<le> ubLen b1 + ubLen b2"
+lemma ubconc_ubcllen_diffDom: assumes "ubclDom\<cdot>ub1 \<inter> ubclDom\<cdot>ub2 = {}"
+  shows "lnmin\<cdot>(ubclLen ub1)\<cdot>(ubclLen ub2) = ubclLen (ubConc ub1\<cdot>ub2)"
+proof (simp add: ubclDom_ubundle_def ubclLen_ubundle_def)
+  have "ubDom\<cdot>(ubConc ub1\<cdot>ub2) = {} \<Longrightarrow> ubLen (ubConc ub1\<cdot>ub2) = lnmin\<cdot>(ubLen ub1)\<cdot>(ubLen ub2)"
     by (simp add: ubLen_def)
   moreover
-  have "ubDom\<cdot>b1 = {} \<Longrightarrow> ubLen ((ubConc b1\<cdot>b2) \<bar> ubDom\<cdot>b2) \<le> ubLen b1 + ubLen b2"
-    by (simp add: plus_lnatInf_r ubLen_def)
+  have "ubDom\<cdot>(ubConc ub1\<cdot>ub2) \<noteq> {} \<Longrightarrow> ubDom\<cdot>ub1 = {} \<Longrightarrow> ubLen (ubConc ub1\<cdot>ub2) = lnmin\<cdot>(ubLen ub1)\<cdot>(ubLen ub2)"
+    by (simp add: ubconc_emptyleft ubLen_def ubclDom_ubundle_def)
+  moreover
+  have "ubDom\<cdot>(ubConc ub1\<cdot>ub2) \<noteq> {} \<Longrightarrow> ubDom\<cdot>ub2 = {} \<Longrightarrow> ubLen (ubConc ub1\<cdot>ub2) = lnmin\<cdot>(ubLen ub1)\<cdot>(ubLen ub2)"
+    by (simp add: ubconc_emptyright ubLen_def ubclDom_ubundle_def)
   moreover
 
-  have "ubDom\<cdot>b1 \<noteq> {} \<Longrightarrow> ubDom\<cdot>b2 \<noteq> {} \<Longrightarrow> ubLen ((ubConc b1\<cdot>b2) \<bar> ubDom\<cdot>b2) \<le> ubLen b1 + ubLen b2"
+  have "ubDom\<cdot>ub1 \<noteq> {} \<Longrightarrow> ubDom\<cdot>ub2 \<noteq> {} \<Longrightarrow> ubLen (ubConc ub1\<cdot>ub2) = lnmin\<cdot>(ubLen ub1)\<cdot>(ubLen ub2)"
   proof -
-    assume b1notempty: "ubDom\<cdot>b1 \<noteq> {}"
-    assume b2notempty: "ubDom\<cdot>b2 \<noteq> {}"
-
-    obtain c0minLen where c0minLen_def: "c0minLen \<in> ubDom\<cdot>(ubConc b1\<cdot>b2) \<and> ubLen (ubConc b1\<cdot>b2) = usclLen\<cdot>((ubConc b1\<cdot>b2) . c0minLen)"
+    assume b1notempty: "ubDom\<cdot>ub1 \<noteq> {}"
+    assume b2notempty: "ubDom\<cdot>ub2 \<noteq> {}"
+    obtain c0minLen where c0minLen_def: "c0minLen \<in> ubDom\<cdot>(ubConc ub1\<cdot>ub2) \<and> ubLen (ubConc ub1\<cdot>ub2) = usclLen\<cdot>((ubConc ub1\<cdot>ub2) . c0minLen)"
       by (metis (no_types, lifting) Un_iff b2notempty empty_iff ubLen_def ubconc_dom ublen_min_on_channel)
+    then have c0minLen_min: "\<forall> c \<in> ubDom\<cdot>(ubConc ub1\<cdot>ub2) . usclLen\<cdot>((ubConc ub1\<cdot>ub2) . c0minLen) \<le> usclLen\<cdot>((ubConc ub1\<cdot>ub2) . c)"
+      using usclLen_all_channel_bigger by blast
+    have ch_xor: "\<forall> c \<in> ubDom\<cdot>(ubConc ub1\<cdot>ub2) . \<not> (c \<in> ubDom\<cdot>ub1 \<and> c \<in> ubDom\<cdot>ub2)"
+      by (metis assms disjoint_iff_not_equal ubclDom_ubundle_def)
 
-    have "c0minLen \<in> ubDom\<cdot>b2 \<Longrightarrow> ubLen ((ubConc b1\<cdot>b2) \<bar> ubDom\<cdot>b2) \<le> ubLen b1 + ubLen b2"
+    have isinb1: "c0minLen \<in> ubDom\<cdot>ub1 \<Longrightarrow> ubLen (ubConc ub1\<cdot>ub2) = lnmin\<cdot>(ubLen ub1)\<cdot>(ubLen ub2)"
     proof -
-      assume c0inb2: "c0minLen \<in> ubDom\<cdot>b2"
-      then have "(ubConc b1\<cdot>b2 \<bar> ubDom\<cdot>b2) . c0minLen = ubConc b1\<cdot>b2 . c0minLen"
-        using ubgetch_ubrestrict by blast
-      then show ?thesis
-        using c0inb2 by (metis (no_types) assms c0minLen_def dual_order.trans ubLen_smallereq_all ubconc_ublen2 ubconceq_dom ubconceq_insert)
+      assume c0inub1: "c0minLen \<in> ubDom\<cdot>ub1"
+      then have not_c0inub2: "c0minLen \<notin> ubDom\<cdot>ub2"
+        using c0minLen_def ch_xor by blast
+      have "\<And> c . c \<in> ubDom\<cdot>ub1 \<Longrightarrow> usclLen\<cdot>(ub1 . c) \<ge> usclLen\<cdot>(ub1 . c0minLen)"
+        by (metis Un_iff c0inub1 c0minLen_min ch_xor ubconc_dom ubconc_uscllen_justub1 ubclDom_ubundle_def)
+      then have ub1Lenisub1Len: "usclLen\<cdot>(ub1 . c0minLen) = ubLen ub1"
+        by (metis (no_types, lifting) b1notempty c0inub1 dual_order.antisym ubLen_def ubLen_smallereq_all ublen_min_on_channel)
+      then have concLenisub1Len: "ubLen (ubConc ub1\<cdot>ub2) = ubLen ub1"
+        by (simp add: c0inub1 c0minLen_def not_c0inub2 ubconc_uscllen_justub1 ubclDom_ubundle_def)
+      have concLensmallerub2Len: "ubLen (ubConc ub1\<cdot>ub2) \<le> ubLen ub2"
+        by (metis IntI Un_iff assms empty_iff ubLen_geI ubLen_smallereq_all ubclDom_ubundle_def ubconc_dom ubconc_uscllen_justub2)
+
+      show "ubLen (ubConc ub1\<cdot>ub2) = lnmin\<cdot>(ubLen ub1)\<cdot>(ubLen ub2)"
+        using concLenisub1Len concLensmallerub2Len lnmin_eqasmthmin by auto
     qed
 
-    moreover
-
-    have "\<not> (c0minLen \<in> ubDom\<cdot>b2) \<Longrightarrow> ubLen ((ubConc b1\<cdot>b2) \<bar> ubDom\<cdot>b2) \<le> ubLen b1 + ubLen b2"
+    have isinb2: "c0minLen \<notin> ubDom\<cdot>ub1 \<Longrightarrow> ubLen (ubConc ub1\<cdot>ub2) = lnmin\<cdot>(ubLen ub1)\<cdot>(ubLen ub2)"
     proof -
-      assume c0notb2: "\<not> (c0minLen \<in> ubDom\<cdot>b2)"
-      then have c0inb1: "c0minLen \<in> ubDom\<cdot>b1"
-        using c0minLen_def by auto
-
-      have "ubclDom\<cdot>b2 \<subseteq> ubclDom\<cdot>b1"
-        by (metis assms c0minLen_def c0notb2 ubclDom_ubundle_def ubconc_dom ubunionDom ubunion_idL)
-      have "(ubDom\<cdot>b1 \<union> ubDom\<cdot>b2) \<inter> ubDom\<cdot>b2 \<noteq> {}"
-        by (simp add: Int_absorb1 b2notempty)
-
-      have "ubclDom\<cdot>b2 \<subseteq> ubclDom\<cdot>b1 \<Longrightarrow> ubLen ((ubConc b1\<cdot>b2) \<bar> ubDom\<cdot>b2) \<le> ubLen b1 + ubLen b2"
-                  apply (simp add: ubLen_def assms b1notempty b2notempty)
-
-        sorry
-      then show ?thesis
-        by (metis (no_types, lifting) assms c0inb1 c0notb2 subsetCE ubclDom_ubundle_def)
+      assume not_c0inub1: "c0minLen \<notin> ubDom\<cdot>ub1"
+      then have c0inub2: "c0minLen \<in> ubDom\<cdot>ub2"
+        using c0minLen_def by (simp add: ch_xor)
+      have "\<And> c . c \<in> ubDom\<cdot>ub2 \<Longrightarrow> usclLen\<cdot>(ub2 . c) \<ge> usclLen\<cdot>(ub2 . c0minLen)"
+        by (metis Un_iff c0inub2 c0minLen_min ch_xor ubconc_dom ubconc_uscllen_justub2 ubclDom_ubundle_def)
+      then have concLenisub2Len: "ubLen (ubConc ub1\<cdot>ub2) = ubLen ub2"
+        by (simp add: c0inub2 c0minLen_def dual_order.antisym not_c0inub1 ubLen_geI ubLen_smallereq_all ubconc_uscllen_justub2 ubclDom_ubundle_def)
+      have concLensmallerub1Len: "ubLen (ubConc ub1\<cdot>ub2) \<le> ubLen ub1"
+        by (metis Un_iff c0minLen_def c0minLen_min ch_xor ubLen_geI ubconc_dom ubconc_uscllen_justub1 ubclDom_ubundle_def)
+      show "ubLen (ubConc ub1\<cdot>ub2) = lnmin\<cdot>(ubLen ub1)\<cdot>(ubLen ub2)"
+        using concLenisub2Len concLensmallerub1Len lnmin_eqasmthmin lnmin_asso by fastforce
     qed
 
-    then show ?thesis
-      using calculation by blast 
+    show "ubLen (ubConc ub1\<cdot>ub2) = lnmin\<cdot>(ubLen ub1)\<cdot>(ubLen ub2)"
+      by (cases "c0minLen \<in> ubDom\<cdot>ub1", simp_all add: isinb1 isinb2)
   qed
-
-  then show "ubLen ((ubConc b1\<cdot>b2) \<bar> ubDom\<cdot>b2) \<le> ubLen b1 + ubLen b2"
-    using calculation by blast
+  then show "lnmin\<cdot>(ubLen ub1)\<cdot>(ubLen ub2) = ubLen (ubConc ub1\<cdot>ub2)"
+    using calculation by argo
 qed
 
 
-lemma ubleast_len: assumes cs_nempty: "cs \<noteq> {}" and len_zero: "usclLen\<cdot>(\<bottom> :: 'a) = 0"
+lemma ubconc_ublen_onech: assumes ubdom_one: "ubclDom\<cdot>b2 = {c}" and ubdom_eq: "ubclDom\<cdot>b1 = ubclDom\<cdot>b2"
+  shows "ubLen (ubConc b1\<cdot>b2) = (ubLen b1) + (ubLen b2)"
+proof (cases "ubDom\<cdot>b1 = {}")
+  case True
+  then show ?thesis
+    by (metis (no_types, lifting) bot_eq_sup_iff plus_lnatInf_l ubLen_def ubconc_dom ubdom_eq ubclDom_ubundle_def)
+next
+  case False
+
+  obtain c1 where c1_def: "c1 \<in> ubDom\<cdot>b1 \<and> ubLen b1 = usclLen\<cdot>(b1 . c1)"
+    by (metis (no_types, lifting) False ubLen_def ublen_min_on_channel)
+  then have c1_min: "\<forall> c\<in>ubDom\<cdot>b1. usclLen\<cdot>(b1 . c1) \<le> usclLen\<cdot>(b1 . c)"
+    using usclLen_all_channel_bigger by blast
+
+  obtain c2 where c2_def: "c2 \<in> ubDom\<cdot>b2 \<and> ubLen b2 = usclLen\<cdot>(b2 . c2)"
+    by (metis (no_types, lifting) False ubLen_def ubdom_eq ublen_min_on_channel ubclDom_ubundle_def)
+  then have c2_min: "\<forall> c\<in>ubDom\<cdot>b2. usclLen\<cdot>(b2 . c2) \<le> usclLen\<cdot>(b2 . c)"
+    using usclLen_all_channel_bigger by blast
+
+  have c1isublenb1: "ubLen b1 = (usclLen\<cdot>(b1 . c1))"
+    by (simp add: c1_def)
+  have c2isublenb2: "ubLen b2 = (usclLen\<cdot>(b2 . c2))"
+    by (simp add: c2_def)
+
+  have conclen: "ubLen (ubConc b1\<cdot>b2) = usclLen\<cdot>((ubConc b1\<cdot>b2) . c1)"
+    by (metis c1_def singletonD sup.idem ubconc_dom ubdom_eq ubdom_one uslen_ubLen_ch3 ubclDom_ubundle_def)
+
+  have c1_def: "c1 = c"
+    by (metis c1_def singletonD ubclDom_ubundle_def ubdom_eq ubdom_one)
+  have c2_def: "c2 = c"
+    by (metis c2_def singletonD ubclDom_ubundle_def ubdom_one)
+
+  show ?thesis
+    by (simp add: c1_def c1isublenb1 c2_def c2isublenb2 conclen ubconc_uscllen_both ubdom_eq ubdom_one)
+qed
+
+
+subsection \<open>ubConcEq\<close>
+
+
+lemma ubconceq_cont [simp]: "cont (\<lambda> b2.  (ubConc b1\<cdot>b2) \<bar> ubDom\<cdot>b2)"
+  apply(rule contI)
+  by (smt ch2ch_Rep_cfunR contlub_cfun_arg cpo_lubI image_cong ubdom_chain_eq2)
+
+lemma ubconceq_insert [simp]: "ubConcEq b1\<cdot>b2 = (ubConc b1\<cdot>b2) \<bar> ubDom\<cdot>b2"
+  by(simp add: ubConcEq_def)
+
+lemma ubconceq_dom [simp]: "ubDom\<cdot>(ubConcEq b1\<cdot>b2) = ubDom\<cdot>b2"
+  by auto
+
+lemma ubconceq_ubleast:
+  shows "ubConcEq (a :: 'a ubundle)\<cdot>(ubLeast (ubDom\<cdot>a)) = a"
+  by (simp add: usclConc_rightbottom ubconc_ubleast)
+
+lemma ubconceq_ubcllen_equalDom: assumes "ubclDom\<cdot>ub1 = ubclDom\<cdot>ub2"
+  shows "(ubclLen ub1) + (ubclLen ub2) \<le> ubclLen (ubConcEq ub1\<cdot>ub2)"
+  using assms by (simp add: ubclDom_ubundle_def ubconc_ubcllen_equalDom)
+
+lemma ubconceq_ubcllen_diffDom: assumes "ubclDom\<cdot>ub1 \<inter> ubclDom\<cdot>ub2 = {}"
+  shows "ubclLen ub2 = ubclLen (ubConcEq ub1\<cdot>ub2)"
+  apply (simp add: ubclLen_ubundle_def)
+  apply (simp add: ubLen_def)
+  apply (cases "ubDom\<cdot>ub2 = {}")
+  apply simp
+  apply (cases "(ubDom\<cdot>ub1 \<union> ubDom\<cdot>ub2) \<inter> ubDom\<cdot>ub2 = {}")
+  apply blast
+  apply rule
+  apply simp
+  by (metis (no_types, hide_lams) assms disjoint_iff_not_equal ubclDom_ubundle_def ubconc_uscllen_justub2 ubgetch_ubrestrict)
+
+lemma ubconceq_ublen_onech: assumes ubdom_one: "ubclDom\<cdot>b2 = {c}" and ubdom_eq: "ubclDom\<cdot>b1 = ubclDom\<cdot>b2" 
+  shows "ubLen (ubConcEq b1\<cdot>b2) = (ubLen b1) + (ubLen b2)"
+proof -
+  have "ubDom\<cdot>b1 = ubclDom\<cdot>b2"
+    by (metis ubclDom_ubundle_def ubdom_eq)
+  then have "ubConc b1\<cdot>b2 = ubConcEq b1\<cdot>b2"
+    by (simp add: ubclDom_ubundle_def)
+  then show ?thesis
+    by (simp add: ubconc_ublen_onech ubdom_eq ubdom_one)
+qed
+
+lemma conceq_longer_conc: "ubLen (ubConcEq b1\<cdot>b2) \<ge> ubLen (ubConc b1\<cdot>b2)"
+  by (simp add: ubLen_geI ubLen_smallereq_all)
+
+lemma conceq_conc_1: assumes "ubclDom\<cdot>b1 \<subseteq> ubclDom\<cdot>b2" shows "ubConcEq b1\<cdot>b2 = ubConc b1\<cdot>b2"
+  by (metis assms ubclDom_ubundle_def ubclRestrict_ubundle_def ubclrestrict_dom_id ubconc_dom ubconceq_insert ubunionDom ubunion_idL)
+
+
+
+
+lemma ubleast_len: assumes cs_nempty: "cs \<noteq> {}"
   shows "ubLen (ubLeast cs :: 'a ubundle) = 0"
 proof -
   obtain c where c_def: "c \<in> cs"
     using cs_nempty by blast
   have "usclLen\<cdot>((ubLeast cs :: 'a ubundle)  .  c) = 0"
-    by (simp add: c_def len_zero)
+    by (simp add: c_def usclLen_bottom)
   then show "ubLen (ubLeast cs :: 'a ubundle) = (0::lnat)"
     by (metis bot_is_0 c_def dual_order.antisym lnle_def minimal ubLen_smallereq_all ubleast_ubdom)
 qed
-
-
-lemma ubconc_ubleast:
-  assumes "\<And> x. usclConc x\<cdot>(\<bottom> :: 'a) = x"
-  shows "ubConc (a :: 'a ubundle)\<cdot>(ubLeast (ubDom\<cdot>a)) = a"
-  proof -
-    have a_dom: "ubDom\<cdot>a = ubDom\<cdot>(ubConc a\<cdot>(ubLeast (ubDom\<cdot>a)))"
-      by simp
-    have "\<And>c. c \<in> ubDom\<cdot>(ubConc (a :: 'a ubundle)\<cdot>(ubLeast (ubDom\<cdot>a))) 
-                \<Longrightarrow> ubConc a\<cdot>(ubLeast (ubDom\<cdot>a))  .  c = a  .  c"
-      using assms by auto
-    then show ?thesis
-      using a_dom ubgetchI by blast
-  qed
-
-(*     have "ubLen a = ubLen (ubConc a\<cdot>(ubLeast (ubDom\<cdot>a)))"
-      by (metis a_dom for_each ubgetchI) *)
-
-lemma ubconceq_ubleast:
-  assumes "\<And> x. usclConc x\<cdot>(\<bottom> :: 'a) = x"
-  shows "ubConcEq (a :: 'a ubundle)\<cdot>(ubLeast (ubDom\<cdot>a)) = a"
-  by (simp add: assms ubconc_ubleast)
 
 end    
