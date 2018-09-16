@@ -29,6 +29,10 @@ begin
 definition DIV_rev :: "'a rev set set" where
 "DIV_rev = image (image Rev) DIV"
 
+
+lemma div_rev_inv: "a\<in>DIV \<Longrightarrow> ((inv Rev)`a) \<in> DIV"
+  by (smt DIV_rev_def GFP.rev.inject image_iff image_inv_f_f inj_def)
+
 instance
   by intro_classes
 end
@@ -42,7 +46,7 @@ class rev_div_cpo = division + po +
 
 
     (* every set is a cpo *)
-  assumes rev_div_cpo: "\<And>S a. a\<in>DIV \<Longrightarrow> \<not>finite S \<Longrightarrow> longChain S \<Longrightarrow> S\<subseteq>a \<Longrightarrow> \<exists>x\<in>a. (Rev ` S) <<| Rev x"
+  assumes rev_div_cpo: "\<And>S a. a\<in>DIV \<Longrightarrow> \<not>finite  (Rev ` S) \<Longrightarrow> longChain (Rev ` S) \<Longrightarrow> S\<subseteq>a \<Longrightarrow> \<exists>x\<in>a. (Rev ` S) <<| Rev x"
 
 begin
 end
@@ -66,11 +70,26 @@ lemma rev_obtains: fixes S::"'a GFP.rev set"
   obtains A where "Rev ` A = S"
   by (metis GFP.rev.exhaust UNIV_I subset_iff subset_image_iff surj_def that)
 
+lemma rev_lub_ex: 
+  fixes S::"'a rev set"
+    assumes "a \<in> DIV" and "infinite S" and "longChain S"
+  and "S \<subseteq> a"
+shows  "\<exists>x\<in>a. S <<| x"
+proof -
+  obtain b where b_rev: "Rev ` b = a" and b_div:"b\<in>DIV"
+    by (metis DIV_rev_def assms(1) imageE)
+  from this obtain D where "longChain D" and "S = Rev ` D" and "infinite D" and "D\<subseteq>b"
+    by (metis assms(2) assms(3) assms(4) finite_imageI longchain_rev subset_image_iff)
+  thus ?thesis
+    by (metis b_rev b_div assms(2) assms(3) rev_div_cpo rev_image_eqI)
+qed
+
 instance
   apply(intro_classes)
   apply (simp add: DIV_rev_def rev_div_non_empty)
   using DIV_rev_def rev_div_inner_non_empty apply fastforce
-  sorry
+  by (simp add: rev_lub_ex)
+  
 end
 
 
@@ -103,9 +122,29 @@ class rev_div_upcpo = div_upcpo + rev_div_cpo
 
 instantiation rev :: (rev_div_upcpo) div_pcpo
 begin
-instance 
+
+lemma div_top_bot:"\<And>x. x\<in>a \<Longrightarrow> a\<in>DIV \<Longrightarrow> (Rev (div_top a)) \<sqsubseteq> Rev x"
+  by (simp add: div_top)
+
+lemma div_top_rev_in: "\<And>a::'a GFP.rev set. a \<in> DIV \<Longrightarrow> (Rev (div_top ((inv Rev)`a))) \<in> a"
+proof -
+  fix a :: "'a GFP.rev set"
+  assume a1: "a \<in> DIV"
+  have f2: "\<forall>R a f. \<exists>r. ((a::'a) \<notin> f ` R \<or> (r::'a GFP.rev) \<in> R) \<and> (a \<notin> f ` R \<or> f r = a)"
+    by blast
+have "\<And>r. GFP.rev.Rev (inv GFP.rev.Rev r::'a) = r"
+  by (metis GFP.below_rev.elims(1) f_inv_into_f range_eqI)
+  then show "GFP.rev.Rev (div_top (inv GFP.rev.Rev ` a)) \<in> a"
+using f2 a1 by (metis (no_types) div_rev_inv div_top)
+qed
+
+lemma div_top_rev: "\<And>a::'a GFP.rev set. a \<in> DIV \<Longrightarrow> \<forall>b::'a GFP.rev\<in>a. (Rev (div_top ((inv Rev)`a))) \<sqsubseteq> b"
+  by (metis (no_types, lifting) GFP.below_rev.elims(3) div_rev_inv div_top_bot f_inv_into_f image_eqI range_eqI)
+
+instance
   apply(intro_classes)
-  sorry
+  using GFP.div_top_rev div_top_rev_in by blast
+
 end
 
 
@@ -159,7 +198,7 @@ lemma gfp_fix:
     assumes "monofun f"
     and "goodFormed C f"
     and "C \<in> DIV"
-  shows "(gfp C f) = (f  ((gfp C f))) "
+  shows "(gfp C f) = (f  (gfp C f)) "
   by (metis (no_types, lifting) GFP.rev.inject assms(1) assms(2) assms(3) gfp_fix_h rev_invrev reverseFun_def)
 
 lemma gfp_div: assumes "monofun f"
@@ -186,5 +225,14 @@ proof -
   thus ?thesis
     by simp 
 qed
+
+
+lemma gfp_monofun: assumes "f\<sqsubseteq>g"
+    and "monofun f" and "monofun g"
+    and "goodFormed C f" and "goodFormed C g"
+    and "C \<in> DIV"
+  shows "gfp C f \<sqsubseteq> gfp C g"
+  by (metis assms(1) assms(2) assms(3) assms(4) assms(5) assms(6) below_fun_def gfp_div gfp_fix gfp_greatest)
+
 
 end
