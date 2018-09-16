@@ -52,6 +52,30 @@ class uscl_conc = uscl_pcpo +
 begin
 end 
 
+class uscl_ind = uscl_conc  +
+  fixes usclTake :: "nat \<Rightarrow> 'a  \<rightarrow> 'a"
+  fixes usclDrop :: "nat \<Rightarrow> 'a  \<rightarrow> 'a"
+
+  assumes uscl_Hd_Rt : "\<And>x.  x = usclConc (usclTake 1 \<cdot> x)\<cdot>(usclDrop 1 \<cdot> x)"
+
+  assumes usclLen_zero : "\<And>x. usclLen\<cdot>x \<le> 0 \<Longrightarrow> x = \<bottom>"       
+  assumes usclLen_bot: "usclLen\<cdot>\<bottom> = (0::lnat)" 
+
+  assumes usclTake_len : "\<And>x n.  usclLen\<cdot>x \<ge> Fin n \<Longrightarrow> usclLen\<cdot>(usclTake n\<cdot>x) = Fin n"
+  assumes usclTake_len_le :"\<And>x k m. usclLen\<cdot>x = Fin k \<Longrightarrow> Fin k < Fin m \<Longrightarrow>  usclLen\<cdot>(usclTake m\<cdot>x) = Fin k" 
+  assumes usclTake_eq : "\<And>x. usclLen\<cdot>x \<le> Fin n \<Longrightarrow> usclTake n\<cdot>x = x"
+  assumes usclTake_well : "\<And> cs s n. (usclOkay cs s \<Longrightarrow> usclOkay cs (usclTake n \<cdot> s))"
+  assumes usclTake_below : "\<And>x n. usclTake n\<cdot> x \<sqsubseteq> usclTake (Suc n) \<cdot> x"
+  assumes usclTake_lub : "(\<Squnion>i. usclTake i\<cdot>s) = s"
+
+  assumes usclDrop_len : "\<And>x n.  (usclLen\<cdot>x \<le> Fin (Suc n)) = (usclLen\<cdot>(usclDrop (Suc 0)\<cdot>x) \<le> Fin n)" 
+  assumes usclDrop_eq : "\<And>x. usclDrop 0 \<cdot> x = x"
+  assumes usclDrop_well : "\<And> cs s n. (usclOkay cs s \<Longrightarrow> usclOkay cs (usclDrop n \<cdot> s))"
+
+begin
+end
+
+
 
 (****************************************************)
 section\<open>Universal Stream Bundle\<close>

@@ -7,13 +7,13 @@ package abp;
     out Pair<Integer,Boolean> dr;
 
   automaton Medium {
-    variable Integer c=random(50);
+    variable Integer c=random();
 
     state Single;
-    initial Single / { dr=null};
+    initial Single / {dr=null};
 
-    Single -> Single {i=null} / {o=null};
+    Single -> Single {ds=null} / {dr=null};
     Single -> Single [c>0]  / {c=c-1};
-    Single -> Single [c=0]  / {c=random(50), o=i};
+    Single -> Single [c=0]  / {c=random(), dr=ds};
   }
 }

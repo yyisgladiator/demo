@@ -92,7 +92,7 @@ subsection \<open>Lemma only over SPS\<close>
 
 
 (* counter not null, drop every message and count one down *)
-lemma "spsConcIn (makeInput m) (h_MED (State TheOne (Suc n))) = spsConcOut (makeNull (\<C> ''Output Channel''))\<cdot>(h_MED (State TheOne (Suc n)))"
+lemma "spsConcIn (makeInput m) (h_MED (State TheOne (Suc n))) = spsConcOut (makeNull (\<C> ''Output Channel''))\<cdot>(h_MED (State TheOne  n))"
   oops
 
 (* If a "null" comes in send it out and stay in the same state *) 
