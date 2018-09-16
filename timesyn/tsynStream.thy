@@ -618,7 +618,23 @@ lemma tsynfilter_tsynabs: "tsynAbs\<cdot>(tsynFilter A\<cdot>s) = sfilter A\<cdo
 
 text {* @{term tsynFilter} leaves the length of the stream unchanged. *}
 lemma tsynfilter_tsynlen: "tsynLen\<cdot>(tsynFilter A\<cdot>s) \<le> tsynLen\<cdot>s"
-  sorry
+  proof (induction s rule: tsyn_ind)
+    case adm
+    then show ?case 
+      by (simp add: slen_sfilterl1 tsynfilter_tsynabs tsynlen_insert)  
+  next
+    case bot
+    then show ?case 
+      by simp
+  next
+    case (msg m s)
+    then show ?case 
+      by (simp add: slen_sfilterl1 tsynfilter_tsynabs tsynlen_insert)
+  next
+    case (null s)
+    then show ?case 
+      by (simp add: tsynabs_sconc_null tsynfilter_tsynabs tsynlen_insert)
+  qed
 
 text {* @{term tsynFilter} test on finite nat tsyn-stream. *}
 lemma tsynfilter_test_finstream: 
@@ -773,9 +789,10 @@ next
   then show ?case by simp
 next
   case (msg m s)
-  obtain a  where "\<exists>b. m = (a, b)" by fastforce
-  obtain b where m_def: "m=(a,b)" 
-    using \<open>\<exists>b::'b. (m::'a \<times> 'b) = (a::'a, b)\<close> by blast
+  obtain a  where b_def: "\<exists>b. m = (a, b)" 
+    by fastforce
+  obtain b where m_def: "m = (a, b)"
+    using b_def by auto
   then show ?case 
     by (simp add: m_def tsynprojfst_sconc_msg tsynlen_sconc_msg msg.IH)
 next
@@ -842,8 +859,10 @@ next
   then show ?case by simp
 next
   case (msg m s)
-  obtain b  where "\<exists>a. m = (a, b)" by (meson surj_pair)
-  obtain a where m_def: "m=(a,b)" using \<open>\<exists>a::'b. (m::'b \<times> 'a) = (a, b::'a)\<close> by blast
+  obtain b  where b_def: "\<exists>a. m = (a, b)" 
+    by (meson surj_pair)
+  obtain a where m_def: "m = (a, b)"
+    using b_def by auto
   then show ?case 
     by (simp add: m_def tsynprojsnd_sconc_msg tsynlen_sconc_msg msg.IH)
 next
@@ -996,48 +1015,23 @@ lemma tsynzip_singleton_null_second: "tsynZip\<cdot>(\<up>- \<bullet> as)\<cdot>
 
 text {* @{term tsynZip} keeps the length of the finite stream. *}
 lemma tsynzip_slen: "#bs = \<infinity> \<Longrightarrow> #(tsynZip\<cdot>as\<cdot>bs) = #as"
-proof (induction as arbitrary: bs rule: tsyn_ind)
-  case adm
-  then show ?case 
-    apply (rule admI)
-    by (simp add: contlub_cfun_fun contlub_cfun_arg)
-next
-  case bot
-  then show ?case by simp
-next
-  case (null s)
-  then show ?case by (simp add: only_empty_has_length_0 tsynzip_sconc_null)
-next
-  case (msg m s)
-  then show ?case
-    apply (case_tac "#(\<up>(Msg m) \<bullet> s) \<noteq> \<infinity>")
-    apply (rule_tac x=bs in scases, simp)
-    apply (simp add: tsynzip_sconc_msg)
-    (* both infinite case is missing*)
-    sorry
-qed
-
-
-lemma tsynzip_tsynlen: "#bs = \<infinity> \<Longrightarrow> tsynLen\<cdot>(tsynZip\<cdot>as\<cdot>bs) = tsynLen\<cdot>as"
-  proof (induction as rule: tsyn_ind)
-  case adm
-  then show ?case  
-    apply (rule admI)
-    by (simp add: contlub_cfun_arg contlub_cfun_fun)
-next
-  case bot
-  then show ?case by simp
-next
-  case (null s)
-  then show ?case by (metis Inf'_neq_0 strict_slen tsynlen_sconc_null tsynzip_sconc_null)
-next
-  case (msg m s)
-  then show ?case
-    apply (case_tac "tsynLen\<cdot>(\<up>(Msg m) \<bullet> s) \<noteq> \<infinity>")
-    apply (rule_tac x=bs in scases, simp)
-    apply (simp add: tsynzip_sconc_msg tsynlen_sconc_msg)
-    sorry
-qed
+  proof (induction as arbitrary: bs rule: tsyn_ind)
+    case adm
+    then show ?case 
+      apply (rule admI)
+      by (simp add: contlub_cfun_fun contlub_cfun_arg)
+  next
+    case bot
+    then show ?case by simp
+  next
+    case (null s)
+    then show ?case 
+      by (simp add: only_empty_has_length_0 tsynzip_sconc_null)
+  next
+    case (msg m s)
+    then show ?case
+      by (metis (no_types, lifting) inf_scase slen_scons tsynzip_sconc_msg)
+  qed
 
 text {* Abstraction of @{term tsynZip} equals szip executed on abstracted stream. *}
 lemma tsynzip_tsynabs: "tsynAbs\<cdot>(tsynZip\<cdot>as\<cdot>bs) = szip\<cdot>(tsynAbs\<cdot>as)\<cdot>bs"
@@ -1048,6 +1042,9 @@ lemma tsynzip_tsynabs: "tsynAbs\<cdot>(tsynZip\<cdot>as\<cdot>bs) = szip\<cdot>(
   apply (rename_tac x y)
   apply (case_tac "y = \<epsilon>", simp_all)
   by (simp add: tsynzip_sconc_null tsynabs_sconc_null)
+
+lemma tsynzip_tsynlen: "#bs = \<infinity> \<Longrightarrow> tsynLen\<cdot>(tsynZip\<cdot>as\<cdot>bs) = tsynLen\<cdot>as"
+  oops
 
 text {* @{term tsynProjFst} of @{term tsynZip} equals the first stream, if the length of it is
         less than or equal to the length of the second stream. *}
