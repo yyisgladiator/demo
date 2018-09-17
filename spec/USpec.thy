@@ -1365,4 +1365,8 @@ lemma uspec_size_mono:
   apply (simp add: uspecSize_def)
   by (simp add: assms monofun_cfun_arg setrev_size_mono)
 
+lift_definition createConstUspec:: "'f::ufuncl_comp \<Rightarrow> 'f uspec" is
+"\<lambda> f. (Rev {f}, Discr (ufclDom\<cdot>f), Discr (ufclRan\<cdot>f))"
+  by auto
+
 end

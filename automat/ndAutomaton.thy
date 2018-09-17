@@ -56,10 +56,12 @@ lift_definition ndaRan :: "('s, 'm::message) ndAutomaton \<rightarrow> channel s
 "(\<lambda> nda. undiscr(snd (snd (snd (Rep_ndAutomaton nda)))))" 
   apply (simp add: cfun_def)
   by (smt Cont.contI2 below_ndAutomaton_def discrete_cpo is_ub_thelub monofunI po_eq_conv snd_monofun)
+thm createConstSPF_def
+thm createConstUspec_def
 
-lift_definition creatConstSPS:: "channel set \<Rightarrow> 'm::message SB \<Rightarrow> 'm SPS" is
-"\<lambda> In sb. (Rev {createConstSPF In\<cdot>sb}, Discr In, Discr (ubclDom\<cdot>sb))"
-  by (rule, simp)
+definition creatConstSPS:: "channel set \<Rightarrow> 'm::message SB  \<Rightarrow> 'm SPS" where
+"creatConstSPS \<equiv> \<lambda> In sb. createConstUspec (createConstSPF In\<cdot>sb)"
+  
 
 lift_definition ndaTodo_h:: "channel set \<Rightarrow>  ('s \<times> 'm::message SB) \<Rightarrow> ('s \<Rightarrow> 'm SPS) \<Rightarrow>'m SPS" is
 "\<lambda> In (s, sb) h. if (ubLen (ubRestrict In\<cdot>(ubUp\<cdot>sb)) < \<infinity>) then spsConcOut sb(h s) else
@@ -282,6 +284,7 @@ lemma sbhdwell_ubconceq: assumes "ubDom\<cdot>(sbe2SB sbe) = ubDom\<cdot>us"
   apply rule
   by (metis (no_types, lifting) assms sbHdElem_bottom_exI sbHdElem_channel sbe2sb_dom sbe2sb_hdelem_conc sbe2sb_nbot ubconceq_dom)
 
+(*
 lemma nda_h_final_h_1: assumes "sbeDom sbe = ndaDom\<cdot>nda"
   shows "uspecFlatten (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) (setrevImage (\<lambda>(s, sb). spsConcOut sb (nda_h nda s)) ((ndaTransition\<cdot>nda) (state, sbe))) \<sqsubseteq>
 (uspecImage (Rep_cfun (spfConcIn (sbe2SB sbe))) (nda_h nda state))"
@@ -520,6 +523,6 @@ lemma nda_h_final_back: assumes "\<And>state sbe. sbeDom sbe = ndaDom\<cdot>nda 
   and "\<And> state. uspecDom\<cdot>(other state) = ndaDom\<cdot>nda" and "\<And> state. uspecRan\<cdot>(other state) = ndaRan\<cdot>nda"
 shows "other = nda_h nda" 
   oops
-
+*)
 
 end
