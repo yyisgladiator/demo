@@ -57,11 +57,19 @@ lift_definition ndaRan :: "('s, 'm::message) ndAutomaton \<rightarrow> channel s
   apply (simp add: cfun_def)
   by (smt Cont.contI2 below_ndAutomaton_def discrete_cpo is_ub_thelub monofunI po_eq_conv snd_monofun)
 
+lift_definition creatConstSPS:: "channel set \<Rightarrow> 'm::message SB \<Rightarrow> 'm SPS" is
+"\<lambda> In sb. (Rev {createConstSPF In\<cdot>sb}, Discr In, Discr (ubclDom\<cdot>sb))"
+  by (rule, simp)
+
+lift_definition ndaTodo_h:: "channel set \<Rightarrow>  ('s \<times> 'm::message SB) \<Rightarrow> ('s \<Rightarrow> 'm SPS) \<Rightarrow>'m SPS" is
+"\<lambda> In (s, sb) h. if (ubLen (ubRestrict In\<cdot>(ubUp\<cdot>sb)) < \<infinity>) then spsConcOut sb(h s) else
+      creatConstSPS In sb"
+  done
 
   (* Only monofun, not cont *)
 definition ndaConcOutFlatten:: "channel set \<Rightarrow> channel set \<Rightarrow> ('s \<times> 'm::message SB) set rev \<Rightarrow> ('s \<Rightarrow> 'm SPS) \<Rightarrow> 'm SPS" where
 "ndaConcOutFlatten In Out S \<equiv> \<lambda> h. uspecFlatten In Out 
-                (setrevImage (\<lambda>(s, sb). spsConcOut sb(h s)) S)"
+                (setrevImage (\<lambda> (s, sb). ndaTodo_h In (s, sb) h) S)"
 
 definition ndaHelper2:: "channel set \<Rightarrow> channel set \<Rightarrow> 
   's \<Rightarrow> (('s \<times>'e) \<Rightarrow> ('s \<times> 'm::message SB) set rev) \<Rightarrow> ('s \<Rightarrow> 'm SPS) \<Rightarrow> ('e \<Rightarrow> 'm SPS)" where
@@ -97,6 +105,19 @@ lemma nddom_finite[simp]:  "finite (ndaDom\<cdot>nda)"
   by (smt Rep_ndAutomaton fst_conv mem_Collect_eq ndaDom.abs_eq 
       ndaDom.rep_eq ndaWell.elims(2) snd_conv undiscr_Discr)
 
+lemma ndatodo_h_monofun: "monofun (ndaTodo_h In (s, sb))"
+proof (rule monofunI)
+  fix x::"('a \<Rightarrow> 'b SPS)"
+  fix y::"('a \<Rightarrow> 'b SPS)"
+  assume a1: "x \<sqsubseteq> y"
+  have h: "x s \<sqsubseteq> y s"
+    by (meson a1 below_fun_def)
+  thus " ndaTodo_h In (s, sb) x \<sqsubseteq> ndaTodo_h In (s, sb) y"
+    apply (simp add: ndaTodo_h_def)
+    apply rule
+    by (simp add: spsConcOut_def spsconcout_mono monofunE)
+qed
+
 lemma ndatodo_monofun: "monofun (ndaConcOutFlatten In Out S)" (is "monofun ?f")
 proof (rule monofunI)                 
   fix x y :: "'a \<Rightarrow> 'b SPS"
@@ -110,7 +131,13 @@ proof (rule monofunI)
       apply (simp add: spsConcOut_def)
       by (simp add: monofunE spsconcout_mono)
   qed
-  thus "?f x \<sqsubseteq> ?f y" by (metis (no_types) h monofun_def ndaConcOutFlatten_def uspecflatten_image_monofun)
+  have h3: "(\<lambda>(s::'a, sb::'b stream\<^sup>\<Omega>). ndaTodo_h In (s, sb) x) \<sqsubseteq> 
+              (\<lambda>(s::'a, sb::'b stream\<^sup>\<Omega>). ndaTodo_h In (s, sb) y)"
+    by (metis (mono_tags, lifting) a1 below_fun_def case_prod_conv monofunE ndatodo_h_monofun old.prod.exhaust)
+  show "?f x \<sqsubseteq> ?f y" 
+    apply (simp add: ndaConcOutFlatten_def)
+    apply (rule uspecflatten_mono2)
+    using h3 setrevimage_mono_obtain2 by blast
  qed
 
 
@@ -125,11 +152,16 @@ qed
 lemma ndatodo_monofun3: "S1 \<sqsubseteq> S2 \<Longrightarrow> h1 \<sqsubseteq> h2 \<Longrightarrow> (ndaConcOutFlatten In Out S1 h1) \<sqsubseteq> (ndaConcOutFlatten In Out S2 h2)"
 proof -
   assume a1: "h1 \<sqsubseteq> h2"
-  assume "S1 \<sqsubseteq> S2"
-  then have "uspecFlatten In Out (setrevImage (\<lambda>(a, u). spsConcOut u (h1 a)) S1) \<sqsubseteq> uspecFlatten In Out (setrevImage (\<lambda>(a, u). spsConcOut u (h1 a)) S2)"
-    using monofun_def ndatodo_monofun2 by fastforce
-  then show ?thesis
-    using a1 by (metis (no_types) HOLCF_trans_rules(1) monofun_def ndaConcOutFlatten_def ndatodo_monofun)
+  assume a2: "S1 \<sqsubseteq> S2"
+  have h1: "(\<lambda>(s::'a, sb::'b stream\<^sup>\<Omega>). ndaTodo_h In (s, sb) h1) \<sqsubseteq> 
+              (\<lambda>(s::'a, sb::'b stream\<^sup>\<Omega>). ndaTodo_h In (s, sb) h2)"
+    by (metis (mono_tags, lifting) a1 below_fun_def case_prod_conv monofunE ndatodo_h_monofun old.prod.exhaust)
+  have h2: "\<And> ele. ele \<in> inv Rev S2 \<Longrightarrow> ele \<in> inv Rev S1"
+    by (meson a2 revBelowNeqSubset subsetCE)
+  show ?thesis
+    apply (simp add: ndaConcOutFlatten_def)
+    apply (rule uspecflatten_mono2)
+    by (smt below_fun_def h1 h2 image_eqI inv_rev_rev setrevImage_def setrevimage_mono_obtain3)
 qed
 
 
@@ -144,7 +176,7 @@ lemma ndaHelper2_monofun2: "monofun (ndaHelper2 In Out s)"
   unfolding ndaHelper2_def
   apply(rule monofunI)
   apply(auto simp add: below_fun_def)
-  by (metis (mono_tags, lifting) monofun_def ndaConcOutFlatten_def ndatodo_monofun2)
+  by (simp add: ndatodo_monofun3)
 
 
 lemma nda_h_inner_dom [simp]: "uspecDom\<cdot>(nda_h_inner nda h s) = ndaDom\<cdot>nda"
@@ -169,7 +201,12 @@ lemma ndaran_below_eq:"nda1 \<sqsubseteq> nda2 \<Longrightarrow> ndaRan\<cdot>nd
   by (metis (mono_tags, hide_lams) below_ndAutomaton_def discrete_cpo snd_monofun)
 
 lemma nda_helper2_h2:"x\<sqsubseteq>y \<Longrightarrow> ndaHelper2 CS1 CS2 xb x xa \<sqsubseteq> ndaHelper2 CS1 CS2 xb y xa"
-  by (metis (mono_tags, lifting) below_fun_def monofun_def ndaHelper2_def ndaConcOutFlatten_def ndatodo_monofun2)
+  apply (simp add: ndaHelper2_def)
+  apply (simp add: ndaConcOutFlatten_def)
+  by (smt below_fun_def below_refl case_prod_unfold inv_rev_rev pair_imageI prod.collapse revBelowNeqSubset 
+      setrevImage_def setrevimage_mono_obtain3 subset_iff uspecflatten_mono2)
+  sorry
+
 
 lemma nda_h_inner_monofun2: "monofun (nda_h_inner)"
   unfolding nda_h_inner_def

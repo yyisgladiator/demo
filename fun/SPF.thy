@@ -665,6 +665,11 @@ lemma constspf_well[simp]: "ufWell (Abs_cfun (\<lambda> (ub::'m SB). (ubclDom\<c
 lemma constspf_dom[simp]: "ufDom\<cdot>(Abs_cufun (\<lambda> (ub::'m SB). (ubclDom\<cdot>ub = In) \<leadsto> (sb::'m SB))) = In"
   by (simp add: ufun_ufdom_abs)
 
+lemma constspf_ran[simp]: "ufRan\<cdot>(Abs_cufun (\<lambda> (ub::'m SB). (ubclDom\<cdot>ub = In) \<leadsto> (sb::'m SB))) = 
+  ubclDom\<cdot>sb"
+  apply (simp add: ufran_least)
+  by (simp add: ubcldom_least_cs)
+
 lemma createconstspf_cont[simp]: "cont  (\<lambda> (sb::'m SB). Abs_cufun (\<lambda> (ub::'m SB). (ubclDom\<cdot>ub = In) \<leadsto> sb))"
   apply (rule Cont.contI2)
    apply (rule monofunI)
@@ -675,5 +680,11 @@ lemma createconstspf_cont[simp]: "cont  (\<lambda> (sb::'m SB). Abs_cufun (\<lam
   using ufdom_lub_eq apply fastforce
   by (subst rep_cufun_lub_apply, simp_all)
 
- 
+lemma creatconstspf_dom[simp]: "ufclDom\<cdot>(createConstSPF In\<cdot>ub) = In"
+  by (simp add: createConstSPF_def ufclDom_ufun_def)
+
+lemma creatconstspf_ran[simp]: "ufclRan\<cdot>(createConstSPF In\<cdot>ub) = ubclDom\<cdot>ub"
+  by (simp add: createConstSPF_def ufclRan_ufun_def)
+
+
 end
