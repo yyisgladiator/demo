@@ -112,6 +112,26 @@ proof-
     by (simp add: ubLen_def ubdom_x_nempty)
 qed
 
+lemma ubTakeLen_le : "ubLen (ubTake a\<cdot>x) \<le> ubLen x"
+proof (cases "ubDom\<cdot>x = {}")
+  case True
+  then show ?thesis
+    by (simp add: ubLen_def)
+next
+  case False
+  have "ubDom\<cdot>(ubTake a\<cdot>x) \<noteq> {}"
+    by (simp add: False)
+  hence ublen_ubtake_least: "ubLen (ubTake a\<cdot>x) = (LEAST ln. ln\<in>{(usclLen\<cdot>((ubTake a\<cdot>x) . c)) | c. c \<in> ubDom\<cdot>(ubTake a\<cdot>x)})"
+    by (simp add: ubLen_def)
+  have "\<And>c. c \<in> ubDom\<cdot>x \<Longrightarrow> usclLen\<cdot>((ubTake a\<cdot>x) . c) \<le> usclLen\<cdot>(x . c)"
+    by (metis le_cases ubtake_ubgetch usclTake_eq usclTake_len)
+  have "\<And>c. c \<in> ubDom\<cdot>x \<Longrightarrow> usclLen\<cdot>((ubTake a\<cdot>x) . c) \<in> {(usclLen\<cdot>((ubTake a\<cdot>x) . c)) | c. c \<in> ubDom\<cdot>(ubTake a\<cdot>x)}"
+    by force
+  then show ?thesis
+    by (metis (no_types, lifting) Least_le dual_order.trans le_cases ubLen_def ubTakeLen
+        ublen_min_on_channel ublen_ubtake_least ubtake_ubdom ubtake_ubgetch usclTake_eq)
+qed
+
 
 (* ----------------------------------------------------------------------- *)
   subsection \<open>ubHd\<close>
