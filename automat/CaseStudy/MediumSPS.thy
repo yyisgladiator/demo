@@ -61,15 +61,13 @@ lemma medsps_0_uspecwell:
   using medspf_ufdom medspf_ufran by blast
 
 (* If a "null" comes in, send it out and stay in the same state. *)
-lemma "spsConcIn (tsynbNull(\<C> ''ds'')) (MedSPS n) = spsConcOut (tsynbNull (\<C> ''dr''))\<cdot>(MedSPS n)"
+lemma "spsConcIn (medIn -)(MedSPS n) = spsConcOut (medOut -)\<cdot>(MedSPS n)"
 sorry
 
-lemma "spsConcIn (createBundle (Msg m) (\<C> ''ds'')) (MedSPS (Suc n))
-  = spsConcOut (tsynbNull(\<C> ''dr''))\<cdot>(MedSPS n)"
+lemma "spsConcIn (medIn (Msg m)) (MedSPS (Suc n)) = spsConcOut (medOut -)\<cdot>(MedSPS n)"
 sorry
 
-lemma "spsConcIn (createBundle (Msg m) (\<C> ''ds'')) (MedSPS 0) 
-  = spsConcOut (createBundle (Msg m) (\<C> ''dr''))\<cdot>(MedSPS n)"
+lemma "\<exists>n. spsConcIn (medIn (Msg m)) (MedSPS 0) = spsConcOut (medOut (Msg m))\<cdot>(MedSPS n)"
 sorry
 
 end
