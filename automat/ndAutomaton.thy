@@ -205,7 +205,6 @@ lemma nda_helper2_h2:"x\<sqsubseteq>y \<Longrightarrow> ndaHelper2 CS1 CS2 xb x 
   apply (simp add: ndaConcOutFlatten_def)
   by (smt below_fun_def below_refl case_prod_unfold inv_rev_rev pair_imageI prod.collapse revBelowNeqSubset 
       setrevImage_def setrevimage_mono_obtain3 subset_iff uspecflatten_mono2)
-  sorry
 
 
 lemma nda_h_inner_monofun2: "monofun (nda_h_inner)"
