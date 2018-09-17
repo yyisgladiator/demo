@@ -652,39 +652,4 @@ lemma spfConcOut_weak_ublen_strong[simp]:
       by (metis a1 dom_not_empty local.dom_empty rep_ufun_well spfConcOut_dom ubcldom_least_cs ufWell_def ufunLeastIDom)
   qed
 
-definition createConstSPF:: "channel set \<Rightarrow> 'm SB \<rightarrow> ('m, 'm) SPF" where
-  "createConstSPF \<equiv> \<lambda> In. \<Lambda> (sb::'m SB). Abs_cufun (\<lambda> (ub::'m SB). (ubclDom\<cdot>ub = In) \<leadsto> sb)"
-
-lemma constspf_cont[simp]: "cont  (\<lambda> (ub::'m SB). (ubclDom\<cdot>ub = In) \<leadsto> (sb::'m SB))"
-  by simp
-
-lemma constspf_well[simp]: "ufWell (Abs_cfun (\<lambda> (ub::'m SB). (ubclDom\<cdot>ub = In) \<leadsto> (sb::'m SB)))"
-  apply (rule ufwellI)
-  by (simp_all add: domIff2 ubclDom_ubundle_def)
-
-lemma constspf_dom[simp]: "ufDom\<cdot>(Abs_cufun (\<lambda> (ub::'m SB). (ubclDom\<cdot>ub = In) \<leadsto> (sb::'m SB))) = In"
-  by (simp add: ufun_ufdom_abs)
-
-lemma constspf_ran[simp]: "ufRan\<cdot>(Abs_cufun (\<lambda> (ub::'m SB). (ubclDom\<cdot>ub = In) \<leadsto> (sb::'m SB))) = 
-  ubclDom\<cdot>sb"
-  apply (simp add: ufran_least)
-  by (simp add: ubcldom_least_cs)
-
-lemma createconstspf_cont[simp]: "cont  (\<lambda> (sb::'m SB). Abs_cufun (\<lambda> (ub::'m SB). (ubclDom\<cdot>ub = In) \<leadsto> sb))"
-  apply (rule Cont.contI2)
-   apply (rule monofunI)
-   apply (rule ufun_belowI)
-    apply simp_all
-  apply (rule ufun_belowI)
-   apply simp_all
-  using ufdom_lub_eq apply fastforce
-  by (subst rep_cufun_lub_apply, simp_all)
-
-lemma creatconstspf_dom[simp]: "ufclDom\<cdot>(createConstSPF In\<cdot>ub) = In"
-  by (simp add: createConstSPF_def ufclDom_ufun_def)
-
-lemma creatconstspf_ran[simp]: "ufclRan\<cdot>(createConstSPF In\<cdot>ub) = ubclDom\<cdot>ub"
-  by (simp add: createConstSPF_def ufclRan_ufun_def)
-
-
 end
