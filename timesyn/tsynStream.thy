@@ -1044,7 +1044,7 @@ lemma tsynzip_tsynabs: "tsynAbs\<cdot>(tsynZip\<cdot>as\<cdot>bs) = szip\<cdot>(
   by (simp add: tsynzip_sconc_null tsynabs_sconc_null)
 
 lemma tsynzip_tsynlen: "#bs = \<infinity> \<Longrightarrow> tsynLen\<cdot>(tsynZip\<cdot>as\<cdot>bs) = tsynLen\<cdot>as"
-  oops
+  by (simp add: tsynLen_def tsynzip_tsynabs)
 
 text {* @{term tsynProjFst} of @{term tsynZip} equals the first stream, if the length of it is
         less than or equal to the length of the second stream. *}
