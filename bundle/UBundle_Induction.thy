@@ -210,9 +210,56 @@ lemma ubRt2usclrt[simp]: assumes "ubWell [c \<mapsto> x]"
                         shows "ubRt\<cdot>(Abs_ubundle [c \<mapsto> x]) = (Abs_ubundle [c \<mapsto> usclDrop 1 \<cdot>x])"
   by (smt assms dom_empty dom_fun_upd fun_upd_same option.discI option.sel singletonD ubMapStream_ubGetCh ubRt_def ubWell_def ubdom_ubrep_eq ubdrop_insert ubdrop_ubdom ubgetchI ubgetch_insert ubrep_ubabs usclDrop_well)
 
-lemma ubRtLen: "lnsuc\<cdot>(ubLen (ubRt\<cdot>x)) = ubLen x"
-  oops
-  
+lemma ubRtLen: assumes "ubLen x > 0"
+  shows "lnsuc\<cdot>(ubLen (ubRt\<cdot>x)) = ubLen x"
+proof (cases "ubDom\<cdot>x = {}")
+  case True
+  then show ?thesis
+    by (simp add: ubLen_def)
+next
+  case False
+  have ubdrop_ubdom_eq: "ubDom\<cdot>x = ubDom\<cdot>(ubDrop 1\<cdot>x)"
+    by simp
+  hence ublen_ubdrop_least:
+    "ubLen (ubDrop 1\<cdot>x) = (LEAST ln. ln\<in>{(usclLen\<cdot>((ubDrop 1\<cdot>x . c))) | c. c \<in> ubDom\<cdot>(ubDrop 1\<cdot>x)})"
+    by (simp add: False ubLen_def)
+  have uscldrop_uscllen_suc: "\<And>y k. usclLen\<cdot>y = lnsuc\<cdot>k \<Longrightarrow> usclLen\<cdot>(usclDrop 1\<cdot>y) = k"
+    by (metis (no_types, lifting) Fin_Suc One_nat_def inf_ub less2eq lnat_well_h2 lnsuc_lnle_emb
+        order_le_less order_refl usclDrop_len)
+  hence uscllen_uscldrop_suc:
+    "\<And>c. c \<in> ubDom\<cdot>x \<Longrightarrow> usclLen\<cdot>(x . c) = lnsuc\<cdot>(usclLen\<cdot>(usclDrop 1\<cdot>(x . c)))"
+    by (metis (mono_tags, lifting) False Least_le assms gr_0 mem_Collect_eq not_le ubLen_def
+        usclLen_bot usclLen_zero)
+  hence usclLen_lnsuc_in_set:
+    "\<And>c. c \<in> ubDom\<cdot>x \<Longrightarrow> lnsuc\<cdot>(usclLen\<cdot>((ubDrop 1\<cdot>x) . c)) \<in> {(usclLen\<cdot>(x . c)) | c. c \<in> ubDom\<cdot>x}"
+    by force
+  obtain c where c_def: "c \<in> ubDom\<cdot>(ubDrop 1\<cdot>x) \<and> lnsuc\<cdot>(usclLen\<cdot>((ubDrop 1\<cdot>x) . c)) = ubLen x"
+    by (metis (no_types, lifting) False ubLen_def ubdrop_ubdom_eq ubdrop_ubgetch
+        ublen_min_on_channel uscllen_uscldrop_suc)
+  hence "\<And>ch. ch \<in> ubDom\<cdot>(ubDrop 1\<cdot>x) \<Longrightarrow> usclLen\<cdot>((ubDrop 1\<cdot>x) . c) \<le> usclLen\<cdot>((ubDrop 1\<cdot>x) . ch)"
+    by (metis (mono_tags, lifting) False Least_le lnsuc_lnle_emb ubLen_def ubdrop_ubdom_eq
+        usclLen_lnsuc_in_set)
+  hence "usclLen\<cdot>((ubDrop 1\<cdot>x) . c) = ubLen (ubDrop 1\<cdot>x)"
+    by (metis (mono_tags, lifting) Least_le c_def less2eq mem_Collect_eq ubLen_geI ubRt_def
+        ubdrop_ubdom_eq ublen_ubdrop_least ubrt_ubdom)
+  then show ?thesis
+    by (metis c_def ubRt_def)
+qed
+
+lemma ubRtLen_zero: assumes "ubLen x = Fin 0"
+  shows "ubLen (ubRt\<cdot>x) = Fin 0"
+proof-
+  have ubrt_ubdom_nempty: "ubDom\<cdot>(ubRt\<cdot>x) \<noteq> {}"
+    by (metis Fin_0 Inf'_neq_0 assms lnzero_def ubLen_def ubrt_ubdom)
+  have "ubLen (ubRt\<cdot>x) \<ge> Fin 0"
+    by simp
+  hence "\<exists>c. c \<in> ubDom\<cdot>(ubRt\<cdot>x) \<and> usclLen\<cdot>((ubRt\<cdot>x) . c) = Fin 0 \<Longrightarrow> ubLen (ubRt\<cdot>x) = Fin 0"
+    using ubrt_ubdom_nempty by (metis (mono_tags, lifting) Least_le less2eq mem_Collect_eq ubLen_def)
+  thus ?thesis
+    by (metis (mono_tags, lifting) Fin_02bot One_nat_def assms less2nat lnzero_def ubrt_ubdom
+        ubLen_def ubRt_def ubdrop_ubgetch ublen_min_on_channel usclDrop_len usclLen_bot usclLen_zero zero_le_one)
+qed
+
 
 (* ----------------------------------------------------------------------- *)
   subsection\<open>MaxLen\<close>
