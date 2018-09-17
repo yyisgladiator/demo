@@ -145,6 +145,34 @@ lemma ubHdLen: assumes "ubDom\<cdot>x \<noteq> {}"
   shows "ubLen (ubHd\<cdot>x) \<le> Fin (Suc(0))"
   by (simp add: assms ubHd_def ubTakeLen)
 
+lemma ubHdLen_zero: assumes "ubLen x = 0"
+  shows "ubLen (ubHd\<cdot>x) = 0"
+proof-
+  have ubhd_ubdom_nempty: "ubDom\<cdot>(ubHd\<cdot>x) \<noteq> {}"
+    by (metis Inf'_neq_0 assms ubLen_def ubhd_ubdom)
+  have ubhd_ublen_zero_geq: "ubLen (ubHd\<cdot>x) \<ge> Fin 0"
+    using Fin_leq_Suc_leq lnat_po_eq_conv by fastforce
+  have "\<exists>c. c \<in> ubDom\<cdot>(ubHd\<cdot>x) \<and> usclLen\<cdot>((ubHd\<cdot>x) . c) = Fin 0 \<Longrightarrow> ubLen (ubHd\<cdot>x) = Fin 0"
+    by (metis (mono_tags, lifting) Fin_02bot Least_le ubhd_ublen_zero_geq ubhd_ubdom_nempty
+        less2eq mem_Collect_eq ubLen_def)
+  thus ?thesis
+    by (metis Fin_02bot Fin_Suc One_nat_def assms less2eq less_lnsuc lnzero_def neq02Suclnle
+        ubHd_def ubLen_geI ubTakeLen ubhd_ubdom ubhd_ubdom_nempty ubtake_ubgetch usclTake_eq)
+qed
+
+lemma ubHdLen_one: assumes "ubDom\<cdot>x \<noteq> {}" and "ubLen x > 0"
+  shows "ubLen (ubHd\<cdot>x) = Fin 1" 
+proof-
+  have "\<And>c. c \<in> ubDom\<cdot>x \<Longrightarrow> usclLen\<cdot>(x . c) > 0" 
+    by (metis (mono_tags, lifting) assms(1) assms(2) mem_Collect_eq not_le not_less_Least
+        ubLen_def usclLen_bot usclLen_zero)
+  hence "\<And>c. c \<in> ubDom\<cdot>x \<Longrightarrow> usclLen\<cdot>(usclTake 1\<cdot>(x . c)) = Fin 1"  
+    using usclTake_len by force
+  thus ?thesis
+    by (metis (no_types, lifting) assms(1) ubHd_def ubLen_def ubhd_ubdom
+        ublen_min_on_channel ubtake_ubgetch)
+qed
+
 
 (* ----------------------------------------------------------------------- *)
   subsection \<open>ubDrop\<close>
