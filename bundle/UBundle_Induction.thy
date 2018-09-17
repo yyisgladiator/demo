@@ -96,6 +96,22 @@ proof-
     by (metis (no_types, lifting) assms ubLen_def ublen_min_on_channel ubtake_ubdom)
 qed
 
+lemma ubTakeLen_zero: assumes "ubLen x = 0" 
+  shows "ubLen (ubTake a\<cdot>x) = 0"
+proof-
+  have ubdom_x_nempty: "ubDom\<cdot>x \<noteq> {}" 
+    by (metis Inf'_neq_0 assms ubLen_def)
+  hence "\<exists>c. c \<in> ubDom\<cdot>(ubTake a\<cdot>x) \<and> usclLen\<cdot>((ubTake a\<cdot>x) . c) = 0"
+    by (metis (no_types, lifting) Fin_02bot assms le_cases lnle_Fin_0 lnzero_def ubLen_def
+        ublen_min_on_channel ubtake_ubdom ubtake_ubgetch usclTake_eq)
+  hence "0 \<in> {(usclLen\<cdot>((ubTake a\<cdot>x) . c)) | c. c \<in> ubDom\<cdot>(ubTake a\<cdot>x)}"
+    by force
+  hence "(LEAST ln. ln\<in>{(usclLen\<cdot>((ubTake a\<cdot>x) . c)) | c. c \<in> ubDom\<cdot>(ubTake a\<cdot>x)}) = 0"
+    by (metis (no_types, lifting) Least_le bot_is_0 bottomI lnle_def)
+  then show ?thesis
+    by (simp add: ubLen_def ubdom_x_nempty)
+qed
+
 
 (* ----------------------------------------------------------------------- *)
   subsection \<open>ubHd\<close>
