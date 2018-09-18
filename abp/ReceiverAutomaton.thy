@@ -11,7 +11,6 @@ theory ReceiverAutomaton
 begin
 
 (* TODO Das sollte vielleicht wo anders hin *)
-(* SWS: Ja. Oder du verwendest einfach den "#" operator....  *)
 fun prepend :: "'a::type list \<Rightarrow> 'a \<Rightarrow> 'a list" where
 "prepend xs x = x#xs"
 
@@ -61,33 +60,37 @@ lift_definition createOBundle :: "nat \<Rightarrow> receiverMessage tsyn sbElem"
 
 section \<open>Helpers to create a bundle from a single tsyn element\<close>
 
-fun createTsynDrBundle :: "(nat\<times>bool) tsyn \<Rightarrow> receiverMessage tsyn sbElem" where
-"createTsynDrBundle (Msg x) = (createDrBundle x)" |
-"createTsynDrBundle null = (sbeNull {\<C> ''dr''})"
-(* SWS: Delete From Simps, the user should NEVER have to look inside this *)
-(* SWS: The function should use "sbElem" internally. Not actually return an sbElem *)
+fun createTsynDrBundle :: "(nat\<times>bool) tsyn \<Rightarrow> receiverMessage tsyn SB" where
+"createTsynDrBundle (Msg x) = sbe2SB (createDrBundle x)" |
+"createTsynDrBundle null = sbe2SB (sbeNull {\<C> ''dr''})"
 
-fun createTsynArBundle :: "bool tsyn \<Rightarrow> receiverMessage tsyn sbElem" where
-"createTsynArBundle (Msg x) = (createArBundle x)" |
-"createTsynArBundle null = (sbeNull {\<C> ''ar''})"
+declare createTsynDrBundle.simps[simp del]
 
-fun createTsynOBundle :: "nat tsyn \<Rightarrow> receiverMessage tsyn sbElem" where
-"createTsynOBundle (Msg x) = (createOBundle x)" |
-"createTsynOBundle null = (sbeNull {\<C> ''o''})"
+fun createTsynArBundle :: "bool tsyn \<Rightarrow> receiverMessage tsyn SB" where
+"createTsynArBundle (Msg x) = sbe2SB (createArBundle x)" |
+"createTsynArBundle null = sbe2SB (sbeNull {\<C> ''ar''})"
+
+declare createTsynArBundle.simps[simp del]
+
+fun createTsynOBundle :: "nat tsyn \<Rightarrow> receiverMessage tsyn SB" where
+"createTsynOBundle (Msg x) = sbe2SB (createOBundle x)" |
+"createTsynOBundle null = sbe2SB (sbeNull {\<C> ''o''})"
+
+declare createTsynOBundle.simps[simp del]
 
 
 section \<open>Helpers to create a bundle from a tsyn list of elements\<close>
 
 fun createLongDrBundle :: "((nat\<times>bool) tsyn) list \<Rightarrow> receiverMessage tsyn SB" where
-"createLongDrBundle (x#xs) = ubConcEq (sbe2SB (createTsynDrBundle x))\<cdot>(createLongDrBundle xs)" |
+"createLongDrBundle (x#xs) = ubConcEq (createTsynDrBundle x)\<cdot>(createLongDrBundle xs)" |
 "createLongDrBundle []     = ubLeast {\<C> ''dr''}"
 
 fun createLongArBundle :: "(bool tsyn) list \<Rightarrow> receiverMessage tsyn SB" where
-"createLongArBundle (x#xs) = ubConcEq (sbe2SB (createTsynArBundle x))\<cdot>(createLongArBundle xs)" |
+"createLongArBundle (x#xs) = ubConcEq (createTsynArBundle x)\<cdot>(createLongArBundle xs)" |
 "createLongArBundle []     = ubLeast {\<C> ''ar''}"
 
 fun createLongOBundle :: "(nat tsyn) list \<Rightarrow> receiverMessage tsyn SB" where
-"createLongOBundle (x#xs) = ubConcEq (sbe2SB (createTsynOBundle x))\<cdot>(createLongOBundle xs)" |
+"createLongOBundle (x#xs) = ubConcEq (createTsynOBundle x)\<cdot>(createLongOBundle xs)" |
 "createLongOBundle []     = ubLeast {\<C> ''o''}"
 
 (* SWS: gerne auch getter und lemma über getter. Der "sbeGetter" soll dann in der transitions-function verwendet werden *)
@@ -135,24 +138,24 @@ lemma createOBundle_len [simp]: "ubLen (sbe2SB (createOBundle x)) = Fin 1"
 
 section \<open>Lemmas for "createTsynXBundle"\<close>
 
-lemma createTsynDrBundle_dom [simp]: "sbeDom (createTsynDrBundle x) = {\<C> ''dr''}"
+lemma createTsynDrBundle_dom [simp]: "ubDom\<cdot>(createTsynDrBundle x) = {\<C> ''dr''}"
   by (cases x, simp_all)
 
-lemma createTsynDrBundle_len [simp]: "ubLen (sbe2DB (createTsynDrBundle x)) = Fin 1"
+lemma createTsynDrBundle_len [simp]: "ubLen  (createTsynDrBundle x) = Fin 1"
   apply (cases x, simp_all)
   oops
 
-lemma createTsynArBundle_dom [simp]: "sbeDom (createTsynArBundle x) = {\<C> ''ar''}"
+lemma createTsynArBundle_dom [simp]: "ubDom\<cdot>(createTsynArBundle x) = {\<C> ''ar''}"
   by (cases x, simp_all)
 
-lemma createTsynArBundle_len [simp]: "ubLen (sbe2DB (createTsynArBundle x)) = Fin 1"
+lemma createTsynArBundle_len [simp]: "ubLen (createTsynArBundle x) = Fin 1"
   apply (cases x, simp_all)
   oops
 
-lemma createTsynOBundle_dom [simp]: "sbeDom (createTsynOBundle x) = {\<C> ''o''}"
+lemma createTsynOBundle_dom [simp]: "ubDom\<cdot>(createTsynOBundle x) = {\<C> ''o''}"
   by (cases x, simp_all)
 
-lemma createTsynOBundle_len [simp]: "ubLen (sbe2DB (createTsynOBundle x)) = Fin 1"
+lemma createTsynOBundle_len [simp]: "ubLen (createTsynOBundle x) = Fin 1"
   apply (cases x, simp_all)
   oops
 
