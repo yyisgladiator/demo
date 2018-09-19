@@ -10,6 +10,9 @@ type_synonym ('m,'n) SPS = "('m,'n) SPF uspec"
 
 section \<open>Definition\<close>
 
+definition uspecConstOut:: "channel set \<Rightarrow> 'n::message SB  \<Rightarrow> ('m,'n) SPF uspec" where
+"uspecConstOut \<equiv> \<lambda> In sb. uspecConst (ufConst In\<cdot>sb)"
+
 definition spsConcOut:: "'n SB \<Rightarrow> ('m,'n) SPS \<Rightarrow> ('m,'n) SPS" where
 "spsConcOut sb = (uspecImage (Rep_cfun (spfConcOut sb)))"
 
@@ -19,7 +22,23 @@ definition spsConcIn:: "'m SB \<Rightarrow> ('m,'n) SPS \<Rightarrow> ('m,'n) SP
 definition spsRtIn:: "('m,'n) SPS \<rightarrow> ('m,'n) SPS" where
 "spsRtIn = Abs_cfun (uspecImage (Rep_cfun spfRtIn))"
 
+
 section \<open>Lemma\<close>
+
+(* ----------------------------------------------------------------------- *)
+subsection \<open>uspecConstOut\<close>
+(* ----------------------------------------------------------------------- *)
+lemma uspecconstout_insert: "uspecConstOut In sb =  uspecConst (ufConst In\<cdot>sb)"
+  by (simp add: uspecConstOut_def)
+
+lemma uspecconstout_dom: "uspecDom\<cdot>(uspecConstOut In sb) = In"
+  apply (simp add: uspecconstout_insert)
+  by (simp add: ufclDom_ufun_def uspecconst_dom)
+
+lemma uspecconstout_ran: "uspecRan\<cdot>(uspecConstOut In sb) = ubclDom\<cdot>sb"
+  apply (simp add: uspecconstout_insert)
+  by (simp add: ufclRan_ufun_def uspecconst_ran)
+
 
 (* ----------------------------------------------------------------------- *)
 subsection \<open>spsConcOut\<close>

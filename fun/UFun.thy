@@ -751,8 +751,8 @@ proof -
 qed*)
 
 
-definition createConstSPF:: "channel set \<Rightarrow> 'n \<rightarrow> ('m, 'n) ufun" where
-  "createConstSPF \<equiv> \<lambda> In. \<Lambda> (sb::'n). Abs_cufun (\<lambda> (ub::'m). (ubclDom\<cdot>ub = In) \<leadsto> sb)"
+definition ufConst:: "channel set \<Rightarrow> 'n \<rightarrow> ('m, 'n) ufun" where
+  "ufConst \<equiv> \<lambda> In. \<Lambda> (sb::'n). Abs_cufun (\<lambda> (ub::'m). (ubclDom\<cdot>ub = In) \<leadsto> sb)"
 
 lemma constspf_cont[simp]: "cont  (\<lambda> (ub::'m). (ubclDom\<cdot>ub = In) \<leadsto> (sb::'n))"
   by simp
@@ -778,11 +778,11 @@ lemma createconstspf_cont[simp]: "cont  (\<lambda> (sb::'n). Abs_cufun (\<lambda
   using ufdom_lub_eq apply fastforce
   by (subst rep_cufun_lub_apply, simp_all)
 
-lemma creatconstspf_dom[simp]: "ufDom\<cdot>(createConstSPF In\<cdot>ub) = In"
-  by (simp add: createConstSPF_def)
+lemma creatconstspf_dom[simp]: "ufDom\<cdot>(ufConst In\<cdot>ub) = In"
+  by (simp add: ufConst_def)
 
-lemma creatconstspf_ran[simp]: "ufRan\<cdot>(createConstSPF In\<cdot>ub) = ubclDom\<cdot>ub"
-  by (simp add: createConstSPF_def)
+lemma creatconstspf_ran[simp]: "ufRan\<cdot>(ufConst In\<cdot>ub) = ubclDom\<cdot>ub"
+  by (simp add: ufConst_def)
 
 
 (****************************************************)
