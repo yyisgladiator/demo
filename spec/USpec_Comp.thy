@@ -437,6 +437,12 @@ proof -
     using f2 Bex_def_raw image_iff by blast
 qed
 
+lemma uspecimage_ele_in: assumes "uspec_in g H"
+and  "\<And>x. ufclDom\<cdot> (f x) = ufclDom\<cdot>x"
+    and "\<And>x. ufclRan\<cdot> (f x) = ufclRan\<cdot>x"
+  shows "uspec_in (f g) (uspecImage f H)"
+  by (simp add: assms(1) assms(2) assms(3) inv_rev_rev setrevImage_def uspecimage_useful_uspecrevset)
+
 subsection \<open>uspecStateLeast\<close>
 
 lemma uspecStateLeast_dom [simp]: "\<forall>x. uspecDom\<cdot>(uspecStateLeast In Out x) = In"

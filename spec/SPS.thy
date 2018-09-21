@@ -9,7 +9,7 @@ default_sort message
 type_synonym ('m,'n) SPS = "('m,'n) SPF uspec"
 
 section \<open>Definition\<close>
-
+                         
 definition uspecConstOut:: "channel set \<Rightarrow> 'n::message SB  \<Rightarrow> ('m,'n) SPF uspec" where
 "uspecConstOut \<equiv> \<lambda> In sb. uspecConst (ufConst In\<cdot>sb)"
 
@@ -31,11 +31,11 @@ subsection \<open>uspecConstOut\<close>
 lemma uspecconstout_insert: "uspecConstOut In sb =  uspecConst (ufConst In\<cdot>sb)"
   by (simp add: uspecConstOut_def)
 
-lemma uspecconstout_dom: "uspecDom\<cdot>(uspecConstOut In sb) = In"
+lemma uspecconstout_dom[simp]: "uspecDom\<cdot>(uspecConstOut In sb) = In"
   apply (simp add: uspecconstout_insert)
   by (simp add: ufclDom_ufun_def uspecconst_dom)
 
-lemma uspecconstout_ran: "uspecRan\<cdot>(uspecConstOut In sb) = ubclDom\<cdot>sb"
+lemma uspecconstout_ran[simp]: "uspecRan\<cdot>(uspecConstOut In sb) = ubclDom\<cdot>sb"
   apply (simp add: uspecconstout_insert)
   by (simp add: ufclRan_ufun_def uspecconst_ran)
 

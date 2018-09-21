@@ -62,15 +62,15 @@ definition creatConstSPS:: "channel set \<Rightarrow> 'm::message SB  \<Rightarr
 "creatConstSPS \<equiv> \<lambda> In sb. createConstUspec (createConstSPF In\<cdot>sb)"
  
 *)
-lift_definition ndaTodo_h:: "channel set \<Rightarrow>  ('s \<times> 'm::message SB) \<Rightarrow> ('s \<Rightarrow> 'm SPS) \<Rightarrow>'m SPS" is
-"\<lambda> In (s, sb) h. if (ubLen (ubRestrict In\<cdot>(ubUp\<cdot>sb)) < \<infinity>) then spsConcOut sb(h s) else
-      uspecConstOut In sb"
+lift_definition ndaTodo_h:: "channel set \<Rightarrow> channel set\<Rightarrow>  ('s \<times> 'm::message SB) \<Rightarrow> ('s \<Rightarrow> 'm SPS) \<Rightarrow>'m SPS" is
+"\<lambda> In Out (s, sb) h. if (ubLen (ubRestrict Out\<cdot>(ubUp\<cdot>sb)) < \<infinity>) then spsConcOut sb (h s) else
+      uspecConstOut In (ubRestrict Out\<cdot>(ubUp\<cdot>sb))"
   done
 
   (* Only monofun, not cont *)
 definition ndaConcOutFlatten:: "channel set \<Rightarrow> channel set \<Rightarrow> ('s \<times> 'm::message SB) set rev \<Rightarrow> ('s \<Rightarrow> 'm SPS) \<Rightarrow> 'm SPS" where
 "ndaConcOutFlatten In Out S \<equiv> \<lambda> h. uspecFlatten In Out 
-                (setrevImage (\<lambda> (s, sb). ndaTodo_h In (s, sb) h) S)"
+                (setrevImage (\<lambda> (s, sb). ndaTodo_h In Out (s, sb) h) S)"
 
 definition ndaHelper2:: "channel set \<Rightarrow> channel set \<Rightarrow> 
   's \<Rightarrow> (('s \<times>'e) \<Rightarrow> ('s \<times> 'm::message SB) set rev) \<Rightarrow> ('s \<Rightarrow> 'm SPS) \<Rightarrow> ('e \<Rightarrow> 'm SPS)" where
@@ -79,7 +79,7 @@ definition ndaHelper2:: "channel set \<Rightarrow> channel set \<Rightarrow>
 definition nda_h_inner::"('s::type, 'm::message) ndAutomaton \<Rightarrow> ('s \<Rightarrow> 'm SPS) \<Rightarrow> ('s \<Rightarrow> 'm SPS)" where
 "nda_h_inner nda h \<equiv>  let dom = (ndaDom\<cdot>nda);
                           ran = (ndaRan\<cdot>nda) in 
-     (\<lambda>s. spsStep dom ran\<cdot>(ndaHelper2 dom ran s (ndaTransition\<cdot>nda) h))"
+     (\<lambda>s. spsStep_m dom ran (ndaHelper2 dom ran s (ndaTransition\<cdot>nda) h))"
 
 (* Similar to Rum96 *)
 definition  nda_h :: "('s::type, 'm::message) ndAutomaton \<Rightarrow> ('s \<Rightarrow> 'm SPS)" where
@@ -106,18 +106,31 @@ lemma nddom_finite[simp]:  "finite (ndaDom\<cdot>nda)"
   by (smt Rep_ndAutomaton fst_conv mem_Collect_eq ndaDom.abs_eq 
       ndaDom.rep_eq ndaWell.elims(2) snd_conv undiscr_Discr)
 
-lemma ndatodo_h_monofun: "monofun (ndaTodo_h In (s, sb))"
+lemma ndatodo_h_monofun: "monofun (ndaTodo_h In Out (s, sb))"
 proof (rule monofunI)
   fix x::"('a \<Rightarrow> 'b SPS)"
   fix y::"('a \<Rightarrow> 'b SPS)"
   assume a1: "x \<sqsubseteq> y"
   have h: "x s \<sqsubseteq> y s"
     by (meson a1 below_fun_def)
-  thus " ndaTodo_h In (s, sb) x \<sqsubseteq> ndaTodo_h In (s, sb) y"
+  thus " ndaTodo_h In Out (s, sb) x \<sqsubseteq> ndaTodo_h In Out (s, sb) y"
     apply (simp add: ndaTodo_h_def)
     apply rule
     by (simp add: spsConcOut_def spsconcout_mono monofunE)
 qed
+
+lemma ndatodo_h_dom: assumes "\<And> s. uspecDom\<cdot>(H s) = In \<and> uspecRan\<cdot>(H s) = Out"
+  shows "uspecDom\<cdot>(ndaTodo_h In Out (s, sb) H) = In"
+  apply (simp add: ndaTodo_h_def)
+  apply (case_tac "(ubLen (ubRestrict Out\<cdot>(ubUp\<cdot>sb)) < \<infinity>)")
+  by (simp_all add: assms)
+
+lemma ndatodo_h_ran: assumes "\<And> s. uspecDom\<cdot>(H s) = In \<and> uspecRan\<cdot>(H s) = Out"
+  shows "uspecRan\<cdot>(ndaTodo_h In Out (s, sb) H) = Out"
+  apply (simp add: ndaTodo_h_def)
+  apply (case_tac "(ubLen (ubRestrict Out\<cdot>(ubUp\<cdot>sb)) < \<infinity>)")
+  by (simp_all add: assms ubclDom_ubundle_def)
+
 
 lemma ndatodo_monofun: "monofun (ndaConcOutFlatten In Out S)" (is "monofun ?f")
 proof (rule monofunI)                 
@@ -132,8 +145,8 @@ proof (rule monofunI)
       apply (simp add: spsConcOut_def)
       by (simp add: monofunE spsconcout_mono)
   qed
-  have h3: "(\<lambda>(s::'a, sb::'b stream\<^sup>\<Omega>). ndaTodo_h In (s, sb) x) \<sqsubseteq> 
-              (\<lambda>(s::'a, sb::'b stream\<^sup>\<Omega>). ndaTodo_h In (s, sb) y)"
+  have h3: "(\<lambda>(s::'a, sb::'b stream\<^sup>\<Omega>). ndaTodo_h In Out (s, sb) x) \<sqsubseteq> 
+              (\<lambda>(s::'a, sb::'b stream\<^sup>\<Omega>). ndaTodo_h In Out (s, sb) y)"
     by (metis (mono_tags, lifting) a1 below_fun_def case_prod_conv monofunE ndatodo_h_monofun old.prod.exhaust)
   show "?f x \<sqsubseteq> ?f y" 
     apply (simp add: ndaConcOutFlatten_def)
@@ -154,8 +167,8 @@ lemma ndatodo_monofun3: "S1 \<sqsubseteq> S2 \<Longrightarrow> h1 \<sqsubseteq> 
 proof -
   assume a1: "h1 \<sqsubseteq> h2"
   assume a2: "S1 \<sqsubseteq> S2"
-  have h1: "(\<lambda>(s::'a, sb::'b stream\<^sup>\<Omega>). ndaTodo_h In (s, sb) h1) \<sqsubseteq> 
-              (\<lambda>(s::'a, sb::'b stream\<^sup>\<Omega>). ndaTodo_h In (s, sb) h2)"
+  have h1: "(\<lambda>(s::'a, sb::'b stream\<^sup>\<Omega>). ndaTodo_h In Out (s, sb) h1) \<sqsubseteq> 
+              (\<lambda>(s::'a, sb::'b stream\<^sup>\<Omega>). ndaTodo_h In Out (s, sb) h2)"
     by (metis (mono_tags, lifting) a1 below_fun_def case_prod_conv monofunE ndatodo_h_monofun old.prod.exhaust)
   have h2: "\<And> ele. ele \<in> inv Rev S2 \<Longrightarrow> ele \<in> inv Rev S1"
     by (meson a2 revBelowNeqSubset subsetCE)
@@ -171,7 +184,7 @@ qed
 
 lemma ndaHelper2_monofun: "monofun (ndaHelper2 In Out s transition)"
   unfolding ndaHelper2_def
-  by (metis (mono_tags, lifting) mono2mono_lambda monofun_def ndaConcOutFlatten_def ndatodo_monofun)
+  by (metis (mono_tags, lifting) mono2mono_lambda monofun_def ndatodo_monofun)
 
 lemma ndaHelper2_monofun2: "monofun (ndaHelper2 In Out s)"
   unfolding ndaHelper2_def
@@ -190,7 +203,7 @@ lemma nda_h_inner_monofun: "monofun (nda_h_inner nda)"
   unfolding nda_h_inner_def
   apply(simp only: Let_def)
   apply(rule monofunI)
-  by (simp add: fun_belowI monofunE monofun_Rep_cfun2 ndaHelper2_monofun)
+  by (simp add: fun_belowI ndaHelper2_def ndatodo_monofun3 spsStep_mono_2)
 
 lemma ndadom_below_eq:"nda1 \<sqsubseteq> nda2 \<Longrightarrow> ndaDom\<cdot>nda1 = ndaDom\<cdot>nda2"
   apply(simp add: ndaDom.rep_eq)
@@ -214,7 +227,8 @@ lemma nda_h_inner_monofun2: "monofun (nda_h_inner)"
   apply(rule monofunI)
   apply(simp add: ndadom_below_eq ndaran_below_eq)
   apply(auto simp add: below_fun_def)
-  using nda_helper2_h2 by (simp add: nda_helper2_h2 monofun_cfun_arg)
+  by (simp add: monofun_cfun_arg nda_helper2_h2 spsStep_mono_2)
+
 
 lemma nda_inner_good: "goodFormed (SetPcpo.setify (\<lambda>a. USPEC (ndaDom\<cdot>nda) (ndaRan\<cdot>nda))) (nda_h_inner nda)"
   unfolding goodFormed_def 
@@ -284,7 +298,7 @@ lemma sbhdwell_ubconceq: assumes "ubDom\<cdot>(sbe2SB sbe) = ubDom\<cdot>us"
   by (metis (no_types, lifting) assms sbHdElem_bottom_exI sbHdElem_channel sbe2sb_dom sbe2sb_hdelem_conc sbe2sb_nbot ubconceq_dom)
 
 lemma nda_h_final_h_1: assumes "sbeDom sbe = ndaDom\<cdot>nda"
-  shows "uspecFlatten (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) (setrevImage (\<lambda>(s, sb). ndaTodo_h (ndaDom\<cdot>nda) (s, sb) (nda_h nda)) ((ndaTransition\<cdot>nda) (state, sbe))) \<sqsubseteq>
+  shows "uspecFlatten (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) (setrevImage (\<lambda>(s, sb). ndaTodo_h (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) (s, sb) (nda_h nda)) ((ndaTransition\<cdot>nda) (state, sbe))) \<sqsubseteq>
 (uspecImage (Rep_cfun (spfConcIn (sbe2SB sbe))) (nda_h nda state))"
   apply (rule uspec_belowI) 
     apply (metis (no_types, lifting) nda_h_fixpoint nda_h_inner_dom spfConcIn_dom spfConcIn_ran ufclDom_ufun_def ufclRan_ufun_def uspecflatten_dom uspecimage_dom1)
@@ -296,7 +310,7 @@ let ?H  = "(ndaHelper2 (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) state (ndaTransitio
   let ?transition = "(ndaTransition\<cdot>nda)"
 
   show "inv Rev (uspecRevSet\<cdot>(uspecImage (Rep_cfun (spfConcIn (sbe2SB sbe))) (nda_h nda state)))
-    \<subseteq> inv Rev (uspecRevSet\<cdot>(uspecFlatten (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) (setrevImage (\<lambda>(s::'b, sb::'a stream\<^sup>\<Omega>). ndaTodo_h (ndaDom\<cdot>nda) (s, sb) (nda_h nda)) ((ndaTransition\<cdot>nda) (state, sbe)))))"
+    \<subseteq> inv Rev (uspecRevSet\<cdot>(uspecFlatten (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) (setrevImage (\<lambda>(s::'b, sb::'a stream\<^sup>\<Omega>). ndaTodo_h (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) (s, sb) (nda_h nda)) ((ndaTransition\<cdot>nda) (state, sbe)))))"
   proof rule
     fix x::"('a stream\<^sup>\<Omega>, 'a stream\<^sup>\<Omega>) ufun"      
     assume a1: "uspec_in x (uspecImage (Rep_cfun (spfConcIn (sbe2SB sbe))) (nda_h nda state))"
@@ -309,7 +323,7 @@ let ?H  = "(ndaHelper2 (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) state (ndaTransitio
       by (metis (mono_tags, lifting) a1 f1 setrevimage_mono_obtain3)
     have f2: "uspec_in y ((nda_h_inner nda (nda_h nda)) state)"
       by (metis nda_h_fixpoint y_def_1)
-    then have f3: "uspec_in y (spsStep ?In ?Out\<cdot>?H)"
+    then have f3: "uspec_in y (spsStep_m ?In ?Out ?H)"
       by (metis nda_h_inner_def)
     obtain f where f_def_1: "f \<in> (inv Rev (spsStep_h\<cdot>?H))" and f_def_2: "spsStep_P ?In ?Out f"
       and "y =  spfStep ?In ?Out\<cdot>((\<lambda> h sbEl. spfRtIn\<cdot>(h sbEl)) f)"
@@ -322,7 +336,7 @@ let ?H  = "(ndaHelper2 (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) state (ndaTransitio
 
     then have "\<And> sbe. uspec_in (f sbe) ((\<lambda>e. ndaConcOutFlatten ?In ?Out (?transition (state,e)) (nda_h nda)) sbe)"
       by (simp add: ndaHelper2_def)
-    then have "\<And> sbe. uspec_in (f sbe) (uspecFlatten ?In ?Out (setrevImage (\<lambda>(s, sb). ndaTodo_h ?In (s, sb) (nda_h nda)) (?transition (state,sbe))))"
+    then have "\<And> sbe. uspec_in (f sbe) (uspecFlatten ?In ?Out (setrevImage (\<lambda>(s, sb). ndaTodo_h ?In ?Out (s, sb) (nda_h nda)) (?transition (state,sbe))))"
       by (simp add: ndaConcOutFlatten_def)
     have "\<And> us. x \<rightleftharpoons> us = (Rep_cfun (spfConcIn (sbe2SB sbe))) (spfStep ?In ?Out\<cdot>((\<lambda> h sbEl. spfRtIn\<cdot>(h sbEl)) f)) \<rightleftharpoons> us"
       using x_f_eq by blast
@@ -353,7 +367,7 @@ let ?H  = "(ndaHelper2 (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) state (ndaTransitio
       by (metis \<open>ufDom\<cdot> (x::'a stream\<^sup>\<Omega>\<Rrightarrow> 'a stream\<^sup>\<Omega>) = ndaDom\<cdot>(nda::('b, 'a) ndAutomaton)\<close> test2 test2_2 ufRestrict_apply)
 
 
-    show "uspec_in x (uspecFlatten ?In ?Out (setrevImage (\<lambda>(s::'b, sb::'a stream\<^sup>\<Omega>). ndaTodo_h ?In (s, sb) (nda_h nda)) ((ndaTransition\<cdot>nda) (state, sbe))))"
+    show "uspec_in x (uspecFlatten ?In ?Out (setrevImage (\<lambda>(s::'b, sb::'a stream\<^sup>\<Omega>). ndaTodo_h ?In ?Out (s, sb) (nda_h nda)) ((ndaTransition\<cdot>nda) (state, sbe))))"
     proof -
       have "\<forall>u ua. (ufDom\<cdot>u \<noteq> ufDom\<cdot>ua \<or> (\<exists>ub. ubDom\<cdot>(ub::'a stream\<^sup>\<Omega>) = ufDom\<cdot>u \<and> u \<rightleftharpoons> ub \<noteq> ua \<rightleftharpoons> ub)) \<or> u = ua"
         by (meson spf_eq)
@@ -362,10 +376,10 @@ let ?H  = "(ndaHelper2 (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) state (ndaTransitio
           by (metis (full_types))
       have "\<forall>x0 x1 x2 x3. (dom (Rep_sbElem (x0::'a sbElem)) \<noteq> x3 \<longrightarrow> (x1 x0::('a stream\<^sup>\<Omega>, 'a stream\<^sup>\<Omega>) ufun) = ufLeast x3 x2) = (dom (Rep_sbElem x0) = x3 \<or> x1 x0 = ufLeast x3 x2)"
         by auto
-      then have "\<forall>C Ca f. spsStep_P C Ca f = (\<forall>s. (dom (Rep_sbElem (s::'a sbElem)) \<noteq> C \<or> ufDom\<cdot>(f s) = C \<and> ufRan\<cdot>(f s) = Ca) \<and> (dom (Rep_sbElem s) = C \<or> f s = ufLeast C Ca))"
+      then have "\<forall>C Ca f. spsStep_P C Ca f = (\<forall>s. ufDom\<cdot>(f s) = C \<and> ufRan\<cdot>(f s) = Ca) "
         by (simp add: spsStep_P_def)
-      then have f2: "\<forall>s. (dom (Rep_sbElem s) \<noteq> ndaDom\<cdot>nda \<or> ufDom\<cdot>(f s) = ndaDom\<cdot>nda \<and> ufRan\<cdot>(f s) = ndaRan\<cdot>nda) \<and> (dom (Rep_sbElem s) = ndaDom\<cdot>nda \<or> f s = ufLeast (ndaDom\<cdot>nda) (ndaRan\<cdot>nda))"
-      using f_def_2 by presburger
+      then have f2: "\<forall>s. ufDom\<cdot>(f s) = ndaDom\<cdot>nda \<and> ufRan\<cdot>(f s) = ndaRan\<cdot>nda"
+        using f_def_2 by blast
       have f3: "ufDom\<cdot> (spfStep (ndaDom\<cdot>nda) (ndaRan\<cdot>nda)\<cdot> (\<lambda>s. spfRtIn\<cdot>(f s))) = ndaDom\<cdot>nda"
         using nddom_finite spfstep_dom by blast
       have f4: "ufDom\<cdot>(f sbe) \<noteq> ndaDom\<cdot>nda \<longrightarrow> ufDom\<cdot>(f sbe) = ndaDom\<cdot>nda"
@@ -379,107 +393,189 @@ let ?H  = "(ndaHelper2 (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) state (ndaTransitio
       then have "f sbe = spfConcIn (sbe2SB sbe)\<cdot> (spfStep (ndaDom\<cdot>nda) (ndaRan\<cdot>nda)\<cdot> (\<lambda>s. spfRtIn\<cdot>(f s)))"
         using f5 f1 by meson
       then show ?thesis
-       by (metis \<open>\<And>sbe::'a sbElem. uspec_in ((f::'a sbElem \<Rightarrow> 'a stream\<^sup>\<Omega>\<Rrightarrow> 'a stream\<^sup>\<Omega>) sbe) (uspecFlatten (ndaDom\<cdot>(nda::('b, 'a) ndAutomaton)) (ndaRan\<cdot>nda) (setrevImage (\<lambda>(s::'b, sb::'a stream\<^sup>\<Omega>). ndaTodo_h (ndaDom\<cdot>nda) (s, sb) (nda_h nda)) ((ndaTransition\<cdot>nda) (state::'b, sbe))))\<close> x_f_eq)
+       by (metis \<open>\<And>sbe::'a sbElem. uspec_in ((f::'a sbElem \<Rightarrow> 'a stream\<^sup>\<Omega>\<Rrightarrow> 'a stream\<^sup>\<Omega>) sbe) (uspecFlatten (ndaDom\<cdot>(nda::('b, 'a) ndAutomaton)) (ndaRan\<cdot>nda) (setrevImage (\<lambda>(s::'b, sb::'a stream\<^sup>\<Omega>). ndaTodo_h (ndaDom\<cdot>nda) ?Out (s, sb) (nda_h nda)) ((ndaTransition\<cdot>nda) (state::'b, sbe))))\<close> x_f_eq)
     qed
   qed
 qed
 
+lemma bla: "(uspecFlatten (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) (setrevImage (\<lambda>(s, sb). ndaTodo_h (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) (s, sb) (nda_h nda)) ((ndaTransition\<cdot>nda) (state, sbe)))) = 
+ndaConcOutFlatten (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) ((ndaTransition\<cdot>nda) (state, sbe)) (nda_h nda)"
+  by (simp add: ndaConcOutFlatten_def)
 
-(*
-lemma nda_h_final_h_2:assumes "sbeDom sbe = ndaDom\<cdot>nda"
+lemma nda_h_final_h_2:assumes "sbeDom sbe = ndaDom\<cdot>nda" and
+  nda_h_state_not_empty: "nda_h nda state \<noteq> uspecMax (ndaDom\<cdot>nda) (ndaRan\<cdot>nda)" 
   shows "(uspecImage (Rep_cfun (spfConcIn (sbe2SB sbe))) (nda_h nda state)) \<sqsubseteq>
-    (uspecFlatten (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) (setrevImage (\<lambda>(s, sb). spsConcOut sb (nda_h nda s)) ((ndaTransition\<cdot>nda) (state, sbe))))" 
-  apply (rule uspec_belowI) 
-    apply (metis (no_types, lifting) nda_h_fixpoint nda_h_inner_dom spfConcIn_dom spfConcIn_ran ufclDom_ufun_def ufclRan_ufun_def uspecflatten_dom uspecimage_dom1)
-   apply (metis (no_types, lifting) nda_h_fixpoint nda_h_inner_ran spfConcIn_dom spfConcIn_ran ufclDom_ufun_def ufclRan_ufun_def uspecflatten_ran uspecimage_ran1)
+    ndaConcOutFlatten (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) ((ndaTransition\<cdot>nda) (state, sbe)) (nda_h nda)" 
+  apply (rule uspec_belowI)
+    apply (metis (mono_tags, lifting) assms(1) bla nda_h_final_h_1 uspecdom_eq)
+  apply (metis (mono_tags, lifting) assms(1) bla nda_h_final_h_1 uspecran_eq)
 proof (rule setrev_belowI)
   let ?H  = "(ndaHelper2 (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) state (ndaTransition\<cdot>nda) (nda_h nda))"
   let ?In = "(ndaDom\<cdot>nda)"
   let ?Out = "(ndaRan\<cdot>nda)"
   let ?transition = "(ndaTransition\<cdot>nda)"
-  show "inv Rev (uspecRevSet\<cdot>(uspecFlatten ?In ?Out (setrevImage (\<lambda>(s::'b, sb::'a stream\<^sup>\<Omega>). spsConcOut sb (nda_h nda s)) ((ndaTransition\<cdot>nda) (state, sbe)))))
+  show "inv Rev (uspecRevSet\<cdot>(ndaConcOutFlatten (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) ((ndaTransition\<cdot>nda) (state, sbe)) (nda_h nda)))
     \<subseteq> inv Rev (uspecRevSet\<cdot>(uspecImage (Rep_cfun (spfConcIn (sbe2SB sbe))) (nda_h nda state)))" 
   proof rule
     fix x::"('a stream\<^sup>\<Omega>, 'a stream\<^sup>\<Omega>) ufun"
-    let ?L = " \<lambda> sbe. (uspecFlatten ?In ?Out (setrevImage (\<lambda>(s::'b, sb::'a stream\<^sup>\<Omega>). spsConcOut sb (nda_h nda s)) (?transition (state, sbe))))"
+    let ?L = " \<lambda> sbe. (ndaConcOutFlatten (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) ((ndaTransition\<cdot>nda) (state, sbe)) (nda_h nda))"
     assume a100: "uspec_in x (?L sbe)"
-    obtain Z where z_def_1: "Z \<in> inv Rev (setrevImage (\<lambda>(s::'b, sb::'a stream\<^sup>\<Omega>). spsConcOut sb (nda_h nda s)) (?transition (state, sbe)))" and 
-                   z_def_2: "uspec_in x Z"
-      using a100 uspecflatten_elen by blast
-    obtain W where w_def_1: "W \<in> inv Rev (?transition (state, sbe))" and w_def_2: " Z = (\<lambda>(s::'b, sb::'a stream\<^sup>\<Omega>). spsConcOut sb (nda_h nda s)) W"
-      by (metis (no_types, lifting) setrevimage_mono_obtain3 z_def_1)
-    obtain s1 sbe1 where s1_sbe1_def: "W = (s1, sbe1)"
-      using surjective_pairing by blast
-    have "uspec_in x (spsConcOut sbe1 (nda_h nda s1))"
-      using s1_sbe1_def w_def_2 z_def_2 by auto
-    have "(spsConcOut sbe1 (nda_h nda s1)) \<in> inv Rev (setrevImage (\<lambda>(s::'b, sb::'a stream\<^sup>\<Omega>). spsConcOut sb (nda_h nda s)) (?transition (state, sbe)))"
-      using s1_sbe1_def w_def_2 z_def_1 by auto
-    have "(spsConcOut sbe1 (nda_h nda s1)) \<noteq> uspecMax ?In ?Out"
-      by (metis (mono_tags, lifting) case_prod_conv empty_iff rep_abs_rev_simp s1_sbe1_def uspecMax.abs_eq uspecrevset_insert uspecwell_exists w_def_2 z_def_2)
-    have "nda_h nda s1 \<noteq> uspecMax ?In ?Out"
-    proof (rule ccontr, simp) 
-      assume a111: " nda_h nda s1 = uspecMax (ndaDom\<cdot>nda) (ndaRan\<cdot>nda)"
-      then have "(spsConcOut sbe1 (nda_h nda s1)) = uspecMax ?In ?Out"
-        apply (simp add: spsConcOut_def)
-        apply (rule uspecimage_max)
-          apply simp
-        apply (simp add: ufclDom_ufun_def)
-        by (simp add: ufclRan_ufun_def)
-      then show False
-        using \<open>spsConcOut (sbe1::'a stream\<^sup>\<Omega>) (nda_h (nda::('b, 'a) ndAutomaton) (s1::'b)) \<noteq> uspecMax (ndaDom\<cdot>nda) (ndaRan\<cdot>nda)\<close> by auto
-    qed
-    have "nda_h nda s1 = (nda_h_inner nda (nda_h nda)) s1"
-      by (metis nda_h_fixpoint)
-    then have "nda_h nda s1 = spsStep ?In ?Out\<cdot>(ndaHelper2 ?In ?Out s1 ?transition (nda_h nda))"
-      by (metis nda_h_inner_def)
-    then have "nda_h nda s1 = spsStep ?In ?Out\<cdot>(\<lambda>e. ndaConcOutFlatten ?In ?Out (?transition (s1,e)) (nda_h nda))"
+    obtain Z where "Z \<in> inv Rev (setrevImage (\<lambda> (s, sb). ndaTodo_h ?In ?Out (s, sb) (nda_h nda)) (?transition (state, sbe)))"
+        and "uspec_in x Z"
+      by (smt a100 case_prodE2 inv_rev_rev ndaConcOutFlatten_def pair_imageI setrevImage_def setrevimage_mono_obtain3 uspec_bex_triv_one_point2 uspecflatten_elen)
+
+    (* nda_h nda state simplify *)
+    have "(nda_h nda state) = 
+      spsStep_m ?In ?Out (\<lambda>e. ndaConcOutFlatten ?In ?Out (?transition (state,e)) (nda_h nda))"
+      apply (subst nda_h_fixpoint)
+      apply (simp add: nda_h_inner_def Let_def)
       by (simp add: ndaHelper2_def)
 
-    then have "uspec_in x (spsConcOut sbe1 (spsStep ?In ?Out\<cdot>(\<lambda>e. ndaConcOutFlatten ?In ?Out (?transition (s1,e)) (nda_h nda))))"
-      using \<open>uspec_in (x::'a stream\<^sup>\<Omega>\<Rrightarrow> 'a stream\<^sup>\<Omega>) (spsConcOut (sbe1::'a stream\<^sup>\<Omega>) (nda_h (nda::('b, 'a) ndAutomaton) (s1::'b)))\<close> by auto 
-    then obtain y where "uspec_in y (spsStep ?In ?Out\<cdot>(\<lambda>e. ndaConcOutFlatten ?In ?Out (?transition (s1,e)) (nda_h nda)))" and
-        "x = spfConcOut sbe1\<cdot>y"
-      using spsconcout_obtain by blast 
-    then obtain da_y where "da_y \<in> (inv Rev (spsStep_h\<cdot>(\<lambda>e. ndaConcOutFlatten ?In ?Out (?transition (s1,e)) (nda_h nda))))" and "spsStep_P ?In ?Out da_y" and 
-      "y  = ((\<lambda> h. spfStep ?In ?Out\<cdot>((\<lambda> h sbEl. spfRtIn\<cdot>(h sbEl)) h)) da_y)"
-      using nddom_finite spsstep_ele_rev by blast
-    then have "\<And> sbe. uspec_in (da_y sbe) ((\<lambda>e. ndaConcOutFlatten ?In ?Out (?transition (s1,e)) (nda_h nda)) sbe)"
-      by (meson spsstep_h_ele)
-    then have "\<And> sbe. ((\<lambda>e. ndaConcOutFlatten ?In ?Out (?transition (s1,e)) (nda_h nda)) sbe) \<noteq> uspecMax ?In ?Out"
-      by (metis empty_iff rep_abs_rev_simp uspecMax.abs_eq uspecrevset_insert uspecwell_exists)
-    then have "\<And> sbe. uspecFlatten ?In ?Out 
-                (setrevImage (\<lambda>(s, sb). spsConcOut sb((nda_h nda) s)) (?transition (s1,sbe))) \<noteq> uspecMax ?In ?Out"
+    (* spsStep properties  *)
+    then have "spsStep_m ?In ?Out ((\<lambda>e. ndaConcOutFlatten ?In ?Out (?transition (state,e)) (nda_h nda))) \<noteq>
+      uspecMax ?In ?Out"
+      using nda_h_state_not_empty by auto
+    then have "spsStep_h\<cdot>((\<lambda>e. ndaConcOutFlatten ?In ?Out (?transition (state,e)) (nda_h nda))) \<noteq>
+      Rev {}"
+      using spsstep_m_not_empty by blast
+    have ndaConcOutFlatten_dom: "\<And> sbe. uspecDom\<cdot>(((\<lambda>e. ndaConcOutFlatten ?In ?Out (?transition (state,e)) (nda_h nda))) sbe) = 
+        ?In"
       by (simp add: ndaConcOutFlatten_def)
-    have "\<And>sbe. uspec_in (da_y sbe) (uspecFlatten ?In ?Out 
-                (setrevImage (\<lambda>(s, sb). spsConcOut sb((nda_h nda) s)) (?transition (s1,sbe))))"
-      by (metis \<open>\<And>sbe::'a sbElem. uspec_in ((da_y::'a sbElem \<Rightarrow> 'a stream\<^sup>\<Omega>\<Rrightarrow> 'a stream\<^sup>\<Omega>) sbe) (ndaConcOutFlatten (ndaDom\<cdot>(nda::('b, 'a) ndAutomaton)) (ndaRan\<cdot>nda) ((ndaTransition\<cdot>nda) (s1::'b, sbe)) (nda_h nda))\<close> ndaConcOutFlatten_def)
-    then have "\<And> sbe. (?transition (s1,sbe)) \<noteq> Rev {}"
-      by (metis (no_types, lifting) equals0D inv_rev_rev setrevimage_empty uspecflatten_elen)
-    then have "\<And>s sbe. (?transition (s,sbe)) \<noteq> Rev {}"
-      sorry
+    have "\<And> sbe. uspecRan\<cdot>(((\<lambda>e. ndaConcOutFlatten ?In ?Out (?transition (state,e)) (nda_h nda))) sbe) = 
+        ?Out"
+      by (simp add: ndaConcOutFlatten_def) 
+    have "\<And> sbe. ((\<lambda>e. ndaConcOutFlatten ?In ?Out (?transition (state,e)) (nda_h nda))) sbe \<noteq> 
+      uspecMax ?In ?Out"
+      by (metis (no_types, lifting) \<open>\<And>sbe::'a sbElem. uspecDom\<cdot> (ndaConcOutFlatten (ndaDom\<cdot>(nda::('b, 'a) ndAutomaton)) (ndaRan\<cdot>nda) ((ndaTransition\<cdot>nda) (state::'b, sbe)) (nda_h nda)) = ndaDom\<cdot>nda\<close> \<open>\<And>sbe::'a sbElem. uspecRan\<cdot> (ndaConcOutFlatten (ndaDom\<cdot>(nda::('b, 'a) ndAutomaton)) (ndaRan\<cdot>nda) ((ndaTransition\<cdot>nda) (state::'b, sbe)) (nda_h nda)) = ndaRan\<cdot>nda\<close> \<open>spsStep_h\<cdot> (\<lambda>e::'a sbElem. ndaConcOutFlatten (ndaDom\<cdot>(nda::('b, 'a) ndAutomaton)) (ndaRan\<cdot>nda) ((ndaTransition\<cdot>nda) (state::'b, e)) (nda_h nda)) \<noteq> Rev {}\<close> spsstep_h_ele3)
+    then have "\<And> sbe. uspecFlatten ?In ?Out 
+                (setrevImage (\<lambda> (s, sb). ndaTodo_h ?In ?Out (s, sb) (nda_h nda)) (?transition (state, sbe)))  \<noteq> uspecMax ?In ?Out"
+      by (simp add: ndaConcOutFlatten_def)
+    then have "\<And> sbe. (setrevImage (\<lambda> (s, sb). ndaTodo_h ?In ?Out (s, sb) (nda_h nda)) (?transition (state, sbe))) \<noteq> Rev {}"
+      by (smt empty_iff inv_rev_rev not_uspec_consisten_empty_eq rep_abs_rev_simp setrev_eqI uspecMax.abs_eq uspec_consist_f_ex uspec_eqI uspecflatten_dom uspecflatten_elen uspecflatten_ran uspecmax_dom uspecmax_ran uspecrevset_insert uspecwell_exists)
+    then have "\<And>sbe. (?transition (state, sbe)) \<noteq> Rev {}"
+      using setrevimage_empty by blast
 
+    have "\<And>g sbe. g \<in> inv Rev (spsStep_h\<cdot>(\<lambda>e. uspecFlatten ?In ?Out 
+                (setrevImage (\<lambda> (s, sb). ndaTodo_h ?In ?Out (s, sb) (nda_h nda)) (?transition (state, e))))) \<Longrightarrow> uspec_in (g sbe) ((\<lambda>e. uspecFlatten ?In ?Out 
+                                                                                                                                (setrevImage (\<lambda> (s, sb). ndaTodo_h ?In ?Out (s, sb) (nda_h nda)) (?transition (state, e)))) sbe)"
+      using spsstep_h_ele by auto
+    then have "\<And>g sbe. g \<in> inv Rev (spsStep_h\<cdot>(\<lambda>e. uspecFlatten ?In ?Out 
+                (setrevImage (\<lambda> (s, sb). ndaTodo_h ?In ?Out (s, sb) (nda_h nda)) (?transition (state, e))))) \<Longrightarrow> \<exists> S. S \<in> inv Rev (setrevImage (\<lambda> (s, sb). ndaTodo_h ?In ?Out (s, sb) (nda_h nda)) (?transition (state, sbe))) \<and>
+                                  uspec_in (g sbe) S"
+      by (meson uspecflatten_elen)
+    then have "\<And>g sbe. g \<in> inv Rev (spsStep_h\<cdot>(\<lambda>e. uspecFlatten ?In ?Out 
+                (setrevImage (\<lambda> (s, sb). ndaTodo_h ?In ?Out (s, sb) (nda_h nda)) (?transition (state, e))))) \<Longrightarrow> \<exists> S s2 sbe2. S \<in> inv Rev (setrevImage (\<lambda> (s, sb). ndaTodo_h ?In ?Out (s, sb) (nda_h nda)) (?transition (state, sbe))) \<and>
+                                  uspec_in (g sbe) S \<and> (S = (\<lambda> (s, sb). ndaTodo_h ?In ?Out (s, sb) (nda_h nda)) (s2, sbe2))"
+      by (smt \<open>\<And>(sbe::'a sbElem) g::'a sbElem \<Rightarrow> 'a stream\<^sup>\<Omega>\<Rrightarrow> 'a stream\<^sup>\<Omega>. g \<in> inv Rev (spsStep_h\<cdot> (\<lambda>e::'a sbElem. uspecFlatten (ndaDom\<cdot>(nda::('b, 'a) ndAutomaton)) (ndaRan\<cdot>nda) (setrevImage (\<lambda>(s::'b, sb::'a stream\<^sup>\<Omega>). ndaTodo_h (ndaDom\<cdot>nda) ?Out (s, sb) (nda_h nda)) ((ndaTransition\<cdot>nda) (state::'b, e))))) \<Longrightarrow> uspec_in (g sbe) (uspecFlatten (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) (setrevImage (\<lambda>(s::'b, sb::'a stream\<^sup>\<Omega>). ndaTodo_h (ndaDom\<cdot>nda) ?Out (s, sb) (nda_h nda)) ((ndaTransition\<cdot>nda) (state, sbe))))\<close> case_prodE2 setrevimage_mono_obtain3 uspec_bex_triv_one_point2 uspecflatten_elen)
+    have "\<And> f sbe. uspec_in f ((\<lambda>e. uspecFlatten ?In ?Out 
+                (setrevImage (\<lambda> (s, sb). ndaTodo_h ?In ?Out(s, sb) (nda_h nda)) (?transition (state, e)))) sbe) 
+      \<Longrightarrow> \<exists> g \<in> inv Rev (spsStep_h\<cdot>(\<lambda>e. uspecFlatten ?In ?Out 
+                (setrevImage (\<lambda> (s, sb). ndaTodo_h ?In ?Out(s, sb) (nda_h nda)) (?transition (state, e))))). g sbe = f"
+      apply (rule spsstep_h_ele4)
+       apply (metis (mono_tags, lifting) SetRev.setify_notempty \<open>\<And>sbe::'a sbElem. uspecFlatten (ndaDom\<cdot>(nda::('b, 'a) ndAutomaton)) (ndaRan\<cdot>nda) (setrevImage (\<lambda>(s::'b, sb::'a stream\<^sup>\<Omega>). ndaTodo_h (ndaDom\<cdot>nda) ?Out (s, sb) (nda_h nda)) ((ndaTransition\<cdot>nda) (state::'b, sbe))) \<noteq> uspecMax (ndaDom\<cdot>nda) (ndaRan\<cdot>nda)\<close> rep_abs_rev_simp rev_inv_rev spsStep_h_insert uspecMax.abs_eq uspec_eqI uspecflatten_dom uspecflatten_ran uspecmax_dom uspecmax_ran uspecrevset_insert uspecwell_exists)
+      by simp
+    have "\<And> S sbe. S \<in> inv Rev ((\<lambda>e. (setrevImage (\<lambda> (s, sb). ndaTodo_h ?In ?Out (s, sb) (nda_h nda)) (?transition (state, e)))) sbe)
+      \<Longrightarrow> uspecDom\<cdot>S = ?In \<and> uspecRan\<cdot>S = ?Out"
+    proof -
+      fix S::"('a stream\<^sup>\<Omega>\<Rrightarrow> 'a stream\<^sup>\<Omega>) uspec"
+      fix sbee::"'a sbElem"
+      assume "S \<in> inv Rev ((\<lambda>e. (setrevImage (\<lambda> (s, sb). ndaTodo_h ?In ?Out (s, sb) (nda_h nda)) (?transition (state, e)))) sbee)"
+      then obtain da_s da_sbe where bla: "S = (\<lambda> (s, sb). ndaTodo_h ?In ?Out (s, sb) (nda_h nda)) (da_s, da_sbe)"
+      proof -
+        assume "\<And>da_s da_sbe. S = (case (da_s, da_sbe) of (s, sb) \<Rightarrow> ndaTodo_h (ndaDom\<cdot>nda) ?Out (s, sb) (nda_h nda)) \<Longrightarrow> thesis"
+        then show ?thesis
+          by (metis (no_types) \<open>(S::('a stream\<^sup>\<Omega>\<Rrightarrow> 'a stream\<^sup>\<Omega>) uspec) \<in> inv Rev (setrevImage (\<lambda>(s::'b, sb::'a stream\<^sup>\<Omega>). ndaTodo_h (ndaDom\<cdot>(nda::('b, 'a) ndAutomaton)) ?Out (s, sb) (nda_h nda)) ((ndaTransition\<cdot>nda) (state::'b, sbee::'a sbElem)))\<close> old.prod.exhaust setrevimage_mono_obtain3)
+      qed
+      show "uspecDom\<cdot>S = ?In \<and> uspecRan\<cdot>S = ?Out"
+        apply (subst bla) +
+        apply (case_tac "(ubLen (ubRestrict ?Out\<cdot>(ubUp\<cdot>da_sbe)) < \<infinity>)")
+         apply (simp_all add: ndaTodo_h_def)
+         apply (metis nda_h_fixpoint nda_h_inner_dom nda_h_inner_ran)
+        by (simp add: ubclDom_ubundle_def)
+    qed
+    then have "\<And> S f sbe. S \<in> inv Rev ((\<lambda>e. (setrevImage (\<lambda> (s, sb). ndaTodo_h ?In ?Out (s, sb) (nda_h nda)) (?transition (state, e)))) sbe)
+      \<Longrightarrow> uspec_in f S 
+      \<Longrightarrow> uspec_in f ((\<lambda>e. uspecFlatten ?In ?Out 
+                (setrevImage (\<lambda> (s, sb). ndaTodo_h ?In ?Out (s, sb) (nda_h nda)) (?transition (state, e)))) sbe)"
+      by (simp add: uspecflatten_ele2)
+    then have "\<And> S f . S \<in> inv Rev ((\<lambda>e. (setrevImage (\<lambda> (s, sb). ndaTodo_h ?In ?Out (s, sb) (nda_h nda)) (?transition (state, e)))) sbe)
+      \<Longrightarrow> uspec_in f S 
+      \<Longrightarrow> uspec_in f ((\<lambda>e. uspecFlatten ?In ?Out 
+                (setrevImage (\<lambda> (s, sb). ndaTodo_h ?In ?Out (s, sb) (nda_h nda)) (?transition (state, e)))) sbe)"
+      by (simp add: uspecflatten_ele2)
+    then have "\<And> f. uspec_in f ((\<lambda>e. uspecFlatten ?In ?Out 
+                (setrevImage (\<lambda> (s, sb). ndaTodo_h ?In ?Out(s, sb) (nda_h nda)) (?transition (state, e)))) sbe) 
+      \<Longrightarrow> \<exists> g \<in> inv Rev (spsStep_h\<cdot>(\<lambda>e. uspecFlatten ?In ?Out 
+                (setrevImage (\<lambda> (s, sb). ndaTodo_h ?In ?Out(s, sb) (nda_h nda)) (?transition (state, e))))). g sbe = f"
+      using \<open>\<And>(sbe::'a sbElem) f::'a stream\<^sup>\<Omega>\<Rrightarrow> 'a stream\<^sup>\<Omega>. uspec_in f (uspecFlatten (ndaDom\<cdot>(nda::('b, 'a) ndAutomaton)) (ndaRan\<cdot>nda) (setrevImage (\<lambda>(s::'b, sb::'a stream\<^sup>\<Omega>). ndaTodo_h (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) (s, sb) (nda_h nda)) ((ndaTransition\<cdot>nda) (state::'b, sbe)))) \<Longrightarrow> \<exists>g::'a sbElem \<Rightarrow> 'a stream\<^sup>\<Omega>\<Rrightarrow> 'a stream\<^sup>\<Omega> \<in>inv Rev (spsStep_h\<cdot> (\<lambda>e::'a sbElem. uspecFlatten (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) (setrevImage (\<lambda>(s::'b, sb::'a stream\<^sup>\<Omega>). ndaTodo_h (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) (s, sb) (nda_h nda)) ((ndaTransition\<cdot>nda) (state, e))))). g sbe = f\<close> by blast
 
+    
 
+    have "\<And> f. uspec_in f  (nda_h nda state) \<Longrightarrow> uspec_in ((Rep_cfun (spfConcIn (sbe2SB sbe))) f) 
+            (uspecImage (Rep_cfun (spfConcIn (sbe2SB sbe))) (nda_h nda state))"
+      apply (rule uspecimage_ele_in)
+      by (simp_all add: ufclRan_ufun_def ufclDom_ufun_def)
+    have "\<And> f ub. ((Rep_cfun (spfConcIn (sbe2SB sbe))) f)  \<rightleftharpoons> ub = f \<rightleftharpoons> (ubConcEq (sbe2SB sbe)\<cdot>ub)"
+      by (metis spfConcIn_dom spfConcIn_step test2 ubconceq_dom ufRestrict_apply)
+    have "\<And> f. uspec_in f  (nda_h nda state) \<Longrightarrow> 
+\<exists> g \<in> (inv Rev (spsStep_h\<cdot>?H)). spsStep_P ?In ?Out g
+  \<and> f = ((\<lambda> h. spfStep ?In ?Out\<cdot>((\<lambda> h sbEl. spfRtIn\<cdot>(h sbEl)) h)) g) "
+    proof -
+      fix f :: "'a stream\<^sup>\<Omega>\<Rrightarrow> 'a stream\<^sup>\<Omega>"
+      assume "uspec_in f (nda_h nda state)"
+      then have "\<exists>u. uspec_in u (spsStep_m (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) (ndaHelper2 (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) state (ndaTransition\<cdot>nda) (nda_h nda))) \<and> uspec_in u (nda_h nda state) \<and> u = f"
+        by (metis (lifting) nda_h_fixpoint nda_h_inner_def)
+      then show "\<exists>fa\<in>inv Rev (spsStep_h\<cdot> (ndaHelper2 (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) state (ndaTransition\<cdot>nda) (nda_h nda))). spsStep_P (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) fa \<and> f = spfStep (ndaDom\<cdot>nda) (ndaRan\<cdot>nda)\<cdot> (\<lambda>s. spfRtIn\<cdot>(fa s))"
+        using nddom_finite spsstep_ele_rev by blast
+    qed
+    have "\<And>g sbe. g \<in> (inv Rev (spsStep_h\<cdot>(\<lambda>e. ndaConcOutFlatten ?In ?Out (?transition (state,e)) (nda_h nda))))
+      \<Longrightarrow> ufclDom\<cdot>(g sbe) = ?In \<and> ufclRan\<cdot>(g sbe) = ?Out"
+      by (metis ndaConcOutFlatten_def spsstep_h_ele uspec_allDom uspec_allRan uspecflatten_dom uspecflatten_ran)
+    then have "\<And>g. g \<in> inv Rev (spsStep_h\<cdot>(\<lambda>e. ndaConcOutFlatten ?In ?Out (?transition (state,e)) (nda_h nda))) \<Longrightarrow>
+       spsStep_P ?In ?Out  g "
+      unfolding spsStep_P_def
+      by (simp add: ufclDom_ufun_def ufclRan_ufun_def)
+   have "\<And> f ub. uspec_in f (uspecImage (Rep_cfun (spfConcIn (sbe2SB sbe))) (spsStep_m ?In ?Out (\<lambda>e. ndaConcOutFlatten ?In ?Out (?transition (state,e)) (nda_h nda)))) \<Longrightarrow>
+        \<exists> g \<in> inv Rev (spsStep_h\<cdot>(\<lambda>e. ndaConcOutFlatten ?In ?Out (?transition (state,e)) (nda_h nda))). spsStep_P ?In ?Out  g 
+        \<and> f = (Rep_cfun (spfConcIn (sbe2SB sbe))) ((\<lambda> h. spfStep ?In ?Out\<cdot>((\<lambda> h sbEl. spfRtIn\<cdot>(h sbEl)) h)) g)"
+     by (smt nddom_finite rep_abs_rev_simp rev_inv_rev setrevImage_def setrevimage_mono_obtain3 spfConcIn_dom spfConcIn_ran spsstep_ele_rev ufclDom_ufun_def ufclRan_ufun_def uspecImage_def uspecimage_well uspecrevset_insert)
 
-
-
-
-    have f100: "uspec_in x (uspecImage (Rep_cfun (spfConcIn (sbe2SB sbe))) (spsStep ?In ?Out\<cdot>(ndaHelper2 ?In ?Out state ?transition (nda_h nda))))"
-      apply (simp add: ndaHelper2_def ndaConcOutFlatten_def)
-      sorry
-    have "\<And> sbe. nda_h nda sbe \<noteq> uspecMax ?In ?Out"
-      sorry
-
-
-    show "uspec_in x (uspecImage (Rep_cfun (spfConcIn (sbe2SB sbe))) (nda_h nda state))"
-      by (metis f100 nda_h_fixpoint nda_h_inner_def)
+    obtain g where g_def_1: "g \<in> (inv Rev (spsStep_h\<cdot>(\<lambda>e. ndaConcOutFlatten ?In ?Out (?transition (state,e)) (nda_h nda))))" and
+      g_def_2: "uspec_in (g sbe) Z" and g_def_3: "x = g sbe"
+      using \<open>spsStep_h\<cdot> (\<lambda>e::'a sbElem. ndaConcOutFlatten (ndaDom\<cdot>(nda::('b, 'a) ndAutomaton)) (ndaRan\<cdot>nda) ((ndaTransition\<cdot>nda) (state::'b, e)) (nda_h nda)) \<noteq> Rev {}\<close> \<open>uspec_in (x::'a stream\<^sup>\<Omega>\<Rrightarrow> 'a stream\<^sup>\<Omega>) (Z::('a stream\<^sup>\<Omega>\<Rrightarrow> 'a stream\<^sup>\<Omega>) uspec)\<close> a100 spsstep_h_ele4 by blast
+    have g_dom_ran: "\<And> sbe. ufclDom\<cdot>(g sbe) = ?In \<and> ufclRan\<cdot>(g sbe) = ?Out"
+      by (simp add: \<open>\<And>(sbe::'a sbElem) g::'a sbElem \<Rightarrow> 'a stream\<^sup>\<Omega>\<Rrightarrow> 'a stream\<^sup>\<Omega>. g \<in> inv Rev (spsStep_h\<cdot> (\<lambda>e::'a sbElem. ndaConcOutFlatten (ndaDom\<cdot>(nda::('b, 'a) ndAutomaton)) (ndaRan\<cdot>nda) ((ndaTransition\<cdot>nda) (state::'b, e)) (nda_h nda))) \<Longrightarrow> ufclDom\<cdot>(g sbe) = ndaDom\<cdot>nda \<and> ufclRan\<cdot>(g sbe) = ndaRan\<cdot>nda\<close> g_def_1)
+    then have g_spsStep_P: "spsStep_P ?In ?Out g"
+      by (simp add: spsStep_P_def ufclDom_ufun_def ufclRan_ufun_def)
+    have "uspec_in (((\<lambda> h. spfStep ?In ?Out\<cdot>((\<lambda> h sbEl. spfRtIn\<cdot>(h sbEl)) h)) g))
+      ((spsStep_m ?In ?Out (\<lambda>e. ndaConcOutFlatten ?In ?Out (?transition (state,e)) (nda_h nda))))"
+      apply (rule spsstep_m_ele)
+      apply (simp_all add: g_def_1)
+      by (simp add: g_spsStep_P)
+    then have "uspec_in ((Rep_cfun (spfConcIn (sbe2SB sbe))) ((\<lambda> h. spfStep ?In ?Out\<cdot>((\<lambda> h sbEl. spfRtIn\<cdot>(h sbEl)) h)) g))
+      (uspecImage (Rep_cfun (spfConcIn (sbe2SB sbe))) (spsStep_m ?In ?Out (\<lambda>e. ndaConcOutFlatten ?In ?Out (?transition (state,e)) (nda_h nda))))"
+      using \<open>\<And>f::'a stream\<^sup>\<Omega>\<Rrightarrow> 'a stream\<^sup>\<Omega>. uspec_in f (nda_h (nda::('b, 'a) ndAutomaton) (state::'b)) \<Longrightarrow> uspec_in (spfConcIn (sbe2SB (sbe::'a sbElem))\<cdot>f) (uspecImage (Rep_cfun (spfConcIn (sbe2SB sbe))) (nda_h nda state))\<close> \<open>nda_h (nda::('b, 'a) ndAutomaton) (state::'b) = spsStep_m (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) (\<lambda>e::'a sbElem. ndaConcOutFlatten (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) ((ndaTransition\<cdot>nda) (state, e)) (nda_h nda))\<close> by auto
+    have "(Rep_cfun (spfConcIn (sbe2SB sbe))) ((\<lambda> h. spfStep ?In ?Out\<cdot>((\<lambda> h sbEl. spfRtIn\<cdot>(h sbEl)) h)) g) = 
+              x "
+      apply (rule ufun_eqI)
+       apply (metis g_def_3 g_dom_ran nddom_finite spfConcIn_dom spfstep_dom ufclDom_ufun_def)
+      apply (simp add: ubclDom_ubundle_def)
+      apply (subst spfstep_step)
+          apply auto[1]
+      using assms(1) sbhdwell_ubconceq apply fastforce
+        apply simp
+       apply (metis g_dom_ran spfRtIn_dom spfRtIn_ran ufclDom_ufun_def ufclRan_ufun_def)
+      by (metis assms(1) g_def_3 sbe2sb_hdelem3 sbe2sb_hdelem_conc sbe2sb_rt spfRtIn_step ubconceq_insert)
+    then show " uspec_in x (uspecImage (Rep_cfun (spfConcIn (sbe2SB sbe))) (nda_h nda state))"
+      using \<open>nda_h (nda::('b, 'a) ndAutomaton) (state::'b) = spsStep_m (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) (\<lambda>e::'a sbElem. ndaConcOutFlatten (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) ((ndaTransition\<cdot>nda) (state, e)) (nda_h nda))\<close> \<open>uspec_in (spfConcIn (sbe2SB (sbe::'a sbElem))\<cdot> (spfStep (ndaDom\<cdot>(nda::('b, 'a) ndAutomaton)) (ndaRan\<cdot>nda)\<cdot> (\<lambda>sbEl::'a sbElem. spfRtIn\<cdot> ((g::'a sbElem \<Rightarrow> 'a stream\<^sup>\<Omega>\<Rrightarrow> 'a stream\<^sup>\<Omega>) sbEl)))) (uspecImage (Rep_cfun (spfConcIn (sbe2SB sbe))) (spsStep_m (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) (\<lambda>e::'a sbElem. ndaConcOutFlatten (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) ((ndaTransition\<cdot>nda) (state::'b, e)) (nda_h nda))))\<close> by auto
   qed
 qed
 
 
-lemma nda_h_final: assumes "sbeDom sbe = ndaDom\<cdot>nda"
+lemma nda_h_final: assumes "sbeDom sbe = ndaDom\<cdot>nda" and
+  nda_h_state_not_empty: "nda_h nda state \<noteq> uspecMax (ndaDom\<cdot>nda) (ndaRan\<cdot>nda)"
   shows "spsConcIn (sbe2SB sbe) (nda_h nda state) = 
-  uspecFlatten (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) (setrevImage (\<lambda>(s, sb). spsConcOut sb (nda_h nda s)) ((ndaTransition\<cdot>nda) (state,sbe)))"
+  uspecFlatten (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) (setrevImage (\<lambda>(s, sb). ndaTodo_h (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) (s, sb) (nda_h nda)) ((ndaTransition\<cdot>nda) (state,sbe)))"
    apply (rule uspec_eqI)  defer
     apply (subst spsconcin_dom)
      apply (simp add: one_lnat_def sbe_ch_len)
@@ -488,7 +584,7 @@ lemma nda_h_final: assumes "sbeDom sbe = ndaDom\<cdot>nda"
     apply (simp add: one_lnat_def sbe_ch_len)
    apply (metis (no_types, lifting) nda_h_fixpoint nda_h_inner_ran uspecflatten_ran)
   apply (simp add: spsConcIn_def)
-  by (metis assms nda_h_final_h_1 nda_h_final_h_2 po_eq_conv)
+  by (metis (no_types) assms(1) ndaConcOutFlatten_def nda_h_final_h_1 nda_h_final_h_2 nda_h_state_not_empty po_eq_conv)
 
 
 lemma nda_h_bottom_h: "uspecIsStrict (spsStep (ndaDom\<cdot>nda) (ndaRan\<cdot>nda)\<cdot>
@@ -517,10 +613,10 @@ lemma nda_h_bottom: "uspecIsStrict (nda_h nda state)"
   by (metis nda_h_bottom_h nda_h_fixpoint nda_h_inner_def)
 
 lemma nda_h_final_back: assumes "\<And>state sbe. sbeDom sbe = ndaDom\<cdot>nda \<Longrightarrow> spsConcIn (sbe2SB sbe) (other state) = 
-  uspecFlatten (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) (setrevImage (\<lambda>(s, sb). spsConcOut sb (other s)) ((ndaTransition\<cdot>nda) (s,sbe)))"
+  uspecFlatten (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) (setrevImage (\<lambda>(s, sb). ndaTodo_h (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) (s, sb) other) ((ndaTransition\<cdot>nda) (s,sbe)))"
   and "\<And> state. uspecDom\<cdot>(other state) = ndaDom\<cdot>nda" and "\<And> state. uspecRan\<cdot>(other state) = ndaRan\<cdot>nda"
 shows "other = nda_h nda" 
   oops
-*)
+
 
 end
