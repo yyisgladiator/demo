@@ -3,7 +3,7 @@
  * This file was generated from Receiver.maa and will be overridden when changed. To change
  * permanently, consider changing the model itself.
  *
- * Generated on Sep 19, 2018 11:04:38 PM by isartransformer 1.0.0
+ * Generated on Sep 21, 2018 4:47:19 PM by isartransformer 1.0.0
  *)
 theory ReceiverAutomaton
   imports bundle.tsynBundle automat.dAutomaton
@@ -36,30 +36,21 @@ end
 
 section \<open>Helpers to create a bundle from a single raw element\<close>
 
-(* Create one sbElem for all input streams *)
-fun createSbElem_Dr :: "((nat\<times>bool) tsyn) \<Rightarrow> (receiverMessage tsyn sbElem)" where
-"createSbElem_Dr null = Abs_sbElem [\<C> ''dr'' \<mapsto> null]" |
-"createSbElem_Dr (Msg port_dr) = Abs_sbElem [\<C> ''dr'' \<mapsto> Msg (ReceiverPair_ReceiverNat_ReceiverBool port_dr)]"
-
-(* Create one SB for all input streams *)
-fun createBundle_Dr :: "((nat\<times>bool) tsyn) \<Rightarrow> (receiverMessage tsyn SB)" where
-"createBundle_Dr port_dr  = (sbe2SB (createSbElem_Dr port_dr ))"
-
-lift_definition createDrBundle :: "(nat\<times>bool) \<Rightarrow> receiverMessage tsyn sbElem" is
+lift_definition receiverElem_raw_Dr :: "(nat\<times>bool) \<Rightarrow> receiverMessage tsyn sbElem" is
 "\<lambda>x. [\<C> ''dr'' \<mapsto> Msg (ReceiverPair_ReceiverNat_ReceiverBool x)]"
   unfolding sbElemWell_def
   unfolding usclOkay_stream_def
   unfolding ctype_tsyn_def
   by simp
 
-lift_definition createArBundle :: "bool \<Rightarrow> receiverMessage tsyn sbElem" is
+lift_definition receiverElem_raw_Ar :: "bool \<Rightarrow> receiverMessage tsyn sbElem" is
 "\<lambda>x. [\<C> ''ar'' \<mapsto> Msg (ReceiverBool x)]"
   unfolding sbElemWell_def
   unfolding usclOkay_stream_def
   unfolding ctype_tsyn_def
   by simp
 
-lift_definition createOBundle :: "nat \<Rightarrow> receiverMessage tsyn sbElem" is
+lift_definition receiverElem_raw_O :: "nat \<Rightarrow> receiverMessage tsyn sbElem" is
 "\<lambda>x. [\<C> ''o'' \<mapsto> Msg (ReceiverNat x)]"
   unfolding sbElemWell_def
   unfolding usclOkay_stream_def
@@ -69,152 +60,108 @@ lift_definition createOBundle :: "nat \<Rightarrow> receiverMessage tsyn sbElem"
 
 section \<open>Helpers to create a bundle from a single tsyn element\<close>
 
-fun createTsynDrBundle :: "(nat\<times>bool) tsyn \<Rightarrow> receiverMessage tsyn SB" where
-"createTsynDrBundle (Msg x) = sbe2SB (createDrBundle x)" |
-"createTsynDrBundle null = sbe2SB (sbeNull {\<C> ''dr''})"
+fun receiverElem_Dr :: "(nat\<times>bool) tsyn \<Rightarrow> receiverMessage tsyn sbElem" where
+"receiverElem_Dr (Msg port_dr) = receiverElem_raw_Dr port_dr" |
+"receiverElem_Dr null = sbeNull {\<C> ''dr''}"
 
-declare createTsynDrBundle.simps[simp del]
+definition receiver_Dr :: "(nat\<times>bool) tsyn \<Rightarrow> receiverMessage tsyn SB" where
+"receiver_Dr port_dr = sbe2SB (receiverElem_Dr port_dr)"
 
-fun createTsynArBundle :: "bool tsyn \<Rightarrow> receiverMessage tsyn SB" where
-"createTsynArBundle (Msg x) = sbe2SB (createArBundle x)" |
-"createTsynArBundle null = sbe2SB (sbeNull {\<C> ''ar''})"
+fun receiverElem_Ar :: "bool tsyn \<Rightarrow> receiverMessage tsyn sbElem" where
+"receiverElem_Ar (Msg port_ar) = receiverElem_raw_Ar port_ar" |
+"receiverElem_Ar null = sbeNull {\<C> ''ar''}"
 
-declare createTsynArBundle.simps[simp del]
+definition receiver_Ar :: "bool tsyn \<Rightarrow> receiverMessage tsyn SB" where
+"receiver_Ar port_ar = sbe2SB (receiverElem_Ar port_ar)"
 
-fun createTsynOBundle :: "nat tsyn \<Rightarrow> receiverMessage tsyn SB" where
-"createTsynOBundle (Msg x) = sbe2SB (createOBundle x)" |
-"createTsynOBundle null = sbe2SB (sbeNull {\<C> ''o''})"
+fun receiverElem_O :: "nat tsyn \<Rightarrow> receiverMessage tsyn sbElem" where
+"receiverElem_O (Msg port_o) = receiverElem_raw_O port_o" |
+"receiverElem_O null = sbeNull {\<C> ''o''}"
 
-declare createTsynOBundle.simps[simp del]
+definition receiver_O :: "nat tsyn \<Rightarrow> receiverMessage tsyn SB" where
+"receiver_O port_o = sbe2SB (receiverElem_O port_o)"
+
+(* Create one sbElem for all input channels *)
+fun receiverElemIn_Dr :: "(nat\<times>bool) tsyn \<Rightarrow> receiverMessage tsyn sbElem" where
+"receiverElemIn_Dr port_dr = (receiverElem_Dr port_dr)"
+
+(* Create one sbElem for all output channels *)
+fun receiverElemOut_Ar_O :: "bool tsyn \<Rightarrow> nat tsyn \<Rightarrow> receiverMessage tsyn sbElem" where
+"receiverElemOut_Ar_O port_ar port_o = (receiverElem_Ar port_ar) \<plusminus> (receiverElem_O port_o)"
+
+(* Create one SB for all input channels *)
+fun receiverIn_Dr :: "(nat\<times>bool) tsyn \<Rightarrow> receiverMessage tsyn SB" where
+"receiverIn_Dr port_dr = (sbe2SB (receiverElemIn_Dr port_dr))"
+
+(* Create one SB for all output channels *)
+fun receiverOut_Ar_O :: "bool tsyn \<Rightarrow> nat tsyn \<Rightarrow> receiverMessage tsyn SB" where
+"receiverOut_Ar_O port_ar port_o = (sbe2SB (receiverElemOut_Ar_O port_ar port_o))"
 
 
 section \<open>Helpers to create a bundle from a tsyn list of elements\<close>
 
-fun createLongDrBundle :: "((nat\<times>bool) tsyn) list \<Rightarrow> receiverMessage tsyn SB" where
-"createLongDrBundle (x#xs) = ubConcEq (createTsynDrBundle x)\<cdot>(createLongDrBundle xs)" |
-"createLongDrBundle []     = ubLeast {\<C> ''dr''}"
+fun receiver_list_Dr :: "((nat\<times>bool) tsyn) list \<Rightarrow> receiverMessage tsyn SB" where
+"receiver_list_Dr (x#xs) = ubConcEq (receiver_Dr x)\<cdot>(receiver_list_Dr xs)" |
+"receiver_list_Dr []     = ubLeast {\<C> ''dr''}"
 
-fun createLongArBundle :: "(bool tsyn) list \<Rightarrow> receiverMessage tsyn SB" where
-"createLongArBundle (x#xs) = ubConcEq (createTsynArBundle x)\<cdot>(createLongArBundle xs)" |
-"createLongArBundle []     = ubLeast {\<C> ''ar''}"
+fun receiver_list_Ar :: "(bool tsyn) list \<Rightarrow> receiverMessage tsyn SB" where
+"receiver_list_Ar (x#xs) = ubConcEq (receiver_Ar x)\<cdot>(receiver_list_Ar xs)" |
+"receiver_list_Ar []     = ubLeast {\<C> ''ar''}"
 
-fun createLongOBundle :: "(nat tsyn) list \<Rightarrow> receiverMessage tsyn SB" where
-"createLongOBundle (x#xs) = ubConcEq (createTsynOBundle x)\<cdot>(createLongOBundle xs)" |
-"createLongOBundle []     = ubLeast {\<C> ''o''}"
+fun receiver_list_O :: "(nat tsyn) list \<Rightarrow> receiverMessage tsyn SB" where
+"receiver_list_O (x#xs) = ubConcEq (receiver_O x)\<cdot>(receiver_list_O xs)" |
+"receiver_list_O []     = ubLeast {\<C> ''o''}"
 
+(* Create one SB for all input channels *)
+fun receiverIn_list_Dr :: "(nat\<times>bool) tsyn list \<Rightarrow> receiverMessage tsyn SB" where
+"receiverIn_list_Dr port_dr = (receiver_list_Dr port_dr)"
 
-section \<open>Lemmas for "createXBundle"\<close>
-
-lemma createDrBundle_dom [simp]: "sbeDom (createDrBundle x) = {\<C> ''dr''}"
-  apply(simp add: sbeDom_def createDrBundle_def)
-  using createDrBundle.abs_eq createDrBundle.rep_eq by auto
-
-lemma createDrBundle_getch [simp]: "(sbe2SB (createDrBundle x)).(\<C> ''dr'') = \<up>(Msg (ReceiverPair_ReceiverNat_ReceiverBool x))"
-  by (simp add: createDrBundle.rep_eq sbe2sb_getch)
-
-lemma createDrBundle_len [simp]: "ubLen (sbe2SB (createDrBundle x)) = Fin 1"
-  apply (subst ubLen_def)
-  apply (simp add: usclLen_stream_def)
-  by (metis (full_types) LeastI)
-
-lemma createArBundle_dom [simp]: "sbeDom (createArBundle x) = {\<C> ''ar''}"
-  apply(simp add: sbeDom_def createArBundle_def)
-  using createArBundle.abs_eq createArBundle.rep_eq by auto
-
-lemma createArBundle_getch [simp]: "(sbe2SB (createArBundle x)).(\<C> ''ar'') = \<up>(Msg (ReceiverBool x))"
-  by (simp add: createArBundle.rep_eq sbe2sb_getch)
-
-lemma createArBundle_len [simp]: "ubLen (sbe2SB (createArBundle x)) = Fin 1"
-  apply (subst ubLen_def)
-  apply (simp add: usclLen_stream_def)
-  by (metis (full_types) LeastI)
-
-lemma createOBundle_dom [simp]: "sbeDom (createOBundle x) = {\<C> ''o''}"
-  apply(simp add: sbeDom_def createOBundle_def)
-  using createOBundle.abs_eq createOBundle.rep_eq by auto
-
-lemma createOBundle_getch [simp]: "(sbe2SB (createOBundle x)).(\<C> ''o'') = \<up>(Msg (ReceiverNat x))"
-  by (simp add: createOBundle.rep_eq sbe2sb_getch)
-
-lemma createOBundle_len [simp]: "ubLen (sbe2SB (createOBundle x)) = Fin 1"
-  apply (subst ubLen_def)
-  apply (simp add: usclLen_stream_def)
-  by (metis (full_types) LeastI)
+(* Create one SB for all output channels *)
+fun receiverOut_list_Ar_O :: "bool tsyn list \<Rightarrow> nat tsyn list \<Rightarrow> receiverMessage tsyn SB" where
+"receiverOut_list_Ar_O port_ar port_o = (receiver_list_Ar port_ar) \<uplus> (receiver_list_O port_o)"
 
 
-section \<open>Lemmas for "createTsynXBundle"\<close>
+section \<open>Helpers to create a bundle from a tsyn stream of elements\<close>
 
-lemma createTsynDrBundle_dom [simp]: "ubDom\<cdot>(createTsynDrBundle x) = {\<C> ''dr''}"
-  by (cases x, simp_all add: createTsynDrBundle.simps)
+definition receiver_stream_Dr :: "((nat\<times>bool)) tsyn stream \<Rightarrow> receiverMessage tsyn SB" where
+"receiver_stream_Dr = undefined"
 
-lemma createTsynDrBundle_len [simp]: "ubLen (sbe2DB (createTsynDrBundle x)) = Fin 1"
-  apply (cases x, simp_all)
-  oops
+definition receiver_stream_Ar :: "(bool) tsyn stream \<Rightarrow> receiverMessage tsyn SB" where
+"receiver_stream_Ar = undefined"
 
-lemma createTsynArBundle_dom [simp]: "ubDom\<cdot>(createTsynArBundle x) = {\<C> ''ar''}"
-  by (cases x, simp_all add: createTsynArBundle.simps)
+definition receiver_stream_O :: "(nat) tsyn stream \<Rightarrow> receiverMessage tsyn SB" where
+"receiver_stream_O = undefined"
 
-lemma createTsynArBundle_len [simp]: "ubLen (sbe2DB (createTsynArBundle x)) = Fin 1"
-  apply (cases x, simp_all)
-  oops
+(* Create one SB for all input channels *)
+fun receiverIn_stream_Dr :: "(nat\<times>bool) tsyn stream \<Rightarrow> receiverMessage tsyn SB" where
+"receiverIn_stream_Dr port_dr = (receiver_stream_Dr port_dr)"
 
-lemma createTsynOBundle_dom [simp]: "ubDom\<cdot>(createTsynOBundle x) = {\<C> ''o''}"
-  by (cases x, simp_all add: createTsynOBundle.simps)
-
-lemma createTsynOBundle_len [simp]: "ubLen (sbe2DB (createTsynOBundle x)) = Fin 1"
-  apply (cases x, simp_all)
-  oops
+(* Create one SB for all output channels *)
+fun receiverOut_stream_Ar_O :: "bool tsyn stream \<Rightarrow> nat tsyn stream \<Rightarrow> receiverMessage tsyn SB" where
+"receiverOut_stream_Ar_O port_ar port_o = (receiver_stream_Ar port_ar) \<uplus> (receiver_stream_O port_o)"
 
 
-section \<open>Lemmas for "createLongXBundle"\<close>
+section \<open>Helpers to get tsyn elements and streams from sbElems and SBs\<close>
 
-lemma createLongDrBundle_dom [simp]: "ubDom\<cdot>(createLongDrBundle xs) = {\<C> ''dr''}"
-  proof (induction xs)
-    case Nil then show ?case by simp
-  next
-    case (Cons a _)
-      then show ?case
-        proof (cases a)
-          case (Msg _) then show ?thesis by (simp add: Cons.IH)
-        next
-          case null then show ?thesis by (simp add: Cons.IH)
-        qed
-  qed
+fun receiverElem_get_Dr :: "receiverMessage tsyn sbElem \<Rightarrow> ((nat\<times>bool)) tsyn" where
+"receiverElem_get_Dr sbe = undefined"
 
-lemma createLongDrBundle_len [simp]: "ubLen (createLongDrBundle xs) = Fin (length xs)"
-  oops
+fun receiverElem_get_stream_Dr :: "receiverMessage tsyn SB \<Rightarrow> ((nat\<times>bool)) tsyn stream" where
+"receiverElem_get_stream_Dr sb = undefined"
 
-lemma createLongArBundle_dom [simp]: "ubDom\<cdot>(createLongArBundle xs) = {\<C> ''ar''}"
-  proof (induction xs)
-    case Nil then show ?case by simp
-  next
-    case (Cons a _)
-      then show ?case
-        proof (cases a)
-          case (Msg _) then show ?thesis by (simp add: Cons.IH)
-        next
-          case null then show ?thesis by (simp add: Cons.IH)
-        qed
-  qed
+fun receiverElem_get_Ar :: "receiverMessage tsyn sbElem \<Rightarrow> (bool) tsyn" where
+"receiverElem_get_Ar sbe = undefined"
 
-lemma createLongArBundle_len [simp]: "ubLen (createLongArBundle xs) = Fin (length xs)"
-  oops
+fun receiverElem_get_stream_Ar :: "receiverMessage tsyn SB \<Rightarrow> (bool) tsyn stream" where
+"receiverElem_get_stream_Ar sb = undefined"
 
-lemma createLongOBundle_dom [simp]: "ubDom\<cdot>(createLongOBundle xs) = {\<C> ''o''}"
-  proof (induction xs)
-    case Nil then show ?case by simp
-  next
-    case (Cons a _)
-      then show ?case
-        proof (cases a)
-          case (Msg _) then show ?thesis by (simp add: Cons.IH)
-        next
-          case null then show ?thesis by (simp add: Cons.IH)
-        qed
-  qed
+fun receiverElem_get_O :: "receiverMessage tsyn sbElem \<Rightarrow> (nat) tsyn" where
+"receiverElem_get_O sbe = undefined"
 
-lemma createLongOBundle_len [simp]: "ubLen (createLongOBundle xs) = Fin (length xs)"
-  oops
+fun receiverElem_get_stream_O :: "receiverMessage tsyn SB \<Rightarrow> (nat) tsyn stream" where
+"receiverElem_get_stream_O sb = undefined"
+
+
 
 
 section \<open>Automaton definition\<close>
@@ -230,31 +177,39 @@ fun getReceiverSubState :: "ReceiverState \<Rightarrow> ReceiverSubstate" where
 "getReceiverSubState (ReceiverState s ) = s"
 
 (* Helper that allows us to utilize pattern matching *)
-fun receiverTransitionH :: "(ReceiverState \<times> (receiverMessage tsyn)) \<Rightarrow> (ReceiverState \<times> receiverMessage tsyn SB)" where
-"receiverTransitionH (ReceiverState Rf, (\<^cancel>\<open>dr\<mapsto>\<close>Msg (ReceiverPair_ReceiverNat_ReceiverBool port_dr))) =
-  (if((snd port_dr)=True) then ((ReceiverState Rf, (sbe2SB (createArBundle (True)) \<uplus> tsynbNull (\<C> ''o''))))
-   else if((snd port_dr)=False) then ((ReceiverState Rt, (sbe2SB (createArBundle (False)) \<uplus> sbe2SB (createOBundle ((fst port_dr))))))
-   else (ReceiverState Rf, (tsynbNull (\<C> ''ar'') \<uplus> tsynbNull (\<C> ''o''))))" |
+fun receiverTransitionH :: "(ReceiverState \<times> ((nat\<times>bool) tsyn)) \<Rightarrow> (ReceiverState \<times> receiverMessage tsyn SB)" where
+"receiverTransitionH (ReceiverState Rf, (\<^cancel>\<open>dr\<mapsto>\<close>Msg port_dr)) =
+  (if((snd port_dr)=True) then ((ReceiverState Rf, (receiverOut_Ar_O (Msg (True)) null)))
+   else if((snd port_dr)=False) then ((ReceiverState Rt, (receiverOut_Ar_O (Msg (False)) (Msg ((fst port_dr))))))
+   else (ReceiverState Rf, (receiverOut_Ar_O null null)))" |
 
 "receiverTransitionH (ReceiverState Rf, (\<^cancel>\<open>dr\<mapsto>\<close>null)) =
-  (ReceiverState Rf, (tsynbNull (\<C> ''ar'') \<uplus> tsynbNull (\<C> ''o'')))" |
+  (ReceiverState Rf, (receiverOut_Ar_O null null))" |
 
-"receiverTransitionH (ReceiverState Rt, (\<^cancel>\<open>dr\<mapsto>\<close>Msg (ReceiverPair_ReceiverNat_ReceiverBool port_dr))) =
-  (if((snd port_dr)=True) then ((ReceiverState Rf, (sbe2SB (createArBundle (True)) \<uplus> sbe2SB (createOBundle ((fst port_dr))))))
-   else if((snd port_dr)=False) then ((ReceiverState Rt, (sbe2SB (createArBundle (False)) \<uplus> tsynbNull (\<C> ''o''))))
-   else (ReceiverState Rt, (tsynbNull (\<C> ''ar'') \<uplus> tsynbNull (\<C> ''o''))))" |
+"receiverTransitionH (ReceiverState Rt, (\<^cancel>\<open>dr\<mapsto>\<close>Msg port_dr)) =
+  (if((snd port_dr)=True) then ((ReceiverState Rf, (receiverOut_Ar_O (Msg (True)) (Msg ((fst port_dr))))))
+   else if((snd port_dr)=False) then ((ReceiverState Rt, (receiverOut_Ar_O (Msg (False)) null)))
+   else (ReceiverState Rt, (receiverOut_Ar_O null null)))" |
 
 "receiverTransitionH (ReceiverState Rt, (\<^cancel>\<open>dr\<mapsto>\<close>null)) =
-  (ReceiverState Rt, (tsynbNull (\<C> ''ar'') \<uplus> tsynbNull (\<C> ''o'')))"
+  (ReceiverState Rt, (receiverOut_Ar_O null null))"
+
+(* Domain *)
+definition receiverDom :: "channel set" where
+"receiverDom = {\<C> ''dr''}"
+
+(* Range *)
+definition receiverRan :: "channel set" where
+"receiverRan = {\<C> ''ar'', \<C> ''o''}"
 
 (* Transition function *)
 fun receiverTransition :: "(ReceiverState \<times> receiverMessage tsyn sbElem) \<Rightarrow> (ReceiverState \<times> receiverMessage tsyn SB)" where
-"receiverTransition (s,b) = (if (sbeDom b) = {\<C> ''dr''} then receiverTransitionH (s, (Rep_sbElem b\<rightharpoonup>\<C> ''dr'')) else undefined)"
+"receiverTransition (s,b) = (if (sbeDom b) = receiverDom then receiverTransitionH (s, (receiverElem_get_Dr b)) else undefined)"
 
 (* The final automaton *)
 lift_definition ReceiverAutomaton :: "(ReceiverState, receiverMessage tsyn) dAutomaton" is
-"(receiverTransition, ReceiverState Rt , tsynbNull (\<C> ''ar'') \<uplus> tsynbNull (\<C> ''o''), {\<C> ''dr''}, {\<C> ''ar'', \<C> ''o''})"
-  by simp
+"(receiverTransition, ReceiverState Rt , (receiverOut_Ar_O null null), receiverDom, receiverRan)"
+  by (simp add: receiverDom_def receiverRan_def)
 
 (* Stream processing function for each state (handy for step lemmata) *)
 definition ReceiverStep :: "(ReceiverState \<Rightarrow> (receiverMessage tsyn, receiverMessage tsyn) SPF)" where
@@ -270,43 +225,43 @@ section \<open>Step-wise lemmata for the transition function\<close>
 (* Line 18:  Rf -> Rf [dr.snd=true] / {ar=true}; *)
 lemma transition_0_0:
   assumes "(snd port_dr)=True"
-    shows "receiverTransition ((ReceiverState Rf ), (createSbElem_Dr (Msg port_dr)))
-         = (ReceiverState Rf, (sbe2SB (createArBundle (True)) \<uplus> tsynbNull (\<C> ''o'')))"
+    shows "receiverTransition ((ReceiverState Rf ), (receiverElemIn_Dr (Msg port_dr)))
+         = (ReceiverState Rf, (receiverOut_Ar_O (Msg (True)) null))"
   oops
 
 (* Line 19:  Rf -> Rt [dr.snd=false] / {ar=false, o=dr.fst}; *)
 lemma transition_0_1:
   assumes "(snd port_dr)=False"
-    shows "receiverTransition ((ReceiverState Rf ), (createSbElem_Dr (Msg port_dr)))
-         = (ReceiverState Rt, (sbe2SB (createArBundle (False)) \<uplus> sbe2SB (createOBundle ((fst port_dr)))))"
+    shows "receiverTransition ((ReceiverState Rf ), (receiverElemIn_Dr (Msg port_dr)))
+         = (ReceiverState Rt, (receiverOut_Ar_O (Msg (False)) (Msg ((fst port_dr)))))"
   oops
 
 (* Line 17:  Rf -> Rf {dr==null}; *)
 lemma transition_1_0:
   assumes "True"
-    shows "receiverTransition ((ReceiverState Rf ), (createSbElem_Dr null))
-         = (ReceiverState Rf, (tsynbNull (\<C> ''ar'') \<uplus> tsynbNull (\<C> ''o'')))"
+    shows "receiverTransition ((ReceiverState Rf ), (receiverElemIn_Dr null))
+         = (ReceiverState Rf, (receiverOut_Ar_O null null))"
   oops
 
 (* Line 14:  Rt -> Rf [dr.snd=true] / {o=dr.fst, ar=true}; *)
 lemma transition_2_0:
   assumes "(snd port_dr)=True"
-    shows "receiverTransition ((ReceiverState Rt ), (createSbElem_Dr (Msg port_dr)))
-         = (ReceiverState Rf, (sbe2SB (createArBundle (True)) \<uplus> sbe2SB (createOBundle ((fst port_dr)))))"
+    shows "receiverTransition ((ReceiverState Rt ), (receiverElemIn_Dr (Msg port_dr)))
+         = (ReceiverState Rf, (receiverOut_Ar_O (Msg (True)) (Msg ((fst port_dr)))))"
   oops
 
 (* Line 15:  Rt -> Rt [dr.snd=false] / {ar=false}; *)
 lemma transition_2_1:
   assumes "(snd port_dr)=False"
-    shows "receiverTransition ((ReceiverState Rt ), (createSbElem_Dr (Msg port_dr)))
-         = (ReceiverState Rt, (sbe2SB (createArBundle (False)) \<uplus> tsynbNull (\<C> ''o'')))"
+    shows "receiverTransition ((ReceiverState Rt ), (receiverElemIn_Dr (Msg port_dr)))
+         = (ReceiverState Rt, (receiverOut_Ar_O (Msg (False)) null))"
   oops
 
 (* Line 16:  Rt -> Rt {dr==null}; *)
 lemma transition_3_0:
   assumes "True"
-    shows "receiverTransition ((ReceiverState Rt ), (createSbElem_Dr null))
-         = (ReceiverState Rt, (tsynbNull (\<C> ''ar'') \<uplus> tsynbNull (\<C> ''o'')))"
+    shows "receiverTransition ((ReceiverState Rt ), (receiverElemIn_Dr null))
+         = (ReceiverState Rt, (receiverOut_Ar_O null null))"
   oops
 
 
@@ -315,43 +270,43 @@ section \<open>Step-wise lemmata for the SPF\<close>
 (* Line 18:  Rf -> Rf [dr.snd=true] / {ar=true}; *)
 lemma step_0_0:
   assumes "(snd port_dr)=True"
-    shows "spfConcIn  (createBundle_Dr (Msg port_dr))\<cdot>(da_h ReceiverAutomaton (ReceiverState Rf ))
-         = spfConcOut (sbe2SB (createArBundle (True)) \<uplus> tsynbNull (\<C> ''o''))\<cdot>(da_h ReceiverAutomaton (ReceiverState Rf))"
+    shows "spfConcIn  (receiverIn_Dr (Msg port_dr))\<cdot>(ReceiverStep (ReceiverState Rf ))
+         = spfConcOut (receiverOut_Ar_O (Msg (True)) null)\<cdot>(ReceiverStep (ReceiverState Rf))"
   oops
 
 (* Line 19:  Rf -> Rt [dr.snd=false] / {ar=false, o=dr.fst}; *)
 lemma step_0_1:
   assumes "(snd port_dr)=False"
-    shows "spfConcIn  (createBundle_Dr (Msg port_dr))\<cdot>(da_h ReceiverAutomaton (ReceiverState Rf ))
-         = spfConcOut (sbe2SB (createArBundle (False)) \<uplus> sbe2SB (createOBundle ((fst port_dr))))\<cdot>(da_h ReceiverAutomaton (ReceiverState Rt))"
+    shows "spfConcIn  (receiverIn_Dr (Msg port_dr))\<cdot>(ReceiverStep (ReceiverState Rf ))
+         = spfConcOut (receiverOut_Ar_O (Msg (False)) (Msg ((fst port_dr))))\<cdot>(ReceiverStep (ReceiverState Rt))"
   oops
 
 (* Line 17:  Rf -> Rf {dr==null}; *)
 lemma step_1_0:
   assumes "True"
-    shows "spfConcIn  (createBundle_Dr null)\<cdot>(da_h ReceiverAutomaton (ReceiverState Rf ))
-         = spfConcOut (tsynbNull (\<C> ''ar'') \<uplus> tsynbNull (\<C> ''o''))\<cdot>(da_h ReceiverAutomaton (ReceiverState Rf))"
+    shows "spfConcIn  (receiverIn_Dr null)\<cdot>(ReceiverStep (ReceiverState Rf ))
+         = spfConcOut (receiverOut_Ar_O null null)\<cdot>(ReceiverStep (ReceiverState Rf))"
   oops
 
 (* Line 14:  Rt -> Rf [dr.snd=true] / {o=dr.fst, ar=true}; *)
 lemma step_2_0:
   assumes "(snd port_dr)=True"
-    shows "spfConcIn  (createBundle_Dr (Msg port_dr))\<cdot>(da_h ReceiverAutomaton (ReceiverState Rt ))
-         = spfConcOut (sbe2SB (createArBundle (True)) \<uplus> sbe2SB (createOBundle ((fst port_dr))))\<cdot>(da_h ReceiverAutomaton (ReceiverState Rf))"
+    shows "spfConcIn  (receiverIn_Dr (Msg port_dr))\<cdot>(ReceiverStep (ReceiverState Rt ))
+         = spfConcOut (receiverOut_Ar_O (Msg (True)) (Msg ((fst port_dr))))\<cdot>(ReceiverStep (ReceiverState Rf))"
   oops
 
 (* Line 15:  Rt -> Rt [dr.snd=false] / {ar=false}; *)
 lemma step_2_1:
   assumes "(snd port_dr)=False"
-    shows "spfConcIn  (createBundle_Dr (Msg port_dr))\<cdot>(da_h ReceiverAutomaton (ReceiverState Rt ))
-         = spfConcOut (sbe2SB (createArBundle (False)) \<uplus> tsynbNull (\<C> ''o''))\<cdot>(da_h ReceiverAutomaton (ReceiverState Rt))"
+    shows "spfConcIn  (receiverIn_Dr (Msg port_dr))\<cdot>(ReceiverStep (ReceiverState Rt ))
+         = spfConcOut (receiverOut_Ar_O (Msg (False)) null)\<cdot>(ReceiverStep (ReceiverState Rt))"
   oops
 
 (* Line 16:  Rt -> Rt {dr==null}; *)
 lemma step_3_0:
   assumes "True"
-    shows "spfConcIn  (createBundle_Dr null)\<cdot>(da_h ReceiverAutomaton (ReceiverState Rt ))
-         = spfConcOut (tsynbNull (\<C> ''ar'') \<uplus> tsynbNull (\<C> ''o''))\<cdot>(da_h ReceiverAutomaton (ReceiverState Rt))"
+    shows "spfConcIn  (receiverIn_Dr null)\<cdot>(ReceiverStep (ReceiverState Rt ))
+         = spfConcOut (receiverOut_Ar_O null null)\<cdot>(ReceiverStep (ReceiverState Rt))"
   oops
 
 

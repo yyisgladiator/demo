@@ -33,7 +33,11 @@ lift_definition sbe2SB::"'a::message sbElem \<Rightarrow> 'a SB" is
   apply simp
   using Rep_sbElem sbElemWell_def by auto
 
+definition sbeUnion :: "'a::message sbElem \<Rightarrow> 'a sbElem \<Rightarrow> 'a sbElem" where
+"sbeUnion = undefined"
 
+abbreviation sbeUnion_abbr :: "'a::message sbElem \<Rightarrow> 'a sbElem \<Rightarrow> 'a sbElem" (infixl "\<plusminus>" 100) where 
+"a \<plusminus> b \<equiv> sbeUnion a b"
 
 section \<open>Lemma\<close>
 
