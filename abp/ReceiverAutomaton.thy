@@ -305,6 +305,19 @@ lemma receiverout_ar_o_dom[simp]: "ubDom\<cdot>(receiverOut_ar_o port_ar port_o)
 
 section \<open>Lemmas for getter\<close>
 
+(* SWS: die getter-id-lemma auch für die multi-parameter Version *)
+lemma SWSexample[simp]: "receiver_get_stream_ar\<cdot>(receiverOut_ar_o port_ar port_o) = \<up>port_ar"
+  sorry
+lemma SWSexample2[simp]: "receiver_get_stream_ar\<cdot>(receiverOut_stream_ar_o\<cdot>port_ar\<cdot>port_o) = port_ar"
+  sorry
+lemma SWSexample3[simp]: "receiver_get_stream_ar\<cdot>(receiverOut_list_ar_o port_ar port_o) = <port_ar>"
+  sorry
+lemma SWSexample4[simp]: "receiverElem_get_ar (receiverElemOut_ar_o port_ar port_o) = port_ar"
+  sorry
+(* SWS: End Example *)
+
+
+
 lemma receiverelem_dr_id[simp]: "receiverElem_get_dr (receiverElem_dr port_dr) = port_dr"
   sorry
 
