@@ -33,9 +33,19 @@ lift_definition sbe2SB::"'a::message sbElem \<Rightarrow> 'a SB" is
   apply simp
   using Rep_sbElem sbElemWell_def by auto
 
+lift_definition sbeUnion ::"'a sbElem \<Rightarrow> 'a sbElem \<Rightarrow> 'a sbElem" (infixl "\<plusminus>" 100) is
+"\<lambda> l r. ((Rep_sbElem l) ++ (Rep_sbElem r))"
+ unfolding sbElemWell_def usclOkay_stream_def ctype_tsyn_def
+  by (metis Rep_sbElem domIff map_add_dom_app_simps(1) map_add_dom_app_simps(3) mem_Collect_eq sbElemWellI)
+ 
 
 
 section \<open>Lemma\<close>
+
+lemma sbe_eq: assumes "sbeDom sbe1 = sbeDom sbe2"
+  and "\<And>c. c\<in>sbeDom sbe1 \<Longrightarrow> (Rep_sbElem sbe1)\<rightharpoonup>c =  (Rep_sbElem sbe2)\<rightharpoonup>c"
+  shows "sbe1 = sbe2"
+  by (metis Rep_sbElem_inject assms(1) assms(2) part_eq sbeDom_def)
 
 subsection \<open>sbe2SB\<close>
 
@@ -83,6 +93,27 @@ lemma sbe2sb_rt[simp]:"ubDom\<cdot>sb = sbeDom sbe \<Longrightarrow> sbRt\<cdot>
 
 lemma sbedom_null[simp]: "sbeDom (sbeNull cs) = cs"
   by(simp add: sbeDom_def sbeNull.rep_eq)
+
+
+
+
+subsection \<open>sbeUnion\<close>
+
+lemma sbeunion_dom [simp]: "sbeDom (sbe1 \<plusminus> sbe2) = sbeDom sbe1 \<union> sbeDom sbe2"
+  unfolding sbeDom_def sbeUnion.rep_eq
+  by (simp add: Un_commute)
+
+lemma sbeunion_2sb: "sbe2SB (sbe1 \<plusminus> sbe2) = (ubUnion\<cdot>(sbe2SB sbe1)\<cdot>(sbe2SB sbe2))"
+  apply(rule ub_eq)
+  apply simp_all
+  by (smt Un_iff domD map_add_dom_app_simps(3) map_add_find_right sbe2sb_dom sbe2sb_getch sbeDom_def sbeUnion.rep_eq sbeunion_dom ubunion_getchL ubunion_getchR)
+
+lemma sbeunion_null: "(sbeNull cs1) \<plusminus> (sbeNull cs2) = sbeNull (cs1 \<union> cs2)"
+  apply(rule sbe_eq)
+   apply simp_all
+  unfolding sbeUnion.rep_eq sbeNull.rep_eq
+  apply auto
+  by (simp add: map_add_def)
 
 
 end
