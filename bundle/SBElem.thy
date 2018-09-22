@@ -39,6 +39,8 @@ lift_definition sbeUnion ::"'a sbElem \<Rightarrow> 'a sbElem \<Rightarrow> 'a s
   by (metis Rep_sbElem domIff map_add_dom_app_simps(1) map_add_dom_app_simps(3) mem_Collect_eq sbElemWellI)
  
 
+abbreviation sbeUnion_abbr :: "'a::message sbElem \<Rightarrow> 'a sbElem \<Rightarrow> 'a sbElem" (infixl "\<plusminus>" 100) where 
+"a \<plusminus> b \<equiv> sbeUnion a b"
 
 section \<open>Lemma\<close>
 
