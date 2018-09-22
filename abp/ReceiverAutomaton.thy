@@ -10,17 +10,8 @@ theory ReceiverAutomaton
 
 begin
 
+(* SWS: I moved that stuff *)
 
-(* TODO SWS: Move this to dAutomaton *)
-lemma da_h_stepI:
-  assumes "sbeDom sbe = daDom da"
-      and "(daNextOutput da s sbe) = out"
-      and "(daNextState da s sbe) = nextState"
-  shows "spfConcIn (sbe2SB sbe)\<cdot>(da_h da s) = spfConcOut out\<cdot>(da_h da nextState)"
-  by (metis (no_types) assms da_h_dom da_h_final_h3 spfConcIn_dom spfConcIn_step spfConcOut_dom spf_eq)
-
-(* TODO SWS: Move this to...? *)
-setup_lifting type_definition_cfun
 
 (* Helper for easier generation *)
 fun prepend :: "'a::type list \<Rightarrow> 'a \<Rightarrow> 'a list" where
@@ -145,8 +136,7 @@ section \<open>Helpers to create a bundle from a tsyn stream of elements\<close>
 lift_definition receiver_stream_dr_h :: "(nat\<times>bool) tsyn stream \<Rightarrow> receiverMessage tsyn SB" is
 "\<lambda> s. [(\<C> ''dr'') \<mapsto> (tsynMap (ReceiverPair_ReceiverNat_ReceiverBool)\<cdot>s)]"
   unfolding ubWell_def usclOkay_stream_def ctype_tsyn_def
-  apply auto
-  sorry
+  by auto (* SWS: Beweis fertig *)
 
 lift_definition receiver_stream_dr :: "((nat\<times>bool)) tsyn stream \<rightarrow> receiverMessage tsyn SB" is
 "receiver_stream_dr_h"
@@ -155,8 +145,7 @@ lift_definition receiver_stream_dr :: "((nat\<times>bool)) tsyn stream \<rightar
 lift_definition receiver_stream_ar_h :: "bool tsyn stream \<Rightarrow> receiverMessage tsyn SB" is
 "\<lambda> s. [(\<C> ''ar'') \<mapsto> (tsynMap (ReceiverBool)\<cdot>s)]"
   unfolding ubWell_def usclOkay_stream_def ctype_tsyn_def
-  apply auto
-  sorry
+  by auto
 
 lift_definition receiver_stream_ar :: "(bool) tsyn stream \<rightarrow> receiverMessage tsyn SB" is
 "receiver_stream_ar_h"
@@ -183,15 +172,17 @@ definition receiverOut_stream_ar_o :: "bool tsyn stream \<rightarrow> nat tsyn s
 
 section \<open>Helpers to get tsyn elements and streams from sbElems and SBs\<close>
 
-fun receiverElem_get_dr :: "receiverMessage tsyn sbElem \<Rightarrow> ((nat\<times>bool)) tsyn" where
-"receiverElem_get_dr sbe = undefined"
+(* SWS: implemented Body, make this a "definition" *)
+definition receiverElem_get_dr :: "receiverMessage tsyn sbElem \<Rightarrow> ((nat\<times>bool)) tsyn" where
+"receiverElem_get_dr sbe = tsynApplyElem (inv ReceiverPair_ReceiverNat_ReceiverBool) ((Rep_sbElem sbe) \<rightharpoonup> (\<C> ''dr''))"
 
 lift_definition receiver_get_stream_dr :: "receiverMessage tsyn SB \<rightarrow> (nat\<times>bool) tsyn stream" is
 "\<lambda>sb. tsynMap (inv ReceiverPair_ReceiverNat_ReceiverBool)\<cdot>(sb . (\<C> ''dr''))"
   by(simp add: cfun_def)
 
-fun receiverElem_get_ar :: "receiverMessage tsyn sbElem \<Rightarrow> (bool) tsyn" where
-"receiverElem_get_ar sbe = undefined"
+(* SWS: implemented Body, make this a "definition" *)
+definition receiverElem_get_ar :: "receiverMessage tsyn sbElem \<Rightarrow> (bool) tsyn" where
+"receiverElem_get_ar sbe = tsynApplyElem (inv ReceiverBool) ((Rep_sbElem sbe) \<rightharpoonup> (\<C> ''ar''))"
 
 lift_definition receiver_get_stream_ar :: "receiverMessage tsyn SB \<rightarrow> bool tsyn stream" is
 "\<lambda>sb. tsynMap (inv ReceiverBool)\<cdot>(sb . (\<C> ''ar''))"
@@ -293,19 +284,33 @@ lemma receiverautomaton_ran[simp]: "daRan receiverAutomaton = receiverRan"
   by(simp add: receiverAutomaton.rep_eq)
 
 
+
 section \<open>Lemmas for single tsyn setter\<close>
 
-lemma receiverelemin_dr_dom[simp]: "sbeDom (receiverElemIn_dr port_dr) = receiverDom"
+(* SWS: Ich brauche das leider auch über die individuelle channels *)
+lemma receiverelem_dr_dom[simp]: "sbeDom (receiverElem_dr port_dr) = {\<C> ''dr''}"
+  apply(cases port_dr)
+   apply(simp add: receiverElem_dr.simps sbeDom_def receiverElem_raw_dr.rep_eq)
+  by(simp add: receiverElem_dr.simps)
+lemma receiverelem_ar_dom[simp]: "sbeDom (receiverElem_ar port_ar) = {\<C> ''ar''}"
   sorry
+lemma receiverelem_o_dom[simp]: "sbeDom (receiverElem_o port_o) = {\<C> ''o''}"
+  sorry
+
+
+(* SWS: Beweis implemented *)
+lemma receiverelemin_dr_dom[simp]: "sbeDom (receiverElemIn_dr port_dr) = receiverDom"
+  by(auto simp add: receiverElemIn_dr_def receiverDom_def)
 
 lemma receiverelemout_ar_o_dom[simp]: "sbeDom (receiverElemOut_ar_o port_ar port_o) = receiverRan"
-  sorry
+  by(auto simp add: receiverElemOut_ar_o_def receiverRan_def)
 
+(* SWS: Beweis implemented *)
 lemma receiverin_dr_dom[simp]: "ubDom\<cdot>(receiverIn_dr port_dr) = receiverDom"
-  sorry
+  by(simp add: receiverIn_dr_def)
 
 lemma receiverout_ar_o_dom[simp]: "ubDom\<cdot>(receiverOut_ar_o port_ar port_o) = receiverRan"
-  sorry
+  by(simp add: receiverOut_ar_o_def)
 
 
 section \<open>Lemmas for getter\<close>
@@ -313,7 +318,12 @@ section \<open>Lemmas for getter\<close>
 subsection \<open>Identity lemmas for single sbElems\<close>
 
 lemma receiverelem_dr_id[simp]: "receiverElem_get_dr (receiverElem_dr port_dr) = port_dr"
-  sorry
+  apply(cases port_dr)
+  apply(auto simp add: receiverElem_dr.simps)
+  unfolding receiverElem_get_dr_def receiverElem_raw_dr.rep_eq
+  apply simp
+  apply (meson f_inv_into_f rangeI receiverMessage.inject) (*SWS: kp ob das hier immer klappt, kommt von sledgi *)
+  by(simp add: sbeNull.rep_eq)
 
 lemma receiverelem_ar_id[simp]: "receiverElem_get_ar (receiverElem_ar port_ar) = port_ar"
   sorry
@@ -336,15 +346,19 @@ lemma receiver_stream_o_id[simp]: "receiver_get_stream_o\<cdot>(receiver_stream_
 
 subsection \<open>Identity lemmas for input sbElems\<close>
 
+(* SWS: This case is simple and works because it is only one channel. *)
 lemma receiverelemin_dr_dr_id[simp]: "receiverElem_get_dr (receiverElemIn_dr port_dr) = port_dr"
-  sorry
+   by(auto simp add: receiverElemIn_dr_def)
+
 
 
 subsection \<open>Identity lemmas for output sbElems\<close>
 
+(* SWS: The 2 channel version is more difficult... Can you create a 3-channel version? *)
 lemma receiverelemout_ar_o_ar_id[simp]: "receiverElem_get_ar (receiverElemOut_ar_o port_ar port_o) = port_ar"
-  sorry
+  using receiverElem_get_ar_def receiverelem_ar_id by(auto simp add: receiverElemOut_ar_o_def)
 
+(* SWS: Kann sein, dass das hier nochmal anders zu beweisen ist*)
 lemma receiverelemout_ar_o_o_id[simp]: "receiverElem_get_o (receiverElemOut_ar_o port_ar port_o) = port_o"
   sorry
 
@@ -352,7 +366,15 @@ lemma receiverelemout_ar_o_o_id[simp]: "receiverElem_get_o (receiverElemOut_ar_o
 subsection \<open>Identity lemmas for input SBs\<close>
 
 lemma receiverin_dr_dr_id[simp]: "receiver_get_stream_dr\<cdot>(receiverIn_dr port_dr) = \<up>port_dr"
-  sorry
+  apply(simp add: receiver_get_stream_dr_def receiverIn_dr_def)
+  apply(subst sbe2sb_getch)
+   apply(auto simp add: receiverDom_def receiverElemIn_dr_def)
+  apply(cases port_dr) (* SWS: das ist exakt "receiverelem_dr_id" Beweis kopiert... finde ich auch scheiße... sollte besser gehen *)
+  apply(auto simp add: receiverElem_dr.simps)
+  unfolding receiverElem_get_dr_def receiverElem_raw_dr.rep_eq
+   apply auto
+  apply (meson f_inv_into_f rangeI receiverMessage.inject(1))
+  by(simp add: sbeNull.rep_eq)
 
 
 subsection \<open>Identity lemmas for output SBs\<close>
@@ -401,16 +423,15 @@ lemma receiverTransition_0_0[simp]:
   assumes "(snd port_dr)=True"
     shows "receiverTransition ((ReceiverState Rf ), (receiverElemIn_dr (Msg port_dr)))
          = (ReceiverState Rf, (receiverOut_ar_o (Msg (True)) null))"
-  apply(simp add: receiverTransition_def)
-  sorry
+  by(simp add: receiverTransition_def assms) (* SWS: Beweis implementiert *)
 
 (* Line 19:  Rf -> Rt [dr.snd=false] / {ar=false, o=dr.fst}; *)
 lemma receiverTransition_0_1[simp]:
   assumes "(snd port_dr)=False"
     shows "receiverTransition ((ReceiverState Rf ), (receiverElemIn_dr (Msg port_dr)))
          = (ReceiverState Rt, (receiverOut_ar_o (Msg (False)) (Msg ((fst port_dr)))))"
-  apply(simp add: receiverTransition_def)
-  sorry
+  by(simp add: receiverTransition_def assms)
+  
 
 (* Line 17:  Rf -> Rf {dr==null}; *)
 lemma receiverTransition_1_0[simp]:
@@ -448,8 +469,9 @@ lemma receiverTransition_3_0[simp]:
 section \<open>Step-wise lemmata for the SPF\<close>
 
 (* Convert the SPF to step notation *)
+(* SWS: Beweis implementiert *)
 lemma receiverSpf2Step: "receiverSPF = spfConcOut (receiverOut_ar_o null null)\<cdot>(receiverStep (ReceiverState Rt ))"
-  sorry
+  by(simp add: receiverSPF_def da_H_def receiverInitialOutput_def receiverInitialState_def receiverStep_def)
 
 (* Line 18:  Rf -> Rf [dr.snd=true] / {ar=true}; *)
 lemma receiverStep_0_0:

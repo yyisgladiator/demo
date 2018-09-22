@@ -54,7 +54,7 @@ lemma sbe2sb_dom [simp]: "ubDom\<cdot>(sbe2SB sbe) = sbeDom sbe"
 lemma sbe2sb_nbot: "\<And>c. c\<in>sbeDom sbe \<Longrightarrow> (sbe2SB sbe) . c \<noteq> \<epsilon>"
   by(simp add: ubgetch_insert sbe2SB.rep_eq sbeDom_def)
 
-lemma sbe2sb_getch: "c\<in>sbeDom sbe \<Longrightarrow> ((sbe2SB sbe)  .  c) = \<up>((Rep_sbElem sbe) \<rightharpoonup> c)"
+lemma sbe2sb_getch[simp]: "c\<in>sbeDom sbe \<Longrightarrow> ((sbe2SB sbe)  .  c) = \<up>((Rep_sbElem sbe) \<rightharpoonup> c)"
   unfolding ubgetch_insert sbe2SB.rep_eq
   apply auto
   done
@@ -114,5 +114,10 @@ lemma sbeunion_null: "(sbeNull cs1) \<plusminus> (sbeNull cs2) = sbeNull (cs1 \<
   apply auto
   by (simp add: map_add_def)
 
+lemma sbeunion_second[simp]: "c\<in>sbeDom sbe2 \<Longrightarrow> (Rep_sbElem (sbe1 \<plusminus> sbe2) ) \<rightharpoonup> c = Rep_sbElem sbe2 \<rightharpoonup> c"
+  by(simp add: sbeUnion.rep_eq sbeDom_def map_add_dom_app_simps)
+
+lemma sbeunion_first[simp]: "c\<notin>sbeDom sbe2 \<Longrightarrow> (Rep_sbElem (sbe1 \<plusminus> sbe2) ) \<rightharpoonup> c = Rep_sbElem sbe1 \<rightharpoonup> c"  
+  by(simp add: sbeUnion.rep_eq sbeDom_def map_add_dom_app_simps)
 
 end

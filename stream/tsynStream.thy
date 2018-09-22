@@ -760,6 +760,13 @@ lemma tsynMap_test_infstream: "tsynMap (plus 1)\<cdot>((<[Msg 3, Msg 4, Msg 3]>)
   = (<[Msg 4, Msg 5, Msg 4]>)\<infinity>"
   by (simp add: tsynmap_insert)
 
+lemma tsynmap_tick [simp]: "x \<in> sdom\<cdot>(tsynMap F\<cdot>stream) \<Longrightarrow> x \<notin> Msg ` range F \<Longrightarrow> x = -"
+  by (metis (no_types, lifting) insert_iff subsetCE tsynabs_sdom_subset_eq tsynabs_tsyndom tsynmap_tsyndom_range)
+
+lemma tsynmap_msg [simp]: "tsynMap f\<cdot>(\<up>tsyn) = \<up>(tsynApplyElem f tsyn)"
+  apply(cases tsyn)
+  by(auto simp add: tsynMap_def)
+
 (* ----------------------------------------------------------------------- *)
   subsection {* tsynProjFst *}
 (* ----------------------------------------------------------------------- *)
