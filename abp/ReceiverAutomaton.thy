@@ -3,7 +3,7 @@
  * This file was generated from Receiver.maa and will be overridden when changed. To change
  * permanently, consider changing the model itself.
  *
- * Generated on Sep 22, 2018 1:11:51 PM by isartransformer 1.0.0
+ * Generated on Sep 22, 2018 6:29:44 PM by isartransformer 1.0.0
  *)
 theory ReceiverAutomaton
   imports bundle.tsynBundle automat.dAutomaton
@@ -273,19 +273,24 @@ definition receiverSPF :: "(receiverMessage tsyn, receiverMessage tsyn) SPF" whe
 section \<open>Lemmas for automaton definition\<close>
 
 lemma receiverautomaton_trans[simp]: "daTransition receiverAutomaton = receiverTransition"
-  sorry
+  unfolding daTransition_def
+  by(simp add: receiverAutomaton.rep_eq)
 
 lemma receiverautomaton_initialstate[simp]: "daInitialState receiverAutomaton = receiverInitialState"
-  sorry
+  unfolding daInitialState_def
+  by(simp add: receiverAutomaton.rep_eq)
 
 lemma receiverautomaton_initialoutput[simp]: "daInitialOutput receiverAutomaton = receiverInitialOutput"
-  sorry
+  unfolding daInitialOutput_def
+  by(simp add: receiverAutomaton.rep_eq)
 
 lemma receiverautomaton_dom[simp]: "daDom receiverAutomaton = receiverDom"
-  sorry
+  unfolding daDom_def
+  by(simp add: receiverAutomaton.rep_eq)
 
 lemma receiverautomaton_ran[simp]: "daRan receiverAutomaton = receiverRan"
-  sorry
+  unfolding daRan_def
+  by(simp add: receiverAutomaton.rep_eq)
 
 
 section \<open>Lemmas for single tsyn setter\<close>
@@ -305,35 +310,87 @@ lemma receiverout_ar_o_dom[simp]: "ubDom\<cdot>(receiverOut_ar_o port_ar port_o)
 
 section \<open>Lemmas for getter\<close>
 
-(* SWS: die getter-id-lemma auch für die multi-parameter Version *)
-lemma SWSexample[simp]: "receiver_get_stream_ar\<cdot>(receiverOut_ar_o port_ar port_o) = \<up>port_ar"
-  sorry
-lemma SWSexample2[simp]: "receiver_get_stream_ar\<cdot>(receiverOut_stream_ar_o\<cdot>port_ar\<cdot>port_o) = port_ar"
-  sorry
-lemma SWSexample3[simp]: "receiver_get_stream_ar\<cdot>(receiverOut_list_ar_o port_ar port_o) = <port_ar>"
-  sorry
-lemma SWSexample4[simp]: "receiverElem_get_ar (receiverElemOut_ar_o port_ar port_o) = port_ar"
-  sorry
-(* SWS: End Example *)
-
-
+subsection \<open>Identity lemmas for single sbElems\<close>
 
 lemma receiverelem_dr_id[simp]: "receiverElem_get_dr (receiverElem_dr port_dr) = port_dr"
-  sorry
-
-lemma receiver_stream_dr_id[simp]: "receiver_get_stream_dr\<cdot>(receiver_stream_dr\<cdot>port_dr) = port_dr"
   sorry
 
 lemma receiverelem_ar_id[simp]: "receiverElem_get_ar (receiverElem_ar port_ar) = port_ar"
   sorry
 
-lemma receiver_stream_ar_id[simp]: "receiver_get_stream_ar\<cdot>(receiver_stream_ar\<cdot>port_ar) = port_ar"
-  sorry
-
 lemma receiverelem_o_id[simp]: "receiverElem_get_o (receiverElem_o port_o) = port_o"
   sorry
 
+
+subsection \<open>Identity lemmas for single SBs from streams\<close>
+
+lemma receiver_stream_dr_id[simp]: "receiver_get_stream_dr\<cdot>(receiver_stream_dr\<cdot>port_dr) = port_dr"
+  sorry
+
+lemma receiver_stream_ar_id[simp]: "receiver_get_stream_ar\<cdot>(receiver_stream_ar\<cdot>port_ar) = port_ar"
+  sorry
+
 lemma receiver_stream_o_id[simp]: "receiver_get_stream_o\<cdot>(receiver_stream_o\<cdot>port_o) = port_o"
+  sorry
+
+
+subsection \<open>Identity lemmas for input sbElems\<close>
+
+lemma receiverelemin_dr_dr_id[simp]: "receiverElem_get_dr (receiverElemIn_dr port_dr) = port_dr"
+  sorry
+
+
+subsection \<open>Identity lemmas for output sbElems\<close>
+
+lemma receiverelemout_ar_o_ar_id[simp]: "receiverElem_get_ar (receiverElemOut_ar_o port_ar port_o) = port_ar"
+  sorry
+
+lemma receiverelemout_ar_o_o_id[simp]: "receiverElem_get_o (receiverElemOut_ar_o port_ar port_o) = port_o"
+  sorry
+
+
+subsection \<open>Identity lemmas for input SBs\<close>
+
+lemma receiverin_dr_dr_id[simp]: "receiver_get_stream_dr\<cdot>(receiverIn_dr port_dr) = \<up>port_dr"
+  sorry
+
+
+subsection \<open>Identity lemmas for output SBs\<close>
+
+lemma receiverout_ar_o_ar_id[simp]: "receiver_get_stream_ar\<cdot>(receiverOut_ar_o port_ar port_o) = \<up>port_ar"
+  sorry
+
+lemma receiverout_ar_o_o_id[simp]: "receiver_get_stream_o\<cdot>(receiverOut_ar_o port_ar port_o) = \<up>port_o"
+  sorry
+
+
+subsection \<open>Identity lemmas for input SBs from lists\<close>
+
+lemma receiverin_list_dr_dr_id[simp]: "receiver_get_stream_dr\<cdot>(receiverIn_list_dr port_dr) = <port_dr>"
+  sorry
+
+
+subsection \<open>Identity lemmas for output SBs from lists\<close>
+
+lemma receiverout_list_ar_o_ar_id[simp]: "receiver_get_stream_ar\<cdot>(receiverOut_list_ar_o port_ar port_o) = <port_ar>"
+  sorry
+
+lemma receiverout_list_ar_o_o_id[simp]: "receiver_get_stream_o\<cdot>(receiverOut_list_ar_o port_ar port_o) = <port_o>"
+  sorry
+
+
+subsection \<open>Identity lemmas for input SBs from streams\<close>
+
+lemma receiverin_stream_dr_dr_id[simp]: "receiver_get_stream_dr\<cdot>(receiverIn_stream_dr\<cdot>port_dr) = port_dr"
+  sorry
+
+
+subsection \<open>Identity lemmas for output SBs from streams\<close>
+
+lemma receiverout_stream_ar_o_ar_id[simp]: "receiver_get_stream_ar\<cdot>(receiverOut_stream_ar_o\<cdot>port_ar\<cdot>port_o) = port_ar"
+  sorry
+
+lemma receiverout_stream_ar_o_o_id[simp]: "receiver_get_stream_o\<cdot>(receiverOut_stream_ar_o\<cdot>port_ar\<cdot>port_o) = port_o"
   sorry
 
 
@@ -391,7 +448,7 @@ lemma receiverTransition_3_0[simp]:
 section \<open>Step-wise lemmata for the SPF\<close>
 
 (* Convert the SPF to step notation *)
-lemma receiverSpf2Step: "receiverSPF = spfConcOut (receiverOut_ar_o null null)\<cdot>(ReceiverStep (ReceiverState Rt ))"
+lemma receiverSpf2Step: "receiverSPF = spfConcOut (receiverOut_ar_o null null)\<cdot>(receiverStep (ReceiverState Rt ))"
   sorry
 
 (* Line 18:  Rf -> Rf [dr.snd=true] / {ar=true}; *)
@@ -401,10 +458,7 @@ lemma receiverStep_0_0:
          = spfConcOut (receiverOut_ar_o (Msg (True)) null)\<cdot>(receiverStep (ReceiverState Rf))"
   apply(simp add: receiverStep_def receiverIn_dr_def)
   apply(rule da_h_stepI)
-  apply(auto simp add: daNextState_def daNextOutput_def assms)
-  (* TODO SWS: Manchmal fehlt noch das hier: *)
-  (*using assms by auto*)
-  sorry
+  using assms by(auto simp add: daNextState_def daNextOutput_def assms)
 
 (* Line 19:  Rf -> Rt [dr.snd=false] / {ar=false, o=dr.fst}; *)
 lemma receiverStep_0_1:
@@ -413,10 +467,7 @@ lemma receiverStep_0_1:
          = spfConcOut (receiverOut_ar_o (Msg (False)) (Msg ((fst port_dr))))\<cdot>(receiverStep (ReceiverState Rt))"
   apply(simp add: receiverStep_def receiverIn_dr_def)
   apply(rule da_h_stepI)
-  apply(auto simp add: daNextState_def daNextOutput_def assms)
-  (* TODO SWS: Manchmal fehlt noch das hier: *)
-  (*using assms by auto*)
-  sorry
+  using assms by(auto simp add: daNextState_def daNextOutput_def assms)
 
 (* Line 17:  Rf -> Rf {dr==null}; *)
 lemma receiverStep_1_0:
@@ -425,10 +476,7 @@ lemma receiverStep_1_0:
          = spfConcOut (receiverOut_ar_o null null)\<cdot>(receiverStep (ReceiverState Rf))"
   apply(simp add: receiverStep_def receiverIn_dr_def)
   apply(rule da_h_stepI)
-  apply(auto simp add: daNextState_def daNextOutput_def assms)
-  (* TODO SWS: Manchmal fehlt noch das hier: *)
-  (*using assms by auto*)
-  sorry
+  using assms by(auto simp add: daNextState_def daNextOutput_def assms)
 
 (* Line 14:  Rt -> Rf [dr.snd=true] / {o=dr.fst, ar=true}; *)
 lemma receiverStep_2_0:
@@ -437,10 +485,7 @@ lemma receiverStep_2_0:
          = spfConcOut (receiverOut_ar_o (Msg (True)) (Msg ((fst port_dr))))\<cdot>(receiverStep (ReceiverState Rf))"
   apply(simp add: receiverStep_def receiverIn_dr_def)
   apply(rule da_h_stepI)
-  apply(auto simp add: daNextState_def daNextOutput_def assms)
-  (* TODO SWS: Manchmal fehlt noch das hier: *)
-  (*using assms by auto*)
-  sorry
+  using assms by(auto simp add: daNextState_def daNextOutput_def assms)
 
 (* Line 15:  Rt -> Rt [dr.snd=false] / {ar=false}; *)
 lemma receiverStep_2_1:
@@ -449,10 +494,7 @@ lemma receiverStep_2_1:
          = spfConcOut (receiverOut_ar_o (Msg (False)) null)\<cdot>(receiverStep (ReceiverState Rt))"
   apply(simp add: receiverStep_def receiverIn_dr_def)
   apply(rule da_h_stepI)
-  apply(auto simp add: daNextState_def daNextOutput_def assms)
-  (* TODO SWS: Manchmal fehlt noch das hier: *)
-  (*using assms by auto*)
-  sorry
+  using assms by(auto simp add: daNextState_def daNextOutput_def assms)
 
 (* Line 16:  Rt -> Rt {dr==null}; *)
 lemma receiverStep_3_0:
@@ -461,10 +503,7 @@ lemma receiverStep_3_0:
          = spfConcOut (receiverOut_ar_o null null)\<cdot>(receiverStep (ReceiverState Rt))"
   apply(simp add: receiverStep_def receiverIn_dr_def)
   apply(rule da_h_stepI)
-  apply(auto simp add: daNextState_def daNextOutput_def assms)
-  (* TODO SWS: Manchmal fehlt noch das hier: *)
-  (*using assms by auto*)
-  sorry
+  using assms by(auto simp add: daNextState_def daNextOutput_def assms)
 
 
 end

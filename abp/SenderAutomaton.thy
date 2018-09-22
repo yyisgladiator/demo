@@ -3,7 +3,7 @@
  * This file was generated from Sender.maa and will be overridden when changed. To change
  * permanently, consider changing the model itself.
  *
- * Generated on Sep 22, 2018 1:11:51 PM by isartransformer 1.0.0
+ * Generated on Sep 22, 2018 6:29:44 PM by isartransformer 1.0.0
  *)
 theory SenderAutomaton
   imports bundle.tsynBundle automat.dAutomaton
@@ -297,12 +297,10 @@ definition senderTransition :: "(SenderState \<times> senderMessage tsyn sbElem)
 "senderTransition = (\<lambda> (s,b). (if (sbeDom b) = senderDom then senderTransitionH (s, (senderElem_get_as b, senderElem_get_i b)) else undefined))"
 
 (* Initial state *)
-(* SWS: unbedingt brauchen tut man das nicht *)
 definition senderInitialState :: "SenderState" where
 "senderInitialState = SenderState St []  0"
 
 (* Initial output *)
-(* SWS: unbedingt brauchen tut man das nicht *)
 definition senderInitialOutput :: "senderMessage tsyn SB" where
 "senderInitialOutput = senderOut_ds null"
 
@@ -324,28 +322,23 @@ section \<open>Lemmas for automaton definition\<close>
 
 lemma senderautomaton_trans[simp]: "daTransition senderAutomaton = senderTransition"
   unfolding daTransition_def
-  by(simp add: senderAutomaton.rep_eq)  (* SWS: Bewiesen *)
-  
+  by(simp add: senderAutomaton.rep_eq)
 
 lemma senderautomaton_initialstate[simp]: "daInitialState senderAutomaton = senderInitialState"
-    unfolding daInitialState_def
-  by(simp add: senderAutomaton.rep_eq)  (* SWS: Bewiesen *)
-
+  unfolding daInitialState_def
+  by(simp add: senderAutomaton.rep_eq)
 
 lemma senderautomaton_initialoutput[simp]: "daInitialOutput senderAutomaton = senderInitialOutput"
-      unfolding daInitialOutput_def
-  by(simp add: senderAutomaton.rep_eq)  (* SWS: Bewiesen *)
-
+  unfolding daInitialOutput_def
+  by(simp add: senderAutomaton.rep_eq)
 
 lemma senderautomaton_dom[simp]: "daDom senderAutomaton = senderDom"
-        unfolding daDom_def
-  by(simp add: senderAutomaton.rep_eq)  (* SWS: Bewiesen *)
-
+  unfolding daDom_def
+  by(simp add: senderAutomaton.rep_eq)
 
 lemma senderautomaton_ran[simp]: "daRan senderAutomaton = senderRan"
-        unfolding daRan_def
-  by(simp add: senderAutomaton.rep_eq)  (* SWS: Bewiesen *)
-
+  unfolding daRan_def
+  by(simp add: senderAutomaton.rep_eq)
 
 
 section \<open>Lemmas for single tsyn setter\<close>
@@ -365,22 +358,87 @@ lemma senderout_ds_dom[simp]: "ubDom\<cdot>(senderOut_ds port_ds) = senderRan"
 
 section \<open>Lemmas for getter\<close>
 
-lemma senderelem_as_id[simp]: "senderElem_get_as (senderElem_as port_as) = port_as"
-  sorry
+subsection \<open>Identity lemmas for single sbElems\<close>
 
-lemma sender_stream_as_id[simp]: "sender_get_stream_as\<cdot>(sender_stream_as\<cdot>port_as) = port_as"
+lemma senderelem_as_id[simp]: "senderElem_get_as (senderElem_as port_as) = port_as"
   sorry
 
 lemma senderelem_i_id[simp]: "senderElem_get_i (senderElem_i port_i) = port_i"
   sorry
 
-lemma sender_stream_i_id[simp]: "sender_get_stream_i\<cdot>(sender_stream_i\<cdot>port_i) = port_i"
-  sorry
-
 lemma senderelem_ds_id[simp]: "senderElem_get_ds (senderElem_ds port_ds) = port_ds"
   sorry
 
+
+subsection \<open>Identity lemmas for single SBs from streams\<close>
+
+lemma sender_stream_as_id[simp]: "sender_get_stream_as\<cdot>(sender_stream_as\<cdot>port_as) = port_as"
+  sorry
+
+lemma sender_stream_i_id[simp]: "sender_get_stream_i\<cdot>(sender_stream_i\<cdot>port_i) = port_i"
+  sorry
+
 lemma sender_stream_ds_id[simp]: "sender_get_stream_ds\<cdot>(sender_stream_ds\<cdot>port_ds) = port_ds"
+  sorry
+
+
+subsection \<open>Identity lemmas for input sbElems\<close>
+
+lemma senderelemin_as_i_as_id[simp]: "senderElem_get_as (senderElemIn_as_i port_as port_i) = port_as"
+  sorry
+
+lemma senderelemin_as_i_i_id[simp]: "senderElem_get_i (senderElemIn_as_i port_as port_i) = port_i"
+  sorry
+
+
+subsection \<open>Identity lemmas for output sbElems\<close>
+
+lemma senderelemout_ds_ds_id[simp]: "senderElem_get_ds (senderElemOut_ds port_ds) = port_ds"
+  sorry
+
+
+subsection \<open>Identity lemmas for input SBs\<close>
+
+lemma senderin_as_i_as_id[simp]: "sender_get_stream_as\<cdot>(senderIn_as_i port_as port_i) = \<up>port_as"
+  sorry
+
+lemma senderin_as_i_i_id[simp]: "sender_get_stream_i\<cdot>(senderIn_as_i port_as port_i) = \<up>port_i"
+  sorry
+
+
+subsection \<open>Identity lemmas for output SBs\<close>
+
+lemma senderout_ds_ds_id[simp]: "sender_get_stream_ds\<cdot>(senderOut_ds port_ds) = \<up>port_ds"
+  sorry
+
+
+subsection \<open>Identity lemmas for input SBs from lists\<close>
+
+lemma senderin_list_as_i_as_id[simp]: "sender_get_stream_as\<cdot>(senderIn_list_as_i port_as port_i) = <port_as>"
+  sorry
+
+lemma senderin_list_as_i_i_id[simp]: "sender_get_stream_i\<cdot>(senderIn_list_as_i port_as port_i) = <port_i>"
+  sorry
+
+
+subsection \<open>Identity lemmas for output SBs from lists\<close>
+
+lemma senderout_list_ds_ds_id[simp]: "sender_get_stream_ds\<cdot>(senderOut_list_ds port_ds) = <port_ds>"
+  sorry
+
+
+subsection \<open>Identity lemmas for input SBs from streams\<close>
+
+lemma senderin_stream_as_i_as_id[simp]: "sender_get_stream_as\<cdot>(senderIn_stream_as_i\<cdot>port_as\<cdot>port_i) = port_as"
+  sorry
+
+lemma senderin_stream_as_i_i_id[simp]: "sender_get_stream_i\<cdot>(senderIn_stream_as_i\<cdot>port_as\<cdot>port_i) = port_i"
+  sorry
+
+
+subsection \<open>Identity lemmas for output SBs from streams\<close>
+
+lemma senderout_stream_ds_ds_id[simp]: "sender_get_stream_ds\<cdot>(senderOut_stream_ds\<cdot>port_ds) = port_ds"
   sorry
 
 
@@ -646,9 +704,7 @@ lemma senderTransition_7_2[simp]:
 section \<open>Step-wise lemmata for the SPF\<close>
 
 (* Convert the SPF to step notation *)
-
-(* SWS: "ReceiverStep" *)
-lemma senderSpf2Step: "senderSPF = spfConcOut (senderOut_ds null)\<cdot>(ReceiverStep (SenderState St []  0))"
+lemma senderSpf2Step: "senderSPF = spfConcOut (senderOut_ds null)\<cdot>(senderStep (SenderState St []  0))"
   sorry
 
 (* Line 33:  Sf -> St [buffer.size()>1 && i!=null] {as==false} / {buffer=buffer.butlast().prepend(i), c=3, ds=new Pair<>(buffer.butlast().last(),true)}; *)
@@ -659,7 +715,6 @@ lemma senderStep_0_0:
   apply(simp add: senderStep_def senderIn_as_i_def)
   apply(rule da_h_stepI)
   using assms by(auto simp add: daNextState_def daNextOutput_def assms)
-(* SWS: ... naja... sollte jetzt vllt klappen *)
 
 (* Line 35:  Sf -> St [buffer.size()=1 && i!=null] {as==false} / {buffer=buffer.butlast().prepend(i), c=3, ds=new Pair<>(i,true)}; *)
 lemma senderStep_0_1:
@@ -670,7 +725,6 @@ lemma senderStep_0_1:
   apply(rule da_h_stepI)
   using assms by(auto simp add: daNextState_def daNextOutput_def assms)
 
-
 (* Line 43:  Sf -> Sf [buffer.size()=0 && as!=null && i!=null] / {buffer=buffer.prepend(i), c=3, ds=new Pair<>(i,false)}; *)
 lemma senderStep_0_2:
   assumes "(size var_buffer)=0"
@@ -679,7 +733,6 @@ lemma senderStep_0_2:
   apply(simp add: senderStep_def senderIn_as_i_def)
   apply(rule da_h_stepI)
   using assms by(auto simp add: daNextState_def daNextOutput_def assms)
-
 
 (* Line 45:  Sf -> Sf [buffer.size()>0 && c>0 && i!=null] {as==true} / {buffer=buffer.prepend(i), c=c-1}; *)
 lemma senderStep_0_3:
@@ -690,7 +743,6 @@ lemma senderStep_0_3:
   apply(rule da_h_stepI)
   using assms by(auto simp add: daNextState_def daNextOutput_def assms)
 
-
 (* Line 47:  Sf -> Sf [buffer.size()>0 && c=0 && i!=null] {as==true} / {buffer=buffer.prepend(i), c=3, ds=new Pair<>(buffer.last(),false)}; *)
 lemma senderStep_0_4:
   assumes "(size var_buffer)>0 \<and> var_c=0 \<and> port_as=True"
@@ -698,9 +750,7 @@ lemma senderStep_0_4:
          = spfConcOut (senderOut_ds (Msg (Pair (last var_buffer) False)))\<cdot>(senderStep (SenderState Sf (prepend var_buffer port_i) 3))"
   apply(simp add: senderStep_def senderIn_as_i_def)
   apply(rule da_h_stepI)
-  apply(auto simp add: daNextState_def daNextOutput_def assms)
-    using assms by(auto simp add: daNextState_def daNextOutput_def assms)
-
+  using assms by(auto simp add: daNextState_def daNextOutput_def assms)
 
 (* Line 34:  Sf -> St [buffer.size()>1] {as==false, i==null} / {buffer=buffer.butlast(), c=3, ds=new Pair<>(buffer.butlast().last(),true)}; *)
 lemma senderStep_1_0:
@@ -709,7 +759,6 @@ lemma senderStep_1_0:
          = spfConcOut (senderOut_ds (Msg (Pair (last (butlast var_buffer)) True)))\<cdot>(senderStep (SenderState St (butlast var_buffer) 3))"
   apply(simp add: senderStep_def senderIn_as_i_def)
   apply(rule da_h_stepI)
-  apply(auto simp add: daNextState_def daNextOutput_def assms)
   using assms by(auto simp add: daNextState_def daNextOutput_def assms)
 
 (* Line 36:  Sf -> St [buffer.size()=1] {as==false, i==null} / {buffer=buffer.butlast()}; *)
@@ -746,10 +795,7 @@ lemma senderStep_1_4:
          = spfConcOut (senderOut_ds (Msg (Pair (last var_buffer) False)))\<cdot>(senderStep (SenderState Sf var_buffer 3))"
   apply(simp add: senderStep_def senderIn_as_i_def)
   apply(rule da_h_stepI)
-  apply(auto simp add: daNextState_def daNextOutput_def assms)
-  (* TODO SWS: Manchmal fehlt noch das hier: *)
-  (*using assms by auto*)
-  sorry
+  using assms by(auto simp add: daNextState_def daNextOutput_def assms)
 
 (* Line 44:  Sf -> Sf [buffer.size()=0 && i!=null] {as==null} / {buffer=buffer.prepend(i), c=3, ds=new Pair<>(i,false)}; *)
 lemma senderStep_2_0:
@@ -758,10 +804,7 @@ lemma senderStep_2_0:
          = spfConcOut (senderOut_ds (Msg (Pair port_i False)))\<cdot>(senderStep (SenderState Sf (prepend var_buffer port_i) 3))"
   apply(simp add: senderStep_def senderIn_as_i_def)
   apply(rule da_h_stepI)
-  apply(auto simp add: daNextState_def daNextOutput_def assms)
-  (* TODO SWS: Manchmal fehlt noch das hier: *)
-  (*using assms by auto*)
-  sorry
+  using assms by(auto simp add: daNextState_def daNextOutput_def assms)
 
 (* Line 46:  Sf -> Sf [buffer.size()>0 && c>0 && i!=null] {as==null} / {buffer=buffer.prepend(i), c=c-1}; *)
 lemma senderStep_2_1:
@@ -770,10 +813,7 @@ lemma senderStep_2_1:
          = spfConcOut (senderOut_ds null)\<cdot>(senderStep (SenderState Sf (prepend var_buffer port_i) (var_c-1)))"
   apply(simp add: senderStep_def senderIn_as_i_def)
   apply(rule da_h_stepI)
-  apply(auto simp add: daNextState_def daNextOutput_def assms)
-  (* TODO SWS: Manchmal fehlt noch das hier: *)
-  (*using assms by auto*)
-  sorry
+  using assms by(auto simp add: daNextState_def daNextOutput_def assms)
 
 (* Line 48:  Sf -> Sf [buffer.size()>0 && c=0 && i!=null] {as==null} / {buffer=buffer.prepend(i), c=3, ds=new Pair<>(buffer.last(),false)}; *)
 lemma senderStep_2_2:
@@ -782,10 +822,7 @@ lemma senderStep_2_2:
          = spfConcOut (senderOut_ds (Msg (Pair (last var_buffer) False)))\<cdot>(senderStep (SenderState Sf (prepend var_buffer port_i) 3))"
   apply(simp add: senderStep_def senderIn_as_i_def)
   apply(rule da_h_stepI)
-  apply(auto simp add: daNextState_def daNextOutput_def assms)
-  (* TODO SWS: Manchmal fehlt noch das hier: *)
-  (*using assms by auto*)
-  sorry
+  using assms by(auto simp add: daNextState_def daNextOutput_def assms)
 
 (* Line 37:  Sf -> Sf [buffer.size()=0] {as==null, i==null}; *)
 lemma senderStep_3_0:
@@ -794,10 +831,7 @@ lemma senderStep_3_0:
          = spfConcOut (senderOut_ds null)\<cdot>(senderStep (SenderState Sf var_buffer var_c))"
   apply(simp add: senderStep_def senderIn_as_i_def)
   apply(rule da_h_stepI)
-  apply(auto simp add: daNextState_def daNextOutput_def assms)
-  (* TODO SWS: Manchmal fehlt noch das hier: *)
-  (*using assms by auto*)
-  sorry
+  using assms by(auto simp add: daNextState_def daNextOutput_def assms)
 
 (* Line 39:  Sf -> Sf [buffer.size()>0 && c>0] {as==null, i==null}; *)
 lemma senderStep_3_1:
@@ -806,10 +840,7 @@ lemma senderStep_3_1:
          = spfConcOut (senderOut_ds null)\<cdot>(senderStep (SenderState Sf var_buffer var_c))"
   apply(simp add: senderStep_def senderIn_as_i_def)
   apply(rule da_h_stepI)
-  apply(auto simp add: daNextState_def daNextOutput_def assms)
-  (* TODO SWS: Manchmal fehlt noch das hier: *)
-  (*using assms by auto*)
-  sorry
+  using assms by(auto simp add: daNextState_def daNextOutput_def assms)
 
 (* Line 42:  Sf -> Sf [buffer.size()>0 && c=0] {as==null, i==null} / {c=3, ds=new Pair<>(buffer.last(),false)}; *)
 lemma senderStep_3_2:
@@ -818,10 +849,7 @@ lemma senderStep_3_2:
          = spfConcOut (senderOut_ds (Msg (Pair (last var_buffer) False)))\<cdot>(senderStep (SenderState Sf var_buffer 3))"
   apply(simp add: senderStep_def senderIn_as_i_def)
   apply(rule da_h_stepI)
-  apply(auto simp add: daNextState_def daNextOutput_def assms)
-  (* TODO SWS: Manchmal fehlt noch das hier: *)
-  (*using assms by auto*)
-  sorry
+  using assms by(auto simp add: daNextState_def daNextOutput_def assms)
 
 (* Line 25:  St -> St [buffer.size()=0 && as!=null && i!=null] / {buffer=buffer.prepend(i), c=3, ds=new Pair<>(i,true)}; *)
 lemma senderStep_4_0:
@@ -830,10 +858,7 @@ lemma senderStep_4_0:
          = spfConcOut (senderOut_ds (Msg (Pair port_i True)))\<cdot>(senderStep (SenderState St (prepend var_buffer port_i) 3))"
   apply(simp add: senderStep_def senderIn_as_i_def)
   apply(rule da_h_stepI)
-  apply(auto simp add: daNextState_def daNextOutput_def assms)
-  (* TODO SWS: Manchmal fehlt noch das hier: *)
-  (*using assms by auto*)
-  sorry
+  using assms by(auto simp add: daNextState_def daNextOutput_def assms)
 
 (* Line 27:  St -> Sf [buffer.size()>1 && i!=null] {as==true} / {buffer=buffer.butlast().prepend(i), c=3, ds=new Pair<>(buffer.butlast().last(),false)}; *)
 lemma senderStep_4_1:
@@ -842,10 +867,7 @@ lemma senderStep_4_1:
          = spfConcOut (senderOut_ds (Msg (Pair (last (butlast var_buffer)) False)))\<cdot>(senderStep (SenderState Sf (prepend (butlast var_buffer) port_i) 3))"
   apply(simp add: senderStep_def senderIn_as_i_def)
   apply(rule da_h_stepI)
-  apply(auto simp add: daNextState_def daNextOutput_def assms)
-  (* TODO SWS: Manchmal fehlt noch das hier: *)
-  (*using assms by auto*)
-  sorry
+  using assms by(auto simp add: daNextState_def daNextOutput_def assms)
 
 (* Line 28:  St -> St [buffer.size()>0 && c>0 && i!=null] {as==false} / {buffer=buffer.prepend(i), c=c-1}; *)
 lemma senderStep_4_2:
@@ -854,10 +876,7 @@ lemma senderStep_4_2:
          = spfConcOut (senderOut_ds null)\<cdot>(senderStep (SenderState St (prepend var_buffer port_i) (var_c-1)))"
   apply(simp add: senderStep_def senderIn_as_i_def)
   apply(rule da_h_stepI)
-  apply(auto simp add: daNextState_def daNextOutput_def assms)
-  (* TODO SWS: Manchmal fehlt noch das hier: *)
-  (*using assms by auto*)
-  sorry
+  using assms by(auto simp add: daNextState_def daNextOutput_def assms)
 
 (* Line 30:  St -> St [buffer.size()>0 && c=0 && i!=null] {as==false} / {buffer=buffer.prepend(i), c=3, ds=new Pair<>(buffer.last(),true)}; *)
 lemma senderStep_4_3:
@@ -866,10 +885,7 @@ lemma senderStep_4_3:
          = spfConcOut (senderOut_ds (Msg (Pair (last var_buffer) True)))\<cdot>(senderStep (SenderState St (prepend var_buffer port_i) 3))"
   apply(simp add: senderStep_def senderIn_as_i_def)
   apply(rule da_h_stepI)
-  apply(auto simp add: daNextState_def daNextOutput_def assms)
-  (* TODO SWS: Manchmal fehlt noch das hier: *)
-  (*using assms by auto*)
-  sorry
+  using assms by(auto simp add: daNextState_def daNextOutput_def assms)
 
 (* Line 32:  St -> Sf [buffer.size()=1 && i!=null] {as==true} / {buffer=buffer.butlast().prepend(i), c=3, ds=new Pair<>(i,false)}; *)
 lemma senderStep_4_4:
@@ -878,10 +894,7 @@ lemma senderStep_4_4:
          = spfConcOut (senderOut_ds (Msg (Pair port_i False)))\<cdot>(senderStep (SenderState Sf (prepend (butlast var_buffer) port_i) 3))"
   apply(simp add: senderStep_def senderIn_as_i_def)
   apply(rule da_h_stepI)
-  apply(auto simp add: daNextState_def daNextOutput_def assms)
-  (* TODO SWS: Manchmal fehlt noch das hier: *)
-  (*using assms by auto*)
-  sorry
+  using assms by(auto simp add: daNextState_def daNextOutput_def assms)
 
 (* Line 17:  St -> St [buffer.size()=0 && as!=null] {i==null}; *)
 lemma senderStep_5_0:
@@ -890,10 +903,7 @@ lemma senderStep_5_0:
          = spfConcOut (senderOut_ds null)\<cdot>(senderStep (SenderState St var_buffer var_c))"
   apply(simp add: senderStep_def senderIn_as_i_def)
   apply(rule da_h_stepI)
-  apply(auto simp add: daNextState_def daNextOutput_def assms)
-  (* TODO SWS: Manchmal fehlt noch das hier: *)
-  (*using assms by auto*)
-  sorry
+  using assms by(auto simp add: daNextState_def daNextOutput_def assms)
 
 (* Line 18:  St -> Sf [buffer.size()>1] {as==true, i==null} / {buffer=buffer.butlast(), c=3, ds=new Pair<>(buffer.butlast().last(),false)}; *)
 lemma senderStep_5_1:
@@ -902,10 +912,7 @@ lemma senderStep_5_1:
          = spfConcOut (senderOut_ds (Msg (Pair (last (butlast var_buffer)) False)))\<cdot>(senderStep (SenderState Sf (butlast var_buffer) 3))"
   apply(simp add: senderStep_def senderIn_as_i_def)
   apply(rule da_h_stepI)
-  apply(auto simp add: daNextState_def daNextOutput_def assms)
-  (* TODO SWS: Manchmal fehlt noch das hier: *)
-  (*using assms by auto*)
-  sorry
+  using assms by(auto simp add: daNextState_def daNextOutput_def assms)
 
 (* Line 20:  St -> St [buffer.size()>0 && c>0] {as==false, i==null} / {c=c-1}; *)
 lemma senderStep_5_2:
@@ -914,10 +921,7 @@ lemma senderStep_5_2:
          = spfConcOut (senderOut_ds null)\<cdot>(senderStep (SenderState St var_buffer (var_c-1)))"
   apply(simp add: senderStep_def senderIn_as_i_def)
   apply(rule da_h_stepI)
-  apply(auto simp add: daNextState_def daNextOutput_def assms)
-  (* TODO SWS: Manchmal fehlt noch das hier: *)
-  (*using assms by auto*)
-  sorry
+  using assms by(auto simp add: daNextState_def daNextOutput_def assms)
 
 (* Line 22:  St -> St [buffer.size()>0 && c=0] {as==false, i==null} / {c=3, ds=new Pair<>(buffer.last(),true)}; *)
 lemma senderStep_5_3:
@@ -926,10 +930,7 @@ lemma senderStep_5_3:
          = spfConcOut (senderOut_ds (Msg (Pair (last var_buffer) True)))\<cdot>(senderStep (SenderState St var_buffer 3))"
   apply(simp add: senderStep_def senderIn_as_i_def)
   apply(rule da_h_stepI)
-  apply(auto simp add: daNextState_def daNextOutput_def assms)
-  (* TODO SWS: Manchmal fehlt noch das hier: *)
-  (*using assms by auto*)
-  sorry
+  using assms by(auto simp add: daNextState_def daNextOutput_def assms)
 
 (* Line 24:  St -> Sf [buffer.size()=1] {as==true, i==null} / {buffer=buffer.butlast()}; *)
 lemma senderStep_5_4:
@@ -938,10 +939,7 @@ lemma senderStep_5_4:
          = spfConcOut (senderOut_ds null)\<cdot>(senderStep (SenderState Sf (butlast var_buffer) var_c))"
   apply(simp add: senderStep_def senderIn_as_i_def)
   apply(rule da_h_stepI)
-  apply(auto simp add: daNextState_def daNextOutput_def assms)
-  (* TODO SWS: Manchmal fehlt noch das hier: *)
-  (*using assms by auto*)
-  sorry
+  using assms by(auto simp add: daNextState_def daNextOutput_def assms)
 
 (* Line 26:  St -> St [buffer.size()=0 && i!=null] {as==null} / {buffer=buffer.prepend(i), c=3, ds=new Pair<>(i,true)}; *)
 lemma senderStep_6_0:
@@ -950,10 +948,7 @@ lemma senderStep_6_0:
          = spfConcOut (senderOut_ds (Msg (Pair port_i True)))\<cdot>(senderStep (SenderState St (prepend var_buffer port_i) 3))"
   apply(simp add: senderStep_def senderIn_as_i_def)
   apply(rule da_h_stepI)
-  apply(auto simp add: daNextState_def daNextOutput_def assms)
-  (* TODO SWS: Manchmal fehlt noch das hier: *)
-  (*using assms by auto*)
-  sorry
+  using assms by(auto simp add: daNextState_def daNextOutput_def assms)
 
 (* Line 29:  St -> St [buffer.size()>0 && c>0 && i!=null] {as==null} / {buffer=buffer.prepend(i), c=c-1}; *)
 lemma senderStep_6_1:
@@ -962,10 +957,7 @@ lemma senderStep_6_1:
          = spfConcOut (senderOut_ds null)\<cdot>(senderStep (SenderState St (prepend var_buffer port_i) (var_c-1)))"
   apply(simp add: senderStep_def senderIn_as_i_def)
   apply(rule da_h_stepI)
-  apply(auto simp add: daNextState_def daNextOutput_def assms)
-  (* TODO SWS: Manchmal fehlt noch das hier: *)
-  (*using assms by auto*)
-  sorry
+  using assms by(auto simp add: daNextState_def daNextOutput_def assms)
 
 (* Line 31:  St -> St [buffer.size()>0 && c=0 && i!=null] {as==null} / {buffer=buffer.prepend(i), c=3, ds=new Pair<>(buffer.last(),true)}; *)
 lemma senderStep_6_2:
@@ -974,10 +966,7 @@ lemma senderStep_6_2:
          = spfConcOut (senderOut_ds (Msg (Pair (last var_buffer) True)))\<cdot>(senderStep (SenderState St (prepend var_buffer port_i) 3))"
   apply(simp add: senderStep_def senderIn_as_i_def)
   apply(rule da_h_stepI)
-  apply(auto simp add: daNextState_def daNextOutput_def assms)
-  (* TODO SWS: Manchmal fehlt noch das hier: *)
-  (*using assms by auto*)
-  sorry
+  using assms by(auto simp add: daNextState_def daNextOutput_def assms)
 
 (* Line 19:  St -> St [buffer.size()=0] {as==null, i==null}; *)
 lemma senderStep_7_0:
@@ -986,10 +975,7 @@ lemma senderStep_7_0:
          = spfConcOut (senderOut_ds null)\<cdot>(senderStep (SenderState St var_buffer var_c))"
   apply(simp add: senderStep_def senderIn_as_i_def)
   apply(rule da_h_stepI)
-  apply(auto simp add: daNextState_def daNextOutput_def assms)
-  (* TODO SWS: Manchmal fehlt noch das hier: *)
-  (*using assms by auto*)
-  sorry
+  using assms by(auto simp add: daNextState_def daNextOutput_def assms)
 
 (* Line 21:  St -> St [buffer.size()>0 && c>0] {as==null, i==null} / {c=c-1}; *)
 lemma senderStep_7_1:
@@ -998,10 +984,7 @@ lemma senderStep_7_1:
          = spfConcOut (senderOut_ds null)\<cdot>(senderStep (SenderState St var_buffer (var_c-1)))"
   apply(simp add: senderStep_def senderIn_as_i_def)
   apply(rule da_h_stepI)
-  apply(auto simp add: daNextState_def daNextOutput_def assms)
-  (* TODO SWS: Manchmal fehlt noch das hier: *)
-  (*using assms by auto*)
-  sorry
+  using assms by(auto simp add: daNextState_def daNextOutput_def assms)
 
 (* Line 23:  St -> St [buffer.size()>0 && c=0] {as==null, i==null} / {c=3, ds=new Pair<>(buffer.last(),true)}; *)
 lemma senderStep_7_2:
@@ -1010,10 +993,7 @@ lemma senderStep_7_2:
          = spfConcOut (senderOut_ds (Msg (Pair (last var_buffer) True)))\<cdot>(senderStep (SenderState St var_buffer 3))"
   apply(simp add: senderStep_def senderIn_as_i_def)
   apply(rule da_h_stepI)
-  apply(auto simp add: daNextState_def daNextOutput_def assms)
-  (* TODO SWS: Manchmal fehlt noch das hier: *)
-  (*using assms by auto*)
-  sorry
+  using assms by(auto simp add: daNextState_def daNextOutput_def assms)
 
 
 end
