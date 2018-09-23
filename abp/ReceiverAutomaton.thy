@@ -3,7 +3,7 @@
  * This file was generated from Receiver.maa and will be overridden when changed. To change
  * permanently, consider changing the model itself.
  *
- * Generated on Sep 23, 2018 6:42:30 PM by isartransformer 1.0.0
+ * Generated on Sep 24, 2018 1:22:52 AM by isartransformer 1.0.0
  *)
 theory ReceiverAutomaton
   imports bundle.tsynBundle automat.dAutomaton
@@ -268,7 +268,7 @@ definition receiverStep :: "(ReceiverState \<Rightarrow> (('e::countable) receiv
 
 (* The final SPF *)
 definition receiverSPF :: "(('e::countable) receiverMessage tsyn, ('e::countable) receiverMessage tsyn) SPF" where
-"receiverSPF = da_H receiverAutomaton"
+"receiverSPF = da_H (receiverAutomaton::(ReceiverState, ('e::countable) receiverMessage tsyn) dAutomaton)"
 
 
 section \<open>Lemmas for automaton definition\<close>
