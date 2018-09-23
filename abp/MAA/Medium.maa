@@ -1,0 +1,20 @@
+package abp;
+
+/* Beispiel mit möglichst vielen generischen Parametern */
+<<nonDeterministic>>component Medium<E,F,K> {
+
+  port
+    in E ar,
+    in F ar2,
+    out E as,
+    out F as2;
+
+  automaton Medium {
+    variable K c;
+
+    state Single;
+    initial Single / {c = rand {i. True}};
+
+    Single / {c = rand {i. True}, as = ar, as2 = ar2};
+  }
+}
