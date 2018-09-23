@@ -587,7 +587,7 @@ lemma nda_h_final: assumes "sbeDom sbe = ndaDom\<cdot>nda" and
   by (metis (no_types) assms(1) ndaConcOutFlatten_def nda_h_final_h_1 nda_h_final_h_2 nda_h_state_not_empty po_eq_conv)
 
 
-lemma nda_h_bottom_h: "uspecIsStrict (spsStep (ndaDom\<cdot>nda) (ndaRan\<cdot>nda)\<cdot>
+lemma nda_h_bottom_h: "uspecIsStrict (spsStep_m (ndaDom\<cdot>nda) (ndaRan\<cdot>nda)
   (ndaHelper2 (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) state (ndaTransition\<cdot>nda) (nda_h nda)))"
   apply (simp add: uspecIsStrict_def)
   apply (rule uspec_ballI)
@@ -595,7 +595,7 @@ lemma nda_h_bottom_h: "uspecIsStrict (spsStep (ndaDom\<cdot>nda) (ndaRan\<cdot>n
 proof -
   fix x::"('a stream\<^sup>\<Omega>, 'a stream\<^sup>\<Omega>) ufun"
   fix sb::"'a stream\<^sup>\<Omega>"
-  assume a1: "uspec_in x (spsStep (ndaDom\<cdot>nda) (ndaRan\<cdot>nda)\<cdot>(ndaHelper2 (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) state (ndaTransition\<cdot>nda) (nda_h nda)))"
+  assume a1: "uspec_in x (spsStep_m (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) (ndaHelper2 (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) state (ndaTransition\<cdot>nda) (nda_h nda)))"
   assume a2: "ubclDom\<cdot>sb = ufDom\<cdot>x"
   assume a3: "ubclLen sb = (0::lnat)"
   obtain y where y_def_1: " y \<in> (inv Rev (spsStep_h\<cdot>(ndaHelper2 (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) state (ndaTransition\<cdot>nda) (nda_h nda))))"
@@ -613,7 +613,7 @@ lemma nda_h_bottom: "uspecIsStrict (nda_h nda state)"
   by (metis nda_h_bottom_h nda_h_fixpoint nda_h_inner_def)
 
 lemma nda_h_final_back: assumes "\<And>state sbe. sbeDom sbe = ndaDom\<cdot>nda \<Longrightarrow> spsConcIn (sbe2SB sbe) (other state) = 
-  uspecFlatten (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) (setrevImage (\<lambda>(s, sb). ndaTodo_h (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) (s, sb) other) ((ndaTransition\<cdot>nda) (s,sbe)))"
+  ndaConcOutFlatten (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) ((ndaTransition\<cdot>nda) (s,sbe)) (nda_h nda)"
   and "\<And> state. uspecDom\<cdot>(other state) = ndaDom\<cdot>nda" and "\<And> state. uspecRan\<cdot>(other state) = ndaRan\<cdot>nda"
 shows "other = nda_h nda" 
   oops
