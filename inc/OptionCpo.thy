@@ -502,7 +502,17 @@ lemma some_lub_chain_eq2: fixes Y:: "nat \<Rightarrow> 'a::cpo"
              assumes "chain (\<lambda>i. f (Y i))"
              shows " Some (\<Squnion> i. f (Y i)) = (\<Squnion> i. Some (f (Y i)))"
   using assms(1) some_lub_chain_eq by blast
- 
+
+lemma option_one_cont: "cont (\<lambda>x. [c \<mapsto> f\<cdot>x])"
+  apply(rule contI2, rule monofunI)
+   apply (simp add: below_option_def fun_belowI monofun_cfun_arg)
+  apply (auto simp add: below_fun_def below_option_def)
+  apply (smt below_option_def chain_monofun domIff fun_belowI fun_upd_apply option.exhaust_sel part_dom_lub po_class.chain_def some_below)
+  apply (simp add: contlub_cfun_arg part_map_chain part_the_lub)
+  by (smt below_option_def cont_pref_eq1I domIff fun_belowI fun_upd_apply option.sel option.simps(3) part_dom_lub po_class.chain_def)
+
+  
+  
 
 subsection \<open>Lub\<close>     
     

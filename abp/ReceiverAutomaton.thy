@@ -138,9 +138,14 @@ lift_definition receiver_stream_dr_h :: "(nat\<times>bool) tsyn stream \<Rightar
   unfolding ubWell_def usclOkay_stream_def ctype_tsyn_def
   by auto (* SWS: Beweis fertig *)
 
+(* SWS: Beweis fertig *)
 lift_definition receiver_stream_dr :: "((nat\<times>bool)) tsyn stream \<rightarrow> receiverMessage tsyn SB" is
 "receiver_stream_dr_h"
-  sorry
+  apply(auto simp add: cfun_def receiver_stream_dr_h_def map_fun_def comp_def )
+  apply(rule cont_Abs_UB)
+   apply(simp add: option_one_cont)
+  by (metis receiver_stream_dr_h.rep_eq ubrep_well)
+  
 
 lift_definition receiver_stream_ar_h :: "bool tsyn stream \<Rightarrow> receiverMessage tsyn SB" is
 "\<lambda> s. [(\<C> ''ar'') \<mapsto> (tsynMap (ReceiverBool)\<cdot>s)]"
