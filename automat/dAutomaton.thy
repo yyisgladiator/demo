@@ -168,6 +168,13 @@ lemma da_h_final2: assumes "sbeDom sbe = daDom da"
   shows "spfConcIn (sbe2SB sbe)\<cdot>(da_h da s) = spfConcOut (daNextOutput da s sbe)\<cdot>((da_h da (daNextState da s sbe)))"
   by (metis (no_types) assms da_h_dom da_h_final_h3 spfConcIn_dom spfConcIn_step spfConcOut_dom spf_eq)
 
+(* use this with the "rule" command *)
+lemma da_h_stepI: assumes "sbeDom sbe = daDom da"
+  assumes "(daNextOutput da s sbe) = out"
+      and "(daNextState da s sbe) = nextState"
+  shows "spfConcIn (sbe2SB sbe)\<cdot>(da_h da s) = spfConcOut out\<cdot>((da_h da nextState))"
+  by (metis (no_types) assms da_h_dom da_h_final_h3 spfConcIn_dom spfConcIn_step spfConcOut_dom spf_eq)
+
 lemma da_h_bottom: assumes "ubDom\<cdot>sb = daDom automat" and "\<exists>c\<in>daDom automat. sb  .  c = \<epsilon>"
   shows "(da_h automat s)\<rightleftharpoons>sb = ubclLeast (daRan automat)"
   apply(simp add: da_h_unfolding spfStep_def assms)
