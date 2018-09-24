@@ -92,25 +92,6 @@ definition mediumOut_as :: "'e tsyn \<Rightarrow> ('e::countable) mediumMessage 
 "mediumOut_as port_as = (sbe2SB (mediumElemOut_as port_as))"
 
 
-section \<open>Helpers to create a bundle from a tsyn list of elements\<close>
-
-fun medium_list_ar :: "('e tsyn) list \<Rightarrow> ('e::countable) mediumMessage tsyn SB" where
-"medium_list_ar (x#xs) = ubConcEq (medium_ar x)\<cdot>(medium_list_ar xs)" |
-"medium_list_ar []     = ubLeast {\<C> ''DoNotUse_99b5dbc59d3c49e098332bf020a6675d_ar''}"
-
-fun medium_list_as :: "('e tsyn) list \<Rightarrow> ('e::countable) mediumMessage tsyn SB" where
-"medium_list_as (x#xs) = ubConcEq (medium_as x)\<cdot>(medium_list_as xs)" |
-"medium_list_as []     = ubLeast {\<C> ''DoNotUse_99b5dbc59d3c49e098332bf020a6675d_as''}"
-
-(* Create one SB for all input channels *)
-definition mediumIn_list_ar :: "'e tsyn list \<Rightarrow> ('e::countable) mediumMessage tsyn SB" where
-"mediumIn_list_ar port_ar = (medium_list_ar port_ar)"
-
-(* Create one SB for all output channels *)
-definition mediumOut_list_as :: "'e tsyn list \<Rightarrow> ('e::countable) mediumMessage tsyn SB" where
-"mediumOut_list_as port_as = (medium_list_as port_as)"
-
-
 section \<open>Helpers to create a bundle from a tsyn stream of elements\<close>
 
 lift_definition DoNotUse_99b5dbc59d3c49e098332bf020a6675d_medium_stream_ar_h :: "'e tsyn stream \<Rightarrow> ('e::countable) mediumMessage tsyn SB" is
@@ -289,18 +270,6 @@ lemma mediumin_ar_ar_id[simp]: "medium_get_stream_ar\<cdot>(mediumIn_ar port_ar)
 subsection \<open>Identity lemmas for output SBs\<close>
 
 lemma mediumout_as_as_id[simp]: "medium_get_stream_as\<cdot>(mediumOut_as port_as) = \<up>port_as"
-  sorry
-
-
-subsection \<open>Identity lemmas for input SBs from lists\<close>
-
-lemma mediumin_list_ar_ar_id[simp]: "medium_get_stream_ar\<cdot>(mediumIn_list_ar port_ar) = <port_ar>"
-  sorry
-
-
-subsection \<open>Identity lemmas for output SBs from lists\<close>
-
-lemma mediumout_list_as_as_id[simp]: "medium_get_stream_as\<cdot>(mediumOut_list_as port_as) = <port_as>"
   sorry
 
 

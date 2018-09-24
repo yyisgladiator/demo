@@ -118,29 +118,6 @@ definition senderOut_ds :: "('e\<times>bool) tsyn \<Rightarrow> ('e::countable) 
 "senderOut_ds port_ds = (sbe2SB (senderElemOut_ds port_ds))"
 
 
-section \<open>Helpers to create a bundle from a tsyn list of elements\<close>
-
-fun sender_list_as :: "(bool tsyn) list \<Rightarrow> ('e::countable) senderMessage tsyn SB" where
-"sender_list_as (x#xs) = ubConcEq (sender_as x)\<cdot>(sender_list_as xs)" |
-"sender_list_as []     = ubLeast {\<C> ''DoNotUse_3799f81ae967487eb80129631a203e71_as''}"
-
-fun sender_list_i :: "('e tsyn) list \<Rightarrow> ('e::countable) senderMessage tsyn SB" where
-"sender_list_i (x#xs) = ubConcEq (sender_i x)\<cdot>(sender_list_i xs)" |
-"sender_list_i []     = ubLeast {\<C> ''DoNotUse_3799f81ae967487eb80129631a203e71_i''}"
-
-fun sender_list_ds :: "(('e\<times>bool) tsyn) list \<Rightarrow> ('e::countable) senderMessage tsyn SB" where
-"sender_list_ds (x#xs) = ubConcEq (sender_ds x)\<cdot>(sender_list_ds xs)" |
-"sender_list_ds []     = ubLeast {\<C> ''DoNotUse_3799f81ae967487eb80129631a203e71_ds''}"
-
-(* Create one SB for all input channels *)
-definition senderIn_list_as_i :: "bool tsyn list \<Rightarrow> 'e tsyn list \<Rightarrow> ('e::countable) senderMessage tsyn SB" where
-"senderIn_list_as_i port_as port_i = (sender_list_as port_as) \<uplus> (sender_list_i port_i)"
-
-(* Create one SB for all output channels *)
-definition senderOut_list_ds :: "('e\<times>bool) tsyn list \<Rightarrow> ('e::countable) senderMessage tsyn SB" where
-"senderOut_list_ds port_ds = (sender_list_ds port_ds)"
-
-
 section \<open>Helpers to create a bundle from a tsyn stream of elements\<close>
 
 lift_definition DoNotUse_3799f81ae967487eb80129631a203e71_sender_stream_as_h :: "bool tsyn stream \<Rightarrow> ('e::countable) senderMessage tsyn SB" is
@@ -409,21 +386,6 @@ lemma senderin_as_i_i_id[simp]: "sender_get_stream_i\<cdot>(senderIn_as_i port_a
 subsection \<open>Identity lemmas for output SBs\<close>
 
 lemma senderout_ds_ds_id[simp]: "sender_get_stream_ds\<cdot>(senderOut_ds port_ds) = \<up>port_ds"
-  sorry
-
-
-subsection \<open>Identity lemmas for input SBs from lists\<close>
-
-lemma senderin_list_as_i_as_id[simp]: "sender_get_stream_as\<cdot>(senderIn_list_as_i port_as port_i) = <port_as>"
-  sorry
-
-lemma senderin_list_as_i_i_id[simp]: "sender_get_stream_i\<cdot>(senderIn_list_as_i port_as port_i) = <port_i>"
-  sorry
-
-
-subsection \<open>Identity lemmas for output SBs from lists\<close>
-
-lemma senderout_list_ds_ds_id[simp]: "sender_get_stream_ds\<cdot>(senderOut_list_ds port_ds) = <port_ds>"
   sorry
 
 

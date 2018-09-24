@@ -118,29 +118,6 @@ definition receiverOut_ar_o :: "bool tsyn \<Rightarrow> 'e tsyn \<Rightarrow> ('
 "receiverOut_ar_o port_ar port_o = (sbe2SB (receiverElemOut_ar_o port_ar port_o))"
 
 
-section \<open>Helpers to create a bundle from a tsyn list of elements\<close>
-
-fun receiver_list_dr :: "(('e\<times>bool) tsyn) list \<Rightarrow> ('e::countable) receiverMessage tsyn SB" where
-"receiver_list_dr (x#xs) = ubConcEq (receiver_dr x)\<cdot>(receiver_list_dr xs)" |
-"receiver_list_dr []     = ubLeast {\<C> ''DoNotUse_6bb7a2acb4ad47378fc9b0c670528dcd_dr''}"
-
-fun receiver_list_ar :: "(bool tsyn) list \<Rightarrow> ('e::countable) receiverMessage tsyn SB" where
-"receiver_list_ar (x#xs) = ubConcEq (receiver_ar x)\<cdot>(receiver_list_ar xs)" |
-"receiver_list_ar []     = ubLeast {\<C> ''DoNotUse_6bb7a2acb4ad47378fc9b0c670528dcd_ar''}"
-
-fun receiver_list_o :: "('e tsyn) list \<Rightarrow> ('e::countable) receiverMessage tsyn SB" where
-"receiver_list_o (x#xs) = ubConcEq (receiver_o x)\<cdot>(receiver_list_o xs)" |
-"receiver_list_o []     = ubLeast {\<C> ''DoNotUse_6bb7a2acb4ad47378fc9b0c670528dcd_o''}"
-
-(* Create one SB for all input channels *)
-definition receiverIn_list_dr :: "('e\<times>bool) tsyn list \<Rightarrow> ('e::countable) receiverMessage tsyn SB" where
-"receiverIn_list_dr port_dr = (receiver_list_dr port_dr)"
-
-(* Create one SB for all output channels *)
-definition receiverOut_list_ar_o :: "bool tsyn list \<Rightarrow> 'e tsyn list \<Rightarrow> ('e::countable) receiverMessage tsyn SB" where
-"receiverOut_list_ar_o port_ar port_o = (receiver_list_ar port_ar) \<uplus> (receiver_list_o port_o)"
-
-
 section \<open>Helpers to create a bundle from a tsyn stream of elements\<close>
 
 lift_definition DoNotUse_6bb7a2acb4ad47378fc9b0c670528dcd_receiver_stream_dr_h :: "('e\<times>bool) tsyn stream \<Rightarrow> ('e::countable) receiverMessage tsyn SB" is
@@ -362,21 +339,6 @@ lemma receiverout_ar_o_ar_id[simp]: "receiver_get_stream_ar\<cdot>(receiverOut_a
   sorry
 
 lemma receiverout_ar_o_o_id[simp]: "receiver_get_stream_o\<cdot>(receiverOut_ar_o port_ar port_o) = \<up>port_o"
-  sorry
-
-
-subsection \<open>Identity lemmas for input SBs from lists\<close>
-
-lemma receiverin_list_dr_dr_id[simp]: "receiver_get_stream_dr\<cdot>(receiverIn_list_dr port_dr) = <port_dr>"
-  sorry
-
-
-subsection \<open>Identity lemmas for output SBs from lists\<close>
-
-lemma receiverout_list_ar_o_ar_id[simp]: "receiver_get_stream_ar\<cdot>(receiverOut_list_ar_o port_ar port_o) = <port_ar>"
-  sorry
-
-lemma receiverout_list_ar_o_o_id[simp]: "receiver_get_stream_o\<cdot>(receiverOut_list_ar_o port_ar port_o) = <port_o>"
   sorry
 
 
