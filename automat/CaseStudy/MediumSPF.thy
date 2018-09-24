@@ -74,12 +74,15 @@ lemma medspf_strict: "(MedSPF ora) \<rightleftharpoons> ubLeast(medInDom) = ubLe
 subsection {* properties of oraFun *}
 (* ----------------------------------------------------------------------- *)
 
+text{* The n-th element of an @{term oraFun} stream is True. *}
 lemma orafun_snth: "ora \<in> oraFun n \<Longrightarrow> snth n ora"
   by (simp add: oraFun_def)
 
+text{* No element of @{term oraFun} is empty. *}
 lemma orafun_nbot: "ora \<in> oraFun n \<Longrightarrow> ora \<noteq> \<epsilon>"
   using oraFun_def by force
 
+text{* The set @{term oraFun} is not empty. *}
 lemma orafun_nempty: "oraFun n \<noteq> {}"
   proof -
   obtain ora where ora_def: "ora = ((n \<star> \<up>False) \<bullet> ((\<up>True)\<infinity>))"
@@ -104,6 +107,7 @@ lemma orafun_nempty: "oraFun n \<noteq> {}"
     by blast
   qed
 
+text{* If the first element of an @{term oraFun} stream is True, then the rest is in @{term oraFun}. *}
 lemma orafun0_orafunn: 
   assumes "ora \<in> oraFun 0" obtains n where "\<exists>ora1. ora = \<up>True \<bullet> ora1 \<and> ora1 \<in> oraFun n"
   using assms

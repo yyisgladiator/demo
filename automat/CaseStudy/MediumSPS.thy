@@ -20,8 +20,7 @@ default_sort countable
 
 text {* @{term MedSPS}: Lossy medium function set for the Alternating Bit Protocol. *}
 lift_definition MedSPS :: "nat \<Rightarrow> 'a medMessage tsyn SPS" is 
-  "\<lambda> n. (Rev {(MedSPF ora) | ora. ora \<in> (oraFun n)}, Discr medInDom, 
-  Discr medOutDom)"
+  "\<lambda> n. (Rev {(MedSPF ora) | ora. ora \<in> (oraFun n)}, Discr medInDom, Discr medOutDom)"
   apply (simp add: ufclDom_ufun_def ufclRan_ufun_def)
   using medspf_ufdom medspf_ufran by blast
 
@@ -62,7 +61,19 @@ lemma medsps_0_uspecwell:
 
 (* If a "null" comes in, send it out and stay in the same state. *)
 lemma "spsConcIn (medIn -)(MedSPS n) = spsConcOut (medOut -)\<cdot>(MedSPS n)"
-sorry
+  apply (subst spsconcin_insert)
+  apply (simp add: medIn_def sbe2sb_getch)
+  apply (subst spsconcout_insert)
+  apply (simp add: medOut_def sbe2sb_getch)
+  apply (rule uspec_eqI)
+  apply (subst uspecimage_useful_uspecrevset)
+  apply (simp add: ufclDom_ufun_def ufclRan_ufun_def)
+  apply (subst uspecimage_useful_uspecrevset)
+  apply (simp add: ufclDom_ufun_def ufclRan_ufun_def)
+  apply (simp add: uspecrevset_insert setrevImage_def MedSPS.rep_eq inv_rev_rev)
+  apply (rule image_cong, simp_all)
+  using medspf_spfconc_null apply blast
+  by (simp add: ufclDom_ufun_def ufclRan_ufun_def)+
 
 lemma "spsConcIn (medIn (Msg m)) (MedSPS (Suc n)) = spsConcOut (medOut -)\<cdot>(MedSPS n)"
 sorry
