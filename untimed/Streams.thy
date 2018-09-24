@@ -3285,6 +3285,33 @@ lemma sconc_slen [simp]: assumes "#s<\<infinity>" and "#xs<\<infinity>"
   shows "#(s\<bullet>xs) < \<infinity>"
 by (metis Fin_neq_inf assms(1) assms(2) infI inf_ub lnle_def lnless_def slen_sconc_all_finite)
 
+lemma sconc_slen2: "\<And>(s1::'a stream) s2::'a stream. #(s1 \<bullet> s2) = #s1 + #s2"
+proof - 
+  fix s1::"'a stream"
+  fix s2::"'a stream"
+
+  have "#s1 = \<infinity> \<Longrightarrow> #(s1 \<bullet> s2) = #s1 + #s2"
+    by (simp add: plus_lnatInf_r)
+  moreover
+  have "#s2 = \<infinity> \<Longrightarrow> #(s1 \<bullet> s2) = #s1 + #s2"
+    by (simp add: slen_sconc_snd_inf)
+  moreover
+  have "#s1 \<noteq> \<infinity> \<Longrightarrow> #s2 \<noteq> \<infinity> \<Longrightarrow> #(s1 \<bullet> s2) = #s1 + #s2"
+  proof-
+    assume "#s1 \<noteq> \<infinity>"
+    then obtain l_s1 where l_s1_def: "Fin l_s1 = #s1"
+      using infI by metis
+    assume " #s2 \<noteq> \<infinity>"
+    then obtain l_s2 where l_s2_def: "Fin l_s2 =  #s2"
+      using infI by metis
+    show ?thesis
+      using l_s1_def l_s2_def by (metis lnat_plus_fin slen_sconc_all_finite)
+  qed
+
+  then show "#(s1 \<bullet> s2) = #s1 + #s2"
+    using calculation by linarith
+qed
+
 (* if the foot of a non-empty stream xs is a, then xs consists of another stream s (possibly empty)
    concatenated with \<up>a *)
 lemma sfoot2 [simp]: assumes "sfoot xs = a" and "xs\<noteq>\<epsilon>"
@@ -4887,8 +4914,9 @@ begin
   definition usclConc_stream_def: "usclConc \<equiv> sconc"
 instance
   apply intro_classes
-  apply (simp add: usclOkay_stream_def)
-  by (smt Un_subset_iff contra_subsetD sconc_sdom subsetI usclConc_stream_def)
+  apply (simp_all add: usclOkay_stream_def usclLen_stream_def usclConc_stream_def)
+  apply (meson Un_subset_iff dual_order.trans sconc_sdom)
+  by (simp add: sconc_slen2)
 end
 
 end
