@@ -62,4 +62,6 @@ session "automatCaseStudy" (mustWork) in "automat/CaseStudy" = "automat" +
 session "abp" (canFail) in abp = "automat" + 
   options [quick_and_dirty = true]
   theories
-    Receiver
+    ReceiverAutomaton
+    SenderAutomaton
+    MediumAutomaton
