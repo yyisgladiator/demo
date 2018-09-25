@@ -43,8 +43,25 @@ begin
 end
 
 
+(* SWS: Und noch die normalen definitionen/lemma über den globalen Datentypen *)
+
+
+(* SWS: channel heißt hier anders, aber für simplicity lasse ich das auf dr *)
+lift_definition abp_get_stream_dr :: "('e::countable) abpMessage tsyn SB \<rightarrow> ('e\<times>bool) tsyn stream" is
+"undefined"
+  sorry
+
+(* SWS: ToDo: bessere namen/soll sich an bisherige konventionen halten *)
+definition abpReceiverIn_stream_dr :: "('e\<times>bool) tsyn stream \<rightarrow> ('e::countable) abpMessage tsyn SB" where
+"abpReceiverIn_stream_dr =  undefined"
+
+
+
+
+
 (* TODO Channel renamen für die Lampe? *)
 section \<open>Instanzen der Sub-Komponenten\<close>
+
 
 definition sender :: "(('e::countable) abpMessage tsyn, ('e::countable) abpMessage tsyn) SPF" where
 "sender = undefined"
@@ -52,8 +69,18 @@ definition sender :: "(('e::countable) abpMessage tsyn, ('e::countable) abpMessa
 definition mediumSr :: "('e::countable) abpMessage tsyn SPS" where
 "mediumSr = undefined"
 
+
+lift_definition recevierInConvert::"('e::countable) abpMessage tsyn SB \<rightarrow> 'e receiverMessage tsyn SB" is
+"\<lambda>sb. receiverIn_stream_dr\<cdot>(abp_get_stream_dr\<cdot>sb)"
+  by (simp add: cfun_def)
+
+lift_definition recevierOutConvert::"('e::countable) receiverMessage tsyn SB \<rightarrow> 'e abpMessage tsyn SB" is
+"\<lambda>sb. abpReceiverIn_stream_dr\<cdot>(receiver_get_stream_dr\<cdot>sb)"
+  by (simp add: cfun_def)
+
+(* SWS: Receiver im neuen Datentypen *)
 definition receiver :: "(('e::countable) abpMessage tsyn, ('e::countable) abpMessage tsyn) SPF" where
-"receiver = undefined"
+"receiver = ufApplyIn recevierInConvert\<cdot>(ufApplyOut recevierOutConvert\<cdot>receiverSPF) "
 
 definition mediumRs :: "('e::countable) abpMessage tsyn SPS" where
 "mediumRs = undefined"
