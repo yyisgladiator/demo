@@ -1,11 +1,11 @@
 package abp;
 
-component Receiver<E> {
+component Receiver {
 
   port
-    in Pair<E,boolean> dr,
-    out boolean ar,
-    out E o;
+    in Pair<Integer,Boolean> dr,
+    out Boolean ar,
+    out Integer o;
 
   automaton Receiver {
     state Rf, Rt;
