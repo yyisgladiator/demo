@@ -1,9 +1,15 @@
 package abp;
 
-component ABP {
-    component MediumRS mediumRs;
-    component MediumSR mediumSr;
-    component Sender sender;
-    component Receiver receiver;
-    autoconnect port;
+component ABP<E> {
+
+    component Sender<E> sender;
+    component Medium<Pair<E,boolean>> mediumSr;
+    component Receiver<E> receiver;
+    component Medium<boolean> mediumRs;
+
+    connect sender.ds -> mediumSr.ar;
+    connect mediumSr.as -> receiver.dr;
+    connect receiver.ar -> mediumRs.ar;
+    connect mediumRs.as -> sender.as;
+
 }
