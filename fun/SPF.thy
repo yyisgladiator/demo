@@ -354,18 +354,11 @@ lemma spfRtIn_strongF_isweak: assumes "ufIsStrong spf" shows "ufIsWeak (spfRtIn\
 
 subsection \<open>spfConcIn lemma\<close>
 
-(*
+
 lemma spfConcIn_step[simp]:
   assumes  "ubDom\<cdot>sb = ufDom\<cdot>spf"
   shows "(spfConcIn sb1\<cdot>spf)\<rightleftharpoons>sb = spf\<rightleftharpoons>(ubConcEq sb1\<cdot>sb)"
-(* "(spfConcIn sb1\<cdot>spf)\<rightleftharpoons>sb = ubConcEq sb1\<cdot>(spf\<rightleftharpoons>sb)" *)
-  apply(simp only: spfConcIn_def ufApplyIn_def)     
-  apply (subst Abs_cfun_inverse2)
-   apply (rule ufapplyin_cont_h)
-   apply (metis ubclDom_ubundle_def ubconceq_dom)
-    apply (subst rep_abs_cufun)
-  apply simp_all
-  sorry*)
+  by (metis assms spfConcIn_def ubclDom_ubundle_def ubconceq_dom ufapplyin_apply)
 
 
 lemma spfConcIn_dom[simp]:"ufDom\<cdot>(spfConcIn sb \<cdot>spf) = ufDom\<cdot>spf"
@@ -450,6 +443,12 @@ lemma spfConcIn_weak_ublen_strong[simp]:
     show "lnsuc\<cdot>(ubclLen b) \<le> ubclLen (spfConcIn sb\<cdot>spf \<rightleftharpoons> b)"
       using a1 dom_not_empty local.dom_empty ufdom_2ufundom by fastforce
   qed
+
+lemma spfconcin_uspec_iamge_well: 
+     "\<And>x. ufclDom\<cdot> (spfConcIn sb\<cdot>x) = ufclDom\<cdot>x"
+    and "\<And>x. ufclRan\<cdot> (spfConcIn sb\<cdot>x) = ufclRan\<cdot>x"
+   apply (simp add: ufclDom_ufun_def)
+  by (simp add: ufclRan_ufun_def)
 
 subsection \<open>spfRtOut lemma\<close>
 
@@ -658,5 +657,5 @@ lemma spfConcOut_weak_ublen_strong[simp]:
     show "lnsuc\<cdot>(ubclLen b) \<le> ubclLen (spfConcOut sb\<cdot>spf \<rightleftharpoons> b)"
       by (metis a1 dom_not_empty local.dom_empty rep_ufun_well spfConcOut_dom ubcldom_least_cs ufWell_def ufunLeastIDom)
   qed
- 
+
 end

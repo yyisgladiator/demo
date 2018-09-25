@@ -30,6 +30,7 @@ session "bundle" (mustWork) in bundle = "stream" +
     SB
     UBundle_Induction
     tsynBundle
+    SBElem
 
 session "fun" (mustWork) in fun = "bundle" + 
   options [quick_and_dirty = true]
@@ -61,4 +62,6 @@ session "automatCaseStudy" (mustWork) in "automat/CaseStudy" = "automat" +
 session "abp" (canFail) in abp = "automat" + 
   options [quick_and_dirty = true]
   theories
-    Receiver
+    ReceiverAutomaton
+    SenderAutomaton
+    MediumAutomaton
