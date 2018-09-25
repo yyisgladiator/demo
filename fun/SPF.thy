@@ -444,6 +444,12 @@ lemma spfConcIn_weak_ublen_strong[simp]:
       using a1 dom_not_empty local.dom_empty ufdom_2ufundom by fastforce
   qed
 
+lemma spfconcin_uspec_iamge_well: 
+     "\<And>x. ufclDom\<cdot> (spfConcIn sb\<cdot>x) = ufclDom\<cdot>x"
+    and "\<And>x. ufclRan\<cdot> (spfConcIn sb\<cdot>x) = ufclRan\<cdot>x"
+   apply (simp add: ufclDom_ufun_def)
+  by (simp add: ufclRan_ufun_def)
+
 subsection \<open>spfRtOut lemma\<close>
 
 lemma spfRtOut_step[simp]: 
@@ -651,5 +657,5 @@ lemma spfConcOut_weak_ublen_strong[simp]:
     show "lnsuc\<cdot>(ubclLen b) \<le> ubclLen (spfConcOut sb\<cdot>spf \<rightleftharpoons> b)"
       by (metis a1 dom_not_empty local.dom_empty rep_ufun_well spfConcOut_dom ubcldom_least_cs ufWell_def ufunLeastIDom)
   qed
- 
+
 end
