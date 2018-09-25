@@ -54,4 +54,4 @@ Isabelle Version:
 
 <!--- Do not change anything below this line --->
 
-/label ~bug
+/label ~Bug

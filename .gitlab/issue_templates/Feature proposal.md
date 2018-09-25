@@ -24,4 +24,4 @@
 - [ ] Removed unnecessary template text
 
 <!--- Do not change anything below this line --->
-/label ~"feature proposal"
+/label ~"Feature Proposal"
