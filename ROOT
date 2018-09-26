@@ -55,6 +55,7 @@ session "automat" (mustWork) in automat = "spec" +
 session "automatCaseStudy" (mustWork) in "automat/CaseStudy" = "automat" + 
   options [quick_and_dirty = true]
   theories
+    medGeneralAut
     medFairStep
     medUnfairStep
     medsBelow
