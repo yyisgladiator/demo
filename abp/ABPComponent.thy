@@ -74,13 +74,23 @@ lift_definition recevierInConvert::"('e::countable) abpMessage tsyn SB \<rightar
 "\<lambda>sb. receiverIn_stream_dr\<cdot>(abp_get_stream_dr\<cdot>sb)"
   by (simp add: cfun_def)
 
+lift_definition recevierInConverterSPF::"('e::countable) abpMessage tsyn SB \<Rrightarrow> 'e receiverMessage tsyn SB" is
+"(\<Lambda> sb . ((ubDom\<cdot>sb = undefined (* TODO *)) \<leadsto> recevierInConvert\<cdot>sb))"
+  sorry
+
 lift_definition recevierOutConvert::"('e::countable) receiverMessage tsyn SB \<rightarrow> 'e abpMessage tsyn SB" is
 "\<lambda>sb. abpReceiverIn_stream_dr\<cdot>(receiver_get_stream_dr\<cdot>sb)"
   by (simp add: cfun_def)
 
+lift_definition recevierOutConverterSPF::"('e::countable) receiverMessage tsyn SB \<Rrightarrow> 'e abpMessage tsyn SB" is
+"(\<Lambda> sb . ((ubDom\<cdot>sb = undefined (*ToDo *)) \<leadsto> recevierOutConvert\<cdot>sb))"
+  sorry
+
+
 (* SWS: Receiver im neuen Datentypen *)
 definition receiver :: "(('e::countable) abpMessage tsyn, ('e::countable) abpMessage tsyn) SPF" where
-"receiver = ufApplyIn recevierInConvert\<cdot>(ufApplyOut recevierOutConvert\<cdot>receiverSPF) "
+"receiver = ufSerComp (ufSerComp recevierInConverterSPF receiverSPF)  recevierOutConverterSPF"
+(* Es gibt eine infix-Notation für ufSerComp ... klappt aber nicht so richtig *)
 
 definition mediumRs :: "('e::countable) abpMessage tsyn SPS" where
 "mediumRs = undefined"
