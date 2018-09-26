@@ -598,54 +598,6 @@ lemma setrevimage_not_empty: assumes "f \<in> inv Rev (setrevImage g H)"
 
 section \<open>set flat rev\<close>
 (* ToDo: Copy to SetPcpo *)
-subsection \<open>set flat def N lemmas\<close>
-definition setflat :: "'a set set \<rightarrow> 'a set" where
-"setflat = (\<Lambda> S. {K  | Z K. K\<in>Z \<and> Z \<in>S} )"
-
-lemma setflat_mono: "monofun (\<lambda> S. {K  | Z K. K\<in>Z \<and> Z \<in>S} )"
-  apply(rule monofunI)
-  apply auto
-  apply (simp add: less_set_def)
-  apply (rule subsetI)
-  by auto
-
-
-lemma setflat_cont: "cont (\<lambda> S. {K  | Z K. K\<in>Z \<and> Z \<in>S} )"
-  apply(rule contI2)
-  using setflat_mono apply simp
-  apply auto
-  unfolding  SetPcpo.less_set_def
-  unfolding lub_eq_Union
-  by blast
-
-lemma setflat_insert: "setflat\<cdot>S = {K  | Z K. K\<in>Z \<and> Z \<in>S}"
-  unfolding setflat_def
-  by (metis (mono_tags, lifting) Abs_cfun_inverse2 setflat_cont)  
-    
-lemma setflat_empty:"(setflat\<cdot>S = {}) \<longleftrightarrow> (\<forall>x\<in>S. x = {})"
-  by(simp add: setflat_insert, auto)
-
-lemma setflat_not_empty:"(setflat\<cdot>S \<noteq> {}) \<longleftrightarrow> (\<exists>x\<in>S. x \<noteq> {})"
-  by (simp add: setflat_empty)
-
-lemma setflat_obtain: assumes "f \<in> setflat\<cdot>S"
-  shows "\<exists> Z \<in> S. f \<in> Z"
-proof -
-  have "f \<in> {a. \<exists>A aa. a = aa \<and> aa \<in> A \<and> A \<in> S}"
-    by (metis assms setflat_insert)
-  then show ?thesis
-    by blast
-qed
-
-lemma "\<And> S. setflat\<cdot>S = \<Union>S"
-  apply (simp add: setflat_insert)
-  apply (subst Union_eq)
-  by auto
-
-lemma setflatten_mono2: assumes "\<And>b. b\<in>S1 \<Longrightarrow>( \<exists>c. c\<in>S2 \<and> b \<subseteq> c)"
-  shows "setflat\<cdot>S1 \<subseteq> setflat\<cdot> S2"
-  by (smt Abs_cfun_inverse2 setflat_def SetRev.setflat_cont assms mem_Collect_eq subsetCE subsetI)
-
 
 subsection \<open>set flat rev def N lemmas\<close>
 definition setflat_rev :: "'a set set rev \<rightarrow> 'a set rev" where
