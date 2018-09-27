@@ -3,7 +3,7 @@
  * This file was generated from ABP.maa and will be overridden when changed. To change
  * permanently, consider changing the model itself.
  *
- *  1.0.0
+ * isartransformer 1.0.0
  *)
 theory ABPComponent
   imports ReceiverAutomaton SenderAutomaton MediumAutomaton
@@ -43,57 +43,86 @@ begin
 end
 
 
-(* SWS: Und noch die normalen definitionen/lemma über den globalen Datentypen *)
+section \<open>Getter and Setter\<close>
 
-
-(* SWS: channel heißt hier anders, aber für simplicity lasse ich das auf dr *)
-lift_definition abp_get_stream_dr :: "('e::countable) abpMessage tsyn SB \<rightarrow> ('e\<times>bool) tsyn stream" is
+(* mediumSr.as \<rightarrow> receiver.dr *)
+lift_definition abp_get_stream_mediumSr_as__receiver_dr :: "('e::countable) abpMessage tsyn SB \<rightarrow> ('e\<times>bool) tsyn stream" is
 "undefined"
   sorry
 
-(* SWS: ToDo: bessere namen/soll sich an bisherige konventionen halten *)
-definition abpReceiverIn_stream_dr :: "('e\<times>bool) tsyn stream \<rightarrow> ('e::countable) abpMessage tsyn SB" where
-"abpReceiverIn_stream_dr =  undefined"
+(* i \<rightarrow> sender.i *)
+lift_definition abp_get_stream_i__sender_i :: "('e::countable) abpMessage tsyn SB \<rightarrow> 'e tsyn stream" is
+"undefined"
+  sorry
+
+(* mediumRs.as \<rightarrow> sender.as *)
+lift_definition abp_get_stream_mediumRs_as__sender_as :: "('e::countable) abpMessage tsyn SB \<rightarrow> bool tsyn stream" is
+"undefined"
+  sorry
+
+(* sender.ds \<rightarrow> mediumSr.ar *)
+lift_definition abp_get_stream_sender_ds__mediumSr_ar :: "('e::countable) abpMessage tsyn SB \<rightarrow> 'e tsyn stream" is
+"undefined"
+  sorry
+
+definition abpReceiverOut_stream_ar_o :: "bool tsyn stream \<rightarrow> 'e tsyn stream \<rightarrow> ('e::countable) abpMessage tsyn SB" where
+"abpReceiverOut_stream_ar_o =  undefined"
+
+definition abpSenderOut_stream_ds :: "('e\<times>bool) tsyn stream \<rightarrow> 'e abpMessage tsyn SB" where
+"abpSenderOut_stream_ds = undefined"
 
 
+section \<open>Converter\<close>
+
+(* Receiver *)
+lift_definition receiverInConvert::"('e::countable) abpMessage tsyn SB \<rightarrow> 'e receiverMessage tsyn SB" is
+"\<lambda>sb. receiverIn_stream_dr\<cdot>(abp_get_stream_mediumSr_as__receiver_dr\<cdot>sb)"
+  by (simp add: cfun_def)
+
+lift_definition receiverOutConvert::"('e::countable) receiverMessage tsyn SB \<rightarrow> 'e abpMessage tsyn SB" is
+"\<lambda>sb. abpReceiverOut_stream_ar_o\<cdot>(receiver_get_stream_ar\<cdot>sb)\<cdot>(receiver_get_stream_o\<cdot>sb)"
+  by (simp add: cfun_def)
+
+(* Sender *)
+lift_definition senderInConvert::"('e::countable) abpMessage tsyn SB \<rightarrow> 'e senderMessage tsyn SB" is
+"\<lambda>sb. senderIn_stream_as_i\<cdot>(abp_get_stream_mediumRs_as__sender_as\<cdot>sb)\<cdot>(abp_get_stream_i__sender_i\<cdot>sb)"
+  by (simp add: cfun_def)
+
+lift_definition senderOutConvert::"('e::countable) senderMessage tsyn SB \<rightarrow> 'e abpMessage tsyn SB" is
+"\<lambda>sb. abpSenderOut_stream_ds\<cdot>(sender_get_stream_ds\<cdot>sb)"
+  by (simp add: cfun_def)
 
 
+section \<open>Alternative Converter mit Serieller Komposition\<close>
 
-(* TODO Channel renamen für die Lampe? *)
+lift_definition receiverInConverterSPF::"('e::countable) abpMessage tsyn SB \<Rrightarrow> 'e receiverMessage tsyn SB" is
+"(\<Lambda> sb . ((ubDom\<cdot>sb = undefined) \<leadsto> receiverInConvert\<cdot>sb))"
+  sorry
+
+lift_definition receiverOutConverterSPF::"('e::countable) receiverMessage tsyn SB \<Rrightarrow> 'e abpMessage tsyn SB" is
+"(\<Lambda> sb . ((ubDom\<cdot>sb = undefined) \<leadsto> receiverOutConvert\<cdot>sb))"
+  sorry
+
+
 section \<open>Instanzen der Sub-Komponenten\<close>
 
-
 definition sender :: "(('e::countable) abpMessage tsyn, ('e::countable) abpMessage tsyn) SPF" where
-"sender = undefined"
+"sender = ufApplyIn senderInConvert\<cdot>(ufApplyOut senderOutConvert\<cdot>senderSPF)"
 
 definition mediumSr :: "('e::countable) abpMessage tsyn SPS" where
 "mediumSr = undefined"
 
-
-lift_definition recevierInConvert::"('e::countable) abpMessage tsyn SB \<rightarrow> 'e receiverMessage tsyn SB" is
-"\<lambda>sb. receiverIn_stream_dr\<cdot>(abp_get_stream_dr\<cdot>sb)"
-  by (simp add: cfun_def)
-
-lift_definition recevierInConverterSPF::"('e::countable) abpMessage tsyn SB \<Rrightarrow> 'e receiverMessage tsyn SB" is
-"(\<Lambda> sb . ((ubDom\<cdot>sb = undefined (* TODO *)) \<leadsto> recevierInConvert\<cdot>sb))"
-  sorry
-
-lift_definition recevierOutConvert::"('e::countable) receiverMessage tsyn SB \<rightarrow> 'e abpMessage tsyn SB" is
-"\<lambda>sb. abpReceiverIn_stream_dr\<cdot>(receiver_get_stream_dr\<cdot>sb)"
-  by (simp add: cfun_def)
-
-lift_definition recevierOutConverterSPF::"('e::countable) receiverMessage tsyn SB \<Rrightarrow> 'e abpMessage tsyn SB" is
-"(\<Lambda> sb . ((ubDom\<cdot>sb = undefined (*ToDo *)) \<leadsto> recevierOutConvert\<cdot>sb))"
-  sorry
-
-
-(* SWS: Receiver im neuen Datentypen *)
 definition receiver :: "(('e::countable) abpMessage tsyn, ('e::countable) abpMessage tsyn) SPF" where
-"receiver = ufSerComp (ufSerComp recevierInConverterSPF receiverSPF)  recevierOutConverterSPF"
-(* Es gibt eine infix-Notation für ufSerComp ... klappt aber nicht so richtig *)
+"receiver = ufApplyIn receiverInConvert\<cdot>(ufApplyOut receiverOutConvert\<cdot>receiverSPF)"
 
 definition mediumRs :: "('e::countable) abpMessage tsyn SPS" where
 "mediumRs = undefined"
+
+
+section \<open>Alternative Instanzen mit den alternativen Convertern\<close>
+
+definition receiver2 :: "(('e::countable) abpMessage tsyn, ('e::countable) abpMessage tsyn) SPF" where
+"receiver2 = (receiverInConverterSPF \<circ> receiverSPF \<circ> receiverOutConverterSPF)"
 
 
 section \<open>Die Komponente selbst\<close>
