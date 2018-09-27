@@ -96,6 +96,13 @@ lemma sbedom_null[simp]: "sbeDom (sbeNull cs) = cs"
 lemma sbe_ch_len: "\<And>c. c\<in> ubDom\<cdot>(sbe2SB sbe) \<Longrightarrow> # ((sbe2SB sbe) . c) = 1"
   by (simp add: one_lnat_def sbe2SB.rep_eq ubgetch_insert)
 
+lemma sbe2sb_len[simp]: "sbeDom sbe \<noteq> {} \<Longrightarrow> ubLen (sbe2SB sbe) = 1"
+  apply(simp add: ubLen_def)
+  apply(rule Least_equality)
+  apply (metis all_not_in_conv sbe2sb_dom sbe_ch_len usclLen_stream_def)
+  by (metis order_refl sbe2sb_dom sbe_ch_len usclLen_stream_def)
+
+
 
 
 
@@ -110,7 +117,7 @@ lemma sbeunion_2sb: "sbe2SB (sbe1 \<plusminus> sbe2) = (ubUnion\<cdot>(sbe2SB sb
   apply simp_all
   by (smt Un_iff domD map_add_dom_app_simps(3) map_add_find_right sbe2sb_dom sbe2sb_getch sbeDom_def sbeUnion.rep_eq sbeunion_dom ubunion_getchL ubunion_getchR)
 
-lemma sbeunion_null: "(sbeNull cs1) \<plusminus> (sbeNull cs2) = sbeNull (cs1 \<union> cs2)"
+lemma sbeunion_null[simp]: "(sbeNull cs1) \<plusminus> (sbeNull cs2) = sbeNull (cs1 \<union> cs2)"
   apply(rule sbe_eq)
    apply simp_all
   unfolding sbeUnion.rep_eq sbeNull.rep_eq
