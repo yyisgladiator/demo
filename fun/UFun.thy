@@ -139,6 +139,9 @@ abbreviation theRep_abbrv :: "('in, 'out) ufun \<Rightarrow> 'in \<Rightarrow> '
 definition ufIsStrict :: "('a::ubcl_comp, 'b::ubcl_comp) ufun \<Rightarrow> bool" where
 "ufIsStrict uf = (\<forall>sb. ubclDom\<cdot>sb=ufDom\<cdot>uf \<longrightarrow> ubclLen sb = 0 \<longrightarrow> ((uf\<rightleftharpoons>sb) = ubclLeast (ufRan\<cdot>uf)))"
 
+definition ufLift :: "channel set \<Rightarrow> ('a::ubcl_comp \<rightarrow> 'b::ubcl_comp) \<rightarrow> ('a \<Rrightarrow> 'b)" where
+"ufLift cs \<equiv> (\<Lambda> f . Abs_ufun (\<Lambda> sb. (ubclDom\<cdot>sb = cs) \<leadsto> (f\<cdot>sb)))"
+
 
 (****************************************************)
 section\<open>Subtype\<close>
@@ -783,6 +786,37 @@ lemma creatconstspf_dom[simp]: "ufDom\<cdot>(ufConst In\<cdot>ub) = In"
 
 lemma creatconstspf_ran[simp]: "ufRan\<cdot>(ufConst In\<cdot>ub) = ubclDom\<cdot>ub"
   by (simp add: ufConst_def)
+
+
+
+subsection \<open>ufLift\<close>
+thm ufLift_def
+
+
+lemma uflift_well[simp]: "ufWell (Abs_cfun (\<lambda> (ub::'m). (ubclDom\<cdot>ub = In) \<leadsto> (f\<cdot>ub)))"
+  apply (rule ufun_wellI)
+    apply (simp_all add: domIff2)
+  sorry
+
+lemma uflift_cont[simp]: "cont  (\<lambda> f. Abs_cufun (\<lambda> (ub::'m). (ubclDom\<cdot>ub = In) \<leadsto> f\<cdot>ub))"
+  apply (rule Cont.contI2)
+   apply (rule monofunI)
+   apply (rule ufun_belowI)
+    apply(simp add: ufdom_insert)
+  sorry
+
+lemma uflift_insert: "ufLift In\<cdot>f = Abs_cufun (\<lambda> ub. (ubclDom\<cdot>ub = In) \<leadsto> f\<cdot>ub)"
+  by(simp add: ufLift_def)
+
+lemma uflift_dom[simp]: "ufDom\<cdot>(ufLift In\<cdot>f) = In"
+  apply (simp add: uflift_insert)
+  sorry
+
+lemma uflift_ran[simp]: "ufRan\<cdot>(ufLift In\<cdot>f) = ubclDom\<cdot>(f\<cdot>(ubclLeast In))"
+  sorry
+
+lemma uflift_apply: "ubclDom\<cdot>ub = In \<Longrightarrow> (ufLift In\<cdot>f) \<rightleftharpoons> ub = f\<cdot>ub"
+  sorry
 
 
 (****************************************************)
