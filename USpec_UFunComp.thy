@@ -483,7 +483,8 @@ proof -
       have h2: "(f1 \<circ> f2) = (f3 \<circ> (f4 \<circ> f2))"
         by (simp add: f1_eq_f3_f4 h1)
       then show "\<exists>f1a f2a. (f1 \<circ> f2) = (f1a \<circ> f2a) \<and> f1a \<in> Rep_rev_uspec S1 \<and> f2a \<in> Rep_rev_uspec (S2 \<circle> S3)"
-        using assms f1_def f2_def f3_def f4_def sorry
+        using assms f1_def f2_def f3_def f4_def 
+        by (meson assms ufSerComp_asso uspec_sercomp_h2 uspec_sercomp_not_empty)
     qed
   next
     show "\<And>f1 f2. 
@@ -497,10 +498,11 @@ proof -
         using assms(2) f2_def uspec_sercomp_rep by blast
       have h1: "(f1 \<circ> (f3 \<circ> f4)) = ((f1 \<circ> f3) \<circ> f4)"
         by (meson assms(1) assms(2) f1_def f3_def f4_def ufSerComp_asso uspec_sercompwell2ufunclsercompwell)  
-      have f1: "(f1 \<circ> f2) = ((f1 \<circ> f3) \<circ> f4)"
+      have h2: "(f1 \<circ> f2) = ((f1 \<circ> f3) \<circ> f4)"
         by (simp add: f2_eq_f3_f4 h1)  
       then show "\<exists>f1a f2a. (f1 \<circ> f2) = (f1a \<circ> f2a) \<and> f1a \<in> Rep_rev_uspec (S1 \<circle> S2) \<and> f2a \<in> Rep_rev_uspec S3"
-        using assms(1) f1_def f2_def f3_def f4_def uspec_sercomp_not_empty sorry
+        using assms(1) f1_def f2_def f3_def f4_def 
+        by (meson assms ufSerComp_asso uspec_sercomp_h2 uspec_sercomp_not_empty)
     qed
   qed
   have f11: "uspecRevSet\<cdot>(S1 \<circle> S2 \<circle> S3) = uspecRevSet\<cdot>(S1 \<circle> (S2 \<circle> S3))"
