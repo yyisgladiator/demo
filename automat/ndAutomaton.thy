@@ -16,7 +16,9 @@ fun ndaWell::"((('state \<times> 'm sbElem) \<Rightarrow> (('state \<times> 'm S
 (* FYI: Non-deterministic version *)
 cpodef ('state::type, 'm::message) ndAutomaton = 
   "{f::(('state \<times>'m sbElem) \<Rightarrow> (('state \<times> 'm SB) set rev)) \<times> ('state \<times> 'm SB) set rev \<times> channel set discr \<times> channel set discr. ndaWell f}"
-    sorry
+   apply (meson finite.emptyI mem_Collect_eq ndaWell.simps)
+  apply(rule admI, auto)
+  sorry
 
 setup_lifting type_definition_ndAutomaton
 
@@ -253,6 +255,13 @@ lemma nda_h_valid_domain: "(SetPcpo.setify (\<lambda>a. USPEC (ndaDom\<cdot>nda)
 
 lemma nda_h_fixpoint:"nda_h nda = nda_h_inner nda (nda_h nda)"
   by (metis (no_types) lfp_fix nda_h_def nda_h_inner_monofun nda_h_valid_domain nda_inner_good)
+
+lemma nda_h_least: assumes "other_h \<in> SetPcpo.setify (\<lambda>a::'a. USPEC (ndaDom\<cdot>nda) (ndaRan\<cdot>nda))"
+  and "nda_h_inner nda other_h \<sqsubseteq> other_h"
+  shows "nda_h nda \<sqsubseteq> other_h"
+  unfolding nda_h_def
+  apply(rule lfp_least)
+  using assms nda_h_inner_monofun nda_h_valid_domain nda_inner_good by auto
 
 lemma nda_h_mono:  "monofun nda_h"
   apply(rule monofunI)
@@ -495,6 +504,18 @@ lemma nda_h_final: assumes "sbeDom sbe = ndaDom\<cdot>nda" and
   by (metis (no_types) assms(1) ndaConcOutFlatten_def nda_h_final_h_1 nda_h_final_h_2 nda_h_state_not_empty po_eq_conv)
 
 
+
+lemma nda_h_I:
+  assumes "sbeDom sbe = ndaDom\<cdot>nda" 
+    and "uspecIsConsistent (nda_h nda state)" (* For the proof see "ndaTotal.thy" *)
+    and "transitions = (ndaTransition\<cdot>nda) (state,sbe)"
+  shows "spsConcIn (sbe2SB sbe) (nda_h nda state) = ndaConcOutFlatten (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) transitions (nda_h nda)"
+  unfolding ndaConcOutFlatten_def assms(3)
+  apply(rule nda_h_final, simp add: assms)
+  by (metis assms(2) uspecmax_consistent uspecmax_dom uspecmax_ran)
+
+
+
 lemma nda_h_bottom_h: "uspecIsStrict (spsStep_m (ndaDom\<cdot>nda) (ndaRan\<cdot>nda)
   (ndaHelper2 (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) state (ndaTransition\<cdot>nda) (nda_h nda)))"
   apply (simp add: uspecIsStrict_def)
@@ -525,6 +546,7 @@ lemma nda_h_final_back: assumes "\<And>state sbe. sbeDom sbe = ndaDom\<cdot>nda 
   and "\<And> state. uspecDom\<cdot>(other state) = ndaDom\<cdot>nda" and "\<And> state. uspecRan\<cdot>(other state) = ndaRan\<cdot>nda"
 shows "other = nda_h nda" 
   oops
+
 
 
 end
