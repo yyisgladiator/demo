@@ -147,6 +147,12 @@ lemma ubmaxlen_sbtake: "ubMaxLen (Fin n) (ubTake n\<cdot>x)"
   apply (simp add: ubMapStream_ubDom ubMapStream_ubGetCh usclTake_len usclTake_len_le usclTake_well)
   by (metis (no_types, lifting) leI le_cases lnat_well_h1 usclTake_len usclTake_len_le)
 
+lemma ubmax_len_len: assumes "ubLen ub = n" and "ubMaxLen n ub" 
+  shows "\<And>c. c\<in>ubDom\<cdot>ub \<Longrightarrow> usclLen\<cdot>(ub . c) = n"
+  by (metis assms(1) assms(2) dual_order.antisym ubMaxLen_def ublen_channel)
+
+
+
 lemma ubleast_sbtake: assumes "x \<noteq> ubLeast (ubDom\<cdot>x)" shows "ubHd\<cdot>x \<noteq> ubLeast (ubDom\<cdot>x)"
 proof - 
   obtain my_c where my_c_def1: "x . my_c \<noteq> \<bottom>" and my_c_def2: "my_c \<in> ubDom\<cdot>x"

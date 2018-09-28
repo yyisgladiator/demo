@@ -102,12 +102,36 @@ lemma sbe2sb_len[simp]: "sbeDom sbe \<noteq> {} \<Longrightarrow> ubLen (sbe2SB 
   apply (metis all_not_in_conv sbe2sb_dom sbe_ch_len usclLen_stream_def)
   by (metis order_refl sbe2sb_dom sbe_ch_len usclLen_stream_def)
 
-lemma sbe_obtain: assumes "ubLen ub = 1" and "ubMaxLen 1 ub" 
+lemma sbe2sb_maxlen[simp]: "sbeDom sbe \<noteq> {} \<Longrightarrow> ubMaxLen 1 (sbe2SB sbe)"
+  apply(auto simp add: ubMaxLen_def)
+  by (simp add: sbe_ch_len usclLen_stream_def)
+
+lemma sbe_obtain: assumes "ubLen ub = 1" and "ubMaxLen 1 ub"
   obtains sbe where "sbe2SB sbe = ub" and "sbeDom sbe = ubDom\<cdot>ub"
 proof -
   have "ubDom\<cdot>ub \<noteq> {}"
     by (metis assms(1) notinfI3 one_lnat_def order_refl ubLen_def)
-  have "\<And>c. c\<in>ubDom\<cdot>ub \<Longrightarrow> (# (ub. c)) = 1" oops
+  have len: "\<And>c. c\<in>ubDom\<cdot>ub \<Longrightarrow> (# (ub. c)) = 1"
+    by (metis assms(1) assms(2) ubmax_len_len usclLen_stream_def)
+  have "\<And>s. #s = 1 \<Longrightarrow> \<exists>m. (\<up>m = s \<and> m\<in>sdom\<cdot>s)"
+    using len_one_stream one_lnat_def by fastforce
+  hence f_exists: "\<And>c.  (c\<in>ubDom\<cdot>ub) \<Longrightarrow> \<exists>m. ( ub . c = \<up>m \<and> m \<in> ctype c)" 
+      using len usclOkay_stream_def by (smt subsetCE ubdom_channel_usokay ubgetch_insert)
+  let ?f = "\<lambda>c. (c\<in>ubDom\<cdot>ub) \<leadsto> SOME m. (ub . c = \<up>m \<and> m \<in> ctype c)"
+  have "dom ?f = ubDom\<cdot>ub" by(simp add: domIff2)
+
+  have f_well: "sbElemWell ?f"
+    apply(auto simp add: sbElemWell_def)
+    by (metis (mono_tags, lifting) f_exists someI_ex)
+  have "sbe2SB (Abs_sbElem ?f) = ub"
+    apply(rule ub_eq)
+    apply (simp add: sbeDom_def Abs_sbElem_inverse f_well)
+    apply (simp add: domIff2 sbeDom_def Abs_sbElem_inverse f_well)
+    apply(simp add: ubGetCh_def sbe2SB.rep_eq domIff2 sbeDom_def Abs_sbElem_inverse f_well)
+    by (metis (mono_tags, lifting) f_exists someI_ex ubgetch_insert)
+  thus ?thesis
+    by (metis (no_types, lifting) sbe2sb_dom that) 
+qed
 
 
 subsection \<open>sbeUnion\<close>
