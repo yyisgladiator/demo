@@ -1382,8 +1382,7 @@ lemma uspecconst_ran [simp]: "uspecRan\<cdot>(uspecConst f ) = (ufclRan\<cdot>f)
   by (simp add: uspecran_insert)
 
 lemma uspecconst_consistent [simp]: "uspecIsConsistent (uspecConst f)"
-  apply(simp add: uspecIsConsistent_def uspecConst.rep_eq)
-  by (simp add: inv_rev_rev)
+  by(simp add: uspecIsConsistent_def uspecConst.rep_eq)
 
 lemma uspecconst_set [simp]: "uspecRevSet\<cdot>(uspecConst f) = Rev {f}"
   by(simp add: uspecrevset_insert uspecConst.rep_eq)
