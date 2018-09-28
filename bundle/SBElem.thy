@@ -102,8 +102,12 @@ lemma sbe2sb_len[simp]: "sbeDom sbe \<noteq> {} \<Longrightarrow> ubLen (sbe2SB 
   apply (metis all_not_in_conv sbe2sb_dom sbe_ch_len usclLen_stream_def)
   by (metis order_refl sbe2sb_dom sbe_ch_len usclLen_stream_def)
 
-
-
+lemma sbe_obtain: assumes "ubLen ub = 1" and "ubMaxLen 1 ub" 
+  obtains sbe where "sbe2SB sbe = ub" and "sbeDom sbe = ubDom\<cdot>ub"
+proof -
+  have "ubDom\<cdot>ub \<noteq> {}"
+    by (metis assms(1) notinfI3 one_lnat_def order_refl ubLen_def)
+  have "\<And>c. c\<in>ubDom\<cdot>ub \<Longrightarrow> (# (ub. c)) = 1" oops
 
 
 subsection \<open>sbeUnion\<close>
