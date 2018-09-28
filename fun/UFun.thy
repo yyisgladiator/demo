@@ -139,7 +139,6 @@ abbreviation theRep_abbrv :: "('in, 'out) ufun \<Rightarrow> 'in \<Rightarrow> '
 definition ufIsStrict :: "('a::ubcl_comp, 'b::ubcl_comp) ufun \<Rightarrow> bool" where
 "ufIsStrict uf = (\<forall>sb. ubclDom\<cdot>sb=ufDom\<cdot>uf \<longrightarrow> ubclLen sb = 0 \<longrightarrow> ((uf\<rightleftharpoons>sb) = ubclLeast (ufRan\<cdot>uf)))"
 
-
 (****************************************************)
 section\<open>Subtype\<close>
 (****************************************************) 
@@ -783,6 +782,7 @@ lemma creatconstspf_dom[simp]: "ufDom\<cdot>(ufConst In\<cdot>ub) = In"
 
 lemma creatconstspf_ran[simp]: "ufRan\<cdot>(ufConst In\<cdot>ub) = ubclDom\<cdot>ub"
   by (simp add: ufConst_def)
+
 
 
 (****************************************************)
