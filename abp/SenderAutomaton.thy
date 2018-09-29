@@ -3,24 +3,13 @@
  * This file was generated from Sender.maa and will be overridden when changed. To change
  * permanently, consider changing the model itself.
  *
- * Generated on Sep 24, 2018 7:09:25 PM by isartransformer 1.0.0
+ * Generated on Sep 29, 2018 5:54:13 PM by isartransformer 1.0.0
  *)
 theory SenderAutomaton
   imports bundle.tsynBundle automat.dAutomaton
 
 begin
 
-
-(* TODO SWS: Move this to dAutomaton *)
-lemma da_h_stepI:
-  assumes "sbeDom sbe = daDom da"
-      and "(daNextOutput da s sbe) = out"
-      and "(daNextState da s sbe) = nextState"
-  shows "spfConcIn (sbe2SB sbe)\<cdot>(da_h da s) = spfConcOut out\<cdot>(da_h da nextState)"
-  by (metis (no_types) assms da_h_dom da_h_final_h3 spfConcIn_dom spfConcIn_step spfConcOut_dom spf_eq)
-
-(* TODO SWS: Move this to...? *)
-setup_lifting type_definition_cfun
 
 (* Helper for easier generation *)
 fun prepend :: "'a::type list \<Rightarrow> 'a \<Rightarrow> 'a list" where
@@ -29,7 +18,7 @@ fun prepend :: "'a::type list \<Rightarrow> 'a \<Rightarrow> 'a list" where
 
 section \<open>Datatype definition\<close>
 
-datatype ('e::countable) senderMessage = DoNotUse_3799f81ae967487eb80129631a203e71_SenderBool "bool" | DoNotUse_3799f81ae967487eb80129631a203e71_SenderE "'e" | DoNotUse_3799f81ae967487eb80129631a203e71_SenderPair_SenderE_SenderBool "('e\<times>bool)"
+datatype ('e::countable) senderMessage = DoNotUse_ce16d6ec03a74c76b51abb668037291d_SenderBool "bool" | DoNotUse_ce16d6ec03a74c76b51abb668037291d_SenderE "'e" | DoNotUse_ce16d6ec03a74c76b51abb668037291d_SenderPair_E_Bool "('e\<times>bool)"
 
 instance senderMessage :: (countable) countable
   apply(intro_classes)
@@ -39,9 +28,9 @@ instantiation senderMessage :: (countable) message
 begin
   fun ctype_senderMessage :: "channel \<Rightarrow> ('e::countable) senderMessage set" where
   "ctype_senderMessage c = (
-    if c = \<C> ''DoNotUse_3799f81ae967487eb80129631a203e71_as'' then range DoNotUse_3799f81ae967487eb80129631a203e71_SenderBool else
-    if c = \<C> ''DoNotUse_3799f81ae967487eb80129631a203e71_i'' then range DoNotUse_3799f81ae967487eb80129631a203e71_SenderE else
-    if c = \<C> ''DoNotUse_3799f81ae967487eb80129631a203e71_ds'' then range DoNotUse_3799f81ae967487eb80129631a203e71_SenderPair_SenderE_SenderBool else
+    if c = \<C> ''DoNotUse_ce16d6ec03a74c76b51abb668037291d_as'' then range DoNotUse_ce16d6ec03a74c76b51abb668037291d_SenderBool else
+    if c = \<C> ''DoNotUse_ce16d6ec03a74c76b51abb668037291d_i'' then range DoNotUse_ce16d6ec03a74c76b51abb668037291d_SenderE else
+    if c = \<C> ''DoNotUse_ce16d6ec03a74c76b51abb668037291d_ds'' then range DoNotUse_ce16d6ec03a74c76b51abb668037291d_SenderPair_E_Bool else
     undefined)"
   instance
     by(intro_classes)
@@ -51,21 +40,21 @@ end
 section \<open>Helpers to create a bundle from a single raw element\<close>
 
 lift_definition senderElem_raw_as :: "bool \<Rightarrow> ('e::countable) senderMessage tsyn sbElem" is
-"\<lambda>x. [\<C> ''DoNotUse_3799f81ae967487eb80129631a203e71_as'' \<mapsto> Msg (DoNotUse_3799f81ae967487eb80129631a203e71_SenderBool x)]"
+"\<lambda>x. [\<C> ''DoNotUse_ce16d6ec03a74c76b51abb668037291d_as'' \<mapsto> Msg (DoNotUse_ce16d6ec03a74c76b51abb668037291d_SenderBool x)]"
   unfolding sbElemWell_def
   unfolding usclOkay_stream_def
   unfolding ctype_tsyn_def
   by simp
 
 lift_definition senderElem_raw_i :: "'e \<Rightarrow> ('e::countable) senderMessage tsyn sbElem" is
-"\<lambda>x. [\<C> ''DoNotUse_3799f81ae967487eb80129631a203e71_i'' \<mapsto> Msg (DoNotUse_3799f81ae967487eb80129631a203e71_SenderE x)]"
+"\<lambda>x. [\<C> ''DoNotUse_ce16d6ec03a74c76b51abb668037291d_i'' \<mapsto> Msg (DoNotUse_ce16d6ec03a74c76b51abb668037291d_SenderE x)]"
   unfolding sbElemWell_def
   unfolding usclOkay_stream_def
   unfolding ctype_tsyn_def
   by simp
 
 lift_definition senderElem_raw_ds :: "('e\<times>bool) \<Rightarrow> ('e::countable) senderMessage tsyn sbElem" is
-"\<lambda>x. [\<C> ''DoNotUse_3799f81ae967487eb80129631a203e71_ds'' \<mapsto> Msg (DoNotUse_3799f81ae967487eb80129631a203e71_SenderPair_SenderE_SenderBool x)]"
+"\<lambda>x. [\<C> ''DoNotUse_ce16d6ec03a74c76b51abb668037291d_ds'' \<mapsto> Msg (DoNotUse_ce16d6ec03a74c76b51abb668037291d_SenderPair_E_Bool x)]"
   unfolding sbElemWell_def
   unfolding usclOkay_stream_def
   unfolding ctype_tsyn_def
@@ -76,7 +65,7 @@ section \<open>Helpers to create a bundle from a single tsyn element\<close>
 
 fun senderElem_as :: "bool tsyn \<Rightarrow> ('e::countable) senderMessage tsyn sbElem" where
 "senderElem_as (Msg port_as) = senderElem_raw_as port_as" |
-"senderElem_as null = sbeNull {\<C> ''DoNotUse_3799f81ae967487eb80129631a203e71_as''}"
+"senderElem_as null = sbeNull {\<C> ''DoNotUse_ce16d6ec03a74c76b51abb668037291d_as''}"
 
 declare senderElem_as.simps[simp del]
 
@@ -85,7 +74,7 @@ definition sender_as :: "bool tsyn \<Rightarrow> ('e::countable) senderMessage t
 
 fun senderElem_i :: "'e tsyn \<Rightarrow> ('e::countable) senderMessage tsyn sbElem" where
 "senderElem_i (Msg port_i) = senderElem_raw_i port_i" |
-"senderElem_i null = sbeNull {\<C> ''DoNotUse_3799f81ae967487eb80129631a203e71_i''}"
+"senderElem_i null = sbeNull {\<C> ''DoNotUse_ce16d6ec03a74c76b51abb668037291d_i''}"
 
 declare senderElem_i.simps[simp del]
 
@@ -94,7 +83,7 @@ definition sender_i :: "'e tsyn \<Rightarrow> ('e::countable) senderMessage tsyn
 
 fun senderElem_ds :: "('e\<times>bool) tsyn \<Rightarrow> ('e::countable) senderMessage tsyn sbElem" where
 "senderElem_ds (Msg port_ds) = senderElem_raw_ds port_ds" |
-"senderElem_ds null = sbeNull {\<C> ''DoNotUse_3799f81ae967487eb80129631a203e71_ds''}"
+"senderElem_ds null = sbeNull {\<C> ''DoNotUse_ce16d6ec03a74c76b51abb668037291d_ds''}"
 
 declare senderElem_ds.simps[simp del]
 
@@ -118,59 +107,36 @@ definition senderOut_ds :: "('e\<times>bool) tsyn \<Rightarrow> ('e::countable) 
 "senderOut_ds port_ds = (sbe2SB (senderElemOut_ds port_ds))"
 
 
-section \<open>Helpers to create a bundle from a tsyn list of elements\<close>
-
-fun sender_list_as :: "(bool tsyn) list \<Rightarrow> ('e::countable) senderMessage tsyn SB" where
-"sender_list_as (x#xs) = ubConcEq (sender_as x)\<cdot>(sender_list_as xs)" |
-"sender_list_as []     = ubLeast {\<C> ''DoNotUse_3799f81ae967487eb80129631a203e71_as''}"
-
-fun sender_list_i :: "('e tsyn) list \<Rightarrow> ('e::countable) senderMessage tsyn SB" where
-"sender_list_i (x#xs) = ubConcEq (sender_i x)\<cdot>(sender_list_i xs)" |
-"sender_list_i []     = ubLeast {\<C> ''DoNotUse_3799f81ae967487eb80129631a203e71_i''}"
-
-fun sender_list_ds :: "(('e\<times>bool) tsyn) list \<Rightarrow> ('e::countable) senderMessage tsyn SB" where
-"sender_list_ds (x#xs) = ubConcEq (sender_ds x)\<cdot>(sender_list_ds xs)" |
-"sender_list_ds []     = ubLeast {\<C> ''DoNotUse_3799f81ae967487eb80129631a203e71_ds''}"
-
-(* Create one SB for all input channels *)
-definition senderIn_list_as_i :: "bool tsyn list \<Rightarrow> 'e tsyn list \<Rightarrow> ('e::countable) senderMessage tsyn SB" where
-"senderIn_list_as_i port_as port_i = (sender_list_as port_as) \<uplus> (sender_list_i port_i)"
-
-(* Create one SB for all output channels *)
-definition senderOut_list_ds :: "('e\<times>bool) tsyn list \<Rightarrow> ('e::countable) senderMessage tsyn SB" where
-"senderOut_list_ds port_ds = (sender_list_ds port_ds)"
-
-
 section \<open>Helpers to create a bundle from a tsyn stream of elements\<close>
 
-lift_definition DoNotUse_3799f81ae967487eb80129631a203e71_sender_stream_as_h :: "bool tsyn stream \<Rightarrow> ('e::countable) senderMessage tsyn SB" is
-"\<lambda> s. [(\<C> ''DoNotUse_3799f81ae967487eb80129631a203e71_as'') \<mapsto> (tsynMap (DoNotUse_3799f81ae967487eb80129631a203e71_SenderBool)\<cdot>s)]"
+lift_definition DoNotUse_ce16d6ec03a74c76b51abb668037291d_sender_stream_as_h :: "bool tsyn stream \<Rightarrow> ('e::countable) senderMessage tsyn SB" is
+"\<lambda> s. [(\<C> ''DoNotUse_ce16d6ec03a74c76b51abb668037291d_as'') \<mapsto> (tsynMap (DoNotUse_ce16d6ec03a74c76b51abb668037291d_SenderBool)\<cdot>s)]"
   unfolding ubWell_def usclOkay_stream_def ctype_tsyn_def
   apply auto
   sorry
 
 lift_definition sender_stream_as :: "(bool) tsyn stream \<rightarrow> ('e::countable) senderMessage tsyn SB" is
-"DoNotUse_3799f81ae967487eb80129631a203e71_sender_stream_as_h"
+"DoNotUse_ce16d6ec03a74c76b51abb668037291d_sender_stream_as_h"
   sorry
 
-lift_definition DoNotUse_3799f81ae967487eb80129631a203e71_sender_stream_i_h :: "'e tsyn stream \<Rightarrow> ('e::countable) senderMessage tsyn SB" is
-"\<lambda> s. [(\<C> ''DoNotUse_3799f81ae967487eb80129631a203e71_i'') \<mapsto> (tsynMap (DoNotUse_3799f81ae967487eb80129631a203e71_SenderE)\<cdot>s)]"
+lift_definition DoNotUse_ce16d6ec03a74c76b51abb668037291d_sender_stream_i_h :: "'e tsyn stream \<Rightarrow> ('e::countable) senderMessage tsyn SB" is
+"\<lambda> s. [(\<C> ''DoNotUse_ce16d6ec03a74c76b51abb668037291d_i'') \<mapsto> (tsynMap (DoNotUse_ce16d6ec03a74c76b51abb668037291d_SenderE)\<cdot>s)]"
   unfolding ubWell_def usclOkay_stream_def ctype_tsyn_def
   apply auto
   sorry
 
 lift_definition sender_stream_i :: "('e) tsyn stream \<rightarrow> ('e::countable) senderMessage tsyn SB" is
-"DoNotUse_3799f81ae967487eb80129631a203e71_sender_stream_i_h"
+"DoNotUse_ce16d6ec03a74c76b51abb668037291d_sender_stream_i_h"
   sorry
 
-lift_definition DoNotUse_3799f81ae967487eb80129631a203e71_sender_stream_ds_h :: "('e\<times>bool) tsyn stream \<Rightarrow> ('e::countable) senderMessage tsyn SB" is
-"\<lambda> s. [(\<C> ''DoNotUse_3799f81ae967487eb80129631a203e71_ds'') \<mapsto> (tsynMap (DoNotUse_3799f81ae967487eb80129631a203e71_SenderPair_SenderE_SenderBool)\<cdot>s)]"
+lift_definition DoNotUse_ce16d6ec03a74c76b51abb668037291d_sender_stream_ds_h :: "('e\<times>bool) tsyn stream \<Rightarrow> ('e::countable) senderMessage tsyn SB" is
+"\<lambda> s. [(\<C> ''DoNotUse_ce16d6ec03a74c76b51abb668037291d_ds'') \<mapsto> (tsynMap (DoNotUse_ce16d6ec03a74c76b51abb668037291d_SenderPair_E_Bool)\<cdot>s)]"
   unfolding ubWell_def usclOkay_stream_def ctype_tsyn_def
   apply auto
   sorry
 
 lift_definition sender_stream_ds :: "(('e\<times>bool)) tsyn stream \<rightarrow> ('e::countable) senderMessage tsyn SB" is
-"DoNotUse_3799f81ae967487eb80129631a203e71_sender_stream_ds_h"
+"DoNotUse_ce16d6ec03a74c76b51abb668037291d_sender_stream_ds_h"
   sorry
 
 (* Create one SB for all input channels *)
@@ -188,23 +154,22 @@ fun senderElem_get_as :: "('e::countable) senderMessage tsyn sbElem \<Rightarrow
 "senderElem_get_as sbe = undefined"
 
 lift_definition sender_get_stream_as :: "('e::countable) senderMessage tsyn SB \<rightarrow> bool tsyn stream" is
-"\<lambda>sb. tsynMap (inv DoNotUse_3799f81ae967487eb80129631a203e71_SenderBool)\<cdot>(sb . (\<C> ''DoNotUse_3799f81ae967487eb80129631a203e71_as''))"
+"\<lambda>sb. tsynMap (inv DoNotUse_ce16d6ec03a74c76b51abb668037291d_SenderBool)\<cdot>(sb . (\<C> ''DoNotUse_ce16d6ec03a74c76b51abb668037291d_as''))"
   by(simp add: cfun_def)
 
 fun senderElem_get_i :: "('e::countable) senderMessage tsyn sbElem \<Rightarrow> ('e) tsyn" where
 "senderElem_get_i sbe = undefined"
 
 lift_definition sender_get_stream_i :: "('e::countable) senderMessage tsyn SB \<rightarrow> 'e tsyn stream" is
-"\<lambda>sb. tsynMap (inv DoNotUse_3799f81ae967487eb80129631a203e71_SenderE)\<cdot>(sb . (\<C> ''DoNotUse_3799f81ae967487eb80129631a203e71_i''))"
+"\<lambda>sb. tsynMap (inv DoNotUse_ce16d6ec03a74c76b51abb668037291d_SenderE)\<cdot>(sb . (\<C> ''DoNotUse_ce16d6ec03a74c76b51abb668037291d_i''))"
   by(simp add: cfun_def)
 
 fun senderElem_get_ds :: "('e::countable) senderMessage tsyn sbElem \<Rightarrow> (('e\<times>bool)) tsyn" where
 "senderElem_get_ds sbe = undefined"
 
 lift_definition sender_get_stream_ds :: "('e::countable) senderMessage tsyn SB \<rightarrow> ('e\<times>bool) tsyn stream" is
-"\<lambda>sb. tsynMap (inv DoNotUse_3799f81ae967487eb80129631a203e71_SenderPair_SenderE_SenderBool)\<cdot>(sb . (\<C> ''DoNotUse_3799f81ae967487eb80129631a203e71_ds''))"
+"\<lambda>sb. tsynMap (inv DoNotUse_ce16d6ec03a74c76b51abb668037291d_SenderPair_E_Bool)\<cdot>(sb . (\<C> ''DoNotUse_ce16d6ec03a74c76b51abb668037291d_ds''))"
   by(simp add: cfun_def)
-
 
 
 section \<open>Automaton definition\<close>
@@ -286,11 +251,11 @@ fun senderTransitionH :: "('e SenderState \<times> (bool tsyn \<times> 'e tsyn))
 
 (* Domain *)
 definition senderDom :: "channel set" where
-"senderDom = {\<C> ''DoNotUse_3799f81ae967487eb80129631a203e71_as'', \<C> ''DoNotUse_3799f81ae967487eb80129631a203e71_i''}"
+"senderDom = {\<C> ''DoNotUse_ce16d6ec03a74c76b51abb668037291d_as'', \<C> ''DoNotUse_ce16d6ec03a74c76b51abb668037291d_i''}"
 
 (* Range *)
 definition senderRan :: "channel set" where
-"senderRan = {\<C> ''DoNotUse_3799f81ae967487eb80129631a203e71_ds''}"
+"senderRan = {\<C> ''DoNotUse_ce16d6ec03a74c76b51abb668037291d_ds''}"
 
 (* Transition function *)
 definition senderTransition :: "('e SenderState \<times> ('e::countable) senderMessage tsyn sbElem) \<Rightarrow> ('e SenderState \<times> ('e::countable) senderMessage tsyn SB)" where
@@ -360,25 +325,25 @@ section \<open>Lemmas for getter\<close>
 
 subsection \<open>Identity lemmas for single sbElems\<close>
 
-lemma senderelem_as_id[simp]: "senderElem_get_as (senderElem_as port_as) = port_as"
+lemma senderelem_as_id[simp]: "senderElem_get_as (senderElem_as x) = x"
   sorry
 
-lemma senderelem_i_id[simp]: "senderElem_get_i (senderElem_i port_i) = port_i"
+lemma senderelem_i_id[simp]: "senderElem_get_i (senderElem_i x) = x"
   sorry
 
-lemma senderelem_ds_id[simp]: "senderElem_get_ds (senderElem_ds port_ds) = port_ds"
+lemma senderelem_ds_id[simp]: "senderElem_get_ds (senderElem_ds x) = x"
   sorry
 
 
 subsection \<open>Identity lemmas for single SBs from streams\<close>
 
-lemma sender_stream_as_id[simp]: "sender_get_stream_as\<cdot>(sender_stream_as\<cdot>port_as) = port_as"
+lemma sender_stream_as_id[simp]: "sender_get_stream_as\<cdot>(sender_stream_as\<cdot>x) = x"
   sorry
 
-lemma sender_stream_i_id[simp]: "sender_get_stream_i\<cdot>(sender_stream_i\<cdot>port_i) = port_i"
+lemma sender_stream_i_id[simp]: "sender_get_stream_i\<cdot>(sender_stream_i\<cdot>x) = x"
   sorry
 
-lemma sender_stream_ds_id[simp]: "sender_get_stream_ds\<cdot>(sender_stream_ds\<cdot>port_ds) = port_ds"
+lemma sender_stream_ds_id[simp]: "sender_get_stream_ds\<cdot>(sender_stream_ds\<cdot>x) = x"
   sorry
 
 
@@ -409,21 +374,6 @@ lemma senderin_as_i_i_id[simp]: "sender_get_stream_i\<cdot>(senderIn_as_i port_a
 subsection \<open>Identity lemmas for output SBs\<close>
 
 lemma senderout_ds_ds_id[simp]: "sender_get_stream_ds\<cdot>(senderOut_ds port_ds) = \<up>port_ds"
-  sorry
-
-
-subsection \<open>Identity lemmas for input SBs from lists\<close>
-
-lemma senderin_list_as_i_as_id[simp]: "sender_get_stream_as\<cdot>(senderIn_list_as_i port_as port_i) = <port_as>"
-  sorry
-
-lemma senderin_list_as_i_i_id[simp]: "sender_get_stream_i\<cdot>(senderIn_list_as_i port_as port_i) = <port_i>"
-  sorry
-
-
-subsection \<open>Identity lemmas for output SBs from lists\<close>
-
-lemma senderout_list_ds_ds_id[simp]: "sender_get_stream_ds\<cdot>(senderOut_list_ds port_ds) = <port_ds>"
   sorry
 
 

@@ -2,14 +2,20 @@ package abp;
 
 component ABP<E> {
 
+    port
+      in E i,
+      out E o;
+
     component Sender<E> sender;
     component Medium<Pair<E,boolean>> mediumSr;
     component Receiver<E> receiver;
     component Medium<boolean> mediumRs;
 
+    connect i -> sender.i;
     connect sender.ds -> mediumSr.ar;
     connect mediumSr.as -> receiver.dr;
     connect receiver.ar -> mediumRs.ar;
     connect mediumRs.as -> sender.as;
+    connect receiver.o -> o;
 
 }
