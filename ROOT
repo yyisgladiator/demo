@@ -66,3 +66,4 @@ session "abp" (canFail) in abp = "automat" +
     ReceiverAutomaton
     SenderAutomaton
     MediumAutomaton
+    ABPComponent
