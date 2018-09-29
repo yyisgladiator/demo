@@ -338,9 +338,12 @@ lemma uspecmax_max: assumes "spec \<in> USPEC In Out"
   apply(simp add: uspecMax.rep_eq uspecSet_def)
   by (metis (mono_tags, lifting) SetPcpo.less_set_def UNIV_I assms member_filter subsetI uspecSet.rep_eq uspec_allDom uspec_allRan uspec_dom uspec_ran)
 
-lemma uspecmax_consistent: "(uspec \<noteq> uspecMax (uspecDom\<cdot>uspec) (uspecRan\<cdot>uspec)) \<longleftrightarrow> uspecIsConsistent uspec"
+
+lemma uspecleast_consistent: "(uspec \<noteq> uspecLeast (uspecDom\<cdot>uspec) (uspecRan\<cdot>uspec)) \<longleftrightarrow> uspecIsConsistent uspec"
   apply(simp add: uspecMax_def uspecIsConsistent_def)
-  by (metis rep_abs_rev_simp uspecMax.abs_eq uspec_obtain uspecmax_dom uspecmax_ran uspecwell_exists)
+  by (metis prod.sel(1) uspecLeast.rep_eq uspecSet.rep_eq uspec_eqI uspecleast_dom uspecleast_ran)
+
+
 
 
 lemma uspec_exists[simp]: "USPEC In Out \<noteq> {}"
