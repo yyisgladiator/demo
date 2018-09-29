@@ -215,8 +215,7 @@ lemma setrevfilter_included: "\<And>x. x \<in> (inv Rev (setrevFilter P\<cdot>A)
   by (simp add: inv_rev_rev setrevFilter_def)
 
 lemma setrevfilter_reversed: "\<And>x. P x \<and> x \<in> inv Rev A \<Longrightarrow> x \<in> (inv Rev (setrevFilter P\<cdot>A))"
-  apply(simp add: setrevFilter_def)
-  by(simp add: Set.filter_def inv_rev_rev)
+  by(simp add: setrevFilter_def)
 
 lemma setrevFilter_gdw: "\<And>x. x \<in> (inv Rev (setrevFilter P\<cdot>A)) \<longleftrightarrow> P x \<and> x \<in> inv Rev A"
   by (meson setrevfilter_condition setrevfilter_included setrevfilter_reversed)
@@ -374,7 +373,7 @@ lemma setrevUnion_cont1[simp]: "cont (\<lambda>x. Rev((inv Rev A) \<union> (inv 
         fix x
         assume a11: "x \<in> \<Inter>{x::'a set. \<exists>i::nat. x = inv Rev (Rev (inv Rev A \<union> inv Rev (Y i)))}"
         have g1: "\<And>i. x \<in> inv Rev (Rev (inv Rev A \<union> inv Rev (Y i)))"
-          using a11 by fastforce
+          using a11 by auto
         have g2: "\<And>i. x \<in>  (inv Rev A \<union> inv Rev (Y i))"
           by (metis g1 inv_rev_rev)
         then show "x \<in> inv Rev A \<union> inv Rev (Lub Y)"
@@ -432,8 +431,7 @@ proof -
     apply (rule chainI)
     by (metis Set.image_mono SetPcpo.less_set_def a1 below_rev.simps po_class.chainE revBelowNeqSubset)
   have f1: "(\<Squnion>i::nat. Rev (f ` inv Rev (Y i))) =  Rev (\<Inter>{x. \<exists>i. x = f ` inv Rev (Y i)})"
-    apply (simp add: f0 setrevLubEqInter)
-    by (simp add: inv_rev_rev)
+    by (simp add: f0 setrevLubEqInter)
   have f2: "\<And>i. \<forall> a \<in> inv Rev (Lub Y). a \<in> inv Rev (Y i)"
     by (metis (mono_tags, hide_lams) a1 below_rev.simps contra_subsetD is_ub_thelub rev_inv_rev set_cpo_simps(1))
   have f3: "\<And>i. \<forall> a \<in> inv Rev (Lub Y). f a \<in> f ` inv Rev (Y i)"
