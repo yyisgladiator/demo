@@ -34,7 +34,8 @@ lemma makeitoneset_one: "\<exists>!a. (makeItOneSet A = Rev {a})"
   by (metis makeItOneSet.elims rev.set the_elem_eq)
 lemma makeitoneset_in: "A\<noteq>(Rev {}) \<Longrightarrow> A\<sqsubseteq>makeItOneSet A"
   by (metis (no_types, lifting) inv_rev_rev makeItOneSet.simps revBelowNeqSubset setrev_eqI singletonD some_in_eq subsetI)
-
+lemma makeitoneset_subset: "makeItOneSet A = Rev {makeItOne (A)}"
+  by (metis below_refl makeItOne.elims makeItOneSet.simps)
 
 
 subsection \<open>ndaOne\<close>
@@ -81,6 +82,18 @@ lemma uspec_in: "uspecDom\<cdot>uspec = In \<Longrightarrow> uspecRan\<cdot>uspe
   apply(simp only: USPEC_def)
   by blast
 
+lemma nda2da_step:   assumes "sbeDom sbe = ndaDom\<cdot>nda" 
+  shows "spfConcIn (sbe2SB sbe)\<cdot>(da_h (nda2da nda) s) = spfConcOut (daNextOutput (nda2da nda) s sbe)\<cdot>((da_h (nda2da nda) (daNextState (nda2da nda) s sbe)))"
+  by (simp add: assms da_h_stepI)
+
+lemma 
+  assumes "sbeDom sbe = ndaDom\<cdot>nda" 
+  shows "spsConcIn (sbe2SB sbe) (uspecConst (da_h (nda2da nda) s)) = 
+  ndaConcOutFlatten (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) (makeItOneSet ((ndaTransition\<cdot>nda) (s, sbe))) (\<lambda>s::'a. uspecConst (da_h (nda2da nda) s))"
+  apply simp
+  apply(simp add: ndaConcOutFlatten_def ndaTodo_h_def)
+  oops
+
 lemma nda2da_least_h: "nda_h_inner nda (\<lambda>s::'a. uspecConst (da_h (nda2da nda) s)) \<sqsubseteq> (\<lambda>s::'a. uspecConst (da_h (nda2da nda) s))"
   apply(auto simp add: below_fun_def)
   apply(rule uspec_belowI)
@@ -89,6 +102,7 @@ lemma nda2da_least_h: "nda_h_inner nda (\<lambda>s::'a. uspecConst (da_h (nda2da
   apply simp
 
   apply(simp add: nda_h_inner_def Let_def)
+  apply(simp add: ndaHelper2_def)
   sorry
 
 lemma nda2da_in: "nda_h nda \<sqsubseteq> (\<lambda>s. uspecConst (da_h (nda2da nda) s)) "

@@ -180,7 +180,11 @@ proof -
     by (smt below_fun_def h1 h2 image_eqI inv_rev_rev setrevImage_def setrevimage_mono_obtain3)
 qed
 
-
+thm ndaConcOutFlatten_def
+lemma ndacontout_one: "ndaConcOutFlatten In Out (Rev {(s,out)}) h = ndaTodo_h In Out (s, out) h"
+  apply(simp add: ndaConcOutFlatten_def setrevImage_def)
+  apply(simp add: uspecFlatten_def uspec_set_filter_def setrevFilter_def)
+  oops
 
 
 
