@@ -432,8 +432,7 @@ lemma spfConcIn_weak_ublen_strong[simp]:
             have f2: "\<forall>c \<in> ubDom\<cdot>b. lnsuc\<cdot>(LEAST ln. ln\<in>{(usclLen\<cdot>(b. c)) | c. c \<in> ubDom\<cdot>b}) \<le> (usclLen\<cdot>(ubConcEq sb\<cdot>b . c))"
               by (metis (mono_tags, lifting) Least_le f1 lnsuc_lnle_emb mem_Collect_eq trans_lnle ubclDom_ubundle_def)
             have f3: "\<forall>c \<in> ubDom\<cdot>b. lnsuc\<cdot>(ubLen b) \<le> (usclLen\<cdot>(ubConcEq sb\<cdot>b . c))"
-              apply (simp add: ubLen_def)
-              using f2 by auto   
+              by (metis (no_types, lifting) dual_order.trans f1 lnsuc_lnle_emb ubclDom_ubundle_def ublen_channel)
             show ?thesis
               by (metis f3 ubLen_geI ubclLen_ubundle_def ubconceq_dom)
           qed
@@ -562,6 +561,31 @@ lemma spfconc_surj:
   apply(simp add: spfConcOut_def)
   using ufapplyin_inj assms
   by (metis sbconc_inj ubclDom_ubundle_def ubconceq_dom ufapplyout_inj) 
+
+lemma spfconcout_inf: "ubLen ub = \<infinity> \<Longrightarrow> ubDom\<cdot>ub=ufRan\<cdot>uf \<Longrightarrow> ubclDom\<cdot>x = ufDom\<cdot>uf \<Longrightarrow> spfConcOut ub\<cdot>uf \<rightleftharpoons> x = ub"
+  apply (simp add: ubclDom_ubundle_def spfConcOut_step)
+  by (metis sbconc_inf ubclDom_ubundle_def ubclRestrict_ubundle_def ubclrestrict_dom_id ufran_2_ubcldom2)
+
+lemma spfconcout_inf_const: assumes "ubDom\<cdot>ub = ufRan\<cdot>uf" and "ubLen ub = \<infinity>"
+  shows "spfConcOut ub\<cdot>uf = ufConst (ufDom\<cdot>uf)\<cdot>ub"
+  apply(rule ufun_eqI)
+   apply simp
+  apply simp
+  using assms(1) assms(2) spfconcout_inf by blast
+
+lemma spfconcout_restrict: "ufRan\<cdot>uf \<subseteq> ubDom\<cdot>ub \<Longrightarrow> spfConcOut ub\<cdot>uf = spfConcOut (ubRestrict (ufRan\<cdot>uf)\<cdot>ub)\<cdot>uf"
+  apply(rule ufun_eqI)
+   apply simp
+  apply simp
+  apply(simp add: ubclDom_ubundle_def)
+  by (metis order_refl ubclDom_ubundle_def ubconceq_insert ubconceq_restrict ufran_2_ubcldom2)
+
+lemma spfconcout_inf_const2: assumes "ufRan\<cdot>uf \<subseteq> ubDom\<cdot>ub" and "ubLen (ubRestrict (ufRan\<cdot>uf)\<cdot>ub) = \<infinity>"
+  shows "spfConcOut ub\<cdot>uf = (ufConst (ufDom\<cdot>uf)\<cdot>(ubRestrict (ufRan\<cdot>uf)\<cdot>ub))"
+  apply(rule ufun_eqI)
+   apply simp
+  apply simp
+  using assms(1) assms(2) spfconcout_inf spfconcout_restrict by fastforce
 
 lemma spfConcOut_weak_ublen_strong[simp]:
   assumes "ufIsWeak spf" and "ubLen sb = lnsuc\<cdot>0" and "ufRan\<cdot>spf \<subseteq> ubDom\<cdot>sb"

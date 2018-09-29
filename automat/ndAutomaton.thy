@@ -64,10 +64,9 @@ definition creatConstSPS:: "channel set \<Rightarrow> 'm::message SB  \<Rightarr
 "creatConstSPS \<equiv> \<lambda> In sb. createConstUspec (createConstSPF In\<cdot>sb)"
  
 *)
-lift_definition ndaTodo_h:: "channel set \<Rightarrow> channel set\<Rightarrow>  ('s \<times> 'm::message SB) \<Rightarrow> ('s \<Rightarrow> 'm SPS) \<Rightarrow>'m SPS" is
-"\<lambda> In Out (s, sb) h. if (ubLen (ubRestrict Out\<cdot>(ubUp\<cdot>sb)) < \<infinity>) then spsConcOut sb (h s) else
-      uspecConstOut In (ubRestrict Out\<cdot>(ubUp\<cdot>sb))"
-  done
+definition ndaTodo_h:: "channel set \<Rightarrow> channel set\<Rightarrow>  ('s \<times> 'm::message SB) \<Rightarrow> ('s \<Rightarrow> 'm SPS) \<Rightarrow>'m SPS" where
+"ndaTodo_h = (\<lambda> In Out (s, sb) h. if (ubLen (ubRestrict Out\<cdot>(ubUp\<cdot>sb)) < \<infinity>) then spsConcOut sb (h s) else
+      uspecConstOut In (ubRestrict Out\<cdot>(ubUp\<cdot>sb)))"
 
   (* Only monofun, not cont *)
 definition ndaConcOutFlatten:: "channel set \<Rightarrow> channel set \<Rightarrow> ('s \<times> 'm::message SB) set rev \<Rightarrow> ('s \<Rightarrow> 'm SPS) \<Rightarrow> 'm SPS" where
@@ -180,13 +179,35 @@ proof -
     by (smt below_fun_def h1 h2 image_eqI inv_rev_rev setrevImage_def setrevimage_mono_obtain3)
 qed
 
-thm ndaConcOutFlatten_def
-lemma ndacontout_one: "ndaConcOutFlatten In Out (Rev {(s,out)}) h = ndaTodo_h In Out (s, out) h"
-  apply(simp add: ndaConcOutFlatten_def setrevImage_def)
+(* ToDo: Copy to USPEC *)
+lemma uspecflatten_one_h:"({u::('a::ufuncl). (\<exists>Z::'a set. u \<in> Z \<and> (Z \<in> Rep_rev_uspec ` {a::'a uspec. a = uspec \<and> uspecDom\<cdot>a = uspecDom\<cdot>uspec \<and> uspecRan\<cdot>a = uspecRan\<cdot>uspec}))}) 
+  = Rep_rev_uspec uspec"
+  by blast
+lemma uspecflatten_one [simp]: "uspecDom\<cdot>uspec = In \<Longrightarrow> uspecRan\<cdot>uspec = Out \<Longrightarrow> uspecFlatten In Out (Rev {uspec}) = uspec"
   apply(simp add: uspecFlatten_def uspec_set_filter_def setrevFilter_def)
-  oops
+  apply(simp add: Set.filter_def )
+  apply(simp add: setflat_insert)
+  apply auto
+  apply(subst uspecflatten_one_h)
+  by (simp add: uspecdom_insert uspecran_insert)
+ 
 
+lemma ndatodo_dom[simp]: "uspecDom\<cdot>(h s) = In \<Longrightarrow> uspecDom\<cdot>(ndaTodo_h In Out (s,out) h) = In"
+  by(simp add: ndaTodo_h_def)
 
+lemma ndatodo_ran[simp]:"uspecRan\<cdot>(h s) = Out \<Longrightarrow> uspecRan\<cdot>(ndaTodo_h In Out (s,out) h) = Out"
+  apply(simp add: ndaTodo_h_def)
+  by (simp add: ubclDom_ubundle_def)
+
+lemma ndaconout_one[simp]: assumes "uspecDom\<cdot>(h s) = In" and "uspecRan\<cdot>(h s) = Out"
+  shows "ndaConcOutFlatten In Out (Rev {(s,out)}) h = ndaTodo_h In Out (s, out) h"
+  apply(simp add: ndaConcOutFlatten_def setrevImage_def)
+  apply(rule uspecflatten_one)
+  by(simp_all add: assms)
+
+lemma ndaconcout_one2[simp]: assumes "uspecDom\<cdot>(h (fst T)) = In" and "uspecRan\<cdot>(h (fst T)) = Out"
+  shows "ndaConcOutFlatten In Out (Rev { T }) h = ndaTodo_h In Out T h"
+  by (metis assms(1) assms(2) ndaconout_one prod.collapse)
 
 lemma ndaHelper2_monofun: "monofun (ndaHelper2 In Out s transition)"
   unfolding ndaHelper2_def
@@ -545,11 +566,17 @@ qed
 lemma nda_h_bottom: "uspecIsStrict (nda_h nda state)"
   by (metis nda_h_bottom_h nda_h_fixpoint nda_h_inner_def)
 
+
+(* This is the version used for "ndaTotal" *)
+(* Annika needs a different lemma with equality, that "nda_h nda = other" *)
 lemma nda_h_final_back: assumes "\<And>state sbe. sbeDom sbe = ndaDom\<cdot>nda \<Longrightarrow> spsConcIn (sbe2SB sbe) (other state) = 
-  ndaConcOutFlatten (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) ((ndaTransition\<cdot>nda) (s,sbe)) (nda_h nda)"
+  ndaConcOutFlatten (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) ((ndaTransition\<cdot>nda) (state,sbe)) (other)"
   and "\<And> state. uspecDom\<cdot>(other state) = ndaDom\<cdot>nda" and "\<And> state. uspecRan\<cdot>(other state) = ndaRan\<cdot>nda"
-shows "other = nda_h nda" 
-  oops
+shows "nda_h nda \<sqsubseteq> other" 
+  apply(rule nda_h_least) 
+  apply(simp only: USPEC_def SetPcpo.setify_def)
+  using assms(2) assms(3) apply auto[1]
+  sorry
 
 
 

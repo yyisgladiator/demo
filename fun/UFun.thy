@@ -783,6 +783,8 @@ lemma creatconstspf_dom[simp]: "ufDom\<cdot>(ufConst In\<cdot>ub) = In"
 lemma creatconstspf_ran[simp]: "ufRan\<cdot>(ufConst In\<cdot>ub) = ubclDom\<cdot>ub"
   by (simp add: ufConst_def)
 
+lemma ufconst_apply[simp]: "ubclDom\<cdot>x = In \<Longrightarrow> ((ufConst In\<cdot>ub) \<rightleftharpoons> x) = ub"
+  by(simp add: ufConst_def)
 
 
 (****************************************************)

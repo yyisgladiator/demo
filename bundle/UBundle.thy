@@ -584,6 +584,10 @@ using f2 by (simp add: ubLen_def wellorder_Least_lemma(2))
 qed
 
 
+lemma ublen_not_0: assumes "ubLen ub \<noteq> 0" and "c\<in>ubDom\<cdot>ub"
+  shows "usclLen\<cdot>(ub . c) \<noteq> 0"
+  using assms(1) assms(2) ublen_channel by fastforce
+
 
 
 
