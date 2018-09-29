@@ -1387,4 +1387,5 @@ lemma uspecconst_consistent [simp]: "uspecIsConsistent (uspecConst f)"
 lemma uspecconst_set [simp]: "uspecRevSet\<cdot>(uspecConst f) = Rev {f}"
   by(simp add: uspecrevset_insert uspecConst.rep_eq)
 
+
 end
