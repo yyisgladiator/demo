@@ -207,33 +207,26 @@ lemma medout_null: "medOut - . \<C> ''out'' = \<up>-"
 lemma medout_msg: "medOut (Msg m) . \<C> ''out'' = \<up>(Msg(medData m))"
   by (simp add: medOut_def medOutDom_def sbe2sb_getch medOutElem.simps(1) medOutMsgElem.rep_eq)
 
-lemma medingetstream_ubconc_null: assumes "ubDom\<cdot>ub = medInDom"
-  shows "medInGetStream\<cdot>(ubConc (medIn -)\<cdot>ub) = \<up>- \<bullet> (medInGetStream\<cdot>ub)"
-  apply (simp add: medInGetStream_def)
-  apply (subst ubConc_usclConc_eq)
-  apply (simp add: medInDom_def assms)+
-  apply (simp add: usclConc_stream_def tsynmap_sconc)
+lemma medingetstream_ubconc: assumes "ubDom\<cdot>ub = medInDom"
+  shows "medInGetStream\<cdot>(ubConc (medIn elem)\<cdot>ub) = \<up>elem \<bullet> (medInGetStream\<cdot>ub)"
   proof -
-    have tsynmap_medin_null: "tsynMap (inv medData)\<cdot>(medIn -  .  \<C> ''in'') = \<up>-"
-      by (simp add: medin_null tsynmap_singleton_null)
-    then show "tsynMap (inv medData)\<cdot>(medIn -  .  \<C> ''in'') \<bullet> tsynMap (inv medData)\<cdot>(ub  .  \<C> ''in'') 
-      = \<up>- \<bullet> tsynMap (inv medData)\<cdot>(ub  .  \<C> ''in'')"
-    by (simp add: tsynmap_medin_null)
-  qed
-
-lemma medingetstream_ubconc_msg: assumes "ubDom\<cdot>ub = medInDom"
-  shows "medInGetStream\<cdot>(ubConc (medIn (Msg m))\<cdot>ub) = \<up>(Msg m) \<bullet> (medInGetStream\<cdot>ub)"
-  apply (simp add: medInGetStream_def)
-  apply (subst ubConc_usclConc_eq)
-  apply (simp add: medInDom_def assms)+
-  apply (simp add: usclConc_stream_def tsynmap_sconc)
-  proof -
-    have tsynmap_medin_msg: "tsynMap (inv medData)\<cdot>(medIn (Msg m)  .  \<C> ''in'') = \<up>(Msg m)"
+    have tsynmap_medin_msg: "\<And>m. tsynMap (inv medData)\<cdot>(medIn (Msg m)  .  \<C> ''in'') = \<up>(Msg m)"  
       apply (simp add: medin_msg tsynmap_singleton_msg)
       by (meson f_inv_into_f medMessage.inject rangeI)
-    then show "tsynMap (inv medData)\<cdot>(medIn (Msg m)  .  \<C> ''in'') \<bullet> tsynMap (inv medData)\<cdot>(ub  .  \<C> ''in'') 
-      = \<up>(Msg m) \<bullet> tsynMap (inv medData)\<cdot>(ub  .  \<C> ''in'')"
-    by (simp add: tsynmap_medin_msg)
+    then have tsynmap_medin_conc_msg: "\<And>m. tsynMap (inv medData)\<cdot>(medIn (Msg m)  .  \<C> ''in'')
+      \<bullet> tsynMap (inv medData)\<cdot>(ub  .  \<C> ''in'') = \<up>(Msg m) \<bullet> tsynMap (inv medData)\<cdot>(ub  .  \<C> ''in'')"
+      by (simp add: tsynmap_medin_msg)
+    have tsynmap_medin_null: "tsynMap (inv medData)\<cdot>(medIn -  .  \<C> ''in'') = \<up>-"
+      by (simp add: medin_null tsynmap_singleton_null)
+    then have tsynmap_medin_conc_null: "tsynMap (inv medData)\<cdot>(medIn -  .  \<C> ''in'') 
+        \<bullet> tsynMap (inv medData)\<cdot>(ub  .  \<C> ''in'') = \<up>- \<bullet> tsynMap (inv medData)\<cdot>(ub  .  \<C> ''in'')"
+      by (simp add: tsynmap_medin_null)
+    show ?thesis
+      apply (simp add: medInGetStream_def)
+      apply (subst ubConc_usclConc_eq)
+      apply (simp add: medInDom_def assms)+
+      apply (simp add: usclConc_stream_def tsynmap_sconc)
+      by (metis tsynmap_medin_conc_null tsynmap_medin_conc_msg medInGetStream.rep_eq medOutElem.cases)
   qed
 
 end

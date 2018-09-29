@@ -59,6 +59,8 @@ lemma medsps_0_uspecwell:
   apply (simp add: ufclDom_ufun_def ufclRan_ufun_def)
   using medspf_ufdom medspf_ufran by blast
 
+
+
 (* If a "null" comes in, send it out and stay in the same state. *)
 lemma "spsConcIn (medIn -)(MedSPS n) = spsConcOut (medOut -)\<cdot>(MedSPS n)"
   apply (subst spsconcin_insert)

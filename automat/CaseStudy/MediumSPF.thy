@@ -147,7 +147,7 @@ lemma medspf_spfconc_null: assumes "ora \<in> oraFun n"
   apply (simp add: medspf_ubdom)+
   using assms
   by (simp add: medspf_insert usclConc_stream_def medOutDom_def tsynbmed_getch_out 
-    medingetstream_ubconc_null orafun_nbot tsynmed_sconc_null tsynmap_sconc medout_null 
+    medingetstream_ubconc orafun_nbot tsynmed_sconc_null tsynmap_sconc medout_null 
     tsynmap_singleton_null)
 
 lemma medspf_spfconc_msg_nzero: assumes "ora1 \<in> oraFun (Suc n)" obtains ora2 where "ora2 \<in> oraFun n"
@@ -173,7 +173,7 @@ lemma medspf_spfconc_msg_nzero: assumes "ora1 \<in> oraFun (Suc n)" obtains ora2
       apply (simp add: medspf_ubdom)+
       using assms
       by (simp add: medspf_insert usclConc_stream_def medOutDom_def tsynbmed_getch_out ora2def 
-        medingetstream_ubconc_msg tsynmed_sconc_msg_f tsynmap_sconc_null medout_null)
+        medingetstream_ubconc tsynmed_sconc_msg_f tsynmap_sconc_null medout_null)
    then show ?thesis
      using ora2_orafun that by simp
   qed           
@@ -197,7 +197,7 @@ lemma medspf_spfconc_msg_zero: assumes "ora1 \<in> oraFun 0" obtains ora2 where 
       apply (simp add: medspf_ubdom)+
       using assms
       by (simp add: medspf_insert usclConc_stream_def ora_def medOutDom_def tsynbmed_getch_out 
-        medout_msg medingetstream_ubconc_msg tsynmed_sconc_msg_t tsynmap_sconc_msg)
+        medout_msg medingetstream_ubconc tsynmed_sconc_msg_t tsynmap_sconc_msg)
     then show ?thesis
       using ora1_def that by blast
   qed
