@@ -566,10 +566,16 @@ qed
 lemma nda_h_bottom: "uspecIsStrict (nda_h nda state)"
   by (metis nda_h_bottom_h nda_h_fixpoint nda_h_inner_def)
 
+
+(* This is the version used for "ndaTotal" *)
+(* Annika needs a different lemma with equality, that "nda_h nda = other" *)
 lemma nda_h_final_back: assumes "\<And>state sbe. sbeDom sbe = ndaDom\<cdot>nda \<Longrightarrow> spsConcIn (sbe2SB sbe) (other state) = 
   ndaConcOutFlatten (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) ((ndaTransition\<cdot>nda) (state,sbe)) (other)"
   and "\<And> state. uspecDom\<cdot>(other state) = ndaDom\<cdot>nda" and "\<And> state. uspecRan\<cdot>(other state) = ndaRan\<cdot>nda"
 shows "nda_h nda \<sqsubseteq> other" 
+  apply(rule nda_h_least) 
+  apply(simp only: USPEC_def SetPcpo.setify_def)
+  using assms(2) assms(3) apply auto[1]
   sorry
 
 

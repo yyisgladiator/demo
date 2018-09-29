@@ -151,6 +151,13 @@ lemma ubconceq_insert [simp]: "ubConcEq b1\<cdot>b2 = (ubConc b1\<cdot>b2) \<bar
 lemma ubconceq_dom [simp]: "ubDom\<cdot>(ubConcEq b1\<cdot>b2) = ubDom\<cdot>b2"
   by auto
 
+lemma ubconceq_restrict: "ubDom\<cdot>ub2 \<subseteq> cs \<Longrightarrow> ubConcEq (ubRestrict cs\<cdot>ub)\<cdot>ub2 = ubConcEq ub\<cdot>ub2"
+  apply(rule ub_eq)
+  apply simp
+   apply blast
+  apply simp
+  by (smt IntE IntI Un_iff subset_Un_eq ubconc_getch ubgetch_ubrestrict ubrestrict_ubdom2 ubup_ubgetch ubup_ubgetch2)
+
 
 
 end    
