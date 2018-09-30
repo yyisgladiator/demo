@@ -3,7 +3,7 @@
  * This file was generated from ABP.maa and will be overridden when changed. To change
  * permanently, consider changing the model itself.
  *
- * Generated on Sep 30, 2018 5:27:45 PM by isartransformer 1.0.0
+ * Generated on Oct 1, 2018 1:17:47 AM by isartransformer 1.0.0
  *)
 theory ABPComponent
   imports SenderAutomaton MediumAutomaton ReceiverAutomaton spec.SPS
@@ -22,7 +22,7 @@ definition uspecSerComp :: "('in,'m) ufun uspec ⇒ ('m,'out) ufun uspec ⇒ ('i
 
 section ‹Datatype definition›
 
-datatype ('e::countable) abpMessage = DoNotUse_f1edc413eeff4b6090e752496a1d9259_ABPE "'e" | DoNotUse_f1edc413eeff4b6090e752496a1d9259_ABPBool "bool" | DoNotUse_f1edc413eeff4b6090e752496a1d9259_ABPPair_E_Bool "('e×bool)"
+datatype ('e::countable) abpMessage = DoNotUse_8f3c8a916fc74aa884e9a52e6d9e962c_ABPE "'e" | DoNotUse_8f3c8a916fc74aa884e9a52e6d9e962c_ABPBool "bool" | DoNotUse_8f3c8a916fc74aa884e9a52e6d9e962c_ABPPair_E_Bool "('e×bool)"
 
 instance abpMessage :: (countable) countable
   apply(intro_classes)
@@ -32,57 +32,102 @@ instantiation abpMessage :: (countable) message
 begin
   fun ctype_abpMessage :: "channel ⇒ ('e::countable) abpMessage set" where
   "ctype_abpMessage c = (
-    if c = 𝒞 ''DoNotUse_f1edc413eeff4b6090e752496a1d9259_receiver_o__o'' then range DoNotUse_f1edc413eeff4b6090e752496a1d9259_ABPE else
-    if c = 𝒞 ''DoNotUse_f1edc413eeff4b6090e752496a1d9259_i__sender_i'' then range DoNotUse_f1edc413eeff4b6090e752496a1d9259_ABPE else
-    if c = 𝒞 ''DoNotUse_f1edc413eeff4b6090e752496a1d9259_sender_ds__mediumSr_ar'' then range DoNotUse_f1edc413eeff4b6090e752496a1d9259_ABPPair_E_Bool else
-    if c = 𝒞 ''DoNotUse_f1edc413eeff4b6090e752496a1d9259_mediumSr_as__receiver_dr'' then range DoNotUse_f1edc413eeff4b6090e752496a1d9259_ABPPair_E_Bool else
-    if c = 𝒞 ''DoNotUse_f1edc413eeff4b6090e752496a1d9259_receiver_ar__mediumRs_ar'' then range DoNotUse_f1edc413eeff4b6090e752496a1d9259_ABPBool else
-    if c = 𝒞 ''DoNotUse_f1edc413eeff4b6090e752496a1d9259_mediumRs_as__sender_as'' then range DoNotUse_f1edc413eeff4b6090e752496a1d9259_ABPBool else
+    if c = 𝒞 ''DoNotUse_8f3c8a916fc74aa884e9a52e6d9e962c_receiver_o__o'' then range DoNotUse_8f3c8a916fc74aa884e9a52e6d9e962c_ABPE else
+    if c = 𝒞 ''DoNotUse_8f3c8a916fc74aa884e9a52e6d9e962c_i__sender_i'' then range DoNotUse_8f3c8a916fc74aa884e9a52e6d9e962c_ABPE else
+    if c = 𝒞 ''DoNotUse_8f3c8a916fc74aa884e9a52e6d9e962c_sender_ds__mediumSr_ar'' then range DoNotUse_8f3c8a916fc74aa884e9a52e6d9e962c_ABPPair_E_Bool else
+    if c = 𝒞 ''DoNotUse_8f3c8a916fc74aa884e9a52e6d9e962c_mediumSr_as__receiver_dr'' then range DoNotUse_8f3c8a916fc74aa884e9a52e6d9e962c_ABPPair_E_Bool else
+    if c = 𝒞 ''DoNotUse_8f3c8a916fc74aa884e9a52e6d9e962c_receiver_ar__mediumRs_ar'' then range DoNotUse_8f3c8a916fc74aa884e9a52e6d9e962c_ABPBool else
+    if c = 𝒞 ''DoNotUse_8f3c8a916fc74aa884e9a52e6d9e962c_mediumRs_as__sender_as'' then range DoNotUse_8f3c8a916fc74aa884e9a52e6d9e962c_ABPBool else
     undefined)"
   instance
     by(intro_classes)
 end
 
 
+section ‹Domain and range›
+
+definition aBPDom :: "channel set" where
+"aBPDom = {𝒞 ''DoNotUse_8f3c8a916fc74aa884e9a52e6d9e962c_i__sender_i''}"
+
+definition aBPRan :: "channel set" where
+"aBPRan = {𝒞 ''DoNotUse_8f3c8a916fc74aa884e9a52e6d9e962c_receiver_o__o''}"
+
+
+subsection ‹sender›
+
+definition aBPSenderDom :: "channel set" where
+"aBPSenderDom = {𝒞 ''DoNotUse_8f3c8a916fc74aa884e9a52e6d9e962c_mediumRs_as__sender_as'', 𝒞 ''DoNotUse_8f3c8a916fc74aa884e9a52e6d9e962c_i__sender_i''}"
+
+definition aBPSenderRan :: "channel set" where
+"aBPSenderRan = {𝒞 ''DoNotUse_8f3c8a916fc74aa884e9a52e6d9e962c_sender_ds__mediumSr_ar''}"
+
+
+subsection ‹mediumSr›
+
+definition aBPMediumSrDom :: "channel set" where
+"aBPMediumSrDom = {𝒞 ''DoNotUse_8f3c8a916fc74aa884e9a52e6d9e962c_sender_ds__mediumSr_ar''}"
+
+definition aBPMediumSrRan :: "channel set" where
+"aBPMediumSrRan = {𝒞 ''DoNotUse_8f3c8a916fc74aa884e9a52e6d9e962c_mediumSr_as__receiver_dr''}"
+
+
+subsection ‹receiver›
+
+definition aBPReceiverDom :: "channel set" where
+"aBPReceiverDom = {𝒞 ''DoNotUse_8f3c8a916fc74aa884e9a52e6d9e962c_mediumSr_as__receiver_dr''}"
+
+definition aBPReceiverRan :: "channel set" where
+"aBPReceiverRan = {𝒞 ''DoNotUse_8f3c8a916fc74aa884e9a52e6d9e962c_receiver_ar__mediumRs_ar'', 𝒞 ''DoNotUse_8f3c8a916fc74aa884e9a52e6d9e962c_receiver_o__o''}"
+
+
+subsection ‹mediumRs›
+
+definition aBPMediumRsDom :: "channel set" where
+"aBPMediumRsDom = {𝒞 ''DoNotUse_8f3c8a916fc74aa884e9a52e6d9e962c_receiver_ar__mediumRs_ar''}"
+
+definition aBPMediumRsRan :: "channel set" where
+"aBPMediumRsRan = {𝒞 ''DoNotUse_8f3c8a916fc74aa884e9a52e6d9e962c_mediumRs_as__sender_as''}"
+
+
 section ‹Helpers to create a bundle from a single raw element›
 
 lift_definition aBPElem_raw_receiver_o__o :: "'e ⇒ ('e::countable) abpMessage tsyn sbElem" is
-"λx. [𝒞 ''DoNotUse_f1edc413eeff4b6090e752496a1d9259_receiver_o__o'' ↦ Msg (DoNotUse_f1edc413eeff4b6090e752496a1d9259_ABPE x)]"
+"λx. [𝒞 ''DoNotUse_8f3c8a916fc74aa884e9a52e6d9e962c_receiver_o__o'' ↦ Msg (DoNotUse_8f3c8a916fc74aa884e9a52e6d9e962c_ABPE x)]"
   unfolding sbElemWell_def
   unfolding usclOkay_stream_def
   unfolding ctype_tsyn_def
   by simp
 
 lift_definition aBPElem_raw_i__sender_i :: "'e ⇒ ('e::countable) abpMessage tsyn sbElem" is
-"λx. [𝒞 ''DoNotUse_f1edc413eeff4b6090e752496a1d9259_i__sender_i'' ↦ Msg (DoNotUse_f1edc413eeff4b6090e752496a1d9259_ABPE x)]"
+"λx. [𝒞 ''DoNotUse_8f3c8a916fc74aa884e9a52e6d9e962c_i__sender_i'' ↦ Msg (DoNotUse_8f3c8a916fc74aa884e9a52e6d9e962c_ABPE x)]"
   unfolding sbElemWell_def
   unfolding usclOkay_stream_def
   unfolding ctype_tsyn_def
   by simp
 
 lift_definition aBPElem_raw_sender_ds__mediumSr_ar :: "('e×bool) ⇒ ('e::countable) abpMessage tsyn sbElem" is
-"λx. [𝒞 ''DoNotUse_f1edc413eeff4b6090e752496a1d9259_sender_ds__mediumSr_ar'' ↦ Msg (DoNotUse_f1edc413eeff4b6090e752496a1d9259_ABPPair_E_Bool x)]"
+"λx. [𝒞 ''DoNotUse_8f3c8a916fc74aa884e9a52e6d9e962c_sender_ds__mediumSr_ar'' ↦ Msg (DoNotUse_8f3c8a916fc74aa884e9a52e6d9e962c_ABPPair_E_Bool x)]"
   unfolding sbElemWell_def
   unfolding usclOkay_stream_def
   unfolding ctype_tsyn_def
   by simp
 
 lift_definition aBPElem_raw_mediumSr_as__receiver_dr :: "('e×bool) ⇒ ('e::countable) abpMessage tsyn sbElem" is
-"λx. [𝒞 ''DoNotUse_f1edc413eeff4b6090e752496a1d9259_mediumSr_as__receiver_dr'' ↦ Msg (DoNotUse_f1edc413eeff4b6090e752496a1d9259_ABPPair_E_Bool x)]"
+"λx. [𝒞 ''DoNotUse_8f3c8a916fc74aa884e9a52e6d9e962c_mediumSr_as__receiver_dr'' ↦ Msg (DoNotUse_8f3c8a916fc74aa884e9a52e6d9e962c_ABPPair_E_Bool x)]"
   unfolding sbElemWell_def
   unfolding usclOkay_stream_def
   unfolding ctype_tsyn_def
   by simp
 
 lift_definition aBPElem_raw_receiver_ar__mediumRs_ar :: "bool ⇒ ('e::countable) abpMessage tsyn sbElem" is
-"λx. [𝒞 ''DoNotUse_f1edc413eeff4b6090e752496a1d9259_receiver_ar__mediumRs_ar'' ↦ Msg (DoNotUse_f1edc413eeff4b6090e752496a1d9259_ABPBool x)]"
+"λx. [𝒞 ''DoNotUse_8f3c8a916fc74aa884e9a52e6d9e962c_receiver_ar__mediumRs_ar'' ↦ Msg (DoNotUse_8f3c8a916fc74aa884e9a52e6d9e962c_ABPBool x)]"
   unfolding sbElemWell_def
   unfolding usclOkay_stream_def
   unfolding ctype_tsyn_def
   by simp
 
 lift_definition aBPElem_raw_mediumRs_as__sender_as :: "bool ⇒ ('e::countable) abpMessage tsyn sbElem" is
-"λx. [𝒞 ''DoNotUse_f1edc413eeff4b6090e752496a1d9259_mediumRs_as__sender_as'' ↦ Msg (DoNotUse_f1edc413eeff4b6090e752496a1d9259_ABPBool x)]"
+"λx. [𝒞 ''DoNotUse_8f3c8a916fc74aa884e9a52e6d9e962c_mediumRs_as__sender_as'' ↦ Msg (DoNotUse_8f3c8a916fc74aa884e9a52e6d9e962c_ABPBool x)]"
   unfolding sbElemWell_def
   unfolding usclOkay_stream_def
   unfolding ctype_tsyn_def
@@ -93,7 +138,7 @@ section ‹Helpers to create a bundle from a single tsyn element›
 
 fun aBPElem_receiver_o__o :: "'e tsyn ⇒ ('e::countable) abpMessage tsyn sbElem" where
 "aBPElem_receiver_o__o (Msg receiver_port_o__port_o) = aBPElem_raw_receiver_o__o receiver_port_o__port_o" |
-"aBPElem_receiver_o__o null = sbeNull {𝒞 ''DoNotUse_f1edc413eeff4b6090e752496a1d9259_receiver_o__o''}"
+"aBPElem_receiver_o__o null = sbeNull {𝒞 ''DoNotUse_8f3c8a916fc74aa884e9a52e6d9e962c_receiver_o__o''}"
 
 declare aBPElem_receiver_o__o.simps[simp del]
 
@@ -102,7 +147,7 @@ definition aBP_receiver_o__o :: "'e tsyn ⇒ ('e::countable) abpMessage tsyn SB"
 
 fun aBPElem_i__sender_i :: "'e tsyn ⇒ ('e::countable) abpMessage tsyn sbElem" where
 "aBPElem_i__sender_i (Msg port_i__sender_port_i) = aBPElem_raw_i__sender_i port_i__sender_port_i" |
-"aBPElem_i__sender_i null = sbeNull {𝒞 ''DoNotUse_f1edc413eeff4b6090e752496a1d9259_i__sender_i''}"
+"aBPElem_i__sender_i null = sbeNull {𝒞 ''DoNotUse_8f3c8a916fc74aa884e9a52e6d9e962c_i__sender_i''}"
 
 declare aBPElem_i__sender_i.simps[simp del]
 
@@ -111,7 +156,7 @@ definition aBP_i__sender_i :: "'e tsyn ⇒ ('e::countable) abpMessage tsyn SB" w
 
 fun aBPElem_sender_ds__mediumSr_ar :: "('e×bool) tsyn ⇒ ('e::countable) abpMessage tsyn sbElem" where
 "aBPElem_sender_ds__mediumSr_ar (Msg sender_port_ds__mediumSr_port_ar) = aBPElem_raw_sender_ds__mediumSr_ar sender_port_ds__mediumSr_port_ar" |
-"aBPElem_sender_ds__mediumSr_ar null = sbeNull {𝒞 ''DoNotUse_f1edc413eeff4b6090e752496a1d9259_sender_ds__mediumSr_ar''}"
+"aBPElem_sender_ds__mediumSr_ar null = sbeNull {𝒞 ''DoNotUse_8f3c8a916fc74aa884e9a52e6d9e962c_sender_ds__mediumSr_ar''}"
 
 declare aBPElem_sender_ds__mediumSr_ar.simps[simp del]
 
@@ -120,7 +165,7 @@ definition aBP_sender_ds__mediumSr_ar :: "('e×bool) tsyn ⇒ ('e::countable) ab
 
 fun aBPElem_mediumSr_as__receiver_dr :: "('e×bool) tsyn ⇒ ('e::countable) abpMessage tsyn sbElem" where
 "aBPElem_mediumSr_as__receiver_dr (Msg mediumSr_port_as__receiver_port_dr) = aBPElem_raw_mediumSr_as__receiver_dr mediumSr_port_as__receiver_port_dr" |
-"aBPElem_mediumSr_as__receiver_dr null = sbeNull {𝒞 ''DoNotUse_f1edc413eeff4b6090e752496a1d9259_mediumSr_as__receiver_dr''}"
+"aBPElem_mediumSr_as__receiver_dr null = sbeNull {𝒞 ''DoNotUse_8f3c8a916fc74aa884e9a52e6d9e962c_mediumSr_as__receiver_dr''}"
 
 declare aBPElem_mediumSr_as__receiver_dr.simps[simp del]
 
@@ -129,7 +174,7 @@ definition aBP_mediumSr_as__receiver_dr :: "('e×bool) tsyn ⇒ ('e::countable) 
 
 fun aBPElem_receiver_ar__mediumRs_ar :: "bool tsyn ⇒ ('e::countable) abpMessage tsyn sbElem" where
 "aBPElem_receiver_ar__mediumRs_ar (Msg receiver_port_ar__mediumRs_port_ar) = aBPElem_raw_receiver_ar__mediumRs_ar receiver_port_ar__mediumRs_port_ar" |
-"aBPElem_receiver_ar__mediumRs_ar null = sbeNull {𝒞 ''DoNotUse_f1edc413eeff4b6090e752496a1d9259_receiver_ar__mediumRs_ar''}"
+"aBPElem_receiver_ar__mediumRs_ar null = sbeNull {𝒞 ''DoNotUse_8f3c8a916fc74aa884e9a52e6d9e962c_receiver_ar__mediumRs_ar''}"
 
 declare aBPElem_receiver_ar__mediumRs_ar.simps[simp del]
 
@@ -138,7 +183,7 @@ definition aBP_receiver_ar__mediumRs_ar :: "bool tsyn ⇒ ('e::countable) abpMes
 
 fun aBPElem_mediumRs_as__sender_as :: "bool tsyn ⇒ ('e::countable) abpMessage tsyn sbElem" where
 "aBPElem_mediumRs_as__sender_as (Msg mediumRs_port_as__sender_port_as) = aBPElem_raw_mediumRs_as__sender_as mediumRs_port_as__sender_port_as" |
-"aBPElem_mediumRs_as__sender_as null = sbeNull {𝒞 ''DoNotUse_f1edc413eeff4b6090e752496a1d9259_mediumRs_as__sender_as''}"
+"aBPElem_mediumRs_as__sender_as null = sbeNull {𝒞 ''DoNotUse_8f3c8a916fc74aa884e9a52e6d9e962c_mediumRs_as__sender_as''}"
 
 declare aBPElem_mediumRs_as__sender_as.simps[simp del]
 
@@ -238,66 +283,167 @@ definition aBPMediumRsOut_as :: "bool tsyn ⇒ ('e::countable) abpMessage tsyn S
 "aBPMediumRsOut_as port_as = (sbe2SB (aBPMediumRsElemOut_as port_as))"
 
 
+section ‹Helpers to create a bundle from a tsyn list of elements›
+
+fun aBP_list_receiver_o__o :: "('e tsyn) list ⇒ ('e::countable) abpMessage tsyn SB" where
+"aBP_list_receiver_o__o (x#xs) = ubConcEq (aBP_receiver_o__o x)⋅(aBP_list_receiver_o__o xs)" |
+"aBP_list_receiver_o__o []     = ubLeast {𝒞 ''DoNotUse_8f3c8a916fc74aa884e9a52e6d9e962c_receiver_o__o''}"
+
+declare aBP_list_receiver_o__o.simps[simp del]
+
+fun aBP_list_i__sender_i :: "('e tsyn) list ⇒ ('e::countable) abpMessage tsyn SB" where
+"aBP_list_i__sender_i (x#xs) = ubConcEq (aBP_i__sender_i x)⋅(aBP_list_i__sender_i xs)" |
+"aBP_list_i__sender_i []     = ubLeast {𝒞 ''DoNotUse_8f3c8a916fc74aa884e9a52e6d9e962c_i__sender_i''}"
+
+declare aBP_list_i__sender_i.simps[simp del]
+
+fun aBP_list_sender_ds__mediumSr_ar :: "(('e×bool) tsyn) list ⇒ ('e::countable) abpMessage tsyn SB" where
+"aBP_list_sender_ds__mediumSr_ar (x#xs) = ubConcEq (aBP_sender_ds__mediumSr_ar x)⋅(aBP_list_sender_ds__mediumSr_ar xs)" |
+"aBP_list_sender_ds__mediumSr_ar []     = ubLeast {𝒞 ''DoNotUse_8f3c8a916fc74aa884e9a52e6d9e962c_sender_ds__mediumSr_ar''}"
+
+declare aBP_list_sender_ds__mediumSr_ar.simps[simp del]
+
+fun aBP_list_mediumSr_as__receiver_dr :: "(('e×bool) tsyn) list ⇒ ('e::countable) abpMessage tsyn SB" where
+"aBP_list_mediumSr_as__receiver_dr (x#xs) = ubConcEq (aBP_mediumSr_as__receiver_dr x)⋅(aBP_list_mediumSr_as__receiver_dr xs)" |
+"aBP_list_mediumSr_as__receiver_dr []     = ubLeast {𝒞 ''DoNotUse_8f3c8a916fc74aa884e9a52e6d9e962c_mediumSr_as__receiver_dr''}"
+
+declare aBP_list_mediumSr_as__receiver_dr.simps[simp del]
+
+fun aBP_list_receiver_ar__mediumRs_ar :: "(bool tsyn) list ⇒ ('e::countable) abpMessage tsyn SB" where
+"aBP_list_receiver_ar__mediumRs_ar (x#xs) = ubConcEq (aBP_receiver_ar__mediumRs_ar x)⋅(aBP_list_receiver_ar__mediumRs_ar xs)" |
+"aBP_list_receiver_ar__mediumRs_ar []     = ubLeast {𝒞 ''DoNotUse_8f3c8a916fc74aa884e9a52e6d9e962c_receiver_ar__mediumRs_ar''}"
+
+declare aBP_list_receiver_ar__mediumRs_ar.simps[simp del]
+
+fun aBP_list_mediumRs_as__sender_as :: "(bool tsyn) list ⇒ ('e::countable) abpMessage tsyn SB" where
+"aBP_list_mediumRs_as__sender_as (x#xs) = ubConcEq (aBP_mediumRs_as__sender_as x)⋅(aBP_list_mediumRs_as__sender_as xs)" |
+"aBP_list_mediumRs_as__sender_as []     = ubLeast {𝒞 ''DoNotUse_8f3c8a916fc74aa884e9a52e6d9e962c_mediumRs_as__sender_as''}"
+
+declare aBP_list_mediumRs_as__sender_as.simps[simp del]
+
+(* Create one SB for all input channels *)
+fun aBPIn_list_i :: "('e tsyn) list ⇒ ('e::countable) abpMessage tsyn SB" where
+"aBPIn_list_i ((port_i)#xs) = ubConcEq (aBPIn_i port_i)⋅(aBPIn_list_i xs)" |
+"aBPIn_list_i [] = ubLeast aBPDom"
+
+(* Create one SB for all output channels *)
+fun aBPOut_list_o :: "('e tsyn) list ⇒ ('e::countable) abpMessage tsyn SB" where
+"aBPOut_list_o ((port_o)#xs) = ubConcEq (aBPOut_o port_o)⋅(aBPOut_list_o xs)" |
+"aBPOut_list_o [] = ubLeast aBPRan"
+
+
+subsection ‹sender›
+
+(* Create one SB for all input channels *)
+fun aBPSenderIn_list_as_i :: "(bool tsyn×'e tsyn) list ⇒ ('e::countable) abpMessage tsyn SB" where
+"aBPSenderIn_list_as_i ((port_as,port_i)#xs) = ubConcEq (aBPSenderIn_as_i port_as port_i)⋅(aBPSenderIn_list_as_i xs)" |
+"aBPSenderIn_list_as_i [] = ubLeast aBPSenderDom"
+
+(* Create one SB for all output channels *)
+fun aBPSenderOut_list_ds :: "(('e×bool) tsyn) list ⇒ ('e::countable) abpMessage tsyn SB" where
+"aBPSenderOut_list_ds ((port_ds)#xs) = ubConcEq (aBPSenderOut_ds port_ds)⋅(aBPSenderOut_list_ds xs)" |
+"aBPSenderOut_list_ds [] = ubLeast aBPSenderRan"
+
+
+subsection ‹mediumSr›
+
+(* Create one SB for all input channels *)
+fun aBPMediumSrIn_list_ar :: "(('e×bool) tsyn) list ⇒ ('e::countable) abpMessage tsyn SB" where
+"aBPMediumSrIn_list_ar ((port_ar)#xs) = ubConcEq (aBPMediumSrIn_ar port_ar)⋅(aBPMediumSrIn_list_ar xs)" |
+"aBPMediumSrIn_list_ar [] = ubLeast aBPMediumSrDom"
+
+(* Create one SB for all output channels *)
+fun aBPMediumSrOut_list_as :: "(('e×bool) tsyn) list ⇒ ('e::countable) abpMessage tsyn SB" where
+"aBPMediumSrOut_list_as ((port_as)#xs) = ubConcEq (aBPMediumSrOut_as port_as)⋅(aBPMediumSrOut_list_as xs)" |
+"aBPMediumSrOut_list_as [] = ubLeast aBPMediumSrRan"
+
+
+subsection ‹receiver›
+
+(* Create one SB for all input channels *)
+fun aBPReceiverIn_list_dr :: "(('e×bool) tsyn) list ⇒ ('e::countable) abpMessage tsyn SB" where
+"aBPReceiverIn_list_dr ((port_dr)#xs) = ubConcEq (aBPReceiverIn_dr port_dr)⋅(aBPReceiverIn_list_dr xs)" |
+"aBPReceiverIn_list_dr [] = ubLeast aBPReceiverDom"
+
+(* Create one SB for all output channels *)
+fun aBPReceiverOut_list_ar_o :: "(bool tsyn×'e tsyn) list ⇒ ('e::countable) abpMessage tsyn SB" where
+"aBPReceiverOut_list_ar_o ((port_ar,port_o)#xs) = ubConcEq (aBPReceiverOut_ar_o port_ar port_o)⋅(aBPReceiverOut_list_ar_o xs)" |
+"aBPReceiverOut_list_ar_o [] = ubLeast aBPReceiverRan"
+
+
+subsection ‹mediumRs›
+
+(* Create one SB for all input channels *)
+fun aBPMediumRsIn_list_ar :: "(bool tsyn) list ⇒ ('e::countable) abpMessage tsyn SB" where
+"aBPMediumRsIn_list_ar ((port_ar)#xs) = ubConcEq (aBPMediumRsIn_ar port_ar)⋅(aBPMediumRsIn_list_ar xs)" |
+"aBPMediumRsIn_list_ar [] = ubLeast aBPMediumRsDom"
+
+(* Create one SB for all output channels *)
+fun aBPMediumRsOut_list_as :: "(bool tsyn) list ⇒ ('e::countable) abpMessage tsyn SB" where
+"aBPMediumRsOut_list_as ((port_as)#xs) = ubConcEq (aBPMediumRsOut_as port_as)⋅(aBPMediumRsOut_list_as xs)" |
+"aBPMediumRsOut_list_as [] = ubLeast aBPMediumRsRan"
+
+
 section ‹Helpers to create a bundle from a tsyn stream of elements›
 
-lift_definition DoNotUse_f1edc413eeff4b6090e752496a1d9259_aBP_stream_receiver_o__o_h :: "'e tsyn stream ⇒ ('e::countable) abpMessage tsyn SB" is
-"λ s. [(𝒞 ''DoNotUse_f1edc413eeff4b6090e752496a1d9259_receiver_o__o'') ↦ (tsynMap (DoNotUse_f1edc413eeff4b6090e752496a1d9259_ABPE)⋅s)]"
+lift_definition DoNotUse_8f3c8a916fc74aa884e9a52e6d9e962c_aBP_stream_receiver_o__o_h :: "'e tsyn stream ⇒ ('e::countable) abpMessage tsyn SB" is
+"λ s. [(𝒞 ''DoNotUse_8f3c8a916fc74aa884e9a52e6d9e962c_receiver_o__o'') ↦ (tsynMap (DoNotUse_8f3c8a916fc74aa884e9a52e6d9e962c_ABPE)⋅s)]"
   unfolding ubWell_def usclOkay_stream_def ctype_tsyn_def
   apply auto
   sorry
 
 lift_definition aBP_stream_receiver_o__o :: "('e) tsyn stream → ('e::countable) abpMessage tsyn SB" is
-"DoNotUse_f1edc413eeff4b6090e752496a1d9259_aBP_stream_receiver_o__o_h"
+"DoNotUse_8f3c8a916fc74aa884e9a52e6d9e962c_aBP_stream_receiver_o__o_h"
   sorry
 
-lift_definition DoNotUse_f1edc413eeff4b6090e752496a1d9259_aBP_stream_i__sender_i_h :: "'e tsyn stream ⇒ ('e::countable) abpMessage tsyn SB" is
-"λ s. [(𝒞 ''DoNotUse_f1edc413eeff4b6090e752496a1d9259_i__sender_i'') ↦ (tsynMap (DoNotUse_f1edc413eeff4b6090e752496a1d9259_ABPE)⋅s)]"
+lift_definition DoNotUse_8f3c8a916fc74aa884e9a52e6d9e962c_aBP_stream_i__sender_i_h :: "'e tsyn stream ⇒ ('e::countable) abpMessage tsyn SB" is
+"λ s. [(𝒞 ''DoNotUse_8f3c8a916fc74aa884e9a52e6d9e962c_i__sender_i'') ↦ (tsynMap (DoNotUse_8f3c8a916fc74aa884e9a52e6d9e962c_ABPE)⋅s)]"
   unfolding ubWell_def usclOkay_stream_def ctype_tsyn_def
   apply auto
   sorry
 
 lift_definition aBP_stream_i__sender_i :: "('e) tsyn stream → ('e::countable) abpMessage tsyn SB" is
-"DoNotUse_f1edc413eeff4b6090e752496a1d9259_aBP_stream_i__sender_i_h"
+"DoNotUse_8f3c8a916fc74aa884e9a52e6d9e962c_aBP_stream_i__sender_i_h"
   sorry
 
-lift_definition DoNotUse_f1edc413eeff4b6090e752496a1d9259_aBP_stream_sender_ds__mediumSr_ar_h :: "('e×bool) tsyn stream ⇒ ('e::countable) abpMessage tsyn SB" is
-"λ s. [(𝒞 ''DoNotUse_f1edc413eeff4b6090e752496a1d9259_sender_ds__mediumSr_ar'') ↦ (tsynMap (DoNotUse_f1edc413eeff4b6090e752496a1d9259_ABPPair_E_Bool)⋅s)]"
+lift_definition DoNotUse_8f3c8a916fc74aa884e9a52e6d9e962c_aBP_stream_sender_ds__mediumSr_ar_h :: "('e×bool) tsyn stream ⇒ ('e::countable) abpMessage tsyn SB" is
+"λ s. [(𝒞 ''DoNotUse_8f3c8a916fc74aa884e9a52e6d9e962c_sender_ds__mediumSr_ar'') ↦ (tsynMap (DoNotUse_8f3c8a916fc74aa884e9a52e6d9e962c_ABPPair_E_Bool)⋅s)]"
   unfolding ubWell_def usclOkay_stream_def ctype_tsyn_def
   apply auto
   sorry
 
 lift_definition aBP_stream_sender_ds__mediumSr_ar :: "(('e×bool)) tsyn stream → ('e::countable) abpMessage tsyn SB" is
-"DoNotUse_f1edc413eeff4b6090e752496a1d9259_aBP_stream_sender_ds__mediumSr_ar_h"
+"DoNotUse_8f3c8a916fc74aa884e9a52e6d9e962c_aBP_stream_sender_ds__mediumSr_ar_h"
   sorry
 
-lift_definition DoNotUse_f1edc413eeff4b6090e752496a1d9259_aBP_stream_mediumSr_as__receiver_dr_h :: "('e×bool) tsyn stream ⇒ ('e::countable) abpMessage tsyn SB" is
-"λ s. [(𝒞 ''DoNotUse_f1edc413eeff4b6090e752496a1d9259_mediumSr_as__receiver_dr'') ↦ (tsynMap (DoNotUse_f1edc413eeff4b6090e752496a1d9259_ABPPair_E_Bool)⋅s)]"
+lift_definition DoNotUse_8f3c8a916fc74aa884e9a52e6d9e962c_aBP_stream_mediumSr_as__receiver_dr_h :: "('e×bool) tsyn stream ⇒ ('e::countable) abpMessage tsyn SB" is
+"λ s. [(𝒞 ''DoNotUse_8f3c8a916fc74aa884e9a52e6d9e962c_mediumSr_as__receiver_dr'') ↦ (tsynMap (DoNotUse_8f3c8a916fc74aa884e9a52e6d9e962c_ABPPair_E_Bool)⋅s)]"
   unfolding ubWell_def usclOkay_stream_def ctype_tsyn_def
   apply auto
   sorry
 
 lift_definition aBP_stream_mediumSr_as__receiver_dr :: "(('e×bool)) tsyn stream → ('e::countable) abpMessage tsyn SB" is
-"DoNotUse_f1edc413eeff4b6090e752496a1d9259_aBP_stream_mediumSr_as__receiver_dr_h"
+"DoNotUse_8f3c8a916fc74aa884e9a52e6d9e962c_aBP_stream_mediumSr_as__receiver_dr_h"
   sorry
 
-lift_definition DoNotUse_f1edc413eeff4b6090e752496a1d9259_aBP_stream_receiver_ar__mediumRs_ar_h :: "bool tsyn stream ⇒ ('e::countable) abpMessage tsyn SB" is
-"λ s. [(𝒞 ''DoNotUse_f1edc413eeff4b6090e752496a1d9259_receiver_ar__mediumRs_ar'') ↦ (tsynMap (DoNotUse_f1edc413eeff4b6090e752496a1d9259_ABPBool)⋅s)]"
+lift_definition DoNotUse_8f3c8a916fc74aa884e9a52e6d9e962c_aBP_stream_receiver_ar__mediumRs_ar_h :: "bool tsyn stream ⇒ ('e::countable) abpMessage tsyn SB" is
+"λ s. [(𝒞 ''DoNotUse_8f3c8a916fc74aa884e9a52e6d9e962c_receiver_ar__mediumRs_ar'') ↦ (tsynMap (DoNotUse_8f3c8a916fc74aa884e9a52e6d9e962c_ABPBool)⋅s)]"
   unfolding ubWell_def usclOkay_stream_def ctype_tsyn_def
   apply auto
   sorry
 
 lift_definition aBP_stream_receiver_ar__mediumRs_ar :: "(bool) tsyn stream → ('e::countable) abpMessage tsyn SB" is
-"DoNotUse_f1edc413eeff4b6090e752496a1d9259_aBP_stream_receiver_ar__mediumRs_ar_h"
+"DoNotUse_8f3c8a916fc74aa884e9a52e6d9e962c_aBP_stream_receiver_ar__mediumRs_ar_h"
   sorry
 
-lift_definition DoNotUse_f1edc413eeff4b6090e752496a1d9259_aBP_stream_mediumRs_as__sender_as_h :: "bool tsyn stream ⇒ ('e::countable) abpMessage tsyn SB" is
-"λ s. [(𝒞 ''DoNotUse_f1edc413eeff4b6090e752496a1d9259_mediumRs_as__sender_as'') ↦ (tsynMap (DoNotUse_f1edc413eeff4b6090e752496a1d9259_ABPBool)⋅s)]"
+lift_definition DoNotUse_8f3c8a916fc74aa884e9a52e6d9e962c_aBP_stream_mediumRs_as__sender_as_h :: "bool tsyn stream ⇒ ('e::countable) abpMessage tsyn SB" is
+"λ s. [(𝒞 ''DoNotUse_8f3c8a916fc74aa884e9a52e6d9e962c_mediumRs_as__sender_as'') ↦ (tsynMap (DoNotUse_8f3c8a916fc74aa884e9a52e6d9e962c_ABPBool)⋅s)]"
   unfolding ubWell_def usclOkay_stream_def ctype_tsyn_def
   apply auto
   sorry
 
 lift_definition aBP_stream_mediumRs_as__sender_as :: "(bool) tsyn stream → ('e::countable) abpMessage tsyn SB" is
-"DoNotUse_f1edc413eeff4b6090e752496a1d9259_aBP_stream_mediumRs_as__sender_as_h"
+"DoNotUse_8f3c8a916fc74aa884e9a52e6d9e962c_aBP_stream_mediumRs_as__sender_as_h"
   sorry
 
 (* Create one SB for all input channels *)
@@ -359,42 +505,42 @@ fun aBPElem_get_receiver_o__o :: "('e::countable) abpMessage tsyn sbElem ⇒ ('e
 "aBPElem_get_receiver_o__o sbe = undefined"
 
 lift_definition aBP_get_stream_receiver_o__o :: "('e::countable) abpMessage tsyn SB → 'e tsyn stream" is
-"λsb. tsynMap (inv DoNotUse_f1edc413eeff4b6090e752496a1d9259_ABPE)⋅(sb . (𝒞 ''DoNotUse_f1edc413eeff4b6090e752496a1d9259_receiver_o__o''))"
+"λsb. tsynMap (inv DoNotUse_8f3c8a916fc74aa884e9a52e6d9e962c_ABPE)⋅(sb . (𝒞 ''DoNotUse_8f3c8a916fc74aa884e9a52e6d9e962c_receiver_o__o''))"
   by(simp add: cfun_def)
 
 fun aBPElem_get_i__sender_i :: "('e::countable) abpMessage tsyn sbElem ⇒ ('e) tsyn" where
 "aBPElem_get_i__sender_i sbe = undefined"
 
 lift_definition aBP_get_stream_i__sender_i :: "('e::countable) abpMessage tsyn SB → 'e tsyn stream" is
-"λsb. tsynMap (inv DoNotUse_f1edc413eeff4b6090e752496a1d9259_ABPE)⋅(sb . (𝒞 ''DoNotUse_f1edc413eeff4b6090e752496a1d9259_i__sender_i''))"
+"λsb. tsynMap (inv DoNotUse_8f3c8a916fc74aa884e9a52e6d9e962c_ABPE)⋅(sb . (𝒞 ''DoNotUse_8f3c8a916fc74aa884e9a52e6d9e962c_i__sender_i''))"
   by(simp add: cfun_def)
 
 fun aBPElem_get_sender_ds__mediumSr_ar :: "('e::countable) abpMessage tsyn sbElem ⇒ (('e×bool)) tsyn" where
 "aBPElem_get_sender_ds__mediumSr_ar sbe = undefined"
 
 lift_definition aBP_get_stream_sender_ds__mediumSr_ar :: "('e::countable) abpMessage tsyn SB → ('e×bool) tsyn stream" is
-"λsb. tsynMap (inv DoNotUse_f1edc413eeff4b6090e752496a1d9259_ABPPair_E_Bool)⋅(sb . (𝒞 ''DoNotUse_f1edc413eeff4b6090e752496a1d9259_sender_ds__mediumSr_ar''))"
+"λsb. tsynMap (inv DoNotUse_8f3c8a916fc74aa884e9a52e6d9e962c_ABPPair_E_Bool)⋅(sb . (𝒞 ''DoNotUse_8f3c8a916fc74aa884e9a52e6d9e962c_sender_ds__mediumSr_ar''))"
   by(simp add: cfun_def)
 
 fun aBPElem_get_mediumSr_as__receiver_dr :: "('e::countable) abpMessage tsyn sbElem ⇒ (('e×bool)) tsyn" where
 "aBPElem_get_mediumSr_as__receiver_dr sbe = undefined"
 
 lift_definition aBP_get_stream_mediumSr_as__receiver_dr :: "('e::countable) abpMessage tsyn SB → ('e×bool) tsyn stream" is
-"λsb. tsynMap (inv DoNotUse_f1edc413eeff4b6090e752496a1d9259_ABPPair_E_Bool)⋅(sb . (𝒞 ''DoNotUse_f1edc413eeff4b6090e752496a1d9259_mediumSr_as__receiver_dr''))"
+"λsb. tsynMap (inv DoNotUse_8f3c8a916fc74aa884e9a52e6d9e962c_ABPPair_E_Bool)⋅(sb . (𝒞 ''DoNotUse_8f3c8a916fc74aa884e9a52e6d9e962c_mediumSr_as__receiver_dr''))"
   by(simp add: cfun_def)
 
 fun aBPElem_get_receiver_ar__mediumRs_ar :: "('e::countable) abpMessage tsyn sbElem ⇒ (bool) tsyn" where
 "aBPElem_get_receiver_ar__mediumRs_ar sbe = undefined"
 
 lift_definition aBP_get_stream_receiver_ar__mediumRs_ar :: "('e::countable) abpMessage tsyn SB → bool tsyn stream" is
-"λsb. tsynMap (inv DoNotUse_f1edc413eeff4b6090e752496a1d9259_ABPBool)⋅(sb . (𝒞 ''DoNotUse_f1edc413eeff4b6090e752496a1d9259_receiver_ar__mediumRs_ar''))"
+"λsb. tsynMap (inv DoNotUse_8f3c8a916fc74aa884e9a52e6d9e962c_ABPBool)⋅(sb . (𝒞 ''DoNotUse_8f3c8a916fc74aa884e9a52e6d9e962c_receiver_ar__mediumRs_ar''))"
   by(simp add: cfun_def)
 
 fun aBPElem_get_mediumRs_as__sender_as :: "('e::countable) abpMessage tsyn sbElem ⇒ (bool) tsyn" where
 "aBPElem_get_mediumRs_as__sender_as sbe = undefined"
 
 lift_definition aBP_get_stream_mediumRs_as__sender_as :: "('e::countable) abpMessage tsyn SB → bool tsyn stream" is
-"λsb. tsynMap (inv DoNotUse_f1edc413eeff4b6090e752496a1d9259_ABPBool)⋅(sb . (𝒞 ''DoNotUse_f1edc413eeff4b6090e752496a1d9259_mediumRs_as__sender_as''))"
+"λsb. tsynMap (inv DoNotUse_8f3c8a916fc74aa884e9a52e6d9e962c_ABPBool)⋅(sb . (𝒞 ''DoNotUse_8f3c8a916fc74aa884e9a52e6d9e962c_mediumRs_as__sender_as''))"
   by(simp add: cfun_def)
 
 
@@ -402,12 +548,6 @@ section ‹Converter›
 
 
 subsection ‹sender›
-
-definition aBPSenderDom :: "channel set" where
-"aBPSenderDom = {𝒞 ''DoNotUse_f1edc413eeff4b6090e752496a1d9259_mediumRs_as__sender_as'', 𝒞 ''DoNotUse_f1edc413eeff4b6090e752496a1d9259_i__sender_i''}"
-
-definition aBPSenderRan :: "channel set" where
-"aBPSenderRan = {𝒞 ''DoNotUse_f1edc413eeff4b6090e752496a1d9259_sender_ds__mediumSr_ar''}"
 
 lift_definition senderInConvert :: "('e::countable) abpMessage tsyn SB → ('e) senderMessage tsyn SB" is
 "λsb. senderIn_stream_as_i⋅(aBP_get_stream_mediumRs_as__sender_as⋅sb)⋅(aBP_get_stream_i__sender_i⋅sb)"
@@ -426,12 +566,6 @@ definition senderOutConverterSPF :: "('e) senderMessage tsyn SB ⇛ ('e::countab
 
 subsection ‹mediumSr›
 
-definition aBPMediumSrDom :: "channel set" where
-"aBPMediumSrDom = {𝒞 ''DoNotUse_f1edc413eeff4b6090e752496a1d9259_sender_ds__mediumSr_ar''}"
-
-definition aBPMediumSrRan :: "channel set" where
-"aBPMediumSrRan = {𝒞 ''DoNotUse_f1edc413eeff4b6090e752496a1d9259_mediumSr_as__receiver_dr''}"
-
 lift_definition mediumSrInConvert :: "('e::countable) abpMessage tsyn SB → (('e×bool)) mediumMessage tsyn SB" is
 "λsb. mediumIn_stream_ar⋅(aBP_get_stream_sender_ds__mediumSr_ar⋅sb)"
   by (simp add: cfun_def)
@@ -449,12 +583,6 @@ definition mediumSrOutConverterSPF :: "(('e×bool)) mediumMessage tsyn SB ⇛ ('
 
 subsection ‹receiver›
 
-definition aBPReceiverDom :: "channel set" where
-"aBPReceiverDom = {𝒞 ''DoNotUse_f1edc413eeff4b6090e752496a1d9259_mediumSr_as__receiver_dr''}"
-
-definition aBPReceiverRan :: "channel set" where
-"aBPReceiverRan = {𝒞 ''DoNotUse_f1edc413eeff4b6090e752496a1d9259_receiver_ar__mediumRs_ar'', 𝒞 ''DoNotUse_f1edc413eeff4b6090e752496a1d9259_receiver_o__o''}"
-
 lift_definition receiverInConvert :: "('e::countable) abpMessage tsyn SB → ('e) receiverMessage tsyn SB" is
 "λsb. receiverIn_stream_dr⋅(aBP_get_stream_mediumSr_as__receiver_dr⋅sb)"
   by (simp add: cfun_def)
@@ -471,12 +599,6 @@ definition receiverOutConverterSPF :: "('e) receiverMessage tsyn SB ⇛ ('e::cou
 
 
 subsection ‹mediumRs›
-
-definition aBPMediumRsDom :: "channel set" where
-"aBPMediumRsDom = {𝒞 ''DoNotUse_f1edc413eeff4b6090e752496a1d9259_receiver_ar__mediumRs_ar''}"
-
-definition aBPMediumRsRan :: "channel set" where
-"aBPMediumRsRan = {𝒞 ''DoNotUse_f1edc413eeff4b6090e752496a1d9259_mediumRs_as__sender_as''}"
 
 lift_definition mediumRsInConvert :: "('e::countable) abpMessage tsyn SB → (bool) mediumMessage tsyn SB" is
 "λsb. mediumIn_stream_ar⋅(aBP_get_stream_receiver_ar__mediumRs_ar⋅sb)"
@@ -512,6 +634,81 @@ section ‹Final definition›
 
 definition aBPSPS :: "('e::countable) abpMessage tsyn SPS" where
 "aBPSPS = ((uspecConst aBPSender)⨂aBPMediumSr⨂(uspecConst aBPReceiver)⨂aBPMediumRs)"
+
+
+section ‹Lemmas for single tsyn setter›
+
+lemma abpelemin_i_dom[simp]: "sbeDom (aBPElemIn_i port_i) = aBPDom"
+  sorry
+
+lemma abpelemout_o_dom[simp]: "sbeDom (aBPElemOut_o port_o) = aBPRan"
+  sorry
+
+lemma abpin_i_dom[simp]: "ubDom⋅(aBPIn_i port_i) = aBPDom"
+  sorry
+
+lemma abpout_o_dom[simp]: "ubDom⋅(aBPOut_o port_o) = aBPRan"
+  sorry
+
+
+subsection ‹sender›
+
+lemma abpsenderelemin_as_i_dom[simp]: "sbeDom (aBPSenderElemIn_as_i port_as port_i) = aBPSenderDom"
+  sorry
+
+lemma abpsenderelemout_ds_dom[simp]: "sbeDom (aBPSenderElemOut_ds port_ds) = aBPSenderRan"
+  sorry
+
+lemma abpsenderin_as_i_dom[simp]: "ubDom⋅(aBPSenderIn_as_i port_as port_i) = aBPSenderDom"
+  sorry
+
+lemma abpsenderout_ds_dom[simp]: "ubDom⋅(aBPSenderOut_ds port_ds) = aBPSenderRan"
+  sorry
+
+
+subsection ‹mediumSr›
+
+lemma abpmediumsrelemin_ar_dom[simp]: "sbeDom (aBPMediumSrElemIn_ar port_ar) = aBPMediumSrDom"
+  sorry
+
+lemma abpmediumsrelemout_as_dom[simp]: "sbeDom (aBPMediumSrElemOut_as port_as) = aBPMediumSrRan"
+  sorry
+
+lemma abpmediumsrin_ar_dom[simp]: "ubDom⋅(aBPMediumSrIn_ar port_ar) = aBPMediumSrDom"
+  sorry
+
+lemma abpmediumsrout_as_dom[simp]: "ubDom⋅(aBPMediumSrOut_as port_as) = aBPMediumSrRan"
+  sorry
+
+
+subsection ‹receiver›
+
+lemma abpreceiverelemin_dr_dom[simp]: "sbeDom (aBPReceiverElemIn_dr port_dr) = aBPReceiverDom"
+  sorry
+
+lemma abpreceiverelemout_ar_o_dom[simp]: "sbeDom (aBPReceiverElemOut_ar_o port_ar port_o) = aBPReceiverRan"
+  sorry
+
+lemma abpreceiverin_dr_dom[simp]: "ubDom⋅(aBPReceiverIn_dr port_dr) = aBPReceiverDom"
+  sorry
+
+lemma abpreceiverout_ar_o_dom[simp]: "ubDom⋅(aBPReceiverOut_ar_o port_ar port_o) = aBPReceiverRan"
+  sorry
+
+
+subsection ‹mediumRs›
+
+lemma abpmediumrselemin_ar_dom[simp]: "sbeDom (aBPMediumRsElemIn_ar port_ar) = aBPMediumRsDom"
+  sorry
+
+lemma abpmediumrselemout_as_dom[simp]: "sbeDom (aBPMediumRsElemOut_as port_as) = aBPMediumRsRan"
+  sorry
+
+lemma abpmediumrsin_ar_dom[simp]: "ubDom⋅(aBPMediumRsIn_ar port_ar) = aBPMediumRsDom"
+  sorry
+
+lemma abpmediumrsout_as_dom[simp]: "ubDom⋅(aBPMediumRsOut_as port_as) = aBPMediumRsRan"
+  sorry
 
 
 section ‹Lemmas for getter›

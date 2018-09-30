@@ -3,7 +3,7 @@
  * This file was generated from Medium.maa and will be overridden when changed. To change
  * permanently, consider changing the model itself.
  *
- * Generated on Sep 29, 2018 5:54:16 PM by isartransformer 1.0.0
+ * Generated on Oct 1, 2018 1:17:47 AM by isartransformer 1.0.0
  *)
 theory MediumAutomaton
   imports bundle.tsynBundle automat.ndAutomaton
@@ -18,7 +18,7 @@ fun prepend :: "'a::type list \<Rightarrow> 'a \<Rightarrow> 'a list" where
 
 section \<open>Datatype definition\<close>
 
-datatype ('e::countable) mediumMessage = DoNotUse_d039b6fac07940468d7a0ffda738689c_MediumE "'e"
+datatype ('e::countable) mediumMessage = DoNotUse_07592f9396884104b3e743d922fc2e1c_MediumE "'e"
 
 instance mediumMessage :: (countable) countable
   apply(intro_classes)
@@ -28,25 +28,34 @@ instantiation mediumMessage :: (countable) message
 begin
   fun ctype_mediumMessage :: "channel \<Rightarrow> ('e::countable) mediumMessage set" where
   "ctype_mediumMessage c = (
-    if c = \<C> ''DoNotUse_d039b6fac07940468d7a0ffda738689c_ar'' then range DoNotUse_d039b6fac07940468d7a0ffda738689c_MediumE else
-    if c = \<C> ''DoNotUse_d039b6fac07940468d7a0ffda738689c_as'' then range DoNotUse_d039b6fac07940468d7a0ffda738689c_MediumE else
+    if c = \<C> ''DoNotUse_07592f9396884104b3e743d922fc2e1c_ar'' then range DoNotUse_07592f9396884104b3e743d922fc2e1c_MediumE else
+    if c = \<C> ''DoNotUse_07592f9396884104b3e743d922fc2e1c_as'' then range DoNotUse_07592f9396884104b3e743d922fc2e1c_MediumE else
     undefined)"
   instance
     by(intro_classes)
 end
 
 
+section \<open>Domain and range\<close>
+
+definition mediumDom :: "channel set" where
+"mediumDom = {\<C> ''DoNotUse_07592f9396884104b3e743d922fc2e1c_ar''}"
+
+definition mediumRan :: "channel set" where
+"mediumRan = {\<C> ''DoNotUse_07592f9396884104b3e743d922fc2e1c_as''}"
+
+
 section \<open>Helpers to create a bundle from a single raw element\<close>
 
 lift_definition mediumElem_raw_ar :: "'e \<Rightarrow> ('e::countable) mediumMessage tsyn sbElem" is
-"\<lambda>x. [\<C> ''DoNotUse_d039b6fac07940468d7a0ffda738689c_ar'' \<mapsto> Msg (DoNotUse_d039b6fac07940468d7a0ffda738689c_MediumE x)]"
+"\<lambda>x. [\<C> ''DoNotUse_07592f9396884104b3e743d922fc2e1c_ar'' \<mapsto> Msg (DoNotUse_07592f9396884104b3e743d922fc2e1c_MediumE x)]"
   unfolding sbElemWell_def
   unfolding usclOkay_stream_def
   unfolding ctype_tsyn_def
   by simp
 
 lift_definition mediumElem_raw_as :: "'e \<Rightarrow> ('e::countable) mediumMessage tsyn sbElem" is
-"\<lambda>x. [\<C> ''DoNotUse_d039b6fac07940468d7a0ffda738689c_as'' \<mapsto> Msg (DoNotUse_d039b6fac07940468d7a0ffda738689c_MediumE x)]"
+"\<lambda>x. [\<C> ''DoNotUse_07592f9396884104b3e743d922fc2e1c_as'' \<mapsto> Msg (DoNotUse_07592f9396884104b3e743d922fc2e1c_MediumE x)]"
   unfolding sbElemWell_def
   unfolding usclOkay_stream_def
   unfolding ctype_tsyn_def
@@ -57,7 +66,7 @@ section \<open>Helpers to create a bundle from a single tsyn element\<close>
 
 fun mediumElem_ar :: "'e tsyn \<Rightarrow> ('e::countable) mediumMessage tsyn sbElem" where
 "mediumElem_ar (Msg port_ar) = mediumElem_raw_ar port_ar" |
-"mediumElem_ar null = sbeNull {\<C> ''DoNotUse_d039b6fac07940468d7a0ffda738689c_ar''}"
+"mediumElem_ar null = sbeNull {\<C> ''DoNotUse_07592f9396884104b3e743d922fc2e1c_ar''}"
 
 declare mediumElem_ar.simps[simp del]
 
@@ -66,7 +75,7 @@ definition medium_ar :: "'e tsyn \<Rightarrow> ('e::countable) mediumMessage tsy
 
 fun mediumElem_as :: "'e tsyn \<Rightarrow> ('e::countable) mediumMessage tsyn sbElem" where
 "mediumElem_as (Msg port_as) = mediumElem_raw_as port_as" |
-"mediumElem_as null = sbeNull {\<C> ''DoNotUse_d039b6fac07940468d7a0ffda738689c_as''}"
+"mediumElem_as null = sbeNull {\<C> ''DoNotUse_07592f9396884104b3e743d922fc2e1c_as''}"
 
 declare mediumElem_as.simps[simp del]
 
@@ -90,26 +99,51 @@ definition mediumOut_as :: "'e tsyn \<Rightarrow> ('e::countable) mediumMessage 
 "mediumOut_as port_as = (sbe2SB (mediumElemOut_as port_as))"
 
 
+section \<open>Helpers to create a bundle from a tsyn list of elements\<close>
+
+fun medium_list_ar :: "('e tsyn) list \<Rightarrow> ('e::countable) mediumMessage tsyn SB" where
+"medium_list_ar (x#xs) = ubConcEq (medium_ar x)\<cdot>(medium_list_ar xs)" |
+"medium_list_ar []     = ubLeast {\<C> ''DoNotUse_07592f9396884104b3e743d922fc2e1c_ar''}"
+
+declare medium_list_ar.simps[simp del]
+
+fun medium_list_as :: "('e tsyn) list \<Rightarrow> ('e::countable) mediumMessage tsyn SB" where
+"medium_list_as (x#xs) = ubConcEq (medium_as x)\<cdot>(medium_list_as xs)" |
+"medium_list_as []     = ubLeast {\<C> ''DoNotUse_07592f9396884104b3e743d922fc2e1c_as''}"
+
+declare medium_list_as.simps[simp del]
+
+(* Create one SB for all input channels *)
+fun mediumIn_list_ar :: "('e tsyn) list \<Rightarrow> ('e::countable) mediumMessage tsyn SB" where
+"mediumIn_list_ar ((port_ar)#xs) = ubConcEq (mediumIn_ar port_ar)\<cdot>(mediumIn_list_ar xs)" |
+"mediumIn_list_ar [] = ubLeast mediumDom"
+
+(* Create one SB for all output channels *)
+fun mediumOut_list_as :: "('e tsyn) list \<Rightarrow> ('e::countable) mediumMessage tsyn SB" where
+"mediumOut_list_as ((port_as)#xs) = ubConcEq (mediumOut_as port_as)\<cdot>(mediumOut_list_as xs)" |
+"mediumOut_list_as [] = ubLeast mediumRan"
+
+
 section \<open>Helpers to create a bundle from a tsyn stream of elements\<close>
 
-lift_definition DoNotUse_d039b6fac07940468d7a0ffda738689c_medium_stream_ar_h :: "'e tsyn stream \<Rightarrow> ('e::countable) mediumMessage tsyn SB" is
-"\<lambda> s. [(\<C> ''DoNotUse_d039b6fac07940468d7a0ffda738689c_ar'') \<mapsto> (tsynMap (DoNotUse_d039b6fac07940468d7a0ffda738689c_MediumE)\<cdot>s)]"
+lift_definition DoNotUse_07592f9396884104b3e743d922fc2e1c_medium_stream_ar_h :: "'e tsyn stream \<Rightarrow> ('e::countable) mediumMessage tsyn SB" is
+"\<lambda> s. [(\<C> ''DoNotUse_07592f9396884104b3e743d922fc2e1c_ar'') \<mapsto> (tsynMap (DoNotUse_07592f9396884104b3e743d922fc2e1c_MediumE)\<cdot>s)]"
   unfolding ubWell_def usclOkay_stream_def ctype_tsyn_def
   apply auto
   sorry
 
 lift_definition medium_stream_ar :: "('e) tsyn stream \<rightarrow> ('e::countable) mediumMessage tsyn SB" is
-"DoNotUse_d039b6fac07940468d7a0ffda738689c_medium_stream_ar_h"
+"DoNotUse_07592f9396884104b3e743d922fc2e1c_medium_stream_ar_h"
   sorry
 
-lift_definition DoNotUse_d039b6fac07940468d7a0ffda738689c_medium_stream_as_h :: "'e tsyn stream \<Rightarrow> ('e::countable) mediumMessage tsyn SB" is
-"\<lambda> s. [(\<C> ''DoNotUse_d039b6fac07940468d7a0ffda738689c_as'') \<mapsto> (tsynMap (DoNotUse_d039b6fac07940468d7a0ffda738689c_MediumE)\<cdot>s)]"
+lift_definition DoNotUse_07592f9396884104b3e743d922fc2e1c_medium_stream_as_h :: "'e tsyn stream \<Rightarrow> ('e::countable) mediumMessage tsyn SB" is
+"\<lambda> s. [(\<C> ''DoNotUse_07592f9396884104b3e743d922fc2e1c_as'') \<mapsto> (tsynMap (DoNotUse_07592f9396884104b3e743d922fc2e1c_MediumE)\<cdot>s)]"
   unfolding ubWell_def usclOkay_stream_def ctype_tsyn_def
   apply auto
   sorry
 
 lift_definition medium_stream_as :: "('e) tsyn stream \<rightarrow> ('e::countable) mediumMessage tsyn SB" is
-"DoNotUse_d039b6fac07940468d7a0ffda738689c_medium_stream_as_h"
+"DoNotUse_07592f9396884104b3e743d922fc2e1c_medium_stream_as_h"
   sorry
 
 (* Create one SB for all input channels *)
@@ -127,14 +161,14 @@ fun mediumElem_get_ar :: "('e::countable) mediumMessage tsyn sbElem \<Rightarrow
 "mediumElem_get_ar sbe = undefined"
 
 lift_definition medium_get_stream_ar :: "('e::countable) mediumMessage tsyn SB \<rightarrow> 'e tsyn stream" is
-"\<lambda>sb. tsynMap (inv DoNotUse_d039b6fac07940468d7a0ffda738689c_MediumE)\<cdot>(sb . (\<C> ''DoNotUse_d039b6fac07940468d7a0ffda738689c_ar''))"
+"\<lambda>sb. tsynMap (inv DoNotUse_07592f9396884104b3e743d922fc2e1c_MediumE)\<cdot>(sb . (\<C> ''DoNotUse_07592f9396884104b3e743d922fc2e1c_ar''))"
   by(simp add: cfun_def)
 
 fun mediumElem_get_as :: "('e::countable) mediumMessage tsyn sbElem \<Rightarrow> ('e) tsyn" where
 "mediumElem_get_as sbe = undefined"
 
 lift_definition medium_get_stream_as :: "('e::countable) mediumMessage tsyn SB \<rightarrow> 'e tsyn stream" is
-"\<lambda>sb. tsynMap (inv DoNotUse_d039b6fac07940468d7a0ffda738689c_MediumE)\<cdot>(sb . (\<C> ''DoNotUse_d039b6fac07940468d7a0ffda738689c_as''))"
+"\<lambda>sb. tsynMap (inv DoNotUse_07592f9396884104b3e743d922fc2e1c_MediumE)\<cdot>(sb . (\<C> ''DoNotUse_07592f9396884104b3e743d922fc2e1c_as''))"
   by(simp add: cfun_def)
 
 
@@ -165,14 +199,6 @@ fun mediumTransitionH :: "(MediumState \<times> ('e tsyn)) \<Rightarrow> (Medium
   (if(var_c>0) then (Rev {(MediumState Single (var_c-1), (mediumOut_as null))})
    else if(var_c=0) then (Rev {(MediumState Single var_c, (mediumOut_as null)) | var_c . (True)})
    else (Rev {(MediumState Single var_c, (mediumOut_as null))}))"
-
-(* Domain *)
-definition mediumDom :: "channel set" where
-"mediumDom = {\<C> ''DoNotUse_d039b6fac07940468d7a0ffda738689c_ar''}"
-
-(* Range *)
-definition mediumRan :: "channel set" where
-"mediumRan = {\<C> ''DoNotUse_d039b6fac07940468d7a0ffda738689c_as''}"
 
 (* Transition function *)
 definition mediumTransition :: "(MediumState \<times> ('e::countable) mediumMessage tsyn sbElem) \<Rightarrow> (MediumState \<times> ('e::countable) mediumMessage tsyn SB) set rev" where
