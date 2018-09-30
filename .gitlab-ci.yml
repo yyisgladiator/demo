@@ -1,77 +1,62 @@
-# load docker image with isabelle-support
-image: jecb96/isabelle-holcf
+variables:
+  ISABELLE_HOME_USER_DIR: "/home/isabelle/.isabelle"
+  TIMEOUT_SCALE: "1.8"
+  NUMBER_SIMULT_SESSIONS: "2"
 
-
-
-
-#####################################
-## Setup Stuff
-#####################################
-
-## run this bevore every stage
-
-before_script:
-  - if [ ! -z "$(ls -A cache)" ]; then mv cache/* /home/isabelle/.isabelle; fi
-  - find /home/isabelle/.isabelle
-
-  # run after every stage
-after_script:
-  - find /home/isabelle/.isabelle
-  - mv /home/isabelle/.isabelle/* cache/
-
+image: jecb96/isabelle:2018
 
 cache:
-  key: "$CI_COMMIT_REF_NAME"  # cache per branch
+  key: "$CI_COMMIT_REF_SLUG"
   paths:
     - cache/
-#    - /home/isabelle/.isabelle
 
-
-
-# stages are run one after another, it the previous stage is successful
 stages:
   - dependency
   - mustWork
   - canFail
 
 
+before_script:
+  - if [ ! -z "$(ls -A cache)" ]; then mv cache/* $ISABELLE_HOME_USER_DIR; fi
+  - find $ISABELLE_HOME_USER_DIR
+
+after_script:
+  - find $ISABELLE_HOME_USER_DIR
+  - rm -rf cache/*
+  - mv $ISABELLE_HOME_USER_DIR/* cache/
 
 
 
 #####################################
-## Main Tests
+## Test Jobs
 #####################################
 
 ## Look in the "ROOT" file to see the sessions and add files
 
 
-  # check for ALL sessions in ROOT if the dependencies are working
-  # -D .  loads all sessions in directory
-  # -n    checks imports
 dependency:
   stage: dependency
   script:
-    - isabelle build -D . -j2 -n -v || if [ $? -eq 1 ]; then exit 0; else exit $?; fi
+    - isabelle build -S -D . -j$NUMBER_SIMULT_SESSIONS -o timeout_scale=$TIMEOUT_SCALE -n -v || if [ $? -eq 1 ]; then exit 0; else exit $?; fi
+  tags:
+    - docker
+    - private
 
 
-
-  # run everything in the group "mustWork" (as defined in ROOT)
-  # -d .      make sessions addable (but do not load them)
-  # -g sorry  load all "sorry" sessions
-  # -b        save heap files
 mustWork:
   stage: mustWork
   script:
-    - isabelle build -d . -j2 -v -b -g mustWork
+    - isabelle build -S -d . -j$NUMBER_SIMULT_SESSIONS -o timeout_scale=$TIMEOUT_SCALE -v -b -g mustWork
+  tags:
+    - docker
+    - private
 
 
-
-  # run everything in the group "canFail" (as defined in ROOT)
-  # -d .          make sessions addable (but do not load them)
-  # -g verified   load all "verified" sessions
-  # -b            save heap files
 canFail:
   stage: canFail
-  allow_failure: true   #for now, sorrys are allowed
+  allow_failure: true   # for now, sorrys are allowed
   script:
-    - isabelle build -d . -j2 -v -b -g canFail
+    - isabelle build -S -d . -j$NUMBER_SIMULT_SESSIONS -o timeout_scale=$TIMEOUT_SCALE -v -b -g canFail
+  tags:
+    - docker
+    - private

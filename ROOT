@@ -1,77 +1,64 @@
-session "uClasses" (mustWork) = "HOLCF" +
+session "inc" (mustWork) in inc = "HOLCF" +
   options [quick_and_dirty = false]
   theories
+    Channel
+    LNat
+    SetPcpo
+    Reversed
+    Prelude
+    OptionCpo
     UnivClasses
+    CPOFix
 
-session "ubundle" (mustWork) = "uClasses" +
+
+session "HOLMF" (mustWork) in HOLMF = "inc" +
   options [quick_and_dirty = false]
   theories
-    UBundle
-    UBundle_Conc
-    UBundle_Pcpo
+    LongChain
+    Division
+    LFP
 
-session "ufun" (mustWork) = "uClasses" +
+session "stream" (mustWork) in stream = "inc" +
   options [quick_and_dirty = true]
   theories
-    UFun
-    UFun_applyIn
-    UFun_Comp
+    Streams
+    tsynStream
 
-session "uspec" (mustWork) = "uClasses" +
+session "bundle" (mustWork) in bundle = "stream" + 
   options [quick_and_dirty = true]
   theories
-    USpec
-    USpec_Comp
+    SB
+    UBundle_Induction
+    tsynBundle
 
-
-session "sb" (mustWork) = "ubundle" +
+session "fun" (mustWork) in fun = "bundle" + 
   options [quick_and_dirty = true]
   theories
-    "untimed/SB"
+    SPF
 
-session "spf" (mustWork) = "sb" +
+session "spec" (mustWork) in spec = "fun" + 
+  options [quick_and_dirty = true]
+  sessions
+    HOLMF
+  theories
+    SPS
+
+session "automat" (mustWork) in automat = "spec" + 
   options [quick_and_dirty = true]
   theories
-    "untimed/SPF"
+    SpfStep
+    dAutomaton
+    SpsStep
+    ndAutomaton
 
-session "sps" (mustWork) = "spf" +
+session "automatCaseStudy" (mustWork) in "automat/CaseStudy" = "automat" + 
   options [quick_and_dirty = true]
   theories
-    "untimed/SPS"
+    medFairStep
+    medUnfairStep
+    medsBelow
 
-session "dAutomaton" (mustWork) = "spf" +
+session "abp" (canFail) in abp = "automat" + 
   options [quick_and_dirty = true]
   theories
-    "untimed/CaseStudy/dAutomaton"
-
-session "ndAutomaton" (mustWork) = "sps" +
-  options [quick_and_dirty = true]
-  theories
-    "untimed/CaseStudy/ndAutomaton"
-
-
-session "Streams" (mustWork) = "HOLCF" +
-  options [quick_and_dirty = false]
-  theories
-    "untimed/Streams"
-	
-session "tsynStream" (mustWork) = "Streams" + 
-  options [quick_and_dirty = true]
-  theories
-    "timesyn/tsynStream"
-	"timesyn/tsynBundle"
-
-session "ubundle_opt" (canFail) = "uClasses" +
-  options [quick_and_dirty = false]
-  theories
-    UBundle
-
-session "ufun_opt" (canFail) = "uClasses" +
-  options [quick_and_dirty = false]
-  theories
-    UFun
-
-session "uspec_opt" (canFail) = "uClasses" +
-  options [quick_and_dirty = false]
-  theories
-    USpec
+    Receiver
