@@ -399,6 +399,49 @@ proof -
     by (meson assms(2) injD setrevimage_inj_inj)
 qed
 
+lemma uspecimage_max: assumes "H = uspecMax In Out"
+and  "\<And>x. ufclDom\<cdot> (f x) = ufclDom\<cdot>x"
+    and "\<And>x. ufclRan\<cdot> (f x) = ufclRan\<cdot>x"
+  shows "uspecImage f H = uspecMax In Out"
+  apply (simp add: assms)
+  apply (simp add: uspecImage_def)
+  apply (simp add: uspecrevset_insert)
+  apply (simp add: uspecMax_def)
+  apply (simp add: setrevimage_empty assms) 
+  by (simp add: ufuncldom_least_dom ufuncldom_least_ran)
+
+lemma uspecimage_not_max: assumes "uspec_in h (uspecImage f H)"
+and  "\<And>x. ufclDom\<cdot> (f x) = ufclDom\<cdot>x"
+    and "\<And>x. ufclRan\<cdot> (f x) = ufclRan\<cdot>x"
+  shows "H \<noteq> uspecMax In Out"
+  by (metis assms(1) assms(2) assms(3) empty_iff inv_rev_rev prod.sel(1) uspecMax.rep_eq uspecimage_max uspecrevset_insert)
+
+lemma uspecimage_obtain: assumes "uspec_in h (uspecImage f H)"
+and  "\<And>x. ufclDom\<cdot> (f x) = ufclDom\<cdot>x"
+    and "\<And>x. ufclRan\<cdot> (f x) = ufclRan\<cdot>x"
+  shows "\<exists> g. uspec_in g H \<and> h = f g"
+proof -
+  have "\<forall>f u. (\<exists>b ba. (ufclDom\<cdot>(b::'b) = ufclDom\<cdot>ba \<and> ufclRan\<cdot>b = ufclRan\<cdot>ba) \<and> (ufclDom\<cdot>(f b::'a) \<noteq> ufclDom\<cdot>(f ba) \<or> ufclRan\<cdot>(f b) \<noteq> ufclRan\<cdot>(f ba))) \<or> uspecRevSet\<cdot>(uspecImage f u) = setrevImage f (uspecRevSet\<cdot>u)"
+    by (meson uspecimage_useful_uspecrevset)
+  then obtain bb :: "('b \<Rightarrow> 'a) \<Rightarrow> 'b" and bba :: "('b \<Rightarrow> 'a) \<Rightarrow> 'b" where
+    f1: "\<forall>f u. (ufclDom\<cdot>(bb f) = ufclDom\<cdot>(bba f) \<and> ufclRan\<cdot>(bb f) = ufclRan\<cdot>(bba f)) \<and> (ufclDom\<cdot>(f (bb f)) \<noteq> ufclDom\<cdot>(f (bba f)) \<or> ufclRan\<cdot>(f (bb f)) \<noteq> ufclRan\<cdot>(f (bba f))) \<or> uspecRevSet\<cdot>(uspecImage f u) = setrevImage f (uspecRevSet\<cdot>u)"
+    by moura
+  obtain bbb :: "'b set \<Rightarrow> ('b \<Rightarrow> 'a) \<Rightarrow> 'a \<Rightarrow> 'b" where
+    f2: "\<forall>x0 x1 x2. (\<exists>v3. v3 \<in> x0 \<and> x2 = x1 v3) = (bbb x0 x1 x2 \<in> x0 \<and> x2 = x1 (bbb x0 x1 x2))"
+    by moura
+  have "uspecRevSet\<cdot>(uspecImage f H) = setrevImage f (uspecRevSet\<cdot>H)"
+    using f1 by (metis (no_types) assms(2) assms(3))
+    then have "h \<in> f ` inv Rev (uspecRevSet\<cdot>H)"
+      by (metis assms(1) inv_rev_rev setrevImage_def)
+  then show ?thesis
+    using f2 Bex_def_raw image_iff by blast
+qed
+
+lemma uspecimage_ele_in: assumes "uspec_in g H"
+and  "\<And>x. ufclDom\<cdot> (f x) = ufclDom\<cdot>x"
+    and "\<And>x. ufclRan\<cdot> (f x) = ufclRan\<cdot>x"
+  shows "uspec_in (f g) (uspecImage f H)"
+  by (simp add: assms(1) assms(2) assms(3) inv_rev_rev setrevImage_def uspecimage_useful_uspecrevset)
 
 subsection \<open>uspecStateLeast\<close>
 

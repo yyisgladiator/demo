@@ -1,0 +1,18 @@
+package abp;
+
+<<nonDeterministic>>component Medium<E> {
+
+  port
+    in E ar,
+    out E as;
+
+  automaton Medium {
+    variable int c;
+
+    state Single;
+    initial Single / {c = rand {i. True}};
+
+    Single [c>0]  / {c = c-1};
+    Single [c==0] / {c = rand {i. True}, as = ar};
+  }
+}
