@@ -3,13 +3,22 @@
  * This file was generated from Receiver.maa and will be overridden when changed. To change
  * permanently, consider changing the model itself.
  *
- * Generated on Oct 1, 2018 1:17:46 AM by isartransformer 1.0.0
+ * Generated on Oct 1, 2018 2:45:41 PM by isartransformer 1.0.0
  *)
 theory ReceiverAutomaton
   imports bundle.tsynBundle automat.dAutomaton
 
 begin
 
+
+(* TODO Sollte wahrscheinlich in OptionCpo sein? *)
+lemma option_one_cont: "cont (\<lambda>x. [c \<mapsto> f\<cdot>x])"
+  apply(rule contI2, rule monofunI)
+  apply (simp add: below_option_def fun_belowI monofun_cfun_arg)
+  apply (auto simp add: below_fun_def below_option_def)
+  apply (smt below_option_def chain_monofun domIff fun_belowI fun_upd_apply option.exhaust_sel part_dom_lub po_class.chain_def some_below)
+  apply (simp add: contlub_cfun_arg part_map_chain part_the_lub)
+  by (smt below_option_def cont_pref_eq1I domIff fun_belowI fun_upd_apply option.sel option.simps(3) part_dom_lub po_class.chain_def)
 
 (* Helper for easier generation *)
 fun prepend :: "'a::type list \<Rightarrow> 'a \<Rightarrow> 'a list" where
@@ -18,7 +27,7 @@ fun prepend :: "'a::type list \<Rightarrow> 'a \<Rightarrow> 'a list" where
 
 section \<open>Datatype definition\<close>
 
-datatype ('e::countable) receiverMessage = DoNotUse_1c0d7c63719b48839967533f1cc69c57_ReceiverPair_E_Bool "('e\<times>bool)" | DoNotUse_1c0d7c63719b48839967533f1cc69c57_ReceiverBool "bool" | DoNotUse_1c0d7c63719b48839967533f1cc69c57_ReceiverE "'e"
+datatype ('e::countable) receiverMessage = DoNotUse_d3c2301e6a7a443b97f53d6f15fd411a_ReceiverPair_E_Bool "('e\<times>bool)" | DoNotUse_d3c2301e6a7a443b97f53d6f15fd411a_ReceiverBool "bool" | DoNotUse_d3c2301e6a7a443b97f53d6f15fd411a_ReceiverE "'e"
 
 instance receiverMessage :: (countable) countable
   apply(intro_classes)
@@ -28,9 +37,9 @@ instantiation receiverMessage :: (countable) message
 begin
   fun ctype_receiverMessage :: "channel \<Rightarrow> ('e::countable) receiverMessage set" where
   "ctype_receiverMessage c = (
-    if c = \<C> ''DoNotUse_1c0d7c63719b48839967533f1cc69c57_dr'' then range DoNotUse_1c0d7c63719b48839967533f1cc69c57_ReceiverPair_E_Bool else
-    if c = \<C> ''DoNotUse_1c0d7c63719b48839967533f1cc69c57_ar'' then range DoNotUse_1c0d7c63719b48839967533f1cc69c57_ReceiverBool else
-    if c = \<C> ''DoNotUse_1c0d7c63719b48839967533f1cc69c57_o'' then range DoNotUse_1c0d7c63719b48839967533f1cc69c57_ReceiverE else
+    if c = \<C> ''DoNotUse_d3c2301e6a7a443b97f53d6f15fd411a_dr'' then range DoNotUse_d3c2301e6a7a443b97f53d6f15fd411a_ReceiverPair_E_Bool else
+    if c = \<C> ''DoNotUse_d3c2301e6a7a443b97f53d6f15fd411a_ar'' then range DoNotUse_d3c2301e6a7a443b97f53d6f15fd411a_ReceiverBool else
+    if c = \<C> ''DoNotUse_d3c2301e6a7a443b97f53d6f15fd411a_o'' then range DoNotUse_d3c2301e6a7a443b97f53d6f15fd411a_ReceiverE else
     undefined)"
   instance
     by(intro_classes)
@@ -40,30 +49,30 @@ end
 section \<open>Domain and range\<close>
 
 definition receiverDom :: "channel set" where
-"receiverDom = {\<C> ''DoNotUse_1c0d7c63719b48839967533f1cc69c57_dr''}"
+"receiverDom = {\<C> ''DoNotUse_d3c2301e6a7a443b97f53d6f15fd411a_dr''}"
 
 definition receiverRan :: "channel set" where
-"receiverRan = {\<C> ''DoNotUse_1c0d7c63719b48839967533f1cc69c57_ar'', \<C> ''DoNotUse_1c0d7c63719b48839967533f1cc69c57_o''}"
+"receiverRan = {\<C> ''DoNotUse_d3c2301e6a7a443b97f53d6f15fd411a_ar'', \<C> ''DoNotUse_d3c2301e6a7a443b97f53d6f15fd411a_o''}"
 
 
 section \<open>Helpers to create a bundle from a single raw element\<close>
 
 lift_definition receiverElem_raw_dr :: "('e\<times>bool) \<Rightarrow> ('e::countable) receiverMessage tsyn sbElem" is
-"\<lambda>x. [\<C> ''DoNotUse_1c0d7c63719b48839967533f1cc69c57_dr'' \<mapsto> Msg (DoNotUse_1c0d7c63719b48839967533f1cc69c57_ReceiverPair_E_Bool x)]"
+"\<lambda>x. [\<C> ''DoNotUse_d3c2301e6a7a443b97f53d6f15fd411a_dr'' \<mapsto> Msg (DoNotUse_d3c2301e6a7a443b97f53d6f15fd411a_ReceiverPair_E_Bool x)]"
   unfolding sbElemWell_def
   unfolding usclOkay_stream_def
   unfolding ctype_tsyn_def
   by simp
 
 lift_definition receiverElem_raw_ar :: "bool \<Rightarrow> ('e::countable) receiverMessage tsyn sbElem" is
-"\<lambda>x. [\<C> ''DoNotUse_1c0d7c63719b48839967533f1cc69c57_ar'' \<mapsto> Msg (DoNotUse_1c0d7c63719b48839967533f1cc69c57_ReceiverBool x)]"
+"\<lambda>x. [\<C> ''DoNotUse_d3c2301e6a7a443b97f53d6f15fd411a_ar'' \<mapsto> Msg (DoNotUse_d3c2301e6a7a443b97f53d6f15fd411a_ReceiverBool x)]"
   unfolding sbElemWell_def
   unfolding usclOkay_stream_def
   unfolding ctype_tsyn_def
   by simp
 
 lift_definition receiverElem_raw_o :: "'e \<Rightarrow> ('e::countable) receiverMessage tsyn sbElem" is
-"\<lambda>x. [\<C> ''DoNotUse_1c0d7c63719b48839967533f1cc69c57_o'' \<mapsto> Msg (DoNotUse_1c0d7c63719b48839967533f1cc69c57_ReceiverE x)]"
+"\<lambda>x. [\<C> ''DoNotUse_d3c2301e6a7a443b97f53d6f15fd411a_o'' \<mapsto> Msg (DoNotUse_d3c2301e6a7a443b97f53d6f15fd411a_ReceiverE x)]"
   unfolding sbElemWell_def
   unfolding usclOkay_stream_def
   unfolding ctype_tsyn_def
@@ -74,7 +83,7 @@ section \<open>Helpers to create a bundle from a single tsyn element\<close>
 
 fun receiverElem_dr :: "('e\<times>bool) tsyn \<Rightarrow> ('e::countable) receiverMessage tsyn sbElem" where
 "receiverElem_dr (Msg port_dr) = receiverElem_raw_dr port_dr" |
-"receiverElem_dr null = sbeNull {\<C> ''DoNotUse_1c0d7c63719b48839967533f1cc69c57_dr''}"
+"receiverElem_dr null = sbeNull {\<C> ''DoNotUse_d3c2301e6a7a443b97f53d6f15fd411a_dr''}"
 
 declare receiverElem_dr.simps[simp del]
 
@@ -83,7 +92,7 @@ definition receiver_dr :: "('e\<times>bool) tsyn \<Rightarrow> ('e::countable) r
 
 fun receiverElem_ar :: "bool tsyn \<Rightarrow> ('e::countable) receiverMessage tsyn sbElem" where
 "receiverElem_ar (Msg port_ar) = receiverElem_raw_ar port_ar" |
-"receiverElem_ar null = sbeNull {\<C> ''DoNotUse_1c0d7c63719b48839967533f1cc69c57_ar''}"
+"receiverElem_ar null = sbeNull {\<C> ''DoNotUse_d3c2301e6a7a443b97f53d6f15fd411a_ar''}"
 
 declare receiverElem_ar.simps[simp del]
 
@@ -92,7 +101,7 @@ definition receiver_ar :: "bool tsyn \<Rightarrow> ('e::countable) receiverMessa
 
 fun receiverElem_o :: "'e tsyn \<Rightarrow> ('e::countable) receiverMessage tsyn sbElem" where
 "receiverElem_o (Msg port_o) = receiverElem_raw_o port_o" |
-"receiverElem_o null = sbeNull {\<C> ''DoNotUse_1c0d7c63719b48839967533f1cc69c57_o''}"
+"receiverElem_o null = sbeNull {\<C> ''DoNotUse_d3c2301e6a7a443b97f53d6f15fd411a_o''}"
 
 declare receiverElem_o.simps[simp del]
 
@@ -120,19 +129,19 @@ section \<open>Helpers to create a bundle from a tsyn list of elements\<close>
 
 fun receiver_list_dr :: "(('e\<times>bool) tsyn) list \<Rightarrow> ('e::countable) receiverMessage tsyn SB" where
 "receiver_list_dr (x#xs) = ubConcEq (receiver_dr x)\<cdot>(receiver_list_dr xs)" |
-"receiver_list_dr []     = ubLeast {\<C> ''DoNotUse_1c0d7c63719b48839967533f1cc69c57_dr''}"
+"receiver_list_dr []     = ubLeast {\<C> ''DoNotUse_d3c2301e6a7a443b97f53d6f15fd411a_dr''}"
 
 declare receiver_list_dr.simps[simp del]
 
 fun receiver_list_ar :: "(bool tsyn) list \<Rightarrow> ('e::countable) receiverMessage tsyn SB" where
 "receiver_list_ar (x#xs) = ubConcEq (receiver_ar x)\<cdot>(receiver_list_ar xs)" |
-"receiver_list_ar []     = ubLeast {\<C> ''DoNotUse_1c0d7c63719b48839967533f1cc69c57_ar''}"
+"receiver_list_ar []     = ubLeast {\<C> ''DoNotUse_d3c2301e6a7a443b97f53d6f15fd411a_ar''}"
 
 declare receiver_list_ar.simps[simp del]
 
 fun receiver_list_o :: "('e tsyn) list \<Rightarrow> ('e::countable) receiverMessage tsyn SB" where
 "receiver_list_o (x#xs) = ubConcEq (receiver_o x)\<cdot>(receiver_list_o xs)" |
-"receiver_list_o []     = ubLeast {\<C> ''DoNotUse_1c0d7c63719b48839967533f1cc69c57_o''}"
+"receiver_list_o []     = ubLeast {\<C> ''DoNotUse_d3c2301e6a7a443b97f53d6f15fd411a_o''}"
 
 declare receiver_list_o.simps[simp del]
 
@@ -149,35 +158,44 @@ fun receiverOut_list_ar_o :: "(bool tsyn\<times>'e tsyn) list \<Rightarrow> ('e:
 
 section \<open>Helpers to create a bundle from a tsyn stream of elements\<close>
 
-lift_definition DoNotUse_1c0d7c63719b48839967533f1cc69c57_receiver_stream_dr_h :: "('e\<times>bool) tsyn stream \<Rightarrow> ('e::countable) receiverMessage tsyn SB" is
-"\<lambda> s. [(\<C> ''DoNotUse_1c0d7c63719b48839967533f1cc69c57_dr'') \<mapsto> (tsynMap (DoNotUse_1c0d7c63719b48839967533f1cc69c57_ReceiverPair_E_Bool)\<cdot>s)]"
+lift_definition DoNotUse_d3c2301e6a7a443b97f53d6f15fd411a_receiver_stream_dr_h :: "('e\<times>bool) tsyn stream \<Rightarrow> ('e::countable) receiverMessage tsyn SB" is
+"\<lambda> s. [(\<C> ''DoNotUse_d3c2301e6a7a443b97f53d6f15fd411a_dr'') \<mapsto> (tsynMap (DoNotUse_d3c2301e6a7a443b97f53d6f15fd411a_ReceiverPair_E_Bool)\<cdot>s)]"
   unfolding ubWell_def usclOkay_stream_def ctype_tsyn_def
-  apply auto
+  apply auto (* TODO War angeblich mal fertig, hat jetzt aber noch ein Goal *)
   sorry
 
 lift_definition receiver_stream_dr :: "(('e\<times>bool)) tsyn stream \<rightarrow> ('e::countable) receiverMessage tsyn SB" is
-"DoNotUse_1c0d7c63719b48839967533f1cc69c57_receiver_stream_dr_h"
-  sorry
+"DoNotUse_d3c2301e6a7a443b97f53d6f15fd411a_receiver_stream_dr_h"
+  apply(auto simp add: cfun_def DoNotUse_d3c2301e6a7a443b97f53d6f15fd411a_receiver_stream_dr_h_def map_fun_def comp_def)
+  apply(rule cont_Abs_UB)
+  apply(simp add: option_one_cont)
+  by (metis DoNotUse_d3c2301e6a7a443b97f53d6f15fd411a_receiver_stream_dr_h.rep_eq ubrep_well)
 
-lift_definition DoNotUse_1c0d7c63719b48839967533f1cc69c57_receiver_stream_ar_h :: "bool tsyn stream \<Rightarrow> ('e::countable) receiverMessage tsyn SB" is
-"\<lambda> s. [(\<C> ''DoNotUse_1c0d7c63719b48839967533f1cc69c57_ar'') \<mapsto> (tsynMap (DoNotUse_1c0d7c63719b48839967533f1cc69c57_ReceiverBool)\<cdot>s)]"
+lift_definition DoNotUse_d3c2301e6a7a443b97f53d6f15fd411a_receiver_stream_ar_h :: "bool tsyn stream \<Rightarrow> ('e::countable) receiverMessage tsyn SB" is
+"\<lambda> s. [(\<C> ''DoNotUse_d3c2301e6a7a443b97f53d6f15fd411a_ar'') \<mapsto> (tsynMap (DoNotUse_d3c2301e6a7a443b97f53d6f15fd411a_ReceiverBool)\<cdot>s)]"
   unfolding ubWell_def usclOkay_stream_def ctype_tsyn_def
-  apply auto
+  apply auto (* TODO War angeblich mal fertig, hat jetzt aber noch ein Goal *)
   sorry
 
 lift_definition receiver_stream_ar :: "(bool) tsyn stream \<rightarrow> ('e::countable) receiverMessage tsyn SB" is
-"DoNotUse_1c0d7c63719b48839967533f1cc69c57_receiver_stream_ar_h"
-  sorry
+"DoNotUse_d3c2301e6a7a443b97f53d6f15fd411a_receiver_stream_ar_h"
+  apply(auto simp add: cfun_def DoNotUse_d3c2301e6a7a443b97f53d6f15fd411a_receiver_stream_ar_h_def map_fun_def comp_def)
+  apply(rule cont_Abs_UB)
+  apply(simp add: option_one_cont)
+  by (metis DoNotUse_d3c2301e6a7a443b97f53d6f15fd411a_receiver_stream_ar_h.rep_eq ubrep_well)
 
-lift_definition DoNotUse_1c0d7c63719b48839967533f1cc69c57_receiver_stream_o_h :: "'e tsyn stream \<Rightarrow> ('e::countable) receiverMessage tsyn SB" is
-"\<lambda> s. [(\<C> ''DoNotUse_1c0d7c63719b48839967533f1cc69c57_o'') \<mapsto> (tsynMap (DoNotUse_1c0d7c63719b48839967533f1cc69c57_ReceiverE)\<cdot>s)]"
+lift_definition DoNotUse_d3c2301e6a7a443b97f53d6f15fd411a_receiver_stream_o_h :: "'e tsyn stream \<Rightarrow> ('e::countable) receiverMessage tsyn SB" is
+"\<lambda> s. [(\<C> ''DoNotUse_d3c2301e6a7a443b97f53d6f15fd411a_o'') \<mapsto> (tsynMap (DoNotUse_d3c2301e6a7a443b97f53d6f15fd411a_ReceiverE)\<cdot>s)]"
   unfolding ubWell_def usclOkay_stream_def ctype_tsyn_def
-  apply auto
+  apply auto (* TODO War angeblich mal fertig, hat jetzt aber noch ein Goal *)
   sorry
 
 lift_definition receiver_stream_o :: "('e) tsyn stream \<rightarrow> ('e::countable) receiverMessage tsyn SB" is
-"DoNotUse_1c0d7c63719b48839967533f1cc69c57_receiver_stream_o_h"
-  sorry
+"DoNotUse_d3c2301e6a7a443b97f53d6f15fd411a_receiver_stream_o_h"
+  apply(auto simp add: cfun_def DoNotUse_d3c2301e6a7a443b97f53d6f15fd411a_receiver_stream_o_h_def map_fun_def comp_def)
+  apply(rule cont_Abs_UB)
+  apply(simp add: option_one_cont)
+  by (metis DoNotUse_d3c2301e6a7a443b97f53d6f15fd411a_receiver_stream_o_h.rep_eq ubrep_well)
 
 (* Create one SB for all input channels *)
 definition receiverIn_stream_dr :: "('e\<times>bool) tsyn stream \<rightarrow> ('e::countable) receiverMessage tsyn SB" where
@@ -190,25 +208,25 @@ definition receiverOut_stream_ar_o :: "bool tsyn stream \<rightarrow> 'e tsyn st
 
 section \<open>Helpers to get tsyn elements and streams from sbElems and SBs\<close>
 
-fun receiverElem_get_dr :: "('e::countable) receiverMessage tsyn sbElem \<Rightarrow> (('e\<times>bool)) tsyn" where
-"receiverElem_get_dr sbe = undefined"
+definition receiverElem_get_dr :: "('e::countable) receiverMessage tsyn sbElem \<Rightarrow> (('e\<times>bool)) tsyn" where
+"receiverElem_get_dr sbe = tsynApplyElem (inv DoNotUse_d3c2301e6a7a443b97f53d6f15fd411a_ReceiverPair_E_Bool) ((Rep_sbElem sbe) \<rightharpoonup> (\<C> ''DoNotUse_d3c2301e6a7a443b97f53d6f15fd411a_dr''))"
 
 lift_definition receiver_get_stream_dr :: "('e::countable) receiverMessage tsyn SB \<rightarrow> ('e\<times>bool) tsyn stream" is
-"\<lambda>sb. tsynMap (inv DoNotUse_1c0d7c63719b48839967533f1cc69c57_ReceiverPair_E_Bool)\<cdot>(sb . (\<C> ''DoNotUse_1c0d7c63719b48839967533f1cc69c57_dr''))"
+"\<lambda>sb. tsynMap (inv DoNotUse_d3c2301e6a7a443b97f53d6f15fd411a_ReceiverPair_E_Bool)\<cdot>(sb . (\<C> ''DoNotUse_d3c2301e6a7a443b97f53d6f15fd411a_dr''))"
   by(simp add: cfun_def)
 
-fun receiverElem_get_ar :: "('e::countable) receiverMessage tsyn sbElem \<Rightarrow> (bool) tsyn" where
-"receiverElem_get_ar sbe = undefined"
+definition receiverElem_get_ar :: "('e::countable) receiverMessage tsyn sbElem \<Rightarrow> (bool) tsyn" where
+"receiverElem_get_ar sbe = tsynApplyElem (inv DoNotUse_d3c2301e6a7a443b97f53d6f15fd411a_ReceiverBool) ((Rep_sbElem sbe) \<rightharpoonup> (\<C> ''DoNotUse_d3c2301e6a7a443b97f53d6f15fd411a_ar''))"
 
 lift_definition receiver_get_stream_ar :: "('e::countable) receiverMessage tsyn SB \<rightarrow> bool tsyn stream" is
-"\<lambda>sb. tsynMap (inv DoNotUse_1c0d7c63719b48839967533f1cc69c57_ReceiverBool)\<cdot>(sb . (\<C> ''DoNotUse_1c0d7c63719b48839967533f1cc69c57_ar''))"
+"\<lambda>sb. tsynMap (inv DoNotUse_d3c2301e6a7a443b97f53d6f15fd411a_ReceiverBool)\<cdot>(sb . (\<C> ''DoNotUse_d3c2301e6a7a443b97f53d6f15fd411a_ar''))"
   by(simp add: cfun_def)
 
-fun receiverElem_get_o :: "('e::countable) receiverMessage tsyn sbElem \<Rightarrow> ('e) tsyn" where
-"receiverElem_get_o sbe = undefined"
+definition receiverElem_get_o :: "('e::countable) receiverMessage tsyn sbElem \<Rightarrow> ('e) tsyn" where
+"receiverElem_get_o sbe = tsynApplyElem (inv DoNotUse_d3c2301e6a7a443b97f53d6f15fd411a_ReceiverE) ((Rep_sbElem sbe) \<rightharpoonup> (\<C> ''DoNotUse_d3c2301e6a7a443b97f53d6f15fd411a_o''))"
 
 lift_definition receiver_get_stream_o :: "('e::countable) receiverMessage tsyn SB \<rightarrow> 'e tsyn stream" is
-"\<lambda>sb. tsynMap (inv DoNotUse_1c0d7c63719b48839967533f1cc69c57_ReceiverE)\<cdot>(sb . (\<C> ''DoNotUse_1c0d7c63719b48839967533f1cc69c57_o''))"
+"\<lambda>sb. tsynMap (inv DoNotUse_d3c2301e6a7a443b97f53d6f15fd411a_ReceiverE)\<cdot>(sb . (\<C> ''DoNotUse_d3c2301e6a7a443b97f53d6f15fd411a_o''))"
   by(simp add: cfun_def)
 
 
@@ -293,17 +311,32 @@ lemma receiverautomaton_ran[simp]: "daRan receiverAutomaton = receiverRan"
 
 section \<open>Lemmas for single tsyn setter\<close>
 
+lemma receiverelem_dr_dom[simp]: "sbeDom (receiverElem_dr x) = {\<C> ''DoNotUse_d3c2301e6a7a443b97f53d6f15fd411a_dr''}"
+  apply(cases x)
+  apply(simp add: receiverElem_dr.simps sbeDom_def receiverElem_raw_dr.rep_eq)
+  by(simp add: receiverElem_dr.simps)
+
+lemma receiverelem_ar_dom[simp]: "sbeDom (receiverElem_ar x) = {\<C> ''DoNotUse_d3c2301e6a7a443b97f53d6f15fd411a_ar''}"
+  apply(cases x)
+  apply(simp add: receiverElem_ar.simps sbeDom_def receiverElem_raw_ar.rep_eq)
+  by(simp add: receiverElem_ar.simps)
+
+lemma receiverelem_o_dom[simp]: "sbeDom (receiverElem_o x) = {\<C> ''DoNotUse_d3c2301e6a7a443b97f53d6f15fd411a_o''}"
+  apply(cases x)
+  apply(simp add: receiverElem_o.simps sbeDom_def receiverElem_raw_o.rep_eq)
+  by(simp add: receiverElem_o.simps)
+
 lemma receiverelemin_dr_dom[simp]: "sbeDom (receiverElemIn_dr port_dr) = receiverDom"
-  sorry
+  by(auto simp add: receiverElemIn_dr_def receiverDom_def)
 
 lemma receiverelemout_ar_o_dom[simp]: "sbeDom (receiverElemOut_ar_o port_ar port_o) = receiverRan"
-  sorry
+  by(auto simp add: receiverElemOut_ar_o_def receiverRan_def)
 
 lemma receiverin_dr_dom[simp]: "ubDom\<cdot>(receiverIn_dr port_dr) = receiverDom"
-  sorry
+  by(simp add: receiverIn_dr_def)
 
 lemma receiverout_ar_o_dom[simp]: "ubDom\<cdot>(receiverOut_ar_o port_ar port_o) = receiverRan"
-  sorry
+  by(simp add: receiverOut_ar_o_def)
 
 
 section \<open>Lemmas for getter\<close>
@@ -311,13 +344,28 @@ section \<open>Lemmas for getter\<close>
 subsection \<open>Identity lemmas for single sbElems\<close>
 
 lemma receiverelem_dr_id[simp]: "receiverElem_get_dr (receiverElem_dr x) = x"
-  sorry
+  apply(cases x)
+  apply(auto simp add: receiverElem_dr.simps)
+  unfolding receiverElem_get_dr_def receiverElem_raw_dr.rep_eq
+  apply simp
+  apply (meson f_inv_into_f rangeI receiverMessage.inject)
+  by(simp add: sbeNull.rep_eq)
 
 lemma receiverelem_ar_id[simp]: "receiverElem_get_ar (receiverElem_ar x) = x"
-  sorry
+  apply(cases x)
+  apply(auto simp add: receiverElem_ar.simps)
+  unfolding receiverElem_get_ar_def receiverElem_raw_ar.rep_eq
+  apply simp
+  apply (meson f_inv_into_f rangeI receiverMessage.inject)
+  by(simp add: sbeNull.rep_eq)
 
 lemma receiverelem_o_id[simp]: "receiverElem_get_o (receiverElem_o x) = x"
-  sorry
+  apply(cases x)
+  apply(auto simp add: receiverElem_o.simps)
+  unfolding receiverElem_get_o_def receiverElem_raw_o.rep_eq
+  apply simp
+  apply (meson f_inv_into_f rangeI receiverMessage.inject)
+  by(simp add: sbeNull.rep_eq)
 
 
 subsection \<open>Identity lemmas for single SBs from streams\<close>
@@ -350,6 +398,16 @@ lemma receiverelemout_ar_o_o_id[simp]: "receiverElem_get_o (receiverElemOut_ar_o
 subsection \<open>Identity lemmas for input SBs\<close>
 
 lemma receiverin_dr_dr_id[simp]: "receiver_get_stream_dr\<cdot>(receiverIn_dr port_dr) = \<up>port_dr"
+  apply(simp add: receiver_get_stream_dr_def receiverIn_dr_def)
+  apply(subst sbe2sb_getch)
+  apply(auto simp add: receiverDom_def receiverElemIn_dr_def)
+  apply(cases port_dr)
+  apply(auto simp add: receiverElem_dr.simps)
+  unfolding receiverElem_get_dr_def receiverElem_raw_dr.rep_eq
+  (* TODO Ab hier funktioniert der Beweis nicht mehr *)
+  (*apply auto
+  apply (meson f_inv_into_f rangeI receiverMessage.inject(1))
+  by(simp add: sbeNull.rep_eq)*)
   sorry
 
 
@@ -384,55 +442,49 @@ lemma receiverTransition_0_0[simp]:
   assumes "(snd port_dr)=True"
     shows "receiverTransition ((ReceiverState Rf ), (receiverElemIn_dr (Msg port_dr)))
          = (ReceiverState Rf, (receiverOut_ar_o (Msg (True)) null))"
-  apply(simp add: receiverTransition_def)
-  sorry
+  using assms by(auto simp add: receiverTransition_def assms)
 
 (* Line 19:  Rf -> Rt [dr.snd=false] / {ar=false, o=dr.fst}; *)
 lemma receiverTransition_0_1[simp]:
   assumes "(snd port_dr)=False"
     shows "receiverTransition ((ReceiverState Rf ), (receiverElemIn_dr (Msg port_dr)))
          = (ReceiverState Rt, (receiverOut_ar_o (Msg (False)) (Msg ((fst port_dr)))))"
-  apply(simp add: receiverTransition_def)
-  sorry
+  using assms by(auto simp add: receiverTransition_def assms)
 
 (* Line 17:  Rf -> Rf {dr==null}; *)
 lemma receiverTransition_1_0[simp]:
   assumes "True"
     shows "receiverTransition ((ReceiverState Rf ), (receiverElemIn_dr null))
          = (ReceiverState Rf, (receiverOut_ar_o null null))"
-  apply(simp add: receiverTransition_def)
-  sorry
+  using assms by(auto simp add: receiverTransition_def assms)
 
 (* Line 14:  Rt -> Rf [dr.snd=true] / {o=dr.fst, ar=true}; *)
 lemma receiverTransition_2_0[simp]:
   assumes "(snd port_dr)=True"
     shows "receiverTransition ((ReceiverState Rt ), (receiverElemIn_dr (Msg port_dr)))
          = (ReceiverState Rf, (receiverOut_ar_o (Msg (True)) (Msg ((fst port_dr)))))"
-  apply(simp add: receiverTransition_def)
-  sorry
+  using assms by(auto simp add: receiverTransition_def assms)
 
 (* Line 15:  Rt -> Rt [dr.snd=false] / {ar=false}; *)
 lemma receiverTransition_2_1[simp]:
   assumes "(snd port_dr)=False"
     shows "receiverTransition ((ReceiverState Rt ), (receiverElemIn_dr (Msg port_dr)))
          = (ReceiverState Rt, (receiverOut_ar_o (Msg (False)) null))"
-  apply(simp add: receiverTransition_def)
-  sorry
+  using assms by(auto simp add: receiverTransition_def assms)
 
 (* Line 16:  Rt -> Rt {dr==null}; *)
 lemma receiverTransition_3_0[simp]:
   assumes "True"
     shows "receiverTransition ((ReceiverState Rt ), (receiverElemIn_dr null))
          = (ReceiverState Rt, (receiverOut_ar_o null null))"
-  apply(simp add: receiverTransition_def)
-  sorry
+  using assms by(auto simp add: receiverTransition_def assms)
 
 
 section \<open>Step-wise lemmata for the SPF\<close>
 
 (* Convert the SPF to step notation *)
 lemma receiverSpf2Step: "receiverSPF = spfConcOut (receiverOut_ar_o null null)\<cdot>(receiverStep (ReceiverState Rt ))"
-  sorry
+  by(simp add: receiverSPF_def da_H_def receiverInitialOutput_def receiverInitialState_def receiverStep_def)
 
 (* Line 18:  Rf -> Rf [dr.snd=true] / {ar=true}; *)
 lemma receiverStep_0_0:
