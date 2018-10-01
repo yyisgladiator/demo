@@ -432,17 +432,14 @@ let ?H  = "(ndaHelper2 (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) state (ndaTransitio
   qed
 qed
 
-lemma bla: "(uspecFlatten (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) (setrevImage (\<lambda>(s, sb). ndaTodo_h (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) (s, sb) (nda_h nda)) ((ndaTransition\<cdot>nda) (state, sbe)))) = 
-ndaConcOutFlatten (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) ((ndaTransition\<cdot>nda) (state, sbe)) (nda_h nda)"
-  by (simp add: ndaConcOutFlatten_def)
 
 lemma nda_h_final_h_2:assumes "sbeDom sbe = ndaDom\<cdot>nda" and
   nda_h_state_not_empty: "nda_h nda state \<noteq> uspecMax (ndaDom\<cdot>nda) (ndaRan\<cdot>nda)" 
   shows "(uspecImage (Rep_cfun (spfConcIn (sbe2SB sbe))) (nda_h nda state)) \<sqsubseteq>
     ndaConcOutFlatten (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) ((ndaTransition\<cdot>nda) (state, sbe)) (nda_h nda)" 
   apply (rule uspec_belowI)
-    apply (metis (mono_tags, lifting) assms(1) bla nda_h_final_h_1 uspecdom_eq)
-  apply (metis (mono_tags, lifting) assms(1) bla nda_h_final_h_1 uspecran_eq)
+  apply (metis (no_types, lifting) assms(1) ndaConcOutFlatten_def nda_h_final_h_1 uspecdom_eq uspecflatten_dom)
+  apply (metis (no_types, lifting) assms(1) ndaConcOutFlatten_def nda_h_final_h_1 uspecflatten_ran uspecran_eq)
 proof (rule setrev_belowI)
   let ?H  = "(ndaHelper2 (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) state (ndaTransition\<cdot>nda) (nda_h nda))"
   let ?In = "(ndaDom\<cdot>nda)"
