@@ -3,7 +3,7 @@
  * This file was generated from Sender.maa and will be overridden when changed. To change
  * permanently, consider changing the model itself.
  *
- * Generated on Sep 29, 2018 5:54:13 PM by isartransformer 1.0.0
+ * isartransformer 1.0.0
  *)
 theory SenderAutomaton
   imports bundle.tsynBundle automat.dAutomaton
@@ -18,7 +18,7 @@ fun prepend :: "'a::type list \<Rightarrow> 'a \<Rightarrow> 'a list" where
 
 section \<open>Datatype definition\<close>
 
-datatype ('e::countable) senderMessage = DoNotUse_ce16d6ec03a74c76b51abb668037291d_SenderBool "bool" | DoNotUse_ce16d6ec03a74c76b51abb668037291d_SenderE "'e" | DoNotUse_ce16d6ec03a74c76b51abb668037291d_SenderPair_E_Bool "('e\<times>bool)"
+datatype ('e::countable) senderMessage = DoNotUse_393bf6658dbd4365810a660f29a7e675_SenderBool "bool" | DoNotUse_393bf6658dbd4365810a660f29a7e675_SenderE "'e" | DoNotUse_393bf6658dbd4365810a660f29a7e675_SenderPair_E_Bool "('e\<times>bool)"
 
 instance senderMessage :: (countable) countable
   apply(intro_classes)
@@ -28,33 +28,42 @@ instantiation senderMessage :: (countable) message
 begin
   fun ctype_senderMessage :: "channel \<Rightarrow> ('e::countable) senderMessage set" where
   "ctype_senderMessage c = (
-    if c = \<C> ''DoNotUse_ce16d6ec03a74c76b51abb668037291d_as'' then range DoNotUse_ce16d6ec03a74c76b51abb668037291d_SenderBool else
-    if c = \<C> ''DoNotUse_ce16d6ec03a74c76b51abb668037291d_i'' then range DoNotUse_ce16d6ec03a74c76b51abb668037291d_SenderE else
-    if c = \<C> ''DoNotUse_ce16d6ec03a74c76b51abb668037291d_ds'' then range DoNotUse_ce16d6ec03a74c76b51abb668037291d_SenderPair_E_Bool else
+    if c = \<C> ''DoNotUse_393bf6658dbd4365810a660f29a7e675_as'' then range DoNotUse_393bf6658dbd4365810a660f29a7e675_SenderBool else
+    if c = \<C> ''DoNotUse_393bf6658dbd4365810a660f29a7e675_i'' then range DoNotUse_393bf6658dbd4365810a660f29a7e675_SenderE else
+    if c = \<C> ''DoNotUse_393bf6658dbd4365810a660f29a7e675_ds'' then range DoNotUse_393bf6658dbd4365810a660f29a7e675_SenderPair_E_Bool else
     undefined)"
   instance
     by(intro_classes)
 end
 
 
+section \<open>Domain and range\<close>
+
+definition senderDom :: "channel set" where
+"senderDom = {\<C> ''DoNotUse_393bf6658dbd4365810a660f29a7e675_as'', \<C> ''DoNotUse_393bf6658dbd4365810a660f29a7e675_i''}"
+
+definition senderRan :: "channel set" where
+"senderRan = {\<C> ''DoNotUse_393bf6658dbd4365810a660f29a7e675_ds''}"
+
+
 section \<open>Helpers to create a bundle from a single raw element\<close>
 
 lift_definition senderElem_raw_as :: "bool \<Rightarrow> ('e::countable) senderMessage tsyn sbElem" is
-"\<lambda>x. [\<C> ''DoNotUse_ce16d6ec03a74c76b51abb668037291d_as'' \<mapsto> Msg (DoNotUse_ce16d6ec03a74c76b51abb668037291d_SenderBool x)]"
+"\<lambda>x. [\<C> ''DoNotUse_393bf6658dbd4365810a660f29a7e675_as'' \<mapsto> Msg (DoNotUse_393bf6658dbd4365810a660f29a7e675_SenderBool x)]"
   unfolding sbElemWell_def
   unfolding usclOkay_stream_def
   unfolding ctype_tsyn_def
   by simp
 
 lift_definition senderElem_raw_i :: "'e \<Rightarrow> ('e::countable) senderMessage tsyn sbElem" is
-"\<lambda>x. [\<C> ''DoNotUse_ce16d6ec03a74c76b51abb668037291d_i'' \<mapsto> Msg (DoNotUse_ce16d6ec03a74c76b51abb668037291d_SenderE x)]"
+"\<lambda>x. [\<C> ''DoNotUse_393bf6658dbd4365810a660f29a7e675_i'' \<mapsto> Msg (DoNotUse_393bf6658dbd4365810a660f29a7e675_SenderE x)]"
   unfolding sbElemWell_def
   unfolding usclOkay_stream_def
   unfolding ctype_tsyn_def
   by simp
 
 lift_definition senderElem_raw_ds :: "('e\<times>bool) \<Rightarrow> ('e::countable) senderMessage tsyn sbElem" is
-"\<lambda>x. [\<C> ''DoNotUse_ce16d6ec03a74c76b51abb668037291d_ds'' \<mapsto> Msg (DoNotUse_ce16d6ec03a74c76b51abb668037291d_SenderPair_E_Bool x)]"
+"\<lambda>x. [\<C> ''DoNotUse_393bf6658dbd4365810a660f29a7e675_ds'' \<mapsto> Msg (DoNotUse_393bf6658dbd4365810a660f29a7e675_SenderPair_E_Bool x)]"
   unfolding sbElemWell_def
   unfolding usclOkay_stream_def
   unfolding ctype_tsyn_def
@@ -65,7 +74,7 @@ section \<open>Helpers to create a bundle from a single tsyn element\<close>
 
 fun senderElem_as :: "bool tsyn \<Rightarrow> ('e::countable) senderMessage tsyn sbElem" where
 "senderElem_as (Msg port_as) = senderElem_raw_as port_as" |
-"senderElem_as null = sbeNull {\<C> ''DoNotUse_ce16d6ec03a74c76b51abb668037291d_as''}"
+"senderElem_as null = sbeNull {\<C> ''DoNotUse_393bf6658dbd4365810a660f29a7e675_as''}"
 
 declare senderElem_as.simps[simp del]
 
@@ -74,7 +83,7 @@ definition sender_as :: "bool tsyn \<Rightarrow> ('e::countable) senderMessage t
 
 fun senderElem_i :: "'e tsyn \<Rightarrow> ('e::countable) senderMessage tsyn sbElem" where
 "senderElem_i (Msg port_i) = senderElem_raw_i port_i" |
-"senderElem_i null = sbeNull {\<C> ''DoNotUse_ce16d6ec03a74c76b51abb668037291d_i''}"
+"senderElem_i null = sbeNull {\<C> ''DoNotUse_393bf6658dbd4365810a660f29a7e675_i''}"
 
 declare senderElem_i.simps[simp del]
 
@@ -83,7 +92,7 @@ definition sender_i :: "'e tsyn \<Rightarrow> ('e::countable) senderMessage tsyn
 
 fun senderElem_ds :: "('e\<times>bool) tsyn \<Rightarrow> ('e::countable) senderMessage tsyn sbElem" where
 "senderElem_ds (Msg port_ds) = senderElem_raw_ds port_ds" |
-"senderElem_ds null = sbeNull {\<C> ''DoNotUse_ce16d6ec03a74c76b51abb668037291d_ds''}"
+"senderElem_ds null = sbeNull {\<C> ''DoNotUse_393bf6658dbd4365810a660f29a7e675_ds''}"
 
 declare senderElem_ds.simps[simp del]
 
@@ -107,36 +116,67 @@ definition senderOut_ds :: "('e\<times>bool) tsyn \<Rightarrow> ('e::countable) 
 "senderOut_ds port_ds = (sbe2SB (senderElemOut_ds port_ds))"
 
 
+section \<open>Helpers to create a bundle from a tsyn list of elements\<close>
+
+fun sender_list_as :: "(bool tsyn) list \<Rightarrow> ('e::countable) senderMessage tsyn SB" where
+"sender_list_as (x#xs) = ubConcEq (sender_as x)\<cdot>(sender_list_as xs)" |
+"sender_list_as []     = ubLeast {\<C> ''DoNotUse_393bf6658dbd4365810a660f29a7e675_as''}"
+
+declare sender_list_as.simps[simp del]
+
+fun sender_list_i :: "('e tsyn) list \<Rightarrow> ('e::countable) senderMessage tsyn SB" where
+"sender_list_i (x#xs) = ubConcEq (sender_i x)\<cdot>(sender_list_i xs)" |
+"sender_list_i []     = ubLeast {\<C> ''DoNotUse_393bf6658dbd4365810a660f29a7e675_i''}"
+
+declare sender_list_i.simps[simp del]
+
+fun sender_list_ds :: "(('e\<times>bool) tsyn) list \<Rightarrow> ('e::countable) senderMessage tsyn SB" where
+"sender_list_ds (x#xs) = ubConcEq (sender_ds x)\<cdot>(sender_list_ds xs)" |
+"sender_list_ds []     = ubLeast {\<C> ''DoNotUse_393bf6658dbd4365810a660f29a7e675_ds''}"
+
+declare sender_list_ds.simps[simp del]
+
+(* Create one SB for all input channels *)
+fun senderIn_list_as_i :: "(bool tsyn\<times>'e tsyn) list \<Rightarrow> ('e::countable) senderMessage tsyn SB" where
+"senderIn_list_as_i ((port_as,port_i)#xs) = ubConcEq (senderIn_as_i port_as port_i)\<cdot>(senderIn_list_as_i xs)" |
+"senderIn_list_as_i [] = ubLeast senderDom"
+
+(* Create one SB for all output channels *)
+fun senderOut_list_ds :: "(('e\<times>bool) tsyn) list \<Rightarrow> ('e::countable) senderMessage tsyn SB" where
+"senderOut_list_ds ((port_ds)#xs) = ubConcEq (senderOut_ds port_ds)\<cdot>(senderOut_list_ds xs)" |
+"senderOut_list_ds [] = ubLeast senderRan"
+
+
 section \<open>Helpers to create a bundle from a tsyn stream of elements\<close>
 
-lift_definition DoNotUse_ce16d6ec03a74c76b51abb668037291d_sender_stream_as_h :: "bool tsyn stream \<Rightarrow> ('e::countable) senderMessage tsyn SB" is
-"\<lambda> s. [(\<C> ''DoNotUse_ce16d6ec03a74c76b51abb668037291d_as'') \<mapsto> (tsynMap (DoNotUse_ce16d6ec03a74c76b51abb668037291d_SenderBool)\<cdot>s)]"
+lift_definition DoNotUse_393bf6658dbd4365810a660f29a7e675_sender_stream_as_h :: "bool tsyn stream \<Rightarrow> ('e::countable) senderMessage tsyn SB" is
+"\<lambda> s. [(\<C> ''DoNotUse_393bf6658dbd4365810a660f29a7e675_as'') \<mapsto> (tsynMap (DoNotUse_393bf6658dbd4365810a660f29a7e675_SenderBool)\<cdot>s)]"
   unfolding ubWell_def usclOkay_stream_def ctype_tsyn_def
   apply auto
   sorry
 
 lift_definition sender_stream_as :: "(bool) tsyn stream \<rightarrow> ('e::countable) senderMessage tsyn SB" is
-"DoNotUse_ce16d6ec03a74c76b51abb668037291d_sender_stream_as_h"
+"DoNotUse_393bf6658dbd4365810a660f29a7e675_sender_stream_as_h"
   sorry
 
-lift_definition DoNotUse_ce16d6ec03a74c76b51abb668037291d_sender_stream_i_h :: "'e tsyn stream \<Rightarrow> ('e::countable) senderMessage tsyn SB" is
-"\<lambda> s. [(\<C> ''DoNotUse_ce16d6ec03a74c76b51abb668037291d_i'') \<mapsto> (tsynMap (DoNotUse_ce16d6ec03a74c76b51abb668037291d_SenderE)\<cdot>s)]"
+lift_definition DoNotUse_393bf6658dbd4365810a660f29a7e675_sender_stream_i_h :: "'e tsyn stream \<Rightarrow> ('e::countable) senderMessage tsyn SB" is
+"\<lambda> s. [(\<C> ''DoNotUse_393bf6658dbd4365810a660f29a7e675_i'') \<mapsto> (tsynMap (DoNotUse_393bf6658dbd4365810a660f29a7e675_SenderE)\<cdot>s)]"
   unfolding ubWell_def usclOkay_stream_def ctype_tsyn_def
   apply auto
   sorry
 
 lift_definition sender_stream_i :: "('e) tsyn stream \<rightarrow> ('e::countable) senderMessage tsyn SB" is
-"DoNotUse_ce16d6ec03a74c76b51abb668037291d_sender_stream_i_h"
+"DoNotUse_393bf6658dbd4365810a660f29a7e675_sender_stream_i_h"
   sorry
 
-lift_definition DoNotUse_ce16d6ec03a74c76b51abb668037291d_sender_stream_ds_h :: "('e\<times>bool) tsyn stream \<Rightarrow> ('e::countable) senderMessage tsyn SB" is
-"\<lambda> s. [(\<C> ''DoNotUse_ce16d6ec03a74c76b51abb668037291d_ds'') \<mapsto> (tsynMap (DoNotUse_ce16d6ec03a74c76b51abb668037291d_SenderPair_E_Bool)\<cdot>s)]"
+lift_definition DoNotUse_393bf6658dbd4365810a660f29a7e675_sender_stream_ds_h :: "('e\<times>bool) tsyn stream \<Rightarrow> ('e::countable) senderMessage tsyn SB" is
+"\<lambda> s. [(\<C> ''DoNotUse_393bf6658dbd4365810a660f29a7e675_ds'') \<mapsto> (tsynMap (DoNotUse_393bf6658dbd4365810a660f29a7e675_SenderPair_E_Bool)\<cdot>s)]"
   unfolding ubWell_def usclOkay_stream_def ctype_tsyn_def
   apply auto
   sorry
 
 lift_definition sender_stream_ds :: "(('e\<times>bool)) tsyn stream \<rightarrow> ('e::countable) senderMessage tsyn SB" is
-"DoNotUse_ce16d6ec03a74c76b51abb668037291d_sender_stream_ds_h"
+"DoNotUse_393bf6658dbd4365810a660f29a7e675_sender_stream_ds_h"
   sorry
 
 (* Create one SB for all input channels *)
@@ -154,21 +194,21 @@ fun senderElem_get_as :: "('e::countable) senderMessage tsyn sbElem \<Rightarrow
 "senderElem_get_as sbe = undefined"
 
 lift_definition sender_get_stream_as :: "('e::countable) senderMessage tsyn SB \<rightarrow> bool tsyn stream" is
-"\<lambda>sb. tsynMap (inv DoNotUse_ce16d6ec03a74c76b51abb668037291d_SenderBool)\<cdot>(sb . (\<C> ''DoNotUse_ce16d6ec03a74c76b51abb668037291d_as''))"
+"\<lambda>sb. tsynMap (inv DoNotUse_393bf6658dbd4365810a660f29a7e675_SenderBool)\<cdot>(sb . (\<C> ''DoNotUse_393bf6658dbd4365810a660f29a7e675_as''))"
   by(simp add: cfun_def)
 
 fun senderElem_get_i :: "('e::countable) senderMessage tsyn sbElem \<Rightarrow> ('e) tsyn" where
 "senderElem_get_i sbe = undefined"
 
 lift_definition sender_get_stream_i :: "('e::countable) senderMessage tsyn SB \<rightarrow> 'e tsyn stream" is
-"\<lambda>sb. tsynMap (inv DoNotUse_ce16d6ec03a74c76b51abb668037291d_SenderE)\<cdot>(sb . (\<C> ''DoNotUse_ce16d6ec03a74c76b51abb668037291d_i''))"
+"\<lambda>sb. tsynMap (inv DoNotUse_393bf6658dbd4365810a660f29a7e675_SenderE)\<cdot>(sb . (\<C> ''DoNotUse_393bf6658dbd4365810a660f29a7e675_i''))"
   by(simp add: cfun_def)
 
 fun senderElem_get_ds :: "('e::countable) senderMessage tsyn sbElem \<Rightarrow> (('e\<times>bool)) tsyn" where
 "senderElem_get_ds sbe = undefined"
 
 lift_definition sender_get_stream_ds :: "('e::countable) senderMessage tsyn SB \<rightarrow> ('e\<times>bool) tsyn stream" is
-"\<lambda>sb. tsynMap (inv DoNotUse_ce16d6ec03a74c76b51abb668037291d_SenderPair_E_Bool)\<cdot>(sb . (\<C> ''DoNotUse_ce16d6ec03a74c76b51abb668037291d_ds''))"
+"\<lambda>sb. tsynMap (inv DoNotUse_393bf6658dbd4365810a660f29a7e675_SenderPair_E_Bool)\<cdot>(sb . (\<C> ''DoNotUse_393bf6658dbd4365810a660f29a7e675_ds''))"
   by(simp add: cfun_def)
 
 
@@ -248,14 +288,6 @@ fun senderTransitionH :: "('e SenderState \<times> (bool tsyn \<times> 'e tsyn))
    else if((size var_buffer)>0 \<and> var_c>0) then ((SenderState St var_buffer (var_c-1), (senderOut_ds null)))
    else if((size var_buffer)>0 \<and> var_c=0) then ((SenderState St var_buffer 3, (senderOut_ds (Msg (Pair (last var_buffer) True)))))
    else (SenderState St var_buffer var_c, (senderOut_ds null)))"
-
-(* Domain *)
-definition senderDom :: "channel set" where
-"senderDom = {\<C> ''DoNotUse_ce16d6ec03a74c76b51abb668037291d_as'', \<C> ''DoNotUse_ce16d6ec03a74c76b51abb668037291d_i''}"
-
-(* Range *)
-definition senderRan :: "channel set" where
-"senderRan = {\<C> ''DoNotUse_ce16d6ec03a74c76b51abb668037291d_ds''}"
 
 (* Transition function *)
 definition senderTransition :: "('e SenderState \<times> ('e::countable) senderMessage tsyn sbElem) \<Rightarrow> ('e SenderState \<times> ('e::countable) senderMessage tsyn SB)" where
