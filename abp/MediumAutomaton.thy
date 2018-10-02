@@ -3,22 +3,13 @@
  * This file was generated from Medium.maa and will be overridden when changed. To change
  * permanently, consider changing the model itself.
  *
- * Generated on Oct 1, 2018 2:45:43 PM by isartransformer 1.0.0
+ * Generated on Oct 2, 2018 4:40:10 PM by isartransformer 1.0.0
  *)
 theory MediumAutomaton
   imports bundle.tsynBundle automat.ndAutomaton
 
 begin
 
-
-(* TODO Sollte wahrscheinlich in OptionCpo sein? *)
-lemma option_one_cont: "cont (\<lambda>x. [c \<mapsto> f\<cdot>x])"
-  apply(rule contI2, rule monofunI)
-  apply (simp add: below_option_def fun_belowI monofun_cfun_arg)
-  apply (auto simp add: below_fun_def below_option_def)
-  apply (smt below_option_def chain_monofun domIff fun_belowI fun_upd_apply option.exhaust_sel part_dom_lub po_class.chain_def some_below)
-  apply (simp add: contlub_cfun_arg part_map_chain part_the_lub)
-  by (smt below_option_def cont_pref_eq1I domIff fun_belowI fun_upd_apply option.sel option.simps(3) part_dom_lub po_class.chain_def)
 
 (* Helper for easier generation *)
 fun prepend :: "'a::type list \<Rightarrow> 'a \<Rightarrow> 'a list" where
@@ -27,7 +18,7 @@ fun prepend :: "'a::type list \<Rightarrow> 'a \<Rightarrow> 'a list" where
 
 section \<open>Datatype definition\<close>
 
-datatype ('e::countable) mediumMessage = DoNotUse_41c2e588edd3412794268e2d90be9c41_MediumE "'e"
+datatype ('e::countable) mediumMessage = DoNotUse_d588d00bde96454a8978c43d8abc48ab_MediumE "'e"
 
 instance mediumMessage :: (countable) countable
   apply(intro_classes)
@@ -37,8 +28,8 @@ instantiation mediumMessage :: (countable) message
 begin
   fun ctype_mediumMessage :: "channel \<Rightarrow> ('e::countable) mediumMessage set" where
   "ctype_mediumMessage c = (
-    if c = \<C> ''DoNotUse_41c2e588edd3412794268e2d90be9c41_ar'' then range DoNotUse_41c2e588edd3412794268e2d90be9c41_MediumE else
-    if c = \<C> ''DoNotUse_41c2e588edd3412794268e2d90be9c41_as'' then range DoNotUse_41c2e588edd3412794268e2d90be9c41_MediumE else
+    if c = \<C> ''DoNotUse_d588d00bde96454a8978c43d8abc48ab_ar'' then range DoNotUse_d588d00bde96454a8978c43d8abc48ab_MediumE else
+    if c = \<C> ''DoNotUse_d588d00bde96454a8978c43d8abc48ab_as'' then range DoNotUse_d588d00bde96454a8978c43d8abc48ab_MediumE else
     undefined)"
   instance
     by(intro_classes)
@@ -48,23 +39,23 @@ end
 section \<open>Domain and range\<close>
 
 definition mediumDom :: "channel set" where
-"mediumDom = {\<C> ''DoNotUse_41c2e588edd3412794268e2d90be9c41_ar''}"
+"mediumDom = {\<C> ''DoNotUse_d588d00bde96454a8978c43d8abc48ab_ar''}"
 
 definition mediumRan :: "channel set" where
-"mediumRan = {\<C> ''DoNotUse_41c2e588edd3412794268e2d90be9c41_as''}"
+"mediumRan = {\<C> ''DoNotUse_d588d00bde96454a8978c43d8abc48ab_as''}"
 
 
 section \<open>Helpers to create a bundle from a single raw element\<close>
 
 lift_definition mediumElem_raw_ar :: "'e \<Rightarrow> ('e::countable) mediumMessage tsyn sbElem" is
-"\<lambda>x. [\<C> ''DoNotUse_41c2e588edd3412794268e2d90be9c41_ar'' \<mapsto> Msg (DoNotUse_41c2e588edd3412794268e2d90be9c41_MediumE x)]"
+"\<lambda>x. [\<C> ''DoNotUse_d588d00bde96454a8978c43d8abc48ab_ar'' \<mapsto> Msg (DoNotUse_d588d00bde96454a8978c43d8abc48ab_MediumE x)]"
   unfolding sbElemWell_def
   unfolding usclOkay_stream_def
   unfolding ctype_tsyn_def
   by simp
 
 lift_definition mediumElem_raw_as :: "'e \<Rightarrow> ('e::countable) mediumMessage tsyn sbElem" is
-"\<lambda>x. [\<C> ''DoNotUse_41c2e588edd3412794268e2d90be9c41_as'' \<mapsto> Msg (DoNotUse_41c2e588edd3412794268e2d90be9c41_MediumE x)]"
+"\<lambda>x. [\<C> ''DoNotUse_d588d00bde96454a8978c43d8abc48ab_as'' \<mapsto> Msg (DoNotUse_d588d00bde96454a8978c43d8abc48ab_MediumE x)]"
   unfolding sbElemWell_def
   unfolding usclOkay_stream_def
   unfolding ctype_tsyn_def
@@ -75,7 +66,7 @@ section \<open>Helpers to create a bundle from a single tsyn element\<close>
 
 fun mediumElem_ar :: "'e tsyn \<Rightarrow> ('e::countable) mediumMessage tsyn sbElem" where
 "mediumElem_ar (Msg port_ar) = mediumElem_raw_ar port_ar" |
-"mediumElem_ar null = sbeNull {\<C> ''DoNotUse_41c2e588edd3412794268e2d90be9c41_ar''}"
+"mediumElem_ar null = sbeNull {\<C> ''DoNotUse_d588d00bde96454a8978c43d8abc48ab_ar''}"
 
 declare mediumElem_ar.simps[simp del]
 
@@ -84,7 +75,7 @@ definition medium_ar :: "'e tsyn \<Rightarrow> ('e::countable) mediumMessage tsy
 
 fun mediumElem_as :: "'e tsyn \<Rightarrow> ('e::countable) mediumMessage tsyn sbElem" where
 "mediumElem_as (Msg port_as) = mediumElem_raw_as port_as" |
-"mediumElem_as null = sbeNull {\<C> ''DoNotUse_41c2e588edd3412794268e2d90be9c41_as''}"
+"mediumElem_as null = sbeNull {\<C> ''DoNotUse_d588d00bde96454a8978c43d8abc48ab_as''}"
 
 declare mediumElem_as.simps[simp del]
 
@@ -112,13 +103,13 @@ section \<open>Helpers to create a bundle from a tsyn list of elements\<close>
 
 fun medium_list_ar :: "('e tsyn) list \<Rightarrow> ('e::countable) mediumMessage tsyn SB" where
 "medium_list_ar (x#xs) = ubConcEq (medium_ar x)\<cdot>(medium_list_ar xs)" |
-"medium_list_ar []     = ubLeast {\<C> ''DoNotUse_41c2e588edd3412794268e2d90be9c41_ar''}"
+"medium_list_ar []     = ubLeast {\<C> ''DoNotUse_d588d00bde96454a8978c43d8abc48ab_ar''}"
 
 declare medium_list_ar.simps[simp del]
 
 fun medium_list_as :: "('e tsyn) list \<Rightarrow> ('e::countable) mediumMessage tsyn SB" where
 "medium_list_as (x#xs) = ubConcEq (medium_as x)\<cdot>(medium_list_as xs)" |
-"medium_list_as []     = ubLeast {\<C> ''DoNotUse_41c2e588edd3412794268e2d90be9c41_as''}"
+"medium_list_as []     = ubLeast {\<C> ''DoNotUse_d588d00bde96454a8978c43d8abc48ab_as''}"
 
 declare medium_list_as.simps[simp del]
 
@@ -135,31 +126,29 @@ fun mediumOut_list_as :: "('e tsyn) list \<Rightarrow> ('e::countable) mediumMes
 
 section \<open>Helpers to create a bundle from a tsyn stream of elements\<close>
 
-lift_definition DoNotUse_41c2e588edd3412794268e2d90be9c41_medium_stream_ar_h :: "'e tsyn stream \<Rightarrow> ('e::countable) mediumMessage tsyn SB" is
-"\<lambda> s. [(\<C> ''DoNotUse_41c2e588edd3412794268e2d90be9c41_ar'') \<mapsto> (tsynMap (DoNotUse_41c2e588edd3412794268e2d90be9c41_MediumE)\<cdot>s)]"
+lift_definition DoNotUse_d588d00bde96454a8978c43d8abc48ab_medium_stream_ar_h :: "'e tsyn stream \<Rightarrow> ('e::countable) mediumMessage tsyn SB" is
+"\<lambda> s. [(\<C> ''DoNotUse_d588d00bde96454a8978c43d8abc48ab_ar'') \<mapsto> (tsynMap (DoNotUse_d588d00bde96454a8978c43d8abc48ab_MediumE)\<cdot>s)]"
   unfolding ubWell_def usclOkay_stream_def ctype_tsyn_def
-  apply auto (* TODO War angeblich mal fertig, hat jetzt aber noch ein Goal *)
-  sorry
+  by auto
 
 lift_definition medium_stream_ar :: "('e) tsyn stream \<rightarrow> ('e::countable) mediumMessage tsyn SB" is
-"DoNotUse_41c2e588edd3412794268e2d90be9c41_medium_stream_ar_h"
-  apply(auto simp add: cfun_def DoNotUse_41c2e588edd3412794268e2d90be9c41_medium_stream_ar_h_def map_fun_def comp_def)
+"DoNotUse_d588d00bde96454a8978c43d8abc48ab_medium_stream_ar_h"
+  apply(auto simp add: cfun_def DoNotUse_d588d00bde96454a8978c43d8abc48ab_medium_stream_ar_h_def map_fun_def comp_def)
   apply(rule cont_Abs_UB)
   apply(simp add: option_one_cont)
-  by (metis DoNotUse_41c2e588edd3412794268e2d90be9c41_medium_stream_ar_h.rep_eq ubrep_well)
+  by (metis DoNotUse_d588d00bde96454a8978c43d8abc48ab_medium_stream_ar_h.rep_eq ubrep_well)
 
-lift_definition DoNotUse_41c2e588edd3412794268e2d90be9c41_medium_stream_as_h :: "'e tsyn stream \<Rightarrow> ('e::countable) mediumMessage tsyn SB" is
-"\<lambda> s. [(\<C> ''DoNotUse_41c2e588edd3412794268e2d90be9c41_as'') \<mapsto> (tsynMap (DoNotUse_41c2e588edd3412794268e2d90be9c41_MediumE)\<cdot>s)]"
+lift_definition DoNotUse_d588d00bde96454a8978c43d8abc48ab_medium_stream_as_h :: "'e tsyn stream \<Rightarrow> ('e::countable) mediumMessage tsyn SB" is
+"\<lambda> s. [(\<C> ''DoNotUse_d588d00bde96454a8978c43d8abc48ab_as'') \<mapsto> (tsynMap (DoNotUse_d588d00bde96454a8978c43d8abc48ab_MediumE)\<cdot>s)]"
   unfolding ubWell_def usclOkay_stream_def ctype_tsyn_def
-  apply auto (* TODO War angeblich mal fertig, hat jetzt aber noch ein Goal *)
-  sorry
+  by auto
 
 lift_definition medium_stream_as :: "('e) tsyn stream \<rightarrow> ('e::countable) mediumMessage tsyn SB" is
-"DoNotUse_41c2e588edd3412794268e2d90be9c41_medium_stream_as_h"
-  apply(auto simp add: cfun_def DoNotUse_41c2e588edd3412794268e2d90be9c41_medium_stream_as_h_def map_fun_def comp_def)
+"DoNotUse_d588d00bde96454a8978c43d8abc48ab_medium_stream_as_h"
+  apply(auto simp add: cfun_def DoNotUse_d588d00bde96454a8978c43d8abc48ab_medium_stream_as_h_def map_fun_def comp_def)
   apply(rule cont_Abs_UB)
   apply(simp add: option_one_cont)
-  by (metis DoNotUse_41c2e588edd3412794268e2d90be9c41_medium_stream_as_h.rep_eq ubrep_well)
+  by (metis DoNotUse_d588d00bde96454a8978c43d8abc48ab_medium_stream_as_h.rep_eq ubrep_well)
 
 (* Create one SB for all input channels *)
 definition mediumIn_stream_ar :: "'e tsyn stream \<rightarrow> ('e::countable) mediumMessage tsyn SB" where
@@ -173,17 +162,17 @@ definition mediumOut_stream_as :: "'e tsyn stream \<rightarrow> ('e::countable) 
 section \<open>Helpers to get tsyn elements and streams from sbElems and SBs\<close>
 
 definition mediumElem_get_ar :: "('e::countable) mediumMessage tsyn sbElem \<Rightarrow> ('e) tsyn" where
-"mediumElem_get_ar sbe = tsynApplyElem (inv DoNotUse_41c2e588edd3412794268e2d90be9c41_MediumE) ((Rep_sbElem sbe) \<rightharpoonup> (\<C> ''DoNotUse_41c2e588edd3412794268e2d90be9c41_ar''))"
+"mediumElem_get_ar sbe = tsynApplyElem (inv DoNotUse_d588d00bde96454a8978c43d8abc48ab_MediumE) ((Rep_sbElem sbe) \<rightharpoonup> (\<C> ''DoNotUse_d588d00bde96454a8978c43d8abc48ab_ar''))"
 
 lift_definition medium_get_stream_ar :: "('e::countable) mediumMessage tsyn SB \<rightarrow> 'e tsyn stream" is
-"\<lambda>sb. tsynMap (inv DoNotUse_41c2e588edd3412794268e2d90be9c41_MediumE)\<cdot>(sb . (\<C> ''DoNotUse_41c2e588edd3412794268e2d90be9c41_ar''))"
+"\<lambda>sb. tsynMap (inv DoNotUse_d588d00bde96454a8978c43d8abc48ab_MediumE)\<cdot>(sb . (\<C> ''DoNotUse_d588d00bde96454a8978c43d8abc48ab_ar''))"
   by(simp add: cfun_def)
 
 definition mediumElem_get_as :: "('e::countable) mediumMessage tsyn sbElem \<Rightarrow> ('e) tsyn" where
-"mediumElem_get_as sbe = tsynApplyElem (inv DoNotUse_41c2e588edd3412794268e2d90be9c41_MediumE) ((Rep_sbElem sbe) \<rightharpoonup> (\<C> ''DoNotUse_41c2e588edd3412794268e2d90be9c41_as''))"
+"mediumElem_get_as sbe = tsynApplyElem (inv DoNotUse_d588d00bde96454a8978c43d8abc48ab_MediumE) ((Rep_sbElem sbe) \<rightharpoonup> (\<C> ''DoNotUse_d588d00bde96454a8978c43d8abc48ab_as''))"
 
 lift_definition medium_get_stream_as :: "('e::countable) mediumMessage tsyn SB \<rightarrow> 'e tsyn stream" is
-"\<lambda>sb. tsynMap (inv DoNotUse_41c2e588edd3412794268e2d90be9c41_MediumE)\<cdot>(sb . (\<C> ''DoNotUse_41c2e588edd3412794268e2d90be9c41_as''))"
+"\<lambda>sb. tsynMap (inv DoNotUse_d588d00bde96454a8978c43d8abc48ab_MediumE)\<cdot>(sb . (\<C> ''DoNotUse_d588d00bde96454a8978c43d8abc48ab_as''))"
   by(simp add: cfun_def)
 
 
@@ -254,12 +243,12 @@ lemma mediumautomaton_ran[simp]: "ndaRan\<cdot>mediumAutomaton = mediumRan"
 
 section \<open>Lemmas for single tsyn setter\<close>
 
-lemma mediumelem_ar_dom[simp]: "sbeDom (mediumElem_ar x) = {\<C> ''DoNotUse_41c2e588edd3412794268e2d90be9c41_ar''}"
+lemma mediumelem_ar_dom[simp]: "sbeDom (mediumElem_ar x) = {\<C> ''DoNotUse_d588d00bde96454a8978c43d8abc48ab_ar''}"
   apply(cases x)
   apply(simp add: mediumElem_ar.simps sbeDom_def mediumElem_raw_ar.rep_eq)
   by(simp add: mediumElem_ar.simps)
 
-lemma mediumelem_as_dom[simp]: "sbeDom (mediumElem_as x) = {\<C> ''DoNotUse_41c2e588edd3412794268e2d90be9c41_as''}"
+lemma mediumelem_as_dom[simp]: "sbeDom (mediumElem_as x) = {\<C> ''DoNotUse_d588d00bde96454a8978c43d8abc48ab_as''}"
   apply(cases x)
   apply(simp add: mediumElem_as.simps sbeDom_def mediumElem_raw_as.rep_eq)
   by(simp add: mediumElem_as.simps)
@@ -310,13 +299,15 @@ lemma medium_stream_as_id[simp]: "medium_get_stream_as\<cdot>(medium_stream_as\<
 subsection \<open>Identity lemmas for input sbElems\<close>
 
 lemma mediumelemin_ar_ar_id[simp]: "mediumElem_get_ar (mediumElemIn_ar port_ar) = port_ar"
-  sorry
+  apply(simp add: mediumElemIn_ar_def mediumElem_get_ar_def)
+  by(metis mediumElem_get_ar_def mediumelem_ar_id)
 
 
 subsection \<open>Identity lemmas for output sbElems\<close>
 
 lemma mediumelemout_as_as_id[simp]: "mediumElem_get_as (mediumElemOut_as port_as) = port_as"
-  sorry
+  apply(simp add: mediumElemOut_as_def mediumElem_get_as_def)
+  by(metis mediumElem_get_as_def mediumelem_as_id)
 
 
 subsection \<open>Identity lemmas for input SBs\<close>
@@ -328,9 +319,9 @@ lemma mediumin_ar_ar_id[simp]: "medium_get_stream_ar\<cdot>(mediumIn_ar port_ar)
   apply(cases port_ar)
   apply(auto simp add: mediumElem_ar.simps)
   unfolding mediumElem_get_ar_def mediumElem_raw_ar.rep_eq
-  (* TODO Ab hier funktioniert der Beweis nicht mehr *)
-  (*apply auto
-  apply (meson f_inv_into_f rangeI mediumMessage.inject(1))
+  apply auto
+  (* TODO not working for SenderAutomaton *)
+  (*apply (meson f_inv_into_f rangeI mediumMessage.inject(1))
   by(simp add: sbeNull.rep_eq)*)
   sorry
 
@@ -338,6 +329,16 @@ lemma mediumin_ar_ar_id[simp]: "medium_get_stream_ar\<cdot>(mediumIn_ar port_ar)
 subsection \<open>Identity lemmas for output SBs\<close>
 
 lemma mediumout_as_as_id[simp]: "medium_get_stream_as\<cdot>(mediumOut_as port_as) = \<up>port_as"
+  apply(simp add: medium_get_stream_as_def mediumOut_as_def)
+  apply(subst sbe2sb_getch)
+  apply(auto simp add: mediumDom_def mediumElemOut_as_def)
+  apply(cases port_as)
+  apply(auto simp add: mediumElem_as.simps)
+  unfolding mediumElem_get_as_def mediumElem_raw_as.rep_eq
+  apply auto
+  (* TODO not working for SenderAutomaton *)
+  (*apply (meson f_inv_into_f rangeI mediumMessage.inject(1))
+  by(simp add: sbeNull.rep_eq)*)
   sorry
 
 
