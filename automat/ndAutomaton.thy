@@ -514,14 +514,12 @@ qed
 lemma nda_h_final: assumes "sbeDom sbe = ndaDom\<cdot>nda" and
   nda_h_state_not_empty: "nda_h nda state \<noteq> uspecMax (ndaDom\<cdot>nda) (ndaRan\<cdot>nda)"
   shows "spsConcIn (sbe2SB sbe) (nda_h nda state) = 
-  uspecFlatten (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) (setrevImage (\<lambda>(s, sb). ndaTodo_h (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) (s, sb) (nda_h nda)) ((ndaTransition\<cdot>nda) (state,sbe)))"
+   ndaConcOutFlatten (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) ((ndaTransition\<cdot>nda) (state,sbe)) (nda_h nda)"
    apply (rule uspec_eqI)  defer
     apply (subst spsconcin_dom)
      apply (simp add: one_lnat_def sbe_ch_len)
-    apply (metis (no_types, lifting) nda_h_fixpoint nda_h_inner_dom uspecflatten_dom)
-   apply (subst spsconcin_ran)
-    apply (simp add: one_lnat_def sbe_ch_len)
-   apply (metis (no_types, lifting) nda_h_fixpoint nda_h_inner_ran uspecflatten_ran)
+    apply (metis ndaConcOutFlatten_def nda_h_fixpoint nda_h_inner_dom uspecflatten_dom)
+  apply (simp add: assms(1) nda_h_final_h_2 nda_h_state_not_empty spsConcIn_def)
   apply (simp add: spsConcIn_def)
   by (metis (no_types) assms(1) ndaConcOutFlatten_def nda_h_final_h_1 nda_h_final_h_2 nda_h_state_not_empty po_eq_conv)
 
@@ -531,8 +529,9 @@ lemma nda_h_I:
   assumes "sbeDom sbe = ndaDom\<cdot>nda" 
     and "uspecIsConsistent (nda_h nda state)" (* For the proof see "ndaTotal.thy" *)
     and "transitions = (ndaTransition\<cdot>nda) (state,sbe)"
-  shows "spsConcIn (sbe2SB sbe) (nda_h nda state) = ndaConcOutFlatten (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) transitions (nda_h nda)"
-  unfolding ndaConcOutFlatten_def assms(3)
+  shows "spsConcIn (sbe2SB sbe) (nda_h nda state) = 
+    ndaConcOutFlatten (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) transitions (nda_h nda)"
+  unfolding assms(3)
   apply(rule nda_h_final, simp add: assms)
   by (metis assms(2) uspecmax_consistent uspecmax_dom uspecmax_ran)
 
@@ -564,17 +563,62 @@ lemma nda_h_bottom: "uspecIsStrict (nda_h nda state)"
   by (metis nda_h_bottom_h nda_h_fixpoint nda_h_inner_def)
 
 
+
+lemma nda_h_final_back_h_1: "\<forall> sbe. sbeDom sbe = In \<longrightarrow>
+ (uspecIsStrict other \<and> h sbe \<in> USPEC In Out \<and> spsConcIn (sbe2SB sbe) other = h sbe)
+            \<Longrightarrow> 
+      (spsStep_m In Out h = other)"
+proof -
+  assume a1: "\<forall> sbe. sbeDom sbe = In \<longrightarrow>
+ (uspecIsStrict other \<and> h sbe \<in> USPEC In Out \<and> spsConcIn (sbe2SB sbe) other = h sbe)"
+  show "(spsStep_m In Out h = other)"
+    sorry
+qed
+
+
+lemma nda_h_final_back_h_2: "(spsStep_m In Out h = other)
+ \<Longrightarrow> \<forall> sbe. sbeDom sbe = In \<longrightarrow>
+ (uspecIsStrict other \<and> h sbe \<in> USPEC In Out \<and> spsConcIn (sbe2SB sbe) other = h sbe)"
+  sorry
+
+
+lemma nda_h_final_back_eq_h: "(\<forall> sbe. sbeDom sbe = In \<longrightarrow>
+ (uspecIsStrict other \<and> h sbe \<in> USPEC In Out \<and> spsConcIn (sbe2SB sbe) other = h sbe))
+            \<longleftrightarrow> 
+      (spsStep_m In Out h = other)"
+  by (meson nda_h_final_back_h_1 nda_h_final_back_h_2)
+
+
 (* This is the version used for "ndaTotal" *)
 (* Annika needs a different lemma with equality, that "nda_h nda = other" *)
-lemma nda_h_final_back: assumes "\<And>state sbe. sbeDom sbe = ndaDom\<cdot>nda \<Longrightarrow> spsConcIn (sbe2SB sbe) (other state) = 
+lemma nda_h_final_back: assumes "\<And>state sbe. sbeDom sbe = ndaDom\<cdot>nda \<Longrightarrow> 
+spsConcIn (sbe2SB sbe) (other state) = 
   ndaConcOutFlatten (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) ((ndaTransition\<cdot>nda) (state,sbe)) (other)"
-  and "\<And> state. uspecDom\<cdot>(other state) = ndaDom\<cdot>nda" and "\<And> state. uspecRan\<cdot>(other state) = ndaRan\<cdot>nda"
+  and "\<And> state. uspecIsStrict (other state)"
+  and "\<And> state. uspecDom\<cdot>(other state) = ndaDom\<cdot>nda" 
+  and "\<And> state. uspecRan\<cdot>(other state) = ndaRan\<cdot>nda"
 shows "nda_h nda \<sqsubseteq> other" 
   apply(rule nda_h_least) 
   apply(simp only: USPEC_def SetPcpo.setify_def)
   using assms(2) assms(3) apply auto[1]
-  sorry
-
+    apply (simp_all add: assms(4))
+  apply (simp add: nda_h_inner_def Let_def)
+  apply (simp add: below_fun_def)
+  apply rule
+  apply (simp add: ndaHelper2_def)
+proof -
+  fix x::'a
+  have "spsStep_m (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) (\<lambda>e::'b sbElem. ndaConcOutFlatten (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) ((ndaTransition\<cdot>nda) (x, e)) other) = other x"
+    apply (rule nda_h_final_back_h_1)
+    apply rule +
+     apply (simp add: assms(2))
+    apply rule
+     apply (metis (mono_tags, lifting) USPEC_def mem_Collect_eq ndaConcOutFlatten_def uspecflatten_dom uspecflatten_ran)
+    by (simp add: assms(1))
+  then show "spsStep_m (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) (\<lambda>e::'b sbElem. ndaConcOutFlatten (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) ((ndaTransition\<cdot>nda) (x, e)) other) 
+          \<sqsubseteq> other x"
+    by simp
+qed
 
 
 end
