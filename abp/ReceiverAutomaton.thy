@@ -71,7 +71,9 @@ lift_definition receiverElem_raw_o :: "'e \<Rightarrow> ('e::countable) receiver
 
 
 section \<open>Helpers to create a bundle from a single tsyn element\<close>
+(* SWS: Add comments to point the user to the right definition. similar for other definitions *)
 
+(* Do not use this for the input, use receiverElemIn_dr instead *)
 fun receiverElem_dr :: "('e\<times>bool) tsyn \<Rightarrow> ('e::countable) receiverMessage tsyn sbElem" where
 "receiverElem_dr (Msg port_dr) = receiverElem_raw_dr port_dr" |
 "receiverElem_dr null = sbeNull {\<C> ''DoNotUse_25014a1e21f24dc487c610ded93e188f_dr''}"
@@ -96,6 +98,7 @@ fun receiverElem_o :: "'e tsyn \<Rightarrow> ('e::countable) receiverMessage tsy
 
 declare receiverElem_o.simps[simp del]
 
+(* Do not use this for the input, use receiverIn_dr instead *)
 definition receiver_o :: "'e tsyn \<Rightarrow> ('e::countable) receiverMessage tsyn SB" where
 "receiver_o port_o = sbe2SB (receiverElem_o port_o)"
 
@@ -117,7 +120,7 @@ definition receiverOut_ar_o :: "bool tsyn \<Rightarrow> 'e tsyn \<Rightarrow> ('
 
 
 section \<open>Helpers to create a bundle from a tsyn list of elements\<close>
-
+(* Do not use .. bla bla *)
 fun receiver_list_dr :: "(('e\<times>bool) tsyn) list \<Rightarrow> ('e::countable) receiverMessage tsyn SB" where
 "receiver_list_dr (x#xs) = ubConcEq (receiver_dr x)\<cdot>(receiver_list_dr xs)" |
 "receiver_list_dr []     = ubLeast {\<C> ''DoNotUse_25014a1e21f24dc487c610ded93e188f_dr''}"
@@ -359,10 +362,15 @@ lemma receiverelem_o_id[simp]: "receiverElem_get_o (receiverElem_o x) = x"
 subsection \<open>Identity lemmas for single SBs from streams\<close>
 
 lemma receiver_stream_dr_id[simp]: "receiver_get_stream_dr\<cdot>(receiver_stream_dr\<cdot>x) = x"
-  sorry
+  apply(simp add: receiver_get_stream_dr.rep_eq receiver_stream_dr.rep_eq)
+  apply(simp add: ubGetCh_def DoNotUse_25014a1e21f24dc487c610ded93e188f_receiver_stream_dr_h.rep_eq)
+  by (simp add: inj_def) (* SWS: Done, required additional theories in tsynStream *)
+
 
 lemma receiver_stream_ar_id[simp]: "receiver_get_stream_ar\<cdot>(receiver_stream_ar\<cdot>x) = x"
-  sorry
+  apply(simp add: receiver_get_stream_ar.rep_eq receiver_stream_ar.rep_eq)
+  apply(simp add: ubGetCh_def DoNotUse_25014a1e21f24dc487c610ded93e188f_receiver_stream_ar_h.rep_eq)
+  by (simp add: inj_def) (* SWS: Done, required additional theories in tsynStream *)
 
 lemma receiver_stream_o_id[simp]: "receiver_get_stream_o\<cdot>(receiver_stream_o\<cdot>x) = x"
   sorry
@@ -395,11 +403,8 @@ lemma receiverin_dr_dr_id[simp]: "receiver_get_stream_dr\<cdot>(receiverIn_dr po
   apply(cases port_dr)
   apply(auto simp add: receiverElem_dr.simps)
   unfolding receiverElem_get_dr_def receiverElem_raw_dr.rep_eq
-  apply auto
-  (* TODO not working for SenderAutomaton *)
-  (*apply (meson f_inv_into_f rangeI receiverMessage.inject(1))
-  by(simp add: sbeNull.rep_eq)*)
-  sorry
+   apply(simp add: inj_def)
+  by(simp add: sbeNull.rep_eq)  (* SWS: Done, now without sledgi *)
 
 
 subsection \<open>Identity lemmas for output SBs\<close>
@@ -411,11 +416,8 @@ lemma receiverout_ar_o_ar_id[simp]: "receiver_get_stream_ar\<cdot>(receiverOut_a
   apply(cases port_ar)
   apply(auto simp add: receiverElem_ar.simps)
   unfolding receiverElem_get_ar_def receiverElem_raw_ar.rep_eq
-  apply auto
-  (* TODO not working for SenderAutomaton *)
-  (*apply (meson f_inv_into_f rangeI receiverMessage.inject(1))
-  by(simp add: sbeNull.rep_eq)*)
-  sorry
+   apply(simp add: inj_def)
+  by(simp add: sbeNull.rep_eq)  (* SWS: Done, now without sledgi *)
 
 lemma receiverout_ar_o_o_id[simp]: "receiver_get_stream_o\<cdot>(receiverOut_ar_o port_ar port_o) = \<up>port_o"
   apply(simp add: receiver_get_stream_o_def receiverOut_ar_o_def)
@@ -425,10 +427,8 @@ lemma receiverout_ar_o_o_id[simp]: "receiver_get_stream_o\<cdot>(receiverOut_ar_
   apply(auto simp add: receiverElem_o.simps)
   unfolding receiverElem_get_o_def receiverElem_raw_o.rep_eq
   apply auto
-  (* TODO not working for SenderAutomaton *)
-  (*apply (meson f_inv_into_f rangeI receiverMessage.inject(1))
-  by(simp add: sbeNull.rep_eq)*)
-  sorry
+   apply(simp add: inj_def)
+  by(simp add: sbeNull.rep_eq)  (* SWS: Done, now without sledgi *)
 
 
 subsection \<open>Identity lemmas for input SBs from streams\<close>
@@ -438,9 +438,19 @@ lemma receiverin_stream_dr_dr_id[simp]: "receiver_get_stream_dr\<cdot>(receiverI
 
 
 subsection \<open>Identity lemmas for output SBs from streams\<close>
+thm ubUnion_def
+
+lemma [simp]: "ubDom\<cdot>(receiver_stream_ar\<cdot>port_ar) = {\<C> ''DoNotUse_25014a1e21f24dc487c610ded93e188f_ar'' }"
+  by(simp add: receiver_stream_ar.rep_eq ubdom_insert DoNotUse_25014a1e21f24dc487c610ded93e188f_receiver_stream_ar_h.rep_eq)
+  
+
+lemma [simp]:"ubDom\<cdot>(receiver_stream_o\<cdot>port_o) = {\<C> ''DoNotUse_25014a1e21f24dc487c610ded93e188f_o'' }"
+  sorry
 
 lemma receiverout_stream_ar_o_ar_id[simp]: "receiver_get_stream_ar\<cdot>(receiverOut_stream_ar_o\<cdot>port_ar\<cdot>port_o) = port_ar"
-  sorry
+  apply(simp add: receiver_get_stream_ar.rep_eq receiverOut_stream_ar_o_def)
+  apply(auto simp add: ubclUnion_ubundle_def)
+  by (metis receiver_get_stream_ar.rep_eq receiver_stream_ar_id) (* SWS: proofed *)
 
 lemma receiverout_stream_ar_o_o_id[simp]: "receiver_get_stream_o\<cdot>(receiverOut_stream_ar_o\<cdot>port_ar\<cdot>port_o) = port_o"
   sorry

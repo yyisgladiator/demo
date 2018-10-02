@@ -774,6 +774,16 @@ text {* Every message produced by @{term tsynMap} of the function f is in @{term
 lemma tsynmap_tsyndom_range: "tsynDom\<cdot>(tsynMap f\<cdot>s) \<subseteq> range f"
   by (simp add: tsynabs_tsyndom tsynmap_tsynabs)
 
+lemma tsynmap_tsynmap[simp]: "tsynMap f\<cdot>(tsynMap g\<cdot>s) = tsynMap (f\<circ>g)\<cdot>s"
+  apply(induction s rule: tsyn_ind)
+     apply simp_all
+  by(simp add: tsynmap_sconc_null tsynmap_sconc_msg)+
+
+lemma tsynmap_id [simp]: "tsynMap id\<cdot>s = s"
+  apply(induction s rule: tsyn_ind)
+     apply simp_all
+  by(simp add: tsynmap_sconc_null tsynmap_sconc_msg)+
+
 text {* @{term tsynMap} test on finite stream. *}
 lemma tsynMap_test_finstream: "tsynMap (plus 1)\<cdot>(<[Msg 1, Msg 2, Msg 1, null]>) 
   = <[Msg 2, Msg 3, Msg 2, null]>"

@@ -442,11 +442,8 @@ lemma senderin_as_i_as_id[simp]: "sender_get_stream_as\<cdot>(senderIn_as_i port
   apply(cases port_as)
   apply(auto simp add: senderElem_as.simps)
   unfolding senderElem_get_as_def senderElem_raw_as.rep_eq
-  apply auto
-  (* TODO not working for SenderAutomaton *)
-  (*apply (meson f_inv_into_f rangeI senderMessage.inject(1))
-  by(simp add: sbeNull.rep_eq)*)
-  sorry
+   apply(simp add: inj_def)
+  by(simp add: sbeNull.rep_eq)  (* SWS: Done, now without sledgi *)
 
 lemma senderin_as_i_i_id[simp]: "sender_get_stream_i\<cdot>(senderIn_as_i port_as port_i) = \<up>port_i"
   apply(simp add: sender_get_stream_i_def senderIn_as_i_def)
@@ -455,11 +452,8 @@ lemma senderin_as_i_i_id[simp]: "sender_get_stream_i\<cdot>(senderIn_as_i port_a
   apply(cases port_i)
   apply(auto simp add: senderElem_i.simps)
   unfolding senderElem_get_i_def senderElem_raw_i.rep_eq
-  apply auto
-  (* TODO not working for SenderAutomaton *)
-  (*apply (meson f_inv_into_f rangeI senderMessage.inject(1))
-  by(simp add: sbeNull.rep_eq)*)
-  sorry
+   apply(simp add: inj_def)
+  by(simp add: sbeNull.rep_eq)  (* SWS: Done, now without sledgi *)
 
 
 subsection \<open>Identity lemmas for output SBs\<close>
@@ -471,11 +465,8 @@ lemma senderout_ds_ds_id[simp]: "sender_get_stream_ds\<cdot>(senderOut_ds port_d
   apply(cases port_ds)
   apply(auto simp add: senderElem_ds.simps)
   unfolding senderElem_get_ds_def senderElem_raw_ds.rep_eq
-  apply auto
-  (* TODO not working for SenderAutomaton *)
-  (*apply (meson f_inv_into_f rangeI senderMessage.inject(1))
-  by(simp add: sbeNull.rep_eq)*)
-  sorry
+   apply(simp add: inj_def)
+  by(simp add: sbeNull.rep_eq)  (* SWS: Done, now without sledgi *)
 
 
 subsection \<open>Identity lemmas for input SBs from streams\<close>
