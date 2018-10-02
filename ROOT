@@ -43,6 +43,7 @@ session "spec" (mustWork) in spec = "fun" +
     HOLMF
   theories
     SPS
+    USpec_UFunComp
 
 session "automat" (mustWork) in automat = "spec" + 
   options [quick_and_dirty = true]

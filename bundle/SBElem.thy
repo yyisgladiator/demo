@@ -54,7 +54,7 @@ lemma sbe2sb_dom [simp]: "ubDom\<cdot>(sbe2SB sbe) = sbeDom sbe"
 lemma sbe2sb_nbot: "\<And>c. c\<in>sbeDom sbe \<Longrightarrow> (sbe2SB sbe) . c \<noteq> \<epsilon>"
   by(simp add: ubgetch_insert sbe2SB.rep_eq sbeDom_def)
 
-lemma sbe2sb_getch: "c\<in>sbeDom sbe \<Longrightarrow> ((sbe2SB sbe)  .  c) = \<up>((Rep_sbElem sbe) \<rightharpoonup> c)"
+lemma sbe2sb_getch[simp]: "c\<in>sbeDom sbe \<Longrightarrow> ((sbe2SB sbe)  .  c) = \<up>((Rep_sbElem sbe) \<rightharpoonup> c)"
   unfolding ubgetch_insert sbe2SB.rep_eq
   apply auto
   done
@@ -104,7 +104,8 @@ lemma sbe2sb_len[simp]: "sbeDom sbe \<noteq> {} \<Longrightarrow> ubLen (sbe2SB 
 
 lemma sbe2sb_maxlen[simp]: "sbeDom sbe \<noteq> {} \<Longrightarrow> ubMaxLen 1 (sbe2SB sbe)"
   apply(auto simp add: ubMaxLen_def)
-  by (simp add: sbe_ch_len usclLen_stream_def)
+  apply (simp add: sbe_ch_len usclLen_stream_def)
+  by (simp add: one_lnat_def)
 
 lemma sbe_obtain: assumes "ubLen ub = 1" and "ubMaxLen 1 ub"
   obtains sbe where "sbe2SB sbe = ub" and "sbeDom sbe = ubDom\<cdot>ub"
@@ -152,5 +153,10 @@ lemma sbeunion_null[simp]: "(sbeNull cs1) \<plusminus> (sbeNull cs2) = sbeNull (
   apply auto
   by (simp add: map_add_def)
 
+lemma sbeunion_second[simp]: "c\<in>sbeDom sbe2 \<Longrightarrow> (Rep_sbElem (sbe1 \<plusminus> sbe2) ) \<rightharpoonup> c = Rep_sbElem sbe2 \<rightharpoonup> c"
+  by(simp add: sbeUnion.rep_eq sbeDom_def map_add_dom_app_simps)
+
+lemma sbeunion_first[simp]: "c\<notin>sbeDom sbe2 \<Longrightarrow> (Rep_sbElem (sbe1 \<plusminus> sbe2) ) \<rightharpoonup> c = Rep_sbElem sbe1 \<rightharpoonup> c"  
+  by(simp add: sbeUnion.rep_eq sbeDom_def map_add_dom_app_simps)
 
 end
