@@ -104,7 +104,8 @@ lemma sbe2sb_len[simp]: "sbeDom sbe \<noteq> {} \<Longrightarrow> ubLen (sbe2SB 
 
 lemma sbe2sb_maxlen[simp]: "sbeDom sbe \<noteq> {} \<Longrightarrow> ubMaxLen 1 (sbe2SB sbe)"
   apply(auto simp add: ubMaxLen_def)
-  by (simp add: sbe_ch_len usclLen_stream_def)
+  apply (simp add: sbe_ch_len usclLen_stream_def)
+  by (simp add: one_lnat_def)
 
 lemma sbe_obtain: assumes "ubLen ub = 1" and "ubMaxLen 1 ub"
   obtains sbe where "sbe2SB sbe = ub" and "sbeDom sbe = ubDom\<cdot>ub"

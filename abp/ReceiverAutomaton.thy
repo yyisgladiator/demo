@@ -157,12 +157,12 @@ lift_definition DoNotUse_d3c2301e6a7a443b97f53d6f15fd411a_receiver_stream_dr_h :
   by auto (* SWS: Beweis fertig *)
 
 (* SWS: Beweis fertig *)
-lift_definition receiver_stream_dr :: "((nat\<times>bool)) tsyn stream \<rightarrow> receiverMessage tsyn SB" is
-"receiver_stream_dr_h"
-  apply(auto simp add: cfun_def receiver_stream_dr_h_def map_fun_def comp_def )
+lift_definition receiver_stream_dr :: "(('e\<times>bool)) tsyn stream \<rightarrow> 'e::countable receiverMessage tsyn SB" is
+"DoNotUse_d3c2301e6a7a443b97f53d6f15fd411a_receiver_stream_dr_h"
+  apply(auto simp add: cfun_def DoNotUse_d3c2301e6a7a443b97f53d6f15fd411a_receiver_stream_dr_h_def map_fun_def comp_def )
   apply(rule cont_Abs_UB)
    apply(simp add: option_one_cont)
-  by (metis receiver_stream_dr_h.rep_eq ubrep_well)
+  by (metis DoNotUse_d3c2301e6a7a443b97f53d6f15fd411a_receiver_stream_dr_h.rep_eq ubrep_well)
   
 
 lift_definition DoNotUse_d3c2301e6a7a443b97f53d6f15fd411a_receiver_stream_ar_h :: "bool tsyn stream \<Rightarrow> ('e::countable) receiverMessage tsyn SB" is
@@ -180,8 +180,7 @@ lift_definition receiver_stream_ar :: "(bool) tsyn stream \<rightarrow> ('e::cou
 lift_definition DoNotUse_d3c2301e6a7a443b97f53d6f15fd411a_receiver_stream_o_h :: "'e tsyn stream \<Rightarrow> ('e::countable) receiverMessage tsyn SB" is
 "\<lambda> s. [(\<C> ''DoNotUse_d3c2301e6a7a443b97f53d6f15fd411a_o'') \<mapsto> (tsynMap (DoNotUse_d3c2301e6a7a443b97f53d6f15fd411a_ReceiverE)\<cdot>s)]"
   unfolding ubWell_def usclOkay_stream_def ctype_tsyn_def
-  apply auto (* TODO War angeblich mal fertig, hat jetzt aber noch ein Goal *)
-  sorry
+  by auto (* TODO War angeblich mal fertig, hat jetzt aber noch ein Goal *)
 
 lift_definition receiver_stream_o :: "('e) tsyn stream \<rightarrow> ('e::countable) receiverMessage tsyn SB" is
 "DoNotUse_d3c2301e6a7a443b97f53d6f15fd411a_receiver_stream_o_h"
@@ -202,16 +201,16 @@ definition receiverOut_stream_ar_o :: "bool tsyn stream \<rightarrow> 'e tsyn st
 section \<open>Helpers to get tsyn elements and streams from sbElems and SBs\<close>
 
 (* SWS: implemented Body, make this a "definition" *)
-definition receiverElem_get_dr :: "receiverMessage tsyn sbElem \<Rightarrow> ((nat\<times>bool)) tsyn" where
-"receiverElem_get_dr sbe = tsynApplyElem (inv ReceiverPair_ReceiverNat_ReceiverBool) ((Rep_sbElem sbe) \<rightharpoonup> (\<C> ''dr''))"
+definition receiverElem_get_dr :: "'e::countable receiverMessage tsyn sbElem \<Rightarrow> (('e\<times>bool)) tsyn" where
+"receiverElem_get_dr sbe = tsynApplyElem (inv DoNotUse_d3c2301e6a7a443b97f53d6f15fd411a_ReceiverPair_E_Bool) ((Rep_sbElem sbe) \<rightharpoonup> (\<C> ''DoNotUse_d3c2301e6a7a443b97f53d6f15fd411a_dr''))"
 
 lift_definition receiver_get_stream_dr :: "('e::countable) receiverMessage tsyn SB \<rightarrow> ('e\<times>bool) tsyn stream" is
 "\<lambda>sb. tsynMap (inv DoNotUse_d3c2301e6a7a443b97f53d6f15fd411a_ReceiverPair_E_Bool)\<cdot>(sb . (\<C> ''DoNotUse_d3c2301e6a7a443b97f53d6f15fd411a_dr''))"
   by(simp add: cfun_def)
 
 (* SWS: implemented Body, make this a "definition" *)
-definition receiverElem_get_ar :: "receiverMessage tsyn sbElem \<Rightarrow> (bool) tsyn" where
-"receiverElem_get_ar sbe = tsynApplyElem (inv ReceiverBool) ((Rep_sbElem sbe) \<rightharpoonup> (\<C> ''ar''))"
+definition receiverElem_get_ar :: "('e::countable) receiverMessage tsyn sbElem \<Rightarrow> (bool) tsyn" where
+"receiverElem_get_ar sbe = tsynApplyElem (inv DoNotUse_d3c2301e6a7a443b97f53d6f15fd411a_ReceiverBool) ((Rep_sbElem sbe) \<rightharpoonup> (\<C> ''DoNotUse_d3c2301e6a7a443b97f53d6f15fd411a_ar''))"
 
 lift_definition receiver_get_stream_ar :: "('e::countable) receiverMessage tsyn SB \<rightarrow> bool tsyn stream" is
 "\<lambda>sb. tsynMap (inv DoNotUse_d3c2301e6a7a443b97f53d6f15fd411a_ReceiverBool)\<cdot>(sb . (\<C> ''DoNotUse_d3c2301e6a7a443b97f53d6f15fd411a_ar''))"
@@ -326,10 +325,8 @@ lemma receiverelemin_dr_dom[simp]: "sbeDom (receiverElemIn_dr port_dr) = receive
   by(auto simp add: receiverElemIn_dr_def receiverDom_def)
 
 
-(* SWS: Beweis implemented *)
-lemma receiverelemin_dr_dom[simp]: "sbeDom (receiverElemIn_dr port_dr) = receiverDom"
-  by(auto simp add: receiverElemIn_dr_def receiverDom_def)
 
+(* SWS: get for multi-parameter *)
 lemma receiverelemout_ar_o_dom[simp]: "sbeDom (receiverElemOut_ar_o port_ar port_o) = receiverRan"
   by(auto simp add: receiverElemOut_ar_o_def receiverRan_def)
 
@@ -349,7 +346,7 @@ lemma receiverelem_dr_id[simp]: "receiverElem_get_dr (receiverElem_dr x) = x"
   apply(cases x)
   apply(auto simp add: receiverElem_dr.simps)
   unfolding receiverElem_get_dr_def receiverElem_raw_dr.rep_eq
-  apply simp
+   apply simp
   apply (meson f_inv_into_f rangeI receiverMessage.inject)
   by(simp add: sbeNull.rep_eq)
 
@@ -394,7 +391,8 @@ subsection \<open>Identity lemmas for output sbElems\<close>
 
 (* SWS: The 2 channel version is more difficult... Can you create a 3-channel version? *)
 lemma receiverelemout_ar_o_ar_id[simp]: "receiverElem_get_ar (receiverElemOut_ar_o port_ar port_o) = port_ar"
-  using receiverElem_get_ar_def receiverelem_ar_id by(auto simp add: receiverElemOut_ar_o_def)
+  apply(simp add: receiverElemOut_ar_o_def receiverElem_get_ar_def)
+  by (metis receiverElem_get_ar_def receiverelem_ar_id)
 
 (* SWS: Kann sein, dass das hier nochmal anders zu beweisen ist*)
 lemma receiverelemout_ar_o_o_id[simp]: "receiverElem_get_o (receiverElemOut_ar_o port_ar port_o) = port_o"
