@@ -465,7 +465,6 @@ lemma uspecUnion_general_easy2:
   using assms apply (simp add: uspecUnion_general_easy1)
   by (simp add: sup_commute)
 
-
 lemma uspec_union_general_notfit: 
   assumes "uspecDom\<cdot>A \<noteq> uspecDom\<cdot>B \<or> uspecRan\<cdot>A \<noteq> uspecRan\<cdot>B"
   shows "uspecSet\<cdot>(uspecUnion_general A B) = {}"
@@ -636,10 +635,9 @@ lemma uspecFilterSubset:
 "\<And>S::'a uspec. \<forall>f::'a \<in> (Set.filter P (uspecSet\<cdot>S)). f \<in> (uspecSet\<cdot>S)"
   by simp
 
-lemma uspecFilter_general_well[simp]: "\<And>S. uspecWell (setrevFilter P \<cdot>(uspecRevSet\<cdot>S))
+lemma uspecFilter_general_well[simp]: "\<And>S P. uspecWell (Set.filter P (uspecSet\<cdot>S))
     (Discr (uspecDom\<cdot>S)) (Discr (uspecRan\<cdot>S))"
-  by (metis (no_types, lifting) inv_rev_rev undiscr_Discr 
-    uspecFilterSubset uspecWell.elims(3) uspec_allDom uspec_allRan)
+  by auto
         
 (* Dom and ran for general (non cont) function *)                             
 lemma uspecFilter_general_dom: "uspecDom\<cdot>(uspecFilter_general P S) = uspecDom\<cdot>S"
@@ -657,15 +655,19 @@ lemma uspecFilter_mono[simp]: "monofun (\<lambda> S. uspecFilter_general P S)"
     fix x::"'a uspec" and y::"'a uspec"
     assume a1: "x \<sqsubseteq> y"
     have h1: "uspecDom\<cdot>x = uspecDom\<cdot>y"
-      by (simp add: a1)
+      by (simp add: a1 uspecdom_eq)
     have h2: "uspecRan\<cdot>x = uspecRan\<cdot>y"
-      by (simp add: a1)
+      by (simp add: a1 uspecran_eq)
+    have h3: "fst (Rep_uspec x) \<subseteq> fst (Rep_uspec y)"
+      by (metis SetPcpo.less_set_def a1 fst_monofun rep_uspec_belowI)
     show "uspecFilter_general P x \<sqsubseteq> uspecFilter_general P y"
       apply (rule uspec_belowI)
       apply (simp add: h1 uspecFilter_general_dom)
       apply (simp add: h2 uspecFilter_general_ran)
-      by (metis a1 cont_pref_eq1I fst_conv rep_abs_uspec uspecFilter_general_def 
-        uspecFilter_general_well uspecrevset_insert)
+      unfolding SetPcpo.less_set_def
+      apply (simp add: uspecFilter_general_def)
+      apply (simp add: uspecset_insert)
+      using h3 by auto
   qed
 
 lemma uspecFilter_chain:
@@ -677,131 +679,89 @@ lemma uspecFilter_cont[simp]: "cont (\<lambda> S. uspecFilter_general P S)"
   apply(rule contI2)
   apply simp
   apply(rule allI, rule impI)
-   proof -
+  proof -
     fix Y::"nat \<Rightarrow> 'a uspec"
     assume a1: "chain Y"
-    have "chain (\<lambda>i. uspecFilter_general P (Y i))"
-      by (simp add: a1 uspecFilter_chain)
+    have h0: "chain (\<lambda>i. uspecFilter_general P (Y i))"
+      by (meson a1 monofunE po_class.chain_def uspecFilter_mono)
     then have h1: "fst (Rep_uspec (\<Squnion>i::nat. uspecFilter_general P (Y i)))
                  = fst (\<Squnion>i::nat. Rep_uspec (uspecFilter_general P (Y i)))"
       by (metis cont2contlubE uspec_rep_cont)
-    have "chain (\<lambda>i. Rep_uspec (uspecFilter_general P (Y i)))"
+    have h00: "chain (\<lambda>i. Rep_uspec (uspecFilter_general P (Y i)))"
       using a1 uspecFilter_chain ch2ch_monofun uspec_rep_mono by blast
     then have h2: "fst (\<Squnion>i::nat. Rep_uspec (uspecFilter_general P (Y i)))
                  = (\<Squnion>i::nat. fst (Rep_uspec (uspecFilter_general P (Y i))))"
       using lub_prod by fastforce
-    have h3: "\<And>i. uspecDom\<cdot>(Y i) = uspecDom\<cdot>(Lub Y)"
-      using a1 is_ub_thelub uspecdom_eq by blast
-    have h4: "\<And>i. uspecRan\<cdot>(Y i) = uspecRan\<cdot>(Lub Y)"
-      using a1 is_ub_thelub uspecran_eq by blast
+    have h3: "(uspecSet\<cdot>(Lub Y)) \<subseteq> (\<Union>i.(uspecSet\<cdot>(Y i)))"
+      by (simp add: a1 contlub_cfun_arg lub_eq_Union)
     show "uspecFilter_general P (\<Squnion>i. Y i) \<sqsubseteq> (\<Squnion>i. uspecFilter_general P (Y i))"
-      apply (rule uspec_belowI)
-      apply (simp add: uspecFilter_general_dom)
-      using \<open>chain (\<lambda>i::nat. uspecFilter_general (P::'a \<Rightarrow> bool) ((Y::nat \<Rightarrow> 'a uspec) i))\<close> h3 
-        is_ub_thelub uspecFilter_general_dom uspecdom_eq apply blast
-      apply (simp add: uspecFilter_general_ran)
-      using \<open>chain (\<lambda>i::nat. uspecFilter_general (P::'a \<Rightarrow> bool) ((Y::nat \<Rightarrow> 'a uspec) i))\<close> h4 
-        is_ub_thelub uspecFilter_general_ran uspecran_eq apply blast
-      apply(simp add: uspecRevSet_def)
+      apply(rule uspec_belowI)
+      apply(simp add: uspecFilter_general_dom)
+      using a1 uspecFilter_chain uspecFilter_general_dom uspecdom_lub_chain apply blast
+      apply(simp add: uspecFilter_general_ran)
+      using a1 uspecFilter_chain uspecFilter_general_ran uspecran_lub_chain apply blast
+      apply(simp add: uspecSet_def)
       apply(simp add: h1)
       apply(simp add: h2)
-      apply(simp add: uspecFilter_general_def)
-      by (simp add: a1 contlub_cfun_arg)
+      apply (simp add: uspecFilter_general_def)
+      unfolding SetPcpo.less_set_def
+      unfolding SetPcpo.lub_eq_Union
+      using h3 subsetI by fastforce
   qed
 
 lemma uspecfilter_insert: "uspecFilter P\<cdot>S = uspecFilter_general P S"
   by (simp add: uspecFilter_def)
 
-lemma uspecfilter_condition: "\<And>x. uspec_in x (uspecFilter P\<cdot>A) \<Longrightarrow> P x"
-proof -
-  fix x :: 'a
-  assume a1: "uspec_in x (uspecFilter P\<cdot>A)"
-  have "(\<lambda>u. fst (Rep_uspec (u::'a uspec))) = Rep_cfun uspecRevSet"
-    by (simp add: uspecRevSet_def)
-  then have f2: "\<forall>u p. setrevFilter p\<cdot>(uspecRevSet\<cdot>(u::'a uspec)) = uspecRevSet\<cdot>(uspecFilter_general p u)"
-    by (metis (no_types) fst_conv rep_abs_uspec uspecFilter_general_def uspecFilter_general_well)
-  have "uspec_in x (uspecFilter_general P A)"
-    using a1 by (simp add: uspecfilter_insert)
-  then show "P x"
-    using f2 by (metis setrevFilter_gdw)
-qed
+lemma uspecfilter_condition: "\<And>x. x \<in> uspecSet\<cdot>(uspecFilter P\<cdot>A) \<Longrightarrow> P x"
+  by (simp add: uspecFilter_general_def uspecfilter_insert uspecset_insert)
 
-lemma uspecfilter_included: "\<And>x. uspec_in x (uspecFilter P\<cdot>A) \<Longrightarrow> uspec_in x A"
-proof -
-  fix x :: 'a
-  assume a1: "uspec_in x (uspecFilter P\<cdot>A)"
-  have "setrevFilter P\<cdot>(uspecRevSet\<cdot>A) = fst (Rep_uspec (uspecFilter P\<cdot>A))"
-    by (simp add: uspecFilter_general_def uspecfilter_insert)
-  then have "x \<in> inv Rev (setrevFilter P\<cdot>(uspecRevSet\<cdot>A))"
-    using a1 rep_rev_revset by auto
-  then show "uspec_in x A"
-    by (meson uspecFilterSubset)
-qed
+lemma uspecfilter_included: "\<And>x.  x \<in> uspecSet\<cdot>(uspecFilter P\<cdot>A) \<Longrightarrow> x \<in> uspecSet\<cdot>A"
+  by (simp add: uspecFilter_general_def uspecSet.rep_eq uspecfilter_insert)
+
 
 subsection \<open>uspecInter\<close> 
 
-lemma uspecInter_filtered: " setrevFilter (\<lambda>f. ufclDom\<cdot>f = (uspecDom\<cdot>S1 \<inter> uspecDom\<cdot>S2)
-                          \<and> ufclRan\<cdot>f = (uspecRan\<cdot>S1 \<inter> uspecRan\<cdot>S2))
-                          \<cdot>(setrevInter\<cdot>(uspecRevSet\<cdot>S1)\<cdot>(uspecRevSet\<cdot>S2)) =
-                        setrevInter\<cdot>(uspecRevSet\<cdot>S1)\<cdot>(uspecRevSet\<cdot>S2) "
-proof -
-  have b0: "\<forall>f \<in> inv Rev (setrevInter\<cdot>(uspecRevSet\<cdot>S1)\<cdot>(uspecRevSet\<cdot>S2)).
-            ufclDom\<cdot>f = (uspecDom\<cdot>S1 \<inter> uspecDom\<cdot>S2)"
-    by (metis IntD1 inf.idem inf_commute inv_rev_rev setrevinter_insert uspec_allDom)
-  have b1: "\<forall>f \<in> inv Rev (setrevInter\<cdot>(uspecRevSet\<cdot>S1)\<cdot>(uspecRevSet\<cdot>S2)).
-            ufclRan\<cdot>f = (uspecRan\<cdot>S1 \<inter> uspecRan\<cdot>S2)"
-    by (metis IntD2 inf.idem inf_commute inv_rev_rev setrevinter_insert uspec_allRan)
-  show ?thesis
-    apply (simp add: setrevfilter_insert)
-    by (smt Collect_cong Set.filter_def b0 b1 inf_set_def mem_Collect_eq rev.inject rev_inv_rev setrevinter_insert)
-qed
-
-lemma uspecInter_general_well[simp]: "\<And>S1 S2. uspecWell
-    (setrevFilter (\<lambda>f. ufclDom\<cdot>f = (uspecDom\<cdot>S1 \<inter> uspecDom\<cdot>S2)
-                     \<and> ufclRan\<cdot>f = (uspecRan\<cdot>S1 \<inter> uspecRan\<cdot>S2))
-                  \<cdot>(setrevInter\<cdot>(uspecRevSet\<cdot>S1)\<cdot>(uspecRevSet\<cdot>S2)))
-    (Discr (uspecDom\<cdot>S1 \<inter> uspecDom\<cdot>S2))
-    (Discr (uspecRan\<cdot>S1 \<inter> uspecRan\<cdot>S2))"
-  apply(rule uspec_wellI2)
-  by (metis (mono_tags, lifting) setrevfilter_condition)+
+lemma uspecInter_general_well[simp]: "\<And>S1 S2. uspecWell    
+    ((uspecSet\<cdot>S1) \<inter> (uspecSet\<cdot>S2))
+    (Discr (uspecDom\<cdot>S1 \<union> uspecDom\<cdot>S2))
+    (Discr (uspecRan\<cdot>S1 \<union> uspecRan\<cdot>S2))"
+  by (metis (no_types, hide_lams) Int_iff sup.idem undiscr_Discr uspecWell.elims(3) uspec_allDom uspec_allRan)
 
 lemma uspecInter_general_sym: 
 "uspecInter_general = (\<lambda> S1 S2. (uspecInter_general S2 S1))"
-  by (simp add: uspecInter_general_def inf_commute setrevInter_sym2)
+  apply (simp add: uspecInter_general_def inf_commute)
+  by (simp add: sup_commute)
         
 (* Dom and ran for general (non cont) function *)                             
-lemma uspecInter_general_dom: "uspecDom\<cdot>(uspecInter_general S1 S2) = uspecDom\<cdot>S1 \<inter> uspecDom\<cdot>S2"
+lemma uspecInter_general_dom: "uspecDom\<cdot>(uspecInter_general S1 S2) = uspecDom\<cdot>S1 \<union> uspecDom\<cdot>S2"
   apply(simp add: uspecInter_general_def)
-  apply(subst uspecdom_insert)
-  by (metis (no_types, lifting) Discr_undiscr discr.simps(1) fst_conv uspecInter_filtered rep_abs_uspec 
-    snd_conv uspecInter_general_well uspecrevset_insert)
+  by (metis fstI prod.sel(2) rep_abs_uspec undiscr_Discr uspecInter_general_well uspecdom_insert)
 
-lemma uspecInter_general_ran: "uspecRan\<cdot>(uspecInter_general S1 S2) = uspecRan\<cdot>S1 \<inter> uspecRan\<cdot>S2"
+lemma uspecInter_general_ran: "uspecRan\<cdot>(uspecInter_general S1 S2) = uspecRan\<cdot>S1 \<union> uspecRan\<cdot>S2"
   apply(simp add: uspecInter_general_def)
-  apply(subst uspecran_insert)
-  by (metis (no_types, lifting) uspecInter_filtered rep_abs_uspec snd_conv undiscr_Discr uspecInter_general_well)
-
+  by (metis prod.sel(2) rep_abs_uspec undiscr_Discr uspecInter_general_well uspecran_insert)
 
 lemma uspecInter_mono[simp]: "\<And>S1. monofun (uspecInter_general S1)"
   proof (rule monofunI)
     fix S1::"'a uspec" and x::"'a uspec" and y::"'a uspec"
     assume a1: "x \<sqsubseteq> y"
     have h1: "uspecDom\<cdot>x = uspecDom\<cdot>y"
-      by (simp add: a1)
+      by (simp add: a1 uspecdom_eq)
     have h2: "uspecRan\<cdot>x = uspecRan\<cdot>y"
-      by (simp add: a1)
-    have h3: "(Rev (inv Rev (uspecRevSet\<cdot>S1) \<inter> inv Rev (uspecRevSet\<cdot>x)))
-            \<sqsubseteq> (Rev (inv Rev (uspecRevSet\<cdot>S1) \<inter> inv Rev (uspecRevSet\<cdot>y)))"
-      by (metis a1 monofun_cfun_arg setrevinter_insert)
+      by (simp add: a1 uspecran_eq)
+    have h3: " (uspecSet\<cdot>S1) \<inter> (uspecSet\<cdot>x)
+            \<sqsubseteq> (uspecSet\<cdot>S1) \<inter> (uspecSet\<cdot>y)"
+      unfolding SetPcpo.less_set_def
+      by (metis SetPcpo.less_set_def a1 inf.idem inf_le2 inf_mono monofun_cfun_arg)
     show "(uspecInter_general S1 x) \<sqsubseteq> (uspecInter_general S1 y)"
       apply(rule uspec_belowI)
       apply(simp add: uspecInter_general_dom)
       apply(simp only: h1)
       apply(simp add: uspecInter_general_ran)
       apply(simp only: h2)
-      apply(simp add: uspecrevset_insert)
       apply(simp add: uspecInter_general_def)
-      by (metis (no_types, lifting) fst_conv h3 uspecInter_filtered rep_abs_uspec setrevinter_insert uspecInter_general_well)
+      apply (simp add: uspecset_insert)
+      by (metis fstI h3 rep_abs_uspec uspecInter_general_well uspecSet.rep_eq)
   qed
 
 lemma uspecInter_chain:
@@ -813,15 +773,15 @@ lemma uspecInter_cont1[simp]: "\<And>S1. cont (uspecInter_general S1)"
   apply(rule contI2)
   apply simp
   apply(rule allI, rule impI)
-   proof -
+  proof -
     fix S1::"'a uspec" and Y::"nat \<Rightarrow> 'a uspec"
     assume a1: "chain Y"
-    have "chain (\<lambda>i. uspecInter_general S1 (Y i))"
+    have h0: "chain (\<lambda>i. uspecInter_general S1 (Y i))"
       by (simp add: a1 uspecInter_chain)
     then have h1: "fst (Rep_uspec (\<Squnion>i::nat. uspecInter_general S1 (Y i)))
                  = fst (\<Squnion>i::nat. Rep_uspec (uspecInter_general S1 (Y i)))"
       by (metis cont2contlubE uspec_rep_cont)
-    have "chain (\<lambda>i. Rep_uspec (uspecInter_general S1 (Y i)))"
+    have h00: "chain (\<lambda>i. Rep_uspec (uspecInter_general S1 (Y i)))"
       using a1 uspecInter_chain ch2ch_monofun uspec_rep_mono by blast
     then have h2: "fst (\<Squnion>i::nat. Rep_uspec (uspecInter_general S1 (Y i)))
                  = (\<Squnion>i::nat. fst (Rep_uspec (uspecInter_general S1 (Y i))))"
@@ -830,26 +790,64 @@ lemma uspecInter_cont1[simp]: "\<And>S1. cont (uspecInter_general S1)"
       by (simp add: a1 uspecdom_lub_chain)
     have h4: "\<And>i. uspecRan\<cdot>(Y i) = uspecRan\<cdot>(Lub Y)"
       by (simp add: a1 uspecran_lub_chain)
-    show "uspecInter_general S1 (\<Squnion>i. Y i) \<sqsubseteq> (\<Squnion>i. uspecInter_general S1 (Y i))"
+    have h5: "\<And>A B. uspecDom\<cdot>A = uspecDom\<cdot>B \<and> uspecRan\<cdot>A = uspecRan\<cdot>B
+      \<Longrightarrow> uspecWell (uspecSet\<cdot>A \<inter> uspecSet\<cdot>B) (Discr (uspecDom\<cdot>B)) (Discr (uspecRan\<cdot>B))"
+      using Un_iff by force
+    have h6:  "\<And>A B. uspecDom\<cdot>A = uspecDom\<cdot>B \<and> uspecRan\<cdot>A = uspecRan\<cdot>B
+  \<Longrightarrow> fst (Rep_uspec (Abs_uspec (uspecSet\<cdot>A \<inter> uspecSet\<cdot>B, Discr (uspecDom\<cdot>B), Discr (uspecRan\<cdot>B))))
+  = uspecSet\<cdot>A \<inter> uspecSet\<cdot>B"
+      using h5 by (metis fstI rep_abs_uspec)
+    have h7:  "\<And>i. uspecDom\<cdot>S1 = uspecDom\<cdot>(Lub Y) \<and> uspecRan\<cdot>S1 = uspecRan\<cdot>(Lub Y)
+      \<Longrightarrow> fst (Rep_uspec (Abs_uspec (uspecSet\<cdot>S1 \<inter> uspecSet\<cdot>(Y i), 
+      Discr (uspecDom\<cdot>(Lub Y)), Discr (uspecRan\<cdot>(Lub Y)))))
+      = uspecSet\<cdot>S1 \<inter> uspecSet\<cdot>(Y i)"
+      by (metis (full_types) h3 h4 h6)
+    have h8: "uspecSet\<cdot>(Lub Y) = (\<Union>i. uspecSet\<cdot>(Y i))"
+      by (metis a1 contlub_cfun_arg lub_eq_Union)
+    have h9: "uspecDom\<cdot>S1 = uspecDom\<cdot>(Lub Y) \<and> uspecRan\<cdot>S1 = uspecRan\<cdot>(Lub Y) \<Longrightarrow>
+     uspecSet\<cdot>S1 \<inter> uspecSet\<cdot>(Lub Y) \<subseteq> (\<Squnion>i. uspecSet\<cdot>S1 \<inter> uspecSet\<cdot>(Y i))"
+      apply (subst h8)
+      unfolding SetPcpo.lub_eq_Union
+      by blast
+    have h10: "uspecDom\<cdot>S1 = uspecDom\<cdot>(Lub Y) \<and> uspecRan\<cdot>S1 = uspecRan\<cdot>(Lub Y)
+      \<Longrightarrow> uspecInter_general S1 (\<Squnion>i. Y i) \<sqsubseteq> (\<Squnion>i. uspecInter_general S1 (Y i))"
       apply(rule uspec_belowI)
       apply(simp add: uspecInter_general_dom)
       using a1 uspecInter_chain uspecInter_general_dom uspecdom_lub_chain apply blast
       apply(simp add: uspecInter_general_ran)
       using a1 uspecInter_chain uspecInter_general_ran uspecran_lub_chain apply blast
-      apply(simp add: uspecRevSet_def)
+      apply(simp add: uspecSet_def)
       apply(simp add: h1)
       apply(simp add: h2)
-      apply(simp add: uspecInter_general_def)
-      by (smt a1 ch2ch_Rep_cfunR contlub_cfun_arg fst_conv uspecInter_filtered 
-        lub_eq not_below2not_eq rep_abs_uspec uspecInter_general_well)
+      apply (simp add: uspecInter_general_def)
+      apply(subst h3, subst h4)
+      apply (simp add: setfilter_easy)
+      apply (simp add: h6 h7)
+      unfolding SetPcpo.less_set_def
+      by (simp add: h9)
+    have h12:  "uspecDom\<cdot>S1 \<noteq> uspecDom\<cdot>(Lub Y) \<or> uspecRan\<cdot>S1 \<noteq> uspecRan\<cdot>(Lub Y)
+      \<Longrightarrow> uspecSet\<cdot>(uspecInter_general S1 (\<Squnion>i. Y i)) = {}"
+      using uspec_union_general_notfit by blast
+    have h13: "uspecDom\<cdot>(uspecInter_general S1 (\<Squnion>i. Y i)) = uspecDom\<cdot>(\<Squnion>i. uspecInter_general S1 (Y i))"
+      by (metis h0 h3 uspecInter_general_dom uspecdom_lub_chain)
+    have h14: "uspecRan\<cdot>(uspecInter_general S1 (\<Squnion>i. Y i)) = uspecRan\<cdot>(\<Squnion>i. uspecInter_general S1 (Y i))"
+      by (metis h0 h4 uspecInter_general_ran uspecran_lub_chain)
+    have h15: "uspecDom\<cdot>S1 \<noteq> uspecDom\<cdot>(Lub Y) \<or> uspecRan\<cdot>S1 \<noteq> uspecRan\<cdot>(Lub Y)
+      \<Longrightarrow> uspecInter_general S1 (\<Squnion>i. Y i) \<sqsubseteq> (\<Squnion>i. uspecInter_general S1 (Y i))"
+      apply (rule uspec_min)
+      using a1 h0 uspecInter_general_dom uspecdom_lub_chain
+      using h13 apply blast
+      using h14 apply blast
+      using h12 by linarith
+    show "uspecInter_general S1 (\<Squnion>i. Y i) \<sqsubseteq> (\<Squnion>i. uspecInter_general S1 (Y i))"
+      using h10 h15 by blast
   qed
 
 lemma uspecInter_cont2[simp]: "cont ( \<lambda>S1. \<Lambda> S2. (uspecInter_general S1 S2))"
   apply(rule cont2cont_LAM)
   apply(simp only: uspecInter_cont1)
-  apply(rule easy_cont)
   apply(subst uspecInter_general_sym)
-  by simp+
+  by simp
 
 lemma uspecInter_insert: "uspecInter\<cdot>S1\<cdot>S2 = uspecInter_general S1 S2"
   by (simp add: uspecInter_def)
