@@ -288,6 +288,15 @@ lemma nda_h_least: assumes "other_h \<in> SetPcpo.setify (\<lambda>a::'a. USPEC 
   apply(rule lfp_least)
   using assms nda_h_inner_monofun nda_h_valid_domain nda_inner_good by auto
 
+lemma nda_h_least_eq: assumes "other_h \<in> SetPcpo.setify (\<lambda>a::'a. USPEC (ndaDom\<cdot>nda) (ndaRan\<cdot>nda))"
+  and "nda_h_inner nda other_h \<sqsubseteq> other_h"
+  and "\<And>x. x\<in>SetPcpo.setify (\<lambda>a::'a. USPEC (ndaDom\<cdot>nda) (ndaRan\<cdot>nda)) \<Longrightarrow> nda_h_inner nda x \<sqsubseteq> x \<Longrightarrow> other_h \<sqsubseteq> x"
+  shows "nda_h nda = other_h"
+  unfolding nda_h_def
+  apply(rule lfp_least_eq)
+  using nda_h_inner_monofun apply blast
+  using assms nda_h_inner_monofun nda_h_valid_domain nda_inner_good by auto
+
 lemma nda_h_mono:  "monofun nda_h"
   apply(rule monofunI)
   unfolding nda_h_def
@@ -618,6 +627,33 @@ proof -
   then show "spsStep_m (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) (\<lambda>e::'b sbElem. ndaConcOutFlatten (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) ((ndaTransition\<cdot>nda) (x, e)) other) 
           \<sqsubseteq> other x"
     by simp
+qed
+
+
+
+
+
+
+
+
+lemma nda_h_final_back_eq: assumes "\<And>state sbe. sbeDom sbe = ndaDom\<cdot>nda \<Longrightarrow> 
+spsConcIn (sbe2SB sbe) (other state) = 
+  ndaConcOutFlatten (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) ((ndaTransition\<cdot>nda) (state,sbe)) (other)"
+  and "\<And> state. uspecIsStrict (other state)"
+  and "\<And> state. uspecDom\<cdot>(other state) = ndaDom\<cdot>nda" 
+  and "\<And> state. uspecRan\<cdot>(other state) = ndaRan\<cdot>nda"
+
+  and "\<And>x state sbe. uspecIsStrict (x state) \<Longrightarrow> uspecDom\<cdot>(x state) = ndaDom\<cdot>nda \<Longrightarrow> uspecRan\<cdot>(x state) = ndaRan\<cdot>nda
+    \<Longrightarrow> sbeDom sbe = ndaDom\<cdot>nda \<Longrightarrow> spsConcIn (sbe2SB sbe) (x state) =  ndaConcOutFlatten (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) ((ndaTransition\<cdot>nda) (state,sbe)) (x)
+    \<Longrightarrow> other \<sqsubseteq> x"
+shows "nda_h nda = other" 
+proof -
+  have "nda_h nda\<sqsubseteq>other"
+    by (simp add: assms(1) assms(2) assms(3) assms(4) nda_h_final_back) 
+  moreover have "other \<sqsubseteq> nda_h nda"
+    by (smt assms(5) fun_belowI ndaHelper2_def nda_h_final_back_eq_h nda_h_fixpoint nda_h_inner_def nda_h_inner_dom nda_h_inner_ran not_below2not_eq)
+  ultimately show ?thesis
+    by (simp add: po_eq_conv) 
 qed
 
 
