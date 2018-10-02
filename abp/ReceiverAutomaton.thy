@@ -344,6 +344,7 @@ lemma receiverout_ar_o_dom[simp]: "ubDom\<cdot>(receiverOut_ar_o port_ar port_o)
 
 section \<open>stream-setter (just for simp)\<close>
 
+(* SWS: Allen Lemma einen Namen geben *)
 lemma [simp]: "ubDom\<cdot>(receiver_stream_dr\<cdot>x) = {\<C> ''DoNotUse_243b33898468406b9e941a9b4ac72937_dr''}"
   by(simp add: receiver_stream_dr.rep_eq ubdom_insert DoNotUse_243b33898468406b9e941a9b4ac72937_receiver_stream_dr_h.rep_eq)
 
@@ -353,6 +354,11 @@ lemma [simp]: "ubDom\<cdot>(receiver_stream_ar\<cdot>x) = {\<C> ''DoNotUse_243b3
 lemma [simp]: "ubDom\<cdot>(receiver_stream_o\<cdot>x) = {\<C> ''DoNotUse_243b33898468406b9e941a9b4ac72937_o''}"
   by(simp add: receiver_stream_o.rep_eq ubdom_insert DoNotUse_243b33898468406b9e941a9b4ac72937_receiver_stream_o_h.rep_eq)
 
+(* SWS: Analog für In *)
+lemma [simp]: "ubDom\<cdot>(receiverOut_stream_ar_o\<cdot>port_ar\<cdot>port_o) = receiverRan"
+  apply(simp add: receiverOut_stream_ar_o_def)
+  apply(simp add: ubclUnion_ubundle_def)
+  by(auto simp add: receiverRan_def)
 
 section \<open>Lemmas for getter\<close>
 
