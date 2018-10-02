@@ -1,14 +1,14 @@
 package abp;
 
-component Sender {
+component Sender<E> {
 
   ports
     in boolean as,
-    in int i,
-    out Pair<int,boolean> ds;
+    in E i,
+    out Pair<E,boolean> ds;
 
   automaton Sender {
-    variable List<int> buffer=new List<>();
+    variable List<E> buffer=new List<>();
     variable Integer c=0;
 
     state Sf, St;

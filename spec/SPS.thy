@@ -9,9 +9,12 @@ default_sort message
 type_synonym ('m,'n) SPS = "('m,'n) SPF uspec"
 
 section \<open>Definition\<close>
+                         
+definition uspecConstOut:: "channel set \<Rightarrow> 'n::message SB  \<Rightarrow> ('m,'n) SPF uspec" where
+"uspecConstOut \<equiv> \<lambda> In sb. uspecConst (ufConst In\<cdot>sb)"
 
-definition spsConcOut:: "'n SB \<Rightarrow> ('m,'n) SPS \<rightarrow> ('m,'n) SPS" where
-"spsConcOut sb = (Abs_cfun (uspecImage (Rep_cfun (spfConcOut sb))))"
+definition spsConcOut:: "'n SB \<Rightarrow> ('m,'n) SPS \<Rightarrow> ('m,'n) SPS" where
+"spsConcOut sb = (uspecImage (Rep_cfun (spfConcOut sb)))"
 
 definition spsConcIn:: "'m SB \<Rightarrow> ('m,'n) SPS \<Rightarrow> ('m,'n) SPS" where
 "spsConcIn sb = uspecImage (Rep_cfun (spfConcIn sb))"
@@ -19,11 +22,32 @@ definition spsConcIn:: "'m SB \<Rightarrow> ('m,'n) SPS \<Rightarrow> ('m,'n) SP
 definition spsRtIn:: "('m,'n) SPS \<rightarrow> ('m,'n) SPS" where
 "spsRtIn = Abs_cfun (uspecImage (Rep_cfun spfRtIn))"
 
+
 section \<open>Lemma\<close>
+
+(* ----------------------------------------------------------------------- *)
+subsection \<open>uspecConstOut\<close>
+(* ----------------------------------------------------------------------- *)
+lemma uspecconstout_insert: "uspecConstOut In sb =  uspecConst (ufConst In\<cdot>sb)"
+  by (simp add: uspecConstOut_def)
+
+lemma uspecconstout_dom[simp]: "uspecDom\<cdot>(uspecConstOut In sb) = In"
+  apply (simp add: uspecconstout_insert)
+  by (simp add: ufclDom_ufun_def uspecconst_dom)
+
+lemma uspecconstout_ran[simp]: "uspecRan\<cdot>(uspecConstOut In sb) = ubclDom\<cdot>sb"
+  apply (simp add: uspecconstout_insert)
+  by (simp add: ufclRan_ufun_def uspecconst_ran)
+
 
 (* ----------------------------------------------------------------------- *)
 subsection \<open>spsConcOut\<close>
 (* ----------------------------------------------------------------------- *)
+
+lemma spsconcout_mono: "monofun (uspecImage (Rep_cfun (spfConcOut sb)))"
+  apply (rule uspecimage_mono)
+  by (simp add: ufclDom_ufun_def ufclRan_ufun_def)
+
 
 lemma spsconcout_cont: 
   assumes "\<And>c. c\<in>ubDom\<cdot>sb \<Longrightarrow> # (sb . c) < \<infinity>"
@@ -33,21 +57,25 @@ lemma spsconcout_cont:
   by (simp add: ufclDom_ufun_def ufclRan_ufun_def)
   
 lemma spsconcout_insert: 
-  assumes "\<And>c. c\<in>ubDom\<cdot>sb \<Longrightarrow> # (sb . c) < \<infinity>"
-  shows "spsConcOut sb\<cdot>sps = (uspecImage (Rep_cfun (spfConcOut sb)) sps)"
-  apply(simp only: spsConcOut_def)
-  by (simp add: assms spsconcout_cont)
+  "spsConcOut sb sps = (uspecImage (Rep_cfun (spfConcOut sb)) sps)"
+  by (simp only: spsConcOut_def)
 
 lemma spsconcout_dom [simp]: 
-  assumes "\<And>c. c\<in>ubDom\<cdot>sb \<Longrightarrow> # (sb . c) < \<infinity>"
-  shows "uspecDom\<cdot>(spsConcOut sb\<cdot>sps) = uspecDom\<cdot>sps"
-  apply (simp add: spsconcout_insert assms)
-  by (simp add: assms spsconcout_insert ufclDom_ufun_def ufclRan_ufun_def)
+  "uspecDom\<cdot>(spsConcOut sb sps) = uspecDom\<cdot>sps"
+  apply (simp add: spsconcout_insert)
+  by (simp add: spsconcout_insert ufclDom_ufun_def ufclRan_ufun_def)
 
 lemma spsconcout_ran [simp]: 
-  assumes "\<And>c. c\<in>ubDom\<cdot>sb \<Longrightarrow> # (sb . c) < \<infinity>"
-  shows "uspecRan\<cdot>(spsConcOut sb\<cdot>sps) = uspecRan\<cdot>sps"
-  by (simp add: assms spsconcout_insert ufclDom_ufun_def ufclRan_ufun_def)
+  "uspecRan\<cdot>(spsConcOut sb sps) = uspecRan\<cdot>sps"
+  by (simp add: spsconcout_insert ufclDom_ufun_def ufclRan_ufun_def)
+
+lemma spsconcout_obtain: assumes "uspec_in g (spsConcOut sb sps)"
+  shows "\<exists> f. uspec_in f sps \<and> g = spfConcOut sb\<cdot>f"
+  by (metis (no_types, lifting) assms spfConcOut_dom spfConcOut_ran spsconcout_insert ufclDom_ufun_def ufclRan_ufun_def uspecimage_obtain)
+
+lemma spsconcout_const[simp]: "spsConcOut sb (uspecConst f) = uspecConst (spfConcOut sb\<cdot>f)"
+  apply(simp add: spsConcOut_def)
+  by (simp add: ufclDom_ufun_def ufclRan_ufun_def)
 
 (* ----------------------------------------------------------------------- *)
 subsection \<open>spsConcIn\<close>
@@ -66,6 +94,10 @@ lemma spsconcin_ran:
   assumes "\<And>c. c\<in>ubDom\<cdot>sb \<Longrightarrow> # (sb . c) < \<infinity>"
   shows "uspecRan\<cdot>(spsConcIn sb sps) = uspecRan\<cdot>sps"
   by (simp add: spsConcIn_def ufclDom_ufun_def ufclRan_ufun_def)
+
+lemma spsconcin_const[simp]: "spsConcIn sb (uspecConst f) = uspecConst (spfConcIn sb\<cdot>f)"
+  apply(simp add: spsConcIn_def)
+  by (simp add: ufclDom_ufun_def ufclRan_ufun_def)
 
 (* ----------------------------------------------------------------------- *)
 subsection \<open>spsRtIn\<close>
@@ -87,7 +119,7 @@ lemma spsrtin_ran [simp]: "uspecRan\<cdot>(spsRtIn\<cdot>sps) = uspecRan\<cdot>s
 
 lemma spsconcout_inj: 
   assumes "\<And>c. c\<in>ubDom\<cdot>sb \<Longrightarrow> # (sb . c) < \<infinity>"
-  shows "inj (\<lambda>sps. spsConcOut sb\<cdot>sps)"
+  shows "inj (\<lambda>sps. spsConcOut sb sps)"
 proof -   
   have f1: "\<forall>c. c \<notin> ubDom\<cdot>sb \<or> #(sb . c) < \<infinity>"
     by (meson assms)

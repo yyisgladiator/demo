@@ -30,7 +30,6 @@ session "bundle" (mustWork) in bundle = "stream" +
     SB
     UBundle_Induction
     tsynBundle
-    SBElem
 
 session "fun" (mustWork) in fun = "bundle" + 
   options [quick_and_dirty = true]
@@ -51,12 +50,10 @@ session "automat" (mustWork) in automat = "spec" +
     dAutomaton
     SpsStep
     ndAutomaton
-    ndaTotal
 
 session "automatCaseStudy" (mustWork) in "automat/CaseStudy" = "automat" + 
   options [quick_and_dirty = true]
   theories
-    medGeneralAut
     medFairStep
     medUnfairStep
     medsBelow
@@ -67,4 +64,3 @@ session "abp" (canFail) in abp = "automat" +
     ReceiverAutomaton
     SenderAutomaton
     MediumAutomaton
-    ABPComponent

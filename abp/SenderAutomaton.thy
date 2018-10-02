@@ -3,7 +3,7 @@
  * This file was generated from Sender.maa and will be overridden when changed. To change
  * permanently, consider changing the model itself.
  *
- * Generated on Sep 22, 2018 6:29:44 PM by isartransformer 1.0.0
+ * Generated on Oct 1, 2018 2:45:43 PM by isartransformer 1.0.0
  *)
 theory SenderAutomaton
   imports bundle.tsynBundle automat.dAutomaton
@@ -11,60 +11,68 @@ theory SenderAutomaton
 begin
 
 
-(* TODO SWS: Move this to dAutomaton *)
-lemma da_h_stepI:
-  assumes "sbeDom sbe = daDom da"
-      and "(daNextOutput da s sbe) = out"
-      and "(daNextState da s sbe) = nextState"
-  shows "spfConcIn (sbe2SB sbe)\<cdot>(da_h da s) = spfConcOut out\<cdot>(da_h da nextState)"
-  by (metis (no_types) assms da_h_dom da_h_final_h3 spfConcIn_dom spfConcIn_step spfConcOut_dom spf_eq)
-
-(* TODO SWS: Move this to...? *)
-setup_lifting type_definition_cfun
+(* TODO Sollte wahrscheinlich in OptionCpo sein? *)
+lemma option_one_cont: "cont (\<lambda>x. [c \<mapsto> f\<cdot>x])"
+  apply(rule contI2, rule monofunI)
+  apply (simp add: below_option_def fun_belowI monofun_cfun_arg)
+  apply (auto simp add: below_fun_def below_option_def)
+  apply (smt below_option_def chain_monofun domIff fun_belowI fun_upd_apply option.exhaust_sel part_dom_lub po_class.chain_def some_below)
+  apply (simp add: contlub_cfun_arg part_map_chain part_the_lub)
+  by (smt below_option_def cont_pref_eq1I domIff fun_belowI fun_upd_apply option.sel option.simps(3) part_dom_lub po_class.chain_def)
 
 (* Helper for easier generation *)
 fun prepend :: "'a::type list \<Rightarrow> 'a \<Rightarrow> 'a list" where
 "prepend xs x = x#xs"
 
+
 section \<open>Datatype definition\<close>
 
-datatype senderMessage = SenderBool "bool" | SenderNat "nat" | SenderPair_SenderNat_SenderBool "(nat\<times>bool)"
+datatype ('e::countable) senderMessage = DoNotUse_68fffe8e525945708a2c302dfe2fe6ec_SenderBool "bool" | DoNotUse_68fffe8e525945708a2c302dfe2fe6ec_SenderE "'e" | DoNotUse_68fffe8e525945708a2c302dfe2fe6ec_SenderPair_E_Bool "('e\<times>bool)"
 
-instance senderMessage :: countable
+instance senderMessage :: (countable) countable
   apply(intro_classes)
   by(countable_datatype)
 
-instantiation senderMessage :: message
+instantiation senderMessage :: (countable) message
 begin
-  fun ctype_senderMessage :: "channel \<Rightarrow> senderMessage set" where
+  fun ctype_senderMessage :: "channel \<Rightarrow> ('e::countable) senderMessage set" where
   "ctype_senderMessage c = (
-    if c = \<C> ''as'' then range SenderBool else
-    if c = \<C> ''i'' then range SenderNat else
-    if c = \<C> ''ds'' then range SenderPair_SenderNat_SenderBool else
+    if c = \<C> ''DoNotUse_68fffe8e525945708a2c302dfe2fe6ec_as'' then range DoNotUse_68fffe8e525945708a2c302dfe2fe6ec_SenderBool else
+    if c = \<C> ''DoNotUse_68fffe8e525945708a2c302dfe2fe6ec_i'' then range DoNotUse_68fffe8e525945708a2c302dfe2fe6ec_SenderE else
+    if c = \<C> ''DoNotUse_68fffe8e525945708a2c302dfe2fe6ec_ds'' then range DoNotUse_68fffe8e525945708a2c302dfe2fe6ec_SenderPair_E_Bool else
     undefined)"
   instance
     by(intro_classes)
 end
 
 
+section \<open>Domain and range\<close>
+
+definition senderDom :: "channel set" where
+"senderDom = {\<C> ''DoNotUse_68fffe8e525945708a2c302dfe2fe6ec_as'', \<C> ''DoNotUse_68fffe8e525945708a2c302dfe2fe6ec_i''}"
+
+definition senderRan :: "channel set" where
+"senderRan = {\<C> ''DoNotUse_68fffe8e525945708a2c302dfe2fe6ec_ds''}"
+
+
 section \<open>Helpers to create a bundle from a single raw element\<close>
 
-lift_definition senderElem_raw_as :: "bool \<Rightarrow> senderMessage tsyn sbElem" is
-"\<lambda>x. [\<C> ''as'' \<mapsto> Msg (SenderBool x)]"
+lift_definition senderElem_raw_as :: "bool \<Rightarrow> ('e::countable) senderMessage tsyn sbElem" is
+"\<lambda>x. [\<C> ''DoNotUse_68fffe8e525945708a2c302dfe2fe6ec_as'' \<mapsto> Msg (DoNotUse_68fffe8e525945708a2c302dfe2fe6ec_SenderBool x)]"
   unfolding sbElemWell_def
   unfolding usclOkay_stream_def
   unfolding ctype_tsyn_def
   by simp
 
-lift_definition senderElem_raw_i :: "nat \<Rightarrow> senderMessage tsyn sbElem" is
-"\<lambda>x. [\<C> ''i'' \<mapsto> Msg (SenderNat x)]"
+lift_definition senderElem_raw_i :: "'e \<Rightarrow> ('e::countable) senderMessage tsyn sbElem" is
+"\<lambda>x. [\<C> ''DoNotUse_68fffe8e525945708a2c302dfe2fe6ec_i'' \<mapsto> Msg (DoNotUse_68fffe8e525945708a2c302dfe2fe6ec_SenderE x)]"
   unfolding sbElemWell_def
   unfolding usclOkay_stream_def
   unfolding ctype_tsyn_def
   by simp
 
-lift_definition senderElem_raw_ds :: "(nat\<times>bool) \<Rightarrow> senderMessage tsyn sbElem" is
-"\<lambda>x. [\<C> ''ds'' \<mapsto> Msg (SenderPair_SenderNat_SenderBool x)]"
+lift_definition senderElem_raw_ds :: "('e\<times>bool) \<Rightarrow> ('e::countable) senderMessage tsyn sbElem" is
+"\<lambda>x. [\<C> ''DoNotUse_68fffe8e525945708a2c302dfe2fe6ec_ds'' \<mapsto> Msg (DoNotUse_68fffe8e525945708a2c302dfe2fe6ec_SenderPair_E_Bool x)]"
   unfolding sbElemWell_def
   unfolding usclOkay_stream_def
   unfolding ctype_tsyn_def
@@ -73,137 +81,153 @@ lift_definition senderElem_raw_ds :: "(nat\<times>bool) \<Rightarrow> senderMess
 
 section \<open>Helpers to create a bundle from a single tsyn element\<close>
 
-fun senderElem_as :: "bool tsyn \<Rightarrow> senderMessage tsyn sbElem" where
+fun senderElem_as :: "bool tsyn \<Rightarrow> ('e::countable) senderMessage tsyn sbElem" where
 "senderElem_as (Msg port_as) = senderElem_raw_as port_as" |
-"senderElem_as null = sbeNull {\<C> ''as''}"
+"senderElem_as null = sbeNull {\<C> ''DoNotUse_68fffe8e525945708a2c302dfe2fe6ec_as''}"
 
 declare senderElem_as.simps[simp del]
 
-definition sender_as :: "bool tsyn \<Rightarrow> senderMessage tsyn SB" where
+definition sender_as :: "bool tsyn \<Rightarrow> ('e::countable) senderMessage tsyn SB" where
 "sender_as port_as = sbe2SB (senderElem_as port_as)"
 
-fun senderElem_i :: "nat tsyn \<Rightarrow> senderMessage tsyn sbElem" where
+fun senderElem_i :: "'e tsyn \<Rightarrow> ('e::countable) senderMessage tsyn sbElem" where
 "senderElem_i (Msg port_i) = senderElem_raw_i port_i" |
-"senderElem_i null = sbeNull {\<C> ''i''}"
+"senderElem_i null = sbeNull {\<C> ''DoNotUse_68fffe8e525945708a2c302dfe2fe6ec_i''}"
 
 declare senderElem_i.simps[simp del]
 
-definition sender_i :: "nat tsyn \<Rightarrow> senderMessage tsyn SB" where
+definition sender_i :: "'e tsyn \<Rightarrow> ('e::countable) senderMessage tsyn SB" where
 "sender_i port_i = sbe2SB (senderElem_i port_i)"
 
-fun senderElem_ds :: "(nat\<times>bool) tsyn \<Rightarrow> senderMessage tsyn sbElem" where
+fun senderElem_ds :: "('e\<times>bool) tsyn \<Rightarrow> ('e::countable) senderMessage tsyn sbElem" where
 "senderElem_ds (Msg port_ds) = senderElem_raw_ds port_ds" |
-"senderElem_ds null = sbeNull {\<C> ''ds''}"
+"senderElem_ds null = sbeNull {\<C> ''DoNotUse_68fffe8e525945708a2c302dfe2fe6ec_ds''}"
 
 declare senderElem_ds.simps[simp del]
 
-definition sender_ds :: "(nat\<times>bool) tsyn \<Rightarrow> senderMessage tsyn SB" where
+definition sender_ds :: "('e\<times>bool) tsyn \<Rightarrow> ('e::countable) senderMessage tsyn SB" where
 "sender_ds port_ds = sbe2SB (senderElem_ds port_ds)"
 
 (* Create one sbElem for all input channels *)
-definition senderElemIn_as_i :: "bool tsyn \<Rightarrow> nat tsyn \<Rightarrow> senderMessage tsyn sbElem" where
+definition senderElemIn_as_i :: "bool tsyn \<Rightarrow> 'e tsyn \<Rightarrow> ('e::countable) senderMessage tsyn sbElem" where
 "senderElemIn_as_i port_as port_i = (senderElem_as port_as) \<plusminus> (senderElem_i port_i)"
 
 (* Create one sbElem for all output channels *)
-definition senderElemOut_ds :: "(nat\<times>bool) tsyn \<Rightarrow> senderMessage tsyn sbElem" where
+definition senderElemOut_ds :: "('e\<times>bool) tsyn \<Rightarrow> ('e::countable) senderMessage tsyn sbElem" where
 "senderElemOut_ds port_ds = (senderElem_ds port_ds)"
 
 (* Create one SB for all input channels *)
-definition senderIn_as_i :: "bool tsyn \<Rightarrow> nat tsyn \<Rightarrow> senderMessage tsyn SB" where
+definition senderIn_as_i :: "bool tsyn \<Rightarrow> 'e tsyn \<Rightarrow> ('e::countable) senderMessage tsyn SB" where
 "senderIn_as_i port_as port_i = (sbe2SB (senderElemIn_as_i port_as port_i))"
 
 (* Create one SB for all output channels *)
-definition senderOut_ds :: "(nat\<times>bool) tsyn \<Rightarrow> senderMessage tsyn SB" where
+definition senderOut_ds :: "('e\<times>bool) tsyn \<Rightarrow> ('e::countable) senderMessage tsyn SB" where
 "senderOut_ds port_ds = (sbe2SB (senderElemOut_ds port_ds))"
 
 
 section \<open>Helpers to create a bundle from a tsyn list of elements\<close>
 
-fun sender_list_as :: "(bool tsyn) list \<Rightarrow> senderMessage tsyn SB" where
+fun sender_list_as :: "(bool tsyn) list \<Rightarrow> ('e::countable) senderMessage tsyn SB" where
 "sender_list_as (x#xs) = ubConcEq (sender_as x)\<cdot>(sender_list_as xs)" |
-"sender_list_as []     = ubLeast {\<C> ''as''}"
+"sender_list_as []     = ubLeast {\<C> ''DoNotUse_68fffe8e525945708a2c302dfe2fe6ec_as''}"
 
-fun sender_list_i :: "(nat tsyn) list \<Rightarrow> senderMessage tsyn SB" where
+declare sender_list_as.simps[simp del]
+
+fun sender_list_i :: "('e tsyn) list \<Rightarrow> ('e::countable) senderMessage tsyn SB" where
 "sender_list_i (x#xs) = ubConcEq (sender_i x)\<cdot>(sender_list_i xs)" |
-"sender_list_i []     = ubLeast {\<C> ''i''}"
+"sender_list_i []     = ubLeast {\<C> ''DoNotUse_68fffe8e525945708a2c302dfe2fe6ec_i''}"
 
-fun sender_list_ds :: "((nat\<times>bool) tsyn) list \<Rightarrow> senderMessage tsyn SB" where
+declare sender_list_i.simps[simp del]
+
+fun sender_list_ds :: "(('e\<times>bool) tsyn) list \<Rightarrow> ('e::countable) senderMessage tsyn SB" where
 "sender_list_ds (x#xs) = ubConcEq (sender_ds x)\<cdot>(sender_list_ds xs)" |
-"sender_list_ds []     = ubLeast {\<C> ''ds''}"
+"sender_list_ds []     = ubLeast {\<C> ''DoNotUse_68fffe8e525945708a2c302dfe2fe6ec_ds''}"
+
+declare sender_list_ds.simps[simp del]
 
 (* Create one SB for all input channels *)
-definition senderIn_list_as_i :: "bool tsyn list \<Rightarrow> nat tsyn list \<Rightarrow> senderMessage tsyn SB" where
-"senderIn_list_as_i port_as port_i = (sender_list_as port_as) \<uplus> (sender_list_i port_i)"
+fun senderIn_list_as_i :: "(bool tsyn\<times>'e tsyn) list \<Rightarrow> ('e::countable) senderMessage tsyn SB" where
+"senderIn_list_as_i ((port_as,port_i)#xs) = ubConcEq (senderIn_as_i port_as port_i)\<cdot>(senderIn_list_as_i xs)" |
+"senderIn_list_as_i [] = ubLeast senderDom"
 
 (* Create one SB for all output channels *)
-definition senderOut_list_ds :: "(nat\<times>bool) tsyn list \<Rightarrow> senderMessage tsyn SB" where
-"senderOut_list_ds port_ds = (sender_list_ds port_ds)"
+fun senderOut_list_ds :: "(('e\<times>bool) tsyn) list \<Rightarrow> ('e::countable) senderMessage tsyn SB" where
+"senderOut_list_ds ((port_ds)#xs) = ubConcEq (senderOut_ds port_ds)\<cdot>(senderOut_list_ds xs)" |
+"senderOut_list_ds [] = ubLeast senderRan"
 
 
 section \<open>Helpers to create a bundle from a tsyn stream of elements\<close>
 
-lift_definition sender_stream_as_h :: "bool tsyn stream \<Rightarrow> senderMessage tsyn SB" is
-"\<lambda> s. [(\<C> ''as'') \<mapsto> (tsynMap (SenderBool)\<cdot>s)]"
+lift_definition DoNotUse_68fffe8e525945708a2c302dfe2fe6ec_sender_stream_as_h :: "bool tsyn stream \<Rightarrow> ('e::countable) senderMessage tsyn SB" is
+"\<lambda> s. [(\<C> ''DoNotUse_68fffe8e525945708a2c302dfe2fe6ec_as'') \<mapsto> (tsynMap (DoNotUse_68fffe8e525945708a2c302dfe2fe6ec_SenderBool)\<cdot>s)]"
   unfolding ubWell_def usclOkay_stream_def ctype_tsyn_def
-  apply auto
+  apply auto (* TODO War angeblich mal fertig, hat jetzt aber noch ein Goal *)
   sorry
 
-lift_definition sender_stream_as :: "(bool) tsyn stream \<rightarrow> senderMessage tsyn SB" is
-"sender_stream_as_h"
-  sorry
+lift_definition sender_stream_as :: "(bool) tsyn stream \<rightarrow> ('e::countable) senderMessage tsyn SB" is
+"DoNotUse_68fffe8e525945708a2c302dfe2fe6ec_sender_stream_as_h"
+  apply(auto simp add: cfun_def DoNotUse_68fffe8e525945708a2c302dfe2fe6ec_sender_stream_as_h_def map_fun_def comp_def)
+  apply(rule cont_Abs_UB)
+  apply(simp add: option_one_cont)
+  by (metis DoNotUse_68fffe8e525945708a2c302dfe2fe6ec_sender_stream_as_h.rep_eq ubrep_well)
 
-lift_definition sender_stream_i_h :: "nat tsyn stream \<Rightarrow> senderMessage tsyn SB" is
-"\<lambda> s. [(\<C> ''i'') \<mapsto> (tsynMap (SenderNat)\<cdot>s)]"
+lift_definition DoNotUse_68fffe8e525945708a2c302dfe2fe6ec_sender_stream_i_h :: "'e tsyn stream \<Rightarrow> ('e::countable) senderMessage tsyn SB" is
+"\<lambda> s. [(\<C> ''DoNotUse_68fffe8e525945708a2c302dfe2fe6ec_i'') \<mapsto> (tsynMap (DoNotUse_68fffe8e525945708a2c302dfe2fe6ec_SenderE)\<cdot>s)]"
   unfolding ubWell_def usclOkay_stream_def ctype_tsyn_def
-  apply auto
+  apply auto (* TODO War angeblich mal fertig, hat jetzt aber noch ein Goal *)
   sorry
 
-lift_definition sender_stream_i :: "(nat) tsyn stream \<rightarrow> senderMessage tsyn SB" is
-"sender_stream_i_h"
-  sorry
+lift_definition sender_stream_i :: "('e) tsyn stream \<rightarrow> ('e::countable) senderMessage tsyn SB" is
+"DoNotUse_68fffe8e525945708a2c302dfe2fe6ec_sender_stream_i_h"
+  apply(auto simp add: cfun_def DoNotUse_68fffe8e525945708a2c302dfe2fe6ec_sender_stream_i_h_def map_fun_def comp_def)
+  apply(rule cont_Abs_UB)
+  apply(simp add: option_one_cont)
+  by (metis DoNotUse_68fffe8e525945708a2c302dfe2fe6ec_sender_stream_i_h.rep_eq ubrep_well)
 
-lift_definition sender_stream_ds_h :: "(nat\<times>bool) tsyn stream \<Rightarrow> senderMessage tsyn SB" is
-"\<lambda> s. [(\<C> ''ds'') \<mapsto> (tsynMap (SenderPair_SenderNat_SenderBool)\<cdot>s)]"
+lift_definition DoNotUse_68fffe8e525945708a2c302dfe2fe6ec_sender_stream_ds_h :: "('e\<times>bool) tsyn stream \<Rightarrow> ('e::countable) senderMessage tsyn SB" is
+"\<lambda> s. [(\<C> ''DoNotUse_68fffe8e525945708a2c302dfe2fe6ec_ds'') \<mapsto> (tsynMap (DoNotUse_68fffe8e525945708a2c302dfe2fe6ec_SenderPair_E_Bool)\<cdot>s)]"
   unfolding ubWell_def usclOkay_stream_def ctype_tsyn_def
-  apply auto
+  apply auto (* TODO War angeblich mal fertig, hat jetzt aber noch ein Goal *)
   sorry
 
-lift_definition sender_stream_ds :: "((nat\<times>bool)) tsyn stream \<rightarrow> senderMessage tsyn SB" is
-"sender_stream_ds_h"
-  sorry
+lift_definition sender_stream_ds :: "(('e\<times>bool)) tsyn stream \<rightarrow> ('e::countable) senderMessage tsyn SB" is
+"DoNotUse_68fffe8e525945708a2c302dfe2fe6ec_sender_stream_ds_h"
+  apply(auto simp add: cfun_def DoNotUse_68fffe8e525945708a2c302dfe2fe6ec_sender_stream_ds_h_def map_fun_def comp_def)
+  apply(rule cont_Abs_UB)
+  apply(simp add: option_one_cont)
+  by (metis DoNotUse_68fffe8e525945708a2c302dfe2fe6ec_sender_stream_ds_h.rep_eq ubrep_well)
 
 (* Create one SB for all input channels *)
-definition senderIn_stream_as_i :: "bool tsyn stream \<rightarrow> nat tsyn stream \<rightarrow> senderMessage tsyn SB" where
+definition senderIn_stream_as_i :: "bool tsyn stream \<rightarrow> 'e tsyn stream \<rightarrow> ('e::countable) senderMessage tsyn SB" where
 "senderIn_stream_as_i = (\<Lambda>  port_as port_i. (sender_stream_as\<cdot>port_as) \<uplus> (sender_stream_i\<cdot>port_i))"
 
 (* Create one SB for all output channels *)
-definition senderOut_stream_ds :: "(nat\<times>bool) tsyn stream \<rightarrow> senderMessage tsyn SB" where
+definition senderOut_stream_ds :: "('e\<times>bool) tsyn stream \<rightarrow> ('e::countable) senderMessage tsyn SB" where
 "senderOut_stream_ds = (\<Lambda>  port_ds. (sender_stream_ds\<cdot>port_ds))"
 
 
 section \<open>Helpers to get tsyn elements and streams from sbElems and SBs\<close>
 
-fun senderElem_get_as :: "senderMessage tsyn sbElem \<Rightarrow> (bool) tsyn" where
-"senderElem_get_as sbe = undefined"
+definition senderElem_get_as :: "('e::countable) senderMessage tsyn sbElem \<Rightarrow> (bool) tsyn" where
+"senderElem_get_as sbe = tsynApplyElem (inv DoNotUse_68fffe8e525945708a2c302dfe2fe6ec_SenderBool) ((Rep_sbElem sbe) \<rightharpoonup> (\<C> ''DoNotUse_68fffe8e525945708a2c302dfe2fe6ec_as''))"
 
-lift_definition sender_get_stream_as :: "senderMessage tsyn SB \<rightarrow> bool tsyn stream" is
-"\<lambda>sb. tsynMap (inv SenderBool)\<cdot>(sb . (\<C> ''as''))"
+lift_definition sender_get_stream_as :: "('e::countable) senderMessage tsyn SB \<rightarrow> bool tsyn stream" is
+"\<lambda>sb. tsynMap (inv DoNotUse_68fffe8e525945708a2c302dfe2fe6ec_SenderBool)\<cdot>(sb . (\<C> ''DoNotUse_68fffe8e525945708a2c302dfe2fe6ec_as''))"
   by(simp add: cfun_def)
 
-fun senderElem_get_i :: "senderMessage tsyn sbElem \<Rightarrow> (nat) tsyn" where
-"senderElem_get_i sbe = undefined"
+definition senderElem_get_i :: "('e::countable) senderMessage tsyn sbElem \<Rightarrow> ('e) tsyn" where
+"senderElem_get_i sbe = tsynApplyElem (inv DoNotUse_68fffe8e525945708a2c302dfe2fe6ec_SenderE) ((Rep_sbElem sbe) \<rightharpoonup> (\<C> ''DoNotUse_68fffe8e525945708a2c302dfe2fe6ec_i''))"
 
-lift_definition sender_get_stream_i :: "senderMessage tsyn SB \<rightarrow> nat tsyn stream" is
-"\<lambda>sb. tsynMap (inv SenderNat)\<cdot>(sb . (\<C> ''i''))"
+lift_definition sender_get_stream_i :: "('e::countable) senderMessage tsyn SB \<rightarrow> 'e tsyn stream" is
+"\<lambda>sb. tsynMap (inv DoNotUse_68fffe8e525945708a2c302dfe2fe6ec_SenderE)\<cdot>(sb . (\<C> ''DoNotUse_68fffe8e525945708a2c302dfe2fe6ec_i''))"
   by(simp add: cfun_def)
 
-fun senderElem_get_ds :: "senderMessage tsyn sbElem \<Rightarrow> ((nat\<times>bool)) tsyn" where
-"senderElem_get_ds sbe = undefined"
+definition senderElem_get_ds :: "('e::countable) senderMessage tsyn sbElem \<Rightarrow> (('e\<times>bool)) tsyn" where
+"senderElem_get_ds sbe = tsynApplyElem (inv DoNotUse_68fffe8e525945708a2c302dfe2fe6ec_SenderPair_E_Bool) ((Rep_sbElem sbe) \<rightharpoonup> (\<C> ''DoNotUse_68fffe8e525945708a2c302dfe2fe6ec_ds''))"
 
-lift_definition sender_get_stream_ds :: "senderMessage tsyn SB \<rightarrow> (nat\<times>bool) tsyn stream" is
-"\<lambda>sb. tsynMap (inv SenderPair_SenderNat_SenderBool)\<cdot>(sb . (\<C> ''ds''))"
+lift_definition sender_get_stream_ds :: "('e::countable) senderMessage tsyn SB \<rightarrow> ('e\<times>bool) tsyn stream" is
+"\<lambda>sb. tsynMap (inv DoNotUse_68fffe8e525945708a2c302dfe2fe6ec_SenderPair_E_Bool)\<cdot>(sb . (\<C> ''DoNotUse_68fffe8e525945708a2c302dfe2fe6ec_ds''))"
   by(simp add: cfun_def)
-
 
 
 section \<open>Automaton definition\<close>
@@ -212,22 +236,21 @@ section \<open>Automaton definition\<close>
 datatype SenderSubstate = Sf | St
 
 (* And these have also the variables *)
-datatype SenderState = SenderState SenderSubstate (* buffer = *) "nat list" (* c = *) "nat"
+datatype 'e SenderState = SenderState SenderSubstate (* buffer = *) "'e list" (* c = *) "nat"
 
 (* Function to get the substate *)
-fun getSenderSubState :: "SenderState \<Rightarrow> SenderSubstate" where
+fun getSenderSubState :: "'e SenderState \<Rightarrow> SenderSubstate" where
 "getSenderSubState (SenderState s _ _) = s"
 
 (* Functions to get the variables *)
-fun getBuffer :: "SenderState \<Rightarrow> nat list" where
+fun getBuffer :: "'e SenderState \<Rightarrow> 'e list" where
 "getBuffer (SenderState _ var_buffer var_c) = var_buffer"
 
-fun getC :: "SenderState \<Rightarrow> nat" where
+fun getC :: "'e SenderState \<Rightarrow> nat" where
 "getC (SenderState _ var_buffer var_c) = var_c"
 
-
 (* Helper that allows us to utilize pattern matching *)
-fun senderTransitionH :: "(SenderState \<times> (bool tsyn \<times> nat tsyn)) \<Rightarrow> (SenderState \<times> senderMessage tsyn SB)" where
+fun senderTransitionH :: "('e SenderState \<times> (bool tsyn \<times> 'e tsyn)) \<Rightarrow> ('e SenderState \<times> ('e::countable) senderMessage tsyn SB)" where
 "senderTransitionH (SenderState Sf var_buffer var_c, (\<^cancel>\<open>as\<mapsto>\<close>Msg port_as, \<^cancel>\<open>i\<mapsto>\<close>Msg port_i)) =
   (if((size var_buffer)>1 \<and> port_as=False) then ((SenderState St (prepend (butlast var_buffer) port_i) 3, (senderOut_ds (Msg (Pair (last (butlast var_buffer)) True)))))
    else if((size var_buffer)=1 \<and> port_as=False) then ((SenderState St (prepend (butlast var_buffer) port_i) 3, (senderOut_ds (Msg (Pair port_i True)))))
@@ -284,38 +307,30 @@ fun senderTransitionH :: "(SenderState \<times> (bool tsyn \<times> nat tsyn)) \
    else if((size var_buffer)>0 \<and> var_c=0) then ((SenderState St var_buffer 3, (senderOut_ds (Msg (Pair (last var_buffer) True)))))
    else (SenderState St var_buffer var_c, (senderOut_ds null)))"
 
-(* Domain *)
-definition senderDom :: "channel set" where
-"senderDom = {\<C> ''as'', \<C> ''i''}"
-
-(* Range *)
-definition senderRan :: "channel set" where
-"senderRan = {\<C> ''ds''}"
-
 (* Transition function *)
-definition senderTransition :: "(SenderState \<times> senderMessage tsyn sbElem) \<Rightarrow> (SenderState \<times> senderMessage tsyn SB)" where
+definition senderTransition :: "('e SenderState \<times> ('e::countable) senderMessage tsyn sbElem) \<Rightarrow> ('e SenderState \<times> ('e::countable) senderMessage tsyn SB)" where
 "senderTransition = (\<lambda> (s,b). (if (sbeDom b) = senderDom then senderTransitionH (s, (senderElem_get_as b, senderElem_get_i b)) else undefined))"
 
 (* Initial state *)
-definition senderInitialState :: "SenderState" where
-"senderInitialState = SenderState St []  0"
+definition senderInitialState :: "'e SenderState" where
+"senderInitialState = SenderState St ([] ::'e list) (0::nat)"
 
 (* Initial output *)
-definition senderInitialOutput :: "senderMessage tsyn SB" where
+definition senderInitialOutput :: "('e::countable) senderMessage tsyn SB" where
 "senderInitialOutput = senderOut_ds null"
 
 (* The final automaton *)
-lift_definition senderAutomaton :: "(SenderState, senderMessage tsyn) dAutomaton" is
+lift_definition senderAutomaton :: "('e SenderState, ('e::countable) senderMessage tsyn) dAutomaton" is
 "(senderTransition, senderInitialState, senderInitialOutput, senderDom, senderRan)"
   by (simp add: senderDom_def senderRan_def)
 
 (* Stream processing function for each state (handy for step lemmata) *)
-definition senderStep :: "(SenderState \<Rightarrow> (senderMessage tsyn, senderMessage tsyn) SPF)" where
+definition senderStep :: "('e SenderState \<Rightarrow> (('e::countable) senderMessage tsyn, ('e::countable) senderMessage tsyn) SPF)" where
 "senderStep = da_h senderAutomaton"
 
 (* The final SPF *)
-definition senderSPF :: "(senderMessage tsyn, senderMessage tsyn) SPF" where
-"senderSPF = da_H senderAutomaton"
+definition senderSPF :: "(('e::countable) senderMessage tsyn, ('e::countable) senderMessage tsyn) SPF" where
+"senderSPF = da_H (senderAutomaton::('e SenderState, ('e::countable) senderMessage tsyn) dAutomaton)"
 
 
 section \<open>Lemmas for automaton definition\<close>
@@ -343,42 +358,72 @@ lemma senderautomaton_ran[simp]: "daRan senderAutomaton = senderRan"
 
 section \<open>Lemmas for single tsyn setter\<close>
 
+lemma senderelem_as_dom[simp]: "sbeDom (senderElem_as x) = {\<C> ''DoNotUse_68fffe8e525945708a2c302dfe2fe6ec_as''}"
+  apply(cases x)
+  apply(simp add: senderElem_as.simps sbeDom_def senderElem_raw_as.rep_eq)
+  by(simp add: senderElem_as.simps)
+
+lemma senderelem_i_dom[simp]: "sbeDom (senderElem_i x) = {\<C> ''DoNotUse_68fffe8e525945708a2c302dfe2fe6ec_i''}"
+  apply(cases x)
+  apply(simp add: senderElem_i.simps sbeDom_def senderElem_raw_i.rep_eq)
+  by(simp add: senderElem_i.simps)
+
+lemma senderelem_ds_dom[simp]: "sbeDom (senderElem_ds x) = {\<C> ''DoNotUse_68fffe8e525945708a2c302dfe2fe6ec_ds''}"
+  apply(cases x)
+  apply(simp add: senderElem_ds.simps sbeDom_def senderElem_raw_ds.rep_eq)
+  by(simp add: senderElem_ds.simps)
+
 lemma senderelemin_as_i_dom[simp]: "sbeDom (senderElemIn_as_i port_as port_i) = senderDom"
-  sorry
+  by(auto simp add: senderElemIn_as_i_def senderDom_def)
 
 lemma senderelemout_ds_dom[simp]: "sbeDom (senderElemOut_ds port_ds) = senderRan"
-  sorry
+  by(auto simp add: senderElemOut_ds_def senderRan_def)
 
 lemma senderin_as_i_dom[simp]: "ubDom\<cdot>(senderIn_as_i port_as port_i) = senderDom"
-  sorry
+  by(simp add: senderIn_as_i_def)
 
 lemma senderout_ds_dom[simp]: "ubDom\<cdot>(senderOut_ds port_ds) = senderRan"
-  sorry
+  by(simp add: senderOut_ds_def)
 
 
 section \<open>Lemmas for getter\<close>
 
 subsection \<open>Identity lemmas for single sbElems\<close>
 
-lemma senderelem_as_id[simp]: "senderElem_get_as (senderElem_as port_as) = port_as"
-  sorry
+lemma senderelem_as_id[simp]: "senderElem_get_as (senderElem_as x) = x"
+  apply(cases x)
+  apply(auto simp add: senderElem_as.simps)
+  unfolding senderElem_get_as_def senderElem_raw_as.rep_eq
+  apply simp
+  apply (meson f_inv_into_f rangeI senderMessage.inject)
+  by(simp add: sbeNull.rep_eq)
 
-lemma senderelem_i_id[simp]: "senderElem_get_i (senderElem_i port_i) = port_i"
-  sorry
+lemma senderelem_i_id[simp]: "senderElem_get_i (senderElem_i x) = x"
+  apply(cases x)
+  apply(auto simp add: senderElem_i.simps)
+  unfolding senderElem_get_i_def senderElem_raw_i.rep_eq
+  apply simp
+  apply (meson f_inv_into_f rangeI senderMessage.inject)
+  by(simp add: sbeNull.rep_eq)
 
-lemma senderelem_ds_id[simp]: "senderElem_get_ds (senderElem_ds port_ds) = port_ds"
-  sorry
+lemma senderelem_ds_id[simp]: "senderElem_get_ds (senderElem_ds x) = x"
+  apply(cases x)
+  apply(auto simp add: senderElem_ds.simps)
+  unfolding senderElem_get_ds_def senderElem_raw_ds.rep_eq
+  apply simp
+  apply (meson f_inv_into_f rangeI senderMessage.inject)
+  by(simp add: sbeNull.rep_eq)
 
 
 subsection \<open>Identity lemmas for single SBs from streams\<close>
 
-lemma sender_stream_as_id[simp]: "sender_get_stream_as\<cdot>(sender_stream_as\<cdot>port_as) = port_as"
+lemma sender_stream_as_id[simp]: "sender_get_stream_as\<cdot>(sender_stream_as\<cdot>x) = x"
   sorry
 
-lemma sender_stream_i_id[simp]: "sender_get_stream_i\<cdot>(sender_stream_i\<cdot>port_i) = port_i"
+lemma sender_stream_i_id[simp]: "sender_get_stream_i\<cdot>(sender_stream_i\<cdot>x) = x"
   sorry
 
-lemma sender_stream_ds_id[simp]: "sender_get_stream_ds\<cdot>(sender_stream_ds\<cdot>port_ds) = port_ds"
+lemma sender_stream_ds_id[simp]: "sender_get_stream_ds\<cdot>(sender_stream_ds\<cdot>x) = x"
   sorry
 
 
@@ -400,30 +445,35 @@ lemma senderelemout_ds_ds_id[simp]: "senderElem_get_ds (senderElemOut_ds port_ds
 subsection \<open>Identity lemmas for input SBs\<close>
 
 lemma senderin_as_i_as_id[simp]: "sender_get_stream_as\<cdot>(senderIn_as_i port_as port_i) = \<up>port_as"
+  apply(simp add: sender_get_stream_as_def senderIn_as_i_def)
+  apply(subst sbe2sb_getch)
+  apply(auto simp add: senderDom_def senderElemIn_as_i_def)
+  apply(cases port_as)
+  apply(auto simp add: senderElem_as.simps)
+  unfolding senderElem_get_as_def senderElem_raw_as.rep_eq
+  (* TODO Ab hier funktioniert der Beweis nicht mehr *)
+  (*apply auto
+  apply (meson f_inv_into_f rangeI senderMessage.inject(1))
+  by(simp add: sbeNull.rep_eq)*)
   sorry
 
 lemma senderin_as_i_i_id[simp]: "sender_get_stream_i\<cdot>(senderIn_as_i port_as port_i) = \<up>port_i"
+  apply(simp add: sender_get_stream_i_def senderIn_as_i_def)
+  apply(subst sbe2sb_getch)
+  apply(auto simp add: senderDom_def senderElemIn_as_i_def)
+  apply(cases port_i)
+  apply(auto simp add: senderElem_i.simps)
+  unfolding senderElem_get_i_def senderElem_raw_i.rep_eq
+  (* TODO Ab hier funktioniert der Beweis nicht mehr *)
+  (*apply auto
+  apply (meson f_inv_into_f rangeI senderMessage.inject(1))
+  by(simp add: sbeNull.rep_eq)*)
   sorry
 
 
 subsection \<open>Identity lemmas for output SBs\<close>
 
 lemma senderout_ds_ds_id[simp]: "sender_get_stream_ds\<cdot>(senderOut_ds port_ds) = \<up>port_ds"
-  sorry
-
-
-subsection \<open>Identity lemmas for input SBs from lists\<close>
-
-lemma senderin_list_as_i_as_id[simp]: "sender_get_stream_as\<cdot>(senderIn_list_as_i port_as port_i) = <port_as>"
-  sorry
-
-lemma senderin_list_as_i_i_id[simp]: "sender_get_stream_i\<cdot>(senderIn_list_as_i port_as port_i) = <port_i>"
-  sorry
-
-
-subsection \<open>Identity lemmas for output SBs from lists\<close>
-
-lemma senderout_list_ds_ds_id[simp]: "sender_get_stream_ds\<cdot>(senderOut_list_ds port_ds) = <port_ds>"
   sorry
 
 
@@ -449,263 +499,231 @@ lemma senderTransition_0_0[simp]:
   assumes "(size var_buffer)>1 \<and> port_as=False"
     shows "senderTransition ((SenderState Sf var_buffer var_c), (senderElemIn_as_i (Msg port_as) (Msg port_i)))
          = (SenderState St (prepend (butlast var_buffer) port_i) 3, (senderOut_ds (Msg (Pair (last (butlast var_buffer)) True))))"
-  apply(simp add: senderTransition_def)
-  sorry
+  using assms by(auto simp add: senderTransition_def assms)
 
 (* Line 35:  Sf -> St [buffer.size()=1 && i!=null] {as==false} / {buffer=buffer.butlast().prepend(i), c=3, ds=new Pair<>(i,true)}; *)
 lemma senderTransition_0_1[simp]:
   assumes "(size var_buffer)=1 \<and> port_as=False"
     shows "senderTransition ((SenderState Sf var_buffer var_c), (senderElemIn_as_i (Msg port_as) (Msg port_i)))
          = (SenderState St (prepend (butlast var_buffer) port_i) 3, (senderOut_ds (Msg (Pair port_i True))))"
-  apply(simp add: senderTransition_def)
-  sorry
+  using assms by(auto simp add: senderTransition_def assms)
 
 (* Line 43:  Sf -> Sf [buffer.size()=0 && as!=null && i!=null] / {buffer=buffer.prepend(i), c=3, ds=new Pair<>(i,false)}; *)
 lemma senderTransition_0_2[simp]:
   assumes "(size var_buffer)=0"
     shows "senderTransition ((SenderState Sf var_buffer var_c), (senderElemIn_as_i (Msg port_as) (Msg port_i)))
          = (SenderState Sf (prepend var_buffer port_i) 3, (senderOut_ds (Msg (Pair port_i False))))"
-  apply(simp add: senderTransition_def)
-  sorry
+  using assms by(auto simp add: senderTransition_def assms)
 
 (* Line 45:  Sf -> Sf [buffer.size()>0 && c>0 && i!=null] {as==true} / {buffer=buffer.prepend(i), c=c-1}; *)
 lemma senderTransition_0_3[simp]:
   assumes "(size var_buffer)>0 \<and> var_c>0 \<and> port_as=True"
     shows "senderTransition ((SenderState Sf var_buffer var_c), (senderElemIn_as_i (Msg port_as) (Msg port_i)))
          = (SenderState Sf (prepend var_buffer port_i) (var_c-1), (senderOut_ds null))"
-  apply(simp add: senderTransition_def)
-  sorry
+  using assms by(auto simp add: senderTransition_def assms)
 
 (* Line 47:  Sf -> Sf [buffer.size()>0 && c=0 && i!=null] {as==true} / {buffer=buffer.prepend(i), c=3, ds=new Pair<>(buffer.last(),false)}; *)
 lemma senderTransition_0_4[simp]:
   assumes "(size var_buffer)>0 \<and> var_c=0 \<and> port_as=True"
     shows "senderTransition ((SenderState Sf var_buffer var_c), (senderElemIn_as_i (Msg port_as) (Msg port_i)))
          = (SenderState Sf (prepend var_buffer port_i) 3, (senderOut_ds (Msg (Pair (last var_buffer) False))))"
-  apply(simp add: senderTransition_def)
-  sorry
+  using assms by(auto simp add: senderTransition_def assms)
 
 (* Line 34:  Sf -> St [buffer.size()>1] {as==false, i==null} / {buffer=buffer.butlast(), c=3, ds=new Pair<>(buffer.butlast().last(),true)}; *)
 lemma senderTransition_1_0[simp]:
   assumes "(size var_buffer)>1 \<and> port_as=False"
     shows "senderTransition ((SenderState Sf var_buffer var_c), (senderElemIn_as_i (Msg port_as) null))
          = (SenderState St (butlast var_buffer) 3, (senderOut_ds (Msg (Pair (last (butlast var_buffer)) True))))"
-  apply(simp add: senderTransition_def)
-  sorry
+  using assms by(auto simp add: senderTransition_def assms)
 
 (* Line 36:  Sf -> St [buffer.size()=1] {as==false, i==null} / {buffer=buffer.butlast()}; *)
 lemma senderTransition_1_1[simp]:
   assumes "(size var_buffer)=1 \<and> port_as=False"
     shows "senderTransition ((SenderState Sf var_buffer var_c), (senderElemIn_as_i (Msg port_as) null))
          = (SenderState St (butlast var_buffer) var_c, (senderOut_ds null))"
-  apply(simp add: senderTransition_def)
-  sorry
+  using assms by(auto simp add: senderTransition_def assms)
 
 (* Line 38:  Sf -> Sf [buffer.size()=0 && as!=null] {i==null}; *)
 lemma senderTransition_1_2[simp]:
   assumes "(size var_buffer)=0"
     shows "senderTransition ((SenderState Sf var_buffer var_c), (senderElemIn_as_i (Msg port_as) null))
          = (SenderState Sf var_buffer var_c, (senderOut_ds null))"
-  apply(simp add: senderTransition_def)
-  sorry
+  using assms by(auto simp add: senderTransition_def assms)
 
 (* Line 40:  Sf -> Sf [buffer.size()>0 && c>0] {as==true, i==null} / {c=c-1}; *)
 lemma senderTransition_1_3[simp]:
   assumes "(size var_buffer)>0 \<and> var_c>0 \<and> port_as=True"
     shows "senderTransition ((SenderState Sf var_buffer var_c), (senderElemIn_as_i (Msg port_as) null))
          = (SenderState Sf var_buffer (var_c-1), (senderOut_ds null))"
-  apply(simp add: senderTransition_def)
-  sorry
+  using assms by(auto simp add: senderTransition_def assms)
 
 (* Line 41:  Sf -> Sf [buffer.size()>0 && c=0] {as==true, i==null} / {c=3, ds=new Pair<>(buffer.last(),false)}; *)
 lemma senderTransition_1_4[simp]:
   assumes "(size var_buffer)>0 \<and> var_c=0 \<and> port_as=True"
     shows "senderTransition ((SenderState Sf var_buffer var_c), (senderElemIn_as_i (Msg port_as) null))
          = (SenderState Sf var_buffer 3, (senderOut_ds (Msg (Pair (last var_buffer) False))))"
-  apply(simp add: senderTransition_def)
-  sorry
+  using assms by(auto simp add: senderTransition_def assms)
 
 (* Line 44:  Sf -> Sf [buffer.size()=0 && i!=null] {as==null} / {buffer=buffer.prepend(i), c=3, ds=new Pair<>(i,false)}; *)
 lemma senderTransition_2_0[simp]:
   assumes "(size var_buffer)=0"
     shows "senderTransition ((SenderState Sf var_buffer var_c), (senderElemIn_as_i null (Msg port_i)))
          = (SenderState Sf (prepend var_buffer port_i) 3, (senderOut_ds (Msg (Pair port_i False))))"
-  apply(simp add: senderTransition_def)
-  sorry
+  using assms by(auto simp add: senderTransition_def assms)
 
 (* Line 46:  Sf -> Sf [buffer.size()>0 && c>0 && i!=null] {as==null} / {buffer=buffer.prepend(i), c=c-1}; *)
 lemma senderTransition_2_1[simp]:
   assumes "(size var_buffer)>0 \<and> var_c>0"
     shows "senderTransition ((SenderState Sf var_buffer var_c), (senderElemIn_as_i null (Msg port_i)))
          = (SenderState Sf (prepend var_buffer port_i) (var_c-1), (senderOut_ds null))"
-  apply(simp add: senderTransition_def)
-  sorry
+  using assms by(auto simp add: senderTransition_def assms)
 
 (* Line 48:  Sf -> Sf [buffer.size()>0 && c=0 && i!=null] {as==null} / {buffer=buffer.prepend(i), c=3, ds=new Pair<>(buffer.last(),false)}; *)
 lemma senderTransition_2_2[simp]:
   assumes "(size var_buffer)>0 \<and> var_c=0"
     shows "senderTransition ((SenderState Sf var_buffer var_c), (senderElemIn_as_i null (Msg port_i)))
          = (SenderState Sf (prepend var_buffer port_i) 3, (senderOut_ds (Msg (Pair (last var_buffer) False))))"
-  apply(simp add: senderTransition_def)
-  sorry
+  using assms by(auto simp add: senderTransition_def assms)
 
 (* Line 37:  Sf -> Sf [buffer.size()=0] {as==null, i==null}; *)
 lemma senderTransition_3_0[simp]:
   assumes "(size var_buffer)=0"
     shows "senderTransition ((SenderState Sf var_buffer var_c), (senderElemIn_as_i null null))
          = (SenderState Sf var_buffer var_c, (senderOut_ds null))"
-  apply(simp add: senderTransition_def)
-  sorry
+  using assms by(auto simp add: senderTransition_def assms)
 
 (* Line 39:  Sf -> Sf [buffer.size()>0 && c>0] {as==null, i==null}; *)
 lemma senderTransition_3_1[simp]:
   assumes "(size var_buffer)>0 \<and> var_c>0"
     shows "senderTransition ((SenderState Sf var_buffer var_c), (senderElemIn_as_i null null))
          = (SenderState Sf var_buffer var_c, (senderOut_ds null))"
-  apply(simp add: senderTransition_def)
-  sorry
+  using assms by(auto simp add: senderTransition_def assms)
 
 (* Line 42:  Sf -> Sf [buffer.size()>0 && c=0] {as==null, i==null} / {c=3, ds=new Pair<>(buffer.last(),false)}; *)
 lemma senderTransition_3_2[simp]:
   assumes "(size var_buffer)>0 \<and> var_c=0"
     shows "senderTransition ((SenderState Sf var_buffer var_c), (senderElemIn_as_i null null))
          = (SenderState Sf var_buffer 3, (senderOut_ds (Msg (Pair (last var_buffer) False))))"
-  apply(simp add: senderTransition_def)
-  sorry
+  using assms by(auto simp add: senderTransition_def assms)
 
 (* Line 25:  St -> St [buffer.size()=0 && as!=null && i!=null] / {buffer=buffer.prepend(i), c=3, ds=new Pair<>(i,true)}; *)
 lemma senderTransition_4_0[simp]:
   assumes "(size var_buffer)=0"
     shows "senderTransition ((SenderState St var_buffer var_c), (senderElemIn_as_i (Msg port_as) (Msg port_i)))
          = (SenderState St (prepend var_buffer port_i) 3, (senderOut_ds (Msg (Pair port_i True))))"
-  apply(simp add: senderTransition_def)
-  sorry
+  using assms by(auto simp add: senderTransition_def assms)
 
 (* Line 27:  St -> Sf [buffer.size()>1 && i!=null] {as==true} / {buffer=buffer.butlast().prepend(i), c=3, ds=new Pair<>(buffer.butlast().last(),false)}; *)
 lemma senderTransition_4_1[simp]:
   assumes "(size var_buffer)>1 \<and> port_as=True"
     shows "senderTransition ((SenderState St var_buffer var_c), (senderElemIn_as_i (Msg port_as) (Msg port_i)))
          = (SenderState Sf (prepend (butlast var_buffer) port_i) 3, (senderOut_ds (Msg (Pair (last (butlast var_buffer)) False))))"
-  apply(simp add: senderTransition_def)
-  sorry
+  using assms by(auto simp add: senderTransition_def assms)
 
 (* Line 28:  St -> St [buffer.size()>0 && c>0 && i!=null] {as==false} / {buffer=buffer.prepend(i), c=c-1}; *)
 lemma senderTransition_4_2[simp]:
   assumes "(size var_buffer)>0 \<and> var_c>0 \<and> port_as=False"
     shows "senderTransition ((SenderState St var_buffer var_c), (senderElemIn_as_i (Msg port_as) (Msg port_i)))
          = (SenderState St (prepend var_buffer port_i) (var_c-1), (senderOut_ds null))"
-  apply(simp add: senderTransition_def)
-  sorry
+  using assms by(auto simp add: senderTransition_def assms)
 
 (* Line 30:  St -> St [buffer.size()>0 && c=0 && i!=null] {as==false} / {buffer=buffer.prepend(i), c=3, ds=new Pair<>(buffer.last(),true)}; *)
 lemma senderTransition_4_3[simp]:
   assumes "(size var_buffer)>0 \<and> var_c=0 \<and> port_as=False"
     shows "senderTransition ((SenderState St var_buffer var_c), (senderElemIn_as_i (Msg port_as) (Msg port_i)))
          = (SenderState St (prepend var_buffer port_i) 3, (senderOut_ds (Msg (Pair (last var_buffer) True))))"
-  apply(simp add: senderTransition_def)
-  sorry
+  using assms by(auto simp add: senderTransition_def assms)
 
 (* Line 32:  St -> Sf [buffer.size()=1 && i!=null] {as==true} / {buffer=buffer.butlast().prepend(i), c=3, ds=new Pair<>(i,false)}; *)
 lemma senderTransition_4_4[simp]:
   assumes "(size var_buffer)=1 \<and> port_as=True"
     shows "senderTransition ((SenderState St var_buffer var_c), (senderElemIn_as_i (Msg port_as) (Msg port_i)))
          = (SenderState Sf (prepend (butlast var_buffer) port_i) 3, (senderOut_ds (Msg (Pair port_i False))))"
-  apply(simp add: senderTransition_def)
-  sorry
+  using assms by(auto simp add: senderTransition_def assms)
 
 (* Line 17:  St -> St [buffer.size()=0 && as!=null] {i==null}; *)
 lemma senderTransition_5_0[simp]:
   assumes "(size var_buffer)=0"
     shows "senderTransition ((SenderState St var_buffer var_c), (senderElemIn_as_i (Msg port_as) null))
          = (SenderState St var_buffer var_c, (senderOut_ds null))"
-  apply(simp add: senderTransition_def)
-  sorry
+  using assms by(auto simp add: senderTransition_def assms)
 
 (* Line 18:  St -> Sf [buffer.size()>1] {as==true, i==null} / {buffer=buffer.butlast(), c=3, ds=new Pair<>(buffer.butlast().last(),false)}; *)
 lemma senderTransition_5_1[simp]:
   assumes "(size var_buffer)>1 \<and> port_as=True"
     shows "senderTransition ((SenderState St var_buffer var_c), (senderElemIn_as_i (Msg port_as) null))
          = (SenderState Sf (butlast var_buffer) 3, (senderOut_ds (Msg (Pair (last (butlast var_buffer)) False))))"
-  apply(simp add: senderTransition_def)
-  sorry
+  using assms by(auto simp add: senderTransition_def assms)
 
 (* Line 20:  St -> St [buffer.size()>0 && c>0] {as==false, i==null} / {c=c-1}; *)
 lemma senderTransition_5_2[simp]:
   assumes "(size var_buffer)>0 \<and> var_c>0 \<and> port_as=False"
     shows "senderTransition ((SenderState St var_buffer var_c), (senderElemIn_as_i (Msg port_as) null))
          = (SenderState St var_buffer (var_c-1), (senderOut_ds null))"
-  apply(simp add: senderTransition_def)
-  sorry
+  using assms by(auto simp add: senderTransition_def assms)
 
 (* Line 22:  St -> St [buffer.size()>0 && c=0] {as==false, i==null} / {c=3, ds=new Pair<>(buffer.last(),true)}; *)
 lemma senderTransition_5_3[simp]:
   assumes "(size var_buffer)>0 \<and> var_c=0 \<and> port_as=False"
     shows "senderTransition ((SenderState St var_buffer var_c), (senderElemIn_as_i (Msg port_as) null))
          = (SenderState St var_buffer 3, (senderOut_ds (Msg (Pair (last var_buffer) True))))"
-  apply(simp add: senderTransition_def)
-  sorry
+  using assms by(auto simp add: senderTransition_def assms)
 
 (* Line 24:  St -> Sf [buffer.size()=1] {as==true, i==null} / {buffer=buffer.butlast()}; *)
 lemma senderTransition_5_4[simp]:
   assumes "(size var_buffer)=1 \<and> port_as=True"
     shows "senderTransition ((SenderState St var_buffer var_c), (senderElemIn_as_i (Msg port_as) null))
          = (SenderState Sf (butlast var_buffer) var_c, (senderOut_ds null))"
-  apply(simp add: senderTransition_def)
-  sorry
+  using assms by(auto simp add: senderTransition_def assms)
 
 (* Line 26:  St -> St [buffer.size()=0 && i!=null] {as==null} / {buffer=buffer.prepend(i), c=3, ds=new Pair<>(i,true)}; *)
 lemma senderTransition_6_0[simp]:
   assumes "(size var_buffer)=0"
     shows "senderTransition ((SenderState St var_buffer var_c), (senderElemIn_as_i null (Msg port_i)))
          = (SenderState St (prepend var_buffer port_i) 3, (senderOut_ds (Msg (Pair port_i True))))"
-  apply(simp add: senderTransition_def)
-  sorry
+  using assms by(auto simp add: senderTransition_def assms)
 
 (* Line 29:  St -> St [buffer.size()>0 && c>0 && i!=null] {as==null} / {buffer=buffer.prepend(i), c=c-1}; *)
 lemma senderTransition_6_1[simp]:
   assumes "(size var_buffer)>0 \<and> var_c>0"
     shows "senderTransition ((SenderState St var_buffer var_c), (senderElemIn_as_i null (Msg port_i)))
          = (SenderState St (prepend var_buffer port_i) (var_c-1), (senderOut_ds null))"
-  apply(simp add: senderTransition_def)
-  sorry
+  using assms by(auto simp add: senderTransition_def assms)
 
 (* Line 31:  St -> St [buffer.size()>0 && c=0 && i!=null] {as==null} / {buffer=buffer.prepend(i), c=3, ds=new Pair<>(buffer.last(),true)}; *)
 lemma senderTransition_6_2[simp]:
   assumes "(size var_buffer)>0 \<and> var_c=0"
     shows "senderTransition ((SenderState St var_buffer var_c), (senderElemIn_as_i null (Msg port_i)))
          = (SenderState St (prepend var_buffer port_i) 3, (senderOut_ds (Msg (Pair (last var_buffer) True))))"
-  apply(simp add: senderTransition_def)
-  sorry
+  using assms by(auto simp add: senderTransition_def assms)
 
 (* Line 19:  St -> St [buffer.size()=0] {as==null, i==null}; *)
 lemma senderTransition_7_0[simp]:
   assumes "(size var_buffer)=0"
     shows "senderTransition ((SenderState St var_buffer var_c), (senderElemIn_as_i null null))
          = (SenderState St var_buffer var_c, (senderOut_ds null))"
-  apply(simp add: senderTransition_def)
-  sorry
+  using assms by(auto simp add: senderTransition_def assms)
 
 (* Line 21:  St -> St [buffer.size()>0 && c>0] {as==null, i==null} / {c=c-1}; *)
 lemma senderTransition_7_1[simp]:
   assumes "(size var_buffer)>0 \<and> var_c>0"
     shows "senderTransition ((SenderState St var_buffer var_c), (senderElemIn_as_i null null))
          = (SenderState St var_buffer (var_c-1), (senderOut_ds null))"
-  apply(simp add: senderTransition_def)
-  sorry
+  using assms by(auto simp add: senderTransition_def assms)
 
 (* Line 23:  St -> St [buffer.size()>0 && c=0] {as==null, i==null} / {c=3, ds=new Pair<>(buffer.last(),true)}; *)
 lemma senderTransition_7_2[simp]:
   assumes "(size var_buffer)>0 \<and> var_c=0"
     shows "senderTransition ((SenderState St var_buffer var_c), (senderElemIn_as_i null null))
          = (SenderState St var_buffer 3, (senderOut_ds (Msg (Pair (last var_buffer) True))))"
-  apply(simp add: senderTransition_def)
-  sorry
+  using assms by(auto simp add: senderTransition_def assms)
 
 
 section \<open>Step-wise lemmata for the SPF\<close>
 
 (* Convert the SPF to step notation *)
-lemma senderSpf2Step: "senderSPF = spfConcOut (senderOut_ds null)\<cdot>(senderStep (SenderState St []  0))"
-  sorry
+lemma senderSpf2Step: "senderSPF = spfConcOut (senderOut_ds null)\<cdot>(senderStep (SenderState St ([] ::'e::countable list) (0::nat)))"
+  by(simp add: senderSPF_def da_H_def senderInitialOutput_def senderInitialState_def senderStep_def)
 
 (* Line 33:  Sf -> St [buffer.size()>1 && i!=null] {as==false} / {buffer=buffer.butlast().prepend(i), c=3, ds=new Pair<>(buffer.butlast().last(),true)}; *)
 lemma senderStep_0_0:

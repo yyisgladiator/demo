@@ -435,6 +435,11 @@ lemma tsyndom_slen: assumes "#s = Fin k" shows "card (tsynDom\<cdot>s) \<le> k"
       by (simp add: tsyndom_insert)
   qed
 
+text {* @{term tsynDom} inverses the msg, removes null. *}
+lemma tsyndom_sdom: "tsynDom\<cdot>s = inverseMsg ` ((sdom\<cdot>s) - {null})"
+  apply (simp add: tsyndom_insert image_def set_eq_iff)
+  by (metis DiffE DiffI empty_iff insert_iff inverseMsg.simps(2) tsyn.exhaust tsyn.simps(3))
+
 text {* @{term tsynDom} test on finite stream. *}
 lemma tsyndom_test_finstream: "tsynDom\<cdot>(<[Msg (1 :: nat), Msg 2, null, null, Msg 1, null]>) = {1, 2}"
   apply (simp add: tsyndom_insert set_eq_iff) 
@@ -502,6 +507,7 @@ lemma tsynabs_sdom_subset_eq: "(sdom\<cdot>s \<subseteq> insert - (Msg ` range a
       by (simp only: tsynabs_sconc_null sdom2un, auto)
   qed
 
+
 (* ToDo: rename or remove as duplicate. *)
 
 text {* The set of messages of a stream equals the set of values of @{term tsynAbs} of the 
@@ -510,6 +516,11 @@ lemma tsynabs_tsyndom: "tsynDom\<cdot>s = sdom\<cdot>(tsynAbs\<cdot>s)"
   apply (induction s rule: tsyn_ind, simp_all)
   apply (simp add: tsynabs_sconc_msg tsyndom_sconc_msg)
   by (simp add: tsyndom_sconc_null tsynabs_sconc_null)
+
+lemma tsynabs_sdom: "sdom\<cdot>(tsynAbs\<cdot>s) = tsynDom\<cdot>s"
+  apply (induction rule: tsyn_ind, simp_all)
+  apply (simp add: tsynabs_sconc_msg tsyndom_sconc_msg)
+  by (simp add: tsynabs_sconc_null tsyndom_sconc_null)
 
 text {* @{term tsynAbs} test on finite stream. *}
 lemma tsynabs_test_finstream: "tsynAbs\<cdot>(<[Msg 1, Msg 2, null, null, Msg 1, null]>) = <[1, 2, 1]>"
@@ -682,6 +693,13 @@ text {* @{term tsynFilter} leaves the length of the stream unchanged. *}
 lemma tsynfilter_tsynlen: "tsynLen\<cdot>(tsynFilter A\<cdot>s) \<le> tsynLen\<cdot>s"
   sorry
 
+text {* @{term sdom} of @{term tsynFilter} A is subset of @{term image} of 
+        @{term tsynFilterElem} of A. *}
+lemma tsynfilter_sdom: "sdom\<cdot>(tsynFilter A\<cdot>s) \<subseteq> tsynFilterElem A ` sdom\<cdot>s"
+  apply (induction s arbitrary: A rule: tsyn_ind, simp_all)
+  apply (rule admI)
+  by (simp add: smap_sdom tsynfilter_insert)+
+
 text {* @{term tsynDom} of @{term tsynFilter} is subset of @{term tsynDom} of 
         the original stream. *}
 lemma tsynfilter_tsyndom: "tsynDom\<cdot>(tsynFilter A\<cdot>s) \<subseteq> tsynDom\<cdot>s"
@@ -741,6 +759,12 @@ lemma tsynmap_tsynabs: "tsynAbs\<cdot>(tsynMap f\<cdot>s) = smap f\<cdot>(tsynAb
   apply (induction s rule: tsyn_ind, simp_all)
   apply (simp add: tsynmap_sconc_msg tsynabs_sconc_msg)
   by (simp add: tsynmap_sconc_null tsynabs_sconc_null)
+
+text {* Every value produced by @{term tsynMap} of the function f is in @{term image} of @{term tsynApplyElem} f *}
+lemma tsynmap_sdom: "sdom\<cdot>(tsynMap f\<cdot>s) = tsynApplyElem f ` sdom\<cdot>s"
+  apply (induction s arbitrary: f rule: tsyn_ind, simp_all)
+  apply (rule admI)
+  by (simp add: smap_sdom tsynmap_insert)+
 
 text {* Every message produced by @{term tsynMap} of the function f is in @{term image} of f *}
 lemma tsynmap_tsyndom: "tsynDom\<cdot>(tsynMap f\<cdot>s) = f ` tsynDom\<cdot>s"
@@ -833,6 +857,12 @@ text {* @{term tsynProjFst} leaves the length of a time abstracted stream unchan
 lemma tsynprojfst_tsynlen: "tsynLen\<cdot>(tsynProjFst\<cdot>ts) = tsynLen\<cdot>ts"
   sorry
 
+text {* Every value produced by @{term tsynProjFst} is in the image of @{term tsynFst} *}
+lemma tsynprojfst_sdom: "sdom\<cdot>(tsynProjFst\<cdot>s) = tsynFst ` sdom\<cdot>s"
+  apply (induction rule: tsyn_ind, simp_all)
+  apply (rule admI)
+  by (simp add: smap_sdom tsynprojfst_insert)+
+
 text {* Every message produced by @{term tsynProjFst} is in the image of @{term fst} *}
 lemma tsynprojfst_tsyndom: "tsynDom\<cdot>(tsynProjFst\<cdot>s) = fst ` tsynDom\<cdot>s"
   by (simp add: tsynabs_tsyndom tsynprojfst_tsynabs sprojfst_def smap_sdom)
@@ -910,6 +940,12 @@ lemma tsynprojsnd_tsynabs: "tsynAbs\<cdot>(tsynProjSnd\<cdot>s) = sprojsnd\<cdot
     then show ?case
       by (simp add: tsynprojsnd_sconc_null tsynabs_sconc_null)
   qed
+
+text {* Every value produced by @{term tsynProjSnd} is in the image of @{term tsynSnd} *}
+lemma tsynprojsnd_sdom: "sdom\<cdot>(tsynProjSnd\<cdot>s) = tsynSnd ` sdom\<cdot>s"
+  apply (induction rule: tsyn_ind, simp_all)
+  apply (rule admI)
+  by (simp add: smap_sdom tsynprojsnd_insert)+
 
 text {* Every message produced by @{term tsynProjSnd} is in the image of @{term snd} *}
 lemma tsynprojsnd_tsyndom: "tsynDom\<cdot>(tsynProjSnd\<cdot>s) = snd ` tsynDom\<cdot>s"
@@ -1103,7 +1139,18 @@ lemma tsynzip_tsynprojsnd_tsynabs:
   apply (metis dual_order.antisym inf_chainl4 inf_ub l42)
   by (simp add: szip_sprojsnd tsynlen_insert tsynprojsnd_tsynabs tsynzip_tsynabs)
 
-text {* @{term tsynDom} of @{term tsynZip} is subset of the Cartesian product of @{term tsynDom}
+text {* @{term sdom} of @{term tsynZip} is subset of the @{term image} of @{term Msg} 
+        on the Cartesian product of @{term tsynDom} of the first stream 
+        and @{term sdom} of the second stream @{term union} null. *}
+lemma tsynzip_sdom: "sdom\<cdot>(tsynZip\<cdot>as\<cdot>bs) \<subseteq> (Msg ` (tsynDom\<cdot>as \<times> sdom\<cdot>bs)) \<union> {null}"  
+  apply (induction as arbitrary: bs rule: tsyn_ind, simp_all)
+  apply (rule admI)
+  apply (simp add: contlub_cfun_arg contlub_cfun_fun lub_eq_Union, blast)
+  apply (rule_tac x = bs in scases, simp_all)
+  apply (simp add: tsynzip_sconc_msg tsyndom_sconc_msg, blast)
+  by (metis (no_types) insert_absorb2 insert_is_Un insert_mono sdom2un tsynZip.simps(2) tsynzip_sconc_null tsyndom_sconc_null)
+
+text {* @{term tsynDom} of @{term tsynZip} is subset of the Cartesian product of @{term tsynDom} 
         of the first stream and @{term sdom} of the second stream. *}
 lemma tsynzip_tsyndom: "tsynDom\<cdot>(tsynZip\<cdot>as\<cdot>bs) \<subseteq> (tsynDom\<cdot>as \<times> sdom\<cdot>bs)"
   by (simp add: szip_sdom tsynabs_tsyndom tsynzip_tsynabs)
@@ -1171,7 +1218,23 @@ lemma tsynremdups_tsynabs: "tsynAbs\<cdot>(tsynRemDups\<cdot>s) = srcdups\<cdot>
   by (simp_all add: tsynabs_sconc_null tsynremdups_sconc_null tsynabs_sconc_msg 
       tsynremdups_sconc_msg srcdups_step tsynremdups_h_tsynabs)
 
-text {* @{term tsynRemDups } doesn't change the @{term tsynDom} of a stream *}
+text {* @{term tsynRemDups_h} is subset of @{term sdom} of a stream @{term union} null *}
+lemma tsynremdups_h_sdom: "sdom\<cdot>(sscanlA tsynRemDups_h (\<M> m)\<cdot>s) \<subseteq> sdom\<cdot>s \<union> {null}"
+  apply (induction s arbitrary: m rule: tsyn_ind, simp_all)
+  apply (rule admI)
+  apply (simp add: contlub_cfun_arg lub_eq_Union)
+  by blast+
+
+text {* @{term tsynRemDups} is subset of @{term sdom} of a stream @{term union} null *}
+lemma tsynremdups_sdom: "sdom\<cdot>(tsynRemDups\<cdot>s) \<subseteq> sdom\<cdot>s \<union> {null}"
+  apply (induction rule: tsyn_ind, simp_all)
+  apply (rule admI)
+  apply (simp add: contlub_cfun_arg lub_eq_Union, blast)
+  apply (metis (no_types, hide_lams) Un_commute Un_insert_left insert_mono sdom2un 
+         sup_bot.left_neutral tsynremdups_sconc_msg tsynremdups_h_sdom)
+  by (simp add: tsynremdups_sconc_null)
+
+text {* @{term tsynRemDups} doesn't change the @{term tsynDom} of a stream *}
 lemma tsynremdups_tsyndom: "tsynDom\<cdot>(tsynRemDups\<cdot>s) = tsynDom\<cdot>s"
   by (simp add: tsynabs_tsyndom tsynremdups_tsynabs)
 
@@ -1375,6 +1438,16 @@ text {* @{term tsynDropWhile} is idempotent. *}
 lemma tsyndropwhile_idem: "tsynDropWhile f\<cdot>(tsynDropWhile f\<cdot>s) = tsynDropWhile f\<cdot>s"
   apply (induction s arbitrary: f rule: tsyn_ind, simp_all)
   apply (metis tsyndropwhile_sconc_msg_f tsyndropwhile_sconc_msg_t tsyndropwhile_sconc_null)
+  by (simp add: tsyndropwhile_sconc_null)
+
+text {* @{term sdom} of @{term tsynDropWhile} is subset of @{term sdom} of 
+        the original stream @{term union} null. *}
+lemma tsyndropwhile_sdom: "sdom\<cdot>(tsynDropWhile f\<cdot>s) \<subseteq> sdom\<cdot>s \<union> {null}"
+  apply (induction s arbitrary: f rule: tsyn_ind, simp_all)
+  apply (rule admI)
+  apply (simp add: contlub_cfun_arg lub_eq_Union, blast)
+  apply (metis (no_types, hide_lams) insert_commute insert_is_Un insert_subset sdom2un 
+         subset_insertI2 subset_refl tsyndropwhile_sconc_msg_f tsyndropwhile_sconc_msg_t)
   by (simp add: tsyndropwhile_sconc_null)
 
 text {* @{term tsynDom} of @{term tsynDropWhile} is subset of @{term tsynDom} of 

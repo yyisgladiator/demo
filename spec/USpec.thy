@@ -166,9 +166,6 @@ section\<open>Predicates\<close>
 definition uspecIsConsistent :: "'m uspec \<Rightarrow> bool" where
 "uspecIsConsistent S \<equiv> ((Rep_rev_uspec S) \<noteq> {})"
 
-
-
-
 (****************************************************)
 section\<open>Lemmas\<close>
 (****************************************************) 
@@ -402,6 +399,10 @@ lemma uspecmax_max: assumes "spec \<in> USPEC In Out"
   apply (metis (no_types) assms uspecdom_eq uspecleast_dom uspecleast_least uspecmax_dom)
   apply (metis (no_types) assms uspecleast_least uspecleast_ran uspecmax_ran uspecran_eq)
   by (simp add: inv_rev_rev revBelowNeqSubset uspecMax.rep_eq uspecrevset_insert)
+
+lemma uspecmax_consistent: "(uspec \<noteq> uspecMax (uspecDom\<cdot>uspec) (uspecRan\<cdot>uspec)) \<longleftrightarrow> uspecIsConsistent uspec"
+  apply(simp add: uspecMax_def uspecIsConsistent_def)
+  by (metis rep_abs_rev_simp uspecMax.abs_eq uspec_obtain uspecmax_dom uspecmax_ran uspecwell_exists)
 
 
 lemma uspec_exists: "USPEC In Out \<noteq> {}"
@@ -1021,6 +1022,62 @@ proof(rule monofunI)
     by (simp add: uspecflatten_mono2) 
 qed
 
+lemma uspecflatten_elen: assumes "uspec_in f (uspecFlatten In Out H)"
+  obtains h where "h \<in> inv Rev H" and  "uspec_in f h"
+proof -
+  have f1: "uspecFlatten In Out H \<noteq> uspecMax In Out"
+    by (metis assms empty_iff inv_rev_rev prod.sel(1) uspecMax.rep_eq uspecrevset_insert)
+  have f2: "uspecRevSet\<cdot>(uspecFlatten In Out H) = Rev (setflat\<cdot>(Rep_rev_uspec ` (inv Rev (uspec_set_filter In Out\<cdot>H))))"
+    by (metis (mono_tags, lifting) fst_conv rep_abs_uspec uspecFlatten_def uspecflatten_well uspecrevset_insert)
+  have f3: "f \<in>  (setflat\<cdot>(Rep_rev_uspec ` (inv Rev (uspec_set_filter In Out\<cdot>H))))"
+    by (metis assms f2 inv_rev_rev)
+  then show ?thesis
+  proof -
+    have f1: "\<forall>u p r. (u::'a uspec) \<notin> inv Rev (setrevFilter p\<cdot>r) \<or> u \<in> inv Rev r"
+      by (meson setrevfilter_included)
+    obtain uu :: "'a uspec set \<Rightarrow> ('a uspec \<Rightarrow> 'a set) \<Rightarrow> 'a set \<Rightarrow> 'a uspec" where
+      "\<forall>x0 x1 x2. (\<exists>v3. x2 = x1 v3 \<and> v3 \<in> x0) = (x2 = x1 (uu x0 x1 x2) \<and> uu x0 x1 x2 \<in> x0)"
+      by moura
+    then have f2: "\<forall>A f U. A \<notin> f ` U \<or> A = f (uu U f A) \<and> uu U f A \<in> U"
+      by (meson imageE)
+    obtain AA :: "'a set set \<Rightarrow> 'a \<Rightarrow> 'a set" where
+      "\<forall>x0 x1. (\<exists>v2. v2 \<in> x0 \<and> x1 \<in> v2) = (AA x0 x1 \<in> x0 \<and> x1 \<in> AA x0 x1)"
+      by moura
+    then have "\<forall>a A. a \<notin> setflat\<cdot>A \<or> AA A a \<in> A \<and> a \<in> AA A a"
+      by (meson setflat_obtain)
+    then have f3: "AA (Rep_rev_uspec ` inv Rev (uspec_set_filter In Out\<cdot>H)) f \<in> Rep_rev_uspec ` inv Rev (uspec_set_filter In Out\<cdot>H) \<and> f \<in> AA (Rep_rev_uspec ` inv Rev (uspec_set_filter In Out\<cdot>H)) f"
+      using f3 by auto
+    have "setrevFilter (\<lambda>u. uspecDom\<cdot>(u::'a uspec) = In \<and> uspecRan\<cdot>u = Out) = uspec_set_filter In Out"
+      by (simp add: eta_cfun uspec_set_filter_def)
+    then have f4: "uu (inv Rev (uspec_set_filter In Out\<cdot>H)) Rep_rev_uspec (AA (Rep_rev_uspec ` inv Rev (uspec_set_filter In Out\<cdot>H)) f) \<in> inv Rev (setrevFilter (\<lambda>u. uspecDom\<cdot>u = In \<and> uspecRan\<cdot>u = Out)\<cdot> H)"
+      using f3 f2 by presburger
+    have "uspec_in f (uu (inv Rev (uspec_set_filter In Out\<cdot>H)) Rep_rev_uspec (AA (Rep_rev_uspec ` inv Rev (uspec_set_filter In Out\<cdot>H)) f))"
+      using f3 f2 by (metis (no_types) rep_rev_revset)
+    then show ?thesis
+      using f4 f1 by (meson that)
+  qed
+qed
+
+lemma uspecflatten_ele2:  "\<And> Z. Z \<in> inv Rev H \<Longrightarrow> uspecDom\<cdot>Z = In \<Longrightarrow>
+  uspecRan\<cdot>Z = Out \<Longrightarrow> \<forall>f.  uspec_in f Z \<longrightarrow> uspec_in f (uspecFlatten In Out H)"
+proof -
+  fix Z ::"'a uspec"
+  assume a1: "Z \<in> inv Rev H" and a2: "uspecDom\<cdot>Z = In"
+and a3: "uspecRan\<cdot>Z = Out"
+  have f1: "Z \<in> inv Rev (uspec_set_filter In Out\<cdot>H)"
+    by (simp add: a1 a2 a3 setrevfilter_reversed uspec_set_filter_def)
+  show "\<forall>f.  uspec_in f Z \<longrightarrow> uspec_in f (uspecFlatten In Out H)"
+  proof (auto)
+    fix f:: 'a 
+    assume b1: "uspec_in f Z "
+    show "uspec_in f (uspecFlatten In Out H)"
+      apply (simp add: uspecFlatten_def uspecRevSet_def)
+      apply (subst rep_abs_rev_simp)
+      using uspecflatten_well apply blast
+      using b1 f1 rep_rev_revset setflat_insert by fastforce
+  qed
+qed
+
 subsection \<open>Forall Exists\<close>
 
 lemma uspec_for_all_ex:
@@ -1311,5 +1368,24 @@ lemma uspec_size_mono:
   shows "uspecSize G \<le> uspecSize F"
   apply (simp add: uspecSize_def)
   by (simp add: assms monofun_cfun_arg setrev_size_mono)
+
+lift_definition uspecConst:: "'f::ufuncl_comp \<Rightarrow> 'f uspec" is
+"\<lambda> f. (Rev {f}, Discr (ufclDom\<cdot>f), Discr (ufclRan\<cdot>f))"
+  by auto
+
+lemma uspecconst_dom [simp]: "uspecDom\<cdot>(uspecConst f ) = (ufclDom\<cdot>f)"
+  apply (simp add: uspecConst_def)
+  by (simp add: uspecdom_insert)
+
+lemma uspecconst_ran [simp]: "uspecRan\<cdot>(uspecConst f ) = (ufclRan\<cdot>f)"
+  apply (simp add: uspecConst_def)
+  by (simp add: uspecran_insert)
+
+lemma uspecconst_consistent [simp]: "uspecIsConsistent (uspecConst f)"
+  by(simp add: uspecIsConsistent_def uspecConst.rep_eq)
+
+lemma uspecconst_set [simp]: "uspecRevSet\<cdot>(uspecConst f) = Rev {f}"
+  by(simp add: uspecrevset_insert uspecConst.rep_eq)
+
 
 end

@@ -136,6 +136,9 @@ abbreviation theRep_abbrv :: "('in, 'out) ufun \<Rightarrow> 'in \<Rightarrow> '
 "(f \<rightleftharpoons> s) \<equiv> (Rep_cufun f)\<rightharpoonup>s"
 
 
+definition ufIsStrict :: "('a::ubcl_comp, 'b::ubcl_comp) ufun \<Rightarrow> bool" where
+"ufIsStrict uf = (\<forall>sb. ubclDom\<cdot>sb=ufDom\<cdot>uf \<longrightarrow> ubclLen sb = 0 \<longrightarrow> ((uf\<rightleftharpoons>sb) = ubclLeast (ufRan\<cdot>uf)))"
+
 (****************************************************)
 section\<open>Subtype\<close>
 (****************************************************) 
@@ -342,7 +345,6 @@ lemma rep_cufun_rev: "Rep_cfun (Rep_ufun F) = Rep_cufun F"
 
 
 subsection \<open>ufun_definition\<close>
-
   
 text{*  introduction rules for mono proofs *}
 lemma ufun_monoI2 [simp]: assumes "\<And> x y. ubclDom\<cdot>x = In \<Longrightarrow> x \<sqsubseteq> y \<Longrightarrow> (g x) \<sqsubseteq> (g y)"
@@ -668,7 +670,15 @@ lemma ufuntype_cont: "cont (\<lambda>f. (ufDom\<cdot>f, ufRan\<cdot>f))"
 (* insert rule for ufuntype *)
 lemma ufuntype_insert: "ufunType\<cdot>f = (ufDom\<cdot>f, ufRan\<cdot>f)"
   by (simp add: ufunType_def)
-  
+
+
+subsection \<open>ufIsStrict\<close>
+
+thm ufIsStrict_def
+lemma ufisstrictI: assumes "\<And>sb. ubclDom\<cdot>sb=ufDom\<cdot>uf \<Longrightarrow> ubclLen sb = 0 \<Longrightarrow> ((uf\<rightleftharpoons>sb) = ubclLeast (ufRan\<cdot>uf))"
+  shows "ufIsStrict uf"
+  by (simp add: assms ufIsStrict_def)
+
 
 subsection \<open>monoTick2cont\<close>
 
@@ -738,6 +748,43 @@ proof -
     apply(simp add: assms(1))
     by(simp add: f1)
 qed*)
+
+
+definition ufConst:: "channel set \<Rightarrow> 'n \<rightarrow> ('m, 'n) ufun" where
+  "ufConst \<equiv> \<lambda> In. \<Lambda> (sb::'n). Abs_cufun (\<lambda> (ub::'m). (ubclDom\<cdot>ub = In) \<leadsto> sb)"
+
+lemma constspf_cont[simp]: "cont  (\<lambda> (ub::'m). (ubclDom\<cdot>ub = In) \<leadsto> (sb::'n))"
+  by simp
+
+lemma constspf_well[simp]: "ufWell (Abs_cfun (\<lambda> (ub::'m). (ubclDom\<cdot>ub = In) \<leadsto> (sb::'n)))"
+  apply (rule ufun_wellI)
+  by (simp_all add: domIff2)
+
+lemma constspf_dom[simp]: "ufDom\<cdot>(Abs_cufun (\<lambda> (ub::'m). (ubclDom\<cdot>ub = In) \<leadsto> (sb::'n))) = In"
+  by (simp add: ufun_ufdom_abs)
+
+lemma constspf_ran[simp]: "ufRan\<cdot>(Abs_cufun (\<lambda> (ub::'m). (ubclDom\<cdot>ub = In) \<leadsto> (sb::'n))) = 
+  ubclDom\<cdot>sb"
+  by (simp add: ubcldom_ex)
+
+lemma createconstspf_cont[simp]: "cont  (\<lambda> (sb::'n). Abs_cufun (\<lambda> (ub::'m). (ubclDom\<cdot>ub = In) \<leadsto> sb))"
+  apply (rule Cont.contI2)
+   apply (rule monofunI)
+   apply (rule ufun_belowI)
+    apply simp_all
+  apply (rule ufun_belowI)
+   apply simp_all
+  using ufdom_lub_eq apply fastforce
+  by (subst rep_cufun_lub_apply, simp_all)
+
+lemma creatconstspf_dom[simp]: "ufDom\<cdot>(ufConst In\<cdot>ub) = In"
+  by (simp add: ufConst_def)
+
+lemma creatconstspf_ran[simp]: "ufRan\<cdot>(ufConst In\<cdot>ub) = ubclDom\<cdot>ub"
+  by (simp add: ufConst_def)
+
+lemma ufconst_apply[simp]: "ubclDom\<cdot>x = In \<Longrightarrow> ((ufConst In\<cdot>ub) \<rightleftharpoons> x) = ub"
+  by(simp add: ufConst_def)
 
 
 (****************************************************)
