@@ -526,7 +526,6 @@ lemma nda_h_final: assumes "sbeDom sbe = ndaDom\<cdot>nda" and
    ndaConcOutFlatten (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) ((ndaTransition\<cdot>nda) (state,sbe)) (nda_h nda)"
    apply (rule uspec_eqI)  defer
     apply (subst spsconcin_dom)
-     apply (simp add: one_lnat_def sbe_ch_len)
     apply (metis ndaConcOutFlatten_def nda_h_fixpoint nda_h_inner_dom uspecflatten_dom)
   apply (simp add: assms(1) nda_h_final_h_2 nda_h_state_not_empty spsConcIn_def)
   apply (simp add: spsConcIn_def)
@@ -573,15 +572,229 @@ lemma nda_h_bottom: "uspecIsStrict (nda_h nda state)"
 
 
 
-lemma nda_h_final_back_h_1: "\<forall> sbe. sbeDom sbe = In \<longrightarrow>
- (uspecIsStrict other \<and> h sbe \<in> USPEC In Out \<and> spsConcIn (sbe2SB sbe) other = h sbe)
+lemma nda_h_final_back_h_1: "finite In \<Longrightarrow> 
+  uspecDom\<cdot>other = In  \<Longrightarrow>
+  uspecRan\<cdot>other = Out \<Longrightarrow>
+  uspecIsStrict other \<Longrightarrow>
+  \<forall> sbe. h sbe \<in> USPEC In Out \<Longrightarrow>
+  \<forall> sbe. h sbe \<noteq> uspecMax In Out \<Longrightarrow>
+  \<forall> sbe. sbeDom sbe = In \<longrightarrow> (spsConcIn (sbe2SB sbe) other = h sbe)
             \<Longrightarrow> 
-      (spsStep_m In Out h = other)"
+      (spsStep_m In Out h \<sqsubseteq> other)"
 proof -
-  assume a1: "\<forall> sbe. sbeDom sbe = In \<longrightarrow>
- (uspecIsStrict other \<and> h sbe \<in> USPEC In Out \<and> spsConcIn (sbe2SB sbe) other = h sbe)"
-  show "(spsStep_m In Out h = other)"
-    sorry
+  assume a0: "finite In"
+  assume a1: "uspecDom\<cdot>other = In"
+  assume a2: "uspecRan\<cdot>other = Out"
+  assume a4: "uspecIsStrict other"
+  assume a5: "\<forall> sbe. h sbe \<in> USPEC In Out"
+  assume a6: "\<forall> sbe. h sbe \<noteq> uspecMax In Out"
+  assume a3: "\<forall> sbe. sbeDom sbe = In \<longrightarrow>
+ (spsConcIn (sbe2SB sbe) other = h sbe)"
+
+  have a3_simp: "\<And> sbe. sbeDom sbe = In \<Longrightarrow>
+ (spsConcIn (sbe2SB sbe) other = h sbe)"
+    using a3 by blast
+  (* dom and ran of other *)
+  have other_dom: "\<And> sbe. uspecDom\<cdot>(spsConcIn (sbe2SB sbe) other) = uspecDom\<cdot>other"
+    by (simp add: spsconcin_dom)
+  have h1: "\<And> sbe. sbeDom sbe = In \<Longrightarrow> uspecDom\<cdot>other = uspecDom\<cdot>(h sbe) \<and> uspecDom\<cdot>other = In"
+    apply rule
+     apply (metis a3 other_dom)
+    by (metis a1)
+
+  have R_sub_L: "inv Rev (uspecRevSet\<cdot>other) \<subseteq> inv Rev (uspecRevSet\<cdot>(spsStep_m In Out h))"
+  proof rule
+    fix x:: "'a stream\<^sup>\<Omega>\<Rrightarrow> 'a stream\<^sup>\<Omega>"
+    assume a11: "uspec_in x other"
+    have spsStep_h_h_not_empty:"spsStep_h\<cdot>h \<noteq> Rev {}"
+      by (metis (no_types, lifting) SetRev.setify_notempty a5 a6 not_uspec_consisten_empty_eq rev_inv_rev spsStep_h_insert uspec_dom uspec_eqI2 uspec_ran uspecmax_consistent uspecmax_dom uspecmax_ran uspecrevset_insert)
+    have f8: "\<And>f sbe. f \<in> inv Rev (spsStep_h\<cdot>h) \<Longrightarrow> uspec_in (f sbe) (h sbe)"
+      by (simp add: spsstep_h_ele)
+    then have elem_h_spsStep_P: "\<And>f. f \<in> inv Rev (spsStep_h\<cdot>h) \<Longrightarrow> spsStep_P In Out f"
+      by (metis (no_types, hide_lams) a5 spsStep_P_def ufclDom_ufun_def ufclRan_ufun_def uspec_allDom uspec_allRan uspec_dom uspec_ran)
+   
+    
+    have f9: "\<And> sbe. uspec_in (spfConcIn (sbe2SB sbe)\<cdot>x) (spsConcIn (sbe2SB sbe) other)"
+      by (simp add: a11 spsconcin_ele)
+    then have f10: "\<And> sbe. sbeDom sbe = In \<Longrightarrow> uspec_in (spfConcIn (sbe2SB sbe)\<cdot>x) (h sbe)"
+      by (metis a3)
+    then have f101: "\<And> sbe. sbeDom sbe = In \<Longrightarrow> 
+      \<exists> g \<in> inv Rev (spsStep_h\<cdot>h). g sbe = (spfConcIn (sbe2SB sbe)\<cdot>x)"
+      by (simp add: spsStep_h_h_not_empty spsstep_h_ele4)
+
+
+    have f11: "\<And> f sbe. sbeDom sbe = In \<Longrightarrow> f \<in> inv Rev (spsStep_h\<cdot>h) 
+      \<Longrightarrow> uspec_in (f sbe) (h sbe)"
+      by (simp add: spsstep_h_ele)
+    then have f12: "\<And> f sbe. sbeDom sbe = In \<Longrightarrow> f \<in> inv Rev (spsStep_h\<cdot>h) 
+      \<Longrightarrow> uspec_in (f sbe) (spsConcIn (sbe2SB sbe) other)"
+      by (simp add: a3)
+    have f13: "\<And>f sbe. sbeDom sbe = In \<Longrightarrow> uspec_in f (spsConcIn (sbe2SB sbe) other)
+      \<Longrightarrow> \<exists> g \<in> inv Rev (spsStep_h\<cdot>h). g sbe = f"
+      by (simp add: a3 spsStep_h_h_not_empty spsstep_h_ele4)
+    obtain the_g where the_g_def: "the_g \<equiv> (\<lambda> sbe. if (sbeDom sbe = In) 
+      then (spfConcIn (sbe2SB sbe)\<cdot>x) else (SOME f. uspec_in f (h sbe)))"
+      by simp
+    have the_g_in_h: "the_g \<in> inv Rev (spsStep_h\<cdot>h)"
+      by (metis f10 someI_ex spsStep_h_h_not_empty spsstep_h_ele2 spsstep_h_inI the_g_def)
+    have the_g_spsStep_P: "spsStep_P In Out the_g"
+      by (simp add: elem_h_spsStep_P the_g_in_h)
+
+    have the_g_spsStep: "uspec_in ((\<lambda> h. spfStep In Out\<cdot>((\<lambda> h sbEl. spfRtIn\<cdot>(h sbEl)) h)) the_g) (spsStep_m In Out h)"
+      apply (rule spsstep_m_ele)
+        apply (simp add: a0)
+       apply (simp add: the_g_in_h)
+      by (simp add: the_g_spsStep_P)
+
+    let ?spfStep_g = "((\<lambda> h. spfStep In Out\<cdot>((\<lambda> h sbEl. spfRtIn\<cdot>(h sbEl)) h)) the_g)"
+    have spfStep_g_ufisstrict: "ufIsStrict ?spfStep_g"
+      unfolding ufIsStrict_def
+      apply (simp add: a0)
+      by (simp add: a0 spfStep_2_spfStep_inj spfStep_inj_def ubcllen_0_not_elemwell ufleast_apply)
+
+    have "\<And>x. uspec_in x other \<Longrightarrow> ufIsStrict x"
+      by (metis a4 setrevForall_def uspecForall_def uspecIsStrict_def)
+
+    then have x_ufisstrict: "ufIsStrict x"
+      by (simp add: a11)
+
+    have bla: "\<And> xa. \<not> sbHdElemWell xa  \<Longrightarrow> ubclLen xa = 0"
+      apply (simp add: ubclLen_ubundle_def)
+      apply (simp add: sbHdElemWell_def)
+      by (metis strict_slen ublen_not_0 usclLen_stream_def)
+    have x_dom_ran: "ufDom\<cdot>x = In \<and> ufRan\<cdot>x = Out"
+      by (metis a1 a11 a2 ufclDom_ufun_def ufclRan_ufun_def uspec_allDom uspec_allRan)
+    have spfStep_g_strict_apply: "\<And> xa. \<not> sbHdElemWell xa \<Longrightarrow> ubclDom\<cdot>xa = In \<Longrightarrow> ?spfStep_g \<rightleftharpoons> xa = ubclLeast Out"
+      by (simp add: a0 spfStep_2_spfStep_inj spfStep_inj_def ufleast_apply)
+
+    have x_strict_apply: "\<And> xa. \<not> sbHdElemWell xa \<Longrightarrow> ubclDom\<cdot>xa = In \<Longrightarrow> x \<rightleftharpoons> xa = ubclLeast Out"
+      using bla ufIsStrict_def x_dom_ran x_ufisstrict by blast
+    have helper: "\<And>xa::'a stream\<^sup>\<Omega>. ubclDom\<cdot>xa = In \<Longrightarrow> sbHdElemWell xa 
+      \<Longrightarrow> the_g (Abs_sbElem (inv convDiscrUp (sbHdElem\<cdot>xa))) \<rightleftharpoons> sbRt\<cdot>xa = x \<rightleftharpoons> xa"
+    proof -
+      fix xa::"'a stream\<^sup>\<Omega>"
+      assume a22: "ubclDom\<cdot>xa = In" 
+      assume a23: "sbHdElemWell xa"
+      let ?da_hd = "(Abs_sbElem (inv convDiscrUp (sbHdElem\<cdot>xa)))"
+      have h1: "dom (sbHdElem\<cdot>xa) = In"
+        apply (simp add: sbhdelem_insert)
+        by (metis a22 ubclDom_ubundle_def)
+      then have h2: "dom (inv convDiscrUp (sbHdElem\<cdot>xa)) = In"
+        by (metis UNIV_I a23 convDiscrUp_dom convDiscrUp_inj inv_into_f_f sbHdElemWell_inv_ex)
+      have h3: "sbElemWell (inv convDiscrUp (sbHdElem\<cdot>xa))"
+        by (meson a23 sbHdElemWell_def sbHdElem_sbElemWell)
+      then have h4: "sbeDom (Abs_sbElem (inv convDiscrUp (sbHdElem\<cdot>xa))) = In"
+        apply (simp add: sbeDom_def)
+        apply (simp add: Abs_sbElem_inverse)
+        by (simp add: \<open>dom (inv convDiscrUp (sbHdElem\<cdot>(xa::'a stream\<^sup>\<Omega>))) = (In::channel set)\<close>)
+      have da_hd_sub: "sbe2SB ?da_hd = ubHd\<cdot>xa"
+      proof -
+        have h5: "\<And>c. c \<in> In \<Longrightarrow> (\<lambda>c. (c \<in> ubDom\<cdot>xa)\<leadsto>lshd\<cdot>(xa  .  c))\<rightharpoonup>c =
+          lshd\<cdot>(xa  .  c)"
+          by (metis (mono_tags, lifting) a22 option.sel ubclDom_ubundle_def)
+        have h6: "ubDom\<cdot>xa = In"
+          by (metis a22 ubclDom_ubundle_def)
+        have h7: "\<And> c. c \<in> In \<Longrightarrow> xa  .  c \<noteq> \<epsilon>"
+          by (metis (full_types) a23 h6 sbHdElemWell_def)
+        have h8: "\<And>c::channel. c \<in> In \<Longrightarrow> 
+          updis (inv Discr (inv Iup (lshd\<cdot>(xa  .  c)))) && \<epsilon> = stake (Suc (0::nat))\<cdot>(xa  .  c)"
+        proof -
+          fix c:: channel
+          assume a30: "c \<in> In"
+          obtain daEle rtSt where da_conc: "xa . c = \<up>daEle \<bullet> rtSt"
+            by (metis a30 h7 surj_scons)
+          show "updis (inv Discr (inv Iup (lshd\<cdot>(xa  .  c)))) && \<epsilon> = stake (Suc (0::nat))\<cdot>(xa  .  c)"
+            apply (simp add: da_conc)
+            by (metis (no_types, hide_lams) Abs_cfun_inverse2 cont_discrete_cpo discr.exhaust iup_inv_iup sup'_def surj_def surj_f_inv_f up_def)
+        qed
+        show ?thesis
+          apply (rule ub_eq)
+           apply (metis a22 h4 sbe2sb_dom ubclDom_ubundle_def ubhd_ubdom)
+          apply (simp add: h4)   
+          apply (simp add: sbe2SB_def)
+          apply (subst ubgetch_ubrep_eq)
+           apply (smt domIff id_apply sbe2SB.rep_eq ubWell_def ubrep_well)
+          apply (simp add: h4)
+          apply (simp add: h3 Abs_sbElem_inverse)
+          apply (simp add: ubHd_def ubTake_def)
+          apply (subst ubMapStream_ubGetCh)
+            apply (simp add: usclTake_well)
+           apply (metis a22 ubclDom_ubundle_def)
+          apply (subst convDiscrUp_inv_subst)
+            apply (metis a22 a23 h1 sbHdElemWell_def sbHdElem_channel ubclDom_ubundle_def)
+          using h1 apply auto[1]
+          apply (simp add: sbhdelem_insert)
+          apply (simp add: h6)
+          apply (simp add: sup'_def usclTake_stream_def)
+          by (simp add: h8)
+      qed
+      have h7: "xa = ubConc (ubHd\<cdot>xa)\<cdot>(sbRt\<cdot>xa)" (is "xa = ?R")
+      proof(rule ub_eq)
+        show f0: "ubDom\<cdot>xa = ubDom\<cdot>(?R)" by simp
+        fix x :: "'a\<^sup>\<Omega>"
+        fix c
+        assume a0: "c\<in>ubDom\<cdot>xa" 
+        show "xa  .  c = (ubConc (ubHd\<cdot>xa)\<cdot>(sbRt\<cdot>xa) ) .  c"
+          apply(subst ubConc_usclConc_eq)
+              using ubhd_ubdom a0 apply auto[1]
+               using sbrt_sbdom a0 apply auto[1]
+        proof -
+            have f1: "c\<in>ubDom\<cdot>(ubConc (ubHd\<cdot>xa)\<cdot>(sbRt\<cdot>xa))" 
+              using a0 f0 by blast
+            have f2: "c\<in>ubDom\<cdot>(ubHd\<cdot>xa)" 
+              by (simp add: a0)
+            have f3: "c\<in>ubDom\<cdot>(ubRt\<cdot>xa)"
+              by (simp add: a0)
+            show "xa  .  c = usclConc (ubHd\<cdot>xa  .  c)\<cdot>(sbRt\<cdot>xa  .  c)" 
+              apply (simp add: ubHd_def sbRt_def)
+              apply (simp add: ubTake_def sbDrop_def)
+            proof -
+              have f1: "\<And>c s n. \<not> usclOkay c (s::'a stream) \<or> usclOkay c (sdrop n\<cdot>s)"
+                by (metis usclDrop_stream_def usclDrop_well)
+              have f2: "\<And>c s n. \<not> usclOkay c (s::'a stream) \<or> usclOkay c (stake n\<cdot>s)"
+                by (metis usclTake_stream_def usclTake_well)
+              obtain cc :: "('a stream \<Rightarrow> 'a stream) \<Rightarrow> channel" and ss :: "('a stream \<Rightarrow> 'a stream) \<Rightarrow> 'a stream" where
+                f3: "\<And>c u f ca ua. (c \<notin> ubDom\<cdot>u \<or> usclOkay (cc f) (ss f) \<or> ubMapStream f u . c = f (u . c)) \<and> (\<not> usclOkay (cc f) (f (ss f)) \<or> ca \<notin> ubDom\<cdot>ua \<or> ubMapStream f ua . ca = f (ua . ca))"
+                by (metis ubMapStream_ubGetCh)
+              then have f4: "\<And>c u f. c \<notin> ubDom\<cdot>u \<or> \<not> usclOkay (cc f) (f (ss f)) \<or> Abs_ubundle (\<lambda>c. (c \<in> ubDom\<cdot>u)\<leadsto>f (u . c)) . c = f (u . c)"
+                by (simp add: ubMapStream_def)
+              have f5: "\<And>f. usclOkay (cc f) (ss f) \<or> Abs_ubundle (\<lambda>c. (c \<in> ubDom\<cdot>xa)\<leadsto>f (xa . c)) . c = f (xa . c)"
+                using f3 by (simp add: a0 ubMapStream_def)
+              then have f6: "\<And>n. Abs_ubundle (\<lambda>c. (c \<in> ubDom\<cdot>xa)\<leadsto>sdrop n\<cdot>(xa . c)) . c = sdrop n\<cdot>(xa . c)"
+                using f4 f1 a0 by blast
+              have "\<And>n. Abs_ubundle (\<lambda>c. (c \<in> ubDom\<cdot>xa)\<leadsto>stake n\<cdot>(xa . c)) . c = stake n\<cdot>(xa . c)"
+                using f5 f4 f2 a0 by blast
+              then show "xa . c = usclConc (ubMapStream (Rep_cfun (usclTake (Suc 0))) xa . c)\<cdot> (sbMapStream (Rep_cfun (sdrop (Suc 0))) xa . c)"
+                using f6 by (simp add: sbMapStream_def ubMapStream_def usclConc_stream_def usclTake_stream_def)
+            qed
+          qed
+        qed
+      show "the_g (Abs_sbElem (inv convDiscrUp (sbHdElem\<cdot>xa))) \<rightleftharpoons> sbRt\<cdot>xa = x \<rightleftharpoons> xa"
+        apply (simp add: the_g_def h4)
+        apply (simp add: da_hd_sub)
+        apply (subst spfConcIn_step)
+         apply (metis a22 sbrt_sbdom ubclDom_ubundle_def x_dom_ran)
+        apply (simp)
+        using h7 by auto
+    qed
+    have "?spfStep_g = x"
+      apply (rule ufun_eqI)
+       apply (simp_all add: a0)
+       apply (metis a1 a11 ufclDom_ufun_def uspec_allDom)
+      apply (case_tac "sbHdElemWell xa") defer
+       apply (simp add: spfStep_g_strict_apply x_strict_apply)
+      apply (subst spfstep_step)
+          apply (simp add: ubclDom_ubundle_def)
+         apply (simp_all add: a0)
+       apply (metis spsStep_P_def the_g_spsStep_P)
+      by (simp add: helper)
+
+    then show "uspec_in x (spsStep_m In Out h)"
+      using the_g_spsStep by auto
+  qed
+
+  show "(spsStep_m In Out h \<sqsubseteq> other)"
+    by (metis R_sub_L a0 a1 a2 revBelowNeqSubset spstep_m_dom spstep_m_ran uspec_belowI)
 qed
 
 
@@ -595,7 +808,7 @@ lemma nda_h_final_back_eq_h: "(\<forall> sbe. sbeDom sbe = In \<longrightarrow>
  (uspecIsStrict other \<and> h sbe \<in> USPEC In Out \<and> spsConcIn (sbe2SB sbe) other = h sbe))
             \<longleftrightarrow> 
       (spsStep_m In Out h = other)"
-  by (meson nda_h_final_back_h_1 nda_h_final_back_h_2)
+  sorry
 
 
 (* This is the version used for "ndaTotal" *)
@@ -617,13 +830,15 @@ shows "nda_h nda \<sqsubseteq> other"
   apply (simp add: ndaHelper2_def)
 proof -
   fix x::'a
-  have "spsStep_m (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) (\<lambda>e::'b sbElem. ndaConcOutFlatten (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) ((ndaTransition\<cdot>nda) (x, e)) other) = other x"
+  have "spsStep_m (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) (\<lambda>e::'b sbElem. ndaConcOutFlatten (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) ((ndaTransition\<cdot>nda) (x, e)) other) 
+        \<sqsubseteq> other x"
     apply (rule nda_h_final_back_h_1)
-    apply rule +
-     apply (simp add: assms(2))
+    apply (simp_all add: assms)
+    apply rule 
+     apply (metis (mono_tags, hide_lams) ndaHelper2_def nda_h_final_back_h_2 uspec_ran)
     apply rule
-     apply (metis (mono_tags, lifting) USPEC_def mem_Collect_eq ndaConcOutFlatten_def uspecflatten_dom uspecflatten_ran)
-    by (simp add: assms(1))
+    unfolding ndaConcOutFlatten_def
+    sorry
   then show "spsStep_m (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) (\<lambda>e::'b sbElem. ndaConcOutFlatten (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) ((ndaTransition\<cdot>nda) (x, e)) other) 
           \<sqsubseteq> other x"
     by simp

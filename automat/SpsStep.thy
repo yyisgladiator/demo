@@ -78,6 +78,51 @@ lemma spsstep_h_ele4: assumes "spsStep_h\<cdot>H \<noteq> Rev {}" and "uspec_in 
   shows  "\<exists> h \<in> inv Rev (spsStep_h\<cdot>H). h sbe = f"
   by (metis (no_types, lifting) assms SetRev.setify_empty SetRev.setify_final spsStep_h_insert)
 
+lemma spsstep_h_inI: "(\<forall> sbe. uspec_in (g sbe) (H sbe)) \<Longrightarrow> g \<in> inv Rev (spsStep_h\<cdot>H)"
+  by (simp add: setify_insert spsStep_h_insert)
+
+lemma spstep_h_P_obtain_h: assumes "spsStep_h\<cdot>H \<noteq> Rev {}" and "\<And> sbe. P sbe \<Longrightarrow> uspec_in f (H sbe)"
+  shows "\<exists> g \<in> inv Rev (spsStep_h\<cdot>H). \<forall> sbe. P sbe \<longrightarrow> g sbe = f"
+proof  (rule ccontr)
+  assume a1: "\<not>(\<exists> g \<in> inv Rev (spsStep_h\<cdot>H). \<forall> sbe. P sbe \<longrightarrow> g sbe = f)"
+  obtain g where g_def: "g \<equiv> (\<lambda> sbe. if P sbe then f else (SOME f. uspec_in f (H sbe)))"
+    by simp
+  have "\<forall> sbe. uspec_in (g sbe) (H sbe)"
+    apply rule
+    apply (case_tac "P sbe")
+     apply (simp_all add: g_def)
+     apply (simp add: assms(2))
+    using assms(1) some_in_eq spsstep_h_ele2 by fastforce
+  then have "g \<in> inv Rev (spsStep_h\<cdot>H)"
+    by (simp add: spsstep_h_inI)
+  then show False
+    using a1 g_def by auto
+qed
+
+lemma spstep_h_P_obtain_h2: assumes "spsStep_h\<cdot>H \<noteq> Rev {}" and "\<And> sbe. P sbe \<Longrightarrow> uspec_in f (H sbe)"
+  shows "\<exists> g \<in> inv Rev (spsStep_h\<cdot>H). \<forall> sbe. (P sbe \<longrightarrow> g sbe = f) \<and> 
+        (\<not> (P sbe) \<longrightarrow> uspec_in (g sbe) (H sbe))"
+proof  (rule ccontr)
+  assume a1: "\<not>(\<exists> g \<in> inv Rev (spsStep_h\<cdot>H). \<forall> sbe. (P sbe \<longrightarrow> g sbe = f) \<and> 
+        (\<not> (P sbe) \<longrightarrow> uspec_in (g sbe) (H sbe)))"
+  obtain g where g_def: "g \<equiv> (\<lambda> sbe. if P sbe then f else (SOME f. uspec_in f (H sbe)))"
+    by simp
+  have "\<forall> sbe. uspec_in (g sbe) (H sbe)"
+    apply rule
+    apply (case_tac "P sbe")
+     apply (simp_all add: g_def)
+     apply (simp add: assms(2))
+    using assms(1) some_in_eq spsstep_h_ele2 by fastforce
+  then have "g \<in> inv Rev (spsStep_h\<cdot>H)"
+    by (simp add: spsstep_h_inI)
+  then show False
+    using a1 g_def spsstep_h_ele by fastforce
+qed
+
+lemma spstep_h_P_obtain: assumes "spsStep_h\<cdot>H \<noteq> Rev {}" and "\<And> sbe. P sbe \<Longrightarrow> uspec_in f (H sbe)"
+  obtains g where "g \<in> inv Rev (spsStep_h\<cdot>H)" and "\<forall> sbe. (P sbe \<longrightarrow> g sbe = f) \<and> 
+        (\<not> (P sbe) \<longrightarrow> uspec_in (g sbe) (H sbe))"
+  by (metis assms(1) assms(2) spsstep_h_ele spstep_h_P_obtain_h)
     
 (*NewSpsStep Lemma*)    
     
