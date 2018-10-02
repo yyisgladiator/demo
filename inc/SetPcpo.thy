@@ -474,4 +474,7 @@ lemma setflatten_mono2: assumes "\<And>b. b\<in>S1 \<Longrightarrow>( \<exists>c
   shows "setflat\<cdot>S1 \<subseteq> setflat\<cdot> S2"
   by (smt Abs_cfun_inverse2 setflat_def setflat_cont assms mem_Collect_eq subsetCE subsetI)
 
+lemma setfilter_easy: "Set.filter (\<lambda>f. True) X = X"
+  using member_filter by auto
+
 end
