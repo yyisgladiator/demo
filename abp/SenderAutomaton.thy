@@ -3,7 +3,7 @@
  * This file was generated from Sender.maa and will be overridden when changed. To change
  * permanently, consider changing the model itself.
  *
- * isartransformer 1.0.0
+ * Generated on Oct 2, 2018 7:58:20 PM by isartransformer 1.0.0
  *)
 theory SenderAutomaton
   imports bundle.tsynBundle automat.dAutomaton
@@ -18,7 +18,7 @@ fun prepend :: "'a::type list \<Rightarrow> 'a \<Rightarrow> 'a list" where
 
 section \<open>Datatype definition\<close>
 
-datatype ('e::countable) senderMessage = SenderBool "bool" | SenderE "'e" | SenderPair_E_Bool "('e\<times>bool)"
+datatype ('e::countable) senderMessage = DoNotUse_4764ad_SenderBool "bool" | DoNotUse_4764ad_SenderE "'e" | DoNotUse_4764ad_SenderPair_E_Bool "('e\<times>bool)"
 
 instance senderMessage :: (countable) countable
   apply(intro_classes)
@@ -28,9 +28,9 @@ instantiation senderMessage :: (countable) message
 begin
   fun ctype_senderMessage :: "channel \<Rightarrow> ('e::countable) senderMessage set" where
   "ctype_senderMessage c = (
-    if c = \<C> ''as'' then range SenderBool else
-    if c = \<C> ''i'' then range SenderE else
-    if c = \<C> ''ds'' then range SenderPair_E_Bool else
+    if c = \<C> ''DoNotUse_4764ad_as'' then range DoNotUse_4764ad_SenderBool else
+    if c = \<C> ''DoNotUse_4764ad_i'' then range DoNotUse_4764ad_SenderE else
+    if c = \<C> ''DoNotUse_4764ad_ds'' then range DoNotUse_4764ad_SenderPair_E_Bool else
     undefined)"
   instance
     by(intro_classes)
@@ -40,17 +40,17 @@ end
 section \<open>Domain and range\<close>
 
 definition senderDom :: "channel set" where
-"senderDom = {\<C> ''as'', \<C> ''i''}"
+"senderDom = {\<C> ''DoNotUse_4764ad_as'', \<C> ''DoNotUse_4764ad_i''}"
 
 definition senderRan :: "channel set" where
-"senderRan = {\<C> ''ds''}"
+"senderRan = {\<C> ''DoNotUse_4764ad_ds''}"
 
 
 section \<open>Helpers to create a bundle from a single raw element\<close>
 
 (* Do not use this, use senderElemIn_as_i instead *)
 lift_definition senderElem_raw_as :: "bool \<Rightarrow> ('e::countable) senderMessage tsyn sbElem" is
-"\<lambda>x. [\<C> ''as'' \<mapsto> Msg (SenderBool x)]"
+"\<lambda>x. [\<C> ''DoNotUse_4764ad_as'' \<mapsto> Msg (DoNotUse_4764ad_SenderBool x)]"
   unfolding sbElemWell_def
   unfolding usclOkay_stream_def
   unfolding ctype_tsyn_def
@@ -58,7 +58,7 @@ lift_definition senderElem_raw_as :: "bool \<Rightarrow> ('e::countable) senderM
 
 (* Do not use this, use senderElemIn_as_i instead *)
 lift_definition senderElem_raw_i :: "'e \<Rightarrow> ('e::countable) senderMessage tsyn sbElem" is
-"\<lambda>x. [\<C> ''i'' \<mapsto> Msg (SenderE x)]"
+"\<lambda>x. [\<C> ''DoNotUse_4764ad_i'' \<mapsto> Msg (DoNotUse_4764ad_SenderE x)]"
   unfolding sbElemWell_def
   unfolding usclOkay_stream_def
   unfolding ctype_tsyn_def
@@ -66,7 +66,7 @@ lift_definition senderElem_raw_i :: "'e \<Rightarrow> ('e::countable) senderMess
 
 (* Do not use this, use senderElemOut_ds instead *)
 lift_definition senderElem_raw_ds :: "('e\<times>bool) \<Rightarrow> ('e::countable) senderMessage tsyn sbElem" is
-"\<lambda>x. [\<C> ''ds'' \<mapsto> Msg (SenderPair_E_Bool x)]"
+"\<lambda>x. [\<C> ''DoNotUse_4764ad_ds'' \<mapsto> Msg (DoNotUse_4764ad_SenderPair_E_Bool x)]"
   unfolding sbElemWell_def
   unfolding usclOkay_stream_def
   unfolding ctype_tsyn_def
@@ -78,7 +78,7 @@ section \<open>Helpers to create a bundle from a single tsyn element\<close>
 (* Do not use this, use senderElemIn_as_i instead *)
 fun senderElem_as :: "bool tsyn \<Rightarrow> ('e::countable) senderMessage tsyn sbElem" where
 "senderElem_as (Msg port_as) = senderElem_raw_as port_as" |
-"senderElem_as null = sbeNull {\<C> ''as''}"
+"senderElem_as null = sbeNull {\<C> ''DoNotUse_4764ad_as''}"
 
 declare senderElem_as.simps[simp del]
 
@@ -89,7 +89,7 @@ definition sender_as :: "bool tsyn \<Rightarrow> ('e::countable) senderMessage t
 (* Do not use this, use senderElemIn_as_i instead *)
 fun senderElem_i :: "'e tsyn \<Rightarrow> ('e::countable) senderMessage tsyn sbElem" where
 "senderElem_i (Msg port_i) = senderElem_raw_i port_i" |
-"senderElem_i null = sbeNull {\<C> ''i''}"
+"senderElem_i null = sbeNull {\<C> ''DoNotUse_4764ad_i''}"
 
 declare senderElem_i.simps[simp del]
 
@@ -100,7 +100,7 @@ definition sender_i :: "'e tsyn \<Rightarrow> ('e::countable) senderMessage tsyn
 (* Do not use this, use senderElemOut_ds instead *)
 fun senderElem_ds :: "('e\<times>bool) tsyn \<Rightarrow> ('e::countable) senderMessage tsyn sbElem" where
 "senderElem_ds (Msg port_ds) = senderElem_raw_ds port_ds" |
-"senderElem_ds null = sbeNull {\<C> ''ds''}"
+"senderElem_ds null = sbeNull {\<C> ''DoNotUse_4764ad_ds''}"
 
 declare senderElem_ds.simps[simp del]
 
@@ -130,21 +130,21 @@ section \<open>Helpers to create a bundle from a tsyn list of elements\<close>
 (* Do not use this, use senderIn_list_as_i instead *)
 fun sender_list_as :: "(bool tsyn) list \<Rightarrow> ('e::countable) senderMessage tsyn SB" where
 "sender_list_as (x#xs) = ubConcEq (sender_as x)\<cdot>(sender_list_as xs)" |
-"sender_list_as []     = ubLeast {\<C> ''as''}"
+"sender_list_as []     = ubLeast {\<C> ''DoNotUse_4764ad_as''}"
 
 declare sender_list_as.simps[simp del]
 
 (* Do not use this, use senderIn_list_as_i instead *)
 fun sender_list_i :: "('e tsyn) list \<Rightarrow> ('e::countable) senderMessage tsyn SB" where
 "sender_list_i (x#xs) = ubConcEq (sender_i x)\<cdot>(sender_list_i xs)" |
-"sender_list_i []     = ubLeast {\<C> ''i''}"
+"sender_list_i []     = ubLeast {\<C> ''DoNotUse_4764ad_i''}"
 
 declare sender_list_i.simps[simp del]
 
 (* Do not use this, use senderOut_list_ds instead *)
 fun sender_list_ds :: "(('e\<times>bool) tsyn) list \<Rightarrow> ('e::countable) senderMessage tsyn SB" where
 "sender_list_ds (x#xs) = ubConcEq (sender_ds x)\<cdot>(sender_list_ds xs)" |
-"sender_list_ds []     = ubLeast {\<C> ''ds''}"
+"sender_list_ds []     = ubLeast {\<C> ''DoNotUse_4764ad_ds''}"
 
 declare sender_list_ds.simps[simp del]
 
@@ -161,44 +161,44 @@ fun senderOut_list_ds :: "(('e\<times>bool) tsyn) list \<Rightarrow> ('e::counta
 
 section \<open>Helpers to create a bundle from a tsyn stream of elements\<close>
 
-lift_definition sender_stream_as_h :: "bool tsyn stream \<Rightarrow> ('e::countable) senderMessage tsyn SB" is
-"\<lambda> s. [(\<C> ''as'') \<mapsto> (tsynMap (SenderBool)\<cdot>s)]"
+lift_definition DoNotUse_4764ad_sender_stream_as_h :: "bool tsyn stream \<Rightarrow> ('e::countable) senderMessage tsyn SB" is
+"\<lambda> s. [(\<C> ''DoNotUse_4764ad_as'') \<mapsto> (tsynMap (DoNotUse_4764ad_SenderBool)\<cdot>s)]"
   unfolding ubWell_def usclOkay_stream_def ctype_tsyn_def
   by auto
 
 (* Do not use this, use senderIn_stream_as_i instead *)
 lift_definition sender_stream_as :: "(bool) tsyn stream \<rightarrow> ('e::countable) senderMessage tsyn SB" is
-"sender_stream_as_h"
-  apply(auto simp add: cfun_def sender_stream_as_h_def map_fun_def comp_def)
+"DoNotUse_4764ad_sender_stream_as_h"
+  apply(auto simp add: cfun_def DoNotUse_4764ad_sender_stream_as_h_def map_fun_def comp_def)
   apply(rule cont_Abs_UB)
   apply(simp add: option_one_cont)
-  by (metis sender_stream_as_h.rep_eq ubrep_well)
+  by (metis DoNotUse_4764ad_sender_stream_as_h.rep_eq ubrep_well)
 
-lift_definition sender_stream_i_h :: "'e tsyn stream \<Rightarrow> ('e::countable) senderMessage tsyn SB" is
-"\<lambda> s. [(\<C> ''i'') \<mapsto> (tsynMap (SenderE)\<cdot>s)]"
+lift_definition DoNotUse_4764ad_sender_stream_i_h :: "'e tsyn stream \<Rightarrow> ('e::countable) senderMessage tsyn SB" is
+"\<lambda> s. [(\<C> ''DoNotUse_4764ad_i'') \<mapsto> (tsynMap (DoNotUse_4764ad_SenderE)\<cdot>s)]"
   unfolding ubWell_def usclOkay_stream_def ctype_tsyn_def
   by auto
 
 (* Do not use this, use senderIn_stream_as_i instead *)
 lift_definition sender_stream_i :: "('e) tsyn stream \<rightarrow> ('e::countable) senderMessage tsyn SB" is
-"sender_stream_i_h"
-  apply(auto simp add: cfun_def sender_stream_i_h_def map_fun_def comp_def)
+"DoNotUse_4764ad_sender_stream_i_h"
+  apply(auto simp add: cfun_def DoNotUse_4764ad_sender_stream_i_h_def map_fun_def comp_def)
   apply(rule cont_Abs_UB)
   apply(simp add: option_one_cont)
-  by (metis sender_stream_i_h.rep_eq ubrep_well)
+  by (metis DoNotUse_4764ad_sender_stream_i_h.rep_eq ubrep_well)
 
-lift_definition sender_stream_ds_h :: "('e\<times>bool) tsyn stream \<Rightarrow> ('e::countable) senderMessage tsyn SB" is
-"\<lambda> s. [(\<C> ''ds'') \<mapsto> (tsynMap (SenderPair_E_Bool)\<cdot>s)]"
+lift_definition DoNotUse_4764ad_sender_stream_ds_h :: "('e\<times>bool) tsyn stream \<Rightarrow> ('e::countable) senderMessage tsyn SB" is
+"\<lambda> s. [(\<C> ''DoNotUse_4764ad_ds'') \<mapsto> (tsynMap (DoNotUse_4764ad_SenderPair_E_Bool)\<cdot>s)]"
   unfolding ubWell_def usclOkay_stream_def ctype_tsyn_def
   by auto
 
 (* Do not use this, use senderOut_stream_ds instead *)
 lift_definition sender_stream_ds :: "(('e\<times>bool)) tsyn stream \<rightarrow> ('e::countable) senderMessage tsyn SB" is
-"sender_stream_ds_h"
-  apply(auto simp add: cfun_def sender_stream_ds_h_def map_fun_def comp_def)
+"DoNotUse_4764ad_sender_stream_ds_h"
+  apply(auto simp add: cfun_def DoNotUse_4764ad_sender_stream_ds_h_def map_fun_def comp_def)
   apply(rule cont_Abs_UB)
   apply(simp add: option_one_cont)
-  by (metis sender_stream_ds_h.rep_eq ubrep_well)
+  by (metis DoNotUse_4764ad_sender_stream_ds_h.rep_eq ubrep_well)
 
 (* Create one SB for all input channels *)
 definition senderIn_stream_as_i :: "bool tsyn stream \<rightarrow> 'e tsyn stream \<rightarrow> ('e::countable) senderMessage tsyn SB" where
@@ -212,24 +212,24 @@ definition senderOut_stream_ds :: "('e\<times>bool) tsyn stream \<rightarrow> ('
 section \<open>Helpers to get tsyn elements and streams from sbElems and SBs\<close>
 
 definition senderElem_get_as :: "('e::countable) senderMessage tsyn sbElem \<Rightarrow> (bool) tsyn" where
-"senderElem_get_as sbe = tsynApplyElem (inv SenderBool) ((Rep_sbElem sbe) \<rightharpoonup> (\<C> ''as''))"
+"senderElem_get_as sbe = tsynApplyElem (inv DoNotUse_4764ad_SenderBool) ((Rep_sbElem sbe) \<rightharpoonup> (\<C> ''DoNotUse_4764ad_as''))"
 
 lift_definition sender_get_stream_as :: "('e::countable) senderMessage tsyn SB \<rightarrow> bool tsyn stream" is
-"\<lambda>sb. tsynMap (inv SenderBool)\<cdot>(sb . (\<C> ''as''))"
+"\<lambda>sb. tsynMap (inv DoNotUse_4764ad_SenderBool)\<cdot>(sb . (\<C> ''DoNotUse_4764ad_as''))"
   by(simp add: cfun_def)
 
 definition senderElem_get_i :: "('e::countable) senderMessage tsyn sbElem \<Rightarrow> ('e) tsyn" where
-"senderElem_get_i sbe = tsynApplyElem (inv SenderE) ((Rep_sbElem sbe) \<rightharpoonup> (\<C> ''i''))"
+"senderElem_get_i sbe = tsynApplyElem (inv DoNotUse_4764ad_SenderE) ((Rep_sbElem sbe) \<rightharpoonup> (\<C> ''DoNotUse_4764ad_i''))"
 
 lift_definition sender_get_stream_i :: "('e::countable) senderMessage tsyn SB \<rightarrow> 'e tsyn stream" is
-"\<lambda>sb. tsynMap (inv SenderE)\<cdot>(sb . (\<C> ''i''))"
+"\<lambda>sb. tsynMap (inv DoNotUse_4764ad_SenderE)\<cdot>(sb . (\<C> ''DoNotUse_4764ad_i''))"
   by(simp add: cfun_def)
 
 definition senderElem_get_ds :: "('e::countable) senderMessage tsyn sbElem \<Rightarrow> (('e\<times>bool)) tsyn" where
-"senderElem_get_ds sbe = tsynApplyElem (inv SenderPair_E_Bool) ((Rep_sbElem sbe) \<rightharpoonup> (\<C> ''ds''))"
+"senderElem_get_ds sbe = tsynApplyElem (inv DoNotUse_4764ad_SenderPair_E_Bool) ((Rep_sbElem sbe) \<rightharpoonup> (\<C> ''DoNotUse_4764ad_ds''))"
 
 lift_definition sender_get_stream_ds :: "('e::countable) senderMessage tsyn SB \<rightarrow> ('e\<times>bool) tsyn stream" is
-"\<lambda>sb. tsynMap (inv SenderPair_E_Bool)\<cdot>(sb . (\<C> ''ds''))"
+"\<lambda>sb. tsynMap (inv DoNotUse_4764ad_SenderPair_E_Bool)\<cdot>(sb . (\<C> ''DoNotUse_4764ad_ds''))"
   by(simp add: cfun_def)
 
 
@@ -361,17 +361,17 @@ lemma senderautomaton_ran[simp]: "daRan senderAutomaton = senderRan"
 
 section \<open>Lemmas for single tsyn setter\<close>
 
-lemma senderelem_as_dom[simp]: "sbeDom (senderElem_as x) = {\<C> ''as''}"
+lemma senderelem_as_dom[simp]: "sbeDom (senderElem_as x) = {\<C> ''DoNotUse_4764ad_as''}"
   apply(cases x)
   apply(simp add: senderElem_as.simps sbeDom_def senderElem_raw_as.rep_eq)
   by(simp add: senderElem_as.simps)
 
-lemma senderelem_i_dom[simp]: "sbeDom (senderElem_i x) = {\<C> ''i''}"
+lemma senderelem_i_dom[simp]: "sbeDom (senderElem_i x) = {\<C> ''DoNotUse_4764ad_i''}"
   apply(cases x)
   apply(simp add: senderElem_i.simps sbeDom_def senderElem_raw_i.rep_eq)
   by(simp add: senderElem_i.simps)
 
-lemma senderelem_ds_dom[simp]: "sbeDom (senderElem_ds x) = {\<C> ''ds''}"
+lemma senderelem_ds_dom[simp]: "sbeDom (senderElem_ds x) = {\<C> ''DoNotUse_4764ad_ds''}"
   apply(cases x)
   apply(simp add: senderElem_ds.simps sbeDom_def senderElem_raw_ds.rep_eq)
   by(simp add: senderElem_ds.simps)
@@ -391,14 +391,14 @@ lemma senderout_ds_dom[simp]: "ubDom\<cdot>(senderOut_ds port_ds) = senderRan"
 
 section \<open>Stream-setter\<close>
 
-lemma sender_stream_as_dom[simp]: "ubDom\<cdot>(sender_stream_as\<cdot>x) = {\<C> ''as''}"
-  by(simp add: sender_stream_as.rep_eq ubdom_insert sender_stream_as_h.rep_eq)
+lemma sender_stream_as_dom[simp]: "ubDom\<cdot>(sender_stream_as\<cdot>x) = {\<C> ''DoNotUse_4764ad_as''}"
+  by(simp add: sender_stream_as.rep_eq ubdom_insert DoNotUse_4764ad_sender_stream_as_h.rep_eq)
 
-lemma sender_stream_i_dom[simp]: "ubDom\<cdot>(sender_stream_i\<cdot>x) = {\<C> ''i''}"
-  by(simp add: sender_stream_i.rep_eq ubdom_insert sender_stream_i_h.rep_eq)
+lemma sender_stream_i_dom[simp]: "ubDom\<cdot>(sender_stream_i\<cdot>x) = {\<C> ''DoNotUse_4764ad_i''}"
+  by(simp add: sender_stream_i.rep_eq ubdom_insert DoNotUse_4764ad_sender_stream_i_h.rep_eq)
 
-lemma sender_stream_ds_dom[simp]: "ubDom\<cdot>(sender_stream_ds\<cdot>x) = {\<C> ''ds''}"
-  by(simp add: sender_stream_ds.rep_eq ubdom_insert sender_stream_ds_h.rep_eq)
+lemma sender_stream_ds_dom[simp]: "ubDom\<cdot>(sender_stream_ds\<cdot>x) = {\<C> ''DoNotUse_4764ad_ds''}"
+  by(simp add: sender_stream_ds.rep_eq ubdom_insert DoNotUse_4764ad_sender_stream_ds_h.rep_eq)
 
 lemma senderin_stream_as_i_dom[simp]: "ubDom\<cdot>(senderIn_stream_as_i\<cdot>port_as\<cdot>port_i) = senderDom"
   apply(simp add: senderIn_stream_as_i_def ubclUnion_ubundle_def)
@@ -442,17 +442,17 @@ subsection \<open>Identity lemmas for single SBs from streams\<close>
 
 lemma sender_stream_as_id[simp]: "sender_get_stream_as\<cdot>(sender_stream_as\<cdot>x) = x"
   apply(simp add: sender_get_stream_as.rep_eq sender_stream_as.rep_eq)
-  apply(simp add: ubGetCh_def sender_stream_as_h.rep_eq)
+  apply(simp add: ubGetCh_def DoNotUse_4764ad_sender_stream_as_h.rep_eq)
   by (simp add: inj_def)
 
 lemma sender_stream_i_id[simp]: "sender_get_stream_i\<cdot>(sender_stream_i\<cdot>x) = x"
   apply(simp add: sender_get_stream_i.rep_eq sender_stream_i.rep_eq)
-  apply(simp add: ubGetCh_def sender_stream_i_h.rep_eq)
+  apply(simp add: ubGetCh_def DoNotUse_4764ad_sender_stream_i_h.rep_eq)
   by (simp add: inj_def)
 
 lemma sender_stream_ds_id[simp]: "sender_get_stream_ds\<cdot>(sender_stream_ds\<cdot>x) = x"
   apply(simp add: sender_get_stream_ds.rep_eq sender_stream_ds.rep_eq)
-  apply(simp add: ubGetCh_def sender_stream_ds_h.rep_eq)
+  apply(simp add: ubGetCh_def DoNotUse_4764ad_sender_stream_ds_h.rep_eq)
   by (simp add: inj_def)
 
 
