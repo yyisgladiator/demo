@@ -3,13 +3,35 @@
  * This file was generated from Medium.maa and will be overridden when changed. To change
  * permanently, consider changing the model itself.
  *
- * Generated on Oct 3, 2018 1:00:26 AM by isartransformer 1.0.0
+ * Generated on Oct 3, 2018 1:36:23 AM by isartransformer 1.0.0
  *)
 theory MediumAutomaton
   imports bundle.tsynBundle automat.ndAutomaton
 
 begin
 
+
+(* TODO Move to tsynStream and find a name for it, the proposed "tsynmap_id" already exists *)
+lemma tsynmap_id_xx[simp]: "tsynDom\<cdot>tsyn \<subseteq> range F \<Longrightarrow> tsynMap F\<cdot>(tsynMap (inv F)\<cdot>tsyn) = tsyn"
+  apply(induction tsyn rule: ind)
+    apply simp_all
+  apply(rename_tac x xs)
+  apply(case_tac x)
+   apply(auto simp add: tsynmap_sconc_msg tsynmap_sconc_null)
+  by(auto simp add: tsyndom_sconc_msg tsyndom_sconc_null f_inv_into_f)
+
+(* TODO: Move to tsynBundle *)
+lemma tsynbundle_ctype: fixes ub::"'m::message tsyn SB"
+  shows "c\<in>ubDom\<cdot>ub \<Longrightarrow> tsynDom\<cdot>(ub . c) \<subseteq> (ctype c)"
+  apply(simp add: tsyndom_insert)
+  using usclOkay_stream_def ctype_tsyn_def
+  by (smt ctype_tsyn_iff mem_Collect_eq subsetCE subsetI ubdom_channel_usokay ubgetch_insert)
+
+(* TODO: Move to UBundle *)
+lemma ub_id_single: "ubDom\<cdot>ub = {c} \<Longrightarrow> Abs_ubundle [c \<mapsto> ub  .  c] = ub"
+  apply(rule ub_eq)
+  apply simp
+  by (simp add: ubWell_single_channel ubdom_ubrep_eq ubgetch_insert)+
 
 (* Helper for easier generation *)
 fun prepend :: "'a::type list \<Rightarrow> 'a \<Rightarrow> 'a list" where
@@ -20,7 +42,7 @@ section \<open>Datatype\<close>
 
 subsection \<open>Definition\<close>
 
-datatype ('e::countable) mediumMessage = DoNotUse_970810_MediumE "'e"
+datatype ('e::countable) mediumMessage = DoNotUse_ffb161_MediumE "'e"
 
 instance mediumMessage :: (countable) countable
   apply(intro_classes)
@@ -30,8 +52,8 @@ instantiation mediumMessage :: (countable) message
 begin
   fun ctype_mediumMessage :: "channel \<Rightarrow> ('e::countable) mediumMessage set" where
   "ctype_mediumMessage c = (
-    if c = \<C> ''DoNotUse_970810_ar'' then range DoNotUse_970810_MediumE else
-    if c = \<C> ''DoNotUse_970810_as'' then range DoNotUse_970810_MediumE else
+    if c = \<C> ''DoNotUse_ffb161_ar'' then range DoNotUse_ffb161_MediumE else
+    if c = \<C> ''DoNotUse_ffb161_as'' then range DoNotUse_ffb161_MediumE else
     undefined)"
   instance
     by(intro_classes)
@@ -41,10 +63,10 @@ end
 subsection \<open>Domain and Range\<close>
 
 definition mediumDom :: "channel set" where
-"mediumDom = {\<C> ''DoNotUse_970810_ar''}"
+"mediumDom = {\<C> ''DoNotUse_ffb161_ar''}"
 
 definition mediumRan :: "channel set" where
-"mediumRan = {\<C> ''DoNotUse_970810_as''}"
+"mediumRan = {\<C> ''DoNotUse_ffb161_as''}"
 
 
 section \<open>Setter\<close>
@@ -53,13 +75,13 @@ subsection \<open>type to sbElem\<close>
 
 (* Do not use this, use mediumElemIn_ar instead *)
 lift_definition mediumElem_raw_ar :: "'e \<Rightarrow> ('e::countable) mediumMessage tsyn sbElem" is
-"\<lambda>x. [\<C> ''DoNotUse_970810_ar'' \<mapsto> Msg (DoNotUse_970810_MediumE x)]"
+"\<lambda>x. [\<C> ''DoNotUse_ffb161_ar'' \<mapsto> Msg (DoNotUse_ffb161_MediumE x)]"
   unfolding sbElemWell_def usclOkay_stream_def ctype_tsyn_def
   by simp
 
 (* Do not use this, use mediumElemOut_as instead *)
 lift_definition mediumElem_raw_as :: "'e \<Rightarrow> ('e::countable) mediumMessage tsyn sbElem" is
-"\<lambda>x. [\<C> ''DoNotUse_970810_as'' \<mapsto> Msg (DoNotUse_970810_MediumE x)]"
+"\<lambda>x. [\<C> ''DoNotUse_ffb161_as'' \<mapsto> Msg (DoNotUse_ffb161_MediumE x)]"
   unfolding sbElemWell_def usclOkay_stream_def ctype_tsyn_def
   by simp
 
@@ -71,12 +93,12 @@ subsubsection \<open>Intern\<close>
 (* Do not use this, use mediumElemIn_ar instead *)
 fun mediumElem_ar :: "'e tsyn \<Rightarrow> ('e::countable) mediumMessage tsyn sbElem" where
 "mediumElem_ar (Msg port_ar) = mediumElem_raw_ar port_ar" |
-"mediumElem_ar null = sbeNull {\<C> ''DoNotUse_970810_ar''}"
+"mediumElem_ar null = sbeNull {\<C> ''DoNotUse_ffb161_ar''}"
 
 (* Do not use this, use mediumElemOut_as instead *)
 fun mediumElem_as :: "'e tsyn \<Rightarrow> ('e::countable) mediumMessage tsyn sbElem" where
 "mediumElem_as (Msg port_as) = mediumElem_raw_as port_as" |
-"mediumElem_as null = sbeNull {\<C> ''DoNotUse_970810_as''}"
+"mediumElem_as null = sbeNull {\<C> ''DoNotUse_ffb161_as''}"
 
 declare mediumElem_ar.simps[simp del]
 
@@ -117,14 +139,14 @@ subsubsection \<open>Intern\<close>
 (* Do not use this, use mediumIn_list_ar instead *)
 fun medium_list_ar :: "('e tsyn) list \<Rightarrow> ('e::countable) mediumMessage tsyn SB" where
 "medium_list_ar (x#xs) = ubConcEq (medium_ar x)\<cdot>(medium_list_ar xs)" |
-"medium_list_ar []     = ubLeast {\<C> ''DoNotUse_970810_ar''}"
+"medium_list_ar []     = ubLeast {\<C> ''DoNotUse_ffb161_ar''}"
 
 declare medium_list_ar.simps[simp del]
 
 (* Do not use this, use mediumOut_list_as instead *)
 fun medium_list_as :: "('e tsyn) list \<Rightarrow> ('e::countable) mediumMessage tsyn SB" where
 "medium_list_as (x#xs) = ubConcEq (medium_as x)\<cdot>(medium_list_as xs)" |
-"medium_list_as []     = ubLeast {\<C> ''DoNotUse_970810_as''}"
+"medium_list_as []     = ubLeast {\<C> ''DoNotUse_ffb161_as''}"
 
 declare medium_list_as.simps[simp del]
 
@@ -146,31 +168,31 @@ subsection \<open>stream to SB\<close>
 
 subsubsection \<open>Intern\<close>
 
-lift_definition DoNotUse_970810_medium_stream_ar_h :: "'e tsyn stream \<Rightarrow> ('e::countable) mediumMessage tsyn SB" is
-"\<lambda> s. [(\<C> ''DoNotUse_970810_ar'') \<mapsto> (tsynMap (DoNotUse_970810_MediumE)\<cdot>s)]"
+lift_definition DoNotUse_ffb161_medium_stream_ar_h :: "'e tsyn stream \<Rightarrow> ('e::countable) mediumMessage tsyn SB" is
+"\<lambda> s. [(\<C> ''DoNotUse_ffb161_ar'') \<mapsto> (tsynMap (DoNotUse_ffb161_MediumE)\<cdot>s)]"
   unfolding ubWell_def usclOkay_stream_def ctype_tsyn_def
   by auto
 
 (* Do not use this, use mediumIn_stream_ar instead *)
 lift_definition medium_stream_ar :: "('e) tsyn stream \<rightarrow> ('e::countable) mediumMessage tsyn SB" is
-"DoNotUse_970810_medium_stream_ar_h"
-  apply(auto simp add: cfun_def DoNotUse_970810_medium_stream_ar_h_def map_fun_def comp_def)
+"DoNotUse_ffb161_medium_stream_ar_h"
+  apply(auto simp add: cfun_def DoNotUse_ffb161_medium_stream_ar_h_def map_fun_def comp_def)
   apply(rule cont_Abs_UB)
   apply(simp add: option_one_cont)
-  by (metis DoNotUse_970810_medium_stream_ar_h.rep_eq ubrep_well)
+  by (metis DoNotUse_ffb161_medium_stream_ar_h.rep_eq ubrep_well)
 
-lift_definition DoNotUse_970810_medium_stream_as_h :: "'e tsyn stream \<Rightarrow> ('e::countable) mediumMessage tsyn SB" is
-"\<lambda> s. [(\<C> ''DoNotUse_970810_as'') \<mapsto> (tsynMap (DoNotUse_970810_MediumE)\<cdot>s)]"
+lift_definition DoNotUse_ffb161_medium_stream_as_h :: "'e tsyn stream \<Rightarrow> ('e::countable) mediumMessage tsyn SB" is
+"\<lambda> s. [(\<C> ''DoNotUse_ffb161_as'') \<mapsto> (tsynMap (DoNotUse_ffb161_MediumE)\<cdot>s)]"
   unfolding ubWell_def usclOkay_stream_def ctype_tsyn_def
   by auto
 
 (* Do not use this, use mediumOut_stream_as instead *)
 lift_definition medium_stream_as :: "('e) tsyn stream \<rightarrow> ('e::countable) mediumMessage tsyn SB" is
-"DoNotUse_970810_medium_stream_as_h"
-  apply(auto simp add: cfun_def DoNotUse_970810_medium_stream_as_h_def map_fun_def comp_def)
+"DoNotUse_ffb161_medium_stream_as_h"
+  apply(auto simp add: cfun_def DoNotUse_ffb161_medium_stream_as_h_def map_fun_def comp_def)
   apply(rule cont_Abs_UB)
   apply(simp add: option_one_cont)
-  by (metis DoNotUse_970810_medium_stream_as_h.rep_eq ubrep_well)
+  by (metis DoNotUse_ffb161_medium_stream_as_h.rep_eq ubrep_well)
 
 
 subsubsection \<open>In/Out\<close>
@@ -188,20 +210,20 @@ section \<open>Getter\<close>
 subsection \<open>sbElem to tsyn\<close>
 
 definition mediumElem_get_ar :: "('e::countable) mediumMessage tsyn sbElem \<Rightarrow> ('e) tsyn" where
-"mediumElem_get_ar sbe = tsynApplyElem (inv DoNotUse_970810_MediumE) ((Rep_sbElem sbe) \<rightharpoonup> (\<C> ''DoNotUse_970810_ar''))"
+"mediumElem_get_ar sbe = tsynApplyElem (inv DoNotUse_ffb161_MediumE) ((Rep_sbElem sbe) \<rightharpoonup> (\<C> ''DoNotUse_ffb161_ar''))"
 
 definition mediumElem_get_as :: "('e::countable) mediumMessage tsyn sbElem \<Rightarrow> ('e) tsyn" where
-"mediumElem_get_as sbe = tsynApplyElem (inv DoNotUse_970810_MediumE) ((Rep_sbElem sbe) \<rightharpoonup> (\<C> ''DoNotUse_970810_as''))"
+"mediumElem_get_as sbe = tsynApplyElem (inv DoNotUse_ffb161_MediumE) ((Rep_sbElem sbe) \<rightharpoonup> (\<C> ''DoNotUse_ffb161_as''))"
 
 
 subsection \<open>SB to stream\<close>
 
 lift_definition medium_get_stream_ar :: "('e::countable) mediumMessage tsyn SB \<rightarrow> 'e tsyn stream" is
-"\<lambda>sb. tsynMap (inv DoNotUse_970810_MediumE)\<cdot>(sb . (\<C> ''DoNotUse_970810_ar''))"
+"\<lambda>sb. tsynMap (inv DoNotUse_ffb161_MediumE)\<cdot>(sb . (\<C> ''DoNotUse_ffb161_ar''))"
   by(simp add: cfun_def)
 
 lift_definition medium_get_stream_as :: "('e::countable) mediumMessage tsyn SB \<rightarrow> 'e tsyn stream" is
-"\<lambda>sb. tsynMap (inv DoNotUse_970810_MediumE)\<cdot>(sb . (\<C> ''DoNotUse_970810_as''))"
+"\<lambda>sb. tsynMap (inv DoNotUse_ffb161_MediumE)\<cdot>(sb . (\<C> ''DoNotUse_ffb161_as''))"
   by(simp add: cfun_def)
 
 
@@ -276,23 +298,23 @@ subsection \<open>tsyn to sbElem/SB\<close>
 
 subsubsection \<open>Intern\<close>
 
-lemma mediumelem_ar_dom[simp]: "sbeDom (mediumElem_ar x) = {\<C> ''DoNotUse_970810_ar''}"
+lemma mediumelem_ar_dom[simp]: "sbeDom (mediumElem_ar x) = {\<C> ''DoNotUse_ffb161_ar''}"
   apply(cases x)
   apply(simp add: mediumElem_ar.simps sbeDom_def mediumElem_raw_ar.rep_eq)
   by(simp add: mediumElem_ar.simps)
 
-lemma mediumelem_as_dom[simp]: "sbeDom (mediumElem_as x) = {\<C> ''DoNotUse_970810_as''}"
+lemma mediumelem_as_dom[simp]: "sbeDom (mediumElem_as x) = {\<C> ''DoNotUse_ffb161_as''}"
   apply(cases x)
   apply(simp add: mediumElem_as.simps sbeDom_def mediumElem_raw_as.rep_eq)
   by(simp add: mediumElem_as.simps)
 
-lemma medium_ar_dom[simp]: "ubDom\<cdot>(medium_ar x) = {\<C> ''DoNotUse_970810_ar''}"
+lemma medium_ar_dom[simp]: "ubDom\<cdot>(medium_ar x) = {\<C> ''DoNotUse_ffb161_ar''}"
   by(simp add: medium_ar_def)
 
 lemma medium_ar_len[simp]: "ubLen (medium_ar x) = 1"
   by(simp add: medium_ar_def)
 
-lemma medium_as_dom[simp]: "ubDom\<cdot>(medium_as x) = {\<C> ''DoNotUse_970810_as''}"
+lemma medium_as_dom[simp]: "ubDom\<cdot>(medium_as x) = {\<C> ''DoNotUse_ffb161_as''}"
   by(simp add: medium_as_def)
 
 lemma medium_as_len[simp]: "ubLen (medium_as x) = 1"
@@ -324,25 +346,43 @@ subsection \<open>stream to SB\<close>
 
 subsubsection \<open>Intern\<close>
 
-lemma medium_stream_ar_dom[simp]: "ubDom\<cdot>(medium_stream_ar\<cdot>x) = {\<C> ''DoNotUse_970810_ar''}"
-  by(simp add: medium_stream_ar.rep_eq ubdom_insert DoNotUse_970810_medium_stream_ar_h.rep_eq)
+lemma medium_stream_ar_dom[simp]: "ubDom\<cdot>(medium_stream_ar\<cdot>x) = {\<C> ''DoNotUse_ffb161_ar''}"
+  by(simp add: medium_stream_ar.rep_eq ubdom_insert DoNotUse_ffb161_medium_stream_ar_h.rep_eq)
 
 lemma medium_stream_ar_len[simp]: "ubLen (medium_stream_ar\<cdot>x) = #x"
   apply(subst uslen_ubLen_ch3)
   apply simp
   apply(simp add: medium_stream_ar.rep_eq)
-  apply(simp add: ubGetCh_def DoNotUse_970810_medium_stream_ar_h.rep_eq)
+  apply(simp add: ubGetCh_def DoNotUse_ffb161_medium_stream_ar_h.rep_eq)
   by (simp add: tsynmap_slen usclLen_stream_def)
 
-lemma medium_stream_as_dom[simp]: "ubDom\<cdot>(medium_stream_as\<cdot>x) = {\<C> ''DoNotUse_970810_as''}"
-  by(simp add: medium_stream_as.rep_eq ubdom_insert DoNotUse_970810_medium_stream_as_h.rep_eq)
+lemma medium_stream_ar_id[simp]:
+  assumes "ubDom\<cdot>ub = {\<C> ''DoNotUse_ffb161_ar''} "
+    shows "medium_stream_ar\<cdot>(medium_get_stream_ar\<cdot>ub) = ub"
+  apply(simp add: medium_stream_ar.rep_eq medium_get_stream_ar.rep_eq)
+  apply(simp add: DoNotUse_ffb161_medium_stream_ar_h_def)
+  apply(subst tsynmap_id_xx)
+  using assms tsynbundle_ctype apply fastforce
+  using assms ub_id_single by blast
+
+lemma medium_stream_as_dom[simp]: "ubDom\<cdot>(medium_stream_as\<cdot>x) = {\<C> ''DoNotUse_ffb161_as''}"
+  by(simp add: medium_stream_as.rep_eq ubdom_insert DoNotUse_ffb161_medium_stream_as_h.rep_eq)
 
 lemma medium_stream_as_len[simp]: "ubLen (medium_stream_as\<cdot>x) = #x"
   apply(subst uslen_ubLen_ch3)
   apply simp
   apply(simp add: medium_stream_as.rep_eq)
-  apply(simp add: ubGetCh_def DoNotUse_970810_medium_stream_as_h.rep_eq)
+  apply(simp add: ubGetCh_def DoNotUse_ffb161_medium_stream_as_h.rep_eq)
   by (simp add: tsynmap_slen usclLen_stream_def)
+
+lemma medium_stream_as_id[simp]:
+  assumes "ubDom\<cdot>ub = {\<C> ''DoNotUse_ffb161_as''} "
+    shows "medium_stream_as\<cdot>(medium_get_stream_as\<cdot>ub) = ub"
+  apply(simp add: medium_stream_as.rep_eq medium_get_stream_as.rep_eq)
+  apply(simp add: DoNotUse_ffb161_medium_stream_as_h_def)
+  apply(subst tsynmap_id_xx)
+  using assms tsynbundle_ctype apply fastforce
+  using assms ub_id_single by blast
 
 
 subsubsection \<open>In/Out\<close>
@@ -396,12 +436,12 @@ subsubsection \<open>Intern\<close>
 
 lemma medium_stream_ar_id[simp]: "medium_get_stream_ar\<cdot>(medium_stream_ar\<cdot>x) = x"
   apply(simp add: medium_get_stream_ar.rep_eq medium_stream_ar.rep_eq)
-  apply(simp add: ubGetCh_def DoNotUse_970810_medium_stream_ar_h.rep_eq)
+  apply(simp add: ubGetCh_def DoNotUse_ffb161_medium_stream_ar_h.rep_eq)
   by (simp add: inj_def)
 
 lemma medium_stream_as_id[simp]: "medium_get_stream_as\<cdot>(medium_stream_as\<cdot>x) = x"
   apply(simp add: medium_get_stream_as.rep_eq medium_stream_as.rep_eq)
-  apply(simp add: ubGetCh_def DoNotUse_970810_medium_stream_as_h.rep_eq)
+  apply(simp add: ubGetCh_def DoNotUse_ffb161_medium_stream_as_h.rep_eq)
   by (simp add: inj_def)
 
 
