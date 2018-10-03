@@ -816,6 +816,7 @@ lemma nda_h_final_back_eq_h: "(\<forall> sbe. sbeDom sbe = In \<longrightarrow>
 lemma nda_h_final_back: assumes "\<And>state sbe. sbeDom sbe = ndaDom\<cdot>nda \<Longrightarrow> 
 spsConcIn (sbe2SB sbe) (other state) = 
   ndaConcOutFlatten (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) ((ndaTransition\<cdot>nda) (state,sbe)) (other)"
+  and "\<And> state sbe. (ndaTransition\<cdot>nda) (state, sbe) \<noteq> Rev {}"
   and "\<And> state. uspecIsStrict (other state)"
   and "\<And> state. uspecDom\<cdot>(other state) = ndaDom\<cdot>nda" 
   and "\<And> state. uspecRan\<cdot>(other state) = ndaRan\<cdot>nda"
@@ -823,22 +824,65 @@ shows "nda_h nda \<sqsubseteq> other"
   apply(rule nda_h_least) 
   apply(simp only: USPEC_def SetPcpo.setify_def)
   using assms(2) assms(3) apply auto[1]
-    apply (simp_all add: assms(4))
+      apply (simp_all add: assms(4) assms(5))
   apply (simp add: nda_h_inner_def Let_def)
   apply (simp add: below_fun_def)
   apply rule
   apply (simp add: ndaHelper2_def)
 proof -
   fix x::'a
-  have "spsStep_m (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) (\<lambda>e::'b sbElem. ndaConcOutFlatten (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) ((ndaTransition\<cdot>nda) (x, e)) other) 
+  have " \<And>sbe::'b sbElem.
+       other x \<noteq> uspecMax (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) \<Longrightarrow>
+       uspecFlatten (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) 
+            (setrevImage (\<lambda>(s::'a, sb::'b stream\<^sup>\<Omega>). ndaTodo_h (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) (s, sb) other) ((ndaTransition\<cdot>nda) (x, sbe))) 
+                    \<noteq> uspecMax (ndaDom\<cdot>nda) (ndaRan\<cdot>nda)"
+  proof -
+    fix sbe::"'b sbElem"
+    assume a11: "other x \<noteq> uspecMax (ndaDom\<cdot>nda) (ndaRan\<cdot>nda)"
+    have x_sbe_transit_not_empty: "(ndaTransition\<cdot>nda) (x, sbe) \<noteq> Rev {}"
+      by (simp add: assms(2))
+    have s_sb_ndatodo_h_not_max: "\<And> s sb. (\<lambda>(s::'a, sb::'b stream\<^sup>\<Omega>). ndaTodo_h (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) (s, sb) other) (s, sb) \<noteq> uspecMax (ndaDom\<cdot>nda) (ndaRan\<cdot>nda)"
+    proof -
+      fix s :: 'a and sb :: "'b stream\<^sup>\<Omega>"
+      have "\<forall>s f C. f (s::'b sbElem) \<in> {u. uspecDom\<cdot> (u::('b stream\<^sup>\<Omega>\<Rrightarrow> 'b stream\<^sup>\<Omega>) uspec) = sbeDom s \<and> uspecRan\<cdot>u = C}"
+        by (metis (no_types) USPEC_def nda_h_final_back_eq_h)
+      then have "\<forall>f s C. uspecDom\<cdot> (f (s::'b sbElem)::('b stream\<^sup>\<Omega>\<Rrightarrow> 'b stream\<^sup>\<Omega>) uspec) = sbeDom s \<and> uspecRan\<cdot>(f s) = C"
+        by blast
+      then have "\<forall>U. ({}::('b stream\<^sup>\<Omega>\<Rrightarrow> 'b stream\<^sup>\<Omega>) uspec set) = U"
+        by (metis (full_types) image_is_empty)
+      moreover
+      { assume "ndaTodo_h (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) (s, sb) other \<notin> {u. uspecDom\<cdot>u = ndaDom\<cdot>nda \<and> uspecRan\<cdot>u = ndaRan\<cdot>nda}"
+        then have "uspecDom\<cdot> (ndaTodo_h (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) (s, sb) other) \<noteq> ndaDom\<cdot>nda \<or> uspecRan\<cdot> (ndaTodo_h (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) (s, sb) other) \<noteq> ndaRan\<cdot>nda"
+          by blast
+        then have "uspecMax (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) \<noteq> ndaTodo_h (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) (s, sb) other"
+          by (metis (no_types) uspecmax_dom uspecmax_ran) }
+      ultimately show "(case (s, sb) of (a, u) \<Rightarrow> ndaTodo_h (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) (a, u) other) \<noteq> uspecMax (ndaDom\<cdot>nda) (ndaRan\<cdot>nda)"
+        using case_prod_conv by blast
+    qed
+    have "setrevImage (\<lambda>(s::'a, sb::'b stream\<^sup>\<Omega>). ndaTodo_h (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) (s, sb) other) ((ndaTransition\<cdot>nda) (x, sbe))
+            \<noteq> Rev {}"
+      by (metis (no_types, lifting) image_is_empty inv_rev_rev rev_inv_rev setrevImage_def x_sbe_transit_not_empty)
+    moreover have "\<And> sset. sset \<in> inv Rev (setrevImage (\<lambda>(s::'a, sb::'b stream\<^sup>\<Omega>). ndaTodo_h (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) (s, sb) other) ((ndaTransition\<cdot>nda) (x, sbe))) \<Longrightarrow>
+      sset \<noteq> uspecMax (ndaDom\<cdot>nda) (ndaRan\<cdot>nda)"
+      by (metis (no_types) prod.collapse s_sb_ndatodo_h_not_max setrevimage_mono_obtain3)    
+    moreover have "\<And> sset. sset \<in> inv Rev (setrevImage (\<lambda>(s::'a, sb::'b stream\<^sup>\<Omega>). ndaTodo_h (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) (s, sb) other) ((ndaTransition\<cdot>nda) (x, sbe))) \<Longrightarrow>
+      uspecDom\<cdot>sset = (ndaDom\<cdot>nda) \<and> uspecRan\<cdot>sset = (ndaRan\<cdot>nda)"
+      by (metis (mono_tags, hide_lams) nda_h_final_back_h_2 uspec_ran)
+    ultimately show "uspecFlatten (ndaDom\<cdot>nda) (ndaRan\<cdot>nda)
+            (setrevImage (\<lambda>(s::'a, sb::'b stream\<^sup>\<Omega>). ndaTodo_h (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) (s, sb) other) ((ndaTransition\<cdot>nda) (x, sbe))) 
+                    \<noteq> uspecMax (ndaDom\<cdot>nda) (ndaRan\<cdot>nda)"
+      by (simp add: uspecflatten_not_max)
+  qed
+  then have "spsStep_m (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) (\<lambda>e::'b sbElem. ndaConcOutFlatten (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) ((ndaTransition\<cdot>nda) (x, e)) other) 
         \<sqsubseteq> other x"
+    apply (case_tac "other x = uspecMax (ndaDom\<cdot>nda) (ndaRan\<cdot>nda)")
+    apply (metis (mono_tags) USPEC_def mem_Collect_eq nda_h_final_back_h_2 uspecMax.abs_eq uspecmax_max)
     apply (rule nda_h_final_back_h_1)
     apply (simp_all add: assms)
     apply rule 
      apply (metis (mono_tags, hide_lams) ndaHelper2_def nda_h_final_back_h_2 uspec_ran)
     apply rule
-    unfolding ndaConcOutFlatten_def
-    sorry
+    by (simp add: ndaConcOutFlatten_def)
   then show "spsStep_m (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) (\<lambda>e::'b sbElem. ndaConcOutFlatten (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) ((ndaTransition\<cdot>nda) (x, e)) other) 
           \<sqsubseteq> other x"
     by simp
