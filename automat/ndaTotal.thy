@@ -140,11 +140,25 @@ lemma nda2da_nda_step:
 
 (* The da is in the nda *)
 lemma nda2da_ndaone_below: "nda_h (ndaOne nda) \<sqsubseteq> (\<lambda>s. uspecConst (da_h (nda2da nda) s)) "
-  apply(rule nda_h_final_back)
-  using nda2da_nda_step apply fastforce
-  apply (simp add: ufclDom_ufun_def)
-  by (simp add: ufclRan_ufun_def)
-
+proof -
+  have h1: "\<And> state. uspecDom\<cdot>(uspecConst (da_h (nda2da nda) state)) = ndaDom\<cdot>(ndaOne nda)"
+    by (simp add: ufclDom_ufun_def)
+  have h2: "\<And> state. uspecRan\<cdot>(uspecConst (da_h (nda2da nda) state)) = ndaRan\<cdot>(ndaOne nda)"
+    by (simp add: ufclRan_ufun_def)
+  show ?thesis 
+    apply(rule nda_h_final_back)
+    using nda2da_nda_step apply fastforce defer defer defer
+        apply (simp add: ufclDom_ufun_def)
+       apply (simp add: ufclRan_ufun_def)
+      apply (simp add: makeitoneset_subset)
+     apply (simp)
+     apply (metis uspecconst_consistent uspecmax_consistent uspecmax_dom uspecmax_ran)
+    apply (simp add: uspecIsStrict_def)
+    apply (rule uspec_ballI)
+    apply simp
+    apply (rule ufisstrictI)
+    by (metis da_h_bottom da_h_dom da_h_ran sbLen_empty_bundle ubclDom_ubundle_def)
+qed
 
 
 
