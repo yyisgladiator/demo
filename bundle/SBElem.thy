@@ -100,10 +100,6 @@ proof -
   show ?thesis
     apply (rule ub_eq)
     apply (simp_all add: h9)
-    apply (simp add: sbe2SB_def)
-    apply (subst ubgetch_ubrep_eq)
-    apply (smt domIff id_apply sbe2SB.rep_eq ubWell_def ubrep_well)
-    apply (simp_all add: h9)
     apply (simp add: h3 Abs_sbElem_inverse)
     apply (simp add: ubHd_def ubTake_def)
     apply (subst ubMapStream_ubGetCh)

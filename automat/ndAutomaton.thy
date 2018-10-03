@@ -13,12 +13,16 @@ default_sort type
 fun ndaWell::"((('state \<times> 'm sbElem) \<Rightarrow> (('state \<times> 'm SB) set rev)) \<times> ('state \<times> 'm SB) set rev \<times> channel set discr \<times> channel set discr) \<Rightarrow> bool " where
 "ndaWell (transition, initialState, Discr chIn, Discr chOut) = finite chIn"
 
+lemma ndaWell_def: "ndaWell Y = finite ((inv Discr) (fst (snd (snd Y))))"
+  by (metis (no_types, lifting) discr.exhaust ndaWell.simps prod.collapse surj_def surj_f_inv_f)
+
 (* FYI: Non-deterministic version *)
 cpodef ('state::type, 'm::message) ndAutomaton = 
   "{f::(('state \<times>'m sbElem) \<Rightarrow> (('state \<times> 'm SB) set rev)) \<times> ('state \<times> 'm SB) set rev \<times> channel set discr \<times> channel set discr. ndaWell f}"
    apply (meson finite.emptyI mem_Collect_eq ndaWell.simps)
   apply(rule admI, auto)
-  sorry
+  apply(simp add: ndaWell_def)
+  by (metis (mono_tags, lifting) below_prod_def discrete_cpo is_ub_thelub)
 
 setup_lifting type_definition_ndAutomaton
 
