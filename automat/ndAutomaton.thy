@@ -676,58 +676,10 @@ proof -
       assume a22: "ubclDom\<cdot>xa = In" 
       assume a23: "sbHdElemWell xa"
       let ?da_hd = "(Abs_sbElem (inv convDiscrUp (sbHdElem\<cdot>xa)))"
-      have h1: "dom (sbHdElem\<cdot>xa) = In"
-        apply (simp add: sbhdelem_insert)
-        by (metis a22 ubclDom_ubundle_def)
-      then have h2: "dom (inv convDiscrUp (sbHdElem\<cdot>xa)) = In"
-        by (metis UNIV_I a23 convDiscrUp_dom convDiscrUp_inj inv_into_f_f sbHdElemWell_inv_ex)
-      have h3: "sbElemWell (inv convDiscrUp (sbHdElem\<cdot>xa))"
-        by (meson a23 sbHdElemWell_def sbHdElem_sbElemWell)
-      then have h4: "sbeDom (Abs_sbElem (inv convDiscrUp (sbHdElem\<cdot>xa))) = In"
-        apply (simp add: sbeDom_def)
-        apply (simp add: Abs_sbElem_inverse)
-        by (simp add: \<open>dom (inv convDiscrUp (sbHdElem\<cdot>(xa::'a stream\<^sup>\<Omega>))) = (In::channel set)\<close>)
+      have h4: "sbeDom (Abs_sbElem (inv convDiscrUp (sbHdElem\<cdot>xa))) = In"
+        by (metis a22 a23 sbe2sb_dom sbe2sb_ubhd ubclDom_ubundle_def ubhd_ubdom)
       have da_hd_sub: "sbe2SB ?da_hd = ubHd\<cdot>xa"
-      proof -
-        have h5: "\<And>c. c \<in> In \<Longrightarrow> (\<lambda>c. (c \<in> ubDom\<cdot>xa)\<leadsto>lshd\<cdot>(xa  .  c))\<rightharpoonup>c =
-          lshd\<cdot>(xa  .  c)"
-          by (metis (mono_tags, lifting) a22 option.sel ubclDom_ubundle_def)
-        have h6: "ubDom\<cdot>xa = In"
-          by (metis a22 ubclDom_ubundle_def)
-        have h7: "\<And> c. c \<in> In \<Longrightarrow> xa  .  c \<noteq> \<epsilon>"
-          by (metis (full_types) a23 h6 sbHdElemWell_def)
-        have h8: "\<And>c::channel. c \<in> In \<Longrightarrow> 
-          updis (inv Discr (inv Iup (lshd\<cdot>(xa  .  c)))) && \<epsilon> = stake (Suc (0::nat))\<cdot>(xa  .  c)"
-        proof -
-          fix c:: channel
-          assume a30: "c \<in> In"
-          obtain daEle rtSt where da_conc: "xa . c = \<up>daEle \<bullet> rtSt"
-            by (metis a30 h7 surj_scons)
-          show "updis (inv Discr (inv Iup (lshd\<cdot>(xa  .  c)))) && \<epsilon> = stake (Suc (0::nat))\<cdot>(xa  .  c)"
-            apply (simp add: da_conc)
-            by (metis (no_types, hide_lams) Abs_cfun_inverse2 cont_discrete_cpo discr.exhaust iup_inv_iup sup'_def surj_def surj_f_inv_f up_def)
-        qed
-        show ?thesis
-          apply (rule ub_eq)
-           apply (metis a22 h4 sbe2sb_dom ubclDom_ubundle_def ubhd_ubdom)
-          apply (simp add: h4)   
-          apply (simp add: sbe2SB_def)
-          apply (subst ubgetch_ubrep_eq)
-           apply (smt domIff id_apply sbe2SB.rep_eq ubWell_def ubrep_well)
-          apply (simp add: h4)
-          apply (simp add: h3 Abs_sbElem_inverse)
-          apply (simp add: ubHd_def ubTake_def)
-          apply (subst ubMapStream_ubGetCh)
-            apply (simp add: usclTake_well)
-           apply (metis a22 ubclDom_ubundle_def)
-          apply (subst convDiscrUp_inv_subst)
-            apply (metis a22 a23 h1 sbHdElemWell_def sbHdElem_channel ubclDom_ubundle_def)
-          using h1 apply auto[1]
-          apply (simp add: sbhdelem_insert)
-          apply (simp add: h6)
-          apply (simp add: sup'_def usclTake_stream_def)
-          by (simp add: h8)
-      qed
+        by (simp add: a23 sbe2sb_ubhd)
       have h7: "xa = ubConc (ubHd\<cdot>xa)\<cdot>(sbRt\<cdot>xa)" (is "xa = ?R")
       proof(rule ub_eq)
         show f0: "ubDom\<cdot>xa = ubDom\<cdot>(?R)" by simp
@@ -801,14 +753,14 @@ qed
 lemma nda_h_final_back_h_2: "(spsStep_m In Out h = other)
  \<Longrightarrow> \<forall> sbe. sbeDom sbe = In \<longrightarrow>
  (uspecIsStrict other \<and> h sbe \<in> USPEC In Out \<and> spsConcIn (sbe2SB sbe) other = h sbe)"
-  sorry
+  oops
 
 
 lemma nda_h_final_back_eq_h: "(\<forall> sbe. sbeDom sbe = In \<longrightarrow>
  (uspecIsStrict other \<and> h sbe \<in> USPEC In Out \<and> spsConcIn (sbe2SB sbe) other = h sbe))
             \<longleftrightarrow> 
       (spsStep_m In Out h = other)"
-  sorry
+  oops
 
 
 (* This is the version used for "ndaTotal" *)
@@ -817,6 +769,7 @@ lemma nda_h_final_back: assumes "\<And>state sbe. sbeDom sbe = ndaDom\<cdot>nda 
 spsConcIn (sbe2SB sbe) (other state) = 
   ndaConcOutFlatten (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) ((ndaTransition\<cdot>nda) (state,sbe)) (other)"
   and "\<And> state sbe. (ndaTransition\<cdot>nda) (state, sbe) \<noteq> Rev {}"
+  and "\<And> state. other state \<noteq> uspecMax (ndaDom\<cdot>nda) (ndaRan\<cdot>nda)"
   and "\<And> state. uspecIsStrict (other state)"
   and "\<And> state. uspecDom\<cdot>(other state) = ndaDom\<cdot>nda" 
   and "\<And> state. uspecRan\<cdot>(other state) = ndaRan\<cdot>nda"
@@ -824,7 +777,7 @@ shows "nda_h nda \<sqsubseteq> other"
   apply(rule nda_h_least) 
   apply(simp only: USPEC_def SetPcpo.setify_def)
   using assms(2) assms(3) apply auto[1]
-      apply (simp_all add: assms(4) assms(5))
+      apply (simp_all add: assms(5) assms(6))
   apply (simp add: nda_h_inner_def Let_def)
   apply (simp add: below_fun_def)
   apply rule
@@ -842,23 +795,11 @@ proof -
     have x_sbe_transit_not_empty: "(ndaTransition\<cdot>nda) (x, sbe) \<noteq> Rev {}"
       by (simp add: assms(2))
     have s_sb_ndatodo_h_not_max: "\<And> s sb. (\<lambda>(s::'a, sb::'b stream\<^sup>\<Omega>). ndaTodo_h (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) (s, sb) other) (s, sb) \<noteq> uspecMax (ndaDom\<cdot>nda) (ndaRan\<cdot>nda)"
-    proof -
-      fix s :: 'a and sb :: "'b stream\<^sup>\<Omega>"
-      have "\<forall>s f C. f (s::'b sbElem) \<in> {u. uspecDom\<cdot> (u::('b stream\<^sup>\<Omega>\<Rrightarrow> 'b stream\<^sup>\<Omega>) uspec) = sbeDom s \<and> uspecRan\<cdot>u = C}"
-        by (metis (no_types) USPEC_def nda_h_final_back_eq_h)
-      then have "\<forall>f s C. uspecDom\<cdot> (f (s::'b sbElem)::('b stream\<^sup>\<Omega>\<Rrightarrow> 'b stream\<^sup>\<Omega>) uspec) = sbeDom s \<and> uspecRan\<cdot>(f s) = C"
-        by blast
-      then have "\<forall>U. ({}::('b stream\<^sup>\<Omega>\<Rrightarrow> 'b stream\<^sup>\<Omega>) uspec set) = U"
-        by (metis (full_types) image_is_empty)
-      moreover
-      { assume "ndaTodo_h (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) (s, sb) other \<notin> {u. uspecDom\<cdot>u = ndaDom\<cdot>nda \<and> uspecRan\<cdot>u = ndaRan\<cdot>nda}"
-        then have "uspecDom\<cdot> (ndaTodo_h (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) (s, sb) other) \<noteq> ndaDom\<cdot>nda \<or> uspecRan\<cdot> (ndaTodo_h (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) (s, sb) other) \<noteq> ndaRan\<cdot>nda"
-          by blast
-        then have "uspecMax (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) \<noteq> ndaTodo_h (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) (s, sb) other"
-          by (metis (no_types) uspecmax_dom uspecmax_ran) }
-      ultimately show "(case (s, sb) of (a, u) \<Rightarrow> ndaTodo_h (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) (a, u) other) \<noteq> uspecMax (ndaDom\<cdot>nda) (ndaRan\<cdot>nda)"
-        using case_prod_conv by blast
-    qed
+      apply (case_tac "(ubLen (ubRestrict (ndaRan\<cdot>nda)\<cdot>(ubUp\<cdot>sb)) < \<infinity>)")
+       apply (simp_all add: ndaTodo_h_def) defer
+       apply (simp add: uspecconstout_insert)
+      apply (metis uspecconst_consistent uspecmax_consistent uspecmax_dom uspecmax_ran)
+      by (metis assms(3) assms(5) assms(6) spsconcout_consistentI uspecmax_consistent uspecmax_dom uspecmax_ran)
     have "setrevImage (\<lambda>(s::'a, sb::'b stream\<^sup>\<Omega>). ndaTodo_h (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) (s, sb) other) ((ndaTransition\<cdot>nda) (x, sbe))
             \<noteq> Rev {}"
       by (metis (no_types, lifting) image_is_empty inv_rev_rev rev_inv_rev setrevImage_def x_sbe_transit_not_empty)
@@ -867,7 +808,7 @@ proof -
       by (metis (no_types) prod.collapse s_sb_ndatodo_h_not_max setrevimage_mono_obtain3)    
     moreover have "\<And> sset. sset \<in> inv Rev (setrevImage (\<lambda>(s::'a, sb::'b stream\<^sup>\<Omega>). ndaTodo_h (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) (s, sb) other) ((ndaTransition\<cdot>nda) (x, sbe))) \<Longrightarrow>
       uspecDom\<cdot>sset = (ndaDom\<cdot>nda) \<and> uspecRan\<cdot>sset = (ndaRan\<cdot>nda)"
-      by (metis (mono_tags, hide_lams) nda_h_final_back_h_2 uspec_ran)
+      by (metis (no_types, lifting) assms(5) assms(6) case_prod_conv ndatodo_dom ndatodo_ran old.prod.exhaust setrevimage_mono_obtain3)
     ultimately show "uspecFlatten (ndaDom\<cdot>nda) (ndaRan\<cdot>nda)
             (setrevImage (\<lambda>(s::'a, sb::'b stream\<^sup>\<Omega>). ndaTodo_h (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) (s, sb) other) ((ndaTransition\<cdot>nda) (x, sbe))) 
                     \<noteq> uspecMax (ndaDom\<cdot>nda) (ndaRan\<cdot>nda)"
@@ -876,11 +817,10 @@ proof -
   then have "spsStep_m (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) (\<lambda>e::'b sbElem. ndaConcOutFlatten (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) ((ndaTransition\<cdot>nda) (x, e)) other) 
         \<sqsubseteq> other x"
     apply (case_tac "other x = uspecMax (ndaDom\<cdot>nda) (ndaRan\<cdot>nda)")
-    apply (metis (mono_tags) USPEC_def mem_Collect_eq nda_h_final_back_h_2 uspecMax.abs_eq uspecmax_max)
+    apply (simp add: assms(3))
     apply (rule nda_h_final_back_h_1)
     apply (simp_all add: assms)
-    apply rule 
-     apply (metis (mono_tags, hide_lams) ndaHelper2_def nda_h_final_back_h_2 uspec_ran)
+    apply (metis (mono_tags, lifting) USPEC_def mem_Collect_eq ndaConcOutFlatten_def uspecflatten_dom uspecflatten_ran)
     apply rule
     by (simp add: ndaConcOutFlatten_def)
   then show "spsStep_m (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) (\<lambda>e::'b sbElem. ndaConcOutFlatten (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) ((ndaTransition\<cdot>nda) (x, e)) other) 
@@ -906,14 +846,7 @@ spsConcIn (sbe2SB sbe) (other state) =
     \<Longrightarrow> sbeDom sbe = ndaDom\<cdot>nda \<Longrightarrow> spsConcIn (sbe2SB sbe) (x state) =  ndaConcOutFlatten (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) ((ndaTransition\<cdot>nda) (state,sbe)) (x)
     \<Longrightarrow> other \<sqsubseteq> x"
 shows "nda_h nda = other" 
-proof -
-  have "nda_h nda\<sqsubseteq>other"
-    by (simp add: assms(1) assms(2) assms(3) assms(4) nda_h_final_back) 
-  moreover have "other \<sqsubseteq> nda_h nda"
-    by (smt assms(5) fun_belowI ndaHelper2_def nda_h_final_back_eq_h nda_h_fixpoint nda_h_inner_def nda_h_inner_dom nda_h_inner_ran not_below2not_eq)
-  ultimately show ?thesis
-    by (simp add: po_eq_conv) 
-qed
+  oops
 
 
 end

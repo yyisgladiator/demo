@@ -77,6 +77,11 @@ lemma spsconcout_const[simp]: "spsConcOut sb (uspecConst f) = uspecConst (spfCon
   apply(simp add: spsConcOut_def)
   by (simp add: ufclDom_ufun_def ufclRan_ufun_def)
 
+lemma spsconcout_consistentI: assumes "uspecIsConsistent S" 
+  shows "uspecIsConsistent (spsConcOut sb S)"
+  by (metis (no_types, hide_lams) assms emptyE spfConcOut_dom spfConcOut_ran spsConcOut_def 
+      ufclDom_ufun_def ufclRan_ufun_def uspecIsConsistent_def uspec_consist_f_ex uspecimage_ele_in uspecrevset_insert)
+
 (* ----------------------------------------------------------------------- *)
 subsection \<open>spsConcIn\<close>
 (* ----------------------------------------------------------------------- *)

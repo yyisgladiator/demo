@@ -7,9 +7,7 @@ theory NewSpfStep
 imports fun.SPF bundle.SBElem
 begin
 default_sort type
-
-definition sbHdElemWell::"'m::message SB \<Rightarrow> bool" where
-"sbHdElemWell  \<equiv> \<lambda> sb. (\<forall>c \<in> ubDom\<cdot>(sb). sb. c \<noteq> \<epsilon>)"  
+ 
 (* Returns the SPF that switches depending on input.  (spfStep_h1 In Out\<cdot>h)\<cdot>(sbHdElem\<cdot>sb) computes the SPF which has to be applied to the input sb*)
 
 (*

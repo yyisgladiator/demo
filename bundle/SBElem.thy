@@ -5,6 +5,12 @@ imports SB tsynBundle
 begin
 default_sort message
 
+definition sbHdElemWell::"'m::message SB \<Rightarrow> bool" where
+"sbHdElemWell  \<equiv> \<lambda> sb. (\<forall>c \<in> ubDom\<cdot>(sb). sb. c \<noteq> \<epsilon>)"  
+
+
+lemma sbHdElem_below:"sbHdElemWell sb1  \<Longrightarrow> sb1\<sqsubseteq>sb2 \<Longrightarrow>  sbHdElemWell sb2"
+  by (metis bottomI sbHdElemWell_def ubdom_below ubgetch_below)
 
 lemma sbelemwell_empty: "sbElemWell Map.empty"
   by(simp add: sbElemWell_def)
@@ -66,6 +72,49 @@ lemma sbe2sb_hdelem: "(sbHdElem\<cdot>(sbe2SB sbe)) = convDiscrUp (Rep_sbElem sb
   apply (auto simp add: convDiscrUp_def sbe2sb_getch sup'_def up_def)
   apply (simp add: domD sbeDom_def)
   by (simp add: domI sbeDom_def)
+
+lemma sbe2sb_ubhd: assumes "sbHdElemWell ub"
+  shows "sbe2SB (Abs_sbElem (inv convDiscrUp (sbHdElem\<cdot>ub))) = ubHd\<cdot>ub"
+proof -
+  let ?In = "ubDom\<cdot>ub"
+  have h3: "sbElemWell (inv convDiscrUp (sbHdElem\<cdot>ub))"
+    by (meson assms sbHdElemWell_def sbHdElem_sbElemWell)
+  have h5: "\<And>c. c \<in> ?In \<Longrightarrow> (\<lambda>c. (c \<in> ?In)\<leadsto>lshd\<cdot>(ub  .  c))\<rightharpoonup>c =
+          lshd\<cdot>(ub  .  c)"
+    by simp
+  have h7: "\<And> c. c \<in> ?In \<Longrightarrow> ub  .  c \<noteq> \<epsilon>"
+    by (meson assms sbHdElemWell_def)
+  have h8: "\<And>c::channel. c \<in> ?In \<Longrightarrow>
+          updis (inv Discr (inv Iup (lshd\<cdot>(ub  .  c)))) && \<epsilon> = stake (Suc (0::nat))\<cdot>(ub  .  c)"
+  proof -
+    fix c:: channel
+    assume a30: "c \<in> ?In"
+    obtain daEle rtSt where da_conc: "ub . c = \<up>daEle \<bullet> rtSt"
+      using a30 h7 scases by blast
+    show "updis (inv Discr (inv Iup (lshd\<cdot>(ub  .  c)))) && \<epsilon> = stake (Suc (0::nat))\<cdot>(ub  .  c)"
+      apply (simp add: da_conc)
+      by (metis (no_types, hide_lams) Abs_cfun_inverse2 cont_discrete_cpo discr.exhaust iup_inv_iup sup'_def surj_def surj_f_inv_f up_def)
+  qed
+  have h9: "sbeDom (Abs_sbElem (inv convDiscrUp (sbHdElem\<cdot>ub)))  = ?In"
+    by (simp add: Abs_sbElem_inverse h7 sbHdElem_channel sbHdElem_sbElemWell sbeDom_def)
+  show ?thesis
+    apply (rule ub_eq)
+    apply (simp_all add: h9)
+    apply (simp add: sbe2SB_def)
+    apply (subst ubgetch_ubrep_eq)
+    apply (smt domIff id_apply sbe2SB.rep_eq ubWell_def ubrep_well)
+    apply (simp_all add: h9)
+    apply (simp add: h3 Abs_sbElem_inverse)
+    apply (simp add: ubHd_def ubTake_def)
+    apply (subst ubMapStream_ubGetCh)
+      apply (simp add: usclTake_well)
+    apply simp
+    apply (subst convDiscrUp_inv_subst)
+      apply (simp_all add: h7 sbHdElem_channel)
+    apply (simp add: sbhdelem_insert)
+    apply (simp add: sup'_def usclTake_stream_def)
+    by (simp add: h8)
+qed
 
 lemma sbe2sb_hdelem_conc: "ubDom\<cdot>sb = sbeDom sbe \<Longrightarrow> (sbHdElem\<cdot>(ubConcEq(sbe2SB sbe)\<cdot>sb)) = sbHdElem\<cdot>(sbe2SB sbe)"
   apply(simp add: sbhdelem_insert)
