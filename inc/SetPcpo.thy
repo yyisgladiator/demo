@@ -477,4 +477,7 @@ lemma setflatten_mono2: assumes "\<And>b. b\<in>S1 \<Longrightarrow>( \<exists>c
 lemma setfilter_easy: "Set.filter (\<lambda>f. True) X = X"
   using member_filter by auto
 
+lemma setfilter_cont: "cont (Set.filter P)"
+  by (simp add: Prelude.contI2 SetPcpo.less_set_def lub_eq_Union monofun_def subset_eq)
+
 end
