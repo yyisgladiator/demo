@@ -62,7 +62,7 @@ session "automatCaseStudy" (mustWork) in "automat/CaseStudy" = "automat" +
     medUnfairStep
     medsBelow
 
-session "abp" (canFail) in abp = "automat" + 
+session "abpGenerat" (mustWork) in abp = "automat" + 
   options [quick_and_dirty = true]
   theories
     ReceiverAutomaton
