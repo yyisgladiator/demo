@@ -139,6 +139,7 @@ lemma orafun0_orafunn:
 subsection {* MedSPF step lemmata *}
 (* ----------------------------------------------------------------------- *)
 
+text{* If null comes in, it will be sent and Medium stays in its state. *}
 lemma medspf_spfconc_null: assumes "ora \<in> oraFun n"  
   shows "spfConcIn (medIn -)\<cdot>(MedSPF ora) = spfConcOut (medOut -)\<cdot>(MedSPF ora)"
   apply (rule spf_eq, simp_all)
@@ -150,6 +151,8 @@ lemma medspf_spfconc_null: assumes "ora \<in> oraFun n"
     medingetstream_ubconc orafun_nbot tsynmed_sconc_null tsynmap_sconc medout_null 
     tsynmap_singleton_null)
 
+text{* If a message comes in and the counter is not zero, null will be sent and Medium stays in its 
+  state. *}
 lemma medspf_spfconc_msg_nzero: assumes "ora1 \<in> oraFun (Suc n)" obtains ora2 where "ora2 \<in> oraFun n"
   and "spfConcIn (medIn (Msg m))\<cdot>(MedSPF ora1) = spfConcOut (medOut -)\<cdot>(MedSPF ora2)"
   using assms
@@ -178,6 +181,8 @@ lemma medspf_spfconc_msg_nzero: assumes "ora1 \<in> oraFun (Suc n)" obtains ora2
      using ora2_orafun that by simp
   qed           
 
+text{* If a message comes in and the counter is zero, the message will be sent and Medium changes its 
+  state. *}
 lemma medspf_spfconc_msg_zero: assumes "ora1 \<in> oraFun 0" obtains ora2 where "\<exists>n. ora2 \<in> oraFun n"
   and "spfConcIn (medIn (Msg m))\<cdot>(MedSPF ora1) = spfConcOut (medOut (Msg m))\<cdot>(MedSPF ora2)"
   using assms
