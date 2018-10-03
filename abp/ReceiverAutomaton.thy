@@ -12,7 +12,7 @@ begin
 
 
 (* TODO Move to tsynStream and find a name for it, the proposed "tsynmap_id" already exists *)
-lemma tsynmap_id_xx[simp]: "tsynDom\<cdot>tsyn \<subseteq> range F \<Longrightarrow> tsynMap F\<cdot>(tsynMap (inv F)\<cdot>tsyn) = tsyn"
+lemma tsynmap_id_xx[simp]: "tsynDom\<cdot>tsyn \<subseteq> range F \<Longrightarrow> tsynMap (F \<circ> (inv F))\<cdot>tsyn = tsyn"
   apply(induction tsyn rule: ind)
     apply simp_all
   apply(rename_tac x xs)
@@ -426,6 +426,7 @@ lemma receiver_stream_dr_len[simp]: "ubLen (receiver_stream_dr\<cdot>x) = #x"
   apply(simp add: ubGetCh_def DoNotUse_277815_receiver_stream_dr_h.rep_eq)
   by (simp add: tsynmap_slen usclLen_stream_def)
 
+(* SWS: Gib denen einen anderen Namen, sonst duplicat *)
 lemma receiver_stream_dr_id[simp]:
   assumes "ubDom\<cdot>ub = {\<C> ''DoNotUse_277815_dr''} "
     shows "receiver_stream_dr\<cdot>(receiver_get_stream_dr\<cdot>ub) = ub"
