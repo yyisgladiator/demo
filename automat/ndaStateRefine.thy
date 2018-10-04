@@ -36,8 +36,19 @@ lemma helper_todo: assumes dom_eq: "ndaDom\<cdot>nda1 = ndaDom\<cdot>nda2" and r
 shows "nda_h_inner nda1 h s = nda_h_inner nda2 h (f s)"
   apply(simp add: nda_h_inner_def Let_def ndaHelper2_def)
   apply(subst dom_eq, subst ran_eq)
-  apply(subst ndaconcout_staterefine, simp_all add: assms)
+ (*  apply(subst ndaconcout_staterefine, simp_all add: assms) *)
   oops
+
+lemma ndaconcout_staterefine2:
+assumes dom_eq: "ndaDom\<cdot>nda1 = ndaDom\<cdot>nda2" and ran_eq: "ndaRan\<cdot>nda1 = ndaRan\<cdot>nda2"
+  and "\<And>s sbe t out. sbeDom sbe = ndaDom\<cdot>nda1 \<Longrightarrow>  (
+                        ((t, out) \<in> ((inv Rev) ((ndaTransition\<cdot>nda1) (s, sbe))))
+                          \<longleftrightarrow>
+                        ((f t, out) \<in> ((inv Rev) ((ndaTransition\<cdot>nda2) (f s, sbe)))))"
+shows "ndaConcOutFlatten (ndaDom\<cdot>nda2) (ndaRan\<cdot>nda2) ((ndaTransition\<cdot>nda1) (x, e)) (\<lambda>s::'a. h (f s)) 
+  = ndaConcOutFlatten (ndaDom\<cdot>nda2) (ndaRan\<cdot>nda2) ((ndaTransition\<cdot>nda2) (f x, e)) h"
+  apply(simp add: ndaConcOutFlatten_def)
+  sorry
 
 lemma nda_h_inner_staterefine: 
 assumes dom_eq: "ndaDom\<cdot>nda1 = ndaDom\<cdot>nda2" and ran_eq: "ndaRan\<cdot>nda1 = ndaRan\<cdot>nda2"
@@ -47,10 +58,11 @@ assumes dom_eq: "ndaDom\<cdot>nda1 = ndaDom\<cdot>nda2" and ran_eq: "ndaRan\<cdo
                         ((f t, out) \<in> ((inv Rev) ((ndaTransition\<cdot>nda2) (f s, sbe)))))"
 shows "nda_h_inner nda1 (\<lambda>s::'a. h (f s)) \<sqsubseteq> (\<lambda>s::'a. nda_h_inner nda2 h (f s))"
   apply(simp add: nda_h_inner_def Let_def ndaHelper2_def)
-  apply(subst dom_eq, subst ran_eq)
+  apply(simp add: dom_eq ran_eq)
   unfolding below_fun_def
   apply auto
-  sorry
+  by(subst ndaconcout_staterefine2, simp_all add: assms)
+
 
 lemma lfp_lfp_below:
     assumes "monofun g1" 
