@@ -22,9 +22,6 @@ section\<open>Definitions\<close>
 subsection\<open>abbreviations\<close>
 
 
-abbreviation ubclUnion_abbr :: " 'm \<Rightarrow> 'm \<Rightarrow> 'm" (infixl "\<uplus>" 100) where 
-"b1 \<uplus> b2 \<equiv> ubclUnion\<cdot>b1\<cdot>b2"
-
 abbreviation ubclRestrict_abbr :: " 'm \<Rightarrow> channel set \<Rightarrow> 'm" ("(_\<bar>_)" [66,65] 65)
 where "b\<bar>cs \<equiv> ubclRestrict cs\<cdot>b"
 
