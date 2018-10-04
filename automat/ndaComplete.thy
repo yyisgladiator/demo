@@ -36,18 +36,19 @@ definition transIsComplete:: "(('state \<times> 'm::message sbElem) \<Rightarrow
 "transIsComplete \<equiv> \<lambda> trans. \<forall> state sbe. trans (state, sbe) \<noteq> Rev {}"
 
 definition ndaIsComplete:: "('state::type, 'm::message) ndAutomaton \<Rightarrow> bool" where
-"ndaIsComplete \<equiv> \<lambda> nda. transIsComplete (ndaTransition\<cdot>nda)"
+"ndaIsComplete \<equiv> \<lambda> nda. transIsComplete (ndaTransition\<cdot>nda)"  (* SWS: und initialState \<noteq> {} *)
 
 subsection \<open>completion\<close>
 
 definition ignoreComplete:: "('state::type \<times> 'm::message sbElem) \<Rightarrow>
     ('state \<times> 'm SB) set rev" where
 "ignoreComplete \<equiv> \<lambda> (state, sbe). Rev {(state, ubclLeast (sbeDom sbe))}"
+(* SWS: Allgemein ndaDom \<noteq> ndaRan *)
 
 definition chaosComplete:: "('state::type \<times> 'm::message sbElem) \<Rightarrow>
     ('state \<times> 'm SB) set rev" where
 "chaosComplete \<equiv> 
-  \<lambda> (state, sbe). Rev {undefined, undefined}"
+  \<lambda> (state, sbe). Rev UNIV"
 
 definition transCompletion:: "(('state::type \<times> 'm::message sbElem) \<Rightarrow>
     ('state \<times> 'm SB) set rev) \<Rightarrow> ('state, 'm::message) trans2TransFunc"
@@ -60,6 +61,8 @@ let errorStateP = (\<lambda> trans (state, sbe). trans (state,sbe)  = Rev {} \<o
                                          state = errorState)
 in (\<lambda> trans. (\<lambda> (state, sbe). if (errorStateP trans (state,sbe)) then 
                 Rev {(errorState, ubclLeast (sbeDom sbe))} else (trans (state,sbe))))"
+(* SWS: Allgemein ndaDom \<noteq> ndaRan *)
+(* SWS: Von dem Error-State kommt man nie wieder weg? Wieso? *)
 
 abbreviation ignorerTransCompletion:: "('state, 'm::message) trans2TransFunc"
   where "ignorerTransCompletion \<equiv> \<lambda> trans. transCompletion ignoreComplete trans"
@@ -68,7 +71,7 @@ abbreviation chaosTransCompletion:: "('state, 'm::message) trans2TransFunc"
   where "chaosTransCompletion \<equiv> \<lambda> trans. transCompletion chaosComplete trans"
 
 
-
+(* SWS: Bei completion chaos auch den InitialState-Completen *)
 lift_definition ndaCompletion:: "('state::type, 'm::message) trans2TransFunc \<Rightarrow>
   ('state::type, 'm::message) ndAutomaton 
   \<Rightarrow> ('state::type, 'm::message) ndAutomaton"
@@ -77,6 +80,8 @@ lift_definition ndaCompletion:: "('state::type, 'm::message) trans2TransFunc \<R
   (f (ndaTransition\<cdot>nda), ndaInitialState\<cdot>nda, Discr (ndaDom\<cdot>nda),  Discr (ndaRan\<cdot>nda))"
   by simp
 
+(* SWS: Ich hatte gedacht man generiert einfach "chaosTransCompletion" vor die Transitionsfunktion.
+        Aber ich mag diesen Ansatz auch. Dann kann man mehr allgemein zeigen *)
 
 (*******************************************************************)
 section \<open>Lemma\<close>
