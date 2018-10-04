@@ -784,6 +784,14 @@ lemma tsynmap_id [simp]: "tsynMap id\<cdot>s = s"
      apply simp_all
   by(simp add: tsynmap_sconc_null tsynmap_sconc_msg)+
 
+lemma tsynmap_inv_id[simp]: "tsynDom\<cdot>tsyn \<subseteq> range F \<Longrightarrow> tsynMap (F \<circ> (inv F))\<cdot>tsyn = tsyn"
+  apply(induction tsyn rule: ind)
+  apply simp_all
+  apply(rename_tac x xs)
+  apply(case_tac x)
+  apply(auto simp add: tsynmap_sconc_msg tsynmap_sconc_null)
+  by(auto simp add: tsyndom_sconc_msg tsyndom_sconc_null f_inv_into_f)
+
 text {* @{term tsynMap} test on finite stream. *}
 lemma tsynMap_test_finstream: "tsynMap (plus 1)\<cdot>(<[Msg 1, Msg 2, Msg 1, null]>) 
   = <[Msg 2, Msg 3, Msg 2, null]>"
