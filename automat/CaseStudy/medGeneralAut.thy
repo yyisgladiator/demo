@@ -15,11 +15,15 @@ fun medGeneralTransitionH :: "nat set \<Rightarrow> ('a \<Rightarrow> ('a tsyn s
 definition tsynDelay :: "nat \<Rightarrow> 'm::message tsyn SB \<rightarrow> 'm tsyn SB" where
 "tsynDelay n = ubConcEq (sbNTimes n (tsynbNull  (\<C> ''in'')))" 
 
-(* ToDo: use delaySet to nondeterministically delay everything *)
 fun medGeneralTransition :: "nat set \<Rightarrow> medState set \<Rightarrow> ('a \<Rightarrow> ('a tsyn set)) \<Rightarrow> (medState \<times> 'a medMessage tsyn sbElem) \<Rightarrow> ((medState \<times> 'a medMessage tsyn SB) set rev)" where
-"medGeneralTransition delaySet resetSet dropBehaviour (s,f) = (if sbeDom f = medInDom then 
-    Rev {(sNext, tsynDelay n\<cdot>(medOut out)) | n sNext out. n\<in>delaySet  \<and> (sNext, out)\<in>(medGeneralTransitionH resetSet dropBehaviour s (medMessageTransform ((Rep_sbElem f)\<rightharpoonup>(\<C> ''in''))))} 
-  else Rev {undefined})"
+"medGeneralTransition delaySet resetSet dropBehaviour (s,f) = 
+  (let inMsg = (medMessageTransform ((Rep_sbElem f)\<rightharpoonup>(\<C> ''in'')));
+       outSet = {(sNext,(medOut out)) | sNext out.(sNext, out)\<in>(medGeneralTransitionH resetSet dropBehaviour s inMsg)}
+  in
+  (if sbeDom f = medInDom then
+    (if(inMsg = -) then Rev outSet else Rev {(sNext, tsynDelay n\<cdot>outElem)| n sNext outElem . n\<in>delaySet \<and> (sNext, outElem)\<in>outSet})
+  else Rev {undefined}))"
+
 
 lift_definition medGeneralAut :: "nat set \<Rightarrow> medState set \<Rightarrow> ('a \<Rightarrow> ('a tsyn set)) \<Rightarrow> (medState, 'a medMessage tsyn) ndAutomaton" is 
   "\<lambda>delaySet resetSet dropBehaviour. (medGeneralTransition delaySet resetSet dropBehaviour, Rev {(n, medOut - )| n. n \<in> resetSet}, Discr medInDom, Discr medOutDom)"
@@ -65,6 +69,8 @@ lemma medgen_trans_total_h: "Delay\<noteq>{} \<Longrightarrow> Reset\<noteq>{} \
   apply(simp)
   apply(cases "sbeDom sbe \<noteq> medInDom")
    apply simp
+  apply (auto simp add: Let_def)
+  apply(cases "medMessageTransform Rep_sbElem sbe\<rightharpoonup>\<C> ''in'' = -")
   apply auto
   by (metis all_not_in_conv medgen_transh_total old.prod.exhaust)
 
@@ -73,12 +79,13 @@ lemma medgen_trans_total[simp]: "Delay\<noteq>{} \<Longrightarrow> Reset\<noteq>
 
 
 lemma medgen_trans_tick [simp]: 
-    "medGeneralTransition Delay Reset Drop (state, (medInElem -)) = Rev {(state, tsynDelay n\<cdot>(medOut -)) | n::nat. n \<in> Delay}"
+    "Delay\<noteq>{} \<Longrightarrow> medGeneralTransition Delay Reset Drop (state, (medInElem -)) = Rev {(state, medOut -)}"
   by(simp add: sbeNull.rep_eq medInDom_def medInElem.simps)
 
 lemma medfair_transition_msg_suc [simp]: 
   shows "medGeneralTransition Delay Reset Drop (Suc n, (medInElem (Msg m))) = Rev {(n, tsynDelay na\<cdot>(medOut out)) |(na::nat) out::'a tsyn. na \<in> Delay \<and> out \<in> Drop m}"
-  by(simp add: medInMsgElem.rep_eq medInDom_def medInElem.simps)
+  apply(simp add: medInMsgElem.rep_eq medInDom_def medInElem.simps)
+  by auto
 
 lemma medfair_transition_msg_0 [simp]: 
     "medGeneralTransition Delay Reset Drop (0, (medInElem (Msg m))) = Rev {(sNext, tsynDelay n\<cdot>(medOut (\<M> m))) |(n::nat) sNext::nat. n \<in> Delay \<and> sNext \<in> Reset}"
@@ -95,7 +102,7 @@ lemma medgen_init_total[simp]: assumes "Reset\<noteq>{}"
 
 lemma med_gen_step_tick: assumes "Delay\<noteq>{}" and  "Reset\<noteq>{}" and "(\<And>m. Drop m \<noteq> {})"
 shows "spsConcIn (medIn -) (medGeneral Delay Reset Drop s) = 
-  ndaConcOutFlatten medInDom medOutDom (Rev {(s, tsynDelay n\<cdot>(medOut -)) | n::nat. n \<in> Delay}) (medGeneral Delay Reset Drop)"
+  ndaConcOutFlatten medInDom medOutDom (Rev {(s, (medOut -))}) (medGeneral Delay Reset Drop)"
   apply(simp add: medIn_def medGeneral_def)
   apply(subst nda_h_I)
      apply simp_all
@@ -111,8 +118,9 @@ shows "spsConcIn (medIn (Msg m)) (medGeneral Delay Reset Drop (Suc s)) =
   apply(subst nda_h_I)
      apply simp_all
    apply(rule nda_consistent)
-    apply(simp_all add: assms )
-  by (metis medGeneral_def)
+    apply(auto simp add: assms)
+  unfolding medGeneral_def
+  by (metis (no_types, hide_lams))
 
 
 lemma med_gen_step_msg_0: assumes "Delay\<noteq>{}" and  "Reset\<noteq>{}" and "(\<And>m. Drop m \<noteq> {})"
