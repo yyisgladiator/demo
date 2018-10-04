@@ -1056,6 +1056,13 @@ have "\<forall>f fa. (\<exists>n. (f (n::nat)::'a) \<noteq> fa n) \<or> Lub f = 
 qed
 *)
 
+subsection \<open>More general lemmas\<close>
+
+lemma ub_id_single: "ubDom\<cdot>ub = {c} \<Longrightarrow> Abs_ubundle [c \<mapsto> ub  .  c] = ub"
+  apply(rule ub_eq)
+  apply simp
+  by (simp add: ubWell_single_channel ubdom_ubrep_eq ubgetch_insert)+
+
 
 (****************************************************)
 section\<open>Instantiation\<close>
