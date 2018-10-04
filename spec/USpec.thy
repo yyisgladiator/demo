@@ -928,7 +928,7 @@ proof -
     using b1 setflat_obtain by fastforce
 qed
 
-
+(*
 lemma uspecflatten_mono_h: "monofun (\<lambda> uspecs. Rev (setflat\<cdot>(Rep_rev_uspec ` (inv Rev (uspec_set_filter In Out\<cdot>uspecs)))))"
 proof (rule rev_monoI)
   fix x::"'a uspec set rev" and y::"'a uspec set rev"
@@ -942,28 +942,120 @@ proof (rule rev_monoI)
   thus "setflat\<cdot>(Rep_rev_uspec ` inv Rev (uspec_set_filter In Out\<cdot>y)) \<sqsubseteq> setflat\<cdot>(Rep_rev_uspec ` inv Rev (uspec_set_filter In Out\<cdot>x))"
     by (simp add: monofun_cfun_arg)
 qed
+*)
 
-lemma uspecflatten_dom [simp]: "uspecDom\<cdot>(uspecFlatten In Out uspecs) = In"
+lemma uspecflatten_dom_help : "uspecDom\<cdot>(Abs_uspec 
+  ((setflat\<cdot>((Rep_cfun uspecSet)  ` (uspec_set_filter In Out\<cdot>uspecs))), Discr In, Discr Out)) = In"
   apply (simp add: uspecDom_def uspecFlatten_def)
-  by (metis fst_conv rep_abs_uspec snd_conv undiscr_Discr uspecflatten_well)
+  by (metis (no_types) fst_conv rep_abs_uspec snd_conv undiscr_Discr uspecDom.abs_eq uspecdom_insert uspecflatten_well)
 
-lemma uspecflatten_ran [simp]: "uspecRan\<cdot>(uspecFlatten In Out uspecs) = Out"
+lemma uspecflatten_ran_help : "uspecRan\<cdot>(Abs_uspec 
+  ((setflat\<cdot>((Rep_cfun uspecSet)  ` (uspec_set_filter In Out\<cdot>uspecs))), Discr In, Discr Out)) = Out"
   apply (simp add: uspecRan_def uspecFlatten_def)
-  by (metis rep_abs_uspec snd_conv undiscr_Discr uspecflatten_well)
+  by (metis (no_types) rep_abs_uspec snd_conv undiscr_Discr uspecRan.abs_eq uspecran_insert uspecflatten_well)
 
-lemma uspecflatten_monofun: "monofun (uspecFlatten In Out)"
-  unfolding uspecFlatten_def
+lemma uspecflatten_monofun: "monofun (\<lambda> uspecs. Abs_uspec 
+  ((setflat\<cdot>((Rep_cfun uspecSet)  ` (uspec_set_filter In Out\<cdot>uspecs))), Discr In, Discr Out))"
   apply (rule monofunI)
   apply (rule uspec_belowI)
-    apply (metis uspecFlatten_def uspecflatten_dom)
-   apply (metis uspecFlatten_def uspecflatten_ran)
-  apply (simp add: uspecrevset_insert)
-  apply (subst rep_abs_uspec)
-  using uspecflatten_well apply blast
-  apply (subst rep_abs_uspec)
-  using uspecflatten_well apply blast
-  apply simp
-  by (metis SetPcpo.less_set_def image_mono monofun_cfun_arg revBelowNeqSubset)
+  apply (simp add: uspecflatten_dom_help)
+  apply (simp add: uspecflatten_ran_help)
+  by (metis cont_pref_eq1I fst_conv image_mono rep_abs_uspec set_cpo_simps(1) uspecflatten_well uspecset_insert)
+
+lemma uspec_abs_chain: "\<And>x y.  chain Y \<Longrightarrow> (\<forall>i. uspecWell (Y i) In Out) \<Longrightarrow> uspecWell (\<Squnion>i. Y i) In Out \<Longrightarrow>
+         chain (\<lambda>i. Abs_uspec (Y i, In, Out)) \<Longrightarrow> Abs_uspec (\<Squnion>i. Y i, In, Out) \<sqsubseteq> (\<Squnion>i. Abs_uspec (Y i, In, Out))"
+proof -
+  fix x :: 'a and y :: 'b
+  assume a1: "chain Y"
+  assume a2: "chain (\<lambda>i. Abs_uspec (Y i, In, Out))"
+  assume a3: "\<forall>i. uspecWell (Y i) In Out"
+  assume a4: "uspecWell (\<Squnion>i. Y i) In Out"
+  obtain nn :: "'c set \<Rightarrow> (nat \<Rightarrow> 'c set) \<Rightarrow> nat" where
+    f5: "\<forall>f C. (\<not> chain f \<or> f (nn C f) \<notsqsubseteq> C) \<or> Lub f \<sqsubseteq> C"
+    by (meson lub_below)
+  have f6: "\<forall>f n. \<not> chain f \<or> (f n::'c uspec) \<sqsubseteq> Lub f"
+    by (meson is_ub_thelub)
+  have f7: "\<forall>C d da. \<not> uspecWell (C::'c set) d da \<or> Rep_uspec (Abs_uspec (C, d, da)) = (C, d, da)"
+    by (meson rep_abs_uspec)
+  have f8: "\<forall>u. \<exists>C Ca Cb. Abs_uspec (C::'c set, Discr Ca, Discr Cb) = u \<and> uspecWell C (Discr Ca) (Discr Cb)"
+    by (meson uspec_obtain)
+  have "\<forall>x0. (Abs_uspec (v1_2 (x0::'c uspec), Discr (v2_1 x0), Discr (v3_0 x0)) = x0 \<and> uspecWell (v1_2 x0) (Discr (v2_1 x0)) (Discr (v3_0 x0))) = (Abs_uspec (v1_2 x0, Discr (v2_1 x0), Discr (v3_0 x0)) = x0 \<and> uspecWell (v1_2 x0) (Discr (v2_1 x0)) (Discr (v3_0 x0)))"
+    by force
+  then obtain CC :: "'c uspec \<Rightarrow> 'c set" and CCa :: "'c uspec \<Rightarrow> channel set" and CCb :: "'c uspec \<Rightarrow> channel set" where
+    f9: "(CC (\<Squnion>n. Abs_uspec (Y n, In, Out)), Discr (CCa (\<Squnion>n. Abs_uspec (Y n, In, Out))), Discr (CCb (\<Squnion>n. Abs_uspec (Y n, In, Out)))) = Rep_uspec (\<Squnion>n. Abs_uspec (Y n, In, Out))"
+    using f8 f7 by metis
+  then have f10: "(Y elem_13, In, Out) \<sqsubseteq> (CC (\<Squnion>n. Abs_uspec (Y n, In, Out)), Discr (CCa (\<Squnion>n. Abs_uspec (Y n, In, Out))), Discr (CCb (\<Squnion>n. Abs_uspec (Y n, In, Out))))"
+    using f7 f6 a3 a2 by (metis below_uspec_def)
+  have "Abs_uspec (Y (nn (CC (\<Squnion>n. Abs_uspec (Y n, In, Out))) Y), In, Out) \<sqsubseteq> (\<Squnion>n. Abs_uspec (Y n, In, Out))"
+    using f6 a2 by meson
+  then have "(Y (nn (CC (\<Squnion>n. Abs_uspec (Y n, In, Out))) Y), In, Out) \<sqsubseteq> (CC (\<Squnion>n. Abs_uspec (Y n, In, Out)), Discr (CCa (\<Squnion>n. Abs_uspec (Y n, In, Out))), Discr (CCb (\<Squnion>n. Abs_uspec (Y n, In, Out))))"
+    using f9 a3 by (simp add: below_uspec_def)
+  then have "Lub Y \<sqsubseteq> CC (\<Squnion>n. Abs_uspec (Y n, In, Out))"
+    using f5 a1 by (meson Pair_below_iff)
+  then have "(Lub Y, In, Out) \<sqsubseteq> (CC (\<Squnion>n. Abs_uspec (Y n, In, Out)), Discr (CCa (\<Squnion>n. Abs_uspec (Y n, In, Out))), Discr (CCb (\<Squnion>n. Abs_uspec (Y n, In, Out))))"
+    using f10 by (meson Pair_below_iff)
+  then show "Abs_uspec (\<Squnion>n. Y n, In, Out) \<sqsubseteq> (\<Squnion>n. Abs_uspec (Y n, In, Out))"
+    using f9 a4 by (simp add: below_uspec_def)
+qed
+
+lemma uspecflatten_cont: "cont (\<lambda> uspecs. Abs_uspec 
+  ((setflat\<cdot>((Rep_cfun uspecSet) ` (uspec_set_filter In Out\<cdot>uspecs))), Discr In, Discr Out))"
+  apply (rule Cont.contI2)
+  apply (simp add: uspecflatten_monofun)
+  proof -
+    fix Y::"nat \<Rightarrow> 'a uspec set"
+    assume a1: "chain Y"
+    have b0: "Abs_uspec (setflat\<cdot>(Rep_cfun uspecSet ` uspec_set_filter In Out\<cdot>(\<Squnion>i. Y i)), Discr In, Discr Out)
+     = Abs_uspec (setflat\<cdot>(Rep_cfun uspecSet ` (\<Squnion>i. uspec_set_filter In Out\<cdot>(Y i))), Discr In, Discr Out)"
+      by (simp add: a1 contlub_cfun_arg)
+    have b1: "Abs_uspec (setflat\<cdot>(Rep_cfun uspecSet ` (\<Squnion>i. uspec_set_filter In Out\<cdot>(Y i))), Discr In, Discr Out)
+     = Abs_uspec (setflat\<cdot>(\<Squnion>i. Rep_cfun uspecSet ` ( uspec_set_filter In Out\<cdot>(Y i))), Discr In, Discr Out)"
+      by (metis image_UN lub_eq_Union)
+    have "chain (\<lambda>n. uspec_set_filter In Out\<cdot>(Y n))"
+      by (meson a1 monofun_cfun_arg po_class.chain_def)
+    then have b2: "Abs_uspec (setflat\<cdot>(\<Squnion>i. Rep_cfun uspecSet ` (uspec_set_filter In Out\<cdot>(Y i))), Discr In, Discr Out)
+     = Abs_uspec (\<Squnion>i. setflat\<cdot>(Rep_cfun uspecSet ` (uspec_set_filter In Out\<cdot>(Y i))), Discr In, Discr Out)"
+      by (simp add: SetPcpo.less_set_def contlub_cfun_arg image_mono po_class.chain_def)
+    have b3: "\<And>i. uspecWell (setflat\<cdot>(Rep_cfun uspecSet ` (uspec_set_filter In Out\<cdot>(Y i)))) (Discr In) (Discr Out)"
+      using uspecflatten_well by blast
+    have b4: "uspecWell (\<Squnion>i. setflat\<cdot>(Rep_cfun uspecSet ` (uspec_set_filter In Out\<cdot>(Y i)))) (Discr In) (Discr Out)"
+      unfolding lub_eq_Union
+      using b3 by auto
+    have b5:  "Abs_uspec (\<Squnion>i. setflat\<cdot>(Rep_cfun uspecSet ` (uspec_set_filter In Out\<cdot>(Y i))), Discr In, Discr Out)
+     \<sqsubseteq> (\<Squnion>i. Abs_uspec (setflat\<cdot>(Rep_cfun uspecSet ` (uspec_set_filter In Out\<cdot>(Y i))), Discr In, Discr Out))"
+      apply (rule uspec_abs_chain)
+      apply (metis (no_types, lifting) SetPcpo.less_set_def a1 image_mono monofun_cfun_arg 
+        po_class.chainE po_class.chain_def)
+      using b3 apply blast
+      using b4 apply blast
+    proof -
+  have f1: "\<forall>A Aa c. (A::'a set set) \<notsqsubseteq> Aa \<or> (c\<cdot>A::'a set) \<sqsubseteq> c\<cdot>Aa"
+      using cont_pref_eq1I by blast
+  obtain nn :: "(nat \<Rightarrow> 'a uspec) \<Rightarrow> nat" where
+    f2: "\<forall>f. (\<not> chain f \<or> (\<forall>n. f n \<sqsubseteq> f (Suc n))) \<and> (chain f \<or> f (nn f) \<notsqsubseteq> f (Suc (nn f)))"
+  using po_class.chain_def by moura
+  have f3: "setflat\<cdot> (Rep_cfun uspecSet ` uspec_set_filter In Out\<cdot> (Y (nn (\<lambda>n. Abs_uspec (setflat\<cdot> (Rep_cfun uspecSet ` uspec_set_filter In Out\<cdot>(Y n)), Discr In, Discr Out))))) = fst (Rep_uspec (Abs_uspec (setflat\<cdot> (Rep_cfun uspecSet ` uspec_set_filter In Out\<cdot> (Y (nn (\<lambda>n. Abs_uspec (setflat\<cdot> (Rep_cfun uspecSet ` uspec_set_filter In Out\<cdot>(Y n)), Discr In, Discr Out))))), Discr In, Discr Out)))"
+    by (metis fst_conv rep_abs_uspec uspecflatten_well)
+  have f4: "setflat\<cdot> (Rep_cfun uspecSet ` uspec_set_filter In Out\<cdot> (Y (Suc (nn (\<lambda>n. Abs_uspec (setflat\<cdot> (Rep_cfun uspecSet ` uspec_set_filter In Out\<cdot>(Y n)), Discr In, Discr Out)))))) = fst (Rep_uspec (Abs_uspec (setflat\<cdot> (Rep_cfun uspecSet ` uspec_set_filter In Out\<cdot> (Y (Suc (nn (\<lambda>n. Abs_uspec (setflat\<cdot> (Rep_cfun uspecSet ` uspec_set_filter In Out\<cdot>(Y n)), Discr In, Discr Out)))))), Discr In, Discr Out)))"
+    by (metis fst_conv rep_abs_uspec uspecflatten_well)
+  have "\<forall>n. uspec_set_filter In Out\<cdot>(Y n) \<sqsubseteq> uspec_set_filter In Out\<cdot>(Y (Suc n))"
+    by (metis (no_types) \<open>chain (\<lambda>n. uspec_set_filter In Out\<cdot>(Y n))\<close> po_class.chain_def)
+  then have "Abs_uspec (setflat\<cdot> (Rep_cfun uspecSet ` uspec_set_filter In Out\<cdot> (Y (nn (\<lambda>n. Abs_uspec (setflat\<cdot> (Rep_cfun uspecSet ` uspec_set_filter In Out\<cdot>(Y n)), Discr In, Discr Out))))), Discr In, Discr Out) \<sqsubseteq> Abs_uspec (setflat\<cdot> (Rep_cfun uspecSet ` uspec_set_filter In Out\<cdot> (Y (Suc (nn (\<lambda>n. Abs_uspec (setflat\<cdot> (Rep_cfun uspecSet ` uspec_set_filter In Out\<cdot>(Y n)), Discr In, Discr Out)))))), Discr In, Discr Out)"
+    using f4 f3 f1 by (simp add: SetPcpo.less_set_def image_mono uspec_belowI uspecflatten_dom_help uspecflatten_ran_help uspecset_insert)
+  then show "chain (\<lambda>n. Abs_uspec (setflat\<cdot> (Rep_cfun uspecSet ` uspec_set_filter In Out\<cdot>(Y n)), Discr In, Discr Out))"
+    using f2 by meson
+qed
+    show "chain (\<lambda>i. Abs_uspec (setflat\<cdot>(Rep_cfun uspecSet ` uspec_set_filter In Out\<cdot>(Y i)), Discr In, Discr Out)) \<Longrightarrow>
+         Abs_uspec (setflat\<cdot>(Rep_cfun uspecSet ` uspec_set_filter In Out\<cdot>(\<Squnion>i. Y i)), Discr In, Discr Out) \<sqsubseteq>
+         (\<Squnion>i. Abs_uspec (setflat\<cdot>(Rep_cfun uspecSet ` uspec_set_filter In Out\<cdot>(Y i)), Discr In, Discr Out))"
+      by (simp add: b0 b1 b2 b5)
+  qed
+
+lemma uspecflatten_dom [simp]: "uspecDom\<cdot>(uspecFlatten In Out\<cdot>uspecs) = In"
+  by (simp add: uspecFlatten_def uspecflatten_cont uspecflatten_dom_help)
+
+lemma uspecflatten_ran [simp]: "uspecRan\<cdot>(uspecFlatten In Out\<cdot>uspecs) = Out"
+  by (simp add: uspecFlatten_def uspecflatten_cont uspecflatten_ran_help)
 
 
 (* Every Element in S1 has a LARGER element in S2 *)
