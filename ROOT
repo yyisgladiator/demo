@@ -53,6 +53,7 @@ session "automat" (mustWork) in automat = "spec" +
     SpsStep
     ndAutomaton
     ndaTotal
+    ndaStateRefine
 
 session "automatCaseStudy" (mustWork) in "automat/CaseStudy" = "automat" + 
   options [quick_and_dirty = true]

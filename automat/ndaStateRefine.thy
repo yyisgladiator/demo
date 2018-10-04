@@ -39,6 +39,31 @@ shows "nda_h_inner nda1 h s = nda_h_inner nda2 h (f s)"
  (*  apply(subst ndaconcout_staterefine, simp_all add: assms) *)
   oops
 
+
+
+lemma ndaimage_staterefine2:
+assumes dom_eq: "ndaDom\<cdot>nda1 = ndaDom\<cdot>nda2" and ran_eq: "ndaRan\<cdot>nda1 = ndaRan\<cdot>nda2"
+  and "\<And>s sbe t out. (
+                        ((t, out) \<in> ((inv Rev) ((ndaTransition\<cdot>nda1) (s, sbe))))
+                          \<longleftrightarrow>
+                        ((f t, out) \<in> ((inv Rev) ((ndaTransition\<cdot>nda2) (f s, sbe)))))"
+shows "(setrevImage (\<lambda>(s, sb). ndaTodo_h (ndaDom\<cdot>nda2) (ndaRan\<cdot>nda2) (s, sb) (\<lambda>s. h (f s)))
+       ((ndaTransition\<cdot>nda1) (x, e))) 
+\<sqsubseteq> (setrevImage (\<lambda>(s, sb). ndaTodo_h (ndaDom\<cdot>nda2) (ndaRan\<cdot>nda2) (s, sb) h) ((ndaTransition\<cdot>nda2) (f x, e)))"
+  apply(simp add: setrevImage_def ndaTodo_h_def)
+  sorry                       
+
+lemma ndaimage_staterefine2:
+assumes dom_eq: "ndaDom\<cdot>nda1 = ndaDom\<cdot>nda2" and ran_eq: "ndaRan\<cdot>nda1 = ndaRan\<cdot>nda2"
+  and "\<And>s sbe t out. sbeDom sbe = ndaDom\<cdot>nda1 \<Longrightarrow>  (
+                        ((t, out) \<in> ((inv Rev) ((ndaTransition\<cdot>nda1) (s, sbe))))
+                          \<longleftrightarrow>
+                        ((f t, out) \<in> ((inv Rev) ((ndaTransition\<cdot>nda2) (f s, sbe)))))"
+shows "(setrevImage (\<lambda>(s, sb). ndaTodo_h (ndaDom\<cdot>nda2) (ndaRan\<cdot>nda2) (s, sb) (\<lambda>s. h (f s)))
+       ((ndaTransition\<cdot>nda1) (x, e))) 
+\<sqsubseteq> (setrevImage (\<lambda>(s, sb). ndaTodo_h (ndaDom\<cdot>nda2) (ndaRan\<cdot>nda2) (s, sb) h) ((ndaTransition\<cdot>nda2) (f x, e)))"
+  apply(simp add: setrevImage_def ndaTodo_h_def)
+
 lemma ndaconcout_staterefine2:
 assumes dom_eq: "ndaDom\<cdot>nda1 = ndaDom\<cdot>nda2" and ran_eq: "ndaRan\<cdot>nda1 = ndaRan\<cdot>nda2"
   and "\<And>s sbe t out. sbeDom sbe = ndaDom\<cdot>nda1 \<Longrightarrow>  (
@@ -95,14 +120,6 @@ shows "nda_h nda1 \<sqsubseteq> (\<lambda>h s. h (f s)) (nda_h nda2)"
 
 
 
-
-
-
-lemma nda_h_final_back: assumes "\<And>state sbe. sbeDom sbe = ndaDom\<cdot>nda \<Longrightarrow> spsConcIn (sbe2SB sbe) (other state) = 
-  ndaConcOutFlatten (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) ((ndaTransition\<cdot>nda) (state,sbe)) (other)"
-  and "\<And> state. uspecDom\<cdot>(other state) = ndaDom\<cdot>nda" and "\<And> state. uspecRan\<cdot>(other state) = ndaRan\<cdot>nda"
-shows "nda_h nda = other" 
-  oops
 
 
 
