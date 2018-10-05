@@ -262,37 +262,32 @@ proof -
   have f10: "{f1 \<parallel> f2 |f1 f2. f1 \<in> Rep_rev_uspec (S1 \<parallel> S2) \<and> f2 \<in> Rep_rev_uspec S3} =
                {f1 \<parallel> f2 |f1 f2. f1 \<in> Rep_rev_uspec S1 \<and> f2 \<in> Rep_rev_uspec (S2 \<parallel> S3)}"
   proof(auto)
-    show "\<And>(f1::'a\<Rrightarrow> 'b) f2::'a\<Rrightarrow> 'b.
+    show "\<And>f1 f2.
        f1 \<in> Rep_rev_uspec (S1 \<parallel> S2) \<Longrightarrow>
-       f2 \<in> Rep_rev_uspec S3 \<Longrightarrow> \<exists>(f1a::'a\<Rrightarrow> 'b) f2a::'a\<Rrightarrow> 'b. (f1 \<parallel> f2) = (f1a \<parallel> f2a) \<and> f1a \<in> Rep_rev_uspec S1 \<and> f2a \<in> Rep_rev_uspec (S2 \<parallel> S3)"
-      sorry
-  next
-    show "\<And>(f1::'a\<Rrightarrow> 'b) f2::'a\<Rrightarrow> 'b.
-       f1 \<in> Rep_rev_uspec S1 \<Longrightarrow>
-       f2 \<in> Rep_rev_uspec (S2 \<parallel> S3) \<Longrightarrow>
-       \<exists>(f1a::'a\<Rrightarrow> 'b) f2a::'a\<Rrightarrow> 'b. (f1 \<parallel> f2) = (f1a \<parallel> f2a) \<and> f1a \<in> Rep_rev_uspec (S1 \<parallel> S2) \<and> f2a \<in> Rep_rev_uspec S3"
-      sorry
-  qed
-(*proof (auto)
-    show "\<And>f1 f2. f1 \<in> Rep_rev_uspec (S1 \<parallel> S2) \<Longrightarrow> f2 \<in> Rep_rev_uspec S3 \<Longrightarrow> \<exists>f1a f2a. f1 \<parallel> f2 = (ufParComp f1a f2a) \<and> f1a \<in> Rep_rev_uspec S1 \<and> f2a \<in> Rep_rev_uspec (S2 \<parallel> S3)"
+       f2 \<in> Rep_rev_uspec S3 \<Longrightarrow> 
+       \<exists>f1a f2a. (f1 \<parallel> f2) = (f1a \<parallel> f2a) \<and> f1a \<in> Rep_rev_uspec S1 \<and> f2a \<in> Rep_rev_uspec (S2 \<parallel> S3)"
     proof -
-      fix f1::"('a,'b) ufun" and f2::"('a,'b) ufun"
+      fix f1::"'a\<Rrightarrow> 'b" and f2::"'a\<Rrightarrow> 'b"
       assume f1_def: "f1 \<in> Rep_rev_uspec (S1 \<parallel> S2)" and f2_def: "f2 \<in> Rep_rev_uspec S3"
       obtain f3 f4 where f3_def: "f3 \<in> Rep_rev_uspec S1" and f4_def: "f4 \<in> Rep_rev_uspec S2" and f1_eq_f3_f4: "f1 = (f3 \<parallel> f4)"
-        by (metis assms(1) empty_iff f1_def uspecIsConsistent_def uspec_parcomp_ele_ex)
-      then show "\<exists>f1a f2a. (ufParComp f1 f2) = (ufParComp f1a f2a) \<and> f1a \<in> Rep_rev_uspec S1 \<and> f2a \<in> Rep_rev_uspec (S2 \<parallel> S3)"
-        using assms(1) assms(2) assms(3) f2_def uspec_parcomp_not_empty uspec_parcompwell_def sorry
+        by (metis assms(1) f1_def uspec_parcomp_ele_ex)
+      then show "\<exists>f1a f2a. (f1 \<parallel> f2) = (f1a \<parallel> f2a) \<and> f1a \<in> Rep_rev_uspec S1 \<and> f2a \<in> Rep_rev_uspec (S2 \<parallel> S3)"
+        using f1_def f2_def f3_def f4_def
+        by (meson assms ufParComp_asso uspec_parcomp_h2 uspec_parcomp_not_empty)
     qed
-  next
-    show "\<And>(f1::'a) f2::'a. f1 \<in> Rep_rev_uspec S1 \<Longrightarrow> f2 \<in> Rep_rev_uspec (S2 \<parallel> S3) \<Longrightarrow> 
-              \<exists>(f1a::'a) f2a::'a. f1 \<parallel> f2 = f1a \<parallel> f2a \<and> f1a \<in> Rep_rev_uspec (S1 \<parallel> S2) \<and> f2a \<in> Rep_rev_uspec S3"
-    proof -
-      fix f1::'a and f2::'a
+  next 
+    show "\<And>f1 f2.
+       f1 \<in> Rep_rev_uspec S1 \<Longrightarrow>
+       f2 \<in> Rep_rev_uspec (S2 \<parallel> S3) \<Longrightarrow> 
+       \<exists>f1a f2a. (f1 \<parallel> f2) = (f1a \<parallel> f2a) \<and> f1a \<in> Rep_rev_uspec (S1 \<parallel> S2) \<and> f2a \<in> Rep_rev_uspec S3"
+     proof -
+      fix f1::"'a\<Rrightarrow> 'b" and f2::"'a\<Rrightarrow> 'b"
       assume f1_def: "f1 \<in> Rep_rev_uspec S1" and f2_def: "f2 \<in> Rep_rev_uspec (S2 \<parallel> S3)"
-      obtain f3 f4 where f3_def: "f3 \<in> Rep_rev_uspec S2" and f4_def: "f4 \<in> Rep_rev_uspec S3" and f2_eq_f3_f4: "f2 = f3 \<parallel> f4"
-        by (metis assms(3) empty_iff f2_def uspecIsConsistent_def uspec_parcomp_ele_ex)
-      then show "\<exists>(f1a::'a) f2a::'a. f1 \<parallel> f2 = f1a \<parallel> f2a \<and> f1a \<in> Rep_rev_uspec (S1 \<parallel> S2) \<and> f2a \<in> Rep_rev_uspec S3"
-        by (meson assms(1) assms(2) assms(3) f1_def parcomp_asso uspec_parcomp_not_empty uspec_parcompwell_def)
+      obtain f3 f4 where f3_def: "f3 \<in> Rep_rev_uspec S2" and f4_def: "f4 \<in> Rep_rev_uspec S3" and f2_eq_f3_f4: "f2 = (f3 \<parallel> f4)"
+        by (metis assms(3) f2_def uspec_parcomp_ele_ex)
+      then show "\<exists>f1a f2a. (f1 \<parallel> f2) = (f1a \<parallel> f2a) \<and> f1a \<in> Rep_rev_uspec (S1 \<parallel> S2) \<and> f2a \<in> Rep_rev_uspec S3"
+        using f1_def f2_def f3_def f4_def
+        by (smt assms ufParComp_asso uspec_parcomp_h2 uspec_parcomp_not_empty)
     qed
   qed
   have f11: "uspecRevSet\<cdot>(S1 \<parallel> S2 \<parallel> S3) = uspecRevSet\<cdot>(S1 \<parallel> (S2 \<parallel> S3))"
@@ -303,16 +298,6 @@ proof -
     apply (rule uspec_eqI)
       apply (simp add: f11)
      apply (simp add: assms(1) assms(3) f0 f1 sup_assoc uspec_parcomp_dom)
-    by (simp add: assms(1) assms(3) f0 f1 sup_assoc uspec_parcomp_ran)
-qed*)
-  have f11: "uspecRevSet\<cdot>(S1 \<parallel> S2 \<parallel> S3) = uspecRevSet\<cdot>(S1 \<parallel> (S2 \<parallel> S3))"
-    apply (subst f2)
-    apply (subst f3)
-    by (simp add: f10)
-  show ?thesis
-    apply (rule uspec_eqI)
-    apply (simp add: f11)
-    apply (simp add: assms(1) assms(3) f0 f1 sup_assoc uspec_parcomp_dom)
     by (simp add: assms(1) assms(3) f0 f1 sup_assoc uspec_parcomp_ran)
 qed
 
@@ -477,43 +462,49 @@ proof -
       Rev {f1 \<circ> f2 |f1 f2. f1 \<in> Rep_rev_uspec S1 \<and> f2 \<in> Rep_rev_uspec (S2 \<circle> S3)}"
     apply (simp add: uspecrevset_insert)
     apply (subst uspec_sercomp_rep)
-     apply (simp add: f1)
+    apply (simp add: f1)
     by (simp add: rev_inv_rev)
   have f10: "{ ufSerComp f1 f2 |(f1::('a,'c) ufun) (f2::('c,'d) ufun). f1 \<in> (Rep_rev_uspec (S1 \<circle> S2)) \<and> (f2 \<in> Rep_rev_uspec S3)} =
               { ufSerComp f1 f2 |(f1::('a,'b) ufun) (f2::('b,'d) ufun). f1 \<in> (Rep_rev_uspec S1) \<and> f2 \<in> (Rep_rev_uspec (S2 \<circle> S3))}"
-    
-    sorry
-(*  apply (rule subset_antisym)
-     apply (rule subsetI)
-  proof auto
-    show "\<And>(f1::'a) f2::'a. f1 \<in> Rep_rev_uspec (S1 \<circle> S2) \<Longrightarrow> f2 \<in> Rep_rev_uspec S3 \<Longrightarrow> \<exists>(f1a::'a) f2a::'a. f1 \<circ> f2 = f1a \<circ> f2a \<and> f1a \<in> Rep_rev_uspec S1 \<and> f2a \<in> Rep_rev_uspec (S2 \<circle> S3)"
+  (*apply (rule subset_antisym)
+  apply (rule subsetI)*)
+  proof(auto)
+    show "\<And>f1 f2.
+       f1 \<in> Rep_rev_uspec (S1 \<circle> S2) \<Longrightarrow>
+       f2 \<in> Rep_rev_uspec S3 \<Longrightarrow>
+       \<exists>f1a f2a. (f1 \<circ> f2) = (f1a \<circ> f2a) \<and> f1a \<in> Rep_rev_uspec S1 \<and> f2a \<in> Rep_rev_uspec (S2 \<circle> S3)"
     proof -
-      fix f1::'a and f2::'a
+      fix f1::"'a\<Rrightarrow> 'c" and f2::"'c\<Rrightarrow> 'd"
       assume f1_def: "f1 \<in> Rep_rev_uspec (S1 \<circle> S2)" and f2_def: "f2 \<in> Rep_rev_uspec S3"
-      obtain f3 f4 where f3_def: "f3 \<in> Rep_rev_uspec S1" and f4_def: "f4 \<in> Rep_rev_uspec S2" 
-        and f1_eq_f3_f4: "f1 = f3 \<circ> f4"
-        by (metis assms(1) empty_iff f1_def uspecIsConsistent_def uspec_sercomp_ele_ex)
-      have f1: " f1 \<circ> f2 = f3 \<circ> (f4 \<circ> f2)"
-        apply (subst f1_eq_f3_f4)
-        by (metis assms(1) assms(2) f2_def f3_def f4_def sercomp_asso uspec_sercompwell2ufunclsercompwell)
-      then show "\<exists>(f1a::'a) f2a::'a. f1 \<circ> f2 = f1a \<circ> f2a \<and> f1a \<in> Rep_rev_uspec S1 \<and> f2a \<in> Rep_rev_uspec (S2 \<circle> S3)"
-        using assms(2) f2_def f3_def f4_def uspec_sercomp_h1 by blast
+      obtain f3 f4 where f3_def: "f3 \<in> Rep_rev_uspec S1" and f4_def: "f4 \<in> Rep_rev_uspec S2" and f1_eq_f3_f4: "f1 = (f3 \<circ> f4)"
+        by (metis assms(1) f1_def uspec_sercomp_ele_ex)
+      have h1: "(f3 \<circ> (f4 \<circ> f2)) = ((f3 \<circ> f4) \<circ> f2)"
+        by (meson assms(1) assms(2) f2_def f3_def f4_def ufSerComp_asso uspec_sercompwell2ufunclsercompwell)
+      have h2: "(f1 \<circ> f2) = (f3 \<circ> (f4 \<circ> f2))"
+        by (simp add: f1_eq_f3_f4 h1)
+      then show "\<exists>f1a f2a. (f1 \<circ> f2) = (f1a \<circ> f2a) \<and> f1a \<in> Rep_rev_uspec S1 \<and> f2a \<in> Rep_rev_uspec (S2 \<circle> S3)"
+        using assms f1_def f2_def f3_def f4_def 
+        by (meson assms ufSerComp_asso uspec_sercomp_h2 uspec_sercomp_not_empty)
     qed
   next
-    show "\<And>(f1::'a) f2::'a. f1 \<in> Rep_rev_uspec S1 \<Longrightarrow> f2 \<in> Rep_rev_uspec (S2 \<circle> S3) \<Longrightarrow> \<exists>(f1a::'a) f2a::'a. f1 \<circ> f2 = f1a \<circ> f2a \<and> f1a \<in> Rep_rev_uspec (S1 \<circle> S2) \<and> f2a \<in> Rep_rev_uspec S3"
+    show "\<And>f1 f2. 
+        f1 \<in> Rep_rev_uspec S1 \<Longrightarrow> 
+        f2 \<in> Rep_rev_uspec (S2 \<circle> S3) \<Longrightarrow> 
+        \<exists>f1a f2a. (f1 \<circ> f2) = (f1a \<circ> f2a) \<and> f1a \<in> Rep_rev_uspec (S1 \<circle> S2) \<and> f2a \<in> Rep_rev_uspec S3"
     proof -
-      fix f1::'a and f2::'a
+      fix f1::"'a\<Rrightarrow> 'b" and f2::"'b\<Rrightarrow> 'd"
       assume f1_def: "f1 \<in> Rep_rev_uspec S1" and f2_def: "f2 \<in> Rep_rev_uspec (S2 \<circle> S3)"
-      obtain f3 f4 where f3_def: "f3 \<in> Rep_rev_uspec S2" and f4_def: "f4 \<in> Rep_rev_uspec S3" 
-                    and f2_eq_f3_f4: "f2 = f3 \<circ> f4"
+      obtain f3 f4 where f3_def: "f3 \<in> Rep_rev_uspec S2" and f4_def: "f4 \<in> Rep_rev_uspec S3" and f2_eq_f3_f4: "f2 = (f3 \<circ> f4)"
         using assms(2) f2_def uspec_sercomp_rep by blast
-      have f1: "f1 \<circ> f2 = (f1 \<circ> f3) \<circ> f4"
-        apply (subst f2_eq_f3_f4)
-        using assms(1) assms(2) f1_def f3_def f4_def sercomp_asso uspec_sercompwell2ufunclsercompwell by blast
-      then show "\<exists>(f1a::'a) f2a::'a. f1 \<circ> f2 = f1a \<circ> f2a \<and> f1a \<in> Rep_rev_uspec (S1 \<circle> S2) \<and> f2a \<in> Rep_rev_uspec S3"
-        using assms(1) f1_def f3_def f4_def uspec_sercomp_not_empty by blast
+      have h1: "(f1 \<circ> (f3 \<circ> f4)) = ((f1 \<circ> f3) \<circ> f4)"
+        by (meson assms(1) assms(2) f1_def f3_def f4_def ufSerComp_asso uspec_sercompwell2ufunclsercompwell)  
+      have h2: "(f1 \<circ> f2) = ((f1 \<circ> f3) \<circ> f4)"
+        by (simp add: f2_eq_f3_f4 h1)  
+      then show "\<exists>f1a f2a. (f1 \<circ> f2) = (f1a \<circ> f2a) \<and> f1a \<in> Rep_rev_uspec (S1 \<circle> S2) \<and> f2a \<in> Rep_rev_uspec S3"
+        using assms(1) f1_def f2_def f3_def f4_def 
+        by (meson assms ufSerComp_asso uspec_sercomp_h2 uspec_sercomp_not_empty)
     qed
-  qed*)
+  qed
   have f11: "uspecRevSet\<cdot>(S1 \<circle> S2 \<circle> S3) = uspecRevSet\<cdot>(S1 \<circle> (S2 \<circle> S3))"
     by (simp add: f10 f2 f3)
   show ?thesis
