@@ -20,8 +20,10 @@ imports ndAutomaton
 
 begin
 
-type_synonym ('state, 'm) trans2TransFunc = "(('state \<times> 'm sbElem) \<Rightarrow> (('state \<times> 'm SB) set rev)) \<Rightarrow>
+type_synonym ('state, 'm) nda2TransF = "('state, 'm) ndAutomaton \<Rightarrow>
     (('state \<times> 'm sbElem) \<Rightarrow> (('state \<times> 'm SB) set rev))"
+
+type_synonym ('state, 'm) nda2InitStateF = "('state, 'm) ndAutomaton \<Rightarrow> (('state \<times> 'm SB) set rev)"
 
 (*******************************************************************)
 section \<open>Definition\<close>
@@ -29,88 +31,131 @@ section \<open>Definition\<close>
 
 datatype CompletionType = Error | Reattach | Ignore | Chaos
 
+definition randomSBLeast:: "'m::message SB" where
+"randomSBLeast \<equiv> (SOME sb. sb \<in> UNIV \<and> (\<forall> otherSB. sb \<sqsubseteq> otherSB))"
+
 subsection \<open>predicate\<close>
+
 
 definition transIsComplete:: "(('state \<times> 'm::message sbElem) \<Rightarrow> (('state \<times> 'm SB) set rev)) \<Rightarrow>
   bool" where 
 "transIsComplete \<equiv> \<lambda> trans. \<forall> state sbe. trans (state, sbe) \<noteq> Rev {}"
 
 definition ndaIsComplete:: "('state::type, 'm::message) ndAutomaton \<Rightarrow> bool" where
-"ndaIsComplete \<equiv> \<lambda> nda. transIsComplete (ndaTransition\<cdot>nda)"  (* SWS: und initialState \<noteq> {} *)
+"ndaIsComplete \<equiv> \<lambda> nda. transIsComplete (ndaTransition\<cdot>nda) \<and> ndaInitialState\<cdot>nda \<noteq> Rev {}"   
 
-subsection \<open>completion\<close>
 
-definition ignoreComplete:: "('state::type \<times> 'm::message sbElem) \<Rightarrow>
+subsection \<open>transCompletion\<close>
+
+(* Ignore completion: stay in the same state and produce abitrary output *)
+definition ignoreTrans_h:: "('state::type \<times> 'm::message sbElem) \<Rightarrow>
     ('state \<times> 'm SB) set rev" where
-"ignoreComplete \<equiv> \<lambda> (state, sbe). Rev {(state, ubclLeast (sbeDom sbe))}"
-(* SWS: Allgemein ndaDom \<noteq> ndaRan *)
+"ignoreTrans_h \<equiv> \<lambda> (state, sbe). Rev {(state, sb) | sb. sb \<in> UNIV}"
 
-definition chaosComplete:: "('state::type \<times> 'm::message sbElem) \<Rightarrow>
+(* Chaos completion: switch to an abitrary state and produce abitrary output *)
+definition chaosTrans_h:: "('state::type \<times> 'm::message sbElem) \<Rightarrow>
     ('state \<times> 'm SB) set rev" where
-"chaosComplete \<equiv> 
-  \<lambda> (state, sbe). Rev UNIV"
+"chaosTrans_h \<equiv>  \<lambda> (state, sbe). Rev UNIV"
 
-definition transCompletion:: "(('state::type \<times> 'm::message sbElem) \<Rightarrow>
-    ('state \<times> 'm SB) set rev) \<Rightarrow> ('state, 'm::message) trans2TransFunc"
-  where "transCompletion f \<equiv> (\<lambda> trans. (\<lambda> (state, sbe). if (trans (state,sbe)  = Rev {}) then 
-                f (state, sbe) else (trans (state,sbe))))"
+(* *)
+definition transCompletion:: "(('state::type \<times> 'm::message sbElem) \<Rightarrow> ('state \<times> 'm SB) set rev) 
+  \<Rightarrow> ('state, 'm::message) nda2TransF"
+  where "transCompletion f \<equiv> (\<lambda> nda. (\<lambda> (state, sbe). if ((ndaTransition\<cdot>nda) (state,sbe)  = Rev {}) then 
+                f (state, sbe) else ((ndaTransition\<cdot>nda) (state,sbe))))"
 
-definition errorTransCompletion:: "'state::type \<Rightarrow> ('state, 'm::message) trans2TransFunc"
-  where "errorTransCompletion errorState \<equiv> 
+(* DD: error completion - unknown transition will cause the automaton to switch to error state and
+and it will stay there and produce no output (empty SB). To ensure that it will only produce no output,
+it will stay in the error state for ever (see Steffen's MD)  *)
+definition errorTransCompletion:: "'state::type \<Rightarrow> ('state, 'm::message) nda2TransF"
+  where "errorTransCompletion errorState nda \<equiv> 
 let errorStateP = (\<lambda> trans (state, sbe). trans (state,sbe)  = Rev {} \<or>
                                          state = errorState)
-in (\<lambda> trans. (\<lambda> (state, sbe). if (errorStateP trans (state,sbe)) then 
-                Rev {(errorState, ubclLeast (sbeDom sbe))} else (trans (state,sbe))))"
-(* SWS: Allgemein ndaDom \<noteq> ndaRan *)
-(* SWS: Von dem Error-State kommt man nie wieder weg? Wieso? *)
+in (\<lambda> (state, sbe). if (errorStateP (ndaTransition\<cdot>nda) (state,sbe)) then 
+                Rev {(errorState, randomSBLeast)} else ((ndaTransition\<cdot>nda) (state,sbe)))"
 
-abbreviation ignorerTransCompletion:: "('state, 'm::message) trans2TransFunc"
-  where "ignorerTransCompletion \<equiv> \<lambda> trans. transCompletion ignoreComplete trans"
+abbreviation ignorerTransCompletion:: "('state, 'm::message) nda2TransF"
+  where "ignorerTransCompletion \<equiv> \<lambda> trans. transCompletion ignoreTrans_h trans"
 
-abbreviation chaosTransCompletion:: "('state, 'm::message) trans2TransFunc"
-  where "chaosTransCompletion \<equiv> \<lambda> trans. transCompletion chaosComplete trans"
+abbreviation chaosTransCompletion:: "('state, 'm::message) nda2TransF"
+  where "chaosTransCompletion \<equiv> \<lambda> trans. transCompletion ignoreTrans_h trans"
 
 
 (* SWS: Bei completion chaos auch den InitialState-Completen *)
-lift_definition ndaCompletion:: "('state::type, 'm::message) trans2TransFunc \<Rightarrow>
+lift_definition ndaTransCompletion:: "('state::type, 'm::message) nda2TransF \<Rightarrow>
   ('state::type, 'm::message) ndAutomaton 
   \<Rightarrow> ('state::type, 'm::message) ndAutomaton"
   is
-"\<lambda> (f::('state::type, 'm::message) trans2TransFunc) nda. 
-  (f (ndaTransition\<cdot>nda), ndaInitialState\<cdot>nda, Discr (ndaDom\<cdot>nda),  Discr (ndaRan\<cdot>nda))"
+"\<lambda> (transComplete::('state::type, 'm::message) nda2TransF) nda. 
+  (transComplete nda, ndaInitialState\<cdot>nda, Discr (ndaDom\<cdot>nda),  Discr (ndaRan\<cdot>nda))"
   by simp
 
-(* SWS: Ich hatte gedacht man generiert einfach "chaosTransCompletion" vor die Transitionsfunktion.
-        Aber ich mag diesen Ansatz auch. Dann kann man mehr allgemein zeigen *)
+subsection \<open>InitStateCompletion\<close>
+definition errorInit_h::  "'state  \<Rightarrow> (('state \<times> 'm::message SB) set rev)" where
+"errorInit_h \<equiv> \<lambda> state. Rev {(state, randomSBLeast)}"
+
+definition ignoreInit_h:: "'state \<Rightarrow> (('state \<times> 'm SB) set rev)" where
+"ignoreInit_h \<equiv> \<lambda> state. Rev {(state, sb) | sb. sb \<in> UNIV}"
+
+definition chaosInit_h:: "(('state \<times> 'm SB) set rev)" where
+"chaosInit_h \<equiv> Rev UNIV"
+
+definition initCompletion:: "(('state \<times> 'm SB) set rev) \<Rightarrow> 
+   ('state::type, 'm::message) nda2InitStateF"
+  where "initCompletion \<equiv> \<lambda> otherInit nda.  if (ndaInitialState\<cdot>nda = Rev {}) then otherInit else
+                                    ndaInitialState\<cdot>nda"
+
+lift_definition ndaCompletion:: "('state::type, 'm::message) nda2TransF \<Rightarrow>
+  ('state::type, 'm::message) nda2InitStateF \<Rightarrow>
+  ('state::type, 'm::message) ndAutomaton 
+  \<Rightarrow> ('state::type, 'm::message) ndAutomaton"
+  is
+"\<lambda> (transComplete::('state::type, 'm::message) nda2TransF) (initComplete::('state, 'm) nda2InitStateF) nda. 
+  (transComplete nda, initComplete nda, Discr (ndaDom\<cdot>nda),  Discr (ndaRan\<cdot>nda))"
+  by simp
+
+abbreviation ndaChaosCompletion:: "('state::type, 'm::message) ndAutomaton 
+  \<Rightarrow> ('state::type, 'm::message) ndAutomaton"
+  where
+"ndaChaosCompletion \<equiv> ndaCompletion chaosTransCompletion (initCompletion chaosInit_h)"
+
+abbreviation ndaErrorCompletion:: "'state \<Rightarrow>('state::type, 'm::message) ndAutomaton 
+  \<Rightarrow> ('state::type, 'm::message) ndAutomaton"
+  where
+"ndaErrorCompletion state \<equiv> ndaCompletion (errorTransCompletion state) (initCompletion (errorInit_h state))"
+
+abbreviation ndaIgnoreCompletion:: "'state \<Rightarrow> ('state::type, 'm::message) ndAutomaton 
+  \<Rightarrow> ('state::type, 'm::message) ndAutomaton"
+  where
+"ndaIgnoreCompletion state \<equiv> ndaCompletion ignorerTransCompletion (initCompletion (ignoreInit_h state))"
 
 (*******************************************************************)
 section \<open>Lemma\<close>
 (*******************************************************************)
 
-lemma ndaiscompleI: assumes "\<And> state sbe. (ndaTransition\<cdot>nda) (state, sbe) \<noteq> Rev {}"
+lemma ndaiscomplI: assumes "transIsComplete (ndaTransition\<cdot>nda)"
+  and "ndaInitialState\<cdot>nda \<noteq> Rev {}"
   shows "ndaIsComplete nda"
-  by (simp add: assms ndaIsComplete_def transIsComplete_def)
+  by (simp add: assms(1) assms(2) ndaIsComplete_def)
 
-lemma traniscompleI: assumes "\<And> state sbe. transition (state, sbe) \<noteq> Rev {}"
+lemma traniscomplI: assumes "\<And> state sbe. transition (state, sbe) \<noteq> Rev {}"
   shows "transIsComplete transition"
   by (simp add: assms ndaIsComplete_def transIsComplete_def)
 
 
-lemma errortranscomplete_complete: "transIsComplete (errorTransCompletion state transition)"
+lemma errortranscompl_compl: "transIsComplete (errorTransCompletion state transition)"
   apply (simp add: transIsComplete_def)
   apply (rule allI) +
   by (simp add: errorTransCompletion_def)
 
-lemma transcompletion_completeI: assumes "\<And>state sbe. f (state, sbe) \<noteq> Rev {}"
+lemma transcompl_complI: assumes "transIsComplete f"
   shows "transIsComplete (transCompletion f ndaTrans)"
   apply (simp add: transIsComplete_def)
   apply (rule allI) +
-  by (simp add: assms transCompletion_def)
+  apply (simp add: transCompletion_def)
+  by (meson assms transIsComplete_def)
 
-lemma ndacomplete_complete:  assumes "\<And> transition. transIsComplete (f transition)" 
-  shows "ndaIsComplete (ndaCompletion f nda)"
-  by (simp add: assms ndaCompletion.rep_eq ndaIsComplete_def ndaTransition.rep_eq)
-
-
+lemma ndaTransCompletion_trueI: assumes "transIsComplete (f nda)"
+  shows "transIsComplete (ndaTransition\<cdot>(ndaTransCompletion f nda))"
+  by (simp add: assms ndaTransCompletion.rep_eq ndaTransition.rep_eq)
 
 end
