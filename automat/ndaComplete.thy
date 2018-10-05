@@ -29,9 +29,6 @@ type_synonym ('state, 'm) nda2InitStateF = "('state, 'm) ndAutomaton \<Rightarro
 section \<open>Definition\<close>
 (*******************************************************************)
 
-definition randomSBLeast:: "'m::message SB" where
-"randomSBLeast \<equiv> (SOME sb. sb \<in> UNIV \<and> (\<forall> otherSB. ubDom\<cdot>sb = ubDom\<cdot>otherSB \<longrightarrow> sb \<sqsubseteq> otherSB))"
-
 subsection \<open>predicate\<close>
 
 definition transIsComplete:: "(('state \<times> 'm::message sbElem) \<Rightarrow> (('state \<times> 'm SB) set rev)) \<Rightarrow>
@@ -47,7 +44,7 @@ subsection \<open>transCompletion\<close>
 (* Ignore completion: stay in the same state and produce empty SB *)
 definition ignoreTrans_h:: "('state::type \<times> 'm::message sbElem) \<Rightarrow>
     ('state \<times> 'm SB) set rev" where
-"ignoreTrans_h \<equiv> \<lambda> (state, sbe). Rev {(state, randomSBLeast)}"
+"ignoreTrans_h \<equiv> \<lambda> (state, sbe). Rev {(state, ubLeast UNIV)}"
 
 (* Chaos completion: switch to an abitrary state and produce abitrary output *)
 definition chaosTrans_h:: "('state::type \<times> 'm::message sbElem) \<Rightarrow>
@@ -68,7 +65,7 @@ definition errorTransCompletion:: "'state::type \<Rightarrow> ('state, 'm::messa
 let errorStateP = (\<lambda> trans (state, sbe). trans (state,sbe)  = Rev {} \<or>
                                          state = errorState)
 in (\<lambda> (state, sbe). if (errorStateP (ndaTransition\<cdot>nda) (state,sbe)) then 
-                Rev {(errorState, randomSBLeast)} else ((ndaTransition\<cdot>nda) (state,sbe)))"
+                Rev {(errorState, ubLeast UNIV)} else ((ndaTransition\<cdot>nda) (state,sbe)))"
 
 abbreviation ignorerTransCompletion:: "('state, 'm::message) nda2TransF"
   where "ignorerTransCompletion \<equiv> \<lambda> trans. transCompletion ignoreTrans_h trans"
@@ -79,7 +76,7 @@ abbreviation chaosTransCompletion:: "('state, 'm::message) nda2TransF"
 
 subsection \<open>InitStateCompletion\<close>
 definition errorInit_h::  "'state  \<Rightarrow> (('state \<times> 'm::message SB) set rev)" where
-"errorInit_h \<equiv> \<lambda> state. Rev {(state, randomSBLeast)}"
+"errorInit_h \<equiv> \<lambda> state. Rev {(state, ubLeast UNIV)}"
 
 definition chaosInit_h:: "(('state \<times> 'm SB) set rev)" where
 "chaosInit_h \<equiv> Rev UNIV"
