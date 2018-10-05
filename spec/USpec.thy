@@ -888,11 +888,6 @@ lemma uspec_inter_notfit:
 
 subsection \<open>uspecFlatten\<close>
 
-(*
-lemma uspec_filter_in_out_cont: "cont (\<lambda> uspecs. (Set.filter (uspec_in_out_eq In Out) uspecs))"
-  by (simp add: setfilter_cont)
-*)
-
 lemma uspec_set_filter_empty: "uspec_set_filter In Out\<cdot>({}) = {}"
   apply (simp add: uspec_set_filter_def)
 proof -
@@ -904,12 +899,6 @@ have "{u. (u::'a uspec) \<in> Collect bot \<and> uspecDom\<cdot>u = In \<and> us
   then show "(\<Lambda> U. Set.filter (\<lambda>u. uspecDom\<cdot>(u::'a uspec) = In \<and> uspecRan\<cdot>u = Out) U)\<cdot> {} = {}"
     using f1 by (metis (no_types) Set.filter_def bot_set_def)
 qed
-
-(*
-lemma uspec_filter_in_out_cont2:
- "cont (\<lambda> uspecs. Set.filter (\<lambda>uspec. uspecDom\<cdot>uspec = In \<and> uspecRan\<cdot>uspec = Out) uspecs)"
-  by (simp add: setfilter_cont)
-*)
 
 lemma uspec_filter_insert: 
   "(\<Lambda> uspecs. Set.filter (\<lambda>uspec. uspecDom\<cdot>uspec = In \<and> uspecRan\<cdot>uspec = Out) uspecs)\<cdot>uspecs
@@ -932,22 +921,6 @@ proof -
   show ?thesis 
     using b1 setflat_obtain by fastforce
 qed
-
-(*
-lemma uspecflatten_mono_h: "monofun (\<lambda> uspecs. Rev (setflat\<cdot>(Rep_rev_uspec ` (inv Rev (uspec_set_filter In Out\<cdot>uspecs)))))"
-proof (rule rev_monoI)
-  fix x::"'a uspec set rev" and y::"'a uspec set rev"
-  assume a1: "x \<sqsubseteq> y"
-  have "uspec_set_filter In Out\<cdot>x \<sqsubseteq> uspec_set_filter In Out\<cdot>y"
-    by (simp add: a1 monofun_cfun_arg)
-  then have " inv Rev (uspec_set_filter In Out\<cdot>y) \<sqsubseteq>  inv Rev (uspec_set_filter In Out\<cdot>x)"
-    by (metis SetPcpo.less_set_def revBelowNeqSubset)
-  then have "(Rep_rev_uspec ` inv Rev (uspec_set_filter In Out\<cdot>y)) \<sqsubseteq> (Rep_rev_uspec ` inv Rev (uspec_set_filter In Out\<cdot>x))"
-    by (simp add: SetPcpo.less_set_def image_mono)
-  thus "setflat\<cdot>(Rep_rev_uspec ` inv Rev (uspec_set_filter In Out\<cdot>y)) \<sqsubseteq> setflat\<cdot>(Rep_rev_uspec ` inv Rev (uspec_set_filter In Out\<cdot>x))"
-    by (simp add: monofun_cfun_arg)
-qed
-*)
 
 lemma uspecflatten_dom_help : "uspecDom\<cdot>(Abs_uspec 
   ((setflat\<cdot>((Rep_cfun uspecSet)  ` (uspec_set_filter In Out\<cdot>uspecs))), Discr In, Discr Out)) = In"
@@ -1154,6 +1127,7 @@ and a3: "uspecRan\<cdot>Z = Out"
       by (simp add: b3)
   qed
 qed
+
 
 subsection \<open>Forall Exists\<close>
 
