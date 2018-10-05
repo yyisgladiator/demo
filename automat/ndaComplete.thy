@@ -29,8 +29,10 @@ type_synonym ('state, 'm) nda2InitStateF = "('state, 'm) ndAutomaton \<Rightarro
 section \<open>Definition\<close>
 (*******************************************************************)
 
+(* SWS: Löschen *)
 datatype CompletionType = Error | Reattach | Ignore | Chaos
 
+(* SWS: ? Das existiert nicht *)
 definition randomSBLeast:: "'m::message SB" where
 "randomSBLeast \<equiv> (SOME sb. sb \<in> UNIV \<and> (\<forall> otherSB. sb \<sqsubseteq> otherSB))"
 
@@ -46,6 +48,9 @@ definition ndaIsComplete:: "('state::type, 'm::message) ndAutomaton \<Rightarrow
 
 
 subsection \<open>transCompletion\<close>
+
+(* SWS: oben sagst du:  "2.3 Ignore: the automaton will stay in the same state and produce nothing." 
+    hier gibst du aber was aus. *)
 
 (* Ignore completion: stay in the same state and produce abitrary output *)
 definition ignoreTrans_h:: "('state::type \<times> 'm::message sbElem) \<Rightarrow>
@@ -80,7 +85,7 @@ abbreviation chaosTransCompletion:: "('state, 'm::message) nda2TransF"
   where "chaosTransCompletion \<equiv> \<lambda> trans. transCompletion ignoreTrans_h trans"
 
 
-(* SWS: Bei completion chaos auch den InitialState-Completen *)
+(* SWS: Löschen? *)
 lift_definition ndaTransCompletion:: "('state::type, 'm::message) nda2TransF \<Rightarrow>
   ('state::type, 'm::message) ndAutomaton 
   \<Rightarrow> ('state::type, 'm::message) ndAutomaton"
@@ -93,6 +98,7 @@ subsection \<open>InitStateCompletion\<close>
 definition errorInit_h::  "'state  \<Rightarrow> (('state \<times> 'm::message SB) set rev)" where
 "errorInit_h \<equiv> \<lambda> state. Rev {(state, randomSBLeast)}"
 
+(* SWS: Macht ignore-Completion beim startzustand sinn? *)
 definition ignoreInit_h:: "'state \<Rightarrow> (('state \<times> 'm SB) set rev)" where
 "ignoreInit_h \<equiv> \<lambda> state. Rev {(state, sb) | sb. sb \<in> UNIV}"
 
