@@ -59,18 +59,6 @@ definition abp2nat :: "abpMessage tsyn stream \<rightarrow> nat tsyn stream" whe
   section {* Datatype Conversion Lemmata *}
 (* ----------------------------------------------------------------------- *)
 
-(* ToDo: add descriptions and move to tsynStream. *)
-
-lemma tsynmap_tsynmap: "tsynMap f\<cdot>(tsynMap g\<cdot>s) = tsynMap (\<lambda> x. f (g x))\<cdot>s"
-  apply (induction s rule: tsyn_ind, simp_all)
-  apply (simp add: tsynmap_sconc_msg)
-  by (simp add: tsynmap_sconc_null)
-
-lemma tsynmap_id: "tsynMap (\<lambda>x. x)\<cdot>s = s"
-  apply (induction s rule: tsyn_ind, simp_all)
-  apply (simp add: tsynmap_sconc_msg)
-  by (simp add: tsynmap_sconc_null)
-
 (* ToDo: add descriptions and inverse lemmata. *)
 
 lemma pair_invpair_inv: "invPair (ABPPair_nat_bool m) = m"

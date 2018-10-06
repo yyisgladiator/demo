@@ -19,13 +19,13 @@ session "HOLMF" (mustWork) in HOLMF = "inc" +
     LFP
 
 session "stream" (mustWork) in stream = "inc" +
-  options [quick_and_dirty = true]
+  options [quick_and_dirty = false]
   theories
     Streams
     tsynStream
 
 session "bundle" (mustWork) in bundle = "stream" + 
-  options [quick_and_dirty = true]
+  options [quick_and_dirty = false]
   theories
     SB
     UBundle_Induction
@@ -33,12 +33,12 @@ session "bundle" (mustWork) in bundle = "stream" +
     SBElem
 
 session "fun" (mustWork) in fun = "bundle" + 
-  options [quick_and_dirty = true]
+  options [quick_and_dirty = false]
   theories
     SPF
 
 session "spec" (mustWork) in spec = "fun" + 
-  options [quick_and_dirty = true]
+  options [quick_and_dirty = false]
   sessions
     HOLMF
   theories

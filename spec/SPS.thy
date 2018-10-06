@@ -120,17 +120,12 @@ lemma spsrtin_dom [simp]: "uspecDom\<cdot>(spsRtIn\<cdot>sps) = uspecDom\<cdot>s
 lemma spsrtin_ran [simp]: "uspecRan\<cdot>(spsRtIn\<cdot>sps) = uspecRan\<cdot>sps"
   by (simp add: spsRtIn_def spsrtin_cont ufclDom_ufun_def ufclRan_ufun_def)
 
+(*
 lemma spsconcout_inj: 
   assumes "\<And>c. c\<in>ubDom\<cdot>sb \<Longrightarrow> # (sb . c) < \<infinity>"
   shows "inj (\<lambda>sps. spsConcOut sb sps)"
-proof -   
-  have f1: "\<forall>c. c \<notin> ubDom\<cdot>sb \<or> #(sb . c) < \<infinity>"
-    by (meson assms)
-  then show ?thesis
-    
-    sorry
-qed
-(*proof -
+
+proof -
   have f1: "\<forall>c. c \<notin> ubDom\<cdot>sb \<or> #(sb . c) < \<infinity>"
     by (meson assms)
   have f2: "\<forall>f u ua. ((\<exists>u ua. (ufclDom\<cdot>(u::('a stream\<^sup>\<Omega>, 'a stream\<^sup>\<Omega>) ufun) = ufclDom\<cdot>ua \<and> ufclRan\<cdot>u = ufclRan\<cdot>ua) 

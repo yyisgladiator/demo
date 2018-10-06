@@ -48,7 +48,14 @@ end
 
 class uscl_conc = uscl_pcpo +
   fixes usclConc :: "'a \<Rightarrow> 'a \<rightarrow> 'a"
+
   assumes usclOkay_conc: "\<And>c. \<And>s1 s2. usclOkay c s1 \<Longrightarrow> usclOkay c s2 \<Longrightarrow> usclOkay c (usclConc s1\<cdot>s2)"
+
+  assumes usclLen_bottom: "usclLen\<cdot>(\<bottom> :: 'a) = 0"
+  assumes usclConc_rightbottom: "\<And> x. usclConc x\<cdot>(\<bottom> :: 'a) = x"
+  assumes usclConc_leftbottom: "\<And> x. usclConc (\<bottom> :: 'a)\<cdot>x = x"
+  assumes usclLen_usclConc: "usclLen\<cdot>(usclConc s1\<cdot>s2) = usclLen\<cdot>s1 + usclLen\<cdot>s2"
+
 begin
 end 
 
