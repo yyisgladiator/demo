@@ -806,6 +806,19 @@ text {* Every message produced by @{term tsynMap} of the function f is in @{term
 lemma tsynmap_tsyndom_range: "tsynDom\<cdot>(tsynMap f\<cdot>s) \<subseteq> range f"
   by (simp add: tsynabs_tsyndom tsynmap_tsynabs)
 
+text {* @{term tsynMap} of the function f on @{term tsynMap} of the function g is 
+        the function composition of f and g *}
+lemma tsynmap_tsynmap: "tsynMap f\<cdot>(tsynMap g\<cdot>s) = tsynMap (\<lambda> x. f (g x))\<cdot>s"
+  apply (induction s rule: tsyn_ind, simp_all)
+  apply (simp add: tsynmap_sconc_msg)
+  by (simp add: tsynmap_sconc_null)
+
+text {* @{term tsynMap} of the identity function leaves the stream unchanged. *}
+lemma tsynmap_id: "tsynMap (\<lambda>x. x)\<cdot>s = s"
+  apply (induction s rule: tsyn_ind, simp_all)
+  apply (simp add: tsynmap_sconc_msg)
+  by (simp add: tsynmap_sconc_null)
+
 text {* @{term tsynMap} test on finite stream. *}
 lemma tsynMap_test_finstream: "tsynMap (plus 1)\<cdot>(<[Msg 1, Msg 2, Msg 1, null]>) 
   = <[Msg 2, Msg 3, Msg 2, null]>"
