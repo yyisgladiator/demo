@@ -400,6 +400,10 @@ lemma uspecmax_max: assumes "spec \<in> USPEC In Out"
   apply (metis (no_types) assms uspecleast_least uspecleast_ran uspecmax_ran uspecran_eq)
   by (simp add: inv_rev_rev revBelowNeqSubset uspecMax.rep_eq uspecrevset_insert)
 
+lemma uspecmax_consistent: "(uspec \<noteq> uspecMax (uspecDom\<cdot>uspec) (uspecRan\<cdot>uspec)) \<longleftrightarrow> uspecIsConsistent uspec"
+  apply(simp add: uspecMax_def uspecIsConsistent_def)
+  by (metis rep_abs_rev_simp uspecMax.abs_eq uspec_obtain uspecmax_dom uspecmax_ran uspecwell_exists)
+
 
 lemma uspec_exists: "USPEC In Out \<noteq> {}"
   unfolding USPEC_def
@@ -1074,6 +1078,24 @@ and a3: "uspecRan\<cdot>Z = Out"
   qed
 qed
 
+lemma uspecflatten_not_max: assumes "SET \<noteq> Rev {}" 
+and "\<And>set. set \<in> inv Rev SET \<Longrightarrow>  (uspecDom\<cdot>set) = In \<and>  (uspecRan\<cdot>set) = Out"
+and "\<And>set. set \<in> inv Rev SET \<Longrightarrow>   set \<noteq> uspecMax In Out"
+shows "uspecFlatten In Out SET \<noteq> uspecMax In Out"
+proof -
+  obtain da_set where da_set_def: "da_set \<in> inv Rev SET"
+    by (metis all_not_in_conv assms(1) rev_inv_rev)
+  have set_dom_ran: "(uspecDom\<cdot>da_set) = In \<and>  (uspecRan\<cdot>da_set) = Out"
+    using assms(2) da_set_def by auto
+  have da_set_in_filter: "da_set \<in> inv Rev (uspec_set_filter In Out\<cdot>SET)"
+    by (simp add: da_set_def set_dom_ran setrevfilter_reversed uspec_set_filter_def)
+  have da_set_not_empty: "da_set \<noteq> uspecMax In Out"
+    by (simp add: assms(3) da_set_def)
+  show ?thesis
+    apply (simp add: uspecFlatten_def)
+    by (metis (mono_tags, lifting) da_set_def da_set_not_empty empty_iff fstI inv_rev_rev set_dom_ran uspecFlatten_def uspecMax.rep_eq uspec_consist_f_ex uspecflatten_ele2 uspecmax_consistent uspecrevset_insert)
+qed
+
 subsection \<open>Forall Exists\<close>
 
 lemma uspec_for_all_ex:
@@ -1369,12 +1391,19 @@ lift_definition uspecConst:: "'f::ufuncl_comp \<Rightarrow> 'f uspec" is
 "\<lambda> f. (Rev {f}, Discr (ufclDom\<cdot>f), Discr (ufclRan\<cdot>f))"
   by auto
 
-lemma uspecconst_dom: "uspecDom\<cdot>(uspecConst f ) = (ufclDom\<cdot>f)"
+lemma uspecconst_dom [simp]: "uspecDom\<cdot>(uspecConst f ) = (ufclDom\<cdot>f)"
   apply (simp add: uspecConst_def)
   by (simp add: uspecdom_insert)
 
-lemma uspecconst_ran: "uspecRan\<cdot>(uspecConst f ) = (ufclRan\<cdot>f)"
+lemma uspecconst_ran [simp]: "uspecRan\<cdot>(uspecConst f ) = (ufclRan\<cdot>f)"
   apply (simp add: uspecConst_def)
   by (simp add: uspecran_insert)
+
+lemma uspecconst_consistent [simp]: "uspecIsConsistent (uspecConst f)"
+  by(simp add: uspecIsConsistent_def uspecConst.rep_eq)
+
+lemma uspecconst_set [simp]: "uspecRevSet\<cdot>(uspecConst f) = Rev {f}"
+  by(simp add: uspecrevset_insert uspecConst.rep_eq)
+
 
 end

@@ -43,6 +43,7 @@ session "spec" (mustWork) in spec = "fun" +
     HOLMF
   theories
     SPS
+    USpec_UFunComp
 
 session "automat" (mustWork) in automat = "spec" + 
   options [quick_and_dirty = true]
@@ -51,17 +52,20 @@ session "automat" (mustWork) in automat = "spec" +
     dAutomaton
     SpsStep
     ndAutomaton
+    ndaTotal
 
 session "automatCaseStudy" (mustWork) in "automat/CaseStudy" = "automat" + 
   options [quick_and_dirty = true]
   theories
+    medGeneralAut
     medFairStep
     medUnfairStep
     medsBelow
 
-session "abp" (canFail) in abp = "automat" + 
+session "abpGenerat" (mustWork) in abp = "automat" + 
   options [quick_and_dirty = true]
   theories
     ReceiverAutomaton
     SenderAutomaton
     MediumAutomaton
+    ABPComponent

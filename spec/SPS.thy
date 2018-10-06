@@ -73,24 +73,35 @@ lemma spsconcout_obtain: assumes "uspec_in g (spsConcOut sb sps)"
   shows "\<exists> f. uspec_in f sps \<and> g = spfConcOut sb\<cdot>f"
   by (metis (no_types, lifting) assms spfConcOut_dom spfConcOut_ran spsconcout_insert ufclDom_ufun_def ufclRan_ufun_def uspecimage_obtain)
 
+lemma spsconcout_const[simp]: "spsConcOut sb (uspecConst f) = uspecConst (spfConcOut sb\<cdot>f)"
+  apply(simp add: spsConcOut_def)
+  by (simp add: ufclDom_ufun_def ufclRan_ufun_def)
+
+lemma spsconcout_consistentI: assumes "uspecIsConsistent S" 
+  shows "uspecIsConsistent (spsConcOut sb S)"
+  by (metis (no_types, hide_lams) assms emptyE spfConcOut_dom spfConcOut_ran spsConcOut_def 
+      ufclDom_ufun_def ufclRan_ufun_def uspecIsConsistent_def uspec_consist_f_ex uspecimage_ele_in uspecrevset_insert)
+
 (* ----------------------------------------------------------------------- *)
 subsection \<open>spsConcIn\<close>
 (* ----------------------------------------------------------------------- *)
 
-lemma spsconcin_insert: 
-  assumes "\<And>c. c\<in>ubDom\<cdot>sb \<Longrightarrow> # (sb . c) < \<infinity>"
-  shows "spsConcIn sb sps = (uspecImage (Rep_cfun (spfConcIn sb)) sps)"
+lemma spsconcin_insert: "spsConcIn sb sps = (uspecImage (Rep_cfun (spfConcIn sb)) sps)"
   by (simp add: spsConcIn_def)
 
-lemma spsconcin_dom: assumes "\<And>c. c\<in>ubDom\<cdot>sb \<Longrightarrow> # (sb . c) < \<infinity>"
-  shows "uspecDom\<cdot>(spsConcIn sb sps) = uspecDom\<cdot>sps"
+lemma spsconcin_dom: "uspecDom\<cdot>(spsConcIn sb sps) = uspecDom\<cdot>sps"
   by (simp add: spsConcIn_def ufclDom_ufun_def ufclRan_ufun_def)
 
-lemma spsconcin_ran: 
-  assumes "\<And>c. c\<in>ubDom\<cdot>sb \<Longrightarrow> # (sb . c) < \<infinity>"
-  shows "uspecRan\<cdot>(spsConcIn sb sps) = uspecRan\<cdot>sps"
+lemma spsconcin_ran:  "uspecRan\<cdot>(spsConcIn sb sps) = uspecRan\<cdot>sps"
   by (simp add: spsConcIn_def ufclDom_ufun_def ufclRan_ufun_def)
 
+lemma spsconcin_const[simp]: "spsConcIn sb (uspecConst f) = uspecConst (spfConcIn sb\<cdot>f)"
+  apply(simp add: spsConcIn_def)
+  by (simp add: ufclDom_ufun_def ufclRan_ufun_def)
+
+lemma spsconcin_ele: assumes "uspec_in g H"
+  shows "\<And> sbe. uspec_in (spfConcIn sbe\<cdot>g) (spsConcIn sbe H)"
+  by (simp add: assms spsConcIn_def ufclDom_ufun_def ufclRan_ufun_def uspecimage_ele_in)
 (* ----------------------------------------------------------------------- *)
 subsection \<open>spsRtIn\<close>
 (* ----------------------------------------------------------------------- *)
