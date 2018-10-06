@@ -1364,11 +1364,17 @@ lemma tsynremdups_test_finstream:
    <[null, Msg (1 :: nat), null, null, null, null, Msg (2 :: nat), null, null]>"
   by (simp add: tsynremdups_insert)
 
+
 text {* @{term tsynRemDups} test on infinitely many time-slots. *}
 lemma tsynremdups_test_infstream:  "tsynRemDups\<cdot>(<[Msg (1 :: nat), Msg (1 :: nat)]> \<bullet> ((<[null]>)\<infinity>)) 
   = <[Msg (1 :: nat), null]> \<bullet> ((<[null]>)\<infinity>)"
   apply (simp add: tsynremdups_insert)
-  oops
+  apply (subst rek2sinftimes [of "sscanlA tsynRemDups_h (\<M> 1::nat)\<cdot>\<up>-\<infinity>" "\<up>-\<infinity>"], simp_all)
+  apply(subst s2sinftimes, simp_all)
+  apply(subst sinftimes_unfold)
+  by (simp add: tsynremdups_sconc_null)
+  
+  
    
 (* ----------------------------------------------------------------------- *)
   subsection {* tsynRemDups_fix_h *}
@@ -1476,7 +1482,14 @@ text {* @{term tsynRemDups_fix_h} test on infinite stream. *}
 lemma tsynremdups_fix_h_test_infinstream:
   "tsynRemDups_fix_h\<cdot>(<[null, Msg (1 :: nat), null, Msg (1 :: nat)]>\<infinity>)\<cdot>None = 
    <[null, Msg (1 :: nat)]> \<bullet> (<[null]>\<infinity>)"
-  oops
+  apply (subst sinftimes_unfold)
+  apply (simp add: tsynremdups_fix_h_sconc_null_none tsynremdups_fix_h_sconc_msg_none
+                   tsynremdups_fix_h_sconc_null_some tsynremdups_fix_h_sconc_msg_some_eq)
+  apply (subst rek2sinftimes [of "tsynRemDups_fix_h\<cdot>\<up>- \<bullet> \<up>(\<M> 1::nat) \<bullet> \<up>- \<bullet> \<up>(\<M> 1::nat)\<infinity>\<cdot>(Some (Discr (\<M> 1::nat)))" "\<up>-\<infinity>"], simp_all)
+  apply (subst sinftimes_unfold)
+  by (smt assoc_sconc bot_is_0 lnat.con_rews rek2sinftimes sinftimes_unfold slen_scons strict_slen
+      tsynremdups_fix_h_sconc_msg_some_eq tsynremdups_fix_h_sconc_null_some)
+
 
 (* ----------------------------------------------------------------------- *)
   subsection {* tsynRemDups_fix *}
@@ -1538,10 +1551,7 @@ text {* @{term tsynRemDups_fix} test on infinite stream. *}
 lemma tsynremdups_fix_test_infinstream:
   "tsynRemDups_fix\<cdot>(<[null, Msg (1 :: nat), null, Msg (1 :: nat)]>\<infinity>) 
      = <[null, Msg (1 :: nat)]> \<bullet> (<[null]>\<infinity>)"
-  oops
-  (*
   by (metis tsynremdups_fix_h_test_infinstream tsynremdups_fix_insert)
-  *)
 
 text {* Abstraction of @{term tsynRemDups_fix} equals srcdups executed on abstracted stream. *}
 lemma tsynremdups_fix_tsynabs: "tsynAbs\<cdot>(tsynRemDups_fix\<cdot>s) = srcdups\<cdot>(tsynAbs\<cdot>s)" 
@@ -1649,8 +1659,9 @@ lemma tsynscanl_test_finstream:
 text {* @{term tsynScanl} test on infinite nat tsyn-stream. *}
 lemma tsynscanl_test_infinstream: 
   "tsynScanl plus 2 \<cdot>(<[Msg 1, Msg 4]> \<bullet> ((<[null]>)\<infinity>)) = <[Msg 3, Msg 7]> \<bullet> ((<[null]>)\<infinity>)"
-  apply (simp add: tsynscanl_insert)
-  oops
+  apply (simp add: tsynscanl_sconc_msg)
+  apply (subst rek2sinftimes [of "tsynScanl (+) (7::'a)\<cdot>\<up>-\<infinity>" "\<up>-\<infinity>"], simp_all)
+  by (metis s2sinftimes sinftimes_unfold tsynscanl_sconc_null)
 
 (* ----------------------------------------------------------------------- *)
   subsection {* tsynDropWhile *}
