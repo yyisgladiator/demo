@@ -1468,8 +1468,6 @@ next
   then show ?case by (simp add: tsynlen_sconc_null tsynremdups_fix_h_sconc_null_none)
 qed
   
-
-
 text {* @{term tsynRemDups_fix_h} test on finite stream. *}
 lemma tsynremdups_fix_h_test_finstream:
   "tsynRemDups_fix_h\<cdot>(<[null, Msg (1 :: nat), null, Msg (1 :: nat)]>)\<cdot>None = 
@@ -1487,9 +1485,7 @@ lemma tsynremdups_fix_h_test_infinstream:
                    tsynremdups_fix_h_sconc_null_some tsynremdups_fix_h_sconc_msg_some_eq)
   apply (subst rek2sinftimes [of "tsynRemDups_fix_h\<cdot>\<up>- \<bullet> \<up>(\<M> 1::nat) \<bullet> \<up>- \<bullet> \<up>(\<M> 1::nat)\<infinity>\<cdot>(Some (Discr (\<M> 1::nat)))" "\<up>-\<infinity>"], simp_all)
   apply (subst sinftimes_unfold)
-  by (smt assoc_sconc bot_is_0 lnat.con_rews rek2sinftimes sinftimes_unfold slen_scons strict_slen
-      tsynremdups_fix_h_sconc_msg_some_eq tsynremdups_fix_h_sconc_null_some)
-
+  oops
 
 (* ----------------------------------------------------------------------- *)
   subsection {* tsynRemDups_fix *}
