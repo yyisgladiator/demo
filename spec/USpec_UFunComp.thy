@@ -1,5 +1,5 @@
 theory USpec_UFunComp
-  imports spec.USpec inc.CPOFix fun.UFun_Comp
+  imports USpec inc.CPOFix fun.UFun_Comp
 begin
 
 (****************************************************)
@@ -257,8 +257,7 @@ proof -
   have f3: "uspecRevSet\<cdot>(S1 \<parallel> (S2 \<parallel> S3)) = 
       Rev {f1 \<parallel> f2 |f1 f2. f1 \<in> Rep_rev_uspec S1 \<and> f2 \<in> Rep_rev_uspec (S2 \<parallel> S3)}"
     apply (simp add: uspecrevset_insert)
-    apply (simp add: f1)
-    by (simp add: rev_inv_rev)
+    by (simp add: f1)
   have f10: "{f1 \<parallel> f2 |f1 f2. f1 \<in> Rep_rev_uspec (S1 \<parallel> S2) \<and> f2 \<in> Rep_rev_uspec S3} =
                {f1 \<parallel> f2 |f1 f2. f1 \<in> Rep_rev_uspec S1 \<and> f2 \<in> Rep_rev_uspec (S2 \<parallel> S3)}"
   proof(auto)

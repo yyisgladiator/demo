@@ -52,6 +52,15 @@ lemma lfp_least: assumes "monofun f"
   shows "(lfp C f) \<sqsubseteq> y"
   by (simp add: assms(1) assms(2) assms(3) assms(4) assms(5) lfp_all)
 
+lemma lfp_least_eq: assumes "monofun f"
+    and "goodFormed C f"
+    and "C \<in> DIV"
+    and "\<And>x. x\<in>C \<Longrightarrow> f x \<sqsubseteq> x \<Longrightarrow> y\<sqsubseteq>x"
+    and "f y \<sqsubseteq> y"
+    and "y \<in> C"
+  shows "(lfp C f) = y"
+  by (simp add: assms(1) assms(2) assms(3) assms(4) assms(5) assms(6) below_antisym lfp_all)
+
 
 lemma lfp_monofun: assumes "f\<sqsubseteq>g"
     and "monofun f" and "monofun g"

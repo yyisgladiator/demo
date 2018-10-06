@@ -5,6 +5,12 @@ imports SB tsynBundle
 begin
 default_sort message
 
+definition sbHdElemWell::"'m::message SB \<Rightarrow> bool" where
+"sbHdElemWell  \<equiv> \<lambda> sb. (\<forall>c \<in> ubDom\<cdot>(sb). sb. c \<noteq> \<epsilon>)"  
+
+
+lemma sbHdElem_below:"sbHdElemWell sb1  \<Longrightarrow> sb1\<sqsubseteq>sb2 \<Longrightarrow>  sbHdElemWell sb2"
+  by (metis bottomI sbHdElemWell_def ubdom_below ubgetch_below)
 
 lemma sbelemwell_empty: "sbElemWell Map.empty"
   by(simp add: sbElemWell_def)
@@ -54,7 +60,7 @@ lemma sbe2sb_dom [simp]: "ubDom\<cdot>(sbe2SB sbe) = sbeDom sbe"
 lemma sbe2sb_nbot: "\<And>c. c\<in>sbeDom sbe \<Longrightarrow> (sbe2SB sbe) . c \<noteq> \<epsilon>"
   by(simp add: ubgetch_insert sbe2SB.rep_eq sbeDom_def)
 
-lemma sbe2sb_getch: "c\<in>sbeDom sbe \<Longrightarrow> ((sbe2SB sbe)  .  c) = \<up>((Rep_sbElem sbe) \<rightharpoonup> c)"
+lemma sbe2sb_getch[simp]: "c\<in>sbeDom sbe \<Longrightarrow> ((sbe2SB sbe)  .  c) = \<up>((Rep_sbElem sbe) \<rightharpoonup> c)"
   unfolding ubgetch_insert sbe2SB.rep_eq
   apply auto
   done
@@ -66,6 +72,45 @@ lemma sbe2sb_hdelem: "(sbHdElem\<cdot>(sbe2SB sbe)) = convDiscrUp (Rep_sbElem sb
   apply (auto simp add: convDiscrUp_def sbe2sb_getch sup'_def up_def)
   apply (simp add: domD sbeDom_def)
   by (simp add: domI sbeDom_def)
+
+lemma sbe2sb_ubhd: assumes "sbHdElemWell ub"
+  shows "sbe2SB (Abs_sbElem (inv convDiscrUp (sbHdElem\<cdot>ub))) = ubHd\<cdot>ub"
+proof -
+  let ?In = "ubDom\<cdot>ub"
+  have h3: "sbElemWell (inv convDiscrUp (sbHdElem\<cdot>ub))"
+    by (meson assms sbHdElemWell_def sbHdElem_sbElemWell)
+  have h5: "\<And>c. c \<in> ?In \<Longrightarrow> (\<lambda>c. (c \<in> ?In)\<leadsto>lshd\<cdot>(ub  .  c))\<rightharpoonup>c =
+          lshd\<cdot>(ub  .  c)"
+    by simp
+  have h7: "\<And> c. c \<in> ?In \<Longrightarrow> ub  .  c \<noteq> \<epsilon>"
+    by (meson assms sbHdElemWell_def)
+  have h8: "\<And>c::channel. c \<in> ?In \<Longrightarrow>
+          updis (inv Discr (inv Iup (lshd\<cdot>(ub  .  c)))) && \<epsilon> = stake (Suc (0::nat))\<cdot>(ub  .  c)"
+  proof -
+    fix c:: channel
+    assume a30: "c \<in> ?In"
+    obtain daEle rtSt where da_conc: "ub . c = \<up>daEle \<bullet> rtSt"
+      using a30 h7 scases by blast
+    show "updis (inv Discr (inv Iup (lshd\<cdot>(ub  .  c)))) && \<epsilon> = stake (Suc (0::nat))\<cdot>(ub  .  c)"
+      apply (simp add: da_conc)
+      by (metis (no_types, hide_lams) Abs_cfun_inverse2 cont_discrete_cpo discr.exhaust iup_inv_iup sup'_def surj_def surj_f_inv_f up_def)
+  qed
+  have h9: "sbeDom (Abs_sbElem (inv convDiscrUp (sbHdElem\<cdot>ub)))  = ?In"
+    by (simp add: Abs_sbElem_inverse h7 sbHdElem_channel sbHdElem_sbElemWell sbeDom_def)
+  show ?thesis
+    apply (rule ub_eq)
+    apply (simp_all add: h9)
+    apply (simp add: h3 Abs_sbElem_inverse)
+    apply (simp add: ubHd_def ubTake_def)
+    apply (subst ubMapStream_ubGetCh)
+      apply (simp add: usclTake_well)
+    apply simp
+    apply (subst convDiscrUp_inv_subst)
+      apply (simp_all add: h7 sbHdElem_channel)
+    apply (simp add: sbhdelem_insert)
+    apply (simp add: sup'_def usclTake_stream_def)
+    by (simp add: h8)
+qed
 
 lemma sbe2sb_hdelem_conc: "ubDom\<cdot>sb = sbeDom sbe \<Longrightarrow> (sbHdElem\<cdot>(ubConcEq(sbe2SB sbe)\<cdot>sb)) = sbHdElem\<cdot>(sbe2SB sbe)"
   apply(simp add: sbhdelem_insert)
@@ -96,7 +141,43 @@ lemma sbedom_null[simp]: "sbeDom (sbeNull cs) = cs"
 lemma sbe_ch_len: "\<And>c. c\<in> ubDom\<cdot>(sbe2SB sbe) \<Longrightarrow> # ((sbe2SB sbe) . c) = 1"
   by (simp add: one_lnat_def sbe2SB.rep_eq ubgetch_insert)
 
+lemma sbe2sb_len[simp]: "sbeDom sbe \<noteq> {} \<Longrightarrow> ubLen (sbe2SB sbe) = 1"
+  apply(simp add: ubLen_def)
+  apply(rule Least_equality)
+  apply (metis all_not_in_conv sbe2sb_dom sbe_ch_len usclLen_stream_def)
+  by (metis order_refl sbe2sb_dom sbe_ch_len usclLen_stream_def)
 
+lemma sbe2sb_maxlen[simp]: "sbeDom sbe \<noteq> {} \<Longrightarrow> ubMaxLen 1 (sbe2SB sbe)"
+  apply(auto simp add: ubMaxLen_def)
+  apply (simp add: sbe_ch_len usclLen_stream_def)
+  by (simp add: one_lnat_def)
+
+lemma sbe_obtain: assumes "ubLen ub = 1" and "ubMaxLen 1 ub"
+  obtains sbe where "sbe2SB sbe = ub" and "sbeDom sbe = ubDom\<cdot>ub"
+proof -
+  have "ubDom\<cdot>ub \<noteq> {}"
+    by (metis assms(1) notinfI3 one_lnat_def order_refl ubLen_def)
+  have len: "\<And>c. c\<in>ubDom\<cdot>ub \<Longrightarrow> (# (ub. c)) = 1"
+    by (metis assms(1) assms(2) ubmax_len_len usclLen_stream_def)
+  have "\<And>s. #s = 1 \<Longrightarrow> \<exists>m. (\<up>m = s \<and> m\<in>sdom\<cdot>s)"
+    using len_one_stream one_lnat_def by fastforce
+  hence f_exists: "\<And>c.  (c\<in>ubDom\<cdot>ub) \<Longrightarrow> \<exists>m. ( ub . c = \<up>m \<and> m \<in> ctype c)" 
+      using len usclOkay_stream_def by (smt subsetCE ubdom_channel_usokay ubgetch_insert)
+  let ?f = "\<lambda>c. (c\<in>ubDom\<cdot>ub) \<leadsto> SOME m. (ub . c = \<up>m \<and> m \<in> ctype c)"
+  have "dom ?f = ubDom\<cdot>ub" by(simp add: domIff2)
+
+  have f_well: "sbElemWell ?f"
+    apply(auto simp add: sbElemWell_def)
+    by (metis (mono_tags, lifting) f_exists someI_ex)
+  have "sbe2SB (Abs_sbElem ?f) = ub"
+    apply(rule ub_eq)
+    apply (simp add: sbeDom_def Abs_sbElem_inverse f_well)
+    apply (simp add: domIff2 sbeDom_def Abs_sbElem_inverse f_well)
+    apply(simp add: ubGetCh_def sbe2SB.rep_eq domIff2 sbeDom_def Abs_sbElem_inverse f_well)
+    by (metis (mono_tags, lifting) f_exists someI_ex ubgetch_insert)
+  thus ?thesis
+    by (metis (no_types, lifting) sbe2sb_dom that) 
+qed
 
 
 subsection \<open>sbeUnion\<close>
@@ -110,12 +191,17 @@ lemma sbeunion_2sb: "sbe2SB (sbe1 \<plusminus> sbe2) = (ubUnion\<cdot>(sbe2SB sb
   apply simp_all
   by (smt Un_iff domD map_add_dom_app_simps(3) map_add_find_right sbe2sb_dom sbe2sb_getch sbeDom_def sbeUnion.rep_eq sbeunion_dom ubunion_getchL ubunion_getchR)
 
-lemma sbeunion_null: "(sbeNull cs1) \<plusminus> (sbeNull cs2) = sbeNull (cs1 \<union> cs2)"
+lemma sbeunion_null[simp]: "(sbeNull cs1) \<plusminus> (sbeNull cs2) = sbeNull (cs1 \<union> cs2)"
   apply(rule sbe_eq)
    apply simp_all
   unfolding sbeUnion.rep_eq sbeNull.rep_eq
   apply auto
   by (simp add: map_add_def)
 
+lemma sbeunion_second[simp]: "c\<in>sbeDom sbe2 \<Longrightarrow> (Rep_sbElem (sbe1 \<plusminus> sbe2) ) \<rightharpoonup> c = Rep_sbElem sbe2 \<rightharpoonup> c"
+  by(simp add: sbeUnion.rep_eq sbeDom_def map_add_dom_app_simps)
+
+lemma sbeunion_first[simp]: "c\<notin>sbeDom sbe2 \<Longrightarrow> (Rep_sbElem (sbe1 \<plusminus> sbe2) ) \<rightharpoonup> c = Rep_sbElem sbe1 \<rightharpoonup> c"  
+  by(simp add: sbeUnion.rep_eq sbeDom_def map_add_dom_app_simps)
 
 end

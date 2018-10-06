@@ -380,6 +380,13 @@ proof -
     by (simp add: ubconc_ublen_onech ubdom_eq ubdom_one)
 qed
 
+lemma ubconceq_restrict: "ubDom\<cdot>ub2 \<subseteq> cs \<Longrightarrow> ubConcEq (ubRestrict cs\<cdot>ub)\<cdot>ub2 = ubConcEq ub\<cdot>ub2"
+  apply(rule ub_eq)
+  apply simp
+   apply blast
+  apply simp
+  by (smt IntE IntI Un_iff subset_Un_eq ubconc_getch ubgetch_ubrestrict ubrestrict_ubdom2 ubup_ubgetch ubup_ubgetch2)
+
 lemma conceq_longer_conc: "ubLen (ubConcEq b1\<cdot>b2) \<ge> ubLen (ubConc b1\<cdot>b2)"
   by (simp add: ubLen_geI ubLen_smallereq_all)
 
