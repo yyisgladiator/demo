@@ -19,7 +19,7 @@ default_sort countable
 (* ----------------------------------------------------------------------- *)
 
 text {* @{term MedSPF}: Lossy medium function for the Alternating Bit Protocol. *}
-lift_definition MedSPF :: "bool stream \<Rightarrow> 'a medMessage tsyn SPF" is
+lift_definition MedSPF :: "bool stream \<Rightarrow> ('a medMessage tsyn,'a medMessage tsyn) SPF" is
   "\<lambda> ora. tsynbMed ora"
   by simp
 

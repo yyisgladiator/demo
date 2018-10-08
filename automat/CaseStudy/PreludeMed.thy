@@ -166,18 +166,6 @@ lemma medout_dom[simp]: "ubDom\<cdot>(medOut a) = medOutDom"
 
   subsection\<open>Additional Lemma\<close>
 
-(* kopiert, nach Merge löschen. *)
-lemma tsynmap_tsynmap: "tsynMap f\<cdot>(tsynMap g\<cdot>s) = tsynMap (\<lambda> x. f (g x))\<cdot>s"
-  apply (induction s rule: tsyn_ind, simp_all)
-  apply (simp add: tsynmap_sconc_msg)
-  by (simp add: tsynmap_sconc_null)
-
-lemma tsynmap_id: "tsynMap (\<lambda>x. x)\<cdot>s = s"
-  apply (induction s rule: tsyn_ind, simp_all)
-  apply (simp add: tsynmap_sconc_msg)
-  by (simp add: tsynmap_sconc_null)
-(**)
-
 lemma tsynmap_medData: "Abs_cfun (map_fun id Abs_ubundle (\<lambda>s::'a tsyn stream. 
     [\<C> ''out'' \<mapsto> tsynMap medData\<cdot>s]))\<cdot>ts  .  \<C> ''out'' = tsynMap medData\<cdot>ts"
   by (metis (no_types) fun_upd_same medOutSetStream.abs_eq medOutSetStream.rep_eq 
@@ -189,21 +177,21 @@ lemma medoutgetstream_medoutsetstream: "medOutGetStream\<cdot>(medOutSetStream\<
   proof -
     have "\<forall>a. inv medData (medData (a::'a)) = a"
   by (meson f_inv_into_f medMessage.inject rangeI)
-    then show "tsynMap (\<lambda>a. inv medData (medData a))\<cdot>ts = ts"
-      using tsynmap_id by auto
+    then show "tsynMap (inv medData \<circ> medData)\<cdot>ts = ts"
+      by (metis inj_onI inv_o_cancel tsynmap_id2)
   qed
 
 lemma medin_null: "medIn - . \<C> ''in'' = \<up>-"
-  by (simp add: medIn_def medInElem.simps(2) medInDom_def sbe2sb_getch sbeNull.rep_eq)
+  by (simp add: medIn_def medInElem.simps(2) medInDom_def sbeNull.rep_eq)
 
 lemma medin_msg: "medIn (Msg m) . \<C> ''in'' = \<up>(Msg(medData m))"
-  by (simp add: medIn_def medInDom_def sbe2sb_getch medInElem.simps(1) medInMsgElem.rep_eq)
+  by (simp add: medIn_def medInDom_def medInElem.simps(1) medInMsgElem.rep_eq)
 
 lemma medout_null: "medOut - . \<C> ''out'' = \<up>-"
-  by (simp add: medOut_def medOutElem.simps(2) medOutDom_def sbe2sb_getch sbeNull.rep_eq)
+  by (simp add: medOut_def medOutElem.simps(2) medOutDom_def sbeNull.rep_eq)
 
 lemma medout_msg: "medOut (Msg m) . \<C> ''out'' = \<up>(Msg(medData m))"
-  by (simp add: medOut_def medOutDom_def sbe2sb_getch medOutElem.simps(1) medOutMsgElem.rep_eq)
+  by (simp add: medOut_def medOutDom_def medOutElem.simps(1) medOutMsgElem.rep_eq)
 
 lemma medingetstream_ubconc: assumes "ubDom\<cdot>ub = medInDom"
   shows "medInGetStream\<cdot>(ubConc (medIn elem)\<cdot>ub) = \<up>elem \<bullet> (medInGetStream\<cdot>ub)"

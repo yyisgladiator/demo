@@ -45,30 +45,28 @@ subsection {* Medium State Lemmata *}
 (* ----------------------------------------------------------------------- *)
 
 text{* If null comes in, it will be sent and Medium stays in its state. *}
-lemma "spsConcIn (medIn -)(MedSPS n) = spsConcOut (medOut -)\<cdot>(MedSPS n)"
+lemma "spsConcIn (medIn -)(MedSPS n) = spsConcOut (medOut -)(MedSPS n)"
   apply (subst spsconcin_insert)
-  apply (simp add: medIn_def sbe2sb_getch)
   apply (subst spsconcout_insert)
-  apply (simp add: medOut_def sbe2sb_getch)
   apply (rule uspec_eqI)
   apply (subst uspecimage_useful_uspecrevset)
   apply (simp add: ufclDom_ufun_def ufclRan_ufun_def)
   apply (subst uspecimage_useful_uspecrevset)
   apply (simp add: ufclDom_ufun_def ufclRan_ufun_def)
-  apply (simp add: uspecrevset_insert setrevImage_def MedSPS.rep_eq inv_rev_rev)
+  apply (simp add: uspecrevset_insert setrevImage_def MedSPS.rep_eq)
   apply (rule image_cong, simp_all)
   using medspf_spfconc_null apply blast
   by (simp add: ufclDom_ufun_def ufclRan_ufun_def)+
 
 text{* If a message comes in and the counter is not zero, null will be sent and Medium stays in its 
   state. *}
-lemma "spsConcIn (medIn (Msg m)) (MedSPS (Suc n)) = spsConcOut (medOut -)\<cdot>(MedSPS n)"
+lemma "spsConcIn (medIn (Msg m)) (MedSPS (Suc n)) = spsConcOut (medOut -)(MedSPS n)"
 sorry
 
 text{* If a message comes in and the counter is zero, the message will be sent and Medium changes its 
   state. *}
 lemma "spsConcIn (medIn (Msg m)) (MedSPS 0) 
-  = spsConcOut (medOut (Msg m))\<cdot>(uspecFlatten medInDom medOutDom (Rev {MedSPS n | n. True}))"
+  = spsConcOut (medOut (Msg m))(uspecFlatten medInDom medOutDom (Rev {MedSPS n | n. True}))"
 sorry
 
 end
