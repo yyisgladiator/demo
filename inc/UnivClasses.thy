@@ -48,7 +48,14 @@ end
 
 class uscl_conc = uscl_pcpo +
   fixes usclConc :: "'a \<Rightarrow> 'a \<rightarrow> 'a"
+
   assumes usclOkay_conc: "\<And>c. \<And>s1 s2. usclOkay c s1 \<Longrightarrow> usclOkay c s2 \<Longrightarrow> usclOkay c (usclConc s1\<cdot>s2)"
+
+  assumes usclLen_bottom: "usclLen\<cdot>(\<bottom> :: 'a) = 0"
+  assumes usclConc_rightbottom: "\<And> x. usclConc x\<cdot>(\<bottom> :: 'a) = x"
+  assumes usclConc_leftbottom: "\<And> x. usclConc (\<bottom> :: 'a)\<cdot>x = x"
+  assumes usclLen_usclConc: "usclLen\<cdot>(usclConc s1\<cdot>s2) = usclLen\<cdot>s1 + usclLen\<cdot>s2"
+
 begin
 end 
 
@@ -99,7 +106,7 @@ end
 
 class ubcl_comp = ubcl +
   fixes ubclLeast :: "channel set \<Rightarrow> 'a"
-  fixes ubclUnion :: "'a \<rightarrow> 'a \<rightarrow> 'a"
+  fixes ubclUnion :: "'a \<rightarrow> 'a \<rightarrow> 'a" 
   fixes ubclRestrict :: "channel set \<Rightarrow> 'a \<rightarrow> 'a"
   
   assumes ubclunion_dom: "ubclDom\<cdot>(ubclUnion\<cdot>f1\<cdot>f2) = ubclDom\<cdot>f1 \<union> ubclDom\<cdot>f2"
@@ -126,7 +133,11 @@ class ubcl_comp = ubcl +
   assumes ubclunion_id: "ubclUnion\<cdot>ub\<cdot>ub = ub"
   assumes ubclunion_asso:"ubclUnion\<cdot>(ubclUnion\<cdot>ub1\<cdot>ub2)\<cdot>ub3 = ubclUnion\<cdot>ub1\<cdot>(ubclUnion\<cdot>ub2\<cdot>ub3)"
   assumes ubclunion_commu: "ubclDom\<cdot>ub1 \<inter> ubclDom\<cdot>ub2 = {} \<longrightarrow> ubclUnion\<cdot>ub1\<cdot>ub2 = ubclUnion\<cdot>ub2\<cdot>ub1"
+
 begin
+
+abbreviation ubclUnion_abbr :: " 'm \<Rightarrow> 'm \<Rightarrow> 'm" (infixl "\<uplus>" 100) where 
+"b1 \<uplus> b2 \<equiv> ubclUnion\<cdot>b1\<cdot>b2"
 
 lemma ubclrestrict_dom_idI: "ubclDom\<cdot>x = cs \<Longrightarrow> ubclRestrict cs\<cdot>x = x"
   using local.ubclrestrict_dom_id by blast
@@ -167,6 +178,17 @@ class ufuncl = cpo +
 begin
 end
 
+
+class ufuncl_comp = ufuncl +
+  fixes ufunclLeast :: "channel set \<Rightarrow> channel set \<Rightarrow> 'a"
+  
+  assumes ufuncldom_least: "\<And> x. ufunclLeast (ufclDom\<cdot>x) (ufclRan\<cdot>x)\<sqsubseteq>x"
+  assumes ufuncldom_least_dom: "\<And> cs. ufclDom\<cdot>(ufunclLeast cin cout) = cin"
+  assumes ufuncldom_least_ran: "\<And> cs. ufclRan\<cdot>(ufunclLeast cin cout) = cout"
+
+begin
+end
+(*
 class ufuncl_comp = ufuncl +
   fixes ufunclLeast :: "channel set \<Rightarrow> channel set \<Rightarrow> 'a"
 
@@ -227,6 +249,6 @@ lemma sercompwell_asso2: "ufunclSerCompWell f1 f2 \<Longrightarrow>
                       ufclDom\<cdot>f1 \<inter> ufclRan\<cdot>f2 = {} \<Longrightarrow> ufclDom\<cdot>f2 \<inter> ufclRan\<cdot>f3 = {} \<Longrightarrow> ufunclSerCompWell (f1 \<circ> f2) f3"
   by (simp add: local.sercompwell_asso)
 end
-
+*)
 
 end

@@ -72,17 +72,17 @@ definition daNextOutput:: "('s::type, 'm::message) dAutomaton \<Rightarrow> 's \
 
 
 
-definition da_helper:: "(('s \<times>'e) \<Rightarrow> ('s \<times> 'm::message  SB)) \<Rightarrow> 's \<Rightarrow> ('s \<Rightarrow> 'm SPF) \<rightarrow> ('e \<Rightarrow> 'm SPF)" where
+definition da_helper:: "(('s \<times>'e) \<Rightarrow> ('s \<times> 'm::message  SB)) \<Rightarrow> 's \<Rightarrow> ('s \<Rightarrow> ('m,'m) SPF) \<rightarrow> ('e \<Rightarrow> ('m,'m) SPF)" where
 "da_helper f s \<equiv> \<Lambda> h. (\<lambda> e. spfRtIn\<cdot>(spfConcOut (snd (f (s,e)))\<cdot>(h (fst (f (s,e))))))"
 
 (* As defined in Rum96 *)
-definition da_h :: "('s::type, 'm::message) dAutomaton \<Rightarrow> ('s \<Rightarrow> 'm SPF)" where
+definition da_h :: "('s::type, 'm::message) dAutomaton \<Rightarrow> ('s \<Rightarrow> ('m,'m) SPF)" where
 "da_h automat = spfStateFix (daDom automat)(daRan automat)\<cdot>
      (\<Lambda> h. (\<lambda>s. spfStep  (daDom automat) (daRan automat)\<cdot>(da_helper (daTransition automat) s\<cdot>h)))"
 
 (* This function also prepends the first SB ... *)
 (* But basically she just calls h *)
-definition da_H :: "('s, 'm::message) dAutomaton \<Rightarrow> 'm SPF" where
+definition da_H :: "('s, 'm::message) dAutomaton \<Rightarrow> ('m,'m) SPF" where
 "da_H automat = spfConcOut (daInitialOutput automat)\<cdot>(da_h automat (daInitialState automat))"
 
 
@@ -166,6 +166,13 @@ lemma da_h_final_h3:
 (* Use this ! *)
 lemma da_h_final2: assumes "sbeDom sbe = daDom da"
   shows "spfConcIn (sbe2SB sbe)\<cdot>(da_h da s) = spfConcOut (daNextOutput da s sbe)\<cdot>((da_h da (daNextState da s sbe)))"
+  by (metis (no_types) assms da_h_dom da_h_final_h3 spfConcIn_dom spfConcIn_step spfConcOut_dom spf_eq)
+
+(* use this with the "rule" command *)
+lemma da_h_stepI: assumes "sbeDom sbe = daDom da"
+  assumes "(daNextOutput da s sbe) = out"
+      and "(daNextState da s sbe) = nextState"
+  shows "spfConcIn (sbe2SB sbe)\<cdot>(da_h da s) = spfConcOut out\<cdot>((da_h da nextState))"
   by (metis (no_types) assms da_h_dom da_h_final_h3 spfConcIn_dom spfConcIn_step spfConcOut_dom spf_eq)
 
 lemma da_h_bottom: assumes "ubDom\<cdot>sb = daDom automat" and "\<exists>c\<in>daDom automat. sb  .  c = \<epsilon>"

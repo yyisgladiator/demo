@@ -32,11 +32,9 @@ abbreviation invMsg :: "'a tsyn \<Rightarrow> 'a"  ("\<M>\<inverse> _") where
   "invMsg \<equiv> inverseMsg"
 
 text {* Prove that datatype tsyn is countable. Needed, since the domain-constructor defined
-        to work for countable types .*}
+        to work for countable types. *}
 instance tsyn :: (countable) countable
   by countable_datatype
-
-(* ToDo: add descriptions. *)
 
 text {* Instantiation of tsyn message. *}
 instantiation tsyn :: (message) message
@@ -243,6 +241,61 @@ lemma szip_sprojsnd:
   apply (rename_tac a as bs)
   by (rule_tac x = bs in scases, simp_all)
 
+text {* @{term sdom} of @{term szip} is subset of the Cartesian product of the sets of values of
+        the zipped streams. *}
+lemma szip_sdom: "sdom\<cdot>(szip\<cdot>as\<cdot>bs) \<subseteq> (sdom\<cdot>as \<times> sdom\<cdot>bs)"
+  apply (induction as arbitrary: bs rule: ind, simp_all)
+  apply (rule adm_all, rule admI)
+  apply (simp add: contlub_cfun_arg contlub_cfun_fun lub_eq_Union, blast)
+  apply (rename_tac a s bs)
+  by (rule_tac x = bs in scases, simp_all,  blast)
+
+text {* Each element of @{term sdom} of @{term sscanl} is in the range of f *}
+lemma sscanl_sdom: "sdom\<cdot>(sscanl f i\<cdot>s) \<subseteq> {f i s | i s. True}"
+  apply (induction s rule: ind, simp_all)
+  apply (rule admI)
+  apply (metis (no_types, lifting) ch2ch_Rep_cfunR contlub_cfun_arg l44)
+  apply (rename_tac a s)
+  apply (rule conjI)
+  apply auto
+  apply (simp add: sdom_def2)
+  apply (erule exE)
+  apply (rename_tac n)
+  apply (case_tac "n > 0")
+  apply (rule_tac x = "snth (n - 1) (sscanl f (f i a)\<cdot>s)" in exI)
+  apply (rule_tac x = "snth n s" in exI)
+  apply (metis (no_types, lifting) Suc_pred' sscanl_snth)
+  apply (rule_tac x = "f i a" in exI)
+  apply (rule_tac x = "shd s" in exI)
+  by (metis empty_is_shortest gr0I snth_shd sscanl_shd)
+
+text {* Each element of @{term sdom} of @{term sscanlA} is in the range of @{term fst} of f *}
+lemma sscanla_sdom: "sdom\<cdot>(sscanlA f i\<cdot>s) \<subseteq> { fst(f i a) | i a. True }"
+  apply (induction s rule: ind, simp_all)
+  apply (rule admI)
+  apply (metis (no_types, lifting) ch2ch_Rep_cfunR contlub_cfun_arg l44)
+  apply (rule conjI, fastforce)
+  apply (rule subsetI)
+  apply (simp add: sdom_def2 sscanlA_def sprojfst_def)
+  apply (erule exE)
+  apply (rename_tac n)
+  apply (case_tac "n > 0")
+  apply (simp add: smap_sdom smap_snth_lemma gr0_conv_Suc)
+  apply (erule exE)
+  apply (rename_tac a s x n m)
+  apply (rule_tac x = "snd (snth m (sscanl (\<lambda>(u::'a, y::'c). f y) (undefined, snd (f i a))\<cdot>s))" 
+         in exI)
+  apply (rule_tac x = "snth (Suc m) s" in exI)
+  apply (simp add: case_prod_beta' sscanl_snth)
+  by (simp, metis (no_types, lifting) case_prod_conv fair_sscanl lnsuc_neq_0 shd1 slen_empty_eq 
+      smap_hd_rst sscanl_shd)
+
+lemma sdropwhile_sdom: "sdom\<cdot>(sdropwhile f\<cdot>s) \<subseteq> sdom\<cdot>s"
+  apply (induction s rule: ind, simp_all)
+  apply (rename_tac a s)
+  apply (case_tac "f a")
+  by (rule subset_insertI2, simp_all)
+
 (* ----------------------------------------------------------------------- *)
   section {* Lemmata on Time-Synchronous Streams *}
 (* ----------------------------------------------------------------------- *)
@@ -316,7 +369,7 @@ lemma tsyndom_insert: "tsynDom\<cdot>s = {m | m. (Msg m) \<in> sdom\<cdot>s}"
   by (metis (no_types) Abs_cfun_inverse2 tsynDom_def tsyndom_cont)
 
 text {* @{term tsynDom} maps the empty stream on the empty set. *}
-lemma tsyndom_strict: "tsynDom\<cdot>\<epsilon> = {}"
+lemma tsyndom_strict [simp]: "tsynDom\<cdot>\<epsilon> = {}"
   by (simp add: tsyndom_insert)
 
 text {* If the domain of a stream is subset of another set it is also after removing the first 
@@ -381,6 +434,11 @@ lemma tsyndom_slen: assumes "#s = Fin k" shows "card (tsynDom\<cdot>s) \<le> k"
     then show ?thesis
       by (simp add: tsyndom_insert)
   qed
+
+text {* @{term tsynDom} inverses the msg, removes null. *}
+lemma tsyndom_sdom: "tsynDom\<cdot>s = inverseMsg ` ((sdom\<cdot>s) - {null})"
+  apply (simp add: tsyndom_insert image_def set_eq_iff)
+  by (metis DiffE DiffI empty_iff insert_iff inverseMsg.simps(2) tsyn.exhaust tsyn.simps(3))
 
 text {* @{term tsynDom} test on finite stream. *}
 lemma tsyndom_test_finstream: "tsynDom\<cdot>(<[Msg (1 :: nat), Msg 2, null, null, Msg 1, null]>) = {1, 2}"
@@ -448,6 +506,21 @@ lemma tsynabs_sdom_subset_eq: "(sdom\<cdot>s \<subseteq> insert - (Msg ` range a
     then show ?case 
       by (simp only: tsynabs_sconc_null sdom2un, auto)
   qed
+
+
+(* ToDo: rename or remove as duplicate. *)
+
+text {* The set of messages of a stream equals the set of values of @{term tsynAbs} of the 
+        stream. *}
+lemma tsynabs_tsyndom: "tsynDom\<cdot>s = sdom\<cdot>(tsynAbs\<cdot>s)"
+  apply (induction s rule: tsyn_ind, simp_all)
+  apply (simp add: tsynabs_sconc_msg tsyndom_sconc_msg)
+  by (simp add: tsyndom_sconc_null tsynabs_sconc_null)
+
+lemma tsynabs_sdom: "sdom\<cdot>(tsynAbs\<cdot>s) = tsynDom\<cdot>s"
+  apply (induction rule: tsyn_ind, simp_all)
+  apply (simp add: tsynabs_sconc_msg tsyndom_sconc_msg)
+  by (simp add: tsynabs_sconc_null tsyndom_sconc_null)
 
 text {* @{term tsynAbs} test on finite stream. *}
 lemma tsynabs_test_finstream: "tsynAbs\<cdot>(<[Msg 1, Msg 2, null, null, Msg 1, null]>) = <[1, 2, 1]>"
@@ -618,7 +691,35 @@ lemma tsynfilter_tsynabs: "tsynAbs\<cdot>(tsynFilter A\<cdot>s) = sfilter A\<cdo
 
 text {* @{term tsynFilter} leaves the length of the stream unchanged. *}
 lemma tsynfilter_tsynlen: "tsynLen\<cdot>(tsynFilter A\<cdot>s) \<le> tsynLen\<cdot>s"
-  sorry
+  proof (induction s rule: tsyn_ind)
+    case adm
+    then show ?case 
+      by (simp add: slen_sfilterl1 tsynfilter_tsynabs tsynlen_insert)  
+  next
+    case bot
+    then show ?case 
+      by simp
+  next
+    case (msg m s)
+    then show ?case 
+      by (simp add: slen_sfilterl1 tsynfilter_tsynabs tsynlen_insert)
+  next
+    case (null s)
+    then show ?case 
+      by (simp add: tsynabs_sconc_null tsynfilter_tsynabs tsynlen_insert)
+  qed
+
+text {* @{term sdom} of @{term tsynFilter} A is subset of @{term image} of 
+        @{term tsynFilterElem} of A. *}
+lemma tsynfilter_sdom: "sdom\<cdot>(tsynFilter A\<cdot>s) \<subseteq> tsynFilterElem A ` sdom\<cdot>s"
+  apply (induction s arbitrary: A rule: tsyn_ind, simp_all)
+  apply (rule admI)
+  by (simp add: smap_sdom tsynfilter_insert)+
+
+text {* @{term tsynDom} of @{term tsynFilter} is subset of @{term tsynDom} of 
+        the original stream. *}
+lemma tsynfilter_tsyndom: "tsynDom\<cdot>(tsynFilter A\<cdot>s) \<subseteq> tsynDom\<cdot>s"
+  by (simp add: tsynabs_tsyndom tsynfilter_tsynabs)
 
 text {* @{term tsynFilter} test on finite nat tsyn-stream. *}
 lemma tsynfilter_test_finstream: 
@@ -669,11 +770,72 @@ text {* @{term tsynMap} leaves the length of a stream unchanged. *}
 lemma tsynmap_slen: "#(tsynMap f\<cdot>s) = #s"
   by (simp add: tsynmap_insert)
 
+text {* @{term tsynMap} leaves the length of a tsyn stream unchanged. *}
+lemma tsynmap_tsynlen: "tsynLen\<cdot>(tsynMap f\<cdot>ts) = tsynLen\<cdot>ts"
+proof (induction ts rule: tsyn_ind)
+  case adm
+  then show ?case by simp
+next
+  case bot
+  then show ?case by simp
+next
+  case (null s)
+  then show ?case by (simp add: tsynlen_sconc_null tsynmap_sconc_null)
+next
+  case (msg m s)
+  then show ?case by (simp add: tsynlen_sconc_msg tsynmap_sconc_msg)
+qed
+
 text {* Abstraction of @{term tsynMap} equals sMap executed on abstracted stream. *}
 lemma tsynmap_tsynabs: "tsynAbs\<cdot>(tsynMap f\<cdot>s) = smap f\<cdot>(tsynAbs\<cdot>s)"
   apply (induction s rule: tsyn_ind, simp_all)
   apply (simp add: tsynmap_sconc_msg tsynabs_sconc_msg)
   by (simp add: tsynmap_sconc_null tsynabs_sconc_null)
+
+text {* Every value produced by @{term tsynMap} of the function f is in @{term image} of @{term tsynApplyElem} f *}
+lemma tsynmap_sdom: "sdom\<cdot>(tsynMap f\<cdot>s) = tsynApplyElem f ` sdom\<cdot>s"
+  apply (induction s arbitrary: f rule: tsyn_ind, simp_all)
+  apply (rule admI)
+  by (simp add: smap_sdom tsynmap_insert)+
+
+text {* Every message produced by @{term tsynMap} of the function f is in @{term image} of f *}
+lemma tsynmap_tsyndom: "tsynDom\<cdot>(tsynMap f\<cdot>s) = f ` tsynDom\<cdot>s"
+  by (simp add: tsynmap_tsynabs tsynabs_tsyndom smap_sdom)
+
+text {* Every message produced by @{term tsynMap} of the function f is in @{term range} of f *}
+lemma tsynmap_tsyndom_range: "tsynDom\<cdot>(tsynMap f\<cdot>s) \<subseteq> range f"
+  by (simp add: tsynabs_tsyndom tsynmap_tsynabs)
+
+text {* @{term tsynMap} of the function f on @{term tsynMap} of the function g is 
+        the function composition of f and g *}
+lemma tsynmap_tsynmap: "tsynMap f\<cdot>(tsynMap g\<cdot>s) = tsynMap (\<lambda> x. f (g x))\<cdot>s"
+  apply (induction s rule: tsyn_ind, simp_all)
+  apply (simp add: tsynmap_sconc_msg)
+  by (simp add: tsynmap_sconc_null)
+
+text {* @{term tsynMap} of the identity function leaves the stream unchanged. *}
+lemma tsynmap_id: "tsynMap (\<lambda>x. x)\<cdot>s = s"
+  apply (induction s rule: tsyn_ind, simp_all)
+  apply (simp add: tsynmap_sconc_msg)
+  by (simp add: tsynmap_sconc_null)
+
+lemma tsynmap_tsynmap2[simp]: "tsynMap f\<cdot>(tsynMap g\<cdot>s) = tsynMap (f\<circ>g)\<cdot>s"
+  apply(induction s rule: tsyn_ind)
+     apply simp_all
+  by(simp add: tsynmap_sconc_null tsynmap_sconc_msg)+
+
+lemma tsynmap_id2 [simp]: "tsynMap id\<cdot>s = s"
+  apply(induction s rule: tsyn_ind)
+  apply simp_all
+  by(simp add: tsynmap_sconc_null tsynmap_sconc_msg)+
+
+lemma tsynmap_inv_id[simp]: "tsynDom\<cdot>tsyn \<subseteq> range F \<Longrightarrow> tsynMap (F \<circ> (inv F))\<cdot>tsyn = tsyn"
+  apply (induction tsyn rule: ind)
+  apply simp_all
+  apply (rename_tac x xs)
+  apply (case_tac x)
+  apply (auto simp add: tsynmap_sconc_msg tsynmap_sconc_null)
+  by (auto simp add: tsyndom_sconc_msg tsyndom_sconc_null f_inv_into_f)
 
 text {* @{term tsynMap} test on finite stream. *}
 lemma tsynMap_test_finstream: "tsynMap (plus 1)\<cdot>(<[Msg 1, Msg 2, Msg 1, null]>) 
@@ -684,6 +846,13 @@ text {* @{term tsynMap} test on infinite stream. *}
 lemma tsynMap_test_infstream: "tsynMap (plus 1)\<cdot>((<[Msg 3, Msg 4, Msg 3]>)\<infinity>) 
   = (<[Msg 4, Msg 5, Msg 4]>)\<infinity>"
   by (simp add: tsynmap_insert)
+
+lemma tsynmap_tick [simp]: "x \<in> sdom\<cdot>(tsynMap F\<cdot>stream) \<Longrightarrow> x \<notin> Msg ` range F \<Longrightarrow> x = -"
+  by (metis (no_types, lifting) insert_iff subsetCE tsynabs_sdom_subset_eq tsynabs_tsyndom tsynmap_tsyndom_range)
+
+lemma tsynmap_msg [simp]: "tsynMap f\<cdot>(\<up>tsyn) = \<up>(tsynApplyElem f tsyn)"
+  apply(cases tsyn)
+  by(auto simp add: tsynMap_def)
 
 (* ----------------------------------------------------------------------- *)
   subsection {* tsynProjFst *}
@@ -749,7 +918,34 @@ lemma tsynprojfst_tsynabs: "tsynAbs\<cdot>(tsynProjFst\<cdot>s) = sprojfst\<cdot
 
 text {* @{term tsynProjFst} leaves the length of a time abstracted stream unchanged. *}
 lemma tsynprojfst_tsynlen: "tsynLen\<cdot>(tsynProjFst\<cdot>ts) = tsynLen\<cdot>ts"
-  sorry
+proof (induction ts rule: tsyn_ind)
+  case adm
+  then show ?case by simp
+next
+  case bot
+  then show ?case by simp
+next
+  case (msg m s)
+  obtain a  where b_def: "\<exists>b. m = (a, b)" 
+    by fastforce
+  obtain b where m_def: "m = (a, b)"
+    using b_def by auto
+  then show ?case 
+    by (simp add: m_def tsynprojfst_sconc_msg tsynlen_sconc_msg msg.IH)
+next
+  case (null s)
+  then show ?case by (simp add: tsynlen_sconc_null tsynprojfst_sconc_null)
+qed
+
+text {* Every value produced by @{term tsynProjFst} is in the image of @{term tsynFst} *}
+lemma tsynprojfst_sdom: "sdom\<cdot>(tsynProjFst\<cdot>s) = tsynFst ` sdom\<cdot>s"
+  apply (induction rule: tsyn_ind, simp_all)
+  apply (rule admI)
+  by (simp add: smap_sdom tsynprojfst_insert)+
+
+text {* Every message produced by @{term tsynProjFst} is in the image of @{term fst} *}
+lemma tsynprojfst_tsyndom: "tsynDom\<cdot>(tsynProjFst\<cdot>s) = fst ` tsynDom\<cdot>s"
+  by (simp add: tsynabs_tsyndom tsynprojfst_tsynabs sprojfst_def smap_sdom)
 
 text {* @{term tsynProjFst} test on finite stream. *}
 lemma tsynprojfst_test_finstream:
@@ -776,7 +972,7 @@ lemma tsynprojsnd_strict [simp]: "tsynProjSnd\<cdot>\<epsilon> = \<epsilon>"
 
 text {* @{term tsynProjSnd} distributes over concatenation. *}
 lemma tsynprojsnd_sconc_msg: 
-  shows "tsynProjSnd\<cdot>(\<up>(Msg (a, b)) \<bullet> as) = \<up>(Msg b) \<bullet> (tsynProjSnd\<cdot>as)"
+   "tsynProjSnd\<cdot>(\<up>(Msg (a, b)) \<bullet> as) = \<up>(Msg b) \<bullet> (tsynProjSnd\<cdot>as)"
   by (simp add: tsynprojsnd_insert)
  
 text {* @{term tsynProjSnd} ignores empty time-slots. *}
@@ -801,6 +997,26 @@ text {* @{term tsynProjSnd} leaves the length of a stream unchanged. *}
 lemma tsynprojsnd_slen: "#(tsynProjSnd\<cdot>s) = #s"
   by (simp add: tsynprojsnd_insert)
 
+lemma tsynprojsnd_tsynlen: "tsynLen\<cdot>(tsynProjSnd\<cdot>ts) = tsynLen\<cdot>ts"
+proof (induction ts rule: tsyn_ind)
+  case adm
+  then show ?case by simp
+next
+  case bot
+  then show ?case by simp
+next
+  case (msg m s)
+  obtain b  where b_def: "\<exists>a. m = (a, b)" 
+    by (meson surj_pair)
+  obtain a where m_def: "m = (a, b)"
+    using b_def by auto
+  then show ?case 
+    by (simp add: m_def tsynprojsnd_sconc_msg tsynlen_sconc_msg msg.IH)
+next
+  case (null s)
+  then show ?case by (simp add: tsynlen_sconc_null tsynprojsnd_sconc_null)
+qed
+
 text {* Abstraction of @{term tsynProjSnd} equals sprojsnd executed on abstracted stream. *}
 lemma tsynprojsnd_tsynabs: "tsynAbs\<cdot>(tsynProjSnd\<cdot>s) = sprojsnd\<cdot>(tsynAbs\<cdot>s)"
   proof (induction s rule: tsyn_ind)
@@ -824,6 +1040,16 @@ lemma tsynprojsnd_tsynabs: "tsynAbs\<cdot>(tsynProjSnd\<cdot>s) = sprojsnd\<cdot
     then show ?case
       by (simp add: tsynprojsnd_sconc_null tsynabs_sconc_null)
   qed
+
+text {* Every value produced by @{term tsynProjSnd} is in the image of @{term tsynSnd} *}
+lemma tsynprojsnd_sdom: "sdom\<cdot>(tsynProjSnd\<cdot>s) = tsynSnd ` sdom\<cdot>s"
+  apply (induction rule: tsyn_ind, simp_all)
+  apply (rule admI)
+  by (simp add: smap_sdom tsynprojsnd_insert)+
+
+text {* Every message produced by @{term tsynProjSnd} is in the image of @{term snd} *}
+lemma tsynprojsnd_tsyndom: "tsynDom\<cdot>(tsynProjSnd\<cdot>s) = snd ` tsynDom\<cdot>s"
+  by (simp add: tsynabs_tsyndom tsynprojsnd_tsynabs sprojsnd_def smap_sdom)
 
 text {* @{term tsynProjSnd} test on finite stream. *}
 lemma tsynprojsnd_test_finstream: 
@@ -944,9 +1170,25 @@ text{* @{term tsynZip} zips a tsyn stream beginning with null to a pair of null 
 lemma tsynzip_singleton_null_second: "tsynZip\<cdot>(\<up>- \<bullet> as)\<cdot>(\<up>b) = \<up>- \<bullet> tsynZip\<cdot>as\<cdot>(\<up>b)"
   by (simp add: tsynzip_sconc_null)
 
-text {* @{term tsynZyp} keeps the length of the finite stream. *}
+text {* @{term tsynZip} keeps the length of the finite stream. *}
 lemma tsynzip_slen: "#bs = \<infinity> \<Longrightarrow> #(tsynZip\<cdot>as\<cdot>bs) = #as"
-  sorry
+  proof (induction as arbitrary: bs rule: tsyn_ind)
+    case adm
+    then show ?case 
+      apply (rule admI)
+      by (simp add: contlub_cfun_fun contlub_cfun_arg)
+  next
+    case bot
+    then show ?case by simp
+  next
+    case (null s)
+    then show ?case 
+      by (simp add: only_empty_has_length_0 tsynzip_sconc_null)
+  next
+    case (msg m s)
+    then show ?case
+      by (metis (no_types, lifting) inf_scase slen_scons tsynzip_sconc_msg)
+  qed
 
 text {* Abstraction of @{term tsynZip} equals szip executed on abstracted stream. *}
 lemma tsynzip_tsynabs: "tsynAbs\<cdot>(tsynZip\<cdot>as\<cdot>bs) = szip\<cdot>(tsynAbs\<cdot>as)\<cdot>bs"
@@ -958,9 +1200,9 @@ lemma tsynzip_tsynabs: "tsynAbs\<cdot>(tsynZip\<cdot>as\<cdot>bs) = szip\<cdot>(
   apply (case_tac "y = \<epsilon>", simp_all)
   by (simp add: tsynzip_sconc_null tsynabs_sconc_null)
 
-text {* @{term tsynZyp} keeps the length of the finite stream. *}
+text {* @{term tsynZip} keeps the length of the finite stream. *}
 lemma tsynzip_tsynlen: "#bs = \<infinity> \<Longrightarrow> tsynLen\<cdot>(tsynZip\<cdot>as\<cdot>bs) = tsynLen\<cdot>as"
-  sorry
+  by (simp add: tsynLen_def tsynzip_tsynabs)
 
 text {* @{term tsynProjFst} of @{term tsynZip} equals the first stream, if the length of it is
         less than or equal to the length of the second stream. *}
@@ -1013,6 +1255,22 @@ lemma tsynzip_tsynprojsnd_tsynabs:
   apply (metis dual_order.antisym inf_chainl4 inf_ub l42)
   by (simp add: szip_sprojsnd tsynlen_insert tsynprojsnd_tsynabs tsynzip_tsynabs)
 
+text {* @{term sdom} of @{term tsynZip} is subset of the @{term image} of @{term Msg} 
+        on the Cartesian product of @{term tsynDom} of the first stream 
+        and @{term sdom} of the second stream @{term union} null. *}
+lemma tsynzip_sdom: "sdom\<cdot>(tsynZip\<cdot>as\<cdot>bs) \<subseteq> (Msg ` (tsynDom\<cdot>as \<times> sdom\<cdot>bs)) \<union> {null}"  
+  apply (induction as arbitrary: bs rule: tsyn_ind, simp_all)
+  apply (rule admI)
+  apply (simp add: contlub_cfun_arg contlub_cfun_fun lub_eq_Union, blast)
+  apply (rule_tac x = bs in scases, simp_all)
+  apply (simp add: tsynzip_sconc_msg tsyndom_sconc_msg, blast)
+  by (metis (no_types) insert_absorb2 insert_is_Un insert_mono sdom2un tsynZip.simps(2) tsynzip_sconc_null tsyndom_sconc_null)
+
+text {* @{term tsynDom} of @{term tsynZip} is subset of the Cartesian product of @{term tsynDom} 
+        of the first stream and @{term sdom} of the second stream. *}
+lemma tsynzip_tsyndom: "tsynDom\<cdot>(tsynZip\<cdot>as\<cdot>bs) \<subseteq> (tsynDom\<cdot>as \<times> sdom\<cdot>bs)"
+  by (simp add: szip_sdom tsynabs_tsyndom tsynzip_tsynabs)
+
 text {* @{term tsynZip} test on finite streams. *}
 lemma tsynzip_test_finstream: 
   "tsynZip\<cdot>(<[Msg 1, null, Msg 2, Msg 3, null]>)\<cdot>(<[4, 2, 3]>) 
@@ -1062,6 +1320,47 @@ text {* @{term tsynRemDups} leaves the length of a stream unchanged. *}
 lemma tsynremdups_slen: "#(tsynRemDups\<cdot>s) = #s"
   by (simp add: tsynremdups_insert)
 
+lemma tsynremdups_h_tsynlen: "tsynLen\<cdot>(sscanlA tsynRemDups_h a\<cdot>s) \<le> tsynLen\<cdot>s"
+proof (induction s arbitrary: a rule: tsyn_ind)
+  case adm
+  then show ?case
+    by (simp add: admI contlub_cfun_arg lub_mono2)
+next
+  case bot
+  then show ?case by simp
+next
+  case (msg m s)
+  then show ?case 
+    apply (simp add: sscanla_step)
+    apply (auto)
+    apply (simp add: tsynlen_sconc_null tsynlen_sconc_msg)
+    using dual_order.trans less_lnsuc apply blast
+    by (simp add: tsynlen_sconc_msg)
+next
+  case (null s)
+  then show ?case by (simp add: tsynremdups_sconc_null tsynlen_sconc_null)
+qed
+
+text {* @{term tsynRemDups} leaves the length of a tsyn-stream unchanged. *}
+lemma tsynremdups_tsynlen: "tsynLen \<cdot> (tsynRemDups\<cdot>ts) <= tsynLen \<cdot>ts"
+proof (induction ts rule: tsyn_ind)
+  case adm
+  then show ?case by (simp add: admI contlub_cfun_arg lub_mono2)
+next
+  case bot
+  then show ?case by simp
+next
+  case (null s)
+  then show ?case by (simp add: tsynlen_sconc_null tsynremdups_sconc_null)
+next
+  case (msg m s)
+  then show ?case 
+    apply (simp add: tsynremdups_sconc_msg)
+    apply (simp add: tsynlen_sconc_msg)
+    apply (rule tsynremdups_h_tsynlen)
+    done
+qed
+
 text {* Abstraction of @{term sscanlA} execution on @{term tsynRemDups_h} on the state (\<M> m) 
         equals srcdups executed on abstracted stream stepping with m. *}
 lemma tsynremdups_h_tsynabs:
@@ -1076,6 +1375,26 @@ lemma tsynremdups_tsynabs: "tsynAbs\<cdot>(tsynRemDups\<cdot>s) = srcdups\<cdot>
   by (simp_all add: tsynabs_sconc_null tsynremdups_sconc_null tsynabs_sconc_msg 
       tsynremdups_sconc_msg srcdups_step tsynremdups_h_tsynabs)
 
+text {* @{term tsynRemDups_h} is subset of @{term sdom} of a stream @{term union} null *}
+lemma tsynremdups_h_sdom: "sdom\<cdot>(sscanlA tsynRemDups_h (\<M> m)\<cdot>s) \<subseteq> sdom\<cdot>s \<union> {null}"
+  apply (induction s arbitrary: m rule: tsyn_ind, simp_all)
+  apply (rule admI)
+  apply (simp add: contlub_cfun_arg lub_eq_Union)
+  by blast+
+
+text {* @{term tsynRemDups} is subset of @{term sdom} of a stream @{term union} null *}
+lemma tsynremdups_sdom: "sdom\<cdot>(tsynRemDups\<cdot>s) \<subseteq> sdom\<cdot>s \<union> {null}"
+  apply (induction rule: tsyn_ind, simp_all)
+  apply (rule admI)
+  apply (simp add: contlub_cfun_arg lub_eq_Union, blast)
+  apply (metis (no_types, hide_lams) Un_commute Un_insert_left insert_mono sdom2un 
+         sup_bot.left_neutral tsynremdups_sconc_msg tsynremdups_h_sdom)
+  by (simp add: tsynremdups_sconc_null)
+
+text {* @{term tsynRemDups} doesn't change the @{term tsynDom} of a stream *}
+lemma tsynremdups_tsyndom: "tsynDom\<cdot>(tsynRemDups\<cdot>s) = tsynDom\<cdot>s"
+  by (simp add: tsynabs_tsyndom tsynremdups_tsynabs)
+
 text {* @{term tsynRemDups} test on finite stream. *}
 lemma tsynremdups_test_finstream:
   "tsynRemDups\<cdot>(<[null, Msg (1 :: nat), Msg (1 :: nat), null, null, Msg (1 :: nat), Msg (2 :: nat),
@@ -1083,11 +1402,17 @@ lemma tsynremdups_test_finstream:
    <[null, Msg (1 :: nat), null, null, null, null, Msg (2 :: nat), null, null]>"
   by (simp add: tsynremdups_insert)
 
+
 text {* @{term tsynRemDups} test on infinitely many time-slots. *}
 lemma tsynremdups_test_infstream:  "tsynRemDups\<cdot>(<[Msg (1 :: nat), Msg (1 :: nat)]> \<bullet> ((<[null]>)\<infinity>)) 
   = <[Msg (1 :: nat), null]> \<bullet> ((<[null]>)\<infinity>)"
   apply (simp add: tsynremdups_insert)
-  oops
+  apply (subst rek2sinftimes [of "sscanlA tsynRemDups_h (\<M> 1::nat)\<cdot>\<up>-\<infinity>" "\<up>-\<infinity>"], simp_all)
+  apply(subst s2sinftimes, simp_all)
+  apply(subst sinftimes_unfold)
+  by (simp add: tsynremdups_sconc_null)
+  
+  
    
 (* ----------------------------------------------------------------------- *)
   subsection {* tsynRemDups_fix_h *}
@@ -1144,6 +1469,43 @@ lemma tsynremdups_fix_h_slen_none: "#(tsynRemDups_fix_h\<cdot>s\<cdot>None) = #s
   apply (simp add: tsynremdups_fix_h_sconc_msg_none tsynremdups_fix_h_slen_some)
   by (simp add: tsynremdups_fix_h_sconc_null_none)
 
+lemma tsynremdups_fix_h_tsynlen_some: "tsynLen\<cdot>(tsynRemDups_fix_h\<cdot>s\<cdot>(Some (Discr (\<M> m)))) <= tsynLen\<cdot>s"
+proof(induction s arbitrary: m rule: tsyn_ind)
+case adm
+  then show ?case 
+    apply (rule admI)
+    by (simp add: contlub_cfun_fun contlub_cfun_arg lub_mono2)
+next
+  case bot
+  then show ?case by simp
+next
+  case (msg m s)
+  then show ?case by (metis (no_types, lifting) dual_order.strict_implies_order inf_ub le2lnle
+ lnsuc_lnle_emb order.not_eq_order_implies_strict tsynlen_sconc_msg tsynlen_sconc_null
+           tsynremdups_fix_h_sconc_msg_some_eq tsynremdups_fix_h_sconc_msg_some_neq)
+next
+case (null s)
+  then show ?case by (simp add: tsynlen_sconc_null tsynremdups_fix_h_sconc_null_some)
+qed
+
+lemma tsynremdups_fix_h_tsynlen_none: "tsynLen\<cdot>(tsynRemDups_fix_h\<cdot>s\<cdot>None) <= tsynLen\<cdot>s"
+proof (induction s rule: tsyn_ind)
+  case adm
+  then show ?case 
+    apply (rule admI)
+    by (simp add: contlub_cfun_fun contlub_cfun_arg lub_mono2)
+next
+  case bot
+  then show ?case by simp
+next
+  case (msg m s)
+  then show ?case by (simp add: tsynlen_sconc_msg tsynremdups_fix_h_sconc_msg_none
+                      tsynremdups_fix_h_tsynlen_some)
+next
+  case (null s)
+  then show ?case by (simp add: tsynlen_sconc_null tsynremdups_fix_h_sconc_null_none)
+qed
+  
 text {* @{term tsynRemDups_fix_h} test on finite stream. *}
 lemma tsynremdups_fix_h_test_finstream:
   "tsynRemDups_fix_h\<cdot>(<[null, Msg (1 :: nat), null, Msg (1 :: nat)]>)\<cdot>None = 
@@ -1156,6 +1518,11 @@ text {* @{term tsynRemDups_fix_h} test on infinite stream. *}
 lemma tsynremdups_fix_h_test_infinstream:
   "tsynRemDups_fix_h\<cdot>(<[null, Msg (1 :: nat), null, Msg (1 :: nat)]>\<infinity>)\<cdot>None = 
    <[null, Msg (1 :: nat)]> \<bullet> (<[null]>\<infinity>)"
+  apply (subst sinftimes_unfold)
+  apply (simp add: tsynremdups_fix_h_sconc_null_none tsynremdups_fix_h_sconc_msg_none
+                   tsynremdups_fix_h_sconc_null_some tsynremdups_fix_h_sconc_msg_some_eq)
+  apply (subst rek2sinftimes [of "tsynRemDups_fix_h\<cdot>\<up>- \<bullet> \<up>(\<M> 1::nat) \<bullet> \<up>- \<bullet> \<up>(\<M> 1::nat)\<infinity>\<cdot>(Some (Discr (\<M> 1::nat)))" "\<up>-\<infinity>"], simp_all)
+  apply (subst sinftimes_unfold)
   oops
 
 (* ----------------------------------------------------------------------- *)
@@ -1183,6 +1550,27 @@ text {* @{term tsynRemDups_fix} leaves the length of a stream unchanged. *}
 lemma tsynremdups_fix_slen: "#(tsynRemDups_fix\<cdot>s) = #s"
   by (simp add: tsynremdups_fix_insert tsynremdups_fix_h_slen_none)
 
+lemma tsynremdups_fix_tsynlen: "tsynLen\<cdot>(tsynRemDups_fix\<cdot>s) \<le> tsynLen\<cdot>s"
+proof (induction s rule: tsyn_ind)
+  case adm
+  then show ?case 
+    apply (rule admI)
+    by (simp add: contlub_cfun_fun contlub_cfun_arg lub_mono2)
+next
+  case bot
+  then show ?case by simp
+next
+  case (msg m s)
+  then show ?case 
+    apply (simp add: tsynremdups_fix_sconc_msg tsynlen_sconc_msg)
+    by (simp add: tsynremdups_fix_insert tsynremdups_fix_h_tsynlen_none tsynremdups_fix_h_tsynlen_some)
+next
+  case (null s)
+  then show ?case 
+    apply (simp add : tsynremdups_fix_sconc_null tsynlen_sconc_null)
+    by (simp add: tsynremdups_fix_h_tsynlen_none)
+qed
+
 text {* Abstraction of @{term tsynRemDups_fix} equals srcdups executed on abstracted stream. *}
 lemma tsynremdups_fix_tsynabs: "tsynAbs\<cdot>(tsynRemDups_fix\<cdot>s) = srcdups\<cdot>(tsynAbs\<cdot>s)" 
   oops
@@ -1198,9 +1586,119 @@ lemma tsynremdups_fix_test_infinstream:
   "tsynRemDups_fix\<cdot>(<[null, Msg (1 :: nat), null, Msg (1 :: nat)]>\<infinity>) 
      = <[null, Msg (1 :: nat)]> \<bullet> (<[null]>\<infinity>)"
   oops
-  (*
+(*
   by (metis tsynremdups_fix_h_test_infinstream tsynremdups_fix_insert)
-  *)
+*)
+
+text {* Abstraction of @{term tsynRemDups_fix} equals srcdups executed on abstracted stream. *}
+lemma tsynremdups_fix_tsynabs: "tsynAbs\<cdot>(tsynRemDups_fix\<cdot>s) = srcdups\<cdot>(tsynAbs\<cdot>s)" 
+  oops
+  
+(* ----------------------------------------------------------------------- *)
+  subsection {* tsynScanlExt *}
+(* ----------------------------------------------------------------------- *)
+
+text {* @{term tsynScanlExt} insertion lemma. *}
+lemma tsynscanlext_insert: "tsynScanlExt f i\<cdot>s = sscanlA (tsynScanlExt_h f) i\<cdot>s"
+  by (simp add: tsynScanlExt_def)
+
+text {* @{term tsynScanlExt} maps the empty stream on the empty stream. *}
+lemma tsynscanlext_strict [simp]: "tsynScanlExt f i\<cdot>\<epsilon> = \<epsilon>"
+  by (simp add: tsynscanlext_insert)
+
+text {* @{term tsynScanlExt} distributes over concatenation. *}
+lemma tsynscanlext_sconc_msg: 
+  "tsynScanlExt f i\<cdot>(\<up>(Msg a) \<bullet> as) = \<up>(Msg (fst (f i a))) \<bullet> (tsynScanlExt f (snd (f i a))\<cdot>as)"
+  by (simp add: tsynscanlext_insert)
+
+text {* @{term tsynScanlExt} ignores empty time-slots. *}
+lemma tsynscanlext_sconc_null: "tsynScanlExt f i\<cdot>(\<up>null \<bullet> s) = \<up>null \<bullet> (tsynScanlExt f i\<cdot>s)"
+  by (simp add: tsynscanlext_insert)
+
+text {* @{term tsynScanlExt} maps the singleton stream containing a message a to the
+        singleton stream containing the message received by applying f to the message. *}
+lemma tsynscanlext_singleton: "tsynScanlExt f i\<cdot>(\<up>a) = \<up>(tsynApplyElem (\<lambda>x. fst (f i x)) a)"
+  by (cases a, simp_all add: tsynscanlext_insert)
+
+text {* @{term tsynScanlExt} leaves the length of a stream unchanged. *}
+lemma tsynscanlext_slen: "#(tsynScanlExt f i\<cdot>s) = #s"
+  by (simp add: tsynscanlext_insert)
+
+lemma tsynscanlext_tsynlen: "tsynLen\<cdot>(tsynScanlExt f i\<cdot>s) \<le> tsynLen\<cdot>s"
+proof (induction s arbitrary: i rule: tsyn_ind)          
+  case adm
+  then show ?case 
+    apply (rule admI)
+    apply (simp add: contlub_cfun_arg contlub_cfun_fun lub_mono2)
+    done
+next
+  case bot
+  then show ?case by simp
+next
+  case (msg m s)
+  then show ?case by (simp add: tsynscanlext_sconc_msg tsynlen_sconc_msg)
+next
+  case (null s)
+then show ?case  by (simp add: tsynlen_sconc_null tsynscanlext_sconc_null)
+qed
+
+text {* Abstraction of @{term tsynScanlExt} equals sscanlA executed on abstracted stream. *}
+lemma tsynscanlext_tsynabs: "tsynAbs\<cdot>(tsynScanlExt f i\<cdot>s) = sscanlA f i\<cdot>(tsynAbs\<cdot>s)"
+  apply (induction s arbitrary: i rule: tsyn_ind, simp_all)
+  apply (simp add: tsynscanlext_sconc_msg tsynabs_sconc_msg)
+  by (simp add: tsynscanlext_sconc_null tsynabs_sconc_null)
+
+text {* @{term ifEqualThenZero} Auxiliary function for tsynScanlExt finite test. Checks whether
+ both input nats x and y are equal and if so returns tuple of 0, otherwise returns tuple of y*}
+fun ifEqualThenZero :: "(nat \<Rightarrow> nat \<Rightarrow> nat \<times> nat)" where
+  "ifEqualThenZero x y = (if x = y then (0, 0) else (y, y))"
+
+text {* @{term tsynScanlExt} test on finite nat tsyn-stream. *}
+lemma tsynscanlext_test_finstream:
+  "tsynScanlExt ifEqualThenZero 0\<cdot>(<[Msg 5, Msg 3, Msg 3, null]>) = <[Msg 5, Msg 3, Msg 0, null]>"
+  by (simp add: tsynscanlext_insert)
+
+(* ----------------------------------------------------------------------- *)
+  subsection {* tsynScanl *}
+(* ----------------------------------------------------------------------- *)
+
+text {* @{term tsynScanl} insertion lemma. *}
+lemma tsynscanl_insert: "tsynScanl f i\<cdot>s = tsynScanlExt (\<lambda>a b. (f a b, f a b)) i\<cdot>s"
+  by (simp add: tsynScanl_def)
+
+text {* @{term tsynScanl} maps the empty stream on the empty stream. *}
+lemma tsynscanl_strict [simp]: "tsynScanl f i\<cdot>\<epsilon> = \<epsilon>"
+  by (simp add: tsynscanl_insert)
+
+text {* @{term tsynScanl} maps the singleton stream containing message a to the singleton stream
+containing the message received by applying f to a. *}
+lemma tsynscanl_singleton: "tsynScanl f i\<cdot>(\<up>a) = \<up>(tsynApplyElem (f i) a)"
+  by (simp add: tsynscanl_insert tsynscanlext_singleton)
+
+text {* @{term tsynScanl} distributes over concatenation. *}
+lemma tsynscanl_sconc_msg: 
+  "tsynScanl f i\<cdot>(\<up>(Msg a) \<bullet> as) = \<up>(Msg (f i a)) \<bullet> (tsynScanl f (f i a)\<cdot>as)"
+  by (simp add: tsynscanl_insert tsynscanlext_sconc_msg)
+
+text {* @{term tsynScanl} ignores empty time-slots. *}
+lemma tsynscanl_sconc_null: "tsynScanl f i\<cdot>(\<up>null \<bullet> s) = \<up>null \<bullet> (tsynScanl f i\<cdot>s)"
+  by (simp add: tsynscanl_insert tsynscanlext_sconc_null)
+
+text {* @{term tsynScanl} leaves the length of a stream unchanged. *}
+lemma tsynscanl_slen: "#(tsynScanl f i\<cdot>s) = #s"
+  by (simp add: tsynscanl_insert tsynscanlext_slen)
+
+text {* @{term tsynScanl} test on finite nat tsyn-stream. *}
+lemma tsynscanl_test_finstream: 
+  "tsynScanl plus 2 \<cdot>(<[Msg 1, Msg 4]>) = <[Msg 3, Msg 7]>"
+  by (simp add: tsynscanl_insert tsynscanlext_sconc_msg tsynscanlext_singleton)
+
+text {* @{term tsynScanl} test on infinite nat tsyn-stream. *}
+lemma tsynscanl_test_infinstream: 
+  "tsynScanl plus 2 \<cdot>(<[Msg 1, Msg 4]> \<bullet> ((<[null]>)\<infinity>)) = <[Msg 3, Msg 7]> \<bullet> ((<[null]>)\<infinity>)"
+  apply (simp add: tsynscanl_sconc_msg)
+  apply (subst rek2sinftimes [of "tsynScanl (+) (7::'a)\<cdot>\<up>-\<infinity>" "\<up>-\<infinity>"], simp_all)
+  by (metis s2sinftimes sinftimes_unfold tsynscanl_sconc_null)
 
 (* ----------------------------------------------------------------------- *)
   subsection {* tsynDropWhile *}
@@ -1259,6 +1757,27 @@ text {* @{term tsynDropWhile} does not change the length of a stream. *}
 lemma tsyndropwhile_slen: "#(tsynDropWhile f\<cdot>s) = #s "
   by (simp add: tsyndropwhile_insert)
 
+lemma tsyndropwhile_tsynlen: "tsynLen\<cdot>(tsynDropWhile f\<cdot>s) \<le> tsynLen\<cdot>s"
+  proof(induction s rule: tsyn_ind)
+    case adm
+    then show ?case 
+      apply (rule admI)
+      by (simp add: contlub_cfun_fun contlub_cfun_arg lub_mono2)
+  next
+    case bot
+    then show ?case by simp
+  next
+    case (msg m s)
+    then show ?case 
+      apply (case_tac "f m = True")
+      apply (simp add: tsyndropwhile_sconc_msg_t tsynlen_sconc_null tsynlen_sconc_msg)
+      using dual_order.trans less_lnsuc apply blast
+      by (simp add: tsyndropwhile_sconc_msg_f)
+  next
+    case (null s)
+    then show ?case by (simp add: tsyndropwhile_sconc_null tsynlen_sconc_null)
+  qed
+
 text {* Abstraction of @{term tsynDropWhile} equals sdropwhile executed on abstracted stream. *}
 lemma tsyndropwhile_tsynabs: "tsynAbs\<cdot>(tsynDropWhile f\<cdot>s) = sdropwhile f\<cdot>(tsynAbs\<cdot>s)"
   apply (induction s rule: tsyn_ind, simp_all)
@@ -1273,6 +1792,21 @@ lemma tsyndropwhile_idem: "tsynDropWhile f\<cdot>(tsynDropWhile f\<cdot>s) = tsy
   apply (induction s arbitrary: f rule: tsyn_ind, simp_all)
   apply (metis tsyndropwhile_sconc_msg_f tsyndropwhile_sconc_msg_t tsyndropwhile_sconc_null)
   by (simp add: tsyndropwhile_sconc_null)
+
+text {* @{term sdom} of @{term tsynDropWhile} is subset of @{term sdom} of 
+        the original stream @{term union} null. *}
+lemma tsyndropwhile_sdom: "sdom\<cdot>(tsynDropWhile f\<cdot>s) \<subseteq> sdom\<cdot>s \<union> {null}"
+  apply (induction s arbitrary: f rule: tsyn_ind, simp_all)
+  apply (rule admI)
+  apply (simp add: contlub_cfun_arg lub_eq_Union, blast)
+  apply (metis (no_types, hide_lams) insert_commute insert_is_Un insert_subset sdom2un 
+         subset_insertI2 subset_refl tsyndropwhile_sconc_msg_f tsyndropwhile_sconc_msg_t)
+  by (simp add: tsyndropwhile_sconc_null)
+
+text {* @{term tsynDom} of @{term tsynDropWhile} is subset of @{term tsynDom} of 
+        the original stream. *}
+lemma tsyndropwhile_tsyndom: "tsynDom\<cdot>(tsynDropWhile f\<cdot>s) \<subseteq> tsynDom\<cdot>s" 
+  by (simp add: sdropwhile_sdom tsynabs_tsyndom tsyndropwhile_tsynabs)
 
 text {* @{term tsynDropWhile} test on finite stream. *}    
 lemma tsyndropwhile_test_finstream: 
@@ -1305,100 +1839,6 @@ proof -
   from drop_first drop_second drop_third show ?thesis 
     by simp
 qed
-
-(* ----------------------------------------------------------------------- *)
-  subsection {* tsynScanlExt *}
-(* ----------------------------------------------------------------------- *)
-
-text {* @{term tsynScanlExt} insertion lemma. *}
-lemma tsynscanlext_insert: "tsynScanlExt f i\<cdot>s = sscanlA (tsynScanlExt_h f) i\<cdot>s"
-  by (simp add: tsynScanlExt_def)
-
-text {* @{term tsynScanlExt} maps the empty stream on the empty stream. *}
-lemma tsynscanlext_strict [simp]: "tsynScanlExt f i\<cdot>\<epsilon> = \<epsilon>"
-  by (simp add: tsynscanlext_insert)
-
-text {* @{term tsynScanlExt} distributes over concatenation. *}
-lemma tsynscanlext_sconc_msg: 
-  "tsynScanlExt f i\<cdot>(\<up>(Msg a) \<bullet> as) = \<up>(Msg (fst (f i a))) \<bullet> (tsynScanlExt f (snd (f i a))\<cdot>as)"
-  by (simp add: tsynscanlext_insert)
-
-text {* @{term tsynScanlExt} ignores empty time-slots. *}
-lemma tsynscanlext_sconc_null: "tsynScanlExt f i\<cdot>(\<up>null \<bullet> s) = \<up>null \<bullet> (tsynScanlExt f i\<cdot>s)"
-  by (simp add: tsynscanlext_insert)
-
-text {* @{term tsynScanlExt} maps the singleton stream containing a message a to the
-        singleton stream containing the message received by applying f to the message. *}
-lemma tsynscanlext_singleton: "tsynScanlExt f i\<cdot>(\<up>a) = \<up>(tsynApplyElem (\<lambda>x. fst (f i x)) a)"
-  by (cases a, simp_all add: tsynscanlext_insert)
-
-text {* @{term tsynScanlExt} leaves the length of a stream unchanged. *}
-lemma tsynscanlext_slen: "#(tsynScanlExt f i\<cdot>s) = #s"
-  by (simp add: tsynscanlext_insert)
-
-text {* Abstraction of @{term tsynScanlExt} equals sscanlA executed on abstracted stream. *}
-lemma tsynscanlext_tsynabs: "tsynAbs\<cdot>(tsynScanlExt f i\<cdot>s) = sscanlA f i\<cdot>(tsynAbs\<cdot>s)"
-  apply (induction s arbitrary: i rule: tsyn_ind, simp_all)
-  apply (simp add: tsynscanlext_sconc_msg tsynabs_sconc_msg)
-  by (simp add: tsynscanlext_sconc_null tsynabs_sconc_null)
-
-text {* @{term ifEqualThenZero} Auxiliary function for tsynScanlExt finite test. Checks whether
- both input nats x and y are equal and if so returns tuple of 0, otherwise returns tuple of y*}
-fun ifEqualThenZero :: "(nat \<Rightarrow> nat \<Rightarrow> nat \<times> nat)" where
-  "ifEqualThenZero x y = (if x = y then (0, 0) else (y, y))"
-
-text {* @{term tsynScanlExt} test on finite nat tsyn-stream. *}
-lemma tsynscanlext_test_finstream:
-  "tsynScanlExt ifEqualThenZero 0\<cdot>(<[Msg 5, Msg 3, Msg 3, null]>) = <[Msg 5, Msg 3, Msg 0, null]>"
-  by (simp add: tsynscanlext_insert)
-
-(* ----------------------------------------------------------------------- *)
-  subsection {* tsynScanl *}
-(* ----------------------------------------------------------------------- *)
-
-text {* @{term tsynScanl} insertion lemma. *}
-lemma tsynscanl_insert: "tsynScanl f i\<cdot>s = tsynScanlExt (\<lambda>a b. (f a b, f a b)) i\<cdot>s"
-  by (simp add: tsynScanl_def)
-
-text {* @{term tsynScanl} maps the empty stream on the empty stream. *}
-lemma tsynscanl_strict [simp]: "tsynScanl f i\<cdot>\<epsilon> = \<epsilon>"
-  by (simp add: tsynscanl_insert)
-
-text {* @{term tsynScanl} distributes over concatenation. *}
-lemma tsynscanl_sconc_msg: 
-  "tsynScanl f i\<cdot>(\<up>(Msg a) \<bullet> as) = \<up>(Msg (f i a)) \<bullet> (tsynScanl f (f i a)\<cdot>as)"
-  by (simp add: tsynscanl_insert tsynscanlext_sconc_msg)
-
-text {* @{term tsynScanl} ignores empty time-slots. *}
-lemma tsynscanl_sconc_null: "tsynScanl f i\<cdot>(\<up>null \<bullet> s) = \<up>null \<bullet> (tsynScanl f i\<cdot>s)"
-  by (simp add: tsynscanl_insert tsynscanlext_sconc_null)
-
-text {* @{term tsynScanl} maps the singleton stream containing message a to the singleton stream
-containing the message received by applying f to a. *}
-lemma tsynscanl_singleton: "tsynScanl f i\<cdot>(\<up>a) = \<up>(tsynApplyElem (f i) a)"
-  by (simp add: tsynscanl_insert tsynscanlext_singleton)
-
-text {* @{term tsynScanl} leaves the length of a stream unchanged. *}
-lemma tsynscanl_slen: "#(tsynScanl f i\<cdot>s) = #s"
-  by (simp add: tsynscanl_insert tsynscanlext_slen)
-
-text {* Abstraction of @{term tsynScanl} equals sscanl executed on abstracted stream. *}
-lemma tsynscanl_tsynabs: "tsynAbs\<cdot>(tsynScanl f i\<cdot>s) = sscanl f i\<cdot>(tsynAbs\<cdot>s)"
-  apply (induction s arbitrary: i rule: tsyn_ind, simp_all)
-  apply (simp add: tsynscanl_sconc_msg tsynabs_sconc_msg)
-  by (simp add: tsynscanl_sconc_null tsynabs_sconc_null)
-  
-
-text {* @{term tsynScanl} test on finite nat tsyn-stream. *}
-lemma tsynscanl_test_finstream: 
-  "tsynScanl plus 2 \<cdot>(<[Msg 1, Msg 4]>) = <[Msg 3, Msg 7]>"
-  by (simp add: tsynscanl_insert tsynscanlext_sconc_msg tsynscanlext_singleton)
-
-text {* @{term tsynScanl} test on infinite nat tsyn-stream. *}
-lemma tsynscanl_test_infinstream: 
-  "tsynScanl plus 2 \<cdot>(<[Msg 1, Msg 4]> \<bullet> ((<[null]>)\<infinity>)) = <[Msg 3, Msg 7]> \<bullet> ((<[null]>)\<infinity>)"
-  apply (simp add: tsynscanl_insert)
-  oops
 
 (* ----------------------------------------------------------------------- *)
   section {* tsynSum - CaseStudy *}
@@ -1437,7 +1877,7 @@ lemma tsynsum_test_infnull: "tsynSum\<cdot>(\<up>null\<infinity>) = \<up>null\<i
   by (metis s2sinftimes sinftimes_unfold tsynSum_def tsynscanl_sconc_null)
 
 text {* Auxiliary function for @{term tsynsum_even}. *}
-lemma tsynsum_even_h: 
+lemma tsynsum_even_h:
   assumes "tsynDom\<cdot>s \<subseteq> {n. even n}"
     and "even m"
   shows "tsynDom\<cdot>(tsynScanl plus m\<cdot>s) \<subseteq> {n. even n}"

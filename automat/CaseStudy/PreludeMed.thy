@@ -79,8 +79,7 @@ lift_definition medInGetStream :: "'a medMessage tsyn SB \<rightarrow> 'a tsyn s
 lift_definition medInSetStream_h :: "'a tsyn stream \<Rightarrow> 'a medMessage tsyn SB" is 
 "\<lambda> s. [(\<C> ''in'') \<mapsto> (tsynMap (medData)\<cdot>s)]"
   unfolding ubWell_def usclOkay_stream_def ctype_tsyn_def
-  apply auto
-  by (metis imageI medMessageTransform.cases range_eqI)
+  by auto
 
 lift_definition medInSetStream :: "'a tsyn stream \<rightarrow> 'a medMessage tsyn SB" is
 "medInSetStream_h"
@@ -140,8 +139,7 @@ lift_definition medOutGetStream :: "'a medMessage tsyn SB \<rightarrow> 'a tsyn 
 lift_definition medOutSetStream_h :: "'a tsyn stream \<Rightarrow> 'a medMessage tsyn SB" is 
 "\<lambda> s. [(\<C> ''out'') \<mapsto> (tsynMap (medData)\<cdot>s)]"
   unfolding ubWell_def usclOkay_stream_def ctype_tsyn_def
-  apply auto
-  by (metis imageI medMessageTransform.cases range_eqI)
+  by auto
 
 lift_definition medOutSetStream :: "'a tsyn stream \<rightarrow> 'a medMessage tsyn SB" is
 "medOutSetStream_h"

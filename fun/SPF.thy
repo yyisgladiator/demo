@@ -3,34 +3,34 @@ theory SPF
 begin
 default_sort message
 
-type_synonym 'm SPF = "'m SB ufun"
+type_synonym ('m,'n) SPF = "('m SB, 'n SB) ufun"
 
 
 subsection \<open>spfStateFix\<close>
 
-definition spfStateLeast :: "channel set \<Rightarrow> channel set \<Rightarrow>('s1::type \<Rightarrow> 'm SPF)" where
+definition spfStateLeast :: "channel set \<Rightarrow> channel set \<Rightarrow>('s1::type \<Rightarrow> ('m,'m) SPF)" where
 "spfStateLeast In Out \<equiv> (\<lambda> x. ufLeast In Out)"
 
-definition spfStateFix ::"channel set \<Rightarrow> channel set \<Rightarrow>(('s1::type \<Rightarrow>'m SPF) \<rightarrow> ('s1 \<Rightarrow>'m SPF)) \<rightarrow> ('s1 \<Rightarrow> 'm SPF)" where
+definition spfStateFix ::"channel set \<Rightarrow> channel set \<Rightarrow>(('s1::type \<Rightarrow> ('m,'m) SPF) \<rightarrow> ('s1 \<Rightarrow> ('m,'m) SPF)) \<rightarrow> ('s1 \<Rightarrow> ('m,'m) SPF)" where
 "spfStateFix In Out \<equiv> (\<Lambda> F.  fixg (spfStateLeast In Out)\<cdot>F)"
 
 
 section \<open>Definitions with ufApplyIn\<close>
 
 (* ToDo: make signature more general, output does not have to be an SB *)
-definition spfRtIn :: "('m SB ufun) \<rightarrow> ('m SB ufun)" where
+definition spfRtIn :: "(('m,'n) SPF) \<rightarrow> (('m,'n) SPF)" where
 "spfRtIn \<equiv> ufApplyIn sbRt"
 
-definition spfConcIn :: "'m SB \<Rightarrow> 'm SPF \<rightarrow> 'm SPF" where
+definition spfConcIn :: "'m SB \<Rightarrow> ('m,'n) SPF \<rightarrow> ('m,'n) SPF" where
 "spfConcIn sb = ufApplyIn (ubConcEq sb)"
 
 section \<open>Definitions with ufApplyOut\<close>
 
 (* ToDo: make signature more general, input does not have to be an SB *)
-definition spfConcOut :: "'m SB \<Rightarrow> 'm SPF \<rightarrow> 'm SPF" where
+definition spfConcOut :: "'n SB \<Rightarrow> ('m,'n) SPF \<rightarrow> ('m,'n) SPF" where
 "spfConcOut sb = ufApplyOut (ubConcEq sb)"
 
-definition spfRtOut :: "('m SB ufun) \<rightarrow> ('m SB ufun)" where
+definition spfRtOut :: "(('m,'n) SPF) \<rightarrow> (('m,'n) SPF)" where
 "spfRtOut \<equiv> ufApplyOut sbRt"
 
 
@@ -118,7 +118,7 @@ lemma spfStateFix_fix: assumes "spfStateLeast In Out \<sqsubseteq> F\<cdot>(spfS
 
 lemma spfsl_below_spfsf: "spfStateLeast In Out \<sqsubseteq> spfStateFix In Out\<cdot>F"
   proof (simp add: spfStateFix_def, simp add: fixg_def)
-    have "\<forall>x0 x1. ((x1::'a \<Rightarrow> ('b stream\<^sup>\<Omega>) ufun) \<sqsubseteq> (if x1 \<sqsubseteq> x0\<cdot>x1 then \<Squnion>uub. iterate uub\<cdot>x0\<cdot>x1 else x1)) = (if x1 \<sqsubseteq> x0\<cdot>x1 then x1 \<sqsubseteq> (\<Squnion>uub. iterate uub\<cdot>x0\<cdot>x1) else x1 \<sqsubseteq> x1)"
+    have "\<forall>x0 x1. ((x1::'a \<Rightarrow> ('b stream\<^sup>\<Omega>, 'b stream\<^sup>\<Omega>) ufun) \<sqsubseteq> (if x1 \<sqsubseteq> x0\<cdot>x1 then \<Squnion>uub. iterate uub\<cdot>x0\<cdot>x1 else x1)) = (if x1 \<sqsubseteq> x0\<cdot>x1 then x1 \<sqsubseteq> (\<Squnion>uub. iterate uub\<cdot>x0\<cdot>x1) else x1 \<sqsubseteq> x1)"
       by simp
     then show "spfStateLeast In Out \<sqsubseteq> F\<cdot>(spfStateLeast In Out) \<longrightarrow> spfStateLeast In Out \<sqsubseteq> (\<Squnion>n. iterate n\<cdot>F\<cdot>(spfStateLeast In Out))"
       by (metis (no_types) fixg_pre)
@@ -206,99 +206,7 @@ lemma spfrt_ufleast: "spfRtIn\<cdot>(ufLeast In Out) = ufLeast In Out"
    apply (simp_all add: ufclDom_ufun_def ubclDom_ubundle_def)
   by (simp add: ubclDom_ubundle_def ufleast_apply)
 
-(*assms*)
-lemma sbRtLen: assumes "ubLen x = Fin ( Suc(y))" 
-  shows "ubLen (sbRt\<cdot>x) = Fin y"
-  sorry
-(*nach SB.thy ? *)
-lemma sbRt_inf: assumes "ubLen ub = \<infinity>" shows "ubLen (sbRt\<cdot>ub) = \<infinity>"
-  proof (cases "ubDom\<cdot>ub = {}")
-    case True
-    have a1: "ubDom\<cdot>(sbRt\<cdot>ub) = {}"
-      by (simp add: True)
-    show ?thesis
-      unfolding ubLen_def
-      apply (simp only: a1)
-      by (simp add: ubLen_def)
-  next
-    case False
-    have ch_inf: "\<And> c . c \<in> ubDom\<cdot>ub \<Longrightarrow> usclLen\<cdot>(ub  .  c) = \<infinity>"
-    proof -
-      fix c :: channel
-      assume "c \<in> ubDom\<cdot>ub"
-      then have f1: "c \<in> dom (Rep_ubundle ub)"
-        by (metis (full_types, lifting) ubdom_insert)
-      then have f5: "dom (Rep_ubundle ub) \<noteq> {} \<or> \<not> ({} \<noteq> ubDom\<cdot>(ubLeast (dom (Rep_ubundle ub))::'a stream\<^sup>\<Omega>))"
-        by (metis (full_types, lifting) ubleast_ubdom)
-      have f7: "\<not> (dom (Rep_ubundle ub) \<noteq> {}) \<or> ({} \<noteq> ubDom\<cdot>(ubLeast (dom (Rep_ubundle ub))::'a stream\<^sup>\<Omega>))"
-        using f5 by auto
-      have f75: "dom (Rep_ubundle ub) = {} \<or> \<not> ({} = ubDom\<cdot>(ubLeast (dom (Rep_ubundle ub))::'a stream\<^sup>\<Omega>))"
-        by (metis ubleast_ubdom)
-      then have f8: "\<not> (c \<in> dom (Rep_ubundle ub)) \<or> \<not> ({} = ubDom\<cdot>(ubLeast (dom (Rep_ubundle ub))::'a stream\<^sup>\<Omega>))"
-        by blast
-      
-      have f15: "\<not> (\<infinity> = Fin (sK1 \<infinity>))"
-        by (metis (full_types) not_less not_less_iff_gr_or_eq notinfI3)
-      have f151: "(\<forall>n p. \<infinity> \<noteq> Least p \<or> \<not> p (Fin n))"
-        by (metis (no_types) Least_le notinfI3)
-      then have "(\<forall>u n. \<infinity> \<noteq> ubLen u \<or> Fin n \<notin> {usclLen\<cdot>(u . c::'a stream) |c. c \<in> ubDom\<cdot>u} \<or> {} = ubDom\<cdot>u)"
-        using ubLen_def by (metis (mono_tags, lifting))
-      then have f16: "(\<forall>n c. Fin n \<noteq> usclLen\<cdot>(ub . c) \<or> c \<notin> ubDom\<cdot>ub) \<or> \<not> (dom (Rep_ubundle ub) \<noteq> {})"
-        by (metis (mono_tags, lifting) empty_iff f151 ubLen_def assms mem_Collect_eq ubdom_insert)
-      have "\<not> (\<infinity> \<noteq> usclLen\<cdot>Rep_ubundle ub\<rightharpoonup>c) \<or> \<not> (dom (Rep_ubundle ub) \<noteq> {}) \<or> \<not> (\<exists>ca. usclLen\<cdot>Rep_ubundle ub\<rightharpoonup>c = usclLen\<cdot>(ub . ca) \<and> ca \<in> ubDom\<cdot>ub) \<or> \<not> spl107_759"
-        using f16 by (metis (no_types) lncases)
-      then have "\<infinity> = usclLen\<cdot>Rep_ubundle ub\<rightharpoonup>c"
-        proof -
-          obtain cc :: channel where
-            f1: "usclLen\<cdot>Rep_ubundle ub\<rightharpoonup>c = usclLen\<cdot>(ub . cc) \<and> cc \<in> ubDom\<cdot>ub"
-            by (metis f1 ubdom_insert ubgetch_insert)
-          then have f2: "\<exists>c. usclLen\<cdot>(ub . cc) = usclLen\<cdot>(ub . c) \<and> c \<in> ubDom\<cdot>ub"
-            by blast
-          have f3: "ubLen ub = (LEAST l. l \<in> {usclLen\<cdot>(ub . c) |c. c \<in> ubDom\<cdot>ub})"
-            by (simp add: False ubLen_def)
-          have "(LEAST l. l \<in> {usclLen\<cdot>(ub . c) |c. c \<in> ubDom\<cdot>ub}) \<le> usclLen\<cdot>(ub . cc)"
-            using f2 by (simp add: Least_le)
-          then show ?thesis
-            using f3 f1 by (simp add: assms)
-        qed
-      then show "usclLen\<cdot>(ub . c) = \<infinity>"
-        by (metis (full_types, lifting) ubgetch_insert)
-    qed
-
-    have chrt_inf: "\<And> c . c \<in> ubDom\<cdot>ub \<Longrightarrow> usclLen\<cdot>(sbRt\<cdot>ub  .  c) = \<infinity>"
-    proof -
-      fix c::channel
-      assume a2: "c \<in> ubDom\<cdot>ub"
-      then have f1: "c \<in> dom (Rep_ubundle ub)"
-        by (metis (full_types, lifting) ubdom_insert)
-      have f161: "\<not> (\<infinity> \<noteq> usclLen\<cdot>Rep_ubundle ub\<rightharpoonup>c) \<or> \<not> (dom (Rep_ubundle ub) \<noteq> {}) \<or> \<not> (\<exists>ca. usclLen\<cdot>Rep_ubundle ub\<rightharpoonup>c = usclLen\<cdot>(ub . ca) \<and> ca \<in> ubDom\<cdot>ub) \<or> \<not> spl107_759"
-        using ch_inf by auto
-      then have f162: "\<infinity> = usclLen\<cdot>Rep_ubundle ub\<rightharpoonup>c"
-        proof -
-          obtain cc :: channel where
-            f1: "usclLen\<cdot>Rep_ubundle ub\<rightharpoonup>c = usclLen\<cdot>(ub . cc) \<and> cc \<in> ubDom\<cdot>ub"
-            by (metis f1 ubdom_insert ubgetch_insert)
-          then have f2: "\<exists>c. usclLen\<cdot>(ub . cc) = usclLen\<cdot>(ub . c) \<and> c \<in> ubDom\<cdot>ub"
-            by blast
-          have f3: "ubLen ub = (LEAST l. l \<in> {usclLen\<cdot>(ub . c) |c. c \<in> ubDom\<cdot>ub})"
-            by (simp add: False ubLen_def)
-          have "(LEAST l. l \<in> {usclLen\<cdot>(ub . c) |c. c \<in> ubDom\<cdot>ub}) \<le> usclLen\<cdot>(ub . cc)"
-            using f2 by (simp add: Least_le)
-          then show ?thesis
-            using f3 f1 by (simp add: assms)
-        qed
-    show "usclLen\<cdot>(sbRt\<cdot>ub  .  c) = \<infinity>"
-      unfolding sbRt_def
-      unfolding sbDrop_def
-      by (metis f1 fair_sdrop f162 sbDrop_def sbdrop_sbgetch ubdom_insert ubgetch_insert usclLen_stream_def)
-  qed
-
-
-    show ?thesis
-      using inf_less_eq chrt_inf sbrt_sbdom ubLen_geI by blast
-  qed
-
-
+(* Rewrite with ubRt
 lemma spfRtIn_strongF_isweak: assumes "ufIsStrong spf" shows "ufIsWeak (spfRtIn\<cdot>spf)"
   apply (simp add: ufIsWeak_def ubclLen_ubundle_def)
   apply rule+
@@ -350,7 +258,7 @@ lemma spfRtIn_strongF_isweak: assumes "ufIsStrong spf" shows "ufIsWeak (spfRtIn\
       qed
     qed
   qed
-
+*)
 
 subsection \<open>spfConcIn lemma\<close>
 
@@ -432,8 +340,7 @@ lemma spfConcIn_weak_ublen_strong[simp]:
             have f2: "\<forall>c \<in> ubDom\<cdot>b. lnsuc\<cdot>(LEAST ln. ln\<in>{(usclLen\<cdot>(b. c)) | c. c \<in> ubDom\<cdot>b}) \<le> (usclLen\<cdot>(ubConcEq sb\<cdot>b . c))"
               by (metis (mono_tags, lifting) Least_le f1 lnsuc_lnle_emb mem_Collect_eq trans_lnle ubclDom_ubundle_def)
             have f3: "\<forall>c \<in> ubDom\<cdot>b. lnsuc\<cdot>(ubLen b) \<le> (usclLen\<cdot>(ubConcEq sb\<cdot>b . c))"
-              apply (simp add: ubLen_def)
-              using f2 by auto   
+              by (metis (no_types, lifting) dual_order.trans f1 lnsuc_lnle_emb ubclDom_ubundle_def ublen_channel)
             show ?thesis
               by (metis f3 ubLen_geI ubclLen_ubundle_def ubconceq_dom)
           qed
@@ -443,6 +350,12 @@ lemma spfConcIn_weak_ublen_strong[simp]:
     show "lnsuc\<cdot>(ubclLen b) \<le> ubclLen (spfConcIn sb\<cdot>spf \<rightleftharpoons> b)"
       using a1 dom_not_empty local.dom_empty ufdom_2ufundom by fastforce
   qed
+
+lemma spfconcin_uspec_iamge_well: 
+     "\<And>x. ufclDom\<cdot> (spfConcIn sb\<cdot>x) = ufclDom\<cdot>x"
+    and "\<And>x. ufclRan\<cdot> (spfConcIn sb\<cdot>x) = ufclRan\<cdot>x"
+   apply (simp add: ufclDom_ufun_def)
+  by (simp add: ufclRan_ufun_def)
 
 subsection \<open>spfRtOut lemma\<close>
 
@@ -472,6 +385,7 @@ lemma spfRtOut_spfConcIn: "(spfRtOut\<cdot>(spfConcIn sb \<cdot>spf)) = (spfConc
    apply (simp add: ubclDom_ubundle_def)
   by blast
 
+(* Rewrite with ubRt 
 lemma spfRtOut_strongF_isweak: assumes "ufIsStrong spf" shows "ufIsWeak (spfRtOut\<cdot>spf)"
   apply (simp add: ufIsWeak_def ubclLen_ubundle_def)
   apply rule+
@@ -525,7 +439,7 @@ lemma spfRtOut_strongF_isweak: assumes "ufIsStrong spf" shows "ufIsWeak (spfRtOu
       qed
     qed
   qed
-
+*)
 
 subsection \<open>spfConcOut lemma\<close>
 
@@ -556,6 +470,31 @@ lemma spfconc_surj:
   apply(simp add: spfConcOut_def)
   using ufapplyin_inj assms
   by (metis sbconc_inj ubclDom_ubundle_def ubconceq_dom ufapplyout_inj) 
+
+lemma spfconcout_inf: "ubLen ub = \<infinity> \<Longrightarrow> ubDom\<cdot>ub=ufRan\<cdot>uf \<Longrightarrow> ubclDom\<cdot>x = ufDom\<cdot>uf \<Longrightarrow> spfConcOut ub\<cdot>uf \<rightleftharpoons> x = ub"
+  apply (simp add: ubclDom_ubundle_def spfConcOut_step)
+  by (metis sbconc_inf ubclDom_ubundle_def ubclRestrict_ubundle_def ubclrestrict_dom_id ufran_2_ubcldom2)
+
+lemma spfconcout_inf_const: assumes "ubDom\<cdot>ub = ufRan\<cdot>uf" and "ubLen ub = \<infinity>"
+  shows "spfConcOut ub\<cdot>uf = ufConst (ufDom\<cdot>uf)\<cdot>ub"
+  apply(rule ufun_eqI)
+   apply simp
+  apply simp
+  using assms(1) assms(2) spfconcout_inf by blast
+
+lemma spfconcout_restrict: "ufRan\<cdot>uf \<subseteq> ubDom\<cdot>ub \<Longrightarrow> spfConcOut ub\<cdot>uf = spfConcOut (ubRestrict (ufRan\<cdot>uf)\<cdot>ub)\<cdot>uf"
+  apply(rule ufun_eqI)
+   apply simp
+  apply simp
+  apply(simp add: ubclDom_ubundle_def)
+  by (metis order_refl ubclDom_ubundle_def ubconceq_insert ubconceq_restrict ufran_2_ubcldom2)
+
+lemma spfconcout_inf_const2: assumes "ufRan\<cdot>uf \<subseteq> ubDom\<cdot>ub" and "ubLen (ubRestrict (ufRan\<cdot>uf)\<cdot>ub) = \<infinity>"
+  shows "spfConcOut ub\<cdot>uf = (ufConst (ufDom\<cdot>uf)\<cdot>(ubRestrict (ufRan\<cdot>uf)\<cdot>ub))"
+  apply(rule ufun_eqI)
+   apply simp
+  apply simp
+  using assms(1) assms(2) spfconcout_inf spfconcout_restrict by fastforce
 
 lemma spfConcOut_weak_ublen_strong[simp]:
   assumes "ufIsWeak spf" and "ubLen sb = lnsuc\<cdot>0" and "ufRan\<cdot>spf \<subseteq> ubDom\<cdot>sb"
@@ -651,5 +590,5 @@ lemma spfConcOut_weak_ublen_strong[simp]:
     show "lnsuc\<cdot>(ubclLen b) \<le> ubclLen (spfConcOut sb\<cdot>spf \<rightleftharpoons> b)"
       by (metis a1 dom_not_empty local.dom_empty rep_ufun_well spfConcOut_dom ubcldom_least_cs ufWell_def ufunLeastIDom)
   qed
- 
+
 end

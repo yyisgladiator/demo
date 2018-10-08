@@ -3,200 +3,17 @@
  * This file was generated from Sender.maa and will be overridden when changed. To change
  * permanently, consider changing the model itself.
  *
- * Generated on Sep 5, 2018 3:18:21 PM by isartransformer 1.0.0
+ * isartransformer 1.0.0
  *)
 theory SenderAutomaton
-  imports bundle.tsynBundle automat.dAutomaton
+  imports SenderDatatype automat.dAutomaton
 
 begin
 
-(* TODO Das sollte vielleicht wo anders hin *)
+
+(* Helper for easier generation *)
 fun prepend :: "'a::type list \<Rightarrow> 'a \<Rightarrow> 'a list" where
 "prepend xs x = x#xs"
-
-section \<open>Datatype definition\<close>
-
-datatype senderMessage = SenderBool "bool" | SenderNat "nat" | SenderPair_SenderNat_SenderBool "(nat\<times>bool)"
-instance senderMessage :: countable
-  apply(intro_classes)
-  by(countable_datatype)
-
-instantiation senderMessage :: message
-begin
-  fun ctype_senderMessage :: "channel  \<Rightarrow> senderMessage set" where
-  "ctype_senderMessage c = (
-    if c = \<C> ''as'' then range SenderBool else
-    if c = \<C> ''i'' then range SenderNat else
-    if c = \<C> ''ds'' then range SenderPair_SenderNat_SenderBool else
-    {})"
-    instance
-    by(intro_classes)
-end
-
-
-section \<open>Helpers to create a bundle from a single raw element\<close>
-
-lift_definition createAsBundle :: "bool \<Rightarrow> senderMessage tsyn SB" is
-"\<lambda>x. [\<C> ''as'' \<mapsto> \<up>(Msg (SenderBool x))]"
-  unfolding ubWell_def
-  unfolding usclOkay_stream_def
-  unfolding ctype_tsyn_def
-  by simp
-
-lift_definition createIBundle :: "nat \<Rightarrow> senderMessage tsyn SB" is
-"\<lambda>x. [\<C> ''i'' \<mapsto> \<up>(Msg (SenderNat x))]"
-  unfolding ubWell_def
-  unfolding usclOkay_stream_def
-  unfolding ctype_tsyn_def
-  by simp
-
-lift_definition createDsBundle :: "(nat\<times>bool) \<Rightarrow> senderMessage tsyn SB" is
-"\<lambda>x. [\<C> ''ds'' \<mapsto> \<up>(Msg (SenderPair_SenderNat_SenderBool x))]"
-  unfolding ubWell_def
-  unfolding usclOkay_stream_def
-  unfolding ctype_tsyn_def
-  by simp
-
-
-section \<open>Helpers to create a bundle from a single tsyn element\<close>
-
-fun createTsynAsBundle :: "bool tsyn \<Rightarrow> senderMessage tsyn SB" where
-"createTsynAsBundle (Msg x) = (createAsBundle x)" |
-"createTsynAsBundle null = (tsynbNull (\<C> ''as''))"
-
-fun createTsynIBundle :: "nat tsyn \<Rightarrow> senderMessage tsyn SB" where
-"createTsynIBundle (Msg x) = (createIBundle x)" |
-"createTsynIBundle null = (tsynbNull (\<C> ''i''))"
-
-fun createTsynDsBundle :: "(nat\<times>bool) tsyn \<Rightarrow> senderMessage tsyn SB" where
-"createTsynDsBundle (Msg x) = (createDsBundle x)" |
-"createTsynDsBundle null = (tsynbNull (\<C> ''ds''))"
-
-
-section \<open>Helpers to create a bundle from a tsyn list of elements\<close>
-
-fun createLongAsBundle :: "(bool tsyn) list \<Rightarrow> senderMessage tsyn SB" where
-"createLongAsBundle (x#xs) = ubConcEq (createTsynAsBundle x)\<cdot>(createLongAsBundle xs)" |
-"createLongAsBundle []     = ubLeast {\<C> ''as''}"
-
-fun createLongIBundle :: "(nat tsyn) list \<Rightarrow> senderMessage tsyn SB" where
-"createLongIBundle (x#xs) = ubConcEq (createTsynIBundle x)\<cdot>(createLongIBundle xs)" |
-"createLongIBundle []     = ubLeast {\<C> ''i''}"
-
-fun createLongDsBundle :: "((nat\<times>bool) tsyn) list \<Rightarrow> senderMessage tsyn SB" where
-"createLongDsBundle (x#xs) = ubConcEq (createTsynDsBundle x)\<cdot>(createLongDsBundle xs)" |
-"createLongDsBundle []     = ubLeast {\<C> ''ds''}"
-
-
-section \<open>Lemmas for "createXBundle"\<close>
-
-lemma createAsBundle_dom [simp]: "ubDom\<cdot>(createAsBundle x) = {\<C> ''as''}"
-  by (simp add: createAsBundle.rep_eq ubdom_insert)
-
-lemma createAsBundle_getch [simp]: "(createAsBundle x).(\<C> ''as'') = \<up>(Msg (SenderBool x))"
-  by (simp add: createAsBundle.rep_eq ubgetch_insert)
-
-lemma createAsBundle_len [simp]: "ubLen (createAsBundle x) = Fin 1"
-  apply (subst ubLen_def)
-  apply (simp add: usclLen_stream_def)
-  by (metis (full_types) LeastI)
-
-lemma createIBundle_dom [simp]: "ubDom\<cdot>(createIBundle x) = {\<C> ''i''}"
-  by (simp add: createIBundle.rep_eq ubdom_insert)
-
-lemma createIBundle_getch [simp]: "(createIBundle x).(\<C> ''i'') = \<up>(Msg (SenderNat x))"
-  by (simp add: createIBundle.rep_eq ubgetch_insert)
-
-lemma createIBundle_len [simp]: "ubLen (createIBundle x) = Fin 1"
-  apply (subst ubLen_def)
-  apply (simp add: usclLen_stream_def)
-  by (metis (full_types) LeastI)
-
-lemma createDsBundle_dom [simp]: "ubDom\<cdot>(createDsBundle x) = {\<C> ''ds''}"
-  by (simp add: createDsBundle.rep_eq ubdom_insert)
-
-lemma createDsBundle_getch [simp]: "(createDsBundle x).(\<C> ''ds'') = \<up>(Msg (SenderPair_SenderNat_SenderBool x))"
-  by (simp add: createDsBundle.rep_eq ubgetch_insert)
-
-lemma createDsBundle_len [simp]: "ubLen (createDsBundle x) = Fin 1"
-  apply (subst ubLen_def)
-  apply (simp add: usclLen_stream_def)
-  by (metis (full_types) LeastI)
-
-
-section \<open>Lemmas for "createTsynXBundle"\<close>
-
-lemma createTsynAsBundle_dom [simp]: "ubDom\<cdot>(createTsynAsBundle x) = {\<C> ''as''}"
-  by (cases x, simp_all)
-
-lemma createTsynAsBundle_len [simp]: "ubLen (createTsynAsBundle x) = Fin 1"
-  apply (cases x, simp_all)
-  oops
-
-lemma createTsynIBundle_dom [simp]: "ubDom\<cdot>(createTsynIBundle x) = {\<C> ''i''}"
-  by (cases x, simp_all)
-
-lemma createTsynIBundle_len [simp]: "ubLen (createTsynIBundle x) = Fin 1"
-  apply (cases x, simp_all)
-  oops
-
-lemma createTsynDsBundle_dom [simp]: "ubDom\<cdot>(createTsynDsBundle x) = {\<C> ''ds''}"
-  by (cases x, simp_all)
-
-lemma createTsynDsBundle_len [simp]: "ubLen (createTsynDsBundle x) = Fin 1"
-  apply (cases x, simp_all)
-  oops
-
-
-section \<open>Lemmas for "createLongXBundle"\<close>
-
-lemma createLongAsBundle_dom [simp]: "ubDom\<cdot>(createLongAsBundle xs) = {\<C> ''as''}"
-  proof (induction xs)
-    case Nil then show ?case by simp
-  next
-    case (Cons a _)
-      then show ?case
-        proof (cases a)
-          case (Msg _) then show ?thesis by (simp add: Cons.IH)
-        next
-          case null then show ?thesis by (simp add: Cons.IH)
-        qed
-  qed
-
-lemma createLongAsBundle_len [simp]: "ubLen (createLongAsBundle xs) = Fin (length xs)"
-  oops
-
-lemma createLongIBundle_dom [simp]: "ubDom\<cdot>(createLongIBundle xs) = {\<C> ''i''}"
-  proof (induction xs)
-    case Nil then show ?case by simp
-  next
-    case (Cons a _)
-      then show ?case
-        proof (cases a)
-          case (Msg _) then show ?thesis by (simp add: Cons.IH)
-        next
-          case null then show ?thesis by (simp add: Cons.IH)
-        qed
-  qed
-
-lemma createLongIBundle_len [simp]: "ubLen (createLongIBundle xs) = Fin (length xs)"
-  oops
-
-lemma createLongDsBundle_dom [simp]: "ubDom\<cdot>(createLongDsBundle xs) = {\<C> ''ds''}"
-  proof (induction xs)
-    case Nil then show ?case by simp
-  next
-    case (Cons a _)
-      then show ?case
-        proof (cases a)
-          case (Msg _) then show ?thesis by (simp add: Cons.IH)
-        next
-          case null then show ?thesis by (simp add: Cons.IH)
-        qed
-  qed
-
-lemma createLongDsBundle_len [simp]: "ubLen (createLongDsBundle xs) = Fin (length xs)"
-  oops
 
 
 section \<open>Automaton definition\<close>
@@ -205,315 +22,646 @@ section \<open>Automaton definition\<close>
 datatype SenderSubstate = Sf | St
 
 (* And these have also the variables *)
-datatype SenderState = SenderState SenderSubstate (* buffer = *) "nat list" (* c = *) "nat"
+datatype 'e SenderState = SenderState SenderSubstate (* buffer = *) "'e list" (* c = *) "nat"
 
 (* Function to get the substate *)
-fun getSenderSubState :: "SenderState \<Rightarrow> SenderSubstate" where
+fun getSenderSubState :: "'e SenderState \<Rightarrow> SenderSubstate" where
 "getSenderSubState (SenderState s _ _) = s"
 
 (* Functions to get the variables *)
-fun getBuffer :: "SenderState \<Rightarrow> nat list" where
+fun getBuffer :: "'e SenderState \<Rightarrow> 'e list" where
 "getBuffer (SenderState _ var_buffer var_c) = var_buffer"
 
-fun getC :: "SenderState \<Rightarrow> nat" where
+fun getC :: "'e SenderState \<Rightarrow> nat" where
 "getC (SenderState _ var_buffer var_c) = var_c"
 
-
 (* Helper that allows us to utilize pattern matching *)
-fun senderTransitionH :: "(SenderState \<times> (senderMessage tsyn \<times> senderMessage tsyn)) \<Rightarrow> (SenderState \<times> senderMessage tsyn SB)" where
-"senderTransitionH (SenderState Sf var_buffer var_c, (\<^cancel>\<open>as\<mapsto>\<close>Msg (SenderBool port_as), \<^cancel>\<open>i\<mapsto>\<close>Msg (SenderNat port_i))) =
-  (if((size var_buffer)>1 \<and> port_as=False) then ((SenderState St (prepend (butlast var_buffer) port_i) 3, (createDsBundle (Pair (last (butlast var_buffer)) True))))
-   else if((size var_buffer)=1 \<and> port_as=False) then ((SenderState St (prepend (butlast var_buffer) port_i) 3, (createDsBundle (Pair port_i True))))
-   else if((size var_buffer)=0) then ((SenderState Sf (prepend var_buffer port_i) 3, (createDsBundle (Pair port_i False))))
-   else if((size var_buffer)>0 \<and> var_c>0 \<and> port_as=True) then ((SenderState Sf (prepend var_buffer port_i) (var_c-1), (tsynbNull (\<C> ''ds''))))
-   else if((size var_buffer)>0 \<and> var_c=0 \<and> port_as=True) then ((SenderState Sf (prepend var_buffer port_i) 3, (createDsBundle (Pair (last var_buffer) False))))
-   else (SenderState Sf var_buffer var_c, (tsynbNull (\<C> ''ds''))))" |
+fun senderTransitionH :: "('e SenderState \<times> (bool tsyn \<times> 'e tsyn)) \<Rightarrow> ('e SenderState \<times> ('e::countable) senderMessage tsyn SB)" where
+"senderTransitionH (SenderState Sf var_buffer var_c, (\<^cancel>\<open>as\<mapsto>\<close>Msg port_as, \<^cancel>\<open>i\<mapsto>\<close>Msg port_i)) =
+  (if((size var_buffer)>1 \<and> port_as=False) then ((SenderState St (prepend (butlast var_buffer) port_i) 3, (senderOut_ds (Msg (Pair (last (butlast var_buffer)) True)))))
+   else if((size var_buffer)=1 \<and> port_as=False) then ((SenderState St (prepend (butlast var_buffer) port_i) 3, (senderOut_ds (Msg (Pair port_i True)))))
+   else if((size var_buffer)=0) then ((SenderState Sf (prepend var_buffer port_i) 3, (senderOut_ds (Msg (Pair port_i False)))))
+   else if((size var_buffer)>0 \<and> var_c>0 \<and> port_as=True) then ((SenderState Sf (prepend var_buffer port_i) (var_c-1), (senderOut_ds null)))
+   else if((size var_buffer)>0 \<and> var_c=0 \<and> port_as=True) then ((SenderState Sf (prepend var_buffer port_i) 3, (senderOut_ds (Msg (Pair (last var_buffer) False)))))
+   else (SenderState Sf var_buffer var_c, (senderOut_ds null)))" |
 
-"senderTransitionH (SenderState Sf var_buffer var_c, (\<^cancel>\<open>as\<mapsto>\<close>Msg (SenderBool port_as), \<^cancel>\<open>i\<mapsto>\<close>null)) =
-  (if((size var_buffer)>1 \<and> port_as=False) then ((SenderState St (butlast var_buffer) 3, (createDsBundle (Pair (last (butlast var_buffer)) True))))
-   else if((size var_buffer)=1 \<and> port_as=False) then ((SenderState St (butlast var_buffer) var_c, (tsynbNull (\<C> ''ds''))))
-   else if((size var_buffer)=0) then ((SenderState Sf var_buffer var_c, (tsynbNull (\<C> ''ds''))))
-   else if((size var_buffer)>0 \<and> var_c>0 \<and> port_as=True) then ((SenderState Sf var_buffer (var_c-1), (tsynbNull (\<C> ''ds''))))
-   else if((size var_buffer)>0 \<and> var_c=0 \<and> port_as=True) then ((SenderState Sf var_buffer 3, (createDsBundle (Pair (last var_buffer) False))))
-   else (SenderState Sf var_buffer var_c, (tsynbNull (\<C> ''ds''))))" |
+"senderTransitionH (SenderState Sf var_buffer var_c, (\<^cancel>\<open>as\<mapsto>\<close>Msg port_as, \<^cancel>\<open>i\<mapsto>\<close>null)) =
+  (if((size var_buffer)>1 \<and> port_as=False) then ((SenderState St (butlast var_buffer) 3, (senderOut_ds (Msg (Pair (last (butlast var_buffer)) True)))))
+   else if((size var_buffer)=1 \<and> port_as=False) then ((SenderState St (butlast var_buffer) var_c, (senderOut_ds null)))
+   else if((size var_buffer)=0) then ((SenderState Sf var_buffer var_c, (senderOut_ds null)))
+   else if((size var_buffer)>0 \<and> var_c>0 \<and> port_as=True) then ((SenderState Sf var_buffer (var_c-1), (senderOut_ds null)))
+   else if((size var_buffer)>0 \<and> var_c=0 \<and> port_as=True) then ((SenderState Sf var_buffer 3, (senderOut_ds (Msg (Pair (last var_buffer) False)))))
+   else (SenderState Sf var_buffer var_c, (senderOut_ds null)))" |
 
-"senderTransitionH (SenderState Sf var_buffer var_c, (\<^cancel>\<open>as\<mapsto>\<close>null, \<^cancel>\<open>i\<mapsto>\<close>Msg (SenderNat port_i))) =
-  (if((size var_buffer)=0) then ((SenderState Sf (prepend var_buffer port_i) 3, (createDsBundle (Pair port_i False))))
-   else if((size var_buffer)>0 \<and> var_c>0) then ((SenderState Sf (prepend var_buffer port_i) (var_c-1), (tsynbNull (\<C> ''ds''))))
-   else if((size var_buffer)>0 \<and> var_c=0) then ((SenderState Sf (prepend var_buffer port_i) 3, (createDsBundle (Pair (last var_buffer) False))))
-   else (SenderState Sf var_buffer var_c, (tsynbNull (\<C> ''ds''))))" |
+"senderTransitionH (SenderState Sf var_buffer var_c, (\<^cancel>\<open>as\<mapsto>\<close>null, \<^cancel>\<open>i\<mapsto>\<close>Msg port_i)) =
+  (if((size var_buffer)=0) then ((SenderState Sf (prepend var_buffer port_i) 3, (senderOut_ds (Msg (Pair port_i False)))))
+   else if((size var_buffer)>0 \<and> var_c>0) then ((SenderState Sf (prepend var_buffer port_i) (var_c-1), (senderOut_ds null)))
+   else if((size var_buffer)>0 \<and> var_c=0) then ((SenderState Sf (prepend var_buffer port_i) 3, (senderOut_ds (Msg (Pair (last var_buffer) False)))))
+   else (SenderState Sf var_buffer var_c, (senderOut_ds null)))" |
 
 "senderTransitionH (SenderState Sf var_buffer var_c, (\<^cancel>\<open>as\<mapsto>\<close>null, \<^cancel>\<open>i\<mapsto>\<close>null)) =
-  (if((size var_buffer)=0) then ((SenderState Sf var_buffer var_c, (tsynbNull (\<C> ''ds''))))
-   else if((size var_buffer)>0 \<and> var_c>0) then ((SenderState Sf var_buffer var_c, (tsynbNull (\<C> ''ds''))))
-   else if((size var_buffer)>0 \<and> var_c=0) then ((SenderState Sf var_buffer 3, (createDsBundle (Pair (last var_buffer) False))))
-   else (SenderState Sf var_buffer var_c, (tsynbNull (\<C> ''ds''))))" |
+  (if((size var_buffer)=0) then ((SenderState Sf var_buffer var_c, (senderOut_ds null)))
+   else if((size var_buffer)>0 \<and> var_c>0) then ((SenderState Sf var_buffer var_c, (senderOut_ds null)))
+   else if((size var_buffer)>0 \<and> var_c=0) then ((SenderState Sf var_buffer 3, (senderOut_ds (Msg (Pair (last var_buffer) False)))))
+   else (SenderState Sf var_buffer var_c, (senderOut_ds null)))" |
 
-"senderTransitionH (SenderState St var_buffer var_c, (\<^cancel>\<open>as\<mapsto>\<close>Msg (SenderBool port_as), \<^cancel>\<open>i\<mapsto>\<close>Msg (SenderNat port_i))) =
-  (if((size var_buffer)=0) then ((SenderState St (prepend var_buffer port_i) 3, (createDsBundle (Pair port_i True))))
-   else if((size var_buffer)>1 \<and> port_as=True) then ((SenderState Sf (prepend (butlast var_buffer) port_i) 3, (createDsBundle (Pair (last (butlast var_buffer)) False))))
-   else if((size var_buffer)>0 \<and> var_c>0 \<and> port_as=False) then ((SenderState St (prepend var_buffer port_i) (var_c-1), (tsynbNull (\<C> ''ds''))))
-   else if((size var_buffer)>0 \<and> var_c=0 \<and> port_as=False) then ((SenderState St (prepend var_buffer port_i) 3, (createDsBundle (Pair (last var_buffer) True))))
-   else if((size var_buffer)=1 \<and> port_as=True) then ((SenderState Sf (prepend (butlast var_buffer) port_i) 3, (createDsBundle (Pair port_i False))))
-   else (SenderState St var_buffer var_c, (tsynbNull (\<C> ''ds''))))" |
+"senderTransitionH (SenderState St var_buffer var_c, (\<^cancel>\<open>as\<mapsto>\<close>Msg port_as, \<^cancel>\<open>i\<mapsto>\<close>Msg port_i)) =
+  (if((size var_buffer)=0) then ((SenderState St (prepend var_buffer port_i) 3, (senderOut_ds (Msg (Pair port_i True)))))
+   else if((size var_buffer)>1 \<and> port_as=True) then ((SenderState Sf (prepend (butlast var_buffer) port_i) 3, (senderOut_ds (Msg (Pair (last (butlast var_buffer)) False)))))
+   else if((size var_buffer)>0 \<and> var_c>0 \<and> port_as=False) then ((SenderState St (prepend var_buffer port_i) (var_c-1), (senderOut_ds null)))
+   else if((size var_buffer)>0 \<and> var_c=0 \<and> port_as=False) then ((SenderState St (prepend var_buffer port_i) 3, (senderOut_ds (Msg (Pair (last var_buffer) True)))))
+   else if((size var_buffer)=1 \<and> port_as=True) then ((SenderState Sf (prepend (butlast var_buffer) port_i) 3, (senderOut_ds (Msg (Pair port_i False)))))
+   else (SenderState St var_buffer var_c, (senderOut_ds null)))" |
 
-"senderTransitionH (SenderState St var_buffer var_c, (\<^cancel>\<open>as\<mapsto>\<close>Msg (SenderBool port_as), \<^cancel>\<open>i\<mapsto>\<close>null)) =
-  (if((size var_buffer)=0) then ((SenderState St var_buffer var_c, (tsynbNull (\<C> ''ds''))))
-   else if((size var_buffer)>1 \<and> port_as=True) then ((SenderState Sf (butlast var_buffer) 3, (createDsBundle (Pair (last (butlast var_buffer)) False))))
-   else if((size var_buffer)>0 \<and> var_c>0 \<and> port_as=False) then ((SenderState St var_buffer (var_c-1), (tsynbNull (\<C> ''ds''))))
-   else if((size var_buffer)>0 \<and> var_c=0 \<and> port_as=False) then ((SenderState St var_buffer 3, (createDsBundle (Pair (last var_buffer) True))))
-   else if((size var_buffer)=1 \<and> port_as=True) then ((SenderState Sf (butlast var_buffer) var_c, (tsynbNull (\<C> ''ds''))))
-   else (SenderState St var_buffer var_c, (tsynbNull (\<C> ''ds''))))" |
+"senderTransitionH (SenderState St var_buffer var_c, (\<^cancel>\<open>as\<mapsto>\<close>Msg port_as, \<^cancel>\<open>i\<mapsto>\<close>null)) =
+  (if((size var_buffer)=0) then ((SenderState St var_buffer var_c, (senderOut_ds null)))
+   else if((size var_buffer)>1 \<and> port_as=True) then ((SenderState Sf (butlast var_buffer) 3, (senderOut_ds (Msg (Pair (last (butlast var_buffer)) False)))))
+   else if((size var_buffer)>0 \<and> var_c>0 \<and> port_as=False) then ((SenderState St var_buffer (var_c-1), (senderOut_ds null)))
+   else if((size var_buffer)>0 \<and> var_c=0 \<and> port_as=False) then ((SenderState St var_buffer 3, (senderOut_ds (Msg (Pair (last var_buffer) True)))))
+   else if((size var_buffer)=1 \<and> port_as=True) then ((SenderState Sf (butlast var_buffer) var_c, (senderOut_ds null)))
+   else (SenderState St var_buffer var_c, (senderOut_ds null)))" |
 
-"senderTransitionH (SenderState St var_buffer var_c, (\<^cancel>\<open>as\<mapsto>\<close>null, \<^cancel>\<open>i\<mapsto>\<close>Msg (SenderNat port_i))) =
-  (if((size var_buffer)=0) then ((SenderState St (prepend var_buffer port_i) 3, (createDsBundle (Pair port_i True))))
-   else if((size var_buffer)>0 \<and> var_c>0) then ((SenderState St (prepend var_buffer port_i) (var_c-1), (tsynbNull (\<C> ''ds''))))
-   else if((size var_buffer)>0 \<and> var_c=0) then ((SenderState St (prepend var_buffer port_i) 3, (createDsBundle (Pair (last var_buffer) True))))
-   else (SenderState St var_buffer var_c, (tsynbNull (\<C> ''ds''))))" |
+"senderTransitionH (SenderState St var_buffer var_c, (\<^cancel>\<open>as\<mapsto>\<close>null, \<^cancel>\<open>i\<mapsto>\<close>Msg port_i)) =
+  (if((size var_buffer)=0) then ((SenderState St (prepend var_buffer port_i) 3, (senderOut_ds (Msg (Pair port_i True)))))
+   else if((size var_buffer)>0 \<and> var_c>0) then ((SenderState St (prepend var_buffer port_i) (var_c-1), (senderOut_ds null)))
+   else if((size var_buffer)>0 \<and> var_c=0) then ((SenderState St (prepend var_buffer port_i) 3, (senderOut_ds (Msg (Pair (last var_buffer) True)))))
+   else (SenderState St var_buffer var_c, (senderOut_ds null)))" |
 
 "senderTransitionH (SenderState St var_buffer var_c, (\<^cancel>\<open>as\<mapsto>\<close>null, \<^cancel>\<open>i\<mapsto>\<close>null)) =
-  (if((size var_buffer)=0) then ((SenderState St var_buffer var_c, (tsynbNull (\<C> ''ds''))))
-   else if((size var_buffer)>0 \<and> var_c>0) then ((SenderState St var_buffer (var_c-1), (tsynbNull (\<C> ''ds''))))
-   else if((size var_buffer)>0 \<and> var_c=0) then ((SenderState St var_buffer 3, (createDsBundle (Pair (last var_buffer) True))))
-   else (SenderState St var_buffer var_c, (tsynbNull (\<C> ''ds''))))"
+  (if((size var_buffer)=0) then ((SenderState St var_buffer var_c, (senderOut_ds null)))
+   else if((size var_buffer)>0 \<and> var_c>0) then ((SenderState St var_buffer (var_c-1), (senderOut_ds null)))
+   else if((size var_buffer)>0 \<and> var_c=0) then ((SenderState St var_buffer 3, (senderOut_ds (Msg (Pair (last var_buffer) True)))))
+   else (SenderState St var_buffer var_c, (senderOut_ds null)))"
 
 (* Transition function *)
-fun senderTransition :: "(SenderState \<times> senderMessage tsyn sbElem) \<Rightarrow> (SenderState \<times> senderMessage tsyn SB)" where
-"senderTransition (s,b) = (if dom(Rep_sbElem b) = {\<C> ''as'', \<C> ''i''} then senderTransitionH (s, (Rep_sbElem b\<rightharpoonup>\<C> ''as'', Rep_sbElem b\<rightharpoonup>\<C> ''i'')) else undefined)"
+definition senderTransition :: "('e SenderState \<times> ('e::countable) senderMessage tsyn sbElem) \<Rightarrow> ('e SenderState \<times> ('e::countable) senderMessage tsyn SB)" where
+"senderTransition = (\<lambda> (s,b). (if (sbeDom b) = senderDom then senderTransitionH (s, (senderElem_get_as b, senderElem_get_i b)) else undefined))"
 
-lift_definition SenderAutomaton :: "(SenderState, senderMessage tsyn) dAutomaton" is
-"(senderTransition, SenderState St []  0, tsynbNull (\<C> ''ds''), {\<C> ''as'', \<C> ''i''}, {\<C> ''ds''})"
-  by simp
+(* Initial state *)
+definition senderInitialState :: "'e SenderState" where
+"senderInitialState = SenderState St ([] ::'e list) (0::nat)"
 
-definition SenderSPF :: "senderMessage tsyn SPF" where
-"SenderSPF = da_H SenderAutomaton"
+(* Initial output *)
+definition senderInitialOutput :: "('e::countable) senderMessage tsyn SB" where
+"senderInitialOutput = senderOut_ds null"
+
+(* The final automaton *)
+lift_definition senderAutomaton :: "('e SenderState, ('e::countable) senderMessage tsyn) dAutomaton" is
+"(senderTransition, senderInitialState, senderInitialOutput, senderDom, senderRan)"
+  by (simp add: senderDom_def senderRan_def)
+
+(* Stream processing function for each state (handy for step lemmata) *)
+definition senderStep :: "('e SenderState \<Rightarrow> (('e::countable) senderMessage tsyn, ('e::countable) senderMessage tsyn) SPF)" where
+"senderStep = da_h senderAutomaton"
+
+(* The final SPF *)
+definition senderSPF :: "(('e::countable) senderMessage tsyn, ('e::countable) senderMessage tsyn) SPF" where
+"senderSPF = da_H (senderAutomaton::('e SenderState, ('e::countable) senderMessage tsyn) dAutomaton)"
 
 
-section \<open>Lemmata for the transitions\<close>
+section \<open>Lemmas for automaton definition\<close>
 
-(* Line 33 in the MAA model *)
-lemma tbd_0_0:
+lemma senderautomaton_trans[simp]: "daTransition senderAutomaton = senderTransition"
+  unfolding daTransition_def
+  by(simp add: senderAutomaton.rep_eq)
+
+lemma senderautomaton_initialstate[simp]: "daInitialState senderAutomaton = senderInitialState"
+  unfolding daInitialState_def
+  by(simp add: senderAutomaton.rep_eq)
+
+lemma senderautomaton_initialoutput[simp]: "daInitialOutput senderAutomaton = senderInitialOutput"
+  unfolding daInitialOutput_def
+  by(simp add: senderAutomaton.rep_eq)
+
+lemma senderautomaton_dom[simp]: "daDom senderAutomaton = senderDom"
+  unfolding daDom_def
+  by(simp add: senderAutomaton.rep_eq)
+
+lemma senderautomaton_ran[simp]: "daRan senderAutomaton = senderRan"
+  unfolding daRan_def
+  by(simp add: senderAutomaton.rep_eq)
+
+
+section \<open>Step-wise lemmata for the transition function\<close>
+
+(* Line 33:  Sf -> St [buffer.size()>1 && i!=null] {as==false} / {buffer=buffer.butlast().prepend(i), c=3, ds=new Pair<>(buffer.butlast().last(),true)}; *)
+lemma senderTransition_0_0[simp]:
   assumes "(size var_buffer)>1 \<and> port_as=False"
-    shows "spfConcIn  (createAsBundle port_as \<uplus> createIBundle port_i)\<cdot>(da_h SenderAutomaton (SenderState Sf var_buffer var_c))
-         = spfConcOut (createDsBundle (Pair (last (butlast var_buffer)) True))\<cdot>(da_h SenderAutomaton (SenderState St (prepend (butlast var_buffer) port_i) 3))"
-  oops
+    shows "senderTransition ((SenderState Sf var_buffer var_c), (senderElemIn_as_i (Msg port_as) (Msg port_i)))
+         = (SenderState St (prepend (butlast var_buffer) port_i) 3, (senderOut_ds (Msg (Pair (last (butlast var_buffer)) True))))"
+  using assms by(auto simp add: senderTransition_def assms)
 
-(* Line 35 in the MAA model *)
-lemma tbd_0_1:
+(* Line 35:  Sf -> St [buffer.size()=1 && i!=null] {as==false} / {buffer=buffer.butlast().prepend(i), c=3, ds=new Pair<>(i,true)}; *)
+lemma senderTransition_0_1[simp]:
   assumes "(size var_buffer)=1 \<and> port_as=False"
-    shows "spfConcIn  (createAsBundle port_as \<uplus> createIBundle port_i)\<cdot>(da_h SenderAutomaton (SenderState Sf var_buffer var_c))
-         = spfConcOut (createDsBundle (Pair port_i True))\<cdot>(da_h SenderAutomaton (SenderState St (prepend (butlast var_buffer) port_i) 3))"
-  oops
+    shows "senderTransition ((SenderState Sf var_buffer var_c), (senderElemIn_as_i (Msg port_as) (Msg port_i)))
+         = (SenderState St (prepend (butlast var_buffer) port_i) 3, (senderOut_ds (Msg (Pair port_i True))))"
+  using assms by(auto simp add: senderTransition_def assms)
 
-(* Line 43 in the MAA model *)
-lemma tbd_0_2:
+(* Line 43:  Sf -> Sf [buffer.size()=0 && as!=null && i!=null] / {buffer=buffer.prepend(i), c=3, ds=new Pair<>(i,false)}; *)
+lemma senderTransition_0_2[simp]:
   assumes "(size var_buffer)=0"
-    shows "spfConcIn  (createAsBundle port_as \<uplus> createIBundle port_i)\<cdot>(da_h SenderAutomaton (SenderState Sf var_buffer var_c))
-         = spfConcOut (createDsBundle (Pair port_i False))\<cdot>(da_h SenderAutomaton (SenderState Sf (prepend var_buffer port_i) 3))"
-  oops
+    shows "senderTransition ((SenderState Sf var_buffer var_c), (senderElemIn_as_i (Msg port_as) (Msg port_i)))
+         = (SenderState Sf (prepend var_buffer port_i) 3, (senderOut_ds (Msg (Pair port_i False))))"
+  using assms by(auto simp add: senderTransition_def assms)
 
-(* Line 45 in the MAA model *)
-lemma tbd_0_3:
+(* Line 45:  Sf -> Sf [buffer.size()>0 && c>0 && i!=null] {as==true} / {buffer=buffer.prepend(i), c=c-1}; *)
+lemma senderTransition_0_3[simp]:
   assumes "(size var_buffer)>0 \<and> var_c>0 \<and> port_as=True"
-    shows "spfConcIn  (createAsBundle port_as \<uplus> createIBundle port_i)\<cdot>(da_h SenderAutomaton (SenderState Sf var_buffer var_c))
-         = spfConcOut (tsynbNull (\<C> ''ds''))\<cdot>(da_h SenderAutomaton (SenderState Sf (prepend var_buffer port_i) (var_c-1)))"
-  oops
+    shows "senderTransition ((SenderState Sf var_buffer var_c), (senderElemIn_as_i (Msg port_as) (Msg port_i)))
+         = (SenderState Sf (prepend var_buffer port_i) (var_c-1), (senderOut_ds null))"
+  using assms by(auto simp add: senderTransition_def assms)
 
-(* Line 47 in the MAA model *)
-lemma tbd_0_4:
+(* Line 47:  Sf -> Sf [buffer.size()>0 && c=0 && i!=null] {as==true} / {buffer=buffer.prepend(i), c=3, ds=new Pair<>(buffer.last(),false)}; *)
+lemma senderTransition_0_4[simp]:
   assumes "(size var_buffer)>0 \<and> var_c=0 \<and> port_as=True"
-    shows "spfConcIn  (createAsBundle port_as \<uplus> createIBundle port_i)\<cdot>(da_h SenderAutomaton (SenderState Sf var_buffer var_c))
-         = spfConcOut (createDsBundle (Pair (last var_buffer) False))\<cdot>(da_h SenderAutomaton (SenderState Sf (prepend var_buffer port_i) 3))"
-  oops
+    shows "senderTransition ((SenderState Sf var_buffer var_c), (senderElemIn_as_i (Msg port_as) (Msg port_i)))
+         = (SenderState Sf (prepend var_buffer port_i) 3, (senderOut_ds (Msg (Pair (last var_buffer) False))))"
+  using assms by(auto simp add: senderTransition_def assms)
 
-(* Line 34 in the MAA model *)
-lemma tbd_1_0:
+(* Line 34:  Sf -> St [buffer.size()>1] {as==false, i==null} / {buffer=buffer.butlast(), c=3, ds=new Pair<>(buffer.butlast().last(),true)}; *)
+lemma senderTransition_1_0[simp]:
   assumes "(size var_buffer)>1 \<and> port_as=False"
-    shows "spfConcIn  (createAsBundle port_as \<uplus> tsynbNull (\<C> ''i''))\<cdot>(da_h SenderAutomaton (SenderState Sf var_buffer var_c))
-         = spfConcOut (createDsBundle (Pair (last (butlast var_buffer)) True))\<cdot>(da_h SenderAutomaton (SenderState St (butlast var_buffer) 3))"
-  oops
+    shows "senderTransition ((SenderState Sf var_buffer var_c), (senderElemIn_as_i (Msg port_as) null))
+         = (SenderState St (butlast var_buffer) 3, (senderOut_ds (Msg (Pair (last (butlast var_buffer)) True))))"
+  using assms by(auto simp add: senderTransition_def assms)
 
-(* Line 36 in the MAA model *)
-lemma tbd_1_1:
+(* Line 36:  Sf -> St [buffer.size()=1] {as==false, i==null} / {buffer=buffer.butlast()}; *)
+lemma senderTransition_1_1[simp]:
   assumes "(size var_buffer)=1 \<and> port_as=False"
-    shows "spfConcIn  (createAsBundle port_as \<uplus> tsynbNull (\<C> ''i''))\<cdot>(da_h SenderAutomaton (SenderState Sf var_buffer var_c))
-         = spfConcOut (tsynbNull (\<C> ''ds''))\<cdot>(da_h SenderAutomaton (SenderState St (butlast var_buffer) var_c))"
-  oops
+    shows "senderTransition ((SenderState Sf var_buffer var_c), (senderElemIn_as_i (Msg port_as) null))
+         = (SenderState St (butlast var_buffer) var_c, (senderOut_ds null))"
+  using assms by(auto simp add: senderTransition_def assms)
 
-(* Line 38 in the MAA model *)
-lemma tbd_1_2:
+(* Line 38:  Sf -> Sf [buffer.size()=0 && as!=null] {i==null}; *)
+lemma senderTransition_1_2[simp]:
   assumes "(size var_buffer)=0"
-    shows "spfConcIn  (createAsBundle port_as \<uplus> tsynbNull (\<C> ''i''))\<cdot>(da_h SenderAutomaton (SenderState Sf var_buffer var_c))
-         = spfConcOut (tsynbNull (\<C> ''ds''))\<cdot>(da_h SenderAutomaton (SenderState Sf var_buffer var_c))"
-  oops
+    shows "senderTransition ((SenderState Sf var_buffer var_c), (senderElemIn_as_i (Msg port_as) null))
+         = (SenderState Sf var_buffer var_c, (senderOut_ds null))"
+  using assms by(auto simp add: senderTransition_def assms)
 
-(* Line 40 in the MAA model *)
-lemma tbd_1_3:
+(* Line 40:  Sf -> Sf [buffer.size()>0 && c>0] {as==true, i==null} / {c=c-1}; *)
+lemma senderTransition_1_3[simp]:
   assumes "(size var_buffer)>0 \<and> var_c>0 \<and> port_as=True"
-    shows "spfConcIn  (createAsBundle port_as \<uplus> tsynbNull (\<C> ''i''))\<cdot>(da_h SenderAutomaton (SenderState Sf var_buffer var_c))
-         = spfConcOut (tsynbNull (\<C> ''ds''))\<cdot>(da_h SenderAutomaton (SenderState Sf var_buffer (var_c-1)))"
-  oops
+    shows "senderTransition ((SenderState Sf var_buffer var_c), (senderElemIn_as_i (Msg port_as) null))
+         = (SenderState Sf var_buffer (var_c-1), (senderOut_ds null))"
+  using assms by(auto simp add: senderTransition_def assms)
 
-(* Line 41 in the MAA model *)
-lemma tbd_1_4:
+(* Line 41:  Sf -> Sf [buffer.size()>0 && c=0] {as==true, i==null} / {c=3, ds=new Pair<>(buffer.last(),false)}; *)
+lemma senderTransition_1_4[simp]:
   assumes "(size var_buffer)>0 \<and> var_c=0 \<and> port_as=True"
-    shows "spfConcIn  (createAsBundle port_as \<uplus> tsynbNull (\<C> ''i''))\<cdot>(da_h SenderAutomaton (SenderState Sf var_buffer var_c))
-         = spfConcOut (createDsBundle (Pair (last var_buffer) False))\<cdot>(da_h SenderAutomaton (SenderState Sf var_buffer 3))"
-  oops
+    shows "senderTransition ((SenderState Sf var_buffer var_c), (senderElemIn_as_i (Msg port_as) null))
+         = (SenderState Sf var_buffer 3, (senderOut_ds (Msg (Pair (last var_buffer) False))))"
+  using assms by(auto simp add: senderTransition_def assms)
 
-(* Line 44 in the MAA model *)
-lemma tbd_2_0:
+(* Line 44:  Sf -> Sf [buffer.size()=0 && i!=null] {as==null} / {buffer=buffer.prepend(i), c=3, ds=new Pair<>(i,false)}; *)
+lemma senderTransition_2_0[simp]:
   assumes "(size var_buffer)=0"
-    shows "spfConcIn  (tsynbNull (\<C> ''as'') \<uplus> createIBundle port_i)\<cdot>(da_h SenderAutomaton (SenderState Sf var_buffer var_c))
-         = spfConcOut (createDsBundle (Pair port_i False))\<cdot>(da_h SenderAutomaton (SenderState Sf (prepend var_buffer port_i) 3))"
-  oops
+    shows "senderTransition ((SenderState Sf var_buffer var_c), (senderElemIn_as_i null (Msg port_i)))
+         = (SenderState Sf (prepend var_buffer port_i) 3, (senderOut_ds (Msg (Pair port_i False))))"
+  using assms by(auto simp add: senderTransition_def assms)
 
-(* Line 46 in the MAA model *)
-lemma tbd_2_1:
+(* Line 46:  Sf -> Sf [buffer.size()>0 && c>0 && i!=null] {as==null} / {buffer=buffer.prepend(i), c=c-1}; *)
+lemma senderTransition_2_1[simp]:
   assumes "(size var_buffer)>0 \<and> var_c>0"
-    shows "spfConcIn  (tsynbNull (\<C> ''as'') \<uplus> createIBundle port_i)\<cdot>(da_h SenderAutomaton (SenderState Sf var_buffer var_c))
-         = spfConcOut (tsynbNull (\<C> ''ds''))\<cdot>(da_h SenderAutomaton (SenderState Sf (prepend var_buffer port_i) (var_c-1)))"
-  oops
+    shows "senderTransition ((SenderState Sf var_buffer var_c), (senderElemIn_as_i null (Msg port_i)))
+         = (SenderState Sf (prepend var_buffer port_i) (var_c-1), (senderOut_ds null))"
+  using assms by(auto simp add: senderTransition_def assms)
 
-(* Line 48 in the MAA model *)
-lemma tbd_2_2:
+(* Line 48:  Sf -> Sf [buffer.size()>0 && c=0 && i!=null] {as==null} / {buffer=buffer.prepend(i), c=3, ds=new Pair<>(buffer.last(),false)}; *)
+lemma senderTransition_2_2[simp]:
   assumes "(size var_buffer)>0 \<and> var_c=0"
-    shows "spfConcIn  (tsynbNull (\<C> ''as'') \<uplus> createIBundle port_i)\<cdot>(da_h SenderAutomaton (SenderState Sf var_buffer var_c))
-         = spfConcOut (createDsBundle (Pair (last var_buffer) False))\<cdot>(da_h SenderAutomaton (SenderState Sf (prepend var_buffer port_i) 3))"
-  oops
+    shows "senderTransition ((SenderState Sf var_buffer var_c), (senderElemIn_as_i null (Msg port_i)))
+         = (SenderState Sf (prepend var_buffer port_i) 3, (senderOut_ds (Msg (Pair (last var_buffer) False))))"
+  using assms by(auto simp add: senderTransition_def assms)
 
-(* Line 37 in the MAA model *)
-lemma tbd_3_0:
+(* Line 37:  Sf -> Sf [buffer.size()=0] {as==null, i==null}; *)
+lemma senderTransition_3_0[simp]:
   assumes "(size var_buffer)=0"
-    shows "spfConcIn  (tsynbNull (\<C> ''as'') \<uplus> tsynbNull (\<C> ''i''))\<cdot>(da_h SenderAutomaton (SenderState Sf var_buffer var_c))
-         = spfConcOut (tsynbNull (\<C> ''ds''))\<cdot>(da_h SenderAutomaton (SenderState Sf var_buffer var_c))"
-  oops
+    shows "senderTransition ((SenderState Sf var_buffer var_c), (senderElemIn_as_i null null))
+         = (SenderState Sf var_buffer var_c, (senderOut_ds null))"
+  using assms by(auto simp add: senderTransition_def assms)
 
-(* Line 39 in the MAA model *)
-lemma tbd_3_1:
+(* Line 39:  Sf -> Sf [buffer.size()>0 && c>0] {as==null, i==null}; *)
+lemma senderTransition_3_1[simp]:
   assumes "(size var_buffer)>0 \<and> var_c>0"
-    shows "spfConcIn  (tsynbNull (\<C> ''as'') \<uplus> tsynbNull (\<C> ''i''))\<cdot>(da_h SenderAutomaton (SenderState Sf var_buffer var_c))
-         = spfConcOut (tsynbNull (\<C> ''ds''))\<cdot>(da_h SenderAutomaton (SenderState Sf var_buffer var_c))"
-  oops
+    shows "senderTransition ((SenderState Sf var_buffer var_c), (senderElemIn_as_i null null))
+         = (SenderState Sf var_buffer var_c, (senderOut_ds null))"
+  using assms by(auto simp add: senderTransition_def assms)
 
-(* Line 42 in the MAA model *)
-lemma tbd_3_2:
+(* Line 42:  Sf -> Sf [buffer.size()>0 && c=0] {as==null, i==null} / {c=3, ds=new Pair<>(buffer.last(),false)}; *)
+lemma senderTransition_3_2[simp]:
   assumes "(size var_buffer)>0 \<and> var_c=0"
-    shows "spfConcIn  (tsynbNull (\<C> ''as'') \<uplus> tsynbNull (\<C> ''i''))\<cdot>(da_h SenderAutomaton (SenderState Sf var_buffer var_c))
-         = spfConcOut (createDsBundle (Pair (last var_buffer) False))\<cdot>(da_h SenderAutomaton (SenderState Sf var_buffer 3))"
-  oops
+    shows "senderTransition ((SenderState Sf var_buffer var_c), (senderElemIn_as_i null null))
+         = (SenderState Sf var_buffer 3, (senderOut_ds (Msg (Pair (last var_buffer) False))))"
+  using assms by(auto simp add: senderTransition_def assms)
 
-(* Line 25 in the MAA model *)
-lemma tbd_4_0:
+(* Line 25:  St -> St [buffer.size()=0 && as!=null && i!=null] / {buffer=buffer.prepend(i), c=3, ds=new Pair<>(i,true)}; *)
+lemma senderTransition_4_0[simp]:
   assumes "(size var_buffer)=0"
-    shows "spfConcIn  (createAsBundle port_as \<uplus> createIBundle port_i)\<cdot>(da_h SenderAutomaton (SenderState St var_buffer var_c))
-         = spfConcOut (createDsBundle (Pair port_i True))\<cdot>(da_h SenderAutomaton (SenderState St (prepend var_buffer port_i) 3))"
-  oops
+    shows "senderTransition ((SenderState St var_buffer var_c), (senderElemIn_as_i (Msg port_as) (Msg port_i)))
+         = (SenderState St (prepend var_buffer port_i) 3, (senderOut_ds (Msg (Pair port_i True))))"
+  using assms by(auto simp add: senderTransition_def assms)
 
-(* Line 27 in the MAA model *)
-lemma tbd_4_1:
+(* Line 27:  St -> Sf [buffer.size()>1 && i!=null] {as==true} / {buffer=buffer.butlast().prepend(i), c=3, ds=new Pair<>(buffer.butlast().last(),false)}; *)
+lemma senderTransition_4_1[simp]:
   assumes "(size var_buffer)>1 \<and> port_as=True"
-    shows "spfConcIn  (createAsBundle port_as \<uplus> createIBundle port_i)\<cdot>(da_h SenderAutomaton (SenderState St var_buffer var_c))
-         = spfConcOut (createDsBundle (Pair (last (butlast var_buffer)) False))\<cdot>(da_h SenderAutomaton (SenderState Sf (prepend (butlast var_buffer) port_i) 3))"
-  oops
+    shows "senderTransition ((SenderState St var_buffer var_c), (senderElemIn_as_i (Msg port_as) (Msg port_i)))
+         = (SenderState Sf (prepend (butlast var_buffer) port_i) 3, (senderOut_ds (Msg (Pair (last (butlast var_buffer)) False))))"
+  using assms by(auto simp add: senderTransition_def assms)
 
-(* Line 28 in the MAA model *)
-lemma tbd_4_2:
+(* Line 28:  St -> St [buffer.size()>0 && c>0 && i!=null] {as==false} / {buffer=buffer.prepend(i), c=c-1}; *)
+lemma senderTransition_4_2[simp]:
   assumes "(size var_buffer)>0 \<and> var_c>0 \<and> port_as=False"
-    shows "spfConcIn  (createAsBundle port_as \<uplus> createIBundle port_i)\<cdot>(da_h SenderAutomaton (SenderState St var_buffer var_c))
-         = spfConcOut (tsynbNull (\<C> ''ds''))\<cdot>(da_h SenderAutomaton (SenderState St (prepend var_buffer port_i) (var_c-1)))"
-  oops
+    shows "senderTransition ((SenderState St var_buffer var_c), (senderElemIn_as_i (Msg port_as) (Msg port_i)))
+         = (SenderState St (prepend var_buffer port_i) (var_c-1), (senderOut_ds null))"
+  using assms by(auto simp add: senderTransition_def assms)
 
-(* Line 30 in the MAA model *)
-lemma tbd_4_3:
+(* Line 30:  St -> St [buffer.size()>0 && c=0 && i!=null] {as==false} / {buffer=buffer.prepend(i), c=3, ds=new Pair<>(buffer.last(),true)}; *)
+lemma senderTransition_4_3[simp]:
   assumes "(size var_buffer)>0 \<and> var_c=0 \<and> port_as=False"
-    shows "spfConcIn  (createAsBundle port_as \<uplus> createIBundle port_i)\<cdot>(da_h SenderAutomaton (SenderState St var_buffer var_c))
-         = spfConcOut (createDsBundle (Pair (last var_buffer) True))\<cdot>(da_h SenderAutomaton (SenderState St (prepend var_buffer port_i) 3))"
-  oops
+    shows "senderTransition ((SenderState St var_buffer var_c), (senderElemIn_as_i (Msg port_as) (Msg port_i)))
+         = (SenderState St (prepend var_buffer port_i) 3, (senderOut_ds (Msg (Pair (last var_buffer) True))))"
+  using assms by(auto simp add: senderTransition_def assms)
 
-(* Line 32 in the MAA model *)
-lemma tbd_4_4:
+(* Line 32:  St -> Sf [buffer.size()=1 && i!=null] {as==true} / {buffer=buffer.butlast().prepend(i), c=3, ds=new Pair<>(i,false)}; *)
+lemma senderTransition_4_4[simp]:
   assumes "(size var_buffer)=1 \<and> port_as=True"
-    shows "spfConcIn  (createAsBundle port_as \<uplus> createIBundle port_i)\<cdot>(da_h SenderAutomaton (SenderState St var_buffer var_c))
-         = spfConcOut (createDsBundle (Pair port_i False))\<cdot>(da_h SenderAutomaton (SenderState Sf (prepend (butlast var_buffer) port_i) 3))"
-  oops
+    shows "senderTransition ((SenderState St var_buffer var_c), (senderElemIn_as_i (Msg port_as) (Msg port_i)))
+         = (SenderState Sf (prepend (butlast var_buffer) port_i) 3, (senderOut_ds (Msg (Pair port_i False))))"
+  using assms by(auto simp add: senderTransition_def assms)
 
-(* Line 17 in the MAA model *)
-lemma tbd_5_0:
+(* Line 17:  St -> St [buffer.size()=0 && as!=null] {i==null}; *)
+lemma senderTransition_5_0[simp]:
   assumes "(size var_buffer)=0"
-    shows "spfConcIn  (createAsBundle port_as \<uplus> tsynbNull (\<C> ''i''))\<cdot>(da_h SenderAutomaton (SenderState St var_buffer var_c))
-         = spfConcOut (tsynbNull (\<C> ''ds''))\<cdot>(da_h SenderAutomaton (SenderState St var_buffer var_c))"
-  oops
+    shows "senderTransition ((SenderState St var_buffer var_c), (senderElemIn_as_i (Msg port_as) null))
+         = (SenderState St var_buffer var_c, (senderOut_ds null))"
+  using assms by(auto simp add: senderTransition_def assms)
 
-(* Line 18 in the MAA model *)
-lemma tbd_5_1:
+(* Line 18:  St -> Sf [buffer.size()>1] {as==true, i==null} / {buffer=buffer.butlast(), c=3, ds=new Pair<>(buffer.butlast().last(),false)}; *)
+lemma senderTransition_5_1[simp]:
   assumes "(size var_buffer)>1 \<and> port_as=True"
-    shows "spfConcIn  (createAsBundle port_as \<uplus> tsynbNull (\<C> ''i''))\<cdot>(da_h SenderAutomaton (SenderState St var_buffer var_c))
-         = spfConcOut (createDsBundle (Pair (last (butlast var_buffer)) False))\<cdot>(da_h SenderAutomaton (SenderState Sf (butlast var_buffer) 3))"
-  oops
+    shows "senderTransition ((SenderState St var_buffer var_c), (senderElemIn_as_i (Msg port_as) null))
+         = (SenderState Sf (butlast var_buffer) 3, (senderOut_ds (Msg (Pair (last (butlast var_buffer)) False))))"
+  using assms by(auto simp add: senderTransition_def assms)
 
-(* Line 20 in the MAA model *)
-lemma tbd_5_2:
+(* Line 20:  St -> St [buffer.size()>0 && c>0] {as==false, i==null} / {c=c-1}; *)
+lemma senderTransition_5_2[simp]:
   assumes "(size var_buffer)>0 \<and> var_c>0 \<and> port_as=False"
-    shows "spfConcIn  (createAsBundle port_as \<uplus> tsynbNull (\<C> ''i''))\<cdot>(da_h SenderAutomaton (SenderState St var_buffer var_c))
-         = spfConcOut (tsynbNull (\<C> ''ds''))\<cdot>(da_h SenderAutomaton (SenderState St var_buffer (var_c-1)))"
-  oops
+    shows "senderTransition ((SenderState St var_buffer var_c), (senderElemIn_as_i (Msg port_as) null))
+         = (SenderState St var_buffer (var_c-1), (senderOut_ds null))"
+  using assms by(auto simp add: senderTransition_def assms)
 
-(* Line 22 in the MAA model *)
-lemma tbd_5_3:
+(* Line 22:  St -> St [buffer.size()>0 && c=0] {as==false, i==null} / {c=3, ds=new Pair<>(buffer.last(),true)}; *)
+lemma senderTransition_5_3[simp]:
   assumes "(size var_buffer)>0 \<and> var_c=0 \<and> port_as=False"
-    shows "spfConcIn  (createAsBundle port_as \<uplus> tsynbNull (\<C> ''i''))\<cdot>(da_h SenderAutomaton (SenderState St var_buffer var_c))
-         = spfConcOut (createDsBundle (Pair (last var_buffer) True))\<cdot>(da_h SenderAutomaton (SenderState St var_buffer 3))"
-  oops
+    shows "senderTransition ((SenderState St var_buffer var_c), (senderElemIn_as_i (Msg port_as) null))
+         = (SenderState St var_buffer 3, (senderOut_ds (Msg (Pair (last var_buffer) True))))"
+  using assms by(auto simp add: senderTransition_def assms)
 
-(* Line 24 in the MAA model *)
-lemma tbd_5_4:
+(* Line 24:  St -> Sf [buffer.size()=1] {as==true, i==null} / {buffer=buffer.butlast()}; *)
+lemma senderTransition_5_4[simp]:
   assumes "(size var_buffer)=1 \<and> port_as=True"
-    shows "spfConcIn  (createAsBundle port_as \<uplus> tsynbNull (\<C> ''i''))\<cdot>(da_h SenderAutomaton (SenderState St var_buffer var_c))
-         = spfConcOut (tsynbNull (\<C> ''ds''))\<cdot>(da_h SenderAutomaton (SenderState Sf (butlast var_buffer) var_c))"
-  oops
+    shows "senderTransition ((SenderState St var_buffer var_c), (senderElemIn_as_i (Msg port_as) null))
+         = (SenderState Sf (butlast var_buffer) var_c, (senderOut_ds null))"
+  using assms by(auto simp add: senderTransition_def assms)
 
-(* Line 26 in the MAA model *)
-lemma tbd_6_0:
+(* Line 26:  St -> St [buffer.size()=0 && i!=null] {as==null} / {buffer=buffer.prepend(i), c=3, ds=new Pair<>(i,true)}; *)
+lemma senderTransition_6_0[simp]:
   assumes "(size var_buffer)=0"
-    shows "spfConcIn  (tsynbNull (\<C> ''as'') \<uplus> createIBundle port_i)\<cdot>(da_h SenderAutomaton (SenderState St var_buffer var_c))
-         = spfConcOut (createDsBundle (Pair port_i True))\<cdot>(da_h SenderAutomaton (SenderState St (prepend var_buffer port_i) 3))"
-  oops
+    shows "senderTransition ((SenderState St var_buffer var_c), (senderElemIn_as_i null (Msg port_i)))
+         = (SenderState St (prepend var_buffer port_i) 3, (senderOut_ds (Msg (Pair port_i True))))"
+  using assms by(auto simp add: senderTransition_def assms)
 
-(* Line 29 in the MAA model *)
-lemma tbd_6_1:
+(* Line 29:  St -> St [buffer.size()>0 && c>0 && i!=null] {as==null} / {buffer=buffer.prepend(i), c=c-1}; *)
+lemma senderTransition_6_1[simp]:
   assumes "(size var_buffer)>0 \<and> var_c>0"
-    shows "spfConcIn  (tsynbNull (\<C> ''as'') \<uplus> createIBundle port_i)\<cdot>(da_h SenderAutomaton (SenderState St var_buffer var_c))
-         = spfConcOut (tsynbNull (\<C> ''ds''))\<cdot>(da_h SenderAutomaton (SenderState St (prepend var_buffer port_i) (var_c-1)))"
-  oops
+    shows "senderTransition ((SenderState St var_buffer var_c), (senderElemIn_as_i null (Msg port_i)))
+         = (SenderState St (prepend var_buffer port_i) (var_c-1), (senderOut_ds null))"
+  using assms by(auto simp add: senderTransition_def assms)
 
-(* Line 31 in the MAA model *)
-lemma tbd_6_2:
+(* Line 31:  St -> St [buffer.size()>0 && c=0 && i!=null] {as==null} / {buffer=buffer.prepend(i), c=3, ds=new Pair<>(buffer.last(),true)}; *)
+lemma senderTransition_6_2[simp]:
   assumes "(size var_buffer)>0 \<and> var_c=0"
-    shows "spfConcIn  (tsynbNull (\<C> ''as'') \<uplus> createIBundle port_i)\<cdot>(da_h SenderAutomaton (SenderState St var_buffer var_c))
-         = spfConcOut (createDsBundle (Pair (last var_buffer) True))\<cdot>(da_h SenderAutomaton (SenderState St (prepend var_buffer port_i) 3))"
-  oops
+    shows "senderTransition ((SenderState St var_buffer var_c), (senderElemIn_as_i null (Msg port_i)))
+         = (SenderState St (prepend var_buffer port_i) 3, (senderOut_ds (Msg (Pair (last var_buffer) True))))"
+  using assms by(auto simp add: senderTransition_def assms)
 
-(* Line 19 in the MAA model *)
-lemma tbd_7_0:
+(* Line 19:  St -> St [buffer.size()=0] {as==null, i==null}; *)
+lemma senderTransition_7_0[simp]:
   assumes "(size var_buffer)=0"
-    shows "spfConcIn  (tsynbNull (\<C> ''as'') \<uplus> tsynbNull (\<C> ''i''))\<cdot>(da_h SenderAutomaton (SenderState St var_buffer var_c))
-         = spfConcOut (tsynbNull (\<C> ''ds''))\<cdot>(da_h SenderAutomaton (SenderState St var_buffer var_c))"
-  oops
+    shows "senderTransition ((SenderState St var_buffer var_c), (senderElemIn_as_i null null))
+         = (SenderState St var_buffer var_c, (senderOut_ds null))"
+  using assms by(auto simp add: senderTransition_def assms)
 
-(* Line 21 in the MAA model *)
-lemma tbd_7_1:
+(* Line 21:  St -> St [buffer.size()>0 && c>0] {as==null, i==null} / {c=c-1}; *)
+lemma senderTransition_7_1[simp]:
   assumes "(size var_buffer)>0 \<and> var_c>0"
-    shows "spfConcIn  (tsynbNull (\<C> ''as'') \<uplus> tsynbNull (\<C> ''i''))\<cdot>(da_h SenderAutomaton (SenderState St var_buffer var_c))
-         = spfConcOut (tsynbNull (\<C> ''ds''))\<cdot>(da_h SenderAutomaton (SenderState St var_buffer (var_c-1)))"
-  oops
+    shows "senderTransition ((SenderState St var_buffer var_c), (senderElemIn_as_i null null))
+         = (SenderState St var_buffer (var_c-1), (senderOut_ds null))"
+  using assms by(auto simp add: senderTransition_def assms)
 
-(* Line 23 in the MAA model *)
-lemma tbd_7_2:
+(* Line 23:  St -> St [buffer.size()>0 && c=0] {as==null, i==null} / {c=3, ds=new Pair<>(buffer.last(),true)}; *)
+lemma senderTransition_7_2[simp]:
   assumes "(size var_buffer)>0 \<and> var_c=0"
-    shows "spfConcIn  (tsynbNull (\<C> ''as'') \<uplus> tsynbNull (\<C> ''i''))\<cdot>(da_h SenderAutomaton (SenderState St var_buffer var_c))
-         = spfConcOut (createDsBundle (Pair (last var_buffer) True))\<cdot>(da_h SenderAutomaton (SenderState St var_buffer 3))"
-  oops
+    shows "senderTransition ((SenderState St var_buffer var_c), (senderElemIn_as_i null null))
+         = (SenderState St var_buffer 3, (senderOut_ds (Msg (Pair (last var_buffer) True))))"
+  using assms by(auto simp add: senderTransition_def assms)
+
+
+section \<open>Step-wise lemmata for the SPF\<close>
+
+(* Convert the SPF to step notation *)
+lemma senderSpf2Step: "senderSPF = spfConcOut (senderOut_ds null)\<cdot>(senderStep (SenderState St ([] ::'e::countable list) (0::nat)))"
+  by(simp add: senderSPF_def da_H_def senderInitialOutput_def senderInitialState_def senderStep_def)
+
+(* Line 33:  Sf -> St [buffer.size()>1 && i!=null] {as==false} / {buffer=buffer.butlast().prepend(i), c=3, ds=new Pair<>(buffer.butlast().last(),true)}; *)
+lemma senderStep_0_0:
+  assumes "(size var_buffer)>1 \<and> port_as=False"
+    shows "spfConcIn  (senderIn_as_i (Msg port_as) (Msg port_i))\<cdot>(senderStep (SenderState Sf var_buffer var_c))
+         = spfConcOut (senderOut_ds (Msg (Pair (last (butlast var_buffer)) True)))\<cdot>(senderStep (SenderState St (prepend (butlast var_buffer) port_i) 3))"
+  apply(simp add: senderStep_def senderIn_as_i_def)
+  apply(rule da_h_stepI)
+  using assms by(auto simp add: daNextState_def daNextOutput_def assms)
+
+(* Line 35:  Sf -> St [buffer.size()=1 && i!=null] {as==false} / {buffer=buffer.butlast().prepend(i), c=3, ds=new Pair<>(i,true)}; *)
+lemma senderStep_0_1:
+  assumes "(size var_buffer)=1 \<and> port_as=False"
+    shows "spfConcIn  (senderIn_as_i (Msg port_as) (Msg port_i))\<cdot>(senderStep (SenderState Sf var_buffer var_c))
+         = spfConcOut (senderOut_ds (Msg (Pair port_i True)))\<cdot>(senderStep (SenderState St (prepend (butlast var_buffer) port_i) 3))"
+  apply(simp add: senderStep_def senderIn_as_i_def)
+  apply(rule da_h_stepI)
+  using assms by(auto simp add: daNextState_def daNextOutput_def assms)
+
+(* Line 43:  Sf -> Sf [buffer.size()=0 && as!=null && i!=null] / {buffer=buffer.prepend(i), c=3, ds=new Pair<>(i,false)}; *)
+lemma senderStep_0_2:
+  assumes "(size var_buffer)=0"
+    shows "spfConcIn  (senderIn_as_i (Msg port_as) (Msg port_i))\<cdot>(senderStep (SenderState Sf var_buffer var_c))
+         = spfConcOut (senderOut_ds (Msg (Pair port_i False)))\<cdot>(senderStep (SenderState Sf (prepend var_buffer port_i) 3))"
+  apply(simp add: senderStep_def senderIn_as_i_def)
+  apply(rule da_h_stepI)
+  using assms by(auto simp add: daNextState_def daNextOutput_def assms)
+
+(* Line 45:  Sf -> Sf [buffer.size()>0 && c>0 && i!=null] {as==true} / {buffer=buffer.prepend(i), c=c-1}; *)
+lemma senderStep_0_3:
+  assumes "(size var_buffer)>0 \<and> var_c>0 \<and> port_as=True"
+    shows "spfConcIn  (senderIn_as_i (Msg port_as) (Msg port_i))\<cdot>(senderStep (SenderState Sf var_buffer var_c))
+         = spfConcOut (senderOut_ds null)\<cdot>(senderStep (SenderState Sf (prepend var_buffer port_i) (var_c-1)))"
+  apply(simp add: senderStep_def senderIn_as_i_def)
+  apply(rule da_h_stepI)
+  using assms by(auto simp add: daNextState_def daNextOutput_def assms)
+
+(* Line 47:  Sf -> Sf [buffer.size()>0 && c=0 && i!=null] {as==true} / {buffer=buffer.prepend(i), c=3, ds=new Pair<>(buffer.last(),false)}; *)
+lemma senderStep_0_4:
+  assumes "(size var_buffer)>0 \<and> var_c=0 \<and> port_as=True"
+    shows "spfConcIn  (senderIn_as_i (Msg port_as) (Msg port_i))\<cdot>(senderStep (SenderState Sf var_buffer var_c))
+         = spfConcOut (senderOut_ds (Msg (Pair (last var_buffer) False)))\<cdot>(senderStep (SenderState Sf (prepend var_buffer port_i) 3))"
+  apply(simp add: senderStep_def senderIn_as_i_def)
+  apply(rule da_h_stepI)
+  using assms by(auto simp add: daNextState_def daNextOutput_def assms)
+
+(* Line 34:  Sf -> St [buffer.size()>1] {as==false, i==null} / {buffer=buffer.butlast(), c=3, ds=new Pair<>(buffer.butlast().last(),true)}; *)
+lemma senderStep_1_0:
+  assumes "(size var_buffer)>1 \<and> port_as=False"
+    shows "spfConcIn  (senderIn_as_i (Msg port_as) null)\<cdot>(senderStep (SenderState Sf var_buffer var_c))
+         = spfConcOut (senderOut_ds (Msg (Pair (last (butlast var_buffer)) True)))\<cdot>(senderStep (SenderState St (butlast var_buffer) 3))"
+  apply(simp add: senderStep_def senderIn_as_i_def)
+  apply(rule da_h_stepI)
+  using assms by(auto simp add: daNextState_def daNextOutput_def assms)
+
+(* Line 36:  Sf -> St [buffer.size()=1] {as==false, i==null} / {buffer=buffer.butlast()}; *)
+lemma senderStep_1_1:
+  assumes "(size var_buffer)=1 \<and> port_as=False"
+    shows "spfConcIn  (senderIn_as_i (Msg port_as) null)\<cdot>(senderStep (SenderState Sf var_buffer var_c))
+         = spfConcOut (senderOut_ds null)\<cdot>(senderStep (SenderState St (butlast var_buffer) var_c))"
+  apply(simp add: senderStep_def senderIn_as_i_def)
+  apply(rule da_h_stepI)
+  using assms by(auto simp add: daNextState_def daNextOutput_def assms)
+
+(* Line 38:  Sf -> Sf [buffer.size()=0 && as!=null] {i==null}; *)
+lemma senderStep_1_2:
+  assumes "(size var_buffer)=0"
+    shows "spfConcIn  (senderIn_as_i (Msg port_as) null)\<cdot>(senderStep (SenderState Sf var_buffer var_c))
+         = spfConcOut (senderOut_ds null)\<cdot>(senderStep (SenderState Sf var_buffer var_c))"
+  apply(simp add: senderStep_def senderIn_as_i_def)
+  apply(rule da_h_stepI)
+  using assms by(auto simp add: daNextState_def daNextOutput_def assms)
+
+(* Line 40:  Sf -> Sf [buffer.size()>0 && c>0] {as==true, i==null} / {c=c-1}; *)
+lemma senderStep_1_3:
+  assumes "(size var_buffer)>0 \<and> var_c>0 \<and> port_as=True"
+    shows "spfConcIn  (senderIn_as_i (Msg port_as) null)\<cdot>(senderStep (SenderState Sf var_buffer var_c))
+         = spfConcOut (senderOut_ds null)\<cdot>(senderStep (SenderState Sf var_buffer (var_c-1)))"
+  apply(simp add: senderStep_def senderIn_as_i_def)
+  apply(rule da_h_stepI)
+  using assms by(auto simp add: daNextState_def daNextOutput_def assms)
+
+(* Line 41:  Sf -> Sf [buffer.size()>0 && c=0] {as==true, i==null} / {c=3, ds=new Pair<>(buffer.last(),false)}; *)
+lemma senderStep_1_4:
+  assumes "(size var_buffer)>0 \<and> var_c=0 \<and> port_as=True"
+    shows "spfConcIn  (senderIn_as_i (Msg port_as) null)\<cdot>(senderStep (SenderState Sf var_buffer var_c))
+         = spfConcOut (senderOut_ds (Msg (Pair (last var_buffer) False)))\<cdot>(senderStep (SenderState Sf var_buffer 3))"
+  apply(simp add: senderStep_def senderIn_as_i_def)
+  apply(rule da_h_stepI)
+  using assms by(auto simp add: daNextState_def daNextOutput_def assms)
+
+(* Line 44:  Sf -> Sf [buffer.size()=0 && i!=null] {as==null} / {buffer=buffer.prepend(i), c=3, ds=new Pair<>(i,false)}; *)
+lemma senderStep_2_0:
+  assumes "(size var_buffer)=0"
+    shows "spfConcIn  (senderIn_as_i null (Msg port_i))\<cdot>(senderStep (SenderState Sf var_buffer var_c))
+         = spfConcOut (senderOut_ds (Msg (Pair port_i False)))\<cdot>(senderStep (SenderState Sf (prepend var_buffer port_i) 3))"
+  apply(simp add: senderStep_def senderIn_as_i_def)
+  apply(rule da_h_stepI)
+  using assms by(auto simp add: daNextState_def daNextOutput_def assms)
+
+(* Line 46:  Sf -> Sf [buffer.size()>0 && c>0 && i!=null] {as==null} / {buffer=buffer.prepend(i), c=c-1}; *)
+lemma senderStep_2_1:
+  assumes "(size var_buffer)>0 \<and> var_c>0"
+    shows "spfConcIn  (senderIn_as_i null (Msg port_i))\<cdot>(senderStep (SenderState Sf var_buffer var_c))
+         = spfConcOut (senderOut_ds null)\<cdot>(senderStep (SenderState Sf (prepend var_buffer port_i) (var_c-1)))"
+  apply(simp add: senderStep_def senderIn_as_i_def)
+  apply(rule da_h_stepI)
+  using assms by(auto simp add: daNextState_def daNextOutput_def assms)
+
+(* Line 48:  Sf -> Sf [buffer.size()>0 && c=0 && i!=null] {as==null} / {buffer=buffer.prepend(i), c=3, ds=new Pair<>(buffer.last(),false)}; *)
+lemma senderStep_2_2:
+  assumes "(size var_buffer)>0 \<and> var_c=0"
+    shows "spfConcIn  (senderIn_as_i null (Msg port_i))\<cdot>(senderStep (SenderState Sf var_buffer var_c))
+         = spfConcOut (senderOut_ds (Msg (Pair (last var_buffer) False)))\<cdot>(senderStep (SenderState Sf (prepend var_buffer port_i) 3))"
+  apply(simp add: senderStep_def senderIn_as_i_def)
+  apply(rule da_h_stepI)
+  using assms by(auto simp add: daNextState_def daNextOutput_def assms)
+
+(* Line 37:  Sf -> Sf [buffer.size()=0] {as==null, i==null}; *)
+lemma senderStep_3_0:
+  assumes "(size var_buffer)=0"
+    shows "spfConcIn  (senderIn_as_i null null)\<cdot>(senderStep (SenderState Sf var_buffer var_c))
+         = spfConcOut (senderOut_ds null)\<cdot>(senderStep (SenderState Sf var_buffer var_c))"
+  apply(simp add: senderStep_def senderIn_as_i_def)
+  apply(rule da_h_stepI)
+  using assms by(auto simp add: daNextState_def daNextOutput_def assms)
+
+(* Line 39:  Sf -> Sf [buffer.size()>0 && c>0] {as==null, i==null}; *)
+lemma senderStep_3_1:
+  assumes "(size var_buffer)>0 \<and> var_c>0"
+    shows "spfConcIn  (senderIn_as_i null null)\<cdot>(senderStep (SenderState Sf var_buffer var_c))
+         = spfConcOut (senderOut_ds null)\<cdot>(senderStep (SenderState Sf var_buffer var_c))"
+  apply(simp add: senderStep_def senderIn_as_i_def)
+  apply(rule da_h_stepI)
+  using assms by(auto simp add: daNextState_def daNextOutput_def assms)
+
+(* Line 42:  Sf -> Sf [buffer.size()>0 && c=0] {as==null, i==null} / {c=3, ds=new Pair<>(buffer.last(),false)}; *)
+lemma senderStep_3_2:
+  assumes "(size var_buffer)>0 \<and> var_c=0"
+    shows "spfConcIn  (senderIn_as_i null null)\<cdot>(senderStep (SenderState Sf var_buffer var_c))
+         = spfConcOut (senderOut_ds (Msg (Pair (last var_buffer) False)))\<cdot>(senderStep (SenderState Sf var_buffer 3))"
+  apply(simp add: senderStep_def senderIn_as_i_def)
+  apply(rule da_h_stepI)
+  using assms by(auto simp add: daNextState_def daNextOutput_def assms)
+
+(* Line 25:  St -> St [buffer.size()=0 && as!=null && i!=null] / {buffer=buffer.prepend(i), c=3, ds=new Pair<>(i,true)}; *)
+lemma senderStep_4_0:
+  assumes "(size var_buffer)=0"
+    shows "spfConcIn  (senderIn_as_i (Msg port_as) (Msg port_i))\<cdot>(senderStep (SenderState St var_buffer var_c))
+         = spfConcOut (senderOut_ds (Msg (Pair port_i True)))\<cdot>(senderStep (SenderState St (prepend var_buffer port_i) 3))"
+  apply(simp add: senderStep_def senderIn_as_i_def)
+  apply(rule da_h_stepI)
+  using assms by(auto simp add: daNextState_def daNextOutput_def assms)
+
+(* Line 27:  St -> Sf [buffer.size()>1 && i!=null] {as==true} / {buffer=buffer.butlast().prepend(i), c=3, ds=new Pair<>(buffer.butlast().last(),false)}; *)
+lemma senderStep_4_1:
+  assumes "(size var_buffer)>1 \<and> port_as=True"
+    shows "spfConcIn  (senderIn_as_i (Msg port_as) (Msg port_i))\<cdot>(senderStep (SenderState St var_buffer var_c))
+         = spfConcOut (senderOut_ds (Msg (Pair (last (butlast var_buffer)) False)))\<cdot>(senderStep (SenderState Sf (prepend (butlast var_buffer) port_i) 3))"
+  apply(simp add: senderStep_def senderIn_as_i_def)
+  apply(rule da_h_stepI)
+  using assms by(auto simp add: daNextState_def daNextOutput_def assms)
+
+(* Line 28:  St -> St [buffer.size()>0 && c>0 && i!=null] {as==false} / {buffer=buffer.prepend(i), c=c-1}; *)
+lemma senderStep_4_2:
+  assumes "(size var_buffer)>0 \<and> var_c>0 \<and> port_as=False"
+    shows "spfConcIn  (senderIn_as_i (Msg port_as) (Msg port_i))\<cdot>(senderStep (SenderState St var_buffer var_c))
+         = spfConcOut (senderOut_ds null)\<cdot>(senderStep (SenderState St (prepend var_buffer port_i) (var_c-1)))"
+  apply(simp add: senderStep_def senderIn_as_i_def)
+  apply(rule da_h_stepI)
+  using assms by(auto simp add: daNextState_def daNextOutput_def assms)
+
+(* Line 30:  St -> St [buffer.size()>0 && c=0 && i!=null] {as==false} / {buffer=buffer.prepend(i), c=3, ds=new Pair<>(buffer.last(),true)}; *)
+lemma senderStep_4_3:
+  assumes "(size var_buffer)>0 \<and> var_c=0 \<and> port_as=False"
+    shows "spfConcIn  (senderIn_as_i (Msg port_as) (Msg port_i))\<cdot>(senderStep (SenderState St var_buffer var_c))
+         = spfConcOut (senderOut_ds (Msg (Pair (last var_buffer) True)))\<cdot>(senderStep (SenderState St (prepend var_buffer port_i) 3))"
+  apply(simp add: senderStep_def senderIn_as_i_def)
+  apply(rule da_h_stepI)
+  using assms by(auto simp add: daNextState_def daNextOutput_def assms)
+
+(* Line 32:  St -> Sf [buffer.size()=1 && i!=null] {as==true} / {buffer=buffer.butlast().prepend(i), c=3, ds=new Pair<>(i,false)}; *)
+lemma senderStep_4_4:
+  assumes "(size var_buffer)=1 \<and> port_as=True"
+    shows "spfConcIn  (senderIn_as_i (Msg port_as) (Msg port_i))\<cdot>(senderStep (SenderState St var_buffer var_c))
+         = spfConcOut (senderOut_ds (Msg (Pair port_i False)))\<cdot>(senderStep (SenderState Sf (prepend (butlast var_buffer) port_i) 3))"
+  apply(simp add: senderStep_def senderIn_as_i_def)
+  apply(rule da_h_stepI)
+  using assms by(auto simp add: daNextState_def daNextOutput_def assms)
+
+(* Line 17:  St -> St [buffer.size()=0 && as!=null] {i==null}; *)
+lemma senderStep_5_0:
+  assumes "(size var_buffer)=0"
+    shows "spfConcIn  (senderIn_as_i (Msg port_as) null)\<cdot>(senderStep (SenderState St var_buffer var_c))
+         = spfConcOut (senderOut_ds null)\<cdot>(senderStep (SenderState St var_buffer var_c))"
+  apply(simp add: senderStep_def senderIn_as_i_def)
+  apply(rule da_h_stepI)
+  using assms by(auto simp add: daNextState_def daNextOutput_def assms)
+
+(* Line 18:  St -> Sf [buffer.size()>1] {as==true, i==null} / {buffer=buffer.butlast(), c=3, ds=new Pair<>(buffer.butlast().last(),false)}; *)
+lemma senderStep_5_1:
+  assumes "(size var_buffer)>1 \<and> port_as=True"
+    shows "spfConcIn  (senderIn_as_i (Msg port_as) null)\<cdot>(senderStep (SenderState St var_buffer var_c))
+         = spfConcOut (senderOut_ds (Msg (Pair (last (butlast var_buffer)) False)))\<cdot>(senderStep (SenderState Sf (butlast var_buffer) 3))"
+  apply(simp add: senderStep_def senderIn_as_i_def)
+  apply(rule da_h_stepI)
+  using assms by(auto simp add: daNextState_def daNextOutput_def assms)
+
+(* Line 20:  St -> St [buffer.size()>0 && c>0] {as==false, i==null} / {c=c-1}; *)
+lemma senderStep_5_2:
+  assumes "(size var_buffer)>0 \<and> var_c>0 \<and> port_as=False"
+    shows "spfConcIn  (senderIn_as_i (Msg port_as) null)\<cdot>(senderStep (SenderState St var_buffer var_c))
+         = spfConcOut (senderOut_ds null)\<cdot>(senderStep (SenderState St var_buffer (var_c-1)))"
+  apply(simp add: senderStep_def senderIn_as_i_def)
+  apply(rule da_h_stepI)
+  using assms by(auto simp add: daNextState_def daNextOutput_def assms)
+
+(* Line 22:  St -> St [buffer.size()>0 && c=0] {as==false, i==null} / {c=3, ds=new Pair<>(buffer.last(),true)}; *)
+lemma senderStep_5_3:
+  assumes "(size var_buffer)>0 \<and> var_c=0 \<and> port_as=False"
+    shows "spfConcIn  (senderIn_as_i (Msg port_as) null)\<cdot>(senderStep (SenderState St var_buffer var_c))
+         = spfConcOut (senderOut_ds (Msg (Pair (last var_buffer) True)))\<cdot>(senderStep (SenderState St var_buffer 3))"
+  apply(simp add: senderStep_def senderIn_as_i_def)
+  apply(rule da_h_stepI)
+  using assms by(auto simp add: daNextState_def daNextOutput_def assms)
+
+(* Line 24:  St -> Sf [buffer.size()=1] {as==true, i==null} / {buffer=buffer.butlast()}; *)
+lemma senderStep_5_4:
+  assumes "(size var_buffer)=1 \<and> port_as=True"
+    shows "spfConcIn  (senderIn_as_i (Msg port_as) null)\<cdot>(senderStep (SenderState St var_buffer var_c))
+         = spfConcOut (senderOut_ds null)\<cdot>(senderStep (SenderState Sf (butlast var_buffer) var_c))"
+  apply(simp add: senderStep_def senderIn_as_i_def)
+  apply(rule da_h_stepI)
+  using assms by(auto simp add: daNextState_def daNextOutput_def assms)
+
+(* Line 26:  St -> St [buffer.size()=0 && i!=null] {as==null} / {buffer=buffer.prepend(i), c=3, ds=new Pair<>(i,true)}; *)
+lemma senderStep_6_0:
+  assumes "(size var_buffer)=0"
+    shows "spfConcIn  (senderIn_as_i null (Msg port_i))\<cdot>(senderStep (SenderState St var_buffer var_c))
+         = spfConcOut (senderOut_ds (Msg (Pair port_i True)))\<cdot>(senderStep (SenderState St (prepend var_buffer port_i) 3))"
+  apply(simp add: senderStep_def senderIn_as_i_def)
+  apply(rule da_h_stepI)
+  using assms by(auto simp add: daNextState_def daNextOutput_def assms)
+
+(* Line 29:  St -> St [buffer.size()>0 && c>0 && i!=null] {as==null} / {buffer=buffer.prepend(i), c=c-1}; *)
+lemma senderStep_6_1:
+  assumes "(size var_buffer)>0 \<and> var_c>0"
+    shows "spfConcIn  (senderIn_as_i null (Msg port_i))\<cdot>(senderStep (SenderState St var_buffer var_c))
+         = spfConcOut (senderOut_ds null)\<cdot>(senderStep (SenderState St (prepend var_buffer port_i) (var_c-1)))"
+  apply(simp add: senderStep_def senderIn_as_i_def)
+  apply(rule da_h_stepI)
+  using assms by(auto simp add: daNextState_def daNextOutput_def assms)
+
+(* Line 31:  St -> St [buffer.size()>0 && c=0 && i!=null] {as==null} / {buffer=buffer.prepend(i), c=3, ds=new Pair<>(buffer.last(),true)}; *)
+lemma senderStep_6_2:
+  assumes "(size var_buffer)>0 \<and> var_c=0"
+    shows "spfConcIn  (senderIn_as_i null (Msg port_i))\<cdot>(senderStep (SenderState St var_buffer var_c))
+         = spfConcOut (senderOut_ds (Msg (Pair (last var_buffer) True)))\<cdot>(senderStep (SenderState St (prepend var_buffer port_i) 3))"
+  apply(simp add: senderStep_def senderIn_as_i_def)
+  apply(rule da_h_stepI)
+  using assms by(auto simp add: daNextState_def daNextOutput_def assms)
+
+(* Line 19:  St -> St [buffer.size()=0] {as==null, i==null}; *)
+lemma senderStep_7_0:
+  assumes "(size var_buffer)=0"
+    shows "spfConcIn  (senderIn_as_i null null)\<cdot>(senderStep (SenderState St var_buffer var_c))
+         = spfConcOut (senderOut_ds null)\<cdot>(senderStep (SenderState St var_buffer var_c))"
+  apply(simp add: senderStep_def senderIn_as_i_def)
+  apply(rule da_h_stepI)
+  using assms by(auto simp add: daNextState_def daNextOutput_def assms)
+
+(* Line 21:  St -> St [buffer.size()>0 && c>0] {as==null, i==null} / {c=c-1}; *)
+lemma senderStep_7_1:
+  assumes "(size var_buffer)>0 \<and> var_c>0"
+    shows "spfConcIn  (senderIn_as_i null null)\<cdot>(senderStep (SenderState St var_buffer var_c))
+         = spfConcOut (senderOut_ds null)\<cdot>(senderStep (SenderState St var_buffer (var_c-1)))"
+  apply(simp add: senderStep_def senderIn_as_i_def)
+  apply(rule da_h_stepI)
+  using assms by(auto simp add: daNextState_def daNextOutput_def assms)
+
+(* Line 23:  St -> St [buffer.size()>0 && c=0] {as==null, i==null} / {c=3, ds=new Pair<>(buffer.last(),true)}; *)
+lemma senderStep_7_2:
+  assumes "(size var_buffer)>0 \<and> var_c=0"
+    shows "spfConcIn  (senderIn_as_i null null)\<cdot>(senderStep (SenderState St var_buffer var_c))
+         = spfConcOut (senderOut_ds (Msg (Pair (last var_buffer) True)))\<cdot>(senderStep (SenderState St var_buffer 3))"
+  apply(simp add: senderStep_def senderIn_as_i_def)
+  apply(rule da_h_stepI)
+  using assms by(auto simp add: daNextState_def daNextOutput_def assms)
 
 
 end
