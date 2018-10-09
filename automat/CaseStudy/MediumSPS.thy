@@ -63,10 +63,31 @@ text{* If a message comes in and the counter is not zero, null will be sent and 
 lemma "spsConcIn (medIn (Msg m)) (MedSPS (Suc n)) = spsConcOut (medOut -)(MedSPS n)"
 sorry
 
+(*lemma nda_h_final_back: assumes "\<And>state sbe. sbeDom sbe = ndaDom\<cdot>nda \<Longrightarrow> 
+spsConcIn (sbe2SB sbe) (other state) = 
+  ndaConcOutFlatten (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) ((ndaTransition\<cdot>nda) (state,sbe)) (other)"
+  and "\<And> state sbe. (ndaTransition\<cdot>nda) (state, sbe) \<noteq> Rev {}"
+  and "\<And> state. other state \<noteq> uspecMax (ndaDom\<cdot>nda) (ndaRan\<cdot>nda)"
+  and "\<And> state. uspecIsStrict (other state)"
+  and "\<And> state. uspecDom\<cdot>(other state) = ndaDom\<cdot>nda" 
+  and "\<And> state. uspecRan\<cdot>(other state) = ndaRan\<cdot>nda"
+shows "nda_h nda \<sqsubseteq> other"*)
+
+lemma spf2sps: assumes "spfConcIn (sbe2SB sbe1)\<cdot>spf1 = spfConcOut (sbe2SB sbe2)\<cdot>spf2"
+  and "sbeDom sbe1 = ufDom\<cdot>spf1"
+  and "sbeDom sbe2 = ufDom\<cdot>spf2"
+  shows "spsConcIn (sbe2SB sbe1) sps = spsConcOut (sbe2SB sbe2) (uspecFlatten (uspecDom\<cdot>sps2)(uspecRan\<cdot>sps2)(Rev {sps2}))"
+sorry
+
 text{* If a message comes in and the counter is zero, the message will be sent and Medium changes its 
   state. *}
 lemma "spsConcIn (medIn (Msg m)) (MedSPS 0) 
   = spsConcOut (medOut (Msg m))(uspecFlatten medInDom medOutDom (Rev {MedSPS n | n. True}))"
+  apply (simp add: medIn_def medOut_def)
+  apply (subst spf2sps)
+sorry
+
+lemma "MedSPS n = medFair n"
 sorry
 
 end
