@@ -20,29 +20,33 @@ default_sort message
 
 (* ToDo: add descriptions. *)
 
-lift_definition tsynbNull :: "channel \<Rightarrow> 'm tsyn SB" is
-  "\<lambda>c. [c \<mapsto> \<up>null]"
+lift_definition tsynbNull :: "channel set \<Rightarrow> 'm tsyn SB" is
+  "\<lambda>cs. (\<lambda>c. (c\<in>cs) \<leadsto> \<up>null)"
   by (simp add: ubWell_def usclOkay_stream_def ctype_tsyn_def)
     
-lemma tsynbnull_ubdom [simp]: "ubDom\<cdot>(tsynbNull c) = {c}"
+lemma tsynbnull_ubdom [simp]: "ubDom\<cdot>(tsynbNull cs) = cs"
   by (simp add:tsynbNull.rep_eq ubdom_insert)
 
-lemma tsynbnull_ubgetch [simp]: "tsynbNull c  .  c = \<up>null"
-  by (simp add: tsynbNull.rep_eq ubgetch_insert)
+lemma tsynbnull_ubgetch [simp]: 
+  assumes "c \<in> cs"
+  shows "tsynbNull cs  .  c = \<up>null"
+  by (simp add: assms tsynbNull.rep_eq ubgetch_insert)
 
 lemma tsynbnull_ubconc [simp]:
   assumes "c \<in> ubDom\<cdot>sb"
-  shows "ubConc (tsynbNull c)\<cdot>sb  .  c = \<up>null \<bullet> (sb  .  c)"
+  and "c \<in> cs"
+  shows "ubConc (tsynbNull cs)\<cdot>sb  .  c = \<up>null \<bullet> (sb  .  c)"
   by (simp add: assms usclConc_stream_def)
     
 lemma tsynbnull_ubconc_sbrt [simp]:
-  assumes "ubDom\<cdot>sb = {c}"
-  shows "sbRt\<cdot>(ubConc (tsynbNull c)\<cdot>sb) = sb"
+  assumes "ubDom\<cdot>sb = cs"
+  shows "sbRt\<cdot>(ubConc (tsynbNull cs)\<cdot>sb) = sb"
   apply (rule ub_eq)
   by (simp add: assms sbRt_def usclConc_stream_def)+
 
+(* no longer true
 lemma tsynbnull_eq_createbundle: "tsynbNull c = createBundle - c"
-  by (simp add: ctype_tsyn_def tsynbNull.abs_eq)
+  by (simp add: ctype_tsyn_def tsynbNull.abs_eq)*)
 
 (* ----------------------------------------------------------------------- *)
   section {* Definitions on Time-Synchronous Stream Bundles *}
