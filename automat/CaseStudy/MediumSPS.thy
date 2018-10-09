@@ -29,13 +29,13 @@ subsection {* Basic Properties of MedSPS *}
 (* ----------------------------------------------------------------------- *)
 
 text{* The domain of @{term MedSPS}. *}
-lemma medsps_uspecdom: "uspecDom\<cdot>(MedSPS n) = medInDom"
+lemma medsps_uspecdom[simp]: "uspecDom\<cdot>(MedSPS n) = medInDom"
   apply (simp add: MedSPS_def uspecdom_insert oraFun_def)
   apply (subst rep_abs_uspec, simp_all)
   by (metis medspf_ufdom medspf_ufran ufclDom_ufun_def ufclRan_ufun_def)
 
 text{* The range of @{term MedSPS}. *}
-lemma medsps_uspecran: "uspecRan\<cdot>(MedSPS n) = medOutDom"
+lemma medsps_uspecran[simp]: "uspecRan\<cdot>(MedSPS n) = medOutDom"
   apply (simp add: MedSPS_def uspecran_insert oraFun_def)
   apply (subst rep_abs_uspec, simp_all)
   by (metis medspf_ufdom medspf_ufran ufclDom_ufun_def ufclRan_ufun_def)
@@ -74,20 +74,25 @@ spsConcIn (sbe2SB sbe) (other state) =
 shows "nda_h nda \<sqsubseteq> other"*)
 
 lemma spf2sps: assumes "spfConcIn (sbe2SB sbe1)\<cdot>spf1 = spfConcOut (sbe2SB sbe2)\<cdot>spf2"
-  and "sbeDom sbe1 = ufDom\<cdot>spf1"
-  and "sbeDom sbe2 = ufDom\<cdot>spf2"
-  shows "spsConcIn (sbe2SB sbe1) sps = spsConcOut (sbe2SB sbe2) (uspecFlatten (uspecDom\<cdot>sps2)(uspecRan\<cdot>sps2)(Rev {sps2}))"
+  and "sbeDom sbe1 = uspecDom\<cdot>sps"
+  and "sbeDom sbe2 = uspecRan\<cdot>sps2"
+  shows "spsConcIn (sbe2SB sbe1) sps 
+    = spsConcOut (sbe2SB sbe2) (uspecFlatten (uspecDom\<cdot>sps2)(uspecRan\<cdot>sps2)(Rev {sps2}))"
 sorry
 
-text{* If a message comes in and the counter is zero, the message will be sent and Medium changes its 
-  state. *}
+text{* If a message comes in and the counter is zero, the message will be sent and Medium changes 
+  its state. *}
 lemma "spsConcIn (medIn (Msg m)) (MedSPS 0) 
   = spsConcOut (medOut (Msg m))(uspecFlatten medInDom medOutDom (Rev {MedSPS n | n. True}))"
   apply (simp add: medIn_def medOut_def)
-  apply (subst spf2sps)
+  apply (subst spf2sps, simp_all)
+  defer
 sorry
 
-lemma "MedSPS n = medFair n"
+lemma medsps_medfair_eq: 
+  shows "MedSPS n = medFair n"
+  apply (rule uspec_eqI, simp_all)
+  apply (simp add: uspecrevset_insert)
 sorry
 
 end
