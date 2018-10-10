@@ -8,7 +8,7 @@
 chapter {* Theory for Medium Definitions and Lemmata *}
 
 theory Medium
-imports PreludeMed spec.SPS
+imports medFairAut
 
 begin
 
