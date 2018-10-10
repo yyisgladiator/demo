@@ -61,7 +61,7 @@ lemma "spsConcIn (medIn -)(MedSPS n) = spsConcOut (medOut -)(MedSPS n)"
 text{* If a message comes in and the counter is not zero, null will be sent and Medium stays in its 
   state. *}
 lemma "spsConcIn (medIn (Msg m)) (MedSPS (Suc n)) = spsConcOut (medOut -)(MedSPS n)"
-sorry
+  oops
 
 lemma spf2sps: assumes "spfConcIn (sbe2SB sbe1)\<cdot>spf1 = spfConcOut (sbe2SB sbe2)\<cdot>spf2"
   and "sbeDom sbe1 = uspecDom\<cdot>sps"
@@ -76,23 +76,22 @@ lemma "spsConcIn (medIn (Msg m)) (MedSPS 0)
   = spsConcOut (medOut (Msg m))(uspecFlatten medInDom medOutDom (Rev {MedSPS n | n. True}))"
   apply (simp add: medIn_def medOut_def)
   apply (subst spf2sps, simp_all)
+  oops
+
+lemma ndatrans_nempty[simp]: "(ndaTransition\<cdot>medFairAut) (n, sbe) \<noteq> Rev {}"
 sorry
 
-lemma ndatrans_nempty: "(ndaTransition\<cdot>medFairAut) (n, sbe) \<noteq> Rev {}"
+lemma medsps_notuspecmax[simp]: "MedSPS n \<noteq> uspecMax medInDom medOutDom"
 sorry
 
-lemma medsps_notuspecmax: "MedSPS n \<noteq> uspecMax (ndaDom\<cdot>medFairAut) (ndaRan\<cdot>medFairAut)"
+lemma medsps_strict[simp]: "uspecIsStrict (MedSPS n)"
 sorry
 
-lemma medsps_strict: "uspecIsStrict (MedSPS n)"
-sorry
-
+thm nda_h_final_back
 lemma medsps_medfair_eq: 
-  shows "MedSPS n = medFair n"
-  apply (rule uspec_eqI, simp_all)
-  apply (simp add: uspecrevset_insert)
-  apply (simp add: MedSPS.rep_eq)
-  apply (rule below_antisym)
+  shows "nda_h medFairAut \<sqsubseteq> MedSPS"
+  apply(subst nda_h_final_back, simp_all)
+  apply(subst spf2sps)  (* This should result in a proof over MedSPF *)
 sorry
-
+  
 end
