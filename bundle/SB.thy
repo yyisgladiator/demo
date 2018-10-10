@@ -664,7 +664,7 @@ lemma sbConcEq_Len2 [simp]: "ubLen(b2 :: 'a stream ubundle) \<le> ubLen(ubConcEq
         have h2: "b2 = ubConc b1\<cdot>b2"
           by (metis (no_types, lifting) h1 h21 option.inject ubconc_dom ubconc_getch ubgetchI ubup_ubgetch)
         have h3: "b2 = ubConcEq b1\<cdot>b2"
-          using h2 by auto
+          using h2 by (auto simp add: ubconceq_insert)
         show ?thesis
           using h3 by auto
       qed
@@ -998,9 +998,9 @@ lemma sbconc_inj_h: assumes "\<And>c. c\<in>ubDom\<cdot>sb \<Longrightarrow> # (
   and "c \<in> ubDom\<cdot>x" and "c \<in> ubDom\<cdot>y"
 shows "x  .  c = y  .  c"
   apply(cases "c \<in> ubDom\<cdot>sb")
-  using assms apply (simp add: usclConc_stream_def)
+  using assms apply (simp add: usclConc_stream_def ubconceq_insert)
   using sconc_neq apply blast
-  using assms apply (simp add: usclConc_stream_def ubconc_getch )
+  using assms apply (simp add: usclConc_stream_def ubconc_getch ubconceq_insert)
   done
 
 lemma sbconc_inj: assumes "\<And>c. c\<in>ubDom\<cdot>sb \<Longrightarrow> # (sb . c) < \<infinity>"
