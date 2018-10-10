@@ -730,7 +730,7 @@ proof -
         apply (simp add: da_hd_sub)
         apply (subst spfConcIn_step)
          apply (metis a22 sbrt_sbdom ubclDom_ubundle_def x_dom_ran)
-        apply (simp)
+        apply (simp add: ubconceq_insert)
         using h7 by auto
     qed
     have "?spfStep_g = x"
