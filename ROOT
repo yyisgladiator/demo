@@ -68,12 +68,11 @@ session "abpGenerat" (mustWork) in "abp/generated/abp" = "automat" +
     NoMediumABPComponent
 
 
-session "automatCaseStudy" (mustWork) in "abp/Medium" = "abpGenerat" + 
+session "abpMedium" (mustWork) in "abp/Medium" = "abpGenerat" + 
   options [quick_and_dirty = true]
   theories
     medGeneralAut
     medUnfairStep
-    medsBelow
     Medium
     MediumSPF
     MediumSPS

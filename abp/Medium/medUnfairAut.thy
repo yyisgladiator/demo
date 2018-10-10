@@ -11,37 +11,37 @@ fun medUnfairTransitionH :: "medState \<Rightarrow> 'a tsyn \<Rightarrow> (medSt
 "medUnfairTransitionH (Suc n) (Msg m) = { (  n  ,    -   )            }" |
 "medUnfairTransitionH    0    (Msg m) = { (  n  , (Msg m)) | n . True } \<union> { (0, -) }"
 
-fun medUnfairTransition :: "(medState \<times> 'a medMessage tsyn sbElem) \<Rightarrow> ((medState \<times> 'a medMessage tsyn SB) set rev)" where
-"medUnfairTransition (s,f) = (if sbeDom f = medInDom then 
-    Rev ((\<lambda>(s,out). (s, medOut out)) ` (medUnfairTransitionH s (medMessageTransform ((Rep_sbElem f)\<rightharpoonup>(\<C> ''in''))))) 
+fun medUnfairTransition :: "(medState \<times> 'a mediumMessage tsyn sbElem) \<Rightarrow> ((medState \<times> 'a mediumMessage tsyn SB) set rev)" where
+"medUnfairTransition (s,f) = (if sbeDom f = mediumDom then 
+    Rev ((\<lambda>(s,out). (s, mediumOut_as out)) ` (medUnfairTransitionH s (mediumElem_get_ar f))) 
   else undefined)"
 
-lift_definition medUnfairAut :: "(medState, 'a medMessage tsyn) ndAutomaton" is 
-  "(medUnfairTransition, Rev {(n, medOut - )| n. True}, Discr medInDom, Discr medOutDom)"
-  by (simp add: medInDom_def)
+lift_definition medUnfairAut :: "(medState, 'a mediumMessage tsyn) ndAutomaton" is 
+  "(medUnfairTransition, Rev {(n, mediumOut_as - )| n. True}, Discr mediumDom, Discr mediumRan)"
+  by (simp add: mediumDom_def)
 
-definition medUnfair :: "medState \<Rightarrow> 'a medMessage tsyn SPS" where
+definition medUnfair :: "medState \<Rightarrow> 'a mediumMessage tsyn SPS" where
 "medUnfair n = nda_h medUnfairAut n"
 
 
 
 
 
-lemma medunfairaut_dom[simp]: "ndaDom\<cdot>medUnfairAut = medInDom"
+lemma medunfairaut_dom[simp]: "ndaDom\<cdot>medUnfairAut = mediumDom"
   by (simp add: medUnfairAut.rep_eq ndaDom.rep_eq)
 
-lemma medunfairaut_ran[simp]: "ndaRan\<cdot>medUnfairAut = medOutDom"
+lemma medunfairaut_ran[simp]: "ndaRan\<cdot>medUnfairAut = mediumRan"
   by (simp add: medUnfairAut.rep_eq ndaRan.rep_eq)
 
 
-lemma medunfair_transition_tick [simp]: "medUnfairTransition (state, (medInElem -)) = Rev {(state, medOut -)}"
-  by(simp add: sbeNull.rep_eq medInDom_def medInElem.simps)
+lemma medunfair_transition_tick [simp]: "medUnfairTransition (state, (mediumElemIn_ar -)) = Rev {(state, mediumOut_as -)}"
+  by simp
 
-lemma medunfair_transition_msg_suc [simp]: "medUnfairTransition (Suc n, (medInElem (Msg m))) = Rev {(n, medOut -)}"
-  by(simp add: medInMsgElem.rep_eq medInDom_def medInElem.simps)
+lemma medunfair_transition_msg_suc [simp]: "medUnfairTransition (Suc n, (mediumElemIn_ar (Msg m))) = Rev {(n, mediumOut_as -)}"
+  by simp
 
-lemma medunfair_transition_msg_0 [simp]: "medUnfairTransition (0, (medInElem (Msg m))) = Rev ({(n, medOut (Msg m)) | n. True} \<union> { (0, medOut -) })"
-  by(auto simp add: medInMsgElem.rep_eq medInDom_def image_iff medInElem.simps)
+lemma medunfair_transition_msg_0 [simp]: "medUnfairTransition (0, (mediumElemIn_ar (Msg m))) = Rev ({(n, mediumOut_as (Msg m)) | n. True} \<union> { (0, mediumOut_as -) })"
+  by auto
 
 
 end

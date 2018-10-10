@@ -1,6 +1,6 @@
 theory PreludeMed
 
-imports HOLCF automat.ndAutomaton bundle.tsynBundle
+imports HOLCF automat.ndAutomaton bundle.tsynBundle abpGenerat.MediumDatatype
 
 begin
 
@@ -20,6 +20,7 @@ type_synonym medState = nat
 section \<open>Message Datatype\<close>
 
 
+(*
 datatype 'a::countable medMessage = medData 'a 
 
 instance medMessage :: (countable) countable
@@ -214,5 +215,7 @@ lemma medingetstream_ubconc: assumes "ubDom\<cdot>ub = medInDom"
       apply (simp add: usclConc_stream_def tsynmap_sconc)
       by (metis tsynmap_medin_conc_null tsynmap_medin_conc_msg medInGetStream.rep_eq medOutElem.cases)
   qed
+
+*)
 
 end
