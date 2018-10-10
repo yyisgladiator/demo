@@ -54,21 +54,23 @@ session "automat" (mustWork) in automat = "spec" +
     ndAutomaton
     ndaTotal
 
-session "automatCaseStudy" (mustWork) in "automat/CaseStudy" = "automat" + 
-  options [quick_and_dirty = true]
-  theories
-    medGeneralAut
-    medFairStep
-    medUnfairStep
-    medsBelow
-	Medium
-	MediumSPF
-	MediumSPS
-
 session "abpGenerat" (mustWork) in abp = "automat" + 
   options [quick_and_dirty = true]
   theories
     ReceiverAutomaton
     SenderAutomaton
+    MediumDatatype
     MediumAutomaton
     ABPComponent
+
+
+session "automatCaseStudy" (mustWork) in "abp/Medium" = "automat" + 
+  options [quick_and_dirty = true]
+  theories
+    medGeneralAut
+    medUnfairStep
+    medsBelow
+    Medium
+    MediumSPF
+    MediumSPS
+
