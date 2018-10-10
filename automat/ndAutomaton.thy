@@ -842,6 +842,8 @@ qed
 lemma nda_h_final_back_eq: assumes "\<And>state sbe. sbeDom sbe = ndaDom\<cdot>nda \<Longrightarrow> 
 spsConcIn (sbe2SB sbe) (other state) = 
   ndaConcOutFlatten (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) ((ndaTransition\<cdot>nda) (state,sbe)) (other)"
+  and "\<And> state sbe. (ndaTransition\<cdot>nda) (state, sbe) \<noteq> Rev {}"
+  and "\<And> state. other state \<noteq> uspecMax (ndaDom\<cdot>nda) (ndaRan\<cdot>nda)"
   and "\<And> state. uspecIsStrict (other state)"
   and "\<And> state. uspecDom\<cdot>(other state) = ndaDom\<cdot>nda" 
   and "\<And> state. uspecRan\<cdot>(other state) = ndaRan\<cdot>nda"
@@ -850,7 +852,11 @@ spsConcIn (sbe2SB sbe) (other state) =
     \<Longrightarrow> sbeDom sbe = ndaDom\<cdot>nda \<Longrightarrow> spsConcIn (sbe2SB sbe) (x state) =  ndaConcOutFlatten (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) ((ndaTransition\<cdot>nda) (state,sbe)) (x)
     \<Longrightarrow> other \<sqsubseteq> x"
 shows "nda_h nda = other" 
+  apply(simp add: nda_h_def)
+  apply(subst lfp_least_eq, auto simp add: assms)
+  apply (simp add: nda_h_inner_monofun)
+  apply (simp add: nda_inner_good)
+     apply (simp add: nda_h_valid_domain)
   oops
-
 
 end
