@@ -3,10 +3,10 @@
  * This file was generated from Receiver.maa and will be overridden when changed. To change
  * permanently, consider changing the model itself.
  *
- * isartransformer 1.0.0
+ * isartransformer 2.0.0
  *)
 theory ReceiverAutomaton
-  imports ReceiverDatatype automat.dAutomaton
+  imports ReceiverDatatype ReceiverStates automat.dAutomaton
 
 begin
 
@@ -17,16 +17,6 @@ fun prepend :: "'a::type list \<Rightarrow> 'a \<Rightarrow> 'a list" where
 
 
 section \<open>Automaton definition\<close>
-
-(* These are the actual states from MAA *)
-datatype ReceiverSubstate = Rf | Rt
-
-(* And these have also the variables *)
-datatype ReceiverState = ReceiverState ReceiverSubstate 
-
-(* Function to get the substate *)
-fun getReceiverSubState :: "ReceiverState \<Rightarrow> ReceiverSubstate" where
-"getReceiverSubState (ReceiverState s ) = s"
 
 (* Helper that allows us to utilize pattern matching *)
 fun receiverTransitionH :: "(ReceiverState \<times> (('e\<times>bool) tsyn)) \<Rightarrow> (ReceiverState \<times> ('e::countable) receiverMessage tsyn SB)" where

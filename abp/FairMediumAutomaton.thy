@@ -6,7 +6,7 @@
  * isartransformer 2.0.0
  *)
 theory FairMediumAutomaton
-  imports UnfairMediumDatatype automat.ndAutomaton
+  imports UnfairMediumDatatype FairMediumStates automat.ndAutomaton
 
 begin
 
@@ -17,20 +17,6 @@ fun prepend :: "'a::type list \<Rightarrow> 'a \<Rightarrow> 'a list" where
 
 
 section \<open>Automaton definition\<close>
-
-(* These are the actual states from MAA *)
-datatype FairMediumSubstate = Single
-
-(* And these have also the variables *)
-datatype FairMediumState = FairMediumState FairMediumSubstate (* counter = *) "nat"
-
-(* Function to get the substate *)
-fun getFairMediumSubState :: "FairMediumState \<Rightarrow> FairMediumSubstate" where
-"getFairMediumSubState (FairMediumState s _) = s"
-
-(* Functions to get the variables *)
-fun getCounter :: "FairMediumState \<Rightarrow> nat" where
-"getCounter (FairMediumState _ var_counter) = var_counter"
 
 (* Helper that allows us to utilize pattern matching *)
 fun fairMediumTransitionH :: "(FairMediumState \<times> ('e tsyn)) \<Rightarrow> (FairMediumState \<times> ('e::countable) unfairMediumMessage tsyn SB) set rev" where

@@ -3,10 +3,10 @@
  * This file was generated from Sender.maa and will be overridden when changed. To change
  * permanently, consider changing the model itself.
  *
- * isartransformer 1.0.0
+ * isartransformer 2.0.0
  *)
 theory SenderAutomaton
-  imports SenderDatatype automat.dAutomaton
+  imports SenderDatatype SenderStates automat.dAutomaton
 
 begin
 
@@ -17,23 +17,6 @@ fun prepend :: "'a::type list \<Rightarrow> 'a \<Rightarrow> 'a list" where
 
 
 section \<open>Automaton definition\<close>
-
-(* These are the actual states from MAA *)
-datatype SenderSubstate = Sf | St
-
-(* And these have also the variables *)
-datatype 'e SenderState = SenderState SenderSubstate (* buffer = *) "'e list" (* c = *) "nat"
-
-(* Function to get the substate *)
-fun getSenderSubState :: "'e SenderState \<Rightarrow> SenderSubstate" where
-"getSenderSubState (SenderState s _ _) = s"
-
-(* Functions to get the variables *)
-fun getBuffer :: "'e SenderState \<Rightarrow> 'e list" where
-"getBuffer (SenderState _ var_buffer var_c) = var_buffer"
-
-fun getC :: "'e SenderState \<Rightarrow> nat" where
-"getC (SenderState _ var_buffer var_c) = var_c"
 
 (* Helper that allows us to utilize pattern matching *)
 fun senderTransitionH :: "('e SenderState \<times> (bool tsyn \<times> 'e tsyn)) \<Rightarrow> ('e SenderState \<times> ('e::countable) senderMessage tsyn SB)" where

@@ -6,7 +6,7 @@
  * isartransformer 2.0.0
  *)
 theory UnfairMediumAutomaton
-  imports UnfairMediumDatatype automat.ndAutomaton
+  imports UnfairMediumDatatype UnfairMediumStates automat.ndAutomaton
 
 begin
 
@@ -17,20 +17,6 @@ fun prepend :: "'a::type list \<Rightarrow> 'a \<Rightarrow> 'a list" where
 
 
 section \<open>Automaton definition\<close>
-
-(* These are the actual states from MAA *)
-datatype UnfairMediumSubstate = Single
-
-(* And these have also the variables *)
-datatype UnfairMediumState = UnfairMediumState UnfairMediumSubstate (* coin = *) "nat"
-
-(* Function to get the substate *)
-fun getUnfairMediumSubState :: "UnfairMediumState \<Rightarrow> UnfairMediumSubstate" where
-"getUnfairMediumSubState (UnfairMediumState s _) = s"
-
-(* Functions to get the variables *)
-fun getCoin :: "UnfairMediumState \<Rightarrow> nat" where
-"getCoin (UnfairMediumState _ var_coin) = var_coin"
 
 (* Helper that allows us to utilize pattern matching *)
 fun unfairMediumTransitionH :: "(UnfairMediumState \<times> ('e tsyn)) \<Rightarrow> (UnfairMediumState \<times> ('e::countable) unfairMediumMessage tsyn SB) set rev" where
