@@ -1,0 +1,18 @@
+package abp;
+
+<<nonDeterministic,refines="UnfairMedium">>component FairMedium<E> {
+
+  port
+    in E i,
+    out E o;
+
+  automaton FairMedium {
+    variable int counter;
+
+    state Single;
+    initial Single / {counter=rand{j. True}};
+
+    Single [counter!=0] / {counter=counter-1};
+    Single [counter==0] / {counter=rand{j. True}, o=i};
+  }
+}
