@@ -67,23 +67,16 @@ lemma tsynb_cont [simp]:
   apply (rule contI2)
   apply (rule monofunI)
   apply (simp add: below_option_def fun_below_iff monofun_cfun_arg ubdom_below)
-  apply (rule allI)
-  apply (rule impI)
+  apply (rule allI,rule impI)
   apply (subst fun_belowI)
   apply (subst below_option_def)
   apply (case_tac "x \<in> ubDom\<cdot>(Lub Y)")
   apply (subst lub_fun)
-  apply (subst po_class.chain_def)
-  apply (subst fun_belowI) 
-  apply (case_tac "xa \<in> ubDom\<cdot>(Lub Y)") 
-  apply (simp add: cont_pref_eq1I po_class.chainE some_below)
-  apply simp+
+  apply (simp add: po_class.chain_def fun_belowI monofun_cfun_arg po_class.chainE some_below) 
+  apply simp
   apply (metis (no_types) ch2ch_Rep_cfunR contlub_cfun_arg some_lub_chain_eq)
   apply (subst lub_fun)
-  apply (subst po_class.chain_def)
-  apply (subst fun_belowI)
-  apply (case_tac "xa \<in> ubDom\<cdot>(Lub Y)") 
-  apply (simp add: cont_pref_eq1I po_class.chainE some_below)
+  apply (simp add: po_class.chain_def fun_belowI monofun_cfun_arg po_class.chainE some_below) 
   by (simp add: assms)+
 
 (* ----------------------------------------------------------------------- *)
