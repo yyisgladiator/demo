@@ -548,6 +548,18 @@ lemma nda_h_I:
   by (metis assms(2) uspecmax_consistent uspecmax_dom uspecmax_ran)
 
 
+lemma nda_h_one_I:
+  assumes "sbeDom sbe = ndaDom\<cdot>nda" 
+    and "uspecIsConsistent (nda_h nda state)" (* For the proof see "ndaTotal.thy" *)
+    and "(ndaTransition\<cdot>nda) (state,sbe) = Rev {(nextState, output)}"
+    and "(ubLen (ubRestrict (ndaRan\<cdot>nda)\<cdot>(ubUp\<cdot>output)) < \<infinity>)" (* ToDo: Kann man löschen *)
+  shows "spsConcIn (sbe2SB sbe) (nda_h nda state) = 
+    spsConcOut output (nda_h nda nextState)"
+  apply(subst nda_h_I, auto simp add: assms)
+  apply(simp add: ndaConcOutFlatten_def ndaTodo_h_def)
+  apply(auto simp add: setrevImage_def assms)
+  by (metis (no_types, lifting) nda_h_fixpoint nda_h_inner_dom nda_h_inner_ran spsconcout_dom spsconcout_ran uspecflatten_one)
+
 
 lemma nda_h_bottom_h: "uspecIsStrict (spsStep_m (ndaDom\<cdot>nda) (ndaRan\<cdot>nda)
   (ndaHelper2 (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) state (ndaTransition\<cdot>nda) (nda_h nda)))"

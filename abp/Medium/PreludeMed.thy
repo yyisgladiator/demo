@@ -48,7 +48,13 @@ lemma med_get_i_least [simp]: "medium_get_stream_i\<cdot>(ubLeast mediumDom) = \
 lemma med_get_o_least [simp]: "medium_get_stream_o\<cdot>(ubLeast mediumRan) = \<epsilon>"
   by (metis inject_scons med_get_o_conc medium_get_stream_o_single_out_o_id mediumout_o_dom sconc_snd_empty ubconceq_ubleast ubleast_ubdom)
 
+(* ToDo Move to ubundle *)
+lemma ubup_restrict_id [simp]: "ubUp\<cdot>(ub) \<bar> ubDom\<cdot>ub = ub"
+  by (metis (no_types, lifting) inf_commute inf_top.right_neutral ubgetchI ubgetch_ubrestrict ubrestrict_ubdom2 ubup_ubdom ubup_ubgetch)
 
+lemma med_out_up_restrict_id [simp]:"(ubUp\<cdot>(mediumOut_o m) \<bar> mediumRan) = mediumOut_o m"
+  by (metis PreludeMed.ubup_restrict_id mediumout_o_dom)
+  
 (*
 datatype 'a::countable medMessage = medData 'a 
 
