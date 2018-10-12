@@ -1,6 +1,6 @@
 theory medUnfairAut
 
-imports PreludeMed
+imports PreludeMed automat.ndAutomaton
 
 begin
 
@@ -13,11 +13,11 @@ fun medUnfairTransitionH :: "medState \<Rightarrow> 'a tsyn \<Rightarrow> (medSt
 
 fun medUnfairTransition :: "(medState \<times> 'a mediumMessage tsyn sbElem) \<Rightarrow> ((medState \<times> 'a mediumMessage tsyn SB) set rev)" where
 "medUnfairTransition (s,f) = (if sbeDom f = mediumDom then 
-    Rev ((\<lambda>(s,out). (s, mediumOut_as out)) ` (medUnfairTransitionH s (mediumElem_get_ar f))) 
+    Rev ((\<lambda>(s,out). (s, mediumOut_o out)) ` (medUnfairTransitionH s (mediumElem_get_i f))) 
   else undefined)"
 
 lift_definition medUnfairAut :: "(medState, 'a mediumMessage tsyn) ndAutomaton" is 
-  "(medUnfairTransition, Rev {(n, mediumOut_as - )| n. True}, Discr mediumDom, Discr mediumRan)"
+  "(medUnfairTransition, Rev {(n, mediumOut_o - )| n. True}, Discr mediumDom, Discr mediumRan)"
   by (simp add: mediumDom_def)
 
 definition medUnfair :: "medState \<Rightarrow> 'a mediumMessage tsyn SPS" where
@@ -34,13 +34,13 @@ lemma medunfairaut_ran[simp]: "ndaRan\<cdot>medUnfairAut = mediumRan"
   by (simp add: medUnfairAut.rep_eq ndaRan.rep_eq)
 
 
-lemma medunfair_transition_tick [simp]: "medUnfairTransition (state, (mediumElemIn_ar -)) = Rev {(state, mediumOut_as -)}"
+lemma medunfair_transition_tick [simp]: "medUnfairTransition (state, (mediumElemIn_i -)) = Rev {(state, mediumOut_o -)}"
   by simp
 
-lemma medunfair_transition_msg_suc [simp]: "medUnfairTransition (Suc n, (mediumElemIn_ar (Msg m))) = Rev {(n, mediumOut_as -)}"
+lemma medunfair_transition_msg_suc [simp]: "medUnfairTransition (Suc n, (mediumElemIn_i (Msg m))) = Rev {(n, mediumOut_o -)}"
   by simp
 
-lemma medunfair_transition_msg_0 [simp]: "medUnfairTransition (0, (mediumElemIn_ar (Msg m))) = Rev ({(n, mediumOut_as (Msg m)) | n. True} \<union> { (0, mediumOut_as -) })"
+lemma medunfair_transition_msg_0 [simp]: "medUnfairTransition (0, (mediumElemIn_i (Msg m))) = Rev ({(n, mediumOut_o (Msg m)) | n. True} \<union> { (0, mediumOut_o -) })"
   by auto
 
 

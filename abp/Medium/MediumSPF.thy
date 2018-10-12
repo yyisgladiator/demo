@@ -8,7 +8,7 @@
 chapter {* Theory for MediumSPF Definitions and Lemmata *}
 
 theory MediumSPF
-imports Medium
+imports fun.SPF PreludeMed Medium
 
 begin
 
@@ -22,7 +22,7 @@ default_sort countable
 text {* @{term tsynbMed}: Lossy medium function on time-synchonous stream bundles. *}
 definition tsynbMed :: "bool stream \<Rightarrow> 'a mediumMessage tsyn stream ubundle 
   \<rightarrow> 'a mediumMessage tsyn stream ubundle" where
-  "tsynbMed ora \<equiv> \<Lambda> sb. (mediumOut_stream_as\<cdot>(tsynMed\<cdot>(medium_get_stream_ar\<cdot>sb)\<cdot>ora))"
+  "tsynbMed ora \<equiv> \<Lambda> sb. (mediumOut_stream_o\<cdot>(tsynMed\<cdot>(medium_get_stream_i\<cdot>sb)\<cdot>ora))"
 
 
 text {* @{term MedSPF}: Lossy medium function for the Alternating Bit Protocol. *}
@@ -48,18 +48,16 @@ lemma medspf_ufran[simp]: "ufRan\<cdot>(MedSPF ora) = mediumRan"
   by (simp add: ubclDom_ubundle_def)
 
 text{* The domain of the output bundle of @{term MedSPF}. *}
-lemma medspf_ubdom:
+lemma medspf_ubdom [simp]:
   assumes "ubDom\<cdot>sb = ufDom\<cdot>(MedSPF ora)"
   shows "ubDom\<cdot>((MedSPF ora) \<rightleftharpoons> sb) = mediumRan"
   by (metis assms medspf_ufdom medspf_ufran ubclDom_ubundle_def ufran_2_ubcldom2)
 
 text{* @{term MedSPF} is strict. *}
 lemma medspf_strict: "(MedSPF ora) \<rightleftharpoons> ubLeast(mediumDom) = ubLeast(mediumRan)"
-  apply (simp add: MedSPF_def)
-  apply(subst uflift_apply)
-   apply (simp add: ubclDom_ubundle_def)
-  apply(simp add: tsynbMed_def)
-  sorry (* ToDo: create generator feature request for ubLeast stuff *)
+  apply (simp add: MedSPF_def ubclDom_ubundle_def)
+      apply(rule medium_get_stream_Out_eq, simp_all)
+  by (simp add: tsynbMed_def)+
 
 (* ----------------------------------------------------------------------- *)
 subsection {* properties of oraFun *}
@@ -132,20 +130,17 @@ subsection {* MedSPF step lemmata *}
 
 text{* If null comes in, it will be sent and Medium stays in its state. *}
 lemma medspf_spfconc_null: assumes "ora \<in> oraFun n"  
-  shows "spfConcIn (mediumIn_ar -)\<cdot>(MedSPF ora) = spfConcOut (mediumOut_as -)\<cdot>(MedSPF ora)"
+  shows "spfConcIn (mediumIn_i -)\<cdot>(MedSPF ora) = spfConcOut (mediumOut_o -)\<cdot>(MedSPF ora)"
   apply (rule spf_eq, simp_all)
-  apply (subst medspf_ubdom, simp)
-  apply (rule ub_eq, simp_all)
-  apply (simp add: medspf_ubdom)+
-  using assms
-  by (simp add:  usclConc_stream_def mediumRan_def  
-     orafun_nbot tsynmed_sconc_null tsynmap_sconc  
-    tsynmap_singleton_null)
+  apply(rule medium_get_stream_Out_eq, simp_all)
+  apply(simp add: MedSPF_def tsynbMed_def ubclDom_ubundle_def)
+  using assms orafun_nbot tsynmed_sconc_null by blast
+
 
 text{* If a message comes in and the counter is not zero, null will be sent and Medium stays in its 
   state. *}
 lemma medspf_spfconc_msg_nzero: assumes "ora1 \<in> oraFun (Suc n)" obtains ora2 where "ora2 \<in> oraFun n"
-  and "spfConcIn (mediumIn_ar (Msg m))\<cdot>(MedSPF ora1) = spfConcOut (mediumOut_as -)\<cdot>(MedSPF ora2)"
+  and "spfConcIn (mediumIn_i (Msg m))\<cdot>(MedSPF ora1) = spfConcOut (mediumOut_o -)\<cdot>(MedSPF ora2)"
   using assms
   proof -
     have ora1_shd_f: "\<not>(snth 0 ora1)"
@@ -160,22 +155,19 @@ lemma medspf_spfconc_msg_nzero: assumes "ora1 \<in> oraFun (Suc n)" obtains ora2
       by (metis (no_types, lifting) CollectD Suc_less_eq assms ora2def oraFun_def snth_scons)
     have ora2_orafun: "ora2 \<in> oraFun n"
       by (simp add: ora2_f ora2_fair ora2_snth oraFun_def)
-    have "spfConcIn (mediumIn_ar (Msg m))\<cdot>(MedSPF ora1) = spfConcOut (mediumOut_as -)\<cdot>(MedSPF ora2)"
-      apply (rule spf_eq, simp_all)
-      apply (subst medspf_ubdom, simp)
-      apply (rule ub_eq, simp)
-      apply (simp add: medspf_ubdom)+
-      using assms
-      by (simp add: medspf_insert usclConc_stream_def mediumRan_def tsynbmed_getch_out ora2def 
-        medingetstream_ubconc tsynmed_sconc_msg_f tsynmap_sconc_null medout_null)
-   then show ?thesis
-     using ora2_orafun that by simp
+    have "spfConcIn (mediumIn_i (Msg m))\<cdot>(MedSPF ora1) = spfConcOut (mediumOut_o -)\<cdot>(MedSPF ora2)"
+  apply (rule spf_eq, simp_all)
+  apply(rule medium_get_stream_Out_eq, simp_all)
+  apply(simp add: MedSPF_def tsynbMed_def ubclDom_ubundle_def)
+      by (simp add: ora2def tsynmed_sconc_msg_f)
+    thus ?thesis
+      using ora2_orafun that by blast 
   qed           
 
 text{* If a message comes in and the counter is zero, the message will be sent and Medium changes its 
   state. *}
 lemma medspf_spfconc_msg_zero: assumes "ora1 \<in> oraFun 0" obtains ora2 where "\<exists>n. ora2 \<in> oraFun n"
-  and "spfConcIn (mediumIn_ar (Msg m))\<cdot>(MedSPF ora1) = spfConcOut (mediumOut_as (Msg m))\<cdot>(MedSPF ora2)"
+  and "spfConcIn (mediumIn_i (Msg m))\<cdot>(MedSPF ora1) = spfConcOut (mediumOut_o (Msg m))\<cdot>(MedSPF ora2)"
   using assms
   proof -
     have ora1_shd_t: "shd ora1 = True"
@@ -186,14 +178,12 @@ lemma medspf_spfconc_msg_zero: assumes "ora1 \<in> oraFun 0" obtains ora2 where 
       by (metis assms inject_scons ora_def orafun0_orafunn)
     have ora_fair: "#({True} \<ominus> ora) = \<infinity>"
       using assms oraFun_def ora_def by auto
-    have "spfConcIn (mediumIn_ar (Msg m))\<cdot>(MedSPF ora1) = spfConcOut (mediumOut_as (Msg m))\<cdot>(MedSPF ora)"
+    have "spfConcIn (mediumIn_i (Msg m))\<cdot>(MedSPF ora1) = spfConcOut (mediumOut_o (Msg m))\<cdot>(MedSPF ora)"
       apply (rule spf_eq, simp_all)
-      apply (subst medspf_ubdom, simp)
-      apply (rule ub_eq, simp_all)
-      apply (simp add: medspf_ubdom)+
-      using assms
-      by (simp add: medspf_insert usclConc_stream_def ora_def mediumRan_def tsynbmed_getch_out 
-        medout_msg medingetstream_ubconc tsynmed_sconc_msg_t tsynmap_sconc_msg)
+      apply(rule medium_get_stream_Out_eq, simp_all)
+      apply(simp add: MedSPF_def tsynbMed_def ubclDom_ubundle_def)
+      using ora1_def tsynmed_sconc_msg_t by blast
+
     then show ?thesis
       using ora1_def that by blast
   qed

@@ -8,7 +8,7 @@
 chapter {* Theory for MediumSPS Definitions and Lemmata *}
 
 theory MediumSPS
-imports MediumSPF
+imports spec.SPS MediumSPF  (* Do not import automaton theories, do that in a new file *)
 
 begin
 
@@ -19,7 +19,7 @@ default_sort countable
 (* ----------------------------------------------------------------------- *)
 
 text {* @{term MedSPS}: Lossy medium function set for the Alternating Bit Protocol. *}
-lift_definition MedSPS :: "nat \<Rightarrow> 'a mediumMessage tsyn SPS" is 
+lift_definition MedSPS :: "nat \<Rightarrow> ('a mediumMessage tsyn,'a mediumMessage tsyn) SPS" is 
   "\<lambda> n. (Rev {(MedSPF ora) | ora. ora \<in> (oraFun n)}, Discr mediumDom, Discr mediumRan)"
   apply (simp add: ufclDom_ufun_def ufclRan_ufun_def)
   using medspf_ufdom medspf_ufran by blast
@@ -45,7 +45,7 @@ subsection {* Medium State Lemmata *}
 (* ----------------------------------------------------------------------- *)
 
 text{* If null comes in, it will be sent and Medium stays in its state. *}
-lemma "spsConcIn (mediumIn_ar -)(MedSPS n) = spsConcOut (mediumOut_as -)(MedSPS n)"
+lemma "spsConcIn (mediumIn_i -)(MedSPS n) = spsConcOut (mediumOut_o -)(MedSPS n)"
   apply (subst spsconcin_insert)
   apply (subst spsconcout_insert)
   apply (rule uspec_eqI)
@@ -60,7 +60,7 @@ lemma "spsConcIn (mediumIn_ar -)(MedSPS n) = spsConcOut (mediumOut_as -)(MedSPS 
 
 text{* If a message comes in and the counter is not zero, null will be sent and Medium stays in its 
   state. *}
-lemma "spsConcIn (mediumIn_ar (Msg m)) (MedSPS (Suc n)) = spsConcOut (mediumOut_as -)(MedSPS n)"
+lemma "spsConcIn (mediumIn_i (Msg m)) (MedSPS (Suc n)) = spsConcOut (mediumOut_o -)(MedSPS n)"
 sorry
 
 (*lemma nda_h_final_back: assumes "\<And>state sbe. sbeDom sbe = ndaDom\<cdot>nda \<Longrightarrow> 
@@ -82,9 +82,9 @@ sorry
 
 text{* If a message comes in and the counter is zero, the message will be sent and Medium changes 
   its state. *}
-lemma "spsConcIn (mediumIn_ar (Msg m)) (MedSPS 0) 
-  = spsConcOut (mediumOut_as (Msg m))(uspecFlatten mediumDom mediumRan (Rev {MedSPS n | n. True}))"
-  apply (simp add: mediumIn_ar_def mediumOut_as_def)
+lemma "spsConcIn (mediumIn_i (Msg m)) (MedSPS 0) 
+  = spsConcOut (mediumOut_o (Msg m))(uspecFlatten mediumDom mediumRan (Rev {MedSPS n | n. True}))"
+  apply (simp add: mediumIn_i_def mediumOut_o_def)
   apply (subst spf2sps, simp_all)
   defer
 sorry

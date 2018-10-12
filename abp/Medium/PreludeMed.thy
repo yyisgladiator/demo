@@ -1,6 +1,6 @@
 theory PreludeMed
 
-imports HOLCF automat.ndAutomaton bundle.tsynBundle abpGenerat.MediumDatatype
+imports bundle.tsynBundle abpGenerat.MediumDatatype
 
 begin
 
@@ -18,6 +18,35 @@ type_synonym medState = nat
 
 
 section \<open>Message Datatype\<close>
+
+
+lemma medium_get_stream_In_eq:
+  assumes "ubDom\<cdot>ub1 = mediumDom"
+      and "ubDom\<cdot>ub2 = mediumDom"
+      and "medium_get_stream_i\<cdot>ub1 = medium_get_stream_i\<cdot>ub2"
+    shows "ub1 = ub2"
+  apply(rule medium_get_stream_i_eq)
+  using assms mediumDom_def by blast+
+
+lemma medium_get_stream_Out_eq:
+  assumes "ubDom\<cdot>ub1 = mediumRan"
+      and "ubDom\<cdot>ub2 = mediumRan"
+      and "medium_get_stream_o\<cdot>ub1 = medium_get_stream_o\<cdot>ub2"
+    shows "ub1 = ub2"
+  apply(rule medium_get_stream_o_eq)
+  using assms mediumRan_def by blast+
+
+lemma med_get_i_conc [simp]: "ubDom\<cdot>ub = mediumDom \<Longrightarrow> medium_get_stream_i\<cdot>(ubConcEq (mediumIn_i m)\<cdot>ub) = \<up>m \<bullet> medium_get_stream_i\<cdot>ub"
+  by (simp add: mediumDom_def ubconceq_insert)
+
+lemma med_get_o_conc [simp]: "ubDom\<cdot>ub = mediumRan \<Longrightarrow> medium_get_stream_o\<cdot>(ubConcEq (mediumOut_o m)\<cdot>ub) = \<up>m \<bullet> medium_get_stream_o\<cdot>ub"
+  by (simp add: mediumRan_def ubconceq_insert)
+
+lemma med_get_i_least [simp]: "medium_get_stream_i\<cdot>(ubLeast mediumDom) = \<epsilon>"
+  by (metis inject_scons med_get_i_conc medium_get_stream_i_single_in_i_id mediumin_i_dom sconc_snd_empty ubconceq_ubleast ubleast_ubdom)
+
+lemma med_get_o_least [simp]: "medium_get_stream_o\<cdot>(ubLeast mediumRan) = \<epsilon>"
+  by (metis inject_scons med_get_o_conc medium_get_stream_o_single_out_o_id mediumout_o_dom sconc_snd_empty ubconceq_ubleast ubleast_ubdom)
 
 
 (*
