@@ -3,7 +3,7 @@
  * This file was generated from ABP.maa and will be overridden when changed. To change
  * permanently, consider changing the model itself.
  *
- * Generated on Oct 12, 2018 1:15:33 PM by isartransformer 2.0.0
+ * Generated on Oct 12, 2018 3:45:16 PM by isartransformer 2.0.0
  *)
 theory ABPComponent
   imports ABPDatatype SenderAutomaton FairMediumAutomaton ReceiverAutomaton spec.SPS spec.USpec_UFunComp
@@ -33,18 +33,18 @@ definition senderOutConverterSPF :: "('e) senderMessage tsyn SB \<Rrightarrow> (
 
 subsection \<open>mediumSr\<close>
 
-lift_definition mediumSrInConvert :: "('e::countable) abpMessage tsyn SB \<rightarrow> (('e\<times>bool)) fairMediumMessage tsyn SB" is
+lift_definition mediumSrInConvert :: "('e::countable) abpMessage tsyn SB \<rightarrow> (('e\<times>bool)) mediumMessage tsyn SB" is
 "\<lambda>sb. mediumIn_stream_i\<cdot>(aBP_get_stream_sender_ds__mediumSr_i\<cdot>sb)"
   by (simp add: cfun_def)
 
-lift_definition mediumSrOutConvert :: "(('e\<times>bool)) fairMediumMessage tsyn SB \<rightarrow> ('e::countable) abpMessage tsyn SB" is
+lift_definition mediumSrOutConvert :: "(('e\<times>bool)) mediumMessage tsyn SB \<rightarrow> ('e::countable) abpMessage tsyn SB" is
 "\<lambda>sb. aBPMediumSrOut_stream_o\<cdot>(medium_get_stream_o\<cdot>sb)"
   by (simp add: cfun_def)
 
-definition mediumSrInConverterSPF :: "('e::countable) abpMessage tsyn SB \<Rrightarrow> (('e\<times>bool)) fairMediumMessage tsyn SB" where
+definition mediumSrInConverterSPF :: "('e::countable) abpMessage tsyn SB \<Rrightarrow> (('e\<times>bool)) mediumMessage tsyn SB" where
 "mediumSrInConverterSPF = ufLift aBPMediumSrDom mediumSrInConvert"
 
-definition mediumSrOutConverterSPF :: "(('e\<times>bool)) fairMediumMessage tsyn SB \<Rrightarrow> ('e::countable) abpMessage tsyn SB" where
+definition mediumSrOutConverterSPF :: "(('e\<times>bool)) mediumMessage tsyn SB \<Rrightarrow> ('e::countable) abpMessage tsyn SB" where
 "mediumSrOutConverterSPF = ufLift aBPMediumSrRan mediumSrOutConvert"
 
 
@@ -67,18 +67,18 @@ definition receiverOutConverterSPF :: "('e) receiverMessage tsyn SB \<Rrightarro
 
 subsection \<open>mediumRs\<close>
 
-lift_definition mediumRsInConvert :: "('e::countable) abpMessage tsyn SB \<rightarrow> (bool) fairMediumMessage tsyn SB" is
+lift_definition mediumRsInConvert :: "('e::countable) abpMessage tsyn SB \<rightarrow> (bool) mediumMessage tsyn SB" is
 "\<lambda>sb. mediumIn_stream_i\<cdot>(aBP_get_stream_receiver_ar__mediumRs_i\<cdot>sb)"
   by (simp add: cfun_def)
 
-lift_definition mediumRsOutConvert :: "(bool) fairMediumMessage tsyn SB \<rightarrow> ('e::countable) abpMessage tsyn SB" is
+lift_definition mediumRsOutConvert :: "(bool) mediumMessage tsyn SB \<rightarrow> ('e::countable) abpMessage tsyn SB" is
 "\<lambda>sb. aBPMediumRsOut_stream_o\<cdot>(medium_get_stream_o\<cdot>sb)"
   by (simp add: cfun_def)
 
-definition mediumRsInConverterSPF :: "('e::countable) abpMessage tsyn SB \<Rrightarrow> (bool) fairMediumMessage tsyn SB" where
+definition mediumRsInConverterSPF :: "('e::countable) abpMessage tsyn SB \<Rrightarrow> (bool) mediumMessage tsyn SB" where
 "mediumRsInConverterSPF = ufLift aBPMediumRsDom mediumRsInConvert"
 
-definition mediumRsOutConverterSPF :: "(bool) fairMediumMessage tsyn SB \<Rrightarrow> ('e::countable) abpMessage tsyn SB" where
+definition mediumRsOutConverterSPF :: "(bool) mediumMessage tsyn SB \<Rrightarrow> ('e::countable) abpMessage tsyn SB" where
 "mediumRsOutConverterSPF = ufLift aBPMediumRsRan mediumRsOutConvert"
 
 
