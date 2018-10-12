@@ -3,7 +3,7 @@
  * This file was generated from Fair99Medium.maa and will be overridden when changed. To change
  * permanently, consider changing the model itself.
  *
- * Generated on Oct 12, 2018 1:15:31 PM by isartransformer 2.0.0
+ * Generated on Oct 12, 2018 5:31:30 PM by isartransformer 2.0.0
  *)
 theory Fair99MediumAutomaton
   imports MediumDatatype FairMediumStates automat.ndAutomaton
@@ -22,12 +22,12 @@ section \<open>Automaton definition\<close>
 fun fair99MediumTransitionH :: "(FairMediumState \<times> ('e tsyn)) \<Rightarrow> (FairMediumState \<times> ('e::countable) mediumMessage tsyn SB) set rev" where
 "fair99MediumTransitionH (FairMediumState Single var_counter, (\<^cancel>\<open>i\<mapsto>\<close>Msg port_i)) =
   (if(var_counter\<noteq>0) then (Rev {(FairMediumState Single (var_counter-1), (mediumOut_o null))})
-   else if(var_counter=0) then (Rev {(FairMediumState Single var_counter, (mediumOut_o (Msg (port_i)))) | var_counter . (var_counter<100)})
+   else if(var_counter=0) then (Rev {(FairMediumState Single var_counter, (mediumOut_o (Msg (port_i)))) | var_counter . (var_counter>=0 \<and> var_counter<100)})
    else (Rev {(FairMediumState Single var_counter, (mediumOut_o null))}))" |
 
 "fair99MediumTransitionH (FairMediumState Single var_counter, (\<^cancel>\<open>i\<mapsto>\<close>null)) =
   (if(var_counter\<noteq>0) then (Rev {(FairMediumState Single (var_counter-1), (mediumOut_o null))})
-   else if(var_counter=0) then (Rev {(FairMediumState Single var_counter, (mediumOut_o null)) | var_counter . (var_counter<100)})
+   else if(var_counter=0) then (Rev {(FairMediumState Single var_counter, (mediumOut_o null)) | var_counter . (var_counter>=0 \<and> var_counter<100)})
    else (Rev {(FairMediumState Single var_counter, (mediumOut_o null))}))"
 
 (* Transition function *)
@@ -36,7 +36,7 @@ definition fair99MediumTransition :: "(FairMediumState \<times> ('e::countable) 
 
 (* Initial states with initial outputs *)
 definition fair99MediumInitials :: "(FairMediumState \<times> ('e::countable) mediumMessage tsyn SB) set rev" where
-"fair99MediumInitials = Rev (setflat\<cdot>{{(FairMediumState Single (var_counter::nat), (mediumOut_o null)) | var_counter . (var_counter<100)}})"
+"fair99MediumInitials = Rev (setflat\<cdot>{{(FairMediumState Single (var_counter::nat), (mediumOut_o null)) | var_counter . (var_counter>=0 \<and> var_counter<100)}})"
 
 (* The final automaton *)
 lift_definition fair99MediumAutomaton :: "(FairMediumState, ('e::countable) mediumMessage tsyn) ndAutomaton" is
@@ -76,11 +76,11 @@ lemma fair99MediumTransition_0_0:
          = (Rev {(FairMediumState Single (var_counter-1), (mediumOut_o null))})"
   using assms by(auto simp add: fair99MediumTransition_def assms)
 
-(* Line 16:  Single [counter==0] / {counter=rand{j. j<100}, o=i}; *)
+(* Line 16:  Single [counter==0] / {counter=rand{j. j>=0 && j<100}, o=i}; *)
 lemma fair99MediumTransition_0_1:
   assumes "var_counter=0"
     shows "fair99MediumTransition ((FairMediumState Single var_counter), (mediumElemIn_i (Msg port_i)))
-         = (Rev {(FairMediumState Single var_counter, (mediumOut_o (Msg (port_i)))) | var_counter . (var_counter<100)})"
+         = (Rev {(FairMediumState Single var_counter, (mediumOut_o (Msg (port_i)))) | var_counter . (var_counter>=0 \<and> var_counter<100)})"
   using assms by(auto simp add: fair99MediumTransition_def assms)
 
 (* Line 15:  Single [counter!=0] / {counter=counter-1}; *)
@@ -90,11 +90,11 @@ lemma fair99MediumTransition_1_0:
          = (Rev {(FairMediumState Single (var_counter-1), (mediumOut_o null))})"
   using assms by(auto simp add: fair99MediumTransition_def assms)
 
-(* Line 16:  Single [counter==0] / {counter=rand{j. j<100}, o=i}; *)
+(* Line 16:  Single [counter==0] / {counter=rand{j. j>=0 && j<100}, o=i}; *)
 lemma fair99MediumTransition_1_1:
   assumes "var_counter=0"
     shows "fair99MediumTransition ((FairMediumState Single var_counter), (mediumElemIn_i null))
-         = (Rev {(FairMediumState Single var_counter, (mediumOut_o null)) | var_counter . (var_counter<100)})"
+         = (Rev {(FairMediumState Single var_counter, (mediumOut_o null)) | var_counter . (var_counter>=0 \<and> var_counter<100)})"
   using assms by(auto simp add: fair99MediumTransition_def assms)
 
 
@@ -102,7 +102,7 @@ section \<open>Step-wise lemmata for the SPS\<close>
 
 (* Convert the SPS to step notation *)
 lemma fair99MediumSps2Step: "fair99MediumSPS = uspecFlatten mediumDom mediumRan
-    (Rev {spsConcOut (mediumOut_o null) (fair99MediumStep (FairMediumState Single (var_counter::nat))) | var_counter . (var_counter<100)})"
+    (Rev {spsConcOut (mediumOut_o null) (fair99MediumStep (FairMediumState Single (var_counter::nat))) | var_counter . (var_counter>=0 \<and> var_counter<100)})"
   sorry
 
 (* Line 15:  Single [counter!=0] / {counter=counter-1}; *)
@@ -112,12 +112,12 @@ lemma fair99MediumStep_0_0:
          = spsConcOut (mediumOut_o null) (fair99MediumStep (FairMediumState Single (var_counter-1)))"
   oops
 
-(* Line 16:  Single [counter==0] / {counter=rand{j. j<100}, o=i}; *)
+(* Line 16:  Single [counter==0] / {counter=rand{j. j>=0 && j<100}, o=i}; *)
 lemma fair99MediumStep_0_1:
   assumes "var_counter=0"
     shows "spsConcIn  (mediumIn_i (Msg port_i)) (fair99MediumStep (FairMediumState Single var_counter))
          = uspecFlatten mediumDom mediumRan
-          (Rev {spsConcOut (mediumOut_o (Msg (port_i))) (fair99MediumStep (FairMediumState Single var_counter)) | var_counter . (var_counter<100)})"
+          (Rev {spsConcOut (mediumOut_o (Msg (port_i))) (fair99MediumStep (FairMediumState Single var_counter)) | var_counter . (var_counter>=0 \<and> var_counter<100)})"
   oops
 
 (* Line 15:  Single [counter!=0] / {counter=counter-1}; *)
@@ -127,12 +127,12 @@ lemma fair99MediumStep_1_0:
          = spsConcOut (mediumOut_o null) (fair99MediumStep (FairMediumState Single (var_counter-1)))"
   oops
 
-(* Line 16:  Single [counter==0] / {counter=rand{j. j<100}, o=i}; *)
+(* Line 16:  Single [counter==0] / {counter=rand{j. j>=0 && j<100}, o=i}; *)
 lemma fair99MediumStep_1_1:
   assumes "var_counter=0"
     shows "spsConcIn  (mediumIn_i null) (fair99MediumStep (FairMediumState Single var_counter))
          = uspecFlatten mediumDom mediumRan
-          (Rev {spsConcOut (mediumOut_o null) (fair99MediumStep (FairMediumState Single var_counter)) | var_counter . (var_counter<100)})"
+          (Rev {spsConcOut (mediumOut_o null) (fair99MediumStep (FairMediumState Single var_counter)) | var_counter . (var_counter>=0 \<and> var_counter<100)})"
   oops
 
 
