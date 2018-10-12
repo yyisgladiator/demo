@@ -1,6 +1,6 @@
 package abp;
 
-<<nonDeterministic,refines="UnfairMedium">>component FairMedium<E> {
+<<nonDeterministic,refines="Medium">>component FairMedium<E> {
 
   port
     in E i,

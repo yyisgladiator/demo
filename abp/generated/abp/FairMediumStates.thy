@@ -3,10 +3,10 @@
  * This file was generated from FairMedium.maa and will be overridden when changed. To change
  * permanently, consider changing the model itself.
  *
- * isartransformer 2.0.0
+ * Generated on Oct 12, 2018 1:15:31 PM by isartransformer 2.0.0
  *)
 theory FairMediumStates
-  imports UnfairMediumDatatype
+  imports MediumDatatype
 
 begin
 

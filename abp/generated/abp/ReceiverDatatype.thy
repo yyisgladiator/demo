@@ -3,7 +3,7 @@
  * This file was generated from Receiver.maa and will be overridden when changed. To change
  * permanently, consider changing the model itself.
  *
- * isartransformer 2.0.0
+ * Generated on Oct 12, 2018 1:15:27 PM by isartransformer 2.0.0
  *)
 theory ReceiverDatatype
   imports bundle.SBElem
@@ -18,7 +18,7 @@ section \<open>Datatype\<close>
 
 subsection \<open>Definition\<close>
 
-datatype ('e::countable) receiverMessage = ReceiverPair_E_Bool "('e\<times>bool)" | ReceiverBool "bool" | ReceiverE "'e"
+datatype ('e::countable) receiverMessage = DoNotUse_e88fe0_ReceiverPair_E_Bool "('e\<times>bool)" | DoNotUse_e88fe0_ReceiverBool "bool" | DoNotUse_e88fe0_ReceiverE "'e"
 
 instance receiverMessage :: (countable) countable
   apply(intro_classes)
@@ -28,9 +28,9 @@ instantiation receiverMessage :: (countable) message
 begin
   fun ctype_receiverMessage :: "channel \<Rightarrow> ('e::countable) receiverMessage set" where
   "ctype_receiverMessage c = (
-    if c = \<C> ''dr'' then range ReceiverPair_E_Bool else
-    if c = \<C> ''ar'' then range ReceiverBool else
-    if c = \<C> ''o'' then range ReceiverE else
+    if c = \<C> ''DoNotUse_e88fe0_dr'' then range DoNotUse_e88fe0_ReceiverPair_E_Bool else
+    if c = \<C> ''DoNotUse_e88fe0_ar'' then range DoNotUse_e88fe0_ReceiverBool else
+    if c = \<C> ''DoNotUse_e88fe0_o'' then range DoNotUse_e88fe0_ReceiverE else
     undefined)"
   instance
     by(intro_classes)
@@ -40,10 +40,10 @@ end
 subsection \<open>Domain and Range\<close>
 
 definition receiverDom :: "channel set" where
-"receiverDom = {\<C> ''dr''}"
+"receiverDom = {\<C> ''DoNotUse_e88fe0_dr''}"
 
 definition receiverRan :: "channel set" where
-"receiverRan = {\<C> ''ar'', \<C> ''o''}"
+"receiverRan = {\<C> ''DoNotUse_e88fe0_ar'', \<C> ''DoNotUse_e88fe0_o''}"
 
 
 section \<open>Setter\<close>
@@ -52,19 +52,19 @@ subsection \<open>type to sbElem\<close>
 
 (* Do not use this, use receiverElemIn_dr instead *)
 lift_definition receiverElem_raw_dr :: "('e\<times>bool) \<Rightarrow> ('e::countable) receiverMessage tsyn sbElem" is
-"\<lambda>x. [\<C> ''dr'' \<mapsto> Msg (ReceiverPair_E_Bool x)]"
+"\<lambda>x. [\<C> ''DoNotUse_e88fe0_dr'' \<mapsto> Msg (DoNotUse_e88fe0_ReceiverPair_E_Bool x)]"
   unfolding sbElemWell_def usclOkay_stream_def ctype_tsyn_def
   by simp
 
 (* Do not use this, use receiverElemOut_ar_o instead *)
 lift_definition receiverElem_raw_ar :: "bool \<Rightarrow> ('e::countable) receiverMessage tsyn sbElem" is
-"\<lambda>x. [\<C> ''ar'' \<mapsto> Msg (ReceiverBool x)]"
+"\<lambda>x. [\<C> ''DoNotUse_e88fe0_ar'' \<mapsto> Msg (DoNotUse_e88fe0_ReceiverBool x)]"
   unfolding sbElemWell_def usclOkay_stream_def ctype_tsyn_def
   by simp
 
 (* Do not use this, use receiverElemOut_ar_o instead *)
 lift_definition receiverElem_raw_o :: "'e \<Rightarrow> ('e::countable) receiverMessage tsyn sbElem" is
-"\<lambda>x. [\<C> ''o'' \<mapsto> Msg (ReceiverE x)]"
+"\<lambda>x. [\<C> ''DoNotUse_e88fe0_o'' \<mapsto> Msg (DoNotUse_e88fe0_ReceiverE x)]"
   unfolding sbElemWell_def usclOkay_stream_def ctype_tsyn_def
   by simp
 
@@ -76,17 +76,17 @@ subsubsection \<open>Intern\<close>
 (* Do not use this, use receiverElemIn_dr instead *)
 fun receiverElem_dr :: "('e\<times>bool) tsyn \<Rightarrow> ('e::countable) receiverMessage tsyn sbElem" where
 "receiverElem_dr (Msg port_dr) = receiverElem_raw_dr port_dr" |
-"receiverElem_dr null = sbeNull {\<C> ''dr''}"
+"receiverElem_dr null = sbeNull {\<C> ''DoNotUse_e88fe0_dr''}"
 
 (* Do not use this, use receiverElemOut_ar_o instead *)
 fun receiverElem_ar :: "bool tsyn \<Rightarrow> ('e::countable) receiverMessage tsyn sbElem" where
 "receiverElem_ar (Msg port_ar) = receiverElem_raw_ar port_ar" |
-"receiverElem_ar null = sbeNull {\<C> ''ar''}"
+"receiverElem_ar null = sbeNull {\<C> ''DoNotUse_e88fe0_ar''}"
 
 (* Do not use this, use receiverElemOut_ar_o instead *)
 fun receiverElem_o :: "'e tsyn \<Rightarrow> ('e::countable) receiverMessage tsyn sbElem" where
 "receiverElem_o (Msg port_o) = receiverElem_raw_o port_o" |
-"receiverElem_o null = sbeNull {\<C> ''o''}"
+"receiverElem_o null = sbeNull {\<C> ''DoNotUse_e88fe0_o''}"
 
 declare receiverElem_dr.simps[simp del]
 
@@ -133,21 +133,21 @@ subsubsection \<open>Intern\<close>
 (* Do not use this, use receiverIn_list_dr instead *)
 fun receiver_list_dr :: "(('e\<times>bool) tsyn) list \<Rightarrow> ('e::countable) receiverMessage tsyn SB" where
 "receiver_list_dr (x#xs) = ubConcEq (receiver_dr x)\<cdot>(receiver_list_dr xs)" |
-"receiver_list_dr []     = ubLeast {\<C> ''dr''}"
+"receiver_list_dr []     = ubLeast {\<C> ''DoNotUse_e88fe0_dr''}"
 
 declare receiver_list_dr.simps[simp del]
 
 (* Do not use this, use receiverOut_list_ar_o instead *)
 fun receiver_list_ar :: "(bool tsyn) list \<Rightarrow> ('e::countable) receiverMessage tsyn SB" where
 "receiver_list_ar (x#xs) = ubConcEq (receiver_ar x)\<cdot>(receiver_list_ar xs)" |
-"receiver_list_ar []     = ubLeast {\<C> ''ar''}"
+"receiver_list_ar []     = ubLeast {\<C> ''DoNotUse_e88fe0_ar''}"
 
 declare receiver_list_ar.simps[simp del]
 
 (* Do not use this, use receiverOut_list_ar_o instead *)
 fun receiver_list_o :: "('e tsyn) list \<Rightarrow> ('e::countable) receiverMessage tsyn SB" where
 "receiver_list_o (x#xs) = ubConcEq (receiver_o x)\<cdot>(receiver_list_o xs)" |
-"receiver_list_o []     = ubLeast {\<C> ''o''}"
+"receiver_list_o []     = ubLeast {\<C> ''DoNotUse_e88fe0_o''}"
 
 declare receiver_list_o.simps[simp del]
 
@@ -169,44 +169,44 @@ subsection \<open>stream to SB\<close>
 
 subsubsection \<open>Intern\<close>
 
-lift_definition receiver_stream_dr_h :: "('e\<times>bool) tsyn stream \<Rightarrow> ('e::countable) receiverMessage tsyn SB" is
-"\<lambda> s. [(\<C> ''dr'') \<mapsto> (tsynMap (ReceiverPair_E_Bool)\<cdot>s)]"
+lift_definition DoNotUse_e88fe0_receiver_stream_dr_h :: "('e\<times>bool) tsyn stream \<Rightarrow> ('e::countable) receiverMessage tsyn SB" is
+"\<lambda> s. [(\<C> ''DoNotUse_e88fe0_dr'') \<mapsto> (tsynMap (DoNotUse_e88fe0_ReceiverPair_E_Bool)\<cdot>s)]"
   unfolding ubWell_def usclOkay_stream_def ctype_tsyn_def
   by auto
 
 (* Do not use this, use receiverIn_stream_dr instead *)
 lift_definition receiver_stream_dr :: "(('e\<times>bool)) tsyn stream \<rightarrow> ('e::countable) receiverMessage tsyn SB" is
-"receiver_stream_dr_h"
-  apply(auto simp add: cfun_def receiver_stream_dr_h_def map_fun_def comp_def)
+"DoNotUse_e88fe0_receiver_stream_dr_h"
+  apply(auto simp add: cfun_def DoNotUse_e88fe0_receiver_stream_dr_h_def map_fun_def comp_def)
   apply(rule cont_Abs_UB)
   apply(simp add: option_one_cont)
-  by (metis receiver_stream_dr_h.rep_eq ubrep_well)
+  by (metis DoNotUse_e88fe0_receiver_stream_dr_h.rep_eq ubrep_well)
 
-lift_definition receiver_stream_ar_h :: "bool tsyn stream \<Rightarrow> ('e::countable) receiverMessage tsyn SB" is
-"\<lambda> s. [(\<C> ''ar'') \<mapsto> (tsynMap (ReceiverBool)\<cdot>s)]"
+lift_definition DoNotUse_e88fe0_receiver_stream_ar_h :: "bool tsyn stream \<Rightarrow> ('e::countable) receiverMessage tsyn SB" is
+"\<lambda> s. [(\<C> ''DoNotUse_e88fe0_ar'') \<mapsto> (tsynMap (DoNotUse_e88fe0_ReceiverBool)\<cdot>s)]"
   unfolding ubWell_def usclOkay_stream_def ctype_tsyn_def
   by auto
 
 (* Do not use this, use receiverOut_stream_ar_o instead *)
 lift_definition receiver_stream_ar :: "(bool) tsyn stream \<rightarrow> ('e::countable) receiverMessage tsyn SB" is
-"receiver_stream_ar_h"
-  apply(auto simp add: cfun_def receiver_stream_ar_h_def map_fun_def comp_def)
+"DoNotUse_e88fe0_receiver_stream_ar_h"
+  apply(auto simp add: cfun_def DoNotUse_e88fe0_receiver_stream_ar_h_def map_fun_def comp_def)
   apply(rule cont_Abs_UB)
   apply(simp add: option_one_cont)
-  by (metis receiver_stream_ar_h.rep_eq ubrep_well)
+  by (metis DoNotUse_e88fe0_receiver_stream_ar_h.rep_eq ubrep_well)
 
-lift_definition receiver_stream_o_h :: "'e tsyn stream \<Rightarrow> ('e::countable) receiverMessage tsyn SB" is
-"\<lambda> s. [(\<C> ''o'') \<mapsto> (tsynMap (ReceiverE)\<cdot>s)]"
+lift_definition DoNotUse_e88fe0_receiver_stream_o_h :: "'e tsyn stream \<Rightarrow> ('e::countable) receiverMessage tsyn SB" is
+"\<lambda> s. [(\<C> ''DoNotUse_e88fe0_o'') \<mapsto> (tsynMap (DoNotUse_e88fe0_ReceiverE)\<cdot>s)]"
   unfolding ubWell_def usclOkay_stream_def ctype_tsyn_def
   by auto
 
 (* Do not use this, use receiverOut_stream_ar_o instead *)
 lift_definition receiver_stream_o :: "('e) tsyn stream \<rightarrow> ('e::countable) receiverMessage tsyn SB" is
-"receiver_stream_o_h"
-  apply(auto simp add: cfun_def receiver_stream_o_h_def map_fun_def comp_def)
+"DoNotUse_e88fe0_receiver_stream_o_h"
+  apply(auto simp add: cfun_def DoNotUse_e88fe0_receiver_stream_o_h_def map_fun_def comp_def)
   apply(rule cont_Abs_UB)
   apply(simp add: option_one_cont)
-  by (metis receiver_stream_o_h.rep_eq ubrep_well)
+  by (metis DoNotUse_e88fe0_receiver_stream_o_h.rep_eq ubrep_well)
 
 
 subsubsection \<open>In/Out\<close>
@@ -224,27 +224,27 @@ section \<open>Getter\<close>
 subsection \<open>sbElem to tsyn\<close>
 
 definition receiverElem_get_dr :: "('e::countable) receiverMessage tsyn sbElem \<Rightarrow> (('e\<times>bool)) tsyn" where
-"receiverElem_get_dr sbe = tsynApplyElem (inv ReceiverPair_E_Bool) ((Rep_sbElem sbe) \<rightharpoonup> (\<C> ''dr''))"
+"receiverElem_get_dr sbe = tsynApplyElem (inv DoNotUse_e88fe0_ReceiverPair_E_Bool) ((Rep_sbElem sbe) \<rightharpoonup> (\<C> ''DoNotUse_e88fe0_dr''))"
 
 definition receiverElem_get_ar :: "('e::countable) receiverMessage tsyn sbElem \<Rightarrow> (bool) tsyn" where
-"receiverElem_get_ar sbe = tsynApplyElem (inv ReceiverBool) ((Rep_sbElem sbe) \<rightharpoonup> (\<C> ''ar''))"
+"receiverElem_get_ar sbe = tsynApplyElem (inv DoNotUse_e88fe0_ReceiverBool) ((Rep_sbElem sbe) \<rightharpoonup> (\<C> ''DoNotUse_e88fe0_ar''))"
 
 definition receiverElem_get_o :: "('e::countable) receiverMessage tsyn sbElem \<Rightarrow> ('e) tsyn" where
-"receiverElem_get_o sbe = tsynApplyElem (inv ReceiverE) ((Rep_sbElem sbe) \<rightharpoonup> (\<C> ''o''))"
+"receiverElem_get_o sbe = tsynApplyElem (inv DoNotUse_e88fe0_ReceiverE) ((Rep_sbElem sbe) \<rightharpoonup> (\<C> ''DoNotUse_e88fe0_o''))"
 
 
 subsection \<open>SB to stream\<close>
 
 lift_definition receiver_get_stream_dr :: "('e::countable) receiverMessage tsyn SB \<rightarrow> ('e\<times>bool) tsyn stream" is
-"\<lambda>sb. tsynMap (inv ReceiverPair_E_Bool)\<cdot>(sb . (\<C> ''dr''))"
+"\<lambda>sb. tsynMap (inv DoNotUse_e88fe0_ReceiverPair_E_Bool)\<cdot>(sb . (\<C> ''DoNotUse_e88fe0_dr''))"
   by(simp add: cfun_def)
 
 lift_definition receiver_get_stream_ar :: "('e::countable) receiverMessage tsyn SB \<rightarrow> bool tsyn stream" is
-"\<lambda>sb. tsynMap (inv ReceiverBool)\<cdot>(sb . (\<C> ''ar''))"
+"\<lambda>sb. tsynMap (inv DoNotUse_e88fe0_ReceiverBool)\<cdot>(sb . (\<C> ''DoNotUse_e88fe0_ar''))"
   by(simp add: cfun_def)
 
 lift_definition receiver_get_stream_o :: "('e::countable) receiverMessage tsyn SB \<rightarrow> 'e tsyn stream" is
-"\<lambda>sb. tsynMap (inv ReceiverE)\<cdot>(sb . (\<C> ''o''))"
+"\<lambda>sb. tsynMap (inv DoNotUse_e88fe0_ReceiverE)\<cdot>(sb . (\<C> ''DoNotUse_e88fe0_o''))"
   by(simp add: cfun_def)
 
 
@@ -254,34 +254,34 @@ subsection \<open>tsyn to sbElem/SB\<close>
 
 subsubsection \<open>Intern\<close>
 
-lemma receiverelem_dr_dom[simp]: "sbeDom (receiverElem_dr x) = {\<C> ''dr''}"
+lemma receiverelem_dr_dom[simp]: "sbeDom (receiverElem_dr x) = {\<C> ''DoNotUse_e88fe0_dr''}"
   apply(cases x)
   apply(simp add: receiverElem_dr.simps sbeDom_def receiverElem_raw_dr.rep_eq)
   by(simp add: receiverElem_dr.simps)
 
-lemma receiverelem_ar_dom[simp]: "sbeDom (receiverElem_ar x) = {\<C> ''ar''}"
+lemma receiverelem_ar_dom[simp]: "sbeDom (receiverElem_ar x) = {\<C> ''DoNotUse_e88fe0_ar''}"
   apply(cases x)
   apply(simp add: receiverElem_ar.simps sbeDom_def receiverElem_raw_ar.rep_eq)
   by(simp add: receiverElem_ar.simps)
 
-lemma receiverelem_o_dom[simp]: "sbeDom (receiverElem_o x) = {\<C> ''o''}"
+lemma receiverelem_o_dom[simp]: "sbeDom (receiverElem_o x) = {\<C> ''DoNotUse_e88fe0_o''}"
   apply(cases x)
   apply(simp add: receiverElem_o.simps sbeDom_def receiverElem_raw_o.rep_eq)
   by(simp add: receiverElem_o.simps)
 
-lemma receiver_dr_dom[simp]: "ubDom\<cdot>(receiver_dr x) = {\<C> ''dr''}"
+lemma receiver_dr_dom[simp]: "ubDom\<cdot>(receiver_dr x) = {\<C> ''DoNotUse_e88fe0_dr''}"
   by(simp add: receiver_dr_def)
 
 lemma receiver_dr_len[simp]: "ubLen (receiver_dr x) = 1"
   by(simp add: receiver_dr_def)
 
-lemma receiver_ar_dom[simp]: "ubDom\<cdot>(receiver_ar x) = {\<C> ''ar''}"
+lemma receiver_ar_dom[simp]: "ubDom\<cdot>(receiver_ar x) = {\<C> ''DoNotUse_e88fe0_ar''}"
   by(simp add: receiver_ar_def)
 
 lemma receiver_ar_len[simp]: "ubLen (receiver_ar x) = 1"
   by(simp add: receiver_ar_def)
 
-lemma receiver_o_dom[simp]: "ubDom\<cdot>(receiver_o x) = {\<C> ''o''}"
+lemma receiver_o_dom[simp]: "ubDom\<cdot>(receiver_o x) = {\<C> ''DoNotUse_e88fe0_o''}"
   by(simp add: receiver_o_def)
 
 lemma receiver_o_len[simp]: "ubLen (receiver_o x) = 1"
@@ -313,59 +313,59 @@ subsection \<open>stream to SB\<close>
 
 subsubsection \<open>Intern\<close>
 
-lemma receiver_stream_dr_dom[simp]: "ubDom\<cdot>(receiver_stream_dr\<cdot>x) = {\<C> ''dr''}"
-  by(simp add: receiver_stream_dr.rep_eq ubdom_insert receiver_stream_dr_h.rep_eq)
+lemma receiver_stream_dr_dom[simp]: "ubDom\<cdot>(receiver_stream_dr\<cdot>x) = {\<C> ''DoNotUse_e88fe0_dr''}"
+  by(simp add: receiver_stream_dr.rep_eq ubdom_insert DoNotUse_e88fe0_receiver_stream_dr_h.rep_eq)
 
 lemma receiver_stream_dr_len[simp]: "ubLen (receiver_stream_dr\<cdot>x) = #x"
   apply(subst uslen_ubLen_ch3)
   apply simp
   apply(simp add: receiver_stream_dr.rep_eq)
-  apply(simp add: ubGetCh_def receiver_stream_dr_h.rep_eq)
+  apply(simp add: ubGetCh_def DoNotUse_e88fe0_receiver_stream_dr_h.rep_eq)
   by (simp add: tsynmap_slen usclLen_stream_def)
 
 lemma receiver_stream_dr_id[simp]:
-  assumes "ubDom\<cdot>ub = {\<C> ''dr''} "
+  assumes "ubDom\<cdot>ub = {\<C> ''DoNotUse_e88fe0_dr''} "
     shows "receiver_stream_dr\<cdot>(receiver_get_stream_dr\<cdot>ub) = ub"
   apply(simp add: receiver_stream_dr.rep_eq receiver_get_stream_dr.rep_eq)
-  apply(simp add: receiver_stream_dr_h_def)
+  apply(simp add: DoNotUse_e88fe0_receiver_stream_dr_h_def)
   apply(subst tsynmap_inv_id)
   using assms tsynbundle_ctype apply fastforce
   using assms ub_id_single by blast
 
-lemma receiver_stream_ar_dom[simp]: "ubDom\<cdot>(receiver_stream_ar\<cdot>x) = {\<C> ''ar''}"
-  by(simp add: receiver_stream_ar.rep_eq ubdom_insert receiver_stream_ar_h.rep_eq)
+lemma receiver_stream_ar_dom[simp]: "ubDom\<cdot>(receiver_stream_ar\<cdot>x) = {\<C> ''DoNotUse_e88fe0_ar''}"
+  by(simp add: receiver_stream_ar.rep_eq ubdom_insert DoNotUse_e88fe0_receiver_stream_ar_h.rep_eq)
 
 lemma receiver_stream_ar_len[simp]: "ubLen (receiver_stream_ar\<cdot>x) = #x"
   apply(subst uslen_ubLen_ch3)
   apply simp
   apply(simp add: receiver_stream_ar.rep_eq)
-  apply(simp add: ubGetCh_def receiver_stream_ar_h.rep_eq)
+  apply(simp add: ubGetCh_def DoNotUse_e88fe0_receiver_stream_ar_h.rep_eq)
   by (simp add: tsynmap_slen usclLen_stream_def)
 
 lemma receiver_stream_ar_id[simp]:
-  assumes "ubDom\<cdot>ub = {\<C> ''ar''} "
+  assumes "ubDom\<cdot>ub = {\<C> ''DoNotUse_e88fe0_ar''} "
     shows "receiver_stream_ar\<cdot>(receiver_get_stream_ar\<cdot>ub) = ub"
   apply(simp add: receiver_stream_ar.rep_eq receiver_get_stream_ar.rep_eq)
-  apply(simp add: receiver_stream_ar_h_def)
+  apply(simp add: DoNotUse_e88fe0_receiver_stream_ar_h_def)
   apply(subst tsynmap_inv_id)
   using assms tsynbundle_ctype apply fastforce
   using assms ub_id_single by blast
 
-lemma receiver_stream_o_dom[simp]: "ubDom\<cdot>(receiver_stream_o\<cdot>x) = {\<C> ''o''}"
-  by(simp add: receiver_stream_o.rep_eq ubdom_insert receiver_stream_o_h.rep_eq)
+lemma receiver_stream_o_dom[simp]: "ubDom\<cdot>(receiver_stream_o\<cdot>x) = {\<C> ''DoNotUse_e88fe0_o''}"
+  by(simp add: receiver_stream_o.rep_eq ubdom_insert DoNotUse_e88fe0_receiver_stream_o_h.rep_eq)
 
 lemma receiver_stream_o_len[simp]: "ubLen (receiver_stream_o\<cdot>x) = #x"
   apply(subst uslen_ubLen_ch3)
   apply simp
   apply(simp add: receiver_stream_o.rep_eq)
-  apply(simp add: ubGetCh_def receiver_stream_o_h.rep_eq)
+  apply(simp add: ubGetCh_def DoNotUse_e88fe0_receiver_stream_o_h.rep_eq)
   by (simp add: tsynmap_slen usclLen_stream_def)
 
 lemma receiver_stream_o_id[simp]:
-  assumes "ubDom\<cdot>ub = {\<C> ''o''} "
+  assumes "ubDom\<cdot>ub = {\<C> ''DoNotUse_e88fe0_o''} "
     shows "receiver_stream_o\<cdot>(receiver_get_stream_o\<cdot>ub) = ub"
   apply(simp add: receiver_stream_o.rep_eq receiver_get_stream_o.rep_eq)
-  apply(simp add: receiver_stream_o_h_def)
+  apply(simp add: DoNotUse_e88fe0_receiver_stream_o_h_def)
   apply(subst tsynmap_inv_id)
   using assms tsynbundle_ctype apply fastforce
   using assms ub_id_single by blast
@@ -434,19 +434,19 @@ subsubsection \<open>Intern\<close>
 
 lemma receiver_get_stream_dr_id[simp]: "receiver_get_stream_dr\<cdot>(receiver_stream_dr\<cdot>x) = x"
   apply(simp add: receiver_get_stream_dr.rep_eq receiver_stream_dr.rep_eq)
-  apply(simp add: ubGetCh_def receiver_stream_dr_h.rep_eq)
+  apply(simp add: ubGetCh_def DoNotUse_e88fe0_receiver_stream_dr_h.rep_eq)
   by (simp add: inj_def)
 
 lemma receiver_get_stream_dr_eq:
-  assumes "ubDom\<cdot>ub1 = {\<C> ''dr''}"
-      and "ubDom\<cdot>ub2 = {\<C> ''dr''}"
+  assumes "ubDom\<cdot>ub1 = {\<C> ''DoNotUse_e88fe0_dr''}"
+      and "ubDom\<cdot>ub2 = {\<C> ''DoNotUse_e88fe0_dr''}"
       and "receiver_get_stream_dr\<cdot>ub1 = receiver_get_stream_dr\<cdot>ub2"
     shows "ub1 = ub2"
   using assms(1) assms(2) assms(3) receiver_stream_dr_id by metis
 
 lemma receiver_get_stream_dr_conc[simp]:
-  assumes "\<C> ''dr'' \<in> ubDom\<cdot>ub1"
-      and "\<C> ''dr'' \<in> ubDom\<cdot>ub2"
+  assumes "\<C> ''DoNotUse_e88fe0_dr'' \<in> ubDom\<cdot>ub1"
+      and "\<C> ''DoNotUse_e88fe0_dr'' \<in> ubDom\<cdot>ub2"
     shows "receiver_get_stream_dr\<cdot>(ubConc ub1\<cdot>ub2) = (receiver_get_stream_dr\<cdot>ub1) \<bullet> (receiver_get_stream_dr\<cdot>ub2)"
   apply(simp add: receiver_get_stream_dr.rep_eq)
   apply (subst ubConc_usclConc_eq)
@@ -456,19 +456,19 @@ lemma receiver_get_stream_dr_conc[simp]:
 
 lemma receiver_get_stream_ar_id[simp]: "receiver_get_stream_ar\<cdot>(receiver_stream_ar\<cdot>x) = x"
   apply(simp add: receiver_get_stream_ar.rep_eq receiver_stream_ar.rep_eq)
-  apply(simp add: ubGetCh_def receiver_stream_ar_h.rep_eq)
+  apply(simp add: ubGetCh_def DoNotUse_e88fe0_receiver_stream_ar_h.rep_eq)
   by (simp add: inj_def)
 
 lemma receiver_get_stream_ar_eq:
-  assumes "ubDom\<cdot>ub1 = {\<C> ''ar''}"
-      and "ubDom\<cdot>ub2 = {\<C> ''ar''}"
+  assumes "ubDom\<cdot>ub1 = {\<C> ''DoNotUse_e88fe0_ar''}"
+      and "ubDom\<cdot>ub2 = {\<C> ''DoNotUse_e88fe0_ar''}"
       and "receiver_get_stream_ar\<cdot>ub1 = receiver_get_stream_ar\<cdot>ub2"
     shows "ub1 = ub2"
   using assms(1) assms(2) assms(3) receiver_stream_ar_id by metis
 
 lemma receiver_get_stream_ar_conc[simp]:
-  assumes "\<C> ''ar'' \<in> ubDom\<cdot>ub1"
-      and "\<C> ''ar'' \<in> ubDom\<cdot>ub2"
+  assumes "\<C> ''DoNotUse_e88fe0_ar'' \<in> ubDom\<cdot>ub1"
+      and "\<C> ''DoNotUse_e88fe0_ar'' \<in> ubDom\<cdot>ub2"
     shows "receiver_get_stream_ar\<cdot>(ubConc ub1\<cdot>ub2) = (receiver_get_stream_ar\<cdot>ub1) \<bullet> (receiver_get_stream_ar\<cdot>ub2)"
   apply(simp add: receiver_get_stream_ar.rep_eq)
   apply (subst ubConc_usclConc_eq)
@@ -478,19 +478,19 @@ lemma receiver_get_stream_ar_conc[simp]:
 
 lemma receiver_get_stream_o_id[simp]: "receiver_get_stream_o\<cdot>(receiver_stream_o\<cdot>x) = x"
   apply(simp add: receiver_get_stream_o.rep_eq receiver_stream_o.rep_eq)
-  apply(simp add: ubGetCh_def receiver_stream_o_h.rep_eq)
+  apply(simp add: ubGetCh_def DoNotUse_e88fe0_receiver_stream_o_h.rep_eq)
   by (simp add: inj_def)
 
 lemma receiver_get_stream_o_eq:
-  assumes "ubDom\<cdot>ub1 = {\<C> ''o''}"
-      and "ubDom\<cdot>ub2 = {\<C> ''o''}"
+  assumes "ubDom\<cdot>ub1 = {\<C> ''DoNotUse_e88fe0_o''}"
+      and "ubDom\<cdot>ub2 = {\<C> ''DoNotUse_e88fe0_o''}"
       and "receiver_get_stream_o\<cdot>ub1 = receiver_get_stream_o\<cdot>ub2"
     shows "ub1 = ub2"
   using assms(1) assms(2) assms(3) receiver_stream_o_id by metis
 
 lemma receiver_get_stream_o_conc[simp]:
-  assumes "\<C> ''o'' \<in> ubDom\<cdot>ub1"
-      and "\<C> ''o'' \<in> ubDom\<cdot>ub2"
+  assumes "\<C> ''DoNotUse_e88fe0_o'' \<in> ubDom\<cdot>ub1"
+      and "\<C> ''DoNotUse_e88fe0_o'' \<in> ubDom\<cdot>ub2"
     shows "receiver_get_stream_o\<cdot>(ubConc ub1\<cdot>ub2) = (receiver_get_stream_o\<cdot>ub1) \<bullet> (receiver_get_stream_o\<cdot>ub2)"
   apply(simp add: receiver_get_stream_o.rep_eq)
   apply (subst ubConc_usclConc_eq)

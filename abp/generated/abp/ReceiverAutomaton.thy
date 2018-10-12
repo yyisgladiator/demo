@@ -3,7 +3,7 @@
  * This file was generated from Receiver.maa and will be overridden when changed. To change
  * permanently, consider changing the model itself.
  *
- * isartransformer 2.0.0
+ * Generated on Oct 12, 2018 1:15:28 PM by isartransformer 2.0.0
  *)
 theory ReceiverAutomaton
   imports ReceiverDatatype ReceiverStates automat.dAutomaton

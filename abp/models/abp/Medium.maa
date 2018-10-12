@@ -1,12 +1,13 @@
 package abp;
 
-<<nonDeterministic>>component UnfairMedium<E> {
+/* Unfair Medium */
+<<nonDeterministic>>component Medium<E> {
 
   port
     in E i,
     out E o;
 
-  automaton UnfairMedium {
+  automaton Medium {
     variable int coin;
 
     state Single;
