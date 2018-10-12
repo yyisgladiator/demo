@@ -8,7 +8,7 @@
 chapter {* Theory for Medium Definitions and Lemmata *}
 
 theory Medium
-imports PreludeMed spec.SPS
+imports stream.tsynStream
 
 begin
 
@@ -26,11 +26,6 @@ text{* @{term tsynMed}: Lossy medium on time-synchronous streams that gets messa
        message will be discarded. *}
 definition tsynMed :: "'a tsyn stream \<rightarrow> bool stream \<rightarrow> 'a tsyn stream" where
   "tsynMed \<equiv> \<Lambda> msg ora. tsynProjFst\<cdot>(tsynFilter {x. snd x}\<cdot>(tsynZip\<cdot>msg\<cdot>ora))"
-
-text {* @{term tsynbMed}: Lossy medium function on time-synchonous stream bundles. *}
-definition tsynbMed :: "bool stream \<Rightarrow> 'a medMessage tsyn stream ubundle 
-  \<rightarrow> 'a medMessage tsyn stream ubundle option" where
-  "tsynbMed ora \<equiv> \<Lambda> sb. (ubDom\<cdot>sb = medInDom) \<leadsto> (medOutSetStream\<cdot>(tsynMed\<cdot>(medInGetStream\<cdot>sb)\<cdot>ora))"
 
 (* ----------------------------------------------------------------------- *)
 section {* Basic Properties *}
@@ -297,74 +292,15 @@ lemma tsynmed_tsynlen_inf:
   using assms by (simp add: tsynmed_tsynlen_ora)
 
 text {* @{term tsynMed} test on finite stream with ticks. *}
-lemma tsynmed_test_finstream_null:
+lemma tsynmed_test_finstream_null: (* SWS: use mediumIn_list_ar *)
   "tsynMed\<cdot>(<[null, null, Msg (2,False), Msg (1, True), Msg (3, True)]>)\<cdot>(<[True, False, True]>) 
     = <[null, null, Msg (2,False), null, Msg (3, True)]>"
-  sorry
+  oops
 
 text {* @{term tsynMed} test on infinite stream. *}
-lemma tsynmed_test_infstream:
+lemma tsynmed_test_infstream: (* SWS: use mediumIn_list_ar *)
   "tsynMed\<cdot>((<[Msg(3, False), null, Msg(2, True),Msg(1, False)]>)\<infinity>)\<cdot>((<[True, False, True]>)\<infinity>)
     =(<[Msg(3, False), null, null, Msg(1, False)]>)\<infinity>"
-  sorry
-
-(* ----------------------------------------------------------------------- *)
-subsection {* basic properties of tsynbMed *}
-(* ----------------------------------------------------------------------- *)
-
-(* tsynbMed ist implizit immer ubWell, da über medOutSetstream_h definiert. *)
-
-text{* The domain of the output bundle of @{term tsynbMed}. *}
-lemma tsynbmed_ubundle_ubdom: "ubDom\<cdot>(medOutSetStream\<cdot>(tsynMed\<cdot>(medInGetStream\<cdot>sb)\<cdot>ora)) = medOutDom"
-  by (simp add: ubdom_insert medOutSetStream.rep_eq medOutSetStream_h.rep_eq medOutDom_def)
-
-(*text {* @{term tsynbMed}: Lossy medium function on time-synchonous stream bundles. *}
-definition tsynbMed :: "bool stream \<Rightarrow> 'a medMessage tsyn stream ubundle 
-  \<rightarrow> 'a medMessage tsyn stream ubundle option" where
-  "tsynbMed ora \<equiv> \<Lambda> sb. (ubDom\<cdot>sb = medInDom) \<leadsto> (medOutSetStream\<cdot>(tsynMed\<cdot>(medInGetStream\<cdot>sb)\<cdot>ora))"*)
-
-text{* @{term tsynbMed} is monotonous. *}
-lemma tsynbmed_mono [simp]:
-  "monofun (\<lambda> sb. (ubDom\<cdot>sb = medInDom) \<leadsto> (medOutSetStream\<cdot>(tsynMed\<cdot>(medInGetStream\<cdot>sb)\<cdot>ora)))"
-  apply (fold ubclDom_ubundle_def)
-  apply (rule ufun_monoI3)
-  apply (rule monofunI)
-  apply (simp add: below_ubundle_def medOutSetStream.rep_eq medOutSetStream_h.rep_eq)
-  by (simp add: below_ubundle_def cont_pref_eq1I fun_below_iff monofun_cfun_fun some_below)
-
-text{* Chain on the output bundle of @{term tsynbMed}. *}
-lemma tsynbmed_chain: "chain Y \<Longrightarrow> 
-      chain (\<lambda>i::nat.(medOutSetStream\<cdot>(tsynMed\<cdot>(medInGetStream\<cdot>(Y i))\<cdot>ora)))"
-  by simp
-
-text{* @{term tsynbMed} is continuous. *}
-lemma tsynbmed_cont [simp]:
-  "cont (\<lambda> sb. (ubDom\<cdot>sb = medInDom) \<leadsto> (medOutSetStream\<cdot>(tsynMed\<cdot>(medInGetStream\<cdot>sb)\<cdot>ora)))"
-  by simp
-
-text{* @{term tsynbMed} insertion lemma. *}
-lemma tsynbmed_insert: "tsynbMed ora\<cdot>sb = (ubDom\<cdot>sb = medInDom) 
-  \<leadsto> (medOutSetStream\<cdot>(tsynMed\<cdot>(medInGetStream\<cdot>sb)\<cdot>ora))"
-  by (simp add: tsynbMed_def ubclDom_ubundle_def)
-
-text{* @{term tsynbMed} is well-formed. *}
-lemma tsynbmed_ufwell [simp]: "ufWell (tsynbMed ora)"
-  apply (rule ufun_wellI [of "tsynbMed ora" "medInDom" "medOutDom"])
-  apply (simp_all add: ubclDom_ubundle_def domIff tsynbmed_insert)
-  apply (meson option.distinct(1))
-  by (metis option.distinct(1) tsynbmed_ubundle_ubdom)
-
-text {* Medium output stream of @{term tsynbMed}}. *}
-lemma tsynbmed_medoutgetstream:
-  assumes "ubDom\<cdot>sb = medInDom"
-  shows "medOutGetStream\<cdot>((Rep_cfun (tsynbMed ora)) \<rightharpoonup> sb)
-    = tsynMed\<cdot>(medInGetStream\<cdot>sb)\<cdot>ora"
-  by (simp add: tsynbmed_insert assms medoutgetstream_medoutsetstream)
-
-text {* The output stream of @{term tsynbMed}} on channel out. *}
-lemma tsynbmed_getch_out: assumes "ubDom\<cdot>sb = medInDom"
-  shows "((Rep_cfun (tsynbMed ora))\<rightharpoonup>sb)  .  \<C> ''out'' 
-    = tsynMap (medData)\<cdot>(tsynMed\<cdot>(medInGetStream\<cdot>sb)\<cdot>ora)"
-  by (simp add: tsynbmed_insert assms medOutSetStream_def medOutSetStream_h_def tsynmap_medData)
+  oops
 
 end

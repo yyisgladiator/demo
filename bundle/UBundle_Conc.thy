@@ -343,23 +343,23 @@ lemma ubconceq_cont [simp]: "cont (\<lambda> b2.  (ubConc b1\<cdot>b2) \<bar> ub
   apply(rule contI)
   by (smt ch2ch_Rep_cfunR contlub_cfun_arg cpo_lubI image_cong ubdom_chain_eq2)
 
-lemma ubconceq_insert [simp]: "ubConcEq b1\<cdot>b2 = (ubConc b1\<cdot>b2) \<bar> ubDom\<cdot>b2"
+lemma ubconceq_insert: "ubConcEq b1\<cdot>b2 = (ubConc b1\<cdot>b2) \<bar> ubDom\<cdot>b2"
   by(simp add: ubConcEq_def)
 
 lemma ubconceq_dom [simp]: "ubDom\<cdot>(ubConcEq b1\<cdot>b2) = ubDom\<cdot>b2"
-  by auto
+  by (simp add: inf.absorb2 ubconceq_insert)
 
 lemma ubconceq_ubleast:
   shows "ubConcEq (a :: 'a ubundle)\<cdot>(ubLeast (ubDom\<cdot>a)) = a"
-  by (simp add: usclConc_rightbottom ubconc_ubleast)
+  by (simp add: usclConc_rightbottom ubconc_ubleast ubconceq_insert)
 
 lemma ubconceq_ubcllen_equalDom: assumes "ubclDom\<cdot>ub1 = ubclDom\<cdot>ub2"
   shows "(ubclLen ub1) + (ubclLen ub2) \<le> ubclLen (ubConcEq ub1\<cdot>ub2)"
-  using assms by (simp add: ubclDom_ubundle_def ubconc_ubcllen_equalDom)
+  using assms by (simp add: ubclDom_ubundle_def ubconc_ubcllen_equalDom ubconceq_insert)
 
 lemma ubconceq_ubcllen_diffDom: assumes "ubclDom\<cdot>ub1 \<inter> ubclDom\<cdot>ub2 = {}"
   shows "ubclLen ub2 = ubclLen (ubConcEq ub1\<cdot>ub2)"
-  apply (simp add: ubclLen_ubundle_def)
+  apply (simp add: ubclLen_ubundle_def ubconceq_insert)
   apply (simp add: ubLen_def)
   apply (cases "ubDom\<cdot>ub2 = {}")
   apply simp
@@ -375,20 +375,20 @@ proof -
   have "ubDom\<cdot>b1 = ubclDom\<cdot>b2"
     by (metis ubclDom_ubundle_def ubdom_eq)
   then have "ubConc b1\<cdot>b2 = ubConcEq b1\<cdot>b2"
-    by (simp add: ubclDom_ubundle_def)
+    by (simp add: ubclDom_ubundle_def ubconceq_insert)
   then show ?thesis
-    by (simp add: ubconc_ublen_onech ubdom_eq ubdom_one)
+    by (simp add: ubconc_ublen_onech ubdom_eq ubdom_one ubconceq_insert)
 qed
 
 lemma ubconceq_restrict: "ubDom\<cdot>ub2 \<subseteq> cs \<Longrightarrow> ubConcEq (ubRestrict cs\<cdot>ub)\<cdot>ub2 = ubConcEq ub\<cdot>ub2"
   apply(rule ub_eq)
-  apply simp
+  apply (simp add: ubconceq_insert)
    apply blast
-  apply simp
+  apply (simp add: ubconceq_insert)
   by (smt IntE IntI Un_iff subset_Un_eq ubconc_getch ubgetch_ubrestrict ubrestrict_ubdom2 ubup_ubgetch ubup_ubgetch2)
 
 lemma conceq_longer_conc: "ubLen (ubConcEq b1\<cdot>b2) \<ge> ubLen (ubConc b1\<cdot>b2)"
-  by (simp add: ubLen_geI ubLen_smallereq_all)
+  by (simp add: ubLen_geI ubLen_smallereq_all ubconceq_insert)
 
 lemma conceq_conc_1: assumes "ubclDom\<cdot>b1 \<subseteq> ubclDom\<cdot>b2" shows "ubConcEq b1\<cdot>b2 = ubConc b1\<cdot>b2"
   by (metis assms ubclDom_ubundle_def ubclRestrict_ubundle_def ubclrestrict_dom_id ubconc_dom ubconceq_insert ubunionDom ubunion_idL)

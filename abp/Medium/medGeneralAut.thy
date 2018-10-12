@@ -15,46 +15,46 @@ fun medGeneralTransitionH :: "nat set \<Rightarrow> ('a \<Rightarrow> ('a tsyn s
 definition tsynDelay :: "nat \<Rightarrow> 'm::message tsyn SB \<rightarrow> 'm tsyn SB" where
 "tsynDelay n = ubConcEq (sbNTimes n (tsynbNull  (\<C> ''in'')))" 
 
-fun medGeneralTransition :: "nat set \<Rightarrow> medState set \<Rightarrow> ('a \<Rightarrow> ('a tsyn set)) \<Rightarrow> (medState \<times> 'a medMessage tsyn sbElem) \<Rightarrow> ((medState \<times> 'a medMessage tsyn SB) set rev)" where
+fun medGeneralTransition :: "nat set \<Rightarrow> medState set \<Rightarrow> ('a \<Rightarrow> ('a tsyn set)) \<Rightarrow> (medState \<times> 'a mediumMessage tsyn sbElem) \<Rightarrow> ((medState \<times> 'a mediumMessage tsyn SB) set rev)" where
 "medGeneralTransition delaySet resetSet dropBehaviour (s,f) = 
-  (let inMsg = (medMessageTransform ((Rep_sbElem f)\<rightharpoonup>(\<C> ''in'')));
-       outSet = {(sNext,(medOut out)) | sNext out.(sNext, out)\<in>(medGeneralTransitionH resetSet dropBehaviour s inMsg)}
+  (let inMsg = mediumElem_get_i f;
+       outSet = {(sNext,(mediumOut_o out)) | sNext out.(sNext, out)\<in>(medGeneralTransitionH resetSet dropBehaviour s inMsg)}
   in
-  (if sbeDom f = medInDom then
+  (if sbeDom f = mediumDom then
     (if(inMsg = -) then Rev outSet else Rev {(sNext, tsynDelay n\<cdot>outElem)| n sNext outElem . n\<in>delaySet \<and> (sNext, outElem)\<in>outSet})
   else Rev {undefined}))"
 
 
-lift_definition medGeneralAut :: "nat set \<Rightarrow> medState set \<Rightarrow> ('a \<Rightarrow> ('a tsyn set)) \<Rightarrow> (medState, 'a medMessage tsyn) ndAutomaton" is 
-  "\<lambda>delaySet resetSet dropBehaviour. (medGeneralTransition delaySet resetSet dropBehaviour, Rev {(n, medOut - )| n. n \<in> resetSet}, Discr medInDom, Discr medOutDom)"
-  by (simp add: medInDom_def)
+lift_definition medGeneralAut :: "nat set \<Rightarrow> medState set \<Rightarrow> ('a \<Rightarrow> ('a tsyn set)) \<Rightarrow> (medState, 'a mediumMessage tsyn) ndAutomaton" is 
+  "\<lambda>delaySet resetSet dropBehaviour. (medGeneralTransition delaySet resetSet dropBehaviour, Rev {(n, mediumOut_o - )| n. n \<in> resetSet}, Discr mediumDom, Discr mediumRan)"
+  by (simp add: mediumDom_def)
 
-definition medGeneral :: "nat set \<Rightarrow> medState set \<Rightarrow> ('a \<Rightarrow> ('a tsyn set)) \<Rightarrow> medState \<Rightarrow> 'a medMessage tsyn SPS" where
+definition medGeneral :: "nat set \<Rightarrow> medState set \<Rightarrow> ('a \<Rightarrow> ('a tsyn set)) \<Rightarrow> medState \<Rightarrow> 'a mediumMessage tsyn SPS" where
 "medGeneral delaySet resetSet dropBehaviour n = nda_h (medGeneralAut delaySet resetSet dropBehaviour) n"
 
 
 
-definition medFair :: "medState \<Rightarrow> 'a medMessage tsyn SPS" where
+definition medFair :: "medState \<Rightarrow> 'a mediumMessage tsyn SPS" where
 "medFair = medGeneral {0} UNIV (\<lambda>s. {-})"  (* No delay, normal counter, normal drop *)
 
-definition medFairDelay :: "medState \<Rightarrow> 'a medMessage tsyn SPS" where
+definition medFairDelay :: "medState \<Rightarrow> 'a mediumMessage tsyn SPS" where
 "medFairDelay = medGeneral UNIV UNIV (\<lambda>s. {-})"  (* arbitrary but finite delay, normal counter, normal drop *)
 
-definition medFairDelayTupel :: "medState \<Rightarrow> ('a\<times>'b) medMessage tsyn SPS" where
+definition medFairDelayTupel :: "medState \<Rightarrow> ('a\<times>'b) mediumMessage tsyn SPS" where
 "medFairDelayTupel = medGeneral UNIV UNIV (\<lambda>(a,b). {Msg (undefined, b), -, Msg (a, undefined)})"  
   (* arbitrary but finite delay, normal counter, drop can alter elements and only delete part of the information *)
 
-definition medGurantee :: "medState \<Rightarrow> 'a medMessage tsyn SPS" where
+definition medGurantee :: "medState \<Rightarrow> 'a mediumMessage tsyn SPS" where
 "medGurantee = medGeneral {0} {n. n\<le>5} (\<lambda>s. {-})" 
-  (* No delay, Passes at least every 5th message, normal drop *)
+  (* No delay, Psses at least every 5th message, normal drop *)
 
 
 
 
-lemma medgen_dom[simp]: "ndaDom\<cdot>(medGeneralAut d r b ) = medInDom"
+lemma medgen_dom[simp]: "ndaDom\<cdot>(medGeneralAut d r b ) = mediumDom"
   by (simp add: medGeneralAut.rep_eq ndaDom.rep_eq)
 
-lemma medgen_ran[simp]: "ndaRan\<cdot>(medGeneralAut d r b ) = medOutDom"
+lemma medgen_ran[simp]: "ndaRan\<cdot>(medGeneralAut d r b ) = mediumRan"
   by (simp add: medGeneralAut.rep_eq ndaRan.rep_eq)
 
 lemma medgen_trans[simp]: "ndaTransition\<cdot>(medGeneralAut Delay Reset Drop) = medGeneralTransition Delay Reset Drop"
@@ -67,10 +67,10 @@ lemma medgen_transh_total:  "Reset\<noteq>{} \<Longrightarrow> (\<And>m. Drop m 
 
 lemma medgen_trans_total_h: "Delay\<noteq>{} \<Longrightarrow> Reset\<noteq>{} \<Longrightarrow> (\<And>m. Drop m \<noteq> {}) \<Longrightarrow> medGeneralTransition Delay Reset Drop (s,sbe) \<noteq> Rev {}"
   apply(simp)
-  apply(cases "sbeDom sbe \<noteq> medInDom")
+  apply(cases "sbeDom sbe \<noteq> mediumDom")
    apply simp
   apply (auto simp add: Let_def)
-  apply(cases "medMessageTransform Rep_sbElem sbe\<rightharpoonup>\<C> ''in'' = -")
+  apply(cases "mediumElem_get_i sbe = -")
   apply auto
   by (metis all_not_in_conv medgen_transh_total old.prod.exhaust)
 
@@ -79,31 +79,27 @@ lemma medgen_trans_total[simp]: "Delay\<noteq>{} \<Longrightarrow> Reset\<noteq>
 
 
 lemma medgen_trans_tick [simp]: 
-    "Delay\<noteq>{} \<Longrightarrow> medGeneralTransition Delay Reset Drop (state, (medInElem -)) = Rev {(state, medOut -)}"
-  by(simp add: sbeNull.rep_eq medInDom_def medInElem.simps)
-
-lemma medfair_transition_msg_suc [simp]: 
-  shows "medGeneralTransition Delay Reset Drop (Suc n, (medInElem (Msg m))) = Rev {(n, tsynDelay na\<cdot>(medOut out)) |(na::nat) out::'a tsyn. na \<in> Delay \<and> out \<in> Drop m}"
-  apply(simp add: medInMsgElem.rep_eq medInDom_def medInElem.simps)
+    "Delay\<noteq>{} \<Longrightarrow> medGeneralTransition Delay Reset Drop (state, (mediumElemIn_i -)) = Rev {(state, mediumOut_o -)}"
   by auto
 
+lemma medfair_transition_msg_suc [simp]: 
+  shows "medGeneralTransition Delay Reset Drop (Suc n, (mediumElemIn_i (Msg m))) = Rev {(n, tsynDelay na\<cdot>(mediumOut_o out)) |(na::nat) out::'a tsyn. na \<in> Delay \<and> out \<in> Drop m}"
+  by auto
+ 
+
 lemma medfair_transition_msg_0 [simp]: 
-    "medGeneralTransition Delay Reset Drop (0, (medInElem (Msg m))) = Rev {(sNext, tsynDelay n\<cdot>(medOut (\<M> m))) |(n::nat) sNext::nat. n \<in> Delay \<and> sNext \<in> Reset}"
-  by(simp add: medInMsgElem.rep_eq medInDom_def image_iff medInElem.simps)
+    "medGeneralTransition Delay Reset Drop (0, (mediumElemIn_i (Msg m))) = Rev {(sNext, tsynDelay n\<cdot>(mediumOut_o (\<M> m))) |(n::nat) sNext::nat. n \<in> Delay \<and> sNext \<in> Reset}"
+  by simp
 
-
-lemma medinelem_get_id[simp]: "(medMessageTransform Rep_sbElem (medInElem m)\<rightharpoonup>\<C> ''in'') = m"
-apply(cases m)
-  by(simp add: medInElem.simps medInMsgElem.rep_eq sbeNull.rep_eq medInDom_def)+
 
 lemma medgen_init_total[simp]: assumes "Reset\<noteq>{}" 
   shows "ndaInitialState\<cdot>(medGeneralAut Delay Reset Drop) \<noteq> Rev {}"
   by(simp add: ndaInitialState.rep_eq medGeneralAut.rep_eq assms)
 
 lemma med_gen_step_tick: assumes "Delay\<noteq>{}" and  "Reset\<noteq>{}" and "(\<And>m. Drop m \<noteq> {})"
-shows "spsConcIn (medIn -) (medGeneral Delay Reset Drop s) = 
-  ndaConcOutFlatten medInDom medOutDom (Rev {(s, (medOut -))}) (medGeneral Delay Reset Drop)"
-  apply(simp add: medIn_def medGeneral_def)
+shows "spsConcIn (mediumIn_i -) (medGeneral Delay Reset Drop s) = 
+  ndaConcOutFlatten mediumDom mediumRan (Rev {(s, (mediumOut_o -))}) (medGeneral Delay Reset Drop)"
+  apply(simp add: mediumIn_i_def medGeneral_def)
   apply(subst nda_h_I)
      apply simp_all
    apply(rule nda_consistent)
@@ -112,9 +108,9 @@ shows "spsConcIn (medIn -) (medGeneral Delay Reset Drop s) =
 
 
 lemma med_gen_step_msg_suc: assumes "Delay\<noteq>{}" and  "Reset\<noteq>{}" and "(\<And>m. Drop m \<noteq> {})"
-shows "spsConcIn (medIn (Msg m)) (medGeneral Delay Reset Drop (Suc s)) = 
-  ndaConcOutFlatten medInDom medOutDom (Rev {(s, tsynDelay n\<cdot>(medOut out)) |(n::nat) out::'a tsyn. n \<in> Delay \<and> out \<in> Drop m}) (medGeneral Delay Reset Drop)"
-  apply(simp add: medIn_def medGeneral_def)
+shows "spsConcIn (mediumIn_i (Msg m)) (medGeneral Delay Reset Drop (Suc s)) = 
+  ndaConcOutFlatten mediumDom mediumRan (Rev {(s, tsynDelay n\<cdot>(mediumOut_o out)) |(n::nat) out::'a tsyn. n \<in> Delay \<and> out \<in> Drop m}) (medGeneral Delay Reset Drop)"
+  apply(simp add: mediumIn_i_def medGeneral_def)
   apply(subst nda_h_I)
      apply simp_all
    apply(rule nda_consistent)
@@ -124,9 +120,9 @@ shows "spsConcIn (medIn (Msg m)) (medGeneral Delay Reset Drop (Suc s)) =
 
 
 lemma med_gen_step_msg_0: assumes "Delay\<noteq>{}" and  "Reset\<noteq>{}" and "(\<And>m. Drop m \<noteq> {})"
-shows "spsConcIn (medIn (Msg m)) (medGeneral Delay Reset Drop 0) = 
-  ndaConcOutFlatten medInDom medOutDom (Rev {(sNext, tsynDelay n\<cdot>(medOut (\<M> m))) |(n::nat) sNext::nat. n \<in> Delay \<and> sNext \<in> Reset}) (medGeneral Delay Reset Drop)"
-  apply(simp add: medIn_def medGeneral_def)
+shows "spsConcIn (mediumIn_i (Msg m)) (medGeneral Delay Reset Drop 0) = 
+  ndaConcOutFlatten mediumDom mediumRan (Rev {(sNext, tsynDelay n\<cdot>(mediumOut_o (\<M> m))) |(n::nat) sNext::nat. n \<in> Delay \<and> sNext \<in> Reset}) (medGeneral Delay Reset Drop)"
+  apply(simp add: mediumIn_i_def medGeneral_def)
   apply(subst nda_h_I)
      apply simp_all
    apply(rule nda_consistent)

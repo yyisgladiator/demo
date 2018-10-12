@@ -214,7 +214,7 @@ lemma ubconceq_ubleast:
       by (simp add: ubWell_def ubgetch_insert ubrestrict_insert bundle_restrict_eq)
     show ?thesis
       by (simp add: ubclLeast_ubundle_def ubconc_insert ubdom_intersec
-         ubrestrict_insert usclConc_stream_def bundle_restrict_eq2)
+         ubrestrict_insert usclConc_stream_def bundle_restrict_eq2 ubconceq_insert)
   qed
     
 lemma da_H_bottom:
