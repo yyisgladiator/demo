@@ -13,7 +13,7 @@ fun medGeneralTransitionH :: "nat set \<Rightarrow> ('a \<Rightarrow> ('a tsyn s
 "medGeneralTransitionH resetSet  _        0    (Msg m) = { (  n  , (Msg m)) | n. n \<in> resetSet}"     (* Pass *)
 
 definition tsynDelay :: "nat \<Rightarrow> 'm::message tsyn SB \<rightarrow> 'm tsyn SB" where
-"tsynDelay n = ubConcEq (sbNTimes n (tsynbNull  (\<C> ''in'')))" 
+"tsynDelay n = ubConcEq (sbNTimes n (tsynbNull  {(\<C> ''in'')}))" 
 
 fun medGeneralTransition :: "nat set \<Rightarrow> medState set \<Rightarrow> ('a \<Rightarrow> ('a tsyn set)) \<Rightarrow> (medState \<times> 'a medMessage tsyn sbElem) \<Rightarrow> ((medState \<times> 'a medMessage tsyn SB) set rev)" where
 "medGeneralTransition delaySet resetSet dropBehaviour (s,f) = 
