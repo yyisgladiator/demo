@@ -1012,6 +1012,46 @@ lemma sbconc_inj: assumes "\<And>c. c\<in>ubDom\<cdot>sb \<Longrightarrow> # (sb
   by (metis assms sbconc_inj_h ubconceq_dom ubconceq_insert)
   
   
+lemma sbconc_inf: fixes sb::"'m::message SB"
+    assumes "ubDom\<cdot>sb=ubDom\<cdot>ub_inf" and "ubLen ub_inf = \<infinity>"
+  shows "ubConc ub_inf\<cdot>sb = ub_inf"
+proof(rule ub_eq)
+  show "ubDom\<cdot>(ubConc ub_inf\<cdot>sb) = ubDom\<cdot>ub_inf" by (simp add: assms(1))
+next
+  fix c
+  assume "c \<in> ubDom\<cdot>(ubConc ub_inf\<cdot>sb)"
+  hence c_dom: "c\<in>(ubDom\<cdot>ub_inf)"
+    by (simp add: assms(1))
+  hence "usclLen\<cdot>(ub_inf . c) = \<infinity>"
+    using assms(2) ublen_channel by fastforce
+  thus "(ubConc ub_inf\<cdot>sb)  .  c = ub_inf  .  c"
+    by (simp add: c_dom assms(1) usclConc_stream_def usclLen_stream_def)
+qed
+
+
+
+
+
+
+
+lemma sblen_up_restrict[simp]: fixes ub ::"'a::message SB"
+  assumes "ubLen (ubRestrict cs\<cdot>(ubUp\<cdot>ub)) \<noteq> 0"
+  shows "cs \<subseteq> ubDom\<cdot>ub"
+proof - 
+  have "\<And>c. c\<in>cs \<Longrightarrow>  usclLen\<cdot>((ubRestrict cs \<cdot>(ubUp\<cdot>ub)) . c) \<noteq> 0" 
+    by(subst ublen_not_0, auto simp add: assms)
+  hence "\<And>c. c\<in>cs \<Longrightarrow>  usclLen\<cdot>((ubUp\<cdot>ub) . c) \<noteq> 0" by simp
+  thus ?thesis
+    by (metis strict_slen subsetI ubup_ubgetch2 usclLen_stream_def)
+qed
+
+
+lemma sblen_up_restrict2[simp]: fixes ub ::"'a::message SB"
+  shows "ubLen (ubRestrict cs\<cdot>(ubUp\<cdot>ub)) \<noteq> 0 \<Longrightarrow> (ubRestrict cs\<cdot>(ubUp\<cdot>ub)) = ubRestrict cs\<cdot>ub"
+  apply(rule ub_eq)
+  apply (simp add: inf_absorb2)
+  apply simp
+  by (simp add: rev_subsetD)
 
 
 

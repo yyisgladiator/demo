@@ -124,10 +124,10 @@ instance rev :: (dpcpo) dpcpo
   by (metis Abs_rev_inverse below_rev.elims(1) maximal mem_Collect_eq)
 *)
 
-lemma inv_rev_rev: "inv Rev (Rev S) = S"
+lemma inv_rev_rev[simp]: "inv Rev (Rev S) = S"
   by (meson f_inv_into_f rangeI rev.inject)
     
-lemma rev_inv_rev: "Rev (inv Rev S) = S"
+lemma rev_inv_rev[simp]: "Rev (inv Rev S) = S"
   by (meson rev.exhaust surj_def surj_f_inv_f)
     
 lemma Lub_rev_inv_rev:"(Rev (inv Rev (\<Squnion>i. Y i))) = (\<Squnion>i. (Rev (inv Rev (Y i))))"

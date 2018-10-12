@@ -106,7 +106,7 @@ end
 
 class ubcl_comp = ubcl +
   fixes ubclLeast :: "channel set \<Rightarrow> 'a"
-  fixes ubclUnion :: "'a \<rightarrow> 'a \<rightarrow> 'a"
+  fixes ubclUnion :: "'a \<rightarrow> 'a \<rightarrow> 'a" 
   fixes ubclRestrict :: "channel set \<Rightarrow> 'a \<rightarrow> 'a"
   
   assumes ubclunion_dom: "ubclDom\<cdot>(ubclUnion\<cdot>f1\<cdot>f2) = ubclDom\<cdot>f1 \<union> ubclDom\<cdot>f2"
@@ -133,7 +133,11 @@ class ubcl_comp = ubcl +
   assumes ubclunion_id: "ubclUnion\<cdot>ub\<cdot>ub = ub"
   assumes ubclunion_asso:"ubclUnion\<cdot>(ubclUnion\<cdot>ub1\<cdot>ub2)\<cdot>ub3 = ubclUnion\<cdot>ub1\<cdot>(ubclUnion\<cdot>ub2\<cdot>ub3)"
   assumes ubclunion_commu: "ubclDom\<cdot>ub1 \<inter> ubclDom\<cdot>ub2 = {} \<longrightarrow> ubclUnion\<cdot>ub1\<cdot>ub2 = ubclUnion\<cdot>ub2\<cdot>ub1"
+
 begin
+
+abbreviation ubclUnion_abbr :: " 'm \<Rightarrow> 'm \<Rightarrow> 'm" (infixl "\<uplus>" 100) where 
+"b1 \<uplus> b2 \<equiv> ubclUnion\<cdot>b1\<cdot>b2"
 
 lemma ubclrestrict_dom_idI: "ubclDom\<cdot>x = cs \<Longrightarrow> ubclRestrict cs\<cdot>x = x"
   using local.ubclrestrict_dom_id by blast

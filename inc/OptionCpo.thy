@@ -479,7 +479,72 @@ lemma if_then_lubdom [simp]: assumes "chain Y"
   then show ?thesis
   using \<open>dom (\<lambda>c. (c \<in> A)\<leadsto>g\<cdot>(Y 0)) = A\<close> part_dom_lub by blast
     qed 
+  qed
+
+lemma if_then_chain2: "chain Y \<Longrightarrow> chain (\<lambda>i.  (\<lambda>c. (c \<in> A)\<leadsto>((Y i) c)))"
+  by (simp add: below_fun_def below_option_def po_class.chain_def)
+
+lemma if_then_cont_inner:"(\<And>x y. x\<sqsubseteq>y \<Longrightarrow> P x = P y) \<Longrightarrow> cont (\<lambda>c. (P c)\<leadsto>f\<cdot>c)"
+  apply(rule contI2, rule monofunI)
+  apply (simp add: domIff monofun_cfun_arg some_below)
+  by (smt if_then_lub is_ub_thelub lub_eq po_class.chain_def po_eq_conv)
+
+
+lemma if_then_cont [simp]: "cont (\<lambda>f.  (\<lambda>c. (c \<in> A)\<leadsto>(f c)))"
+  apply(rule contI2, rule monofunI)
+  apply (simp add: below_fun_def some_below)
+  apply auto
+  apply(rule fun_belowI)
+  apply auto
+  apply (smt ch2ch_fun cont2contlubE contlub_lambda lub_eq not_below2not_eq po_class.chain_def some_below some_cont)
+  by (smt below_option_def domIff fun_belowD fun_belowI option.distinct(1) option.sel part_dom_lub po_class.chain_def)
+
+lemma if_then_cont2 [simp]: "cont (\<lambda>f.  (\<lambda>c. (P c)\<leadsto>(f c)))"
+proof - 
+  obtain A where "\<And>c. P c \<longleftrightarrow> c\<in>A"
+    by auto
+  hence h: "\<And>f. (\<lambda>c. (P c)\<leadsto>(f c)) =  (\<lambda>c. (c \<in> A)\<leadsto>(f c))"
+    by simp
+  show ?thesis unfolding h by simp
 qed
+
+
+lemma if_then_cont3 [simp]: "cont (\<lambda>f.  (\<lambda>c. (P c)\<leadsto>(f\<cdot>c)))"
+proof(rule contI)
+  fix Y::"nat \<Rightarrow> 'a \<rightarrow> 'b"
+  assume "chain Y"
+  obtain K where k_chain: "chain K" and k_def: "\<And>i. K i = Rep_cfun (Y i)"
+    by (simp add: \<open>chain (Y::nat \<Rightarrow> 'a \<rightarrow> 'b)\<close> ch2ch_lambda)
+  hence k_lub_eq: "(\<Squnion>i. K i) = (Rep_cfun (\<Squnion>i. Y i))"
+    proof -
+      obtain nn :: "(nat \<Rightarrow> 'b) \<Rightarrow> (nat \<Rightarrow> 'b) \<Rightarrow> nat" where
+        "\<forall>f fa. f (nn f fa) \<noteq> fa (nn f fa) \<or> Lub f = Lub fa"
+    by moura
+      then have "\<forall>a f. Lub f = (\<Squnion>n. Y n\<cdot>a) \<or> f (nn f (\<lambda>n. Y n\<cdot>a)) \<noteq> K (nn f (\<lambda>n. Y n\<cdot>a)) a"
+        by (metis \<open>\<And>i::nat. (K::nat \<Rightarrow> 'a \<Rightarrow> 'b) i = Rep_cfun ((Y::nat \<Rightarrow> 'a \<rightarrow> 'b) i)\<close>)
+      then have "\<forall>a. Lub Y\<cdot>a = (\<Squnion>n. K n a)"
+        by (metis \<open>chain (Y::nat \<Rightarrow> 'a \<rightarrow> 'b)\<close> contlub_cfun_fun)
+      then show ?thesis
+    by (simp add: \<open>chain (K::nat \<Rightarrow> 'a \<Rightarrow> 'b)\<close> fun_belowI lub_fun po_eq_conv)
+qed
+  have h1: "range (\<lambda>(i::nat) c::'a. (P c)\<leadsto>((Y i)\<cdot>c)) = range (\<lambda>(i::nat) c::'a. (P c)\<leadsto>((K i)c))"
+    using k_def by presburger
+  have h2: "(\<lambda>c::'a. (P c)\<leadsto>(\<Squnion>i::nat. Y i)\<cdot>c) = (\<lambda>c::'a. (P c)\<leadsto>(\<Squnion>i::nat. K i)c)"
+    using k_lub_eq by auto
+  hence "chain K \<Longrightarrow> range (\<lambda>(i::nat) c::'a. (P c)\<leadsto>((K i) c)) <<| (\<lambda>c::'a. (P c)\<leadsto>(\<Squnion>i::nat. K i) c)"
+    using contE if_then_cont2 k_chain by blast
+  thus "range (\<lambda>(i::nat) c::'a. (P c)\<leadsto>((Y i)\<cdot>c)) <<| (\<lambda>c::'a. (P c)\<leadsto>(\<Squnion>i::nat. Y i)\<cdot>c)" 
+    by (metis h1 k_chain k_lub_eq)
+qed
+
+lemma if_then_mono4 [simp]: "(\<And>x y. x\<sqsubseteq>y \<Longrightarrow> P x = P y) \<Longrightarrow> monofun (\<lambda>f.  (\<Lambda> c. (P c)\<leadsto>(f\<cdot>c)))"
+  apply(rule monofunI)
+  apply(simp add: below_cfun_def if_then_cont_inner)
+  by (simp add: below_option_def fun_belowD fun_belowI)
+
+lemma if_then_cont4 [simp]: "(\<And>x y. x\<sqsubseteq>y \<Longrightarrow> P x = P y) \<Longrightarrow> cont (\<lambda>f.  (\<Lambda> c. (P c)\<leadsto>(f\<cdot>c)))"
+  using if_then_cont_inner if_then_mono4 
+  oops
 
 (* The domain of the special if-then-else command ist determined by the if-clause and vice versa *)
 lemma domIff2: "b\<in>dom (\<lambda>b2. ((P b2) \<leadsto> h b2)) \<longleftrightarrow> P b"
@@ -502,7 +567,17 @@ lemma some_lub_chain_eq2: fixes Y:: "nat \<Rightarrow> 'a::cpo"
              assumes "chain (\<lambda>i. f (Y i))"
              shows " Some (\<Squnion> i. f (Y i)) = (\<Squnion> i. Some (f (Y i)))"
   using assms(1) some_lub_chain_eq by blast
- 
+
+lemma option_one_cont: "cont (\<lambda>x. [c \<mapsto> f\<cdot>x])"
+  apply(rule contI2, rule monofunI)
+   apply (simp add: below_option_def fun_belowI monofun_cfun_arg)
+  apply (auto simp add: below_fun_def below_option_def)
+  apply (smt below_option_def chain_monofun domIff fun_belowI fun_upd_apply option.exhaust_sel part_dom_lub po_class.chain_def some_below)
+  apply (simp add: contlub_cfun_arg part_map_chain part_the_lub)
+  by (smt below_option_def cont_pref_eq1I domIff fun_belowI fun_upd_apply option.sel option.simps(3) part_dom_lub po_class.chain_def)
+
+  
+  
 
 subsection \<open>Lub\<close>     
     

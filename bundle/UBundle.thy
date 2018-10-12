@@ -571,6 +571,26 @@ lemma ubLen_geI: assumes "\<forall> c \<in> ubDom\<cdot>tb. n \<le> usclLen\<cdo
   shows "n \<le> ubLen tb"
   by (metis (no_types, lifting) assms inf_ub ubLen_def ublen_min_on_channel)
 
+lemma ublen_channel[simp]: "\<And>c. c\<in>ubDom\<cdot>ub \<Longrightarrow> ubLen ub \<le> usclLen\<cdot>(ub . c)"
+proof -
+fix c :: channel
+assume a1: "c \<in> ubDom\<cdot>ub"
+then have f2: "ubDom\<cdot>ub \<noteq> {}"
+by blast
+  have "\<exists>ca. usclLen\<cdot>(ub . c) = usclLen\<cdot>(ub . ca) \<and> ca \<in> ubDom\<cdot>ub"
+using a1 by blast
+  then show "ubLen ub \<le> usclLen\<cdot>(ub . c)"
+using f2 by (simp add: ubLen_def wellorder_Least_lemma(2))
+qed
+
+
+lemma ublen_not_0: assumes "ubLen ub \<noteq> 0" and "c\<in>ubDom\<cdot>ub"
+  shows "usclLen\<cdot>(ub . c) \<noteq> 0"
+  using assms(1) assms(2) ublen_channel by fastforce
+
+
+
+
 (* Missing *)
   
 subsection \<open>ubShift\<close>
@@ -898,6 +918,13 @@ proof -
   show "ubLen ub \<le> usclLen\<cdot>(ub . c)"
     by (metis (no_types, lifting) cindom empty_iff ubLen_def ublen_min_on_channel usclLen_all_channel_bigger)
 qed
+
+subsection \<open>More general lemmas\<close>
+
+lemma ub_id_single: "ubDom\<cdot>ub = {c} \<Longrightarrow> Abs_ubundle [c \<mapsto> ub  .  c] = ub"
+  apply(rule ub_eq)
+  apply simp
+  by (simp add: ubWell_single_channel ubdom_ubrep_eq ubgetch_insert)+
 
 
 (****************************************************)

@@ -22,9 +22,6 @@ section\<open>Definitions\<close>
 subsection\<open>abbreviations\<close>
 
 
-abbreviation ubclUnion_abbr :: " 'm \<Rightarrow> 'm \<Rightarrow> 'm" (infixl "\<uplus>" 100) where 
-"b1 \<uplus> b2 \<equiv> ubclUnion\<cdot>b1\<cdot>b2"
-
 abbreviation ubclRestrict_abbr :: " 'm \<Rightarrow> channel set \<Rightarrow> 'm" ("(_\<bar>_)" [66,65] 65)
 where "b\<bar>cs \<equiv> ubclRestrict cs\<cdot>b"
 
@@ -37,6 +34,9 @@ definition ufLeast :: "channel set \<Rightarrow> channel set \<Rightarrow> ('in,
 
 definition ufRestrict :: "channel set \<Rightarrow> channel set \<Rightarrow> ('in,'out) ufun \<rightarrow> ('in,'out) ufun" where
 "ufRestrict In Out \<equiv> (\<Lambda> f. if (ufDom\<cdot>f = In \<and> ufRan\<cdot>f = Out) then f else (ufLeast In Out))"
+
+definition ufLift :: "channel set \<Rightarrow> ('a::ubcl_comp \<rightarrow> 'b::ubcl_comp) \<Rightarrow> ('a \<Rrightarrow> 'b)" where
+"ufLift cs \<equiv> (\<lambda> f . Abs_ufun (\<Lambda> sb. (ubclDom\<cdot>sb = cs) \<leadsto> (f\<cdot>sb)))"
 
 definition ufHide :: "('in,'out) ufun \<Rightarrow> channel set \<Rightarrow> ('in,'out) ufun" (infixl "\<h>" 100) where
 "ufHide f cs \<equiv> Abs_cufun (\<lambda>x. (ubclDom\<cdot>x = ufDom\<cdot>f ) \<leadsto> ((f\<rightleftharpoons>x) \<bar> (ufRan\<cdot>f - cs)))"
@@ -1617,6 +1617,76 @@ next
   then show ?thesis
     by (simp add: ufRestrict_def ufleast_ufRan)
 qed
+
+
+
+
+subsection \<open>ufLift\<close>
+thm ufLift_def
+
+lemma uflift_ran_h: 
+  fixes b::"'m::ubcl_comp"
+  shows "ubclDom\<cdot>(f\<cdot>b) = ubclDom\<cdot>(f\<cdot>(ubclLeast (ubclDom\<cdot>b)))"
+proof - 
+  have "ubclLeast (ubclDom\<cdot>b) \<sqsubseteq> b"
+    using ubcldom_least by blast
+  hence "f\<cdot>(ubclLeast (ubclDom\<cdot>b)) \<sqsubseteq> f\<cdot>b"
+    by (simp add: cont2monofunE)
+  thus ?thesis
+    using ubcldom_fix by blast
+qed
+
+lemma uflift_ran_h_h: 
+  fixes b::"'m::ubcl_comp"
+  shows  "ubclDom\<cdot>b = ubclDom\<cdot>a  \<Longrightarrow>  ubclDom\<cdot>(f\<cdot>a) =  ubclDom\<cdot>(f\<cdot>b)"
+  by (metis uflift_ran_h)
+
+lemma uflift_well[simp]: "ufWell (Abs_cfun (\<lambda> (ub::'m). (ubclDom\<cdot>ub = In) \<leadsto> (f\<cdot>ub)))"
+  apply (simp add: ufWell_def domIff2)
+  apply rule
+  apply blast
+  by (smt option.distinct(1) option.sel ran2exists uflift_ran_h_h)
+
+lemma uf_cont_abs: "(\<And>f. ufWell (g\<cdot>f)) \<Longrightarrow> cont (\<lambda>f. Abs_ufun (g\<cdot>f))"
+  apply(rule contI2, rule monofunI)
+  apply (simp add: below_ufun_def monofun_cfun_arg)
+  by (smt below_lub below_ufun_def ch2ch_Rep_cfunR contlub_cfun_arg lub_below_iff po_class.chain_def rep_abs_cufun2)
+
+
+lemma uflift_cont_h1:  "cont (\<lambda> g. \<Lambda> ub . ((ubclDom\<cdot>ub = In)\<leadsto>(g\<cdot>ub)))"
+  oops
+(*  apply(rule if_then_cont4)
+  by (simp add: ubcldom_fix) *)  (* See OptionCPO for the proof-begin *)
+
+lemma uflift_cont_h[simp]: "cont  (\<lambda> f. Abs_ufun ((\<Lambda> g. (\<Lambda>(ub::'m). (ubclDom\<cdot>ub = In) \<leadsto> g\<cdot>ub))\<cdot>f))"
+  oops
+(*  apply(rule uf_cont_abs)
+  by (simp add: uflift_cont_h1) *)
+
+lemma uflift_cont[simp]: "cont  (\<lambda> f. Abs_ufun (((\<Lambda>(ub::'m). (ubclDom\<cdot>ub = In) \<leadsto> f\<cdot>ub))))"
+  oops
+
+lemma uflift_insert: "ufLift In f = Abs_cufun (\<lambda> ub. (ubclDom\<cdot>ub = In) \<leadsto> f\<cdot>ub)"
+  by(simp add: ufLift_def)
+
+lemma uflift_dom[simp]: "ufDom\<cdot>(ufLift In f) = In"
+  apply (simp add: uflift_insert)
+  by (simp add: ufun_ufdom_abs)
+
+lemma uflift_ran[simp]: "ufRan\<cdot>(ufLift In f) = ubclDom\<cdot>(f\<cdot>(ubclLeast In))"
+  apply (simp add: uflift_insert ufran_insert)
+  by (smt option.distinct(1) option.inject ran2exists ranI tfl_some ubcldom_least ubcldom_least_cs uflift_ran_h)
+
+lemma uflift_apply[simp]: "ubclDom\<cdot>ub = In \<Longrightarrow> (ufLift In f) \<rightleftharpoons> ub = f\<cdot>ub"
+  by(simp add: uflift_insert)
+
+
+
+
+
+
+
+
 
 
 (*neu*\<down>*)

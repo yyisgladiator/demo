@@ -369,6 +369,16 @@ lemma tsynb_cases_ext
               by (simp add: null_null)
           qed
       qed
-  qed
+    qed
+
+(* ----------------------------------------------------------------------- *)
+  subsection {* tsynbDom *}
+(* ----------------------------------------------------------------------- *)
+
+lemma tsynbundle_ctype: fixes ub::"'m::message tsyn SB"
+                        shows "c\<in>ubDom\<cdot>ub \<Longrightarrow> tsynDom\<cdot>(ub . c) \<subseteq> (ctype c)"
+  apply(simp add: tsyndom_insert)
+  using usclOkay_stream_def ctype_tsyn_def
+  by (smt ctype_tsyn_iff mem_Collect_eq subsetCE subsetI ubdom_channel_usokay ubgetch_insert)
 
 end

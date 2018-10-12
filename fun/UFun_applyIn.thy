@@ -359,8 +359,12 @@ lemma ufapplyout_ran [simp]: assumes "\<And>b. ubclDom\<cdot>(k\<cdot>b) = ubclD
 proof -
   have f1: "ufApplyOut k\<cdot>f =  Abs_cufun (\<lambda>x. (ubclDom\<cdot>x = ufDom\<cdot>f) \<leadsto> k\<cdot>(f \<rightleftharpoons>x))"
     by (simp add: assms ufapplyout_insert)
+  obtain x::'c  where x_def: "ubclDom\<cdot>x = ufDom\<cdot>f"
+    using ubcldom_ex by blast
+  have f2: "(Abs_cufun ((\<lambda> x. (ubclDom\<cdot>x = ufDom\<cdot>f) \<leadsto> k\<cdot>(f \<rightleftharpoons>x))))\<rightleftharpoons>x = k\<cdot>(f \<rightleftharpoons>x)"
+    by (simp add: assms ufran_2_ubcldom2 x_def)
   have "ufRan\<cdot>(Abs_cufun (\<lambda>x. (ubclDom\<cdot>x = ufDom\<cdot>f) \<leadsto> k\<cdot>(f \<rightleftharpoons>x))) = ufRan\<cdot>f"
-    using assms ufran_2_ubcldom2 sorry
+    by (metis (no_types, lifting) assms f1 f2 ufapplyout_dom ufran_2_ubcldom2 x_def)
   then show ?thesis
     by (simp add: f1)
 qed
@@ -747,7 +751,7 @@ lemma ufapplyin_dom: assumes "\<And>b. ubclDom\<cdot>(k\<cdot>b) = ubclDom\<cdot
 lemma ufapplyin_ran2: assumes "\<And>b. ubclDom\<cdot>(k\<cdot>b) = ubclDom\<cdot>b"
   shows "ufRan\<cdot>(ufApplyIn k\<cdot>f) = ufRan\<cdot>f"
 proof - 
- have f20: "\<And>g. cont (\<lambda> x. Rep_cufun g (k\<cdot>x))"
+  have f20: "\<And>g. cont (\<lambda> x. Rep_cufun g (k\<cdot>x))"
     by simp
   have f21: "\<And>g. ufWell (\<Lambda> x. Rep_cufun g (k\<cdot>x))"
     by (simp add: assms ufapplyin_well_h)
