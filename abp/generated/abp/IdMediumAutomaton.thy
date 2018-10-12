@@ -3,7 +3,7 @@
  * This file was generated from IdMedium.maa and will be overridden when changed. To change
  * permanently, consider changing the model itself.
  *
- * Generated on Oct 12, 2018 1:15:32 PM by isartransformer 2.0.0
+ * Generated on Oct 12, 2018 3:13:56 PM by isartransformer 2.0.0
  *)
 theory IdMediumAutomaton
   imports MediumDatatype IdMediumStates automat.ndAutomaton
@@ -83,7 +83,7 @@ lemma idMediumTransition_1_0:
 section \<open>Step-wise lemmata for the SPS\<close>
 
 (* Convert the SPS to step notation *)
-lemma idMediumSps2Step: "idMediumSPS = {spsConcOut (mediumOut_o null) (idMediumStep (IdMediumState Single ))}"
+lemma idMediumSps2Step: "idMediumSPS = spsConcOut (mediumOut_o null) (idMediumStep (IdMediumState Single ))"
   sorry
 
 (* Line 14:  Single / {o=i}; *)
