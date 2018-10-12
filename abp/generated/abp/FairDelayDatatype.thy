@@ -3,7 +3,7 @@
  * This file was generated from FairDelay.maa and will be overridden when changed. To change
  * permanently, consider changing the model itself.
  *
- * isartransformer 1.0.0
+ * Generated on Oct 12, 2018 1:15:32 PM by isartransformer 2.0.0
  *)
 theory FairDelayDatatype
   imports bundle.SBElem
@@ -18,7 +18,7 @@ section \<open>Datatype\<close>
 
 subsection \<open>Definition\<close>
 
-datatype ('e::countable) fairDelayMessage = DoNotUse_b696c7_FairDelayE "'e"
+datatype ('e::countable) fairDelayMessage = DoNotUse_51f7be_FairDelayE "'e"
 
 instance fairDelayMessage :: (countable) countable
   apply(intro_classes)
@@ -28,8 +28,8 @@ instantiation fairDelayMessage :: (countable) message
 begin
   fun ctype_fairDelayMessage :: "channel \<Rightarrow> ('e::countable) fairDelayMessage set" where
   "ctype_fairDelayMessage c = (
-    if c = \<C> ''DoNotUse_b696c7_i'' then range DoNotUse_b696c7_FairDelayE else
-    if c = \<C> ''DoNotUse_b696c7_o'' then range DoNotUse_b696c7_FairDelayE else
+    if c = \<C> ''DoNotUse_51f7be_i'' then range DoNotUse_51f7be_FairDelayE else
+    if c = \<C> ''DoNotUse_51f7be_o'' then range DoNotUse_51f7be_FairDelayE else
     undefined)"
   instance
     by(intro_classes)
@@ -39,10 +39,10 @@ end
 subsection \<open>Domain and Range\<close>
 
 definition fairDelayDom :: "channel set" where
-"fairDelayDom = {\<C> ''DoNotUse_b696c7_i''}"
+"fairDelayDom = {\<C> ''DoNotUse_51f7be_i''}"
 
 definition fairDelayRan :: "channel set" where
-"fairDelayRan = {\<C> ''DoNotUse_b696c7_o''}"
+"fairDelayRan = {\<C> ''DoNotUse_51f7be_o''}"
 
 
 section \<open>Setter\<close>
@@ -51,13 +51,13 @@ subsection \<open>type to sbElem\<close>
 
 (* Do not use this, use fairDelayElemIn_i instead *)
 lift_definition fairDelayElem_raw_i :: "'e \<Rightarrow> ('e::countable) fairDelayMessage tsyn sbElem" is
-"\<lambda>x. [\<C> ''DoNotUse_b696c7_i'' \<mapsto> Msg (DoNotUse_b696c7_FairDelayE x)]"
+"\<lambda>x. [\<C> ''DoNotUse_51f7be_i'' \<mapsto> Msg (DoNotUse_51f7be_FairDelayE x)]"
   unfolding sbElemWell_def usclOkay_stream_def ctype_tsyn_def
   by simp
 
 (* Do not use this, use fairDelayElemOut_o instead *)
 lift_definition fairDelayElem_raw_o :: "'e \<Rightarrow> ('e::countable) fairDelayMessage tsyn sbElem" is
-"\<lambda>x. [\<C> ''DoNotUse_b696c7_o'' \<mapsto> Msg (DoNotUse_b696c7_FairDelayE x)]"
+"\<lambda>x. [\<C> ''DoNotUse_51f7be_o'' \<mapsto> Msg (DoNotUse_51f7be_FairDelayE x)]"
   unfolding sbElemWell_def usclOkay_stream_def ctype_tsyn_def
   by simp
 
@@ -69,12 +69,12 @@ subsubsection \<open>Intern\<close>
 (* Do not use this, use fairDelayElemIn_i instead *)
 fun fairDelayElem_i :: "'e tsyn \<Rightarrow> ('e::countable) fairDelayMessage tsyn sbElem" where
 "fairDelayElem_i (Msg port_i) = fairDelayElem_raw_i port_i" |
-"fairDelayElem_i null = sbeNull {\<C> ''DoNotUse_b696c7_i''}"
+"fairDelayElem_i null = sbeNull {\<C> ''DoNotUse_51f7be_i''}"
 
 (* Do not use this, use fairDelayElemOut_o instead *)
 fun fairDelayElem_o :: "'e tsyn \<Rightarrow> ('e::countable) fairDelayMessage tsyn sbElem" where
 "fairDelayElem_o (Msg port_o) = fairDelayElem_raw_o port_o" |
-"fairDelayElem_o null = sbeNull {\<C> ''DoNotUse_b696c7_o''}"
+"fairDelayElem_o null = sbeNull {\<C> ''DoNotUse_51f7be_o''}"
 
 declare fairDelayElem_i.simps[simp del]
 
@@ -115,14 +115,14 @@ subsubsection \<open>Intern\<close>
 (* Do not use this, use fairDelayIn_list_i instead *)
 fun fairDelay_list_i :: "('e tsyn) list \<Rightarrow> ('e::countable) fairDelayMessage tsyn SB" where
 "fairDelay_list_i (x#xs) = ubConcEq (fairDelay_i x)\<cdot>(fairDelay_list_i xs)" |
-"fairDelay_list_i []     = ubLeast {\<C> ''DoNotUse_b696c7_i''}"
+"fairDelay_list_i []     = ubLeast {\<C> ''DoNotUse_51f7be_i''}"
 
 declare fairDelay_list_i.simps[simp del]
 
 (* Do not use this, use fairDelayOut_list_o instead *)
 fun fairDelay_list_o :: "('e tsyn) list \<Rightarrow> ('e::countable) fairDelayMessage tsyn SB" where
 "fairDelay_list_o (x#xs) = ubConcEq (fairDelay_o x)\<cdot>(fairDelay_list_o xs)" |
-"fairDelay_list_o []     = ubLeast {\<C> ''DoNotUse_b696c7_o''}"
+"fairDelay_list_o []     = ubLeast {\<C> ''DoNotUse_51f7be_o''}"
 
 declare fairDelay_list_o.simps[simp del]
 
@@ -144,31 +144,31 @@ subsection \<open>stream to SB\<close>
 
 subsubsection \<open>Intern\<close>
 
-lift_definition DoNotUse_b696c7_fairDelay_stream_i_h :: "'e tsyn stream \<Rightarrow> ('e::countable) fairDelayMessage tsyn SB" is
-"\<lambda> s. [(\<C> ''DoNotUse_b696c7_i'') \<mapsto> (tsynMap (DoNotUse_b696c7_FairDelayE)\<cdot>s)]"
+lift_definition DoNotUse_51f7be_fairDelay_stream_i_h :: "'e tsyn stream \<Rightarrow> ('e::countable) fairDelayMessage tsyn SB" is
+"\<lambda> s. [(\<C> ''DoNotUse_51f7be_i'') \<mapsto> (tsynMap (DoNotUse_51f7be_FairDelayE)\<cdot>s)]"
   unfolding ubWell_def usclOkay_stream_def ctype_tsyn_def
   by auto
 
 (* Do not use this, use fairDelayIn_stream_i instead *)
 lift_definition fairDelay_stream_i :: "('e) tsyn stream \<rightarrow> ('e::countable) fairDelayMessage tsyn SB" is
-"DoNotUse_b696c7_fairDelay_stream_i_h"
-  apply(auto simp add: cfun_def DoNotUse_b696c7_fairDelay_stream_i_h_def map_fun_def comp_def)
+"DoNotUse_51f7be_fairDelay_stream_i_h"
+  apply(auto simp add: cfun_def DoNotUse_51f7be_fairDelay_stream_i_h_def map_fun_def comp_def)
   apply(rule cont_Abs_UB)
   apply(simp add: option_one_cont)
-  by (metis DoNotUse_b696c7_fairDelay_stream_i_h.rep_eq ubrep_well)
+  by (metis DoNotUse_51f7be_fairDelay_stream_i_h.rep_eq ubrep_well)
 
-lift_definition DoNotUse_b696c7_fairDelay_stream_o_h :: "'e tsyn stream \<Rightarrow> ('e::countable) fairDelayMessage tsyn SB" is
-"\<lambda> s. [(\<C> ''DoNotUse_b696c7_o'') \<mapsto> (tsynMap (DoNotUse_b696c7_FairDelayE)\<cdot>s)]"
+lift_definition DoNotUse_51f7be_fairDelay_stream_o_h :: "'e tsyn stream \<Rightarrow> ('e::countable) fairDelayMessage tsyn SB" is
+"\<lambda> s. [(\<C> ''DoNotUse_51f7be_o'') \<mapsto> (tsynMap (DoNotUse_51f7be_FairDelayE)\<cdot>s)]"
   unfolding ubWell_def usclOkay_stream_def ctype_tsyn_def
   by auto
 
 (* Do not use this, use fairDelayOut_stream_o instead *)
 lift_definition fairDelay_stream_o :: "('e) tsyn stream \<rightarrow> ('e::countable) fairDelayMessage tsyn SB" is
-"DoNotUse_b696c7_fairDelay_stream_o_h"
-  apply(auto simp add: cfun_def DoNotUse_b696c7_fairDelay_stream_o_h_def map_fun_def comp_def)
+"DoNotUse_51f7be_fairDelay_stream_o_h"
+  apply(auto simp add: cfun_def DoNotUse_51f7be_fairDelay_stream_o_h_def map_fun_def comp_def)
   apply(rule cont_Abs_UB)
   apply(simp add: option_one_cont)
-  by (metis DoNotUse_b696c7_fairDelay_stream_o_h.rep_eq ubrep_well)
+  by (metis DoNotUse_51f7be_fairDelay_stream_o_h.rep_eq ubrep_well)
 
 
 subsubsection \<open>In/Out\<close>
@@ -186,20 +186,20 @@ section \<open>Getter\<close>
 subsection \<open>sbElem to tsyn\<close>
 
 definition fairDelayElem_get_i :: "('e::countable) fairDelayMessage tsyn sbElem \<Rightarrow> ('e) tsyn" where
-"fairDelayElem_get_i sbe = tsynApplyElem (inv DoNotUse_b696c7_FairDelayE) ((Rep_sbElem sbe) \<rightharpoonup> (\<C> ''DoNotUse_b696c7_i''))"
+"fairDelayElem_get_i sbe = tsynApplyElem (inv DoNotUse_51f7be_FairDelayE) ((Rep_sbElem sbe) \<rightharpoonup> (\<C> ''DoNotUse_51f7be_i''))"
 
 definition fairDelayElem_get_o :: "('e::countable) fairDelayMessage tsyn sbElem \<Rightarrow> ('e) tsyn" where
-"fairDelayElem_get_o sbe = tsynApplyElem (inv DoNotUse_b696c7_FairDelayE) ((Rep_sbElem sbe) \<rightharpoonup> (\<C> ''DoNotUse_b696c7_o''))"
+"fairDelayElem_get_o sbe = tsynApplyElem (inv DoNotUse_51f7be_FairDelayE) ((Rep_sbElem sbe) \<rightharpoonup> (\<C> ''DoNotUse_51f7be_o''))"
 
 
 subsection \<open>SB to stream\<close>
 
 lift_definition fairDelay_get_stream_i :: "('e::countable) fairDelayMessage tsyn SB \<rightarrow> 'e tsyn stream" is
-"\<lambda>sb. tsynMap (inv DoNotUse_b696c7_FairDelayE)\<cdot>(sb . (\<C> ''DoNotUse_b696c7_i''))"
+"\<lambda>sb. tsynMap (inv DoNotUse_51f7be_FairDelayE)\<cdot>(sb . (\<C> ''DoNotUse_51f7be_i''))"
   by(simp add: cfun_def)
 
 lift_definition fairDelay_get_stream_o :: "('e::countable) fairDelayMessage tsyn SB \<rightarrow> 'e tsyn stream" is
-"\<lambda>sb. tsynMap (inv DoNotUse_b696c7_FairDelayE)\<cdot>(sb . (\<C> ''DoNotUse_b696c7_o''))"
+"\<lambda>sb. tsynMap (inv DoNotUse_51f7be_FairDelayE)\<cdot>(sb . (\<C> ''DoNotUse_51f7be_o''))"
   by(simp add: cfun_def)
 
 
@@ -209,23 +209,23 @@ subsection \<open>tsyn to sbElem/SB\<close>
 
 subsubsection \<open>Intern\<close>
 
-lemma fairdelayelem_i_dom[simp]: "sbeDom (fairDelayElem_i x) = {\<C> ''DoNotUse_b696c7_i''}"
+lemma fairdelayelem_i_dom[simp]: "sbeDom (fairDelayElem_i x) = {\<C> ''DoNotUse_51f7be_i''}"
   apply(cases x)
   apply(simp add: fairDelayElem_i.simps sbeDom_def fairDelayElem_raw_i.rep_eq)
   by(simp add: fairDelayElem_i.simps)
 
-lemma fairdelayelem_o_dom[simp]: "sbeDom (fairDelayElem_o x) = {\<C> ''DoNotUse_b696c7_o''}"
+lemma fairdelayelem_o_dom[simp]: "sbeDom (fairDelayElem_o x) = {\<C> ''DoNotUse_51f7be_o''}"
   apply(cases x)
   apply(simp add: fairDelayElem_o.simps sbeDom_def fairDelayElem_raw_o.rep_eq)
   by(simp add: fairDelayElem_o.simps)
 
-lemma fairdelay_i_dom[simp]: "ubDom\<cdot>(fairDelay_i x) = {\<C> ''DoNotUse_b696c7_i''}"
+lemma fairdelay_i_dom[simp]: "ubDom\<cdot>(fairDelay_i x) = {\<C> ''DoNotUse_51f7be_i''}"
   by(simp add: fairDelay_i_def)
 
 lemma fairdelay_i_len[simp]: "ubLen (fairDelay_i x) = 1"
   by(simp add: fairDelay_i_def)
 
-lemma fairdelay_o_dom[simp]: "ubDom\<cdot>(fairDelay_o x) = {\<C> ''DoNotUse_b696c7_o''}"
+lemma fairdelay_o_dom[simp]: "ubDom\<cdot>(fairDelay_o x) = {\<C> ''DoNotUse_51f7be_o''}"
   by(simp add: fairDelay_o_def)
 
 lemma fairdelay_o_len[simp]: "ubLen (fairDelay_o x) = 1"
@@ -257,40 +257,40 @@ subsection \<open>stream to SB\<close>
 
 subsubsection \<open>Intern\<close>
 
-lemma fairdelay_stream_i_dom[simp]: "ubDom\<cdot>(fairDelay_stream_i\<cdot>x) = {\<C> ''DoNotUse_b696c7_i''}"
-  by(simp add: fairDelay_stream_i.rep_eq ubdom_insert DoNotUse_b696c7_fairDelay_stream_i_h.rep_eq)
+lemma fairdelay_stream_i_dom[simp]: "ubDom\<cdot>(fairDelay_stream_i\<cdot>x) = {\<C> ''DoNotUse_51f7be_i''}"
+  by(simp add: fairDelay_stream_i.rep_eq ubdom_insert DoNotUse_51f7be_fairDelay_stream_i_h.rep_eq)
 
 lemma fairdelay_stream_i_len[simp]: "ubLen (fairDelay_stream_i\<cdot>x) = #x"
   apply(subst uslen_ubLen_ch3)
   apply simp
   apply(simp add: fairDelay_stream_i.rep_eq)
-  apply(simp add: ubGetCh_def DoNotUse_b696c7_fairDelay_stream_i_h.rep_eq)
+  apply(simp add: ubGetCh_def DoNotUse_51f7be_fairDelay_stream_i_h.rep_eq)
   by (simp add: tsynmap_slen usclLen_stream_def)
 
 lemma fairdelay_stream_i_id[simp]:
-  assumes "ubDom\<cdot>ub = {\<C> ''DoNotUse_b696c7_i''} "
+  assumes "ubDom\<cdot>ub = {\<C> ''DoNotUse_51f7be_i''} "
     shows "fairDelay_stream_i\<cdot>(fairDelay_get_stream_i\<cdot>ub) = ub"
   apply(simp add: fairDelay_stream_i.rep_eq fairDelay_get_stream_i.rep_eq)
-  apply(simp add: DoNotUse_b696c7_fairDelay_stream_i_h_def)
+  apply(simp add: DoNotUse_51f7be_fairDelay_stream_i_h_def)
   apply(subst tsynmap_inv_id)
   using assms tsynbundle_ctype apply fastforce
   using assms ub_id_single by blast
 
-lemma fairdelay_stream_o_dom[simp]: "ubDom\<cdot>(fairDelay_stream_o\<cdot>x) = {\<C> ''DoNotUse_b696c7_o''}"
-  by(simp add: fairDelay_stream_o.rep_eq ubdom_insert DoNotUse_b696c7_fairDelay_stream_o_h.rep_eq)
+lemma fairdelay_stream_o_dom[simp]: "ubDom\<cdot>(fairDelay_stream_o\<cdot>x) = {\<C> ''DoNotUse_51f7be_o''}"
+  by(simp add: fairDelay_stream_o.rep_eq ubdom_insert DoNotUse_51f7be_fairDelay_stream_o_h.rep_eq)
 
 lemma fairdelay_stream_o_len[simp]: "ubLen (fairDelay_stream_o\<cdot>x) = #x"
   apply(subst uslen_ubLen_ch3)
   apply simp
   apply(simp add: fairDelay_stream_o.rep_eq)
-  apply(simp add: ubGetCh_def DoNotUse_b696c7_fairDelay_stream_o_h.rep_eq)
+  apply(simp add: ubGetCh_def DoNotUse_51f7be_fairDelay_stream_o_h.rep_eq)
   by (simp add: tsynmap_slen usclLen_stream_def)
 
 lemma fairdelay_stream_o_id[simp]:
-  assumes "ubDom\<cdot>ub = {\<C> ''DoNotUse_b696c7_o''} "
+  assumes "ubDom\<cdot>ub = {\<C> ''DoNotUse_51f7be_o''} "
     shows "fairDelay_stream_o\<cdot>(fairDelay_get_stream_o\<cdot>ub) = ub"
   apply(simp add: fairDelay_stream_o.rep_eq fairDelay_get_stream_o.rep_eq)
-  apply(simp add: DoNotUse_b696c7_fairDelay_stream_o_h_def)
+  apply(simp add: DoNotUse_51f7be_fairDelay_stream_o_h_def)
   apply(subst tsynmap_inv_id)
   using assms tsynbundle_ctype apply fastforce
   using assms ub_id_single by blast
@@ -347,19 +347,19 @@ subsubsection \<open>Intern\<close>
 
 lemma fairdelay_get_stream_i_id[simp]: "fairDelay_get_stream_i\<cdot>(fairDelay_stream_i\<cdot>x) = x"
   apply(simp add: fairDelay_get_stream_i.rep_eq fairDelay_stream_i.rep_eq)
-  apply(simp add: ubGetCh_def DoNotUse_b696c7_fairDelay_stream_i_h.rep_eq)
+  apply(simp add: ubGetCh_def DoNotUse_51f7be_fairDelay_stream_i_h.rep_eq)
   by (simp add: inj_def)
 
 lemma fairdelay_get_stream_i_eq:
-  assumes "ubDom\<cdot>ub1 = {\<C> ''DoNotUse_b696c7_i''}"
-      and "ubDom\<cdot>ub2 = {\<C> ''DoNotUse_b696c7_i''}"
+  assumes "ubDom\<cdot>ub1 = {\<C> ''DoNotUse_51f7be_i''}"
+      and "ubDom\<cdot>ub2 = {\<C> ''DoNotUse_51f7be_i''}"
       and "fairDelay_get_stream_i\<cdot>ub1 = fairDelay_get_stream_i\<cdot>ub2"
     shows "ub1 = ub2"
   using assms(1) assms(2) assms(3) fairdelay_stream_i_id by metis
 
 lemma fairdelay_get_stream_i_conc[simp]:
-  assumes "\<C> ''DoNotUse_b696c7_i'' \<in> ubDom\<cdot>ub1"
-      and "\<C> ''DoNotUse_b696c7_i'' \<in> ubDom\<cdot>ub2"
+  assumes "\<C> ''DoNotUse_51f7be_i'' \<in> ubDom\<cdot>ub1"
+      and "\<C> ''DoNotUse_51f7be_i'' \<in> ubDom\<cdot>ub2"
     shows "fairDelay_get_stream_i\<cdot>(ubConc ub1\<cdot>ub2) = (fairDelay_get_stream_i\<cdot>ub1) \<bullet> (fairDelay_get_stream_i\<cdot>ub2)"
   apply(simp add: fairDelay_get_stream_i.rep_eq)
   apply (subst ubConc_usclConc_eq)
@@ -369,19 +369,19 @@ lemma fairdelay_get_stream_i_conc[simp]:
 
 lemma fairdelay_get_stream_o_id[simp]: "fairDelay_get_stream_o\<cdot>(fairDelay_stream_o\<cdot>x) = x"
   apply(simp add: fairDelay_get_stream_o.rep_eq fairDelay_stream_o.rep_eq)
-  apply(simp add: ubGetCh_def DoNotUse_b696c7_fairDelay_stream_o_h.rep_eq)
+  apply(simp add: ubGetCh_def DoNotUse_51f7be_fairDelay_stream_o_h.rep_eq)
   by (simp add: inj_def)
 
 lemma fairdelay_get_stream_o_eq:
-  assumes "ubDom\<cdot>ub1 = {\<C> ''DoNotUse_b696c7_o''}"
-      and "ubDom\<cdot>ub2 = {\<C> ''DoNotUse_b696c7_o''}"
+  assumes "ubDom\<cdot>ub1 = {\<C> ''DoNotUse_51f7be_o''}"
+      and "ubDom\<cdot>ub2 = {\<C> ''DoNotUse_51f7be_o''}"
       and "fairDelay_get_stream_o\<cdot>ub1 = fairDelay_get_stream_o\<cdot>ub2"
     shows "ub1 = ub2"
   using assms(1) assms(2) assms(3) fairdelay_stream_o_id by metis
 
 lemma fairdelay_get_stream_o_conc[simp]:
-  assumes "\<C> ''DoNotUse_b696c7_o'' \<in> ubDom\<cdot>ub1"
-      and "\<C> ''DoNotUse_b696c7_o'' \<in> ubDom\<cdot>ub2"
+  assumes "\<C> ''DoNotUse_51f7be_o'' \<in> ubDom\<cdot>ub1"
+      and "\<C> ''DoNotUse_51f7be_o'' \<in> ubDom\<cdot>ub2"
     shows "fairDelay_get_stream_o\<cdot>(ubConc ub1\<cdot>ub2) = (fairDelay_get_stream_o\<cdot>ub1) \<bullet> (fairDelay_get_stream_o\<cdot>ub2)"
   apply(simp add: fairDelay_get_stream_o.rep_eq)
   apply (subst ubConc_usclConc_eq)

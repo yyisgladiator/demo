@@ -3,12 +3,10 @@
  * This file was generated from NoMediumABP.maa and will be overridden when changed. To change
  * permanently, consider changing the model itself.
  *
- * isartransformer 1.0.0
+ * Generated on Oct 12, 2018 1:15:33 PM by isartransformer 2.0.0
  *)
 theory NoMediumABPComponent
-  imports NoMediumABPDatatype
-          SenderAutomaton ReceiverAutomaton
-          spec.SPS spec.USpec_UFunComp
+  imports NoMediumABPDatatype SenderAutomaton ReceiverAutomaton spec.SPS spec.USpec_UFunComp
 
 begin
 

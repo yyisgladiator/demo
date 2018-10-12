@@ -65,10 +65,14 @@ session "automatCaseStudy" (mustWork) in "automat/CaseStudy" = "automat" +
 	MediumSPF
 	MediumSPS
 
-session "abpGenerat" (mustWork) in abp = "automat" + 
+session "abpGenerat" (mustWork) in "abp/generated/abp" = "automat" + 
   options [quick_and_dirty = true]
   theories
     ReceiverAutomaton
     SenderAutomaton
     MediumAutomaton
+    FairMediumAutomaton
+    Fair99MediumAutomaton
+    IdMediumAutomaton
     ABPComponent
+    NoMediumABPComponent

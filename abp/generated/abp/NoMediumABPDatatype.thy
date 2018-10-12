@@ -3,7 +3,7 @@
  * This file was generated from NoMediumABP.maa and will be overridden when changed. To change
  * permanently, consider changing the model itself.
  *
- * isartransformer 1.0.0
+ * Generated on Oct 12, 2018 1:15:32 PM by isartransformer 2.0.0
  *)
 theory NoMediumABPDatatype
   imports bundle.SBElem
@@ -18,7 +18,7 @@ section \<open>Datatype\<close>
 
 subsection \<open>Definition\<close>
 
-datatype ('e::countable) noMediumABPMessage = DoNotUse_7929da_NoMediumABPE "'e" | DoNotUse_7929da_NoMediumABPBool "bool" | DoNotUse_7929da_NoMediumABPPair_E_Bool "('e\<times>bool)"
+datatype ('e::countable) noMediumABPMessage = DoNotUse_c8d703_NoMediumABPE "'e" | DoNotUse_c8d703_NoMediumABPBool "bool" | DoNotUse_c8d703_NoMediumABPPair_E_Bool "('e\<times>bool)"
 
 instance noMediumABPMessage :: (countable) countable
   apply(intro_classes)
@@ -28,10 +28,10 @@ instantiation noMediumABPMessage :: (countable) message
 begin
   fun ctype_noMediumABPMessage :: "channel \<Rightarrow> ('e::countable) noMediumABPMessage set" where
   "ctype_noMediumABPMessage c = (
-    if c = \<C> ''DoNotUse_7929da_receiver_o__o'' then range DoNotUse_7929da_NoMediumABPE else
-    if c = \<C> ''DoNotUse_7929da_i__sender_i'' then range DoNotUse_7929da_NoMediumABPE else
-    if c = \<C> ''DoNotUse_7929da_sender_ds__receiver_dr'' then range DoNotUse_7929da_NoMediumABPPair_E_Bool else
-    if c = \<C> ''DoNotUse_7929da_receiver_ar__sender_as'' then range DoNotUse_7929da_NoMediumABPBool else
+    if c = \<C> ''DoNotUse_c8d703_receiver_o__o'' then range DoNotUse_c8d703_NoMediumABPE else
+    if c = \<C> ''DoNotUse_c8d703_i__sender_i'' then range DoNotUse_c8d703_NoMediumABPE else
+    if c = \<C> ''DoNotUse_c8d703_sender_ds__receiver_dr'' then range DoNotUse_c8d703_NoMediumABPPair_E_Bool else
+    if c = \<C> ''DoNotUse_c8d703_receiver_ar__sender_as'' then range DoNotUse_c8d703_NoMediumABPBool else
     undefined)"
   instance
     by(intro_classes)
@@ -41,24 +41,24 @@ end
 subsection \<open>Domain and Range\<close>
 
 definition noMediumABPDom :: "channel set" where
-"noMediumABPDom = {\<C> ''DoNotUse_7929da_i__sender_i''}"
+"noMediumABPDom = {\<C> ''DoNotUse_c8d703_i__sender_i''}"
 
 definition noMediumABPRan :: "channel set" where
-"noMediumABPRan = {\<C> ''DoNotUse_7929da_receiver_o__o''}"
+"noMediumABPRan = {\<C> ''DoNotUse_c8d703_receiver_o__o''}"
 
 (* sender *)
 definition noMediumABPSenderDom :: "channel set" where
-"noMediumABPSenderDom = {\<C> ''DoNotUse_7929da_receiver_ar__sender_as'', \<C> ''DoNotUse_7929da_i__sender_i''}"
+"noMediumABPSenderDom = {\<C> ''DoNotUse_c8d703_receiver_ar__sender_as'', \<C> ''DoNotUse_c8d703_i__sender_i''}"
 
 definition noMediumABPSenderRan :: "channel set" where
-"noMediumABPSenderRan = {\<C> ''DoNotUse_7929da_sender_ds__receiver_dr''}"
+"noMediumABPSenderRan = {\<C> ''DoNotUse_c8d703_sender_ds__receiver_dr''}"
 
 (* receiver *)
 definition noMediumABPReceiverDom :: "channel set" where
-"noMediumABPReceiverDom = {\<C> ''DoNotUse_7929da_sender_ds__receiver_dr''}"
+"noMediumABPReceiverDom = {\<C> ''DoNotUse_c8d703_sender_ds__receiver_dr''}"
 
 definition noMediumABPReceiverRan :: "channel set" where
-"noMediumABPReceiverRan = {\<C> ''DoNotUse_7929da_receiver_ar__sender_as'', \<C> ''DoNotUse_7929da_receiver_o__o''}"
+"noMediumABPReceiverRan = {\<C> ''DoNotUse_c8d703_receiver_ar__sender_as'', \<C> ''DoNotUse_c8d703_receiver_o__o''}"
 
 
 section \<open>Setter\<close>
@@ -67,25 +67,25 @@ subsection \<open>type to sbElem\<close>
 
 (* Do not use this, use noMediumABPReceiverElemOut_ar_o or noMediumABPElemOut_o instead *)
 lift_definition noMediumABPElem_raw_receiver_o__o :: "'e \<Rightarrow> ('e::countable) noMediumABPMessage tsyn sbElem" is
-"\<lambda>x. [\<C> ''DoNotUse_7929da_receiver_o__o'' \<mapsto> Msg (DoNotUse_7929da_NoMediumABPE x)]"
+"\<lambda>x. [\<C> ''DoNotUse_c8d703_receiver_o__o'' \<mapsto> Msg (DoNotUse_c8d703_NoMediumABPE x)]"
   unfolding sbElemWell_def usclOkay_stream_def ctype_tsyn_def
   by simp
 
 (* Do not use this, use noMediumABPElemIn_i or noMediumABPSenderElemIn_as_i instead *)
 lift_definition noMediumABPElem_raw_i__sender_i :: "'e \<Rightarrow> ('e::countable) noMediumABPMessage tsyn sbElem" is
-"\<lambda>x. [\<C> ''DoNotUse_7929da_i__sender_i'' \<mapsto> Msg (DoNotUse_7929da_NoMediumABPE x)]"
+"\<lambda>x. [\<C> ''DoNotUse_c8d703_i__sender_i'' \<mapsto> Msg (DoNotUse_c8d703_NoMediumABPE x)]"
   unfolding sbElemWell_def usclOkay_stream_def ctype_tsyn_def
   by simp
 
 (* Do not use this, use noMediumABPSenderElemOut_ds or noMediumABPReceiverElemIn_dr instead *)
 lift_definition noMediumABPElem_raw_sender_ds__receiver_dr :: "('e\<times>bool) \<Rightarrow> ('e::countable) noMediumABPMessage tsyn sbElem" is
-"\<lambda>x. [\<C> ''DoNotUse_7929da_sender_ds__receiver_dr'' \<mapsto> Msg (DoNotUse_7929da_NoMediumABPPair_E_Bool x)]"
+"\<lambda>x. [\<C> ''DoNotUse_c8d703_sender_ds__receiver_dr'' \<mapsto> Msg (DoNotUse_c8d703_NoMediumABPPair_E_Bool x)]"
   unfolding sbElemWell_def usclOkay_stream_def ctype_tsyn_def
   by simp
 
 (* Do not use this, use noMediumABPReceiverElemOut_ar_o or noMediumABPSenderElemIn_as_i instead *)
 lift_definition noMediumABPElem_raw_receiver_ar__sender_as :: "bool \<Rightarrow> ('e::countable) noMediumABPMessage tsyn sbElem" is
-"\<lambda>x. [\<C> ''DoNotUse_7929da_receiver_ar__sender_as'' \<mapsto> Msg (DoNotUse_7929da_NoMediumABPBool x)]"
+"\<lambda>x. [\<C> ''DoNotUse_c8d703_receiver_ar__sender_as'' \<mapsto> Msg (DoNotUse_c8d703_NoMediumABPBool x)]"
   unfolding sbElemWell_def usclOkay_stream_def ctype_tsyn_def
   by simp
 
@@ -97,22 +97,22 @@ subsubsection \<open>Intern\<close>
 (* Do not use this, use noMediumABPReceiverElemOut_ar_o or noMediumABPElemOut_o instead *)
 fun noMediumABPElem_receiver_o__o :: "'e tsyn \<Rightarrow> ('e::countable) noMediumABPMessage tsyn sbElem" where
 "noMediumABPElem_receiver_o__o (Msg receiver_port_o__port_o) = noMediumABPElem_raw_receiver_o__o receiver_port_o__port_o" |
-"noMediumABPElem_receiver_o__o null = sbeNull {\<C> ''DoNotUse_7929da_receiver_o__o''}"
+"noMediumABPElem_receiver_o__o null = sbeNull {\<C> ''DoNotUse_c8d703_receiver_o__o''}"
 
 (* Do not use this, use noMediumABPElemIn_i or noMediumABPSenderElemIn_as_i instead *)
 fun noMediumABPElem_i__sender_i :: "'e tsyn \<Rightarrow> ('e::countable) noMediumABPMessage tsyn sbElem" where
 "noMediumABPElem_i__sender_i (Msg port_i__sender_port_i) = noMediumABPElem_raw_i__sender_i port_i__sender_port_i" |
-"noMediumABPElem_i__sender_i null = sbeNull {\<C> ''DoNotUse_7929da_i__sender_i''}"
+"noMediumABPElem_i__sender_i null = sbeNull {\<C> ''DoNotUse_c8d703_i__sender_i''}"
 
 (* Do not use this, use noMediumABPSenderElemOut_ds or noMediumABPReceiverElemIn_dr instead *)
 fun noMediumABPElem_sender_ds__receiver_dr :: "('e\<times>bool) tsyn \<Rightarrow> ('e::countable) noMediumABPMessage tsyn sbElem" where
 "noMediumABPElem_sender_ds__receiver_dr (Msg sender_port_ds__receiver_port_dr) = noMediumABPElem_raw_sender_ds__receiver_dr sender_port_ds__receiver_port_dr" |
-"noMediumABPElem_sender_ds__receiver_dr null = sbeNull {\<C> ''DoNotUse_7929da_sender_ds__receiver_dr''}"
+"noMediumABPElem_sender_ds__receiver_dr null = sbeNull {\<C> ''DoNotUse_c8d703_sender_ds__receiver_dr''}"
 
 (* Do not use this, use noMediumABPReceiverElemOut_ar_o or noMediumABPSenderElemIn_as_i instead *)
 fun noMediumABPElem_receiver_ar__sender_as :: "bool tsyn \<Rightarrow> ('e::countable) noMediumABPMessage tsyn sbElem" where
 "noMediumABPElem_receiver_ar__sender_as (Msg receiver_port_ar__sender_port_as) = noMediumABPElem_raw_receiver_ar__sender_as receiver_port_ar__sender_port_as" |
-"noMediumABPElem_receiver_ar__sender_as null = sbeNull {\<C> ''DoNotUse_7929da_receiver_ar__sender_as''}"
+"noMediumABPElem_receiver_ar__sender_as null = sbeNull {\<C> ''DoNotUse_c8d703_receiver_ar__sender_as''}"
 
 declare noMediumABPElem_receiver_o__o.simps[simp del]
 
@@ -203,28 +203,28 @@ subsubsection \<open>Intern\<close>
 (* Do not use this, use noMediumABPReceiverOut_list_ar_o or noMediumABPOut_list_o instead *)
 fun noMediumABP_list_receiver_o__o :: "('e tsyn) list \<Rightarrow> ('e::countable) noMediumABPMessage tsyn SB" where
 "noMediumABP_list_receiver_o__o (x#xs) = ubConcEq (noMediumABP_receiver_o__o x)\<cdot>(noMediumABP_list_receiver_o__o xs)" |
-"noMediumABP_list_receiver_o__o []     = ubLeast {\<C> ''DoNotUse_7929da_receiver_o__o''}"
+"noMediumABP_list_receiver_o__o []     = ubLeast {\<C> ''DoNotUse_c8d703_receiver_o__o''}"
 
 declare noMediumABP_list_receiver_o__o.simps[simp del]
 
 (* Do not use this, use noMediumABPIn_list_i or noMediumABPSenderIn_list_as_i instead *)
 fun noMediumABP_list_i__sender_i :: "('e tsyn) list \<Rightarrow> ('e::countable) noMediumABPMessage tsyn SB" where
 "noMediumABP_list_i__sender_i (x#xs) = ubConcEq (noMediumABP_i__sender_i x)\<cdot>(noMediumABP_list_i__sender_i xs)" |
-"noMediumABP_list_i__sender_i []     = ubLeast {\<C> ''DoNotUse_7929da_i__sender_i''}"
+"noMediumABP_list_i__sender_i []     = ubLeast {\<C> ''DoNotUse_c8d703_i__sender_i''}"
 
 declare noMediumABP_list_i__sender_i.simps[simp del]
 
 (* Do not use this, use noMediumABPSenderOut_list_ds or noMediumABPReceiverIn_list_dr instead *)
 fun noMediumABP_list_sender_ds__receiver_dr :: "(('e\<times>bool) tsyn) list \<Rightarrow> ('e::countable) noMediumABPMessage tsyn SB" where
 "noMediumABP_list_sender_ds__receiver_dr (x#xs) = ubConcEq (noMediumABP_sender_ds__receiver_dr x)\<cdot>(noMediumABP_list_sender_ds__receiver_dr xs)" |
-"noMediumABP_list_sender_ds__receiver_dr []     = ubLeast {\<C> ''DoNotUse_7929da_sender_ds__receiver_dr''}"
+"noMediumABP_list_sender_ds__receiver_dr []     = ubLeast {\<C> ''DoNotUse_c8d703_sender_ds__receiver_dr''}"
 
 declare noMediumABP_list_sender_ds__receiver_dr.simps[simp del]
 
 (* Do not use this, use noMediumABPReceiverOut_list_ar_o or noMediumABPSenderIn_list_as_i instead *)
 fun noMediumABP_list_receiver_ar__sender_as :: "(bool tsyn) list \<Rightarrow> ('e::countable) noMediumABPMessage tsyn SB" where
 "noMediumABP_list_receiver_ar__sender_as (x#xs) = ubConcEq (noMediumABP_receiver_ar__sender_as x)\<cdot>(noMediumABP_list_receiver_ar__sender_as xs)" |
-"noMediumABP_list_receiver_ar__sender_as []     = ubLeast {\<C> ''DoNotUse_7929da_receiver_ar__sender_as''}"
+"noMediumABP_list_receiver_ar__sender_as []     = ubLeast {\<C> ''DoNotUse_c8d703_receiver_ar__sender_as''}"
 
 declare noMediumABP_list_receiver_ar__sender_as.simps[simp del]
 
@@ -272,57 +272,57 @@ subsection \<open>stream to SB\<close>
 
 subsubsection \<open>Intern\<close>
 
-lift_definition DoNotUse_7929da_noMediumABP_stream_receiver_o__o_h :: "'e tsyn stream \<Rightarrow> ('e::countable) noMediumABPMessage tsyn SB" is
-"\<lambda> s. [(\<C> ''DoNotUse_7929da_receiver_o__o'') \<mapsto> (tsynMap (DoNotUse_7929da_NoMediumABPE)\<cdot>s)]"
+lift_definition DoNotUse_c8d703_noMediumABP_stream_receiver_o__o_h :: "'e tsyn stream \<Rightarrow> ('e::countable) noMediumABPMessage tsyn SB" is
+"\<lambda> s. [(\<C> ''DoNotUse_c8d703_receiver_o__o'') \<mapsto> (tsynMap (DoNotUse_c8d703_NoMediumABPE)\<cdot>s)]"
   unfolding ubWell_def usclOkay_stream_def ctype_tsyn_def
   by auto
 
 (* Do not use this, use noMediumABPReceiverOut_stream_ar_o or noMediumABPOut_stream_o instead *)
 lift_definition noMediumABP_stream_receiver_o__o :: "('e) tsyn stream \<rightarrow> ('e::countable) noMediumABPMessage tsyn SB" is
-"DoNotUse_7929da_noMediumABP_stream_receiver_o__o_h"
-  apply(auto simp add: cfun_def DoNotUse_7929da_noMediumABP_stream_receiver_o__o_h_def map_fun_def comp_def)
+"DoNotUse_c8d703_noMediumABP_stream_receiver_o__o_h"
+  apply(auto simp add: cfun_def DoNotUse_c8d703_noMediumABP_stream_receiver_o__o_h_def map_fun_def comp_def)
   apply(rule cont_Abs_UB)
   apply(simp add: option_one_cont)
-  by (metis DoNotUse_7929da_noMediumABP_stream_receiver_o__o_h.rep_eq ubrep_well)
+  by (metis DoNotUse_c8d703_noMediumABP_stream_receiver_o__o_h.rep_eq ubrep_well)
 
-lift_definition DoNotUse_7929da_noMediumABP_stream_i__sender_i_h :: "'e tsyn stream \<Rightarrow> ('e::countable) noMediumABPMessage tsyn SB" is
-"\<lambda> s. [(\<C> ''DoNotUse_7929da_i__sender_i'') \<mapsto> (tsynMap (DoNotUse_7929da_NoMediumABPE)\<cdot>s)]"
+lift_definition DoNotUse_c8d703_noMediumABP_stream_i__sender_i_h :: "'e tsyn stream \<Rightarrow> ('e::countable) noMediumABPMessage tsyn SB" is
+"\<lambda> s. [(\<C> ''DoNotUse_c8d703_i__sender_i'') \<mapsto> (tsynMap (DoNotUse_c8d703_NoMediumABPE)\<cdot>s)]"
   unfolding ubWell_def usclOkay_stream_def ctype_tsyn_def
   by auto
 
 (* Do not use this, use noMediumABPIn_stream_i or noMediumABPSenderIn_stream_as_i instead *)
 lift_definition noMediumABP_stream_i__sender_i :: "('e) tsyn stream \<rightarrow> ('e::countable) noMediumABPMessage tsyn SB" is
-"DoNotUse_7929da_noMediumABP_stream_i__sender_i_h"
-  apply(auto simp add: cfun_def DoNotUse_7929da_noMediumABP_stream_i__sender_i_h_def map_fun_def comp_def)
+"DoNotUse_c8d703_noMediumABP_stream_i__sender_i_h"
+  apply(auto simp add: cfun_def DoNotUse_c8d703_noMediumABP_stream_i__sender_i_h_def map_fun_def comp_def)
   apply(rule cont_Abs_UB)
   apply(simp add: option_one_cont)
-  by (metis DoNotUse_7929da_noMediumABP_stream_i__sender_i_h.rep_eq ubrep_well)
+  by (metis DoNotUse_c8d703_noMediumABP_stream_i__sender_i_h.rep_eq ubrep_well)
 
-lift_definition DoNotUse_7929da_noMediumABP_stream_sender_ds__receiver_dr_h :: "('e\<times>bool) tsyn stream \<Rightarrow> ('e::countable) noMediumABPMessage tsyn SB" is
-"\<lambda> s. [(\<C> ''DoNotUse_7929da_sender_ds__receiver_dr'') \<mapsto> (tsynMap (DoNotUse_7929da_NoMediumABPPair_E_Bool)\<cdot>s)]"
+lift_definition DoNotUse_c8d703_noMediumABP_stream_sender_ds__receiver_dr_h :: "('e\<times>bool) tsyn stream \<Rightarrow> ('e::countable) noMediumABPMessage tsyn SB" is
+"\<lambda> s. [(\<C> ''DoNotUse_c8d703_sender_ds__receiver_dr'') \<mapsto> (tsynMap (DoNotUse_c8d703_NoMediumABPPair_E_Bool)\<cdot>s)]"
   unfolding ubWell_def usclOkay_stream_def ctype_tsyn_def
   by auto
 
 (* Do not use this, use noMediumABPSenderOut_stream_ds or noMediumABPReceiverIn_stream_dr instead *)
 lift_definition noMediumABP_stream_sender_ds__receiver_dr :: "(('e\<times>bool)) tsyn stream \<rightarrow> ('e::countable) noMediumABPMessage tsyn SB" is
-"DoNotUse_7929da_noMediumABP_stream_sender_ds__receiver_dr_h"
-  apply(auto simp add: cfun_def DoNotUse_7929da_noMediumABP_stream_sender_ds__receiver_dr_h_def map_fun_def comp_def)
+"DoNotUse_c8d703_noMediumABP_stream_sender_ds__receiver_dr_h"
+  apply(auto simp add: cfun_def DoNotUse_c8d703_noMediumABP_stream_sender_ds__receiver_dr_h_def map_fun_def comp_def)
   apply(rule cont_Abs_UB)
   apply(simp add: option_one_cont)
-  by (metis DoNotUse_7929da_noMediumABP_stream_sender_ds__receiver_dr_h.rep_eq ubrep_well)
+  by (metis DoNotUse_c8d703_noMediumABP_stream_sender_ds__receiver_dr_h.rep_eq ubrep_well)
 
-lift_definition DoNotUse_7929da_noMediumABP_stream_receiver_ar__sender_as_h :: "bool tsyn stream \<Rightarrow> ('e::countable) noMediumABPMessage tsyn SB" is
-"\<lambda> s. [(\<C> ''DoNotUse_7929da_receiver_ar__sender_as'') \<mapsto> (tsynMap (DoNotUse_7929da_NoMediumABPBool)\<cdot>s)]"
+lift_definition DoNotUse_c8d703_noMediumABP_stream_receiver_ar__sender_as_h :: "bool tsyn stream \<Rightarrow> ('e::countable) noMediumABPMessage tsyn SB" is
+"\<lambda> s. [(\<C> ''DoNotUse_c8d703_receiver_ar__sender_as'') \<mapsto> (tsynMap (DoNotUse_c8d703_NoMediumABPBool)\<cdot>s)]"
   unfolding ubWell_def usclOkay_stream_def ctype_tsyn_def
   by auto
 
 (* Do not use this, use noMediumABPReceiverOut_stream_ar_o or noMediumABPSenderIn_stream_as_i instead *)
 lift_definition noMediumABP_stream_receiver_ar__sender_as :: "(bool) tsyn stream \<rightarrow> ('e::countable) noMediumABPMessage tsyn SB" is
-"DoNotUse_7929da_noMediumABP_stream_receiver_ar__sender_as_h"
-  apply(auto simp add: cfun_def DoNotUse_7929da_noMediumABP_stream_receiver_ar__sender_as_h_def map_fun_def comp_def)
+"DoNotUse_c8d703_noMediumABP_stream_receiver_ar__sender_as_h"
+  apply(auto simp add: cfun_def DoNotUse_c8d703_noMediumABP_stream_receiver_ar__sender_as_h_def map_fun_def comp_def)
   apply(rule cont_Abs_UB)
   apply(simp add: option_one_cont)
-  by (metis DoNotUse_7929da_noMediumABP_stream_receiver_ar__sender_as_h.rep_eq ubrep_well)
+  by (metis DoNotUse_c8d703_noMediumABP_stream_receiver_ar__sender_as_h.rep_eq ubrep_well)
 
 
 subsubsection \<open>In/Out\<close>
@@ -362,34 +362,34 @@ section \<open>Getter\<close>
 subsection \<open>sbElem to tsyn\<close>
 
 definition noMediumABPElem_get_receiver_o__o :: "('e::countable) noMediumABPMessage tsyn sbElem \<Rightarrow> ('e) tsyn" where
-"noMediumABPElem_get_receiver_o__o sbe = tsynApplyElem (inv DoNotUse_7929da_NoMediumABPE) ((Rep_sbElem sbe) \<rightharpoonup> (\<C> ''DoNotUse_7929da_receiver_o__o''))"
+"noMediumABPElem_get_receiver_o__o sbe = tsynApplyElem (inv DoNotUse_c8d703_NoMediumABPE) ((Rep_sbElem sbe) \<rightharpoonup> (\<C> ''DoNotUse_c8d703_receiver_o__o''))"
 
 definition noMediumABPElem_get_i__sender_i :: "('e::countable) noMediumABPMessage tsyn sbElem \<Rightarrow> ('e) tsyn" where
-"noMediumABPElem_get_i__sender_i sbe = tsynApplyElem (inv DoNotUse_7929da_NoMediumABPE) ((Rep_sbElem sbe) \<rightharpoonup> (\<C> ''DoNotUse_7929da_i__sender_i''))"
+"noMediumABPElem_get_i__sender_i sbe = tsynApplyElem (inv DoNotUse_c8d703_NoMediumABPE) ((Rep_sbElem sbe) \<rightharpoonup> (\<C> ''DoNotUse_c8d703_i__sender_i''))"
 
 definition noMediumABPElem_get_sender_ds__receiver_dr :: "('e::countable) noMediumABPMessage tsyn sbElem \<Rightarrow> (('e\<times>bool)) tsyn" where
-"noMediumABPElem_get_sender_ds__receiver_dr sbe = tsynApplyElem (inv DoNotUse_7929da_NoMediumABPPair_E_Bool) ((Rep_sbElem sbe) \<rightharpoonup> (\<C> ''DoNotUse_7929da_sender_ds__receiver_dr''))"
+"noMediumABPElem_get_sender_ds__receiver_dr sbe = tsynApplyElem (inv DoNotUse_c8d703_NoMediumABPPair_E_Bool) ((Rep_sbElem sbe) \<rightharpoonup> (\<C> ''DoNotUse_c8d703_sender_ds__receiver_dr''))"
 
 definition noMediumABPElem_get_receiver_ar__sender_as :: "('e::countable) noMediumABPMessage tsyn sbElem \<Rightarrow> (bool) tsyn" where
-"noMediumABPElem_get_receiver_ar__sender_as sbe = tsynApplyElem (inv DoNotUse_7929da_NoMediumABPBool) ((Rep_sbElem sbe) \<rightharpoonup> (\<C> ''DoNotUse_7929da_receiver_ar__sender_as''))"
+"noMediumABPElem_get_receiver_ar__sender_as sbe = tsynApplyElem (inv DoNotUse_c8d703_NoMediumABPBool) ((Rep_sbElem sbe) \<rightharpoonup> (\<C> ''DoNotUse_c8d703_receiver_ar__sender_as''))"
 
 
 subsection \<open>SB to stream\<close>
 
 lift_definition noMediumABP_get_stream_receiver_o__o :: "('e::countable) noMediumABPMessage tsyn SB \<rightarrow> 'e tsyn stream" is
-"\<lambda>sb. tsynMap (inv DoNotUse_7929da_NoMediumABPE)\<cdot>(sb . (\<C> ''DoNotUse_7929da_receiver_o__o''))"
+"\<lambda>sb. tsynMap (inv DoNotUse_c8d703_NoMediumABPE)\<cdot>(sb . (\<C> ''DoNotUse_c8d703_receiver_o__o''))"
   by(simp add: cfun_def)
 
 lift_definition noMediumABP_get_stream_i__sender_i :: "('e::countable) noMediumABPMessage tsyn SB \<rightarrow> 'e tsyn stream" is
-"\<lambda>sb. tsynMap (inv DoNotUse_7929da_NoMediumABPE)\<cdot>(sb . (\<C> ''DoNotUse_7929da_i__sender_i''))"
+"\<lambda>sb. tsynMap (inv DoNotUse_c8d703_NoMediumABPE)\<cdot>(sb . (\<C> ''DoNotUse_c8d703_i__sender_i''))"
   by(simp add: cfun_def)
 
 lift_definition noMediumABP_get_stream_sender_ds__receiver_dr :: "('e::countable) noMediumABPMessage tsyn SB \<rightarrow> ('e\<times>bool) tsyn stream" is
-"\<lambda>sb. tsynMap (inv DoNotUse_7929da_NoMediumABPPair_E_Bool)\<cdot>(sb . (\<C> ''DoNotUse_7929da_sender_ds__receiver_dr''))"
+"\<lambda>sb. tsynMap (inv DoNotUse_c8d703_NoMediumABPPair_E_Bool)\<cdot>(sb . (\<C> ''DoNotUse_c8d703_sender_ds__receiver_dr''))"
   by(simp add: cfun_def)
 
 lift_definition noMediumABP_get_stream_receiver_ar__sender_as :: "('e::countable) noMediumABPMessage tsyn SB \<rightarrow> bool tsyn stream" is
-"\<lambda>sb. tsynMap (inv DoNotUse_7929da_NoMediumABPBool)\<cdot>(sb . (\<C> ''DoNotUse_7929da_receiver_ar__sender_as''))"
+"\<lambda>sb. tsynMap (inv DoNotUse_c8d703_NoMediumABPBool)\<cdot>(sb . (\<C> ''DoNotUse_c8d703_receiver_ar__sender_as''))"
   by(simp add: cfun_def)
 
 
@@ -399,45 +399,45 @@ subsection \<open>tsyn to sbElem/SB\<close>
 
 subsubsection \<open>Intern\<close>
 
-lemma nomediumabpelem_receiver_o__o_dom[simp]: "sbeDom (noMediumABPElem_receiver_o__o x) = {\<C> ''DoNotUse_7929da_receiver_o__o''}"
+lemma nomediumabpelem_receiver_o__o_dom[simp]: "sbeDom (noMediumABPElem_receiver_o__o x) = {\<C> ''DoNotUse_c8d703_receiver_o__o''}"
   apply(cases x)
   apply(simp add: noMediumABPElem_receiver_o__o.simps sbeDom_def noMediumABPElem_raw_receiver_o__o.rep_eq)
   by(simp add: noMediumABPElem_receiver_o__o.simps)
 
-lemma nomediumabpelem_i__sender_i_dom[simp]: "sbeDom (noMediumABPElem_i__sender_i x) = {\<C> ''DoNotUse_7929da_i__sender_i''}"
+lemma nomediumabpelem_i__sender_i_dom[simp]: "sbeDom (noMediumABPElem_i__sender_i x) = {\<C> ''DoNotUse_c8d703_i__sender_i''}"
   apply(cases x)
   apply(simp add: noMediumABPElem_i__sender_i.simps sbeDom_def noMediumABPElem_raw_i__sender_i.rep_eq)
   by(simp add: noMediumABPElem_i__sender_i.simps)
 
-lemma nomediumabpelem_sender_ds__receiver_dr_dom[simp]: "sbeDom (noMediumABPElem_sender_ds__receiver_dr x) = {\<C> ''DoNotUse_7929da_sender_ds__receiver_dr''}"
+lemma nomediumabpelem_sender_ds__receiver_dr_dom[simp]: "sbeDom (noMediumABPElem_sender_ds__receiver_dr x) = {\<C> ''DoNotUse_c8d703_sender_ds__receiver_dr''}"
   apply(cases x)
   apply(simp add: noMediumABPElem_sender_ds__receiver_dr.simps sbeDom_def noMediumABPElem_raw_sender_ds__receiver_dr.rep_eq)
   by(simp add: noMediumABPElem_sender_ds__receiver_dr.simps)
 
-lemma nomediumabpelem_receiver_ar__sender_as_dom[simp]: "sbeDom (noMediumABPElem_receiver_ar__sender_as x) = {\<C> ''DoNotUse_7929da_receiver_ar__sender_as''}"
+lemma nomediumabpelem_receiver_ar__sender_as_dom[simp]: "sbeDom (noMediumABPElem_receiver_ar__sender_as x) = {\<C> ''DoNotUse_c8d703_receiver_ar__sender_as''}"
   apply(cases x)
   apply(simp add: noMediumABPElem_receiver_ar__sender_as.simps sbeDom_def noMediumABPElem_raw_receiver_ar__sender_as.rep_eq)
   by(simp add: noMediumABPElem_receiver_ar__sender_as.simps)
 
-lemma nomediumabp_receiver_o__o_dom[simp]: "ubDom\<cdot>(noMediumABP_receiver_o__o x) = {\<C> ''DoNotUse_7929da_receiver_o__o''}"
+lemma nomediumabp_receiver_o__o_dom[simp]: "ubDom\<cdot>(noMediumABP_receiver_o__o x) = {\<C> ''DoNotUse_c8d703_receiver_o__o''}"
   by(simp add: noMediumABP_receiver_o__o_def)
 
 lemma nomediumabp_receiver_o__o_len[simp]: "ubLen (noMediumABP_receiver_o__o x) = 1"
   by(simp add: noMediumABP_receiver_o__o_def)
 
-lemma nomediumabp_i__sender_i_dom[simp]: "ubDom\<cdot>(noMediumABP_i__sender_i x) = {\<C> ''DoNotUse_7929da_i__sender_i''}"
+lemma nomediumabp_i__sender_i_dom[simp]: "ubDom\<cdot>(noMediumABP_i__sender_i x) = {\<C> ''DoNotUse_c8d703_i__sender_i''}"
   by(simp add: noMediumABP_i__sender_i_def)
 
 lemma nomediumabp_i__sender_i_len[simp]: "ubLen (noMediumABP_i__sender_i x) = 1"
   by(simp add: noMediumABP_i__sender_i_def)
 
-lemma nomediumabp_sender_ds__receiver_dr_dom[simp]: "ubDom\<cdot>(noMediumABP_sender_ds__receiver_dr x) = {\<C> ''DoNotUse_7929da_sender_ds__receiver_dr''}"
+lemma nomediumabp_sender_ds__receiver_dr_dom[simp]: "ubDom\<cdot>(noMediumABP_sender_ds__receiver_dr x) = {\<C> ''DoNotUse_c8d703_sender_ds__receiver_dr''}"
   by(simp add: noMediumABP_sender_ds__receiver_dr_def)
 
 lemma nomediumabp_sender_ds__receiver_dr_len[simp]: "ubLen (noMediumABP_sender_ds__receiver_dr x) = 1"
   by(simp add: noMediumABP_sender_ds__receiver_dr_def)
 
-lemma nomediumabp_receiver_ar__sender_as_dom[simp]: "ubDom\<cdot>(noMediumABP_receiver_ar__sender_as x) = {\<C> ''DoNotUse_7929da_receiver_ar__sender_as''}"
+lemma nomediumabp_receiver_ar__sender_as_dom[simp]: "ubDom\<cdot>(noMediumABP_receiver_ar__sender_as x) = {\<C> ''DoNotUse_c8d703_receiver_ar__sender_as''}"
   by(simp add: noMediumABP_receiver_ar__sender_as_def)
 
 lemma nomediumabp_receiver_ar__sender_as_len[simp]: "ubLen (noMediumABP_receiver_ar__sender_as x) = 1"
@@ -499,78 +499,78 @@ subsection \<open>stream to SB\<close>
 
 subsubsection \<open>Intern\<close>
 
-lemma nomediumabp_stream_receiver_o__o_dom[simp]: "ubDom\<cdot>(noMediumABP_stream_receiver_o__o\<cdot>x) = {\<C> ''DoNotUse_7929da_receiver_o__o''}"
-  by(simp add: noMediumABP_stream_receiver_o__o.rep_eq ubdom_insert DoNotUse_7929da_noMediumABP_stream_receiver_o__o_h.rep_eq)
+lemma nomediumabp_stream_receiver_o__o_dom[simp]: "ubDom\<cdot>(noMediumABP_stream_receiver_o__o\<cdot>x) = {\<C> ''DoNotUse_c8d703_receiver_o__o''}"
+  by(simp add: noMediumABP_stream_receiver_o__o.rep_eq ubdom_insert DoNotUse_c8d703_noMediumABP_stream_receiver_o__o_h.rep_eq)
 
 lemma nomediumabp_stream_receiver_o__o_len[simp]: "ubLen (noMediumABP_stream_receiver_o__o\<cdot>x) = #x"
   apply(subst uslen_ubLen_ch3)
   apply simp
   apply(simp add: noMediumABP_stream_receiver_o__o.rep_eq)
-  apply(simp add: ubGetCh_def DoNotUse_7929da_noMediumABP_stream_receiver_o__o_h.rep_eq)
+  apply(simp add: ubGetCh_def DoNotUse_c8d703_noMediumABP_stream_receiver_o__o_h.rep_eq)
   by (simp add: tsynmap_slen usclLen_stream_def)
 
 lemma nomediumabp_stream_receiver_o__o_id[simp]:
-  assumes "ubDom\<cdot>ub = {\<C> ''DoNotUse_7929da_receiver_o__o''} "
+  assumes "ubDom\<cdot>ub = {\<C> ''DoNotUse_c8d703_receiver_o__o''} "
     shows "noMediumABP_stream_receiver_o__o\<cdot>(noMediumABP_get_stream_receiver_o__o\<cdot>ub) = ub"
   apply(simp add: noMediumABP_stream_receiver_o__o.rep_eq noMediumABP_get_stream_receiver_o__o.rep_eq)
-  apply(simp add: DoNotUse_7929da_noMediumABP_stream_receiver_o__o_h_def)
+  apply(simp add: DoNotUse_c8d703_noMediumABP_stream_receiver_o__o_h_def)
   apply(subst tsynmap_inv_id)
   using assms tsynbundle_ctype apply fastforce
   using assms ub_id_single by blast
 
-lemma nomediumabp_stream_i__sender_i_dom[simp]: "ubDom\<cdot>(noMediumABP_stream_i__sender_i\<cdot>x) = {\<C> ''DoNotUse_7929da_i__sender_i''}"
-  by(simp add: noMediumABP_stream_i__sender_i.rep_eq ubdom_insert DoNotUse_7929da_noMediumABP_stream_i__sender_i_h.rep_eq)
+lemma nomediumabp_stream_i__sender_i_dom[simp]: "ubDom\<cdot>(noMediumABP_stream_i__sender_i\<cdot>x) = {\<C> ''DoNotUse_c8d703_i__sender_i''}"
+  by(simp add: noMediumABP_stream_i__sender_i.rep_eq ubdom_insert DoNotUse_c8d703_noMediumABP_stream_i__sender_i_h.rep_eq)
 
 lemma nomediumabp_stream_i__sender_i_len[simp]: "ubLen (noMediumABP_stream_i__sender_i\<cdot>x) = #x"
   apply(subst uslen_ubLen_ch3)
   apply simp
   apply(simp add: noMediumABP_stream_i__sender_i.rep_eq)
-  apply(simp add: ubGetCh_def DoNotUse_7929da_noMediumABP_stream_i__sender_i_h.rep_eq)
+  apply(simp add: ubGetCh_def DoNotUse_c8d703_noMediumABP_stream_i__sender_i_h.rep_eq)
   by (simp add: tsynmap_slen usclLen_stream_def)
 
 lemma nomediumabp_stream_i__sender_i_id[simp]:
-  assumes "ubDom\<cdot>ub = {\<C> ''DoNotUse_7929da_i__sender_i''} "
+  assumes "ubDom\<cdot>ub = {\<C> ''DoNotUse_c8d703_i__sender_i''} "
     shows "noMediumABP_stream_i__sender_i\<cdot>(noMediumABP_get_stream_i__sender_i\<cdot>ub) = ub"
   apply(simp add: noMediumABP_stream_i__sender_i.rep_eq noMediumABP_get_stream_i__sender_i.rep_eq)
-  apply(simp add: DoNotUse_7929da_noMediumABP_stream_i__sender_i_h_def)
+  apply(simp add: DoNotUse_c8d703_noMediumABP_stream_i__sender_i_h_def)
   apply(subst tsynmap_inv_id)
   using assms tsynbundle_ctype apply fastforce
   using assms ub_id_single by blast
 
-lemma nomediumabp_stream_sender_ds__receiver_dr_dom[simp]: "ubDom\<cdot>(noMediumABP_stream_sender_ds__receiver_dr\<cdot>x) = {\<C> ''DoNotUse_7929da_sender_ds__receiver_dr''}"
-  by(simp add: noMediumABP_stream_sender_ds__receiver_dr.rep_eq ubdom_insert DoNotUse_7929da_noMediumABP_stream_sender_ds__receiver_dr_h.rep_eq)
+lemma nomediumabp_stream_sender_ds__receiver_dr_dom[simp]: "ubDom\<cdot>(noMediumABP_stream_sender_ds__receiver_dr\<cdot>x) = {\<C> ''DoNotUse_c8d703_sender_ds__receiver_dr''}"
+  by(simp add: noMediumABP_stream_sender_ds__receiver_dr.rep_eq ubdom_insert DoNotUse_c8d703_noMediumABP_stream_sender_ds__receiver_dr_h.rep_eq)
 
 lemma nomediumabp_stream_sender_ds__receiver_dr_len[simp]: "ubLen (noMediumABP_stream_sender_ds__receiver_dr\<cdot>x) = #x"
   apply(subst uslen_ubLen_ch3)
   apply simp
   apply(simp add: noMediumABP_stream_sender_ds__receiver_dr.rep_eq)
-  apply(simp add: ubGetCh_def DoNotUse_7929da_noMediumABP_stream_sender_ds__receiver_dr_h.rep_eq)
+  apply(simp add: ubGetCh_def DoNotUse_c8d703_noMediumABP_stream_sender_ds__receiver_dr_h.rep_eq)
   by (simp add: tsynmap_slen usclLen_stream_def)
 
 lemma nomediumabp_stream_sender_ds__receiver_dr_id[simp]:
-  assumes "ubDom\<cdot>ub = {\<C> ''DoNotUse_7929da_sender_ds__receiver_dr''} "
+  assumes "ubDom\<cdot>ub = {\<C> ''DoNotUse_c8d703_sender_ds__receiver_dr''} "
     shows "noMediumABP_stream_sender_ds__receiver_dr\<cdot>(noMediumABP_get_stream_sender_ds__receiver_dr\<cdot>ub) = ub"
   apply(simp add: noMediumABP_stream_sender_ds__receiver_dr.rep_eq noMediumABP_get_stream_sender_ds__receiver_dr.rep_eq)
-  apply(simp add: DoNotUse_7929da_noMediumABP_stream_sender_ds__receiver_dr_h_def)
+  apply(simp add: DoNotUse_c8d703_noMediumABP_stream_sender_ds__receiver_dr_h_def)
   apply(subst tsynmap_inv_id)
   using assms tsynbundle_ctype apply fastforce
   using assms ub_id_single by blast
 
-lemma nomediumabp_stream_receiver_ar__sender_as_dom[simp]: "ubDom\<cdot>(noMediumABP_stream_receiver_ar__sender_as\<cdot>x) = {\<C> ''DoNotUse_7929da_receiver_ar__sender_as''}"
-  by(simp add: noMediumABP_stream_receiver_ar__sender_as.rep_eq ubdom_insert DoNotUse_7929da_noMediumABP_stream_receiver_ar__sender_as_h.rep_eq)
+lemma nomediumabp_stream_receiver_ar__sender_as_dom[simp]: "ubDom\<cdot>(noMediumABP_stream_receiver_ar__sender_as\<cdot>x) = {\<C> ''DoNotUse_c8d703_receiver_ar__sender_as''}"
+  by(simp add: noMediumABP_stream_receiver_ar__sender_as.rep_eq ubdom_insert DoNotUse_c8d703_noMediumABP_stream_receiver_ar__sender_as_h.rep_eq)
 
 lemma nomediumabp_stream_receiver_ar__sender_as_len[simp]: "ubLen (noMediumABP_stream_receiver_ar__sender_as\<cdot>x) = #x"
   apply(subst uslen_ubLen_ch3)
   apply simp
   apply(simp add: noMediumABP_stream_receiver_ar__sender_as.rep_eq)
-  apply(simp add: ubGetCh_def DoNotUse_7929da_noMediumABP_stream_receiver_ar__sender_as_h.rep_eq)
+  apply(simp add: ubGetCh_def DoNotUse_c8d703_noMediumABP_stream_receiver_ar__sender_as_h.rep_eq)
   by (simp add: tsynmap_slen usclLen_stream_def)
 
 lemma nomediumabp_stream_receiver_ar__sender_as_id[simp]:
-  assumes "ubDom\<cdot>ub = {\<C> ''DoNotUse_7929da_receiver_ar__sender_as''} "
+  assumes "ubDom\<cdot>ub = {\<C> ''DoNotUse_c8d703_receiver_ar__sender_as''} "
     shows "noMediumABP_stream_receiver_ar__sender_as\<cdot>(noMediumABP_get_stream_receiver_ar__sender_as\<cdot>ub) = ub"
   apply(simp add: noMediumABP_stream_receiver_ar__sender_as.rep_eq noMediumABP_get_stream_receiver_ar__sender_as.rep_eq)
-  apply(simp add: DoNotUse_7929da_noMediumABP_stream_receiver_ar__sender_as_h_def)
+  apply(simp add: DoNotUse_c8d703_noMediumABP_stream_receiver_ar__sender_as_h_def)
   apply(subst tsynmap_inv_id)
   using assms tsynbundle_ctype apply fastforce
   using assms ub_id_single by blast
@@ -665,19 +665,19 @@ subsubsection \<open>Intern\<close>
 
 lemma nomediumabp_get_stream_receiver_o__o_id[simp]: "noMediumABP_get_stream_receiver_o__o\<cdot>(noMediumABP_stream_receiver_o__o\<cdot>x) = x"
   apply(simp add: noMediumABP_get_stream_receiver_o__o.rep_eq noMediumABP_stream_receiver_o__o.rep_eq)
-  apply(simp add: ubGetCh_def DoNotUse_7929da_noMediumABP_stream_receiver_o__o_h.rep_eq)
+  apply(simp add: ubGetCh_def DoNotUse_c8d703_noMediumABP_stream_receiver_o__o_h.rep_eq)
   by (simp add: inj_def)
 
 lemma nomediumabp_get_stream_receiver_o__o_eq:
-  assumes "ubDom\<cdot>ub1 = {\<C> ''DoNotUse_7929da_receiver_o__o''}"
-      and "ubDom\<cdot>ub2 = {\<C> ''DoNotUse_7929da_receiver_o__o''}"
+  assumes "ubDom\<cdot>ub1 = {\<C> ''DoNotUse_c8d703_receiver_o__o''}"
+      and "ubDom\<cdot>ub2 = {\<C> ''DoNotUse_c8d703_receiver_o__o''}"
       and "noMediumABP_get_stream_receiver_o__o\<cdot>ub1 = noMediumABP_get_stream_receiver_o__o\<cdot>ub2"
     shows "ub1 = ub2"
   using assms(1) assms(2) assms(3) nomediumabp_stream_receiver_o__o_id by metis
 
 lemma nomediumabp_get_stream_receiver_o__o_conc[simp]:
-  assumes "\<C> ''DoNotUse_7929da_receiver_o__o'' \<in> ubDom\<cdot>ub1"
-      and "\<C> ''DoNotUse_7929da_receiver_o__o'' \<in> ubDom\<cdot>ub2"
+  assumes "\<C> ''DoNotUse_c8d703_receiver_o__o'' \<in> ubDom\<cdot>ub1"
+      and "\<C> ''DoNotUse_c8d703_receiver_o__o'' \<in> ubDom\<cdot>ub2"
     shows "noMediumABP_get_stream_receiver_o__o\<cdot>(ubConc ub1\<cdot>ub2) = (noMediumABP_get_stream_receiver_o__o\<cdot>ub1) \<bullet> (noMediumABP_get_stream_receiver_o__o\<cdot>ub2)"
   apply(simp add: noMediumABP_get_stream_receiver_o__o.rep_eq)
   apply (subst ubConc_usclConc_eq)
@@ -687,19 +687,19 @@ lemma nomediumabp_get_stream_receiver_o__o_conc[simp]:
 
 lemma nomediumabp_get_stream_i__sender_i_id[simp]: "noMediumABP_get_stream_i__sender_i\<cdot>(noMediumABP_stream_i__sender_i\<cdot>x) = x"
   apply(simp add: noMediumABP_get_stream_i__sender_i.rep_eq noMediumABP_stream_i__sender_i.rep_eq)
-  apply(simp add: ubGetCh_def DoNotUse_7929da_noMediumABP_stream_i__sender_i_h.rep_eq)
+  apply(simp add: ubGetCh_def DoNotUse_c8d703_noMediumABP_stream_i__sender_i_h.rep_eq)
   by (simp add: inj_def)
 
 lemma nomediumabp_get_stream_i__sender_i_eq:
-  assumes "ubDom\<cdot>ub1 = {\<C> ''DoNotUse_7929da_i__sender_i''}"
-      and "ubDom\<cdot>ub2 = {\<C> ''DoNotUse_7929da_i__sender_i''}"
+  assumes "ubDom\<cdot>ub1 = {\<C> ''DoNotUse_c8d703_i__sender_i''}"
+      and "ubDom\<cdot>ub2 = {\<C> ''DoNotUse_c8d703_i__sender_i''}"
       and "noMediumABP_get_stream_i__sender_i\<cdot>ub1 = noMediumABP_get_stream_i__sender_i\<cdot>ub2"
     shows "ub1 = ub2"
   using assms(1) assms(2) assms(3) nomediumabp_stream_i__sender_i_id by metis
 
 lemma nomediumabp_get_stream_i__sender_i_conc[simp]:
-  assumes "\<C> ''DoNotUse_7929da_i__sender_i'' \<in> ubDom\<cdot>ub1"
-      and "\<C> ''DoNotUse_7929da_i__sender_i'' \<in> ubDom\<cdot>ub2"
+  assumes "\<C> ''DoNotUse_c8d703_i__sender_i'' \<in> ubDom\<cdot>ub1"
+      and "\<C> ''DoNotUse_c8d703_i__sender_i'' \<in> ubDom\<cdot>ub2"
     shows "noMediumABP_get_stream_i__sender_i\<cdot>(ubConc ub1\<cdot>ub2) = (noMediumABP_get_stream_i__sender_i\<cdot>ub1) \<bullet> (noMediumABP_get_stream_i__sender_i\<cdot>ub2)"
   apply(simp add: noMediumABP_get_stream_i__sender_i.rep_eq)
   apply (subst ubConc_usclConc_eq)
@@ -709,19 +709,19 @@ lemma nomediumabp_get_stream_i__sender_i_conc[simp]:
 
 lemma nomediumabp_get_stream_sender_ds__receiver_dr_id[simp]: "noMediumABP_get_stream_sender_ds__receiver_dr\<cdot>(noMediumABP_stream_sender_ds__receiver_dr\<cdot>x) = x"
   apply(simp add: noMediumABP_get_stream_sender_ds__receiver_dr.rep_eq noMediumABP_stream_sender_ds__receiver_dr.rep_eq)
-  apply(simp add: ubGetCh_def DoNotUse_7929da_noMediumABP_stream_sender_ds__receiver_dr_h.rep_eq)
+  apply(simp add: ubGetCh_def DoNotUse_c8d703_noMediumABP_stream_sender_ds__receiver_dr_h.rep_eq)
   by (simp add: inj_def)
 
 lemma nomediumabp_get_stream_sender_ds__receiver_dr_eq:
-  assumes "ubDom\<cdot>ub1 = {\<C> ''DoNotUse_7929da_sender_ds__receiver_dr''}"
-      and "ubDom\<cdot>ub2 = {\<C> ''DoNotUse_7929da_sender_ds__receiver_dr''}"
+  assumes "ubDom\<cdot>ub1 = {\<C> ''DoNotUse_c8d703_sender_ds__receiver_dr''}"
+      and "ubDom\<cdot>ub2 = {\<C> ''DoNotUse_c8d703_sender_ds__receiver_dr''}"
       and "noMediumABP_get_stream_sender_ds__receiver_dr\<cdot>ub1 = noMediumABP_get_stream_sender_ds__receiver_dr\<cdot>ub2"
     shows "ub1 = ub2"
   using assms(1) assms(2) assms(3) nomediumabp_stream_sender_ds__receiver_dr_id by metis
 
 lemma nomediumabp_get_stream_sender_ds__receiver_dr_conc[simp]:
-  assumes "\<C> ''DoNotUse_7929da_sender_ds__receiver_dr'' \<in> ubDom\<cdot>ub1"
-      and "\<C> ''DoNotUse_7929da_sender_ds__receiver_dr'' \<in> ubDom\<cdot>ub2"
+  assumes "\<C> ''DoNotUse_c8d703_sender_ds__receiver_dr'' \<in> ubDom\<cdot>ub1"
+      and "\<C> ''DoNotUse_c8d703_sender_ds__receiver_dr'' \<in> ubDom\<cdot>ub2"
     shows "noMediumABP_get_stream_sender_ds__receiver_dr\<cdot>(ubConc ub1\<cdot>ub2) = (noMediumABP_get_stream_sender_ds__receiver_dr\<cdot>ub1) \<bullet> (noMediumABP_get_stream_sender_ds__receiver_dr\<cdot>ub2)"
   apply(simp add: noMediumABP_get_stream_sender_ds__receiver_dr.rep_eq)
   apply (subst ubConc_usclConc_eq)
@@ -731,19 +731,19 @@ lemma nomediumabp_get_stream_sender_ds__receiver_dr_conc[simp]:
 
 lemma nomediumabp_get_stream_receiver_ar__sender_as_id[simp]: "noMediumABP_get_stream_receiver_ar__sender_as\<cdot>(noMediumABP_stream_receiver_ar__sender_as\<cdot>x) = x"
   apply(simp add: noMediumABP_get_stream_receiver_ar__sender_as.rep_eq noMediumABP_stream_receiver_ar__sender_as.rep_eq)
-  apply(simp add: ubGetCh_def DoNotUse_7929da_noMediumABP_stream_receiver_ar__sender_as_h.rep_eq)
+  apply(simp add: ubGetCh_def DoNotUse_c8d703_noMediumABP_stream_receiver_ar__sender_as_h.rep_eq)
   by (simp add: inj_def)
 
 lemma nomediumabp_get_stream_receiver_ar__sender_as_eq:
-  assumes "ubDom\<cdot>ub1 = {\<C> ''DoNotUse_7929da_receiver_ar__sender_as''}"
-      and "ubDom\<cdot>ub2 = {\<C> ''DoNotUse_7929da_receiver_ar__sender_as''}"
+  assumes "ubDom\<cdot>ub1 = {\<C> ''DoNotUse_c8d703_receiver_ar__sender_as''}"
+      and "ubDom\<cdot>ub2 = {\<C> ''DoNotUse_c8d703_receiver_ar__sender_as''}"
       and "noMediumABP_get_stream_receiver_ar__sender_as\<cdot>ub1 = noMediumABP_get_stream_receiver_ar__sender_as\<cdot>ub2"
     shows "ub1 = ub2"
   using assms(1) assms(2) assms(3) nomediumabp_stream_receiver_ar__sender_as_id by metis
 
 lemma nomediumabp_get_stream_receiver_ar__sender_as_conc[simp]:
-  assumes "\<C> ''DoNotUse_7929da_receiver_ar__sender_as'' \<in> ubDom\<cdot>ub1"
-      and "\<C> ''DoNotUse_7929da_receiver_ar__sender_as'' \<in> ubDom\<cdot>ub2"
+  assumes "\<C> ''DoNotUse_c8d703_receiver_ar__sender_as'' \<in> ubDom\<cdot>ub1"
+      and "\<C> ''DoNotUse_c8d703_receiver_ar__sender_as'' \<in> ubDom\<cdot>ub2"
     shows "noMediumABP_get_stream_receiver_ar__sender_as\<cdot>(ubConc ub1\<cdot>ub2) = (noMediumABP_get_stream_receiver_ar__sender_as\<cdot>ub1) \<bullet> (noMediumABP_get_stream_receiver_ar__sender_as\<cdot>ub2)"
   apply(simp add: noMediumABP_get_stream_receiver_ar__sender_as.rep_eq)
   apply (subst ubConc_usclConc_eq)
