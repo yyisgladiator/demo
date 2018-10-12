@@ -73,6 +73,7 @@ session "abpMedium" (mustWork) in "abp/Medium" = "abpGenerat" +
   theories
     medGeneralAut
     medUnfairStep
+    medsBelow
     Medium
     MediumSPF
     MediumSPS
