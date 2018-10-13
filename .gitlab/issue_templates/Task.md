@@ -23,5 +23,3 @@ Work in: (List of theories.)
 - [ ] Assigned milestone.
 
 <!--- Do not change anything below this line --->
-
-/label ~Tasks
