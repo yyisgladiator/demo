@@ -69,7 +69,7 @@ session "abpGenerat" (mustWork) in "abp/generated/abp" = "automat" +
     NoMediumABPComponent
 
 
-session "abpMedium" (mustWork) in "abp/Medium" = "abpGenerat" + 
+session "abpMedium" (canFail) in "abp/Medium" = "abpGenerat" + 
   options [quick_and_dirty = true]
   theories
     medGeneralAut
