@@ -163,4 +163,14 @@ lemma fairMediumStep_1_1:
   oops
 
 
+
+
+
+(* SWS: Example for a deterministic step. ONLY works for deterministic steps *)
+lemma fairMediumStep_det_0_0:
+  assumes "var_counter\<noteq>0"
+    shows "spsConcIn  (mediumIn_i (Msg port_i)) (fairMediumStep (FairMediumState Single   var_counter))
+         = spsConcOut (mediumOut_o -)           (fairMediumStep (FairMediumState Single (var_counter - 1)))"
+  sorry
+
 end
