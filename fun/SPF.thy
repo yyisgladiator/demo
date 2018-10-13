@@ -472,7 +472,7 @@ lemma spfconc_surj:
   by (metis sbconc_inj ubclDom_ubundle_def ubconceq_dom ufapplyout_inj) 
 
 lemma spfconcout_inf: "ubLen ub = \<infinity> \<Longrightarrow> ubDom\<cdot>ub=ufRan\<cdot>uf \<Longrightarrow> ubclDom\<cdot>x = ufDom\<cdot>uf \<Longrightarrow> spfConcOut ub\<cdot>uf \<rightleftharpoons> x = ub"
-  apply (simp add: ubclDom_ubundle_def spfConcOut_step)
+  apply (simp add: ubclDom_ubundle_def spfConcOut_step ubconceq_insert)
   by (metis sbconc_inf ubclDom_ubundle_def ubclRestrict_ubundle_def ubclrestrict_dom_id ufran_2_ubcldom2)
 
 lemma spfconcout_inf_const: assumes "ubDom\<cdot>ub = ufRan\<cdot>uf" and "ubLen ub = \<infinity>"

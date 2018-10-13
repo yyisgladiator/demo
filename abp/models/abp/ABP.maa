@@ -1,0 +1,21 @@
+package abp;
+
+component ABP<E> {
+
+    port
+      in E i,
+      out E o;
+
+    component Sender<E> sender;
+    component FairMedium<Pair<E,boolean>> mediumSr;
+    component Receiver<E> receiver;
+    component FairMedium<boolean> mediumRs;
+
+    connect i -> sender.i;
+    connect sender.ds -> mediumSr.i;
+    connect mediumSr.o -> receiver.dr;
+    connect receiver.ar -> mediumRs.i;
+    connect mediumRs.o -> sender.as;
+    connect receiver.o -> o;
+
+}
