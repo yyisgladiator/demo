@@ -47,8 +47,9 @@ lemma medspf_ufdom[simp]: "ufDom\<cdot>(MedSPF ora) = medInDom"
 text{* The range of @{term MedSPF}. *}
 lemma medspf_ufran[simp]: "ufRan\<cdot>(MedSPF ora) = medOutDom"
   apply (simp add: ufran_least)
-  apply (simp add: ubclLeast_ubundle_def ubclDom_ubundle_def)
-  by (simp add: MedSPF_def tsynbmed_insert tsynbmed_ubundle_ubdom)
+  by (simp add: ubclLeast_ubundle_def ubclDom_ubundle_def MedSPF_def tsynbmed_insert 
+    tsynbmed_ubundle_ubdom)
+
 
 text{* The domain of the output bundle of @{term MedSPF}. *}
 lemma medspf_ubdom:

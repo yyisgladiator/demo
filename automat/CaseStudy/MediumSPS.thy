@@ -63,7 +63,7 @@ lemma spf2sps: assumes "spfConcIn (sbe2SB sbe1)\<cdot>spf1 = spfConcOut (sbe2SB 
   defer 
   defer
   apply (simp add: ufclDom_ufun_def ufclRan_ufun_def assms)+
-sorry
+oops
 
 (* step Lemmata *) 
 text{* If null comes in, it will be sent and Medium stays in its state. *}
@@ -84,7 +84,7 @@ text{* If a message comes in and the counter is not zero, null will be sent and 
   state. *}
 lemma medsps_spsconc_msg_nzero: "spsConcIn (medIn (Msg m)) (MedSPS (Suc n)) = spsConcOut (medOut -)(MedSPS n)"
   apply (simp add: medIn_def medOut_def)
-  apply (subst spf2sps, simp_all)
+ (* apply (subst spf2sps, simp_all)*)
   oops
 
 text{* If a message comes in and the counter is zero, the message will be sent and Medium changes 
@@ -92,19 +92,21 @@ text{* If a message comes in and the counter is zero, the message will be sent a
 lemma medsps_spsconc_msg_zero:"spsConcIn (medIn (Msg m)) (MedSPS 0) 
   = spsConcOut (medOut (Msg m))(uspecFlatten medInDom medOutDom (Rev {MedSPS n | n. True}))"
   apply (simp add: medIn_def medOut_def)
-  apply (subst spf2sps, simp_all)
+ (* apply (subst spf2sps, simp_all)*)
   oops
 (**)
 
 lemma sps2spf_ndaconcoutflatten:
   assumes "\<And>state. uspecDom\<cdot>(other state) = In"
   and "\<And>state. uspecRan\<cdot>(other state) = Out"
+  and "\<And>state. other state \<noteq> uspecMax In Out" 
   shows "spsConcIn (sbe2SB sbe) (other state) = ndaConcOutFlatten In Out (currentTransitions) other"
   apply (rule uspec_eqI)
   apply (simp add: spsconcin_insert)
   apply (subst uspecimage_useful_uspecrevset)
   apply (simp add: ufclDom_ufun_def ufclRan_ufun_def)
   apply (simp add: uspecrevset_insert)
+  apply (simp add: ndaConcOutFlatten_def)
   defer
   apply (subst spsconcin_dom)
   apply (simp add: ndaConcOutFlatten_def assms)
@@ -132,7 +134,7 @@ thm nda_h_final_back
 lemma medsps_medfair_subeq:
   shows "nda_h medFairAut \<sqsubseteq> MedSPS"
   apply (subst nda_h_final_back, simp_all)
-  apply (subst sps2spf_ndaconcoutflatten, simp_all) (* This should result in a proof over MedSPF *)
+  apply (subst sps2spf_ndaconcoutflatten, simp_all)
 sorry
   
 end

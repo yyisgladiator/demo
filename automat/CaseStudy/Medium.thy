@@ -318,11 +318,6 @@ text{* The domain of the output bundle of @{term tsynbMed}. *}
 lemma tsynbmed_ubundle_ubdom: "ubDom\<cdot>(medOutSetStream\<cdot>(tsynMed\<cdot>(medInGetStream\<cdot>sb)\<cdot>ora)) = medOutDom"
   by (simp add: ubdom_insert medOutSetStream.rep_eq medOutSetStream_h.rep_eq medOutDom_def)
 
-(*text {* @{term tsynbMed}: Lossy medium function on time-synchonous stream bundles. *}
-definition tsynbMed :: "bool stream \<Rightarrow> 'a medMessage tsyn stream ubundle 
-  \<rightarrow> 'a medMessage tsyn stream ubundle option" where
-  "tsynbMed ora \<equiv> \<Lambda> sb. (ubDom\<cdot>sb = medInDom) \<leadsto> (medOutSetStream\<cdot>(tsynMed\<cdot>(medInGetStream\<cdot>sb)\<cdot>ora))"*)
-
 text{* @{term tsynbMed} is monotonous. *}
 lemma tsynbmed_mono [simp]:
   "monofun (\<lambda> sb. (ubDom\<cdot>sb = medInDom) \<leadsto> (medOutSetStream\<cdot>(tsynMed\<cdot>(medInGetStream\<cdot>sb)\<cdot>ora)))"
