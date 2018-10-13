@@ -53,6 +53,7 @@ session "automat" (mustWork) in automat = "spec" +
     SpsStep
     ndAutomaton
     ndaTotal
+    ndaComplete
 
 session "abpGenerat" (mustWork) in "abp/generated/abp" = "automat" + 
   options [quick_and_dirty = true]
