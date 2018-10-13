@@ -63,6 +63,7 @@ shows "(setrevImage (\<lambda>(s, sb). ndaTodo_h (ndaDom\<cdot>nda2) (ndaRan\<cd
        ((ndaTransition\<cdot>nda1) (x, e))) 
 \<sqsubseteq> (setrevImage (\<lambda>(s, sb). ndaTodo_h (ndaDom\<cdot>nda2) (ndaRan\<cdot>nda2) (s, sb) h) ((ndaTransition\<cdot>nda2) (f x, e)))"
   apply(simp add: setrevImage_def ndaTodo_h_def)
+  oops
 
 lemma ndaconcout_staterefine2:
 assumes dom_eq: "ndaDom\<cdot>nda1 = ndaDom\<cdot>nda2" and ran_eq: "ndaRan\<cdot>nda1 = ndaRan\<cdot>nda2"
@@ -101,6 +102,28 @@ lemma lfp_lfp_below:
   shows "(lfp C2 g2) \<sqsubseteq> f (lfp C1 g1)"
   by (metis assms(1) assms(2) assms(3) assms(4) assms(5) assms(6) assms(7) assms(8) below_refl lfp_all)
 
+
+lemma lfp_lfp_below2:
+    assumes "monofun g1" 
+    and "monofun g2"
+    and "goodFormed C1 g1" 
+    and "goodFormed C2 g2"
+    and "C1 \<in> DIV" 
+    and "C2 \<in> DIV"
+    and "\<And>x. g2 (f x) = f (g1 x)"
+    and "\<And>x. x\<in>C1 \<Longrightarrow> f x \<in>C2"
+    and "f (div_bot C1) = div_bot C2"
+    and "\<And>K. longAdm(\<lambda>x. f x \<sqsubseteq> (lfp C2 g2))"
+  shows "f (lfp C1 g1) \<sqsubseteq> (lfp C2 g2)"
+proof - 
+  let ?P = "\<lambda>x. f x \<sqsubseteq> (lfp C2 g2)"
+  have "f (div_bot C1) \<sqsubseteq> (lfp C2 g2)"
+    by (simp add: assms(2) assms(4) assms(6) assms(9) div_bot lfp_div)
+  hence "\<And>x. ?P x \<Longrightarrow> f (g1 x) \<sqsubseteq> g2 (lfp C2 g2)"
+    by (metis assms(2) assms(7) monofun_def)
+  hence "\<And>x. ?P x \<Longrightarrow> ?P (g1 x)"
+    using assms(2) assms(4) assms(6) lfp_fix by fastforce
+  hence ?thesis oops
 
 (* I cannot use "isStateRefined" because i need the f *)
 lemma nda_h_staterefine: assumes dom_eq: "ndaDom\<cdot>nda1 = ndaDom\<cdot>nda2" and ran_eq: "ndaRan\<cdot>nda1 = ndaRan\<cdot>nda2"
