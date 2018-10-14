@@ -94,8 +94,22 @@ definition nda_H :: "('s, 'm::message) ndAutomaton \<Rightarrow> 'm SPS" where
 "nda_H nda \<equiv> ndaConcOutFlatten (ndaDom\<cdot>nda)(ndaRan\<cdot>nda) (ndaInitialState\<cdot>nda) (nda_h nda)"
 
 
+
+(* ToDo: Move somewhere else *)
 definition uspecIsStrict :: "('a::ubcl_comp, 'b::ubcl_comp) ufun uspec \<Rightarrow> bool" where
 "uspecIsStrict = uspecForall ufIsStrict"
+
+lemma uspecstrict_set[simp]: "spf\<in>uspecSet sps \<Longrightarrow> uspecIsStrict sps \<Longrightarrow> ufIsStrict spf"
+  by(simp add: uspecIsStrict_def)
+
+
+lemma spf_isstrict[simp]: fixes uf::"('m::message SB \<Rrightarrow> 'n::uscl_pcpo ubundle )"
+  shows "(ufDom\<cdot>uf) =cs \<Longrightarrow> cs\<noteq>{} \<Longrightarrow> ufIsStrict uf \<Longrightarrow> (uf\<rightleftharpoons>(ubLeast cs)) = ubLeast (ufRan\<cdot>uf)"
+  apply(subst ufstrictE, simp_all)
+  apply (simp add: ubclDom_ubundle_def)
+  apply (simp add: ubclLen_ubundle_def)
+  using ubleast_len apply blast
+  by (simp add: ubclLeast_ubundle_def)
 
 
 (* ----------------------------------------------------------------------- *)

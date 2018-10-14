@@ -679,6 +679,10 @@ lemma ufisstrictI: assumes "\<And>sb. ubclDom\<cdot>sb=ufDom\<cdot>uf \<Longrigh
   shows "ufIsStrict uf"
   by (simp add: assms ufIsStrict_def)
 
+lemma ufstrictE: assumes "ufIsStrict uf" and "ubclDom\<cdot>sb=ufDom\<cdot>uf" and "ubclLen sb = 0"
+  shows "((uf\<rightleftharpoons>sb) = ubclLeast (ufRan\<cdot>uf))"
+  using assms(1) assms(2) assms(3) ufIsStrict_def by blast
+
 
 subsection \<open>monoTick2cont\<close>
 

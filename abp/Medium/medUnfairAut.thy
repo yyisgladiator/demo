@@ -202,8 +202,20 @@ lemma medunfair_spf_step_msg [simp]: assumes "spf \<in> uspecSet (medUnfair)"
 
 
 (* Autogenerate: *)
-lemma med_spf_strict[simp]: "spf\<in>uspecSet (medUnfair) \<Longrightarrow> (spf \<rightleftharpoons> ubLeast mediumDom) = ubLeast mediumRan"
+lemma medunfair_strict_spf[simp]: "spf\<in>uspecSet (medUnfair) \<Longrightarrow> ufIsStrict spf"
+  by (simp add: medUnfair_def nda_h_bottom)
+
+lemma mediumdom_nbot[simp]: "mediumDom\<noteq>{}"
+  by(simp add: mediumDom_def)
+
+lemma medium_dom_spf[simp]: "spf\<in>uspecSet (medUnfair) \<Longrightarrow> ufDom\<cdot>spf = mediumDom"
   sorry
+
+lemma medium_ran_spf[simp]: "spf\<in>uspecSet (medUnfair) \<Longrightarrow> ufRan\<cdot>spf = mediumRan"
+  sorry
+
+lemma med_spf_strict[simp]: "spf\<in>uspecSet (medUnfair) \<Longrightarrow> (spf \<rightleftharpoons> ubLeast mediumDom) = ubLeast mediumRan"
+  by(subst spf_isstrict, simp_all)
 
 lemma med_spf_strict2[simp]: "spf\<in>uspecSet (medUnfair) \<Longrightarrow> (spf \<rightleftharpoons> (mediumIn_stream_i\<cdot>\<epsilon>)) = ubLeast mediumRan"
   by (simp add: medin_stream_least)
