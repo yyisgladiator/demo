@@ -1,9 +1,0 @@
-package abp;
-
-component ABP {
-    component MediumRS mediumRs;
-    component MediumSR mediumSr;
-    component Sender sender;
-    component Receiver receiver;
-    autoconnect port;
-}

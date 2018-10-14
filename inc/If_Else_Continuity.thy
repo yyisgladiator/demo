@@ -1,5 +1,5 @@
 theory If_Else_Continuity
-imports Main Cfun SetPcpo
+imports HOLCF  SetPcpo
 begin
 
 lemma bool_cont_implies_lub : "cont pred \<Longrightarrow> chain Y \<Longrightarrow> (\<And>i. pred (Y i)) \<Longrightarrow> pred (Lub Y)" by (smt cont_def fun.set_map imageE lub_const lub_eq lub_eqI)
@@ -29,7 +29,7 @@ instantiation nat :: po
 begin
 
 definition below_nat :: "nat \<Rightarrow> nat \<Rightarrow> bool"  where
-"below_nat \<equiv> op \<le>"
+"below_nat \<equiv> (\<le>)"
 
 instance by intro_classes (simp_all add: below_nat_def)
 end
@@ -259,7 +259,7 @@ proof (rule allI)
 
     assume asm : "chain Y \<and> (\<forall>i. Y i \<in> S1 \<union> S2)"
     case False
-    def YinS2 \<equiv> "restr Y S2"
+    obtain YinS2 where YinS2_def:"YinS2 = restr Y S2" by simp
     hence chainYinS2 : "chain YinS2" using False Int_iff Un_iff asm image_subsetI rangeI restr_is_chain by fastforce
 
     have range_of_comp_is_intersection : "range (f \<circ> YinS2) = f ` (range Y \<inter> S2)" by (smt False Int_iff UnE YinS2_def asm fun.set_map imageE restr_range subsetI)
@@ -308,44 +308,43 @@ theorem if_else_cont :
   and "cont pred"
   and "\<And>x y. (\<not> pred x \<and> pred y) \<Longrightarrow> x \<sqsubseteq> y"
   and "\<And>x y. (\<not> pred x \<and> pred y) \<Longrightarrow>  else_branch x \<sqsubseteq> if_branch y"
-  shows "cont (\<lambda>x. if pred x then if_branch x else else_branch x)"
+  shows "cont (\<lambda>x. if pred x then if_branch x else else_branch x)" (is "cont ?f")
 proof -
-  def f \<equiv> "\<lambda>x. if pred x then if_branch x else else_branch x"
-  have cont_true : "cont_at f {x. pred x}" unfolding cont_at_def by (smt assms(1) assms(3) bool_cont_implies_lub cont_at_def f_def fun.map_cong0 imageE mem_Collect_eq)
-  have cont_false : "cont_at f {x. \<not> pred x}" unfolding cont_at_def by (smt assms(2) assms(3) bool_cont_implies_not_lub cont_at_def f_def fun.map_cong0 imageE mem_Collect_eq)
+  have cont_true : "cont_at ?f {x. pred x}" unfolding cont_at_def by (smt assms(1) assms(3) bool_cont_implies_lub cont_at_def fun.map_cong0 imageE mem_Collect_eq)
+  have cont_false : "cont_at ?f {x. \<not> pred x}" unfolding cont_at_def by (smt assms(2) assms(3) bool_cont_implies_not_lub cont_at_def fun.map_cong0 imageE mem_Collect_eq)
   have "set_below {x. \<not> pred x} {x. pred x}" by (simp add: assms(4) set_below_def)
-  hence "monotone_on_sets f {x. \<not> pred x} {x. pred x} " by (simp add: assms(5) f_def monotone_on_sets_def)
-  hence cont_at_union : "cont_at f ({x. pred x} \<union> {x. \<not> pred x})"by (metis cont_false cont_true cont_union sup_commute)
+  hence "monotone_on_sets ?f {x. \<not> pred x} {x. pred x} " by (simp add: assms(5) monotone_on_sets_def)
+  hence cont_at_union : "cont_at ?f ({x. pred x} \<union> {x. \<not> pred x})"
+    by (metis (no_types, lifting) cont_false cont_true cont_union sup_commute) 
   have "{x. pred x} \<union> {x. \<not> pred x} = (UNIV :: 'a set)" by blast
-  hence "cont_at f (UNIV :: 'a set)" using cont_at_union by simp
-  thus ?thesis using cont_at_univ cont_def f_def image_cong by blast
+  hence "cont_at ?f (UNIV :: 'a set)" using cont_at_union by simp
+  thus ?thesis using cont_at_univ cont_def image_cong by blast
 qed
 
 theorem equalizing_pred_cont :
   assumes "cont_at if_branch {x. pred x}"
   and "cont_at else_branch {x. \<not> pred x}"
   and "\<And>x y. x \<sqsubseteq> y \<Longrightarrow> pred x = pred y"
-  shows "cont (\<lambda>x. if pred x then if_branch x else else_branch x)"
+  shows "cont (\<lambda>x. if pred x then if_branch x else else_branch x)" (is "cont ?f")
 proof -
-  def f \<equiv> "\<lambda>x. if pred x then if_branch x else else_branch x" 
-  have "\<And>Y. chain Y \<Longrightarrow> range (\<lambda>i. f (Y i)) <<| f (\<Squnion>i. Y i)"
+  have "\<And>Y. chain Y \<Longrightarrow> range (\<lambda>i. ?f (Y i)) <<| ?f (\<Squnion>i. Y i)"
   proof - 
     fix Y :: "nat \<Rightarrow> 'a"
     assume chainY : "chain Y"
-    show "range (\<lambda>i. f (Y i)) <<| f (\<Squnion>i. Y i)"
+    show "range (\<lambda>i. ?f (Y i)) <<| ?f (\<Squnion>i. Y i)"
     proof (cases "\<forall>i. pred (Y i)")
       case True
       hence "range (if_branch \<circ> Y) <<| if_branch (Lub Y)" by (meson assms(1) chainY cont_at_def mem_Collect_eq)
-      thus ?thesis by (metis (mono_tags, lifting) True assms(3) chainY comp_apply f_def image_cong is_ub_thelub)
+      thus ?thesis by (metis (mono_tags, lifting) True assms(3) chainY comp_apply image_cong is_ub_thelub)
       next
 
       case False
       have all_false : "\<forall>i. \<not> pred (Y i)" using False assms(3) chainY is_ub_thelub by blast
       hence "range (else_branch \<circ> Y) <<| else_branch (Lub Y)" by (metis assms(2) chainY cont_at_def mem_Collect_eq)
-      thus ?thesis by (metis (mono_tags, lifting) all_false assms(3) chainY comp_apply f_def image_cong is_ub_thelub)
+      thus ?thesis by (metis (mono_tags, lifting) all_false assms(3) chainY comp_apply image_cong is_ub_thelub)
     qed
   qed
-  thus ?thesis by (smt contI f_def image_cong)
+  thus ?thesis by (smt contI image_cong)
 qed
 
 end

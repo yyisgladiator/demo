@@ -1,5 +1,5 @@
 theory Event
-  imports HOLCF "../Channel" "../UnivClasses"
+  imports Channel UnivClasses
 
 begin
 default_sort countable
