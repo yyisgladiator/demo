@@ -22,6 +22,8 @@ lemma longchain_mono: assumes "longChain S" and "monofun f"
   apply (metis (no_types, lifting) assms(1) assms(2) image_iff longChain_def monofunE)
   using assms(1) longChain_def by auto
 
+lemma longchain_subset: "longChain S \<Longrightarrow> C \<subseteq> S \<Longrightarrow> C\<noteq>{} \<Longrightarrow> longChain C"
+  by (simp add: longChain_def set_mp)
 
 lemma mono_lub_below: assumes "monofun f" and "longChain S"
       and cpo: "\<And>S. longChain S \<Longrightarrow> S\<noteq>{} \<Longrightarrow> S\<subseteq>C \<Longrightarrow> \<exists>x\<in>C. S <<| x"

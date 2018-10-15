@@ -83,7 +83,19 @@ lemma lfp_monofun: assumes "f\<sqsubseteq>g"
 
 
 
+
+
+
+
+
+
+
 section\<open>ToDo: induction\<close>
+
+
+
+
+
 
 
 (* similar to iterate, but no longer countable *)
@@ -168,13 +180,29 @@ lemma long_iterate_below_fix5: assumes "monofun f" and "C\<in>DIV" and "goodForm
   apply(rule ccontr)
   oops
 
+lemma "adm(\<lambda>x. x\<sqsubseteq>U)"
+  by simp
+lemma "chain K \<Longrightarrow> (\<And>i. K i \<sqsubseteq> U) \<Longrightarrow> ((\<Squnion>i. K i) \<sqsubseteq> U)"
+  oops
+
+lemma longiterate_step2: assumes "C\<in>DIV" and "goodFormed C f" 
+  and "x \<in> longIterate C f"
+shows "f x \<in> longIterate C f"
+  using assms longiterate_step by fastforce
+
 (* admissibility/completeness *)
 lemma longiterate_subchain: assumes "monofun f" and "C\<in>DIV" and "goodFormed C f" 
 and "longChain K" and "K\<subseteq>(longIterate C f)" 
 shows "lub K \<in> longIterate C f"
 proof - 
-  have "lub K \<sqsubseteq> lfp C f" sorry
-  thus ?thesis sorry
+  have "\<And>k. k\<in>K \<Longrightarrow> k\<sqsubseteq>lfp C f"
+    using assms(1) assms(2) assms(3) assms(5) long_iterate_below_fix4 by blast
+  moreover have "K \<subseteq> C"
+    using assms(2) assms(3) assms(5) longiterate_subset by auto
+  ultimately have "lub K \<sqsubseteq> lfp C f"
+    using assms(2) assms(4) div_cpo_g holmf_below_iff by blast
+
+ thus ?thesis sorry
 qed
 
 lemma longiterate_test: assumes "monofun f" and "C\<in>DIV" and "goodFormed C f" and  "a\<in>(longIterate C f)"
@@ -214,7 +242,28 @@ lemma longiterate_induction: assumes "goodFormed C f" and "C \<in> DIV"
 shows "P x"
   apply(cases "x = div_bot C")
    apply (simp add: assms(5))
-  oops
+proof (rule ccontr)
+  assume "x\<noteq>div_bot C" and "\<not>P x"
+
+  (* y is the smallest element where (P x) is not valid *)
+  obtain y where y_in: "y\<in>longIterate C f" and y_p: "\<not>P y" and y_least: "\<And>z. z\<in>longIterate C f \<Longrightarrow>\<not>P z \<Longrightarrow>  y\<sqsubseteq>z" sorry
+
+  let ?C = "{x. x\<in>longIterate C f \<and> x\<sqsubseteq>y \<and> x\<noteq>y}"
+
+  have c_p: "\<And>c. c\<in>?C \<Longrightarrow> P c"
+    using below_antisym y_least by fastforce
+  have c_bot: "div_bot C \<in> ?C"
+    by (smt CollectI assms(1) assms(2) assms(5) div_bot longiterate_bot longiterate_subset set_mp y_in y_p)
+  hence c_chain: "longChain ?C"
+    by (metis (no_types, lifting) CollectD assms(1) assms(2) assms(4) empty_iff longChain_def longiterate_chain)
+  have c_lub: "P (lub ?C)"
+    using assms(3) c_chain c_p longAdm_def by auto
+
+  have "lub ?C \<noteq> y \<Longrightarrow> f (lub ?C) = y" sorry
+
+  thus False
+    using assms(1) assms(2) assms(4) assms(6) c_chain c_lub longiterate_subchain longiterate_subset y_p by fastforce
+qed
 
 
 lemma lfp_induction: assumes "goodFormed C f" and "C \<in> DIV"
@@ -224,7 +273,7 @@ lemma lfp_induction: assumes "goodFormed C f" and "C \<in> DIV"
   and "P bott"
   and "\<And>x. x\<in>C \<Longrightarrow> P x \<Longrightarrow> P (f x)"
   shows "P (lfp C f)"
-  oops
+  by (metis assms(1) assms(2) assms(3) assms(4) assms(5) assms(6) assms(7) assms(8) below_antisym div_bot longiterate_bot longiterate_induction longiterate_test)
 
 
 end
