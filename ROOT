@@ -17,6 +17,7 @@ session "HOLMF" (mustWork) in HOLMF = "inc" +
     LongChain
     Division
     LFP
+    GFP
 
 session "stream" (mustWork) in stream = "inc" +
   options [quick_and_dirty = false]
