@@ -3,7 +3,7 @@
  * This file was generated from Password.maa and will be overridden when changed. To change
  * permanently, consider changing the model itself.
  *
- * isartransformer 2.0.0
+ * Generated on Oct 15, 2018 8:59:07 PM by isartransformer 2.0.0
  *)
 theory PasswordDatatype
   imports bundle.SBElem
@@ -18,7 +18,7 @@ section \<open>Datatype\<close>
 
 subsection \<open>Definition\<close>
 
-datatype passwordMessage = PasswordString "string"
+datatype passwordMessage = DoNotUse_b4e409_PasswordString "string"
 
 instance passwordMessage :: countable
   apply(intro_classes)
@@ -28,8 +28,8 @@ instantiation passwordMessage :: message
 begin
   fun ctype_passwordMessage :: "channel \<Rightarrow> passwordMessage set" where
   "ctype_passwordMessage c = (
-    if c = \<C> ''i'' then range PasswordString else
-    if c = \<C> ''o'' then range PasswordString else
+    if c = \<C> ''DoNotUse_b4e409_i'' then range DoNotUse_b4e409_PasswordString else
+    if c = \<C> ''DoNotUse_b4e409_o'' then range DoNotUse_b4e409_PasswordString else
     undefined)"
   instance
     by(intro_classes)
@@ -39,10 +39,10 @@ end
 subsection \<open>Domain and Range\<close>
 
 definition passwordDom :: "channel set" where
-"passwordDom = {\<C> ''i''}"
+"passwordDom = {\<C> ''DoNotUse_b4e409_i''}"
 
 definition passwordRan :: "channel set" where
-"passwordRan = {\<C> ''o''}"
+"passwordRan = {\<C> ''DoNotUse_b4e409_o''}"
 
 
 section \<open>Setter\<close>
@@ -51,13 +51,13 @@ subsection \<open>type to sbElem\<close>
 
 (* Do not use this, use passwordElemIn_i instead *)
 lift_definition passwordElem_raw_i :: "string \<Rightarrow> passwordMessage tsyn sbElem" is
-"\<lambda>x. [\<C> ''i'' \<mapsto> Msg (PasswordString x)]"
+"\<lambda>x. [\<C> ''DoNotUse_b4e409_i'' \<mapsto> Msg (DoNotUse_b4e409_PasswordString x)]"
   unfolding sbElemWell_def usclOkay_stream_def ctype_tsyn_def
   by simp
 
 (* Do not use this, use passwordElemOut_o instead *)
 lift_definition passwordElem_raw_o :: "string \<Rightarrow> passwordMessage tsyn sbElem" is
-"\<lambda>x. [\<C> ''o'' \<mapsto> Msg (PasswordString x)]"
+"\<lambda>x. [\<C> ''DoNotUse_b4e409_o'' \<mapsto> Msg (DoNotUse_b4e409_PasswordString x)]"
   unfolding sbElemWell_def usclOkay_stream_def ctype_tsyn_def
   by simp
 
@@ -69,12 +69,12 @@ subsubsection \<open>Intern\<close>
 (* Do not use this, use passwordElemIn_i instead *)
 fun passwordElem_i :: "string tsyn \<Rightarrow> passwordMessage tsyn sbElem" where
 "passwordElem_i (Msg port_i) = passwordElem_raw_i port_i" |
-"passwordElem_i null = sbeNull {\<C> ''i''}"
+"passwordElem_i null = sbeNull {\<C> ''DoNotUse_b4e409_i''}"
 
 (* Do not use this, use passwordElemOut_o instead *)
 fun passwordElem_o :: "string tsyn \<Rightarrow> passwordMessage tsyn sbElem" where
 "passwordElem_o (Msg port_o) = passwordElem_raw_o port_o" |
-"passwordElem_o null = sbeNull {\<C> ''o''}"
+"passwordElem_o null = sbeNull {\<C> ''DoNotUse_b4e409_o''}"
 
 declare passwordElem_i.simps[simp del]
 
@@ -115,14 +115,14 @@ subsubsection \<open>Intern\<close>
 (* Do not use this, use passwordIn_list_i instead *)
 fun password_list_i :: "(string tsyn) list \<Rightarrow> passwordMessage tsyn SB" where
 "password_list_i (x#xs) = ubConcEq (password_i x)\<cdot>(password_list_i xs)" |
-"password_list_i []     = ubLeast {\<C> ''i''}"
+"password_list_i []     = ubLeast {\<C> ''DoNotUse_b4e409_i''}"
 
 declare password_list_i.simps[simp del]
 
 (* Do not use this, use passwordOut_list_o instead *)
 fun password_list_o :: "(string tsyn) list \<Rightarrow> passwordMessage tsyn SB" where
 "password_list_o (x#xs) = ubConcEq (password_o x)\<cdot>(password_list_o xs)" |
-"password_list_o []     = ubLeast {\<C> ''o''}"
+"password_list_o []     = ubLeast {\<C> ''DoNotUse_b4e409_o''}"
 
 declare password_list_o.simps[simp del]
 
@@ -144,31 +144,31 @@ subsection \<open>stream to SB\<close>
 
 subsubsection \<open>Intern\<close>
 
-lift_definition password_stream_i_h :: "string tsyn stream \<Rightarrow> passwordMessage tsyn SB" is
-"\<lambda> s. [(\<C> ''i'') \<mapsto> (tsynMap (PasswordString)\<cdot>s)]"
+lift_definition DoNotUse_b4e409_password_stream_i_h :: "string tsyn stream \<Rightarrow> passwordMessage tsyn SB" is
+"\<lambda> s. [(\<C> ''DoNotUse_b4e409_i'') \<mapsto> (tsynMap (DoNotUse_b4e409_PasswordString)\<cdot>s)]"
   unfolding ubWell_def usclOkay_stream_def ctype_tsyn_def
   by auto
 
 (* Do not use this, use passwordIn_stream_i instead *)
 lift_definition password_stream_i :: "(string) tsyn stream \<rightarrow> passwordMessage tsyn SB" is
-"password_stream_i_h"
-  apply(auto simp add: cfun_def password_stream_i_h_def map_fun_def comp_def)
+"DoNotUse_b4e409_password_stream_i_h"
+  apply(auto simp add: cfun_def DoNotUse_b4e409_password_stream_i_h_def map_fun_def comp_def)
   apply(rule cont_Abs_UB)
   apply(simp add: option_one_cont)
-  by (metis password_stream_i_h.rep_eq ubrep_well)
+  by (metis DoNotUse_b4e409_password_stream_i_h.rep_eq ubrep_well)
 
-lift_definition password_stream_o_h :: "string tsyn stream \<Rightarrow> passwordMessage tsyn SB" is
-"\<lambda> s. [(\<C> ''o'') \<mapsto> (tsynMap (PasswordString)\<cdot>s)]"
+lift_definition DoNotUse_b4e409_password_stream_o_h :: "string tsyn stream \<Rightarrow> passwordMessage tsyn SB" is
+"\<lambda> s. [(\<C> ''DoNotUse_b4e409_o'') \<mapsto> (tsynMap (DoNotUse_b4e409_PasswordString)\<cdot>s)]"
   unfolding ubWell_def usclOkay_stream_def ctype_tsyn_def
   by auto
 
 (* Do not use this, use passwordOut_stream_o instead *)
 lift_definition password_stream_o :: "(string) tsyn stream \<rightarrow> passwordMessage tsyn SB" is
-"password_stream_o_h"
-  apply(auto simp add: cfun_def password_stream_o_h_def map_fun_def comp_def)
+"DoNotUse_b4e409_password_stream_o_h"
+  apply(auto simp add: cfun_def DoNotUse_b4e409_password_stream_o_h_def map_fun_def comp_def)
   apply(rule cont_Abs_UB)
   apply(simp add: option_one_cont)
-  by (metis password_stream_o_h.rep_eq ubrep_well)
+  by (metis DoNotUse_b4e409_password_stream_o_h.rep_eq ubrep_well)
 
 
 subsubsection \<open>In/Out\<close>
@@ -186,20 +186,20 @@ section \<open>Getter\<close>
 subsection \<open>sbElem to tsyn\<close>
 
 definition passwordElem_get_i :: "passwordMessage tsyn sbElem \<Rightarrow> (string) tsyn" where
-"passwordElem_get_i sbe = tsynApplyElem (inv PasswordString) ((Rep_sbElem sbe) \<rightharpoonup> (\<C> ''i''))"
+"passwordElem_get_i sbe = tsynApplyElem (inv DoNotUse_b4e409_PasswordString) ((Rep_sbElem sbe) \<rightharpoonup> (\<C> ''DoNotUse_b4e409_i''))"
 
 definition passwordElem_get_o :: "passwordMessage tsyn sbElem \<Rightarrow> (string) tsyn" where
-"passwordElem_get_o sbe = tsynApplyElem (inv PasswordString) ((Rep_sbElem sbe) \<rightharpoonup> (\<C> ''o''))"
+"passwordElem_get_o sbe = tsynApplyElem (inv DoNotUse_b4e409_PasswordString) ((Rep_sbElem sbe) \<rightharpoonup> (\<C> ''DoNotUse_b4e409_o''))"
 
 
 subsection \<open>SB to stream\<close>
 
 lift_definition password_get_stream_i :: "passwordMessage tsyn SB \<rightarrow> string tsyn stream" is
-"\<lambda>sb. tsynMap (inv PasswordString)\<cdot>(sb . (\<C> ''i''))"
+"\<lambda>sb. tsynMap (inv DoNotUse_b4e409_PasswordString)\<cdot>(sb . (\<C> ''DoNotUse_b4e409_i''))"
   by(simp add: cfun_def)
 
 lift_definition password_get_stream_o :: "passwordMessage tsyn SB \<rightarrow> string tsyn stream" is
-"\<lambda>sb. tsynMap (inv PasswordString)\<cdot>(sb . (\<C> ''o''))"
+"\<lambda>sb. tsynMap (inv DoNotUse_b4e409_PasswordString)\<cdot>(sb . (\<C> ''DoNotUse_b4e409_o''))"
   by(simp add: cfun_def)
 
 
@@ -209,23 +209,23 @@ subsection \<open>tsyn to sbElem/SB\<close>
 
 subsubsection \<open>Intern\<close>
 
-lemma passwordelem_i_dom[simp]: "sbeDom (passwordElem_i x) = {\<C> ''i''}"
+lemma passwordelem_i_dom[simp]: "sbeDom (passwordElem_i x) = {\<C> ''DoNotUse_b4e409_i''}"
   apply(cases x)
   apply(simp add: passwordElem_i.simps sbeDom_def passwordElem_raw_i.rep_eq)
   by(simp add: passwordElem_i.simps)
 
-lemma passwordelem_o_dom[simp]: "sbeDom (passwordElem_o x) = {\<C> ''o''}"
+lemma passwordelem_o_dom[simp]: "sbeDom (passwordElem_o x) = {\<C> ''DoNotUse_b4e409_o''}"
   apply(cases x)
   apply(simp add: passwordElem_o.simps sbeDom_def passwordElem_raw_o.rep_eq)
   by(simp add: passwordElem_o.simps)
 
-lemma password_i_dom[simp]: "ubDom\<cdot>(password_i x) = {\<C> ''i''}"
+lemma password_i_dom[simp]: "ubDom\<cdot>(password_i x) = {\<C> ''DoNotUse_b4e409_i''}"
   by(simp add: password_i_def)
 
 lemma password_i_len[simp]: "ubLen (password_i x) = 1"
   by(simp add: password_i_def)
 
-lemma password_o_dom[simp]: "ubDom\<cdot>(password_o x) = {\<C> ''o''}"
+lemma password_o_dom[simp]: "ubDom\<cdot>(password_o x) = {\<C> ''DoNotUse_b4e409_o''}"
   by(simp add: password_o_def)
 
 lemma password_o_len[simp]: "ubLen (password_o x) = 1"
@@ -257,40 +257,40 @@ subsection \<open>stream to SB\<close>
 
 subsubsection \<open>Intern\<close>
 
-lemma password_stream_i_dom[simp]: "ubDom\<cdot>(password_stream_i\<cdot>x) = {\<C> ''i''}"
-  by(simp add: password_stream_i.rep_eq ubdom_insert password_stream_i_h.rep_eq)
+lemma password_stream_i_dom[simp]: "ubDom\<cdot>(password_stream_i\<cdot>x) = {\<C> ''DoNotUse_b4e409_i''}"
+  by(simp add: password_stream_i.rep_eq ubdom_insert DoNotUse_b4e409_password_stream_i_h.rep_eq)
 
 lemma password_stream_i_len[simp]: "ubLen (password_stream_i\<cdot>x) = #x"
   apply(subst uslen_ubLen_ch3)
   apply simp
   apply(simp add: password_stream_i.rep_eq)
-  apply(simp add: ubGetCh_def password_stream_i_h.rep_eq)
+  apply(simp add: ubGetCh_def DoNotUse_b4e409_password_stream_i_h.rep_eq)
   by (simp add: tsynmap_slen usclLen_stream_def)
 
 lemma password_stream_i_id[simp]:
-  assumes "ubDom\<cdot>ub = {\<C> ''i''} "
+  assumes "ubDom\<cdot>ub = {\<C> ''DoNotUse_b4e409_i''} "
     shows "password_stream_i\<cdot>(password_get_stream_i\<cdot>ub) = ub"
   apply(simp add: password_stream_i.rep_eq password_get_stream_i.rep_eq)
-  apply(simp add: password_stream_i_h_def)
+  apply(simp add: DoNotUse_b4e409_password_stream_i_h_def)
   apply(subst tsynmap_inv_id)
   using assms tsynbundle_ctype apply fastforce
   using assms ub_id_single by blast
 
-lemma password_stream_o_dom[simp]: "ubDom\<cdot>(password_stream_o\<cdot>x) = {\<C> ''o''}"
-  by(simp add: password_stream_o.rep_eq ubdom_insert password_stream_o_h.rep_eq)
+lemma password_stream_o_dom[simp]: "ubDom\<cdot>(password_stream_o\<cdot>x) = {\<C> ''DoNotUse_b4e409_o''}"
+  by(simp add: password_stream_o.rep_eq ubdom_insert DoNotUse_b4e409_password_stream_o_h.rep_eq)
 
 lemma password_stream_o_len[simp]: "ubLen (password_stream_o\<cdot>x) = #x"
   apply(subst uslen_ubLen_ch3)
   apply simp
   apply(simp add: password_stream_o.rep_eq)
-  apply(simp add: ubGetCh_def password_stream_o_h.rep_eq)
+  apply(simp add: ubGetCh_def DoNotUse_b4e409_password_stream_o_h.rep_eq)
   by (simp add: tsynmap_slen usclLen_stream_def)
 
 lemma password_stream_o_id[simp]:
-  assumes "ubDom\<cdot>ub = {\<C> ''o''} "
+  assumes "ubDom\<cdot>ub = {\<C> ''DoNotUse_b4e409_o''} "
     shows "password_stream_o\<cdot>(password_get_stream_o\<cdot>ub) = ub"
   apply(simp add: password_stream_o.rep_eq password_get_stream_o.rep_eq)
-  apply(simp add: password_stream_o_h_def)
+  apply(simp add: DoNotUse_b4e409_password_stream_o_h_def)
   apply(subst tsynmap_inv_id)
   using assms tsynbundle_ctype apply fastforce
   using assms ub_id_single by blast
@@ -347,19 +347,19 @@ subsubsection \<open>Intern\<close>
 
 lemma password_get_stream_i_id[simp]: "password_get_stream_i\<cdot>(password_stream_i\<cdot>x) = x"
   apply(simp add: password_get_stream_i.rep_eq password_stream_i.rep_eq)
-  apply(simp add: ubGetCh_def password_stream_i_h.rep_eq)
+  apply(simp add: ubGetCh_def DoNotUse_b4e409_password_stream_i_h.rep_eq)
   by (simp add: inj_def)
 
 lemma password_get_stream_i_eq:
-  assumes "ubDom\<cdot>ub1 = {\<C> ''i''}"
-      and "ubDom\<cdot>ub2 = {\<C> ''i''}"
+  assumes "ubDom\<cdot>ub1 = {\<C> ''DoNotUse_b4e409_i''}"
+      and "ubDom\<cdot>ub2 = {\<C> ''DoNotUse_b4e409_i''}"
       and "password_get_stream_i\<cdot>ub1 = password_get_stream_i\<cdot>ub2"
     shows "ub1 = ub2"
   using assms(1) assms(2) assms(3) password_stream_i_id by metis
 
 lemma password_get_stream_i_conc[simp]:
-  assumes "\<C> ''i'' \<in> ubDom\<cdot>ub1"
-      and "\<C> ''i'' \<in> ubDom\<cdot>ub2"
+  assumes "\<C> ''DoNotUse_b4e409_i'' \<in> ubDom\<cdot>ub1"
+      and "\<C> ''DoNotUse_b4e409_i'' \<in> ubDom\<cdot>ub2"
     shows "password_get_stream_i\<cdot>(ubConc ub1\<cdot>ub2) = (password_get_stream_i\<cdot>ub1) \<bullet> (password_get_stream_i\<cdot>ub2)"
   apply(simp add: password_get_stream_i.rep_eq)
   apply (subst ubConc_usclConc_eq)
@@ -369,19 +369,19 @@ lemma password_get_stream_i_conc[simp]:
 
 lemma password_get_stream_o_id[simp]: "password_get_stream_o\<cdot>(password_stream_o\<cdot>x) = x"
   apply(simp add: password_get_stream_o.rep_eq password_stream_o.rep_eq)
-  apply(simp add: ubGetCh_def password_stream_o_h.rep_eq)
+  apply(simp add: ubGetCh_def DoNotUse_b4e409_password_stream_o_h.rep_eq)
   by (simp add: inj_def)
 
 lemma password_get_stream_o_eq:
-  assumes "ubDom\<cdot>ub1 = {\<C> ''o''}"
-      and "ubDom\<cdot>ub2 = {\<C> ''o''}"
+  assumes "ubDom\<cdot>ub1 = {\<C> ''DoNotUse_b4e409_o''}"
+      and "ubDom\<cdot>ub2 = {\<C> ''DoNotUse_b4e409_o''}"
       and "password_get_stream_o\<cdot>ub1 = password_get_stream_o\<cdot>ub2"
     shows "ub1 = ub2"
   using assms(1) assms(2) assms(3) password_stream_o_id by metis
 
 lemma password_get_stream_o_conc[simp]:
-  assumes "\<C> ''o'' \<in> ubDom\<cdot>ub1"
-      and "\<C> ''o'' \<in> ubDom\<cdot>ub2"
+  assumes "\<C> ''DoNotUse_b4e409_o'' \<in> ubDom\<cdot>ub1"
+      and "\<C> ''DoNotUse_b4e409_o'' \<in> ubDom\<cdot>ub2"
     shows "password_get_stream_o\<cdot>(ubConc ub1\<cdot>ub2) = (password_get_stream_o\<cdot>ub1) \<bullet> (password_get_stream_o\<cdot>ub2)"
   apply(simp add: password_get_stream_o.rep_eq)
   apply (subst ubConc_usclConc_eq)

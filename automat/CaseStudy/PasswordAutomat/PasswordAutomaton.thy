@@ -3,10 +3,10 @@
  * This file was generated from Password.maa and will be overridden when changed. To change
  * permanently, consider changing the model itself.
  *
- * isartransformer 2.0.0
+ * Generated on Oct 15, 2018 8:59:07 PM by isartransformer 2.0.0
  *)
 theory PasswordAutomaton
-  imports PasswordDatatype automat.dAutomaton
+  imports PasswordDatatype PasswordStates automat.dAutomaton
 
 begin
 
@@ -18,30 +18,16 @@ fun prepend :: "'a::type list \<Rightarrow> 'a \<Rightarrow> 'a list" where
 
 section \<open>Automaton definition\<close>
 
-(* These are the actual states from MAA *)
-datatype PasswordSubstate = Initial | PasswortSaved | OneTick
-
-(* And these have also the variables *)
-datatype PasswordState = PasswordState PasswordSubstate (* lastB = *) "string"
-
-(* Function to get the substate *)
-fun getPasswordSubState :: "PasswordState \<Rightarrow> PasswordSubstate" where
-"getPasswordSubState (PasswordState s _) = s"
-
-(* Functions to get the variables *)
-fun getLastB :: "PasswordState \<Rightarrow> string" where
-"getLastB (PasswordState _ var_lastB) = var_lastB"
-
 (* Helper that allows us to utilize pattern matching *)
 fun passwordTransitionH :: "(PasswordState \<times> (string tsyn)) \<Rightarrow> (PasswordState \<times> passwordMessage tsyn SB)" where
 "passwordTransitionH (PasswordState Initial var_lastB, (\<^cancel>\<open>i\<mapsto>\<close>Msg port_i)) =
   (PasswordState PasswortSaved port_i, (passwordOut_o null))" |
 
 "passwordTransitionH (PasswordState Initial var_lastB, (\<^cancel>\<open>i\<mapsto>\<close>null)) =
-  (PasswordState Initial var_lastB, (passwordOut_o null))" |
+  (PasswordState Initial '''', (passwordOut_o null))" |
 
 "passwordTransitionH (PasswordState PasswortSaved var_lastB, (\<^cancel>\<open>i\<mapsto>\<close>Msg port_i)) =
-  (if(port_i=var_lastB) then ((PasswordState Initial var_lastB, (passwordOut_o (Msg (port_i)))))
+  (if(port_i=var_lastB) then ((PasswordState Initial '''', (passwordOut_o (Msg (port_i)))))
    else if(port_i\<noteq>var_lastB) then ((PasswordState PasswortSaved port_i, (passwordOut_o null)))
    else (PasswordState PasswortSaved var_lastB, (passwordOut_o null)))" |
 
@@ -114,18 +100,18 @@ lemma passwordTransition_0_0[simp]:
          = (PasswordState PasswortSaved port_i, (passwordOut_o null))"
   using assms by(auto simp add: passwordTransition_def assms)
 
-(* Line 14:  Initial -> Initial {i==null}; *)
+(* Line 14:  Initial -> Initial {i==null} / {lastB=""}; *)
 lemma passwordTransition_1_0[simp]:
   assumes "True"
     shows "passwordTransition ((PasswordState Initial var_lastB), (passwordElemIn_i null))
-         = (PasswordState Initial var_lastB, (passwordOut_o null))"
+         = (PasswordState Initial '''', (passwordOut_o null))"
   using assms by(auto simp add: passwordTransition_def assms)
 
-(* Line 16:  PasswortSaved -> Initial {i==lastB} / {o=i}; *)
+(* Line 16:  PasswortSaved -> Initial {i==lastB} / {o=i, lastB=""}; *)
 lemma passwordTransition_2_0[simp]:
   assumes "port_i=var_lastB"
     shows "passwordTransition ((PasswordState PasswortSaved var_lastB), (passwordElemIn_i (Msg port_i)))
-         = (PasswordState Initial var_lastB, (passwordOut_o (Msg (port_i))))"
+         = (PasswordState Initial '''', (passwordOut_o (Msg (port_i))))"
   using assms by(auto simp add: passwordTransition_def assms)
 
 (* Line 17:  PasswortSaved -> PasswortSaved [i!=lastB && i!=null] / {lastB=i}; *)
@@ -179,20 +165,20 @@ lemma passwordStep_0_0:
   apply(rule da_h_stepI)
   using assms by(auto simp add: daNextState_def daNextOutput_def assms)
 
-(* Line 14:  Initial -> Initial {i==null}; *)
+(* Line 14:  Initial -> Initial {i==null} / {lastB=""}; *)
 lemma passwordStep_1_0:
   assumes "True"
     shows "spfConcIn  (passwordIn_i null)\<cdot>(passwordStep (PasswordState Initial var_lastB))
-         = spfConcOut (passwordOut_o null)\<cdot>(passwordStep (PasswordState Initial var_lastB))"
+         = spfConcOut (passwordOut_o null)\<cdot>(passwordStep (PasswordState Initial ''''))"
   apply(simp add: passwordStep_def passwordIn_i_def)
   apply(rule da_h_stepI)
   using assms by(auto simp add: daNextState_def daNextOutput_def assms)
 
-(* Line 16:  PasswortSaved -> Initial {i==lastB} / {o=i}; *)
+(* Line 16:  PasswortSaved -> Initial {i==lastB} / {o=i, lastB=""}; *)
 lemma passwordStep_2_0:
   assumes "port_i=var_lastB"
     shows "spfConcIn  (passwordIn_i (Msg port_i))\<cdot>(passwordStep (PasswordState PasswortSaved var_lastB))
-         = spfConcOut (passwordOut_o (Msg (port_i)))\<cdot>(passwordStep (PasswordState Initial var_lastB))"
+         = spfConcOut (passwordOut_o (Msg (port_i)))\<cdot>(passwordStep (PasswordState Initial ''''))"
   apply(simp add: passwordStep_def passwordIn_i_def)
   apply(rule da_h_stepI)
   using assms by(auto simp add: daNextState_def daNextOutput_def assms)
