@@ -34,15 +34,17 @@ lemma div_rev_inv: "a\<in>DIV \<Longrightarrow> ((inv Rev)`a) \<in> DIV"
   by (smt DIV_rev_def GFP.rev.inject image_iff image_inv_f_f inj_def)
 
 instance
-  by intro_classes
+  apply intro_classes
+  apply (simp add: DIV_rev_def div_non_empty)
+  using GFP.div_rev_inv div_inner_non_empty by blast
 end
 
 
 class rev_div_cpo = division + po +
 
-  assumes rev_div_non_empty: "DIV \<noteq> {}"
+(*   assumes rev_div_non_empty: "DIV \<noteq> {}" *)
 
-  assumes rev_div_inner_non_empty: "\<And>a. a\<in>DIV  \<Longrightarrow> a \<noteq> {}"
+ (*  assumes rev_div_inner_non_empty: "\<And>a. a\<in>DIV  \<Longrightarrow> a \<noteq> {}" *)
 
 
     (* every set is a cpo *)
@@ -86,9 +88,9 @@ qed
 
 instance
   apply(intro_classes)
-  apply (simp add: DIV_rev_def rev_div_non_empty)
-  using DIV_rev_def rev_div_inner_non_empty apply fastforce
-  by (simp add: rev_lub_ex)
+  apply (simp add: DIV_rev_def div_non_empty)
+  by (simp add: DIV_rev_def GFP.rev_lub_ex)
+
   
 end
 
@@ -227,6 +229,14 @@ proof -
 qed
 
 
+lemma gfp_smaller: assumes "monofun f"
+    and "goodFormed C f"
+    and "C \<in> DIV"
+    and "\<And>x. x\<in>C \<Longrightarrow>f x = x \<Longrightarrow> x\<sqsubseteq>y"
+  shows "(gfp C f) \<sqsubseteq> y"
+  using assms(1) assms(2) assms(3) assms(4) gfp_div gfp_fix by fastforce
+
+
 lemma gfp_monofun: assumes "f\<sqsubseteq>g"
     and "monofun f" and "monofun g"
     and "goodFormed C f" and "goodFormed C g"
@@ -234,5 +244,11 @@ lemma gfp_monofun: assumes "f\<sqsubseteq>g"
   shows "gfp C f \<sqsubseteq> gfp C g"
   by (metis assms(1) assms(2) assms(3) assms(4) assms(5) assms(6) below_fun_def gfp_div gfp_fix gfp_greatest)
 
+lemma gfp_lfp:
+  assumes "monofun f"
+    and "goodFormed C f"
+    and "C \<in> DIV"
+  shows "(lfp C f) \<sqsubseteq> (gfp C f)"
+  using assms(1) assms(2) assms(3) gfp_greatest lfp_div lfp_fix by fastforce
 
 end
