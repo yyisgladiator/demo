@@ -44,9 +44,20 @@ lemma medsps_uspecran[simp]: "uspecRan\<cdot>(MedSPS n) = mediumRan"
 subsection {* Medium State Lemmata *}
 (* ----------------------------------------------------------------------- *)
 
-lemma spf2sps: assumes "spfConcIn (sbe2SB sbe1)\<cdot>spf1 = spfConcOut (sbe2SB sbe2)\<cdot>spf2"
-(*  and "sbeDom sbe1 = uspecDom\<cdot>sps"
-  and "sbeDom sbe2 = uspecRan\<cdot>sps2" *)
+lemma spf2sps: assumes "spfConcIn In\<cdot>spf1 = spfConcOut Out\<cdot>spf2"
+  and "spf1 \<in> uspecSet sps1"
+  shows "\<exists>sps2. spf2 \<in> uspecSet sps2 \<and> spsConcIn In sps1
+    = spsConcOut Out (uspecFlatten (uspecDom\<cdot>sps2)(uspecRan\<cdot>sps2)(Rev {sps2}))"
+  apply (subst spsconcin_insert)
+  apply (subst spsconcout_insert)
+  apply (simp add: uspecImage_def)
+  apply (simp add: ufclDom_ufun_def ufclRan_ufun_def)
+  apply (simp add: uspecrevset_insert setrevImage_def)
+  apply (simp add: rep_rev_revset)
+oops
+
+(*
+lemma spf2sps_b: assumes "spfConcIn (sbe2SB sbe1)\<cdot>spf1 = spfConcOut (sbe2SB sbe2)\<cdot>spf2"
   and "uspecDom\<cdot>sps1 = uspecDom\<cdot>sps2"
   and "uspecRan\<cdot>sps1 = uspecRan\<cdot>sps2"
   shows "spsConcIn (sbe2SB sbe1) sps1 
@@ -63,7 +74,7 @@ lemma spf2sps: assumes "spfConcIn (sbe2SB sbe1)\<cdot>spf1 = spfConcOut (sbe2SB 
   defer 
   defer
   apply (simp add: ufclDom_ufun_def ufclRan_ufun_def assms)+
-oops
+oops*)
 
 (* step Lemmata *) 
 text{* If null comes in, it will be sent and Medium stays in its state. *}
