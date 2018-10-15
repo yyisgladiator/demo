@@ -220,15 +220,46 @@ lemma med_spf_strict[simp]: "spf\<in>uspecSet (medUnfair) \<Longrightarrow> (spf
 lemma med_spf_strict2[simp]: "spf\<in>uspecSet (medUnfair) \<Longrightarrow> (spf \<rightleftharpoons> (mediumIn_stream_i\<cdot>\<epsilon>)) = ubLeast mediumRan"
   by (simp add: medin_stream_least)
 
+lemma adm_subset[simp]:"adm(\<lambda>s. g\<cdot>s \<subseteq> f\<cdot>s)"
+  by simp
+
+thm adm_subsetEq
 (* Final Proof *)
+
+lemma medapply_cont[simp]: "spf\<in>uspecSet (medUnfair) \<Longrightarrow> cont (\<lambda>s. (spf \<rightleftharpoons> mediumIn_stream_i\<cdot>s))"
+  using cont_compose f20 op_the_cont by blast
+
+lemma medapply_subst: assumes "spf\<in>uspecSet (medUnfair)" 
+  shows "(spf \<rightleftharpoons> mediumIn_stream_i\<cdot>s) = (\<Lambda> s. (spf \<rightleftharpoons> mediumIn_stream_i\<cdot>s))\<cdot>s"
+  by (simp add: assms)
+
+lemma medunfair_step_stream_tick: assumes "spf\<in>uspecSet medUnfair"
+  obtains spf2 where "medium_get_stream_o\<cdot>(spf \<rightleftharpoons> mediumIn_stream_i\<cdot>(\<up>- \<bullet> s)) = \<up>- \<bullet> medium_get_stream_o\<cdot>(spf2 \<rightleftharpoons> mediumIn_stream_i\<cdot>s)"
+  and  "spf2\<in>uspecSet medUnfair"
+  sorry
+
+lemma medunfair_step_stream_msg: assumes "spf\<in>uspecSet medUnfair"
+  shows "\<exists>spf2 out. medium_get_stream_o\<cdot>(spf \<rightleftharpoons> mediumIn_stream_i\<cdot>(\<up>(Msg m) \<bullet> s)) = \<up>out \<bullet> medium_get_stream_o\<cdot>(spf2 \<rightleftharpoons> mediumIn_stream_i\<cdot>s)
+    \<and> spf2\<in>uspecSet medUnfair \<and> out\<in>{-, Msg m}"
+  sorry
+
+lemma medunfair_step_stream_msg_dom: assumes "spf\<in>uspecSet medUnfair"
+  shows "\<exists>spf2. tsynDom\<cdot>(medium_get_stream_o\<cdot>(spf \<rightleftharpoons> mediumIn_stream_i\<cdot>(\<up>(Msg m) \<bullet> s))) \<sqsubseteq> 
+    insert m (tsynDom\<cdot>(medium_get_stream_o\<cdot>(spf2 \<rightleftharpoons> mediumIn_stream_i\<cdot>s)))
+    \<and> spf2\<in>uspecSet medUnfair"
+  sorry
+
 lemma medunfair_dom [simp]: assumes "spf \<in> uspecSet medUnfair"
-  shows "tsynDom\<cdot>(medium_get_stream_o\<cdot>(spf \<rightleftharpoons> mediumIn_stream_i\<cdot>s)) \<subseteq> tsynDom\<cdot>s"
+  shows "tsynDom\<cdot>(medium_get_stream_o\<cdot>(spf \<rightleftharpoons> mediumIn_stream_i\<cdot>s)) \<sqsubseteq> tsynDom\<cdot>s"
   using assms apply(induction s arbitrary: spf rule:ind)
-    apply(rule adm_all, rule admI)
-    apply (rule, simp)
-    defer
-    apply (simp)
-  
-  oops
+  apply(rule admI, auto)
+   apply (smt ch2ch_Rep_cfunR contlub_cfun_arg lub_mono medapply_subst)
+  apply(rename_tac m s spf)                  
+  apply(case_tac m, auto simp add: tsyndom_sconc_null tsyndom_sconc_msg)
+  defer
+  apply (metis medunfair_step_stream_tick tsyndom_sconc_null)
+  using medunfair_step_stream_msg_dom tsyndom_sconc_msg
+  by (smt SetPcpo.less_set_def insert_iff subset_iff)
+
 
 end
