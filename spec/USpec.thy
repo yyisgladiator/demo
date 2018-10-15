@@ -1128,23 +1128,28 @@ and a3: "uspecRan\<cdot>Z = Out"
   qed
 qed
 
-lemma uspecflatten_not_max: assumes "SET \<noteq> Rev {}" 
-and "\<And>set. set \<in> inv Rev SET \<Longrightarrow>  (uspecDom\<cdot>set) = In \<and>  (uspecRan\<cdot>set) = Out"
-and "\<And>set. set \<in> inv Rev SET \<Longrightarrow>   set \<noteq> uspecMax In Out"
-shows "uspecFlatten In Out SET \<noteq> uspecMax In Out"
+lemma uspecflatten_not_least: assumes "SET \<noteq> {}" 
+and "\<And>set. set \<in> SET \<Longrightarrow>  (uspecDom\<cdot>set) = In \<and>  (uspecRan\<cdot>set) = Out"
+and "\<And>set. set \<in> SET \<Longrightarrow>  set \<noteq> uspecLeast In Out"
+shows "uspecFlatten In Out\<cdot>SET \<noteq> uspecLeast In Out"
 proof -
-  obtain da_set where da_set_def: "da_set \<in> inv Rev SET"
-    by (metis all_not_in_conv assms(1) rev_inv_rev)
+  obtain da_set where da_set_def: "da_set \<in> SET"
+    by (metis all_not_in_conv assms(1))
   have set_dom_ran: "(uspecDom\<cdot>da_set) = In \<and>  (uspecRan\<cdot>da_set) = Out"
     using assms(2) da_set_def by auto
-  have da_set_in_filter: "da_set \<in> inv Rev (uspec_set_filter In Out\<cdot>SET)"
-    by (simp add: da_set_def set_dom_ran setrevfilter_reversed uspec_set_filter_def)
-  have da_set_not_empty: "da_set \<noteq> uspecMax In Out"
+  have da_set_in_filter: "da_set \<in> (uspec_set_filter In Out\<cdot>SET)"
+    by (simp add: da_set_def set_dom_ran uspec_filter_insert uspec_set_filter_def)
+  have da_set_not_empty: "da_set \<noteq> uspecLeast In Out"
     by (simp add: assms(3) da_set_def)
+  have b0: "(\<Lambda> uspecs. Abs_uspec (setflat\<cdot>(Rep_cfun uspecSet ` uspec_set_filter In Out\<cdot>uspecs), Discr In, Discr Out))\<cdot>SET = 
+     Abs_uspec (setflat\<cdot>(Rep_cfun uspecSet ` uspec_set_filter In Out\<cdot>SET), Discr In, Discr Out)"
+    by (metis uspecFlatten_def uspecflatten_insert)
   show ?thesis
     apply (simp add: uspecFlatten_def)
-    by (metis (mono_tags, lifting) da_set_def da_set_not_empty empty_iff fstI inv_rev_rev set_dom_ran uspecFlatten_def uspecMax.rep_eq uspec_consist_f_ex uspecflatten_ele2 uspecmax_consistent uspecrevset_insert)
-qed
+    apply (subst b0)
+    by (metis (no_types, lifting) Pair_inject da_set_in_filter da_set_not_empty imageI rep_abs_uspec set_dom_ran 
+      setflat_not_empty uspecIsConsistent_def uspecLeast.rep_eq uspecflatten_well uspecleast_consistent)
+ qed
 
 subsection \<open>Forall Exists\<close>
 
