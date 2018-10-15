@@ -72,16 +72,16 @@ by (meson a1 fun_below_iff)
     by (simp add: SetPcpo.less_set_def)
 qed
 qed
-   
-lemma spsStep_h_cont[simp]:"cont (\<lambda> h::('m::message sbElem \<Rightarrow> 'm SPS). setify\<cdot>(\<lambda>e. uspecRevSet\<cdot>(h e)))"
+
+lemma spsStep_h_cont[simp]:"cont (\<lambda> h::('m::message sbElem \<Rightarrow> 'm SPS). setify (\<lambda>e. uspecSet\<cdot>(h e)))"
 proof(rule Cont.contI2,simp)
   fix Y::"nat \<Rightarrow> 'm sbElem \<Rightarrow> 'm SPS"
   assume a1:"chain Y"
-  assume a2:"chain (\<lambda>i::nat. setify\<cdot>(\<lambda>e. uspecRevSet\<cdot>(Y i e)))"
-  have a3:"(\<lambda>e. \<Squnion>i. uspecRevSet\<cdot>(Y i e)) =  (\<Squnion>i.(\<lambda>e. uspecRevSet\<cdot>(Y i e)))"
+  assume a2:"chain (\<lambda>i::nat. setify (\<lambda>e. uspecSet\<cdot>(Y i e)))"
+  have a3:"(\<lambda>e. \<Squnion>i. uspecSet\<cdot>(Y i e)) =  (\<Squnion>i.(\<lambda>e. uspecSet\<cdot>(Y i e)))"
     apply(subst lub_fun,auto)
     by (metis (mono_tags, lifting) a1 cont_pref_eq1I fun_below_iff po_class.chain_def)
-  show "setify\<cdot>(\<lambda>e. uspecRevSet\<cdot>((\<Squnion>i::nat. Y i) e)) \<sqsubseteq> (\<Squnion>i. setify\<cdot>(\<lambda>e. uspecRevSet\<cdot>(Y i e)))"
+  show "setify (\<lambda>e. uspecSet\<cdot>((\<Squnion>i::nat. Y i) e)) \<sqsubseteq> (\<Squnion>i. setify (\<lambda>e. uspecSet\<cdot>(Y i e)))"
     apply(simp add: a1 lub_fun)
     apply (simp add: contlub_cfun_arg a1 ch2ch_fun a3)
     apply(subst contlub_cfun_arg, auto)
