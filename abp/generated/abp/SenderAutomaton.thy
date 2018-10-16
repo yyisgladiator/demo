@@ -3,7 +3,7 @@
  * This file was generated from Sender.maa and will be overridden when changed. To change
  * permanently, consider changing the model itself.
  *
- * Generated on Oct 12, 2018 1:15:28 PM by isartransformer 2.0.0
+ * Generated on Oct 16, 2018 10:17:26 PM by isartransformer 3.1.0
  *)
 theory SenderAutomaton
   imports SenderDatatype SenderStates automat.dAutomaton
@@ -82,7 +82,7 @@ definition senderTransition :: "('e SenderState \<times> ('e::countable) senderM
 
 (* Initial state *)
 definition senderInitialState :: "'e SenderState" where
-"senderInitialState = SenderState St ([] ::'e list) (0::nat)"
+"senderInitialState = SenderState St ([] ::'e list) (0::int)"
 
 (* Initial output *)
 definition senderInitialOutput :: "('e::countable) senderMessage tsyn SB" where
@@ -355,7 +355,7 @@ lemma senderTransition_7_2[simp]:
 section \<open>Step-wise lemmata for the SPF\<close>
 
 (* Convert the SPF to step notation *)
-lemma senderSpf2Step: "senderSPF = spfConcOut (senderOut_ds null)\<cdot>(senderStep (SenderState St ([] ::'e::countable list) (0::nat)))"
+lemma senderSpf2Step: "senderSPF = spfConcOut (senderOut_ds null)\<cdot>(senderStep (SenderState St ([] ::'e::countable list) (0::int)))"
   by(simp add: senderSPF_def da_H_def senderInitialOutput_def senderInitialState_def senderStep_def)
 
 (* Line 33:  Sf -> St [buffer.size()>1 && i!=null] {as==false} / {buffer=buffer.butlast().prepend(i), c=3, ds=new Pair<>(buffer.butlast().last(),true)}; *)
@@ -646,5 +646,6 @@ lemma senderStep_7_2:
   apply(rule da_h_stepI)
   using assms by(auto simp add: daNextState_def daNextOutput_def assms)
 
+lemmas senderSteps = senderStep_0_0 senderStep_0_1 senderStep_0_2 senderStep_0_3 senderStep_0_4 senderStep_1_0 senderStep_1_1 senderStep_1_2 senderStep_1_3 senderStep_1_4 senderStep_2_0 senderStep_2_1 senderStep_2_2 senderStep_3_0 senderStep_3_1 senderStep_3_2 senderStep_4_0 senderStep_4_1 senderStep_4_2 senderStep_4_3 senderStep_4_4 senderStep_5_0 senderStep_5_1 senderStep_5_2 senderStep_5_3 senderStep_5_4 senderStep_6_0 senderStep_6_1 senderStep_6_2 senderStep_7_0 senderStep_7_1 senderStep_7_2
 
 end

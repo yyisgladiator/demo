@@ -3,7 +3,7 @@
  * This file was generated from FairDelay.maa and will be overridden when changed. To change
  * permanently, consider changing the model itself.
  *
- * Generated on Oct 12, 2018 1:15:32 PM by isartransformer 2.0.0
+ * Generated on Oct 16, 2018 10:17:27 PM by isartransformer 3.1.0
  *)
 theory FairDelayStates
   imports FairDelayDatatype
@@ -15,14 +15,14 @@ begin
 datatype FairDelaySubstate = Single
 
 (* And these have also the variables *)
-datatype 'e FairDelayState = FairDelayState FairDelaySubstate (* ctr = *) "nat" (* buffer = *) "'e list"
+datatype 'e FairDelayState = FairDelayState FairDelaySubstate (* ctr = *) "int" (* buffer = *) "'e list"
 
 (* Function to get the substate *)
 fun getFairDelaySubState :: "'e FairDelayState \<Rightarrow> FairDelaySubstate" where
     "getFairDelaySubState (FairDelayState s _ _) = s"
 
 (* Functions to get the variables *)
-fun getCtr :: "'e FairDelayState \<Rightarrow> nat" where
+fun getCtr :: "'e FairDelayState \<Rightarrow> int" where
 "getCtr (FairDelayState _ var_ctr var_buffer) = var_ctr"
 
 fun getBuffer :: "'e FairDelayState \<Rightarrow> 'e list" where

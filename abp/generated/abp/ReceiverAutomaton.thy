@@ -3,7 +3,7 @@
  * This file was generated from Receiver.maa and will be overridden when changed. To change
  * permanently, consider changing the model itself.
  *
- * Generated on Oct 12, 2018 1:15:28 PM by isartransformer 2.0.0
+ * Generated on Oct 16, 2018 10:17:26 PM by isartransformer 3.1.0
  *)
 theory ReceiverAutomaton
   imports ReceiverDatatype ReceiverStates automat.dAutomaton
@@ -190,5 +190,6 @@ lemma receiverStep_3_0:
   apply(rule da_h_stepI)
   using assms by(auto simp add: daNextState_def daNextOutput_def assms)
 
+lemmas receiverSteps = receiverStep_0_0 receiverStep_0_1 receiverStep_1_0 receiverStep_2_0 receiverStep_2_1 receiverStep_3_0
 
 end
