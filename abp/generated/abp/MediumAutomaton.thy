@@ -3,7 +3,7 @@
  * This file was generated from Medium.maa and will be overridden when changed. To change
  * permanently, consider changing the model itself.
  *
- * Generated on Oct 16, 2018 10:17:27 PM by isartransformer 3.1.0
+ * Generated on Oct 16, 2018 10:34:43 PM by isartransformer 3.1.0
  *)
 theory MediumAutomaton
   imports MediumDatatype MediumStates automat.ndAutomaton automat.ndaComplete automat.ndaTotal
@@ -19,26 +19,26 @@ fun prepend :: "'a::type list \<Rightarrow> 'a \<Rightarrow> 'a list" where
 section \<open>Function for each transition to allow transition overlap\<close>
 
 fun mediumTransitionH_0_0 :: "(MediumState \<times> ('e tsyn)) \<Rightarrow> (MediumState \<times> ('e::countable) mediumMessage tsyn SB) set" where
-"mediumTransitionH_0_0 (MediumState Single var_coin, (Msg port_i)) =
-  (if (var_coin=0) then {(MediumState Single var_coin, (mediumOut_o null)) | var_coin . (var_coin = 0 \<or> var_coin = 1)}
+"mediumTransitionH_0_0 (MediumState Single, (Msg port_i)) =
+  (if (True) then {(MediumState Single, (mediumOut_o null))}
    else {})" |
 "mediumTransitionH_0_0 _ = {}"
 
 fun mediumTransitionH_0_1 :: "(MediumState \<times> ('e tsyn)) \<Rightarrow> (MediumState \<times> ('e::countable) mediumMessage tsyn SB) set" where
-"mediumTransitionH_0_1 (MediumState Single var_coin, (Msg port_i)) =
-  (if (var_coin=1) then {(MediumState Single var_coin, (mediumOut_o (Msg (port_i)))) | var_coin . (var_coin = 0 \<or> var_coin = 1)}
+"mediumTransitionH_0_1 (MediumState Single, (Msg port_i)) =
+  (if (True) then {(MediumState Single, (mediumOut_o (Msg (port_i))))}
    else {})" |
 "mediumTransitionH_0_1 _ = {}"
 
 fun mediumTransitionH_1_0 :: "(MediumState \<times> ('e tsyn)) \<Rightarrow> (MediumState \<times> ('e::countable) mediumMessage tsyn SB) set" where
-"mediumTransitionH_1_0 (MediumState Single var_coin, (\<^cancel>\<open>i\<mapsto>\<close>null)) =
-  (if (var_coin=0) then {(MediumState Single var_coin, (mediumOut_o null)) | var_coin . (var_coin = 0 \<or> var_coin = 1)}
+"mediumTransitionH_1_0 (MediumState Single, (\<^cancel>\<open>i\<mapsto>\<close>null)) =
+  (if (True) then {(MediumState Single, (mediumOut_o null))}
    else {})" |
 "mediumTransitionH_1_0 _ = {}"
 
 fun mediumTransitionH_1_1 :: "(MediumState \<times> ('e tsyn)) \<Rightarrow> (MediumState \<times> ('e::countable) mediumMessage tsyn SB) set" where
-"mediumTransitionH_1_1 (MediumState Single var_coin, (\<^cancel>\<open>i\<mapsto>\<close>null)) =
-  (if (var_coin=1) then {(MediumState Single var_coin, (mediumOut_o null)) | var_coin . (var_coin = 0 \<or> var_coin = 1)}
+"mediumTransitionH_1_1 (MediumState Single, (\<^cancel>\<open>i\<mapsto>\<close>null)) =
+  (if (True) then {(MediumState Single, (mediumOut_o null))}
    else {})" |
 "mediumTransitionH_1_1 _ = {}"
 
@@ -55,7 +55,7 @@ definition mediumTransition :: "(MediumState \<times> ('e::countable) mediumMess
 
 (* Initial states with initial outputs *)
 definition mediumInitials :: "(MediumState \<times> ('e::countable) mediumMessage tsyn SB) set rev" where
-"mediumInitials = Rev (setflat\<cdot>{{(MediumState Single (var_coin::int), (mediumOut_o null)) | var_coin . (var_coin = 0 \<or> var_coin = 1)}})"
+"mediumInitials = Rev (setflat\<cdot>{{(MediumState Single , (mediumOut_o null))}})"
 
 (* The -potentially partial- automaton *)
 lift_definition mediumAutomaton_partial :: "(MediumState, ('e::countable) mediumMessage tsyn) ndAutomaton" is
@@ -106,32 +106,32 @@ lemma mediumsps_consistent [simp]: "uspecIsConsistent mediumSPS"
 
 section \<open>Step-wise lemmata for the transition function\<close>
 
-(* Line 16:  Single [coin==0] / {coin=alt{0,1}}; *)
+(* Line 14:  Single / {o=null}; *)
 lemma mediumTransition_0_0:
-  assumes "var_coin=0"
-    shows "inv Rev (mediumTransition ((MediumState Single var_coin), (mediumElemIn_i (Msg port_i))))
-         \<supseteq> {(MediumState Single var_coin, (mediumOut_o null)) | var_coin . (var_coin = 0 \<or> var_coin = 1)}"
+  assumes "True"
+    shows "inv Rev (mediumTransition ((MediumState Single ), (mediumElemIn_i (Msg port_i))))
+         \<supseteq> {(MediumState Single, (mediumOut_o null))}"
   using assms by(auto simp add: mediumTransition_def assms)
 
-(* Line 17:  Single [coin==1] / {coin=alt{0,1}, o=i}; *)
+(* Line 15:  Single / {o=i}; *)
 lemma mediumTransition_0_1:
-  assumes "var_coin=1"
-    shows "inv Rev (mediumTransition ((MediumState Single var_coin), (mediumElemIn_i (Msg port_i))))
-         \<supseteq> {(MediumState Single var_coin, (mediumOut_o (Msg (port_i)))) | var_coin . (var_coin = 0 \<or> var_coin = 1)}"
+  assumes "True"
+    shows "inv Rev (mediumTransition ((MediumState Single ), (mediumElemIn_i (Msg port_i))))
+         \<supseteq> {(MediumState Single, (mediumOut_o (Msg (port_i))))}"
   using assms by(auto simp add: mediumTransition_def assms)
 
-(* Line 16:  Single [coin==0] / {coin=alt{0,1}}; *)
+(* Line 14:  Single / {o=null}; *)
 lemma mediumTransition_1_0:
-  assumes "var_coin=0"
-    shows "inv Rev (mediumTransition ((MediumState Single var_coin), (mediumElemIn_i null)))
-         \<supseteq> {(MediumState Single var_coin, (mediumOut_o null)) | var_coin . (var_coin = 0 \<or> var_coin = 1)}"
+  assumes "True"
+    shows "inv Rev (mediumTransition ((MediumState Single ), (mediumElemIn_i null)))
+         \<supseteq> {(MediumState Single, (mediumOut_o null))}"
   using assms by(auto simp add: mediumTransition_def assms)
 
-(* Line 17:  Single [coin==1] / {coin=alt{0,1}, o=i}; *)
+(* Line 15:  Single / {o=i}; *)
 lemma mediumTransition_1_1:
-  assumes "var_coin=1"
-    shows "inv Rev (mediumTransition ((MediumState Single var_coin), (mediumElemIn_i null)))
-         \<supseteq> {(MediumState Single var_coin, (mediumOut_o null)) | var_coin . (var_coin = 0 \<or> var_coin = 1)}"
+  assumes "True"
+    shows "inv Rev (mediumTransition ((MediumState Single ), (mediumElemIn_i null)))
+         \<supseteq> {(MediumState Single, (mediumOut_o null))}"
   using assms by(auto simp add: mediumTransition_def assms)
 
 
@@ -141,36 +141,32 @@ section \<open>Step-wise lemmata for the SPS\<close>
 lemma mediumSps2Step: "mediumSPS = ndaConcOutFlatten mediumDom mediumRan (initCompletion chaosInit_h mediumInitials) mediumStep"
   by (simp add: mediumSPS_def mediumStep_def nda_H_def)
 
-(* Line 16:  Single [coin==0] / {coin=alt{0,1}}; *)
+(* Line 14:  Single / {o=null}; *)
 lemma mediumStep_0_0:
-  assumes "var_coin=0"
-    shows "spsConcIn  (mediumIn_i (Msg port_i)) (mediumStep (MediumState Single var_coin))
-         \<sqsubseteq> uspecFlatten mediumDom mediumRan
-          (Rev {spsConcOut (mediumOut_o null) (mediumStep (MediumState Single var_coin)) | var_coin . (var_coin = 0 \<or> var_coin = 1)})"
+  assumes "True"
+    shows "spsConcIn  (mediumIn_i (Msg port_i)) (mediumStep (MediumState Single ))
+         \<sqsubseteq> spsConcOut (mediumOut_o null) (mediumStep (MediumState Single))"
   sorry (* Muss sorry wegen mediumSteps *)
 
-(* Line 17:  Single [coin==1] / {coin=alt{0,1}, o=i}; *)
+(* Line 15:  Single / {o=i}; *)
 lemma mediumStep_0_1:
-  assumes "var_coin=1"
-    shows "spsConcIn  (mediumIn_i (Msg port_i)) (mediumStep (MediumState Single var_coin))
-         \<sqsubseteq> uspecFlatten mediumDom mediumRan
-          (Rev {spsConcOut (mediumOut_o (Msg (port_i))) (mediumStep (MediumState Single var_coin)) | var_coin . (var_coin = 0 \<or> var_coin = 1)})"
+  assumes "True"
+    shows "spsConcIn  (mediumIn_i (Msg port_i)) (mediumStep (MediumState Single ))
+         \<sqsubseteq> spsConcOut (mediumOut_o (Msg (port_i))) (mediumStep (MediumState Single))"
   sorry (* Muss sorry wegen mediumSteps *)
 
-(* Line 16:  Single [coin==0] / {coin=alt{0,1}}; *)
+(* Line 14:  Single / {o=null}; *)
 lemma mediumStep_1_0:
-  assumes "var_coin=0"
-    shows "spsConcIn  (mediumIn_i null) (mediumStep (MediumState Single var_coin))
-         \<sqsubseteq> uspecFlatten mediumDom mediumRan
-          (Rev {spsConcOut (mediumOut_o null) (mediumStep (MediumState Single var_coin)) | var_coin . (var_coin = 0 \<or> var_coin = 1)})"
+  assumes "True"
+    shows "spsConcIn  (mediumIn_i null) (mediumStep (MediumState Single ))
+         \<sqsubseteq> spsConcOut (mediumOut_o null) (mediumStep (MediumState Single))"
   sorry (* Muss sorry wegen mediumSteps *)
 
-(* Line 17:  Single [coin==1] / {coin=alt{0,1}, o=i}; *)
+(* Line 15:  Single / {o=i}; *)
 lemma mediumStep_1_1:
-  assumes "var_coin=1"
-    shows "spsConcIn  (mediumIn_i null) (mediumStep (MediumState Single var_coin))
-         \<sqsubseteq> uspecFlatten mediumDom mediumRan
-          (Rev {spsConcOut (mediumOut_o null) (mediumStep (MediumState Single var_coin)) | var_coin . (var_coin = 0 \<or> var_coin = 1)})"
+  assumes "True"
+    shows "spsConcIn  (mediumIn_i null) (mediumStep (MediumState Single ))
+         \<sqsubseteq> spsConcOut (mediumOut_o null) (mediumStep (MediumState Single))"
   sorry (* Muss sorry wegen mediumSteps *)
 
 lemmas mediumSteps = mediumStep_0_0 mediumStep_0_1 mediumStep_1_0 mediumStep_1_1
