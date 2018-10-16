@@ -203,63 +203,92 @@ lemma spsStep_P_uspecwell_h3:
   by (simp add: spfStep_inj_def)
 
 lemma spsStep_P_uspecwell_h4: assumes "finite In" shows
-  "\<And>H. \<forall> g \<in> (inv Rev (setrevImage (\<lambda> h. spfStep In Out\<cdot>h)
-                        (setrevImage (\<lambda> h sbEl. spfRtIn\<cdot>(h sbEl)) 
-                          (setrevFilter (spsStep_P In Out)\<cdot>(spsStep_h\<cdot>H))))). 
+  "\<And>H. \<forall> g \<in> (\<lambda> h. spfStep In Out\<cdot>h) `
+                        ((\<lambda> h sbEl. spfRtIn\<cdot>(h sbEl)) ` 
+                          (Set.filter (spsStep_P In Out) (spsStep_h H))). 
      ufDom\<cdot>g = In \<and> ufRan\<cdot>g = Out"
 proof rule
   fix H:: "'a sbElem \<Rightarrow> ('a stream\<^sup>\<Omega>,'a stream\<^sup>\<Omega>) ufun uspec"
   fix g:: "('a stream\<^sup>\<Omega>,'a stream\<^sup>\<Omega>) ufun"
-  assume a1: "g \<in> (inv Rev (setrevImage (\<lambda> h. spfStep In Out\<cdot>h)
-                        (setrevImage (\<lambda> h sbEl. spfRtIn\<cdot>(h sbEl)) 
-                          (setrevFilter (spsStep_P In Out)\<cdot>(spsStep_h\<cdot>H)))))"
+  assume a1: "g \<in> (\<lambda> h. spfStep In Out\<cdot>h) `
+                        ((\<lambda> h sbEl. spfRtIn\<cdot>(h sbEl)) ` 
+                          (Set.filter (spsStep_P In Out) (spsStep_h H)))"
   obtain h where h_def: "g =  (\<lambda> h. spfStep In Out\<cdot>h) h \<and>
-    h \<in> (inv Rev ((setrevImage (\<lambda> h sbEl. spfRtIn\<cdot>(h sbEl)) 
-                          (setrevFilter (spsStep_P In Out)\<cdot>(spsStep_h\<cdot>H)))))"
-    by (metis (no_types, lifting) a1 setrevimage_mono_obtain3)
+    h \<in> ((\<lambda> h sbEl. spfRtIn\<cdot>(h sbEl)) ` 
+                          (Set.filter (spsStep_P In Out) (spsStep_h H)))"
+    using a1 by blast
   show "ufDom\<cdot>g = In \<and> ufRan\<cdot>g = Out"
     by (simp add: assms h_def)
 qed
 
 subsection \<open>injectivity\<close>
 
-lemma spsStep_image_simp: "setrevImage (\<lambda> h. spfStep In Out\<cdot>h)
-                        (setrevImage (\<lambda> h sbEl. spfRtIn\<cdot>(h sbEl)) H) = 
-setrevImage (\<lambda> h. spfStep In Out\<cdot>((\<lambda> h sbEl. spfRtIn\<cdot>(h sbEl)) h)) H"
-  using setrevimage_image by auto
+lemma spsStep_image_simp: "(\<lambda> h. spfStep In Out\<cdot>h) `
+                        (Set.image (\<lambda> h sbEl. spfRtIn\<cdot>(h sbEl)) H) = 
+Set.image (\<lambda> h. spfStep In Out\<cdot>((\<lambda> h sbEl. spfRtIn\<cdot>(h sbEl)) h)) H"
+  by auto
 
 lemma spsStep_uspecWell_h: assumes "finite In" shows
-"uspecWell (setrevImage (\<lambda> h. spfStep In Out\<cdot>((\<lambda> h sbEl. spfRtIn\<cdot>(h sbEl)) h)) H) (Discr In) (Discr Out)"
-  by (simp add: assms setrevImage_def ufclDom_ufun_def ufclRan_ufun_def)
+"uspecWell (Set.image (\<lambda> h. spfStep In Out\<cdot>((\<lambda> h sbEl. spfRtIn\<cdot>(h sbEl)) h)) H) (Discr In) (Discr Out)"
+  by (simp add: assms ufclDom_ufun_def ufclRan_ufun_def)
 
 lemma spsStep_uspecWell[simp]: assumes "finite In" shows
-"uspecWell (setrevImage (\<lambda> h. spfStep In Out\<cdot>((\<lambda> h sbEl. spfRtIn\<cdot>(h sbEl)) h)) (setrevFilter (spsStep_P In Out)\<cdot>(spsStep_h\<cdot>H))) (Discr In) (Discr Out)"
-  by (simp add: assms setrevImage_def ufclDom_ufun_def ufclRan_ufun_def)
+"uspecWell (Set.image (\<lambda> h. spfStep In Out\<cdot>((\<lambda> h sbEl. spfRtIn\<cdot>(h sbEl)) h)) (setrevFilter (spsStep_P In Out)\<cdot>(spsStep_h H))) (Discr In) (Discr Out)"
+  by (simp add: assms ufclDom_ufun_def ufclRan_ufun_def)
 
 
-lemma spsStep_mono_h: assumes "x \<sqsubseteq> y" shows "setrevImage (\<lambda> h. spfStep In Out\<cdot>((\<lambda> h sbEl. spfRtIn\<cdot>(h sbEl)) h)) x \<sqsubseteq>
-setrevImage (\<lambda> h. spfStep In Out\<cdot>((\<lambda> h sbEl. spfRtIn\<cdot>(h sbEl)) h)) y"
-  by (simp add: assms image_mono_rev monofunE)
+lemma spsStep_mono_h: assumes "x \<sqsubseteq> y" shows "Set.image (\<lambda> h. spfStep In Out\<cdot>((\<lambda> h sbEl. spfRtIn\<cdot>(h sbEl)) h)) x \<sqsubseteq>
+Set.image (\<lambda> h. spfStep In Out\<cdot>((\<lambda> h sbEl. spfRtIn\<cdot>(h sbEl)) h)) y"
+  by (metis SetPcpo.less_set_def assms image_mono)
 
 lemma spsStep_mono_h2: assumes "finite In" shows
 "monofun (\<lambda> H. Abs_uspec 
-((setrevImage (\<lambda> h. spfStep In Out\<cdot>((\<lambda> h sbEl. spfRtIn\<cdot>(h sbEl)) h)) H), Discr  In, Discr Out))"
+((Set.image (\<lambda> h. spfStep In Out\<cdot>((\<lambda> h sbEl. spfRtIn\<cdot>(h sbEl)) h)) H), Discr  In, Discr Out))"
   apply (rule monofunI)
   apply (simp add: below_uspec_def)
-  by (simp add: assms spsStep_mono_h spsStep_uspecWell_h)
+  by (metis (no_types) Pair_below_iff assms below_refl rep_abs_uspec spsStep_mono_h spsStep_uspecWell_h)
+
+lemma spsStep_mono_useful:  "\<And>x y. x \<sqsubseteq> y \<Longrightarrow>
+    ((\<lambda>h. spfStep In Out\<cdot>(\<lambda>sbEl. spfRtIn\<cdot>(h sbEl))) ` Set.filter (spsStep_P In Out) (spsStep_h x)) \<sqsubseteq>
+    ((\<lambda>h. spfStep In Out\<cdot>(\<lambda>sbEl. spfRtIn\<cdot>(h sbEl))) ` Set.filter (spsStep_P In Out) (spsStep_h y))"
+proof -
+  have b0:  "\<And>x y. x \<sqsubseteq> y \<Longrightarrow>
+   (spsStep_h x) \<subseteq> (spsStep_h y)"
+    by (metis (mono_tags, lifting) SetPcpo.less_set_def monofun_def spsStep_h_def spsStep_h_mono)
+  have b1: "\<And>x y. x \<sqsubseteq> y \<Longrightarrow>
+    Set.filter (spsStep_P In Out) (spsStep_h x) \<sqsubseteq> Set.filter (spsStep_P In Out) (spsStep_h y)"
+    apply (simp add: SetPcpo.less_set_def)
+    using b0 by fastforce
+  show  "\<And>x y. x \<sqsubseteq> y \<Longrightarrow>
+    ((\<lambda>h. spfStep In Out\<cdot>(\<lambda>sbEl. spfRtIn\<cdot>(h sbEl))) ` Set.filter (spsStep_P In Out) (spsStep_h x)) \<sqsubseteq>
+    ((\<lambda>h. spfStep In Out\<cdot>(\<lambda>sbEl. spfRtIn\<cdot>(h sbEl))) ` Set.filter (spsStep_P In Out) (spsStep_h y))"
+    by (metis SetPcpo.less_set_def b1 image_mono)
+qed
 
 lemma spsStep_mono: assumes "finite In" shows
 "monofun
-     (\<lambda>H . Abs_uspec (setrevImage (\<lambda>h . spfStep In Out\<cdot>(\<lambda>sbEl. spfRtIn\<cdot>(h sbEl))) 
-            (setrevFilter (spsStep_P In Out)\<cdot>(spsStep_h\<cdot>H)), Discr In, Discr Out))"
+     (\<lambda>H . Abs_uspec (Set.image (\<lambda>h . spfStep In Out\<cdot>(\<lambda>sbEl. spfRtIn\<cdot>(h sbEl))) 
+            (Set.filter (spsStep_P In Out) (spsStep_h H)), Discr In, Discr Out))"
   apply (rule monofunI)
-  apply (simp add: below_uspec_def assms spsStep_uspecWell)
-  by (simp add: monofun_cfun_arg spsStep_mono_h)
+  by (metis (mono_tags, lifting) Pair_below_iff assms spsStep_mono_useful below_uspec_def 
+    monofun_pair not_below2not_eq rep_abs_uspec spsStep_uspecWell_h)
+
 
 lemma spsStep_mono_2: assumes "finite In" shows "x \<sqsubseteq> y \<Longrightarrow> spsStep_m In Out x \<sqsubseteq> spsStep_m In Out y"
   unfolding spsStep_m_def
-  apply (simp add: below_uspec_def assms)
-  by (simp add: monofun_cfun_arg spsStep_mono_h)
+proof -
+  assume "x \<sqsubseteq> y"
+  then have f1: "((\<lambda>f. spfStep In Out\<cdot>(\<lambda>s. spfRtIn\<cdot>(f s))) ` Set.filter (spsStep_P In Out) (spsStep_h x), Discr In, Discr Out) \<sqsubseteq> ((\<lambda>f. spfStep In Out\<cdot>(\<lambda>s. spfRtIn\<cdot>(f s))) ` Set.filter (spsStep_P In Out) (spsStep_h y), snd ((\<lambda>f. spfStep In Out\<cdot>(\<lambda>s. spfRtIn\<cdot>(f s))) ` Set.filter (spsStep_P In Out) (spsStep_h x), Discr In, Discr Out))"
+by (simp add: spsStep_mono_useful)
+have f2: "\<forall>C Ca F. infinite C \<or> uspecWell ((\<lambda>f. spfStep C Ca\<cdot> (\<lambda>s. spfRtIn\<cdot>(f (s::'a sbElem)))) ` F) (Discr C) (Discr Ca)"
+  using spsStep_uspecWell_h by blast
+  then have f3: "uspecWell ((\<lambda>f. spfStep In Out\<cdot>(\<lambda>s. spfRtIn\<cdot>(f s))) ` Set.filter (spsStep_P In Out) (spsStep_h x)) (Discr In) (Discr Out)"
+    using assms by blast
+  have "uspecWell ((\<lambda>f. spfStep In Out\<cdot>(\<lambda>s. spfRtIn\<cdot>(f s))) ` Set.filter (spsStep_P In Out) (spsStep_h y)) (Discr In) (Discr Out)"
+    using f2 assms by blast
+  then show "Abs_uspec ((\<lambda>f. spfStep In Out\<cdot>(\<lambda>s. spfRtIn\<cdot>(f s))) ` Set.filter (spsStep_P In Out) (spsStep_h x), Discr In, Discr Out) \<sqsubseteq> Abs_uspec ((\<lambda>f. spfStep In Out\<cdot>(\<lambda>s. spfRtIn\<cdot>(f s))) ` Set.filter (spsStep_P In Out) (spsStep_h y), Discr In, Discr Out)"
+    using f3 f1 by (simp add: below_uspec_def)
+qed
 
 
 (*
@@ -439,61 +468,69 @@ lemma spsStep_cont[simp]: assumes "finite In"
 subsection \<open>spsStep_m  utils\<close>
 (*******************************************************************)
 lemma spstep_m_dom[simp]: assumes "finite In" shows "uspecDom\<cdot>(spsStep_m In Out H) = In"
-  by (simp add: spsStep_m_def assms uspecdom_insert)
+  by (metis (no_types, lifting) assms fst_conv rep_abs_uspec snd_conv spsStep_m_def spsStep_uspecWell_h undiscr_Discr uspecdom_insert)
 
 lemma spstep_m_ran[simp]: assumes "finite In" shows "uspecRan\<cdot>(spsStep_m In Out H) = Out"
-  by (simp add: spsStep_def spsStep_m_def  uspecran_insert assms)
+  by (metis (no_types, lifting) assms rep_abs_uspec snd_conv spsStep_m_def spsStep_uspecWell_h undiscr_Discr uspecran_insert)
 
 lemma spsstep_m_insert:
   "spsStep_m In Out H = 
-    Abs_uspec ((setrevImage (\<lambda> h. spfStep In Out\<cdot>((\<lambda> h sbEl. spfRtIn\<cdot>(h sbEl)) h)) 
-          (setrevFilter (spsStep_P In Out)\<cdot>(spsStep_h\<cdot>H))), Discr  In, Discr Out)"
+    Abs_uspec ((Set.image (\<lambda> h. spfStep In Out\<cdot>((\<lambda> h sbEl. spfRtIn\<cdot>(h sbEl)) h)) 
+          (Set.filter (spsStep_P In Out) (spsStep_h H))), Discr  In, Discr Out)"
   by (simp add: spsStep_m_def)
 
-lemma spsstep_m_not_empty: assumes "spsStep_m In Out h \<noteq> uspecMax In Out"
-  shows "spsStep_h\<cdot>h \<noteq> Rev {}"
-  by (metis (no_types, lifting) assms ex_in_conv image_iff inv_rev_rev setrevImage_def 
-        setrevfilter_included setrevfilter_insert spsStep_m_def uspecMax.abs_eq)
+lemma spsstep_m_not_empty: assumes "spsStep_m In Out h \<noteq> uspecLeast In Out"
+  shows "spsStep_h h \<noteq> {}"
+  apply (insert assms)
+  unfolding spsStep_m_def
+proof -
+  assume a1: "Abs_uspec ((\<lambda>h. spfStep In Out\<cdot>(\<lambda>sbEl. spfRtIn\<cdot>(h sbEl))) ` Set.filter (spsStep_P In Out) (spsStep_h h), Discr In, Discr Out) \<noteq> uspecLeast In Out"
+  have "Set.filter (spsStep_P In Out) ({}::('a sbElem \<Rightarrow> _ stream\<^sup>\<Omega>\<Rrightarrow> _ stream\<^sup>\<Omega>) set) = {} \<and> Abs_uspec ({}::('a stream\<^sup>\<Omega>\<Rrightarrow> 'a stream\<^sup>\<Omega>) set, Discr In, Discr Out) = uspecLeast In Out"
+    by (metis (no_types) all_not_in_conv member_filter uspecLeast.abs_eq)
+  then show ?thesis
+    using a1 by force
+qed
 
-lemma spsstep_m_ele: "\<And> H f. finite In \<Longrightarrow> f \<in> (inv Rev (spsStep_h\<cdot>H)) \<Longrightarrow> spsStep_P In Out f \<Longrightarrow>
-  uspec_in ((\<lambda> h. spfStep In Out\<cdot>((\<lambda> h sbEl. spfRtIn\<cdot>(h sbEl)) h)) f) (spsStep_m In Out H)"
+lemma spsstep_m_ele: "\<And> H f. finite In \<Longrightarrow> f \<in> (spsStep_h H) \<Longrightarrow> spsStep_P In Out f \<Longrightarrow>
+  ((\<lambda> h. spfStep In Out\<cdot>((\<lambda> h sbEl. spfRtIn\<cdot>(h sbEl)) h)) f) \<in> uspecSet\<cdot>(spsStep_m In Out H)"
 proof - 
   fix H::"'a sbElem \<Rightarrow> ('a stream\<^sup>\<Omega>,'a stream\<^sup>\<Omega>) ufun uspec"
   fix f::"'a sbElem \<Rightarrow> ('a stream\<^sup>\<Omega>,'a stream\<^sup>\<Omega>) ufun"
   assume a1: "finite In"
-  assume a2: "f \<in> (inv Rev (spsStep_h\<cdot>H))"
+  assume a2: "f \<in> (spsStep_h H)"
   assume a3: "spsStep_P In Out f"
-  have f1: "f \<in> (inv Rev (setrevFilter (spsStep_P In Out)\<cdot>(spsStep_h\<cdot>H)))"
-    by (simp add: a2 a3 setrevfilter_reversed)
-  show "uspec_in ((\<lambda> h. spfStep In Out\<cdot>((\<lambda> h sbEl. spfRtIn\<cdot>(h sbEl)) h)) f) (spsStep_m In Out H)"
+  have f1: "f \<in> (Set.filter (spsStep_P In Out) (spsStep_h H))"
+    by (simp add: a2 a3)
+  show "((\<lambda> h. spfStep In Out\<cdot>((\<lambda> h sbEl. spfRtIn\<cdot>(h sbEl)) h)) f) \<in> uspecSet\<cdot>(spsStep_m In Out H)"
     apply (simp add: spsstep_m_insert a1)
-    apply (simp add: uspecrevset_insert a1)
-    by (simp add: f1 inv_rev_rev setrevImage_def)
+    apply (subst uspec_abs_set)
+    using a1 spsStep_uspecWell_h apply fastforce
+    using f1 by auto
 qed
 
 lemma spsstep_ele_rev:  "\<And> H f. finite In \<Longrightarrow> 
-uspec_in g (spsStep_m In Out H) \<Longrightarrow>
-\<exists> f \<in> (inv Rev (spsStep_h\<cdot>H)). spsStep_P In Out f 
+g \<in> uspecSet\<cdot>(spsStep_m In Out H) \<Longrightarrow>
+\<exists> f \<in> (spsStep_h H). spsStep_P In Out f 
   \<and> g = ((\<lambda> h. spfStep In Out\<cdot>((\<lambda> h sbEl. spfRtIn\<cdot>(h sbEl)) h)) f) "
 proof -
   fix H :: "'a sbElem \<Rightarrow> ('a stream\<^sup>\<Omega>,'a stream\<^sup>\<Omega>) ufun uspec" and f :: 'b
-  assume a1: "uspec_in g (spsStep_m In Out H)"
+  assume a1: "g \<in> uspecSet\<cdot>(spsStep_m In Out H)"
   assume a2: "finite In"
   obtain uu :: "('a sbElem \<Rightarrow> ('a stream\<^sup>\<Omega>,'a stream\<^sup>\<Omega>) ufun) set \<Rightarrow> (('a sbElem \<Rightarrow> ('a stream\<^sup>\<Omega>,'a stream\<^sup>\<Omega>) ufun) \<Rightarrow> ('a stream\<^sup>\<Omega>,'a stream\<^sup>\<Omega>) ufun) 
   \<Rightarrow> ('a stream\<^sup>\<Omega>,'a stream\<^sup>\<Omega>) ufun \<Rightarrow> 'a sbElem \<Rightarrow> ('a stream\<^sup>\<Omega>,'a stream\<^sup>\<Omega>) ufun" where
     f3: "\<forall>x0 x1 x2. (\<exists>v3. x2 = x1 v3 \<and> v3 \<in> x0) = (x2 = x1 (uu x0 x1 x2) \<and> uu x0 x1 x2 \<in> x0)"
     by moura
-  have f4: "Set.filter (spsStep_P In Out) (inv Rev (spsStep_h\<cdot>H)) = inv Rev (setrevFilter (spsStep_P In Out)\<cdot>(spsStep_h\<cdot>H))"
-    by (simp add: inv_rev_rev setrevfilter_insert)
-  have "spsStep_m In Out H = Abs_uspec (setrevImage (\<lambda>f. spfStep In Out\<cdot>(\<lambda>s. spfRtIn\<cdot>(f s))) (setrevFilter (spsStep_P In Out)\<cdot>(spsStep_h\<cdot>H)), Discr In, Discr Out)"
+  have f4: "Set.filter (spsStep_P In Out) (spsStep_h H) = Set.filter (spsStep_P In Out) (spsStep_h H)"
+    by simp
+  have "spsStep_m In Out H = Abs_uspec (Set.image (\<lambda>f. spfStep In Out\<cdot>(\<lambda>s. spfRtIn\<cdot>(f s))) (Set.filter (spsStep_P In Out) (spsStep_h H)), Discr In, Discr Out)"
     using a2 by (simp add: spsstep_m_insert)
-  then have "g \<in> (\<lambda>f. spfStep In Out\<cdot>(\<lambda>s. spfRtIn\<cdot>(f s))) ` Set.filter (spsStep_P In Out) (inv Rev (spsStep_h\<cdot>H))"
-    using f4 a2 a1 by (metis (no_types) rep_abs_rev_simp setrevImage_def spsStep_uspecWell_h uspecrevset_insert)
-  then have f5: "g = spfStep In Out\<cdot> (\<lambda>s. spfRtIn\<cdot> (uu (Set.filter (spsStep_P In Out) (inv Rev (spsStep_h\<cdot>H))) (\<lambda>f. spfStep In Out\<cdot>(\<lambda>s. spfRtIn\<cdot>(f s))) g s)) \<and> uu (Set.filter (spsStep_P In Out) (inv Rev (spsStep_h\<cdot>H))) (\<lambda>f. spfStep In Out\<cdot>(\<lambda>s. spfRtIn\<cdot>(f s))) g \<in> Set.filter (spsStep_P In Out) (inv Rev (spsStep_h\<cdot>H))"
+  then have "g \<in> (\<lambda>f. spfStep In Out\<cdot>(\<lambda>s. spfRtIn\<cdot>(f s))) ` Set.filter (spsStep_P In Out) (spsStep_h H)"
+    by (metis (mono_tags, lifting) a1 a2 spsStep_uspecWell_h spsstep_m_insert uspec_abs_set)
+  then have f5: "g = spfStep In Out\<cdot> (\<lambda>s. spfRtIn\<cdot> (uu (Set.filter (spsStep_P In Out) (spsStep_h H)) (\<lambda>f. spfStep In Out\<cdot>(\<lambda>s. spfRtIn\<cdot>(f s))) g s)) \<and> uu (Set.filter (spsStep_P In Out) (spsStep_h H)) (\<lambda>f. spfStep In Out\<cdot>(\<lambda>s. spfRtIn\<cdot>(f s))) g \<in> Set.filter (spsStep_P In Out) (spsStep_h H)"
 using f3 by (meson imageE)
 have "\<forall>f p F. ((f::'a sbElem \<Rightarrow> ('a stream\<^sup>\<Omega>,'a stream\<^sup>\<Omega>) ufun) \<in> Set.filter p F) = (f \<in> F \<and> p f)"
   using member_filter by blast
-then show "\<exists>f\<in>inv Rev (spsStep_h\<cdot>H). spsStep_P In Out f \<and> g = spfStep In Out\<cdot>(\<lambda>s. spfRtIn\<cdot>(f s))"
+then show "\<exists>f\<in> (spsStep_h H). spsStep_P In Out f \<and> g = spfStep In Out\<cdot>(\<lambda>s. spfRtIn\<cdot>(f s))"
     using f5 by meson
 qed
 
