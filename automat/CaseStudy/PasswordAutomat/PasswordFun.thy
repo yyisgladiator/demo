@@ -10,18 +10,21 @@ lemma output_S0[simp]: "daNextOutput passwordAutomaton (PasswordState S Buf) (pa
   apply (simp add: daNextOutput_def)
   by (metis PasswordSubstate.exhaust passwordTransition_1_0 passwordTransition_3_0 passwordTransition_5_0 snd_conv)
 
-lemma state_S0[simp]:"daNextState passwordAutomaton (PasswordState Initial Buf) (passwordElemIn_i -) = PasswordState Initial Buf"
+lemma state_S0[simp]:"daNextState passwordAutomaton (PasswordState Initial Buf) (passwordElemIn_i -) = PasswordState Initial ''''"
   by (simp add:daNextState_def)
 
 lemma spfconcin_split:"spfConcIn (ubConcEq a\<cdot>b)\<cdot>spf = spfConcIn b\<cdot>(spfConcIn a\<cdot>spf)"
+  apply (simp add:spfConcIn_def)
   apply (simp add:ubConcEq_def)
   sorry
 
-
 lemma spfconcout_split:"spfConcOut (ubConcEq a\<cdot>b)\<cdot>spf = spfConcOut a\<cdot>(spfConcOut b\<cdot>spf)"
+  apply (simp add:spfConcOut_def)
   sorry
 
 lemma spfconcout_least [simp]: "spfConcOut (ubLeast cs)\<cdot>spf = spf"
+  apply (simp add:spfConcOut_def)
+  apply (simp add:ubConcEq_def)
   sorry
 
 lemma spfconcin_least [simp]: "spfConcIn (ubLeast cs)\<cdot>spf = spf"
