@@ -13,8 +13,8 @@ section \<open>Definition\<close>
 
 subsection \<open>Helper\<close>
 (*  convert input function to a set rev *)    
-definition spsStep_h::"('m::message sbElem \<Rightarrow> 'm SPS)\<rightarrow> ('m sbElem \<Rightarrow> ('m,'m) SPF) set rev"where
-"spsStep_h= (\<Lambda> h. setify\<cdot>(\<lambda>e. uspecRevSet\<cdot>(h e)))"
+definition spsStep_h::"('m::message sbElem \<Rightarrow> 'm SPS)\<rightarrow> ('m sbElem \<Rightarrow> ('m,'m) SPF) set"where
+"spsStep_h= (\<Lambda> h. setify (\<lambda>e. uspecSet\<cdot>(h e)))"
 
 (* Pradicate to filter those interesting function  *)
 definition spsStep_P:: "channel set \<Rightarrow> channel set \<Rightarrow> ('m::message sbElem \<Rightarrow> ('m,'m) SPF)  \<Rightarrow> bool" where
@@ -24,8 +24,8 @@ definition spsStep_P:: "channel set \<Rightarrow> channel set \<Rightarrow> ('m:
 
 (* DD: monofun only version of spsStep  *)
 definition spsStep_m::"channel set \<Rightarrow> channel set \<Rightarrow> ('m::message sbElem \<Rightarrow> 'm SPS) \<Rightarrow> 'm SPS" where
-"spsStep_m In Out \<equiv> \<lambda> H. Abs_uspec ((setrevImage (\<lambda> h. spfStep In Out\<cdot>((\<lambda> h sbEl. spfRtIn\<cdot>(h sbEl)) h)) 
-                                      (setrevFilter (spsStep_P In Out)\<cdot>(spsStep_h\<cdot>H))), Discr  In, Discr Out)"
+"spsStep_m In Out \<equiv> \<lambda> H. Abs_uspec (((\<lambda> h. spfStep In Out\<cdot>((\<lambda> h sbEl. spfRtIn\<cdot>(h sbEl)) h)) ` 
+                                      (Set.filter (spsStep_P In Out) (spsStep_h\<cdot>H))), Discr  In, Discr Out)"
 
 definition spsStep ::"channel set \<Rightarrow> channel set \<Rightarrow> ('m::message sbElem \<Rightarrow> 'm SPS) \<rightarrow> 'm SPS" where
 "spsStep In Out \<equiv> (\<Lambda> h. spsStep_m In Out h)"
@@ -36,23 +36,52 @@ section \<open>Lemma\<close>
 
 subsection \<open>spsStep_h\<close>
 
-lemma spsStep_h_mono[simp]:"monofun (\<lambda> h::('m::message sbElem \<Rightarrow> 'm SPS). setify\<cdot>(\<lambda>e. uspecRevSet\<cdot>(h e)))"
-proof(rule monofunI, simp add: uspecRevSet_def)
+lemma spsStep_h_mono[simp]:"monofun (\<lambda> h::('m::message sbElem \<Rightarrow> 'm SPS). setify (\<lambda>e. uspecSet\<cdot>(h e)))"
+proof(rule monofunI, simp add: uspecSet_def)
   fix x y::"'m sbElem \<Rightarrow> 'm SPS"
   assume a1:"x \<sqsubseteq> y"
-  then show "setify\<cdot>(\<lambda>e. fst (Rep_uspec (x e))) \<sqsubseteq> setify\<cdot>(\<lambda>e. fst (Rep_uspec (y e)))"
-    by (simp add: below_fun_def fst_monofun monofun_cfun_arg rep_uspec_belowI)
+  then show "setify (\<lambda>e. fst (Rep_uspec (x e))) \<sqsubseteq> setify (\<lambda>e. fst (Rep_uspec (y e)))"
+  proof -
+    have f1: "\<forall>s. x s \<sqsubseteq> y s"
+by (meson a1 fun_below_iff)
+  obtain uu :: "('m sbElem \<Rightarrow> 'm stream\<^sup>\<Omega>\<Rrightarrow> 'm stream\<^sup>\<Omega>) set \<Rightarrow> ('m sbElem \<Rightarrow> 'm stream\<^sup>\<Omega>\<Rrightarrow> 'm stream\<^sup>\<Omega>) set \<Rightarrow> 'm sbElem \<Rightarrow> 'm stream\<^sup>\<Omega>\<Rrightarrow> 'm stream\<^sup>\<Omega>" where
+    "\<forall>x0 x1. (\<exists>v2. v2 \<in> x1 \<and> v2 \<notin> x0) = (uu x0 x1 \<in> x1 \<and> uu x0 x1 \<notin> x0)"
+    by moura
+  then have f2: "\<forall>F Fa. (\<not> F \<subseteq> Fa \<or> (\<forall>f. f \<notin> F \<or> f \<in> Fa)) \<and> (F \<subseteq> Fa \<or> uu Fa F \<in> F \<and> uu Fa F \<notin> Fa)"
+    by blast
+  obtain ss :: "('m sbElem \<Rightarrow> 'm stream\<^sup>\<Omega>\<Rrightarrow> 'm stream\<^sup>\<Omega>) \<Rightarrow> ('m sbElem \<Rightarrow> ('m stream\<^sup>\<Omega>\<Rrightarrow> 'm stream\<^sup>\<Omega>) set) \<Rightarrow> 'm sbElem" where
+    "\<forall>x0 x1. (\<exists>v2. x0 v2 \<notin> x1 v2) = (x0 (ss x0 x1) \<notin> x1 (ss x0 x1))"
+    by moura
+  then have f3: "(\<not> (\<forall>s. uu (setify (\<lambda>s. fst (Rep_uspec (y s)))) (setify (\<lambda>s. fst (Rep_uspec (x s)))) s \<in> fst (Rep_uspec (y s))) \<or> (\<forall>s. uu (setify (\<lambda>s. fst (Rep_uspec (y s)))) (setify (\<lambda>s. fst (Rep_uspec (x s)))) s \<in> fst (Rep_uspec (y s)))) \<and> ((\<forall>s. uu (setify (\<lambda>s. fst (Rep_uspec (y s)))) (setify (\<lambda>s. fst (Rep_uspec (x s)))) s \<in> fst (Rep_uspec (y s))) \<or> uu (setify (\<lambda>s. fst (Rep_uspec (y s)))) (setify (\<lambda>s. fst (Rep_uspec (x s)))) (ss (uu (setify (\<lambda>s. fst (Rep_uspec (y s)))) (setify (\<lambda>s. fst (Rep_uspec (x s))))) (\<lambda>s. fst (Rep_uspec (y s)))) \<notin> fst (Rep_uspec (y (ss (uu (setify (\<lambda>s. fst (Rep_uspec (y s)))) (setify (\<lambda>s. fst (Rep_uspec (x s))))) (\<lambda>s. fst (Rep_uspec (y s)))))))"
+    by blast
+  have "fst (Rep_uspec (x (ss (uu (setify (\<lambda>s. fst (Rep_uspec (y s)))) (setify (\<lambda>s. fst (Rep_uspec (x s))))) (\<lambda>s. fst (Rep_uspec (y s)))))) \<subseteq> fst (Rep_uspec (y (ss (uu (setify (\<lambda>s. fst (Rep_uspec (y s)))) (setify (\<lambda>s. fst (Rep_uspec (x s))))) (\<lambda>s. fst (Rep_uspec (y s))))))"
+    using f1 by (metis SetPcpo.less_set_def fst_monofun rep_uspec_belowI)
+  moreover
+  { assume "fst (Rep_uspec (x (ss (uu (setify (\<lambda>s. fst (Rep_uspec (y s)))) (setify (\<lambda>s. fst (Rep_uspec (x s))))) (\<lambda>s. fst (Rep_uspec (y s)))))) \<subseteq> fst (Rep_uspec (y (ss (uu (setify (\<lambda>s. fst (Rep_uspec (y s)))) (setify (\<lambda>s. fst (Rep_uspec (x s))))) (\<lambda>s. fst (Rep_uspec (y s)))))) \<and> uu (setify (\<lambda>s. fst (Rep_uspec (y s)))) (setify (\<lambda>s. fst (Rep_uspec (x s)))) (ss (uu (setify (\<lambda>s. fst (Rep_uspec (y s)))) (setify (\<lambda>s. fst (Rep_uspec (x s))))) (\<lambda>s. fst (Rep_uspec (y s)))) \<notin> fst (Rep_uspec (y (ss (uu (setify (\<lambda>s. fst (Rep_uspec (y s)))) (setify (\<lambda>s. fst (Rep_uspec (x s))))) (\<lambda>s. fst (Rep_uspec (y s))))))"
+    then have "\<exists>s. uu (setify (\<lambda>s. fst (Rep_uspec (y s)))) (setify (\<lambda>s. fst (Rep_uspec (x s)))) s \<notin> fst (Rep_uspec (x s))"
+      by (meson rev_subsetD)
+    then have "uu (setify (\<lambda>s. fst (Rep_uspec (y s)))) (setify (\<lambda>s. fst (Rep_uspec (x s)))) \<notin> setify (\<lambda>s. fst (Rep_uspec (x s))) \<or> uu (setify (\<lambda>s. fst (Rep_uspec (y s)))) (setify (\<lambda>s. fst (Rep_uspec (x s)))) \<in> setify (\<lambda>s. fst (Rep_uspec (y s)))"
+      by (simp add: SetPcpo.setify_def) }
+  moreover
+  { assume "uu (setify (\<lambda>s. fst (Rep_uspec (y s)))) (setify (\<lambda>s. fst (Rep_uspec (x s)))) (ss (uu (setify (\<lambda>s. fst (Rep_uspec (y s)))) (setify (\<lambda>s. fst (Rep_uspec (x s))))) (\<lambda>s. fst (Rep_uspec (y s)))) \<in> fst (Rep_uspec (y (ss (uu (setify (\<lambda>s. fst (Rep_uspec (y s)))) (setify (\<lambda>s. fst (Rep_uspec (x s))))) (\<lambda>s. fst (Rep_uspec (y s))))))"
+    then have "uu (setify (\<lambda>s. fst (Rep_uspec (y s)))) (setify (\<lambda>s. fst (Rep_uspec (x s)))) \<notin> setify (\<lambda>s. fst (Rep_uspec (x s))) \<or> uu (setify (\<lambda>s. fst (Rep_uspec (y s)))) (setify (\<lambda>s. fst (Rep_uspec (x s)))) \<in> setify (\<lambda>s. fst (Rep_uspec (y s)))"
+      using f3 by (simp add: SetPcpo.setify_def) }
+  ultimately have "setify (\<lambda>s. fst (Rep_uspec (x s))) \<subseteq> setify (\<lambda>s. fst (Rep_uspec (y s)))"
+    using f2 by meson
+  then show ?thesis
+    by (simp add: SetPcpo.less_set_def)
 qed
-   
-lemma spsStep_h_cont[simp]:"cont (\<lambda> h::('m::message sbElem \<Rightarrow> 'm SPS). setify\<cdot>(\<lambda>e. uspecRevSet\<cdot>(h e)))"
+qed
+
+lemma spsStep_h_cont[simp]:"cont (\<lambda> h::('m::message sbElem \<Rightarrow> 'm SPS). setify (\<lambda>e. uspecSet\<cdot>(h e)))"
 proof(rule Cont.contI2,simp)
   fix Y::"nat \<Rightarrow> 'm sbElem \<Rightarrow> 'm SPS"
   assume a1:"chain Y"
-  assume a2:"chain (\<lambda>i::nat. setify\<cdot>(\<lambda>e. uspecRevSet\<cdot>(Y i e)))"
-  have a3:"(\<lambda>e. \<Squnion>i. uspecRevSet\<cdot>(Y i e)) =  (\<Squnion>i.(\<lambda>e. uspecRevSet\<cdot>(Y i e)))"
+  assume a2:"chain (\<lambda>i::nat. setify (\<lambda>e. uspecSet\<cdot>(Y i e)))"
+  have a3:"(\<lambda>e. \<Squnion>i. uspecSet\<cdot>(Y i e)) =  (\<Squnion>i.(\<lambda>e. uspecSet\<cdot>(Y i e)))"
     apply(subst lub_fun,auto)
     by (metis (mono_tags, lifting) a1 cont_pref_eq1I fun_below_iff po_class.chain_def)
-  show "setify\<cdot>(\<lambda>e. uspecRevSet\<cdot>((\<Squnion>i::nat. Y i) e)) \<sqsubseteq> (\<Squnion>i. setify\<cdot>(\<lambda>e. uspecRevSet\<cdot>(Y i e)))"
+  show "setify (\<lambda>e. uspecSet\<cdot>((\<Squnion>i::nat. Y i) e)) \<sqsubseteq> (\<Squnion>i. setify (\<lambda>e. uspecSet\<cdot>(Y i e)))"
     apply(simp add: a1 lub_fun)
     apply (simp add: contlub_cfun_arg a1 ch2ch_fun a3)
     apply(subst contlub_cfun_arg, auto)
