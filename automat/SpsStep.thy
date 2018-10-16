@@ -1,7 +1,7 @@
 theory SpsStep
 
 (* imports "../USpec" "NewSpfStep" "../USpec_Comp" *)
-imports NewSpfStep spec.USpec 
+imports NewSpfStep spec.USpec
 
 begin
 
@@ -13,8 +13,8 @@ section \<open>Definition\<close>
 
 subsection \<open>Helper\<close>
 (*  convert input function to a set rev *)    
-definition spsStep_h::"('m::message sbElem \<Rightarrow> 'm SPS)\<rightarrow> ('m sbElem \<Rightarrow> ('m,'m) SPF) set"where
-"spsStep_h= (\<Lambda> h. setify (\<lambda>e. uspecSet\<cdot>(h e)))"
+definition spsStep_h::"('m::message sbElem \<Rightarrow> 'm SPS)\<Rightarrow> ('m sbElem \<Rightarrow> ('m,'m) SPF) set"where
+"spsStep_h= (\<lambda> h. setify (\<lambda>e. uspecSet\<cdot>(h e)))"
 
 (* Pradicate to filter those interesting function  *)
 definition spsStep_P:: "channel set \<Rightarrow> channel set \<Rightarrow> ('m::message sbElem \<Rightarrow> ('m,'m) SPF)  \<Rightarrow> bool" where
@@ -25,7 +25,7 @@ definition spsStep_P:: "channel set \<Rightarrow> channel set \<Rightarrow> ('m:
 (* DD: monofun only version of spsStep  *)
 definition spsStep_m::"channel set \<Rightarrow> channel set \<Rightarrow> ('m::message sbElem \<Rightarrow> 'm SPS) \<Rightarrow> 'm SPS" where
 "spsStep_m In Out \<equiv> \<lambda> H. Abs_uspec (((\<lambda> h. spfStep In Out\<cdot>((\<lambda> h sbEl. spfRtIn\<cdot>(h sbEl)) h)) ` 
-                                      (Set.filter (spsStep_P In Out) (spsStep_h\<cdot>H))), Discr  In, Discr Out)"
+                                      (Set.filter (spsStep_P In Out) (spsStep_h H))), Discr  In, Discr Out)"
 
 definition spsStep ::"channel set \<Rightarrow> channel set \<Rightarrow> ('m::message sbElem \<Rightarrow> 'm SPS) \<rightarrow> 'm SPS" where
 "spsStep In Out \<equiv> (\<Lambda> h. spsStep_m In Out h)"
@@ -73,6 +73,7 @@ by (meson a1 fun_below_iff)
 qed
 qed
 
+(*
 lemma spsStep_h_cont[simp]:"cont (\<lambda> h::('m::message sbElem \<Rightarrow> 'm SPS). setify (\<lambda>e. uspecSet\<cdot>(h e)))"
 proof(rule Cont.contI2,simp)
   fix Y::"nat \<Rightarrow> 'm sbElem \<Rightarrow> 'm SPS"
@@ -84,103 +85,110 @@ proof(rule Cont.contI2,simp)
   show "setify (\<lambda>e. uspecSet\<cdot>((\<Squnion>i::nat. Y i) e)) \<sqsubseteq> (\<Squnion>i. setify (\<lambda>e. uspecSet\<cdot>(Y i e)))"
     apply(simp add: a1 lub_fun)
     apply (simp add: contlub_cfun_arg a1 ch2ch_fun a3)
-    apply(subst contlub_cfun_arg, auto)
-    by (metis (mono_tags, lifting) a1 fun_below_iff monofun_cfun_arg po_class.chain_def)
+    (* using setify_cont *)
+    oops
 qed
+*)
   
-lemma spsStep_h_insert:"spsStep_h\<cdot>f = setify\<cdot>(\<lambda>e. uspecRevSet\<cdot>(f e))"
+lemma spsStep_h_insert:"spsStep_h f = setify (\<lambda>e. uspecSet\<cdot>(f e))"
   by(simp add: spsStep_h_def)
 
-lemma spsstep_h_ele: assumes "g \<in> inv Rev (spsStep_h\<cdot>H)"
-  shows "\<And> sbe. uspec_in (g sbe) (H sbe)"
-  by (metis (no_types, lifting) assms mem_Collect_eq rev.inject rev_inv_rev setify_insert spsStep_h_insert)
+lemma spsstep_h_ele: assumes "g \<in> (spsStep_h H)"
+  shows "\<And> sbe. (g sbe) \<in> uspecSet\<cdot>(H sbe)"
+  by (metis (no_types, lifting) CollectD SetPcpo.setify_def assms spsStep_h_def)
 
-lemma spsstep_h_ele2: assumes "spsStep_h\<cdot>H \<noteq> Rev {}"
-  shows "\<And> sbe. \<exists> g \<in> inv Rev (spsStep_h\<cdot>H). uspec_in (g sbe) (H sbe)"
-  by (metis assms ex_in_conv rev_inv_rev spsstep_h_ele)
+lemma spsstep_h_ele2: assumes "spsStep_h H \<noteq> {}"
+  shows "\<And> sbe. \<exists> g \<in> (spsStep_h H). (g sbe) \<in> uspecSet\<cdot>(H sbe)"
+  by (metis (no_types, lifting) Collect_empty_eq SetPcpo.setify_def assms mem_Collect_eq spsStep_h_def)
 
-lemma spsstep_h_ele3: assumes "spsStep_h\<cdot>H \<noteq> Rev {}"
-  shows "\<And> sbe. (H sbe) \<noteq> uspecMax (uspecDom\<cdot>(H sbe)) (uspecRan\<cdot>(H sbe))"
-  by (metis assms equals0D inv_rev_rev prod.sel(1) spsstep_h_ele2 uspecMax.rep_eq uspecrevset_insert)
+lemma spsstep_h_ele3: assumes "spsStep_h H \<noteq> {}"
+  shows "\<And> sbe. (H sbe) \<noteq> uspecLeast (uspecDom\<cdot>(H sbe)) (uspecRan\<cdot>(H sbe))"
+proof -
+  fix sbe :: "'a sbElem"
+  have "uspecSet\<cdot>(H sbe) \<noteq> {}"
+    by (metis (no_types) assms equals0D spsstep_h_ele2)
+  then show "H sbe \<noteq> uspecLeast (uspecDom\<cdot>(H sbe)) (uspecRan\<cdot>(H sbe))"
+    using uspecIsConsistent_def uspecleast_consistent by blast
+qed
 
-lemma spsstep_h_ele4: assumes "spsStep_h\<cdot>H \<noteq> Rev {}" and "uspec_in f (H sbe)"
-  shows  "\<exists> h \<in> inv Rev (spsStep_h\<cdot>H). h sbe = f"
-  by (metis (no_types, lifting) assms SetRev.setify_empty SetRev.setify_final spsStep_h_insert)
+lemma spsstep_h_ele4: assumes "spsStep_h H \<noteq> {}" and "f \<in> uspecSet\<cdot>(H sbe)"
+  shows  "\<exists> h \<in> (spsStep_h H). h sbe = f"
+  by (metis (no_types, lifting) assms(1) assms(2) setify_empty setify_final spsStep_h_def)
 
-lemma spsstep_h_inI: "(\<forall> sbe. uspec_in (g sbe) (H sbe)) \<Longrightarrow> g \<in> inv Rev (spsStep_h\<cdot>H)"
-  by (simp add: setify_insert spsStep_h_insert)
+lemma spsstep_h_inI: "(\<forall> sbe. (g sbe) \<in> uspecSet\<cdot>(H sbe)) \<Longrightarrow> g \<in> (spsStep_h H)"
+  by (simp add: setify_def spsStep_h_insert)
 
-lemma spstep_h_P_obtain_h: assumes "spsStep_h\<cdot>H \<noteq> Rev {}" and "\<And> sbe. P sbe \<Longrightarrow> uspec_in f (H sbe)"
-  shows "\<exists> g \<in> inv Rev (spsStep_h\<cdot>H). \<forall> sbe. P sbe \<longrightarrow> g sbe = f"
+lemma spstep_h_P_obtain_h: assumes "spsStep_h H \<noteq> {}" and "\<And> sbe. P sbe \<Longrightarrow> f \<in> uspecSet\<cdot>(H sbe)"
+  shows "\<exists> g \<in> (spsStep_h H). \<forall> sbe. P sbe \<longrightarrow> g sbe = f"
 proof  (rule ccontr)
-  assume a1: "\<not>(\<exists> g \<in> inv Rev (spsStep_h\<cdot>H). \<forall> sbe. P sbe \<longrightarrow> g sbe = f)"
-  obtain g where g_def: "g \<equiv> (\<lambda> sbe. if P sbe then f else (SOME f. uspec_in f (H sbe)))"
+  assume a1: "\<not>(\<exists> g \<in> (spsStep_h H). \<forall> sbe. P sbe \<longrightarrow> g sbe = f)"
+  obtain g where g_def: "g \<equiv> (\<lambda> sbe. if P sbe then f else (SOME f. f \<in> uspecSet\<cdot>(H sbe)))"
     by simp
-  have "\<forall> sbe. uspec_in (g sbe) (H sbe)"
+  have "\<forall> sbe. (g sbe) \<in> uspecSet\<cdot>(H sbe)"
     apply rule
     apply (case_tac "P sbe")
      apply (simp_all add: g_def)
      apply (simp add: assms(2))
     using assms(1) some_in_eq spsstep_h_ele2 by fastforce
-  then have "g \<in> inv Rev (spsStep_h\<cdot>H)"
+  then have "g \<in> (spsStep_h H)"
     by (simp add: spsstep_h_inI)
   then show False
     using a1 g_def by auto
 qed
 
-lemma spstep_h_P_obtain_h2: assumes "spsStep_h\<cdot>H \<noteq> Rev {}" and "\<And> sbe. P sbe \<Longrightarrow> uspec_in f (H sbe)"
-  shows "\<exists> g \<in> inv Rev (spsStep_h\<cdot>H). \<forall> sbe. (P sbe \<longrightarrow> g sbe = f) \<and> 
-        (\<not> (P sbe) \<longrightarrow> uspec_in (g sbe) (H sbe))"
+lemma spstep_h_P_obtain_h2: assumes "spsStep_h H \<noteq> {}" and "\<And> sbe. P sbe \<Longrightarrow> f \<in> uspecSet\<cdot>(H sbe)"
+  shows "\<exists> g \<in> (spsStep_h H). \<forall> sbe. (P sbe \<longrightarrow> g sbe = f) \<and> 
+        (\<not> (P sbe) \<longrightarrow> (g sbe) \<in> uspecSet\<cdot>(H sbe))"
 proof  (rule ccontr)
-  assume a1: "\<not>(\<exists> g \<in> inv Rev (spsStep_h\<cdot>H). \<forall> sbe. (P sbe \<longrightarrow> g sbe = f) \<and> 
-        (\<not> (P sbe) \<longrightarrow> uspec_in (g sbe) (H sbe)))"
-  obtain g where g_def: "g \<equiv> (\<lambda> sbe. if P sbe then f else (SOME f. uspec_in f (H sbe)))"
+  assume a1: "\<not>(\<exists> g \<in> (spsStep_h H). \<forall> sbe. (P sbe \<longrightarrow> g sbe = f) \<and> 
+        (\<not> (P sbe) \<longrightarrow> (g sbe) \<in> uspecSet\<cdot>(H sbe)))"
+  obtain g where g_def: "g \<equiv> (\<lambda> sbe. if P sbe then f else (SOME f. f \<in> uspecSet\<cdot>(H sbe)))"
     by simp
-  have "\<forall> sbe. uspec_in (g sbe) (H sbe)"
+  have "\<forall> sbe. (g sbe)  \<in> uspecSet\<cdot>(H sbe)"
     apply rule
     apply (case_tac "P sbe")
      apply (simp_all add: g_def)
      apply (simp add: assms(2))
     using assms(1) some_in_eq spsstep_h_ele2 by fastforce
-  then have "g \<in> inv Rev (spsStep_h\<cdot>H)"
+  then have "g \<in> (spsStep_h H)"
     by (simp add: spsstep_h_inI)
   then show False
     using a1 g_def spsstep_h_ele by fastforce
 qed
 
-lemma spstep_h_P_obtain: assumes "spsStep_h\<cdot>H \<noteq> Rev {}" and "\<And> sbe. P sbe \<Longrightarrow> uspec_in f (H sbe)"
-  obtains g where "g \<in> inv Rev (spsStep_h\<cdot>H)" and "\<forall> sbe. (P sbe \<longrightarrow> g sbe = f) \<and> 
-        (\<not> (P sbe) \<longrightarrow> uspec_in (g sbe) (H sbe))"
+lemma spstep_h_P_obtain: assumes "spsStep_h H \<noteq> {}" and "\<And> sbe. P sbe \<Longrightarrow> f  \<in> uspecSet\<cdot>(H sbe)"
+  obtains g where "g \<in> (spsStep_h H)" and "\<forall> sbe. (P sbe \<longrightarrow> g sbe = f) \<and> 
+        (\<not> (P sbe) \<longrightarrow> (g sbe) \<in> uspecSet\<cdot>(H sbe))"
   by (metis assms(1) assms(2) spsstep_h_ele spstep_h_P_obtain_h)
     
 (*NewSpsStep Lemma*)    
     
 subsection \<open>spsStep_P\<close>
 
-lemma spsStep_P_uspecwell_h: "\<And>H. \<forall> g \<in> (inv Rev (setrevFilter (spsStep_P In Out)\<cdot>(spsStep_h\<cdot>H))). 
+lemma spsStep_P_uspecwell_h: "\<And>H. \<forall> g \<in> (Set.filter (spsStep_P In Out) (spsStep_h H)). 
   (\<forall>m. ufDom\<cdot>(g m) = In \<and> ufRan\<cdot>(g m) = Out)"
 proof rule
   fix H:: "'a sbElem \<Rightarrow> ('a stream\<^sup>\<Omega>,'a stream\<^sup>\<Omega>) ufun uspec"
   fix g::"'a sbElem \<Rightarrow> ('a stream\<^sup>\<Omega>,'a stream\<^sup>\<Omega>) ufun"
-  assume a1: "g \<in> inv Rev (setrevFilter (spsStep_P In Out)\<cdot>(spsStep_h\<cdot>H))"
+  assume a1: "g \<in> (Set.filter (spsStep_P In Out) (spsStep_h H))"
   have f1: "spsStep_P In Out g"
-    by (metis a1 setrevFilter_gdw)
+    using a1 by auto
   then show "\<forall>m::'a sbElem. ufDom\<cdot>(g m) = In \<and> ufRan\<cdot>(g m) = Out"
-    by (metis (no_types, lifting) spsStep_P_def ufleast_ufRan ufleast_ufdom)
+    by (metis (no_types, lifting) spsStep_P_def)
 qed
 
 lemma spsStep_P_uspecwell_h2: 
-  "\<And>H. \<forall> g \<in> (inv Rev (setrevImage (\<lambda> h sbEl. spfRtIn\<cdot>(h sbEl)) (setrevFilter (spsStep_P In Out)\<cdot>(spsStep_h\<cdot>H)))). 
+  "\<And>H. \<forall> g \<in> ((\<lambda> h sbEl. spfRtIn\<cdot>(h sbEl)) ` (Set.filter (spsStep_P In Out) (spsStep_h H))). 
     (\<forall>m. ufDom\<cdot>(g m) = In \<and> ufRan\<cdot>(g m) = Out)"
 proof rule
   fix H:: "'a sbElem \<Rightarrow> ('a stream\<^sup>\<Omega>,'a stream\<^sup>\<Omega>) ufun uspec"
   fix g::"'a sbElem \<Rightarrow> ('a stream\<^sup>\<Omega>,'a stream\<^sup>\<Omega>) ufun"
-  assume a1: "g \<in> inv Rev (setrevImage (\<lambda> h sbEl. spfRtIn\<cdot>(h sbEl)) (setrevFilter (spsStep_P In Out)\<cdot>(spsStep_h\<cdot>H)))"
+  assume a1: "g \<in>  ((\<lambda> h sbEl. spfRtIn\<cdot>(h sbEl)) ` (Set.filter (spsStep_P In Out) (spsStep_h H)))"
   obtain h where h_def: "g = (\<lambda> h sbEl. spfRtIn\<cdot>(h sbEl)) h" 
-     and h_def_2: "h \<in> inv Rev (setrevFilter (spsStep_P In Out)\<cdot>(spsStep_h\<cdot>H))"
-    by (metis (mono_tags, lifting) a1 image_iff inv_rev_rev setrevImage_def)
+     and h_def_2: "h \<in> (Set.filter (spsStep_P In Out) (spsStep_h H))"
+    by (metis (mono_tags, lifting) a1 image_iff)
   have f1: "spsStep_P In Out h"
-    by (metis h_def_2 setrevFilter_gdw)
+    using h_def_2 by auto
   then have f2: "spsStep_P In Out  (\<lambda> sbEl. spfRtIn\<cdot>(h sbEl))"
     by (simp add: spfrt_ufleast spsStep_P_def)
   then show "\<forall>m::'a sbElem. ufDom\<cdot>(g m) = In \<and> ufRan\<cdot>(g m) = Out"
@@ -188,11 +196,11 @@ proof rule
 qed
 
 lemma spsStep_P_uspecwell_h3: 
-  "\<And>H. \<forall> g \<in> (inv Rev (setrevImage (\<lambda> h. spfStep_inj In Out h)
-                        (setrevImage (\<lambda> h sbEl. spfRtIn\<cdot>(h sbEl)) 
-                          (setrevFilter (spsStep_P In Out)\<cdot>(spsStep_h\<cdot>H))))). 
+  "\<And>H. \<forall> g \<in> (\<lambda> h. spfStep_inj In Out h) `
+                        ((\<lambda> h sbEl. spfRtIn\<cdot>(h sbEl)) ` 
+                          (Set.filter (spsStep_P In Out) (spsStep_h H))). 
     (\<forall>m. ufDom\<cdot>(g m) = In \<and> ufRan\<cdot>(g m) = Out)"
-  by (simp add: inv_rev_rev setrevImage_def spfStep_inj_def)
+  by (simp add: spfStep_inj_def)
 
 lemma spsStep_P_uspecwell_h4: assumes "finite In" shows
   "\<And>H. \<forall> g \<in> (inv Rev (setrevImage (\<lambda> h. spfStep In Out\<cdot>h)
