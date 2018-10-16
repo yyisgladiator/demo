@@ -37,16 +37,36 @@ definition eventAut :: "channel set \<Rightarrow> channel set \<Rightarrow>  (ch
 
 
 
-(* Example *)
+section \<open>Example \<close>
 
 definition sendMessageAway:: "'m \<Rightarrow> 'm SB" where
 "sendMessageAway = undefined" (* Funktion wird autogeneriert *)
 
-fun userEventTransition :: "channel \<Rightarrow> nat \<Rightarrow> 'm::message  \<Rightarrow> (nat \<times> 'm tsyn SB) set" where
-"userEventTransition c    0     m  = { (n,sendMessageAway (Msg m)) | n. True}" |
-"userEventTransition c (Suc n)  m  = { (n, sendMessageAway -)}"
+
+subsection \<open>Fair Medium\<close>
+
+fun eventMediumFairTransition :: "channel \<Rightarrow> nat \<Rightarrow> 'm::message  \<Rightarrow> (nat \<times> 'm tsyn SB) set" where
+"eventMediumFairTransition c    0     m  = { (n,sendMessageAway (Msg m)) | n. True}" |
+"eventMediumFairTransition c (Suc n)  m  = { (n, sendMessageAway -)}"
 
 
-definition "userEventAut = eventAut {c1} {c2} userEventTransition { (n,sendMessageAway -) | n. True}"
+definition "eventMediumFair = eventAut {c1} {c2} eventMediumFairTransition { (n,sendMessageAway -) | n. True}"
+
+
+
+
+
+
+
+subsection \<open>Merge\<close>
+
+
+
+fun eventMergeTransition :: "channel \<Rightarrow> 's \<Rightarrow> 'm::message  \<Rightarrow> ('s \<times> 'm tsyn SB) set" where
+"eventMergeTransition _ s m  = { (s,sendMessageAway (Msg m))}"
+
+
+definition "eventMerge = eventAut {c1, c2} {c3} eventMergeTransition { (n,sendMessageAway -) | n. True}"
+
 
 end
