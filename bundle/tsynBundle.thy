@@ -60,6 +60,25 @@ definition tsynbRemDups :: "'a tsyn stream ubundle \<rightarrow> 'a tsyn stream 
   section {* Lemmata on Time-Synchronous Stream Bundles *}
 (* ----------------------------------------------------------------------- *)    
 
+lemma tsynb_cont [simp]: 
+  assumes "\<forall>sb. ubWell (\<lambda>c. (c \<in> ubDom\<cdot>sb) \<leadsto> (f\<cdot>(sb . c)))"
+  shows  "cont (\<lambda> sb. Abs_ubundle (\<lambda>c. (c\<in>ubDom\<cdot>sb) \<leadsto> (f\<cdot>(sb . c))))"
+  apply (rule cont_Abs_UB)
+  apply (rule contI2)
+  apply (rule monofunI)
+  apply (simp add: below_option_def fun_below_iff monofun_cfun_arg ubdom_below)
+  apply (rule allI,rule impI)
+  apply (subst fun_belowI)
+  apply (subst below_option_def)
+  apply (case_tac "x \<in> ubDom\<cdot>(Lub Y)")
+  apply (subst lub_fun)
+  apply (simp add: po_class.chain_def fun_belowI monofun_cfun_arg po_class.chainE some_below) 
+  apply simp
+  apply (metis (no_types) ch2ch_Rep_cfunR contlub_cfun_arg some_lub_chain_eq)
+  apply (subst lub_fun)
+  apply (simp add: po_class.chain_def fun_belowI monofun_cfun_arg po_class.chainE some_below) 
+  by (simp add: assms)+
+
 (* ----------------------------------------------------------------------- *)
   subsection {* tsynbAbs *}
 (* ----------------------------------------------------------------------- *)
@@ -82,18 +101,9 @@ lemma tsynbabs_ubundle_ubdom:
   "ubDom\<cdot>(Abs_ubundle (\<lambda>c. (c \<in> ubDom\<cdot>sb) \<leadsto> tsynAbs\<cdot>(sb . c))) = ubDom\<cdot>sb"
   by (simp add: ubdom_ubrep_eq)
 
-(* ToDo: remove smt. *)
-
 text {* @{term tsynbAbs} is continous. *}  
 lemma tsynbabs_cont [simp]: "cont (\<lambda> sb. Abs_ubundle (\<lambda>c. (c\<in>ubDom\<cdot>sb) \<leadsto> (tsynAbs\<cdot>(sb . c))))"
-  apply (rule cont_Abs_UB, simp_all)
-  apply (rule contI2)
-  apply (rule monofunI)
-  apply (simp add: below_option_def fun_below_iff monofun_cfun_arg ubdom_below)
-  apply (simp, rule+)
-  apply (simp only: fun_below_iff)
-  by (smt contlub_cfun_arg contlub_lambda is_ub_thelub lub_eq monofun_cfun_arg not_below2not_eq 
-      po_class.chain_def some_below some_lub_chain_eq)
+  by simp
 
 text {* @{term tsynbAbs} insertion lemma. *}
 lemma tsynbabs_insert: 
@@ -149,18 +159,9 @@ lemma tsynbremdups_mono [simp]: "monofun (\<lambda>sb. Abs_ubundle(\<lambda>c. (
   apply (metis monofun_cfun_arg some_below some_below2 ubdom_insert ubgetchE)
   by (metis below_option_def domIff)+
 
-(* ToDo: remove smt. *)
-
 text {* @{term tsynbRemDups} is continous. *}
 lemma tsynbremdups_cont [simp]: "cont (\<lambda>sb. Abs_ubundle(\<lambda>c. (c\<in>ubDom\<cdot>sb) \<leadsto> (tsynRemDups\<cdot>(sb . c))))"
-  apply (rule cont_Abs_UB, simp_all)
-  apply (rule contI2)
-  apply (rule monofunI)
-  apply (simp add: below_option_def fun_below_iff monofun_cfun_arg ubdom_below)
-  apply (simp, rule+)
-  apply (simp only: fun_below_iff)
-  by (smt contlub_cfun_arg contlub_lambda is_ub_thelub lub_eq monofun_cfun_arg not_below2not_eq 
-      po_class.chain_def some_below some_lub_chain_eq)
+  by simp
 
 text {* @{term tsynbRemDups} insertion lemma. *}
 lemma tsynbremdups_insert: 
