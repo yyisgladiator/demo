@@ -17,6 +17,7 @@ session "HOLMF" (mustWork) in HOLMF = "inc" +
     LongChain
     Division
     LFP
+    GFP
 
 session "stream" (mustWork) in stream = "inc" +
   options [quick_and_dirty = false]
@@ -54,18 +55,27 @@ session "automat" (mustWork) in automat = "spec" +
     ndAutomaton
     ndaTotal
 
-session "automatCaseStudy" (mustWork) in "automat/CaseStudy" = "automat" + 
-  options [quick_and_dirty = true]
-  theories
-    medGeneralAut
-    medFairStep
-    medUnfairStep
-    medsBelow
-
-session "abpGenerat" (mustWork) in abp = "automat" + 
+session "abpGenerat" (mustWork) in "abp/generated/abp" = "automat" + 
   options [quick_and_dirty = true]
   theories
     ReceiverAutomaton
     SenderAutomaton
+    MediumDatatype
     MediumAutomaton
+    FairMediumAutomaton
+    Fair99MediumAutomaton
+    IdMediumAutomaton
     ABPComponent
+    NoMediumABPComponent
+
+
+session "abpMedium" (mustWork) in "abp/Medium" = "abpGenerat" + 
+  options [quick_and_dirty = true]
+  theories
+    medGeneralAut
+    medUnfairStep
+    medsBelow
+    Medium
+    MediumSPF
+    MediumSPS
+

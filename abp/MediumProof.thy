@@ -52,7 +52,14 @@ definition medMapOutSPS:: "('a \<Rightarrow> 'b) \<Rightarrow> ('a mediumMessage
 
 
 (* Med \<otimes> map = map \<otimes> Med *)
+(* Version 1 *)
 lemma "mediumSPS \<circle> medMapOutSPS f = ((medMapInSPS f) \<circle> mediumSPS)"
+  oops
+
+(* Med \<otimes> map = map \<otimes> Med *)
+(* Version 2 *)
+lemma assumes "spf\<in>uspecSet mediumSPS"
+  shows "spfConcIn (mediumIn_stream_ar\<cdot>(tsynMap f\<cdot>s))\<cdot>spf = spfConcOut(mediumOut_stream_as\<cdot>(tsynMap f\<cdot>(medium_get_stream_as\<cdot>sb)))\<cdot>spf"
   oops
 
 end
