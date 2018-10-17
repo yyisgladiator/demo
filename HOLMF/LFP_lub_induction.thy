@@ -91,32 +91,49 @@ lemma long_iterate_below_fix: assumes "monofun f" and "C\<in>DIV" and "goodForme
   using assms(1) assms(2) assms(3) lub_in apply fastforce
   by (simp add: assms(2) div_cpo_lub_in subset_iff)
 
-lemma long_iterate_below_fix_least: assumes "monofun f" and "C\<in>DIV" and "goodFormed C f"
-  shows "longIterate C f \<sqsubseteq> {y. y \<sqsubseteq> f y \<and> y \<in> C \<and> (\<forall>x\<in>{x. f x\<sqsubseteq> x \<and> x\<in>C}. y\<sqsubseteq>x)}"
-  apply(simp add: longIterate_def)
-  apply(subst less_set_def)
-  apply(rule lfp_induct)
-  using assms(2) longiterate_mono apply auto[1]
-   apply auto
-  using assms(2) assms(3) div_bot goodFormed_def apply blast
-  using assms(2) div_bot apply blast
-  using assms(2) div_bot apply blast
-  using assms(1) monofunE apply blast
-  using assms(3) goodFormed_def apply auto[1]
-  using assms(1) monofun_def rev_below_trans apply blast
-  defer
-  apply (simp add: assms(2) conj_subset_def div_cpo_lub_in)
-  oops
 
-(*
+lemma fixes C::"'a::div_cpo set"
+  shows "C\<in>DIV \<Longrightarrow> longAdm C (\<lambda>x. x \<sqsubseteq> K)"
+  apply(auto simp add: longAdm_def)
+  using div_cpo_g holmf_below_iff by blast
+
+lemma long_iterate_below_fix_least: assumes "monofun f" and "C\<in>DIV" and "goodFormed C f" and "a\<in>longIterate C f"
+  shows "a \<sqsubseteq> lfp C f"
+apply(rule lfp_induct_set [of "a" " (\<lambda> (S::'a set).  insert (div_bot C) (f `S) \<union> {lub K | K. K \<subseteq>S \<and> longChain K })"])
+  using assms(4) longIterate_def apply blast
+  using assms(2) longiterate_mono apply blast
+  apply auto
+  apply (simp add: assms(1) assms(2) assms(3) div_bot lfp_div)
+  using assms(1) assms(2) assms(3) lfp_fix monofunE apply fastforce
+proof -
+  fix K::"'a set"
+  assume k_subset: "K \<subseteq> complete_lattice_class.lfp (\<lambda>S::'a set. insert (div_bot C) (f ` S \<union> {lub K |K::'a set. K \<subseteq> S \<and> longChain K}))"
+   and  k_elem: "K \<subseteq> {x::'a. x \<sqsubseteq> LFP.lfp C f}" and k_chain: "longChain K"
+  have "K \<subseteq> longIterate C f" by(simp add: longIterate_def k_subset) 
+  hence "K \<subseteq> C"
+    using assms(2) assms(3) longiterate_subset by auto
+  thus "lub K \<sqsubseteq> LFP.lfp C f"
+    by (metis Ball_Collect assms(2) div_cpo_g holmf_below_iff k_chain k_elem)
+qed
+
+
+lemma long_iterate_below_fix_least_set: assumes "monofun f" and "C\<in>DIV" and "goodFormed C f"
+  shows "longIterate C f \<sqsubseteq> {y. y \<sqsubseteq> f y \<and> y \<in> C \<and> (\<forall>x\<in>{x. f x\<sqsubseteq> x \<and> x\<in>C}. y\<sqsubseteq>x)}"
+  apply(subst less_set_def)
+  apply auto
+  apply (smt CollectD SetPcpo.less_set_def assms(1) assms(2) assms(3) long_iterate_below_fix subsetCE)
+  using assms(2) assms(3) longiterate_subset apply blast
+  using assms(1) assms(2) assms(3) lfp_all long_iterate_below_fix_least rev_below_trans by blast
+
+
 lemma long_iterate_below_fix2: assumes "monofun f" and "C\<in>DIV" and "goodFormed C f"
   shows "f x\<sqsubseteq> x \<Longrightarrow> x\<in>C \<Longrightarrow> a\<in>longIterate C f \<Longrightarrow> a\<sqsubseteq> x" 
-  using long_iterate_below_fix_least apply (auto simp add: assms SetPcpo.less_set_def)
+  using long_iterate_below_fix_least_set apply (auto simp add: assms SetPcpo.less_set_def)
   using assms(1) assms(2) assms(3) by blast
 
 lemma long_iterate_below_fix3: assumes "monofun f" and "C\<in>DIV" and "goodFormed C f" 
   shows "a\<in>longIterate C f \<Longrightarrow> a\<sqsubseteq>f a"
-  using long_iterate_below_fix_least apply (auto simp add: assms SetPcpo.less_set_def)
+  using long_iterate_below_fix_least_set apply (auto simp add: assms SetPcpo.less_set_def)
   using assms(1) assms(2) assms(3) apply blast+
   done
 
@@ -130,15 +147,9 @@ lemma longiterate_step2: assumes "C\<in>DIV" and "goodFormed C f"
 shows "f x \<in> longIterate C f"
   using assms longiterate_step by fastforce
 
-*)
+
 lemma longiterate_lfp_in: assumes "monofun f" and "C\<in>DIV" and "goodFormed C f" and  "a\<in>(longIterate C f)"
   shows "lfp C f \<in> longIterate C f"
-  unfolding longIterate_def
-  apply(rule lfp_ordinal_induct)
-  using assms(2) longiterate_mono apply blast
-  using assms(1) assms(2) assms(3) lfp_fix apply fastforce
-  apply auto
-  oops
 proof - 
   have h1: "\<And>K. longChain K \<Longrightarrow> K\<subseteq>(longIterate C f) \<Longrightarrow> \<exists>u\<in>(longIterate C f). \<forall>a\<in>K. a \<sqsubseteq> u"
     by (meson assms(2) assms(3) div_cpo_g dual_order.trans is_ub_thelub_ex longiterate_lub_in longiterate_subset)
@@ -163,79 +174,28 @@ lemma longiterate_step_back: assumes "monofun f" and "C\<in>DIV" and "goodFormed
   using assms(2) assms(3) assms(4) assms(5) div_bot longiterate_bot longiterate_subset by blast
 
 
-lemma longiterate_chain: assumes "monofun f" and "C\<in>DIV" and "goodFormed C f"
-  shows "longChain (longIterate C f)"
-  unfolding longIterate_def
-  apply(rule lfp_ordinal_induct_set)
-  using assms(2) longiterate_mono apply blast
-  defer
-
-  oops
-  apply(rule longchainI)
-   apply(rename_tac x y)
-  apply(case_tac "x=div_bot C \<or> y=div_bot C")
-  using assms(2) assms(3) div_bot longiterate_subset apply blast
-   apply simp
-  sorry
-
-
 lemma longiterate_induction: assumes "goodFormed C f" and "C \<in> DIV"
-(*  and "longAdm P" *)
-  and "\<And>K. K\<subseteq>C \<Longrightarrow> longChain K \<Longrightarrow> (\<And>k. k\<in>K \<Longrightarrow> P k) \<Longrightarrow> P (lub K)"
-  and "monofun f"
+  and "longAdm C P"
   and "P (div_bot C)"
   and "\<And>x. x\<in>C \<Longrightarrow> P x \<Longrightarrow> P (f x)"
   and "x\<in>longIterate C f"
 shows "P x"
-  apply(cases "x = div_bot C")
-   apply (simp add: assms(5))
-proof (rule ccontr)
-  assume "x\<noteq>div_bot C" and "\<not>P x"
-
-
-  let ?C = "{x. x\<in>longIterate C f \<and> P x \<and> (\<forall>y. y\<in>longIterate C f \<longrightarrow> \<not>P y \<longrightarrow> x\<sqsubseteq>y)}"
+  apply(rule lfp_induct_set [of "x" " (\<lambda> (S::'a set).  insert (div_bot C) (f `S) \<union> {lub K | K. K \<subseteq>S \<and> longChain K })"])
+  apply(simp_all only: longIterate_def [symmetric])
+  using assms(6) longIterate_def apply blast
+  using assms(2) longiterate_mono apply blast
+  apply auto
+  apply (simp add: assms(4))
+  using assms(1) assms(2) assms(5) longiterate_subset apply auto[1]
+  by (metis longAdm_def Ball_Collect assms(1) assms(2) assms(3) dual_order.trans longiterate_subset)
   
-   have c_bot: "div_bot C \<in> ?C"
-     using assms(1) assms(2) assms(5) div_bot longiterate_bot longiterate_subset by blast
 
-   have c_chain: "longChain ?C"
-     by (metis (no_types, lifting) CollectD assms(1) assms(2) assms(4) c_bot emptyE longChain_def longiterate_chain)
-   have c_div: "?C \<subseteq> C"
-     using assms(1) assms(2) longiterate_subset by fastforce
-   have "\<And>c. c\<in>?C \<Longrightarrow> P c"
-     by blast
-   have "P (lub ?C)"
-     using assms(3) c_chain c_div by blast
-
-  (* y is the smallest element where (P x) is not valid *)
-  obtain y where y_in: "y\<in>longIterate C f" and y_p: "\<not>P y" and y_least: "\<And>z. z\<in>longIterate C f \<Longrightarrow>\<not>P z \<Longrightarrow>  y\<sqsubseteq>z" sorry
-
-  let ?C = "{x. x\<in>longIterate C f \<and> x\<sqsubseteq>y \<and> x\<noteq>y}"
-
-  have c_p: "\<And>c. c\<in>?C \<Longrightarrow> P c"
-    using below_antisym y_least by fastforce
-  have c_bot: "div_bot C \<in> ?C"
-    by (smt CollectI assms(1) assms(2) assms(5) div_bot longiterate_bot longiterate_subset set_mp y_in y_p)
-  hence c_chain: "longChain ?C"
-    by (metis (no_types, lifting) CollectD assms(1) assms(2) assms(4) empty_iff longChain_def longiterate_chain)
-  have c_lub: "P (lub ?C)"
-    by (metis (no_types, lifting) CollectD assms(1) assms(2) assms(3) c_chain c_p dual_order.trans longiterate_subset subsetI)
-
-  have "lub ?C \<noteq> y \<Longrightarrow> f (lub ?C) = y" sorry
-
-  thus False
-    using assms(1) assms(2) assms(4) assms(6) c_chain c_lub longiterate_subchain longiterate_subset y_p by fastforce
-qed
-
-
-lemma lfp_induction: assumes "goodFormed C f" and "C \<in> DIV"
-  and "longAdm P"
-  and "monofun f"
-  and "\<And>x. x\<in>C \<Longrightarrow> bott\<sqsubseteq>x" and "bott\<in>C"
-  and "P bott"
+lemma lfp_induction: assumes "goodFormed C f" and "C \<in> DIV" and "monofun f"
+  and "longAdm C P"
+  and "P (div_bot C)"
   and "\<And>x. x\<in>C \<Longrightarrow> P x \<Longrightarrow> P (f x)"
   shows "P (lfp C f)"
-  by (metis assms(1) assms(2) assms(3) assms(4) assms(5) assms(6) assms(7) assms(8) below_antisym div_bot longiterate_bot longiterate_induction longiterate_test)
+  using assms(1) assms(2) assms(3) assms(4) assms(5) assms(6) longiterate_bot longiterate_induction longiterate_lfp_in by blast
 
 
 

@@ -14,6 +14,20 @@ begin
 definition DIV_set:: "'a::division set set set" where
 "DIV_set = (Pow ` DIV)"
 
+lemma set_div_union: "S \<subseteq> C \<Longrightarrow> C\<in>DIV \<Longrightarrow> \<Union>S \<in> C"
+  by (smt DIV_set_def Pow_mono Pow_top Sup_subset_mono Union_Pow_eq contra_subsetD imageE)
+
+lemma set_div_intersection: "S \<subseteq> C \<Longrightarrow> C\<in>DIV \<Longrightarrow> S\<noteq>{} \<Longrightarrow> \<Inter>S \<in> C"
+proof -
+  assume a1: "S \<subseteq> C"
+  assume a2: "C \<in> DIV"
+  assume a3: "S \<noteq> {}"
+  have "C \<in> Pow ` DIV"
+    using a2 DIV_set_def by fastforce
+  then show ?thesis
+    using a3 a1 by blast
+qed
+
 instance
   apply(intro_classes)
   apply (simp add: DIV_set_def div_non_empty)
@@ -27,8 +41,21 @@ instantiation set::(division) rev_div_cpo
 begin
 
 instance
-  apply(intro_classes)
-  sorry
+proof(intro_classes)
+  fix S:: "'a set set"
+  fix C:: "'a set set"
+
+  assume "longChain (Rev ` S)" and c_div: "C\<in>DIV" and s_c: "S\<subseteq>C" and "infinite (GFP.rev.Rev ` S)"
+  have rev_below:"\<And>a b:: 'a set . Rev a \<sqsubseteq> Rev b \<longleftrightarrow> b \<subseteq> a"
+    by (simp add: SetPcpo.less_set_def)
+  hence "(Rev ` S) <<| (Rev (\<Inter> S))" 
+    apply(auto simp add: is_lub_def is_ub_def)
+    by (metis GFP.rev.exhaust Inf_greatest rev_below)
+  moreover have "(\<Inter> S) \<in> C "
+    using \<open>infinite (GFP.rev.Rev ` (S::'a set set))\<close> c_div s_c set_div_intersection by auto 
+  thus "\<exists>x\<in>C. GFP.rev.Rev ` S <<| GFP.rev.Rev x"
+    using calculation by blast 
+  qed
 end
 
 
@@ -45,10 +72,9 @@ end
 
 section \<open>fun div_cpo\<close>
 
-
-instantiation "fun" :: (type, div_cpo) div_cpo
+instantiation "fun" :: (type, division) division
 begin
-definition DIV_fun:: "('s::type \<Rightarrow> 'm::div_cpo) set set" where
+definition DIV_fun:: "('s::type \<Rightarrow> 'm::division) set set" where
 "DIV_fun = (setify ` (setify (\<lambda>a. DIV)))"   
 
 lemma div_fun_s: fixes f g::"'s::type \<Rightarrow> 'm::div_cpo"
@@ -58,20 +84,29 @@ lemma div_fun_s: fixes f g::"'s::type \<Rightarrow> 'm::div_cpo"
   unfolding DIV_fun_def
   by (smt setify_def bex_imageD mem_Collect_eq)
 
-lemma div_fun_non_empty: "(DIV::('s::type \<Rightarrow> 'm::div_cpo) set set) \<noteq> {}"
+lemma div_fun_non_empty: "(DIV::('s::type \<Rightarrow> 'm::division) set set) \<noteq> {}"
   apply(simp add:  DIV_fun_def)
   apply(rule setify_notempty)
   by (simp add: div_non_empty)
 
-lemma div_fun_non_empty2: "a\<in>(DIV::('s::type \<Rightarrow> 'm::div_cpo) set set) \<Longrightarrow> a \<noteq> {}"
+lemma div_fun_non_empty2: "a\<in>(DIV::('s::type \<Rightarrow> 'm::division) set set) \<Longrightarrow> a \<noteq> {}"
   apply(simp add:  DIV_fun_def)
   by (smt setify_def setify_notempty div_inner_non_empty image_iff mem_Collect_eq)
 
-lemma div_fun_s2: fixes f g::"'s::type \<Rightarrow> 'm::div_cpo"
+lemma div_fun_s2: fixes f g::"'s::type \<Rightarrow> 'm::division"
   assumes "D\<in>(DIV::('s \<Rightarrow> 'm) set set)" and "f\<in>D" and "g\<in>D"
   shows "(\<exists>d2\<in>DIV::'m set set. f a\<in>d2 \<and> g a\<in>d2)"
   using assms apply(simp add: DIV_fun_def)
   by (smt setify_def image_iff mem_Collect_eq) 
+instance
+  apply(intro_classes)
+  apply (simp add: div_fun_non_empty)
+  using div_fun_non_empty2 by blast
+
+end
+
+instantiation "fun" :: (type, div_cpo) div_cpo
+begin
 
 lemma div_cpo_fun_chains: "longChain S \<Longrightarrow> longChain {s a | s. s\<in>S}"
 apply(auto simp add: longChain_def)
@@ -110,8 +145,6 @@ qed
 
 instance 
   apply(intro_classes)
-  apply (simp add: div_fun_non_empty)
-  apply (simp add: div_fun_non_empty2)
   using div_cpo_fun_lub(1) div_cpo_fun_lub(2) by blast
 end
 
@@ -141,6 +174,13 @@ qed
 
 
 
+instance "fun" :: (type, rev_div_cpo) rev_div_cpo
+  apply(intro_classes)
+  sorry
+
+instance "fun" :: (type, div_upcpo) div_upcpo
+  apply(intro_classes)
+  sorry
 
 
 end
