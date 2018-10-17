@@ -13,27 +13,87 @@ lemma output_S0[simp]: "daNextOutput passwordAutomaton (PasswordState S Buf) (pa
 lemma state_S0[simp]:"daNextState passwordAutomaton (PasswordState Initial Buf) (passwordElemIn_i -) = PasswordState Initial ''''"
   by (simp add:daNextState_def)
 
+lemma help_dom:"(ubDom\<cdot>b \<union> ubDom\<cdot>(y)) \<inter> ubDom\<cdot>(y) = ubDom\<cdot>(y)"
+  by auto
+
 lemma spfconcin_split:"spfConcIn (ubConcEq a\<cdot>b)\<cdot>spf = spfConcIn b\<cdot>(spfConcIn a\<cdot>spf)"
-  apply (simp add:spfConcIn_def)
-  apply (simp add:ubConcEq_def)
+  apply(rule ufun_eqI)
+   apply(simp)
+  apply (subst spfConcIn_step)
+   apply simp+
+   apply (simp add: ubclDom_ubundle_def)
+  apply (subst spfConcIn_step)
+   apply simp+
+   apply (simp add: ubclDom_ubundle_def)
+  apply (subst spfConcIn_step)
+   apply simp+
+   apply (simp add: ubclDom_ubundle_def)
+   apply auto
+  apply (subst help_dom)
+  apply (simp add: ubclDom_ubundle_def)
+  
   sorry
+
+
 
 lemma spfconcout_split:"spfConcOut (ubConcEq a\<cdot>b)\<cdot>spf = spfConcOut a\<cdot>(spfConcOut b\<cdot>spf)"
-  apply (simp add:spfConcOut_def)
+  apply(rule ufun_eqI)
+   apply(simp)
+  apply (subst spfConcOut_step)  (* subst wendet es genau einmal an... simp klappt gerade irgendwie nicht *)
+   apply simp+
+   apply (simp add: ubclDom_ubundle_def)
+  apply simp
+  apply (subst spfConcOut_step) 
+    apply simp+
+   apply (simp add: ubclDom_ubundle_def)
+  apply (subst spfConcOut_step) 
+   apply (simp add: ubclDom_ubundle_def) 
+  apply simp
+  apply (subst help_dom)
+  apply (simp add: ubclDom_ubundle_def) 
+  
   sorry
-
+(*
+lemma "ubConc (ubConc a\<cdot>b)\<cdot>(spf \<rightleftharpoons> x) = ubConc a\<cdot>(ubConc b\<cdot>(spf \<rightleftharpoons> x))"
+*)
 lemma spfconcout_least [simp]: "spfConcOut (ubLeast cs)\<cdot>spf = spf"
-  apply (simp add:spfConcOut_def)
-  apply (simp add:ubConcEq_def)
+  apply(rule ufun_eqI)
+   apply(simp)
+  apply (subst spfConcOut_step)
+  apply simp+
+   apply (simp add: ubclDom_ubundle_def)
+  apply simp
+  apply (simp add: ubclDom_ubundle_def)
+  
   sorry
 
 lemma spfconcin_least [simp]: "spfConcIn (ubLeast cs)\<cdot>spf = spf"
-  apply (simp add:ubLeast_def)
-  sorry
+  apply(rule ufun_eqI)
+   apply(simp)
+  apply (subst spfConcIn_step)
+   apply simp+
+   apply (simp add: ubclDom_ubundle_def)
+  apply simp
+  apply (simp add: ubclDom_ubundle_def)
+  by (metis (no_types, lifting) spfConcOut_def spfconcout_least ubclDom_ubundle_def ubclLeast_ubundle_def ubconc_sbhdrt ubconc_ubleast ubconceq_dom ubconceq_insert ubrestrict_ubdom2 ubrestrict_ubleast_inter ufapplyout_apply uflift_apply uflift_dom uflift_ran_h)
 
 lemma spfconcin_out_switch: "spfConcIn a\<cdot>(spfConcOut b\<cdot>spf) = spfConcOut b\<cdot>(spfConcIn a\<cdot>spf)"
-  sorry
-
+  apply(rule ufun_eqI)
+   apply(simp)
+  apply (subst spfConcIn_step)
+   apply simp+
+   apply (simp add: ubclDom_ubundle_def)
+  apply simp
+  apply (subst spfConcOut_step)
+   apply simp+
+   apply (simp add: ubclDom_ubundle_def)
+  apply blast
+  apply (subst spfConcOut_step)
+   apply simp+
+   apply (simp add: ubclDom_ubundle_def)
+  apply (subst spfConcIn_step)
+  apply (simp add: ubclDom_ubundle_def)
+   by (simp add: ubclDom_ubundle_def)
 
 
 (* 1. f(null) = null *)
