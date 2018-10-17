@@ -89,7 +89,7 @@ definition nda_h_inner::"('s::type, 'm::message) ndAutomaton \<Rightarrow> ('s \
 
 (* Similar to Rum96 *)
 definition  nda_h :: "('s::type, 'm::message) ndAutomaton \<Rightarrow> ('s \<Rightarrow> 'm SPS)" where
-"nda_h nda \<equiv> lfp (SetPcpo.setify (\<lambda>a. USPEC (ndaDom\<cdot>nda) (ndaRan\<cdot>nda))) (nda_h_inner nda)"
+"nda_h nda \<equiv> gfp (SetPcpo.setify (\<lambda>a. USPEC (ndaDom\<cdot>nda) (ndaRan\<cdot>nda))) (nda_h_inner nda)"
 
 definition nda_H :: "('s, 'm::message) ndAutomaton \<Rightarrow> 'm SPS" where
 "nda_H nda \<equiv> ndaConcOutFlatten (ndaDom\<cdot>nda)(ndaRan\<cdot>nda) (ndaInitialState\<cdot>nda) (nda_h nda)"

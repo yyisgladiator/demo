@@ -1414,6 +1414,12 @@ instance
 end
 
 
+instance "fun" :: (type, rev_div_upcpo) rev_div_upcpo
+  sorry
+
+instance uspec:: (ufuncl) rev_div_upcpo
+  sorry
+
 
 subsection \<open>Size\<close>
 
