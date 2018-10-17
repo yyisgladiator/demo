@@ -6,7 +6,7 @@
 *)
 
 theory USpec
-  imports inc.UnivClasses
+  imports inc.UnivClasses HOLMF.GFP
 begin
 
 default_sort ufuncl
@@ -77,7 +77,26 @@ lift_definition uspecDom :: "'m uspec \<rightarrow> channel set" is
    apply(rule monofunI)
    apply (metis (mono_tags, lifting) below_uspec_def discrete_cpo eq_imp_below snd_monofun)
   apply auto
-  by (smt below_uspec_def discrete_cpo is_ub_thelub lub_const lub_eq po_eq_conv snd_monofun)
+proof -
+fix Y :: "nat \<Rightarrow> 'm uspec"
+assume a1: "chain Y"
+  obtain cc :: "channel set \<Rightarrow> channel set \<Rightarrow> channel" where
+      f2: "\<forall>x0 x1. (\<exists>v2. v2 \<in> x1 \<and> v2 \<notin> x0) = (cc x0 x1 \<in> x1 \<and> cc x0 x1 \<notin> x0)"
+    by moura
+  have "snd (Rep_uspec (Y elem_24)) \<sqsubseteq> snd (Rep_uspec (Lub Y))"
+    using a1 by (meson below_uspec_def is_ub_thelub snd_monofun)
+  then have f3: "undiscr (fst (snd (Rep_uspec (Lub Y)))) = undiscr (fst (snd (Rep_uspec (Y elem_24))))"
+    by auto
+{ assume "cc (\<Squnion>n. undiscr (fst (snd (Rep_uspec (Y n))))) (undiscr (fst (snd (Rep_uspec (Lub Y))))) \<in> undiscr (fst (snd (Rep_uspec (Lub Y))))"
+  then have "cc (\<Squnion>n. undiscr (fst (snd (Rep_uspec (Y n))))) (undiscr (fst (snd (Rep_uspec (Lub Y))))) \<in> (\<Union>n. undiscr (fst (snd (Rep_uspec (Y n)))))"
+    using f3 by blast
+  then have "cc (\<Squnion>n. undiscr (fst (snd (Rep_uspec (Y n))))) (undiscr (fst (snd (Rep_uspec (Lub Y))))) \<notin> undiscr (fst (snd (Rep_uspec (Lub Y)))) \<or> cc (\<Squnion>n. undiscr (fst (snd (Rep_uspec (Y n))))) (undiscr (fst (snd (Rep_uspec (Lub Y))))) \<in> (\<Squnion>n. undiscr (fst (snd (Rep_uspec (Y n)))))"
+by (simp add: lub_eq_Union) }
+  then have "undiscr (fst (snd (Rep_uspec (Lub Y)))) \<subseteq> (\<Squnion>n. undiscr (fst (snd (Rep_uspec (Y n)))))"
+    using f2 by blast
+  then show "undiscr (fst (snd (Rep_uspec (\<Squnion>n. Y n)))) \<sqsubseteq> (\<Squnion>n. undiscr (fst (snd (Rep_uspec (Y n)))))"
+by (simp add: SetPcpo.less_set_def)
+qed
 
 
 (* The range. Notice this also works on empty uspecs *)
@@ -147,6 +166,13 @@ definition uspecFlatten:: "channel set \<Rightarrow> channel set \<Rightarrow> '
 
 definition uspecSize :: "'a uspec \<Rightarrow> lnat" where
  "uspecSize X = setSize (uspecSet\<cdot>X)"
+
+abbreviation Rep_fst_uspec:: "'m uspec \<Rightarrow> 'm set" where
+"Rep_fst_uspec uspec \<equiv> fst (Rep_uspec uspec)"
+
+abbreviation Abs_fst_uspec:: "'m set \<Rightarrow> channel set \<Rightarrow> channel set \<Rightarrow> 'm uspec" where
+"Abs_fst_uspec spec csIn csOut \<equiv> Abs_uspec (spec, Discr csIn, Discr csOut)"
+
 
 (****************************************************)
 section\<open>Predicates\<close>
@@ -273,7 +299,7 @@ qed
 lemma uspec_eqI2: assumes "uspecSet\<cdot>S1 = uspecSet\<cdot>S2"
   and "uspecIsConsistent S1"
   shows "S1 = S2"
-  by (metis (full_types) assms(1) assms(2) neq_emptyD uspecIsConsistent_def uspec_allDom uspec_allRan uspec_eqI)
+  by (metis (mono_tags) assms(1) assms(2) neq_emptyD uspecIsConsistent_def uspec_allDom uspec_allRan uspec_eqI)
 
 (* if the upper uspec is consistent then the lower uspec is also consistent  *)
 lemma uspec_isconsistent_below: assumes "S1\<sqsubseteq>S2" and "uspecIsConsistent S1"
@@ -292,7 +318,7 @@ lemma uspec_belowI: assumes "uspecDom\<cdot>x = uspecDom\<cdot>y"
       by (metis  surjective_pairing)
     show ?thesis
       apply(simp add: below_uspec_def x_def y_def)
-      by (metis SetPcpo.less_set_def assms(1) assms(2) assms(3) empty_iff fst_conv member_filter po_eq_conv snd_conv subset_eq undiscr_Discr uspecSet.rep_eq uspecWell.elims(2) uspecWell.elims(3) uspecdom_insert uspecran_insert x_def y_def)
+      by (metis SetPcpo.less_set_def assms(1) assms(2) assms(3) empty_iff fst_conv po_eq_conv snd_conv subset_eq undiscr_Discr uspecSet.rep_eq uspecWell.elims(2) uspecWell.elims(3) uspecdom_insert uspecran_insert x_def y_def)
    qed
 
 lemma uspec_min:
@@ -905,6 +931,10 @@ lemma uspec_filter_insert:
     =  Set.filter (\<lambda>uspec. uspecDom\<cdot>uspec = In \<and> uspecRan\<cdot>uspec = Out) uspecs"
   by (simp add: setfilter_cont)
 
+lemma uspec_set_filter_insert:
+  "uspec_set_filter In Out\<cdot>X = (Set.filter (\<lambda> uspec. uspecDom\<cdot>uspec = In \<and> uspecRan\<cdot>uspec = Out) X)"
+  by (simp add: uspec_filter_insert uspec_set_filter_def)
+
 lemma uspecflatten_well:
  "uspecWell 
   (setflat\<cdot>((Rep_cfun uspecSet)  ` (uspec_set_filter In Out\<cdot>uspecs)))
@@ -1306,12 +1336,13 @@ lemma uspec_filter_forall:
 
 section \<open>instance div_pcpo\<close>
 
-(*
+
 lemma uspec_ub: "S\<noteq>{} \<Longrightarrow>S \<subseteq> USPEC In Out \<Longrightarrow> S <| x \<Longrightarrow> x\<in>USPEC In Out"
   unfolding USPEC_def
   unfolding is_ub_def
   by (metis (mono_tags, lifting) bot.extremum_uniqueI contra_subsetD mem_Collect_eq subset_emptyI uspecdom_eq uspecran_eq)
 
+(*
 lemma uspec_cpo: assumes  "S \<subseteq> USPEC In Out" and "S\<noteq>{}"
   shows "\<exists>x\<in>USPEC In Out. S <<| x"
 proof -
@@ -1341,7 +1372,7 @@ proof -
   ultimately show ?thesis
     using assms is_lubI uspec_ub by blast
 qed
-
+*)
 
 lemma uspec_chain_field: assumes "longChain S"
   and "a\<in>S" and "b\<in>S"
@@ -1361,23 +1392,27 @@ proof (rule ccontr)
     by (meson assms(1) uspec_chain_field(1) uspec_chain_field(2)) 
 qed
 
+(*
 lemma uspec_cpo2: fixes S :: "'m::ufuncl uspec set"
   assumes "longChain S"
   shows "\<exists>x. S <<| x"
   by (metis assms empty_iff finite.simps lc_finite_lub uspec_chain_field2 uspec_cpo)
+*)
 
 instantiation uspec:: (ufuncl) div_pcpo
 begin
 definition DIV_uspec_def: "DIV_uspec \<equiv> { USPEC In Out | In Out . True  }"
 instance
+  sorry
+(*
   apply(intro_classes)
   apply(auto simp add: DIV_uspec_def)
   apply (simp add: uspec_exists)
   apply (simp add: infinite_imp_nonempty uspec_cpo)
   by (metis (mono_tags, lifting) USPEC_def mem_Collect_eq uspecleast_dom uspecleast_least uspecleast_ran)
+*)
 end
 
-*)
 
 
 subsection \<open>Size\<close>
