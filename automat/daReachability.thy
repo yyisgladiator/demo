@@ -12,18 +12,23 @@ definition daReach_helper::"('s::type, 'm::message) dAutomaton \<Rightarrow> 'm 
 definition daReach::"('s::type, 'm::message) dAutomaton \<Rightarrow> 'm sbElem set \<Rightarrow> 's set  \<Rightarrow> 's set" where
 "daReach da M S_init = fix\<cdot>(\<Lambda> S. daReach_helper da M S_init S)"
 
+
+lemma dareach_helper_mono: "monofun (\<lambda>S. daReach_helper da M S_init S)"
+  apply(rule monofunI)
+  apply(auto simp add: less_set_def)
+   by (smt CollectD CollectI SetPcpo.less_set_def Un_iff daReach_helper_def subset_iff)
+
 lemma dareach_helper_cont: "cont (\<lambda>S. daReach_helper da M S_init S)"
   apply(rule contI2)
-   apply(rule monofunI)
-  apply(auto simp add: less_set_def)
-   apply (smt CollectD CollectI SetPcpo.less_set_def Un_iff daReach_helper_def subset_iff)
+   apply(simp add: dareach_helper_mono)
   apply (simp add:chain_def)
   apply(auto simp add: less_set_def)
-  apply (simp add:is_lubD1)
+  apply (simp add:lub_eq_Union)
+  apply simp
   
   apply (simp add:contlub_cfun_arg)
 (*  apply(auto simp add: daReach_helper_def) *)
-(*  apply (simp add:lub_def)
+(*  
   
 "chain Y \<Longrightarrow> f\<cdot>(\<Squnion>i. Y i) = (\<Squnion>i. f\<cdot>(Y i))"
 
