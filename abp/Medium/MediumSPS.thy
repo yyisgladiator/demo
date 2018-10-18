@@ -95,15 +95,44 @@ text{* If a message comes in and the counter is not zero, null will be sent and 
   state. *}
 lemma medsps_spsconc_msg_nzero: 
   "spsConcIn (mediumIn_i (Msg m)) (MedSPS (Suc n)) = spsConcOut (mediumOut_o -)(MedSPS n)"
- (* apply (subst spf2sps, simp_all)*)
+  apply (subst spsconcin_insert)
+  apply (subst spsconcout_insert)
+  apply (rule uspec_eqI)
+  apply (subst uspecimage_useful_uspecrevset)
+  apply (simp add: ufclDom_ufun_def ufclRan_ufun_def)
+  apply (subst uspecimage_useful_uspecrevset)
+  apply (simp add: ufclDom_ufun_def ufclRan_ufun_def)
+  apply (simp add: uspecrevset_insert setrevImage_def MedSPS.rep_eq)
+  apply (rule)
+  apply (rule image_Collect_subsetI)
+  apply (subst setcompr_eq_image)
+  apply (metis (mono_tags) image_eqI medspf_spfconc_msg_nzero mem_Collect_eq)
+  apply (rule image_Collect_subsetI)
+  defer
+  apply (simp add: ufclDom_ufun_def ufclRan_ufun_def)+
   oops
+
+(*copied*)
+lemma uspecflatten_rep_eq: "Rep_rev_uspec (uspecFlatten Dom Ran uspec) 
+  = ((setflat\<cdot>(Rep_rev_uspec ` (inv Rev (uspec_set_filter Dom Ran\<cdot>uspec)))))"
+  apply(simp add: uspecFlatten_def)
+  using rep_abs_rev_simp uspecflatten_well by blast
+(**)
 
 text{* If a message comes in and the counter is zero, the message will be sent and Medium changes 
   its state. *}
 lemma medsps_spsconc_msg_zero: "spsConcIn (mediumIn_i (Msg m)) (MedSPS 0) 
   = spsConcOut (mediumOut_o (Msg m))(uspecFlatten mediumDom mediumRan (Rev {MedSPS n | n. True}))"
-  apply (simp add: mediumIn_i_def mediumOut_o_def)
-  (*apply (subst spf2sps, simp_all)*)
+  apply (subst spsconcin_insert)
+  apply (subst spsconcout_insert)
+  apply (rule uspec_eqI)
+  apply (subst uspecimage_useful_uspecrevset)
+  apply (simp add: ufclDom_ufun_def ufclRan_ufun_def)
+  apply (subst uspecimage_useful_uspecrevset)
+  apply (simp add: ufclDom_ufun_def ufclRan_ufun_def)
+  apply (simp add: uspecrevset_insert setrevImage_def MedSPS.rep_eq)
+  apply (simp add: uspecflatten_rep_eq)
+  apply (simp add: uspec_set_filter_def setrevFilter_def)
 oops
   
 end
