@@ -4,7 +4,7 @@ imports Division GFP
 
 begin
 
-
+default_sort po
 
 
 section \<open>set\<close>
@@ -152,6 +152,23 @@ end
 
 
 
+instance "fun" :: (type, div_upcpo) div_upcpo
+proof(intro_classes)
+  fix a ::"('a::type \<Rightarrow> 'b::div_upcpo) set"
+  assume "a\<in>DIV"
+ from this obtain DD where dd_def: "a = setify DD" and dd_in: "DD\<in>setify (\<lambda>a. DIV)"
+   by (metis DIV_fun_def imageE)  
+  hence top_exist: "\<And>s. \<exists>top\<in>DD s. \<forall>b\<in>DD s. b\<sqsubseteq>top"
+    by (metis (mono_tags, lifting) CollectD SetPcpo.setify_def div_upcpo)
+  let ?top = "\<lambda>s. SOME top. (top\<in>DD s \<and> (\<forall>b\<in>DD s. b\<sqsubseteq>top))"
+  have "?top \<in> a"
+    by (smt SetPcpo.setify_def dd_def mem_Collect_eq someI_ex top_exist)
+  moreover have "\<forall>b\<in>a. b\<sqsubseteq>?top" apply(simp add: below_fun_def, auto)
+    by (smt SetPcpo.setify_def dd_def mem_Collect_eq someI_ex top_exist)
+  ultimately show "\<exists>top\<in>a. \<forall>b\<in>a.  b \<sqsubseteq> top" by blast
+qed
+
+
 
 
 section \<open>fun div_pcpo\<close>
@@ -173,14 +190,10 @@ proof(intro_classes)
 qed
 
 
-
 instance "fun" :: (type, rev_div_cpo) rev_div_cpo
   apply(intro_classes)
   sorry
 
-instance "fun" :: (type, div_upcpo) div_upcpo
-  apply(intro_classes)
-  sorry
 
 
 end

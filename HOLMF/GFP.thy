@@ -14,6 +14,9 @@ begin
   fun below_rev:: "'a rev \<Rightarrow> 'a rev \<Rightarrow> bool" where
   "below_rev (Rev b1) (Rev b2) = (b2\<sqsubseteq>b1)"
 
+  lemma below_rev_def: "b1 \<sqsubseteq> b2 = (((inv Rev) b2) \<sqsubseteq> ((inv Rev) b1))"
+  by (metis (no_types, hide_lams) GFP.rev.exhaust UNIV_I f_inv_into_f local.below_rev.simps surj_def)
+
   (* Show that the ordering definition defines a correct partial order. *)
   instance
     apply intro_classes
@@ -51,6 +54,8 @@ class rev_div_cpo = division + po +
   assumes rev_div_cpo: "\<And>S a. a\<in>DIV \<Longrightarrow> \<not>finite  (Rev ` S) \<Longrightarrow> longChain (Rev ` S) \<Longrightarrow> S\<subseteq>a \<Longrightarrow> \<exists>x\<in>a. (Rev ` S) <<| Rev x"
 
 begin
+
+
 end
 
 
