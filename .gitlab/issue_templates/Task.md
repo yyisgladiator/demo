@@ -6,14 +6,15 @@
 
 ### Branch and Theories:
 
-Create a Branch of: (Branch.)
-Work in: (List of theories.)
+* Branch: <Branch>
+* Files: <List of theories>
+* Related Issues: <Issue ID>
 
 ### Checklist Tasks:
 
-- [ ] (Task 1.)
-- [ ] (Task 2.)
-- [ ] (Task 3.)
+- [ ] <Task 1>
+- [ ] <Task 2>
+- [ ] <Task 3>
 
 ### Checklist Issue:
 
