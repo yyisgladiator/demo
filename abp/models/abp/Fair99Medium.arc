@@ -6,9 +6,9 @@ package abp;
     in E i,
     out E o;
 
-  automaton Fair99Medium {
-    variable int counter;
+  int counter;
 
+  automaton Fair99Medium {
     state Single;
     initial Single / {counter=rand{j. j>=0 && j<100}};
 

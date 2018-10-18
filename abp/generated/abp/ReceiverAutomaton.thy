@@ -3,7 +3,7 @@
  * This file was generated from Receiver.maa and will be overridden when changed. To change
  * permanently, consider changing the model itself.
  *
- * Generated on Oct 16, 2018 10:17:26 PM by isartransformer 3.1.0
+ * Generated on Oct 18, 2018 11:59:04 PM by isartransformer 3.1.0
  *)
 theory ReceiverAutomaton
   imports ReceiverDatatype ReceiverStates automat.dAutomaton
@@ -101,7 +101,7 @@ lemma receiverTransition_0_1[simp]:
          = (ReceiverState Rt, (receiverOut_ar_o (Msg (False)) (Msg ((fst port_dr)))))"
   using assms by(auto simp add: receiverTransition_def assms)
 
-(* Line 17:  Rf -> Rf {dr==null}; *)
+(* Line 17:  Rf -> Rf [dr==null]; *)
 lemma receiverTransition_1_0[simp]:
   assumes "True"
     shows "receiverTransition ((ReceiverState Rf ), (receiverElemIn_dr null))
@@ -122,7 +122,7 @@ lemma receiverTransition_2_1[simp]:
          = (ReceiverState Rt, (receiverOut_ar_o (Msg (False)) null))"
   using assms by(auto simp add: receiverTransition_def assms)
 
-(* Line 16:  Rt -> Rt {dr==null}; *)
+(* Line 16:  Rt -> Rt [dr==null]; *)
 lemma receiverTransition_3_0[simp]:
   assumes "True"
     shows "receiverTransition ((ReceiverState Rt ), (receiverElemIn_dr null))
@@ -154,7 +154,7 @@ lemma receiverStep_0_1:
   apply(rule da_h_stepI)
   using assms by(auto simp add: daNextState_def daNextOutput_def assms)
 
-(* Line 17:  Rf -> Rf {dr==null}; *)
+(* Line 17:  Rf -> Rf [dr==null]; *)
 lemma receiverStep_1_0:
   assumes "True"
     shows "spfConcIn  (receiverIn_dr null)\<cdot>(receiverStep (ReceiverState Rf ))
@@ -181,7 +181,7 @@ lemma receiverStep_2_1:
   apply(rule da_h_stepI)
   using assms by(auto simp add: daNextState_def daNextOutput_def assms)
 
-(* Line 16:  Rt -> Rt {dr==null}; *)
+(* Line 16:  Rt -> Rt [dr==null]; *)
 lemma receiverStep_3_0:
   assumes "True"
     shows "spfConcIn  (receiverIn_dr null)\<cdot>(receiverStep (ReceiverState Rt ))
