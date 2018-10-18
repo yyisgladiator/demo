@@ -3,7 +3,7 @@
  * This file was generated from Password.maa and will be overridden when changed. To change
  * permanently, consider changing the model itself.
  *
- * Generated on Oct 15, 2018 8:59:07 PM by isartransformer 2.0.0
+ * Generated on Oct 18, 2018 7:47:14 PM by isartransformer 3.1.0
  *)
 theory PasswordAutomaton
   imports PasswordDatatype PasswordStates automat.dAutomaton
@@ -228,5 +228,6 @@ lemma passwordStep_5_0:
   apply(rule da_h_stepI)
   using assms by(auto simp add: daNextState_def daNextOutput_def assms)
 
+lemmas passwordSteps = passwordStep_0_0 passwordStep_1_0 passwordStep_2_0 passwordStep_2_1 passwordStep_3_0 passwordStep_4_0 passwordStep_4_1 passwordStep_5_0
 
 end
