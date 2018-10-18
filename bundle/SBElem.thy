@@ -113,7 +113,7 @@ proof -
 qed
 
 lemma sbe2sb_hdelem_conc: "ubDom\<cdot>sb = sbeDom sbe \<Longrightarrow> (sbHdElem\<cdot>(ubConcEq(sbe2SB sbe)\<cdot>sb)) = sbHdElem\<cdot>(sbe2SB sbe)"
-  apply(simp add: sbhdelem_insert)
+  apply(simp add: sbhdelem_insert ubconceq_insert)
   apply(rule ext, rename_tac a)
   apply(case_tac "a\<in>sbeDom sbe")
   apply (auto simp add: convDiscrUp_def sbe2sb_getch sup'_def up_def)
@@ -132,7 +132,7 @@ lemma sbe2sb_rt[simp]:"ubDom\<cdot>sb = sbeDom sbe \<Longrightarrow> sbRt\<cdot>
   apply(rule ub_eq)
    apply simp
   apply (simp add: sbe2sb_getch)
-  by (simp add: usclConc_stream_def)
+  by (simp add: usclConc_stream_def ubconceq_insert)
 
 
 lemma sbedom_null[simp]: "sbeDom (sbeNull cs) = cs"
