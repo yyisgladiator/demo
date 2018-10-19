@@ -286,29 +286,33 @@ lemma nda_h_valid_domain: "(SetPcpo.setify (\<lambda>a. USPEC (ndaDom\<cdot>nda)
   using nda_h_valid_domain_h by fastforce
 
 lemma nda_h_fixpoint:"nda_h nda = nda_h_inner nda (nda_h nda)"
-  by (metis (no_types) lfp_fix nda_h_def nda_h_inner_monofun nda_h_valid_domain nda_inner_good)
+  by (metis gfp_fix nda_h_def nda_h_inner_monofun nda_h_valid_domain nda_inner_good)
 
-lemma nda_h_least: assumes "other_h \<in> SetPcpo.setify (\<lambda>a::'a. USPEC (ndaDom\<cdot>nda) (ndaRan\<cdot>nda))"
-  and "nda_h_inner nda other_h \<sqsubseteq> other_h"
-  shows "nda_h nda \<sqsubseteq> other_h"
+lemma nda_h_greatest: assumes "other_h \<in> SetPcpo.setify (\<lambda>a::'a. USPEC (ndaDom\<cdot>nda) (ndaRan\<cdot>nda))"
+  and "other_h \<sqsubseteq> nda_h_inner nda other_h"
+shows "other_h \<sqsubseteq> nda_h nda"
   unfolding nda_h_def
-  apply(rule lfp_least)
-  using assms nda_h_inner_monofun nda_h_valid_domain nda_inner_good by auto
+  apply(rule gfp_greatest)
+  using nda_h_inner_monofun apply auto[1]
+  apply (simp add: nda_inner_good)
+  apply (simp add: nda_h_valid_domain)
+  apply (simp add: assms(2))
+  by (simp add: assms(1))
 
-lemma nda_h_least_eq: assumes "other_h \<in> SetPcpo.setify (\<lambda>a::'a. USPEC (ndaDom\<cdot>nda) (ndaRan\<cdot>nda))"
-  and "nda_h_inner nda other_h \<sqsubseteq> other_h"
-  and "\<And>x. x\<in>SetPcpo.setify (\<lambda>a::'a. USPEC (ndaDom\<cdot>nda) (ndaRan\<cdot>nda)) \<Longrightarrow> nda_h_inner nda x \<sqsubseteq> x \<Longrightarrow> other_h \<sqsubseteq> x"
+lemma nda_h_greatest_eq: assumes "other_h \<in> SetPcpo.setify (\<lambda>a::'a. USPEC (ndaDom\<cdot>nda) (ndaRan\<cdot>nda))"
+  and "other_h \<sqsubseteq> nda_h_inner nda other_h"
+  and "\<And>x. x\<in>SetPcpo.setify (\<lambda>a::'a. USPEC (ndaDom\<cdot>nda) (ndaRan\<cdot>nda)) \<Longrightarrow> x \<sqsubseteq> nda_h_inner nda x \<Longrightarrow>  x \<sqsubseteq> other_h"
   shows "nda_h nda = other_h"
   unfolding nda_h_def
-  apply(rule lfp_least_eq)
+  apply(rule gfp_greatest_eq)
   using nda_h_inner_monofun apply blast
   using assms nda_h_inner_monofun nda_h_valid_domain nda_inner_good by auto
 
-lemma nda_h_mono:  "monofun nda_h"
+lemma nda_h_mono: "monofun nda_h"
   apply(rule monofunI)
   unfolding nda_h_def
   apply(simp add: ndadom_below_eq ndaran_below_eq)
-  apply(rule lfp_monofun)
+  apply(rule gfp_monofun)
   apply (simp add: monofunE nda_h_inner_monofun2)
       apply (simp_all add: nda_h_inner_monofun nda_inner_good nda_h_valid_domain)
   by (metis (no_types) nda_inner_good ndadom_below_eq ndaran_below_eq)
@@ -348,9 +352,12 @@ lemma sbhdwell_ubconceq: assumes "ubDom\<cdot>(sbe2SB sbe) = ubDom\<cdot>us"
   by (metis (no_types, lifting) assms sbHdElem_bottom_exI sbHdElem_channel sbe2sb_dom sbe2sb_hdelem_conc sbe2sb_nbot ubconceq_dom)
 
 lemma nda_h_final_h_1: assumes "sbeDom sbe = ndaDom\<cdot>nda"
+ and nda_h_state_not_empty: "nda_h nda state \<noteq> uspecLeast (ndaDom\<cdot>nda) (ndaRan\<cdot>nda)"
   shows "uspecFlatten (ndaDom\<cdot>nda) (ndaRan\<cdot>nda)\<cdot>(Set.image (\<lambda>(s, sb). ndaTodo_h (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) (s, sb) (nda_h nda)) ((ndaTransition\<cdot>nda) (state, sbe))) \<sqsubseteq>
 (uspecImage (Rep_cfun (spfConcIn (sbe2SB sbe))) (nda_h nda state))"
-  apply (rule uspec_belowI) 
+  sorry
+(*
+  apply (rule uspec_belowI)
     apply (metis (no_types, lifting) nda_h_fixpoint nda_h_inner_dom spfConcIn_dom spfConcIn_ran ufclDom_ufun_def ufclRan_ufun_def uspecflatten_dom uspecimage_dom1)
    apply (metis (no_types, lifting) nda_h_fixpoint nda_h_inner_ran spfConcIn_dom spfConcIn_ran ufclDom_ufun_def ufclRan_ufun_def uspecflatten_ran uspecimage_ran1)
 proof -  (*(rule setrev_belowI)*)
@@ -463,12 +470,14 @@ let ?H  = "(ndaHelper2 (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) state (ndaTransitio
     qed
   qed
 qed
-
+*)
 
 lemma nda_h_final_h_2:assumes "sbeDom sbe = ndaDom\<cdot>nda" and
-  nda_h_state_not_empty: "nda_h nda state \<noteq> uspecMax (ndaDom\<cdot>nda) (ndaRan\<cdot>nda)" 
+  nda_h_state_not_empty: "nda_h nda state \<noteq> uspecLeast (ndaDom\<cdot>nda) (ndaRan\<cdot>nda)" 
   shows "(uspecImage (Rep_cfun (spfConcIn (sbe2SB sbe))) (nda_h nda state)) \<sqsubseteq>
     ndaConcOutFlatten (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) ((ndaTransition\<cdot>nda) (state, sbe)) (nda_h nda)" 
+  sorry
+(*
   apply (rule uspec_belowI)
   apply (metis (no_types, lifting) assms(1) ndaConcOutFlatten_def nda_h_final_h_1 uspecdom_eq uspecflatten_dom)
   apply (metis (no_types, lifting) assms(1) ndaConcOutFlatten_def nda_h_final_h_1 uspecflatten_ran uspecran_eq)
@@ -541,30 +550,29 @@ proof (rule setrev_belowI)
       by (simp add: nda_h_2_spsStep_m)
   qed
 qed
-
+*)
 
 lemma nda_h_final: assumes "sbeDom sbe = ndaDom\<cdot>nda" and
-  nda_h_state_not_empty: "nda_h nda state \<noteq> uspecMax (ndaDom\<cdot>nda) (ndaRan\<cdot>nda)"
-  shows "spsConcIn (sbe2SB sbe) (nda_h nda state) = 
+  nda_h_state_not_empty: "nda_h nda state \<noteq> uspecLeast (ndaDom\<cdot>nda) (ndaRan\<cdot>nda)"
+  shows "spsConcIn (sbe2SB sbe)\<cdot>(nda_h nda state) = 
    ndaConcOutFlatten (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) ((ndaTransition\<cdot>nda) (state,sbe)) (nda_h nda)"
    apply (rule uspec_eqI)  defer
     apply (subst spsconcin_dom)
-    apply (metis ndaConcOutFlatten_def nda_h_fixpoint nda_h_inner_dom uspecflatten_dom)
-  apply (simp add: assms(1) nda_h_final_h_2 nda_h_state_not_empty spsConcIn_def)
+  apply (metis (no_types) ndaConcOutFlatten_def nda_h_fixpoint nda_h_inner_dom uspecflatten_dom)
+  apply (metis (no_types, lifting) ndaConcOutFlatten_def nda_h_fixpoint nda_h_inner_ran spsconcin_ran uspecflatten_ran)
   apply (simp add: spsConcIn_def)
-  by (metis (no_types) assms(1) ndaConcOutFlatten_def nda_h_final_h_1 nda_h_final_h_2 nda_h_state_not_empty po_eq_conv)
-
+  by (metis (no_types) assms(1) ndaConcOutFlatten_def nda_h_final_h_1 nda_h_final_h_2 nda_h_state_not_empty po_eq_conv uspecimagec_insert)
 
 
 lemma nda_h_I:
   assumes "sbeDom sbe = ndaDom\<cdot>nda" 
     and "uspecIsConsistent (nda_h nda state)" (* For the proof see "ndaTotal.thy" *)
     and "transitions = (ndaTransition\<cdot>nda) (state,sbe)"
-  shows "spsConcIn (sbe2SB sbe) (nda_h nda state) = 
+  shows "spsConcIn (sbe2SB sbe)\<cdot>(nda_h nda state) = 
     ndaConcOutFlatten (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) transitions (nda_h nda)"
   unfolding assms(3)
   apply(rule nda_h_final, simp add: assms)
-  by (metis assms(2) uspecmax_consistent uspecmax_dom uspecmax_ran)
+  by (metis assms(2) uspecleast_consistent uspecleast_dom uspecleast_ran)
 
 
 

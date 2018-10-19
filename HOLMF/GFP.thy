@@ -226,6 +226,14 @@ proof -
     by simp 
 qed
 
+lemma gfp_greatest_eq: assumes "monofun f"
+    and "goodFormed C f"
+    and "C \<in> DIV"
+    and "\<And>x. x\<in>C \<Longrightarrow> x \<sqsubseteq> f x \<Longrightarrow> x\<sqsubseteq>y"
+    and "y \<sqsubseteq> f y"
+    and "y \<in> C"
+  shows "(gfp C f) = y"
+  by (metis assms(1) assms(2) assms(3) assms(4) assms(5) assms(6) below_antisym below_refl gfp_div gfp_fix gfp_greatest)
 
 lemma gfp_monofun: assumes "f\<sqsubseteq>g"
     and "monofun f" and "monofun g"
