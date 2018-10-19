@@ -303,4 +303,9 @@ instance
   using fun_rev_cpo(1) fun_rev_cpo(2) by blast
 end
 
+
+
+instance "fun" :: (type, rev_div_upcpo) rev_div_upcpo
+  by(intro_classes)
+  
 end
