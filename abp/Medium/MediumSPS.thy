@@ -108,9 +108,9 @@ lemma medsps_spsconc_msg_nzero:
   apply (subst setcompr_eq_image)
   apply (metis (mono_tags) image_eqI medspf_spfconc_msg_nzero mem_Collect_eq)
   apply (rule image_Collect_subsetI)
-  defer
-  apply (simp add: ufclDom_ufun_def ufclRan_ufun_def)+
-  oops
+  apply (subst setcompr_eq_image, simp)
+  apply (metis imageI medspf_spfconc_msg_nzero2)
+  by (simp add: ufclDom_ufun_def ufclRan_ufun_def)+
 
 (*copied*)
 lemma uspecflatten_rep_eq: "Rep_rev_uspec (uspecFlatten Dom Ran uspec) 
