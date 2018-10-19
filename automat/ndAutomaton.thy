@@ -584,10 +584,10 @@ lemma nda_h_bottom_h: "uspecIsStrict (spsStep_m (ndaDom\<cdot>nda) (ndaRan\<cdot
 proof -
   fix x::"('a stream\<^sup>\<Omega>, 'a stream\<^sup>\<Omega>) ufun"
   fix sb::"'a stream\<^sup>\<Omega>"
-  assume a1: "uspec_in x (spsStep_m (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) (ndaHelper2 (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) state (ndaTransition\<cdot>nda) (nda_h nda)))"
+  assume a1: "x \<in> uspecSet\<cdot>(spsStep_m (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) (ndaHelper2 (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) state (ndaTransition\<cdot>nda) (nda_h nda)))"
   assume a2: "ubclDom\<cdot>sb = ufDom\<cdot>x"
   assume a3: "ubclLen sb = (0::lnat)"
-  obtain y where y_def_1: " y \<in> (inv Rev (spsStep_h\<cdot>(ndaHelper2 (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) state (ndaTransition\<cdot>nda) (nda_h nda))))"
+  obtain y where y_def_1: " y \<in> (spsStep_h (ndaHelper2 (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) state (ndaTransition\<cdot>nda) (nda_h nda)))"
               and y_def_2: "spsStep_P (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) y"
    and y_def_3: "x = spfStep (ndaDom\<cdot>nda) (ndaRan\<cdot>nda)\<cdot>(\<lambda>sbEl::'a sbElem. spfRtIn\<cdot>(y sbEl))"
     using a1 nddom_finite spsstep_ele_rev by blast
@@ -608,70 +608,70 @@ lemma nda_h_final_back_h_1: "finite In \<Longrightarrow>
   uspecRan\<cdot>other = Out \<Longrightarrow>
   uspecIsStrict other \<Longrightarrow>
   \<forall> sbe. h sbe \<in> USPEC In Out \<Longrightarrow>
-  \<forall> sbe. h sbe \<noteq> uspecMax In Out \<Longrightarrow>
-  \<forall> sbe. sbeDom sbe = In \<longrightarrow> (spsConcIn (sbe2SB sbe) other = h sbe)
+  \<forall> sbe. h sbe \<noteq> uspecLeast In Out \<Longrightarrow>
+  \<forall> sbe. sbeDom sbe = In \<longrightarrow> (spsConcIn (sbe2SB sbe)\<cdot>other = h sbe)
             \<Longrightarrow> 
-      (spsStep_m In Out h \<sqsubseteq> other)"
+      (other \<sqsubseteq> spsStep_m In Out h)"
 proof -
   assume a0: "finite In"
   assume a1: "uspecDom\<cdot>other = In"
   assume a2: "uspecRan\<cdot>other = Out"
   assume a4: "uspecIsStrict other"
   assume a5: "\<forall> sbe. h sbe \<in> USPEC In Out"
-  assume a6: "\<forall> sbe. h sbe \<noteq> uspecMax In Out"
+  assume a6: "\<forall> sbe. h sbe \<noteq> uspecLeast In Out"
   assume a3: "\<forall> sbe. sbeDom sbe = In \<longrightarrow>
- (spsConcIn (sbe2SB sbe) other = h sbe)"
+ (spsConcIn (sbe2SB sbe)\<cdot>other = h sbe)"
 
   have a3_simp: "\<And> sbe. sbeDom sbe = In \<Longrightarrow>
- (spsConcIn (sbe2SB sbe) other = h sbe)"
+ (spsConcIn (sbe2SB sbe)\<cdot>other = h sbe)"
     using a3 by blast
   (* dom and ran of other *)
-  have other_dom: "\<And> sbe. uspecDom\<cdot>(spsConcIn (sbe2SB sbe) other) = uspecDom\<cdot>other"
+  have other_dom: "\<And> sbe. uspecDom\<cdot>(spsConcIn (sbe2SB sbe)\<cdot>other) = uspecDom\<cdot>other"
     by (simp add: spsconcin_dom)
   have h1: "\<And> sbe. sbeDom sbe = In \<Longrightarrow> uspecDom\<cdot>other = uspecDom\<cdot>(h sbe) \<and> uspecDom\<cdot>other = In"
     apply rule
      apply (metis a3 other_dom)
     by (metis a1)
 
-  have R_sub_L: "inv Rev (uspecRevSet\<cdot>other) \<subseteq> inv Rev (uspecRevSet\<cdot>(spsStep_m In Out h))"
+  have R_sub_L: "uspecSet\<cdot>other \<subseteq> uspecSet\<cdot>(spsStep_m In Out h)"
   proof rule
     fix x:: "'a stream\<^sup>\<Omega>\<Rrightarrow> 'a stream\<^sup>\<Omega>"
-    assume a11: "uspec_in x other"
-    have spsStep_h_h_not_empty:"spsStep_h\<cdot>h \<noteq> Rev {}"
-      by (metis (no_types, lifting) SetRev.setify_notempty a5 a6 not_uspec_consisten_empty_eq rev_inv_rev spsStep_h_insert uspec_dom uspec_eqI2 uspec_ran uspecmax_consistent uspecmax_dom uspecmax_ran uspecrevset_insert)
-    have f8: "\<And>f sbe. f \<in> inv Rev (spsStep_h\<cdot>h) \<Longrightarrow> uspec_in (f sbe) (h sbe)"
+    assume a11: "x \<in> uspecSet\<cdot>other"
+    have spsStep_h_h_not_empty:"spsStep_h h \<noteq> {}"
+      by (metis (no_types, lifting) a5 a6 setify_notempty spsStep_h_def uspecIsConsistent_def uspec_dom uspec_ran uspecleast_consistent)
+    have f8: "\<And>f sbe. f \<in> (spsStep_h h) \<Longrightarrow> (f sbe) \<in> uspecSet\<cdot>(h sbe)"
       by (simp add: spsstep_h_ele)
-    then have elem_h_spsStep_P: "\<And>f. f \<in> inv Rev (spsStep_h\<cdot>h) \<Longrightarrow> spsStep_P In Out f"
+    then have elem_h_spsStep_P: "\<And>f. f \<in> (spsStep_h h) \<Longrightarrow> spsStep_P In Out f"
       by (metis (no_types, hide_lams) a5 spsStep_P_def ufclDom_ufun_def ufclRan_ufun_def uspec_allDom uspec_allRan uspec_dom uspec_ran)
    
     
-    have f9: "\<And> sbe. uspec_in (spfConcIn (sbe2SB sbe)\<cdot>x) (spsConcIn (sbe2SB sbe) other)"
-      by (simp add: a11 spsconcin_ele)
-    then have f10: "\<And> sbe. sbeDom sbe = In \<Longrightarrow> uspec_in (spfConcIn (sbe2SB sbe)\<cdot>x) (h sbe)"
+    have f9: "\<And> sbe. (spfConcIn (sbe2SB sbe)\<cdot>x) \<in> uspecSet\<cdot>(spsConcIn (sbe2SB sbe)\<cdot>other)"
+      by (simp add: a11 spsConcIn_def uspecimagec_set)
+    then have f10: "\<And> sbe. sbeDom sbe = In \<Longrightarrow> (spfConcIn (sbe2SB sbe)\<cdot>x) \<in> uspecSet\<cdot>(h sbe)"
       by (metis a3)
     then have f101: "\<And> sbe. sbeDom sbe = In \<Longrightarrow> 
-      \<exists> g \<in> inv Rev (spsStep_h\<cdot>h). g sbe = (spfConcIn (sbe2SB sbe)\<cdot>x)"
+      \<exists> g \<in> (spsStep_h h). g sbe = (spfConcIn (sbe2SB sbe)\<cdot>x)"
       by (simp add: spsStep_h_h_not_empty spsstep_h_ele4)
 
 
-    have f11: "\<And> f sbe. sbeDom sbe = In \<Longrightarrow> f \<in> inv Rev (spsStep_h\<cdot>h) 
-      \<Longrightarrow> uspec_in (f sbe) (h sbe)"
+    have f11: "\<And> f sbe. sbeDom sbe = In \<Longrightarrow> f \<in> (spsStep_h h) 
+      \<Longrightarrow> (f sbe) \<in> uspecSet\<cdot>(h sbe)"
       by (simp add: spsstep_h_ele)
-    then have f12: "\<And> f sbe. sbeDom sbe = In \<Longrightarrow> f \<in> inv Rev (spsStep_h\<cdot>h) 
-      \<Longrightarrow> uspec_in (f sbe) (spsConcIn (sbe2SB sbe) other)"
+    then have f12: "\<And> f sbe. sbeDom sbe = In \<Longrightarrow> f \<in> (spsStep_h h) 
+      \<Longrightarrow> (f sbe) \<in> uspecSet\<cdot>(spsConcIn (sbe2SB sbe)\<cdot>other)"
       by (simp add: a3)
-    have f13: "\<And>f sbe. sbeDom sbe = In \<Longrightarrow> uspec_in f (spsConcIn (sbe2SB sbe) other)
-      \<Longrightarrow> \<exists> g \<in> inv Rev (spsStep_h\<cdot>h). g sbe = f"
+    have f13: "\<And>f sbe. sbeDom sbe = In \<Longrightarrow> f \<in> uspecSet\<cdot>(spsConcIn (sbe2SB sbe)\<cdot>other)
+      \<Longrightarrow> \<exists> g \<in> (spsStep_h h). g sbe = f"
       by (simp add: a3 spsStep_h_h_not_empty spsstep_h_ele4)
     obtain the_g where the_g_def: "the_g \<equiv> (\<lambda> sbe. if (sbeDom sbe = In) 
-      then (spfConcIn (sbe2SB sbe)\<cdot>x) else (SOME f. uspec_in f (h sbe)))"
+      then (spfConcIn (sbe2SB sbe)\<cdot>x) else (SOME f. f \<in> uspecSet\<cdot>(h sbe)))"
       by simp
-    have the_g_in_h: "the_g \<in> inv Rev (spsStep_h\<cdot>h)"
+    have the_g_in_h: "the_g \<in> (spsStep_h h)"
       by (metis f10 someI_ex spsStep_h_h_not_empty spsstep_h_ele2 spsstep_h_inI the_g_def)
     have the_g_spsStep_P: "spsStep_P In Out the_g"
       by (simp add: elem_h_spsStep_P the_g_in_h)
 
-    have the_g_spsStep: "uspec_in ((\<lambda> h. spfStep In Out\<cdot>((\<lambda> h sbEl. spfRtIn\<cdot>(h sbEl)) h)) the_g) (spsStep_m In Out h)"
+    have the_g_spsStep: "((\<lambda> h. spfStep In Out\<cdot>((\<lambda> h sbEl. spfRtIn\<cdot>(h sbEl)) h)) the_g) \<in> uspecSet\<cdot>(spsStep_m In Out h)"
       apply (rule spsstep_m_ele)
         apply (simp add: a0)
        apply (simp add: the_g_in_h)
@@ -683,8 +683,8 @@ proof -
       apply (simp add: a0)
       by (simp add: a0 spfStep_2_spfStep_inj spfStep_inj_def ubcllen_0_not_elemwell ufleast_apply)
 
-    have "\<And>x. uspec_in x other \<Longrightarrow> ufIsStrict x"
-      by (metis a4 setrevForall_def uspecForall_def uspecIsStrict_def)
+    have "\<And>x. x \<in> uspecSet\<cdot>other \<Longrightarrow> ufIsStrict x"
+      by (metis a4 uspecForall_def uspecIsStrict_def)
 
     then have x_ufisstrict: "ufIsStrict x"
       by (simp add: a11)
@@ -772,23 +772,23 @@ proof -
        apply (metis spsStep_P_def the_g_spsStep_P)
       by (simp add: helper)
 
-    then show "uspec_in x (spsStep_m In Out h)"
+    then show "x \<in> uspecSet\<cdot>(spsStep_m In Out h)"
       using the_g_spsStep by auto
   qed
 
-  show "(spsStep_m In Out h \<sqsubseteq> other)"
-    by (metis R_sub_L a0 a1 a2 revBelowNeqSubset spstep_m_dom spstep_m_ran uspec_belowI)
+  show "(other \<sqsubseteq> spsStep_m In Out h)"
+    by (simp add: R_sub_L SetPcpo.less_set_def a0 a1 a2 uspec_belowI)
 qed
 
 
 lemma nda_h_final_back_h_2: "(spsStep_m In Out h = other)
  \<Longrightarrow> \<forall> sbe. sbeDom sbe = In \<longrightarrow>
- (uspecIsStrict other \<and> h sbe \<in> USPEC In Out \<and> spsConcIn (sbe2SB sbe) other = h sbe)"
+ (uspecIsStrict other \<and> h sbe \<in> USPEC In Out \<and> spsConcIn (sbe2SB sbe)\<cdot>other = h sbe)"
   oops
 
 
 lemma nda_h_final_back_eq_h: "(\<forall> sbe. sbeDom sbe = In \<longrightarrow>
- (uspecIsStrict other \<and> h sbe \<in> USPEC In Out \<and> spsConcIn (sbe2SB sbe) other = h sbe))
+ (uspecIsStrict other \<and> h sbe \<in> USPEC In Out \<and> spsConcIn (sbe2SB sbe)\<cdot>other = h sbe))
             \<longleftrightarrow> 
       (spsStep_m In Out h = other)"
   oops
@@ -797,15 +797,15 @@ lemma nda_h_final_back_eq_h: "(\<forall> sbe. sbeDom sbe = In \<longrightarrow>
 (* This is the version used for "ndaTotal" *)
 (* Annika needs a different lemma with equality, that "nda_h nda = other" *)
 lemma nda_h_final_back: assumes "\<And>state sbe. sbeDom sbe = ndaDom\<cdot>nda \<Longrightarrow> 
-spsConcIn (sbe2SB sbe) (other state) = 
+spsConcIn (sbe2SB sbe)\<cdot>(other state) = 
   ndaConcOutFlatten (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) ((ndaTransition\<cdot>nda) (state,sbe)) (other)"
-  and "\<And> state sbe. (ndaTransition\<cdot>nda) (state, sbe) \<noteq> Rev {}"
-  and "\<And> state. other state \<noteq> uspecMax (ndaDom\<cdot>nda) (ndaRan\<cdot>nda)"
+  and "\<And> state sbe. (ndaTransition\<cdot>nda) (state, sbe) \<noteq> {}"
+  and "\<And> state. other state \<noteq> uspecLeast (ndaDom\<cdot>nda) (ndaRan\<cdot>nda)"
   and "\<And> state. uspecIsStrict (other state)"
   and "\<And> state. uspecDom\<cdot>(other state) = ndaDom\<cdot>nda" 
   and "\<And> state. uspecRan\<cdot>(other state) = ndaRan\<cdot>nda"
-shows "nda_h nda \<sqsubseteq> other" 
-  apply(rule nda_h_least) 
+shows "other \<sqsubseteq> nda_h nda" 
+  apply(rule nda_h_greatest) 
   apply(simp only: USPEC_def SetPcpo.setify_def)
   using assms(2) assms(3) apply auto[1]
       apply (simp_all add: assms(5) assms(6))
@@ -816,46 +816,44 @@ shows "nda_h nda \<sqsubseteq> other"
 proof -
   fix x::'a
   have " \<And>sbe::'b sbElem.
-       other x \<noteq> uspecMax (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) \<Longrightarrow>
-       uspecFlatten (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) 
-            (setrevImage (\<lambda>(s::'a, sb::'b stream\<^sup>\<Omega>). ndaTodo_h (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) (s, sb) other) ((ndaTransition\<cdot>nda) (x, sbe))) 
-                    \<noteq> uspecMax (ndaDom\<cdot>nda) (ndaRan\<cdot>nda)"
+       other x \<noteq> uspecLeast (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) \<Longrightarrow>
+       uspecFlatten (ndaDom\<cdot>nda) (ndaRan\<cdot>nda)\<cdot> 
+            (Set.image (\<lambda>(s::'a, sb::'b stream\<^sup>\<Omega>). ndaTodo_h (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) (s, sb) other) ((ndaTransition\<cdot>nda) (x, sbe))) 
+                    \<noteq> uspecLeast (ndaDom\<cdot>nda) (ndaRan\<cdot>nda)"
   proof -
     fix sbe::"'b sbElem"
-    assume a11: "other x \<noteq> uspecMax (ndaDom\<cdot>nda) (ndaRan\<cdot>nda)"
-    have x_sbe_transit_not_empty: "(ndaTransition\<cdot>nda) (x, sbe) \<noteq> Rev {}"
+    assume a11: "other x \<noteq> uspecLeast (ndaDom\<cdot>nda) (ndaRan\<cdot>nda)"
+    have x_sbe_transit_not_empty: "(ndaTransition\<cdot>nda) (x, sbe) \<noteq> {}"
       by (simp add: assms(2))
-    have s_sb_ndatodo_h_not_max: "\<And> s sb. (\<lambda>(s::'a, sb::'b stream\<^sup>\<Omega>). ndaTodo_h (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) (s, sb) other) (s, sb) \<noteq> uspecMax (ndaDom\<cdot>nda) (ndaRan\<cdot>nda)"
+    have s_sb_ndatodo_h_not_least: "\<And> s sb. (\<lambda>(s::'a, sb::'b stream\<^sup>\<Omega>). ndaTodo_h (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) (s, sb) other) (s, sb) \<noteq> uspecLeast (ndaDom\<cdot>nda) (ndaRan\<cdot>nda)"
       apply (case_tac "(ubLen (ubRestrict (ndaRan\<cdot>nda)\<cdot>(ubUp\<cdot>sb)) < \<infinity>)")
        apply (simp_all add: ndaTodo_h_def) defer
        apply (simp add: uspecconstout_insert)
-      apply (metis uspecconst_consistent uspecmax_consistent uspecmax_dom uspecmax_ran)
-      by (metis assms(3) assms(5) assms(6) spsconcout_consistentI uspecmax_consistent uspecmax_dom uspecmax_ran)
-    have "setrevImage (\<lambda>(s::'a, sb::'b stream\<^sup>\<Omega>). ndaTodo_h (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) (s, sb) other) ((ndaTransition\<cdot>nda) (x, sbe))
-            \<noteq> Rev {}"
-      by (metis (no_types, lifting) image_is_empty inv_rev_rev rev_inv_rev setrevImage_def x_sbe_transit_not_empty)
-    moreover have "\<And> sset. sset \<in> inv Rev (setrevImage (\<lambda>(s::'a, sb::'b stream\<^sup>\<Omega>). ndaTodo_h (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) (s, sb) other) ((ndaTransition\<cdot>nda) (x, sbe))) \<Longrightarrow>
-      sset \<noteq> uspecMax (ndaDom\<cdot>nda) (ndaRan\<cdot>nda)"
-      by (metis (no_types) prod.collapse s_sb_ndatodo_h_not_max setrevimage_mono_obtain3)    
-    moreover have "\<And> sset. sset \<in> inv Rev (setrevImage (\<lambda>(s::'a, sb::'b stream\<^sup>\<Omega>). ndaTodo_h (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) (s, sb) other) ((ndaTransition\<cdot>nda) (x, sbe))) \<Longrightarrow>
+      apply (metis uspecconst_consistent uspecleast_consistent uspecleast_dom uspecleast_ran)
+      by (metis assms(3) assms(5) assms(6) spsconcout_consistentI uspecleast_consistent uspecleast_dom uspecleast_ran)
+    have "Set.image (\<lambda>(s::'a, sb::'b stream\<^sup>\<Omega>). ndaTodo_h (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) (s, sb) other) ((ndaTransition\<cdot>nda) (x, sbe))
+            \<noteq> {}"
+      by (metis (no_types, lifting) image_is_empty x_sbe_transit_not_empty)
+    moreover have "\<And> sset. sset \<in> (Set.image (\<lambda>(s::'a, sb::'b stream\<^sup>\<Omega>). ndaTodo_h (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) (s, sb) other) ((ndaTransition\<cdot>nda) (x, sbe))) \<Longrightarrow>
+      sset \<noteq> uspecLeast (ndaDom\<cdot>nda) (ndaRan\<cdot>nda)"
+      using case_prodE2 s_sb_ndatodo_h_not_least by auto   
+    moreover have "\<And> sset. sset \<in> (Set.image (\<lambda>(s::'a, sb::'b stream\<^sup>\<Omega>). ndaTodo_h (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) (s, sb) other) ((ndaTransition\<cdot>nda) (x, sbe))) \<Longrightarrow>
       uspecDom\<cdot>sset = (ndaDom\<cdot>nda) \<and> uspecRan\<cdot>sset = (ndaRan\<cdot>nda)"
-      by (metis (no_types, lifting) assms(5) assms(6) case_prod_conv ndatodo_dom ndatodo_ran old.prod.exhaust setrevimage_mono_obtain3)
-    ultimately show "uspecFlatten (ndaDom\<cdot>nda) (ndaRan\<cdot>nda)
-            (setrevImage (\<lambda>(s::'a, sb::'b stream\<^sup>\<Omega>). ndaTodo_h (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) (s, sb) other) ((ndaTransition\<cdot>nda) (x, sbe))) 
-                    \<noteq> uspecMax (ndaDom\<cdot>nda) (ndaRan\<cdot>nda)"
-      by (simp add: uspecflatten_not_max)
+      using assms(5) assms(6) f_inv_into_f ndatodo_dom by auto
+       ultimately show "uspecFlatten (ndaDom\<cdot>nda) (ndaRan\<cdot>nda)\<cdot>
+            (Set.image (\<lambda>(s::'a, sb::'b stream\<^sup>\<Omega>). ndaTodo_h (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) (s, sb) other) ((ndaTransition\<cdot>nda) (x, sbe))) 
+                    \<noteq> uspecLeast (ndaDom\<cdot>nda) (ndaRan\<cdot>nda)"
+      by (simp add: uspecflatten_not_least)
   qed
-  then have "spsStep_m (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) (\<lambda>e::'b sbElem. ndaConcOutFlatten (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) ((ndaTransition\<cdot>nda) (x, e)) other) 
-        \<sqsubseteq> other x"
-    apply (case_tac "other x = uspecMax (ndaDom\<cdot>nda) (ndaRan\<cdot>nda)")
+  then have "other x \<sqsubseteq> spsStep_m (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) (\<lambda>e::'b sbElem. ndaConcOutFlatten (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) ((ndaTransition\<cdot>nda) (x, e)) other)"
+    apply (case_tac "other x = uspecLeast (ndaDom\<cdot>nda) (ndaRan\<cdot>nda)")
     apply (simp add: assms(3))
     apply (rule nda_h_final_back_h_1)
     apply (simp_all add: assms)
     apply (metis (mono_tags, lifting) USPEC_def mem_Collect_eq ndaConcOutFlatten_def uspecflatten_dom uspecflatten_ran)
     apply rule
     by (simp add: ndaConcOutFlatten_def)
-  then show "spsStep_m (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) (\<lambda>e::'b sbElem. ndaConcOutFlatten (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) ((ndaTransition\<cdot>nda) (x, e)) other) 
-          \<sqsubseteq> other x"
+  then show " other x  \<sqsubseteq> spsStep_m (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) (\<lambda>e::'b sbElem. ndaConcOutFlatten (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) ((ndaTransition\<cdot>nda) (x, e)) other)"
     by simp
 qed
 
