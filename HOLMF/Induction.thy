@@ -1,4 +1,4 @@
-theory LFP_lub_induction
+theory Induction
 
 imports LFP Instantiation
 

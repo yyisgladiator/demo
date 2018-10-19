@@ -18,6 +18,8 @@ session "HOLMF" (mustWork) in HOLMF = "inc" +
     Division
     LFP
     GFP
+    Induction
+    Instantiation
 
 session "stream" (mustWork) in stream = "inc" +
   options [quick_and_dirty = false]
@@ -74,7 +76,7 @@ session "abpMedium" (mustWork) in "abp/Medium" = "abpGenerat" +
   options [quick_and_dirty = true]
   theories
     medGeneralAut
-    medUnfairStep
+    medUnfairAut
     medsBelow
     Medium
     MediumSPF
