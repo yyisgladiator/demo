@@ -18,4 +18,6 @@ component ABP<E> {
     connect mediumRs.o -> sender.as;
     connect receiver.o -> o;
 
+    inv Final: i==o;
+
 }
