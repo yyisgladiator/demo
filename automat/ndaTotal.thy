@@ -19,11 +19,11 @@ begin
 
 section\<open>Definitions\<close>
 
-fun makeItOne::"'a::type set rev \<Rightarrow> 'a" where
-"makeItOne (Rev A) = (SOME a. a\<in>A)"
+fun makeItOne::"'a::type set \<Rightarrow> 'a" where
+"makeItOne A = (SOME a. a\<in>A)"
 
-fun makeItOneSet::"'a::type set rev \<Rightarrow> 'a set rev" where
-"makeItOneSet (Rev A) = Rev {(SOME a. a\<in>A)}"
+fun makeItOneSet::"'a::type set \<Rightarrow> 'a set" where
+"makeItOneSet A = {(SOME a. a\<in>A)}"
 
 (* Convert any nda to an deterministic NDA *)
 lift_definition ndaOne:: "('s::type,'m::message) ndAutomaton \<Rightarrow> ('s,'m) ndAutomaton" is
@@ -44,7 +44,7 @@ section \<open>Lemma\<close>
 
 
 subsection\<open>makeItOne\<close>
-lemma makeitone_in: "A\<noteq>{} \<Longrightarrow> makeItOne (Rev A) \<in> A"
+lemma makeitone_in: "A\<noteq>{} \<Longrightarrow> makeItOne A \<in> A"
   by (simp add: some_in_eq)
 
 
@@ -52,11 +52,11 @@ lemma makeitone_in: "A\<noteq>{} \<Longrightarrow> makeItOne (Rev A) \<in> A"
 
 subsection\<open>makeItOneSet\<close>
 
-lemma makeitoneset_one: "\<exists>!a. (makeItOneSet A = Rev {a})"
-  by (metis makeItOneSet.elims rev.set the_elem_eq)
-lemma makeitoneset_in: "A\<noteq>(Rev {}) \<Longrightarrow> A\<sqsubseteq>makeItOneSet A"
-  by (metis (no_types, lifting) inv_rev_rev makeItOneSet.simps revBelowNeqSubset setrev_eqI singletonD some_in_eq subsetI)
-lemma makeitoneset_subset: "makeItOneSet A = Rev {makeItOne (A)}"
+lemma makeitoneset_one: "\<exists>!a. (makeItOneSet A = {a})"
+  by (metis makeItOneSet.elims the_elem_eq)
+lemma makeitoneset_in: "A\<noteq> {} \<Longrightarrow> makeItOneSet A \<sqsubseteq> A "
+  by (metis SetPcpo.less_set_def makeItOne.elims makeItOneSet.elims makeitone_in singletonD subsetI)
+lemma makeitoneset_subset: "makeItOneSet A = {makeItOne (A)}"
   by (metis below_refl makeItOne.elims makeItOneSet.simps)
 
 
@@ -74,17 +74,17 @@ lemma ndaone_transition [simp]: "ndaTransition\<cdot>(ndaOne nda) = (\<lambda>s.
 lemma ndaone_initial [simp]: "ndaInitialState\<cdot>(ndaOne nda) = makeItOneSet (ndaInitialState\<cdot>nda)"
   by(simp add: ndaInitialState.rep_eq ndaOne.rep_eq)
 
-lemma ndaone_below: assumes trans_total: "\<And>s. (ndaTransition\<cdot>nda) s \<noteq> Rev {}"
-        and initial_total: "(ndaInitialState\<cdot>nda) \<noteq> Rev {}"
-  shows "nda \<sqsubseteq> ndaOne nda"
+lemma ndaone_below: assumes trans_total: "\<And>s. (ndaTransition\<cdot>nda) s \<noteq> {}"
+        and initial_total: "(ndaInitialState\<cdot>nda) \<noteq> {}"
+  shows "ndaOne nda \<sqsubseteq> nda"
   apply(rule nda_belowI, simp_all)
-  apply (simp add: initial_total makeitoneset_in)
-  by (simp add: fun_belowI makeitoneset_in trans_total)
+  apply (metis SetPcpo.less_set_def initial_total makeitone_in singletonD some_eq_ex subsetI)
+  by (simp add: SetPcpo.less_set_def fun_belowI some_in_eq trans_total)
 
 lemma nda_one_h_below: 
-    assumes trans_total: "\<And>s. (ndaTransition\<cdot>nda) s \<noteq> Rev {}"
-        and initial_total: "(ndaInitialState\<cdot>nda) \<noteq> Rev {}"
-      shows "nda_h nda \<sqsubseteq> nda_h (ndaOne nda)"
+    assumes trans_total: "\<And>s. (ndaTransition\<cdot>nda) s \<noteq> {}"
+        and initial_total: "(ndaInitialState\<cdot>nda) \<noteq> {}"
+      shows "nda_h (ndaOne nda) \<sqsubseteq> nda_h nda"
   using nda_h_mono by (simp add: nda_h_mono initial_total monofunE ndaone_below trans_total)
 
 
@@ -119,10 +119,10 @@ lemma nda2da_da_step:   assumes "sbeDom sbe = ndaDom\<cdot>nda"
 (* Show that the da fulfills the nda-step-lemma *) 
 lemma nda2da_nda_step: 
   assumes "sbeDom sbe = ndaDom\<cdot>nda"  
-  shows "spsConcIn (sbe2SB sbe) (uspecConst (da_h (nda2da nda) s)) = 
+  shows "spsConcIn (sbe2SB sbe)\<cdot>(uspecConst (da_h (nda2da nda) s)) = 
   ndaConcOutFlatten (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) (makeItOneSet ((ndaTransition\<cdot>nda) (s, sbe))) (\<lambda>s::'a. uspecConst (da_h (nda2da nda) s))"
+ apply(subst makeitoneset_subset)
   apply (simp add: nda2da_da_step assms daNextOutput_def daNextState_def)
-  apply(subst makeitoneset_subset)
   apply(subst ndaconcout_one2)
   apply (simp add: ufclDom_ufun_def)
    apply (simp add: ufclRan_ufun_def)
@@ -139,7 +139,7 @@ lemma nda2da_nda_step:
   done
 
 (* The da is in the nda *)
-lemma nda2da_ndaone_below: "nda_h (ndaOne nda) \<sqsubseteq> (\<lambda>s. uspecConst (da_h (nda2da nda) s)) "
+lemma nda2da_ndaone_below: " (\<lambda>s. uspecConst (da_h (nda2da nda) s)) \<sqsubseteq> nda_h (ndaOne nda)"
 proof -
   have h1: "\<And> state. uspecDom\<cdot>(uspecConst (da_h (nda2da nda) state)) = ndaDom\<cdot>(ndaOne nda)"
     by (simp add: ufclDom_ufun_def)
@@ -152,7 +152,7 @@ proof -
        apply (simp add: ufclRan_ufun_def)
       apply (simp add: makeitoneset_subset)
      apply (simp)
-     apply (metis uspecconst_consistent uspecmax_consistent uspecmax_dom uspecmax_ran)
+     apply (metis uspecconst_consistent uspecleast_consistent uspecleast_dom uspecleast_ran)
     apply (simp add: uspecIsStrict_def)
     apply (rule uspec_ballI)
     apply simp
@@ -171,8 +171,8 @@ lemma ndaone_consistent:
 
 (* Final Result *)
 lemma nda_consistent:  
-    assumes trans_total: "\<And>s. (ndaTransition\<cdot>nda) s \<noteq> Rev {}"
-        and initial_total: "(ndaInitialState\<cdot>nda) \<noteq> Rev {}"
+    assumes trans_total: "\<And>s. (ndaTransition\<cdot>nda) s \<noteq> {}"
+        and initial_total: "(ndaInitialState\<cdot>nda) \<noteq> {}"
       shows "uspecIsConsistent (nda_h nda s)"
   by (metis (no_types, hide_lams) below_fun_def initial_total monofunE nda_h_mono ndaone_below ndaone_consistent trans_total uspec_isconsistent_below)
 
