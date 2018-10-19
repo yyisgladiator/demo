@@ -45,14 +45,14 @@ proof(intro_classes)
   fix S:: "'a set set"
   fix C:: "'a set set"
 
-  assume "longChain (Rev ` S)" and c_div: "C\<in>DIV" and s_c: "S\<subseteq>C" and "infinite (GFP.rev.Rev ` S)"
+  assume "longChain (S)" and c_div: "C\<in>DIV" and s_c: "S\<subseteq>C" and "infinite (S)"
   have rev_below:"\<And>a b:: 'a set . Rev a \<sqsubseteq> Rev b \<longleftrightarrow> b \<subseteq> a"
     by (simp add: SetPcpo.less_set_def)
   hence "(Rev ` S) <<| (Rev (\<Inter> S))" 
     apply(auto simp add: is_lub_def is_ub_def)
     by (metis GFP.rev.exhaust Inf_greatest rev_below)
   moreover have "(\<Inter> S) \<in> C "
-    using \<open>infinite (GFP.rev.Rev ` (S::'a set set))\<close> c_div s_c set_div_intersection by auto 
+    using \<open>infinite (S::'a set set)\<close> c_div s_c set_div_intersection by blast
   thus "\<exists>x\<in>C. GFP.rev.Rev ` S <<| GFP.rev.Rev x"
     using calculation by blast 
   qed
@@ -189,11 +189,118 @@ proof(intro_classes)
   ultimately show "\<exists>bot\<in>a. \<forall>b\<in>a. bot \<sqsubseteq> b" by blast
 qed
 
+instantiation "fun" :: (type, rev_div_cpo) rev_div_cpo
+begin
 
-instance "fun" :: (type, rev_div_cpo) rev_div_cpo
+lemma fun_rev_cpo: fixes S :: "('a::type \<Rightarrow> 'b::rev_div_cpo) set"
+    assumes "C \<in> DIV" and "infinite (S)" and  "longChain ( S)" and "S \<subseteq> C" 
+  shows "Rev ` S <<| Rev (\<lambda>a. (inv Rev) (lub {Rev (s a) | s. s\<in>S}))" and "(\<lambda>a. (inv Rev) (lub {Rev (s a) | s. s\<in>S})) \<in>C"
+proof -
+  have "longChain S"
+    using assms(3) longchain_rev by blast
+
+  obtain DD where dd_def: "C = setify DD" and dd_in: "DD\<in>setify (\<lambda>a. DIV)"
+    by (metis DIV_fun_def assms(1) imageE)
+  hence "\<And>s a. s\<in>S \<Longrightarrow> s a \<in> DD a"
+    by (metis (mono_tags, lifting) SetPcpo.setify_def assms(4) mem_Collect_eq rev_subsetD)
+  hence f1: "\<And>a. {s a | s. s\<in>S} \<subseteq> DD a"
+    by (smt CollectD setify_def dd_in subsetI)
+
+  have dd_in_div: "\<And>a. DD a\<in>DIV"
+    by (metis (mono_tags, lifting) setify_def dd_in mem_Collect_eq)
+  have chain: "\<And>a. longChain {s a | s. s\<in>S}"
+    by (simp add: assms(3) div_cpo_fun_chains)
+  hence "\<And>a. longChain (Rev ` {(s a) | s. s\<in>S})"
+    using longchain_rev by blast
+  hence h1: "\<And>a. \<exists>x\<in>(DD a). (Rev ` {(s a) | s. s\<in>S}) <<| Rev x" 
+    using rev_div_lub_ex dd_in_div f1
+    by (simp add: rev_div_lub_ex chain)
+  hence h2: "\<And>a. \<exists>!x. x \<in>(DD a) \<and> (Rev ` {(s a) | s. s\<in>S}) <<| Rev x"
+    by (smt GFP.rev.inject lub_eqI) 
+
+  let ?Lubs = "\<lambda>a. THE x. (x\<in>(DD a) \<and> (Rev ` {(s a) | s. s\<in>S}) <<| Rev x)"
+  have lubs: "\<And>a.  ((?Lubs a)\<in>(DD a) \<and> (Rev ` {(s a) | s. s\<in>S}) <<| Rev (?Lubs a))"
+    apply(rule theI')
+    by (simp add: h2)
+  have h5: "\<And>a. GFP.rev.Rev ` {s a |s. s \<in> S} = {Rev (s a) | s. s\<in>S}"
+    by auto
+  have "\<And>a. (Rev ` {(s a) | s. s\<in>S}) <<| (lub {Rev (s a) | s. s\<in>S})"
+    apply(simp add: h5 )
+    using h5 is_lub_lub lubs by fastforce
+
+
+  hence lub_in: "\<And>a. lub (Rev ` {(s a) | s. s\<in>S}) \<in> (Rev ` (DD a))"
+    by (smt h2 imageI lub_eqI)
+  have lubs_eq_lulb: "?Lubs = (\<lambda>a. (inv Rev) (lub {Rev (s a) | s. s\<in>S}))"
+    by (metis (no_types, lifting) GFP.rev.inject \<open>\<And>a::'a. GFP.rev.Rev ` {s a |s::'a \<Rightarrow> 'b. s \<in> (S::('a \<Rightarrow> 'b) set)} <<| lub {GFP.rev.Rev (s a) |s::'a \<Rightarrow> 'b. s \<in> S}\<close> is_lub_unique lub_def lubs rev_invrev setcompr_eq_image)
+
+  have s_lub: "\<And>a. (Rev ` {s a | s. s\<in>S}) <<| lub (Rev ` {(s a) | s. s\<in>S})"
+    using chain dd_in_div div_cpo_g f1 is_lub_lub using h1 by fastforce
+  hence "\<And>a y. y\<in>S \<Longrightarrow> (Rev (y a)) \<sqsubseteq> (lub {GFP.rev.Rev (s a) |s. s \<in> S})"
+    by (metis (mono_tags, lifting) Collect_cong h5 is_ub_thelub_ex mem_Collect_eq) 
+  hence "Rev ` S <| Rev (\<lambda>a. (inv Rev) (lub {Rev (s a) | s. s\<in>S}))" 
+    by(auto simp add: is_ub_def below_rev_def below_fun_def)
+  have "\<And>x a. (Rev ` S) <| (Rev x) \<Longrightarrow> (lub {Rev (s a) |s. s \<in> S}) \<sqsubseteq> Rev (x a)" 
+    apply(auto simp add: is_ub_def)
+  proof - (* fuck it, thx sledgi *)
+    fix x :: "'a \<Rightarrow> 'b" and a :: 'a
+    assume a1: "\<forall>y\<in>S. x \<sqsubseteq> y"
+    obtain rr :: "'b GFP.rev \<Rightarrow> 'b GFP.rev set \<Rightarrow> 'b GFP.rev" where
+      f2: "\<forall>x0 x1. (\<exists>v2. v2 \<in> x1 \<and> v2 \<notsqsubseteq> x0) = (rr x0 x1 \<in> x1 \<and> rr x0 x1 \<notsqsubseteq> x0)"
+by moura
+  obtain bb :: "'b GFP.rev \<Rightarrow> 'b GFP.rev \<Rightarrow> 'b" and bba :: "'b GFP.rev \<Rightarrow> 'b GFP.rev \<Rightarrow> 'b" where
+    "\<forall>x0 x1. (\<exists>v2 v3. x1 = GFP.rev.Rev v2 \<and> x0 = GFP.rev.Rev v3 \<and> v3 \<notsqsubseteq> v2) = (x1 = GFP.rev.Rev (bb x0 x1) \<and> x0 = GFP.rev.Rev (bba x0 x1) \<and> bba x0 x1 \<notsqsubseteq> bb x0 x1)"
+    by moura
+  then have f3: "\<forall>r ra. r \<sqsubseteq> ra \<or> r = GFP.rev.Rev (bb ra r) \<and> ra = GFP.rev.Rev (bba ra r) \<and> bba ra r \<notsqsubseteq> bb ra r"
+    by (meson GFP.below_rev.elims(3))
+obtain bbb :: "'b GFP.rev \<Rightarrow> 'a \<Rightarrow> 'a \<Rightarrow> 'b" where
+  f4: "\<forall>x0 x1. (\<exists>v2. x0 = GFP.rev.Rev (v2 x1) \<and> v2 \<in> S) = (x0 = GFP.rev.Rev (bbb x0 x1 x1) \<and> bbb x0 x1 \<in> S)"
+by moura
+  { assume "GFP.rev.Rev (bb (GFP.rev.Rev (bba (GFP.rev.Rev (x a)) (lub {GFP.rev.Rev (f a) |f. f \<in> S}))) (rr (GFP.rev.Rev (bba (GFP.rev.Rev (x a)) (lub {GFP.rev.Rev (f a) |f. f \<in> S}))) {GFP.rev.Rev (f a) |f. f \<in> S})) \<noteq> GFP.rev.Rev (bbb (GFP.rev.Rev (bb (GFP.rev.Rev (bba (GFP.rev.Rev (x a)) (lub {GFP.rev.Rev (f a) |f. f \<in> S}))) (rr (GFP.rev.Rev (bba (GFP.rev.Rev (x a)) (lub {GFP.rev.Rev (f a) |f. f \<in> S}))) {GFP.rev.Rev (f a) |f. f \<in> S}))) a a) \<or> bbb (GFP.rev.Rev (bb (GFP.rev.Rev (bba (GFP.rev.Rev (x a)) (lub {GFP.rev.Rev (f a) |f. f \<in> S}))) (rr (GFP.rev.Rev (bba (GFP.rev.Rev (x a)) (lub {GFP.rev.Rev (f a) |f. f \<in> S}))) {GFP.rev.Rev (f a) |f. f \<in> S}))) a \<notin> S"
+    moreover
+    { assume "\<nexists>f. rr (GFP.rev.Rev (bba (GFP.rev.Rev (x a)) (lub {GFP.rev.Rev (f a) |f. f \<in> S}))) {GFP.rev.Rev (f a) |f. f \<in> S} = GFP.rev.Rev (f a) \<and> f \<in> S"
+      then have "rr (GFP.rev.Rev (bba (GFP.rev.Rev (x a)) (lub {GFP.rev.Rev (f a) |f. f \<in> S}))) {GFP.rev.Rev (f a) |f. f \<in> S} \<notin> {GFP.rev.Rev (f a) |f. f \<in> S} \<or> rr (GFP.rev.Rev (bba (GFP.rev.Rev (x a)) (lub {GFP.rev.Rev (f a) |f. f \<in> S}))) {GFP.rev.Rev (f a) |f. f \<in> S} \<sqsubseteq> GFP.rev.Rev (bba (GFP.rev.Rev (x a)) (lub {GFP.rev.Rev (f a) |f. f \<in> S}))"
+by blast
+  then have "{GFP.rev.Rev (f a) |f. f \<in> S} <| GFP.rev.Rev (bba (GFP.rev.Rev (x a)) (lub {GFP.rev.Rev (f a) |f. f \<in> S}))"
+using f2 by (meson is_ubI) }
+  ultimately have "(rr (GFP.rev.Rev (bba (GFP.rev.Rev (x a)) (lub {GFP.rev.Rev (f a) |f. f \<in> S}))) {GFP.rev.Rev (f a) |f. f \<in> S} \<noteq> GFP.rev.Rev (bb (GFP.rev.Rev (bba (GFP.rev.Rev (x a)) (lub {GFP.rev.Rev (f a) |f. f \<in> S}))) (rr (GFP.rev.Rev (bba (GFP.rev.Rev (x a)) (lub {GFP.rev.Rev (f a) |f. f \<in> S}))) {GFP.rev.Rev (f a) |f. f \<in> S})) \<or> GFP.rev.Rev (bba (GFP.rev.Rev (x a)) (lub {GFP.rev.Rev (f a) |f. f \<in> S})) \<noteq> GFP.rev.Rev (bba (GFP.rev.Rev (bba (GFP.rev.Rev (x a)) (lub {GFP.rev.Rev (f a) |f. f \<in> S}))) (rr (GFP.rev.Rev (bba (GFP.rev.Rev (x a)) (lub {GFP.rev.Rev (f a) |f. f \<in> S}))) {GFP.rev.Rev (f a) |f. f \<in> S})) \<or> bba (GFP.rev.Rev (bba (GFP.rev.Rev (x a)) (lub {GFP.rev.Rev (f a) |f. f \<in> S}))) (rr (GFP.rev.Rev (bba (GFP.rev.Rev (x a)) (lub {GFP.rev.Rev (f a) |f. f \<in> S}))) {GFP.rev.Rev (f a) |f. f \<in> S}) \<sqsubseteq> bb (GFP.rev.Rev (bba (GFP.rev.Rev (x a)) (lub {GFP.rev.Rev (f a) |f. f \<in> S}))) (rr (GFP.rev.Rev (bba (GFP.rev.Rev (x a)) (lub {GFP.rev.Rev (f a) |f. f \<in> S}))) {GFP.rev.Rev (f a) |f. f \<in> S})) \<or> {GFP.rev.Rev (f a) |f. f \<in> S} <| GFP.rev.Rev (bba (GFP.rev.Rev (x a)) (lub {GFP.rev.Rev (f a) |f. f \<in> S}))"
+      using f4 by fastforce }
+  moreover
+  { assume "rr (GFP.rev.Rev (bba (GFP.rev.Rev (x a)) (lub {GFP.rev.Rev (f a) |f. f \<in> S}))) {GFP.rev.Rev (f a) |f. f \<in> S} \<noteq> GFP.rev.Rev (bb (GFP.rev.Rev (bba (GFP.rev.Rev (x a)) (lub {GFP.rev.Rev (f a) |f. f \<in> S}))) (rr (GFP.rev.Rev (bba (GFP.rev.Rev (x a)) (lub {GFP.rev.Rev (f a) |f. f \<in> S}))) {GFP.rev.Rev (f a) |f. f \<in> S})) \<or> GFP.rev.Rev (bba (GFP.rev.Rev (x a)) (lub {GFP.rev.Rev (f a) |f. f \<in> S})) \<noteq> GFP.rev.Rev (bba (GFP.rev.Rev (bba (GFP.rev.Rev (x a)) (lub {GFP.rev.Rev (f a) |f. f \<in> S}))) (rr (GFP.rev.Rev (bba (GFP.rev.Rev (x a)) (lub {GFP.rev.Rev (f a) |f. f \<in> S}))) {GFP.rev.Rev (f a) |f. f \<in> S})) \<or> bba (GFP.rev.Rev (bba (GFP.rev.Rev (x a)) (lub {GFP.rev.Rev (f a) |f. f \<in> S}))) (rr (GFP.rev.Rev (bba (GFP.rev.Rev (x a)) (lub {GFP.rev.Rev (f a) |f. f \<in> S}))) {GFP.rev.Rev (f a) |f. f \<in> S}) \<sqsubseteq> bb (GFP.rev.Rev (bba (GFP.rev.Rev (x a)) (lub {GFP.rev.Rev (f a) |f. f \<in> S}))) (rr (GFP.rev.Rev (bba (GFP.rev.Rev (x a)) (lub {GFP.rev.Rev (f a) |f. f \<in> S}))) {GFP.rev.Rev (f a) |f. f \<in> S})"
+    then have "{GFP.rev.Rev (f a) |f. f \<in> S} <| GFP.rev.Rev (bba (GFP.rev.Rev (x a)) (lub {GFP.rev.Rev (f a) |f. f \<in> S}))"
+      using f3 f2 by (meson is_ubI) }
+  moreover
+  { assume "{GFP.rev.Rev (f a) |f. f \<in> S} <| GFP.rev.Rev (bba (GFP.rev.Rev (x a)) (lub {GFP.rev.Rev (f a) |f. f \<in> S}))"
+    moreover
+    { assume "(GFP.rev.Rev (bb (GFP.rev.Rev (x a)) (lub {GFP.rev.Rev (f a) |f. f \<in> S})) \<sqsubseteq> GFP.rev.Rev (bba (GFP.rev.Rev (x a)) (lub {GFP.rev.Rev (f a) |f. f \<in> S}))) \<noteq> {GFP.rev.Rev (f a) |f. f \<in> S} <| GFP.rev.Rev (bba (GFP.rev.Rev (x a)) (lub {GFP.rev.Rev (f a) |f. f \<in> S}))"
+      then have "\<not> {GFP.rev.Rev (f a) |f. f \<in> S} <<| GFP.rev.Rev (bb (GFP.rev.Rev (x a)) (lub {GFP.rev.Rev (f a) |f. f \<in> S}))"
+        using is_lub_below_iff by blast
+      then have "lub {GFP.rev.Rev (f a) |f. f \<in> S} \<noteq> GFP.rev.Rev (bb (GFP.rev.Rev (x a)) (lub {GFP.rev.Rev (f a) |f. f \<in> S})) \<or> GFP.rev.Rev (x a) \<noteq> GFP.rev.Rev (bba (GFP.rev.Rev (x a)) (lub {GFP.rev.Rev (f a) |f. f \<in> S})) \<or> bba (GFP.rev.Rev (x a)) (lub {GFP.rev.Rev (f a) |f. f \<in> S}) \<sqsubseteq> bb (GFP.rev.Rev (x a)) (lub {GFP.rev.Rev (f a) |f. f \<in> S})"
+        using \<open>\<And>a::'a. GFP.rev.Rev ` {s a |s::'a \<Rightarrow> 'b. s \<in> (S::('a \<Rightarrow> 'b) set)} <<| lub {GFP.rev.Rev (s a) |s::'a \<Rightarrow> 'b. s \<in> S}\<close> h5 by force }
+    ultimately have "lub {GFP.rev.Rev (f a) |f. f \<in> S} \<sqsubseteq> GFP.rev.Rev (x a) \<or> lub {GFP.rev.Rev (f a) |f. f \<in> S} \<noteq> GFP.rev.Rev (bb (GFP.rev.Rev (x a)) (lub {GFP.rev.Rev (f a) |f. f \<in> S})) \<or> GFP.rev.Rev (x a) \<noteq> GFP.rev.Rev (bba (GFP.rev.Rev (x a)) (lub {GFP.rev.Rev (f a) |f. f \<in> S})) \<or> bba (GFP.rev.Rev (x a)) (lub {GFP.rev.Rev (f a) |f. f \<in> S}) \<sqsubseteq> bb (GFP.rev.Rev (x a)) (lub {GFP.rev.Rev (f a) |f. f \<in> S})"
+      by auto }
+  ultimately have "lub {GFP.rev.Rev (f a) |f. f \<in> S} \<sqsubseteq> GFP.rev.Rev (x a) \<or> lub {GFP.rev.Rev (f a) |f. f \<in> S} \<noteq> GFP.rev.Rev (bb (GFP.rev.Rev (x a)) (lub {GFP.rev.Rev (f a) |f. f \<in> S})) \<or> GFP.rev.Rev (x a) \<noteq> GFP.rev.Rev (bba (GFP.rev.Rev (x a)) (lub {GFP.rev.Rev (f a) |f. f \<in> S})) \<or> bba (GFP.rev.Rev (x a)) (lub {GFP.rev.Rev (f a) |f. f \<in> S}) \<sqsubseteq> bb (GFP.rev.Rev (x a)) (lub {GFP.rev.Rev (f a) |f. f \<in> S})"
+    using a1 fun_belowD by fastforce
+  then show "lub {GFP.rev.Rev (f a) |f. f \<in> S} \<sqsubseteq> GFP.rev.Rev (x a)"
+    using f3 by meson
+qed
+ 
+  hence "\<And>x a. (Rev ` S) <| (Rev x) \<Longrightarrow> x a \<sqsubseteq> (inv Rev) (lub {Rev (s a) |s. s \<in> S})"
+    by (metis (no_types, lifting) Collect_cong below_rev_def inv_rev)
+  hence "\<And>u. (Rev ` S) <| u \<Longrightarrow>  Rev (\<lambda>a. (inv Rev) (lub {Rev (s a) | s. s\<in>S})) \<sqsubseteq> u"
+    by (simp add: below_rev_def fun_belowI)
+
+  thus "Rev ` S <<| Rev (\<lambda>a. (inv Rev) (lub {Rev (s a) | s. s\<in>S}))"
+    using \<open>GFP.rev.Rev ` (S::('a \<Rightarrow> 'b) set) <| GFP.rev.Rev (\<lambda>a::'a. inv GFP.rev.Rev (lub {GFP.rev.Rev (s a) |s::'a \<Rightarrow> 'b. s \<in> S}))\<close> is_lubI by blast
+  have "\<And>a. (inv Rev) (lub {Rev (s a) | s. s\<in>S}) \<in> DD a"
+    by (metis lubs lubs_eq_lulb)
+  thus "(\<lambda>a. (inv Rev) (lub {Rev (s a) | s. s\<in>S})) \<in>C"  by (simp add: setify_def dd_def lub_in)
+
+qed
+
+instance
   apply(intro_classes)
-  sorry
-
-
+  using fun_rev_cpo(1) fun_rev_cpo(2) by blast
+end
 
 end

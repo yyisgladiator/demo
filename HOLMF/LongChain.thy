@@ -76,7 +76,8 @@ qed
 lemma lc_finite_lub: "longChain S \<Longrightarrow> finite S \<Longrightarrow> lub S \<in>S"
   by (metis is_ubI lc_finite longChain_def lub_maximal)
   
-
+lemma lc_finite_lub_ex: "longChain S \<Longrightarrow> finite S \<Longrightarrow> \<exists>x \<in> S. S <<| x"
+  by (metis is_lub_maximal is_ubI lc_finite longChain_def)
 
 lemma assumes  "s\<in>S" and "\<exists>x\<in>C. S <<| x"
   shows "s \<sqsubseteq> lub S"
