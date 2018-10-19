@@ -33,14 +33,27 @@ proof(rule admI)
     allWell: "\<forall>i::nat. Y i \<in> {(S::'m set, csIn::channel set discr, csOut::channel set discr). uspecWell S csIn csOut}"
 
   obtain csIn where csIn_def: "\<forall>i::nat. (Discr csIn) = (fst (snd (Y i)))"
-    by (metis chainY discr.exhaust discrete_cpo fst_conv is_ub_thelub old.prod.inject snd_conv snd_monofun surj_pair)
+    by (metis chainY discr.exhaust discrete_cpo  is_ub_thelub snd_conv snd_monofun surj_pair)
   obtain csOut where csOut_def: "\<forall>i::nat. (Discr csOut) = (snd (snd (Y i)))"
-    by (metis chainY discr.exhaust discrete_cpo fst_conv is_ub_thelub old.prod.inject snd_conv snd_monofun surj_pair)
+    by (metis chainY discr.exhaust discrete_cpo is_ub_thelub snd_conv snd_monofun surj_pair)
 
-  have h1: "fst (Y 0 ) \<sqsubseteq> fst (\<Squnion>i::nat. Y i)"
-    using chainY fst_monofun is_ub_thelub by blast
+  have h2: "chain (\<lambda>i. fst(Y i))"
+    by (simp add: chainY)
+  have h3:  "fst (\<Squnion>i::nat. Y i) = (\<Squnion>i::nat. fst(Y i))"
+    using chainY lub_prod by fastforce
+  have h4:  "fst (snd (\<Squnion>i::nat. Y i)) = Discr csIn"
+    by (smt chainY csIn_def discrete_chain_const lub_const lub_prod2 prod_chain_cases sndI)
+  have h5:  "snd (snd (\<Squnion>i::nat. Y i)) = Discr csOut"
+    by (smt chainY csOut_def discrete_chain_const lub_const lub_prod2 prod_chain_cases sndI)
+  have h6: "(\<Squnion>i::nat. Y i) = ((\<Squnion>i::nat. fst(Y i)),  (Discr csIn),  (Discr csOut))"
+    by (metis h3 h4 h5 prod.collapse)
+  have h7:  "\<And>x. \<exists>i. x \<in> fst (Y i) \<Longrightarrow> (ufclDom\<cdot>x = csIn \<and> ufclRan\<cdot>x=csOut) "
+    by (metis (no_types, lifting) CollectD allWell csIn_def csOut_def split_def uspecWell.simps)
+  have h8: "uspecWell (\<Squnion>i::nat. fst(Y i)) (Discr csIn) (Discr csOut)"
+      unfolding lub_eq_Union
+      using h7 by auto
   show "(\<Squnion>i::nat. Y i) \<in> {(S::'m set, csIn::channel set discr, csOut::channel set discr). uspecWell S csIn csOut}"
-    sorry
+    using h6 h8 by auto
 qed
 
 lemma uspecwell_filter: "uspecWell S cIn cOut \<Longrightarrow> uspecWell (Set.filter P S) cIn cOut"
