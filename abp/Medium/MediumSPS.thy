@@ -117,6 +117,19 @@ lemma uspecflatten_rep_eq: "Rep_rev_uspec (uspecFlatten Dom Ran uspec)
   = ((setflat\<cdot>(Rep_rev_uspec ` (inv Rev (uspec_set_filter Dom Ran\<cdot>uspec)))))"
   apply(simp add: uspecFlatten_def)
   using rep_abs_rev_simp uspecflatten_well by blast
+
+lemma uspecflatten_set: "uspecSet (uspecFlatten Dom Ran (Rev uspecs)) = 
+    (Set.filter (\<lambda> uf. ufDom\<cdot>uf = Dom \<and> ufRan\<cdot>uf = Ran) (\<Union> (uspecSet ` uspecs)))"
+  apply(simp add: uspecSet_def uspecRevSet_def)
+  apply(simp add: uspecflatten_rep_eq)
+  apply(simp add: setflat_union uspec_set_filter_def setrevFilter_def)
+  apply auto
+  apply blast
+  apply (metis ufclDom_ufun_def uspec_allDom uspecrevset_insert)
+  apply (metis rep_rev_revset ufclDom_ufun_def uspec_allDom)
+  apply (metis rep_rev_revset ufclRan_ufun_def uspec_allRan)
+  apply (metis ufclRan_ufun_def uspec_allRan uspecrevset_insert)
+  by (metis (mono_tags, lifting) member_filter rep_rev_revset ufclDom_ufun_def ufclRan_ufun_def uspec_allDom uspec_allRan)
 (**)
 
 text{* If a message comes in and the counter is zero, the message will be sent and Medium changes 
@@ -133,6 +146,9 @@ lemma medsps_spsconc_msg_zero: "spsConcIn (mediumIn_i (Msg m)) (MedSPS 0)
   apply (simp add: uspecrevset_insert setrevImage_def MedSPS.rep_eq)
   apply (simp add: uspecflatten_rep_eq)
   apply (simp add: uspec_set_filter_def setrevFilter_def)
+  apply (simp add: Set.filter_def)
+  defer
+  apply (simp add: ufclDom_ufun_def ufclRan_ufun_def)+
 oops
   
 end
