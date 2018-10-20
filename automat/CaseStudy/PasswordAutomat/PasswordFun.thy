@@ -20,15 +20,25 @@ lemma help_dom:"(ubDom\<cdot>b \<union> ubDom\<cdot>(y)) \<inter> ubDom\<cdot>(y
 section\<open>UbConcEq lemmas\<close>
 (****************************************************)  
 
+lemma ubdom_ubConcEq:"ubDom\<cdot>(ubConcEq (ubConcEq a\<cdot>b)\<cdot>ub) = ubDom\<cdot>(ubConcEq a\<cdot>(ubConcEq b\<cdot>ub))"
+  by auto[1]
+
+
 lemma ubConcEq_associative: "ubConcEq (ubConcEq a\<cdot>b)\<cdot>ub = ubConcEq a\<cdot>(ubConcEq b\<cdot>ub)"
   apply(rule ub_eq)
-  apply auto[1]
+   apply auto[1]
+  apply (simp only:ubconceq_dom)
+  apply (simp add:ubConcEq_def)
+  apply (simp add:ubconc_getch usclConc_leftbottom)
+  apply (simp add:usclConc)
+  
+  apply (simp add:usclConc_rightbottom)
   sorry
 
 lemma ubConcEq_ubLeast[simp]: "ubConcEq (ubLeast cs)\<cdot>s = s"
   apply(rule ub_eq)
-  apply auto
-  apply (simp add: usclConc_leftbottom)
+   apply auto
+  apply (simp add:ubConcEq_def)
   by (simp add: ubconc_getch usclConc_leftbottom)
 
 lemma ubConcEq_spf: "spf \<rightleftharpoons> ubConcEq (ubConcEq a\<cdot>b)\<cdot>ub = spf \<rightleftharpoons> ubConcEq a\<cdot>(ubConcEq b\<cdot>ub)"
@@ -82,9 +92,7 @@ lemma spfconcin_least [simp]: "spfConcIn (ubLeast cs)\<cdot>spf = spf"
   apply (subst spfConcIn_step)
    apply simp+
    apply (simp add: ubclDom_ubundle_def)
-  apply simp
-  apply (simp add: ubclDom_ubundle_def)
-  by (metis (no_types, lifting) spfConcOut_def spfconcout_least ubclDom_ubundle_def ubclLeast_ubundle_def ubconc_sbhdrt ubconc_ubleast ubconceq_dom ubconceq_insert ubrestrict_ubdom2 ubrestrict_ubleast_inter ufapplyout_apply uflift_apply uflift_dom uflift_ran_h)
+  by simp
 
 lemma spfconcin_out_switch: "spfConcIn a\<cdot>(spfConcOut b\<cdot>spf) = spfConcOut b\<cdot>(spfConcIn a\<cdot>spf)"
   apply(rule ufun_eqI)
@@ -96,7 +104,6 @@ lemma spfconcin_out_switch: "spfConcIn a\<cdot>(spfConcOut b\<cdot>spf) = spfCon
   apply (subst spfConcOut_step)
    apply simp+
    apply (simp add: ubclDom_ubundle_def)
-  apply blast
   apply (subst spfConcOut_step)
    apply simp+
    apply (simp add: ubclDom_ubundle_def)
