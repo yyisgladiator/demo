@@ -35,6 +35,12 @@ lemma div_cpo_g: "a\<in>DIV \<Longrightarrow> longChain S \<Longrightarrow> S\<s
 lemma div_cpo_lub_in: "a\<in>DIV \<Longrightarrow> longChain S \<Longrightarrow> S\<subseteq>a \<Longrightarrow> lub S \<in> a"
   using div_cpo_g lub_eqI by blast
 
+lemma div_cpo_lub_ub: "a\<in>DIV \<Longrightarrow> longChain S \<Longrightarrow> S\<subseteq>a \<Longrightarrow> x\<in>S \<Longrightarrow> x \<sqsubseteq> lub S"
+  using div_cpo_g holmf_below_lub by blast
+
+lemma div_cpo_lub_least: "C \<in> DIV \<Longrightarrow> longChain S \<Longrightarrow> S \<subseteq> C \<Longrightarrow> (\<And>y. y\<in>S \<Longrightarrow>  y \<sqsubseteq> a) \<Longrightarrow> lub S \<sqsubseteq> a"
+  using div_cpo_g holmf_below_iff by blast
+
 end
 
 class div_pcpo = div_cpo +  

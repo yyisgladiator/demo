@@ -307,5 +307,105 @@ end
 
 instance "fun" :: (type, rev_div_upcpo) rev_div_upcpo
   by(intro_classes)
-  
+
+
+
+
+section \<open>Pair\<close>
+
+instantiation prod :: (division, division) division
+begin
+definition DIV_prod:: "('a \<times> 'b) set set" where
+"DIV_prod = { {(a,b) | a b. a\<in>A \<and> b\<in>B} | A B . A\<in>DIV \<and> B\<in>DIV}"   
+
+lemma prod_div_fst: "C\<in>DIV \<Longrightarrow> (fst ` C)\<in>DIV"
+  by(auto simp add: DIV_prod_def div_inner_non_empty)
+
+lemma prod_div_snd: "C\<in>DIV \<Longrightarrow> (snd ` C)\<in>DIV"
+  by(auto simp add: DIV_prod_def div_inner_non_empty)
+
+instance 
+  apply(intro_classes)
+  unfolding DIV_prod_def
+  apply auto
+  apply (metis div_non_empty ex_in_conv)
+  using div_inner_non_empty apply blast
+  using div_inner_non_empty by blast
+end
+
+
+instantiation prod :: (div_cpo, div_cpo) div_cpo
+begin
+
+lemma prod_fst_chain: "longChain S \<Longrightarrow> longChain (fst ` S)"
+  by (simp add: longchain_mono monofun_fst)
+
+lemma prod_snd_chain: "longChain S \<Longrightarrow> longChain (snd ` S)"
+  by (simp add: longchain_mono monofun_snd)
+
+lemma prod_fst_lub_in: fixes C :: "('a::div_cpo \<times> 'b) set" 
+  shows "C \<in>DIV \<Longrightarrow> longChain S \<Longrightarrow> S \<subseteq> C \<Longrightarrow> (lub (fst ` S))\<in>(fst ` C)"
+  by (simp add: div_cpo_lub_in image_mono prod_div_fst prod_fst_chain)
+
+lemma prod_snd_lub_in: fixes C :: "('a \<times> 'b::div_cpo) set" 
+  shows "C \<in>DIV \<Longrightarrow> longChain S \<Longrightarrow> S \<subseteq> C \<Longrightarrow> (lub (snd ` S))\<in>(snd ` C)"
+  by (simp add: div_cpo_lub_in image_mono prod_div_snd prod_snd_chain)
+
+lemma prod_lub_in: fixes C :: "('a::div_cpo \<times> 'b::div_cpo) set" 
+  shows "C \<in> DIV \<Longrightarrow> longChain S \<Longrightarrow> S \<subseteq> C \<Longrightarrow> (lub (fst ` S), lub (snd ` S)) \<in> C"
+  apply(auto simp add: DIV_prod_def)
+  using div_cpo_lub_in prod_fst_chain apply fastforce
+  using div_cpo_lub_in prod_snd_chain apply fastforce
+  done
+
+lemma  prod_lub_h: fixes C :: "('a::div_cpo \<times> 'b::div_cpo) set" 
+  shows "C \<in> DIV \<Longrightarrow> longChain S \<Longrightarrow> S \<subseteq> C \<Longrightarrow> S <<| (lub (fst ` S), lub (snd ` S))"
+  apply(auto simp add: is_lub_def is_ub_def below_prod_def)
+  using prod_fst_chain div_cpo_lub_ub prod_div_fst apply (metis (no_types, hide_lams) fst_conv image_iff image_mono)
+  using prod_snd_chain div_cpo_lub_ub prod_div_snd apply (metis (no_types, hide_lams) snd_conv image_iff image_mono)
+  using prod_fst_chain div_cpo_lub_ub prod_div_fst  div_cpo_lub_least  apply fast
+  using prod_snd_chain div_cpo_lub_ub prod_div_snd div_cpo_lub_least  apply fast
+  done
+
+lemma prod_lub: fixes C :: "('a::div_cpo \<times> 'b::div_cpo) set" 
+  shows "C \<in> DIV \<Longrightarrow> longChain S \<Longrightarrow> S \<subseteq> C \<Longrightarrow> lub S = (lub (fst ` S), lub (snd ` S))"
+  by (simp add: lub_eqI prod_lub_h)
+
+instance
+  apply(intro_classes)
+  using Instantiation.prod_lub_in prod_lub_h by blast
+
+
+end
+
+instantiation prod :: (div_pcpo, div_pcpo) div_pcpo
+begin
+
+lemma prod_div: "(fst ` C)\<in>DIV \<Longrightarrow> (snd ` C)\<in>DIV \<Longrightarrow> C \<in>DIV"
+  apply(auto simp add: DIV_prod_def)
+  oops
+
+lemma prod_least: "C \<in> DIV \<Longrightarrow> b\<in>C \<Longrightarrow> (div_bot (fst ` C), div_bot (snd ` C)) \<sqsubseteq> b"
+  apply(rule prod_belowI, auto)
+  using div_bot prod_div_fst apply blast
+  by (simp add: div_bot prod_div_snd)
+
+lemma prod_least_in: "C \<in> DIV \<Longrightarrow> (div_bot (fst ` C), div_bot (snd ` C)) \<in> C"
+  apply(auto simp add: DIV_prod_def)
+  using div_inner_non_empty apply blast
+  apply (simp add: div_bot)
+  using div_inner_non_empty apply blast
+  by (simp add: div_bot)
+
+
+instance
+  apply(intro_classes)
+  using prod_least prod_least_in by blast
+
+end
+
+lemma prod_div_bot: "C\<in>DIV \<Longrightarrow> div_bot C = (div_bot (fst ` C), div_bot (snd ` C))"
+  using div_bot div_pcpo_bott prod_least prod_least_in by blast
+
+
 end
