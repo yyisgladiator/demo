@@ -46,9 +46,8 @@ assumes dom_eq: "ndaDom\<cdot>nda1 = ndaDom\<cdot>nda2" and ran_eq: "ndaRan\<cdo
                         ((t, out) \<in> (((ndaTransition\<cdot>nda1) (s, sbe))))
                           \<longleftrightarrow>
                         ((f t, out) \<in> (((ndaTransition\<cdot>nda2) (f s, sbe)))))"
-shows "(setrevImage (\<lambda>(s, sb). ndaTodo_h (ndaDom\<cdot>nda2) (ndaRan\<cdot>nda2) (s, sb) (\<lambda>s. h (f s)))
-       ((ndaTransition\<cdot>nda1) (x, e))) 
-\<sqsubseteq> (setrevImage (\<lambda>(s, sb). ndaTodo_h (ndaDom\<cdot>nda2) (ndaRan\<cdot>nda2) (s, sb) h) ((ndaTransition\<cdot>nda2) (f x, e)))"
+shows "((\<lambda>(s, sb). ndaTodo_h (ndaDom\<cdot>nda2) (ndaRan\<cdot>nda2) sb (h (f s))) `((ndaTransition\<cdot>nda1) (x, e))) 
+\<sqsubseteq> ((\<lambda>(s, sb). ndaTodo_h (ndaDom\<cdot>nda2) (ndaRan\<cdot>nda2) sb (h s)) ` ((ndaTransition\<cdot>nda2) (f x, e)))"
   oops                   
 
 lemma ndaimage_staterefine2:
@@ -57,9 +56,8 @@ assumes dom_eq: "ndaDom\<cdot>nda1 = ndaDom\<cdot>nda2" and ran_eq: "ndaRan\<cdo
                         ((t, out) \<in> (((ndaTransition\<cdot>nda1) (s, sbe))))
                           \<longleftrightarrow>
                         ((f t, out) \<in> (((ndaTransition\<cdot>nda2) (f s, sbe)))))"
-shows "(setrevImage (\<lambda>(s, sb). ndaTodo_h (ndaDom\<cdot>nda2) (ndaRan\<cdot>nda2) (s, sb) (\<lambda>s. h (f s)))
-       ((ndaTransition\<cdot>nda1) (x, e))) 
-\<sqsubseteq> (setrevImage (\<lambda>(s, sb). ndaTodo_h (ndaDom\<cdot>nda2) (ndaRan\<cdot>nda2) (s, sb) h) ((ndaTransition\<cdot>nda2) (f x, e)))"
+shows "((\<lambda>(s, sb). ndaTodo_h (ndaDom\<cdot>nda2) (ndaRan\<cdot>nda2) sb (h (f s)))` ((ndaTransition\<cdot>nda1) (x, e))) 
+\<sqsubseteq> ((\<lambda>(s, sb). ndaTodo_h (ndaDom\<cdot>nda2) (ndaRan\<cdot>nda2) sb (h s))` ((ndaTransition\<cdot>nda2) (f x, e)))"
   oops
 
 lemma ndaconcout_staterefine2:

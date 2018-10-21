@@ -13,8 +13,8 @@ component Receiver<E> {
 
     Rt -> Rf [dr.snd=true]             / {o=dr.fst, ar=true};
     Rt -> Rt [dr.snd=false]            / {ar=false};
-    Rt -> Rt                {dr==null};
-    Rf -> Rf                {dr==null};
+    Rt -> Rt [dr==null];
+    Rf -> Rf [dr==null];
     Rf -> Rf [dr.snd=true]             / {ar=true};
     Rf -> Rt [dr.snd=false]            / {ar=false, o=dr.fst};
   }

@@ -116,6 +116,12 @@ lemma nda2da_da_step:   assumes "sbeDom sbe = ndaDom\<cdot>nda"
   shows "spfConcIn (sbe2SB sbe)\<cdot>(da_h (nda2da nda) s) = spfConcOut (daNextOutput (nda2da nda) s sbe)\<cdot>((da_h (nda2da nda) (daNextState (nda2da nda) s sbe)))"
   by (simp add: assms da_h_stepI)
 
+
+lemma ndaconcout_one2[simp]: assumes "uspecDom\<cdot>(h (fst T)) = In" and "uspecRan\<cdot>(h (fst T)) = Out"
+  shows "ndaConcOutFlatten In Out ( { T }) h = ndaTodo_h In Out (snd T) (h (fst T))"
+  by (metis assms(1) assms(2) ndaconout_one prod.collapse)
+
+
 (* Show that the da fulfills the nda-step-lemma *) 
 lemma nda2da_nda_step: 
   assumes "sbeDom sbe = ndaDom\<cdot>nda"  

@@ -20,11 +20,15 @@ imports ndAutomaton
 
 begin
 
+type_synonym ('state, 'm) ndaTrans = "(('state \<times> 'm sbElem) \<Rightarrow> (('state \<times> 'm SB) set))"
+type_synonym ('state, 'm) ndaInit = "(('state \<times> 'm SB) set)"
+(*
 type_synonym ('state, 'm) nda2TransF = "('state, 'm) ndAutomaton \<Rightarrow>
     (('state \<times> 'm sbElem) \<Rightarrow> (('state \<times> 'm SB) set))"
 
 type_synonym ('state, 'm) nda2InitStateF = "('state, 'm) ndAutomaton \<Rightarrow> (('state \<times> 'm SB) set)"
 
+*)
 (*******************************************************************)
 section \<open>Definition\<close>
 (*******************************************************************)
@@ -39,72 +43,69 @@ definition ndaIsComplete:: "('state::type, 'm::message) ndAutomaton \<Rightarrow
 "ndaIsComplete \<equiv> \<lambda> nda. transIsComplete (ndaTransition\<cdot>nda) \<and> ndaInitialState\<cdot>nda \<noteq> {}"   
 
 
+
+
+subsection \<open>InitStateCompletion\<close>
+definition errorInit_h::  "'state  \<Rightarrow> ('state, 'm::message) ndaInit" where
+"errorInit_h \<equiv> \<lambda> state. {(state, ubLeast UNIV)}"
+
+definition chaosInit_h:: "('state, 'm::message) ndaInit" where
+"chaosInit_h \<equiv> UNIV"
+
+definition initCompletion:: "'s set \<Rightarrow> 's set \<Rightarrow> 's set"
+  where "initCompletion completeInit oldInit\<equiv> if (oldInit = {}) then completeInit else oldInit"
+
+
+
 subsection \<open>transCompletion\<close>
 
 (* Ignore completion: stay in the same state and produce empty SB *)
-definition ignoreTrans_h:: "('state::type \<times> 'm::message sbElem) \<Rightarrow>
-    ('state \<times> 'm SB) set" where
+
+definition ignoreTrans_h:: "('state::type \<times> 'm::message sbElem) \<Rightarrow> ('state \<times> 'm SB) set" where
 "ignoreTrans_h \<equiv> \<lambda> (state, sbe). {(state, ubLeast UNIV)}"
 
 (* Chaos completion: switch to an abitrary state and produce abitrary output *)
-definition chaosTrans_h:: "('state::type \<times> 'm::message sbElem) \<Rightarrow>
-    ('state \<times> 'm SB) set" where
+definition chaosTrans_h:: "('state::type \<times> 'm::message sbElem) \<Rightarrow> ('state \<times> 'm SB) set" where
 "chaosTrans_h \<equiv>  \<lambda> (state, sbe). UNIV"
 
-(* *)
-definition transCompletion:: "(('state::type \<times> 'm::message sbElem) \<Rightarrow> ('state \<times> 'm SB) set) 
-  \<Rightarrow> ('state, 'm::message) nda2TransF"
-  where "transCompletion f \<equiv> (\<lambda> nda. (\<lambda> (state, sbe). if ((ndaTransition\<cdot>nda) (state,sbe)  = {}) then 
-                f (state, sbe) else ((ndaTransition\<cdot>nda) (state,sbe))))"
+definition transCompletion:: "('s, 'm::message) ndaTrans \<Rightarrow> ('s, 'm::message) ndaTrans \<Rightarrow> ('s, 'm::message) ndaTrans" where 
+"transCompletion complete transition \<equiv> (\<lambda> (state, sbe). initCompletion (complete (state, sbe)) (transition (state,sbe)))"
 
 (* DD: error completion - unknown transition will cause the automaton to switch to error state and
 and it will stay there and produce no output (empty SB). To ensure that it will only produce no output,
 it will stay in the error state for ever (see Steffen's MD)  *)
-definition errorTransCompletion:: "'state::type \<Rightarrow> ('state, 'm::message) nda2TransF"
+definition errorTransCompletion:: "'state::type \<Rightarrow> ('state, 'm::message) ndAutomaton \<Rightarrow> ('state, 'm::message) ndaTrans"
   where "errorTransCompletion errorState nda \<equiv> 
 let errorStateP = (\<lambda> trans (state, sbe). trans (state,sbe)  = {} \<or>
                                          state = errorState)
 in (\<lambda> (state, sbe). if (errorStateP (ndaTransition\<cdot>nda) (state,sbe)) then 
                 {(errorState, ubLeast UNIV)} else ((ndaTransition\<cdot>nda) (state,sbe)))"
 
-abbreviation ignorerTransCompletion:: "('state, 'm::message) nda2TransF"
+abbreviation ignorerTransCompletion:: "('s, 'm::message) ndaTrans \<Rightarrow> ('s, 'm::message) ndaTrans"
   where "ignorerTransCompletion \<equiv> \<lambda> trans. transCompletion ignoreTrans_h trans"
 
-abbreviation chaosTransCompletion:: "('state, 'm::message) nda2TransF"
-  where "chaosTransCompletion \<equiv> \<lambda> trans. transCompletion ignoreTrans_h trans"
+abbreviation chaosTransCompletion:: "('s, 'm::message) ndaTrans \<Rightarrow> ('s, 'm::message) ndaTrans"
+  where "chaosTransCompletion \<equiv> \<lambda> trans. transCompletion chaosTrans_h trans"
 
 
-subsection \<open>InitStateCompletion\<close>
-definition errorInit_h::  "'state  \<Rightarrow> (('state \<times> 'm::message SB) set)" where
-"errorInit_h \<equiv> \<lambda> state. {(state, ubLeast UNIV)}"
-
-definition chaosInit_h:: "(('state \<times> 'm SB) set)" where
-"chaosInit_h \<equiv> UNIV"
-
-definition initCompletion:: "(('state \<times> 'm SB) set) \<Rightarrow> 
-   ('state::type, 'm::message) nda2InitStateF"
-  where "initCompletion \<equiv> \<lambda> otherInit nda.  if (ndaInitialState\<cdot>nda = {}) then otherInit else
-                                    ndaInitialState\<cdot>nda"
-
-lift_definition ndaCompletion:: "('state::type, 'm::message) nda2TransF \<Rightarrow>
-  ('state::type, 'm::message) nda2InitStateF \<Rightarrow>
+lift_definition ndaCompletion:: "(('state, 'm::message) ndaTrans \<Rightarrow> ('s, 'n::message) ndaTrans) \<Rightarrow>
+  (('state, 'm::message) ndaInit \<Rightarrow> ('s, 'n::message) ndaInit) \<Rightarrow>
   ('state::type, 'm::message) ndAutomaton 
-  \<Rightarrow> ('state::type, 'm::message) ndAutomaton"
+  \<Rightarrow> ('s::type, 'n::message) ndAutomaton"
   is
-"\<lambda> (transComplete::('state::type, 'm::message) nda2TransF) (initComplete::('state, 'm) nda2InitStateF) nda. 
-  (transComplete nda, initComplete nda, Discr (ndaDom\<cdot>nda),  Discr (ndaRan\<cdot>nda))"
+"\<lambda> (transCompletion::((('state, 'm::message) ndaTrans) \<Rightarrow> (('s, 'n::message) ndaTrans)))
+   (initCompletion::(('state, 'm::message) ndaInit \<Rightarrow> ('s, 'n::message) ndaInit))
+   (nda::('state::type, 'm::message) ndAutomaton). 
+  ( transCompletion (ndaTransition\<cdot>nda), (initCompletion (ndaInitialState\<cdot>nda)), Discr (ndaDom\<cdot>nda),  Discr (ndaRan\<cdot>nda))"
   by simp
 
-abbreviation ndaChaosCompletion:: "('state::type, 'm::message) ndAutomaton 
-  \<Rightarrow> ('state::type, 'm::message) ndAutomaton"
-  where
+definition ndaChaosCompletion:: "('state::type, 'm::message) ndAutomaton \<Rightarrow> ('state::type, 'm::message) ndAutomaton" where
 "ndaChaosCompletion \<equiv> ndaCompletion chaosTransCompletion (initCompletion chaosInit_h)"
 
-abbreviation ndaErrorCompletion:: "'state \<Rightarrow>('state::type, 'm::message) ndAutomaton 
-  \<Rightarrow> ('state::type, 'm::message) ndAutomaton"
-  where
+(*
+definition ndaErrorCompletion:: "'state \<Rightarrow> ('state::type, 'm::message) ndAutomaton \<Rightarrow> ('state::type, 'm::message) ndAutomaton" where
 "ndaErrorCompletion state \<equiv> ndaCompletion (errorTransCompletion state) (initCompletion (errorInit_h state))"
-
+*)
 
 (*******************************************************************)
 section \<open>Lemma\<close>
@@ -129,18 +130,38 @@ lemma transcompl_complI: assumes "transIsComplete f"
   shows "transIsComplete (transCompletion f ndaTrans)"
   apply (simp add: transIsComplete_def)
   apply (rule allI) +
-  apply (simp add: transCompletion_def)
+  apply (simp add: transCompletion_def initCompletion_def)
   by (meson assms transIsComplete_def)
 
-lemma ndaChaosCompletion_true: "ndaIsComplete (ndaChaosCompletion nda)"
-  apply (rule ndaiscomplI)
-   apply (simp_all add: ndaCompletion_def ndaTransition_def)
-   apply (metis (no_types) Rep_ndAutomaton_inverse eq_fst_iff ignoreTrans_h_def insert_not_empty ndaCompletion.rep_eq old.prod.case transIsComplete_def transcompl_complI)
-  by (simp add: Abs_ndAutomaton_inverse chaosInit_h_def initCompletion_def ndaInitialState.rep_eq)
+lemma ndachaos_trans[simp]: "ndaTransition\<cdot>(ndaChaosCompletion nda) = chaosTransCompletion (ndaTransition\<cdot>nda)"
+  by(simp add: ndaChaosCompletion_def ndaTransition.rep_eq ndaCompletion.rep_eq)
 
+lemma ndachaos_init[simp]: "ndaInitialState\<cdot>(ndaChaosCompletion nda) = (initCompletion chaosInit_h) (ndaInitialState\<cdot>nda)"
+  by(simp add: ndaChaosCompletion_def ndaInitialState.rep_eq ndaCompletion.rep_eq)
+
+lemma ndachaos_dom[simp]: "ndaDom\<cdot>(ndaChaosCompletion nda) = ndaDom\<cdot>nda"
+  by(simp add: ndaChaosCompletion_def ndaDom.rep_eq ndaCompletion.rep_eq)
+
+lemma ndachaos_ran[simp]: "ndaRan\<cdot>(ndaChaosCompletion nda) = ndaRan\<cdot>nda"
+  by(simp add: ndaChaosCompletion_def ndaRan.rep_eq ndaCompletion.rep_eq)
+
+lemma ndachaostrans_complete[simp]: "chaosTransCompletion f s \<noteq> {}"
+  by(simp add: transCompletion_def chaosTrans_h_def initCompletion_def)
+
+lemma ndachaosinit_complete[simp]: "initCompletion chaosInit_h init \<noteq> {}"
+  by(simp add: initCompletion_def chaosInit_h_def )
+
+lemma ndachaos_complete[simp]: "ndaIsComplete (ndaChaosCompletion nda)"
+  apply (rule ndaiscomplI)
+   apply (simp_all add: ndaChaosCompletion_def ndaCompletion.rep_eq ndaTransition_def)
+  apply (simp add: chaosTrans_h_def traniscomplI transcompl_complI)
+  apply (simp add: ndaCompletion.rep_eq ndaInitialState.rep_eq initCompletion_def)
+  by (simp add: chaosInit_h_def)
+
+(*
 lemma ndaErrorCompletion_true: "ndaIsComplete (ndaErrorCompletion state nda)"
   by (simp add: errorInit_h_def errortranscompl_compl initCompletion_def ndaCompletion.rep_eq 
       ndaInitialState.rep_eq ndaIsComplete_def ndaTransition.rep_eq)
-
+*)
 
 end

@@ -3,7 +3,7 @@
  * This file was generated from Sender.maa and will be overridden when changed. To change
  * permanently, consider changing the model itself.
  *
- * Generated on Oct 12, 2018 1:15:28 PM by isartransformer 2.0.0
+ * Generated on Oct 16, 2018 10:17:26 PM by isartransformer 3.1.0
  *)
 theory SenderDatatype
   imports bundle.SBElem
@@ -18,7 +18,7 @@ section \<open>Datatype\<close>
 
 subsection \<open>Definition\<close>
 
-datatype ('e::countable) senderMessage = DoNotUse_3f14ef_SenderBool "bool" | DoNotUse_3f14ef_SenderE "'e" | DoNotUse_3f14ef_SenderPair_E_Bool "('e\<times>bool)"
+datatype ('e::countable) senderMessage = DoNotUse_1e8d5f_SenderBool "bool" | DoNotUse_1e8d5f_SenderE "'e" | DoNotUse_1e8d5f_SenderPair_E_Bool "('e\<times>bool)"
 
 instance senderMessage :: (countable) countable
   apply(intro_classes)
@@ -28,9 +28,9 @@ instantiation senderMessage :: (countable) message
 begin
   fun ctype_senderMessage :: "channel \<Rightarrow> ('e::countable) senderMessage set" where
   "ctype_senderMessage c = (
-    if c = \<C> ''DoNotUse_3f14ef_as'' then range DoNotUse_3f14ef_SenderBool else
-    if c = \<C> ''DoNotUse_3f14ef_i'' then range DoNotUse_3f14ef_SenderE else
-    if c = \<C> ''DoNotUse_3f14ef_ds'' then range DoNotUse_3f14ef_SenderPair_E_Bool else
+    if c = \<C> ''DoNotUse_1e8d5f_as'' then range DoNotUse_1e8d5f_SenderBool else
+    if c = \<C> ''DoNotUse_1e8d5f_i'' then range DoNotUse_1e8d5f_SenderE else
+    if c = \<C> ''DoNotUse_1e8d5f_ds'' then range DoNotUse_1e8d5f_SenderPair_E_Bool else
     undefined)"
   instance
     by(intro_classes)
@@ -40,10 +40,10 @@ end
 subsection \<open>Domain and Range\<close>
 
 definition senderDom :: "channel set" where
-"senderDom = {\<C> ''DoNotUse_3f14ef_as'', \<C> ''DoNotUse_3f14ef_i''}"
+"senderDom = {\<C> ''DoNotUse_1e8d5f_as'', \<C> ''DoNotUse_1e8d5f_i''}"
 
 definition senderRan :: "channel set" where
-"senderRan = {\<C> ''DoNotUse_3f14ef_ds''}"
+"senderRan = {\<C> ''DoNotUse_1e8d5f_ds''}"
 
 
 section \<open>Setter\<close>
@@ -52,19 +52,19 @@ subsection \<open>type to sbElem\<close>
 
 (* Do not use this, use senderElemIn_as_i instead *)
 lift_definition senderElem_raw_as :: "bool \<Rightarrow> ('e::countable) senderMessage tsyn sbElem" is
-"\<lambda>x. [\<C> ''DoNotUse_3f14ef_as'' \<mapsto> Msg (DoNotUse_3f14ef_SenderBool x)]"
+"\<lambda>x. [\<C> ''DoNotUse_1e8d5f_as'' \<mapsto> Msg (DoNotUse_1e8d5f_SenderBool x)]"
   unfolding sbElemWell_def usclOkay_stream_def ctype_tsyn_def
   by simp
 
 (* Do not use this, use senderElemIn_as_i instead *)
 lift_definition senderElem_raw_i :: "'e \<Rightarrow> ('e::countable) senderMessage tsyn sbElem" is
-"\<lambda>x. [\<C> ''DoNotUse_3f14ef_i'' \<mapsto> Msg (DoNotUse_3f14ef_SenderE x)]"
+"\<lambda>x. [\<C> ''DoNotUse_1e8d5f_i'' \<mapsto> Msg (DoNotUse_1e8d5f_SenderE x)]"
   unfolding sbElemWell_def usclOkay_stream_def ctype_tsyn_def
   by simp
 
 (* Do not use this, use senderElemOut_ds instead *)
 lift_definition senderElem_raw_ds :: "('e\<times>bool) \<Rightarrow> ('e::countable) senderMessage tsyn sbElem" is
-"\<lambda>x. [\<C> ''DoNotUse_3f14ef_ds'' \<mapsto> Msg (DoNotUse_3f14ef_SenderPair_E_Bool x)]"
+"\<lambda>x. [\<C> ''DoNotUse_1e8d5f_ds'' \<mapsto> Msg (DoNotUse_1e8d5f_SenderPair_E_Bool x)]"
   unfolding sbElemWell_def usclOkay_stream_def ctype_tsyn_def
   by simp
 
@@ -76,17 +76,17 @@ subsubsection \<open>Intern\<close>
 (* Do not use this, use senderElemIn_as_i instead *)
 fun senderElem_as :: "bool tsyn \<Rightarrow> ('e::countable) senderMessage tsyn sbElem" where
 "senderElem_as (Msg port_as) = senderElem_raw_as port_as" |
-"senderElem_as null = sbeNull {\<C> ''DoNotUse_3f14ef_as''}"
+"senderElem_as null = sbeNull {\<C> ''DoNotUse_1e8d5f_as''}"
 
 (* Do not use this, use senderElemIn_as_i instead *)
 fun senderElem_i :: "'e tsyn \<Rightarrow> ('e::countable) senderMessage tsyn sbElem" where
 "senderElem_i (Msg port_i) = senderElem_raw_i port_i" |
-"senderElem_i null = sbeNull {\<C> ''DoNotUse_3f14ef_i''}"
+"senderElem_i null = sbeNull {\<C> ''DoNotUse_1e8d5f_i''}"
 
 (* Do not use this, use senderElemOut_ds instead *)
 fun senderElem_ds :: "('e\<times>bool) tsyn \<Rightarrow> ('e::countable) senderMessage tsyn sbElem" where
 "senderElem_ds (Msg port_ds) = senderElem_raw_ds port_ds" |
-"senderElem_ds null = sbeNull {\<C> ''DoNotUse_3f14ef_ds''}"
+"senderElem_ds null = sbeNull {\<C> ''DoNotUse_1e8d5f_ds''}"
 
 declare senderElem_as.simps[simp del]
 
@@ -133,21 +133,21 @@ subsubsection \<open>Intern\<close>
 (* Do not use this, use senderIn_list_as_i instead *)
 fun sender_list_as :: "(bool tsyn) list \<Rightarrow> ('e::countable) senderMessage tsyn SB" where
 "sender_list_as (x#xs) = ubConcEq (sender_as x)\<cdot>(sender_list_as xs)" |
-"sender_list_as []     = ubLeast {\<C> ''DoNotUse_3f14ef_as''}"
+"sender_list_as []     = ubLeast {\<C> ''DoNotUse_1e8d5f_as''}"
 
 declare sender_list_as.simps[simp del]
 
 (* Do not use this, use senderIn_list_as_i instead *)
 fun sender_list_i :: "('e tsyn) list \<Rightarrow> ('e::countable) senderMessage tsyn SB" where
 "sender_list_i (x#xs) = ubConcEq (sender_i x)\<cdot>(sender_list_i xs)" |
-"sender_list_i []     = ubLeast {\<C> ''DoNotUse_3f14ef_i''}"
+"sender_list_i []     = ubLeast {\<C> ''DoNotUse_1e8d5f_i''}"
 
 declare sender_list_i.simps[simp del]
 
 (* Do not use this, use senderOut_list_ds instead *)
 fun sender_list_ds :: "(('e\<times>bool) tsyn) list \<Rightarrow> ('e::countable) senderMessage tsyn SB" where
 "sender_list_ds (x#xs) = ubConcEq (sender_ds x)\<cdot>(sender_list_ds xs)" |
-"sender_list_ds []     = ubLeast {\<C> ''DoNotUse_3f14ef_ds''}"
+"sender_list_ds []     = ubLeast {\<C> ''DoNotUse_1e8d5f_ds''}"
 
 declare sender_list_ds.simps[simp del]
 
@@ -169,44 +169,44 @@ subsection \<open>stream to SB\<close>
 
 subsubsection \<open>Intern\<close>
 
-lift_definition DoNotUse_3f14ef_sender_stream_as_h :: "bool tsyn stream \<Rightarrow> ('e::countable) senderMessage tsyn SB" is
-"\<lambda> s. [(\<C> ''DoNotUse_3f14ef_as'') \<mapsto> (tsynMap (DoNotUse_3f14ef_SenderBool)\<cdot>s)]"
+lift_definition DoNotUse_1e8d5f_sender_stream_as_h :: "bool tsyn stream \<Rightarrow> ('e::countable) senderMessage tsyn SB" is
+"\<lambda> s. [(\<C> ''DoNotUse_1e8d5f_as'') \<mapsto> (tsynMap (DoNotUse_1e8d5f_SenderBool)\<cdot>s)]"
   unfolding ubWell_def usclOkay_stream_def ctype_tsyn_def
   by auto
 
 (* Do not use this, use senderIn_stream_as_i instead *)
 lift_definition sender_stream_as :: "(bool) tsyn stream \<rightarrow> ('e::countable) senderMessage tsyn SB" is
-"DoNotUse_3f14ef_sender_stream_as_h"
-  apply(auto simp add: cfun_def DoNotUse_3f14ef_sender_stream_as_h_def map_fun_def comp_def)
+"DoNotUse_1e8d5f_sender_stream_as_h"
+  apply(auto simp add: cfun_def DoNotUse_1e8d5f_sender_stream_as_h_def map_fun_def comp_def)
   apply(rule cont_Abs_UB)
   apply(simp add: option_one_cont)
-  by (metis DoNotUse_3f14ef_sender_stream_as_h.rep_eq ubrep_well)
+  by (metis DoNotUse_1e8d5f_sender_stream_as_h.rep_eq ubrep_well)
 
-lift_definition DoNotUse_3f14ef_sender_stream_i_h :: "'e tsyn stream \<Rightarrow> ('e::countable) senderMessage tsyn SB" is
-"\<lambda> s. [(\<C> ''DoNotUse_3f14ef_i'') \<mapsto> (tsynMap (DoNotUse_3f14ef_SenderE)\<cdot>s)]"
+lift_definition DoNotUse_1e8d5f_sender_stream_i_h :: "'e tsyn stream \<Rightarrow> ('e::countable) senderMessage tsyn SB" is
+"\<lambda> s. [(\<C> ''DoNotUse_1e8d5f_i'') \<mapsto> (tsynMap (DoNotUse_1e8d5f_SenderE)\<cdot>s)]"
   unfolding ubWell_def usclOkay_stream_def ctype_tsyn_def
   by auto
 
 (* Do not use this, use senderIn_stream_as_i instead *)
 lift_definition sender_stream_i :: "('e) tsyn stream \<rightarrow> ('e::countable) senderMessage tsyn SB" is
-"DoNotUse_3f14ef_sender_stream_i_h"
-  apply(auto simp add: cfun_def DoNotUse_3f14ef_sender_stream_i_h_def map_fun_def comp_def)
+"DoNotUse_1e8d5f_sender_stream_i_h"
+  apply(auto simp add: cfun_def DoNotUse_1e8d5f_sender_stream_i_h_def map_fun_def comp_def)
   apply(rule cont_Abs_UB)
   apply(simp add: option_one_cont)
-  by (metis DoNotUse_3f14ef_sender_stream_i_h.rep_eq ubrep_well)
+  by (metis DoNotUse_1e8d5f_sender_stream_i_h.rep_eq ubrep_well)
 
-lift_definition DoNotUse_3f14ef_sender_stream_ds_h :: "('e\<times>bool) tsyn stream \<Rightarrow> ('e::countable) senderMessage tsyn SB" is
-"\<lambda> s. [(\<C> ''DoNotUse_3f14ef_ds'') \<mapsto> (tsynMap (DoNotUse_3f14ef_SenderPair_E_Bool)\<cdot>s)]"
+lift_definition DoNotUse_1e8d5f_sender_stream_ds_h :: "('e\<times>bool) tsyn stream \<Rightarrow> ('e::countable) senderMessage tsyn SB" is
+"\<lambda> s. [(\<C> ''DoNotUse_1e8d5f_ds'') \<mapsto> (tsynMap (DoNotUse_1e8d5f_SenderPair_E_Bool)\<cdot>s)]"
   unfolding ubWell_def usclOkay_stream_def ctype_tsyn_def
   by auto
 
 (* Do not use this, use senderOut_stream_ds instead *)
 lift_definition sender_stream_ds :: "(('e\<times>bool)) tsyn stream \<rightarrow> ('e::countable) senderMessage tsyn SB" is
-"DoNotUse_3f14ef_sender_stream_ds_h"
-  apply(auto simp add: cfun_def DoNotUse_3f14ef_sender_stream_ds_h_def map_fun_def comp_def)
+"DoNotUse_1e8d5f_sender_stream_ds_h"
+  apply(auto simp add: cfun_def DoNotUse_1e8d5f_sender_stream_ds_h_def map_fun_def comp_def)
   apply(rule cont_Abs_UB)
   apply(simp add: option_one_cont)
-  by (metis DoNotUse_3f14ef_sender_stream_ds_h.rep_eq ubrep_well)
+  by (metis DoNotUse_1e8d5f_sender_stream_ds_h.rep_eq ubrep_well)
 
 
 subsubsection \<open>In/Out\<close>
@@ -224,27 +224,27 @@ section \<open>Getter\<close>
 subsection \<open>sbElem to tsyn\<close>
 
 definition senderElem_get_as :: "('e::countable) senderMessage tsyn sbElem \<Rightarrow> (bool) tsyn" where
-"senderElem_get_as sbe = tsynApplyElem (inv DoNotUse_3f14ef_SenderBool) ((Rep_sbElem sbe) \<rightharpoonup> (\<C> ''DoNotUse_3f14ef_as''))"
+"senderElem_get_as sbe = tsynApplyElem (inv DoNotUse_1e8d5f_SenderBool) ((Rep_sbElem sbe) \<rightharpoonup> (\<C> ''DoNotUse_1e8d5f_as''))"
 
 definition senderElem_get_i :: "('e::countable) senderMessage tsyn sbElem \<Rightarrow> ('e) tsyn" where
-"senderElem_get_i sbe = tsynApplyElem (inv DoNotUse_3f14ef_SenderE) ((Rep_sbElem sbe) \<rightharpoonup> (\<C> ''DoNotUse_3f14ef_i''))"
+"senderElem_get_i sbe = tsynApplyElem (inv DoNotUse_1e8d5f_SenderE) ((Rep_sbElem sbe) \<rightharpoonup> (\<C> ''DoNotUse_1e8d5f_i''))"
 
 definition senderElem_get_ds :: "('e::countable) senderMessage tsyn sbElem \<Rightarrow> (('e\<times>bool)) tsyn" where
-"senderElem_get_ds sbe = tsynApplyElem (inv DoNotUse_3f14ef_SenderPair_E_Bool) ((Rep_sbElem sbe) \<rightharpoonup> (\<C> ''DoNotUse_3f14ef_ds''))"
+"senderElem_get_ds sbe = tsynApplyElem (inv DoNotUse_1e8d5f_SenderPair_E_Bool) ((Rep_sbElem sbe) \<rightharpoonup> (\<C> ''DoNotUse_1e8d5f_ds''))"
 
 
 subsection \<open>SB to stream\<close>
 
 lift_definition sender_get_stream_as :: "('e::countable) senderMessage tsyn SB \<rightarrow> bool tsyn stream" is
-"\<lambda>sb. tsynMap (inv DoNotUse_3f14ef_SenderBool)\<cdot>(sb . (\<C> ''DoNotUse_3f14ef_as''))"
+"\<lambda>sb. tsynMap (inv DoNotUse_1e8d5f_SenderBool)\<cdot>(sb . (\<C> ''DoNotUse_1e8d5f_as''))"
   by(simp add: cfun_def)
 
 lift_definition sender_get_stream_i :: "('e::countable) senderMessage tsyn SB \<rightarrow> 'e tsyn stream" is
-"\<lambda>sb. tsynMap (inv DoNotUse_3f14ef_SenderE)\<cdot>(sb . (\<C> ''DoNotUse_3f14ef_i''))"
+"\<lambda>sb. tsynMap (inv DoNotUse_1e8d5f_SenderE)\<cdot>(sb . (\<C> ''DoNotUse_1e8d5f_i''))"
   by(simp add: cfun_def)
 
 lift_definition sender_get_stream_ds :: "('e::countable) senderMessage tsyn SB \<rightarrow> ('e\<times>bool) tsyn stream" is
-"\<lambda>sb. tsynMap (inv DoNotUse_3f14ef_SenderPair_E_Bool)\<cdot>(sb . (\<C> ''DoNotUse_3f14ef_ds''))"
+"\<lambda>sb. tsynMap (inv DoNotUse_1e8d5f_SenderPair_E_Bool)\<cdot>(sb . (\<C> ''DoNotUse_1e8d5f_ds''))"
   by(simp add: cfun_def)
 
 
@@ -254,34 +254,34 @@ subsection \<open>tsyn to sbElem/SB\<close>
 
 subsubsection \<open>Intern\<close>
 
-lemma senderelem_as_dom[simp]: "sbeDom (senderElem_as x) = {\<C> ''DoNotUse_3f14ef_as''}"
+lemma senderelem_as_dom[simp]: "sbeDom (senderElem_as x) = {\<C> ''DoNotUse_1e8d5f_as''}"
   apply(cases x)
   apply(simp add: senderElem_as.simps sbeDom_def senderElem_raw_as.rep_eq)
   by(simp add: senderElem_as.simps)
 
-lemma senderelem_i_dom[simp]: "sbeDom (senderElem_i x) = {\<C> ''DoNotUse_3f14ef_i''}"
+lemma senderelem_i_dom[simp]: "sbeDom (senderElem_i x) = {\<C> ''DoNotUse_1e8d5f_i''}"
   apply(cases x)
   apply(simp add: senderElem_i.simps sbeDom_def senderElem_raw_i.rep_eq)
   by(simp add: senderElem_i.simps)
 
-lemma senderelem_ds_dom[simp]: "sbeDom (senderElem_ds x) = {\<C> ''DoNotUse_3f14ef_ds''}"
+lemma senderelem_ds_dom[simp]: "sbeDom (senderElem_ds x) = {\<C> ''DoNotUse_1e8d5f_ds''}"
   apply(cases x)
   apply(simp add: senderElem_ds.simps sbeDom_def senderElem_raw_ds.rep_eq)
   by(simp add: senderElem_ds.simps)
 
-lemma sender_as_dom[simp]: "ubDom\<cdot>(sender_as x) = {\<C> ''DoNotUse_3f14ef_as''}"
+lemma sender_as_dom[simp]: "ubDom\<cdot>(sender_as x) = {\<C> ''DoNotUse_1e8d5f_as''}"
   by(simp add: sender_as_def)
 
 lemma sender_as_len[simp]: "ubLen (sender_as x) = 1"
   by(simp add: sender_as_def)
 
-lemma sender_i_dom[simp]: "ubDom\<cdot>(sender_i x) = {\<C> ''DoNotUse_3f14ef_i''}"
+lemma sender_i_dom[simp]: "ubDom\<cdot>(sender_i x) = {\<C> ''DoNotUse_1e8d5f_i''}"
   by(simp add: sender_i_def)
 
 lemma sender_i_len[simp]: "ubLen (sender_i x) = 1"
   by(simp add: sender_i_def)
 
-lemma sender_ds_dom[simp]: "ubDom\<cdot>(sender_ds x) = {\<C> ''DoNotUse_3f14ef_ds''}"
+lemma sender_ds_dom[simp]: "ubDom\<cdot>(sender_ds x) = {\<C> ''DoNotUse_1e8d5f_ds''}"
   by(simp add: sender_ds_def)
 
 lemma sender_ds_len[simp]: "ubLen (sender_ds x) = 1"
@@ -313,59 +313,59 @@ subsection \<open>stream to SB\<close>
 
 subsubsection \<open>Intern\<close>
 
-lemma sender_stream_as_dom[simp]: "ubDom\<cdot>(sender_stream_as\<cdot>x) = {\<C> ''DoNotUse_3f14ef_as''}"
-  by(simp add: sender_stream_as.rep_eq ubdom_insert DoNotUse_3f14ef_sender_stream_as_h.rep_eq)
+lemma sender_stream_as_dom[simp]: "ubDom\<cdot>(sender_stream_as\<cdot>x) = {\<C> ''DoNotUse_1e8d5f_as''}"
+  by(simp add: sender_stream_as.rep_eq ubdom_insert DoNotUse_1e8d5f_sender_stream_as_h.rep_eq)
 
 lemma sender_stream_as_len[simp]: "ubLen (sender_stream_as\<cdot>x) = #x"
   apply(subst uslen_ubLen_ch3)
   apply simp
   apply(simp add: sender_stream_as.rep_eq)
-  apply(simp add: ubGetCh_def DoNotUse_3f14ef_sender_stream_as_h.rep_eq)
+  apply(simp add: ubGetCh_def DoNotUse_1e8d5f_sender_stream_as_h.rep_eq)
   by (simp add: tsynmap_slen usclLen_stream_def)
 
 lemma sender_stream_as_id[simp]:
-  assumes "ubDom\<cdot>ub = {\<C> ''DoNotUse_3f14ef_as''} "
+  assumes "ubDom\<cdot>ub = {\<C> ''DoNotUse_1e8d5f_as''} "
     shows "sender_stream_as\<cdot>(sender_get_stream_as\<cdot>ub) = ub"
   apply(simp add: sender_stream_as.rep_eq sender_get_stream_as.rep_eq)
-  apply(simp add: DoNotUse_3f14ef_sender_stream_as_h_def)
+  apply(simp add: DoNotUse_1e8d5f_sender_stream_as_h_def)
   apply(subst tsynmap_inv_id)
   using assms tsynbundle_ctype apply fastforce
   using assms ub_id_single by blast
 
-lemma sender_stream_i_dom[simp]: "ubDom\<cdot>(sender_stream_i\<cdot>x) = {\<C> ''DoNotUse_3f14ef_i''}"
-  by(simp add: sender_stream_i.rep_eq ubdom_insert DoNotUse_3f14ef_sender_stream_i_h.rep_eq)
+lemma sender_stream_i_dom[simp]: "ubDom\<cdot>(sender_stream_i\<cdot>x) = {\<C> ''DoNotUse_1e8d5f_i''}"
+  by(simp add: sender_stream_i.rep_eq ubdom_insert DoNotUse_1e8d5f_sender_stream_i_h.rep_eq)
 
 lemma sender_stream_i_len[simp]: "ubLen (sender_stream_i\<cdot>x) = #x"
   apply(subst uslen_ubLen_ch3)
   apply simp
   apply(simp add: sender_stream_i.rep_eq)
-  apply(simp add: ubGetCh_def DoNotUse_3f14ef_sender_stream_i_h.rep_eq)
+  apply(simp add: ubGetCh_def DoNotUse_1e8d5f_sender_stream_i_h.rep_eq)
   by (simp add: tsynmap_slen usclLen_stream_def)
 
 lemma sender_stream_i_id[simp]:
-  assumes "ubDom\<cdot>ub = {\<C> ''DoNotUse_3f14ef_i''} "
+  assumes "ubDom\<cdot>ub = {\<C> ''DoNotUse_1e8d5f_i''} "
     shows "sender_stream_i\<cdot>(sender_get_stream_i\<cdot>ub) = ub"
   apply(simp add: sender_stream_i.rep_eq sender_get_stream_i.rep_eq)
-  apply(simp add: DoNotUse_3f14ef_sender_stream_i_h_def)
+  apply(simp add: DoNotUse_1e8d5f_sender_stream_i_h_def)
   apply(subst tsynmap_inv_id)
   using assms tsynbundle_ctype apply fastforce
   using assms ub_id_single by blast
 
-lemma sender_stream_ds_dom[simp]: "ubDom\<cdot>(sender_stream_ds\<cdot>x) = {\<C> ''DoNotUse_3f14ef_ds''}"
-  by(simp add: sender_stream_ds.rep_eq ubdom_insert DoNotUse_3f14ef_sender_stream_ds_h.rep_eq)
+lemma sender_stream_ds_dom[simp]: "ubDom\<cdot>(sender_stream_ds\<cdot>x) = {\<C> ''DoNotUse_1e8d5f_ds''}"
+  by(simp add: sender_stream_ds.rep_eq ubdom_insert DoNotUse_1e8d5f_sender_stream_ds_h.rep_eq)
 
 lemma sender_stream_ds_len[simp]: "ubLen (sender_stream_ds\<cdot>x) = #x"
   apply(subst uslen_ubLen_ch3)
   apply simp
   apply(simp add: sender_stream_ds.rep_eq)
-  apply(simp add: ubGetCh_def DoNotUse_3f14ef_sender_stream_ds_h.rep_eq)
+  apply(simp add: ubGetCh_def DoNotUse_1e8d5f_sender_stream_ds_h.rep_eq)
   by (simp add: tsynmap_slen usclLen_stream_def)
 
 lemma sender_stream_ds_id[simp]:
-  assumes "ubDom\<cdot>ub = {\<C> ''DoNotUse_3f14ef_ds''} "
+  assumes "ubDom\<cdot>ub = {\<C> ''DoNotUse_1e8d5f_ds''} "
     shows "sender_stream_ds\<cdot>(sender_get_stream_ds\<cdot>ub) = ub"
   apply(simp add: sender_stream_ds.rep_eq sender_get_stream_ds.rep_eq)
-  apply(simp add: DoNotUse_3f14ef_sender_stream_ds_h_def)
+  apply(simp add: DoNotUse_1e8d5f_sender_stream_ds_h_def)
   apply(subst tsynmap_inv_id)
   using assms tsynbundle_ctype apply fastforce
   using assms ub_id_single by blast
@@ -434,19 +434,19 @@ subsubsection \<open>Intern\<close>
 
 lemma sender_get_stream_as_id[simp]: "sender_get_stream_as\<cdot>(sender_stream_as\<cdot>x) = x"
   apply(simp add: sender_get_stream_as.rep_eq sender_stream_as.rep_eq)
-  apply(simp add: ubGetCh_def DoNotUse_3f14ef_sender_stream_as_h.rep_eq)
+  apply(simp add: ubGetCh_def DoNotUse_1e8d5f_sender_stream_as_h.rep_eq)
   by (simp add: inj_def)
 
 lemma sender_get_stream_as_eq:
-  assumes "ubDom\<cdot>ub1 = {\<C> ''DoNotUse_3f14ef_as''}"
-      and "ubDom\<cdot>ub2 = {\<C> ''DoNotUse_3f14ef_as''}"
+  assumes "ubDom\<cdot>ub1 = {\<C> ''DoNotUse_1e8d5f_as''}"
+      and "ubDom\<cdot>ub2 = {\<C> ''DoNotUse_1e8d5f_as''}"
       and "sender_get_stream_as\<cdot>ub1 = sender_get_stream_as\<cdot>ub2"
     shows "ub1 = ub2"
   using assms(1) assms(2) assms(3) sender_stream_as_id by metis
 
 lemma sender_get_stream_as_conc[simp]:
-  assumes "\<C> ''DoNotUse_3f14ef_as'' \<in> ubDom\<cdot>ub1"
-      and "\<C> ''DoNotUse_3f14ef_as'' \<in> ubDom\<cdot>ub2"
+  assumes "\<C> ''DoNotUse_1e8d5f_as'' \<in> ubDom\<cdot>ub1"
+      and "\<C> ''DoNotUse_1e8d5f_as'' \<in> ubDom\<cdot>ub2"
     shows "sender_get_stream_as\<cdot>(ubConc ub1\<cdot>ub2) = (sender_get_stream_as\<cdot>ub1) \<bullet> (sender_get_stream_as\<cdot>ub2)"
   apply(simp add: sender_get_stream_as.rep_eq)
   apply (subst ubConc_usclConc_eq)
@@ -456,19 +456,19 @@ lemma sender_get_stream_as_conc[simp]:
 
 lemma sender_get_stream_i_id[simp]: "sender_get_stream_i\<cdot>(sender_stream_i\<cdot>x) = x"
   apply(simp add: sender_get_stream_i.rep_eq sender_stream_i.rep_eq)
-  apply(simp add: ubGetCh_def DoNotUse_3f14ef_sender_stream_i_h.rep_eq)
+  apply(simp add: ubGetCh_def DoNotUse_1e8d5f_sender_stream_i_h.rep_eq)
   by (simp add: inj_def)
 
 lemma sender_get_stream_i_eq:
-  assumes "ubDom\<cdot>ub1 = {\<C> ''DoNotUse_3f14ef_i''}"
-      and "ubDom\<cdot>ub2 = {\<C> ''DoNotUse_3f14ef_i''}"
+  assumes "ubDom\<cdot>ub1 = {\<C> ''DoNotUse_1e8d5f_i''}"
+      and "ubDom\<cdot>ub2 = {\<C> ''DoNotUse_1e8d5f_i''}"
       and "sender_get_stream_i\<cdot>ub1 = sender_get_stream_i\<cdot>ub2"
     shows "ub1 = ub2"
   using assms(1) assms(2) assms(3) sender_stream_i_id by metis
 
 lemma sender_get_stream_i_conc[simp]:
-  assumes "\<C> ''DoNotUse_3f14ef_i'' \<in> ubDom\<cdot>ub1"
-      and "\<C> ''DoNotUse_3f14ef_i'' \<in> ubDom\<cdot>ub2"
+  assumes "\<C> ''DoNotUse_1e8d5f_i'' \<in> ubDom\<cdot>ub1"
+      and "\<C> ''DoNotUse_1e8d5f_i'' \<in> ubDom\<cdot>ub2"
     shows "sender_get_stream_i\<cdot>(ubConc ub1\<cdot>ub2) = (sender_get_stream_i\<cdot>ub1) \<bullet> (sender_get_stream_i\<cdot>ub2)"
   apply(simp add: sender_get_stream_i.rep_eq)
   apply (subst ubConc_usclConc_eq)
@@ -478,19 +478,19 @@ lemma sender_get_stream_i_conc[simp]:
 
 lemma sender_get_stream_ds_id[simp]: "sender_get_stream_ds\<cdot>(sender_stream_ds\<cdot>x) = x"
   apply(simp add: sender_get_stream_ds.rep_eq sender_stream_ds.rep_eq)
-  apply(simp add: ubGetCh_def DoNotUse_3f14ef_sender_stream_ds_h.rep_eq)
+  apply(simp add: ubGetCh_def DoNotUse_1e8d5f_sender_stream_ds_h.rep_eq)
   by (simp add: inj_def)
 
 lemma sender_get_stream_ds_eq:
-  assumes "ubDom\<cdot>ub1 = {\<C> ''DoNotUse_3f14ef_ds''}"
-      and "ubDom\<cdot>ub2 = {\<C> ''DoNotUse_3f14ef_ds''}"
+  assumes "ubDom\<cdot>ub1 = {\<C> ''DoNotUse_1e8d5f_ds''}"
+      and "ubDom\<cdot>ub2 = {\<C> ''DoNotUse_1e8d5f_ds''}"
       and "sender_get_stream_ds\<cdot>ub1 = sender_get_stream_ds\<cdot>ub2"
     shows "ub1 = ub2"
   using assms(1) assms(2) assms(3) sender_stream_ds_id by metis
 
 lemma sender_get_stream_ds_conc[simp]:
-  assumes "\<C> ''DoNotUse_3f14ef_ds'' \<in> ubDom\<cdot>ub1"
-      and "\<C> ''DoNotUse_3f14ef_ds'' \<in> ubDom\<cdot>ub2"
+  assumes "\<C> ''DoNotUse_1e8d5f_ds'' \<in> ubDom\<cdot>ub1"
+      and "\<C> ''DoNotUse_1e8d5f_ds'' \<in> ubDom\<cdot>ub2"
     shows "sender_get_stream_ds\<cdot>(ubConc ub1\<cdot>ub2) = (sender_get_stream_ds\<cdot>ub1) \<bullet> (sender_get_stream_ds\<cdot>ub2)"
   apply(simp add: sender_get_stream_ds.rep_eq)
   apply (subst ubConc_usclConc_eq)

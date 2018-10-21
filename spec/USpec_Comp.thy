@@ -140,9 +140,7 @@ lemma uspecforall_image:
   assumes "\<And>x y. ((ufclDom\<cdot>x = ufclDom\<cdot>y \<and> ufclRan\<cdot>x = ufclRan\<cdot>y) \<Longrightarrow>
     (ufclDom\<cdot>(f x) = ufclDom\<cdot>(f y) \<and> ufclRan\<cdot>(f x) = ufclRan\<cdot>(f y)))"
   shows "\<And>S. uspecForall (\<lambda>x. uspecExists (\<lambda>y. f y = x) S) (uspecImage f S)"
-  apply (simp add: uspecForall_def uspecExists_def)
-  by (smt assms image_iff uspecimage_set)
-
+  by (smt assms f_inv_into_f inv_into_into uspecExists_def uspecForall_def uspecimage_set)
 
 
 subsection \<open>uspecImageC\<close>

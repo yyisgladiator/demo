@@ -68,14 +68,15 @@ definition creatConstSPS:: "channel set \<Rightarrow> 'm::message SB  \<Rightarr
 "creatConstSPS \<equiv> \<lambda> In sb. createConstUspec (createConstSPF In\<cdot>sb)"
  
 *)
-definition ndaTodo_h:: "channel set \<Rightarrow> channel set\<Rightarrow>  ('s \<times> 'm::message SB) \<Rightarrow> ('s \<Rightarrow> 'm SPS) \<Rightarrow>'m SPS" where
-"ndaTodo_h = (\<lambda> In Out (s, sb) h. if (ubLen (ubRestrict Out\<cdot>(ubUp\<cdot>sb)) < \<infinity>) then spsConcOut sb\<cdot>(h s) else
+
+definition ndaTodo_h:: "channel set \<Rightarrow> channel set\<Rightarrow> 'm::message SB \<Rightarrow> 'm SPS \<Rightarrow>'m SPS" where
+"ndaTodo_h In Out sb uspec = ( if (ubLen (ubRestrict Out\<cdot>(ubUp\<cdot>sb)) < \<infinity>) then spsConcOut sb\<cdot>uspec else
       uspecConstOut In (ubRestrict Out\<cdot>(ubUp\<cdot>sb)))"
 
   (* Only monofun, not cont *)
 definition ndaConcOutFlatten:: "channel set \<Rightarrow> channel set \<Rightarrow> ('s \<times> 'm::message SB) set \<Rightarrow> ('s \<Rightarrow> 'm SPS) \<Rightarrow> 'm SPS" where
-"ndaConcOutFlatten In Out S \<equiv> \<lambda> h. uspecFlatten In Out\<cdot>
-                (Set.image (\<lambda> (s, sb). ndaTodo_h In Out (s, sb) h) S)"
+"ndaConcOutFlatten In Out S \<equiv> \<lambda> h. uspecFlatten In Out\<cdot>((\<lambda> (s, sb). ndaTodo_h In Out sb (h s)) ` S)"
+
 
 definition ndaHelper2:: "channel set \<Rightarrow> channel set \<Rightarrow> 
   's \<Rightarrow> (('s \<times>'e) \<Rightarrow> ('s \<times> 'm::message SB) set) \<Rightarrow> ('s \<Rightarrow> 'm SPS) \<Rightarrow> ('e \<Rightarrow> 'm SPS)" where
@@ -95,8 +96,22 @@ definition nda_H :: "('s, 'm::message) ndAutomaton \<Rightarrow> 'm SPS" where
 "nda_H nda \<equiv> ndaConcOutFlatten (ndaDom\<cdot>nda)(ndaRan\<cdot>nda) (ndaInitialState\<cdot>nda) (nda_h nda)"
 
 
+
+(* ToDo: Move somewhere else *)
 definition uspecIsStrict :: "('a::ubcl_comp, 'b::ubcl_comp) ufun uspec \<Rightarrow> bool" where
 "uspecIsStrict = uspecForall ufIsStrict"
+
+lemma uspecstrict_set[simp]: "spf\<in>uspecSet\<cdot>sps \<Longrightarrow> uspecIsStrict sps \<Longrightarrow> ufIsStrict spf"
+  by(simp add: uspecIsStrict_def)
+
+
+lemma spf_isstrict[simp]: fixes uf::"('m::message SB \<Rrightarrow> 'n::uscl_pcpo ubundle )"
+  shows "(ufDom\<cdot>uf) =cs \<Longrightarrow> cs\<noteq>{} \<Longrightarrow> ufIsStrict uf \<Longrightarrow> (uf\<rightleftharpoons>(ubLeast cs)) = ubLeast (ufRan\<cdot>uf)"
+  apply(subst ufstrictE, simp_all)
+  apply (simp add: ubclDom_ubundle_def)
+  apply (simp add: ubclLen_ubundle_def)
+  using ubleast_len apply blast
+  by (simp add: ubclLeast_ubundle_def)
 
 
 (* ----------------------------------------------------------------------- *)
@@ -112,27 +127,21 @@ lemma nddom_finite[simp]:  "finite (ndaDom\<cdot>nda)"
   by (smt Rep_ndAutomaton fst_conv mem_Collect_eq ndaDom.abs_eq 
       ndaDom.rep_eq ndaWell.elims(2) snd_conv undiscr_Discr)
 
-lemma ndatodo_h_monofun: "monofun (ndaTodo_h In Out (s, sb))"
-proof (rule monofunI)
-  fix x::"('a \<Rightarrow> 'b SPS)"
-  fix y::"('a \<Rightarrow> 'b SPS)"
-  assume a1: "x \<sqsubseteq> y"
-  have h: "x s \<sqsubseteq> y s"
-    by (meson a1 below_fun_def)
-  thus " ndaTodo_h In Out (s, sb) x \<sqsubseteq> ndaTodo_h In Out (s, sb) y"
+lemma ndatodo_h_monofun: "monofun (ndaTodo_h In Out sb)"
+  apply(rule monofunI)
     apply (simp add: ndaTodo_h_def)
     apply rule
     using monofun_cfun_arg by blast
-qed
+
 
 lemma ndatodo_h_dom: assumes "\<And> s. uspecDom\<cdot>(H s) = In \<and> uspecRan\<cdot>(H s) = Out"
-  shows "uspecDom\<cdot>(ndaTodo_h In Out (s, sb) H) = In"
+  shows "uspecDom\<cdot>(ndaTodo_h In Out sb (H s)) = In"
   apply (simp add: ndaTodo_h_def)
   apply (case_tac "(ubLen (ubRestrict Out\<cdot>(ubUp\<cdot>sb)) < \<infinity>)")
   by (simp_all add: assms)
 
-lemma ndatodo_h_ran: assumes "\<And> s. uspecDom\<cdot>(H s) = In \<and> uspecRan\<cdot>(H s) = Out"
-  shows "uspecRan\<cdot>(ndaTodo_h In Out (s, sb) H) = Out"
+lemma ndatodo_h_ran: assumes "\<And> s. uspecDom\<cdot>uspec = In \<and> uspecRan\<cdot>uspec = Out"
+  shows "uspecRan\<cdot>(ndaTodo_h In Out sb uspec) = Out"
   apply (simp add: ndaTodo_h_def)
   apply (case_tac "(ubLen (ubRestrict Out\<cdot>(ubUp\<cdot>sb)) < \<infinity>)")
   by (simp_all add: assms ubclDom_ubundle_def)
@@ -151,8 +160,8 @@ proof (rule monofunI)
       apply (simp add: spsConcOut_def)
       by (simp add: monofun_cfun_arg)
   qed
-  have h3: "(\<lambda>(s::'a, sb::'b stream\<^sup>\<Omega>). ndaTodo_h In Out (s, sb) x) \<sqsubseteq> 
-              (\<lambda>(s::'a, sb::'b stream\<^sup>\<Omega>). ndaTodo_h In Out (s, sb) y)"
+  have h3: "(\<lambda>(s::'a, sb::'b stream\<^sup>\<Omega>). ndaTodo_h In Out sb (x s)) \<sqsubseteq> 
+              (\<lambda>(s::'a, sb::'b stream\<^sup>\<Omega>). ndaTodo_h In Out sb (y s))"
     by (metis (mono_tags, lifting) a1 below_fun_def case_prod_conv monofunE ndatodo_h_monofun old.prod.exhaust)
   show "?f x \<sqsubseteq> ?f y" 
     apply (simp add: ndaConcOutFlatten_def)
@@ -173,8 +182,8 @@ lemma ndatodo_monofun3: "S1 \<sqsubseteq> S2 \<Longrightarrow> h1 \<sqsubseteq> 
 proof -
   assume a1: "h1 \<sqsubseteq> h2"
   assume a2: "S1 \<sqsubseteq> S2"
-  have h1: "(\<lambda>(s::'a, sb::'b stream\<^sup>\<Omega>). ndaTodo_h In Out (s, sb) h1) \<sqsubseteq> 
-              (\<lambda>(s::'a, sb::'b stream\<^sup>\<Omega>). ndaTodo_h In Out (s, sb) h2)"
+  have h1: "(\<lambda>(s::'a, sb::'b stream\<^sup>\<Omega>). ndaTodo_h In Out sb (h1 s)) \<sqsubseteq> 
+              (\<lambda>(s::'a, sb::'b stream\<^sup>\<Omega>). ndaTodo_h In Out sb (h2 s))"
     by (metis (mono_tags, lifting) a1 below_fun_def case_prod_conv monofunE ndatodo_h_monofun old.prod.exhaust)
   have h2: "\<And> ele. ele \<in> S1 \<Longrightarrow> ele \<in> S2"
     by (metis SetPcpo.less_set_def a2 contra_subsetD)
@@ -201,22 +210,25 @@ lemma uspecflatten_one [simp]: "uspecDom\<cdot>uspec = In \<Longrightarrow> uspe
     uspecSet.rep_eq uspecflatten_one_h)
  
 
-lemma ndatodo_dom[simp]: "uspecDom\<cdot>(h s) = In \<Longrightarrow> uspecDom\<cdot>(ndaTodo_h In Out (s,out) h) = In"
+lemma ndatodo_dom[simp]: "uspecDom\<cdot>(h s) = In \<Longrightarrow> uspecDom\<cdot>(ndaTodo_h In Out out (h s)) = In"
   by(simp add: ndaTodo_h_def)
 
-lemma ndatodo_ran[simp]:"uspecRan\<cdot>(h s) = Out \<Longrightarrow> uspecRan\<cdot>(ndaTodo_h In Out (s,out) h) = Out"
+lemma ndatodo_ran[simp]:"uspecRan\<cdot>(h s) = Out \<Longrightarrow> uspecRan\<cdot>(ndaTodo_h In Out out (h s)) = Out"
   apply(simp add: ndaTodo_h_def)
   by (simp add: ubclDom_ubundle_def)
 
 lemma ndaconout_one[simp]: assumes "uspecDom\<cdot>(h s) = In" and "uspecRan\<cdot>(h s) = Out"
-  shows "ndaConcOutFlatten In Out {(s,out)} h = ndaTodo_h In Out (s, out) h"
+  shows "ndaConcOutFlatten In Out {(s,out)} h = ndaTodo_h In Out out (h s)"
   apply(simp add: ndaConcOutFlatten_def)
   apply(rule uspecflatten_one)
   by(simp_all add: assms)
 
+(*
 lemma ndaconcout_one2[simp]: assumes "uspecDom\<cdot>(h (fst T)) = In" and "uspecRan\<cdot>(h (fst T)) = Out"
   shows "ndaConcOutFlatten In Out { T } h = ndaTodo_h In Out T h"
   by (metis assms(1) assms(2) ndaconout_one prod.collapse)
+*)
+
 
 lemma ndaHelper2_monofun: "monofun (ndaHelper2 In Out s transition)"
   unfolding ndaHelper2_def
@@ -353,7 +365,7 @@ lemma sbhdwell_ubconceq: assumes "ubDom\<cdot>(sbe2SB sbe) = ubDom\<cdot>us"
 
 lemma nda_h_final_h_1: assumes "sbeDom sbe = ndaDom\<cdot>nda"
   shows "(uspecImage (Rep_cfun (spfConcIn (sbe2SB sbe))) (nda_h nda state)) \<sqsubseteq>
-uspecFlatten (ndaDom\<cdot>nda) (ndaRan\<cdot>nda)\<cdot>(Set.image (\<lambda>(s, sb). ndaTodo_h (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) (s, sb) (nda_h nda)) ((ndaTransition\<cdot>nda) (state, sbe)))"
+uspecFlatten (ndaDom\<cdot>nda) (ndaRan\<cdot>nda)\<cdot>(Set.image (\<lambda>(s, sb). ndaTodo_h (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) sb (nda_h nda s)) ((ndaTransition\<cdot>nda) (state, sbe)))"
   apply (rule uspec_belowI)
     apply (metis (no_types, lifting) nda_h_fixpoint nda_h_inner_dom spfConcIn_dom spfConcIn_ran ufclDom_ufun_def ufclRan_ufun_def uspecflatten_dom uspecimage_dom1)
    apply (metis (no_types, lifting) nda_h_fixpoint nda_h_inner_ran spfConcIn_dom spfConcIn_ran ufclDom_ufun_def ufclRan_ufun_def uspecflatten_ran uspecimage_ran1)
@@ -365,7 +377,7 @@ let ?H  = "(ndaHelper2 (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) state (ndaTransitio
   let ?transition = "(ndaTransition\<cdot>nda)"
 
   show "uspecSet\<cdot>(uspecImage (Rep_cfun (spfConcIn (sbe2SB sbe))) (nda_h nda state))
-    \<subseteq> uspecSet\<cdot>(uspecFlatten (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) \<cdot>(Set.image (\<lambda>(s::'b, sb::'a stream\<^sup>\<Omega>). ndaTodo_h (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) (s, sb) (nda_h nda)) ((ndaTransition\<cdot>nda) (state, sbe))))"
+    \<subseteq> uspecSet\<cdot>(uspecFlatten (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) \<cdot>(Set.image (\<lambda>(s::'b, sb::'a stream\<^sup>\<Omega>). ndaTodo_h (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) sb (nda_h nda s)) ((ndaTransition\<cdot>nda) (state, sbe))))"
   proof rule
     fix x::"('a stream\<^sup>\<Omega>, 'a stream\<^sup>\<Omega>) ufun"      
     assume a1: "x \<in> uspecSet\<cdot>(uspecImage (Rep_cfun (spfConcIn (sbe2SB sbe))) (nda_h nda state))"
@@ -388,7 +400,7 @@ let ?H  = "(ndaHelper2 (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) state (ndaTransitio
       by (simp add: f_def_1 spsstep_h_ele)
     then have "\<And> sbe. (f sbe) \<in> uspecSet\<cdot>((\<lambda>e. ndaConcOutFlatten ?In ?Out (?transition (state,e)) (nda_h nda)) sbe)"
       by (simp add: ndaHelper2_def)
-    then have "\<And> sbe. (f sbe) \<in> uspecSet\<cdot>(uspecFlatten ?In ?Out\<cdot>(Set.image (\<lambda>(s, sb). ndaTodo_h ?In ?Out (s, sb) (nda_h nda)) (?transition (state,sbe))))"
+    then have "\<And> sbe. (f sbe) \<in> uspecSet\<cdot>(uspecFlatten ?In ?Out\<cdot>(Set.image (\<lambda>(s, sb). ndaTodo_h ?In ?Out sb (nda_h nda s)) (?transition (state,sbe))))"
       by (simp add: ndaConcOutFlatten_def)
     have "\<And> us. x \<rightleftharpoons> us = (Rep_cfun (spfConcIn (sbe2SB sbe))) (spfStep ?In ?Out\<cdot>((\<lambda> h sbEl. spfRtIn\<cdot>(h sbEl)) f)) \<rightleftharpoons> us"
       using x_f_eq by blast
@@ -417,9 +429,7 @@ let ?H  = "(ndaHelper2 (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) state (ndaTransitio
    
     have "\<And> us. ubDom\<cdot>us \<noteq> ?In \<Longrightarrow> x \<rightleftharpoons> us = (ufLeast ?In ?Out) \<rightleftharpoons> us"
       by (metis \<open>ufDom\<cdot> (x::'a stream\<^sup>\<Omega>\<Rrightarrow> 'a stream\<^sup>\<Omega>) = ndaDom\<cdot>(nda::('b, 'a) ndAutomaton)\<close> test2 test2_2 ufRestrict_apply)
-
-
-    show "x \<in> uspecSet\<cdot>(uspecFlatten ?In ?Out\<cdot>(Set.image (\<lambda>(s::'b, sb::'a stream\<^sup>\<Omega>). ndaTodo_h ?In ?Out (s, sb) (nda_h nda)) ((ndaTransition\<cdot>nda) (state, sbe))))"
+    show "x \<in> uspecSet\<cdot>(uspecFlatten ?In ?Out\<cdot>(Set.image (\<lambda>(s::'b, sb::'a stream\<^sup>\<Omega>). ndaTodo_h ?In ?Out sb (nda_h nda s)) ((ndaTransition\<cdot>nda) (state, sbe))))"
     proof -
       have "\<forall>u ua. (ufDom\<cdot>u \<noteq> ufDom\<cdot>ua \<or> (\<exists>ub. ubDom\<cdot>(ub::'a stream\<^sup>\<Omega>) = ufDom\<cdot>u \<and> u \<rightleftharpoons> ub \<noteq> ua \<rightleftharpoons> ub)) \<or> u = ua"
         by (meson spf_eq)
@@ -445,7 +455,7 @@ let ?H  = "(ndaHelper2 (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) state (ndaTransitio
       then have "f sbe = spfConcIn (sbe2SB sbe)\<cdot> (spfStep (ndaDom\<cdot>nda) (ndaRan\<cdot>nda)\<cdot> (\<lambda>s. spfRtIn\<cdot>(f s)))"
         using f5 f1 by meson
       then show ?thesis
-        by (metis \<open>\<And>sbe. f sbe \<in> uspecSet\<cdot> (uspecFlatten (ndaDom\<cdot>nda) (ndaRan\<cdot>nda)\<cdot> ((\<lambda>(s, sb). ndaTodo_h (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) (s, sb) (nda_h nda)) ` (ndaTransition\<cdot>nda) (state, sbe)))\<close> x_f_eq)
+        by (metis \<open>\<And>sbe. f sbe \<in> uspecSet\<cdot> (uspecFlatten (ndaDom\<cdot>nda) (ndaRan\<cdot>nda)\<cdot> ((\<lambda>(s, sb). ndaTodo_h (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) sb (nda_h nda s)) ` (ndaTransition\<cdot>nda) (state, sbe)))\<close> x_f_eq)
     qed
   qed
 qed
@@ -469,7 +479,7 @@ proof -
     fix x::"('a stream\<^sup>\<Omega>, 'a stream\<^sup>\<Omega>) ufun"
     let ?L = " \<lambda> sbe. (ndaConcOutFlatten (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) ((ndaTransition\<cdot>nda) (state, sbe)) (nda_h nda))"
     assume a100: "x \<in> uspecSet\<cdot>(?L sbe)"
-    obtain Z where "Z \<in> (Set.image (\<lambda> (s, sb). ndaTodo_h ?In ?Out (s, sb) (nda_h nda)) (?transition (state, sbe)))"
+    obtain Z where "Z \<in> (Set.image (\<lambda> (s, sb). ndaTodo_h ?In ?Out sb (nda_h nda s)) (?transition (state, sbe)))"
         and x_in_Z: "x \<in> uspecSet\<cdot> Z"
       by (smt a100 image_cong ndaConcOutFlatten_def split_cong uspecflatten_elen)
 
@@ -548,6 +558,18 @@ lemma nda_h_I:
   apply(rule nda_h_final, simp add: assms)
   by (metis assms(2) uspecleast_consistent uspecleast_dom uspecleast_ran)
 
+
+lemma nda_h_one_I:
+  assumes "sbeDom sbe = ndaDom\<cdot>nda" 
+    and "uspecIsConsistent (nda_h nda state)" (* For the proof see "ndaTotal.thy" *)
+    and "(ndaTransition\<cdot>nda) (state,sbe) = {(nextState, OutSB)}"
+    and "(ubLen (ubRestrict (ndaRan\<cdot>nda)\<cdot>(ubUp\<cdot>OutSB)) < \<infinity>)" (* ToDo: Kann man löschen *)
+  shows "spsConcIn (sbe2SB sbe)\<cdot>(nda_h nda state) = 
+    spsConcOut OutSB\<cdot>(nda_h nda nextState)"
+  apply(subst nda_h_I, auto simp add: assms)
+  apply(simp add: ndaConcOutFlatten_def ndaTodo_h_def)
+  apply(auto simp add:  assms)
+  by (metis (no_types, lifting) nda_h_fixpoint nda_h_inner_dom nda_h_inner_ran spsconcout_dom spsconcout_ran uspecflatten_one)
 
 
 lemma nda_h_bottom_h: "uspecIsStrict (spsStep_m (ndaDom\<cdot>nda) (ndaRan\<cdot>nda)
@@ -792,32 +814,33 @@ proof -
   have " \<And>sbe::'b sbElem.
        other x \<noteq> uspecLeast (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) \<Longrightarrow>
        uspecFlatten (ndaDom\<cdot>nda) (ndaRan\<cdot>nda)\<cdot> 
-            (Set.image (\<lambda>(s::'a, sb::'b stream\<^sup>\<Omega>). ndaTodo_h (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) (s, sb) other) ((ndaTransition\<cdot>nda) (x, sbe))) 
+            (Set.image (\<lambda>(s::'a, sb::'b stream\<^sup>\<Omega>). ndaTodo_h (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) sb (other s)) ((ndaTransition\<cdot>nda) (x, sbe))) 
                     \<noteq> uspecLeast (ndaDom\<cdot>nda) (ndaRan\<cdot>nda)"
   proof -
     fix sbe::"'b sbElem"
     assume a11: "other x \<noteq> uspecLeast (ndaDom\<cdot>nda) (ndaRan\<cdot>nda)"
     have x_sbe_transit_not_empty: "(ndaTransition\<cdot>nda) (x, sbe) \<noteq> {}"
       by (simp add: assms(2))
-    have s_sb_ndatodo_h_not_least: "\<And> s sb. (\<lambda>(s::'a, sb::'b stream\<^sup>\<Omega>). ndaTodo_h (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) (s, sb) other) (s, sb) \<noteq> uspecLeast (ndaDom\<cdot>nda) (ndaRan\<cdot>nda)"
+    have s_sb_ndatodo_h_not_least: "\<And> s sb. (\<lambda>(s::'a, sb::'b stream\<^sup>\<Omega>). ndaTodo_h (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) sb (other s)) (s, sb) \<noteq> uspecLeast (ndaDom\<cdot>nda) (ndaRan\<cdot>nda)"
       apply (case_tac "(ubLen (ubRestrict (ndaRan\<cdot>nda)\<cdot>(ubUp\<cdot>sb)) < \<infinity>)")
        apply (simp_all add: ndaTodo_h_def) defer
        apply (simp add: uspecconstout_insert)
       apply (metis uspecconst_consistent uspecleast_consistent uspecleast_dom uspecleast_ran)
       by (metis assms(3) assms(5) assms(6) spsconcout_consistentI uspecleast_consistent uspecleast_dom uspecleast_ran)
-    have "Set.image (\<lambda>(s::'a, sb::'b stream\<^sup>\<Omega>). ndaTodo_h (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) (s, sb) other) ((ndaTransition\<cdot>nda) (x, sbe))
+    have "Set.image (\<lambda>(s::'a, sb::'b stream\<^sup>\<Omega>). ndaTodo_h (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) sb (other s)) ((ndaTransition\<cdot>nda) (x, sbe))
             \<noteq> {}"
       by (metis (no_types, lifting) image_is_empty x_sbe_transit_not_empty)
-    moreover have "\<And> sset. sset \<in> (Set.image (\<lambda>(s::'a, sb::'b stream\<^sup>\<Omega>). ndaTodo_h (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) (s, sb) other) ((ndaTransition\<cdot>nda) (x, sbe))) \<Longrightarrow>
+    moreover have "\<And> sset. sset \<in> (Set.image (\<lambda>(s::'a, sb::'b stream\<^sup>\<Omega>). ndaTodo_h (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) sb (other s)) ((ndaTransition\<cdot>nda) (x, sbe))) \<Longrightarrow>
       sset \<noteq> uspecLeast (ndaDom\<cdot>nda) (ndaRan\<cdot>nda)"
       using case_prodE2 s_sb_ndatodo_h_not_least by auto   
-    moreover have "\<And> sset. sset \<in> (Set.image (\<lambda>(s::'a, sb::'b stream\<^sup>\<Omega>). ndaTodo_h (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) (s, sb) other) ((ndaTransition\<cdot>nda) (x, sbe))) \<Longrightarrow>
+    moreover have "\<And> sset. sset \<in> (Set.image (\<lambda>(s::'a, sb::'b stream\<^sup>\<Omega>). ndaTodo_h (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) sb (other s)) ((ndaTransition\<cdot>nda) (x, sbe))) \<Longrightarrow>
       uspecDom\<cdot>sset = (ndaDom\<cdot>nda) \<and> uspecRan\<cdot>sset = (ndaRan\<cdot>nda)"
       using assms(5) assms(6) f_inv_into_f ndatodo_dom by auto
        ultimately show "uspecFlatten (ndaDom\<cdot>nda) (ndaRan\<cdot>nda)\<cdot>
-            (Set.image (\<lambda>(s::'a, sb::'b stream\<^sup>\<Omega>). ndaTodo_h (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) (s, sb) other) ((ndaTransition\<cdot>nda) (x, sbe))) 
+            (Set.image (\<lambda>(s::'a, sb::'b stream\<^sup>\<Omega>). ndaTodo_h (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) sb (other s)) ((ndaTransition\<cdot>nda) (x, sbe))) 
                     \<noteq> uspecLeast (ndaDom\<cdot>nda) (ndaRan\<cdot>nda)"
       by (simp add: uspecflatten_not_least)
+
   qed
   then have "other x \<sqsubseteq> spsStep_m (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) (\<lambda>e::'b sbElem. ndaConcOutFlatten (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) ((ndaTransition\<cdot>nda) (x, e)) other)"
     apply (case_tac "other x = uspecLeast (ndaDom\<cdot>nda) (ndaRan\<cdot>nda)")

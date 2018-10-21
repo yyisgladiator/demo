@@ -1346,6 +1346,9 @@ lemma uspec_filter_forall:
   apply (metis uspecFilter_general_well)
   by simp
 
+lemma uspecforall_set[simp]: "spf\<in>uspecSet\<cdot>sps \<Longrightarrow> uspecForall P sps \<Longrightarrow> P spf"
+  by (simp add: uspecForall_def)
+  
 
 section \<open>instance div_pcpo\<close>
 
