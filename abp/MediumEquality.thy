@@ -37,14 +37,13 @@ lemma sps2spf_ndaconcoutflatten:
   apply (simp add: ndaConcOutFlatten_def assms)
   apply (simp add: ndaConcOutFlatten_def)
   apply (simp add: uspecflatten_rep_eq)
-  
-sorry
+oops
 
 lemma ndatrans_nempty[simp]: "(ndaTransition\<cdot>fairMediumAutomaton) (n, sbe) \<noteq> Rev {}"
   apply (simp add: ndaTransition_def fairMediumAutomaton.rep_eq)
   apply (simp add: fairMediumTransition_def)
   apply rule
-sorry
+oops
 
 lemma medsps_notuspecmax[simp]: "MedSPS n \<noteq> uspecMax mediumDom mediumRan"
   by (metis (mono_tags, lifting) MedSPS.rep_eq all_not_in_conv empty_Collect_eq orafun_nempty 
@@ -56,13 +55,13 @@ lemma medsps_strict[simp]: "uspecIsStrict (MedSPS n)"
   apply (rule uspec_ballI)
   apply (rule ufisstrictI)
   apply (simp add: ubclDom_ubundle_def MedSPS.abs_eq)
-sorry
+oops
 
 thm nda_h_final_back
 lemma medsps_medfair_subeq:
   shows "nda_h fairMediumAutomaton state \<sqsubseteq> MedSPS n"
 (*  apply (subst nda_h_final_back, simp_all)
   apply (subst sps2spf_ndaconcoutflatten, simp_all)*)
-sorry
+oops
 
 end
