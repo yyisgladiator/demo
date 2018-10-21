@@ -881,4 +881,53 @@ shows "nda_h nda = other"
      apply (simp add: nda_h_valid_domain)
   oops
 
+
+
+
+
+
+  section \<open>ndaConcOut\<close>
+
+lemma ndaconcoutflat_set: 
+  "uspecSet\<cdot>(ndaConcOutFlatten Dom Ran (Transition) h) = 
+    (Set.filter (\<lambda> uf. ufDom\<cdot>uf = Dom \<and> ufRan\<cdot>uf = Ran) (\<Union> (((\<lambda> (s, sb). uspecSet\<cdot>(ndaTodo_h Dom Ran sb (h s))) ` Transition))))"
+  apply(simp add: ndaConcOutFlatten_def)
+  apply(simp add: uspecflatten_set)
+  by (simp add: case_prod_beta' ufclRan_ufun_def ufclDom_ufun_def)
+
+lemma ndaconcout_subset: assumes "(nextState, Out) \<in> Transition" and "uspecDom\<cdot>(h nextState) = Dom" and "uspecRan\<cdot>(h nextState) = Ran"
+  shows " uspecSet\<cdot>(ndaTodo_h Dom Ran Out (h nextState)) \<subseteq> uspecSet\<cdot>(ndaConcOutFlatten Dom Ran (Transition) h) "
+  apply(subst ndaconcoutflat_set)
+  apply rule
+  by (smt UN_iff assms(1) assms(2) assms(3) case_prod_beta' fst_conv member_filter ndaconcoutflat_set ndaconout_one snd_conv)
+
+lemma ndaconcout_get: assumes "spf \<in> uspecSet\<cdot>(ndaConcOutFlatten Dom Ran Transition h)"
+  shows "\<exists> nextState Out. (nextState, Out) \<in> Transition 
+          \<and>spf \<in> uspecSet\<cdot>(ndaTodo_h Dom Ran Out (h nextState))"
+  by (metis (mono_tags, lifting) UN_iff assms case_prod_beta' member_filter ndaconcoutflat_set prod.collapse)
+
+lemma ndastep_spf: assumes "spsConcIn In\<cdot>sps = ndaConcOutFlatten Dom Ran (Transition) h" and "spf\<in>uspecSet\<cdot>sps"
+  and "\<And>nextState Out. (nextState, Out) \<in> Transition \<Longrightarrow> ubLen (ubRestrict Ran\<cdot>(ubUp\<cdot>Out)) < \<infinity>"
+  shows "\<exists> nextState Out spf2. (nextState, Out) \<in> Transition 
+          \<and> spf2 \<in>(uspecSet\<cdot>(h nextState))
+          \<and> spfConcIn In\<cdot>spf = spfConcOut Out\<cdot>spf2"
+proof - 
+  have "spfConcIn In\<cdot>spf \<in> uspecSet\<cdot>(ndaConcOutFlatten Dom Ran (Transition) h)"
+    by (metis assms(1) assms(2) rev_image_eqI spsconcin_set)
+  from this obtain nextState Out where  in_trans: "(nextState, Out) \<in> Transition" 
+      and step_h:"spfConcIn In\<cdot>spf \<in> uspecSet\<cdot>(ndaTodo_h Dom Ran Out (h nextState))"
+    using ndaconcout_get by force
+  hence "ubLen (ubRestrict Ran\<cdot>(ubUp\<cdot>Out)) < \<infinity>"
+    using assms(3) by blast
+  hence "spfConcIn In\<cdot>spf \<in> uspecSet\<cdot>(spsConcOut Out\<cdot>(h nextState))" using step_h ndaTodo_h_def by metis
+  thus ?thesis
+    using in_trans spsconcout_set by fastforce
+qed
+
+lemma ndaconcout_get_step: assumes "spf \<in> uspecSet\<cdot>(ndaConcOutFlatten Dom Ran Transition h)"
+  shows "\<exists> nextState Out. (nextState, Out) \<in> Transition 
+          \<and>spf \<in> uspecSet\<cdot>(ndaTodo_h Dom Ran Out (h nextState))"
+  by (metis (mono_tags, lifting) UN_iff assms case_prod_beta' member_filter ndaconcoutflat_set prod.collapse)
+
+
 end

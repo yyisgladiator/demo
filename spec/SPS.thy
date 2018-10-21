@@ -70,6 +70,9 @@ lemma spsconcout_consistentI: assumes "uspecIsConsistent S"
   shows "uspecIsConsistent (spsConcOut sb\<cdot>S)"
   by (simp add: assms spsConcOut_def)
 
+lemma spsconcout_set:  "uspecSet\<cdot>(spsConcOut Out\<cdot>sps) = (Rep_cfun (spfConcOut Out)) ` (uspecSet\<cdot>sps)"
+  by (simp add: spsConcOut_def uspecimagec_set)
+
 (* ----------------------------------------------------------------------- *)
 subsection \<open>spsConcIn\<close>
 (* ----------------------------------------------------------------------- *)
@@ -82,6 +85,10 @@ lemma spsconcin_ran[simp]:  "uspecRan\<cdot>(spsConcIn sb\<cdot>sps) = uspecRan\
 
 lemma spsconcin_const[simp]: "spsConcIn sb\<cdot>(uspecConst f) = uspecConst (spfConcIn sb\<cdot>f)"
   by(simp add: spsConcIn_def)
+
+lemma spsconcin_set:  "uspecSet\<cdot>(spsConcIn In\<cdot>sps) = (Rep_cfun (spfConcIn In)) ` (uspecSet\<cdot>sps)"
+  by (simp add: spsConcIn_def uspecimagec_set)
+
 
 (* ----------------------------------------------------------------------- *)
 subsection \<open>spsRtIn\<close>

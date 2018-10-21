@@ -73,7 +73,6 @@ lemma medunfair_step_msg [simp]: "spsConcIn (mediumIn_i (Msg m))\<cdot>medUnfair
 
 
 
-
 (* Allgemein det-step*)
 lemma uspecimage_rep_eq: assumes "\<And>x y. ((ufclDom\<cdot>x = ufclDom\<cdot>y \<and> ufclRan\<cdot>x = ufclRan\<cdot>y) \<Longrightarrow>
     (ufclDom\<cdot>(f x) = ufclDom\<cdot>(f y) \<and> ufclRan\<cdot>(f x) = ufclRan\<cdot>(f y)))" 
@@ -81,12 +80,6 @@ lemma uspecimage_rep_eq: assumes "\<And>x y. ((ufclDom\<cdot>x = ufclDom\<cdot>y
     Discr (ufclDom\<cdot> (f (ufunclLeast (uspecDom\<cdot> S) (uspecRan\<cdot> S)))),
     Discr (ufclRan\<cdot> (f (ufunclLeast (uspecDom\<cdot> S) (uspecRan\<cdot> S)))))"
   by (simp add: assms ufuncldom_least_dom ufuncldom_least_ran uspecImage_def uspec_allDom uspec_allRan)
-
-lemma spsconcin_set:  "uspecSet\<cdot>(spsConcIn In\<cdot>sps) = (Rep_cfun (spfConcIn In)) ` (uspecSet\<cdot>sps)"
-  by (simp add: spsConcIn_def uspecimagec_set)
-
-lemma spsconcout_set:  "uspecSet\<cdot>(spsConcOut Out\<cdot>sps) = (Rep_cfun (spfConcOut Out)) ` (uspecSet\<cdot>sps)"
-  by (simp add: spsConcOut_def uspecimagec_set)
 
 lemma spsonestep_spf: assumes "spsConcIn In\<cdot>sps1 = spsConcOut Out\<cdot>sps2" 
   shows "(Rep_cfun (spfConcIn In)) `(uspecSet\<cdot>sps1) = (Rep_cfun (spfConcOut Out)) ` uspecSet\<cdot>sps2"
@@ -96,71 +89,6 @@ lemma spsonestep_spf_exists: assumes "spsConcIn In\<cdot>sps1 = spsConcOut Out\<
   shows  "\<exists>spf2. spf2 \<in> uspecSet\<cdot>sps2 \<and> spfConcIn In\<cdot>spf1 = spfConcOut Out\<cdot>spf2"
   by (metis (no_types, hide_lams) assms(1) assms(2) image_iff spsconcin_set spsconcout_set)
   
-
-
-
-(* Global, non-det-step *)
-
-lemma uspecflatten_rep_eq: "uspecSet\<cdot>(uspecFlatten Dom Ran\<cdot>uspec) 
-  = ((setflat\<cdot>((Rep_cfun uspecSet) ` ((uspec_set_filter Dom Ran\<cdot>uspec)))))"
-  by (metis uspec_abs_set uspecflatten_insert uspecflatten_well)
-
-lemma uspecflatten_set: "uspecSet\<cdot>(uspecFlatten Dom Ran\<cdot>(uspecs)) = 
-    (Set.filter (\<lambda> uf. ufDom\<cdot>uf = Dom \<and> ufRan\<cdot>uf = Ran) (\<Union> ((Rep_cfun uspecSet) ` uspecs)))"
-  apply(simp add: uspecflatten_rep_eq)
-  apply(simp add: setflat_union uspec_set_filter_def)
-  apply auto
-  apply (metis (mono_tags) member_filter uspec_set_filter_def uspec_set_filter_insert)
-  apply (metis (mono_tags) member_filter ufclDom_ufun_def uspec_allDom uspec_set_filter_def uspec_set_filter_insert)+
-  apply (metis (mono_tags) member_filter ufclRan_ufun_def uspec_allRan uspec_set_filter_def uspec_set_filter_insert)+
-  by (metis (mono_tags) member_filter ufclDom_ufun_def ufclRan_ufun_def uspec_allDom uspec_allRan uspec_set_filter_def uspec_set_filter_insert)
-
-lemma ndaconcoutflat_set: 
-  "uspecSet\<cdot>(ndaConcOutFlatten Dom Ran (Transition) h) = 
-    (Set.filter (\<lambda> uf. ufDom\<cdot>uf = Dom \<and> ufRan\<cdot>uf = Ran) (\<Union> (((\<lambda> (s, sb). uspecSet\<cdot>(ndaTodo_h Dom Ran sb (h s))) ` Transition))))"
-  apply(simp add: ndaConcOutFlatten_def)
-  apply(simp add: uspecflatten_set)
-  by (simp add: case_prod_beta')
-
-lemma ndaconcout_subset: assumes "(nextState, Out) \<in> Transition" and "uspecDom\<cdot>(h nextState) = Dom" and "uspecRan\<cdot>(h nextState) = Ran"
-  shows " uspecSet\<cdot>(ndaTodo_h Dom Ran Out (h nextState)) \<subseteq> uspecSet\<cdot>(ndaConcOutFlatten Dom Ran (Transition) h) "
-  apply(subst ndaconcoutflat_set)
-  apply rule
-  by (smt UN_iff assms(1) assms(2) assms(3) case_prod_beta' fst_conv member_filter ndaconcoutflat_set ndaconout_one snd_conv)
-
-
-lemma ndaconcout_get: assumes "spf \<in> uspecSet\<cdot>(ndaConcOutFlatten Dom Ran Transition h)"
-  shows "\<exists> nextState Out. (nextState, Out) \<in> Transition 
-          \<and>spf \<in> uspecSet\<cdot>(ndaTodo_h Dom Ran Out (h nextState))"
-  by (metis (mono_tags, lifting) UN_iff assms case_prod_beta' member_filter ndaconcoutflat_set prod.collapse)
-
-lemma ndastep_spf: assumes "spsConcIn In\<cdot>sps = ndaConcOutFlatten Dom Ran (Transition) h" and "spf\<in>uspecSet\<cdot>sps"
-  and "\<And>nextState Out. (nextState, Out) \<in> Transition \<Longrightarrow> ubLen (ubRestrict Ran\<cdot>(ubUp\<cdot>Out)) < \<infinity>"
-  shows "\<exists> nextState Out spf2. (nextState, Out) \<in> Transition 
-          \<and> spf2 \<in>(uspecSet\<cdot>(h nextState))
-          \<and> spfConcIn In\<cdot>spf = spfConcOut Out\<cdot>spf2"
-proof - 
-  have "spfConcIn In\<cdot>spf \<in> uspecSet\<cdot>(ndaConcOutFlatten Dom Ran (Transition) h)"
-    by (metis assms(1) assms(2) rev_image_eqI spsconcin_set)
-  from this obtain nextState Out where  in_trans: "(nextState, Out) \<in> Transition" 
-      and step_h:"spfConcIn In\<cdot>spf \<in> uspecSet\<cdot>(ndaTodo_h Dom Ran Out (h nextState))"
-    using ndaconcout_get by force
-  hence "ubLen (ubRestrict Ran\<cdot>(ubUp\<cdot>Out)) < \<infinity>"
-    using assms(3) by blast
-  hence "spfConcIn In\<cdot>spf \<in> uspecSet\<cdot>(spsConcOut Out\<cdot>(h nextState))" using step_h ndaTodo_h_def by metis
-  thus ?thesis
-    using in_trans spsconcout_set by fastforce
-qed
-
-lemma ndaconcout_get_step: assumes "spf \<in> uspecSet\<cdot>(ndaConcOutFlatten Dom Ran Transition h)"
-  shows "\<exists> nextState Out. (nextState, Out) \<in> Transition 
-          \<and>spf \<in> uspecSet\<cdot>(ndaTodo_h Dom Ran Out (h nextState))"
-  by (metis (mono_tags, lifting) UN_iff assms case_prod_beta' member_filter ndaconcoutflat_set prod.collapse)
-
-
-lemma lnat_1_inf [simp]: "1 < \<infinity>"
-  unfolding one_lnat_def
-  by simp
 
 
 

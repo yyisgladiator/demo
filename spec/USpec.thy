@@ -1194,6 +1194,20 @@ proof -
       setflat_not_empty uspecIsConsistent_def uspecLeast.rep_eq uspecflatten_well uspecleast_consistent)
  qed
 
+
+lemma uspecflatten_set_h: "uspecSet\<cdot>(uspecFlatten Dom Ran\<cdot>uspec) 
+  = ((\<Union>((Rep_cfun uspecSet) ` ((uspec_set_filter Dom Ran\<cdot>uspec)))))"
+  by (metis uspec_abs_set uspecflatten_insert uspecflatten_well setflat_union)
+
+lemma uspecflatten_set: "uspecSet\<cdot>(uspecFlatten Dom Ran\<cdot>(uspecs)) = 
+    (Set.filter (\<lambda> uf. ufclDom\<cdot>uf = Dom \<and> ufclRan\<cdot>uf = Ran) (\<Union> ((Rep_cfun uspecSet) ` uspecs)))"
+  apply(simp add: uspecflatten_set_h)
+  apply(simp add: setflat_union uspec_set_filter_def)
+  apply auto
+  apply (metis (mono_tags) member_filter uspec_set_filter_def uspec_set_filter_insert)
+  apply (metis (mono_tags) member_filter uspec_allDom uspec_set_filter_def uspec_set_filter_insert)+
+  done
+
 subsection \<open>Forall Exists\<close>
 
 lemma uspec_for_all_ex:
