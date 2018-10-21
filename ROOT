@@ -48,16 +48,4 @@ session "spec" (mustWork) in spec = "fun" +
     SPS
     USpec_UFunComp
 
-session "automat" (mustWork) in automat = "spec" + 
-  options [quick_and_dirty = false]
-  theories
-    SpfStep
-    dAutomaton
-    SpsStep
-    ndAutomaton
-    ndaTotal
-    ndaComplete
-    ndaStateRefine
-
-
 
