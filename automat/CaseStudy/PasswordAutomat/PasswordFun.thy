@@ -30,9 +30,20 @@ lemma ubConcEq_associative: "ubConcEq (ubConcEq a\<cdot>b)\<cdot>ub = ubConcEq a
   apply (simp only:ubconceq_dom)
   apply (simp add:ubConcEq_def)
   apply (simp add:ubconc_getch usclConc_leftbottom)
+  
+  apply (simp add:ubConc_def)
+
+(*
+proof (cases "c \<in> ubDom\<cdot>b")
+  
+    case True
+    then show ?thesis
+  apply (simp add:ubUp_def)
+  
   apply (simp add:usclConc)
   
   apply (simp add:usclConc_rightbottom)
+*)
   sorry
 
 lemma ubConcEq_ubLeast[simp]: "ubConcEq (ubLeast cs)\<cdot>s = s"
