@@ -8,12 +8,10 @@ package abp;
     out E o;
 
   automaton Medium {
-    variable int coin;
-
     state Single;
-    initial Single / {coin=alt{0,1}};
+    initial Single;
 
-    Single [coin==0] / {coin=alt{0,1}};
-    Single [coin==1] / {coin=alt{0,1}, o=i};
+    Single / {o=null};
+    Single / {o=i};
   }
 }

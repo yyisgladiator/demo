@@ -14,4 +14,6 @@ component NoMediumABP<E> {
     connect receiver.ar -> sender.as;
     connect receiver.o -> o;
 
+    inv Final: i==o;
+
 }

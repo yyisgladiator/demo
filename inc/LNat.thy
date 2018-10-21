@@ -746,6 +746,10 @@ text{* This 1 element is the successor of 0. *}
 lemma one_def: "1 = lnsuc\<cdot>0"
    by (metis Fin_02bot Fin_Suc One_nat_def lnzero_def one_lnat_def)
 
+lemma lnat_1_inf [simp]: "1 < \<infinity>"
+  unfolding one_lnat_def
+  by simp
+
 text{* Adding 1 to an lnat ln1 yields the same result as the successor of ln1. *}     
 lemma lnat_plus_suc: "ln1 + 1 = lnsuc\<cdot>ln1"
   apply(simp add: plus_lnat_def)

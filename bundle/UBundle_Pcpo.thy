@@ -19,8 +19,10 @@ section\<open>Definitions\<close>
   
 (* ubLeast *)
 text {* @{text "ubLeast"} creates a bundle with \<bottom> in each channel  *}
-definition ubLeast :: "channel set \<Rightarrow> 'M\<^sup>\<Omega>"  where
-"ubLeast cs \<equiv> Abs_ubundle (\<lambda>c. (c \<in> cs) \<leadsto> \<bottom> )"  
+lift_definition ubLeast :: "channel set \<Rightarrow> 'M\<^sup>\<Omega>" is
+"(\<lambda> cs c. (c \<in> cs) \<leadsto> \<bottom> )"  
+  apply(rule ubwellI)
+  by (simp add: usclOkay_bot)
 
 (* ubUp *)
 text {* @{text "ubUp"}  replaces all "None" channels with \<bottom>. *}
@@ -129,7 +131,7 @@ have f3: "ubDom\<cdot>((ubLeast cs1::'a\<^sup>\<Omega>) \<bar> cs2) = ubDom\<cdo
   then show ?thesis
     using f3 f2 by blast
 qed
-    
+
 subsection \<open>ubUp\<close>
 
     

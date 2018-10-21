@@ -56,7 +56,7 @@ lemma medspf_ubdom [simp]:
 text{* @{term MedSPF} is strict. *}
 lemma medspf_strict: "(MedSPF ora) \<rightleftharpoons> ubLeast(mediumDom) = ubLeast(mediumRan)"
   apply (simp add: MedSPF_def ubclDom_ubundle_def)
-      apply(rule medium_get_stream_Out_eq, simp_all)
+  apply (rule medium_get_stream_Out_eq, simp_all)
   by (simp add: tsynbMed_def)+
 
 (* ----------------------------------------------------------------------- *)
@@ -132,8 +132,8 @@ text{* If null comes in, it will be sent and Medium stays in its state. *}
 lemma medspf_spfconc_null: assumes "ora \<in> oraFun n"  
   shows "spfConcIn (mediumIn_i -)\<cdot>(MedSPF ora) = spfConcOut (mediumOut_o -)\<cdot>(MedSPF ora)"
   apply (rule spf_eq, simp_all)
-  apply(rule medium_get_stream_Out_eq, simp_all)
-  apply(simp add: MedSPF_def tsynbMed_def ubclDom_ubundle_def)
+  apply (rule medium_get_stream_Out_eq, simp_all)
+  apply (simp add: MedSPF_def tsynbMed_def ubclDom_ubundle_def)
   using assms orafun_nbot tsynmed_sconc_null by blast
 
 
@@ -156,13 +156,36 @@ lemma medspf_spfconc_msg_nzero: assumes "ora1 \<in> oraFun (Suc n)" obtains ora2
     have ora2_orafun: "ora2 \<in> oraFun n"
       by (simp add: ora2_f ora2_fair ora2_snth oraFun_def)
     have "spfConcIn (mediumIn_i (Msg m))\<cdot>(MedSPF ora1) = spfConcOut (mediumOut_o -)\<cdot>(MedSPF ora2)"
-  apply (rule spf_eq, simp_all)
-  apply(rule medium_get_stream_Out_eq, simp_all)
-  apply(simp add: MedSPF_def tsynbMed_def ubclDom_ubundle_def)
+      apply (rule spf_eq, simp_all)
+      apply (rule medium_get_stream_Out_eq, simp_all)
+      apply (simp add: MedSPF_def tsynbMed_def ubclDom_ubundle_def)
       by (simp add: ora2def tsynmed_sconc_msg_f)
     thus ?thesis
       using ora2_orafun that by blast 
-  qed           
+  qed
+
+lemma medspf_spfconc_msg_nzero2: assumes "ora2 \<in> oraFun n" obtains ora1 where "ora1 \<in> oraFun (Suc n)"
+  and "spfConcIn (mediumIn_i (Msg m))\<cdot>(MedSPF ora1) = spfConcOut (mediumOut_o -)\<cdot>(MedSPF ora2)"
+  using assms
+  proof -
+    obtain ora1 where ora1def: "ora1 = \<up>False \<bullet> ora2"
+      by simp
+    have ora1_fair: "#({True} \<ominus> ora1) = \<infinity>"
+      using assms ora1def oraFun_def by simp
+    have ora1_snth: "snth (Suc n) ora1"
+      by (simp add: assms ora1def orafun_snth)
+    have ora1_f: "(\<forall>k<Suc n. \<not> snth k ora1)"
+      using assms less_Suc_eq_0_disj ora1def oraFun_def snth_scons snth_shd by auto
+    have ora1_orafun: "ora1 \<in> oraFun (Suc n)"
+      by (simp add: ora1_f ora1_fair ora1_snth oraFun_def)
+    have "spfConcIn (mediumIn_i (Msg m))\<cdot>(MedSPF ora1) = spfConcOut (mediumOut_o -)\<cdot>(MedSPF ora2)"
+      apply (rule spf_eq, simp_all)
+      apply (rule medium_get_stream_Out_eq, simp_all)
+      apply (simp add: MedSPF_def tsynbMed_def ubclDom_ubundle_def)
+      by (simp add: ora1def tsynmed_sconc_msg_f)
+    thus ?thesis
+      using ora1_orafun that by blast
+  qed
 
 text{* If a message comes in and the counter is zero, the message will be sent and Medium changes its 
   state. *}
@@ -180,10 +203,9 @@ lemma medspf_spfconc_msg_zero: assumes "ora1 \<in> oraFun 0" obtains ora2 where 
       using assms oraFun_def ora_def by auto
     have "spfConcIn (mediumIn_i (Msg m))\<cdot>(MedSPF ora1) = spfConcOut (mediumOut_o (Msg m))\<cdot>(MedSPF ora)"
       apply (rule spf_eq, simp_all)
-      apply(rule medium_get_stream_Out_eq, simp_all)
-      apply(simp add: MedSPF_def tsynbMed_def ubclDom_ubundle_def)
+      apply (rule medium_get_stream_Out_eq, simp_all)
+      apply (simp add: MedSPF_def tsynbMed_def ubclDom_ubundle_def)
       using ora1_def tsynmed_sconc_msg_t by blast
-
     then show ?thesis
       using ora1_def that by blast
   qed

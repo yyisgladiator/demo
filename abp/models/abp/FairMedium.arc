@@ -6,11 +6,11 @@ package abp;
     in E i,
     out E o;
 
-  automaton FairMedium {
-    variable int counter;
+  int counter;
 
+  automaton FairMedium {
     state Single;
-    initial Single / {counter=rand{j. j>=0}};
+    initial Single      / {counter=rand{j. j>=0}};
 
     Single [counter!=0] / {counter=counter-1};
     Single [counter==0] / {counter=rand{j. j>=0}, o=i};
