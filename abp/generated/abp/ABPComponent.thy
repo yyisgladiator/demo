@@ -3,7 +3,7 @@
  * This file was generated from ABP.maa and will be overridden when changed. To change
  * permanently, consider changing the model itself.
  *
- * Generated on Oct 12, 2018 3:45:16 PM by isartransformer 2.0.0
+ * Generated on Oct 16, 2018 10:17:28 PM by isartransformer 3.1.0
  *)
 theory ABPComponent
   imports ABPDatatype SenderAutomaton FairMediumAutomaton ReceiverAutomaton spec.SPS spec.USpec_UFunComp

@@ -9,8 +9,8 @@ default_sort po
 definition longChain :: "'a set \<Rightarrow> bool" where
 "longChain S \<equiv> S\<noteq>{} \<and> (\<forall>a b. (a\<in>S \<and> b\<in>S) \<longrightarrow> (a\<sqsubseteq>b \<or> b\<sqsubseteq>a))"
 
-definition longAdm :: "('a::cpo \<Rightarrow> bool) \<Rightarrow> bool"
-  where "longAdm P \<longleftrightarrow> (\<forall>Y. longChain Y \<longrightarrow> (\<forall>y\<in>Y. P y) \<longrightarrow> P (lub Y))"
+definition longAdm :: "'a set \<Rightarrow> ('a::po \<Rightarrow> bool) \<Rightarrow> bool"
+  where "longAdm C P \<longleftrightarrow> (\<forall>Y. longChain Y \<longrightarrow> Y \<subseteq> C \<longrightarrow> (\<forall>y\<in>Y. P y) \<longrightarrow> P (lub Y))"
 
 
 lemma longchainI: "(\<And>a b. a\<in>S \<Longrightarrow> b\<in>S \<Longrightarrow> (a\<sqsubseteq>b \<or> b\<sqsubseteq>a)) \<Longrightarrow> S\<noteq>{} \<Longrightarrow> longChain S"
@@ -22,6 +22,8 @@ lemma longchain_mono: assumes "longChain S" and "monofun f"
   apply (metis (no_types, lifting) assms(1) assms(2) image_iff longChain_def monofunE)
   using assms(1) longChain_def by auto
 
+lemma longchain_subset: "longChain S \<Longrightarrow> C \<subseteq> S \<Longrightarrow> C\<noteq>{} \<Longrightarrow> longChain C"
+  by (simp add: longChain_def set_mp)
 
 lemma mono_lub_below: assumes "monofun f" and "longChain S"
       and cpo: "\<And>S. longChain S \<Longrightarrow> S\<noteq>{} \<Longrightarrow> S\<subseteq>C \<Longrightarrow> \<exists>x\<in>C. S <<| x"
@@ -74,7 +76,8 @@ qed
 lemma lc_finite_lub: "longChain S \<Longrightarrow> finite S \<Longrightarrow> lub S \<in>S"
   by (metis is_ubI lc_finite longChain_def lub_maximal)
   
-
+lemma lc_finite_lub_ex: "longChain S \<Longrightarrow> finite S \<Longrightarrow> \<exists>x \<in> S. S <<| x"
+  by (metis is_lub_maximal is_ubI lc_finite longChain_def)
 
 lemma assumes  "s\<in>S" and "\<exists>x\<in>C. S <<| x"
   shows "s \<sqsubseteq> lub S"

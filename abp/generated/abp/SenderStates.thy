@@ -3,7 +3,7 @@
  * This file was generated from Sender.maa and will be overridden when changed. To change
  * permanently, consider changing the model itself.
  *
- * Generated on Oct 12, 2018 1:15:28 PM by isartransformer 2.0.0
+ * Generated on Oct 16, 2018 10:17:26 PM by isartransformer 3.1.0
  *)
 theory SenderStates
   imports SenderDatatype
@@ -15,7 +15,7 @@ begin
 datatype SenderSubstate = Sf | St
 
 (* And these have also the variables *)
-datatype 'e SenderState = SenderState SenderSubstate (* buffer = *) "'e list" (* c = *) "nat"
+datatype 'e SenderState = SenderState SenderSubstate (* buffer = *) "'e list" (* c = *) "int"
 
 (* Function to get the substate *)
 fun getSenderSubState :: "'e SenderState \<Rightarrow> SenderSubstate" where
@@ -25,7 +25,7 @@ fun getSenderSubState :: "'e SenderState \<Rightarrow> SenderSubstate" where
 fun getBuffer :: "'e SenderState \<Rightarrow> 'e list" where
 "getBuffer (SenderState _ var_buffer var_c) = var_buffer"
 
-fun getC :: "'e SenderState \<Rightarrow> nat" where
+fun getC :: "'e SenderState \<Rightarrow> int" where
 "getC (SenderState _ var_buffer var_c) = var_c"
 
 
