@@ -8,11 +8,23 @@ default_sort po
 
 datatype 'a rev = Rev 'a
 
+lemma inv_rev [simp]: "(inv Rev) (Rev a) = a"
+  by (meson GFP.rev.inject f_inv_into_f range_eqI)
+
+lemma inv_rev2 [simp]: "(Rev) ((inv Rev) a) = a"
+  by (metis GFP.rev.exhaust inv_rev)
+
+lemma rev_bij: "bij Rev"
+  by (metis GFP.rev.exhaust GFP.rev.inject bijI')
+
 (* rev simply reverses the order of the original type *)
 instantiation rev :: (po) po
 begin
   fun below_rev:: "'a rev \<Rightarrow> 'a rev \<Rightarrow> bool" where
   "below_rev (Rev b1) (Rev b2) = (b2\<sqsubseteq>b1)"
+
+  lemma below_rev_def: "b1 \<sqsubseteq> b2 = (((inv Rev) b2) \<sqsubseteq> ((inv Rev) b1))"
+  by (metis (no_types, hide_lams) GFP.rev.exhaust UNIV_I f_inv_into_f local.below_rev.simps surj_def)
 
   (* Show that the ordering definition defines a correct partial order. *)
   instance
@@ -24,6 +36,15 @@ begin
 end
 
 
+lemma longchain_rev: "longChain S \<longleftrightarrow> longChain (Rev ` S)"
+  apply auto
+  apply(rule longchainI)
+  apply (metis GFP.below_rev.elims(3) GFP.below_rev.simps GFP.rev.exhaust GFP.rev.inject imageE image_iff longChain_def)
+  apply (simp add: longChain_def)
+  apply(rule longchainI)
+  apply (meson GFP.below_rev.simps image_iff longChain_def)
+  by (simp add: longChain_def)
+
 instantiation rev :: (division) division
 begin
 definition DIV_rev :: "'a rev set set" where
@@ -34,21 +55,41 @@ lemma div_rev_inv: "a\<in>DIV \<Longrightarrow> ((inv Rev)`a) \<in> DIV"
   by (smt DIV_rev_def GFP.rev.inject image_iff image_inv_f_f inj_def)
 
 instance
-  by intro_classes
+  apply intro_classes
+  apply (simp add: DIV_rev_def div_non_empty)
+  using GFP.div_rev_inv div_inner_non_empty by blast
 end
 
 
 class rev_div_cpo = division + po +
 
-  assumes rev_div_non_empty: "DIV \<noteq> {}"
+(*   assumes rev_div_non_empty: "DIV \<noteq> {}" *)
 
-  assumes rev_div_inner_non_empty: "\<And>a. a\<in>DIV  \<Longrightarrow> a \<noteq> {}"
+ (*  assumes rev_div_inner_non_empty: "\<And>a. a\<in>DIV  \<Longrightarrow> a \<noteq> {}" *)
 
 
     (* every set is a cpo *)
-  assumes rev_div_cpo: "\<And>S a. a\<in>DIV \<Longrightarrow> \<not>finite  (Rev ` S) \<Longrightarrow> longChain (Rev ` S) \<Longrightarrow> S\<subseteq>a \<Longrightarrow> \<exists>x\<in>a. (Rev ` S) <<| Rev x"
+  assumes rev_div_cpo: "\<And>S a. a\<in>DIV \<Longrightarrow> \<not>finite  S \<Longrightarrow> longChain S \<Longrightarrow> S\<subseteq>a \<Longrightarrow> \<exists>x\<in>a. (Rev ` S) <<| Rev x"
 
 begin
+lemma rev_div_lub_ex: assumes "C\<in>DIV" and "longChain S" and "S\<subseteq>C" shows "\<exists>x\<in>C. (Rev ` S) <<| Rev x"
+proof(cases "finite S")
+  case True
+  hence "finite (Rev ` S)"
+    by simp
+  have "longChain (Rev ` S)"
+    using assms(2) longchain_rev by blast
+  hence "lub (Rev ` S) \<in> (Rev `S)"
+    using assms(2) lc_finite_lub True by blast
+  hence "(Rev ` S) <<| lub (Rev ` S)"
+    using \<open>finite (GFP.rev.Rev ` (S::'a set))\<close> \<open>longChain (GFP.rev.Rev ` (S::'a set))\<close> is_lub_lub lc_finite_lub_ex by blast 
+  then show ?thesis
+    using assms(3) \<open>lub (GFP.rev.Rev ` (S::'a set)) \<in> GFP.rev.Rev ` S\<close> by auto
+next
+  case False
+  then show ?thesis
+    by (simp add: assms(1) assms(2) assms(3) local.rev_div_cpo) 
+qed
 end
 
 
@@ -56,15 +97,6 @@ instantiation rev :: (rev_div_cpo) div_cpo
 begin
 lemma rev_bot_top: "x\<sqsubseteq>(Rev \<bottom>)"
   using below_rev.elims(3) by blast
-
-lemma longchain_rev: "longChain S \<longleftrightarrow> longChain (Rev ` S)"
-  apply auto
-  apply(rule longchainI)
-  apply (metis GFP.below_rev.elims(3) GFP.below_rev.simps GFP.rev.exhaust GFP.rev.inject imageE image_iff longChain_def)
-  apply (simp add: longChain_def)
-  apply(rule longchainI)
-  apply (meson GFP.below_rev.simps image_iff longChain_def)
-  by (simp add: longChain_def)
 
 lemma rev_obtains: fixes S::"'a GFP.rev set"
   obtains A where "Rev ` A = S"
@@ -86,9 +118,9 @@ qed
 
 instance
   apply(intro_classes)
-  apply (simp add: DIV_rev_def rev_div_non_empty)
-  using DIV_rev_def rev_div_inner_non_empty apply fastforce
-  by (simp add: rev_lub_ex)
+  apply (simp add: DIV_rev_def div_non_empty)
+  by (simp add: DIV_rev_def GFP.rev_lub_ex)
+
   
 end
 
@@ -162,9 +194,6 @@ lemma reversefun_below: "f x \<sqsubseteq> f y \<longleftrightarrow> (reverseFun
 definition gfp:: "'a::rev_div_upcpo set \<Rightarrow> ('a \<Rightarrow> 'a) \<Rightarrow> 'a" where
 "gfp A f = (inv Rev) (lfp (Rev ` A) (reverseFun f))"
 
-lemma rev_bij: "bij Rev"
-  by (metis GFP.rev.exhaust GFP.rev.inject bijI')
-
 lemma rev_division: "C\<in>DIV \<Longrightarrow> (Rev ` C)\<in>DIV"
   by (simp add: DIV_rev_def)
 
@@ -226,6 +255,22 @@ proof -
     by simp 
 qed
 
+lemma gfp_greatest_eq: assumes "monofun f"
+    and "goodFormed C f"
+    and "C \<in> DIV"
+    and "\<And>x. x\<in>C \<Longrightarrow> x \<sqsubseteq> f x \<Longrightarrow> x\<sqsubseteq>y"
+    and "y \<sqsubseteq> f y"
+    and "y \<in> C"
+  shows "(gfp C f) = y"
+  by (metis assms(1) assms(2) assms(3) assms(4) assms(5) assms(6) below_antisym below_refl gfp_div gfp_fix gfp_greatest)
+
+lemma gfp_smaller: assumes "monofun f"
+    and "goodFormed C f"
+    and "C \<in> DIV"
+    and "\<And>x. x\<in>C \<Longrightarrow>f x = x \<Longrightarrow> x\<sqsubseteq>y"
+  shows "(gfp C f) \<sqsubseteq> y"
+  using assms(1) assms(2) assms(3) assms(4) gfp_div gfp_fix by fastforce
+
 
 lemma gfp_monofun: assumes "f\<sqsubseteq>g"
     and "monofun f" and "monofun g"
@@ -234,5 +279,11 @@ lemma gfp_monofun: assumes "f\<sqsubseteq>g"
   shows "gfp C f \<sqsubseteq> gfp C g"
   by (metis assms(1) assms(2) assms(3) assms(4) assms(5) assms(6) below_fun_def gfp_div gfp_fix gfp_greatest)
 
+lemma gfp_lfp:
+  assumes "monofun f"
+    and "goodFormed C f"
+    and "C \<in> DIV"
+  shows "(lfp C f) \<sqsubseteq> (gfp C f)"
+  using assms(1) assms(2) assms(3) gfp_greatest lfp_div lfp_fix by fastforce
 
 end

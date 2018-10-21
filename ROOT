@@ -18,6 +18,8 @@ session "HOLMF" (mustWork) in HOLMF = "inc" +
     Division
     LFP
     GFP
+    Induction
+    Instantiation
 
 session "stream" (mustWork) in stream = "inc" +
   options [quick_and_dirty = false]
@@ -47,7 +49,7 @@ session "spec" (mustWork) in spec = "fun" +
     USpec_UFunComp
 
 session "automat" (mustWork) in automat = "spec" + 
-  options [quick_and_dirty = true]
+  options [quick_and_dirty = false]
   theories
     SpfStep
     dAutomaton
@@ -55,28 +57,7 @@ session "automat" (mustWork) in automat = "spec" +
     ndAutomaton
     ndaTotal
     ndaComplete
-
-session "abpGenerat" (mustWork) in "abp/generated/abp" = "automat" + 
-  options [quick_and_dirty = true]
-  theories
-    ReceiverAutomaton
-    SenderAutomaton
-    MediumDatatype
-    MediumAutomaton
-    FairMediumAutomaton
-    Fair99MediumAutomaton
-    IdMediumAutomaton
-    ABPComponent
-    NoMediumABPComponent
+    ndaStateRefine
 
 
-session "abpMedium" (canFail) in "abp/Medium" = "abpGenerat" + 
-  options [quick_and_dirty = true]
-  theories
-    medGeneralAut
-    medUnfairStep
-    medsBelow
-    Medium
-    MediumSPF
-    MediumSPS
 

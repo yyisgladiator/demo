@@ -19,9 +19,9 @@ fun eventStepChannel :: "('m  \<Rightarrow> 'o set) \<Rightarrow> 'm::countable 
 
 
 fun eventAutomatTransition:: "channel set \<Rightarrow> (channel \<Rightarrow> 's \<Rightarrow> 'm  \<Rightarrow> ('s \<times> 'm::message tsyn SB) set) 
-  \<Rightarrow> (('s, 'm) eventState \<times> 'm tsyn sbElem) \<Rightarrow> (('s, 'm) eventState \<times> 'm tsyn SB) set rev" where
+  \<Rightarrow> (('s, 'm) eventState \<times> 'm tsyn sbElem) \<Rightarrow> (('s, 'm) eventState \<times> 'm tsyn SB) set" where
 "eventAutomatTransition Dom eventTrans ((EventState s buffers) , input) = (if (sbeDom input) = Dom then 
-    (Rev ( { (EventState nextS (\<lambda> cc. if (c = cc) then nextList else buffers c), nextOut) 
+    (( { (EventState nextS (\<lambda> cc. if (c = cc) then nextList else buffers c), nextOut) 
     | c nextS nextList nextOut. c\<in>Dom \<and>(nextList, nextS, nextOut)\<in>(eventStepChannel (eventTrans c s) ((Rep_sbElem input)\<rightharpoonup> c) (buffers c))})) 
   else undefined) "
 
@@ -31,7 +31,7 @@ definition eventAutomatonInitial :: "('s \<times> 'm::message tsyn SB) set \<Rig
 definition eventAut :: "channel set \<Rightarrow> channel set \<Rightarrow>  (channel \<Rightarrow> 's \<Rightarrow> 'm::message  \<Rightarrow> ('s \<times> 'm tsyn SB) set) => ('s \<times> 'm::message tsyn SB) set 
     \<Rightarrow> (('s, 'm) eventState ,'m tsyn) ndAutomaton" where
 "eventAut Dom Ran transition initial = 
-  Abs_ndAutomaton ((eventAutomatTransition Dom transition), Rev (eventAutomatonInitial initial), Discr Dom, Discr Ran)"
+  Abs_ndAutomaton ((eventAutomatTransition Dom transition), (eventAutomatonInitial initial), Discr Dom, Discr Ran)"
 
 
 

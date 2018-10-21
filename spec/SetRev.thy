@@ -596,6 +596,8 @@ lemma setrevimage_not_empty: assumes "f \<in> inv Rev (setrevImage g H)"
 
 section \<open>set flat rev\<close>
 (* ToDo: Copy to SetPcpo *)
+<<<<<<< HEAD
+=======
 subsection \<open>set flat def N lemmas\<close>
 definition setflat :: "'a set set \<rightarrow> 'a set" where
 "setflat = (\<Lambda> S. {K  | Z K. K\<in>Z \<and> Z \<in>S} )"
@@ -644,6 +646,7 @@ lemma setflatten_mono2: assumes "\<And>b. b\<in>S1 \<Longrightarrow>( \<exists>c
   shows "setflat\<cdot>S1 \<subseteq> setflat\<cdot> S2"
   by (smt Abs_cfun_inverse2 setflat_def SetRev.setflat_cont assms mem_Collect_eq subsetCE subsetI)
 
+>>>>>>> develop
 
 subsection \<open>set flat rev def N lemmas\<close>
 definition setflat_rev :: "'a set set rev \<rightarrow> 'a set rev" where
