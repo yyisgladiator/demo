@@ -7,13 +7,14 @@ begin
 default_sort div_pcpo
 
 (* There exists a division in which f is complete *)
-definition goodFormed :: "'a set \<Rightarrow> ('a \<Rightarrow> 'a) \<Rightarrow> bool" where
+definition goodFormed :: "'a::div_cpo set \<Rightarrow> ('a \<Rightarrow> 'a) \<Rightarrow> bool" where
 "goodFormed C f \<equiv> \<forall>aa\<in>C. f aa \<in>C"
 
 definition lfp:: "'a set \<Rightarrow> ('a \<Rightarrow> 'a) \<Rightarrow> 'a" where
 "lfp A f = (THE x. f x = x \<and> x\<in>A \<and> (\<forall>y\<in>A. f y \<sqsubseteq> y \<longrightarrow> x\<sqsubseteq>y))"
 
-lemma lfp_condition: 
+lemma lfp_condition:
+  fixes f::"'a::div_pcpo \<Rightarrow> 'a"
   assumes "monofun f"
     and "goodFormed C f"
     and "C \<in> DIV"

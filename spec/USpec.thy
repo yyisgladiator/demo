@@ -1245,7 +1245,8 @@ lemma uspec_filter_forall:
   by (metis setrev_filter_forall fst_conv rep_abs_uspec uspecFilter_general_def 
     uspecFilter_general_well uspecrevset_insert)
 
-
+lemma uspecforall_set[simp]: "spf\<in>uspecSet sps \<Longrightarrow> uspecForall P sps \<Longrightarrow> P spf"
+  by(simp add: uspecForall_def setrevForall_def uspecRevSet_def uspecSet_def)
 
 
 

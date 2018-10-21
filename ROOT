@@ -17,6 +17,7 @@ session "HOLMF" (mustWork) in HOLMF = "inc" +
     LongChain
     Division
     LFP
+    GFP
 
 session "stream" (mustWork) in stream = "inc" +
   options [quick_and_dirty = false]
@@ -53,6 +54,7 @@ session "automat" (mustWork) in automat = "spec" +
     SpsStep
     ndAutomaton
     ndaTotal
+    ndaComplete
 
 session "abpGenerat" (mustWork) in "abp/generated/abp" = "automat" + 
   options [quick_and_dirty = true]
@@ -68,7 +70,7 @@ session "abpGenerat" (mustWork) in "abp/generated/abp" = "automat" +
     NoMediumABPComponent
 
 
-session "abpMedium" (mustWork) in "abp/Medium" = "abpGenerat" + 
+session "abpMedium" (canFail) in "abp/Medium" = "abpGenerat" + 
   options [quick_and_dirty = true]
   theories
     medGeneralAut

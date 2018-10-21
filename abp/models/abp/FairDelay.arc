@@ -9,12 +9,12 @@ package abp;
     in E i,
     out E o;
 
-  automaton FairDelay {
-    variable int ctr;
-    variable List<E> buffer = new List<>();
+  int ctr;
+  List<E> buffer;
 
+  automaton FairDelay {
     state Single;
-    initial Single / {ctr=rand{j.true}};
+    initial Single / {ctr=rand{j.true}, buffer=new List<>()};
 
     Single [ctr>0 && i!=null]  / {ctr=ctr-1, buffer=buffer.prepend(i)};
     Single [ctr>0 && i==null]  / {ctr=ctr-1};

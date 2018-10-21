@@ -635,7 +635,7 @@ proof -
     by blast
 qed
 
-lemma setflat_union: "\<And> S. setflat\<cdot>S = \<Union>S"
+lemma setflat_union: "setflat\<cdot>S = \<Union>S"
   apply (simp add: setflat_insert)
   apply (subst Union_eq)
   by auto
