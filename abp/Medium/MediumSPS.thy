@@ -8,7 +8,7 @@
 chapter {* Theory for MediumSPS Definitions and Lemmata *}
 
 theory MediumSPS
-imports spec.SPS MediumSPF  (* Do not import automaton theories, do that in a new file *)
+imports spec.SPS MediumSPF
 
 begin
 
@@ -44,8 +44,41 @@ lemma medsps_uspecran[simp]: "uspecRan\<cdot>(MedSPS n) = mediumRan"
 subsection {* Medium State Lemmata *}
 (* ----------------------------------------------------------------------- *)
 
+lemma spf2sps: assumes "spfConcIn In\<cdot>spf1 = spfConcOut Out\<cdot>spf2"
+  and "spf1 \<in> uspecSet sps1"
+  shows "\<exists>sps2. spf2 \<in> uspecSet sps2 \<and> spsConcIn In sps1
+    = spsConcOut Out (uspecFlatten (uspecDom\<cdot>sps2)(uspecRan\<cdot>sps2)(Rev {sps2}))"
+  apply (subst spsconcin_insert)
+  apply (subst spsconcout_insert)
+  apply (simp add: uspecImage_def)
+  apply (simp add: ufclDom_ufun_def ufclRan_ufun_def)
+  apply (simp add: uspecrevset_insert setrevImage_def)
+  apply (simp add: rep_rev_revset)
+oops
+
+(*
+lemma spf2sps_b: assumes "spfConcIn (sbe2SB sbe1)\<cdot>spf1 = spfConcOut (sbe2SB sbe2)\<cdot>spf2"
+  and "uspecDom\<cdot>sps1 = uspecDom\<cdot>sps2"
+  and "uspecRan\<cdot>sps1 = uspecRan\<cdot>sps2"
+  shows "spsConcIn (sbe2SB sbe1) sps1 
+    = spsConcOut (sbe2SB sbe2) (uspecFlatten (uspecDom\<cdot>sps2)(uspecRan\<cdot>sps2)(Rev {sps2}))"
+  apply (subst spsconcin_insert)
+  apply (subst spsconcout_insert)
+  apply (rule uspec_eqI)
+  apply (subst uspecimage_useful_uspecrevset)
+  apply (simp add: ufclDom_ufun_def ufclRan_ufun_def)
+  apply (subst uspecimage_useful_uspecrevset)
+  apply (simp add: ufclDom_ufun_def ufclRan_ufun_def)
+  apply (simp add: uspecrevset_insert setrevImage_def)
+  apply (rule image_cong)
+  defer 
+  defer
+  apply (simp add: ufclDom_ufun_def ufclRan_ufun_def assms)+
+oops*)
+
+(* step Lemmata *) 
 text{* If null comes in, it will be sent and Medium stays in its state. *}
-lemma "spsConcIn (mediumIn_i -)(MedSPS n) = spsConcOut (mediumOut_o -)(MedSPS n)"
+lemma medsps_spsconc_null: "spsConcIn (mediumIn_i -)(MedSPS n) = spsConcOut (mediumOut_o -)(MedSPS n)"
   apply (subst spsconcin_insert)
   apply (subst spsconcout_insert)
   apply (rule uspec_eqI)
@@ -60,39 +93,62 @@ lemma "spsConcIn (mediumIn_i -)(MedSPS n) = spsConcOut (mediumOut_o -)(MedSPS n)
 
 text{* If a message comes in and the counter is not zero, null will be sent and Medium stays in its 
   state. *}
-lemma "spsConcIn (mediumIn_i (Msg m)) (MedSPS (Suc n)) = spsConcOut (mediumOut_o -)(MedSPS n)"
-sorry
+lemma medsps_spsconc_msg_nzero: 
+  "spsConcIn (mediumIn_i (Msg m)) (MedSPS (Suc n)) = spsConcOut (mediumOut_o -)(MedSPS n)"
+  apply (subst spsconcin_insert)
+  apply (subst spsconcout_insert)
+  apply (rule uspec_eqI)
+  apply (subst uspecimage_useful_uspecrevset)
+  apply (simp add: ufclDom_ufun_def ufclRan_ufun_def)
+  apply (subst uspecimage_useful_uspecrevset)
+  apply (simp add: ufclDom_ufun_def ufclRan_ufun_def)
+  apply (simp add: uspecrevset_insert setrevImage_def MedSPS.rep_eq)
+  apply (rule)
+  apply (rule image_Collect_subsetI)
+  apply (subst setcompr_eq_image)
+  apply (metis (mono_tags) image_eqI medspf_spfconc_msg_nzero mem_Collect_eq)
+  apply (rule image_Collect_subsetI)
+  apply (subst setcompr_eq_image, simp)
+  apply (metis imageI medspf_spfconc_msg_nzero2)
+  by (simp add: ufclDom_ufun_def ufclRan_ufun_def)+
 
-(*lemma nda_h_final_back: assumes "\<And>state sbe. sbeDom sbe = ndaDom\<cdot>nda \<Longrightarrow> 
-spsConcIn (sbe2SB sbe) (other state) = 
-  ndaConcOutFlatten (ndaDom\<cdot>nda) (ndaRan\<cdot>nda) ((ndaTransition\<cdot>nda) (state,sbe)) (other)"
-  and "\<And> state sbe. (ndaTransition\<cdot>nda) (state, sbe) \<noteq> Rev {}"
-  and "\<And> state. other state \<noteq> uspecMax (ndaDom\<cdot>nda) (ndaRan\<cdot>nda)"
-  and "\<And> state. uspecIsStrict (other state)"
-  and "\<And> state. uspecDom\<cdot>(other state) = ndaDom\<cdot>nda" 
-  and "\<And> state. uspecRan\<cdot>(other state) = ndaRan\<cdot>nda"
-shows "nda_h nda \<sqsubseteq> other"*)
+(*copied*)
+lemma uspecflatten_rep_eq: "Rep_rev_uspec (uspecFlatten Dom Ran uspec) 
+  = ((setflat\<cdot>(Rep_rev_uspec ` (inv Rev (uspec_set_filter Dom Ran\<cdot>uspec)))))"
+  apply(simp add: uspecFlatten_def)
+  using rep_abs_rev_simp uspecflatten_well by blast
 
-lemma spf2sps: assumes "spfConcIn (sbe2SB sbe1)\<cdot>spf1 = spfConcOut (sbe2SB sbe2)\<cdot>spf2"
-  and "sbeDom sbe1 = uspecDom\<cdot>sps"
-  and "sbeDom sbe2 = uspecRan\<cdot>sps2"
-  shows "spsConcIn (sbe2SB sbe1) sps 
-    = spsConcOut (sbe2SB sbe2) (uspecFlatten (uspecDom\<cdot>sps2)(uspecRan\<cdot>sps2)(Rev {sps2}))"
-sorry
+lemma uspecflatten_set: "uspecSet (uspecFlatten Dom Ran (Rev uspecs)) = 
+    (Set.filter (\<lambda> uf. ufDom\<cdot>uf = Dom \<and> ufRan\<cdot>uf = Ran) (\<Union> (uspecSet ` uspecs)))"
+  apply(simp add: uspecSet_def uspecRevSet_def)
+  apply(simp add: uspecflatten_rep_eq)
+  apply(simp add: setflat_union uspec_set_filter_def setrevFilter_def)
+  apply auto
+  apply blast
+  apply (metis ufclDom_ufun_def uspec_allDom uspecrevset_insert)
+  apply (metis rep_rev_revset ufclDom_ufun_def uspec_allDom)
+  apply (metis rep_rev_revset ufclRan_ufun_def uspec_allRan)
+  apply (metis ufclRan_ufun_def uspec_allRan uspecrevset_insert)
+  by (metis (mono_tags, lifting) member_filter rep_rev_revset ufclDom_ufun_def ufclRan_ufun_def uspec_allDom uspec_allRan)
+(**)
 
 text{* If a message comes in and the counter is zero, the message will be sent and Medium changes 
   its state. *}
-lemma "spsConcIn (mediumIn_i (Msg m)) (MedSPS 0) 
+lemma medsps_spsconc_msg_zero: "spsConcIn (mediumIn_i (Msg m)) (MedSPS 0) 
   = spsConcOut (mediumOut_o (Msg m))(uspecFlatten mediumDom mediumRan (Rev {MedSPS n | n. True}))"
-  apply (simp add: mediumIn_i_def mediumOut_o_def)
-  apply (subst spf2sps, simp_all)
+  apply (subst spsconcin_insert)
+  apply (subst spsconcout_insert)
+  apply (rule uspec_eqI)
+  apply (subst uspecimage_useful_uspecrevset)
+  apply (simp add: ufclDom_ufun_def ufclRan_ufun_def)
+  apply (subst uspecimage_useful_uspecrevset)
+  apply (simp add: ufclDom_ufun_def ufclRan_ufun_def)
+  apply (simp add: uspecrevset_insert setrevImage_def MedSPS.rep_eq)
+  apply (simp add: uspecflatten_rep_eq)
+  apply (simp add: uspec_set_filter_def setrevFilter_def)
+  apply (simp add: Set.filter_def)
   defer
-sorry
-
-lemma medsps_medfair_eq: 
-  shows "MedSPS n = medFair n"
-  apply (rule uspec_eqI, simp_all)
-  apply (simp add: uspecrevset_insert)
-sorry
-
+  apply (simp add: ufclDom_ufun_def ufclRan_ufun_def)+
+oops
+  
 end

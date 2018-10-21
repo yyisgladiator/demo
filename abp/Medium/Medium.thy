@@ -8,14 +8,12 @@
 chapter {* Theory for Medium Definitions and Lemmata *}
 
 theory Medium
+
 imports stream.tsynStream
 
 begin
 
 default_sort countable
-
-(* deletes the Rule "1 = Suc 0" *)
- declare One_nat_def[simp del]
 
 (* ----------------------------------------------------------------------- *)
   section {* Medium Definition for Verification *}
@@ -132,7 +130,7 @@ lemma tsynmed_tsyndom: "tsynDom\<cdot>(tsynMed\<cdot>msg\<cdot>ora) \<subseteq> 
       proof (cases rule: oracases [of ora])
         case bot
         then show ?thesis 
-            by (simp add: tsyndom_strict)
+            by simp
       next
         case (true as)
         then show ?thesis
@@ -286,8 +284,7 @@ lemma tsynmed_tsynlen_ora:
 
 text{* If infinitely many messages are sent, infinitely many messages will be transmitted. *}
 lemma tsynmed_tsynlen_inf:
-  assumes "#({True} \<ominus> ora) = \<infinity>" 
-    and "tsynLen\<cdot>msg = \<infinity>"
+  assumes "#({True} \<ominus> ora) = \<infinity>" and "tsynLen\<cdot>msg = \<infinity>"
   shows "tsynLen\<cdot>(tsynMed\<cdot>msg\<cdot>ora) = \<infinity>"
   using assms by (simp add: tsynmed_tsynlen_ora)
 
