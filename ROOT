@@ -59,27 +59,5 @@ session "automat" (mustWork) in automat = "spec" +
     ndaComplete
     ndaStateRefine
 
-session "abpGenerat" (mustWork) in "abp/generated/abp" = "automat" + 
-  options [quick_and_dirty = true]
-  theories
-    ReceiverAutomaton
-    SenderAutomaton
-    MediumDatatype
-    MediumAutomaton
-    FairMediumAutomaton
-    Fair99MediumAutomaton
-    IdMediumAutomaton
-    ABPComponent
-    NoMediumABPComponent
 
-
-session "abpMedium" (canFail) in "abp/Medium" = "abpGenerat" + 
-  options [quick_and_dirty = true]
-  theories
-    medGeneralAut
-    medUnfairAut
-    medsBelow
-    Medium
-    MediumSPF
-    MediumSPS
 
