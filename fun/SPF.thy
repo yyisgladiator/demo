@@ -357,6 +357,30 @@ lemma spfconcin_uspec_iamge_well:
    apply (simp add: ufclDom_ufun_def)
   by (simp add: ufclRan_ufun_def)
 
+lemma spfconcin_split:"ubclDom\<cdot>b = ufclDom\<cdot>spf \<Longrightarrow> spfConcIn (ubConcEq a\<cdot>b)\<cdot>spf = spfConcIn b\<cdot>(spfConcIn a\<cdot>spf)"
+  apply(rule ufun_eqI)
+   apply(simp)
+  apply (subst spfConcIn_step)
+   apply simp+
+   apply (simp add: ubclDom_ubundle_def)
+  apply (subst spfConcIn_step)
+   apply simp+
+   apply (simp add: ubclDom_ubundle_def)
+  apply (subst spfConcIn_step)
+   apply simp+
+   apply (simp add: ubclDom_ubundle_def)
+   apply auto[1]
+  by (simp add: ubconceq_assoc ufclDom_ufun_def)
+
+
+lemma spfconcin_least [simp]: "spfConcIn (ubLeast cs)\<cdot>spf = spf"
+  apply(rule ufun_eqI)
+   apply(simp)
+  apply (subst spfConcIn_step)
+   apply simp+
+   apply (simp add: ubclDom_ubundle_def)
+  by simp
+
 subsection \<open>spfRtOut lemma\<close>
 
 lemma spfRtOut_step[simp]: 
@@ -590,5 +614,49 @@ lemma spfConcOut_weak_ublen_strong[simp]:
     show "lnsuc\<cdot>(ubclLen b) \<le> ubclLen (spfConcOut sb\<cdot>spf \<rightleftharpoons> b)"
       by (metis a1 dom_not_empty local.dom_empty rep_ufun_well spfConcOut_dom ubcldom_least_cs ufWell_def ufunLeastIDom)
   qed
+
+
+
+lemma spfconcout_split:"ubclDom\<cdot>b = ufclRan\<cdot>spf \<Longrightarrow>spfConcOut (ubConcEq a\<cdot>b)\<cdot>spf = spfConcOut a\<cdot>(spfConcOut b\<cdot>spf)"
+  apply(rule ufun_eqI)
+   apply(simp)
+  apply (subst spfConcOut_step)
+   apply simp+
+   apply (simp add: ubclDom_ubundle_def)
+  apply (subst spfConcOut_step) 
+    apply simp+
+   apply (simp add: ubclDom_ubundle_def)
+  apply (subst spfConcOut_step) 
+   apply (simp add: ubclDom_ubundle_def)
+  by (simp add: ubconceq_assoc ufclRan_ufun_def ufran_2_ubcldom2) 
+
+lemma spfconcout_least [simp]: "spfConcOut (ubLeast cs)\<cdot>spf = spf"
+  apply(rule ufun_eqI)
+   apply(simp)
+  apply (subst spfConcOut_step)
+  apply simp+
+   apply (simp add: ubclDom_ubundle_def)
+  by (simp only:ubConcEq_ubLeast)
+
+
+
+
+
+lemma spfconcin_out_switch: "spfConcIn a\<cdot>(spfConcOut b\<cdot>spf) = spfConcOut b\<cdot>(spfConcIn a\<cdot>spf)"
+  apply(rule ufun_eqI)
+   apply(simp)
+  apply (subst spfConcIn_step)
+   apply simp+
+   apply (simp add: ubclDom_ubundle_def)
+  apply simp
+  apply (subst spfConcOut_step)
+   apply simp+
+   apply (simp add: ubclDom_ubundle_def)
+  apply (subst spfConcOut_step)
+   apply simp+
+   apply (simp add: ubclDom_ubundle_def)
+  apply (subst spfConcIn_step)
+  apply (simp add: ubclDom_ubundle_def)
+   by (simp add: ubclDom_ubundle_def)
 
 end

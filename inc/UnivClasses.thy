@@ -54,6 +54,7 @@ class uscl_conc = uscl_pcpo +
   assumes usclLen_bottom: "usclLen\<cdot>(\<bottom> :: 'a) = 0"
   assumes usclConc_rightbottom: "\<And> x. usclConc x\<cdot>(\<bottom> :: 'a) = x"
   assumes usclConc_leftbottom: "\<And> x. usclConc (\<bottom> :: 'a)\<cdot>x = x"
+  assumes usclConc_assoc: "\<And>a b c. usclConc a\<cdot>(usclConc b\<cdot>c) = usclConc (usclConc a\<cdot>b)\<cdot>c"
   assumes usclLen_usclConc: "usclLen\<cdot>(usclConc s1\<cdot>s2) = usclLen\<cdot>s1 + usclLen\<cdot>s2"
 
 begin
