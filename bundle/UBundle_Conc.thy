@@ -336,6 +336,15 @@ next
 qed
 
 
+lemma ubconc_assoc: "ubConc (ubConc a\<cdot>b)\<cdot>ub = ubConc a\<cdot>(ubConc b\<cdot>ub)"
+  apply(rule ub_eq)
+   apply auto
+  apply (auto simp add: ubconc_getch )
+  apply (metis (no_types, lifting) Un_iff ubconc_dom ubconc_getch ubup_ubgetch ubup_ubgetch2 usclConc_assoc usclConc_rightbottom)
+  apply (simp add: usclConc_assoc)
+  by (metis (no_types, lifting) Un_iff ubconc_dom ubconc_getch ubup_ubgetch ubup_ubgetch2 usclConc_assoc usclConc_rightbottom)
+
+
 subsection \<open>ubConcEq\<close>
 
 
@@ -392,6 +401,18 @@ lemma conceq_longer_conc: "ubLen (ubConcEq b1\<cdot>b2) \<ge> ubLen (ubConc b1\<
 
 lemma conceq_conc_1: assumes "ubclDom\<cdot>b1 \<subseteq> ubclDom\<cdot>b2" shows "ubConcEq b1\<cdot>b2 = ubConc b1\<cdot>b2"
   by (metis assms ubclDom_ubundle_def ubclRestrict_ubundle_def ubclrestrict_dom_id ubconc_dom ubconceq_insert ubunionDom ubunion_idL)
+
+
+lemma ubconceq_assoc: "ubclDom\<cdot>b = ubclDom\<cdot>ub \<Longrightarrow> ubConcEq (ubConcEq a\<cdot>b)\<cdot>ub = ubConcEq a\<cdot>(ubConcEq b\<cdot>ub)"
+  apply(simp add: ubConcEq_def ubconc_assoc)
+  by (metis conceq_conc_1 inf_sup_absorb sup.idem ubclDom_ubundle_def ubconc_assoc ubconceq_insert ubconceq_restrict ubrestrict_ubdom ubrestrict_ubdom2)
+
+
+lemma ubConcEq_ubLeast[simp]: "ubConcEq (ubLeast cs)\<cdot>s = s"
+  apply(rule ub_eq)
+   apply auto
+  apply (simp add:ubConcEq_def)
+  by (simp add: ubconc_getch usclConc_leftbottom)
 
 
 
