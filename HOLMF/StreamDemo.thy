@@ -6,6 +6,7 @@ begin
 
 default_sort div_pcpo
 
+
 instantiation stream :: (countable) division
 begin
 definition DIV_stream:: "'a stream set set" where
