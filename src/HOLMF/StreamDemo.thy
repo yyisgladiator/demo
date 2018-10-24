@@ -18,14 +18,25 @@ instance
 end
 
 
-instance stream :: (countable) div_cpo
-  apply(intro_classes)
-  apply(auto simp add: DIV_stream_def)
-  sorry
+instantiation stream :: (countable) div_pcpo
+begin
 
-instance stream :: (countable) div_pcpo
+
+instance
   apply(intro_classes)
-  by(auto simp add: DIV_stream_def)
+  sorry
+end
+
+
+lemma stream_bot [simp]: "div_bot UNIV = \<epsilon>"
+  apply(simp add: div_bot_def)
+  by (simp add: bottom_def)
+
+lemma prod_stream_bot[simp]: "(div_bot UNIV) = (\<epsilon>, \<epsilon>)"
+  apply(simp add: div_bot_def)
+  by (smt below_bottom_iff inst_prod_pcpo minimal the_equality)
+
+
 
 
 
@@ -40,18 +51,31 @@ lemma example_mono [simp]: "monofun example"
 lemma allgood[simp]: "goodFormed UNIV x"
   using goodFormed_def by blast
 
-lemma stream_bot [simp]: "div_bot UNIV = \<epsilon>"
-  apply(simp add: div_bot_def)
-  by (simp add: bottom_def)
-
-lemma prod_stream_bot[simp]: "(div_bot UNIV) = (\<epsilon>, \<epsilon>)"
-  apply(simp add: div_bot_def)
-  by (smt below_bottom_iff inst_prod_pcpo minimal the_equality)
-
 lemma fixes C::"'a::div_cpo set"
   shows "C\<in>DIV \<Longrightarrow> monofun h \<Longrightarrow> K\<in>C \<Longrightarrow> longAdm C (\<lambda>a. h a \<sqsubseteq> K)"
   apply(auto simp add: longAdm_def)
   oops
+
+
+
+lemma ind_adm [simp]: "longAdm UNIV (\<lambda>a. snd a \<noteq> \<up>(Suc 0))"
+  apply(auto simp add: longAdm_def)
+  apply(rename_tac Y, case_tac "finite Y")
+  using lc_finite_lub apply blast
+  sorry
+
+lemma "snd (lfp UNIV example) \<noteq> \<up>1"
+  apply(rule lfp_induction)
+  apply auto
+     apply(auto simp add: DIV_prod_def DIV_stream_def)
+   apply(simp add: example_def)
+   apply(rename_tac a b, case_tac "#a=\<infinity>")
+  apply auto
+  apply (smt Pair_eqD2 inf_less_eq linorder_not_le prod.collapse stream.con_rews(2) sup'_def up_defined)
+  done
+
+
+
 
 lemma "sdom\<cdot>(snd (lfp UNIV example)) \<subseteq> {0}"
   apply(rule lfp_induction)
