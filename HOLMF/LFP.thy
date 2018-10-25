@@ -7,7 +7,7 @@ begin
 default_sort div_pcpo
 
 (* There exists a division in which f is complete *)
-definition goodFormed :: "'a::div_cpo set \<Rightarrow> ('a \<Rightarrow> 'a) \<Rightarrow> bool" where
+definition goodFormed :: "'a::division set \<Rightarrow> ('a \<Rightarrow> 'a) \<Rightarrow> bool" where
 "goodFormed C f \<equiv> \<forall>aa\<in>C. f aa \<in>C"
 
 definition lfp:: "'a set \<Rightarrow> ('a \<Rightarrow> 'a) \<Rightarrow> 'a" where
