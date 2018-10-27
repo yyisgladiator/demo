@@ -34,8 +34,12 @@ lemma stream_split: "{x \<in> S. #x \<le> Fin (Suc n)} = {x \<in> S. #x \<le> Fi
 lemma stream_lc_one: "longChain S \<Longrightarrow> x\<in>S \<Longrightarrow> y\<in>S \<Longrightarrow> #x = #y \<Longrightarrow> x=y"
     by (metis longChain_def snth_less snths_eq)
 
+lemma finite_one: "x\<in>S \<Longrightarrow> (\<And>y. y\<in>S \<Longrightarrow> x = y) \<Longrightarrow> finite S"
+  by (metis ex_new_if_finitel1 finite.emptyI finite.insertI singletonI)
+
 lemma longchain_one_lenght: "longChain S \<Longrightarrow>  finite {x \<in> S. #x = n}"
-  sorry
+  by (smt ex_new_if_finitel1 finite.intros(1) finite_one mem_Collect_eq stream_lc_one)
+
 lemma stream_lc_finite: assumes "longChain S"
   shows "finite {x. x\<in>S \<and> #x \<le> Fin n}"
   apply(induction n)
@@ -90,22 +94,65 @@ lemma stream_lc_below: assumes "longChain S" and "infinite S"
   apply(simp add: getNthElement_def)
   by (metis (mono_tags, lifting) assms(1) assms(2) finite_subset order_refl someI_ex stream.take_below stream_lc_infinite)
 
-lemma assumes "longChain S" and "infinite S"
-  shows "# (lub S) = \<infinity>"
-  oops
+
 lemma longchain2chain_h: assumes "longChain S" and "infinite S" 
   shows "(range (getNthElement S)) <| lub S"
-  apply(rule is_ubI)
-  apply auto
-  sorry
+proof(rule is_ubI)
+  fix x
+  assume "x\<in>range (local.getNthElement S)"
+  obtain s where "s\<in>S" and "x \<sqsubseteq> s"
+    by (metis StreamDemo.stream_lc_below \<open>x \<in> range (local.getNthElement S)\<close> assms(1) assms(2) image_iff)
+  thus "x \<sqsubseteq> lub S " oops
+ 
+lemma stream_getnth_below: assumes "longChain S" and "infinite S" and "s\<in>S" and "#s = Fin n"
+  shows "getNthElement S n \<sqsubseteq> s"
+proof -
+  have "#(local.getNthElement S n) = Fin n"
+    using StreamDemo.stream_lc_n_length assms(1) assms(2) by blast
+  then show ?thesis
+    by (metis (no_types) StreamDemo.stream_lc_below antisym_conv approxl1 assms(1) assms(2) assms(3) assms(4) longChain_def mono_slen)
+qed 
 
-lemma longchain2chain: assumes "longChain S" and "infinite S" 
+lemma stream_getnth_eq: assumes "longChain S" and "infinite S" and "s\<in>S" and "#s = Fin n"
+  shows "getNthElement S n = s"
+  by (simp add: assms(1) assms(2) assms(3) assms(4) eq_slen_eq_and_less stream_getnth_below stream_lc_n_length)
+
+lemma longchain2chain_ub: assumes "longChain S" and "infinite S" 
+  shows "S <| (\<Squnion>i. (getNthElement S) i)"
+proof(rule is_ubI)
+  fix x
+  assume "x\<in>S"
+  show "x \<sqsubseteq> (\<Squnion>i. local.getNthElement S i)"
+  proof (cases "#x<\<infinity>")
+    case True
+    obtain n where "Fin n = #x"
+      by (metis True lnat_well_h2)
+    hence "getNthElement S n = x"
+      by (simp add: \<open>x \<in> S\<close> assms(1) assms(2) stream_getnth_eq)
+    then show ?thesis
+      using assms(1) assms(2) is_ub_thelub stream_lc2c by blast
+    next
+      case False
+      have "\<And>n. getNthElement S n \<sqsubseteq> x"
+        by (metis False StreamDemo.stream_lc_below \<open>x \<in> S\<close> assms(1) assms(2) below_trans eq_less_and_fst_inf inf_ub leD longChain_def neq_iff)
+      hence "\<And>n. getNthElement S n = stake n\<cdot>x"
+        by (metis approxl1 assms(1) assms(2) stream_lc_n_length)
+    then show ?thesis
+      by (metis StreamDemo.stream_lc_inf assms(1) assms(2) eq_less_and_fst_inf lub_below stream.take_below stream_lc2c)
+  qed
+qed
+
+lemma longchain2chain: assumes "longChain S" and "infinite S"
   shows "S <<| (\<Squnion>i. (getNthElement S) i)"
-  sorry
+  by (meson StreamDemo.stream_lc2c assms(1) assms(2) below_refl box_below is_lubI is_ub_def longchain2chain_ub lub_below stream_lc_below)
 
-lemma assumes "longChain S" and "infinite S"
-  obtains Y where "chain Y" and "lub S = (\<Squnion>i. Y i)"
-  using chain_const by fastforce
+lemma lc2c: assumes "longChain S" and "infinite S"
+  shows "lub S = (\<Squnion>i. (getNthElement S) i)"
+  using StreamDemo.longchain2chain assms(1) assms(2) lub_eqI by blast
+
+lemma lc_lub_inf: assumes "longChain S" and "infinite S"
+  shows "# (lub S) = \<infinity>"
+  by (simp add: StreamDemo.lc2c StreamDemo.stream_lc_inf assms(1) assms(2))
 
 instance
   apply(intro_classes)
@@ -133,9 +180,24 @@ lemma prod_stream_bot[simp]: "(div_bot UNIV) = (\<epsilon>, \<epsilon>)"
   apply(simp add: div_bot_def)
   by (smt below_bottom_iff inst_prod_pcpo minimal the_equality)
 
-lemma fixes C::"'a::div_cpo set"
-  shows "C\<in>DIV \<Longrightarrow> monofun h \<Longrightarrow> K\<in>C \<Longrightarrow> longAdm C (\<lambda>a. h a \<sqsubseteq> K)"
+lemma longAdmI: assumes "\<And>Y. longChain Y \<Longrightarrow> infinite Y \<Longrightarrow> Y \<subseteq> C \<Longrightarrow> (\<And>y. y\<in>Y \<Longrightarrow> P y) \<Longrightarrow> P (lub Y)"
+  shows "longAdm C P"
   apply(auto simp add: longAdm_def)
+  using assms lc_finite_lub by blast
+
+lemma longAdmI_stream: fixes P::"'a::countable stream \<Rightarrow> bool"
+  assumes "adm P"
+    shows "longAdm UNIV P"
+  apply(rule longAdmI)
+  apply auto
+  apply(subst lc2c, auto)
+  oops
+
+lemma fixes h::"'a::countable stream \<Rightarrow> 'b::countable stream"
+  shows " cont h  \<Longrightarrow> longAdm UNIV (\<lambda>a. h a \<sqsubseteq> K)"
+  apply(rule longAdmI)
+  apply(subst lc2c)
+  apply auto
   oops
 
 lemma "sdom\<cdot>(snd (lfp UNIV example)) \<subseteq> {0}"
