@@ -67,6 +67,7 @@ qed
 definition getNthElement:: "'a::countable stream set \<Rightarrow> nat \<Rightarrow> 'a stream" where
 "getNthElement S n = stake n\<cdot>(SOME x. x\<in>S \<and> Fin n \<le> #x)"
 
+
 lemma stake_below_2: assumes "n\<le>m" and "s\<sqsubseteq>xs \<or> xs\<sqsubseteq>s" and "Fin n \<le> #s" and "Fin m \<le> #xs"
   shows "stake n\<cdot>s \<sqsubseteq> stake m\<cdot>xs"
   by (smt assms(1) assms(2) assms(3) assms(4) below_trans less2nat slen_stake snth_less snths_eq stream.take_below)
@@ -154,6 +155,119 @@ lemma lc_lub_inf: assumes "longChain S" and "infinite S"
   shows "# (lub S) = \<infinity>"
   by (simp add: StreamDemo.lc2c StreamDemo.stream_lc_inf assms(1) assms(2))
 
+
+
+
+
+
+definition getNthelement_in:: "'a::countable stream set \<Rightarrow> nat \<Rightarrow> 'a stream" where
+"getNthelement_in S n = getNthElement S (LEAST m. \<exists>s\<in>S. #s = Fin m \<and> n\<le>m)"
+
+lemma lc_filter_finite: assumes "longChain S" and "infinite S" 
+  shows "infinite (Set.filter (\<lambda>s. #s < \<infinity>) S)"
+  by (smt assms(1) assms(2) ex_new_if_finitel1 finite_one inf_ub less_le member_filter set_infinite_split stream_lc_one)
+
+lemma lc_ex_in: assumes "longChain S" and "infinite S" 
+  shows "\<exists>m. (\<exists>s\<in>S. #s = Fin m \<and> n\<le>m)"
+proof(rule ccontr)
+  assume "\<nexists>m. \<exists>s\<in>S. #s = Fin m \<and> n \<le> m"
+  hence "\<And>s m. s\<in>S \<Longrightarrow> #s = Fin m \<Longrightarrow> m < n" by auto
+  hence "\<And>s m. s\<in>S \<Longrightarrow> #s < \<infinity> \<Longrightarrow> #s < Fin n"
+    by (metis inf_ub less2nat ninf2Fin not_le)
+  hence "(Set.filter (\<lambda>s. #s < \<infinity>) S) = Set.filter (\<lambda>s. #s < Fin n) S"
+    by (smt antisym_conv inf_ub member_filter not_le subsetI)
+  hence "finite (Set.filter (\<lambda>s. #s < \<infinity>) S)"
+    by (metis (no_types, lifting) \<open>\<And>s. \<lbrakk>s \<in> S; #s < \<infinity>\<rbrakk> \<Longrightarrow> #s < Fin n\<close> assms(1) ex_new_if_finitel1 less_le mem_Collect_eq member_filter stream_lc_finite)
+  thus False
+    using assms(1) assms(2) lc_filter_finite by blast
+qed
+
+lemma lc_nt_in: assumes "longChain S" and "infinite S" 
+  shows "getNthelement_in S n \<in> S"
+  unfolding getNthelement_in_def
+  apply(rule LeastI2_ex)
+  using assms(1) assms(2) lc_ex_in apply blast
+  using StreamDemo.stream_getnth_eq assms(1) assms(2) by blast
+
+lemma lc_nt_length: assumes "longChain S" and "infinite S" 
+  shows "Fin n \<le> #(getNthelement_in S n)"
+  unfolding getNthelement_in_def
+  apply(rule LeastI2_ex)
+  using assms(1) assms(2) lc_ex_in apply blast
+  by (simp add: assms(1) assms(2) stream_lc_n_length)
+
+lemma lc_nt_in_below: assumes "longChain S" and "infinite S" 
+  and "s\<in>S" and "#s = Fin m" and "n\<le>m"
+shows "#(getNthelement_in S n) \<le> #s"
+  unfolding getNthelement_in_def
+  apply(rule LeastI2_wellorder [of _ m])
+  using assms(3) assms(4) assms(5) less_imp_le_nat apply blast
+  using assms  using stream_getnth_eq by auto 
+
+lemma lc_nt_in_chain: assumes "longChain S" and "infinite S" 
+  shows "chain (getNthelement_in S)"
+  apply(rule chainI)
+  by (smt Fin_leq_Suc_leq StreamDemo.getNthelement_in_def StreamDemo.lc_nt_in StreamDemo.lc_nt_in_below StreamDemo.lc_nt_length approxl2 assms(1) assms(2) chain_tord less2eq less2nat_lemma mono_slen stream_lc2c stream_lc_one)
+
+lemma lc_nt_in_chain_inf: assumes "longChain S" and "infinite S" 
+  shows "#(\<Squnion>i. (getNthelement_in S) i) = \<infinity>"
+proof -
+  have f1: "chain (local.getNthelement_in S)"
+    using assms(1) assms(2) lc_nt_in_chain by blast
+  then have f2: "chain (\<lambda>n. #(local.getNthelement_in S n))"
+    using ch2ch_Rep_cfunR by blast
+  have f3: "\<forall>f c. \<not> chain f \<or> (c\<cdot>(Lub f::'a stream)::lnat) = (\<Squnion>n. c\<cdot>(f n))"
+    using contlub_cfun_arg by blast
+  have f4: "\<forall>S n. \<not> longChain S \<or> finite S \<or> #(local.getNthElement S n) = Fin n"
+using StreamDemo.stream_lc_n_length by blast
+then have f5: "#(local.getNthElement S (LEAST n. \<exists>s. s \<in> S \<and> #s = Fin n \<and> (LEAST n. max_in_chain n (local.getNthelement_in S)) \<le> n)) = Fin (LEAST n. \<exists>s. s \<in> S \<and> #s = Fin n \<and> (LEAST n. max_in_chain n (local.getNthelement_in S)) \<le> n)"
+  using assms(1) assms(2) by blast
+  obtain nn :: "(nat \<Rightarrow> 'a stream) \<Rightarrow> nat" where
+f6: "\<forall>f. (\<not> chain f \<or> \<not> finite_chain f) \<or> Lub f = f (nn f)"
+    using l42 by moura
+  have f7: "#(local.getNthElement S (LEAST n. \<exists>s. s \<in> S \<and> #s = Fin n \<and> nn (local.getNthelement_in S) \<le> n)) = Fin (LEAST n. \<exists>s. s \<in> S \<and> #s = Fin n \<and> nn (local.getNthelement_in S) \<le> n)"
+    using f4 assms(1) assms(2) by blast
+  have f8: "#(local.getNthElement S (LEAST n. \<exists>s. s \<in> S \<and> #s = Fin n \<and> (LEAST n. max_in_chain n (local.getNthelement_in S)) \<le> n)) = Fin (LEAST n. \<exists>s. s \<in> S \<and> #s = Fin n \<and> (LEAST n. max_in_chain n (local.getNthelement_in S)) \<le> n)"
+using f4 assms(1) assms(2) by blast
+  { assume "Fin (Suc (LEAST n. \<exists>s. s \<in> S \<and> #s = Fin n \<and> nn (local.getNthelement_in S) \<le> n)) \<notsqsubseteq> #(local.getNthelement_in S (Suc (LEAST n. \<exists>s. s \<in> S \<and> #s = Fin n \<and> (LEAST n. max_in_chain n (local.getNthelement_in S)) \<le> n)))"
+    then have "\<not> Fin (Suc (LEAST n. \<exists>s. s \<in> S \<and> #s = Fin n \<and> nn (local.getNthelement_in S) \<le> n)) \<le> #(local.getNthelement_in S (Suc (LEAST n. \<exists>s. s \<in> S \<and> #s = Fin n \<and> (LEAST n. max_in_chain n (local.getNthelement_in S)) \<le> n)))"
+using lnle_def by blast
+  then have "Fin (Suc (LEAST n. \<exists>s. s \<in> S \<and> #s = Fin n \<and> nn (local.getNthelement_in S) \<le> n)) \<noteq> Fin (Suc (LEAST n. \<exists>s. s \<in> S \<and> #s = Fin n \<and> (LEAST n. max_in_chain n (local.getNthelement_in S)) \<le> n))"
+    using StreamDemo.lc_nt_length assms(1) assms(2) by fastforce }
+  moreover
+{ assume "Fin (Suc (LEAST n. \<exists>s. s \<in> S \<and> #s = Fin n \<and> nn (local.getNthelement_in S) \<le> n)) \<sqsubseteq> (\<Squnion>n. #(local.getNthelement_in S n))"
+  then have "Fin (Suc (LEAST n. \<exists>s. s \<in> S \<and> #s = Fin n \<and> nn (local.getNthelement_in S) \<le> n)) \<le> (\<Squnion>n. #(local.getNthelement_in S n))"
+    using lnle_def by blast
+  then have "Fin (Suc (LEAST n. \<exists>s. s \<in> S \<and> #s = Fin n \<and> nn (local.getNthelement_in S) \<le> n)) \<noteq> Fin (Suc (LEAST n. \<exists>s. s \<in> S \<and> #s = Fin n \<and> (LEAST n. max_in_chain n (local.getNthelement_in S)) \<le> n)) \<or> local.getNthElement S (LEAST n. \<exists>s. s \<in> S \<and> #s = Fin n \<and> (LEAST n. max_in_chain n (local.getNthelement_in S)) \<le> n) \<noteq> Lub (local.getNthelement_in S)"
+using f8 f3 f1 by auto }
+  moreover
+  { assume "Fin (Suc (LEAST n. \<exists>s. s \<in> S \<and> #s = Fin n \<and> nn (local.getNthelement_in S) \<le> n)) \<noteq> Fin (Suc (LEAST n. \<exists>s. s \<in> S \<and> #s = Fin n \<and> (LEAST n. max_in_chain n (local.getNthelement_in S)) \<le> n))"
+    then have "local.getNthElement S (LEAST n. \<exists>s. s \<in> S \<and> #s = Fin n \<and> nn (local.getNthelement_in S) \<le> n) \<noteq> Lub (local.getNthelement_in S) \<or> Fin (LEAST n. \<exists>s. s \<in> S \<and> #s = Fin n \<and> (LEAST n. max_in_chain n (local.getNthelement_in S)) \<le> n) \<noteq> #(Lub (local.getNthelement_in S))"
+      using f7 by fastforce
+moreover
+  { assume "Fin (LEAST n. \<exists>s. s \<in> S \<and> #s = Fin n \<and> (LEAST n. max_in_chain n (local.getNthelement_in S)) \<le> n) \<noteq> #(Lub (local.getNthelement_in S))"
+    then have "local.getNthElement S (LEAST n. \<exists>s. s \<in> S \<and> #s = Fin n \<and> (LEAST n. max_in_chain n (local.getNthelement_in S)) \<le> n) \<noteq> Lub (local.getNthelement_in S)"
+      using f5 by metis }
+  moreover
+  { assume "local.getNthElement S (LEAST n. \<exists>s. s \<in> S \<and> #s = Fin n \<and> nn (local.getNthelement_in S) \<le> n) \<noteq> Lub (local.getNthelement_in S)"
+    then have "\<not> finite_chain (local.getNthelement_in S)"
+      using f6 f1 by (metis (no_types) StreamDemo.getNthelement_in_def) }
+ultimately have "local.getNthElement S (LEAST n. \<exists>s. s \<in> S \<and> #s = Fin n \<and> (LEAST n. max_in_chain n (local.getNthelement_in S)) \<le> n) \<noteq> Lub (local.getNthelement_in S) \<or> \<not> finite_chain (local.getNthelement_in S)"
+  by fastforce }
+  ultimately have "finite_chain (local.getNthelement_in S) \<and> local.getNthElement S (LEAST n. \<exists>s. s \<in> S \<and> #s = Fin n \<and> (LEAST n. max_in_chain n (local.getNthelement_in S)) \<le> n) = Lub (local.getNthelement_in S) \<longrightarrow> #(\<Squnion>n. local.getNthelement_in S n) = \<infinity>"
+    using f2 box_below is_ub_thelub by blast
+  then show ?thesis
+    using f1 by (metis (no_types) StreamDemo.getNthelement_in_def inf_chainl4 lub_eqI lub_finch2)
+qed
+
+lemma lc_nt_in_chain2chain: assumes "longChain S" and "infinite S" 
+  shows "(\<Squnion>i. (getNthElement S) i) = (\<Squnion>i. (getNthelement_in S) i)"
+  by (metis (no_types, lifting) StreamDemo.lc_nt_in_chain StreamDemo.longchain2chain_ub assms(1) assms(2) is_ub_def lc_nt_in lc_nt_in_chain_inf lub_below snth_less snths_eq stream_lc_inf)
+
+lemma lc_nt_in_lc2c: assumes "longChain S" and "infinite S" 
+  shows "lub S = (\<Squnion>i. (getNthelement_in S) i)"
+  using assms(1) assms(2) lc2c lc_nt_in_chain2chain by auto
+
 instance
   apply(intro_classes)
   apply(auto simp add: DIV_stream_def)
@@ -190,27 +304,34 @@ lemma longAdmI_stream: fixes P::"'a::countable stream \<Rightarrow> bool"
     shows "longAdm UNIV P"
   apply(rule longAdmI)
   apply auto
-  apply(subst lc2c, auto)
-  oops
+  apply(subst lc_nt_in_lc2c, auto)
+  by (simp add: admD assms lc_nt_in lc_nt_in_chain)
 
-lemma fixes h::"'a::countable stream \<Rightarrow> 'b::countable stream"
-  shows " cont h  \<Longrightarrow> longAdm UNIV (\<lambda>a. h a \<sqsubseteq> K)"
-  apply(rule longAdmI)
-  apply(subst lc2c)
+lemma snd_cont: assumes "longChain S" and "C\<in>DIV" and "S\<subseteq>C" shows "snd (lub S) = lub (snd ` S)"
+proof - 
+  have "longChain (snd ` S)"
+    by (simp add: assms(1) prod_snd_chain)
+  hence "(snd ` S) <| snd (lub S)" sorry
+  thus ?thesis sorry
+qed
+
+lemma snd_longAdm: "C\<in>DIV \<Longrightarrow> longAdm (snd ` C) (\<lambda>s. P s) \<Longrightarrow> longAdm C (\<lambda>s. P (snd s))"
+  unfolding longAdm_def
   apply auto
-  oops
+  by (simp add: image_mono prod_snd_chain snd_cont)
 
 lemma "sdom\<cdot>(snd (lfp UNIV example)) \<subseteq> {0}"
   apply(rule lfp_induction)
        apply auto
-     apply(auto simp add: DIV_prod_def DIV_stream_def)
+    apply(auto simp add: DIV_prod_def DIV_stream_def)
    defer
    apply(auto simp add: example_def)
-  apply (smt Fin_02bot Fin_Suc bot_is_0 insert_not_empty leI mk_disjoint_insert notinfI3 only_empty_has_length_0 sconc_snd_empty singleton_insert_inj_eq slen_scons snd_conv srcdups_anotb_h srcdups_dom srcdups_dom_h srcdups_eq srcdups_sconc_duplicates strict_srcdups subset_singletonD)
-  apply(auto simp add: longAdm_def)
-  using prod_lub
-  oops
-  
+   apply (smt Fin_02bot Fin_Suc bot_is_0 insert_not_empty leI mk_disjoint_insert notinfI3 only_empty_has_length_0 sconc_snd_empty singleton_insert_inj_eq slen_scons snd_conv srcdups_anotb_h srcdups_dom srcdups_dom_h srcdups_eq srcdups_sconc_duplicates strict_srcdups subset_singletonD)
+  apply(rule snd_longAdm)
+   apply (auto simp add: DIV_stream_def DIV_prod_def)
+  apply(rule longAdmI_stream)
+  by simp
+
 
 
 lemma "(lfp UNIV example) \<in> {(s1, s2) | s1 s2. sdom\<cdot>s1 \<subseteq> {0} \<and> sdom\<cdot>s2 \<subseteq>{0}}"
