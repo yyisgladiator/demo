@@ -39,6 +39,8 @@ lemma uspecconstout_ran[simp]: "uspecRan\<cdot>(uspecConstOut In sb) = ubclDom\<
   apply (simp add: uspecconstout_insert)
   by (simp add: ufclRan_ufun_def uspecconst_ran)
 
+lemma uspecconstout_set[simp]: "uspecSet\<cdot>(uspecConstOut In sb) = {ufConst In\<cdot>sb}"
+  by (simp add: uspecconstout_insert)
 
 (* ----------------------------------------------------------------------- *)
 subsection \<open>spsConcOut\<close>
