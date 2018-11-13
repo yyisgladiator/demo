@@ -22,6 +22,14 @@ definition spsConcIn:: "'m SB \<Rightarrow> ('m,'n) SPS \<rightarrow> ('m,'n) SP
 definition spsRtIn:: "('m,'n) SPS \<rightarrow> ('m,'n) SPS" where
 "spsRtIn = uspecImageC spfRtIn"
 
+lift_definition uspecLeast :: "channel set \<Rightarrow> channel set \<Rightarrow> 'm::ufuncl uspec" is
+"\<lambda>In Out. ({}, Discr In, Discr Out)"
+  by simp
+
+definition spsComplete :: "('m::ubcl \<Rrightarrow> 'n::ubcl) uspec \<Rightarrow> ('m::ubcl \<Rrightarrow> 'n::ubcl) uspec" where
+"spsComplete sps = Abs_uspec ({spf | spf . ufDom\<cdot>spf = uspecDom\<cdot>sps \<and> ufRan\<cdot>spf = uspecRan\<cdot>sps
+                                            \<and> (\<forall>sb. ubclDom\<cdot>sb = uspecDom\<cdot>sps \<longrightarrow> (\<exists>spf2\<in>(uspecSet\<cdot>sps). spf\<rightleftharpoons>sb = spf2\<rightleftharpoons>sb))},
+                             (Discr (uspecDom\<cdot>sps)), (Discr (uspecRan\<cdot>sps)))"
 
 section \<open>Lemma\<close>
 
@@ -102,4 +110,38 @@ lemma spsrtin_dom [simp]: "uspecDom\<cdot>(spsRtIn\<cdot>sps) = uspecDom\<cdot>s
 lemma spsrtin_ran [simp]: "uspecRan\<cdot>(spsRtIn\<cdot>sps) = uspecRan\<cdot>sps"
   by (simp add: spsRtIn_def ufclDom_ufun_def ufclRan_ufun_def uspecimagec_insert)
 
+
+
+subsection \<open>spsComplete\<close>
+
+lemma spscomplete_well [simp]: "uspecWell {spf | spf . ufDom\<cdot>spf = uspecDom\<cdot>sps \<and> ufRan\<cdot>spf = uspecRan\<cdot>sps
+                                            \<and> (\<forall>sb. ubclDom\<cdot>sb = uspecDom\<cdot>sps \<longrightarrow> (\<exists>spf2\<in>(uspecSet\<cdot>sps). spf\<rightleftharpoons>sb = spf2\<rightleftharpoons>sb))}
+                      (Discr (uspecDom\<cdot>sps))  (Discr (uspecRan\<cdot>sps))"
+  apply(simp)
+  by (simp add: ufclDom_ufun_def ufclRan_ufun_def)
+
+lemma spscomplete_set: "uspecSet\<cdot>(spsComplete sps) = {spf | spf . ufDom\<cdot>spf = uspecDom\<cdot>sps \<and> ufRan\<cdot>spf = uspecRan\<cdot>sps
+                                            \<and> (\<forall>sb. ubclDom\<cdot>sb = uspecDom\<cdot>sps \<longrightarrow> (\<exists>spf2\<in>(uspecSet\<cdot>sps). spf\<rightleftharpoons>sb = spf2\<rightleftharpoons>sb))}"
+  unfolding uspecSet_def spsComplete_def
+  by (simp add: ufclDom_ufun_def ufclRan_ufun_def)
+
+lemma spscomplete_dom [simp]: "uspecDom\<cdot>(spsComplete sps) = uspecDom\<cdot>sps"
+  by (smt prod.sel(1) prod.sel(2) rep_abs_uspec spsComplete_def spscomplete_well undiscr_Discr uspecdom_insert)
+
+lemma spscomplete_ran [simp]: "uspecRan\<cdot>(spsComplete sps) = uspecRan\<cdot>sps"
+  by (metis (mono_tags, lifting) Discr_undiscr prod.sel(2) rep_abs_uspec spsComplete_def spscomplete_well uspecran_insert)
+
+lemma spscomplete_below: "sps \<sqsubseteq> (spsComplete sps)"
+  apply(rule uspec_belowI)
+    apply auto
+  apply(simp add: spscomplete_set less_set_def)
+  apply auto
+  by (metis ufclDom_ufun_def uspec_allDom ufclRan_ufun_def uspec_allRan)+
+
+lemma spscomplete_complete: assumes "spf\<in>(uspecSet\<cdot>(spsComplete sps))" and "ubclDom\<cdot>sb = uspecDom\<cdot>sps"
+  shows "\<exists>spf2. spf2\<in>uspecSet\<cdot>sps \<and> spf\<rightleftharpoons>sb = spf2\<rightleftharpoons>sb"
+  using assms by(auto simp add: spscomplete_set)
+
+  
+  
 end
