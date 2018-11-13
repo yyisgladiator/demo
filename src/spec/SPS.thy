@@ -138,9 +138,16 @@ lemma spscomplete_below: "sps \<sqsubseteq> (spsComplete sps)"
   apply auto
   by (metis ufclDom_ufun_def uspec_allDom ufclRan_ufun_def uspec_allRan)+
 
-lemma spscomplete_complete: assumes "spf\<in>(uspecSet\<cdot>(spsComplete sps))" and "ubclDom\<cdot>sb = uspecDom\<cdot>sps"
+lemma spscomplete_exists: assumes "spf\<in>(uspecSet\<cdot>(spsComplete sps))" and "ubclDom\<cdot>sb = uspecDom\<cdot>sps"
   shows "\<exists>spf2. spf2\<in>uspecSet\<cdot>sps \<and> spf\<rightleftharpoons>sb = spf2\<rightleftharpoons>sb"
   using assms by(auto simp add: spscomplete_set)
+
+lemma spscomplete_complete_h: "uspecSet\<cdot>(spsComplete (spsComplete sps)) \<subseteq> uspecSet\<cdot>(spsComplete sps)"
+  unfolding spscomplete_set
+  by auto
+
+lemma spscomplete_complete [simp]: "spsComplete (spsComplete sps) = spsComplete sps"
+  by (simp add: SetPcpo.less_set_def below_antisym spscomplete_below spscomplete_complete_h uspec_belowI)
 
   
   
