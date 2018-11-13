@@ -1,5 +1,5 @@
 theory SPF
-  imports bundle.SB UFun_Comp UFun_applyIn inc.CPOFix
+  imports bundle.SBElem UFun_Comp UFun_applyIn inc.CPOFix
 begin
 default_sort message
 
@@ -637,6 +637,14 @@ lemma spfconcout_least [simp]: "spfConcOut (ubLeast cs)\<cdot>spf = spf"
   apply simp+
    apply (simp add: ubclDom_ubundle_def)
   by (simp only:ubConcEq_ubLeast)
+
+lemma spfrt_conc_out_id[simp]: assumes "sbeDom sbe = ufRan\<cdot>spf"
+  shows "spfRtOut\<cdot>(spfConcOut (sbe2SB sbe)\<cdot>spf) = spf"
+  apply(rule ufun_eqI)
+   apply simp
+  apply (simp add: ufclDom_ufun_def)
+  by (metis assms sbe2sb_rt spfConcOut_dom spfConcOut_step spfRtOut_step ubclDom_ubundle_def ufran_2_ubcldom2)
+
 
 
 
