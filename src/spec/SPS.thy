@@ -22,10 +22,6 @@ definition spsConcIn:: "'m SB \<Rightarrow> ('m,'n) SPS \<rightarrow> ('m,'n) SP
 definition spsRtIn:: "('m,'n) SPS \<rightarrow> ('m,'n) SPS" where
 "spsRtIn = uspecImageC spfRtIn"
 
-lift_definition uspecLeast :: "channel set \<Rightarrow> channel set \<Rightarrow> 'm::ufuncl uspec" is
-"\<lambda>In Out. ({}, Discr In, Discr Out)"
-  by simp
-
 definition spsComplete :: "('m::ubcl \<Rrightarrow> 'n::ubcl) uspec \<Rightarrow> ('m::ubcl \<Rrightarrow> 'n::ubcl) uspec" where
 "spsComplete sps = Abs_uspec ({spf | spf . ufDom\<cdot>spf = uspecDom\<cdot>sps \<and> ufRan\<cdot>spf = uspecRan\<cdot>sps
                                             \<and> (\<forall>sb. ubclDom\<cdot>sb = uspecDom\<cdot>sps \<longrightarrow> (\<exists>spf2\<in>(uspecSet\<cdot>sps). spf\<rightleftharpoons>sb = spf2\<rightleftharpoons>sb))},
