@@ -179,6 +179,11 @@ proof -
     by (metis (no_types, lifting) sbe2sb_dom that) 
 qed
 
+lemma sbe_eq_bundle: assumes "sbe2SB sbe1 = sbe2SB sbe2"
+  shows "sbe1 = sbe2"
+  apply(rule sbe_eq)
+  apply (metis assms sbe2sb_dom)
+  by (metis assms sbe2sb_hdelem2)
 
 subsection \<open>sbeUnion\<close>
 
@@ -203,5 +208,6 @@ lemma sbeunion_second[simp]: "c\<in>sbeDom sbe2 \<Longrightarrow> (Rep_sbElem (s
 
 lemma sbeunion_first[simp]: "c\<notin>sbeDom sbe2 \<Longrightarrow> (Rep_sbElem (sbe1 \<plusminus> sbe2) ) \<rightharpoonup> c = Rep_sbElem sbe1 \<rightharpoonup> c"  
   by(simp add: sbeUnion.rep_eq sbeDom_def map_add_dom_app_simps)
+
 
 end
