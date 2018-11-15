@@ -1,7 +1,6 @@
 variables:
   ISABELLE_HOME_USER_DIR: "/home/isabelle/.isabelle"
   TIMEOUT_SCALE: "1.8"
-  NUMBER_SIMULT_SESSIONS: "2"
 
 image: jecb96/isabelle:2018
 
