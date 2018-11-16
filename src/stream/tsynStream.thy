@@ -463,11 +463,11 @@ lemma tsynabs_strict [simp]: "tsynAbs\<cdot>\<epsilon> = \<epsilon>"
   by (simp add: tsynabs_insert)
 
 text {* @{term tsynAbs} distributes over concatenation. *}
-lemma tsynabs_sconc_msg: "tsynAbs\<cdot>(\<up>(Msg a) \<bullet> as) = \<up>a \<bullet> (tsynAbs\<cdot>as)"
+lemma tsynabs_sconc_msg[simp]: "tsynAbs\<cdot>(\<up>(Msg a) \<bullet> as) = \<up>a \<bullet> (tsynAbs\<cdot>as)"
   by (simp add: tsynabs_insert)
 
 text {* @{term tsynAbs} ignores empty time-slots. *}
-lemma tsynabs_sconc_null: "tsynAbs\<cdot>(\<up>null \<bullet> s) = tsynAbs\<cdot>s"
+lemma tsynabs_sconc_null[simp]: "tsynAbs\<cdot>(\<up>null \<bullet> s) = tsynAbs\<cdot>s"
   by (simp add: tsynabs_insert)
 
 text {* @{term tsynAbs} of the concatenation of two streams equals the concatenation of 
@@ -477,11 +477,11 @@ lemma tsynabs_sconc: assumes "#as < \<infinity>" shows "tsynAbs\<cdot>(as \<bull
 
 text {* @{term tsynAbs} of a singleton stream with a message is the singleton stream with the 
         message. *}
-lemma tsynabs_singleton_msg: "tsynAbs\<cdot>(\<up>(Msg a)) = \<up>a"
+lemma tsynabs_singleton_msg[simp]: "tsynAbs\<cdot>(\<up>(Msg a)) = \<up>a"
   by (simp add: tsynabs_insert)
 
 text {* @{term tsynAbs} of a singleton stream with null is the empty stream. *}
-lemma tsynabs_singleton_null: "tsynAbs\<cdot>(\<up>null) = \<epsilon>"
+lemma tsynabs_singleton_null[simp]: "tsynAbs\<cdot>(\<up>null) = \<epsilon>"
   by (simp add: tsynabs_insert)
 
 text {* Length of @{term tsynAbs} is smaller or equal to the length of the original stream. *}
@@ -702,7 +702,8 @@ lemma tsynfilter_tsynlen: "tsynLen\<cdot>(tsynFilter A\<cdot>s) \<le> tsynLen\<c
   next
     case (msg m s)
     then show ?case 
-      by (simp add: slen_sfilterl1 tsynfilter_tsynabs tsynlen_insert)
+      apply (simp add: slen_sfilterl1 tsynfilter_tsynabs tsynlen_insert)
+      by (metis slen_scons slen_sfilterl1)
   next
     case (null s)
     then show ?case 

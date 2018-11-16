@@ -94,7 +94,6 @@ lemma tsynabs_sdom_sub_ctype: assumes "sdom\<cdot>s \<subseteq> ctype c" shows "
   apply (induction s rule: tsyn_ind, simp_all)
   apply (rule admI)
   apply (metis (no_types, lifting) ch2ch_Rep_cfunR contlub_cfun_arg l44 sdom_chain2lub subset_trans)
-  apply (simp_all add: tsynabs_sconc_msg tsynabs_sconc_null)
   using ctype_tsyn_iff by auto
 
 text {* @{term tsynbAbs} ubundle is ubwell. *}   
