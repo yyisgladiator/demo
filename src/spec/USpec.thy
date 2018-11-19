@@ -1487,6 +1487,35 @@ instance uspec:: (ufuncl) rev_div_upcpo
   by (smt DIV_uspec_def finite.emptyI mem_Collect_eq uspec_rev_cpo)
 
 
+lemma uspec_top_max[simp]: "div_top (USPEC Dom Ran) = uspecMax Dom Ran"
+  by (metis (mono_tags, lifting) DIV_uspec_def USPEC_def div_topI mem_Collect_eq uspecmax_dom uspecmax_max uspecmax_ran)
+
+lemma uspec_bot_least[simp]: "div_bot (USPEC Dom Ran) = uspecLeast Dom Ran"
+  by (metis (mono_tags, lifting) CollectI DIV_uspec_def USPEC_def div_bot po_eq_conv uspecleast_dom uspecleast_least uspecleast_ran)
+
+
+lemma uspec_div_const: "(setify (\<lambda>a. USPEC Dom Ran))\<in>DIV"
+  apply(rule fun_div_const)
+  by(auto simp add: DIV_uspec_def)
+
+
+lemma uspec_fun_div_top: "div_top (setify (\<lambda>a. USPEC Dom Ran)) a  \<in> USPEC Dom Ran" (is "?top a \<in> ?USPEC")
+proof - 
+  have "?top \<in> (setify (\<lambda>a. USPEC Dom Ran))"
+    using div_top_in uspec_div_const by blast
+  thus ?thesis
+    by (simp add: SetPcpo.setify_def) 
+qed
+
+lemma uspec_fun_div_top2: "div_top (setify (\<lambda>a. USPEC Dom Ran)) (f m) \<in> USPEC Dom Ran"
+  by (simp add: uspec_fun_div_top)
+
+lemma uspec_fun_top[simp]: "div_top (setify (\<lambda>a. USPEC Dom Ran)) = (\<lambda>a. uspecMax Dom Ran)"
+  apply(subst fun_top)
+  using DIV_uspec_def apply blast
+  by simp
+
+
 subsection \<open>Size\<close>
 
 lemma uspec_size_empty: 

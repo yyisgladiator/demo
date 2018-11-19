@@ -79,4 +79,17 @@ lemma lfp_monofun: assumes "f\<sqsubseteq>g"
   by (metis assms(1) assms(2) assms(3) assms(4) assms(5) assms(6) below_fun_def lfp_div lfp_fix lfp_least)
 
 
+lemma lfp_lfp_below:
+    assumes "monofun g1" 
+    and "monofun g2"
+    and "goodFormed C1 g1" 
+    and "goodFormed C2 g2"
+    and "C1 \<in> DIV" 
+    and "C2 \<in> DIV"
+    and "\<And>x. g2 (f x) \<sqsubseteq> f (g1 x)"
+    and "\<And>x. x\<in>C1 \<Longrightarrow> f x \<in>C2"
+  shows "(lfp C2 g2) \<sqsubseteq> f (lfp C1 g1)"
+  by (metis assms(1) assms(2) assms(3) assms(4) assms(5) assms(6) assms(7) assms(8) below_refl lfp_all)
+
+
 end

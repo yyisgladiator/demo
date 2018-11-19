@@ -87,4 +87,13 @@ lemma assumes "S\<noteq>{}" and "S \<subseteq> C" and "\<exists>x. S <<| x"
   shows "lub S \<in> C"
   oops
 
+
+lemma lc_const_fun: "longChain Y \<Longrightarrow> longChain ((\<lambda>y. y c ) `Y)"
+  by (simp add: fun_belowD longchain_mono monofun_def)
+
+
+lemma longadm_all: "(\<And>y. longAdm C (\<lambda>x. P x y)) \<Longrightarrow> longAdm C (\<lambda>x. \<forall>y. P x y)"
+  by(auto simp add: longAdm_def)
+
+
 end

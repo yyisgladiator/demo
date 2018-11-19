@@ -61,6 +61,11 @@ lemma div_bot:
   apply(rule theI' [of _ ])
   by (simp add: assms div_pcpo_class.div_pcpo_bott)
 
+
+lemma div_botI: assumes "\<And>x. x\<in>C \<Longrightarrow> y\<sqsubseteq>x" and "y\<in>C" and "C\<in>DIV"
+  shows "y=div_bot C"
+  by (simp add: assms(1) assms(2) assms(3) below_antisym div_bot)
+
 end
 
 

@@ -148,6 +148,17 @@ lemma div_top:
   apply(rule theI' [of _ ])
   by (simp add: assms div_upcpo_class.div_upcpo_top)
 
+lemma div_topI: assumes "\<And>x. x\<in>C \<Longrightarrow> x\<sqsubseteq>y" and "y\<in>C" and "C\<in>DIV"
+  shows "y=div_top C"
+  by (simp add: assms below_antisym div_top)
+
+lemma div_top_below: "x\<in>C \<Longrightarrow> C\<in>DIV \<Longrightarrow> x\<sqsubseteq>div_top C"
+  using div_top by blast
+
+lemma div_top_in: "C\<in>DIV \<Longrightarrow> div_top C \<in>C"
+  using div_top by blast
+
+
 end
 
 class rev_div_upcpo = div_upcpo + rev_div_cpo
@@ -196,6 +207,14 @@ definition gfp:: "'a::rev_div_upcpo set \<Rightarrow> ('a \<Rightarrow> 'a) \<Ri
 
 lemma rev_division: "C\<in>DIV \<Longrightarrow> (Rev ` C)\<in>DIV"
   by (simp add: DIV_rev_def)
+
+
+lemma rev_bot2top[simp]:"C\<in>DIV \<Longrightarrow> (inv Rev (div_bot (Rev ` C))) = div_top C"
+  apply(rule div_topI)
+  using div_bot rev_division apply fastforce
+  using div_bot rev_division apply force
+  by simp
+
 
 lemma rev_goodformed: "goodFormed C f \<longleftrightarrow> goodFormed (Rev`C) (reverseFun f)"
   apply(auto simp add: goodFormed_def)
@@ -285,5 +304,17 @@ lemma gfp_lfp:
     and "C \<in> DIV"
   shows "(lfp C f) \<sqsubseteq> (gfp C f)"
   using assms(1) assms(2) assms(3) gfp_greatest lfp_div lfp_fix by fastforce
+
+lemma gfp_gfp_below:
+    assumes "monofun g1" 
+    and "monofun g2"
+    and "goodFormed C1 g1" 
+    and "goodFormed C2 g2"
+    and "C1 \<in> DIV" 
+    and "C2 \<in> DIV"
+    and "\<And>x. x\<in>C1 \<Longrightarrow>  f (g1 x)\<sqsubseteq>g2 (f x)"
+    and "\<And>x. x\<in>C1 \<Longrightarrow> f x \<in>C2"
+  shows "f (gfp C1 g1) \<sqsubseteq> (gfp C2 g2)"
+  by (metis assms(1) assms(2) assms(3) assms(4) assms(5) assms(6) assms(7) assms(8) gfp_div gfp_fix gfp_greatest)
 
 end

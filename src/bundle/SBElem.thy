@@ -43,7 +43,14 @@ lift_definition sbeUnion ::"'a sbElem \<Rightarrow> 'a sbElem \<Rightarrow> 'a s
 "\<lambda> l r. ((Rep_sbElem l) ++ (Rep_sbElem r))"
  unfolding sbElemWell_def usclOkay_stream_def ctype_tsyn_def
   by (metis Rep_sbElem domIff map_add_dom_app_simps(1) map_add_dom_app_simps(3) mem_Collect_eq sbElemWellI)
- 
+
+
+definition SBELEM :: "channel set \<Rightarrow> 'a::message sbElem set" where 
+"SBELEM \<equiv> \<lambda> In. {sbe::'a sbElem. sbeDom sbe = In}"
+
+lemma sbeunivI: "\<And> sbe. sbeDom sbe = In \<Longrightarrow> sbe \<in> SBELEM In"
+  by (simp add: SBELEM_def)
+
 
 section \<open>Lemma\<close>
 
