@@ -145,6 +145,12 @@ lemma spscomplete_complete_h: "uspecSet\<cdot>(spsComplete (spsComplete sps)) \<
 lemma spscomplete_complete [simp]: "spsComplete (spsComplete sps) = spsComplete sps"
   by (simp add: SetPcpo.less_set_def below_antisym spscomplete_below spscomplete_complete_h uspec_belowI)
 
+lemma spscomplete_mono: assumes "uspec1 \<sqsubseteq> uspec2"
+  shows "spsComplete uspec1 \<sqsubseteq> spsComplete uspec2"
+  apply(rule uspec_belowI)
+  apply (simp add: assms uspecdom_eq)
+  apply (simp add: assms uspecran_eq)
+  by (smt Collect_mono_iff SetPcpo.less_set_def assms monofun_Rep_cfun2 monofun_def spscomplete_set subset_eq uspecdom_eq uspecran_eq)
   
   
 end
