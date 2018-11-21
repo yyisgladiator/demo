@@ -124,6 +124,15 @@ shows "uspecDom\<cdot>(S1 \<Otimes> S2) = (uspecDom\<cdot>S1 \<union> uspecDom\<
   apply (simp only: uspec_comp_well assms rep_abs_uspec)
   by simp
 
+lemma uspec_comp_ran: assumes "uspec_compwell S1 S2"
+shows "uspecRan\<cdot>(S1 \<Otimes> S2) = (uspecRan\<cdot>S1 \<union> uspecRan\<cdot>S2)"
+  apply (simp add: uspecComp_def)
+proof -
+  have "uspecWell {u \<otimes> ua |u ua. u \<in> Rep_fst_uspec S1 \<and> ua \<in> Rep_fst_uspec S2} (Discr (uspecDomUnion S1 S2 - uspecRanUnion S1 S2)) (Discr (uspecRanUnion S1 S2))"
+    using assms uspec_comp_well by blast
+  then show "uspecRan\<cdot> (Abs_fst_uspec {u \<otimes> ua |u ua. u \<in> Rep_fst_uspec S1 \<and> ua \<in> Rep_fst_uspec S2} (uspecDomUnion S1 S2 - uspecRanUnion S1 S2) (uspecRanUnion S1 S2)) = uspecRanUnion S1 S2"
+    by (simp add: uspecran_insert)
+qed
 
 subsection \<open>UspecParComp\<close>
 

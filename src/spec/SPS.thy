@@ -1,6 +1,6 @@
 theory SPS
 
-imports fun.SPF USpec_Comp
+imports fun.SPF USpec_Comp USpec_UFunComp
 
 begin
 
@@ -127,6 +127,14 @@ lemma spscomplete_dom [simp]: "uspecDom\<cdot>(spsComplete sps) = uspecDom\<cdot
 lemma spscomplete_ran [simp]: "uspecRan\<cdot>(spsComplete sps) = uspecRan\<cdot>sps"
   by (metis (mono_tags, lifting) Discr_undiscr prod.sel(2) rep_abs_uspec spsComplete_def spscomplete_well uspecran_insert)
 
+lemma spscomplete_belowI: assumes "uspecDom\<cdot>S1 = uspecDom\<cdot>S2"
+  and "uspecRan\<cdot>S1 = uspecRan\<cdot>S2"
+  and "(\<And>spf sb. spf\<in>uspecSet\<cdot>S1 \<Longrightarrow> ubclDom\<cdot>sb = uspecDom\<cdot>S1 \<Longrightarrow> (\<exists>spf2\<in>(uspecSet\<cdot>S2). spf\<rightleftharpoons>sb = spf2\<rightleftharpoons>sb))"
+shows "S1 \<sqsubseteq> spsComplete S2"
+  apply(rule uspec_belowI)
+  apply (simp_all add: assms)
+  by (smt SetPcpo.less_set_def assms(1) assms(2) assms(3) mem_Collect_eq spscomplete_set subsetI ufclDom_ufun_def ufclRan_ufun_def uspec_allDom uspec_allRan)
+
 lemma spscomplete_below: "sps \<sqsubseteq> (spsComplete sps)"
   apply(rule uspec_belowI)
     apply auto
@@ -151,6 +159,24 @@ lemma spscomplete_mono: assumes "uspec1 \<sqsubseteq> uspec2"
   apply (simp add: assms uspecdom_eq)
   apply (simp add: assms uspecran_eq)
   by (smt Collect_mono_iff SetPcpo.less_set_def assms monofun_Rep_cfun2 monofun_def spscomplete_set subset_eq uspecdom_eq uspecran_eq)
-  
-  
+
+lemma spscomplete_same_behaviour: assumes "ubclDom\<cdot>sb = uspecDom\<cdot>sps"
+  shows "{spf \<rightleftharpoons> sb | spf. spf\<in>uspecSet\<cdot>(spsComplete sps)} = {spf \<rightleftharpoons> sb | spf. spf\<in>uspecSet\<cdot>sps}"
+  apply auto
+  using assms spscomplete_exists apply blast
+  by (metis SetPcpo.less_set_def contra_subsetD monofun_cfun_arg spscomplete_below)
+
+lemma assumes "uspec_compwell uspec1 uspec2"
+  shows "((spsComplete uspec1) \<Otimes> (spsComplete uspec2)) \<sqsubseteq> spsComplete (uspec1 \<Otimes> uspec2)"
+  apply(subgoal_tac "uspec_compwell (spsComplete uspec1) (spsComplete uspec2)")
+  apply(rule spscomplete_belowI) 
+     apply (simp add: assms uspec_comp_dom)
+    apply (simp add: assms uspec_comp_ran)
+  defer
+  oops
+
+lemma assumes "uspec_compwell uspec1 uspec2"
+  shows "spsComplete (uspec1 \<Otimes> uspec2) \<sqsubseteq> ((spsComplete uspec1) \<Otimes> (spsComplete uspec2))"
+  oops
+
 end
