@@ -79,6 +79,48 @@ lemma lc_finite_lub: "longChain S \<Longrightarrow> finite S \<Longrightarrow> l
 lemma lc_finite_lub_ex: "longChain S \<Longrightarrow> finite S \<Longrightarrow> \<exists>x \<in> S. S <<| x"
   by (metis is_lub_maximal is_ubI lc_finite longChain_def)
 
+lemma chain2longchain: "chain K \<Longrightarrow> longChain (range K)"
+  apply(auto simp add: longChain_def)
+  using nat_le_linear po_class.chain_mono by blast
+
+lemma assumes "longChain Y" and "infinite Y"
+  obtains y where "y\<in>Y" and "longChain (Set.filter (\<lambda>x. y\<sqsubseteq>x) Y)"
+  by (metis (mono_tags, hide_lams) all_not_in_conv assms(1) longChain_def member_filter)
+
+
+lemma longchain_one_less: assumes "longChain Y" and "infinite Y"
+  shows "longChain (Y - {y})"
+  by (metis Diff_subset assms(1) assms(2) infinite_imp_nonempty infinite_remove longchain_subset)
+
+lemma longchain_fin_less: assumes "longChain Y" and "infinite Y" and "finite K"
+  shows "longChain (Y - K)"
+  apply(auto simp add: longChain_def)
+  using assms(2) assms(3) infinite_super apply blast
+  using assms(1) longChain_def by blast
+
+
+lemma set_infinite_split: "infinite Y \<Longrightarrow> (infinite (Set.filter (\<lambda>a. P a) Y)) \<or> (infinite (Set.filter  (\<lambda>a. \<not> P a) Y))"
+proof(rule ccontr, auto)
+  assume "infinite Y" and "finite (Set.filter P Y)" and "finite (Set.filter (\<lambda>a. \<not> P a) Y)"
+  have "(Set.filter (\<lambda>a. P a) Y) \<union> (Set.filter (\<lambda>a. \<not> P a) Y) = Y" by auto
+  hence "finite Y"
+    by (metis \<open>finite (Set.filter (\<lambda>a. \<not> P a) Y)\<close> \<open>finite (Set.filter P Y)\<close> finite_UnI)
+  thus False
+    using \<open>infinite Y\<close> by blast 
+qed
+
+(*
+lemma assumes "longChain Y" and "infinite Y"
+  obtains y where "y\<in>Y" and "infinite (Set.filter (\<lambda>x. y\<sqsubseteq>x) Y) \<or> infinite (Set.filter (\<lambda>x. \<not>(y\<sqsubseteq>x)) Y)"
+  using assms(2) set_infinite_split by force
+
+lemma longchain2chain_fin: assumes "longChain K" and "infinite K"
+  obtains Y where "chain Y" and "range Y \<subseteq> K" and "infinite (range Y)"
+
+lemma longchain2chain_fin: assumes "longChain K" and "finite K"
+  obtains Y where "chain Y" and "range Y = K"
+*)
+
 lemma assumes  "s\<in>S" and "\<exists>x\<in>C. S <<| x"
   shows "s \<sqsubseteq> lub S"
   using assms(1) assms(2) is_ub_thelub_ex by blast
