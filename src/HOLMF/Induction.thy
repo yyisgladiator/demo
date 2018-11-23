@@ -54,7 +54,9 @@ lemma longiterate_lub_in: assumes "C\<in>DIV" and "goodFormed C f"
   shows "\<And>K. longChain K \<Longrightarrow> K\<subseteq>(longIterate C f) \<Longrightarrow> lub K\<in>(longIterate C f)"
   by (metis (mono_tags, lifting) CollectI UnCI assms(1) assms(2) longiterate_step)
 
-lemma longchain_map: assumes "longChain K" and "K \<subseteq> C" and "C\<in>DIV" and "(\<And>k. k\<in>K \<Longrightarrow> k \<sqsubseteq> f k)" and "monofun f" and "goodFormed C f"
+lemma longchain_map: 
+  fixes C ::"'a set"
+    assumes "longChain K" and "K \<subseteq> C" and "C\<in>DIV" and "(\<And>k. k\<in>K \<Longrightarrow> k \<sqsubseteq> f k)" and "monofun f" and "goodFormed C f"
   shows "(lub K \<sqsubseteq> f (lub K))"
 proof - 
   have "longChain (f`K)"

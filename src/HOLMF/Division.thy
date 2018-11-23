@@ -41,6 +41,18 @@ lemma div_cpo_lub_ub: "a\<in>DIV \<Longrightarrow> longChain S \<Longrightarrow>
 lemma div_cpo_lub_least: "C \<in> DIV \<Longrightarrow> longChain S \<Longrightarrow> S \<subseteq> C \<Longrightarrow> (\<And>y. y\<in>S \<Longrightarrow>  y \<sqsubseteq> a) \<Longrightarrow> lub S \<sqsubseteq> a"
   using div_cpo_g holmf_below_iff by blast
 
+lemma div_cpo_adm_below: "C\<in>DIV \<Longrightarrow> longAdm C (\<lambda>x. x\<sqsubseteq>K)"
+  by(auto simp add: longAdm_def div_cpo_lub_least)
+
+lemma div_cpo_adm_less: "C\<in>DIV \<Longrightarrow> longAdm C (\<lambda>x. K\<sqsubseteq>x)"
+  apply(auto simp add: longAdm_def div_cpo_lub_least)
+  using div_cpo_g holmf_below_lub longChain_def by fastforce
+
+lemma div_cpo_adm_below_mono: "C\<in>DIV \<Longrightarrow> monofun f \<Longrightarrow> longAdm C (\<lambda>x. K \<sqsubseteq> (f x))"
+  apply(auto simp add: longAdm_def)
+  by (metis bot.extremum_uniqueI div_cpo_g is_lubD1 is_ubD longChain_def lub_eqI monofun_def rev_below_trans subsetI)
+
+
 end
 
 class div_pcpo = div_cpo +  
