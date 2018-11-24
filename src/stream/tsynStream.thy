@@ -296,6 +296,14 @@ lemma sdropwhile_sdom: "sdom\<cdot>(sdropwhile f\<cdot>s) \<subseteq> sdom\<cdot
   apply (case_tac "f a")
   by (rule subset_insertI2, simp_all)
 
+text{* @{term smap} is injective if the mapped function is injective. *}
+lemma smap_inj: 
+  assumes "inj f"
+  shows "inj (Rep_cfun (smap f))"
+  apply (rule injI, rule snths_eq)
+  apply (metis slen_smap)
+  by (metis assms inj_eq slen_smap smap_snth_lemma)
+
 (* ----------------------------------------------------------------------- *)
   section {* Lemmata on Time-Synchronous Streams *}
 (* ----------------------------------------------------------------------- *)
@@ -506,7 +514,6 @@ lemma tsynabs_sdom_subset_eq: "(sdom\<cdot>s \<subseteq> insert - (Msg ` range a
     then show ?case 
       by (simp only: tsynabs_sconc_null sdom2un, auto)
   qed
-
 
 (* ToDo: rename or remove as duplicate. *)
 
@@ -854,6 +861,31 @@ lemma tsynmap_tick [simp]: "x \<in> sdom\<cdot>(tsynMap F\<cdot>stream) \<Longri
 lemma tsynmap_msg [simp]: "tsynMap f\<cdot>(\<up>tsyn) = \<up>(tsynApplyElem f tsyn)"
   apply(cases tsyn)
   by(auto simp add: tsynMap_def)
+
+text{* @{term tsynApplyElem} is injective if the applied function is injective. *}
+lemma tsynapplyelem_inj: 
+  assumes "inj f"
+  shows "inj (tsynApplyElem f)"
+  apply (rule injI)
+  apply (case_tac x)
+  apply (case_tac y)
+  apply (simp add: assms inj_eq)+
+  by (metis tsyn.distinct(1) tsynApplyElem.elims)
+
+text{* @{term tsynMap} is injective if the mapped function is injective. *}
+lemma tsynmap_inj:
+  assumes "inj f"
+  shows "inj (Rep_cfun(tsynMap f))"
+  apply (rule injI)
+  by (simp add: assms tsynMap_def inj_eq smap_inj tsynapplyelem_inj)
+
+text{* If the result of @{term tsynMap} with an injective function is equal the stream is equal. *}
+lemma tsynmap_inj_eq:
+  assumes "inj f"
+    and "tsynMap f\<cdot>s = tsynMap f\<cdot>t"
+  shows "s = t"
+  apply (rule injD)
+  using assms tsynmap_inj by blast+
 
 (* ----------------------------------------------------------------------- *)
   subsection {* tsynProjFst *}
