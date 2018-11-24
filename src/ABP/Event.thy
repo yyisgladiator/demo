@@ -1,5 +1,5 @@
 theory Event
-  imports Channel UnivClasses
+  imports inc.Channel inc.UnivClasses
 
 begin
 default_sort countable

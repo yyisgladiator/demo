@@ -9,7 +9,7 @@ chapter {* Timed Streams *}
 
 theory TStream
 
-imports "../stream/Streams" "../inc/OptionCpo" "../inc/Event"
+imports stream.Streams inc.OptionCpo Event
 
 begin
 default_sort countable
