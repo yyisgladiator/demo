@@ -443,6 +443,41 @@ lemma tsyndom_slen: assumes "#s = Fin k" shows "card (tsynDom\<cdot>s) \<le> k"
       by (simp add: tsyndom_insert)
   qed
 
+lemma tsyndom_subset: "tsynDom\<cdot>(stake n\<cdot>s) \<subseteq> tsynDom\<cdot>s"
+  apply(induction s arbitrary: n rule:ind)
+  apply auto
+  apply (smt monofun_cfun_arg set_cpo_simps(1) triv_admI ub_stake)
+  by (metis cont_pref_eq1I contra_subsetD set_cpo_simps(1) stream.take_below)
+
+lemma tsyn_ticks_only: assumes "#s = Fin n" and "tsynDom\<cdot>s = {}"
+  shows "s = sntimes n (\<up>-)"
+  using assms proof(induction s arbitrary: n rule: finind)
+  case 1
+  then show "#s = Fin n"
+    by (simp add: assms(1))
+next
+  case 2
+  then show ?case
+    by simp 
+next
+  case (3 a s)
+  hence "a = -"
+    by (metis insert_is_Un insert_not_empty tsyn.exhaust tsyndom_sconc_msg)
+  then show ?case
+    by (metis (no_types, lifting) "3.IH" "3.prems"(1) "3.prems"(2) Fin_0 bot_is_0 gr0_implies_Suc inject_lnsuc lnat.con_rews neq0_conv slen_scons sntimes.simps(2) sntimes_len tsyndom_sconc_null)
+qed
+
+lemma tsyn_ticks_only_inf: assumes "#s = \<infinity>" and "tsynDom\<cdot>s = {}"
+  shows "s = (\<up>-)\<infinity>"
+proof - 
+  have "\<And>n. tsynDom\<cdot>(stake n\<cdot>s) = {}"
+    using assms(2) tsyndom_subset by fastforce
+  hence "\<And>n. stake n\<cdot>s = stake n\<cdot>((\<up>-)\<infinity>)"
+    by (metis assms(1) slen_stake_fst_inf sntimes_stake tsyn_ticks_only)
+  thus ?thesis
+    using stream.take_lemma by blast 
+qed
+
 text {* @{term tsynDom} inverses the msg, removes null. *}
 lemma tsyndom_sdom: "tsynDom\<cdot>s = inverseMsg ` ((sdom\<cdot>s) - {null})"
   apply (simp add: tsyndom_insert image_def set_eq_iff)
@@ -457,6 +492,7 @@ text {* @{term tsynDom} test on infinite stream. *}
 lemma tsyndom_test_infstream: "tsynDom\<cdot>((<[Msg (1 :: nat), Msg 2, null, Msg 3]>)\<infinity>) = {1, 2, 3}"
   apply (simp add:  tsyndom_insert set_eq_iff)
   by blast
+
 
 (* ----------------------------------------------------------------------- *)
   subsection {* tsynAbs *}
@@ -492,6 +528,10 @@ text {* @{term tsynAbs} of a singleton stream with null is the empty stream. *}
 lemma tsynabs_singleton_null[simp]: "tsynAbs\<cdot>(\<up>null) = \<epsilon>"
   by (simp add: tsynabs_insert)
 
+lemma tsynabs_below_lub: "chain Y \<Longrightarrow> #(tsynAbs\<cdot>(Y i )) \<le> #(tsynAbs\<cdot>(\<Squnion>i. Y i))"
+  using is_ub_thelub mono_slen monofun_cfun_arg by blast
+
+
 text {* Length of @{term tsynAbs} is smaller or equal to the length of the original stream. *}
 lemma tsynabs_slen: "#(tsynAbs\<cdot>s) \<le> #s"
   by (simp add: slen_sfilterl1 tsynabs_insert)
@@ -523,6 +563,24 @@ lemma tsynabs_tsyndom: "tsynDom\<cdot>s = sdom\<cdot>(tsynAbs\<cdot>s)"
   apply (induction s rule: tsyn_ind, simp_all)
   apply (simp add: tsynabs_sconc_msg tsyndom_sconc_msg)
   by (simp add: tsyndom_sconc_null tsynabs_sconc_null)
+
+lemma tsyn_fin_msg: assumes "#(tsynAbs\<cdot>s) < \<infinity>" and "#s = \<infinity>"
+  shows "\<exists>n. sdrop n\<cdot>s = \<up>- \<infinity>"
+proof - 
+  obtain n where "tsynAbs\<cdot>s = tsynAbs\<cdot>(stake n\<cdot>s)"
+    by (meson assms(1) fun_approxl2 lnat_well_h2)
+  have "tsynAbs\<cdot>s = (tsynAbs\<cdot>(stake n\<cdot>s)) \<bullet> (tsynAbs\<cdot>(sdrop n\<cdot>s))"
+    by (metis Fin_neq_inf inf_less_eq not_le split_streaml1 tsynabs_sconc ub_slen_stake)
+  hence "tsynAbs\<cdot>(sdrop n\<cdot>s) = \<epsilon>"
+    by (metis \<open>tsynAbs\<cdot>s = tsynAbs\<cdot>(stake n\<cdot>s)\<close> assms(1) lnat_well_h2 sconc_snd_empty sdropl6)
+  hence "tsynDom\<cdot>(sdrop n\<cdot>s) = {}" using tsynabs_tsyndom by force
+  moreover have "#(sdrop n\<cdot>s) = \<infinity>"
+    using assms(2) fair_sdrop by blast
+  ultimately have "sdrop n\<cdot>s = \<up>- \<infinity>"
+    using tsyn_ticks_only_inf by blast
+  thus ?thesis
+    by blast 
+qed
 
 lemma tsynabs_sdom: "sdom\<cdot>(tsynAbs\<cdot>s) = tsynDom\<cdot>s"
   apply (induction rule: tsyn_ind, simp_all)
