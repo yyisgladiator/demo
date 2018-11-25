@@ -54,7 +54,9 @@ lemma longiterate_lub_in: assumes "C\<in>DIV" and "goodFormed C f"
   shows "\<And>K. longChain K \<Longrightarrow> K\<subseteq>(longIterate C f) \<Longrightarrow> lub K\<in>(longIterate C f)"
   by (metis (mono_tags, lifting) CollectI UnCI assms(1) assms(2) longiterate_step)
 
-lemma longchain_map: assumes "longChain K" and "K \<subseteq> C" and "C\<in>DIV" and "(\<And>k. k\<in>K \<Longrightarrow> k \<sqsubseteq> f k)" and "monofun f" and "goodFormed C f"
+lemma longchain_map: 
+  fixes C ::"'a set"
+    assumes "longChain K" and "K \<subseteq> C" and "C\<in>DIV" and "(\<And>k. k\<in>K \<Longrightarrow> k \<sqsubseteq> f k)" and "monofun f" and "goodFormed C f"
   shows "(lub K \<sqsubseteq> f (lub K))"
 proof - 
   have "longChain (f`K)"
@@ -190,12 +192,34 @@ shows "P x"
   by (metis longAdm_def Ball_Collect assms(1) assms(2) assms(3) dual_order.trans longiterate_subset)
   
 
+
+
+section \<open>high level induction lemma\<close>
+
 lemma lfp_induction: assumes "goodFormed C f" and "C \<in> DIV" and "monofun f"
   and "longAdm C P"
   and "P (div_bot C)"
   and "\<And>x. x\<in>C \<Longrightarrow> P x \<Longrightarrow> P (f x)"
   shows "P (lfp C f)"
   using assms(1) assms(2) assms(3) assms(4) assms(5) assms(6) longiterate_bot longiterate_induction longiterate_lfp_in by blast
+
+
+lemma lfp_lfp_below2:
+    assumes "monofun g1" 
+    and "monofun g2"
+    and "goodFormed C1 g1" 
+    and "goodFormed C2 g2"
+    and "C1 \<in> DIV" 
+    and "C2 \<in> DIV"
+    and "\<And>x. f (g1 x) \<sqsubseteq> g2 (f x)"
+    and "\<And>x. x\<in>C1 \<Longrightarrow> f x \<in>C2"
+    and "f (div_bot C1) = div_bot C2"
+    and "longAdm C1 (\<lambda>x. f x \<sqsubseteq> (lfp C2 g2))"
+  shows "f (lfp C1 g1) \<sqsubseteq> (lfp C2 g2)"
+  apply(rule lfp_induction [of "C1" "g1"])
+  apply( auto simp add: assms)
+   apply (simp add: assms(2) assms(4) assms(6) div_bot lfp_greater)
+  by (metis (mono_tags, lifting) assms(2) assms(4) assms(6) assms(7) below_trans lfp_fix monofun_def)
 
 
 

@@ -105,6 +105,10 @@ instance
 
 end
 
+lemma fun_div_const: "C\<in>DIV \<Longrightarrow> (setify (\<lambda>a. C))\<in>DIV"
+  by(auto simp add: DIV_fun_def setify_def)
+
+
 instantiation "fun" :: (type, div_cpo) div_cpo
 begin
 
@@ -168,6 +172,20 @@ proof(intro_classes)
   ultimately show "\<exists>top\<in>a. \<forall>b\<in>a.  b \<sqsubseteq> top" by blast
 qed
 
+
+lemma fun_top: "(\<And>a. C a\<in>DIV)  \<Longrightarrow> div_top (setify (\<lambda>a. C a)) = (\<lambda>a. ( div_top (C a)))"
+  apply(rule div_topI[symmetric])
+  apply (simp add: SetPcpo.setify_def div_top fun_belowI)
+  apply (simp add: SetPcpo.setify_def div_top)
+  by (smt CollectI DIV_fun_def SetPcpo.setify_def image_iff)
+
+lemma fun_top2: "C\<in>DIV \<Longrightarrow> x\<in>C \<Longrightarrow> x\<sqsubseteq>div_top (setify (\<lambda>a. C)) m"
+  by (simp add: div_top fun_top)
+
+lemma div_const_fun: "C\<in>DIV \<Longrightarrow> Y \<subseteq> C \<Longrightarrow> \<exists>C2. C2\<in>DIV \<and> ((\<lambda>y. y c ) `Y) \<subseteq>C2 "
+  unfolding DIV_fun_def
+  apply auto
+  by(auto simp add: setify_def image_def)
 
 
 

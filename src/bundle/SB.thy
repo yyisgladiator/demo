@@ -1074,5 +1074,10 @@ lemma createBundle_apply[simp]: assumes "a \<in> ctype c"
                                   shows "createBundle a c = Abs_ubundle [c \<mapsto> \<up>a]"
   by (simp add: assms createBundle.abs_eq)
 
+lemma createbundle_ubgetch:
+  assumes " m \<in> ctype c"
+  shows   "(createBundle m c) . c  = \<up>m"
+  apply (simp add: ubgetch_insert createBundle.rep_eq)
+  by (simp add: assms)
 
 end

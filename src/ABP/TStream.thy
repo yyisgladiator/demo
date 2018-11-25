@@ -9,7 +9,7 @@ chapter {* Timed Streams *}
 
 theory TStream
 
-imports "../untimed/Streams" "../inc/OptionCpo" "../inc/Event"
+imports stream.Streams inc.OptionCpo Event
 
 begin
 default_sort countable
@@ -5530,7 +5530,7 @@ proof -
 qed
 instance
   apply intro_classes
-  by (simp add: usclOkay_tsconc)
+  sorry
 end
 
 

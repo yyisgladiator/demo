@@ -43,7 +43,14 @@ lift_definition sbeUnion ::"'a sbElem \<Rightarrow> 'a sbElem \<Rightarrow> 'a s
 "\<lambda> l r. ((Rep_sbElem l) ++ (Rep_sbElem r))"
  unfolding sbElemWell_def usclOkay_stream_def ctype_tsyn_def
   by (metis Rep_sbElem domIff map_add_dom_app_simps(1) map_add_dom_app_simps(3) mem_Collect_eq sbElemWellI)
- 
+
+
+definition SBELEM :: "channel set \<Rightarrow> 'a::message sbElem set" where 
+"SBELEM \<equiv> \<lambda> In. {sbe::'a sbElem. sbeDom sbe = In}"
+
+lemma sbeunivI: "\<And> sbe. sbeDom sbe = In \<Longrightarrow> sbe \<in> SBELEM In"
+  by (simp add: SBELEM_def)
+
 
 section \<open>Lemma\<close>
 
@@ -179,6 +186,11 @@ proof -
     by (metis (no_types, lifting) sbe2sb_dom that) 
 qed
 
+lemma sbe_eq_bundle: assumes "sbe2SB sbe1 = sbe2SB sbe2"
+  shows "sbe1 = sbe2"
+  apply(rule sbe_eq)
+  apply (metis assms sbe2sb_dom)
+  by (metis assms sbe2sb_hdelem2)
 
 subsection \<open>sbeUnion\<close>
 
@@ -203,5 +215,6 @@ lemma sbeunion_second[simp]: "c\<in>sbeDom sbe2 \<Longrightarrow> (Rep_sbElem (s
 
 lemma sbeunion_first[simp]: "c\<notin>sbeDom sbe2 \<Longrightarrow> (Rep_sbElem (sbe1 \<plusminus> sbe2) ) \<rightharpoonup> c = Rep_sbElem sbe1 \<rightharpoonup> c"  
   by(simp add: sbeUnion.rep_eq sbeDom_def map_add_dom_app_simps)
+
 
 end

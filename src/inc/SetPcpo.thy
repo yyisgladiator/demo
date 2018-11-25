@@ -200,11 +200,67 @@ lemma union_cont:"cont (\<lambda>S2. union S1 S2)"
 
 
 
-(* ToDo: make cont/move the SetPcpo *)
+section \<open>setify\<close>
+definition setify_on::"'m set \<Rightarrow> ('m::type \<Rightarrow> ('n::type set)) \<Rightarrow> ('m \<Rightarrow> 'n) set" where
+"setify_on Dom \<equiv> \<lambda> f. {g. \<forall>m\<in>Dom. g m \<in> (f m)}"
+
 definition setify::"('m::type \<Rightarrow> ('n::type set)) \<Rightarrow> ('m \<Rightarrow> 'n) set" where
 "setify \<equiv> \<lambda> f. {g. \<forall>m. g m \<in> (f m)}"
 
 
+
+subsection \<open>setify_on\<close>
+thm setify_def
+lemma setify_on_mono[simp]: "\<And> Dom. monofun (\<lambda> f. {g. \<forall>m\<in>Dom. g m \<in> (f m)})"
+proof (rule monofunI, simp add: less_set_def, rule)
+  fix x y::"'m::type \<Rightarrow> ('n::type set)"  
+  fix Dom::"'m set"
+  fix xa:: "'m \<Rightarrow> 'n"
+  assume a1:"x \<sqsubseteq> y"
+  assume a2: "xa \<in> {g. \<forall>m\<in>Dom. g m \<in> x m}"
+  have f0: "\<And>m. x m \<sqsubseteq> y m"
+    by (simp add: a1 fun_belowD)
+  have f1: "\<And>m. m \<in> Dom \<Longrightarrow> xa m \<in> x m"
+    using a2 by blast
+  have f2: "\<And>m. m \<in> Dom \<Longrightarrow> xa m \<in> y m"
+    by (metis SetPcpo.less_set_def f0 f1 subsetCE)
+  show "xa \<in> {g. \<forall>m\<in>Dom. g m \<in> y m}"
+    using f2 by blast
+qed
+
+lemma setify_on_empty:"\<And> Dom. sbe \<in> Dom \<Longrightarrow> f sbe = {} \<Longrightarrow> setify_on Dom f = {}"
+  apply(simp add: setify_on_def)
+  by (metis empty_iff)
+
+lemma setify_on_notempty_ex:"setify_on Dom f \<noteq> {} \<Longrightarrow> \<exists>g.(\<forall>m \<in> Dom. g m \<in> (f m))"
+  by (metis (no_types, lifting) Collect_empty_eq setify_on_def)
+
+lemma setify_on_notempty:assumes "\<forall>m \<in> Dom. f m \<noteq> {}" shows" setify_on Dom f \<noteq> {}"
+proof(simp add: setify_on_def)
+  have "\<forall>m \<in> Dom. (\<exists>x. x\<in>((f m)))"
+    by (metis all_not_in_conv assms)
+  have "\<forall>m \<in> Dom. (\<lambda>e. SOME x. x\<in> (f e)) m \<in> (f m)"
+    by (metis assms some_in_eq)
+  then show "\<exists>x::'a \<Rightarrow> 'b. \<forall>m::'a \<in> Dom. x m \<in> (f m)"
+    by(rule_tac x="(\<lambda>e. SOME x. x\<in> (f e))" in exI, auto)
+qed
+
+lemma setify_on_final:assumes "\<forall>m \<in> Dom. f m \<noteq> {}" and "x \<in> (f m)" 
+  shows"\<exists>g\<in>((setify_on Dom f)). g m = x"
+proof(simp add: setify_on_def)         
+  have "\<exists>g.(\<forall>m \<in> Dom. g m \<in> (f m))"
+    by(simp add: setify_on_notempty setify_on_notempty_ex assms(1))
+  then obtain g where g_def:"(\<forall>m \<in> Dom. g m \<in> (f m))"
+    by auto
+  have g2_def:"\<forall>n \<in> Dom. (\<lambda>e. if e = m then x else g e) n \<in> (f n)"
+    by (simp add: assms(2) g_def)
+  then show "\<exists>g::'a \<Rightarrow> 'b. (\<forall>m::'a \<in> Dom. g m \<in> (f m)) \<and> g m = x"     
+    by(rule_tac x="(\<lambda>e. if e = m then x else g e)" in exI, auto) 
+qed
+
+
+
+subsection \<open>setify\<close>
 lemma setify_mono[simp]:"monofun (\<lambda>f. {g. \<forall>m. g m \<in> (f m)})"
   apply(rule monofunI)
   by (smt Collect_mono SetPcpo.less_set_def below_fun_def subsetCE)
