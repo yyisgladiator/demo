@@ -54,6 +54,9 @@ definition DIV_rev :: "'a rev set set" where
 lemma div_rev_inv: "a\<in>DIV \<Longrightarrow> ((inv Rev)`a) \<in> DIV"
   by (smt DIV_rev_def GFP.rev.inject image_iff image_inv_f_f inj_def)
 
+lemma div_rev: "C\<in>DIV \<Longrightarrow> (Rev ` C) \<in> DIV"
+  by (simp add: DIV_rev_def)
+
 instance
   apply intro_classes
   apply (simp add: DIV_rev_def div_non_empty)
@@ -125,10 +128,42 @@ instance
 end
 
 
+lemma div_rev_adm_h:fixes C::"'a::rev_div_cpo set"
+    assumes "C\<in>DIV" and "longChain Y" and "Y \<subseteq> C" and "y \<in> Y"
+  shows "Rev y\<sqsubseteq>lub (Rev ` Y)"
+  by (metis assms(1) assms(2) assms(3) assms(4) is_lub_def lub_eqI rev_div_lub_ex ub_imageD)
 
 
+lemma div_cpo_adm_below: fixes C::"'a::rev_div_cpo set"
+  shows "C\<in>DIV \<Longrightarrow> longAdm (Rev`C) (\<lambda>x. K\<sqsubseteq>x)"
+  by (simp add: div_cpo_adm_less div_rev)
 
+lemma div_cpo_adm_less: fixes C::"'a::rev_div_cpo set"
+  shows "C\<in>DIV \<Longrightarrow> longAdm (Rev`C) (\<lambda>x. x\<sqsubseteq>K)"
+  by (simp add: div_cpo_class.div_cpo_adm_below div_rev)
 
+lemma rev_div_cpo_adm_below: fixes C::"'a::rev_div_cpo set"
+  assumes "C\<in>DIV"
+  shows "longAdm (Rev ` C) (\<lambda>a. K \<sqsubseteq> (inv Rev a))"
+  apply(auto simp add: longAdm_def)
+  by (metis assms below_rev.simps div_cpo_lub_least div_rev inv_rev2)
+
+lemma rev_div_cpo_adm_less: fixes C::"'a::rev_div_cpo set"
+  assumes "C\<in>DIV"
+  shows "longAdm (Rev ` C) (\<lambda>a. (inv Rev a) \<sqsubseteq>K)"
+  apply(auto simp add: longAdm_def)
+proof -
+  fix Y :: "'a rev set"
+  assume a1: "\<forall>y\<in>Y. inv Rev y \<sqsubseteq> K"
+  assume a2: "longChain Y"
+  assume a3: "Y \<subseteq> Rev ` C"
+have f4: "Y \<noteq> {} \<and> (\<forall>r ra. r \<notin> Y \<or> ra \<notin> Y \<or> r \<sqsubseteq> ra \<or> ra \<sqsubseteq> r)"
+  using a2 by (simp add: longChain_def)
+  have "Rev ` C \<in> DIV"
+by (simp add: assms div_rev)
+  then show "inv Rev (lub Y) \<sqsubseteq> K"
+    using f4 a3 a2 a1 by (metis (no_types) all_not_in_conv below_rev.simps box_below div_cpo_lub_ub inv_rev2)
+qed
 
 class div_upcpo = div_cpo +  
     (* every division has its own top element *)
@@ -147,6 +182,17 @@ lemma div_top:
   apply(simp add: div_top_def)
   apply(rule theI' [of _ ])
   by (simp add: assms div_upcpo_class.div_upcpo_top)
+
+lemma div_topI: assumes "\<And>x. x\<in>C \<Longrightarrow> x\<sqsubseteq>y" and "y\<in>C" and "C\<in>DIV"
+  shows "y=div_top C"
+  by (simp add: assms below_antisym div_top)
+
+lemma div_top_below: "x\<in>C \<Longrightarrow> C\<in>DIV \<Longrightarrow> x\<sqsubseteq>div_top C"
+  using div_top by blast
+
+lemma div_top_in: "C\<in>DIV \<Longrightarrow> div_top C \<in>C"
+  using div_top by blast
+
 
 end
 
@@ -196,6 +242,14 @@ definition gfp:: "'a::rev_div_upcpo set \<Rightarrow> ('a \<Rightarrow> 'a) \<Ri
 
 lemma rev_division: "C\<in>DIV \<Longrightarrow> (Rev ` C)\<in>DIV"
   by (simp add: DIV_rev_def)
+
+
+lemma rev_bot2top[simp]:"C\<in>DIV \<Longrightarrow> (inv Rev (div_bot (Rev ` C))) = div_top C"
+  apply(rule div_topI)
+  using div_bot rev_division apply fastforce
+  using div_bot rev_division apply force
+  by simp
+
 
 lemma rev_goodformed: "goodFormed C f \<longleftrightarrow> goodFormed (Rev`C) (reverseFun f)"
   apply(auto simp add: goodFormed_def)
@@ -285,5 +339,17 @@ lemma gfp_lfp:
     and "C \<in> DIV"
   shows "(lfp C f) \<sqsubseteq> (gfp C f)"
   using assms(1) assms(2) assms(3) gfp_greatest lfp_div lfp_fix by fastforce
+
+lemma gfp_gfp_below:
+    assumes "monofun g1" 
+    and "monofun g2"
+    and "goodFormed C1 g1" 
+    and "goodFormed C2 g2"
+    and "C1 \<in> DIV" 
+    and "C2 \<in> DIV"
+    and "\<And>x. x\<in>C1 \<Longrightarrow>  f (g1 x)\<sqsubseteq>g2 (f x)"
+    and "\<And>x. x\<in>C1 \<Longrightarrow> f x \<in>C2"
+  shows "f (gfp C1 g1) \<sqsubseteq> (gfp C2 g2)"
+  by (metis assms(1) assms(2) assms(3) assms(4) assms(5) assms(6) assms(7) assms(8) gfp_div gfp_fix gfp_greatest)
 
 end

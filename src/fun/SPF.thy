@@ -1,5 +1,5 @@
 theory SPF
-  imports bundle.SB UFun_Comp UFun_applyIn inc.CPOFix
+  imports bundle.SBElem UFun_Comp UFun_applyIn inc.CPOFix
 begin
 default_sort message
 
@@ -8,10 +8,10 @@ type_synonym ('m,'n) SPF = "('m SB, 'n SB) ufun"
 
 subsection \<open>spfStateFix\<close>
 
-definition spfStateLeast :: "channel set \<Rightarrow> channel set \<Rightarrow>('s1::type \<Rightarrow> ('m,'m) SPF)" where
+definition spfStateLeast :: "channel set \<Rightarrow> channel set \<Rightarrow>('s1::type \<Rightarrow> ('m,'n) SPF)" where
 "spfStateLeast In Out \<equiv> (\<lambda> x. ufLeast In Out)"
 
-definition spfStateFix ::"channel set \<Rightarrow> channel set \<Rightarrow>(('s1::type \<Rightarrow> ('m,'m) SPF) \<rightarrow> ('s1 \<Rightarrow> ('m,'m) SPF)) \<rightarrow> ('s1 \<Rightarrow> ('m,'m) SPF)" where
+definition spfStateFix ::"channel set \<Rightarrow> channel set \<Rightarrow>(('s1::type \<Rightarrow> ('m,'n) SPF) \<rightarrow> ('s1 \<Rightarrow> ('m,'n) SPF)) \<rightarrow> ('s1 \<Rightarrow> ('m,'n) SPF)" where
 "spfStateFix In Out \<equiv> (\<Lambda> F.  fixg (spfStateLeast In Out)\<cdot>F)"
 
 
@@ -118,7 +118,7 @@ lemma spfStateFix_fix: assumes "spfStateLeast In Out \<sqsubseteq> F\<cdot>(spfS
 
 lemma spfsl_below_spfsf: "spfStateLeast In Out \<sqsubseteq> spfStateFix In Out\<cdot>F"
   proof (simp add: spfStateFix_def, simp add: fixg_def)
-    have "\<forall>x0 x1. ((x1::'a \<Rightarrow> ('b stream\<^sup>\<Omega>, 'b stream\<^sup>\<Omega>) ufun) \<sqsubseteq> (if x1 \<sqsubseteq> x0\<cdot>x1 then \<Squnion>uub. iterate uub\<cdot>x0\<cdot>x1 else x1)) = (if x1 \<sqsubseteq> x0\<cdot>x1 then x1 \<sqsubseteq> (\<Squnion>uub. iterate uub\<cdot>x0\<cdot>x1) else x1 \<sqsubseteq> x1)"
+    have "\<forall>x0 x1. ((x1::'a \<Rightarrow> ('b stream\<^sup>\<Omega>, 'n stream\<^sup>\<Omega>) ufun) \<sqsubseteq> (if x1 \<sqsubseteq> x0\<cdot>x1 then \<Squnion>uub. iterate uub\<cdot>x0\<cdot>x1 else x1)) = (if x1 \<sqsubseteq> x0\<cdot>x1 then x1 \<sqsubseteq> (\<Squnion>uub. iterate uub\<cdot>x0\<cdot>x1) else x1 \<sqsubseteq> x1)"
       by simp
     then show "spfStateLeast In Out \<sqsubseteq> F\<cdot>(spfStateLeast In Out) \<longrightarrow> spfStateLeast In Out \<sqsubseteq> (\<Squnion>n. iterate n\<cdot>F\<cdot>(spfStateLeast In Out))"
       by (metis (no_types) fixg_pre)
@@ -637,6 +637,21 @@ lemma spfconcout_least [simp]: "spfConcOut (ubLeast cs)\<cdot>spf = spf"
   apply simp+
    apply (simp add: ubclDom_ubundle_def)
   by (simp only:ubConcEq_ubLeast)
+
+
+lemma spfrt_conc_out_id[simp]: assumes "sbeDom sbe = ufRan\<cdot>spf"
+  shows "spfRtOut\<cdot>(spfConcOut (sbe2SB sbe)\<cdot>spf) = spf"
+  apply(rule ufun_eqI)
+   apply simp
+  apply (simp add: ufclDom_ufun_def)
+  by (metis assms sbe2sb_rt spfConcOut_dom spfConcOut_step spfRtOut_step ubclDom_ubundle_def ufran_2_ubcldom2)
+
+lemma spfrt_conc_in_id[simp]: assumes "sbeDom sbe = ufDom\<cdot>spf"
+  shows "spfConcIn (sbe2SB sbe)\<cdot>(spfRtIn\<cdot>spf) = spf"
+  apply(rule ufun_eqI)
+   apply simp
+  apply (simp add: ufclDom_ufun_def)
+  by (simp add: assms ubclDom_ubundle_def)
 
 
 

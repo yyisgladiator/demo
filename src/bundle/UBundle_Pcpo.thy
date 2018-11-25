@@ -231,6 +231,10 @@ lemma ub_empty: "UB {} = {ubLeast {}}"
          CollectD Rep_ubundle_inject singleton_iff subsetI ubWell_empty ubrep_ubabs)
   by (simp add: ubWell_empty)
 
+lemma ubup_restrict_id2 [simp]: "ubUp\<cdot>(ub) \<bar> ubDom\<cdot>ub = ub"
+  by (metis (no_types, lifting) inf_commute inf_top.right_neutral ubgetchI ubgetch_ubrestrict 
+    ubrestrict_ubdom2 ubup_ubdom ubup_ubgetch)
+
 (****************************************************)
 section\<open>Instantiation\<close>
 (****************************************************) 

@@ -516,6 +516,14 @@ lemma ind_ub:
   apply (erule_tac x="\<lambda>i. ubTake i\<cdot>x" in allE, auto)
   by(simp add: ubtake_ind)
 
+text{* Alternative induction rule for bundles *}
+lemma ind_ub2:
+  "\<lbrakk> adm P; P (ubLeast (ubDom\<cdot>x)); \<And>u ub. P ub \<and> ubDom\<cdot>u = (ubDom\<cdot>x) \<and> ubDom\<cdot>ub = (ubDom\<cdot>x) 
+       \<and> ubMaxLen (Fin 1) u \<and> u \<noteq> (ubLeast (ubDom\<cdot>x)) \<Longrightarrow> P (ubConcEq u\<cdot>ub) \<rbrakk>
+     \<Longrightarrow> P x"
+  apply (unfold adm_def)
+  apply (erule_tac x="\<lambda>i. ubTake i\<cdot>x" in allE, auto)
+  by (simp add: ubtake_ind ubConcEq_def)
 
 (* ----------------------------------------------------------------------- *)
 section\<open>Instantiation Stream\<close>
