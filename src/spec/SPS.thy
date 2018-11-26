@@ -113,34 +113,34 @@ subsection \<open>spsComplete\<close>
 lemma spscomplete_well [simp]: "uspecWell {spf | spf . ufDom\<cdot>spf = uspecDom\<cdot>sps \<and> ufRan\<cdot>spf = uspecRan\<cdot>sps
                                             \<and> (\<forall>sb. ubclDom\<cdot>sb = uspecDom\<cdot>sps \<longrightarrow> (\<exists>spf2\<in>(uspecSet\<cdot>sps). spf\<rightleftharpoons>sb = spf2\<rightleftharpoons>sb))}
                       (Discr (uspecDom\<cdot>sps))  (Discr (uspecRan\<cdot>sps))"
-  apply(simp)
-  by (simp add: ufclDom_ufun_def ufclRan_ufun_def)
+ by (simp add: ufclDom_ufun_def ufclRan_ufun_def)
 
 lemma spscomplete_set: "uspecSet\<cdot>(spsComplete sps) = {spf | spf . ufDom\<cdot>spf = uspecDom\<cdot>sps \<and> ufRan\<cdot>spf = uspecRan\<cdot>sps
                                             \<and> (\<forall>sb. ubclDom\<cdot>sb = uspecDom\<cdot>sps \<longrightarrow> (\<exists>spf2\<in>(uspecSet\<cdot>sps). spf\<rightleftharpoons>sb = spf2\<rightleftharpoons>sb))}"
   unfolding uspecSet_def spsComplete_def
   by (simp add: ufclDom_ufun_def ufclRan_ufun_def)
 
+(* Domain of the USpec is not modified *)
 lemma spscomplete_dom [simp]: "uspecDom\<cdot>(spsComplete sps) = uspecDom\<cdot>sps"
   by (smt prod.sel(1) prod.sel(2) rep_abs_uspec spsComplete_def spscomplete_well undiscr_Discr uspecdom_insert)
 
+(* Range of the USpec is not modified *)
 lemma spscomplete_ran [simp]: "uspecRan\<cdot>(spsComplete sps) = uspecRan\<cdot>sps"
   by (metis (mono_tags, lifting) Discr_undiscr prod.sel(2) rep_abs_uspec spsComplete_def spscomplete_well uspecran_insert)
 
+(* general rule to prove an uspec is below an spsCompleted USpec *)
 lemma spscomplete_belowI: assumes "uspecDom\<cdot>S1 = uspecDom\<cdot>S2"
   and "uspecRan\<cdot>S1 = uspecRan\<cdot>S2"
   and "(\<And>spf sb. spf\<in>uspecSet\<cdot>S1 \<Longrightarrow> ubclDom\<cdot>sb = uspecDom\<cdot>S1 \<Longrightarrow> (\<exists>spf2\<in>(uspecSet\<cdot>S2). spf\<rightleftharpoons>sb = spf2\<rightleftharpoons>sb))"
 shows "S1 \<sqsubseteq> spsComplete S2"
   apply(rule uspec_belowI)
-  apply (simp_all add: assms)
+    apply (simp_all add: assms)
   by (smt SetPcpo.less_set_def assms(1) assms(2) assms(3) mem_Collect_eq spscomplete_set subsetI ufclDom_ufun_def ufclRan_ufun_def uspec_allDom uspec_allRan)
 
+(* The original functions are also part of the completion *)
 lemma spscomplete_below: "sps \<sqsubseteq> (spsComplete sps)"
-  apply(rule uspec_belowI)
-    apply auto
-  apply(simp add: spscomplete_set less_set_def)
-  apply auto
-  by (metis ufclDom_ufun_def uspec_allDom ufclRan_ufun_def uspec_allRan)+
+  apply(rule spscomplete_belowI)
+    by auto
 
 lemma spscomplete_exists: assumes "spf\<in>(uspecSet\<cdot>(spsComplete sps))" and "ubclDom\<cdot>sb = uspecDom\<cdot>sps"
   shows "\<exists>spf2. spf2\<in>uspecSet\<cdot>sps \<and> spf\<rightleftharpoons>sb = spf2\<rightleftharpoons>sb"
@@ -150,16 +150,19 @@ lemma spscomplete_complete_h: "uspecSet\<cdot>(spsComplete (spsComplete sps)) \<
   unfolding spscomplete_set
   by auto
 
+(* Already completed USpecs are complete *)
 lemma spscomplete_complete [simp]: "spsComplete (spsComplete sps) = spsComplete sps"
   by (simp add: SetPcpo.less_set_def below_antisym spscomplete_below spscomplete_complete_h uspec_belowI)
 
+(* spsComplete is a monotone function *)
 lemma spscomplete_mono: assumes "uspec1 \<sqsubseteq> uspec2"
   shows "spsComplete uspec1 \<sqsubseteq> spsComplete uspec2"
-  apply(rule uspec_belowI)
+  apply(rule spscomplete_belowI)
   apply (simp add: assms uspecdom_eq)
-  apply (simp add: assms uspecran_eq)
-  by (smt Collect_mono_iff SetPcpo.less_set_def assms monofun_Rep_cfun2 monofun_def spscomplete_set subset_eq uspecdom_eq uspecran_eq)
+   apply (simp add: assms uspecran_eq)
+  by (metis (mono_tags, hide_lams) SetPcpo.less_set_def assms contra_subsetD monofun_cfun_arg spscomplete_dom spscomplete_exists)
 
+(* The behaviour on Bundle-Level is not modified *)
 lemma spscomplete_same_behaviour: assumes "ubclDom\<cdot>sb = uspecDom\<cdot>sps"
   shows "{spf \<rightleftharpoons> sb | spf. spf\<in>uspecSet\<cdot>(spsComplete sps)} = {spf \<rightleftharpoons> sb | spf. spf\<in>uspecSet\<cdot>sps}"
   apply auto
@@ -168,11 +171,27 @@ lemma spscomplete_same_behaviour: assumes "ubclDom\<cdot>sb = uspecDom\<cdot>sps
 
 lemma assumes "uspec_compwell uspec1 uspec2"
   shows "((spsComplete uspec1) \<Otimes> (spsComplete uspec2)) \<sqsubseteq> spsComplete (uspec1 \<Otimes> uspec2)"
-  apply(subgoal_tac "uspec_compwell (spsComplete uspec1) (spsComplete uspec2)")
-  apply(rule spscomplete_belowI) 
-     apply (simp add: assms uspec_comp_dom)
-    apply (simp add: assms uspec_comp_ran)
-  defer
+proof(rule spscomplete_belowI) 
+  have well:"uspec_compwell (spsComplete uspec1) (spsComplete uspec2)" 
+    sorry (* Waiting for a better uspec_compwell definition: https://git.rwth-aachen.de/montibelle/core/issues/235 *)
+  show dom_eq:"uspecDom\<cdot>(spsComplete uspec1 \<Otimes> spsComplete uspec2) = uspecDom\<cdot>(uspec1 \<Otimes> uspec2)"
+    by (simp add: assms uspec_comp_dom well)
+  show ran_eq: "uspecRan\<cdot>(spsComplete uspec1 \<Otimes> spsComplete uspec2) = uspecRan\<cdot>(uspec1 \<Otimes> uspec2)"
+    by (simp add: assms uspec_comp_ran well)
+  fix sb::'a 
+  fix spf::"'a\<Rrightarrow>'a"
+    assume spf_in:"spf \<in> uspecSet\<cdot>(spsComplete uspec1 \<Otimes> spsComplete uspec2)"
+       and sb_dom: "ubclDom\<cdot>sb = uspecDom\<cdot>(spsComplete uspec1 \<Otimes> spsComplete uspec2)" 
+    hence sb_dom2: "ubclDom\<cdot>sb = uspecDom\<cdot>(uspec1 \<Otimes> uspec2)"
+      using dom_eq by blast
+    obtain spf1 spf2 where "spf = ufComp spf1 spf2" 
+          and "spf1\<in>uspecSet\<cdot>(spsComplete uspec1)" and "spf2\<in>uspecSet\<cdot>(spsComplete uspec2)" 
+      sorry
+    obtain spf1origin where "spf1origin \<rightleftharpoons> sb = spf1 \<rightleftharpoons> sb" and "spf1origin\<in>uspecSet\<cdot>uspec1" sorry
+          (* Stimmt von der Domain nicht *)
+    obtain spf2origin where "spf2origin \<rightleftharpoons> sb = spf1 \<rightleftharpoons> sb" and "spf2origin\<in>uspecSet\<cdot>uspec2" sorry
+          (* Stimmt von der Domain nicht *)
+  show "\<exists>spf2\<in>uspecSet\<cdot>(uspec1 \<Otimes> uspec2). spf \<rightleftharpoons> sb = spf2 \<rightleftharpoons> sb"
   oops
 
 lemma assumes "uspec_compwell uspec1 uspec2"
