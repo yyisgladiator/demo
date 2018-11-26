@@ -171,7 +171,9 @@ lemma spscomplete_same_behaviour: assumes "ubclDom\<cdot>sb = uspecDom\<cdot>sps
 
 lemma assumes "uspec_compwell uspec1 uspec2"
   shows "((spsComplete uspec1) \<Otimes> (spsComplete uspec2)) \<sqsubseteq> spsComplete (uspec1 \<Otimes> uspec2)"
-proof(rule spscomplete_belowI) 
+  oops
+
+(*proof(rule spscomplete_belowI)
   have well:"uspec_compwell (spsComplete uspec1) (spsComplete uspec2)" 
     sorry (* Waiting for a better uspec_compwell definition: https://git.rwth-aachen.de/montibelle/core/issues/235 *)
   show dom_eq:"uspecDom\<cdot>(spsComplete uspec1 \<Otimes> spsComplete uspec2) = uspecDom\<cdot>(uspec1 \<Otimes> uspec2)"
@@ -192,7 +194,7 @@ proof(rule spscomplete_belowI)
     obtain spf2origin where "spf2origin \<rightleftharpoons> sb = spf1 \<rightleftharpoons> sb" and "spf2origin\<in>uspecSet\<cdot>uspec2" sorry
           (* Stimmt von der Domain nicht *)
   show "\<exists>spf2\<in>uspecSet\<cdot>(uspec1 \<Otimes> uspec2). spf \<rightleftharpoons> sb = spf2 \<rightleftharpoons> sb"
-  oops
+  oops*)
 
 lemma assumes "uspec_compwell uspec1 uspec2"
   shows "spsComplete (uspec1 \<Otimes> uspec2) \<sqsubseteq> ((spsComplete uspec1) \<Otimes> (spsComplete uspec2))"
