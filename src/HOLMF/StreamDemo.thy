@@ -303,15 +303,14 @@ lemma longAdmI_stream: fixes P::"'a::countable stream \<Rightarrow> bool"
   apply(subst lc_nt_in_lc2c, auto)
   by (simp add: admD assms lc_nt_in lc_nt_in_chain)
 
-lemma snd_cont: assumes "longChain S" and "C\<in>DIV" and "S\<subseteq>C" shows "snd (lub S) = lub (snd ` S)"
-proof - 
-  have "longChain (snd ` S)"
-    by (simp add: assms(1) prod_snd_chain)
-  hence "(snd ` S) <| snd (lub S)" sorry
-  thus ?thesis sorry
-qed
+lemma snd_cont: fixes C::"('a::div_cpo \<times> 'b::div_cpo) set"
+    assumes "longChain S" and "C\<in>DIV" and "S\<subseteq>C" shows "snd (lub S) = lub (snd ` S)"
+  using assms(1) assms(2) assms(3) prod_lub by fastforce
 
-lemma snd_longAdm: "C\<in>DIV \<Longrightarrow> longAdm (snd ` C) (\<lambda>s. P s) \<Longrightarrow> longAdm C (\<lambda>s. P (snd s))"
+
+lemma snd_longAdm: 
+  fixes C::"('a::div_cpo \<times> 'b::div_cpo) set"
+  shows "C\<in>DIV \<Longrightarrow> longAdm (snd ` C) (\<lambda>s. P s) \<Longrightarrow> longAdm C (\<lambda>s. P (snd s))"
   unfolding longAdm_def
   apply auto
   by (simp add: image_mono prod_snd_chain snd_cont)
@@ -322,16 +321,14 @@ lemma ind_adm_h [simp]: "longAdm UNIV (\<lambda>s. s \<noteq> \<up>x)"
   apply rule+
   using lc_finite_lub lc_lub_inf by fastforce
 
-lemma ind_adm [simp]: "longAdm UNIV (\<lambda>a. snd a \<noteq> \<up>x)"
-  apply(auto simp add: longAdm_def)
-  apply(rename_tac Y, case_tac "finite Y")
-  using lc_finite_lub apply blast
-  sorry
+lemma ind_adm [simp]: "longAdm (UNIV::('a::countable stream \<times> 'b::countable stream) set) (\<lambda>a.( (snd a) \<noteq> \<up>x))"
+  apply(rule snd_longAdm)
+  by(auto simp add: DIV_prod_def DIV_stream_def)
 
 lemma "snd (lfp UNIV example) \<noteq> \<up>1"
   apply(rule lfp_induction)
   apply auto
-     apply(auto simp add: DIV_prod_def DIV_stream_def)
+    apply(auto simp add: DIV_prod_def DIV_stream_def)
    apply(simp add: example_def)
    apply(rename_tac a b, case_tac "#a=\<infinity>")
   apply auto
@@ -341,7 +338,7 @@ lemma "snd (lfp UNIV example) \<noteq> \<up>1"
 
 
 
-lemma "sdom\<cdot>(snd (lfp UNIV example)) \<subseteq> {0}"
+lemma snd_dom:"sdom\<cdot>(snd (lfp UNIV example)) \<subseteq> {0}"
   apply(rule lfp_induction)
        apply auto
     apply(auto simp add: DIV_prod_def DIV_stream_def)
@@ -354,21 +351,32 @@ lemma "sdom\<cdot>(snd (lfp UNIV example)) \<subseteq> {0}"
   by simp
 
 
+lemma lub_fst_length:"#(fst ((lfp UNIV example))) = # (fst(example (lfp UNIV example)))"
+  apply(subst lfp_fix)
+     apply auto
+  by(auto simp add: DIV_prod_def DIV_stream_def)
 
-lemma "(lfp UNIV example) \<in> {(s1, s2) | s1 s2. sdom\<cdot>s1 \<subseteq> {0} \<and> sdom\<cdot>s2 \<subseteq>{0}}"
-  apply(rule lfp_induction)
-       apply auto
-     apply(auto simp add: DIV_prod_def DIV_stream_def)
-    defer
-   apply(auto simp add: example_def)
-   apply(auto simp add: longAdm_def)
- 
-  using prod_div_bot DIV_stream_def 
-  using prod_lub
-  oops
+lemma lub_fst_inf[simp]: "#(fst ((lfp UNIV example))) = \<infinity>"
+  by (metis (mono_tags, lifting) Fin_Suc example_def inf_less_eq inject_Fin lessI less_imp_neq lnat_well_h2 lub_fst_length not_less prod.sel(1) slen_scons)
 
-lemma "lfp UNIV example = (\<up>0\<infinity>, \<up>0\<infinity>)"
-  oops
+lemma lub_snd_length:"#(snd ((lfp UNIV example))) = # (snd(example (lfp UNIV example)))"
+  apply(subst lfp_fix)
+     apply auto
+  by(auto simp add: DIV_prod_def DIV_stream_def)
 
+lemma lub_snd_inf[simp]: "#(snd ((lfp UNIV example))) = \<infinity>"
+  by (metis (no_types, hide_lams) Fin_Suc example_def infI inject_Fin lessI less_imp_neq lub_fst_inf lub_snd_length slen_scons snd_conv)
+
+lemma fst_final:"fst (lfp UNIV example) = \<up>0\<infinity>"
+  apply(rule rek2sinftimes)
+   apply(subst lfp_fix)
+      apply(auto simp add: DIV_prod_def DIV_stream_def)
+  by(simp add: example_def)
+
+lemma snd_final:"snd (lfp UNIV example) = \<up>0\<infinity>"
+  apply(rule rek2sinftimes)
+   apply(subst lfp_fix)
+      apply(auto simp add: DIV_prod_def DIV_stream_def)
+  by(simp add: example_def)
 
 end
