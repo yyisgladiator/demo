@@ -365,6 +365,9 @@ lemma uspecleast_dom[simp]: "uspecDom\<cdot>(uspecLeast In Out) = In"
 lemma uspecleast_ran[simp]: "uspecRan\<cdot>(uspecLeast In Out) = Out"
   by (simp add: uspecran_insert uspecLeast.rep_eq)
 
+lemma uspecleast_set[simp]: "uspecSet\<cdot>(uspecLeast In Out) = {}"
+  by (simp add: uspecSet_def uspecLeast.rep_eq)
+
 lemma uspecleast_least: assumes "spec \<in> USPEC In Out"
   shows "uspecLeast In Out \<sqsubseteq> spec"
   apply(rule uspec_belowI)
@@ -381,6 +384,9 @@ lemma uspecmax_dom[simp]: "uspecDom\<cdot>(uspecMax In Out) = In"
 
 lemma uspecmax_ran[simp]: "uspecRan\<cdot>(uspecMax In Out) = Out"
   by (simp add: uspecran_insert uspecMax.rep_eq)
+
+lemma uspecmax_set[simp]: "uspecSet\<cdot>(uspecMax In Out) = (Set.filter (\<lambda>x. ufclDom\<cdot>x = In \<and> ufclRan\<cdot>x=Out) UNIV)"
+  by (simp add: uspecSet_def uspecMax.rep_eq)
 
 lemma uspecmax_max: assumes "spec \<in> USPEC In Out"
   shows "spec \<sqsubseteq> uspecMax In Out"

@@ -169,6 +169,27 @@ lemma spscomplete_same_behaviour: assumes "ubclDom\<cdot>sb = uspecDom\<cdot>sps
   using assms spscomplete_exists apply blast
   by (metis SetPcpo.less_set_def contra_subsetD monofun_cfun_arg spscomplete_below)
 
+lemma spscomplete_const_h: "spsComplete (uspecConst spf) \<sqsubseteq> uspecConst spf"
+  apply(rule uspec_belowI)
+    apply auto
+  apply(auto simp add: less_set_def spscomplete_set)
+  by (simp add: ufclDom_ufun_def ufun_eqI)
+
+lemma spscomplete_const[simp]: "spsComplete (uspecConst spf) = uspecConst spf"
+  by (simp add: below_antisym spscomplete_below spscomplete_const_h)
+
+lemma spscomplete_least [simp]: "spsComplete (uspecLeast Dom Ran) = uspecLeast Dom Ran"
+  apply(rule uspec_eqI)
+    apply auto
+  apply(auto simp add: spscomplete_set)
+  using ufdom_insert by blast
+
+lemma spscomplete_max [simp]: "spsComplete (uspecMax Dom Ran) = uspecMax Dom Ran"
+  apply(rule uspec_eqI)
+    apply auto
+  apply(auto simp add: spscomplete_set)
+  by (auto simp add: ufclDom_ufun_def ufclRan_ufun_def)
+
 lemma assumes "uspec_compwell uspec1 uspec2"
   shows "((spsComplete uspec1) \<Otimes> (spsComplete uspec2)) \<sqsubseteq> spsComplete (uspec1 \<Otimes> uspec2)"
   oops
