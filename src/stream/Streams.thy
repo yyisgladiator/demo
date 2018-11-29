@@ -1779,6 +1779,27 @@ apply (rule notI)
 apply (drule sym)
 by (drule_tac f="f" in range_eqI, simp)
 
+lemma sfilter_lub_inf: assumes "\<And>n. \<exists>i. Fin n \<le> #(A \<ominus> (Y i))" and "chain Y"
+  shows " #(A \<ominus> (\<Squnion>i. Y i)) = \<infinity>"
+proof(rule ccontr)
+  assume as: "#(A \<ominus> (\<Squnion>i::nat. Y i)) \<noteq> \<infinity>"
+  obtain n where n_def:"#(A \<ominus> (\<Squnion>i. Y i)) = Fin n"
+    using as lncases by auto
+  obtain i where i_def:"Fin (Suc n) \<le>  #(A \<ominus> (Y i))"
+    using assms(1) by blast
+  have "#(A \<ominus> (Y i)) \<le> #(A \<ominus> (\<Squnion>i::nat. Y i))"
+    using assms(2) cont_pref_eq1I is_ub_thelub mono_slen by blast
+  thus False
+    using dual_order.trans i_def n_def by fastforce
+qed
+
+lemma snth_filter: "Fin n < #s \<Longrightarrow> snth n s\<in>A \<Longrightarrow> sfilter A\<cdot>s \<noteq>\<bottom>"
+  apply(induction n arbitrary: s)
+  apply auto
+  apply (metis lnsuc_neq_0_rev sfilter_in slen_scons strict_slen surj_scons)
+  apply(simp add: snth_rt)
+  by (metis Fin_02bot Fin_Suc inject_Fin lnzero_def n_not_Suc_n not_le only_empty_has_length_0 sfilter_in sfilter_nin slen_rt_ile_eq slen_scons stream.sel_rews(2) strictI surj_scons)
+
 
 (* ----------------------------------------------------------------------- *)
 subsection {* @{term stakewhile} *}
@@ -2805,6 +2826,13 @@ proof -
   hence "#(szip\<cdot>(\<up>a \<bullet> as)\<cdot>(\<up>b \<bullet> bs2)) = min (#(\<up>a \<bullet> as)) (#(\<up>b \<bullet> bs2))" by (simp add: as2 min_def) 
   thus "#(szip\<cdot>(u && as)\<cdot>bs) = min (#(u && as)) (#bs)" by (metis a_def b_def lscons_conv) 
 qed
+
+lemma szip_nth: "Fin n < #s1 \<Longrightarrow> Fin n < #s2 \<Longrightarrow> snth n (szip\<cdot>s1\<cdot>s2) = (snth n s1, snth n s2)"
+  apply(induction n arbitrary: s1 s2)
+  apply auto
+   apply (metis lnsuc_neq_0 only_empty_has_length_0 shd1 surj_scons szip_scons)
+  apply(simp add: snth_rt)
+  by (smt empty_is_shortest leD not_le only_empty_has_length_0 only_empty_has_length_0 only_empty_has_length_0 slen_rt_ile_eq slen_rt_ile_eq snth_rt snth_scons stream.sel_rews(2) stream.sel_rews(2) strict_slen strict_slen strict_slen strict_szip_snd surj_scons surj_scons szip_scons)
 
 (* ----------------------------------------------------------------------- *)
 subsection {* @{term sscanlA} *}
@@ -3882,6 +3910,21 @@ text {* filtering with the stream's domain does not change the stream *}
 lemma sfilter_sdoml4 [simp]:
   "sfilter (sdom\<cdot>s)\<cdot>s = s"
 by (rule sfilter_sdoml3 [rule_format, of "s" "sdom\<cdot>s"], simp)
+
+lemma sfilter_fin: assumes "#(A \<ominus> s) < \<infinity>" 
+  shows "\<exists>n. (A \<ominus> (sdrop n\<cdot>s)) = \<bottom>"
+  apply(rule ccontr)
+  apply auto
+  by (metis assms fun_approxl2 lnat_well_h2 sconc_neq_h sconc_snd_empty split_sfilter)
+
+lemma s_one_dom_inf: assumes "sdom\<cdot>s = {x}" and "#s = \<infinity>"
+    shows "s = (\<up>x) \<infinity>"
+  by (metis Fin_02bot Fin_Suc Suc_n_not_le_n assms(1) assms(2) bot_is_0 inject_Fin less_or_eq_imp_le sinftimes_unfold singleton_iff slen_scons slen_sinftimes snth2sdom snth_sinftimes snths_eq strict_icycle strict_slen)
+
+lemma sfilter_bot_dom: "(A \<ominus> s) = \<bottom> \<Longrightarrow> sdom\<cdot>s \<subseteq> UNIV - A"
+  apply(induction s rule: ind)
+    apply auto
+  by (metis DiffD2 inject_scons rev_subsetD sfilter_in sfilter_nin strictI)
 
 text {* The domain of a concatenated stream is the union of the single domains *}
 lemma sdom_sconc2un:

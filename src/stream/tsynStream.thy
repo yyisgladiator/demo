@@ -587,6 +587,15 @@ lemma tsynabs_sdom: "sdom\<cdot>(tsynAbs\<cdot>s) = tsynDom\<cdot>s"
   apply (simp add: tsynabs_sconc_msg tsyndom_sconc_msg)
   by (simp add: tsynabs_sconc_null tsyndom_sconc_null)
 
+lemma tsynabs_fin_take: assumes "#(tsynAbs\<cdot>s) < \<infinity>"
+  shows "\<exists>n. tsynAbs\<cdot>(stake n\<cdot>s) = tsynAbs\<cdot>s"
+  by (metis assms fun_approxl2 lnat_well_h2)
+
+lemma tsynabs_fin_drop: assumes "#(tsynAbs\<cdot>s) < \<infinity>"
+  shows "\<exists>n. tsynAbs\<cdot>(sdrop n\<cdot>s) = \<bottom>"
+  by (metis (no_types, lifting) assms drop_not_all inf_less_eq leI notinfI3 sconc_neq_h sconc_snd_empty sdropostake split_streaml1 tsynabs_fin_take tsynabs_sconc)
+
+
 text {* @{term tsynAbs} test on finite stream. *}
 lemma tsynabs_test_finstream: "tsynAbs\<cdot>(<[Msg 1, Msg 2, null, null, Msg 1, null]>) = <[1, 2, 1]>"
   by (simp add: tsynabs_insert)
