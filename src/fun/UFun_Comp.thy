@@ -1320,9 +1320,6 @@ subsection \<open>Equality\<close>
 subsubsection \<open>ufSerComp\<close>
 (* ufcomp ufsercomp  *)
 
-lemma ufcomph_insert: "ufCompH f1 f2 x\<cdot>z = ((f1\<rightleftharpoons>((x \<uplus> z)  \<bar> ufDom\<cdot>f1)) \<uplus>  (f2\<rightleftharpoons>((x \<uplus> z)  \<bar> ufDom\<cdot>f2)))"
-  by (simp add: ufCompH_def)
-
 lemma sercomp_dom_f1: assumes "sercomp_well f1 f2"
                       and "(ufDom\<cdot>f1 \<inter> ufRan\<cdot>f2 = {})"
                       and "ubclDom\<cdot>tb = ufCompI f1 f2"

@@ -687,8 +687,18 @@ lemma sercomp_conc_inout:
   shows "ufSerComp (spfConcOut sb\<cdot>f) g = ufSerComp f (spfConcIn sb\<cdot>g)"
   apply (rule spf_eq)
    apply (metis (no_types, lifting) assms spfConcIn_dom spfConcIn_ran spfConcOut_dom spfConcOut_ran ufSerComp_dom)
-  using spfConcIn_dom spfConcIn_ran spfConcIn_step spfConcOut_dom spfConcOut_ran spfConcOut_step ubclDom_ubundle_def ufSerComp_apply ufran_2_ubcldom2
-  by (metis assms ufSerComp_dom)
+  using spfConcIn_dom spfConcIn_ran spfConcIn_step spfConcOut_dom spfConcOut_ran spfConcOut_step ubclDom_ubundle_def ufSerComp_apply ufran_2_ubcldom2 assms ufSerComp_dom
+proof -
+  fix ub :: "'a stream\<^sup>\<Omega>"
+  assume a1: "ubDom\<cdot>ub = ufDom\<cdot>(spfConcOut sb\<cdot>f \<circ> g)"
+  have f2: "ufDom\<cdot>(spfConcOut sb\<cdot>f) \<inter> ufRan\<cdot>(spfConcOut sb\<cdot>f) = {}"
+    using assms by force
+  have "ubclDom\<cdot>(f \<rightleftharpoons> ub) = ufRan\<cdot>f"
+    using a1 by (metis (no_types) assms spfConcOut_dom spfConcOut_ran ubclDom_ubundle_def ufSerComp_dom ufran_2_ubcldom2)
+  then show "(spfConcOut sb\<cdot>f \<circ> g) \<rightleftharpoons> ub = (f \<circ> spfConcIn sb\<cdot>g) \<rightleftharpoons> ub"
+    using f2 a1 by (simp add: assms spfConcIn_dom spfConcIn_step spfConcOut_dom spfConcOut_ran ubclDom_ubundle_def ufSerComp_apply ufSerComp_dom)
+qed
+
 
 lemma sercomp_conc_out: 
   assumes "sercomp_well f g"
