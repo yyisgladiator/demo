@@ -653,10 +653,6 @@ lemma spfrt_conc_in_id[simp]: assumes "sbeDom sbe = ufDom\<cdot>spf"
   apply (simp add: ufclDom_ufun_def)
   by (simp add: assms ubclDom_ubundle_def)
 
-
-
-
-
 lemma spfconcin_out_switch: "spfConcIn a\<cdot>(spfConcOut b\<cdot>spf) = spfConcOut b\<cdot>(spfConcIn a\<cdot>spf)"
   apply(rule ufun_eqI)
    apply(simp)
@@ -673,5 +669,35 @@ lemma spfconcin_out_switch: "spfConcIn a\<cdot>(spfConcOut b\<cdot>spf) = spfCon
   apply (subst spfConcIn_step)
   apply (simp add: ubclDom_ubundle_def)
    by (simp add: ubclDom_ubundle_def)
+
+
+subsection \<open>Sercomp spfConcIn/Out lemma\<close>
+
+
+lemma sercomp_conc_in: 
+  assumes "sercomp_well f g"
+  shows "spfConcIn sb\<cdot>(ufSerComp f g) = ufSerComp (spfConcIn sb\<cdot>f) g"
+  apply (rule spf_eq)
+  apply (metis (no_types, lifting) assms spfConcIn_dom spfConcIn_ran ufSerComp_dom)
+  using assms spfConcIn_dom spfConcIn_ran spfConcIn_step ubconceq_dom
+  by (simp add: assms ubclDom_ubundle_def ufSerComp_apply ufSerComp_dom)
+
+lemma sercomp_conc_inout: 
+  assumes "sercomp_well f g"
+  shows "ufSerComp (spfConcOut sb\<cdot>f) g = ufSerComp f (spfConcIn sb\<cdot>g)"
+  apply (rule spf_eq)
+   apply (metis (no_types, lifting) assms spfConcIn_dom spfConcIn_ran spfConcOut_dom spfConcOut_ran ufSerComp_dom)
+  using spfConcIn_dom spfConcIn_ran spfConcIn_step spfConcOut_dom spfConcOut_ran spfConcOut_step ubclDom_ubundle_def ufSerComp_apply ufran_2_ubcldom2
+  by (metis assms ufSerComp_dom)
+
+lemma sercomp_conc_out: 
+  assumes "sercomp_well f g"
+  shows "ufSerComp f (spfConcOut sb\<cdot>g) = spfConcOut sb\<cdot>(ufSerComp f g)"
+  apply (rule spf_eq)
+  apply simp
+  apply (metis (no_types, lifting) assms spfConcOut_dom spfConcOut_ran ufSerComp_dom)
+  using spfConcOut_dom spfConcOut_ran spfConcOut_step ubclDom_ubundle_def ufSerComp_apply
+  by (smt assms ufSerComp_dom ufran_2_ubcldom2)
+
 
 end
