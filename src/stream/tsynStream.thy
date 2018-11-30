@@ -954,6 +954,13 @@ lemma tsynmap_inj_eq:
   apply (rule injD)
   using assms tsynmap_inj by blast+
 
+lemma tsynmap_rt: "tsynMap f\<cdot>(srt\<cdot>s) = srt\<cdot>(tsynMap f\<cdot>s)"
+  apply(induction s rule:tsyn_ind)
+  apply auto
+  apply (simp add: tsynmap_sconc_msg)
+  by (simp add: tsynmap_sconc_null)
+
+
 (* ----------------------------------------------------------------------- *)
   subsection {* tsynProjFst *}
 (* ----------------------------------------------------------------------- *)
