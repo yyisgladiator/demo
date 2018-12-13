@@ -357,6 +357,10 @@ lemma uspec_dom[simp]: "s\<in>USPEC In Out \<Longrightarrow> uspecDom\<cdot>s = 
 lemma uspec_ran[simp]: "s\<in>USPEC In Out \<Longrightarrow> uspecRan\<cdot>s= Out"
   by (metis (mono_tags) USPEC_def mem_Collect_eq)
 
+lemma uspec_in: "uspecDom\<cdot>uspec = In \<Longrightarrow> uspecRan\<cdot>uspec=Out \<Longrightarrow> uspec \<in> USPEC In Out"
+  apply(simp only: USPEC_def)
+  by blast
+
 subsection \<open>uspecLeast\<close>
 
 lemma uspecleast_dom[simp]: "uspecDom\<cdot>(uspecLeast In Out) = In"
@@ -1603,5 +1607,11 @@ lemma uspecconst_consistent [simp]: "uspecIsConsistent (uspecConst f)"
 
 lemma uspecconst_set [simp]: "uspecSet\<cdot>(uspecConst f) = {f}"
   by (simp add: uspecConst.rep_eq uspecset_insert)
+
+lemma uspecconst_least: "uspecConst f \<noteq> uspecLeast Dom Ran"
+  by (metis uspecconst_consistent uspecleast_consistent uspecleast_dom uspecleast_ran)
+
+lemma uspecconst_all: "P  f \<Longrightarrow> uspecForall P (uspecConst f)"
+  by(simp add: uspecForall_def)
 
 end
