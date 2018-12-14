@@ -1218,6 +1218,12 @@ lemma uspecflatten_set: "uspecSet\<cdot>(uspecFlatten Dom Ran\<cdot>(uspecs)) =
   apply (metis (mono_tags) member_filter uspec_allDom uspec_set_filter_def uspec_set_filter_insert)+
   done
 
+lemma uspecflatten_set_nofilter: assumes "\<And>spec. spec\<in>uspecs \<Longrightarrow> uspecDom\<cdot>spec = Dom"
+    and "\<And>spec. spec\<in>uspecs \<Longrightarrow> uspecRan\<cdot>spec = Ran"
+  shows "uspecSet\<cdot>(uspecFlatten Dom Ran\<cdot>(uspecs)) = ((\<Union> ((Rep_cfun uspecSet) ` uspecs)))"
+  apply(subst uspecflatten_set)
+  using assms(1) assms(2) by auto
+
 subsection \<open>Forall Exists\<close>
 
 lemma uspec_for_all_ex:
