@@ -51,3 +51,9 @@ session "spec" (mustWork) in spec = "fun" +
     USpec_UFunComp
 
 
+session ABPstream (canFail) in ABP = "spec" + 
+  options [quick_and_dirty = false]
+  theories
+    Medium
+
+
