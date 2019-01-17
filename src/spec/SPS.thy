@@ -27,6 +27,12 @@ definition spsComplete :: "('m::ubcl \<Rrightarrow> 'n::ubcl) uspec \<Rightarrow
                                             \<and> (\<forall>sb. ubclDom\<cdot>sb = uspecDom\<cdot>sps \<longrightarrow> (\<exists>spf2\<in>(uspecSet\<cdot>sps). spf\<rightleftharpoons>sb = spf2\<rightleftharpoons>sb))},
                              (Discr (uspecDom\<cdot>sps)), (Discr (uspecRan\<cdot>sps)))"
 
+(* Black Box View of the Komponent *)
+definition spsBehaviour :: "('m::ubcl \<Rrightarrow> 'n::ubcl) uspec \<Rightarrow> 'm \<Rightarrow> 'n set" where
+"spsBehaviour sps input = (if(uspecDom\<cdot>sps = ubclDom\<cdot>input) then {spf\<rightleftharpoons>input | spf. spf\<in>uspecSet\<cdot>sps} else {})"
+
+
+
 section \<open>Lemma\<close>
 
 (* ----------------------------------------------------------------------- *)
@@ -220,5 +226,25 @@ lemma assumes "uspec_compwell uspec1 uspec2"
 lemma assumes "uspec_compwell uspec1 uspec2"
   shows "spsComplete (uspec1 \<Otimes> uspec2) \<sqsubseteq> ((spsComplete uspec1) \<Otimes> (spsComplete uspec2))"
   oops
+
+
+
+(* ----------------------------------------------------------------------- *)
+subsection \<open>spsBehaviour\<close>
+(* ----------------------------------------------------------------------- *)
+lemma spsbehaviour_ran: assumes "output \<in> spsBehaviour sps input"
+  shows "ubclDom\<cdot>output = uspecRan\<cdot>sps"
+  using assms apply(simp add: spsBehaviour_def)
+  apply(cases "uspecDom\<cdot>sps = ubclDom\<cdot>input")
+  apply auto
+  apply (metis ufclDom_ufun_def ufclRan_ufun_def ufran_2_ubcldom2 uspec_allDom uspec_allRan)
+  by (metis ufclDom_ufun_def ufclRan_ufun_def ufran_2_ubcldom2 uspec_allDom uspec_allRan)
+
+lemma spscomplete_behaviour[simp]: "spsBehaviour (spsComplete sps) input = spsBehaviour sps input"
+  unfolding spsBehaviour_def spscomplete_set
+  apply(cases "uspecDom\<cdot>sps = ubclDom\<cdot>input")
+  apply (auto)
+  by (metis ufclDom_ufun_def ufclRan_ufun_def uspec_allDom uspec_allRan)
+
 
 end
