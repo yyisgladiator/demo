@@ -246,5 +246,19 @@ lemma spscomplete_behaviour[simp]: "spsBehaviour (spsComplete sps) input = spsBe
   apply (auto)
   by (metis ufclDom_ufun_def ufclRan_ufun_def uspec_allDom uspec_allRan)
 
+lemma spscomplete_behaviour_max: 
+  assumes "\<And>input. spsBehaviour sps1 input = spsBehaviour sps2 input"
+  and "uspecDom\<cdot>sps1 = uspecDom\<cdot>sps2" and "uspecRan\<cdot>sps1 = uspecRan\<cdot>sps2"
+  shows "sps1 \<sqsubseteq> spsComplete sps2"
+  apply(rule spscomplete_belowI)
+  using assms(2) apply blast
+  using assms(3) apply blast
+  by (smt assms(1) assms(2) mem_Collect_eq spsBehaviour_def)
+
+lemma spscomplete_behaviour_eq: 
+  assumes "\<And>input. spsBehaviour sps1 input = spsBehaviour sps2 input"
+  and "uspecDom\<cdot>sps1 = uspecDom\<cdot>sps2" and "uspecRan\<cdot>sps1 = uspecRan\<cdot>sps2"
+  shows "spsComplete sps1 = spsComplete sps2"
+  by (simp add: assms(1) assms(2) assms(3) below_antisym spscomplete_behaviour_max)
 
 end
