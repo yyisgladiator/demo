@@ -150,13 +150,14 @@ shows "f x \<in> longIterate C f"
   using assms longiterate_step by fastforce
 
 
-lemma longiterate_lfp_in: assumes "monofun f" and "C\<in>DIV" and "goodFormed C f" and  "a\<in>(longIterate C f)"
+lemma longiterate_lfp_in: assumes "monofun f" and "C\<in>DIV" and "goodFormed C f"
   shows "lfp C f \<in> longIterate C f"
 proof - 
   have h1: "\<And>K. longChain K \<Longrightarrow> K\<subseteq>(longIterate C f) \<Longrightarrow> \<exists>u\<in>(longIterate C f). \<forall>a\<in>K. a \<sqsubseteq> u"
     by (meson assms(2) assms(3) div_cpo_g dual_order.trans is_ub_thelub_ex longiterate_lub_in longiterate_subset)
+  obtain a where a_def: "a\<in>(longIterate C f)" using assms(2) longiterate_bot by blast
   obtain z where "z\<in>(longIterate C f)" and "\<And>a. a\<in>(longIterate C f) \<Longrightarrow> (z\<sqsubseteq>a \<longrightarrow> a=z)" 
-    using h1 by (metis assms(4) empty_iff own_zorn3)
+    using h1 by (metis a_def empty_iff own_zorn3)
   thus ?thesis
     by (metis assms(1) assms(2) assms(3) lfp_least_eq long_iterate_below_fix2 long_iterate_below_fix3 longiterate_step2 longiterate_subset subsetCE) 
 qed
