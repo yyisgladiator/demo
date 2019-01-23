@@ -12,7 +12,7 @@ class division =
 
   assumes div_non_empty: "DIV \<noteq> {}"
 
-  assumes div_inner_non_empty: "\<And>a. a\<in>DIV  \<Longrightarrow> a \<noteq> {}"
+  assumes div_inner_non_empty: "\<And>D. D\<in>DIV  \<Longrightarrow> D \<noteq> {}"
 
 begin
 
@@ -24,7 +24,7 @@ class div_cpo = division + po +
 
 
     (* every set is a cpo *)
-  assumes div_cpo: "\<And>S a. a\<in>DIV \<Longrightarrow> \<not>finite S \<Longrightarrow> longChain S \<Longrightarrow> S\<subseteq>a \<Longrightarrow> \<exists>x\<in>a. S <<| x"
+  assumes div_cpo: "\<And>S D. D\<in>DIV \<Longrightarrow> \<not>finite S \<Longrightarrow> longChain S \<Longrightarrow> S\<subseteq>D \<Longrightarrow> \<exists>x\<in>D. S <<| x"
 begin
 
 lemma div_cpo_g: "a\<in>DIV \<Longrightarrow> longChain S \<Longrightarrow> S\<subseteq>a \<Longrightarrow> \<exists>x\<in>a. S <<| x"
@@ -57,7 +57,7 @@ end
 
 class div_pcpo = div_cpo +  
     (* every division has its own bottom element *)
-  assumes div_pcpo: "\<And>a. a\<in>DIV \<Longrightarrow> \<exists>bot\<in>a. \<forall>b\<in>a. bot \<sqsubseteq>b"  (* ToDo: Name + schöner aufschreiben *)
+  assumes div_pcpo: "\<And>D. D\<in>DIV \<Longrightarrow> \<exists>bot\<in>D. \<forall>b\<in>D. bot \<sqsubseteq>b" 
 begin
 
 definition div_bot::"'b::div_pcpo set \<Rightarrow> 'b" where

@@ -939,5 +939,20 @@ proof -
     using calculation by blast
 qed
 
+lemma lnat_no_chain: fixes Y:: " nat \<Rightarrow> lnat" 
+  assumes "range Y = UNIV"
+  shows "\<not>chain Y"
+proof (rule ccontr)
+  assume "\<not>\<not>chain Y"
+  obtain i where "Y i = \<infinity>"
+    by (metis assms surj_def)
+  hence "max_in_chain i Y"
+    by (metis \<open>\<not>\<not>chain Y\<close> inf_less_eq is_ub_thelub lnle_conv max_in_chainI3)
+  hence "finite (range Y)"
+    using Prelude.finite_chainI \<open>\<not> \<not> chain Y\<close> finch_imp_finite_range by blast
+  thus False
+    by (metis (mono_tags, hide_lams) Fin_neq_inf assms ex_new_if_finite f_inv_into_f finite_imageI finite_insert finite_subset infinite_UNIV_nat inject_Fin insertCI lncases rangeI subset_UNIV)
+qed
+
 
 end

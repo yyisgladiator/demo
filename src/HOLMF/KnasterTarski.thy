@@ -52,11 +52,13 @@ lemma po_chain_total: assumes "chain K" shows "K a \<sqsubseteq> K b  \<or>  K b
   qed
 
   lemma own_zorn3: 
-    assumes "\<And>C. longChain C \<Longrightarrow> C\<noteq>{} \<Longrightarrow> C\<subseteq>S \<Longrightarrow> \<exists>u\<in>S. \<forall>a\<in>C. a \<sqsubseteq> u" and "S\<noteq>{}"
+    assumes "\<And>C. longChain C  \<Longrightarrow> C\<subseteq>S \<Longrightarrow> \<exists>u\<in>S. \<forall>a\<in>C. a \<sqsubseteq> u" and "S\<noteq>{}"
     shows "\<exists>m\<in>S. \<forall>a\<in>S. (m\<sqsubseteq>a \<longrightarrow> a=m)"
   proof -
-    have "\<forall>C. (C\<in>Chains {(x,y) | x y. x\<sqsubseteq>y \<and>x\<in>S \<and> y\<in>S} \<longrightarrow> (\<exists>u\<in>S. \<forall>a\<in>C. a \<sqsubseteq> u))"
-      using assms  by (auto simp add: longChain_def Chains_def) 
+    have "\<And>C. longChain C \<Longrightarrow> C\<noteq>{} \<Longrightarrow> C\<subseteq>S \<Longrightarrow> \<exists>u\<in>S. \<forall>a\<in>C. a \<sqsubseteq> u"
+      using assms(1) by blast
+    hence "\<forall>C. (C\<in>Chains {(x,y) | x y. x\<sqsubseteq>y \<and>x\<in>S \<and> y\<in>S} \<longrightarrow> (\<exists>u\<in>S. \<forall>a\<in>C. a \<sqsubseteq> u))"
+      using assms(2)  by (auto simp add: longChain_def Chains_def) 
     thus ?thesis 
       using po_class.own_zorn2 by blast
   qed
@@ -75,7 +77,7 @@ shows "lub S \<sqsubseteq> lub K"
 lemma knaster_tarski: fixes f :: "'a::po \<Rightarrow>'a"
   assumes monof: "monofun f" 
     and goodf: "\<And>a. a\<in>C \<Longrightarrow> f a\<in>C" 
-    and cpo: "\<And>S. longChain S \<Longrightarrow> S\<noteq>{} \<Longrightarrow> S\<subseteq>C \<Longrightarrow> \<exists>x\<in>C. S <<| x"
+    and cpo: "\<And>S. longChain S \<Longrightarrow> S\<subseteq>C \<Longrightarrow> \<exists>x\<in>C. S <<| x"
     and pcpo: "\<exists>bot\<in>C. \<forall>b\<in>C. bot \<sqsubseteq>b"
   shows "\<exists>!x. f x = x \<and> x\<in>C \<and> (\<forall>y\<in>C. f y \<sqsubseteq>y \<longrightarrow> x\<sqsubseteq>y)" (is "\<exists>!x. ?P x")
 proof -
@@ -95,10 +97,12 @@ proof -
 
   let ?r = "{(x,y) | x y. x\<sqsubseteq>y \<and>x\<in>?Z \<and> y\<in>?Z}"
 
-  have lub_in_z: "\<And>S. longChain S \<Longrightarrow> S\<noteq>{} \<Longrightarrow> S \<subseteq> ?Z \<Longrightarrow> lub S \<in> ?Z"
+  have lub_in_z: "\<And>S. longChain S  \<Longrightarrow> S \<subseteq> ?Z \<Longrightarrow> lub S \<in> ?Z"
   proof
     fix S
-    assume s_chain: "longChain S" and s_empty: "S\<noteq>{}" and s_in: "S \<subseteq> ?Z"
+    assume s_chain: "longChain S"  and s_in: "S \<subseteq> ?Z"
+    have s_empty: "S\<noteq>{}"
+      using longChain_def s_chain by blast
     have "\<And>s x. s\<in>S \<Longrightarrow> x\<in>?F \<Longrightarrow> s\<sqsubseteq>x"
       using s_in by auto
     hence lub_f:"\<And>x. x\<in>?F \<Longrightarrow> lub S \<sqsubseteq> x"
@@ -128,10 +132,10 @@ proof -
       using cpo s_empty lub_eqI s_chain s_in by blast 
     ultimately show "lub S \<sqsubseteq> f (lub S) \<and> (\<forall>x\<in>{x. f x\<sqsubseteq> x \<and> x \<in> C}. lub S \<sqsubseteq> x) \<and> lub S \<in> C" using lub_f by blast
   qed
-  have "\<And>C x. longChain C \<Longrightarrow> C\<noteq>{}\<Longrightarrow>C\<subseteq>?Z \<Longrightarrow> \<forall>a\<in>C. a\<sqsubseteq>lub C"
+  have "\<And>C x. longChain C \<Longrightarrow>C\<subseteq>?Z \<Longrightarrow> \<forall>a\<in>C. a\<sqsubseteq>lub C"
     by (metis (no_types, lifting) Ball_Collect  cpo is_ub_thelub_ex subset_iff)
-  hence "\<And>C. longChain C \<Longrightarrow> C\<noteq>{}\<Longrightarrow>C\<subseteq>?Z \<Longrightarrow> \<exists>u\<in>?Z. \<forall>a\<in>C. a \<sqsubseteq> u"
-    by (metis (no_types, lifting) lub_in_z)
+  hence "\<And>C. longChain C \<Longrightarrow>C\<subseteq>?Z \<Longrightarrow> \<exists>u\<in>?Z. \<forall>a\<in>C. a \<sqsubseteq> u"
+    by (metis (no_types, lifting) longChain_def lub_in_z)
 
   hence "\<exists>m\<in>?Z. \<forall>a\<in>?Z. (m\<sqsubseteq>a \<longrightarrow> a=m)" using bot_bot z_bot by(subst own_zorn3, auto)
 
