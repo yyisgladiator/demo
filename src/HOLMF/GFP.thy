@@ -309,6 +309,12 @@ proof -
     by simp 
 qed
 
+lemma gfp_all: assumes "monofun f"
+    and "goodFormed C f"
+    and "C \<in> DIV"
+  shows "(f (gfp C f) = (gfp C f) \<and>  (gfp C f)\<in>C \<and> (\<forall>y\<in>C. y \<sqsubseteq> f  y \<longrightarrow> y\<sqsubseteq>(gfp C f)))"
+  using assms(1) assms(2) assms(3) gfp_div gfp_fix gfp_greatest by fastforce
+
 lemma gfp_greatest_eq: assumes "monofun f"
     and "goodFormed C f"
     and "C \<in> DIV"
