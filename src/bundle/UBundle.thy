@@ -588,7 +588,18 @@ lemma ublen_not_0: assumes "ubLen ub \<noteq> 0" and "c\<in>ubDom\<cdot>ub"
   shows "usclLen\<cdot>(ub . c) \<noteq> 0"
   using assms(1) assms(2) ublen_channel by fastforce
 
-
+lemma ubLen_min: assumes "ubDom\<cdot>ub \<noteq> {}" and "finite (ubDom\<cdot>ub)"
+  shows "ubLen ub = Min {usclLen\<cdot>(ub . c) | c. c \<in> ubDom\<cdot>ub}"
+proof-
+  have uscllen_ub_set_fin: "finite {usclLen\<cdot>(ub . c) | c. c \<in> ubDom\<cdot>ub}"
+    by (simp add: assms(2) Setcompr_eq_image)
+  have uscllen_set_nempty: "{usclLen\<cdot>(ub . c) | c. c \<in> ubDom\<cdot>ub} \<noteq> {}"
+    using assms(1) by blast
+  have "ubLen ub = (LEAST ln. \<exists>c. ln = usclLen\<cdot>(ub  .  c) \<and> c \<in> ubDom\<cdot>ub)"
+    by (simp add: assms ubLen_def)
+  thus ?thesis
+    using Least_Min uscllen_ub_set_fin uscllen_set_nempty by fastforce
+qed
 
 
 (* Missing *)
@@ -679,6 +690,44 @@ lemma ubunion_restrict2 [simp]: assumes "ubDom\<cdot>b2 \<inter> cs = {}"
 lemma ubunion_ubrestrict3: "(ubUnion\<cdot>a\<cdot>b) \<bar> cs = ubUnion\<cdot>(a \<bar> cs)\<cdot>(b \<bar> cs)"
   apply (simp add: ubunion_insert ubrestrict_insert)
   by (metis mapadd2if_then restrict_map_def)
+
+lemma ubunion_ubLen_min: 
+  assumes "finite (ubDom\<cdot>ub1)"
+  and "finite (ubDom\<cdot>ub2)"
+  and "ubDom\<cdot>ub1 \<inter> ubDom\<cdot>ub2 = {}"
+  shows "ubLen (ubUnion\<cdot>ub1\<cdot>ub2) = Min {ubLen ub1, ubLen ub2}"
+proof-
+  have ub1_dom_empty_case: "ubDom\<cdot>ub1 = {} \<Longrightarrow> ubLen (ubUnion\<cdot>ub1\<cdot>ub2) = Min {ubLen ub1, ubLen ub2}"
+    by (simp add: ubLen_def)
+  have ub2_dom_empty_case: "ubDom\<cdot>ub2 = {} \<Longrightarrow> ubLen (ubUnion\<cdot>ub1\<cdot>ub2) = Min {ubLen ub1, ubLen ub2}"
+    by (simp add: Min_insert2 assms(3) ubLen_def)
+  have ub1_ub2_union_dom_fin: "finite (ubDom\<cdot>(ubUnion\<cdot>ub1\<cdot>ub2))"
+    by (simp add: assms)
+  hence ubunion_ublen_min: "ubDom\<cdot>ub2 \<noteq> {} \<Longrightarrow> ubLen (ubUnion\<cdot>ub1\<cdot>ub2) = Min {usclLen\<cdot>((ubUnion\<cdot>ub1\<cdot>ub2) . c) | c. c \<in> ubDom\<cdot>(ubUnion\<cdot>ub1\<cdot>ub2)}"
+    by (simp add: assms ub1_ub2_union_dom_fin ubLen_min)
+  have ub1_ub2_dom_union: "Min {usclLen\<cdot>((ubUnion\<cdot>ub1\<cdot>ub2) . c) | c. c \<in> ubDom\<cdot>(ubUnion\<cdot>ub1\<cdot>ub2)} = Min {usclLen\<cdot>((ubUnion\<cdot>ub1\<cdot>ub2) . c) | c. c \<in> (ubDom\<cdot>ub1 \<union> ubDom\<cdot>ub2)}"
+    by simp
+  have ubunion_union_split: "{usclLen\<cdot>((ubUnion\<cdot>ub1\<cdot>ub2) . c) | c. c \<in> (ubDom\<cdot>ub1 \<union> ubDom\<cdot>ub2)} = ({usclLen\<cdot>(ub1 . c) | c. c \<in> ubDom\<cdot>ub1 } \<union> {usclLen\<cdot>(ub2 . c) | c. c \<in> ubDom\<cdot>ub2 })"
+  proof-
+    have len_union_split: "{usclLen\<cdot>((ubUnion\<cdot>ub1\<cdot>ub2) . c) | c. c \<in> ubDom\<cdot>ub1 \<or> c \<in> ubDom\<cdot>ub2} = ({usclLen\<cdot>((ubUnion\<cdot>ub1\<cdot>ub2) . c) | c. c \<in> ubDom\<cdot>ub1} \<union> {usclLen\<cdot>((ubUnion\<cdot>ub1\<cdot>ub2) . c) | c. c \<in> ubDom\<cdot>ub2})"
+      by auto
+    have ubunion_ub1_len_set: "{usclLen\<cdot>((ubUnion\<cdot>ub1\<cdot>ub2) . c) | c. c \<in> ubDom\<cdot>ub1 } = {usclLen\<cdot>(ub1 . c) | c. c \<in> ubDom\<cdot>ub1 }"
+      by (metis (no_types, hide_lams) assms(3) ubunion_commutative ubunion_getchR)
+    have ubunion_ub2_len_set: "{usclLen\<cdot>((ubUnion\<cdot>ub1\<cdot>ub2) . c) | c. c \<in> ubDom\<cdot>ub2 } = {usclLen\<cdot>(ub2 . c) | c. c \<in> ubDom\<cdot>ub2 }"
+      by (metis (no_types, lifting) ubunion_getchR)
+    thus ?thesis
+      by (simp add: len_union_split ubunion_ub1_len_set)
+  qed
+  have min_union_split: "ubDom\<cdot>ub1 \<noteq> {} \<and> ubDom\<cdot>ub2 \<noteq> {} \<Longrightarrow> Min ({usclLen\<cdot>(ub1 . c) | c. c \<in> ubDom\<cdot>ub1 } \<union> {usclLen\<cdot>(ub2 . c) | c. c \<in> ubDom\<cdot>ub2 }) = Min {(Min {usclLen\<cdot>(ub1 . c) | c. c \<in> ubDom\<cdot>ub1 }), (Min {usclLen\<cdot>(ub2 . c) | c. c \<in> ubDom\<cdot>ub2 })}"
+    by (subst Min.union, simp_all add: assms)
+  have ub1_min_ublen: "ubDom\<cdot>ub1 \<noteq> {} \<and> ubDom\<cdot>ub2 \<noteq> {} \<Longrightarrow> (Min {usclLen\<cdot>(ub1 . c) | c. c \<in> ubDom\<cdot>ub1 }) = ubLen ub1"
+    by (subst ubLen_min, simp_all add: assms)
+  have ub2_min_ublen: "ubDom\<cdot>ub1 \<noteq> {} \<and> ubDom\<cdot>ub2 \<noteq> {} \<Longrightarrow> (Min {usclLen\<cdot>(ub2 . c) | c. c \<in> ubDom\<cdot>ub2 }) = ubLen ub2"
+    by (subst ubLen_min, simp_all add: assms)
+  thus ?thesis
+    using ub1_dom_empty_case ub2_dom_empty_case min_union_split ub1_min_ublen ub1_ub2_dom_union 
+          ubunion_ublen_min ubunion_union_split by fastforce
+qed
 
 subsection \<open>ubSetCh\<close>
 
