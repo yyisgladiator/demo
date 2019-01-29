@@ -912,6 +912,12 @@ lemma tsynmap_inv_id[simp]: "tsynDom\<cdot>tsyn \<subseteq> range F \<Longrighta
   apply (auto simp add: tsynmap_sconc_msg tsynmap_sconc_null)
   by (auto simp add: tsyndom_sconc_msg tsyndom_sconc_null f_inv_into_f)
 
+lemma tsynmap_inv_eq: 
+  assumes "surj f"
+    and "tsynMap (inv f)\<cdot>s1 = tsynMap (inv f)\<cdot>s2"
+  shows "s1 = s2"
+  by (metis (no_types, lifting) UNIV_I assms subsetI tsynmap_inv_id tsynmap_tsynmap2)
+
 text {* @{term tsynMap} test on finite stream. *}
 lemma tsynMap_test_finstream: "tsynMap (plus 1)\<cdot>(<[Msg 1, Msg 2, Msg 1, null]>) 
   = <[Msg 2, Msg 3, Msg 2, null]>"
