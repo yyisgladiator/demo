@@ -1,7 +1,8 @@
 theory bundle_induction
-imports  automat.dAutomaton
+imports  bundle.SBElem
 begin
 
+section{* more general lemmata *}
 
 lemma ubhd_getch_noteps: assumes "\<forall>c\<in>ubDom\<cdot>x. x . c \<noteq> \<bottom>"
   shows "\<forall>c\<in>ubDom\<cdot>x.  ubHd\<cdot>x . c \<noteq> \<bottom>"
@@ -16,11 +17,15 @@ lemma ubcases_alt2: "\<And>x P. \<lbrakk>\<exists>c\<in>ubDom\<cdot>x. x . c = \
                         \<Longrightarrow> P"
   using ubcases_alt by blast
 
-
 lemma ublen_sbrt_sbhd : 
   assumes "ubLen x \<le> Fin (Suc n)" 
   shows " ubLen (ubRt\<cdot>x) \<le> Fin n"
   by (metis Fin_Suc assms bottomI leD leI less2lnleD lnle_Fin_0 lnle_def lnsuc_lnle_emb lnzero_def nat.distinct(1) ubRtLen ubRtLen_zero)
+
+
+section{* new bundle induction *}
+
+subsection{* auxiliary lemmata*}
 
 lemma ubtake_ind_alt2: 
   "\<forall>x. (\<forall>ub.  ubDom\<cdot>ub = ubDom\<cdot>x \<and> (\<exists>c\<in>ubDom\<cdot>x. ub . c = \<bottom>)\<longrightarrow> P ub) \<and> 
@@ -31,10 +36,8 @@ proof(induct n)
   case 0
   have "\<And>x.
        (\<forall>ub.  ubDom\<cdot>ub = ubDom\<cdot>x \<and> (\<exists>c\<in>ubDom\<cdot>x. ub . c = \<bottom>)\<longrightarrow> P ub) \<Longrightarrow>
-        (\<forall>a s.
-            P s \<and> ubDom\<cdot>a = ubDom\<cdot>x \<and> ubDom\<cdot>s = ubDom\<cdot>x \<and> ubMaxLen (Fin (Suc 0)) a \<and> (\<forall>c\<in>ubDom\<cdot>a. a . c \<noteq> \<bottom>) \<longrightarrow> P (ubConc a\<cdot>s)) \<Longrightarrow>
-       ubLen x \<le> Fin 0 \<Longrightarrow>
-       P x"
+        (\<forall>a s. P s \<and> ubDom\<cdot>a = ubDom\<cdot>x \<and> ubDom\<cdot>s = ubDom\<cdot>x \<and> ubMaxLen (Fin (Suc 0)) a \<and> (\<forall>c\<in>ubDom\<cdot>a. a . c \<noteq> \<bottom>) \<longrightarrow> P (ubConc a\<cdot>s)) \<Longrightarrow>
+       ubLen x \<le> Fin 0 \<Longrightarrow> P x"
     by (metis (mono_tags, lifting) Fin_02bot Inf'_neq_0 bottomI lnle_def lnzero_def ubLen_def ublen_min_on_channel usclLen_zero)
   then show ?case
     using "0.prems" by blast
@@ -43,27 +46,20 @@ next
   have "\<And>(n::nat) x.
        (\<And>x.
           (\<forall>ub.  ubDom\<cdot>ub = ubDom\<cdot>x \<and> (\<exists>c\<in>ubDom\<cdot>x. ub . c = \<bottom>)\<longrightarrow> P ub) \<and>
-           (\<forall>a s.
-               P s \<and> ubDom\<cdot>a = ubDom\<cdot>x \<and> ubDom\<cdot>s = ubDom\<cdot>x \<and> ubMaxLen (Fin (Suc 0)) a \<and>  (\<forall>c\<in>ubDom\<cdot>a. a . c \<noteq> \<bottom>) \<longrightarrow> P (ubConc a\<cdot>s)) \<and>
-           ubLen x \<le> Fin n \<Longrightarrow>
-           P x) \<Longrightarrow>
+           (\<forall>a s. P s \<and> ubDom\<cdot>a = ubDom\<cdot>x \<and> ubDom\<cdot>s = ubDom\<cdot>x \<and> ubMaxLen (Fin (Suc 0)) a \<and>  (\<forall>c\<in>ubDom\<cdot>a. a . c \<noteq> \<bottom>) \<longrightarrow> P (ubConc a\<cdot>s)) \<and>
+           ubLen x \<le> Fin n \<Longrightarrow> P x) \<Longrightarrow>
       (\<forall>ub.  ubDom\<cdot>ub = ubDom\<cdot>x \<and> (\<exists>c\<in>ubDom\<cdot>x. ub . c = \<bottom>)\<longrightarrow> P ub) \<Longrightarrow>
-       (\<forall>a s.
-           P s \<and> ubDom\<cdot>a = ubDom\<cdot>x \<and> ubDom\<cdot>s = ubDom\<cdot>x \<and> ubMaxLen (Fin (Suc 0)) a \<and>  (\<forall>c\<in>ubDom\<cdot>a. a . c \<noteq> \<bottom>) \<longrightarrow> P (ubConc a\<cdot>s)) \<Longrightarrow>
-       ubLen x \<le> Fin (Suc n) \<Longrightarrow>
-       P x"
+       (\<forall>a s. P s \<and> ubDom\<cdot>a = ubDom\<cdot>x \<and> ubDom\<cdot>s = ubDom\<cdot>x \<and> ubMaxLen (Fin (Suc 0)) a \<and>  (\<forall>c\<in>ubDom\<cdot>a. a . c \<noteq> \<bottom>) \<longrightarrow> P (ubConc a\<cdot>s)) \<Longrightarrow>
+       ubLen x \<le> Fin (Suc n) \<Longrightarrow> P x"
   proof -
     fix n :: "nat"
     fix x ::" 'a\<^sup>\<Omega>"
     assume a3: "(\<And>x.
              (\<forall>ub.  ubDom\<cdot>ub = ubDom\<cdot>x \<and> (\<exists>c\<in>ubDom\<cdot>x. ub . c = \<bottom>)\<longrightarrow> P ub) \<and>
-              (\<forall>a s.
-                  P s \<and> ubDom\<cdot>a = ubDom\<cdot>x \<and> ubDom\<cdot>s = ubDom\<cdot>x \<and> ubMaxLen (Fin (Suc 0)) a \<and> (\<forall>c\<in>ubDom\<cdot>a. a . c \<noteq> \<bottom>) \<longrightarrow> P (ubConc a\<cdot>s)) \<and>
-              ubLen x \<le> Fin n \<Longrightarrow>
-              P x)"
+              (\<forall>a s. P s \<and> ubDom\<cdot>a = ubDom\<cdot>x \<and> ubDom\<cdot>s = ubDom\<cdot>x \<and> ubMaxLen (Fin (Suc 0)) a \<and> (\<forall>c\<in>ubDom\<cdot>a. a . c \<noteq> \<bottom>) \<longrightarrow> P (ubConc a\<cdot>s)) \<and>
+              ubLen x \<le> Fin n \<Longrightarrow> P x)"
     assume a4: "(\<forall>ub.  ubDom\<cdot>ub = ubDom\<cdot>x \<and> (\<exists>c\<in>ubDom\<cdot>x. ub . c = \<bottom>)\<longrightarrow> P ub)"
-    assume a5: "(\<forall>a s.
-            P s \<and> ubDom\<cdot>a = ubDom\<cdot>x \<and> ubDom\<cdot>s = ubDom\<cdot>x \<and> ubMaxLen (Fin (Suc 0)) a \<and> (\<forall>c\<in>ubDom\<cdot>a. a . c \<noteq> \<bottom>) \<longrightarrow> P (ubConc a\<cdot>s))"
+    assume a5: "(\<forall>a s. P s \<and> ubDom\<cdot>a = ubDom\<cdot>x \<and> ubDom\<cdot>s = ubDom\<cdot>x \<and> ubMaxLen (Fin (Suc 0)) a \<and> (\<forall>c\<in>ubDom\<cdot>a. a . c \<noteq> \<bottom>) \<longrightarrow> P (ubConc a\<cdot>s))"
     assume a6: "ubLen x \<le> Fin (Suc n)"
     show "P x" 
     proof -
@@ -101,8 +97,26 @@ lemma ubtake_ind_alt:
   using ubTakeLen ubtake_ind_alt2
   by auto
 
-declare[[show_types]]
-lemma ub_ind_alt:
+subsection{* final bundle inductions *}
+
+lemma finind_ub_alt:
+  "\<lbrakk>ubLen x = Fin n; 
+    \<And>ub. (ubDom\<cdot>ub = ubDom\<cdot>x \<and> (\<exists>c\<in>ubDom\<cdot>x. ub . c = \<bottom>)) \<Longrightarrow> P ub;
+    \<And>u ub. (P ub \<and> ubDom\<cdot>u = ubDom\<cdot>x \<and> ubDom\<cdot>ub = ubDom\<cdot>x \<and> ubMaxLen (Fin 1) u \<and> (\<forall>c\<in>ubDom\<cdot>u. u . c \<noteq> \<bottom>)) \<Longrightarrow> P (ubConc u\<cdot>ub)\<rbrakk>
+    \<Longrightarrow> P x"
+  by(subst ubtake_ind_alt2, auto)
+
+lemma finind_sbe:
+ "\<lbrakk>ubLen x = Fin n;
+  \<And>ub. (ubDom\<cdot>ub = ubDom\<cdot>x \<Longrightarrow> (\<exists>c\<in>ubDom\<cdot>x. ub . c = \<bottom>)) \<Longrightarrow> P ub;
+  \<And>sbe ub. P ub \<Longrightarrow> sbeDom sbe = ubDom\<cdot>x \<Longrightarrow> ubDom\<cdot>ub = ubDom\<cdot>x \<Longrightarrow> P (ubConcEq (sbe2SB sbe)\<cdot>ub)\<rbrakk>
+  \<Longrightarrow> P x"
+  apply(subst ubtake_ind_alt2, auto)
+  by (smt Fin_neq_inf One_nat_def conceq_conc_1 leI one_lnat_def order_refl sbe_obtain ubHdLen_one 
+          ubLen_def ubclDom_ubundle_def ubconc_sbhdrt ubconc_ubleast ubhd_ubdom ublen_min_on_channel 
+          ubmaxlen_least_only ubmaxlen_sbrt_sbhd ubrt_ubdom usclLen_zero)
+
+lemma ind_ub_alt:
   "\<lbrakk>ubDom\<cdot>x \<noteq> {};
     adm P;
     \<And>ub. (ubDom\<cdot>ub = ubDom\<cdot>x \<and> (\<exists>c\<in>ubDom\<cdot>x. ub . c = \<bottom>)) \<Longrightarrow> P ub;
@@ -114,16 +128,16 @@ lemma ub_ind_alt:
 
 lemma ind_sbe:
   assumes "adm P" 
-  and     "ubDom\<cdot>x = {} \<Longrightarrow> P x"
-  and     "\<And>ub. ubDom\<cdot>ub = ubDom\<cdot>x \<and> ubLen ub = 0 \<Longrightarrow> P ub" 
-  and     "\<And>sbe ub. P ub \<Longrightarrow> sbeDom sbe = (ubDom\<cdot>x) \<Longrightarrow> ubDom\<cdot>ub = (ubDom\<cdot>x) \<Longrightarrow> P (ubConcEq (sbe2SB sbe)\<cdot>ub)"
+  and     "ubDom\<cdot>x \<noteq> {}"
+  and     "\<And>ub. (ubDom\<cdot>ub = ubDom\<cdot>x \<Longrightarrow> (\<exists>c\<in>ubDom\<cdot>x. ub . c = \<bottom>)) \<Longrightarrow> P ub"
+  and     "\<And>sbe ub. P ub \<Longrightarrow> sbeDom sbe = ubDom\<cdot>x \<Longrightarrow> ubDom\<cdot>ub = ubDom\<cdot>x \<Longrightarrow> P (ubConcEq (sbe2SB sbe)\<cdot>ub)"
 shows     "P x"
-  apply(case_tac "ubDom\<cdot>x = {}", simp add: assms)
-  apply(rule ub_ind_alt)
-  apply(simp add: assms)+
-  apply(metis (no_types) assms(3) ublen_not_0 usclLen_bot)
+  apply(rule ind_ub_alt)
+  apply (simp add: assms)
+  apply (simp add: assms)
+  apply (simp add: assms)
   by (metis (no_types, lifting) assms  ublen_not_0 usclLen_bot one_lnat_def sbe_obtain ubLen_def 
-      ublen_min_on_channel ubundle_ubgetch_uscllen_one)
+      ublen_min_on_channel ubundle_ubgetch_uscllen_one)                       
 
 
 
