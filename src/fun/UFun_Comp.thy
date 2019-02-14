@@ -2542,6 +2542,226 @@ instance
   apply (simp add: UFun_Comp.ufunclLeast_ufun_def ufclRan_ufun_def)
   done
 end
+(*
+lemma arbiter_asspf_apply:
+  assumes "ubDom\<cdot>ub = arbiter_ASDom"
+  shows "arbiter_ASSPF \<rightleftharpoons> ub = 
+        (arbiter_ASCmd \<rightleftharpoons> (
+        (arbiter_ASAnd \<otimes> arbiter_ASFlasher) \<rightleftharpoons> (
+          ubRestrict (ufDom\<cdot>(arbiter_ASAnd \<otimes> arbiter_ASFlasher))\<cdot>(ub \<uplus> 
+            ((arbiter_ASOr\<otimes>arbiter_ASNot) \<rightleftharpoons> ub)
+        ))))"
+  proof -
+    have asspf_ufdom: "ubDom\<cdot>ub = ufDom\<cdot>(arbiter_ASOr \<otimes> arbiter_ASNot \<otimes> arbiter_ASAnd \<otimes> arbiter_ASFlasher \<otimes> arbiter_ASCmd)"
+      by (metis arbiter_ASSPF_def arbiter_asspf_dom assms ufhide_dom)
+    have restrict_ran: "ufRan\<cdot>(arbiter_ASOr \<otimes> arbiter_ASNot \<otimes> arbiter_ASAnd \<otimes> arbiter_ASFlasher \<otimes> arbiter_ASCmd) -
+                (arbiter_ASOrRan \<union> arbiter_ASNotRan \<union> arbiter_ASAndRan \<union> arbiter_ASFlasherRan \<union> arbiter_ASCmdRan - arbiter_ASRan) = arbiter_ASRan"
+      using arbiter_ASCmdRan_def arbiter_ASRan_def by auto
+    have asspf_uf1_eq: "ubclRestrict (ufDom\<cdot>arbiter_ASSPF_uf1)\<cdot>ub = ub"
+      proof -
+        have "ufDom\<cdot>arbiter_ASSPF_uf1 = ubclDom\<cdot>ub"
+          apply (simp add: ubclDom_ubundle_def assms(1) arbiter_ASSPF_uf1_def arbiter_ASOrDom_def arbiter_ASNotDom_def arbiter_ASOrRan_def arbiter_ASNotRan_def arbiter_ASDom_def)
+          by (simp add: insert_commute)
+        then show ?thesis
+          by (simp add: ubclrestrict_dom_id)
+      qed
+    have ubcldom_l: "ubclDom\<cdot>(arbiter_ASSPF_uf1 \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>arbiter_ASSPF_uf1)\<cdot>ub)) = arbiter_ASOrRan \<union> arbiter_ASNotRan"
+      by (metis arbiter_ASSPF_uf1_def arbiter_asspf_arbitercomp_well arbiter_asspf_ran_h1 arbiter_asspf_uf1_uf2_comp_dom arbitercomp_f1_ubcldom_eq assms)
+    have uf1_restrict_eq: "(ubclRestrict arbiter_ASRan\<cdot>((arbiter_ASSPF_uf1 \<rightleftharpoons> ub) \<uplus> 
+                            (arbiter_ASSPF_uf2 \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>arbiter_ASSPF_uf2)\<cdot>(ub \<uplus> 
+                            (arbiter_ASSPF_uf1 \<rightleftharpoons> ub)))))) = 
+                            (ubclRestrict arbiter_ASRan\<cdot>(arbiter_ASSPF_uf2 \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>arbiter_ASSPF_uf2)\<cdot>(ub \<uplus> 
+                            (arbiter_ASSPF_uf1 \<rightleftharpoons> ub)))))"
+      proof -
+        have h1: "(arbiter_ASOrRan \<union> arbiter_ASNotRan) \<inter> arbiter_ASRan = {}"
+          by (simp add: arbiter_ASRan_def arbiter_ASOrRan_def arbiter_ASNotRan_def)
+        have h2: "(ubclRestrict arbiter_ASRan\<cdot>((arbiter_ASSPF_uf2 \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>arbiter_ASSPF_uf2)\<cdot>(ub \<uplus> 
+                  (arbiter_ASSPF_uf1 \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>arbiter_ASSPF_uf1)\<cdot>ub))))) \<uplus> (arbiter_ASSPF_uf1 \<rightleftharpoons> 
+                  (ubclRestrict (ufDom\<cdot>arbiter_ASSPF_uf1)\<cdot>ub)))) = (ubclRestrict arbiter_ASRan\<cdot>(arbiter_ASSPF_uf2 \<rightleftharpoons> 
+                  (ubclRestrict (ufDom\<cdot>arbiter_ASSPF_uf2)\<cdot>(ub \<uplus> (arbiter_ASSPF_uf1 \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>arbiter_ASSPF_uf1)\<cdot>ub))))))"
+          apply (rule ubclunion_restrict_R)
+          by (simp add: ubcldom_l h1)
+        then show ?thesis
+          by (smt Un_commute ubclrestrict_dom_id ubclrestrict_ubcldom ubclunion_restrict2 ubclunion_ubcldom ubclunion_ubclrestrict asspf_uf1_eq)
+      qed
+    have ubcldom_r: "ubclDom\<cdot>(ubclRestrict (ufDom\<cdot>arbiter_ASSPF_uf2)\<cdot>(ub \<uplus> (arbiter_ASSPF_uf1 \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>arbiter_ASSPF_uf1)\<cdot>ub)))) = arbiter_ASAndDom \<union> arbiter_ASFlasherDom"
+      apply (simp add: ubclrestrict_ubcldom ubclunion_ubcldom ubcldom_l arbiter_ASSPF_uf2_def)
+      apply (simp add: assms(1) ubclDom_ubundle_def)
+      by (simp add: arbiter_ASDom_def arbiter_ASOrRan_def arbiter_ASNotRan_def arbiter_ASAndDom_def arbiter_ASFlasherDom_def arbiter_ASCmdDom_def 
+              arbiter_ASAndRan_def arbiter_ASFlasherRan_def arbiter_ASCmdRan_def)
+    have restrict_ran2: "(ubclRestrict (ufDom\<cdot>arbiter_ASSPF_uf2)\<cdot>(ub \<uplus> (arbiter_ASSPF_uf1 \<rightleftharpoons> ub))) = (ubclRestrict (arbiter_ASAndDom \<union> arbiter_ASFlasherDom)\<cdot>(ub \<uplus> (arbiter_ASSPF_uf1 \<rightleftharpoons> ub)))"
+      by (metis (no_types, lifting) asspf_uf1_eq ubcldom_r ubclrestrict_dom_id ubclrestrict_twice ubclrestrict_ubcldom ubclunion_ubcldom)
+    have uf2_restrict_eq: "(ubclRestrict arbiter_ASRan\<cdot>((arbiter_ASCmd \<rightleftharpoons> ((arbiter_ASAnd \<otimes> arbiter_ASFlasher) \<rightleftharpoons>
+                            (ubclRestrict (arbiter_ASAndDom \<union> arbiter_ASFlasherDom)\<cdot>(ub \<uplus> (arbiter_ASSPF_uf1 \<rightleftharpoons> ub))))) \<uplus> 
+                            ((arbiter_ASAnd \<otimes> arbiter_ASFlasher) \<rightleftharpoons> 
+                            (ubclRestrict (arbiter_ASAndDom \<union> arbiter_ASFlasherDom)\<cdot>(ub \<uplus> (arbiter_ASSPF_uf1 \<rightleftharpoons> ub)))))) = 
+                            (ubclRestrict arbiter_ASRan\<cdot>(arbiter_ASCmd \<rightleftharpoons> ((arbiter_ASAnd \<otimes> arbiter_ASFlasher) \<rightleftharpoons>
+                            (ubclRestrict (arbiter_ASAndDom \<union> arbiter_ASFlasherDom)\<cdot>(ub \<uplus> (arbiter_ASSPF_uf1 \<rightleftharpoons> ub))))))"
+      proof -
+        have h1: "(arbiter_ASAndRan \<union> arbiter_ASFlasherRan) \<inter> arbiter_ASRan = {}"
+          by (simp add: arbiter_ASRan_def arbiter_ASAndRan_def arbiter_ASFlasherRan_def)
+        then show ?thesis
+          apply (simp add: restrict_ran2[symmetric])
+          by (metis (no_types, lifting) arbiter_and_flasher_apply arbiter_asand_dom arbiter_asand_ran arbiter_asflasher_dom 
+              arbiter_asflasher_ran asspf_uf1_eq sup_ge1 sup_ge2 ubclDom_ubundle_def ubclRestrict_ubundle_def ubcldom_r ubclunion_restrict_R 
+              ubclunion_ubcldom ufun_ubrestrict_ubundle_dom)
+      qed
+    have ufran_uf2_h: "ufDom\<cdot>(arbiter_ASAnd \<otimes> arbiter_ASFlasher) = (arbiter_ASAndDom \<union> arbiter_ASFlasherDom)"
+      apply (subst ufcomp_dom)
+      apply (simp add: arbiter_ASAndRan_def arbiter_ASFlasherRan_def)
+      by (simp add: ufCompI_def arbiter_ASAndDom_def arbiter_ASFlasherDom_def arbiter_ASAndRan_def arbiter_ASFlasherRan_def)
+    have restrict_ran3: "(ubclRestrict arbiter_ASRan\<cdot>(arbiter_ASCmd \<rightleftharpoons> ((arbiter_ASAnd \<otimes> arbiter_ASFlasher) \<rightleftharpoons> 
+                          (ubclRestrict (arbiter_ASAndDom \<union> arbiter_ASFlasherDom)\<cdot>(ub \<uplus> 
+                          (arbiter_ASSPF_uf1 \<rightleftharpoons> ub)))))) = 
+                          (arbiter_ASCmd \<rightleftharpoons> ((arbiter_ASAnd \<otimes> arbiter_ASFlasher) \<rightleftharpoons> 
+                          (ubclRestrict (arbiter_ASAndDom \<union> arbiter_ASFlasherDom)\<cdot>(ub \<uplus> 
+                          (arbiter_ASSPF_uf1 \<rightleftharpoons> ub)))))"
+      proof -
+        have h0: "ubclDom\<cdot>((arbiter_ASAnd \<otimes> arbiter_ASFlasher) \<rightleftharpoons> 
+                            (ubclRestrict (arbiter_ASAndDom \<union> arbiter_ASFlasherDom)\<cdot>(ub \<uplus> 
+                            (arbiter_ASSPF_uf1 \<rightleftharpoons> ub)))) = arbiter_ASCmdDom"
+          apply (subst ufran_2_ubcldom2)
+          apply (simp add: ufran_uf2_h)
+          using asspf_uf1_eq restrict_ran2 ubcldom_r apply auto[1]
+          apply (subst ufcomp_ran)
+          apply (simp add: arbiter_ASAndRan_def arbiter_ASFlasherRan_def)
+          apply (simp add: ufCompO_def arbiter_ASAndDom_def arbiter_ASFlasherDom_def arbiter_ASAndRan_def arbiter_ASFlasherRan_def arbiter_ASCmdDom_def)
+          by (simp add: insert_commute)
+        have h1: "ubclDom\<cdot>(arbiter_ASCmd \<rightleftharpoons> ((arbiter_ASAnd \<otimes> arbiter_ASFlasher) \<rightleftharpoons> 
+                          (ubclRestrict (arbiter_ASAndDom \<union> arbiter_ASFlasherDom)\<cdot>(ub \<uplus> 
+                          (arbiter_ASSPF_uf1 \<rightleftharpoons> ub))))) = arbiter_ASCmdRan"
+          by (simp add: h0 ufran_2_ubcldom2)
+        have h2: "arbiter_ASRan = arbiter_ASCmdRan"
+          by (simp add: arbiter_ASRan_def arbiter_ASCmdRan_def)
+        show ?thesis
+          using h1 h2 ubclrestrict_dom_idI by auto
+      qed
+    have arbitercomp: "((arbiter_ASOr \<otimes> arbiter_ASNot \<otimes> arbiter_ASAnd \<otimes> arbiter_ASFlasher \<otimes> arbiter_ASCmd) \<rightleftharpoons> ub) =
+                        (arbiter_ASSPF_uf1\<otimes>arbiter_ASSPF_uf2) \<rightleftharpoons> ub"
+    proof -
+      have ufran1: "ufRan\<cdot>arbiter_ASSPF_uf1 \<inter> ufRan\<cdot>(arbiter_ASAnd \<otimes> arbiter_ASFlasher) = {}"
+        by (simp add: ufcomp_ran arbiter_ASSPF_uf1_def arbiter_ASOrRan_def arbiter_ASNotRan_def arbiter_ASAndRan_def arbiter_ASFlasherRan_def ufCompO_def)
+      have ufran2: "ufRan\<cdot>(arbiter_ASAnd \<otimes> arbiter_ASFlasher) \<inter> ufRan\<cdot>arbiter_ASCmd = {}"
+        by (simp add: ufcomp_ran arbiter_ASAndRan_def arbiter_ASFlasherRan_def arbiter_ASCmdRan_def ufCompO_def)
+      have ufran3: "ufRan\<cdot>arbiter_ASSPF_uf1 \<inter> ufRan\<cdot>arbiter_ASCmd = {}"
+        by (simp add: ufcomp_ran arbiter_ASSPF_uf1_def arbiter_ASOrRan_def arbiter_ASNotRan_def arbiter_ASCmdRan_def ufCompO_def)
+      have h1: "(arbiter_ASSPF_uf1 \<otimes> (arbiter_ASAnd \<otimes> arbiter_ASFlasher) \<otimes> arbiter_ASCmd) \<rightleftharpoons> ub =
+                (arbiter_ASSPF_uf1 \<otimes> (arbiter_ASAnd \<otimes> arbiter_ASFlasher \<otimes> arbiter_ASCmd)) \<rightleftharpoons> ub"
+        using ufcomp_asso ufran1 ufran2 ufran3 by fastforce
+      show ?thesis
+        apply (simp add: arbiter_ASSPF_uf1_def[symmetric] arbiter_ASSPF_uf2_def)
+        apply (subst ufcomp_asso)
+        apply (simp add: ufcomp_ran arbiter_ASSPF_uf1_def arbiter_ASOrRan_def arbiter_ASNotRan_def arbiter_ASAndRan_def)
+        apply (simp add: ufcomp_ran arbiter_ASAndRan_def arbiter_ASFlasherRan_def)
+        apply (simp add: ufcomp_ran arbiter_ASSPF_uf1_def arbiter_ASOrRan_def arbiter_ASNotRan_def arbiter_ASFlasherRan_def)
+        by (simp add: h1)
+      qed
+    show ?thesis
+      apply (simp add: arbiter_ASSPF_def)
+      apply (subst ufhide_apply, simp add: asspf_ufdom)
+      apply (simp only: restrict_ran)
+      apply (simp add: arbitercomp arbiter_asspf_uf1_uf2_comp_apply assms(1))
+      apply (simp add: asspf_uf1_eq)
+      apply (simp add: uf1_restrict_eq)
+      apply (simp add: restrict_ran2)
+      apply (simp add: arbiter_ASSPF_uf2_def)
+      apply (subst arbiter_and_flasher_cmd_apply)
+      apply (metis asspf_uf1_eq restrict_ran2 ubclDom_ubundle_def ubcldom_r)
+      apply (simp add: uf2_restrict_eq)
+      apply (simp add: restrict_ran3)
+      apply (simp add: arbiter_ASSPF_uf1_def)
+      apply (simp add: ubclRestrict_ubundle_def)
+      by (simp add: ufran_uf2_h)
+  qed
+
+*)
+lemma ufcomp_asso_generic_proof: assumes "ufRan\<cdot>f1 \<inter> ufRan\<cdot>f2 = {}" and "ufRan\<cdot>f1 \<inter> ufRan\<cdot>f3 = {}" and  "ufRan\<cdot>f1 \<inter> ufRan\<cdot>f4 = {}" 
+and  "ufRan\<cdot>f1 \<inter> ufRan\<cdot>f5 = {}" and "ufRan\<cdot>f2 \<inter> ufRan\<cdot>f3 = {}" and  "ufRan\<cdot>f2 \<inter> ufRan\<cdot>f4 = {}" and  "ufRan\<cdot>f2 \<inter> ufRan\<cdot>f5 = {}"
+and  "ufRan\<cdot>f3 \<inter> ufRan\<cdot>f4 = {}" and  "ufRan\<cdot>f3 \<inter> ufRan\<cdot>f5 = {}"  and  "ufRan\<cdot>f4 \<inter> ufRan\<cdot>f5 = {}" 
+shows "ufComp( ufComp(ufComp (ufComp f1 f2) f3) f4)f5 = ufComp(ufComp f1 f2)(ufComp (ufComp f3 f4) f5)"
+proof-
+  have f0: "ufRan\<cdot>(ufComp f1 f2) \<inter> ufRan\<cdot>f3 = {}"
+    apply (simp add: assms(1) ufcomp_ran)
+    unfolding ufCompO_def
+    by (simp add: assms inf_sup_distrib2)
+  have f1: "ufDom\<cdot>(ufComp (ufComp f1 f2) f3) = (ufDom\<cdot>f1 \<union> ufDom\<cdot>f2 \<union> ufDom\<cdot>f3) - (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2 \<union> ufRan\<cdot>f3)"
+    apply (simp add: f0 ufcomp_dom)
+    unfolding ufCompI_def
+    apply (simp add: ufcomp_ran ufcomp_dom assms(1))
+    unfolding ufCompO_def
+    apply (subst ufCompI_def)
+    by blast
+  have f2 :"ufRan\<cdot>(ufComp (ufComp f1 f2) f3) = ufRan\<cdot>f1 \<union> ufRan\<cdot>f2 \<union> ufRan\<cdot>f3"
+    by (metis assms(1) f0 ufCompO_def ufcomp_ran)
+  have f3: "ufRan\<cdot>(ufComp (ufComp f1 f2) f3) \<inter> ufRan\<cdot>f4 = {}"
+    by (simp add: assms(3) assms(6) assms(8) f2 inf_sup_distrib2)
+  have f4 :"ufRan\<cdot>(ufComp (ufComp (ufComp f1 f2) f3) f4) = ufRan\<cdot>f1 \<union> ufRan\<cdot>f2 \<union> ufRan\<cdot>f3\<union> ufRan\<cdot>f4"
+    by (metis f2 f3 ufCompO_def ufcomp_ran)
+  have f5:"ufRan\<cdot>(ufComp (ufComp (ufComp f1 f2) f3) f4) \<inter> ufRan\<cdot>f5 = {}"
+    by (simp add: assms(10) assms(4) assms(7) assms(9) f4 inf_sup_distrib2)
+  have f6: "ufDom\<cdot>(ufComp (ufComp (ufComp f1 f2) f3) f4) = (ufDom\<cdot>f1 \<union> ufDom\<cdot>f2 \<union> ufDom\<cdot>f3 \<union> ufDom\<cdot>f4) - (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2 \<union> ufRan\<cdot>f3\<union> ufRan\<cdot>f4)"
+    apply (simp add: f3 ufcomp_dom)
+    unfolding ufCompI_def
+    apply(simp add:f1 ufcomp_ran ufcomp_dom assms)
+    unfolding ufCompO_def
+    apply (simp add:f2)
+    by blast
+  have f7 :"ufRan\<cdot>(ufComp  (ufComp (ufComp (ufComp f1 f2) f3) f4) f5) = ufRan\<cdot>f1 \<union> ufRan\<cdot>f2 \<union> ufRan\<cdot>f3\<union> ufRan\<cdot>f4\<union> ufRan\<cdot>f5"
+    by (metis f4 f5 ufCompO_def ufcomp_ran)
+  have f8: "ufDom\<cdot>(ufComp(ufComp (ufComp (ufComp f1 f2) f3) f4) f5) = (ufDom\<cdot>f1 \<union> ufDom\<cdot>f2 \<union> ufDom\<cdot>f3 \<union> ufDom\<cdot>f4 \<union> ufDom\<cdot>f5) - (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2 \<union> ufRan\<cdot>f3\<union> ufRan\<cdot>f4\<union> ufRan\<cdot>f5)"
+    apply (simp add: f5 ufcomp_dom)
+   unfolding ufCompI_def
+   apply(simp add:f4 f6 f7 ufcomp_ran ufcomp_dom assms)
+   by blast
+  have f9: "ufRan\<cdot>(ufComp f3 f4) \<inter> ufRan\<cdot>f5 = {}"
+    apply (simp add: assms ufcomp_ran)
+    unfolding ufCompO_def
+    by (simp add: assms inf_sup_distrib2)
+  have f10: "ufDom\<cdot>(ufComp (ufComp f3 f4) f5) = (ufDom\<cdot>f3 \<union> ufDom\<cdot>f4 \<union> ufDom\<cdot>f5) - (ufRan\<cdot>f3 \<union> ufRan\<cdot>f4 \<union> ufRan\<cdot>f5)"
+    apply (simp add: f9 ufcomp_dom)
+    unfolding ufCompI_def
+    apply (simp add: ufcomp_ran ufcomp_dom assms)
+    unfolding ufCompO_def
+    apply (subst ufCompI_def)
+    by blast
+  have f11:"ufRan\<cdot>(ufComp (ufComp f3 f4) f5) = ufRan\<cdot>f3 \<union> ufRan\<cdot>f4 \<union> ufRan\<cdot>f5"
+    by (metis assms(8) f9 ufCompO_def ufcomp_ran)
+  have f12: "ufRan\<cdot>(ufComp f1 f2) \<inter> ufRan\<cdot>(ufComp (ufComp f3 f4) f5) = {}"
+    apply (simp add: assms(1) ufcomp_ran)
+    unfolding ufCompO_def
+    by (smt assms(1) assms(4) assms(7) assms(8) f0 f11 f3 inf_sup_distrib1 inf_sup_distrib2 sup_bot.right_neutral ufCompO_def ufcomp_ran)
+  have f13: "ufDom\<cdot>( ufComp(ufComp f1 f2) (ufComp (ufComp f3 f4) f5)) = (ufDom\<cdot>f1 \<union> ufDom\<cdot>f2 \<union> ufDom\<cdot>f3 \<union> ufDom\<cdot>f4 \<union> ufDom\<cdot>f5) - (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2 \<union> ufRan\<cdot>f3\<union> ufRan\<cdot>f4\<union> ufRan\<cdot>f5)"
+    apply (simp add: f12 ufcomp_dom)
+    unfolding ufCompI_def
+    apply (simp add: ufcomp_ran ufcomp_dom assms f9 f10 f11)
+    unfolding ufCompO_def
+    apply (subst ufCompI_def)
+    by blast
+  have f14:"ufDom\<cdot>(ufComp(ufComp (ufComp (ufComp f1 f2) f3) f4) f5) =ufDom\<cdot>( ufComp(ufComp f1 f2) (ufComp (ufComp f3 f4) f5))" 
+    by (simp add: f8 f13)
+  show ?thesis
+    by (smt Un_empty assms(1) f0 f12 f3 f9 inf_sup_distrib1 inf_sup_distrib2 ufCompO_def ufcomp_asso ufcomp_ran)
+qed
+
+
+lemma ufcomp_asso_generic_apply_proof: assumes 
+  "ufRan\<cdot>f1 \<inter> ufRan\<cdot>f2 = {}" and "ufRan\<cdot>f1 \<inter> ufRan\<cdot>f3 = {}" and  "ufRan\<cdot>f1 \<inter> ufRan\<cdot>f4 = {}" 
+and  "ufRan\<cdot>f1 \<inter> ufRan\<cdot>f5 = {}" and "ufRan\<cdot>f2 \<inter> ufRan\<cdot>f3 = {}" and  "ufRan\<cdot>f2 \<inter> ufRan\<cdot>f4 = {}" and  "ufRan\<cdot>f2 \<inter> ufRan\<cdot>f5 = {}"
+and  "ufRan\<cdot>f3 \<inter> ufRan\<cdot>f4 = {}" and  "ufRan\<cdot>f3 \<inter> ufRan\<cdot>f5 = {}"  and  "ufRan\<cdot>f4 \<inter> ufRan\<cdot>f5 = {}" 
+shows "ufComp( ufComp(ufComp (ufComp f1 f2) f3) f4)f5  \<rightleftharpoons> ub= ufComp(ufComp f1 f2)(ufComp (ufComp f3 f4) f5) \<rightleftharpoons> ub"
+proof-
+  have f1:"ufComp( ufComp(ufComp (ufComp f1 f2) f3) f4)f5  = ufComp(ufComp f1 f2)(ufComp (ufComp f3 f4) f5) "
+    using ufcomp_asso_generic_proof
+    using assms by blast
+  show ?thesis
+    using f1 by auto
+qed
+
+lemma ufcomp_asso_generic_apply_proof_2: assumes  
+   "ufComp( ufComp(ufComp (ufComp f1 f2) f3) f4)f5 = ufComp(ufComp f1 f2)(ufComp (ufComp f3 f4) f5)"
+ shows "ufComp( ufComp(ufComp (ufComp f1 f2) f3) f4)f5  \<rightleftharpoons> ub= ufComp(ufComp f1 f2)(ufComp (ufComp f3 f4) f5) \<rightleftharpoons> ub"
+  by (simp add: assms)
+
 
 
 (*
