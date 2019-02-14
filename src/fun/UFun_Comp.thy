@@ -2743,7 +2743,6 @@ proof-
     by (smt Un_empty assms(1) f0 f12 f3 f9 inf_sup_distrib1 inf_sup_distrib2 ufCompO_def ufcomp_asso ufcomp_ran)
 qed
 
-
 lemma ufcomp_asso_generic_apply_proof: assumes 
   "ufRan\<cdot>f1 \<inter> ufRan\<cdot>f2 = {}" and "ufRan\<cdot>f1 \<inter> ufRan\<cdot>f3 = {}" and  "ufRan\<cdot>f1 \<inter> ufRan\<cdot>f4 = {}" 
 and  "ufRan\<cdot>f1 \<inter> ufRan\<cdot>f5 = {}" and "ufRan\<cdot>f2 \<inter> ufRan\<cdot>f3 = {}" and  "ufRan\<cdot>f2 \<inter> ufRan\<cdot>f4 = {}" and  "ufRan\<cdot>f2 \<inter> ufRan\<cdot>f5 = {}"
