@@ -87,6 +87,9 @@ proof(rule ub_eq)
   thus "?L .c = b .c" using usclTake_lub by simp
 qed
 
+lemma ubtake_pref: " ubTake i\<cdot>ub \<sqsubseteq> ub"
+  using is_ub_thelub ubtake_chain by fastforce
+
 lemma ubTakeLen: assumes "ubDom\<cdot>x \<noteq> {}"
   shows "(ubLen (ubTake a\<cdot>x)) \<le> Fin a"
 proof-
@@ -132,6 +135,31 @@ next
         ublen_min_on_channel ublen_ubtake_least ubtake_ubdom ubtake_ubgetch usclTake_eq)
 qed
 
+lemma ubtake_len_eq: 
+  assumes "ubDom\<cdot>ub \<noteq> {}"
+  and     "Fin i \<le> ubLen ub"
+  shows   "ubLen (ubTake i\<cdot>ub) = Fin i"
+proof- 
+  have "ubLen (ubTake i\<cdot>ub) = 
+        (LEAST ln. \<exists>c. ln = usclLen\<cdot>((ubTake i\<cdot>ub)  .  c) \<and> c \<in> ubDom\<cdot>ub)"
+    by (simp add: assms ubLen_def)
+  moreover have "(LEAST ln. \<exists>c. ln = usclLen\<cdot>((ubTake i\<cdot>ub)  .  c) \<and> c \<in> ubDom\<cdot>ub)
+                = (LEAST ln. \<exists>c. ln = usclLen\<cdot>(ubMapStream (Rep_cfun (usclTake i)) ub  .  c) \<and> c \<in> ubDom\<cdot>ub)"
+    by (simp add: ubtake_insert)
+  moreover have "(LEAST ln. \<exists>c. ln = usclLen\<cdot>(ubMapStream (Rep_cfun (usclTake i)) ub  .  c) \<and> c \<in> ubDom\<cdot>ub)
+                = (LEAST ln. \<exists>c\<in>ubDom\<cdot>ub. ln = usclLen\<cdot>(ubMapStream (Rep_cfun (usclTake i)) ub  .  c))"
+    by meson
+  moreover have "(LEAST ln. \<exists>c\<in>ubDom\<cdot>ub. ln = usclLen\<cdot>(ubMapStream (Rep_cfun (usclTake i)) ub  .  c))
+                = (LEAST ln. \<exists>c\<in>ubDom\<cdot>ub. ln = usclLen\<cdot>(usclTake i\<cdot>(ub  .  c)))"
+    by (metis (no_types, hide_lams) ubtake_insert ubtake_ubgetch)
+  moreover have "(LEAST ln. \<exists>c\<in>ubDom\<cdot>ub. ln = usclLen\<cdot>(usclTake i\<cdot>(ub  .  c)))
+                = (LEAST ln. \<exists>c\<in>ubDom\<cdot>ub. ln = Fin i)"
+    by (metis (no_types, hide_lams) assms trans_lnle ubLen_smallereq_all usclTake_len)
+  moreover have "(LEAST ln. \<exists>c\<in>ubDom\<cdot>ub. ln = Fin i) = Fin i"
+    by (metis (mono_tags) LeastI all_not_in_conv assms(1))
+  ultimately show ?thesis 
+    by simp
+qed
 
 (* ----------------------------------------------------------------------- *)
   subsection \<open>ubHd\<close>
@@ -260,6 +288,10 @@ proof-
         ubLen_def ubRt_def ubdrop_ubgetch ublen_min_on_channel usclDrop_len usclLen_bot usclLen_zero zero_le_one)
 qed
 
+lemma ublen_sbrt_sbhd : 
+  assumes "ubLen x \<le> Fin (Suc n)" 
+  shows " ubLen (ubRt\<cdot>x) \<le> Fin n"
+  by (metis Fin_Suc assms bottomI leD leI less2lnleD lnle_Fin_0 lnle_def lnsuc_lnle_emb lnzero_def nat.distinct(1) ubRtLen ubRtLen_zero)
 
 (* ----------------------------------------------------------------------- *)
   subsection\<open>MaxLen\<close>
@@ -346,6 +378,57 @@ proof -
     using f2 ubMaxLen_def by blast
 qed
 
+lemma ublen_ubconc_const: 
+  assumes "ubDom\<cdot>ub1 = ubDom\<cdot>ub2"
+  and     "ubMaxLen n ub1"
+  and     "ubLen ub1 = n"
+shows   "ubLen (ubConc ub1\<cdot>ub2) = (ubLen ub1) + (ubLen ub2)"
+proof(cases "ubDom\<cdot>ub2 = {}")
+  case True
+  then show ?thesis 
+    by(simp add: ubLen_def assms)
+next
+  case False
+  obtain n2 where n2_def: "ubLen ub2 = n2"
+    by simp
+  have "\<exists>c. n2 = usclLen\<cdot>(ub2 . c) \<and> c \<in> ubDom\<cdot>ub2"
+    by (metis (no_types, lifting) False n2_def ubLen_def ublen_min_on_channel)
+  then obtain c2 where c2_def: "n2 = usclLen\<cdot>(ub2 . c2) \<and> c2\<in> ubDom\<cdot>ub2"
+    by blast
+  obtain n3 where n3_def: "ubLen (ubConc ub1\<cdot>ub2) = n3"
+    by simp
+  have ub1_c_len:"\<forall>c\<in>ubDom\<cdot>ub2. usclLen\<cdot>(ub1 . c) = n" 
+    by (simp add: assms ubmax_len_len)
+  have "n2 = (LEAST ln. \<exists>c. ln = usclLen\<cdot>(ub2 . c) \<and> c\<in>ubDom\<cdot>ub2)"
+    by(insert n2_def, simp add: ubLen_def False)
+  then have n2_def2: "n2 = (LEAST ln. \<exists>c\<in>ubDom\<cdot>ub2. ln = usclLen\<cdot>(ub2 . c))"
+    by meson
+  have "n3 = ubLen (ubConc ub1\<cdot>ub2)"
+    by (simp add: n3_def)
+  then have "n3 = (LEAST ln. \<exists>c. ln = usclLen\<cdot>(ubConc ub1\<cdot>ub2 . c) \<and> c\<in>ubDom\<cdot>ub2)"
+    by(simp add: assms False ubLen_def)
+  then have "n3 = (LEAST ln. \<exists>c\<in>ubDom\<cdot>ub2. ln = usclLen\<cdot>(ubConc ub1\<cdot>ub2 . c))"
+    by meson
+  then have "n3 = (LEAST ln.  \<exists>c\<in>ubDom\<cdot>ub2. ln = usclLen\<cdot>(usclConc (ub1 . c)\<cdot>(ub2 . c)))" 
+    by(simp add: Least_def assms)
+  then have "n3 = (LEAST ln.  \<exists>c\<in>ubDom\<cdot>ub2. ln = usclLen\<cdot>(ub1 . c)+ usclLen\<cdot>(ub2 . c))" 
+    by(simp add: usclLen_usclConc)
+  then have "n3 = (LEAST ln.  \<exists>c\<in>ubDom\<cdot>ub2. ln = n + usclLen\<cdot>(ub2 . c))" 
+    by(simp add: ub1_c_len)
+  then have "n3 = n +(LEAST ln.  \<exists>c\<in>ubDom\<cdot>ub2. ln = usclLen\<cdot>(ub2 . c))"
+    by (metis (mono_tags, lifting) Least_le assms c2_def eq_iff n2_def n2_def2 n3_def ubclDom_ubundle_def ubclLen_ubundle_def ubconc_ubcllen_equalDom) 
+  then have "n3 = n + ubLen ub2"
+    by(simp add: n2_def2[symmetric] n2_def[symmetric])
+  then show "ubLen (ubConc ub1\<cdot>ub2) = (ubLen ub1) + (ubLen ub2)"
+    by (simp add: assms(3) n3_def[symmetric])
+  qed
+ 
+lemma ublen_ubconceq_const: 
+  assumes "ubDom\<cdot>ub1 = ubDom\<cdot>ub2"
+  and     "ubMaxLen (ubLen ub1) ub1"
+  shows   "ubLen (ubConcEq ub1\<cdot>ub2) = (ubLen ub1) + (ubLen ub2)"
+  by (metis assms conceq_conc_1 order_refl ubclDom_ubundle_def ublen_ubconc_const)
+   
 
 (* ----------------------------------------------------------------------- *)
 section\<open>Induction\<close>
@@ -524,6 +607,112 @@ lemma ind_ub2:
   apply (unfold adm_def)
   apply (erule_tac x="\<lambda>i. ubTake i\<cdot>x" in allE, auto)
   by (simp add: ubtake_ind ubConcEq_def)
+
+
+(* ----------------------------------------------------------------------- *)
+section\<open>Alternative Induction\<close>
+(* ----------------------------------------------------------------------- *)
+
+
+lemma ubhd_getch_noteps: assumes "\<forall>c\<in>ubDom\<cdot>x. x . c \<noteq> \<bottom>"
+  shows "\<forall>c\<in>ubDom\<cdot>x.  ubHd\<cdot>x . c \<noteq> \<bottom>"
+  by (metis (no_types, lifting) Fin_0 assms empty_iff le_imp_less_or_eq ubHdLen_one ubHd_def ubLen_def ubLen_smallereq_all ubTakeLen_le ubhd_ubdom ubleast_sbtake ublen_min_on_channel ubtake_zero usclLen_bot usclLen_zero) 
+
+lemma ubcases_alt: "\<And>x. (\<exists>c\<in>ubDom\<cdot>x. x . c = \<bottom>) \<or> (\<exists>a s. ubDom\<cdot>a = ubDom\<cdot>x \<and> ubDom\<cdot>s = ubDom\<cdot>x \<and> ubMaxLen (Fin 1) a  \<and> (\<forall>c\<in>ubDom\<cdot>x. a . c \<noteq> \<bottom>) \<and> x = ubConc a\<cdot>s)"
+  apply(case_tac "(\<exists>c\<in>ubDom\<cdot>x. x . c = \<bottom>)", simp)
+  by (metis (no_types, hide_lams) ubhd_getch_noteps ubHd_def ubconc_sbhdrt ubhd_ubdom ubmaxlen_sbtake ubrt_ubdom)
+
+lemma ubcases_alt2: "\<And>x P. \<lbrakk>\<exists>c\<in>ubDom\<cdot>x. x . c = \<bottom> \<Longrightarrow> P; 
+                        \<And>a s. ubDom\<cdot>a = ubDom\<cdot>x \<and> ubDom\<cdot>s = ubDom\<cdot>x \<and> ubMaxLen (Fin 1) a  \<and> (\<forall>c\<in>ubDom\<cdot>x. a . c \<noteq> \<bottom>) \<and> x = ubConc a\<cdot>s \<Longrightarrow> P\<rbrakk> 
+                        \<Longrightarrow> P"
+  using ubcases_alt by blast
+
+lemma ubtake_ind_alt2: 
+  "\<forall>x. (\<forall>ub.  ubDom\<cdot>ub = ubDom\<cdot>x \<and> (\<exists>c\<in>ubDom\<cdot>x. ub . c = \<bottom>)\<longrightarrow> P ub) \<and> 
+       (\<forall>a s. P s \<and> ubDom\<cdot>a = ubDom\<cdot>x \<and> ubDom\<cdot>s = ubDom\<cdot>x \<and> ubMaxLen (Fin (Suc 0)) a  \<and> (\<forall>c\<in>ubDom\<cdot>a. a . c \<noteq> \<bottom>) \<longrightarrow> P (ubConc a\<cdot>s)) 
+        \<and> ubLen x \<le> Fin n
+       \<longrightarrow> P x"
+proof(induct n)
+  case 0
+  have "\<And>x.
+       (\<forall>ub.  ubDom\<cdot>ub = ubDom\<cdot>x \<and> (\<exists>c\<in>ubDom\<cdot>x. ub . c = \<bottom>)\<longrightarrow> P ub) \<Longrightarrow>
+        (\<forall>a s. P s \<and> ubDom\<cdot>a = ubDom\<cdot>x \<and> ubDom\<cdot>s = ubDom\<cdot>x \<and> ubMaxLen (Fin (Suc 0)) a \<and> (\<forall>c\<in>ubDom\<cdot>a. a . c \<noteq> \<bottom>) \<longrightarrow> P (ubConc a\<cdot>s)) \<Longrightarrow>
+       ubLen x \<le> Fin 0 \<Longrightarrow> P x"
+    by (metis (mono_tags, lifting) Fin_02bot Inf'_neq_0 bottomI lnle_def lnzero_def ubLen_def ublen_min_on_channel usclLen_zero)
+  then show ?case
+    using "0.prems" by blast
+next
+  case (Suc n)
+  have "\<And>(n::nat) x.
+       (\<And>x.
+          (\<forall>ub.  ubDom\<cdot>ub = ubDom\<cdot>x \<and> (\<exists>c\<in>ubDom\<cdot>x. ub . c = \<bottom>)\<longrightarrow> P ub) \<and>
+           (\<forall>a s. P s \<and> ubDom\<cdot>a = ubDom\<cdot>x \<and> ubDom\<cdot>s = ubDom\<cdot>x \<and> ubMaxLen (Fin (Suc 0)) a \<and>  (\<forall>c\<in>ubDom\<cdot>a. a . c \<noteq> \<bottom>) \<longrightarrow> P (ubConc a\<cdot>s)) \<and>
+           ubLen x \<le> Fin n \<Longrightarrow> P x) \<Longrightarrow>
+      (\<forall>ub.  ubDom\<cdot>ub = ubDom\<cdot>x \<and> (\<exists>c\<in>ubDom\<cdot>x. ub . c = \<bottom>)\<longrightarrow> P ub) \<Longrightarrow>
+       (\<forall>a s. P s \<and> ubDom\<cdot>a = ubDom\<cdot>x \<and> ubDom\<cdot>s = ubDom\<cdot>x \<and> ubMaxLen (Fin (Suc 0)) a \<and>  (\<forall>c\<in>ubDom\<cdot>a. a . c \<noteq> \<bottom>) \<longrightarrow> P (ubConc a\<cdot>s)) \<Longrightarrow>
+       ubLen x \<le> Fin (Suc n) \<Longrightarrow> P x"
+  proof -
+    fix n :: "nat"
+    fix x ::" 'a\<^sup>\<Omega>"
+    assume a3: "(\<And>x.
+             (\<forall>ub.  ubDom\<cdot>ub = ubDom\<cdot>x \<and> (\<exists>c\<in>ubDom\<cdot>x. ub . c = \<bottom>)\<longrightarrow> P ub) \<and>
+              (\<forall>a s. P s \<and> ubDom\<cdot>a = ubDom\<cdot>x \<and> ubDom\<cdot>s = ubDom\<cdot>x \<and> ubMaxLen (Fin (Suc 0)) a \<and> (\<forall>c\<in>ubDom\<cdot>a. a . c \<noteq> \<bottom>) \<longrightarrow> P (ubConc a\<cdot>s)) \<and>
+              ubLen x \<le> Fin n \<Longrightarrow> P x)"
+    assume a4: "(\<forall>ub.  ubDom\<cdot>ub = ubDom\<cdot>x \<and> (\<exists>c\<in>ubDom\<cdot>x. ub . c = \<bottom>)\<longrightarrow> P ub)"
+    assume a5: "(\<forall>a s. P s \<and> ubDom\<cdot>a = ubDom\<cdot>x \<and> ubDom\<cdot>s = ubDom\<cdot>x \<and> ubMaxLen (Fin (Suc 0)) a \<and> (\<forall>c\<in>ubDom\<cdot>a. a . c \<noteq> \<bottom>) \<longrightarrow> P (ubConc a\<cdot>s))"
+    assume a6: "ubLen x \<le> Fin (Suc n)"
+    show "P x" 
+    proof -
+      have f1: "x = ubConc (ubHd\<cdot>x)\<cdot>(ubRt\<cdot>x)" 
+        by (simp add: ubconc_sbhdrt)
+      have f2: "ubMaxLen (Fin (Suc 0)) (ubHd\<cdot>x)" 
+        by (simp add: ubHd_def ubmaxlen_sbtake)
+      have f3: "ubDom\<cdot>(ubHd\<cdot>x) = ubDom\<cdot>x" 
+        by simp 
+      have f4: "ubDom\<cdot>(ubRt\<cdot>x) = ubDom\<cdot>x" 
+        by simp
+      have f5: "P (ubRt\<cdot>x)" 
+      proof - 
+        have f51: "ubLen (ubRt\<cdot>x) \<le> Fin n" 
+          by (simp add: a6 ublen_sbrt_sbhd)
+        show ?thesis using f51
+          by(subst a3, simp_all add: f51 a4 a5)
+      qed
+      have f6: "P (ubConc (ubHd\<cdot>x)\<cdot>(ubRt\<cdot>x))"
+        by (metis One_nat_def a4 a5 f1 f2 f3 f4 f5 ubhd_getch_noteps)
+      show ?thesis using f5 f6 a3 a4 a5 a6 
+        by (metis f1)
+    qed
+  qed
+  then show ?case
+    using Suc.hyps by blast 
+qed
+
+lemma ubtake_ind_alt: 
+  "\<forall>x. (\<forall>ub.  ubDom\<cdot>ub = ubDom\<cdot>x \<and> (\<exists>c\<in>ubDom\<cdot>x. ub . c = \<bottom>)\<longrightarrow> P ub) \<and> ubDom\<cdot>x \<noteq> {} \<and>
+       (\<forall>a s. P s \<and> ubDom\<cdot>a = ubDom\<cdot>x \<and> ubDom\<cdot>s = ubDom\<cdot>x \<and> ubMaxLen (Fin 1) a \<and> (\<forall>c\<in>ubDom\<cdot>a. a . c \<noteq> \<bottom>) \<longrightarrow> P (ubConc a\<cdot>s)) 
+       \<longrightarrow> P (ubTake n\<cdot>x)" 
+  apply rule+
+  apply(subst ubtake_ind_alt2, simp_all)
+  using ubTakeLen ubtake_ind_alt2
+  by auto
+
+lemma finind_ub_alt:
+  "\<lbrakk>ubLen x = Fin n; 
+    \<And>ub. (ubDom\<cdot>ub = ubDom\<cdot>x \<and> (\<exists>c\<in>ubDom\<cdot>x. ub . c = \<bottom>)) \<Longrightarrow> P ub;
+    \<And>u ub. (P ub \<and> ubDom\<cdot>u = ubDom\<cdot>x \<and> ubDom\<cdot>ub = ubDom\<cdot>x \<and> ubMaxLen (Fin 1) u \<and> (\<forall>c\<in>ubDom\<cdot>u. u . c \<noteq> \<bottom>)) \<Longrightarrow> P (ubConc u\<cdot>ub)\<rbrakk>
+    \<Longrightarrow> P x"
+  by(subst ubtake_ind_alt2, auto)
+
+lemma ind_ub_alt:
+  "\<lbrakk>ubDom\<cdot>x \<noteq> {};
+    adm P;
+    \<And>ub. (ubDom\<cdot>ub = ubDom\<cdot>x \<and> (\<exists>c\<in>ubDom\<cdot>x. ub . c = \<bottom>)) \<Longrightarrow> P ub;
+    \<And>u ub. P ub \<and> ubDom\<cdot>ub = ubDom\<cdot>x \<and> ubDom\<cdot>u = ubDom\<cdot>x \<and> ubMaxLen (Fin 1) u \<and> (\<forall>c\<in>ubDom\<cdot>x. u . c \<noteq> \<bottom>) \<Longrightarrow> P (ubConcEq u\<cdot>ub)\<rbrakk>
+  \<Longrightarrow> P x"
+ apply (unfold adm_def)
+ apply (erule_tac x="\<lambda>i. ubTake i\<cdot>x" in allE)
+  by(simp add: ubtake_ind_alt ubConcEq_def)
 
 (* ----------------------------------------------------------------------- *)
 section\<open>Instantiation Stream\<close>
