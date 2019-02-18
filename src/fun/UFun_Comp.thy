@@ -1441,11 +1441,7 @@ lemma uf_eq: assumes "\<And>b. Rep_cufun f1 b = Rep_cufun f2 b"
   using assms
   using Rep_ufun_inject cfun_eqI by blast
 
-lemma ufcomp_serial_eq: assumes "sercomp_well f1 f2"
-                            and "(ufDom\<cdot>f1 \<inter> ufRan\<cdot>f2 = {})"
-                          shows "ufHide (ufComp f1 f2) (ufRan\<cdot>f1) = (ufSerComp f1 f2)"  
-proof - 
-  have f1: "cont (\<lambda>x::'a. (ubclDom\<cdot>x = ufDom\<cdot>f1)\<leadsto>(f1 \<rightleftharpoons> x\<bar>ufDom\<cdot>f1) \<uplus> (f2 \<rightleftharpoons> (f1 \<rightleftharpoons> x\<bar>ufDom\<cdot>f1)))"
+lemma ufcomp_serial_eq_h1: "cont (\<lambda>x::'a. (ubclDom\<cdot>x = ufDom\<cdot>f1)\<leadsto>(f1 \<rightleftharpoons> ubclRestrict (ufDom\<cdot>f1)\<cdot>x) \<uplus> (f2 \<rightleftharpoons> (f1 \<rightleftharpoons> ubclRestrict (ufDom\<cdot>f1)\<cdot>x)))"
   proof -
     have "cont (\<lambda>x. (f1 \<rightleftharpoons> x\<bar>ufDom\<cdot>f1))"
       using cont_compose by force
@@ -1456,22 +1452,33 @@ proof -
     then show ?thesis
       using if_then_cont by blast
   qed
-  have f2: "ufWell (\<Lambda> x. (ubclDom\<cdot>x = ufDom\<cdot>f1)\<leadsto>(f1 \<rightleftharpoons> x\<bar>ufDom\<cdot>f1) \<uplus> (f2 \<rightleftharpoons> (f1 \<rightleftharpoons> x\<bar>ufDom\<cdot>f1)))" 
-    apply(simp add: ufWell_def f1)
-    apply rule
-     apply(rule_tac x="ufDom\<cdot>f1" in exI)
-    apply (simp add: domIff2)
-    apply(rule_tac x="ufRan\<cdot>f1 \<union> ufRan\<cdot>f2" in exI)
-    by (smt Diff_eq_empty_iff Un_Diff Un_Diff_Int assms(1) assms(2) option.distinct(1) option.sel ran2exists sercomp_dom_f1 sercomp_dom_f12 sup_ge1 ubclunion_ubcldom ufCompI_def ufran_2_ubcldom2)
 
+lemma ufcomp_serial_eq_h2:
+  assumes "sercomp_well f1 f2"
+      and "(ufDom\<cdot>f1 \<inter> ufRan\<cdot>f2 = {})"
+    shows "ufWell (\<Lambda> x. (ubclDom\<cdot>x = ufDom\<cdot>f1)\<leadsto>(f1 \<rightleftharpoons> x\<bar>ufDom\<cdot>f1) \<uplus> (f2 \<rightleftharpoons> (f1 \<rightleftharpoons> x\<bar>ufDom\<cdot>f1)))" 
+  apply(simp add: ufWell_def ufcomp_serial_eq_h1)
+  apply rule
+  apply(rule_tac x="ufDom\<cdot>f1" in exI)
+  apply (simp add: domIff2)
+  apply(rule_tac x="ufRan\<cdot>f1 \<union> ufRan\<cdot>f2" in exI)
+  by (smt assms(1) option.distinct(1) option.sel ran2exists ubclrestrict_dom_id ubclunion_ubcldom ufran_2_ubcldom2)
+
+lemma ufcomp_serial_eq: assumes "sercomp_well f1 f2"
+                            and "(ufDom\<cdot>f1 \<inter> ufRan\<cdot>f2 = {})"
+                          shows "ufHide (ufComp f1 f2) (ufRan\<cdot>f1) = (ufSerComp f1 f2)"  
+proof - 
+  have f1: "cont (\<lambda>x::'a. (ubclDom\<cdot>x = ufDom\<cdot>f1)\<leadsto>(f1 \<rightleftharpoons> x\<bar>ufDom\<cdot>f1) \<uplus> (f2 \<rightleftharpoons> (f1 \<rightleftharpoons> x\<bar>ufDom\<cdot>f1)))"
+    by (simp add: ufcomp_serial_eq_h1)
+  have f2: "ufWell (\<Lambda> x. (ubclDom\<cdot>x = ufDom\<cdot>f1)\<leadsto>(f1 \<rightleftharpoons> x\<bar>ufDom\<cdot>f1) \<uplus> (f2 \<rightleftharpoons> (f1 \<rightleftharpoons> x\<bar>ufDom\<cdot>f1)))" 
+    apply (subst ufcomp_serial_eq_h2)
+    using assms by auto
   have f3: "cont (\<lambda>x::'a. (ubclDom\<cdot>x = ufDom\<cdot>f1)\<leadsto>f2 \<rightleftharpoons> (f1 \<rightleftharpoons> x))"
     by (simp add: ufSerComp_cont)
   have f4: "ufWell (\<Lambda> x. (ubclDom\<cdot>x = ufDom\<cdot>f1)\<leadsto>f2 \<rightleftharpoons> (f1 \<rightleftharpoons> x))"
     using assms(1) ufSerComp_well by blast
-
   have f5: "ufRan\<cdot>(Abs_cufun (\<lambda>x::'a. (ubclDom\<cdot>x = ufDom\<cdot>f1)\<leadsto>(f1 \<rightleftharpoons> x\<bar>ufDom\<cdot>f1) \<uplus> (f2 \<rightleftharpoons> (f1 \<rightleftharpoons> x\<bar>ufDom\<cdot>f1)))) = ufRan\<cdot>f1 \<union> ufRan\<cdot>f2"
     by (smt UFun_Comp.ufran_least assms(1) domIff f1 f2 option.sel rep_abs_cufun ubclrestrict_dom_idI ubclunion_ubcldom ufran_2_ubcldom2 ufunLeastIDom)
-  
   show ?thesis
     apply(subst (4) uf_eq, simp_all)
     apply(simp only: ufComp_def ufSerComp_def ubFix_def)
@@ -1487,7 +1494,6 @@ proof -
     apply (simp add: f5)
     by (smt Diff_disjoint Un_Diff Un_Diff_Int Un_commute assms(1) domIff f1 f2 inf_sup_absorb inf_sup_aci(1) rep_abs_cufun ubclrestrict_dom_idI ubclunion_restrict2 ufdom_2ufundom ufran_2_ubcldom2 ufunLeastIDom)
 qed
-
 
 subsubsection \<open>ufParComp\<close>
 (* ufcomp ufparcomp  *)
@@ -2090,6 +2096,27 @@ lemma lub_iter_comph_3arg_dom[simp]:assumes "ubclDom\<cdot>x = ufCompI_3arg f1 f
   shows "ubclDom\<cdot>(\<Squnion>i. iterate i\<cdot>(ufCompH_3arg f1 f2 f3 x)\<cdot>(ubclLeast (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2 \<union> ufRan\<cdot>f3))) 
     = (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2  \<union> ufRan\<cdot>f3)"
   by (metis assms lub_iter_ubfix2_dom ufCompH_3arg_io_eq)
+
+
+subsubsection\<open>Apply Lemma for ufComp\<close>
+
+lemma ufcomp2sercomp_apply: 
+  assumes "sercomp_well f1 f2"
+    and "(ufDom\<cdot>f1 \<inter> ufRan\<cdot>f2 = {})"
+    and "ubclDom\<cdot>x = ufCompI f1 f2"
+  shows "(f1 \<otimes> f2) \<rightleftharpoons> x = (f1 \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>f1)\<cdot>x)) \<uplus> (f2 \<rightleftharpoons> (f1 \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>f1)\<cdot>x)))"
+  apply (subst ufcomp_repabs)
+  apply (simp add: assms)
+  apply (simp only: ubFix_def)
+  apply (subst ufcomp_sercomp_lub_const2, simp_all add: assms)
+  using assms(1) by blast
+
+lemma ufComp_sercomp_well_apply:
+  assumes "sercomp_well f1 f2"
+      and "(ufDom\<cdot>f1 \<inter> ufRan\<cdot>f2 = {})"
+      and "ubclDom\<cdot>x = ufCompI f1 f2"
+    shows "(ufComp f1 f2) \<rightleftharpoons> x = (f1 \<rightleftharpoons> x) \<uplus> (f2 \<rightleftharpoons> (f1 \<rightleftharpoons> x))"
+  by (smt assms(1) assms(2) assms(3) comp_well_def ubclrestrict_dom_id ubclunion_commu ubclunion_restrict_R ubclunion_ubclrestrict_RI ufSerComp_dom ufcomp_I_inter_Oc_empty ufcomp_dom ufcomp_fix ufcomp_fix_f1 ufcomp_ran ufcomp_serial_eq ufhide_dom ufran_2_ubcldom2)
 
 subsubsection \<open>ufComp3\<close>
 
