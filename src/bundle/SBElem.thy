@@ -217,4 +217,30 @@ lemma sbeunion_first[simp]: "c\<notin>sbeDom sbe2 \<Longrightarrow> (Rep_sbElem 
   by(simp add: sbeUnion.rep_eq sbeDom_def map_add_dom_app_simps)
 
 
+section \<open>SBElem Induction for SB\<close>
+
+
+lemma finind_sbe:
+  "\<lbrakk>ubLen x = Fin n; 
+    \<And>ub. (ubDom\<cdot>ub = ubDom\<cdot>x \<and> (\<exists>c\<in>ubDom\<cdot>x. ub . c = \<bottom>)) \<Longrightarrow> P ub;
+    \<And>sbe ub. P ub \<Longrightarrow> sbeDom sbe = (ubDom\<cdot>x) \<Longrightarrow> ubDom\<cdot>ub = (ubDom\<cdot>x) \<Longrightarrow> P (ubConcEq (sbe2SB sbe)\<cdot>ub)\<rbrakk>
+    \<Longrightarrow> P x"
+  apply(subst ubtake_ind_alt2, auto)
+  by (smt Fin_neq_inf One_nat_def conceq_conc_1 leI one_lnat_def order_refl sbe_obtain ubHdLen_one 
+          ubLen_def ubclDom_ubundle_def ubconc_sbhdrt ubconc_ubleast ubhd_ubdom ublen_min_on_channel 
+          ubmaxlen_least_only ubmaxlen_sbrt_sbhd ubrt_ubdom usclLen_zero)
+
+lemma ind_sbe:
+  assumes "adm P" 
+  and     "ubDom\<cdot>x \<noteq> {}"
+  and     "\<And>ub. (ubDom\<cdot>ub = ubDom\<cdot>x \<Longrightarrow> (\<exists>c\<in>ubDom\<cdot>x. ub . c = \<bottom>)) \<Longrightarrow> P ub"
+  and     "\<And>sbe ub. P ub \<Longrightarrow> sbeDom sbe = ubDom\<cdot>x \<Longrightarrow> ubDom\<cdot>ub = ubDom\<cdot>x \<Longrightarrow> P (ubConcEq (sbe2SB sbe)\<cdot>ub)"
+shows     "P x"
+  apply(rule ind_ub_alt)
+  apply (simp add: assms)
+  apply (simp add: assms)
+  apply (simp add: assms)
+  by (metis (no_types, lifting) assms  ublen_not_0 usclLen_bot one_lnat_def sbe_obtain ubLen_def 
+      ublen_min_on_channel ubundle_ubgetch_uscllen_one)  
+
 end
