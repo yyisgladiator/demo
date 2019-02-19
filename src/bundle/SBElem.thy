@@ -26,7 +26,7 @@ definition sbeDom :: "'a sbElem \<Rightarrow> channel set" where
 "sbeDom sbe = dom (Rep_sbElem sbe)"
 
 lift_definition sbeNull :: "channel set \<Rightarrow> 'a::message tsyn sbElem" is
-"\<lambda>cs. (\<lambda>c. (c\<in>cs) \<leadsto> -)"
+"\<lambda>cs. (\<lambda>c. (c\<in>cs) \<leadsto> ~)"
  unfolding sbElemWell_def
   unfolding usclOkay_stream_def
   unfolding ctype_tsyn_def
