@@ -904,6 +904,15 @@ lemma tsynmap_id2 [simp]: "tsynMap id\<cdot>s = s"
   apply simp_all
   by(simp add: tsynmap_sconc_null tsynmap_sconc_msg)+
 
+lemma tsynmap_funcomp_id:
+  assumes "\<forall>a. f (f a) = a"
+  shows "tsynMap f\<cdot>(tsynMap f\<cdot>s) = s"
+  apply (induction s rule: tsyn_ind)
+  apply (rule admI)
+  apply (simp add: ch2ch_Rep_cfunR contlub_cfun_arg op_the_lub op_the_chain)+
+  apply (simp add: assms tsynmap_sconc_msg)
+  by (simp add: tsynmap_sconc_null)
+
 lemma tsynmap_inv_id[simp]: "tsynDom\<cdot>tsyn \<subseteq> range F \<Longrightarrow> tsynMap (F \<circ> (inv F))\<cdot>tsyn = tsyn"
   apply (induction tsyn rule: ind)
   apply simp_all
