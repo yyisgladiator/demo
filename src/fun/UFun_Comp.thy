@@ -1042,7 +1042,7 @@ lemma parcomp_func_h2: assumes "parcomp_well f1 f2"
                shows "((ufParComp f1 f2) \<rightleftharpoons> ub) = (f1 \<rightleftharpoons> ub\<bar>ufDom\<cdot>f1) \<uplus> (f2 \<rightleftharpoons> ub\<bar>ufDom\<cdot>f2)"
   by (metis assms(1) assms(2) inf_idem inf_le2 parcomp_func_h ubclrestrict_dom_id ufParComp_dom)  
 
-lemma ubresrict_dom2: assumes "cs \<subseteq> ubclDom\<cdot>ub"
+lemma ubrestrict_dom2: assumes "cs \<subseteq> ubclDom\<cdot>ub"
   shows "ubclDom\<cdot>(ub \<bar> cs) = cs"
   by (simp add: Int_absorb1 assms ubclrestrict_ubcldom)
 
