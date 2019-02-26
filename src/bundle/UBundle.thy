@@ -476,6 +476,10 @@ lemma ubrestrict_lub: assumes "chain Y"
   shows "(\<Squnion>i. Y i) \<bar> cs = (\<Squnion>i. (Y i) \<bar> cs)"
   using assms contlub_cfun_arg by auto
 
+lemma ubRestrict_ubGetCh: 
+  assumes "{c} \<subseteq> ubDom\<cdot>ub"
+  shows "(ubRestrict {c}\<cdot>ub) . c = (ub . c)"
+  by simp
 
 subsection \<open>ubLen\<close>
 lemma ublen_monofun:"monofun ubLen"

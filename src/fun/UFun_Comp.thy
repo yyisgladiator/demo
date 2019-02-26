@@ -1046,7 +1046,7 @@ lemma parcomp_func_h2: assumes "parcomp_well f1 f2"
                shows "((ufParComp f1 f2) \<rightleftharpoons> ub) = (f1 \<rightleftharpoons> ub\<bar>ufDom\<cdot>f1) \<uplus> (f2 \<rightleftharpoons> ub\<bar>ufDom\<cdot>f2)"
   by (metis assms(1) assms(2) inf_idem inf_le2 parcomp_func_h ubclrestrict_dom_id ufParComp_dom)  
 
-lemma ubresrict_dom2: assumes "cs \<subseteq> ubclDom\<cdot>ub"
+lemma ubrestrict_dom2: assumes "cs \<subseteq> ubclDom\<cdot>ub"
   shows "ubclDom\<cdot>(ub \<bar> cs) = cs"
   by (simp add: Int_absorb1 assms ubclrestrict_ubcldom)
 
@@ -1073,7 +1073,7 @@ proof-
             ((f1 \<rightleftharpoons> (ub \<bar>ufDom\<cdot>f1)) \<uplus> ((ufParComp f2 f3) \<rightleftharpoons> (ub\<bar>ufDom\<cdot>(ufParComp f2 f3))))
           = ((f1 \<rightleftharpoons> (ub \<bar>ufDom\<cdot>f1)) \<uplus> (f2 \<rightleftharpoons> (ub \<bar>ufDom\<cdot>f2)) \<uplus> (f3 \<rightleftharpoons> (ub \<bar>ufDom\<cdot>f3)))"
     using ubclunion_asso
-    by (smt assms(1) assms(2) assms(3) le_sup_iff parcomp_func_h sup_ge1 sup_ge2 ubresrict_dom2 ufran_2_ubcldom2)
+    by (smt assms(1) assms(2) assms(3) le_sup_iff parcomp_func_h sup_ge1 sup_ge2 ubrestrict_dom2 ufran_2_ubcldom2)
 
   have f3: "\<forall>ub. (ubclDom\<cdot>ub \<noteq> ufDom\<cdot>f1 \<union> ufDom\<cdot>f2 \<union> ufDom\<cdot>f3) \<or>
             (((ufParComp f1 f2) \<rightleftharpoons> (ub \<bar>ufDom\<cdot>(ufParComp f1 f2))) \<uplus> (f3 \<rightleftharpoons> (ub\<bar>ufDom\<cdot>f3))) 
@@ -1511,7 +1511,7 @@ lemma ufComp_parallel :assumes "(ufCompL f1 f2 = {}) \<and> (ufRan\<cdot>f1 \<in
 proof (induction i)
   have f28: "ubclDom\<cdot>(f2 \<rightleftharpoons> x\<bar>ufDom\<cdot>f2) = ufRan\<cdot>f2"
     apply (rule ufran_2_ubcldom2)
-    by (metis Un_upper2 assms(1) assms(2) parcomp_dom_i_below ubresrict_dom2)
+    by (metis Un_upper2 assms(1) assms(2) parcomp_dom_i_below ubrestrict_dom2)
   have f29: "ubclDom\<cdot>(f1 \<rightleftharpoons> x\<bar>ufDom\<cdot>f1) = ufRan\<cdot>f1"
     apply (rule ufran_2_ubcldom2)
     by (metis assms(1) assms(2) inf_sup_absorb inf_sup_aci(1) parcomp_dom_i_below ubclrestrict_ubcldom)
@@ -1710,7 +1710,7 @@ lemma parcomp_sercomp_iter_serial_i_h:
       by (metis (no_types, lifting) parcomp_sercomp_f2_ufdom_subseteq assms(1) assms(2) le_supI1 sup_assoc ubcldom_l ubclunion_ubcldom)
     show ?thesis   
       using ufcomph_insert parcomp_sercomp_f1_f2_l ubcldom_l ubcldom_r 
-      by (smt parcomp_sercomp_f1_ufdom_subseteq assms(1) assms(2) inf.absorb_iff2 inf.right_idem inf_commute inf_sup_aci(2) iterate_Suc ubclunion_restrict3 ubresrict_dom2 ufran_2_ubcldom2)
+      by (smt parcomp_sercomp_f1_ufdom_subseteq assms(1) assms(2) inf.absorb_iff2 inf.right_idem inf_commute inf_sup_aci(2) iterate_Suc ubclunion_restrict3 ubrestrict_dom2 ufran_2_ubcldom2)
   qed
 
 lemma parcomp_sercomp_iter_serial_i: 
@@ -2209,7 +2209,7 @@ proof -
 
     have f105: "ubclDom\<cdot>(x \<uplus> ubFix (ufCompH f1 (ufComp f2 f3) x) (ufRan\<cdot>f1 \<union> ufRan\<cdot>(ufComp f2 f3))\<bar>ufDom\<cdot>(ufComp f2 f3)) = ufCompI f2 f3"
       by (smt Un_Diff_cancel Un_commute a1 assms(2) f1 sup.orderI sup.right_idem sup_assoc 
-            ubclunion_ubcldom ubresrict_dom2 ufCompI_def ufCompO_def ufcomp_dom ufcomp_well_h)
+            ubclunion_ubcldom ubrestrict_dom2 ufCompI_def ufCompO_def ufcomp_dom ufcomp_well_h)
     
     have f150: "ubFix (ufCompH f1 (ufComp f2 f3) x) (ufRan\<cdot>f1 \<union> ufRan\<cdot>(ufComp f2 f3)) = 
     (\<Squnion>i. iterate i\<cdot>(ufCompH f1 (ufComp f2 f3) x)\<cdot>(ubclLeast (ufRan\<cdot>f1 \<union> ufRan\<cdot>(ufComp f2 f3))))"
@@ -2512,7 +2512,7 @@ proof -
       apply (simp add: assms(2) f418)
       apply (rule ubfix_least_below)
         apply (simp add: f418 ubcldom_least_cs)
-       apply (metis (mono_tags, lifting) Un_assoc Un_def f308 f399 inf_sup_aci(6) sup.assoc sup.cobounded2 sup_assoc ubresrict_dom2)
+       apply (metis (mono_tags, lifting) Un_assoc Un_def f308 f399 inf_sup_aci(6) sup.assoc sup.cobounded2 sup_assoc ubrestrict_dom2)
       apply (subst ufCompH_def)
       apply simp
       apply (simp add: f419 f415)
@@ -2758,7 +2758,7 @@ proof -
       apply (subst ufCompH_3arg_def)
       by (simp add: ufCompH_3arg_cont1)
     have comp3_arg_x_dom_f1: "ubclDom\<cdot>(x \<uplus> ubFix (ufCompH_3arg f1 f2 f3 x) (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2 \<union> ufRan\<cdot>f3)\<bar>ufDom\<cdot>f1) = ufDom\<cdot>f1"
-      by (metis Un_Diff_cancel2 a1 f12 f2 le_supI1 sup_ge1 ubclunion_ubcldom ubresrict_dom2 ufcomp3_well_h x_dom2)
+      by (metis Un_Diff_cancel2 a1 f12 f2 le_supI1 sup_ge1 ubclunion_ubcldom ubrestrict_dom2 ufcomp3_well_h x_dom2)
     have comp3_arg_x_dom_f2: "ubclDom\<cdot>(x \<uplus> ubFix (ufCompH_3arg f1 f2 f3 x) (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2 \<union> ufRan\<cdot>f3)\<bar>ufDom\<cdot>f2) = ufDom\<cdot>f2"
       apply (simp add: ubclunion_restrict ubclunion_dom ubclrestrict_dom)
       apply (subst ubfix_dom)
@@ -2770,7 +2770,7 @@ proof -
       apply (subst comp3_arg_fix_eq)
       apply (subst ubclunion_restrict_R)
        apply (subst ufran_2_ubcldom2)
-        apply (metis Un_Diff_cancel2 a1 f12 f2 le_supI1 sup_ge2 ubclunion_ubcldom ubresrict_dom2 ufcomp3_well_h x_dom2)
+        apply (metis Un_Diff_cancel2 a1 f12 f2 le_supI1 sup_ge2 ubclunion_ubcldom ubrestrict_dom2 ufcomp3_well_h x_dom2)
        apply (simp add: assms(2) assms(3) inf.commute inf_sup_distrib1)
       apply (rule ubclrestrict_dom_idI)
       apply (simp add: ubclunion_dom)
@@ -2827,7 +2827,7 @@ x \<uplus> ubFix (ufCompH_3arg f1 f2 f3 x) (ufRan\<cdot>f1 \<union> ufRan\<cdot>
       apply (simp add: assms(1) x_fix_comp3_dom_f1_f2)
       apply (rule ubfix_least_below)
         apply (simp add: ubcldom_least_cs x_fix_comp3_dom_f1_f2)
-       apply (simp add: ubresrict_dom2 ufcomp3_well_h x_dom2)
+       apply (simp add: ubrestrict_dom2 ufcomp3_well_h x_dom2)
       apply (subst ufCompH_def, simp)
       apply (simp add: x_fix_comp3_f1_simp x_fix_comp3_f2_simp)
       by (simp add: comp3_arg_res_f1_f2)
