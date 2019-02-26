@@ -2980,15 +2980,6 @@ instance
 end
 *)
 
-subsubsection\<open>ufComp applied\<close>
-
-lemma ufComp_sercomp_well_apply:
-  assumes "sercomp_well f1 f2"
-      and "(ufDom\<cdot>f1 \<inter> ufRan\<cdot>f2 = {})"
-      and "ubclDom\<cdot>x = ufCompI f1 f2"
-    shows "(ufComp f1 f2) \<rightleftharpoons> x = (f1 \<rightleftharpoons> x) \<uplus> (f2 \<rightleftharpoons> (f1 \<rightleftharpoons> x))"
-  by (smt assms(1) assms(2) assms(3) comp_well_def ubclrestrict_dom_id ubclunion_commu ubclunion_restrict_R ubclunion_ubclrestrict_RI ufSerComp_dom ufcomp_I_inter_Oc_empty ufcomp_dom ufcomp_fix ufcomp_fix_f1 ufcomp_ran ufcomp_serial_eq ufhide_dom ufran_2_ubcldom2)
-
 
 subsubsection\<open>Associativity\<close>
 

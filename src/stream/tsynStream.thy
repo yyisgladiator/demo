@@ -911,7 +911,7 @@ lemma tsynmap_funcomp_id:
   apply (rule admI)
   apply (simp add: ch2ch_Rep_cfunR contlub_cfun_arg op_the_lub op_the_chain)+
   apply (simp add: assms tsynmap_sconc_msg)
-  by (simp add: tsynmap_sconc_null)
+  by (simp add: tsynmap_sconc_eps)
 
 lemma tsynmap_inv_id[simp]: "tsynDom\<cdot>tsyn \<subseteq> range F \<Longrightarrow> tsynMap (F \<circ> (inv F))\<cdot>tsyn = tsyn"
   apply (induction tsyn rule: ind)
