@@ -2834,6 +2834,12 @@ lemma szip_nth: "Fin n < #s1 \<Longrightarrow> Fin n < #s2 \<Longrightarrow> snt
   apply(simp add: snth_rt)
   by (smt empty_is_shortest leD not_le only_empty_has_length_0 only_empty_has_length_0 only_empty_has_length_0 slen_rt_ile_eq slen_rt_ile_eq snth_rt snth_scons stream.sel_rews(2) stream.sel_rews(2) strict_slen strict_slen strict_slen strict_szip_snd surj_scons surj_scons szip_scons)
 
+lemma szip_sdrop: "sdrop n\<cdot>(szip\<cdot>s\<cdot>t) = szip\<cdot>(sdrop n\<cdot>s)\<cdot>(sdrop n\<cdot>t)"
+  apply(induction n arbitrary: s t, simp)
+  by (metis (no_types, lifting) sdrop_forw_rt sdrop_scons stream.sel_rews(2) strict_szip_fst 
+            strict_szip_snd surj_scons szip_scons)
+
+
 (* ----------------------------------------------------------------------- *)
 subsection {* @{term sscanlA} *}
 (* ----------------------------------------------------------------------- *)

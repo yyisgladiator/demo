@@ -575,6 +575,12 @@ lemma ubLen_geI: assumes "\<forall> c \<in> ubDom\<cdot>tb. n \<le> usclLen\<cdo
   shows "n \<le> ubLen tb"
   by (metis (no_types, lifting) assms inf_ub ubLen_def ublen_min_on_channel)
 
+lemma ubLen_geI2: assumes "\<forall> c \<in> ubDom\<cdot>tb. (Fin n) < usclLen\<cdot>(tb . c)"
+  shows "(Fin n) < ubLen tb"
+  using ubLen_geI assms
+  using less_le lnsuc_lnle_emb ubLen_def ublen_min_on_channel
+  by (metis (no_types, lifting) notinfI3)
+
 lemma ublen_channel[simp]: "\<And>c. c\<in>ubDom\<cdot>ub \<Longrightarrow> ubLen ub \<le> usclLen\<cdot>(ub . c)"
 proof -
 fix c :: channel
