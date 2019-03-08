@@ -1499,6 +1499,17 @@ proof -
     by (smt Diff_disjoint Un_Diff Un_Diff_Int Un_commute assms(1) domIff f1 f2 inf_sup_absorb inf_sup_aci(1) rep_abs_cufun ubclrestrict_dom_idI ubclunion_restrict2 ufdom_2ufundom ufran_2_ubcldom2 ufunLeastIDom)
 qed
 
+lemma ufcomp2sercomp_apply: 
+  assumes "sercomp_well f1 f2"
+    and "(ufDom\<cdot>f1 \<inter> ufRan\<cdot>f2 = {})"
+    and "ubclDom\<cdot>x = ufCompI f1 f2"
+  shows "(f1 \<otimes> f2) \<rightleftharpoons> x = (f1 \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>f1)\<cdot>x)) \<uplus> (f2 \<rightleftharpoons> (f1 \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>f1)\<cdot>x)))"
+  apply (subst ufcomp_repabs)
+  apply (simp add: assms)
+  apply (simp only: ubFix_def)
+  apply (subst ufcomp_sercomp_lub_const2, simp_all add: assms)
+  using assms(1) by blast
+
 subsubsection \<open>ufParComp\<close>
 (* ufcomp ufparcomp  *)
 
@@ -1596,6 +1607,11 @@ proof -
     by (simp add: ufComp_def ufParComp_def)
 qed
 
+lemma ufcomp_parcomp_apply:
+  assumes "parcomp_well f1 f2" 
+  and "ubclDom\<cdot>ub = ufCompI f1 f2"
+  shows "(f1 \<otimes> f2) \<rightleftharpoons> ub = ((f1 \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>f1)\<cdot>ub)) \<uplus> (f2 \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>f2)\<cdot>ub)))"
+  by (metis assms(1) assms(2) parallelOperatorEq ufParComp_apply ufcomp_dom)
 
 subsubsection \<open>ufParcomp_Sercomp\<close>
 (* ufcomp ufparcomp_sercomp  *)
@@ -2103,17 +2119,6 @@ lemma lub_iter_comph_3arg_dom[simp]:assumes "ubclDom\<cdot>x = ufCompI_3arg f1 f
 
 
 subsubsection\<open>Apply Lemma for ufComp\<close>
-
-lemma ufcomp2sercomp_apply: 
-  assumes "sercomp_well f1 f2"
-    and "(ufDom\<cdot>f1 \<inter> ufRan\<cdot>f2 = {})"
-    and "ubclDom\<cdot>x = ufCompI f1 f2"
-  shows "(f1 \<otimes> f2) \<rightleftharpoons> x = (f1 \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>f1)\<cdot>x)) \<uplus> (f2 \<rightleftharpoons> (f1 \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>f1)\<cdot>x)))"
-  apply (subst ufcomp_repabs)
-  apply (simp add: assms)
-  apply (simp only: ubFix_def)
-  apply (subst ufcomp_sercomp_lub_const2, simp_all add: assms)
-  using assms(1) by blast
 
 lemma ufComp_sercomp_well_apply:
   assumes "sercomp_well f1 f2"
