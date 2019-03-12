@@ -520,6 +520,20 @@ lemma spfconcout_inf_const2: assumes "ufRan\<cdot>uf \<subseteq> ubDom\<cdot>ub"
   apply simp
   using assms(1) assms(2) spfconcout_inf spfconcout_restrict by fastforce
 
+lemma spfconcout_weak:
+  assumes "ufIsWeak f"
+  shows "ufIsWeak (spfConcOut ub\<cdot>f)"
+  apply(rule ufisweakI)
+  by (metis (no_types, lifting) assms dual_order.trans sbConcEq_Len2 spfConcOut_dom spfConcOut_step 
+      ubclDom_ubundle_def ubclLen_ubundle_def ufisweakE)
+
+lemma spfconcout_strong:
+  assumes "ufIsStrong f"
+  shows "ufIsStrong (spfConcOut ub\<cdot>f)"
+  apply(rule ufisstrongI)
+  by (metis (no_types, lifting) assms dual_order.trans sbConcEq_Len2 spfConcOut_dom spfConcOut_step 
+      ubclDom_ubundle_def ubclLen_ubundle_def ufisstrongE)
+
 lemma spfConcOut_weak_ublen_strong[simp]:
   assumes "ufIsWeak spf" and "ubLen sb = lnsuc\<cdot>0" and "ufRan\<cdot>spf \<subseteq> ubDom\<cdot>sb"
   shows "ufIsStrong (spfConcOut sb\<cdot>spf)"

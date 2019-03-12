@@ -414,9 +414,6 @@ lemma ubConcEq_ubLeast[simp]: "ubConcEq (ubLeast cs)\<cdot>s = s"
   apply (simp add:ubConcEq_def)
   by (simp add: ubconc_getch usclConc_leftbottom)
 
-
-
-
 lemma ubleast_len: assumes cs_nempty: "cs \<noteq> {}"
   shows "ubLen (ubLeast cs :: 'a ubundle) = 0"
 proof -

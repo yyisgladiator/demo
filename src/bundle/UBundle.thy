@@ -593,7 +593,6 @@ using a1 by blast
 using f2 by (simp add: ubLen_def wellorder_Least_lemma(2))
 qed
 
-
 lemma ublen_not_0: assumes "ubLen ub \<noteq> 0" and "c\<in>ubDom\<cdot>ub"
   shows "usclLen\<cdot>(ub . c) \<noteq> 0"
   using assms(1) assms(2) ublen_channel by fastforce
@@ -611,6 +610,15 @@ proof-
     using Least_Min uscllen_ub_set_fin uscllen_set_nempty by fastforce
 qed
 
+lemma ubrestrict_ublen: "ubLen ub \<le> ubLen (ubRestrict cs\<cdot>ub)"
+proof -
+  have " ubDom\<cdot>(ubRestrict cs\<cdot>ub)\<subseteq> ubDom\<cdot>ub "
+    by simp
+  then have "\<And>c. c\<in>ubDom\<cdot>(ubRestrict cs\<cdot>ub) \<Longrightarrow> ubLen ub \<le> usclLen\<cdot>((ubRestrict cs\<cdot>ub) . c)"
+    by simp
+  then show ?thesis
+    by (simp add: ubLen_geI)
+qed
 
 (* Missing *)
   
@@ -696,10 +704,25 @@ lemma ubunion_restrict2 [simp]: assumes "ubDom\<cdot>b2 \<inter> cs = {}"
   apply (simp add: ubunion_insert ubrestrict_insert)
   by (metis assms map_union_restrict ubdom_insert)
 
-
 lemma ubunion_ubrestrict3: "(ubUnion\<cdot>a\<cdot>b) \<bar> cs = ubUnion\<cdot>(a \<bar> cs)\<cdot>(b \<bar> cs)"
   apply (simp add: ubunion_insert ubrestrict_insert)
   by (metis mapadd2if_then restrict_map_def)
+
+lemma ubunion_ubrestrict4:
+  assumes " ubDom\<cdot>y \<subseteq> cs"
+  and     "ubDom\<cdot>x \<inter> cs = {}"
+shows     "ubRestrict cs\<cdot>(ubUnion\<cdot>x\<cdot>y) = ubRestrict cs\<cdot>y"
+  by (metis (no_types, lifting) Int_commute Int_empty_right assms ubrestrict_id ubrestrict_ubdom2 
+      ubrestrict_ubdom_sup_inter ubunion_restrict ubunion_ubrestrict3)
+
+lemma ub_split_union: 
+  assumes "ubDom\<cdot>ub \<subseteq> A \<union> B"
+  shows   "ubUnion\<cdot>(ubRestrict A\<cdot>ub)\<cdot>(ubRestrict B\<cdot>ub) = ub"
+  apply(rule ub_eq)
+  using assms apply auto[1]
+  by (metis Int_iff Un_iff ubgetch_ubrestrict ubrestrict_ubdom2 ubunionDom ubunion_getchL 
+      ubunion_getchR)
+
 
 lemma ubunion_ubLen_min: 
   assumes "finite (ubDom\<cdot>ub1)"
@@ -738,6 +761,25 @@ proof-
     using ub1_dom_empty_case ub2_dom_empty_case min_union_split ub1_min_ublen ub1_ub2_dom_union 
           ubunion_ublen_min ubunion_union_split by fastforce
 qed
+
+lemma ubunion_ublen_le: 
+  assumes "ubLen x \<le> ubLen z"
+  shows   "ubLen x \<le> ubLen(ubUnion\<cdot>x\<cdot>z)"
+  apply(rule ubLen_geI)
+  by (metis Un_iff assms dual_order.trans ublen_channel ubunionDom ubunion_getchL ubunion_getchR)
+
+lemma ubunion_len_le: 
+  assumes "ubLen a \<le> ubLen b"
+  and     "ubLen a \<le> ubLen c"
+shows     "ubLen a \<le> ubLen (ubUnion\<cdot>b\<cdot>c)"
+  apply(rule ubLen_geI, simp)
+  by (metis Un_iff assms(1) assms(2) dual_order.trans ublen_channel ubunion_getchL ubunion_getchR)
+
+lemma ubunion_len_l: 
+  assumes "ubLen a <  ubLen b"
+  and     "ubLen a < ubLen c"
+shows "ubLen a < ubLen (ubUnion\<cdot>b\<cdot>c)"
+  by (metis assms dual_order.strict_iff_order leD le_cases ubunion_len_le)
 
 subsection \<open>ubSetCh\<close>
 
