@@ -751,6 +751,11 @@ lemma ufcomph_commu: assumes  "ufRan\<cdot>f1 \<inter> ufRan\<cdot>f2 = {}"
 
 subsubsection \<open>iterate ufCompH\<close>  
 
+lemma iterate_ufcomph_dom:
+  assumes "ubclDom\<cdot>ub = ufRan\<cdot>f1 \<union> ufRan\<cdot>f2"
+  and     "ubclDom\<cdot>x = ufCompI f1 f2"
+  shows "ubclDom\<cdot>(iterate i\<cdot>(ufCompH f1 f2 x)\<cdot>ub) =  ufRan\<cdot>f1 \<union> ufRan\<cdot>f2"
+  by(induction i, simp_all add: assms)
   
 (* lub equalities *)
 lemma iter_ufCompH_cont[simp]: "cont (\<lambda>x. iter_ufCompH f1 f2 i x)"
@@ -841,6 +846,12 @@ lemma ufcomp_repabs: assumes "ufRan\<cdot>f1 \<inter> ufRan\<cdot>f2 = {}"
   apply (subst rep_abs_cufun)
     apply (simp, simp add: assms)
   by auto
+
+lemma ufcomp_insert:
+  assumes "ubclDom\<cdot>ub = ufCompI uf1 uf2"
+  and     "ufRan\<cdot>uf1 \<inter> ufRan\<cdot>uf2 = {}"
+  shows   "(uf1 \<otimes> uf2) \<rightleftharpoons> ub = ubFix (ufCompH uf1 uf2 ub) (ufRan\<cdot>uf1 \<union> ufRan\<cdot>uf2)"
+  by (simp add: assms ufcomp_repabs)
 
 lemma ufcomp_dom: assumes "ufRan\<cdot>f1 \<inter> ufRan\<cdot>f2 = {}"
   shows "ufDom\<cdot>(ufComp f1 f2) =  ufCompI f1 f2"

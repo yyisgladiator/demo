@@ -684,6 +684,32 @@ lemma ufstrictE: assumes "ufIsStrict uf" and "ubclDom\<cdot>sb=ufDom\<cdot>uf" a
   using assms(1) assms(2) assms(3) ufIsStrict_def by blast
 
 
+subsection \<open>ufIsWeak\<close>
+
+lemma ufisweakI: 
+  assumes "\<And> ub. ubclDom\<cdot>ub = ufDom\<cdot>f \<Longrightarrow> ubclLen ub \<le> ubclLen (f \<rightleftharpoons> ub)"
+  shows   "ufIsWeak f"
+  by (metis assms domD ufIsWeak_def ufdom_2ufundom)
+
+lemma ufisweakE: assumes "ubclDom\<cdot>ub = ufDom\<cdot>f"
+  and "ufIsWeak f"
+shows "ubclLen ub \<le> ubclLen (f \<rightleftharpoons> ub)"
+  by (metis assms domIff option.collapse rep_ufun_well ufIsWeak_def ufWell_def ufdom_2ufundom ufdom_not_empty)
+
+
+subsection \<open>ufIsStrong\<close>
+
+lemma ufisstrongI: 
+  assumes "\<And> ub. ubclDom\<cdot>ub = ufDom\<cdot>f \<Longrightarrow> lnsuc\<cdot>(ubclLen ub) \<le> ubclLen (f \<rightleftharpoons> ub)"
+  shows   "ufIsStrong f"
+  by (metis assms domD ufIsStrong_def ufdom_2ufundom)
+
+lemma ufisstrongE: assumes "ubclDom\<cdot>ub = ufDom\<cdot>f"
+  and "ufIsStrong f"
+shows "lnsuc\<cdot>(ubclLen ub) \<le> ubclLen (f \<rightleftharpoons> ub)"
+  by (metis assms domIff option.collapse rep_ufun_well ufIsStrong_def ufWell_def ufdom_2ufundom ufdom_not_empty)
+
+
 subsection \<open>monoTick2cont\<close>
 
 (*

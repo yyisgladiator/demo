@@ -1,5 +1,5 @@
 theory UFun_Comp_Causalities
-  imports UFun_Comp bundle.UBundle_Pcpo
+  imports UFun_Comp bundle.UBundle_Conc
 begin
 
 default_sort uscl_pcpo
@@ -8,6 +8,541 @@ declare [[show_types]]
 declare [[show_sorts]]
 declare [[show_consts]]
 
+section{* ufSerComp *}
+
+lemma ufsercomp_ufisweak: 
+  assumes "ufIsWeak uf1"
+  and     "ufIsWeak uf2"
+  and     "sercomp_well uf1 uf2"
+shows     "ufIsWeak (uf1 \<circ> uf2)"
+proof(rule ufisweakI)
+  fix ub::"'a"
+  assume ub_dom: "ubclDom\<cdot>ub = ufDom\<cdot>(uf1 \<circ> uf2)"
+  have comp_apply: "(uf1 \<circ> uf2)\<rightleftharpoons> ub = uf2 \<rightleftharpoons> (uf1 \<rightleftharpoons> ub)"
+    by (metis assms ub_dom ufSerComp_apply ufSerComp_dom)
+  moreover have "ubclLen ub \<le> ubclLen (uf1 \<rightleftharpoons> ub)"
+    by (metis assms ub_dom ufSerComp_dom ufisweakE)
+  moreover have "ubclLen (uf1 \<rightleftharpoons> ub) \<le> ubclLen (uf2 \<rightleftharpoons> (uf1 \<rightleftharpoons> ub))"
+    by (metis assms ub_dom ufSerComp_dom ufisweakE ufran_2_ubcldom2)
+  ultimately have "ubclLen ub \<le> ubclLen (uf2 \<rightleftharpoons> (uf1 \<rightleftharpoons> ub))"
+    using trans_lnle by blast
+  then show "ubclLen ub \<le> ubclLen ((uf1 \<circ> uf2) \<rightleftharpoons> ub)"
+    by(simp add: comp_apply)
+qed
+
+lemma ufsercomp_ufisstrong1:
+  assumes "ufIsStrong uf1"
+  and     "ufIsWeak uf2"
+  and     "sercomp_well uf1 uf2"
+shows     "ufIsStrong (uf1 \<circ> uf2)"
+proof(rule ufisstrongI)
+  fix ub::"'a"
+  assume ub_dom: "ubclDom\<cdot>ub = ufDom\<cdot>(uf1 \<circ> uf2)"
+  have comp_apply: "(uf1 \<circ> uf2) \<rightleftharpoons> ub = uf2 \<rightleftharpoons> (uf1 \<rightleftharpoons> ub)"
+    by (metis assms(3) ub_dom ufSerComp_apply ufSerComp_dom)
+  moreover have "lnsuc\<cdot>(ubclLen ub) \<le> ubclLen (uf1  \<rightleftharpoons> ub)"
+    by (metis assms(1) assms(3) ub_dom ufSerComp_dom ufisstrongE)
+  moreover have "ubclLen(uf1 \<rightleftharpoons> ub) \<le> ubclLen (uf2 \<rightleftharpoons> (uf1 \<rightleftharpoons> ub))"
+    by (metis assms(2) assms(3) ub_dom ufSerComp_dom ufisweakE ufran_2_ubcldom2)  
+  ultimately have "lnsuc\<cdot>(ubclLen ub) \<le> ubclLen (uf2 \<rightleftharpoons> (uf1 \<rightleftharpoons> ub))"
+    using lnsuc_lnle_emb trans_lnle by blast
+  then show "lnsuc\<cdot>(ubclLen ub) \<le> ubclLen ((uf1 \<circ> uf2) \<rightleftharpoons> ub)"
+    by(simp add: comp_apply)
+qed 
+
+lemma ufsercomp_ufisstrong2:
+  assumes "ufIsWeak uf1"
+  and     "ufIsStrong uf2"
+  and     "sercomp_well uf1 uf2"
+shows     "ufIsStrong (uf1 \<circ> uf2)"
+proof(rule ufisstrongI)
+  fix ub::"'a"
+  assume ub_dom: "ubclDom\<cdot>ub = ufDom\<cdot>(uf1 \<circ> uf2)"
+  have comp_apply: "(uf1 \<circ> uf2) \<rightleftharpoons> ub = uf2 \<rightleftharpoons> (uf1 \<rightleftharpoons> ub)"
+    by (metis assms(3) ub_dom ufSerComp_apply)
+  moreover have "ubclLen ub \<le> ubclLen (uf1  \<rightleftharpoons> ub)"
+    by (metis assms(1) assms(3) ub_dom ufSerComp_dom ufisweakE)
+  moreover have "lnsuc\<cdot>(ubclLen(uf1 \<rightleftharpoons> ub)) \<le> ubclLen (uf2 \<rightleftharpoons> (uf1 \<rightleftharpoons> ub))"
+    by (metis assms(2) assms(3) ub_dom ufSerComp_dom ufisstrongE ufran_2_ubcldom2)
+  ultimately have "lnsuc\<cdot>(ubclLen ub) \<le> ubclLen (uf2 \<rightleftharpoons> (uf1 \<rightleftharpoons> ub))"
+    using lnsuc_lnle_emb trans_lnle by blast
+  then show "lnsuc\<cdot>(ubclLen ub) \<le> ubclLen ((uf1 \<circ> uf2) \<rightleftharpoons> ub)" 
+    by(simp add: comp_apply)
+qed 
+  
+lemma ufsercomp_ufisstrong:
+  assumes "ufIsWeak uf1"
+  and     "ufIsWeak uf2"
+  and     "ufIsStrong uf1 \<or> ufIsStrong uf2"
+  and     "sercomp_well uf1 uf2"
+shows     "ufIsStrong (uf1 \<circ> uf2)"
+  apply(cases "ufIsStrong uf1")
+  apply(subst ufsercomp_ufisstrong1)
+  apply(simp_all add: assms)
+  using assms(4) apply blast
+  apply(subst ufsercomp_ufisstrong2)
+  apply(simp_all add: assms)
+  using assms(3) assms(4) by blast+
+
+subsection{* ufParComp *}
+
+lemma ufparcomp_ufisweak:
+  fixes uf1 uf2::"('a::uscl_pcpo ubundle, 'b::uscl_pcpo ubundle) ufun"
+  assumes "ufIsWeak uf1"
+  and     "ufIsWeak uf2"
+  and     "parcomp_well uf1 uf2"
+shows     "ufIsWeak (ufParComp uf1  uf2)"
+proof(rule ufisweakI)
+  fix ub::"'a::uscl_pcpo ubundle"
+  assume "ubclDom\<cdot>ub = ufDom\<cdot>(uf1 \<parallel> uf2)"
+  then have  ub_dom: "ubclDom\<cdot>ub = ufDom\<cdot>uf1 \<union> ufDom\<cdot>uf2"
+    using assms(3) ufParComp_dom by blast
+ have comp_apply: "(uf1 \<parallel> uf2) \<rightleftharpoons> ub = (uf1 \<rightleftharpoons> (ubRestrict (ufDom\<cdot>uf1)\<cdot>ub)) \<uplus> (uf2 \<rightleftharpoons> (ubRestrict (ufDom\<cdot>uf2)\<cdot>ub))"
+   by (simp add: assms(3) parcomp_func_h2 ub_dom ubclRestrict_ubundle_def)
+  have "ubLen ub \<le> ubLen (ubRestrict (ufDom\<cdot>uf1)\<cdot>ub)"
+    by (simp add: ubrestrict_ublen)
+  then have uf1_len:"ubLen ub \<le> ubLen (uf1 \<rightleftharpoons> (ubRestrict (ufDom\<cdot>uf1)\<cdot>ub))"
+    by (metis (no_types, lifting) Un_upper1 assms ub_dom dual_order.trans 
+        ubclLen_ubundle_def ubclRestrict_ubundle_def ubrestrict_dom2 ufisweakE)
+   have "ubLen ub \<le> ubLen (ubRestrict (ufDom\<cdot>uf2)\<cdot>ub)"
+    by (simp add: ubrestrict_ublen)
+  moreover have "ubLen (ubRestrict (ufDom\<cdot>uf2)\<cdot>ub) \<le> ubLen (uf2 \<rightleftharpoons> (ubRestrict (ufDom\<cdot>uf2)\<cdot>ub))"
+    by (metis Int_absorb1 Un_upper1 assms ub_dom sup_commute ubclDom_ubundle_def ubclLen_ubundle_def 
+        ubrestrict_ubdom2 ufisweakE)
+  ultimately have uf2_len: "ubLen ub \<le> ubLen (uf2 \<rightleftharpoons> (ubRestrict (ufDom\<cdot>uf2)\<cdot>ub))"
+     by (metis order_trans)
+  show "ubclLen ub \<le> ubclLen ((uf1 \<parallel> uf2) \<rightleftharpoons> ub)"
+    by (simp add: local.comp_apply ubclLen_ubundle_def ubclUnion_ubundle_def ubunion_len_le uf1_len uf2_len)
+qed
+
+
+section{* ufHide *}
+
+lemma ufhide_ufisweak_ubundle:
+  fixes f::"('a::uscl_pcpo ubundle, 'b::uscl_pcpo ubundle ) ufun"
+  assumes "ufIsWeak f"
+  shows   "ufIsWeak (ufHide f cs)"
+proof(rule ufisweakI)
+  fix ub::"'a ubundle"
+  assume "ubclDom\<cdot>ub = ufDom\<cdot>(f \<h> cs)"
+  then have ub_dom: "ubDom\<cdot>ub = ufDom\<cdot>f"
+    by (simp add: ubclDom_ubundle_def ufhide_dom)
+ have "ubLen ub \<le> ubLen (f \<rightleftharpoons> ub)"
+   by (metis assms ub_dom ubclDom_ubundle_def ubclLen_ubundle_def ufisweakE)
+  moreover have "\<And> cs. ubLen (f \<rightleftharpoons> ub) \<le> ubLen (ubRestrict cs\<cdot>(f \<rightleftharpoons> ub))" 
+    by (simp add: ubrestrict_ublen)
+  ultimately show "ubclLen ub \<le> ubclLen (f \<h> cs \<rightleftharpoons> ub)"
+    by(simp add: ufhide_apply assms ub_dom ubclRestrict_ubundle_def trans_lnle ubclDom_ubundle_def ubclLen_ubundle_def)
+qed
+
+lemma ufhide_ufisweak:
+  assumes "ufIsWeak f"
+  shows   "ufIsWeak (ufHide f cs)"
+  oops
+
+section{* ufComp *}
+
+subsection {* ufCompH*}
+
+lemma ufcomph_len:
+  assumes "ubDom\<cdot>ub = ufRan\<cdot>f1 \<union> ufRan\<cdot>f2"
+      and "ubDom\<cdot>x = ufCompI f1 f2"
+      and "ufIsWeak f1" 
+      and "ufIsWeak f2"
+      and "ufRan\<cdot>f1 \<inter> ufRan\<cdot>f2 = {}"                   
+    shows "min (ubLen ub) (ubLen x) \<le> ubLen ((ufCompH f1 f2 x)\<cdot>ub)"
+proof -
+ have in_dom: "ubDom\<cdot>(x \<uplus> ub) \<supseteq> ufDom\<cdot>f1 \<union> ufDom\<cdot>f2"
+   by(simp add: ubclUnion_ubundle_def assms ufCompI_def)
+  obtain n where min_len: "n = min (ubLen ub) (ubLen x)"
+    by simp
+   
+  have in_len: "n \<le> ubLen (x \<uplus> ub)"
+    by (simp add: min_def min_len ubclUnion_ubundle_def ubunion_len_le)
+  
+  have "n \<le> ubLen (ubRestrict (ufDom\<cdot>f1)\<cdot>(x \<uplus> ub))"
+    using in_len trans_lnle ubrestrict_ublen by blast
+    moreover have "ubLen (ubRestrict (ufDom\<cdot>f1)\<cdot>(x \<uplus> ub)) \<le> ubLen (f1 \<rightleftharpoons> (ubRestrict (ufDom\<cdot>f1)\<cdot>(x \<uplus> ub)))"
+      by (metis assms(3) in_dom le_supE ubclDom_ubundle_def ubclLen_ubundle_def ubclRestrict_ubundle_def ubrestrict_dom2 ufisweakE)
+    ultimately have f1_len: "n \<le> ubLen (f1 \<rightleftharpoons> (ubRestrict (ufDom\<cdot>f1)\<cdot>(x \<uplus> ub)))"
+      using trans_lnle in_len by blast
+
+  have "n \<le> ubLen (ubRestrict (ufDom\<cdot>f2)\<cdot>(x \<uplus> ub))"
+    using in_len trans_lnle ubrestrict_ublen by blast
+    moreover have "ubLen (ubRestrict (ufDom\<cdot>f2)\<cdot>(x \<uplus> ub)) \<le> ubLen (f2 \<rightleftharpoons> (ubRestrict (ufDom\<cdot>f2)\<cdot>(x \<uplus> ub)))"
+      by (metis Int_absorb1 assms(4) in_dom le_supE ubclDom_ubundle_def ubclLen_ubundle_def ubrestrict_ubdom2 ufisweakE)
+    moreover have "ubLen (ubRestrict (ufDom\<cdot>f2)\<cdot>(x \<uplus> ub)) \<le> ubLen (f2 \<rightleftharpoons> (ubRestrict (ufDom\<cdot>f2)\<cdot>(x \<uplus> ub)))"
+      using calculation(2) dual_order.trans less_lnsuc by blast
+    ultimately have f2_len: "n \<le> ubLen (f2 \<rightleftharpoons> (ubRestrict (ufDom\<cdot>f2)\<cdot>(x \<uplus> ub)))"
+      using dual_order.trans by blast
+
+   have "n \<le> ubLen ((f1 \<rightleftharpoons> (ubRestrict (ufDom\<cdot>f1)\<cdot>(x \<uplus> ub))) \<uplus> (f2 \<rightleftharpoons> (ubRestrict (ufDom\<cdot>f2)\<cdot>(x \<uplus> ub))))"
+     by (metis f1_len f2_len min_def min_len ubclUnion_ubundle_def ubunion_len_le)
+   then show ?thesis
+     by (metis min_len ubclRestrict_ubundle_def ufcomph_insert)
+  qed
+
+lemma iterate_ufcomph_len_le: 
+  assumes "ubDom\<cdot>ub = ufRan\<cdot>f1 \<union> ufRan\<cdot>f2"
+    and  "ubDom\<cdot>x = ufCompI f1 f2"
+    and  "ufIsWeak f1" 
+    and  "ufIsWeak f2"
+    and  "ufRan\<cdot>f1 \<inter> ufRan\<cdot>f2 = {}"  
+  shows  "min (ubLen ub) (ubLen x) \<le> ubLen (iterate i\<cdot>(ufCompH f1 f2 x)\<cdot>ub)"
+proof(induction i)
+  case 0
+  then show ?case 
+    by simp
+next
+  case (Suc i)
+  assume a: "min (ubLen ub) (ubLen x) \<le> ubLen (iterate i\<cdot>(ufCompH f1 f2 x)\<cdot>ub)"
+  moreover have "min (ubLen (iterate i\<cdot>(ufCompH f1 f2 x)\<cdot>ub)) (ubLen x) \<le> ubLen ((ufCompH f1 f2 x)\<cdot>(iterate i\<cdot>(ufCompH f1 f2 x)\<cdot>ub))"
+    by (metis assms iterate_ufcomph_dom ubclDom_ubundle_def ufcomph_len)
+  moreover have "min (ubLen ub) (ubLen x) \<le> min (ubLen (iterate i\<cdot>(ufCompH f1 f2 x)\<cdot>ub)) (ubLen ub)"
+    by (simp add: a)
+  ultimately show ?case
+    using dual_order.trans by fastforce 
+qed
+
+subsection{* Feedback Case *}
+
+lemma iterate_ufcomph_len_l_h:  
+  assumes "ubDom\<cdot>ub = ufRan\<cdot>f1 \<union> ufRan\<cdot>f2"
+    and     "ubDom\<cdot>x = ufCompI f1 f2"
+    and     "ufIsWeak f1" 
+    and     "ufIsStrong f2"
+    and     "ufRan\<cdot>f2 \<subset> ufDom\<cdot>f1"
+    and     "ufDom\<cdot>f2 = ufRan\<cdot>f1"
+    and     "ufRan\<cdot>f1 \<inter> ufRan\<cdot>f2 = {}"
+    and     "ubLen ub < ubLen x"
+    and     "ubLen (ubRestrict (ufDom\<cdot>f2)\<cdot>ub) < ubLen (ubRestrict (ufDom\<cdot>f1)\<cdot>ub)"
+  shows     "ubLen ub < ubLen (iterate (Suc i)\<cdot>(ufCompH f1 f2 x)\<cdot>ub)"
+proof -
+  have ub_fin: "ubLen ub < \<infinity>"
+    by (metis assms(8) inf_ub leD le_neq_trans)
+  have ub_split: " ub = (ubRestrict (ufDom\<cdot>f1)\<cdot>ub) \<uplus> (ubRestrict (ufDom\<cdot>f2)\<cdot>ub)"
+    by (simp add: assms dual_order.strict_implies_order le_supI1 ub_split_union ubclUnion_ubundle_def)
+  have ub_res_f2: "ubRestrict (ufDom\<cdot>f2)\<cdot>(x \<uplus> ub) = ubRestrict  (ufDom\<cdot>f2)\<cdot>ub"
+    by (metis (no_types, lifting) Un_upper1 assms ubRestrict_twice ubclDom_ubundle_def 
+        ubclRestrict_ubundle_def ubclunion_restrict2 ubrestrict_dom2 ubrestrict_ubdom2)
+ have in_dom: "ubDom\<cdot>(x \<uplus> ub) \<supseteq> ufDom\<cdot>f1 \<union> ufDom\<cdot>f2"
+   by(simp add: ubclUnion_ubundle_def assms ufCompI_def)
+
+  have ub_len: "ubLen ub = ubLen (ubRestrict (ufDom\<cdot>f2)\<cdot>ub)"
+    by (metis (no_types, lifting) assms dual_order.strict_trans2 not_less_iff_gr_or_eq ub_split 
+        ubclUnion_ubundle_def ubrestrict_ublen ubunion_len_l)
+  have "lnsuc\<cdot>(ubLen (ubRestrict (ufDom\<cdot>f2)\<cdot>ub)) \<le> ubLen (f2 \<rightleftharpoons> (ubRestrict (ufDom\<cdot>f2)\<cdot>ub))"
+    by (metis assms inf_commute inf_sup_absorb ubclDom_ubundle_def ubclLen_ubundle_def 
+        ubrestrict_ubdom2 ufisstrongE)  
+  then have "ubLen (ubRestrict (ufDom\<cdot>f2)\<cdot>ub) < ubLen (f2 \<rightleftharpoons> (ubRestrict (ufDom\<cdot>f2)\<cdot>ub))"
+    by (metis assms inf_ub le2lnle leD le_neq_trans)
+  moreover have "ubLen ub \<le> ubLen (ubRestrict (ufDom\<cdot>f2)\<cdot>ub)"
+    by (simp add: ubrestrict_ublen)
+  ultimately have f2_out_len:"ubLen ub < ubLen (f2 \<rightleftharpoons> (ubRestrict (ufDom\<cdot>f2)\<cdot>ub))"
+    by (metis dual_order.strict_trans2)
+   have "ubLen ub < ubLen (ubRestrict (ufDom\<cdot>f1)\<cdot>(x \<uplus> ub))"
+     by (metis (no_types, lifting) assms order.strict_trans2 ub_len ubclUnion_ubundle_def 
+         ubrestrict_ublen ubunion_len_l ubunion_ubrestrict3)
+  moreover have "ubLen (ubRestrict (ufDom\<cdot>f1)\<cdot>(x \<uplus> ub)) \<le> ubLen (f1 \<rightleftharpoons> (ubRestrict (ufDom\<cdot>f1)\<cdot>(x \<uplus> ub)))"
+    by (metis (no_types) Int_absorb1 assms in_dom le_supE ubclDom_ubundle_def ubclLen_ubundle_def ubrestrict_ubdom2 ufisweakE)
+  ultimately have f1_out_len: "ubLen ub < ubLen (f1 \<rightleftharpoons> (ubRestrict (ufDom\<cdot>f1)\<cdot>(x \<uplus> ub)))"
+    using dual_order.strict_trans1 by blast 
+  
+  have "ubLen ub < ubLen ((f1 \<rightleftharpoons> ubRestrict (ufDom\<cdot>f1)\<cdot>(x \<uplus> ub)) \<uplus> (f2\<rightleftharpoons> ubRestrict (ufDom\<cdot>f2)\<cdot>(x \<uplus> ub)))"
+    by (metis f1_out_len f2_out_len ub_res_f2 ubclUnion_ubundle_def ubunion_len_l)
+  then have iter1:"ubLen ub < ubLen (iterate 1\<cdot>(ufCompH f1 f2 x)\<cdot>ub)"
+    by(simp add: ufcomph_insert ubclRestrict_ubundle_def)
+
+  moreover have "min (ubLen (iterate 1\<cdot>(ufCompH f1 f2 x)\<cdot>ub)) (ubLen x) \<le> ubLen (iterate i\<cdot>(ufCompH f1 f2 x)\<cdot>(iterate 1\<cdot>(ufCompH f1 f2 x)\<cdot>ub))"
+    by (metis assms iterate_ufcomph_dom iterate_ufcomph_len_le ubclDom_ubundle_def ufisstrong_2_ufisweak)
+  moreover have "ubLen ub < ubLen (iterate 1\<cdot>(ufCompH f1 f2 x)\<cdot>ub)"
+    using iter1 by auto
+  ultimately show ?thesis
+    by (metis (no_types, hide_lams) Suc_eq_plus1 assms(8) dual_order.strict_trans1 iterate_iterate min_def)          
+qed
+
+lemma iterate_ufcomph_len_l:  
+  assumes "ubDom\<cdot>ub = ufRan\<cdot>f1 \<union> ufRan\<cdot>f2"
+    and     "ubDom\<cdot>x = ufCompI f1 f2"
+    and     "ufIsWeak f1" 
+    and     "ufIsStrong f2"
+    and     "ufRan\<cdot>f2 \<subset> ufDom\<cdot>f1"
+    and     "ufDom\<cdot>f2 = ufRan\<cdot>f1"
+    and     "ufRan\<cdot>f1 \<inter> ufRan\<cdot>f2 = {}"
+    and     "ufRan\<cdot>f1 \<inter> ufDom\<cdot>f1 = {}"
+    and     "ubLen ub < ubLen x"                          
+  shows     "ubLen ub < ubLen (iterate (2+i)\<cdot>(ufCompH f1 f2 x)\<cdot>ub)"
+proof(cases "ubLen (ubRestrict (ufDom\<cdot>f2)\<cdot>ub) < ubLen (ubRestrict (ufDom\<cdot>f1)\<cdot>ub)")
+  case True
+ then show ?thesis
+   by (metis assms add_2_eq_Suc iterate_ufcomph_len_l_h)              
+next
+  case False
+  then have f1_le_f2: "ubLen (ubRestrict (ufDom\<cdot>f1)\<cdot>ub) \<le> ubLen  (ubRestrict (ufDom\<cdot>f2)\<cdot>ub)"
+    using leI by blast
+  have ub_fin: "ubLen ub < \<infinity>"
+    by (metis assms(9) inf_ub leD le_neq_trans)
+  have ub_split: " ub = (ubRestrict (ufDom\<cdot>f1)\<cdot>ub) \<uplus> (ubRestrict (ufDom\<cdot>f2)\<cdot>ub)"
+    by (simp add: assms dual_order.strict_implies_order le_supI1 ub_split_union ubclUnion_ubundle_def)
+  have ub_min: "ubLen ub = ubLen (ubRestrict (ufDom\<cdot>f1)\<cdot>ub)"
+   by (metis dual_order.antisym f1_le_f2 ub_split ubclUnion_ubundle_def ubrestrict_ublen ubunion_ublen_le) 
+  then have ub_f1_fin: "ubLen (ubRestrict (ufDom\<cdot>f1)\<cdot>ub) < \<infinity>"
+    using ub_fin by auto
+  have ub_res_f2: "ubRestrict (ufDom\<cdot>f2)\<cdot>(x\<uplus>ub) = ubRestrict  (ufDom\<cdot>f2)\<cdot>ub"
+    by (metis (no_types, lifting) Un_upper1 assms ubRestrict_twice ubclDom_ubundle_def 
+        ubclRestrict_ubundle_def ubclunion_restrict2 ubrestrict_dom2 ubrestrict_ubdom2)
+ have in_dom: "ubDom\<cdot>(x \<uplus> ub) \<supseteq> ufDom\<cdot>f1 \<union> ufDom\<cdot>f2"
+   by(simp add: ubclUnion_ubundle_def assms ufCompI_def)
+
+   have "lnsuc\<cdot>(ubLen (ubRestrict (ufDom\<cdot>f2)\<cdot>ub)) \<le> ubLen (f2 \<rightleftharpoons> (ubRestrict (ufDom\<cdot>f2)\<cdot>ub))"
+     by (metis Int_absorb1 Un_upper1 assms ubclDom_ubundle_def ubclLen_ubundle_def 
+         ubrestrict_ubdom2 ufisstrongE)  
+   then have "lnsuc\<cdot>(ubLen (ubRestrict (ufDom\<cdot>f1)\<cdot>ub)) \<le> ubLen (f2 \<rightleftharpoons> (ubRestrict (ufDom\<cdot>f2)\<cdot>ub))"
+    by (metis f1_le_f2 lnsuc_lnle_emb order_subst2)
+  then have f2_out_len: "ubLen ub < ubLen (f2 \<rightleftharpoons> (ubRestrict (ufDom\<cdot>f2)\<cdot>ub))"
+    using le2lnle ub_fin ub_min by auto
+
+ have "ubLen ub \<le> ubLen (ubRestrict (ufDom\<cdot>f1)\<cdot>(x \<uplus> ub))"
+   by (metis (no_types, hide_lams) assms dual_order.trans le_cases not_le ubclUnion_ubundle_def 
+       ubrestrict_ublen ubunion_len_le)
+  moreover have "ubLen (ubRestrict (ufDom\<cdot>f1)\<cdot>(x \<uplus> ub)) \<le> ubLen (f1 \<rightleftharpoons> (ubRestrict (ufDom\<cdot>f1)\<cdot>(x \<uplus> ub)))"
+    by (metis Int_absorb1 assms in_dom le_supE ubclDom_ubundle_def ubclLen_ubundle_def 
+        ubrestrict_ubdom2 ufisweakE)
+  ultimately have f1_out_len: "ubLen ub \<le> ubLen (f1 \<rightleftharpoons> (ubRestrict (ufDom\<cdot>f1)\<cdot>(x \<uplus> ub)))"
+    using dual_order.trans by blast 
+  
+  then show ?thesis
+  proof(cases "ubLen (f2 \<rightleftharpoons> (ubRestrict (ufDom\<cdot>f2)\<cdot>ub)) \<le> ubLen (f1 \<rightleftharpoons> (ubRestrict (ufDom\<cdot>f1)\<cdot>(x \<uplus> ub)))")
+    case True
+    then have "ubLen ub < ubLen (f1 \<rightleftharpoons> (ubRestrict (ufDom\<cdot>f1)\<cdot>(x\<uplus> ub)))"
+      using dual_order.strict_trans1 f2_out_len by blast
+    then have "ubLen ub < ubLen ((f1 \<rightleftharpoons> ubRestrict (ufDom\<cdot>f1)\<cdot>(x \<uplus> ub)) \<uplus> (f2\<rightleftharpoons> ubRestrict (ufDom\<cdot>f2)\<cdot>(x \<uplus> ub)))"
+      by (metis assms f2_out_len ub_res_f2 ubclDom_ubundle_def ubclUnion_ubundle_def 
+          ubclunion_commu ubunion_len_l ufCompO_def ufcomp_I_inter_Oc_empty)
+    then have "ubLen ub < ubLen (iterate 1\<cdot>(ufCompH f1 f2 x)\<cdot>ub)"
+      by(simp add: ufcomph_insert ubclRestrict_ubundle_def ubclUnion_ubundle_def)
+
+  moreover have "min (ubLen (iterate 1\<cdot>(ufCompH f1 f2 x)\<cdot>ub)) (ubLen x) \<le> ubLen (iterate (Suc i)\<cdot>(ufCompH f1 f2 x)\<cdot>(iterate 1\<cdot>(ufCompH f1 f2 x)\<cdot>ub))"
+    by (metis assms iterate_ufcomph_dom iterate_ufcomph_len_le ubclDom_ubundle_def ufisstrong_2_ufisweak)
+  moreover have "(iterate (2 + i)\<cdot>(ufCompH f1 f2 x)\<cdot>ub) = (iterate (Suc i)\<cdot>(ufCompH f1 f2 x)\<cdot>(iterate 1\<cdot>(ufCompH f1 f2 x)\<cdot>ub))"
+    by (metis Suc_eq_plus1 add_2_eq_Suc iterate_iterate)
+  ultimately show ?thesis
+    by (metis (no_types, hide_lams) assms(9) min_def min_less_iff_conj)
+
+  next
+    case False
+    then have "ubLen (f1 \<rightleftharpoons> (ubRestrict (ufDom\<cdot>f1)\<cdot>(x \<uplus> ub))) < ubLen (f2 \<rightleftharpoons> (ubRestrict (ufDom\<cdot>f2)\<cdot>(ub)))"
+      by (metis assms leI ubclDom_ubundle_def ubclunion_commu ufCompO_def ufcomp_I_inter_Oc_empty)
+    moreover obtain ub2 where ub2_split: "ub2 = (f1 \<rightleftharpoons> (ubRestrict (ufDom\<cdot>f1)\<cdot>(x \<uplus> ub))) \<uplus> (f2 \<rightleftharpoons> (ubRestrict (ufDom\<cdot>f2)\<cdot>(x \<uplus> ub)))"
+      by metis
+    moreover have ub2_iter: "ub2 = iterate 1\<cdot>(ufCompH f1 f2 x)\<cdot>ub"
+      by(simp add: ub2_split ufcomph_insert ub_res_f2 ubclRestrict_ubundle_def)
+    moreover have ub2_res_f2:"ubRestrict (ufDom\<cdot>f2)\<cdot>ub2 = f1 \<rightleftharpoons> (ubRestrict (ufDom\<cdot>f1)\<cdot>(x \<uplus> ub))"
+      by (metis (no_types, lifting) Un_upper1 assms in_dom inf_commute le_supE ub2_split 
+          ubclDom_ubundle_def ubclRestrict_ubundle_def ubclunion_restrict3 ufRanRestrict)
+    moreover have ub2_res_f1: "ubRestrict (ufDom\<cdot>f1)\<cdot>ub2 = f2 \<rightleftharpoons> (ubRestrict (ufDom\<cdot>f2)\<cdot>(x \<uplus> ub))"
+      by (metis (no_types, lifting) assms dual_order.strict_implies_order in_dom le_supE ub2_split 
+          ubclDom_ubundle_def ubclRestrict_ubundle_def ubclUnion_ubundle_def ubrestrict_id 
+          ubunion_ubrestrict4 ufRanRestrict)
+    ultimately have ub2_min_res: "ubLen (ubRestrict (ufDom\<cdot>f2)\<cdot>ub2) < ubLen (ubRestrict (ufDom\<cdot>f1)\<cdot>ub2)"
+      by (metis ub_res_f2)
+    then have ub2_min: "ubLen ub2 = ubLen (ubRestrict (ufDom\<cdot>f2)\<cdot>ub2)"
+      by (metis ub2_res_f1 ub2_res_f2 dual_order.antisym dual_order.strict_implies_order ub2_split 
+          ubrestrict_ublen ubclUnion_ubundle_def ubunion_ublen_le)
+    then show ?thesis 
+    proof(cases "ubLen ub2 < ubLen x")
+      
+      case True
+      then have "ubLen ub2 < ubLen (iterate (Suc i)\<cdot>(ufCompH f1 f2 x)\<cdot>ub2)"
+        by (metis assms iterate_ufcomph_dom iterate_ufcomph_len_l_h ub2_iter ub2_min_res 
+            ubclDom_ubundle_def)
+    then have "ubLen ub < ubLen (iterate (Suc i)\<cdot>(ufCompH f1 f2 x)\<cdot>ub2)"
+      by (metis (no_types, lifting) assms dual_order.trans f1_out_len not_le ub2_min ub2_res_f2 
+          ub_split ubclUnion_ubundle_def ubunion_commutative ufCompO_def ufcomp_I_inter_Oc_empty)
+      then show ?thesis
+        by (metis (no_types, hide_lams) One_nat_def add_2_eq_Suc iterate_0 iterate_Suc2 ub2_iter)
+    
+    next
+      case False
+      then have "ubLen x \<le> ubLen ub2"
+        by simp
+      moreover have "ubLen ub < ubLen ub2"
+        using assms(9) calculation by auto
+      moreover  have "ubLen ub < ubLen (iterate 1\<cdot>(ufCompH f1 f2 x)\<cdot>ub)"
+        using calculation ub2_iter by auto
+      moreover have "min (ubLen (iterate 1\<cdot>(ufCompH f1 f2 x)\<cdot>ub)) (ubLen x) \<le> ubLen (iterate (Suc i)\<cdot>(ufCompH f1 f2 x)\<cdot>(iterate 1\<cdot>(ufCompH f1 f2 x)\<cdot>ub))"
+        by (metis assms iterate_ufcomph_dom iterate_ufcomph_len_le ubclDom_ubundle_def ufisstrong_2_ufisweak)
+      ultimately show ?thesis
+        by (metis (no_types, lifting) add_2_eq_Suc assms(9) dual_order.strict_trans1 iterate_Suc2 
+            min_absorb2 ub2_iter ub2_split ub_res_f2 ubclRestrict_ubundle_def ufcomph_insert) 
+    qed
+  qed
+qed
+
+lemma iterate_ufcomph_len_ex:  
+  assumes     "ubDom\<cdot>x = ufCompI f1 f2"
+      and     "ufIsWeak f1" 
+      and     "ufIsStrong f2"
+      and     "ufRan\<cdot>f2 \<subset> ufDom\<cdot>f1"
+      and     "ufDom\<cdot>f2 = ufRan\<cdot>f1"
+      and     "ufRan\<cdot>f1 \<inter> ufRan\<cdot>f2 = {}"
+      and     "ufDom\<cdot>f1 \<noteq> {}"
+      and     "ufDom\<cdot>f2 \<noteq> {}"
+      and     "ufRan\<cdot>f1 \<inter> ufDom\<cdot>f1 = {}"
+    shows     "Fin n \<le> ubLen x \<Longrightarrow> \<exists>i. Fin n \<le> ubLen (iterate i\<cdot>(ufCompH f1 f2 x)\<cdot>(ubLeast (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2)))"
+proof(induction n)
+  case 0
+  then show ?case
+    by (metis Fin_0 lnle_def lnzero_def minimal)
+next
+  case (Suc n)
+  then obtain i where i_def: "Fin n \<le> ubLen (iterate i\<cdot>(ufCompH f1 f2 x)\<cdot>(ubLeast (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2)))"
+    using Fin_leq_Suc_leq by blast
+  then show  ?case 
+  proof(cases "ubLen (iterate i\<cdot>(ufCompH f1 f2 x)\<cdot>(ubLeast (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2))) < ubLen x")
+    case True
+    then have "ubLen (iterate i\<cdot>(ufCompH f1 f2 x)\<cdot>(ubLeast (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2))) <  
+               ubLen (iterate (2)\<cdot>(ufCompH f1 f2 x)\<cdot>(iterate i\<cdot>(ufCompH f1 f2 x)\<cdot>(ubLeast (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2))))"
+      by (metis One_nat_def Suc_1 add_2_eq_Suc assms iter_ufCompH_dom iterate_ufcomph_len_l ubclDom_ubundle_def ubclLeast_ubundle_def)   
+    moreover have "iterate (2)\<cdot>(ufCompH f1 f2 x)\<cdot>(iterate i\<cdot>(ufCompH f1 f2 x)\<cdot>(ubLeast (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2))) 
+                   = iterate (2+i)\<cdot>(ufCompH f1 f2 x)\<cdot>(ubLeast (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2))"
+      by (simp add: iterate_iterate)
+    moreover have "Fin n < ubLen (iterate (2+i)\<cdot>(ufCompH f1 f2 x)\<cdot>(ubLeast (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2)))"
+      using calculation(1) calculation(2) i_def by auto
+    moreover have "Fin (Suc n) \<le> ubLen (iterate (2+i)\<cdot>(ufCompH f1 f2 x)\<cdot>(ubLeast (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2)))"
+      using calculation(3) less2lnleD by blast
+    ultimately show ?thesis
+      by blast
+  next
+    case False
+    then show ?thesis
+      by (metis Fin_leq_Suc_leq Suc.prems i_def le_neq_trans less2lnleD)
+  qed
+qed
+
+
+lemma ubfix_ublen: 
+ fixes f1 f2::"('a::uscl_ind ubundle, 'a ubundle) ufun"
+  assumes     "ubDom\<cdot>x = ufCompI f1 f2"
+      and     "ufIsWeak f1" 
+      and     "ufIsStrong f2"
+      and     "ufRan\<cdot>f2 \<subset> ufDom\<cdot>f1"
+      and     "ufDom\<cdot>f2 = ufRan\<cdot>f1"
+      and     "ufRan\<cdot>f1 \<inter> ufRan\<cdot>f2 = {}"
+      and     "ufDom\<cdot>f1 \<noteq> {}"
+      and     "ufDom\<cdot>f2 \<noteq> {}"
+      and     "ufRan\<cdot>f1 \<inter> ufDom\<cdot>f1 = {}"
+    shows "ubLen x \<le> ubLen (ubFix (ufCompH f1 f2 x) (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2))"
+proof(cases  "ubLen x = 0")
+  case True
+  then show ?thesis
+    by (metis bottomI le_cases lnle_def lnzero_def)
+next
+  case False
+  then show ?thesis  
+proof -
+  assume a: "ubLen x \<noteq> 0"
+  then have x_g_zero:" ubLen x > 0"
+    by (metis bottomI leI lnle_def lnzero_def)
+  obtain ub  where ub_def: "ub  = ubFix (ufCompH f1 f2 x) (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2)"
+    by blast
+  have iter_chain: "chain (\<lambda> i. iter_ubfix2 (ufCompH f1 f2) i (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2) x)"
+    by (simp add: assms(1) ubclDom_ubundle_def)
+  then have iter_pref: "iter_ubfix2 (ufCompH f1 f2) i (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2) x \<sqsubseteq> ub"
+    by (metis  ub_def ubFix_def is_ub_thelub) 
+  then have iter_len: "ubLen (iter_ubfix2 (ufCompH f1 f2) i (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2) x) \<le> ubLen ub"
+    using lnle_def monofun_def ublen_monofun by blast
+
+  have h2:"iter_ubfix2 (ufCompH f1 f2) i (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2) x = iterate i\<cdot>(ufCompH f1 f2 x)\<cdot>(ubLeast (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2))"
+    by (simp add: ubclLeast_ubundle_def)
+  have h3: "ubLen (ubLeast (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2)::('a::uscl_ind ubundle)) < ubLen x"
+    by (metis assms(5) assms(8) x_g_zero sup_eq_bot_iff ubleast_len)
+  have h4: "ubLen (iter_ubfix2 (ufCompH f1 f2) i (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2) x) < ubLen x 
+          \<Longrightarrow> ubLen (iter_ubfix2 (ufCompH f1 f2) i (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2) x) < ubLen (iter_ubfix2 (ufCompH f1 f2) (i+2) (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2) x)"
+    by (smt add.commute add_cancel_right_left assms iter_ufCompH_dom iterate_iterate iterate_ufcomph_len_l ubclDom_ubundle_def)
+  have h5: "ubLen (iter_ubfix2 (ufCompH f1 f2) i (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2) x) < ubLen x 
+          \<Longrightarrow> iter_ubfix2 (ufCompH f1 f2) i (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2) x \<noteq> ub"
+    by (metis (no_types, lifting) add_2_eq_Suc' assms(1) ub_def h4 iterate_Suc not_less_iff_gr_or_eq 
+        ubclDom_ubundle_def ubcldom_least_cs ubfix_eq ufCompH_dom)
+  have h6: "ubLen (iter_ubfix2 (ufCompH f1 f2) i (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2) x) < ubLen x 
+          \<Longrightarrow> ubLen (iter_ubfix2 (ufCompH f1 f2) i (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2) x) < ubLen ub"
+    by (smt add_2_eq_Suc' assms(1) h4 iter_pref iterate_Suc leD lnle_def monofun_cfun_arg 
+        monofun_def not_less_iff_gr_or_eq ub_def ubclDom_ubundle_def ubclLen_ubundle_def 
+        ubcldom_least_cs ubcllen_mono ubfix_eq ufCompH_dom)
+
+   have " ubLen x < \<infinity> \<Longrightarrow> ubLen x \<le> ubLen ub"
+  proof -
+    assume x_fin: "ubLen x < \<infinity>"
+    then obtain n where x_len: "ubLen x = Fin n"
+      using lnat_well_h2 by auto 
+    then have n_le_x:"Fin n \<le> ubLen x"
+      by simp
+    then have "\<exists>i. Fin n \<le> ubLen (iterate i\<cdot>(ufCompH f1 f2 x)\<cdot>(ubLeast (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2)))"
+      using assms iterate_ufcomph_len_ex by blast
+    then obtain i where i_def: "Fin n \<le> ubLen(iter_ubfix2 (ufCompH f1 f2) i (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2) x)"
+      by (metis ubclLeast_ubundle_def)
+    then have "iter_ubfix2 (ufCompH f1 f2) i (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2) x \<sqsubseteq> ub"
+      by (metis is_ub_thelub iter_chain ubFix_def ub_def)
+    then have "Fin n \<le> ubLen ub"
+      by (meson i_def lnle_def monofun_def rev_below_trans ublen_monofun)
+    then show ?thesis
+      by (simp add: x_len)
+  qed    
+  moreover have "ubLen x = \<infinity> \<Longrightarrow> ubLen ub = \<infinity>"
+  proof(rule ccontr)
+    assume x_len: "ubLen x = \<infinity>"
+    assume ub_len: "ubLen ub \<noteq> \<infinity>"
+    then obtain n where ub_len_fin: "ubLen ub = Fin n"
+      using infI by auto
+    then have n_le_x: "Fin n \<le> ubLen x"
+      by (simp add: x_len)
+    then have "\<exists>i. Fin n \<le> ubLen (iterate i\<cdot>(ufCompH f1 f2 x)\<cdot>(ubLeast (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2)))"
+      using assms iterate_ufcomph_len_ex by blast
+    then obtain i where i_def: "Fin n \<le> ubLen (iter_ubfix2 (ufCompH f1 f2) i (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2) x)"
+      by (metis ubclLeast_ubundle_def)
+    moreover have "ubLen (iter_ubfix2 (ufCompH f1 f2) i (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2) x) < ubLen x"
+    proof -
+      have "\<not>(\<infinity> \<sqsubseteq> Fin n)"
+        by (metis lnle_def notinfI3)
+      then show ?thesis
+        by (metis (no_types) inf_ub is_ub_thelub iter_chain le_neq_trans monofun_def ubFix_def ub_def ub_len_fin ublen_monofun x_len)
+    qed    
+    moreover have "ubLen (iter_ubfix2 (ufCompH f1 f2) i (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2) x) < ubLen (iterate (2 + 0)\<cdot>(ufCompH f1 f2 x)\<cdot> (iter_ubfix2 (ufCompH f1 f2) i (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2) x))"
+        by (metis assms calculation(2) iter_ufCompH_dom iterate_ufcomph_len_l ubclDom_ubundle_def)
+    moreover have "ubLen (iter_ubfix2 (ufCompH f1 f2) i (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2) x) < ubLen (iter_ubfix2 (ufCompH f1 f2) (i+2) (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2) x)"
+        by (metis (no_types, lifting) add.commute add_cancel_right_right calculation(3) iterate_iterate)
+    moreover have "(iter_ubfix2 (ufCompH f1 f2) (i+2) (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2) x) \<sqsubseteq> ub"
+      by (metis is_ub_thelub iter_chain ubFix_def ub_def)
+    moreover have "ubLen (iter_ubfix2 (ufCompH f1 f2) (i+2) (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2) x) \<le> ubLen ub"
+      using calculation(5) lnle_def monofun_def ublen_monofun by blast
+    then show "False"
+      using calculation(4) i_def ub_len_fin by auto
+  qed
+ ultimately show "ubLen x \<le> ubLen (ubFix (ufCompH f1 f2 x) (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2))"
+    by (metis inf_ub le_neq_trans ub_def) 
+  qed
+qed
+
+lemma ufisweak_comp_ufisstrong_ufisweak_eq_weak: 
+  fixes uf1 uf2::"('a::uscl_ind ubundle, 'a ubundle) ufun"
+  assumes "ufIsWeak uf1" 
+      and "ufIsStrong uf2"
+      and "ufRan\<cdot>uf2 \<subset> ufDom\<cdot>uf1"
+      and "ufDom\<cdot>uf2 = ufRan\<cdot>uf1"
+      and "ufRan\<cdot>uf1 \<inter> ufRan\<cdot>uf2 = {}"
+      and "ufDom\<cdot>uf1 \<noteq> {}"
+      and "ufDom\<cdot>uf2 \<noteq> {}"
+      and  "ufRan\<cdot>uf1 \<inter> ufDom\<cdot>uf1 = {}"
+    shows "ufIsWeak (uf1 \<otimes> uf2)"
+  apply(rule ufisweakI)
+  apply(simp add: assms ubclDom_ubundle_def ufcomp_dom ufcomp_insert ubclLen_ubundle_def)
+  apply(rule ubfix_ublen)
+  using assms by blast+
+
+
+
+
+section{* Old Version *}
 
 lemma z1: assumes "ubDom\<cdot>z \<inter> ubDom\<cdot>zz = {}" shows "ubLen (z \<uplus> zz) = ubLen z \<or> ubLen (z \<uplus> zz) = ubLen zz"
   apply (simp add: ubclUnion_ubundle_def)
@@ -128,6 +663,7 @@ proof -
   qed
 qed
 
+(* TODO: update to new ufun type 
 lemma ufcompH_len_step:
   assumes "ufRan\<cdot>f1 \<inter> ufRan\<cdot>f2 = {}"
   and "ufIsStrong f1"
@@ -997,3 +1533,6 @@ lemma ufSerComp_weakCausal: assumes "ufIsWeak f1" and "ufIsWeak f2" and "sercomp
   then show ?thesis
     using f1 by (metis (no_types))
 qed
+*)
+
+end
