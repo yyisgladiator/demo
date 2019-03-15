@@ -193,7 +193,7 @@ lemma ubHdLen_one: assumes "ubDom\<cdot>x \<noteq> {}" and "ubLen x > 0"
 proof-
   have "\<And>c. c \<in> ubDom\<cdot>x \<Longrightarrow> usclLen\<cdot>(x . c) > 0" 
     by (metis (mono_tags, lifting) assms(1) assms(2) mem_Collect_eq not_le not_less_Least
-        ubLen_def usclLen_bot usclLen_zero)
+        ubLen_def usclLen_bottom usclLen_zero)
   hence "\<And>c. c \<in> ubDom\<cdot>x \<Longrightarrow> usclLen\<cdot>(usclTake 1\<cdot>(x . c)) = Fin 1"  
     using usclTake_len by force
   thus ?thesis
@@ -257,7 +257,7 @@ next
   hence uscllen_uscldrop_suc:
     "\<And>c. c \<in> ubDom\<cdot>x \<Longrightarrow> usclLen\<cdot>(x . c) = lnsuc\<cdot>(usclLen\<cdot>(usclDrop 1\<cdot>(x . c)))"
     by (metis (mono_tags, lifting) False Least_le assms gr_0 mem_Collect_eq not_le ubLen_def
-        usclLen_bot usclLen_zero)
+        usclLen_bottom usclLen_zero)
   hence usclLen_lnsuc_in_set:
     "\<And>c. c \<in> ubDom\<cdot>x \<Longrightarrow> lnsuc\<cdot>(usclLen\<cdot>((ubDrop 1\<cdot>x) . c)) \<in> {(usclLen\<cdot>(x . c)) | c. c \<in> ubDom\<cdot>x}"
     by force
@@ -285,7 +285,7 @@ proof-
     using ubrt_ubdom_nempty by (metis (mono_tags, lifting) Least_le less2eq mem_Collect_eq ubLen_def)
   thus ?thesis
     by (metis (mono_tags, lifting) Fin_02bot One_nat_def assms less2nat lnzero_def ubrt_ubdom
-        ubLen_def ubRt_def ubdrop_ubgetch ublen_min_on_channel usclDrop_len usclLen_bot usclLen_zero zero_le_one)
+        ubLen_def ubRt_def ubdrop_ubgetch ublen_min_on_channel usclDrop_len usclLen_bottom usclLen_zero zero_le_one)
 qed
 
 lemma ublen_sbrt_sbhd : 
@@ -299,7 +299,7 @@ lemma ublen_sbrt_sbhd :
 
 
 lemma ubmaxlen_least: "ubMaxLen 0 (ubLeast cs)"
-  by(simp add: ubMaxLen_def usclLen_bot)
+  by(simp add: ubMaxLen_def usclLen_bottom)
 
 lemma ubmaxlen_sbtake: "ubMaxLen (Fin n) (ubTake n\<cdot>x)"
   apply (simp add: ubMaxLen_def ubTake_def)
@@ -319,7 +319,7 @@ proof -
   have "(ubHd\<cdot>x) . my_c \<noteq> \<bottom>" 
     apply (simp add: ubHd_def)
     apply (simp add: my_c_def1 my_c_def2)
-    using usclLen_zero inject_Fin le_numeral_extra(3) less2nat my_c_def1 n_not_Suc_n neq02Suclnle usclLen_bot usclTake_len by fastforce
+    using usclLen_zero inject_Fin le_numeral_extra(3) less2nat my_c_def1 n_not_Suc_n neq02Suclnle usclLen_bottom usclTake_len by fastforce
   thus ?thesis 
     using my_c_def2 by auto
 qed
@@ -616,7 +616,7 @@ section\<open>Alternative Induction\<close>
 
 lemma ubhd_getch_noteps: assumes "\<forall>c\<in>ubDom\<cdot>x. x . c \<noteq> \<bottom>"
   shows "\<forall>c\<in>ubDom\<cdot>x.  ubHd\<cdot>x . c \<noteq> \<bottom>"
-  by (metis (no_types, lifting) Fin_0 assms empty_iff le_imp_less_or_eq ubHdLen_one ubHd_def ubLen_def ubLen_smallereq_all ubTakeLen_le ubhd_ubdom ubleast_sbtake ublen_min_on_channel ubtake_zero usclLen_bot usclLen_zero) 
+  by (metis (no_types, lifting) Fin_0 assms empty_iff le_imp_less_or_eq ubHdLen_one ubHd_def ubLen_def ubLen_smallereq_all ubTakeLen_le ubhd_ubdom ubleast_sbtake ublen_min_on_channel ubtake_zero usclLen_bottom usclLen_zero) 
 
 lemma ubcases_alt: "\<And>x. (\<exists>c\<in>ubDom\<cdot>x. x . c = \<bottom>) \<or> (\<exists>a s. ubDom\<cdot>a = ubDom\<cdot>x \<and> ubDom\<cdot>s = ubDom\<cdot>x \<and> ubMaxLen (Fin 1) a  \<and> (\<forall>c\<in>ubDom\<cdot>x. a . c \<noteq> \<bottom>) \<and> x = ubConc a\<cdot>s)"
   apply(case_tac "(\<exists>c\<in>ubDom\<cdot>x. x . c = \<bottom>)", simp)

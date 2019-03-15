@@ -240,7 +240,7 @@ shows     "P x"
   apply (simp add: assms)
   apply (simp add: assms)
   apply (simp add: assms)
-  by (metis (no_types, lifting) assms  ublen_not_0 usclLen_bot one_lnat_def sbe_obtain ubLen_def 
+  by (metis (no_types, lifting) assms  ublen_not_0 usclLen_bottom one_lnat_def sbe_obtain ubLen_def 
       ublen_min_on_channel ubundle_ubgetch_uscllen_one)  
 
 end
