@@ -2,7 +2,7 @@ theory UFun_Comp_Causalities
   imports UFun_Comp bundle.UBundle_Conc
 begin
 
-default_sort uscl_pcpo
+default_sort uscl_conc
 
 declare [[show_types]]
 declare [[show_sorts]]
@@ -422,7 +422,7 @@ qed
 
 
 lemma ubfix_ublen: 
- fixes f1 f2::"('a::uscl_ind ubundle, 'a ubundle) ufun"
+ fixes f1 f2::"('a ubundle, 'a ubundle) ufun"
   assumes     "ubDom\<cdot>x = ufCompI f1 f2"
       and     "ufIsWeak f1" 
       and     "ufIsStrong f2"
@@ -455,7 +455,7 @@ proof -
 
   have h2:"iter_ubfix2 (ufCompH f1 f2) i (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2) x = iterate i\<cdot>(ufCompH f1 f2 x)\<cdot>(ubLeast (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2))"
     by (simp add: ubclLeast_ubundle_def)
-  have h3: "ubLen (ubLeast (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2)::('a::uscl_ind ubundle)) < ubLen x"
+  have h3: "ubLen (ubLeast (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2)::('b::uscl_conc) ubundle) < ubLen x"
     by (metis assms(5) assms(8) x_g_zero sup_eq_bot_iff ubleast_len)
   have h4: "ubLen (iter_ubfix2 (ufCompH f1 f2) i (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2) x) < ubLen x 
           \<Longrightarrow> ubLen (iter_ubfix2 (ufCompH f1 f2) i (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2) x) < ubLen (iter_ubfix2 (ufCompH f1 f2) (i+2) (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2) x)"
@@ -524,7 +524,7 @@ proof -
 qed
 
 lemma ufisweak_comp_ufisstrong_ufisweak_eq_weak: 
-  fixes uf1 uf2::"('a::uscl_ind ubundle, 'a ubundle) ufun"
+  fixes uf1 uf2::"('a ubundle, 'a ubundle) ufun"
   assumes "ufIsWeak uf1" 
       and "ufIsStrong uf2"
       and "ufRan\<cdot>uf2 \<subset> ufDom\<cdot>uf1"

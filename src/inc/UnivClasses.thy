@@ -66,8 +66,7 @@ class uscl_ind = uscl_conc  +
 
   assumes uscl_Hd_Rt : "\<And>x.  x = usclConc (usclTake 1 \<cdot> x)\<cdot>(usclDrop 1 \<cdot> x)"
 
-  assumes usclLen_zero : "\<And>x. usclLen\<cdot>x \<le> 0 \<Longrightarrow> x = \<bottom>"       
-  assumes usclLen_bot: "usclLen\<cdot>\<bottom> = (0::lnat)" 
+  assumes usclLen_zero : "\<And>x. usclLen\<cdot>x \<le> 0 \<Longrightarrow> x = \<bottom>"        
 
   assumes usclTake_len : "\<And>x n.  usclLen\<cdot>x \<ge> Fin n \<Longrightarrow> usclLen\<cdot>(usclTake n\<cdot>x) = Fin n"
   assumes usclTake_len_le :"\<And>x k m. usclLen\<cdot>x = Fin k \<Longrightarrow> Fin k < Fin m \<Longrightarrow>  usclLen\<cdot>(usclTake m\<cdot>x) = Fin k" 
