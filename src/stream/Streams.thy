@@ -252,6 +252,12 @@ definition sscanl     :: "('o \<Rightarrow> 'i \<Rightarrow> 'o) \<Rightarrow> '
 definition sscanlA :: "('s \<Rightarrow>'a \<Rightarrow> ('b \<times>'s)) \<Rightarrow> 's  \<Rightarrow> 'a stream \<rightarrow> 'b stream" where
 "sscanlA f s0 \<equiv> \<Lambda> s. sprojfst\<cdot>(sscanl (\<lambda>(_,b). f b) (undefined, s0)\<cdot>s)"
 
+(* scanline Advanced :D  *)
+(* or stateful ... with different order*)
+(* The user has more control. Instead of the last output ('b)  a state ('s) is used as next input *)
+definition sscanlA2 :: "('s \<Rightarrow>'a \<Rightarrow> ('s \<times>'b)) \<Rightarrow> 's  \<Rightarrow> 'a stream \<rightarrow> 'b stream" where
+"sscanlA2 f s0 \<equiv> \<Lambda> s. sprojsnd\<cdot>(sscanl (\<lambda>(b,_). f b) (s0, undefined)\<cdot>s)"
+
 
 text {* @{term siterate}: Create a stream by repeated application of
   a function to an element. The generated stream starts with @{text "a"},
@@ -2867,6 +2873,35 @@ qed
 lemma sscanla_one [simp]: "sscanlA f b\<cdot>(\<up>x) = \<up>(fst (f b x))"
   apply(simp add: sscanlA_def)
   by (metis prod.collapse sconc_snd_empty sprojfst_scons strict_sprojfst)
+
+
+(* ----------------------------------------------------------------------- *)
+subsection {* @{term sscanlA2} *}
+(* ----------------------------------------------------------------------- *)
+
+lemma sscanla2_cont: "cont (\<lambda>s. sprojsnd\<cdot>(sscanl (\<lambda>(b,_). f b) (s0, undefined)\<cdot>s))"
+  by simp
+
+lemma sscanla2_len [simp]: "#(sscanlA2 f s0\<cdot>s) = #s"
+  by(simp add: sscanlA2_def slen_sprojsnd)
+
+lemma sscanla2_bot [simp]: "sscanlA2 f s0\<cdot>\<bottom> = \<bottom>"
+  by (simp add: sscanlA2_def)
+
+lemma sscanla2_step [simp]: "sscanlA2 f s0\<cdot>(\<up>a \<bullet> as) = \<up>(snd (f s0 a)) \<bullet> sscanlA2 f (fst (f s0 a))\<cdot>as"
+  apply(simp add: sscanlA2_def sprojsnd_def)
+proof -
+  have "(case f s0 a of (x, a) \<Rightarrow> f x) = (case (fst (f s0 a), undefined::'a) of (x, a) \<Rightarrow> f x)"
+    by (metis (no_types) old.prod.case prod.collapse)
+  then have "\<up>(shd as) \<bullet> srt\<cdot>as = as \<longrightarrow> sscanl (\<lambda>(y, a). f y) (f s0 a)\<cdot>as = sscanl (\<lambda>(y, a). f y) (fst (f s0 a), undefined)\<cdot> (\<up>(shd as) \<bullet> srt\<cdot>as)"
+    by (metis (no_types) sscanl_scons)
+  then show "\<up>(snd (f s0 a)) \<bullet> smap snd\<cdot> (sscanl (\<lambda>(y, a). f y) (f s0 a)\<cdot> as) = \<up>(snd (f s0 a)) \<bullet> smap snd\<cdot> (sscanl (\<lambda>(y, a). f y) (fst (f s0 a), undefined)\<cdot> as)"
+    using surj_scons by force
+qed
+
+lemma sscanla2_one [simp]: "sscanlA2 f b\<cdot>(\<up>x) = \<up>(snd (f b x))"
+  apply(simp add: sscanlA2_def)
+  by (metis eq_snd_iff sconc_snd_empty sprojsnd_scons strict_sprojsnd)
 
 
 (* ----------------------------------------------------------------------- *)
