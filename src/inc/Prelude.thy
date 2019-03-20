@@ -11,6 +11,9 @@ setup_lifting type_definition_cfun
 
 text {* Helpful lemmas to work with HOL and HOLCF's definitions.*}
 
+lemma trivial[simp]: "(Not \<circ> Not) = id"
+  by auto
+
 text {* Convert a relation to a map (function with @{text "option"}al result).*}
 definition rel2map ::   "('c * 'm) set \<Rightarrow> ('c \<rightharpoonup> 'm)"
 where rel2map_def: "rel2map r \<equiv> \<lambda>x. (if x \<in> Domain r then Some (SOME a. (x,a) \<in> r) else None)"
