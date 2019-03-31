@@ -103,41 +103,7 @@ let I = ufCompI f1 f2;
     Oc = (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2)
 in Abs_ufun (Abs_cfun (\<lambda> x. (ubclDom\<cdot>x = I) \<leadsto> ubFix (ufCompH f1 f2 x) Oc))" 
 
-(* parcomp *)
-abbreviation parcomp_well :: "('in,'out) ufun \<Rightarrow> ('in,'out) ufun \<Rightarrow> bool" where
-"parcomp_well f1 f2 \<equiv> (ufCompL f1 f2 = {}) \<and> (ufRan\<cdot>f1 \<inter> ufRan\<cdot>f2 = {})"
 
-
-definition ufParComp :: "('in,'out) ufun \<Rightarrow> ('in,'out) ufun \<Rightarrow> ('in,'out) ufun" (infixl "\<parallel>" 50) where
-"ufParComp f1 f2 \<equiv> Abs_ufun (Abs_cfun (\<lambda> x. (ubclDom\<cdot>x = ufDom\<cdot>f1 \<union> ufDom\<cdot>f2 ) \<leadsto> ((f1 \<rightleftharpoons> (x \<bar>ufDom\<cdot>f1)) \<uplus> (f2 \<rightleftharpoons> (x\<bar>ufDom\<cdot>f2)))))"
-
-
-abbreviation sercomp_well :: "('in,'m) ufun \<Rightarrow> ('m,'out) ufun \<Rightarrow> bool" where
-"sercomp_well f1 f2 \<equiv>  (ufRan\<cdot>f1 = ufDom\<cdot>f2) 
-                        \<and> (ufDom\<cdot>f1 \<inter> ufRan\<cdot>f1 = {})
-                        \<and> (ufDom\<cdot>f2 \<inter> ufRan\<cdot>f2 = {})"
-
-definition ufSerComp :: "('in,'m) ufun \<Rightarrow> ('m,'out) ufun \<Rightarrow> ('in,'out) ufun" (infixl "\<circ>" 50) where
-"ufSerComp f1 f2 \<equiv> Abs_ufun (Abs_cfun (\<lambda> x. (ubclDom\<cdot>x =  ufDom\<cdot>f1) \<leadsto> (f2 \<rightleftharpoons> (f1 \<rightleftharpoons> x))))"
-
-
-definition ufFeedH:: "('m,'m) ufun \<Rightarrow> 'm \<Rightarrow> 'm  \<rightarrow> 'm" where
-"ufFeedH f x \<equiv> (\<Lambda> z. (f\<rightleftharpoons>((x \<uplus> z)\<bar> (ufDom\<cdot>f))))"
-
-definition ufFeedbackComp :: "('m,'m) ufun \<Rightarrow> ('m,'m) ufun" where
-"ufFeedbackComp f \<equiv>
-let I  = ufDom\<cdot>f - ufRan\<cdot>f;
-    C  = ufRan\<cdot>f
-in Abs_ufun (Abs_cfun (\<lambda> sb. (ubclDom\<cdot>sb = I) \<leadsto>
-    (ubFix (ufFeedH f sb) C)))"  
-
-abbreviation parcomp_sercomp_well :: "('in,'m) ufun \<Rightarrow> ('m,'out) ufun \<Rightarrow> bool" where
-"parcomp_sercomp_well f1 f2 \<equiv>  (ufRan\<cdot>f1 \<subseteq> ufDom\<cdot>f2) 
-                                \<and> (ufDom\<cdot>f1 \<inter> ufRan\<cdot>f1 = {})
-                                \<and> (ufDom\<cdot>f2 \<inter> ufRan\<cdot>f2 = {})
-                                \<and> (ufDom\<cdot>f1 \<inter> ufRan\<cdot>f2 = {})"
-
-  
 (****************************************************)
 section\<open>Lemmas\<close>
 (****************************************************)  
@@ -145,15 +111,11 @@ section\<open>Lemmas\<close>
 subsection\<open>ubclunion?\<close>
 
 (*it is normally right before  ufParCompWell_associativity*)
-lemma ubrestrict_dom2: assumes "cs \<subseteq> ubclDom\<cdot>ub"
-  shows "ubclDom\<cdot>(ub \<bar> cs) = cs"
-  by (simp add: Int_absorb1 assms ubclrestrict_ubcldom)
+
 
 
 (*it normally is right before sercomp_iter_serial_res_f1 in*)
-lemma ubclunion_restrict3 [simp]: assumes "(ubclDom\<cdot>y)\<inter>(ubclDom\<cdot>x) = {}" 
-  shows "(x\<uplus>y) \<bar> ubclDom\<cdot>x = x"
-  by (simp add: assms ubclrestrict_dom_id ubclunion_restrict_R)
+
 
 
 subsection \<open>ufHide\<close>
@@ -922,62 +884,6 @@ proof -
 qed
 *)
 
-
-subsection \<open>Feedback\<close>    
-  
-lemma ufFeedH_cont1: "cont (\<lambda> z. (f\<rightleftharpoons>((x \<uplus> z)\<bar> (ufDom\<cdot>f))))"
-  using cont_compose by force   
-
-lemma ufFeedH_cont2: "cont (\<lambda>x. (\<Lambda> z. (f\<rightleftharpoons>((x \<uplus> z)\<bar> (ufDom\<cdot>f)))))"
-  apply(subst cont2cont_LAM)
-    apply (simp_all add: ufFeedH_cont1)
-  using cont_compose by force
-
-lemma ufFeedH_cont: "cont (ufFeedH f)"
-proof - 
-  have f1: "ufFeedH f = (\<lambda>x. (\<Lambda> z. (f\<rightleftharpoons>((x \<uplus> z)\<bar> (ufDom\<cdot>f)))))"
-    using ufFeedH_def by auto
-  have f2: "cont (\<lambda>x. (\<Lambda> z. (f\<rightleftharpoons>((x \<uplus> z)\<bar> (ufDom\<cdot>f)))))"
-    by(simp add: ufFeedH_cont2)
-  show ?thesis
-    apply(subst f1)
-    by(simp add: f2)
-qed
-
-(* (\<Lambda> z. (f\<rightleftharpoons>((x \<uplus> z)\<bar> (ufDom\<cdot>f)))) *)
-lemma ufFeedH_insert: "(ufFeedH f tb)\<cdot>x = (f\<rightleftharpoons>((tb \<uplus> x)\<bar> (ufDom\<cdot>f)))"
-  by (simp add: ufFeedH_cont1 ufFeedH_def)
-
-lemma ufFeedH_dom [simp]: assumes "ubclDom\<cdot>x = ufDom\<cdot>f - ufRan\<cdot>f" 
-                           and "ubclDom\<cdot>sb = ufRan\<cdot>f"
-shows "ubclDom\<cdot>((ufFeedH f x)\<cdot>sb) = (ufRan\<cdot>f)"
-  apply(simp add: ufFeedH_def ufFeedH_cont1)
-  by (simp add: Int_commute assms(1) assms(2) ubclrestrict_dom ubclunion_dom ufran_2_ubcldom2)
-
-lemma ufFeedbackComp_cont: "cont (\<lambda> sb. (ubclDom\<cdot>sb = (ufDom\<cdot>f - ufRan\<cdot>f)) \<leadsto> (ubFix (ufFeedH f sb) (ufRan\<cdot>f)))"
-  apply(rule ubfix_contI2)
-   apply (simp add: ufFeedH_cont)
-   apply (simp add: ubcldom_least_cs)
-    by simp
-    
-lemma ufFeedbackComp_well: "ufWell (\<Lambda> sb. (ubclDom\<cdot>sb = (ufDom\<cdot>f - ufRan\<cdot>f)) \<leadsto> (ubFix (ufFeedH f sb) (ufRan\<cdot>f)))"
-  apply (rule ufun_wellI)
-    apply (simp_all add: ufFeedbackComp_cont domIff2)
-  apply (rule ubfix_dom)
-  by (simp add: ubcldom_least_cs)
-
-lemma ufFeedbackComp_dom: "ufDom\<cdot>(ufFeedbackComp f) = ufDom\<cdot>f - ufRan\<cdot>f"
-  apply(subst ufDom_def , simp add:ufFeedbackComp_def)
-  apply(subst rep_abs_cufun, simp add: ufFeedbackComp_cont)
-   apply(simp add: ufFeedbackComp_well)
-  by (simp add: domIff2 ubclDom_h)
-
-lemma ufFeedbackComp_ran: "ufRan\<cdot>(ufFeedbackComp f) = ufRan\<cdot>f"
-  apply (simp add: ufran_least)
-  apply (simp add: ufFeedbackComp_dom)
-  apply (simp add: ufFeedbackComp_def ufFeedbackComp_cont ufFeedbackComp_well)
-  by (simp add: UFun_Comp.ufran_least ubcldom_least_cs ubfix_dom)
-
 subsection \<open>ufLeast\<close>
   
 
@@ -1134,6 +1040,7 @@ lemma uflift_ran[simp]: "ufRan\<cdot>(ufLift In f) = ubclDom\<cdot>(f\<cdot>(ubc
 lemma uflift_apply[simp]: "ubclDom\<cdot>ub = In \<Longrightarrow> (ufLift In f) \<rightleftharpoons> ub = f\<cdot>ub"
   by(simp add: uflift_insert)
 
+
 subsection\<open>More General Comp lemma\<close>
 
 
@@ -1188,7 +1095,6 @@ qed
 lemma ufcomp_fix: assumes "comp_well uf1 uf2" and "ubclDom\<cdot>sb = ufCompI uf1 uf2"
   shows "(uf1 \<otimes> uf2) \<rightleftharpoons> sb = (uf1 \<rightleftharpoons> ((((uf1 \<otimes> uf2) \<rightleftharpoons> sb) \<uplus> sb) \<bar> ufDom\<cdot>uf1)) \<uplus> (uf2 \<rightleftharpoons> ((((uf1 \<otimes> uf2) \<rightleftharpoons> sb) \<uplus> sb) \<bar> ufDom\<cdot>uf2))"
   by (metis (no_types, lifting) assms(1) assms(2) comp_well_def ubclunion_commu ubclunion_ubclrestrict_id ufCompO_def ufcomp_I_inter_Oc_empty ufcomp_dom ufcomp_fix_f1 ufcomp_fix_f2 ufcomp_ran ufran_2_ubcldom2) 
-
 
 
 
@@ -1251,6 +1157,8 @@ proof -
     using cont2cont_APP by blast
 qed
 
+lemma ufFeedH_cont1: "cont (\<lambda> z. (f\<rightleftharpoons>((x \<uplus> z)\<bar> (ufDom\<cdot>f))))"
+  using cont_compose by force  
 
 lemma ufCompH_3arg_cont1: "cont (\<lambda> z. (f1\<rightleftharpoons>((x \<uplus> z) \<bar> ufDom\<cdot>f1)) \<uplus>  (f2\<rightleftharpoons>((x \<uplus> z) \<bar> ufDom\<cdot>f2)) \<uplus>  (f3\<rightleftharpoons>((x \<uplus> z) \<bar> ufDom\<cdot>f3)))"
   by (simp add: ufFeedH_cont1)
@@ -2165,82 +2073,5 @@ end
 *)
 
 
-subsubsection\<open>Associativity\<close>
-
-lemma ufcomp_asso_parcomp_sercomp: assumes "ufRan\<cdot>f1 \<inter> ufRan\<cdot>f2 = {}" and "ufRan\<cdot>f1 \<inter> ufRan\<cdot>f3 = {}" and  "ufRan\<cdot>f1 \<inter> ufRan\<cdot>f4 = {}" 
-  and  "ufRan\<cdot>f1 \<inter> ufRan\<cdot>f5 = {}" and "ufRan\<cdot>f2 \<inter> ufRan\<cdot>f3 = {}" and  "ufRan\<cdot>f2 \<inter> ufRan\<cdot>f4 = {}" and  "ufRan\<cdot>f2 \<inter> ufRan\<cdot>f5 = {}"
-  and  "ufRan\<cdot>f3 \<inter> ufRan\<cdot>f4 = {}" and  "ufRan\<cdot>f3 \<inter> ufRan\<cdot>f5 = {}"  and  "ufRan\<cdot>f4 \<inter> ufRan\<cdot>f5 = {}" 
-shows "ufComp(ufComp(ufComp (ufComp f1 f2)f3)f4)f5 = ufComp(ufComp f1 f2)(ufComp(ufComp f3 f4) f5)"
-  proof-
-    have f0: "ufRan\<cdot>(ufComp f1 f2) \<inter> ufRan\<cdot>f3 = {}"
-      apply (simp add: assms(1) ufcomp_ran)
-      unfolding ufCompO_def
-      by (simp add: assms inf_sup_distrib2)
-    have f1: "ufDom\<cdot>(ufComp (ufComp f1 f2) f3) = (ufDom\<cdot>f1 \<union> ufDom\<cdot>f2 \<union> ufDom\<cdot>f3) - (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2 \<union> ufRan\<cdot>f3)"
-      apply (simp add: f0 ufcomp_dom)
-      unfolding ufCompI_def
-      apply (simp add: ufcomp_ran ufcomp_dom assms(1))
-      unfolding ufCompO_def
-      apply (subst ufCompI_def)
-      by blast
-    have f2 :"ufRan\<cdot>(ufComp (ufComp f1 f2) f3) = ufRan\<cdot>f1 \<union> ufRan\<cdot>f2 \<union> ufRan\<cdot>f3"
-      by (metis assms(1) f0 ufCompO_def ufcomp_ran)
-    have f3: "ufRan\<cdot>(ufComp (ufComp f1 f2) f3) \<inter> ufRan\<cdot>f4 = {}"
-      by (simp add: assms(3) assms(6) assms(8) f2 inf_sup_distrib2)
-    have f4 :"ufRan\<cdot>(ufComp (ufComp (ufComp f1 f2) f3) f4) = ufRan\<cdot>f1 \<union> ufRan\<cdot>f2 \<union> ufRan\<cdot>f3\<union> ufRan\<cdot>f4"
-      by (metis f2 f3 ufCompO_def ufcomp_ran)
-    have f5:"ufRan\<cdot>(ufComp (ufComp (ufComp f1 f2) f3) f4) \<inter> ufRan\<cdot>f5 = {}"
-      by (simp add: assms(10) assms(4) assms(7) assms(9) f4 inf_sup_distrib2)
-    have f6: "ufDom\<cdot>(ufComp (ufComp (ufComp f1 f2) f3) f4) = (ufDom\<cdot>f1 \<union> ufDom\<cdot>f2 \<union> ufDom\<cdot>f3 \<union> ufDom\<cdot>f4) - (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2 \<union> ufRan\<cdot>f3\<union> ufRan\<cdot>f4)"
-      apply (simp add: f3 ufcomp_dom)
-      unfolding ufCompI_def
-      apply(simp add:f1 ufcomp_ran ufcomp_dom assms)
-      unfolding ufCompO_def
-      apply (simp add:f2)
-      by blast
-    have f7 :"ufRan\<cdot>(ufComp  (ufComp (ufComp (ufComp f1 f2) f3) f4) f5) = ufRan\<cdot>f1 \<union> ufRan\<cdot>f2 \<union> ufRan\<cdot>f3\<union> ufRan\<cdot>f4\<union> ufRan\<cdot>f5"
-      by (metis f4 f5 ufCompO_def ufcomp_ran)
-    have f8: "ufDom\<cdot>(ufComp(ufComp (ufComp (ufComp f1 f2) f3) f4) f5) = (ufDom\<cdot>f1 \<union> ufDom\<cdot>f2 \<union> ufDom\<cdot>f3 \<union> ufDom\<cdot>f4 \<union> ufDom\<cdot>f5) - (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2 \<union> ufRan\<cdot>f3\<union> ufRan\<cdot>f4\<union> ufRan\<cdot>f5)"
-      apply (simp add: f5 ufcomp_dom)
-     unfolding ufCompI_def
-     apply(simp add:f4 f6 f7 ufcomp_ran ufcomp_dom assms)
-     by blast
-    have f9: "ufRan\<cdot>(ufComp f3 f4) \<inter> ufRan\<cdot>f5 = {}"
-      apply (simp add: assms ufcomp_ran)
-      unfolding ufCompO_def
-      by (simp add: assms inf_sup_distrib2)
-    have f10: "ufDom\<cdot>(ufComp (ufComp f3 f4) f5) = (ufDom\<cdot>f3 \<union> ufDom\<cdot>f4 \<union> ufDom\<cdot>f5) - (ufRan\<cdot>f3 \<union> ufRan\<cdot>f4 \<union> ufRan\<cdot>f5)"
-      apply (simp add: f9 ufcomp_dom)
-      unfolding ufCompI_def
-      apply (simp add: ufcomp_ran ufcomp_dom assms)
-      unfolding ufCompO_def
-      apply (subst ufCompI_def)
-      by blast
-    have f11:"ufRan\<cdot>(ufComp (ufComp f3 f4) f5) = ufRan\<cdot>f3 \<union> ufRan\<cdot>f4 \<union> ufRan\<cdot>f5"
-      by (metis assms(8) f9 ufCompO_def ufcomp_ran)
-    have f12: "ufRan\<cdot>(ufComp f1 f2) \<inter> ufRan\<cdot>(ufComp (ufComp f3 f4) f5) = {}"
-      apply (simp add: assms(1) ufcomp_ran)
-      unfolding ufCompO_def
-      by (smt assms(1) assms(4) assms(7) assms(8) f0 f11 f3 inf_sup_distrib1 inf_sup_distrib2 sup_bot.right_neutral ufCompO_def ufcomp_ran)
-    have f13: "ufDom\<cdot>( ufComp(ufComp f1 f2) (ufComp (ufComp f3 f4) f5)) = (ufDom\<cdot>f1 \<union> ufDom\<cdot>f2 \<union> ufDom\<cdot>f3 \<union> ufDom\<cdot>f4 \<union> ufDom\<cdot>f5) - (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2 \<union> ufRan\<cdot>f3\<union> ufRan\<cdot>f4\<union> ufRan\<cdot>f5)"
-      apply (simp add: f12 ufcomp_dom)
-      unfolding ufCompI_def
-      apply (simp add: ufcomp_ran ufcomp_dom assms f9 f10 f11)
-      unfolding ufCompO_def
-      apply (subst ufCompI_def)
-      by blast
-    have f14:"ufDom\<cdot>(ufComp(ufComp (ufComp (ufComp f1 f2) f3) f4) f5) =ufDom\<cdot>( ufComp(ufComp f1 f2) (ufComp (ufComp f3 f4) f5))" 
-      by (simp add: f8 f13)
-    show ?thesis
-      by (smt Un_empty assms(1) f0 f12 f3 f9 inf_sup_distrib1 inf_sup_distrib2 ufCompO_def ufcomp_asso ufcomp_ran)
-  qed
-
-
-lemma ufcomp_asso_parcomp_sercomp_apply: assumes 
-  "ufRan\<cdot>f1 \<inter> ufRan\<cdot>f2 = {}" and "ufRan\<cdot>f1 \<inter> ufRan\<cdot>f3 = {}" and  "ufRan\<cdot>f1 \<inter> ufRan\<cdot>f4 = {}" 
-  and  "ufRan\<cdot>f1 \<inter> ufRan\<cdot>f5 = {}" and "ufRan\<cdot>f2 \<inter> ufRan\<cdot>f3 = {}" and  "ufRan\<cdot>f2 \<inter> ufRan\<cdot>f4 = {}" and  "ufRan\<cdot>f2 \<inter> ufRan\<cdot>f5 = {}"
-  and  "ufRan\<cdot>f3 \<inter> ufRan\<cdot>f4 = {}" and  "ufRan\<cdot>f3 \<inter> ufRan\<cdot>f5 = {}"  and  "ufRan\<cdot>f4 \<inter> ufRan\<cdot>f5 = {}" 
-shows "ufComp(ufComp(ufComp (ufComp f1 f2) f3) f4) f5  \<rightleftharpoons> ub= ufComp(ufComp f1 f2)(ufComp (ufComp f3 f4) f5) \<rightleftharpoons> ub"
-  by (simp add: assms ufcomp_asso_parcomp_sercomp)
 
 end
