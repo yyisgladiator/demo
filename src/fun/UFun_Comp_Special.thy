@@ -1,5 +1,5 @@
 theory UFun_Comp_Special
-  imports UFun UFun_Comp
+  imports UFun_Comp
 begin
 
 (****************************************************)
