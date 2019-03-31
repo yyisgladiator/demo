@@ -108,15 +108,6 @@ in Abs_ufun (Abs_cfun (\<lambda> x. (ubclDom\<cdot>x = I) \<leadsto> ubFix (ufCo
 section\<open>Lemmas\<close>
 (****************************************************)  
 
-subsection\<open>ubclunion?\<close>
-
-(*it is normally right before  ufParCompWell_associativity*)
-
-
-
-(*it normally is right before sercomp_iter_serial_res_f1 in*)
-
-
 
 subsection \<open>ufHide\<close>
 
@@ -145,11 +136,6 @@ lemma ufhide_id:
   assumes "ufRan\<cdot>f \<inter> cs = {}" 
   shows   "f \<h> cs = f"
   by (metis Diff_triv assms ubclrestrict_dom_id ufhide_apply ufhide_dom ufran_2_ubcldom2 ufun_eqI)
-
-lemma ufhide_parcompwell: assumes "parcomp_well f1 f2"
-  shows "parcomp_well (f1 \<h> cs) (f2 \<h> cs)"
-  apply(simp add: ufCompL_def ufhide_dom ufhide_ran)
-  by (metis (no_types) Int_Diff Un_Diff assms empty_Diff inf_commute ufCompL_def)
 
 subsection \<open>ubclLeast\<close>
   
@@ -2083,70 +2069,5 @@ end
 
 
 
-subsubsection\<open>ufHide split\<close>
-
-lemma ufhide_sercomp: 
-  assumes "ufDom\<cdot>f2 \<subseteq> ufRan\<cdot>f1"
-  and     "ufRan\<cdot>f1 \<inter> ufRan\<cdot>f2 = {}"
-  and     "ufDom\<cdot>f1 \<inter> ufRan\<cdot>f2 = {}"
-  and     "ufDom\<cdot>f1 \<inter> ufRan\<cdot>f1 = {}"
-(*and     "ufDom\<cdot>f2 \<inter> ufRan\<cdot>f2 = {}" *)
-shows "(f1 \<otimes> f2) \<h> (ufRan\<cdot>f1) = ((f1 \<h> (ufRan\<cdot>f1-ufDom\<cdot>f2)) \<otimes> f2) \<h> (ufDom\<cdot>f2)" (is "?f = ?g")
-proof -
-  have f2_no_feedback: "ufDom\<cdot>f2 \<inter> ufRan\<cdot>f2 = {}"
-    using assms(1) assms(2) by blast 
-  have dom_eq:"ufDom\<cdot>?f = ufDom\<cdot>?g"
-    apply(simp add: Diff_triv assms ufCompI_def ufcomp_dom ufhide_dom ufhide_ran)
-    apply(subst ufcomp_dom)
-    apply(simp add: ufhide_ran)
-    apply(simp add: Diff_Int_distrib2 assms(2))
-    apply(simp add: ufCompI_def ufhide_dom ufhide_ran)
-    by (smt Diff_Diff_Int Diff_Int_distrib2 Diff_Un Diff_idemp Diff_triv Un_Diff Un_Diff_Int assms(3) assms(4) f2_no_feedback inf.idem inf_bot_right)
-  have f1_dom: "ufRan\<cdot>(f1 \<h> (ufRan\<cdot>f1 - ufDom\<cdot>f2)) = ufDom\<cdot>f2"
-      by (simp add: Diff_Diff_Int Int_absorb1 assms(1) ufhide_ran)
-  have g_sercomp_well: "sercomp_well (f1 \<h> (ufRan\<cdot>f1-ufDom\<cdot>f2)) f2"
-      apply(simp add: ufhide_dom f1_dom f2_no_feedback)
-      using assms(1) assms(4) by blast
-  have g_ser: "?g = ((f1 \<h> (ufRan\<cdot>f1-ufDom\<cdot>f2)) \<circ> f2)"
-    by (metis (no_types, lifting) assms(3) ufcomp_serial_eq ufhide_dom g_sercomp_well)
-
-  have ran_eq:"ufRan\<cdot>(f1 \<otimes> f2) - ufRan\<cdot>f1 = ufRan\<cdot>f2"
-    by (metis Diff_cancel Un_Diff Un_Diff_Int assms(2) inf_commute sup_commute ufCompO_def ufcomp_ran) 
-  have out_eq:"\<And> ub. ubclDom\<cdot>ub =(ufDom\<cdot>?f) \<Longrightarrow> ?f \<rightleftharpoons> ub = ?g \<rightleftharpoons> ub"
-    apply(simp add: g_ser ufhide_apply ufhide_dom ran_eq)
-    apply(subst ufSerComp_apply)
-    using g_sercomp_well apply blast
-    apply (metis dom_eq g_ser ufhide_dom)
-    apply(simp add: ufcomp_fix_f2 comp_well_def assms ufcomp_dom)
-    apply(subst ufhide_apply)
-    apply (metis (no_types, lifting) assms(2) dom_eq g_ser g_sercomp_well ufSerComp_dom ufcomp_dom ufhide_dom)
-    apply(subst ubclunion_restrict_R)
-    apply (metis (no_types, lifting) assms(2) dom_eq g_ser g_sercomp_well ufSerComp_dom ufcomp_dom ufhide_dom)
-    by (smt Diff_Diff_Int assms(2) comp_well_def dom_eq g_ser g_sercomp_well ubclrestrict_twice 
-        ubclunion_commu ubclunion_restrict2 ufSerComp_dom ufcomp_I_inter_Oc_empty ufcomp_dom ufcomp_fix_f1 
-        ufcomp_ran ufhide_dom ufhide_ran ufran_2_ubcldom2)
-   
-  then show ?thesis
-    using dom_eq ufun_eqI by blast
-qed
-
-lemma ufhide_parcomp:
-  assumes "parcomp_well f1 f2"
-  shows "(f1 \<otimes> f2) \<h> cs = ((f1 \<h> cs) \<otimes> (f2 \<h> cs))"
-  apply(subst parallelOperatorEq)
-  using assms apply blast
-  apply(simp add: assms parallelOperatorEq ufhide_parcompwell)
-  apply(rule ufun_eqI)
-  apply(simp add: assms ufParComp_dom ufhide_dom ufhide_parcompwell)
-  apply(simp add: ufhide_dom ufhide_apply)
-  apply(subst ufParComp_apply)
-  using assms apply blast
-  apply(simp add: assms ufParComp_apply ufParComp_dom ufhide_dom ufhide_parcompwell)+
-  apply (simp add: ufhide_apply ubrestrict_dom2 ubclunion_ubclrestrict)
-  apply(subst ufParComp_ran)
-  using assms apply blast
-  apply(subst ufParComp_ran)
-  using assms apply blast
-  by (smt Int_Diff Un_commute Un_upper2 inf_sup_absorb ubclrestrict_dom_id ubclrestrict_twice ufRanRestrict)
 
 end
