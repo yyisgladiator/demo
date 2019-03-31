@@ -1,5 +1,5 @@
 theory USpec_UFunComp
-  imports USpec inc.CPOFix fun.UFun_Comp
+  imports USpec inc.CPOFix fun.UFun_Comp_Special
 begin
 
 (****************************************************)

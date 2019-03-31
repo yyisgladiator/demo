@@ -141,8 +141,13 @@ abbreviation ubclUnion_abbr :: " 'm \<Rightarrow> 'm \<Rightarrow> 'm" (infixl "
 
 lemma ubclrestrict_dom_idI: "ubclDom\<cdot>x = cs \<Longrightarrow> ubclRestrict cs\<cdot>x = x"
   using local.ubclrestrict_dom_id by blast
+
 lemma ubclunion_ubclrestrict_RI:"ubclDom\<cdot>ub = cs \<Longrightarrow> ubclRestrict cs\<cdot>(ubclUnion\<cdot>ub2\<cdot>ub) = ubclRestrict cs\<cdot>ub"
   using local.ubclunion_restrict2 ubclrestrict_dom_idI by auto
+
+lemma ubrestrict_dom2: assumes "cs \<subseteq> ubclDom\<cdot>ub"
+  shows "ubclDom\<cdot>(ubclRestrict cs\<cdot>ub) = cs"
+  by (simp add: Int_absorb1 assms ubclrestrict_ubcldom)
 
 lemma ubclunion_lub_sep: assumes "chain Y1" and "chain Y2"
   shows "ubclUnion\<cdot>(Lub Y1)\<cdot>(Lub Y2) = (\<Squnion>i. ubclUnion\<cdot>(Y1 i)\<cdot>(Y2 i))"
@@ -159,6 +164,10 @@ lemma ubclunion_lub_sep2: assumes "chain Y1" and "chain Y2"
 
 lemma ubclunion_ubclrestrict_id: "ubclDom\<cdot>ub = cs1 \<union> cs2 \<Longrightarrow> cs1 \<inter> cs2 = {} \<Longrightarrow> ubclUnion\<cdot>(ubclRestrict cs1\<cdot>ub)\<cdot>(ubclRestrict cs2\<cdot>ub) = ub"
   by (metis Diff_cancel Un_Diff Un_Diff_Int local.ubclrestrict_dom_id local.ubclrestrict_twice local.ubclunion_ubclrestrict_minus_id)
+
+lemma ubclunion_restrict3 [simp]: assumes "(ubclDom\<cdot>y)\<inter>(ubclDom\<cdot>x) = {}" 
+  shows "ubclRestrict(ubclDom\<cdot>x)\<cdot>(x\<uplus>y) = x"
+  by (simp add: assms ubclrestrict_dom_id ubclunion_restrict_R)
 
 lemma ubclUnion_disjoint_three:
   assumes "ubclDom\<cdot>ub = cs1 \<union> cs2 \<union> cs3 \<and> cs1 \<inter> cs2 = {} \<and> cs1 \<inter> cs3 = {}\<and> cs2 \<inter> cs3 = {}"

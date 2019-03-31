@@ -1,5 +1,5 @@
 theory UFun_Comp_Causalities
-  imports UFun_Comp bundle.UBundle_Conc
+  imports UFun_Comp_Special bundle.UBundle_Conc
 begin
 
 default_sort uscl_conc

@@ -1,5 +1,5 @@
 theory SPF
-  imports bundle.SBElem UFun_Comp UFun_applyIn inc.CPOFix
+  imports bundle.SBElem UFun_Comp_Special UFun_applyIn inc.CPOFix
 begin
 default_sort message
 
