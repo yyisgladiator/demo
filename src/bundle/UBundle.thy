@@ -742,6 +742,12 @@ lemma ubunion_len_l:
 shows "ubLen a < ubLen (ubUnion\<cdot>b\<cdot>c)"
   by (metis assms dual_order.strict_iff_order leD le_cases ubunion_len_le)
 
+lemma ubunion_len_l2: 
+  assumes "Fin n < ubLen b"
+  and     "Fin n < ubLen c"
+shows     "Fin n < ubLen (ubUnion\<cdot>b\<cdot>c)"
+  by (meson assms dual_order.strict_iff_order leI order.strict_trans1 ubunion_len_l)
+
 lemma ubunion_ubLen_min: 
    assumes "ubDom\<cdot>x \<inter> ubDom\<cdot>y = {}"
   shows   "ubLen (ubUnion\<cdot>x\<cdot>y) = Min {ubLen x, ubLen y}"
