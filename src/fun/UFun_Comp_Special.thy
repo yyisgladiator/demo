@@ -1072,5 +1072,45 @@ lemma ufcomp_asso_sercomp_in_apply: assumes
 shows "ufComp(ufComp(ufComp (ufComp f1 f2) f3) f4) f5  \<rightleftharpoons> ub= ufComp(ufComp f1 f2)(ufComp (ufComp f3 f4) f5) \<rightleftharpoons> ub"
   by (simp add: assms ufcomp_asso_sercomp_in)
 
+subsubsection\<open>property split\<close>
+
+
+lemma sercomp_prop:
+  assumes "\<And>ub. ubclDom\<cdot>ub = ufDom\<cdot>f1 \<Longrightarrow> P ub \<Longrightarrow> Q (f1 \<rightleftharpoons> ub)"
+  and     "\<And>ub. ubclDom\<cdot>ub = ufDom\<cdot>f2 \<Longrightarrow> Q ub \<Longrightarrow> R (f2 \<rightleftharpoons> ub)"
+  and     "sercomp_well f1 f2"
+  and     "ubclDom\<cdot>ub = ufDom\<cdot>f1"
+  and     "P ub"
+shows     "R ((f1 \<circ> f2) \<rightleftharpoons> ub)"
+  apply(subst ufSerComp_apply)
+  using assms apply blast
+  apply(simp add: assms)
+  apply(subst ufSerComp_dom)
+  using assms apply blast
+  by(simp add: assms ufran_2_ubcldom2)+
+
+lemma parcomp_prop:
+  assumes "parcomp_well f1 f2"      
+      and "\<And>ub. ubclDom\<cdot>ub = ufDom\<cdot>f1 \<union> ufDom\<cdot>f2 \<Longrightarrow> P ub \<Longrightarrow> P1 (ubclRestrict (ufDom\<cdot>f1)\<cdot>ub) \<and> P2 (ubclRestrict (ufDom\<cdot>f2)\<cdot>ub)"
+      and "\<And>ub. ubclDom\<cdot>ub = ufRan\<cdot>f1 \<union> ufRan\<cdot>f2 \<Longrightarrow> Q1 (ubclRestrict (ufRan\<cdot>f1)\<cdot>ub) \<and> Q2 (ubclRestrict (ufRan\<cdot>f2)\<cdot>ub) \<Longrightarrow> R ub"
+      and "\<And>ub. ubclDom\<cdot>ub = ufDom\<cdot>f1 \<Longrightarrow> P1 ub \<Longrightarrow> Q1 (f1 \<rightleftharpoons> ub)"
+      and "\<And>ub. ubclDom\<cdot>ub = ufDom\<cdot>f2 \<Longrightarrow> P2 ub \<Longrightarrow> Q2 (f2 \<rightleftharpoons> ub)"
+      and "ubclDom\<cdot>ub = ufDom\<cdot>f1 \<union> ufDom\<cdot>f2"
+      and "P ub"
+    shows "R ((f1 \<parallel> f2) \<rightleftharpoons> ub)"
+  apply(subst ufParComp_apply)
+  using assms apply blast
+  apply(simp add: assms)
+  apply(subst ufParComp_dom)
+  using assms apply blast
+  apply simp
+  apply(subst assms(3))
+  apply(simp add: ubclunion_dom)
+  apply(simp add: ufran_2_ubcldom2 ubclrestrict_dom assms Int_absorb1)
+  apply(rule)
+  apply(subst ubclunion_restrict_R)
+  apply(simp add: ufran_2_ubcldom2 ubclrestrict_dom assms Int_absorb1 Int_commute)
+  apply(simp add: assms ubclrestrict_dom_idI ubrestrict_dom2)
+  by(metis Un_upper2 assms(2) assms(5) assms(6) assms(7) ubclunion_restrict2 ubrestrict_dom2 ufRanRestrict)+
 
 end

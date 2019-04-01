@@ -4,10 +4,6 @@ begin
 
 default_sort uscl_conc
 
-declare [[show_types]]
-declare [[show_sorts]]
-declare [[show_consts]]
-
 section{* ufSerComp *}
 
 lemma ufsercomp_ufisweak: 
