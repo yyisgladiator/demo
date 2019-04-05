@@ -1,12 +1,8 @@
 theory UFun_Comp_Causalities
-  imports UFun_Comp_Special bundle.UBundle_Conc
+  imports fun.UFun_Comp_Special bundle.UBundle_Conc
 begin
 
 default_sort uscl_conc
-
-declare [[show_types]]
-declare [[show_sorts]]
-declare [[show_consts]]
 
 section{* ufSerComp *}
 

@@ -169,17 +169,21 @@ lemma ubclunion_restrict3 [simp]: assumes "(ubclDom\<cdot>y)\<inter>(ubclDom\<cd
   shows "ubclRestrict(ubclDom\<cdot>x)\<cdot>(x\<uplus>y) = x"
   by (simp add: assms ubclrestrict_dom_id ubclunion_restrict_R)
 
-lemma ubclUnion_disjoint_three:
-  assumes "ubclDom\<cdot>ub = cs1 \<union> cs2 \<union> cs3 \<and> cs1 \<inter> cs2 = {} \<and> cs1 \<inter> cs3 = {}\<and> cs2 \<inter> cs3 = {}"
-  shows "(ubclRestrict cs1\<cdot>ub \<uplus> ubclRestrict cs2\<cdot>ub) \<uplus> ubclRestrict cs3\<cdot>ub = ub"
-  proof -
-    have f1: "cs1 \<union> cs2 - cs2 = cs1"
-      using assms by blast
-    have "cs1 \<union> cs2 \<union> cs3 - cs3 = cs1 \<union> cs2"
-      using assms by blast
-    then show ?thesis
-      by (metis Int_absorb1 Un_upper2 assms f1 local.ubclrestrict_dom_id local.ubclunion_ubclrestrict_minus_id )
-  qed
+lemma ubclunion_ubclrestrict_union:
+  assumes "A \<inter> B = {}"
+  shows   "(ubclRestrict A\<cdot>ub) \<uplus> (ubclRestrict B\<cdot>ub) = ubclRestrict (A \<union> B)\<cdot>ub"
+proof -
+  obtain C where c_def: "C = A \<union> B"
+    by simp
+  then have a_eq:"A = C - B"
+    using assms by blast
+  have b_eq: "B = C \<inter> B"
+    by (simp add: Int_absorb1 c_def)
+  have "(ubclRestrict A\<cdot>ub) \<uplus> (ubclRestrict B\<cdot>ub) = (ubclRestrict (C-B)\<cdot>ub) \<uplus> (ubclRestrict (C\<inter>B)\<cdot>ub)"
+    by(subst b_eq, subst a_eq, simp)
+  then show ?thesis
+     by (simp add: c_def ubclunion_ubclrestrict_minus_id)
+ qed
 
 end  
   
