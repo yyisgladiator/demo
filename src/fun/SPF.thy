@@ -78,7 +78,7 @@ lemma spfStateLeast_ran[simp]: "\<forall>x. ufRan\<cdot>(spfStateLeast In Out x)
 lemma spfStateLeast_apply[simp]:
   assumes "ubDom\<cdot>sb = In"
   shows "spfStateLeast In Out x \<rightleftharpoons> sb = ubLeast Out"
-  apply(auto simp add: spfStateLeast_def ufLeast_def ubclLeast_ubundle_def assms ubclDom_ubundle_def)
+  apply(auto simp add: spfStateLeast_def ufLeast_def ubclLeast_ubundle_def assms)
   by (metis (no_types) assms option.sel ubclDom_ubundle_def ubclLeast_ubundle_def ufleast_rep_abs)
 
 lemma spfStateLeast_bottom [simp]: assumes "\<forall>x. ufDom\<cdot>(f x) = In" and " \<forall>x. ufRan\<cdot>(f x) = Out"
@@ -162,23 +162,23 @@ lemma spfRtIn_step[simp]: "(spfRtIn\<cdot>spf)\<rightleftharpoons>sb = spf\<righ
   apply(simp add: spfRtIn_def ufApplyIn_def)
   apply (subst Abs_cfun_inverse2)
    apply (rule ufapplyin_cont_h)
-  by (simp add: ubclDom_ubundle_def ufapplyin_well_h) +
+  by (simp add: ufapplyin_well_h) +
 
 lemma spfRtIn_dom [simp] :"ufDom\<cdot>(spfRtIn\<cdot>spf) = ufDom\<cdot>spf"
   unfolding spfRtIn_def
-  by (simp add: ubclDom_ubundle_def ufapplyin_dom)
+  by (simp add: ufapplyin_dom)
 
 lemma spfRtIn_ran [simp]:"ufRan\<cdot>(spfRtIn\<cdot>spf) = ufRan\<cdot>spf"
   unfolding spfRtIn_def
   apply(subst ufapplyin_ran2)
-   apply (simp add: ubclDom_ubundle_def)
+   apply (simp)
   by blast
 
 lemma spfRtIn_spfConcOut: "(spfRtIn\<cdot>(spfConcOut sb \<cdot>spf)) = (spfConcOut sb \<cdot>(spfRtIn\<cdot>spf))"
   unfolding spfConcOut_def
   unfolding spfRtIn_def
   apply(subst ufapply_eq)
-  apply (simp add: ubclDom_ubundle_def)
+  apply (simp)
   apply (metis ubclDom_ubundle_def ubconceq_dom)
   by blast
 
@@ -203,8 +203,8 @@ lemma spfRt_inj: "inj (Rep_cfun spfRtIn)"
 
 lemma spfrt_ufleast: "spfRtIn\<cdot>(ufLeast In Out) = ufLeast In Out"
   apply (rule ufun_eqI)
-   apply (simp_all add: ufclDom_ufun_def ubclDom_ubundle_def)
-  by (simp add: ubclDom_ubundle_def ufleast_apply)
+   apply (simp_all add: ufclDom_ufun_def)
+  by (simp add: ufleast_apply)
 
 (* Rewrite with ubRt
 lemma spfRtIn_strongF_isweak: assumes "ufIsStrong spf" shows "ufIsWeak (spfRtIn\<cdot>spf)"
@@ -362,14 +362,6 @@ lemma spfconcin_split:"ubclDom\<cdot>b = ufclDom\<cdot>spf \<Longrightarrow> spf
    apply(simp)
   apply (subst spfConcIn_step)
    apply simp+
-   apply (simp add: ubclDom_ubundle_def)
-  apply (subst spfConcIn_step)
-   apply simp+
-   apply (simp add: ubclDom_ubundle_def)
-  apply (subst spfConcIn_step)
-   apply simp+
-   apply (simp add: ubclDom_ubundle_def)
-   apply auto[1]
   by (simp add: ubconceq_assoc ufclDom_ufun_def)
 
 
@@ -377,9 +369,7 @@ lemma spfconcin_least [simp]: "spfConcIn (ubLeast cs)\<cdot>spf = spf"
   apply(rule ufun_eqI)
    apply(simp)
   apply (subst spfConcIn_step)
-   apply simp+
-   apply (simp add: ubclDom_ubundle_def)
-  by simp
+  by simp+
 
 subsection \<open>spfRtOut lemma\<close>
 
@@ -388,25 +378,25 @@ lemma spfRtOut_step[simp]:
   shows "(spfRtOut\<cdot>spf)\<rightleftharpoons>sb = sbRt\<cdot>(spf\<rightleftharpoons>sb)"
   apply(simp only: spfRtOut_def)
   apply (subst ufapplyout_apply)
-    apply (simp add: ubclDom_ubundle_def)
-   apply (simp add: assms ubclDom_ubundle_def)
+    apply (simp)
+   apply (simp add: assms)
   by simp
 
 lemma spfRtOut_dom [simp] :"ufDom\<cdot>(spfRtOut\<cdot>spf) = ufDom\<cdot>spf"
   unfolding spfRtOut_def
-  by (simp add: ubclDom_ubundle_def ufapplyout_dom)
+  by (simp add: ufapplyout_dom)
 
 lemma spfRtOut_ran [simp]:"ufRan\<cdot>(spfRtOut\<cdot>spf) = ufRan\<cdot>spf"
   unfolding spfRtOut_def
   apply(subst ufapplyout_ran)
-   apply (simp add: ubclDom_ubundle_def)
+   apply (simp)
   by blast
 
 lemma spfRtOut_spfConcIn: "(spfRtOut\<cdot>(spfConcIn sb \<cdot>spf)) = (spfConcIn sb \<cdot>(spfRtOut\<cdot>spf))"
   apply (simp add: spfConcIn_def spfRtOut_def)
   apply(subst ufapply_eq)
     apply (metis ubclDom_ubundle_def ubconceq_dom)
-   apply (simp add: ubclDom_ubundle_def)
+   apply (simp)
   by blast
 
 (* Rewrite with ubRt 
@@ -473,7 +463,7 @@ lemma spfConcOut_step[simp]:
   apply(simp only: spfConcOut_def)
   apply (subst ufapplyout_apply)
     apply (metis ubclDom_ubundle_def ubconceq_dom)
-   apply (simp add: assms ubclDom_ubundle_def)
+   apply (simp add: assms)
   by simp
 
 lemma spfConcOut_dom[simp]:"ufDom\<cdot>(spfConcOut sb \<cdot>spf) = ufDom\<cdot>spf"
@@ -496,7 +486,7 @@ lemma spfconc_surj:
   by (metis sbconc_inj ubclDom_ubundle_def ubconceq_dom ufapplyout_inj) 
 
 lemma spfconcout_inf: "ubLen ub = \<infinity> \<Longrightarrow> ubDom\<cdot>ub=ufRan\<cdot>uf \<Longrightarrow> ubclDom\<cdot>x = ufDom\<cdot>uf \<Longrightarrow> spfConcOut ub\<cdot>uf \<rightleftharpoons> x = ub"
-  apply (simp add: ubclDom_ubundle_def spfConcOut_step ubconceq_insert)
+  apply (simp add: spfConcOut_step ubconceq_insert)
   by (metis sbconc_inf ubclDom_ubundle_def ubclRestrict_ubundle_def ubclrestrict_dom_id ufran_2_ubcldom2)
 
 lemma spfconcout_inf_const: assumes "ubDom\<cdot>ub = ufRan\<cdot>uf" and "ubLen ub = \<infinity>"
@@ -504,36 +494,20 @@ lemma spfconcout_inf_const: assumes "ubDom\<cdot>ub = ufRan\<cdot>uf" and "ubLen
   apply(rule ufun_eqI)
    apply simp
   apply simp
-  using assms(1) assms(2) spfconcout_inf by blast
+  using assms(1) assms(2) spfconcout_inf by fastforce
 
 lemma spfconcout_restrict: "ufRan\<cdot>uf \<subseteq> ubDom\<cdot>ub \<Longrightarrow> spfConcOut ub\<cdot>uf = spfConcOut (ubRestrict (ufRan\<cdot>uf)\<cdot>ub)\<cdot>uf"
   apply(rule ufun_eqI)
-   apply simp
-  apply simp
-  apply(simp add: ubclDom_ubundle_def)
-  by (metis order_refl ubclDom_ubundle_def ubconceq_insert ubconceq_restrict ufran_2_ubcldom2)
+   apply simp+
+  by (metis order_refl ubclDom_ubundle_def ubconceq_restrict ufran_2_ubcldom2)
 
 lemma spfconcout_inf_const2: assumes "ufRan\<cdot>uf \<subseteq> ubDom\<cdot>ub" and "ubLen (ubRestrict (ufRan\<cdot>uf)\<cdot>ub) = \<infinity>"
   shows "spfConcOut ub\<cdot>uf = (ufConst (ufDom\<cdot>uf)\<cdot>(ubRestrict (ufRan\<cdot>uf)\<cdot>ub))"
   apply(rule ufun_eqI)
    apply simp
   apply simp
-  using assms(1) assms(2) spfconcout_inf spfconcout_restrict by fastforce
-
-lemma spfconcout_weak:
-  assumes "ufIsWeak f"
-  shows "ufIsWeak (spfConcOut ub\<cdot>f)"
-  apply(rule ufisweakI)
-  by (metis (no_types, lifting) assms dual_order.trans sbConcEq_Len2 spfConcOut_dom spfConcOut_step 
-      ubclDom_ubundle_def ubclLen_ubundle_def ufisweakE)
-
-lemma spfconcout_strong:
-  assumes "ufIsStrong f"
-  shows "ufIsStrong (spfConcOut ub\<cdot>f)"
-  apply(rule ufisstrongI)
-  by (metis (no_types, lifting) assms dual_order.trans sbConcEq_Len2 spfConcOut_dom spfConcOut_step 
-      ubclDom_ubundle_def ubclLen_ubundle_def ufisstrongE)
-
+  by (metis (no_types, lifting) assms(1) assms(2) spfConcOut_step spfconcout_inf spfconcout_restrict ubclDom_ubundle_def ubclRestrict_ubundle_def ubresrict_dom2)
+  
 lemma spfConcOut_weak_ublen_strong[simp]:
   assumes "ufIsWeak spf" and "ubLen sb = lnsuc\<cdot>0" and "ufRan\<cdot>spf \<subseteq> ubDom\<cdot>sb"
   shows "ufIsStrong (spfConcOut sb\<cdot>spf)"
@@ -636,22 +610,13 @@ lemma spfconcout_split:"ubclDom\<cdot>b = ufclRan\<cdot>spf \<Longrightarrow>spf
    apply(simp)
   apply (subst spfConcOut_step)
    apply simp+
-   apply (simp add: ubclDom_ubundle_def)
-  apply (subst spfConcOut_step) 
-    apply simp+
-   apply (simp add: ubclDom_ubundle_def)
-  apply (subst spfConcOut_step) 
-   apply (simp add: ubclDom_ubundle_def)
-  by (simp add: ubconceq_assoc ufclRan_ufun_def ufran_2_ubcldom2) 
+  by (metis ubclDom_ubundle_def ubconceq_assoc ufclRan_ufun_def ufran_2_ubcldom2)
 
 lemma spfconcout_least [simp]: "spfConcOut (ubLeast cs)\<cdot>spf = spf"
   apply(rule ufun_eqI)
    apply(simp)
   apply (subst spfConcOut_step)
-  apply simp+
-   apply (simp add: ubclDom_ubundle_def)
-  by (simp only:ubConcEq_ubLeast)
-
+  by simp+  
 
 lemma spfrt_conc_out_id[simp]: assumes "sbeDom sbe = ufRan\<cdot>spf"
   shows "spfRtOut\<cdot>(spfConcOut (sbe2SB sbe)\<cdot>spf) = spf"
@@ -665,25 +630,13 @@ lemma spfrt_conc_in_id[simp]: assumes "sbeDom sbe = ufDom\<cdot>spf"
   apply(rule ufun_eqI)
    apply simp
   apply (simp add: ufclDom_ufun_def)
-  by (simp add: assms ubclDom_ubundle_def)
+  by (simp add: assms)
 
 lemma spfconcin_out_switch: "spfConcIn a\<cdot>(spfConcOut b\<cdot>spf) = spfConcOut b\<cdot>(spfConcIn a\<cdot>spf)"
   apply(rule ufun_eqI)
    apply(simp)
   apply (subst spfConcIn_step)
-   apply simp+
-   apply (simp add: ubclDom_ubundle_def)
-  apply simp
-  apply (subst spfConcOut_step)
-   apply simp+
-   apply (simp add: ubclDom_ubundle_def)
-  apply (subst spfConcOut_step)
-   apply simp+
-   apply (simp add: ubclDom_ubundle_def)
-  apply (subst spfConcIn_step)
-  apply (simp add: ubclDom_ubundle_def)
-   by (simp add: ubclDom_ubundle_def)
-
+  by simp+
 
 subsection \<open>Sercomp spfConcIn/Out lemma\<close>
 
@@ -694,7 +647,7 @@ lemma sercomp_conc_in:
   apply (rule spf_eq)
   apply (metis (no_types, lifting) assms spfConcIn_dom spfConcIn_ran ufSerComp_dom)
   using assms spfConcIn_dom spfConcIn_ran spfConcIn_step ubconceq_dom
-  by (simp add: assms ubclDom_ubundle_def ufSerComp_apply ufSerComp_dom)
+  by (simp add: assms ufSerComp_apply ufSerComp_dom)
 
 lemma sercomp_conc_inout: 
   assumes "sercomp_well f g"
@@ -710,7 +663,7 @@ proof -
   have "ubclDom\<cdot>(f \<rightleftharpoons> ub) = ufRan\<cdot>f"
     using a1 by (metis (no_types) assms spfConcOut_dom spfConcOut_ran ubclDom_ubundle_def ufSerComp_dom ufran_2_ubcldom2)
   then show "(spfConcOut sb\<cdot>f \<circ> g) \<rightleftharpoons> ub = (f \<circ> spfConcIn sb\<cdot>g) \<rightleftharpoons> ub"
-    using f2 a1 by (simp add: assms spfConcIn_dom spfConcIn_step spfConcOut_dom spfConcOut_ran ubclDom_ubundle_def ufSerComp_apply ufSerComp_dom)
+    using f2 a1 by (simp add: assms spfConcIn_dom spfConcIn_step spfConcOut_dom spfConcOut_ran ufSerComp_apply ufSerComp_dom)
 qed
 
 
