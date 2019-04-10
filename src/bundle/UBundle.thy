@@ -1009,7 +1009,7 @@ section\<open>Instantiation\<close>
 
 instantiation ubundle :: (uscl) ubcl
 begin
-definition ubclDom_ubundle_def [simp]: "ubclDom \<equiv> ubDom"
+definition ubclDom_ubundle_def: "ubclDom \<equiv> ubDom"
 definition ubclLen_ubundle_def: "ubclLen \<equiv> ubLen"
 
 lemma ubundle_ex: "\<And>C::channel set. \<exists>x::'a\<^sup>\<Omega>. ubclDom\<cdot>x = C"
@@ -1028,9 +1028,8 @@ qed
 
 instance
   apply intro_classes
-     apply (simp add:  ubdom_below)
+     apply (simp add: ubclDom_ubundle_def ubdom_below)
     apply (simp add: ubundle_ex)
-  using ubundle_ex apply auto[1]
    apply (simp add: ubclLen_ubundle_def ublen_monofun)
   by (metis (mono_tags) domIff empty_iff equalityI subsetI ubLen_def ubclLen_ubundle_def ubWell_empty ubdom_ubrep_eq)
 
