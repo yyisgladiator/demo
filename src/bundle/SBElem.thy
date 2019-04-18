@@ -59,6 +59,21 @@ lemma sbe_eq: assumes "sbeDom sbe1 = sbeDom sbe2"
   shows "sbe1 = sbe2"
   by (metis Rep_sbElem_inject assms(1) assms(2) part_eq sbeDom_def)
 
+lemma Rep_abs_sbElem[simp]:"sbElemWell sbE \<Longrightarrow> Rep_sbElem (Abs_sbElem sbE) = sbE"
+  by(simp add: Abs_sbElem_inverse)
+
+lemma sbElem_Elem_well: assumes "E \<in> ctype c" shows "sbElemWell [c \<mapsto> E]"
+  unfolding sbElemWell_def usclOkay_stream_def ctype_tsyn_def 
+  by(simp add: assms)
+
+lemma sbElem_Elem_well_alt:assumes "c \<in> sbeDom sbE" shows "sbElemWell [c \<mapsto> Rep_sbElem sbE\<rightharpoonup>c]"
+  using Rep_sbElem assms sbElem_Elem_well sbElemWellI sbeDom_def by fastforce
+
+lemma Rep_abs_channel_eq[simp]:assumes "c\<in> sbeDom sbE" shows "Rep_sbElem (Abs_sbElem [c \<mapsto> Rep_sbElem sbE\<rightharpoonup>c])\<rightharpoonup>c = Rep_sbElem sbE\<rightharpoonup>c"
+  apply(subst Rep_abs_sbElem, auto)
+  apply(rule sbElem_Elem_well)
+  by(metis Rep_sbElem assms mem_Collect_eq sbElemWell_def sbeDom_def)
+
 subsection \<open>sbe2SB\<close>
 
 lemma sbe2sb_dom [simp]: "ubDom\<cdot>(sbe2SB sbe) = sbeDom sbe"

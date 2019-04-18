@@ -42,12 +42,10 @@ lemma uspecconstout_insert: "uspecConstOut In sb = uspecConst (ufConst In\<cdot>
   by (simp add: uspecConstOut_def)
 
 lemma uspecconstout_dom[simp]: "uspecDom\<cdot>(uspecConstOut In sb) = In"
-  apply (simp add: uspecconstout_insert)
-  by (simp add: ufclDom_ufun_def uspecconst_dom)
+  by (simp add: uspecconstout_insert)
 
 lemma uspecconstout_ran[simp]: "uspecRan\<cdot>(uspecConstOut In sb) = ubclDom\<cdot>sb"
-  apply (simp add: uspecconstout_insert)
-  by (simp add: ufclRan_ufun_def uspecconst_ran)
+  by (simp add: uspecconstout_insert)
 
 lemma uspecconstout_set[simp]: "uspecSet\<cdot>(uspecConstOut In sb) = {ufConst In\<cdot>sb}"
   by (simp add: uspecconstout_insert)
@@ -57,19 +55,17 @@ subsection \<open>spsConcOut\<close>
 (* ----------------------------------------------------------------------- *)
 
 lemma spsconcout_mono: "monofun (uspecImage (Rep_cfun (spfConcOut sb)))"
-  apply (rule uspecimage_mono)
-  by (simp add: ufclDom_ufun_def ufclRan_ufun_def)
-
+  by (rule uspecimage_mono, simp)
 
 lemma spsconcout_dom [simp]: 
   "uspecDom\<cdot>(spsConcOut sb\<cdot>sps) = uspecDom\<cdot>sps"
   apply (simp add: spsConcOut_def)
-  by (simp add: ufclDom_ufun_def ufclRan_ufun_def uspecimagec_insert)
+  by (simp add: uspecimagec_insert)
 
 lemma spsconcout_ran [simp]: 
   "uspecRan\<cdot>(spsConcOut sb\<cdot>sps) = uspecRan\<cdot>sps"
   apply (simp add: spsConcOut_def)
-  by (simp add: ufclDom_ufun_def ufclRan_ufun_def uspecimagec_insert)
+  by (simp add: uspecimagec_insert)
 
 lemma spsconcout_obtain: assumes "g \<in> uspecSet\<cdot>(spsConcOut sb\<cdot>sps)"
   shows "\<exists> f. f\<in>(uspecSet\<cdot>sps) \<and> g = spfConcOut sb\<cdot>f"
@@ -90,10 +86,10 @@ subsection \<open>spsConcIn\<close>
 (* ----------------------------------------------------------------------- *)
 
 lemma spsconcin_dom[simp]: "uspecDom\<cdot>(spsConcIn sb\<cdot>sps) = uspecDom\<cdot>sps"
-  by (simp add: spfconcin_uspec_iamge_well spsConcIn_def ufuncldom_least_dom uspecimagec_dom)
+  by (metis (no_types, hide_lams) spfconcin_uspec_iamge_well spsConcIn_def ufuncldom_least_dom uspecimagec_dom)
 
 lemma spsconcin_ran[simp]:  "uspecRan\<cdot>(spsConcIn sb\<cdot>sps) = uspecRan\<cdot>sps"
-  by (simp add: spfconcin_uspec_iamge_well spsConcIn_def ufclRan_ufun_def uspecimagec_insert)
+  by (simp add: spfconcin_uspec_iamge_well spsConcIn_def uspecimagec_insert)
 
 lemma spsconcin_const[simp]: "spsConcIn sb\<cdot>(uspecConst f) = uspecConst (spfConcIn sb\<cdot>f)"
   by(simp add: spsConcIn_def)
@@ -110,7 +106,7 @@ lemma spsrtin_dom [simp]: "uspecDom\<cdot>(spsRtIn\<cdot>sps) = uspecDom\<cdot>s
   by (metis spfRtIn_dom spsRtIn_def ufclDom_ufun_def ufuncldom_least_dom uspecimagec_dom)
 
 lemma spsrtin_ran [simp]: "uspecRan\<cdot>(spsRtIn\<cdot>sps) = uspecRan\<cdot>sps"
-  by (simp add: spsRtIn_def ufclDom_ufun_def ufclRan_ufun_def uspecimagec_insert)
+  by (simp add: spsRtIn_def uspecimagec_insert)
 
 
 
@@ -119,12 +115,12 @@ subsection \<open>spsComplete\<close>
 lemma spscomplete_well [simp]: "uspecWell {spf | spf . ufDom\<cdot>spf = uspecDom\<cdot>sps \<and> ufRan\<cdot>spf = uspecRan\<cdot>sps
                                             \<and> (\<forall>sb. ubclDom\<cdot>sb = uspecDom\<cdot>sps \<longrightarrow> (\<exists>spf2\<in>(uspecSet\<cdot>sps). spf\<rightleftharpoons>sb = spf2\<rightleftharpoons>sb))}
                       (Discr (uspecDom\<cdot>sps))  (Discr (uspecRan\<cdot>sps))"
- by (simp add: ufclDom_ufun_def ufclRan_ufun_def)
+  by simp
 
 lemma spscomplete_set: "uspecSet\<cdot>(spsComplete sps) = {spf | spf . ufDom\<cdot>spf = uspecDom\<cdot>sps \<and> ufRan\<cdot>spf = uspecRan\<cdot>sps
                                             \<and> (\<forall>sb. ubclDom\<cdot>sb = uspecDom\<cdot>sps \<longrightarrow> (\<exists>spf2\<in>(uspecSet\<cdot>sps). spf\<rightleftharpoons>sb = spf2\<rightleftharpoons>sb))}"
   unfolding uspecSet_def spsComplete_def
-  by (simp add: ufclDom_ufun_def ufclRan_ufun_def)
+  by simp
 
 (* Domain of the USpec is not modified *)
 lemma spscomplete_dom [simp]: "uspecDom\<cdot>(spsComplete sps) = uspecDom\<cdot>sps"
@@ -140,13 +136,13 @@ lemma spscomplete_belowI: assumes "uspecDom\<cdot>S1 = uspecDom\<cdot>S2"
   and "(\<And>spf sb. spf\<in>uspecSet\<cdot>S1 \<Longrightarrow> ubclDom\<cdot>sb = uspecDom\<cdot>S1 \<Longrightarrow> (\<exists>spf2\<in>(uspecSet\<cdot>S2). spf\<rightleftharpoons>sb = spf2\<rightleftharpoons>sb))"
 shows "S1 \<sqsubseteq> spsComplete S2"
   apply(rule uspec_belowI)
-    apply (simp_all add: assms)
+  apply (simp_all add: assms)
   by (smt SetPcpo.less_set_def assms(1) assms(2) assms(3) mem_Collect_eq spscomplete_set subsetI ufclDom_ufun_def ufclRan_ufun_def uspec_allDom uspec_allRan)
 
 (* The original functions are also part of the completion *)
 lemma spscomplete_below: "sps \<sqsubseteq> (spsComplete sps)"
   apply(rule spscomplete_belowI)
-    by auto
+  by auto
 
 lemma spscomplete_exists: assumes "spf\<in>(uspecSet\<cdot>(spsComplete sps))" and "ubclDom\<cdot>sb = uspecDom\<cdot>sps"
   shows "\<exists>spf2. spf2\<in>uspecSet\<cdot>sps \<and> spf\<rightleftharpoons>sb = spf2\<rightleftharpoons>sb"
@@ -179,7 +175,7 @@ lemma spscomplete_const_h: "spsComplete (uspecConst spf) \<sqsubseteq> uspecCons
   apply(rule uspec_belowI)
     apply auto
   apply(auto simp add: less_set_def spscomplete_set)
-  by (simp add: ufclDom_ufun_def ufun_eqI)
+  by (simp add: ufun_eqI)
 
 lemma spscomplete_const[simp]: "spsComplete (uspecConst spf) = uspecConst spf"
   by (simp add: below_antisym spscomplete_below spscomplete_const_h)
@@ -192,9 +188,8 @@ lemma spscomplete_least [simp]: "spsComplete (uspecLeast Dom Ran) = uspecLeast D
 
 lemma spscomplete_max [simp]: "spsComplete (uspecMax Dom Ran) = uspecMax Dom Ran"
   apply(rule uspec_eqI)
-    apply auto
-  apply(auto simp add: spscomplete_set)
-  by (auto simp add: ufclDom_ufun_def ufclRan_ufun_def)
+  apply auto
+  by (auto simp add: spscomplete_set)
 
 lemma assumes "uspec_compwell uspec1 uspec2"
   shows "((spsComplete uspec1) \<Otimes> (spsComplete uspec2)) \<sqsubseteq> spsComplete (uspec1 \<Otimes> uspec2)"

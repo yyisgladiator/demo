@@ -291,7 +291,7 @@ qed
 lemma ublen_sbrt_sbhd : 
   assumes "ubLen x \<le> Fin (Suc n)" 
   shows " ubLen (ubRt\<cdot>x) \<le> Fin n"
-  by (metis Fin_Suc assms bottomI leD leI less2lnleD lnle_Fin_0 lnle_def lnsuc_lnle_emb lnzero_def nat.distinct(1) ubRtLen ubRtLen_zero)
+  by (metis Fin_Suc assms bottomI leI less2lnleD lnle_Fin_0 lnle_def lnsuc_lnle_emb lnzero_def nat.distinct(1) ubRtLen ubRtLen_zero)
 
 (* ----------------------------------------------------------------------- *)
   subsection\<open>MaxLen\<close>

@@ -279,10 +279,9 @@ lemma createbundle_ubclunion:
     have create_cc: "(createBundle m2 cc) . cc = \<up>m2"
       by (metis createBundle.rep_eq fun_upd_same m2_ctype option.sel ubgetch_insert)
     have ubunion_create_eq_c: "(ubUnion\<cdot>(createBundle m1 c)\<cdot>(createBundle m2 cc)) . c = \<up>m1"
-      by (metis createBundle_dom create_c create_cc m1_def m2_def singletonD ubclUnion_ubundle_def 
-          ubunion_getchL ubunion_getchR)
+      by (metis createBundle_dom create_c create_cc m1_def m2_def singletonD ubunion_getchL ubunion_getchR)
     have ubunion_create_eq_cc: "(ubUnion\<cdot>(createBundle m1 c)\<cdot>(createBundle m2 cc)) . cc = \<up>m2"
-      by (simp add: create_cc ubclUnion_ubundle_def)
+      by (simp add: create_cc)
     hence "x = (ubUnion\<cdot>(createBundle m1 c)\<cdot>(createBundle m2 cc))"
       by (smt assms(1) createBundle_dom insert_iff insert_is_Un m1_def m2_def singletonD ub_eq ubunionDom ubunion_create_eq_c)
     then show ?thesis
@@ -366,7 +365,7 @@ lemma tsynb_cases_ext
                   max_len not_empty numb_channel s1_cases s1_def s2_cases s2_def 
                   tsynbeps_eq_createbundle)
             then show "P x"
-              by (simp add: eps_eps)
+              using eps_eps by auto
           qed
       qed
     qed
