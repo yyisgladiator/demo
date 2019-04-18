@@ -825,14 +825,14 @@ section\<open>Instantiation\<close>
 instantiation ufun :: (ubcl,ubcl) ufuncl
 begin
 
-definition ufclDom_ufun_def: "ufclDom \<equiv> ufDom"
+definition ufclDom_ufun_def[simp]: "ufclDom \<equiv> ufDom"
 
-definition ufclRan_ufun_def: "ufclRan \<equiv> ufRan"
+definition ufclRan_ufun_def[simp]: "ufclRan \<equiv> ufRan"
 
 instance
   apply intro_classes
-  apply (simp add: ufclDom_ufun_def ufdom_below_eq)
-  by (simp add: ufclRan_ufun_def ufran_below)
+  apply (simp add: ufdom_below_eq)
+  by (simp add: ufran_below)
 end
 
 end

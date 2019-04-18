@@ -808,6 +808,19 @@ lemma tsynfilter_test_infstream: assumes "c \<noteq> a \<and> c \<noteq> b"
   by (simp add: assms tsynfilter_insert)
 
 (* ----------------------------------------------------------------------- *)
+  subsection {* tsynApplyElem *}
+(* ----------------------------------------------------------------------- *)
+
+lemma tsynApplyElem_inv_id[simp]: "inv Msg tsyn \<in> range (F) \<Longrightarrow> tsynApplyElem (F \<circ> (inv F)) tsyn = tsyn"
+  apply (induction tsyn)
+  apply simp_all
+  by (metis UNIV_I f_inv_into_f image_iff tsynAbsElem.simps(2))
+
+lemma tsymApply_applyF_in[simp]:"tsynApplyElem F1 (tsynApplyElem F2 tsyn) = tsynApplyElem (F1 \<circ> F2) tsyn"
+  by (smt comp_apply tsynApplyElem.elims tsynApplyElem.simps(1) tsynApplyElem.simps(2))
+
+
+(* ----------------------------------------------------------------------- *)
   subsection {* tsynMap *}
 (* ----------------------------------------------------------------------- *)
 

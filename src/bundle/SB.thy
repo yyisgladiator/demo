@@ -354,6 +354,8 @@ lemma sbElemWellEx:"\<exists>x::channel \<Rightarrow> 'm option. sbElemWell x"
   apply(simp add: sbElemWell_def)
   by fastforce
 
+
+
 (* ----------------------------------------------------------------------- *)
   subsection \<open>convSB\<close>
 (* ----------------------------------------------------------------------- *)

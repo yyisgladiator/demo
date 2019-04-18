@@ -682,7 +682,7 @@ lemma ufapplyin_well_h: assumes "\<And>b. ubclDom\<cdot>(k\<cdot>b) = ubclDom\<c
   apply(simp add: ufWell_def)
   apply rule
    apply (metis assms(1) domIff rep_ufun_well ufWell_def)
-  using assms(1) ufWell_def rep_ufun_well
+  using assms(1)
   by (metis (no_types, lifting) ran2exists ufran_2_ubcldom)
 
 lemma ufapplyin_cont_h: assumes "\<And>b. ubclDom\<cdot>(k\<cdot>b) = ubclDom\<cdot>b" shows "cont (\<lambda> g. Abs_cufun (\<lambda>x::'a. Rep_cufun g (k\<cdot>x)))"    
@@ -719,7 +719,7 @@ proof -
       using f200
       by (simp add: lub_ufun rep_cfun_cont uf_well_lub)
     have f2005: "\<And>Y. chain Y \<Longrightarrow> Rep_ufun (\<Squnion>i::nat. Y i) =  (\<Squnion>i::nat. Rep_ufun (Y i))"
-      by (metis cont_def lub_eq lub_eqI rep_ufun_cont)
+      by (metis cont_def lub_eqI rep_ufun_cont)
 
     have f2006: "chain (\<lambda>i::nat. Abs_cufun (\<lambda>x::'a. Rep_cufun (Y i) (k\<cdot>x)))"
       using f200 assms 
@@ -791,7 +791,7 @@ proof -
 
   show ?thesis
     apply(simp add: ufApplyOut_def)
-    apply(simp add: ufapplyout_cont assms)
+    apply(simp add: assms)
     apply(simp add: f1)
     apply(simp add: ufApplyIn_def)
     apply(simp add: ufapplyin_cont_h assms)
