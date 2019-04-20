@@ -726,11 +726,7 @@ lemma ufcomp2sercomp_apply:
     and "(ufDom\<cdot>f1 \<inter> ufRan\<cdot>f2 = {})"
     and "ubclDom\<cdot>x = ufCompI f1 f2"
   shows "(f1 \<otimes> f2) \<rightleftharpoons> x = (f1 \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>f1)\<cdot>x)) \<uplus> (f2 \<rightleftharpoons> (f1 \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>f1)\<cdot>x)))"
-  apply (subst ufcomp_repabs)
-  apply (simp add: assms)
-  apply (simp only: ubFix_def)
-  apply (subst ufcomp_sercomp_lub_const2, simp_all add: assms)
-  using assms(1) by blast
+  by (metis assms(1) assms(2) assms(3) ubFix_def ufcomp_insert ufcomp_sercomp_lub_const2)
 
 subsubsection \<open>ufParComp\<close>
 (* ufcomp ufparcomp  *)
@@ -1047,7 +1043,6 @@ lemma ufcomp_sercomp_in_apply:
   and "ubclDom\<cdot>x = ufCompI f1 f2"
   shows "(f1\<otimes>f2) \<rightleftharpoons> x = (f1 \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>f1)\<cdot>x)) \<uplus> (f2 \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>f2)\<cdot>(x \<uplus> (f1 \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>f1)\<cdot>x)))))"  
   apply (subst ufcomp_repabs)
-  using assms apply blast
   apply (simp add: assms(2))
   apply (simp add: ubFix_def)
   apply (subst ufcomp_sercomp_in_lub_const2)
@@ -1085,11 +1080,7 @@ proof -
     using assms(1) assms(2) by blast 
   have dom_eq:"ufDom\<cdot>?f = ufDom\<cdot>?g"
     apply(simp add: Diff_triv assms ufCompI_def ufcomp_dom ufhide_dom ufhide_ran)
-    apply(subst ufcomp_dom)
-    apply(simp add: ufhide_ran)
-    apply(simp add: Diff_Int_distrib2 assms(2))
-    apply(simp add: ufCompI_def ufhide_dom ufhide_ran)
-    by (smt Diff_Diff_Int Diff_Int_distrib2 Diff_Un Diff_idemp Diff_triv Un_Diff Un_Diff_Int assms(3) assms(4) f2_no_feedback inf.idem inf_bot_right)
+    using assms(4) by fastforce
   have f1_dom: "ufRan\<cdot>(f1 \<h> (ufRan\<cdot>f1 - ufDom\<cdot>f2)) = ufDom\<cdot>f2"
       by (simp add: Diff_Diff_Int Int_absorb1 assms(1) ufhide_ran)
   have g_sercomp_well: "sercomp_well (f1 \<h> (ufRan\<cdot>f1-ufDom\<cdot>f2)) f2"
@@ -1098,7 +1089,7 @@ proof -
   have g_ser: "?g = ((f1 \<h> (ufRan\<cdot>f1-ufDom\<cdot>f2)) \<circ> f2)"
     by (metis (no_types, lifting) assms(3) ufcomp_serial_eq ufhide_dom g_sercomp_well)
   have ran_eq:"ufRan\<cdot>(f1 \<otimes> f2) - ufRan\<cdot>f1 = ufRan\<cdot>f2"
-    by (metis Diff_cancel Un_Diff Un_Diff_Int assms(2) inf_commute sup_commute ufCompO_def ufcomp_ran) 
+    by (simp add: Diff_triv Int_commute Un_Diff assms(2) ufCompO_def ufcomp_ran)
   have out_eq:"\<And> ub. ubclDom\<cdot>ub =(ufDom\<cdot>?f) \<Longrightarrow> ?f \<rightleftharpoons> ub = ?g \<rightleftharpoons> ub"
     apply(simp add: g_ser ufhide_apply ufhide_dom ran_eq)
     apply(subst ufSerComp_apply)
@@ -1163,18 +1154,12 @@ shows "ufComp(ufComp(ufComp (ufComp f1 f2)f3)f4)f5 = ufComp(ufComp f1 f2)(ufComp
     have f5:"ufRan\<cdot>(ufComp (ufComp (ufComp f1 f2) f3) f4) \<inter> ufRan\<cdot>f5 = {}"
       by (simp add: assms(10) assms(4) assms(7) assms(9) f4 inf_sup_distrib2)
     have f6: "ufDom\<cdot>(ufComp (ufComp (ufComp f1 f2) f3) f4) = (ufDom\<cdot>f1 \<union> ufDom\<cdot>f2 \<union> ufDom\<cdot>f3 \<union> ufDom\<cdot>f4) - (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2 \<union> ufRan\<cdot>f3\<union> ufRan\<cdot>f4)"
-      apply (simp add: f3 ufcomp_dom)
-      unfolding ufCompI_def
-      apply(simp add:f1 ufcomp_ran ufcomp_dom assms)
-      unfolding ufCompO_def
-      apply (simp add:f2)
+      apply (simp add: f3  ufCompO_def ufCompI_def f1 ufcomp_ran ufcomp_dom assms)
       by blast
     have f7 :"ufRan\<cdot>(ufComp  (ufComp (ufComp (ufComp f1 f2) f3) f4) f5) = ufRan\<cdot>f1 \<union> ufRan\<cdot>f2 \<union> ufRan\<cdot>f3\<union> ufRan\<cdot>f4\<union> ufRan\<cdot>f5"
       by (metis f4 f5 ufCompO_def ufcomp_ran)
     have f8: "ufDom\<cdot>(ufComp(ufComp (ufComp (ufComp f1 f2) f3) f4) f5) = (ufDom\<cdot>f1 \<union> ufDom\<cdot>f2 \<union> ufDom\<cdot>f3 \<union> ufDom\<cdot>f4 \<union> ufDom\<cdot>f5) - (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2 \<union> ufRan\<cdot>f3\<union> ufRan\<cdot>f4\<union> ufRan\<cdot>f5)"
-      apply (simp add: f5 ufcomp_dom)
-     unfolding ufCompI_def
-     apply(simp add:f4 f6 f7 ufcomp_ran ufcomp_dom assms)
+      apply (simp add: ufCompI_def ufCompO_def assms f5 ufcomp_dom f4 f6 f7 ufcomp_ran)
      by blast
     have f9: "ufRan\<cdot>(ufComp f3 f4) \<inter> ufRan\<cdot>f5 = {}"
       apply (simp add: assms ufcomp_ran)
@@ -1194,11 +1179,7 @@ shows "ufComp(ufComp(ufComp (ufComp f1 f2)f3)f4)f5 = ufComp(ufComp f1 f2)(ufComp
       unfolding ufCompO_def
       by (smt assms(1) assms(4) assms(7) assms(8) f0 f11 f3 inf_sup_distrib1 inf_sup_distrib2 sup_bot.right_neutral ufCompO_def ufcomp_ran)
     have f13: "ufDom\<cdot>( ufComp(ufComp f1 f2) (ufComp (ufComp f3 f4) f5)) = (ufDom\<cdot>f1 \<union> ufDom\<cdot>f2 \<union> ufDom\<cdot>f3 \<union> ufDom\<cdot>f4 \<union> ufDom\<cdot>f5) - (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2 \<union> ufRan\<cdot>f3\<union> ufRan\<cdot>f4\<union> ufRan\<cdot>f5)"
-      apply (simp add: f12 ufcomp_dom)
-      unfolding ufCompI_def
-      apply (simp add: ufcomp_ran ufcomp_dom assms f9 f10 f11)
-      unfolding ufCompO_def
-      apply (subst ufCompI_def)
+      apply (simp add: f12 ufCompO_def  ufcomp_dom ufCompI_def ufcomp_ran  assms f9 f10 f11)
       by blast
     have f14:"ufDom\<cdot>(ufComp(ufComp (ufComp (ufComp f1 f2) f3) f4) f5) =ufDom\<cdot>( ufComp(ufComp f1 f2) (ufComp (ufComp f3 f4) f5))" 
       by (simp add: f8 f13)
