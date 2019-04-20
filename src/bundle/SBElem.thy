@@ -248,14 +248,16 @@ lemma finind_sbe:
 lemma ind_sbe:
   assumes "adm P" 
   and     "ubDom\<cdot>x \<noteq> {}"
-  and     "\<And>ub. (ubDom\<cdot>ub = ubDom\<cdot>x \<Longrightarrow> (\<exists>c\<in>ubDom\<cdot>x. ub . c = \<bottom>)) \<Longrightarrow> P ub"
+  and     "\<And>ub. (ubLen ub = 0) \<Longrightarrow> P ub"
   and     "\<And>sbe ub. P ub \<Longrightarrow> sbeDom sbe = ubDom\<cdot>x \<Longrightarrow> ubDom\<cdot>ub = ubDom\<cdot>x \<Longrightarrow> P (ubConcEq (sbe2SB sbe)\<cdot>ub)"
 shows     "P x"
   apply(rule ind_ub_alt)
   apply (simp add: assms)
   apply (simp add: assms)
+  apply (metis assms(3) strict_slen ublen_not_0 usclLen_stream_def)
   apply (simp add: assms)
-  by (metis (no_types, lifting) assms  ublen_not_0 usclLen_bottom one_lnat_def sbe_obtain ubLen_def 
-      ublen_min_on_channel ubundle_ubgetch_uscllen_one)  
+  by (metis (no_types, lifting) One_nat_def assms(2) assms(4) not_le one_lnat_def sbe_obtain 
+      ubHdLen_one ubLen_def ubconc_sbhdrt ubconc_ubleast ubhd_ubdom ublen_min_on_channel 
+      ubmaxlen_least_only ubmaxlen_sbrt_sbhd ubrt_ubdom usclLen_zero)
 
 end
