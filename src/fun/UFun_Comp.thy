@@ -781,26 +781,23 @@ proof (simp_all)
 qed
 
 (* helper lemma for  ufWell proof of ufComp *)
-lemma ufcomp_well_h: assumes "ufRan\<cdot>f1 \<inter> ufRan\<cdot>f2 = {}" 
-  and "ubclDom\<cdot>x = ufCompI f1 f2" shows  "ubclDom\<cdot>(ubFix (ufCompH f1 f2 x) (UFun.ufRan\<cdot>f1 \<union> UFun.ufRan\<cdot>f2)) = ufCompO f1 f2"
-    by (simp add: assms(2) ubcldom_least_cs ubfix_dom ufCompO_def)
+lemma ufcomp_well_h: assumes "ubclDom\<cdot>x = ufCompI f1 f2" 
+    shows  "ubclDom\<cdot>(ubFix (ufCompH f1 f2 x) (UFun.ufRan\<cdot>f1 \<union> UFun.ufRan\<cdot>f2)) = ufCompO f1 f2"
+  by (simp add: assms ubcldom_least_cs ubfix_dom ufCompO_def)
 
 (* ufcomp produce a ufwell component*)
-lemma ufcomp_well[simp]: assumes "ufRan\<cdot>f1 \<inter> ufRan\<cdot>f2 = {}" 
+lemma ufcomp_well[simp]:  
   shows "ufWell (Abs_cfun (\<lambda> x. (ubclDom\<cdot>x = ufCompI f1 f2) \<leadsto> ubFix (ufCompH f1 f2 x) (ufRan\<cdot>f1 \<union> ufRan\<cdot>f2)))"
   apply (simp add: ufWell_def)
   apply (rule conjI)
    apply (rule_tac x = "ufCompI f1 f2" in exI)
    apply (simp add: domIff)
   apply (rule_tac x = "ufCompO f1 f2" in exI) 
-  by (smt assms option.distinct(1) option.sel ran2exists ufcomp_well_h)
+  by (smt option.distinct(1) option.sel ran2exists ufcomp_well_h)
 
-lemma ufcomp_repabs: assumes "ufRan\<cdot>f1 \<inter> ufRan\<cdot>f2 = {}"
+lemma ufcomp_repabs: 
   shows "Rep_cufun (ufComp f1 f2) = (\<lambda>a. (ubclDom\<cdot>a = ufCompI f1 f2)\<leadsto>ubFix (ufCompH f1 f2 a)(ufRan\<cdot>f1 \<union> ufRan\<cdot>f2))"
-  apply (simp add: ufComp_def)
-  apply (subst rep_abs_cufun)
-    apply (simp, simp add: assms)
-  by auto
+  by (simp add: ufComp_def)
 
 lemma ufcomp_insert:
   assumes "ubclDom\<cdot>ub = ufCompI uf1 uf2"
@@ -808,12 +805,10 @@ lemma ufcomp_insert:
   shows   "(uf1 \<otimes> uf2) \<rightleftharpoons> ub = ubFix (ufCompH uf1 uf2 ub) (ufRan\<cdot>uf1 \<union> ufRan\<cdot>uf2)"
   by (simp add: assms ufcomp_repabs)
 
-lemma ufcomp_dom: assumes "ufRan\<cdot>f1 \<inter> ufRan\<cdot>f2 = {}"
+lemma ufcomp_dom:
   shows "ufDom\<cdot>(ufComp f1 f2) =  ufCompI f1 f2"
   apply (simp add: ufDom_def)
   apply (simp add: ufComp_def)
-  apply (subst rep_abs_cufun)
-    apply (simp, simp add: assms)
   apply (simp add: domIff)
   by (meson someI_ex ubcldom_ex)
 
@@ -824,13 +819,13 @@ proof -
     by (meson x_def someI_ex)
 qed
 
-lemma ufcomp_ran: assumes "ufRan\<cdot>f1 \<inter> ufRan\<cdot>f2 = {}"
+lemma ufcomp_ran:
   shows "ufRan\<cdot>(ufComp f1 f2) = ufCompO f1 f2"
 proof -
   obtain x where x_def: "x \<in> (ran (Rep_cufun (ufComp f1 f2)))"
     using ufran_not_empty by blast
   have f2: "ubclDom\<cdot>x = ufCompO f1 f2"
-    by (metis (mono_tags, lifting) assms option.distinct(1) ran2exists ufcomp_well_h ufcomp_repabs ufran_2_ubcldom x_def)
+    by (metis (mono_tags, lifting) option.distinct(1) ran2exists ufcomp_well_h ufcomp_repabs ufran_2_ubcldom x_def)
   have f3: "ufRan\<cdot>(ufComp f1 f2) = ubclDom\<cdot>x"
     by (meson ran2exists ufran_2_ubcldom x_def)
   show ?thesis
@@ -1057,11 +1052,7 @@ proof -
     using ubclunion_restrict2 ufcomph_insert
     by (smt Un_Diff_cancel assms(1) assms(2) comp_well_def inf_sup_aci(1) subset_Un_eq sup_commute sup_left_commute sup_left_idem ubclunion_restrict3 ubclunion_ubcldom ufCompI_def ufCompO_def ufRanRestrict ufcomp_well_h)
   then show ?thesis
-    apply(subst ufcomp_repabs)
-    using assms(1) comp_well_def apply auto[1]
-    apply(subst ufcomp_repabs)
-    using assms(1) comp_well_def apply auto[1]
-    by(simp add: assms(2))
+    by (simp add: assms(2) ufcomp_repabs)
 qed
 
 lemma ufcomp_fix_f2: assumes "comp_well uf1 uf2" and "ubclDom\<cdot>sb = ufCompI uf1 uf2"
@@ -1079,12 +1070,8 @@ proof -
     using ubclunion_restrict2 ufcomph_insert
     by (smt Un_Diff_cancel assms(1) assms(2) comp_well_def inf_sup_aci(1) subset_Un_eq sup_commute sup_left_commute sup_left_idem ubclunion_restrict3 ubclunion_ubcldom ufCompI_def ufCompO_def ufRanRestrict ufcomp_well_h)
   then show ?thesis
-    apply(subst ufcomp_repabs)
-    using assms(1) comp_well_def apply auto[1]
-    apply(subst ufcomp_repabs)
-    using assms(1) comp_well_def apply auto[1]
-    apply(simp add: assms(2))
-    by (metis  assms(1) assms(2) comp_well_def ubclunion_commu ufcomp_I_inter_Oc_empty ufcomp_well_h)
+    by (metis assms(1) assms(2) comp_well_def ubclunion_commu ufcomp_I_inter_Oc_empty ufcomp_insert ufcomp_well_h)
+
 qed
 
 lemma ufcomp_fix: assumes "comp_well uf1 uf2" and "ubclDom\<cdot>sb = ufCompI uf1 uf2"
