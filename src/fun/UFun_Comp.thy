@@ -801,7 +801,6 @@ lemma ufcomp_repabs:
 
 lemma ufcomp_insert:
   assumes "ubclDom\<cdot>ub = ufCompI uf1 uf2"
-  and     "ufRan\<cdot>uf1 \<inter> ufRan\<cdot>uf2 = {}"
   shows   "(uf1 \<otimes> uf2) \<rightleftharpoons> ub = ubFix (ufCompH uf1 uf2 ub) (ufRan\<cdot>uf1 \<union> ufRan\<cdot>uf2)"
   by (simp add: assms ufcomp_repabs)
 
