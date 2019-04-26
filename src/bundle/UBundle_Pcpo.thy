@@ -256,6 +256,16 @@ lemma ubunion_ubrestrict_id: assumes "ubDom\<cdot>ub = cs1 \<union> cs2" and "cs
   using assms(1) apply auto
   by (metis Int_commute Int_iff ubgetch_ubrestrict ubrestrict_ubdom2 ubunion_getchL ubunion_getchR)
 
+lemma ubunion_ubrestrict_union:
+  assumes "A \<inter> B = {}"
+  shows   "ubUnion\<cdot>(ubRestrict A\<cdot>ub)\<cdot>(ubRestrict B\<cdot>ub) = ubRestrict (A \<union> B)\<cdot>ub"
+  proof -
+    have "A \<union> B - B = A"
+      by (simp add: Diff_triv Un_Diff assms)
+    then show ?thesis
+      by (metis (no_types) UBundle_Pcpo.ubclunion_ubclrestrict_minus_id Un_upper2 inf.absorb_iff2)
+  qed
+
 instantiation ubundle :: (uscl_pcpo) ubcl_comp
 begin
 definition ubclLeast_ubundle_def[simp]: "ubclLeast \<equiv> ubLeast"
