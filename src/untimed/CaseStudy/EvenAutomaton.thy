@@ -6,9 +6,11 @@ begin
 
 (* This are the actual states from MAA *)
 datatype EvenAutomatonSubstate = Odd | Even
+setup_lifting datatype_definition_EvenAutomatonSubstate
 
 (* And these have also the variables *)
 datatype EvenAutomatonState = State EvenAutomatonSubstate "nat"
+setup_lifting datatype_definition_EvenAutomatonState
 
 fun getSubState :: "EvenAutomatonState \<Rightarrow> EvenAutomatonSubstate" where
     "getSubState (State state_s automaton_sum) = state_s"

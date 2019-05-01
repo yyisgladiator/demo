@@ -12,9 +12,10 @@ begin
 
 (* This are the actual states from MAA *)
 datatype EvenAutomatonSubstate = TheOneAndOnly
-
+setup_lifting datatype_definition_EvenAutomatonSubstate
 (* And these have also the variables *)
 datatype EvenAutomatonState = State EvenAutomatonSubstate nat
+setup_lifting datatype_definition_EvenAutomatonState
 
 fun getSubState :: "EvenAutomatonState \<Rightarrow> EvenAutomatonSubstate" where
 "getSubState (State automaton_s automaton_sum) = automaton_s"
@@ -24,6 +25,8 @@ fun getSum :: "EvenAutomatonState \<Rightarrow> nat" where
 
 
 datatype EvenAutomaton = A  nat | B  bool
+setup_lifting datatype_definition_EvenAutomaton
+
 instance EvenAutomaton :: countable
 apply(intro_classes)
 by(countable_datatype)

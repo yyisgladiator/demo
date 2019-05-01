@@ -7,7 +7,7 @@ begin
 default_sort type
 
 (* allows to use lift_definition for continuous functions *)
-setup_lifting type_definition_cfun
+
 
 text {* Helpful lemmas to work with HOL and HOLCF's definitions.*}
 

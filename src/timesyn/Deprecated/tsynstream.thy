@@ -13,8 +13,7 @@ section \<open>Typ Definition\<close>
 
 pcpodef 'a tsynstream = "{t :: 'a event stream. True}"
   by auto
-
-
+setup_lifting datatype_definition_tsynstream
 
 (***************************************)
 section \<open>Function Definitions\<close>

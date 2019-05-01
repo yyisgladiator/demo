@@ -22,4 +22,5 @@ proof -
   then show "adm (\<lambda>x::'s\<^sup>\<Omega>. x \<in> {b::'s\<^sup>\<Omega>. ub_eqLen b})"
     by (simp add: adm_def)
 qed
+setup_lifting type_definition_eqLenBundle
 end

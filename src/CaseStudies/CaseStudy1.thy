@@ -13,7 +13,7 @@ begin
 
 (* Definiere Datentyp über dem die Ströme gebildet werden sollen *)
 datatype M = Nats nat | Bools bool
-
+setup_lifting datatype_defintion_M
 
 
 (* Instanziiere M als "message". nötig da TSB über ::message definiert ist *)

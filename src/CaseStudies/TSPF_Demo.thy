@@ -12,7 +12,9 @@ definition tsb_well :: "(channel \<rightharpoonup> 'm tstream) => bool" where
 
 cpodef 'm :: message TSB = "{b :: channel \<rightharpoonup> 'm tstream . tsb_well b }"
   sorry
-    
+
+setup_lifting datatype_definition_m
+
 definition tsbDom :: "'m TSB \<rightarrow> channel set" where
 "tsbDom \<equiv> \<Lambda> tb. {}"
   

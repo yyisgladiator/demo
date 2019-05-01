@@ -35,7 +35,7 @@ begin
   instance
   by(intro_classes)
 end
-
+setup_lifting datatype_definition_M
 (* empty 'm SB *)
 lift_definition stB0 :: "'m SB" is "empty"
 by (simp add: sb_well_def)

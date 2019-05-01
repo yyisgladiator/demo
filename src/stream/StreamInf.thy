@@ -11,7 +11,7 @@ cpodef 'a stream_inf = "{s :: 'a stream . streaminf_well s}"
   apply (simp add: streaminf_well_def)
   apply (metis fix_eq2 inf_ub ln_less order_less_le slen_scons)
   by (simp add: streaminf_well_def)
-
+setup_lifting datatype_definition_stream_inf
 definition sinfDom :: "'a stream_inf \<rightarrow> 'a set" where
 "sinfDom \<equiv> (\<Lambda> s. sdom\<cdot>(Rep_stream_inf s))"
 

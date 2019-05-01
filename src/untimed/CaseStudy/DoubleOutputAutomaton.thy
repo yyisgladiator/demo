@@ -6,9 +6,11 @@ begin
 
 (* This are the actual states from MAA *)
 datatype DoubleOutputSubstate = Down | Up
+setup_lifting datatype_definition_DoubleOutputSubstate
 
 (* And these have also the variables *)
 datatype DoubleOutputState = State DoubleOutputSubstate 
+setup_lifting datatype_definition_DoubleOutputState
 
 fun getSubState :: "DoubleOutputState \<Rightarrow> DoubleOutputSubstate" where
     "getSubState (State state_s ) = state_s"
@@ -18,6 +20,7 @@ datatype DoubleOutput = A "nat"
 instance DoubleOutput :: countable
 apply(intro_classes)
 by(countable_datatype)
+setup_lifting datatype_definition_DoubleOutput
 
 abbreviation input_i1_c1 :: "channel" ("\<guillemotright>i1") where
 "\<guillemotright>i1 \<equiv> c1"

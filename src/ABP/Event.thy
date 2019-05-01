@@ -11,7 +11,8 @@ section {* Type definition *}
 
 
 text {* Definition of  datatype  @{text "'m event"}; extends @{text "'m"} with a @{term "Tick"}. *}
-datatype 'm event = Msg 'm ( "\<M> _" 65)| Tick
+datatype 'm event = Msg 'm ( "\<M> _" 65)| Tick 
+setup_lifting type_definition_event
 
 text {* Inverse of Msg.*}
 abbreviation

@@ -7,7 +7,7 @@ begin
   (* Some new Datatypes and instanciations *)
   
 datatype "DNum" = Eins | Zwei | Drei
-  
+
 instantiation DNum :: po
 begin
   definition below_DNum_def: "b1 \<sqsubseteq> b2 \<equiv> ((b1::DNum)=b2) \<or> b1 = Eins \<or>(b1=Zwei \<and>b2=Drei)"

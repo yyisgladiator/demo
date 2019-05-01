@@ -23,7 +23,7 @@ begin
  
   instance ..
 end
-
+setup_lifting datatype_definition_M
 (* SB *)
 lift_definition SB1 :: "M SB" is "([c1\<mapsto><[\<N> 1,\<N> 3,\<N> 5,\<N> 7,\<N> 9]>, c2\<mapsto><[\<N> 0,\<N> 2,\<N> 4,\<N> 6,\<N> 8]>])"
 by(simp add: sb_well_def)
