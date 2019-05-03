@@ -728,7 +728,6 @@ instance
   apply simp_all
   apply (simp add: usclOkay_stream_def usclConc_stream_def usclTake_stream_def usclDrop_stream_def)
   apply (simp add: usclTake_stream_def usclLen_stream_def slen_stake)
-  apply (simp add: usclLen_stream_def usclDrop_stream_def)
   apply (simp add: slen_stake usclLen_stream_def usclTake_stream_def)
   apply (metis (mono_tags, lifting) dual_order.strict_implies_order fin2stake_lemma  usclLen_stream_def usclTake_stream_def)
   apply (metis (mono_tags, lifting) fin2stake fin2stake_lemma le_neq_trans lnat_well_h1 order.strict_implies_order usclLen_stream_def usclTake_stream_def)   
@@ -737,7 +736,7 @@ instance
   apply (simp add: reach_stream usclTake_stream_def)
   apply (simp add: sdrop_forw_rt slen_rt_ile_eq usclDrop_stream_def usclLen_stream_def)
   apply (simp add: usclDrop_stream_def)
-  by(metis (mono_tags, lifting) dual_order.trans sdrop_sdom usclDrop_stream_def usclOkay_stream_def)
+  by(metis (mono_tags, lifting) dual_order.trans sdrop_sdom usclDrop_stream_def)
 
 end
 

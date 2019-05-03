@@ -126,6 +126,7 @@ proof -
     apply (simp add: ubHd_def ubTake_def)
     apply (subst ubMapStream_ubGetCh)
       apply (simp add: usclTake_well)
+    apply (simp add: usclTake_stream_def)
     apply simp
     apply (subst convDiscrUp_inv_subst)
       apply (simp_all add: h7 sbHdElem_channel)
@@ -171,7 +172,6 @@ lemma sbe2sb_len[simp]: "sbeDom sbe \<noteq> {} \<Longrightarrow> ubLen (sbe2SB 
 
 lemma sbe2sb_maxlen[simp]: "sbeDom sbe \<noteq> {} \<Longrightarrow> ubMaxLen 1 (sbe2SB sbe)"
   apply(auto simp add: ubMaxLen_def)
-  apply (simp add: sbe_ch_len usclLen_stream_def)
   by (simp add: one_lnat_def)
 
 lemma sbe_obtain: assumes "ubLen ub = 1" and "ubMaxLen 1 ub"

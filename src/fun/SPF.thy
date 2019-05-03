@@ -541,7 +541,7 @@ lemma spfConcOut_weak_ublen_strong[simp]:
         have h25: "\<And>c::channel. c \<in> ubDom\<cdot>(spf \<rightleftharpoons> b) \<Longrightarrow> (spfConcOut sb\<cdot>spf \<rightleftharpoons> b) . c = (ubUp\<cdot>sb  .  c) \<bullet> ubUp\<cdot>(spf \<rightleftharpoons> b)  .  c"
           by (smt h1 h23 subsetCE ubConc_usclConc_eq ubconceq_insert ubgetch_ubrestrict ubup_ubgetch usclConc_stream_def)
         have h2: "ubLen sb = lnsuc\<cdot>0 \<Longrightarrow> \<forall>c \<in> ubclDom\<cdot>sb. lnsuc\<cdot>0 \<le> usclLen\<cdot>(sb . c)"
-          by (smt equals0D mem_Collect_eq ubLen_def ubclDom_ubundle_def wellorder_Least_lemma(2))
+         using ubLen_smallereq_all by force
         have h3: "\<And>c::channel. c \<in> ubDom\<cdot>(spf \<rightleftharpoons> b) \<Longrightarrow> c \<in> ubDom\<cdot>sb \<Longrightarrow> lnsuc\<cdot>(#((spf \<rightleftharpoons> b)  .  c)) \<le> #((ubUp\<cdot>sb  .  c) \<bullet> ubUp\<cdot>(spf \<rightleftharpoons> b)  .  c)"
           apply (case_tac "#((spf \<rightleftharpoons> b)   .  c) = \<infinity>")
           apply (simp add: slen_sconc_snd_inf)
@@ -585,21 +585,10 @@ lemma spfConcOut_weak_ublen_strong[simp]:
               by (smt Least_le antisym_conv f1 le_cases lnsuc_lnle_emb mem_Collect_eq ord_eq_le_trans order.trans)
             have f3: "\<forall>c \<in> ubDom\<cdot>(spf \<rightleftharpoons> b). lnsuc\<cdot>(ubLen(spf \<rightleftharpoons> b)) \<le> (usclLen\<cdot>((spfConcOut sb\<cdot>spf \<rightleftharpoons> b) . c))"
               apply (simp add: ubLen_def)
-              proof -
-                obtain cc :: channel where
-                  "(\<exists>v0. v0 \<in> ubDom\<cdot>(spf \<rightleftharpoons> b) \<and> \<not> lnsuc\<cdot> (LEAST uu. \<exists>c. uu = usclLen\<cdot>((spf \<rightleftharpoons> b) . c) \<and> c \<in> ubDom\<cdot>(spf \<rightleftharpoons> b)) \<le> usclLen\<cdot> ((spfConcOut sb\<cdot>spf \<rightleftharpoons> b) . v0)) = (cc \<in> ubDom\<cdot>(spf \<rightleftharpoons> b) \<and> \<not> lnsuc\<cdot> (LEAST uu. \<exists>c. uu = usclLen\<cdot>((spf \<rightleftharpoons> b) . c) \<and> c \<in> ubDom\<cdot>(spf \<rightleftharpoons> b)) \<le> usclLen\<cdot> ((spfConcOut sb\<cdot>spf \<rightleftharpoons> b) . cc))"
-                  by blast
-                moreover
-                { assume "\<exists>c. usclLen\<cdot>((spf \<rightleftharpoons> b) . cc) = usclLen\<cdot>((spf \<rightleftharpoons> b) . c) \<and> c \<in> ubDom\<cdot>(spf \<rightleftharpoons> b)"
-                  then have "(LEAST l. \<exists>c. l = usclLen\<cdot>((spf \<rightleftharpoons> b) . c) \<and> c \<in> ubDom\<cdot>(spf \<rightleftharpoons> b)) \<le> usclLen\<cdot>((spf \<rightleftharpoons> b) . cc)"
-                    by (simp add: Least_le)
-                  then have "cc \<notin> ubDom\<cdot>(spf \<rightleftharpoons> b) \<or> lnsuc\<cdot> (LEAST l. \<exists>c. l = usclLen\<cdot>((spf \<rightleftharpoons> b) . c) \<and> c \<in> ubDom\<cdot>(spf \<rightleftharpoons> b)) \<le> usclLen\<cdot> ((spfConcOut sb\<cdot>spf \<rightleftharpoons> b) . cc)"
-                    by (meson dual_order.trans f1 lnsuc_lnle_emb) }
-                ultimately show "ubDom\<cdot>(spf \<rightleftharpoons> b) \<noteq> {} \<longrightarrow> (\<forall>c\<in>ubDom\<cdot>(spf \<rightleftharpoons> b). lnsuc\<cdot> (LEAST l. \<exists>c. l = usclLen\<cdot>((spf \<rightleftharpoons> b) . c) \<and> c \<in> ubDom\<cdot>(spf \<rightleftharpoons> b)) \<le> usclLen\<cdot> ((spfConcOut sb\<cdot>spf \<rightleftharpoons> b) . c))"
-                  by blast
-              qed
+             sledgehammer
+             by (smt Least_le f1 lnsuc_lnle_emb trans_lnle usclLen_stream_def)
             show ?thesis
-              by (simp add: f3 h24 ubLen_geI)
+              using f3 h24 ubLen_geI by blast
           qed
         show "lnsuc\<cdot>(ubclLen b) \<le> ubclLen (spfConcOut sb\<cdot>spf \<rightleftharpoons> b)"
           by (metis (no_types, hide_lams) dual_order.trans h22 h4 ubclLen_ubundle_def)
