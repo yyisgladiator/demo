@@ -620,6 +620,18 @@ text {* @{term tsynLen} distributes over concatenation. *}
 lemma tsynlen_sconc_msg: "tsynLen\<cdot>(\<up>(Msg a) \<bullet> as) = lnsuc\<cdot>(tsynLen\<cdot>as)"
   by (simp add: tsynabs_sconc_msg tsynlen_insert)
 
+text {* @{term tsynLen} distributes over concatenation. *}
+lemma tsynlen_sconc_msg_2:
+  assumes "m \<noteq> ~"
+  shows "tsynLen\<cdot>(\<up>m \<bullet> s) = lnsuc\<cdot>(tsynLen\<cdot>s)"
+proof (cases m)
+  case (Msg x1)
+  then show ?thesis by (simp add: tsynlen_sconc_msg)
+next
+  case eps
+  then show ?thesis by (simp add: assms)
+qed
+
 text {* @{term tsynLen} ignores empty time slots. *}
 lemma tsynlen_sconc_eps: "tsynLen\<cdot>(\<up>(eps) \<bullet> as) = tsynLen\<cdot>as"
   by (simp add: tsynabs_sconc_eps tsynlen_insert)
@@ -1834,6 +1846,36 @@ lemma tsynscanl_test_infinstream:
   apply (simp add: tsynscanl_sconc_msg)
   apply (subst rek2sinftimes [of "tsynScanl (+) (7::'a)\<cdot>\<up>~\<infinity>" "\<up>~\<infinity>"], simp_all)
   by (metis s2sinftimes sinftimes_unfold tsynscanl_sconc_eps)
+
+text {* The length of @{term sscanlA2} without @{term ~} of input and output is the same, if the
+function f does not introduce or eliminate @{term ~} from the stream.*}
+lemma sccanla2_tsynlen:
+  assumes "\<And> a. snd (f a ~) = ~"
+      and "\<And> a. \<forall>m. snd (f a (\<M> m)) \<noteq> ~"
+    shows "tsynLen\<cdot>(sscanlA2 f a\<cdot>s) = tsynLen\<cdot>s "
+proof (induction s arbitrary: a rule: tsyn_ind)          
+  case adm
+  then show ?case 
+    apply (rule admI)
+    apply (simp add: contlub_cfun_arg contlub_cfun_fun lub_mono2)
+    done
+next
+  case bot
+  then show ?case by simp
+next
+  case (msg m s)
+  then show ?case
+    apply(simp add: assms)
+    apply(subst (1 2) tsynlen_sconc_msg_2)
+    apply(simp)
+    apply(simp add: assms)
+    by (simp)
+next
+  case (eps s)
+  then show ?case
+    apply (simp add: assms)
+    by (simp add: tsynlen_sconc_eps)
+qed
 
 (* ----------------------------------------------------------------------- *)
   subsection {* tsynDropWhile *}
