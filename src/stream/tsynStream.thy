@@ -1877,6 +1877,36 @@ next
     by (simp add: tsynlen_sconc_eps)
 qed
 
+text {* Same as @{term sccanla2_tsynlen}, but with another formulation of the second assumption..*}
+lemma sccanla2_tsynlen2:
+  assumes "\<And> a. snd (f a ~) = ~"
+      and "\<And> a m. m \<noteq> ~ ==> snd (f a m) \<noteq> ~"
+    shows "tsynLen\<cdot>(sscanlA2 f a\<cdot>s) = tsynLen\<cdot>s "
+proof (induction s arbitrary: a rule: tsyn_ind)          
+  case adm
+  then show ?case 
+    apply (rule admI)
+    apply (simp add: contlub_cfun_arg contlub_cfun_fun lub_mono2)
+    done
+next
+  case bot
+  then show ?case by simp
+next
+  case (msg m s)
+  then show ?case
+    apply(simp add: assms)
+    apply(subst (1 2) tsynlen_sconc_msg_2)
+    apply(simp)
+    apply(simp add: assms)
+    by (simp)
+next
+  case (eps s)
+  then show ?case
+    apply (simp add: assms)
+    by (simp add: tsynlen_sconc_eps)
+qed
+
+
 (* ----------------------------------------------------------------------- *)
   subsection {* tsynDropWhile *}
 (* ----------------------------------------------------------------------- *)
