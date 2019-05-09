@@ -736,7 +736,7 @@ instance
   apply (simp add: reach_stream usclTake_stream_def)
   apply (simp add: sdrop_forw_rt slen_rt_ile_eq usclDrop_stream_def usclLen_stream_def)
   apply (simp add: usclDrop_stream_def)
-  by(metis (mono_tags, lifting) dual_order.trans sdrop_sdom usclDrop_stream_def)
+  by (simp add: dual_order.trans usclDrop_stream_def usclOkay_stream_def)
 
 end
 

@@ -585,7 +585,7 @@ lemma spfConcOut_weak_ublen_strong[simp]:
               by (smt Least_le antisym_conv f1 le_cases lnsuc_lnle_emb mem_Collect_eq ord_eq_le_trans order.trans)
             have f3: "\<forall>c \<in> ubDom\<cdot>(spf \<rightleftharpoons> b). lnsuc\<cdot>(ubLen(spf \<rightleftharpoons> b)) \<le> (usclLen\<cdot>((spfConcOut sb\<cdot>spf \<rightleftharpoons> b) . c))"
               apply (simp add: ubLen_def)
-             by (smt Least_le f1 lnsuc_lnle_emb trans_lnle usclLen_stream_def)
+              using Least_le f2 by auto
             show ?thesis
               using f3 h24 ubLen_geI by blast
           qed
