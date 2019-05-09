@@ -976,7 +976,8 @@ lemma sbHdElem_sbElemWell: assumes "\<forall>c\<in>(ubDom\<cdot>sb). sb .c \<not
         moreover have "inv convDiscrUp (sbHdElem\<cdot>sb)\<rightharpoonup>c = shd(sb .c)"
           by(simp add: assms a1 sbHdElem_2_shd)
         moreover have "usclOkay c (sb .c)"
-          by (simp add: a1 ubgetch_insert)
+          apply (simp only: a1 ubgetch_insert)
+          using a1 ubdom_channel_usokay by blast
         then have "sdom\<cdot>(sb .c) \<subseteq> ctype c"
           using  usclOkay_stream_def by blast
         then have "shd (sb .c) \<in> ctype c" 

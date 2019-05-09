@@ -196,13 +196,13 @@ lemma ubundle_ubgetch_uscllen_one:
   shows  "\<And>c. c \<in> ubDom\<cdot>x \<Longrightarrow> usclLen\<cdot>(x . c) = Fin 1"
   proof -
     have x_leq_one: "\<And>c. c\<in>ubDom\<cdot>x \<Longrightarrow> usclLen\<cdot>(x . c) \<le> Fin 1" 
-      using assms ubMaxLen_def by auto
+      using assms ubMaxLen_def by (simp add: ubMaxLen_def)
     have eps_len_zero: "usclLen\<cdot>\<epsilon> = Fin 0"
       by (simp add: usclLen_stream_def)
     hence x_not_zero: "\<And>c. c\<in>ubDom\<cdot>x \<Longrightarrow> usclLen\<cdot>(x . c) \<noteq> Fin 0" 
       using usclLen_zero assms by auto
     show "\<And>c::channel. c \<in> ubDom\<cdot>x \<Longrightarrow> usclLen\<cdot>(x  .  c) = Fin (1::nat)"
-      using neq02Suclnle x_leq_one x_not_zero by fastforce
+      using neq02Suclnle x_leq_one x_not_zero by (simp add: less2eq)
   qed
 
 text {* Cases rule for simple time-synchronous bundles. *}

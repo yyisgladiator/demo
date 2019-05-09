@@ -4976,13 +4976,13 @@ section \<open>Instantiation\<close>
 
 instantiation stream :: (message) uscl
 begin
-  definition usclOkay_stream_def: "usclOkay c m \<equiv> sdom\<cdot>m \<subseteq> ctype c"
-  definition usclLen_stream_def: "usclLen \<equiv> slen"
+  definition usclOkay_stream_def [simp]: "usclOkay c m \<equiv> sdom\<cdot>m \<subseteq> ctype c"
+  definition usclLen_stream_def [simp]: "usclLen \<equiv> slen"
 instance
   apply intro_classes
    apply (meson sdom_sfilter1 subsetI usclOkay_stream_def)
   apply (rule admI)
-  by (simp add: subset_cont usclOkay_stream_def)
+  by (simp add: subset_cont)
 end
 
 
@@ -4990,15 +4990,15 @@ instantiation stream :: (message) uscl_pcpo
 begin
 instance 
   apply intro_classes
-  by (simp add: usclOkay_stream_def)
+  by simp
 end
 
 instantiation stream :: (message) uscl_conc
 begin
-  definition usclConc_stream_def: "usclConc \<equiv> sconc"
+  definition usclConc_stream_def [simp]: "usclConc \<equiv> sconc"
 instance
   apply intro_classes
-  apply (simp_all add: usclOkay_stream_def usclLen_stream_def usclConc_stream_def)
+  apply (simp_all)
   apply (meson Un_subset_iff dual_order.trans sconc_sdom)
   by (simp add: sconc_slen2)
 end
