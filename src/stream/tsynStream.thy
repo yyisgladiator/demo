@@ -620,6 +620,12 @@ text {* @{term tsynLen} distributes over concatenation. *}
 lemma tsynlen_sconc_msg: "tsynLen\<cdot>(\<up>(Msg a) \<bullet> as) = lnsuc\<cdot>(tsynLen\<cdot>as)"
   by (simp add: tsynabs_sconc_msg tsynlen_insert)
 
+text {* @{term tsynLen} distributes over concatenation. *}
+lemma tsynlen_sconc_msg2:
+  assumes "m \<noteq> ~"
+  shows "tsynLen\<cdot>(\<up>m \<bullet> s) = lnsuc\<cdot>(tsynLen\<cdot>s)"
+using tsynlen_sconc_msg assms tsynAbsElem.cases by blast
+
 text {* @{term tsynLen} ignores empty time slots. *}
 lemma tsynlen_sconc_eps: "tsynLen\<cdot>(\<up>(eps) \<bullet> as) = tsynLen\<cdot>as"
   by (simp add: tsynabs_sconc_eps tsynlen_insert)
@@ -1834,6 +1840,33 @@ lemma tsynscanl_test_infinstream:
   apply (simp add: tsynscanl_sconc_msg)
   apply (subst rek2sinftimes [of "tsynScanl (+) (7::'a)\<cdot>\<up>~\<infinity>" "\<up>~\<infinity>"], simp_all)
   by (metis s2sinftimes sinftimes_unfold tsynscanl_sconc_eps)
+
+(* ----------------------------------------------------------------------- *)
+  subsection {* sscanlA2 *}
+(* ----------------------------------------------------------------------- *)
+
+text {* The length of @{term sscanlA2} without @{term ~} of input and output is the same, if the
+function f does not introduce or eliminate @{term ~} from the stream.*}
+lemma sccanla2_tsynlen:
+  assumes "\<And> a. snd (f a ~) = ~"
+      and "\<And> a. \<forall>m. snd (f a (\<M> m)) \<noteq> ~"
+    shows "tsynLen\<cdot>(sscanlA2 f a\<cdot>s) = tsynLen\<cdot>s"
+  apply (induction s arbitrary: a rule: tsyn_ind)
+  apply (rule admI)
+  apply (simp_all add: assms contlub_cfun_arg contlub_cfun_fun lub_mono2)
+  apply (subst (1 2) tsynlen_sconc_msg2)
+  by (simp_all add: assms tsynlen_sconc_eps)
+
+text {* Same as @{term sccanla2_tsynlen}, but with another formulation of the second assumption..*}
+lemma sccanla2_tsynlen2:
+  assumes "\<And> a. snd (f a ~) = ~"
+      and "\<And> a m. m \<noteq> ~ ==> snd (f a m) \<noteq> ~"
+    shows "tsynLen\<cdot>(sscanlA2 f a\<cdot>s) = tsynLen\<cdot>s "
+  apply (induction s arbitrary: a rule: tsyn_ind)
+  apply (rule admI)
+  apply (simp_all add: assms contlub_cfun_arg contlub_cfun_fun lub_mono2)
+  apply (subst (1 2) tsynlen_sconc_msg2)
+  by (simp_all add: assms tsynlen_sconc_eps)
 
 (* ----------------------------------------------------------------------- *)
   subsection {* tsynDropWhile *}
