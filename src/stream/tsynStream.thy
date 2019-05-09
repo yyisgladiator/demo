@@ -1799,6 +1799,19 @@ lemma tsynscanlext_test_finstream:
   "tsynScanlExt ifEqualThenZero 0\<cdot>(<[Msg 5, Msg 3, Msg 3, eps]>) = <[Msg 5, Msg 3, Msg 0, eps]>"
   by (simp add: tsynscanlext_insert)
 
+
+(* ----------------------------------------------------------------------- *)
+  subsection {* sscanlA2 *}
+(* ----------------------------------------------------------------------- *)
+
+text {* This lemma makes it possible to filter eps-elements from the input before applying a
+        {@term sscanlA2} *}
+lemma sscanlA2_epsfilter_input: assumes "\<And> x. (f x ~) = (x,~)" 
+  shows "tsynAbs\<cdot>(sscanlA2 f a\<cdot>s) = tsynAbs\<cdot>(sscanlA2 f a\<cdot>(sfilter {e. e \<noteq> eps}\<cdot>s))"
+  apply(induction s arbitrary: a rule: tsyn_ind)
+  apply(rule admI)
+  by (simp_all add: tsynabs_sconc assms contlub_cfun_arg contlub_cfun_fun lub_mono2)
+
 (* ----------------------------------------------------------------------- *)
   subsection {* tsynScanl *}
 (* ----------------------------------------------------------------------- *)
