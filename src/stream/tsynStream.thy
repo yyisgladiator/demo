@@ -1827,7 +1827,7 @@ lemma tsynscanlext_test_finstream:
 text {* This lemma makes it possible to filter eps-elements from the input before applying a
         {@term sscanlA2} *}
 lemma sscanlA2_epsfilter_input: assumes "\<And> x. (f x ~) = (x,~)" 
-  shows "tsynAbs\<cdot>(sscanlA2 f a\<cdot>s) = tsynAbs\<cdot>(sscanlA2 f a\<cdot>(sfilter {e. e \<noteq> eps}\<cdot>s))"
+  shows "tsynAbs\<cdot>(sscanlAsnd f a\<cdot>s) = tsynAbs\<cdot>(sscanlAsnd f a\<cdot>(sfilter {e. e \<noteq> eps}\<cdot>s))"
   apply(induction s arbitrary: a rule: tsyn_ind)
   apply(rule admI)
   by (simp_all add: tsynabs_sconc assms contlub_cfun_arg contlub_cfun_fun lub_mono2)
@@ -1883,7 +1883,7 @@ function f does not introduce or eliminate @{term ~} from the stream.*}
 lemma sccanla2_tsynlen:
   assumes "\<And> a. snd (f a ~) = ~"
       and "\<And> a. \<forall>m. snd (f a (\<M> m)) \<noteq> ~"
-    shows "tsynLen\<cdot>(sscanlA2 f a\<cdot>s) = tsynLen\<cdot>s"
+    shows "tsynLen\<cdot>(sscanlAsnd f a\<cdot>s) = tsynLen\<cdot>s"
   apply (induction s arbitrary: a rule: tsyn_ind)
   apply (rule admI)
   apply (simp_all add: assms contlub_cfun_arg contlub_cfun_fun lub_mono2)
@@ -1894,7 +1894,7 @@ text {* Same as @{term sccanla2_tsynlen}, but with another formulation of the se
 lemma sccanla2_tsynlen2:
   assumes "\<And> a. snd (f a ~) = ~"
       and "\<And> a m. m \<noteq> ~ ==> snd (f a m) \<noteq> ~"
-    shows "tsynLen\<cdot>(sscanlA2 f a\<cdot>s) = tsynLen\<cdot>s "
+    shows "tsynLen\<cdot>(sscanlAsnd f a\<cdot>s) = tsynLen\<cdot>s "
   apply (induction s arbitrary: a rule: tsyn_ind)
   apply (rule admI)
   apply (simp_all add: assms contlub_cfun_arg contlub_cfun_fun lub_mono2)

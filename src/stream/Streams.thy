@@ -249,6 +249,9 @@ definition sscanl     :: "('o \<Rightarrow> 'i \<Rightarrow> 'o) \<Rightarrow> '
 (* scanline Advanced :D  *)
 (* or stateful ... *)
 (* The user has more control. Instead of the last output ('b)  a state ('s) is used as next input *)
+definition sscanlA :: "('s \<Rightarrow>'a \<Rightarrow> ('b \<times>'s)) \<Rightarrow> 's  \<Rightarrow> 'a stream \<rightarrow> 'b stream" where
+"sscanlA f s0 \<equiv> \<Lambda> s. sprojfst\<cdot>(sscanl (\<lambda>(_,b). f b) (undefined, s0)\<cdot>s)"
+
 
 definition sscanlAg :: "('s \<Rightarrow>'a::countable \<Rightarrow> ('s::countable \<times>'b::countable)) \<Rightarrow> 's  \<Rightarrow> 'a stream \<rightarrow> ('s\<times>'b) stream" where
 "sscanlAg f s0 \<equiv> \<Lambda> s. (sscanl (\<lambda>(b,_). f b) (s0, undefined)\<cdot>s)"
@@ -954,7 +957,21 @@ lemma sinf_snt2eq: assumes "#s=\<infinity>" and "#x=\<infinity>" and "\<And>i. (
   shows "s=x"
 by (simp add: assms snths_eq)
 
+lemma snthp_shd: assumes"\<And>n.  P(snth n s)"
+  shows"P(shd s)"
+  by (metis assms snth_shd)
 
+lemma snthp_shd2:  assumes"\<And>n.  P(snth n (\<up>m \<bullet> s))"
+  shows"P(m)"
+  by (metis assms shd1 snth_shd)
+
+lemma snthp_snth: assumes"\<And>n.  P(snth n (\<up>m \<bullet> s))"
+      shows"P(snth n(s))"
+  by (metis assms snth_scons)
+
+lemma snthp_srt:  assumes"\<And>n. P(snth n (s))"
+      shows"P(snth n(srt\<cdot>s))"
+  by (metis assms snth_rt)
 (* ----------------------------------------------------------------------- *)
 section {* Further lemmas *}
 (* ----------------------------------------------------------------------- *)
@@ -2854,6 +2871,33 @@ lemma szip_sdrop: "sdrop n\<cdot>(szip\<cdot>s\<cdot>t) = szip\<cdot>(sdrop n\<c
   apply(induction n arbitrary: s t, simp)
   by (metis (no_types, lifting) sdrop_forw_rt sdrop_scons stream.sel_rews(2) strict_szip_fst 
             strict_szip_snd surj_scons szip_scons)
+(* ----------------------------------------------------------------------- *)
+subsection {* @{term sscanlA} *}
+(* ----------------------------------------------------------------------- *)
+
+lemma sscanla_cont: "cont (\<lambda>s. sprojfst\<cdot>(sscanl (\<lambda>(_,b). f b) (undefined, s0)\<cdot>s))"
+  by simp
+
+lemma sscanla_len [simp]: "#(sscanlA f s0\<cdot>s) = #s"
+  by (simp add: sscanlA_def slen_sprojfst)
+
+lemma sscanla_bot [simp]: "sscanlA f s0\<cdot>\<bottom> = \<bottom>"
+  by (simp add: sscanlA_def)
+
+lemma sscanla_step [simp]: "sscanlA f s0\<cdot>(\<up>a \<bullet> as) = \<up>(fst (f s0 a)) \<bullet> sscanlA f (snd (f s0 a))\<cdot>as"
+  apply(simp add: sscanlA_def sprojfst_def)
+proof -
+  have "(case f s0 a of (a, x) \<Rightarrow> f x) = (case (undefined::'a, snd (f s0 a)) of (a, x) \<Rightarrow> f x)"
+by (metis (no_types) old.prod.case prod.collapse)
+  then have "\<up>(shd as) \<bullet> srt\<cdot>as = as \<longrightarrow> sscanl (\<lambda>(a, y). f y) (f s0 a)\<cdot>as = sscanl (\<lambda>(a, y). f y) (undefined, snd (f s0 a))\<cdot> (\<up>(shd as) \<bullet> srt\<cdot>as)"
+    by (metis (no_types) sscanl_scons)
+  then show "\<up>(fst (f s0 a)) \<bullet> smap fst\<cdot> (sscanl (\<lambda>(a, y). f y) (f s0 a)\<cdot> as) = \<up>(fst (f s0 a)) \<bullet> smap fst\<cdot> (sscanl (\<lambda>(a, y). f y) (undefined, snd (f s0 a))\<cdot> as)"
+    using surj_scons by force
+qed
+
+lemma sscanla_one [simp]: "sscanlA f b\<cdot>(\<up>x) = \<up>(fst (f b x))"
+  apply(simp add: sscanlA_def)
+  by (metis prod.collapse sconc_snd_empty sprojfst_scons strict_sprojfst)
 
 (* ----------------------------------------------------------------------- *)
 subsection {* @{term sscanlAg} *}
