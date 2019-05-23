@@ -127,12 +127,7 @@ proof -
     apply (subst ubMapStream_ubGetCh)
       apply (simp add: usclTake_well)
       apply (simp add: usclTake_stream_def)
-    apply simp
-    apply (subst convDiscrUp_inv_subst)
-      apply (simp_all add: h7 sbHdElem_channel)
-    apply (simp add: sbhdelem_insert)
-    apply (simp add: sup'_def usclTake_stream_def)
-    by (simp add: h8)
+    by (simp add: convDiscrUp_inv_subst h7 h8 sbhdelem_insert sup'_def usclTake_stream_def)
 qed
 
 lemma sbe2sb_hdelem_conc: "ubDom\<cdot>sb = sbeDom sbe \<Longrightarrow> (sbHdElem\<cdot>(ubConcEq(sbe2SB sbe)\<cdot>sb)) = sbHdElem\<cdot>(sbe2SB sbe)"
@@ -171,8 +166,7 @@ lemma sbe2sb_len[simp]: "sbeDom sbe \<noteq> {} \<Longrightarrow> ubLen (sbe2SB 
   by (metis order_refl sbe2sb_dom sbe_ch_len usclLen_stream_def)
 
 lemma sbe2sb_maxlen[simp]: "sbeDom sbe \<noteq> {} \<Longrightarrow> ubMaxLen 1 (sbe2SB sbe)"
-  apply(auto simp add: ubMaxLen_def)
-  by (simp add: one_lnat_def)
+  by (metis order_refl sbe_ch_len ubMaxLen_def usclLen_stream_def)
 
 lemma sbe_obtain: assumes "ubLen ub = 1" and "ubMaxLen 1 ub"
   obtains sbe where "sbe2SB sbe = ub" and "sbeDom sbe = ubDom\<cdot>ub"
