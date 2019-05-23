@@ -2923,6 +2923,11 @@ lemma sscanlag_step [simp]: "sscanlAg f s0\<cdot>(\<up>a \<bullet> as) = \<up>((
   by (smt case_prod_conv prod.collapse sscanl_empty sscanl_scons surj_scons)
 
 
+lemma snth_sscanlAg:
+  assumes "Fin (Suc j)<#i"
+    shows "snth (Suc j) (sscanlAg f s0\<cdot>i) = f (fst (snth j (sscanlAg f s0\<cdot>i))) (snth (Suc j) i)"
+  apply(simp add: sscanlAg_def)
+  by (metis (mono_tags, lifting) assms case_prod_conv prod.exhaust_sel sscanl_snth)
 
 (* ----------------------------------------------------------------------- *)
 subsection {* @{term sscanlAfst} *}
