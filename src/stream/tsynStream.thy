@@ -604,6 +604,26 @@ text {* @{term tsynAbs} test on infinite stream. *}
 lemma tsynabs_test_infstream: "tsynAbs\<cdot>((<[Msg 1, Msg 2, eps, Msg 3]>)\<infinity>) = (<[1, 2, 3]>)\<infinity>"
   by (simp add: tsynabs_insert)
 
+text {* If a timed stream has a finite prefix of @{term eps}, then applying {@term tsynAbs} gives
+        us the same result  whether we drop the prefix before or not. *}
+lemma tsynabs_remeps[simp]:
+  assumes "sdom\<cdot>s= {eps}"
+  and "# s < \<infinity>"
+  shows "tsynAbs\<cdot>(s\<bullet>s2) = tsynAbs\<cdot>s2"
+  using assms apply(induction s rule: tsyn_ind, simp_all add: assms)
+  apply (rule admI)
+  apply (metis inf_chainl4 l42 neq_iff)
+  by (metis le_less_trans less_lnsuc sconc_fst_empty strict_sdom_rev subset_singleton_iff)
+
+text {* If a timed stream has a finite prefix of @{term eps}, followed by some message 
+        {@term Msg}, then the stream obtained by applying  {@term tsynAbs} to it begins with this
+        message. *}
+lemma tsynabs_remeps_msg:
+  assumes "sdom\<cdot>s={~}"
+  and "# s < \<infinity>"
+  shows "tsynAbs\<cdot>(s \<bullet> \<up>(Msg a) \<bullet> s2) = \<up>a \<bullet>(tsynAbs\<cdot>s2)"
+  using assms by simp
+
 (* ----------------------------------------------------------------------- *)
   subsection {* tsynLen *}
 (* ----------------------------------------------------------------------- *)
