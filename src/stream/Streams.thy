@@ -252,13 +252,26 @@ definition sscanl     :: "('o \<Rightarrow> 'i \<Rightarrow> 'o) \<Rightarrow> '
 definition sscanlA :: "('s \<Rightarrow>'a \<Rightarrow> ('b \<times>'s)) \<Rightarrow> 's  \<Rightarrow> 'a stream \<rightarrow> 'b stream" where
 "sscanlA f s0 \<equiv> \<Lambda> s. sprojfst\<cdot>(sscanl (\<lambda>(_,b). f b) (undefined, s0)\<cdot>s)"
 
-(* scanline Advanced :D  *)
-(* or stateful ... with different order*)
-(* The user has more control. Instead of the last output ('b)  a state ('s) is used as next input *)
-definition sscanlA2 :: "('s \<Rightarrow>'a \<Rightarrow> ('s \<times>'b)) \<Rightarrow> 's  \<Rightarrow> 'a stream \<rightarrow> 'b stream" where
-"sscanlA2 f s0 \<equiv> \<Lambda> s. sprojsnd\<cdot>(sscanl (\<lambda>(b,_). f b) (s0, undefined)\<cdot>s)"
 
+definition sscanlAg :: "('s \<Rightarrow>'a::countable \<Rightarrow> ('s::countable \<times>'b::countable)) \<Rightarrow> 's  \<Rightarrow> 'a stream \<rightarrow> ('s\<times>'b) stream" where
+"sscanlAg f s0 \<equiv> \<Lambda> s. (sscanl (\<lambda>(b,_). f b) (s0, undefined)\<cdot>s)"
 
+definition sscanlAfst :: "('s \<Rightarrow>'a::countable \<Rightarrow> ('s::countable \<times>'b::countable)) \<Rightarrow> 's  \<Rightarrow> 'a stream \<rightarrow> 's stream" where
+"sscanlAfst f s0 \<equiv> \<Lambda> s. sprojfst\<cdot>(sscanlAg f s0\<cdot>s)"
+
+definition sscanlAsnd :: "('s \<Rightarrow>'a::countable \<Rightarrow> ('s::countable \<times>'b::countable)) \<Rightarrow> 's  \<Rightarrow> 'a stream \<rightarrow> 'b stream" where
+"sscanlAsnd f s0 \<equiv> \<Lambda> s. sprojsnd\<cdot>(sscanlAg f s0\<cdot>s)"
+
+(*
+definition sscanlAg :: "('s \<Rightarrow>'a::countable \<Rightarrow> ('s::countable \<times>'b::countable)) \<Rightarrow>'s   \<Rightarrow> 'a stream \<rightarrow> ('s\<times>'b) stream" where
+"sscanlAg f s0 \<equiv> \<Lambda> s. (sscanl (\<lambda>(b,_). f b) (s0, undefined)\<cdot>s)"
+
+definition sscanlAsnd :: "('s \<Rightarrow>'a::countable \<Rightarrow> ('s::countable \<times>'b::countable)) \<Rightarrow> 's  \<Rightarrow> 'a stream \<rightarrow> 'b stream" where
+"sscanlAsnd f s0 \<equiv> \<Lambda> s. sprojsnd\<cdot>(sscanlAg f s0\<cdot>s)"
+
+definition sscanlAfst :: "('s \<Rightarrow>'a::countable \<Rightarrow> ('s::countable \<times>'b::countable)) \<Rightarrow>'s  \<Rightarrow> 'a stream \<rightarrow> 's stream" where
+"sscanlAfst f s0 \<equiv> \<Lambda> s. sprojfst\<cdot>(sscanlAg f s0\<cdot>s)"
+*)
 text {* @{term siterate}: Create a stream by repeated application of
   a function to an element. The generated stream starts with @{text "a"},
   @{text "f(a)"}, @{text "f(f(a))"}, and so on. *}
@@ -944,7 +957,21 @@ lemma sinf_snt2eq: assumes "#s=\<infinity>" and "#x=\<infinity>" and "\<And>i. (
   shows "s=x"
 by (simp add: assms snths_eq)
 
+lemma snthp_shd: assumes"\<And>n.  P(snth n s)"
+  shows"P(shd s)"
+  by (metis assms snth_shd)
 
+lemma snthp_shd2:  assumes"\<And>n.  P(snth n (\<up>m \<bullet> s))"
+  shows"P(m)"
+  by (metis assms shd1 snth_shd)
+
+lemma snthp_snth: assumes"\<And>n.  P(snth n (\<up>m \<bullet> s))"
+      shows"P(snth n(s))"
+  by (metis assms snth_scons)
+
+lemma snthp_srt:  assumes"\<And>n. P(snth n (s))"
+      shows"P(snth n(srt\<cdot>s))"
+  by (metis assms snth_rt)
 (* ----------------------------------------------------------------------- *)
 section {* Further lemmas *}
 (* ----------------------------------------------------------------------- *)
@@ -2844,8 +2871,6 @@ lemma szip_sdrop: "sdrop n\<cdot>(szip\<cdot>s\<cdot>t) = szip\<cdot>(sdrop n\<c
   apply(induction n arbitrary: s t, simp)
   by (metis (no_types, lifting) sdrop_forw_rt sdrop_scons stream.sel_rews(2) strict_szip_fst 
             strict_szip_snd surj_scons szip_scons)
-
-
 (* ----------------------------------------------------------------------- *)
 subsection {* @{term sscanlA} *}
 (* ----------------------------------------------------------------------- *)
@@ -2854,7 +2879,7 @@ lemma sscanla_cont: "cont (\<lambda>s. sprojfst\<cdot>(sscanl (\<lambda>(_,b). f
   by simp
 
 lemma sscanla_len [simp]: "#(sscanlA f s0\<cdot>s) = #s"
-  by(simp add: sscanlA_def slen_sprojfst)
+  by (simp add: sscanlA_def slen_sprojfst)
 
 lemma sscanla_bot [simp]: "sscanlA f s0\<cdot>\<bottom> = \<bottom>"
   by (simp add: sscanlA_def)
@@ -2874,35 +2899,81 @@ lemma sscanla_one [simp]: "sscanlA f b\<cdot>(\<up>x) = \<up>(fst (f b x))"
   apply(simp add: sscanlA_def)
   by (metis prod.collapse sconc_snd_empty sprojfst_scons strict_sprojfst)
 
-
 (* ----------------------------------------------------------------------- *)
-subsection {* @{term sscanlA2} *}
+subsection {* @{term sscanlAg} *}
 (* ----------------------------------------------------------------------- *)
 
-lemma sscanla2_cont: "cont (\<lambda>s. sprojsnd\<cdot>(sscanl (\<lambda>(b,_). f b) (s0, undefined)\<cdot>s))"
+lemma sscanlag_cont: "cont (\<lambda>s. (sscanl (\<lambda>(b,_). f b) (s0, undefined)\<cdot>s))"
   by simp
 
-lemma sscanla2_len [simp]: "#(sscanlA2 f s0\<cdot>s) = #s"
-  by(simp add: sscanlA2_def slen_sprojsnd)
+lemma sscanlag_len [simp]: "#(sscanlAg f s0\<cdot>s) = #s"
+  by(simp add: sscanlAg_def slen_sprojsnd)
 
-lemma sscanla2_bot [simp]: "sscanlA2 f s0\<cdot>\<bottom> = \<bottom>"
-  by (simp add: sscanlA2_def)
+lemma sscanlag_bot [simp]: "sscanlAg f s0\<cdot>\<bottom> = \<bottom>"
+  by (simp add: sscanlAg_def)
 
-lemma sscanla2_step [simp]: "sscanlA2 f s0\<cdot>(\<up>a \<bullet> as) = \<up>(snd (f s0 a)) \<bullet> sscanlA2 f (fst (f s0 a))\<cdot>as"
-  apply(simp add: sscanlA2_def sprojsnd_def)
+
+lemma sscanlag_one [simp]: "sscanlAg f b\<cdot>(\<up>x) = \<up>(fst(f b x), snd (f b x))"
+  by(simp add: sscanlAg_def)
+
+
+
+lemma sscanlag_step [simp]: "sscanlAg f s0\<cdot>(\<up>a \<bullet> as) = \<up>((f s0 a)) \<bullet> sscanlAg f (fst (f s0 a))\<cdot>as"
+  apply(simp add: sscanlAg_def sprojfst_def)
+  by (smt case_prod_conv prod.collapse sscanl_empty sscanl_scons surj_scons)
+
+
+
+(* ----------------------------------------------------------------------- *)
+subsection {* @{term sscanlAfst} *}
+(* ----------------------------------------------------------------------- *)
+
+lemma sscanlafst_cont: "cont (\<lambda>s. sprojfst\<cdot>(sscanlAg (\<lambda>(_,b). f b) (undefined, s0)\<cdot>s))"
+  by simp
+
+lemma sscanlafst_len [simp]: "#(sscanlAfst f s0\<cdot>s) = #s"
+  by (simp add: sscanlAfst_def slen_sprojfst)
+
+lemma sscanlafst_bot [simp]: "sscanlAfst f s0\<cdot>\<bottom> = \<bottom>"
+  by (simp add: sscanlAfst_def)
+
+lemma sscanlafst_step [simp]: "sscanlAfst f s0\<cdot>(\<up>a \<bullet> as) = \<up>(fst (f s0 a)) \<bullet> sscanlAfst f (fst (f s0 a))\<cdot>as"
+  apply (simp add: sscanlAfst_def sprojfst_def sscanlAg_def) 
+  by (smt approxl2 case_prod_conv eta_cfun fair_sscanl fin2stake prod.collapse sconc_prefix sconc_snd_empty slen_scons slen_smap smap_hd_rst sprojfst_def sscanl_empty sscanl_shd sscanl_srt strict_sprojfst)
+
+
+lemma sscanlafst_one [simp]: "sscanlAfst f b\<cdot>(\<up>x) = \<up>(fst (f b x))"
+  apply(simp add: sscanlAfst_def)
+  by (metis prod.collapse sconc_snd_empty sprojfst_scons strict_sprojfst)
+
+
+(* ----------------------------------------------------------------------- *)
+subsection {* @{term sscanlAsnd} *}
+(* ----------------------------------------------------------------------- *)
+
+lemma sscanlasnd_cont: "cont (\<lambda>s. sprojsnd\<cdot>(sscanl (\<lambda>(b,_). f b) (s0, undefined)\<cdot>s))"
+  by simp
+
+lemma sscanlasnd_len [simp]: "#(sscanlAsnd f s0\<cdot>s) = #s"
+  by(simp add: sscanlAsnd_def slen_sprojsnd)
+
+lemma sscanlasnd_bot [simp]: "sscanlAsnd f s0\<cdot>\<bottom> = \<bottom>"
+  by (simp add: sscanlAsnd_def)
+
+lemma sscanlasnd_step [simp]: "sscanlAsnd f s0\<cdot>(\<up>a \<bullet> as) = \<up>(snd (f s0 a)) \<bullet> sscanlAsnd f (fst (f s0 a))\<cdot>as"
+  apply(simp add: sscanlAsnd_def sprojsnd_def sscanlAg_def)
 proof -
   have "(case f s0 a of (x, a) \<Rightarrow> f x) = (case (fst (f s0 a), undefined::'a) of (x, a) \<Rightarrow> f x)"
     by (metis (no_types) old.prod.case prod.collapse)
-  then have "\<up>(shd as) \<bullet> srt\<cdot>as = as \<longrightarrow> sscanl (\<lambda>(y, a). f y) (f s0 a)\<cdot>as = sscanl (\<lambda>(y, a). f y) (fst (f s0 a), undefined)\<cdot> (\<up>(shd as) \<bullet> srt\<cdot>as)"
+  then have "\<up>(shd as) \<bullet> srt\<cdot>as = as \<longrightarrow>(sscanl (\<lambda>(b, uu). f b) (f s0 a)\<cdot>as)= (sscanl (\<lambda>(b, uu). f b) (fst (f s0 a), undefined)\<cdot>as)"
     by (metis (no_types) sscanl_scons)
-  then show "\<up>(snd (f s0 a)) \<bullet> smap snd\<cdot> (sscanl (\<lambda>(y, a). f y) (f s0 a)\<cdot> as) = \<up>(snd (f s0 a)) \<bullet> smap snd\<cdot> (sscanl (\<lambda>(y, a). f y) (fst (f s0 a), undefined)\<cdot> as)"
+  then show "\<up>(snd (f s0 a)) \<bullet> smap snd\<cdot>(sscanl (\<lambda>(b, uu). f b) (f s0 a)\<cdot>as) = \<up>(snd (f s0 a)) \<bullet> smap snd\<cdot>(sscanl (\<lambda>(b, uu). f b) (fst (f s0 a), undefined)\<cdot>as)"
     using surj_scons by force
 qed
 
-lemma sscanla2_one [simp]: "sscanlA2 f b\<cdot>(\<up>x) = \<up>(snd (f b x))"
-  apply(simp add: sscanlA2_def)
+lemma sscanlasnd_one [simp]: "sscanlAsnd f b\<cdot>(\<up>x) = \<up>(snd (f b x))"
+  apply(simp add: sscanlAsnd_def)
   by (metis eq_snd_iff sconc_snd_empty sprojsnd_scons strict_sprojsnd)
-
 
 (* ----------------------------------------------------------------------- *)
 subsection {* @{term merge} *}
@@ -4976,13 +5047,13 @@ section \<open>Instantiation\<close>
 
 instantiation stream :: (message) uscl
 begin
-  definition usclOkay_stream_def [simp]: "usclOkay c m \<equiv> sdom\<cdot>m \<subseteq> ctype c"
-  definition usclLen_stream_def [simp]: "usclLen \<equiv> slen"
+  definition usclOkay_stream_def: "usclOkay c m \<equiv> sdom\<cdot>m \<subseteq> ctype c"
+  definition usclLen_stream_def: "usclLen \<equiv> slen"
 instance
   apply intro_classes
    apply (meson sdom_sfilter1 subsetI usclOkay_stream_def)
   apply (rule admI)
-  by (simp add: subset_cont)
+  by (simp add: subset_cont usclOkay_stream_def)
 end
 
 
@@ -4990,15 +5061,15 @@ instantiation stream :: (message) uscl_pcpo
 begin
 instance 
   apply intro_classes
-  by simp
+  by (simp add: usclOkay_stream_def)
 end
 
 instantiation stream :: (message) uscl_conc
 begin
-  definition usclConc_stream_def [simp]: "usclConc \<equiv> sconc"
+  definition usclConc_stream_def: "usclConc \<equiv> sconc"
 instance
   apply intro_classes
-  apply (simp_all)
+  apply (simp_all add: usclOkay_stream_def usclLen_stream_def usclConc_stream_def)
   apply (meson Un_subset_iff dual_order.trans sconc_sdom)
   by (simp add: sconc_slen2)
 end
