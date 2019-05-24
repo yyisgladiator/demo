@@ -428,6 +428,10 @@ lemma ufun_wellI:  assumes "\<And>b. (b \<in> dom (Rep_cfun f)) \<Longrightarrow
   apply (simp add: ran_def)
   using assms(2) by force
 
+(* the lub of a chain is also ufWell if all elements of the chain are  *)
+lemma uf_well_lub : assumes "chain Y" and "\<And> i. ufWell (Y i)"
+  shows "ufWell (\<Squnion> i. Y i)"
+  by (simp add: admD assms(1) assms(2) ufWell_adm2)
 
 (* only 'm ubs with the same domain are in an (in, out) ufun *)
 lemma ufun_ufundom2dom: assumes "ubclDom\<cdot>x = ubclDom\<cdot>y" 
@@ -468,6 +472,42 @@ lemma ufun_below_ran: assumes "a\<sqsubseteq>b" and "x \<in> ran (Rep_cufun b)" 
     thus ?thesis
       by (metis (no_types, lifting) rep_ufun_well assms(1) assms(3) below_ufun_def cfun_below_iff domD domI ranI some_below2 sx_def ubcldom_fix ufWell_def)
 qed
+
+(* below rule with additional assums  *)
+lemma ufbelowI: assumes "\<And> x. P x \<Longrightarrow> (f x) \<sqsubseteq> (g x)"
+                 and "cont (\<lambda> x. (P x) \<leadsto> (f x))" and "cont (\<lambda> x. (P x) \<leadsto> g x)" 
+                 and "ufWell (\<Lambda> x. (P x) \<leadsto> (f x))" and "ufWell (\<Lambda> x. (P x) \<leadsto> g x)"
+               shows "Abs_cufun (\<lambda> x. (P x) \<leadsto> (f x)) \<sqsubseteq> Abs_cufun (\<lambda> x. (P x) \<leadsto> (g x))"
+  by (simp add: assms(1) assms(2) assms(3) assms(4) assms(5) below_option_def below_ufun_def monofun_LAM)
+
+(* below rule with additional assums  *)
+lemma ufbelowI2: assumes "cs1 = cs2"  
+                 and "\<And> x. (ubclDom\<cdot>x = cs2) \<Longrightarrow> (f x) \<sqsubseteq> (g x)" 
+                 and "cont (\<lambda> x. (ubclDom\<cdot>x = cs1) \<leadsto> (f x))" 
+                 and "cont (\<lambda> x. (ubclDom\<cdot>x = cs2) \<leadsto> g x)" 
+                 and "ufWell (\<Lambda> x. (ubclDom\<cdot>x = cs1) \<leadsto> (f x))" 
+                 and "ufWell (\<Lambda> x. (ubclDom\<cdot>x = cs2) \<leadsto> g x)"
+  shows "Abs_cufun (\<lambda> x. (ubclDom\<cdot>x = cs1) \<leadsto> (f x)) \<sqsubseteq> Abs_cufun (\<lambda> x. (ubclDom\<cdot>x = cs2) \<leadsto> (g x))"
+  proof -
+  have f1:  "\<And> f g. (ufWell f) \<and> (ufWell g) \<Longrightarrow> (f \<sqsubseteq> g) \<Longrightarrow> (Abs_ufun f \<sqsubseteq> Abs_ufun g)"
+    by (simp add: below_ufun_def)
+  have f2: "\<And> f g. (cont f) \<and> (cont g) \<Longrightarrow> (f \<sqsubseteq> g) \<Longrightarrow> (Abs_cfun f \<sqsubseteq> Abs_cfun g)"
+    by (simp add: below_cfun_def)
+  have f3: "(\<lambda>x. (ubclDom\<cdot>x = cs1)\<leadsto>f x) \<sqsubseteq> (\<lambda>x. (ubclDom\<cdot>x = cs2) \<leadsto>g x)"
+    apply (subst assms(1))
+    by (simp add: assms(2) below_option_def fun_belowI)
+  show ?thesis
+    apply (rule f1)
+      apply (simp add: assms(5) assms(6))
+      apply (rule f2)
+        apply (simp add: assms(3) assms(4))
+         by (simp add: f3)
+     qed
+
+(* rule to proof that function f is below funtion g  *)
+lemma ufbelowI3: assumes "\<And> x. (ubclDom\<cdot>x = cs) \<Longrightarrow> (f x) \<sqsubseteq> (g x)"
+  shows "(\<lambda> x. (ubclDom\<cdot>x = cs) \<leadsto> (f x)) \<sqsubseteq> (\<lambda> x. (ubclDom\<cdot>x = cs) \<leadsto> (g x))"
+  by (simp add: assms below_option_def fun_belowI)
 
 (*   *)
 lemma ufun_rel_eq: assumes "(a \<sqsubseteq> b)"
