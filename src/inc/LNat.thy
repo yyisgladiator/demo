@@ -954,5 +954,55 @@ proof (rule ccontr)
     by (metis (mono_tags, hide_lams) Fin_neq_inf assms ex_new_if_finite f_inv_into_f finite_imageI finite_insert finite_subset infinite_UNIV_nat inject_Fin insertCI lncases rangeI subset_UNIV)
 qed
 
+text {* If the left summand is smaller then {@term \<infinity>}, then the right summand is unqiuely
+        determined by the result of {@term +} *}
+lemma plus_unique_r:
+  fixes "l"
+  assumes "m < \<infinity>"
+  and "(l::lnat) = m + n"
+  and "(l::lnat) = m + p"
+shows "n = p"
+  using assms apply(induction l, simp_all)
+  apply (smt add_left_imp_eq fold_inf inject_Fin less_lnsuc lnat.sel_rews(2) lnat_plus_suc neq_iff notinfI3 plus_lnat_def triv_admI)
+  using assms apply(induction m, simp_all)
+  apply (simp_all add: bot_is_0)
+  apply (smt add.left_commute lnat_plus_commu plus_lnat0_l triv_admI)
+  apply (metis add.left_commute plus_lnat0_l)
+  apply (case_tac "l = \<infinity>")
+  apply simp_all
+proof -
+  fix la :: lnat
+  assume a1: "m + n \<noteq> \<infinity>"
+  assume a2: "m + p = m + n"
+  have f3: "n = 0 + n"
+  by auto
+  have f4: "\<forall>l la. if l = \<infinity> \<or> la = \<infinity> then l + la = \<infinity> else l + la = Fin (inv Fin l + inv Fin la)"
+  using plus_lnat_def by presburger
+    have f5: "0 \<noteq> \<infinity> \<and> n \<noteq> \<infinity>"
+      using a1 by force
+    have f6: "m \<noteq> \<infinity> \<and> p \<noteq> \<infinity>"
+      using f4 a2 a1 by metis
+    then have f7: "Fin (inv Fin m + inv Fin p) = m + n"
+      using f4 a2 by simp
+    have "m \<noteq> \<infinity> \<and> n \<noteq> \<infinity>"
+      using f4 a1 by fastforce
+    then have "inv Fin p = inv Fin n"
+      using f7 f4 by simp
+    then have "n = 0 + p"
+      using f6 f5 f4 f3 by presburger
+    then show ?thesis
+  by auto
+qed
+
+text {* If the right summand is smaller then {@term \<infinity>}, then the left summand is unqiuely
+        determined by the result of {@term +} *}
+lemma plus_unique_l:
+  fixes "l"
+  assumes "m < \<infinity>"
+  and "(l::lnat) = n + m"
+  and "(l::lnat) = p + m"
+shows "n = p"
+  using assms plus_unique_r
+  by (metis lnat_plus_commu) 
 
 end
