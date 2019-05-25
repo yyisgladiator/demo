@@ -71,6 +71,10 @@ text {* @{term tsynAbs}: Filter the epss and return the corresponding stream. *}
 definition tsynAbs:: "'a tsyn stream \<rightarrow> 'a stream" where
   "tsynAbs \<equiv> \<Lambda> s. smap tsynAbsElem\<cdot>(sfilter {e. e \<noteq> eps}\<cdot>s)"
 
+text {* @{term tsynEps}: Return the number of epss of in a stream. *}
+definition tsynEps::"'a::countable tsyn stream \<rightarrow> lnat"where
+  "tsynEps \<equiv> \<Lambda> ts. #(sfilter {~}\<cdot>ts)"
+
 text {* @{term tsynLen}: Return the number of messages. *}
 definition tsynLen:: "'a tsyn stream \<rightarrow> lnat" where 
   "tsynLen \<equiv> \<Lambda> s. #(tsynAbs\<cdot>s)"
@@ -726,6 +730,168 @@ lemma tsyn_cases_inf [case_names inf msg eps]:
   using assms
   apply (cases rule: scases [of s], simp_all)
   by (metis tsynAbsElem.cases)
+
+(* ----------------------------------------------------------------------- *)
+  subsection {* tsynEps *}
+(* ----------------------------------------------------------------------- *)
+
+lemma tsyneps_insert: "tsynEps\<cdot>ts = #(sfilter {~}\<cdot>ts)"
+  by (simp add: tsynEps_def)
+
+lemma tsyneps_strict [simp]:"tsynEps\<cdot>\<epsilon> = 0"
+  by (simp add: tsyneps_insert)
+
+lemma tsyneps_sconc_msg:"tsynEps\<cdot>(\<up>(\<M> m) \<bullet> ts) = tsynEps\<cdot>ts"
+  by (simp add: tsyneps_insert)
+
+lemma tsyneps_sconc_eps:"tsynEps\<cdot>(\<up>~ \<bullet> ts) = lnsuc\<cdot>(tsynEps\<cdot>ts)"
+  by(simp add: tsyneps_insert)
+
+text {* @{term tsynEps} of the concatenation of two streams equals the sum of @{term tsynEps} of 
+        both streams if the number of epss and the first stream are finite. *}
+lemma tsyneps_sconc_finite:
+  assumes "#as < \<infinity>"
+  and "tsynEps\<cdot>as = Fin k"
+  and "tsynEps\<cdot>bs = Fin n"
+  shows "tsynEps\<cdot>(as \<bullet> bs) = Fin (k + n)"
+  using assms
+  by (simp add: slen_sconc_all_finite tsyneps_insert add_sfilter2 sconc_slen2)
+
+text {* @{term tsynEps} of the concatenation of two streams with finite many epss is less or 
+        equal to the sum of @{term tsynEps} of both streams *}
+lemma  tsyneps_sconc_infinite:
+  assumes "tsynEps\<cdot>as = Fin n"
+  and "tsynEps\<cdot>bs = Fin m"
+  shows "tsynEps\<cdot>(as \<bullet> bs) \<le> Fin (n + m)"
+  using assms leI sconc_fst_inf tsyneps_sconc_finite by fastforce
+
+text {* @{term tsynEps} is less or equal to the length of the stream. *}
+lemma tsyneps_slen: "tsynEps\<cdot>s \<le> slen\<cdot>s"
+  by (simp add: slen_sfilterl1 tsyneps_insert)
+
+text {* @{term tsynEps} Non-empty singleton streams have length 0. *}
+lemma tsyneps_singleton_msg: "tsynEps\<cdot>(\<up>(Msg a)) = Fin 0"
+  by (simp add: tsyneps_insert)
+
+text {* @{term tsynEps} Empty slots have length 1. *}
+lemma tsyneps_singleton_eps: "tsynEps\<cdot>(\<up>eps) = Fin 1"
+  by (simp add: tsyneps_insert)
+
+text {* If the last element of a tsyn stream is an eps, tsynEps is greater than 0 *}
+lemma tsyneps_sfoot_msg_geq:
+  assumes "#s < \<infinity>"
+    and "s \<noteq> \<epsilon>"
+    and "sfoot s = ~"
+  shows "Fin 1 \<le> tsynEps\<cdot>s"
+  using assms
+  apply (induction s rule: tsyn_finind, simp_all)
+  apply (metis fold_inf inf_ub leD neq_iff sconc_fst_inf sconc_snd_empty sfoot_conc sfoot_one tsyn.distinct(1) tsyneps_sconc_msg)
+  by (simp add: One_nat_def tsyneps_sconc_eps)
+
+text {* If @{term tsynEps} is infinity the stream cannot be empty. *}
+lemma tsyneps_inf_nbot: assumes "tsynEps\<cdot>s = \<infinity>"
+  shows "s \<noteq> \<epsilon>"
+  using assms by fastforce
+
+text {* @{term tsynEps} of the infinte concatenation of a finite stream with more than one 
+        message is @{term "\<infinity>"}. *}
+lemma tsyneps_inftimes_finite:
+  assumes "#as < \<infinity> "
+  and "0 < tsynEps\<cdot>as" 
+shows "tsynEps\<cdot>as\<infinity> = \<infinity>"
+  using assms
+  by (metis neq_iff sfilter_sinf slen_sinftimes strict_slen tsyneps_insert)
+
+text {* @{term tsynEps} test for finite tsyn stream. *}
+lemma tsyneps_test_finstream: 
+  "tsynEps\<cdot>(<[Msg 1, eps, Msg 2, eps, eps, Msg 1]>) = Fin 3"
+  by (simp add: tsyneps_insert)
+
+text {* @{term tsynEps} test for infinite tsyn stream. *}
+lemma tsyneps_test_infstream: "tsynEps\<cdot>(<[eps, Msg a]>\<infinity>) = \<infinity>"
+  by (metis Fin_neq_inf gr_0 inf_ub less_le list2s_Suc list2streamFin lscons_conv 
+      tsyneps_inftimes_finite tsyneps_sconc_eps) 
+
+(* ----------------------------------------------------------------------- *)
+  subsection {* Relationship between {@term tsynEps}, {@term tsynLen}  {@term slen} *}
+(* ----------------------------------------------------------------------- *)
+
+lemma tsyneps_tsyneps2slen_finite:
+  assumes "#as < \<infinity>"
+  and "tsynEps\<cdot>as = k"
+  and "tsynLen\<cdot>as = n"
+  shows "#as = k + n"
+  using assms
+  apply (induction as arbitrary: n k  rule: tsyn_ind, simp_all)
+  apply (simp_all add: tsyneps_sconc_msg tsynlen_sconc_eps)
+   apply (metis add.assoc inf_ub less_le lnat_plus_suc sconc_fst_inf slen_lnsuc tsynlen_sconc_msg)
+  by (metis (no_types, hide_lams) add.assoc le_less_trans less_lnsuc lnat_plus_lnsuc lnat_plus_suc tsyneps_sconc_eps)
+
+lemma  tsyneps_tsyneps2slen_infinite_msg:
+  assumes "tsynEps\<cdot>as = n"
+  and "tsynLen\<cdot>as = \<infinity>"
+shows "#as = \<infinity>"
+  using assms
+  by (metis inf_less_eq tsynlen_slen) 
+  
+lemma  tsyneps_tsyneps2slen_infinite_eps:
+  assumes "tsynEps\<cdot>as = \<infinity>"
+  and "tsynLen\<cdot>as = m"
+shows "#as = \<infinity>"
+  using assms
+  by (metis inf_less_eq tsyneps_slen)  
+
+lemma  tsyneps_tsyneps2slen_infinite:
+  assumes "tsynEps\<cdot>as = n"
+  and "tsynLen\<cdot>as = m"
+  shows "#as = n + m"
+  using assms apply(case_tac "n = \<infinity>")
+  apply (simp add: tsyneps_tsyneps2slen_infinite_eps plus_lnatInf_r)
+  using assms apply(case_tac "m = \<infinity>")
+  apply (simp add: tsyneps_tsyneps2slen_infinite_msg)
+  apply (subst tsyneps_tsyneps2slen_finite, simp_all)
+  apply (simp add: tsyneps_insert tsynlen_insert tsynabs_insert)
+  by (metis Fin_02bot Fin_Suc One_nat_def assms(2) inf_ub less_le ln_less lnle_Fin_0 not_less notinfI3 sfilter_sinftimes_in slen_sfilter_sdrop_ile slen_sinftimes strict_sfilter strict_slen tsyn_fin_msg tsyneps_insert tsyneps_singleton_eps tsynlen_insert)
+  
+lemma tsynlen_tsyneps2slen:"#\<^sub>-(ts) + (tsynEps\<cdot>ts) = #ts"
+  by (simp add: tsyneps_tsyneps2slen_infinite lnat_plus_commu)
+
+(* ----------------------------------------------------------------------- *)
+
+declare [[show_types]]
+
+lemma tsynlen_eq_h1:
+  assumes "m < \<infinity>"
+    and "#s1 = n"
+    and "#s2 = n"
+    and "tsynEps\<cdot>s1 = m"
+    and "tsynEps\<cdot>s2 = m"
+  shows"#\<^sub>-s1 = #\<^sub>-s2"
+proof -
+  have n1: "n = m + #\<^sub>-s1" using assms by (simp add: tsyneps_tsyneps2slen_infinite)
+  have n2: "n = m + #\<^sub>-s2" using assms by (simp add: tsyneps_tsyneps2slen_infinite)
+  show "#\<^sub>-s1 = #\<^sub>-s2" using assms(1) n1 n2 plus_unique_r
+    by blast
+qed
+
+lemma tsynlen_eq:
+  assumes "#s1 = #s2"
+    and "tsynEps\<cdot>s1 < \<infinity>"
+    and "tsynEps\<cdot>s1 = tsynEps\<cdot>s2"
+  shows"#\<^sub>-s1 = #\<^sub>-s2"
+  using assms tsynlen_eq_h1 by auto
+  
+(* ----------------------------------------------------------------------- *)
+
+text {* If a function preserves the {@term slen} and {@term tsynEps} of a stream and a stream
+        has only finite many eps, then the function preserves {@term tsynLen} *}
+lemma tsynlen_f_preserves_tsynLen:
+  fixes "s"
+  assumes "tsynEps\<cdot>s < \<infinity>"
+  and "#(f s) = #s"
+  and "tsynEps\<cdot>(f s) = tsynEps\<cdot>s"
+  shows "#\<^sub>-(f s) = #\<^sub>-s"
+  using assms by (subst tsynlen_eq, simp_all)
 
 (* ----------------------------------------------------------------------- *)
   subsection {* tsynFilter *}
