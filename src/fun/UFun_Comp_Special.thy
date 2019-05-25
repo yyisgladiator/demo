@@ -757,6 +757,26 @@ lemma ufSerCompRestricted_apply:
   apply (simp add: ufSerCompRestricted_def assms ufSerCompRestricted_cont ufSerCompRestricted_well)
   apply (simp add: ufSerCompRestricted_def[symmetric])
   by (simp add: ufSerCompRestricted_dom assms)
+
+lemma ufSerCompRestricted_apply2:
+  assumes "serparcomp_well f1 f2" and "ubclDom\<cdot>x = ufDom\<cdot>(ufSerCompRestricted f1 f2)"
+  shows  "(ufSerCompRestricted f1 f2)\<rightleftharpoons>x = f2 \<rightleftharpoons> x \<uplus> (f1 \<rightleftharpoons> x\<bar>ufDom\<cdot>f1)\<bar>ufDom\<cdot>f2"
+  apply (simp add: assms ufSerCompRestricted_apply ufSerParComp_apply ufSerCompRestricted_dom ufSerParComp_dom)
+  apply (subst ubclunion_ubclrestrict_RI)
+  apply (subst ufran_2_ubcldom2, simp_all)
+  apply (simp add: ubclrestrict_ubcldom ubclunion_ubcldom)
+  apply (subst ufran_2_ubcldom2)
+  apply (simp add: ubclrestrict_ubcldom)
+  using assms
+  apply (subst (asm) ufSerCompRestricted_dom, simp_all add: ufCompI_def, blast)
+  apply (subst (asm) ufSerCompRestricted_dom, simp_all)+
+  apply (simp add: assms ufSerCompRestricted_dom ufCompI_def)
+  using assms apply blast
+  apply (rule ubclrestrict_dom_idI)
+  apply (subst ufran_2_ubcldom2)
+  apply (simp_all add: ubclrestrict_dom ubclunion_dom)
+  apply (subst ufran_2_ubcldom2)
+  by (simp add: ubclrestrict_dom ufSerCompRestricted_dom ufCompI_def, blast)+
     
 lemma ufSerCompRestricted_ran: assumes "serparcomp_well f1 f2"
   shows "ufRan\<cdot>(ufSerCompRestricted f1 f2) = ufRan\<cdot>f2"
