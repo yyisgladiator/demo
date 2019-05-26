@@ -816,6 +816,9 @@ lemma tsyneps_test_infstream: "tsynEps\<cdot>(<[eps, Msg a]>\<infinity>) = \<inf
   subsection {* Relationship between {@term tsynEps}, {@term tsynLen}  {@term slen} *}
 (* ----------------------------------------------------------------------- *)
 
+text {* The {@term slen} of stream is the sum of its finite  {@term tsynLen} and finite
+        {@term tsynEps}. There is also a stronger variant of this lemma, that generalizes
+        to the infinite cases: {@term tsynlen_tsyneps2slen *}
 lemma tsyneps_tsyneps2slen_finite:
   assumes "#as < \<infinity>"
   and "tsynEps\<cdot>as = k"
@@ -827,21 +830,23 @@ lemma tsyneps_tsyneps2slen_finite:
    apply (metis add.assoc inf_ub less_le lnat_plus_suc sconc_fst_inf slen_lnsuc tsynlen_sconc_msg)
   by (metis (no_types, hide_lams) add.assoc le_less_trans less_lnsuc lnat_plus_lnsuc lnat_plus_suc tsyneps_sconc_eps)
 
+text {* If a stream has infinite {@tsynLen} then it has infnite {@term slen} *}
 lemma  tsyneps_tsyneps2slen_infinite_msg:
-  assumes "tsynEps\<cdot>as = n"
-  and "tsynLen\<cdot>as = \<infinity>"
-shows "#as = \<infinity>"
+  assumes "tsynLen\<cdot>as = \<infinity>"
+  shows "#as = \<infinity>"
   using assms
   by (metis inf_less_eq tsynlen_slen) 
-  
+
+text {* If a stream has infinite {@tsynEps} then it has infnite {@term slen} *}
 lemma  tsyneps_tsyneps2slen_infinite_eps:
   assumes "tsynEps\<cdot>as = \<infinity>"
-  and "tsynLen\<cdot>as = m"
-shows "#as = \<infinity>"
+  shows "#as = \<infinity>"
   using assms
   by (metis inf_less_eq tsyneps_slen)  
 
-lemma  tsyneps_tsyneps2slen_infinite:
+text {* The {@term slen} of stream is the sum of its {@term tsynLen} and {@term tsynEps}.
+        Same as {@term tsynlen_tsyneps2slen}, but more verbose. *}
+lemma  tsyneps_tsyneps2slen_verbose:
   assumes "tsynEps\<cdot>as = n"
   and "tsynLen\<cdot>as = m"
   shows "#as = n + m"
@@ -852,15 +857,15 @@ lemma  tsyneps_tsyneps2slen_infinite:
   apply (subst tsyneps_tsyneps2slen_finite, simp_all)
   apply (simp add: tsyneps_insert tsynlen_insert tsynabs_insert)
   by (metis Fin_02bot Fin_Suc One_nat_def assms(2) inf_ub less_le ln_less lnle_Fin_0 not_less notinfI3 sfilter_sinftimes_in slen_sfilter_sdrop_ile slen_sinftimes strict_sfilter strict_slen tsyn_fin_msg tsyneps_insert tsyneps_singleton_eps tsynlen_insert)
-  
+
+text {* The {@term slen} of stream is the sum of its {@term tsynLen} and {@term tsynEps}.
+        Same as {@term tsyneps_tsyneps2slen_verbose}, but less verbose. *}
 lemma tsynlen_tsyneps2slen:"#\<^sub>-(ts) + (tsynEps\<cdot>ts) = #ts"
-  by (simp add: tsyneps_tsyneps2slen_infinite lnat_plus_commu)
+  by (simp add: tsyneps_tsyneps2slen_verbose lnat_plus_commu)
 
-(* ----------------------------------------------------------------------- *)
-
-declare [[show_types]]
-
-lemma tsynlen_eq_h1:
+text {* If two streams have the same {@term slen} and same finite {@term tsynEps}, then they
+        also have the same {@term tsynLen} *}
+lemma tsynlen_eq_tsynLen_verbose:
   assumes "m < \<infinity>"
     and "#s1 = n"
     and "#s2 = n"
@@ -868,20 +873,43 @@ lemma tsynlen_eq_h1:
     and "tsynEps\<cdot>s2 = m"
   shows"#\<^sub>-s1 = #\<^sub>-s2"
 proof -
-  have n1: "n = m + #\<^sub>-s1" using assms by (simp add: tsyneps_tsyneps2slen_infinite)
-  have n2: "n = m + #\<^sub>-s2" using assms by (simp add: tsyneps_tsyneps2slen_infinite)
+  have n1: "n = m + #\<^sub>-s1" using assms by (simp add: tsyneps_tsyneps2slen_verbose)
+  have n2: "n = m + #\<^sub>-s2" using assms by (simp add: tsyneps_tsyneps2slen_verbose)
   show "#\<^sub>-s1 = #\<^sub>-s2" using assms(1) n1 n2 plus_unique_r
     by blast
 qed
 
-lemma tsynlen_eq:
+text {* If two streams have the same {@term slen} and same finite {@term tsynLen}, then they
+        also have the same {@term tsynEps} *}
+lemma tsynlen_eq_tsynEps_verbose:
+  assumes "m < \<infinity>"
+    and "#s1 = n"
+    and "#s2 = n"
+    and "tsynLen\<cdot>s1 = m"
+    and "tsynLen\<cdot>s2 = m"
+  shows "tsynEps\<cdot>s1 = tsynEps\<cdot>s2"
+proof -
+  have n1: "n = m + tsynEps\<cdot>s1" using assms by (simp add: tsyneps_tsyneps2slen_verbose lnat_plus_commu)
+  have n2: "n = m + tsynEps\<cdot>s2" using assms by (simp add: tsyneps_tsyneps2slen_verbose lnat_plus_commu)
+  show "tsynEps\<cdot>s1 = tsynEps\<cdot>s2" using assms(1) n1 n2 plus_unique_r
+    by blast
+qed
+
+text {* Same as {@term tsynlen_eq_tsynLen_verbose}, but less verbose. *}
+lemma tsynlen_eq_tsynLen:
   assumes "#s1 = #s2"
     and "tsynEps\<cdot>s1 < \<infinity>"
     and "tsynEps\<cdot>s1 = tsynEps\<cdot>s2"
   shows"#\<^sub>-s1 = #\<^sub>-s2"
-  using assms tsynlen_eq_h1 by auto
-  
-(* ----------------------------------------------------------------------- *)
+  using assms tsynlen_eq_tsynLen_verbose by auto
+
+text {* Same as {@term tsynlen_eq_tsynEps_verbose}, but less verbose. *}
+lemma tsynlen_eq_tsynEps:
+  assumes "#s1 = #s2"
+    and "tsynLen\<cdot>s1 < \<infinity>"
+    and "tsynLen\<cdot>s1 = tsynLen\<cdot>s2"
+  shows "tsynEps\<cdot>s1 = tsynEps\<cdot>s2"
+  using assms tsynlen_eq_tsynEps_verbose by auto
 
 text {* If a function preserves the {@term slen} and {@term tsynEps} of a stream and a stream
         has only finite many eps, then the function preserves {@term tsynLen} *}
@@ -891,7 +919,17 @@ lemma tsynlen_f_preserves_tsynLen:
   and "#(f s) = #s"
   and "tsynEps\<cdot>(f s) = tsynEps\<cdot>s"
   shows "#\<^sub>-(f s) = #\<^sub>-s"
-  using assms by (subst tsynlen_eq, simp_all)
+  using assms by (subst tsynlen_eq_tsynLen, simp_all)
+
+text {* If a function preserves the {@term slen} and {@term tsynLen} of a stream and a stream
+        has only finite many msgs, then the function preserves {@term tsynEps} *}
+lemma tsynlen_f_preserves_tsynEps:
+  fixes "s"
+  assumes "tsynLen\<cdot>s < \<infinity>"
+  and "#(f s) = #s"
+  and "tsynLen\<cdot>(f s) = tsynLen\<cdot>s"
+  shows "tsynEps\<cdot>(f s) = tsynEps\<cdot>s"
+  using assms by (subst tsynlen_eq_tsynEps, simp_all)
 
 (* ----------------------------------------------------------------------- *)
   subsection {* tsynFilter *}
