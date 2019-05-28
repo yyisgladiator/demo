@@ -1748,6 +1748,24 @@ apply (subst sfilter_empty_snths_nin_lemma, simp+)
 apply (subst contlub_cfun_arg [THEN sym], simp)
 by (simp add: reach_stream)
 
+text {* @{term sfilter} returns the original streams if every element is included in the filter *}
+lemma sfilter_snths_in_lemma: 
+  "\<forall>p. (\<forall>n. Fin n < #p \<longrightarrow> snth n p \<in> X) \<longrightarrow> sfilter X\<cdot>(stake k\<cdot>p) = stake k\<cdot>p"
+  apply (induct_tac k, auto)
+  apply (rule_tac x=p in scases, auto)
+  apply (case_tac "a\<in>X", auto)
+   apply (case_tac "n", auto)
+   apply (erule_tac x="s" in allE, auto)
+   apply (erule_tac x="Suc n" in allE, auto)
+  by (erule_tac x="0" in allE, simp)
+
+lemma sfilter_snths_in_stream_lemma:assumes a1:" \<And> n . Fin n <#p  \<Longrightarrow> snth n p \<in> X" 
+  shows  " p =  sfilter X\<cdot>(p)"
+  apply (subst reach_stream [THEN sym], rule sym)
+  apply (subst reach_stream [THEN sym],case_tac "#p=\<infinity>")
+   apply(smt Inf.INF_cong a1 approxl1 assms monofun_cfun_arg sfilter_snths_in_lemma slen_stake_fst_inf stream.take_below)
+  by (metis (no_types, hide_lams) assms infI  fin2stake sfilter_snths_in_lemma)
+
 text {* The filtered stream is at most as long as the original one *}
 lemma slen_sfilterl1: "#(sfilter S\<cdot>x) \<le> #x"
 apply (rule ind [of _ x], auto)
