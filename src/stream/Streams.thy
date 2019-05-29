@@ -2998,6 +2998,18 @@ lemma sscanlasnd_one [simp]: "sscanlAsnd f b\<cdot>(\<up>x) = \<up>(snd (f b x))
   apply(simp add: sscanlAsnd_def)
   by (metis eq_snd_iff sconc_snd_empty sprojsnd_scons strict_sprojsnd)
 
+lemma sscanlasnd_ntimes_loop:
+  assumes "\<And>r. sscanlAsnd f state\<cdot>(s \<bullet> r) = out \<bullet> (sscanlAsnd f state\<cdot>r)" 
+  shows "sscanlAsnd f state\<cdot>(sntimes n s) = sntimes n out"
+  using assms
+  by (induction n, simp_all)
+
+lemma sscanlasnd_inftimes_loop:
+  assumes "\<And>r. sscanlAsnd f state\<cdot>(s \<bullet> r) = out \<bullet> (sscanlAsnd f state\<cdot>r)"
+  shows "sscanlAsnd f state\<cdot>(sinftimes s) = sinftimes out"
+  using assms
+  by (metis rek2sinftimes sinftimes_unfold slen_empty_eq sscanlasnd_bot sscanlasnd_len strict_icycle) 
+
 (* ----------------------------------------------------------------------- *)
 subsection {* @{term merge} *}
 (* ----------------------------------------------------------------------- *)
