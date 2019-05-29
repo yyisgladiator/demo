@@ -2749,7 +2749,7 @@ apply (rule fun_belowD [of _ _ "f"])
 by (rule chain_SSCANL [THEN chainE], simp)
 
 (* scanning a singleton stream is equivalent to computing \<up>(f a b) *)
-lemma [simp]: "sscanl f a\<cdot>(\<up>b) = \<up>(f a b)"
+lemma sscanl_one[simp]: "sscanl f a\<cdot>(\<up>b) = \<up>(f a b)"
 by (insert sscanl_scons [of f a b \<epsilon>], auto)
 
 text {* applying @{term sscanl} never shortens the stream *}
@@ -2803,6 +2803,17 @@ next
     by (metis a2 a3 leI not_less slen_rt_ile_eq snth_rt sscanl_srt)
 qed
 
+lemma sscan_ntimes_loop:
+  assumes "\<And>r. sscanl f state\<cdot>(s \<bullet> r) = out \<bullet> (sscanl f state\<cdot>r)" 
+  shows "sscanl f state\<cdot>(sntimes n s) = sntimes n out"
+  using assms
+  by (induction n, simp_all)
+
+lemma sscanl_inftimes_loop:
+  assumes "\<And>r. sscanl f state\<cdot>(s \<bullet> r) = out \<bullet> (sscanl f state\<cdot>r)"
+  shows "sscanl f state\<cdot>(sinftimes s) = sinftimes out"
+  using assms
+  by (metis rek2sinftimes sinftimes_unfold slen_empty_eq sscanl_empty fair_sscanl strict_icycle) 
 
 (* ----------------------------------------------------------------------- *)
 subsection {* @{term szip} *}
@@ -2917,6 +2928,24 @@ lemma sscanla_one [simp]: "sscanlA f b\<cdot>(\<up>x) = \<up>(fst (f b x))"
   apply(simp add: sscanlA_def)
   by (metis prod.collapse sconc_snd_empty sprojfst_scons strict_sprojfst)
 
+lemma sscanla_shd: "s\<noteq>\<epsilon> \<Longrightarrow> shd (sscanlA f q\<cdot>s) = fst (f q (shd s))"
+  by (metis shd1 sscanla_step surj_scons)
+
+lemma sscanla_srt: "srt\<cdot>(sscanlA f a\<cdot>s) = sscanlA f (snd (f a (shd s)))\<cdot>(srt\<cdot>s)"
+  by (metis (no_types, lifting) sconc_fst_empty sconc_scons' sscanla_bot sscanla_step stream.sel_rews(2) stream.sel_rews(5) sup'_def surj_scons up_defined)
+
+lemma sscanla_ntimes_loop:
+  assumes "\<And>r. sscanlA f state\<cdot>(s \<bullet> r) = out \<bullet> (sscanlA f state\<cdot>r)" 
+  shows "sscanlA f state\<cdot>(sntimes n s) = sntimes n out"
+  using assms
+  by (induction n, simp_all)
+
+lemma sscanla_inftimes_loop:
+  assumes "\<And>r. sscanlA f state\<cdot>(s \<bullet> r) = out \<bullet> (sscanlA f state\<cdot>r)"
+  shows "sscanlA f state\<cdot>(sinftimes s) = sinftimes out"
+  using assms
+  by (metis rek2sinftimes sinftimes_unfold slen_empty_eq sscanla_bot sscanla_len strict_icycle) 
+
 (* ----------------------------------------------------------------------- *)
 subsection {* @{term sscanlAg} *}
 (* ----------------------------------------------------------------------- *)
@@ -2934,18 +2963,33 @@ lemma sscanlag_bot [simp]: "sscanlAg f s0\<cdot>\<bottom> = \<bottom>"
 lemma sscanlag_one [simp]: "sscanlAg f b\<cdot>(\<up>x) = \<up>(fst(f b x), snd (f b x))"
   by(simp add: sscanlAg_def)
 
-
-
 lemma sscanlag_step [simp]: "sscanlAg f s0\<cdot>(\<up>a \<bullet> as) = \<up>((f s0 a)) \<bullet> sscanlAg f (fst (f s0 a))\<cdot>as"
   apply(simp add: sscanlAg_def sprojfst_def)
   by (smt case_prod_conv prod.collapse sscanl_empty sscanl_scons surj_scons)
 
+lemma sscanlag_shd: "s\<noteq>\<epsilon> \<Longrightarrow> shd (sscanlAg f q\<cdot>s) = (f q (shd s))"
+  by (metis shd1 sscanlag_step surj_scons)
+
+lemma sscanlag_srt: "srt\<cdot>(sscanlAg f a\<cdot>s) = sscanlAg f (fst (f a (shd s)))\<cdot>(srt\<cdot>s)"
+  by (metis (no_types, lifting) sconc_fst_empty sconc_scons' sscanlag_bot sscanlag_step stream.sel_rews(2) stream.sel_rews(5) sup'_def surj_scons up_defined)
 
 lemma snth_sscanlAg:
   assumes "Fin (Suc j)<#i"
     shows "snth (Suc j) (sscanlAg f s0\<cdot>i) = f (fst (snth j (sscanlAg f s0\<cdot>i))) (snth (Suc j) i)"
   apply(simp add: sscanlAg_def)
   by (metis (mono_tags, lifting) assms case_prod_conv prod.exhaust_sel sscanl_snth)
+
+lemma sscanlag_ntimes_loop:
+  assumes "\<And>r. sscanlAg f state\<cdot>(s \<bullet> r) = out \<bullet> (sscanlAg f state\<cdot>r)" 
+  shows "sscanlAg f state\<cdot>(sntimes n s) = sntimes n out"
+  using assms
+  by (induction n, simp_all)
+
+lemma sscanlag_inftimes_loop:
+  assumes "\<And>r. sscanlAg f state\<cdot>(s \<bullet> r) = out \<bullet> (sscanlAg f state\<cdot>r)"
+  shows "sscanlAg f state\<cdot>(sinftimes s) = sinftimes out"
+  using assms
+  by (metis rek2sinftimes sinftimes_unfold slen_empty_eq sscanlag_bot sscanlag_len strict_icycle) 
 
 (* ----------------------------------------------------------------------- *)
 subsection {* @{term sscanlAfst} *}
@@ -2964,11 +3008,27 @@ lemma sscanlafst_step [simp]: "sscanlAfst f s0\<cdot>(\<up>a \<bullet> as) = \<u
   apply (simp add: sscanlAfst_def sprojfst_def sscanlAg_def) 
   by (smt approxl2 case_prod_conv eta_cfun fair_sscanl fin2stake prod.collapse sconc_prefix sconc_snd_empty slen_scons slen_smap smap_hd_rst sprojfst_def sscanl_empty sscanl_shd sscanl_srt strict_sprojfst)
 
-
 lemma sscanlafst_one [simp]: "sscanlAfst f b\<cdot>(\<up>x) = \<up>(fst (f b x))"
   apply(simp add: sscanlAfst_def)
   by (metis prod.collapse sconc_snd_empty sprojfst_scons strict_sprojfst)
 
+lemma sscanlafst_shd: "s\<noteq>\<epsilon> \<Longrightarrow> shd (sscanlAfst f q\<cdot>s) = fst (f q (shd s))"
+  by (metis shd1 sscanlafst_step surj_scons)
+
+lemma sscanlafst_srt: "srt\<cdot>(sscanlAfst f a\<cdot>s) = sscanlAfst f (fst (f a (shd s)))\<cdot>(srt\<cdot>s)"
+  by (metis (no_types, lifting) sconc_fst_empty sconc_scons' sscanlafst_bot sscanlafst_step stream.sel_rews(2) stream.sel_rews(5) sup'_def surj_scons up_defined)
+
+lemma sscanlafst_ntimes_loop:
+  assumes "\<And>r. sscanlAfst f state\<cdot>(s \<bullet> r) = out \<bullet> (sscanlAfst f state\<cdot>r)" 
+  shows "sscanlAfst f state\<cdot>(sntimes n s) = sntimes n out"
+  using assms
+  by (induction n, simp_all)
+
+lemma sscanlafst_inftimes_loop:
+  assumes "\<And>r. sscanlAfst f state\<cdot>(s \<bullet> r) = out \<bullet> (sscanlAfst f state\<cdot>r)"
+  shows "sscanlAfst f state\<cdot>(sinftimes s) = sinftimes out"
+  using assms
+  by (metis rek2sinftimes sinftimes_unfold slen_empty_eq sscanlafst_bot sscanlafst_len strict_icycle) 
 
 (* ----------------------------------------------------------------------- *)
 subsection {* @{term sscanlAsnd} *}
@@ -2997,6 +3057,12 @@ qed
 lemma sscanlasnd_one [simp]: "sscanlAsnd f b\<cdot>(\<up>x) = \<up>(snd (f b x))"
   apply(simp add: sscanlAsnd_def)
   by (metis eq_snd_iff sconc_snd_empty sprojsnd_scons strict_sprojsnd)
+
+lemma sscanlasnd_shd: "s\<noteq>\<epsilon> \<Longrightarrow> shd (sscanlAsnd f q\<cdot>s) = snd (f q (shd s))"
+  by (metis shd1 sscanlasnd_step surj_scons)
+
+lemma sscanlasnd_srt: "srt\<cdot>(sscanlAsnd f a\<cdot>s) = sscanlAsnd f (fst (f a (shd s)))\<cdot>(srt\<cdot>s)"
+  by (metis (no_types, lifting) sconc_fst_empty sconc_scons' sscanlasnd_bot sscanlasnd_step stream.sel_rews(2) stream.sel_rews(5) sup'_def surj_scons up_defined)
 
 lemma sscanlasnd_ntimes_loop:
   assumes "\<And>r. sscanlAsnd f state\<cdot>(s \<bullet> r) = out \<bullet> (sscanlAsnd f state\<cdot>r)" 
