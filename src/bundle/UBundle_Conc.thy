@@ -408,6 +408,13 @@ lemma ubconceq_assoc: "ubclDom\<cdot>b = ubclDom\<cdot>ub \<Longrightarrow> ubCo
   apply(simp add: ubConcEq_def ubconc_assoc)
   by (metis conceq_conc_1 inf_sup_absorb sup.idem ubclDom_ubundle_def ubconc_assoc ubconceq_insert ubconceq_restrict ubrestrict_ubdom ubrestrict_ubdom2)
 
+lemma ubconceq_ubunion_split: 
+  assumes "ubDom\<cdot>ub1 = ubDom\<cdot>ub2"
+  and     "ubDom\<cdot>ub3 = ubDom\<cdot>ub4"
+  shows "ubUnion\<cdot>(ubConcEq ub1\<cdot>ub2)\<cdot>(ubConcEq ub3\<cdot>ub4) =  ubConcEq (ubUnion\<cdot>ub1\<cdot>ub3)\<cdot>(ubUnion\<cdot>ub2\<cdot>ub4)"
+  apply(rule ub_eq, simp+)
+  apply(case_tac "c\<in>ubDom\<cdot>ub4")
+  by(simp add: assms ubconceq_insert)+
 
 lemma ubConcEq_ubLeast[simp]: "ubConcEq (ubLeast cs)\<cdot>s = s"
   apply(rule ub_eq)

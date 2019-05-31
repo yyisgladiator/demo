@@ -1,8 +1,25 @@
 theory UFun_Comp_Causalities
-  imports fun.UFun_Comp_Special bundle.UBundle_Conc
+  imports UFun_Comp_Special bundle.UBundle_Conc
 begin
 
 default_sort uscl_conc
+
+
+section{* UBundle *}
+
+lemma weakfun_ubrestrict_ublen:
+  assumes "ubDom\<cdot>ub \<supseteq> ufDom\<cdot>f"
+      and "ufIsWeak f"
+    shows "ubLen ub \<le> ubLen (f \<rightleftharpoons> (ubRestrict (ufDom\<cdot>f)\<cdot>ub))"
+proof -
+  have "ubLen ub \<le> ubLen (ubRestrict (ufDom\<cdot>f)\<cdot>ub)"
+    using ubrestrict_ublen by blast
+  moreover have "ubLen (ubRestrict (ufDom\<cdot>f)\<cdot>ub) \<le> ubLen (f \<rightleftharpoons> (ubRestrict (ufDom\<cdot>f)\<cdot>ub))"
+    by (metis assms inf.absorb_iff2 ubclDom_ubundle_def ubclLen_ubundle_def ubrestrict_ubdom2 ufisweakE)
+  ultimately show ?thesis
+    using trans_lnle by blast
+qed
+
 
 section{* ufSerComp *}
 
