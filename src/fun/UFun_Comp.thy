@@ -1032,7 +1032,6 @@ lemma uflift_apply[simp]: "ubclDom\<cdot>ub = In \<Longrightarrow> (ufLift In f)
 
 subsection\<open>More General Comp lemma\<close>
 
-
 subsubsection\<open>Fixed point property\<close>
 
 
@@ -1924,9 +1923,37 @@ x \<uplus> ubFix (ufCompH_3arg f1 f2 f3 x) (ufRan\<cdot>f1 \<union> ufRan\<cdot>
     by (simp add: f100 f200)
 qed
 
-
-
-
+lemma ufcomp_ubclrestrict:
+  assumes "ubclDom\<cdot>ub = ufCompI f1 f2"
+  and     "comp_well f1 f2"
+  and     "ufDom\<cdot>f1 \<supset> ufRan\<cdot>f2"
+  and     "ufRan\<cdot>f1 \<inter> ufDom\<cdot>f1 = {}"
+  shows   "ubclRestrict (ufRan\<cdot>f1)\<cdot>((f1 \<otimes> f2) \<rightleftharpoons> ub) = f1 \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>f1)\<cdot>(ub \<uplus> (f2 \<rightleftharpoons> (ubclRestrict (ufDom\<cdot>f2)\<cdot>(ub \<uplus> ((f1 \<otimes> f2) \<rightleftharpoons> ub))))))"
+  apply(subst ufcomp_fix_f1)
+  apply(simp add: assms)+
+  apply(simp add: ubclunion_ubclrestrict)
+proof -
+  have comp_ran:"ubclDom\<cdot>((f1 \<otimes> f2) \<rightleftharpoons> ub) = ufRan\<cdot>f1 \<union> ufRan\<cdot>f2"
+    by (simp add: assms(1) ufCompO_def ufcomp_dom ufcomp_ran ufran_2_ubcldom2)
+  have f1_dom_f2_ran_inter: "ufRan\<cdot>f2 \<inter> ufDom\<cdot>f1 = ufRan\<cdot>f2"
+    using assms(3) by blast
+   have split:"((f1 \<otimes> f2) \<rightleftharpoons> ub) = (ubclRestrict (ufRan\<cdot>f1)\<cdot>((f1 \<otimes> f2) \<rightleftharpoons> ub)) \<uplus> (ubclRestrict (ufRan\<cdot>f2)\<cdot>((f1 \<otimes> f2) \<rightleftharpoons> ub))"
+    by (metis assms(2) comp_ran comp_well_def ubclunion_ubclrestrict_id)
+   have restrict_eq: "((f1 \<otimes> f2) \<rightleftharpoons> ub)\<bar>ufDom\<cdot>f1 = ((f1 \<otimes> f2) \<rightleftharpoons> ub)\<bar>ufRan\<cdot>f2"
+    apply(subst split)                             
+    by(simp add: ubclunion_ubclrestrict ubclrestrict_twice assms f1_dom_f2_ran_inter ubclunion_ubclrestrict_union)
+  then show "f1 \<rightleftharpoons> (ub\<bar>ufDom\<cdot>f1) \<uplus> (((f1 \<otimes> f2) \<rightleftharpoons> ub)\<bar>ufDom\<cdot>f1) = f1 \<rightleftharpoons> (ub\<bar>ufDom\<cdot>f1) \<uplus> ((f2 \<rightleftharpoons> (ub\<bar>ufDom\<cdot>f2) \<uplus> (((f1 \<otimes> f2) \<rightleftharpoons> ub)\<bar>ufDom\<cdot>f2))\<bar>ufDom\<cdot>f1)"
+    apply(simp add: restrict_eq)
+    apply(subst ufcomp_fix_f2)
+    apply(simp add: assms)+
+    apply(simp add: ubclunion_ubclrestrict)
+    apply(subst ubclunion_commu[where ?ub1.0="(ub\<bar>ufDom\<cdot>f2)", where ?ub2.0="((f1 \<otimes> f2) \<rightleftharpoons> ub)\<bar>ufDom\<cdot>f2"])
+    apply(simp add: ubclrestrict_dom ufcomp_insert assms )
+    apply(subst ubfix_dom)
+    apply (simp add: assms(1) ubcldom_least_cs)
+    using ufCompI_def apply blast
+    by (metis (no_types) assms(1) assms(2) f1_dom_f2_ran_inter ubclrestrict_twice ubclunion_ubclrestrict ufcomp_fix_f2)
+qed
 
 instantiation ufun:: (ubcl_comp,ubcl_comp) ufuncl_comp
 begin

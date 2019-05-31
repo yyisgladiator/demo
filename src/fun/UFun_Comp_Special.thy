@@ -1487,6 +1487,18 @@ shows "ufComp(ufComp(ufComp (ufComp f1 f2) f3) f4) f5  \<rightleftharpoons> ub= 
   by (simp add: assms ufcomp_asso_sercomp_in)
 *)
 
+subsubsection\<open>ufHide Special Comp\<close>
+
+
+lemma ufhide_sercomp2: 
+  assumes "ufDom\<cdot>f2 \<subseteq> ufRan\<cdot>f1"
+  and     "ufRan\<cdot>f1 \<inter> ufRan\<cdot>f2 = {}"
+  and     "ufDom\<cdot>f1 \<inter> ufRan\<cdot>f2 = {}"
+  and     "ufDom\<cdot>f1 \<inter> ufRan\<cdot>f1 = {}"
+  and     "cs = ufRan\<cdot>f1"
+shows "(f1 \<otimes> f2) \<h> cs = (f1 \<h> (ufRan\<cdot>f1-ufDom\<cdot>f2) \<otimes> f2) \<h> (ufDom\<cdot>f2)" (is "?f = ?g")
+  by(simp add: assms ufhide_sercomp)
+
 
 subsubsection\<open>property split\<close>
 

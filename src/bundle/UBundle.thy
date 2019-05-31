@@ -715,6 +715,11 @@ shows     "ubRestrict cs\<cdot>(ubUnion\<cdot>x\<cdot>y) = ubRestrict cs\<cdot>y
   by (metis (no_types, lifting) Int_commute Int_empty_right assms ubrestrict_id ubrestrict_ubdom2 
       ubrestrict_ubdom_sup_inter ubunion_restrict ubunion_ubrestrict3)
 
+lemma ubunion_ubrestrictL:
+  assumes "ubDom\<cdot>ub1 \<inter> cs = {}"
+  shows "ubRestrict cs\<cdot>(ubUnion\<cdot>ub1\<cdot>ub2) = ubRestrict cs\<cdot>ub2"
+  by (simp add: assms ubunion_ubrestrict3)
+
 lemma ub_split_union: 
   assumes "ubDom\<cdot>ub \<subseteq> A \<union> B"
   shows   "ubUnion\<cdot>(ubRestrict A\<cdot>ub)\<cdot>(ubRestrict B\<cdot>ub) = ub"
