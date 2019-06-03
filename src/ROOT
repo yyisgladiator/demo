@@ -40,7 +40,6 @@ session "bundle" (mustWork) in bundle = "stream" +
 session "fun" (mustWork) in fun = "bundle" +
   options [quick_and_dirty = false]
   theories
-	UFun_Comp_Causalities
     SPF
     UFun_Comp_Causalities
 
