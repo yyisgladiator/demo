@@ -29,7 +29,7 @@ session "stream" (mustWork) in stream = "inc" +
     Streams
     tsynStream
 
-session "bundle" (mustWork) in bundle = "stream" + 
+session "bundle" (mustWork) in bundle = "stream" +
   options [quick_and_dirty = false]
   theories
     SB
@@ -37,13 +37,14 @@ session "bundle" (mustWork) in bundle = "stream" +
     tsynBundle
     SBElem
 
-session "fun" (mustWork) in fun = "bundle" + 
+session "fun" (mustWork) in fun = "bundle" +
   options [quick_and_dirty = false]
   theories
 	UFun_Comp_Causalities
     SPF
+    UFun_Comp_Causalities
 
-session "spec" (mustWork) in spec = "fun" + 
+session "spec" (mustWork) in spec = "fun" +
   options [quick_and_dirty = false]
   sessions
     HOLMF
@@ -52,9 +53,7 @@ session "spec" (mustWork) in spec = "fun" +
     USpec_UFunComp
 
 
-session ABPstream (canFail) in ABP = "stream" + 
+session ABPstream (canFail) in ABP = "stream" +
   options [quick_and_dirty = false]
   theories
     sMed
-
-
