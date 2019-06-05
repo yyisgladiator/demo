@@ -1604,7 +1604,7 @@ by (unfold sprojsnd_def, simp)
 
 (* sprojsnd extracts the second element of any singleton tuple-stream *)
 lemma [simp]: "sprojsnd\<cdot>(\<up>(a,b)) = \<up>b"
-by (simp add: sprojsnd_def)
+  by (simp add: sprojsnd_def)
 
 text {* @{term sprojfst} / @{term sprojsnd} and @{term srt} commute *}
 
@@ -1652,6 +1652,49 @@ lemma deconstruct_infstream:
   assumes "#s = \<infinity>" obtains x xs where "(updis x) && xs = s \<and> #xs = \<infinity> \<and> xs \<noteq> \<epsilon>"
   by (metis Inf'_neq_0 assms deconstruct_infstream_h slen_empty_eq)
 
+text {* Behaviour of projections on the n-th element in a stream *}
+
+lemma sprojfst_shd[simp]: assumes "s\<noteq>\<epsilon>" shows "shd (sprojfst\<cdot>s) = fst (shd s)"
+  by (metis assms prod.collapse shd1 sprojfst_scons surj_scons)
+
+lemma sprojfst_snth[simp]: assumes "Fin n < #s" shows "snth n (sprojfst\<cdot>s) = fst (snth n s)"
+  using assms
+proof(induction n arbitrary: s)
+  case 0
+  then show ?case
+    apply simp
+    apply(rule sprojfst_shd)
+    by auto
+next
+  case (Suc n)
+  then show ?case
+    apply(simp add: snth_rt)
+    by (metis not_less rt_Sproj_1_eq slen_rt_ile_eq)
+qed
+
+lemma sprojfst_shd2[simp]: "shd (sprojfst\<cdot>(\<up>a \<bullet> s)) = fst (a)"
+  by simp
+
+lemma sprojsnd_shd[simp]: assumes "s\<noteq>\<epsilon>" shows"shd (sprojsnd\<cdot>s) = snd (shd s)"
+  by (metis assms prod.collapse shd1 sprojsnd_scons surj_scons)
+
+lemma sprojsnd_snth[simp]: assumes "Fin n < #s" shows"snth n (sprojsnd\<cdot>s) = snd (snth n s)"
+  using assms
+proof(induction n arbitrary: s)
+  case 0
+  then show ?case
+    apply simp
+    apply(rule sprojsnd_shd)
+    by auto
+next
+  case (Suc n)
+  then show ?case
+    apply(simp add: snth_rt)
+    by (metis not_less rt_Sproj_2_eq slen_rt_ile_eq)
+qed
+
+lemma sprojsnd_shd2[simp]: "shd (sprojsnd\<cdot>(\<up>a \<bullet> s)) = snd (a)"
+  by simp
 
 (* ----------------------------------------------------------------------- *)
 subsection {* @{term sfilter} *}
@@ -3018,6 +3061,16 @@ lemma sscanlafst_shd: "s\<noteq>\<epsilon> \<Longrightarrow> shd (sscanlAfst f q
 lemma sscanlafst_srt: "srt\<cdot>(sscanlAfst f a\<cdot>s) = sscanlAfst f (fst (f a (shd s)))\<cdot>(srt\<cdot>s)"
   by (metis (no_types, lifting) sconc_fst_empty sconc_scons' sscanlafst_bot sscanlafst_step stream.sel_rews(2) stream.sel_rews(5) sup'_def surj_scons up_defined)
 
+lemma sscanlafst_snth: assumes "Fin (Suc n) < #s" and "s2 = fst (shd (sscanlAg f state\<cdot>s))"
+  shows "snth (Suc n) (sscanlAfst f state\<cdot>s) = snth n (sscanlAfst f s2\<cdot>(srt\<cdot>s))"
+  apply(simp add: assms sscanlAfst_def)
+  apply(subst sprojfst_snth)
+  apply(simp add: assms)
+  apply (meson assms(1) leD leI slen_rt_ile_eq)
+  apply(subst snth_sscanlAg)
+  apply(simp add: assms)
+  by (metis (no_types, lifting) assms(1) empty_is_shortest shd1 snth_scons snth_sscanlAg sscanlag_step surj_scons)
+
 lemma sscanlafst_ntimes_loop:
   assumes "\<And>r. sscanlAfst f state\<cdot>(s \<bullet> r) = out \<bullet> (sscanlAfst f state\<cdot>r)" 
   shows "sscanlAfst f state\<cdot>(sntimes n s) = sntimes n out"
@@ -3063,6 +3116,16 @@ lemma sscanlasnd_shd: "s\<noteq>\<epsilon> \<Longrightarrow> shd (sscanlAsnd f q
 
 lemma sscanlasnd_srt: "srt\<cdot>(sscanlAsnd f a\<cdot>s) = sscanlAsnd f (fst (f a (shd s)))\<cdot>(srt\<cdot>s)"
   by (metis (no_types, lifting) sconc_fst_empty sconc_scons' sscanlasnd_bot sscanlasnd_step stream.sel_rews(2) stream.sel_rews(5) sup'_def surj_scons up_defined)
+
+lemma sscanlasnd_snth: assumes "Fin (Suc n)<#s" and "s2 = fst(shd(sscanlAg f state\<cdot>s))"
+  shows "snth (Suc n) (sscanlAsnd f state\<cdot>s) = snth n (sscanlAsnd f s2\<cdot>(srt\<cdot>s))"
+  apply(simp add: assms sscanlAsnd_def)
+  apply(subst sprojsnd_snth)
+  apply(simp add: assms)
+  apply (meson assms(1) leD leI slen_rt_ile_eq)
+  apply(subst snth_sscanlAg)
+  apply(simp add: assms)
+  by (metis (no_types, lifting) assms(1) empty_is_shortest shd1 snth_scons snth_sscanlAg sscanlag_step surj_scons)
 
 lemma sscanlasnd_ntimes_loop:
   assumes "\<And>r. sscanlAsnd f state\<cdot>(s \<bullet> r) = out \<bullet> (sscanlAsnd f state\<cdot>r)" 
