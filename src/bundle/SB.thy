@@ -146,6 +146,11 @@ lemma [simp]: "Abs_ubundle (\<lambda>c. (c \<in> ubDom\<cdot>b)\<leadsto>b . c) 
   using Collect_cong dom_def mem_Collect_eq apply auto[1]
   by auto
 
+lemma bundle_ctype: fixes ub::"'m::message SB"
+                        shows "c\<in>ubDom\<cdot>ub \<Longrightarrow> sdom\<cdot>(ub . c) \<subseteq> (ctype c)"
+  by (metis ubdom_channel_usokay ubgetch_insert usclOkay_stream_def)
+
+
 (* ----------------------------------------------------------------------- *)
   subsection \<open>sbSetCh\<close>
 (* ----------------------------------------------------------------------- *)
