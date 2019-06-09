@@ -4030,7 +4030,14 @@ by (auto simp add: sdom_def2)
 
 (* if the natural number n is less than the length of the stream s, then snth n s is in the domain of s *)
 lemma snth2sdom: "Fin n < #s \<Longrightarrow> snth n s \<in> sdom\<cdot>s"
-by (auto simp add: sdom_def2)
+  by (auto simp add: sdom_def2)
+
+lemma smap_inv_id[simp]: "sdom\<cdot>s \<subseteq> range F \<Longrightarrow> smap (F \<circ> (inv F))\<cdot>s = s"
+  apply (induction s  rule: ind )
+  by(simp_all add: f_inv_into_f)
+
+lemma smap_inv_eq[simp]:"inj F \<Longrightarrow> smap (inv F \<circ> F)\<cdot>x = x"
+  by (metis inv_o_cancel smap_inv_id subset_UNIV surj_id surj_iff)
 
 (* checking if the domain of a stream x isn't a subset of another set M is an admissible predicate *)
 lemma [simp]: "adm (\<lambda>x. \<not> sdom\<cdot>x \<subseteq> M)"
