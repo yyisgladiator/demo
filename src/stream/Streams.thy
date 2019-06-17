@@ -440,6 +440,10 @@ lemma [simp]: "srt\<cdot>(\<up>a) = \<epsilon>"
 by (simp add: sup'_def)
 
 text {* Basic properties of concatenation *}
+lemma reduce_seq: (*never simp*)
+  assumes "s1 = s2"
+  shows "s \<bullet> s1 = s \<bullet> s2"
+  by (simp add: assms)
 
 (* the empty stream is the identity element with respect to concatenation *)
 lemma sconc_fst_empty[simp]:"\<epsilon> \<bullet> s = s"
@@ -1504,7 +1508,38 @@ using assms rek2sinftimes by fastforce
 (* shows that the infinite repetition of a stream x is the least fixed point of iterating (\<Lambda> s. x \<bullet> s),
    which maps streams to streams *)
 lemma fix2sinf[simp]: "fix\<cdot>(\<Lambda> s. x \<bullet> s) = x\<infinity>"
-by (metis eta_cfun fix_eq fix_strict rek2sinftimes sconc_snd_empty strict_icycle)
+  by (metis eta_cfun fix_eq fix_strict rek2sinftimes sconc_snd_empty strict_icycle)
+
+lemma snth_bool_sinftimes: "snth (Suc n) (\<up>bool \<bullet> \<up>(\<not> bool))\<infinity> = (\<not> snth n (\<up>bool \<bullet> \<up>(\<not>bool))\<infinity>)"
+  apply (induction n)
+  apply (metis assoc_sconc shd1 sinftimes_unfold snth_scons snth_shd)
+  by (metis (no_types, hide_lams) sconc_fst_empty sconc_scons' sinftimes_unfold snth_scons sup'_def)
+
+lemma sinftimes_srt: "srt\<cdot>((\<up>a \<bullet> \<up>b)\<infinity>) = (\<up>b \<bullet> \<up>a)\<infinity>"
+  apply (subst sinftimes_unfold, simp)
+  by (metis (no_types, lifting) assoc_sconc rek2sinftimes sinftimes_unfold strictI)
+  
+lemma sinftimes_snth:"(n mod 2 = 0 \<longrightarrow> snth n ((\<up>a \<bullet> \<up>b)\<infinity>) = a) \<and> (n mod 2 = 1 \<longrightarrow> snth n ((\<up>a \<bullet> \<up>b)\<infinity>) = b)"
+proof(induction n arbitrary: a b)
+  case 0
+  then show ?case 
+    by simp
+next
+  case (Suc n)
+  moreover obtain m where m_def:"n\<noteq>0 \<Longrightarrow> n = Suc m"
+    using not0_implies_Suc by auto
+  ultimately show ?case
+    apply(cases "n = 0")
+    apply(subst sinftimes_unfold, simp)
+    apply (metis sconc_scons shd1 sinftimes_unfold snth_scons snth_shd)
+    apply auto
+    apply(subst sinftimes_unfold, simp)
+    apply (simp add: snth_rt)
+    apply (metis One_nat_def even_Suc parity_cases sinftimes_srt)
+    apply(subst sinftimes_unfold, simp)
+    apply (simp add: snth_rt)
+    by (metis One_nat_def even_Suc parity_cases sinftimes_srt)
+qed
 
 
 (* ----------------------------------------------------------------------- *)
@@ -1606,6 +1641,15 @@ by (unfold sprojsnd_def, simp)
 lemma [simp]: "sprojsnd\<cdot>(\<up>(a,b)) = \<up>b"
   by (simp add: sprojsnd_def)
 
+lemma sprojsnd_shd:
+  assumes "s \<noteq> \<epsilon>"
+  shows "shd (sprojsnd\<cdot>s) = snd (shd s)"
+  by (metis assms prod.collapse shd1 sprojsnd_scons surj_scons)
+
+lemma sconc_sprojsnd_shd: 
+  shows "shd (sprojsnd\<cdot>(\<up>a \<bullet> s)) = snd a"
+  by (simp add: sprojsnd_shd)
+
 text {* @{term sprojfst} / @{term sprojsnd} and @{term srt} commute *}
 
 (* commutativity of sprojsnd and srt *)
@@ -1675,26 +1719,16 @@ qed
 lemma sprojfst_shd2[simp]: "shd (sprojfst\<cdot>(\<up>a \<bullet> s)) = fst (a)"
   by simp
 
-lemma sprojsnd_shd[simp]: assumes "s\<noteq>\<epsilon>" shows"shd (sprojsnd\<cdot>s) = snd (shd s)"
-  by (metis assms prod.collapse shd1 sprojsnd_scons surj_scons)
-
-lemma sprojsnd_snth[simp]: assumes "Fin n < #s" shows"snth n (sprojsnd\<cdot>s) = snd (snth n s)"
+lemma sprojsnd_snth:
+  assumes "Fin n < #s" 
+  shows "snth n (sprojsnd\<cdot>s) = snd (snth n s)"
   using assms
-proof(induction n arbitrary: s)
-  case 0
-  then show ?case
-    apply simp
-    apply(rule sprojsnd_shd)
-    by auto
-next
-  case (Suc n)
-  then show ?case
-    apply(simp add: snth_rt)
-    by (metis not_less rt_Sproj_2_eq slen_rt_ile_eq)
-qed
+  apply (induction n arbitrary: s)
+  using sprojsnd_shd apply force
+  by (metis leD leI rt_Sproj_2_eq slen_rt_ile_eq snth_rt)
 
 lemma sprojsnd_shd2[simp]: "shd (sprojsnd\<cdot>(\<up>a \<bullet> s)) = snd (a)"
-  by simp
+  by (simp add: sconc_sprojsnd_shd)
 
 (* ----------------------------------------------------------------------- *)
 subsection {* @{term sfilter} *}
@@ -3121,11 +3155,15 @@ lemma sscanlasnd_snth: assumes "Fin (Suc n)<#s" and "s2 = fst(shd(sscanlAg f sta
   shows "snth (Suc n) (sscanlAsnd f state\<cdot>s) = snth n (sscanlAsnd f s2\<cdot>(srt\<cdot>s))"
   apply(simp add: assms sscanlAsnd_def)
   apply(subst sprojsnd_snth)
-  apply(simp add: assms)
-  apply (meson assms(1) leD leI slen_rt_ile_eq)
-  apply(subst snth_sscanlAg)
-  apply(simp add: assms)
-  by (metis (no_types, lifting) assms(1) empty_is_shortest shd1 snth_scons snth_sscanlAg sscanlag_step surj_scons)
+   apply(simp add: assms)
+  by (metis assms(1) empty_is_shortest eta_cfun rt_Sproj_2_eq smap_snth_lemma snth_rt sprojsnd_def sscanlag_len sscanlag_shd sscanlag_srt)
+
+lemma sscanlasnd_snth2:
+  assumes "Fin (Suc n) < #(\<up>a \<bullet> s)"
+  shows "snth (Suc n) (sscanlAsnd f state\<cdot>(\<up>a \<bullet> s)) = snth n (sscanlAsnd f (fst (f state a))\<cdot>s)"
+  using assms
+  apply (induction s arbitrary: a rule: ind)
+  by simp_all
 
 lemma sscanlasnd_ntimes_loop:
   assumes "\<And>r. sscanlAsnd f state\<cdot>(s \<bullet> r) = out \<bullet> (sscanlAsnd f state\<cdot>r)" 
@@ -3138,6 +3176,13 @@ lemma sscanlasnd_inftimes_loop:
   shows "sscanlAsnd f state\<cdot>(sinftimes s) = sinftimes out"
   using assms
   by (metis rek2sinftimes sinftimes_unfold slen_empty_eq sscanlasnd_bot sscanlasnd_len strict_icycle) 
+
+lemma sscanlasnd2sinftimes:
+  assumes "#s=\<infinity>"
+    and "sscanlAsnd f state\<cdot>s = out \<bullet> (sscanlAsnd f state\<cdot>s)"
+    and "out \<noteq> \<epsilon>"
+  shows "sscanlAsnd f state\<cdot>s = sinftimes out"
+  using assms rek2sinftimes by auto
 
 (* ----------------------------------------------------------------------- *)
 subsection {* @{term merge} *}
@@ -4376,6 +4421,27 @@ lemma sdom_lub: "chain S \<Longrightarrow> sdom\<cdot>(\<Squnion> j. S j) = (\<U
 apply (simp add: contlub_cfun_arg)
 by (simp add: lub_eq_Union)
 
+lemma sscanlasnd_smap_state_loop:
+  assumes"\<And>e. e \<in> sdom\<cdot>s \<Longrightarrow> fst (f state e) = state"
+shows "sscanlAsnd f state\<cdot>(s) = smap (\<lambda>e. snd (f state e))\<cdot>s"
+  using assms
+  apply (induction s rule: ind)
+  apply (rule adm_imp)
+  apply (rule admI)
+  apply (meson sdom_chain2lub set_rev_mp)
+  by simp_all
+
+(* core lemma for exchanging transition function (general lemma) *) 
+lemma sscanla_exchange_f:
+  assumes "\<And>e state. P e \<Longrightarrow> F1 state e = F2 state e" 
+    and "\<forall>x \<in> sdom\<cdot>s. P x"
+  shows "sscanlAsnd F1 state\<cdot>s = sscanlAsnd F2 state\<cdot>s"
+  using assms
+  apply (induction s arbitrary: state rule: ind)
+  apply (rule adm_imp, simp)+
+  apply (rule admI)
+  apply (meson sdom_chain2lub subsetCE)
+  by simp_all
 text {* Let i in N be an index of the chain S of streams and B a set of messages. *}
 lemma l44: assumes "chain S" and "\<forall>i. sdom\<cdot>(S i) \<subseteq> B"
   shows "sdom\<cdot>(\<Squnion> j. S j) \<subseteq> B"
