@@ -44,6 +44,7 @@ dependency:
 
 mustWork:
   stage: mustWork
+  image: jecb96/isabelle:2018-with-latex
   script:
     - isabelle build -S -d . -j$NUMBER_SIMULT_SESSIONS -o timeout_scale=$TIMEOUT_SCALE -v -b -g mustWork
   tags:
