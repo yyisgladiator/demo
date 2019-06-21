@@ -1,6 +1,7 @@
 ### Isabelle ###
 *.thy~
 *.thy~~
+**/output/**
 
 ## jEdit:
 \#*

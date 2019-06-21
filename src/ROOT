@@ -13,10 +13,12 @@ session "stream" (mustWork) in stream = "inc" +
     Stream
     
 session "bundle" (mustWork) in bundle = "stream" +
-  options [quick_and_dirty = true]
+  options [quick_and_dirty, browser_info, document = pdf,document_variants="outline=/proof"]
   theories
     SB    
-
+  document_files
+    "root.tex"
+    
 session "spf" (mustWork) in spf = "bundle" +
   options [quick_and_dirty = true]
   theories
