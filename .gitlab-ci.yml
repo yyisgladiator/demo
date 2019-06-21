@@ -12,7 +12,7 @@ cache:
 stages:
   - dependency
   - mustWork
-  - canFail
+#  - canFail
 
 
 before_script:
@@ -60,3 +60,20 @@ canFail:
   tags:
     - docker
     - private
+    
+    
+    
+
+stage: deploy
+  script:
+    - find $(isabelle getenv -b ISABELLE_BROWSER_INFO)
+    - cp -r $(isabelle getenv -b ISABELLE_BROWSER_INFO)/Unsorted public
+  tags:
+    - docker
+    - private
+  only:
+    - V3   # TODO Change to master
+  artifacts:
+    paths:
+      - public
+    
