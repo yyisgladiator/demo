@@ -426,9 +426,6 @@ definition sbLen::"'c\<^sup>\<Omega> \<Rightarrow> lnat"where
 "sbLen sb = (LEAST n . n\<in>(insert (\<infinity>::lnat) {#(sb \<^enum> (c::'c)) | c. ((Rep::'c \<Rightarrow> channel) c)\<notin>cEmpty}))"
 
 subsubsection \<open> sbLen lemmas \<close>
-lemma assumes "sbLen sb \<noteq> 0" shows "sbECons\<cdot>(sbHdElem sb)\<cdot>(sbRt\<cdot>sb) = sb"
-  oops
-
 
 lemma sblen_min_len [simp]: "sbLen sb \<le> #(sb \<^enum> c)" (* TODO: vermutlich typ von "c" fixieren *)
   oops
@@ -473,19 +470,112 @@ abbreviation sbECons_abbr :: "'c\<^sup>\<surd> \<Rightarrow> 'c\<^sup>\<Omega> \
 "sbe \<bullet>\<^sup>\<surd> sb \<equiv> sbECons\<cdot>sbe\<cdot>sb"
 
 
+subsubsection \<open>sbE2Cons lemmas\<close>
+
+lemma assumes "sbLen sb \<noteq> 0" shows "sbECons\<cdot>(sbHdElem sb)\<cdot>(sbRt\<cdot>sb) = sb"
+  oops
+
+
 subsection\<open>sbHdElem\<close>
 
 subsubsection \<open>sbHdElem definition\<close>
 
-lift_definition sbHdElem_h::"'c\<^sup>\<Omega> \<rightarrow> ('c\<^sup>\<surd>) u"is 
+lemma sbhdelem_mono:"monofun
+     (\<lambda>sb::'c\<^sup>\<Omega>.
+         if range (Rep::'c \<Rightarrow> channel) \<subseteq> cEmpty then Iup (Abs_sbElem None)
+         else if \<exists>c::'c. sb  \<^enum>  c = \<epsilon> then \<bottom> else Iup (Abs_sbElem (Some (\<lambda>c::'c. shd (sb  \<^enum>  c)))))"
+  apply(rule monofunI)
+  apply(cases "range (Rep::'c \<Rightarrow> channel) \<subseteq> cEmpty")
+  apply simp
+  apply auto
+  apply (metis below_bottom_iff monofun_cfun_arg)
+  by (meson below_shd monofun_cfun_arg)
+
+lift_definition sbHdElem_h::"'c\<^sup>\<Omega> \<Rightarrow> ('c\<^sup>\<surd>) u"is 
+"(\<lambda> sb. if (range(Rep::'c\<Rightarrow> channel)\<subseteq>cEmpty) then Iup(Abs_sbElem None) else 
+        if (\<exists>c::'c. sb \<^enum> c = \<epsilon>) then \<bottom> else Iup(Abs_sbElem (Some (\<lambda>c. shd((sb) \<^enum> c)))))"
+  done
+
+lift_definition sbHdElem_h_cont::"('c::{finite,chan})\<^sup>\<Omega> \<rightarrow> ('c\<^sup>\<surd>) u"is 
 "(\<lambda> sb. if (range(Rep::'c\<Rightarrow> channel)\<subseteq>cEmpty) then Iup(Abs_sbElem None) else 
         if (\<exists>c::'c. sb \<^enum> c = \<epsilon>) then \<bottom> else Iup(Abs_sbElem (Some (\<lambda>c. shd((sb) \<^enum> c)))))"
   apply(simp add: cfun_def)
+  apply(intro cont2cont)
   apply(rule Cont.contI2)
-  sorry
+   apply(rule monofunI)
+  apply auto[1]
+  apply (metis minimal monofun_cfun_arg po_eq_conv)
+   apply (meson below_shd monofun_cfun_arg)
+proof-
+  fix Y::"nat \<Rightarrow> 'c\<^sup>\<Omega>"
+  assume ch1:"chain Y"
+  assume ch2:"chain (\<lambda>i::nat. if \<exists>c::'c. Y i  \<^enum>  c = \<epsilon> then \<bottom> else Iup (Abs_sbElem (Some (\<lambda>c::'c. shd (Y i  \<^enum>  c)))))"
+  have "\<exists>c::'c. (\<Squnion>i::nat. Y i)  \<^enum>  c = \<epsilon> \<Longrightarrow> \<exists>c::'c. \<forall>i. (Y i)  \<^enum>  c = \<epsilon>"
+    by (metis ch1 is_ub_thelub minimal monofun_cfun_arg po_eq_conv)
+  have "adm (\<lambda>sb::'c\<^sup>\<Omega>. \<exists>c::'c. sb \<^enum> c= \<epsilon>)" (*Similar proof in spfstep.thy (automaton project)*)
+  proof(rule admI)
+    fix Y::"nat \<Rightarrow> 'c\<^sup>\<Omega>"
+    assume chain:"chain Y"
+    assume epsholds:"\<forall>i::nat. \<exists>c::'c. Y i  \<^enum>  c = \<epsilon>"
+    then have h0:"\<forall>c i. ((Y i) \<^enum> c \<noteq> \<epsilon>) \<longrightarrow> ((\<Squnion>i::nat. Y i)  \<^enum>  c \<noteq> \<epsilon>)"
+      by (metis (full_types) chain is_ub_thelub minimal monofun_cfun_arg po_eq_conv)
+    then obtain set_not_eps where set_not_eps_def:"set_not_eps = {c::'c. \<exists>i. Y i \<^enum> c \<noteq> \<epsilon>}" 
+      by simp
+    then have "finite set_not_eps"
+      by simp
+    then have "finite (UNIV - set_not_eps)"
+      by simp
+    have h1:"\<forall>c\<in>(UNIV - set_not_eps). (\<Squnion>i::nat. Y i)  \<^enum>  c = \<epsilon>"
+      by (simp add: chain contlub_cfun_arg set_not_eps_def)
+    have h2:"\<forall>c\<in>(set_not_eps). (\<Squnion>i::nat. Y i)  \<^enum>  c \<noteq> \<epsilon>"
+      using h0 set_not_eps_def by auto
+    have "set_not_eps \<noteq> UNIV"
+      apply(simp add: set_not_eps_def) 
+      sorry
+    then show "\<exists>c::'c. (\<Squnion>i::nat. Y i)  \<^enum>  c = \<epsilon>"
+      using h1 by blast
+  qed
+  then have "\<forall>i::nat. \<exists>c::'c. Y i  \<^enum>  c = \<epsilon> \<Longrightarrow> \<exists>c::'c. (\<Squnion>i::nat. Y i)  \<^enum>  c = \<epsilon>"
+    apply(rule admD)
+    by(simp_all add: ch1)
+  then have finiteIn:"\<forall>c::'c. (\<Squnion>i::nat. Y i)  \<^enum>  c \<noteq> \<epsilon> \<Longrightarrow> \<exists>i. \<forall>c::'c. (Y i) \<^enum> c \<noteq> \<epsilon>"
+    by blast
+  then show "(if \<exists>c::'c. (\<Squnion>i::nat. Y i)  \<^enum>  c = \<epsilon> then \<bottom> else Iup (Abs_sbElem (Some (\<lambda>c::'c. shd ((\<Squnion>i::nat. Y i)  \<^enum>  c))))) \<sqsubseteq>
+       (\<Squnion>i::nat. if \<exists>c::'c. Y i  \<^enum>  c = \<epsilon> then \<bottom> else Iup (Abs_sbElem (Some (\<lambda>c::'c. shd (Y i  \<^enum>  c)))))"
+  proof(cases "\<exists>c::'c. (\<Squnion>i::nat. Y i)  \<^enum>  c = \<epsilon>")
+    case True
+    then show ?thesis
+      by simp
+  next
+    case False
+    have ch3:"\<And>c. chain (\<lambda>i. Y i  \<^enum>  c)"
+      by (simp add: ch1)
+    obtain n where n_def:"\<forall>c::'c. (Y n) \<^enum> c \<noteq> \<epsilon>"
+      using False finiteIn by auto
+    then have shd_eq:"\<And>i. i\<ge>n \<Longrightarrow> (\<lambda>c::'c. shd (Y i  \<^enum>  c)) = (\<lambda>c::'c. shd (Y n  \<^enum>  c))"
+      apply(subst fun_eq_iff)
+      apply auto
+      apply(rule below_shd_alt,auto)
+      by (simp add: ch1 monofun_cfun_arg po_class.chain_mono)
+    have h1:"\<forall>i\<ge>n. (if \<exists>c::'c. Y i  \<^enum>  c = \<epsilon> then \<bottom> else Iup (Abs_sbElem (Some (\<lambda>c::'c. shd (Y i  \<^enum>  c))))) 
+                = Iup (Abs_sbElem (Some (\<lambda>c::'c. shd (Y n  \<^enum>  c))))"
+      apply(auto)
+      apply (metis ch1 minimal monofun_cfun_arg n_def po_class.chain_mono po_eq_conv)
+      using shd_eq by presburger
+    have h2:"(if \<exists>c::'c. (\<Squnion>i::nat. Y i)  \<^enum>  c = \<epsilon> then \<bottom> else Iup (Abs_sbElem (Some (\<lambda>c::'c. shd ((\<Squnion>i::nat. Y i)  \<^enum>  c))))) \<sqsubseteq> Iup (Abs_sbElem (Some (\<lambda>c::'c. shd (Y n  \<^enum>  c))))"
+      apply(simp add: False)
+      by (metis below_shd ch1 is_ub_thelub monofun_cfun_arg n_def)
+    have h3:"(if \<exists>c::'c. Y n  \<^enum>  c = \<epsilon> then \<bottom> else Iup (Abs_sbElem (Some (\<lambda>c::'c. shd (Y n  \<^enum>  c))))) \<sqsubseteq> (\<Squnion>i::nat. if \<exists>c::'c. Y i  \<^enum>  c = \<epsilon> then \<bottom> else Iup (Abs_sbElem (Some (\<lambda>c::'c. shd (Y i  \<^enum>  c)))))"
+      using below_lub ch2 by blast
+    have h3_h:"(if \<exists>c::'c. Y n  \<^enum>  c = \<epsilon> then \<bottom> else Iup (Abs_sbElem (Some (\<lambda>c::'c. shd (Y n  \<^enum>  c))))) = Iup (Abs_sbElem (Some (\<lambda>c::'c. shd (Y n  \<^enum>  c))))"
+      by(simp add: n_def)
+    then show ?thesis
+      using h2 h3 by auto
+  qed
+qed
 
 definition sbHdElem::"'c\<^sup>\<Omega> \<Rightarrow> 'c\<^sup>\<surd>"where
-"sbHdElem = (\<lambda> sb. case (sbHdElem_h\<cdot>sb) of Iup sbElem \<Rightarrow> sbElem | _ \<Rightarrow> undefined)"
+"sbHdElem = (\<lambda> sb. case (sbHdElem_h sb) of Iup sbElem \<Rightarrow> sbElem | _ \<Rightarrow> undefined)"
 
 subsubsection \<open>sbHdElem abbreviation \<close> (*TODO: better abbreviation lfloor*)
 
@@ -504,7 +594,7 @@ lemma sbhdelem_some:"((\<forall>c::'c. x \<^enum> c \<noteq> \<epsilon>) \<and> 
 lemma sbhdelem_mono_empty[simp]:"((range(Rep::'c\<Rightarrow> channel)\<subseteq>cEmpty)) \<Longrightarrow> (x::('c)\<^sup>\<Omega>) \<sqsubseteq> y \<Longrightarrow> sbHdElem x = sbHdElem y"
   by(simp)
 
-lemma sbhdelem_mono[simp]:"(\<And>c::'a. (x::'a\<^sup>\<Omega>) \<^enum> c \<noteq> \<epsilon>) \<Longrightarrow>  x \<sqsubseteq> y \<Longrightarrow> sbHdElem x = sbHdElem y"
+lemma sbhdelem_mono_eq[simp]:"(\<And>c::'a. (x::'a\<^sup>\<Omega>) \<^enum> c \<noteq> \<epsilon>) \<Longrightarrow>  x \<sqsubseteq> y \<Longrightarrow> sbHdElem x = sbHdElem y"
 proof-
   assume a1:"(\<And>c::'a. x  \<^enum>  c \<noteq> \<epsilon>)"
   assume a2:"x \<sqsubseteq> y"

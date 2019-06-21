@@ -571,7 +571,11 @@ by (rule_tac x=x in scases, simp+)
 
 (* the head of ordered streams are equal *)
 lemma below_shd: "x \<sqsubseteq> y \<and> x \<noteq> \<epsilon> \<Longrightarrow> shd x = shd y"
-by (metis below_bottom_iff less_all_sconsD surj_scons)
+  by (metis below_bottom_iff less_all_sconsD surj_scons)
+
+(* the head of ordered streams are equal *)
+lemma below_shd_alt: "x \<sqsubseteq> y \<and> x \<noteq> \<epsilon> \<Longrightarrow> shd y = shd x"
+  using below_shd by fastforce
 
 text {* Characterizations of @{text "\<sqsubseteq>"} with head and rest *}
 

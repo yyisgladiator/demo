@@ -25,7 +25,7 @@ subsection \<open>Semantic for deterministic Automaton \<close>
 subsubsection \<open>Semantic helper functions \<close>
 
 definition spfStep_h::" ((('c::{chan,finite})\<^sup>\<surd>) u \<rightarrow> ('c\<^sup>\<Omega> \<rightarrow> 'd\<^sup>\<Omega>))\<rightarrow>('c\<^sup>\<Omega> \<rightarrow> 'd\<^sup>\<Omega>)" where
-"spfStep_h \<equiv> (\<Lambda> h. (\<Lambda> sb. h\<cdot>(sbHdElem_h\<cdot>sb)\<cdot>sb))"
+"spfStep_h \<equiv> (\<Lambda> h. (\<Lambda> sb. h\<cdot>(sbHdElem_h_cont\<cdot>sb)\<cdot>sb))"
 
 lift_definition spfStep::" (('c::{chan,finite})\<^sup>\<surd> \<rightarrow> ('c\<^sup>\<Omega> \<rightarrow> 'd\<^sup>\<Omega>))\<rightarrow>('c\<^sup>\<Omega> \<rightarrow> 'd\<^sup>\<Omega>)" is
 "(\<lambda> h. (\<Lambda> sb. spfStep_h\<cdot>(fup\<cdot>h)\<cdot>sb))"
