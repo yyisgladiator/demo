@@ -13,7 +13,7 @@ stages:
   - dependency
   - mustWork
 #  - canFail
-
+  - deploy
 
 before_script:
   - if [ ! -z "$(ls -A cache)" ]; then mv cache/* $ISABELLE_HOME_USER_DIR; fi
@@ -52,19 +52,19 @@ mustWork:
     - private
 
 
-canFail:
-  stage: canFail
-  allow_failure: true   # for now, sorrys are allowed
-  script:
-    - isabelle build -S -d . -j$NUMBER_SIMULT_SESSIONS -o timeout_scale=$TIMEOUT_SCALE -v -b -g canFail
-  tags:
-    - docker
-    - private
+# canFail:
+#   stage: canFail
+#   allow_failure: true   # for now, sorrys are allowed
+#   script:
+#     - isabelle build -S -d . -j$NUMBER_SIMULT_SESSIONS -o timeout_scale=$TIMEOUT_SCALE -v -b -g canFail
+#   tags:
+#     - docker
+#     - private
     
     
     
-
-stage: deploy
+pages:
+  stage: deploy
   script:
     - find $(isabelle getenv -b ISABELLE_BROWSER_INFO)
     - cp -r $(isabelle getenv -b ISABELLE_BROWSER_INFO)/Unsorted public
