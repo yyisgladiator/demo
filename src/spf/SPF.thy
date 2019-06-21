@@ -6,10 +6,10 @@ begin
 
 section \<open> Causal SPFs\<close>
 
-
+(*
 definition strong_weak_ex::"('I\<^sup>\<Omega> \<rightarrow> 'O\<^sup>\<Omega>)" where
 "strong_weak_ex = (\<Lambda> sb. Abs_sb(\<lambda>c. sinftimes(\<up>eps)))" (*doesnt work, because of ctype*)
-
+*)
 subsection \<open>Weak SPF\<close>
 
 subsubsection \<open>Weak SPF definition \<close>

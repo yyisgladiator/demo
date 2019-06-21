@@ -1,18 +1,18 @@
-chapter {* Set and bool as a pointed cpo. *}
+chapter \<open>Set and bool as a pointed cpo.\<close>
 
 theory SetPcpo
 imports HOLCF LNat
 begin
 
-text {*PCPO on sets and bools. The @{text "\<sqsubseteq>"} operator of the order is defined as the @{text "\<subseteq>"} operator on sets
-  and as @{text "\<longrightarrow>"} on booleans.
-*}
+text \<open>PCPO on sets and bools. The \<open>\<sqsubseteq>\<close> operator of the order is defined as the \<open>\<subseteq>\<close> operator on sets
+  and as \<open>\<longrightarrow>\<close> on booleans.
+\<close>
 
 (* ----------------------------------------------------------------------- *)
-section {* Order on sets. *}
+section \<open>Order on sets.\<close>
 (* ----------------------------------------------------------------------- *)
 
-text {* {text "\<sqsubseteq>"} operator as the @{text "\<subseteq>"} operator on sets -> partial order. *}
+text \<open>{text "\<sqsubseteq>"} operator as the \<open>\<subseteq>\<close> operator on sets -> partial order.\<close>
 instantiation set :: (type) po
 begin
   definition less_set_def: "(\<sqsubseteq>) = (\<subseteq>)"
@@ -24,7 +24,7 @@ apply (simp add: less_set_def)
 done
 end
 
-text {* The least upper bound on sets corresponds to the @{text "Union"} operator. *}
+text \<open>The least upper bound on sets corresponds to the \<open>Union\<close> operator.\<close>
 lemma Union_is_lub: "A <<| \<Union>A"
 apply (simp add: is_lub_def)
 apply (simp add: is_ub_def)
@@ -32,40 +32,40 @@ apply (simp add: less_set_def Union_upper)
 apply (simp add: Sup_least)
 done
 
-text {* Another needed variant of the fact that lub on sets corresponds to union. *}
+text \<open>Another needed variant of the fact that lub on sets corresponds to union.\<close>
 lemma lub_eq_Union: "lub = Union"
 apply (rule ext)
 apply (rule lub_eqI [OF Union_is_lub])
 done
 
-text {* The partial order on sets is complete. *}
+text \<open>The partial order on sets is complete.\<close>
 instance set :: (type) cpo
 apply intro_classes
 using Union_is_lub 
 apply auto
 done
 
-text {* Sets are also pcpo`s, pointed with @{text "{}"} as minimal element. *}
+text \<open>Sets are also pcpo`s, pointed with \<open>{}\<close> as minimal element.\<close>
 instance set :: (type) pcpo
 apply intro_classes
 apply (rule_tac x= "{}" in exI)
 apply (simp add: less_set_def)
 done
 
-text {* For sets, the minimal element is the empty set.*}
+text \<open>For sets, the minimal element is the empty set.\<close>
 lemma UU_eq_empty: "\<bottom> = {}"
 apply (simp add: less_set_def bottomI)
 done
 
-text {* We group the following lemmas in order to simplify future proofs. *}
+text \<open>We group the following lemmas in order to simplify future proofs.\<close>
 lemmas set_cpo_simps = less_set_def lub_eq_Union UU_eq_empty
 
 (* ----------------------------------------------------------------------- *)
-section {* Order on booleans. *}
+section \<open>Order on booleans.\<close>
 (* ----------------------------------------------------------------------- *)
 
-text {* If one defines the @{text "\<sqsubseteq>"} operator as the @{text "\<longrightarrow>"} operator on booleans,
-  one obtains a partial order. *}
+text \<open>If one defines the \<open>\<sqsubseteq>\<close> operator as the \<open>\<longrightarrow>\<close> operator on booleans,
+  one obtains a partial order.\<close>
 instantiation bool :: po
 begin
   definition less_bool_def: "(\<sqsubseteq>) = (\<longrightarrow>)"
@@ -79,7 +79,7 @@ apply auto
 done
 end
 
-text {* Chains of bools are always finite. This is needed to prove that bool is a cpo. *}
+text \<open>Chains of bools are always finite. This is needed to prove that bool is a cpo.\<close>
 instance bool :: chfin
 proof
   fix S:: "nat \<Rightarrow> bool"
@@ -96,10 +96,10 @@ proof
   done
 qed
 
-text {* The partial order on bools is complete. *}
+text \<open>The partial order on bools is complete.\<close>
 instance bool :: cpo ..
 
-text {* Bools are also pointed with @{text "False"} as minimal element. *}
+text \<open>Bools are also pointed with \<open>False\<close> as minimal element.\<close>
 instance bool :: pcpo
 proof
   have "\<forall>y::bool. False \<sqsubseteq> y" 
@@ -110,80 +110,80 @@ proof
 qed
 
 (* ----------------------------------------------------------------------- *)
-section {* Properties *}
+section \<open>Properties\<close>
 (* ----------------------------------------------------------------------- *)
 
 (* ----------------------------------------------------------------------- *)
-subsection {* Admissibility of set predicates *}
+subsection \<open>Admissibility of set predicates\<close>
 (* ----------------------------------------------------------------------- *)
 
-text {* The predicate "\<lambda>A. \<exists>x. x \<in> A" is admissible. *}
+text \<open>The predicate "\<lambda>A. \<exists>x. x \<in> A" is admissible.\<close>
 lemma adm_nonempty: "adm (\<lambda>A. \<exists>x. x \<in> A)"
 apply (rule admI)
 apply (simp add: lub_eq_Union)
 apply force
 done
 
-text {* The predicate "\<lambda>A. x \<in> A" is admissible. *}
+text \<open>The predicate "\<lambda>A. x \<in> A" is admissible.\<close>
 lemma adm_in: "adm (\<lambda>A. x \<in> A)"
 apply (rule admI)
 apply (simp add: lub_eq_Union)
 done
 
-text {* The predicate "\<lambda>A. x \<notin> A" is admissible. *}
+text \<open>The predicate "\<lambda>A. x \<notin> A" is admissible.\<close>
 lemma adm_not_in: "adm (\<lambda>A. x \<notin> A)"
 apply (rule admI)
 apply (simp add: lub_eq_Union)
 done
 
-text {* If for all x the predicate "\<lambda>A. P A x" is admissible, then so is "\<lambda>A. \<forall>x\<in>A. P A x". *}
+text \<open>If for all x the predicate "\<lambda>A. P A x" is admissible, then so is "\<lambda>A. \<forall>x\<in>A. P A x".\<close>
 lemma adm_Ball: "(\<And>x. adm (\<lambda>A. P A x)) \<Longrightarrow> adm (\<lambda>A. \<forall>x\<in>A. P A x)"
 apply (simp add: Ball_def)
 apply (simp add: adm_not_in)
 done
 
-text {* The predicate "\<lambda>A. Bex A P", which means "\<lambda>A. \<exists>x. x \<in> A \<and> P x" is admissible. *}
+text \<open>The predicate "\<lambda>A. Bex A P", which means "\<lambda>A. \<exists>x. x \<in> A \<and> P x" is admissible.\<close>
 lemma adm_Bex: "adm (\<lambda>A. Bex A P)"
 apply (rule admI)
 apply (simp add: lub_eq_Union)
 done
 
-text {* The predicate "\<lambda>A. A \<subseteq> B" is admissible. *}
+text \<open>The predicate "\<lambda>A. A \<subseteq> B" is admissible.\<close>
 lemma adm_subset: "adm (\<lambda>A. A \<subseteq> B)"
 apply (rule admI)
 apply (simp add: lub_eq_Union)
 apply auto
 done
 
-text {* The predicate "\<lambda>A. B \<subseteq> A" is admissible. *}
+text \<open>The predicate "\<lambda>A. B \<subseteq> A" is admissible.\<close>
 lemma adm_superset: "adm (\<lambda>A. B \<subseteq> A)"
 apply (rule admI)
 apply (simp add: lub_eq_Union)
 apply auto
 done
 
-text {* We group the following lemmas in order to simplify future proofs. *}
+text \<open>We group the following lemmas in order to simplify future proofs.\<close>
 lemmas adm_set_lemmas = adm_nonempty adm_in adm_not_in adm_Bex adm_Ball adm_subset adm_superset
 
 (* ----------------------------------------------------------------------- *)
-subsection {* Compactness *}
+subsection \<open>Compactness\<close>
 (* ----------------------------------------------------------------------- *)
 
-text {* The bottom element of the set cpo ist compact. *}
+text \<open>The bottom element of the set cpo ist compact.\<close>
 lemma compact_empty: "compact {}"
 apply (fold UU_eq_empty)
 apply simp
 done
 
-text {* Induction step for compact sets: 
-If a set is compact and we insert an element into it, then the compactness is preserved. *}
+text \<open>Induction step for compact sets: 
+If a set is compact and we insert an element into it, then the compactness is preserved.\<close>
 lemma compact_insert: "compact A \<Longrightarrow> compact (insert x A)"
 apply (simp add: compact_def)
 apply (simp add: set_cpo_simps)
 apply (simp add: adm_set_lemmas)
 done
 
-text {* The compactness of finite sets is proven by induction from the lemma above. *}
+text \<open>The compactness of finite sets is proven by induction from the lemma above.\<close>
 lemma finite_imp_compact: "finite A \<Longrightarrow> compact A"
 apply (induct A set: finite)
 apply (rule compact_empty)

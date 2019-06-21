@@ -1,6 +1,6 @@
 theory SB
 
-imports sbElem
+imports stream.Stream sbElem
 begin
 declare[[show_types]]
 section\<open>ctype (generated)\<close>
@@ -93,7 +93,7 @@ proof
   have "Rep((Abs::channel \<Rightarrow> 'a) (Rep c)) \<in> range (Rep::'a \<Rightarrow> channel)"
     by simp
   then show "sdom\<cdot>(Rep_sb sb (Abs (Rep c))) \<subseteq> ctype (Rep c)"
-    using \<open>sb_well (f::'a \<Rightarrow> M stream)\<close> a1 axiom_repabsrep f_def sValues_def sb_well_def by force
+    using \<open>sb_well (f::'a \<Rightarrow> M stream)\<close> a1 f_def sValues_def sb_well_def by fastforce
 qed
 
 lemma sdom_notempty:"s\<noteq>\<epsilon> \<Longrightarrow> sdom\<cdot>s\<noteq>{}"

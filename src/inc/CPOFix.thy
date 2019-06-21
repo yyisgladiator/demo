@@ -1,4 +1,4 @@
-section {* cpo fixpoint *}
+section \<open>cpo fixpoint\<close>
 
 theory CPOFix
 imports Prelude
