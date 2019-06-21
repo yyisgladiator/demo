@@ -1,6 +1,6 @@
-theory SPFv3
+theory SPF
 
-imports "../bundle/SBv3"
+imports bundle.SB
 
 begin
 

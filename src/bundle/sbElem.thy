@@ -1,6 +1,6 @@
-theory sbElemv3
+theory sbElem
 
-imports stream.Streams inc.Channelv3
+imports stream.Streams inc.Channel
 begin
 
 default_sort chan

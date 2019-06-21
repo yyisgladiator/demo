@@ -394,33 +394,6 @@ lemma stake_mono: assumes "i\<le>j"
   shows "stake i\<cdot>s \<sqsubseteq> stake j\<cdot>s"
 by (metis assms min_def stream.take_below stream.take_take)
 
-
-(* ----------------------------------------------------------------------- *)
-subsection {* The continuity of concatenation *}
-(* ----------------------------------------------------------------------- *)
-
-text {* The function body which is used to define concatenation
-  is continuous. Continuity has to be proven before the Lambda-
-  expression may be evaluated (beta reduction). *}
-(* concatenation is continuous *)
-lemma cont_sconc: 
-  "\<And>s1 s2. 
-     cont (\<lambda>h. if s1 = \<epsilon> then s2 else (lshd\<cdot>s1) && (h (srt\<cdot>s1)\<cdot>s2))"
-apply (rule contI)
-apply (rule_tac y=s1 in scases', simp+)
-apply (rule is_lub_const)
-apply (subst lub_fun, assumption)
-apply (subst contlub_cfun_fun)
-apply (rule ch2ch_fun, assumption)
-apply (subst contlub_cfun_arg)
-apply (rule ch2ch_Rep_cfunL)
-apply (rule ch2ch_fun, assumption)
-apply (rule thelubE, simp)
-apply (rule ch2ch_Rep_cfunR)
-apply (rule ch2ch_Rep_cfunL)
-by (rule ch2ch_fun, assumption, simp)
-
-
 (* ----------------------------------------------------------------------- *)
 subsection {* Construction by concatenation and more *}
 (* ----------------------------------------------------------------------- *)

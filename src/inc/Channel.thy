@@ -1,4 +1,4 @@
-theory Channelv3
+theory Channel
 
 imports HOLCF
 begin

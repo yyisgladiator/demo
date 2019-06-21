@@ -1,6 +1,6 @@
-theory SBv3
+theory SB
 
-imports sbElemv3
+imports sbElem
 begin
 declare[[show_types]]
 section\<open>ctype (generated)\<close>

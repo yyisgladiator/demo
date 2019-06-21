@@ -1,27 +1,24 @@
 session "inc" (mustWork) in inc = "HOLCF" +
   options [quick_and_dirty = false]
   theories
-    Channelv3
+    Channel
     LNat
     SetPcpo
-    Reversed
     Prelude
-    CPOFix
 
-
-session "HOLMF" (mustWork) in HOLMF = "inc" +
-  options [quick_and_dirty = false]
-  theories
-    LongChain
-    Division
-    LFP
-    GFP
-    Induction
-    InductionGFP
-    Instantiation
-    GLB
 
 session "stream" (mustWork) in stream = "inc" +
   options [quick_and_dirty = false]
   theories
     Streams
+    
+session "bundle" (mustWork) in bundle = "stream" +
+  options [quick_and_dirty = true]
+  theories
+    SB    
+
+session "spf" (mustWork) in spf = "bundle" +
+  options [quick_and_dirty = true]
+  theories
+    SPF
+
