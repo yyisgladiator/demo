@@ -1005,4 +1005,10 @@ shows "n = p"
   using assms plus_unique_r
   by (metis lnat_plus_commu) 
 
+text{* Declares Fin and {@term \<infinity>} as constructors for lnat. This is useful for patterns that use constructors*}
+setup \<open>Sign.mandatory_path "SBv3"\<close>
+old_rep_datatype Fin Inf'
+  apply (metis ninf2Fin)
+  by simp+
+
 end

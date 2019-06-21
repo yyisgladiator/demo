@@ -1,7 +1,7 @@
 section {* Lazy Streams *} 
 
 theory Streams
-imports inc.LNat inc.SetPcpo inc.UnivClasses
+imports inc.LNat inc.SetPcpo
 begin
 
 section {* The Datatype of Lazy Streams *}
@@ -5211,38 +5211,5 @@ by(simp add: id_def)
 lemma add2ID:"add\<cdot>\<up>0\<infinity> = ID"
 by (simp add: add2ID_h cfun_eqI)
 
-(* ----------------------------------------------------------------------- *)
-section \<open>Instantiation\<close>
-(* ----------------------------------------------------------------------- *)
-
-
-instantiation stream :: (message) uscl
-begin
-  definition usclOkay_stream_def: "usclOkay c m \<equiv> sdom\<cdot>m \<subseteq> ctype c"
-  definition usclLen_stream_def: "usclLen \<equiv> slen"
-instance
-  apply intro_classes
-   apply (meson sdom_sfilter1 subsetI usclOkay_stream_def)
-  apply (rule admI)
-  by (simp add: subset_cont usclOkay_stream_def)
-end
-
-
-instantiation stream :: (message) uscl_pcpo
-begin
-instance 
-  apply intro_classes
-  by (simp add: usclOkay_stream_def)
-end
-
-instantiation stream :: (message) uscl_conc
-begin
-  definition usclConc_stream_def: "usclConc \<equiv> sconc"
-instance
-  apply intro_classes
-  apply (simp_all add: usclOkay_stream_def usclLen_stream_def usclConc_stream_def)
-  apply (meson Un_subset_iff dual_order.trans sconc_sdom)
-  by (simp add: sconc_slen2)
-end
 
 end
