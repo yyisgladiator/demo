@@ -9,12 +9,12 @@ section \<open> flasher port chans \<close>
 typedef botChan ="{SOME c. c\<in>cEmpty}"
   by simp
 
-typedef flasherPortIn = "{c1}"
+typedef flasherPortIn = "{SOME c. c\<notin>cEmpty}"
   apply auto
   done
 
 
-typedef flasherPortOut = "{c2}"
+typedef flasherPortOut = "{SOME c. c\<notin>cEmpty \<and> c\<notin>range(Rep_flasherPortIn)}"
   apply auto
   done
 
@@ -67,7 +67,7 @@ definition flasherAutomatonw::"(flasherState,flasherPortIn,flasherPortOut,botCha
 
 definition flasherAutomatons::"(flasherState,flasherPortIn,flasherPortOut) dAutomaton_strong" where
 "flasherAutomatons =(| dawTransition =(\<lambda>s sbe. (s,Abs_sbElem(Some (\<lambda>c. sbegetch c sbe)))), 
-                 dawInitState = S, dawInitOut = Abs_sbElem(Some (\<lambda>c. B True)) |)"
+                 dawInitState = S, dawInitOut = Abs_sbElem(Some (\<lambda>c. SOME m. True)) |)"
 
 section \<open> flasher automat to spf\<close>
 

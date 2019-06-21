@@ -1,6 +1,6 @@
 theory dAutomatonsemv3
 
-imports "../bundle/SBv3" "../spf/SPFv3"
+imports bundle.SB spf.SPF
 begin
 
 section \<open>Deterministic Automaton\<close>

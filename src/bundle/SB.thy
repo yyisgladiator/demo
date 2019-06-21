@@ -9,14 +9,6 @@ text \<open>TODO: sDom umbenenne zu sValues\<close>
 definition sValues :: "M stream \<Rightarrow> M set" where "sValues = (Rep_cfun sdom)" (*collect*)
 
 
-(*another axiom for Channelv3.thy*)
-text \<open>@Hk: Wieso ist das ein Axiom?\<close>
-lemma axiom_repabsrep:"Rep (c::'d)\<in>(range(Rep::'c\<Rightarrow>channel)) \<Longrightarrow> Rep((Abs::channel \<Rightarrow> 'c) (Rep c)) = Rep c"
-  apply(cases "Rep c \<in> cEmpty")
-   apply (simp add: f_inv_into_f)+
-  done
-
-
 section \<open>sb pcpo definition \<close>
 
 definition sb_well :: "('c::chan \<Rightarrow> M stream) \<Rightarrow> bool" where
@@ -216,7 +208,7 @@ subsubsection \<open>sbUnion lemmas\<close>
 lemma magicsbunion_getch[simp]:fixes c::"'a"
       assumes"Rep c \<in> range(Rep::'c \<Rightarrow> channel)"
       shows  "(sbUnion::'a\<^sup>\<Omega>\<rightarrow> 'b\<^sup>\<Omega> \<rightarrow> 'c\<^sup>\<Omega>)\<cdot>cb\<cdot>db \<^enum> c = cb \<^enum> c"
-  by(simp add: Abs_sb_inverse axiom_repabsrep sbGetCh.rep_eq sbunion_insert assms)
+  by(simp add: Abs_sb_inverse sbGetCh.rep_eq sbunion_insert assms)
 
 subsection \<open>sbConvert\<close>
 

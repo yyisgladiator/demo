@@ -1,6 +1,6 @@
 theory SPFcompv3
 
-imports "../bundle/SBv3"
+imports bundle.SB
 begin
 
 section \<open>General composition\<close>
