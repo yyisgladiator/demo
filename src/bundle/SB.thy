@@ -30,6 +30,11 @@ pcpodef 'c::chan sb("(_\<^sup>\<Omega>)" [1000] 999) = "{f :: ('c::chan \<Righta
   apply(rule admI)
   by (simp add: ch2ch_fun l44 lub_fun)
 
+subsection \<open>Strict definition\<close>
+
+definition spfIsStrict::"('c\<^sup>\<Omega> \<rightarrow> 'd\<^sup>\<Omega>) \<Rightarrow> bool" where
+"spfIsStrict f \<equiv> f\<cdot>\<bottom>=\<bottom>"
+
 subsection \<open> sb pcpo lemmata \<close>
 lemma bot_sb:"\<bottom> = Abs_sb(\<lambda>c. \<epsilon>)"
   by (simp add: Abs_sb_strict lambda_strict)
@@ -410,6 +415,9 @@ abbreviation sbConc_abbr :: "'c\<^sup>\<Omega>  \<Rightarrow>  'c\<^sup>\<Omega>
 
 subsubsection \<open>sbConc lemmas\<close>
 
+lemma sbconc_eq:"sb \<bullet>\<^sup>\<Omega> \<bottom> = sb"
+  oops
+
 subsection \<open>sbLen\<close>
 
 subsubsection \<open>sbLen definition \<close>
@@ -464,7 +472,19 @@ abbreviation sbECons_abbr :: "'c\<^sup>\<surd> \<Rightarrow> 'c\<^sup>\<Omega> \
 
 subsubsection \<open>sbE2Cons lemmas\<close>
 
-lemma assumes "sbLen sb \<noteq> 0" shows "sbECons\<cdot>(sbHdElem sb)\<cdot>(sbRt\<cdot>sb) = sb"
+lemma finind_sbe:
+  "\<lbrakk>sbLen x = Fin n; 
+    \<And>sb. ((\<exists>(c::'a). sb \<^enum> c = \<bottom>)) \<Longrightarrow> (P::'a\<^sup>\<Omega> \<Rightarrow> bool) sb;
+    \<And>sbe sb. P sb \<Longrightarrow> P (sbe \<bullet>\<^sup>\<surd> sb)\<rbrakk>
+    \<Longrightarrow> P x"
+  oops
+
+lemma ind_sbe:
+  assumes "adm (P::'a\<^sup>\<Omega>\<Rightarrow> bool)" 
+  and     "range(Rep::'a\<Rightarrow>channel)\<inter>cEmpty = {}"
+  and     "\<And>sb. (sbLen sb = 0) \<Longrightarrow> P sb"
+  and     "\<And>sbe sb. P sb  \<Longrightarrow> P (sbe \<bullet>\<^sup>\<surd> sb)"
+shows     "P x"
   oops
 
 
@@ -607,6 +627,10 @@ proof-
     using not_bot a3 not_none apply auto[1]
     by(simp add: h1)
 qed
+
+
+lemma assumes "sbLen sb \<noteq> 0" shows "sbECons\<cdot>(sbHdElem sb)\<cdot>(sbRt\<cdot>sb) = sb"
+  oops
 
 (*
 lemma sblen_mono[simp]:"monofun sbLen"

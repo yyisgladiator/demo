@@ -31,17 +31,89 @@ lift_definition spfStep::" (('c::{chan,finite})\<^sup>\<surd> \<rightarrow> ('c\
 "(\<lambda> h. (\<Lambda> sb. spfStep_h\<cdot>(fup\<cdot>h)\<cdot>sb))"
   by(simp add: cfun_def)
 
-definition da_helper:: "('s::type \<Rightarrow>'e::cpo \<Rightarrow> ('s \<times> 'O\<^sup>\<Omega>)) \<Rightarrow> 's \<Rightarrow> ('s \<Rightarrow> ('I\<^sup>\<Omega> \<rightarrow> 'O\<^sup>\<Omega>)) \<rightarrow> ('e \<rightarrow> ('I\<^sup>\<Omega> \<rightarrow> 'O\<^sup>\<Omega>))" where
-"da_helper f s \<equiv> \<Lambda> h. (\<Lambda> e. (\<Lambda> sb. ( (sbRt\<cdot>(snd (f s e)))\<bullet>\<^sup>\<Omega>((h (fst (f s e)))\<cdot>sb))))"
+definition dahelper:: "('s::type \<Rightarrow>'e::cpo \<Rightarrow> ('s \<times> 'O\<^sup>\<Omega>)) \<Rightarrow> 's \<Rightarrow> ('s \<Rightarrow> ('I\<^sup>\<Omega> \<rightarrow> 'O\<^sup>\<Omega>)) \<rightarrow> ('e \<rightarrow> ('I\<^sup>\<Omega> \<rightarrow> 'O\<^sup>\<Omega>))" where
+"dahelper f s \<equiv> \<Lambda> h. (\<Lambda> e. (\<Lambda> sb. ( (sbRt\<cdot>(snd (f s e)))\<bullet>\<^sup>\<Omega>((h (fst (f s e)))\<cdot>sb))))"
 
+subsubsection \<open>Semantic helper functions lemmas\<close>
+
+lemma spfstep_sbstep:assumes"\<forall>(c::'b::{finite,chan}). (sb::'b\<^sup>\<Omega>)  \<^enum>  c \<noteq> \<epsilon>"
+  shows "(spfStep\<cdot>f)\<cdot>sb = (f\<cdot>(sbHdElem sb))\<cdot>sb"
+  oops
+
+lemma spfstep_sbestep:
+shows "spfStep\<cdot>f\<cdot>(sbe \<bullet>\<^sup>\<surd> sb) = f\<cdot>sbe\<cdot>(sbe \<bullet>\<^sup>\<surd> sb)"
+  oops
 
 subsubsection \<open>Sematntic\<close>
 
 definition daStateSem :: "('s::type, 'I::{finite,chan},'O) dAutomaton \<Rightarrow> ('s \<Rightarrow> ('I\<^sup>\<Omega> \<rightarrow> 'O\<^sup>\<Omega>))" where
-"daStateSem automat = fix\<cdot>(\<Lambda> h. (\<lambda>s. spfStep \<cdot>(da_helper (daTransition automat) s\<cdot>h)))"
+"daStateSem automat = fix\<cdot>(\<Lambda> h. (\<lambda>s. spfStep \<cdot>(dahelper (daTransition automat) s\<cdot>h)))"
 
 definition daSem :: "('s::type, 'I::{finite,chan},'O) dAutomaton \<Rightarrow> ('I\<^sup>\<Omega> \<rightarrow> 'O\<^sup>\<Omega>)" where
 "daSem automat = (\<Lambda> sb. (daInitOut automat)\<bullet>\<^sup>\<Omega>((daStateSem automat (daInitState automat))\<cdot>sb))"
+
+subsubsection \<open>Statesematntic lemmas\<close>
+
+lemma dastatesem_unfolding: "(daStateSem automat s) = spfStep\<cdot>(dahelper (daTransition automat) s\<cdot>(daStateSem automat))"
+  oops
+
+lemma dastatesem_step: assumes "\<forall>(c::'b::{finite,chan}). (sb::'b\<^sup>\<Omega>)  \<^enum>  c \<noteq> \<epsilon>"
+            shows "(daStateSem automat s)\<cdot>sb = ((dahelper (daTransition automat) s\<cdot>(daStateSem automat))\<cdot>(sbHdElem sb))\<cdot>sb"
+  oops
+
+lemma dastatesem_final:assumes "\<forall>(c::'b::{finite,chan}). (sb::'b\<^sup>\<Omega>)  \<^enum>  c \<noteq> \<epsilon>"
+  shows "(daStateSem automat s)\<cdot>sb =
+  (daNextOut automat s (sbHdElem sb)) \<bullet>\<^sup>\<Omega> (((daStateSem automat (daNextState automat s (sbHdElem sb))))\<cdot>(sbRt\<cdot>sb))"
+  oops
+
+lemma dastatesem_final_h2:
+  shows "(daStateSem automat s)\<cdot>(sbECons\<cdot>sbe\<cdot>sb) =
+  (daNextOut automat s sbe) \<bullet>\<^sup>\<Omega> ((daStateSem automat (daNextState automat s sbe))\<cdot>sb)"
+  oops
+
+lemma dastatesem_stepI:
+  assumes "(daNextOut da s sbe) = out"
+      and "(daNextState da s sbe) = nextState"
+  shows "(daStateSem da s)\<cdot>(sbECons\<cdot>sbe\<cdot>sb) = out  \<bullet>\<^sup>\<Omega> ((daStateSem da nextState)\<cdot>sb)"
+  oops
+
+lemma dastatesem_bottom:assumes "\<exists>(c::'b::{finite,chan}). (sb::'b\<^sup>\<Omega>)  \<^enum>  c = \<epsilon>"
+  shows "(daStateSem automat s)\<cdot>sb = \<bottom>"
+  oops
+
+lemma dastatesem_strict:
+  shows "(daStateSem automat s)\<cdot>\<bottom> = \<bottom>"
+  oops
+
+lemma dastatesem_strict[simp]: "spfIsStrict (daStateSem da state)"
+  oops
+
+
+lemma dastatesem_weak: 
+  assumes "\<And>state sbe. 1 \<le> sbLen (daNextOut automat state sbe)"
+  shows     "weak_well (daStateSem automat s)"
+  oops
+
+lemma dastatesem_least: assumes"(\<lambda>s. spfStep\<cdot>(dahelper (daTransition X) s\<cdot>Z)) \<sqsubseteq> Z"
+                  shows"daStateSem X \<sqsubseteq> Z"
+  oops
+
+
+subsubsection \<open>Sematntic lemmas\<close>
+
+lemma daSem_insert:
+  "daSem automat\<cdot>sb = (daInitOut automat) \<bullet>\<^sup>\<Omega> ((daStateSem automat (daInitState automat))\<cdot>sb)"
+  by (simp add: daSem_def)
+
+lemma daSem_bottom:
+  shows "daSem automat\<cdot>\<bottom> = daInitOut automat"
+  oops
+
+lemma daSem_strong:
+  assumes "weak_well(daStateSem automat (daInitState automat))"
+  and     "1 \<le> sbLen (daInitOut automat)"
+  shows "strong_well (daSem automat)"
+  oops
 
 subsection \<open>Deterministic Weak Automata definition\<close>
 
