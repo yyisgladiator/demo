@@ -472,6 +472,10 @@ abbreviation sbECons_abbr :: "'c\<^sup>\<surd> \<Rightarrow> 'c\<^sup>\<Omega> \
 
 subsubsection \<open>sbE2Cons lemmas\<close>
 
+
+lemma sbecons_len:"sbLen (sbe \<bullet>\<^sup>\<surd> sb) = lnsuc\<cdot>(sbLen sb)"
+  oops
+
 lemma finind_sbe:
   "\<lbrakk>sbLen x = Fin n; 
     \<And>sb. ((\<exists>(c::'a). sb \<^enum> c = \<bottom>)) \<Longrightarrow> (P::'a\<^sup>\<Omega> \<Rightarrow> bool) sb;
@@ -628,8 +632,7 @@ proof-
     by(simp add: h1)
 qed
 
-
-lemma assumes "sbLen sb \<noteq> 0" shows "sbECons\<cdot>(sbHdElem sb)\<cdot>(sbRt\<cdot>sb) = sb"
+lemma sbecons_eq:assumes "sbLen sb \<noteq> 0" shows "(sbHdElem sb) \<bullet>\<^sup>\<surd> (sbRt\<cdot>sb) = sb"
   oops
 
 (*

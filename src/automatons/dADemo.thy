@@ -1,6 +1,6 @@
 theory dADemo
 
-imports dAutomatonsemv3
+imports dAutomaton
 
 begin
 

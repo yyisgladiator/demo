@@ -1,4 +1,4 @@
-theory SPFcompv3
+theory SPFcomp
 
 imports bundle.SB
 begin

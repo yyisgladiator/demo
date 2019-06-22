@@ -1,4 +1,4 @@
-theory dAutomatonsemv3
+theory dAutomaton
 
 imports bundle.SB spf.SPF
 begin
