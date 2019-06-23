@@ -426,15 +426,16 @@ subsubsection \<open>sbLen definition \<close>
 definition sbLen::"'c\<^sup>\<Omega> \<Rightarrow> lnat"where
 "sbLen sb = (LEAST n . n\<in>(insert (\<infinity>::lnat) {#(sb \<^enum> (c::'c)) | c. ((Rep::'c \<Rightarrow> channel) c)\<notin>cEmpty}))"
 
+
+lemma sblen_mono:"monofun sbLen"
+  oops
+
 subsubsection \<open> sbLen lemmas \<close>
 
 lemma sblen_min_len [simp]: "sbLen sb \<le> #(sb \<^enum> c)" (* TODO: vermutlich typ von "c" fixieren *)
   oops
 
 lemma sbtake_len [simp]: "#((sbTake (sbLen sb)\<cdot>sb) \<^enum> c) = sbLen sb" (* TODO: vermutlich typ von "c" fixieren *)
-  oops
-
-lemma sblen_mono:"x \<sqsubseteq> y \<Longrightarrow> sbLen x \<sqsubseteq> sbLen y"
   oops
 
 lemma sblen_sbeqI:"x \<sqsubseteq> y \<Longrightarrow> sbLen x = \<infinity> \<Longrightarrow> x = y"

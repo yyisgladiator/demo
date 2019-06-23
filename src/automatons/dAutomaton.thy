@@ -44,7 +44,10 @@ lemma spfstep_sbestep:
 shows "spfStep\<cdot>f\<cdot>(sbe \<bullet>\<^sup>\<surd> sb) = f\<cdot>sbe\<cdot>(sb)"
   oops
 
-lemma spfstep_inj:"inj (Rep_cfun spfStep)"
+lemma spfstep_inj1:"inj (Rep_cfun spfStep)"
+  oops
+
+lemma spfstep_inj2:"inj (Rep_cfun (spfStep\<cdot>h))"
   oops
 
 subsubsection \<open>Sematntic\<close>

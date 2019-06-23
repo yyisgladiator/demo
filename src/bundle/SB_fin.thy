@@ -123,16 +123,19 @@ definition sbLen_alt:: "'cs\<^sup>\<Omega> \<rightarrow> lnat" where
 
 subsubsection\<open>sbLen_alt lemmas\<close>
 
-lemma"(range(Rep::'c\<Rightarrow> channel)\<subseteq>cEmpty) \<Longrightarrow> sbLen_alt\<cdot>(\<bottom>::'c\<^sup>\<Omega>) = \<infinity>"
+lemma sblen_alt_empty:"(range(Rep::'c\<Rightarrow> channel)\<subseteq>cEmpty) \<Longrightarrow> sbLen_alt\<cdot>(\<bottom>::'c\<^sup>\<Omega>) = \<infinity>"
   oops
 
-lemma "sbLen_alt\<cdot>(\<bottom>::'cs\<^sup>\<Omega>) = \<infinity> \<or> sbLen_alt\<cdot>(\<bottom>::'cs\<^sup>\<Omega>) = 0"
+lemma sblen_alt_bot:"sbLen_alt\<cdot>(\<bottom>::'cs\<^sup>\<Omega>) = \<infinity> \<or> sbLen_alt\<cdot>(\<bottom>::'cs\<^sup>\<Omega>) = 0"
   oops
 
 lemma sblen_alt_step:"sbLen_alt\<cdot>(sbECons\<cdot>sbe\<cdot>sb) = lnsuc\<cdot>(sbLen_alt\<cdot>sb)"
   oops
 
 lemma sblen_alt_insert2:" sbLen_alt\<cdot>sb = sbLen sb"
+  oops
+
+lemma sblen_alt_sbeqI:"x \<sqsubseteq> y \<Longrightarrow> sbLen_alt\<cdot>x = \<infinity> \<Longrightarrow> x = y"
   oops
 
 end
