@@ -416,7 +416,8 @@ abbreviation sbConc_abbr :: "'c\<^sup>\<Omega>  \<Rightarrow>  'c\<^sup>\<Omega>
 subsubsection \<open>sbConc lemmas\<close>
 
 lemma sbconc_eq:"sb \<bullet>\<^sup>\<Omega> \<bottom> = sb"
-  oops
+  apply(simp add: sbconc_insert sbgetch_bot)
+  by (metis sbconv_eq sbconvert_insert)
 
 subsection \<open>sbLen\<close>
 
@@ -488,7 +489,7 @@ lemma ind_sbe:
   and     "range(Rep::'a\<Rightarrow>channel)\<inter>cEmpty = {}"
   and     "\<And>sb. (sbLen sb = 0) \<Longrightarrow> P sb"
   and     "\<And>sbe sb. P sb  \<Longrightarrow> P (sbe \<bullet>\<^sup>\<surd> sb)"
-shows     "P x"
+  shows     "P x"
   oops
 
 
