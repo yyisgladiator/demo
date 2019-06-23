@@ -2,7 +2,7 @@ variables:
   ISABELLE_HOME_USER_DIR: "/home/isabelle/.isabelle"
   TIMEOUT_SCALE: "1.8"
 
-image: jecb96/isabelle:2018
+image: jecb96/isabelle:2019
 
 cache:
   key: "$CI_COMMIT_REF_SLUG"
@@ -44,7 +44,7 @@ dependency:
 
 mustWork:
   stage: mustWork
-  image: jecb96/isabelle:2018-with-latex
+  image: jecb96/isabelle:2019-with-latex
   script:
     - isabelle build -S -d . -j$NUMBER_SIMULT_SESSIONS -o timeout_scale=$TIMEOUT_SCALE -v -b -g mustWork
   tags:
@@ -60,9 +60,9 @@ mustWork:
 #   tags:
 #     - docker
 #     - private
-    
-    
-    
+
+
+
 pages:
   stage: deploy
   script:
@@ -76,4 +76,3 @@ pages:
   artifacts:
     paths:
       - public
-    
