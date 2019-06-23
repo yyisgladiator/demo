@@ -43,13 +43,13 @@ lemma spfstep_sbstep:assumes"\<forall>(c::'b::{finite,chan}). (sb::'b\<^sup>\<Om
 lemma spfstep_sbestep:
 shows "spfStep\<cdot>f\<cdot>(sbe \<bullet>\<^sup>\<surd> sb) = f\<cdot>sbe\<cdot>(sb)"
   oops
-
+(*
 lemma spfstep_inj1:"inj (Rep_cfun spfStep)"
   oops
 
 lemma spfstep_inj2:"inj (Rep_cfun (spfStep\<cdot>h))"
   oops
-
+*)
 subsubsection \<open>Sematntic\<close>
 
 definition daStateSem :: "('s::type, 'I::{finite,chan},'O) dAutomaton \<Rightarrow> ('s \<Rightarrow> ('I\<^sup>\<Omega> \<rightarrow> 'O\<^sup>\<Omega>))" where

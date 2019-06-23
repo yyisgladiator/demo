@@ -102,7 +102,7 @@ lemma sb_cases_bot:"\<not>(range(Rep::'c\<Rightarrow> channel)\<subseteq>cEmpty)
 
 lemma sb_cases_sbe:"sb_case\<cdot>(sbECons\<cdot>sbe\<cdot>sb)\<cdot>f = f\<cdot>sbe\<cdot>sb"
   oops
-
+(*
 lemma sb_case_inj1:"inj (Rep_cfun (sb_case\<cdot>sb))"
 proof(rule injI)
   fix x y::"'a\<^sup>\<surd> \<rightarrow> 'a\<^sup>\<Omega> \<rightarrow> 'b"
@@ -115,7 +115,8 @@ proof(rule injI)
 
 lemma sb_case_inj2:"inj (Rep_cfun sb_case)"
   oops
-
+*)
+(*
 subsection\<open>cont version of sbLen\<close>
 
 definition sbLen_alt:: "'cs\<^sup>\<Omega> \<rightarrow> lnat" where
@@ -137,5 +138,5 @@ lemma sblen_alt_insert2:" sbLen_alt\<cdot>sb = sbLen sb"
 
 lemma sblen_alt_sbeqI:"x \<sqsubseteq> y \<Longrightarrow> sbLen_alt\<cdot>x = \<infinity> \<Longrightarrow> x = y"
   oops
-
+*)
 end
