@@ -1,10 +1,10 @@
 theory dAutomaton
 
-imports bundle.SB spf.SPF
+imports "../bundle/SB_fin" spf.SPF
 begin
 
 section \<open>Deterministic Automaton\<close>
-
+default_sort "chan"
 
 subsection \<open>Deterministic Automaton definition \<close>
 record ('state::type, 'in, 'out) dAutomaton  =
