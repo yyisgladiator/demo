@@ -23,6 +23,10 @@ begin
   abbreviation "Abs \<equiv> inv Rep"
 end
 
+section \<open>chan Predicate definition\<close>
+
+definition chIsEmpty ::"'cs::chan itself \<Rightarrow> bool" where
+"chIsEmpty cs = (range(Rep::'cs\<Rightarrow>channel) \<subseteq> cEmpty)"
 
 
 section \<open> rep abs chan lemmata \<close>

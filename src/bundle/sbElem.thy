@@ -38,6 +38,23 @@ instance
   by(standard, simp add: below_sbElem_def)
 end
 
+lemma sbe_eqI:"Rep_sbElem sbe1 = Rep_sbElem sbe2 \<Longrightarrow> sbe1 = sbe2"
+  by (simp add: Rep_sbElem_inject)
+
+subsection\<open>chIsEmpty lemmas\<close>
+lemma sbtypeempty_sbewell:"chIsEmpty TYPE ('cs) \<Longrightarrow> sbElem_well (None::('cs \<Rightarrow> M) option)"
+  by(simp add: chIsEmpty_def)
+
+lemma sbtypeempty_notsbewell:"chIsEmpty TYPE ('cs) \<Longrightarrow> \<not>sbElem_well (Some (f::'cs \<Rightarrow> M))"
+  apply(simp add: chIsEmpty_def)
+  by (simp add: cEmpty_def image_subset_iff)
+
+lemma sbtypeepmpty_sbenone[simp]:"chIsEmpty TYPE ('cs) \<Longrightarrow> (sbe::'cs\<^sup>\<surd>) = Abs_sbElem(None)"
+  apply(simp add: chIsEmpty_def)
+  apply(rule sbe_eqI)
+  apply(simp add: sbtypeempty_sbewell Abs_sbElem_inverse)
+  by (metis not_Some_eq Rep_sbElem mem_Collect_eq chIsEmpty_def sbtypeempty_notsbewell)
+
 setup_lifting type_definition_sbElem
 
 subsection \<open>sbElem functions\<close>

@@ -30,7 +30,7 @@ pcpodef 'c::chan sb("(_\<^sup>\<Omega>)" [1000] 999) = "{f :: ('c::chan \<Righta
   apply(rule admI)
   by (simp add: ch2ch_fun l44 lub_fun)
 
-subsection \<open>Strict definition\<close>
+subsection \<open>sb Predicate definitions\<close>
 
 definition spfIsStrict::"('c\<^sup>\<Omega> \<rightarrow> 'd\<^sup>\<Omega>) \<Rightarrow> bool" where
 "spfIsStrict f \<equiv> f\<cdot>\<bottom>=\<bottom>"
@@ -441,6 +441,30 @@ lemma sbtake_len [simp]: "#((sbTake (sbLen sb)\<cdot>sb) \<^enum> c) = sbLen sb"
 lemma sblen_sbeqI:"x \<sqsubseteq> y \<Longrightarrow> sbLen x = \<infinity> \<Longrightarrow> x = y"
   oops
 
+subsection\<open>sbIsLeast Predicate\<close>
+
+(* TODO: Lemma, zB mit "sbLeast" und "sbECons" *)
+definition sbIsLeast::"'cs\<^sup>\<Omega> \<Rightarrow> bool" where
+"sbIsLeast sb = ((sbLen sb = 0) \<or> (chIsEmpty (TYPE('cs))))"
+
+subsection \<open>sbIsLeast lemmas\<close>
+
+lemma "sbIsLeast \<bottom>"
+  apply(simp add: sbIsLeast_def sbLen_def sbgetch_bot chIsEmpty_def)
+  apply(case_tac "(\<exists>c::'a. Rep c \<notin> cEmpty)",simp_all)
+  apply (metis (mono_tags, lifting) Inf'_neq_0_rev LeastI_ex Least_le inf_less_eq)
+  by (simp add: image_subset_iff)
+
+lemma sbtypeepmpty_sbbot[simp]:"chIsEmpty TYPE ('cs) \<Longrightarrow> (sb::'cs\<^sup>\<Omega>) = \<bottom>"
+  apply(simp add: chIsEmpty_def)
+  apply(rule sb_eqI)
+  apply(simp add: sbgetch_insert2 bot_sb)
+  apply(subst Abs_sb_inverse)
+  apply(simp add: sb_well_def sValues_def)
+  by (smt Rep_sb bot.extremum cEmpty_def f_inv_into_f image_subset_iff iso_tuple_UNIV_I 
+      mem_Collect_eq rangeI range_eqI sValues_def sbGetCh.abs_eq sb_well_def sbgetch_insert 
+      sbgetch_insert2 strict_sdom_rev subset_antisym)
+
 section \<open>sbElem functions \<close>
 
 subsection\<open>sbe2sb\<close>
@@ -478,29 +502,23 @@ subsubsection \<open>sbE2Cons lemmas\<close>
 lemma sbecons_len:"sbLen (sbe \<bullet>\<^sup>\<surd> sb) = lnsuc\<cdot>(sbLen sb)"
   oops
 
+lemma sbtypeempty_sbecons_bot[simp]:"chIsEmpty TYPE ('cs) \<Longrightarrow> (sbe::'cs\<^sup>\<surd>) \<bullet>\<^sup>\<surd> sb = \<bottom>"
+  by simp
 
-(* Name okay? Parameter wirklich "itself?" *)
-definition sbIsEmpty ::"'cs itself \<Rightarrow> bool" where
-"sbIsEmpty cs = (range(Rep::'cs\<Rightarrow>channel) \<subseteq> cEmpty)"
-
-
-(* TODO: Lemma, zB mit "sbLeast" und "sbECons" *)
-definition sbIsLeast::"'cs\<^sup>\<Omega> \<Rightarrow> bool" where
-"sbIsLeast sb = ((sbLen sb = 0) \<or> (sbIsEmpty (TYPE('cs))))"
-
+lemma [simp]:"chIsEmpty TYPE ('cs) \<Longrightarrow> P(sb) \<Longrightarrow> P( (sbe::'cs\<^sup>\<surd>) \<bullet>\<^sup>\<surd> sb)"
+  by (metis (full_types) sbtypeepmpty_sbbot)
 
 lemma sb_cases [case_names least sbeCons, cases type: sb]: 
-  "(sbIsLeast sb' \<Longrightarrow> P) 
-  \<Longrightarrow> (\<And>sbe sb. sb' = sbeCons sbe\<cdot>sb \<Longrightarrow> \<not>sbIsEmpty TYPE ('cs) \<Longrightarrow> P) 
+  "(sbIsLeast (sb'::'cs\<^sup>\<Omega>) \<Longrightarrow> P) 
+  \<Longrightarrow> (\<And>sbe sb. sb' = sbECons\<cdot>sbe\<cdot>sb \<Longrightarrow> \<not>chIsEmpty TYPE ('cs) \<Longrightarrow> P) 
   \<Longrightarrow> P"
   oops
-
 
 lemma sb_finind:
     fixes x::"'cs\<^sup>\<Omega>"
   assumes "sbLen x < \<infinity>"
       and "\<And>sb. sbIsLeast sb \<Longrightarrow> P sb"
-      and "\<And>sbe sb. \<not>sbIsEmpty TYPE ('cs) \<Longrightarrow> P sb \<Longrightarrow> P (sbe \<bullet>\<^sup>\<surd> sb)"
+      and "\<And>sbe sb. P sb \<Longrightarrow> \<not>chIsEmpty TYPE ('cs) \<Longrightarrow> P (sbe \<bullet>\<^sup>\<surd> sb)"
     shows "P x"
   oops
 
@@ -508,7 +526,7 @@ lemma sb_ind[case_names adm least sbeCons, induct type: sb]:
     fixes x::"'cs\<^sup>\<Omega>"
   assumes "adm P" 
       and "\<And>sb. sbIsLeast sb \<Longrightarrow> P sb"
-      and "\<And>sbe sb.  \<not>sbIsEmpty TYPE ('cs) \<Longrightarrow> P sb  \<Longrightarrow> P (sbe \<bullet>\<^sup>\<surd> sb)"   
+      and "\<And>sbe sb. P sb  \<Longrightarrow> \<not>chIsEmpty TYPE ('cs) \<Longrightarrow> P (sbe \<bullet>\<^sup>\<surd> sb)"   
   shows  "P x"
   oops
 
