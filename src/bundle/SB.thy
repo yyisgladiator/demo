@@ -478,21 +478,39 @@ subsubsection \<open>sbE2Cons lemmas\<close>
 lemma sbecons_len:"sbLen (sbe \<bullet>\<^sup>\<surd> sb) = lnsuc\<cdot>(sbLen sb)"
   oops
 
-lemma finind_sbe:
-  "\<lbrakk>sbLen x = Fin n; 
-    \<And>sb. ((\<exists>(c::'a). sb \<^enum> c = \<bottom>)) \<Longrightarrow> (P::'a\<^sup>\<Omega> \<Rightarrow> bool) sb;
-    \<And>sbe sb. P sb \<Longrightarrow> P (sbe \<bullet>\<^sup>\<surd> sb)\<rbrakk>
-    \<Longrightarrow> P x"
+
+(* Name okay? Parameter wirklich "itself?" *)
+definition sbIsEmpty ::"'cs itself \<Rightarrow> bool" where
+"sbIsEmpty cs = (range(Rep::'cs\<Rightarrow>channel) \<subseteq> cEmpty)"
+
+
+(* TODO: Lemma, zB mit "sbLeast" und "sbECons" *)
+definition sbIsLeast::"'cs\<^sup>\<Omega> \<Rightarrow> bool" where
+"sbIsLeast sb = ((sbLen sb = 0) \<or> (sbIsEmpty (TYPE('cs))))"
+
+
+lemma sb_cases [case_names least sbeCons, cases type: sb]: 
+  "(sbIsLeast sb' \<Longrightarrow> P) 
+  \<Longrightarrow> (\<And>sbe sb. sb' = sbeCons sbe\<cdot>sb \<Longrightarrow> \<not>sbIsEmpty TYPE ('cs) \<Longrightarrow> P) 
+  \<Longrightarrow> P"
   oops
 
-lemma ind_sbe:
-  assumes "adm (P::'a\<^sup>\<Omega>\<Rightarrow> bool)" 
-  and     "range(Rep::'a\<Rightarrow>channel)\<inter>cEmpty = {}"
-  and     "\<And>sb. (sbLen sb = 0) \<Longrightarrow> P sb"
-  and     "\<And>sbe sb. P sb  \<Longrightarrow> P (sbe \<bullet>\<^sup>\<surd> sb)"
-  shows     "P x"
+
+lemma sb_finind:
+    fixes x::"'cs\<^sup>\<Omega>"
+  assumes "sbLen x < \<infinity>"
+      and "\<And>sb. sbIsLeast sb \<Longrightarrow> P sb"
+      and "\<And>sbe sb. \<not>sbIsEmpty TYPE ('cs) \<Longrightarrow> P sb \<Longrightarrow> P (sbe \<bullet>\<^sup>\<surd> sb)"
+    shows "P x"
   oops
 
+lemma sb_ind[case_names adm least sbeCons, induct type: sb]:
+    fixes x::"'cs\<^sup>\<Omega>"
+  assumes "adm P" 
+      and "\<And>sb. sbIsLeast sb \<Longrightarrow> P sb"
+      and "\<And>sbe sb.  \<not>sbIsEmpty TYPE ('cs) \<Longrightarrow> P sb  \<Longrightarrow> P (sbe \<bullet>\<^sup>\<surd> sb)"   
+  shows  "P x"
+  oops
 
 subsection\<open>sbHdElem\<close>
 
