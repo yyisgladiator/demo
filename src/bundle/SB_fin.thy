@@ -9,7 +9,7 @@ default_sort "{finite,chan}"
 
 section\<open> SB functions with finite type \<close>
 
-subsection \<open>Cont version of sbHdElem_h\<close>
+subsection \<open>Cont version of sbHdElem\_h\<close>
 
 lift_definition sbHdElem_h_cont::"'c\<^sup>\<Omega> \<rightarrow> ('c\<^sup>\<surd>) u"is 
 "sbHdElem_h"
@@ -88,7 +88,7 @@ proof-
   qed
 qed
 
-subsection\<open>sb_cases definition\<close>
+subsection\<open>sb\_cases definition\<close>
 
 definition sb_case::"'cs\<^sup>\<Omega> \<rightarrow> ('cs\<^sup>\<surd> \<rightarrow> 'cs\<^sup>\<Omega> \<rightarrow> 'a::pcpo) \<rightarrow> 'a" where
 "sb_case = (\<Lambda> sb k. fup\<cdot>(\<Lambda> sbe. k\<cdot>sbe\<cdot>(sbRt\<cdot>sb))\<cdot>(sbHdElem_h_cont\<cdot>sb))"
@@ -121,7 +121,7 @@ subsection\<open>cont version of sbLen\<close>
 definition sbLen_alt:: "'cs\<^sup>\<Omega> \<rightarrow> lnat" where
 "sbLen_alt = (fix\<cdot>(\<Lambda> h sb. sb_case\<cdot>sb\<cdot>(\<Lambda> sbe sb2 . lnsuc\<cdot>(h\<cdot>sb2))))"
 
-subsubsection\<open>sbLen_alt lemmas\<close>
+subsubsection\<open>sbLen\_alt lemmas\<close>
 
 lemma sblen_alt_empty:"(range(Rep::'c\<Rightarrow> channel)\<subseteq>cEmpty) \<Longrightarrow> sbLen_alt\<cdot>(\<bottom>::'c\<^sup>\<Omega>) = \<infinity>"
   oops
