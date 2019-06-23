@@ -1,6 +1,6 @@
 theory SB_fin
 
-imports bundle.SB
+imports SB
 begin
 declare[[show_types]]
 

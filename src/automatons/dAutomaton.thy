@@ -1,6 +1,6 @@
 theory dAutomaton
 
-imports "../bundle/SB_fin" spf.SPF
+imports bundle.SB_fin spf.SPF
 begin
 
 section \<open>Deterministic Automaton\<close>

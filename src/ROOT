@@ -7,19 +7,20 @@ session "inc" (mustWork) in inc = "user" +
     Prelude
 
 
-session "stream" (mustWork) in stream = "inc" +
+session "stream" (mustWork) in "stream" = "inc" +
   options [quick_and_dirty = false]
   theories
     Stream
     
-session "bundle" (mustWork) in bundle = "stream" +
+session "bundle" (mustWork) in "bundle" = "stream" +
   options [quick_and_dirty, browser_info, document = pdf,document_variants="outline=/proof"]
   theories
     SB    
+    SB_fin
   document_files
     "root.tex"
     
-session "spf" (mustWork) in spf = "bundle" +
+session "spf" (mustWork) in "spf" = "bundle" +
   options [quick_and_dirty = true]
   theories
     SPF
