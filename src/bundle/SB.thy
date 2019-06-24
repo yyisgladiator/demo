@@ -210,7 +210,7 @@ abbreviation sbUnion_abbr :: "'c\<^sup>\<Omega> \<Rightarrow> 'd\<^sup>\<Omega> 
 
 subsubsection \<open>sbUnion lemmas\<close>
 
-lemma magicsbunion_getch[simp]:fixes c::"'a"
+lemma sbunion_getch[simp]:fixes c::"'a"
       assumes"Rep c \<in> range(Rep::'c \<Rightarrow> channel)"
       shows  "(sbUnion::'a\<^sup>\<Omega>\<rightarrow> 'b\<^sup>\<Omega> \<rightarrow> 'c\<^sup>\<Omega>)\<cdot>cb\<cdot>db \<^enum> c = cb \<^enum> c"
   by(simp add: Abs_sb_inverse sbGetCh.rep_eq sbunion_insert assms)
@@ -256,6 +256,9 @@ lemma fixes sb ::"'a\<^sup>\<Omega>"
 lemma sbconv_eq[simp]:"(sbConvert::'a\<^sup>\<Omega> \<rightarrow> 'a\<^sup>\<Omega>)\<cdot>sb = sb"
   apply(rule sb_eqI)
   by (metis (no_types) Abs_sb_inverse mem_Collect_eq sbconvert_insert sbconvert_well sbgetch_insert2)
+
+lemma sbunion_sbconvert_eq[simp]:"cb \<uplus> cb = (cb\<star>)"
+  by(simp add: sbunion_insert sbconvert_insert)
 
 subsection\<open>sbMapStream\<close>
 
