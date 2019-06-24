@@ -628,6 +628,53 @@ lemma tsynabs_remeps_msg:
   shows "tsynAbs\<cdot>(s \<bullet> \<up>(Msg a) \<bullet> s2) = \<up>a \<bullet>(tsynAbs\<cdot>s2)"
   using assms by simp
 
+lemma tsynabs_ind [case_names adm bot msg]:
+  assumes adm: "adm P"
+    and bot: "P \<epsilon>"
+    and msg: "\<And>m s. P (tsynAbs\<cdot>s) \<Longrightarrow> P (tsynAbs\<cdot>(\<up>(Msg m) \<bullet> s))"
+  shows "P (tsynAbs\<cdot>x)"
+  apply (induction x rule: tsyn_ind)
+  apply (simp add: adm adm_subst)
+  apply (simp add: bot) 
+  using msg by auto
+
+lemma tsynabs_cases [case_names bot msg]:
+  assumes bot: "tsynAbs\<cdot>x = \<epsilon> \<Longrightarrow> P \<epsilon>"
+    and msg: "\<And>m s. tsynAbs\<cdot>x = \<up>m \<bullet> s \<Longrightarrow> P (\<up>m \<bullet> s)"
+  shows "P (tsynAbs\<cdot>x)"
+  apply (rule_tac x = "tsynAbs\<cdot>x" in scases)
+  apply (simp add: bot)
+  by (simp add: msg)
+
+lemma tsynabs_stakewhile: "tsynAbs\<cdot>(stakewhile (\<lambda>x. x = ~)\<cdot>s) = \<epsilon>"
+  apply (induction s rule: tsyn_ind)
+  by simp_all
+
+lemma tsynabs_sdropwhile_neps:
+  assumes "tsynAbs\<cdot>a \<noteq> \<epsilon>"
+  shows "sdropwhile (\<lambda>x. x = ~)\<cdot>a \<noteq> \<epsilon>"
+  by (metis assms sconc_snd_empty stakewhileDropwhile tsynabs_stakewhile)
+
+lemma tsynabs_sdropwhile: "tsynAbs\<cdot>(sdropwhile (\<lambda>x. x = ~)\<cdot>ts) = tsynAbs\<cdot>ts"
+  apply (induction ts rule: tsyn_ind)
+  by simp_all
+
+lemma tsynabs_sdropwhile_srt:
+  "tsynAbs\<cdot>(srt\<cdot>(sdropwhile (\<lambda>x. x = ~)\<cdot>port_i)) = srt\<cdot>(tsynAbs\<cdot>port_i)"
+  apply (induction port_i rule: tsyn_ind)
+  by simp_all
+
+lemma sdropwhile2tsynabs_shd:
+  assumes "sdropwhile (\<lambda>x. x = ~)\<cdot>ts = \<up>(\<M> m) \<bullet> s"
+  shows "shd (tsynAbs\<cdot>ts) = m"
+  by (metis assms shd1 tsynabs_sdropwhile tsynabs_sconc_msg)
+
+lemma sdropwhile_shd2tsynabs_shd:
+  assumes "shd (sdropwhile (\<lambda>x. x = ~)\<cdot>ts) = \<M> m"
+    and "tsynAbs\<cdot>ts \<noteq> \<epsilon>" (* should not be necessary *)
+  shows "shd (tsynAbs\<cdot>ts) = m"
+  by (metis assms surj_scons tsynabs_sdropwhile_neps sdropwhile2tsynabs_shd)
+
 (* ----------------------------------------------------------------------- *)
   subsection {* tsynLen *}
 (* ----------------------------------------------------------------------- *)
@@ -716,6 +763,38 @@ text {* @{term tsynLen} test for infinite tsyn stream. *}
 lemma tsynlen_test_infstream: "tsynLen\<cdot>(<[eps, Msg a]>\<infinity>) = \<infinity>"
   by (metis Fin_neq_inf gr_0 inf_ub less_le list2s_Suc list2streamFin lscons_conv 
       tsynlen_inftimes_finite tsynlen_sconc_msg tsynlen_sconc_eps) 
+
+lemma tsynabs_snths_eq [case_names len nth]:
+  assumes len: "tsynLen\<cdot>x = tsynLen\<cdot>y"
+      and nth: "\<And>n. Fin n < tsynLen\<cdot>x \<Longrightarrow> snth n (tsynAbs\<cdot>x) =  snth n (tsynAbs\<cdot>y)"
+  shows "tsynAbs\<cdot>x = tsynAbs\<cdot>y"
+  by (metis len nth snths_eq tsynlen_insert)
+
+lemma tsynabs_snths_eq_ext [case_names len nth]:
+  assumes len: "tsynLen\<cdot>x = slen\<cdot>y"
+      and nth: "\<And>n. Fin n < tsynLen\<cdot>x \<Longrightarrow> snth n (tsynAbs\<cdot>x) =  snth n y"
+  shows "tsynAbs\<cdot>x = y"
+  by (metis len nth snths_eq tsynlen_insert)
+
+lemma tsynlen2sdropwhile_neps:
+  assumes "0 < tsynLen\<cdot>a"
+  shows "sdropwhile (\<lambda>x. x = ~)\<cdot>a \<noteq> \<epsilon>"
+  by (metis assms gr_0 lnsuc_neq_0 slen_empty_eq tsynabs_sdropwhile_neps tsynlen_insert)
+
+lemma tsynlen2neps:
+  assumes "0 < tsynLen\<cdot>s"
+  shows "s \<noteq> \<epsilon>"
+  using assms by auto
+
+lemma tsynlen2tsynabs_neps: 
+  assumes "0 < tsynLen\<cdot>s"
+  shows "tsynAbs\<cdot>s \<noteq> \<epsilon>"
+  by (metis assms strict_slen tsynlen_insert tsynlen2neps tsynlen_strict)
+
+lemma tsynlen_inf2tsynabs_neps:
+  assumes "tsynLen\<cdot>s = \<infinity>"
+  shows "tsynAbs\<cdot>s \<noteq> \<epsilon>"
+  by (metis Inf'_neq_0_rev assms strict_slen tsynlen_insert)
 
 (* ----------------------------------------------------------------------- *)
   subsection {* Induction variants with Length. *}
@@ -2197,6 +2276,25 @@ lemma tsyndropwhile_idem: "tsynDropWhile f\<cdot>(tsynDropWhile f\<cdot>s) = tsy
   apply (induction s arbitrary: f rule: tsyn_ind, simp_all)
   apply (metis tsyndropwhile_sconc_msg_f tsyndropwhile_sconc_msg_t tsyndropwhile_sconc_eps)
   by (simp add: tsyndropwhile_sconc_eps)
+
+(* sdropwhile *)
+
+lemma sdropwhile_neps: "sdropwhile (\<lambda>x. x = ~)\<cdot>s \<noteq> \<up>~ \<bullet> sa"
+  using sdropwhile_resup by auto
+
+lemma sdropwhile_eps_cases [case_names bot msg]:
+  assumes bot: "sdropwhile (\<lambda>x. x = ~)\<cdot>x = \<epsilon> \<Longrightarrow> P \<epsilon>"
+    and msg: "\<And>m s. sdropwhile (\<lambda>x. x = ~)\<cdot>x = \<up>(Msg m) \<bullet> s \<Longrightarrow> P (\<up>(Msg m) \<bullet> s)"
+  shows "P (sdropwhile (\<lambda>x. x = ~)\<cdot>x)"
+  using assms
+  apply (rule_tac x = "sdropwhile (\<lambda>x. x = ~)\<cdot>x" in tsyn_cases)
+  apply simp_all
+  by (simp add: sdropwhile_neps)
+
+lemma sdropwhile_shd_ex:
+  assumes "tsynAbs\<cdot>s \<noteq> \<epsilon>"
+  obtains m where "shd (sdropwhile (\<lambda>x. x = ~)\<cdot>s) = Msg m"
+  by (metis assms sdropwhile_neps surj_scons tsyn.exhaust tsynabs_sdropwhile_neps)
 
 text {* @{term sdom} of @{term tsynDropWhile} is subset of @{term sdom} of 
         the original stream @{term union} eps. *}
