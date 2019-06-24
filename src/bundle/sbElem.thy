@@ -65,15 +65,28 @@ definition sbegetch::"'e \<Rightarrow> 'c\<^sup>\<surd> \<Rightarrow> M"where (*
 "sbegetch c = (\<lambda> sbe. ((the (Rep_sbElem sbe)) (Abs (Rep c))))"
 
 
-text\<open>This function Restricts the Domain of an sbElem. This works if the Domain to restrict to is 
-      smaller\<close>
-definition sbeRestrict::"'c\<^sup>\<surd> \<Rightarrow> 'd\<^sup>\<surd>"where 
-"sbeRestrict = (\<lambda>sbe. Abs_sbElem(Some (\<lambda>c. sbegetch c sbe)))"
+text\<open>This function Converts the Domain of an sbElem. This works if the Domain it converts to, is 
+      smaller or equal\<close>
+definition sbeConvert::"'c\<^sup>\<surd> \<Rightarrow> 'd\<^sup>\<surd>"where 
+"sbeConvert = (\<lambda>sbe. Abs_sbElem(Some (\<lambda>c. sbegetch c sbe)))"
 
+lemma sberestrict_getch: assumes"Rep (c::'c) \<in> range(Rep::'d \<Rightarrow> channel)"
+  shows "sbegetch c ((sbeConvert::'c\<^sup>\<surd> \<Rightarrow> 'd\<^sup>\<surd>) sbe) = sbegetch c sbe"
+  oops
 
-text\<open>This unites two sbElems. It works, if type e is a subset of the union of type c and d\<close>
+text\<open>This unites two sbElems. It works, if type e is a subset of the union of type c and d. First
+     sbElem has priority\<close>
 definition sbeUnion::"'c\<^sup>\<surd> \<Rightarrow> 'd\<^sup>\<surd> \<Rightarrow> 'e\<^sup>\<surd>"where 
 "sbeUnion = (\<lambda>sbe1 sbe2. Abs_sbElem (Some(\<lambda> c. if (Rep c \<in> (range (Rep ::'c \<Rightarrow> channel))) then 
                   sbegetch c sbe1 else  sbegetch c sbe2)))"
+
+lemma sbeunion_getchfst:assumes "Rep (c::'c) \<in> range(Rep::'e \<Rightarrow> channel)"
+  shows "sbegetch c ((sbeUnion::'c\<^sup>\<surd> \<Rightarrow> 'd\<^sup>\<surd> \<Rightarrow> 'e\<^sup>\<surd>) sbe1 sbe2) = sbegetch c sbe1"
+  oops
+
+lemma sbeunion_getchsnd:assumes "Rep (c::'d) \<in> range(Rep::'e \<Rightarrow> channel)"
+                     and "Rep c \<notin> range(Rep::'c \<Rightarrow> channel)"
+  shows"sbegetch c ((sbeUnion::'c\<^sup>\<surd> \<Rightarrow> 'd\<^sup>\<surd> \<Rightarrow> 'e\<^sup>\<surd>) sbe1 sbe2) = sbegetch c sbe2"
+  oops
 
 end
