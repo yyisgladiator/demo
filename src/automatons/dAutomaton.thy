@@ -128,7 +128,7 @@ lemma dastatesem_strict:
   oops
 
 lemma dastatesem_step: assumes "\<forall>(c::'b::{finite,chan}). (sb::'b\<^sup>\<Omega>)  \<^enum>  c \<noteq> \<epsilon>"
-            shows "(daStateSem automat s)\<cdot>sb = ((dahelper (daTransition automat) s\<cdot>(daStateSem automat))\<cdot>(sbHdElem sb))\<cdot>sb"
+  shows "(daStateSem automat s)\<cdot>sb = snd (daTransition da state (sbHdElem sb)) \<bullet>\<^sup>\<Omega> h (fst (daTransition da state (sbHdElem sb)))\<cdot>(sbRt\<cdot>sb)"
   oops
 
 lemma dastatesem_final:assumes "\<forall>(c::'b::{finite,chan}). (sb::'b\<^sup>\<Omega>)  \<^enum>  c \<noteq> \<epsilon>"

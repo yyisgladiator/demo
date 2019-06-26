@@ -62,6 +62,20 @@ definition ndaInitOuts::"('state::type, 'in, 'out) ndAutomaton \<Rightarrow> ('o
 "ndaInitOuts aut = snd `(snd(aut))"
 *)
 
+lemma ndastatesem_mono[simp]:"mono (\<lambda>h state. {sb_case\<cdot>(\<Lambda> sbe sb.  
+    (let (nextSPF, output) = f' sbe in
+                            output \<bullet>\<^sup>\<Omega> nextSPF\<cdot>sb))
+ 
+  | f f'.  \<forall>sbe . ((f sbe) \<in> (((ndaTransition\<cdot>nda) state) sbe))
+        \<and> ( \<forall>sbe . snd (f' sbe) = snd (f sbe) \<and> fst (f' sbe) \<in> h (fst (f sbe)))})"
+  apply(rule monoI)
+  apply(simp add: prod.case_eq_if)
+  apply(simp add: le_fun_def)
+  apply auto
+  apply(rule_tac x="f"in exI)
+  apply(rule_tac x="f'" in exI)
+  by auto
+
 definition ndaStateSem :: "('s::type, 'in::{chan, finite}, 'out) ndAutomaton \<Rightarrow> ('s \<Rightarrow> ('in\<^sup>\<Omega> \<rightarrow> 'out\<^sup>\<Omega>) set)" where
 "ndaStateSem nda \<equiv> gfp (\<lambda>h state. {sb_case\<cdot>(\<Lambda> sbe sb.  
     (let (nextSPF, output) = f' sbe in
@@ -70,6 +84,14 @@ definition ndaStateSem :: "('s::type, 'in::{chan, finite}, 'out) ndAutomaton \<R
   | f f'.  \<forall>sbe . ((f sbe) \<in> (((ndaTransition\<cdot>nda) state) sbe))
         \<and> ( \<forall>sbe . snd (f' sbe) = snd (f sbe) \<and> fst (f' sbe) \<in> h (fst (f sbe)))})"
     (* TODO: Schöner! *)
+
+lemma ndastatesem_unfold:"ndaStateSem nda s = {sb_case\<cdot>(\<Lambda> (sbe::('a::{chan,finite})\<^sup>\<surd>) sb. let (nextSPF, output) = f' sbe in output \<bullet>\<^sup>\<Omega> nextSPF\<cdot>sb)|
+     f f' .(\<forall>sbe. f sbe \<in> (ndaTransition\<cdot>nda) s sbe \<and>
+            (\<forall>sbe. snd (f' sbe) = snd (f sbe) \<and> fst (f' sbe) \<in> ndaStateSem nda (fst (f sbe))))}"
+  unfolding ndaStateSem_def
+  apply(subst gfp_unfold)
+  using ndastatesem_mono apply auto[1]
+  by auto
 
 definition ndaSem :: "('s::type, 'in::{chan, finite}, 'out) ndAutomaton \<Rightarrow> ('in\<^sup>\<Omega> \<rightarrow> 'out\<^sup>\<Omega>) set" where
 "ndaSem  nda \<equiv> {(\<Lambda> sb. initOut \<bullet>\<^sup>\<Omega> spf\<cdot>sb) | initOut initState spf. 
