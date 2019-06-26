@@ -90,8 +90,8 @@ qed
 
 subsection\<open>sb\_cases definition\<close>
 
-definition sb_case::"'cs\<^sup>\<Omega> \<rightarrow> ('cs\<^sup>\<surd> \<rightarrow> 'cs\<^sup>\<Omega> \<rightarrow> 'a::pcpo) \<rightarrow> 'a" where
-"sb_case = (\<Lambda> sb k. fup\<cdot>(\<Lambda> sbe. k\<cdot>sbe\<cdot>(sbRt\<cdot>sb))\<cdot>(sbHdElem_h_cont\<cdot>sb))"
+definition sb_case::"('cs\<^sup>\<surd> \<rightarrow> 'cs\<^sup>\<Omega> \<rightarrow> 'a::pcpo) \<rightarrow> 'cs\<^sup>\<Omega> \<rightarrow> 'a" where
+"sb_case = (\<Lambda> k sb. fup\<cdot>(\<Lambda> sbe. k\<cdot>sbe\<cdot>(sbRt\<cdot>sb))\<cdot>(sbHdElem_h_cont\<cdot>sb))"
 
 lemma sb_case_cont:"cont (\<lambda>sb. \<Lambda> k. fup\<cdot>(\<Lambda> sbe. k\<cdot>sbe\<cdot>(sbRt\<cdot>sb))\<cdot>(sbHdElem_h_cont\<cdot>sb))"
   by simp
@@ -100,8 +100,8 @@ lemma sb_case_cont:"cont (\<lambda>sb. \<Lambda> k. fup\<cdot>(\<Lambda> sbe. k\
 lemma sb_cases_bot:"\<not>(range(Rep::'c\<Rightarrow> channel)\<subseteq>cEmpty) \<Longrightarrow> sb_case\<cdot>\<bottom>\<cdot>f = \<bottom>"
   oops
 
-lemma sb_cases_sbe:"sb_case\<cdot>(sbECons\<cdot>sbe\<cdot>sb)\<cdot>f = f\<cdot>sbe\<cdot>sb"
-  oops
+lemma sb_cases_sbe[simp]:"sb_case\<cdot>f\<cdot>(sbECons\<cdot>sbe\<cdot>sb) = f\<cdot>sbe\<cdot>sb"
+  sorry
 (*
 lemma sb_case_inj1:"inj (Rep_cfun (sb_case\<cdot>sb))"
 proof(rule injI)

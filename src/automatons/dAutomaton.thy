@@ -7,59 +7,49 @@ section \<open>Deterministic Automaton\<close>
 default_sort "chan"
 
 subsection \<open>Deterministic Automaton definition \<close>
-record ('state::type, 'in, 'out) dAutomaton  =
+record ('state::type, 'in::"{chan, finite}", 'out::chan) dAutomaton  =
   daTransition :: "('state \<Rightarrow> 'in\<^sup>\<surd> \<Rightarrow> ('state \<times> 'out\<^sup>\<Omega>))"
   daInitState :: "'state"
   daInitOut:: "'out\<^sup>\<Omega>"
 
 subsubsection \<open>Deterministic Automaton general functions\<close>
 
-definition daNextState:: "('s::type,'c ,'d) dAutomaton \<Rightarrow> 's \<Rightarrow>  'c\<^sup>\<surd> \<Rightarrow> 's" where
+definition daNextState:: "('s::type,'in::{chan, finite} , _) dAutomaton \<Rightarrow> 's \<Rightarrow>  'in\<^sup>\<surd> \<Rightarrow> 's" where
 "daNextState aut s m = fst ((daTransition aut) s m)"
 
-definition daNextOut:: "('s, 'c,'d) dAutomaton \<Rightarrow> 's \<Rightarrow>  'c\<^sup>\<surd> \<Rightarrow> 'd\<^sup>\<Omega>" where
+definition daNextOut:: "('s::type, 'in::{chan, finite},'out::chan) dAutomaton \<Rightarrow> 's \<Rightarrow>  'in\<^sup>\<surd> \<Rightarrow> 'out\<^sup>\<Omega>" where
 "daNextOut aut s m = snd ((daTransition aut) s m)"
 
 subsection \<open>Semantic for deterministic Automaton \<close>
 
-subsubsection \<open>Semantic helper functions \<close>
 
-lift_definition spfStep::" (('c::{chan,finite})\<^sup>\<surd> \<rightarrow> ('c\<^sup>\<Omega> \<rightarrow> 'd\<^sup>\<Omega>))\<rightarrow>('c\<^sup>\<Omega> \<rightarrow> 'd\<^sup>\<Omega>)" is
-"(\<lambda> h. (\<Lambda> sb. sb_case\<cdot>sb\<cdot>h))"
-  by(simp add: cfun_def)
-
+(*
 definition dahelper:: "('s::type \<Rightarrow>'e::cpo \<Rightarrow> ('s \<times> 'O\<^sup>\<Omega>)) \<Rightarrow> 's \<Rightarrow> ('s \<Rightarrow> ('I\<^sup>\<Omega> \<rightarrow> 'O\<^sup>\<Omega>)) \<rightarrow> ('e \<rightarrow> ('I\<^sup>\<Omega> \<rightarrow> 'O\<^sup>\<Omega>))" where
 "dahelper f s \<equiv> \<Lambda> h. (\<Lambda> e. (\<Lambda> sb. (((snd (f s e)))\<bullet>\<^sup>\<Omega>((h (fst (f s e)))\<cdot>sb))))"
-
-subsubsection \<open>Semantic helper functions lemmas\<close>
-
-lemma spfstep_insert:"spfStep\<cdot>h\<cdot>sb = sb_case\<cdot>sb\<cdot>h"
-  by(simp add: spfStep.rep_eq)
-
-lemma spfstep_sbstep:assumes"\<forall>(c::'b::{finite,chan}). (sb::'b\<^sup>\<Omega>)  \<^enum>  c \<noteq> \<epsilon>"
-  shows "(spfStep\<cdot>f)\<cdot>sb = (f\<cdot>(sbHdElem sb))\<cdot>(sbRt\<cdot>sb)"
-  oops
-
-lemma spfstep_sbestep:
-shows "spfStep\<cdot>f\<cdot>(sbe \<bullet>\<^sup>\<surd> sb) = f\<cdot>sbe\<cdot>(sb)"
-  oops
-(*
-lemma spfstep_inj1:"inj (Rep_cfun spfStep)"
-  oops
-
-lemma spfstep_inj2:"inj (Rep_cfun (spfStep\<cdot>h))"
-  oops
 *)
+
 subsubsection \<open>Sematntic\<close>
 
 definition daStateSem :: "('s::type, 'I::{finite,chan},'O) dAutomaton \<Rightarrow> ('s \<Rightarrow> ('I\<^sup>\<Omega> \<rightarrow> 'O\<^sup>\<Omega>))" where
-"daStateSem automat = fix\<cdot>(\<Lambda> h. (\<lambda>s. spfStep \<cdot>(dahelper (daTransition automat) s\<cdot>h)))"
+"daStateSem da = fix\<cdot>(\<Lambda> h. (\<lambda> state. sb_case\<cdot>
+                        (\<Lambda> sbe sb. 
+                          let (nextState, output) = daTransition da state sbe in
+                            output \<bullet>\<^sup>\<Omega> h nextState\<cdot>sb)
+                      ))"
+
+
+lemma dastatesem_step: "daStateSem da state\<cdot>(sbECons\<cdot>sbe\<cdot>sb) 
+                        = (daNextOut da state sbe) \<bullet>\<^sup>\<Omega> daStateSem da (daNextState da state sbe)\<cdot>sb"
+  apply(subst daStateSem_def, subst fix_eq, subst daStateSem_def[symmetric])
+  apply(simp add: Let_def)
+  oops
+
 
 definition daSem :: "('s::type, 'I::{finite,chan},'O) dAutomaton \<Rightarrow> ('I\<^sup>\<Omega> \<rightarrow> 'O\<^sup>\<Omega>)" where
-"daSem automat = (\<Lambda> sb. (daInitOut automat)\<bullet>\<^sup>\<Omega>((daStateSem automat (daInitState automat))\<cdot>sb))"
+"daSem da = (\<Lambda> sb. (daInitOut da)\<bullet>\<^sup>\<Omega>((daStateSem da (daInitState da))\<cdot>sb))"
 
 subsubsection \<open>Statesematntic lemmas\<close>
-
+(* Die Lemma verwenden noch spfStep *)
 lemma dastatesem_unfolding: "(daStateSem automat s) = spfStep\<cdot>(dahelper (daTransition automat) s\<cdot>(daStateSem automat))"
   oops
 
@@ -125,12 +115,12 @@ lemma dasem_strong:
 
 subsection \<open>Deterministic Weak Automata definition\<close>
 
-record ('state::type, 'in, 'out, 'initOut) dAutomaton_weak  =
+record ('state::type, 'in::"{chan,finite}", 'out, 'initOut) dAutomaton_weak  =
   dawTransition :: "('state \<Rightarrow> 'in\<^sup>\<surd> \<Rightarrow> ('state \<times> 'out\<^sup>\<surd>))"
   dawInitState :: "'state"
   dawInitOut:: "'initOut\<^sup>\<surd>"
 
-definition daw2da::"('state::type, 'in, 'out,'initOut) dAutomaton_weak \<Rightarrow> ('state::type, 'in, 'out) dAutomaton" where
+definition daw2da::"('state::type, 'in::{chan,finite}, 'out,'initOut) dAutomaton_weak \<Rightarrow> ('state::type, 'in, 'out) dAutomaton" where
 "daw2da \<equiv> \<lambda>aut. (| daTransition =(\<lambda>s sbe. (fst(dawTransition aut s sbe),sbe2sb\<cdot>(snd(dawTransition aut s sbe)))), 
                  daInitState = dawInitState(aut), daInitOut = (sbe2sb\<cdot>(dawInitOut aut)\<star>) |)"
 
@@ -145,7 +135,7 @@ definition semantik_weak::"('state::type, 'in::{chan,finite}, 'out::chan, 'initO
 
 subsubsection \<open>Rum96 Automaton Semantic\<close>
 
-function Rum_tap::"('s::type, 'in,'out,'initOut) dAutomaton_weak \<Rightarrow> ('s \<Rightarrow> ('in,'out) spfw) set" where
+function Rum_tap::"('s::type, 'in::{chan,finite},'out,'initOut) dAutomaton_weak \<Rightarrow> ('s \<Rightarrow> ('in,'out) spfw) set" where
 "Rum_tap aut = {h | h. \<forall>m s. \<exists>t out . ((snd(dawTransition aut s m)) = out) \<and> 
                     (\<exists>h2\<in> (Rum_tap aut). \<forall>i .
           (Rep_spfw(h s))\<cdot>(m \<bullet>\<^sup>\<surd> i) = out \<bullet>\<^sup>\<surd> ((Rep_spfw(h2 t))\<cdot>i))}"
@@ -153,7 +143,7 @@ function Rum_tap::"('s::type, 'in,'out,'initOut) dAutomaton_weak \<Rightarrow> (
 
 (*Termination for Rum_tap necessary?*)
 
-fun Rum_ta::"('s::type, 'in,'out,'initOut) dAutomaton_weak \<Rightarrow> (('in,'out) spfw) set"where
+fun Rum_ta::"('s::type, 'in::{chan,finite},'out,'initOut) dAutomaton_weak \<Rightarrow> (('in,'out) spfw) set"where
 "Rum_ta aut = {g | g. \<exists>h\<in>(Rum_tap aut). \<exists> s (out::'initOut\<^sup>\<surd>). \<forall>i. 
               (Rep_spfw g)\<cdot>i = ((sbe2sb\<cdot>out)\<star>)\<bullet>\<^sup>\<Omega>((Rep_spfw(h s))\<cdot>i)}"
 
@@ -171,7 +161,7 @@ definition semantik_strong::"('s::type, 'in::{finite,chan}, 'out) dAutomaton_str
 
 subsection \<open>Rum96 Automaton Semantic \<close>
 
-fun Rum_ta_strong::"('s::type, 'in,'out) dAutomaton_strong \<Rightarrow> (('in,'out) spfs) set"where
+fun Rum_ta_strong::"('s::type, 'in::{chan,finite},'out) dAutomaton_strong \<Rightarrow> (('in,'out) spfs) set"where
 "Rum_ta_strong aut = Abs_spfs `(Rum_ta aut)"
 
 end
