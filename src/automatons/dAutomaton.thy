@@ -26,7 +26,9 @@ subsubsection \<open>Sematntic\<close>
 
 definition daStateSem :: "('s::type, 'I::{finite,chan},'O) dAutomaton \<Rightarrow> ('s \<Rightarrow> ('I\<^sup>\<Omega> \<rightarrow> 'O\<^sup>\<Omega>))" where
 "daStateSem da = fix\<cdot>(\<Lambda> h. (\<lambda> state. sb_case\<cdot>
-                        (\<Lambda> sbe sb. (daNextOut da state sbe) \<bullet>\<^sup>\<Omega> h (daNextState da state sbe)\<cdot>sb)
+                        (\<Lambda> sbe sb. 
+                          let (nextState, output) = daTransition da state sbe in
+                            output \<bullet>\<^sup>\<Omega> h nextState\<cdot>sb)
                       ))"
 
 definition daSem :: "('s::type, 'I::{finite,chan},'O) dAutomaton \<Rightarrow> ('I\<^sup>\<Omega> \<rightarrow> 'O\<^sup>\<Omega>)" where
