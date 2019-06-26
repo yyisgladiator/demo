@@ -6,7 +6,7 @@ begin
 
 default_sort type
 
-datatype channel = TheOneChannel
+datatype channel = c1 | c2 | c3
 
 
 
@@ -19,9 +19,9 @@ type_synonym M = nat
 
 text \<open>Then one describes the types of each channel. Only Messages included are allowed to be
   transmitted\<close>
-definition ctype :: "channel \<Rightarrow> M set" where 
+fun ctype :: "channel \<Rightarrow> M set" where 
+"ctype c3 = {}" |
 "ctype _ = UNIV"
-
 
 
 

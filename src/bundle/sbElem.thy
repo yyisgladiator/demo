@@ -10,7 +10,7 @@ section \<open>sbElem\<close>
 subsection \<open>sbElem Definition \<close>
 fun sbElem_well :: "('c::chan \<Rightarrow> M) option \<Rightarrow> bool" where
 "sbElem_well None = ((Rep ` (UNIV::'c set)) \<subseteq> cEmpty)" |  (* Schöner? *)
-"sbElem_well (Some sbe) = (\<forall> c. sbe c \<in> ctype (Rep c))" (* cbot ist leer, daher wird das nie wahr sein für das leere Bündel *)
+"sbElem_well (Some sbe) = (\<forall> c. sbe c \<in> ctype ((Rep::'c\<Rightarrow>channel) c))" (* cbot ist leer, daher wird das nie wahr sein für das leere Bündel *)
 
 text\<open>Type sbElem is can be interpreted as a Timeslice\<close>
 typedef 'c::chan sbElem  ("(_\<^sup>\<surd>)" [1000] 999) = "{f:: ('c::chan \<Rightarrow> M) option. sbElem_well f}"
