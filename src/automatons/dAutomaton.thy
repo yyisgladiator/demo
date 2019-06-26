@@ -31,13 +31,88 @@ definition daStateSem :: "('s::type, 'I::{finite,chan},'O) dAutomaton \<Rightarr
                             output \<bullet>\<^sup>\<Omega> h nextState\<cdot>sb)
                       ))"
 
+
+lemma "cont (\<lambda> sb. let (nextState, output) = daTransition da state sbe in
+                            output \<bullet>\<^sup>\<Omega> h nextState\<cdot>sb)"
+  by simp
+
+lemma "cont (\<lambda> sbe. \<Lambda> sb. let (nextState, output) = daTransition da state sbe in
+                            output \<bullet>\<^sup>\<Omega> h nextState\<cdot>sb)"
+  by simp
+
+lemma dastatesem_cont[simp]:"cont (\<lambda> h. (\<lambda> state. sb_case\<cdot>
+                        (\<Lambda> sbe sb. 
+                          let (nextState, output) = daTransition da state sbe in
+                            output \<bullet>\<^sup>\<Omega> h nextState\<cdot>sb)))" (*verkürzen*)
+  apply (simp add: prod.case_eq_if)
+  apply(rule Cont.contI2)
+  apply(rule monofunI)
+   apply(rule fun_belowI)
+  apply(rule monofun_cfun,simp)
+  apply(rule cfun_belowI,simp)+
+   apply (smt case_prod_conv fun_below_iff monofun_cfun_arg monofun_cfun_fun po_eq_conv split_cong)
+  apply(simp add: lub_fun)
+  apply(subst contlub_cfun_fun)
+   apply (simp add: ch2ch_fun)
+  apply(subst contlub_cfun_arg)
+   apply (simp add: ch2ch_fun)
+  apply(rule fun_belowI)
+  apply(rule cfun_belowI)
+  apply(subst contlub_cfun_fun)
+  apply(rule chainI)
+  apply(rule monofun_cfun,simp)
+  apply(rule cfun_belowI)
+  apply(simp)
+  apply(rule cfun_belowI)
+   apply(simp)
+   apply (smt po_class.chainE case_prod_conv fun_below_iff monofun_cfun_arg monofun_cfun_fun po_eq_conv split_cong)
+  apply(subgoal_tac "(\<Lambda> (sbe::'b\<^sup>\<surd>) (sb::'b\<^sup>\<Omega>). \<Squnion>i::nat. snd (daTransition da x sbe) \<bullet>\<^sup>\<Omega> Y i (fst (daTransition da x sbe))\<cdot>sb)
+                      = (\<Squnion>i::nat.(\<Lambda> (sbe::'b\<^sup>\<surd>) (sb::'b\<^sup>\<Omega>). snd (daTransition da x sbe) \<bullet>\<^sup>\<Omega> Y i (fst (daTransition da x sbe))\<cdot>sb))")
+   apply simp
+   apply(subst contlub_cfun_arg)
+  apply(rule chainI)
+  apply(rule cfun_belowI)
+  apply(simp)
+  apply(rule cfun_belowI)
+   apply(simp)
+    apply (smt po_class.chainE case_prod_conv fun_below_iff monofun_cfun_arg monofun_cfun_fun po_eq_conv split_cong)
+   apply(subst contlub_cfun_fun)
+    apply(rule chainI)
+    apply(rule monofun_cfun,simp)
+  apply(rule cfun_belowI)
+  apply(simp)
+  apply(rule cfun_belowI)
+    apply(simp)
+    apply (metis (no_types, hide_lams) cfun_below_iff fun_belowD monofun_cfun_arg po_class.chainE)
+   apply simp
+  apply(subst lub_cfun,simp)
+   apply(rule chainI)
+  apply(rule cfun_belowI)
+  apply(simp)
+  apply(rule cfun_belowI)
+    apply(simp)
+   apply (metis (no_types, hide_lams) cfun_below_iff fun_belowD monofun_cfun_arg po_class.chainE)
+  apply(subst lub_cfun,simp)
+   apply(rule chainI)
+  apply(rule cfun_belowI)
+  apply(simp)
+   apply (metis (no_types, hide_lams) cfun_below_iff fun_belowD monofun_cfun_arg po_class.chainE)
+  by simp
+
+
 definition daSem :: "('s::type, 'I::{finite,chan},'O) dAutomaton \<Rightarrow> ('I\<^sup>\<Omega> \<rightarrow> 'O\<^sup>\<Omega>)" where
 "daSem automat = (\<Lambda> sb. (daInitOut automat)\<bullet>\<^sup>\<Omega>((daStateSem automat (daInitState automat))\<cdot>sb))"
 
 subsubsection \<open>Statesemantic lemmas\<close>
 
-lemma dastatesem_unfolding: "(daStateSem automat s) = spfStep\<cdot>(dahelper (daTransition automat) s\<cdot>(daStateSem automat))"
-  oops
+lemma dastatesem_unfolding: "(daStateSem automat s) = sb_case\<cdot>(\<Lambda> sbe sb.
+                                                  let (nextState, output) = daTransition automat s sbe in
+                            output \<bullet>\<^sup>\<Omega> ((daStateSem automat) nextState\<cdot>sb))"
+  unfolding daStateSem_def
+  apply(subst fix_eq)
+  apply(subst beta_cfun)
+  using dastatesem_cont apply blast
+  by auto
 
 lemma dastatesem_bottom:assumes "\<exists>(c::'b::{finite,chan}). (sb::'b\<^sup>\<Omega>)  \<^enum>  c = \<epsilon>"
   shows "(daStateSem automat s)\<cdot>sb = \<bottom>"
