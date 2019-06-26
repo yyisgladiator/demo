@@ -97,7 +97,7 @@ lemma sb_case_cont:"cont (\<lambda>sb. \<Lambda> k. fup\<cdot>(\<Lambda> sbe. k\
   by simp
 
 
-lemma sb_cases_bot:"\<not>(range(Rep::'c\<Rightarrow> channel)\<subseteq>cEmpty) \<Longrightarrow> sb_case\<cdot>\<bottom>\<cdot>f = \<bottom>"
+lemma sb_cases_bot:"\<not>(range(Rep::'c\<Rightarrow> channel)\<subseteq>cEmpty) \<Longrightarrow> sb_case\<cdot>f\<cdot>\<bottom> = \<bottom>"
   oops
 
 lemma sb_cases_sbe[simp]:"sb_case\<cdot>f\<cdot>(sbECons\<cdot>sbe\<cdot>sb) = f\<cdot>sbe\<cdot>sb"

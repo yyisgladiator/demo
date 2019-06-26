@@ -22,7 +22,6 @@ definition daNextOut:: "('s::type, 'in::{chan, finite},'out::chan) dAutomaton \<
 
 subsection \<open>Semantic for deterministic Automaton \<close>
 
-
 (*
 definition dahelper:: "('s::type \<Rightarrow>'e::cpo \<Rightarrow> ('s \<times> 'O\<^sup>\<Omega>)) \<Rightarrow> 's \<Rightarrow> ('s \<Rightarrow> ('I\<^sup>\<Omega> \<rightarrow> 'O\<^sup>\<Omega>)) \<rightarrow> ('e \<rightarrow> ('I\<^sup>\<Omega> \<rightarrow> 'O\<^sup>\<Omega>))" where
 "dahelper f s \<equiv> \<Lambda> h. (\<Lambda> e. (\<Lambda> sb. (((snd (f s e)))\<bullet>\<^sup>\<Omega>((h (fst (f s e)))\<cdot>sb))))"
@@ -44,12 +43,12 @@ lemma dastatesem_step: "daStateSem da state\<cdot>(sbECons\<cdot>sbe\<cdot>sb)
   apply(simp add: Let_def)
   oops
 
-
 definition daSem :: "('s::type, 'I::{finite,chan},'O) dAutomaton \<Rightarrow> ('I\<^sup>\<Omega> \<rightarrow> 'O\<^sup>\<Omega>)" where
 "daSem da = (\<Lambda> sb. (daInitOut da)\<bullet>\<^sup>\<Omega>((daStateSem da (daInitState da))\<cdot>sb))"
 
 subsubsection \<open>Statesematntic lemmas\<close>
 (* Die Lemma verwenden noch spfStep *)
+
 lemma dastatesem_unfolding: "(daStateSem automat s) = spfStep\<cdot>(dahelper (daTransition automat) s\<cdot>(daStateSem automat))"
   oops
 
