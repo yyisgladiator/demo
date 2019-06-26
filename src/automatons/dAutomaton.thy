@@ -17,48 +17,22 @@ subsubsection \<open>Deterministic Automaton general functions\<close>
 definition daNextState:: "('s::type,'c ,'d) dAutomaton \<Rightarrow> 's \<Rightarrow>  'c\<^sup>\<surd> \<Rightarrow> 's" where
 "daNextState aut s m = fst ((daTransition aut) s m)"
 
-definition daNextOut:: "('s, 'c,'d) dAutomaton \<Rightarrow> 's \<Rightarrow>  'c\<^sup>\<surd> \<Rightarrow> 'd\<^sup>\<Omega>" where
+definition daNextOut:: "('s::type, 'c,'d) dAutomaton \<Rightarrow> 's \<Rightarrow>  'c\<^sup>\<surd> \<Rightarrow> 'd\<^sup>\<Omega>" where
 "daNextOut aut s m = snd ((daTransition aut) s m)"
 
 subsection \<open>Semantic for deterministic Automaton \<close>
 
-subsubsection \<open>Semantic helper functions \<close>
-
-lift_definition spfStep::" (('c::{chan,finite})\<^sup>\<surd> \<rightarrow> ('c\<^sup>\<Omega> \<rightarrow> 'd\<^sup>\<Omega>))\<rightarrow>('c\<^sup>\<Omega> \<rightarrow> 'd\<^sup>\<Omega>)" is
-"(\<lambda> h. (\<Lambda> sb. sb_case\<cdot>sb\<cdot>h))"
-  by(simp add: cfun_def)
-
-definition dahelper:: "('s::type \<Rightarrow>'e::cpo \<Rightarrow> ('s \<times> 'O\<^sup>\<Omega>)) \<Rightarrow> 's \<Rightarrow> ('s \<Rightarrow> ('I\<^sup>\<Omega> \<rightarrow> 'O\<^sup>\<Omega>)) \<rightarrow> ('e \<rightarrow> ('I\<^sup>\<Omega> \<rightarrow> 'O\<^sup>\<Omega>))" where
-"dahelper f s \<equiv> \<Lambda> h. (\<Lambda> e. (\<Lambda> sb. (((snd (f s e)))\<bullet>\<^sup>\<Omega>((h (fst (f s e)))\<cdot>sb))))"
-
-subsubsection \<open>Semantic helper functions lemmas\<close>
-
-lemma spfstep_insert:"spfStep\<cdot>h\<cdot>sb = sb_case\<cdot>sb\<cdot>h"
-  by(simp add: spfStep.rep_eq)
-
-lemma spfstep_sbstep:assumes"\<forall>(c::'b::{finite,chan}). (sb::'b\<^sup>\<Omega>)  \<^enum>  c \<noteq> \<epsilon>"
-  shows "(spfStep\<cdot>f)\<cdot>sb = (f\<cdot>(sbHdElem sb))\<cdot>(sbRt\<cdot>sb)"
-  oops
-
-lemma spfstep_sbestep:
-shows "spfStep\<cdot>f\<cdot>(sbe \<bullet>\<^sup>\<surd> sb) = f\<cdot>sbe\<cdot>(sb)"
-  oops
-(*
-lemma spfstep_inj1:"inj (Rep_cfun spfStep)"
-  oops
-
-lemma spfstep_inj2:"inj (Rep_cfun (spfStep\<cdot>h))"
-  oops
-*)
 subsubsection \<open>Sematntic\<close>
 
 definition daStateSem :: "('s::type, 'I::{finite,chan},'O) dAutomaton \<Rightarrow> ('s \<Rightarrow> ('I\<^sup>\<Omega> \<rightarrow> 'O\<^sup>\<Omega>))" where
-"daStateSem automat = fix\<cdot>(\<Lambda> h. (\<lambda>s. spfStep \<cdot>(dahelper (daTransition automat) s\<cdot>h)))"
+"daStateSem da = fix\<cdot>(\<Lambda> h. (\<lambda> state. sb_case\<cdot>
+                        (\<Lambda> sbe sb. (daNextOut da state sbe) \<bullet>\<^sup>\<Omega> h (daNextState da state sbe)\<cdot>sb)
+                      ))"
 
 definition daSem :: "('s::type, 'I::{finite,chan},'O) dAutomaton \<Rightarrow> ('I\<^sup>\<Omega> \<rightarrow> 'O\<^sup>\<Omega>)" where
 "daSem automat = (\<Lambda> sb. (daInitOut automat)\<bullet>\<^sup>\<Omega>((daStateSem automat (daInitState automat))\<cdot>sb))"
 
-subsubsection \<open>Statesematntic lemmas\<close>
+subsubsection \<open>Statesemantic lemmas\<close>
 
 lemma dastatesem_unfolding: "(daStateSem automat s) = spfStep\<cdot>(dahelper (daTransition automat) s\<cdot>(daStateSem automat))"
   oops
