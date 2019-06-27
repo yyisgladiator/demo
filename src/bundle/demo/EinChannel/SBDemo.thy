@@ -9,7 +9,6 @@ text \<open>This Theory gives a few examples for SB. First we will show how a SB
       also test some SB functions. Some of these functions will also use sbElems.\<close>
 
 subsection\<open>sbElem definition\<close>
-setup_lifting type_definition_sb
 
 lift_definition inSB::"inChan\<^sup>\<Omega>"is
 "((\<lambda>c. fix\<cdot>(\<Lambda> s. (\<up>1) \<bullet> s)))"
@@ -44,7 +43,7 @@ lemma "(inSB) \<^enum> (c::inChan) = fix\<cdot>(\<Lambda> s. \<up>1 \<bullet> s)
 
 text \<open>Now we take a look at the sbUnion function. The result of the union of the same SB is the SB
       itself.\<close>
-lemma "(sbUnion::'c\<^sup>\<Omega> \<rightarrow> 'c\<^sup>\<Omega> \<rightarrow> 'c\<^sup>\<Omega>)\<cdot>someSB\<cdot>someSB = someSB"
+lemma "sbUnion\<cdot>someSB\<cdot>someSB = someSB"
   by simp
 
 text \<open>But if the union output type is different from the input type, the union of the same SB is

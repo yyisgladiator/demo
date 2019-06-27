@@ -45,11 +45,59 @@ lemma "cont (\<lambda> sbe. \<Lambda> sb. let (nextState, output) = daTransition
                             output \<bullet>\<^sup>\<Omega> h nextState\<cdot>sb)"
   by simp
 
+lemma "(\<forall>state. cont (\<lambda>h. k h state)) \<Longrightarrow> cont (\<lambda>h (state::'a::type). k h state)"
+  by (metis cont2cont_lambda)
+
+
+lemma dastatesem_cont[simp]:"cont (\<lambda> h. (\<lambda> state. sb_case\<cdot>
+                        (\<Lambda> sbe sb. 
+                          let (nextState, output) = daTransition da state sbe in
+                            output \<bullet>\<^sup>\<Omega> h nextState\<cdot>sb)))" (*verkürzen*)
+  oops
+
+lemma [cont2cont]: "cont fst"
+  by simp
+lemma [cont2cont]: "cont snd"
+  by simp
+
+lemma "cont (\<lambda>x. g x) \<Longrightarrow> cont (\<lambda>x. k\<cdot>(g x))"
+  by (metis cont_Rep_cfun2 cont_compose)
+
+
+
+
+lemma [cont2cont]: "cont(\<lambda>f s. g (f,s)) \<Longrightarrow> cont (\<lambda>x. g x)"
+  sorry
+
+
+lemma discr_cont2: "monofun f \<Longrightarrow> cont (\<lambda>x. g ((f x)::'a:: discrete_cpo))"
+  oops  
+
+lemma discr_cont[cont2cont]: "cont f \<Longrightarrow> cont (\<lambda>x. g ((f x)::'a:: discrete_cpo))"
+  sorry (* Verwende discr_cont2 *)
+
+
+lemma discr_cont3[]: "cont h \<Longrightarrow> \<comment>\<open>oder monofun\<close> cont f \<Longrightarrow> cont (\<lambda>x. ((h x)) ((f x)::'a:: discrete_cpo))"
+  sorry
+
+
 lemma dastatesem_cont[simp]:"cont (\<lambda> h. (\<lambda> state. sb_case\<cdot>
                         (\<Lambda> sbe sb. 
                           let (nextState, output) = daTransition da state sbe in
                             output \<bullet>\<^sup>\<Omega> h nextState\<cdot>sb)))" (*verkürzen*)
   apply (simp add: prod.case_eq_if)
+  apply(intro cont2cont)
+  by auto
+
+
+  apply(rule cont2cont_lambda)
+
+  apply(rule discr_cont3)
+  apply auto
+  
+   defer
+  oops
+
   apply(rule Cont.contI2)
   apply(rule monofunI)
    apply(rule fun_belowI)
