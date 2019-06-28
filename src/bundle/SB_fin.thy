@@ -13,7 +13,7 @@ subsection \<open>Cont version of sbHdElem\_h\<close>
 
 lift_definition sbHdElem_h_cont::"'c\<^sup>\<Omega> \<rightarrow> ('c\<^sup>\<surd>) u"is 
 "sbHdElem_h"
-  apply(simp add: sbHdElem_h_def cfun_def)
+  apply(simp add: sbHdElem_h_def)
   apply(intro cont2cont)
   apply(rule Cont.contI2)
    apply(rule monofunI)

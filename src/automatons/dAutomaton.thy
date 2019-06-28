@@ -3,6 +3,12 @@ theory dAutomaton
 imports bundle.SB_fin spf.SPF
 begin
 
+section \<open>automaton cont2cont\<close>
+
+(*causes problems in sb.thy*)
+lemma prod_contI[cont2cont]: "(\<And>s. cont(\<lambda>f. g (f,s))) \<Longrightarrow>(\<And>f. cont (\<lambda>s. g (f,s))) \<Longrightarrow> cont g"
+  by (simp add: prod_contI)
+
 section \<open>Deterministic Automaton\<close>
 default_sort "chan"
 
@@ -36,121 +42,12 @@ definition daStateSem :: "('s::type, 'I::{finite,chan},'O) dAutomaton \<Rightarr
                             output \<bullet>\<^sup>\<Omega> h nextState\<cdot>sb)
                       ))"
 
-
-lemma "cont (\<lambda> sb. let (nextState, output) = daTransition da state sbe in
-                            output \<bullet>\<^sup>\<Omega> h nextState\<cdot>sb)"
-  by simp
-
-lemma "cont (\<lambda> sbe. \<Lambda> sb. let (nextState, output) = daTransition da state sbe in
-                            output \<bullet>\<^sup>\<Omega> h nextState\<cdot>sb)"
-  by simp
-
-lemma "(\<forall>state. cont (\<lambda>h. k h state)) \<Longrightarrow> cont (\<lambda>h (state::'a::type). k h state)"
-  by (metis cont2cont_lambda)
-
-
 lemma dastatesem_cont[simp]:"cont (\<lambda> h. (\<lambda> state. sb_case\<cdot>
                         (\<Lambda> sbe sb. 
                           let (nextState, output) = daTransition da state sbe in
-                            output \<bullet>\<^sup>\<Omega> h nextState\<cdot>sb)))" (*verkürzen*)
-  oops
+                            output \<bullet>\<^sup>\<Omega> h nextState\<cdot>sb)))"
 
-lemma [cont2cont]: "cont fst"
-  by simp
-lemma [cont2cont]: "cont snd"
-  by simp
-
-lemma "cont (\<lambda>x. g x) \<Longrightarrow> cont (\<lambda>x. k\<cdot>(g x))"
-  by (metis cont_Rep_cfun2 cont_compose)
-
-
-
-
-lemma [cont2cont]: "cont(\<lambda>f s. g (f,s)) \<Longrightarrow> cont (\<lambda>x. g x)"
-  sorry
-
-
-lemma discr_cont2: "monofun f \<Longrightarrow> cont (\<lambda>x. g ((f x)::'a:: discrete_cpo))"
-  oops  
-
-lemma discr_cont[cont2cont]: "cont f \<Longrightarrow> cont (\<lambda>x. g ((f x)::'a:: discrete_cpo))"
-  sorry (* Verwende discr_cont2 *)
-
-
-lemma discr_cont3[]: "cont h \<Longrightarrow> \<comment>\<open>oder monofun\<close> cont f \<Longrightarrow> cont (\<lambda>x. ((h x)) ((f x)::'a:: discrete_cpo))"
-  sorry
-
-
-lemma dastatesem_cont[simp]:"cont (\<lambda> h. (\<lambda> state. sb_case\<cdot>
-                        (\<Lambda> sbe sb. 
-                          let (nextState, output) = daTransition da state sbe in
-                            output \<bullet>\<^sup>\<Omega> h nextState\<cdot>sb)))" (*verkürzen*)
-  apply (simp add: prod.case_eq_if)
-  apply(intro cont2cont)
-  by auto
-
-
-  apply(rule cont2cont_lambda)
-
-  apply(rule discr_cont3)
-  apply auto
-  
-   defer
-  oops
-
-  apply(rule Cont.contI2)
-  apply(rule monofunI)
-   apply(rule fun_belowI)
-  apply(rule monofun_cfun,simp)
-  apply(rule cfun_belowI,simp)+
-   apply (smt case_prod_conv fun_below_iff monofun_cfun_arg monofun_cfun_fun po_eq_conv split_cong)
-  apply(simp add: lub_fun)
-  apply(subst contlub_cfun_fun)
-   apply (simp add: ch2ch_fun)
-  apply(subst contlub_cfun_arg)
-   apply (simp add: ch2ch_fun)
-  apply(rule fun_belowI)
-  apply(rule cfun_belowI)
-  apply(subst contlub_cfun_fun)
-  apply(rule chainI)
-  apply(rule monofun_cfun,simp)
-  apply(rule cfun_belowI)
-  apply(simp)
-  apply(rule cfun_belowI)
-   apply(simp)
-   apply (smt po_class.chainE case_prod_conv fun_below_iff monofun_cfun_arg monofun_cfun_fun po_eq_conv split_cong)
-  apply(subgoal_tac "(\<Lambda> (sbe::'b\<^sup>\<surd>) (sb::'b\<^sup>\<Omega>). \<Squnion>i::nat. snd (daTransition da x sbe) \<bullet>\<^sup>\<Omega> Y i (fst (daTransition da x sbe))\<cdot>sb)
-                      = (\<Squnion>i::nat.(\<Lambda> (sbe::'b\<^sup>\<surd>) (sb::'b\<^sup>\<Omega>). snd (daTransition da x sbe) \<bullet>\<^sup>\<Omega> Y i (fst (daTransition da x sbe))\<cdot>sb))")
-   apply simp
-   apply(subst contlub_cfun_arg)
-  apply(rule chainI)
-  apply(rule cfun_belowI)
-  apply(simp)
-  apply(rule cfun_belowI)
-   apply(simp)
-    apply (smt po_class.chainE case_prod_conv fun_below_iff monofun_cfun_arg monofun_cfun_fun po_eq_conv split_cong)
-   apply(subst contlub_cfun_fun)
-    apply(rule chainI)
-    apply(rule monofun_cfun,simp)
-  apply(rule cfun_belowI)
-  apply(simp)
-  apply(rule cfun_belowI)
-    apply(simp)
-    apply (metis (no_types, hide_lams) cfun_below_iff fun_belowD monofun_cfun_arg po_class.chainE)
-   apply simp
-  apply(subst lub_cfun,simp)
-   apply(rule chainI)
-  apply(rule cfun_belowI)
-  apply(simp)
-  apply(rule cfun_belowI)
-    apply(simp)
-   apply (metis (no_types, hide_lams) cfun_below_iff fun_belowD monofun_cfun_arg po_class.chainE)
-  apply(subst lub_cfun,simp)
-   apply(rule chainI)
-  apply(rule cfun_belowI)
-  apply(simp)
-   apply (metis (no_types, hide_lams) cfun_below_iff fun_belowD monofun_cfun_arg po_class.chainE)
-  by simp
+  by(intro cont2cont,simp_all)
 
 definition daSem :: "('s::type, 'I::{finite,chan},'O) dAutomaton \<Rightarrow> ('I\<^sup>\<Omega> \<rightarrow> 'O\<^sup>\<Omega>)" where
 "daSem da = (\<Lambda> sb. (daInitOut da)\<bullet>\<^sup>\<Omega>((daStateSem da (daInitState da))\<cdot>sb))"

@@ -4,7 +4,10 @@ imports inc.Channel
 begin
 
 default_sort chan
-
+(* Move to prelude and add mono2mono rules
+section \<open> mono2mono\<close>
+named_theorems mono2mono "monofun intro rule"
+*)
 section \<open>sbElem\<close>
 
 subsection \<open>sbElem Definition \<close>
