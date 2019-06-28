@@ -11,17 +11,24 @@ session "stream" (mustWork) in "stream" = "inc" +
   options [quick_and_dirty = false]
   theories
     Stream
-    
+
 session "bundle" (mustWork) in "bundle" = "stream" +
   options [quick_and_dirty, browser_info, document = pdf,document_variants="outline=/proof"]
   theories
-    SB    
+    SB
     SB_fin
   document_files
     "root.tex"
-    
+
 session "spf" (mustWork) in "spf" = "bundle" +
   options [quick_and_dirty = true]
   theories
     SPF
 
+session "automaton" (mustWork) in "automatons" = "bundle" +
+  options [quick_and_dirty = true, browser_info, document = pdf,document_variants="outline=/proof"]
+  theories
+    dAutomaton
+    ndAutomaton
+  document_files
+    "root.tex"
