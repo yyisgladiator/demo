@@ -67,7 +67,7 @@ pages:
   stage: deploy
   script:
     - find $(isabelle getenv -b ISABELLE_BROWSER_INFO)
-    - cp -r $(isabelle getenv -b ISABELLE_BROWSER_INFO)/Unsorted public
+    - cp -r $(isabelle getenv -b ISABELLE_BROWSER_INFO)/MontiBelle public
   tags:
     - docker
     - private

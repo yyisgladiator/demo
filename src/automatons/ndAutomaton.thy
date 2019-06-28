@@ -1,6 +1,6 @@
 theory ndAutomaton
 
-imports bundle.SB_fin spf.SPF dAutomaton
+imports bundle.SB_fin (* dAutomaton *)
 begin
 
 section \<open>Non-Deterministic Automaton\<close>
@@ -18,7 +18,7 @@ record ('state::type, 'in::"{chan, finite}", 'out::chan) ndAutomaton_incomplete 
   ndaiInitConfig :: "('state \<times> 'out\<^sup>\<Omega>) set"
 
 cpodef ('state::type, 'in::"{chan, finite}", 'out::chan) ndAutomaton  =
-  "{(transition::(('state \<Rightarrow> 'in\<^sup>\<surd> \<Rightarrow> (('state \<times> 'out\<^sup>\<Omega>) set))), initialConfig::('state \<times> 'out\<^sup>\<Omega>) set) 
+  "{(transition::(('state \<Rightarrow> 'in\<^sup>\<surd> \<Rightarrow> (('state \<times> 'out\<^sup>\<Omega>) set))), initialConfig::('state \<times> 'out\<^sup>\<Omega>) set)
     | transition initialConfig.
       (\<forall>sbe state. transition sbe state \<noteq> {})
     \<and> initialConfig \<noteq> {}}"
@@ -44,10 +44,10 @@ definition ndaInitOuts::"('state::type, 'in, 'out) ndAutomaton \<Rightarrow> ('o
 "ndaInitOuts aut = snd `(snd(aut))"
 *)
 
-lemma ndastatesem_mono[simp]:"mono (\<lambda>h state. {sb_case\<cdot>(\<Lambda> sbe sb.  
+lemma ndastatesem_mono[simp]:"mono (\<lambda>h state. {sb_case\<cdot>(\<Lambda> sbe sb.
     (let (nextSPF, output) = f' sbe in
                             output \<bullet>\<^sup>\<Omega> nextSPF\<cdot>sb))
- 
+
   | f f'.  \<forall>sbe . ((f sbe) \<in> (((ndaTransition\<cdot>nda) state) sbe))
         \<and> ( \<forall>sbe . snd (f' sbe) = snd (f sbe) \<and> fst (f' sbe) \<in> h (fst (f sbe)))})"
   apply(rule monoI)
@@ -59,10 +59,10 @@ lemma ndastatesem_mono[simp]:"mono (\<lambda>h state. {sb_case\<cdot>(\<Lambda> 
   by auto
 
 definition ndaStateSem :: "('s::type, 'in::{chan, finite}, 'out) ndAutomaton \<Rightarrow> ('s \<Rightarrow> ('in\<^sup>\<Omega> \<rightarrow> 'out\<^sup>\<Omega>) set)" where
-"ndaStateSem nda \<equiv> gfp (\<lambda>h state. {sb_case\<cdot>(\<Lambda> sbe sb.  
+"ndaStateSem nda \<equiv> gfp (\<lambda>h state. {sb_case\<cdot>(\<Lambda> sbe sb.
     (let (nextSPF, output) = f' sbe in
                             output \<bullet>\<^sup>\<Omega> nextSPF\<cdot>sb))
- 
+
   | f f'.  \<forall>sbe . ((f sbe) \<in> (((ndaTransition\<cdot>nda) state) sbe))
         \<and> ( \<forall>sbe . snd (f' sbe) = snd (f sbe) \<and> fst (f' sbe) \<in> h (fst (f sbe)))})"
     (* TODO: Schöner! *)
@@ -76,7 +76,7 @@ lemma ndastatesem_unfold:"ndaStateSem nda s = {sb_case\<cdot>(\<Lambda> (sbe::('
   by auto
 
 definition ndaSem :: "('s::type, 'in::{chan, finite}, 'out) ndAutomaton \<Rightarrow> ('in\<^sup>\<Omega> \<rightarrow> 'out\<^sup>\<Omega>) set" where
-"ndaSem  nda \<equiv> {(\<Lambda> sb. initOut \<bullet>\<^sup>\<Omega> spf\<cdot>sb) | initOut initState spf. 
+"ndaSem  nda \<equiv> {(\<Lambda> sb. initOut \<bullet>\<^sup>\<Omega> spf\<cdot>sb) | initOut initState spf.
     (initState,initOut)\<in>ndaInitConfig\<cdot>nda \<and> spf\<in>(ndaStateSem nda initState)}"
 
 end
