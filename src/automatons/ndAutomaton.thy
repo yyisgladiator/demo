@@ -1,7 +1,8 @@
+(*<*)
 theory ndAutomaton
-
-imports bundle.SB_fin (* dAutomaton *)
+  imports bundle.SB_fin (* dAutomaton *)
 begin
+(*>*)
 
 section \<open>Non-Deterministic Automaton\<close>
 default_sort "chan"
@@ -115,4 +116,6 @@ definition ndaSem :: "('s::type, 'in::{chan,finite}, 'out) ndAutomaton \<Rightar
 "ndaSem  \<equiv> (\<lambda> nda. {(\<Lambda> sb. iout \<bullet>\<^sup>\<Omega> (spf\<cdot>sb)) | iout spf s. (s,iout)\<in>(ndaInitConfig\<cdot>nda) \<and> spf\<in>((ndaStateSem\<cdot>nda)s)})"
 *)
 
+(*<*)
 end
+(*>*)

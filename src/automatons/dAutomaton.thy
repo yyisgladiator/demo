@@ -1,7 +1,8 @@
+(*<*)
 theory dAutomaton
-
-imports bundle.SB_fin
+  imports bundle.SB_fin
 begin
+(*>*)
 
 section \<open>Deterministic Automaton\<close>
 default_sort "chan"
@@ -230,4 +231,7 @@ subsection \<open>Rum96 Automaton Semantic \<close>
 fun Rum_ta_strong::"('s::type, 'in::{chan,finite},'out) dAutomaton_strong \<Rightarrow> (('in,'out) spfs) set"where
 "Rum_ta_strong aut = Abs_spfs `(Rum_ta aut)"
 *)
+
+(*<*)
 end
+(*>*)

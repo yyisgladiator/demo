@@ -1,7 +1,8 @@
+(*<*)
 theory sbElem
-
-imports inc.Channel
+  imports inc.Channel
 begin
+(*>*)
 
 default_sort chan
 
@@ -59,15 +60,15 @@ setup_lifting type_definition_sbElem
 
 subsection \<open>sbElem functions\<close>
 
-text\<open>This function retrieves an element on channel e from the sbElem. This only works 
+text\<open>This function retrieves an element on channel e from the sbElem. This only works
       if Elements are allowed on channel e and channel e is also in type c\<close>
 definition sbegetch::"'e \<Rightarrow> 'c\<^sup>\<surd> \<Rightarrow> M"where (*works if sbe \<noteq> None* and 'e \<subseteq> 'c *)
 "sbegetch c = (\<lambda> sbe. ((the (Rep_sbElem sbe)) (Abs (Rep c))))"
 
 
-text\<open>This function Converts the Domain of an sbElem. This works if the Domain it converts to, is 
+text\<open>This function Converts the Domain of an sbElem. This works if the Domain it converts to, is
       smaller or equal\<close>
-definition sbeConvert::"'c\<^sup>\<surd> \<Rightarrow> 'd\<^sup>\<surd>"where 
+definition sbeConvert::"'c\<^sup>\<surd> \<Rightarrow> 'd\<^sup>\<surd>"where
 "sbeConvert = (\<lambda>sbe. Abs_sbElem(Some (\<lambda>c. sbegetch c sbe)))"
 
 lemma sberestrict_getch: assumes"Rep (c::'c) \<in> range(Rep::'d \<Rightarrow> channel)"
@@ -76,8 +77,8 @@ lemma sberestrict_getch: assumes"Rep (c::'c) \<in> range(Rep::'d \<Rightarrow> c
 
 text\<open>This unites two sbElems. It works, if type e is a subset of the union of type c and d. First
      sbElem has priority\<close>
-definition sbeUnion::"'c\<^sup>\<surd> \<Rightarrow> 'd\<^sup>\<surd> \<Rightarrow> 'e\<^sup>\<surd>"where 
-"sbeUnion = (\<lambda>sbe1 sbe2. Abs_sbElem (Some(\<lambda> c. if (Rep c \<in> (range (Rep ::'c \<Rightarrow> channel))) then 
+definition sbeUnion::"'c\<^sup>\<surd> \<Rightarrow> 'd\<^sup>\<surd> \<Rightarrow> 'e\<^sup>\<surd>"where
+"sbeUnion = (\<lambda>sbe1 sbe2. Abs_sbElem (Some(\<lambda> c. if (Rep c \<in> (range (Rep ::'c \<Rightarrow> channel))) then
                   sbegetch c sbe1 else  sbegetch c sbe2)))"
 
 lemma sbeunion_getchfst:assumes "Rep (c::'c) \<in> range(Rep::'e \<Rightarrow> channel)"
@@ -89,4 +90,6 @@ lemma sbeunion_getchsnd:assumes "Rep (c::'d) \<in> range(Rep::'e \<Rightarrow> c
   shows"sbegetch c ((sbeUnion::'c\<^sup>\<surd> \<Rightarrow> 'd\<^sup>\<surd> \<Rightarrow> 'e\<^sup>\<surd>) sbe1 sbe2) = sbegetch c sbe2"
   oops
 
+(*<*)
 end
+(*>*)

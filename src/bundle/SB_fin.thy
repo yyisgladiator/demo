@@ -1,7 +1,9 @@
+(*<*)
 theory SB_fin
-
-imports SB
+  imports SB
 begin
+(*>*)
+
 declare[[show_types]]
 
 section\<open>default sort finite and chan\<close>
@@ -11,7 +13,7 @@ section\<open> SB functions with finite type \<close>
 
 subsection \<open>Cont version of sbHdElem\_h\<close>
 
-lift_definition sbHdElem_h_cont::"'c\<^sup>\<Omega> \<rightarrow> ('c\<^sup>\<surd>) u"is 
+lift_definition sbHdElem_h_cont::"'c\<^sup>\<Omega> \<rightarrow> ('c\<^sup>\<surd>) u"is
 "sbHdElem_h"
   apply(simp add: sbHdElem_h_def cfun_def)
   apply(intro cont2cont)
@@ -33,7 +35,7 @@ proof-
     assume epsholds:"\<forall>i::nat. \<exists>c::'c. Y i  \<^enum>  c = \<epsilon>"
     then have h0:"\<forall>c i. ((Y i) \<^enum> c \<noteq> \<epsilon>) \<longrightarrow> ((\<Squnion>i::nat. Y i)  \<^enum>  c \<noteq> \<epsilon>)"
       by (metis (full_types) chain is_ub_thelub minimal monofun_cfun_arg po_eq_conv)
-    then obtain set_not_eps where set_not_eps_def:"set_not_eps = {c::'c. \<exists>i. Y i \<^enum> c \<noteq> \<epsilon>}" 
+    then obtain set_not_eps where set_not_eps_def:"set_not_eps = {c::'c. \<exists>i. Y i \<^enum> c \<noteq> \<epsilon>}"
       by simp
     then have "finite set_not_eps"
       by simp
@@ -44,7 +46,7 @@ proof-
     have h2:"\<forall>c\<in>(set_not_eps). (\<Squnion>i::nat. Y i)  \<^enum>  c \<noteq> \<epsilon>"
       using h0 set_not_eps_def by auto
     have "set_not_eps \<noteq> UNIV"
-      apply(simp add: set_not_eps_def) 
+      apply(simp add: set_not_eps_def)
       sorry
     then show "\<exists>c::'c. (\<Squnion>i::nat. Y i)  \<^enum>  c = \<epsilon>"
       using h1 by blast
@@ -71,7 +73,7 @@ proof-
       apply auto
       apply(rule below_shd_alt,auto)
       by (simp add: ch1 monofun_cfun_arg po_class.chain_mono)
-    have h1:"\<forall>i\<ge>n. (if \<exists>c::'c. Y i  \<^enum>  c = \<epsilon> then \<bottom> else Iup (Abs_sbElem (Some (\<lambda>c::'c. shd (Y i  \<^enum>  c))))) 
+    have h1:"\<forall>i\<ge>n. (if \<exists>c::'c. Y i  \<^enum>  c = \<epsilon> then \<bottom> else Iup (Abs_sbElem (Some (\<lambda>c::'c. shd (Y i  \<^enum>  c)))))
                 = Iup (Abs_sbElem (Some (\<lambda>c::'c. shd (Y n  \<^enum>  c))))"
       apply(auto)
       apply (metis ch1 minimal monofun_cfun_arg n_def po_class.chain_mono po_eq_conv)

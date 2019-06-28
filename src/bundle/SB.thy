@@ -1,7 +1,9 @@
+(*<*)
 theory SB
-
-imports stream.Stream sbElem
+  imports stream.Stream sbElem
 begin
+(*>*)
+
 declare[[show_types]]
 section\<open>ctype (generated)\<close>
 
@@ -70,7 +72,7 @@ lemmas sbgetch_insert = sbGetCh.rep_eq
 
 subsubsection \<open>sbGetCh abbreviation\<close>
 
-abbreviation sbgetch_abbr :: "'c\<^sup>\<Omega> \<Rightarrow> 'e \<Rightarrow> M stream" (infix " \<^enum> " 65) where 
+abbreviation sbgetch_abbr :: "'c\<^sup>\<Omega> \<Rightarrow> 'e \<Rightarrow> M stream" (infix " \<^enum> " 65) where
 "sb \<^enum> c \<equiv> sbGetCh c\<cdot>sb"
 
 subsubsection \<open>sbGetCh Lemmata\<close>
@@ -117,16 +119,16 @@ lemma sb_eqI:
     assumes "\<And>c::'a. sb1 \<^enum> c = sb2 \<^enum> c"
     shows "sb1 = sb2"
   using Rep_sb_inject by (metis assms ext sbgetch_insert2)
-  
+
 subsection \<open>sbUnion\<close>
 
 subsubsection\<open>sbUnion definition\<close>
 
 definition sbUnion::"'c\<^sup>\<Omega> \<rightarrow> 'd\<^sup>\<Omega> \<rightarrow> 'e\<^sup>\<Omega>" where
-"sbUnion = (\<Lambda> sb1 sb2. Abs_sb (\<lambda> c. if (Rep c \<in> (range (Rep ::'c \<Rightarrow> channel))) then 
+"sbUnion = (\<Lambda> sb1 sb2. Abs_sb (\<lambda> c. if (Rep c \<in> (range (Rep ::'c \<Rightarrow> channel))) then
                   sb1 \<^enum> c else  sb2\<^enum> c))"
 
-lemma sbunion_sbwell[simp]: "sb_well ((\<lambda> (c::'e). if (Rep c \<in> (range (Rep ::'c \<Rightarrow> channel))) then 
+lemma sbunion_sbwell[simp]: "sb_well ((\<lambda> (c::'e). if (Rep c \<in> (range (Rep ::'c \<Rightarrow> channel))) then
                   (sb1::'c\<^sup>\<Omega>) \<^enum> c else  (sb2::'d\<^sup>\<Omega>) \<^enum> c))"
   apply(rule sbwellI)
   by simp
@@ -135,7 +137,7 @@ lemma sbunionlub_well[simp]:"chain Y \<Longrightarrow> sb_well(\<Squnion>i::nat.
   apply(rule sbwellI)
   by (smt below_refl contlub_lambda l44 monofun_cfun_arg po_class.chain_def sbgetch_ctypewell)
 
-lemma sbunion_cont_h[simp]:"cont(\<lambda>sb2::'d\<^sup>\<Omega>. Abs_sb (\<lambda> c. if (Rep c \<in> (range (Rep ::'c \<Rightarrow> channel))) then 
+lemma sbunion_cont_h[simp]:"cont(\<lambda>sb2::'d\<^sup>\<Omega>. Abs_sb (\<lambda> c. if (Rep c \<in> (range (Rep ::'c \<Rightarrow> channel))) then
                   (sb1::'c\<^sup>\<Omega>) \<^enum> c else  sb2 \<^enum> c))"
   apply(rule Cont.contI2)
   apply(rule monofunI)
@@ -199,7 +201,7 @@ next
 qed
 
 
-lemma sbunion_insert:"sbUnion \<cdot>(sb1::'c\<^sup>\<Omega>)\<cdot>sb2 = Abs_sb (\<lambda> c. if (Rep c \<in> (range (Rep ::'c \<Rightarrow> channel))) then 
+lemma sbunion_insert:"sbUnion \<cdot>(sb1::'c\<^sup>\<Omega>)\<cdot>sb2 = Abs_sb (\<lambda> c. if (Rep c \<in> (range (Rep ::'c \<Rightarrow> channel))) then
                   sb1 \<^enum> c else  sb2 \<^enum> c)"
   by(simp add: sbUnion_def)
 
@@ -239,7 +241,7 @@ lemmas sbconvert_insert = sbConvert.rep_eq
 
 subsubsection \<open>sbConvert abbreviation\<close>
 
-abbreviation sbConvert_abbr :: "'c\<^sup>\<Omega> \<Rightarrow> 'd\<^sup>\<Omega>" ( "_\<star>" 70) where 
+abbreviation sbConvert_abbr :: "'c\<^sup>\<Omega> \<Rightarrow> 'd\<^sup>\<Omega>" ( "_\<star>" 70) where
 "sb\<star> \<equiv> sbConvert\<cdot>sb"
 
 subsubsection \<open>sbConvert lemmas\<close>
@@ -305,7 +307,7 @@ lemmas sbdrop_insert = sbDrop.rep_eq
 
 subsubsection \<open>sbRt abbreviation\<close>
 
-abbreviation sbRt :: "'c\<^sup>\<Omega> \<rightarrow> 'c\<^sup>\<Omega>"  where 
+abbreviation sbRt :: "'c\<^sup>\<Omega> \<rightarrow> 'c\<^sup>\<Omega>"  where
 "sbRt \<equiv> sbDrop 1"
 
 subsubsection \<open>sbDrop lemmas\<close>
@@ -364,7 +366,7 @@ lemma sbtake_mono[simp]:"monofun sbTake"
 
 subsubsection \<open>sbHd abbreviation\<close>
 
-abbreviation sbHd :: "'c\<^sup>\<Omega> \<rightarrow> 'c\<^sup>\<Omega>"  where 
+abbreviation sbHd :: "'c\<^sup>\<Omega> \<rightarrow> 'c\<^sup>\<Omega>"  where
 "sbHd \<equiv> sbTake 1"
 
 subsubsection \<open>sbTake lemmas\<close>
@@ -384,7 +386,7 @@ lemma sbtake_max_len [simp]: "#(sbTake ln\<cdot>(sb::'a\<^sup>\<Omega>) \<^enum>
   apply(subgoal_tac "\<exists>n. ln = Fin n")
   apply auto
   apply(simp add: sbMapStream_def sbmap_stake_eq)
-  by (meson SBv3.lnat.exhaust) 
+  by (meson SBv3.lnat.exhaust)
 
 
 subsection \<open>sbConc\<close>
@@ -412,7 +414,7 @@ lemmas sbconc_insert = sbConc.rep_eq
 
 subsubsection \<open> sbConc abbreviation \<close>
 
-abbreviation sbConc_abbr :: "'c\<^sup>\<Omega>  \<Rightarrow>  'c\<^sup>\<Omega> \<Rightarrow>  'c\<^sup>\<Omega>" (infixr "\<bullet>\<^sup>\<Omega>" 70) where 
+abbreviation sbConc_abbr :: "'c\<^sup>\<Omega>  \<Rightarrow>  'c\<^sup>\<Omega> \<Rightarrow>  'c\<^sup>\<Omega>" (infixr "\<bullet>\<^sup>\<Omega>" 70) where
 "sb1 \<bullet>\<^sup>\<Omega> sb2 \<equiv> sbConc sb1\<cdot>sb2"
 
 
@@ -464,8 +466,8 @@ lemma sbtypeepmpty_sbbot[simp]:"chIsEmpty TYPE ('cs) \<Longrightarrow> (sb::'cs\
   apply(simp add: sbgetch_insert2 bot_sb)
   apply(subst Abs_sb_inverse)
   apply(simp add: sb_well_def sValues_def)
-  by (smt Rep_sb bot.extremum cEmpty_def f_inv_into_f image_subset_iff iso_tuple_UNIV_I 
-      mem_Collect_eq rangeI range_eqI sValues_def sbGetCh.abs_eq sb_well_def sbgetch_insert 
+  by (smt Rep_sb bot.extremum cEmpty_def f_inv_into_f image_subset_iff iso_tuple_UNIV_I
+      mem_Collect_eq rangeI range_eqI sValues_def sbGetCh.abs_eq sb_well_def sbgetch_insert
       sbgetch_insert2 strict_sdom_rev subset_antisym)
 
 section \<open>sbElem functions \<close>
@@ -495,7 +497,7 @@ lemmas sbecons_insert = sbECons.rep_eq
 
 subsubsection \<open>sbE2Cons abbreviation\<close>
 
-abbreviation sbECons_abbr :: "'c\<^sup>\<surd> \<Rightarrow> 'c\<^sup>\<Omega> \<Rightarrow> 'c\<^sup>\<Omega>" (infixr "\<bullet>\<^sup>\<surd>" 100) where 
+abbreviation sbECons_abbr :: "'c\<^sup>\<surd> \<Rightarrow> 'c\<^sup>\<Omega> \<Rightarrow> 'c\<^sup>\<Omega>" (infixr "\<bullet>\<^sup>\<surd>" 100) where
 "sbe \<bullet>\<^sup>\<surd> sb \<equiv> sbECons\<cdot>sbe\<cdot>sb"
 
 
@@ -511,9 +513,9 @@ lemma sbtypeempty_sbecons_bot[simp]:"chIsEmpty TYPE ('cs) \<Longrightarrow> (sbe
 lemma [simp]:"chIsEmpty TYPE ('cs) \<Longrightarrow> P(sb) \<Longrightarrow> P( (sbe::'cs\<^sup>\<surd>) \<bullet>\<^sup>\<surd> sb)"
   by (metis (full_types) sbtypeepmpty_sbbot)
 
-lemma sb_cases [case_names least sbeCons, cases type: sb]: 
-  "(sbIsLeast (sb'::'cs\<^sup>\<Omega>) \<Longrightarrow> P) 
-  \<Longrightarrow> (\<And>sbe sb. sb' = sbECons\<cdot>sbe\<cdot>sb \<Longrightarrow> \<not>chIsEmpty TYPE ('cs) \<Longrightarrow> P) 
+lemma sb_cases [case_names least sbeCons, cases type: sb]:
+  "(sbIsLeast (sb'::'cs\<^sup>\<Omega>) \<Longrightarrow> P)
+  \<Longrightarrow> (\<And>sbe sb. sb' = sbECons\<cdot>sbe\<cdot>sb \<Longrightarrow> \<not>chIsEmpty TYPE ('cs) \<Longrightarrow> P)
   \<Longrightarrow> P"
   oops
 
@@ -527,9 +529,9 @@ lemma sb_finind:
 
 lemma sb_ind[case_names adm least sbeCons, induct type: sb]:
     fixes x::"'cs\<^sup>\<Omega>"
-  assumes "adm P" 
+  assumes "adm P"
       and "\<And>sb. sbIsLeast sb \<Longrightarrow> P sb"
-      and "\<And>sbe sb. P sb  \<Longrightarrow> \<not>chIsEmpty TYPE ('cs) \<Longrightarrow> P (sbe \<bullet>\<^sup>\<surd> sb)"   
+      and "\<And>sbe sb. P sb  \<Longrightarrow> \<not>chIsEmpty TYPE ('cs) \<Longrightarrow> P (sbe \<bullet>\<^sup>\<surd> sb)"
   shows  "P x"
   oops
 
@@ -548,8 +550,8 @@ lemma sbhdelem_mono:"monofun
   apply (metis below_bottom_iff monofun_cfun_arg)
   by (meson below_shd monofun_cfun_arg)
 
-definition sbHdElem_h::"'c\<^sup>\<Omega> \<Rightarrow> ('c\<^sup>\<surd>) u"where 
-"sbHdElem_h = (\<lambda> sb. if (range(Rep::'c\<Rightarrow> channel)\<subseteq>cEmpty) then Iup(Abs_sbElem None) else 
+definition sbHdElem_h::"'c\<^sup>\<Omega> \<Rightarrow> ('c\<^sup>\<surd>) u"where
+"sbHdElem_h = (\<lambda> sb. if (range(Rep::'c\<Rightarrow> channel)\<subseteq>cEmpty) then Iup(Abs_sbElem None) else
         if (\<exists>c::'c. sb \<^enum> c = \<epsilon>) then \<bottom> else Iup(Abs_sbElem (Some (\<lambda>c. shd((sb) \<^enum> c)))))"
 
 definition sbHdElem::"'c\<^sup>\<Omega> \<Rightarrow> 'c\<^sup>\<surd>"where
@@ -557,7 +559,7 @@ definition sbHdElem::"'c\<^sup>\<Omega> \<Rightarrow> 'c\<^sup>\<surd>"where
 
 subsubsection \<open>sbHdElem abbreviation \<close> (*TODO: better abbreviation lfloor*)
 
-abbreviation sbHdElem_abbr :: "'c\<^sup>\<Omega> \<Rightarrow> 'c\<^sup>\<surd>" ( "\<lfloor>_" 70) where 
+abbreviation sbHdElem_abbr :: "'c\<^sup>\<Omega> \<Rightarrow> 'c\<^sup>\<surd>" ( "\<lfloor>_" 70) where
 "\<lfloor>sb \<equiv> sbHdElem sb"
 
 subsubsection \<open>sbHdElem lemmas\<close>
@@ -592,7 +594,7 @@ proof-
     apply(subst sbhdelem_some)
     using not_bot a3 not_none apply auto[1]
     by(simp add: h1)
-qed                               
+qed
 
 lemma sbecons_eq:assumes "sbLen sb \<noteq> 0" shows "(sbHdElem sb) \<bullet>\<^sup>\<surd> (sbRt\<cdot>sb) = sb"
   oops
@@ -621,7 +623,7 @@ proof(simp add: sbLen_def)
     have "\<exists>(c::'a).  \<forall>c2::'a.  #(x  \<^enum>  c) \<sqsubseteq> #((x \<^enum> c2))"(*? ? ?*)
     proof(cases "\<exists>(c::'a).  \<forall>c2::'a.  #(x  \<^enum>  c) \<sqsubseteq> #((x \<^enum> c2))" )
       case True
-      then show ?thesis 
+      then show ?thesis
          by simp
     next
       case False
@@ -633,7 +635,7 @@ proof(simp add: sbLen_def)
         by auto
     qed
     then show ?thesis
-      apply auto 
+      apply auto
       sorry
   qed
 
@@ -662,4 +664,6 @@ proof-
 qed
 *)
 
+(*<*)
 end
+(*>*)
