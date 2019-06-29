@@ -39,6 +39,5 @@ session "automaton" (mustWork) in "automatons" = "bundle" +
   theories
     dAutomaton
     ndAutomaton
-	dAutomaton_causal
   document_files
     "root.tex"
