@@ -450,4 +450,25 @@ lemma[simp]:"\<forall>Y. chain Y \<longrightarrow> (\<Lambda> y. f\<cdot>(\<Squn
 lemma cont_lam2cont[simp]:"cont (\<lambda>x. \<Lambda> y. f\<cdot>x\<cdot>y)"
   by(rule contI2, rule monofunI, simp+)
 
+section \<open>add lemmas to cont2cont\<close>
+
+lemma cont2cont_lambda [cont2cont]:
+  assumes f: "\<And>y. cont (\<lambda>x. f x y)"
+  shows "cont f"
+  by (simp add: f) (* TODO: hat es einen grund, dass das nicht schon in cont2cont ist? HOLCF11-Doku lesen *)
+
+lemma [cont2cont]:"cont f \<Longrightarrow> f\<in> cfun"
+  by (simp add: cfun_def)
+
+lemma discr_cont: "monofun f \<Longrightarrow> cont (\<lambda>x. g ((f x)::'a:: discrete_cpo))"
+  apply(rule Cont.contI2)
+  apply(rule monofunI, insert monofunE[of f],auto)
+  by (metis is_ub_thelub)
+
+lemma discr_cont2: "cont f \<Longrightarrow> cont (\<lambda>x. g ((f x)::'a:: discrete_cpo))" (*Not cont2cont, problem with domain definitions, i.e. lnat*)
+  by (simp add: cont2mono discr_cont)
+
+(*monofun f should be enough*)
+lemma discr_cont3: "cont h \<Longrightarrow> cont f \<Longrightarrow> cont (\<lambda>x. ((h x)) ((f x)::'a:: discrete_cpo))"
+  by (simp add: cont2cont_fun cont_apply)
 end

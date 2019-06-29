@@ -29,7 +29,7 @@ subsubsection \<open>Strong SPF definition\<close>
 
 
 definition strong_well::"('I\<^sup>\<Omega> \<rightarrow> 'O\<^sup>\<Omega>) \<Rightarrow> bool" where
-"strong_well spf = (\<forall>c. sbLen c \<le> lnsuc\<cdot>(sbLen (spf\<cdot>c)))"
+"strong_well spf = (\<forall>sb. lnsuc\<cdot>(sbLen sb) \<le> sbLen (spf\<cdot>sb))"
 
 typedef ('I::chan,'O::chan)spfs = "{f::('I,'O)spfw . strong_well (Rep_spfw f)}"
   apply(simp add: strong_well_def)

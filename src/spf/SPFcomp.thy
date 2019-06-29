@@ -10,9 +10,9 @@ subsection \<open>General composition definition\<close>
 (*cbot werden nicht verbunden; cbot können nur bei der eingabe vorkommen (bei der ausgabe nicht vorgesehen, siehe BDD92 Kap3.4)*)
 (*now with magic*)
 definition genComp :: "('I1\<^sup>\<Omega> \<rightarrow> 'O1\<^sup>\<Omega>) \<rightarrow> ('I2\<^sup>\<Omega> \<rightarrow> 'O2\<^sup>\<Omega>) \<rightarrow> (('E)\<^sup>\<Omega> \<rightarrow> ('F)\<^sup>\<Omega>)"  where
-"genComp \<equiv> \<Lambda> spf1 spf2.  (\<Lambda> sbIn . fix\<cdot>(\<Lambda> sb. (spf1\<cdot>((sbIn \<uplus> sb))) \<uplus> (spf2\<cdot>((sbIn \<uplus> sb)))))"
+"genComp \<equiv> \<Lambda> spf1 spf2.  (\<Lambda> sbIn . fix\<cdot>(\<Lambda> sb. (spf1\<cdot>((sbIn \<uplus>\<star> sb))) \<uplus>\<star> (spf2\<cdot>((sbIn \<uplus>\<star> sb)))))"
 
-lemma genComp_cont[simp]:"cont (\<lambda>spf1 . \<Lambda> spf2 .(\<Lambda> sbIn . fix\<cdot>(\<Lambda> sb. (spf1\<cdot>((sbIn \<uplus> sb))) \<uplus> (spf2\<cdot>((sbIn \<uplus> sb))))))"
+lemma genComp_cont[simp]:"cont (\<lambda>spf1 . \<Lambda> spf2 .(\<Lambda> sbIn . fix\<cdot>(\<Lambda> sb. (spf1\<cdot>((sbIn \<uplus>\<star> sb))) \<uplus>\<star> (spf2\<cdot>((sbIn \<uplus>\<star> sb))))))"
   by simp
 
 subsection \<open>General composition abbreviation\<close>

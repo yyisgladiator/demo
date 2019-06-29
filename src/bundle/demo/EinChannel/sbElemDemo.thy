@@ -41,4 +41,16 @@ lemma sbegetch_sbelemone:"sbegetch (c::inChan) insbElem = 1"
 (*TODO: More tests*)
 
 
+
+
+lift_definition mych_elem::"nat \<Rightarrow> nat \<Rightarrow> myChan\<^sup>\<surd>"is 
+"\<lambda>as ar. Some (\<lambda>c. case c of port_as \<Rightarrow> as | _ \<Rightarrow> ar)"
+  apply auto
+  by (case_tac "c", auto)
+
+
+lemma "sbegetch port_as (mych_elem as ar ) = as"
+  apply(simp add: sbegetch_def mych_elem.rep_eq)
+  by (metis Rep_myChan.simps(1) chan_inj inv_f_eq myChan.simps(3))
+
 end
