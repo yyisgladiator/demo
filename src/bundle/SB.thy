@@ -465,7 +465,7 @@ subsubsection \<open>sbTake lemmas\<close>
 
 
 lemma sbtake_getch[simp]:"sbTake n\<cdot>sb \<^enum> c = stake n\<cdot>(sb \<^enum> c)"
-  apply(simp add: sbgetch_insert2 sbTake.rep_eq)
+  apply(simp add: sbgetch_insert sbTake.rep_eq)
   apply(subst Abs_sb_inverse)
   by(auto simp add: sbgetch_insert2[symmetric])
 

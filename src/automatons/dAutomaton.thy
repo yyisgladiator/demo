@@ -38,17 +38,10 @@ subsubsection \<open>Sematntic\<close>
 
 definition daStateSem :: "('s::type, 'I::{finite,chan},'O) dAutomaton \<Rightarrow> ('s \<Rightarrow> ('I\<^sup>\<Omega> \<rightarrow> 'O\<^sup>\<Omega>))" where
 "daStateSem da = fix\<cdot>(\<Lambda> h. (\<lambda> state. sb_case\<cdot>
-                        (\<Lambda> sbe sb.
+                        (\<lambda>sbe. \<Lambda> sb.
                           let (nextState, output) = daTransition da state sbe in
                             output \<bullet>\<^sup>\<Omega> h nextState\<cdot>sb)
                       ))"
-
-lemma dastatesem_cont[simp]:"cont (\<lambda> h. (\<lambda> state. sb_case\<cdot>
-                        (\<Lambda> sbe sb.
-                          let (nextState, output) = daTransition da state sbe in
-                            output \<bullet>\<^sup>\<Omega> h nextState\<cdot>sb)))"
-
-  by(intro cont2cont,simp_all)
 
 definition daSem :: "('s::type, 'I::{finite,chan},'O) dAutomaton \<Rightarrow> ('I\<^sup>\<Omega> \<rightarrow> 'O\<^sup>\<Omega>)" where
 "daSem da = (\<Lambda> sb. (daInitOut da)\<bullet>\<^sup>\<Omega>((daStateSem da (daInitState da))\<cdot>sb))"
@@ -56,41 +49,42 @@ definition daSem :: "('s::type, 'I::{finite,chan},'O) dAutomaton \<Rightarrow> (
 subsubsection \<open>Statesematntic lemmas\<close>
 (* Die Lemma verwenden noch spfStep *)
 
-lemma dastatesem_unfolding: "(daStateSem automat s) = sb_case\<cdot>(\<Lambda> sbe sb.
+lemma dastatesem_unfolding: "(daStateSem automat s) = sb_case\<cdot>(\<lambda>sbe. \<Lambda> sb .
                                                   let (nextState, output) = daTransition automat s sbe in
                             output \<bullet>\<^sup>\<Omega> ((daStateSem automat) nextState\<cdot>sb))"
   unfolding daStateSem_def
   apply(subst fix_eq)
   apply(subst beta_cfun)
-  using dastatesem_cont apply blast
+  apply(intro cont2cont; simp)
   by auto
 
+(* TODO: einheitliche assumption für diesen fall, KEIN rohes exists ! *)
 lemma dastatesem_bottom:assumes "\<exists>(c::'b::{finite,chan}). (sb::'b\<^sup>\<Omega>)  \<^enum>  c = \<epsilon>"
   shows "(daStateSem automat s)\<cdot>sb = \<bottom>"
   oops
 
 lemma dastatesem_strict:
   shows "(daStateSem automat s)\<cdot>\<bottom> = \<bottom>"
-  oops
+  oops  (* gilt nicht für cEmpty-Bündel *)
 
-lemma dastatesem_step: assumes "\<forall>(c::'b::{finite,chan}). (sb::'b\<^sup>\<Omega>)  \<^enum>  c \<noteq> \<epsilon>"
+lemma dastatesem_step: assumes "\<And>c . sb \<^enum> c \<noteq> \<epsilon>"
   shows "(daStateSem automat s)\<cdot>sb = snd (daTransition da state (sbHdElem sb)) \<bullet>\<^sup>\<Omega> h (fst (daTransition da state (sbHdElem sb)))\<cdot>(sbRt\<cdot>sb)"
   oops
 
-lemma dastatesem_final:assumes "\<forall>(c::'b::{finite,chan}). (sb::'b\<^sup>\<Omega>)  \<^enum>  c \<noteq> \<epsilon>"
+lemma dastatesem_final:assumes "\<And>c . sb \<^enum> c \<noteq> \<epsilon>"  (* Todo: einheitliche assumption *)
   shows "(daStateSem automat s)\<cdot>sb =
   (daNextOut automat s (sbHdElem sb)) \<bullet>\<^sup>\<Omega> (((daStateSem automat (daNextState automat s (sbHdElem sb))))\<cdot>(sbRt\<cdot>sb))"
   oops
 
 lemma dastatesem_final_h2:
-  shows "(daStateSem automat s)\<cdot>(sbECons\<cdot>sbe\<cdot>sb) =
+  shows "(daStateSem automat s)\<cdot>(sbECons sbe\<cdot>sb) =
   (daNextOut automat s sbe) \<bullet>\<^sup>\<Omega> ((daStateSem automat (daNextState automat s sbe))\<cdot>sb)"
-  oops
+  oops (* Das soll gehen mit "by(simp add: dastatesem_step)". Wenn nicht, mehr in den simplifier packen *)
 
 lemma dastatesem_stepI:
   assumes "(daNextOut da s sbe) = out"
       and "(daNextState da s sbe) = nextState"
-  shows "(daStateSem da s)\<cdot>(sbECons\<cdot>sbe\<cdot>sb) = out  \<bullet>\<^sup>\<Omega> ((daStateSem da nextState)\<cdot>sb)"
+  shows "(daStateSem da s)\<cdot>(sbECons sbe\<cdot>sb) = out  \<bullet>\<^sup>\<Omega> ((daStateSem da nextState)\<cdot>sb)"
   oops
 
 
