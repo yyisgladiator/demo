@@ -16,7 +16,7 @@ class chan =
       "\<And>c.   (range Rep) \<subseteq> cEmpty 
            \<or> (range Rep) \<inter> cEmpty = {}" 
 
-  assumes chan_inj:"inj Rep"
+  assumes chan_inj[simp]:"inj Rep"
 
 begin
 
