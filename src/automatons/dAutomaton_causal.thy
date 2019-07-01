@@ -6,7 +6,7 @@ begin
 
 section \<open>Deterministic Weak Automata\<close>
 
-record ('state::type, 'in::"{chan,finite}", 'out, 'initOut) dAutomaton_weak  =
+record ('state::type, 'in, 'out, 'initOut) dAutomaton_weak  =
   dawTransition :: "('state \<Rightarrow> 'in\<^sup>\<surd> \<Rightarrow> ('state \<times> 'out\<^sup>\<surd>))"
   dawInitState :: "'state"
   dawInitOut:: "'initOut\<^sup>\<surd>"
