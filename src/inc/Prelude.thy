@@ -9,6 +9,9 @@ default_sort type
 (* allows to use lift_definition for continuous functions *)
 setup_lifting type_definition_cfun
 
+text \<open>SMT-Proofs are not allowed in the AFP, so don't generate them\<close>
+sledgehammer_params [smt_proofs=false]
+
 text \<open>Helpful lemmas to work with HOL and HOLCF's definitions.\<close>
 
 lemma trivial[simp]: "(Not \<circ> Not) = id"
