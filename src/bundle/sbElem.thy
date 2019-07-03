@@ -45,6 +45,9 @@ end
 lemma sbe_eqI:"Rep_sbElem sbe1 = Rep_sbElem sbe2 \<Longrightarrow> sbe1 = sbe2"
   by (simp add: Rep_sbElem_inject)
 
+lemma sbelemwell2fwell[simp]:"Rep_sbElem sbe = f \<Longrightarrow> sbElem_well (f)"
+  using Rep_sbElem by auto
+
 subsection\<open>chIsEmpty lemmas\<close>
 lemma sbtypeempty_sbewell:"chIsEmpty TYPE ('cs) \<Longrightarrow> sbElem_well (None::('cs \<Rightarrow> M) option)"
   by(simp add: chIsEmpty_def)

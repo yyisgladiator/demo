@@ -86,8 +86,10 @@ lift_definition sbe2sb::" 'c\<^sup>\<surd> \<Rightarrow> 'c\<^sup>\<Omega>" is
 "\<lambda> sbe. case (Rep_sbElem sbe) of Some f \<Rightarrow> (\<lambda>c. \<up>(f c))
                                 | None  \<Rightarrow> \<bottom> "
   apply(rule sbwellI, auto)
-  sorry
-
+  apply(case_tac "Rep_sbElem sbElem = None")
+  apply auto
+  apply(subgoal_tac "sbElem_well (Some y)",simp)
+  by(simp only: sbelemwell2fwell)
 
 subsection \<open>Extract a single stream\<close>
 
@@ -326,11 +328,6 @@ lemma sbunion_sbwell[simp]: "sb_well ((\<lambda> (c::'e). if (Rep c \<in> (range
                   (sb1::'c\<^sup>\<Omega>) \<^enum>\<^sub>\<star> c else  (sb2::'d\<^sup>\<Omega>) \<^enum>\<^sub>\<star> c))"
   apply(rule sbwellI)
   by simp
-
-lemma sbunionlub_well[simp]:"chain Y \<Longrightarrow> sb_well(\<Squnion>i::nat. (\<lambda>c::'a. if Rep c \<in> range 
-                (Rep::'c \<Rightarrow> channel) then ((Y i)::'c\<^sup>\<Omega> )  \<^enum>\<^sub>\<star>  c else (x::'d\<^sup>\<Omega>)  \<^enum>\<^sub>\<star>  c))"
-  apply(rule sbwellI)
-  by (smt below_refl contlub_lambda l44 monofun_cfun_arg po_class.chain_def sbgetch_ctypewell)
 
 lemma sbunion_insert:"sbUnion\<cdot>(sb1::'c\<^sup>\<Omega>)\<cdot>sb2 = Abs_sb (\<lambda> c. if (Rep c \<in> (range (Rep ::'c \<Rightarrow> channel))) then 
                   sb1 \<^enum>\<^sub>\<star> c else  sb2 \<^enum>\<^sub>\<star> c)"
