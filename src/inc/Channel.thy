@@ -40,7 +40,7 @@ lemma chan_eq[simp]:"Rep (c::'c::chan) = x \<Longrightarrow> x\<in> range(Rep::'
 
 
 
-(*
+
 declare[[show_types]]
 declare[[show_consts]]
 
@@ -79,6 +79,6 @@ instance
   apply (metis (mono_tags, lifting) Diff_eq_empty_iff Diff_iff IntI Rep_minus Rep_minus_def chan_botsingle)
   by (smt Rep_minus_def Rep_minus_inject injI)
 end
-*)
+
 
 end
