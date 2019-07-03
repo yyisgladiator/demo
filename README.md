@@ -1,5 +1,5 @@
 ## Requirements
-* Isabelle2018.1 (or newer)
+* Isabelle2019 (or newer)
    * Download [here](https://isabelle.in.tum.de/)
 
 ## Open Theorie
@@ -17,7 +17,5 @@ You can use prebuild sessions to reduce the startup time. If you start with this
 1. inc
 2. stream
 3. bundle
-4. fun
-5. spec
-6. automat
-7. abpGenerat
+4. spf
+5. automaton
