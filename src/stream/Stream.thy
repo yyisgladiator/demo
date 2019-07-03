@@ -5188,5 +5188,37 @@ by(simp add: id_def)
 lemma add2ID:"add\<cdot>\<up>0\<infinity> = ID"
 by (simp add: add2ID_h cfun_eqI)
 
+(*
+(* Setup type relator for streams*)
+
+(* TODO: Remove Warning
+  https://fa.isabelle.narkive.com/wKVBUrdK/isabelle-setup-lifting-no-relator-for-the-type-warning
+  HOL/Library/Quotient_Set.thy 
+  *)
+definition "rel_stream R x y \<equiv> \<forall>(e1::'e::countable) (e2::'f::countable). R e1 e2 \<longrightarrow> e1\<in> sdom\<cdot>x \<longleftrightarrow> e2\<in> sdom\<cdot>y" (*Does not work*)
+
+definition vstream :: "('a \<Rightarrow> 'b) \<Rightarrow> 'b stream \<Rightarrow> 'a stream" (*Probably also does not work*)
+  where "vstream f s \<equiv> smap (inv f)\<cdot>s"
+
+lemma stream_quotient [quot_thm]:
+  assumes "Quotient3 R Abs Rep"
+  shows "Quotient3 (rel_stream R) (vstream Rep) (vstream Abs)"
+proof (rule Quotient3I)
+  from assms have "\<And>x. Abs (Rep x) = x" by (rule Quotient3_abs_rep)
+  then show "\<And>xs. vstream Rep (vstream Abs xs) = xs"
+    unfolding vstream_def sorry
+next
+  show "\<And>xs. rel_stream R (vstream Abs xs) (vstream Abs xs)"
+    unfolding rel_stream_def vstream_def
+    apply auto sorry
+next
+  fix r s
+  show "rel_stream R r s = (rel_stream R r r \<and> rel_stream R s s \<and> vstream Rep r = vstream Rep s)"
+    unfolding rel_stream_def vstream_def set_eq_iff
+    apply auto sorry
+qed
+
+declare [[mapQ3 stream = (rel_stream, stream_quotient)]]
+*)
 
 end

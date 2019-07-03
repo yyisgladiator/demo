@@ -12,8 +12,8 @@ record ('state::type, 'in, 'out, 'initOut) dAutomaton_weak  =
   dawInitOut:: "'initOut\<^sup>\<surd>"
 
 definition daw2da::"('state::type, 'in::{chan,finite}, 'out,'initOut) dAutomaton_weak \<Rightarrow> ('state::type, 'in, 'out) dAutomaton" where
-"daw2da \<equiv> \<lambda>aut. (| daTransition =(\<lambda>s sbe. (fst(dawTransition aut s sbe),sbe2sb\<cdot>(snd(dawTransition aut s sbe)))),
-                 daInitState = dawInitState(aut), daInitOut = (sbe2sb\<cdot>(dawInitOut aut)\<star>) |)"
+"daw2da \<equiv> \<lambda>aut. (| daTransition =(\<lambda>s sbe. (fst(dawTransition aut s sbe),sbe2sb (snd(dawTransition aut s sbe)))),
+                 daInitState = dawInitState(aut), daInitOut = (sbe2sb (dawInitOut aut)\<star>) |)"
 
 subsection \<open>Weak Automaton Semantic options\<close>
 
@@ -35,7 +35,7 @@ function Rum_tap::"('s::type, 'in::{chan,finite},'out,'initOut) dAutomaton_weak 
 
 fun Rum_ta::"('s::type, 'in::{chan,finite},'out,'initOut) dAutomaton_weak \<Rightarrow> (('in,'out) spfw) set"where
 "Rum_ta aut = {g | g. \<exists>h\<in>(Rum_tap aut). \<exists> s (out::'initOut\<^sup>\<surd>). \<forall>i.
-              (Rep_spfw g)\<cdot>i = ((sbe2sb\<cdot>out)\<star>)\<bullet>\<^sup>\<Omega>((Rep_spfw(h s))\<cdot>i)}"
+              (Rep_spfw g)\<cdot>i = ((sbe2sb out)\<star>)\<bullet>\<^sup>\<Omega>((Rep_spfw(h s))\<cdot>i)}"
 
 section \<open>Deterministic strong Automaton\<close>
 
