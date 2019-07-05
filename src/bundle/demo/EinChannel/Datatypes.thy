@@ -23,7 +23,8 @@ text \<open>Then one describes the types of each channel. Only Messages included
   transmitted\<close>
 fun ctype :: "channel \<Rightarrow> M set" where 
 "ctype c1 = range \<N>" |
-"ctype c2 = range \<B>"
+"ctype c2 = range \<B>" |
+"ctype c3 = {}"
 
 
 

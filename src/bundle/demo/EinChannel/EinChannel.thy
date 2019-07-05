@@ -7,7 +7,7 @@ text \<open>You need to set THIS directory as Session-Directory. NOT the root-di
 
 lemma cempty_empty[simp]: "cEmpty = {c3}"
   apply(auto simp add: cEmpty_def)
-  sorry
+  by(insert ctype.elims,auto)
 
 typedef singleChan = "{c1}"
   by blast
@@ -77,8 +77,6 @@ lift_definition setter::"'a \<Rightarrow> 'cs\<^sup>\<surd>" is "Some o lConstru
 definition getter::"'cs\<^sup>\<surd> \<Rightarrow> 'a" where
 "getter  = (inv lConstructor) o the o Rep_sbElem"
 
-
-
 lemma get_set[simp]: "getter (setter a) = a"
   unfolding getter_def
   by (simp add: setter.rep_eq c_inj)  
@@ -87,7 +85,25 @@ lemma set_inj: "inj setter"
   by (metis get_set injI)
 
 lemma set_surj: "surj setter"
-  sorry
+  unfolding setter_def
+  apply(cases "\<not>(chIsEmpty(TYPE('cs)))")
+proof(simp add: surj_def,auto)
+  fix y::"'cs\<^sup>\<surd>"
+  assume chnEmpty:"\<not> chIsEmpty TYPE('cs)"
+  obtain f where f_def:"Rep_sbElem y=(Some f)"
+    using sbeGen.empty_neq sbeGen_axioms sbtypenotempty_fex  by auto
+  then obtain x where x_def:"f = lConstructor x"
+    by (metis c_inj c_surj f_the_inv_into_f sbelemwell2fwell)
+  then show "\<exists>x::'a. y = Abs_sbElem (Some (lConstructor x))"
+    by (metis Rep_sbElem_inverse f_def)
+next
+  fix x::"'cs\<^sup>\<surd>"
+  assume chEmpty:"chIsEmpty TYPE('cs)"
+  then have"\<And>f. \<not>sbElem_well (Some f)"
+    using empty_neq by auto
+  then show "chIsEmpty TYPE('cs) \<Longrightarrow> x \<in> range (\<lambda>x::'a. Abs_sbElem (Some (lConstructor x)))"
+    using c_well by metis
+qed 
 
 lemma set_bij: "bij setter"
   by (metis bijI inj_onI sbeGen.get_set sbeGen_axioms set_surj)
@@ -99,10 +115,8 @@ lemma set_get[simp]: "setter (getter sbe) = sbe"
   apply(simp add: get_inv_set)
   by (meson bij_inv_eq_iff set_bij)
 
-
 lemma "getter A = getter B \<Longrightarrow> A = B"
   by (metis set_get)
-
 
 fixrec setterSB::"'a stream \<rightarrow> 'cs\<^sup>\<Omega>" where
 "setterSB\<cdot>((up\<cdot>l)&&ls) = (setter (undiscr l)) \<bullet>\<^sup>\<surd> (setterSB\<cdot>ls)" 
@@ -119,18 +133,49 @@ end
 
 
 locale sumChanSB = (* TODO: anpassen wie oben, z.B. reihenfolge argumente *)
-  fixes lConstructor::"'cs::chan \<Rightarrow> 'a::pcpo \<Rightarrow> M stream"
-  assumes c_type: "\<And>a c. sValues (lConstructor c a) \<subseteq> ctype (Rep c)"
-    and c_inj: "\<And>c. inj (lConstructor c)"
+  fixes lConstructor::" 'a::pcpo \<Rightarrow> 'cs::chan  \<Rightarrow> M stream"
+  assumes c_type: "\<And>a c. sValues (lConstructor a c) \<subseteq> ctype (Rep c)"
+    and c_inj: "inj lConstructor"
+    and c_surj: "\<And>f. sb_well f \<Longrightarrow> f\<in>range lConstructor" (* Schöner? *)
 begin
 
-definition setter2::"'a \<rightarrow> ('cs::chan)\<^sup>\<Omega>" where
-"setter2 = (\<Lambda> a . Abs_sb (\<lambda>c. lConstructor c a))"
+lift_definition setter::"'a \<Rightarrow> ('cs::chan)\<^sup>\<Omega>"is"lConstructor"
+  by (simp add: c_type sb_well_def)
 
+definition getter::"'cs\<^sup>\<Omega> \<Rightarrow> 'a" where
+"getter= (inv lConstructor) o  Rep_sb"
 
-definition getter::"'cs\<^sup>\<Omega> \<rightarrow> 'a" where
-"getter= (\<Lambda> sbe. (inv (\<lambda> a c. lConstructor c a)) (((Rep_sb sbe))))"
+lemma get_set[simp]: "getter (setter a) = a"
+  unfolding getter_def
+  by (simp add: setter.rep_eq c_inj)  
 
+lemma set_inj: "inj setter"
+  by (metis get_set injI)
+
+lemma set_surj: "surj setter"
+  unfolding setter_def
+proof(simp add: surj_def,auto)
+  fix y::"'cs\<^sup>\<Omega>"
+ obtain f where f_def:"Rep_sb y=f"
+   by simp
+ then obtain x where x_def:"f = lConstructor x"
+    by (metis c_inj c_surj f_the_inv_into_f sbwell2fwell)
+  then show "\<exists>x::'a. y = Abs_sb (lConstructor x)" 
+    by (metis Rep_sb_inverse f_def)
+qed
+
+lemma set_bij: "bij setter"
+  using bij_betw_def set_inj set_surj by auto
+
+lemma get_inv_set: "getter = (inv setter)"
+  by (metis get_set set_surj surj_imp_inv_eq)
+
+lemma set_get[simp]: "setter (getter sbe) = sbe"
+  apply(simp add: get_inv_set)
+  by (meson bij_inv_eq_iff set_bij)
+
+lemma "getter A = getter B \<Longrightarrow> A = B"
+  by (metis set_get)
 
 end
 
@@ -200,15 +245,38 @@ lemma build_range: "range (\<lambda>a. buildSBE a c) = ctype (Rep c)"
 lemma build_surj: assumes "sbElem_well (Some sbe)"
   shows "sbe \<in> range buildSBE"
 proof -
-  have "\<And>c. sbe c\<in> ctype (Rep c)"
+  have ctypewell:"\<And>c. sbe c\<in> ctype (Rep c)"
     using assms by auto
   hence "\<And>c. sbe c \<in> range (\<lambda>a. buildSBE a c)"
     by (simp add: build_range)
-  thus ?thesis oops (* TODO *)
+  hence "\<exists>prod. sbe = buildSBE prod"
+    apply(subst fun_eq_iff,auto) (*TODO: shorter proof*)
+  proof -
+    { fix mm :: "nat \<Rightarrow> bool \<Rightarrow> mymy"
+      obtain bb :: bool where
+        ff1: "(\<not> bb) = (\<forall>x2. \<B> x2 \<noteq> sbe mymyC2)"
+        by moura
+      then have ff2: bb
+        by (metis ctype.simps(2) ctypewell myc2_rep rangeE)
+      obtain bba :: bool where
+        ff3: "(\<not> bba) = (\<forall>x1. \<N> x1 \<noteq> sbe mymyC1)"
+        by moura
+      then have bba
+        by (metis ctype.simps(1) ctypewell myc1_rep rangeE)
+      then have "\<exists>n b. sbe (mm n b) = buildSBE (n, b) (mm n b)"
+        using ff3 ff2 ff1 by (metis (full_types) mymy.exhaust orderChan.simps(1) orderChan.simps(2)) }
+    then show "\<exists>n b. \<forall>m. sbe m = buildSBE (n, b) m"
+      by metis
+  qed
+  thus ?thesis
+    by auto
+qed
 
-interpretation dudu: sbeGen "buildSBE"
+interpretation dudu: sbeGen "buildSBE" (*WTF Nitpick ? ? ?*)
   apply(unfold_locales)
-  sorry
+  apply (simp add: build_ctype)
+  apply (simp add: build_inj)
+  using build_surj by auto
 
 term "dudu.setter"
 
@@ -217,16 +285,51 @@ term "curry dudu.setter"  (* If you prefer the "old way" *)
 lemma "dudu.getter (dudu.setter (1,True)) = (1,True)"
   by simp
 
-
-
-
+(*buildSB interpretation*)
 
 abbreviation "buildSB \<equiv> orderChan (Rep_cfun (smap \<N>)) (Rep_cfun (smap \<B>))" 
 
-interpretation duda: sumChanSB "buildSB"
+lemma buildSB_ctype: "sValues(buildSB a c) \<subseteq> ctype (Rep c)"
+  by(cases c; cases a; simp add: sValues_def)
+
+lemma buildSB_inj: "inj buildSB"
+  apply(rule injI)
+  apply(case_tac x; case_tac y; simp)
+  apply(auto)
   sorry
 
-term "duda.setter2"
+lemma buildSB_range: "(\<Union>a. sValues (buildSB a c)) = ctype (Rep c)"
+  apply(cases c)
+  apply auto 
+  apply (metis (no_types, lifting) in_mono sValues_def smap_sdom_range)
+  apply(rule_tac x="\<up>xa" in exI) 
+  apply(simp add: sValues_def)
+  apply (metis (mono_tags) ctype.simps(2) image_iff range_eqI sValues_def smap_sdom)
+  apply(rule_tac x="\<up>xa" in exI) 
+  by(simp add: sValues_def)
+
+lemma buildSB_surj: assumes "sb_well f"
+  shows "f \<in> range buildSB"
+proof -
+  have ctypewell:"\<And>c. sValues (f c) \<subseteq> ctype (Rep c)"
+    using assms sb_well_def by blast
+  hence "\<And>c. sValues(f c) \<subseteq> range (\<lambda>a. buildSBE a c)"
+    by (simp add: build_range)
+  hence "\<exists>prod. f = buildSB prod"
+    apply(subst fun_eq_iff,auto,simp add: sValues_def) (*TODO: shorter proof*)
+    sorry
+  thus ?thesis
+    by auto
+qed
+
+
+interpretation duda: sumChanSB "buildSB"
+  apply(unfold_locales)
+  apply (simp add: buildSB_ctype)
+  apply (simp add: buildSB_inj)
+  by (simp add: buildSB_surj)
+
+term "duda.setter"
 term "duda.getter"
 
 

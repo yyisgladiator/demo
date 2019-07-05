@@ -13,7 +13,7 @@ class chan =
 
 
   assumes chan_botsingle:
-      "\<And>c.   (range Rep) \<subseteq> cEmpty 
+      "(range Rep) \<subseteq> cEmpty 
            \<or> (range Rep) \<inter> cEmpty = {}" 
 
   assumes chan_inj[simp]:"inj Rep"
@@ -53,7 +53,8 @@ typedef ('c1::chan, 'c2::chan) union (infixr "\<union>" 20) = "if range (Rep::'c
 
 (* Axiom :/ *)
 lemma cempty_exists: "cEmpty \<noteq> {}"
-  sorry
+  apply(simp add: cEmpty_def)
+  using ctype.simps(3) by blast
 
 typedef ('c1::chan, 'c2::chan) minus (infixr "-" 20) = "(if range (Rep::'c1\<Rightarrow>channel) \<subseteq> range (Rep::'c2\<Rightarrow>channel) then cEmpty
                                                          else range (Rep::'c1\<Rightarrow>channel) - range (Rep::'c2\<Rightarrow>channel))" 
@@ -79,6 +80,5 @@ instance
   apply (metis (mono_tags, lifting) Diff_eq_empty_iff Diff_iff IntI Rep_minus Rep_minus_def chan_botsingle)
   by (smt Rep_minus_def Rep_minus_inject injI)
 end
-
 
 end
