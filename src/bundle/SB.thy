@@ -280,14 +280,15 @@ shows "k \<le> sbLen sb"
  
 
 lemma sblen_sbconc: "((sbLen sb1) + (sbLen sb2)) \<le> (sbLen (sb1 \<bullet>\<^sup>\<Omega> sb2))"
-
-  apply(rule BETTERNAME)
   apply(cases  " Rep  (c::'a) \<in> cEmpty")
   defer
+  apply(rule BETTERNAME)
+  apply (metis h1 lessequal_addition sbconc_getch sblen_min_len sconc_slen2)
+   by simp
 
-   apply (metis h1 lessequal_addition sbconc_getch sblen_min_len sconc_slen2)
-  (* subgoal is false*)
-  oops
+ 
+
+
 lemma sblen_sbeqI:"x \<sqsubseteq> y \<Longrightarrow> sbLen x = \<infinity> \<Longrightarrow> x = y"
   apply(simp add: sbLen_def)
 
