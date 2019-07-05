@@ -229,10 +229,65 @@ then show "(LEAST l. l = \<infinity> \<or> (\<exists>a. l = #(x \<^enum> (a::'a)
   by (meson dual_order.trans)
 qed
 subsubsection \<open> sbLen lemmas \<close>
+lemma slen_empty_eq:  assumes" Rep c \<in> cEmpty"
+  shows " #(sb \<^enum>\<^sub>\<star> (c :: 'a ) ) =0"
+  using assms
+  
+  using cEmpty_def sbgetch_ctype_notempty by fastforce
 
-lemma sblen_min_len [simp]: "sbLen sb \<le> #(sb \<^enum>\<^sub>\<star> c)" (* TODO: vermutlich typ von "c" fixieren *)
-  oops  (* Sonderfall: "cEmpty" *)
+lemma h1:assumes"Rep( c::'a) \<in> cEmpty"
+  shows"(\<exists>ca::'a. Rep ca \<notin> cEmpty) =False"
+  using assms chan_botsingle by blast
 
+lemma sblen_min_len_empty[simp]:
+  assumes" Rep (c::'a) \<in> cEmpty"
+  shows " sbLen (sb :: 'a\<^sup>\<Omega>) = \<infinity>"
+  apply(simp add: sbLen_def )
+  apply(subst slen_empty_eq)
+  using assms chan_botsingle apply blast
+  apply auto
+  apply(subst h1)
+
+  using assms  chan_botsingle apply auto[1]
+  apply auto
+  by (metis (full_types) LeastI)
+
+
+lemma sblen_min_len [simp]:
+  assumes" Rep c \<notin> cEmpty"
+  shows
+  "sbLen (sb :: 'a\<^sup>\<Omega>) \<le> #(sb \<^enum>\<^sub>\<star> (c :: 'a ) )" (* TODO: vermutlich typ von "c" fixieren *)
+
+  apply(simp add: sbLen_def)
+  using assms  
+ by (metis (mono_tags, lifting) Least_le)
+  
+   (* Sonderfall: "cEmpty" *)
+
+
+
+
+lemma BETTERNAME: assumes 
+ "\<And>c::'a. k\<le> #(sb\<^enum>c)"
+shows "k \<le> sbLen sb" 
+  apply(cases  " Rep  (c::'a) \<in> cEmpty")
+  using assms(1) apply auto
+ 
+  
+  using   LeastI2_wellorder_ex inf_ub insert_iff mem_Collect_eq sbLen_def by smt
+
+ 
+ 
+
+lemma sblen_sbconc: "((sbLen sb1) + (sbLen sb2)) \<le> (sbLen (sb1 \<bullet>\<^sup>\<Omega> sb2))"
+
+  apply(rule BETTERNAME)
+  apply(cases  " Rep  (c::'a) \<in> cEmpty")
+  defer
+
+   apply (metis h1 lessequal_addition sbconc_getch sblen_min_len sconc_slen2)
+  (* subgoal is false*)
+  oops
 lemma sblen_sbeqI:"x \<sqsubseteq> y \<Longrightarrow> sbLen x = \<infinity> \<Longrightarrow> x = y"
   apply(simp add: sbLen_def)
 
