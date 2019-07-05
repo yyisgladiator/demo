@@ -33,11 +33,12 @@ session "spf" (mustWork) in "spf" = "bundle" +
   theories
     SPF
 
-session "automaton" (mustWork) in "automatons" = "bundle" +
+session "automaton" (mustWork) in "automatons" = "spf" +
   description "Deterministic and Non-Deterministic Automatons based on Rum96"
   options [quick_and_dirty = true, browser_info, document = pdf,document_variants="outline=/proof"]
   theories
     dAutomaton
+    dAutomaton_causal
     ndAutomaton
   document_files
     "root.tex"

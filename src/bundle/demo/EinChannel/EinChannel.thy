@@ -1,6 +1,6 @@
 theory EinChannel
 
-imports bundle.SB
+imports bundle.SB automaton.dAutomaton_causal
 
 begin
 text \<open>You need to set THIS directory as Session-Directory. NOT the root-directory of the repository\<close>
@@ -120,12 +120,50 @@ lemma "getter A = getter B \<Longrightarrow> A = B"
 
 fixrec setterSB::"'a stream \<rightarrow> 'cs\<^sup>\<Omega>" where
 "setterSB\<cdot>((up\<cdot>l)&&ls) = (setter (undiscr l)) \<bullet>\<^sup>\<surd> (setterSB\<cdot>ls)" 
+
+fixrec getterSB::"'cs\<^sup>\<Omega> \<rightarrow> 'a stream" where
+"getterSB\<cdot>x = \<bottom>" 
 (* Man kann auch einen getterSB definieren (mit fixrec, nachdem das klappt(über endliche bündel)).... 
     Sollte man auch, die frage ist nur wie weitflächig der einsetzbar ist. Er schneidet längere Elemente ab *)
 
 
 (* TODO: lemma über setterSB und getterSB *)
 end
+
+
+
+
+
+
+locale sscanlGen =
+  fixes da::"('state::countable, 'in::{chan, finite}, 'out::chan, 'initOut::chan) dAutomaton_weak"
+  and fin::"'a::countable \<Rightarrow> 'in \<Rightarrow> M"  
+  and fout::"'b::countable \<Rightarrow> 'out \<Rightarrow> M"
+  assumes sbegenfin:"sbeGen fin"
+      and sbegenfout:"sbeGen fout"
+begin
+
+abbreviation "stupidTransition \<equiv> (\<lambda> s a. 
+  let (nextState, nextOut) = dawTransition da s (sbeGen.setter fin a) in
+     (nextState, sbeGen.getter fout nextOut)
+)"
+
+lemma daut2sscanl:"dawStateSem da state\<cdot>(input::'in\<^sup>\<Omega>) = 
+       sbeGen.setterSB fout\<cdot>(sscanlAsnd stupidTransition state\<cdot>(sbeGen.getterSB\<cdot>input))"
+  sorry
+(* Frag mich nicht, wieso "setterSB" "fout" als parameter braucht
+  aber der "getterSB" nicht *)
+
+(* TODO: semantikabbildung "dawStateSem" anlegen *)
+
+(* TODO: initiale ausgabe ... "sscanlA" kann nichts partielles ausgben.
+  dh alles oder nichts. Das kann man durch den typ abfangen!
+    * weak = "chIstEmpty" als assumption (oder besser, dafür eine klasse anlegen)
+    * strong = gleicher typ wie ausgabe
+*)
+
+end
+
 
 
 
