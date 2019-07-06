@@ -199,7 +199,7 @@ lemma sblen_mono:"monofun sbLen"
 
 subsubsection \<open> sbLen lemmas \<close>
 
-lemma sblen_min_len [simp]: "sbLen sb \<le> #(sb \<^enum>\<^sub>\<star> c)" (* TODO: vermutlich typ von "c" fixieren *)
+lemma sblen_min_len [simp]: "\<not>chIsEmpty(TYPE('cs)) \<Longrightarrow>sbLen (sb::'cs\<^sup>\<Omega>) \<le> #(sb \<^enum> c)" (* TODO: vermutlich typ von "c" fixieren *)
   oops  (* Sonderfall: "cEmpty" *)
 
 lemma sblen_sbeqI:"x \<sqsubseteq> y \<Longrightarrow> sbLen x = \<infinity> \<Longrightarrow> x = y"
@@ -256,7 +256,7 @@ lemma sb_ind[case_names adm least sbeCons, induct type: sb]:
       and "\<And>sb. sbIsLeast sb \<Longrightarrow> P sb"
       and "\<And>sbe sb. P sb  \<Longrightarrow> \<not>chIsEmpty TYPE ('cs) \<Longrightarrow> P (sbe \<bullet>\<^sup>\<surd> sb)"
   shows  "P x"
-  oops
+  sorry
 
 subsection\<open>sbHdElem\<close>
 

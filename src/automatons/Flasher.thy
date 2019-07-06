@@ -170,7 +170,7 @@ definition andStep::"(S \<Rightarrow> (inAnd\<^sup>\<Omega> \<rightarrow> outAnd
 definition andSpf::"(inAnd\<^sup>\<Omega> \<rightarrow> outAnd\<^sup>\<Omega>)"where
 "andSpf = andStep (dawInitState dAand)"
 
-interpretation and_sscanl:sscanlGen "dAand" "buildAndinSBE" "buildAndoutSBE"
+interpretation and_smap:smapGen "dAand" "buildAndinSBE" "buildAndoutSBE"
   sorry
 
 lemma andingetset_eq:"andInSBE.getterSB\<cdot>(andInSBE.setterSB\<cdot>s) = s"
@@ -179,8 +179,8 @@ lemma andingetset_eq:"andInSBE.getterSB\<cdot>(andInSBE.setterSB\<cdot>s) = s"
 lemma andoutgetset_eq:"andOutSBE.getterSB\<cdot> (andOutSBE.setterSB\<cdot>s) = s"
   using andOutSBE.c_empty andOutSBE.getset_eq by auto
 
-lemma "andOutSBE.getterSB\<cdot>(andStep state\<cdot>(andInSBE.setterSB\<cdot>input)) = (sscanlAsnd and_sscanl.stupidTransition state\<cdot>(input))"
-  by(simp add: andStep_def and_sscanl.daut2sscanl andingetset_eq andoutgetset_eq)
+lemma "andOutSBE.getterSB\<cdot>(andStep state\<cdot>(andInSBE.setterSB\<cdot>input)) = (smap and_smap.smapTransition\<cdot>(input))"
+  by(simp add: andStep_def and_smap.daut2smap andingetset_eq andoutgetset_eq)
 
 lemma "andOutSBE.getterSB\<cdot>(andStep Single\<cdot>(andInSBE.setterSB\<cdot>(\<up>(x,y)))) = \<up>(x\<and>y)"
   sorry
@@ -207,7 +207,7 @@ definition notSpf::"(inNot\<^sup>\<Omega> \<rightarrow> outNot\<^sup>\<Omega>)"w
 "notSpf = notStep (dawInitState dAnot)"
 
 
-interpretation not_sscanl:sscanlGen "dAnot" "buildNotinSBE" "buildNotoutSBE"
+interpretation not_sscanl:smapGen "dAnot" "buildNotinSBE" "buildNotoutSBE"
   sorry
 
 

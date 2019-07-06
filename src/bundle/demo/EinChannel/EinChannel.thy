@@ -116,30 +116,89 @@ lemma "getter A = getter B \<Longrightarrow> A = B"
 fixrec setterSB::"'a stream \<rightarrow> 'cs\<^sup>\<Omega>" where
 "setterSB\<cdot>((up\<cdot>l)&&ls) = (setter (undiscr l)) \<bullet>\<^sup>\<surd> (setterSB\<cdot>ls)" 
 
+lemma settersb_unfold:"setterSB\<cdot>(\<up>a \<bullet> s) = (setter a) \<bullet>\<^sup>\<surd> setterSB\<cdot>s"
+  unfolding setterSB_def
+  apply(subst fix_eq)
+  apply simp 
+  apply(subgoal_tac "\<exists>l. \<up>a \<bullet> s = (up\<cdot>l)&&s")
+  apply auto 
+  apply (metis (no_types, lifting) lshd_updis stream.sel_rews(4) undiscr_Discr up_inject)
+  by (metis lscons_conv)
+
+lemma settersb_emptyfix:"chIsEmpty (TYPE ('cs)) \<Longrightarrow> setterSB\<cdot>s = \<bottom>"
+  by simp
+
+lemma settersb_epsbot:"setterSB\<cdot>\<epsilon> = \<bottom>"
+  apply(simp add: setterSB_def)
+  apply(subst fix_eq)
+  by auto
+
 (* TODO : Dokumentireen! *)
 definition getterSB::"'cs\<^sup>\<Omega> \<rightarrow> 'a stream" where
 "getterSB \<equiv> fix\<cdot>(\<Lambda> h. sb_case\<cdot>(\<lambda>sbe. \<Lambda> sb. updis (getter sbe) && h\<cdot>sb))"
 
+lemma gettersb_unfold:"getterSB\<cdot>(sbe \<bullet>\<^sup>\<surd> sb) = \<up>(getter sbe) \<bullet> getterSB\<cdot>sb"
+  unfolding getterSB_def
+  apply(subst fix_eq)
+  apply simp
+  by (simp add: lscons_conv)
 
+lemma gettersb_emptyfix:"chIsEmpty (TYPE ('cs)) \<Longrightarrow> getterSB\<cdot>sb = \<up>(getter (Abs_sbElem None)) \<bullet> getterSB\<cdot>sb"
+  by (metis(full_types) gettersb_unfold sbtypeepmpty_sbbot)
+
+lemma gettersb_realboteps:"\<not>(chIsEmpty (TYPE ('cs))) \<Longrightarrow> getterSB\<cdot>\<bottom> = \<epsilon>"
+  unfolding getterSB_def
+  apply(subst fix_eq)
+  by (simp add: sb_cases_bot)
 (* TODO: lemma über setterSB und getterSB *)
 
 lemma assumes "chIsEmpty (TYPE ('cs))"
-  shows "(getterSB\<cdot>sb) = ((\<up>(a))\<infinity>)" (* TODO; warning entfernen. abbreviation-prioritäten für \<infinity>?*)
-  oops
+  shows "\<exists>a. (getterSB\<cdot>sb) = (sinftimes(\<up>(a)))"
+  apply(insert assms,subst gettersb_emptyfix,simp) 
+  using gettersb_emptyfix s2sinftimes by auto
+  
+ (* TODO; warning entfernen. abbreviation-prioritäten für \<infinity>?*)
 
 lemma "sbLen (setterSB\<cdot>s) = #s"
   oops(* gilt nicht für chIsEmpty *)
 
 lemma "a \<sqsubseteq> getterSB\<cdot>(setterSB\<cdot>a)"
-  oops
+  apply(induction a rule: ind)
+  apply(auto)
+  apply (simp add: gettersb_unfold settersb_unfold)
+  by (simp add: monofun_cfun_arg)
 
 lemma getset_eq:"\<not>chIsEmpty (TYPE ('cs)) \<Longrightarrow> getterSB\<cdot>(setterSB\<cdot>a) = a"
-  sorry  (* gilt nicht für chIsEmpty *)
+  apply(induction a rule: ind)
+  apply(auto)
+  apply (simp add: gettersb_realboteps settersb_epsbot)
+  by (simp add: gettersb_unfold settersb_unfold)
 
 lemma "setterSB\<cdot>(getterSB\<cdot>sb) \<sqsubseteq> sb"
-  oops  
+  apply(induction sb)
+  apply auto
+  apply(cases "chIsEmpty(TYPE('cs))")
+  apply (metis (full_types)minimal sbtypeepmpty_sbbot)
+  apply(simp add: sbIsLeast_def)
+  oops
+ 
 
-lemma setget_eq:"True \<Longrightarrow>setterSB\<cdot>(getterSB\<cdot>sb) = sb"
+lemma setget_eq:"(\<forall>c. #(sb \<^enum> c) = k) \<Longrightarrow>setterSB\<cdot>(getterSB\<cdot>sb) = sb"
+  apply(induction sb arbitrary: k)
+  apply auto
+  apply(rule adm_imp)
+     apply auto 
+  apply(rule admI)
+  defer
+  apply(case_tac "chIsEmpty (TYPE ('cs))")
+  apply (metis (full_types)sbtypeepmpty_sbbot)
+    apply(simp add: sbIsLeast_def)
+  apply(subgoal_tac "k = 0",auto)
+     apply (metis gettersb_realboteps sb_eqI sbgetch_bot settersb_epsbot)
+    defer
+    apply(subst gettersb_unfold)
+    apply(subst settersb_unfold,simp)
+  apply(subgoal_tac "\<And>c. #(sb \<^enum> c) \<le> #(sbe \<bullet>\<^sup>\<surd> sb  \<^enum>  c)",auto)
   oops  (* Nur für gleichlange ströme *)
 end
 
@@ -156,15 +215,18 @@ locale sscanlGen =
       and sbegenfout:"sbeGen fout"
 begin
 
-abbreviation "stupidTransition \<equiv> (\<lambda> s a. 
+abbreviation "sscanlTransition \<equiv> (\<lambda> s a. 
   let (nextState, nextOut) = dawTransition da s (sbeGen.setter fin a) in
      (nextState, sbeGen.getter fout nextOut)
 )"
 
 lemma daut2sscanl:"dawStateSem da state\<cdot>(input::'in\<^sup>\<Omega>) = 
-       sbeGen.setterSB fout\<cdot>(sscanlAsnd stupidTransition state\<cdot>(sbeGen.getterSB fin\<cdot>input))"
+       sbeGen.setterSB fout\<cdot>(sscanlAsnd sscanlTransition state\<cdot>(sbeGen.getterSB fin\<cdot>input))"
   sorry
-(* TODO: semantikabbildung "dawStateSem" anlegen *)
+
+lemma daut2sscnalinit:"range(Rep::'out \<Rightarrow> channel) = range(Rep::'initOut\<Rightarrow> channel) \<Longrightarrow> dawSem da\<cdot>input = 
+  sbeConvert(dawInitOut da) \<bullet>\<^sup>\<surd> dawStateSem da state\<cdot>(input::'in\<^sup>\<Omega>)"
+  sorry
 
 (* TODO: initiale ausgabe ... "sscanlA" kann nichts partielles ausgben.
   dh alles oder nichts. Das kann man durch den typ abfangen!
@@ -172,13 +234,28 @@ lemma daut2sscanl:"dawStateSem da state\<cdot>(input::'in\<^sup>\<Omega>) =
     * strong = gleicher typ wie ausgabe
 *)
 
-(* TODO: smapGen
-  using Locale Hierarchy
-      http://isabelle.in.tum.de/dist/Isabelle2019/doc/locales.pdf
-*)
 end
 
+locale smapGen =
+ fixes da::"('state::countable, 'in::{chan, finite}, 'out::{chan,finite}, 'initOut::chan) dAutomaton_weak"
+  and fin::"'a::countable \<Rightarrow> 'in \<Rightarrow> M"  
+  and fout::"'b::countable \<Rightarrow> 'out \<Rightarrow> M"
+  assumes scscanlgenf:"sscanlGen fin fout"
+  and singlestate:"is_singleton(UNIV::'state set)"
+begin
 
+abbreviation "smapTransition \<equiv> (\<lambda>a. 
+  let nextOut = snd(dawTransition da (dawInitState da) (sbeGen.setter fin a)) in
+     sbeGen.getter fout nextOut)"
+
+lemma daut2smap:"dawStateSem da state\<cdot>(input::'in\<^sup>\<Omega>) = 
+       sbeGen.setterSB fout\<cdot>(smap smapTransition\<cdot>(sbeGen.getterSB fin\<cdot>input))"
+  sorry
+
+end
+
+sublocale  smapGen \<subseteq> sscanlGen
+  by (simp add: scscanlgenf)
 
 
 
