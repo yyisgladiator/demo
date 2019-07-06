@@ -62,24 +62,24 @@ text \<open>\<open>'a\<close> should be interpreted as a tuple. The goal of this
   The user can freely choose \<open>'a\<close>, hence he will not use the datatype \<open>M\<close>. 
   for example \<open>'a = (nat \<times> bool)\<close> which maps to a bundle with one bool-channel and one nat-channel\<close>
 locale sbeGen =
-  fixes lConstructor::"'a::countable \<Rightarrow> 'cs::chan \<Rightarrow> M"
-  assumes c_well: "\<And>a. sbElem_well (Some (lConstructor a))"
-      and c_inj: "inj lConstructor" 
-      and c_surj: "\<And>sbe. sbElem_well (Some sbe) \<Longrightarrow> sbe\<in>range lConstructor" (* Schöner? *)
+  fixes lConstructor::"'a::countable \<Rightarrow> 'cs::{chan, finite} \<Rightarrow> M"
+  assumes c_well: "\<And>a. \<not>chIsEmpty TYPE ('cs) \<Longrightarrow> sbElem_well (Some (lConstructor a))"
+      and c_inj: "\<not>chIsEmpty TYPE ('cs) \<Longrightarrow> inj lConstructor" 
+      and c_surj: "\<And>sbe. \<not>chIsEmpty TYPE ('cs) \<Longrightarrow> sbElem_well (Some sbe) \<Longrightarrow> sbe\<in>range lConstructor" (* Schöner? *)
+      and c_empty: "\<And>a b::'a. chIsEmpty TYPE ('cs) \<Longrightarrow> a=b"
 begin
 
-lemma empty_neq: "\<not>chIsEmpty TYPE ('cs)"
-  using c_well sbtypeempty_notsbewell by blast
-
-lift_definition setter::"'a \<Rightarrow> 'cs\<^sup>\<surd>" is "Some o lConstructor"
-  using c_well by auto
+lift_definition setter::"'a \<Rightarrow> 'cs\<^sup>\<surd>" is 
+  "if(chIsEmpty TYPE ('cs)) then (\<lambda>_. None) else Some o lConstructor"
+  using c_well sbtypeempty_sbewell by auto
 
 definition getter::"'cs\<^sup>\<surd> \<Rightarrow> 'a" where
-"getter  = (inv lConstructor) o the o Rep_sbElem"
+"getter sbe = (case (Rep_sbElem sbe) of None \<Rightarrow> (SOME x. True) | 
+      Some f \<Rightarrow> (inv lConstructor) f)" (* geht was anderes als "SOME x"? *)
 
 lemma get_set[simp]: "getter (setter a) = a"
   unfolding getter_def
-  by (simp add: setter.rep_eq c_inj)  
+  by (simp add: setter.rep_eq c_inj c_empty)
 
 lemma set_inj: "inj setter"
   by (metis get_set injI)
@@ -91,18 +91,11 @@ proof(simp add: surj_def,auto)
   fix y::"'cs\<^sup>\<surd>"
   assume chnEmpty:"\<not> chIsEmpty TYPE('cs)"
   obtain f where f_def:"Rep_sbElem y=(Some f)"
-    using sbeGen.empty_neq sbeGen_axioms sbtypenotempty_fex  by auto
+    using chnEmpty sbtypenotempty_fex by auto
   then obtain x where x_def:"f = lConstructor x"
-    by (metis c_inj c_surj f_the_inv_into_f sbelemwell2fwell)
+    by (metis c_inj c_surj f_the_inv_into_f sbelemwell2fwell chnEmpty)
   then show "\<exists>x::'a. y = Abs_sbElem (Some (lConstructor x))"
     by (metis Rep_sbElem_inverse f_def)
-next
-  fix x::"'cs\<^sup>\<surd>"
-  assume chEmpty:"chIsEmpty TYPE('cs)"
-  then have"\<And>f. \<not>sbElem_well (Some f)"
-    using empty_neq by auto
-  then show "chIsEmpty TYPE('cs) \<Longrightarrow> x \<in> range (\<lambda>x::'a. Abs_sbElem (Some (lConstructor x)))"
-    using c_well by metis
 qed 
 
 lemma set_bij: "bij setter"
@@ -121,13 +114,31 @@ lemma "getter A = getter B \<Longrightarrow> A = B"
 fixrec setterSB::"'a stream \<rightarrow> 'cs\<^sup>\<Omega>" where
 "setterSB\<cdot>((up\<cdot>l)&&ls) = (setter (undiscr l)) \<bullet>\<^sup>\<surd> (setterSB\<cdot>ls)" 
 
-fixrec getterSB::"'cs\<^sup>\<Omega> \<rightarrow> 'a stream" where
-"getterSB\<cdot>x = \<bottom>" 
-(* Man kann auch einen getterSB definieren (mit fixrec, nachdem das klappt(über endliche bündel)).... 
-    Sollte man auch, die frage ist nur wie weitflächig der einsetzbar ist. Er schneidet längere Elemente ab *)
+(* TODO : Dokumentireen! *)
+definition getterSB::"'cs\<^sup>\<Omega> \<rightarrow> 'a stream" where
+"getterSB \<equiv> fix\<cdot>(\<Lambda> h. sb_case\<cdot>(\<lambda>sbe. \<Lambda> sb. updis (getter sbe) && h\<cdot>sb))"
 
 
 (* TODO: lemma über setterSB und getterSB *)
+
+lemma assumes "chIsEmpty (TYPE ('cs))"
+  shows "(getterSB\<cdot>sb) = ((\<up>(a))\<infinity>)" (* TODO; warning entfernen. abbreviation-prioritäten für \<infinity>?*)
+  oops
+
+lemma "sbLen (setterSB\<cdot>s) = #s"
+  oops(* gilt nicht für chIsEmpty *)
+
+lemma "a \<sqsubseteq> getterSB\<cdot>(setterSB\<cdot>a)"
+  oops
+
+lemma "getterSB\<cdot>(setterSB\<cdot>a) = a"
+  oops  (* gilt nicht für chIsEmpty *)
+
+lemma "setterSB\<cdot>(getterSB\<cdot>sb) \<sqsubseteq> sb"
+  oops  
+
+lemma "setterSB\<cdot>(getterSB\<cdot>sb) = sb"
+  oops  (* Nur für gleichlange ströme *)
 end
 
 
@@ -136,7 +147,7 @@ end
 
 
 locale sscanlGen =
-  fixes da::"('state::countable, 'in::{chan, finite}, 'out::chan, 'initOut::chan) dAutomaton_weak"
+  fixes da::"('state::countable, 'in::{chan, finite}, 'out::{chan,finite}, 'initOut::chan) dAutomaton_weak"
   and fin::"'a::countable \<Rightarrow> 'in \<Rightarrow> M"  
   and fout::"'b::countable \<Rightarrow> 'out \<Rightarrow> M"
   assumes sbegenfin:"sbeGen fin"
@@ -149,11 +160,8 @@ abbreviation "stupidTransition \<equiv> (\<lambda> s a.
 )"
 
 lemma daut2sscanl:"dawStateSem da state\<cdot>(input::'in\<^sup>\<Omega>) = 
-       sbeGen.setterSB fout\<cdot>(sscanlAsnd stupidTransition state\<cdot>(sbeGen.getterSB\<cdot>input))"
+       sbeGen.setterSB fout\<cdot>(sscanlAsnd stupidTransition state\<cdot>(sbeGen.getterSB fin\<cdot>input))"
   sorry
-(* Frag mich nicht, wieso "setterSB" "fout" als parameter braucht
-  aber der "getterSB" nicht *)
-
 (* TODO: semantikabbildung "dawStateSem" anlegen *)
 
 (* TODO: initiale ausgabe ... "sscanlA" kann nichts partielles ausgben.
@@ -162,6 +170,10 @@ lemma daut2sscanl:"dawStateSem da state\<cdot>(input::'in\<^sup>\<Omega>) =
     * strong = gleicher typ wie ausgabe
 *)
 
+(* TODO: smapGen
+  using Locale Hierarchy
+      http://isabelle.in.tum.de/dist/Isabelle2019/doc/locales.pdf
+*)
 end
 
 
