@@ -7,7 +7,9 @@ text \<open>You need to set THIS directory as Session-Directory. NOT the root-di
 
 lemma cempty_empty[simp]: "cEmpty = {c3}"
   apply(auto simp add: cEmpty_def)
-  by(insert ctype.elims,auto)
+  apply(insert ctype.elims,auto)
+  by (metis channel.exhaust ctype.simps(1) ctype.simps(2) ctype.simps(4) ctype.simps(5) ctype.simps(6)
+      empty_not_UNIV image_is_empty  sup_eq_bot_iff)
 
 typedef singleChan = "{c1}"
   by blast
@@ -131,13 +133,13 @@ lemma "sbLen (setterSB\<cdot>s) = #s"
 lemma "a \<sqsubseteq> getterSB\<cdot>(setterSB\<cdot>a)"
   oops
 
-lemma "getterSB\<cdot>(setterSB\<cdot>a) = a"
-  oops  (* gilt nicht für chIsEmpty *)
+lemma getset_eq:"\<not>chIsEmpty (TYPE ('cs)) \<Longrightarrow> getterSB\<cdot>(setterSB\<cdot>a) = a"
+  sorry  (* gilt nicht für chIsEmpty *)
 
 lemma "setterSB\<cdot>(getterSB\<cdot>sb) \<sqsubseteq> sb"
   oops  
 
-lemma "setterSB\<cdot>(getterSB\<cdot>sb) = sb"
+lemma setget_eq:"True \<Longrightarrow>setterSB\<cdot>(getterSB\<cdot>sb) = sb"
   oops  (* Nur für gleichlange ströme *)
 end
 
@@ -322,11 +324,14 @@ proof -
     by auto
 qed
 
+instance mymy::finite
+  sorry
+
 interpretation dudu: sbeGen "buildSBE" (*WTF Nitpick ? ? ?*)
   apply(unfold_locales)
   apply (simp add: build_ctype)
   apply (simp add: build_inj)
-  using build_surj by auto
+  using build_surj sorry
 
 term "dudu.setter"
 
