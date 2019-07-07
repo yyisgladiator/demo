@@ -31,6 +31,7 @@ fun ctype :: "channel \<Rightarrow> M set" where
 "ctype c3 = {}" |
 "ctype _ = range \<B>"
 
-
+lemma ctypeempty_ex:"\<exists>c. ctype c = {}"
+  using ctype.simps by blast
 
 end

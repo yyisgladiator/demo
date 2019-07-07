@@ -34,4 +34,9 @@ text \<open>Then one describes the types of each channel. Only Messages included
 definition ctype :: "channel \<Rightarrow> M set" where 
 "ctype = (\<lambda>c. if c= undefined then {} else undefined)"
 
+lemma ctypeempty_ex:"\<exists>c. ctype c = {}"
+  by (simp add: ctype_def)
+
+hide_fact ctype_def
+
 end
