@@ -10,18 +10,21 @@ definition cEmpty :: "channel set" where
 
 class chan =
   fixes Rep :: "'a \<Rightarrow> channel"
-
-
   assumes chan_botsingle:
       "(range Rep) \<subseteq> cEmpty 
            \<or> (range Rep) \<inter> cEmpty = {}" 
-
   assumes chan_inj[simp]:"inj Rep"
-
 begin
-
   abbreviation "Abs \<equiv> inv Rep"
 end
+
+class somechan = chan +
+  assumes chan_empty:
+      "(range Rep) \<inter> cEmpty = {}" 
+
+class emptychan = chan +
+  assumes chan_empty:
+      "(range Rep) \<subseteq> cEmpty" 
 
 section \<open>chan Predicate definition\<close>
 

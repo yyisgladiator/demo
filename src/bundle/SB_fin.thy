@@ -104,41 +104,170 @@ lemma sb_cases_bot:"\<not>(chIsEmpty (TYPE ('cs))) \<Longrightarrow> sb_case\<cd
 
 lemma sb_cases_sbe[simp]:"sb_case\<cdot>f\<cdot>(sbECons sbe\<cdot>sb) = f sbe\<cdot>sb"
   sorry
-(*
-lemma sb_case_inj1:"inj (Rep_cfun (sb_case\<cdot>sb))"
-proof(rule injI)
-  fix x y::"'a\<^sup>\<surd> \<rightarrow> 'a\<^sup>\<Omega> \<rightarrow> 'b"
-  assume sb_case_eq:"sb_case\<cdot>sb\<cdot>x = sb_case\<cdot>sb\<cdot>y"
-  have "\<And>xa. x\<cdot>xa = y\<cdot>xa"
-    sorry
-  then show "x = y"
-    by(simp add: cfun_eqI)
-  oops
 
-lemma sb_case_inj2:"inj (Rep_cfun sb_case)"
-  oops
+section\<open>Datatype Konstruktor\<close>
+
+(* FYI: the old approach from v2 to create the datatype is not really reusable, 
+  because: 
+      lift_definition elem_raw_i :: "int \<Rightarrow> ndaExampleMessage sbElem" is
+  Thats an old "single-channel" setter...
+  One has to replace the "ndaExampleMessage" with a "chan"... but which?
+  There can only be ONE channel in the replacement! ! !
+  But what if the channel-datatype of the component has 2 or more channels?
 *)
-(*
-subsection\<open>cont version of sbLen\<close>
 
-definition sbLen_alt:: "'cs\<^sup>\<Omega> \<rightarrow> lnat" where
-"sbLen_alt = (fix\<cdot>(\<Lambda> h sb. sb_case\<cdot>sb\<cdot>(\<Lambda> sbe sb2 . lnsuc\<cdot>(h\<cdot>sb2))))"
+text \<open>Motivation: I HATE freemarker and other templates. 
+  And the workflow sucks. The generator people have no idea about isabelle, 
+  feature-request take FOREVER and then it might not work in every case\<close>
 
-subsubsection\<open>sbLen\_alt lemmas\<close>
+text\<open>Goal: Move the heavy-stuff from the Generator to Isabelle.
+  Pretty much every proof should be done in Isabelle, the generator
+  can still create datatypes, functions and so on\<close>
 
-lemma sblen_alt_empty:"(range(Rep::'c\<Rightarrow> channel)\<subseteq>cEmpty) \<Longrightarrow> sbLen_alt\<cdot>(\<bottom>::'c\<^sup>\<Omega>) = \<infinity>"
+text\<open>Implementation: Is using Locales... \<close>
+
+
+text \<open>\<open>'a\<close> should be interpreted as a tuple. The goal of this local is to create a
+  bijective mapping from \<open>'a\<close> to \<open>'cs\<close>.
+  The user can freely choose \<open>'a\<close>, hence he will not use the datatype \<open>M\<close>. 
+  for example \<open>'a = (nat \<times> bool)\<close> which maps to a bundle with one bool-channel and one nat-channel\<close>
+locale sbeGen =
+  fixes lConstructor::"'a::countable \<Rightarrow> 'cs::{chan, finite} \<Rightarrow> M"
+  assumes c_well: "\<And>a. \<not>chIsEmpty TYPE ('cs) \<Longrightarrow> sbElem_well (Some (lConstructor a))"
+      and c_inj: "\<not>chIsEmpty TYPE ('cs) \<Longrightarrow> inj lConstructor" 
+      and c_surj: "\<And>sbe. \<not>chIsEmpty TYPE ('cs) \<Longrightarrow> sbElem_well (Some sbe) \<Longrightarrow> sbe\<in>range lConstructor" (* Schöner? *)
+      and c_empty: "chIsEmpty TYPE ('cs) \<Longrightarrow> is_singleton(UNIV::'a set)"
+begin
+
+lift_definition setter::"'a \<Rightarrow> 'cs\<^sup>\<surd>" is 
+  "if(chIsEmpty TYPE ('cs)) then (\<lambda>_. None) else Some o lConstructor"
+  using c_well sbtypeempty_sbewell by auto
+
+definition getter::"'cs\<^sup>\<surd> \<Rightarrow> 'a" where
+"getter sbe = (case (Rep_sbElem sbe) of None \<Rightarrow> (SOME x. True) | 
+      Some f \<Rightarrow> (inv lConstructor) f)" (* geht was anderes als "SOME x"? *)
+
+lemma get_set[simp]: "getter (setter a) = a"
+  unfolding getter_def
+  apply (simp add: setter.rep_eq c_inj c_empty)
+  by (metis UNIV_I c_empty is_singletonE singleton_iff)
+
+lemma set_inj: "inj setter"
+  by (metis get_set injI)
+
+lemma set_surj: "surj setter"
+  unfolding setter_def
+  apply(cases "\<not>(chIsEmpty(TYPE('cs)))")
+proof(simp add: surj_def,auto)
+  fix y::"'cs\<^sup>\<surd>"
+  assume chnEmpty:"\<not> chIsEmpty TYPE('cs)"
+  obtain f where f_def:"Rep_sbElem y=(Some f)"
+    using chnEmpty sbtypenotempty_fex by auto
+  then obtain x where x_def:"f = lConstructor x"
+    by (metis c_inj c_surj f_the_inv_into_f sbelemwell2fwell chnEmpty)
+  then show "\<exists>x::'a. y = Abs_sbElem (Some (lConstructor x))"
+    by (metis Rep_sbElem_inverse f_def)
+qed 
+
+lemma set_bij: "bij setter"
+  by (metis bijI inj_onI sbeGen.get_set sbeGen_axioms set_surj)
+
+lemma get_inv_set: "getter = (inv setter)"
+  by (metis get_set set_surj surj_imp_inv_eq)
+
+lemma set_get[simp]: "setter (getter sbe) = sbe"
+  apply(simp add: get_inv_set)
+  by (meson bij_inv_eq_iff set_bij)
+
+lemma "getter A = getter B \<Longrightarrow> A = B"
+  by (metis set_get)
+
+fixrec setterSB::"'a stream \<rightarrow> 'cs\<^sup>\<Omega>" where
+"setterSB\<cdot>((up\<cdot>l)&&ls) = (setter (undiscr l)) \<bullet>\<^sup>\<surd> (setterSB\<cdot>ls)" 
+
+lemma settersb_unfold:"setterSB\<cdot>(\<up>a \<bullet> s) = (setter a) \<bullet>\<^sup>\<surd> setterSB\<cdot>s"
+  unfolding setterSB_def
+  apply(subst fix_eq)
+  apply simp 
+  apply(subgoal_tac "\<exists>l. \<up>a \<bullet> s = (up\<cdot>l)&&s")
+  apply auto 
+  apply (metis (no_types, lifting) lshd_updis stream.sel_rews(4) undiscr_Discr up_inject)
+  by (metis lscons_conv)
+
+lemma settersb_emptyfix:"chIsEmpty (TYPE ('cs)) \<Longrightarrow> setterSB\<cdot>s = \<bottom>"
+  by simp
+
+lemma settersb_epsbot:"setterSB\<cdot>\<epsilon> = \<bottom>"
+  apply(simp add: setterSB_def)
+  apply(subst fix_eq)
+  by auto
+
+(* TODO : Dokumentireen! *)
+definition getterSB::"'cs\<^sup>\<Omega> \<rightarrow> 'a stream" where
+"getterSB \<equiv> fix\<cdot>(\<Lambda> h. sb_case\<cdot>(\<lambda>sbe. \<Lambda> sb. updis (getter sbe) && h\<cdot>sb))"
+
+lemma gettersb_unfold:"getterSB\<cdot>(sbe \<bullet>\<^sup>\<surd> sb) = \<up>(getter sbe) \<bullet> getterSB\<cdot>sb"
+  unfolding getterSB_def
+  apply(subst fix_eq)
+  apply simp
+  by (simp add: lscons_conv)
+
+lemma gettersb_emptyfix:"chIsEmpty (TYPE ('cs)) \<Longrightarrow> getterSB\<cdot>sb = \<up>(getter (Abs_sbElem None)) \<bullet> getterSB\<cdot>sb"
+  by (metis(full_types) gettersb_unfold sbtypeepmpty_sbbot)
+
+lemma gettersb_realboteps:"\<not>(chIsEmpty (TYPE ('cs))) \<Longrightarrow> getterSB\<cdot>\<bottom> = \<epsilon>"
+  unfolding getterSB_def
+  apply(subst fix_eq)
+  by (simp add: sb_cases_bot)
+lemma assumes "chIsEmpty (TYPE ('cs))"
+  shows "(getterSB\<cdot>sb) = (sinftimes(\<up>(a)))"
+  apply(insert assms,subst gettersb_emptyfix,simp) 
+  using gettersb_emptyfix s2sinftimes c_empty
+  by (metis (mono_tags) get_set sbtypeepmpty_sbenone)
+  
+ (* TODO; warning entfernen. abbreviation-prioritäten für \<infinity>?*)
+
+lemma "sbLen (setterSB\<cdot>s) = #s"
+  oops(* gilt nicht für chIsEmpty *)
+
+lemma "a \<sqsubseteq> getterSB\<cdot>(setterSB\<cdot>a)"
+  apply(induction a rule: ind)
+  apply(auto)
+  apply (simp add: gettersb_unfold settersb_unfold)
+  by (simp add: monofun_cfun_arg)
+
+lemma getset_eq:"\<not>chIsEmpty (TYPE ('cs)) \<Longrightarrow> getterSB\<cdot>(setterSB\<cdot>a) = a"
+  apply(induction a rule: ind)
+  apply(auto)
+  apply (simp add: gettersb_realboteps settersb_epsbot)
+  by (simp add: gettersb_unfold settersb_unfold)
+
+lemma "setterSB\<cdot>(getterSB\<cdot>sb) \<sqsubseteq> sb"
+  apply(induction sb)
+  apply auto
+  apply(cases "chIsEmpty(TYPE('cs))")
+  apply (metis (full_types)minimal sbtypeepmpty_sbbot)
+  apply(simp add: sbIsLeast_def)
   oops
+ 
+lemma setget_eq:"(\<forall>c. #(sb \<^enum> c) = k) \<Longrightarrow>setterSB\<cdot>(getterSB\<cdot>sb) = sb"
+  apply(induction sb arbitrary: k)
+  apply auto
+  apply(rule adm_imp)
+     apply auto 
+  apply(rule admI)
+  defer
+  apply(case_tac "chIsEmpty (TYPE ('cs))")
+  apply (metis (full_types)sbtypeepmpty_sbbot)
+    apply(simp add: sbIsLeast_def)
+  apply(subgoal_tac "k = 0",auto)
+     apply (metis gettersb_realboteps sb_eqI sbgetch_bot settersb_epsbot)
+    defer
+    apply(subst gettersb_unfold)
+    apply(subst settersb_unfold,simp)
+  apply(subgoal_tac "\<And>c. #(sb \<^enum> c) \<le> #(sbe \<bullet>\<^sup>\<surd> sb  \<^enum>  c)",auto)
+  oops  (* Nur für gleichlange ströme *)
+end
 
-lemma sblen_alt_bot:"sbLen_alt\<cdot>(\<bottom>::'cs\<^sup>\<Omega>) = \<infinity> \<or> sbLen_alt\<cdot>(\<bottom>::'cs\<^sup>\<Omega>) = 0"
-  oops
 
-lemma sblen_alt_step:"sbLen_alt\<cdot>(sbECons\<cdot>sbe\<cdot>sb) = lnsuc\<cdot>(sbLen_alt\<cdot>sb)"
-  oops
-
-lemma sblen_alt_insert2:" sbLen_alt\<cdot>sb = sbLen sb"
-  oops
-
-lemma sblen_alt_sbeqI:"x \<sqsubseteq> y \<Longrightarrow> sbLen_alt\<cdot>x = \<infinity> \<Longrightarrow> x = y"
-  oops
-*)
 end

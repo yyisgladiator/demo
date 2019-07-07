@@ -1,6 +1,6 @@
 theory Flasher
 
-imports "../bundle/demo/EinChannel/EinChannel"
+imports automaton.dAutomaton_causal
 begin
 
 (*State datatype*)
@@ -15,13 +15,14 @@ instance S::countable
 typedef emptychan="{c3}"
   by simp
 
-instantiation emptychan::"{chan,finite}"
+instantiation emptychan::"{finite,emptychan}"
 begin
 definition "Rep = Rep_emptychan"
 instance
   apply(intro_classes)
   apply simp
-  using Rep_emptychan_def type_definition.Rep_range type_definition_emptychan apply fastforce
+  using Rep_emptychan_def type_definition.Rep_range type_definition_emptychan
+  using Rep_emptychan apply auto[1]
   apply (simp add: Rep_emptychan_def Rep_emptychan_inject inj_on_def)
   sorry
 end
@@ -32,13 +33,14 @@ typedef inAnd="{cin1,cin2}"
 typedef outAnd = "{cout}"
   by auto
 
-instantiation inAnd::"{chan,finite}"
+instantiation inAnd::"{somechan,finite}"
 begin
 definition "Rep = Rep_inAnd"
 instance
   apply(standard)
-  apply(auto simp add: Rep_inAnd_def)
-  apply (metis Rep_inAnd channel.distinct(19) channel.distinct(21) insertE singletonD)
+  apply(auto simp add: Rep_inAnd_def cEmpty_def)
+  using ctype.elims
+  apply (metis Rep_inAnd ctype.simps(4) ctype.simps(5) ctype.simps(6) ex_in_conv insertE insert_iff insert_not_empty sup_eq_bot_iff)
   apply (meson Rep_inAnd_inject injI)
   sorry
 end
@@ -55,7 +57,7 @@ free_constructors inAnd for "Andin1"  | "Andin2"
 definition "Andout \<equiv> Abs_outAnd cout"
 
 
-instantiation outAnd::"{chan,finite}"
+instantiation outAnd::"{somechan,finite}"
 begin
 definition "Rep = Rep_outAnd"
 instance
@@ -78,7 +80,7 @@ typedef inNot="{cout}"
 typedef outNot = "{cin2}"
   by auto
 
-instantiation inNot::"{chan,finite}"
+instantiation inNot::"{somechan,finite}"
 begin
 definition "Rep = Rep_inNot"
 instance
@@ -94,7 +96,7 @@ definition "Notin \<equiv> Abs_inNot cout"
 free_constructors inNot for "Notin"
   by (metis(full_types) Abs_inNot_cases singletonD)
 
-instantiation outNot::"{chan,finite}"
+instantiation outNot::"{somechan,finite}"
 begin
 definition "Rep = Rep_outNot"
 instance
@@ -170,16 +172,20 @@ definition andStep::"(S \<Rightarrow> (inAnd\<^sup>\<Omega> \<rightarrow> outAnd
 definition andSpf::"(inAnd\<^sup>\<Omega> \<rightarrow> outAnd\<^sup>\<Omega>)"where
 "andSpf = andStep (dawInitState dAand)"
 
-interpretation and_smap:smapGen "dAand" "buildAndinSBE" "buildAndoutSBE"
+interpretation and_smap:smapGen "dAand" "buildAndinSBE" "buildAndoutSBE" "Single"
   sorry
 
 lemma andingetset_eq:"andInSBE.getterSB\<cdot>(andInSBE.setterSB\<cdot>s) = s"
-  using andInSBE.c_empty andInSBE.getset_eq by blast
+  apply(rule andInSBE.getset_eq)
+  apply(simp add: chIsEmpty_def cEmpty_def)
+  using cEmpty_def somechan_class.chan_empty by fastforce
 
 lemma andoutgetset_eq:"andOutSBE.getterSB\<cdot> (andOutSBE.setterSB\<cdot>s) = s"
-  using andOutSBE.c_empty andOutSBE.getset_eq by auto
+  apply(rule andOutSBE.getset_eq)
+  apply(simp add: chIsEmpty_def cEmpty_def)
+  using cEmpty_def somechan_class.chan_empty by fastforce
 
-lemma "andOutSBE.getterSB\<cdot>(andStep state\<cdot>(andInSBE.setterSB\<cdot>input)) = (smap and_smap.smapTransition\<cdot>(input))"
+lemma "andOutSBE.getterSB\<cdot>(andStep Single\<cdot>(andInSBE.setterSB\<cdot>input)) = (smap and_smap.smapTransition)\<cdot>input"
   by(simp add: andStep_def and_smap.daut2smap andingetset_eq andoutgetset_eq)
 
 lemma "andOutSBE.getterSB\<cdot>(andStep Single\<cdot>(andInSBE.setterSB\<cdot>(\<up>(x,y)))) = \<up>(x\<and>y)"
@@ -207,7 +213,7 @@ definition notSpf::"(inNot\<^sup>\<Omega> \<rightarrow> outNot\<^sup>\<Omega>)"w
 "notSpf = notStep (dawInitState dAnot)"
 
 
-interpretation not_sscanl:smapGen "dAnot" "buildNotinSBE" "buildNotoutSBE"
+interpretation not_sscanl:smapGen "dAnot" "buildNotinSBE" "buildNotoutSBE" Single
   sorry
 
 

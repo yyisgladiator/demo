@@ -69,6 +69,62 @@ fun Rum_ta_strong::"('s::type, 'in::{chan,finite},'out) dAutomaton_strong \<Righ
 "Rum_ta_strong aut = Abs_spfs `(Rum_ta aut)"
 
 
+section \<open>automaton to sscanl equivalence locale\<close>
+
+locale sscanlGen =
+  fixes da::"('state::countable, 'in::{chan, finite}, 'out::{chan,finite}, 'initOut::chan) dAutomaton_weak"
+  and fin::"'a::countable \<Rightarrow> 'in \<Rightarrow> M"  
+  and fout::"'b::countable \<Rightarrow> 'out \<Rightarrow> M"
+  assumes sbegenfin:"sbeGen fin"
+      and sbegenfout:"sbeGen fout"
+begin
+
+abbreviation "sscanlTransition \<equiv> (\<lambda> s a. 
+  let (nextState, nextOut) = dawTransition da s (sbeGen.setter fin a) in
+     (nextState, sbeGen.getter fout nextOut)
+)"
+
+lemma daut2sscanl:"dawStateSem da state\<cdot>(input::'in\<^sup>\<Omega>) = 
+       sbeGen.setterSB fout\<cdot>(sscanlAsnd sscanlTransition state\<cdot>(sbeGen.getterSB fin\<cdot>input))"
+  sorry
+
+lemma daut2sscnalinit:"range(Rep::'out \<Rightarrow> channel) = range(Rep::'initOut\<Rightarrow> channel) \<Longrightarrow> dawSem da\<cdot>input = 
+  sbeConvert(dawInitOut da) \<bullet>\<^sup>\<surd> dawStateSem da state\<cdot>(input::'in\<^sup>\<Omega>)"
+  sorry
+
+(* TODO: initiale ausgabe ... "sscanlA" kann nichts partielles ausgben.
+  dh alles oder nichts. Das kann man durch den typ abfangen!
+    * weak = "chIstEmpty" als assumption (oder besser, dafür eine klasse anlegen)
+    * strong = gleicher typ wie ausgabe
+*)
+
+end
+
+section \<open>automaton to smap equivalence locale\<close>
+
+locale smapGen =
+ fixes da::"('state::countable, 'in::{chan, finite}, 'out::{chan,finite}, 'initOut::chan) dAutomaton_weak"
+  and fin::"'a::countable \<Rightarrow> 'in \<Rightarrow> M"  
+  and fout::"'b::countable \<Rightarrow> 'out \<Rightarrow> M"
+  and loopState::"'state"
+  assumes scscanlgenf:"sscanlGen fin fout"
+  and singlestate:"\<And>sbe. fst((dawTransition da) loopState sbe) = loopState"
+begin
+
+abbreviation "smapTransition \<equiv> (\<lambda>a::'a. 
+  let nextOut = snd((dawTransition da) loopState (sbeGen.setter fin a)) in
+     sbeGen.getter fout nextOut)"
+
+lemma daut2smap:"dawStateSem da state\<cdot>(input::'in\<^sup>\<Omega>) = 
+       sbeGen.setterSB fout\<cdot>(smap smapTransition\<cdot>(sbeGen.getterSB fin\<cdot>input))"
+  sorry
+
+end
+
+sublocale  smapGen \<subseteq> sscanlGen
+  by (simp add: scscanlgenf)
+
+
 (*<*)
 end
 (*>*)
