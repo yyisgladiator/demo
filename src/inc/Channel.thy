@@ -19,7 +19,7 @@ begin
 end
 
 class somechan = chan +
-  assumes chan_empty:
+  assumes chan_notempty:
       "(range Rep) \<inter> cEmpty = {}" 
 
 class emptychan = chan +
@@ -30,6 +30,12 @@ section \<open>chan Predicate definition\<close>
 
 definition chIsEmpty ::"'cs::chan itself \<Rightarrow> bool" where
 "chIsEmpty cs = (range(Rep::'cs\<Rightarrow>channel) \<subseteq> cEmpty)"
+
+lemma emptychanempty[simp]:"chIsEmpty(TYPE('c::emptychan))"
+  by(simp add: chIsEmpty_def chan_empty)
+
+lemma somechannotempty[simp]:"\<not>chIsEmpty(TYPE('c::somechan))"
+  using chIsEmpty_def chan_notempty by blast
 
 
 section \<open> rep abs chan lemmata \<close>

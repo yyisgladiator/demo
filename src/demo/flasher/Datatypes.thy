@@ -29,7 +29,7 @@ fun ctype :: "channel \<Rightarrow> M set" where
 "ctype c1 = range \<N>" |
 "ctype c2 = range \<B>" |
 "ctype c3 = {}" |
-"ctype _ = range \<B>\<union>{~}"
+"ctype _ = range \<B>"
 
 
 

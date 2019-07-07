@@ -17,8 +17,8 @@ definition dAnot::"(S_not, inNot, outNot) dAutomaton_strong"where
 
 
 (*And Sem*)
-definition notStep::"(S_not \<Rightarrow> (inNot\<^sup>\<Omega> \<rightarrow> outNot\<^sup>\<Omega>))"where
-"notStep = dawStateSem dAnot"
+abbreviation notStep::"(S_not \<Rightarrow> (inNot\<^sup>\<Omega> \<rightarrow> outNot\<^sup>\<Omega>))"where
+"notStep \<equiv> dawStateSem dAnot"
 
 definition notSpf::"(inNot\<^sup>\<Omega> \<rightarrow> outNot\<^sup>\<Omega>)"where
 "notSpf = notStep (dawInitState dAnot)"

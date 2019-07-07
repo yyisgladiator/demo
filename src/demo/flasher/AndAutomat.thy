@@ -17,8 +17,8 @@ definition dAand::"(S_and, inAnd, outAnd,emptychan) dAutomaton_weak"where
 
 (*And Sem*)
 
-definition andStep::"(S_and \<Rightarrow> (inAnd\<^sup>\<Omega> \<rightarrow> outAnd\<^sup>\<Omega>))"where
-"andStep = dawStateSem dAand"
+abbreviation andStep::"(S_and \<Rightarrow> (inAnd\<^sup>\<Omega> \<rightarrow> outAnd\<^sup>\<Omega>))"where
+"andStep \<equiv> dawStateSem dAand"
 
 definition andSpf::"(inAnd\<^sup>\<Omega> \<rightarrow> outAnd\<^sup>\<Omega>)"where
 "andSpf = andStep (dawInitState dAand)"
@@ -27,17 +27,13 @@ interpretation and_smap:smapGen "dAand" "buildAndinSBE" "buildAndoutSBE" "Single
   sorry
 
 lemma andingetset_eq:"andInSBE.getterSB\<cdot>(andInSBE.setterSB\<cdot>s) = s"
-  apply(rule andInSBE.getset_eq)
-  apply(simp add: chIsEmpty_def cEmpty_def)
-  using cEmpty_def somechan_class.chan_empty by fastforce
+  by(simp add: andInSBE.getset_eq)
 
 lemma andoutgetset_eq:"andOutSBE.getterSB\<cdot> (andOutSBE.setterSB\<cdot>s) = s"
-  apply(rule andOutSBE.getset_eq)
-  apply(simp add: chIsEmpty_def cEmpty_def)
-  using cEmpty_def somechan_class.chan_empty by fastforce
+  by(simp add: andOutSBE.getset_eq)
 
 lemma "andOutSBE.getterSB\<cdot>(andStep Single\<cdot>(andInSBE.setterSB\<cdot>input)) = (smap and_smap.smapTransition)\<cdot>input"
-  by(simp add: andStep_def and_smap.daut2smap andingetset_eq andoutgetset_eq)
+  by (simp add: andInSBE.getset_eq and_smap.daut2smap andoutgetset_eq)
 
 lemma "andOutSBE.getterSB\<cdot>(andStep Single\<cdot>(andInSBE.setterSB\<cdot>(\<up>(x,y)))) = \<up>(x\<and>y)"
   sorry

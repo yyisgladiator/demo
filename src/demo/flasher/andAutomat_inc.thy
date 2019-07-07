@@ -11,9 +11,17 @@ instance S_and::countable
 (*interpretations And*)
 
 interpretation andInSBE: sbeGen "buildAndinSBE"
-  sorry
+  apply(unfold_locales)
+  apply(simp add: buildandin_ctype)
+  apply (simp add: buildandin_inj)
+  apply (simp add: buildandin_surj)
+  by simp
 
 interpretation andOutSBE: sbeGen "buildAndoutSBE"
-  sorry
+  apply(unfold_locales)
+  apply(simp add: buildandout_ctype)
+  apply (simp add: buildandout_inj)
+  apply (simp add: buildandout_surj)
+  by simp
 
 end

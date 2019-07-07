@@ -11,9 +11,17 @@ instance S_not::countable
 (*interpretations And*)
 
 interpretation notInSBE: sbeGen "buildNotinSBE"
-  sorry
+  apply(unfold_locales)
+  apply(simp add: buildnotin_ctype)
+  apply (simp add: buildnotin_inj)
+  apply (simp add: buildnotin_surj)
+  by simp
 
 interpretation notOutSBE: sbeGen "buildNotoutSBE"
-  sorry
+  apply(unfold_locales)
+  apply(simp add: buildnotout_ctype)
+  apply (simp add: buildnotout_inj)
+  apply (simp add: buildnotout_surj)
+  by simp
 
 end
