@@ -13,7 +13,7 @@ text \<open>The channel-datatype is fixed before the proof begins.
 
 datatype channel = DummyChannel nat
 
-hide_const DummyChannel
+
 
 
 section \<open>Message Definition\<close>
@@ -32,10 +32,9 @@ instance M :: countable
 text \<open>Then one describes the types of each channel. Only Messages included are allowed to be
   transmitted\<close>
 definition ctype :: "channel \<Rightarrow> M set" where 
-"ctype = undefined"
+"ctype = (\<lambda>c. if c= DummyChannel (Abs_Nat undefined) then {} else undefined)"
 
-hide_fact ctype_def
-
+hide_const DummyChannel
 
 
 

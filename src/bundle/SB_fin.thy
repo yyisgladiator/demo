@@ -219,6 +219,7 @@ lemma gettersb_realboteps:"\<not>(chIsEmpty (TYPE ('cs))) \<Longrightarrow> gett
   unfolding getterSB_def
   apply(subst fix_eq)
   by (simp add: sb_cases_bot)
+
 lemma assumes "chIsEmpty (TYPE ('cs))"
   shows "(getterSB\<cdot>sb) = (sinftimes(\<up>(a)))"
   apply(insert assms,subst gettersb_emptyfix,simp) 

@@ -62,8 +62,9 @@ typedef ('c1::chan, 'c2::chan) union (infixr "\<union>" 20) = "if range (Rep::'c
 
 (* Axiom :/ *)
 lemma cempty_exists: "cEmpty \<noteq> {}"
-  apply(simp add: cEmpty_def)
-  using ctype.simps(3) by blast
+  by(simp add: cEmpty_def ctype_def)
+
+hide_fact ctype_def
 
 typedef ('c1::chan, 'c2::chan) minus (infixr "-" 20) = "(if range (Rep::'c1\<Rightarrow>channel) \<subseteq> range (Rep::'c2\<Rightarrow>channel) then cEmpty
                                                          else range (Rep::'c1\<Rightarrow>channel) - range (Rep::'c2\<Rightarrow>channel))" 
