@@ -6,6 +6,7 @@ begin
 typedef inAnd="{cin1,cin2}"
   by auto
 
+
 instantiation inAnd::"{somechan,finite}"
 begin
 definition "Rep = Rep_inAnd"
@@ -13,16 +14,17 @@ instance
   apply(standard)
   apply(auto simp add: Rep_inAnd_def cEmpty_def)
   using ctype.elims
-  apply (metis Rep_inAnd ctype.simps(4) ctype.simps(5) ctype.simps(6) ex_in_conv insertE insert_iff insert_not_empty sup_eq_bot_iff)
-  apply (meson Rep_inAnd_inject injI)
-  sorry
+  apply (metis Rep_inAnd ctype.simps(4) ctype.simps(5) ctype.simps(6) ex_in_conv insertE insert_iff)
+  apply (meson Rep_inAnd_inject injI) using ctype.elims Rep_inAnd apply simp
+  apply (metis ctype.simps(2) ctype.simps(4) ctype.simps(5) emptyE image_iff iso_tuple_UNIV_I)
+  using type_definition.Abs_image type_definition_inAnd typedef_finite_UNIV by fastforce
 end
 
 definition "Andin1 \<equiv> Abs_inAnd cin1"
 definition "Andin2 \<equiv> Abs_inAnd cin2"
 
 free_constructors inAnd for "Andin1"  | "Andin2"
-   apply auto
+  apply auto
   unfolding Andin1_def Andin2_def
   apply (metis Rep_inAnd Rep_inAnd_inverse empty_iff insert_iff)
   by (simp add: Abs_inAnd_inject)

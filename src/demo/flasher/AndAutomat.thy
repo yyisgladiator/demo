@@ -21,7 +21,7 @@ abbreviation andStep::"(S_and \<Rightarrow> (inAnd\<^sup>\<Omega> \<rightarrow> 
 "andStep \<equiv> dawStateSem dAand"
 
 definition andSpf::"(inAnd\<^sup>\<Omega> \<rightarrow> outAnd\<^sup>\<Omega>)"where
-"andSpf = andStep (dawInitState dAand)"
+"andSpf = dawSem dAand"
 
 interpretation and_smap:smapGen "dAand" "buildAndinSBE" "buildAndoutSBE" "Single"
   sorry
@@ -32,11 +32,13 @@ lemma andingetset_eq:"andInSBE.getterSB\<cdot>(andInSBE.setterSB\<cdot>s) = s"
 lemma andoutgetset_eq:"andOutSBE.getterSB\<cdot> (andOutSBE.setterSB\<cdot>s) = s"
   by(simp add: andOutSBE.getset_eq)
 
-lemma "andOutSBE.getterSB\<cdot>(andStep Single\<cdot>(andInSBE.setterSB\<cdot>input)) = (smap and_smap.smapTransition)\<cdot>input"
+lemma andstep2smap:"andOutSBE.getterSB\<cdot>(andStep state\<cdot>(andInSBE.setterSB\<cdot>input)) = (smap and_smap.smapTransition)\<cdot>input"
   by (simp add: andInSBE.getset_eq and_smap.daut2smap andoutgetset_eq)
 
-lemma "andOutSBE.getterSB\<cdot>(andStep Single\<cdot>(andInSBE.setterSB\<cdot>(\<up>(x,y)))) = \<up>(x\<and>y)"
-  sorry
+lemma "andOutSBE.getterSB\<cdot>(andSpf\<cdot>(andInSBE.setterSB\<cdot>input)) =(smap and_smap.smapTransition)\<cdot>input"
+  by(simp add: andSpf_def dawSem_def andstep2smap)
 
+lemma "(smap and_smap.smapTransition)\<cdot>(\<up>(x,y) \<bullet> s) = \<up>(x\<and>y) \<bullet> smap and_smap.smapTransition\<cdot>s"
+  by(simp add: dAand_def dAnd_transition_def)
 
 end

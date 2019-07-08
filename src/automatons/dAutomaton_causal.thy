@@ -69,6 +69,68 @@ fun Rum_ta_strong::"('s::type, 'in::{chan,finite},'out) dAutomaton_strong \<Righ
 "Rum_ta_strong aut = Abs_spfs `(Rum_ta aut)"
 
 
+subsection \<open>*Causal Sem lemmas \<close>
+
+lemma dawstatesem_unfolding: "(dawStateSem automat s) = sb_case\<cdot>(\<lambda>sbe. \<Lambda> sb .
+                                                  let (nextState, output) = dawTransition automat s sbe in
+                            output \<bullet>\<^sup>\<surd> ((dawStateSem automat) nextState\<cdot>sb))"
+  unfolding dawStateSem_def
+  apply(subst fix_eq)
+  apply(subst beta_cfun)
+  apply(intro cont2cont; simp)
+  by auto
+
+(* TODO: einheitliche assumption für diesen fall, KEIN rohes exists ! *)
+lemma dawstatesem_bottom:assumes "\<exists>(c::'b::{finite,chan}). (sb::'b\<^sup>\<Omega>)  \<^enum>  c = \<epsilon>"
+  shows "(dawStateSem automat s)\<cdot>sb = \<bottom>"
+  sorry
+
+lemma dawstatesem_strict:
+  shows "(dawStateSem automat s)\<cdot>\<bottom> = \<bottom>"
+  oops  (* gilt nicht für cEmpty-Bündel *)
+
+lemma dawstatesem_step: assumes "\<And>c . sb \<^enum> c \<noteq> \<epsilon>"
+  shows "(dawStateSem automat s)\<cdot>sb = snd (dawTransition da state (sbHdElem sb)) \<bullet>\<^sup>\<surd> h (fst (dawTransition da state (sbHdElem sb)))\<cdot>(sbRt\<cdot>sb)"
+  oops
+
+lemma dawstatesem_final:assumes "\<And>c . sb \<^enum> c \<noteq> \<epsilon>"  (* Todo: einheitliche assumption *)
+  shows "(dawStateSem automat s)\<cdot>sb =
+  (dawNextOut automat s (sbHdElem sb)) \<bullet>\<^sup>\<surd> (((dawStateSem automat (dawNextState automat s (sbHdElem sb))))\<cdot>(sbRt\<cdot>sb))"
+  oops
+
+lemma dawstatesem_final_h2:
+  shows "(dawStateSem automat s)\<cdot>(sbECons sbe\<cdot>sb) =
+  (dawNextOut automat s sbe) \<bullet>\<^sup>\<surd> ((dawStateSem automat (dawNextState automat s sbe))\<cdot>sb)"
+  oops (* Das soll gehen mit "by(simp add: dastatesem_step)". Wenn nicht, mehr in den simplifier packen *)
+
+lemma dastatesem_stepI:
+  assumes "(dawNextOut da s sbe) = out"
+      and "(dawNextState da s sbe) = nextState"
+  shows "(dawStateSem da s)\<cdot>(sbECons sbe\<cdot>sb) = out  \<bullet>\<^sup>\<surd> ((dawStateSem da nextState)\<cdot>sb)"
+  oops
+
+
+(*
+lemma dastatesem_strict[simp]: "spfIsStrict (daStateSem da state)"
+  oops
+*)
+
+lemma dawstatesem_weak:
+  shows     "weak_well (dawStateSem automat s)"
+  oops
+
+lemma dassem_insert:
+  "dasSem automat\<cdot>sb = (dawInitOut automat) \<bullet>\<^sup>\<surd> ((dawStateSem automat (dawInitState automat))\<cdot>sb)"
+  by (simp add: dasSem_def)
+
+lemma dassem_bottom:
+  shows "dasSem automat\<cdot>\<bottom> = sbe2sb (dawInitOut automat)"
+  oops
+
+lemma dassem_strong:
+  shows "strong_well (dasSem automat)"
+  oops
+
 section \<open>automaton to sscanl equivalence locale\<close>
 
 locale sscanlGen =
@@ -86,11 +148,24 @@ abbreviation "sscanlTransition \<equiv> (\<lambda> s a.
 
 lemma daut2sscanl:"dawStateSem da state\<cdot>(input::'in\<^sup>\<Omega>) = 
        sbeGen.setterSB fout\<cdot>(sscanlAsnd sscanlTransition state\<cdot>(sbeGen.getterSB fin\<cdot>input))"
-  sorry
-
-lemma daut2sscnalinit:"range(Rep::'out \<Rightarrow> channel) = range(Rep::'initOut\<Rightarrow> channel) \<Longrightarrow> dawSem da\<cdot>input = 
-  sbeConvert(dawInitOut da) \<bullet>\<^sup>\<surd> dawStateSem da state\<cdot>(input::'in\<^sup>\<Omega>)"
-  sorry
+proof(induction input)
+  case adm
+  then show ?case
+    by simp
+next
+  case (least input)
+  then show ?case
+    apply(simp add: sbIsLeast_def)
+    apply(cases "chIsEmpty TYPE('in)")
+     apply auto defer
+    apply(subst dawstatesem_bottom)
+    sorry
+next
+  case (sbeCons sbe input)
+  then show ?case 
+    apply(subst sbeGen.gettersb_unfold,simp add: sbegenfin)
+    sorry
+qed
 
 (* TODO: initiale ausgabe ... "sscanlA" kann nichts partielles ausgben.
   dh alles oder nichts. Das kann man durch den typ abfangen!
@@ -115,10 +190,21 @@ abbreviation "smapTransition \<equiv> (\<lambda>a::'a.
   let nextOut = snd((dawTransition da) loopState (sbeGen.setter fin a)) in
      sbeGen.getter fout nextOut)"
 
-lemma daut2smap:"dawStateSem da state\<cdot>(input::'in\<^sup>\<Omega>) = 
-       sbeGen.setterSB fout\<cdot>(smap smapTransition\<cdot>(sbeGen.getterSB fin\<cdot>input))"
+lemma sscanl2smap:
+  assumes "\<And>e. fst(f s e) = s"
+  and "g = (\<lambda>a. snd(f s a))"
+shows"sscanlAsnd f s = smap g"
   sorry
 
+lemma daut2smap:"dawStateSem da loopstate\<cdot>(input::'in\<^sup>\<Omega>) = 
+       sbeGen.setterSB fout\<cdot>(smap smapTransition\<cdot>(sbeGen.getterSB fin\<cdot>input))"
+  apply(subst sscanlGen.daut2sscanl[of fin fout])
+  using scscanlgenf sscanlGen.sbegenfin apply auto[1]
+  apply(subst sscanl2smap[of"(\<lambda>(s::'state) a::'a.
+          let (nextState::'state, nextOut::'out\<^sup>\<surd>) = dawTransition da s (sbeGen.setter fin a) in (nextState, sbeGen.getter fout nextOut))" loopstate smapTransition])
+  apply auto 
+  using singlestate defer
+  sorry
 end
 
 sublocale  smapGen \<subseteq> sscanlGen
