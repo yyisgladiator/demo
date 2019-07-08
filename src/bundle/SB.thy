@@ -151,6 +151,12 @@ lemma sbgetch_bot[simp]:"\<bottom> \<^enum>\<^sub>\<star> c = \<epsilon>"
   apply(simp add: sbGetCh.rep_eq bot_sb)
   by (metis Rep_sb_strict app_strict bot_sb)
 
+lemma sb_belowI: assumes "\<And>c. sb1 \<^enum> c \<sqsubseteq> sb2 \<^enum> c"
+  shows "sb1 \<sqsubseteq> sb2"
+  apply(subst below_sb_def)
+  apply(rule fun_belowI)
+  by (metis assms sbgetch_insert2)
+
 lemma sb_eqI:
     assumes "\<And>c. sb1 \<^enum> c = sb2 \<^enum> c"
     shows "sb1 = sb2"
@@ -357,6 +363,11 @@ lemma sbunion_getch[simp]:fixes c::"'a"
       assumes"Rep c \<in> range(Rep::'c \<Rightarrow> channel)"
       shows  "(sbUnion::'a\<^sup>\<Omega>\<rightarrow> 'b\<^sup>\<Omega> \<rightarrow> 'c\<^sup>\<Omega>)\<cdot>cb\<cdot>db \<^enum>\<^sub>\<star> c = cb \<^enum>\<^sub>\<star> c"
   by(simp add: Abs_sb_inverse sbGetCh.rep_eq sbunion_insert assms)
+
+lemma sbunion_eq [simp]: "sb1 \<uplus>\<^sub>\<star> sb2 = sb1"
+  apply(rule sb_eqI)
+  by simp
+
 
 subsection \<open>sbConvert\<close>
 
