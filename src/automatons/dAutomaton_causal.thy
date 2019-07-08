@@ -134,17 +134,21 @@ lemma dassem_strong:
 section \<open>automaton to sscanl equivalence locale\<close>
 
 locale sscanlGen =
-  fixes da::"('state::countable, 'in::{chan, finite}, 'out::{chan,finite}, 'initOut::chan) dAutomaton_weak"
-  and fin::"'a::countable \<Rightarrow> 'in \<Rightarrow> M"  
-  and fout::"'b::countable \<Rightarrow> 'out \<Rightarrow> M"
+  fixes daTransition::"'state::countable \<Rightarrow> 'a::countable \<Rightarrow> ('state\<times>'b::countable)"
+and    daInitialState::"'state"
+and   daInitialOut::"'b"    (* TODO, schwach kausal = keine initiale ausgabe! *)
+  and fin::"'a::countable \<Rightarrow> 'in::{chan,finite} \<Rightarrow> M"  
+  and fout::"'b::countable \<Rightarrow> 'out::{chan,finite} \<Rightarrow> M"
   assumes sbegenfin:"sbeGen fin"
       and sbegenfout:"sbeGen fout"
 begin
 
-abbreviation "sscanlTransition \<equiv> (\<lambda> s a. 
-  let (nextState, nextOut) = dawTransition da s (sbeGen.setter fin a) in
-     (nextState, sbeGen.getter fout nextOut)
-)"
+definition daTransitionH::"'state \<Rightarrow> 'in\<^sup>\<surd> \<Rightarrow> ('state \<times> 'out\<^sup>\<surd>)" where
+"daTransitionH state sbe = (let (s,output) = daTransition state (sbeGen.getter fin sbe) in 
+  (s, sbeGen.setter fout output))"
+
+definition "da = \<lparr> dawTransition = daTransitionH,
+                 dawInitState =daInitialState, dawInitOut =  (sbeGen.setter fout daInitialOut) \<rparr>"
 
 lemma daut2sscanl:"dawStateSem da state\<cdot>(input::'in\<^sup>\<Omega>) = 
        sbeGen.setterSB fout\<cdot>(sscanlAsnd sscanlTransition state\<cdot>(sbeGen.getterSB fin\<cdot>input))"
@@ -167,6 +171,12 @@ next
     sorry
 qed
 
+fun stateSemList::"'state \<Rightarrow> 'a list \<Rightarrow> 'b list" where
+"stateSemList _ [] = []" |
+"stateSemList state (l#ls) = snd(daTransition state l) # stateSemList (fst (daTransition state l)) ls"
+
+lemma "dawStateSem da state\<cdot>(sbeGen.setterList fin input) = sbeGen.setterList fout (stateSemList state input)"
+  sorry
 (* TODO: initiale ausgabe ... "sscanlA" kann nichts partielles ausgben.
   dh alles oder nichts. Das kann man durch den typ abfangen!
     * weak = "chIstEmpty" als assumption (oder besser, dafür eine klasse anlegen)
