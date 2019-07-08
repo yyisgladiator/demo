@@ -18,15 +18,15 @@ fun sbElem_well :: "('c::chan \<Rightarrow> M) option \<Rightarrow> bool" where
 
 text\<open>Type sbElem is can be interpreted as a Timeslice\<close>
 typedef 'c::chan sbElem  ("(_\<^sup>\<surd>)" [1000] 999) = "{f:: ('c::chan \<Rightarrow> M) option. sbElem_well f}"
-proof(cases "((range (Rep::'c \<Rightarrow> channel) \<subseteq> cEmpty))")
+proof(cases "chIsEmpty(TYPE('c))")
   case True
   then show ?thesis
     apply(rule_tac x=None in exI)
-    by simp
+    by (simp add: chIsEmpty_def)
 next
   case False
   then have "\<forall>c\<in>(range (Rep::'c\<Rightarrow>channel)). ctype c \<noteq> {}"
-    using cEmpty_def chan_botsingle by blast
+    using cEmpty_def chIsEmpty_def chan_botsingle by blast
   then have "sbElem_well (Some(\<lambda>(c::'c). (SOME m. m \<in> ctype (Rep c))))"
     apply(simp add: sbElem_well.cases,auto)
     by (simp add: some_in_eq)
@@ -62,6 +62,11 @@ lemma sbtypeepmpty_sbenone[simp]:"chIsEmpty TYPE ('cs) \<Longrightarrow> (sbe::'
   apply(simp add: sbtypeempty_sbewell Abs_sbElem_inverse)
   by (metis not_Some_eq Rep_sbElem mem_Collect_eq chIsEmpty_def sbtypeempty_notsbewell)
 
+lemma sbtypenotempty_somesbe:"\<not>(chIsEmpty TYPE ('c)) \<Longrightarrow>\<exists>f::'c \<Rightarrow> M. sbElem_well (Some f)"
+  apply(rule_tac x="(\<lambda>(c::'c). (SOME m. m \<in> ctype (Rep c)))" in exI)
+  apply(simp add: chIsEmpty_def cEmpty_def sbElem_well.cases some_in_eq,auto)
+  using cEmpty_def chan_botsingle by blast
+
 setup_lifting type_definition_sbElem
 
 subsection \<open>sbElem functions\<close>
@@ -71,6 +76,12 @@ text\<open>This function retrieves an element on channel e from the sbElem. This
 definition sbegetch::"'e \<Rightarrow> 'c\<^sup>\<surd> \<Rightarrow> M"where (*works if sbe \<noteq> None* and 'e \<subseteq> 'c *)
 "sbegetch c = (\<lambda> sbe. ((the (Rep_sbElem sbe)) (Abs (Rep c))))"
 
+
+lemma sbtypenotempty_fex[simp]:"\<not>(chIsEmpty TYPE ('cs)) \<Longrightarrow> \<exists>f. Rep_sbElem (sbe::'cs\<^sup>\<surd>) = (Some f)"
+  apply(rule_tac x="(\<lambda>(c::'c). (THE m. m= sbegetch c sbe))" in exI)
+  apply(simp add: sbegetch_def)
+  apply(auto simp add: chIsEmpty_def)
+  by (metis option.collapse repinrange sbElem_well.simps(1) sbelemwell2fwell subsetD)
 
 text\<open>This function Converts the Domain of an sbElem. This works if the Domain it converts to, is
       smaller or equal\<close>
