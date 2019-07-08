@@ -71,6 +71,9 @@ lemma sbtypeepmpty_sbbot[simp]:"chIsEmpty TYPE ('cs::chan) \<Longrightarrow> (sb
   by(metis (mono_tags) Rep_sb bot.extremum cEmpty_def f_inv_into_f image_subset_iff iso_tuple_UNIV_I 
       mem_Collect_eq rangeI range_eqI sValues_def sb_well_def strict_sdom_rev subset_antisym)
 
+lemma sbwell2fwell[simp]:"Rep_sb sb = f \<Longrightarrow> sb_well (f)"
+  using Rep_sb by auto
+
 section \<open>Definitions \<close>
 
 subsection \<open>Domain of the SB\<close>
@@ -202,7 +205,7 @@ lemma sblen_mono:"monofun sbLen"
 
 subsubsection \<open> sbLen lemmas \<close>
 
-lemma sblen_min_len [simp]: "sbLen sb \<le> #(sb \<^enum>\<^sub>\<star> c)" (* TODO: vermutlich typ von "c" fixieren *)
+lemma sblen_min_len [simp]: "\<not>chIsEmpty(TYPE('cs)) \<Longrightarrow>sbLen (sb::'cs\<^sup>\<Omega>) \<le> #(sb \<^enum> c)" (* TODO: vermutlich typ von "c" fixieren *)
   oops  (* Sonderfall: "cEmpty" *)
 
 lemma sblen_sbeqI:"x \<sqsubseteq> y \<Longrightarrow> sbLen x = \<infinity> \<Longrightarrow> x = y"
@@ -259,7 +262,7 @@ lemma sb_ind[case_names adm least sbeCons, induct type: sb]:
       and "\<And>sb. sbIsLeast sb \<Longrightarrow> P sb"
       and "\<And>sbe sb. P sb  \<Longrightarrow> \<not>chIsEmpty TYPE ('cs) \<Longrightarrow> P (sbe \<bullet>\<^sup>\<surd> sb)"
   shows  "P x"
-  oops
+  sorry
 
 subsection\<open>sbHdElem\<close>
 
