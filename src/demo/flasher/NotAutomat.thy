@@ -25,7 +25,8 @@ definition notSpf::"(inNot\<^sup>\<Omega> \<rightarrow> outNot\<^sup>\<Omega>)"w
 
 
 interpretation not_smap:smapGen "dAnot" "buildNotinSBE" "buildNotoutSBE" Single
-  sorry
+  apply(unfold_locales)
+  using S_not.exhaust by blast
 
 lemma notingetset_eq:"notInSBE.getterSB\<cdot>(notInSBE.setterSB\<cdot>s) = s"
   by(simp add: notInSBE.getset_eq)
