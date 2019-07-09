@@ -37,7 +37,7 @@ lemma sbconvert_sbeq:assumes"range (Rep::'a::chan\<Rightarrow>channel) = range(R
 
 
 lemma assumes "\<And>c::inFlash. input1 \<^enum>\<^sub>\<star> c = input2 \<^enum>\<^sub>\<star> c" 
-  shows"\<And>c. flasherComp\<cdot>input1 \<^enum>\<^sub>\<star> c= convflasherComp\<cdot>input2 \<^enum>\<^sub>\<star> c"
+  shows"\<And>c. flasherComp\<cdot>input1 \<^enum>\<^sub>\<star> c= convflasherComp\<cdot>input2 \<^enum> c"
   apply(simp add: sbgetch_insert convflasherComp_def spfConvert_def,auto)
   apply(subst sbconvert_sbeq,simp_all)
   apply (metis (mono_tags, hide_lams) Abs_inFlash_cases Flashin1_rep Rep_inFlash_def UNIV_eq_I image_insert image_is_empty insertI1 rangecompin singletonD)

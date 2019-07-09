@@ -155,7 +155,7 @@ definition "da = \<lparr> dawTransition = daTransitionH,
 definition "(daw::('state, 'in, 'out, 'c) dAutomaton_weak) = \<lparr> dawTransition = daTransitionH,
                  dawInitState =daInitialState, dawInitOut =  Abs_sbElem(None)\<rparr>"
 
-lemma daut2sscanl:"dawStateSem da state\<cdot>(input::'in\<^sup>\<Omega>) = 
+lemma daut2sscanl:"dawStateSem daw state\<cdot>(input::'in\<^sup>\<Omega>) = 
        sbeGen.setterSB fout\<cdot>(sscanlAsnd daTransition state\<cdot>(sbeGen.getterSB fin\<cdot>input))"
 proof(induction input)
   case adm
@@ -212,12 +212,12 @@ shows"sscanlAsnd f s = smap g"
   apply(rule cfun_eqI)
   by(induct_tac x rule: ind,simp_all add: assms)
 
-lemma daut2smap:"dawStateSem (sscanlGen.da daTransition daInitialState daInitialOut fin fout) loopState\<cdot>(input::'in\<^sup>\<Omega>) = 
+lemma daut2smap:"dawStateSem (sscanlGen.daw daTransition daInitialState fin fout) loopState\<cdot>(input::'in\<^sup>\<Omega>) = 
        sbeGen.setterSB fout\<cdot>(smap (\<lambda>e. snd(daTransition loopState e))\<cdot>(sbeGen.getterSB fin\<cdot>input))"
-  apply(subst sscanlGen.daut2sscanl)
+  apply(subst sscanlGen.daut2sscanl)(*
   using scscanlgenf sscanlGen.sbegenfin apply auto[1]
   apply(subst sscanl2smap[of daTransition loopState "(\<lambda>e. snd(daTransition loopState e))"])
-  using singlestate by auto
+  using singlestate by auto*) oops
 
 end
 
