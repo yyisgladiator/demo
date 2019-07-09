@@ -57,15 +57,23 @@ lemma dastatesem_unfolding: "(daStateSem automat s) = sb_case\<cdot>(\<lambda>sb
   apply(subst beta_cfun)
   apply(intro cont2cont; simp)
   by auto
+  
 
 (* TODO: einheitliche assumption für diesen fall, KEIN rohes exists ! *)
-lemma dastatesem_bottom:assumes "\<exists>(c::'b::{finite,chan}). (sb::'b\<^sup>\<Omega>)  \<^enum>  c = \<epsilon>"
+lemma dastatesem_bottom:
+  assumes "\<exists>(c::'b::{finite,chan}). (sb::'b\<^sup>\<Omega>)  \<^enum>  c = \<epsilon>"
+  and "\<not> chIsEmpty TYPE('b)"
   shows "(daStateSem automat s)\<cdot>sb = \<bottom>"
-  oops
+  apply (subst dastatesem_unfolding)
+  apply (subst sb_case_def)
+  apply (subst beta_cfun, simp_all)
+  apply (intro cont2cont; simp_all)
+  using assms by (simp add: sbHdElem_h_cont.rep_eq assms sbHdElem_h_def chIsEmpty_def)
 
 lemma dastatesem_strict:
-  shows "(daStateSem automat s)\<cdot>\<bottom> = \<bottom>"
-  oops  (* gilt nicht für cEmpty-Bündel *)
+  assumes "\<not> chIsEmpty TYPE('b::{finite, chan})"
+  shows "(daStateSem automat s)\<cdot>(\<bottom>::'b\<^sup>\<Omega>) = \<bottom>"
+  by (simp add: assms dastatesem_bottom)
 
 lemma dastatesem_step: assumes "\<And>c . sb \<^enum> c \<noteq> \<epsilon>"
   shows "(daStateSem automat s)\<cdot>sb = snd (daTransition da state (sbHdElem sb)) \<bullet>\<^sup>\<Omega> h (fst (daTransition da state (sbHdElem sb)))\<cdot>(sbRt\<cdot>sb)"
