@@ -7,7 +7,7 @@ text \<open>You need to set THIS directory as Session-Directory. NOT the root-di
 
 lemma cempty_empty[simp]: "cEmpty = {c3}"
   apply(simp add: cEmpty_def)
-  by (smt Collect_cong ctype.cases ctype.simps empty_not_UNIV singleton_conv)
+  by(insert ctype.elims,auto)
 
 text \<open>Now we define and instantiate three different chan types, that will be used throughout 
       the demo\<close>
