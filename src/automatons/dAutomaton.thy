@@ -75,25 +75,44 @@ lemma dastatesem_strict:
   shows "(daStateSem automat s)\<cdot>(\<bottom>::'b\<^sup>\<Omega>) = \<bottom>"
   by (simp add: assms dastatesem_bottom)
 
-lemma dastatesem_step: assumes "\<And>c . sb \<^enum> c \<noteq> \<epsilon>"
-  shows "(daStateSem automat s)\<cdot>sb = snd (daTransition da state (sbHdElem sb)) \<bullet>\<^sup>\<Omega> h (fst (daTransition da state (sbHdElem sb)))\<cdot>(sbRt\<cdot>sb)"
-  oops
+lemma type_chnempty: 
+  assumes "\<And>c::'a. sb  \<^enum>  c \<noteq> \<epsilon>"
+  shows "\<not> chIsEmpty TYPE('a)" and "\<not> range (Rep::'a\<Rightarrow>channel) \<subseteq> cEmpty"
+  apply (metis (full_types) assms sbgetch_bot sbtypeepmpty_sbbot)
+  by (metis (mono_tags, lifting) Collect_mem_eq Collect_mono_iff UNIV_I assms cEmpty_def dual_order.refl image_subset_iff sbgetch_ctype_notempty)
 
-lemma dastatesem_final:assumes "\<And>c . sb \<^enum> c \<noteq> \<epsilon>"  (* Todo: einheitliche assumption *)
+lemma dastatesem_step: 
+  assumes "\<And>c . sb \<^enum> c \<noteq> \<epsilon>"
+  shows "(daStateSem automat s)\<cdot>sb = snd (daTransition da state (sbHdElem sb)) \<bullet>\<^sup>\<Omega> daStateSem da (fst (daTransition da state (sbHdElem sb)))\<cdot>(sbRt\<cdot>sb)"
+  apply (subst dastatesem_unfolding)
+  apply (subst sb_case_def)
+  apply (subst beta_cfun, simp_all)
+  apply (intro cont2cont; simp_all)
+  using assms apply (simp add: sbHdElem_h_cont.rep_eq sbHdElem_h_def)
+  apply (rule conjI)
+  apply (rule impI)
+  using assms type_chnempty(2) apply blast
+  apply (rule impI)
+  apply (subst(asm) type_chnempty(2) [where sb="sb"], simp_all add: assms)
+  sorry
+  
+
+lemma dastatesem_final:
+  assumes "\<And>c . sb \<^enum> c \<noteq> \<epsilon>"  (* Todo: einheitliche assumption *)
   shows "(daStateSem automat s)\<cdot>sb =
   (daNextOut automat s (sbHdElem sb)) \<bullet>\<^sup>\<Omega> (((daStateSem automat (daNextState automat s (sbHdElem sb))))\<cdot>(sbRt\<cdot>sb))"
-  oops
+  by (metis assms daNextOut_def daNextState_def dastatesem_step)
 
 lemma dastatesem_final_h2:
   shows "(daStateSem automat s)\<cdot>(sbECons sbe\<cdot>sb) =
   (daNextOut automat s sbe) \<bullet>\<^sup>\<Omega> ((daStateSem automat (daNextState automat s sbe))\<cdot>sb)"
-  oops (* Das soll gehen mit "by(simp add: dastatesem_step)". Wenn nicht, mehr in den simplifier packen *)
+  sorry (* Das soll gehen mit "by(simp add: dastatesem_step)". Wenn nicht, mehr in den simplifier packen *)
 
 lemma dastatesem_stepI:
   assumes "(daNextOut da s sbe) = out"
       and "(daNextState da s sbe) = nextState"
   shows "(daStateSem da s)\<cdot>(sbECons sbe\<cdot>sb) = out  \<bullet>\<^sup>\<Omega> ((daStateSem da nextState)\<cdot>sb)"
-  oops
+  by (simp add: assms dastatesem_final_h2)
 
 
 (*
