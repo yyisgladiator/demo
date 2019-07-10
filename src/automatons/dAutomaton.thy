@@ -83,19 +83,23 @@ lemma type_chnempty:
 
 lemma dastatesem_step: 
   assumes "\<And>c . sb \<^enum> c \<noteq> \<epsilon>"
-  shows "(daStateSem automat s)\<cdot>sb = snd (daTransition da state (sbHdElem sb)) \<bullet>\<^sup>\<Omega> daStateSem da (fst (daTransition da state (sbHdElem sb)))\<cdot>(sbRt\<cdot>sb)"
+  shows "(daStateSem da s)\<cdot>sb = snd (daTransition da s (sbHdElem sb)) \<bullet>\<^sup>\<Omega> daStateSem da (fst (daTransition da s (sbHdElem sb)))\<cdot>(sbRt\<cdot>sb)"
   apply (subst dastatesem_unfolding)
   apply (subst sb_case_def)
   apply (subst beta_cfun, simp_all)
   apply (intro cont2cont; simp_all)
+  apply (subst case_prod_unfold)
+  apply (subst sbHdElem_def)+
   using assms apply (simp add: sbHdElem_h_cont.rep_eq sbHdElem_h_def)
   apply (rule conjI)
   apply (rule impI)
   using assms type_chnempty(2) apply blast
   apply (rule impI)
   apply (subst(asm) type_chnempty(2) [where sb="sb"], simp_all add: assms)
-  sorry
-  
+  apply (case_tac "\<exists>sbe. Iup (Abs_sbElem (Some (\<lambda>c::'a. shd (sb  \<^enum>  c)))) = up\<cdot>sbe")
+  apply auto
+  apply (subst(asm) up_def)
+  by (subst(asm) beta_cfun, simp_all add: up_def)
 
 lemma dastatesem_final:
   assumes "\<And>c . sb \<^enum> c \<noteq> \<epsilon>"  (* Todo: einheitliche assumption *)
