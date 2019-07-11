@@ -49,4 +49,24 @@ lemma assumes "\<And>c::inFlash. input1 \<^enum>\<^sub>\<star> c = input2 \<^enu
   using compout2flashout
   by blast
 
+lemma assumes "flasherSetterout (port_i, port_intern, port_o) = flasherComp\<cdot>(flasherSetterin (port_i))"
+  shows "andSpf\<cdot>(andSetterin (port_i, port_intern)) = andSetterout port_o"
+    and "notSpf\<cdot>(notSetterin(port_intern)) = notSetterout port_i"
+  oops
+datatype S = State S_and S_not bool
+
+instance S::countable
+  by(countable_datatype)
+
+fun flashertransition::"S \<Rightarrow> bool \<Rightarrow> S \<times> bool"where
+"flashertransition (State sand snot inputcin1) inputcin2 = (let (nextand,andout) = dAand_transition sand (inputcin1, inputcin2);
+                                                       (nextnot, notout) = dAnot_transition snot andout in
+                                                   ((State nextand nextnot notout), andout))"
+
+lemma "flashertransition (State sand snot inputcin1) inputcin2 = (State sand snot (inputcin1 \<longrightarrow> \<not> inputcin2), inputcin1 \<and> inputcin2)"
+  by(simp)
+
+definition flashersscanl::"bool stream \<rightarrow> bool stream"where
+"flashersscanl = sscanlAsnd flashertransition (State S_and.Single S_not.Single True)"
+
 end
