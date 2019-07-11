@@ -47,7 +47,13 @@ lemma chan_eq[simp]:"Rep (c::'c::chan) = x \<Longrightarrow> x\<in> range(Rep::'
                         \<Longrightarrow> Rep((Abs::channel \<Rightarrow> 'd)(Rep c)) = x"
   by (simp add: f_inv_into_f)
 
+lemma cempty_rule[simp]:assumes"chIsEmpty(TYPE('c::chan))"
+  shows"Rep (c::'c) \<in> cEmpty"
+  using assms chan_botsingle chIsEmpty_def by blast
 
+lemma cnotempty_rule[simp]:assumes"\<not>chIsEmpty(TYPE('c::chan))"
+  shows"Rep (c::'c) \<notin> cEmpty"
+  using assms chan_botsingle chIsEmpty_def by blast
 
 
 declare[[show_types]]
