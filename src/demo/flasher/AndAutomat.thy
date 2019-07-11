@@ -8,9 +8,8 @@ fun dAand_transition::"S_and \<Rightarrow> (bool\<times> bool) \<Rightarrow> (S_
 "dAand_transition S (bool1,bool2) = (S,(bool1 \<and> bool2))"
 
 
-interpretation and_smap:smapGen "dAand_transition" Single "True" "buildAndinSBE" "buildAndoutSBE" "TYPE(emptychan)" "Single"
+interpretation and_smap:smapGen "dAand_transition" Single "buildAndinSBE" "buildAndoutSBE" "Single"
   apply(unfold_locales)
-  apply simp
   using S_and.exhaust by blast
 
 (*And Sem*)

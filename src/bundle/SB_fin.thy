@@ -287,5 +287,51 @@ fun setterList::"'a list \<Rightarrow> 'cs\<^sup>\<Omega>" where
 
 end
 
+locale sbGen = 
+  fixes lConstructor::" 'a::pcpo \<Rightarrow> 'cs::chan  \<Rightarrow> M stream"
+  assumes c_type: "\<And>a c. sValues (lConstructor a c) \<subseteq> ctype (Rep c)"
+    and c_inj: "inj lConstructor"
+    and c_surj: "\<And>f. sb_well f \<Longrightarrow> f\<in>range lConstructor" (* Schöner? *)
+begin
+
+lift_definition setter::"'a \<Rightarrow> ('cs::chan)\<^sup>\<Omega>"is"lConstructor"
+  by (simp add: c_type sb_well_def)
+
+definition getter::"'cs\<^sup>\<Omega> \<Rightarrow> 'a" where
+"getter= (inv lConstructor) o  Rep_sb"
+
+lemma get_set[simp]: "getter (setter a) = a"
+  unfolding getter_def
+  by (simp add: setter.rep_eq c_inj)  
+
+lemma set_inj: "inj setter"
+  by (metis get_set injI)
+
+lemma set_surj: "surj setter"
+  unfolding setter_def
+proof(simp add: surj_def,auto)
+  fix y::"'cs\<^sup>\<Omega>"
+ obtain f where f_def:"Rep_sb y=f"
+   by simp
+ then obtain x where x_def:"f = lConstructor x"
+    by (metis c_inj c_surj f_the_inv_into_f sbwell2fwell)
+  then show "\<exists>x::'a. y = Abs_sb (lConstructor x)" 
+    by (metis Rep_sb_inverse f_def)
+qed
+
+lemma set_bij: "bij setter"
+  using bij_betw_def set_inj set_surj by auto
+
+lemma get_inv_set: "getter = (inv setter)"
+  by (metis get_set set_surj surj_imp_inv_eq)
+
+lemma set_get[simp]: "setter (getter sbe) = sbe"
+  apply(simp add: get_inv_set)
+  by (meson bij_inv_eq_iff set_bij)
+
+lemma "getter A = getter B \<Longrightarrow> A = B"
+  by (metis set_get)
+
+end
 
 end

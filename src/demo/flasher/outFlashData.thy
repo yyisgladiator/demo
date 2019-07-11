@@ -1,6 +1,6 @@
 theory outFlashData
 
-imports bundle.sbElem
+imports bundle.SB
 begin
 
 typedef outFlash="{cout,cin2}"
@@ -65,6 +65,39 @@ proof -
     apply(subst fun_eq_iff,auto)
     by (smt Flashcin2_rep Flashout1_rep ctype.simps(5) ctype.simps(6) ctypewell imageE outFlash.exhaust outFlashChan.simps(1) outFlashChan.simps(2))
    thus ?thesis
+    by auto
+qed
+
+abbreviation "buildFlashoutSB \<equiv> outFlashChan (Rep_cfun (smap \<B>)) (Rep_cfun (smap \<B>))" 
+
+lemma buildflashinsb_ctype: "sdom\<cdot>(buildFlashoutSB a c) \<subseteq> ctype (Rep c)"
+  by(cases c; cases a;simp)
+
+lemma buildflashinsb_inj: "inj buildFlashoutSB"
+  apply(rule injI)
+  sorry
+
+
+lemma buildflashinsb_range: "(\<Union>a. sdom\<cdot>(buildFlashoutSB a c)) = ctype (Rep c)"
+  apply(cases c)
+  apply auto 
+  apply (metis (no_types, lifting) in_mono smap_sdom_range)
+  apply(rule_tac x="\<up>xa" in exI) 
+  apply simp
+  using smap_sdom_range apply blast
+  apply(rule_tac x="\<up>xa" in exI) 
+  by simp
+
+lemma buildflashinsb_surj: assumes "sb_well sb"
+  shows "sb \<in> range buildFlashoutSB"
+proof -
+  have ctypewell:"\<And> c. sValues (sb c) \<subseteq> ctype (Rep c)"
+    using assms
+    by (simp add: sb_well_def) 
+  hence "\<exists>prod. sb = buildFlashoutSB prod"
+    apply(subst fun_eq_iff,auto,simp add: sValues_def)
+    sorry
+  thus ?thesis
     by auto
 qed
 
