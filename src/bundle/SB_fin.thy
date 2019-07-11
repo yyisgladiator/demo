@@ -279,6 +279,12 @@ lemma setget_eq:"(\<forall>c. #(sb \<^enum> c) = k) \<Longrightarrow>setterSB\<c
     apply(subst settersb_unfold,simp)
   apply(subgoal_tac "\<And>c. #(sb \<^enum> c) \<le> #(sbe \<bullet>\<^sup>\<surd> sb  \<^enum>  c)",auto)
   oops  (* Nur für gleichlange ströme *)
+
+fun setterList::"'a list \<Rightarrow> 'cs\<^sup>\<Omega>" where
+"setterList [] = \<bottom>" |
+"setterList (l#ls) = (setter l) \<bullet>\<^sup>\<surd> (setterList ls)" 
+
+
 end
 
 
