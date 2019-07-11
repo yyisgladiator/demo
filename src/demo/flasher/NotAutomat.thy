@@ -8,10 +8,10 @@ fun dAnot_transition::"S_not \<Rightarrow> (bool) \<Rightarrow> (S_not \<times> 
 "dAnot_transition S (bool) = (S,(\<not>bool))"
 
 
-interpretation not_smap:smapGen "dAnot_transition" Single "True" "buildNotinSBE" "buildNotoutSBE" "TYPE(emptychan)" Single
+interpretation not_smap:smapGen "dAnot_transition" Single "buildNotinSBE" "buildNotoutSBE" Single
   apply(unfold_locales)
   apply auto[1]
-  using S_not.exhaust by blast
+  done
 
 abbreviation notStep::"(S_not \<Rightarrow> (inNot\<^sup>\<Omega> \<rightarrow> outNot\<^sup>\<Omega>))"where
 "notStep \<equiv> dawStateSem not_smap.da"

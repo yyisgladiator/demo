@@ -38,6 +38,7 @@ lemma sbconvert_sbeq:assumes"range (Rep::'a::chan\<Rightarrow>channel) = range(R
 
 lemma assumes "\<And>c::inFlash. input1 \<^enum>\<^sub>\<star> c = input2 \<^enum>\<^sub>\<star> c" 
   shows"\<And>c. flasherComp\<cdot>input1 \<^enum>\<^sub>\<star> c= convflasherComp\<cdot>input2 \<^enum> c"
+  oops
   apply(simp add: sbgetch_insert convflasherComp_def spfConvert_def,auto)
   apply(subst sbconvert_sbeq,simp_all)
   apply (metis (mono_tags, hide_lams) Abs_inFlash_cases Flashin1_rep Rep_inFlash_def UNIV_eq_I image_insert image_is_empty insertI1 rangecompin singletonD)
@@ -49,18 +50,27 @@ lemma assumes "\<And>c::inFlash. input1 \<^enum>\<^sub>\<star> c = input2 \<^enu
   using compout2flashout
   by blast
 
-lemma assumes "flasherSetterout (port_i, port_intern, port_o) = flasherComp\<cdot>(flasherSetterin (port_i))"
+(* use SB-setter! not sbeGen *)
+lemma assumes "flasherComp\<cdot>(flasherSetterin (port_i)) = flasherSetterout (port_i, port_intern, port_o)"
   shows "andSpf\<cdot>(andSetterin (port_i, port_intern)) = andSetterout port_o"
     and "notSpf\<cdot>(notSetterin(port_intern)) = notSetterout port_i"
   oops
+
+(* DEUTLICH WICHTIGER! *)
+lemma assumes "andSpf\<cdot>(andSetterin (port_i, port_intern)) = andSetterout port_o"
+    and "notSpf\<cdot>(notSetterin(port_intern)) = notSetterout port_i"
+  shows "flasherComp\<cdot>(flasherSetterin (port_i)) = flasherSetterout (port_o)"
+  oops
+
 datatype S = State S_and S_not bool
 
 instance S::countable
   by(countable_datatype)
 
 fun flashertransition::"S \<Rightarrow> bool \<Rightarrow> S \<times> bool"where
-"flashertransition (State sand snot inputcin1) inputcin2 = (let (nextand,andout) = dAand_transition sand (inputcin1, inputcin2);
-                                                       (nextnot, notout) = dAnot_transition snot andout in
+"flashertransition (State sand snot inputcin1) inputcin2 = 
+  (let (nextand,andout) = dAand_transition sand (inputcin1, inputcin2);
+                                             (nextnot, notout) = dAnot_transition snot andout in
                                                    ((State nextand nextnot notout), andout))"
 
 lemma "flashertransition (State sand snot inputcin1) inputcin2 = (State sand snot (inputcin1 \<longrightarrow> \<not> inputcin2), inputcin1 \<and> inputcin2)"
