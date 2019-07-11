@@ -12,7 +12,15 @@ default_sort "{finite,chan}"
 section\<open> SB functions with finite type \<close>
 
 subsection \<open>Cont version of sbHdElem\_h\<close>
+lemma cont_h1: assumes"s\<in>{c::'c. \<forall>i::nat. Y i  \<^enum>  c = \<epsilon>}"
+  shows" s\<in>UNIV\<and> s\<notin>{c::'c. \<exists>i::nat. Y i  \<^enum>  c \<noteq> \<epsilon>}"
+  
+  using assms by auto
 
+lemma cont_h2:assumes"\<exists>s. s\<in>UNIV \<and> s\<notin>{c::'c. \<exists>i::nat. Y i  \<^enum>  c \<noteq> \<epsilon>}"
+  shows"{c::'c. \<exists>i::nat. Y i  \<^enum>  c \<noteq> \<epsilon>}\<noteq>UNIV"
+
+  using assms by auto
 lift_definition sbHdElem_h_cont::"'c\<^sup>\<Omega> \<rightarrow> ('c\<^sup>\<surd>) u"is
 "sbHdElem_h"
   apply(simp add: sbHdElem_h_def)
@@ -47,6 +55,9 @@ proof-
       using h0 set_not_eps_def by auto
     have "set_not_eps \<noteq> UNIV"
       apply(simp add: set_not_eps_def)
+      apply(subst cont_h2)
+      apply(auto)
+    
       sorry
     then show "\<exists>c::'c. (\<Squnion>i::nat. Y i)  \<^enum>  c = \<epsilon>"
       using h1 by blast
@@ -268,6 +279,12 @@ lemma setget_eq:"(\<forall>c. #(sb \<^enum> c) = k) \<Longrightarrow>setterSB\<c
     apply(subst settersb_unfold,simp)
   apply(subgoal_tac "\<And>c. #(sb \<^enum> c) \<le> #(sbe \<bullet>\<^sup>\<surd> sb  \<^enum>  c)",auto)
   oops  (* Nur für gleichlange ströme *)
+
+fun setterList::"'a list \<Rightarrow> 'cs\<^sup>\<Omega>" where
+"setterList [] = \<bottom>" |
+"setterList (l#ls) = (setter l) \<bullet>\<^sup>\<surd> (setterList ls)" 
+
+
 end
 
 
