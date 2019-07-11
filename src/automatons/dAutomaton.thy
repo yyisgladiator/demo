@@ -1,6 +1,6 @@
 (*<*)
 theory dAutomaton
-  imports bundle.SB_fin
+  imports bundle.SB_fin spf.SPF
 begin
 (*>*)
 
@@ -61,7 +61,7 @@ lemma dastatesem_unfolding: "(daStateSem automat s) = sb_case\<cdot>(\<lambda>sb
 (* TODO: einheitliche assumption für diesen fall, KEIN rohes exists ! *)
 lemma dastatesem_bottom:assumes "\<exists>(c::'b::{finite,chan}). (sb::'b\<^sup>\<Omega>)  \<^enum>  c = \<epsilon>"
   shows "(daStateSem automat s)\<cdot>sb = \<bottom>"
-  oops
+  sorry
 
 lemma dastatesem_strict:
   shows "(daStateSem automat s)\<cdot>\<bottom> = \<bottom>"
@@ -111,13 +111,28 @@ lemma dasem_insert:
 
 lemma dasem_bottom:
   shows "daSem automat\<cdot>\<bottom> = daInitOut automat"
-  oops
+  by (simp add: daSem_def  dastatesem_bottom)
 
 lemma dasem_strong:
   assumes "weak_well(daStateSem automat (daInitState automat))"
   and     "1 \<le> sbLen (daInitOut automat)"
-  shows "strong_well (daSem automat)"
-  oops
+shows "strong_well (daSem automat)"
+  apply (subst strong_well_def)
+  apply (simp add: daSem_def)
+proof
+  fix sb
+  have h1: "sbLen sb <\<^sup>l lnsuc\<cdot>(sbLen (daStateSem automat (daInitState automat)\<cdot>sb))"
+    using assms(1) sblen_mono
+    by (simp add: weak_well_def)
+  have h4: "lnsuc\<cdot>(sbLen (daStateSem automat (daInitState automat)\<cdot>sb)) \<le> sbLen (daInitOut automat) + sbLen (daStateSem automat (daInitState automat)\<cdot>sb)"
+    using assms(2) lessequal_addition lnat_plus_commu lnat_plus_suc by fastforce 
+  have h2: "sbLen (daInitOut automat) + sbLen (daStateSem automat (daInitState automat)\<cdot>sb) \<le> sbLen (daInitOut automat \<bullet>\<^sup>\<Omega>  daStateSem automat (daInitState automat)\<cdot>sb)"
+    using sblen_sbconc by auto
+  have h3: "sbLen sb <\<^sup>l sbLen (daInitOut automat \<bullet>\<^sup>\<Omega> daStateSem automat (daInitState automat)\<cdot>sb)"
+    using h1 h2 h4 dual_order.trans by blast
+  then show "\<And>sb. sbLen sb <\<^sup>l sbLen (daInitOut automat \<bullet>\<^sup>\<Omega>  daStateSem automat (daInitState automat)\<cdot>sb)"
+    by (metis assms(1) assms(2) dual_order.trans lessequal_addition lnat_plus_commu lnat_plus_suc sblen_sbconc weak_well_def)
+qed
 
 (*<*)
 end
