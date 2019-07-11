@@ -1,6 +1,6 @@
 theory emptychanData
 
-imports inc.Channel
+imports bundle.Channel
   begin
 
 typedef emptychan="{c3}"
