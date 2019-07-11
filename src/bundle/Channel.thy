@@ -53,7 +53,7 @@ lemma chan_eq[simp]:"Rep (c::'c::chan) = x \<Longrightarrow> x\<in> range(Rep::'
 declare[[show_types]]
 declare[[show_consts]]
 
-section \<open>chan \<union> and - \<close>
+section \<open>chan \<open>\<union>\<close> and \<open>-\<close> \<close>
 
 typedef ('c1::chan, 'c2::chan) union (infixr "\<union>" 20) = "if range (Rep::'c1\<Rightarrow>channel)\<subseteq>cEmpty \<and>  range (Rep::'c2\<Rightarrow>channel)\<subseteq>cEmpty then cEmpty
                                                         else (range (Rep::'c1\<Rightarrow>channel) \<union> range (Rep::'c2\<Rightarrow>channel)) - cEmpty" 
