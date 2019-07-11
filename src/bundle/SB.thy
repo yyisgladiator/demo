@@ -453,6 +453,10 @@ subsubsection \<open>sbDrop lemmas\<close>
 lemma sbecons_eq:assumes "sbLen sb \<noteq> 0" shows "(sbHdElem sb) \<bullet>\<^sup>\<surd> (sbRt\<cdot>sb) = sb"
   oops
 
+lemma sbdrop_bot[simp]:"sbDrop n\<cdot>\<bottom> = \<bottom>"
+  apply(simp add: sbdrop_insert)
+  by (simp add: bot_sb)
+
 subsection \<open>sbTake\<close>
 
 subsubsection \<open>sbTake definition\<close>

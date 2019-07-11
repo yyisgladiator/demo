@@ -95,8 +95,11 @@ subsection\<open>sb\_cases definition\<close>
 definition sb_case::"('cs\<^sup>\<surd> \<Rightarrow> 'cs\<^sup>\<Omega> \<rightarrow> 'a::pcpo) \<rightarrow> 'cs\<^sup>\<Omega> \<rightarrow> 'a" where
 "sb_case \<equiv> \<Lambda> k sb. fup\<cdot>(\<Lambda> sbe. k sbe\<cdot>(sbRt\<cdot>sb))\<cdot>(sbHdElem_h_cont\<cdot>sb)"
 
-lemma sb_case_cont:"cont (\<lambda>sb. \<Lambda> k. fup\<cdot>(\<Lambda> sbe. k\<cdot>sbe\<cdot>(sbRt\<cdot>sb))\<cdot>(sbHdElem_h_cont\<cdot>sb))"
-  by simp
+lemma sb_case_insert:"sb_case\<cdot>k\<cdot>sb = (fup\<cdot>(\<Lambda> sbe. k sbe\<cdot>(sbRt\<cdot>sb))\<cdot>(sbHdElem_h_cont\<cdot>sb))"
+  apply(simp add: sb_case_def)
+  apply(subst beta_cfun,auto)
+  apply (intro cont2cont)
+  using cont2cont_snd cont_fst cont_snd discr_cont3 cont2cont_fst by blast
 
 
 lemma sb_cases_bot:"\<not>(chIsEmpty (TYPE ('cs))) \<Longrightarrow> sb_case\<cdot>f\<cdot>\<bottom> = \<bottom>"

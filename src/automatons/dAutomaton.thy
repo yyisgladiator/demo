@@ -65,9 +65,7 @@ lemma dastatesem_bottom:
   and "\<not> chIsEmpty TYPE('b)"
   shows "(daStateSem automat s)\<cdot>sb = \<bottom>"
   apply (subst dastatesem_unfolding)
-  apply (subst sb_case_def)
-  apply (subst beta_cfun, simp_all)
-  apply (intro cont2cont; simp_all)
+  apply (simp add: sb_case_insert)
   using assms by (simp add: sbHdElem_h_cont.rep_eq assms sbHdElem_h_def chIsEmpty_def)
 
 lemma dastatesem_strict:
@@ -85,9 +83,7 @@ lemma dastatesem_step:
   assumes "\<And>c . sb \<^enum> c \<noteq> \<epsilon>"
   shows "(daStateSem da s)\<cdot>sb = snd (daTransition da s (sbHdElem sb)) \<bullet>\<^sup>\<Omega> daStateSem da (fst (daTransition da s (sbHdElem sb)))\<cdot>(sbRt\<cdot>sb)"
   apply (subst dastatesem_unfolding)
-  apply (subst sb_case_def)
-  apply (subst beta_cfun, simp_all)
-  apply (intro cont2cont; simp_all)
+  apply (subst sb_case_insert)
   apply (subst case_prod_unfold)
   apply (subst sbHdElem_def)+
   using assms apply (simp add: sbHdElem_h_cont.rep_eq sbHdElem_h_def)
@@ -99,7 +95,8 @@ lemma dastatesem_step:
   apply (case_tac "\<exists>sbe. Iup (Abs_sbElem (Some (\<lambda>c::'a. shd (sb  \<^enum>  c)))) = up\<cdot>sbe")
   apply auto
   apply (subst(asm) up_def)
-  by (subst(asm) beta_cfun, simp_all add: up_def)
+  apply (subst(asm) beta_cfun, simp_all add: up_def)
+  by metis
 
 lemma dastatesem_final:
   assumes "\<And>c . sb \<^enum> c \<noteq> \<epsilon>"  (* Todo: einheitliche assumption *)
@@ -110,6 +107,14 @@ lemma dastatesem_final:
 lemma dastatesem_final_h2:
   shows "(daStateSem automat s)\<cdot>(sbECons sbe\<cdot>sb) =
   (daNextOut automat s sbe) \<bullet>\<^sup>\<Omega> ((daStateSem automat (daNextState automat s sbe))\<cdot>sb)"
+  apply(cases "chIsEmpty(TYPE('b))")
+  apply (subst sbtypeepmpty_sbenone[of sbe],simp)+
+  apply(subst sbtypeepmpty_sbbot[of sb],simp)+
+  apply(subst dastatesem_unfolding, simp add: sb_case_insert)
+  apply(subst case_prod_unfold)
+  apply(subgoal_tac "sbHdElem_h_cont\<cdot>\<bottom> = up\<cdot>(Abs_sbElem(None)::'b\<^sup>\<surd>)",auto)
+  apply(simp add: daNextOut_def daNextState_def)
+  apply(simp add: sbHdElem_h_cont.rep_eq sbHdElem_h_def chIsEmpty_def up_def)
   sorry (* Das soll gehen mit "by(simp add: dastatesem_step)". Wenn nicht, mehr in den simplifier packen *)
 
 lemma dastatesem_stepI:
