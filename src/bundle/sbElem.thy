@@ -1,6 +1,6 @@
 (*<*)
 theory sbElem
-  imports inc.Channel
+  imports Channel
 begin
 (*>*)
 
