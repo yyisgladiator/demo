@@ -104,6 +104,40 @@ lemma dastatesem_final:
   (daNextOut automat s (sbHdElem sb)) \<bullet>\<^sup>\<Omega> (((daStateSem automat (daNextState automat s (sbHdElem sb))))\<cdot>(sbRt\<cdot>sb))"
   by (metis assms daNextOut_def daNextState_def dastatesem_step)
 
+lemma iup_bot_nexists: "\<nexists>u. Iup u = \<bottom>"
+  by (simp add: inst_up_pcpo)
+
+lemma reprange_cempty_notin: "\<And>(x::'a). range (Rep::'a\<Rightarrow>channel) \<inter> cEmpty = {} \<Longrightarrow> Rep x \<notin> cEmpty"
+  by blast
+
+lemma "\<not> range (Rep::'a\<Rightarrow>channel) \<subseteq> cEmpty \<Longrightarrow> (range (Rep::'a\<Rightarrow>channel)) \<inter> cEmpty = {}"
+  using chan_botsingle by blast
+
+lemma sbecons_sbgetch_nempty: assumes "\<not>chIsEmpty(TYPE('a))"
+  shows "(sbe::'a\<^sup>\<surd>) \<bullet>\<^sup>\<surd> sb  \<^enum>  c \<noteq> \<epsilon>"
+  apply (simp add: sbECons_def)
+  apply (subgoal_tac "\<exists>f. Rep_sbElem sbe = Some f")
+  apply (metis (mono_tags, lifting) option.simps(5) sbe2sb.rep_eq sbgetch_insert2 srcdups_step srcdupsimposs strictI strict_sdropwhile)
+  by (simp add: assms)
+
+lemma assumes "\<not>chIsEmpty(TYPE('a))"
+  shows "sbHdElem (sbe \<bullet>\<^sup>\<surd> sb) = sbHdElem (sbe2sb sbe)"
+  apply (simp add: sbECons_def)
+  apply (subgoal_tac "\<exists>f. Rep_sbElem sbe = Some f")
+  sorry
+
+lemma sbecons_sbhdelem: "sbHdElem (sbe \<bullet>\<^sup>\<surd> sb) = sbe"
+  apply (cases "chIsEmpty(TYPE('a))")
+  apply (simp add: sbHdElem_def sbHdElem_h_def)
+  apply (subst sbtypeepmpty_sbenone[of sbe], simp)+
+  apply simp
+  apply (simp add: sbECons_def)
+  sorry
+  
+lemma sbecons_sbrt: "sbRt\<cdot>(sbe \<bullet>\<^sup>\<surd> sb) = sb"
+  apply (cases "chIsEmpty(TYPE('a))", simp)
+  sorry
+
 lemma dastatesem_final_h2:
   shows "(daStateSem automat s)\<cdot>(sbECons sbe\<cdot>sb) =
   (daNextOut automat s sbe) \<bullet>\<^sup>\<Omega> ((daStateSem automat (daNextState automat s sbe))\<cdot>sb)"
@@ -115,7 +149,11 @@ lemma dastatesem_final_h2:
   apply(subgoal_tac "sbHdElem_h_cont\<cdot>\<bottom> = up\<cdot>(Abs_sbElem(None)::'b\<^sup>\<surd>)",auto)
   apply(simp add: daNextOut_def daNextState_def)
   apply(simp add: sbHdElem_h_cont.rep_eq sbHdElem_h_def chIsEmpty_def up_def)
-  sorry (* Das soll gehen mit "by(simp add: dastatesem_step)". Wenn nicht, mehr in den simplifier packen *)
+  apply (subst dastatesem_step)
+  apply (simp add: sbecons_sbgetch_nempty)
+  apply (subst daNextOut_def)
+  apply (subst daNextState_def)
+  by (simp only: sbecons_sbhdelem sbecons_sbrt)
 
 lemma dastatesem_stepI:
   assumes "(daNextOut da s sbe) = out"
