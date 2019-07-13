@@ -1,6 +1,6 @@
 (*<*)
 theory dAutomaton
-  imports bundle.SB_fin
+  imports bundle.SB_fin spf.SPF
 begin
 (*>*)
 
@@ -73,12 +73,6 @@ lemma dastatesem_strict:
   shows "(daStateSem automat s)\<cdot>(\<bottom>::'b\<^sup>\<Omega>) = \<bottom>"
   by (simp add: assms dastatesem_bottom)
 
-lemma type_chnempty: 
-  assumes "\<And>c::'a. sb  \<^enum>  c \<noteq> \<epsilon>"
-  shows "\<not> chIsEmpty TYPE('a)" and "\<not> range (Rep::'a\<Rightarrow>channel) \<subseteq> cEmpty"
-  apply (metis (full_types) assms sbgetch_bot sbtypeepmpty_sbbot)
-  by (metis (mono_tags, lifting) Collect_mem_eq Collect_mono_iff UNIV_I assms cEmpty_def dual_order.refl image_subset_iff sbgetch_ctype_notempty)
-
 lemma dastatesem_step: 
   assumes "\<And>c . sb \<^enum> c \<noteq> \<epsilon>"
   shows "(daStateSem da s)\<cdot>sb = snd (daTransition da s (sbHdElem sb)) \<bullet>\<^sup>\<Omega> daStateSem da (fst (daTransition da s (sbHdElem sb)))\<cdot>(sbRt\<cdot>sb)"
@@ -89,9 +83,8 @@ lemma dastatesem_step:
   using assms apply (simp add: sbHdElem_h_cont.rep_eq sbHdElem_h_def)
   apply (rule conjI)
   apply (rule impI)
-  using assms type_chnempty(2) apply blast
+  using cEmpty_def sbgetch_ctype_notempty apply fastforce
   apply (rule impI)
-  apply (subst(asm) type_chnempty(2) [where sb="sb"], simp_all add: assms)
   apply (case_tac "\<exists>sbe. Iup (Abs_sbElem (Some (\<lambda>c::'a. shd (sb  \<^enum>  c)))) = up\<cdot>sbe")
   apply auto
   apply (subst(asm) up_def)
@@ -104,56 +97,21 @@ lemma dastatesem_final:
   (daNextOut automat s (sbHdElem sb)) \<bullet>\<^sup>\<Omega> (((daStateSem automat (daNextState automat s (sbHdElem sb))))\<cdot>(sbRt\<cdot>sb))"
   by (metis assms daNextOut_def daNextState_def dastatesem_step)
 
-lemma iup_bot_nexists: "\<nexists>u. Iup u = \<bottom>"
-  by (simp add: inst_up_pcpo)
-
-lemma reprange_cempty_notin: "\<And>(x::'a). range (Rep::'a\<Rightarrow>channel) \<inter> cEmpty = {} \<Longrightarrow> Rep x \<notin> cEmpty"
-  by blast
-
-lemma "\<not> range (Rep::'a\<Rightarrow>channel) \<subseteq> cEmpty \<Longrightarrow> (range (Rep::'a\<Rightarrow>channel)) \<inter> cEmpty = {}"
-  using chan_botsingle by blast
-
-lemma sbecons_sbgetch_nempty: assumes "\<not>chIsEmpty(TYPE('a))"
-  shows "(sbe::'a\<^sup>\<surd>) \<bullet>\<^sup>\<surd> sb  \<^enum>  c \<noteq> \<epsilon>"
-  apply (simp add: sbECons_def)
-  apply (subgoal_tac "\<exists>f. Rep_sbElem sbe = Some f")
-  apply (metis (mono_tags, lifting) option.simps(5) sbe2sb.rep_eq sbgetch_insert2 srcdups_step srcdupsimposs strictI strict_sdropwhile)
-  by (simp add: assms)
-
-lemma assumes "\<not>chIsEmpty(TYPE('a))"
-  shows "sbHdElem (sbe \<bullet>\<^sup>\<surd> sb) = sbHdElem (sbe2sb sbe)"
-  apply (simp add: sbECons_def)
-  apply (subgoal_tac "\<exists>f. Rep_sbElem sbe = Some f")
-  sorry
-
-lemma sbecons_sbhdelem: "sbHdElem (sbe \<bullet>\<^sup>\<surd> sb) = sbe"
-  apply (cases "chIsEmpty(TYPE('a))")
-  apply (simp add: sbHdElem_def sbHdElem_h_def)
-  apply (subst sbtypeepmpty_sbenone[of sbe], simp)+
-  apply simp
-  apply (simp add: sbECons_def)
-  sorry
-  
-lemma sbecons_sbrt: "sbRt\<cdot>(sbe \<bullet>\<^sup>\<surd> sb) = sb"
-  apply (cases "chIsEmpty(TYPE('a))", simp)
-  sorry
-
 lemma dastatesem_final_h2:
   shows "(daStateSem automat s)\<cdot>(sbECons sbe\<cdot>sb) =
   (daNextOut automat s sbe) \<bullet>\<^sup>\<Omega> ((daStateSem automat (daNextState automat s sbe))\<cdot>sb)"
-  apply(cases "chIsEmpty(TYPE('b))")
+  apply (cases "chIsEmpty(TYPE('b))")
   apply (subst sbtypeepmpty_sbenone[of sbe],simp)+
-  apply(subst sbtypeepmpty_sbbot[of sb],simp)+
-  apply(subst dastatesem_unfolding, simp add: sb_case_insert)
-  apply(subst case_prod_unfold)
-  apply(subgoal_tac "sbHdElem_h_cont\<cdot>\<bottom> = up\<cdot>(Abs_sbElem(None)::'b\<^sup>\<surd>)",auto)
-  apply(simp add: daNextOut_def daNextState_def)
-  apply(simp add: sbHdElem_h_cont.rep_eq sbHdElem_h_def chIsEmpty_def up_def)
+  apply (subst sbtypeepmpty_sbbot[of sb],simp)+
+  apply (subst dastatesem_unfolding, simp add: sb_case_insert)
+  apply (subst case_prod_unfold)
+  apply (subgoal_tac "sbHdElem_h_cont\<cdot>\<bottom> = up\<cdot>(Abs_sbElem(None)::'b\<^sup>\<surd>)",auto)
+  apply (simp add: daNextOut_def daNextState_def)
+  apply (simp add: sbHdElem_h_cont.rep_eq sbHdElem_h_def chIsEmpty_def up_def)
   apply (subst dastatesem_step)
-  apply (simp add: sbecons_sbgetch_nempty)
-  apply (subst daNextOut_def)
-  apply (subst daNextState_def)
-  by (simp only: sbecons_sbhdelem sbecons_sbrt)
+  apply (simp add: sbECons_def)
+  using sbgetch_sbe2sb_nempty strictI apply fastforce
+  by (simp only: daNextOut_def daNextState_def sbhdelem_sbecons sbrt_sbecons)
 
 lemma dastatesem_stepI:
   assumes "(daNextOut da s sbe) = out"
@@ -190,8 +148,23 @@ lemma dasem_bottom:
 lemma dasem_strong:
   assumes "weak_well(daStateSem automat (daInitState automat))"
   and     "1 \<le> sbLen (daInitOut automat)"
-  shows "strong_well (daSem automat)"
-  oops
+shows "strong_well (daSem automat)"
+  apply (subst strong_well_def)
+  apply (simp add: daSem_def)
+proof
+  fix sb
+  have h1: "sbLen sb <\<^sup>l lnsuc\<cdot>(sbLen (daStateSem automat (daInitState automat)\<cdot>sb))"
+    using assms(1) sblen_mono
+    by (simp add: weak_well_def)
+  have h4: "lnsuc\<cdot>(sbLen (daStateSem automat (daInitState automat)\<cdot>sb)) \<le> sbLen (daInitOut automat) + sbLen (daStateSem automat (daInitState automat)\<cdot>sb)"
+    using assms(2) lessequal_addition lnat_plus_commu lnat_plus_suc by fastforce 
+  have h2: "sbLen (daInitOut automat) + sbLen (daStateSem automat (daInitState automat)\<cdot>sb) \<le> sbLen (daInitOut automat \<bullet>\<^sup>\<Omega>  daStateSem automat (daInitState automat)\<cdot>sb)"
+    using sblen_sbconc by auto
+  have h3: "sbLen sb <\<^sup>l sbLen (daInitOut automat \<bullet>\<^sup>\<Omega> daStateSem automat (daInitState automat)\<cdot>sb)"
+    using h1 h2 h4 dual_order.trans by blast
+  then show "\<And>sb. sbLen sb <\<^sup>l sbLen (daInitOut automat \<bullet>\<^sup>\<Omega>  daStateSem automat (daInitState automat)\<cdot>sb)"
+    by (metis assms(1) assms(2) dual_order.trans lessequal_addition lnat_plus_commu lnat_plus_suc sblen_sbconc weak_well_def)
+qed
 
 (*<*)
 end

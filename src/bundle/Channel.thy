@@ -47,13 +47,19 @@ lemma chan_eq[simp]:"Rep (c::'c::chan) = x \<Longrightarrow> x\<in> range(Rep::'
                         \<Longrightarrow> Rep((Abs::channel \<Rightarrow> 'd)(Rep c)) = x"
   by (simp add: f_inv_into_f)
 
+lemma cempty_rule[simp]:assumes"chIsEmpty(TYPE('c::chan))"
+  shows"Rep (c::'c) \<in> cEmpty"
+  using assms chan_botsingle chIsEmpty_def by blast
 
+lemma cnotempty_rule[simp]:assumes"\<not>chIsEmpty(TYPE('c::chan))"
+  shows"Rep (c::'c) \<notin> cEmpty"
+  using assms chan_botsingle chIsEmpty_def by blast
 
 
 declare[[show_types]]
 declare[[show_consts]]
 
-section \<open>chan \<union> and - \<close>
+section \<open>chan \<open>\<union>\<close> and \<open>-\<close> \<close>
 
 typedef ('c1::chan, 'c2::chan) union (infixr "\<union>" 20) = "if range (Rep::'c1\<Rightarrow>channel)\<subseteq>cEmpty \<and>  range (Rep::'c2\<Rightarrow>channel)\<subseteq>cEmpty then cEmpty
                                                         else (range (Rep::'c1\<Rightarrow>channel) \<union> range (Rep::'c2\<Rightarrow>channel)) - cEmpty" 
