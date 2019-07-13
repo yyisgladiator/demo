@@ -142,8 +142,9 @@ lemma dasem_insert:
   by (simp add: daSem_def)
 
 lemma dasem_bottom:
-  shows "daSem automat\<cdot>\<bottom> = daInitOut automat"
-  oops
+  assumes "\<not> chIsEmpty TYPE('b::{chan, finite})"
+  shows "daSem automat\<cdot>(\<bottom>::'b\<^sup>\<Omega>) = daInitOut automat"
+  by (simp add: dasem_insert dastatesem_bottom assms)
 
 lemma dasem_strong:
   assumes "weak_well(daStateSem automat (daInitState automat))"
