@@ -58,7 +58,6 @@ lemma dastatesem_unfolding: "(daStateSem automat s) = sb_case\<cdot>(\<lambda>sb
   apply(intro cont2cont; simp)
   by auto
   
-
 (* TODO: einheitliche assumption für diesen fall, KEIN rohes exists ! *)
 lemma dastatesem_bottom:
   assumes "\<exists>(c::'b::{finite,chan}). (sb::'b\<^sup>\<Omega>)  \<^enum>  c = \<epsilon>"
@@ -77,19 +76,11 @@ lemma dastatesem_step:
   assumes "\<And>c . sb \<^enum> c \<noteq> \<epsilon>"
   shows "(daStateSem da s)\<cdot>sb = snd (daTransition da s (sbHdElem sb)) \<bullet>\<^sup>\<Omega> daStateSem da (fst (daTransition da s (sbHdElem sb)))\<cdot>(sbRt\<cdot>sb)"
   apply (subst dastatesem_unfolding)
-  apply (subst sb_case_insert)
-  apply (subst case_prod_unfold)
-  apply (subst sbHdElem_def)+
-  using assms apply (simp add: sbHdElem_h_cont.rep_eq sbHdElem_h_def)
-  apply (rule conjI)
-  apply (rule impI)
-  using cEmpty_def sbgetch_ctype_notempty apply fastforce
-  apply (rule impI)
-  apply (case_tac "\<exists>sbe. Iup (Abs_sbElem (Some (\<lambda>c::'a. shd (sb  \<^enum>  c)))) = up\<cdot>sbe")
-  apply auto
-  apply (subst(asm) up_def)
-  apply (subst(asm) beta_cfun, simp_all add: up_def)
-  by metis
+  apply (simp add: sb_case_insert Let_def case_prod_unfold)
+  apply (cases "sbHdElem_h_cont\<cdot>sb", simp_all add: sbHdElem_h_cont.rep_eq sbHdElem_def)
+  apply (simp_all split: u.split)
+  apply (metis assms inst_up_pcpo sbHdElem_h_def u.simps(3))
+  by (simp add: up_def)
 
 lemma dastatesem_final:
   assumes "\<And>c . sb \<^enum> c \<noteq> \<epsilon>"  (* Todo: einheitliche assumption *)
