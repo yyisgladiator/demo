@@ -1397,6 +1397,25 @@ proof -
     using dom_eq ufun_eqI by blast
 qed
 
+lemma ufhide_sercomp2: 
+  assumes "ufDom\<cdot>f2 \<subseteq> ufRan\<cdot>f1"
+  and     "ufRan\<cdot>f1 \<inter> ufRan\<cdot>f2 = {}"
+  and     "ufDom\<cdot>f1 \<inter> ufRan\<cdot>f2 = {}"
+  and     "ufDom\<cdot>f1 \<inter> ufRan\<cdot>f1 = {}"
+  and     "cs = ufRan\<cdot>f1"
+shows "(f1 \<otimes> f2) \<h> cs = (f1 \<h> (ufRan\<cdot>f1-ufDom\<cdot>f2) \<otimes> f2) \<h> (ufDom\<cdot>f2)" (is "?f = ?g")
+  by(simp add: assms ufhide_sercomp)
+
+lemma sercomp_ufhide_f1: 
+  assumes "ufDom\<cdot>f2 \<subseteq> ufRan\<cdot>f1"
+  and     "ufRan\<cdot>f1 \<inter> ufRan\<cdot>f2 = {}"
+  and     "ufDom\<cdot>f1 \<inter> ufRan\<cdot>f2 = {}"
+  and     "ufDom\<cdot>f1 \<inter> ufRan\<cdot>f1 = {}"
+  and     "cs1 = ufRan\<cdot>f1 - ufDom\<cdot>f2"
+  and     "cs2 = ufDom\<cdot>f2"
+shows "((f1 \<h> cs1) \<otimes> f2) \<h> cs2 = (f1 \<otimes> f2) \<h> ufRan\<cdot>f1"
+  by(simp add: assms ufhide_sercomp2)
+
 lemma ufhide_parcomp:
   assumes "parcomp_well f1 f2"
   shows "(f1 \<otimes> f2) \<h> cs = ((f1 \<h> cs) \<otimes> (f2 \<h> cs))"
@@ -1416,6 +1435,11 @@ lemma ufhide_parcomp:
   using assms apply blast
   by (smt Int_Diff Un_commute Un_upper2 inf_sup_absorb ubclrestrict_dom_id ubclrestrict_twice ufRanRestrict)
 
+lemma parcomp_ufhide_f2: 
+  assumes "parcomp_well f1 f2"
+      and "cs \<inter> ufRan\<cdot>f1 = {}"
+    shows "f1 \<otimes> (f2 \<h> cs) = (f1 \<otimes> f2) \<h> cs"
+  by (simp add: assms(1) assms(2) inf_commute ufhide_id ufhide_parcomp)
 
 (*
 subsubsection\<open>Associativity\<close>
@@ -1486,18 +1510,6 @@ lemma ufcomp_asso_sercomp_in_apply: assumes
 shows "ufComp(ufComp(ufComp (ufComp f1 f2) f3) f4) f5  \<rightleftharpoons> ub= ufComp(ufComp f1 f2)(ufComp (ufComp f3 f4) f5) \<rightleftharpoons> ub"
   by (simp add: assms ufcomp_asso_sercomp_in)
 *)
-
-subsubsection\<open>ufHide Special Comp\<close>
-
-
-lemma ufhide_sercomp2: 
-  assumes "ufDom\<cdot>f2 \<subseteq> ufRan\<cdot>f1"
-  and     "ufRan\<cdot>f1 \<inter> ufRan\<cdot>f2 = {}"
-  and     "ufDom\<cdot>f1 \<inter> ufRan\<cdot>f2 = {}"
-  and     "ufDom\<cdot>f1 \<inter> ufRan\<cdot>f1 = {}"
-  and     "cs = ufRan\<cdot>f1"
-shows "(f1 \<otimes> f2) \<h> cs = (f1 \<h> (ufRan\<cdot>f1-ufDom\<cdot>f2) \<otimes> f2) \<h> (ufDom\<cdot>f2)" (is "?f = ?g")
-  by(simp add: assms ufhide_sercomp)
 
 
 subsubsection\<open>property split\<close>

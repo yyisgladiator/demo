@@ -337,6 +337,9 @@ apply (simp add: atomize_imp)
 apply (induct_tac k, auto)
 by (case_tac "j = Suc n", auto)
 
+lemma inter_union_id:"(x \<union> y) \<inter> x = x"
+  by blast
+
 (* ----------------------------------------------------------------------- *)
 section {* updis *}
 (* ----------------------------------------------------------------------- *)
