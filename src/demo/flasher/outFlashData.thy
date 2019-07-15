@@ -3,7 +3,7 @@ theory outFlashData
 imports bundle.SB
 begin
 
-typedef outFlash="{cout}"
+typedef outFlash="{cout,cin2}"
   by auto
 
 
@@ -22,19 +22,25 @@ instance
 end
 
 definition "Flashout \<equiv> Abs_outFlash cout"
+definition "Flashcin2 \<equiv> Abs_outFlash cin2"
 
-free_constructors outFlash for "Flashout"
-  unfolding Flashout_def
-  by (metis Rep_outFlash Rep_outFlash_inverse empty_iff insert_iff)
-  
+free_constructors outFlash for "Flashout" | Flashcin2
+  unfolding Flashout_def Flashcin2_def
+  apply (metis Rep_outFlash Rep_outFlash_inverse empty_iff insert_iff)
+  by (simp add: Abs_outFlash_inject)
+
 lemma Flashout1_rep [simp]: "Rep (Flashout) = cout"
   by (simp add: Abs_outFlash_inverse Flashout_def Rep_outFlash_def)
 
+lemma Flashcin2_rep [simp]: "Rep (Flashcin2) = cin2"
+  by (simp add: Abs_outFlash_inverse Flashcin2_def Rep_outFlash_def)
 
-fun outFlashChan::"('bool::type \<Rightarrow> 'a::type) \<Rightarrow>('bool) \<Rightarrow> outFlash \<Rightarrow> 'a" where
-"outFlashChan Cc1 (port_c1) Flashout = Cc1 port_c1"
 
-abbreviation "buildFlashoutSBE \<equiv> outFlashChan \<B>" 
+fun outFlashChan::"('nat::type \<Rightarrow> 'a::type) \<Rightarrow> ('bool::type \<Rightarrow> 'a) \<Rightarrow>('nat\<times>'bool) \<Rightarrow> outFlash \<Rightarrow> 'a" where
+"outFlashChan Cc1 Cc2 (port_c1, port_c2) Flashout = Cc1 port_c1" |
+"outFlashChan Cc1 Cc2 (port_c1, port_c2) Flashcin2 = Cc2 port_c2"
+
+abbreviation "buildFlashoutSBE \<equiv> outFlashChan \<B> \<B>" 
 
 lemma buildflashout_ctype: "buildFlashoutSBE a c \<in> ctype (Rep c)"
   by(cases c; cases a;simp)
@@ -57,12 +63,12 @@ proof -
     using buildflashout_range by auto
   hence "\<exists>prod. sbe = buildFlashoutSBE prod"
     apply(subst fun_eq_iff,auto)
-    by (smt Flashout1_rep ctype.simps(5) ctype.simps(6) ctypewell imageE outFlash.exhaust outFlashChan.simps(1))
+    by (smt Flashcin2_rep Flashout1_rep ctype.simps(5) ctype.simps(6) ctypewell imageE outFlash.exhaust outFlashChan.simps(1) outFlashChan.simps(2))
    thus ?thesis
     by auto
 qed
 
-abbreviation "buildFlashoutSB \<equiv> outFlashChan (Rep_cfun (smap \<B>))" 
+abbreviation "buildFlashoutSB \<equiv> outFlashChan (Rep_cfun (smap \<B>)) (Rep_cfun (smap \<B>))" 
 
 lemma buildflashinsb_ctype: "sdom\<cdot>(buildFlashoutSB a c) \<subseteq> ctype (Rep c)"
   by(cases c; cases a;simp)
@@ -76,6 +82,9 @@ lemma buildflashinsb_range: "(\<Union>a. sdom\<cdot>(buildFlashoutSB a c)) = cty
   apply(cases c)
   apply auto 
   apply (metis (no_types, lifting) in_mono smap_sdom_range)
+  apply(rule_tac x="\<up>xa" in exI) 
+  apply simp
+  using smap_sdom_range apply blast
   apply(rule_tac x="\<up>xa" in exI) 
   by simp
 

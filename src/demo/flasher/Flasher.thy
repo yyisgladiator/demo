@@ -80,13 +80,35 @@ assumes "f\<cdot>(sb \<uplus>\<^sub>\<star> out) = out\<star>"
   apply(rule fix_eqI)
   by (simp_all add: assms)
 *)
+lemma [simp]:"chDom TYPE(outAnd) = {cout}"
+  sorry
+lemma [simp]:"chDom TYPE(outNot) = {cin1}"  
+  sorry
+
+lemma flash2andin[simp]:"(flashInSB.setter port_i\<star> \<uplus>\<^sub>\<star> (flashOutSB.setter (port_o, port_intern)\<star>)) = (andInSB.setter (port_i, port_intern))"
+  sorry
+
+lemma flash2andout[simp]:"flashOutSB.setter (port_o, port_intern)\<star>\<star> = andOutSB.setter port_o"
+  sorry
+
+lemma flash2notin[simp]:"flashInSB.setter port_i\<star> \<uplus>\<^sub>\<star> (flashOutSB.setter (port_o, port_intern)\<star>) = notInSB.setter(port_o)"
+  sorry
+
+lemma flash2notout[simp]:"flashOutSB.setter (port_o, port_intern)\<star>\<star> = notOutSB.setter port_intern "
+  sorry
 
 (* DEUTLICH WICHTIGER! *)
 lemma assumes "andSpf\<cdot>(andInSB.setter (port_i, port_intern)) = andOutSB.setter port_o"
-    and "notSpf\<cdot>(notInSB.setter(port_intern)) = notOutSB.setter port_i"
-  shows "(convflasherComp\<cdot>(flashInSB.setter (port_i))) = flashOutSB.setter (port_o)"
+    and "notSpf\<cdot>(notInSB.setter(port_o)) = notOutSB.setter port_intern"
+  shows "(flasherComp\<cdot>(flashInSB.setter (port_i)\<star>)) = flashOutSB.setter (port_o,port_intern)\<star>"
   apply(simp add: flasherComp_def convflasherComp_def spfConvert_def)
-  apply(rule spfcomp_eq) (*nicht anwendbar wenn kanäle versteckt werden*)
+  apply(rule spfcomp_eq,simp)
+    apply (simp add: assms)
+   apply(simp add: assms)
+  oops
+  
+
+ (*nicht anwendbar wenn kanäle versteckt werden*)
 
 datatype S = State S_and S_not bool
 
