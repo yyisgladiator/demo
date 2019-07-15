@@ -1,6 +1,6 @@
 theory outAndData
 
-imports bundle.sbElem
+imports bundle.SB
   begin
 
 typedef outAnd = "{cout}"
@@ -57,5 +57,7 @@ proof -
   thus ?thesis
     by auto
 qed
+
+abbreviation "buildAndoutSB \<equiv> outAndChan (Rep_cfun (smap \<B>))" 
 
 end

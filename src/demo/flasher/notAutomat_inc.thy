@@ -17,11 +17,20 @@ interpretation notInSBE: sbeGen "buildNotinSBE"
   apply (simp add: buildnotin_surj)
   by simp
 
+interpretation notInSB: sbGen "buildNotinSB"
+  apply(unfold_locales)
+  sorry
+
 interpretation notOutSBE: sbeGen "buildNotoutSBE"
   apply(unfold_locales)
   apply(simp add: buildnotout_ctype)
   apply (simp add: buildnotout_inj)
   apply (simp add: buildnotout_surj)
   by simp
+
+
+interpretation notOutSB: sbGen "buildNotoutSB"
+  apply(unfold_locales)
+  sorry
 
 end
