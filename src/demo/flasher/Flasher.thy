@@ -97,6 +97,12 @@ lemma flash2notin[simp]:"flashInSB.setter port_i\<star> \<uplus>\<^sub>\<star> (
 lemma flash2notout[simp]:"flashOutSB.setter (port_o, port_intern)\<star>\<star> = notOutSB.setter port_intern "
   sorry
 
+lemma flash2andinnotout[simp]:"flashInSB.setter port_i\<star> \<uplus>\<^sub>\<star> (z::(outAnd \<union> outNot)\<^sup>\<Omega>) = andInSB.setter (port_i,notOutSB.getter(z\<star>))"
+  sorry
+
+lemma flash2notinandout[simp]:"flashInSB.setter port_i\<star> \<uplus>\<^sub>\<star> (z::(outAnd \<union> outNot)\<^sup>\<Omega>) = notInSB.setter (andOutSB.getter(z\<star>))"
+  sorry
+
 (* DEUTLICH WICHTIGER! *)
 lemma assumes "andSpf\<cdot>(andInSB.setter (port_i, port_intern)) = andOutSB.setter port_o"
     and "notSpf\<cdot>(notInSB.setter(port_o)) = notOutSB.setter port_intern"
@@ -105,6 +111,7 @@ lemma assumes "andSpf\<cdot>(andInSB.setter (port_i, port_intern)) = andOutSB.se
   apply(rule spfcomp_eq,simp)
     apply (simp add: assms)
    apply(simp add: assms)
+  apply (simp)
   oops
   
 
