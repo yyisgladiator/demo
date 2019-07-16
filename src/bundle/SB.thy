@@ -109,6 +109,8 @@ abbreviation sbgetch_magic_abbr :: "'c\<^sup>\<Omega> \<Rightarrow> 'e \<Rightar
 abbreviation sbgetch_abbr :: "'c\<^sup>\<Omega> \<Rightarrow> 'c \<Rightarrow> M stream" (infix " \<^enum> " 65) where 
 "sb \<^enum> c \<equiv> sbGetCh c\<cdot>sb"
 
+definition sbHdElemWell::"'c\<^sup>\<Omega>  \<Rightarrow> bool" where
+"sbHdElemWell  \<equiv> \<lambda> sb. (\<forall>c. sb  \<^enum>  c \<noteq> \<epsilon>)"  
 
 lemma sbgetch_insert2:"sb \<^enum>\<^sub>\<star> c = (Rep_sb sb) c"
   by(simp add: sbgetch_insert)
