@@ -1,6 +1,6 @@
 theory inAndData
 
-imports bundle.sbElem
+imports bundle.SB
 begin
 
 typedef inAnd="{cin1,cin2}"
@@ -67,5 +67,7 @@ proof -
   thus ?thesis
     by auto
 qed
+
+abbreviation "buildAndinSB \<equiv> inAndChan (Rep_cfun (smap \<B>)) (Rep_cfun (smap \<B>))" 
 
 end

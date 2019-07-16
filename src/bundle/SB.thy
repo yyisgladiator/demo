@@ -109,6 +109,8 @@ abbreviation sbgetch_magic_abbr :: "'c\<^sup>\<Omega> \<Rightarrow> 'e \<Rightar
 abbreviation sbgetch_abbr :: "'c\<^sup>\<Omega> \<Rightarrow> 'c \<Rightarrow> M stream" (infix " \<^enum> " 65) where 
 "sb \<^enum> c \<equiv> sbGetCh c\<cdot>sb"
 
+definition sbHdElemWell::"'c\<^sup>\<Omega>  \<Rightarrow> bool" where
+"sbHdElemWell  \<equiv> \<lambda> sb. (\<forall>c. sb  \<^enum>  c \<noteq> \<epsilon>)"  
 
 lemma sbgetch_insert2:"sb \<^enum>\<^sub>\<star> c = (Rep_sb sb) c"
   by(simp add: sbgetch_insert)
@@ -151,16 +153,20 @@ lemma sbgetch_bot[simp]:"\<bottom> \<^enum>\<^sub>\<star> c = \<epsilon>"
   apply(simp add: sbGetCh.rep_eq bot_sb)
   by (metis Rep_sb_strict app_strict bot_sb)
 
-lemma sb_belowI: assumes "\<And>c. sb1 \<^enum> c \<sqsubseteq> sb2 \<^enum> c"
+lemma sb_belowI:   fixes sb1 sb2::"'cs\<^sup>\<Omega>"
+  assumes "\<And>c. Rep c\<in>chDom TYPE('cs) \<Longrightarrow>  sb1 \<^enum> c \<sqsubseteq> sb2 \<^enum> c"
   shows "sb1 \<sqsubseteq> sb2"
   apply(subst below_sb_def)
   apply(rule fun_belowI)
-  by (metis assms sbgetch_insert2)
+  by (metis DiffI assms chDom_def cnotempty_rule po_eq_conv sbGetCh.rep_eq sbgetch_insert2 sbtypeepmpty_sbbot)
 
 lemma sb_eqI:
-    assumes "\<And>c. sb1 \<^enum> c = sb2 \<^enum> c"
+  fixes sb1 sb2::"'cs\<^sup>\<Omega>"
+    assumes "\<And>c. Rep c\<in>chDom TYPE('cs) \<Longrightarrow> sb1 \<^enum> c = sb2 \<^enum> c"
     shows "sb1 = sb2"
-  using Rep_sb_inject by (metis assms ext sbgetch_insert2)
+  apply(cases "chDom TYPE('cs) \<noteq> {}")
+  apply (metis Diff_eq_empty_iff Diff_triv assms chDom_def chan_botsingle rangeI sb_rep_eqI sbgetch_insert2)
+  by (metis Rep_union chDom_def chIsEmpty_def empty_iff sbtypeepmpty_sbbot sup.idem)
 
 lemma slen_empty_eq:  assumes"chIsEmpty(TYPE('c))"
   shows " #(sb \<^enum>\<^sub>\<star> (c::'c)) =0"
@@ -450,11 +456,19 @@ lemma sbunion_insert:"sbUnion\<cdot>(sb1::'c\<^sup>\<Omega>)\<cdot>sb2 = Abs_sb 
   Namin_convention: "insert" = Abs_cfun weg
                       rep_eq = Abs_XXX weg *)
 
+lemma sbunion_rep_eq:"Rep_sb (sbUnion\<cdot>(sb1::'c\<^sup>\<Omega>)\<cdot>sb2) = (\<lambda> c. if (Rep c \<in> (range (Rep ::'c \<Rightarrow> channel))) then 
+                  sb1 \<^enum>\<^sub>\<star> c else  sb2 \<^enum>\<^sub>\<star> c)"
+  apply(subst sbunion_insert)
+  apply(subst Abs_sb_inverse)
+  by auto
+
 subsubsection\<open>sbUnion abbreviation\<close>
 
 abbreviation sbUnion_magic_abbr :: "'c\<^sup>\<Omega> \<Rightarrow> 'd\<^sup>\<Omega> \<Rightarrow> 'e\<^sup>\<Omega>" (infixr "\<uplus>\<^sub>\<star>" 100) where
 "sb1 \<uplus>\<^sub>\<star> sb2 \<equiv> sbUnion\<cdot>sb1\<cdot>sb2"
 
+abbreviation sbUnion_minus_abbr :: "('c - ('d))\<^sup>\<Omega> \<Rightarrow> 'd\<^sup>\<Omega> \<Rightarrow> 'c\<^sup>\<Omega>" (infixr "\<uplus>\<^sub>-" 100) where
+"sb1 \<uplus>\<^sub>- sb2 \<equiv> sbUnion\<cdot>sb1\<cdot>sb2"
 
 abbreviation sbUnion_abbr :: "'c\<^sup>\<Omega> \<Rightarrow> 'd\<^sup>\<Omega> \<Rightarrow> ('c\<union>'d)\<^sup>\<Omega>" (infixr "\<uplus>" 100) where
 " sb1 \<uplus> sb2 \<equiv> sb1 \<uplus>\<^sub>\<star> sb2"
@@ -489,6 +503,12 @@ subsubsection \<open>sbConvert abbreviation\<close>
 
 abbreviation sbConvert_abbr :: "'c\<^sup>\<Omega> \<Rightarrow> 'd\<^sup>\<Omega>" ( "_\<star>" 200) where 
 "sb\<star> \<equiv> sbConvert\<cdot>sb"
+
+abbreviation sbConvert_abbr_fst :: "('c \<union> 'd)\<^sup>\<Omega> \<Rightarrow> 'c\<^sup>\<Omega>" ( "_\<star>\<^sub>1" 200) where 
+"sb\<star>\<^sub>1 \<equiv> sbConvert\<cdot>sb"
+
+abbreviation sbConvert_abbr_snd :: "('c\<union>'d)\<^sup>\<Omega> \<Rightarrow> 'd\<^sup>\<Omega>" ( "_\<star>\<^sub>2" 200) where 
+"sb\<star>\<^sub>2 \<equiv> sbConvert\<cdot>sb"
 
 subsubsection \<open>sbConvert lemmas\<close>
 

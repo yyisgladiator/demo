@@ -1,6 +1,6 @@
 theory outNotData
 
-imports bundle.sbElem
+imports bundle.SB
   begin
 
 typedef outNot = "{cin2}"
@@ -55,5 +55,7 @@ proof -
   thus ?thesis
     by auto
 qed
+
+abbreviation "buildNotoutSB \<equiv> outNotChan (Rep_cfun (smap \<B>))" 
 
 end

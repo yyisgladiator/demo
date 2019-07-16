@@ -17,11 +17,20 @@ interpretation andInSBE: sbeGen "buildAndinSBE"
   apply (simp add: buildandin_surj)
   by simp
 
+interpretation andInSB: sbGen "buildAndinSB"
+  apply(unfold_locales)
+  sorry
+
 interpretation andOutSBE: sbeGen "buildAndoutSBE"
   apply(unfold_locales)
   apply(simp add: buildandout_ctype)
   apply (simp add: buildandout_inj)
   apply (simp add: buildandout_surj)
   by simp
+
+interpretation andOutSB: sbGen "buildAndoutSB"
+  apply(unfold_locales)
+  sorry
+
 
 end

@@ -1,6 +1,6 @@
 theory inNotData
 
-imports bundle.sbElem
+imports bundle.SB
   begin
 
 typedef inNot="{cout}"
@@ -58,5 +58,6 @@ proof -
     by auto
 qed
 
+abbreviation "buildNotinSB \<equiv> inNotChan (Rep_cfun (smap \<B>))" 
 
 end
