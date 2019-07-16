@@ -1,11 +1,10 @@
 chapter MontiBelle
 
 
-session "inc" (mustWork) in inc = "user" +
+session "inc" (mustWork) in inc = "HOLCF" +
   description "Bundles common functionality"
   options [quick_and_dirty = false]
   theories
-    Channel
     LNat
     SetPcpo
     Prelude
@@ -21,7 +20,10 @@ session "bundle" (mustWork) in "bundle" = "stream" +
   description "Bundle multiple streams together. Each stream can be accessed using
     an identifier called Channel. Type-information is pertained"
   options [quick_and_dirty, browser_info, document = pdf,document_variants="outline=/proof"]
+  sessions
+    user
   theories
+    Channel
     SB
     SB_fin
   document_files
@@ -33,11 +35,12 @@ session "spf" (mustWork) in "spf" = "bundle" +
   theories
     SPF
 
-session "automaton" (mustWork) in "automatons" = "bundle" +
+session "automaton" (mustWork) in "automatons" = "spf" +
   description "Deterministic and Non-Deterministic Automatons based on Rum96"
   options [quick_and_dirty = true, browser_info, document = pdf,document_variants="outline=/proof"]
   theories
     dAutomaton
+    dAutomaton_causal
     ndAutomaton
   document_files
     "root.tex"

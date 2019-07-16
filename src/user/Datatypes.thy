@@ -15,7 +15,6 @@ datatype channel = DummyChannel nat
 
 hide_const DummyChannel
 
-
 section \<open>Message Definition\<close>
 
 text\<open>The same is true for the "Message" Datatype. Every kind of message has to be described here:\<close>
@@ -31,12 +30,13 @@ instance M :: countable
 
 text \<open>Then one describes the types of each channel. Only Messages included are allowed to be
   transmitted\<close>
+
 definition ctype :: "channel \<Rightarrow> M set" where 
-"ctype = undefined"
+"ctype = (\<lambda>c. if c= undefined then {} else undefined)"
+
+lemma ctypeempty_ex:"\<exists>c. ctype c = {}"
+  by (simp add: ctype_def)
 
 hide_fact ctype_def
-
-
-
 
 end
