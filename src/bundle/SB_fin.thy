@@ -12,21 +12,12 @@ default_sort "{finite,chan}"
 section\<open> SB functions with finite type \<close>
 
 subsection \<open>Cont version of sbHdElem\_h\<close>
-definition sbHdElemWell::"'c\<^sup>\<Omega>  \<Rightarrow> bool" where
-"sbHdElemWell  \<equiv> \<lambda> sb. (\<forall>c::'c. sb  \<^enum>  c \<noteq> \<epsilon>)"  
-
-
-
-lemma cont_h1: assumes"s\<in>{c::'c. \<forall>i::nat. Y i  \<^enum>  c = \<epsilon>}"
-  shows" s\<in>UNIV\<and> s\<notin>{c::'c. \<exists>i::nat. Y i  \<^enum>  c \<noteq> \<epsilon>}"
-  
-  using assms by auto
 
 
 lemma cont_h2:assumes"\<exists>s. s\<in>UNIV \<and> s\<notin>{c::'c. \<exists>i::nat. Y i  \<^enum>  c \<noteq> \<epsilon>}"
   shows"{c::'c. \<exists>i::nat. Y i  \<^enum>  c \<noteq> \<epsilon>}\<noteq>UNIV"
-
   using assms by auto
+
 lift_definition sbHdElem_h_cont::"'c\<^sup>\<Omega> \<rightarrow> ('c\<^sup>\<surd>) u"is
 "sbHdElem_h"
   apply(simp add: sbHdElem_h_def)
