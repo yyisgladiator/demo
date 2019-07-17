@@ -84,8 +84,14 @@ lemma [simp]:"chDom TYPE(outAnd) = {cout}"
   sorry
 lemma [simp]:"chDom TYPE(outNot) = {cin1}"  
   sorry
+lemma inandset[simp]:"chDom TYPE(inAnd) = {cin1,cin2}"
+  sorry
 
-lemma flash2andin[simp]:"(flashInSB.setter port_i\<star> \<uplus>\<^sub>\<star> (flashOutSB.setter (port_o, port_intern)\<star>)) = (andInSB.setter (port_i, port_intern))"
+lemma flash2andin[simp]:"(((sbConvert::inFlash\<^sup>\<Omega> \<rightarrow> ((inAnd \<union> inNot) - outAnd \<union> outNot)\<^sup>\<Omega>)\<cdot>(flashInSB.setter port_i)) 
+                         \<uplus>\<^sub>\<star> ((sbConvert::outFlash\<^sup>\<Omega> \<rightarrow> (outAnd \<union> outNot)\<^sup>\<Omega>)\<cdot>(flashOutSB.setter (port_o, port_intern)))) 
+                          = (andInSB.setter (port_i, port_intern))"
+  apply(simp add: sbconvert_insert)
+  apply(rule sb_eqI,auto)  
   sorry
 
 lemma flash2andout[simp]:"flashOutSB.setter (port_o, port_intern)\<star>\<star> = andOutSB.setter port_o"
@@ -133,5 +139,21 @@ lemma "flashertransition (State sand snot inputcin1) inputcin2 = (State sand sno
 
 definition flashersscanl::"bool stream \<rightarrow> bool stream"where
 "flashersscanl = sscanlAsnd flashertransition (State S_and.Single S_not.Single True)"
+
+lemma flasherstep[simp]:"sscanlAsnd flashertransition (State S_and.Single S_not.Single bool)\<cdot>(\<up>a \<bullet> s) =
+                   \<up>(bool \<and> a) \<bullet> sscanlAsnd flashertransition (State S_and.Single S_not.Single (\<not>(bool \<and> a)))\<cdot>s"
+  by simp 
+
+lemma flasherout:assumes"Fin (Suc n) < #input" shows"snth (Suc n) (flashersscanl\<cdot>input) = snth (Suc n) input \<and> \<not> snth n input"
+  apply(simp add: flashersscanl_def)
+  apply(rule scases[of input],simp)
+  using assms apply auto[1]
+  apply simp
+  sorry
+
+lemma flasherfinal:assumes"Fin (Suc n) < #input" 
+  shows"snth (Suc n) (flashersscanl\<cdot>input) \<Longrightarrow> snth (Suc n) input \<or> snth n input"
+  by(simp add: assms flasherout)
+
 
 end
