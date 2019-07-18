@@ -108,31 +108,50 @@ proof(rule sb_eqI)
   ultimately show  "out\<star> \<uplus> (out\<star>) \<^enum> c = out \<^enum> c" by fastforce
 qed
 
-lemma spfcomp_belowI: fixes f::"'fIn\<^sup>\<Omega> \<rightarrow> 'fOut\<^sup>\<Omega>"
+lemma spfcomp_belowI: 
+      fixes f::"'fIn\<^sup>\<Omega> \<rightarrow> 'fOut\<^sup>\<Omega>"
         and g::"'gIn\<^sup>\<Omega> \<rightarrow> 'gOut\<^sup>\<Omega>"
-      assumes "chDom (TYPE ('fOut)) \<inter> chDom (TYPE ('gOut)) = {}"
-
-      fixes out::"('fOut \<union> 'gOut)\<^sup>\<Omega>"
-assumes "f\<cdot>(sb \<uplus>\<^sub>\<star> out) = out\<star>\<^sub>1"
-    and "g\<cdot>(sb \<uplus>\<^sub>\<star> out) = out\<star>\<^sub>2"
+        and out::"('fOut \<union> 'gOut)\<^sup>\<Omega>"
+    
+  assumes "chDom (TYPE ('fOut)) \<inter> chDom (TYPE ('gOut)) = {}"
+      and "f\<cdot>(sb \<uplus>\<^sub>\<star> out) = out\<star>\<^sub>1"
+      and "g\<cdot>(sb \<uplus>\<^sub>\<star> out) = out\<star>\<^sub>2"
       shows "((f\<otimes>g)\<cdot>sb) \<sqsubseteq> out"
   apply(subst genComp_def)
   apply(simp add: spfConvert_def)
   apply(rule fix_least)
   by (simp add: assms)
 
-lemma spfcomp_belowI: fixes f::"'fIn\<^sup>\<Omega> \<rightarrow> 'fOut\<^sup>\<Omega>"
+
+lemma sbunion_magic: "(sb1 \<uplus> sb2)\<star> = sb1 \<uplus>\<^sub>\<star> sb2"
+  sorry
+
+lemma sbunion_fst[simp]: "(sb1 \<uplus> sb2)\<star>\<^sub>1 = sb1"
+  by (simp add: sbunion_magic)
+
+lemma sbunion_snd[simp]:
+  fixes sb1 ::"'cs1\<^sup>\<Omega>"
+    and sb2 ::"'cs2\<^sup>\<Omega>"
+  assumes "chDom (TYPE ('cs1)) \<inter> chDom (TYPE ('cs2)) = {}"
+  shows "(sb1 \<uplus> sb2)\<star>\<^sub>2 = sb2"
+  by (metis assms sbconv_eq sbunion_magic ubunion_commu ubunion_fst)
+
+lemma spfcomp_eqI:
+      fixes f::"'fIn\<^sup>\<Omega> \<rightarrow> 'fOut\<^sup>\<Omega>"
         and g::"'gIn\<^sup>\<Omega> \<rightarrow> 'gOut\<^sup>\<Omega>"
-      assumes "chDom (TYPE ('fOut)) \<inter> chDom (TYPE ('gOut)) = {}"
-assumes "f\<cdot>(sb \<uplus>\<^sub>\<star> out) = out\<star>"
-    and "g\<cdot>(sb \<uplus>\<^sub>\<star> out) = out\<star>"
-  shows "((f \<otimes>\<^sub>\<star> g)\<cdot>sb) \<sqsubseteq> out"
+        and out::"('fOut \<union> 'gOut)\<^sup>\<Omega>"
+    
+  assumes "chDom (TYPE ('fOut)) \<inter> chDom (TYPE ('gOut)) = {}"
+      and "f\<cdot>(sb \<uplus>\<^sub>\<star> out) = out\<star>\<^sub>1"
+      and "g\<cdot>(sb \<uplus>\<^sub>\<star> out) = out\<star>\<^sub>2"
+      and "\<And>z. f\<cdot>(sb \<uplus>\<^sub>\<star> z) = z\<star>\<^sub>1 \<Longrightarrow> g\<cdot>(sb \<uplus>\<^sub>\<star> z) = z\<star>\<^sub>2 \<Longrightarrow> out \<sqsubseteq> z"
+
+      shows "((f\<otimes>g)\<cdot>sb) = out"
   apply(subst genComp_def)
   apply(simp add: spfConvert_def)
-  apply(rule fix_least)
-  apply auto
-  apply(rule sb_eqI)
-  oops  (* gilt vermutlich nicht *)
+  apply(rule fix_eqI)
+   apply (simp_all add: assms)
+  by (metis assms(1) assms(4) sbunion_fst sbunion_snd)
 
 lemma spfcomp2gencomp  [simp]: 
       fixes f::"'fIn\<^sup>\<Omega> \<rightarrow> 'fOut\<^sup>\<Omega>"
