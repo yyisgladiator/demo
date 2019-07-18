@@ -3,6 +3,9 @@ theory sbElem
 imports inc.Channel
 begin
 
+declare[[show_types]]
+declare[[show_consts]]
+
 default_sort chan
 
 section \<open>sbElem\<close>
@@ -94,21 +97,42 @@ definition sbeUnion::"'c\<^sup>\<surd> \<Rightarrow> 'd\<^sup>\<surd> \<Rightarr
 
 lemma sbeunion_getchfst:assumes "Rep (c::'c) \<in> range(Rep::'e \<Rightarrow> channel)"
                       and "\<not>(chIsEmpty TYPE('c))"
-                      and "range(Rep::'d \<Rightarrow> channel) \<subseteq> range(Rep::'c \<Rightarrow> channel)"
+                     and "range(Rep::'e \<Rightarrow> channel) \<subseteq> range(Rep::'c \<Rightarrow> channel) \<union> range(Rep::'d \<Rightarrow> channel)"
   shows "sbegetch c ((sbeUnion::'c\<^sup>\<surd> \<Rightarrow> 'd\<^sup>\<surd> \<Rightarrow> 'e\<^sup>\<surd>) sbe1 sbe2) = sbegetch c sbe1"
-  using assms
+  using assms(1)
   apply(simp add: sbeUnion_def)
   apply(simp add: sbegetch_def)
   apply(subst Abs_sbElem_inverse)
    defer
    apply (simp add: sbegetch_def)
-   oops
+  apply(rule)
+  using assms
+  apply(simp)
+  apply(rule)
+  apply(rule conjI)
+   apply(auto)
+
+  
+  oops
+
 
 lemma sbeunion_getchsnd:assumes "Rep (c::'d) \<in> range(Rep::'e \<Rightarrow> channel)"
                      and "Rep c \<notin> range(Rep::'c \<Rightarrow> channel)"
-                     and "range(Rep::'d \<Rightarrow> channel) \<subseteq> range(Rep::'c \<Rightarrow> channel)"
+                     and "\<not>(chIsEmpty TYPE('c))"
+                     and "range(Rep::'e \<Rightarrow> channel) \<subseteq> range(Rep::'c \<Rightarrow> channel) \<union> range(Rep::'d \<Rightarrow> channel)"
   shows"sbegetch c ((sbeUnion::'c\<^sup>\<surd> \<Rightarrow> 'd\<^sup>\<surd> \<Rightarrow> 'e\<^sup>\<surd>) sbe1 sbe2) = sbegetch c sbe2"
-  using assms by blast
+  using assms(1)
+  apply(simp add: sbeUnion_def)
+  apply(simp add: sbegetch_def)
+  apply(subst Abs_sbElem_inverse)
+   defer
+   apply (simp add: assms(2) sbegetch_def)
+  using assms
+  apply(simp)
+  apply(rule)
+  apply(rule conjI)
+   apply(auto)
+   defer
  
 
 end
