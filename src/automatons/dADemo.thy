@@ -1,6 +1,6 @@
 theory dADemo
 
-imports dAutomaton
+imports dAutomaton_causal
 
 begin
 

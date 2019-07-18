@@ -1,11 +1,11 @@
 ## Requirements
-* Isabelle2018.1 (or newer)
+* Isabelle2019 (or newer)
    * Download [here](https://isabelle.in.tum.de/)
 
 ## Open Theorie
 Isabelle requires further configuration to work with the session-dokument. There are 2 possible ways:
 1. commend-line argument. Start isabelle with `isabelle jedit -d <pathToProjectRoot>`. To reduce the startup time you should also use the `-l <sessionName>` flag with a sessionName listed below.
-   * Example: `isabelle jedit -d . -l spec automat/ndAutomaton.thy`
+   * Example: `isabelle jedit -d . -l stream automatons/dAutomaton.thy`
 2. ROOTS file. If you are in **only** one montibelle-project you can add the project root to you isabelle ROOTS file and start isabelle normally. The ROOTS file location varies based on your operating system. 
    *  Example: For ArchLinux it is in `/opt/isabelle`. There you can add `<PathToMontibelleProject>` as last element.
    *  **Windows**: Since Isabelle is running using Cygwin, adding windows path at the end of ROOTS file wont work. To get unix path of the folder, start **Cygwin-Terminal.bat** 
@@ -17,7 +17,5 @@ You can use prebuild sessions to reduce the startup time. If you start with this
 1. inc
 2. stream
 3. bundle
-4. fun
-5. spec
-6. automat
-7. abpGenerat
+4. spf
+5. automaton

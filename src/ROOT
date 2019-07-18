@@ -1,27 +1,46 @@
-session "inc" (mustWork) in inc = "user" +
+chapter MontiBelle
+
+
+session "inc" (mustWork) in inc = "HOLCF" +
+  description "Bundles common functionality"
   options [quick_and_dirty = false]
   theories
-    Channel
     LNat
     SetPcpo
     Prelude
 
 
 session "stream" (mustWork) in "stream" = "inc" +
+  description "FOCUS streams, an infinite list of messages"
   options [quick_and_dirty = false]
   theories
     Stream
-    
+
 session "bundle" (mustWork) in "bundle" = "stream" +
+  description "Bundle multiple streams together. Each stream can be accessed using
+    an identifier called Channel. Type-information is pertained"
   options [quick_and_dirty, browser_info, document = pdf,document_variants="outline=/proof"]
+  sessions
+    user
   theories
-    SB    
+    Channel
+    SB
     SB_fin
   document_files
     "root.tex"
-    
+
 session "spf" (mustWork) in "spf" = "bundle" +
+  description "Weak-Causal and Strong-Causal Components"
   options [quick_and_dirty = true]
   theories
     SPF
 
+session "automaton" (mustWork) in "automatons" = "spf" +
+  description "Deterministic and Non-Deterministic Automatons based on Rum96"
+  options [quick_and_dirty = true, browser_info, document = pdf,document_variants="outline=/proof"]
+  theories
+    dAutomaton
+    dAutomaton_causal
+    ndAutomaton
+  document_files
+    "root.tex"
