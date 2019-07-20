@@ -401,7 +401,7 @@ lemma "getter A = getter B \<Longrightarrow> A = B"
 fixrec setterSB::"'a stream \<rightarrow> 'cs\<^sup>\<Omega>" where
 "setterSB\<cdot>((up\<cdot>l)&&ls) = (setter (undiscr l)) \<bullet>\<^sup>\<surd> (setterSB\<cdot>ls)" 
 
-lemma settersb_unfold:"setterSB\<cdot>(\<up>a \<bullet> s) = (setter a) \<bullet>\<^sup>\<surd> setterSB\<cdot>s"
+lemma settersb_unfold[simp]:"setterSB\<cdot>(\<up>a \<bullet> s) = (setter a) \<bullet>\<^sup>\<surd> setterSB\<cdot>s"
   unfolding setterSB_def
   apply(subst fix_eq)
   apply simp 
@@ -410,10 +410,10 @@ lemma settersb_unfold:"setterSB\<cdot>(\<up>a \<bullet> s) = (setter a) \<bullet
   apply (metis (no_types, lifting) lshd_updis stream.sel_rews(4) undiscr_Discr up_inject)
   by (metis lscons_conv)
 
-lemma settersb_emptyfix:"chIsEmpty (TYPE ('cs)) \<Longrightarrow> setterSB\<cdot>s = \<bottom>"
+lemma settersb_emptyfix[simp]:"chIsEmpty (TYPE ('cs)) \<Longrightarrow> setterSB\<cdot>s = \<bottom>"
   by simp
 
-lemma settersb_epsbot:"setterSB\<cdot>\<epsilon> = \<bottom>"
+lemma settersb_epsbot[simp]:"setterSB\<cdot>\<epsilon> = \<bottom>"
   apply(simp add: setterSB_def)
   apply(subst fix_eq)
   by auto
@@ -422,7 +422,7 @@ lemma settersb_epsbot:"setterSB\<cdot>\<epsilon> = \<bottom>"
 definition getterSB::"'cs\<^sup>\<Omega> \<rightarrow> 'a stream" where
 "getterSB \<equiv> fix\<cdot>(\<Lambda> h. sb_case\<cdot>(\<lambda>sbe. \<Lambda> sb. updis (getter sbe) && h\<cdot>sb))"
 
-lemma gettersb_unfold:"getterSB\<cdot>(sbe \<bullet>\<^sup>\<surd> sb) = \<up>(getter sbe) \<bullet> getterSB\<cdot>sb"
+lemma gettersb_unfold[simp]:"getterSB\<cdot>(sbe \<bullet>\<^sup>\<surd> sb) = \<up>(getter sbe) \<bullet> getterSB\<cdot>sb"
   unfolding getterSB_def
   apply(subst fix_eq)
   apply simp
@@ -431,7 +431,7 @@ lemma gettersb_unfold:"getterSB\<cdot>(sbe \<bullet>\<^sup>\<surd> sb) = \<up>(g
 lemma gettersb_emptyfix:"chIsEmpty (TYPE ('cs)) \<Longrightarrow> getterSB\<cdot>sb = \<up>(getter (Abs_sbElem None)) \<bullet> getterSB\<cdot>sb"
   by (metis(full_types) gettersb_unfold sbtypeepmpty_sbbot)
 
-lemma gettersb_realboteps:"\<not>(chIsEmpty (TYPE ('cs))) \<Longrightarrow> getterSB\<cdot>\<bottom> = \<epsilon>"
+lemma gettersb_realboteps[simp]:"\<not>(chIsEmpty (TYPE ('cs))) \<Longrightarrow> getterSB\<cdot>\<bottom> = \<epsilon>"
   unfolding getterSB_def
   apply(subst fix_eq)
   by (simp add: sb_cases_bot)
@@ -450,14 +450,11 @@ lemma "sbLen (setterSB\<cdot>s) = #s"
 lemma "a \<sqsubseteq> getterSB\<cdot>(setterSB\<cdot>a)"
   apply(induction a rule: ind)
   apply(auto)
-  apply (simp add: gettersb_unfold settersb_unfold)
   by (simp add: monofun_cfun_arg)
 
-lemma getset_eq:"\<not>chIsEmpty (TYPE ('cs)) \<Longrightarrow> getterSB\<cdot>(setterSB\<cdot>a) = a"
+lemma getset_eq[simp]:"\<not>chIsEmpty (TYPE ('cs)) \<Longrightarrow> getterSB\<cdot>(setterSB\<cdot>a) = a"
   apply(induction a rule: ind)
-  apply(auto)
-  apply (simp add: gettersb_realboteps settersb_epsbot)
-  by (simp add: gettersb_unfold settersb_unfold)
+  by(auto)
 
 lemma "setterSB\<cdot>(getterSB\<cdot>sb) \<sqsubseteq> sb"
   apply(induction sb)
@@ -480,8 +477,6 @@ lemma setget_eq:"(\<forall>c. #(sb \<^enum> c) = k) \<Longrightarrow>setterSB\<c
   apply(subgoal_tac "k = 0",auto)
      apply (metis gettersb_realboteps sb_eqI sbgetch_bot settersb_epsbot)
     defer
-    apply(subst gettersb_unfold)
-    apply(subst settersb_unfold,simp)
   apply(subgoal_tac "\<And>c. #(sb \<^enum> c) \<le> #(sbe \<bullet>\<^sup>\<surd> sb  \<^enum>  c)",auto)
   oops  (* Nur für gleichlange ströme *)
 
