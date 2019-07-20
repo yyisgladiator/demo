@@ -13,7 +13,7 @@ interpretation not_smap:smapGen "dAnot_transition" Single "buildNotinSBE" "build
   apply auto[1]
   done
 
-definition "notStrong  \<equiv>  (dAutomaton_weak.extend not_smap.da (dAutomaton_strong.fields (notOutSBE.setter True)))"
+definition "notStrong  \<equiv>  daw2das not_smap.da (notOutSBE.setter True)"
 
 abbreviation notStep::"(S_not \<Rightarrow> (inNot\<^sup>\<Omega> \<rightarrow> outNot\<^sup>\<Omega>))"where
 "notStep \<equiv> dawStateSem not_smap.da"
@@ -31,7 +31,7 @@ lemma notstep2smap:"notOutSBE.getterSB\<cdot>(notStep state\<cdot>(notInSBE.sett
   by (metis (mono_tags, lifting) S_not.exhaust not_smap.daut2smap somechannotempty)
 
 lemma "notOutSBE.getterSB\<cdot>(notSpf\<cdot>(notInSBE.setterSB\<cdot>input)) = \<up>True \<bullet>(smap not_smap.smapTransition)\<cdot>input"
-  by(simp add: notSpf_def dasSem_def dasinitout_well das2daw_trunc_well dawSem_def notstep2smap notStrong_def)
+  by(simp add: notSpf_def dasSem_def dasinitout_well das2daw_trunc_well dawSem_def notstep2smap notStrong_def daw2das_def)
 
 lemma not_step:"smap not_smap.smapTransition\<cdot>(\<up>bool \<bullet> s) = \<up>(\<not>bool) \<bullet> smap not_smap.smapTransition\<cdot>s"
   by simp

@@ -13,7 +13,10 @@ record ('state::type, 'in, 'out) dAutomaton_weak  =
 record ('state::type,'in,'out)dAutomaton_strong = "('state::type, 'in, 'out) dAutomaton_weak" 
                                                   + dasInitOut:: "'out\<^sup>\<surd>"
 
-definition daw2da::"('state::type, 'in::{chan,finite}, 'out) dAutomaton_weak \<Rightarrow> ('state::type, 'in, 'out) dAutomaton" where
+definition daw2das::"('state::type, 'in, 'out) dAutomaton_weak \<Rightarrow> 'out\<^sup>\<surd> \<Rightarrow> ('state::type, 'in, 'out) dAutomaton_strong"where
+"daw2das daw initout\<equiv> (dAutomaton_weak.extend daw (dAutomaton_strong.fields initout))"
+
+definition daw2da::"('state::type, 'in, 'out) dAutomaton_weak \<Rightarrow> ('state::type, 'in, 'out) dAutomaton" where
 "daw2da \<equiv> \<lambda>aut. (| daTransition =(\<lambda>s sbe. (fst(dawTransition aut s sbe),sbe2sb (snd(dawTransition aut s sbe)))),
                  daInitState = dawInitState(aut), daInitOut = \<bottom> |)"
 
