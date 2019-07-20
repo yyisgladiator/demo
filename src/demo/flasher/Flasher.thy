@@ -122,7 +122,7 @@ lemma flash2andin[simp]:"(((sbConvert::inFlash\<^sup>\<Omega> \<rightarrow> ((in
   apply(rule sb_eqI,auto)  
   sorry
 
-lemma flash2andout[simp]:"flashOutSB.setter (port_o, port_intern)\<star>\<star> = andOutSB.setter port_o"
+lemma flash2andout[simp]:"flashOutSB.setter (port_o, port_intern)\<star>\<star>\<^sub>1 = andOutSB.setter port_o"
   oops (* SWS: Gilt Nicht, doppelte magie. Anstatt den Zwischen-Datentyp zu fixieren und assumptions zu haben...
                 kann man die magischen-sachen durch nicht-magie ersetzen? *)
 
@@ -130,7 +130,7 @@ lemma flash2notin[simp]:"flashInSB.setter port_i\<star> \<uplus>\<^sub>\<star> (
   oops (* SWS: Gilt Nicht, doppelte magie. Anstatt den Zwischen-Datentyp zu fixieren und assumptions zu haben...
                 kann man die magischen-sachen durch nicht-magie ersetzen? *)
 
-lemma flash2notout[simp]:"flashOutSB.setter (port_o, port_intern)\<star>\<star> = notOutSB.setter port_intern "
+lemma flash2notout[simp]:"flashOutSB.setter (port_o, port_intern)\<star>\<star>\<^sub>2 = notOutSB.setter port_intern "
   oops (* SWS: Gilt Nicht, doppelte magie. Anstatt den Zwischen-Datentyp zu fixieren und assumptions zu haben...
                 kann man die magischen-sachen durch nicht-magie ersetzen? *)
 
@@ -149,8 +149,6 @@ lemma assumes "andSpf\<cdot>(andInSB.setter (port_i, port_intern)) = andOutSB.se
   apply(simp add: flasherComp_def convflasherComp_def spfConvert_def)
   apply(rule spfcomp_eq,simp)
     apply (simp add: assms)
-   apply(simp add: assms)
-  apply (simp)
   oops
   
 

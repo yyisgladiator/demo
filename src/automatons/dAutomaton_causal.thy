@@ -195,6 +195,8 @@ locale smapGen =
   and singlestate:"\<And>sbe. fst(daTransition loopState sbe) = loopState"
 begin
 
+abbreviation "smapTransition \<equiv> (\<lambda>e. snd(daTransition loopState e))" 
+
 (*Move to stream.thy. Is there already a lemma like this?*)
 lemma sscanl2smap:
   assumes "\<And>e. fst(f s e) = s"
@@ -204,7 +206,7 @@ shows"sscanlAsnd f s = smap g"
   by(induct_tac x rule: ind,simp_all add: assms)
 
 lemma daut2smap:"sbeGen.getterSB fout\<cdot>(dawStateSem (sscanlGen.da daTransition daInitialState fin fout) loopState\<cdot>(sbeGen.setterSB fin \<cdot>input)) = 
-       smap (\<lambda>e. snd(daTransition loopState e))\<cdot>input"
+       smap smapTransition\<cdot>input"
   apply(subst sscanlGen.daut2sscanl)
   using scscanlgenf sscanlGen.sbegenfin apply auto[1]
   apply(subst sscanl2smap[of daTransition loopState "(\<lambda>e. snd(daTransition loopState e))"])
