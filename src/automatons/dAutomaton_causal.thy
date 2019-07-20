@@ -123,8 +123,20 @@ lemma dawstatesem_weak:
 lemma dassem_insert:
   "dasSem automat\<cdot>sb = (dasInitOut automat) \<bullet>\<^sup>\<surd> ((dawStateSem (dAutomaton_weak.truncate automat) (dawInitState automat))\<cdot>sb)"
   apply (simp add: dasSem_def dawSem_def)
-  apply(subgoal_tac "dawInitState (dAutomaton_weak.truncate automat) = dawInitState automat",auto) (*Sollte gelten*)
-  sorry 
+  by(simp add: dAutomaton_weak.defs dAutomaton_strong.defs)
+
+
+
+lemma dasinitout_well:"(dasInitOut
+         (dAutomaton_weak.extend daw
+           (dAutomaton_strong.fields
+             sbe))) = sbe"
+  by(simp add: dAutomaton_weak.defs dAutomaton_strong.defs)
+
+lemma das2daw_trunc_well:"dAutomaton_weak.truncate
+                (dAutomaton_weak.extend da
+                  (dAutomaton_strong.fields sbe)) = da" 
+  by(simp add: dAutomaton_weak.defs dAutomaton_strong.defs)
 
 lemma dassem_bottom:
   shows "dasSem automat\<cdot>\<bottom> = sbe2sb (dawInitOut automat)"
@@ -140,7 +152,7 @@ locale sscanlGen =
   fixes daTransition::"'state::countable \<Rightarrow> 'a::countable \<Rightarrow> ('state\<times>'b::countable)"
   and   daInitialState::"'state"
   and fin::"'a::countable \<Rightarrow> 'in::{chan,finite} \<Rightarrow> M"  
-  and fout::"'b::countable \<Rightarrow> 'out::{somechan,finite} \<Rightarrow> M"
+  and fout::"'b::countable \<Rightarrow> 'out::{chan,finite} \<Rightarrow> M"
   assumes sbegenfin:"sbeGen fin"
       and sbegenfout:"sbeGen fout"
 begin
@@ -152,22 +164,32 @@ definition daTransitionH::"'state \<Rightarrow> 'in\<^sup>\<surd> \<Rightarrow> 
 definition "da = \<lparr> dawTransition = daTransitionH,
                  dawInitState =daInitialState \<rparr>"
 
-lemma daut2sscanl:"sbeGen.getterSB fout \<cdot>(dawStateSem da state\<cdot>(sbeGen.setterSB fin\<cdot>input)) =
+lemma daut2sscanl:assumes "\<not>chIsEmpty(TYPE('out))"shows"sbeGen.getterSB fout \<cdot>(dawStateSem da state\<cdot>(sbeGen.setterSB fin\<cdot>input)) =
                    sscanlAsnd daTransition state\<cdot>input"
+using assms
 proof(induction input arbitrary: state rule: ind)
   case 1
   then show ?case
     by simp
 next
   case 2
-  then show ?case 
-    by (simp add: sbeGen.gettersb_realboteps sbeGen.settersb_epsbot sbegenfin sbegenfout dawstatesem_strict)
+  then show ?case
+    by (simp add: assms sbeGen.gettersb_realboteps sbeGen.settersb_epsbot sbegenfin sbegenfout dawstatesem_strict)
 next
   case (3 a s)
   then show ?case                                                                      
     by (simp add: sbeGen.get_set dawstatesem_final_h2 sbegenfin sbegenfout 
          sbeGen.settersb_unfold prod.case_eq_if sbeGen.gettersb_unfold da_def daTransitionH_def)
 qed
+
+lemma emptychan_eq[simp]:"chIsEmpty TYPE('out) \<Longrightarrow> (sb1::'out\<^sup>\<Omega>) = sb2"
+  by (metis (full_types)sbtypeepmpty_sbbot)
+
+lemma daut2sscanl:"(dawStateSem da state\<cdot>input) =
+                   sbeGen.setterSB fout\<cdot>(sscanlAsnd daTransition state\<cdot>(sbeGen.getterSB fin\<cdot>input))"
+  apply(cases "chIsEmpty(TYPE('out))",simp_all)
+  apply(insert daut2sscanl[of state "sbeGen.getterSB fin\<cdot>input"],auto)
+  oops
 
 fun stateSemList::"'state \<Rightarrow> 'a list \<Rightarrow> 'b list" where
 "stateSemList _ [] = []" |
@@ -189,7 +211,7 @@ locale smapGen =
   fixes daTransition::"'state::countable \<Rightarrow> 'a::countable \<Rightarrow> ('state\<times>'b::countable)"
   and   daInitialState::"'state"
   and fin::"'a::countable \<Rightarrow> 'in::{chan,finite} \<Rightarrow> M"  
-  and fout::"'b::countable \<Rightarrow> 'out::{somechan,finite} \<Rightarrow> M"
+  and fout::"'b::countable \<Rightarrow> 'out::{chan,finite} \<Rightarrow> M"
   and loopState::"'state"
   assumes scscanlgenf:"sscanlGen fin fout"
   and singlestate:"\<And>sbe. fst(daTransition loopState sbe) = loopState"
@@ -205,12 +227,12 @@ shows"sscanlAsnd f s = smap g"
   apply(rule cfun_eqI)
   by(induct_tac x rule: ind,simp_all add: assms)
 
-lemma daut2smap:"sbeGen.getterSB fout\<cdot>(dawStateSem (sscanlGen.da daTransition daInitialState fin fout) loopState\<cdot>(sbeGen.setterSB fin \<cdot>input)) = 
+lemma daut2smap:assumes "\<not>chIsEmpty(TYPE('out))"
+      shows"sbeGen.getterSB fout\<cdot>(dawStateSem (sscanlGen.da daTransition daInitialState fin fout) loopState\<cdot>(sbeGen.setterSB fin \<cdot>input)) = 
        smap smapTransition\<cdot>input"
   apply(subst sscanlGen.daut2sscanl)
-  using scscanlgenf sscanlGen.sbegenfin apply auto[1]
-  apply(subst sscanl2smap[of daTransition loopState "(\<lambda>e. snd(daTransition loopState e))"])
-  using singlestate by auto
+  using scscanlgenf sscanlGen.sbegenfin assms  apply auto[2] 
+  by (simp add: singlestate sscanl2smap)
 
 end
 

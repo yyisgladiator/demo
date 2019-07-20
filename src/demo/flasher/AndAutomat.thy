@@ -28,7 +28,7 @@ lemma andoutgetset_eq:"andOutSBE.getterSB\<cdot> (andOutSBE.setterSB\<cdot>s) = 
   by(simp)
 
 lemma andstep2smap:"andOutSBE.getterSB\<cdot>(andStep state\<cdot>(andInSBE.setterSB\<cdot>input)) = smap and_smap.smapTransition\<cdot>input"
-  by (metis (full_types)S_and.exhaust and_smap.daut2smap)
+  by (metis (mono_tags, lifting) S_and.exhaust and_smap.daut2smap somechannotempty)
 
 lemma "andOutSBE.getterSB\<cdot>(andSpf\<cdot>(andInSBE.setterSB\<cdot>input)) =smap and_smap.smapTransition\<cdot>input"
   by(simp add: andSpf_def dawSem_def andstep2smap)
