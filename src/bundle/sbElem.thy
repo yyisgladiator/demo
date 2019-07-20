@@ -113,24 +113,25 @@ definition sbeUnion::"'c\<^sup>\<surd> \<Rightarrow> 'd\<^sup>\<surd> \<Rightarr
 "sbeUnion = (\<lambda>sbe1 sbe2. Abs_sbElem (Some(\<lambda> c. if (Rep c \<in> (range (Rep ::'c \<Rightarrow> channel))) then
                   sbegetch c sbe1 else  sbegetch c sbe2)))"
 
+lemma h1: assumes "Rep (c::'e) \<notin> range(Rep::'d \<Rightarrow> channel)"
+  shows "sbegetch c sbe2 \<in> ctype (Rep c)"
+  oops
+
 lemma sbeunion_getchfst:assumes "Rep (c::'c) \<in> range(Rep::'e \<Rightarrow> channel)"
                       and "\<not>(chIsEmpty TYPE('c))"
                      and "range(Rep::'e \<Rightarrow> channel) \<subseteq> range(Rep::'c \<Rightarrow> channel) \<union> range(Rep::'d \<Rightarrow> channel)"
   shows "sbegetch c ((sbeUnion::'c\<^sup>\<surd> \<Rightarrow> 'd\<^sup>\<surd> \<Rightarrow> 'e\<^sup>\<surd>) sbe1 sbe2) = sbegetch c sbe1"
-  using assms(1)
+ 
   apply(simp add: sbeUnion_def)
   apply(simp add: sbegetch_def)
   apply(subst Abs_sbElem_inverse)
    defer
    apply (simp add: sbegetch_def)
   apply(rule)
-  using assms
-  apply(simp)
-  apply(rule)
-  apply(rule conjI)
    apply(auto)
-
-  
+  using assms apply (metis chan_inj f_inv_into_f inv_f_f)
+    apply (simp add: assms(1))
+   apply (metis assms(2) chIsEmpty_def chan_eq option.exhaust_sel repinrange sbElem_well.simps(1) sbElem_well.simps(2) sbegetch_def sbelemwell2fwell)
   oops
 
 
@@ -139,6 +140,20 @@ lemma sbeunion_getchsnd:assumes "Rep (c::'d) \<in> range(Rep::'e \<Rightarrow> c
                      and "\<not>(chIsEmpty TYPE('c))"
                      and "range(Rep::'e \<Rightarrow> channel) \<subseteq> range(Rep::'c \<Rightarrow> channel) \<union> range(Rep::'d \<Rightarrow> channel)"
   shows"sbegetch c ((sbeUnion::'c\<^sup>\<surd> \<Rightarrow> 'd\<^sup>\<surd> \<Rightarrow> 'e\<^sup>\<surd>) sbe1 sbe2) = sbegetch c sbe2"
+ 
+  
+   apply(simp add: sbeUnion_def)
+  apply(simp add: sbegetch_def)
+  apply(subst Abs_sbElem_inverse)
+   defer
+   apply (simp add: sbegetch_def)
+  apply(rule)
+   apply(auto)
+  using assms apply simp
+    apply (simp add: assms(1))
+   apply (metis assms(3) chIsEmpty_def chan_eq option.collapse repinrange sbElem_well.simps(1) sbElem_well.simps(2) sbegetch_def sbelemwell2fwell)
+  
+  
   using assms(1)
   apply(simp add: sbeUnion_def)
   apply(simp add: sbegetch_def)
