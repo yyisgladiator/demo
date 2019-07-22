@@ -200,10 +200,9 @@ lemma spfcomp_surj_h:
     apply(rule cfun_arg_eqI)+
   subgoal
     apply(rule sb_eqI)
-  apply auto[1]
-     apply (metis DiffD1 chDom_def sbconvert_rep sbgetch_insert2 sbunion_getch)
-  using DiffD1 chDom_def sbconvert_rep sbgetch_insert2 sbunion_getch  
-  oops  (* TODO: Wichtig *)
+    apply auto[1]
+    oops
+  (* TODO: Wichtig *)
 (* Ist aber sehr komisch, gilt glaube ich nicht ... *)
 
 
@@ -221,7 +220,6 @@ lemma spfcomp_surj:
   apply(rule fix_eqI)
    apply auto
    apply(rule sbunion_eqI)
-    apply(rule cfun_arg_eqI)+
   subgoal
 
   oops
