@@ -123,8 +123,19 @@ lemma spfcomp_belowI:
   by (simp add: assms)
 
 
-lemma sbunion_magic: "(sb1 \<uplus> sb2)\<star> = sb1 \<uplus>\<^sub>\<star> sb2"
+lemma sbconvert_getch [simp]: "sb \<star> \<^enum> c = sb \<^enum>\<^sub>\<star> c"
+  by (simp add: sbgetch_insert2)
+
+lemma sbunion_getch [simp]: "sb1 \<uplus>\<^sub>\<star> sb2  \<^enum>  c = (sb1 \<uplus> sb2) \<^enum>\<^sub>\<star> c"
+  apply(auto simp add: sbGetCh.rep_eq sbunion_rep_eq)
   sorry
+
+lemma sbunion_magic: 
+  fixes sb1 ::"'cs1\<^sup>\<Omega>"
+    and sb2 ::"'cs2\<^sup>\<Omega>"
+  shows "(sb1 \<uplus> sb2)\<star> = sb1 \<uplus>\<^sub>\<star> sb2"
+  apply(rule sb_eqI)
+  by auto
 
 lemma sbunion_fst[simp]: "(sb1 \<uplus> sb2)\<star>\<^sub>1 = sb1"
   by (simp add: sbunion_magic)
@@ -135,6 +146,12 @@ lemma sbunion_snd[simp]:
   assumes "chDom (TYPE ('cs1)) \<inter> chDom (TYPE ('cs2)) = {}"
   shows "(sb1 \<uplus> sb2)\<star>\<^sub>2 = sb2"
   by (metis assms sbconv_eq sbunion_magic ubunion_commu ubunion_fst)
+
+lemma sbunion_eqI:
+  assumes "sb1 = sb\<star>\<^sub>1"
+    and "sb2 = sb\<star>\<^sub>2"
+  shows "sb1 \<uplus> sb2 = sb"
+  by (simp add: assms)
 
 lemma spfcomp_eqI:
       fixes f::"'fIn\<^sup>\<Omega> \<rightarrow> 'fOut\<^sup>\<Omega>"
@@ -163,9 +180,14 @@ lemma spfcomp2gencomp  [simp]:
   apply(simp add: spfConvert_def genComp_def)
   sorry
 
+lemma sbgetch_empty2[simp]: fixes sb::"'cs\<^sup>\<Omega>"
+    assumes "Rep c \<notin> chDom TYPE('cs)"
+    shows "sb \<^enum>\<^sub>\<star> c = \<epsilon>"
+  apply(simp add: sbgetch_insert assms chDom_def)
+  by (metis Diff_triv Rep_sb_strict app_strict assms chDom_def chIsEmpty_def chan_botsingle sbtypeepmpty_sbbot)
 
 lemma spfcomp_surj_h: 
-  fixes  f :: "(('a \<union> 'b) - 'c \<union> 'd)\<^sup>\<Omega> \<rightarrow> ('c \<union> 'd)\<^sup>\<Omega>"
+  fixes  f :: "(('a \<union> 'b) - ('c \<union> 'd))\<^sup>\<Omega> \<rightarrow> ('c \<union> 'd)\<^sup>\<Omega>"
       assumes "chDom (TYPE ('c)) \<inter> chDom (TYPE ('d)) = {}"
 
   shows "(spfConvert\<cdot>(f)) \<otimes> (spfConvert\<cdot>(f)) = f"
@@ -174,12 +196,34 @@ lemma spfcomp_surj_h:
   apply(rule cfun_eqI, simp)
   apply(rule fix_eqI)
    apply auto
-   apply(rule sb_eqI)
-   apply auto
+   apply(rule sbunion_eqI)
+    apply(rule cfun_arg_eqI)+
+  subgoal
+    apply(rule sb_eqI)
+  apply auto[1]
+     apply (metis DiffD1 chDom_def sbconvert_rep sbgetch_insert2 sbunion_getch)
+  using DiffD1 chDom_def sbconvert_rep sbgetch_insert2 sbunion_getch  
   oops  (* TODO: Wichtig *)
 (* Ist aber sehr komisch, gilt glaube ich nicht ... *)
 
-lemma spfcomp_surj: obtains f g where "f \<otimes> g = x"
+
+definition fstcomplete:: "((('a \<union> 'b) - ('c \<union> 'd))\<^sup>\<Omega> \<rightarrow> ('c \<union> 'd)\<^sup>\<Omega>) \<rightarrow> 'a\<^sup>\<Omega> \<rightarrow> 'c\<^sup>\<Omega>" where
+"fstcomplete \<equiv> \<Lambda> f input. undefined"
+
+lemma spfcomp_surj:
+  fixes  h :: "(('a \<union> 'b) - ('c \<union> 'd))\<^sup>\<Omega> \<rightarrow> ('c \<union> 'd)\<^sup>\<Omega>"
+  assumes "chDom (TYPE ('c)) \<inter> chDom (TYPE ('d)) = {}"
+  shows"\<exists>f g. f \<otimes> g = h"
+  apply(subst genComp_def)
+  apply(simp add: spfConvert_def)
+  apply rule+
+  apply(rule cfun_eqI, simp)
+  apply(rule fix_eqI)
+   apply auto
+   apply(rule sbunion_eqI)
+    apply(rule cfun_arg_eqI)+
+  subgoal
+
   oops
 
 
