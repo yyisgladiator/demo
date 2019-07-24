@@ -306,20 +306,33 @@ proof-
   qed
 qed
 
+
+subsection\<open>sbHdElem_h_cont lemmas\<close>
+
+
+lemma h2:"sbHdElem_h_cont\<cdot>(sbe \<bullet>\<^sup>\<surd> sb) = up\<cdot>sbe"
+  by(simp add: sbHdElem_h_cont.rep_eq sbhdelem_h_sbe)
+
 subsection\<open>sb\_cases definition\<close>
 
 definition sb_case::"('cs\<^sup>\<surd> \<Rightarrow> 'cs\<^sup>\<Omega> \<rightarrow> 'a::pcpo) \<rightarrow> 'cs\<^sup>\<Omega> \<rightarrow> 'a" where
 "sb_case \<equiv> \<Lambda> k sb. fup\<cdot>(\<Lambda> sbe. k sbe\<cdot>(sbRt\<cdot>sb))\<cdot>(sbHdElem_h_cont\<cdot>sb)"
 
-lemma sb_case_cont:"cont (\<lambda>sb. \<Lambda> k. fup\<cdot>(\<Lambda> sbe. k\<cdot>sbe\<cdot>(sbRt\<cdot>sb))\<cdot>(sbHdElem_h_cont\<cdot>sb))"
-  by simp
+lemma sb_case_insert:"sb_case\<cdot>k\<cdot>sb = (case sbHdElem_h_cont\<cdot>sb of up\<cdot>(sbe::'b\<^sup>\<surd>) \<Rightarrow> k sbe\<cdot>(sbRt\<cdot>sb))"
+  apply(simp add: sb_case_def)
+  apply(subst beta_cfun)
+  apply(intro cont2cont,simp_all)
+  using cont2cont_fst cont_fst cont_snd discr_cont3 by blast
 
 
-lemma sb_cases_bot:"\<not>(chIsEmpty (TYPE ('cs))) \<Longrightarrow> sb_case\<cdot>f\<cdot>\<bottom> = \<bottom>"
-  sorry
+lemma sb_cases_bot:"\<not>(chIsEmpty (TYPE ('cs))) \<Longrightarrow> sb_case\<cdot>f\<cdot>(\<bottom>::'cs\<^sup>\<Omega>) = \<bottom>"
+  by(simp add: sb_case_insert sbHdElem_h_cont.rep_eq sbHdElem_h_def chIsEmpty_def)
 
-lemma sb_cases_sbe[simp]:"sb_case\<cdot>f\<cdot>(sbECons sbe\<cdot>sb) = f sbe\<cdot>sb"
-  sorry
+lemma sb_cases_sbe[simp]:"sb_case\<cdot>f\<cdot>(sbECons sbe\<cdot>sb) = f sbe\<cdot>(sb)"
+  apply (subst sb_case_insert)
+  apply (subst sbrt_sbecons)
+  by (simp add: h2)
+
 
 section\<open>Datatype Konstruktor\<close>
 

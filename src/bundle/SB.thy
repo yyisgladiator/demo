@@ -172,6 +172,19 @@ lemma slen_empty_eq:  assumes"chIsEmpty(TYPE('c))"
   shows " #(sb \<^enum>\<^sub>\<star> (c::'c)) =0"
   using assms chIsEmpty_def cEmpty_def sbgetch_ctype_notempty by fastforce
 
+
+lemma sbgetch_sbe2sb_nempty: assumes "\<not>chIsEmpty(TYPE('a))"
+  shows "\<forall>c::'a. sbe2sb sbe  \<^enum>  c \<noteq> \<epsilon>"
+  apply (simp add: sbe2sb_def)
+  apply (simp split: option.split) 
+  apply (rule conjI)
+  apply (rule impI)
+  using assms chIsEmpty_def sbElem_well.simps(1) sbelemwell2fwell apply blast
+  apply (rule allI, rule impI, rule allI)
+  by (metis (no_types) option.simps(5) sbe2sb.abs_eq sbe2sb.rep_eq sbgetch_insert2 sconc_snd_empty 
+      srcdups_step srcdupsimposs strict_sdropwhile)
+
+
 subsection \<open>Concatination\<close>
 
 lemma sbconc_well[simp]:"sb_well (\<lambda>c. (sb1 \<^enum> c) \<bullet> (sb2 \<^enum> c))"
@@ -255,7 +268,17 @@ lemma sblen_min_len [simp]:
   shows"sbLen (sb :: 'c\<^sup>\<Omega>) \<le> #(sb \<^enum> c)"
   apply(simp add: sbLen_def assms)
   by (metis (mono_tags, lifting) Least_le)
- 
+
+
+lemma sblenleq: assumes "\<not> chIsEmpty TYPE('a)" and
+ "\<exists>c::'a. #(sb\<^enum>c) \<le> k"
+  shows "sbLen sb \<le> k" 
+  apply(simp add: sbLen_def assms)
+  apply(subgoal_tac "\<And>c::'a. Rep c \<notin> cEmpty") 
+  apply auto
+  apply (metis (mono_tags, lifting) Least_le assms(2) dual_order.trans)
+  using assms(1) by(simp add: chIsEmpty_def)
+
 lemma sblengeq: assumes "\<And>c::'c. k\<le> #(sb\<^enum>c)"
   shows "k \<le> sbLen sb" 
   apply(cases  "chIsEmpty(TYPE('c))",simp add: assms)
@@ -283,6 +306,57 @@ proof(simp add: sbLen_def)
   then show ?thesis
     using f5 f4 f3 by (metis eq_less_and_fst_inf inf_less_eq sbgetch_ctype_notempty)
 qed
+
+lemma sblen_rule:assumes "\<not>chIsEmpty(TYPE('a))" and "\<And>c. k \<le> #(sb \<^enum> (c :: 'a ))" and "\<exists>c. #(sb \<^enum> (c :: 'a )) = k"
+  shows" sbLen sb = k"
+  by (metis assms(1) assms(2) assms(3) dual_order.antisym sblen_min_len sblengeq)
+
+lemma sblen2slen:
+  assumes"\<not>chIsEmpty(TYPE('c))"
+  shows"\<exists>c. sbLen (sb :: 'c\<^sup>\<Omega>) = #(sb \<^enum> c)"
+  sorry
+
+lemma sbconc_chan_len:"#(sb1 \<bullet>\<^sup>\<Omega> sb2  \<^enum>  c) = #(sb1 \<^enum> c)+ #(sb2  \<^enum>  c)"
+  by (simp add: sconc_slen2)
+
+lemma sblen_sbconc_eq: assumes "\<And>c.#(sb1 \<^enum> c) = k" shows "(sbLen (sb1 \<bullet>\<^sup>\<Omega> sb2)) = (sbLen sb2) + k"
+  apply(cases  "chIsEmpty(TYPE('a))",simp)
+  apply (simp add: plus_lnatInf_r)
+  apply(subgoal_tac "sbLen sb1 = k")
+  apply(rule sblen_rule,simp)
+  apply (metis add.commute dual_order.trans sblen_min_len sblen_sbconc)
+  apply (metis assms lnat_plus_commu sbconc_chan_len sblen2slen)  
+  by(rule sblen_rule,simp_all add: assms)
+
+lemma sbelen_one[simp]:
+  assumes"\<not>chIsEmpty(TYPE('a))"
+  shows " sbLen (sbe2sb (sbe::'a\<^sup>\<surd>)) = 1"
+proof-
+  have "\<And>c. #(sbe2sb (sbe::'a\<^sup>\<surd>) \<^enum> (c :: 'a )) = 1"
+    apply(simp add: sbe2sb_def)
+    apply(subgoal_tac "Rep_sbElem sbe \<noteq> None")
+    apply auto
+    apply(simp add: sbgetch_insert2)
+    apply(subst Abs_sb_inverse,auto)
+    apply (metis (full_types) option.simps(5) sbe2sb.rep_eq sbwell2fwell)
+     apply (simp add: one_lnat_def)
+    by(simp add: assms)
+  then show ?thesis
+    apply(subst sblen_rule)
+    by(simp_all add: assms)
+qed
+
+
+lemma sbe2slen_1:  assumes"\<not>chIsEmpty(TYPE('a))"
+  shows  "\<And>c::'a. #(sbe2sb sbe  \<^enum>  c) = (1::lnat)"
+    apply(simp add: sbe2sb_def)
+    apply(subgoal_tac "Rep_sbElem sbe \<noteq> None")
+    apply auto
+    apply(simp add: sbgetch_insert2)
+    apply(subst Abs_sb_inverse,auto)
+    apply (metis (full_types) option.simps(5) sbe2sb.rep_eq sbwell2fwell)
+   apply (simp add: one_lnat_def)
+    by(simp add: assms)
  
 subsection\<open>sbIsLeast Predicate\<close>
 (* TODO: nach oben verschieben *)
@@ -297,45 +371,72 @@ lemma "sbIsLeast \<bottom>"
   apply (metis (mono_tags, lifting) Inf'_neq_0_rev LeastI_ex Least_le inf_less_eq)
   by (simp add: image_subset_iff) 
 
-subsection\<open>sbECons\<close>
-(* TODO: nach oben verschieben *)
-definition sbECons::"'c\<^sup>\<surd> \<Rightarrow> 'c\<^sup>\<Omega> \<rightarrow> 'c\<^sup>\<Omega>" where
-"sbECons sbe = sbConc (sbe2sb sbe)"
+subsection \<open>sbDrop\<close>
 
-abbreviation sbECons_abbr :: "'c\<^sup>\<surd> \<Rightarrow> 'c\<^sup>\<Omega> \<Rightarrow> 'c\<^sup>\<Omega>" (infixr "\<bullet>\<^sup>\<surd>" 100) where
-"sbe \<bullet>\<^sup>\<surd> sb \<equiv> sbECons sbe\<cdot>sb"
+subsubsection \<open>sbDrop definition\<close>
 
-lemma sbecons_len:"sbLen (sbe \<bullet>\<^sup>\<surd> sb) = lnsuc\<cdot>(sbLen sb)"
-  oops
+lemma sbdrop_well[simp]:"sb_well (\<lambda>c. sdrop n\<cdot>(b \<^enum>\<^sub>\<star> c))"
+  apply(rule sbwellI)
+  by (meson dual_order.trans sbgetch_ctypewell sdrop_sdom)
 
-lemma sbtypeempty_sbecons_bot[simp]:"chIsEmpty TYPE ('cs) \<Longrightarrow> (sbe::'cs\<^sup>\<surd>) \<bullet>\<^sup>\<surd> sb = \<bottom>"
+lift_definition sbDrop::"nat \<Rightarrow> 'c\<^sup>\<Omega> \<rightarrow> 'c\<^sup>\<Omega>"is
+"\<lambda> n sb. Abs_sb (\<lambda>c. sdrop n\<cdot>(sb \<^enum> c))"
+  apply(intro cont2cont)
+  by(simp add: sValues_def)
+
+lemmas sbdrop_insert = sbDrop.rep_eq
+
+subsubsection \<open>sbRt abbreviation\<close>
+
+abbreviation sbRt :: "'c\<^sup>\<Omega> \<rightarrow> 'c\<^sup>\<Omega>"  where 
+"sbRt \<equiv> sbDrop 1"
+
+subsubsection \<open>sbDrop lemmas\<close>
+
+
+lemma sbdrop_bot[simp]:"sbDrop n\<cdot>\<bottom> = \<bottom>"
+  apply(simp add: sbdrop_insert)
+  by (simp add: bot_sb)
+
+subsection \<open>sbTake\<close>
+
+subsubsection \<open>sbTake definition\<close>
+
+lemma sbtake_well[simp]:"sb_well (\<lambda>c. stake n\<cdot>(sb  \<^enum>\<^sub>\<star>  c))"
+  apply(rule sbmap_well)
+  by(simp add: sValues_def)
+
+lift_definition sbTake::"nat \<Rightarrow> 'c\<^sup>\<Omega> \<rightarrow>  'c\<^sup>\<Omega>"is
+"\<lambda> n sb. Abs_sb (\<lambda>c. stake n\<cdot>(sb \<^enum> c))"
+  by(intro cont2cont, simp)
+
+lemmas sbtake_insert = sbTake.rep_eq
+
+subsubsection \<open>sbHd abbreviation\<close>
+
+abbreviation sbHd :: "'c\<^sup>\<Omega> \<rightarrow> 'c\<^sup>\<Omega>"  where 
+"sbHd \<equiv> sbTake 1"
+
+subsubsection \<open>sbTake lemmas\<close>
+
+
+lemma sbtake_getch[simp]:"sbTake n\<cdot>sb \<^enum> c = stake n\<cdot>(sb \<^enum> c)"
+  apply(simp add: sbgetch_insert sbTake.rep_eq)
+  apply(subst Abs_sb_inverse)
+  by(auto simp add: sbgetch_insert2[symmetric])
+
+lemma sbmap_stake_eq:"(Abs_sb (\<lambda>c::'a. stake n\<cdot>((sb::'a\<^sup>\<Omega>)  \<^enum>  c))  \<^enum>  (c::'a)) = stake n\<cdot>(sb  \<^enum>  c)"
+  apply(simp add: sbgetch_insert2)
+  apply(subst Abs_sb_inverse)
+  apply simp
+  apply(rule sbwellI)
+  apply (metis sbgetch_insert2 sbgetch_ctypewell dual_order.trans sdom_sconc split_streaml1)
   by simp
 
-lemma [simp]:"chIsEmpty TYPE ('cs) \<Longrightarrow> P(sb) \<Longrightarrow> P( (sbe::'cs\<^sup>\<surd>) \<bullet>\<^sup>\<surd> sb)"
-  by (metis (full_types) sbtypeepmpty_sbbot)
+lemma sbtake_max_len [simp]: "#(sbTake n\<cdot>(sb::'a\<^sup>\<Omega>) \<^enum> (c::'a)) \<le> Fin n"
+  apply(simp add: sbTake.rep_eq)
+  by(simp add: sbmap_stake_eq)
 
-(* TODO: nach oben verschieben *)
-lemma sb_cases [case_names least sbeCons, cases type: sb]:
-  "(sbIsLeast (sb'::'cs\<^sup>\<Omega>) \<Longrightarrow> P)
-  \<Longrightarrow> (\<And>sbe sb. sb' = sbECons sbe\<cdot>sb \<Longrightarrow> \<not>chIsEmpty TYPE ('cs) \<Longrightarrow> P)
-  \<Longrightarrow> P"
-  oops
-(* TODO: nach oben verschieben *)
-lemma sb_finind:
-    fixes x::"'cs\<^sup>\<Omega>"
-  assumes "sbLen x < \<infinity>"
-      and "\<And>sb. sbIsLeast sb \<Longrightarrow> P sb"
-      and "\<And>sbe sb. P sb \<Longrightarrow> \<not>chIsEmpty TYPE ('cs) \<Longrightarrow> P (sbe \<bullet>\<^sup>\<surd> sb)"
-    shows "P x"
-  oops
-(* TODO: nach oben verschieben *)
-lemma sb_ind[case_names adm least sbeCons, induct type: sb]:
-    fixes x::"'cs\<^sup>\<Omega>"
-  assumes "adm P"
-      and "\<And>sb. sbIsLeast sb \<Longrightarrow> P sb"
-      and "\<And>sbe sb. P sb  \<Longrightarrow> \<not>chIsEmpty TYPE ('cs) \<Longrightarrow> P (sbe \<bullet>\<^sup>\<surd> sb)"
-  shows  "P x"
-  sorry
 
 subsection\<open>sbHdElem\<close>
 
@@ -397,6 +498,182 @@ proof-
     using not_bot a3 not_none apply auto[1]
     by(simp add: h1)
 qed
+
+subsection\<open>sbECons\<close>
+(* TODO: nach oben verschieben *)
+definition sbECons::"'c\<^sup>\<surd> \<Rightarrow> 'c\<^sup>\<Omega> \<rightarrow> 'c\<^sup>\<Omega>" where
+"sbECons sbe = sbConc (sbe2sb sbe)"
+
+abbreviation sbECons_abbr :: "'c\<^sup>\<surd> \<Rightarrow> 'c\<^sup>\<Omega> \<Rightarrow> 'c\<^sup>\<Omega>" (infixr "\<bullet>\<^sup>\<surd>" 100) where
+"sbe \<bullet>\<^sup>\<surd> sb \<equiv> sbECons sbe\<cdot>sb"
+
+
+lemma sbtypeempty_sbecons_bot[simp]:"chIsEmpty TYPE ('cs) \<Longrightarrow> (sbe::'cs\<^sup>\<surd>) \<bullet>\<^sup>\<surd> sb = \<bottom>"
+  by simp
+
+lemma [simp]:"chIsEmpty TYPE ('cs) \<Longrightarrow> P(sb) \<Longrightarrow> P( (sbe::'cs\<^sup>\<surd>) \<bullet>\<^sup>\<surd> sb)"
+  by (metis (full_types) sbtypeepmpty_sbbot)
+
+
+lemma sbecons_eq:assumes "sbLen sb \<noteq> 0" shows "(sbHdElem sb) \<bullet>\<^sup>\<surd> (sbRt\<cdot>sb) = sb"
+  oops
+
+lemma sbrt_sbecons: "sbRt\<cdot>(sbe \<bullet>\<^sup>\<surd> sb) = sb"
+  apply (cases "chIsEmpty(TYPE('a))", simp)
+  apply (simp add: sbDrop.rep_eq)
+  apply (simp add: sbECons_def)
+  apply (subst sdropl6)
+  apply (subgoal_tac "\<And>c. \<exists>m. sbe2sb sbe  \<^enum>  c = \<up>m")
+  apply (metis Fin_0 Fin_Suc lnzero_def lscons_conv slen_scons strict_slen sup'_def)
+  apply (simp add: sbgetch_insert2 sbe2sb.rep_eq chIsEmpty_def)
+  apply (metis option.simps(5) sbElem_well.elims(2) sbelemwell2fwell)
+  by (simp add: sb_rep_eqI sbgetch_insert2 Rep_sb_inverse)
+
+lemma sbhdelem_h_sbe:" sbHdElem_h (sbe \<bullet>\<^sup>\<surd> sb) = up\<cdot>sbe"
+  apply (cases "chIsEmpty(TYPE('a))",simp)
+  apply (simp_all add: sbHdElem_def sbHdElem_h_def)+
+  apply (rule conjI, rule impI)+
+  apply (simp_all add: chIsEmpty_def up_def)
+  apply (metis chIsEmpty_def sbtypeepmpty_sbenone)
+  apply (subgoal_tac "\<forall>c::'a. sbe2sb sbe  \<^enum>  c \<noteq> \<epsilon>")
+  apply (simp add: sbgetch_sbe2sb_nempty chIsEmpty_def)+
+  apply (simp add: sbECons_def)
+  apply (simp add: sbe2sb_def)
+  apply (simp split: option.split)
+  apply (rule conjI)
+  apply (rule impI)+
+  using sbElem_well.simps(1) sbelemwell2fwell apply blast
+  apply (rule allI)
+  apply (rule impI)+
+  apply (subgoal_tac "\<forall>c::'a. Abs_sb (\<lambda>c::'a. \<up>(x2 c))  \<^enum>  c = \<up>(x2 c)")
+  apply (simp add: Abs_sbElem_inverse)
+  apply (metis Rep_sbElem_inverse)
+  apply (metis option.simps(5) sbe2sb.abs_eq sbe2sb.rep_eq sbgetch_insert2)
+  by (simp add: chIsEmpty_def sbgetch_sbe2sb_nempty)
+
+lemma sbhdelem_sbecons: "sbHdElem (sbe  \<bullet>\<^sup>\<surd> sb) = sbe"
+  by(simp add: sbHdElem_def sbhdelem_h_sbe up_def)
+
+
+lemma sbecons_len:
+  shows "sbLen (sbe \<bullet>\<^sup>\<surd> sb) = lnsuc\<cdot>(sbLen sb)"
+  apply(cases "chIsEmpty(TYPE('a))")
+  apply(simp)
+  apply(rule sblen_rule,simp)
+  apply(simp add: sbECons_def sbgetch_insert2 sbconc_insert)
+  apply(subst Abs_sb_inverse)
+  apply simp
+  apply(insert sbconc_well[of "sbe2sb sbe" sb],simp add: sbgetch_insert2)
+   apply(subst sconc_slen2)
+  apply(subgoal_tac "#(Rep_sb (sbe2sb sbe) c) = 1",auto)
+  apply (metis sblenleq lnat_plus_commu lnat_plus_suc lnsuc_lnle_emb order_refl sbgetch_insert2)
+  apply (metis sbe2slen_1 sbgetch_insert2)
+  apply(simp add: sbECons_def sbgetch_insert2 sbconc_insert)
+  apply(subst Abs_sb_inverse)
+  apply simp
+  apply(insert sbconc_well[of "sbe2sb sbe" sb],simp add: sbgetch_insert2)
+  apply(subst sconc_slen2)
+  apply(subgoal_tac "\<And>c. #(Rep_sb (sbe2sb sbe) c) = 1",auto)
+  apply(insert sblen2slen[of sb])
+  apply (metis add.commute lnat_plus_suc sbgetch_insert2)
+  by (metis sbe2slen_1 sbgetch_insert2)
+
+(*sb_case*)
+
+lemma sbcons:"sbLen (sb::'cs\<^sup>\<Omega>) \<noteq> (0::lnat) \<Longrightarrow>sbConc (sbHd\<cdot>sb)\<cdot>(sbRt\<cdot>sb) = sb"
+  sorry
+
+lemma sbHdElem:"sbLen (sb::'cs\<^sup>\<Omega>) \<noteq> (0::lnat) \<Longrightarrow>sbe2sb (sbHdElem sb) = sbHd\<cdot>sb"
+  sorry
+
+(*sb_ind*)
+
+lemma sbtake_chain:"chain (\<lambda>i::nat. sbTake i\<cdot>x)"
+  apply (rule chainI)
+  apply(simp add: below_sb_def)
+  apply(rule fun_belowI)
+  apply(simp add: sbtake_insert)
+  by (metis (no_types) Suc_leD le_refl sbgetch_insert2 sbmap_stake_eq stake_mono)
+
+lemma sblen_sbtake:" \<not>chIsEmpty TYPE ('c) \<Longrightarrow> sbLen (sbTake n\<cdot>(x :: 'c\<^sup>\<Omega>)) \<le> Fin (n)"
+proof- 
+assume a0:"\<not>chIsEmpty TYPE ('c)"
+  have h0:"\<And>c. sbLen (sbTake n\<cdot>x) \<le> #((sbTake n\<cdot>x) \<^enum> (c::'c))"
+    by(rule sblen_min_len, simp add: a0)
+  have h1:"\<And>c. #((sbTake n\<cdot>x) \<^enum> (c::'c)) \<le> Fin (n)"
+   by simp 
+  then show ?thesis
+    using dual_order.trans h0 by blast
+qed
+
+lemma sbtake_lub:"(\<Squnion>i::nat. sbTake i\<cdot>x) = x"
+  apply(rule sb_eqI)
+  apply(subst contlub_cfun_arg)
+  apply(simp add: sbtake_chain)
+  by(simp add: sbtake_insert sbmap_stake_eq reach_stream)
+
+lemma sbECons_sbLen:"sbLen (sb::'cs\<^sup>\<Omega>) \<noteq> (0::lnat) \<Longrightarrow> \<not> chIsEmpty TYPE('cs) \<Longrightarrow> \<exists> sbe sb'. sb = sbe \<bullet>\<^sup>\<surd> sb'"
+  by (metis sbECons_def sbHdElem sbcons)
+
+lemma sb_cases [case_names least sbeCons, cases type: sb]: 
+  "(sbIsLeast (sb'::'cs\<^sup>\<Omega>) \<Longrightarrow> P) 
+  \<Longrightarrow> (\<And>sbe sb. sb' = sbECons sbe\<cdot>sb \<Longrightarrow> \<not>chIsEmpty TYPE ('cs) \<Longrightarrow> P) 
+  \<Longrightarrow> P"
+  apply(simp add: sbIsLeast_def)
+  apply(case_tac "sbLen sb' = ( 0::lnat)",simp_all)
+  apply(case_tac "chIsEmpty TYPE('cs)",simp_all)
+  using sbECons_sbLen by blast
+
+lemma sb_finind1:
+    fixes x::"'cs\<^sup>\<Omega>"
+    shows "sbLen x = Fin k\<Longrightarrow> (\<And>sb. sbIsLeast sb \<Longrightarrow> P sb) \<Longrightarrow> (\<And>sbe sb. P sb 
+          \<Longrightarrow> \<not>chIsEmpty TYPE ('cs) \<Longrightarrow> P (sbe \<bullet>\<^sup>\<surd> sb))
+    \<Longrightarrow>P x"
+  apply(induction k  arbitrary:x)
+  apply (simp add: sbIsLeast_def)
+  by (metis Fin_Suc inject_lnsuc sb_cases sbecons_len)
+
+lemma sb_finind:
+    fixes x::"'cs\<^sup>\<Omega>"
+  assumes "sbLen x < \<infinity>"
+      and "\<And>sb. sbIsLeast sb \<Longrightarrow> P sb"
+      and "\<And>sbe sb. P sb \<Longrightarrow> \<not>chIsEmpty TYPE ('cs) \<Longrightarrow> P (sbe \<bullet>\<^sup>\<surd> sb)"
+    shows "P x"
+  by (metis assms(1) assms(2) assms(3) lnat_well_h2 sb_finind1)
+
+lemma sbtakeind1: 
+  fixes x::"'cs\<^sup>\<Omega>"
+  shows "\<forall>x. (( \<forall>(sb::'cs\<^sup>\<Omega>) . sbIsLeast sb \<longrightarrow> P sb) \<and> 
+        (\<forall> (sbe::'cs\<^sup>\<surd>) sb::'cs\<^sup>\<Omega>. P sb  \<longrightarrow> \<not>chIsEmpty TYPE ('cs) \<longrightarrow> P (sbe \<bullet>\<^sup>\<surd> sb))) \<and> 
+        ( \<not>chIsEmpty TYPE ('cs) \<longrightarrow> sbLen x \<le> Fin n) \<longrightarrow> P (x)"
+  by (metis (no_types, lifting) inf_ub less2eq order.not_eq_order_implies_strict sb_cases sb_finind sb_finind1)
+
+lemma sbtakeind: 
+  fixes x::"'cs\<^sup>\<Omega>"
+  shows "\<forall>x. (( \<forall>(sb::'cs\<^sup>\<Omega>) . sbIsLeast sb \<longrightarrow> P sb) \<and> 
+         (\<forall> (sbe::'cs\<^sup>\<surd>) sb::'cs\<^sup>\<Omega>. P sb  \<longrightarrow> \<not>chIsEmpty TYPE ('cs) \<longrightarrow> P (sbe \<bullet>\<^sup>\<surd> sb))) 
+          \<longrightarrow> P (sbTake  n\<cdot>x)"
+  apply rule+
+  apply(subst sbtakeind1, simp_all) 
+  using sblen_sbtake sbtakeind1 by auto
+
+lemma sb_ind1:
+  fixes x::"'cs\<^sup>\<Omega>"
+  shows  "\<lbrakk>adm P;( \<And>sb. sbIsLeast sb \<Longrightarrow> P sb);(\<And>sbe sb. P sb  \<Longrightarrow> \<not>chIsEmpty TYPE ('cs) \<Longrightarrow> P (sbe \<bullet>\<^sup>\<surd> sb))\<rbrakk> \<Longrightarrow>
+      P x"
+  apply(unfold adm_def)
+  apply(erule_tac x="\<lambda>i. sbTake i\<cdot>x" in allE,auto)
+  apply(simp add: sbtake_chain)
+  apply(simp add: sbtakeind)
+  by(simp add: sbtake_lub)
+
+lemma sb_ind[case_names adm least sbeCons, induct type: sb]:
+    fixes x::"'cs\<^sup>\<Omega>"
+  assumes "adm P" 
+      and "\<And>sb. sbIsLeast sb \<Longrightarrow> P sb"
+      and "\<And>sbe sb. P sb  \<Longrightarrow> \<not>chIsEmpty TYPE ('cs) \<Longrightarrow> P (sbe \<bullet>\<^sup>\<surd> sb)"   
+    shows  "P x"
+  using assms(1) assms(2) assms(3) sb_ind1 by blast
 
 subsection \<open>sbUnion\<close>
 
@@ -515,57 +792,9 @@ lemma sbmapstream_cont[cont2cont]:
   by (simp_all add: assms cont_compose sbmapstream_well)
 *)
 
-subsection \<open>sbDrop\<close>
-
-subsubsection \<open>sbDrop definition\<close>
-
-lemma sbdrop_well[simp]:"sb_well (\<lambda>c. sdrop n\<cdot>(b \<^enum>\<^sub>\<star> c))"
-  apply(rule sbwellI)
-  by (meson dual_order.trans sbgetch_ctypewell sdrop_sdom)
-
-lift_definition sbDrop::"nat \<Rightarrow> 'c\<^sup>\<Omega> \<rightarrow> 'c\<^sup>\<Omega>"is
-"\<lambda> n sb. Abs_sb (\<lambda>c. sdrop n\<cdot>(sb \<^enum> c))"
-  apply(intro cont2cont)
-  by(simp add: sValues_def)
-
-lemmas sbdrop_insert = sbDrop.rep_eq
-
-subsubsection \<open>sbRt abbreviation\<close>
-
-abbreviation sbRt :: "'c\<^sup>\<Omega> \<rightarrow> 'c\<^sup>\<Omega>"  where 
-"sbRt \<equiv> sbDrop 1"
-
-subsubsection \<open>sbDrop lemmas\<close>
-
-lemma sbecons_eq:assumes "sbLen sb \<noteq> 0" shows "(sbHdElem sb) \<bullet>\<^sup>\<surd> (sbRt\<cdot>sb) = sb"
-  oops
-
-subsection \<open>sbTake\<close>
-
-subsubsection \<open>sbTake definition\<close>
-
-lemma sbtake_well[simp]:"sb_well (\<lambda>c. stake n\<cdot>(sb  \<^enum>\<^sub>\<star>  c))"
-  apply(rule sbmap_well)
-  by(simp add: sValues_def)
-
-lift_definition sbTake::"nat \<Rightarrow> 'c\<^sup>\<Omega> \<rightarrow>  'c\<^sup>\<Omega>"is
-"\<lambda> n sb. Abs_sb (\<lambda>c. stake n\<cdot>(sb \<^enum> c))"
-  by(intro cont2cont, simp)
-
-lemmas sbtake_insert = sbTake.rep_eq
-
-subsubsection \<open>sbHd abbreviation\<close>
-
-abbreviation sbHd :: "'c\<^sup>\<Omega> \<rightarrow> 'c\<^sup>\<Omega>"  where 
-"sbHd \<equiv> sbTake 1"
-
-subsubsection \<open>sbTake lemmas\<close>
 
 
-lemma sbtake_getch[simp]:"sbTake n\<cdot>sb \<^enum> c = stake n\<cdot>(sb \<^enum> c)"
-  apply(simp add: sbgetch_insert sbTake.rep_eq)
-  apply(subst Abs_sb_inverse)
-  by(auto simp add: sbgetch_insert2[symmetric])
+
 
 (*
 lemma sblen_mono[simp]:"monofun sbLen"
