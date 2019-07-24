@@ -307,7 +307,7 @@ proof-
 qed
 
 
-subsection\<open>sbHdElem_h_cont lemmas\<close>
+subsection\<open>sbHdElem\_h\_cont lemmas\<close>
 
 
 lemma h2:"sbHdElem_h_cont\<cdot>(sbe \<bullet>\<^sup>\<surd> sb) = up\<cdot>sbe"
