@@ -6,7 +6,7 @@ begin
 
 section \<open>The Datatype of Lazy Streams for counterexample\<close>
 
-default_sort countable
+default_sort type
 
 (* deletes the Rule "1 = Suc 0" *)
  declare One_nat_def[simp del]
@@ -15,21 +15,21 @@ default_sort countable
 text \<open>\<open>discr u\<close> lifts an arbitrary type \<open>'a\<close> to the
   discrete \<open>pcpo\<close> and the usual rest operator \<open>rt\<close> on streams.\<close>
 
-codatatype 'a stream = Sbot | SCons (lshd:"'a discr u") (srt: "'a stream")
+codatatype 'a stream = Sbot | SCons (shd:"'a") (srt: "'a stream")
                                         (infixr "&&" 65)
 
-instantiation stream::(countable) pcpo
+instantiation stream::(type) pcpo
 (*TODO below and proof*)
 begin
 instance
   sorry
 end
 
+lemma srt_cont[simp, cont2cont]: "cont srt"
+  sorry
+
 definition sdrop      :: "nat \<Rightarrow> 'a stream \<rightarrow> 'a stream" where
 "sdrop n \<equiv> Fix.iterate n\<cdot>(Abs_cfun srt)"
-
-definition shd        :: "'a stream \<Rightarrow> 'a" where
-"shd s \<equiv> THE a. lshd s = updis a"
 
 definition slen       :: "'a stream \<rightarrow> lnat" where
 "slen \<equiv> fix\<cdot>(\<Lambda> h. strictify\<cdot>(\<Lambda> s. lnsuc\<cdot>(h\<cdot>(srt s))))"
@@ -41,10 +41,11 @@ text \<open>@{term snth}: Get the \<open>n\<close>th element of the stream.\<clo
 definition snth       :: "nat \<Rightarrow> 'a stream \<Rightarrow> 'a" where
 "snth k s \<equiv> shd (sdrop k\<cdot>s)" 
 
+(* SWS: Nope, das ist eine scheiß funktion
 text\<open>@{term sfoot}: Get the last element of a not empty, finite stream\<close>
 definition sfoot      :: "'a stream \<Rightarrow> 'a" where
 "sfoot s = snth (THE a. lnsuc\<cdot>(Fin a) = #s) s"
-
+*)
 text \<open>@{term sdom}: Retrieve the set of all values in a stream.\<close>
 definition sdom       :: "'a stream \<rightarrow> 'a set" where
 "sdom \<equiv> \<Lambda> s. {snth n s | n. Fin n < #s}" 
