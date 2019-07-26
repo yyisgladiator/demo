@@ -603,10 +603,7 @@ lemma sb_cases [case_names least sbeCons, cases type: sb]:
   "(sbIsLeast (sb'::'cs\<^sup>\<Omega>) \<Longrightarrow> P) 
   \<Longrightarrow> (\<And>sbe sb. sb' = sbECons sbe\<cdot>sb \<Longrightarrow> \<not>chIsEmpty TYPE ('cs) \<Longrightarrow> P) 
   \<Longrightarrow> P"
-  apply(simp add: sbIsLeast_def)
-  apply(case_tac "sbLen sb' = ( 0::lnat)",simp_all)
-  apply(case_tac "chIsEmpty TYPE('cs)",simp_all)
-  using sbECons_sbLen by blast
+  using sbECons_sbLen sbIsLeast_def by blast
 
 lemma sb_finind1:
     fixes x::"'cs\<^sup>\<Omega>"
@@ -641,23 +638,18 @@ lemma sbtakeind:
   apply(subst sbtakeind1, simp_all) 
   using sblen_sbtake sbtakeind1 by auto
 
-lemma sb_ind1:
-  fixes x::"'cs\<^sup>\<Omega>"
-  shows  "\<lbrakk>adm P;( \<And>sb. sbIsLeast sb \<Longrightarrow> P sb);(\<And>sbe sb. P sb  \<Longrightarrow> \<not>chIsEmpty TYPE ('cs) \<Longrightarrow> P (sbe \<bullet>\<^sup>\<surd> sb))\<rbrakk> \<Longrightarrow>
-      P x"
-  apply(unfold adm_def)
-  apply(erule_tac x="\<lambda>i. sbTake i\<cdot>x" in allE,auto)
-  apply(simp add: sbtake_chain)
-  apply(simp add: sbtakeind)
-  by(simp add: sbtake_lub)
-
 lemma sb_ind[case_names adm least sbeCons, induct type: sb]:
     fixes x::"'cs\<^sup>\<Omega>"
   assumes "adm P" 
       and "\<And>sb. sbIsLeast sb \<Longrightarrow> P sb"
       and "\<And>sbe sb. P sb  \<Longrightarrow> \<not>chIsEmpty TYPE ('cs) \<Longrightarrow> P (sbe \<bullet>\<^sup>\<surd> sb)"   
     shows  "P x"
-  using assms(1) assms(2) assms(3) sb_ind1 by blast
+  using assms(1) assms(2) assms(3) 
+  apply(unfold adm_def)
+  apply(erule_tac x="\<lambda>i. sbTake i\<cdot>x" in allE,auto)
+  apply(simp add: sbtake_chain)
+  apply(simp add: sbtakeind)
+  by(simp add: sbtake_lub)
 
 lemma sbecons_eq:assumes "sbLen sb \<noteq> 0" shows "(sbHdElem sb) \<bullet>\<^sup>\<surd> (sbRt\<cdot>sb) = sb"
   apply(cases sb,simp_all add: sbIsLeast_def assms)
