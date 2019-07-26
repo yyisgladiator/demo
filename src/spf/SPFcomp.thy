@@ -127,7 +127,8 @@ lemma sbconvert_getch [simp]: "sb \<star> \<^enum> c = sb \<^enum>\<^sub>\<star>
   by (simp add: sbgetch_insert2)
 
 lemma sbunion_getch [simp]: "sb1 \<uplus>\<^sub>\<star> sb2  \<^enum>  c = (sb1 \<uplus> sb2) \<^enum>\<^sub>\<star> c"
-  apply(auto simp add: sbGetCh.rep_eq sbunion_rep_eq)
+  apply(auto simp add: sbgetch_insert2 sbunion_rep_eq)
+  apply(auto simp add: sbgetch_insert sbunion_rep_eq)
   sorry
 
 lemma sbunion_magic: 

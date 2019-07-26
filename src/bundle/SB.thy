@@ -115,6 +115,10 @@ definition sbHdElemWell::"'c\<^sup>\<Omega>  \<Rightarrow> bool" where
 lemma sbgetch_insert2:"sb \<^enum>\<^sub>\<star> c = (Rep_sb sb) c"
   by(simp add: sbgetch_insert)
 
+lemma sbhdelemchain[simp]:"sbHdElemWell x \<Longrightarrow>  x \<sqsubseteq> y \<Longrightarrow> sbHdElemWell y"
+  apply(simp add: sbHdElemWell_def sbgetch_insert2)
+  by (metis below_antisym below_sb_def fun_belowD minimal)
+
 lemma sbgetch_ctypewell[simp]:"sdom\<cdot>(sb \<^enum>\<^sub>\<star> c) \<subseteq> ctype (Rep c)"
   apply(simp add: sbgetch_insert)
 proof
@@ -137,7 +141,7 @@ lemma sbmap_well:assumes"\<And>s. sValues (f s) \<subseteq> sValues s" shows"sb_
 lemma sdom_notempty:"s\<noteq>\<epsilon> \<Longrightarrow> sdom\<cdot>s\<noteq>{}"
   using strict_sdom_rev by auto
 
-lemma sbgetch_ctype_notempty:"sb  \<^enum>\<^sub>\<star>  c \<noteq> \<epsilon> \<Longrightarrow> ctype (Rep c) \<noteq> {}"
+lemma sbgetch_ctype_notempty:"sb  \<^enum>  c \<noteq> \<epsilon> \<Longrightarrow> ctype (Rep c) \<noteq> {}"
 proof-
   assume a1: "sb  \<^enum>\<^sub>\<star>  c \<noteq> \<epsilon>"
   then have "\<exists>e. e\<in> sdom\<cdot>(sb  \<^enum>\<^sub>\<star>  c)"
@@ -169,9 +173,8 @@ lemma sb_eqI:
   by (metis Rep_union chDom_def chIsEmpty_def empty_iff sbtypeepmpty_sbbot sup.idem)
 
 lemma slen_empty_eq:  assumes"chIsEmpty(TYPE('c))"
-  shows " #(sb \<^enum>\<^sub>\<star> (c::'c)) =0"
+  shows " #(sb \<^enum> (c::'c)) =0"
   using assms chIsEmpty_def cEmpty_def sbgetch_ctype_notempty by fastforce
-
 
 lemma sbgetch_sbe2sb_nempty: assumes "\<not>chIsEmpty(TYPE('a))"
   shows "\<forall>c::'a. sbe2sb sbe  \<^enum>  c \<noteq> \<epsilon>"
@@ -470,34 +473,20 @@ subsubsection \<open>sbHdElem lemmas\<close>
 lemma sbhdelem_none[simp]:"(range(Rep::'c\<Rightarrow> channel)\<subseteq>cEmpty) \<Longrightarrow> sbHdElem((x::('c)\<^sup>\<Omega>)) = Abs_sbElem(None)"
   by(simp add: sbHdElem_def sbHdElem_h_def)
 
-lemma sbhdelem_some:"((\<forall>c::'c. x \<^enum>\<^sub>\<star> c \<noteq> \<epsilon>) \<and> x\<noteq>\<bottom>) \<Longrightarrow> sbHdElem((x::('c)\<^sup>\<Omega>)) = Abs_sbElem(Some(\<lambda>c. shd((x) \<^enum>\<^sub>\<star> c)))"
-  apply(simp add: sbHdElem_def sbHdElem_h_def,auto)
+lemma sbhdelem_some:"sbHdElemWell x \<Longrightarrow> sbHdElem((x::('c)\<^sup>\<Omega>)) = Abs_sbElem(Some(\<lambda>c. shd((x) \<^enum>\<^sub>\<star> c)))"
+  apply(simp add: sbHdElem_def sbHdElem_h_def sbHdElemWell_def,auto)
   using cEmpty_def sbgetch_ctype_notempty by fastforce
 
 lemma sbhdelem_mono_empty[simp]:"((range(Rep::'c\<Rightarrow> channel)\<subseteq>cEmpty)) \<Longrightarrow> (x::('c)\<^sup>\<Omega>) \<sqsubseteq> y \<Longrightarrow> sbHdElem x = sbHdElem y"
   by(simp)
 
-lemma sbhdelem_mono_eq[simp]:"(\<And>c::'a. (x::'a\<^sup>\<Omega>) \<^enum>\<^sub>\<star> c \<noteq> \<epsilon>) \<Longrightarrow>  x \<sqsubseteq> y \<Longrightarrow> sbHdElem x = sbHdElem y"
-proof-
-  assume a1:"(\<And>c::'a. x  \<^enum>\<^sub>\<star>  c \<noteq> \<epsilon>)"
-  assume a2:"x \<sqsubseteq> y"
-  then have "\<And>c::'a. ctype (Rep c) \<noteq> {}"
-    using a1 sbgetch_ctype_notempty by auto
-  then have not_none:"\<not>(range(Rep::'a\<Rightarrow> channel)\<subseteq>cEmpty)"
-    by(simp add: cEmpty_def,auto)
-  then have a3:"(\<And>c::'a. y  \<^enum>\<^sub>\<star>  c \<noteq> \<epsilon>)"
-    by (metis a1 a2 below_bottom_iff monofun_cfun_arg)
-  then have not_bot:"x\<noteq>\<bottom> \<and> y \<noteq> \<bottom>"
-    using a1 sbgetch_bot by auto
-  then have h1:"\<And>c::'a. shd (x  \<^enum>\<^sub>\<star>  c) = shd (y  \<^enum>\<^sub>\<star>  c)"
-    by (simp add: a1 a2 below_shd monofun_cfun_arg)
-  then show ?thesis
-    apply(subst sbhdelem_some)
-    using not_bot a1  not_none apply auto[1]
-    apply(subst sbhdelem_some)
-    using not_bot a3 not_none apply auto[1]
-    by(simp add: h1)
-qed
+lemma sbhdelem_mono_eq[simp]:"sbHdElemWell x \<Longrightarrow>  x \<sqsubseteq> y \<Longrightarrow> sbHdElem x = sbHdElem y"
+  apply(cases "chIsEmpty(TYPE('a))")
+  apply(simp add: sbHdElemWell_def chIsEmpty_def)
+  apply(subgoal_tac "\<And>c::'a. shd (x  \<^enum>  c) = shd (y  \<^enum>  c)")
+  apply(simp_all add: sbhdelem_some)
+  apply(rule below_shd)
+  by(simp add: sbgetch_insert2 below_sb_def sbHdElemWell_def below_fun_def)
 
 subsection\<open>sbECons\<close>
 (* TODO: nach oben verschieben *)
@@ -513,10 +502,6 @@ lemma sbtypeempty_sbecons_bot[simp]:"chIsEmpty TYPE ('cs) \<Longrightarrow> (sbe
 
 lemma [simp]:"chIsEmpty TYPE ('cs) \<Longrightarrow> P(sb) \<Longrightarrow> P( (sbe::'cs\<^sup>\<surd>) \<bullet>\<^sup>\<surd> sb)"
   by (metis (full_types) sbtypeepmpty_sbbot)
-
-
-lemma sbecons_eq:assumes "sbLen sb \<noteq> 0" shows "(sbHdElem sb) \<bullet>\<^sup>\<surd> (sbRt\<cdot>sb) = sb"
-  oops
 
 lemma sbrt_sbecons: "sbRt\<cdot>(sbe \<bullet>\<^sup>\<surd> sb) = sb"
   apply (cases "chIsEmpty(TYPE('a))", simp)
@@ -553,7 +538,6 @@ lemma sbhdelem_h_sbe:" sbHdElem_h (sbe \<bullet>\<^sup>\<surd> sb) = up\<cdot>sb
 
 lemma sbhdelem_sbecons: "sbHdElem (sbe  \<bullet>\<^sup>\<surd> sb) = sbe"
   by(simp add: sbHdElem_def sbhdelem_h_sbe up_def)
-
 
 lemma sbecons_len:
   shows "sbLen (sbe \<bullet>\<^sup>\<surd> sb) = lnsuc\<cdot>(sbLen sb)"
@@ -675,6 +659,10 @@ lemma sb_ind[case_names adm least sbeCons, induct type: sb]:
     shows  "P x"
   using assms(1) assms(2) assms(3) sb_ind1 by blast
 
+lemma sbecons_eq:assumes "sbLen sb \<noteq> 0" shows "(sbHdElem sb) \<bullet>\<^sup>\<surd> (sbRt\<cdot>sb) = sb"
+  apply(cases sb,simp_all add: sbIsLeast_def assms)
+  by (metis One_nat_def sbhdelem_sbecons sbrt_sbecons)
+  
 subsection \<open>sbUnion\<close>
 
 subsubsection\<open>sbUnion definition\<close>
