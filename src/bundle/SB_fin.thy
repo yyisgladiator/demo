@@ -476,21 +476,37 @@ lemma "setterSB\<cdot>(getterSB\<cdot>sb) \<sqsubseteq> sb"
   apply (metis (full_types)minimal sbtypeepmpty_sbbot)
   apply(simp add: sbIsLeast_def)
   oops
- 
+
+lemma "sb1 = sb2 \<Longrightarrow> sbe \<bullet>\<^sup>\<surd> sb1 = sbe \<bullet>\<^sup>\<surd> sb2"
+  by simp
+
 lemma setget_eq:"(\<forall>c. #(sb \<^enum> c) = k) \<Longrightarrow>setterSB\<cdot>(getterSB\<cdot>sb) = sb"
-  apply(induction sb arbitrary: k)
-  apply auto
-  apply(rule adm_imp)
-     apply auto 
-  apply(rule admI)
-  defer
-  apply(case_tac "chIsEmpty (TYPE ('cs))")
-  apply (metis (full_types)sbtypeepmpty_sbbot)
-    apply(simp add: sbIsLeast_def)
-  apply(subgoal_tac "k = 0",auto)
-     apply (metis gettersb_realboteps sb_eqI sbgetch_bot settersb_epsbot)
-    defer
-  apply(subgoal_tac "\<And>c. #(sb \<^enum> c) \<le> #(sbe \<bullet>\<^sup>\<surd> sb  \<^enum>  c)",auto)
+proof(induction sb arbitrary: k)
+  case adm
+  then show ?case sorry
+next
+  case (least sb)
+  then show ?case
+   apply(cases "chIsEmpty(TYPE('cs))",auto)
+   apply(simp add: sbIsLeast_def)
+   apply(subgoal_tac "k=0")
+   apply(subgoal_tac "sb = \<bottom>",simp)
+   apply(simp add: sbLen_def)
+   apply(simp add: bot_sb)
+   apply(rule sb_eqI)
+   apply (metis bot_sb sbgetch_bot)
+   by (metis sblen2slen)
+next
+  case (sbeCons sbe sb)
+  then obtain kin where k_def:"lnsuc\<cdot>kin = k"
+    by (metis sbecons_len sblen2slen)
+  then have sbelen1:"\<And>c n. #((sbe::'cs\<^sup>\<surd>) \<bullet>\<^sup>\<surd> (sb::'cs\<^sup>\<Omega>)  \<^enum>  c) = lnsuc\<cdot>n \<Longrightarrow> # (sb \<^enum> c) = n"
+    sorry
+  then show ?case
+    apply simp
+    apply(subst cfun_arg_eqI[of " setterSB\<cdot>(getterSB\<cdot>sb)" sb],auto)
+    apply(subst sbeCons.IH[of kin],auto)
+    using k_def sbeCons.prems by blast 
   oops  (* Nur für gleichlange ströme *)
 
 fun setterList::"'a list \<Rightarrow> 'cs\<^sup>\<Omega>" where
