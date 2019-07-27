@@ -113,9 +113,10 @@ definition sbeUnion::"'c\<^sup>\<surd> \<Rightarrow> 'd\<^sup>\<surd> \<Rightarr
 "sbeUnion = (\<lambda>sbe1 sbe2. Abs_sbElem (Some(\<lambda> c. if (Rep c \<in> (range (Rep ::'c \<Rightarrow> channel))) then
                   sbegetch c sbe1 else  sbegetch c sbe2)))"
 
-lemma h1: assumes "Rep (c::'e) \<notin> range(Rep::'d \<Rightarrow> channel)"
-  shows "sbegetch c sbe2 \<in> ctype (Rep c)"
-  oops
+lemma h1: assumes "Rep (c::'e) \<notin> range(Rep::'c \<Rightarrow> channel)"
+  shows "sbegetch c sbe2 \<in> ctype ((Rep::'e \<Rightarrow> channel) c)"
+  using assms apply(simp add: sbegetch_def)
+  sorry
 
 lemma sbeunion_getchfst:assumes "Rep (c::'c) \<in> range(Rep::'e \<Rightarrow> channel)"
                       and "\<not>(chIsEmpty TYPE('c))"
@@ -127,12 +128,13 @@ lemma sbeunion_getchfst:assumes "Rep (c::'c) \<in> range(Rep::'e \<Rightarrow> c
   apply(subst Abs_sbElem_inverse)
    defer
    apply (simp add: sbegetch_def)
-  apply(rule)
    apply(auto)
   using assms apply (metis chan_inj f_inv_into_f inv_f_f)
     apply (simp add: assms(1))
    apply (metis assms(2) chIsEmpty_def chan_eq option.exhaust_sel repinrange sbElem_well.simps(1) sbElem_well.simps(2) sbegetch_def sbelemwell2fwell)
-  oops
+  using assms apply simp
+  apply auto
+  by (metis h1)
 
 
 lemma sbeunion_getchsnd:assumes "Rep (c::'d) \<in> range(Rep::'e \<Rightarrow> channel)"
@@ -147,14 +149,13 @@ lemma sbeunion_getchsnd:assumes "Rep (c::'d) \<in> range(Rep::'e \<Rightarrow> c
   apply(subst Abs_sbElem_inverse)
    defer
    apply (simp add: sbegetch_def)
-  apply(rule)
    apply(auto)
   using assms apply simp
     apply (simp add: assms(1))
    apply (metis assms(3) chIsEmpty_def chan_eq option.collapse repinrange sbElem_well.simps(1) sbElem_well.simps(2) sbegetch_def sbelemwell2fwell)
+   by (metis h1)
   
-  
-  using assms(1)
+  (*using assms(1)
   apply(simp add: sbeUnion_def)
   apply(simp add: sbegetch_def)
   apply(subst Abs_sbElem_inverse)
@@ -166,7 +167,7 @@ lemma sbeunion_getchsnd:assumes "Rep (c::'d) \<in> range(Rep::'e \<Rightarrow> c
   apply(rule conjI)
    apply(auto)
    defer
- 
+ *)
 
 (*<*)
 end
