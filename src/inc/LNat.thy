@@ -951,7 +951,7 @@ proof (rule ccontr)
   hence "finite (range Y)"
     using Prelude.finite_chainI \<open>\<not> \<not> chain Y\<close> finch_imp_finite_range by blast
   thus False
-    by (metis (mono_tags, hide_lams) Fin_neq_inf assms ex_new_if_finite f_inv_into_f finite_imageI finite_insert finite_subset infinite_UNIV_nat inject_Fin insertCI lncases rangeI subset_UNIV)
+    by (metis (mono_tags, hide_lams) Fin_neq_inf assms ex_new_if_finite  finite_imageI infinite_UNIV_nat inject_Fin lncases rangeI)
 qed
 
 text \<open>If the left summand is smaller then {@term \<infinity>}, then the right summand is unqiuely

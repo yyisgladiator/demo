@@ -26,12 +26,12 @@ cpodef ('I::chan,'O::chan)spfw = "{f::('I\<^sup>\<Omega> \<rightarrow> 'O\<^sup>
   apply(simp add: weak_well_def)
   apply(cases "chIsEmpty TYPE('O)")
   apply(subgoal_tac "\<forall>sb::'O\<^sup>\<Omega>. sbLen sb = \<infinity>",auto)
-  defer(*lemma for sbLen*)
+(*  defer(*lemma for sbLen*)
   apply(rule_tac x="sometimesspfw" in exI)
   defer (*lemma sbLen (sometimesspfw\<cdot>sb) = \<infinity> with assumption*)
   apply(simp add: weak_well_def)
   apply(rule adm_all)(*lemma sblen_leadm*)
-  apply(rule admI)
+  apply(rule admI)*)
   sorry
 
 lemma [simp, cont2cont]:"cont Rep_spfw"
@@ -59,12 +59,12 @@ cpodef ('I::chan,'O::chan)spfs = "{f::('I,'O)spfw . strong_well (Rep_spfw f)}"
   apply(simp add: strong_well_def)
   apply(cases "chIsEmpty TYPE('O)")
   apply(subgoal_tac "\<forall>sb::'O\<^sup>\<Omega>. sbLen sb = \<infinity>",auto)
-  defer(*lemma for sbLen*)
+(*  defer(*lemma for sbLen*)
   apply(rule_tac x="Abs_spfw(sometimesspfw)" in exI)
   defer (*lemma spfw_well sometimesspfw with assumption*)
   apply(simp add: strong_well_def)
   apply(rule adm_all)(*lemma sblen_ladm*)
-  apply(rule admI)
+  apply(rule admI)*)
   sorry
 
 lemma [simp, cont2cont]:"cont Rep_spfs"

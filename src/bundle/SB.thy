@@ -71,6 +71,9 @@ lemma sbtypeepmpty_sbbot[simp]:"chIsEmpty TYPE ('cs::chan) \<Longrightarrow> (sb
   by(metis (mono_tags) Rep_sb bot.extremum cEmpty_def f_inv_into_f image_subset_iff iso_tuple_UNIV_I 
       mem_Collect_eq rangeI range_eqI sValues_def sb_well_def strict_sdom_rev subset_antisym)
 
+lemma sbwell2fwell[simp]:"Rep_sb sb = f \<Longrightarrow> sb_well (f)"
+  using Rep_sb by auto
+
 section \<open>Definitions \<close>
 
 subsection \<open>Domain of the SB\<close>
@@ -106,6 +109,8 @@ abbreviation sbgetch_magic_abbr :: "'c\<^sup>\<Omega> \<Rightarrow> 'e \<Rightar
 abbreviation sbgetch_abbr :: "'c\<^sup>\<Omega> \<Rightarrow> 'c \<Rightarrow> M stream" (infix " \<^enum> " 65) where 
 "sb \<^enum> c \<equiv> sbGetCh c\<cdot>sb"
 
+definition sbHdElemWell::"'c\<^sup>\<Omega>  \<Rightarrow> bool" where
+"sbHdElemWell  \<equiv> \<lambda> sb. (\<forall>c. sb  \<^enum>  c \<noteq> \<epsilon>)"  
 
 lemma sbgetch_insert2:"sb \<^enum>\<^sub>\<star> c = (Rep_sb sb) c"
   by(simp add: sbgetch_insert)
@@ -148,12 +153,24 @@ lemma sbgetch_bot[simp]:"\<bottom> \<^enum>\<^sub>\<star> c = \<epsilon>"
   apply(simp add: sbGetCh.rep_eq bot_sb)
   by (metis Rep_sb_strict app_strict bot_sb)
 
+lemma sb_belowI:   fixes sb1 sb2::"'cs\<^sup>\<Omega>"
+  assumes "\<And>c. Rep c\<in>chDom TYPE('cs) \<Longrightarrow>  sb1 \<^enum> c \<sqsubseteq> sb2 \<^enum> c"
+  shows "sb1 \<sqsubseteq> sb2"
+  apply(subst below_sb_def)
+  apply(rule fun_belowI)
+  by (metis DiffI assms chDom_def cnotempty_rule po_eq_conv sbGetCh.rep_eq sbgetch_insert2 sbtypeepmpty_sbbot)
+
 lemma sb_eqI:
-    assumes "\<And>c. sb1 \<^enum> c = sb2 \<^enum> c"
+  fixes sb1 sb2::"'cs\<^sup>\<Omega>"
+    assumes "\<And>c. Rep c\<in>chDom TYPE('cs) \<Longrightarrow> sb1 \<^enum> c = sb2 \<^enum> c"
     shows "sb1 = sb2"
-  using Rep_sb_inject by (metis assms ext sbgetch_insert2)
+  apply(cases "chDom TYPE('cs) \<noteq> {}")
+  apply (metis Diff_eq_empty_iff Diff_triv assms chDom_def chan_botsingle rangeI sb_rep_eqI sbgetch_insert2)
+  by (metis Rep_union chDom_def chIsEmpty_def empty_iff sbtypeepmpty_sbbot sup.idem)
 
-
+lemma slen_empty_eq:  assumes"chIsEmpty(TYPE('c))"
+  shows " #(sb \<^enum>\<^sub>\<star> (c::'c)) =0"
+  using assms chIsEmpty_def cEmpty_def sbgetch_ctype_notempty by fastforce
 
 subsection \<open>Concatination\<close>
 
@@ -192,119 +209,77 @@ definition sbLen::"'c\<^sup>\<Omega> \<Rightarrow> lnat"where
 "sbLen sb = (LEAST n . n\<in>(insert (\<infinity>) {#(sb \<^enum>\<^sub>\<star> (c::'c)) | c. ((Rep::'c \<Rightarrow> channel) c)\<notin>cEmpty}))"
 
 lemma sblen_mono:"monofun sbLen"
-   apply(rule monofunI)
-
-  apply(simp add: sbLen_def)
-
-proof -
-fix x :: "'a\<^sup>\<Omega>" and y :: "'a\<^sup>\<Omega>"
+  apply(rule monofunI)
+proof(simp add: sbLen_def)
+  fix x :: "'a\<^sup>\<Omega>" and y :: "'a\<^sup>\<Omega>"
   assume a1: "x \<sqsubseteq> y"
-obtain aa :: "lnat \<Rightarrow> 'a" where
-  f2: "\<And>l. (l \<noteq> \<infinity> \<and> (\<forall>a. l \<noteq> #(y \<^enum> (a::'a)) \<or> Rep a \<in> cEmpty) \<or> Rep (aa l) \<notin> cEmpty \<or> l = \<infinity>) \<and> (l \<noteq> \<infinity> \<and> (\<forall>a. l \<noteq> #(y \<^enum> (a::'a)) \<or> Rep a \<in> cEmpty) \<or> #(y \<^enum> aa l) = l \<or> l = \<infinity>)"
-by moura
+  obtain aa :: "lnat \<Rightarrow> 'a" where
+    f2: "\<And>l. (l \<noteq> \<infinity> \<and> (\<forall>a. l \<noteq> #(y \<^enum> (a::'a)) \<or> Rep a \<in> cEmpty) \<or> Rep (aa l) \<notin> cEmpty \<or> l = \<infinity>) 
+         \<and> (l \<noteq> \<infinity> \<and> (\<forall>a. l \<noteq> #(y \<^enum> (a::'a)) \<or> Rep a \<in> cEmpty) \<or> #(y \<^enum> aa l) = l \<or> l = \<infinity>)"
+    by moura
   then have f3: "\<And>l. l \<noteq> \<infinity> \<and> (\<forall>a. l \<noteq> #(y \<^enum> (a::'a)) \<or> Rep a \<in> cEmpty) \<or> l = \<infinity> \<or> #(Rep_sb x (aa l)) \<le> l"
-using a1 by (metis (full_types) sbgetch_below_slen sbgetch_insert2)
+    using a1 by (metis (full_types) sbgetch_below_slen sbgetch_insert2)
   obtain ll :: "(lnat \<Rightarrow> bool) \<Rightarrow> (lnat \<Rightarrow> bool) \<Rightarrow> lnat" where
     f4: "\<And>p l pa la. (\<not> p l \<or> pa (Least p) \<or> p (ll p pa)) \<and> (\<not> p la \<or> \<not> pa (ll p pa) \<or> pa (Least p))"
-by (metis LeastI2_wellorder_ex)
+    by (metis LeastI2_wellorder_ex)
   then have "((LEAST l. l = \<infinity> \<or> (\<exists>a. l = #(y \<^enum> (a::'a)) \<and> Rep a \<notin> cEmpty)) = \<infinity> \<or> (\<exists>a. (LEAST l. l = \<infinity> \<or> (\<exists>a. l = #(y \<^enum> (a::'a)) \<and> Rep a \<notin> cEmpty)) = #(y \<^enum> (a::'a)) \<and> Rep a \<notin> cEmpty)) \<and> (LEAST l. l = \<infinity> \<or> (\<exists>a. l = #(y \<^enum> (a::'a)) \<and> Rep a \<notin> cEmpty)) \<noteq> \<infinity> \<or> (LEAST l. l = \<infinity> \<or> (\<exists>a. l = #(y \<^enum> (a::'a)) \<and> Rep a \<notin> cEmpty)) = \<infinity>"
- 
     by smt
-moreover
+  moreover
   { assume "((LEAST l. l = \<infinity> \<or> (\<exists>a. l = #(y \<^enum> (a::'a)) \<and> Rep a \<notin> cEmpty)) = \<infinity> \<or> (\<exists>a. (LEAST l. l = \<infinity> \<or> (\<exists>a. l = #(y \<^enum> (a::'a)) \<and> Rep a \<notin> cEmpty)) = #(y \<^enum> (a::'a)) \<and> Rep a \<notin> cEmpty)) \<and> (LEAST l. l = \<infinity> \<or> (\<exists>a. l = #(y \<^enum> (a::'a)) \<and> Rep a \<notin> cEmpty)) \<noteq> \<infinity>"
-then have "Rep (aa (LEAST l. l = \<infinity> \<or> (\<exists>a. l = #(y \<^enum> (a::'a)) \<and> Rep a \<notin> cEmpty))) \<notin> cEmpty"
-  using f2 by meson
-  then have "#(Rep_sb x (aa (LEAST l. l = \<infinity> \<or> (\<exists>a. l = #(y \<^enum> (a::'a)) \<and> Rep a \<notin> cEmpty)))) = \<infinity> \<or> (\<exists>a. #(Rep_sb x (aa (LEAST l. l = \<infinity> \<or> (\<exists>a. l = #(y \<^enum> (a::'a)) \<and> Rep a \<notin> cEmpty)))) = #(x \<^enum> (a::'a)) \<and> Rep a \<notin> cEmpty)"
-    by (metis (no_types) sbgetch_insert2)
-then have "(LEAST l. l = \<infinity> \<or> (\<exists>a. l = #(x \<^enum> (a::'a)) \<and> Rep a \<notin> cEmpty)) \<le> #(Rep_sb x (aa (LEAST l. l = \<infinity> \<or> (\<exists>a. l = #(y \<^enum> (a::'a)) \<and> Rep a \<notin> cEmpty))))"
-  by (simp add: Least_le)
-then have "((LEAST l. l = \<infinity> \<or> (\<exists>a. l = #(y \<^enum> (a::'a)) \<and> Rep a \<notin> cEmpty)) = \<infinity> \<or> (\<exists>a. (LEAST l. l = \<infinity> \<or> (\<exists>a. l = #(y \<^enum> (a::'a)) \<and> Rep a \<notin> cEmpty)) = #(y \<^enum> (a::'a)) \<and> Rep a \<notin> cEmpty)) \<and> (LEAST l. l = \<infinity> \<or> (\<exists>a. l = #(x \<^enum> (a::'a)) \<and> Rep a \<notin> cEmpty)) \<le> #(Rep_sb x (aa (LEAST l. l = \<infinity> \<or> (\<exists>a. l = #(y \<^enum> (a::'a)) \<and> Rep a \<notin> cEmpty)))) \<and> (LEAST l. l = \<infinity> \<or> (\<exists>a. l = #(y \<^enum> (a::'a)) \<and> Rep a \<notin> cEmpty)) \<noteq> \<infinity> \<or> (LEAST l. l = \<infinity> \<or> (\<exists>a. l = #(y \<^enum> (a::'a)) \<and> Rep a \<notin> cEmpty)) = \<infinity>"
-  using f4 
-  using calculation by blast
-  then have "(LEAST l. l = \<infinity> \<or> (\<exists>a. l = #(y \<^enum> (a::'a)) \<and> Rep a \<notin> cEmpty)) = \<infinity> \<or> (\<exists>l\<le>LEAST l. l = \<infinity> \<or> (\<exists>a. l = #(y \<^enum> (a::'a)) \<and> Rep a \<notin> cEmpty). (LEAST l. l = \<infinity> \<or> (\<exists>a. l = #(x \<^enum> (a::'a)) \<and> Rep a \<notin> cEmpty)) \<le> l)"
-    using f3 by meson }
+    then have "Rep (aa (LEAST l. l = \<infinity> \<or> (\<exists>a. l = #(y \<^enum> (a::'a)) \<and> Rep a \<notin> cEmpty))) \<notin> cEmpty"
+      using f2 by meson
+    then have "#(Rep_sb x (aa (LEAST l. l = \<infinity> \<or> (\<exists>a. l = #(y \<^enum> (a::'a)) \<and> Rep a \<notin> cEmpty)))) = \<infinity> \<or> (\<exists>a. #(Rep_sb x (aa (LEAST l. l = \<infinity> \<or> (\<exists>a. l = #(y \<^enum> (a::'a)) \<and> Rep a \<notin> cEmpty)))) = #(x \<^enum> (a::'a)) \<and> Rep a \<notin> cEmpty)"
+      by (metis (no_types) sbgetch_insert2)
+    then have "(LEAST l. l = \<infinity> \<or> (\<exists>a. l = #(x \<^enum> (a::'a)) \<and> Rep a \<notin> cEmpty)) \<le> #(Rep_sb x (aa (LEAST l. l = \<infinity> \<or> (\<exists>a. l = #(y \<^enum> (a::'a)) \<and> Rep a \<notin> cEmpty))))"
+      by (simp add: Least_le)
+    then have "((LEAST l. l = \<infinity> \<or> (\<exists>a. l = #(y \<^enum> (a::'a)) \<and> Rep a \<notin> cEmpty)) = \<infinity> \<or> (\<exists>a. (LEAST l. l = \<infinity> \<or> (\<exists>a. l = #(y \<^enum> (a::'a)) \<and> Rep a \<notin> cEmpty)) = #(y \<^enum> (a::'a)) \<and> Rep a \<notin> cEmpty)) \<and> (LEAST l. l = \<infinity> \<or> (\<exists>a. l = #(x \<^enum> (a::'a)) \<and> Rep a \<notin> cEmpty)) \<le> #(Rep_sb x (aa (LEAST l. l = \<infinity> \<or> (\<exists>a. l = #(y \<^enum> (a::'a)) \<and> Rep a \<notin> cEmpty)))) \<and> (LEAST l. l = \<infinity> \<or> (\<exists>a. l = #(y \<^enum> (a::'a)) \<and> Rep a \<notin> cEmpty)) \<noteq> \<infinity> \<or> (LEAST l. l = \<infinity> \<or> (\<exists>a. l = #(y \<^enum> (a::'a)) \<and> Rep a \<notin> cEmpty)) = \<infinity>"
+      using f4 calculation by blast
+    then have "(LEAST l. l = \<infinity> \<or> (\<exists>a. l = #(y \<^enum> (a::'a)) \<and> Rep a \<notin> cEmpty)) = \<infinity> \<or> (\<exists>l\<le>LEAST l. l = \<infinity> \<or> (\<exists>a. l = #(y \<^enum> (a::'a)) \<and> Rep a \<notin> cEmpty). (LEAST l. l = \<infinity> \<or> (\<exists>a. l = #(x \<^enum> (a::'a)) \<and> Rep a \<notin> cEmpty)) \<le> l)"
+      using f3 by meson }
   ultimately have "\<exists>l\<le>LEAST l. l = \<infinity> \<or> (\<exists>a. l = #(y \<^enum> (a::'a)) \<and> Rep a \<notin> cEmpty). (LEAST l. l = \<infinity> \<or> (\<exists>a. l = #(x \<^enum> (a::'a)) \<and> Rep a \<notin> cEmpty)) \<le> l"
     using inf_less_eq inf_ub by blast
-then show "(LEAST l. l = \<infinity> \<or> (\<exists>a. l = #(x \<^enum> (a::'a)) \<and> Rep a \<notin> cEmpty)) \<le> (LEAST l. l = \<infinity> \<or> (\<exists>a. l = #(y \<^enum> (a::'a)) \<and> Rep a \<notin> cEmpty))"
-  by (meson dual_order.trans)
+  then show "(LEAST l. l = \<infinity> \<or> (\<exists>a. l = #(x \<^enum> (a::'a)) \<and> Rep a \<notin> cEmpty)) \<le> (LEAST l. l = \<infinity> \<or> (\<exists>a. l = #(y \<^enum> (a::'a)) \<and> Rep a \<notin> cEmpty))"
+    by (meson dual_order.trans)
 qed
-subsubsection \<open> sbLen lemmas \<close>
-lemma slen_empty_eq:  assumes" Rep c \<in> cEmpty"
-  shows " #(sb \<^enum>\<^sub>\<star> (c :: 'a ) ) =0"
-  using assms
-  
-  using cEmpty_def sbgetch_ctype_notempty by fastforce
 
-lemma h1:assumes"Rep( c::'a) \<in> cEmpty"
-  shows"(\<exists>ca::'a. Rep ca \<notin> cEmpty) =False"
-  using assms chan_botsingle by blast
+subsubsection \<open> sbLen lemmas \<close>
 
 lemma sblen_min_len_empty[simp]:
-  assumes" Rep (c::'a) \<in> cEmpty"
-  shows " sbLen (sb :: 'a\<^sup>\<Omega>) = \<infinity>"
-  apply(simp add: sbLen_def )
-  apply(subst slen_empty_eq)
-  using assms chan_botsingle apply blast
-  apply auto
-  apply(subst h1)
-
-  using assms  chan_botsingle apply auto[1]
-  apply auto
+  assumes"chIsEmpty(TYPE('c))"
+  shows " sbLen (sb::'c\<^sup>\<Omega>) = \<infinity>"
+  apply(simp add: sbLen_def assms slen_empty_eq)
   by (metis (full_types) LeastI)
 
-
 lemma sblen_min_len [simp]:
-  assumes" Rep c \<notin> cEmpty"
-  shows
-  "sbLen (sb :: 'a\<^sup>\<Omega>) \<le> #(sb \<^enum>\<^sub>\<star> (c :: 'a ) )" (* TODO: vermutlich typ von "c" fixieren *)
-
+  assumes"\<not>chIsEmpty(TYPE('c))"
+  shows"sbLen (sb :: 'c\<^sup>\<Omega>) \<le> #(sb \<^enum> c)"
+  apply(simp add: sbLen_def assms)
+  by (metis (mono_tags, lifting) Least_le)
+ 
+lemma sblengeq: assumes "\<And>c::'c. k\<le> #(sb\<^enum>c)"
+  shows "k \<le> sbLen sb" 
+  apply(cases  "chIsEmpty(TYPE('c))",simp add: assms)
   apply(simp add: sbLen_def)
-  using assms  
- by (metis (mono_tags, lifting) Least_le)
-  
-   (* Sonderfall: "cEmpty" *)
-
-
-
-
-lemma BETTERNAME: assumes 
- "\<And>c::'a. k\<le> #(sb\<^enum>c)"
-shows "k \<le> sbLen sb" 
-  apply(cases  " Rep  (c::'a) \<in> cEmpty")
-  using assms(1) apply auto
- 
-  
-  using   LeastI2_wellorder_ex inf_ub insert_iff mem_Collect_eq sbLen_def by smt
-
- 
- 
+  using LeastI2_wellorder_ex inf_ub insert_iff mem_Collect_eq sbLen_def assms by smt
 
 lemma sblen_sbconc: "((sbLen sb1) + (sbLen sb2)) \<le> (sbLen (sb1 \<bullet>\<^sup>\<Omega> sb2))"
-  apply(cases  " Rep  (c::'a) \<in> cEmpty")
-  defer
-  apply(rule BETTERNAME)
-  apply (metis h1 lessequal_addition sbconc_getch sblen_min_len sconc_slen2)
-   by simp
-
- 
-
+  apply(cases  "chIsEmpty(TYPE('a))",simp)
+  apply(rule sblengeq)
+  by (metis lessequal_addition sbconc_getch sblen_min_len sconc_slen2)
 
 lemma sblen_sbeqI:"x \<sqsubseteq> y \<Longrightarrow> sbLen x = \<infinity> \<Longrightarrow> x = y"
-  apply(simp add: sbLen_def)
-
-proof -
-assume a1: "x \<sqsubseteq> y"
+proof(simp add: sbLen_def)
+  assume a1: "x \<sqsubseteq> y"
   assume a2: "(LEAST n. n = \<infinity> \<or> (\<exists>c. n = #(x \<^enum> (c::'a)) \<and> Rep c \<notin> cEmpty)) = \<infinity>"
-have f3: "\<And>c. (c\<cdot>x::M stream) \<sqsubseteq> c\<cdot>y"
-  using a1 by (metis monofun_cfun_arg)
+  have f3: "\<And>c. (c\<cdot>x::M stream) \<sqsubseteq> c\<cdot>y"
+    using a1 by (metis monofun_cfun_arg)
   have f4: "\<And>l. \<not> (l = \<infinity> \<or> (\<exists>a. l = #(x \<^enum> (a::'a)) \<and> Rep a \<notin> cEmpty)) \<or> \<infinity> \<le> l"
     using a2
     by (metis (mono_tags, lifting) Least_le)
-have f5: "\<And>c. c \<notin> cEmpty \<or> ctype c = {}"
-  using cEmpty_def by blast
-obtain aa :: "'a\<^sup>\<Omega> \<Rightarrow> 'a\<^sup>\<Omega> \<Rightarrow> 'a" where
-  "\<And>s sa. s \<^enum> aa s sa \<noteq> sa \<^enum> aa s sa \<or> s = sa"
-  using sb_eqI by moura
+  have f5: "\<And>c. c \<notin> cEmpty \<or> ctype c = {}"
+    using cEmpty_def by blast
+  obtain aa :: "'a\<^sup>\<Omega> \<Rightarrow> 'a\<^sup>\<Omega> \<Rightarrow> 'a" where "\<And>s sa. s \<^enum> aa s sa \<noteq> sa \<^enum> aa s sa \<or> s = sa"
+    using sb_eqI by moura
   then show ?thesis
     using f5 f4 f3 by (metis eq_less_and_fst_inf inf_less_eq sbgetch_ctype_notempty)
 qed
@@ -360,7 +335,7 @@ lemma sb_ind[case_names adm least sbeCons, induct type: sb]:
       and "\<And>sb. sbIsLeast sb \<Longrightarrow> P sb"
       and "\<And>sbe sb. P sb  \<Longrightarrow> \<not>chIsEmpty TYPE ('cs) \<Longrightarrow> P (sbe \<bullet>\<^sup>\<surd> sb)"
   shows  "P x"
-  oops
+  sorry
 
 subsection\<open>sbHdElem\<close>
 
@@ -445,15 +420,23 @@ lemma sbunion_insert:"sbUnion\<cdot>(sb1::'c\<^sup>\<Omega>)\<cdot>sb2 = Abs_sb 
   Namin_convention: "insert" = Abs_cfun weg
                       rep_eq = Abs_XXX weg *)
 
+lemma sbunion_rep_eq:"Rep_sb (sbUnion\<cdot>(sb1::'c\<^sup>\<Omega>)\<cdot>sb2) = (\<lambda> c. if (Rep c \<in> (range (Rep ::'c \<Rightarrow> channel))) then 
+                  sb1 \<^enum>\<^sub>\<star> c else  sb2 \<^enum>\<^sub>\<star> c)"
+  apply(subst sbunion_insert)
+  apply(subst Abs_sb_inverse)
+  by auto
+
 subsubsection\<open>sbUnion abbreviation\<close>
 
 abbreviation sbUnion_magic_abbr :: "'c\<^sup>\<Omega> \<Rightarrow> 'd\<^sup>\<Omega> \<Rightarrow> 'e\<^sup>\<Omega>" (infixr "\<uplus>\<^sub>\<star>" 100) where
 "sb1 \<uplus>\<^sub>\<star> sb2 \<equiv> sbUnion\<cdot>sb1\<cdot>sb2"
 
-(*
+abbreviation sbUnion_minus_abbr :: "('c - ('d))\<^sup>\<Omega> \<Rightarrow> 'd\<^sup>\<Omega> \<Rightarrow> 'c\<^sup>\<Omega>" (infixr "\<uplus>\<^sub>-" 100) where
+"sb1 \<uplus>\<^sub>- sb2 \<equiv> sbUnion\<cdot>sb1\<cdot>sb2"
+
 abbreviation sbUnion_abbr :: "'c\<^sup>\<Omega> \<Rightarrow> 'd\<^sup>\<Omega> \<Rightarrow> ('c\<union>'d)\<^sup>\<Omega>" (infixr "\<uplus>" 100) where
-" sb1 \<uplus> sb2 \<equiv> sb1 \<uplus>\<star> sb2"
-*)
+" sb1 \<uplus> sb2 \<equiv> sb1 \<uplus>\<^sub>\<star> sb2"
+
 
 subsubsection \<open>sbUnion lemmas\<close>
 
@@ -461,6 +444,11 @@ lemma sbunion_getch[simp]:fixes c::"'a"
       assumes"Rep c \<in> range(Rep::'c \<Rightarrow> channel)"
       shows  "(sbUnion::'a\<^sup>\<Omega>\<rightarrow> 'b\<^sup>\<Omega> \<rightarrow> 'c\<^sup>\<Omega>)\<cdot>cb\<cdot>db \<^enum>\<^sub>\<star> c = cb \<^enum>\<^sub>\<star> c"
   by(simp add: Abs_sb_inverse sbGetCh.rep_eq sbunion_insert assms)
+
+lemma sbunion_eq [simp]: "sb1 \<uplus>\<^sub>\<star> sb2 = sb1"
+  apply(rule sb_eqI)
+  by simp
+
 
 subsection \<open>sbConvert\<close>
 
@@ -479,6 +467,12 @@ subsubsection \<open>sbConvert abbreviation\<close>
 
 abbreviation sbConvert_abbr :: "'c\<^sup>\<Omega> \<Rightarrow> 'd\<^sup>\<Omega>" ( "_\<star>" 200) where 
 "sb\<star> \<equiv> sbConvert\<cdot>sb"
+
+abbreviation sbConvert_abbr_fst :: "('c \<union> 'd)\<^sup>\<Omega> \<Rightarrow> 'c\<^sup>\<Omega>" ( "_\<star>\<^sub>1" 200) where 
+"sb\<star>\<^sub>1 \<equiv> sbConvert\<cdot>sb"
+
+abbreviation sbConvert_abbr_snd :: "('c\<union>'d)\<^sup>\<Omega> \<Rightarrow> 'd\<^sup>\<Omega>" ( "_\<star>\<^sub>2" 200) where 
+"sb\<star>\<^sub>2 \<equiv> sbConvert\<cdot>sb"
 
 subsubsection \<open>sbConvert lemmas\<close>
 
