@@ -113,8 +113,8 @@ definition sbeUnion::"'c\<^sup>\<surd> \<Rightarrow> 'd\<^sup>\<surd> \<Rightarr
 "sbeUnion = (\<lambda>sbe1 sbe2. Abs_sbElem (Some(\<lambda> c. if (Rep c \<in> (range (Rep ::'c \<Rightarrow> channel))) then
                   sbegetch c sbe1 else  sbegetch c sbe2)))"
 
-lemma h1: assumes "Rep (c::'e) \<notin> range(Rep::'c \<Rightarrow> channel)"
-  shows "sbegetch c sbe2 \<in> ctype ((Rep::'e \<Rightarrow> channel) c)"
+lemma h1: assumes "Rep (c::'e) \<in> range(Rep::'d \<Rightarrow> channel)" and "\<not>chIsEmpty(TYPE('d))"
+  shows "sbegetch c (sbe2::'d\<^sup>\<surd>) \<in> ctype ((Rep::'e \<Rightarrow> channel) c)"
   using assms apply(simp add: sbegetch_def)
   sorry
 
@@ -134,16 +134,14 @@ lemma sbeunion_getchfst:assumes "Rep (c::'c) \<in> range(Rep::'e \<Rightarrow> c
    apply (metis assms(2) chIsEmpty_def chan_eq option.exhaust_sel repinrange sbElem_well.simps(1) sbElem_well.simps(2) sbegetch_def sbelemwell2fwell)
   using assms apply simp
   apply auto
-  by (metis h1)
+  by (smt UnE chIsEmpty_def cnotempty_rule h1 repinrange subsetD)
 
 
 lemma sbeunion_getchsnd:assumes "Rep (c::'d) \<in> range(Rep::'e \<Rightarrow> channel)"
                      and "Rep c \<notin> range(Rep::'c \<Rightarrow> channel)"
-                     and "\<not>(chIsEmpty TYPE('c))"
+                     and "\<not>(chIsEmpty TYPE('d))"
                      and "range(Rep::'e \<Rightarrow> channel) \<subseteq> range(Rep::'c \<Rightarrow> channel) \<union> range(Rep::'d \<Rightarrow> channel)"
   shows"sbegetch c ((sbeUnion::'c\<^sup>\<surd> \<Rightarrow> 'd\<^sup>\<surd> \<Rightarrow> 'e\<^sup>\<surd>) sbe1 sbe2) = sbegetch c sbe2"
- 
-  
    apply(simp add: sbeUnion_def)
   apply(simp add: sbegetch_def)
   apply(subst Abs_sbElem_inverse)
@@ -151,10 +149,10 @@ lemma sbeunion_getchsnd:assumes "Rep (c::'d) \<in> range(Rep::'e \<Rightarrow> c
    apply (simp add: sbegetch_def)
    apply(auto)
   using assms apply simp
-    apply (simp add: assms(1))
-   apply (metis assms(3) chIsEmpty_def chan_eq option.collapse repinrange sbElem_well.simps(1) sbElem_well.simps(2) sbegetch_def sbelemwell2fwell)
-   by (metis h1)
-  
+  apply (simp add: assms(1))
+   apply (metis assms(1) assms(3) chIsEmpty2chIsEmpty chan_eq h1 rangeI)
+  oops
+
   (*using assms(1)
   apply(simp add: sbeUnion_def)
   apply(simp add: sbegetch_def)
