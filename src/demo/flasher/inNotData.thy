@@ -59,19 +59,44 @@ proof -
 qed
 
 abbreviation "buildNotinSB \<equiv> inNotChan (Rep_cfun (smap \<B>))" 
-
+lemma buildflashoutsb_ctype: "sdom\<cdot>(buildNotinSB a c) \<subseteq> ctype (Rep c)"
+  by(cases c; cases a;simp)
 
 lemma smap_inj:"inj f \<Longrightarrow> inj (Rep_cfun (smap f))"
- 
   apply(rule injI)
-  
-  sorry
+  apply(rule snths_eq,auto)
+  apply (metis slen_smap)
+  by (metis inj_eq slen_smap smap_snth_lemma)
 
 lemma rep_cfun_smap_bool_inj:"inj (Rep_cfun (smap \<B>))"
-  apply(subst smap_inj)
+  apply(rule smap_inj)
   by(simp add: inj_def)+
-lemma buildNotoutsb_inj: "inj buildNotinSB"
 
+lemma buildNotoutsb_inj: "inj buildNotinSB"
   by (metis (mono_tags, hide_lams) inNotChan.simps inj_def rep_cfun_smap_bool_inj)
+
+lemma buildflashoutsb_range: "(\<Union>a. sdom\<cdot>(buildNotinSB a c)) = ctype (Rep c)"
+  apply(cases c)
+  apply auto 
+  apply (metis (no_types, lifting) in_mono smap_sdom_range)
+  apply(rule_tac x="\<up>xa" in exI)
+  by simp
+
+
+lemma smap_well:"range f = S \<Longrightarrow> sdom\<cdot>x\<subseteq>S \<Longrightarrow>  \<exists>s. smap f\<cdot>s = x"
+  sorry
+
+lemma buildflashoutsb_surj: assumes "sb_well sb"
+  shows "sb \<in> range buildNotinSB"
+proof -
+  have ctypewell:"\<And> c. sValues (sb c) \<subseteq> ctype (Rep c)"
+    using assms
+    by (simp add: sb_well_def) 
+  hence "\<exists>prod. sb = buildNotinSB prod"
+    apply(subst fun_eq_iff,auto,simp add: sValues_def)
+    by (metis (full_types)Andin1_rep ctype.simps(6) inNotChan.elims smap_well)
+  thus ?thesis
+    by auto
+qed
 
 end
