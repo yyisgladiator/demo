@@ -95,6 +95,12 @@ lemma chIsEmpty2chIsEmpty:"chIsEmpty TYPE ('c) \<Longrightarrow> Rep (c::'c) \<i
   apply(simp add: chIsEmpty_def cEmpty_def,auto)
   by (metis (mono_tags, lifting) Int_Collect cEmpty_def chan_botsingle insert_not_empty le_iff_inf mk_disjoint_insert repinrange)
 
+lemma sbgetch_ctype: assumes "Rep (c::'e) \<in> range(Rep::'d \<Rightarrow> channel)" and "\<not>chIsEmpty(TYPE('d))"
+  shows "sbegetch c (sbe2::'d\<^sup>\<surd>) \<in> ctype ((Rep::'e \<Rightarrow> channel) c)"
+  using assms apply(simp add: sbegetch_def)
+  by (metis (no_types, hide_lams) assms(1) assms(2) f_inv_into_f option.sel sbElem_well.simps(2) 
+      sbegetch_def sbelemwell2fwell sbtypenotempty_fex)
+
 lemma sberestrict_getch: assumes"Rep (c::'c) \<in> range(Rep::'d \<Rightarrow> channel)"
                      and "\<not>(chIsEmpty TYPE('c))"
                      and "range(Rep::'d \<Rightarrow> channel) \<subseteq> range(Rep::'c \<Rightarrow> channel)"
@@ -113,28 +119,17 @@ definition sbeUnion::"'c\<^sup>\<surd> \<Rightarrow> 'd\<^sup>\<surd> \<Rightarr
 "sbeUnion = (\<lambda>sbe1 sbe2. Abs_sbElem (Some(\<lambda> c. if (Rep c \<in> (range (Rep ::'c \<Rightarrow> channel))) then
                   sbegetch c sbe1 else  sbegetch c sbe2)))"
 
-lemma h1: assumes "Rep (c::'e) \<in> range(Rep::'d \<Rightarrow> channel)" and "\<not>chIsEmpty(TYPE('d))"
-  shows "sbegetch c (sbe2::'d\<^sup>\<surd>) \<in> ctype ((Rep::'e \<Rightarrow> channel) c)"
-  using assms apply(simp add: sbegetch_def)
-  by (metis (no_types, hide_lams) assms(1) assms(2) f_inv_into_f option.sel sbElem_well.simps(2) sbegetch_def sbelemwell2fwell sbtypenotempty_fex)
-
-
 lemma sbeunion_getchfst:assumes "Rep (c::'c) \<in> range(Rep::'e \<Rightarrow> channel)"
                       and "\<not>(chIsEmpty TYPE('c))"
                      and "range(Rep::'e \<Rightarrow> channel) \<subseteq> range(Rep::'c \<Rightarrow> channel) \<union> range(Rep::'d \<Rightarrow> channel)"
   shows "sbegetch c ((sbeUnion::'c\<^sup>\<surd> \<Rightarrow> 'd\<^sup>\<surd> \<Rightarrow> 'e\<^sup>\<surd>) sbe1 sbe2) = sbegetch c sbe1"
-  apply(simp add: sbeUnion_def)
-  apply(simp add: sbegetch_def)
+  apply(simp add: sbeUnion_def sbegetch_def)
   apply(subst Abs_sbElem_inverse)
-   defer
-   apply (simp add: sbegetch_def)
-   apply(auto)
-  using assms apply (metis chan_inj f_inv_into_f inv_f_f)
-    apply (simp add: assms(1))
-   apply (metis assms(2) chIsEmpty_def chan_eq option.exhaust_sel repinrange sbElem_well.simps(1) sbElem_well.simps(2) sbegetch_def sbelemwell2fwell)
-  using assms apply(simp)
-  apply(auto)
-  by (smt UnE chIsEmpty_def cnotempty_rule h1 repinrange subsetD)
+  apply (auto simp add: chIsEmpty_def assms)
+  using assms(2) sbgetch_ctype apply force
+  apply (smt assms(2) sbElem_well.simps(2) Un_iff assms(1) assms(3) chIsEmpty2chIsEmpty chan_eq 
+          repinrange sbgetch_ctype subset_eq)
+  by(simp add: sbegetch_def assms)
 
 
 lemma sbeunion_getchsnd:assumes "Rep (c::'d) \<in> range(Rep::'e \<Rightarrow> channel)"
@@ -142,18 +137,13 @@ lemma sbeunion_getchsnd:assumes "Rep (c::'d) \<in> range(Rep::'e \<Rightarrow> c
                      and "\<not>(chIsEmpty TYPE('d))"
                      and "range(Rep::'e \<Rightarrow> channel) \<subseteq> range(Rep::'c \<Rightarrow> channel) \<union> range(Rep::'d \<Rightarrow> channel)"
   shows"sbegetch c ((sbeUnion::'c\<^sup>\<surd> \<Rightarrow> 'd\<^sup>\<surd> \<Rightarrow> 'e\<^sup>\<surd>) sbe1 sbe2) = sbegetch c sbe2"
-   apply(simp add: sbeUnion_def)
-  apply(simp add: sbegetch_def)
+  apply(simp add: sbeUnion_def sbegetch_def)
   apply(subst Abs_sbElem_inverse)
-   defer
-   apply (simp add: sbegetch_def)
-   apply(auto)
-  using assms apply simp
-    apply (simp add: assms(1))
-   apply (metis assms(1) assms(3) chIsEmpty2chIsEmpty chan_eq h1 rangeI)
- using assms apply(simp)
-  apply(auto)
- by (meson Un_iff h1 repinrange subsetD)
+  apply (auto simp add: chIsEmpty_def assms)
+  apply (metis assms(1) assms(3) chIsEmpty2chIsEmpty chan_eq rangeI sbgetch_ctype)
+  apply (smt assms sbElem_well.simps(2) Un_iff assms(1) assms(3) chIsEmpty2chIsEmpty chan_eq 
+          repinrange sbgetch_ctype subset_eq)
+  by(simp add: sbegetch_def assms)
 
 (*<*)
 end
