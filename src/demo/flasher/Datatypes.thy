@@ -19,6 +19,7 @@ text \<open>* Introduce symbol @{text ~} for empty time-slots called eps. \<clos
 syntax "@eps" :: M ("~")
 translations "~" == "CONST eps"
 
+text \<open>Instantiate @{type M} as countable. This is necessary for using @{type M} streams. }\<close>
 instance M::countable
   apply(countable_datatype)
   done

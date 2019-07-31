@@ -4,8 +4,8 @@ theory sbElem
 begin
 (*>*)
 
-declare[[show_types]]
-declare[[show_consts]]
+declare %invisible[[show_types]]
+declare %invisible[[show_consts]]
 
 default_sort chan
 (* Move to prelude and add mono2mono rules
@@ -13,13 +13,18 @@ section \<open> mono2mono\<close>
 named_theorems mono2mono "monofun intro rule"
 *)
 section \<open>sbElem\<close>
-
+text\<open>A function from channels to messages is quite useful in our later theories. Hence, we define a
+the sbElem type. But the possibility to have no @{type channel}s in the @{const chDom} of a 
+@{class chan} type, forces us to use the allow  @{const None} function in such a case.\<close>
 subsection \<open>sbElem Definition \<close>
 fun sbElem_well :: "('c::chan \<Rightarrow> M) option \<Rightarrow> bool" where
-"sbElem_well None = ((Rep ` (UNIV::'c set)) \<subseteq> cEmpty)" |  (* Schöner? *)
+"sbElem_well None = chIsEmpty(TYPE('c))" |
 "sbElem_well (Some sbe) = (\<forall> c. sbe c \<in> ctype ((Rep::'c\<Rightarrow>channel) c))" (* cbot ist leer, daher wird das nie wahr sein für das leere Bündel *)
+text\<open>Predicate @{const sbElem_well} is used to define sbElem and only allows functions with a Message
+on each channel that are allowed to be transmitted (@{const ctype}), or no function, if the channel 
+type is empty.\<close>
 
-text\<open>Type sbElem is can be interpreted as a Timeslice\<close>
+text\<open>Type sbElem is can be interpreted as a Timeslice.\<close>
 typedef 'c::chan sbElem  ("(_\<^sup>\<surd>)" [1000] 999) = "{f:: ('c::chan \<Rightarrow> M) option. sbElem_well f}"
 proof(cases "chIsEmpty(TYPE('c))")
   case True
@@ -37,7 +42,7 @@ next
     by blast
 qed
 
-text\<open>Instantiation of sbElem as a discrete cpo\<close>
+text\<open>Instantiation of sbElem as a discrete cpo.\<close>
 instantiation  sbElem::(chan)discrete_cpo
 begin
 definition "below_sbElem = (\<lambda>(sbe1::'a sbElem) sbe2. (sbe1 = sbe2))"
@@ -62,7 +67,6 @@ lemma sbtypeempty_notsbewell:"chIsEmpty TYPE ('cs) \<Longrightarrow> \<not>sbEle
 lemma sbtypeepmpty_sbenone[simp]:"chIsEmpty TYPE ('cs) \<Longrightarrow> (sbe::'cs\<^sup>\<surd>) = Abs_sbElem(None)"
   apply(simp add: chIsEmpty_def)
   apply(rule sbe_eqI)
-  apply(simp add: sbtypeempty_sbewell Abs_sbElem_inverse)
   by (metis not_Some_eq Rep_sbElem mem_Collect_eq chIsEmpty_def sbtypeempty_notsbewell)
 
 lemma sbtypenotempty_somesbe:"\<not>(chIsEmpty TYPE ('c)) \<Longrightarrow>\<exists>f::'c \<Rightarrow> M. sbElem_well (Some f)"
@@ -70,7 +74,7 @@ lemma sbtypenotempty_somesbe:"\<not>(chIsEmpty TYPE ('c)) \<Longrightarrow>\<exi
   apply(simp add: chIsEmpty_def cEmpty_def sbElem_well.cases some_in_eq,auto)
   using cEmpty_def chan_botsingle by blast
 
-setup_lifting type_definition_sbElem
+setup_lifting %invisible type_definition_sbElem
 
 subsection \<open>sbElem functions\<close>
 
@@ -84,7 +88,7 @@ lemma sbtypenotempty_fex[simp]:"\<not>(chIsEmpty TYPE ('cs)) \<Longrightarrow> \
   apply(rule_tac x="(\<lambda>(c::'c). (THE m. m= sbegetch c sbe))" in exI)
   apply(simp add: sbegetch_def)
   apply(auto simp add: chIsEmpty_def)
-  by (metis option.collapse repinrange sbElem_well.simps(1) sbelemwell2fwell subsetD)
+  by (metis cempty_rule option.exhaust_sel sbElem_well.simps(1) sbelemwell2fwell)
 
 text\<open>This function Converts the Domain of an sbElem. This works if the Domain it converts to, is
       smaller or equal\<close>

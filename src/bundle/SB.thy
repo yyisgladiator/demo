@@ -4,8 +4,8 @@ theory SB
 begin
 (*>*)
 
-declare[[show_types]]
-declare[[show_consts]]
+declare %invisible[[show_types]]
+declare %invisible[[show_consts]]
 
 text \<open>TODO: sDom  umbenenne zu sValues\<close>
 definition sValues :: "M stream \<Rightarrow> M set" where "sValues = (Rep_cfun sdom)" (*collect*)
@@ -511,7 +511,7 @@ lemma sbrt_sbecons: "sbRt\<cdot>(sbe \<bullet>\<^sup>\<surd> sb) = sb"
   apply (subgoal_tac "\<And>c. \<exists>m. sbe2sb sbe  \<^enum>  c = \<up>m")
   apply (metis Fin_0 Fin_Suc lnzero_def lscons_conv slen_scons strict_slen sup'_def)
   apply (simp add: sbgetch_insert2 sbe2sb.rep_eq chIsEmpty_def)
-  apply (metis option.simps(5) sbElem_well.elims(2) sbelemwell2fwell)
+  apply (metis chIsEmpty_def option.simps(5) sbtypenotempty_fex)
   by (simp add: sb_rep_eqI sbgetch_insert2 Rep_sb_inverse)
 
 lemma sbhdelem_h_sbe:" sbHdElem_h (sbe \<bullet>\<^sup>\<surd> sb) = up\<cdot>sbe"
@@ -527,7 +527,7 @@ lemma sbhdelem_h_sbe:" sbHdElem_h (sbe \<bullet>\<^sup>\<surd> sb) = up\<cdot>sb
   apply (simp split: option.split)
   apply (rule conjI)
   apply (rule impI)+
-  using sbElem_well.simps(1) sbelemwell2fwell apply blast
+  using sbElem_well.simps(1) sbelemwell2fwell chIsEmpty_def apply blast
   apply (rule allI)
   apply (rule impI)+
   apply (subgoal_tac "\<forall>c::'a. Abs_sb (\<lambda>c::'a. \<up>(x2 c))  \<^enum>  c = \<up>(x2 c)")

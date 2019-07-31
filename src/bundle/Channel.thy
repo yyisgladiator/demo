@@ -6,8 +6,10 @@ begin
 
 definition cEmpty :: "channel set" where
 "cEmpty = {c. ctype c = {}}"
+text \<open>@{const cEmpty} contains all channels on which no message is allowed to be transmitted.\<close> 
 
-
+section\<open>@{type channel} class definitions\<close>
+subsection\<open>Class chan\<close>
 class chan =
   fixes Rep :: "'a \<Rightarrow> channel"
   assumes chan_botsingle:
@@ -17,33 +19,52 @@ class chan =
 begin
 abbreviation "Abs \<equiv> inv Rep"
 
-definition chDom::"'cs::chan itself \<Rightarrow> channel set" where
-"chDom a = (range (Rep::'cs \<Rightarrow> channel)) - cEmpty"
-
 end
 
-class somechan = chan +
-  assumes chan_notempty:
-      "(range Rep) \<inter> cEmpty = {}" 
+subsubsection \<open>@{class chan} Functions\<close>
 
-class emptychan = chan +
-  assumes chan_empty:
-      "(range Rep) \<subseteq> cEmpty" 
-
-section \<open>chan Predicate definition\<close>
+definition chDom::"'cs::chan itself \<Rightarrow> channel set" where
+"chDom a = (range (Rep::'cs \<Rightarrow> channel)) - cEmpty"
 
 definition chIsEmpty ::"'cs::chan itself \<Rightarrow> bool" where
 "chIsEmpty cs = (range(Rep::'cs\<Rightarrow>channel) \<subseteq> cEmpty)"
 
-lemma emptychanempty[simp]:"chIsEmpty(TYPE('c::emptychan))"
-  by(simp add: chIsEmpty_def chan_empty)
+text \<open>Types of @{class chan} can be interpreted as a subset of @{type channel}s, where on every
+channel either no message can be transmitted, or on every channel some message is allowed to be
+transmitted. Now we define classes for these two options:\<close>
 
-lemma somechannotempty[simp]:"\<not>chIsEmpty(TYPE('c::somechan))"
-  using chIsEmpty_def chan_notempty by blast
+subsection\<open>Class somechan\<close>
+class somechan = chan +
+  assumes chan_notempty:
+      "(range Rep) \<inter> cEmpty = {}"
+begin
+
+lemma %invisible somechannotempty[simp]:"\<not>chIsEmpty(TYPE('c::somechan))"
+  using chIsEmpty_def somechan_class.chan_notempty by fastforce
+
+lemma %invisible somechandom:"chDom(TYPE('c::somechan)) = range(Rep::'c\<Rightarrow>channel)"
+  by(simp add: chDom_def somechan_class.chan_notempty Diff_triv)
+
+end
+text\<open>Types of  @{class somechan} can transmit at least one message on every channel.\<close>
+subsection\<open>Class emptychan\<close>
+class emptychan = chan +
+  assumes chan_empty:
+      "(range Rep) \<subseteq> cEmpty" 
+begin
+
+lemma %invisible emptychanempty[simp]:"chIsEmpty(TYPE('c::emptychan))"
+  by (simp add: chIsEmpty_def emptychan_class.chan_empty)
+
+lemma %invisible emptychandom[simp]:"chDom(TYPE('c::emptychan)) = {}"
+  by(simp add: chDom_def emptychan_class.chan_empty)
+
+end
+text\<open>Types of @{class emptychan} can not transmit any message on any channel.\<close>
 
 
-section \<open> rep abs chan lemmata \<close>
 
+section %invisible\<open> rep abs chan lemmata \<close>
 lemma repinrange[simp]:"Rep (c::'c::chan) = x \<Longrightarrow> x\<in> range(Rep::'c \<Rightarrow> channel)"
   by blast
 
@@ -59,9 +80,13 @@ lemma cnotempty_rule[simp]:assumes"\<not>chIsEmpty(TYPE('c::chan))"
   shows"Rep (c::'c) \<notin> cEmpty"
   using assms chan_botsingle chIsEmpty_def by blast
 
+lemma cnotempty_cdom[simp]:assumes"\<not>chIsEmpty(TYPE('c::chan))"
+  shows"Rep (c::'c) \<in> chDom(TYPE('c))"
+  by (simp add: assms chDom_def)
 
-declare[[show_types]]
-declare[[show_consts]]
+
+declare %invisible[[show_types]]
+declare %invisible[[show_consts]]
 
 section \<open>chan \<open>\<union>\<close> and \<open>-\<close> \<close>
 
