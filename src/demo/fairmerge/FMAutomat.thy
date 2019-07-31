@@ -6,17 +6,17 @@ begin
 
 setup_lifting type_definition_ndAutomaton
 
-fun dAfm_case::"bool \<Rightarrow> nat \<Rightarrow> nat list \<Rightarrow> nat list \<Rightarrow> (nat\<times> nat) \<Rightarrow> (S_fm \<times> nat)"where
-"dAfm_case True  n [] l2 (nat1,nat2) = (S True  n []          (l2@[nat2]), nat1)"|
-"dAfm_case False n l1 [] (nat1,nat2) = (S False n (l1@[nat1]) []         , nat2)"|
+fun dAfm_case::"bool \<Rightarrow> nat list \<Rightarrow> nat list \<Rightarrow> (nat\<times> nat) \<Rightarrow> nat \<Rightarrow>(S_fm \<times> nat)"where
+"dAfm_case True  [] l2 (nat1,nat2) = (\<lambda>n. (S True  n []          (l2@[nat2]), nat1))"|
+"dAfm_case False l1 [] (nat1,nat2) = (\<lambda>n. (S False n (l1@[nat1]) []         , nat2))"|
 
-"dAfm_case True  n (nhd#l1) l2       (nat1,nat2) = (S True  n (l1@[nat1]) (l2@[nat2]),nhd)"|
-"dAfm_case False n l1       (nhd#l2) (nat1,nat2) = (S False n (l1@[nat1]) (l2@[nat2]),nhd)"
+"dAfm_case True  (nhd#l1) l2       (nat1,nat2) = (\<lambda>n. (S True  n (l1@[nat1]) (l2@[nat2]),nhd))"|
+"dAfm_case False l1       (nhd#l2) (nat1,nat2) = (\<lambda>n. (S False n (l1@[nat1]) (l2@[nat2]),nhd))"
 
 (*FM automaton*)
 fun dAfm_transition::"S_fm \<Rightarrow> (nat\<times> nat) \<Rightarrow> (S_fm \<times> nat)set"where
-"dAfm_transition (S bool 0       buf1 buf2) input = {dAfm_case (\<not>bool) n buf1 buf2 input | n. True} "|
-"dAfm_transition (S bool (Suc n) buf1 buf2) input = {dAfm_case bool    n buf1 buf2 input}"
+"dAfm_transition (S bool 0       buf1 buf2) input = {(dAfm_case (\<not>bool) buf1 buf2 input) n | n. True} "|
+"dAfm_transition (S bool (Suc n) buf1 buf2) input = {(dAfm_case bool    buf1 buf2 input) n}"
 
 definition fairmergetransition::"(S_fm \<Rightarrow> inFM\<^sup>\<surd> \<Rightarrow> ((S_fm \<times> outFM\<^sup>\<Omega>) set))"where
 "fairmergetransition state insbe = ( let Set = (dAfm_transition state (fmInSBE.getter(insbe))) in
