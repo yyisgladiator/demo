@@ -12,11 +12,11 @@ begin
 definition "Rep = Rep_inNot"
 instance
   apply(standard)
-  apply(auto simp add: Rep_inNot_def)
-  apply (metis Rep_inNot singletonD)
-  apply (meson Rep_inNot_inject injI)
-  apply(simp add: cEmpty_def)
-  sorry
+  apply(auto simp add: Rep_inNot_def cEmpty_def)
+  using ctype.elims
+  apply (metis Rep_inNot ctype.simps(4) ctype.simps(5) ctype.simps(6) ex_in_conv insertE insert_iff)
+  apply (meson Rep_inNot_inject injI) using ctype.elims Rep_inNot apply simp
+  using type_definition.Abs_image type_definition_inNot typedef_finite_UNIV by fastforce
 end
 
 definition "Notin \<equiv> Abs_inNot cout"
