@@ -22,7 +22,7 @@ abbreviation genComp_magicabbr :: "('I1\<^sup>\<Omega> \<rightarrow> 'O1\<^sup>\
 
 
 definition spfConvert::"('I\<^sup>\<Omega> \<rightarrow> 'O\<^sup>\<Omega>) \<rightarrow> ('Ie\<^sup>\<Omega> \<rightarrow> 'Oe\<^sup>\<Omega>)" where
-"spfConvert = (\<Lambda> f sb. (f\<cdot>(sb\<star>))\<star>)"   (* TODO: weniger klammern + warnings *)
+"spfConvert = (\<Lambda> f sb. (f\<cdot>(sb\<star>)\<star>))"   (* TODO: weniger klammern + warnings *)
 
 lemma spfcomp_eql[simp]: "genComp\<cdot>f\<cdot>g = f"
   apply(simp add: genComp_def)
@@ -32,7 +32,7 @@ lemma spfcomp_eql[simp]: "genComp\<cdot>f\<cdot>g = f"
 
 lemma sbgetch_empty[simp]: "Rep c\<in>cEmpty \<Longrightarrow> sb \<^enum>\<^sub>\<star> c = \<epsilon>"
   apply(auto simp add: sbGetCh.rep_eq)
-  by (metis Rep_sb_strict app_strict cnotempty_rule sbtypeepmpty_sbbot)
+  by (metis (full_types)Rep_sb_strict app_strict cnotempty_rule sbtypeepmpty_sbbot)
 
 lemma ubunion_commu:
   fixes sb1 ::"'cs1\<^sup>\<Omega>"
@@ -114,8 +114,8 @@ lemma spfcomp_belowI:
         and out::"('fOut \<union> 'gOut)\<^sup>\<Omega>"
     
   assumes "chDom (TYPE ('fOut)) \<inter> chDom (TYPE ('gOut)) = {}"
-      and "f\<cdot>(sb \<uplus>\<^sub>\<star> out) = out\<star>\<^sub>1"
-      and "g\<cdot>(sb \<uplus>\<^sub>\<star> out) = out\<star>\<^sub>2"
+      and "f\<cdot>(sb \<uplus>\<^sub>\<star> out) = (out\<star>\<^sub>1)"
+      and "g\<cdot>(sb \<uplus>\<^sub>\<star> out) = (out\<star>\<^sub>2)"
       shows "((f\<otimes>g)\<cdot>sb) \<sqsubseteq> out"
   apply(subst genComp_def)
   apply(simp add: spfConvert_def)
@@ -149,8 +149,8 @@ lemma sbunion_snd[simp]:
   by (metis assms sbconv_eq sbunion_magic ubunion_commu ubunion_fst)
 
 lemma sbunion_eqI:
-  assumes "sb1 = sb\<star>\<^sub>1"
-    and "sb2 = sb\<star>\<^sub>2"
+  assumes "sb1 = (sb\<star>\<^sub>1)"
+    and "sb2 = (sb\<star>\<^sub>2)"
   shows "sb1 \<uplus> sb2 = sb"
   by (simp add: assms)
 
@@ -160,9 +160,9 @@ lemma spfcomp_eqI:
         and out::"('fOut \<union> 'gOut)\<^sup>\<Omega>"
     
   assumes "chDom (TYPE ('fOut)) \<inter> chDom (TYPE ('gOut)) = {}"
-      and "f\<cdot>(sb \<uplus>\<^sub>\<star> out) = out\<star>\<^sub>1"
-      and "g\<cdot>(sb \<uplus>\<^sub>\<star> out) = out\<star>\<^sub>2"
-      and "\<And>z. f\<cdot>(sb \<uplus>\<^sub>\<star> z) = z\<star>\<^sub>1 \<Longrightarrow> g\<cdot>(sb \<uplus>\<^sub>\<star> z) = z\<star>\<^sub>2 \<Longrightarrow> out \<sqsubseteq> z"
+      and "f\<cdot>(sb \<uplus>\<^sub>\<star> out) =(out\<star>\<^sub>1)"
+      and "g\<cdot>(sb \<uplus>\<^sub>\<star> out) = (out\<star>\<^sub>2)"
+      and "\<And>z. f\<cdot>(sb \<uplus>\<^sub>\<star> z) = (z\<star>\<^sub>1) \<Longrightarrow> g\<cdot>(sb \<uplus>\<^sub>\<star> z) = (z\<star>\<^sub>2) \<Longrightarrow> out \<sqsubseteq> z"
 
       shows "((f\<otimes>g)\<cdot>sb) = out"
   apply(subst genComp_def)
@@ -185,7 +185,7 @@ lemma sbgetch_empty2[simp]: fixes sb::"'cs\<^sup>\<Omega>"
     assumes "Rep c \<notin> chDom TYPE('cs)"
     shows "sb \<^enum>\<^sub>\<star> c = \<epsilon>"
   apply(simp add: sbgetch_insert assms chDom_def)
-  by (metis Diff_triv Rep_sb_strict app_strict assms chDom_def chIsEmpty_def chan_botsingle sbtypeepmpty_sbbot)
+  by (metis(full_types) Diff_triv Rep_sb_strict app_strict assms chDom_def chIsEmpty_def chan_botsingle sbtypeepmpty_sbbot)
 
 lemma spfcomp_surj_h: 
   fixes  f :: "(('a \<union> 'b) - ('c \<union> 'd))\<^sup>\<Omega> \<rightarrow> ('c \<union> 'd)\<^sup>\<Omega>"

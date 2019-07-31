@@ -222,14 +222,6 @@ begin
 
 abbreviation "smapTransition \<equiv> (\<lambda>e. snd(daTransition loopState e))" 
 
-(*Move to stream.thy. Is there already a lemma like this?*)
-lemma sscanl2smap:
-  assumes "\<And>e. fst(f s e) = s"
-  and "g = (\<lambda>a. snd(f s a))"
-shows"sscanlAsnd f s = smap g"
-  apply(rule cfun_eqI)
-  by(induct_tac x rule: ind,simp_all add: assms)
-
 lemma daut2smap:assumes "\<not>chIsEmpty(TYPE('out))"
       shows"sbeGen.getterSB fout\<cdot>(dawStateSem (sscanlGen.da daTransition daInitialState fin fout) loopState\<cdot>(sbeGen.setterSB fin \<cdot>input)) = 
        smap smapTransition\<cdot>input"

@@ -102,7 +102,7 @@ proof-
             qed
             have dom_emty_iff:"(ch_not_eps={})  \<longleftrightarrow> (( Rep  (c::'c) \<in> cEmpty) )"
               using ch_not_eps_def
-              by (metis (full_types, lifting) Collect_empty_eq_bot Diff_cancel Diff_eq_empty_iff a1 bot_empty_eq cEmpty_def ex_in_conv mem_Collect_eq sbgetch_ctype_notempty set_mp)
+              by (metis (full_types, lifting) Collect_empty_eq_bot Diff_cancel Diff_eq_empty_iff a1 cEmpty_def ex_in_conv mem_Collect_eq sbgetch_ctype_notempty set_mp)
             have dom_not_emp_false: "ch_not_eps\<noteq>{} \<Longrightarrow> False"
             proof -
               assume a111: "ch_not_eps\<noteq>{}"
@@ -246,7 +246,7 @@ proof-
                 have "Y the_min \<^enum> c \<noteq> \<epsilon>"
                   using surj_f_def the_min_def the_set_def by blast
                 then show "Y the_max  \<^enum>  c \<noteq> \<epsilon>"
-                  using \<open>(the_min::nat) \<le> (the_max::nat)\<close>  order_class.order.antisym 
+                  using \<open>(the_min::nat) \<le> (the_max::nat)\<close>
                   by (metis \<open>(Y::nat \<Rightarrow> 'c\<^sup>\<Omega>) (the_min::nat) \<sqsubseteq> Y (the_max::nat)\<close> bottomI monofun_cfun_arg)
               qed
               then show False

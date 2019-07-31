@@ -173,6 +173,6 @@ by presburger
 qed
 
 lemma "chDom (TYPE('cs1 - 'cs2)) \<inter> chDom (TYPE ('cs2)) = {}"
-  by(auto simp add: chdom_minus )
+  by auto
 
 end

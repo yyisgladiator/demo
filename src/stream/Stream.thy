@@ -169,7 +169,7 @@ text \<open>(Only listed as a constant below for reference;
 (* consts sntimes_    :: "nat \<Rightarrow> 'a stream \<Rightarrow> 'a stream" *)
 
 text \<open>@{term sinftimes}: Concatenate a stream infinitely often to itself.\<close>
-definition sinftimes  :: "'a stream \<Rightarrow> 'a stream" ("_\<infinity>") where
+definition sinftimes  :: "'a stream \<Rightarrow> 'a stream" ("_\<^sup>\<infinity>") where
  "sinftimes \<equiv> fix\<cdot>(\<Lambda> h. (\<lambda>s. 
                         if s = \<epsilon> then \<epsilon> else (s \<bullet> (h s))))"                         
                         
@@ -1312,15 +1312,15 @@ by (simp add: slen_sinftimes)
 
 (* converting the element x to a singleton stream, repeating the singleton and re-extracting x with
    lshd is equivalent to imposing the discrete order on x *)
-lemma lshd_sinf [simp]: "lshd\<cdot>\<up>x\<infinity> = updis x"
+lemma lshd_sinf [simp]: "lshd\<cdot>\<up>x\<^sup>\<infinity> = updis x"
 by (metis lshd_updis sinftimes_unfold)
 
 (* the infinite repetition of the stream x has the same head as x *)
-lemma shd_sinf[simp]: "shd (x\<infinity>) = shd x"
+lemma shd_sinf[simp]: "shd (x\<^sup>\<infinity>) = shd x"
 by (metis assoc_sconc shd1 sinftimes_unfold strict_icycle surj_scons)
 
 (* srt has no effect on an infinite constant stream of x *)
-lemma srt_sinf [simp]: "srt\<cdot>\<up>x\<infinity> = (\<up>x\<infinity>)"
+lemma srt_sinf [simp]: "srt\<cdot>\<up>x\<^sup>\<infinity> = ((\<up>x)\<^sup>\<infinity>)"
 by (metis lscons_conv sinftimes_unfold stream.sel_rews(5) up_defined)
 
 (* if the stream x contains y elements then the first y elements of the infinite repetition of x will
@@ -1330,31 +1330,31 @@ lemma stake_y [simp]: assumes "#x = Fin y"
 by (metis approxl1 assms minimal monofun_cfun_arg sconc_snd_empty sinftimes_unfold)
 
 (* the infinite repetitions of the singleton stream \<up>s consists only of the element s *)
-lemma snth_sinftimes[simp]: "snth i (\<up>s\<infinity>) = s"
+lemma snth_sinftimes[simp]: "snth i ((\<up>s)\<^sup>\<infinity>) = s"
 apply (induction i)
 apply (simp) 
 by (simp add: snth_rt)
 
 (* dropping any finite number of elements from an infinite constant stream doesn't affect the stream *)
-lemma sdrops_sinf[simp]: "sdrop i\<cdot>\<up>x\<infinity> = \<up>x\<infinity>"
+lemma sdrops_sinf[simp]: "sdrop i\<cdot>((\<up>x)\<^sup>\<infinity>) = ((\<up>x)\<^sup>\<infinity>)"
 apply (induction i)
 apply(simp)
 by (simp add: sdrop_forw_rt)
 
 (* for a finite natural number "i", following relation between sntimes and stake holds:  *)
-lemma sntimes_stake: "i \<star> \<up>x = stake i\<cdot>\<up>x\<infinity>"
+lemma sntimes_stake: "i \<star> \<up>x = stake i\<cdot>((\<up>x)\<^sup>\<infinity>)"
 apply(induction i)
 apply simp
 by (metis sinftimes_unfold sntimes.simps(2) stake_Suc) 
 
 (* for every finite number "i" is sntimes \<noteq> sinftimes. *)
-lemma snNEqSinf [simp]: "i \<star> \<up>x \<noteq> \<up>x\<infinity>"
+lemma snNEqSinf [simp]: "i \<star> \<up>x \<noteq> ((\<up>x)\<^sup>\<infinity>)"
 by (metis lshd_sinf sdropostake sdrops_sinf sntimes_stake stream.sel_rews(3) up_defined)
 
 (* for every natural number i, dropping the first (i*y) elements results in the same infinite stream *)
   (* the first i "blocks" of x are dropped *)
 lemma sdrop_sinf[simp]: assumes "Fin y = #x"
-  shows "sdrop (i * y)\<cdot>(sinftimes x) = x\<infinity>"
+  shows "sdrop (i * y)\<cdot>(sinftimes x) = sinftimes x"
 apply(induction i)
 apply(simp)
 by (metis assms mult_Suc sdrop_plus sdropl6 sinftimes_unfold) 
@@ -1366,11 +1366,11 @@ using assms slen_sinftimes by fastforce
 (* sinftimes has no effect on streams that are already infinite *)
 (* removed simp because of lemma stakewhile_sinftimes_lemma*)
 lemma sinf_inf: assumes "#s = \<infinity>" 
-  shows "s\<infinity> = s"
+  shows "s\<^sup>\<infinity> = s"
 by (metis assms sconc_fst_inf sinftimes_unfold)
 
 (* sinftimes is idempotent *)
-lemma sinf_dupE [simp]: "(sinftimes s) \<infinity> = (s\<infinity>)"
+lemma sinf_dupE [simp]: "(sinftimes s)\<^sup>\<infinity> = (s\<^sup>\<infinity>)"
 using sinf_inf slen_sinftimes by force
 
 (* alternative unfold rule for sntimes, new element is appended on the end *)
@@ -1381,13 +1381,13 @@ by (metis assoc_sconc sntimes.simps(2))
 
 (* Blockwise stake from sinftimes to sntimes. *)
 lemma sinf2sntimes: assumes "Fin y = #x"
-  shows "stake (i*y)\<cdot>(x\<infinity>) = i\<star>x"
+  shows "stake (i*y)\<cdot>(x\<^sup>\<infinity>) = i\<star>x"
 apply(induction i)
 apply simp
 by (metis assms mult_Suc sdrop_plus sdrop_sinf sntimes.simps(2) stake_add stake_y) 
 
 (* for any natural number i, sntimes is a prefix of sinftimes *)
-lemma snT_le_sinfT [simp]: "i\<star>s \<sqsubseteq> s\<infinity>"
+lemma snT_le_sinfT [simp]: "i\<star>s \<sqsubseteq> (s\<^sup>\<infinity>)"
 by (metis minimal monofun_cfun_arg ninf2Fin sconc_fst_inf sconc_snd_empty sinf2sntimes sinf_inf sntimes.simps(2) sntimes_Suc2 ub_stake)
 
 (* repeating the stream s i times produces a prefix of repeating s i+1 times *)
@@ -1442,20 +1442,20 @@ qed
 
 (* building block of the lemma sntimesLub_Fin *)
 lemma sntimesChain: assumes "#s = Fin y" and "y \<noteq> 0"
-  shows "\<forall>j. stake (y*j)\<cdot>(\<Squnion> i. i\<star>s) = stake (y*j)\<cdot> (s\<infinity>)"
+  shows "\<forall>j. stake (y*j)\<cdot>(\<Squnion> i. i\<star>s) = stake (y*j)\<cdot> (s\<^sup>\<infinity>)"
 by (metis assms(1) contlub_cfun_arg lubStake2sn mult.commute sinf2sntimes sntimes_chain)
 
 (* proof for lemma sntimesLub_Fin *)
 lemma sntimesLub_Fin: assumes "#s = Fin y" and "y \<noteq> 0"
-  shows "(\<Squnion> i. i\<star>s) = s\<infinity>"
+  shows "(\<Squnion> i. i\<star>s) = (s\<^sup>\<infinity>)"
 proof - 
-  have  "\<forall>j. stake (j*y)\<cdot>(\<Squnion> i. i\<star>s) = stake (j*y)\<cdot> (s\<infinity>)" by (metis assms(1) assms(2) mult.commute sntimesChain) 
-  hence "\<forall>j. stake j\<cdot>(\<Squnion> i. i\<star>s) = stake j\<cdot> (s\<infinity>)" using assms by (metis gstake2stake)
+  have  "\<forall>j. stake (j*y)\<cdot>(\<Squnion> i. i\<star>s) = stake (j*y)\<cdot> (s\<^sup>\<infinity>)" by (metis assms(1) assms(2) mult.commute sntimesChain) 
+  hence "\<forall>j. stake j\<cdot>(\<Squnion> i. i\<star>s) = stake j\<cdot> (s\<^sup>\<infinity>)" using assms by (metis gstake2stake)
   thus ?thesis by (simp add:  stream.take_lemma)
 qed
 
 (* for any stream s the LUB of sntimes is sinftimes *)
-lemma sntimesLub[simp]:"(\<Squnion> i. i\<star>s) = s\<infinity>"
+lemma sntimesLub[simp]:"(\<Squnion> i. i\<star>s) = (s\<^sup>\<infinity>)"
 apply(cases "#s = \<infinity>")
 apply (metis inf2max sconc_fst_inf sinf_inf sntimes.simps(2) sntimes_chain)
 by (metis Fin_0 lncases lub_eq_bottom_iff slen_empty_eq sntimesLub_Fin sntimes_chain sntimes_eps strict_icycle)
@@ -1468,19 +1468,19 @@ proof (cases "#x = \<infinity>")
 next
   case False 
   obtain y where y_def: "Fin y = #x \<and> y\<noteq>0"  by (metis False Fin_02bot assms(2) infI lnzero_def slen_empty_eq)
-  hence "\<forall>i. stake (i*y)\<cdot>xs = stake (i*y)\<cdot>(x\<infinity>)" using assms(1) stake_eq_sinf by fastforce  
-  hence "\<forall>i. stake i\<cdot>xs = stake i\<cdot>(x\<infinity>)" using gstake2stake y_def by blast 
+  hence "\<forall>i. stake (i*y)\<cdot>xs = stake (i*y)\<cdot>(x\<^sup>\<infinity>)" using assms(1) stake_eq_sinf by fastforce  
+  hence "\<forall>i. stake i\<cdot>xs = stake i\<cdot>(x\<^sup>\<infinity>)" using gstake2stake y_def by blast 
   thus ?thesis by (simp add: stream.take_lemma)
 qed
 
 (* specializes the result from rek2sinftimes to singleton streams *)
 lemma s2sinftimes: assumes "xs = \<up>x \<bullet> xs"
-  shows "xs = \<up>x\<infinity>"
+  shows "xs = ((\<up>x)\<^sup>\<infinity>)"
 using assms rek2sinftimes by fastforce
 
 (* shows that the infinite repetition of a stream x is the least fixed point of iterating (\<Lambda> s. x \<bullet> s),
    which maps streams to streams *)
-lemma fix2sinf[simp]: "fix\<cdot>(\<Lambda> s. x \<bullet> s) = x\<infinity>"
+lemma fix2sinf[simp]: "fix\<cdot>(\<Lambda> s. x \<bullet> s) = (x\<^sup>\<infinity>)"
 by (metis eta_cfun fix_eq fix_strict rek2sinftimes sconc_snd_empty strict_icycle)
 
 
@@ -1540,11 +1540,11 @@ proof (rule lncases [of "#a"], simp)
 qed
 
 (* smap distributes over infinite repetition *)
-lemma smap2sinf[simp]: "smap f\<cdot>(x\<infinity>)= (smap f\<cdot>x)\<infinity>"
+lemma smap2sinf[simp]: "smap f\<cdot>(x\<^sup>\<infinity>)= ((smap f\<cdot>x)\<^sup>\<infinity>)"
 by (metis (no_types) rek2sinftimes sinftimes_unfold slen_empty_eq slen_smap smap_split strict_icycle)
 
 (* smap and infinity *)
-lemma l5: "smap g\<cdot>\<up>x\<infinity> = \<up>(g x)\<infinity>"
+lemma l5: "smap g\<cdot>((\<up>x)\<^sup>\<infinity>) = ((\<up>(g x))\<^sup>\<infinity>)"
   by simp
 
 (* for any nonempty stream it holds that smap f to stream s is \<up>(f (shd s)) \<bullet> smap f\<cdot>(srt\<cdot>s) *) 
@@ -1911,8 +1911,8 @@ apply (metis Fin_02bot lnat_po_eq_conv lnzero_def sdrop_0 slen_empty_eq snth_def
 by (smt inject_scons slen_rt_ile_eq snth_rt stakewhile_f stakewhile_t stream.take_strict strict_stakewhile surj_scons ub_slen_stake)
 
 (* the prefix of the constant stream of x's whose elements aren't equal to x is empty *)
-lemma [simp]: "stakewhile (\<lambda>a. a \<noteq> x)\<cdot>\<up>x\<infinity> = \<epsilon>"
-by (metis sinftimes_unfold stakewhile_f)
+lemma [simp]: "stakewhile (\<lambda>a. a \<noteq> x)\<cdot>\<up>x\<^sup>\<infinity> = \<epsilon>"
+by (metis (full_types)sinftimes_unfold stakewhile_f)
 
 (* stakewhile produces a prefix of the input *)
 lemma stakewhile_below[simp]: "stakewhile f\<cdot>s \<sqsubseteq> s"
@@ -2885,7 +2885,7 @@ by (rule_tac x=x in scases, auto)
 
 (* zipping the infinite constant streams \<up>x\<infinity> and \<up>y\<infinity> is equivalent to infinitely repeating the tuple
    \<up>(x, y) *)
-lemma szip2sinftimes[simp]: "szip\<cdot>\<up>x\<infinity>\<cdot>\<up>y\<infinity> = \<up>(x, y)\<infinity> "
+lemma szip2sinftimes[simp]: "szip\<cdot>((\<up>x)\<^sup>\<infinity>)\<cdot>((\<up>y)\<^sup>\<infinity>) = ((\<up>(x, y))\<^sup>\<infinity>) "
 by (metis s2sinftimes sinftimes_unfold szip_scons)
 
 (* the length of szip\<cdot>as\<cdot>bs is the minimum of the lengths of as and bs *)
@@ -2903,7 +2903,7 @@ proof -
   fix bs:: "'b stream"
   assume as1: "u \<noteq> \<bottom>" and 
     as2: "(\<And>bs::'b stream. #(szip\<cdot>as\<cdot>bs) = min (#as) (#bs))" and as3: "bs \<noteq> \<epsilon>" 
-  obtain a where a_def: "updis a = u" by (metis as1 lshd_updis stream.sel_rews(4) stream.sel_rews(5) surj_scons)
+  obtain a where a_def: "updis a = u" by (metis (mono_tags)as1 lshd_updis stream.sel_rews(4) stream.sel_rews(5) surj_scons)
   obtain b bs2 where b_def: "bs = \<up>b \<bullet> bs2" by (metis as3 surj_scons) 
   hence "#(szip\<cdot>(\<up>a \<bullet> as)\<cdot>(\<up>b \<bullet> bs2)) = min (#(\<up>a \<bullet> as)) (#(\<up>b \<bullet> bs2))" by (simp add: as2 min_def) 
   thus "#(szip\<cdot>(u && as)\<cdot>bs) = min (#(u && as)) (#bs)" by (metis a_def b_def lscons_conv) 
@@ -3116,6 +3116,13 @@ lemma sscanlasnd_inftimes_loop:
   using assms
   by (metis rek2sinftimes sinftimes_unfold slen_empty_eq sscanlasnd_bot sscanlasnd_len strict_icycle) 
 
+lemma sscanl2smap:
+  assumes "\<And>e. fst(f s e) = s"
+  and "g = (\<lambda>a. snd(f s a))"
+shows"sscanlAsnd f s = smap g"
+  apply(rule cfun_eqI)
+  by(induct_tac x rule: ind,simp_all add: assms)
+
 (* ----------------------------------------------------------------------- *)
 subsection \<open>@{term merge}\<close>
 (* ----------------------------------------------------------------------- *)
@@ -3216,7 +3223,7 @@ proof -
   have aI: "max_in_chain 0 (\<lambda>i. (iterate i\<cdot>(\<Lambda> h. (\<lambda>s. s \<bullet> h (g s)))\<cdot>\<bottom>) \<epsilon> )" by (simp add: max_in_chainI assms)
   hence "(\<Squnion>i. (iterate i\<cdot>(\<Lambda> h. (\<lambda>s. s \<bullet> h (g s)))\<cdot>\<bottom>) \<epsilon>) = \<epsilon>"  using assms by auto 
   hence " (\<Squnion> i. iterate i\<cdot>(\<Lambda> h. (\<lambda>s. s \<bullet> h (g s)))\<cdot>\<bottom>) \<epsilon> = \<epsilon>" by (simp add: lub_fun) 
-  thus ?thesis using lub_fun fix_def2 by (metis (no_types, lifting) lub_eq)
+  thus ?thesis using fix_def2 by (metis (no_types, lifting) lub_eq)
 qed
 
 (* beginning the iteration of the function h with the element (h x) is equivalent to beginning the
@@ -3464,7 +3471,7 @@ qed
 (* for any finite stream s and set A, if filtering s with A doesn't produce the empty stream, then
    filtering and infinite repetition are associative *)
 lemma sfilter_sinf [simp]: assumes "#s<\<infinity>" and "(A \<ominus> s) \<noteq> \<epsilon>"
-  shows "A \<ominus> (s\<infinity>) = (A \<ominus> s)\<infinity>"
+  shows "A \<ominus> (s\<^sup>\<infinity>) = ((A \<ominus> s)\<^sup>\<infinity>)"
 by (metis add_sfilter assms(1) assms(2) infI lnless_def rek2sinftimes sinftimes_unfold)
 
 (* if filtering the stream s with the set A produces infinitely many elements, then filtering the 
@@ -3533,7 +3540,7 @@ proof -
   hence "shd xs = True"
     using \<open>snth n s = True\<close> by auto   
   thus ?thesis
-    by (metis \<open>xs \<noteq> \<epsilon>\<close> lscons_conv minimal monofun_cfun_arg sup'_def surj_scons that xs_def)
+    by (metis (full_types)\<open>xs \<noteq> \<epsilon>\<close> lscons_conv minimal monofun_cfun_arg sup'_def surj_scons that xs_def)
   qed
 
 (* ----------------------------------------------------------------------- *)
@@ -3548,7 +3555,7 @@ proof -
   obtain n where n_def: "Fin n = #xs" by (metis assms(2) lncases lnless_def) 
   hence "n>0" using assms(2) gr0I using Fin_02bot \<open>xs \<noteq> \<epsilon>\<close> lnzero_def slen_empty_eq by fastforce 
   hence "(THE n'. lnsuc\<cdot>(Fin n') = #xs) = n-1" by (metis (mono_tags, lifting) Fin_Suc Suc_diff_1 n_def inject_Fin inject_lnsuc the_equality)
-  have "snth (n-1) xs = a" by (metis Fin_0 Fin_Suc Fin_neq_inf Suc_diff_1 assms(1) n_def bot_is_0 inf_ub inject_lnsuc lnat.con_rews lnle_conv lnless_def lscons_conv neq0_conv sconc_fst_inf sdropl6 shd1 slen_lnsuc snth_def sup'_def)
+  have "snth (n-1) xs = a" by (metis Fin_0 Fin_Suc Suc_diff_1 assms(1) n_def bot_is_0 inject_lnsuc lnat.con_rews lscons_conv neq0_conv sdropl6 shd1 slen_lnsuc snth_def sup'_def)
   thus ?thesis by (metis \<open>(THE n'. lnsuc\<cdot>(Fin n') = #xs) = n - 1\<close> sfoot_def)
 qed
 
@@ -3620,9 +3627,9 @@ by (metis (no_types, hide_lams) assms(1) assms(2) assms(3) assoc_sconc sconc_sle
 lemma sfoot_sdrop: assumes "Fin 1<#s" and "#s<\<infinity>"
   shows "sfoot (srt\<cdot>s) = sfoot s"
 proof -
-  obtain s' where "s = s' \<bullet> \<up>(sfoot s)" by (metis assms below_antisym bot_is_0 lnless_def minimal sfoot2 strict_slen)
+  obtain s' where "s = s' \<bullet> \<up>(sfoot s)" by (metis assms(1) below_antisym bot_is_0 lnless_def minimal sfoot2 strict_slen)
   hence "s' \<noteq> \<epsilon>"
-    by (metis Fin_02bot Fin_Suc Inf'_neq_0 One_nat_def assms lnless_def lnzero_def minimal slen_lnsuc strict_slen)
+    by (metis Fin_02bot Fin_Suc One_nat_def assms(1) lnless_def lnzero_def slen_lnsuc strict_slen)
   hence "srt\<cdot>s = srt\<cdot>s' \<bullet> \<up>(sfoot s)"
     by (smt \<open>s = s' \<bullet> \<up>(sfoot s)\<close> assoc_sconc inject_scons sconc_snd_empty strictI surj_scons)
   thus ?thesis
@@ -3721,7 +3728,7 @@ proof -
     by blast
   then have expr: "t \<bullet> \<up>a = u \<bullet> (sntimes n (\<up>(sfoot t))) \<bullet> \<up>a"
     by (metis assoc_sconc)
-  then show "\<exists>ta n. t \<bullet> \<up>a = ta \<bullet> n\<star>\<up>(sfoot (t \<bullet> \<up>a)) \<and> (ta = \<epsilon> \<or> sfoot (t \<bullet> \<up>a) \<noteq> sfoot ta)"
+  then show "\<exists>ta n. ((t \<bullet> \<up>a) =(ta \<bullet> (n\<star>(\<up>(sfoot (t \<bullet> \<up>a)))))) \<and> ((ta = \<epsilon>) \<or> (sfoot (t \<bullet> \<up>a) \<noteq> sfoot ta))"
   proof (cases "a = sfoot t")
     case True
     then have "t \<bullet> \<up>a = u \<bullet> (sntimes (Suc n) (\<up>(sfoot t)))"
@@ -3731,9 +3738,9 @@ proof -
   next
     case False
     then have "t \<bullet> \<up>a = (u \<bullet> (sntimes n (\<up>(sfoot t)))) \<bullet> (sntimes (Suc 0) (\<up>(sfoot (t \<bullet> \<up>a))))"
-      using \<open>#t < \<infinity>\<close> \<open>t = u \<bullet> n\<star>\<up>(sfoot t)\<close> by auto
+      using \<open>#t < \<infinity>\<close> \<open>t = u \<bullet> (n\<star>\<up>(sfoot t))\<close> by auto
     then show ?thesis
-      by (metis False \<open>#t < \<infinity>\<close> \<open>t = u \<bullet> n\<star>\<up>(sfoot t)\<close> sfoot12)
+      by (metis False \<open>#t < \<infinity>\<close> \<open>t = u \<bullet> (n\<star>\<up>(sfoot t))\<close> sfoot12)
   qed
 qed
 
@@ -3882,7 +3889,7 @@ apply (induct_tac n, auto)
 by (drule lessD, auto)+
 
 lemma slen_snth_prefix: "#s > Fin n \<Longrightarrow> snth n s = snth n (s \<bullet> t)"
-  by (simp add: minimal monofun_cfun_arg snth_less)
+  by (simp add: monofun_cfun_arg snth_less)
 
 lemma srcdups_sconc: 
   "#xs < \<infinity> \<Longrightarrow> xs \<noteq> \<epsilon> \<Longrightarrow> 
@@ -3895,15 +3902,15 @@ proof -
   proof (cases "t = \<epsilon>")
     case True
     then have "xs \<bullet> ys = (sntimes n (\<up>(sfoot xs))) \<bullet> ys"
-      using \<open>xs = t \<bullet> n\<star>\<up>(sfoot xs)\<close> by auto
+      using \<open>xs = t \<bullet> (n\<star>\<up>(sfoot xs))\<close> by auto
     then have "srcdups\<cdot>(xs \<bullet> ys) = (\<up>(sfoot xs)) \<bullet> srcdups\<cdot>(sdropwhile (\<lambda>x. x=sfoot xs)\<cdot>ys)"
-      by (metis Fin_02bot True \<open>xs = t \<bullet> n\<star>\<up>(sfoot xs)\<close> \<open>xs \<noteq> \<epsilon>\<close> lnzero_def neq0_conv sconc_fst_empty slen_empty_eq sntimes_len srcdups_sntimes_prefix)
+      by (metis Fin_02bot True \<open>xs = t \<bullet>( n\<star>\<up>(sfoot xs))\<close> \<open>xs \<noteq> \<epsilon>\<close> lnzero_def neq0_conv sconc_fst_empty slen_empty_eq sntimes_len srcdups_sntimes_prefix)
     then show ?thesis
-      by (metis Fin_02bot True \<open>xs = t \<bullet> n\<star>\<up>(sfoot xs)\<close> \<open>xs \<noteq> \<epsilon>\<close> lnzero_def neq0_conv sconc_fst_empty slen_empty_eq sntimes_len srcdups_sntimes)
+      by (metis Fin_02bot True \<open>xs = t \<bullet> (n\<star>\<up>(sfoot xs))\<close> \<open>xs \<noteq> \<epsilon>\<close> lnzero_def neq0_conv sconc_fst_empty slen_empty_eq sntimes_len srcdups_sntimes)
   next
     case False
     then obtain k where "#t = Fin (Suc k)"
-      by (metis Fin_02bot \<open>t = \<epsilon> \<or> sfoot t \<noteq> sfoot xs\<close> \<open>xs = t \<bullet> n\<star>\<up>(sfoot xs)\<close> bot_is_0 ninf2Fin not0_implies_Suc sconc_fst_inf slen_empty_eq)
+      by (metis Fin_02bot \<open>t = \<epsilon> \<or> sfoot t \<noteq> sfoot xs\<close> \<open>xs = t \<bullet> (n\<star>\<up>(sfoot xs))\<close> bot_is_0 ninf2Fin not0_implies_Suc sconc_fst_inf slen_empty_eq)
     then show ?thesis
     proof (cases "ys = \<epsilon>")
       case True
@@ -3915,24 +3922,24 @@ proof -
       proof
         assume "snth k (xs \<bullet> ys) = snth (Suc k) (xs \<bullet> ys)"
         then have "snth k xs = snth (Suc k) xs"
-          by (metis Fin_02bot Fin_Suc Suc_neq_Zero \<open>#t = Fin (Suc k)\<close> \<open>#xs < \<infinity>\<close> \<open>t = \<epsilon> \<or> sfoot t \<noteq> sfoot xs\<close> \<open>xs = t \<bullet> n\<star>\<up>(sfoot xs)\<close> stake_prefix slen_snth_prefix inject_Fin le2lnle leI less_le lnless_def lnzero_def monofun_cfun_arg notinfI3 sfoot_exists2 stream.take_below strict_slen)
+          by (metis Fin_02bot Fin_Suc Suc_neq_Zero \<open>#t = Fin (Suc k)\<close> \<open>#xs < \<infinity>\<close> \<open>t = \<epsilon> \<or> sfoot t \<noteq> sfoot xs\<close> \<open>xs = t \<bullet> (n\<star>\<up>(sfoot xs))\<close> stake_prefix slen_snth_prefix inject_Fin le2lnle leI less_le lnless_def lnzero_def monofun_cfun_arg notinfI3 sfoot_exists2 stream.take_below strict_slen)
         then show "False"
-          by (metis Fin_02bot Fin_Suc Suc_neq_Zero \<open>#t = Fin (Suc k)\<close> \<open>t = \<epsilon> \<or> sfoot t \<noteq> sfoot xs\<close> \<open>xs = t \<bullet> n\<star>\<up>(sfoot xs)\<close> slen_snth_prefix inject_Fin leI ln_less lnzero_def neq0_conv notinfI3 sconc_snd_empty sdropl6 sfoot_exists2 shd_sntime slen_empty_eq snth_def sntimes_len)
+          by (metis Fin_02bot Fin_Suc Suc_neq_Zero \<open>#t = Fin (Suc k)\<close> \<open>t = \<epsilon> \<or> sfoot t \<noteq> sfoot xs\<close> \<open>xs = t \<bullet> (n\<star>\<up>(sfoot xs))\<close> slen_snth_prefix inject_Fin leI ln_less lnzero_def neq0_conv notinfI3 sconc_snd_empty sdropl6 sfoot_exists2 shd_sntime slen_empty_eq snth_def sntimes_len)
       qed
       moreover have "Fin (Suc k) < #(xs \<bullet> ys)"
-        by (metis False \<open>#t = Fin (Suc k)\<close> \<open>#xs < \<infinity>\<close> \<open>xs = t \<bullet> n\<star>\<up>(sfoot xs)\<close> minimal mono_slen monofun_cfun_arg sconc_snd_empty slen_conc)
+        by (metis False \<open>#t = Fin (Suc k)\<close> \<open>#xs < \<infinity>\<close> \<open>xs = t \<bullet> (n\<star>\<up>(sfoot xs))\<close> minimal mono_slen monofun_cfun_arg sconc_snd_empty slen_conc)
       ultimately have "srcdups\<cdot>(xs \<bullet> ys) = srcdups\<cdot>(stake (Suc k)\<cdot>(xs \<bullet> ys)) \<bullet> srcdups\<cdot>(sdrop (Suc k)\<cdot>(xs \<bullet> ys))"
         using srcdups_split2 by blast
       then have "srcdups\<cdot>(xs \<bullet> ys) = srcdups\<cdot>t \<bullet> srcdups\<cdot>((sntimes n (\<up>(sfoot xs))) \<bullet> ys)"
-        by (metis \<open>#t = Fin (Suc k)\<close> \<open>xs = t \<bullet> n\<star>\<up>(sfoot xs)\<close> assoc_sconc stake_prefix2 sdropl6)
+        by (metis \<open>#t = Fin (Suc k)\<close> \<open>xs = t \<bullet> (n\<star>\<up>(sfoot xs))\<close> assoc_sconc stake_prefix2 sdropl6)
       then have "srcdups\<cdot>(xs \<bullet> ys) = srcdups\<cdot>t \<bullet> \<up>(sfoot xs) \<bullet> srcdups\<cdot>(sdropwhile (\<lambda>x. x=sfoot xs)\<cdot>ys)"
-        by (metis \<open>t = \<epsilon> \<or> sfoot t \<noteq> sfoot xs\<close> \<open>xs = t \<bullet> n\<star>\<up>(sfoot xs)\<close> \<open>xs \<noteq> \<epsilon>\<close> neq0_conv sconc_snd_empty sntimes.simps(1) srcdups_sntimes_prefix)
+        by (metis \<open>t = \<epsilon> \<or> sfoot t \<noteq> sfoot xs\<close> \<open>xs = t \<bullet> (n\<star>\<up>(sfoot xs))\<close> \<open>xs \<noteq> \<epsilon>\<close> neq0_conv sconc_snd_empty sntimes.simps(1) srcdups_sntimes_prefix)
       moreover have "srcdups\<cdot>xs = srcdups\<cdot>t \<bullet> \<up>(sfoot xs)"
       proof -
         have "srcdups\<cdot>xs = srcdups\<cdot>t \<bullet> srcdups\<cdot>(sntimes n (\<up>(sfoot xs)))"
-          by (metis \<open>#t = Fin (Suc k)\<close> \<open>snth k (xs \<bullet> ys) \<noteq> snth (Suc k) (xs \<bullet> ys)\<close> \<open>xs = t \<bullet> n\<star>\<up>(sfoot xs)\<close> convert_inductive_asm slen_snth_prefix stake_prefix2 not_less notinfI3 sconc_snd_empty sdropl6 slen_conc srcdups_split2 strict_srcdups ub_slen_stake)
+          by (metis \<open>#t = Fin (Suc k)\<close> \<open>snth k (xs \<bullet> ys) \<noteq> snth (Suc k) (xs \<bullet> ys)\<close> \<open>xs = t \<bullet> (n\<star>\<up>(sfoot xs))\<close> convert_inductive_asm slen_snth_prefix stake_prefix2 not_less notinfI3 sconc_snd_empty sdropl6 slen_conc srcdups_split2 strict_srcdups ub_slen_stake)
         then show ?thesis
-          by (metis \<open>t = \<epsilon> \<or> sfoot t \<noteq> sfoot xs\<close> \<open>xs = t \<bullet> n\<star>\<up>(sfoot xs)\<close> \<open>xs \<noteq> \<epsilon>\<close> neq0_conv sconc_snd_empty sntimes.simps(1) srcdups_sntimes)
+          by (metis \<open>t = \<epsilon> \<or> sfoot t \<noteq> sfoot xs\<close> \<open>xs = t \<bullet> (n\<star>\<up>(sfoot xs))\<close> \<open>xs \<noteq> \<epsilon>\<close> neq0_conv sconc_snd_empty sntimes.simps(1) srcdups_sntimes)
       qed
       ultimately show ?thesis
         by simp
@@ -4178,7 +4185,7 @@ lemma sfilter_fin: assumes "#(A \<ominus> s) < \<infinity>"
   by (metis assms fun_approxl2 lnat_well_h2 sconc_neq_h sconc_snd_empty split_sfilter)
 
 lemma s_one_dom_inf: assumes "sdom\<cdot>s = {x}" and "#s = \<infinity>"
-    shows "s = (\<up>x) \<infinity>"
+    shows "s = ((\<up>x)\<^sup>\<infinity>)"
   by (metis Fin_02bot Fin_Suc Suc_n_not_le_n assms(1) assms(2) bot_is_0 inject_Fin less_or_eq_imp_le sinftimes_unfold singleton_iff slen_scons slen_sinftimes snth2sdom snth_sinftimes snths_eq strict_icycle strict_slen)
 
 lemma sfilter_bot_dom: "(A \<ominus> s) = \<bottom> \<Longrightarrow> sdom\<cdot>s \<subseteq> UNIV - A"
@@ -4300,7 +4307,7 @@ lemma sinftimes_sdom[simp]: "sdom\<cdot>(sinftimes s) \<subseteq> sdom\<cdot>s"
 by (smt chain_monofun contlub_cfun_arg lub_below set_cpo_simps(1) sntimesLub sntimes_chain sntimes_sdom1)
 
 (* repeating a stream doesn't remove elements from the domain either *)
-lemma sinf_sdom [simp]: "sdom\<cdot>(s\<infinity>) = sdom\<cdot>s"
+lemma sinf_sdom [simp]: "sdom\<cdot>(s\<^sup>\<infinity>) = sdom\<cdot>s"
 by (metis antisym_conv sdom_sconc sinftimes_sdom sinftimes_unfold)
 
 (* sfilter doesn't add elements to the domain *)
@@ -4492,14 +4499,14 @@ qed
 lemma strdw_filter_h: "b\<in>sdom\<cdot>s \<longrightarrow> lnsuc\<cdot>(#({b} \<ominus> srtdw (\<lambda>a. a \<noteq> b)\<cdot>s)) = #({b} \<ominus> s)"
 proof(rule ind [of _s])
   have "adm (\<lambda>a. lnsuc\<cdot>(#({b} \<ominus> srtdw (\<lambda>a. a \<noteq> b)\<cdot>a)) = #({b} \<ominus> a))" by simp
-  thus "adm (\<lambda>a. b \<in> sdom\<cdot>a \<longrightarrow> lnsuc\<cdot>(#({b} \<ominus> srtdw (\<lambda>a. a \<noteq> b)\<cdot>a)) = #({b} \<ominus> a))" by(simp add: adm_nsdom)
+  thus "adm (\<lambda>a. b \<in> sdom\<cdot>a \<longrightarrow> lnsuc\<cdot>(#({b} \<ominus> srtdw (\<lambda>a. a \<noteq> b)\<cdot>a)) = #({b} \<ominus> a))" by simp
   show "b \<in> sdom\<cdot>\<epsilon> \<longrightarrow> lnsuc\<cdot>(#({b} \<ominus> srtdw (\<lambda>a. a \<noteq> b)\<cdot>\<epsilon>)) = #({b} \<ominus> \<epsilon>)" by simp
   fix a 
   fix s
   assume IH: " b \<in> sdom\<cdot>s \<longrightarrow> lnsuc\<cdot>(#({b} \<ominus> srtdw (\<lambda>a. a \<noteq> b)\<cdot>s)) = #({b} \<ominus> s)"
   show " b \<in> sdom\<cdot>(\<up>a \<bullet> s) \<longrightarrow> lnsuc\<cdot>(#({b} \<ominus> srtdw (\<lambda>a. a \<noteq> b)\<cdot>(\<up>a \<bullet> s))) = #({b} \<ominus> \<up>a \<bullet> s)"
   proof (cases "a=b")
-    case True thus ?thesis by (simp add: sfilter_in singletonI slen_scons stwbl_f stwbl_srtdw) 
+    case True thus ?thesis by simp 
   next
     case False
     hence f1:"#({b} \<ominus> \<up>a \<bullet> s) = #({b} \<ominus> s)" using sfilter_nin singletonD by auto
@@ -4639,7 +4646,7 @@ by (metis Fin_Suc lnat.sel_rews(2) sconc_snd_empty siterateBlock_unfold slen_sco
 
 (* iterating the identity function commutes with any function f *)
 lemma siterateBlock_smap: "siterateBlock id (smap f\<cdot>x) =  smap f\<cdot>(siterateBlock id x)"
-by (simp add: siterateBlock2sinf smap2sinf)
+by (simp add: siterateBlock2sinf)
 
 (* converting x to a singleton stream and applying siterateBlock using smap g is equivalent to
    iterating using g directly on x *)
@@ -4985,10 +4992,6 @@ lemma "\<not> (compact (sinftimes (\<up>x)))"
 definition add:: "nat stream \<rightarrow> nat stream \<rightarrow> nat stream" where
 "add \<equiv> \<Lambda> s1 s2 . smap (\<lambda> s3. (fst s3) + (snd s3))\<cdot>(szip\<cdot>s1\<cdot>s2)"
 
-(* add2 function defined using add *)
-definition add2:: "nat stream \<Rightarrow> nat stream \<Rightarrow> nat stream" ("_+_") where
-"add2 s1 s2 \<equiv> add\<cdot>s1\<cdot>s2"
-
 (* add is continuous *)
 lemma "cont (\<lambda> s1 s2 . smap (\<lambda> s3. (fst s3) + (snd s3))\<cdot>(szip\<cdot>s1\<cdot>s2))"
 by simp
@@ -5071,13 +5074,13 @@ lemma add_slen_sinf [simp]:
   by (simp add: min.absorb2)
 
 (* relation between snth and add *)
-lemma snth_add: "Fin n < #ys \<Longrightarrow> snth n (add\<cdot>\<up>x\<infinity>\<cdot>ys) = snth n (smap (\<lambda>z. z + x)\<cdot>ys)"
+lemma snth_add: "Fin n < #ys \<Longrightarrow> snth n (add\<cdot>\<up>x\<^sup>\<infinity>\<cdot>ys) = snth n (smap (\<lambda>z. z + x)\<cdot>ys)"
   apply(induction n arbitrary: ys)
    apply (smt Fin_02bot add.commute add_unfold lnless_def lnzero_def shd1 sinftimes_unfold slen_empty_eq smap_snth_lemma snth_shd surj_scons)
   by (smt Fin_Suc add_slen_sinf add_unfold lnle_conv lnless_def lnsuc_lnle_emb sinftimes_unfold slen_empty_eq slen_scons slen_sinftimes slen_smap smap_snth_lemma snth_scons strict_icycle surj_scons)
 
 (* relation between add and smap *)
-lemma add2smap: "add\<cdot>(\<up>x\<infinity>)\<cdot>ys = smap (\<lambda>z. z+x)\<cdot>ys"
+lemma add2smap: "add\<cdot>((\<up>x)\<^sup>\<infinity>)\<cdot>ys = smap (\<lambda>z. z+x)\<cdot>ys"
   apply(rule snths_eq)
    apply auto[1]
   by (metis add_slen_sinf lnat.con_rews lnzero_def lscons_conv slen_empty_eq slen_scons slen_sinftimes snth_add sup'_def)
@@ -5126,7 +5129,7 @@ qed
 
 lemma srcdups_split:
   assumes "#(srcdups\<cdot>s) < \<infinity>" and "#s = \<infinity>"
-  obtains n where "s = (stake n\<cdot>s) \<bullet> (\<up>(snth n s)\<infinity>)"
+  obtains n where "s = (stake n\<cdot>s) \<bullet> ((\<up>(snth n s))\<^sup>\<infinity>)"
 proof -
   obtain k where "srcdups\<cdot>s = srcdups\<cdot>(stake k\<cdot>s)"
     by (meson assms(1) fun_approxl2 lnat_well_h2)
@@ -5144,20 +5147,21 @@ proof -
   qed
   then have "sdrop k\<cdot>s = \<up>(snth k s) \<bullet> (sdrop k\<cdot>s)"
     by (metis Inf'_neq_0 assms(2) fair_sdrop snth_def strict_slen surj_scons)
-  then have "sdrop k\<cdot>s = (\<up>(snth k s))\<infinity>"
+  then have "sdrop k\<cdot>s = ((\<up>(snth k s))\<^sup>\<infinity>)"
     using s2sinftimes by blast
-  then have "s = (stake k\<cdot>s) \<bullet> (\<up>(snth k s)\<infinity>)"
+  then have "s = (stake k\<cdot>s) \<bullet> ((\<up>(snth k s))\<^sup>\<infinity>)"
     by (metis split_streaml1)
   thus ?thesis
     by (metis that)
 qed
 
-lemma add2smapsuc:"add\<cdot>\<up>1\<infinity>\<cdot>s=smap (Suc)\<cdot>s"
-by(simp add: add2smapsuc_helper add2smap)
+lemma add2smapsuc:"add\<cdot>((\<up>1)\<^sup>\<infinity>)\<cdot>s=smap (Suc)\<cdot>s"
+  by (metis add_eps2 add_unfold plus_1_eq_Suc rek2smap sinftimes_unfold)
 
 (* relation between add and smap *)
-lemma add2smap_f: "add\<cdot>(\<up>x\<infinity>) = smap (\<lambda>z. z+x)"
-by(rule cfun_eqI, simp add: add2smap)
+lemma add2smap_f: "add\<cdot>((\<up>x)\<^sup>\<infinity>) = smap (\<lambda>z. z+x)"
+apply(rule cfun_eqI)
+by (metis (no_types, lifting) add_commutative add_eps2 add_unfold rek2smap sinftimes_unfold)
 
 (* relation between shd and updis *)
 lemma shd_updis:"shd (u && s) = (THE a. updis a= u)"
@@ -5179,13 +5183,23 @@ lemma smapid2ID:"smap id= ID"
 by(rule cfun_eqI, simp add: smapid2ID_h)
 
 (* add applied to \<up>0\<infinity>\<cdot>s returns the identity + stream *)
-lemma add2ID_h:"add\<cdot>\<up>0\<infinity>\<cdot>s=ID\<cdot>s"
-apply(simp add: add2smap)
-apply(insert smap_id[of s])
-by(simp add: id_def)
+lemma add2ID_h:"add\<cdot>((\<up>0)\<^sup>\<infinity>)\<cdot>s=ID\<cdot>s"
+proof(induction s rule: ind)
+  case 1
+  then show ?case 
+    by simp
+next
+case 2
+  then show ?case
+    by simp
+next
+  case (3 a s)
+  then show ?case
+    by (metis ID1 add_unfold semiring_normalization_rules(5) sinftimes_unfold)
+qed
 
 (* add applied to \<up>0\<infinity> returns the identity *)
-lemma add2ID:"add\<cdot>\<up>0\<infinity> = ID"
+lemma add2ID:"add\<cdot>\<up>0\<^sup>\<infinity> = ID"
 by (simp add: add2ID_h cfun_eqI)
 
 (*

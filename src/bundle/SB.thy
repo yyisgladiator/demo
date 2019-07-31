@@ -43,7 +43,7 @@ pcpodef 'c::chan sb("(_\<^sup>\<Omega>)" [1000] 999) = "{f :: ('c::chan \<Righta
   https://fa.isabelle.narkive.com/wKVBUrdK/isabelle-setup-lifting-no-relator-for-the-type-warning
   HOL/Library/Quotient_Set.thy 
   *)
-setup_lifting type_definition_sb
+setup_lifting %invisible type_definition_sb
 
 
 subsection \<open> sb pcpo lemmata \<close>
@@ -162,7 +162,8 @@ lemma sb_belowI:   fixes sb1 sb2::"'cs\<^sup>\<Omega>"
   shows "sb1 \<sqsubseteq> sb2"
   apply(subst below_sb_def)
   apply(rule fun_belowI)
-  by (metis DiffI assms chDom_def cnotempty_rule po_eq_conv sbGetCh.rep_eq sbgetch_insert2 sbtypeepmpty_sbbot)
+  by (metis (full_types)DiffI assms chDom_def cnotempty_rule po_eq_conv sbGetCh.rep_eq 
+      sbgetch_insert2 sbtypeepmpty_sbbot)
 
 lemma sb_eqI:
   fixes sb1 sb2::"'cs\<^sup>\<Omega>"
@@ -746,7 +747,7 @@ lemma sbconv_eq[simp]:"sbConvert\<cdot>sb = sb"
   apply(rule sb_eqI)
   by (metis (no_types) Abs_sb_inverse mem_Collect_eq sbconvert_insert sbconvert_well sbgetch_insert2)
 
-lemma sbunion_sbconvert_eq[simp]:"cb \<uplus>\<^sub>\<star> cb = cb\<star>"    (* TODO: keine warning mehr *)
+lemma sbunion_sbconvert_eq[simp]:"cb \<uplus>\<^sub>\<star> cb = (cb\<star>)"
   by(simp add: sbunion_insert sbconvert_insert)
 
 (*  Die Section ist so kurz, das verwirrt mehr als es hilft 
