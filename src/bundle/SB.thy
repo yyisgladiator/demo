@@ -7,8 +7,6 @@ begin
 declare %invisible[[show_types]]
 declare %invisible[[show_consts]]
 
-text \<open>TODO: sDom  umbenenne zu sValues\<close>
-definition sValues :: "M stream \<Rightarrow> M set" where "sValues = (Rep_cfun sdom)" (*collect*)
 
 (* TODO: Sections richtig benennen 
   * English (duh)
@@ -21,18 +19,18 @@ default_sort chan
 section \<open>Type Definition \<close>
 
 definition sb_well :: "('c::chan \<Rightarrow> M stream) \<Rightarrow> bool" where
-"sb_well f \<equiv> \<forall>c. sValues (f c) \<subseteq> ctype (Rep c)"
+"sb_well f \<equiv> \<forall>c. sValues\<cdot> (f c) \<subseteq> ctype (Rep c)"
 
 lemma sbwellI:
-  assumes"\<And>c. sdom\<cdot>(f c) \<subseteq> ctype (Rep c)"
+  assumes"\<And>c. sValues\<cdot>(f c) \<subseteq> ctype (Rep c)"
   shows"sb_well f"
-  by (simp add: assms sValues_def sb_well_def)
+  by (simp add: assms sb_well_def)
 
 lemma sbwell_ex:"sb_well (\<lambda>c. \<epsilon>)"
-  by(simp add: sb_well_def sValues_def)
+  by(simp add: sb_well_def)
 
 lemma sbwell_adm: "adm sb_well"
-  unfolding sb_well_def sValues_def
+  unfolding sb_well_def
   apply(rule adm_all, rule admI)
   by (simp add: ch2ch_fun l44 lub_fun)
 
@@ -69,7 +67,7 @@ lemma sbtypeepmpty_sbbot[simp]:"chIsEmpty TYPE ('cs::chan) \<Longrightarrow> (sb
   apply(subst Abs_sb_inverse)
   apply (simp add: sbwell_ex)
   by(metis (mono_tags) Rep_sb bot.extremum cEmpty_def f_inv_into_f image_subset_iff iso_tuple_UNIV_I 
-      mem_Collect_eq rangeI range_eqI sValues_def sb_well_def strict_sdom_rev subset_antisym)
+      mem_Collect_eq rangeI range_eqI sb_well_def strict_sValues_rev subset_antisym)
 
 lemma sbwell2fwell[simp]:"Rep_sb sb = f \<Longrightarrow> sb_well (f)"
   using Rep_sb by auto
@@ -119,7 +117,7 @@ lemma sbhdelemchain[simp]:"sbHdElemWell x \<Longrightarrow>  x \<sqsubseteq> y \
   apply(simp add: sbHdElemWell_def sbgetch_insert2)
   by (metis below_antisym below_sb_def fun_belowD minimal)
 
-lemma sbgetch_ctypewell[simp]:"sdom\<cdot>(sb \<^enum>\<^sub>\<star> c) \<subseteq> ctype (Rep c)"
+lemma sbgetch_ctypewell[simp]:"sValues\<cdot>(sb \<^enum>\<^sub>\<star> c) \<subseteq> ctype (Rep c)"
   apply(simp add: sbgetch_insert)
 proof
   assume a1:"Rep c \<in> range (Rep::'a \<Rightarrow> channel)"
@@ -129,23 +127,23 @@ proof
     using Rep_sb by auto
   have "Rep((Abs::channel \<Rightarrow> 'a) (Rep c)) \<in> range (Rep::'a \<Rightarrow> channel)"
     by simp
-  then show "sdom\<cdot>(Rep_sb sb (Abs (Rep c))) \<subseteq> ctype (Rep c)"
+  then show "sValues\<cdot>(Rep_sb sb (Abs (Rep c))) \<subseteq> ctype (Rep c)"
     using \<open>sb_well (f::'a \<Rightarrow> M stream)\<close> a1 f_def sValues_def sb_well_def by fastforce
 qed
 
-lemma sbmap_well:assumes"\<And>s. sValues (f s) \<subseteq> sValues s" shows"sb_well (\<lambda>c. f (b \<^enum>\<^sub>\<star> c))"
+lemma sbmap_well:assumes"\<And>s. sValues\<cdot>(f s) \<subseteq> sValues\<cdot>s" shows"sb_well (\<lambda>c. f (b \<^enum>\<^sub>\<star> c))"
   apply(rule sbwellI)
-  using assms sValues_def sbgetch_ctypewell by fastforce
+  using assms sbgetch_ctypewell by fastforce
 
 (* TODO: Move to stream *)
-lemma sdom_notempty:"s\<noteq>\<epsilon> \<Longrightarrow> sdom\<cdot>s\<noteq>{}"
-  using strict_sdom_rev by auto
+lemma sValues_notempty:"s\<noteq>\<epsilon> \<Longrightarrow> sValues\<cdot>s\<noteq>{}"
+  using strict_sValues_rev by auto
 
 lemma sbgetch_ctype_notempty:"sb  \<^enum>  c \<noteq> \<epsilon> \<Longrightarrow> ctype (Rep c) \<noteq> {}"
 proof-
   assume a1: "sb  \<^enum>\<^sub>\<star>  c \<noteq> \<epsilon>"
-  then have "\<exists>e. e\<in> sdom\<cdot>(sb  \<^enum>\<^sub>\<star>  c)"
-    by (simp add: sdom_notempty strict_sdom_rev neq_emptyD)
+  then have "\<exists>e. e\<in> sValues\<cdot>(sb  \<^enum>\<^sub>\<star>  c)"
+    by (simp add: sValues_notempty strict_sValues_rev neq_emptyD)
   then show "ctype (Rep c) \<noteq> {}"
     using sbgetch_ctypewell by blast
 qed
@@ -193,7 +191,7 @@ subsection \<open>Concatination\<close>
 
 lemma sbconc_well[simp]:"sb_well (\<lambda>c. (sb1 \<^enum> c) \<bullet> (sb2 \<^enum> c))"
   apply(rule sbwellI)
-  by (metis (no_types, hide_lams) Un_subset_iff dual_order.trans sbgetch_ctypewell sconc_sdom)
+  by (metis (no_types, hide_lams) Un_subset_iff dual_order.trans sbgetch_ctypewell sconc_sValues)
 
 lift_definition sbConc:: "'c\<^sup>\<Omega>  \<Rightarrow>  'c\<^sup>\<Omega> \<rightarrow>  'c\<^sup>\<Omega>" is
 "\<lambda> sb1 sb2. Abs_sb(\<lambda>c. (sb1 \<^enum> c )\<bullet>(sb2 \<^enum> c))"
@@ -209,7 +207,7 @@ lemma sbconc_getch [simp]: "sb1 \<bullet>\<^sup>\<Omega> sb2  \<^enum> c = (sb1 
   apply(subst Abs_sb_inverse)
    apply simp
   apply(rule sbwellI)
-   apply (metis (no_types, hide_lams) Un_subset_iff dual_order.trans sbgetch_ctypewell sbgetch_insert2 sconc_sdom)
+   apply (metis (no_types, hide_lams) Un_subset_iff dual_order.trans sbgetch_ctypewell sbgetch_insert2 sconc_sValues)
   ..
 
 lemma sbconc_bot_r[simp]:"sb \<bullet>\<^sup>\<Omega> \<bottom> = sb"
@@ -381,7 +379,7 @@ subsubsection \<open>sbDrop definition\<close>
 
 lemma sbdrop_well[simp]:"sb_well (\<lambda>c. sdrop n\<cdot>(b \<^enum>\<^sub>\<star> c))"
   apply(rule sbwellI)
-  by (meson dual_order.trans sbgetch_ctypewell sdrop_sdom)
+  by (meson dual_order.trans sbgetch_ctypewell sdrop_sValues)
 
 lift_definition sbDrop::"nat \<Rightarrow> 'c\<^sup>\<Omega> \<rightarrow> 'c\<^sup>\<Omega>"is
 "\<lambda> n sb. Abs_sb (\<lambda>c. sdrop n\<cdot>(sb \<^enum> c))"
@@ -407,8 +405,7 @@ subsection \<open>sbTake\<close>
 subsubsection \<open>sbTake definition\<close>
 
 lemma sbtake_well[simp]:"sb_well (\<lambda>c. stake n\<cdot>(sb  \<^enum>\<^sub>\<star>  c))"
-  apply(rule sbmap_well)
-  by(simp add: sValues_def)
+  by(simp add: sbmap_well)
 
 lift_definition sbTake::"nat \<Rightarrow> 'c\<^sup>\<Omega> \<rightarrow>  'c\<^sup>\<Omega>"is
 "\<lambda> n sb. Abs_sb (\<lambda>c. stake n\<cdot>(sb \<^enum> c))"
@@ -434,7 +431,7 @@ lemma sbmap_stake_eq:"(Abs_sb (\<lambda>c::'a. stake n\<cdot>((sb::'a\<^sup>\<Om
   apply(subst Abs_sb_inverse)
   apply simp
   apply(rule sbwellI)
-  apply (metis sbgetch_insert2 sbgetch_ctypewell dual_order.trans sdom_sconc split_streaml1)
+  apply (metis sbgetch_insert2 sbgetch_ctypewell dual_order.trans sValues_sconc split_streaml1)
   by simp
 
 lemma sbtake_max_len [simp]: "#(sbTake n\<cdot>(sb::'a\<^sup>\<Omega>) \<^enum> (c::'a)) \<le> Fin n"

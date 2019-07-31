@@ -159,9 +159,9 @@ text\<open>@{term sfoot}: Get the last element of a not empty, finite stream\<cl
 definition sfoot      :: "'a stream \<Rightarrow> 'a" where
 "sfoot s = snth (THE a. lnsuc\<cdot>(Fin a) = #s) s"
 
-text \<open>@{term sdom}: Retrieve the set of all values in a stream.\<close>
-definition sdom       :: "'a stream \<rightarrow> 'a set" where
-"sdom \<equiv> \<Lambda> s. {snth n s | n. Fin n < #s}" 
+text \<open>@{term sValues}: Retrieve the set of all values in a stream.\<close>
+definition sValues       :: "'a stream \<rightarrow> 'a set" where
+"sValues \<equiv> \<Lambda> s. {snth n s | n. Fin n < #s}" 
 
 text \<open>@{term sntimes}: Repeat the given stream \<open>n\<close> times.\<close>
 text \<open>(Only listed as a constant below for reference;
@@ -3377,7 +3377,7 @@ lemma adm_subsetNEq_rc [simp]: "adm (\<lambda>s. \<not> g\<cdot>s \<subseteq> cs
   by (metis SetPcpo.less_set_def is_ub_thelub monofun_cfun_arg subset_eq)
 
 text\<open>For a function g over streams, the admissiblity of the following predicate over streams holds\<close>
-lemma sdom_adm2[simp]: "adm (\<lambda>a. sdom\<cdot>(g\<cdot>a) \<subseteq> sdom\<cdot>a)"
+lemma sValues_adm2[simp]: "adm (\<lambda>a. sValues\<cdot>(g\<cdot>a) \<subseteq> sValues\<cdot>a)"
 apply(rule admI)
 by (smt SetPcpo.less_set_def ch2ch_Rep_cfunR contlub_cfun_arg is_ub_thelub lub_below subset_iff)
 
@@ -3869,15 +3869,15 @@ lemma srcdups_split2: "Fin (Suc n) < #s \<Longrightarrow> snth n s \<noteq> snth
   by (metis less2nat ninf2Fin not_le srcdups_split_fin srcdups_split_inf)
 
 (* ----------------------------------------------------------------------- *)
-subsection \<open>@{term sdom}\<close>
+subsection \<open>@{term sValues}\<close>
 (* ----------------------------------------------------------------------- *)
 
-(* sdom equality rule *)
-lemma sdom_eq: "{z. \<exists>n. Fin n < #s \<and> z = snth n s} = {snth n s |n. Fin n < #s}"
+(* sValues equality rule *)
+lemma sValues_eq: "{z. \<exists>n. Fin n < #s \<and> z = snth n s} = {snth n s |n. Fin n < #s}"
 by auto
 
-(* another sdom equality rule *)
-lemma sdom_eq2: "{snth n s |n. Fin n < #s} = {z. \<exists>n. Fin n < #s \<and> z = snth n s}"
+(* another sValues equality rule *)
+lemma sValues_eq2: "{snth n s |n. Fin n < #s} = {z. \<exists>n. Fin n < #s \<and> z = snth n s}"
 by auto
 
 text \<open>A stream and its prefix agree on their first elements\<close>
@@ -3947,9 +3947,9 @@ proof -
   qed
 qed
 
-text \<open>monotonicity of @{term sdom}\<close>
-lemma sdom_mono: "monofun (\<lambda>s. {snth n s |n. Fin n < #s})"
-apply (simp add: sdom_eq2)
+text \<open>monotonicity of @{term sValues}\<close>
+lemma sValues_mono: "monofun (\<lambda>s. {snth n s |n. Fin n < #s})"
+apply (simp add: sValues_eq2)
 apply (rule monofunI)
 apply (rule_tac x="#x" in lncases)
 apply (drule eq_less_and_fst_inf, simp+)
@@ -3973,11 +3973,11 @@ lemma inf_chainl3rf:
   "\<lbrakk>chain Y; \<not>finite_chain Y\<rbrakk> \<Longrightarrow> \<exists>k. Fin n \<le> #(Y k)"
 by (rule inf_chainl3 [rule_format], auto)
 
-text \<open>@{term sdom} is a continuous function\<close>
-lemma sdom_cont: "cont (\<lambda>s. {snth n s | n. Fin n < #s})"
+text \<open>@{term sValues} is a continuous function\<close>
+lemma sValues_cont: "cont (\<lambda>s. {snth n s | n. Fin n < #s})"
 apply (rule contI2)
-apply (rule sdom_mono)
-apply (simp add: sdom_eq2)
+apply (rule sValues_mono)
+apply (simp add: sValues_eq2)
 apply (rule allI, rule impI)
 apply (simp add: less_set_def)
 apply (auto simp add: lub_eq_Union) 
@@ -3997,14 +3997,14 @@ apply (rule snth_less)
 apply (rule_tac x="#(Y k)" in lncases, simp+)
 by (rule is_ub_thelub)
 
-text \<open>@{term sdom} is a continuous function\<close>
-lemma sdom_def2: "sdom\<cdot>s = {snth n s | n. Fin n < #s}"
-apply (subst sdom_def)
+text \<open>@{term sValues} is a continuous function\<close>
+lemma sValues_def2: "sValues\<cdot>s = {snth n s | n. Fin n < #s}"
+apply (subst sValues_def)
 apply (subst beta_cfun)
-by (rule sdom_cont, simp)
+by (rule sValues_cont, simp)
 
-(* continuity of sdom *)
-lemma sdom_cont2: "\<forall>Y. chain Y \<longrightarrow> sdom\<cdot>(\<Squnion> i. Y i) = (\<Squnion> i. sdom\<cdot>(Y i))"
+(* continuity of sValues *)
+lemma sValues_cont2: "\<forall>Y. chain Y \<longrightarrow> sValues\<cdot>(\<Squnion> i. Y i) = (\<Squnion> i. sValues\<cdot>(Y i))"
 by (simp add: contlub_cfun_arg)
 
 lemma srcdups_bool_prefix:
@@ -4084,42 +4084,42 @@ proof
 qed
 
 
-text \<open>Basic properties of @{term sdom}\<close>
+text \<open>Basic properties of @{term sValues}\<close>
 
-(* sdom applied to the empty stream returns the empty set *)
-lemma [simp]: "sdom\<cdot>\<epsilon> = {}"
-by (auto simp add: sdom_def2 lnless_def)
+(* sValues applied to the empty stream returns the empty set *)
+lemma [simp]: "sValues\<cdot>\<epsilon> = {}"
+by (auto simp add: sValues_def2 lnless_def)
 
 (* the head of any stream is always an element of the domain *)
-lemma sdom2un[simp]: "sdom\<cdot>(\<up>z \<bullet> s) = {z} \<union> sdom\<cdot>s"
-apply (auto simp add: sdom_def2)
+lemma sValues2un[simp]: "sValues\<cdot>(\<up>z \<bullet> s) = {z} \<union> sValues\<cdot>s"
+apply (auto simp add: sValues_def2)
 apply (case_tac "n", auto)
 apply (rule_tac x="0" in exI, auto)
 by (rule_tac x="Suc n" in exI, auto)
 
-lemma srcdups_dom_h: assumes "sdom\<cdot>(srcdups\<cdot>s) = sdom\<cdot>s"
-  shows "sdom\<cdot>(srcdups\<cdot>(\<up>a \<bullet> s)) = insert a (sdom\<cdot>s)"
+lemma srcdups_dom_h: assumes "sValues\<cdot>(srcdups\<cdot>s) = sValues\<cdot>s"
+  shows "sValues\<cdot>(srcdups\<cdot>(\<up>a \<bullet> s)) = insert a (sValues\<cdot>s)"
 proof (cases "shd s = a")
   case True
   have "srcdups\<cdot>(\<up>a \<bullet> \<up>a \<bullet> srt\<cdot>s) = srcdups\<cdot>(\<up>a \<bullet> srt\<cdot>s)"
     using srcdups_eq by blast
-  hence "a \<in> sdom\<cdot>(srcdups\<cdot>(\<up>a \<bullet> srt\<cdot>s))"
+  hence "a \<in> sValues\<cdot>(srcdups\<cdot>(\<up>a \<bullet> srt\<cdot>s))"
     by (simp add: srcdups_step) 
   then show ?thesis
-    by (metis True Un_insert_left assms insert_absorb2 sdom2un srcdups_eq srcdups_step strict_sdropwhile sup_bot.left_neutral surj_scons)
+    by (metis True Un_insert_left assms insert_absorb2 sValues2un srcdups_eq srcdups_step strict_sdropwhile sup_bot.left_neutral surj_scons)
 next
   case False
   then show ?thesis
-    by (metis (no_types, lifting) assms insert_is_Un sdom2un srcdups_neq srcdups_step strict_sdropwhile surj_scons)
+    by (metis (no_types, lifting) assms insert_is_Un sValues2un srcdups_neq srcdups_step strict_sdropwhile surj_scons)
 qed
   
-lemma srcdups_dom [simp]: "sdom\<cdot>(srcdups\<cdot>xs) = sdom\<cdot>xs"
+lemma srcdups_dom [simp]: "sValues\<cdot>(srcdups\<cdot>xs) = sValues\<cdot>xs"
 apply(rule ind, simp_all)
   by (simp add: srcdups_dom_h)  
 
 (* only the empty stream has no elements in its domain *)
-lemma strict_sdom_rev: "sdom\<cdot>s = {} \<Longrightarrow> s = \<epsilon>"
-apply (auto simp add: sdom_def2)
+lemma strict_sValues_rev: "sValues\<cdot>s = {} \<Longrightarrow> s = \<epsilon>"
+apply (auto simp add: sValues_def2)
 apply (rule_tac x="s" in scases, auto)
 by (metis Fin_02bot gr_0 lnzero_def)
 
@@ -4130,22 +4130,22 @@ by (metis Fin_02bot gr_0 lnzero_def)
 apply (subst sinftimes_unfold, simp)
 apply (rule_tac x="0" in exI)
 by (subst sinftimes_unfold, simp)*)
-lemma [simp]: "sdom\<cdot>(sinftimes (\<up>a)) = {a}"
-by (auto simp add: sdom_def2)
+lemma [simp]: "sValues\<cdot>(sinftimes (\<up>a)) = {a}"
+by (auto simp add: sValues_def2)
 
 (* any singleton stream of z only has z in its domain *)
-lemma [simp]: "sdom\<cdot>(\<up>z) = {z}"
-by (auto simp add: sdom_def2)
+lemma [simp]: "sValues\<cdot>(\<up>z) = {z}"
+by (auto simp add: sValues_def2)
 
 (* if an element z is in the domain of a stream s, then z is the n'th element of s for some n *)
-lemma sdom2snth: "z \<in> sdom\<cdot>s \<Longrightarrow> \<exists>n. snth n s = z"
-by (auto simp add: sdom_def2)
+lemma sValues2snth: "z \<in> sValues\<cdot>s \<Longrightarrow> \<exists>n. snth n s = z"
+by (auto simp add: sValues_def2)
 
 (* if the natural number n is less than the length of the stream s, then snth n s is in the domain of s *)
-lemma snth2sdom: "Fin n < #s \<Longrightarrow> snth n s \<in> sdom\<cdot>s"
-  by (auto simp add: sdom_def2)
+lemma snth2sValues: "Fin n < #s \<Longrightarrow> snth n s \<in> sValues\<cdot>s"
+  by (auto simp add: sValues_def2)
 
-lemma smap_inv_id[simp]: "sdom\<cdot>s \<subseteq> range F \<Longrightarrow> smap (F \<circ> (inv F))\<cdot>s = s"
+lemma smap_inv_id[simp]: "sValues\<cdot>s \<subseteq> range F \<Longrightarrow> smap (F \<circ> (inv F))\<cdot>s = s"
   apply (induction s  rule: ind )
   by(simp_all add: f_inv_into_f)
 
@@ -4153,16 +4153,16 @@ lemma smap_inv_eq[simp]:"inj F \<Longrightarrow> smap (inv F \<circ> F)\<cdot>x 
   by (metis inv_o_cancel smap_inv_id subset_UNIV surj_id surj_iff)
 
 (* checking if the domain of a stream x isn't a subset of another set M is an admissible predicate *)
-lemma [simp]: "adm (\<lambda>x. \<not> sdom\<cdot>x \<subseteq> M)"
+lemma [simp]: "adm (\<lambda>x. \<not> sValues\<cdot>x \<subseteq> M)"
 apply (rule admI)
 apply (rule notI)
 apply (frule_tac x="0" in is_ub_thelub)
-apply (frule_tac f="sdom" in monofun_cfun_arg)
+apply (frule_tac f="sValues" in monofun_cfun_arg)
 by (erule_tac x="0" in allE, auto simp add: less_set_def)
 
 text \<open>filtering with a superset of the stream's domain does not change the stream\<close>
-lemma sfilter_sdoml3:
-  "sdom\<cdot>s \<subseteq> X \<longrightarrow> sfilter X\<cdot>s = s"
+lemma sfilter_sValuesl3:
+  "sValues\<cdot>s \<subseteq> X \<longrightarrow> sfilter X\<cdot>s = s"
 apply (rule impI)
 apply (rule stream.take_lemma)
 apply (simp add: atomize_imp)
@@ -4174,9 +4174,9 @@ apply (rule impI)
 by (rule_tac x="xa" in scases, simp+)
 
 text \<open>filtering with the stream's domain does not change the stream\<close>
-lemma sfilter_sdoml4 [simp]:
-  "sfilter (sdom\<cdot>s)\<cdot>s = s"
-by (rule sfilter_sdoml3 [rule_format, of "s" "sdom\<cdot>s"], simp)
+lemma sfilter_sValuesl4 [simp]:
+  "sfilter (sValues\<cdot>s)\<cdot>s = s"
+by (rule sfilter_sValuesl3 [rule_format, of "s" "sValues\<cdot>s"], simp)
 
 lemma sfilter_fin: assumes "#(A \<ominus> s) < \<infinity>" 
   shows "\<exists>n. (A \<ominus> (sdrop n\<cdot>s)) = \<bottom>"
@@ -4184,41 +4184,41 @@ lemma sfilter_fin: assumes "#(A \<ominus> s) < \<infinity>"
   apply auto
   by (metis assms fun_approxl2 lnat_well_h2 sconc_neq_h sconc_snd_empty split_sfilter)
 
-lemma s_one_dom_inf: assumes "sdom\<cdot>s = {x}" and "#s = \<infinity>"
+lemma s_one_dom_inf: assumes "sValues\<cdot>s = {x}" and "#s = \<infinity>"
     shows "s = ((\<up>x)\<^sup>\<infinity>)"
-  by (metis Fin_02bot Fin_Suc Suc_n_not_le_n assms(1) assms(2) bot_is_0 inject_Fin less_or_eq_imp_le sinftimes_unfold singleton_iff slen_scons slen_sinftimes snth2sdom snth_sinftimes snths_eq strict_icycle strict_slen)
+  by (metis Fin_02bot Fin_Suc Suc_n_not_le_n assms(1) assms(2) bot_is_0 inject_Fin less_or_eq_imp_le sinftimes_unfold singleton_iff slen_scons slen_sinftimes snth2sValues snth_sinftimes snths_eq strict_icycle strict_slen)
 
-lemma sfilter_bot_dom: "(A \<ominus> s) = \<bottom> \<Longrightarrow> sdom\<cdot>s \<subseteq> UNIV - A"
+lemma sfilter_bot_dom: "(A \<ominus> s) = \<bottom> \<Longrightarrow> sValues\<cdot>s \<subseteq> UNIV - A"
   apply(induction s rule: ind)
     apply auto
   by (metis DiffD2 inject_scons rev_subsetD sfilter_in sfilter_nin strictI)
 
 text \<open>The domain of a concatenated stream is the union of the single domains\<close>
-lemma sdom_sconc2un:
-  "#x = Fin k \<Longrightarrow> sdom\<cdot>(x \<bullet> y) = sdom\<cdot>x \<union> sdom\<cdot>y"
+lemma sValues_sconc2un:
+  "#x = Fin k \<Longrightarrow> sValues\<cdot>(x \<bullet> y) = sValues\<cdot>x \<union> sValues\<cdot>y"
 apply (simp add: atomize_imp)
 apply (rule_tac x="x" in spec)
 apply (induct_tac k, simp+)
 apply (rule allI, rule impI)
 by (rule_tac x="x" in scases, simp+)
 
-(* sdom applied to s1\<bullet>s2 is a subset of the union of sdom s1 and sdom s2 *)
-lemma sconc_sdom: "sdom\<cdot>(s1\<bullet>s2) \<subseteq> sdom\<cdot>s1 \<union> sdom\<cdot>s2"
-by (metis SetPcpo.less_set_def below_refl lncases sconc_fst_inf sdom_sconc2un sup.coboundedI1)
+(* sValues applied to s1\<bullet>s2 is a subset of the union of sValues s1 and sValues s2 *)
+lemma sconc_sValues: "sValues\<cdot>(s1\<bullet>s2) \<subseteq> sValues\<cdot>s1 \<union> sValues\<cdot>s2"
+by (metis SetPcpo.less_set_def below_refl lncases sconc_fst_inf sValues_sconc2un sup.coboundedI1)
 
-(* relation between sdom and sfoot *)
-lemma sfoot_dom: assumes "#s = Fin (Suc n)" and "sdom\<cdot>s\<subseteq>A"
+(* relation between sValues and sfoot *)
+lemma sfoot_dom: assumes "#s = Fin (Suc n)" and "sValues\<cdot>s\<subseteq>A"
   shows "sfoot s\<in>A"
-by (metis Suc_n_not_le_n assms(1) assms(2) contra_subsetD leI less2nat_lemma sfoot_exists2 snth2sdom)
+by (metis Suc_n_not_le_n assms(1) assms(2) contra_subsetD leI less2nat_lemma sfoot_exists2 snth2sValues)
 
 (* stakewhile doesn't include the element a that failed the predicate f in the result *)
 lemma stakewhile_dom[simp]:assumes "\<not>f a"
-  shows "a\<notin>sdom\<cdot>(stakewhile f\<cdot>s)"
-by (smt assms below_antisym lnle_conv lnless_def mem_Collect_eq sdom_def2 snth_less stakewhile_below stakewhile_slen)
+  shows "a\<notin>sValues\<cdot>(stakewhile f\<cdot>s)"
+by (smt assms below_antisym lnle_conv lnless_def mem_Collect_eq sValues_def2 snth_less stakewhile_below stakewhile_slen)
 
 lemma srcdups_sconc_duplicates:
   assumes "#xs < \<infinity>" and "xs \<noteq> \<epsilon>" and "srcdups\<cdot>xs = srcdups\<cdot>(xs \<bullet> ys)"
-  shows "sdom\<cdot>ys \<subseteq> {sfoot xs}"
+  shows "sValues\<cdot>ys \<subseteq> {sfoot xs}"
 proof -
   have "srcdups\<cdot>(xs \<bullet> ys) = (srcdups\<cdot>xs) \<bullet> (srcdups\<cdot>(sdropwhile (\<lambda>x. x=sfoot xs)\<cdot>ys))"
     using assms(1) assms(2) srcdups_sconc by blast
@@ -4247,16 +4247,16 @@ lemma stakewhile_noteq[simp]: assumes "\<not>f (snth n s)" and "Fin n < #s"
   shows "stakewhile f\<cdot>s \<noteq> s"
 proof (rule ccontr)
   assume "\<not> stakewhile f\<cdot>s \<noteq> s"
-  hence "sdom\<cdot>(stakewhile f\<cdot>s) = sdom\<cdot>s" by simp
-  hence "(snth n s)\<in>sdom\<cdot>(stakewhile f\<cdot>s)" by (simp add: assms(2) snth2sdom)
+  hence "sValues\<cdot>(stakewhile f\<cdot>s) = sValues\<cdot>s" by simp
+  hence "(snth n s)\<in>sValues\<cdot>(stakewhile f\<cdot>s)" by (simp add: assms(2) snth2sValues)
   thus False by (simp add: assms(1)) 
 qed
 
 (* if there's an element a in the domain of s which fails the predicate f, then stwbl will produce a
    finite result *)
-lemma stwbl_fin [simp]: assumes "a\<in>sdom\<cdot>s" and "\<not> f a"
+lemma stwbl_fin [simp]: assumes "a\<in>sValues\<cdot>s" and "\<not> f a"
   shows "#(stwbl f\<cdot>s) < \<infinity>"
-by (metis assms(1) assms(2) inf_ub lnle_conv lnless_def notinfI3 sconc_slen sdom2snth stakewhile_slen stwbl_stakewhile ub_slen_stake)
+by (metis assms(1) assms(2) inf_ub lnle_conv lnless_def notinfI3 sconc_slen sValues2snth stakewhile_slen stwbl_stakewhile ub_slen_stake)
 
 (* stwbl keeps at least all the elements that stakewhile keeps *)
 lemma stakewhile_stwbl [simp]: "stakewhile f\<cdot>(stwbl f\<cdot>s) = stakewhile f\<cdot>s"
@@ -4269,188 +4269,188 @@ proof -
     using stakewhile_finite_below stwbl_below by blast
 qed
 
-(* sdom applied to sntimes n s is a subset of sdom applied to s *)
-lemma sntimes_sdom1[simp]: "sdom\<cdot>(sntimes n s) \<subseteq> sdom\<cdot>s"
+(* sValues applied to sntimes n s is a subset of sValues applied to s *)
+lemma sntimes_sValues1[simp]: "sValues\<cdot>(sntimes n s) \<subseteq> sValues\<cdot>s"
 proof (induction n)
   case 0 thus ?case by simp
 next
-  case (Suc n) thus ?case using sconc_sdom sntimes.simps(2) sup.orderE by auto
+  case (Suc n) thus ?case using sconc_sValues sntimes.simps(2) sup.orderE by auto
 qed
 
 (* if filtering everything except z from the stream x doesn't produce the empty stream, then z must
    be an element of the domain of x *)
 lemma sfilter2dom:
-  "sfilter {z}\<cdot>x \<noteq> \<epsilon> \<Longrightarrow> z \<in> sdom\<cdot>x"
+  "sfilter {z}\<cdot>x \<noteq> \<epsilon> \<Longrightarrow> z \<in> sValues\<cdot>x"
 apply (subgoal_tac "\<exists>k. snth k x = z \<and> Fin k < #x", erule exE)
 apply (erule conjE)
 apply (drule sym, simp)
-apply (rule snth2sdom, simp)
+apply (rule snth2sValues, simp)
 apply (rule ccontr, simp)
 by (insert ex_snth_in_sfilter_nempty [of x "{z}"], auto)
 
 text \<open>For injective functions @{term f} with @{term "f(y) = x"}, @{term x} can only
   be contained in @{term "smap f\<cdot>s"} if the original stream contained @{term y}\<close>
-lemma sdom_smapl1: "\<lbrakk>x \<in> sdom\<cdot>(smap f\<cdot>s); inj f; f y = x\<rbrakk> \<Longrightarrow> y \<in> sdom\<cdot>s" 
-  by (smt mem_Collect_eq sdom_def2 slen_smap smap_snth_lemma the_inv_f_f)
+lemma sValues_smapl1: "\<lbrakk>x \<in> sValues\<cdot>(smap f\<cdot>s); inj f; f y = x\<rbrakk> \<Longrightarrow> y \<in> sValues\<cdot>s" 
+  by (smt mem_Collect_eq sValues_def2 slen_smap smap_snth_lemma the_inv_f_f)
     (*
-apply (auto simp add: sdom_def2)
+apply (auto simp add: sValues_def2)
 apply (rule_tac x="n" in exI, simp)
 apply (simp add: smap_snth_lemma)
 by (simp add: inj_on_def) *)
 
 (* appending another stream xs can't shrink the domain of a stream x *)
-lemma sdom_sconc[simp]: "sdom\<cdot>x \<subseteq> sdom\<cdot>(x \<bullet> xs)"
+lemma sValues_sconc[simp]: "sValues\<cdot>x \<subseteq> sValues\<cdot>(x \<bullet> xs)"
 by (metis minimal monofun_cfun_arg sconc_snd_empty set_cpo_simps(1))
 
 (* repeating a stream doesn't add elements to the domain *)
-lemma sinftimes_sdom[simp]: "sdom\<cdot>(sinftimes s) \<subseteq> sdom\<cdot>s"
-by (smt chain_monofun contlub_cfun_arg lub_below set_cpo_simps(1) sntimesLub sntimes_chain sntimes_sdom1)
+lemma sinftimes_sValues[simp]: "sValues\<cdot>(sinftimes s) \<subseteq> sValues\<cdot>s"
+by (smt chain_monofun contlub_cfun_arg lub_below set_cpo_simps(1) sntimesLub sntimes_chain sntimes_sValues1)
 
 (* repeating a stream doesn't remove elements from the domain either *)
-lemma sinf_sdom [simp]: "sdom\<cdot>(s\<^sup>\<infinity>) = sdom\<cdot>s"
-by (metis antisym_conv sdom_sconc sinftimes_sdom sinftimes_unfold)
+lemma sinf_sValues [simp]: "sValues\<cdot>(s\<^sup>\<infinity>) = sValues\<cdot>s"
+by (metis antisym_conv sValues_sconc sinftimes_sValues sinftimes_unfold)
 
 (* sfilter doesn't add elements to the domain *)
-lemma sbfilter_sbdom[simp]: "sdom\<cdot>(sfilter A\<cdot>s) \<subseteq> sdom\<cdot>s"
+lemma sbfilter_sbdom[simp]: "sValues\<cdot>(sfilter A\<cdot>s) \<subseteq> sValues\<cdot>s"
 apply(rule ind [of _s], auto)
-by (metis (mono_tags, lifting) UnE contra_subsetD sdom2un sfilter_in sfilter_nin singletonD)
+by (metis (mono_tags, lifting) UnE contra_subsetD sValues2un sfilter_in sfilter_nin singletonD)
 
 (* smap can only produce elements in the range of the mapped function f *)
-lemma smap_sdom_range [simp]: "sdom\<cdot>(smap f\<cdot>s) \<subseteq> range f"
-by (smt mem_Collect_eq range_eqI sdom_def2 slen_smap smap_snth_lemma subsetI)
+lemma smap_sValues_range [simp]: "sValues\<cdot>(smap f\<cdot>s) \<subseteq> range f"
+by (smt mem_Collect_eq range_eqI sValues_def2 slen_smap smap_snth_lemma subsetI)
 
 (* every element produced by (smap f) is in the image of the function f *)
-lemma smap_sdom: "sdom\<cdot>(smap f\<cdot>s) =  f ` sdom\<cdot>s"
+lemma smap_sValues: "sValues\<cdot>(smap f\<cdot>s) =  f ` sValues\<cdot>s"
 apply(rule)
-apply (smt image_eqI mem_Collect_eq sdom_def2 slen_smap smap_snth_lemma subsetI)
-by (smt image_subset_iff mem_Collect_eq sdom_def2 slen_smap smap_snth_lemma)
+apply (smt image_eqI mem_Collect_eq sValues_def2 slen_smap smap_snth_lemma subsetI)
+by (smt image_subset_iff mem_Collect_eq sValues_def2 slen_smap smap_snth_lemma)
 
 (* lemmas for SB *)
 (* if the stream a is a prefix of the stream b then a's domain is a subset of b's *)
-lemma sdom_prefix [simp]: "a \<sqsubseteq> b \<Longrightarrow> sdom\<cdot>a \<subseteq> sdom\<cdot>b"
+lemma sValues_prefix [simp]: "a \<sqsubseteq> b \<Longrightarrow> sValues\<cdot>a \<subseteq> sValues\<cdot>b"
 by (metis SetPcpo.less_set_def monofun_cfun_arg)
 
 (* the lub of a chain of streams contains any elements contained in any stream in the chain *)
-lemma sdom_chain2lub: "chain S \<Longrightarrow> sdom\<cdot>(S i) \<subseteq> sdom\<cdot>(\<Squnion> j. S j)"
-using sdom_prefix is_ub_thelub by auto
+lemma sValues_chain2lub: "chain S \<Longrightarrow> sValues\<cdot>(S i) \<subseteq> sValues\<cdot>(\<Squnion> j. S j)"
+using sValues_prefix is_ub_thelub by auto
 
 (* if every element in a chain S is a prefix of s then also the least upper bound in the chain S if prefix of s *)
 lemma lubChainpre: "chain S \<Longrightarrow> S i  \<Longrightarrow> \<forall>i. S i \<sqsubseteq> s \<Longrightarrow> (\<Squnion> j. S j) \<sqsubseteq> s"
 by (simp add: lub_below)
 
 (* if every element in a chain S is a prefix of s, then the domain of S i is a subset of the domain of s *)
-lemma sdom_chainprefix: "chain S \<Longrightarrow> \<forall>i. S i \<sqsubseteq> s \<Longrightarrow> \<forall>i. sdom\<cdot>(S i) \<subseteq> sdom\<cdot>s"
+lemma sValues_chainprefix: "chain S \<Longrightarrow> \<forall>i. S i \<sqsubseteq> s \<Longrightarrow> \<forall>i. sValues\<cdot>(S i) \<subseteq> sValues\<cdot>s"
 by simp
 
 (* if every element in a chain S is a prefix of s, then the domain of the lub is a subset of the domain of s *)
-lemma sdom_chainlub: "chain S \<Longrightarrow>  \<forall>i. S i \<sqsubseteq> s \<Longrightarrow> sdom\<cdot>(\<Squnion> j. S j) \<subseteq> sdom\<cdot>s"
-using sdom_prefix lub_below by blast
+lemma sValues_chainlub: "chain S \<Longrightarrow>  \<forall>i. S i \<sqsubseteq> s \<Longrightarrow> sValues\<cdot>(\<Squnion> j. S j) \<subseteq> sValues\<cdot>s"
+using sValues_prefix lub_below by blast
 
 (* streams appearing later in the chain S contain the elements of preceding streams *)
-lemma sdom_chain_below: "chain S \<Longrightarrow> i \<le> j \<Longrightarrow> sdom\<cdot>(S i) \<subseteq> sdom\<cdot>(S j)"
+lemma sValues_chain_below: "chain S \<Longrightarrow> i \<le> j \<Longrightarrow> sValues\<cdot>(S i) \<subseteq> sValues\<cdot>(S j)"
 by (simp add: po_class.chain_mono)
 
 (* for two elements i, j with i \<le> j in a chain S it holds that the domain of S i is a subset of the domain of S j *)
-lemma sdom_lub2union: "chain S \<Longrightarrow> finite_chain S \<Longrightarrow> sdom\<cdot>(\<Squnion> j. S j) \<subseteq> (\<Union>i. sdom\<cdot>(S i))"
+lemma sValues_lub2union: "chain S \<Longrightarrow> finite_chain S \<Longrightarrow> sValues\<cdot>(\<Squnion> j. S j) \<subseteq> (\<Union>i. sValues\<cdot>(S i))"
 using l42 by fastforce
 
 (* important *)
 (* the lub doesn't have any elements that don't appear somewhere in the chain *)
-lemma sdom_lub: "chain S \<Longrightarrow> sdom\<cdot>(\<Squnion> j. S j) = (\<Union>i. sdom\<cdot>(S i))"
+lemma sValues_lub: "chain S \<Longrightarrow> sValues\<cdot>(\<Squnion> j. S j) = (\<Union>i. sValues\<cdot>(S i))"
 apply (simp add: contlub_cfun_arg)
 by (simp add: lub_eq_Union)
 
 text \<open>Let i in N be an index of the chain S of streams and B a set of messages.\<close>
-lemma l44: assumes "chain S" and "\<forall>i. sdom\<cdot>(S i) \<subseteq> B"
-  shows "sdom\<cdot>(\<Squnion> j. S j) \<subseteq> B"
-by (metis (mono_tags, lifting) UN_E assms sdom_lub subsetCE subsetI)
+lemma l44: assumes "chain S" and "\<forall>i. sValues\<cdot>(S i) \<subseteq> B"
+  shows "sValues\<cdot>(\<Squnion> j. S j) \<subseteq> B"
+by (metis (mono_tags, lifting) UN_E assms sValues_lub subsetCE subsetI)
 
 (* helper lemma *)
-lemma l6: "chain S \<Longrightarrow> \<forall>i. sdom\<cdot>(S i) \<subseteq> B \<Longrightarrow> sdom\<cdot>(\<Squnion> j. S (j + (SOME k. A))) \<subseteq> B"
+lemma l6: "chain S \<Longrightarrow> \<forall>i. sValues\<cdot>(S i) \<subseteq> B \<Longrightarrow> sValues\<cdot>(\<Squnion> j. S (j + (SOME k. A))) \<subseteq> B"
 by (simp add: l44 lub_range_shift)
 
 (* dropping elements can't increase the domain *)
-lemma sdrop_sdom[simp]: "sdom\<cdot>(sdrop n\<cdot>s)\<subseteq>sdom\<cdot>s"
-by (metis Un_upper2 approxl2 sdom_prefix sdom_sconc2un sdrop_0 sdropostake split_streaml1 stream.take_below)
+lemma sdrop_sValues[simp]: "sValues\<cdot>(sdrop n\<cdot>s)\<subseteq>sValues\<cdot>s"
+by (metis Un_upper2 approxl2 sValues_prefix sValues_sconc2un sdrop_0 sdropostake split_streaml1 stream.take_below)
 
 (* if none of the elements in the domain of the stream s are in the set A, then filtering s with A
    produces the empty stream *)
-lemma sfilter_sdom_eps: "sdom\<cdot>s \<inter> A = {} \<Longrightarrow> (A \<ominus> s) = \<epsilon>"
-by (meson disjoint_iff_not_equal ex_snth_in_sfilter_nempty snth2sdom)
+lemma sfilter_sValues_eps: "sValues\<cdot>s \<inter> A = {} \<Longrightarrow> (A \<ominus> s) = \<epsilon>"
+by (meson disjoint_iff_not_equal ex_snth_in_sfilter_nempty snth2sValues)
 
-(* if x in sdom\<cdot>(A\<ominus>s) then x is in A *)
-lemma sdom_sfilter1: assumes "x\<in>sdom\<cdot>(A\<ominus>s)" 
+(* if x in sValues\<cdot>(A\<ominus>s) then x is in A *)
+lemma sValues_sfilter1: assumes "x\<in>sValues\<cdot>(A\<ominus>s)" 
 shows "x\<in>A"
-by (smt assms mem_Collect_eq sdom_def2 sfilterl7)
+by (smt assms mem_Collect_eq sValues_def2 sfilterl7)
 
-(* if u is not bottom then sdom\<cdot>s\<subseteq>sdom\<cdot>(u && s) *)
-lemma sdom_subset: assumes "u\<noteq>\<bottom>"
-shows "sdom\<cdot>s\<subseteq>sdom\<cdot>(u && s)"
-by (metis Un_upper2 assms sdom2un stream.con_rews(2) stream.sel_rews(5) surj_scons)
+(* if u is not bottom then sValues\<cdot>s\<subseteq>sValues\<cdot>(u && s) *)
+lemma sValues_subset: assumes "u\<noteq>\<bottom>"
+shows "sValues\<cdot>s\<subseteq>sValues\<cdot>(u && s)"
+by (metis Un_upper2 assms sValues2un stream.con_rews(2) stream.sel_rews(5) surj_scons)
 
-(* if u is not bottom then sdom\<cdot>(A\<ominus>s)\<subseteq>sdom\<cdot>(A \<ominus> (u && s)) *)
-lemma sdom_sfilter_subset: assumes "u\<noteq>\<bottom>"
-shows "sdom\<cdot>(A\<ominus>s)\<subseteq>sdom\<cdot>(A \<ominus> (u && s))"
-by (smt Un_upper2 assms eq_iff sdom2un sfilter_in sfilter_nin stream.con_rews(2) stream.sel_rews(5) surj_scons)
+(* if u is not bottom then sValues\<cdot>(A\<ominus>s)\<subseteq>sValues\<cdot>(A \<ominus> (u && s)) *)
+lemma sValues_sfilter_subset: assumes "u\<noteq>\<bottom>"
+shows "sValues\<cdot>(A\<ominus>s)\<subseteq>sValues\<cdot>(A \<ominus> (u && s))"
+by (smt Un_upper2 assms eq_iff sValues2un sfilter_in sfilter_nin stream.con_rews(2) stream.sel_rews(5) surj_scons)
 
-(* if x in A then x\<in>sdom\<cdot>s implies x\<in>(sdom\<cdot>(A \<ominus> s)) *)
-lemma sdom_sfilter2: assumes  "x\<in>A"
-shows "x\<in>sdom\<cdot>s \<Longrightarrow> x\<in>(sdom\<cdot>(A \<ominus> s))"
+(* if x in A then x\<in>sValues\<cdot>s implies x\<in>(sValues\<cdot>(A \<ominus> s)) *)
+lemma sValues_sfilter2: assumes  "x\<in>A"
+shows "x\<in>sValues\<cdot>s \<Longrightarrow> x\<in>(sValues\<cdot>(A \<ominus> s))"
 apply(induction s)
 apply(rule admI)
 apply rule
-  apply (metis (mono_tags, lifting) UN_iff ch2ch_Rep_cfunR contlub_cfun_arg sdom_lub)
+  apply (metis (mono_tags, lifting) UN_iff ch2ch_Rep_cfunR contlub_cfun_arg sValues_lub)
 apply simp
-by (smt UnE assms empty_iff insert_iff sconc_sdom sdom2un sdom_sconc sdom_sfilter_subset sfilter_in stream.con_rews(2) stream.sel_rews(5) subsetCE surj_scons)
+by (smt UnE assms empty_iff insert_iff sconc_sValues sValues2un sValues_sconc sValues_sfilter_subset sfilter_in stream.con_rews(2) stream.sel_rews(5) subsetCE surj_scons)
 
-(* sdom applied to A\<ominus>s returns the intersection of sdom applied to s and A *)
-lemma sdom_sfilter[simp]: "sdom\<cdot>(A\<ominus>s) = sdom\<cdot>s \<inter> A"
+(* sValues applied to A\<ominus>s returns the intersection of sValues applied to s and A *)
+lemma sValues_sfilter[simp]: "sValues\<cdot>(A\<ominus>s) = sValues\<cdot>s \<inter> A"
 apply rule
-apply (meson IntI sbfilter_sbdom sdom_sfilter1 subset_iff)
+apply (meson IntI sbfilter_sbdom sValues_sfilter1 subset_iff)
 apply rule
-  by (simp add: sdom_sfilter2)
+  by (simp add: sValues_sfilter2)
 
-(* if sfilter of A\<cdot>s is s then sdom\<cdot>s is a subset of A *)
-lemma sfilterEq2sdom_h: "sfilter A\<cdot>s = s \<longrightarrow> sdom\<cdot>s \<subseteq> A"
+(* if sfilter of A\<cdot>s is s then sValues\<cdot>s is a subset of A *)
+lemma sfilterEq2sValues_h: "sfilter A\<cdot>s = s \<longrightarrow> sValues\<cdot>s \<subseteq> A"
   apply(rule ind [of _s])
-    apply (smt admI inf.orderI sdom_sfilter)
+    apply (smt admI inf.orderI sValues_sfilter)
    apply(simp)
   apply(rule)
-  by (metis inf.orderI sdom_sfilter)
+  by (metis inf.orderI sValues_sfilter)
 
-(* sfilter of A\<cdot>s is s implies that sdom\<cdot>s is a subset of A *)
-lemma sfilterEq2sdom: "sfilter A\<cdot>s = s \<Longrightarrow> sdom\<cdot>s \<subseteq> A"
-  by (simp add: sfilterEq2sdom_h)
+(* sfilter of A\<cdot>s is s implies that sValues\<cdot>s is a subset of A *)
+lemma sfilterEq2sValues: "sfilter A\<cdot>s = s \<Longrightarrow> sValues\<cdot>s \<subseteq> A"
+  by (simp add: sfilterEq2sValues_h)
 
-(* if \<forall>a\<in>sdom\<cdot>s. f a then stwbl applied to f\<cdot>s returns s *)
+(* if \<forall>a\<in>sValues\<cdot>s. f a then stwbl applied to f\<cdot>s returns s *)
 lemma stwbl_id_help:
-  shows "(\<forall>a\<in>sdom\<cdot>s. f a) \<longrightarrow> stwbl f\<cdot>s = s"
+  shows "(\<forall>a\<in>sValues\<cdot>s. f a) \<longrightarrow> stwbl f\<cdot>s = s"
   apply (rule ind [of _s])
     apply(rule adm_imp)
      apply(rule admI, rule+)
-     using sdom_chain2lub apply blast
+     using sValues_chain2lub apply blast
     apply(rule admI)
     apply (metis cont2contlubE cont_Rep_cfun2 lub_eq)
    using strict_stwbl apply blast
   apply rule+
   by simp
 
-(* \<And> a. a\<in>sdom\<cdot>s \<Longrightarrow> f a implies that stwbl applied to f\<cdot>s is s *)
-lemma stwbl_id [simp]: "(\<And> a. a\<in>sdom\<cdot>s \<Longrightarrow> f a) \<Longrightarrow> stwbl f\<cdot>s = s"
+(* \<And> a. a\<in>sValues\<cdot>s \<Longrightarrow> f a implies that stwbl applied to f\<cdot>s is s *)
+lemma stwbl_id [simp]: "(\<And> a. a\<in>sValues\<cdot>s \<Longrightarrow> f a) \<Longrightarrow> stwbl f\<cdot>s = s"
 by (simp add: stwbl_id_help)
 
-(* if a in sdom s and \<not>f a then it holds that \<exists>x. (stwbl f\<cdot>s) = stakewhile f\<cdot>s \<bullet> \<up>x *)
-lemma stwbl2stakewhile: assumes "a\<in>sdom\<cdot>s" and "\<not>f a"
+(* if a in sValues s and \<not>f a then it holds that \<exists>x. (stwbl f\<cdot>s) = stakewhile f\<cdot>s \<bullet> \<up>x *)
+lemma stwbl2stakewhile: assumes "a\<in>sValues\<cdot>s" and "\<not>f a"
   shows "\<exists>x. (stwbl f\<cdot>s) = stakewhile f\<cdot>s \<bullet> \<up>x" 
 proof -
-  have "#(stwbl f\<cdot>s) < \<infinity>" using assms(1) assms(2) snth2sdom stwbl_fin by blast
+  have "#(stwbl f\<cdot>s) < \<infinity>" using assms(1) assms(2) snth2sValues stwbl_fin by blast
   hence "stwbl f\<cdot>s \<noteq> \<epsilon>" by (metis assms(1) assms(2) stakewhile_dom strict_stakewhile stwbl_notEps) 
   thus ?thesis
-    by (smt Fin_02bot approxl2 assms(1) assms(2) bottomI lnle_def lnzero_def mem_Collect_eq sconc_snd_empty sdom_def2 sdrop_0 slen_empty_eq slen_rt_ile_eq split_streaml1 stakewhile_below stakewhile_noteq stakewhile_sdropwhilel1 stwbl_notEps stwbl_stakewhile surj_scons tdw ub_slen_stake) 
+    by (smt Fin_02bot approxl2 assms(1) assms(2) bottomI lnle_def lnzero_def mem_Collect_eq sconc_snd_empty sValues_def2 sdrop_0 slen_empty_eq slen_rt_ile_eq split_streaml1 stakewhile_below stakewhile_noteq stakewhile_sdropwhilel1 stwbl_notEps stwbl_stakewhile surj_scons tdw ub_slen_stake) 
 qed
 
-(* if a in sdom s and \<not>f a it holds that \<not> f (sfoot (stwbl f\<cdot>s)) *)
-lemma stwbl_sfoot: assumes "a\<in>sdom\<cdot>s" and "\<not>f a"
+(* if a in sValues s and \<not>f a it holds that \<not> f (sfoot (stwbl f\<cdot>s)) *)
+lemma stwbl_sfoot: assumes "a\<in>sValues\<cdot>s" and "\<not>f a"
   shows "\<not> f (sfoot (stwbl f\<cdot>s))" 
 proof(rule ccontr)
   assume "\<not> \<not> f (sfoot (stwbl f\<cdot>s))"
@@ -4473,12 +4473,12 @@ lemma stwbl2stbl[simp]: "stwbl f\<cdot>(stwbl f\<cdot>s) = stwbl f\<cdot>s"
     apply simp_all
   by (metis sconc_snd_empty stwbl_f stwbl_t)
 
-(* (\<lambda>x. b \<notin> sdom\<cdot>x) is admissible *)
-lemma adm_nsdom [simp]:  "adm (\<lambda>x. b \<notin> sdom\<cdot>x)"
+(* (\<lambda>x. b \<notin> sValues\<cdot>x) is admissible *)
+lemma adm_nsValues [simp]:  "adm (\<lambda>x. b \<notin> sValues\<cdot>x)"
 proof (rule admI)
   fix Y
-  assume as1: "chain Y" and as2: "\<forall>i. b\<notin>sdom\<cdot>(Y i)"
-  thus "b\<notin>sdom\<cdot>(\<Squnion>i. Y i)"
+  assume as1: "chain Y" and as2: "\<forall>i. b\<notin>sValues\<cdot>(Y i)"
+  thus "b\<notin>sValues\<cdot>(\<Squnion>i. Y i)"
   proof (cases "finite_chain Y")
     case True thus ?thesis using as1 as2 l42 by fastforce 
   next
@@ -4488,40 +4488,40 @@ proof (rule admI)
     proof -
       fix n
       obtain j where "Fin n < # (Y j)"  by (metis False inf_chainl2 as1 inf_chainl3rf less_le) 
-      hence "snth n (Y j) \<noteq>b" using as2 snth2sdom by blast
+      hence "snth n (Y j) \<noteq>b" using as2 snth2sValues by blast
       thus "snth n (\<Squnion>i. Y i) \<noteq> b" using \<open>Fin n < #(Y j)\<close> as1 is_ub_thelub snth_less by blast
     qed
-    thus ?thesis using sdom2snth by blast 
+    thus ?thesis using sValues2snth by blast 
   qed
 qed
 
 (* strdw_filter helper lemma *)
-lemma strdw_filter_h: "b\<in>sdom\<cdot>s \<longrightarrow> lnsuc\<cdot>(#({b} \<ominus> srtdw (\<lambda>a. a \<noteq> b)\<cdot>s)) = #({b} \<ominus> s)"
+lemma strdw_filter_h: "b\<in>sValues\<cdot>s \<longrightarrow> lnsuc\<cdot>(#({b} \<ominus> srtdw (\<lambda>a. a \<noteq> b)\<cdot>s)) = #({b} \<ominus> s)"
 proof(rule ind [of _s])
   have "adm (\<lambda>a. lnsuc\<cdot>(#({b} \<ominus> srtdw (\<lambda>a. a \<noteq> b)\<cdot>a)) = #({b} \<ominus> a))" by simp
-  thus "adm (\<lambda>a. b \<in> sdom\<cdot>a \<longrightarrow> lnsuc\<cdot>(#({b} \<ominus> srtdw (\<lambda>a. a \<noteq> b)\<cdot>a)) = #({b} \<ominus> a))" by simp
-  show "b \<in> sdom\<cdot>\<epsilon> \<longrightarrow> lnsuc\<cdot>(#({b} \<ominus> srtdw (\<lambda>a. a \<noteq> b)\<cdot>\<epsilon>)) = #({b} \<ominus> \<epsilon>)" by simp
+  thus "adm (\<lambda>a. b \<in> sValues\<cdot>a \<longrightarrow> lnsuc\<cdot>(#({b} \<ominus> srtdw (\<lambda>a. a \<noteq> b)\<cdot>a)) = #({b} \<ominus> a))" by simp
+  show "b \<in> sValues\<cdot>\<epsilon> \<longrightarrow> lnsuc\<cdot>(#({b} \<ominus> srtdw (\<lambda>a. a \<noteq> b)\<cdot>\<epsilon>)) = #({b} \<ominus> \<epsilon>)" by simp
   fix a 
   fix s
-  assume IH: " b \<in> sdom\<cdot>s \<longrightarrow> lnsuc\<cdot>(#({b} \<ominus> srtdw (\<lambda>a. a \<noteq> b)\<cdot>s)) = #({b} \<ominus> s)"
-  show " b \<in> sdom\<cdot>(\<up>a \<bullet> s) \<longrightarrow> lnsuc\<cdot>(#({b} \<ominus> srtdw (\<lambda>a. a \<noteq> b)\<cdot>(\<up>a \<bullet> s))) = #({b} \<ominus> \<up>a \<bullet> s)"
+  assume IH: " b \<in> sValues\<cdot>s \<longrightarrow> lnsuc\<cdot>(#({b} \<ominus> srtdw (\<lambda>a. a \<noteq> b)\<cdot>s)) = #({b} \<ominus> s)"
+  show " b \<in> sValues\<cdot>(\<up>a \<bullet> s) \<longrightarrow> lnsuc\<cdot>(#({b} \<ominus> srtdw (\<lambda>a. a \<noteq> b)\<cdot>(\<up>a \<bullet> s))) = #({b} \<ominus> \<up>a \<bullet> s)"
   proof (cases "a=b")
     case True thus ?thesis by simp 
   next
     case False
     hence f1:"#({b} \<ominus> \<up>a \<bullet> s) = #({b} \<ominus> s)" using sfilter_nin singletonD by auto
     hence f2:"#({b} \<ominus> srtdw (\<lambda>a. a \<noteq> b)\<cdot>(\<up>a \<bullet> s)) = #({b} \<ominus> srtdw (\<lambda>a. a \<noteq> b)\<cdot>(s))" using False by auto
-    hence "b \<in> sdom\<cdot>(\<up>a \<bullet> s) \<Longrightarrow> b\<in>sdom\<cdot>s" using False by auto
+    hence "b \<in> sValues\<cdot>(\<up>a \<bullet> s) \<Longrightarrow> b\<in>sValues\<cdot>s" using False by auto
     thus ?thesis using IH f2 local.f1 by auto 
   qed
 qed
 
 (* strdw filter lemma *)
-lemma strdw_filter: "b\<in>sdom\<cdot>s \<Longrightarrow> lnsuc\<cdot>(#({b} \<ominus> srtdw (\<lambda>a. a \<noteq> b)\<cdot>s)) = #({b} \<ominus> s)"
+lemma strdw_filter: "b\<in>sValues\<cdot>s \<Longrightarrow> lnsuc\<cdot>(#({b} \<ominus> srtdw (\<lambda>a. a \<noteq> b)\<cdot>s)) = #({b} \<ominus> s)"
 by(simp add: strdw_filter_h)
 
 (* length of stwbl filter *)
-lemma stwbl_filterlen[simp]: "b\<in>sdom\<cdot>ts \<longrightarrow> #({b} \<ominus> stwbl (\<lambda>a. a \<noteq> b)\<cdot>ts) = Fin 1"
+lemma stwbl_filterlen[simp]: "b\<in>sValues\<cdot>ts \<longrightarrow> #({b} \<ominus> stwbl (\<lambda>a. a \<noteq> b)\<cdot>ts) = Fin 1"
   apply(rule ind [of _ ts])
     apply(rule adm_imp)
      apply simp
@@ -4531,7 +4531,7 @@ lemma stwbl_filterlen[simp]: "b\<in>sdom\<cdot>ts \<longrightarrow> #({b} \<omin
   by (metis (mono_tags, lifting) Fin_02bot Fin_Suc One_nat_def lnzero_def sconc_snd_empty sfilter_in sfilter_nin singletonD singletonI slen_scons strict_sfilter strict_slen stwbl_f stwbl_t)
 
 (* srtdw concatenation *)
-lemma srtdw_conc: "b\<in>sdom\<cdot>ts  \<Longrightarrow> (srtdw (\<lambda>a. a \<noteq> b)\<cdot>(ts \<bullet> as)) = srtdw (\<lambda>a. a \<noteq> b)\<cdot>(ts) \<bullet> as"
+lemma srtdw_conc: "b\<in>sValues\<cdot>ts  \<Longrightarrow> (srtdw (\<lambda>a. a \<noteq> b)\<cdot>(ts \<bullet> as)) = srtdw (\<lambda>a. a \<noteq> b)\<cdot>(ts) \<bullet> as"
   apply(induction ts arbitrary: as)
     apply (rule adm_imp)
      apply auto
@@ -4540,17 +4540,17 @@ lemma srtdw_conc: "b\<in>sdom\<cdot>ts  \<Longrightarrow> (srtdw (\<lambda>a. a 
    apply (metis (no_types, lifting) approxl3 assoc_sconc is_ub_thelub)
 proof -
   fix u ts as
-  assume as1: "u \<noteq> \<bottom>" and as2: "(\<And>as. b \<in> sdom\<cdot>ts \<Longrightarrow> srtdw (\<lambda>a. a \<noteq> b)\<cdot>(ts \<bullet> as) = srtdw (\<lambda>a. a \<noteq> b)\<cdot>ts \<bullet> as)"
-       and as3: "b \<in> sdom\<cdot>(u && ts)"
+  assume as1: "u \<noteq> \<bottom>" and as2: "(\<And>as. b \<in> sValues\<cdot>ts \<Longrightarrow> srtdw (\<lambda>a. a \<noteq> b)\<cdot>(ts \<bullet> as) = srtdw (\<lambda>a. a \<noteq> b)\<cdot>ts \<bullet> as)"
+       and as3: "b \<in> sValues\<cdot>(u && ts)"
   obtain a where a_def: "updis a = u" by (metis Exh_Up as1 discr.exhaust) 
-  have "a\<noteq>b \<Longrightarrow> b\<in>sdom\<cdot>ts" by (metis UnE a_def as3 lscons_conv sdom2un singletonD) 
+  have "a\<noteq>b \<Longrightarrow> b\<in>sValues\<cdot>ts" by (metis UnE a_def as3 lscons_conv sValues2un singletonD) 
   hence "a\<noteq>b \<Longrightarrow> srtdw (\<lambda>a. a \<noteq> b)\<cdot>(\<up>a\<bullet> (ts \<bullet> as)) = srtdw (\<lambda>a. a \<noteq> b)\<cdot>(\<up>a\<bullet> ts) \<bullet> as " using as2 a_def by auto
   thus "srtdw (\<lambda>a. a \<noteq> b)\<cdot>((u && ts) \<bullet> as) = srtdw (\<lambda>a. a \<noteq> b)\<cdot>(u && ts) \<bullet> as "
     by (smt a_def inject_scons lscons_conv sconc_scons stwbl_f stwbl_srtdw) 
 qed
 
 (* stwbl concatenation *)
-lemma stwbl_conc[simp]: "b\<in>sdom\<cdot>ts \<Longrightarrow>
+lemma stwbl_conc[simp]: "b\<in>sValues\<cdot>ts \<Longrightarrow>
     (stwbl (\<lambda>a. a \<noteq> b)\<cdot>(stwbl (\<lambda>a. a \<noteq> b)\<cdot>ts \<bullet> xs)) =
     (stwbl (\<lambda>a. a \<noteq> b)\<cdot>(ts))"
   apply(induction ts)
@@ -4559,7 +4559,7 @@ lemma stwbl_conc[simp]: "b\<in>sdom\<cdot>ts \<Longrightarrow>
     apply(rule admI)
     apply (metis (no_types, lifting) ch2ch_Rep_cfunR contlub_cfun_arg inf_chainl4 lub_eqI lub_finch2 sconc_fst_inf stwbl2stbl)
    apply simp
-  by (smt UnE assoc_sconc sdom2un singletonD stream.con_rews(2) stream.sel_rews(5) stwbl_f stwbl_t surj_scons)
+  by (smt UnE assoc_sconc sValues2un singletonD stream.con_rews(2) stream.sel_rews(5) stwbl_f stwbl_t surj_scons)
 
 
 (* ----------------------------------------------------------------------- *)
@@ -5209,7 +5209,7 @@ by (simp add: add2ID_h cfun_eqI)
   https://fa.isabelle.narkive.com/wKVBUrdK/isabelle-setup-lifting-no-relator-for-the-type-warning
   HOL/Library/Quotient_Set.thy 
   *)
-definition "rel_stream R x y \<equiv> \<forall>(e1::'e::countable) (e2::'f::countable). R e1 e2 \<longrightarrow> e1\<in> sdom\<cdot>x \<longleftrightarrow> e2\<in> sdom\<cdot>y" (*Does not work*)
+definition "rel_stream R x y \<equiv> \<forall>(e1::'e::countable) (e2::'f::countable). R e1 e2 \<longrightarrow> e1\<in> sValues\<cdot>x \<longleftrightarrow> e2\<in> sValues\<cdot>y" (*Does not work*)
 
 definition vstream :: "('a \<Rightarrow> 'b) \<Rightarrow> 'b stream \<Rightarrow> 'a stream" (*Probably also does not work*)
   where "vstream f s \<equiv> smap (inv f)\<cdot>s"

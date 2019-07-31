@@ -518,7 +518,7 @@ end
 
 locale sbGen = 
   fixes lConstructor::" 'a::pcpo \<Rightarrow> 'cs::chan  \<Rightarrow> M stream"
-  assumes c_type: "\<And>a c. sValues (lConstructor a c) \<subseteq> ctype (Rep c)"
+  assumes c_type: "\<And>a c. sValues\<cdot>(lConstructor a c) \<subseteq> ctype (Rep c)"
     and c_inj: "inj lConstructor"
     and c_surj: "\<And>f. sb_well f \<Longrightarrow> f\<in>range lConstructor" (* Schöner? *)
 begin

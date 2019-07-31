@@ -25,7 +25,7 @@ interpretation flashOutSBE: sbeGen "buildFlashoutSBE"
 
 interpretation flashOutSB: sbGen "buildFlashoutSB"
   apply(unfold_locales)
-  apply (simp add: buildflashinsb_ctype sValues_def)
+  apply (simp add: buildflashinsb_ctype)
   apply (simp add: buildflashinsb_inj)
   by (simp add: buildflashinsb_surj)
 
