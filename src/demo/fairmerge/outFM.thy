@@ -30,15 +30,14 @@ lemma FMout1_rep [simp]: "Rep (FMout) = cout"
 fun outFMChan::"('bool::type \<Rightarrow> 'a::type) \<Rightarrow> 'bool \<Rightarrow> outFM \<Rightarrow> 'a" where
 "outFMChan Cc1 bool FMout = Cc1 bool"
 
-abbreviation "buildFMoutSBE \<equiv> outFMChan \<B>" 
+abbreviation "buildFMoutSBE \<equiv> outFMChan \<N>" 
 
 lemma buildfmout_ctype: "buildFMoutSBE a c \<in> ctype (Rep c)"
   by(cases c; cases a;simp)
 
 lemma buildfmout_inj: "inj buildFMoutSBE"
   apply(rule injI)
-  apply(case_tac x; case_tac y; simp)
-  by (metis M.inject(2) outFMChan.simps)+
+  by (metis M.inject(1) outFMChan.simps)
 
 lemma buildfmout_range: "range (\<lambda>a. buildFMoutSBE a c) = ctype (Rep c)"
   apply(cases c)
@@ -58,6 +57,6 @@ proof -
     by auto
 qed
 
-abbreviation "buildFMoutSB \<equiv> outFMChan (Rep_cfun (smap \<B>))" 
+abbreviation "buildFMoutSB \<equiv> outFMChan (Rep_cfun (smap \<N>))" 
 
 end

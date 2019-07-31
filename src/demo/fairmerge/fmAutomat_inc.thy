@@ -4,7 +4,7 @@ imports inFM outFM bundle.SB_fin
 begin
 
 (*State datatype*)
-datatype S_fm = S bool nat "bool list"  "bool list"
+datatype S_fm = S bool nat "nat list"  "nat list"
 
 instance S_fm::countable
   by(countable_datatype)

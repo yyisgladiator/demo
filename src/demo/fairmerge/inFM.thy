@@ -40,7 +40,7 @@ fun inFMChan::"('nat::type \<Rightarrow> 'a::type) \<Rightarrow> ('bool::type \<
 "inFMChan Cc1 Cc2 (port_c1, port_c2) FMin1 = Cc1 port_c1" |
 "inFMChan Cc1 Cc2 (port_c1, port_c2) FMin2 = Cc2 port_c2"
 
-abbreviation "buildFMinSBE \<equiv> inFMChan \<B> \<B>" 
+abbreviation "buildFMinSBE \<equiv> inFMChan \<N> \<N>" 
 
 lemma buildfmin_ctype: "buildFMinSBE a c \<in> ctype (Rep c)"
   by(cases c; cases a;simp)
@@ -48,7 +48,7 @@ lemma buildfmin_ctype: "buildFMinSBE a c \<in> ctype (Rep c)"
 lemma buildfmin_inj: "inj buildFMinSBE"
   apply(rule injI)
   apply(case_tac x; case_tac y; simp)
-  by (metis M.inject(2) inFMChan.simps)+
+  by (metis M.inject(1) inFMChan.simps)
 
 lemma buildfmin_range: "range (\<lambda>a. buildFMinSBE a c) = ctype (Rep c)"
   apply(cases c)
@@ -68,6 +68,6 @@ proof -
     by auto
 qed
 
-abbreviation "buildFMinSB \<equiv> inFMChan (Rep_cfun (smap \<B>)) (Rep_cfun (smap \<B>))" 
+abbreviation "buildFMinSB \<equiv> inFMChan (Rep_cfun (smap \<N>)) (Rep_cfun (smap \<N>))" 
 
 end

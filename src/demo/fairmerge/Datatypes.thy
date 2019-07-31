@@ -26,9 +26,9 @@ instance M::countable
 text \<open>Then one describes the types of each channel. Only Messages included are allowed to be
   transmitted\<close>
 fun ctype :: "channel \<Rightarrow> M set" where 
-"ctype cin1 = range \<B>" |
-"ctype cin2 = range \<B>" |
-"ctype cout = range \<B>" |
+"ctype cin1 = range \<N>" |
+"ctype cin2 = range \<N>" |
+"ctype cout = range \<N>" |
 "ctype _ = {}"
 
 lemma ctypeempty_ex:"\<exists>c. ctype c = {}"
