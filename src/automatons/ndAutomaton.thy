@@ -36,15 +36,6 @@ definition ndaTransition::"('state::type, 'in::{chan, finite}, 'out) ndAutomaton
 definition ndaInitConfig::"('state::type, 'in::{chan, finite}, 'out) ndAutomaton \<rightarrow> ('state \<times>'out\<^sup>\<Omega>)set" where
 "ndaInitConfig = (\<Lambda> aut. (snd(Rep_ndAutomaton aut)))"
 
-
-(*
-definition ndaInitStates::"('state::type, 'in, 'out) ndAutomaton \<Rightarrow> 'state set" where
-"ndaInitStates aut = fst `(snd(aut))"
-
-definition ndaInitOuts::"('state::type, 'in, 'out) ndAutomaton \<Rightarrow> ('out\<^sup>\<Omega>) set" where
-"ndaInitOuts aut = snd `(snd(aut))"
-*)
-
 lemma ndastatesem_mono[simp]:"mono (\<lambda>h state. {sb_case\<cdot>(\<lambda>sbe. \<Lambda> sb.
     (let (nextSPF, output) = f' sbe in
                             output \<bullet>\<^sup>\<Omega> nextSPF\<cdot>sb))
