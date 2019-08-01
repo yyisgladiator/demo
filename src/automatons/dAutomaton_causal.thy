@@ -29,11 +29,7 @@ definition semantik_weak::"('state::type, 'in::{chan,finite}, 'out::chan) dAutom
 
 
 definition dawStateSem :: "('s::type, 'I::{finite,chan},'O) dAutomaton_weak \<Rightarrow> ('s \<Rightarrow> ('I\<^sup>\<Omega> \<rightarrow> 'O\<^sup>\<Omega>))" where
-"dawStateSem da = fix\<cdot>(\<Lambda> h. (\<lambda> state. sb_case\<cdot>
-                        (\<lambda>sbe. \<Lambda> sb.
-                          let (nextState, output) = dawTransition da state sbe in
-                            output \<bullet>\<^sup>\<surd> h nextState\<cdot>sb)
-                      ))"
+"dawStateSem da = daStateSem (daw2da da)"
 
 definition dawSem :: "('s::type, 'I::{finite,chan},'O) dAutomaton_weak \<Rightarrow> ('I\<^sup>\<Omega> \<rightarrow> 'O\<^sup>\<Omega>)" where
 "dawSem da = (\<Lambda> sb. ((dawStateSem da (dawInitState da))\<cdot>sb))"
@@ -78,11 +74,7 @@ subsection \<open>*Causal Sem lemmas \<close>
 lemma dawstatesem_unfolding: "(dawStateSem automat s) = sb_case\<cdot>(\<lambda>sbe. \<Lambda> sb .
                                                   let (nextState, output) = dawTransition automat s sbe in
                             output \<bullet>\<^sup>\<surd> ((dawStateSem automat) nextState\<cdot>sb))"
-  unfolding dawStateSem_def
-  apply(subst fix_eq)
-  apply(subst beta_cfun)
-  apply(intro cont2cont; simp)
-  by auto
+  by(simp add: dawStateSem_def daw2da_def,subst dastatesem_unfolding,simp add: sbECons_def prod.case_eq_if)
 
 (* TODO: einheitliche assumption für diesen fall, KEIN rohes exists ! *)
 lemma dawstatesem_bottom:assumes "\<exists>(c::'b::{finite,chan}). (sb::'b\<^sup>\<Omega>)  \<^enum>  c = \<epsilon>"
