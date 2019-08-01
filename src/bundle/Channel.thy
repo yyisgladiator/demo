@@ -39,10 +39,10 @@ class somechan = chan +
       "(range Rep) \<inter> cEmpty = {}"
 begin
 
-lemma %invisible somechannotempty[simp]:"\<not>chIsEmpty(TYPE('c::somechan))"
+corollary somechannotempty[simp]:"\<not>chIsEmpty(TYPE('c::somechan))"
   using chIsEmpty_def somechan_class.chan_notempty by fastforce
 
-lemma %invisible somechandom:"chDom(TYPE('c::somechan)) = range(Rep::'c\<Rightarrow>channel)"
+corollary somechandom:"chDom(TYPE('c::somechan)) = range(Rep::'c\<Rightarrow>channel)"
   by(simp add: chDom_def somechan_class.chan_notempty Diff_triv)
 
 end
