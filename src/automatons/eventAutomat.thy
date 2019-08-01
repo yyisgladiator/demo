@@ -66,7 +66,31 @@ fun cTime :: "channel \<Rightarrow> timeType" where
 datatype M_timed = Untimed "M_help" | Timed "M_help list" | Tsyn "M_help option"  (* option = tsyn *)
 
 definition ctype::"channel \<Rightarrow> M_timed set" where
-"ctype c = (case (cTime c) of TUntimed \<Rightarrow> {} | _ \<Rightarrow> {})"
+"ctype c \<equiv> if (cMsg c) = {} then {} else 
+  case (cTime c) of TUntimed   \<Rightarrow> Untimed ` (cMsg c) | 
+                   TTimed     \<Rightarrow>  Timed ` {ls. set ls \<subseteq> (cMsg c)} |
+                   TTsyn      \<Rightarrow> Tsyn ` (insert None (Some ` cMsg c))"
+
+lemma ctype_empty_gdw: "ctype c = {} \<longleftrightarrow> cMsg c = {}"
+  apply(cases "(cTime c)")
+  apply (auto simp add: ctype_def)
+  by (metis bot.extremum empty_set)
+
+type_synonym inAnd = bool
+
+fun inAndChan::"('nat::type \<Rightarrow> 'a::type) \<Rightarrow> ('bool::type \<Rightarrow> 'a) \<Rightarrow>('nat\<times>'bool) \<Rightarrow> inAnd \<Rightarrow> 'a" where
+"inAndChan Cc1 Cc2 (port_c1, port_c2) True = Cc1 port_c1" |
+"inAndChan Cc1 Cc2 (port_c1, port_c2) False = Cc2 port_c2"
+
+abbreviation "buildAndinSBE \<equiv> inAndChan (Timed o map \<B>) (Untimed o \<N>)" 
+
+abbreviation "buildAndinSBs \<equiv> inAndChan (Tsyn o (map_option \<B>)) (Untimed o \<N>)"
+
+interpretation andInSBE: sbeGen "buildAndinSBE"
+  oops
+
+
+
 
 subsection \<open>Merge\<close>
 
