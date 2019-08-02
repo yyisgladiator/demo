@@ -1,4 +1,4 @@
-session "user" (mustWork) in "bundle" = "HOLCF" +
+session "user" (mustWork) in "src" = "HOLCF" +
   description "Globally used Channel and Message Datatypes."
   options [quick_and_dirty = false, browser_info, document = pdf,document_variants="outline=/proof"]
   theories
