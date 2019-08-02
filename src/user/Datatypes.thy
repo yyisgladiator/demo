@@ -18,10 +18,10 @@ hide_const DummyChannel
 section \<open>Message Definition\<close>
 
 text\<open>The same is true for the "Message" Datatype. Every kind of message has to be described here:\<close>
-datatype M = DummyMessage nat
+datatype M_pure = DummyMessage nat
 hide_const DummyMessage
 
-instance M :: countable
+instance M_pure :: countable
   apply(intro_classes)
   by(countable_datatype)
 
@@ -31,12 +31,23 @@ instance M :: countable
 text \<open>Then one describes the types of each channel. Only Messages included are allowed to be
   transmitted\<close>
 
-definition ctype :: "channel \<Rightarrow> M set" where 
-"ctype = (\<lambda>c. if c= undefined then {} else undefined)"
+definition cMsg :: "channel \<Rightarrow> M_pure set" where 
+"cMsg = (\<lambda>c. if c= undefined then {} else undefined)"
 
-lemma ctypeempty_ex:"\<exists>c. ctype c = {}"
-  by (simp add: ctype_def)
+lemma cmsgempty_ex:"\<exists>c. cMsg c = {}"
+  by (simp add: cMsg_def)
 
-hide_fact ctype_def
+
+(* Begin Framework: *)
+  (* TODO: woanders hin kopieren, eg Prelude *)
+datatype timeType = TUntimed | TTimed | TTsyn
+(* End Framework *)
+
+definition cTime :: "channel \<Rightarrow> timeType" where
+"cTime = undefined"
+
+
+hide_fact cMsg_def
+hide_fact cTime_def
 
 end

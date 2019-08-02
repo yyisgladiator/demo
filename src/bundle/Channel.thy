@@ -4,6 +4,29 @@ imports HOLCF user.Datatypes
 begin
 
 
+
+datatype M = Untimed "M_pure" | Timed "M_pure list" | Tsyn "M_pure option"  (* option = tsyn *)
+
+instance M::countable
+  by(countable_datatype)
+
+definition ctype::"channel \<Rightarrow> M set" where
+"ctype c \<equiv> if (cMsg c) = {} then {} else 
+  case (cTime c) of TUntimed   \<Rightarrow> Untimed ` (cMsg c) | 
+                   TTimed     \<Rightarrow>  Timed ` {ls. set ls \<subseteq> (cMsg c)} |
+                   TTsyn      \<Rightarrow> Tsyn ` (insert None (Some ` cMsg c))"
+
+lemma ctype_empty_gdw: "ctype c = {} \<longleftrightarrow> cMsg c = {}"
+  apply(cases "(cTime c)")
+  apply (auto simp add: ctype_def)
+  by (metis bot.extremum empty_set)
+
+lemma ctypeempty_ex:"\<exists>c. ctype c = {}"
+  by (simp add: cmsgempty_ex ctype_empty_gdw)
+
+
+
+
 definition cEmpty :: "channel set" where
 "cEmpty = {c. ctype c = {}}"
 text \<open>@{const cEmpty} contains all channels on which no message is allowed to be transmitted.\<close> 

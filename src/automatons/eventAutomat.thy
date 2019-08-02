@@ -5,20 +5,42 @@ imports ndAutomaton
 begin
 
 (* An event Automaton saves the previous events in a buffer. Hence we need to change the state *)
-datatype ('state::type,'csIn) eventState = EventState 'state "'csIn \<Rightarrow> M list"
+datatype ('state::type,'csIn) eventState = EventState 'state "'csIn \<Rightarrow> M_pure list"
+
+
+(* Move to "Channel" *)
+fun getMessages :: "M \<Rightarrow> M_pure list" where
+"getMessages (Untimed msg) = [msg]" |
+
+"getMessages (Timed msgs) = msgs" |
+
+"getMessages (Tsyn (Some msg)) = [msg]" |
+"getMessages (Tsyn None) = []"
 
 
 
 
-fun appendMsg :: "'m::countable tsyn \<Rightarrow> 'm list \<Rightarrow> 'm list" where
-"appendMsg (Msg m) xs = xs @ [m]" | 
-"appendMsg    -    xs = xs"
+(*
+  first parameter : eventAutomat transitions function
+ second parameter : buffer
+  
+  result = set of possible transitions
+*)
+fun eventProcessOne:: "('cs \<Rightarrow>  'msg::type  \<Rightarrow> 'o::type set) \<Rightarrow> ('cs \<Rightarrow> 'msg list)  \<Rightarrow> (('cs \<Rightarrow> 'msg list) \<times> 'o) set" where
+"eventProcessOne eventTrans buffers = 
+    (let possibleActions = { c | c. buffers c \<noteq> []}
+    in
+    (if (\<forall>c. buffers c = []) then {(buffers, undefined)} else \<comment> \<open>TODO: undefined = tick... oder dummy message\<close>
+  ({ ((\<lambda>cc. if(c=cc) then tl (buffers cc) else buffers cc), userNext) | c userNext. buffers c \<noteq> [] \<and> userNext \<in> eventTrans c (hd (buffers c))})))"
 
+
+(* TODO: copy to sbElem *)
+definition sbeGetMsgs:: "'cs sbElem \<Rightarrow> 'cs \<Rightarrow> M_pure list" where
+"sbeGetMsgs sbe c \<equiv> if(chDom (TYPE ('cs)) = {}) then [] else getMessages (the (Rep_sbElem sbe) c)"
 
 (* As a first step append all messages to the buffer. Hence we later have less if-else cases *)
-definition eventAddToBuf::"'m::message tsyn sbElem \<Rightarrow> (channel \<Rightarrow> 'm list) \<Rightarrow> channel \<Rightarrow> 'm list" where
-"eventAddToBuf sbe buf c = (if(c\<in>sbeDom sbe) then appendMsg ((Rep_sbElem sbe)\<rightharpoonup> c) (buf c) else buf c)"
-
+definition eventAddToBuf::"'cs sbElem \<Rightarrow> ('cs \<Rightarrow> M_pure list) \<Rightarrow> 'cs \<Rightarrow> M_pure list" where
+"eventAddToBuf sbe buf c = (buf c) @ (sbeGetMsgs sbe c)"  
 
 
 (*
@@ -27,19 +49,25 @@ definition eventAddToBuf::"'m::message tsyn sbElem \<Rightarrow> (channel \<Righ
   \<^item> das Gesamtsystem soll mit verschiedenenen Zeiten gleichzeitig umgehen können!
      \<^item> also nicht "M = M_gen tsyn"
 *)
-fun eventAutomatTransition:: "('state \<Rightarrow> 'in \<Rightarrow> M \<Rightarrow> 'out\<^sup>\<Omega>) 
-  \<Rightarrow> (('state::type,'in) eventState \<Rightarrow> 'in\<^sup>\<surd> \<Rightarrow> (('state \<times> 'out\<^sup>\<Omega>) set))" where
-"eventAutomatTransition eventTrans (EventState s buffers) input = undefined "
+fun eventAutomatTransition:: "('state \<Rightarrow> 'in \<Rightarrow> M_pure \<Rightarrow> ('state \<times> 'out\<^sup>\<Omega>) set) 
+  \<Rightarrow> (('state::type,'in) eventState \<Rightarrow> 'in\<^sup>\<surd> \<Rightarrow> (((('state::type,'in) eventState) \<times> 'out\<^sup>\<Omega>) set))" where
+"eventAutomatTransition eventTrans (EventState s buffers) input = 
+   {(EventState nextS nextList, nextOut) | nextS nextList nextOut. 
+        (nextList, nextS, nextOut)\<in>(eventProcessOne (eventTrans s) (eventAddToBuf input buffers))
+      } "
+
+setup_lifting type_definition_ndAutomaton
 
 (* TODO: initiale konfiguration *)
-definition eventAut :: "('state \<Rightarrow> 'in \<Rightarrow> M \<Rightarrow> 'out\<^sup>\<Omega>) \<Rightarrow>
-  (('state::type,'in) eventState, 'in::{chan, finite}, 'out::chan) ndAutomaton" where
-"eventAut = undefined"
+lift_definition eventAut :: "('state \<Rightarrow> 'in \<Rightarrow> M_pure \<Rightarrow> ('state \<times> 'out\<^sup>\<Omega>) set) \<Rightarrow>
+  (('state::type,'in) eventState, 'in::{chan, finite}, 'out::chan) ndAutomaton" is
+"\<lambda> eventTrans. (eventAutomatTransition eventTrans,undefined)"
+  sorry
 
 
 
 
-
+(*
 
 (* Begin Framework: *)
 datatype timeType = TUntimed | TTimed | TTsyn
@@ -49,10 +77,10 @@ datatype timeType = TUntimed | TTimed | TTsyn
 (* Begin Generated *)
 datatype channel = c1 | c2 | c3
 
-datatype M_help = \<N> nat | \<B> bool
+datatype M_pure = \<N> nat | \<B> bool
 
 
-fun cMsg :: "channel \<Rightarrow> M_help set" where
+fun cMsg :: "channel \<Rightarrow> M_pure set" where
 "cMsg c1 = range \<N>"
 
 fun cTime :: "channel \<Rightarrow> timeType" where
@@ -63,7 +91,7 @@ fun cTime :: "channel \<Rightarrow> timeType" where
 
 (* Begin Framework eg Channel/sbElem/SB *)
 
-datatype M_timed = Untimed "M_help" | Timed "M_help list" | Tsyn "M_help option"  (* option = tsyn *)
+datatype M_timed = Untimed "M_pure" | Timed "M_pure list" | Tsyn "M_pure option"  (* option = tsyn *)
 
 definition ctype::"channel \<Rightarrow> M_timed set" where
 "ctype c \<equiv> if (cMsg c) = {} then {} else 
@@ -88,17 +116,15 @@ abbreviation "buildAndinSBs \<equiv> inAndChan (Tsyn o (map_option \<B>)) (Untim
 
 interpretation andInSBE: sbeGen "buildAndinSBE"
   oops
-
-
+*)
 
 
 subsection \<open>Merge\<close>
 
-(* Garantiert nicht "M" verwenden! ! ! *)
-fun eventMergeTransition :: "'state \<Rightarrow> 'cs \<Rightarrow> (M\<times>M)  \<Rightarrow> ('state \<times> 'cs\<^sup>\<Omega>) set" where
-"eventMergeTransition s _ m  = { (s,sendMessageAway (Msg m))}"
+fun eventMT :: "state \<Rightarrow> inMerge \<Rightarrow> ('m\<times>'m)  \<Rightarrow> (state \<times> 'cs\<^sup>\<Omega>) set" where
+"eventMT (True, _) cin2 m  = { (s,sendMessageAway (Msg m))}"
 
 
-definition "eventMerge = eventAut {c1, c2} {c3} eventMergeTransition { (n,sendMessageAway -) | n. True}"
+definition "eventMerge = eventAut eventMergeTransition"
 
 end
