@@ -118,7 +118,8 @@ have f1: "\<forall>i M. sValues (sb i) \<subseteq> M \<or> \<not> ctype (Rep i) 
     by force
   then show "\<exists>a b. \<forall>i. sb i = buildAndinSB (a ,b)  i"
     using  f2 f1
-    sorry
+    by (smt inAnd.exhaust inAndChan.simps sValues_def smap_well)
+    
   qed
     thus ?thesis
     by auto
