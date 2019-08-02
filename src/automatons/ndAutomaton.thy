@@ -21,7 +21,7 @@ record ('state::type, 'in::"{chan, finite}", 'out::chan) ndAutomaton_incomplete 
 cpodef ('state::type, 'in::"{chan, finite}", 'out::chan) ndAutomaton  =
   "{(transition::(('state \<Rightarrow> 'in\<^sup>\<surd> \<Rightarrow> (('state \<times> 'out\<^sup>\<Omega>) set))), initialConfig::('state \<times> 'out\<^sup>\<Omega>) set)
     | transition initialConfig.
-      (\<forall>sbe state. transition sbe state \<noteq> {})
+      (\<forall>sbe state. transition state sbe\<noteq> {})
     \<and> initialConfig \<noteq> {}}"
    apply auto[1]
   apply(subst UU_eq_empty[symmetric])+
