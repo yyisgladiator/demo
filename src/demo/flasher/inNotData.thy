@@ -103,8 +103,8 @@ have f1: "\<forall>i M. sValues (sb i) \<subseteq> M \<or> \<not> ctype (Rep i) 
   have "ctype (Rep Notin) \<subseteq> range \<B>"
     by force
 then show "\<exists>s. \<forall>i. sb i = buildNotinSB s i"
-using f1 by (metis (full_types) inNotChan.elims sValues_def smap_well)
-qed  thus ?thesis
+using f1  by(smt inNot.exhaust inNotChan.simps sValues_def smap_well)
+qed   thus ?thesis
     by auto
 qed
 

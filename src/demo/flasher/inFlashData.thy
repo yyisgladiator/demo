@@ -106,7 +106,7 @@ have f1: "\<forall>i M. sValues (sb i) \<subseteq> M \<or> \<not> ctype (Rep i) 
   have "ctype (Rep Flashin) \<subseteq> range \<B>"
     by force
 then show "\<exists>s. \<forall>i. sb i = buildFlashinSB s i"
-using f1 by (metis (full_types) inFlashChan.elims sValues_def smap_well)
+using f1 by (smt inFlash.exhaust inFlashChan.simps sValues_def smap_well)
 qed 
   thus ?thesis
     by auto
