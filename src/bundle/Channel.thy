@@ -1,8 +1,9 @@
+(*<*)
 theory Channel
 
 imports HOLCF user.Datatypes
 begin
-
+(*>*)
 
 definition cEmpty :: "channel set" where
 "cEmpty = {c. ctype c = {}}"
@@ -175,4 +176,6 @@ qed
 lemma "chDom (TYPE('cs1 - 'cs2)) \<inter> chDom (TYPE ('cs2)) = {}"
   by auto
 
+(*<*)
 end
+(*>*)
