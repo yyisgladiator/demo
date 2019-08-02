@@ -84,6 +84,8 @@ lemma buildflashoutsb_range: "(\<Union>a. sdom\<cdot>(buildNotinSB a c)) = ctype
 
 
 lemma smap_well:"range f = S \<Longrightarrow> sdom\<cdot>x\<subseteq>S \<Longrightarrow>  \<exists>s. smap f\<cdot>s = x"
+
+ 
   sorry
 
 lemma buildflashoutsb_surj: assumes "sb_well sb"
@@ -94,8 +96,15 @@ proof -
     by (simp add: sb_well_def) 
   hence "\<exists>prod. sb = buildNotinSB prod"
     apply(subst fun_eq_iff,auto,simp add: sValues_def)
-    by (metis (full_types)Andin1_rep ctype.simps(6) inNotChan.elims smap_well)
-  thus ?thesis
+ 
+  proof -
+have f1: "\<forall>i M. sValues (sb i) \<subseteq> M \<or> \<not> ctype (Rep i) \<subseteq> M"
+  by (metis ctypewell dual_order.trans)
+  have "ctype (Rep Notin) \<subseteq> range \<B>"
+    by force
+then show "\<exists>s. \<forall>i. sb i = buildNotinSB s i"
+using f1 by (metis (full_types) inNotChan.elims sValues_def smap_well)
+qed  thus ?thesis
     by auto
 qed
 

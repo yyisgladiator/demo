@@ -69,5 +69,59 @@ proof -
 qed
 
 abbreviation "buildAndinSB \<equiv> inAndChan (Rep_cfun (smap \<B>)) (Rep_cfun (smap \<B>))" 
+lemma buildandoutsb_ctype: "sdom\<cdot>(buildAndinSB a c) \<subseteq> ctype (Rep c)"
+  by(cases c; cases a;simp)
+
+lemma smap_inj:"inj f \<Longrightarrow> inj (Rep_cfun (smap f))"
+  apply(rule injI)
+  apply(rule snths_eq,auto)
+  apply (metis slen_smap)
+  by (metis inj_eq slen_smap smap_snth_lemma)
+
+lemma rep_cfun_smap_bool_inj:"inj (Rep_cfun (smap \<B>))"
+  apply(rule smap_inj)
+  by(simp add: inj_def)+
+
+lemma buildNotoutsb_inj: "inj buildAndinSB"
+  apply(rule injI)
+ 
+  by (metis inAndChan.simps(1) inAndChan.simps(2) inj_eq old.prod.exhaust rep_cfun_smap_bool_inj)
+
+lemma buildflashoutsb_range: "(\<Union>a. sdom\<cdot>(buildAndinSB a c)) = ctype (Rep c)"
+  apply(cases c)
+  apply auto 
+  apply (metis (no_types, lifting) in_mono smap_sdom_range)
+  apply(rule_tac x="\<up>xa" in exI)
+  apply simp
+  using smap_sdom_range apply blast
+  apply(rule_tac x="\<up>xa" in exI)
+  by simp
+lemma smap_well:"range f = S \<Longrightarrow> sdom\<cdot>x\<subseteq>S \<Longrightarrow>  \<exists>s. smap f\<cdot>s = x"
+
+ 
+  sorry
+
+lemma buildflashoutsb_surj: assumes "sb_well sb"
+  shows "sb \<in> range buildAndinSB"
+proof -
+  have ctypewell:"\<And> c. sValues (sb c) \<subseteq> ctype (Rep c)"
+    using assms
+    by (simp add: sb_well_def) 
+  hence "\<exists>prod. sb = buildAndinSB prod"
+    apply(subst fun_eq_iff,auto,simp add: sValues_def)
+      proof -
+have f1: "\<forall>i M. sValues (sb i) \<subseteq> M \<or> \<not> ctype (Rep i) \<subseteq> M"
+  by (metis ctypewell dual_order.trans)
+  have f2:"ctype (Rep Andin1) \<subseteq> range \<B>"
+    by force
+  have f3:"ctype (Rep Andin2) \<subseteq> range \<B>"
+    by force
+  then show "\<exists>a b. \<forall>i. sb i = buildAndinSB (a ,b)  i"
+    using  f2 f1
+    sorry
+  qed
+    thus ?thesis
+    by auto
+qed
 
 end

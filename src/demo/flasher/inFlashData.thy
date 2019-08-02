@@ -66,9 +66,19 @@ abbreviation "buildFlashinSB \<equiv> inFlashChan (Rep_cfun (smap \<B>))"
 lemma buildflashoutsb_ctype: "sdom\<cdot>(buildFlashinSB a c) \<subseteq> ctype (Rep c)"
   by(cases c; cases a;simp)
 
-lemma buildflashoutsb_inj: "inj buildFlashinSB"
+lemma smap_inj:"inj f \<Longrightarrow> inj (Rep_cfun (smap f))"
   apply(rule injI)
-  sorry
+  apply(rule snths_eq,auto)
+  apply (metis slen_smap)
+  by (metis inj_eq slen_smap smap_snth_lemma)
+
+lemma rep_cfun_smap_bool_inj:"inj (Rep_cfun (smap \<B>))"
+  apply(rule smap_inj)
+  by(simp add: inj_def)+
+
+lemma buildflashoutsb_inj: "inj buildFlashinSB"
+
+  by (metis (mono_tags, lifting) inFlashChan.simps inj_def rep_cfun_smap_bool_inj)
 
 
 lemma buildflashoutsb_range: "(\<Union>a. sdom\<cdot>(buildFlashinSB a c)) = ctype (Rep c)"
@@ -78,6 +88,9 @@ lemma buildflashoutsb_range: "(\<Union>a. sdom\<cdot>(buildFlashinSB a c)) = cty
   apply(rule_tac x="\<up>xa" in exI)
   by simp
 
+lemma smap_well:"range f = S \<Longrightarrow> sdom\<cdot>x\<subseteq>S \<Longrightarrow>  \<exists>s. smap f\<cdot>s = x"
+  sorry
+
 lemma buildflashoutsb_surj: assumes "sb_well sb"
   shows "sb \<in> range buildFlashinSB"
 proof -
@@ -86,7 +99,15 @@ proof -
     by (simp add: sb_well_def) 
   hence "\<exists>prod. sb = buildFlashinSB prod"
     apply(subst fun_eq_iff,auto,simp add: sValues_def)
-    sorry
+
+  proof -
+have f1: "\<forall>i M. sValues (sb i) \<subseteq> M \<or> \<not> ctype (Rep i) \<subseteq> M"
+  by (metis ctypewell dual_order.trans)
+  have "ctype (Rep Flashin) \<subseteq> range \<B>"
+    by force
+then show "\<exists>s. \<forall>i. sb i = buildFlashinSB s i"
+using f1 by (metis (full_types) inFlashChan.elims sValues_def smap_well)
+qed 
   thus ?thesis
     by auto
 qed
