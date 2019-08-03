@@ -31,7 +31,7 @@ text \<open>Then one describes the types of each channel. Only Messages included
   transmitted\<close>
 fun cMsg :: "channel \<Rightarrow> M_pure set" where
 "cMsg cin = range \<N>" |
-"cMsg cout = range \<B>" |
+"cMsg cout = range \<N>" |
 "cMsg _ = {}"
 
 text\<open>Timing properties of each channel\<close>
