@@ -76,13 +76,15 @@ text\<open>Again, these properties are necessary for defining an empty stream bu
 
 
 section\<open>@{type channel} class definitions\label{chan}\<close>
-text\<open>In this section we restrict the Domain of a stream bundle trough the usage of classes. The main 
+text\<open>In this section we restrict the domain of a stream bundle trough the usage of classes. The main 
 Idea is to never construct a stream bundle which has channels with an empty @{const ctype} and 
 channels with non-empty @{const ctype}. With our interpretation of empty bundles, this case would 
 make no sense, because it would be equivalent to the bundle without channels with empty @{const ctype}s.
 Hence, we restrict the Domain of stream bundles to subsets of the @{type channel} type, where its 
 either possible that every channel transmits a message, or non of the channels can transmit any 
-message at all.\<close>
+message at all. We will then use these classes to define the union and subtraction of two domains.
+This is helpful for combining two stream bundles and hence, necessary for defining the input and 
+output domain of the general composition operator.\<close>
 
 subsection \<open>Preliminaries \<close>
 text\<open>For understandable assumptions in our classes we first define the channel set, that contains 
@@ -90,7 +92,8 @@ all channels with an empty @{const ctype}.\<close>
 definition cEmpty :: "channel set" where
 "cEmpty = {c. ctype c = {}}"
 text \<open>@{const cEmpty} contains all channels on which no message is allowed to be transmitted.\<close> 
-
+lemma cempty_exists: "cEmpty \<noteq> {}"
+  by(simp add: cEmpty_def ctypeempty_ex)
 
 subsection\<open>Class chan\<close>
 text\<open>The following class restricts its type to be injective to our @{type channel} type and to also 
@@ -111,9 +114,14 @@ the @{type channel} type. The first class assumption ensures our channel separat
 the injectivity. Furthermore, our abstraction function @{const Abs} is the inverse of @{const Rep}.\<close>
 
 subsubsection \<open>@{class chan} Functions\<close>
-text\<open>We will now define a function for types of @{class chan}. These represent our logical\<close>
+text\<open>We will now define a function for types of @{class chan}. It returns the Domain of the type.
+As a result of our class assumptions and of interpreting empty channels as non existing, our domain 
+is empty, if and only if the input type contains channel(s) from @{const cEmpty}. Then we have the 
+empty domain.\<close>
 definition chDom::"'cs::chan itself \<Rightarrow> channel set" where
 "chDom a = (range (Rep::'cs \<Rightarrow> channel)) - cEmpty"
+
+text\<open>The following abbreviation checks, if a type of @{class chan} is empty.\<close>
 
 abbreviation chIsEmpty ::"'cs::chan itself \<Rightarrow> bool" where
 "chIsEmpty cs \<equiv> chDom cs = {}"
@@ -122,9 +130,10 @@ lemma inchdom[simp]:"\<not>chIsEmpty TYPE('cs) \<Longrightarrow> Rep (c::'cs::ch
   apply(simp add: chDom_def)
   using chan_botsingle by blast
 
-text \<open>Types of @{class chan} can be interpreted as a subset of @{type channel}s, where on every
-channel either no message can be transmitted, or on every channel some message is allowed to be
-transmitted. Now we define classes for these two options:\<close>
+text \<open>As mentioned before, types of @{class chan} can be interpreted as a subset of @{type channel}s, 
+where on every channel either no message can be transmitted, or on every channel some message is 
+allowed to be transmitted. The core theories do not use these classes, but the additional 
+assumptions can be useful for the user. Now we define classes for these two options.\<close>
 
 subsection\<open>Class somechan\<close>
 class somechan = chan +
@@ -139,23 +148,25 @@ lemma somechandom:"chDom(TYPE('c::somechan)) = range(Rep::'c\<Rightarrow>channel
   by(simp add: chDom_def somechan_class.chan_notempty Diff_triv)
 
 end
-text\<open>Types of  @{class somechan} can transmit at least one message on every channel.\<close>
+text\<open>Types of  @{class somechan} can transmit at least one message on every channel. Hence, we know
+@{thm somechannotempty} and @{thm somechandom}.\<close>
+
 subsection\<open>Class emptychan\<close>
 class emptychan = chan +
   assumes chan_empty:
       "(range Rep) \<subseteq> cEmpty" 
 begin
 
-lemma %invisible emptychanempty[simp]:"chIsEmpty(TYPE('c::emptychan))"
+lemma emptychanempty[simp]:"chIsEmpty(TYPE('c::emptychan))"
   by (simp add: chDom_def emptychan_class.chan_empty)
 
-
 end
-text\<open>Types of @{class emptychan} can not transmit any message on any channel.\<close>
+text\<open>Types of @{class emptychan} can not transmit any message on any channel. Hence, the Domain is
+empty @{thm emptychanempty}.\<close>
 
 
 
-section %invisible\<open> rep abs chan lemmata \<close>
+section -section\<open> rep abs chan lemmata \<close>
 lemma repinrange[simp]:"Rep (c::'c::chan) = x \<Longrightarrow> x\<in> range(Rep::'c \<Rightarrow> channel)"
   by blast
 
@@ -186,23 +197,29 @@ lemma notcdom_empty[simp]:assumes"Rep (c::'c) \<notin>chDom TYPE('c::chan)"
 
 declare %invisible[[show_types]]
 declare %invisible[[show_consts]]
+default_sort %invisible chan
 
-section \<open>chan \<open>\<union>\<close> and \<open>-\<close> \<close>
+section \<open>Interconnecting Domain Types\<close>
+text\<open>There are two interesting interconnections between domains. Intuitively, the union operator 
+takes all channels from both domains and the minus operator only channels that are in the first, but
+not the second domain. But because we also have to check for channels from @{const cEmpty}, its not 
+that trivial.\<close>
 
-typedef ('c1::chan, 'c2::chan) union (infixr "\<union>" 20) = "if chIsEmpty TYPE ('c1) \<and>  chIsEmpty TYPE ('c2) then cEmpty
+subsection\<open>Type union operator\<close>
+text\<open>The union of two domains should contain every channel of each domain. So the union of two empty
+domains should also be empty. But because the type itself can never be empty, we again have to use
+channels in @{const cEmpty} to define the union.\<close> 
+typedef ('c1,'c2) union (infixr "\<union>" 20) = "if chIsEmpty TYPE ('c1) \<and>  chIsEmpty TYPE ('c2) then cEmpty
                                                         else chDom TYPE('c1) \<union> chDom TYPE('c2)" 
    apply(auto)
   using chDom_def by blast
-
-(* Axiom :/ *)
-lemma cempty_exists: "cEmpty \<noteq> {}"
-  by(simp add: cEmpty_def ctypeempty_ex)
-
-
-typedef ('c1::chan, 'c2::chan) minus (infixr "-" 20) = "(if chDom TYPE('c1) \<subseteq> chDom TYPE('c2) then cEmpty
-                                                         else chDom TYPE('c1) - chDom TYPE('c2))" 
-apply(cases "range Rep \<subseteq> range Rep", auto)
-  using cempty_exists by blast+
+text\<open>Because we interpret channels in @{const cEmpty} as no real channels, we can define the union 
+of two empty domains as the channel set @{const cEmpty}. The next step is to instantiate the union of
+two members of class @{class chan} as a member of class @{class chan}. This is rather easy, because 
+either the union results in @{const cEmpty}, so there are only channels where no message can be 
+transmitted, or it results in the union of the domains without channels from @{const cEmpty}. Hence,
+we can fulfill the class assumptions with the from "typdef" generated representation function 
+@{const Rep_union}.\<close>
 
 instantiation union :: (chan, chan) chan 
 begin
@@ -214,7 +231,34 @@ instance
   by (simp add: Channel.Rep_union_def Rep_union_inject inj_on_def)
 end
 
-instantiation minus :: (chan, chan) chan 
+lemma union_range_empty:"chIsEmpty TYPE ('cs1) \<and>  chIsEmpty TYPE ('cs2) \<Longrightarrow> 
+                   range (Rep_union::'cs1 \<union> 'cs2 \<Rightarrow> channel) = cEmpty"
+  by (metis (mono_tags, lifting) type_definition.Rep_range type_definition_union)
+
+lemma union_range_union:"\<not>(chIsEmpty TYPE ('cs1) \<and>  chIsEmpty TYPE ('cs2)) \<Longrightarrow> 
+                   range (Rep_union::'cs1 \<union> 'cs2 \<Rightarrow> channel) = chDom TYPE ('cs1) \<union> chDom TYPE('cs2)"
+  by (smt type_definition.Rep_range type_definition_union)
+
+text\<open>After the instantiation, class definition like the @{const chDom} function can be used.
+To verify the correctness of our definition we obtain the domain of the union type and proof, that
+it is indeed the union of the two sub domains.\<close>
+theorem chdom_union[simp]: "chDom (TYPE('cs1 \<union> 'cs2)) = chDom (TYPE ('cs1)) \<union> chDom (TYPE('cs2))"
+  apply(subst chDom_def)
+  apply(simp_all add: Rep_union_def)
+  using chDom_def union_range_empty union_range_union by auto
+
+subsection\<open>Type minus operator\<close>
+text\<open>Subtracting one domain from another results in the empty domain. But analogous to the union, 
+our resulting type always contains channels. Subtracting a set from one of its subsets would result 
+in an empty type. Hence, our result for this case is again @{const cEmpty}.\<close>
+typedef ('c1,'c2) minus (infixr "-" 20) = "(if chDom TYPE('c1) \<subseteq> chDom TYPE('c2) then cEmpty
+                                                         else chDom TYPE('c1) - chDom TYPE('c2))" 
+apply(cases "range Rep \<subseteq> range Rep", auto)
+  using cempty_exists by blast+
+
+text\<open>Instantiating the subtraction result of two @{class chan} types is also in the class. The proof
+is, like above, straight forward.\<close>
+instantiation minus :: (chan, chan) chan
 begin
 definition "Rep == Rep_minus"
 instance
@@ -225,8 +269,6 @@ instance
 end
 
 
-default_sort chan
-
 lemma minus_range_empty:"chDom TYPE('cs1) \<subseteq> chDom TYPE('cs2) \<Longrightarrow> 
                    range (Rep_minus::'cs1 - 'cs2 \<Rightarrow> channel) = cEmpty"
   by (metis (mono_tags, lifting) type_definition.Rep_range type_definition_minus)
@@ -235,26 +277,16 @@ lemma minus_range_minus:"\<not>(chDom TYPE('cs1) \<subseteq> chDom TYPE('cs2)) \
                    range (Rep_minus::'cs1 - 'cs2 \<Rightarrow> channel) = chDom TYPE('cs1) - chDom TYPE('cs2)"
   by (metis (mono_tags, lifting) type_definition.Rep_range type_definition_minus)
 
+text\<open>For verifying the minus operator we again take a look at the resulting domain in the following 
+theorem.\<close>
 theorem chdom_minus[simp]: "chDom (TYPE('cs1 - 'cs2)) = chDom (TYPE ('cs1)) - chDom (TYPE('cs2))"
   apply(subst chDom_def)
   apply(simp_all add: Rep_minus_def)
   using Diff_Int_distrib2 minus_range_empty minus_range_minus by auto
  
-
-lemma union_range_empty:"chIsEmpty TYPE ('cs1) \<and>  chIsEmpty TYPE ('cs2) \<Longrightarrow> 
-                   range (Rep_union::'cs1 \<union> 'cs2 \<Rightarrow> channel) = cEmpty"
-  by (metis (mono_tags, lifting) type_definition.Rep_range type_definition_union)
-
-lemma union_range_union:"\<not>(chIsEmpty TYPE ('cs1) \<and>  chIsEmpty TYPE ('cs2)) \<Longrightarrow> 
-                   range (Rep_union::'cs1 \<union> 'cs2 \<Rightarrow> channel) = chDom TYPE ('cs1) \<union> chDom TYPE('cs2)"
-  by (smt type_definition.Rep_range type_definition_union)
-
-theorem chdom_union[simp]: "chDom (TYPE('cs1 \<union> 'cs2)) = chDom (TYPE ('cs1)) \<union> chDom (TYPE('cs2))"
-  apply(subst chDom_def)
-  apply(simp_all add: Rep_union_def)
-  using chDom_def union_range_empty union_range_union by auto
-
-theorem "chDom (TYPE('cs1 - 'cs2)) \<inter> chDom (TYPE ('cs2)) = {}"
+text\<open>If we subtract domain \<open>A\<close> from domain \<open>B\<close> the resulting domain should contain no channels from
+\<open>A\<close>.We also verify this correctness property.\<close>
+theorem chdom_minus_substracts[simp]:"chDom (TYPE('cs1 - 'cs2)) \<inter> chDom (TYPE ('cs2)) = {}"
   by auto
 
 (*<*)
