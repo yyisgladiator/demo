@@ -8,6 +8,24 @@ begin
 
 datatype M = Untimed "M_pure" | Timed "M_pure list" | Tsyn "M_pure option"  (* option = tsyn *)
 
+lemma inj_tsyn[simp]: "inj Tsyn"
+  by (simp add: inj_def)
+
+lemma inj_tsyncons[simp]:"inj f \<Longrightarrow> inj (Tsyn o (map_option) f)"
+  by (meson comp_inj_on inj_eq inj_onI inj_tsyn option.inj_map)
+
+lemma inj_timed[simp]: "inj Timed"
+  by (simp add: inj_def)
+
+lemma inj_timedcons[simp]:"inj f \<Longrightarrow> inj (Timed o map f)"
+  by(simp add: inj_compose)
+
+lemma inj_untimed[simp]: "inj Untimed"
+  by (simp add: inj_def)
+
+lemma inj_untimedcons[simp]:"inj f \<Longrightarrow> inj (Untimed o f)"
+  by(simp add: inj_compose)
+
 instance M::countable
   by(countable_datatype)
 

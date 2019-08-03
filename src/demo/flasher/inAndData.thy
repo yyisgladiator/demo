@@ -12,7 +12,7 @@ begin
 definition "Rep = Rep_inAnd"
 instance
   apply(standard)
-     apply(auto simp add: Rep_inAnd_def cEmpty_def)
+  apply(auto simp add: Rep_inAnd_def cEmpty_def)
   apply(auto simp add: ctype_empty_gdw)
   using ctype_empty_gdw
   apply (metis Rep_inAnd cMsg.simps ex_in_conv insertE insert_iff)
@@ -48,7 +48,7 @@ fun inAndChan::"('nat::type \<Rightarrow> 'a::type) \<Rightarrow> ('bool::type \
 (* cin1 = gezeitet (mehrere Elemente pro Zeitscheibe)
    cin2 = zeitsynchron
 *)
-abbreviation "buildAndinSBE \<equiv> inAndChan (Timed o map \<B>) (Tsyn o (map_option \<B>))" 
+abbreviation "buildAndinSBE \<equiv> inAndChan (Tsyn o (map_option) \<B>) (Tsyn o (map_option \<B>))" 
 
 (* 
   Konstruktoren:
@@ -65,28 +65,16 @@ abbreviation "buildAndinSBE \<equiv> inAndChan (Timed o map \<B>) (Tsyn o (map_o
 
 lemma buildandin_ctype: "buildAndinSBE a c \<in> ctype (Rep c)"
   apply(cases c; cases a;simp)
-  using ctype_def apply fastforce
-  by(auto simp add: ctype_def)  (* TODO hilfslemma, damit das einfacher geht *)
-
-lemma inj_h1:"inj (Timed o map \<B>)" 
-  by (auto simp add: inj_def)
-
-lemma inj_h2: "inj (Tsyn o (map_option \<B>))"
-  apply(rule inj_compose)
-   apply (simp add: inj_def)
-  apply(rule option.inj_map)
-  by (simp add: inj_def)
+  by(simp_all add: ctype_def,auto)
 
 lemma buildandin_inj: "inj buildAndinSBE"
   apply (auto simp add: inj_def)
-  by (metis inAndChan.simps inj_def inj_h1 inj_h2)+
+  by (metis inAndChan.simps inj_def inj_B inj_tsyncons)+
 
 lemma buildandin_range: "range (\<lambda>a. buildAndinSBE a c) = ctype (Rep c)"
   apply(cases c)
   apply(auto simp add: image_iff ctype_def)
-  apply (meson ex_map_conv rangeE subset_iff)
-  by (metis option.simps(9))
-  
+  by (metis option.simps(9))+
 
 lemma buildandin_surj: assumes "sbElem_well (Some sbe)"
   shows "sbe \<in> range buildAndinSBE"
@@ -96,12 +84,24 @@ proof -
   hence "\<And>c. sbe c \<in> range (\<lambda>a. buildAndinSBE a c)"
     by (simp add: buildandin_range)
   hence "\<exists>prod. sbe = buildAndinSBE prod"
-    apply(subst fun_eq_iff,auto simp add: ctype_def)
-    sorry
+    apply(simp add: fun_eq_iff f_inv_into_f image_iff) (*shorter surj proof*)
+  proof -
+    assume a1: "\<And>c. \<exists>a b. sbe c = buildAndinSBE (a, b) c"
+    { fix ii :: "bool option \<Rightarrow> bool option \<Rightarrow> inAnd"
+      obtain zz :: "inAnd \<Rightarrow> bool option" and zza :: "inAnd \<Rightarrow> bool option" where
+        ff1: "\<forall>i. sbe i = buildAndinSBE (zz i, zza i) i"
+        using a1 by moura
+      then have "(\<exists>z. ii (zz Andin1) z \<noteq> Andin2) \<or> (\<exists>z za. sbe (ii z za) = buildAndinSBE (z, za) (ii z za))"
+        by (metis (no_types) inAndChan.simps(2))
+      then have "\<exists>z za. sbe (ii z za) = buildAndinSBE (z, za) (ii z za)"
+        using ff1 by (metis (full_types) inAnd.exhaust inAndChan.simps(1)) }
+    then show "\<exists>z za. \<forall>i. sbe i = buildAndinSBE (z, za) i"
+      by metis
+  qed
   thus ?thesis
     by auto
 qed
 
-abbreviation "buildAndinSB \<equiv> inAndChan (Rep_cfun (smap \<B>)) (Rep_cfun (smap \<B>))" 
+abbreviation "buildAndinSB \<equiv> inAndChan (Rep_cfun (smap (Tsyn o (map_option) \<B>))) (Rep_cfun (smap (Tsyn o (map_option) \<B>)))" 
 
 end

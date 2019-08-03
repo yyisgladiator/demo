@@ -1,18 +1,10 @@
 theory Datatypes
 
-imports HOLCF
+imports inc.Prelude
 
 begin
 
 default_sort type
-
-
-
-(* Begin Framework: *)
-  (* TODO: woanders hin kopieren, eg Prelude *)
-datatype timeType = TUntimed | TTimed | TTsyn
-(* End Framework *)
-
 
 
 datatype channel = c1 | c2 | c3 | cin1 | cin2 | cout
@@ -29,6 +21,12 @@ instance M_pure::countable
   apply(countable_datatype)
   done
 
+lemma inj_B[simp]:"inj \<B>"
+  by (simp add: inj_def)
+
+lemma inj_Bopt[simp]:"inj (map_option \<B>)"
+  by (simp add: option.inj_map)
+
 text \<open>Then one describes the types of each channel. Only Messages included are allowed to be
   transmitted\<close>
 fun cMsg :: "channel \<Rightarrow> M_pure set" where
@@ -39,8 +37,10 @@ fun cMsg :: "channel \<Rightarrow> M_pure set" where
 
 text\<open>Timing properties of each channel\<close>
 fun cTime :: "channel \<Rightarrow> timeType" where
-"cTime cin1 = TTimed" |
-"cTime cin2 = TTsyn"
+"cTime cin1 = TTsyn" |
+"cTime cin2 = TTsyn" |
+"cTime cout = TTsyn" |
+"cTime _ = undefined"
 
 lemma cmsgempty_ex:"\<exists>c. cMsg c = {}"
   using cMsg.simps by blast
