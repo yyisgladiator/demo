@@ -4,6 +4,7 @@ theory Channel
 imports HOLCF user.Datatypes
 begin
 (*>*)
+
 section \<open>Global message type\<close>
 
 text\<open>Depending on the time model, we allow to transmit slightly different versions of @{type M_pure} 
@@ -50,7 +51,6 @@ definition ctype::"channel \<Rightarrow> M set" where
   case (cTime c) of TUntimed   \<Rightarrow> Untimed ` (cMsg c) | 
                    TTimed     \<Rightarrow>  Timed ` {ls. set ls \<subseteq> (cMsg c)} |
                    TTsyn      \<Rightarrow> Tsyn ` (insert None (Some ` cMsg c))"
-
 
 lemma ctype_empty_gdw: "ctype c = {} \<longleftrightarrow> cMsg c = {}"
   apply(cases "(cTime c)")

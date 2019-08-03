@@ -21,7 +21,6 @@ datatype channel = DummyChannel nat
 hide_const DummyChannel
 text \<open>To ensure that the dummy channel type is never used for proving anything not holding 
 over every channel type, the constructor is immediately hidden.\<close>
-
 section \<open>Pure Message Datatype\<close>
 
 
@@ -36,7 +35,7 @@ different message type, the constructor is also immediately hidden.\<close>
 instance M_pure :: countable
   apply(intro_classes)
   by(countable_datatype)
-text\<open>Since we want use the stream type \ref{sec:stream} for defining stream bundles, the message 
+text\<open>Since we want use the stream type \ref{sec:stream} for defining stream bundles, the message
 datatype has to be countable. In addition, each channel can be restricted to allow only a subset of 
 messages from @{type M_pure} on its stream. Therefore, each channel can be mapped to a set of 
 messages from datatype @{type M_pure}.Such a mapping is described by the cMsg function. Only 
@@ -44,7 +43,6 @@ messages included in the cMsg are allowed to be transmitted on the respective ch
 
 definition cMsg :: "channel \<Rightarrow> M_pure set" where 
 "cMsg = (\<lambda>c. if c= undefined then {} else undefined)"
-
 text\<open>Here we almost use an undefined cMsg mapping. We only assume, is that there always
 exists at least one channel, on which no message can flow.\<close>
 
@@ -66,6 +64,7 @@ definition cTime :: "channel \<Rightarrow> timeType" where
 
 hide_fact cMsg_def
 hide_fact cTime_def
+
 (*<*)
 end
 (*>*)
