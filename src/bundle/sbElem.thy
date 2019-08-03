@@ -87,8 +87,7 @@ definition sbegetch::"'e \<Rightarrow> 'c\<^sup>\<surd> \<Rightarrow> M"where (*
 lemma sbtypenotempty_fex[simp]:"\<not>(chIsEmpty TYPE ('cs)) \<Longrightarrow> \<exists>f. Rep_sbElem (sbe::'cs\<^sup>\<surd>) = (Some f)"
   apply(rule_tac x="(\<lambda>(c::'c). (THE m. m= sbegetch c sbe))" in exI)
   apply(simp add: sbegetch_def)
-  apply(auto simp add: chDom_def)
-  by (metis cempty_rule option.exhaust_sel sbElem_well.simps(1) sbelemwell2fwell)
+  by (metis option.collapse sbElem_well.simps(1) sbelemwell2fwell)
 
 text\<open>This function Converts the Domain of an sbElem. This works if the Domain it converts to, is
       smaller or equal\<close>

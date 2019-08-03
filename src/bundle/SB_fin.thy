@@ -392,7 +392,9 @@ lemma set_inj: "inj setter"
 
 lemma set_surj: "surj setter"
   unfolding setter_def
-  apply(cases "\<not>(chIsEmpty(TYPE('cs)))",auto simp add: chDom_def)
+  apply(cases "\<not>(chIsEmpty(TYPE('cs)))",auto)
+  apply(simp add: chDom_def)
+  apply auto
 proof-
   fix xb::"'cs\<^sup>\<surd>" and xa::'cs
   assume chnEmpty:"Rep xa \<notin> cEmpty"

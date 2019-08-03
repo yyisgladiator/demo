@@ -31,7 +31,7 @@ lemma spfcomp_eql[simp]: "genComp\<cdot>f\<cdot>g = f"
   by simp+
 
 lemma sbgetch_empty[simp]: "Rep c\<in>cEmpty \<Longrightarrow> sb \<^enum>\<^sub>\<star> c = \<epsilon>"
-  by(auto simp add: sbGetCh.rep_eq chDom_def)
+  by(auto simp add: sbGetCh.rep_eq)
 
 lemma ubunion_commu:
   fixes sb1 ::"'cs1\<^sup>\<Omega>"
@@ -41,7 +41,7 @@ lemma ubunion_commu:
   apply(rule sb_eqI)
   apply(rename_tac c)
   apply(case_tac "Rep c \<in> chDom (TYPE ('cs1))"; case_tac "Rep c \<in> chDom (TYPE ('cs2))"; case_tac "Rep c \<in> chDom (TYPE ('cs3))")
-  using assms  by(auto simp add: chDom_def sbGetCh.rep_eq sbunion_rep_eq)
+  using assms  by(auto simp add: sbGetCh.rep_eq sbunion_rep_eq)
 
 lemma ubunion_fst[simp]:
   fixes sb1 ::"'cs1\<^sup>\<Omega>"
@@ -52,7 +52,7 @@ lemma ubunion_fst[simp]:
   apply(rename_tac c)
   apply(case_tac "Rep c \<in> chDom (TYPE ('cs1))"; case_tac "Rep c \<in> chDom (TYPE ('cs2))"; case_tac "Rep c \<in> chDom (TYPE ('cs3))")
   apply(case_tac "Rep c \<in> chDom (TYPE ('cs1))"; case_tac "Rep c \<in> chDom (TYPE ('cs2))"; case_tac "Rep c \<in> chDom (TYPE ('cs3))")
-  using assms  by(auto simp add: chDom_def sbGetCh.rep_eq sbunion_rep_eq)
+  using assms  by(auto simp add: sbGetCh.rep_eq sbunion_rep_eq)
 
 
 (* Solange output disjunkt *)
@@ -183,9 +183,7 @@ lemma spfcomp2gencomp  [simp]:
 lemma sbgetch_empty2[simp]: fixes sb::"'cs\<^sup>\<Omega>"
     assumes "Rep c \<notin> chDom TYPE('cs)"
     shows "sb \<^enum>\<^sub>\<star> c = \<epsilon>"
-  apply(simp add: sbgetch_insert assms chDom_def)
-  by (metis (mono_tags, lifting) Diff_eq_empty_iff Diff_triv Rep_sb_strict app_strict assms chDom_def 
-      chan_botsingle sbtypeepmpty_sbbot)
+  by(simp add: sbgetch_insert assms)
 
 lemma spfcomp_surj_h: 
   fixes  f :: "(('a \<union> 'b) - ('c \<union> 'd))\<^sup>\<Omega> \<rightarrow> ('c \<union> 'd)\<^sup>\<Omega>"

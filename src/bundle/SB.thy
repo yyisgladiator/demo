@@ -115,8 +115,8 @@ lemma sbhdelemchain[simp]:"sbHdElemWell x \<Longrightarrow>  x \<sqsubseteq> y \
   by (metis below_antisym below_sb_def fun_belowD minimal)
 
 lemma sbgetch_ctypewell[simp]:"sValues\<cdot>(sb \<^enum>\<^sub>\<star> c) \<subseteq> ctype (Rep c)"
-  apply(simp add: sbgetch_insert chDom_def,auto)
-  by (meson in_mono sb_well_def sbwell2fwell)
+  apply(simp add: sbgetch_insert)
+  by (metis DiffD1 chDom_def f_inv_into_f sb_well_def sbwell2fwell)
 
 lemma sbmap_well:assumes"\<And>s. sValues\<cdot>(f s) \<subseteq> sValues\<cdot>s" shows"sb_well (\<lambda>c. f (b \<^enum>\<^sub>\<star> c))"
   apply(rule sbwellI)
@@ -225,7 +225,7 @@ lemma sblenleq: assumes "\<not> chIsEmpty TYPE('a)" and
   apply(subgoal_tac "\<And>c::'a. Rep c \<notin> cEmpty") 
   apply auto
   apply (metis (mono_tags, lifting) Least_le assms(2) dual_order.trans)
-  using assms(1) by(simp add: chDom_def)
+  using assms(1) by simp
 
 lemma sblengeq: assumes "\<And>c::'c. k\<le> #(sb\<^enum>c)"
   shows "k \<le> sbLen sb" 
@@ -668,8 +668,8 @@ subsubsection \<open>sbUnion lemmas\<close>
 lemma sbunion_getch[simp]:fixes c::"'a"
       assumes"Rep c \<in> chDom TYPE('c)"
       shows  "(sbUnion::'a\<^sup>\<Omega>\<rightarrow> 'b\<^sup>\<Omega> \<rightarrow> 'c\<^sup>\<Omega>)\<cdot>cb\<cdot>db \<^enum>\<^sub>\<star> c = cb \<^enum> c"
-  apply(simp add: sbgetch_insert sbunion_rep_eq chDom_def)
-  using assms chDom_def by auto
+  apply(simp add: sbgetch_insert sbunion_rep_eq)
+  by (metis assms Diff_iff chDom_def chan_eq range_eqI sbgetch_insert sbgetch_insert2)
 
 lemma sbunion_eq [simp]: "sb1 \<uplus>\<^sub>\<star> sb2 = sb1"
   apply(rule sb_eqI)

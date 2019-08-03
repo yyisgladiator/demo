@@ -175,24 +175,32 @@ lemma cnotempty_cdom[simp]:assumes"\<not>chIsEmpty(TYPE('c::chan))"
   shows"Rep (c::'c) \<in> chDom(TYPE('c))"
   using assms by (simp add: chDom_def)
 
+lemma cdom_notempty[simp]:assumes"c \<in>chDom TYPE('c::chan)"
+  shows" c \<notin> cEmpty"
+  using assms by (simp add: chDom_def)
+
+lemma notcdom_empty[simp]:assumes"Rep (c::'c) \<notin>chDom TYPE('c::chan)"
+  shows" Rep c \<in> cEmpty"
+  using assms by (simp add: chDom_def)
+
 
 declare %invisible[[show_types]]
 declare %invisible[[show_consts]]
 
 section \<open>chan \<open>\<union>\<close> and \<open>-\<close> \<close>
 
-typedef ('c1::chan, 'c2::chan) union (infixr "\<union>" 20) = "if range (Rep::'c1\<Rightarrow>channel)\<subseteq>cEmpty \<and>  range (Rep::'c2\<Rightarrow>channel)\<subseteq>cEmpty then cEmpty
-                                                        else (range (Rep::'c1\<Rightarrow>channel) \<union> range (Rep::'c2\<Rightarrow>channel)) - cEmpty" 
+typedef ('c1::chan, 'c2::chan) union (infixr "\<union>" 20) = "if chIsEmpty TYPE ('c1) \<and>  chIsEmpty TYPE ('c2) then cEmpty
+                                                        else chDom TYPE('c1) \<union> chDom TYPE('c2)" 
    apply(auto)
-  done
+  using chDom_def by blast
 
 (* Axiom :/ *)
 lemma cempty_exists: "cEmpty \<noteq> {}"
   by(simp add: cEmpty_def ctypeempty_ex)
 
 
-typedef ('c1::chan, 'c2::chan) minus (infixr "-" 20) = "(if range (Rep::'c1\<Rightarrow>channel) \<subseteq> range (Rep::'c2\<Rightarrow>channel) then cEmpty
-                                                         else range (Rep::'c1\<Rightarrow>channel) - range (Rep::'c2\<Rightarrow>channel))" 
+typedef ('c1::chan, 'c2::chan) minus (infixr "-" 20) = "(if chDom TYPE('c1) \<subseteq> chDom TYPE('c2) then cEmpty
+                                                         else chDom TYPE('c1) - chDom TYPE('c2))" 
 apply(cases "range Rep \<subseteq> range Rep", auto)
   using cempty_exists by blast+
 
@@ -202,7 +210,7 @@ definition "Rep == Rep_union"
 instance
   apply intro_classes
   apply auto
-  apply (metis (full_types) Diff_iff Rep_union Rep_union_def)
+  apply (metis Rep_union Rep_union_def Un_iff cdom_notempty)
   by (simp add: Channel.Rep_union_def Rep_union_inject inj_on_def)
 end
 
@@ -211,57 +219,40 @@ begin
 definition "Rep == Rep_minus"
 instance
   apply intro_classes
-   apply auto
-  apply (metis (mono_tags, lifting) Diff_eq_empty_iff Diff_iff IntI Rep_minus Rep_minus_def chan_botsingle)
+   apply auto 
+  apply (metis Diff_iff Rep_minus Rep_minus_def cdom_notempty)
   by (smt Rep_minus_def Rep_minus_inject injI)
 end
 
 
 default_sort chan
-theorem chdom_minus[simp]: "chDom (TYPE('cs1 - 'cs2)) = chDom (TYPE ('cs1)) - chDom (TYPE('cs2))"
-  apply(simp add: chDom_def Rep_minus_def)
-  apply auto
-  apply (meson Diff_iff Rep_minus)
-  apply (metis DiffE Rep_minus repinrange)
-proof -
-  fix xa :: 'cs1
-  assume a1: "Rep xa \<notin> range (\<lambda>x. Rep (x::'cs2))"
-  then have f2: "\<not> range (Rep::'cs1 \<Rightarrow> channel) \<subseteq> range (Rep::'cs2 \<Rightarrow> channel)"
-    by (metis repinrange subsetD)
-  have "range (Rep_minus::'cs1 - 'cs2 \<Rightarrow> channel) = (if range (Rep::'cs1 \<Rightarrow> channel) \<subseteq> range (Rep::'cs2 \<Rightarrow> channel) then cEmpty else range (Rep::'cs1 \<Rightarrow> channel) - range (Rep::'cs2 \<Rightarrow> channel))"
-    using type_definition.Rep_range type_definition_minus by blast
-  then show "Rep xa \<in> range (\<lambda>m. Rep_minus (m::'cs1 - 'cs2))"
-    using f2 a1 by (metis (full_types) DiffI repinrange)
-qed
 
+lemma minus_range_empty:"chDom TYPE('cs1) \<subseteq> chDom TYPE('cs2) \<Longrightarrow> 
+                   range (Rep_minus::'cs1 - 'cs2 \<Rightarrow> channel) = cEmpty"
+  by (metis (mono_tags, lifting) type_definition.Rep_range type_definition_minus)
+
+lemma minus_range_minus:"\<not>(chDom TYPE('cs1) \<subseteq> chDom TYPE('cs2)) \<Longrightarrow> 
+                   range (Rep_minus::'cs1 - 'cs2 \<Rightarrow> channel) = chDom TYPE('cs1) - chDom TYPE('cs2)"
+  by (metis (mono_tags, lifting) type_definition.Rep_range type_definition_minus)
+
+theorem chdom_minus[simp]: "chDom (TYPE('cs1 - 'cs2)) = chDom (TYPE ('cs1)) - chDom (TYPE('cs2))"
+  apply(subst chDom_def)
+  apply(simp_all add: Rep_minus_def)
+  using Diff_Int_distrib2 minus_range_empty minus_range_minus by auto
+ 
+
+lemma union_range_empty:"chIsEmpty TYPE ('cs1) \<and>  chIsEmpty TYPE ('cs2) \<Longrightarrow> 
+                   range (Rep_union::'cs1 \<union> 'cs2 \<Rightarrow> channel) = cEmpty"
+  by (metis (mono_tags, lifting) type_definition.Rep_range type_definition_union)
+
+lemma union_range_union:"\<not>(chIsEmpty TYPE ('cs1) \<and>  chIsEmpty TYPE ('cs2)) \<Longrightarrow> 
+                   range (Rep_union::'cs1 \<union> 'cs2 \<Rightarrow> channel) = chDom TYPE ('cs1) \<union> chDom TYPE('cs2)"
+  by (smt type_definition.Rep_range type_definition_union)
 
 theorem chdom_union[simp]: "chDom (TYPE('cs1 \<union> 'cs2)) = chDom (TYPE ('cs1)) \<union> chDom (TYPE('cs2))"
-  apply(simp add: chDom_def Rep_union_def)
-  apply auto
-  apply (meson DiffD1 Rep_union UnE)
-proof -
-  fix xa :: 'cs1
-  assume "Rep xa \<notin> cEmpty"
-then have f1: "\<not> chIsEmpty (TYPE('cs1)::'cs1 itself)"
-  by (metis cempty_rule)
-  have "type_definition (Rep_union::'cs1 \<union> 'cs2 \<Rightarrow> channel) Abs_union (if range (Rep::'cs1 \<Rightarrow> channel) \<subseteq> cEmpty \<and> range (Rep::'cs2 \<Rightarrow> channel) \<subseteq> cEmpty then cEmpty else range (Rep::'cs1 \<Rightarrow> channel) \<union> range (Rep::'cs2 \<Rightarrow> channel) - cEmpty) = type_definition (Rep_union::'cs1 \<union> 'cs2 \<Rightarrow> channel) Abs_union (if \<not> range (Rep::'cs1 \<Rightarrow> channel) \<subseteq> cEmpty \<or> \<not> range (Rep::'cs2 \<Rightarrow> channel) \<subseteq> cEmpty then range (Rep::'cs1 \<Rightarrow> channel) \<union> range (Rep::'cs2 \<Rightarrow> channel) - cEmpty else cEmpty)"
-by presburger
-  then have "type_definition (Rep_union::'cs1 \<union> 'cs2 \<Rightarrow> channel) Abs_union (if \<not> range (Rep::'cs1 \<Rightarrow> channel) \<subseteq> cEmpty \<or> \<not> range (Rep::'cs2 \<Rightarrow> channel) \<subseteq> cEmpty then range (Rep::'cs1 \<Rightarrow> channel) \<union> range (Rep::'cs2 \<Rightarrow> channel) - cEmpty else cEmpty)"
-    by (meson type_definition_union)
-  then show "Rep xa \<in> range (\<lambda>u. Rep_union (u::'cs1 \<union> 'cs2))"
-using f1 by (simp add: chDom_def type_definition.Rep_range)
-next
-  fix xa :: 'cs2
-  assume "Rep xa \<notin> cEmpty"
-then have f1: "\<not> chIsEmpty (TYPE('cs2)::'cs2 itself)"
-  by (metis cempty_rule)
-  have "type_definition (Rep_union::'cs1 \<union> 'cs2 \<Rightarrow> channel) Abs_union (if range (Rep::'cs1 \<Rightarrow> channel) \<subseteq> cEmpty \<and> range (Rep::'cs2 \<Rightarrow> channel) \<subseteq> cEmpty then cEmpty else range (Rep::'cs1 \<Rightarrow> channel) \<union> range (Rep::'cs2 \<Rightarrow> channel) - cEmpty) = type_definition (Rep_union::'cs1 \<union> 'cs2 \<Rightarrow> channel) Abs_union (if \<not> range (Rep::'cs1 \<Rightarrow> channel) \<subseteq> cEmpty \<or> \<not> range (Rep::'cs2 \<Rightarrow> channel) \<subseteq> cEmpty then range (Rep::'cs1 \<Rightarrow> channel) \<union> range (Rep::'cs2 \<Rightarrow> channel) - cEmpty else cEmpty)"
-by presburger
-  then have "type_definition (Rep_union::'cs1 \<union> 'cs2 \<Rightarrow> channel) Abs_union (if \<not> range (Rep::'cs1 \<Rightarrow> channel) \<subseteq> cEmpty \<or> \<not> range (Rep::'cs2 \<Rightarrow> channel) \<subseteq> cEmpty then range (Rep::'cs1 \<Rightarrow> channel) \<union> range (Rep::'cs2 \<Rightarrow> channel) - cEmpty else cEmpty)"
-    by (meson type_definition_union)
-  then show "Rep xa \<in> range (\<lambda>u. Rep_union (u::'cs1 \<union> 'cs2))"
-    using f1 by (simp add: chDom_def type_definition.Rep_range)
-qed
+  apply(subst chDom_def)
+  apply(simp_all add: Rep_union_def)
+  using chDom_def union_range_empty union_range_union by auto
 
 theorem "chDom (TYPE('cs1 - 'cs2)) \<inter> chDom (TYPE ('cs2)) = {}"
   by auto
