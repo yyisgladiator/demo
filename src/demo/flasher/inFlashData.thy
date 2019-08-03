@@ -13,8 +13,8 @@ definition "Rep = Rep_inFlash"
 instance
   apply(standard)
   apply(auto simp add: Rep_inFlash_def cEmpty_def)
-  apply(auto simp add: ctype_empty_gdw)
-  using ctype_empty_gdw
+  apply(auto simp add: ctype_empty_iff)
+  using ctype_empty_iff
   apply (metis Rep_inFlash cMsg.simps ex_in_conv insertE insert_iff)
   apply (meson Rep_inFlash_inject injI) using cMsg.elims Rep_inFlash apply simp
   using type_definition.Abs_image type_definition_inFlash typedef_finite_UNIV by fastforce

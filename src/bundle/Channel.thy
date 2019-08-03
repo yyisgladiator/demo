@@ -10,7 +10,7 @@ section \<open>Global message type\<close>
 text\<open>Depending on the time model, we allow to transmit slightly different versions of @{type M_pure} 
 messages. In every time slot of the synchronous time model, every channel transmits at most one 
 message. But in every time slot of the general timed model, it is possible to transmit an arbitrary 
-high, but finite number of messages \ref{sec:focus}. To allow the usage of both models and also the untimed model, 
+high, but finite number of messages \cref{sec:focus}. To allow the usage of both models and also the untimed model, 
 we introduce the M datatype:\<close>
 datatype M = Untimed "M_pure" | Timed "M_pure list" | Tsyn "M_pure option"  (* option = tsyn *)
 
@@ -18,11 +18,13 @@ text\<open>We interpret the messages in a time slot of a time model as:
   \<^item> a message, for the untimed model and there is no time slot
   \<^item> either Some message or None message at all, for the synchronous time model
   \<^item> a finite list of messages, for the timed model
+
+
 In this interpretation a untimed stream can be seen as a special case of a synchronous timed stream
 (it contains a message in every time slot) and a synchronous timed stream is a special case of a 
 timed stream (it contains at most one element in each list). Now we defined, how a transmitted 
 message in a time slot can look like, respectively to its time model. For this we define a mapping
-from channel to a set of elements from M. Obviously, we have to restrict the channels to their time
+from channels to sets of elements from M. Obviously, we have to restrict the channels to their time
 models, else there could be timed and untimed messages on the same channel.\<close>
 
 lemma inj_tsyn[simp]: "inj Tsyn"
@@ -51,15 +53,26 @@ definition ctype::"channel \<Rightarrow> M set" where
   case (cTime c) of TUntimed   \<Rightarrow> Untimed ` (cMsg c) | 
                    TTimed     \<Rightarrow>  Timed ` {ls. set ls \<subseteq> (cMsg c)} |
                    TTsyn      \<Rightarrow> Tsyn ` (insert None (Some ` cMsg c))"
+text\<open>This is exactly what @{const ctype} does. It then checks the timing of a channel and then 
+returns the respectively correct set of timeslot messages, where the pure messages depend on @{const cMsg}.
+  \<^item> Untimed channels can send any message from @{const cMsg}
+  \<^item> Timesynchronous channels can send \<open>Some\<close> message from @{const cMsg} or the \<open>None\<close> message, 
+interpreted as no Message
+  \<^item> Timed channels can send finite lists, where every list element is in @{const cMsg}.
 
-lemma ctype_empty_gdw: "ctype c = {} \<longleftrightarrow> cMsg c = {}"
+
+Because we interpret channels without any allowed transmitted messages as no channel at all, we 
+define their @{const ctype} as empty. Hence the following theorems hold.
+\<close>
+theorem ctype_empty_iff: "ctype c = {} \<longleftrightarrow> cMsg c = {}"
   apply(cases "(cTime c)")
   apply (auto simp add: ctype_def)
   by (metis bot.extremum empty_set)
 
-lemma ctypeempty_ex:"\<exists>c. ctype c = {}"
-  by (simp add: cmsgempty_ex ctype_empty_gdw)
+theorem ctypeempty_ex:"\<exists>c. ctype c = {}"
+  by (simp add: cmsgempty_ex ctype_empty_iff)
 
+text\<open>I\<close>
 
 
 
@@ -187,7 +200,7 @@ end
 
 
 default_sort chan
-lemma chdom_minus[simp]: "chDom (TYPE('cs1 - 'cs2)) = chDom (TYPE ('cs1)) - chDom (TYPE('cs2))"
+theorem chdom_minus[simp]: "chDom (TYPE('cs1 - 'cs2)) = chDom (TYPE ('cs1)) - chDom (TYPE('cs2))"
   apply(simp add: chDom_def Rep_minus_def)
   apply auto
   apply (meson Diff_iff Rep_minus)
@@ -204,7 +217,7 @@ proof -
 qed
 
 
-lemma chdom_union[simp]: "chDom (TYPE('cs1 \<union> 'cs2)) = chDom (TYPE ('cs1)) \<union> chDom (TYPE('cs2))"
+theorem chdom_union[simp]: "chDom (TYPE('cs1 \<union> 'cs2)) = chDom (TYPE ('cs1)) \<union> chDom (TYPE('cs2))"
   apply(simp add: chDom_def Rep_union_def)
   apply auto
   apply (meson DiffD1 Rep_union UnE)
@@ -232,7 +245,7 @@ by presburger
     using f1 by (simp add: chIsEmpty_def type_definition.Rep_range)
 qed
 
-lemma "chDom (TYPE('cs1 - 'cs2)) \<inter> chDom (TYPE ('cs2)) = {}"
+theorem "chDom (TYPE('cs1 - 'cs2)) \<inter> chDom (TYPE ('cs2)) = {}"
   by auto
 
 (*<*)

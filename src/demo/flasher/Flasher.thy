@@ -89,12 +89,12 @@ assumes "f\<cdot>(sb \<uplus>\<^sub>\<star> out) = out\<star>"
 *)
 
 lemma chtype_empty: "ctype ch = {} \<Longrightarrow> ch = c3"
-  by(cases ch; simp add: ctype_empty_gdw)
+  by(cases ch; simp add: ctype_empty_iff)
 
 (* Das soll weiter nach vorne. geht nicht in "Datatypes", da dort "cEmpty" nich existiert...
     Vllt eine art "prelude" vor den generierten sachen? *)
 lemma chEmpty[simp]:"cEmpty = {c3}"
-  by(auto simp add: cEmpty_def chtype_empty ctype_empty_gdw)
+  by(auto simp add: cEmpty_def chtype_empty ctype_empty_iff)
 
 
 lemma inand_dom[simp]: "chDom TYPE(inAnd) = {cin1,cin2}"
