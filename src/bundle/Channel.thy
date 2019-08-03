@@ -118,6 +118,10 @@ definition chDom::"'cs::chan itself \<Rightarrow> channel set" where
 abbreviation chIsEmpty ::"'cs::chan itself \<Rightarrow> bool" where
 "chIsEmpty cs \<equiv> chDom cs = {}"
 
+lemma inchdom[simp]:"\<not>chIsEmpty TYPE('cs) \<Longrightarrow> Rep (c::'cs::chan) \<in> chDom TYPE('cs)"
+  apply(simp add: chDom_def)
+  using chan_botsingle by blast
+
 text \<open>Types of @{class chan} can be interpreted as a subset of @{type channel}s, where on every
 channel either no message can be transmitted, or on every channel some message is allowed to be
 transmitted. Now we define classes for these two options:\<close>

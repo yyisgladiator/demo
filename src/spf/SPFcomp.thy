@@ -99,9 +99,9 @@ proof(rule sb_eqI)
   fix c::"'a \<union> 'b"
   assume as:"Rep c \<in> chDom TYPE('a \<union> 'b)"
   have "Rep c \<in> chDom (TYPE ('a)) \<Longrightarrow> out\<star> \<uplus> (out\<star>) \<^enum> c = out \<^enum> c"
-    by (metis DiffE chDom_def sbgetch_insert2 sbunion_getch sbunion_rep_eq sbunion_sbconvert_eq)
+    by (metis sbgetch_insert2 sbunion_getch sbunion_rep_eq sbunion_sbconvert_eq)
   moreover have "Rep c \<in> chDom (TYPE ('b)) \<Longrightarrow> out\<star> \<uplus> (out\<star>) \<^enum> c = out \<^enum> c"
-    by (metis DiffE chDom_def sbconv_eq sbunion_getch sbunion_rep_eq sbunion_sbconvert_eq)
+    by (metis sbgetch_insert2 sbunion_getch sbunion_rep_eq sbunion_sbconvert_eq)
   moreover have "(Rep c \<in> chDom (TYPE ('a))) \<or> (Rep c \<in> chDom (TYPE ('b)))"
     using as chdom_in by fastforce
   ultimately show  "out\<star> \<uplus> (out\<star>) \<^enum> c = out \<^enum> c" by fastforce
