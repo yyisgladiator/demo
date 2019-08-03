@@ -185,7 +185,8 @@ lemma sbgetch_empty2[simp]: fixes sb::"'cs\<^sup>\<Omega>"
     assumes "Rep c \<notin> chDom TYPE('cs)"
     shows "sb \<^enum>\<^sub>\<star> c = \<epsilon>"
   apply(simp add: sbgetch_insert assms chDom_def)
-  by (metis(full_types) Diff_triv Rep_sb_strict app_strict assms chDom_def chIsEmpty_def chan_botsingle sbtypeepmpty_sbbot)
+  by (metis (mono_tags, lifting) Diff_eq_empty_iff Diff_triv Rep_sb_strict app_strict assms chDom_def 
+      chan_botsingle sbtypeepmpty_sbbot)
 
 lemma spfcomp_surj_h: 
   fixes  f :: "(('a \<union> 'b) - ('c \<union> 'd))\<^sup>\<Omega> \<rightarrow> ('c \<union> 'd)\<^sup>\<Omega>"

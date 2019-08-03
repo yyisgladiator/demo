@@ -49,6 +49,9 @@ subsection \<open> sb pcpo lemmata \<close>
 lemma bot_sb:"\<bottom> = Abs_sb(\<lambda>c. \<epsilon>)"
   by (simp add: Abs_sb_strict lambda_strict)
 
+lemma rep_sb_well[simp]:"sb_well(Rep_sb sb)"
+  using Rep_sb by auto
+
 lemma sbrep_cont[simp, cont2cont]: "cont Rep_sb"
   using cont_Rep_sb cont_id by blast
 
@@ -62,12 +65,12 @@ lemma sb_rep_eqI:assumes"\<And>c. (Rep_sb sb1) c = (Rep_sb sb2) c"
   by(simp add: po_eq_conv below_sb_def fun_belowI assms)
 
 lemma sbtypeepmpty_sbbot[simp]:"chIsEmpty TYPE ('cs::chan) \<Longrightarrow> (sb::'cs\<^sup>\<Omega>) = \<bottom>"
-  unfolding chIsEmpty_def cEmpty_def bot_sb
+  unfolding chDom_def cEmpty_def bot_sb
   apply(rule sb_rep_eqI)
   apply(subst Abs_sb_inverse)
-  apply (simp add: sbwell_ex)
-  by(metis (mono_tags) Rep_sb bot.extremum cEmpty_def f_inv_into_f image_subset_iff iso_tuple_UNIV_I 
-      mem_Collect_eq rangeI range_eqI sb_well_def strict_sValues_rev subset_antisym)
+  apply (simp add: sbwell_ex,auto)
+  apply(insert sb_well_def[of "Rep_sb sb"],auto)
+  using strict_sValues_rev by fastforce
 
 lemma sbwell2fwell[simp]:"Rep_sb sb = f \<Longrightarrow> sb_well (f)"
   using Rep_sb by auto
@@ -169,11 +172,11 @@ lemma sb_eqI:
     shows "sb1 = sb2"
   apply(cases "chDom TYPE('cs) \<noteq> {}")
   apply (metis Diff_eq_empty_iff Diff_triv assms chDom_def chan_botsingle rangeI sb_rep_eqI sbgetch_insert2)
-  by (metis Rep_union chDom_def chIsEmpty_def empty_iff sbtypeepmpty_sbbot sup.idem)
+  by (metis (full_types) sbtypeepmpty_sbbot)
 
 lemma slen_empty_eq:  assumes"chIsEmpty(TYPE('c))"
   shows " #(sb \<^enum> (c::'c)) =0"
-  using assms chIsEmpty_def cEmpty_def sbgetch_ctype_notempty by fastforce
+  using assms chDom_def cEmpty_def sbgetch_ctype_notempty by fastforce
 
 lemma sbgetch_sbe2sb_nempty: assumes "\<not>chIsEmpty(TYPE('a))"
   shows "\<forall>c::'a. sbe2sb sbe  \<^enum>  c \<noteq> \<epsilon>"
@@ -181,7 +184,7 @@ lemma sbgetch_sbe2sb_nempty: assumes "\<not>chIsEmpty(TYPE('a))"
   apply (simp split: option.split) 
   apply (rule conjI)
   apply (rule impI)
-  using assms chIsEmpty_def sbElem_well.simps(1) sbelemwell2fwell apply blast
+  using assms chDom_def sbElem_well.simps(1) sbelemwell2fwell apply blast
   apply (rule allI, rule impI, rule allI)
   by (metis (no_types) option.simps(5) sbe2sb.abs_eq sbe2sb.rep_eq sbgetch_insert2 sconc_snd_empty 
       srcdups_step srcdupsimposs strict_sdropwhile)
@@ -279,7 +282,7 @@ lemma sblenleq: assumes "\<not> chIsEmpty TYPE('a)" and
   apply(subgoal_tac "\<And>c::'a. Rep c \<notin> cEmpty") 
   apply auto
   apply (metis (mono_tags, lifting) Least_le assms(2) dual_order.trans)
-  using assms(1) by(simp add: chIsEmpty_def)
+  using assms(1) by(simp add: chDom_def)
 
 lemma sblengeq: assumes "\<And>c::'c. k\<le> #(sb\<^enum>c)"
   shows "k \<le> sbLen sb" 
@@ -368,7 +371,7 @@ definition sbIsLeast::"'cs\<^sup>\<Omega> \<Rightarrow> bool" where
 subsubsection \<open>sbIsLeast lemmas\<close>
 
 lemma "sbIsLeast \<bottom>"
-  apply(simp add: sbIsLeast_def sbLen_def chIsEmpty_def)
+  apply(simp add: sbIsLeast_def sbLen_def chDom_def)
   apply(case_tac "(\<exists>c::'a. Rep c \<notin> cEmpty)",simp_all)
   apply (metis (mono_tags, lifting) Inf'_neq_0_rev LeastI_ex Least_le inf_less_eq)
   by (simp add: image_subset_iff) 
@@ -480,7 +483,7 @@ lemma sbhdelem_mono_empty[simp]:"((range(Rep::'c\<Rightarrow> channel)\<subseteq
 
 lemma sbhdelem_mono_eq[simp]:"sbHdElemWell x \<Longrightarrow>  x \<sqsubseteq> y \<Longrightarrow> sbHdElem x = sbHdElem y"
   apply(cases "chIsEmpty(TYPE('a))")
-  apply(simp add: sbHdElemWell_def chIsEmpty_def)
+  apply(simp add: sbHdElemWell_def chDom_def)
   apply(subgoal_tac "\<And>c::'a. shd (x  \<^enum>  c) = shd (y  \<^enum>  c)")
   apply(simp_all add: sbhdelem_some)
   apply(rule below_shd)
@@ -508,31 +511,31 @@ lemma sbrt_sbecons: "sbRt\<cdot>(sbe \<bullet>\<^sup>\<surd> sb) = sb"
   apply (subst sdropl6)
   apply (subgoal_tac "\<And>c. \<exists>m. sbe2sb sbe  \<^enum>  c = \<up>m")
   apply (metis Fin_0 Fin_Suc lnzero_def lscons_conv slen_scons strict_slen sup'_def)
-  apply (simp add: sbgetch_insert2 sbe2sb.rep_eq chIsEmpty_def)
-  apply (metis chIsEmpty_def option.simps(5) sbtypenotempty_fex)
+  apply (simp add: sbgetch_insert2 sbe2sb.rep_eq chDom_def)
+  apply (metis Diff_eq_empty_iff chDom_def option.simps(5) sbtypenotempty_fex)
   by (simp add: sb_rep_eqI sbgetch_insert2 Rep_sb_inverse)
 
 lemma sbhdelem_h_sbe:" sbHdElem_h (sbe \<bullet>\<^sup>\<surd> sb) = up\<cdot>sbe"
   apply (cases "chIsEmpty(TYPE('a))",simp)
   apply (simp_all add: sbHdElem_def sbHdElem_h_def)+
   apply (rule conjI, rule impI)+
-  apply (simp_all add: chIsEmpty_def up_def)
-  apply (metis chIsEmpty_def sbtypeepmpty_sbenone)
+  apply (simp_all add: chDom_def up_def)
+  apply (metis Diff_eq_empty_iff chDom_def sbtypeepmpty_sbenone)
   apply (subgoal_tac "\<forall>c::'a. sbe2sb sbe  \<^enum>  c \<noteq> \<epsilon>")
-  apply (simp add: sbgetch_sbe2sb_nempty chIsEmpty_def)+
+  apply (simp add: sbgetch_sbe2sb_nempty chDom_def)+
   apply (simp add: sbECons_def)
   apply (simp add: sbe2sb_def)
   apply (simp split: option.split)
   apply (rule conjI)
   apply (rule impI)+
-  using sbElem_well.simps(1) sbelemwell2fwell chIsEmpty_def apply blast
+  using sbElem_well.simps(1) sbelemwell2fwell chDom_def apply blast
   apply (rule allI)
   apply (rule impI)+
   apply (subgoal_tac "\<forall>c::'a. Abs_sb (\<lambda>c::'a. \<up>(x2 c))  \<^enum>  c = \<up>(x2 c)")
   apply (simp add: Abs_sbElem_inverse)
   apply (metis Rep_sbElem_inverse)
   apply (metis option.simps(5) sbe2sb.abs_eq sbe2sb.rep_eq sbgetch_insert2)
-  by (simp add: chIsEmpty_def sbgetch_sbe2sb_nempty)
+  by (simp add: chDom_def sbgetch_sbe2sb_nempty)
 
 lemma sbhdelem_sbecons: "sbHdElem (sbe  \<bullet>\<^sup>\<surd> sb) = sbe"
   by(simp add: sbHdElem_def sbhdelem_h_sbe up_def)
@@ -548,17 +551,12 @@ lemma sbecons_len:
   apply(insert sbconc_well[of "sbe2sb sbe" sb],simp add: sbgetch_insert2)
    apply(subst sconc_slen2)
   apply(subgoal_tac "#(Rep_sb (sbe2sb sbe) c) = 1",auto)
-  apply (metis sblenleq lnat_plus_commu lnat_plus_suc lnsuc_lnle_emb order_refl sbgetch_insert2)
-  apply (metis sbe2slen_1 sbgetch_insert2)
-  apply(simp add: sbECons_def sbgetch_insert2 sbconc_insert)
-  apply(subst Abs_sb_inverse)
-  apply simp
-  apply(insert sbconc_well[of "sbe2sb sbe" sb],simp add: sbgetch_insert2)
-  apply(subst sconc_slen2)
-  apply(subgoal_tac "\<And>c. #(Rep_sb (sbe2sb sbe) c) = 1",auto)
-  apply(insert sblen2slen[of sb])
-  apply (metis add.commute lnat_plus_suc sbgetch_insert2)
-  by (metis sbe2slen_1 sbgetch_insert2)
+  apply (metis equals0D lessequal_addition lnat_plus_commu lnat_plus_suc sbelen_one sbgetch_insert2 sblen_min_len)
+  apply (metis emptyE sbe2slen_1 sbgetch_insert2) 
+  apply(simp add: chDom_def)
+  by (metis (no_types, hide_lams) add.left_neutral cempty_rule f_inv_into_f lnat_plus_commu one_def 
+  only_empty_has_length_0 sbECons_def sbconc_chan_len sbe2slen_1 sblen2slen sconc_slen2 slen_scons)
+
 
 (*sb_case*)
 
@@ -601,7 +599,7 @@ lemma sb_cases [case_names least sbeCons, cases type: sb]:
   "(sbIsLeast (sb'::'cs\<^sup>\<Omega>) \<Longrightarrow> P) 
   \<Longrightarrow> (\<And>sbe sb. sb' = sbECons sbe\<cdot>sb \<Longrightarrow> \<not>chIsEmpty TYPE ('cs) \<Longrightarrow> P) 
   \<Longrightarrow> P"
-  using sbECons_sbLen sbIsLeast_def by blast
+  by (meson sbECons_sbLen sbIsLeast_def)
 
 lemma sb_finind1:
     fixes x::"'cs\<^sup>\<Omega>"

@@ -326,7 +326,7 @@ lemma sb_case_insert:"sb_case\<cdot>k\<cdot>sb = (case sbHdElem_h_cont\<cdot>sb 
 
 
 lemma sb_cases_bot:"\<not>(chIsEmpty (TYPE ('cs))) \<Longrightarrow> sb_case\<cdot>f\<cdot>(\<bottom>::'cs\<^sup>\<Omega>) = \<bottom>"
-  by(simp add: sb_case_insert sbHdElem_h_cont.rep_eq sbHdElem_h_def chIsEmpty_def)
+  by(simp add: sb_case_insert sbHdElem_h_cont.rep_eq sbHdElem_h_def chDom_def)
 
 lemma sb_cases_sbe[simp]:"sb_case\<cdot>f\<cdot>(sbECons sbe\<cdot>sb) = f sbe\<cdot>(sb)"
   apply (subst sb_case_insert)
@@ -386,16 +386,16 @@ lemma set_inj: "inj setter"
 
 lemma set_surj: "surj setter"
   unfolding setter_def
-  apply(cases "\<not>(chIsEmpty(TYPE('cs)))")
-proof(simp add: surj_def,auto)
-  fix y::"'cs\<^sup>\<surd>"
-  assume chnEmpty:"\<not> chIsEmpty TYPE('cs)"
-  obtain f where f_def:"Rep_sbElem y=(Some f)"
-    using chnEmpty sbtypenotempty_fex by auto
+  apply(cases "\<not>(chIsEmpty(TYPE('cs)))",auto simp add: chDom_def)
+proof-
+  fix xb::"'cs\<^sup>\<surd>" and xa::'cs
+  assume chnEmpty:"Rep xa \<notin> cEmpty"
+  obtain f where f_def:"Rep_sbElem xb=(Some f)"
+    using chnEmpty sbtypenotempty_fex cempty_rule by blast
   then obtain x where x_def:"f = lConstructor x"
-    by (metis c_inj c_surj f_the_inv_into_f sbelemwell2fwell chnEmpty)
-  then show "\<exists>x::'a. y = Abs_sbElem (Some (lConstructor x))"
-    by (metis Rep_sbElem_inverse f_def)
+    by (metis c_surj rangeE sbelemwell2fwell sbtypeempty_notsbewell)
+  then show "xb \<in> range (\<lambda>x::'a. Abs_sbElem (Some (lConstructor x)))"
+    by (metis (no_types, lifting) Rep_sbElem_inverse f_def range_eqI)
 qed 
 
 lemma set_bij: "bij setter"
@@ -492,21 +492,7 @@ next
    apply(subgoal_tac "k=0")
    apply(subgoal_tac "sb = \<bottom>",simp)
    apply(simp add: sbLen_def)
-   apply(simp add: bot_sb)
-   apply(rule sb_eqI)
-   apply (metis bot_sb sbgetch_bot)
-   by (metis sblen2slen)
-next
-  case (sbeCons sbe sb)
-  then obtain kin where k_def:"lnsuc\<cdot>kin = k"
-    by (metis sbecons_len sblen2slen)
-  then have sbelen1:"\<And>c n. #((sbe::'cs\<^sup>\<surd>) \<bullet>\<^sup>\<surd> (sb::'cs\<^sup>\<Omega>)  \<^enum>  c) = lnsuc\<cdot>n \<Longrightarrow> # (sb \<^enum> c) = n"
-    sorry
-  then show ?case
-    apply simp
-    apply(subst cfun_arg_eqI[of " setterSB\<cdot>(getterSB\<cdot>sb)" sb],auto)
-    apply(subst sbeCons.IH[of kin],auto)
-    using k_def sbeCons.prems by blast 
+   apply(simp add: bot_sb) 
   oops  (* Nur für gleichlange ströme *)
 
 fun setterList::"'a list \<Rightarrow> 'cs\<^sup>\<Omega>" where

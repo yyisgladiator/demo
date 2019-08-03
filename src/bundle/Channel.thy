@@ -5,12 +5,12 @@ imports HOLCF user.Datatypes
 begin
 (*>*)
 
-section \<open>Global message type\<close>
+section \<open>Global message type \label{gmt}\<close>
 
 text\<open>Depending on the time model, we allow to transmit slightly different versions of @{type M_pure} 
 messages. In every time slot of the synchronous time model, every channel transmits at most one 
 message. But in every time slot of the general timed model, it is possible to transmit an arbitrary 
-high, but finite number of messages \cref{sec:focus}. To allow the usage of both models and also the untimed model, 
+high, but finite number of messages. To allow the usage of both models and also the untimed model, 
 we introduce the M datatype:\<close>
 datatype M = Untimed "M_pure" | Timed "M_pure list" | Tsyn "M_pure option"  (* option = tsyn *)
 
@@ -23,7 +23,7 @@ text\<open>We interpret the messages in a time slot of a time model as:
 In this interpretation a untimed stream can be seen as a special case of a synchronous timed stream
 (it contains a message in every time slot) and a synchronous timed stream is a special case of a 
 timed stream (it contains at most one element in each list). Now we defined, how a transmitted 
-message in a time slot can look like, respectively to its time model. For this we define a mapping
+message in a time slot can look like, respectively to its time model. For this, we define a mapping
 from channels to sets of elements from M. Obviously, we have to restrict the channels to their time
 models, else there could be timed and untimed messages on the same channel.\<close>
 
@@ -72,17 +72,30 @@ theorem ctype_empty_iff: "ctype c = {} \<longleftrightarrow> cMsg c = {}"
 theorem ctypeempty_ex:"\<exists>c. ctype c = {}"
   by (simp add: cmsgempty_ex ctype_empty_iff)
 
-text\<open>I\<close>
+text\<open>Again, these properties are necessary for defining an empty stream bundle \ref{sec:pmsgdata}.\<close>
 
 
-
+section\<open>@{type channel} class definitions\label{chan}\<close>
+text\<open>In this section we restrict the Domain of a stream bundle trough the usage of classes. The main 
+Idea is to never construct a stream bundle which has channels with an empty @{const ctype} and 
+channels with non-empty @{const ctype}. With our interpretation of empty bundles, this case would 
+make no sense, because it would be equivalent to the bundle without channels with empty @{const ctype}s.
+Hence, we restrict the Domain of stream bundles to subsets of the @{type channel} type, where its 
+either possible that every channel transmits a message, or non of the channels can transmit any 
+message at all.\<close>
+subsection \<open>Preliminaries \<close>
+text\<open>For understandable assumptions in our classes we first define the channel set, that contains 
+all channels with an empty @{const ctype}.\<close>
 definition cEmpty :: "channel set" where
 "cEmpty = {c. ctype c = {}}"
 text \<open>@{const cEmpty} contains all channels on which no message is allowed to be transmitted.\<close> 
 
-section\<open>@{type channel} class definitions\<close>
 
 subsection\<open>Class chan\<close>
+text\<open>The following class restricts its type to be injective to our @{type channel} type and to also 
+comply with our main Idea. Through its injectivity, the type is isomorphic to a subset of our 
+@{type channel} type.\<close>
+
 class chan =
   fixes Rep :: "'a \<Rightarrow> channel"
   assumes chan_botsingle:
@@ -91,16 +104,18 @@ class chan =
   assumes chan_inj[simp]:"inj Rep"
 begin
 abbreviation "Abs \<equiv> inv Rep"
-
 end
+text\<open> With @{const Rep} we require a representation function, that maps a type of @{class chan} to 
+the @{type channel} type. The first class assumption ensures our channel separation and the second 
+the injectivity. Furthermore, our abstraction function @{const Abs} is the inverse of @{const Rep}.\<close>
 
 subsubsection \<open>@{class chan} Functions\<close>
-
+text\<open>We will now define a function for types of @{class chan}. These represent our logical\<close>
 definition chDom::"'cs::chan itself \<Rightarrow> channel set" where
 "chDom a = (range (Rep::'cs \<Rightarrow> channel)) - cEmpty"
 
-definition chIsEmpty ::"'cs::chan itself \<Rightarrow> bool" where
-"chIsEmpty cs = (range(Rep::'cs\<Rightarrow>channel) \<subseteq> cEmpty)"
+abbreviation chIsEmpty ::"'cs::chan itself \<Rightarrow> bool" where
+"chIsEmpty cs \<equiv> chDom cs = {}"
 
 text \<open>Types of @{class chan} can be interpreted as a subset of @{type channel}s, where on every
 channel either no message can be transmitted, or on every channel some message is allowed to be
@@ -112,10 +127,10 @@ class somechan = chan +
       "(range Rep) \<inter> cEmpty = {}"
 begin
 
-corollary somechannotempty[simp]:"\<not>chIsEmpty(TYPE('c::somechan))"
-  using chIsEmpty_def somechan_class.chan_notempty by fastforce
+lemma somechannotempty[simp]:"\<not>chIsEmpty(TYPE('c::somechan))"
+  using chDom_def somechan_class.chan_notempty by fastforce
 
-corollary somechandom:"chDom(TYPE('c::somechan)) = range(Rep::'c\<Rightarrow>channel)"
+lemma somechandom:"chDom(TYPE('c::somechan)) = range(Rep::'c\<Rightarrow>channel)"
   by(simp add: chDom_def somechan_class.chan_notempty Diff_triv)
 
 end
@@ -127,10 +142,8 @@ class emptychan = chan +
 begin
 
 lemma %invisible emptychanempty[simp]:"chIsEmpty(TYPE('c::emptychan))"
-  by (simp add: chIsEmpty_def emptychan_class.chan_empty)
+  by (simp add: chDom_def emptychan_class.chan_empty)
 
-lemma %invisible emptychandom[simp]:"chDom(TYPE('c::emptychan)) = {}"
-  by(simp add: chDom_def emptychan_class.chan_empty)
 
 end
 text\<open>Types of @{class emptychan} can not transmit any message on any channel.\<close>
@@ -147,15 +160,15 @@ lemma chan_eq[simp]:"Rep (c::'c::chan) = x \<Longrightarrow> x\<in> range(Rep::'
 
 lemma cempty_rule[simp]:assumes"chIsEmpty(TYPE('c::chan))"
   shows"Rep (c::'c) \<in> cEmpty"
-  using assms chan_botsingle chIsEmpty_def by blast
+  using assms chan_botsingle chDom_def by blast
 
 lemma cnotempty_rule[simp]:assumes"\<not>chIsEmpty(TYPE('c::chan))"
   shows"Rep (c::'c) \<notin> cEmpty"
-  using assms chan_botsingle chIsEmpty_def by blast
+  using assms chan_botsingle chDom_def by blast
 
 lemma cnotempty_cdom[simp]:assumes"\<not>chIsEmpty(TYPE('c::chan))"
   shows"Rep (c::'c) \<in> chDom(TYPE('c))"
-  by (simp add: assms chDom_def)
+  using assms by (simp add: chDom_def)
 
 
 declare %invisible[[show_types]]
@@ -231,7 +244,7 @@ by presburger
   then have "type_definition (Rep_union::'cs1 \<union> 'cs2 \<Rightarrow> channel) Abs_union (if \<not> range (Rep::'cs1 \<Rightarrow> channel) \<subseteq> cEmpty \<or> \<not> range (Rep::'cs2 \<Rightarrow> channel) \<subseteq> cEmpty then range (Rep::'cs1 \<Rightarrow> channel) \<union> range (Rep::'cs2 \<Rightarrow> channel) - cEmpty else cEmpty)"
     by (meson type_definition_union)
   then show "Rep xa \<in> range (\<lambda>u. Rep_union (u::'cs1 \<union> 'cs2))"
-using f1 by (simp add: chIsEmpty_def type_definition.Rep_range)
+using f1 by (simp add: chDom_def type_definition.Rep_range)
 next
   fix xa :: 'cs2
   assume "Rep xa \<notin> cEmpty"
@@ -242,7 +255,7 @@ by presburger
   then have "type_definition (Rep_union::'cs1 \<union> 'cs2 \<Rightarrow> channel) Abs_union (if \<not> range (Rep::'cs1 \<Rightarrow> channel) \<subseteq> cEmpty \<or> \<not> range (Rep::'cs2 \<Rightarrow> channel) \<subseteq> cEmpty then range (Rep::'cs1 \<Rightarrow> channel) \<union> range (Rep::'cs2 \<Rightarrow> channel) - cEmpty else cEmpty)"
     by (meson type_definition_union)
   then show "Rep xa \<in> range (\<lambda>u. Rep_union (u::'cs1 \<union> 'cs2))"
-    using f1 by (simp add: chIsEmpty_def type_definition.Rep_range)
+    using f1 by (simp add: chDom_def type_definition.Rep_range)
 qed
 
 theorem "chDom (TYPE('cs1 - 'cs2)) \<inter> chDom (TYPE ('cs2)) = {}"
