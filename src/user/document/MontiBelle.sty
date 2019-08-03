@@ -1,0 +1,30 @@
+% Custom style for generated LaTeX-Code
+
+% e.g.
+%  * colors for keywords (eg. "definition"/"datatype" ...)
+%  * correct characters in italic environment ('_' / '"')
+
+
+ \usepackage{color}
+ 
+ % Normaler Textblock
+% \renewenvironment{isamarkuptext}{\par\isastyletext\color{red}\begin{isapar}}{\end{isapar}}
+
+% Comamnd z.B. "`definition"'/"'datatype"' etc. 
+% Aus irgendeinem grund NICHT "`where"'
+\let\isacommandOLD\isacommand
+\renewcommand{\isacommand}[1]{{\color{green}\isacommandOLD{#1}}}
+
+% underscore soll auch in italic als underscore angezeigt werden!
+\let\isabellestyleitOLD\isabellestyleit
+\renewcommand{\isabellestyleit}{
+\isabellestyleitOLD%
+\def\isacharunderscore{\mbox{\_}}%
+\chardef\isachardoublequote=`\"%
+\chardef\isachardoublequoteopen=`\"%
+\chardef\isachardoublequoteclose=`\"%
+}
+
+
+% Enum
+\newcommand{\isactrlenum}{$\blacktriangleright$}
