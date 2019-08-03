@@ -4,8 +4,10 @@ imports automaton.dAutomaton_causal andAutomat_inc
 
 begin
 (*And automaton*)
-fun dAand_transition::"S_and \<Rightarrow> (bool\<times> bool) \<Rightarrow> (S_and \<times> bool)"where
-"dAand_transition S (bool1,bool2) = (S,(bool1 \<and> bool2))"
+fun dAand_transition::"S_and \<Rightarrow> (bool option \<times> bool option) \<Rightarrow> (S_and \<times> bool option)"where
+"dAand_transition S (Some bool1,Some bool2) = (S,(Some (bool1 \<and> bool2)))" |
+"dAand_transition S (None,bool2) = (S,(Some False))" |
+"dAand_transition S (bool1,None) = (S,(Some False))"
 
 
 interpretation and_smap:smapGen "dAand_transition" Single "buildAndinSBE" "buildAndoutSBE" "Single"
@@ -34,7 +36,14 @@ lemma "andOutSBE.getterSB\<cdot>(andSpf\<cdot>(andInSBE.setterSB\<cdot>input)) =
   by(simp add: andSpf_def dawSem_def andstep2smap)
 
 
-lemma and_step:"(smap and_smap.smapTransition)\<cdot>(\<up>(x,y) \<bullet> s) = \<up>(x\<and>y) \<bullet> smap and_smap.smapTransition\<cdot>s"
+lemma and_step_t1:"(smap and_smap.smapTransition)\<cdot>(\<up>((Some x),(Some y)) \<bullet> s) = \<up>(Some (x\<and>y)) \<bullet> smap and_smap.smapTransition\<cdot>s"
   by(simp)
+
+lemma and_step_t2:"(smap and_smap.smapTransition)\<cdot>(\<up>((None),(y)) \<bullet> s) = \<up>(Some (False)) \<bullet> smap and_smap.smapTransition\<cdot>s"
+  by(simp)
+
+lemma and_step_t3:"(smap and_smap.smapTransition)\<cdot>(\<up>((x),(None)) \<bullet> s) = \<up>(Some (False)) \<bullet> smap and_smap.smapTransition\<cdot>s"
+  apply(simp)
+  by (metis dAand_transition.elims option.distinct(1) snd_conv)
 
 end

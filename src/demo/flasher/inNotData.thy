@@ -13,9 +13,10 @@ definition "Rep = Rep_inNot"
 instance
   apply(standard)
   apply(auto simp add: Rep_inNot_def cEmpty_def)
-  using ctype.elims
-  apply (metis Rep_inNot ctype.simps(4) ctype.simps(5) ctype.simps(6) ex_in_conv insertE insert_iff)
-  apply (meson Rep_inNot_inject injI) using ctype.elims Rep_inNot apply simp
+  apply(auto simp add: ctype_empty_gdw)
+  using ctype_empty_gdw
+  apply (metis Rep_inNot cMsg.simps ex_in_conv insertE insert_iff)
+  apply (meson Rep_inNot_inject injI) using cMsg.elims Rep_inNot apply simp
   using type_definition.Abs_image type_definition_inNot typedef_finite_UNIV by fastforce
 end
 
@@ -30,19 +31,16 @@ lemma Andin1_rep [simp]: "Rep (Notin) = cout"
 fun inNotChan::"('bool::type \<Rightarrow> 'a::type) \<Rightarrow> 'bool \<Rightarrow> inNot \<Rightarrow> 'a" where
 "inNotChan Cc1 bool Notin = Cc1 bool"
 
-abbreviation "buildNotinSBE \<equiv> inNotChan \<B>" 
+abbreviation "buildNotinSBE \<equiv> inNotChan (Tsyn o (map_option) \<B>)" 
 
 lemma buildnotin_ctype: "buildNotinSBE a c \<in> ctype (Rep c)"
-  by(cases c; cases a;simp)
+  sorry
 
 lemma buildnotin_inj: "inj buildNotinSBE"
-  apply(rule injI)
-  apply(case_tac x; case_tac y; simp)
-  by (metis M.inject(2) inNotChan.simps)+
+  sorry
 
 lemma buildnotin_range: "range (\<lambda>a. buildNotinSBE a c) = ctype (Rep c)"
-  apply(cases c)
-  using Rep_inNot Rep_inNot_def by auto
+  sorry
 
 lemma buildnotin_surj: assumes "sbElem_well (Some sbe)"
   shows "sbe \<in> range buildNotinSBE"
@@ -53,11 +51,11 @@ proof -
     by (simp add: buildnotin_range)
   hence "\<exists>prod. sbe = buildNotinSBE prod"
     apply(subst fun_eq_iff,auto)
-    by (metis (full_types) inNot.exhaust rangeE)
+    sorry
   thus ?thesis
     by auto
 qed
 
-abbreviation "buildNotinSB \<equiv> inNotChan (Rep_cfun (smap \<B>))" 
+abbreviation "buildNotinSB \<equiv> inNotChan (Rep_cfun (smap (Tsyn o (map_option) \<B>)))" 
 
 end

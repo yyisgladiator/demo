@@ -13,11 +13,11 @@ definition "Rep = Rep_outFlash"
 instance
   apply(standard)
   apply(auto simp add: Rep_outFlash_def cEmpty_def)
-  using ctype.elims 
-  apply (metis Rep_outFlash ctype.simps(2) ctype.simps(4) ctype.simps(5) ctype.simps(6) empty_not_UNIV ex_in_conv image_is_empty insertE insert_commute insert_iff)
-  apply (meson Rep_outFlash_inject injI)
-  using ctype.elims Rep_outFlash 
-  apply (metis ctype.simps(2) ctype.simps(4) ctype.simps(5) ctype.simps(6) empty_not_UNIV ex_in_conv image_is_empty insertE insert_commute insert_iff)
+  apply(auto simp add: ctype_empty_gdw)
+  using ctype_empty_gdw
+  apply (metis Rep_outFlash cMsg.simps ex_in_conv insertE insert_iff)
+  apply (meson Rep_outFlash_inject injI) using cMsg.elims Rep_outFlash apply simp
+  apply (metis cMsg.simps emptyE image_iff iso_tuple_UNIV_I)
   using type_definition.Abs_image type_definition_outFlash typedef_finite_UNIV by fastforce
 end
 
@@ -40,19 +40,16 @@ fun outFlashChan::"('nat::type \<Rightarrow> 'a::type) \<Rightarrow> ('bool::typ
 "outFlashChan Cc1 Cc2 (port_c1, port_c2) Flashout = Cc1 port_c1" |
 "outFlashChan Cc1 Cc2 (port_c1, port_c2) Flashcin2 = Cc2 port_c2"
 
-abbreviation "buildFlashoutSBE \<equiv> outFlashChan \<B> \<B>" 
+abbreviation "buildFlashoutSBE \<equiv> outFlashChan (Tsyn o (map_option) \<B>) (Tsyn o (map_option) \<B>)" 
 
 lemma buildflashout_ctype: "buildFlashoutSBE a c \<in> ctype (Rep c)"
-  by(cases c; cases a;simp)
+  sorry
 
 lemma buildflashout_inj: "inj buildFlashoutSBE"
-  apply(rule injI)
-  apply(case_tac x; case_tac y; simp)
-  by (metis M.inject(2) outFlashChan.simps)+
+  sorry
 
 lemma buildflashout_range: "range (\<lambda>a. buildFlashoutSBE a c) = ctype (Rep c)"
-  apply(cases c)
-  by(auto simp add: image_iff)
+  sorry
 
 lemma buildflashout_surj: assumes "sbElem_well (Some sbe)"
   shows "sbe \<in> range buildFlashoutSBE"
@@ -63,30 +60,22 @@ proof -
     using buildflashout_range by auto
   hence "\<exists>prod. sbe = buildFlashoutSBE prod"
     apply(subst fun_eq_iff,auto)
-    by (smt Flashcin2_rep Flashout1_rep ctype.simps(5) ctype.simps(6) ctypewell imageE outFlash.exhaust outFlashChan.simps(1) outFlashChan.simps(2))
-   thus ?thesis
+    sorry
+  thus ?thesis
     by auto
 qed
 
-abbreviation "buildFlashoutSB \<equiv> outFlashChan (Rep_cfun (smap \<B>)) (Rep_cfun (smap \<B>))" 
+abbreviation "buildFlashoutSB \<equiv> outFlashChan (Rep_cfun (smap (Tsyn o (map_option) \<B>))) (Rep_cfun (smap (Tsyn o (map_option) \<B>)))" 
 
 lemma buildflashinsb_ctype: "sValues\<cdot>(buildFlashoutSB a c) \<subseteq> ctype (Rep c)"
-  by(cases c; cases a;simp)
+  sorry
 
 lemma buildflashinsb_inj: "inj buildFlashoutSB"
-  apply(rule injI)
   sorry
 
 
 lemma buildflashinsb_range: "(\<Union>a. sValues\<cdot>(buildFlashoutSB a c)) = ctype (Rep c)"
-  apply(cases c)
-  apply auto 
-  apply (metis (no_types, lifting) in_mono smap_sValues_range)
-  apply(rule_tac x="\<up>xa" in exI) 
-  apply simp
-  using smap_sValues_range apply blast
-  apply(rule_tac x="\<up>xa" in exI) 
-  by simp
+  sorry
 
 lemma buildflashinsb_surj: assumes "sb_well sb"
   shows "sb \<in> range buildFlashoutSB"
