@@ -1,7 +1,7 @@
 (*<*)
 theory Datatypes
 
-imports HOLCF
+imports inc.Prelude
 
 begin
 (*>*)
@@ -24,31 +24,32 @@ over every channel type, the constructor is immediately hidden.\<close>
 
 section \<open>Message Definition\<close>
 
+
 text\<open>Analogous to the channel datatype, the message datatype contains all messages that a channel 
 can transmit. Hence, every kind of message has to be described here.\<close>
-datatype M = DummyMessage nat
+datatype M_pure = DummyMessage nat
 
 hide_const DummyMessage
 text \<open>To ensure that the dummy message type is never used for proving anything not holding for a 
 different message type, the constructor is also immediately hidden.\<close>
 
-instance M :: countable
+instance M_pure :: countable
   apply(intro_classes)
   by(countable_datatype)
 text\<open>Since we want use the stream type \ref{sec:stream} for defining stream bundles, the message 
 datatype has to be countable. In addition, a channel can be restricted to allow only a subset of 
-messages on its stream. Therefore, each channel has a "type", a set of messages from datatype @{type M}.
+messages on its stream. Therefore, each channel has a "type", a set of messages from datatype @{type M_pure}.
 These channel types are described by the ctype function. Only Messages included in the ctype are 
 allowed to be transmitted on the respective channel.\<close>
 
-definition ctype :: "channel \<Rightarrow> M set" where 
-"ctype = (\<lambda>c. if c= undefined then {} else undefined)"
+definition cMsg :: "channel \<Rightarrow> M_pure set" where 
+"cMsg = (\<lambda>c. if c= undefined then {} else undefined)"
 
 text\<open>Here we also use a dummy ctype definition. The only this that is assumed, is that there always
 exists at least one channel, on which no channel can flow.\<close>
 
-theorem ctypeempty_ex:"\<exists>c. ctype c = {}"
-  by (simp add: ctype_def)
+lemma cmsgempty_ex:"\<exists>c. cMsg c = {}"
+  by (simp add: cMsg_def)
 
 text\<open>Only with such an assumption we can always artificially define an "empty" stream bundle. The 
 possibility to have an empty stream bundle is important for various reasons. Beside being able to 
@@ -56,7 +57,13 @@ define "sensors" and "sinks" as SPFs, also the general composition\ref{sec:focus
 result in components without in or output channels. Thus, we restrict the user to channel types, 
 that contain a never transmitting channel.\<close>
 
-hide_fact ctype_def
+
+definition cTime :: "channel \<Rightarrow> timeType" where
+"cTime = undefined"
+
+hide_fact cMsg_def
+hide_fact cTime_def
+
 text\<open>At last we hide the ctype definition for other theories\<close>
 (*<*)
 end

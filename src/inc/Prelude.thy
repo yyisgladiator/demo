@@ -474,4 +474,7 @@ lemma discr_cont2: "cont f \<Longrightarrow> cont (\<lambda>x. g ((f x)::'a:: di
 (*monofun f should be enough*)
 lemma discr_cont3: "cont h \<Longrightarrow> cont f \<Longrightarrow> cont (\<lambda>x. ((h x)) ((f x)::'a:: discrete_cpo))"
   by (simp add: cont2cont_fun cont_apply)
+
+section \<open>Timing information V3\<close>
+datatype timeType = TUntimed | TTimed | TTsyn
 end
