@@ -14,7 +14,7 @@ section \<open>Deterministic Automaton\<close>
 default_sort "chan"
 
 subsection \<open>Deterministic Automaton definition \<close>
-record ('state::type, 'in::"{chan, finite}", 'out::chan) dAutomaton  =
+record ('state::type, 'in, 'out::chan) dAutomaton  =
   daTransition :: "('state \<Rightarrow> 'in\<^sup>\<surd> \<Rightarrow> ('state \<times> 'out\<^sup>\<Omega>))"
   daInitState :: "'state"
   daInitOut:: "'out\<^sup>\<Omega>"

@@ -66,8 +66,8 @@ lemma  spfcomp_eq:fixes f::"'fIn\<^sup>\<Omega> \<rightarrow> 'fOut\<^sup>\<Omeg
         and g::"'gIn\<^sup>\<Omega> \<rightarrow> 'gOut\<^sup>\<Omega>"
       assumes "chDom (TYPE ('fOut)) \<inter> chDom (TYPE ('gOut)) = {}"
 fixes out::"('fOut \<union> 'gOut)\<^sup>\<Omega>"
-assumes "f\<cdot>(sb \<uplus>\<^sub>\<star> out) = out\<star>"
-    and "g\<cdot>(sb \<uplus>\<^sub>\<star> out) = out\<star>"
+assumes "f\<cdot>(sb \<uplus>\<^sub>\<star> out) = (out\<star>)"
+    and "g\<cdot>(sb \<uplus>\<^sub>\<star> out) = (out\<star>)"
     and "\<And>z::('fOut \<union> 'gOut)\<^sup>\<Omega>. f\<cdot>(sb \<uplus>\<^sub>\<star> z) \<uplus> g\<cdot>(sb \<uplus>\<^sub>\<star> z) = z \<Longrightarrow> out \<sqsubseteq> z"
       shows "((f\<otimes>g)\<cdot>sb) = out"
   apply(subst genComp_def)
@@ -89,12 +89,12 @@ assumes "f\<cdot>(sb \<uplus>\<^sub>\<star> out) = out\<star>"
 *)
 
 lemma chtype_empty: "ctype ch = {} \<Longrightarrow> ch = c3"
-  by(cases ch; simp)
+  by(cases ch; simp add: ctype_empty_gdw)
 
 (* Das soll weiter nach vorne. geht nicht in "Datatypes", da dort "cEmpty" nich existiert...
     Vllt eine art "prelude" vor den generierten sachen? *)
 lemma chEmpty[simp]:"cEmpty = {c3}"
-  by(auto simp add: cEmpty_def chtype_empty)
+  by(auto simp add: cEmpty_def chtype_empty ctype_empty_gdw)
 
 
 lemma inand_dom[simp]: "chDom TYPE(inAnd) = {cin1,cin2}"
@@ -122,7 +122,7 @@ lemma flash2andin[simp]:"(((sbConvert::inFlash\<^sup>\<Omega> \<rightarrow> ((in
   apply(rule sb_eqI,auto)  
   sorry
 
-lemma flash2andout[simp]:"flashOutSB.setter (port_o, port_intern)\<star>\<star> = andOutSB.setter port_o"
+lemma flash2andout[simp]:"flashOutSB.setter (port_o, port_intern)\<star>\<star>\<^sub>1 = andOutSB.setter port_o"
   oops (* SWS: Gilt Nicht, doppelte magie. Anstatt den Zwischen-Datentyp zu fixieren und assumptions zu haben...
                 kann man die magischen-sachen durch nicht-magie ersetzen? *)
 
@@ -130,7 +130,7 @@ lemma flash2notin[simp]:"flashInSB.setter port_i\<star> \<uplus>\<^sub>\<star> (
   oops (* SWS: Gilt Nicht, doppelte magie. Anstatt den Zwischen-Datentyp zu fixieren und assumptions zu haben...
                 kann man die magischen-sachen durch nicht-magie ersetzen? *)
 
-lemma flash2notout[simp]:"flashOutSB.setter (port_o, port_intern)\<star>\<star> = notOutSB.setter port_intern "
+lemma flash2notout[simp]:"flashOutSB.setter (port_o, port_intern)\<star>\<star>\<^sub>2 = notOutSB.setter port_intern "
   oops (* SWS: Gilt Nicht, doppelte magie. Anstatt den Zwischen-Datentyp zu fixieren und assumptions zu haben...
                 kann man die magischen-sachen durch nicht-magie ersetzen? *)
 
@@ -145,23 +145,21 @@ lemma flash2notinandout[simp]:"flashInSB.setter port_i\<star> \<uplus>\<^sub>\<s
 (* DEUTLICH WICHTIGER! *)
 lemma assumes "andSpf\<cdot>(andInSB.setter (port_i, port_intern)) = andOutSB.setter port_o"
     and "notSpf\<cdot>(notInSB.setter(port_o)) = notOutSB.setter port_intern"
-  shows "(flasherComp\<cdot>(flashInSB.setter (port_i)\<star>)) = flashOutSB.setter (port_o,port_intern)\<star>"
+  shows "(flasherComp\<cdot>(flashInSB.setter (port_i)\<star>)) = (flashOutSB.setter (port_o,port_intern)\<star>)"
   apply(simp add: flasherComp_def convflasherComp_def spfConvert_def)
   apply(rule spfcomp_eq,simp)
     apply (simp add: assms)
-   apply(simp add: assms)
-  apply (simp)
   oops
   
 
  (*nicht anwendbar wenn kanäle versteckt werden*)
-
+(* Ignore the following stuff
 datatype S = State S_and S_not bool
 
 instance S::countable
   by(countable_datatype)
 
-fun flashertransition::"S \<Rightarrow> bool \<Rightarrow> S \<times> bool"where
+fun flashertransition::"S \<Rightarrow> bool option \<Rightarrow> S \<times> bool option"where
 "flashertransition (State sand snot inputcin1) inputcin2 = 
   (let (nextand,andout) = dAand_transition sand (inputcin1, inputcin2);
                                              (nextnot, notout) = dAnot_transition snot andout in
@@ -187,6 +185,6 @@ lemma flasherout:assumes"Fin (Suc n) < #input" shows"snth (Suc n) (flashersscanl
 lemma flasherfinal:assumes"Fin (Suc n) < #input" 
   shows"snth (Suc n) (flashersscanl\<cdot>input) \<Longrightarrow> snth (Suc n) input \<or> snth n input"
   by(simp add: assms flasherout)
-
+*)
 
 end

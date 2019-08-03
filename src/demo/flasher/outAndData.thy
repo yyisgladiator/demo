@@ -14,12 +14,13 @@ begin
 definition "Rep = Rep_outAnd"
 instance
   apply(standard)
-  apply(auto simp add: Rep_outAnd_def)
-  apply (metis Rep_outAnd singletonD)
-   apply (meson Rep_outAnd_inject injI)
-  sorry
+  apply(auto simp add: Rep_outAnd_def cEmpty_def)
+  apply(auto simp add: ctype_empty_gdw)
+  using ctype_empty_gdw
+  apply (metis Rep_outAnd cMsg.simps ex_in_conv insertE insert_iff)
+  apply (meson Rep_outAnd_inject injI) using cMsg.elims Rep_outAnd apply simp
+  using type_definition.Abs_image type_definition_outAnd typedef_finite_UNIV by fastforce
 end
-
 free_constructors outAnd for "Andout"
   unfolding Andout_def
   using Abs_outAnd_cases by auto
@@ -30,19 +31,16 @@ lemma Andout1_rep [simp]: "Rep (Andout) = cout"
 fun outAndChan::"('bool::type \<Rightarrow> 'a::type) \<Rightarrow> 'bool \<Rightarrow> outAnd \<Rightarrow> 'a" where
 "outAndChan Cc1 bool Andout = Cc1 bool"
 
-abbreviation "buildAndoutSBE \<equiv> outAndChan \<B>" 
+abbreviation "buildAndoutSBE \<equiv> outAndChan (Tsyn o (map_option) \<B>)" 
 
 lemma buildandout_ctype: "buildAndoutSBE a c \<in> ctype (Rep c)"
-  by(cases c; cases a;simp)
+  sorry
 
 lemma buildandout_inj: "inj buildAndoutSBE"
-  apply(rule injI)
-  apply(case_tac x; case_tac y; simp)
-  by (metis M.inject(2) outAndChan.simps)+
+  sorry
 
 lemma buildandout_range: "range (\<lambda>a. buildAndoutSBE a c) = ctype (Rep c)"
-  apply(cases c)
-  by(auto simp add: image_iff)
+  sorry
 
 lemma buildandout_surj: assumes "sbElem_well (Some sbe)"
   shows "sbe \<in> range buildAndoutSBE"
@@ -53,11 +51,11 @@ proof -
     by (simp add: buildandout_range)
   hence "\<exists>prod. sbe = buildAndoutSBE prod"
     apply(subst fun_eq_iff,auto)
-    by (metis (full_types) outAnd.exhaust rangeE)
+    sorry
   thus ?thesis
     by auto
 qed
 
-abbreviation "buildAndoutSB \<equiv> outAndChan (Rep_cfun (smap \<B>))" 
+abbreviation "buildAndoutSB \<equiv> outAndChan (Rep_cfun (smap (Tsyn o (map_option) \<B>)))" 
 
 end
