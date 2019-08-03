@@ -379,7 +379,7 @@ definition getter::"'cs\<^sup>\<surd> \<Rightarrow> 'a" where
 lemma get_set[simp]: "getter (setter a) = a"
   unfolding getter_def
   apply (simp add: setter.rep_eq c_inj c_empty)
-  by (metis UNIV_I c_empty is_singletonE singleton_iff)
+  by (metis (full_types)UNIV_I c_empty is_singletonE singleton_iff)
 
 lemma set_inj: "inj setter"
   by (metis get_set injI)
