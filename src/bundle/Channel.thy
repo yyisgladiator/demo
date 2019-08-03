@@ -15,9 +15,11 @@ we introduce the M datatype:\<close>
 datatype M = Untimed "M_pure" | Timed "M_pure list" | Tsyn "M_pure option"  (* option = tsyn *)
 
 text\<open>We interpret the messages in a time slot of a time model as:
+\begin{itemize}
   \<^item> a message, for the untimed model and there is no time slot
   \<^item> either Some message or None message at all, for the synchronous time model
   \<^item> a finite list of messages, for the timed model
+\end{itemize}
 In this interpretation a untimed stream can be seen as a special case of a synchronous timed stream
 (it contains a message in every time slot) and a synchronous timed stream is a special case of a 
 timed stream (it contains at most one element in each list). Now we defined, how a transmitted 
@@ -52,12 +54,12 @@ definition ctype::"channel \<Rightarrow> M set" where
                    TTimed     \<Rightarrow>  Timed ` {ls. set ls \<subseteq> (cMsg c)} |
                    TTsyn      \<Rightarrow> Tsyn ` (insert None (Some ` cMsg c))"
 
-lemma ctype_empty_gdw: "ctype c = {} \<longleftrightarrow> cMsg c = {}"
+theorem ctype_empty_gdw: "ctype c = {} \<longleftrightarrow> cMsg c = {}"
   apply(cases "(cTime c)")
   apply (auto simp add: ctype_def)
   by (metis bot.extremum empty_set)
 
-lemma ctypeempty_ex:"\<exists>c. ctype c = {}"
+theorem ctypeempty_ex:"\<exists>c. ctype c = {}"
   by (simp add: cmsgempty_ex ctype_empty_gdw)
 
 
@@ -187,7 +189,7 @@ end
 
 
 default_sort chan
-lemma chdom_minus[simp]: "chDom (TYPE('cs1 - 'cs2)) = chDom (TYPE ('cs1)) - chDom (TYPE('cs2))"
+theorem chdom_minus[simp]: "chDom (TYPE('cs1 - 'cs2)) = chDom (TYPE ('cs1)) - chDom (TYPE('cs2))"
   apply(simp add: chDom_def Rep_minus_def)
   apply auto
   apply (meson Diff_iff Rep_minus)
@@ -204,7 +206,7 @@ proof -
 qed
 
 
-lemma chdom_union[simp]: "chDom (TYPE('cs1 \<union> 'cs2)) = chDom (TYPE ('cs1)) \<union> chDom (TYPE('cs2))"
+theorem chdom_union[simp]: "chDom (TYPE('cs1 \<union> 'cs2)) = chDom (TYPE ('cs1)) \<union> chDom (TYPE('cs2))"
   apply(simp add: chDom_def Rep_union_def)
   apply auto
   apply (meson DiffD1 Rep_union UnE)
@@ -232,7 +234,7 @@ by presburger
     using f1 by (simp add: chIsEmpty_def type_definition.Rep_range)
 qed
 
-lemma "chDom (TYPE('cs1 - 'cs2)) \<inter> chDom (TYPE ('cs2)) = {}"
+theorem "chDom (TYPE('cs1 - 'cs2)) \<inter> chDom (TYPE ('cs2)) = {}"
   by auto
 
 (*<*)
