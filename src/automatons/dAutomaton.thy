@@ -116,8 +116,23 @@ lemma dastatesem_strict[simp]: "spfIsStrict (daStateSem da state)"
   oops
 *)
 
-lemma up_sbenone: "Iup (Abs_sbElem None) = up\<cdot>(Abs_sbElem None)"
-  by (simp add: up_def)
+lemma iup_up: "Iup a = up\<cdot>a"
+  by (simp add: up_def cont_Iup)
+
+lemma dastatesem_bot_step:
+  assumes "chIsEmpty TYPE('b::{chan,finite})"
+  shows "daStateSem da s\<cdot>(\<bottom>::'b\<^sup>\<Omega>) = (daNextOut da s (Abs_sbElem None)) \<bullet>\<^sup>\<Omega> (daStateSem da (daNextState da s (Abs_sbElem None))\<cdot>\<bottom>)"
+  apply (subst dastatesem_unfolding)
+  apply (simp add: sb_case_insert)
+  apply (simp add: sbHdElem_h_cont.rep_eq sbHdElem_h_def)
+  apply (rule conjI)
+  apply (rule impI)
+  apply (simp add: iup_up)
+  apply (simp add: case_prod_unfold)
+  apply (simp add: daNextOut_def daNextState_def)
+  using assms by (simp add: chIsEmpty_def)
+
+
 
 lemma assumes "\<forall>x. P x"
   shows "\<And>x. P x"
@@ -127,10 +142,10 @@ lemma assumes "\<forall>k. n \<noteq> Fin k"
   shows "n = \<infinity>"
   by (simp add: assms infI)
 
-lemma sblen_slen_fin_eq: assumes "sbLen (sb::'a\<^sup>\<Omega>) = Fin k"
-  and "\<not>chIsEmpty TYPE('a)"
+lemma sblen_slen_fin_eq: 
+  assumes "sbLen (sb::'a\<^sup>\<Omega>) = Fin k"
   shows "\<exists>c. #(sb \<^enum> c) = Fin k"
-  sorry
+  by (metis SBv3.lnat.distinct(2) assms sblen2slen sblen_min_len_empty)
 
 lemma sbtake_pref: "sbTake i\<cdot>sb \<sqsubseteq> sb"
   by (simp add: sb_belowI)
@@ -142,44 +157,140 @@ lemma sbtake_len_fin:
   apply (simp add: sbgetch_insert)
   oops
 
+lemma sblen_sbhdelemwell:
+  fixes sb :: "'b\<^sup>\<Omega>"
+  assumes "sbLen sb \<ge> 1"
+    and "\<not>chIsEmpty TYPE('b)"
+  shows "sbHdElemWell sb"
+  by (metis Stream.slen_empty_eq add.left_neutral assms fold_inf inf_ub leD ln_less lnat.con_rews lnat_plus_suc lnzero_def order.not_eq_order_implies_strict order.trans sbHdElemWell_def sblen_min_len)
+
+lemma sbhdelemwell_type_nempty: assumes "sbHdElemWell (sb::'b\<^sup>\<Omega>)"
+  shows "\<not>chIsEmpty TYPE('b)" 
+  apply (rule ccontr, simp)
+  using assms
+  by (simp add: sbHdElemWell_def)
+
+lemma nempty_slen: assumes "s \<noteq> \<epsilon>"
+  shows "#s \<ge> 1"
+  apply (rule ccontr)
+  apply (subgoal_tac "s = \<epsilon>")
+  using assms apply simp
+  by (metis add.commute add.right_neutral assms lnat_plus_suc lnle_conv lnzero_def minimal monofun_cfun_arg srt_decrements_length)
+
+
+lemma assumes "sbHdElemWell sb"
+  shows "sbLen sb \<ge> 1"
+  apply (cases "chIsEmpty TYPE('a)")
+  apply (simp add: sbhdelemwell_type_nempty assms)  
+  apply (simp add: sbLen_def)
+  apply (subgoal_tac "\<And>c. #(sb  \<^enum>  c) \<ge> 1")
+  apply (rule LeastI2_ex)
+  apply blast
+  using inf_ub apply blast
+  using assms
+  by (simp add: nempty_slen sbHdElemWell_def)
+
+lemma sbhdelemwell_sbconc: assumes "sbHdElemWell (sb1::'b\<^sup>\<Omega>)"
+  shows "sbHdElemWell (sb1 \<bullet>\<^sup>\<Omega> sb2)"
+  by (metis assms sbHdElemWell_def sbconc_getch sconc_snd_empty strictI)
+
+lemma sblen_fin_chisnempty: assumes "\<exists>k. sbLen (sb::('a::{chan})\<^sup>\<Omega>) = Fin k"
+  shows "\<not>chIsEmpty TYPE('a)"
+  using assms by auto
+
+lemma funcomp_abs_sb:
+  assumes "sb_well (\<lambda>c::'a. g\<cdot>(sb  \<^enum>  c))"
+  shows "Abs_sb (\<lambda>c::'a. f\<cdot>(Abs_sb (\<lambda>c::'a. g\<cdot>(sb  \<^enum>  c))  \<^enum>  c)) = Abs_sb (\<lambda>c::'a. f\<cdot>(g\<cdot>(sb \<^enum> c)))"
+  apply (simp add: sbgetch_insert)
+  apply (subst Abs_sb_inverse)
+  apply (metis assms mem_Collect_eq sb_well_def sbgetch_insert2)
+  using assms by blast
+
+lemma sbdrop_sbrt: "sbDrop (Suc k)\<cdot>sb = sbRt\<cdot>(sbDrop k\<cdot>sb)"
+proof (induction k)
+  case 0
+  have "sbDrop 0\<cdot>sb = sb"
+    apply (simp add: sbdrop_insert)
+    by (metis sbconv_eq sbconvert_insert)
+  then show ?case
+    by simp
+next
+  case (Suc k)
+  have srt_sdrop: "\<And>s. srt\<cdot>s = sdrop 1\<cdot>s"
+    by (simp add: sdrop_forw_rt)
+  then show ?case
+    apply (simp add: sbdrop_insert)
+    apply (subst sdrop_back_rt)
+    by (simp add: srt_sdrop funcomp_abs_sb)
+qed
+
+lemma sblen_sbdrop_zero: assumes "sbLen sb = 0"
+  shows "sbLen (sbDrop k\<cdot>sb) = 0"
+  apply (induction k)
+  apply (simp add: sbdrop_insert)
+  apply (metis (mono_tags) assms sbconv_eq sbconvert_insert)
+  by (metis (mono_tags, lifting) Abs_sb_inverse Fin_02bot  Stream.slen_empty_eq assms bottomI 
+      lnle_def lnzero_def mem_Collect_eq sbDrop.rep_eq sbdrop_bot sbdrop_well sbgetch_bot
+      sbgetch_insert2 sblen_min_len sblen_min_len_empty sblen_slen_fin_eq strict_slen)
+
+lemma assumes "sbLen sb = 0"
+  shows "sbLen (sbRt\<cdot>sb) = 0"
+  oops
+    
+
+lemma
+  assumes "sbLen sb = Fin k"
+  shows "sbLen (sbDrop k\<cdot>sb) = 0"
+  using assms
+  apply (induction k)
+  apply (simp add: sbdrop_insert)
+  apply (metis sbconv_eq sbconvert_insert)
+  apply (subst sbdrop_sbrt)
+  apply (simp add: sblen_sbdrop_zero)
+  oops
+  
+lemma dastatesem_fin_zero: assumes "sbLen (daStateSem automat s\<cdot>sb) \<noteq> \<infinity>"
+  shows "\<exists>s sb. sbLen (daStateSem automat s\<cdot>sb) = Fin 0"
+  sorry
+
 lemma
   fixes automat::"('state, 'in::{chan, finite}, 'out) dAutomaton"
   assumes "\<And>state sbe. sbLen (daNextOut automat state sbe) \<ge> 1"
   and "chIsEmpty TYPE('in)"
   and "\<not>chIsEmpty TYPE('out)"
 shows "\<And>s. sbLen (daStateSem automat s\<cdot>\<bottom>) = \<infinity>"
-  apply (rule infI)
-  apply (rule allI)
-  apply (induct_tac "k")
-  defer
-  sorry
-(*proof (rule ccontr)
+proof (rule ccontr)
   fix s
   assume dastatesem_len: "sbLen (daStateSem automat s\<cdot>\<bottom>) \<noteq> \<infinity>"
-  then obtain k where k_len: "sbLen (daStateSem automat s\<cdot>\<bottom>) = Fin k"
-    using infI by blast
-  have bot_sbecons: "(\<bottom>::'in\<^sup>\<Omega>) = (Abs_sbElem (None)) \<bullet>\<^sup>\<surd> \<bottom>"
-    sorry
-  obtain next_state where next_state_def: "daNextState automat s (Abs_sbElem (None)) = next_state"
-    by simp
-  obtain next_out where next_out_def: "daNextOut automat s (Abs_sbElem (None)) = next_out"
-    by simp
-  hence "daStateSem automat s\<cdot>\<bottom> = next_out \<bullet>\<^sup>\<Omega> ((daStateSem automat next_state)\<cdot>\<bottom>)"
-    apply (subst bot_sbecons)
-    by (simp add: dastatesem_final_h2 next_state_def)
-  hence "sbLen (next_out \<bullet>\<^sup>\<Omega> ((daStateSem automat next_state)\<cdot>\<bottom>)) = Fin k"
-    using k_len by auto
-  hence "(sbLen next_out) + sbLen ((daStateSem automat next_state)\<cdot>\<bottom>) \<le> Fin k"
-    by (metis sblen_sbconc)
-  hence "1 + sbLen ((daStateSem automat next_state)\<cdot>\<bottom>) \<le> Fin k"
-    using assms(1) dual_order.trans lessequal_addition next_out_def by fastforce
-  
-  
-  hence "\<exists>c. #(daStateSem automat s\<cdot>\<bottom> \<^enum> c) = Fin k"
-    using dastatesem_len k_len sblen_min_len_empty sblen_slen_fin_eq by blast
-  show False
-    sorry
-qed*)
+  then obtain k where k_def: "sbLen (daStateSem automat s\<cdot>\<bottom>) = Fin k"
+    using SBv3.lnat.exhaust by blast
+  hence "\<And>c. #((daStateSem automat s\<cdot>\<bottom>) \<^enum> c) \<ge> Fin k"
+    by (metis dastatesem_len sblen_min_len sblen_min_len_empty)
+  then obtain c where c_def: "sbLen (daStateSem automat s\<cdot>\<bottom>) = #((daStateSem automat s\<cdot>\<bottom>) \<^enum> c)"
+    by (metis k_def sblen_slen_fin_eq)
+  hence "#((daStateSem automat s\<cdot>\<bottom>) \<^enum> c) = Fin k"
+    using k_def by auto
+  have dastatesem_state_zero_ex: "\<exists>s. sbLen (daStateSem automat s\<cdot>\<bottom>) = Fin 0"
+    by (metis (full_types) assms(2) dastatesem_fin_zero dastatesem_len sbtypeepmpty_sbbot)
+  then obtain ls where ls_def: "sbLen (daStateSem automat ls\<cdot>\<bottom>) = Fin 0"
+    by blast
+  have bot_none_sbecons: "(\<bottom>::'in\<^sup>\<Omega>) = Abs_sbElem (None) \<bullet>\<^sup>\<surd> \<bottom>"
+    apply (rule sb_eqI)
+    apply (simp add: sbECons_def)
+    apply (simp add: sbe2sb_def)
+    apply (simp split: option.split)
+    apply (rule conjI)
+    apply (simp add: Abs_sb_strict)
+    by (simp add: assms(2))
+  hence sbhdelem_typeempty_bot: "sbHdElem (\<bottom>::'in\<^sup>\<Omega>) = Abs_sbElem (None)"
+    by (simp add: assms(2))
+  hence sbrt_typeempty_bot: "sbRt\<cdot>(\<bottom>::'in\<^sup>\<Omega>) = \<bottom>"
+    using sbdrop_bot by blast
+  hence "daStateSem automat ls\<cdot>\<bottom> = (daNextOut automat ls (Abs_sbElem None)) \<bullet>\<^sup>\<Omega> (daStateSem automat (daNextState automat ls (Abs_sbElem None))\<cdot>\<bottom>)"
+    by (metis bot_none_sbecons dastatesem_final_h2)
+  thus False
+    by (metis assms(1) less2nat_lemma ls_def nempty_slen not_one_le_zero one_lnat_def sbHdElemWell_def sbhdelemwell_sbconc sblen_min_len_empty sblen_sbhdelemwell sblen_slen_fin_eq)
+qed
 
 lemma fun_weakI_h:
   assumes "\<And>sb s. sbLen sb < \<infinity> \<Longrightarrow> sbLen sb \<le> sbLen (daStateSem automat s\<cdot>sb)"
