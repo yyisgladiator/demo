@@ -83,6 +83,7 @@ make no sense, because it would be equivalent to the bundle without channels wit
 Hence, we restrict the Domain of stream bundles to subsets of the @{type channel} type, where its 
 either possible that every channel transmits a message, or non of the channels can transmit any 
 message at all.\<close>
+
 subsection \<open>Preliminaries \<close>
 text\<open>For understandable assumptions in our classes we first define the channel set, that contains 
 all channels with an empty @{const ctype}.\<close>

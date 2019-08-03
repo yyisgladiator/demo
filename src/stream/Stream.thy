@@ -4123,6 +4123,9 @@ apply (auto simp add: sValues_def2)
 apply (rule_tac x="s" in scases, auto)
 by (metis Fin_02bot gr_0 lnzero_def)
 
+lemma sValues_notempty:"s\<noteq>\<epsilon> \<longleftrightarrow> sValues\<cdot>s\<noteq>{}"
+  using strict_sValues_rev by auto
+
 (* the infinite repetition of a only has a in its domain *)
 (*with new lemmata not necessary:
  apply (subst sinftimes_unfold, simp)*)

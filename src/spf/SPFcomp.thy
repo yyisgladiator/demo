@@ -31,8 +31,7 @@ lemma spfcomp_eql[simp]: "genComp\<cdot>f\<cdot>g = f"
   by simp+
 
 lemma sbgetch_empty[simp]: "Rep c\<in>cEmpty \<Longrightarrow> sb \<^enum>\<^sub>\<star> c = \<epsilon>"
-  apply(auto simp add: sbGetCh.rep_eq)
-  by (metis (full_types)Rep_sb_strict app_strict cnotempty_rule sbtypeepmpty_sbbot)
+  by(auto simp add: sbGetCh.rep_eq chDom_def)
 
 lemma ubunion_commu:
   fixes sb1 ::"'cs1\<^sup>\<Omega>"
