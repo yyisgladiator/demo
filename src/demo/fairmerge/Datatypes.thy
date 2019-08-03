@@ -6,7 +6,7 @@ begin
 
 default_sort type
 
-datatype channel = c1 | c2 | c3 | cin1 | cin2 | cout
+datatype channel = cin1 | cin2 | cout | cbot
 
 
 
@@ -19,7 +19,6 @@ text \<open>* Introduce symbol @{text ~} for empty time-slots called eps. \<clos
 syntax "@eps" :: M ("~")
 translations "~" == "CONST eps"
 
-text \<open>Instantiate @{type M} as countable. This is necessary for using @{type M} streams. }\<close>
 instance M::countable
   apply(countable_datatype)
   done
@@ -27,10 +26,10 @@ instance M::countable
 text \<open>Then one describes the types of each channel. Only Messages included are allowed to be
   transmitted\<close>
 fun ctype :: "channel \<Rightarrow> M set" where 
-"ctype c1 = range \<N>" |
-"ctype c2 = range \<B>" |
-"ctype c3 = {}" |
-"ctype _ = range \<B>"
+"ctype cin1 = range \<N>" |
+"ctype cin2 = range \<N>" |
+"ctype cout = range \<N>" |
+"ctype _ = {}"
 
 lemma ctypeempty_ex:"\<exists>c. ctype c = {}"
   using ctype.simps by blast

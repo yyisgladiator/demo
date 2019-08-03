@@ -14,12 +14,12 @@ begin
 definition "Rep = Rep_outAnd"
 instance
   apply(standard)
-  apply(auto simp add: Rep_outAnd_def)
-  apply (metis Rep_outAnd singletonD)
-   apply (meson Rep_outAnd_inject injI)
-  sorry
+  apply(auto simp add: Rep_outAnd_def cEmpty_def)
+  using ctype.elims
+  apply (metis Rep_outAnd ctype.simps(4) ctype.simps(5) ctype.simps(6) ex_in_conv insertE insert_iff)
+  apply (meson Rep_outAnd_inject injI) using ctype.elims Rep_outAnd apply simp
+  using type_definition.Abs_image type_definition_outAnd typedef_finite_UNIV by fastforce
 end
-
 free_constructors outAnd for "Andout"
   unfolding Andout_def
   using Abs_outAnd_cases by auto

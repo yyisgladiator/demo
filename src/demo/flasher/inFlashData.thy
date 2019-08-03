@@ -63,7 +63,7 @@ qed
 
 abbreviation "buildFlashinSB \<equiv> inFlashChan (Rep_cfun (smap \<B>))" 
 
-lemma buildflashoutsb_ctype: "sdom\<cdot>(buildFlashinSB a c) \<subseteq> ctype (Rep c)"
+lemma buildflashoutsb_ctype: "sValues\<cdot>(buildFlashinSB a c) \<subseteq> ctype (Rep c)"
   by(cases c; cases a;simp)
 
 lemma buildflashoutsb_inj: "inj buildFlashinSB"
@@ -71,21 +71,21 @@ lemma buildflashoutsb_inj: "inj buildFlashinSB"
   sorry
 
 
-lemma buildflashoutsb_range: "(\<Union>a. sdom\<cdot>(buildFlashinSB a c)) = ctype (Rep c)"
+lemma buildflashoutsb_range: "(\<Union>a. sValues\<cdot>(buildFlashinSB a c)) = ctype (Rep c)"
   apply(cases c)
   apply auto 
-  apply (metis (no_types, lifting) in_mono smap_sdom_range)
+  apply (metis (no_types, lifting) in_mono smap_sValues_range)
   apply(rule_tac x="\<up>xa" in exI)
   by simp
 
 lemma buildflashoutsb_surj: assumes "sb_well sb"
   shows "sb \<in> range buildFlashinSB"
 proof -
-  have ctypewell:"\<And> c. sValues (sb c) \<subseteq> ctype (Rep c)"
+  have ctypewell:"\<And> c. sValues\<cdot>(sb c) \<subseteq> ctype (Rep c)"
     using assms
     by (simp add: sb_well_def) 
   hence "\<exists>prod. sb = buildFlashinSB prod"
-    apply(subst fun_eq_iff,auto,simp add: sValues_def)
+    apply(subst fun_eq_iff,auto,simp)
     sorry
   thus ?thesis
     by auto

@@ -102,7 +102,7 @@ proof-
             qed
             have dom_emty_iff:"(ch_not_eps={})  \<longleftrightarrow> (( Rep  (c::'c) \<in> cEmpty) )"
               using ch_not_eps_def
-              by (metis (full_types, lifting) Collect_empty_eq_bot Diff_cancel Diff_eq_empty_iff a1 bot_empty_eq cEmpty_def ex_in_conv mem_Collect_eq sbgetch_ctype_notempty set_mp)
+              by (metis (full_types, lifting) Collect_empty_eq_bot Diff_cancel Diff_eq_empty_iff a1 cEmpty_def ex_in_conv mem_Collect_eq sbgetch_ctype_notempty set_mp)
             have dom_not_emp_false: "ch_not_eps\<noteq>{} \<Longrightarrow> False"
             proof -
               assume a111: "ch_not_eps\<noteq>{}"
@@ -246,7 +246,7 @@ proof-
                 have "Y the_min \<^enum> c \<noteq> \<epsilon>"
                   using surj_f_def the_min_def the_set_def by blast
                 then show "Y the_max  \<^enum>  c \<noteq> \<epsilon>"
-                  using \<open>(the_min::nat) \<le> (the_max::nat)\<close>  order_class.order.antisym 
+                  using \<open>(the_min::nat) \<le> (the_max::nat)\<close>
                   by (metis \<open>(Y::nat \<Rightarrow> 'c\<^sup>\<Omega>) (the_min::nat) \<sqsubseteq> Y (the_max::nat)\<close> bottomI monofun_cfun_arg)
               qed
               then show False
@@ -306,23 +306,33 @@ proof-
   qed
 qed
 
+
+subsection\<open>sbHdElem\_h\_cont lemmas\<close>
+
+
+lemma h2:"sbHdElem_h_cont\<cdot>(sbe \<bullet>\<^sup>\<surd> sb) = up\<cdot>sbe"
+  by(simp add: sbHdElem_h_cont.rep_eq sbhdelem_h_sbe)
+
 subsection\<open>sb\_cases definition\<close>
 
 definition sb_case::"('cs\<^sup>\<surd> \<Rightarrow> 'cs\<^sup>\<Omega> \<rightarrow> 'a::pcpo) \<rightarrow> 'cs\<^sup>\<Omega> \<rightarrow> 'a" where
 "sb_case \<equiv> \<Lambda> k sb. fup\<cdot>(\<Lambda> sbe. k sbe\<cdot>(sbRt\<cdot>sb))\<cdot>(sbHdElem_h_cont\<cdot>sb)"
 
-lemma sb_case_insert:"sb_case\<cdot>k\<cdot>sb = (fup\<cdot>(\<Lambda> sbe. k sbe\<cdot>(sbRt\<cdot>sb))\<cdot>(sbHdElem_h_cont\<cdot>sb))"
+lemma sb_case_insert:"sb_case\<cdot>k\<cdot>sb = (case sbHdElem_h_cont\<cdot>sb of up\<cdot>(sbe::'b\<^sup>\<surd>) \<Rightarrow> k sbe\<cdot>(sbRt\<cdot>sb))"
   apply(simp add: sb_case_def)
-  apply(subst beta_cfun,auto)
-  apply (intro cont2cont)
-  using cont2cont_snd cont_fst cont_snd discr_cont3 cont2cont_fst by blast
+  apply(subst beta_cfun)
+  apply(intro cont2cont,simp_all)
+  using cont2cont_fst cont_fst cont_snd discr_cont3 by blast
 
 
-lemma sb_cases_bot:"\<not>(chIsEmpty (TYPE ('cs))) \<Longrightarrow> sb_case\<cdot>f\<cdot>\<bottom> = \<bottom>"
-  sorry
+lemma sb_cases_bot:"\<not>(chIsEmpty (TYPE ('cs))) \<Longrightarrow> sb_case\<cdot>f\<cdot>(\<bottom>::'cs\<^sup>\<Omega>) = \<bottom>"
+  by(simp add: sb_case_insert sbHdElem_h_cont.rep_eq sbHdElem_h_def chIsEmpty_def)
 
-lemma sb_cases_sbe[simp]:"sb_case\<cdot>f\<cdot>(sbECons sbe\<cdot>sb) = f sbe\<cdot>sb"
-  sorry
+lemma sb_cases_sbe[simp]:"sb_case\<cdot>f\<cdot>(sbECons sbe\<cdot>sb) = f sbe\<cdot>(sb)"
+  apply (subst sb_case_insert)
+  apply (subst sbrt_sbecons)
+  by (simp add: h2)
+
 
 section\<open>Datatype Konstruktor\<close>
 
@@ -404,7 +414,7 @@ lemma "getter A = getter B \<Longrightarrow> A = B"
 fixrec setterSB::"'a stream \<rightarrow> 'cs\<^sup>\<Omega>" where
 "setterSB\<cdot>((up\<cdot>l)&&ls) = (setter (undiscr l)) \<bullet>\<^sup>\<surd> (setterSB\<cdot>ls)" 
 
-lemma settersb_unfold:"setterSB\<cdot>(\<up>a \<bullet> s) = (setter a) \<bullet>\<^sup>\<surd> setterSB\<cdot>s"
+lemma settersb_unfold[simp]:"setterSB\<cdot>(\<up>a \<bullet> s) = (setter a) \<bullet>\<^sup>\<surd> setterSB\<cdot>s"
   unfolding setterSB_def
   apply(subst fix_eq)
   apply simp 
@@ -413,10 +423,10 @@ lemma settersb_unfold:"setterSB\<cdot>(\<up>a \<bullet> s) = (setter a) \<bullet
   apply (metis (no_types, lifting) lshd_updis stream.sel_rews(4) undiscr_Discr up_inject)
   by (metis lscons_conv)
 
-lemma settersb_emptyfix:"chIsEmpty (TYPE ('cs)) \<Longrightarrow> setterSB\<cdot>s = \<bottom>"
+lemma settersb_emptyfix[simp]:"chIsEmpty (TYPE ('cs)) \<Longrightarrow> setterSB\<cdot>s = \<bottom>"
   by simp
 
-lemma settersb_epsbot:"setterSB\<cdot>\<epsilon> = \<bottom>"
+lemma settersb_epsbot[simp]:"setterSB\<cdot>\<epsilon> = \<bottom>"
   apply(simp add: setterSB_def)
   apply(subst fix_eq)
   by auto
@@ -425,7 +435,7 @@ lemma settersb_epsbot:"setterSB\<cdot>\<epsilon> = \<bottom>"
 definition getterSB::"'cs\<^sup>\<Omega> \<rightarrow> 'a stream" where
 "getterSB \<equiv> fix\<cdot>(\<Lambda> h. sb_case\<cdot>(\<lambda>sbe. \<Lambda> sb. updis (getter sbe) && h\<cdot>sb))"
 
-lemma gettersb_unfold:"getterSB\<cdot>(sbe \<bullet>\<^sup>\<surd> sb) = \<up>(getter sbe) \<bullet> getterSB\<cdot>sb"
+lemma gettersb_unfold[simp]:"getterSB\<cdot>(sbe \<bullet>\<^sup>\<surd> sb) = \<up>(getter sbe) \<bullet> getterSB\<cdot>sb"
   unfolding getterSB_def
   apply(subst fix_eq)
   apply simp
@@ -434,7 +444,7 @@ lemma gettersb_unfold:"getterSB\<cdot>(sbe \<bullet>\<^sup>\<surd> sb) = \<up>(g
 lemma gettersb_emptyfix:"chIsEmpty (TYPE ('cs)) \<Longrightarrow> getterSB\<cdot>sb = \<up>(getter (Abs_sbElem None)) \<bullet> getterSB\<cdot>sb"
   by (metis(full_types) gettersb_unfold sbtypeepmpty_sbbot)
 
-lemma gettersb_realboteps:"\<not>(chIsEmpty (TYPE ('cs))) \<Longrightarrow> getterSB\<cdot>\<bottom> = \<epsilon>"
+lemma gettersb_realboteps[simp]:"\<not>(chIsEmpty (TYPE ('cs))) \<Longrightarrow> getterSB\<cdot>\<bottom> = \<epsilon>"
   unfolding getterSB_def
   apply(subst fix_eq)
   by (simp add: sb_cases_bot)
@@ -453,14 +463,11 @@ lemma "sbLen (setterSB\<cdot>s) = #s"
 lemma "a \<sqsubseteq> getterSB\<cdot>(setterSB\<cdot>a)"
   apply(induction a rule: ind)
   apply(auto)
-  apply (simp add: gettersb_unfold settersb_unfold)
   by (simp add: monofun_cfun_arg)
 
-lemma getset_eq:"\<not>chIsEmpty (TYPE ('cs)) \<Longrightarrow> getterSB\<cdot>(setterSB\<cdot>a) = a"
+lemma getset_eq[simp]:"\<not>chIsEmpty (TYPE ('cs)) \<Longrightarrow> getterSB\<cdot>(setterSB\<cdot>a) = a"
   apply(induction a rule: ind)
-  apply(auto)
-  apply (simp add: gettersb_realboteps settersb_epsbot)
-  by (simp add: gettersb_unfold settersb_unfold)
+  by(auto)
 
 lemma "setterSB\<cdot>(getterSB\<cdot>sb) \<sqsubseteq> sb"
   apply(induction sb)
@@ -469,23 +476,37 @@ lemma "setterSB\<cdot>(getterSB\<cdot>sb) \<sqsubseteq> sb"
   apply (metis (full_types)minimal sbtypeepmpty_sbbot)
   apply(simp add: sbIsLeast_def)
   oops
- 
+
+lemma "sb1 = sb2 \<Longrightarrow> sbe \<bullet>\<^sup>\<surd> sb1 = sbe \<bullet>\<^sup>\<surd> sb2"
+  by simp
+
 lemma setget_eq:"(\<forall>c. #(sb \<^enum> c) = k) \<Longrightarrow>setterSB\<cdot>(getterSB\<cdot>sb) = sb"
-  apply(induction sb arbitrary: k)
-  apply auto
-  apply(rule adm_imp)
-     apply auto 
-  apply(rule admI)
-  defer
-  apply(case_tac "chIsEmpty (TYPE ('cs))")
-  apply (metis (full_types)sbtypeepmpty_sbbot)
-    apply(simp add: sbIsLeast_def)
-  apply(subgoal_tac "k = 0",auto)
-     apply (metis gettersb_realboteps sb_eqI sbgetch_bot settersb_epsbot)
-    defer
-    apply(subst gettersb_unfold)
-    apply(subst settersb_unfold,simp)
-  apply(subgoal_tac "\<And>c. #(sb \<^enum> c) \<le> #(sbe \<bullet>\<^sup>\<surd> sb  \<^enum>  c)",auto)
+proof(induction sb arbitrary: k)
+  case adm
+  then show ?case sorry
+next
+  case (least sb)
+  then show ?case
+   apply(cases "chIsEmpty(TYPE('cs))",auto)
+   apply(simp add: sbIsLeast_def)
+   apply(subgoal_tac "k=0")
+   apply(subgoal_tac "sb = \<bottom>",simp)
+   apply(simp add: sbLen_def)
+   apply(simp add: bot_sb)
+   apply(rule sb_eqI)
+   apply (metis bot_sb sbgetch_bot)
+   by (metis sblen2slen)
+next
+  case (sbeCons sbe sb)
+  then obtain kin where k_def:"lnsuc\<cdot>kin = k"
+    by (metis sbecons_len sblen2slen)
+  then have sbelen1:"\<And>c n. #((sbe::'cs\<^sup>\<surd>) \<bullet>\<^sup>\<surd> (sb::'cs\<^sup>\<Omega>)  \<^enum>  c) = lnsuc\<cdot>n \<Longrightarrow> # (sb \<^enum> c) = n"
+    sorry
+  then show ?case
+    apply simp
+    apply(subst cfun_arg_eqI[of " setterSB\<cdot>(getterSB\<cdot>sb)" sb],auto)
+    apply(subst sbeCons.IH[of kin],auto)
+    using k_def sbeCons.prems by blast 
   oops  (* Nur für gleichlange ströme *)
 
 fun setterList::"'a list \<Rightarrow> 'cs\<^sup>\<Omega>" where
@@ -497,7 +518,7 @@ end
 
 locale sbGen = 
   fixes lConstructor::" 'a::pcpo \<Rightarrow> 'cs::chan  \<Rightarrow> M stream"
-  assumes c_type: "\<And>a c. sValues (lConstructor a c) \<subseteq> ctype (Rep c)"
+  assumes c_type: "\<And>a c. sValues\<cdot>(lConstructor a c) \<subseteq> ctype (Rep c)"
     and c_inj: "inj lConstructor"
     and c_surj: "\<And>f. sb_well f \<Longrightarrow> f\<in>range lConstructor" (* Schöner? *)
 begin

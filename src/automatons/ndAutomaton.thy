@@ -21,7 +21,7 @@ record ('state::type, 'in::"{chan, finite}", 'out::chan) ndAutomaton_incomplete 
 cpodef ('state::type, 'in::"{chan, finite}", 'out::chan) ndAutomaton  =
   "{(transition::(('state \<Rightarrow> 'in\<^sup>\<surd> \<Rightarrow> (('state \<times> 'out\<^sup>\<Omega>) set))), initialConfig::('state \<times> 'out\<^sup>\<Omega>) set)
     | transition initialConfig.
-      (\<forall>sbe state. transition sbe state \<noteq> {})
+      (\<forall>sbe state. transition state sbe\<noteq> {})
     \<and> initialConfig \<noteq> {}}"
    apply auto[1]
   apply(subst UU_eq_empty[symmetric])+
@@ -35,15 +35,6 @@ definition ndaTransition::"('state::type, 'in::{chan, finite}, 'out) ndAutomaton
 
 definition ndaInitConfig::"('state::type, 'in::{chan, finite}, 'out) ndAutomaton \<rightarrow> ('state \<times>'out\<^sup>\<Omega>)set" where
 "ndaInitConfig = (\<Lambda> aut. (snd(Rep_ndAutomaton aut)))"
-
-
-(*
-definition ndaInitStates::"('state::type, 'in, 'out) ndAutomaton \<Rightarrow> 'state set" where
-"ndaInitStates aut = fst `(snd(aut))"
-
-definition ndaInitOuts::"('state::type, 'in, 'out) ndAutomaton \<Rightarrow> ('out\<^sup>\<Omega>) set" where
-"ndaInitOuts aut = snd `(snd(aut))"
-*)
 
 lemma ndastatesem_mono[simp]:"mono (\<lambda>h state. {sb_case\<cdot>(\<lambda>sbe. \<Lambda> sb.
     (let (nextSPF, output) = f' sbe in
