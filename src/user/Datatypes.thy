@@ -8,7 +8,7 @@ begin
 
 default_sort %invisible type
 text\<open>This section mainly introduces two datatypes that will be used for defining stream bundles,
-stream processing functions and automatons \ref{sec:focus}.
+stream processing functions and automatons \cref{sec:focus}.
 The datatypes in this theory are only dummy types, that will be generated differently depending 
 on the component. We need these dummy types to define the general framework.\<close>
 
@@ -35,7 +35,7 @@ different message type, the constructor is also immediately hidden.\<close>
 instance M_pure :: countable
   apply(intro_classes)
   by(countable_datatype)
-text\<open>Since we want use the stream type \ref{sec:stream} for defining stream bundles, the message
+text\<open>Since we want use the stream type \cref{sec:stream} for defining stream bundles, the message
 datatype has to be countable. In addition, each channel can be restricted to allow only a subset of 
 messages from @{type M_pure} on its stream. Therefore, each channel can be mapped to a set of 
 messages from datatype @{type M_pure}.Such a mapping is described by the cMsg function. Only 
@@ -51,14 +51,14 @@ theorem cmsgempty_ex:"\<exists>c. cMsg c = {}"
 
 text\<open>Only with such an assumption we can always artificially define an "empty" stream bundle. The 
 possibility to have an empty stream bundle is important for various reasons. Beside being able to 
-define "sensors" and "sinks" as SPFs, also the general composition\ref{sec:focus} of components may 
+define "sensors" and "sinks" as SPFs, also the general composition\cref{sec:focus} of components may 
 result in components without in or output channels. Thus, we restrict the user to channel types, 
 that contain a never transmitting channel.\<close>
 
-text \<open>Since one can use different time models for components \ref{sec:focus}, we also have to use 
+text \<open>Since one can use different time models for components \cref{sec:focus}, we also have to use 
 the correct time model for our streams. Therefore, we define a function that maps a channel to its 
-time model. The @{type timeType} is defined as @{thm timeType.simps} We allow 3 types of timing: 
-@{const TTimed}, @{const TTsyn} and @{const TUntimed}\ref{sec:focus}.\<close>
+time model. The @{type timeType} is defined as @{thm timeType.simps(7,8,9)} We allow 3 types of timing: 
+@{const TTimed}, @{const TTsyn} and @{const TUntimed}\cref{sec:focus}.\<close>
 definition cTime :: "channel \<Rightarrow> timeType" where
 "cTime = undefined"
 

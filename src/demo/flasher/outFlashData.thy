@@ -13,8 +13,8 @@ definition "Rep = Rep_outFlash"
 instance
   apply(standard)
   apply(auto simp add: Rep_outFlash_def cEmpty_def)
-  apply(auto simp add: ctype_empty_gdw)
-  using ctype_empty_gdw
+  apply(auto simp add: ctype_empty_iff)
+  using ctype_empty_iff
   apply (metis Rep_outFlash cMsg.simps ex_in_conv insertE insert_iff)
   apply (meson Rep_outFlash_inject injI) using cMsg.elims Rep_outFlash apply simp
   apply (metis cMsg.simps emptyE image_iff iso_tuple_UNIV_I)

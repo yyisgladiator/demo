@@ -12,8 +12,8 @@ definition "Rep = Rep_outNot"
 instance
   apply(standard)
   apply(auto simp add: Rep_outNot_def cEmpty_def)
-  apply(auto simp add: ctype_empty_gdw)
-  using ctype_empty_gdw
+  apply(auto simp add: ctype_empty_iff)
+  using ctype_empty_iff
   apply (metis Rep_outNot cMsg.simps ex_in_conv insertE insert_iff)
   apply (meson Rep_outNot_inject injI) using cMsg.elims Rep_outNot apply simp
   using type_definition.Abs_image type_definition_outNot typedef_finite_UNIV by fastforce

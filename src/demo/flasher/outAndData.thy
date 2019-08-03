@@ -15,8 +15,8 @@ definition "Rep = Rep_outAnd"
 instance
   apply(standard)
   apply(auto simp add: Rep_outAnd_def cEmpty_def)
-  apply(auto simp add: ctype_empty_gdw)
-  using ctype_empty_gdw
+  apply(auto simp add: ctype_empty_iff)
+  using ctype_empty_iff
   apply (metis Rep_outAnd cMsg.simps ex_in_conv insertE insert_iff)
   apply (meson Rep_outAnd_inject injI) using cMsg.elims Rep_outAnd apply simp
   using type_definition.Abs_image type_definition_outAnd typedef_finite_UNIV by fastforce

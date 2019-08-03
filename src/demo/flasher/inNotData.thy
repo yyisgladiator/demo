@@ -13,8 +13,8 @@ definition "Rep = Rep_inNot"
 instance
   apply(standard)
   apply(auto simp add: Rep_inNot_def cEmpty_def)
-  apply(auto simp add: ctype_empty_gdw)
-  using ctype_empty_gdw
+  apply(auto simp add: ctype_empty_iff)
+  using ctype_empty_iff
   apply (metis Rep_inNot cMsg.simps ex_in_conv insertE insert_iff)
   apply (meson Rep_inNot_inject injI) using cMsg.elims Rep_inNot apply simp
   using type_definition.Abs_image type_definition_inNot typedef_finite_UNIV by fastforce
