@@ -22,11 +22,11 @@ hide_const DummyChannel
 text \<open>To ensure that the dummy channel type is never used for proving anything not holding 
 over every channel type, the constructor is immediately hidden.\<close>
 
-section \<open>Message Definition\<close>
+section \<open>Pure Message Datatype\<close>
 
 
-text\<open>Analogous to the channel datatype, the message datatype contains all messages that a channel 
-can transmit. Hence, every kind of message has to be described here.\<close>
+text\<open>Analogous to the channel datatype, the pure message datatype contains the messages that a 
+channel can transmit. Hence, every kind of message has to be described here.\<close>
 datatype M_pure = DummyMessage nat
 
 hide_const DummyMessage
@@ -37,18 +37,18 @@ instance M_pure :: countable
   apply(intro_classes)
   by(countable_datatype)
 text\<open>Since we want use the stream type \ref{sec:stream} for defining stream bundles, the message 
-datatype has to be countable. In addition, a channel can be restricted to allow only a subset of 
-messages on its stream. Therefore, each channel has a "type", a set of messages from datatype @{type M_pure}.
-These channel types are described by the cMsg function. Only Messages included in the cMsg are 
-allowed to be transmitted on the respective channel.\<close>
+datatype has to be countable. In addition, each channel can be restricted to allow only a subset of 
+messages from @{type M_pure} on its stream. Therefore, each channel can be mapped to a set of 
+messages from datatype @{type M_pure}.Such a mapping is described by the cMsg function. Only 
+messages included in the cMsg are allowed to be transmitted on the respective channel.\<close>
 
 definition cMsg :: "channel \<Rightarrow> M_pure set" where 
 "cMsg = (\<lambda>c. if c= undefined then {} else undefined)"
 
-text\<open>Here we also use a dummy cMsg definition. We only assume, is that there always
+text\<open>Here we almost use an undefined cMsg mapping. We only assume, is that there always
 exists at least one channel, on which no message can flow.\<close>
 
-lemma cmsgempty_ex:"\<exists>c. cMsg c = {}"
+theorem cmsgempty_ex:"\<exists>c. cMsg c = {}"
   by (simp add: cMsg_def)
 
 text\<open>Only with such an assumption we can always artificially define an "empty" stream bundle. The 
@@ -60,14 +60,12 @@ that contain a never transmitting channel.\<close>
 text \<open>Since one can use different time models for components \ref{sec:focus}, we also have to use 
 the correct time model for our streams. Therefore, we define a function that maps a channel to its 
 time model. The @{type timeType} is defined as @{thm timeType.simps} We allow 3 types of timing: 
-@{const TTimed}, @{const TTsyn} and @{const TUntimed}.\<close>
+@{const TTimed}, @{const TTsyn} and @{const TUntimed}\ref{sec:focus}.\<close>
 definition cTime :: "channel \<Rightarrow> timeType" where
 "cTime = undefined"
 
-text\<open>Like before, we use a dummy definition for cTime.\<close>
 hide_fact cMsg_def
 hide_fact cTime_def
-text\<open>At last we also hide the cMsg and cTime definitions.\<close>
 (*<*)
 end
 (*>*)

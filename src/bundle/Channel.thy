@@ -4,9 +4,25 @@ theory Channel
 imports HOLCF user.Datatypes
 begin
 (*>*)
+section \<open>Global message type\<close>
 
-
+text\<open>Depending on the time model, we allow to transmit slightly different versions of @{type M_pure} 
+messages. In every time slot of the synchronous time model, every channel transmits at most one 
+message. But in every time slot of the general timed model, it is possible to transmit an arbitrary 
+high, but finite number of messages \ref{sec:focus}. To allow the usage of both models and also the untimed model, 
+we introduce the M datatype:\<close>
 datatype M = Untimed "M_pure" | Timed "M_pure list" | Tsyn "M_pure option"  (* option = tsyn *)
+
+text\<open>We interpret the messages in a time slot of a time model as:
+  \<^item> a message, for the untimed model and there is no time slot
+  \<^item> either Some message or None message at all, for the synchronous time model
+  \<^item> a finite list of messages, for the timed model
+In this interpretation a untimed stream can be seen as a special case of a synchronous timed stream
+(it contains a message in every time slot) and a synchronous timed stream is a special case of a 
+timed stream (it contains at most one element in each list). Now we defined, how a transmitted 
+message in a time slot can look like, respectively to its time model. For this we define a mapping
+from channel to a set of elements from M. Obviously, we have to restrict the channels to their time
+models, else there could be timed and untimed messages on the same channel.\<close>
 
 lemma inj_tsyn[simp]: "inj Tsyn"
   by (simp add: inj_def)
@@ -35,6 +51,7 @@ definition ctype::"channel \<Rightarrow> M set" where
                    TTimed     \<Rightarrow>  Timed ` {ls. set ls \<subseteq> (cMsg c)} |
                    TTsyn      \<Rightarrow> Tsyn ` (insert None (Some ` cMsg c))"
 
+
 lemma ctype_empty_gdw: "ctype c = {} \<longleftrightarrow> cMsg c = {}"
   apply(cases "(cTime c)")
   apply (auto simp add: ctype_def)
@@ -51,6 +68,7 @@ definition cEmpty :: "channel set" where
 text \<open>@{const cEmpty} contains all channels on which no message is allowed to be transmitted.\<close> 
 
 section\<open>@{type channel} class definitions\<close>
+
 subsection\<open>Class chan\<close>
 class chan =
   fixes Rep :: "'a \<Rightarrow> channel"
