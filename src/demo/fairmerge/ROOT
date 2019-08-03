@@ -1,3 +1,3 @@
-session "user" = "HOLCF" +
+session "user" = "inc" +
   theories
     Datatypes
