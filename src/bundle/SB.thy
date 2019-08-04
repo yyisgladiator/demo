@@ -268,6 +268,16 @@ proof(simp add: sbLen_def)
     by (simp add: a1 calculation cont_pref_eq1I eq_less_and_fst_inf)
 qed
 
+lemma sblen_leadm:"adm (\<lambda>sb. k \<le> sbLen sb)"
+proof(rule admI)
+ fix Y :: "nat \<Rightarrow>'a\<^sup>\<Omega> " and k :: lnat
+  assume chY:  "chain Y" and  as2: "  \<forall>i::nat. k \<le> sbLen (Y i) "
+  have "\<And>i. sbLen (Y i) \<sqsubseteq>sbLen( \<Squnion>i. Y i)"
+    using sblen_mono chY is_ub_thelub lnle_def monofun_def by blast
+  then show " k \<le> sbLen (\<Squnion>i::nat. Y i)" 
+    using as2 box_below lnle_def sblen_mono chY is_ub_thelub lnle_def monofun_def by blast
+qed
+
 lemma sblen2slen:
   assumes"\<not>chIsEmpty(TYPE('c))"
   shows"\<exists>c. sbLen (sb :: 'c\<^sup>\<Omega>) = #(sb \<^enum> c)"

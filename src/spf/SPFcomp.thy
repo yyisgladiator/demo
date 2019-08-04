@@ -1,6 +1,6 @@
 theory SPFcomp
 
-imports bundle.SB
+imports bundle.SB SPF
 begin
 
 section \<open>General composition\<close>
