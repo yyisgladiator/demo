@@ -15,7 +15,7 @@ named_theorems mono2mono "monofun intro rule"
 section \<open>sbElem\<close>
 text\<open>A function from channels to messages is quite useful in our later 
 theories. Hence, we define a the sbElem type. But the possibility to have no 
-type channel}s in the @{const chDom} of a @{class chan} type, forces us to use 
+@{type channel}s in the @{const chDom} of a @{class chan} type, forces us to use 
 the allow  @{const None} function in such a case.\<close>
 
 subsection \<open>sbElem Definition \<close>
