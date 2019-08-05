@@ -260,57 +260,34 @@ lemma dastatesem_inempty_step:fixes automat::"('state, 'in::{chan, finite}, 'out
   apply(subst dastatesem_final_h2)
   using assms by simp
 
-lemma test:"y \<noteq> 0 \<Longrightarrow> x = x +y \<Longrightarrow> x = \<infinity>"
-  using leI plus_unique_r by fastforce
-
-lemma sblen_inempty:
-  fixes automat::"('state, 'in::{chan, finite}, 'out) dAutomaton"
-  assumes "\<And>state sbe c. #((daNextOut automat state sbe) \<^enum> c) = 1"
-  and "chIsEmpty TYPE('in)"
-shows "sbLen (daStateSem automat s\<cdot>\<bottom>) = \<infinity>"
-apply (rule infI)
-apply (rule allI)
-proof -
-  fix k::nat
-  show "sbLen (daStateSem automat s\<cdot>\<bottom>) \<noteq> Fin k"
-    apply(induction k arbitrary: s,simp)
-    apply(subst dastatesem_inempty_step,simp add: assms) 
-    apply (metis Fin_02bot lnat.con_rews lnat_plus_commu assms(1) lnat_plus_suc lnzero_def sbconc_chan_len sblen_slen_fin_eq)
-  proof(auto)
-    fix s::'state and k::nat
-    assume sblen:"(\<And>s::'state. sbLen (daStateSem automat s\<cdot>\<bottom>) \<noteq> Fin k)"
-    assume sblen2:"sbLen (daStateSem automat s\<cdot>\<bottom>) = Fin (Suc k)"
-    then have h0:"sbLen (daStateSem automat s\<cdot>\<bottom>) = sbLen ((daNextOut automat s (Abs_sbElem None)) \<bullet>\<^sup>\<Omega> 
-           ((daStateSem automat (daNextState automat s (Abs_sbElem None)))\<cdot>\<bottom>))"
-      by (metis assms(2) dastatesem_inempty_step)
-    have h2:"sbLen ((daStateSem automat (daNextState automat s (Abs_sbElem None)))\<cdot>\<bottom>) \<noteq> Fin k"
-      by (simp add: sblen)
-    then have "sbLen ((daNextOut automat s (Abs_sbElem None)) \<bullet>\<^sup>\<Omega> 
-           ((daStateSem automat (daNextState automat s (Abs_sbElem None)))\<cdot>\<bottom>)) = sbLen ((daStateSem automat (daNextState automat s (Abs_sbElem None)))\<cdot>\<bottom>) + 1"
-      using sblen_sbconc_eq assms by blast
-    then show "False"
-      by (metis Fin_Suc h0 inject_lnsuc lnat_plus_suc local.h2 sblen2)
-  qed
-qed
-
 lemma
   fixes automat::"('state, 'in::{chan, finite}, 'out) dAutomaton"
   assumes "\<And>state sbe. sbLen (daNextOut automat state sbe) \<ge> 1"
   and "chIsEmpty TYPE('in)"
-shows "sbLen (daStateSem automat s\<cdot>\<bottom>) = \<infinity>"
-proof-
-  obtain lnat where lnat_def:"lnat = sbLen (daStateSem automat s\<cdot>\<bottom>)"
-    by simp
-  then have hlen:"lnat = sbLen ((daNextOut automat s (Abs_sbElem None)) \<bullet>\<^sup>\<Omega> 
-         ((daStateSem automat (daNextState automat s (Abs_sbElem None)))\<cdot>\<bottom>))"
-    by(simp add: lnat_def,subst  dastatesem_inempty_step, simp_all add: assms)
-  have "\<And>state sbe. lnsuc\<cdot>(lnat) \<le> sbLen (daNextOut automat state sbe \<bullet>\<^sup>\<Omega> daStateSem automat s\<cdot>\<bottom>)"
-    using sblen_sbconc assms lnat_def
-    by (metis dual_order.trans lessequal_addition lnat_plus_commu lnat_plus_suc order_refl)
-  then have "sbLen ((daStateSem automat (daNextState automat s (Abs_sbElem None)))\<cdot>\<bottom>) \<le>lnat"
+shows "\<forall>s. sbLen (daStateSem automat s\<cdot>\<bottom>) = \<infinity>"
+proof(rule contrapos_pp,simp+)
+  assume a1: "\<exists>s::'state. sbLen (daStateSem automat s\<cdot>\<bottom>) \<noteq> \<infinity>"
+  then obtain state where state_def: "\<forall>s. sbLen (daStateSem automat state\<cdot>\<bottom>) \<le> sbLen (daStateSem automat s\<cdot>\<bottom>)" (*v3 branch may have a lemma that helps here*)
+    apply auto
     sorry
-  then show "sbLen (daStateSem automat s\<cdot>\<bottom>) = \<infinity>"
-    oops
+  then obtain k where k_def:"Fin k = sbLen (daStateSem automat state\<cdot>\<bottom>)"
+    by (metis SBv3.lnat.exhaust a1 inf_less_eq)
+  then have "\<forall>s. Fin k \<le> sbLen (daStateSem automat s\<cdot>\<bottom>)"
+    by (simp add: state_def)
+  then have "sbLen (daStateSem automat state\<cdot>\<bottom>) > Fin k"
+    apply(subst dastatesem_inempty_step,simp add: assms)
+    using sblen_sbconc assms
+  proof -
+    assume "\<forall>s. Fin k \<le> sbLen (daStateSem automat s\<cdot>\<bottom>)"
+    then have "Fin k < sbLen (daNextOut automat state (Abs_sbElem None)) + sbLen (daStateSem automat (daNextState automat state (Abs_sbElem None))\<cdot> \<bottom>)"
+      by (metis add.commute assms(1) le2lnle leI lessequal_addition lnat_plus_suc notinfI3)
+    then show "Fin k < sbLen (daNextOut automat state (Abs_sbElem None) \<bullet>\<^sup>\<Omega> daStateSem automat (daNextState automat state (Abs_sbElem None))\<cdot> \<bottom>)"
+      by (meson leD leI sblen_sbconc trans_lnle)
+  qed
+  then show "False"
+    by (simp add: k_def)
+qed
+
 lemma fun_weakI_h:
   assumes "\<And>sb s. sbLen sb < \<infinity> \<Longrightarrow> sbLen sb \<le> sbLen (daStateSem automat s\<cdot>sb)"
   shows   "\<And>sb s. sbLen sb = \<infinity> \<Longrightarrow> sbLen sb \<le> sbLen (daStateSem automat s\<cdot>sb)"
