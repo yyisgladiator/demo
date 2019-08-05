@@ -194,6 +194,11 @@ lemma notcdom_empty[simp]:assumes"Rep (c::'c) \<notin>chDom TYPE('c::chan)"
   shows" Rep c \<in> cEmpty"
   using assms by (simp add: chDom_def)
 
+lemma chdom_in: fixes c::"'cs::chan"
+  assumes "chDom TYPE('cs) \<noteq> {}"
+    shows "Rep c \<in> chDom TYPE('cs)"
+  by (metis Diff_eq_empty_iff Diff_triv assms chDom_def chan_botsingle rangeI)
+
 
 declare %invisible[[show_types]]
 declare %invisible[[show_consts]]

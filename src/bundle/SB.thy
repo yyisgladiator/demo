@@ -693,7 +693,51 @@ lemma sb_ind[case_names adm least sbeCons, induct type: sb]:
 lemma sbecons_eq:assumes "sbLen sb \<noteq> 0" shows "(sbHdElem sb) \<bullet>\<^sup>\<surd> (sbRt\<cdot>sb) = sb"
   apply(cases sb,simp_all add: sbIsLeast_def assms)
   by (metis One_nat_def sbhdelem_sbecons sbrt_sbecons)
+
+
+subsection \<open>sbConvert\<close>
+
+subsubsection \<open>sbConvert definition\<close>
+
+lemma sbconvert_well[simp]:"sb_well (\<lambda>c. sb \<^enum>\<^sub>\<star> c)"
+  by(rule sbwellI, simp)
+
+lift_definition sbConvert::"'c\<^sup>\<Omega> \<rightarrow> 'd\<^sup>\<Omega>"is
+"(\<lambda> sb. Abs_sb (\<lambda>c.  sb \<^enum>\<^sub>\<star> c ))"
+  by(intro cont2cont, simp)
   
+lemmas sbconvert_insert = sbConvert.rep_eq
+
+subsubsection \<open>sbConvert abbreviation\<close>
+
+abbreviation sbConvert_abbr :: "'c\<^sup>\<Omega> \<Rightarrow> 'd\<^sup>\<Omega>" ( "_\<star>" 200) where 
+"sb\<star> \<equiv> sbConvert\<cdot>sb"
+
+abbreviation sbConvert_abbr_fst :: "('c \<union> 'd)\<^sup>\<Omega> \<Rightarrow> 'c\<^sup>\<Omega>" ( "_\<star>\<^sub>1" 200) where 
+"sb\<star>\<^sub>1 \<equiv> sbConvert\<cdot>sb"
+
+abbreviation sbConvert_abbr_snd :: "('c\<union>'d)\<^sup>\<Omega> \<Rightarrow> 'd\<^sup>\<Omega>" ( "_\<star>\<^sub>2" 200) where 
+"sb\<star>\<^sub>2 \<equiv> sbConvert\<cdot>sb"
+
+subsubsection \<open>sbConvert lemmas\<close>
+
+lemma sbconvert_rep[simp]: "Rep_sb(sb\<star>) = (\<lambda>c. sb \<^enum>\<^sub>\<star> c)"
+  by (simp add: Abs_sb_inverse sbconvert_insert)
+
+lemma fixes sb ::"'a\<^sup>\<Omega>"
+  shows "sb\<star> \<^enum>\<^sub>\<star> c = sb \<^enum>\<^sub>\<star> c"
+  apply(cases "Rep c\<in>(range(Rep::'a\<Rightarrow>channel))")
+   apply(auto simp add: sbgetch_insert)
+  oops (* gilt nicht, wenn 'b kleiner ist als 'a *)
+
+lemma sbconv_eq[simp]:"sbConvert\<cdot>sb = sb"
+  apply(rule sb_eqI)
+  by (metis (no_types) Abs_sb_inverse mem_Collect_eq sbconvert_insert sbconvert_well sbgetch_insert2)
+
+lemma sbconvert_getch [simp]: "sb \<star> \<^enum> c = sb \<^enum>\<^sub>\<star> c"
+  by (simp add: sbgetch_insert2)
+
+
 subsection \<open>sbUnion\<close>
 
 subsubsection\<open>sbUnion definition\<close>
@@ -747,47 +791,91 @@ lemma sbunion_eq [simp]: "sb1 \<uplus>\<^sub>\<star> sb2 = sb1"
   by simp
 
 
-subsection \<open>sbConvert\<close>
-
-subsubsection \<open>sbConvert definition\<close>
-
-lemma sbconvert_well[simp]:"sb_well (\<lambda>c. sb \<^enum>\<^sub>\<star> c)"
-  by(rule sbwellI, simp)
-
-lift_definition sbConvert::"'c\<^sup>\<Omega> \<rightarrow> 'd\<^sup>\<Omega>"is
-"(\<lambda> sb. Abs_sb (\<lambda>c.  sb \<^enum>\<^sub>\<star> c ))"
-  by(intro cont2cont, simp)
-  
-lemmas sbconvert_insert = sbConvert.rep_eq
-
-subsubsection \<open>sbConvert abbreviation\<close>
-
-abbreviation sbConvert_abbr :: "'c\<^sup>\<Omega> \<Rightarrow> 'd\<^sup>\<Omega>" ( "_\<star>" 200) where 
-"sb\<star> \<equiv> sbConvert\<cdot>sb"
-
-abbreviation sbConvert_abbr_fst :: "('c \<union> 'd)\<^sup>\<Omega> \<Rightarrow> 'c\<^sup>\<Omega>" ( "_\<star>\<^sub>1" 200) where 
-"sb\<star>\<^sub>1 \<equiv> sbConvert\<cdot>sb"
-
-abbreviation sbConvert_abbr_snd :: "('c\<union>'d)\<^sup>\<Omega> \<Rightarrow> 'd\<^sup>\<Omega>" ( "_\<star>\<^sub>2" 200) where 
-"sb\<star>\<^sub>2 \<equiv> sbConvert\<cdot>sb"
-
-subsubsection \<open>sbConvert lemmas\<close>
-
-lemma sbconvert_rep[simp]: "Rep_sb(sb\<star>) = (\<lambda>c. sb \<^enum>\<^sub>\<star> c)"
-  by (simp add: Abs_sb_inverse sbconvert_insert)
-
-lemma fixes sb ::"'a\<^sup>\<Omega>"
-  shows "sb\<star> \<^enum>\<^sub>\<star> c = sb \<^enum>\<^sub>\<star> c"
-  apply(cases "Rep c\<in>(range(Rep::'a\<Rightarrow>channel))")
-   apply(auto simp add: sbgetch_insert)
-  oops (* gilt nicht, wenn 'b kleiner ist als 'a *)
-
-lemma sbconv_eq[simp]:"sbConvert\<cdot>sb = sb"
-  apply(rule sb_eqI)
-  by (metis (no_types) Abs_sb_inverse mem_Collect_eq sbconvert_insert sbconvert_well sbgetch_insert2)
-
 lemma sbunion_sbconvert_eq[simp]:"cb \<uplus>\<^sub>\<star> cb = (cb\<star>)"
   by(simp add: sbunion_insert sbconvert_insert)
+
+lemma ubunion_commu:
+  fixes sb1 ::"'cs1\<^sup>\<Omega>"
+    and sb2 ::"'cs2\<^sup>\<Omega>"
+    assumes "chDom (TYPE ('cs1)) \<inter> chDom (TYPE ('cs2)) = {}"
+    shows "sb1 \<uplus>\<^sub>\<star> sb2 = ((sb2 \<uplus>\<^sub>\<star> sb1)::'cs3\<^sup>\<Omega>)"
+  apply(rule sb_eqI)
+  apply(rename_tac c)
+  apply(case_tac "Rep c \<in> chDom (TYPE ('cs1))"; case_tac "Rep c \<in> chDom (TYPE ('cs2))"; case_tac "Rep c \<in> chDom (TYPE ('cs3))")
+  using assms  by(auto simp add: sbGetCh.rep_eq sbunion_rep_eq)
+
+lemma ubunion_fst[simp]:
+  fixes sb1 ::"'cs1\<^sup>\<Omega>"
+    and sb2 ::"'cs2\<^sup>\<Omega>"
+  assumes "chDom (TYPE ('cs2)) \<inter> chDom (TYPE ('cs3)) = {}"
+  shows "sb1 \<uplus>\<^sub>\<star> sb2 = (sb1\<star> :: 'cs3\<^sup>\<Omega>)"
+  apply(rule sb_eqI)  (* Exakt gleicher beweis wie "ubunion_commu" ... *)
+  apply(rename_tac c)
+  apply(case_tac "Rep c \<in> chDom (TYPE ('cs1))"; case_tac "Rep c \<in> chDom (TYPE ('cs2))"; case_tac "Rep c \<in> chDom (TYPE ('cs3))")
+  apply(case_tac "Rep c \<in> chDom (TYPE ('cs1))"; case_tac "Rep c \<in> chDom (TYPE ('cs2))"; case_tac "Rep c \<in> chDom (TYPE ('cs3))")
+  using assms  by(auto simp add: sbGetCh.rep_eq sbunion_rep_eq)
+
+lemma ubunion_id[simp]: "out\<star>\<^sub>1 \<uplus> (out\<star>\<^sub>2) = out"
+proof(rule sb_eqI)
+  fix c::"'a \<union> 'b"
+  assume as:"Rep c \<in> chDom TYPE('a \<union> 'b)"
+  have "Rep c \<in> chDom (TYPE ('a)) \<Longrightarrow> out\<star> \<uplus> (out\<star>) \<^enum> c = out \<^enum> c"
+    by (metis sbgetch_insert2 sbunion_getch sbunion_rep_eq sbunion_sbconvert_eq)
+  moreover have "Rep c \<in> chDom (TYPE ('b)) \<Longrightarrow> out\<star> \<uplus> (out\<star>) \<^enum> c = out \<^enum> c"
+    by (metis sbgetch_insert2 sbunion_getch sbunion_rep_eq sbunion_sbconvert_eq)
+  moreover have "(Rep c \<in> chDom (TYPE ('a))) \<or> (Rep c \<in> chDom (TYPE ('b)))"
+    using as chdom_in by fastforce
+  ultimately show  "out\<star> \<uplus> (out\<star>) \<^enum> c = out \<^enum> c" by fastforce
+qed
+
+
+lemma sbunion_getchl[simp]:
+    fixes sb1 ::"'cs1\<^sup>\<Omega>"
+      and sb2 ::"'cs2\<^sup>\<Omega>"
+  assumes "Rep c \<in> chDom TYPE('cs1)"
+    shows "(sb1 \<uplus> sb2) \<^enum>\<^sub>\<star> c = sb1 \<^enum>\<^sub>\<star> c"
+  apply(auto simp add: sbgetch_insert sbunion_rep_eq assms)
+  apply (metis Rep_union_def UnI1 assms equals0D f_inv_into_f union_range_union)
+  apply (metis Rep_union_def UnCI assms f_inv_into_f union_range_union)
+  apply (metis Rep_union_def UnCI assms chan_eq union_range_union)
+  by (metis Rep_union_def Un_iff assms chan_eq empty_iff union_range_union)
+
+lemma sbunion_getchr[simp]:
+    fixes sb1 ::"'cs1\<^sup>\<Omega>"
+      and sb2 ::"'cs2\<^sup>\<Omega>"
+  assumes "Rep c \<notin> chDom TYPE('cs1)"
+  shows "(sb1 \<uplus> sb2) \<^enum>\<^sub>\<star> c = sb2 \<^enum>\<^sub>\<star> c"
+  apply(auto simp add: sbgetch_insert sbunion_rep_eq assms)
+  apply (metis Rep_union_def UnCI assms f_inv_into_f union_range_union)
+  apply (metis Rep_union_def UnCI chan_eq union_range_union)
+   apply (metis Rep_union_def UnCI f_inv_into_f union_range_union)
+  by (metis Rep_union_def Un_iff chan_eq empty_iff union_range_union)
+
+lemma sbunion_getch_nomag [simp]: "sb1 \<uplus>\<^sub>\<star> sb2  \<^enum>  c = (sb1 \<uplus> sb2) \<^enum>\<^sub>\<star> c"
+  by(auto simp add: sbgetch_insert2 sbunion_rep_eq)
+
+lemma sbunion_magic: 
+  fixes sb1 ::"'cs1\<^sup>\<Omega>"
+    and sb2 ::"'cs2\<^sup>\<Omega>"
+  shows "(sb1 \<uplus> sb2)\<star> = sb1 \<uplus>\<^sub>\<star> sb2"
+  apply(rule sb_eqI)
+  by auto
+
+lemma sbunion_fst[simp]: "(sb1 \<uplus> sb2)\<star>\<^sub>1 = sb1"
+  by (simp add: sbunion_magic)
+
+lemma sbunion_snd[simp]:
+  fixes sb1 ::"'cs1\<^sup>\<Omega>"
+    and sb2 ::"'cs2\<^sup>\<Omega>"
+  assumes "chDom (TYPE ('cs1)) \<inter> chDom (TYPE ('cs2)) = {}"
+  shows "(sb1 \<uplus> sb2)\<star>\<^sub>2 = sb2"
+  by (metis assms sbconv_eq sbunion_magic ubunion_commu ubunion_fst)
+
+lemma sbunion_eqI:
+  assumes "sb1 = (sb\<star>\<^sub>1)"
+    and "sb2 = (sb\<star>\<^sub>2)"
+  shows "sb1 \<uplus> sb2 = sb"
+  by (simp add: assms)
 
 (*<*)
 end
