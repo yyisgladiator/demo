@@ -248,50 +248,69 @@ lemma
   apply (subst sbdrop_sbrt)
   apply (simp add: sblen_sbdrop_zero)
   oops
-  
-lemma dastatesem_fin_zero: assumes "sbLen (daStateSem automat s\<cdot>sb) \<noteq> \<infinity>"
-  shows "\<exists>s sb. sbLen (daStateSem automat s\<cdot>sb) = Fin 0"
-  sorry
+
+lemma helper:"chIsEmpty TYPE('cs) \<Longrightarrow> \<bottom> = (Abs_sbElem None) \<bullet>\<^sup>\<surd> (\<bottom>::'cs\<^sup>\<Omega>)"
+  by simp
+
+lemma dastatesem_inempty_step:fixes automat::"('state, 'in::{chan, finite}, 'out) dAutomaton"
+  assumes"chIsEmpty TYPE('in)"
+  shows "daStateSem automat s\<cdot>\<bottom> = (daNextOut automat s (Abs_sbElem None)) \<bullet>\<^sup>\<Omega> 
+         ((daStateSem automat (daNextState automat s (Abs_sbElem None)))\<cdot>\<bottom>)"
+  apply(subst helper,simp add: assms)
+  apply(subst dastatesem_final_h2)
+  using assms by simp
+
+lemma test:"y \<noteq> 0 \<Longrightarrow> x = x +y \<Longrightarrow> x = \<infinity>"
+  using leI plus_unique_r by fastforce
+
+lemma sblen_inempty:
+  fixes automat::"('state, 'in::{chan, finite}, 'out) dAutomaton"
+  assumes "\<And>state sbe c. #((daNextOut automat state sbe) \<^enum> c) = 1"
+  and "chIsEmpty TYPE('in)"
+shows "sbLen (daStateSem automat s\<cdot>\<bottom>) = \<infinity>"
+apply (rule infI)
+apply (rule allI)
+proof -
+  fix k::nat
+  show "sbLen (daStateSem automat s\<cdot>\<bottom>) \<noteq> Fin k"
+    apply(induction k arbitrary: s,simp)
+    apply(subst dastatesem_inempty_step,simp add: assms) 
+    apply (metis Fin_02bot lnat.con_rews lnat_plus_commu assms(1) lnat_plus_suc lnzero_def sbconc_chan_len sblen_slen_fin_eq)
+  proof(auto)
+    fix s::'state and k::nat
+    assume sblen:"(\<And>s::'state. sbLen (daStateSem automat s\<cdot>\<bottom>) \<noteq> Fin k)"
+    assume sblen2:"sbLen (daStateSem automat s\<cdot>\<bottom>) = Fin (Suc k)"
+    then have h0:"sbLen (daStateSem automat s\<cdot>\<bottom>) = sbLen ((daNextOut automat s (Abs_sbElem None)) \<bullet>\<^sup>\<Omega> 
+           ((daStateSem automat (daNextState automat s (Abs_sbElem None)))\<cdot>\<bottom>))"
+      by (metis assms(2) dastatesem_inempty_step)
+    have h2:"sbLen ((daStateSem automat (daNextState automat s (Abs_sbElem None)))\<cdot>\<bottom>) \<noteq> Fin k"
+      by (simp add: sblen)
+    then have "sbLen ((daNextOut automat s (Abs_sbElem None)) \<bullet>\<^sup>\<Omega> 
+           ((daStateSem automat (daNextState automat s (Abs_sbElem None)))\<cdot>\<bottom>)) = sbLen ((daStateSem automat (daNextState automat s (Abs_sbElem None)))\<cdot>\<bottom>) + 1"
+      using sblen_sbconc_eq assms by blast
+    then show "False"
+      by (metis Fin_Suc h0 inject_lnsuc lnat_plus_suc local.h2 sblen2)
+  qed
+qed
 
 lemma
   fixes automat::"('state, 'in::{chan, finite}, 'out) dAutomaton"
   assumes "\<And>state sbe. sbLen (daNextOut automat state sbe) \<ge> 1"
   and "chIsEmpty TYPE('in)"
-  and "\<not>chIsEmpty TYPE('out)"
-shows "\<And>s. sbLen (daStateSem automat s\<cdot>\<bottom>) = \<infinity>"
-proof (rule ccontr)
-  fix s
-  assume dastatesem_len: "sbLen (daStateSem automat s\<cdot>\<bottom>) \<noteq> \<infinity>"
-  then obtain k where k_def: "sbLen (daStateSem automat s\<cdot>\<bottom>) = Fin k"
-    using SBv3.lnat.exhaust by blast
-  hence "\<And>c. #((daStateSem automat s\<cdot>\<bottom>) \<^enum> c) \<ge> Fin k"
-    by (metis dastatesem_len sblen_min_len sblen_min_len_empty)
-  then obtain c where c_def: "sbLen (daStateSem automat s\<cdot>\<bottom>) = #((daStateSem automat s\<cdot>\<bottom>) \<^enum> c)"
-    by (metis k_def sblen_slen_fin_eq)
-  hence "#((daStateSem automat s\<cdot>\<bottom>) \<^enum> c) = Fin k"
-    using k_def by auto
-  have dastatesem_state_zero_ex: "\<exists>s. sbLen (daStateSem automat s\<cdot>\<bottom>) = Fin 0"
-    by (metis (full_types) assms(2) dastatesem_fin_zero dastatesem_len sbtypeepmpty_sbbot)
-  then obtain ls where ls_def: "sbLen (daStateSem automat ls\<cdot>\<bottom>) = Fin 0"
-    by blast
-  have bot_none_sbecons: "(\<bottom>::'in\<^sup>\<Omega>) = Abs_sbElem (None) \<bullet>\<^sup>\<surd> \<bottom>"
-    apply (rule sb_eqI)
-    apply (simp add: sbECons_def)
-    apply (simp add: sbe2sb_def)
-    apply (simp split: option.split)
-    apply (rule conjI)
-    apply (simp add: Abs_sb_strict)
-    by (simp add: assms(2))
-  hence sbhdelem_typeempty_bot: "sbHdElem (\<bottom>::'in\<^sup>\<Omega>) = Abs_sbElem (None)"
-    by (simp add: assms(2))
-  hence sbrt_typeempty_bot: "sbRt\<cdot>(\<bottom>::'in\<^sup>\<Omega>) = \<bottom>"
-    using sbdrop_bot by blast
-  hence "daStateSem automat ls\<cdot>\<bottom> = (daNextOut automat ls (Abs_sbElem None)) \<bullet>\<^sup>\<Omega> (daStateSem automat (daNextState automat ls (Abs_sbElem None))\<cdot>\<bottom>)"
-    by (metis bot_none_sbecons dastatesem_final_h2)
-  thus False
-    by (metis assms(1) less2nat_lemma ls_def nempty_slen not_one_le_zero one_lnat_def sbHdElemWell_def sbhdelemwell_sbconc sblen_min_len_empty sblen_sbhdelemwell sblen_slen_fin_eq)
-qed
-
+shows "sbLen (daStateSem automat s\<cdot>\<bottom>) = \<infinity>"
+proof-
+  obtain lnat where lnat_def:"lnat = sbLen (daStateSem automat s\<cdot>\<bottom>)"
+    by simp
+  then have hlen:"lnat = sbLen ((daNextOut automat s (Abs_sbElem None)) \<bullet>\<^sup>\<Omega> 
+         ((daStateSem automat (daNextState automat s (Abs_sbElem None)))\<cdot>\<bottom>))"
+    by(simp add: lnat_def,subst  dastatesem_inempty_step, simp_all add: assms)
+  have "\<And>state sbe. lnsuc\<cdot>(lnat) \<le> sbLen (daNextOut automat state sbe \<bullet>\<^sup>\<Omega> daStateSem automat s\<cdot>\<bottom>)"
+    using sblen_sbconc assms lnat_def
+    by (metis dual_order.trans lessequal_addition lnat_plus_commu lnat_plus_suc order_refl)
+  then have "sbLen ((daStateSem automat (daNextState automat s (Abs_sbElem None)))\<cdot>\<bottom>) \<le>lnat"
+    sorry
+  then show "sbLen (daStateSem automat s\<cdot>\<bottom>) = \<infinity>"
+    oops
 lemma fun_weakI_h:
   assumes "\<And>sb s. sbLen sb < \<infinity> \<Longrightarrow> sbLen sb \<le> sbLen (daStateSem automat s\<cdot>sb)"
   shows   "\<And>sb s. sbLen sb = \<infinity> \<Longrightarrow> sbLen sb \<le> sbLen (daStateSem automat s\<cdot>sb)"
