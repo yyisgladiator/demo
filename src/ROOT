@@ -19,7 +19,7 @@ session "stream" (mustWork) in "stream" = "inc" +
 session "bundle" (mustWork) in "bundle" = "stream" +
   description "Bundle multiple streams together. Each stream can be accessed using
     an identifier called Channel. Type-information is pertained"
-  options [quick_and_dirty, browser_info, document = pdf,document_variants="outline=-lemma,-proof",document_tags="lemma%lemma"]
+  options [quick_and_dirty = false, browser_info, document = pdf,document_variants="outline=-lemma,-proof",document_tags="lemma%lemma"]
   sessions
     user
   theories

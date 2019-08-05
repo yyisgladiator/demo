@@ -489,19 +489,7 @@ lemma "sb1 = sb2 \<Longrightarrow> sbe \<bullet>\<^sup>\<surd> sb1 = sbe \<bulle
   by simp
 
 lemma setget_eq:"(\<forall>c. #(sb \<^enum> c) = k) \<Longrightarrow>setterSB\<cdot>(getterSB\<cdot>sb) = sb"
-proof(induction sb arbitrary: k)
-  case adm
-  then show ?case sorry
-next
-  case (least sb)
-  then show ?case
-   apply(cases "chIsEmpty(TYPE('cs))",auto)
-   apply(simp add: sbIsLeast_def)
-   apply(subgoal_tac "k=0")
-   apply(subgoal_tac "sb = \<bottom>",simp)
-   apply(simp add: sbLen_def)
-   apply(simp add: bot_sb) 
-  oops  (* Nur für gleichlange ströme *)
+  oops
 
 fun setterList::"'a list \<Rightarrow> 'cs\<^sup>\<Omega>" where
 "setterList [] = \<bottom>" |
