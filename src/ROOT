@@ -28,6 +28,9 @@ session "bundle" (mustWork) in "bundle" = "stream" +
     SB_fin
   document_files
     "root.tex"
+  document_files (in "../")
+    "MontiBelle.sty"
+
 
 session "spf" (mustWork) in "spf" = "bundle" +
   description "Composition of Stream Processing Functions + Weak-Causal and Strong-Causal Components"
@@ -37,6 +40,9 @@ session "spf" (mustWork) in "spf" = "bundle" +
     SPFcomp
   document_files
     "root.tex"
+  document_files (in "../")
+    "MontiBelle.sty"
+
 
 session "automaton" (mustWork) in "automatons" = "spf" +
   description "Deterministic and Non-Deterministic Automatons based on Rum96"
@@ -47,3 +53,6 @@ session "automaton" (mustWork) in "automatons" = "spf" +
     ndAutomaton
   document_files
     "root.tex"
+  document_files (in "../")
+    "MontiBelle.sty"
+

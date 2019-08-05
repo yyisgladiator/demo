@@ -7,4 +7,5 @@ session "user" (mustWork) = "inc" +
     Datatypes
   document_files
     "root.tex"
+  document_files (in "../")
     "MontiBelle.sty"
