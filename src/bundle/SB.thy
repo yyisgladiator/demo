@@ -52,6 +52,9 @@ lemma bot_sb:"\<bottom> = Abs_sb(\<lambda>c. \<epsilon>)"
 lemma rep_sb_well[simp]:"sb_well(Rep_sb sb)"
   using Rep_sb by auto
 
+lemma abs_rep_sb_sb[simp]:"Abs_sb(Rep_sb sb) = sb"
+  using Rep_sb_inverse by auto
+
 lemma sbrep_cont[simp, cont2cont]: "cont Rep_sb"
   using cont_Rep_sb cont_id by blast
 
@@ -278,10 +281,46 @@ proof(rule admI)
     using as2 box_below lnle_def sblen_mono chY is_ub_thelub lnle_def monofun_def by blast
 qed
 
-lemma sblen2slen:
+lemma sblen2slen_h:
+  fixes "c1"
+  assumes"\<not>chIsEmpty(TYPE('c))"
+  and "\<forall>c2. #((sb :: 'c\<^sup>\<Omega>) \<^enum> c1) \<le> #(sb \<^enum> c2)"
+  shows "#((sb :: 'c\<^sup>\<Omega>) \<^enum> c1) = sbLen sb"
+  apply(simp add: sbLen_def)
+  apply(subst Least_equality[of "\<lambda>n. \<exists>c::'c. n = #(sb  \<^enum>  c)" "#((sb :: 'c\<^sup>\<Omega>) \<^enum> c1)"])
+  apply(simp_all add: assms)
+   apply auto[1]
+  using assms(2) by auto
+
+lemma sb_minstream_exists:
+  assumes "\<not>chIsEmpty(TYPE('c))"
+  shows "\<exists>c1. \<forall>c2. #((sb :: 'c\<^sup>\<Omega>) \<^enum> c1) \<le> #(sb \<^enum> c2)"
+  using  assms
+proof -
+  { fix cc :: "'c \<Rightarrow> 'c"
+    have ff1: "\<forall>s c l. l \<le> #(s \<^enum> (c::'c)) \<or> \<not> l \<le> sbLen s"
+      by (meson assms sblen_min_len trans_lnle)
+    { assume "\<exists>c l. \<not> l \<le> #(sb \<^enum> c)"
+      then have "\<not> \<infinity> \<le> sbLen sb"
+        using ff1 by (meson inf_ub trans_lnle)
+      then have "\<exists>c. #(sb \<^enum> c) \<le> #(sb \<^enum> cc c)"
+        using ff1 by (metis less_le_not_le ln_less Orderings.linorder_class.linear lnle2le sblengeq) }
+    then have "\<exists>c. #(sb \<^enum> c) \<le> #(sb \<^enum> cc c)"
+      by meson }
+  then show ?thesis
+    by metis
+qed
+
+theorem sblen2slen:
   assumes"\<not>chIsEmpty(TYPE('c))"
   shows"\<exists>c. sbLen (sb :: 'c\<^sup>\<Omega>) = #(sb \<^enum> c)"
-  sorry
+proof -
+  obtain min_c where "\<forall>c2. #((sb :: 'c\<^sup>\<Omega>) \<^enum> min_c) \<le> #(sb \<^enum> c2)" using sb_minstream_exists assms by blast
+  then have "sbLen (sb :: 'c\<^sup>\<Omega>) = #(sb \<^enum> min_c)" using sblen2slen_h
+    using assms by fastforce
+  then show ?thesis
+    by auto 
+qed
 
 lemma sbconc_chan_len:"#(sb1 \<bullet>\<^sup>\<Omega> sb2  \<^enum>  c) = #(sb1 \<^enum> c)+ #(sb2  \<^enum>  c)"
   by (simp add: sconc_slen2)
@@ -423,6 +462,27 @@ lemma sbtake_max_len [simp]: "#(sbTake n\<cdot>(sb::'a\<^sup>\<Omega>) \<^enum> 
   apply(simp add: sbTake.rep_eq)
   by(simp add: sbmap_stake_eq)
 
+lemma abs_sb_eta:
+  assumes "sb_well  (\<lambda>c::'cs. f\<cdot>(sb \<^enum> c))"
+  and "\<not>chIsEmpty TYPE('cs)"
+  shows "(Abs_sb (\<lambda>c::'cs. f\<cdot>(sb  \<^enum>  c))  \<^enum>  c) = f\<cdot>(sb  \<^enum>  c)"
+  by (metis Abs_sb_inverse assms(1) mem_Collect_eq sbgetch_insert2)
+
+lemma sbconc_sconc:
+  assumes  "sb_well  (\<lambda>c::'cs. f\<cdot>(sb \<^enum> c))"
+  and  "sb_well  (\<lambda>c::'cs. g\<cdot>( sb \<^enum> c))"
+  and "\<not>chIsEmpty TYPE('cs)"
+  shows "Abs_sb (\<lambda>c::'cs. f\<cdot>(sb  \<^enum>  c)) \<bullet>\<^sup>\<Omega> Abs_sb (\<lambda>c::'cs. g\<cdot>(sb  \<^enum>  c)) =
+        Abs_sb (\<lambda>c::'cs. f\<cdot>(sb  \<^enum>  c) \<bullet> g\<cdot>(sb  \<^enum>  c))"
+  by (simp add: assms abs_sb_eta sbconc_insert)
+ 
+theorem sbcons [simp]: " sbConc (sbHd\<cdot>sb)\<cdot>(sbRt\<cdot>sb) = sb"
+  apply(cases "chIsEmpty TYPE('a)")
+  apply (metis (full_types) sbtypeepmpty_sbbot)
+  apply (simp add: sbtake_insert sbdrop_insert)
+  apply (subst sbconc_sconc,simp_all)
+  by (simp add: sbgetch_insert2)
+
 
 subsection\<open>sbHdElem\<close>
 
@@ -539,14 +599,15 @@ lemma sbecons_len:
   by (metis (no_types, hide_lams) add.left_neutral cempty_rule f_inv_into_f lnat_plus_commu one_def 
   only_empty_has_length_0 sbECons_def sbconc_chan_len sbe2slen_1 sblen2slen sconc_slen2 slen_scons)
 
-
-(*sb_case*)
-
-lemma sbcons:"sbLen (sb::'cs\<^sup>\<Omega>) \<noteq> (0::lnat) \<Longrightarrow>sbConc (sbHd\<cdot>sb)\<cdot>(sbRt\<cdot>sb) = sb"
-  sorry
-
-lemma sbHdElem:"sbLen (sb::'cs\<^sup>\<Omega>) \<noteq> (0::lnat) \<Longrightarrow>sbe2sb (sbHdElem sb) = sbHd\<cdot>sb"
-  sorry
+lemma sbHdElem:"sbLen (sb::'cs\<^sup>\<Omega>) \<noteq> (0::lnat) \<Longrightarrow> sbe2sb (sbHdElem sb) = sbHd\<cdot>sb"
+  apply (case_tac "chIsEmpty (TYPE ('cs))")
+  apply (metis (full_types) sbtypeepmpty_sbbot)
+  apply (rule sb_rep_eqI)
+  apply (simp add: sbHdElem_def sbHdElem_h_def)
+  apply rule+
+  apply (simp add: sbIsLeast_def)
+  by (simp add:sbtake_insert stake2shd sbe2sb.abs_eq sbe2sb.rep_eq Abs_sbElem_inverse Abs_sb_inverse 
+      sb_well_def)
 
 (*sb_ind*)
 

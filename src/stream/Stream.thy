@@ -714,7 +714,15 @@ by (case_tac "k", auto)
 
 text \<open>\<open>stake\<close>ing \<open>#x\<close> elements returns \<open>x\<close> again\<close>
 lemma fin2stake:"#x = Fin n \<Longrightarrow> stake n\<cdot>x = x"
-by (rule fin2stake_lemma [rule_format, of "x" "n" "n"], simp)
+  by (rule fin2stake_lemma [rule_format, of "x" "n" "n"], simp)
+
+text \<open>\<open>stake\<close>ing only on element from an empty stream is the same as the stream consisting of 
+      \<open>shd\<close> of the stream\<close>
+lemma stake2shd:"s\<noteq>\<epsilon> \<Longrightarrow> stake (Suc 0)\<cdot>s = \<up>(shd s)"
+  by(rule scases[of s],simp_all add: Nat.One_nat_def)
+
+lemma stake2shd2:"s\<noteq>\<epsilon> \<Longrightarrow> stake 1\<cdot>s = \<up>(shd s)"
+  by(simp add: Nat.One_nat_def stake2shd)
 
 (* if the stream is not empty, it holds that its length is lnsuc\<cdot>(#(srt\<cdot>s)) *)
 lemma srt_decrements_length : "s \<noteq> \<epsilon> \<Longrightarrow> #s = lnsuc\<cdot>(#(srt\<cdot>s))" by (metis slen_scons surj_scons)
