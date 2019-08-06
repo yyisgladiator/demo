@@ -14,10 +14,12 @@ begin
 definition "Rep = Rep_outFM"
 instance
   apply(standard)
-  apply(auto simp add: Rep_outFM_def)
-  apply (metis Rep_outFM singletonD)
-   apply (meson Rep_outFM_inject injI)
-  sorry
+  apply(auto simp add: Rep_outFM_def cEmpty_def)
+  apply(auto simp add: ctype_empty_iff)
+  using ctype_empty_iff
+  apply (metis Rep_outFM cMsg.simps ex_in_conv insertE insert_iff)
+  apply (meson Rep_outFM_inject injI) using cMsg.elims Rep_outFM apply simp
+  using type_definition.Abs_image type_definition_outFM typedef_finite_UNIV by fastforce
 end
 
 free_constructors outFM for "FMout"
@@ -30,18 +32,16 @@ lemma FMout1_rep [simp]: "Rep (FMout) = cout"
 fun outFMChan::"('bool::type \<Rightarrow> 'a::type) \<Rightarrow> 'bool \<Rightarrow> outFM \<Rightarrow> 'a" where
 "outFMChan Cc1 bool FMout = Cc1 bool"
 
-abbreviation "buildFMoutSBE \<equiv> outFMChan \<N>" 
+abbreviation "buildFMoutSBE \<equiv> outFMChan (Tsyn o (map_option) \<B>)" 
 
 lemma buildfmout_ctype: "buildFMoutSBE a c \<in> ctype (Rep c)"
-  by(cases c; cases a;simp)
+  sorry
 
 lemma buildfmout_inj: "inj buildFMoutSBE"
-  apply(rule injI)
-  by (metis M.inject(1) outFMChan.simps)
+  sorry
 
 lemma buildfmout_range: "range (\<lambda>a. buildFMoutSBE a c) = ctype (Rep c)"
-  apply(cases c)
-  by(auto simp add: image_iff)
+  sorry
 
 lemma buildfmout_surj: assumes "sbElem_well (Some sbe)"
   shows "sbe \<in> range buildFMoutSBE"
@@ -52,11 +52,11 @@ proof -
     by (simp add: buildfmout_range)
   hence "\<exists>prod. sbe = buildFMoutSBE prod"
     apply(subst fun_eq_iff,auto)
-    by (metis (full_types) outFM.exhaust rangeE)
+    sorry
   thus ?thesis
     by auto
 qed
 
-abbreviation "buildFMoutSB \<equiv> outFMChan (Rep_cfun (smap \<N>))" 
+abbreviation "buildFMoutSB \<equiv> outFMChan (Rep_cfun (smap (Tsyn o (map_option) \<N>)))" 
 
 end
