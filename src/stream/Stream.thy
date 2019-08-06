@@ -1551,6 +1551,15 @@ lemma l5: "smap g\<cdot>((\<up>x)\<^sup>\<infinity>) = ((\<up>(g x))\<^sup>\<inf
 lemma smap_hd_rst : "s \<noteq> \<epsilon> \<Longrightarrow> smap f\<cdot>s = \<up>(f (shd s)) \<bullet> smap f\<cdot>(srt\<cdot>s)" by (metis smap_scons surj_scons)
 
 
+
+
+lemma smap_inj:"inj f \<Longrightarrow> inj (Rep_cfun (smap f))"
+  apply(rule injI)
+  apply(rule snths_eq,auto)
+  apply (metis slen_smap)
+  by (metis inj_eq slen_smap smap_snth_lemma)
+
+
 (* ----------------------------------------------------------------------- *)
 subsection \<open>@{term sprojfst} and @{term sprojsnd}\<close>
 (* ----------------------------------------------------------------------- *)

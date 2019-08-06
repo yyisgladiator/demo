@@ -66,7 +66,7 @@ qed
 
 abbreviation "buildFlashinSB \<equiv> inFlashChan (Rep_cfun (smap (Tsyn o (map_option) \<B>)))" 
 
-lemma buildflashoutsb_ctype: "sValues\<cdot>(buildFlashinSB a c) \<subseteq> ctype (Rep c)"
+lemma buildflashinsb_ctype: "sValues\<cdot>(buildFlashinSB a c) \<subseteq> ctype (Rep c)"
  apply(cases c)
   apply auto
    by (metis Flashin1_rep buildflashin_ctype f_inv_into_f inFlashChan.simps smap_sValues)
@@ -81,15 +81,15 @@ lemma rep_cfun_smap_bool_inj:"inj (Rep_cfun (smap (Tsyn o (map_option) \<B>)))"
   apply(rule smap_inj)
  
   by simp
-lemma buildflashoutsb_inj: "inj buildFlashinSB"
+lemma buildflashinsb_inj: "inj buildFlashinSB"
   by (metis (mono_tags, lifting) inFlashChan.simps inj_def rep_cfun_smap_bool_inj)
 
 
 
-lemma buildflashoutsb_range: "(\<Union>a. sValues\<cdot>(buildFlashinSB a c)) = ctype (Rep c)"
+lemma buildflashinsb_range: "(\<Union>a. sValues\<cdot>(buildFlashinSB a c)) = ctype (Rep c)"
   apply(cases c)
   apply auto
-  apply (metis (no_types, lifting) Flashin1_rep buildflashoutsb_ctype contra_subsetD inFlashChan.simps)
+  apply (metis (no_types, lifting) Flashin1_rep buildflashinsb_ctype contra_subsetD inFlashChan.simps)
   apply(rule_tac x="\<up>(inv (Tsyn \<circ> map_option \<B>)x)" in exI,auto)
   by (metis Flashin1_rep buildflashin_range comp_apply f_inv_into_f image_cong inFlashChan.simps)
 
@@ -98,7 +98,7 @@ lemma smap_well:"sValues\<cdot>x\<subseteq>range f \<Longrightarrow>  \<exists>s
   apply(rule_tac x = "smap (inv f)\<cdot>x" in exI)
   by (simp add: snths_eq smap_snth_lemma f_inv_into_f snth2sValues subset_eq)
   
-lemma buildflashoutsb_surj: assumes "sb_well sb"
+lemma buildflashinsb_surj: assumes "sb_well sb"
   shows "sb \<in> range buildFlashinSB"
 proof -
   have ctypewell:"\<And> c. sValues\<cdot>(sb c) \<subseteq> ctype (Rep c)"
