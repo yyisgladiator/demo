@@ -58,4 +58,19 @@ lift_definition FairMergelift::"(S_fm,inFM,outFM) ndAutomaton" is
   apply (metis (mono_tags)old.prod.exhaust)+
   by(simp add: fairmergeinit_def,auto)
 
+
+section \<open>Rumpe specification\<close>
+
+primrec Select:: "bool list \<Rightarrow> 'a::countable list \<Rightarrow> 'a list" where
+"Select bs [] = []" |
+"Select bs (x # xs) = (if hd bs then x # Select (tl bs) xs else Select (tl bs) xs)"
+
+definition merge::"nat list \<times> nat list \<Rightarrow> nat list set"where
+"merge \<equiv> \<lambda>(in1,in2). {s  | s. \<exists>org. in1 = Select org s \<and> in2 = Select (map Not org) s}"
+
+datatype S_rum = s
+
+fun Rum_transition::"S_rum \<Rightarrow> (nat list \<times> nat list) \<Rightarrow> (S_rum \<times> nat list)set"where
+"Rum_transition s input = {(s,out) | out. out \<in> merge input}"
+
 end
