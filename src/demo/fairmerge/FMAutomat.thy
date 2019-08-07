@@ -18,7 +18,7 @@ fun eventMT :: "Single \<Rightarrow> inFM \<Rightarrow> nat  \<Rightarrow> (Sing
 "eventMT (S False n      ) FMin1 m  = { (S True    i, fmOutSB.setter (\<up>(Some m))) | i. True}"
 
 
-definition "eventMerge = eventAut (\<lambda> s c m_pure. eventMT s c (inv \<N> m_pure))"
+definition "eventMerge = eventAut (\<lambda> s c m_pure. eventMT s c (inv \<N> m_pure)) ({(S bool n,\<bottom>)| bool n. True})"
 
 
 

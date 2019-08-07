@@ -56,12 +56,16 @@ fun eventAutomatTransition:: "('state \<Rightarrow> 'in \<Rightarrow> M_pure \<R
         (nextList, nextS, nextOut)\<in>(eventProcessOne (eventTrans s) (eventAddToBuf input buffers))
       } "
 
+fun eventAutomatInitConfig::"('state \<times> 'out\<^sup>\<Omega>)set \<Rightarrow>  (('state::type,'in) eventState \<times> 'out\<^sup>\<Omega>) set"where
+"eventAutomatInitConfig  S = {(EventState Sub (\<lambda>c. []),out) | Sub out. (Sub,out)\<in>S}"
+
+
 setup_lifting type_definition_ndAutomaton
 
 (* TODO: initiale konfiguration *)
-lift_definition eventAut :: "('state \<Rightarrow> 'in \<Rightarrow> M_pure \<Rightarrow> ('state \<times> 'out\<^sup>\<Omega>) set) \<Rightarrow>
+lift_definition eventAut :: "('state \<Rightarrow> 'in \<Rightarrow> M_pure \<Rightarrow> ('state \<times> 'out\<^sup>\<Omega>) set) \<Rightarrow> ('state \<times> 'out\<^sup>\<Omega>)set \<Rightarrow>
   (('state::type,'in) eventState, 'in::{chan, finite}, 'out::chan) ndAutomaton" is
-"\<lambda> eventTrans. (eventAutomatTransition eventTrans,undefined)"
+"\<lambda> eventTrans eventInit. (eventAutomatTransition eventTrans,eventAutomatInitConfig eventInit)"
   sorry
 
 
