@@ -134,6 +134,10 @@ proof-
     using sbgetch_ctypewell by blast
 qed
 
+lemma sbhdelemnotempty:"sbHdElemWell (sb::'cs\<^sup>\<Omega>) \<Longrightarrow>  \<not> chIsEmpty TYPE('cs)"
+  apply(auto simp add: sbHdElemWell_def chDom_def cEmpty_def)
+  by (metis (mono_tags) Collect_mem_eq Collect_mono_iff repinrange sbgetch_ctype_notempty)
+
 lemma sbgetch_below_slen[simp]:"sb1 \<sqsubseteq> sb2 \<Longrightarrow> #(sb1 \<^enum>\<^sub>\<star> c) \<le> #(sb2 \<^enum>\<^sub>\<star> c)"
   by (simp add: mono_slen monofun_cfun_arg)
 
@@ -333,6 +337,10 @@ lemma sblen_sbconc_eq: assumes "\<And>c.#(sb1 \<^enum> c) = k" shows "(sbLen (sb
   apply (metis add.commute dual_order.trans sblen_min_len sblen_sbconc)
   apply (metis assms lnat_plus_commu sbconc_chan_len sblen2slen)  
   by(rule sblen_rule,simp_all add: assms)
+
+lemma sblen_sbconc_rule: assumes "\<And>c.#(sb1 \<^enum> c) \<ge> k" shows "(sbLen (sb1 \<bullet>\<^sup>\<Omega> sb2)) \<ge> (sbLen sb2) + k"
+  by (metis (full_types) add.commute assms dual_order.trans lessequal_addition order_refl 
+      sblen_sbconc sblengeq)
 
 lemma sbelen_one[simp]:
   assumes"\<not>chIsEmpty(TYPE('a))"
@@ -543,7 +551,7 @@ abbreviation sbECons_abbr :: "'c\<^sup>\<surd> \<Rightarrow> 'c\<^sup>\<Omega> \
 lemma sbtypeempty_sbecons_bot[simp]:"chIsEmpty TYPE ('cs) \<Longrightarrow> (sbe::'cs\<^sup>\<surd>) \<bullet>\<^sup>\<surd> sb = \<bottom>"
   by simp
 
-lemma [simp]:"chIsEmpty TYPE ('cs) \<Longrightarrow> P(sb) \<Longrightarrow> P( (sbe::'cs\<^sup>\<surd>) \<bullet>\<^sup>\<surd> sb)"
+lemma exchange_bot_sbecons:"chIsEmpty TYPE ('cs) \<Longrightarrow> P(sb) \<Longrightarrow> P( (sbe::'cs\<^sup>\<surd>) \<bullet>\<^sup>\<surd> sb)"
   by (metis (full_types) sbtypeepmpty_sbbot)
 
 lemma sbrt_sbecons: "sbRt\<cdot>(sbe \<bullet>\<^sup>\<surd> sb) = sb"
