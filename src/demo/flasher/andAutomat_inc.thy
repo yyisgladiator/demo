@@ -1,6 +1,6 @@
 theory andAutomat_inc
 
-imports inAndData outAndData bundle.SB_fin emptychanData
+imports inAndData outAndData bundle.SB_fin
 begin
 
 (*State datatype*)
