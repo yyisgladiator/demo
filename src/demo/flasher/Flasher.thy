@@ -122,16 +122,40 @@ lemma flash2andin[simp]:"(((sbConvert::inFlash\<^sup>\<Omega> \<rightarrow> ((in
   apply(rule sb_eqI,auto)  
   sorry
 
-lemma flash2andout[simp]:"flashOutSB.setter (port_o, port_intern)\<star>\<star>\<^sub>1 = andOutSB.setter port_o"
-  oops (* SWS: Gilt Nicht, doppelte magie. Anstatt den Zwischen-Datentyp zu fixieren und assumptions zu haben...
+
+
+
+lemma andOutSB_port_o: assumes " Rep c = cout" shows " andOutSB.setter port_o  \<^enum>  c = (smap \<B>)\<cdot>port_o"
+  by (metis andOutSB.setter.rep_eq outAnd.exhaust outAndChan.simps sbgetch_insert2)
+
+lemma notOutSB_port_o: assumes " Rep c = cin2" shows " notOutSB.setter port_intern  \<^enum>  c = (smap \<B>)\<cdot>port_intern"
+  by (metis notOutSB.setter.rep_eq outNot.exhaust outNotChan.simps sbgetch_insert2)
+
+lemma outFlash_rep_abs: "(Rep :: outAnd \<union> outNot \<Rightarrow> channel) (Abs cout) \<in> range (Rep :: outFlash \<Rightarrow> channel)"
+  by (metis Flashout1_rep chan_eq insertCI rangeoutunion repinrange)
+
+lemma flashOutSB_port_o: assumes " Rep (c::outAnd) = cout" shows "(flashOutSB.setter (port_o, port_intern)\<star> :: (outAnd \<union> outNot)\<^sup>\<Omega>)  \<^enum>\<^sub>\<star> c = (smap \<B>)\<cdot>port_o"
+  apply(simp add: sbgetch_insert assms rangeoutunion)
+  apply(simp add: outFlash_rep_abs)
+  apply(simp add: rangeoutunion f_inv_into_f)
+  by (metis Flashout1_rep chan_inj flashOutSB.setter.rep_eq inv_f_f outFlashChan.simps(1))
+
+
+
+lemma flash2andout[simp]:"(flashOutSB.setter (port_o, port_intern)\<star> :: (outAnd \<union> outNot)\<^sup>\<Omega>)\<star>\<^sub>1 = andOutSB.setter port_o"
+  apply(rule sb_eqI, auto)
+  by(simp add: flashOutSB_port_o andOutSB_port_o)
+  (* SWS: Gilt Nicht, doppelte magie. Anstatt den Zwischen-Datentyp zu fixieren und assumptions zu haben...
                 kann man die magischen-sachen durch nicht-magie ersetzen? *)
 
-lemma flash2notin[simp]:"flashInSB.setter port_i\<star> \<uplus>\<^sub>\<star> (flashOutSB.setter (port_o, port_intern)\<star>) = notInSB.setter(port_o)"
-  oops (* SWS: Gilt Nicht, doppelte magie. Anstatt den Zwischen-Datentyp zu fixieren und assumptions zu haben...
+lemma flash2notin[simp]:"(flashInSB.setter port_i\<star> :: ((inAnd \<union> inNot) - outAnd \<union> outNot)\<^sup>\<Omega>) \<uplus>\<^sub>\<star> (flashOutSB.setter (port_o, port_intern)\<star> :: (outAnd \<union> outNot)\<^sup>\<Omega>) = notInSB.setter(port_o)"
+  apply(rule sb_eqI, auto)
+  sorry (* SWS: Gilt Nicht, doppelte magie. Anstatt den Zwischen-Datentyp zu fixieren und assumptions zu haben...
                 kann man die magischen-sachen durch nicht-magie ersetzen? *)
 
 lemma flash2notout[simp]:"flashOutSB.setter (port_o, port_intern)\<star>\<star>\<^sub>2 = notOutSB.setter port_intern "
-  oops (* SWS: Gilt Nicht, doppelte magie. Anstatt den Zwischen-Datentyp zu fixieren und assumptions zu haben...
+  apply(rule sb_eqI, auto)  
+  sorry (* SWS: Gilt Nicht, doppelte magie. Anstatt den Zwischen-Datentyp zu fixieren und assumptions zu haben...
                 kann man die magischen-sachen durch nicht-magie ersetzen? *)
 
 lemma flash2andinnotout[simp]:"flashInSB.setter port_i\<star> \<uplus>\<^sub>\<star> (z::(outAnd \<union> outNot)\<^sup>\<Omega>) = andInSB.setter (port_i,notOutSB.getter(z\<star>))"
@@ -147,9 +171,21 @@ lemma assumes "andSpf\<cdot>(andInSB.setter (port_i, port_intern)) = andOutSB.se
     and "notSpf\<cdot>(notInSB.setter(port_o)) = notOutSB.setter port_intern"
   shows "(flasherComp\<cdot>(flashInSB.setter (port_i)\<star>)) = flashOutSB.setter (port_o,port_intern)\<star>"
   apply(simp add: flasherComp_def convflasherComp_def spfConvert_def)
-  apply(rule spfcomp_eq,simp)
-    apply (simp add: assms)
+  apply(rule spfcomp_eq)  
+   apply(simp_all add: assms) 
+  
   oops
+
+  (*
+  apply(simp add: genComp_def)
+  apply(rule below_antisym)
+   apply (rule fix_least)
+
+  defer  solvable with assms *)
+  
+  
+
+
   
 
  (*nicht anwendbar wenn kanäle versteckt werden*)
