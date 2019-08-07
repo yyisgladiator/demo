@@ -116,7 +116,7 @@ abbreviation "buildAndinSBs \<equiv> inAndChan (Tsyn o (map_option \<B>)) (Untim
 
 interpretation andInSBE: sbeGen "buildAndinSBE"
   oops
-*)
+
 
 
 subsection \<open>Merge\<close>
@@ -126,5 +126,5 @@ fun eventMT :: "state \<Rightarrow> inMerge \<Rightarrow> ('m\<times>'m)  \<Righ
 
 
 definition "eventMerge = eventAut eventMergeTransition"
-
+*)
 end

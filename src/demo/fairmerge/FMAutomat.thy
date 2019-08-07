@@ -1,9 +1,29 @@
 theory FMAutomat
 
-imports automaton.ndAutomaton automaton.dAutomaton_causal fmAutomat_inc
+imports automaton.eventAutomat automaton.dAutomaton_causal fmAutomat_inc
 
 begin
 
+section\<open>evenAutomat \<close>
+
+datatype Single = S bool nat
+
+(*Setter for M_pure? Nondeterminism in last two cases necessary?*)
+fun eventMT :: "Single \<Rightarrow> inFM \<Rightarrow> nat  \<Rightarrow> (Single \<times> outFM\<^sup>\<Omega>) set" where
+"eventMT (S True  0      ) FMin1 m  = { (S False   i, fmOutSB.setter (\<up>(Some m))) | i. True}" |
+"eventMT (S True  (Suc n)) FMin1 m  = { (S True    n, fmOutSB.setter (\<up>(Some m)))          }" |
+"eventMT (S False 0      ) FMin2 m  = { (S True    i, fmOutSB.setter (\<up>(Some m))) | i. True}" |
+"eventMT (S False (Suc n)) FMin2 m  = { (S False   n, fmOutSB.setter (\<up>(Some m)))          }" |
+"eventMT (S True  n      ) FMin2 m  = { (S False   i, fmOutSB.setter (\<up>(Some m))) | i. True}" |
+"eventMT (S False n      ) FMin1 m  = { (S True    i, fmOutSB.setter (\<up>(Some m))) | i. True}"
+
+
+definition "eventMerge = eventAut (\<lambda> s c m_pure. eventMT s c (inv \<N> m_pure))"
+
+
+
+
+section\<open>ugly transition function\<close>
 setup_lifting type_definition_ndAutomaton
 
 fun dAfm_case::"bool \<Rightarrow> nat list \<Rightarrow> nat list \<Rightarrow> (nat\<times> nat) \<Rightarrow> nat \<Rightarrow>(S_fm \<times> nat option)"where
