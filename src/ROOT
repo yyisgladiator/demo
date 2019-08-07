@@ -51,6 +51,7 @@ session "automaton" (mustWork) in "automatons" = "spf" +
     dAutomaton
     dAutomaton_causal
     ndAutomaton
+	eventAutomat
   document_files
     "root.tex"
   document_files (in "../")

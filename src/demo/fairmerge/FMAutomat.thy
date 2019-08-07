@@ -1,9 +1,41 @@
 theory FMAutomat
 
-imports automaton.ndAutomaton automaton.dAutomaton_causal fmAutomat_inc
+imports automaton.eventAutomat automaton.dAutomaton_causal fmAutomat_inc
 
 begin
 
+section\<open>evenAutomat \<close>
+
+datatype Single = Si bool nat
+
+(*Setter for M_pure? Nondeterminism in last two cases necessary?*)
+fun eventMT :: "Single \<Rightarrow> inFM \<Rightarrow> nat  \<Rightarrow> (Single \<times> outFM\<^sup>\<Omega>) set" where
+"eventMT (Si True  0      ) FMin1 m  = { (Si False   i, fmOutSB.setter (\<up>(Some m))) | i. True}" |
+"eventMT (Si True  (Suc n)) FMin1 m  = { (Si True    n, fmOutSB.setter (\<up>(Some m)))          }" |
+"eventMT (Si False 0      ) FMin2 m  = { (Si True    i, fmOutSB.setter (\<up>(Some m))) | i. True}" |
+"eventMT (Si False (Suc n)) FMin2 m  = { (Si False   n, fmOutSB.setter (\<up>(Some m)))          }" |
+"eventMT (Si True  n      ) FMin2 m  = { (Si True    n, fmOutSB.setter (\<up>(Some m)))          }" |
+"eventMT (Si False n      ) FMin1 m  = { (Si False   n, fmOutSB.setter (\<up>(Some m)))          }"
+
+text\<open>Automaton takes Transition:
+ \<^item> State True  n ch2  => no message on ch1
+ \<^item> State False n ch1  => no message on ch2
+
+
+Else, another transitions would have been taken in eventMT.
+
+==> Longest possible stream of messages from one channel is n and hence, finite.\<close>
+
+
+
+
+
+definition "eventMerge = eventAut (\<lambda> s c m_pure. eventMT s c (inv \<N> m_pure)) ({(Si bool n,\<bottom>)| bool n. True})"
+
+
+
+
+section\<open>ugly transition function\<close>
 setup_lifting type_definition_ndAutomaton
 
 fun dAfm_case::"bool \<Rightarrow> nat list \<Rightarrow> nat list \<Rightarrow> (nat\<times> nat) \<Rightarrow> nat \<Rightarrow>(S_fm \<times> nat option)"where
