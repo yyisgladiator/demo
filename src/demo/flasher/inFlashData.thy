@@ -94,9 +94,6 @@ lemma buildflashinsb_range: "(\<Union>a. sValues\<cdot>(buildFlashinSB a c)) = c
   by (metis Flashin1_rep buildflashin_range comp_apply f_inv_into_f image_cong inFlashChan.simps)
 
 
-lemma smap_well:"sValues\<cdot>x\<subseteq>range f \<Longrightarrow>  \<exists>s. smap f\<cdot>s = x"
-  apply(rule_tac x = "smap (inv f)\<cdot>x" in exI)
-  by (simp add: snths_eq smap_snth_lemma f_inv_into_f snth2sValues subset_eq)
   
 lemma buildflashinsb_surj: assumes "sb_well sb"
   shows "sb \<in> range buildFlashinSB"

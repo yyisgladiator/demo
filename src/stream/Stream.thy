@@ -4165,6 +4165,10 @@ by (auto simp add: sValues_def2)
 lemma snth2sValues: "Fin n < #s \<Longrightarrow> snth n s \<in> sValues\<cdot>s"
   by (auto simp add: sValues_def2)
 
+lemma smap_well:"sValues\<cdot>x\<subseteq>range f \<Longrightarrow>  \<exists>s. smap f\<cdot>s = x"
+  apply(rule_tac x = "smap (inv f)\<cdot>x" in exI)
+  by (simp add: snths_eq smap_snth_lemma f_inv_into_f snth2sValues subset_eq)
+
 lemma smap_inv_id[simp]: "sValues\<cdot>s \<subseteq> range F \<Longrightarrow> smap (F \<circ> (inv F))\<cdot>s = s"
   apply (induction s  rule: ind )
   by(simp_all add: f_inv_into_f)
