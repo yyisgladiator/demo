@@ -20,17 +20,16 @@ lemma cont_h2:assumes"\<exists>s. s\<in>UNIV \<and> s\<notin>{c::'c. \<exists>i:
 
 lift_definition sbHdElem_h_cont::"'c\<^sup>\<Omega> \<rightarrow> ('c\<^sup>\<surd>) u"is
 "sbHdElem_h"
-  apply(simp add: sbHdElem_h_def)
+  apply(simp add: sbHdElem_h_def chDom_def)
   apply(intro cont2cont)
   apply(rule Cont.contI2)
    apply(rule monofunI)
   apply auto[1]
-  apply (metis minimal monofun_cfun_arg po_eq_conv)
-   apply (meson below_shd monofun_cfun_arg)
+  apply (metis sbHdElemWell_def sbhdelem_mono_eq sbhdelem_some sbhdelemchain sbnleast_mex)
 proof-
   fix Y::"nat \<Rightarrow> 'c\<^sup>\<Omega>"
   assume ch1:"chain Y"
-  assume ch2:"chain (\<lambda>i::nat. if \<exists>c::'c. Y i  \<^enum>  c = \<epsilon> then \<bottom> else Iup (Abs_sbElem (Some (\<lambda>c::'c. shd (Y i  \<^enum>  c)))))"
+  assume ch2:"chain (\<lambda>i::nat. if sbIsLeast (Y i) then \<bottom> else Iup (Abs_sbElem (Some (\<lambda>c::'c. shd (Y i  \<^enum>  c)))))"
 
   have "\<exists>c::'c. (\<Squnion>i::nat. Y i)  \<^enum>  c = \<epsilon> \<Longrightarrow> \<exists>c::'c. \<forall>i. (Y i)  \<^enum>  c = \<epsilon>"
     by (metis ch1 is_ub_thelub minimal monofun_cfun_arg po_eq_conv)
@@ -272,37 +271,44 @@ proof-
     by(simp_all add: ch1)
   then have finiteIn:"\<forall>c::'c. (\<Squnion>i::nat. Y i)  \<^enum>  c \<noteq> \<epsilon> \<Longrightarrow> \<exists>i. \<forall>c::'c. (Y i) \<^enum> c \<noteq> \<epsilon>"
     by blast
-  then show "(if \<exists>c::'c. (\<Squnion>i::nat. Y i)  \<^enum>  c = \<epsilon> then \<bottom> else Iup (Abs_sbElem (Some (\<lambda>c::'c. shd ((\<Squnion>i::nat. Y i)  \<^enum>  c))))) \<sqsubseteq>
-       (\<Squnion>i::nat. if \<exists>c::'c. Y i  \<^enum>  c = \<epsilon> then \<bottom> else Iup (Abs_sbElem (Some (\<lambda>c::'c. shd (Y i  \<^enum>  c)))))"
+  then have finiteInsb:" \<forall>c::'c. (\<Squnion>i::nat. Y i)  \<^enum>  c \<noteq> \<epsilon> \<Longrightarrow> \<exists>i.\<not>sbIsLeast (Y i)"
+    apply(simp add: sbIsLeast_def)
+    by (metis (full_types) Stream.slen_empty_eq sbgetch_bot sblen2slen sbtypeepmpty_sbbot)
+  then show "(if sbIsLeast (\<Squnion>i::nat. Y i) then \<bottom> else Iup (Abs_sbElem (Some (\<lambda>c::'c. shd ((\<Squnion>i::nat. Y i)  \<^enum>  c))))) \<sqsubseteq>
+       (\<Squnion>i::nat. if sbIsLeast (Y i) then \<bottom> else Iup (Abs_sbElem (Some (\<lambda>c::'c. shd (Y i  \<^enum>  c)))))"
   proof(cases "\<exists>c::'c. (\<Squnion>i::nat. Y i)  \<^enum>  c = \<epsilon>")
     case True
     then show ?thesis
-      by simp
+      by auto
   next
     case False
     have ch3:"\<And>c. chain (\<lambda>i. Y i  \<^enum>  c)"
       by (simp add: ch1)
-    obtain n where n_def:"\<forall>c::'c. (Y n) \<^enum> c \<noteq> \<epsilon>"
-      using False finiteIn by auto
+    obtain n where n_def:"\<not>sbIsLeast (Y n)"
+      using False finiteInsb  by auto
     then have shd_eq:"\<And>i. i\<ge>n \<Longrightarrow> (\<lambda>c::'c. shd (Y i  \<^enum>  c)) = (\<lambda>c::'c. shd (Y n  \<^enum>  c))"
       apply(subst fun_eq_iff)
       apply auto
       apply(rule below_shd_alt,auto)
       by (simp add: ch1 monofun_cfun_arg po_class.chain_mono)
-    have h1:"\<forall>i\<ge>n. (if \<exists>c::'c. Y i  \<^enum>  c = \<epsilon> then \<bottom> else Iup (Abs_sbElem (Some (\<lambda>c::'c. shd (Y i  \<^enum>  c)))))
+    have h1:"\<forall>i\<ge>n. (if sbIsLeast (Y i) then \<bottom> else Iup (Abs_sbElem (Some (\<lambda>c::'c. shd (Y i  \<^enum>  c)))))
                 = Iup (Abs_sbElem (Some (\<lambda>c::'c. shd (Y n  \<^enum>  c))))"
       apply(auto)
-      apply (metis ch1 minimal monofun_cfun_arg n_def po_class.chain_mono po_eq_conv)
+      apply(insert sbleast_mono[of "Y n"])
+      apply (simp add: ch1 n_def po_class.chain_mono)
       using shd_eq by presburger
-    have h2:"(if \<exists>c::'c. (\<Squnion>i::nat. Y i)  \<^enum>  c = \<epsilon> then \<bottom> else Iup (Abs_sbElem (Some (\<lambda>c::'c. shd ((\<Squnion>i::nat. Y i)  \<^enum>  c))))) \<sqsubseteq> Iup (Abs_sbElem (Some (\<lambda>c::'c. shd (Y n  \<^enum>  c))))"
-      apply(simp add: False)
-      by (metis below_shd ch1 is_ub_thelub monofun_cfun_arg n_def)
-    have h3:"(if \<exists>c::'c. Y n  \<^enum>  c = \<epsilon> then \<bottom> else Iup (Abs_sbElem (Some (\<lambda>c::'c. shd (Y n  \<^enum>  c))))) \<sqsubseteq> (\<Squnion>i::nat. if \<exists>c::'c. Y i  \<^enum>  c = \<epsilon> then \<bottom> else Iup (Abs_sbElem (Some (\<lambda>c::'c. shd (Y i  \<^enum>  c)))))"
-      using below_lub ch2 by blast
-    have h3_h:"(if \<exists>c::'c. Y n  \<^enum>  c = \<epsilon> then \<bottom> else Iup (Abs_sbElem (Some (\<lambda>c::'c. shd (Y n  \<^enum>  c))))) = Iup (Abs_sbElem (Some (\<lambda>c::'c. shd (Y n  \<^enum>  c))))"
-      by(simp add: n_def)
+    have h2:"(if sbIsLeast (\<Squnion>i. Y i) then \<bottom> else Iup (Abs_sbElem (Some (\<lambda>c::'c. shd ((\<Squnion>i::nat. Y i)  \<^enum>  c))))) \<sqsubseteq> Iup (Abs_sbElem (Some (\<lambda>c::'c. shd (Y n  \<^enum>  c))))"
+      apply(simp add: False,auto)
+      apply(rule sbe_eqI)
+      apply(subst Abs_sbElem_inverse,auto)+
+      apply (simp add: n_def)
+      apply(auto simp add: fun_eq_iff)
+      apply(rule below_shd[symmetric])
+      by (simp add: ch1 is_ub_thelub monofun_cfun_arg n_def)
+    have h3_h:"(if sbIsLeast (\<Squnion>i. Y i) then \<bottom> else Iup (Abs_sbElem (Some (\<lambda>c::'c. shd (Y n  \<^enum>  c))))) = Iup (Abs_sbElem (Some (\<lambda>c::'c. shd (Y n  \<^enum>  c))))"
+      using ch1 is_ub_thelub n_def sbleast_mono by auto
     then show ?thesis
-      using h2 h3 by auto
+      using below_lub ch2 h2 n_def by fastforce
   qed
 qed
 
@@ -326,7 +332,7 @@ lemma sb_case_insert:"sb_case\<cdot>k\<cdot>sb = (case sbHdElem_h_cont\<cdot>sb 
 
 
 lemma sb_cases_bot:"\<not>(chIsEmpty (TYPE ('cs))) \<Longrightarrow> sb_case\<cdot>f\<cdot>(\<bottom>::'cs\<^sup>\<Omega>) = \<bottom>"
-  by(simp add: sb_case_insert sbHdElem_h_cont.rep_eq sbHdElem_h_def chIsEmpty_def)
+  by(simp add: sb_case_insert sbHdElem_h_cont.rep_eq sbHdElem_h_def chDom_def)
 
 lemma sb_cases_sbe[simp]:"sb_case\<cdot>f\<cdot>(sbECons sbe\<cdot>sb) = f sbe\<cdot>(sb)"
   apply (subst sb_case_insert)
@@ -379,23 +385,25 @@ definition getter::"'cs\<^sup>\<surd> \<Rightarrow> 'a" where
 lemma get_set[simp]: "getter (setter a) = a"
   unfolding getter_def
   apply (simp add: setter.rep_eq c_inj c_empty)
-  by (metis UNIV_I c_empty is_singletonE singleton_iff)
+  by (metis (full_types)UNIV_I c_empty is_singletonE singleton_iff)
 
 lemma set_inj: "inj setter"
   by (metis get_set injI)
 
 lemma set_surj: "surj setter"
   unfolding setter_def
-  apply(cases "\<not>(chIsEmpty(TYPE('cs)))")
-proof(simp add: surj_def,auto)
-  fix y::"'cs\<^sup>\<surd>"
-  assume chnEmpty:"\<not> chIsEmpty TYPE('cs)"
-  obtain f where f_def:"Rep_sbElem y=(Some f)"
-    using chnEmpty sbtypenotempty_fex by auto
+  apply(cases "\<not>(chIsEmpty(TYPE('cs)))",auto)
+  apply(simp add: chDom_def)
+  apply auto
+proof-
+  fix xb::"'cs\<^sup>\<surd>" and xa::'cs
+  assume chnEmpty:"Rep xa \<notin> cEmpty"
+  obtain f where f_def:"Rep_sbElem xb=(Some f)"
+    using chnEmpty sbtypenotempty_fex cempty_rule by blast
   then obtain x where x_def:"f = lConstructor x"
-    by (metis c_inj c_surj f_the_inv_into_f sbelemwell2fwell chnEmpty)
-  then show "\<exists>x::'a. y = Abs_sbElem (Some (lConstructor x))"
-    by (metis Rep_sbElem_inverse f_def)
+    by (metis c_surj rangeE sbelemwell2fwell sbtypeempty_notsbewell)
+  then show "xb \<in> range (\<lambda>x::'a. Abs_sbElem (Some (lConstructor x)))"
+    by (metis (no_types, lifting) Rep_sbElem_inverse f_def range_eqI)
 qed 
 
 lemma set_bij: "bij setter"
@@ -481,33 +489,7 @@ lemma "sb1 = sb2 \<Longrightarrow> sbe \<bullet>\<^sup>\<surd> sb1 = sbe \<bulle
   by simp
 
 lemma setget_eq:"(\<forall>c. #(sb \<^enum> c) = k) \<Longrightarrow>setterSB\<cdot>(getterSB\<cdot>sb) = sb"
-proof(induction sb arbitrary: k)
-  case adm
-  then show ?case sorry
-next
-  case (least sb)
-  then show ?case
-   apply(cases "chIsEmpty(TYPE('cs))",auto)
-   apply(simp add: sbIsLeast_def)
-   apply(subgoal_tac "k=0")
-   apply(subgoal_tac "sb = \<bottom>",simp)
-   apply(simp add: sbLen_def)
-   apply(simp add: bot_sb)
-   apply(rule sb_eqI)
-   apply (metis bot_sb sbgetch_bot)
-   by (metis sblen2slen)
-next
-  case (sbeCons sbe sb)
-  then obtain kin where k_def:"lnsuc\<cdot>kin = k"
-    by (metis sbecons_len sblen2slen)
-  then have sbelen1:"\<And>c n. #((sbe::'cs\<^sup>\<surd>) \<bullet>\<^sup>\<surd> (sb::'cs\<^sup>\<Omega>)  \<^enum>  c) = lnsuc\<cdot>n \<Longrightarrow> # (sb \<^enum> c) = n"
-    sorry
-  then show ?case
-    apply simp
-    apply(subst cfun_arg_eqI[of " setterSB\<cdot>(getterSB\<cdot>sb)" sb],auto)
-    apply(subst sbeCons.IH[of kin],auto)
-    using k_def sbeCons.prems by blast 
-  oops  (* Nur für gleichlange ströme *)
+  oops
 
 fun setterList::"'a list \<Rightarrow> 'cs\<^sup>\<Omega>" where
 "setterList [] = \<bottom>" |

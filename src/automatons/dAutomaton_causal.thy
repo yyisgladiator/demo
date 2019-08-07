@@ -90,26 +90,14 @@ lemma dawstatesem_step: assumes "\<And>c . sb \<^enum> c \<noteq> \<epsilon>"
   oops
 
 lemma dawstatesem_final:assumes "\<And>c . sb \<^enum> c \<noteq> \<epsilon>"  (* Todo: einheitliche assumption *)
-  shows "(dawStateSem automat s)\<cdot>sb =
-  (dawNextOut automat s (sbHdElem sb)) \<bullet>\<^sup>\<surd> (((dawStateSem automat (dawNextState automat s (sbHdElem sb))))\<cdot>(sbRt\<cdot>sb))"
+  shows "(dawStateSem automat s)\<cdot>sb = (let (nextState, output) = dawTransition automat s (sbHdElem sb) in
+  output \<bullet>\<^sup>\<surd> dawStateSem automat nextState\<cdot>(sbRt\<cdot>sb))"
   oops
 
 lemma dawstatesem_final_h2:
   shows "(dawStateSem automat s)\<cdot>(sbECons sbe\<cdot>sb) =(let (nextState, output) = dawTransition automat s sbe in
-                            output \<bullet>\<^sup>\<surd> ((dawStateSem automat) nextState\<cdot>sb))"
+                            output \<bullet>\<^sup>\<surd> dawStateSem automat nextState\<cdot>sb)"
   sorry
-
-lemma dastatesem_stepI:
-  assumes "(dawNextOut da s sbe) = out"
-      and "(dawNextState da s sbe) = nextState"
-  shows "(dawStateSem da s)\<cdot>(sbECons sbe\<cdot>sb) = out  \<bullet>\<^sup>\<surd> ((dawStateSem da nextState)\<cdot>sb)"
-  oops
-
-
-(*
-lemma dastatesem_strict[simp]: "spfIsStrict (daStateSem da state)"
-  oops
-*)
 
 lemma dawstatesem_weak:
   shows     "weak_well (dawStateSem automat s)"

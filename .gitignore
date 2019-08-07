@@ -7,3 +7,8 @@
 \#*
 
 *.iml
+
+
+### Latex Generated from isabelle
+**.log
+**/gen/**

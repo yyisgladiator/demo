@@ -13,10 +13,11 @@ definition "Rep = Rep_inFM"
 instance
   apply(standard)
   apply(auto simp add: Rep_inFM_def cEmpty_def)
-  using ctype.elims
-  apply (metis Rep_inFM ctype.simps ex_in_conv insertE insert_iff)
-  apply (meson Rep_inFM_inject injI) using ctype.elims Rep_inFM apply simp
-  apply (metis ctype.simps emptyE image_iff iso_tuple_UNIV_I)
+  apply(auto simp add: ctype_empty_iff)
+  using ctype_empty_iff
+  apply (metis Rep_inFM cMsg.simps ex_in_conv insertE insert_iff)
+  apply (meson Rep_inFM_inject injI) using cMsg.elims Rep_inFM apply simp
+  apply (metis cMsg.simps emptyE image_iff iso_tuple_UNIV_I)
   using type_definition.Abs_image type_definition_inFM typedef_finite_UNIV by fastforce
 end
 
@@ -40,19 +41,18 @@ fun inFMChan::"('nat::type \<Rightarrow> 'a::type) \<Rightarrow> ('bool::type \<
 "inFMChan Cc1 Cc2 (port_c1, port_c2) FMin1 = Cc1 port_c1" |
 "inFMChan Cc1 Cc2 (port_c1, port_c2) FMin2 = Cc2 port_c2"
 
-abbreviation "buildFMinSBE \<equiv> inFMChan \<N> \<N>" 
+abbreviation "buildFMinSBE \<equiv> inFMChan (Tsyn o (map_option) \<N>) (Tsyn o (map_option) \<N>)" 
 
 lemma buildfmin_ctype: "buildFMinSBE a c \<in> ctype (Rep c)"
-  by(cases c; cases a;simp)
-
+  apply(cases c; cases a;simp)
+  by(simp_all add: ctype_def,auto)
+ 
 lemma buildfmin_inj: "inj buildFMinSBE"
-  apply(rule injI)
-  apply(case_tac x; case_tac y; simp)
-  by (metis M.inject(1) inFMChan.simps)
+  apply (auto simp add: inj_def)
+  sorry
 
 lemma buildfmin_range: "range (\<lambda>a. buildFMinSBE a c) = ctype (Rep c)"
-  apply(cases c)
-  by(auto simp add: image_iff)
+  sorry
 
 lemma buildfmin_surj: assumes "sbElem_well (Some sbe)"
   shows "sbe \<in> range buildFMinSBE"
@@ -63,11 +63,11 @@ proof -
     by (simp add: buildfmin_range)
   hence "\<exists>prod. sbe = buildFMinSBE prod"
     apply(subst fun_eq_iff,auto)
-    by (smt FMin1_rep FMin2_rep ctype.simps ctypewell imageE inFM.exhaust inFMChan.simps(1) inFMChan.simps(2)) (*TODO: no smt*)
+    sorry
   thus ?thesis
     by auto
 qed
 
-abbreviation "buildFMinSB \<equiv> inFMChan (Rep_cfun (smap \<N>)) (Rep_cfun (smap \<N>))" 
+abbreviation "buildFMinSB \<equiv> inFMChan (Rep_cfun (smap (Tsyn o (map_option) \<N>))) (Rep_cfun (smap (Tsyn o (map_option) \<N>)))" 
 
 end

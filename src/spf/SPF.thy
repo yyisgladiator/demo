@@ -1,6 +1,6 @@
 theory SPF
 
-imports bundle.SB SPFcomp
+imports bundle.SB
 
 begin
 
@@ -16,23 +16,32 @@ definition weak_well::"('I\<^sup>\<Omega> \<rightarrow> 'O\<^sup>\<Omega>) \<Rig
 definition sometimesspfw::"('I\<^sup>\<Omega> \<rightarrow> 'O\<^sup>\<Omega>)"where
 "sometimesspfw = (\<Lambda> sb. Abs_sb(\<lambda>c. sinftimes (\<up>(SOME a. a \<in> ctype (Rep c)))))"
 
-lemma sblen_leadm:"adm (\<lambda>sb. k \<le> sbLen sb)"
-  oops
+lemma sometimesspfw_well:"\<not>chIsEmpty TYPE('cs) 
+                          \<Longrightarrow> sb_well (\<lambda>c::'cs. sinftimes (\<up>(SOME a. a \<in> ctype (Rep c))))"
+  apply(auto simp add: sb_well_def)
+  using cEmpty_def cnotempty_rule some_in_eq by auto
 
-lemma sblen_ladm:"adm (\<lambda>sb. k <\<^sup>l sbLen sb)"
-  oops
+lemma sometimesspfw_len:"\<not>chIsEmpty TYPE('cs) \<Longrightarrow> sbLen ((sometimesspfw\<cdot>sb)::'cs\<^sup>\<Omega>) = \<infinity>"
+  apply(rule sblen_rule,simp_all add: sometimesspfw_def sbgetch_insert2)
+  by(simp add: Abs_sb_inverse sometimesspfw_well)+
+
+lemma weak_well_adm:"adm weak_well"
+  unfolding weak_well_def
+  apply (rule admI)   
+  apply auto
+  by (meson is_ub_thelub  cfun_below_iff sblen_mono lnle_def monofun_def  less_lnsuc order_trans)
+
+lemma strong_spf_exist:" \<exists>x::('I\<^sup>\<Omega> \<rightarrow> 'O\<^sup>\<Omega>) . (\<forall>sb. lnsuc\<cdot>(sbLen sb) \<le> sbLen (x\<cdot>sb))"
+  apply(cases "chIsEmpty TYPE('O)")
+  apply simp
+  apply(rule_tac x=sometimesspfw in exI)
+  by(simp add:  sometimesspfw_len)
 
 cpodef ('I::chan,'O::chan)spfw = "{f::('I\<^sup>\<Omega> \<rightarrow> 'O\<^sup>\<Omega>) . weak_well f}"
   apply(simp add: weak_well_def)
-  apply(cases "chIsEmpty TYPE('O)")
-  apply(subgoal_tac "\<forall>sb::'O\<^sup>\<Omega>. sbLen sb = \<infinity>",auto)
-(*  defer(*lemma for sbLen*)
-  apply(rule_tac x="sometimesspfw" in exI)
-  defer (*lemma sbLen (sometimesspfw\<cdot>sb) = \<infinity> with assumption*)
-  apply(simp add: weak_well_def)
-  apply(rule adm_all)(*lemma sblen_leadm*)
-  apply(rule admI)*)
-  sorry
+  apply (metis (full_types) eq_iff strong_spf_exist fold_inf inf_ub le2lnle leI le_cases 
+        less_irrefl trans_lnle)
+  by (simp add: weak_well_adm)
 
 lemma [simp, cont2cont]:"cont Rep_spfw"
   using cont_Rep_spfw cont_id by blast
@@ -43,29 +52,28 @@ lift_definition Rep_spfw_fun::"('I::chan,'O::chan)spfw \<rightarrow> ('I\<^sup>\
 
 subsubsection \<open>Weak SPF functions \<close>
 
-definition spfcomp_w::"('I::chan,'O::chan)spfw \<rightarrow>  ('I2::chan,'O2::chan)spfw \<rightarrow> ('I3::chan,'O3::chan)spfw"where
-"spfcomp_w \<equiv> (\<Lambda> spf1 spf2. Abs_spfw(genComp\<cdot>(Rep_spfw spf1)\<cdot>(Rep_spfw spf2)))"
-
 subsubsection \<open>Weak SPF lemmas\<close>
 
 subsection \<open>Strong SPF \<close>
 
 subsubsection \<open>Strong SPF definition\<close>
-(*If 'O is empty (then there is no weak function*)
+
 definition strong_well::"('I\<^sup>\<Omega> \<rightarrow> 'O\<^sup>\<Omega>) \<Rightarrow> bool" where
 "strong_well spf = (\<forall>sb. lnsuc\<cdot>(sbLen sb) \<le> sbLen (spf\<cdot>sb))"
 
+lemma strong2weak:" \<And> f. strong_well f \<Longrightarrow> weak_well f"
+  using less_lnsuc strong_well_def trans_lnle weak_well_def by blast
+
+lemma strong_well_adm:"adm (\<lambda>x::('I, 'O) spfw. strong_well (Rep_spfw x))"
+  unfolding strong_well_def
+  apply (rule admI)
+  apply auto
+  by (meson is_ub_thelub below_spfw_def cfun_below_iff sblen_mono 
+      lnle_def monofun_def less_lnsuc order_trans)
+
 cpodef ('I::chan,'O::chan)spfs = "{f::('I,'O)spfw . strong_well (Rep_spfw f)}"
-  apply(simp add: strong_well_def)
-  apply(cases "chIsEmpty TYPE('O)")
-  apply(subgoal_tac "\<forall>sb::'O\<^sup>\<Omega>. sbLen sb = \<infinity>",auto)
-(*  defer(*lemma for sbLen*)
-  apply(rule_tac x="Abs_spfw(sometimesspfw)" in exI)
-  defer (*lemma spfw_well sometimesspfw with assumption*)
-  apply(simp add: strong_well_def)
-  apply(rule adm_all)(*lemma sblen_ladm*)
-  apply(rule admI)*)
-  sorry
+   apply (metis Rep_spfw_cases mem_Collect_eq strong2weak strong_spf_exist strong_well_def)
+  by(simp add: strong_well_adm)
 
 lemma [simp, cont2cont]:"cont Rep_spfs"
   using cont_Rep_spfs cont_id by blast
@@ -75,9 +83,6 @@ subsubsection \<open>Strong SPF functions\<close>
 lift_definition Rep_spfs_fun::"('I::chan,'O::chan)spfs \<rightarrow> ('I\<^sup>\<Omega> \<rightarrow>'O\<^sup>\<Omega>)"is
 "\<lambda> spfs. Rep_spfw_fun\<cdot>(Rep_spfs spfs)"
   by(intro cont2cont)
-
-definition spfcomp_s::"('I::chan,'O::chan)spfs \<rightarrow>  ('I2::chan,'O2::chan)spfs \<rightarrow> ('I3::chan,'O3::chan)spfs"where
-"spfcomp_s \<equiv> (\<Lambda> spf1 spf2. Abs_spfs(spfcomp_w\<cdot>(Rep_spfs spf1)\<cdot>(Rep_spfs spf2)))"
 
 
 subsubsection \<open>Strong SPF lemmas\<close>
