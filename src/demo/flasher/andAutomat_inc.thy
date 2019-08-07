@@ -19,7 +19,9 @@ interpretation andInSBE: sbeGen "buildAndinSBE"
 
 interpretation andInSB: sbGen "buildAndinSB"
   apply(unfold_locales)
-  sorry
+   using buildandoutsb_ctype sValues_def apply auto[1]
+  apply (simp add: buildandoutsb_inj)
+  by (simp add: buildandoutsb_surj)
 
 interpretation andOutSBE: sbeGen "buildAndoutSBE"
   apply(unfold_locales)
@@ -30,7 +32,9 @@ interpretation andOutSBE: sbeGen "buildAndoutSBE"
 
 interpretation andOutSB: sbGen "buildAndoutSB"
   apply(unfold_locales)
-  sorry
+  apply (simp add: buildandinsb_ctype sValues_def)
+  apply (simp add: buildandinsb_inj)
+  by (simp add: buildandinsb_surj)
 
 
 end
