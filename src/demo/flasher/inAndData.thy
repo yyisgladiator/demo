@@ -104,4 +104,84 @@ qed
 
 abbreviation "buildAndinSB \<equiv> inAndChan (Rep_cfun (smap (Tsyn o (map_option) \<B>))) (Rep_cfun (smap (Tsyn o (map_option) \<B>)))" 
 
+
+lemma buildandintsb_ctype: "sValues\<cdot>(buildAndinSB a c) \<subseteq> ctype (Rep c)"
+ apply(cases c)
+   apply auto
+  using smap_sValues Andin1_rep inAndChan.simps
+ 
+proof -
+  fix x :: M
+  assume a1: "x \<in> sValues\<cdot>(buildAndinSB a Andin1)"
+  have f2: "\<forall>z. (Tsyn \<circ> map_option \<B>) z \<in> ctype cin1"
+    by (metis (full_types) Andin1_rep buildandin_ctype inAndChan.simps(1))
+  obtain ss :: "bool option stream \<times> bool option stream \<Rightarrow> bool option stream" where
+    "x \<in> (Tsyn \<circ> map_option \<B>) ` sValues\<cdot>(ss a)"
+    using a1 by (metis inAndChan.simps(1) old.prod.exhaust smap_sValues)
+  then show "x \<in> ctype cin1"
+    using f2 by fastforce
+next
+  fix x :: M
+  assume a1: "x \<in> sValues\<cdot>(buildAndinSB a Andin2)"
+  have f2: "\<forall>z. (Tsyn \<circ> map_option \<B>) z \<in> ctype cin2"
+    by (metis (full_types) Andin2_rep buildandin_ctype inAndChan.simps(2))
+  obtain ss :: "bool option stream \<times> bool option stream \<Rightarrow> bool option stream" where
+    "x \<in> (Tsyn \<circ> map_option \<B>) ` sValues\<cdot>(ss a)"
+    using a1 by (metis inAndChan.simps(2) old.prod.exhaust smap_sValues)
+  then show "x \<in> ctype cin2"
+    using f2 by fastforce
+qed
+
+lemma rep_cfun_smap_bool_inj:"inj (Rep_cfun (smap (Tsyn o (map_option) \<B>)))"
+  apply(rule smap_inj)
+  by simp
+
+
+lemma buildandintsb_inj: "inj buildAndinSB"
+  apply(rule injI)
+ 
+  by (metis inAndChan.simps(1) inAndChan.simps(2) inj_eq old.prod.exhaust rep_cfun_smap_bool_inj)
+
+
+
+
+lemma buildandintsb_range: "(\<Union>a. sValues\<cdot>(buildAndinSB a c)) = ctype (Rep c)"
+  apply(cases c)
+  apply auto
+  apply (metis (no_types, lifting) Andin1_rep buildandintsb_ctype contra_subsetD inAndChan.simps)
+  apply(rule_tac x="\<up>(inv (Tsyn \<circ> map_option \<B>)x)" in exI,auto)
+  apply (smt Andin1_rep buildandin_range comp_apply f_inv_into_f inAndChan.elims rangeI)
+  apply (metis (no_types, lifting) Andin2_rep buildandintsb_ctype contra_subsetD inAndChan.simps)
+  apply(rule_tac x="\<up>(inv (Tsyn \<circ> map_option \<B>)x)" in exI,auto)
+
+  apply(smt Andin2_rep buildandin_range comp_apply f_inv_into_f inAndChan.elims rangeI)
+  done
+
+
+
+lemma smap_well:"sValues\<cdot>x\<subseteq>range f \<Longrightarrow>  \<exists>s. smap f\<cdot>s = x"
+  apply(rule_tac x = "smap (inv f)\<cdot>x" in exI)
+  by (simp add: snths_eq smap_snth_lemma f_inv_into_f snth2sValues subset_eq)
+  
+lemma buildflashinsb_surj: assumes "sb_well sb"
+  shows "sb \<in> range buildAndinSB"
+proof -
+  have ctypewell:"\<And> c. sValues\<cdot>(sb c) \<subseteq> ctype (Rep c)"
+    using assms
+    by (simp add: sb_well_def) 
+  hence "\<exists>prod. sb = buildAndinSB prod"
+    apply(subst fun_eq_iff,auto,simp add: sValues_def)
+  proof -
+    have f1: "\<forall>i M. sValues\<cdot>(sb i) \<subseteq> M \<or> \<not> ctype (Rep i) \<subseteq> M"
+      by (metis ctypewell dual_order.trans)
+    have "ctype (Rep Andin1) \<subseteq> range(Tsyn o (map_option) \<B>)"
+    
+    then show "\<exists>s. \<forall>i. sb i = buildFlashinSB s i"
+      using f1 by (smt inFlash.exhaust inFlashChan.simps sValues_def smap_well)
+  qed 
+  thus ?thesis
+    by auto
+qed
+
+
 end

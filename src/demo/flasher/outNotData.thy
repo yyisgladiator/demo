@@ -33,13 +33,16 @@ fun outNotChan::"('bool::type \<Rightarrow> 'a::type) \<Rightarrow> 'bool \<Righ
 abbreviation "buildNotoutSBE \<equiv> outNotChan (Tsyn o (map_option) \<B>)" 
 
 lemma buildnotout_ctype: "buildNotoutSBE a c \<in> ctype (Rep c)"
-  sorry
-
+  apply(cases c; cases a;simp)
+  by(simp_all add: ctype_def)
 lemma buildnotout_inj: "inj buildNotoutSBE"
-  sorry
+   apply (auto simp add: inj_def)
+  by (metis outNotChan.simps inj_def inj_B inj_tsyncons)+
 
 lemma buildnotout_range: "range (\<lambda>a. buildNotoutSBE a c) = ctype (Rep c)"
-  sorry
+    apply(cases c)
+  apply(auto simp add: image_iff ctype_def)
+  by (metis option.simps(9))+
 
 lemma buildnotout_surj: assumes "sbElem_well (Some sbe)"
   shows "sbe \<in> range buildNotoutSBE"
@@ -49,8 +52,8 @@ proof -
   hence "\<And>c. sbe c \<in> range (\<lambda>a. buildNotoutSBE a c)"
     by (simp add: buildnotout_range)
   hence "\<exists>prod. sbe = buildNotoutSBE prod"
-    apply(subst fun_eq_iff,auto)
-    sorry
+      apply(simp add: fun_eq_iff f_inv_into_f image_iff)
+    by (metis (full_types) outNot.exhaust)
   thus ?thesis
     by auto
 qed

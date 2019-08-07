@@ -34,14 +34,18 @@ fun inNotChan::"('bool::type \<Rightarrow> 'a::type) \<Rightarrow> 'bool \<Right
 abbreviation "buildNotinSBE \<equiv> inNotChan (Tsyn o (map_option) \<B>)" 
 
 lemma buildnotin_ctype: "buildNotinSBE a c \<in> ctype (Rep c)"
-  sorry
+  apply(cases c; cases a;simp)
+  by(simp_all add: ctype_def)
 
 lemma buildnotin_inj: "inj buildNotinSBE"
-  sorry
+  apply (auto simp add: inj_def)
+  by (metis inNotChan.simps inj_def inj_B inj_tsyncons)+
+
 
 lemma buildnotin_range: "range (\<lambda>a. buildNotinSBE a c) = ctype (Rep c)"
-  sorry
-
+    apply(cases c)
+  apply(auto simp add: image_iff ctype_def)
+  by (metis option.simps(9))+
 lemma buildnotin_surj: assumes "sbElem_well (Some sbe)"
   shows "sbe \<in> range buildNotinSBE"
 proof -
@@ -50,8 +54,8 @@ proof -
   hence "\<And>c. sbe c \<in> range (\<lambda>a. buildNotinSBE a c)"
     by (simp add: buildnotin_range)
   hence "\<exists>prod. sbe = buildNotinSBE prod"
-    apply(subst fun_eq_iff,auto)
-    sorry
+      apply(simp add: fun_eq_iff f_inv_into_f image_iff)
+    by (metis (full_types) inNot.exhaust)
   thus ?thesis
     by auto
 qed
