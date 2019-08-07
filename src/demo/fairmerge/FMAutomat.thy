@@ -6,19 +6,19 @@ begin
 
 section\<open>evenAutomat \<close>
 
-datatype Single = S bool nat
+datatype Single = Si bool nat
 
 (*Setter for M_pure? Nondeterminism in last two cases necessary?*)
 fun eventMT :: "Single \<Rightarrow> inFM \<Rightarrow> nat  \<Rightarrow> (Single \<times> outFM\<^sup>\<Omega>) set" where
-"eventMT (S True  0      ) FMin1 m  = { (S False   i, fmOutSB.setter (\<up>(Some m))) | i. True}" |
-"eventMT (S True  (Suc n)) FMin1 m  = { (S True    n, fmOutSB.setter (\<up>(Some m)))          }" |
-"eventMT (S False 0      ) FMin2 m  = { (S True    i, fmOutSB.setter (\<up>(Some m))) | i. True}" |
-"eventMT (S False (Suc n)) FMin2 m  = { (S False   n, fmOutSB.setter (\<up>(Some m)))          }" |
-"eventMT (S True  n      ) FMin2 m  = { (S False   i, fmOutSB.setter (\<up>(Some m))) | i. True}" |
-"eventMT (S False n      ) FMin1 m  = { (S True    i, fmOutSB.setter (\<up>(Some m))) | i. True}"
+"eventMT (Si True  0      ) FMin1 m  = { (Si False   i, fmOutSB.setter (\<up>(Some m))) | i. True}" |
+"eventMT (Si True  (Suc n)) FMin1 m  = { (Si True    n, fmOutSB.setter (\<up>(Some m)))          }" |
+"eventMT (Si False 0      ) FMin2 m  = { (Si True    i, fmOutSB.setter (\<up>(Some m))) | i. True}" |
+"eventMT (Si False (Suc n)) FMin2 m  = { (Si False   n, fmOutSB.setter (\<up>(Some m)))          }" |
+"eventMT (Si True  n      ) FMin2 m  = { (Si False   i, fmOutSB.setter (\<up>(Some m))) | i. True}" |
+"eventMT (Si False n      ) FMin1 m  = { (Si True    i, fmOutSB.setter (\<up>(Some m))) | i. True}"
 
 
-definition "eventMerge = eventAut (\<lambda> s c m_pure. eventMT s c (inv \<N> m_pure)) ({(S bool n,\<bottom>)| bool n. True})"
+definition "eventMerge = eventAut (\<lambda> s c m_pure. eventMT s c (inv \<N> m_pure)) ({(Si bool n,\<bottom>)| bool n. True})"
 
 
 
