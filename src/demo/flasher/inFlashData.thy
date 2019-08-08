@@ -71,11 +71,6 @@ lemma buildflashinsb_ctype: "sValues\<cdot>(buildFlashinSB a c) \<subseteq> ctyp
   apply auto
    by (metis Flashin1_rep buildflashin_ctype f_inv_into_f inFlashChan.simps smap_sValues)
 
-lemma smap_inj:"inj f \<Longrightarrow> inj (Rep_cfun (smap f))"
-  apply(rule injI)
-  apply(rule snths_eq,auto)
-  apply (metis slen_smap)
-  by (metis inj_eq slen_smap smap_snth_lemma)
 
 lemma rep_cfun_smap_bool_inj:"inj (Rep_cfun (smap (Tsyn o (map_option) \<B>)))"
   apply(rule smap_inj)

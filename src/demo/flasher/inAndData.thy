@@ -163,7 +163,7 @@ lemma smap_well:"sValues\<cdot>x\<subseteq>range f \<Longrightarrow>  \<exists>s
   apply(rule_tac x = "smap (inv f)\<cdot>x" in exI)
   by (simp add: snths_eq smap_snth_lemma f_inv_into_f snth2sValues subset_eq)
   
-lemma buildflashinsb_surj: assumes "sb_well sb"
+lemma buildandinsb_surj: assumes "sb_well sb"
   shows "sb \<in> range buildAndinSB"
 proof -
   have ctypewell:"\<And> c. sValues\<cdot>(sb c) \<subseteq> ctype (Rep c)"
@@ -174,10 +174,15 @@ proof -
   proof -
     have f1: "\<forall>i M. sValues\<cdot>(sb i) \<subseteq> M \<or> \<not> ctype (Rep i) \<subseteq> M"
       by (metis ctypewell dual_order.trans)
-    have "ctype (Rep Andin1) \<subseteq> range(Tsyn o (map_option) \<B>)"
-    
-    then show "\<exists>s. \<forall>i. sb i = buildFlashinSB s i"
-      using f1 by (smt inFlash.exhaust inFlashChan.simps sValues_def smap_well)
+    have f2: "ctype (Rep Andin1) \<subseteq> range(Tsyn o (map_option) \<B>)"
+           apply(smt buildandin_range f_inv_into_f inAndChan.elims rangeI subsetI)
+      done
+    have  "ctype (Rep Andin2) \<subseteq> range(Tsyn o (map_option) \<B>)"
+      
+      apply(smt buildandin_range f_inv_into_f inAndChan.elims rangeI subsetI)
+      done
+    then show "\<exists>a b. \<forall>i. sb i = buildAndinSB (a,b) i"
+      using f1 f2  by (smt inAnd.exhaust inAndChan.simps sValues_def smap_well)
   qed 
   thus ?thesis
     by auto
