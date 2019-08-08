@@ -6,7 +6,7 @@ begin
 (*Not automaton*)
 fun dAnot_transition::"S_not \<Rightarrow> (bool option) \<Rightarrow> (S_not \<times> bool option)"where
 "dAnot_transition S (Some bool) = (S,(Some (\<not>bool)))" |
-"dAnot_transition S (None) = (S,(None))"
+"dAnot_transition S (None) = (S,(Some True))"
 
 interpretation not_smap:smapGen "dAnot_transition" Single "buildNotinSBE" "buildNotoutSBE" Single
   apply(unfold_locales)
@@ -35,7 +35,7 @@ lemma "notOutSBE.getterSB\<cdot>(notSpf\<cdot>(notInSBE.setterSB\<cdot>input)) =
 lemma not_step_t1:"smap not_smap.smapTransition\<cdot>(\<up>(Some bool) \<bullet> s) = \<up>(Some (\<not>bool)) \<bullet> smap not_smap.smapTransition\<cdot>s"
   by simp
 
-lemma not_step_t2:"smap not_smap.smapTransition\<cdot>(\<up>(None) \<bullet> s) = \<up>(None) \<bullet> smap not_smap.smapTransition\<cdot>s"
+lemma not_step_t2:"smap not_smap.smapTransition\<cdot>(\<up>(None) \<bullet> s) = \<up>(Some True) \<bullet> smap not_smap.smapTransition\<cdot>s"
   by simp
 
 end
