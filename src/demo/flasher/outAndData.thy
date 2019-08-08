@@ -73,7 +73,7 @@ lemma rep_cfun_smap_bool_inj:"inj (Rep_cfun (smap (Tsyn o (map_option) \<B>)))"
   by simp
 
 
-lemma buildandintsb_inj: "inj buildAndoutSB"
+lemma buildandoutsb_inj: "inj buildAndoutSB"
   apply(rule injI)
  
   by (metis outAndChan.simps inj_eq old.prod.exhaust rep_cfun_smap_bool_inj)
@@ -81,7 +81,7 @@ lemma buildandintsb_inj: "inj buildAndoutSB"
 
 
 
-lemma buildandintsb_range: "(\<Union>a. sValues\<cdot>(buildAndoutSB a c)) = ctype (Rep c)"
+lemma buildandoutsb_range: "(\<Union>a. sValues\<cdot>(buildAndoutSB a c)) = ctype (Rep c)"
   apply(cases c)
   apply auto
   apply (metis (no_types, lifting) Andout1_rep buildandoutsb_ctype contra_subsetD outAndChan.simps)
@@ -92,7 +92,7 @@ lemma buildandintsb_range: "(\<Union>a. sValues\<cdot>(buildAndoutSB a c)) = cty
 
 
   
-lemma buildandinsb_surj: assumes "sb_well sb"
+lemma buildandoutsb_surj: assumes "sb_well sb"
   shows "sb \<in> range buildAndoutSB"
 proof -
   have ctypewell:"\<And> c. sValues\<cdot>(sb c) \<subseteq> ctype (Rep c)"
