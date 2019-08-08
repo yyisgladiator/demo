@@ -137,7 +137,7 @@ lemma rep_cfun_smap_bool_inj:"inj (Rep_cfun (smap (Tsyn o (map_option) \<B>)))"
   by simp
 
 
-lemma buildandintsb_inj: "inj buildAndinSB"
+lemma buildandinsb_inj: "inj buildAndinSB"
   apply(rule injI)
  
   by (metis inAndChan.simps(1) inAndChan.simps(2) inj_eq old.prod.exhaust rep_cfun_smap_bool_inj)
@@ -145,7 +145,7 @@ lemma buildandintsb_inj: "inj buildAndinSB"
 
 
 
-lemma buildandintsb_range: "(\<Union>a. sValues\<cdot>(buildAndinSB a c)) = ctype (Rep c)"
+lemma buildandinsb_range: "(\<Union>a. sValues\<cdot>(buildAndinSB a c)) = ctype (Rep c)"
   apply(cases c)
   apply auto
   apply (metis (no_types, lifting) Andin1_rep buildandinsb_ctype contra_subsetD inAndChan.simps)
