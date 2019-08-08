@@ -9,3 +9,4 @@ session "user" (mustWork) = "inc" +
     "root.tex"
   document_files (in "../")
     "MontiBelle.sty"
+	"glossary.tex"
