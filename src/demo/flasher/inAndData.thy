@@ -105,7 +105,7 @@ qed
 abbreviation "buildAndinSB \<equiv> inAndChan (Rep_cfun (smap (Tsyn o (map_option) \<B>))) (Rep_cfun (smap (Tsyn o (map_option) \<B>)))" 
 
 
-lemma buildandintsb_ctype: "sValues\<cdot>(buildAndinSB a c) \<subseteq> ctype (Rep c)"
+lemma buildandinsb_ctype: "sValues\<cdot>(buildAndinSB a c) \<subseteq> ctype (Rep c)"
  apply(cases c)
    apply auto
   using smap_sValues Andin1_rep inAndChan.simps
@@ -148,10 +148,10 @@ lemma buildandintsb_inj: "inj buildAndinSB"
 lemma buildandintsb_range: "(\<Union>a. sValues\<cdot>(buildAndinSB a c)) = ctype (Rep c)"
   apply(cases c)
   apply auto
-  apply (metis (no_types, lifting) Andin1_rep buildandintsb_ctype contra_subsetD inAndChan.simps)
+  apply (metis (no_types, lifting) Andin1_rep buildandinsb_ctype contra_subsetD inAndChan.simps)
   apply(rule_tac x="\<up>(inv (Tsyn \<circ> map_option \<B>)x)" in exI,auto)
   apply (smt Andin1_rep buildandin_range comp_apply f_inv_into_f inAndChan.elims rangeI)
-  apply (metis (no_types, lifting) Andin2_rep buildandintsb_ctype contra_subsetD inAndChan.simps)
+  apply (metis (no_types, lifting) Andin2_rep buildandinsb_ctype contra_subsetD inAndChan.simps)
   apply(rule_tac x="\<up>(inv (Tsyn \<circ> map_option \<B>)x)" in exI,auto)
 
   apply(smt Andin2_rep buildandin_range comp_apply f_inv_into_f inAndChan.elims rangeI)
@@ -159,9 +159,6 @@ lemma buildandintsb_range: "(\<Union>a. sValues\<cdot>(buildAndinSB a c)) = ctyp
 
 
 
-lemma smap_well:"sValues\<cdot>x\<subseteq>range f \<Longrightarrow>  \<exists>s. smap f\<cdot>s = x"
-  apply(rule_tac x = "smap (inv f)\<cdot>x" in exI)
-  by (simp add: snths_eq smap_snth_lemma f_inv_into_f snth2sValues subset_eq)
   
 lemma buildandinsb_surj: assumes "sb_well sb"
   shows "sb \<in> range buildAndinSB"
