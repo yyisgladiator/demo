@@ -55,6 +55,30 @@ subsubsection \<open>Weak SPF functions \<close>
 
 subsubsection \<open>Weak SPF lemmas\<close>
 
+lemma spf_weakI:
+  fixes spf :: "'I\<^sup>\<Omega> \<rightarrow> 'O\<^sup>\<Omega>"
+  assumes "\<not>chDomEmpty TYPE('I)"
+    and "\<And>sb s. sbLen sb < \<infinity> \<Longrightarrow> sbLen sb \<le> sbLen (spf\<cdot>sb)"
+  shows "weak_well spf"
+proof-
+  have "\<And>sb. sbLen sb = \<infinity> \<Longrightarrow> sbLen sb \<le> sbLen (spf\<cdot>sb)"
+  proof (rule ccontr)
+    fix sb::"'I\<^sup>\<Omega>"
+    assume sb_len: "sbLen sb = \<infinity>"
+      and not_weak: "\<not> sbLen sb \<le> sbLen (spf\<cdot>sb)"
+    then obtain k where out_len: "sbLen (spf\<cdot>sb) = Fin k"
+      by (metis le_less_linear lnat_well_h2)
+    have sbtake_sb_len: "sbLen (sbTake (Suc k)\<cdot>sb) = Fin (Suc k)"
+      by (simp add: assms sbtake_len sb_len)
+    have "sbLen (spf\<cdot>(sbTake (Suc k)\<cdot>sb)) \<le> sbLen (spf\<cdot>sb)"
+      using monofun_cfun_arg sblen_monosimp sbtake_below by blast
+    thus False
+      by (metis Fin_Suc Fin_leq_Suc_leq SBv3.lnat.inject assms(2) le_less_linear less2eq less_lnsuc n_not_Suc_n notinfI3 out_len sbtake_sb_len)
+  qed
+  thus ?thesis
+    by (metis assms(2) inf_ub order.not_eq_order_implies_strict weak_well_def)
+qed
+
 subsection \<open>Strong SPF \<close>
 
 subsubsection \<open>Strong SPF definition\<close>
