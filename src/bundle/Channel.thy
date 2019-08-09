@@ -180,6 +180,9 @@ Now we define classes for these two options.\<close>
 
 paragraph\<open>Class somechan \\\<close>
 
+text\<open>Types of \<open>somechan\<close> can transmit at least one message 
+on every channel.\<close>
+
 class somechan = chan +
   assumes chan_notempty:"(range Rep) \<inter> cEmpty = {}"
 begin
@@ -192,12 +195,13 @@ lemma somechandom:"chDom(TYPE('c::somechan))
   by(simp add: chDom_def somechan_class.chan_notempty Diff_triv)
 
 end
-
-text\<open>Types of  @{class somechan} can transmit at least one message 
-on every channel. Hence, we know @{thm somechannotempty} and 
+text\<open> Hence, we know @{thm somechannotempty} and 
 @{thm somechandom}.\<close>
 
 paragraph\<open>Class emptychan \\\<close>
+
+text\<open>Types of \<open>emptychan\<close> can not transmit any message on any 
+channel.\<close>
 
 class emptychan = chan +
   assumes chan_empty:"(range Rep) \<subseteq> cEmpty" 
@@ -208,8 +212,7 @@ lemma emptychanempty[simp]:"chDomEmpty(TYPE('c::emptychan))"
 
 end
 
-text\<open>Types of @{class emptychan} can not transmit any message on any 
-channel. Hence, the Domain is empty @{thm emptychanempty}.\<close>
+text\<open>Hence, the Domain is empty @{thm emptychanempty}.\<close>
 
 
 
