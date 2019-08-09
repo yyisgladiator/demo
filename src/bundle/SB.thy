@@ -609,6 +609,18 @@ theorem sbcons [simp]: " sbConc (sbHd\<cdot>sb)\<cdot>(sbRt\<cdot>sb) = sb"
   apply (subst sbconc_sconc,simp_all)
   by (simp add: sbgetch_insert2)
 
+lemma sbtake_below: "sbTake i\<cdot>sb \<sqsubseteq> sb"
+  by (simp add: sb_belowI)
+
+lemma sbtake_len:
+  assumes "\<not>chDomEmpty TYPE('b)"
+    and "Fin i \<le> sbLen (sb::'b\<^sup>\<Omega>)"
+  shows "sbLen (sbTake i\<cdot>sb) = Fin i"
+  using assms
+  apply (induction i)
+  apply (simp add: sbLen_def)
+  apply (metis (mono_tags, lifting) LeastI)
+  by (metis (no_types, hide_lams) assms(1) order_trans sblen2slen sbtake_getch slen_stake sblen_min_len)
 
 subsection\<open>sbHdElem\<close>
 
