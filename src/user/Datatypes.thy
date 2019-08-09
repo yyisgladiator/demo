@@ -8,7 +8,7 @@ begin
 (*Todo include cref package and change ref to cref*)
 default_sort %invisible type
 text\<open>This section mainly introduces two datatypes that will be used 
-for defining stream bundles, stream processing functions and 
+for defining \gls{sb}, \gls{spf} and 
 automatons \ref{sec:focus}. The datatypes in this theory are only 
 dummy types, that will be generated differently depending on the 
 component. We need these dummy types to define the general 
