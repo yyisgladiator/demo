@@ -19,7 +19,9 @@ interpretation notInSBE: sbeGen "buildNotinSBE"
 
 interpretation notInSB: sbGen "buildNotinSB"
   apply(unfold_locales)
-  sorry
+  apply (simp add: buildnotinsb_ctype) 
+  apply (simp add: buildnotinsb_inj)
+  by (simp add: buildnotinsb_surj)
 
 interpretation notOutSBE: sbeGen "buildNotoutSBE"
   apply(unfold_locales)
@@ -31,6 +33,8 @@ interpretation notOutSBE: sbeGen "buildNotoutSBE"
 
 interpretation notOutSB: sbGen "buildNotoutSB"
   apply(unfold_locales)
-  sorry
+  apply (simp add: buildnotoutsb_ctype) 
+  apply (simp add: buildnotoutsb_inj)
+  by (simp add: buildnotoutsb_surj)
 
 end

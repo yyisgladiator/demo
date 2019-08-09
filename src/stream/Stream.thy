@@ -402,7 +402,10 @@ text \<open>Basic properties of \<open>\<up>_\<close> constructor\<close>
 
 (* shd composed with \<up> is the identity. *)
 lemma [simp]: "shd (\<up>a) = a"
-by (simp add: shd_def sup'_def)
+  by (simp add: shd_def sup'_def)
+
+lemma [simp]: "<[a]> = \<up>a"
+  by(simp add: sup'_def)
 
 (* the singleton stream is never equal to the empty stream *)
 lemma [simp]: "\<up>a \<noteq> \<epsilon>"
@@ -4164,6 +4167,10 @@ by (auto simp add: sValues_def2)
 (* if the natural number n is less than the length of the stream s, then snth n s is in the domain of s *)
 lemma snth2sValues: "Fin n < #s \<Longrightarrow> snth n s \<in> sValues\<cdot>s"
   by (auto simp add: sValues_def2)
+
+lemma smap_well:"sValues\<cdot>x\<subseteq>range f \<Longrightarrow>  \<exists>s. smap f\<cdot>s = x"
+  apply(rule_tac x = "smap (inv f)\<cdot>x" in exI)
+  by (simp add: snths_eq smap_snth_lemma f_inv_into_f snth2sValues subset_eq)
 
 lemma smap_inv_id[simp]: "sValues\<cdot>s \<subseteq> range F \<Longrightarrow> smap (F \<circ> (inv F))\<cdot>s = s"
   apply (induction s  rule: ind )

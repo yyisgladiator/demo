@@ -1,4 +1,4 @@
-(*<*)
+(*<*)(*:maxLineLen=68:*)
 theory dAutomaton_comp
   imports dAutomaton_causal (*SPF_comp*)
 begin

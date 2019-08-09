@@ -1,0 +1,98 @@
+
+\newacronym[description={A reflexive, transitive and antisymmetric relation}]{po}{po}{partial order}
+
+\newacronym[description={combination of multiple streams}]{sb}{SB}{stream bundle}
+\newacronym[description={continuous function from bundle to bundle}]{spf}{SPF}{stream-processing function}
+\newacronym[description={set of stream-processing functions, used to described non-deterministic behaviour}]{sps}{SPS}{Stream Processing Specification}
+
+\newacronym[description={A partial order in which every chain has a least upper bound}]{cpo}{cpo}{complete partial order}
+
+\newacronym[description={A complete partial order with a bottom element}]{pcpo}{pcpo}{pointed complete partial order}
+
+\newacronym[description={Used to define the semantic of recursive definitions}]{lfp}{lfp}{least fix point}
+
+\newacronym[description={Natural numbers extended with an infinity-element}]{lnat}{lNat}{lazy natural number}
+
+\newglossaryentry{adm}
+{
+    name=admissible,
+    description={A predicate is admissible if it holds for the lub of a chain in whenever it holds for the elements of the chain}
+}
+
+\newglossaryentry{prefixOrder}
+{
+    name=prefix order,
+    description={}
+}
+
+\newglossaryentry{bot}
+{
+    name=bottom,
+    description={Least element in a complete partial order}
+}
+
+\newglossaryentry{isar}
+{
+    name=isar,
+    description={A proof language in Isabelle. Designed to be similar to handwritten proofs}
+}
+
+\newglossaryentry{tstream}
+{
+    name=Tstream,
+    description={Timed Stream. Every time step may contain a finite number of messages}
+}
+
+\newglossaryentry{chain}
+{
+    name=chain,
+    description={Totally ordered set with minimal element}
+}
+
+\newglossaryentry{discr}
+{
+    name=discrete partial order,
+    description={A partial order on $=$}
+}
+
+\newglossaryentry{mono}
+{
+    name=monotonic,
+    description={The order is preserved after application of the function}
+}
+
+\newglossaryentry{cont}
+{
+    name=continuous,
+    description={The least upper bound is preserved after application of the function}
+}
+
+
+\newglossaryentry{seqComp}
+{
+    name=sequential,
+    description={Special kind of composition. The output of the first component is the input of the second component}
+}
+
+\newglossaryentry{parComp}
+{
+    name=parallel,
+    description={Special kind of composition. The two components do not share channels}
+}
+
+\newglossaryentry{feedComp}
+{
+    name=feedback,
+    description={Special kind of composition. Output channels are used as input of the same component}
+}
+
+\newglossaryentry{genComp}
+{
+    name=general,
+    description={most general composition, can describe every system}
+}
+%\newglossaryentry{pfun}
+%{
+%    name=partial function,
+%    description={A partial order on $=$}
+%}

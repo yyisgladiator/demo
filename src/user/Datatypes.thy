@@ -1,4 +1,4 @@
-(*<*)(*:maxLineLen=69:*)
+(*<*)(*:maxLineLen=68:*)
 theory Datatypes
 
 imports inc.Prelude
@@ -8,7 +8,7 @@ begin
 (*Todo include cref package and change ref to cref*)
 default_sort %invisible type
 text\<open>This section mainly introduces two datatypes that will be used 
-for defining stream bundles, stream processing functions and 
+for defining \gls{sb}, \gls{spf} and 
 automatons \ref{sec:focus}. The datatypes in this theory are only 
 dummy types, that will be generated differently depending on the 
 component. We need these dummy types to define the general 
@@ -22,9 +22,9 @@ datatype contains every channel, that is used. There is no way to
 datatype channel = DummyChannel nat
 hide_const DummyChannel
 
-text \<open>To ensure that the dummy channel type is never used for proving
-anything not holding over every channel type, the constructor is 
-immediately hidden.\<close>
+text \<open>To ensure that the dummy channel type is never used for 
+proving anything not holding over every channel type, the 
+constructor is immediately hidden.\<close>
 
 section \<open>Pure Message Datatype \label{sec:pmsgdata}\<close>
 
@@ -35,9 +35,9 @@ of message has to be described here.\<close>
 datatype M_pure = DummyMessage nat
 hide_const DummyMessage
 
-text \<open>To ensure that the dummy message type is never used for proving
-anything not holding for a different message type, the constructor is
-also immediately hidden.\<close>
+text \<open>To ensure that the dummy message type is never used for 
+proving anything not holding for a different message type, the 
+constructor is also immediately hidden.\<close>
 
 instance M_pure :: countable
   apply(intro_classes)
@@ -52,9 +52,9 @@ are allowed to be transmitted on the respective channel.\<close>
 
 definition cMsg :: "channel \<Rightarrow> M_pure set" where
 "cMsg c \<equiv> if c= undefined then {} else undefined"
-text\<open>Here we almost use an undefined cMsg mapping. We only assume, is
-that there always exists at least one channel, on which no message 
-can flow.\<close>
+text\<open>Here we almost use an undefined cMsg mapping. We only assume,
+is that there always exists at least one channel, on which no 
+message can flow.\<close>
 
 theorem cmsgempty_ex:"\<exists>c. cMsg c = {}"
   by (simp add: cMsg_def)
@@ -67,12 +67,10 @@ components may result in components without in or output channels.
 Thus, we restrict the user to channel types, that contain a never 
 transmitting channel.\<close>
 
-text \<open>Since one can use different time models for components, we also
-have to use the correct time model for our streams. Therefore, we 
-define a function that maps a channel to its time model. 
-The @{type timeType} is defined as:
-
-@{datatype timeType}\<close>
+text \<open>Since one can use different time models for components, we 
+also have to use the correct time model for our streams. Therefore,
+we define a function that maps a channel to its time model. The 
+@{type timeType} is defined as: @{datatype timeType}\<close>
 
 definition cTime :: "channel \<Rightarrow> timeType" where
 "cTime = undefined"

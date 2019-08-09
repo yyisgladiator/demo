@@ -1,4 +1,4 @@
-(*<*)
+(*<*)(*:maxLineLen=68:*)
 theory ndAutomaton
   imports bundle.SB_fin (* dAutomaton *)
 begin

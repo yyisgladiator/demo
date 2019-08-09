@@ -1,6 +1,6 @@
 theory Flasher
 
-imports AndAutomat NotAutomat Flasher_inc
+imports AndAutomat NotAutomat Flasher_inc spf.SPFcomp
 begin                             
 
 

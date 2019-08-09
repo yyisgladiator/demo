@@ -1,5 +1,6 @@
+(*<*)(*:maxLineLen=68:*)
 theory eventAutomat
-
+(*>*)
 imports ndAutomaton
 
 begin
@@ -131,4 +132,7 @@ fun eventMT :: "state \<Rightarrow> inMerge \<Rightarrow> ('m\<times>'m)  \<Righ
 
 definition "eventMerge = eventAut eventMergeTransition"
 *)
+
+(*<*)
 end
+(*>*)

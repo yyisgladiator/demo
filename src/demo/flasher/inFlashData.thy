@@ -71,11 +71,6 @@ lemma buildflashinsb_ctype: "sValues\<cdot>(buildFlashinSB a c) \<subseteq> ctyp
   apply auto
    by (metis Flashin1_rep buildflashin_ctype f_inv_into_f inFlashChan.simps smap_sValues)
 
-lemma smap_inj:"inj f \<Longrightarrow> inj (Rep_cfun (smap f))"
-  apply(rule injI)
-  apply(rule snths_eq,auto)
-  apply (metis slen_smap)
-  by (metis inj_eq slen_smap smap_snth_lemma)
 
 lemma rep_cfun_smap_bool_inj:"inj (Rep_cfun (smap (Tsyn o (map_option) \<B>)))"
   apply(rule smap_inj)
@@ -94,9 +89,6 @@ lemma buildflashinsb_range: "(\<Union>a. sValues\<cdot>(buildFlashinSB a c)) = c
   by (metis Flashin1_rep buildflashin_range comp_apply f_inv_into_f image_cong inFlashChan.simps)
 
 
-lemma smap_well:"sValues\<cdot>x\<subseteq>range f \<Longrightarrow>  \<exists>s. smap f\<cdot>s = x"
-  apply(rule_tac x = "smap (inv f)\<cdot>x" in exI)
-  by (simp add: snths_eq smap_snth_lemma f_inv_into_f snth2sValues subset_eq)
   
 lemma buildflashinsb_surj: assumes "sb_well sb"
   shows "sb \<in> range buildFlashinSB"

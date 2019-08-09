@@ -1,4 +1,4 @@
-(*<*)
+(*<*)(*:maxLineLen=68:*)
 theory dAutomaton
   imports bundle.SB_fin spf.SPF
 begin
@@ -43,7 +43,7 @@ definition daSem :: "('s::type, 'I::{finite,chan},'O) dAutomaton \<Rightarrow> (
 
 subsubsection \<open>Statesemantic lemmas\<close>
 
-lemma dastatesem_unfolding: "(daStateSem automat s) = sb_case\<cdot>(\<lambda>sbe. \<Lambda> sb .
+theorem dastatesem_unfolding: "(daStateSem automat s) = sb_case\<cdot>(\<lambda>sbe. \<Lambda> sb .
                                                   let (nextState, output) = daTransition automat s sbe in
                             output \<bullet>\<^sup>\<Omega> ((daStateSem automat) nextState\<cdot>sb))"
   unfolding daStateSem_def
@@ -52,16 +52,16 @@ lemma dastatesem_unfolding: "(daStateSem automat s) = sb_case\<cdot>(\<lambda>sb
   apply(intro cont2cont; simp)
   by auto
 
-lemma dastatesem_bottom:
+theorem dastatesem_bottom:
   assumes "\<not>sbHdElemWell (sb::('b::{finite,chan})\<^sup>\<Omega>)"
-  and "\<not> chIsEmpty TYPE('b)"
+  and "\<not> chDomEmpty TYPE('b)"
   shows "(daStateSem automat s)\<cdot>sb = \<bottom>"
   apply (subst dastatesem_unfolding)
   apply (simp add: sb_case_insert)
   by (metis (no_types, lifting) assms fup1 sbHdElemWell_def sbHdElem_h_cont.rep_eq sbHdElem_h_def sbnleast_mex)
 
 lemma dastatesem_strict:
-  assumes "\<not> chIsEmpty TYPE('b::{finite, chan})"
+  assumes "\<not> chDomEmpty TYPE('b::{finite, chan})"
   shows "(daStateSem automat s)\<cdot>(\<bottom>::'b\<^sup>\<Omega>) = \<bottom>"
   by (simp add: assms dastatesem_bottom sbHdElemWell_def)
 
@@ -85,7 +85,7 @@ lemma dastatesem_final:
 lemma dastatesem_final_h2:
   shows "(daStateSem automat s)\<cdot>(sbECons sbe\<cdot>sb) =
   (daNextOut automat s sbe) \<bullet>\<^sup>\<Omega> ((daStateSem automat (daNextState automat s sbe))\<cdot>sb)"
-  apply (cases "chIsEmpty(TYPE('b))")
+  apply (cases "chDomEmpty(TYPE('b))")
   apply (subst sbtypeepmpty_sbenone[of sbe],simp)+
   apply (subst sbtypeepmpty_sbbot[of sb],simp)+
   apply (subst dastatesem_unfolding, simp add: sb_case_insert)
@@ -98,7 +98,7 @@ lemma dastatesem_final_h2:
   using sbgetch_sbe2sb_nempty strictI apply fastforce
   by (simp only: daNextOut_def daNextState_def sbhdelem_sbecons sbrt_sbecons)
 
-lemma dastatesem_stepI:
+theorem dastatesem_stepI:
   assumes "(daNextOut da s sbe) = out"
       and "(daNextState da s sbe) = nextState"
   shows "(daStateSem da s)\<cdot>(sbECons sbe\<cdot>sb) = out  \<bullet>\<^sup>\<Omega> ((daStateSem da nextState)\<cdot>sb)"
@@ -106,16 +106,16 @@ lemma dastatesem_stepI:
 
 lemma dastatesem_inempty_step:
   fixes automat::"('state, 'in::{chan, finite}, 'out) dAutomaton"
-  assumes"chIsEmpty TYPE('in)"
+  assumes"chDomEmpty TYPE('in)"
   shows "daStateSem automat s\<cdot>\<bottom> = (daNextOut automat s (Abs_sbElem None)) \<bullet>\<^sup>\<Omega> 
          ((daStateSem automat (daNextState automat s (Abs_sbElem None)))\<cdot>\<bottom>)"
   by (metis assms dastatesem_final_h2 sbtypeempty_sbecons_bot)
 
-lemma dastatesem_inempty_len:
+theorem dastatesem_inempty_len:
   fixes automat::"('state, 'in::{chan, finite}, 'out) dAutomaton"
   assumes "\<And>state sbe. sbLen (daNextOut automat state sbe) \<ge> 1"
-  and "chIsEmpty TYPE('in)"
-shows "\<forall>s. sbLen (daStateSem automat s\<cdot>\<bottom>) = \<infinity>"
+  and "chDomEmpty TYPE('in)"
+  shows "\<forall>s. sbLen (daStateSem automat s\<cdot>\<bottom>) = \<infinity>"
 proof(rule contrapos_pp,simp+)
   assume a1: "\<exists>s::'state. sbLen (daStateSem automat s\<cdot>\<bottom>) \<noteq> \<infinity>"
   obtain len_set where len_set_def: "len_set = { sbLen (daStateSem automat s\<cdot>\<bottom>) | s. True }"
@@ -124,7 +124,7 @@ proof(rule contrapos_pp,simp+)
     by (metis (mono_tags, lifting) exists_least_iff le_less_linear len_set_def mem_Collect_eq)
   then obtain state where state_def: "sbLen (daStateSem automat state\<cdot>\<bottom>) = n"
     using len_set_def by blast
-  hence state_least: "\<forall>s. sbLen (daStateSem automat state\<cdot>\<bottom>) \<le> sbLen (daStateSem automat s\<cdot>\<bottom>)" (*v3 branch may have a lemma that helps here*)
+  hence state_least: "\<forall>s. sbLen (daStateSem automat state\<cdot>\<bottom>) \<le> sbLen (daStateSem automat s\<cdot>\<bottom>)"
     using len_set_def n_least by blast
   then obtain k where k_def:"Fin k = sbLen (daStateSem automat state\<cdot>\<bottom>)"
     by (metis SBv3.lnat.exhaust a1 inf_less_eq)
@@ -142,9 +142,38 @@ proof(rule contrapos_pp,simp+)
     by (simp add: k_def)
 qed
 
+lemma dastatesem_weak_fin:
+  assumes "sbLen sb = Fin n"
+    and "\<And>state sbe. 1 \<le> sbLen (daNextOut automat state sbe)"
+  shows "sbLen sb \<le> sbLen (daStateSem automat s\<cdot>sb)"
+proof (induction sb arbitrary: s rule: sb_finind)
+case 1
+  then show ?case
+    by (simp add: assms(1))
+next
+  case (2 sb)
+  then show ?case
+    by (metis Fin_neq_inf assms(1) bottomI linear lnle_def lnzero_def sbIsLeast_def sblen_min_len_empty)
+next
+  case (3 sbe sb)
+  hence "sbLen (sbe \<bullet>\<^sup>\<surd> sb) = sbLen (sbe2sb sbe) + sbLen sb"
+    by (metis lnat_plus_commu lnat_plus_suc sbecons_len sbelen_one)
+  moreover have "sbLen (sbe2sb sbe) = 1"
+    by (simp add: "3.hyps")
+  moreover have "sbLen (daNextOut automat s sbe) + sbLen (daStateSem automat (daNextState automat s sbe)\<cdot>sb)
+  \<le> sbLen ((daNextOut automat s sbe) \<bullet>\<^sup>\<Omega> daStateSem automat (daNextState automat s sbe)\<cdot>sb)"
+    by (simp add: sblen_sbconc)
+  moreover have "(1 + sbLen sb) \<le> (sbLen (daNextOut automat s sbe)) + sbLen (daStateSem automat (daNextState automat s sbe)\<cdot>sb)"
+    by (simp add: "3.IH" assms(2) lessequal_addition)
+  moreover have "1 + sbLen sb \<le> sbLen ((daNextOut automat s sbe) \<bullet>\<^sup>\<Omega> daStateSem automat (daNextState automat s sbe)\<cdot>sb)"
+    using calculation(3) calculation(4) dual_order.trans by blast
+  ultimately show ?case 
+    by (simp add: dastatesem_final_h2)
+qed
+
 lemma fun_weakI_h:
   fixes automat::"('state, 'in::{chan, finite}, 'out) dAutomaton"
-  assumes "\<not>chIsEmpty TYPE('in)" and "\<And>sb s. sbLen sb < \<infinity> \<Longrightarrow> sbLen sb \<le> sbLen (daStateSem automat s\<cdot>sb)"
+  assumes "\<not>chDomEmpty TYPE('in)" and "\<And>sb s. sbLen sb < \<infinity> \<Longrightarrow> sbLen sb \<le> sbLen (daStateSem automat s\<cdot>sb)"
   shows   "\<And>sb s. sbLen sb = \<infinity> \<Longrightarrow> sbLen sb \<le> sbLen (daStateSem automat s\<cdot>sb)"
 proof (rule ccontr)
   fix sb::"'in\<^sup>\<Omega>" and s :: 'state
@@ -179,11 +208,29 @@ qed
 
 lemma fun_weakI: 
   fixes automat::"('state, 'in::{chan, finite}, 'out) dAutomaton"
-  assumes "\<not>chIsEmpty TYPE('in)"
+  assumes "\<not>chDomEmpty TYPE('in)"
     and "\<And>sb s. sbLen sb < \<infinity> \<Longrightarrow> sbLen sb \<le> sbLen (daStateSem automat s\<cdot>sb)"
   shows   "weak_well (daStateSem automat s)"
   apply (simp add: weak_well_def)
   by (metis assms inf_ub less_le fun_weakI_h)
+
+theorem dastatesem_weak:
+  assumes "\<And>state sbe. 1 \<le> sbLen (daNextOut (automat::('state, 'in::{chan, finite}, 'out) dAutomaton) state sbe)"
+  shows     "weak_well (daStateSem automat s)"
+  apply (cases "chDomEmpty TYPE('in)")
+  apply (metis (full_types) assms dastatesem_inempty_len fold_inf less_lnsuc sblen_min_len_empty sbtypeepmpty_sbbot weak_well_def)
+  apply (rule fun_weakI, simp)
+  by (metis assms dastatesem_weak_fin infI less_irrefl)
+
+theorem dastatesem_least:
+  assumes"(\<lambda>state. sb_case\<cdot>(\<lambda>sbe. \<Lambda> sb. snd (daTransition X state sbe) \<bullet>\<^sup>\<Omega>  
+          Z (fst (daTransition X state sbe))\<cdot>sb)) \<sqsubseteq> Z"
+  shows"daStateSem X \<sqsubseteq> Z"
+  apply (simp add: daStateSem_def)
+  apply (rule fix_least_below)
+  apply (subst beta_cfun)
+  apply (intro cont2cont; simp)
+  by (simp add: assms case_prod_unfold)
 
 lemma dastatesem_weak_fin:
   assumes "sbLen sb = Fin n"
@@ -237,19 +284,19 @@ lemma dastatesem_least: assumes"(\<lambda>state::'a.
   
 subsubsection \<open>Semantic lemmas\<close>
 
-lemma dasem_insert:
+theorem dasem_insert:
   "daSem automat\<cdot>sb = (daInitOut automat) \<bullet>\<^sup>\<Omega> ((daStateSem automat (daInitState automat))\<cdot>sb)"
   by (simp add: daSem_def)
 
-lemma dasem_bottom:
-  assumes "\<not> chIsEmpty TYPE('b::{chan, finite})"
-  shows "daSem automat\<cdot>(\<bottom>::'b\<^sup>\<Omega>) = daInitOut automat"
-  by (simp add: dasem_insert dastatesem_bottom assms sbHdElemWell_def)
+theorem dasem_bottom:
+  assumes "\<not>chDomEmpty TYPE('in::{chan,finite})"
+  shows "daSem automat\<cdot>(\<bottom>::'in\<^sup>\<Omega>) = daInitOut automat"
+  by (simp add: daSem_def assms dastatesem_strict)
 
-lemma dasem_strong:
+theorem dasem_strong:
   assumes "weak_well(daStateSem automat (daInitState automat))"
   and     "1 \<le> sbLen (daInitOut automat)"
-shows "strong_well (daSem automat)"
+  shows "strong_well (daSem automat)"
   apply (subst strong_well_def)
   apply (simp add: daSem_def)
 proof

@@ -30,6 +30,7 @@ session "bundle" (mustWork) in "bundle" = "stream" +
     "root.tex"
   document_files (in "../")
     "MontiBelle.sty"
+	"glossary.tex"
 
 
 session "spf" (mustWork) in "spf" = "bundle" +
@@ -42,6 +43,7 @@ session "spf" (mustWork) in "spf" = "bundle" +
     "root.tex"
   document_files (in "../")
     "MontiBelle.sty"
+	"glossary.tex"
 
 
 session "automaton" (mustWork) in "automatons" = "spf" +
@@ -56,4 +58,5 @@ session "automaton" (mustWork) in "automatons" = "spf" +
     "root.tex"
   document_files (in "../")
     "MontiBelle.sty"
+	"glossary.tex"
 
