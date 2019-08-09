@@ -172,7 +172,7 @@ allowed to be transmitted. The core theories do not use these
 classes, but the additional assumptions can be useful for the user. 
 Now we define classes for these two options.\<close>
 
-subsection\<open>Class somechan\<close>
+subsubsection\<open>Class somechan\<close>
 class somechan = chan +
   assumes chan_notempty:"(range Rep) \<inter> cEmpty = {}"
 begin
@@ -190,7 +190,7 @@ text\<open>Types of  @{class somechan} can transmit at least one message
 on every channel. Hence, we know @{thm somechannotempty} and 
 @{thm somechandom}.\<close>
 
-subsection\<open>Class emptychan\<close>
+subsubsection\<open>Class emptychan\<close>
 class emptychan = chan +
   assumes chan_empty:"(range Rep) \<subseteq> cEmpty" 
 begin
