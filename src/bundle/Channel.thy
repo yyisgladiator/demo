@@ -340,10 +340,10 @@ is also in the class. The proof is, like above, straight forward.\<close>
 
 instantiation minus :: (chan, chan) chan
 begin
-definition "Rep == Rep_minus"
+  definition "Rep == Rep_minus"
 instance
   apply intro_classes
-   apply auto 
+  apply auto 
   apply (metis Diff_iff Rep_minus Rep_minus_def cdom_notempty)
   by (smt Rep_minus_def Rep_minus_inject injI)
 end
