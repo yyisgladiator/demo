@@ -4,10 +4,9 @@ theory SB_fin
 begin
 (*>*)
 
-declare[[show_types]]
+declare %invisible[[show_types]]
 
-section\<open>default sort finite and chan\<close>
-default_sort "{finite,chan}"
+default_sort %invisible"{finite,chan}"
 
 section\<open> SB functions with finite type \<close>
 
@@ -25,7 +24,7 @@ lift_definition sbHdElem_h_cont::"'c\<^sup>\<Omega> \<rightarrow> ('c\<^sup>\<su
   apply(rule Cont.contI2)
    apply(rule monofunI)
   apply auto[1]
-  apply (metis sbHdElemWell_def sbhdelem_mono_eq sbhdelem_some sbhdelemchain sbnleast_mex)
+  apply (metis sbhdelem_mono_eq sbhdelem_some sbhdelemchain)
 proof-
   fix Y::"nat \<Rightarrow> 'c\<^sup>\<Omega>"
   assume ch1:"chain Y"
@@ -272,14 +271,13 @@ proof-
   then have finiteIn:"\<forall>c::'c. (\<Squnion>i::nat. Y i)  \<^enum>  c \<noteq> \<epsilon> \<Longrightarrow> \<exists>i. \<forall>c::'c. (Y i) \<^enum> c \<noteq> \<epsilon>"
     by blast
   then have finiteInsb:" \<forall>c::'c. (\<Squnion>i::nat. Y i)  \<^enum>  c \<noteq> \<epsilon> \<Longrightarrow> \<exists>i.\<not>sbIsLeast (Y i)"
-    apply(simp add: sbIsLeast_def)
-    by (metis (full_types) Stream.slen_empty_eq sbgetch_bot sblen2slen sbtypeepmpty_sbbot)
+    by(simp add: sbHdElemWell_def)
   then show "(if sbIsLeast (\<Squnion>i::nat. Y i) then \<bottom> else Iup (Abs_sbElem (Some (\<lambda>c::'c. shd ((\<Squnion>i::nat. Y i)  \<^enum>  c))))) \<sqsubseteq>
        (\<Squnion>i::nat. if sbIsLeast (Y i) then \<bottom> else Iup (Abs_sbElem (Some (\<lambda>c::'c. shd (Y i  \<^enum>  c)))))"
   proof(cases "\<exists>c::'c. (\<Squnion>i::nat. Y i)  \<^enum>  c = \<epsilon>")
     case True
     then show ?thesis
-      by auto
+      using sbnleast_mex by auto
   next
     case False
     have ch3:"\<And>c. chain (\<lambda>i. Y i  \<^enum>  c)"
@@ -289,8 +287,8 @@ proof-
     then have shd_eq:"\<And>i. i\<ge>n \<Longrightarrow> (\<lambda>c::'c. shd (Y i  \<^enum>  c)) = (\<lambda>c::'c. shd (Y n  \<^enum>  c))"
       apply(subst fun_eq_iff)
       apply auto
-      apply(rule below_shd_alt,auto)
-      by (simp add: ch1 monofun_cfun_arg po_class.chain_mono)
+      apply(rule below_shd_alt)
+      by (simp add: ch1 po_class.chain_mono sbnleast_mex)
     have h1:"\<forall>i\<ge>n. (if sbIsLeast (Y i) then \<bottom> else Iup (Abs_sbElem (Some (\<lambda>c::'c. shd (Y i  \<^enum>  c)))))
                 = Iup (Abs_sbElem (Some (\<lambda>c::'c. shd (Y n  \<^enum>  c))))"
       apply(auto)
@@ -304,20 +302,14 @@ proof-
       apply (simp add: n_def)
       apply(auto simp add: fun_eq_iff)
       apply(rule below_shd[symmetric])
-      by (simp add: ch1 is_ub_thelub monofun_cfun_arg n_def)
+      using ch1 is_ub_thelub monofun_cfun_arg n_def sbnleast_mex by blast
     have h3_h:"(if sbIsLeast (\<Squnion>i. Y i) then \<bottom> else Iup (Abs_sbElem (Some (\<lambda>c::'c. shd (Y n  \<^enum>  c))))) = Iup (Abs_sbElem (Some (\<lambda>c::'c. shd (Y n  \<^enum>  c))))"
       using ch1 is_ub_thelub n_def sbleast_mono by auto
     then show ?thesis
-      using below_lub ch2 h2 n_def by fastforce
+      using below_lub ch2 h2 n_def
+      by (metis (mono_tags, lifting))
   qed
 qed
-
-
-subsection\<open>sbHdElem\_h\_cont lemmas\<close>
-
-
-lemma h2:"sbHdElem_h_cont\<cdot>(sbe \<bullet>\<^sup>\<surd> sb) = up\<cdot>sbe"
-  by(simp add: sbHdElem_h_cont.rep_eq sbhdelem_h_sbe)
 
 subsection\<open>sb\_cases definition\<close>
 
@@ -337,7 +329,7 @@ lemma sb_cases_bot:"\<not>(chDomEmpty (TYPE ('cs))) \<Longrightarrow> sb_case\<c
 lemma sb_cases_sbe[simp]:"sb_case\<cdot>f\<cdot>(sbECons sbe\<cdot>sb) = f sbe\<cdot>(sb)"
   apply (subst sb_case_insert)
   apply (subst sbrt_sbecons)
-  by (simp add: h2)
+  by(simp add: sbHdElem_h_cont.rep_eq sbhdelem_h_sbe)
 
 
 section\<open>Datatype Konstruktor\<close>
@@ -479,10 +471,7 @@ lemma getset_eq[simp]:"\<not>chDomEmpty (TYPE ('cs)) \<Longrightarrow> getterSB\
 
 lemma "setterSB\<cdot>(getterSB\<cdot>sb) \<sqsubseteq> sb"
   apply(induction sb)
-  apply auto
   apply(cases "chDomEmpty(TYPE('cs))")
-  apply (metis (full_types)minimal sbtypeepmpty_sbbot)
-  apply(simp add: sbIsLeast_def)
   oops
 
 lemma "sb1 = sb2 \<Longrightarrow> sbe \<bullet>\<^sup>\<surd> sb1 = sbe \<bullet>\<^sup>\<surd> sb2"

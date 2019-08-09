@@ -58,7 +58,7 @@ theorem dastatesem_bottom:
   shows "(daStateSem automat s)\<cdot>sb = \<bottom>"
   apply (subst dastatesem_unfolding)
   apply (simp add: sb_case_insert)
-  by (metis (no_types, lifting) assms fup1 sbHdElemWell_def sbHdElem_h_cont.rep_eq sbHdElem_h_def sbnleast_mex)
+  by (metis (no_types, lifting) assms fup1 sbHdElem_h_cont.rep_eq sbHdElem_h_def)
 
 lemma dastatesem_strict:
   assumes "\<not> chDomEmpty TYPE('b::{finite, chan})"
@@ -72,8 +72,7 @@ lemma dastatesem_step:
   apply (simp add: sb_case_insert Let_def case_prod_unfold)
   apply (cases "sbHdElem_h_cont\<cdot>sb", simp_all add: sbHdElem_h_cont.rep_eq sbHdElem_def)
   apply (simp_all split: u.split)
-  apply (metis assms inst_up_pcpo sbHdElem_h_def Stream.slen_empty_eq sbHdElemWell_def lnzero_def
-         sbIsLeast_def sbgetch_insert2 sblen2slen u.simps(3))
+  apply (metis assms inst_up_pcpo sbHdElem_h_def u.simps(3))
   by (simp add: up_def)
 
 lemma dastatesem_final:
@@ -132,14 +131,16 @@ lemma dastatesem_weak_fin:
     and "\<And>state sbe. 1 \<le> sbLen (daNextOut automat state sbe)"
   shows "sbLen sb \<le> sbLen (daStateSem automat s\<cdot>sb)"
   apply (induction sb arbitrary: s rule: sb_finind, simp_all add: assms)
-  apply (metis Fin_02bot Fin_leq_Suc_leq SBv3.lnat.distinct(2) assms(1) lnzero_def min.orderI min_def neq02Suclnle sbIsLeast_def sblen_min_len_empty)
+  apply(cases "chDomEmpty TYPE('a)")
+  using assms(1) apply auto[1]
+  using sbleast2sblenempty apply fastforce
   by (metis (no_types, lifting) dual_order.trans sbECons_def sbecons_len assms(2) dastatesem_final_h2 lessequal_addition lnat_plus_commu lnat_plus_suc sbECons_def sblen_sbconc)
 
 theorem dastatesem_weak:
   assumes "\<And>state sbe. 1 \<le> sbLen (daNextOut (automat::('state, 'in::{chan, finite}, 'out) dAutomaton) state sbe)"
   shows     "weak_well (daStateSem automat s)"
   apply (cases "chDomEmpty TYPE('in)")
-  apply (metis (full_types) assms dastatesem_inempty_len fold_inf less_lnsuc sblen_min_len_empty sbtypeepmpty_sbbot weak_well_def)
+  apply (metis (full_types) assms dastatesem_inempty_len fold_inf less_lnsuc sblen_empty sbtypeepmpty_sbbot weak_well_def)
   by (metis assms spf_weakI dastatesem_weak_fin lnat_well_h2)
 
 theorem dastatesem_least:
