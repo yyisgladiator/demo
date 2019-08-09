@@ -106,7 +106,7 @@ define the union and subtraction of two domains. This is helpful for
 combining two stream bundles and hence, necessary for defining the 
 input and output domain of the general composition operator.\<close>
 
-paragraph \<open>Preliminaries for channel classes\<close>
+paragraph \<open>Preliminaries for channel classes \\\<close>
 
 text\<open>For understandable assumptions in our classes we first define 
 the channel set, that contains all channels with an empty 
@@ -149,7 +149,7 @@ class assumption ensures our channel separation and the second the
 injectivity. Furthermore, our abstraction function @{const Abs} is 
 the inverse of @{const Rep}.\<close>
 
-paragraph \<open>Class functions \label{sub:clfun}\<close>
+paragraph \<open>Class functions \\\<close>
 
 text\<open>We will now define a function for types of @{class chan}. It 
 returns the Domain of the type. As a result of our class assumptions 
@@ -178,7 +178,7 @@ allowed to be transmitted. The core theories do not use these
 classes, but the additional assumptions can be useful for the user. 
 Now we define classes for these two options.\<close>
 
-paragraph\<open>Class somechan\<close>
+paragraph\<open>Class somechan \\\<close>
 
 class somechan = chan +
   assumes chan_notempty:"(range Rep) \<inter> cEmpty = {}"
@@ -197,7 +197,8 @@ text\<open>Types of  @{class somechan} can transmit at least one message
 on every channel. Hence, we know @{thm somechannotempty} and 
 @{thm somechandom}.\<close>
 
-paragraph\<open>Class emptychan\<close>
+paragraph\<open>Class emptychan \\\<close>
+
 class emptychan = chan +
   assumes chan_empty:"(range Rep) \<subseteq> cEmpty" 
 begin

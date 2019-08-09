@@ -65,7 +65,7 @@ pcpodef 'c::chan sb("(_\<^sup>\<Omega>)" [1000] 999)
  Information at the bottom of Stream.thy *)
 setup_lifting %invisible type_definition_sb
 
-paragraph \<open>SB Type Properties\<close>
+paragraph \<open>SB Type Properties //\<close>
 
 text\<open>Then the \<open>\<bottom>\<close> element of our \gls{sb} type, is of course a 
 mapping to empty streams.\<close>
@@ -185,7 +185,7 @@ checks, if all streams in the bundle are not empty.\<close>
 definition sbHdElemWell::"'c\<^sup>\<Omega>  \<Rightarrow> bool" where
 "sbHdElemWell  \<equiv> \<lambda> sb. (\<forall>c. sb  \<^enum>  c \<noteq> \<epsilon>)"  
 
-paragraph \<open>sbGetCh Properties\<close>
+paragraph \<open>sbGetCh Properties //\<close>
 
 text\<open>When using the intuitively variant of @{const sbGetCh}, it
 obtains a stream from a channel. It should never be able to do
