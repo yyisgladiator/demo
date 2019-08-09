@@ -1,7 +1,7 @@
 section \<open>Lazy Streams\<close> 
 
 theory Stream
-imports inc.LNat inc.SetPcpo
+imports inc.LNat inc.SetPcpo "~~/src/HOL-Library.BNF_Corec"
 begin
 
 section \<open>The Datatype of Lazy Streams for counterexample\<close>
@@ -18,10 +18,77 @@ text \<open>\<open>discr u\<close> lifts an arbitrary type \<open>'a\<close> to 
 codatatype 'a stream = Sbot | SCons (shd:"'a") (srt: "'a stream")
                                         (infixr "&&" 65)
 
+print_theorems
+(*
+codatatype nNat = null | Suc nNat
+print_theorems
+primcorec len ::"'a stream \<Rightarrow> nNat" where
+"len s = (case s of Sbot \<Rightarrow> null |
+ SCons a b \<Rightarrow> Suc(len (b))) "
+
+primcorec stake::"nNat \<Rightarrow> 'a stream \<Rightarrow> 'a stream" where
+"stake n s = (case n of null \<Rightarrow> Sbot |
+ Suc n \<Rightarrow> (shd s) && (stake n (srt s)))"
+
+definition prefix:: "'a stream \<Rightarrow> 'a stream \<Rightarrow> bool" where
+"prefix s1 s2 \<equiv> (\<exists>n. s1 = stake n s2)"
+
+fun stake :: "nat \<Rightarrow> 'a stream \<Rightarrow> 'a stream" where
+"stake 0 s = Sbot"|
+"stake (Suc(n)) s = (shd s) && (stake n (srt s))"
+
+definition prefix:: "'a stream \<Rightarrow> 'a stream \<Rightarrow> bool" where
+"prefix s1 s2 \<equiv> (\<exists>n. s1 = stake n s2)"
+
+lemma " \<exists>n. x = stake n x"
+  apply(case_tac "x = Sbot",simp_all)
+  apply(rule_tac x=0 in exI, simp)
+  apply(coinduct x)
+  sorry*)
+
+primrec sdrop1::"nat \<Rightarrow> 'a stream \<Rightarrow> 'a stream"where
+"sdrop1 0 s = s" |
+"sdrop1 (Suc n) s = sdrop1 n (srt s)"
+
+text \<open>@{term snth}: Get the \<open>n\<close>th element of the stream.\<close>
+definition snth1       :: "nat \<Rightarrow> 'a stream \<Rightarrow> 'a" where
+"snth1 k s \<equiv> shd (sdrop1 k s)" 
+
+definition below::"'a stream \<Rightarrow> 'a stream \<Rightarrow> bool"where
+"below s1 s2 \<equiv> (s1 = Sbot \<or> (\<forall> n. (sdrop1 n s1 \<noteq> Sbot \<longrightarrow> sdrop1 n s2 \<noteq> Sbot \<and> snth1 n s1 = snth1 n s2)))"
+
+lemma sdrop_bot:" sdrop1 n Sbot = Sbot"
+  sorry
+
+lemma sdrop_not_bot:"y \<noteq> Sbot \<Longrightarrow>\<exists> n. sdrop1 n y \<noteq> Sbot"
+  sorry
+
 instantiation stream::(type) pcpo
 (*TODO below and proof*)
 begin
+
+definition less_stream_def: "(\<sqsubseteq>) = (below)"
+
+
 instance
+  apply(intro_classes, auto)
+  apply(simp add: less_stream_def  Stream.below_def)
+  apply(simp add: less_stream_def Stream.below_def )
+  apply(case_tac "x = Sbot",simp_all)
+
+  defer
+     apply(simp add: less_stream_def Stream.below_def)
+     apply(case_tac "x = Sbot",simp_all)
+  apply (metis sdrop1.simps(1))
+  
+      apply(case_tac "y = Sbot",simp_all)
+      apply (metis sdrop1.simps(1))
+     
+  
+
+      defer defer
+  apply(rule_tac x=Sbot in exI)
+  apply(simp add: less_stream_def Stream.below_def)
   sorry
 end
 
@@ -55,4 +122,7 @@ TODO:
   2. add lemmas in THIS Theory so it works (DO NOT CHANGE LEMMAS OR PROOFS IN OTHER THEORIES!!!!)
   3. repeat for other theories until dAutomaton_causal works.
 *)
+
+lemma "sdrop 1\<cdot>s  =s"
+  quickcheck
 end
