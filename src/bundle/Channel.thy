@@ -134,7 +134,12 @@ class chan =
        (range Rep) \<inter> cEmpty = {}" 
   assumes chan_inj[simp]:"inj Rep"
 begin
+
   abbreviation "Abs \<equiv> inv Rep"
+  
+  theorem[simp]:" Abs(Rep c) = c"
+    by simp
+
 end
 
 text\<open> With @{const Rep} we require a representation function, that 
@@ -199,6 +204,7 @@ lemma emptychanempty[simp]:"chDomEmpty(TYPE('c::emptychan))"
   by (simp add: chDom_def emptychan_class.chan_empty)
 
 end
+
 text\<open>Types of @{class emptychan} can not transmit any message on any 
 channel. Hence, the Domain is empty @{thm emptychanempty}.\<close>
 
