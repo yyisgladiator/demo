@@ -17,9 +17,28 @@ declare %invisible[[show_consts]]
 default_sort %invisible chan
 
 section \<open>Stream Bundles \label{sec:sb}\<close>
+text \<open>Streams are the backbone of this verification 
+framework and stream bundles are used to model components with 
+multiple input and output streams by bundleing streams together. Any
+stream in a stream bundle is identifiable through its channel. 
+Hence, a \gls{sb} is a function from channels to streams.
+Since the allowed messages on a channel may be restricted, the 
+streams of a \gls{sb} only contain streams of elements from the
+@{const ctype} of their channel. Similar to @{type sbElem}s, we 
+formulate a predicate to describe the properties of a \gls{sb}.\<close>
 
 definition sb_well :: "('c::chan \<Rightarrow> M stream) \<Rightarrow> bool" where
 "sb_well f \<equiv> \<forall>c. sValues\<cdot> (f c) \<subseteq> ctype (Rep c)"
+
+text\<open>This definition uses @{const sValues} defined as
+@{thm sValues_def}
+to obtain a set, which contains every element occurring in a stream.
+If the values of each stream are a subset of the allowed messages 
+on their corresponding channels, the function is a \gls{sb}. Unlike 
+to our @{type sbElem} predicate, a differentiation for the empty
+domain is not necessary, because it follows directly from 
+@{const sb_well} that there can be no non-empty stream for bundles 
+with an empty domain.\<close>
 
 lemma sbwellI:
   assumes"\<And>c. sValues\<cdot>(f c) \<subseteq> ctype (Rep c)"
@@ -34,19 +53,21 @@ lemma sbwell_adm: "adm sb_well"
   apply(rule adm_all, rule admI)
   by (simp add: ch2ch_fun l44 lub_fun)
 
-pcpodef 'c::chan sb("(_\<^sup>\<Omega>)" [1000] 999) = "{f :: ('c::chan \<Rightarrow> M stream). sb_well f}"
+text\<open>Since we define stream bundles as total functions from channels
+to streams, we can also instantiate them as a \gls{pcpo}.\<close>
+
+pcpodef 'c::chan sb("(_\<^sup>\<Omega>)" [1000] 999) 
+         = "{f::('c::chan \<Rightarrow> M stream). sb_well f}"
   by (auto simp add: sbwell_ex sbwell_adm lambda_strict[symmetric])
 
 (* TODO: Remove Warning
-  https://fa.isabelle.narkive.com/wKVBUrdK/isabelle-setup-lifting-no-relator-for-the-type-warning
-  HOL/Library/Quotient_Set.thy 
-  *)
+ Information at the bottom of Stream.thy *)
 setup_lifting %invisible type_definition_sb
 
-
-subsection \<open> sb pcpo lemmata \<close>
-
-lemma bot_sb:"\<bottom> = Abs_sb(\<lambda>c. \<epsilon>)"
+subsection \<open>SB Type Properties\<close>
+text\<open>Then the \<open>\<bottom>\<close> element of our \gls{sb} type, is of course a 
+mapping to empty streams.\<close>
+theorem bot_sb:"\<bottom> = Abs_sb(\<lambda>c. \<epsilon>)"
   by (simp add: Abs_sb_strict lambda_strict)
 
 lemma rep_sb_well[simp]:"sb_well(Rep_sb sb)"
@@ -57,9 +78,11 @@ lemma abs_rep_sb_sb[simp]:"Abs_sb(Rep_sb sb) = sb"
 
 lemma sbrep_cont[simp, cont2cont]: "cont Rep_sb"
   using cont_Rep_sb cont_id by blast
-
-text\<open>This is a continuity property for SBs.\<close>
-lemma sb_abs_cont2cont [cont2cont]: assumes "cont h" and "\<And>x. sb_well (h x)"
+(*
+text\<open>This is a continuity property for SBs.\<close>*)
+lemma sb_abs_cont2cont [cont2cont]: 
+  assumes "cont h" 
+  and "\<And>x. sb_well (h x)"
   shows "cont (\<lambda>x. Abs_sb (h x))"
   by (simp add: assms(1) assms(2) cont_Abs_sb)
 
@@ -67,7 +90,12 @@ lemma sb_rep_eqI:assumes"\<And>c. (Rep_sb sb1) c = (Rep_sb sb2) c"
   shows "sb1 = sb2"
   by(simp add: po_eq_conv below_sb_def fun_belowI assms)
 
-lemma sbtypeepmpty_sbbot[simp]:"chDomEmpty TYPE ('cs::chan) \<Longrightarrow> (sb::'cs\<^sup>\<Omega>) = \<bottom>"
+text\<open>In case of an empty domain, no stream should be in a \gls{sb}.
+Hence, every \gls{sb} with an empty domain should be \<open>\<bottom>\<close>. This is
+proven in the following theorem.\<close>
+theorem sbtypeepmpty_sbbot[simp]:
+  "chDomEmpty TYPE ('cs::chan) 
+  \<Longrightarrow> (sb::'cs\<^sup>\<Omega>) = \<bottom>"
   unfolding chDom_def cEmpty_def bot_sb
   apply(rule sb_rep_eqI)
   apply(subst Abs_sb_inverse)
@@ -75,13 +103,21 @@ lemma sbtypeepmpty_sbbot[simp]:"chDomEmpty TYPE ('cs::chan) \<Longrightarrow> (s
   apply(insert sb_well_def[of "Rep_sb sb"],auto)
   using strict_sValues_rev by fastforce
 
-lemma sbwell2fwell[simp]:"Rep_sb sb = f \<Longrightarrow> sb_well (f)"
+lemma sbwell2fwell[simp]:"Rep_sb sb = f \<Longrightarrow> sb_well f"
   using Rep_sb by auto
 
-section \<open>Definitions \<close>
+subsection \<open>SB Functions\<close>
+text\<open>This section defines and explains the most commonly used 
+functions for \Gls{sb}. Also, the main properties of important 
+functions will be discussed.\<close>
 
-subsection \<open>Converter from sbElem to SB\<close>
-
+subsubsection \<open>Converter from sbElem to SB\<close>
+text\<open>First we construct a converter from @{type sbElem}s to \Gls{sb}
+. This is rather straight forward, since we either have a function 
+from channels to messages, which we can easily convert to a function
+from channels to streams, which consists only of streams with 
+the exact message from the @{type sbElem}. In the case of an empty 
+domain, we map @{const None} to the \<open>\<bottom>\<close> element of \Gls{sb}.\<close> 
 lift_definition sbe2sb::" 'c\<^sup>\<surd> \<Rightarrow> 'c\<^sup>\<Omega>" is
 "\<lambda> sbe. case (Rep_sbElem sbe) of Some f \<Rightarrow> (\<lambda>c. \<up>(f c))
                                 | None  \<Rightarrow> \<bottom> "
@@ -90,8 +126,12 @@ lift_definition sbe2sb::" 'c\<^sup>\<surd> \<Rightarrow> 'c\<^sup>\<Omega>" is
   apply auto
   apply(subgoal_tac "sbElem_well (Some y)",simp)
   by(simp only: sbelemwell2fwell)
+text\<open>Through the usage of keyword \<open>lift_definition\<close> instead of 
+\<open>definition\<close> we automatically have to proof that the output is 
+indeed a \gls{sb}.\<close>
 
-subsection \<open>Extract a single stream\<close>
+
+subsubsection \<open>Extracting a single stream\<close>
 
 lift_definition sbGetCh :: "'e \<Rightarrow> 'c\<^sup>\<Omega> \<rightarrow> M stream" is
 "(\<lambda>c sb . if Rep c\<in>(chDom TYPE('c)) then  (Rep_sb sb) (Abs(Rep c)) else \<epsilon>)"

@@ -12,15 +12,16 @@ default_sort %invisible chan
 section \<open> mono2mono\<close>
 named_theorems mono2mono "monofun intro rule"
 *)
-section \<open>sbElem \label{sec:sbelem}\<close>
-text\<open>Before we define the \gls{sb} datatype, we define the sbElem 
-type. It is a function from a @{class chan} type to a message 
-@{type M} in @{const ctype} and quite useful in our later theories.
-But how can we define a non partial function, if the Domain of our 
-type is empty? Then the function cannot map to any message in 
-@{const ctype}. To still retain the totality property in all 
-possible cases, one can define sbElem to be some total function, if 
-the domain is not emtpy, but else it is nothing.\<close>
+section \<open>Stream Bundle Elements \label{sec:sbelem}\<close>
+text\<open>Before we define the \gls{sb} datatype, we define a type for 
+stream bundle elements. It is a function from a @{class chan} type 
+to a message @{type M} in @{const ctype} and quite useful in our 
+later theories. But how can we define a non partial function, if the 
+domain of our type is empty? Then the function can never map to any 
+message in @{const ctype}. To still retain the totality property in 
+all possible cases, we define a stream bundle element as some total 
+function, if the domain is not emtpy, and as nothing (@{const None})
+if the domain is empty.\<close>
 
 subsection \<open>sbElem Definition \label{sub:sbedef}\<close>
 fun sbElem_well :: "('c \<Rightarrow> M) option \<Rightarrow> bool" where
@@ -29,10 +30,10 @@ fun sbElem_well :: "('c \<Rightarrow> M) option \<Rightarrow> bool" where
 (*cbot ist leer, daher wird das nie wahr sein für das leere Bündel*)
 text\<open>Predicate @{const sbElem_well} exactly describes our 
 requirements. The @{type option} type in our predicate allows us to 
-have nothing (@{const None}), iff the domain of our 
-channel type is empty. For all non-empty domains, a total function 
-is a sbElem, iff it only maps to messages in the @{const ctype} of 
-the channel. With those preparations we now define the sbElem type:\<close>
+have the (@{const None}) function, iff the domain of our channel 
+type is empty. For all non-empty domains, a total function is a 
+sbElem, iff it only maps to messages in the @{const ctype} of the 
+channel. With those preparations we now define the sbElem type:\<close>
 
 typedef 'c sbElem ("(_\<^sup>\<surd>)"[1000] 999) = 
         "{f::('c \<Rightarrow> M) option. sbElem_well f}"
