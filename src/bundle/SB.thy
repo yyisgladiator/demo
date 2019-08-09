@@ -65,7 +65,7 @@ pcpodef 'c::chan sb("(_\<^sup>\<Omega>)" [1000] 999)
  Information at the bottom of Stream.thy *)
 setup_lifting %invisible type_definition_sb
 
-subsection \<open>SB Type Properties \label{sub:svtpro}\<close>
+paragraph \<open>SB Type Properties\<close>
 
 text\<open>Then the \<open>\<bottom>\<close> element of our \gls{sb} type, is of course a 
 mapping to empty streams.\<close>
@@ -212,7 +212,7 @@ lemma sbmap_well:assumes"\<And>s. sValues\<cdot>(f s) \<subseteq> sValues\<cdot>
   apply(rule sbwellI)
   using assms sbgetch_ctypewell by fastforce
 
-lemma sbgetch_ctype_notempty:"sb  \<^enum>  c \<noteq> \<epsilon> \<Longrightarrow> ctype (Rep c) \<noteq> {}"
+lemma sbgetch_ctype_notempty:"sb  \<^enum>\<^sub>\<star>  c \<noteq> \<epsilon> \<Longrightarrow> ctype (Rep c) \<noteq> {}"
 proof-
   assume a1: "sb  \<^enum>\<^sub>\<star>  c \<noteq> \<epsilon>"
   then have "\<exists>e. e\<in> sValues\<cdot>(sb  \<^enum>\<^sub>\<star>  c)"
@@ -246,11 +246,12 @@ though the relation of their respective streams.\<close>
 
 theorem sb_belowI:
   fixes sb1 sb2::"'cs\<^sup>\<Omega>"
-    assumes "\<And>c.  sb1 \<^enum> c \<sqsubseteq> sb2 \<^enum> c"
+    assumes "\<And> c. Rep c\<in>chDom TYPE('cs) \<Longrightarrow>  sb1 \<^enum> c \<sqsubseteq> sb2 \<^enum> c"
     shows "sb1 \<sqsubseteq> sb2"
   apply(subst below_sb_def)
   apply(rule fun_belowI)
-  by (metis (full_types) assms sbgetch_insert2)
+  by (metis (full_types) assms  po_eq_conv sbGetCh.rep_eq 
+      sbgetch_insert2)
 
 text\<open>If all respectively chosen streams of one bundle are 
 \@{const below} the streams of another bundle, the @{const below}
@@ -258,10 +259,11 @@ relation holds for the bundles as well.\<close>
 
 theorem sb_eqI:
   fixes sb1 sb2::"'cs\<^sup>\<Omega>"
-    assumes "\<And>c. sb1 \<^enum> c = sb2 \<^enum> c"
+    assumes "\<And>c. Rep c\<in>chDom TYPE('cs) \<Longrightarrow>sb1 \<^enum> c = sb2 \<^enum> c"
     shows "sb1 = sb2"
   apply(cases "chDom TYPE('cs) \<noteq> {}")
-  apply (metis assms sb_rep_eqI sbgetch_insert2)
+  apply(metis Diff_eq_empty_iff Diff_triv assms chDom_def 
+        chan_botsingle rangeI sb_rep_eqI sbgetch_insert2)
   by (metis (full_types) sbtypeepmpty_sbbot)
 
 text\<open>If all respectively chosen streams of one bundle are equal to 
@@ -289,7 +291,7 @@ theorem sbgetch_sbe2sb_nempty: assumes "\<not>chDomEmpty(TYPE('a))"
       strict_sdropwhile)
 
 
-subsection \<open>Concatination\<close>
+subsubsection \<open>Concatination \label{subsub:sbconc}\<close>
 
 lemma sbconc_well[simp]:"sb_well (\<lambda>c. (sb1 \<^enum> c) \<bullet> (sb2 \<^enum> c))"
   apply(rule sbwellI)
