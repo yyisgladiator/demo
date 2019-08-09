@@ -65,7 +65,7 @@ infinitely many messages in the asynchronous case.\<close>
 
 text\<open>The order of @{type sbElem}s then has to be a discrete one. 
 Else it order would be inconsistent to our prefix order on streams 
-and also the resulting \gsl{sb} order.\<close>
+and also the resulting \gls{sb} order.\<close>
 instantiation  sbElem::(chan)discrete_cpo
 begin
 definition "below_sbElem = (\<lambda>(sbe1::'a sbElem) sbe2. (sbe1 = sbe2))"
