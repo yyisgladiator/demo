@@ -1,5 +1,6 @@
+(*<*)(*:maxLineLen=68:*)
 theory SPF
-
+(*>*)
 imports bundle.SB
 
 begin
@@ -86,5 +87,6 @@ lift_definition Rep_spfs_fun::"('I::chan,'O::chan)spfs \<rightarrow> ('I\<^sup>\
 
 
 subsubsection \<open>Strong SPF lemmas\<close>
-
+(*<*)
 end
+(*>*)

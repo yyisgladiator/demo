@@ -1,4 +1,4 @@
-(*<*)
+(*<*)(*:maxLineLen=68:*)
 theory dAutomaton
   imports bundle.SB_fin spf.SPF
 begin

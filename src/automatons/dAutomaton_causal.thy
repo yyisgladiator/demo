@@ -1,4 +1,4 @@
-(*<*)
+(*<*)(*:maxLineLen=68:*)
 theory dAutomaton_causal
   imports dAutomaton spf.SPF
 begin

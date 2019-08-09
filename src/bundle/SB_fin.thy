@@ -1,4 +1,4 @@
-(*<*)
+(*<*)(*:maxLineLen=68:*)
 theory SB_fin
   imports SB
 begin

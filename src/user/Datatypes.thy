@@ -1,4 +1,4 @@
-(*<*)(*:maxLineLen=69:*)
+(*<*)(*:maxLineLen=68:*)
 theory Datatypes
 
 imports inc.Prelude

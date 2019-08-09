@@ -1,4 +1,4 @@
-(*<*)
+(*<*)(*:maxLineLen=68:*)
 theory SB
   imports stream.Stream sbElem
 begin
