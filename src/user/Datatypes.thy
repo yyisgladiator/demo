@@ -7,6 +7,9 @@ begin
 (*>*)
 (*Todo include cref package and change ref to cref*)
 default_sort %invisible type
+
+section \<open>Datatypes \label{sec:data}\<close>
+
 text\<open>This section mainly introduces two datatypes that will be used 
 for defining \gls{sb}, \gls{spf} and 
 automatons \ref{sec:focus}. The datatypes in this theory are only 
@@ -14,7 +17,8 @@ dummy types, that will be generated differently depending on the
 component. We need these dummy types to define the general 
 framework.\<close>
 
-section \<open>Channel Datatype \label{sec:chadata}\<close>
+subsection \<open>Channel Datatype \label{sub:chadata}\<close>
+
 text \<open>The channel datatype is fixed before the proof begins. This 
 datatype contains every channel, that is used. There is no way to 
 "dynamically" add channels, except modifying this datatype.\<close>
@@ -26,12 +30,13 @@ text \<open>To ensure that the dummy channel type is never used for
 proving anything not holding over every channel type, the 
 constructor is immediately hidden.\<close>
 
-section \<open>Pure Message Datatype \label{sec:pmsgdata}\<close>
+subsection \<open>Pure Message Datatype \label{sub:pmsgdata}\<close>
 
 
 text\<open>Analogous to the channel datatype, the pure message datatype 
 contains the messages that a channel can transmit. Hence, every kind 
 of message has to be described here.\<close>
+
 datatype M_pure = DummyMessage nat
 hide_const DummyMessage
 
@@ -42,6 +47,7 @@ constructor is also immediately hidden.\<close>
 instance M_pure :: countable
   apply(intro_classes)
   by(countable_datatype)
+
 text\<open>Since we want use the stream type for defining stream bundles, 
 the message datatype has to be countable. In addition, each channel
 can be restricted to allow only a subset of messages from 
@@ -52,6 +58,7 @@ are allowed to be transmitted on the respective channel.\<close>
 
 definition cMsg :: "channel \<Rightarrow> M_pure set" where
 "cMsg c \<equiv> if c= undefined then {} else undefined"
+
 text\<open>Here we almost use an undefined cMsg mapping. We only assume,
 is that there always exists at least one channel, on which no 
 message can flow.\<close>

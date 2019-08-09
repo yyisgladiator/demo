@@ -65,7 +65,7 @@ pcpodef 'c::chan sb("(_\<^sup>\<Omega>)" [1000] 999)
  Information at the bottom of Stream.thy *)
 setup_lifting %invisible type_definition_sb
 
-subsection \<open>SB Type Properties \label{sub:svtpro}\<close>
+paragraph \<open>SB Type Properties //\<close>
 
 text\<open>Then the \<open>\<bottom>\<close> element of our \gls{sb} type, is of course a 
 mapping to empty streams.\<close>
@@ -140,6 +140,13 @@ indeed a \gls{sb}.\<close>
 
 subsubsection \<open>Extracting a single stream \label{subsub:sbgetch}\<close>
 
+text\<open>The direct access to a stream on a specific channel is one of
+the most important functions for defining the framework and also 
+often used for verifying components. Intuitively, the signature of
+such a function should be \<open>'c \<Rightarrow> 'c\<^sup>\<Omega> \<rightarrow> M stream \<close>, but we use a 
+slightly more general signature. This facilitates later function 
+definitions and also reduces the total framework size.\<close>
+
 lift_definition sbGetCh :: "'e \<Rightarrow> 'c\<^sup>\<Omega> \<rightarrow> M stream" is
 "(\<lambda>c sb. if Rep c\<in>chDom TYPE('c) 
             then Rep_sb sb (Abs(Rep c)) 
@@ -147,22 +154,52 @@ lift_definition sbGetCh :: "'e \<Rightarrow> 'c\<^sup>\<Omega> \<rightarrow> M s
   apply(intro cont2cont)
   by(simp add: cont2cont_fun)
 
+text\<open>Our general signature allows the input of any channel from the
+@{type channel} type. If the channel is in the domain of the input
+\gls{sb}, we obtain the corresponding channel. Is the channel not in
+the domain, the empty stream \<open>\<epsilon>\<close> is returned. The continuity of this
+function is also immediately proven.\<close> 
+
 lemmas sbgetch_insert = sbGetCh.rep_eq
 
-abbreviation sbgetch_magic_abbr :: "'c\<^sup>\<Omega> \<Rightarrow> 'e \<Rightarrow> M stream" (infix " \<^enum>\<^sub>\<star> " 65) where 
-"sb \<^enum>\<^sub>\<star> c \<equiv> sbGetCh c\<cdot>sb"
+text\<open>The next abbreviations are defined to differentiate between the
+intuitive and the expanded signature of @{const sbGetCh}. The first 
+abbreviation is an abbreviation for the general signature, the 
+second restricts to the intuitive signature.\<close>
 
-abbreviation sbgetch_abbr :: "'c\<^sup>\<Omega> \<Rightarrow> 'c \<Rightarrow> M stream" (infix " \<^enum> " 65) where 
-"sb \<^enum> c \<equiv> sbGetCh c\<cdot>sb"
+abbreviation sbgetch_magic_abbr :: "'c\<^sup>\<Omega> \<Rightarrow> 'e \<Rightarrow> M stream"
+(infix " \<^enum>\<^sub>\<star> " 65) where "sb \<^enum>\<^sub>\<star> c \<equiv> sbGetCh c\<cdot>sb"
+
+abbreviation sbgetch_abbr :: "'c\<^sup>\<Omega> \<Rightarrow> 'c \<Rightarrow> M stream"
+(infix " \<^enum> " 65) where "sb \<^enum> c \<equiv> sbGetCh c\<cdot>sb"
+
+text \<open>Obtaining a @{type sbElem} form a \gls{sb} is not always 
+possible. If the domain of a bundle is not empty but there is an 
+empty stream on a channel, the resulting @{type sbElem} could not 
+map that channel to a message from the stream. Hence, no slice of 
+such a \gls{sb} can be translated to a @{type sbElem}. The following
+predicate states, that the first slice of an \gls{sb} with a 
+non-empty domain can be transformed to a @{type sbElem}, because it 
+checks, if all streams in the bundle are not empty.\<close>
 
 definition sbHdElemWell::"'c\<^sup>\<Omega>  \<Rightarrow> bool" where
 "sbHdElemWell  \<equiv> \<lambda> sb. (\<forall>c. sb  \<^enum>  c \<noteq> \<epsilon>)"  
 
-lemma sbgetch_insert2:"sb \<^enum> c = (Rep_sb sb) c"
-  apply(simp add: sbgetch_insert)
-  by (metis (full_types)Rep_sb_strict app_strict cnotempty_cdom sbtypeepmpty_sbbot)
+paragraph \<open>sbGetCh Properties //\<close>
 
-lemma sbhdelemchain[simp]:"sbHdElemWell x \<Longrightarrow>  x \<sqsubseteq> y \<Longrightarrow> sbHdElemWell y"
+text\<open>When using the intuitively variant of @{const sbGetCh}, it
+obtains a stream from a channel. It should never be able to do
+anything else. This behavior is verified by the following theorem.
+Obtaining a stream from its \gls{sb} is the same as obtaining the 
+output from the function realizing the \gls{sb}.\<close>
+
+theorem sbgetch_insert2:"sb \<^enum> c = (Rep_sb sb) c"
+  apply(simp add: sbgetch_insert)
+  by (metis (full_types)Rep_sb_strict app_strict cnotempty_cdom 
+      sbtypeepmpty_sbbot)
+
+lemma sbhdelemchain[simp]:
+  "sbHdElemWell x \<Longrightarrow>  x \<sqsubseteq> y \<Longrightarrow> sbHdElemWell y"
   apply(simp add: sbHdElemWell_def sbgetch_insert2)
   by (metis below_antisym below_sb_def fun_belowD minimal)
 
@@ -170,11 +207,12 @@ lemma sbgetch_ctypewell[simp]:"sValues\<cdot>(sb \<^enum>\<^sub>\<star> c) \<sub
   apply(simp add: sbgetch_insert)
   by (metis DiffD1 chDom_def f_inv_into_f sb_well_def sbwell2fwell)
 
-lemma sbmap_well:assumes"\<And>s. sValues\<cdot>(f s) \<subseteq> sValues\<cdot>s" shows"sb_well (\<lambda>c. f (b \<^enum>\<^sub>\<star> c))"
+lemma sbmap_well:assumes"\<And>s. sValues\<cdot>(f s) \<subseteq> sValues\<cdot>s" 
+                 shows"sb_well (\<lambda>c. f (b \<^enum>\<^sub>\<star> c))"
   apply(rule sbwellI)
   using assms sbgetch_ctypewell by fastforce
 
-lemma sbgetch_ctype_notempty:"sb  \<^enum>  c \<noteq> \<epsilon> \<Longrightarrow> ctype (Rep c) \<noteq> {}"
+lemma sbgetch_ctype_notempty:"sb  \<^enum>\<^sub>\<star>  c \<noteq> \<epsilon> \<Longrightarrow> ctype (Rep c) \<noteq> {}"
 proof-
   assume a1: "sb  \<^enum>\<^sub>\<star>  c \<noteq> \<epsilon>"
   then have "\<exists>e. e\<in> sValues\<cdot>(sb  \<^enum>\<^sub>\<star>  c)"
@@ -183,53 +221,84 @@ proof-
     using sbgetch_ctypewell by blast
 qed
 
-lemma sbhdelemnotempty:"sbHdElemWell (sb::'cs\<^sup>\<Omega>) \<Longrightarrow>  \<not> chDomEmpty TYPE('cs)"
+lemma sbhdelemnotempty:
+  "sbHdElemWell (sb::'cs\<^sup>\<Omega>) \<Longrightarrow>  \<not> chDomEmpty TYPE('cs)"
   apply(auto simp add: sbHdElemWell_def chDom_def cEmpty_def)
-  by (metis (mono_tags) Collect_mem_eq Collect_mono_iff repinrange sbgetch_ctype_notempty)
+  by (metis (mono_tags) Collect_mem_eq Collect_mono_iff repinrange 
+      sbgetch_ctype_notempty)
 
-lemma sbgetch_below_slen[simp]:"sb1 \<sqsubseteq> sb2 \<Longrightarrow> #(sb1 \<^enum>\<^sub>\<star> c) \<le> #(sb2 \<^enum>\<^sub>\<star> c)"
+text\<open>If a \gls{sb} \<open>x\<close> is @{const below} another \gls{sb} \<open>y\<close>, the 
+order also holds for each streams on every channel.\<close>
+
+theorem sbgetch_sbelow[simp]:"sb1 \<sqsubseteq> sb2 \<Longrightarrow> (sb1 \<^enum>\<^sub>\<star> c) \<sqsubseteq> (sb2 \<^enum>\<^sub>\<star> c)"
+  by (simp add: mono_slen monofun_cfun_arg)
+
+lemma sbgetch_below_slen[simp]:
+  "sb1 \<sqsubseteq> sb2 \<Longrightarrow> #(sb1 \<^enum>\<^sub>\<star> c) \<le> #(sb2 \<^enum>\<^sub>\<star> c)"
   by (simp add: mono_slen monofun_cfun_arg)
 
 lemma sbgetch_bot[simp]:"\<bottom> \<^enum>\<^sub>\<star> c = \<epsilon>"
   apply(simp add: sbGetCh.rep_eq bot_sb)
   by (metis Rep_sb_strict app_strict bot_sb)
 
-lemma sb_belowI:   fixes sb1 sb2::"'cs\<^sup>\<Omega>"
-  assumes "\<And>c. Rep c\<in>chDom TYPE('cs) \<Longrightarrow>  sb1 \<^enum> c \<sqsubseteq> sb2 \<^enum> c"
-  shows "sb1 \<sqsubseteq> sb2"
+text\<open>Now we can show the equality and below property of two \Gls{sb}
+though the relation of their respective streams. In both cases we 
+only have to check channels from the domain, hence the properties 
+automatically hold for \Gls{sb} with an empty domain.\<close>
+
+theorem sb_belowI:
+  fixes sb1 sb2::"'cs\<^sup>\<Omega>"
+    assumes "\<And> c. Rep c\<in>chDom TYPE('cs) \<Longrightarrow>  sb1 \<^enum> c \<sqsubseteq> sb2 \<^enum> c"
+    shows "sb1 \<sqsubseteq> sb2"
   apply(subst below_sb_def)
   apply(rule fun_belowI)
-  by (metis (full_types) assms  po_eq_conv sbGetCh.rep_eq sbgetch_insert2)
+  by (metis (full_types) assms  po_eq_conv sbGetCh.rep_eq 
+      sbgetch_insert2)
 
-lemma sb_eqI:
+text\<open>If all respectively chosen streams of one bundle are 
+@{const below} the streams of another bundle, the @{const below}
+relation holds for the bundles as well.\<close>
+
+theorem sb_eqI:
   fixes sb1 sb2::"'cs\<^sup>\<Omega>"
-    assumes "\<And>c. Rep c\<in>chDom TYPE('cs) \<Longrightarrow> sb1 \<^enum> c = sb2 \<^enum> c"
+    assumes "\<And>c. Rep c\<in>chDom TYPE('cs) \<Longrightarrow>sb1 \<^enum> c = sb2 \<^enum> c"
     shows "sb1 = sb2"
   apply(cases "chDom TYPE('cs) \<noteq> {}")
-  apply (metis Diff_eq_empty_iff Diff_triv assms chDom_def chan_botsingle rangeI sb_rep_eqI sbgetch_insert2)
+  apply(metis Diff_eq_empty_iff Diff_triv assms chDom_def 
+        chan_botsingle rangeI sb_rep_eqI sbgetch_insert2)
   by (metis (full_types) sbtypeepmpty_sbbot)
+
+text\<open>If all respectively chosen streams of one bundle are equal to 
+the streams of another bundle, these bundles are the same.\<close>
 
 lemma slen_empty_eq:  assumes"chDomEmpty(TYPE('c))"
   shows " #(sb \<^enum> (c::'c)) =0"
-  using assms chDom_def cEmpty_def sbgetch_ctype_notempty by fastforce
+  using assms chDom_def cEmpty_def sbgetch_ctype_notempty 
+  by fastforce
 
-lemma sbgetch_sbe2sb_nempty: assumes "\<not>chDomEmpty(TYPE('a))"
+text\<open>Lastly, the conversion from a @{type sbElem} to a \gls{sb}
+should never result in a \gls{sb} which maps its domain to \<open>\<epsilon>\<close>.\<close>
+
+theorem sbgetch_sbe2sb_nempty: assumes "\<not>chDomEmpty(TYPE('a))"
   shows "\<forall>c::'a. sbe2sb sbe  \<^enum>  c \<noteq> \<epsilon>"
   apply (simp add: sbe2sb_def)
   apply (simp split: option.split) 
   apply (rule conjI)
   apply (rule impI)
-  using assms chDom_def sbElem_well.simps(1) sbelemwell2fwell apply blast
+  using assms chDom_def sbElem_well.simps(1) sbelemwell2fwell 
+  apply blast
   apply (rule allI, rule impI, rule allI)
-  by (metis (no_types) option.simps(5) sbe2sb.abs_eq sbe2sb.rep_eq sbgetch_insert2 sconc_snd_empty 
-      srcdups_step srcdupsimposs strict_sdropwhile)
+  by (metis (no_types) option.simps(5) sbe2sb.abs_eq sbe2sb.rep_eq 
+      sbgetch_insert2 sconc_snd_empty srcdups_step srcdupsimposs 
+      strict_sdropwhile)
 
 
-subsection \<open>Concatination\<close>
+subsubsection \<open>Concatination \label{subsub:sbconc}\<close>
 
 lemma sbconc_well[simp]:"sb_well (\<lambda>c. (sb1 \<^enum> c) \<bullet> (sb2 \<^enum> c))"
   apply(rule sbwellI)
-  by (metis (no_types, hide_lams) Un_subset_iff dual_order.trans sbgetch_ctypewell sconc_sValues)
+  by (metis (no_types, hide_lams) Un_subset_iff dual_order.trans 
+      sbgetch_ctypewell sconc_sValues)
 
 lift_definition sbConc:: "'c\<^sup>\<Omega>  \<Rightarrow>  'c\<^sup>\<Omega> \<rightarrow>  'c\<^sup>\<Omega>" is
 "\<lambda> sb1 sb2. Abs_sb(\<lambda>c. (sb1 \<^enum> c )\<bullet>(sb2 \<^enum> c))"
