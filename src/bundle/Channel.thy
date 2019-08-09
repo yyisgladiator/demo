@@ -27,10 +27,10 @@ text\<open>We interpret the messages in a time slot of a time model as:
   \<^item> a finite list of messages, for the timed model
 
 
-In this interpretation a untimed stream can be seen as a special case
-of a synchronous timed stream (it contains a message in every time 
-slot) and a synchronous timed stream is a special case of a timed 
-stream (it contains at most one element in each list). Now we 
+In this interpretation a untimed stream can be seen as a special
+case of a synchronous timed stream (it contains a message in every
+time slot) and a synchronous timed stream is a special case of a 
+timed stream (it contains at most one element in each list). Now we 
 defined, how a transmitted message in a time slot can look like, 
 respectively to its time model. For this, we define a mapping from 
 channels to sets of elements from M. Obviously, we have to restrict 
@@ -90,19 +90,19 @@ stream bundle\ref{sec:pmsgdata}.\<close>
 
 
 section\<open>@{type channel} class definitions\label{chan}\<close>
-text\<open>In this section we restrict the domain of a stream bundle trough
-the usage of classes. The main Idea is to never construct a stream 
-bundle which has channels with an empty @{const ctype} and channels 
-with non-empty @{const ctype}. With our interpretation of empty 
-bundles, this case would make no sense, because it would be 
-equivalent to the bundle without channels with empty @{const ctype}s.
-Hence, we restrict the Domain of stream bundles to subsets of the 
-@{type channel} type, where its either possible that every channel 
-transmits a message, or non of the channels can transmit any message
-at all. We will then use these classes to define the union and 
-subtraction of two domains. This is helpful for combining two stream
-bundles and hence, necessary for defining the input and output domain
-of the general composition operator.\<close>
+text\<open>In this section we restrict the domain of a stream bundle
+trough the usage of classes. The main Idea is to never construct a 
+stream bundle which has channels with an empty @{const ctype} and 
+channels with non-empty @{const ctype}. With our interpretation of 
+empty bundles, this case would make no sense, because it would be 
+equivalent to the bundle without channels with empty 
+@{const ctype}s. Hence, we restrict the Domain of stream bundles to 
+subsets of the @{type channel} type, where its either possible that 
+every channel transmits a message, or non of the channels can 
+transmit any message at all. We will then use these classes to 
+define the union and subtraction of two domains. This is helpful for
+combining two stream bundles and hence, necessary for defining the 
+input and output domain of the general composition operator.\<close>
 
 subsection \<open>Preliminaries \<close>
 text\<open>For understandable assumptions in our classes we first define 
@@ -177,8 +177,8 @@ lemma somechandom:"chDom(TYPE('c::somechan))
   by(simp add: chDom_def somechan_class.chan_notempty Diff_triv)
 
 end
-text\<open>Types of  @{class somechan} can transmit at least one message on
-every channel. Hence, we know @{thm somechannotempty} and 
+text\<open>Types of  @{class somechan} can transmit at least one message 
+on every channel. Hence, we know @{thm somechannotempty} and 
 @{thm somechandom}.\<close>
 
 subsection\<open>Class emptychan\<close>
@@ -203,7 +203,7 @@ lemma repinrange[simp]:"Rep (c::'c) = x
                         \<Longrightarrow> x\<in> range(Rep::'c \<Rightarrow> channel)"
   by blast
 
-lemma chan_eq[simp]:"Rep (c::'c) = x \<Longrightarrow> x\<in> range(Rep::'d \<Rightarrow> channel) 
+lemma chan_eq[simp]:"Rep (c::'c) = x \<Longrightarrow> x\<in> range(Rep::'d\<Rightarrow>channel) 
                         \<Longrightarrow> Rep((Abs::channel \<Rightarrow> 'd)(Rep c)) = x"
   by (simp add: f_inv_into_f)
 
@@ -257,12 +257,12 @@ typedef ('c1,'c2) union (infixr "\<union>" 20) =
   using chDom_def by blast
 
 text\<open>Because we interpret channels in @{const cEmpty} as no real 
-channels, we can define the union of two empty domains as the channel
-set @{const cEmpty}. The next step is to instantiate the union of two
-members of class @{class chan} as a member of class @{class chan}. 
-This is rather easy, because either the union results in 
-@{const cEmpty}, so there are only channels where no message can be 
-transmitted, or it results in the union of the domains without 
+channels, we can define the union of two empty domains as the 
+channel set @{const cEmpty}. The next step is to instantiate the 
+union of two members of class @{class chan} as a member of class 
+@{class chan}. This is rather easy, because either the union results
+in @{const cEmpty}, so there are only channels where no message can 
+be transmitted, or it results in the union of the domains without 
 channels from @{const cEmpty}. Hence, we can fulfill the class 
 assumptions with the from "typdef" generated representation function 
 @{const Rep_union}.\<close>
@@ -291,20 +291,20 @@ lemma union_range_union:"\<not>(chIsEmpty TYPE ('cs1)
   by (smt type_definition.Rep_range type_definition_union)
 
 text\<open>After the instantiation, class definition like the 
-@{const chDom} function can be used. To verify the correctness of our
-definition we obtain the domain of the union type and proof, that it 
-is indeed the union of the two sub domains.\<close>
-theorem chdom_union[simp]: "chDom (TYPE('cs1 \<union> 'cs2)) = 
-                            chDom (TYPE ('cs1)) \<union> chDom (TYPE('cs2))"
+@{const chDom} function can be used. To verify the correctness of 
+our definition we obtain the domain of the union type and proof, 
+that it is indeed the union of the two sub domains.\<close>
+theorem chdom_union[simp]:"chDom (TYPE('cs1 \<union> 'cs2)) = 
+                           chDom (TYPE ('cs1)) \<union> chDom (TYPE('cs2))"
   apply(subst chDom_def)
   apply(simp_all add: Rep_union_def)
   using chDom_def union_range_empty union_range_union by auto
 
 subsection\<open>Type minus operator\<close>
-text\<open>Subtracting one domain from another results in the empty domain.
-But analogous to the union, our resulting type always contains 
-channels. Subtracting a set from one of its subsets would result in 
-an empty type. Hence, our result for this case is again 
+text\<open>Subtracting one domain from another results in the empty 
+domain. But analogous to the union, our resulting type always 
+contains channels. Subtracting a set from one of its subsets would 
+result in an empty type. Hence, our result for this case is again 
 @{const cEmpty}.\<close>
 
 typedef ('c1,'c2) minus (infixr "-" 20) = 
@@ -328,7 +328,7 @@ end
 
 
 lemma minus_range_empty:"chDom TYPE('cs1) \<subseteq> chDom TYPE('cs2) \<Longrightarrow> 
-                  range (Rep_minus::'cs1 - 'cs2 \<Rightarrow> channel) = cEmpty"
+                 range (Rep_minus::'cs1 - 'cs2 \<Rightarrow> channel) = cEmpty"
   by (metis (mono_tags, lifting) type_definition.Rep_range 
       type_definition_minus)
 
@@ -340,16 +340,17 @@ lemma minus_range_minus:"\<not>(chDom TYPE('cs1) \<subseteq> chDom TYPE('cs2)) \
 
 text\<open>For verifying the minus operator we again take a look at the
 resulting domain in the following theorem.\<close>
-theorem chdom_minus[simp]: "chDom (TYPE('cs1 - 'cs2)) = 
-                            chDom (TYPE ('cs1)) - chDom (TYPE('cs2))"
+theorem chdom_minus[simp]:"chDom (TYPE('cs1 - 'cs2)) = 
+                           chDom (TYPE ('cs1)) - chDom (TYPE('cs2))"
   apply(subst chDom_def)
   apply(simp_all add: Rep_minus_def)
-  using Diff_Int_distrib2 minus_range_empty minus_range_minus by auto
+  using Diff_Int_distrib2 minus_range_empty minus_range_minus 
+  by auto
  
 text\<open>If we subtract domain \<open>A\<close> from domain \<open>B\<close> the resulting domain 
 should contain no channels from \<open>A\<close>.We also verify this correctness
 property.\<close>
-theorem [simp]:"chDom (TYPE('cs1 - 'cs2)) \<inter> chDom (TYPE ('cs2)) = {}"
+theorem [simp]:"chDom TYPE('cs1 - 'cs2) \<inter> chDom TYPE ('cs2) = {}"
   by auto
 
 (*<*)
