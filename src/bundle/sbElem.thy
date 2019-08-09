@@ -13,6 +13,7 @@ section \<open> mono2mono\<close>
 named_theorems mono2mono "monofun intro rule"
 *)
 section \<open>Stream Bundle Elements \label{sec:sbelem}\<close>
+
 text\<open>Before we define the \gls{sb} datatype, we define a type for 
 stream bundle elements. It is a function from a @{class chan} type 
 to a message @{type M} in @{const ctype} and quite useful in our 
@@ -24,10 +25,12 @@ function, if the domain is not emtpy, and as nothing (@{const None})
 if the domain is empty.\<close>
 
 subsection \<open>sbElem Definition \label{sub:sbedef}\<close>
+
 fun sbElem_well :: "('c \<Rightarrow> M) option \<Rightarrow> bool" where
 "sbElem_well None = chDomEmpty TYPE('c)" |
 "sbElem_well (Some sbe) = (\<forall>c. sbe c \<in> ctype((Rep::'c\<Rightarrow>channel) c))" 
 (*cbot ist leer, daher wird das nie wahr sein für das leere Bündel*)
+
 text\<open>Predicate @{const sbElem_well} exactly describes our 
 requirements. The @{type option} type in our predicate allows us to 
 have the (@{const None}) function, iff the domain of our channel 
@@ -53,6 +56,7 @@ next
   then show ?thesis
     by blast
 qed
+
 text\<open>From our different time types, we will derive the abstract 
 interpretation of a @{type sbElem} with no empty domain for the 
 timed cases:
@@ -67,9 +71,10 @@ infinitely many messages in the asynchronous case.\<close>
 text\<open>The order of @{type sbElem}s then has to be a discrete one. 
 Else it order would be inconsistent to our prefix order on streams 
 and also the resulting \gls{sb} order.\<close>
+
 instantiation  sbElem::(chan)discrete_cpo
 begin
-definition "below_sbElem = (\<lambda>(sbe1::'a sbElem) sbe2. (sbe1 = sbe2))"
+  definition "below_sbElem = (\<lambda>(sbe1::'a sbElem) sbe2. sbe1 = sbe2)"
 instance
   by(standard, simp add: below_sbElem_def)
 end
@@ -81,6 +86,7 @@ lemma sbelemwell2fwell[simp]:"Rep_sbElem sbe = f \<Longrightarrow> sbElem_well f
   using Rep_sbElem by auto
 
 subsection\<open>sbElem properties \label{sub:sbeprop}\<close>
+
 lemma sbtypeempty_sbewell:"chDomEmpty TYPE ('cs) 
                           \<Longrightarrow> sbElem_well (None::('cs \<Rightarrow> M) option)"
   by(simp add: chDom_def)
@@ -93,12 +99,14 @@ lemma sbtypeempty_notsbewell:"chDomEmpty TYPE ('cs)
 text\<open>The following three theorems describe the behaviour of the 
 @{type sbElem} type for empty and non-empty domains. Hence, they 
 verify the desired properties of our type.\<close>
+
 theorem sbtypeepmpty_sbenone[simp]:
 "chDomEmpty TYPE ('cs) \<Longrightarrow> (sbe::'cs\<^sup>\<surd>) = Abs_sbElem(None)"
   apply(simp add: chDom_def)
   apply(rule sbe_eqI)
   by (metis Diff_eq_empty_iff not_Some_eq Rep_sbElem mem_Collect_eq 
       chDom_def sbtypeempty_notsbewell)
+
 text\<open>In case of the empty domain, any @{type sbElem} is 
 @{const None}. Hence, we now have to look at the behaviour for 
 non-empty domains.\<close>
@@ -106,6 +114,7 @@ non-empty domains.\<close>
 theorem [simp]:
 "\<not>(chDomEmpty TYPE ('c)) \<Longrightarrow> Rep_sbElem (sbe::'c\<^sup>\<surd>) \<noteq> None"
   using sbElem_well.simps(1) sbelemwell2fwell by blast
+
 text\<open>First we show that a sbElem with a non-empty domain never is 
 @{const None}. Thus, it is easy to show that there always exists a
 total function, that is an @{type sbElem}, if the domain is empty. 
