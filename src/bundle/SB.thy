@@ -242,7 +242,9 @@ lemma sbgetch_bot[simp]:"\<bottom> \<^enum>\<^sub>\<star> c = \<epsilon>"
   by (metis Rep_sb_strict app_strict bot_sb)
 
 text\<open>Now we can show the equality and below property of two \Gls{sb}
-though the relation of their respective streams.\<close>
+though the relation of their respective streams. In both cases we 
+only have to check channels from the domain, hence the properties 
+automatically hold for \Gls{sb} with an empty domain.\<close>
 
 theorem sb_belowI:
   fixes sb1 sb2::"'cs\<^sup>\<Omega>"
@@ -254,7 +256,7 @@ theorem sb_belowI:
       sbgetch_insert2)
 
 text\<open>If all respectively chosen streams of one bundle are 
-\@{const below} the streams of another bundle, the @{const below}
+@{const below} the streams of another bundle, the @{const below}
 relation holds for the bundles as well.\<close>
 
 theorem sb_eqI:
@@ -295,7 +297,8 @@ subsubsection \<open>Concatination \label{subsub:sbconc}\<close>
 
 lemma sbconc_well[simp]:"sb_well (\<lambda>c. (sb1 \<^enum> c) \<bullet> (sb2 \<^enum> c))"
   apply(rule sbwellI)
-  by (metis (no_types, hide_lams) Un_subset_iff dual_order.trans sbgetch_ctypewell sconc_sValues)
+  by (metis (no_types, hide_lams) Un_subset_iff dual_order.trans 
+      sbgetch_ctypewell sconc_sValues)
 
 lift_definition sbConc:: "'c\<^sup>\<Omega>  \<Rightarrow>  'c\<^sup>\<Omega> \<rightarrow>  'c\<^sup>\<Omega>" is
 "\<lambda> sb1 sb2. Abs_sb(\<lambda>c. (sb1 \<^enum> c )\<bullet>(sb2 \<^enum> c))"

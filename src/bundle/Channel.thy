@@ -4,8 +4,8 @@ theory Channel
 imports HOLCF user.Datatypes
 begin
 (*>*)
-
-section \<open>Global message type \label{sec:gmt}\<close>
+section \<open>Preliminaries \label{sec:prelim}\<close>
+subsection \<open>Global message type \label{sub:gmt}\<close>
 
 text\<open>Depending on the time model, we allow to transmit slightly 
 different versions of @{type M_pure} messages. In every time slot of 
@@ -87,10 +87,10 @@ theorem ctypeempty_ex:"\<exists>c. ctype c = {}"
   by (simp add: cmsgempty_ex ctype_empty_iff)
 
 text\<open>Again, these properties are necessary for defining an empty 
-stream bundle\ref{sec:pmsgdata}.\<close>
+stream bundle\ref{sub:pmsgdata}.\<close>
 
 
-section\<open>Channel class definitions\label{sec:chan}\<close>
+subsection\<open>Channel class definitions\label{sub:chan}\<close>
 
 text\<open>In this section we restrict the domain of a stream bundle
 trough the usage of classes. The main Idea is to never construct a 
@@ -106,7 +106,8 @@ define the union and subtraction of two domains. This is helpful for
 combining two stream bundles and hence, necessary for defining the 
 input and output domain of the general composition operator.\<close>
 
-subsection \<open>Preliminaries \label{sub:prelim}\<close>
+paragraph \<open>Preliminaries for channel classes\<close>
+
 text\<open>For understandable assumptions in our classes we first define 
 the channel set, that contains all channels with an empty 
 @{const ctype}.\<close>
@@ -120,7 +121,7 @@ allowed to be transmitted.\<close>
 lemma cempty_exists: "cEmpty \<noteq> {}"
   by(simp add: cEmpty_def ctypeempty_ex)
 
-subsection\<open>Class chan \label{sub:chan}\<close>
+subsubsection\<open>Class chan \label{sub:chan}\<close>
 
 text\<open>The following class restricts its type to be injective to our 
 @{type channel} type and to also comply with our main Idea. Through 
@@ -148,7 +149,7 @@ class assumption ensures our channel separation and the second the
 injectivity. Furthermore, our abstraction function @{const Abs} is 
 the inverse of @{const Rep}.\<close>
 
-subsubsection \<open>Class functions \label{sub:clfun}\<close>
+paragraph \<open>Class functions \label{sub:clfun}\<close>
 
 text\<open>We will now define a function for types of @{class chan}. It 
 returns the Domain of the type. As a result of our class assumptions 
@@ -177,7 +178,8 @@ allowed to be transmitted. The core theories do not use these
 classes, but the additional assumptions can be useful for the user. 
 Now we define classes for these two options.\<close>
 
-subsubsection\<open>Class somechan\<close>
+paragraph\<open>Class somechan\<close>
+
 class somechan = chan +
   assumes chan_notempty:"(range Rep) \<inter> cEmpty = {}"
 begin
@@ -195,7 +197,7 @@ text\<open>Types of  @{class somechan} can transmit at least one message
 on every channel. Hence, we know @{thm somechannotempty} and 
 @{thm somechandom}.\<close>
 
-subsubsection\<open>Class emptychan\<close>
+paragraph\<open>Class emptychan\<close>
 class emptychan = chan +
   assumes chan_empty:"(range Rep) \<subseteq> cEmpty" 
 begin
