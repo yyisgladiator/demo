@@ -17,12 +17,12 @@ definition weak_well::"('I\<^sup>\<Omega> \<rightarrow> 'O\<^sup>\<Omega>) \<Rig
 definition sometimesspfw::"('I\<^sup>\<Omega> \<rightarrow> 'O\<^sup>\<Omega>)"where
 "sometimesspfw = (\<Lambda> sb. Abs_sb(\<lambda>c. sinftimes (\<up>(SOME a. a \<in> ctype (Rep c)))))"
 
-lemma sometimesspfw_well:"\<not>chIsEmpty TYPE('cs) 
+lemma sometimesspfw_well:"\<not>chDomEmpty TYPE('cs) 
                           \<Longrightarrow> sb_well (\<lambda>c::'cs. sinftimes (\<up>(SOME a. a \<in> ctype (Rep c))))"
   apply(auto simp add: sb_well_def)
   using cEmpty_def cnotempty_rule some_in_eq by auto
 
-lemma sometimesspfw_len:"\<not>chIsEmpty TYPE('cs) \<Longrightarrow> sbLen ((sometimesspfw\<cdot>sb)::'cs\<^sup>\<Omega>) = \<infinity>"
+lemma sometimesspfw_len:"\<not>chDomEmpty TYPE('cs) \<Longrightarrow> sbLen ((sometimesspfw\<cdot>sb)::'cs\<^sup>\<Omega>) = \<infinity>"
   apply(rule sblen_rule,simp_all add: sometimesspfw_def sbgetch_insert2)
   by(simp add: Abs_sb_inverse sometimesspfw_well)+
 
@@ -33,7 +33,7 @@ lemma weak_well_adm:"adm weak_well"
   by (meson is_ub_thelub  cfun_below_iff sblen_mono lnle_def monofun_def  less_lnsuc order_trans)
 
 lemma strong_spf_exist:" \<exists>x::('I\<^sup>\<Omega> \<rightarrow> 'O\<^sup>\<Omega>) . (\<forall>sb. lnsuc\<cdot>(sbLen sb) \<le> sbLen (x\<cdot>sb))"
-  apply(cases "chIsEmpty TYPE('O)")
+  apply(cases "chDomEmpty TYPE('O)")
   apply simp
   apply(rule_tac x=sometimesspfw in exI)
   by(simp add:  sometimesspfw_len)

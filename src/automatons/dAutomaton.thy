@@ -60,14 +60,14 @@ theorem dastatesem_unfolding: "(daStateSem automat s) = sb_case\<cdot>(\<lambda>
 
 theorem dastatesem_bottom:
   assumes "\<not>sbHdElemWell (sb::('b::{finite,chan})\<^sup>\<Omega>)"
-  and "\<not> chIsEmpty TYPE('b)"
+  and "\<not> chDomEmpty TYPE('b)"
   shows "(daStateSem automat s)\<cdot>sb = \<bottom>"
   apply (subst dastatesem_unfolding)
   apply (simp add: sb_case_insert)
   by (metis (no_types, lifting) assms fup1 sbHdElemWell_def sbHdElem_h_cont.rep_eq sbHdElem_h_def sbnleast_mex)
 
 lemma dastatesem_strict:
-  assumes "\<not> chIsEmpty TYPE('b::{finite, chan})"
+  assumes "\<not> chDomEmpty TYPE('b::{finite, chan})"
   shows "(daStateSem automat s)\<cdot>(\<bottom>::'b\<^sup>\<Omega>) = \<bottom>"
   by (simp add: assms dastatesem_bottom sbHdElemWell_def)
 
@@ -91,7 +91,7 @@ lemma dastatesem_final:
 lemma dastatesem_final_h2:
   shows "(daStateSem automat s)\<cdot>(sbECons sbe\<cdot>sb) =
   (daNextOut automat s sbe) \<bullet>\<^sup>\<Omega> ((daStateSem automat (daNextState automat s sbe))\<cdot>sb)"
-  apply (cases "chIsEmpty(TYPE('b))")
+  apply (cases "chDomEmpty(TYPE('b))")
   apply (subst sbtypeepmpty_sbenone[of sbe],simp)+
   apply (subst sbtypeepmpty_sbbot[of sb],simp)+
   apply (subst dastatesem_unfolding, simp add: sb_case_insert)
@@ -112,7 +112,7 @@ theorem dastatesem_stepI:
 
 lemma dastatesem_inempty_step:
   fixes automat::"('state, 'in::{chan, finite}, 'out) dAutomaton"
-  assumes"chIsEmpty TYPE('in)"
+  assumes"chDomEmpty TYPE('in)"
   shows "daStateSem automat s\<cdot>\<bottom> = (daNextOut automat s (Abs_sbElem None)) \<bullet>\<^sup>\<Omega> 
          ((daStateSem automat (daNextState automat s (Abs_sbElem None)))\<cdot>\<bottom>)"
   by (metis assms dastatesem_final_h2 sbtypeempty_sbecons_bot)
@@ -120,7 +120,7 @@ lemma dastatesem_inempty_step:
 theorem dastatesem_inempty_len:
   fixes automat::"('state, 'in::{chan, finite}, 'out) dAutomaton"
   assumes "\<And>state sbe. sbLen (daNextOut automat state sbe) \<ge> 1"
-  and "chIsEmpty TYPE('in)"
+  and "chDomEmpty TYPE('in)"
   shows "\<forall>s. sbLen (daStateSem automat s\<cdot>\<bottom>) = \<infinity>"
 proof(rule contrapos_pp,simp+)
   assume a1: "\<exists>s::'state. sbLen (daStateSem automat s\<cdot>\<bottom>) \<noteq> \<infinity>"
@@ -179,7 +179,7 @@ qed
 
 lemma fun_weakI_h:
   fixes automat::"('state, 'in::{chan, finite}, 'out) dAutomaton"
-  assumes "\<not>chIsEmpty TYPE('in)" and "\<And>sb s. sbLen sb < \<infinity> \<Longrightarrow> sbLen sb \<le> sbLen (daStateSem automat s\<cdot>sb)"
+  assumes "\<not>chDomEmpty TYPE('in)" and "\<And>sb s. sbLen sb < \<infinity> \<Longrightarrow> sbLen sb \<le> sbLen (daStateSem automat s\<cdot>sb)"
   shows   "\<And>sb s. sbLen sb = \<infinity> \<Longrightarrow> sbLen sb \<le> sbLen (daStateSem automat s\<cdot>sb)"
 proof (rule ccontr)
   fix sb::"'in\<^sup>\<Omega>" and s :: 'state
@@ -214,7 +214,7 @@ qed
 
 lemma fun_weakI: 
   fixes automat::"('state, 'in::{chan, finite}, 'out) dAutomaton"
-  assumes "\<not>chIsEmpty TYPE('in)"
+  assumes "\<not>chDomEmpty TYPE('in)"
     and "\<And>sb s. sbLen sb < \<infinity> \<Longrightarrow> sbLen sb \<le> sbLen (daStateSem automat s\<cdot>sb)"
   shows   "weak_well (daStateSem automat s)"
   apply (simp add: weak_well_def)
@@ -223,7 +223,7 @@ lemma fun_weakI:
 theorem dastatesem_weak:
   assumes "\<And>state sbe. 1 \<le> sbLen (daNextOut (automat::('state, 'in::{chan, finite}, 'out) dAutomaton) state sbe)"
   shows     "weak_well (daStateSem automat s)"
-  apply (cases "chIsEmpty TYPE('in)")
+  apply (cases "chDomEmpty TYPE('in)")
   apply (metis (full_types) assms dastatesem_inempty_len fold_inf less_lnsuc sblen_min_len_empty sbtypeepmpty_sbbot weak_well_def)
   apply (rule fun_weakI, simp)
   by (metis assms dastatesem_weak_fin infI less_irrefl)
@@ -246,7 +246,7 @@ theorem dasem_insert:
   by (simp add: daSem_def)
 
 theorem dasem_bottom:
-  assumes "\<not>chIsEmpty TYPE('in::{chan,finite})"
+  assumes "\<not>chDomEmpty TYPE('in::{chan,finite})"
   shows "daSem automat\<cdot>(\<bottom>::'in\<^sup>\<Omega>) = daInitOut automat"
   by (simp add: daSem_def assms dastatesem_strict)
 

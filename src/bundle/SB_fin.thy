@@ -331,7 +331,7 @@ lemma sb_case_insert:"sb_case\<cdot>k\<cdot>sb = (case sbHdElem_h_cont\<cdot>sb 
   using cont2cont_fst cont_fst cont_snd discr_cont3 by blast
 
 
-lemma sb_cases_bot:"\<not>(chIsEmpty (TYPE ('cs))) \<Longrightarrow> sb_case\<cdot>f\<cdot>(\<bottom>::'cs\<^sup>\<Omega>) = \<bottom>"
+lemma sb_cases_bot:"\<not>(chDomEmpty (TYPE ('cs))) \<Longrightarrow> sb_case\<cdot>f\<cdot>(\<bottom>::'cs\<^sup>\<Omega>) = \<bottom>"
   by(simp add: sb_case_insert sbHdElem_h_cont.rep_eq sbHdElem_h_def chDom_def)
 
 lemma sb_cases_sbe[simp]:"sb_case\<cdot>f\<cdot>(sbECons sbe\<cdot>sb) = f sbe\<cdot>(sb)"
@@ -368,14 +368,14 @@ text \<open>\<open>'a\<close> should be interpreted as a tuple. The goal of this
   for example \<open>'a = (nat \<times> bool)\<close> which maps to a bundle with one bool-channel and one nat-channel\<close>
 locale sbeGen =
   fixes lConstructor::"'a::countable \<Rightarrow> 'cs::{chan, finite} \<Rightarrow> M"
-  assumes c_well: "\<And>a. \<not>chIsEmpty TYPE ('cs) \<Longrightarrow> sbElem_well (Some (lConstructor a))"
-      and c_inj: "\<not>chIsEmpty TYPE ('cs) \<Longrightarrow> inj lConstructor" 
-      and c_surj: "\<And>sbe. \<not>chIsEmpty TYPE ('cs) \<Longrightarrow> sbElem_well (Some sbe) \<Longrightarrow> sbe\<in>range lConstructor" (* Schöner? *)
-      and c_empty: "chIsEmpty TYPE ('cs) \<Longrightarrow> is_singleton(UNIV::'a set)"
+  assumes c_well: "\<And>a. \<not>chDomEmpty TYPE ('cs) \<Longrightarrow> sbElem_well (Some (lConstructor a))"
+      and c_inj: "\<not>chDomEmpty TYPE ('cs) \<Longrightarrow> inj lConstructor" 
+      and c_surj: "\<And>sbe. \<not>chDomEmpty TYPE ('cs) \<Longrightarrow> sbElem_well (Some sbe) \<Longrightarrow> sbe\<in>range lConstructor" (* Schöner? *)
+      and c_empty: "chDomEmpty TYPE ('cs) \<Longrightarrow> is_singleton(UNIV::'a set)"
 begin
 
 lift_definition setter::"'a \<Rightarrow> 'cs\<^sup>\<surd>" is 
-  "if(chIsEmpty TYPE ('cs)) then (\<lambda>_. None) else Some o lConstructor"
+  "if(chDomEmpty TYPE ('cs)) then (\<lambda>_. None) else Some o lConstructor"
   using c_well sbtypeempty_sbewell by auto
 
 definition getter::"'cs\<^sup>\<surd> \<Rightarrow> 'a" where
@@ -392,7 +392,7 @@ lemma set_inj: "inj setter"
 
 lemma set_surj: "surj setter"
   unfolding setter_def
-  apply(cases "\<not>(chIsEmpty(TYPE('cs)))",auto)
+  apply(cases "\<not>(chDomEmpty(TYPE('cs)))",auto)
   apply(simp add: chDom_def)
   apply auto
 proof-
@@ -431,7 +431,7 @@ lemma settersb_unfold[simp]:"setterSB\<cdot>(\<up>a \<bullet> s) = (setter a) \<
   apply (metis (no_types, lifting) lshd_updis stream.sel_rews(4) undiscr_Discr up_inject)
   by (metis lscons_conv)
 
-lemma settersb_emptyfix[simp]:"chIsEmpty (TYPE ('cs)) \<Longrightarrow> setterSB\<cdot>s = \<bottom>"
+lemma settersb_emptyfix[simp]:"chDomEmpty (TYPE ('cs)) \<Longrightarrow> setterSB\<cdot>s = \<bottom>"
   by simp
 
 lemma settersb_epsbot[simp]:"setterSB\<cdot>\<epsilon> = \<bottom>"
@@ -449,15 +449,15 @@ lemma gettersb_unfold[simp]:"getterSB\<cdot>(sbe \<bullet>\<^sup>\<surd> sb) = \
   apply simp
   by (simp add: lscons_conv)
 
-lemma gettersb_emptyfix:"chIsEmpty (TYPE ('cs)) \<Longrightarrow> getterSB\<cdot>sb = \<up>(getter (Abs_sbElem None)) \<bullet> getterSB\<cdot>sb"
+lemma gettersb_emptyfix:"chDomEmpty (TYPE ('cs)) \<Longrightarrow> getterSB\<cdot>sb = \<up>(getter (Abs_sbElem None)) \<bullet> getterSB\<cdot>sb"
   by (metis(full_types) gettersb_unfold sbtypeepmpty_sbbot)
 
-lemma gettersb_realboteps[simp]:"\<not>(chIsEmpty (TYPE ('cs))) \<Longrightarrow> getterSB\<cdot>\<bottom> = \<epsilon>"
+lemma gettersb_realboteps[simp]:"\<not>(chDomEmpty (TYPE ('cs))) \<Longrightarrow> getterSB\<cdot>\<bottom> = \<epsilon>"
   unfolding getterSB_def
   apply(subst fix_eq)
   by (simp add: sb_cases_bot)
 
-lemma assumes "chIsEmpty (TYPE ('cs))"
+lemma assumes "chDomEmpty (TYPE ('cs))"
   shows "(getterSB\<cdot>sb) = (sinftimes(\<up>(a)))"
   apply(insert assms,subst gettersb_emptyfix,simp) 
   using gettersb_emptyfix s2sinftimes c_empty
@@ -466,21 +466,21 @@ lemma assumes "chIsEmpty (TYPE ('cs))"
  (* TODO; warning entfernen. abbreviation-prioritäten für \<infinity>?*)
 
 lemma "sbLen (setterSB\<cdot>s) = #s"
-  oops(* gilt nicht für chIsEmpty *)
+  oops(* gilt nicht für chDomEmpty *)
 
 lemma "a \<sqsubseteq> getterSB\<cdot>(setterSB\<cdot>a)"
   apply(induction a rule: ind)
   apply(auto)
   by (simp add: monofun_cfun_arg)
 
-lemma getset_eq[simp]:"\<not>chIsEmpty (TYPE ('cs)) \<Longrightarrow> getterSB\<cdot>(setterSB\<cdot>a) = a"
+lemma getset_eq[simp]:"\<not>chDomEmpty (TYPE ('cs)) \<Longrightarrow> getterSB\<cdot>(setterSB\<cdot>a) = a"
   apply(induction a rule: ind)
   by(auto)
 
 lemma "setterSB\<cdot>(getterSB\<cdot>sb) \<sqsubseteq> sb"
   apply(induction sb)
   apply auto
-  apply(cases "chIsEmpty(TYPE('cs))")
+  apply(cases "chDomEmpty(TYPE('cs))")
   apply (metis (full_types)minimal sbtypeepmpty_sbbot)
   apply(simp add: sbIsLeast_def)
   oops

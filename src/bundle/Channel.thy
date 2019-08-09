@@ -148,10 +148,10 @@ definition chDom::"'cs::chan itself \<Rightarrow> channel set" where
 text\<open>The following abbreviation checks, if a type of @{class chan} 
 is empty.\<close>
 
-abbreviation chIsEmpty ::"'cs::chan itself \<Rightarrow> bool" where
-"chIsEmpty cs \<equiv> chDom cs = {}"
+abbreviation chDomEmpty ::"'cs::chan itself \<Rightarrow> bool" where
+"chDomEmpty cs \<equiv> chDom cs = {}"
 
-lemma inchdom[simp]:"\<not>chIsEmpty TYPE('cs) 
+lemma inchdom[simp]:"\<not>chDomEmpty TYPE('cs) 
                      \<Longrightarrow> Rep (c::'cs::chan) \<in> chDom TYPE('cs)"
   apply(simp add: chDom_def)
   using chan_botsingle by blast
@@ -169,7 +169,7 @@ class somechan = chan +
       "(range Rep) \<inter> cEmpty = {}"
 begin
 
-lemma somechannotempty[simp]:"\<not>chIsEmpty(TYPE('c::somechan))"
+lemma somechannotempty[simp]:"\<not>chDomEmpty(TYPE('c::somechan))"
   using chDom_def somechan_class.chan_notempty by fastforce
 
 lemma somechandom:"chDom(TYPE('c::somechan)) 
@@ -187,7 +187,7 @@ class emptychan = chan +
       "(range Rep) \<subseteq> cEmpty" 
 begin
 
-lemma emptychanempty[simp]:"chIsEmpty(TYPE('c::emptychan))"
+lemma emptychanempty[simp]:"chDomEmpty(TYPE('c::emptychan))"
   by (simp add: chDom_def emptychan_class.chan_empty)
 
 end
@@ -207,15 +207,15 @@ lemma chan_eq[simp]:"Rep (c::'c) = x \<Longrightarrow> x\<in> range(Rep::'d\<Rig
                         \<Longrightarrow> Rep((Abs::channel \<Rightarrow> 'd)(Rep c)) = x"
   by (simp add: f_inv_into_f)
 
-lemma cempty_rule[simp]:assumes"chIsEmpty(TYPE('c))"
+lemma cempty_rule[simp]:assumes"chDomEmpty(TYPE('c))"
   shows"Rep (c::'c) \<in> cEmpty"
   using assms chan_botsingle chDom_def by blast
 
-lemma cnotempty_rule[simp]:assumes"\<not>chIsEmpty(TYPE('c))"
+lemma cnotempty_rule[simp]:assumes"\<not>chDomEmpty(TYPE('c))"
   shows"Rep (c::'c) \<notin> cEmpty"
   using assms chan_botsingle chDom_def by blast
 
-lemma cnotempty_cdom[simp]:assumes"\<not>chIsEmpty(TYPE('c))"
+lemma cnotempty_cdom[simp]:assumes"\<not>chDomEmpty(TYPE('c))"
   shows"Rep (c::'c) \<in> chDom(TYPE('c))"
   using assms by (simp add: chDom_def)
 
@@ -250,7 +250,7 @@ domain. So the union of two empty domains should also be empty. But
 because the type itself can never be empty, we again have to use 
 channels in @{const cEmpty} to define the union.\<close> 
 typedef ('c1,'c2) union (infixr "\<union>" 20) = 
-        "if chIsEmpty TYPE ('c1) \<and>  chIsEmpty TYPE ('c2) 
+        "if chDomEmpty TYPE ('c1) \<and>  chDomEmpty TYPE ('c2) 
             then cEmpty
             else chDom TYPE('c1) \<union> chDom TYPE('c2)" 
   apply(auto)
@@ -277,15 +277,15 @@ instance
   by (simp add: Channel.Rep_union_def Rep_union_inject inj_on_def)
 end
 
-lemma union_range_empty:"chIsEmpty TYPE ('cs1) 
-                         \<and>  chIsEmpty TYPE ('cs2) \<Longrightarrow> 
+lemma union_range_empty:"chDomEmpty TYPE ('cs1) 
+                         \<and>  chDomEmpty TYPE ('cs2) \<Longrightarrow> 
                     range (Rep_union::'cs1 \<union> 'cs2 \<Rightarrow> channel) = 
                     cEmpty"
   by (metis (mono_tags, lifting) type_definition.Rep_range 
       type_definition_union)
 
-lemma union_range_union:"\<not>(chIsEmpty TYPE ('cs1) 
-                         \<and>  chIsEmpty TYPE ('cs2)) \<Longrightarrow> 
+lemma union_range_union:"\<not>(chDomEmpty TYPE ('cs1) 
+                         \<and>  chDomEmpty TYPE ('cs2)) \<Longrightarrow> 
                    range (Rep_union::'cs1 \<union> 'cs2 \<Rightarrow> channel) = 
                    chDom TYPE ('cs1) \<union> chDom TYPE('cs2)"
   by (smt type_definition.Rep_range type_definition_union)

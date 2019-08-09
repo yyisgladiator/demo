@@ -24,7 +24,7 @@ the domain is not emtpy, but else it is nothing.\<close>
 
 subsection \<open>sbElem Definition \<close>
 fun sbElem_well :: "('c \<Rightarrow> M) option \<Rightarrow> bool" where
-"sbElem_well None = chIsEmpty TYPE('c)" |
+"sbElem_well None = chDomEmpty TYPE('c)" |
 "sbElem_well (Some sbe) = (\<forall>c. sbe c \<in> ctype((Rep::'c\<Rightarrow>channel) c))" 
 (*cbot ist leer, daher wird das nie wahr sein für das leere Bündel*)
 text\<open>Predicate @{const sbElem_well} exactly describes our 
@@ -36,7 +36,7 @@ the channel. With those preparations we now define the sbElem type:\<close>
 
 typedef 'c sbElem ("(_\<^sup>\<surd>)"[1000] 999) = 
         "{f::('c \<Rightarrow> M) option. sbElem_well f}"
-proof(cases "chIsEmpty(TYPE('c))")
+proof(cases "chDomEmpty(TYPE('c))")
   case True
   then show ?thesis
     apply(rule_tac x=None in exI)
@@ -80,11 +80,11 @@ lemma sbelemwell2fwell[simp]:"Rep_sbElem sbe = f \<Longrightarrow> sbElem_well f
   using Rep_sbElem by auto
 
 subsection\<open>sbElem properties\<close>
-lemma sbtypeempty_sbewell:"chIsEmpty TYPE ('cs) 
+lemma sbtypeempty_sbewell:"chDomEmpty TYPE ('cs) 
                           \<Longrightarrow> sbElem_well (None::('cs \<Rightarrow> M) option)"
   by(simp add: chDom_def)
 
-lemma sbtypeempty_notsbewell:"chIsEmpty TYPE ('cs) 
+lemma sbtypeempty_notsbewell:"chDomEmpty TYPE ('cs) 
                            \<Longrightarrow> \<not>sbElem_well (Some (f::'cs \<Rightarrow> M))"
   apply(simp add: chDom_def)
   by (simp add: cEmpty_def image_subset_iff)
@@ -93,7 +93,7 @@ text\<open>The following three theorems describe the behaviour of the
 @{type sbElem} type for empty and non-empty domains. Hence, they 
 verify the desired properties of our type.\<close>
 theorem sbtypeepmpty_sbenone[simp]:
-"chIsEmpty TYPE ('cs) \<Longrightarrow> (sbe::'cs\<^sup>\<surd>) = Abs_sbElem(None)"
+"chDomEmpty TYPE ('cs) \<Longrightarrow> (sbe::'cs\<^sup>\<surd>) = Abs_sbElem(None)"
   apply(simp add: chDom_def)
   apply(rule sbe_eqI)
   by (metis Diff_eq_empty_iff not_Some_eq Rep_sbElem mem_Collect_eq 
@@ -103,7 +103,7 @@ text\<open>In case of the empty domain, any @{type sbElem} is
 non-empty domains.\<close>
 
 theorem [simp]:
-"\<not>(chIsEmpty TYPE ('c)) \<Longrightarrow> Rep_sbElem (sbe::'c\<^sup>\<surd>) \<noteq> None"
+"\<not>(chDomEmpty TYPE ('c)) \<Longrightarrow> Rep_sbElem (sbe::'c\<^sup>\<surd>) \<noteq> None"
   using sbElem_well.simps(1) sbelemwell2fwell by blast
 text\<open>First we show that a sbElem with a non-empty domain never is 
 @{const None}. Thus, it is easy to show that there always exists a
@@ -111,7 +111,7 @@ total function, that is an @{type sbElem}, if the domain is empty.
 It follows directly from the non-emptiness of a type.\<close>
 
 theorem sbtypenotempty_somesbe:
-"\<not>(chIsEmpty TYPE ('c)) \<Longrightarrow> \<exists>f::'c \<Rightarrow> M. sbElem_well (Some f)"
+"\<not>(chDomEmpty TYPE ('c)) \<Longrightarrow> \<exists>f::'c \<Rightarrow> M. sbElem_well (Some f)"
   using sbElem_well.simps(1) sbelemwell2fwell by blast
 
 
@@ -128,7 +128,7 @@ definition sbegetch::"'e \<Rightarrow> 'c\<^sup>\<surd> \<Rightarrow> M"where
 
 
 lemma sbtypenotempty_fex[simp]:
-"\<not>(chIsEmpty TYPE ('cs)) \<Longrightarrow> \<exists>f. Rep_sbElem (sbe::'cs\<^sup>\<surd>) = (Some f)"
+"\<not>(chDomEmpty TYPE ('cs)) \<Longrightarrow> \<exists>f. Rep_sbElem (sbe::'cs\<^sup>\<surd>) = (Some f)"
   apply(rule_tac x="(\<lambda>(c::'c). (THE m. m= sbegetch c sbe))" in exI)
   by(simp add: sbegetch_def)
 
@@ -137,8 +137,8 @@ the Domain it converts to, is smaller or equal\<close>
 definition sbeConvert::"'c\<^sup>\<surd> \<Rightarrow> 'd\<^sup>\<surd>"where
 "sbeConvert = (\<lambda>sbe. Abs_sbElem(Some (\<lambda>c. sbegetch c sbe)))"
 
-lemma chIsEmpty2chIsEmpty:"chIsEmpty TYPE ('c) \<Longrightarrow> 
-  Rep (c::'c) \<in> range(Rep::'d\<Rightarrow> channel) \<Longrightarrow> chIsEmpty TYPE ('d)"
+lemma chDomEmpty2chDomEmpty:"chDomEmpty TYPE ('c) \<Longrightarrow> 
+  Rep (c::'c) \<in> range(Rep::'d\<Rightarrow> channel) \<Longrightarrow> chDomEmpty TYPE ('d)"
   apply(simp add: chDom_def cEmpty_def,auto)
   by (metis (mono_tags, lifting) Int_Collect cEmpty_def 
       chan_botsingle insert_not_empty le_iff_inf mk_disjoint_insert
@@ -146,7 +146,7 @@ lemma chIsEmpty2chIsEmpty:"chIsEmpty TYPE ('c) \<Longrightarrow>
 
 lemma sbgetch_ctype: 
   assumes "Rep (c::'e) \<in> range(Rep::'d \<Rightarrow> channel)" 
-  and "\<not>chIsEmpty(TYPE('d))"
+  and "\<not>chDomEmpty(TYPE('d))"
   shows "sbegetch c (sbe2::'d\<^sup>\<surd>) \<in> ctype ((Rep::'e \<Rightarrow> channel) c)"
   using assms apply(simp add: sbegetch_def)
   by (metis (no_types, hide_lams) assms(1) assms(2) f_inv_into_f 
@@ -155,7 +155,7 @@ lemma sbgetch_ctype:
 
 lemma sberestrict_getch:
   assumes"Rep (c::'c) \<in> range(Rep::'d \<Rightarrow> channel)"
-  and "\<not>(chIsEmpty TYPE('c))"
+  and "\<not>(chDomEmpty TYPE('c))"
   and "range(Rep::'d \<Rightarrow> channel) \<subseteq> range(Rep::'c \<Rightarrow> channel)"
   shows "sbegetch c ((sbeConvert::'c\<^sup>\<surd> \<Rightarrow> 'd\<^sup>\<surd>) sbe) = sbegetch c sbe"
   using assms
@@ -179,7 +179,7 @@ if (Rep c \<in> (range (Rep ::'c \<Rightarrow> channel)))
 
 lemma sbeunion_getchfst:
   assumes "Rep (c::'c) \<in> range(Rep::'e \<Rightarrow> channel)"
-  and "\<not>(chIsEmpty TYPE('c))"
+  and "\<not>(chDomEmpty TYPE('c))"
   and "range(Rep::'e \<Rightarrow> channel) \<subseteq> 
        range(Rep::'c \<Rightarrow> channel) \<union> range(Rep::'d \<Rightarrow> channel)"
   shows "sbegetch c ((sbeUnion::'c\<^sup>\<surd> \<Rightarrow> 'd\<^sup>\<surd> \<Rightarrow> 'e\<^sup>\<surd>) sbe1 sbe2) 
@@ -189,7 +189,7 @@ lemma sbeunion_getchfst:
   apply (auto simp add: chDom_def assms)
   using assms(2) sbgetch_ctype apply force
   apply (smt assms(2) sbElem_well.simps(2) Un_iff assms(1) assms(3) 
-         chIsEmpty2chIsEmpty chan_eq repinrange sbgetch_ctype 
+         chDomEmpty2chDomEmpty chan_eq repinrange sbgetch_ctype 
          subset_eq)
   by(simp add: sbegetch_def assms)
 
@@ -197,7 +197,7 @@ lemma sbeunion_getchfst:
 lemma sbeunion_getchsnd:
   assumes "Rep (c::'d) \<in> range(Rep::'e \<Rightarrow> channel)"
   and "Rep c \<notin> range(Rep::'c \<Rightarrow> channel)"
-  and "\<not>(chIsEmpty TYPE('d))"
+  and "\<not>(chDomEmpty TYPE('d))"
   and "range(Rep::'e \<Rightarrow> channel) \<subseteq> 
        range(Rep::'c \<Rightarrow> channel) \<union> range(Rep::'d \<Rightarrow> channel)"
 shows"sbegetch c ((sbeUnion::'c\<^sup>\<surd> \<Rightarrow> 'd\<^sup>\<surd> \<Rightarrow> 'e\<^sup>\<surd>) sbe1 sbe2) = 
@@ -205,10 +205,10 @@ shows"sbegetch c ((sbeUnion::'c\<^sup>\<surd> \<Rightarrow> 'd\<^sup>\<surd> \<R
   apply(simp add: sbeUnion_def sbegetch_def)
   apply(subst Abs_sbElem_inverse)
   apply (auto simp add: chDom_def assms)
-  apply (metis assms(1) assms(3) chIsEmpty2chIsEmpty chan_eq rangeI 
-         sbgetch_ctype)
+  apply (metis assms(1) assms(3) chDomEmpty2chDomEmpty chan_eq 
+         rangeI sbgetch_ctype)
   apply (smt assms sbElem_well.simps(2) Un_iff assms(1) assms(3) 
-         chIsEmpty2chIsEmpty chan_eq repinrange sbgetch_ctype 
+         chDomEmpty2chDomEmpty chan_eq repinrange sbgetch_ctype 
          subset_eq)
   by(simp add: sbegetch_def assms)
 (*>*)

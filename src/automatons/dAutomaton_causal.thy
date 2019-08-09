@@ -147,7 +147,7 @@ definition daTransitionH::"'state \<Rightarrow> 'in\<^sup>\<surd> \<Rightarrow> 
 definition "da = \<lparr> dawTransition = daTransitionH,
                  dawInitState =daInitialState \<rparr>"
 
-lemma daut2sscanl:assumes "\<not>chIsEmpty(TYPE('out))"shows"sbeGen.getterSB fout \<cdot>(dawStateSem da state\<cdot>(sbeGen.setterSB fin\<cdot>input)) =
+lemma daut2sscanl:assumes "\<not>chDomEmpty(TYPE('out))"shows"sbeGen.getterSB fout \<cdot>(dawStateSem da state\<cdot>(sbeGen.setterSB fin\<cdot>input)) =
                    sscanlAsnd daTransition state\<cdot>input"
 using assms
 proof(induction input arbitrary: state rule: ind)
@@ -165,12 +165,12 @@ next
          sbeGen.settersb_unfold prod.case_eq_if sbeGen.gettersb_unfold da_def daTransitionH_def)
 qed
 
-lemma emptychan_eq[simp]:"chIsEmpty TYPE('out) \<Longrightarrow> (sb1::'out\<^sup>\<Omega>) = sb2"
+lemma emptychan_eq[simp]:"chDomEmpty TYPE('out) \<Longrightarrow> (sb1::'out\<^sup>\<Omega>) = sb2"
   by (metis (full_types)sbtypeepmpty_sbbot)
 
 lemma daut2sscanl:"(dawStateSem da state\<cdot>input) =
                    sbeGen.setterSB fout\<cdot>(sscanlAsnd daTransition state\<cdot>(sbeGen.getterSB fin\<cdot>input))"
-  apply(cases "chIsEmpty(TYPE('out))",simp_all)
+  apply(cases "chDomEmpty(TYPE('out))",simp_all)
   apply(insert daut2sscanl[of state "sbeGen.getterSB fin\<cdot>input"],auto)
   oops
 
@@ -202,7 +202,7 @@ begin
 
 abbreviation "smapTransition \<equiv> (\<lambda>e. snd(daTransition loopState e))" 
 
-lemma daut2smap:assumes "\<not>chIsEmpty(TYPE('out))"
+lemma daut2smap:assumes "\<not>chDomEmpty(TYPE('out))"
       shows"sbeGen.getterSB fout\<cdot>(dawStateSem (sscanlGen.da daTransition daInitialState fin fout) loopState\<cdot>(sbeGen.setterSB fin \<cdot>input)) = 
        smap smapTransition\<cdot>input"
   apply(subst sscanlGen.daut2sscanl)
