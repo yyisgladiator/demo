@@ -402,7 +402,10 @@ text \<open>Basic properties of \<open>\<up>_\<close> constructor\<close>
 
 (* shd composed with \<up> is the identity. *)
 lemma [simp]: "shd (\<up>a) = a"
-by (simp add: shd_def sup'_def)
+  by (simp add: shd_def sup'_def)
+
+lemma [simp]: "<[a]> = \<up>a"
+  by(simp add: sup'_def)
 
 (* the singleton stream is never equal to the empty stream *)
 lemma [simp]: "\<up>a \<noteq> \<epsilon>"
