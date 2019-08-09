@@ -12,7 +12,7 @@ default_sort %invisible chan
 section \<open> mono2mono\<close>
 named_theorems mono2mono "monofun intro rule"
 *)
-section \<open>sbElem\<close>
+section \<open>sbElem \label{sec:sbelem}\<close>
 text\<open>Before we define the \gls{sb} datatype, we define the sbElem 
 type. It is a function from a @{class chan} type to a message 
 @{type M} in @{const ctype} and quite useful in our later theories.
@@ -22,7 +22,7 @@ type is empty? Then the function cannot map to any message in
 possible cases, one can define sbElem to be some total function, if 
 the domain is not emtpy, but else it is nothing.\<close>
 
-subsection \<open>sbElem Definition \<close>
+subsection \<open>sbElem Definition \label{sub:sbedef}\<close>
 fun sbElem_well :: "('c \<Rightarrow> M) option \<Rightarrow> bool" where
 "sbElem_well None = chDomEmpty TYPE('c)" |
 "sbElem_well (Some sbe) = (\<forall>c. sbe c \<in> ctype((Rep::'c\<Rightarrow>channel) c))" 
@@ -79,7 +79,7 @@ lemma sbe_eqI:"Rep_sbElem sbe1 = Rep_sbElem sbe2 \<Longrightarrow> sbe1 = sbe2"
 lemma sbelemwell2fwell[simp]:"Rep_sbElem sbe = f \<Longrightarrow> sbElem_well f"
   using Rep_sbElem by auto
 
-subsection\<open>sbElem properties\<close>
+subsection\<open>sbElem properties \label{sub:sbeprop}\<close>
 lemma sbtypeempty_sbewell:"chDomEmpty TYPE ('cs) 
                           \<Longrightarrow> sbElem_well (None::('cs \<Rightarrow> M) option)"
   by(simp add: chDom_def)
@@ -117,7 +117,7 @@ theorem sbtypenotempty_somesbe:
 
 setup_lifting %invisible type_definition_sbElem
 (*<*) (*Not in pdf at the moment, because ugly*)
-subsection \<open>sbElem functions\<close>
+subsection \<open>sbElem functions \label{sub:sbefun}\<close>
 
 text\<open>This function retrieves an element on channel e from the 
 sbElem. This only works if Elements are allowed on channel e and 

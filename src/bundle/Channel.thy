@@ -5,7 +5,7 @@ imports HOLCF user.Datatypes
 begin
 (*>*)
 
-section \<open>Global message type \label{gmt}\<close>
+section \<open>Global message type \label{sec:gmt}\<close>
 
 text\<open>Depending on the time model, we allow to transmit slightly 
 different versions of @{type M_pure} messages. In every time slot of 
@@ -89,7 +89,7 @@ text\<open>Again, these properties are necessary for defining an empty
 stream bundle\ref{sec:pmsgdata}.\<close>
 
 
-section\<open>@{type channel} class definitions\label{chan}\<close>
+section\<open>Channel class definitions\label{sec:chan}\<close>
 text\<open>In this section we restrict the domain of a stream bundle
 trough the usage of classes. The main Idea is to never construct a 
 stream bundle which has channels with an empty @{const ctype} and 
@@ -104,7 +104,7 @@ define the union and subtraction of two domains. This is helpful for
 combining two stream bundles and hence, necessary for defining the 
 input and output domain of the general composition operator.\<close>
 
-subsection \<open>Preliminaries \<close>
+subsection \<open>Preliminaries \label{sub:prelim}\<close>
 text\<open>For understandable assumptions in our classes we first define 
 the channel set, that contains all channels with an empty 
 @{const ctype}.\<close>
@@ -115,7 +115,7 @@ allowed to be transmitted.\<close>
 lemma cempty_exists: "cEmpty \<noteq> {}"
   by(simp add: cEmpty_def ctypeempty_ex)
 
-subsection\<open>Class chan\<close>
+subsection\<open>Class chan \label{sub:chan}\<close>
 text\<open>The following class restricts its type to be injective to our 
 @{type channel} type and to also comply with our main Idea. Through 
 its injectivity, the type is isomorphic to a subset of our 
@@ -136,7 +136,7 @@ class assumption ensures our channel separation and the second the
 injectivity. Furthermore, our abstraction function @{const Abs} is 
 the inverse of @{const Rep}.\<close>
 
-subsubsection \<open>@{class chan} Functions\<close>
+subsubsection \<open>Class functions \label{sub:clfun}\<close>
 text\<open>We will now define a function for types of @{class chan}. It 
 returns the Domain of the type. As a result of our class assumptions 
 and of interpreting empty channels as non existing, our domain is 
@@ -237,7 +237,7 @@ lemma chdom_in: fixes c::"'cs::chan"
 declare %invisible[[show_types]]
 declare %invisible[[show_consts]]
 
-section \<open>Interconnecting Domain Types\<close>
+section \<open>Interconnecting Domain Types \label{sec:interdom}\<close>
 text\<open>There are two interesting interconnections between domains. 
 Intuitively, the union operator takes all channels from both domains 
 and the minus operator only channels that are in the first, but not 

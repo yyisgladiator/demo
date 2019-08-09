@@ -14,9 +14,9 @@ declare %invisible[[show_consts]]
 *)
 
 
-default_sort chan
+default_sort %invisible chan
 
-section \<open>Type Definition \<close>
+section \<open>Stream Bundles \label{sec:sb}\<close>
 
 definition sb_well :: "('c::chan \<Rightarrow> M stream) \<Rightarrow> bool" where
 "sb_well f \<equiv> \<forall>c. sValues\<cdot> (f c) \<subseteq> ctype (Rep c)"
