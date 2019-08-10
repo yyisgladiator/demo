@@ -433,49 +433,64 @@ theorem sb_splits_sbe[simp]:"sb_split\<cdot>f\<cdot>(sbe \<bullet>\<^sup>\<surd>
   by(simp add: sbHdElem_h_cont.rep_eq sbhdelem_h_sbe)
 
 
-section\<open>Datatype Konstruktor\<close>
-
-(* FYI: the old approach from v2 to create the datatype is not really reusable, 
+subsection\<open>Datatype Constructors for SBs\<close>
+(*<*)
+(* FYI: the old approach from v2 to create the datatype is not 
+really reusable, 
   because: 
-      lift_definition elem_raw_i :: "int \<Rightarrow> ndaExampleMessage sbElem" is
+      lift_definition elem_raw_i :: "int \<Rightarrow> ndaExampleMessage 
+sbElem" is
   Thats an old "single-channel" setter...
-  One has to replace the "ndaExampleMessage" with a "chan"... but which?
+  One has to replace the "ndaExampleMessage" with a "chan"... 
+but which?
   There can only be ONE channel in the replacement! ! !
-  But what if the channel-datatype of the component has 2 or more channels?
+  But what if the channel-datatype of the component has 2 or more 
+channels?
 *)
 
 text \<open>Motivation: I HATE freemarker and other templates. 
-  And the workflow sucks. The generator people have no idea about isabelle, 
-  feature-request take FOREVER and then it might not work in every case\<close>
+  And the workflow sucks. The generator people have no idea about 
+isabelle, 
+  feature-request take FOREVER and then it might not work in every
+ case\<close>
 
 text\<open>Goal: Move the heavy-stuff from the Generator to Isabelle.
   Pretty much every proof should be done in Isabelle, the generator
   can still create datatypes, functions and so on\<close>
 
 text\<open>Implementation: Is using Locales... \<close>
+(*>*)
 
-
-text \<open>\<open>'a\<close> should be interpreted as a tuple. The goal of this local is to create a
+text \<open>\<open>'a\<close> should be interpreted as a tuple. The goal of this local
+ is to create a
   bijective mapping from \<open>'a\<close> to \<open>'cs\<close>.
-  The user can freely choose \<open>'a\<close>, hence he will not use the datatype \<open>M\<close>. 
-  for example \<open>'a = (nat \<times> bool)\<close> which maps to a bundle with one bool-channel and one nat-channel\<close>
+  The user can freely choose \<open>'a\<close>, hence he will not use the 
+datatype \<open>M\<close>. 
+  for example \<open>'a = (nat \<times> bool)\<close> which maps to a bundle with
+ one bool-channel and one nat-channel\<close>
+
 locale sbeGen =
   fixes lConstructor::"'a::countable \<Rightarrow> 'cs::{chan, finite} \<Rightarrow> M"
-  assumes c_well: "\<And>a. \<not>chDomEmpty TYPE ('cs) \<Longrightarrow> sbElem_well (Some (lConstructor a))"
+  assumes c_well: "\<And>a. \<not>chDomEmpty TYPE ('cs) 
+                        \<Longrightarrow> sbElem_well (Some (lConstructor a))"
       and c_inj: "\<not>chDomEmpty TYPE ('cs) \<Longrightarrow> inj lConstructor" 
-      and c_surj: "\<And>sbe. \<not>chDomEmpty TYPE ('cs) \<Longrightarrow> sbElem_well (Some sbe) \<Longrightarrow> sbe\<in>range lConstructor" (* Schöner? *)
-      and c_empty: "chDomEmpty TYPE ('cs) \<Longrightarrow> is_singleton(UNIV::'a set)"
+      and c_surj: "\<And>sbe. \<not>chDomEmpty TYPE ('cs) 
+                        \<Longrightarrow> sbElem_well (Some sbe) 
+                        \<Longrightarrow> sbe\<in>range lConstructor"
+      and c_empty: "chDomEmpty TYPE ('cs) 
+                        \<Longrightarrow> is_singleton(UNIV::'a set)"
 begin
 
 lift_definition setter::"'a \<Rightarrow> 'cs\<^sup>\<surd>" is 
-  "if(chDomEmpty TYPE ('cs)) then (\<lambda>_. None) else Some o lConstructor"
+"if(chDomEmpty TYPE ('cs)) then (\<lambda>_. None) else Some o lConstructor"
   using c_well sbtypeempty_sbewell by auto
 
 definition getter::"'cs\<^sup>\<surd> \<Rightarrow> 'a" where
-"getter sbe = (case (Rep_sbElem sbe) of None \<Rightarrow> (SOME x. True) | 
-      Some f \<Rightarrow> (inv lConstructor) f)" (* geht was anderes als "SOME x"? *)
+"getter sbe = (case (Rep_sbElem sbe) of 
+        None   \<Rightarrow> (SOME x. True)        | 
+        Some f \<Rightarrow> (inv lConstructor) f)"
 
-lemma get_set[simp]: "getter (setter a) = a"
+theorem get_set[simp]: "getter (setter a) = a"
   unfolding getter_def
   apply (simp add: setter.rep_eq c_inj c_empty)
   by (metis (full_types)UNIV_I c_empty is_singletonE singleton_iff)
@@ -495,17 +510,17 @@ proof-
     using chnEmpty sbtypenotempty_fex cempty_rule by blast
   then obtain x where x_def:"f = lConstructor x"
     by (metis c_surj rangeE sbelemwell2fwell sbtypeempty_notsbewell)
-  then show "xb \<in> range (\<lambda>x::'a. Abs_sbElem (Some (lConstructor x)))"
-    by (metis (no_types, lifting) Rep_sbElem_inverse f_def range_eqI)
+  then show "xb\<in>range (\<lambda>x::'a. Abs_sbElem (Some (lConstructor x)))"
+    by (metis (no_types,lifting) Rep_sbElem_inverse f_def range_eqI)
 qed 
 
-lemma set_bij: "bij setter"
+theorem set_bij: "bij setter"
   by (metis bijI inj_onI sbeGen.get_set sbeGen_axioms set_surj)
 
 lemma get_inv_set: "getter = (inv setter)"
   by (metis get_set set_surj surj_imp_inv_eq)
 
-lemma set_get[simp]: "setter (getter sbe) = sbe"
+theorem set_get[simp]: "setter (getter sbe) = sbe"
   apply(simp add: get_inv_set)
   by (meson bij_inv_eq_iff set_bij)
 
@@ -515,42 +530,51 @@ lemma "getter A = getter B \<Longrightarrow> A = B"
 fixrec setterSB::"'a stream \<rightarrow> 'cs\<^sup>\<Omega>" where
 "setterSB\<cdot>((up\<cdot>l)&&ls) = (setter (undiscr l)) \<bullet>\<^sup>\<surd> (setterSB\<cdot>ls)" 
 
-lemma settersb_unfold[simp]:"setterSB\<cdot>(\<up>a \<bullet> s) = (setter a) \<bullet>\<^sup>\<surd> setterSB\<cdot>s"
+lemma settersb_unfold[simp]:
+"setterSB\<cdot>(\<up>a \<bullet> s) = (setter a) \<bullet>\<^sup>\<surd> setterSB\<cdot>s"
   unfolding setterSB_def
   apply(subst fix_eq)
   apply simp 
   apply(subgoal_tac "\<exists>l. \<up>a \<bullet> s = (up\<cdot>l)&&s")
   apply auto 
-  apply (metis (no_types, lifting) lshd_updis stream.sel_rews(4) undiscr_Discr up_inject)
+  apply (metis (no_types, lifting) lshd_updis stream.sel_rews(4) 
+         undiscr_Discr up_inject)
   by (metis lscons_conv)
 
-lemma settersb_emptyfix[simp]:"chDomEmpty (TYPE ('cs)) \<Longrightarrow> setterSB\<cdot>s = \<bottom>"
+lemma settersb_emptyfix[simp]:
+"chDomEmpty (TYPE ('cs)) \<Longrightarrow> setterSB\<cdot>s = \<bottom>"
   by simp
 
-lemma settersb_epsbot[simp]:"setterSB\<cdot>\<epsilon> = \<bottom>"
+lemma settersb_strict[simp]:"setterSB\<cdot>\<epsilon> = \<bottom>"
   apply(simp add: setterSB_def)
   apply(subst fix_eq)
   by auto
 
 (* TODO : Dokumentireen! *)
 definition getterSB::"'cs\<^sup>\<Omega> \<rightarrow> 'a stream" where
-"getterSB \<equiv> fix\<cdot>(\<Lambda> h. sb_split\<cdot>(\<lambda>sbe. \<Lambda> sb. updis (getter sbe) && h\<cdot>sb))"
+"getterSB \<equiv> fix\<cdot>(\<Lambda> h. sb_split\<cdot>
+                (\<lambda>sbe. \<Lambda> sb. updis (getter sbe) && h\<cdot>sb))"
 
-lemma gettersb_unfold[simp]:"getterSB\<cdot>(sbe \<bullet>\<^sup>\<surd> sb) = \<up>(getter sbe) \<bullet> getterSB\<cdot>sb"
+lemma gettersb_unfold[simp]:
+"getterSB\<cdot>(sbe \<bullet>\<^sup>\<surd> sb) = \<up>(getter sbe) \<bullet> getterSB\<cdot>sb"
   unfolding getterSB_def
   apply(subst fix_eq)
   apply simp
   by (simp add: lscons_conv)
 
-lemma gettersb_emptyfix:"chDomEmpty (TYPE ('cs)) \<Longrightarrow> getterSB\<cdot>sb = \<up>(getter (Abs_sbElem None)) \<bullet> getterSB\<cdot>sb"
+lemma gettersb_emptyfix:
+  "chDomEmpty (TYPE ('cs)) 
+  \<Longrightarrow> getterSB\<cdot>sb = \<up>(getter (Abs_sbElem None)) \<bullet> getterSB\<cdot>sb"
   by (metis(full_types) gettersb_unfold sbtypeepmpty_sbbot)
 
-lemma gettersb_realboteps[simp]:"\<not>(chDomEmpty (TYPE ('cs))) \<Longrightarrow> getterSB\<cdot>\<bottom> = \<epsilon>"
+lemma gettersb_realboteps[simp]:
+  "\<not>(chDomEmpty (TYPE ('cs))) \<Longrightarrow> getterSB\<cdot>\<bottom> = \<epsilon>"
   unfolding getterSB_def
   apply(subst fix_eq)
   by (simp add: sb_splits_bot)
 
-lemma assumes "chDomEmpty (TYPE ('cs))"
+lemma 
+  assumes "chDomEmpty (TYPE ('cs))"
   shows "(getterSB\<cdot>sb) = (sinftimes(\<up>(a)))"
   apply(insert assms,subst gettersb_emptyfix,simp) 
   using gettersb_emptyfix s2sinftimes c_empty
@@ -566,7 +590,8 @@ lemma "a \<sqsubseteq> getterSB\<cdot>(setterSB\<cdot>a)"
   apply(auto)
   by (simp add: monofun_cfun_arg)
 
-lemma getset_eq[simp]:"\<not>chDomEmpty (TYPE ('cs)) \<Longrightarrow> getterSB\<cdot>(setterSB\<cdot>a) = a"
+lemma getset_eq[simp]:
+  "\<not>chDomEmpty (TYPE ('cs)) \<Longrightarrow> getterSB\<cdot>(setterSB\<cdot>a) = a"
   apply(induction a rule: ind)
   by(auto)
 
@@ -592,7 +617,7 @@ locale sbGen =
   fixes lConstructor::" 'a::pcpo \<Rightarrow> 'cs::chan  \<Rightarrow> M stream"
   assumes c_type: "\<And>a c. sValues\<cdot>(lConstructor a c) \<subseteq> ctype (Rep c)"
     and c_inj: "inj lConstructor"
-    and c_surj: "\<And>f. sb_well f \<Longrightarrow> f\<in>range lConstructor" (* Schöner? *)
+    and c_surj: "\<And>f. sb_well f \<Longrightarrow> f\<in>range lConstructor"
 begin
 
 lift_definition setter::"'a \<Rightarrow> ('cs::chan)\<^sup>\<Omega>"is"lConstructor"

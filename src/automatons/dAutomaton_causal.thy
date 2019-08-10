@@ -157,7 +157,7 @@ proof(induction input arbitrary: state rule: ind)
 next
   case 2
   then show ?case
-    by (simp add: assms sbeGen.gettersb_realboteps sbeGen.settersb_epsbot sbegenfin sbegenfout dawstatesem_strict)
+    by (simp add: assms sbeGen.gettersb_realboteps sbeGen.settersb_strict sbegenfin sbegenfout dawstatesem_strict)
 next
   case (3 a s)
   then show ?case                                                                      
