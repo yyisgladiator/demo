@@ -65,7 +65,7 @@ pcpodef 'c::chan sb("(_\<^sup>\<Omega>)" [1000] 999)
  Information at the bottom of Stream.thy *)
 setup_lifting %invisible type_definition_sb
 
-paragraph \<open>SB Type Properties //\<close>
+paragraph \<open>SB Type Properties \\\<close>
 
 text\<open>Then the \<open>\<bottom>\<close> element of our \gls{sb} type, is of course a 
 mapping to empty streams.\<close>
@@ -191,7 +191,7 @@ abbreviation sbIsLeast::"'cs\<^sup>\<Omega> \<Rightarrow> bool" where
 text\<open>The negation of this property is called @{const sbIsLeast}, 
 because these \Gls{sb} do not contain any complete slices.\<close>
 
-paragraph \<open>sbGetCh Properties //\<close>
+paragraph \<open>sbGetCh Properties \\\<close>
 
 text\<open>When using the intuitively variant of @{const sbGetCh}, it
 obtains a stream from a channel. It should never be able to do
@@ -735,7 +735,7 @@ lemma sbtake_len:
   by (metis (no_types, hide_lams) assms(1) order_trans sblen2slen 
       sbtake_getch slen_stake sblen_min_len)
 
-subsubsection \<open>Converter from SB to sbElem\<close>
+subsubsection \<open>Converter from SB to sbElem \label{subsub:sbhdelem}\<close>
 
 text\<open>Converting a \gls{sb} to a @{type sbElem} is rather complex. 
 The main goal is to obtain the first slice of a \gls{sb} as a 
@@ -823,22 +823,45 @@ theorem sbhdelem_mono_eq[simp]:
   apply(simp_all add: sbhdelem_some)
   by (metis below_shd_alt monofun_cfun_arg sbnleast_mex)
 
-subsubsection\<open>sbECons\<close>
+subsubsection \<open>Constructing SBs with sbElem \label{subsub:sbconc}\<close>
+
+text\<open>Given a @{type sbElem} and a \gls{sb}, we can append the 
+\gls{sb} to the @{type sbElem}. Of course we also have to mind the 
+domain when appending the bundle:
+  \<^item> If the domain is empty, the output \gls{sb} is \<open>\<bottom>\<close>
+  \<^item> If the domain is not empty, the output \gls{sb} has the input
+    @{type sbElem} as its first element.
+
+
+Only using this operator allows us to construct all \Gls{sb} where
+every stream has the same length. But since there is no restriction
+for the input bundle, we can map to any \gls{sb} with a a length
+greater 0.\<close>
 
 definition sbECons::"'c\<^sup>\<surd> \<Rightarrow> 'c\<^sup>\<Omega> \<rightarrow> 'c\<^sup>\<Omega>" where
 "sbECons sbe = sbConc (sbe2sb sbe)"
 
+text\<open>Because we already constructed a converter \ref{subsub:sbe2sb}
+from @{type sbElem}s to \Gls{sb} and the concatenation 
+\ref{subsub:sbconc}, the definition of @{const sbECons} is straight 
+forward. We also add another abbreviation for this function.\<close>
+
 abbreviation sbECons_abbr::"'c\<^sup>\<surd> \<Rightarrow> 'c\<^sup>\<Omega> \<Rightarrow> 'c\<^sup>\<Omega>"(infixr "\<bullet>\<^sup>\<surd>" 100) where
 "sbe \<bullet>\<^sup>\<surd> sb \<equiv> sbECons sbe\<cdot>sb"
 
+text\<open>Indeed results the concatenation in \<open>\<bottom> \<close> when the domain is
+empty\<close>
 
-lemma sbtypeempty_sbecons_bot[simp]:
+theorem sbtypeempty_sbecons_bot[simp]:
 "chDomEmpty TYPE ('cs) \<Longrightarrow> (sbe::'cs\<^sup>\<surd>) \<bullet>\<^sup>\<surd> sb = \<bottom>"
   by simp
 
 lemma exchange_bot_sbecons:
 "chDomEmpty TYPE ('cs) \<Longrightarrow> P sb \<Longrightarrow> P((sbe::'cs\<^sup>\<surd>) \<bullet>\<^sup>\<surd> sb)"
   by (metis (full_types) sbtypeepmpty_sbbot)
+
+text\<open>It also holds, that the rest operator \ref{subsub:sbtake} of a
+with @{const sbECons} constructed \gls{sb} is a destructor.\<close>
 
 theorem sbrt_sbecons: "sbRt\<cdot>(sbe \<bullet>\<^sup>\<surd> sb) = sb"
   apply (cases "chDomEmpty(TYPE('a))", simp)
@@ -877,8 +900,15 @@ lemma sbhdelem_h_sbe:" sbHdElem_h (sbe \<bullet>\<^sup>\<surd> sb) = up\<cdot>sb
   by (metis option.simps(5) sbe2sb.abs_eq sbe2sb.rep_eq 
       sbgetch_insert2)
 
+text\<open>Obtaining the head of such an constructed \gls{sb} results in 
+a the @{type sbElem} used for constructing.\<close>
+
 theorem sbhdelem_sbecons: "sbHdElem (sbe  \<bullet>\<^sup>\<surd> sb) = sbe"
   by(simp add: sbHdElem_def sbhdelem_h_sbe up_def)
+
+text\<open>Constructing a \gls{sb} with @{const sbECons} increases its 
+length by exactly 1. This also holds for empty domains, because we 
+interpret the length of those \Gls{sb} as \<open>\<infinity>\<close>.\<close>
 
 theorem sbecons_len:
   shows "sbLen (sbe \<bullet>\<^sup>\<surd> sb) = lnsuc\<cdot>(sbLen sb)"
@@ -946,7 +976,13 @@ lemma sbECons_sbLen:"sbLen (sb::'cs\<^sup>\<Omega>) \<noteq> (0::lnat) \<Longrig
  \<not> chDomEmpty TYPE('cs) \<Longrightarrow> \<exists> sbe sb'. sb = sbe \<bullet>\<^sup>\<surd> sb'"
   by (metis sbECons_def sbHdElem sbcons)
 
-paragraph \<open>SB induction and case rules\<close>
+paragraph \<open>SB induction and case rules \\\<close>
+
+text\<open>This framework also offers the proof methods using the 
+@{type sbElem} constructor, that offer an easy proof process in when 
+applied correctly. The first method is a case distinction for 
+\Gls{sb}. It differentiates between the small \Gls{sb} where an 
+empty stream exists and all other \Gls{sb}.\<close>
 
 theorem sb_cases [case_names least sbeCons, cases type: sb]: 
   "(sbIsLeast (sb'::'cs\<^sup>\<Omega>) \<Longrightarrow> P) 
@@ -993,6 +1029,10 @@ lemma sbtakeind:
   apply(subst sbtakeind1, simp_all) 
   using sblen_sbtake sbtakeind1 by auto
 
+text\<open>The second showcased proof method is the induction for
+\Gls{sb}. Beside the admissibility of the predicate, we divide the
+induction into to the case tactic similar predicates.\<close>  
+
 theorem sb_ind[case_names adm least sbeCons, induct type: sb]:
   fixes x::"'cs\<^sup>\<Omega>"
   assumes "adm P" 
@@ -1009,10 +1049,17 @@ theorem sb_ind[case_names adm least sbeCons, induct type: sb]:
 lemma sbecons_eq:
   assumes "sbLen sb \<noteq> 0" 
   shows "(sbHdElem sb) \<bullet>\<^sup>\<surd> (sbRt\<cdot>sb) = sb"
-  apply(cases sb,simp_all add: assms)
-  by (metis One_nat_def assms sbECons_def sbHdElem sbcons)+
+  by (metis assms sbECons_def sbHdElem sbcons)
 
-subsubsection \<open>Converting Domains of SBs\<close>
+subsubsection \<open>Converting Domains of SBs \label{subsub:sbconvert}\<close>
+
+text\<open>Two \Gls{sb} with a different type are not comparable, since 
+only \Gls{sb} with the same type have an order. This holds even if 
+the domain of both types is the same. To make them comparable we
+introduce a converter that converts the type of a \Gls{sb}. This
+converter can then make two \Gls{sb} of different type comparable.
+Since it does change the type, it can also restrict or expand the 
+domain of a \gls{sb}. Newly added channels map to \<open>\<epsilon>\<close>.\<close>
 
 lemma sbconvert_well[simp]:"sb_well (\<lambda>c. sb \<^enum>\<^sub>\<star> c)"
   by(rule sbwellI, simp)
@@ -1020,7 +1067,11 @@ lemma sbconvert_well[simp]:"sb_well (\<lambda>c. sb \<^enum>\<^sub>\<star> c)"
 lift_definition sbConvert::"'c\<^sup>\<Omega> \<rightarrow> 'd\<^sup>\<Omega>"is
 "(\<lambda> sb. Abs_sb (\<lambda>c.  sb \<^enum>\<^sub>\<star> c ))"
   by(intro cont2cont, simp)
-  
+
+text\<open>Because restricting the domain of a \gls{sb} is an important 
+feature of this framework, we offer explicit abbreviations for such
+cases.\<close>
+
 lemmas sbconvert_insert = sbConvert.rep_eq
 
 abbreviation sbConvert_abbr :: "'c\<^sup>\<Omega> \<Rightarrow> 'd\<^sup>\<Omega>" ( "_\<star>" 200) where 
@@ -1032,8 +1083,6 @@ abbreviation sbConvert_abbr_fst :: "('c \<union> 'd)\<^sup>\<Omega> \<Rightarrow
 abbreviation sbConvert_abbr_snd :: "('c\<union>'d)\<^sup>\<Omega> \<Rightarrow> 'd\<^sup>\<Omega>"
  ( "_\<star>\<^sub>2" 200) where "sb\<star>\<^sub>2 \<equiv> sbConvert\<cdot>sb"
 
-paragraph \<open>sbConvert Properties\<close>
-
 lemma sbconvert_rep[simp]: "Rep_sb(sb\<star>) = (\<lambda>c. sb \<^enum>\<^sub>\<star> c)"
   by (simp add: Abs_sb_inverse sbconvert_insert)
 
@@ -1043,22 +1092,28 @@ lemma fixes sb ::"'a\<^sup>\<Omega>"
    apply(auto simp add: sbgetch_insert)
   oops (* gilt nicht, wenn 'b kleiner ist als 'a *)
 
-lemma sbconv_eq[simp]:"sbConvert\<cdot>sb = sb"
+lemma sbconv_eq[simp]:"sb\<star> = sb"
   apply(rule sb_eqI)
   by (metis (no_types) Abs_sb_inverse mem_Collect_eq 
         sbconvert_insert sbconvert_well sbgetch_insert2)
 
-theorem sbconvert_getch [simp]: "sb \<star> \<^enum> c = sb \<^enum>\<^sub>\<star> c"
+lemma sbconvert_getch [simp]: "sb \<star> \<^enum> c = sb \<^enum>\<^sub>\<star> c"
   by (simp add: sbgetch_insert2)
 
 
 subsubsection \<open>Union of SBs\<close>
 
+text\<open>The union operator for streams merges two \Gls{sb} together.
+The output domain is equal to the union of its input domains.
+But again we use a slightly different signature for the
+general definition. It is equal to applying the converter after
+building the exact union of both bundles. \<close>
+
 definition sbUnion::"'c\<^sup>\<Omega> \<rightarrow> 'd\<^sup>\<Omega> \<rightarrow> 'e\<^sup>\<Omega>" where
 "sbUnion \<equiv> \<Lambda> sb1 sb2. Abs_sb (\<lambda> c. 
                   if Rep c \<in> chDom TYPE('c) 
                   then sb1 \<^enum>\<^sub>\<star> c 
-                  else sb2\<^enum>\<^sub>\<star> c)"
+                  else sb2 \<^enum>\<^sub>\<star> c)"
 
 lemma sbunion_sbwell[simp]: "sb_well ((\<lambda> (c::'e). 
                   if (Rep c \<in> chDom TYPE('c)) then 
@@ -1084,6 +1139,10 @@ lemma sbunion_rep_eq:"Rep_sb (sbUnion\<cdot>(sb1::'c\<^sup>\<Omega>)\<cdot>sb2) 
   apply(subst Abs_sb_inverse)
   by auto
 
+text\<open>The following abbreviations restrict the input and output
+domains of @{const sbUnion} to specific cases. These are displayed 
+by its signature.\<close>
+
 abbreviation sbUnion_magic_abbr :: "'c\<^sup>\<Omega> \<Rightarrow> 'd\<^sup>\<Omega> \<Rightarrow> 'e\<^sup>\<Omega>"
 (infixr "\<uplus>\<^sub>\<star>" 100) where "sb1 \<uplus>\<^sub>\<star> sb2 \<equiv> sbUnion\<cdot>sb1\<cdot>sb2"
 
@@ -1094,7 +1153,9 @@ abbreviation sbUnion_abbr :: "'c\<^sup>\<Omega> \<Rightarrow> 'd\<^sup>\<Omega> 
 (infixr "\<uplus>" 100) where "sb1 \<uplus> sb2 \<equiv> sb1 \<uplus>\<^sub>\<star> sb2"
 
 
-paragraph \<open>sbUnion Properties\<close>
+paragraph \<open>sbUnion Properties \\\<close>
+
+text \<open>Here we show how our union operator works.\<close>
 
 lemma sbunion_getch[simp]:fixes c::"'a"
       assumes"Rep c \<in> chDom TYPE('c)"
@@ -1107,36 +1168,29 @@ lemma sbunion_eq [simp]: "sb1 \<uplus>\<^sub>\<star> sb2 = sb1"
   apply(rule sb_eqI)
   by simp
 
-
 lemma sbunion_sbconvert_eq[simp]:"cb \<uplus>\<^sub>\<star> cb = (cb\<star>)"
   by(simp add: sbunion_insert sbconvert_insert)
 
-lemma ubunion_commu:
+text\<open>The union operator is commutative, if the domains of its input
+are disjoint.\<close>
+
+theorem ubunion_commu:
   fixes sb1 ::"'cs1\<^sup>\<Omega>"
     and sb2 ::"'cs2\<^sup>\<Omega>"
     assumes "chDom (TYPE ('cs1)) \<inter> chDom (TYPE ('cs2)) = {}"
     shows "sb1 \<uplus>\<^sub>\<star> sb2 = ((sb2 \<uplus>\<^sub>\<star> sb1)::'cs3\<^sup>\<Omega>)"
-  apply(rule sb_eqI)
-  apply(rename_tac c)
-  apply(case_tac "Rep c \<in> chDom (TYPE ('cs1))"; 
-        case_tac "Rep c \<in> chDom (TYPE ('cs2))"; 
-        case_tac "Rep c \<in> chDom (TYPE ('cs3))")
-  using assms  by(auto simp add: sbGetCh.rep_eq sbunion_rep_eq)
+  apply(rule sb_rep_eqI)
+  apply(simp add: sbunion_rep_eq sbgetch_insert)
+  using assms cdom_notempty cempty_rule cnotempty_cdom by blast
 
 lemma ubunion_fst[simp]:
   fixes sb1 ::"'cs1\<^sup>\<Omega>"
     and sb2 ::"'cs2\<^sup>\<Omega>"
   assumes "chDom (TYPE ('cs2)) \<inter> chDom (TYPE ('cs3)) = {}"
   shows "sb1 \<uplus>\<^sub>\<star> sb2 = (sb1\<star> :: 'cs3\<^sup>\<Omega>)"
-  apply(rule sb_eqI)  (* Exakt gleicher beweis wie "ubunion_commu" ... *)
-  apply(rename_tac c)
-  apply(case_tac "Rep c \<in> chDom (TYPE ('cs1))"; 
-        case_tac "Rep c \<in> chDom (TYPE ('cs2))"; 
-        case_tac "Rep c \<in> chDom (TYPE ('cs3))")
-  apply(case_tac "Rep c \<in> chDom (TYPE ('cs1))"; 
-        case_tac "Rep c \<in> chDom (TYPE ('cs2))"; 
-        case_tac "Rep c \<in> chDom (TYPE ('cs3))")
-  using assms  by(auto simp add: sbGetCh.rep_eq sbunion_rep_eq)
+  apply(rule sb_rep_eqI)
+  apply(simp add: sbunion_rep_eq sbgetch_insert)
+  using assms cdom_notempty cempty_rule cnotempty_cdom by blast
 
 lemma ubunion_id[simp]: "out\<star>\<^sub>1 \<uplus> (out\<star>\<^sub>2) = out"
 proof(rule sb_eqI)
@@ -1154,6 +1208,9 @@ proof(rule sb_eqI)
   ultimately show  "out\<star> \<uplus> (out\<star>) \<^enum> c = out \<^enum> c" by fastforce
 qed
 
+text\<open>The union of two \Gls{sb} maps each channel in the domain of 
+the first input \gls{sb} to the corresponding stream of the first 
+\gls{sb}.\<close>
 
 theorem sbunion_getchl[simp]:
     fixes sb1 ::"'cs1\<^sup>\<Omega>"
@@ -1169,11 +1226,14 @@ theorem sbunion_getchl[simp]:
   by (metis Rep_union_def Un_iff assms chan_eq empty_iff 
       union_range_union)
 
+text\<open>This also holds for the second input \gls{sb}, if the domains
+of both \Gls{sb} are disjoint.\<close>
+
 theorem sbunion_getchr[simp]:
     fixes sb1 ::"'cs1\<^sup>\<Omega>"
       and sb2 ::"'cs2\<^sup>\<Omega>"
   assumes "Rep c \<notin> chDom TYPE('cs1)"
-  shows "(sb1 \<uplus> sb2) \<^enum>\<^sub>\<star> c = sb2 \<^enum>\<^sub>\<star> c"
+  shows   "(sb1 \<uplus> sb2) \<^enum>\<^sub>\<star> c = sb2 \<^enum>\<^sub>\<star> c"
   apply(auto simp add: sbgetch_insert sbunion_rep_eq assms)
   apply (metis Rep_union_def UnCI assms f_inv_into_f 
          union_range_union)
@@ -1182,9 +1242,15 @@ theorem sbunion_getchr[simp]:
   by (metis Rep_union_def Un_iff chan_eq empty_iff 
       union_range_union)
 
-theorem sbunion_getch_nomag [simp]:
+lemma sbunion_getch_nomag [simp]:
 "sb1 \<uplus>\<^sub>\<star> sb2  \<^enum>  c = (sb1 \<uplus> sb2) \<^enum>\<^sub>\<star> c"
   by(auto simp add: sbgetch_insert2 sbunion_rep_eq)
+
+text\<open>Our general union operator is equivalent to the restricted
+union with an conversion of the output.\<close>
+
+theorem untion_convert_mag:"sb1 \<uplus>\<^sub>\<star> sb2 = ((sb1 \<uplus> sb2)\<star>)"
+  by(simp add: sb_eqI)
 
 lemma sbunion_magic: 
   fixes sb1 ::"'cs1\<^sup>\<Omega>"
@@ -1193,10 +1259,15 @@ lemma sbunion_magic:
   apply(rule sb_eqI)
   by auto
 
-lemma sbunion_fst[simp]: "(sb1 \<uplus> sb2)\<star>\<^sub>1 = sb1"
+text\<open>It then follows directly, that restricting the unions domain 
+to the first inputs domain is equal to the first input. Analogous
+this also holds for the second input, if the input domains are
+disjoint.\<close>
+
+theorem sbunion_fst[simp]: "(sb1 \<uplus> sb2)\<star>\<^sub>1 = sb1"
   by (simp add: sbunion_magic)
 
-lemma sbunion_snd[simp]:
+theorem sbunion_snd[simp]:
   fixes sb1 ::"'cs1\<^sup>\<Omega>"
     and sb2 ::"'cs2\<^sup>\<Omega>"
   assumes "chDom (TYPE ('cs1)) \<inter> chDom (TYPE ('cs2)) = {}"
