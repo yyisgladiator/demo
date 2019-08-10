@@ -257,7 +257,7 @@ lemma chdom_in: fixes c::"'cs::chan"
 declare %invisible[[show_types]]
 declare %invisible[[show_consts]]
 
-section \<open>Interconnecting Domain Types \label{sec:interdom}\<close>
+subsection \<open>Interconnecting Domain Types \label{sec:interdom}\<close>
 
 text\<open>There are two interesting interconnections between domains. 
 Intuitively, the union operator takes all channels from both domains 
@@ -265,7 +265,7 @@ and the minus operator only channels that are in the first, but not
 the second domain. But because we also have to check for channels 
 from @{const cEmpty}, its not that trivial.\<close>
 
-subsection\<open>Type union operator\<close>
+subsubsection\<open>Type union operator\<close>
 
 text\<open>The union of two domains should contain every channel of each 
 domain. So the union of two empty domains should also be empty. But 
@@ -323,7 +323,7 @@ theorem chdom_union[simp]:"chDom (TYPE('cs1 \<union> 'cs2)) =
   apply(simp_all add: Rep_union_def)
   using chDom_def union_range_empty union_range_union by auto
 
-subsection\<open>Type minus operator\<close>
+subsubsection\<open>Type minus operator\<close>
 
 text\<open>Subtracting one domain from another results in the empty 
 domain. But analogous to the union, our resulting type always 

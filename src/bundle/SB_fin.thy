@@ -8,16 +8,25 @@ declare %invisible[[show_types]]
 
 default_sort %invisible"{finite,chan}"
 
-section\<open> SB functions with finite type \<close>
+subsection \<open>SB Functions with restricted domains \label{sub:sbfin}\<close>
 
-subsection \<open>Cont version of sbHdElem\_h\<close>
+text\<open>This section will provide some additional functions and
+properties that only hold, if the domain of a \gls{sb} is empty. We
+also introduce locals for constructing \Gls{sb}.\<close>
 
+subsubsection \<open>Cont version of sbHdElem\_h \label{subsub:sbhdelemc}\<close>
+
+text\<open>The @{const sbHdElem_h}\ref{subsub:sbhdelem} operator is in
+general monotone, but not continuous. Nevertheless, the additional
+restriction to a finite domain is enough for gaining this property.
+Hence, we introduce a continuous lifted version of 
+@{const sbHdElem_h}.\<close>
 
 lemma cont_h2:assumes"\<exists>s. s\<in>UNIV \<and> s\<notin>{c::'c. \<exists>i::nat. Y i  \<^enum>  c \<noteq> \<epsilon>}"
   shows"{c::'c. \<exists>i::nat. Y i  \<^enum>  c \<noteq> \<epsilon>}\<noteq>UNIV"
   using assms by auto
 
-lift_definition sbHdElem_h_cont::"'c\<^sup>\<Omega> \<rightarrow> ('c\<^sup>\<surd>) u"is
+lift_definition sbHdElem_h_cont::"('c::{finite,chan})\<^sup>\<Omega> \<rightarrow> ('c\<^sup>\<surd>) u"is
 "sbHdElem_h"
   apply(simp add: sbHdElem_h_def chDom_def)
   apply(intro cont2cont)
@@ -311,7 +320,9 @@ proof-
   qed
 qed
 
-subsection\<open>sb\_cases definition\<close>
+subsubsection\<open>sb\_cases definition\<close>
+
+text\<open>This \<close>
 
 definition sb_case::"('cs\<^sup>\<surd> \<Rightarrow> 'cs\<^sup>\<Omega> \<rightarrow> 'a::pcpo) \<rightarrow> 'cs\<^sup>\<Omega> \<rightarrow> 'a" where
 "sb_case \<equiv> \<Lambda> k sb. fup\<cdot>(\<Lambda> sbe. k sbe\<cdot>(sbRt\<cdot>sb))\<cdot>(sbHdElem_h_cont\<cdot>sb)"
