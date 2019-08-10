@@ -32,7 +32,7 @@ subsection \<open>Semantic for deterministic Automaton \<close>
 subsubsection \<open>Semantic\<close>
 
 definition daStateSem :: "('s::type, 'I::{finite,chan},'O) dAutomaton \<Rightarrow> ('s \<Rightarrow> ('I\<^sup>\<Omega> \<rightarrow> 'O\<^sup>\<Omega>))" where
-"daStateSem da = fix\<cdot>(\<Lambda> h. (\<lambda> state. sb_case\<cdot>
+"daStateSem da = fix\<cdot>(\<Lambda> h. (\<lambda> state. sb_split\<cdot>
                         (\<lambda>sbe. \<Lambda> sb.
                           let (nextState, output) = daTransition da state sbe in
                             output \<bullet>\<^sup>\<Omega> h nextState\<cdot>sb)
@@ -43,7 +43,7 @@ definition daSem :: "('s::type, 'I::{finite,chan},'O) dAutomaton \<Rightarrow> (
 
 subsubsection \<open>Statesemantic lemmas\<close>
 
-theorem dastatesem_unfolding: "(daStateSem automat s) = sb_case\<cdot>(\<lambda>sbe. \<Lambda> sb .
+theorem dastatesem_unfolding: "(daStateSem automat s) = sb_split\<cdot>(\<lambda>sbe. \<Lambda> sb .
                                                   let (nextState, output) = daTransition automat s sbe in
                             output \<bullet>\<^sup>\<Omega> ((daStateSem automat) nextState\<cdot>sb))"
   unfolding daStateSem_def
@@ -57,7 +57,7 @@ theorem dastatesem_bottom:
   and "\<not> chDomEmpty TYPE('b)"
   shows "(daStateSem automat s)\<cdot>sb = \<bottom>"
   apply (subst dastatesem_unfolding)
-  apply (simp add: sb_case_insert)
+  apply (simp add: sb_split_insert)
   by (metis (no_types, lifting) assms fup1 sbHdElem_h_cont.rep_eq sbHdElem_h_def)
 
 lemma dastatesem_strict:
@@ -69,7 +69,7 @@ lemma dastatesem_step:
   assumes "sbHdElemWell sb"
   shows "(daStateSem da s)\<cdot>sb = snd (daTransition da s (sbHdElem sb)) \<bullet>\<^sup>\<Omega> daStateSem da (fst (daTransition da s (sbHdElem sb)))\<cdot>(sbRt\<cdot>sb)"
   apply (subst dastatesem_unfolding)
-  apply (simp add: sb_case_insert Let_def case_prod_unfold)
+  apply (simp add: sb_split_insert Let_def case_prod_unfold)
   apply (cases "sbHdElem_h_cont\<cdot>sb", simp_all add: sbHdElem_h_cont.rep_eq sbHdElem_def)
   apply (simp_all split: u.split)
   apply (metis assms inst_up_pcpo sbHdElem_h_def u.simps(3))
@@ -87,7 +87,7 @@ lemma dastatesem_final_h2:
   apply (cases "chDomEmpty(TYPE('b))")
   apply (subst sbtypeepmpty_sbenone[of sbe],simp)+
   apply (subst sbtypeepmpty_sbbot[of sb],simp)+
-  apply (subst dastatesem_unfolding, simp add: sb_case_insert)
+  apply (subst dastatesem_unfolding, simp add: sb_split_insert)
   apply (subst case_prod_unfold)
   apply (subgoal_tac "sbHdElem_h_cont\<cdot>\<bottom> = up\<cdot>(Abs_sbElem(None)::'b\<^sup>\<surd>)")
   apply (simp add: daNextOut_def daNextState_def)
@@ -144,7 +144,7 @@ theorem dastatesem_weak:
   by (metis assms spf_weakI dastatesem_weak_fin lnat_well_h2)
 
 theorem dastatesem_least:
-  assumes"(\<lambda>state. sb_case\<cdot>(\<lambda>sbe. \<Lambda> sb. snd (daTransition X state sbe) \<bullet>\<^sup>\<Omega>  
+  assumes"(\<lambda>state. sb_split\<cdot>(\<lambda>sbe. \<Lambda> sb. snd (daTransition X state sbe) \<bullet>\<^sup>\<Omega>  
           Z (fst (daTransition X state sbe))\<cdot>sb)) \<sqsubseteq> Z"
   shows"daStateSem X \<sqsubseteq> Z"
   apply (simp add: daStateSem_def)

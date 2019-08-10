@@ -71,7 +71,7 @@ fun Rum_ta_strong::"('s::type, 'in::{chan,finite},'out) dAutomaton_strong \<Righ
 
 subsection \<open>*Causal Sem lemmas \<close>
 
-lemma dawstatesem_unfolding: "(dawStateSem automat s) = sb_case\<cdot>(\<lambda>sbe. \<Lambda> sb .
+lemma dawstatesem_unfolding: "(dawStateSem automat s) = sb_split\<cdot>(\<lambda>sbe. \<Lambda> sb .
                                                   let (nextState, output) = dawTransition automat s sbe in
                             output \<bullet>\<^sup>\<surd> ((dawStateSem automat) nextState\<cdot>sb))"
   by(simp add: dawStateSem_def daw2da_def,subst dastatesem_unfolding,simp add: sbECons_def prod.case_eq_if)

@@ -22,7 +22,8 @@ restriction to a finite domain is enough for gaining this property.
 Hence, we introduce a continuous lifted version of 
 @{const sbHdElem_h}.\<close>
 
-lemma cont_h2:assumes"\<exists>s. s\<in>UNIV \<and> s\<notin>{c::'c. \<exists>i::nat. Y i  \<^enum>  c \<noteq> \<epsilon>}"
+lemma cont_h2:
+  assumes"\<exists>s. s\<in>UNIV \<and> s\<notin>{c::'c. \<exists>i::nat. Y i  \<^enum>  c \<noteq> \<epsilon>}"
   shows"{c::'c. \<exists>i::nat. Y i  \<^enum>  c \<noteq> \<epsilon>}\<noteq>UNIV"
   using assms by auto
 
@@ -37,11 +38,13 @@ lift_definition sbHdElem_h_cont::"('c::{finite,chan})\<^sup>\<Omega> \<rightarro
 proof-
   fix Y::"nat \<Rightarrow> 'c\<^sup>\<Omega>"
   assume ch1:"chain Y"
-  assume ch2:"chain (\<lambda>i::nat. if sbIsLeast (Y i) then \<bottom> else Iup (Abs_sbElem (Some (\<lambda>c::'c. shd (Y i  \<^enum>  c)))))"
+  assume ch2:"chain (\<lambda>i::nat. if sbIsLeast (Y i) then \<bottom> else 
+              Iup (Abs_sbElem (Some (\<lambda>c::'c. shd (Y i  \<^enum>  c)))))"
 
-  have "\<exists>c::'c. (\<Squnion>i::nat. Y i)  \<^enum>  c = \<epsilon> \<Longrightarrow> \<exists>c::'c. \<forall>i. (Y i)  \<^enum>  c = \<epsilon>"
+  have "\<exists>c::'c. (\<Squnion>i::nat. Y i)  \<^enum>  c = \<epsilon> 
+        \<Longrightarrow> \<exists>c::'c. \<forall>i. (Y i)  \<^enum>  c = \<epsilon>"
     by (metis ch1 is_ub_thelub minimal monofun_cfun_arg po_eq_conv)
-  have "adm (\<lambda>sb::'c\<^sup>\<Omega>. \<exists>c::'c. sb \<^enum> c= \<epsilon>)" (*Similar proof in spfstep.thy (automaton project)*)
+  have "adm (\<lambda>sb::'c\<^sup>\<Omega>. \<exists>c::'c. sb \<^enum> c= \<epsilon>)"
   proof(rule admI)
     fix Y::"nat \<Rightarrow> 'c\<^sup>\<Omega>"
     assume chain:"chain Y"
@@ -49,9 +52,12 @@ proof-
     assume epsholds:"\<forall>i::nat. \<exists>c::'c. Y i  \<^enum>  c = \<epsilon>"
       have well:"\<forall> i.  \<not> sbHdElemWell (Y i) " 
         by (simp add: epsholds sbHdElemWell_def)
-    then have h0:"\<forall>c i. ((Y i) \<^enum> c \<noteq> \<epsilon>) \<longrightarrow> ((\<Squnion>i::nat. Y i)  \<^enum>  c \<noteq> \<epsilon>)"
-      by (metis (full_types) chain is_ub_thelub minimal monofun_cfun_arg po_eq_conv)
-    then obtain set_not_eps where set_not_eps_def:"set_not_eps = {c::'c. \<exists>i. Y i \<^enum> c \<noteq> \<epsilon>}"
+      then have h0:"\<forall>c i. ((Y i) \<^enum> c \<noteq> \<epsilon>) 
+                \<longrightarrow> ((\<Squnion>i::nat. Y i)  \<^enum>  c \<noteq> \<epsilon>)"
+        by (metis (full_types) chain is_ub_thelub minimal 
+            monofun_cfun_arg po_eq_conv)
+      then obtain set_not_eps where set_not_eps_def:
+        "set_not_eps = {c::'c. \<exists>i. Y i \<^enum> c \<noteq> \<epsilon>}"
       by simp
     then have h01:"finite set_not_eps"
       by simp
@@ -86,17 +92,21 @@ proof-
               by (simp add: a10)
             obtain i where i_def: "\<not> sbHdElemWell (Y i)"
               by (simp add: a10)
-            obtain ch_not_eps where ch_not_eps_def: "ch_not_eps = {{i. Y i \<^enum> (ch) \<noteq> \<epsilon>}|ch::'c. True }"
+            obtain ch_not_eps where ch_not_eps_def:
+              "ch_not_eps = {{i. Y i \<^enum> (ch) \<noteq> \<epsilon>}|ch::'c. True }"
               by blast
-            obtain surj_f where surj_f_def: "surj_f = (\<lambda> ch. {i. Y i \<^enum> (ch::'c) \<noteq> \<epsilon>})"
+            obtain surj_f where surj_f_def:
+              "surj_f = (\<lambda> ch. {i. Y i \<^enum> (ch::'c) \<noteq> \<epsilon>})"
               by simp
           have "ch_not_eps \<subseteq>  surj_f ` ({c::'c | c. True})"
       using ch_not_eps_def surj_f_def  
       by auto
             have ch_not_epsfinite: "finite ch_not_eps"
        
-              by (meson \<open>(ch_not_eps::nat set set) \<subseteq> (surj_f::'c \<Rightarrow> nat set) ` {c |c::'c. True}\<close> finite_code finite_surj)
-            have ch_not_eps_ele_not_emp: "\<forall> ele \<in> ch_not_eps. ele \<noteq> {}"
+              by (meson \<open>(ch_not_eps::nat set set) \<subseteq>
+(surj_f::'c \<Rightarrow> nat set) ` {c |c::'c. True}\<close> finite_code finite_surj)
+            have ch_not_eps_ele_not_emp: 
+              "\<forall> ele \<in> ch_not_eps. ele \<noteq> {}"
             proof rule
               fix ele
               assume a11: "ele \<in> ch_not_eps"
@@ -107,25 +117,33 @@ proof-
               then show "ele \<noteq> {}"
                 using ch_def surj_f_def by blast
             qed
-            have dom_emty_iff:"(ch_not_eps={})  \<longleftrightarrow> (( Rep  (c::'c) \<in> cEmpty) )"
+            have dom_emty_iff:"(ch_not_eps={}) 
+                   \<longleftrightarrow> (( Rep  (c::'c) \<in> cEmpty) )"
               using ch_not_eps_def
-              by (metis (full_types, lifting) Collect_empty_eq_bot Diff_cancel Diff_eq_empty_iff a1 cEmpty_def ex_in_conv mem_Collect_eq sbgetch_ctype_notempty set_mp)
+              by (metis (full_types, lifting) Collect_empty_eq_bot 
+                  Diff_cancel Diff_eq_empty_iff a1 cEmpty_def
+                  ex_in_conv mem_Collect_eq sbgetch_ctype_notempty 
+                  set_mp)
             have dom_not_emp_false: "ch_not_eps\<noteq>{} \<Longrightarrow> False"
             proof -
               assume a111: "ch_not_eps\<noteq>{}"
-              have "\<forall> ele. ele \<in> ch_not_eps \<longrightarrow> (\<exists> i. i \<in> ele \<and> (\<forall> j \<in> ele. i \<le> j))"
+              have "\<forall> ele. ele \<in> ch_not_eps 
+                \<longrightarrow> (\<exists> i. i \<in> ele \<and> (\<forall> j \<in> ele. i \<le> j))"
                 apply (rule ccontr)
               proof (simp)
-                assume a1111: "\<exists>ele::nat set. ele \<in>ch_not_eps \<and>  (\<forall>i::nat. i \<in> ele \<longrightarrow> (\<exists>x::nat\<in>ele. \<not> i \<le> x))"
-                obtain ele where ele_def: "ele \<in> ch_not_eps \<and> (\<forall>i::nat. i \<in> ele \<longrightarrow> (\<exists>x::nat\<in>ele. \<not> i \<le> x))"
+                assume a1111: "\<exists>ele::nat set. ele \<in>ch_not_eps \<and> 
+                     (\<forall>i::nat. i \<in> ele \<longrightarrow> (\<exists>x::nat\<in>ele. \<not> i \<le> x))"
+                obtain ele where ele_def: "ele \<in> ch_not_eps \<and> 
+                    (\<forall>i::nat. i \<in> ele \<longrightarrow> (\<exists>x::nat\<in>ele. \<not> i \<le> x))"
                   using a1111 by blast
-                obtain the_ch where the_ch_def: "ele = surj_f the_ch"
+                obtain the_ch where the_ch_def:"ele = surj_f the_ch"
                   using ch_not_eps_def ele_def surj_f_def by blast
                 have ele_def2: "ele = {i. Y i \<^enum> the_ch \<noteq> \<epsilon>}"
                   using surj_f_def the_ch_def by blast
                 obtain the_i where the_i_def: "the_i \<in> ele"
                   using ch_not_eps_ele_not_emp ele_def by auto
-                obtain the_subs where the_subst_def: "the_subs = {i. i \<le> the_i \<and> Y i \<^enum> the_ch \<noteq> \<epsilon>}"
+                obtain the_subs where the_subst_def: 
+                "the_subs = {i. i \<le> the_i \<and> Y i \<^enum> the_ch \<noteq> \<epsilon>}"
                   by simp
                 have the_subs_subs: "the_subs \<subseteq> ele"
                   apply (simp add: the_subst_def ele_def2)
@@ -147,73 +165,102 @@ proof-
                 show False
                   using ele_def the_min_in the_min_min by auto
               qed
-              then have "\<And> ele. ele \<in> ch_not_eps \<Longrightarrow> (\<exists> i. i \<in> ele \<and> (\<forall> j \<in> ele. i \<le> j))"
+              then have "\<And> ele. ele \<in> ch_not_eps 
+                  \<Longrightarrow> (\<exists> i. i \<in> ele \<and> (\<forall> j \<in> ele. i \<le> j))"
                 by blast
-              then have "\<And> ele. ele \<in> ch_not_eps \<Longrightarrow> (\<exists>! i. i \<in> ele \<and> (\<forall> j \<in> ele. i \<le> j))"
+              then have "\<And> ele. ele \<in> ch_not_eps 
+                  \<Longrightarrow> (\<exists>! i. i \<in> ele \<and> (\<forall> j \<in> ele. i \<le> j))"
                 using le_antisym by blast
               obtain finite_ch_n_eps 
-                where min_i_ch_def: "finite_ch_n_eps = {the_i | the_i ele. ele \<in> ch_not_eps \<and> (\<forall> i \<in> ele. the_i \<le> i) \<and> the_i \<in> ele}"
+                where min_i_ch_def:
+"finite_ch_n_eps = {the_i | the_i ele. ele \<in> ch_not_eps \<and> 
+                    (\<forall> i \<in> ele. the_i \<le> i) \<and> the_i \<in> ele}"
                 by simp
-              obtain bla::"nat set \<Rightarrow> nat set" where bla_def: "bla = (\<lambda> da_set. {the_i. (\<forall> i \<in> da_set. the_i \<le> i) \<and> the_i \<in> da_set})"
+              obtain bla::"nat set \<Rightarrow> nat set" where bla_def: 
+"bla = (\<lambda> da_set. {the_i. (\<forall> i \<in> da_set. the_i \<le> i) \<and>
+ the_i \<in> da_set})"
                 by simp
-              have "\<forall> da_set \<in> ch_not_eps. \<exists>! i \<in> da_set. bla da_set = {i}"
+              have "\<forall> da_set \<in> ch_not_eps. 
+                    \<exists>! i \<in> da_set. bla da_set = {i}"
               proof rule
                 fix da_set
                 assume bla: "da_set \<in> ch_not_eps"
-                obtain the_i where the_i_def: "the_i \<in> da_set" and the_i_def2: "(\<forall> j \<in> da_set. the_i \<le> j)"
-                  using \<open>\<And>ele::nat set. ele \<in> (ch_not_eps::nat set set) \<Longrightarrow> \<exists>i::nat. i \<in> ele \<and> (\<forall>j::nat\<in>ele. i \<le> j)\<close> bla by blast
+                obtain the_i where the_i_def: "the_i \<in> da_set" 
+                  and the_i_def2: "(\<forall> j \<in> da_set. the_i \<le> j)"
+                  using \<open>\<And>ele::nat set. ele \<in> 
+(ch_not_eps::nat set set) \<Longrightarrow> \<exists>i::nat. i \<in> ele \<and>
+ (\<forall>j::nat\<in>ele. i \<le> j)\<close> bla by blast
                 have "the_i \<in> bla da_set"
-                  using \<open>(bla::nat set \<Rightarrow> nat set) = (\<lambda>da_set::nat set. {the_i::nat. (\<forall>i::nat\<in>da_set. the_i \<le> i) \<and> the_i \<in> da_set})\<close> the_i_def the_i_def2 by blast
+                  using \<open>(bla::nat set \<Rightarrow> nat set) =
+ (\<lambda>da_set::nat set. {the_i::nat. (\<forall>i::nat\<in>da_set. the_i \<le> i) \<and>
+ the_i \<in> da_set})\<close> the_i_def the_i_def2 by blast
                 have "\<forall> i \<in> bla da_set. i = the_i"
-                  by (simp add: \<open>(bla::nat set \<Rightarrow> nat set) = (\<lambda>da_set::nat set. {the_i::nat. (\<forall>i::nat\<in>da_set. the_i \<le> i) \<and> the_i \<in> da_set})\<close> eq_iff the_i_def the_i_def2)
+                  by (simp add: \<open>(bla::nat set \<Rightarrow> nat set) = 
+(\<lambda>da_set::nat set. {the_i::nat. (\<forall>i::nat\<in>da_set. the_i \<le> i) \<and>
+ the_i \<in> da_set})\<close> eq_iff the_i_def the_i_def2)
                 show "\<exists>!i::nat. i \<in> da_set \<and> bla da_set = {i}"
                   apply (rule ex_ex1I)
                    apply (rule_tac x ="the_i" in exI)
                    apply rule
                     apply (simp add: the_i_def)
                    apply rule
-                    apply (simp add: \<open>\<forall>i::nat\<in>(bla::nat set \<Rightarrow> nat set) (da_set::nat set). i = (the_i::nat)\<close> subsetI)
-                   apply (simp add: \<open>(the_i::nat) \<in> (bla::nat set \<Rightarrow> nat set) (da_set::nat set)\<close>)
+                    apply (simp add:
+ \<open>\<forall>i::nat\<in>(bla::nat set \<Rightarrow> nat set) (da_set::nat set). i
+ = (the_i::nat)\<close> subsetI)
+                   apply (simp add: \<open>(the_i::nat)
+ \<in> (bla::nat set \<Rightarrow> nat set) (da_set::nat set)\<close>)
                   by auto
               qed
-              obtain min_set_set::"nat set" where min_set_set_def: "min_set_set = {THE i. i \<in> bla da_set | da_set. da_set \<in> ch_not_eps}"
+              obtain min_set_set::"nat set" where min_set_set_def:
+ "min_set_set = {THE i. i \<in> bla da_set |
+ da_set. da_set \<in> ch_not_eps}"
                 by simp
-              have i_max_is_max: "\<forall> ch::'c. \<exists> i . (i \<in> min_set_set) \<longrightarrow> Y i \<^enum> ch \<noteq> \<epsilon>"
+              have i_max_is_max: "\<forall> ch::'c. \<exists> i .
+ (i \<in> min_set_set) \<longrightarrow> Y i \<^enum> ch \<noteq> \<epsilon>"
               proof  rule
                 fix ch
                 
                 obtain ch_set where ch_set_def: "ch_set = surj_f ch"
                   by simp
-                obtain the_set where the_st_def: "the_set = bla ch_set"
+                obtain the_set where the_st_def:
+ "the_set = bla ch_set"
                   by simp
                 have ch_set_in_ch_not_eps: "ch_set \<in> ch_not_eps"
                   apply (simp add: ch_not_eps_def)
                   using  ch_set_def surj_f_def by blast
-                obtain the_min where the_min_def: "the_min \<in> ch_set \<and> (\<forall> j \<in> ch_set. the_min \<le> j)"
-                  using \<open>\<And>ele::nat set. ele \<in> (ch_not_eps::nat set set) \<Longrightarrow> \<exists>i::nat. i \<in> ele \<and> (\<forall>j::nat\<in>ele. i \<le> j)\<close> ch_set_in_ch_not_eps by auto
+                obtain the_min where the_min_def:
+ "the_min \<in> ch_set \<and> (\<forall> j \<in> ch_set. the_min \<le> j)"
+                  using \<open>\<And>ele::nat set. ele \<in>
+ (ch_not_eps::nat set set) \<Longrightarrow> \<exists>i::nat. i \<in> ele \<and> 
+(\<forall>j::nat\<in>ele. i \<le> j)\<close> ch_set_in_ch_not_eps by auto
         
                 have "bla ch_set = {the_min}"
                   using bla_def the_min_def by force
                 then have "the_min \<in> bla ch_set"
                   by simp
                 have "\<And> i. i \<in> bla ch_set \<Longrightarrow> i = the_min"
-                  using \<open>(bla::nat set \<Rightarrow> nat set) (ch_set::nat set) = {the_min::nat}\<close> by auto
+                  using \<open>(bla::nat set \<Rightarrow> nat set) (ch_set::nat set)
+ = {the_min::nat}\<close> by auto
                 then have "(THE i::nat. i \<in> bla ch_set) = the_min"
-                  using \<open>(the_min::nat) \<in> (bla::nat set \<Rightarrow> nat set) (ch_set::nat set)\<close> by blast
+                  using \<open>(the_min::nat) \<in> (bla::nat set \<Rightarrow> nat set)
+ (ch_set::nat set)\<close> by blast
                 then have "the_min \<in> min_set_set"
                   apply (simp add: min_set_set_def)
                   apply (rule_tac x="ch_set" in exI)
                   apply rule defer
                    apply (simp add: ch_set_in_ch_not_eps)
                   by simp
-                then show " \<exists>i::nat. i \<in> min_set_set \<longrightarrow> Y i  \<^enum> ch \<noteq> \<epsilon>"
+                then show " \<exists>i::nat. i \<in> min_set_set
+ \<longrightarrow> Y i  \<^enum> ch \<noteq> \<epsilon>"
                   apply (rule_tac x=the_min in exI)
                   apply simp
-                  using ch_set_def mem_Collect_eq surj_f_def the_min_def by blast
+                  using ch_set_def mem_Collect_eq surj_f_def
+ the_min_def by blast
               qed
               have "finite min_set_set"
                 by (simp add: ch_not_epsfinite min_set_set_def)
-              obtain the_max where the_max_def: "the_max = Max min_set_set"
+              obtain the_max where the_max_def: "the_max =
+ Max min_set_set"
                 by simp
               have "the_max \<in> min_set_set"
   
@@ -222,31 +269,41 @@ proof-
                  apply (simp add: \<open>finite (min_set_set::nat set)\<close>)
                 using a111 min_set_set_def by auto
               have "\<exists> i. sbHdElemWell (Y i)"
-              proof (rule_tac x="the_max" in exI, simp add: sbHdElemWell_def, rule)
+              proof (rule_tac x="the_max" in exI, simp add:
+ sbHdElemWell_def, rule)
                 fix c::'c 
                 
-                obtain the_set where the_set_def: "the_set = surj_f c"
+                obtain the_set where the_set_def: "the_set = 
+surj_f c"
                   by simp
                 have "the_set \<in> ch_not_eps"
-                  using ch_not_eps_def surj_f_def the_set_def by auto
-                then obtain the_min where the_min_def: "the_min \<in> the_set \<and> (\<forall> j \<in> the_set. the_min \<le> j)"
-                  using \<open>\<forall>ele::nat set. ele \<in> (ch_not_eps::nat set set) \<longrightarrow> (\<exists>i::nat. i \<in> ele \<and> (\<forall>j::nat\<in>ele. i \<le> j))\<close> by blast
+                  using ch_not_eps_def surj_f_def the_set_def
+                  by auto
+                then obtain the_min where the_min_def: "the_min \<in> 
+the_set \<and> (\<forall> j \<in> the_set. the_min \<le> j)"
+                  using \<open>\<forall>ele::nat set. ele \<in> 
+(ch_not_eps::nat set set) \<longrightarrow> (\<exists>i::nat. i \<in> ele \<and>
+ (\<forall>j::nat\<in>ele. i \<le> j))\<close> by blast
                 have "bla the_set = {the_min}"
                   using bla_def the_min_def by force
                 then have "the_min \<in> bla the_set"
                   by simp
                 have "\<And> i. i \<in> bla the_set \<Longrightarrow> i = the_min"
-                  using \<open>(bla::nat set \<Rightarrow> nat set) (the_set::nat set) = {the_min::nat}\<close> by auto
+                  using \<open>(bla::nat set \<Rightarrow> nat set)
+ (the_set::nat set) = {the_min::nat}\<close> by auto
                 then have "(THE i::nat. i \<in> bla the_set) = the_min"
-                  using \<open>(the_min::nat) \<in> (bla::nat set \<Rightarrow> nat set) (the_set::nat set)\<close> by blast
+                  using \<open>(the_min::nat) \<in> 
+(bla::nat set \<Rightarrow> nat set) (the_set::nat set)\<close> by blast
                 then have "the_min \<in> min_set_set"
                   apply (simp add: min_set_set_def)
                   apply (rule_tac x="the_set" in exI)
                   apply rule defer
-                  apply (simp add: \<open>(the_set::nat set) \<in> (ch_not_eps::nat set set)\<close>)
+                   apply (simp add: \<open>(the_set::nat set) \<in>
+ (ch_not_eps::nat set set)\<close>)
                   by simp
                 then have "the_min \<le> the_max"
-                  by (simp add: \<open>finite (min_set_set::nat set)\<close> the_max_def)
+                  by (simp add: 
+\<open>finite (min_set_set::nat set)\<close> the_max_def)
                 then have "Y the_min \<sqsubseteq> Y the_max"
                
                   by (simp add: chain po_class.chain_mono)
@@ -254,7 +311,8 @@ proof-
                   using surj_f_def the_min_def the_set_def by blast
                 then show "Y the_max  \<^enum>  c \<noteq> \<epsilon>"
                   using \<open>(the_min::nat) \<le> (the_max::nat)\<close>
-                  by (metis \<open>(Y::nat \<Rightarrow> 'c\<^sup>\<Omega>) (the_min::nat) \<sqsubseteq> Y (the_max::nat)\<close> bottomI monofun_cfun_arg)
+                  by (metis \<open>(Y::nat \<Rightarrow> 'c\<^sup>\<Omega>)
+ (the_min::nat) \<sqsubseteq> Y (the_max::nat)\<close> bottomI monofun_cfun_arg)
               qed
               then show False
                 by (simp add: a10)
@@ -274,15 +332,20 @@ proof-
     then show "\<exists>c::'c. (\<Squnion>i::nat. Y i)  \<^enum>  c = \<epsilon>"
       using h1 by blast
   qed
-  then have "\<forall>i::nat. \<exists>c::'c. Y i  \<^enum>  c = \<epsilon> \<Longrightarrow> \<exists>c::'c. (\<Squnion>i::nat. Y i)  \<^enum>  c = \<epsilon>"
+  then have "\<forall>i::nat. \<exists>c::'c. Y i  \<^enum>  c = \<epsilon> 
+\<Longrightarrow> \<exists>c::'c. (\<Squnion>i::nat. Y i)  \<^enum>  c = \<epsilon>"
     apply(rule admD)
     by(simp_all add: ch1)
-  then have finiteIn:"\<forall>c::'c. (\<Squnion>i::nat. Y i)  \<^enum>  c \<noteq> \<epsilon> \<Longrightarrow> \<exists>i. \<forall>c::'c. (Y i) \<^enum> c \<noteq> \<epsilon>"
+  then have finiteIn:"\<forall>c::'c. (\<Squnion>i::nat. Y i)  \<^enum>  c \<noteq> \<epsilon> 
+\<Longrightarrow> \<exists>i. \<forall>c::'c. (Y i) \<^enum> c \<noteq> \<epsilon>"
     by blast
-  then have finiteInsb:" \<forall>c::'c. (\<Squnion>i::nat. Y i)  \<^enum>  c \<noteq> \<epsilon> \<Longrightarrow> \<exists>i.\<not>sbIsLeast (Y i)"
+  then have finiteInsb:" \<forall>c::'c. (\<Squnion>i::nat. Y i)  \<^enum>  c \<noteq> \<epsilon> 
+\<Longrightarrow> \<exists>i.\<not>sbIsLeast (Y i)"
     by(simp add: sbHdElemWell_def)
-  then show "(if sbIsLeast (\<Squnion>i::nat. Y i) then \<bottom> else Iup (Abs_sbElem (Some (\<lambda>c::'c. shd ((\<Squnion>i::nat. Y i)  \<^enum>  c))))) \<sqsubseteq>
-       (\<Squnion>i::nat. if sbIsLeast (Y i) then \<bottom> else Iup (Abs_sbElem (Some (\<lambda>c::'c. shd (Y i  \<^enum>  c)))))"
+  then show "(if sbIsLeast (\<Squnion>i::nat. Y i) then \<bottom> else 
+Iup (Abs_sbElem (Some (\<lambda>c::'c. shd ((\<Squnion>i::nat. Y i)  \<^enum>  c))))) \<sqsubseteq>
+       (\<Squnion>i::nat. if sbIsLeast (Y i) then \<bottom> 
+else Iup (Abs_sbElem (Some (\<lambda>c::'c. shd (Y i  \<^enum>  c)))))"
   proof(cases "\<exists>c::'c. (\<Squnion>i::nat. Y i)  \<^enum>  c = \<epsilon>")
     case True
     then show ?thesis
@@ -293,26 +356,33 @@ proof-
       by (simp add: ch1)
     obtain n where n_def:"\<not>sbIsLeast (Y n)"
       using False finiteInsb  by auto
-    then have shd_eq:"\<And>i. i\<ge>n \<Longrightarrow> (\<lambda>c::'c. shd (Y i  \<^enum>  c)) = (\<lambda>c::'c. shd (Y n  \<^enum>  c))"
+    then have shd_eq:"\<And>i. i\<ge>n \<Longrightarrow> 
+(\<lambda>c::'c. shd (Y i  \<^enum>  c)) = (\<lambda>c::'c. shd (Y n  \<^enum>  c))"
       apply(subst fun_eq_iff)
       apply auto
       apply(rule below_shd_alt)
       by (simp add: ch1 po_class.chain_mono sbnleast_mex)
-    have h1:"\<forall>i\<ge>n. (if sbIsLeast (Y i) then \<bottom> else Iup (Abs_sbElem (Some (\<lambda>c::'c. shd (Y i  \<^enum>  c)))))
+    have h1:"\<forall>i\<ge>n. (if sbIsLeast (Y i) then \<bottom> 
+else Iup (Abs_sbElem (Some (\<lambda>c::'c. shd (Y i  \<^enum>  c)))))
                 = Iup (Abs_sbElem (Some (\<lambda>c::'c. shd (Y n  \<^enum>  c))))"
       apply(auto)
       apply(insert sbleast_mono[of "Y n"])
       apply (simp add: ch1 n_def po_class.chain_mono)
       using shd_eq by presburger
-    have h2:"(if sbIsLeast (\<Squnion>i. Y i) then \<bottom> else Iup (Abs_sbElem (Some (\<lambda>c::'c. shd ((\<Squnion>i::nat. Y i)  \<^enum>  c))))) \<sqsubseteq> Iup (Abs_sbElem (Some (\<lambda>c::'c. shd (Y n  \<^enum>  c))))"
+    have h2:"(if sbIsLeast (\<Squnion>i. Y i) then \<bottom> else Iup 
+(Abs_sbElem (Some (\<lambda>c::'c. shd ((\<Squnion>i::nat. Y i)  \<^enum>  c))))) \<sqsubseteq>
+ Iup (Abs_sbElem (Some (\<lambda>c::'c. shd (Y n  \<^enum>  c))))"
       apply(simp add: False,auto)
       apply(rule sbe_eqI)
       apply(subst Abs_sbElem_inverse,auto)+
       apply (simp add: n_def)
       apply(auto simp add: fun_eq_iff)
       apply(rule below_shd[symmetric])
-      using ch1 is_ub_thelub monofun_cfun_arg n_def sbnleast_mex by blast
-    have h3_h:"(if sbIsLeast (\<Squnion>i. Y i) then \<bottom> else Iup (Abs_sbElem (Some (\<lambda>c::'c. shd (Y n  \<^enum>  c))))) = Iup (Abs_sbElem (Some (\<lambda>c::'c. shd (Y n  \<^enum>  c))))"
+      using ch1 is_ub_thelub monofun_cfun_arg n_def sbnleast_mex
+      by blast
+    have h3_h:"(if sbIsLeast (\<Squnion>i. Y i) then \<bottom> else Iup
+ (Abs_sbElem (Some (\<lambda>c::'c. shd (Y n  \<^enum>  c))))) =
+ Iup (Abs_sbElem (Some (\<lambda>c::'c. shd (Y n  \<^enum>  c))))"
       using ch1 is_ub_thelub n_def sbleast_mono by auto
     then show ?thesis
       using below_lub ch2 h2 n_def
@@ -320,25 +390,45 @@ proof-
   qed
 qed
 
-subsubsection\<open>sb\_cases definition\<close>
+subsubsection\<open>SB step functions\<close>
 
-text\<open>This \<close>
+text\<open>Often a \gls{sb} is processed element wise. If there is no 
+complete element in the \gls{sb} we return \<open>\<bottom>\<close>. We use the
+following definition for realising the automaton semantics, but it
+could also be used to define a continuous version of @{const sbLen}
+\ref{subsub:sblen} for \Gls{sb} with a finite domain or other
+operators.\<close>
 
-definition sb_case::"('cs\<^sup>\<surd> \<Rightarrow> 'cs\<^sup>\<Omega> \<rightarrow> 'a::pcpo) \<rightarrow> 'cs\<^sup>\<Omega> \<rightarrow> 'a" where
-"sb_case \<equiv> \<Lambda> k sb. fup\<cdot>(\<Lambda> sbe. k sbe\<cdot>(sbRt\<cdot>sb))\<cdot>(sbHdElem_h_cont\<cdot>sb)"
+definition sb_split::"('cs\<^sup>\<surd> \<Rightarrow> 'cs\<^sup>\<Omega> \<rightarrow> 'a::pcpo) \<rightarrow> 'cs\<^sup>\<Omega> \<rightarrow> 'a" where
+"sb_split \<equiv> \<Lambda> k sb. fup\<cdot>(\<Lambda> sbe. k sbe\<cdot>(sbRt\<cdot>sb))\<cdot>(sbHdElem_h_cont\<cdot>sb)"
 
-lemma sb_case_insert:"sb_case\<cdot>k\<cdot>sb = (case sbHdElem_h_cont\<cdot>sb of up\<cdot>(sbe::'b\<^sup>\<surd>) \<Rightarrow> k sbe\<cdot>(sbRt\<cdot>sb))"
-  apply(simp add: sb_case_def)
+text\<open>The @{const sb_split} function takes a function that describes
+the split wise mapping of a @{type sbElem} and a \gls{sb} and 
+returns a function, that only takes a \gls{sb} as an input. And maps
+its first element accordingly.\<close>
+
+lemma sb_split_insert:"sb_split\<cdot>k\<cdot>sb = (case sbHdElem_h_cont\<cdot>sb of 
+up\<cdot>(sbe::'b\<^sup>\<surd>) \<Rightarrow> k sbe\<cdot>(sbRt\<cdot>sb))"
+  apply(simp add: sb_split_def)
   apply(subst beta_cfun)
   apply(intro cont2cont,simp_all)
   using cont2cont_fst cont_fst cont_snd discr_cont3 by blast
 
+text\<open>Interestingly, the output of @{const sb_split} is only strict 
+by definition, if the domain of its input is not empty. For the
+empty domain it behaves according to the function it gets as a
+input.\<close>
 
-lemma sb_cases_bot:"\<not>(chDomEmpty (TYPE ('cs))) \<Longrightarrow> sb_case\<cdot>f\<cdot>(\<bottom>::'cs\<^sup>\<Omega>) = \<bottom>"
-  by(simp add: sb_case_insert sbHdElem_h_cont.rep_eq sbHdElem_h_def chDom_def)
+theorem sb_splits_bot:
+"\<not>(chDomEmpty (TYPE ('cs))) \<Longrightarrow> sb_split\<cdot>f\<cdot>(\<bottom>::'cs\<^sup>\<Omega>) = \<bottom>"
+  by(simp add: sb_split_insert sbHdElem_h_cont.rep_eq sbHdElem_h_def 
+      chDom_def)
 
-lemma sb_cases_sbe[simp]:"sb_case\<cdot>f\<cdot>(sbECons sbe\<cdot>sb) = f sbe\<cdot>(sb)"
-  apply (subst sb_case_insert)
+text\<open>Hence, it is only a helper function construct mappings over 
+\Gls{sb} from a step wise mapping over @{type sbElem}s.\<close>
+
+theorem sb_splits_sbe[simp]:"sb_split\<cdot>f\<cdot>(sbe \<bullet>\<^sup>\<surd> sb) = f sbe\<cdot>sb"
+  apply (subst sb_split_insert)
   apply (subst sbrt_sbecons)
   by(simp add: sbHdElem_h_cont.rep_eq sbhdelem_h_sbe)
 
@@ -444,7 +534,7 @@ lemma settersb_epsbot[simp]:"setterSB\<cdot>\<epsilon> = \<bottom>"
 
 (* TODO : Dokumentireen! *)
 definition getterSB::"'cs\<^sup>\<Omega> \<rightarrow> 'a stream" where
-"getterSB \<equiv> fix\<cdot>(\<Lambda> h. sb_case\<cdot>(\<lambda>sbe. \<Lambda> sb. updis (getter sbe) && h\<cdot>sb))"
+"getterSB \<equiv> fix\<cdot>(\<Lambda> h. sb_split\<cdot>(\<lambda>sbe. \<Lambda> sb. updis (getter sbe) && h\<cdot>sb))"
 
 lemma gettersb_unfold[simp]:"getterSB\<cdot>(sbe \<bullet>\<^sup>\<surd> sb) = \<up>(getter sbe) \<bullet> getterSB\<cdot>sb"
   unfolding getterSB_def
@@ -458,7 +548,7 @@ lemma gettersb_emptyfix:"chDomEmpty (TYPE ('cs)) \<Longrightarrow> getterSB\<cdo
 lemma gettersb_realboteps[simp]:"\<not>(chDomEmpty (TYPE ('cs))) \<Longrightarrow> getterSB\<cdot>\<bottom> = \<epsilon>"
   unfolding getterSB_def
   apply(subst fix_eq)
-  by (simp add: sb_cases_bot)
+  by (simp add: sb_splits_bot)
 
 lemma assumes "chDomEmpty (TYPE ('cs))"
   shows "(getterSB\<cdot>sb) = (sinftimes(\<up>(a)))"

@@ -36,7 +36,7 @@ definition ndaTransition::"('state::type, 'in::{chan, finite}, 'out) ndAutomaton
 definition ndaInitConfig::"('state::type, 'in::{chan, finite}, 'out) ndAutomaton \<rightarrow> ('state \<times>'out\<^sup>\<Omega>)set" where
 "ndaInitConfig = (\<Lambda> aut. (snd(Rep_ndAutomaton aut)))"
 
-lemma ndastatesem_mono[simp]:"mono (\<lambda>h state. {sb_case\<cdot>(\<lambda>sbe. \<Lambda> sb.
+lemma ndastatesem_mono[simp]:"mono (\<lambda>h state. {sb_split\<cdot>(\<lambda>sbe. \<Lambda> sb.
     (let (nextSPF, output) = f' sbe in
                             output \<bullet>\<^sup>\<Omega> nextSPF\<cdot>sb))
 
@@ -51,7 +51,7 @@ lemma ndastatesem_mono[simp]:"mono (\<lambda>h state. {sb_case\<cdot>(\<lambda>s
   by auto
 
 definition ndaStateSem :: "('s::type, 'in::{chan, finite}, 'out) ndAutomaton \<Rightarrow> ('s \<Rightarrow> ('in\<^sup>\<Omega> \<rightarrow> 'out\<^sup>\<Omega>) set)" where
-"ndaStateSem nda \<equiv> gfp (\<lambda>h state. {sb_case\<cdot>(\<lambda> sbe. \<Lambda> sb.
+"ndaStateSem nda \<equiv> gfp (\<lambda>h state. {sb_split\<cdot>(\<lambda> sbe. \<Lambda> sb.
     (let (nextSPF, output) = f' sbe in
                             output \<bullet>\<^sup>\<Omega> nextSPF\<cdot>sb))
 
@@ -59,7 +59,7 @@ definition ndaStateSem :: "('s::type, 'in::{chan, finite}, 'out) ndAutomaton \<R
         \<and> ( \<forall>sbe . snd (f' sbe) = snd (f sbe) \<and> fst (f' sbe) \<in> h (fst (f sbe)))})"
     (* TODO: Schöner! *)
 
-lemma ndastatesem_unfold:"ndaStateSem nda s = {sb_case\<cdot>(\<lambda> sbe. \<Lambda> sb. let (nextSPF, output) = f' sbe in output \<bullet>\<^sup>\<Omega> nextSPF\<cdot>sb)|
+lemma ndastatesem_unfold:"ndaStateSem nda s = {sb_split\<cdot>(\<lambda> sbe. \<Lambda> sb. let (nextSPF, output) = f' sbe in output \<bullet>\<^sup>\<Omega> nextSPF\<cdot>sb)|
      f f' .(\<forall>sbe. f sbe \<in> (ndaTransition\<cdot>nda) s sbe \<and>
             (\<forall>sbe. snd (f' sbe) = snd (f sbe) \<and> fst (f' sbe) \<in> ndaStateSem nda (fst (f sbe))))}"
   unfolding ndaStateSem_def
