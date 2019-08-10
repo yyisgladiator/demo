@@ -35,7 +35,7 @@ session "bundle" (mustWork) in "bundle" = "stream" +
 
 session "spf" (mustWork) in "spf" = "bundle" +
   description "Composition of Stream Processing Functions + Weak-Causal and Strong-Causal Components"
-  options [quick_and_dirty = false, browser_info, document = pdf,document_variants="outline=/proof,-corollary"]
+  options [quick_and_dirty = false, browser_info, document = pdf,document_variants="outline=-lemma,-proof",document_tags="lemma%lemma"]
   theories
     SPF
     SPFcomp
@@ -48,7 +48,7 @@ session "spf" (mustWork) in "spf" = "bundle" +
 
 session "automaton" (mustWork) in "automatons" = "spf" +
   description "Deterministic and Non-Deterministic Automatons based on Rum96"
-  options [quick_and_dirty = true, browser_info, document = pdf,document_variants="outline=/proof"]
+  options [quick_and_dirty = true, browser_info, document = pdf,document_variants="outline=-lemma,-proof",document_tags="lemma%lemma"]
   theories
     dAutomaton
     dAutomaton_causal

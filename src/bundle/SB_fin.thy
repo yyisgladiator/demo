@@ -704,5 +704,6 @@ lemma "getter A = getter B \<Longrightarrow> A = B"
   by (metis set_get)
 
 end
-
+(*<*)
 end
+(*>*)
