@@ -738,7 +738,7 @@ lemma sbtake_len:
 subsubsection \<open>Converter from SB to sbElem\<close>
 
 text\<open>Converting a \gls{sb} to a @{type sbElem} is rather complex. 
-The main goal is to obtain the first slice of a \gsl{sb} as a 
+The main goal is to obtain the first slice of a \gls{sb} as a 
 @{type sbElem}. This is not possible, if there is an empty stream in
 the bundle domain, hence: 
   \<^item> if the domain is empty, the head element is @{const None}
@@ -793,7 +793,7 @@ abbreviation sbHdElem_abbr :: "'c\<^sup>\<Omega> \<Rightarrow> 'c\<^sup>\<surd>"
 (*>*)
 paragraph \<open>sbHdElem Properties \\\<close>
 
-text\<open>Our @{const sbHdElem} operator maps each \gsl{sb} to a 
+text\<open>Our @{const sbHdElem} operator maps each \gls{sb} to a 
 corresponding @{type sbElem} exactly as intended. If the domain of 
 the \gls{sb} is empty, it results in the @{const None} 
 @{type sbElem} and if the input bundle contains no empty stream, the
