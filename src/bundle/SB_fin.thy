@@ -419,8 +419,14 @@ by definition, if the domain of its input is not empty. For the
 empty domain it behaves according to the function it gets as a
 input.\<close>
 
-theorem sb_splits_bot:
+lemma sb_splits_bot[simp]:
 "\<not>(chDomEmpty (TYPE ('cs))) \<Longrightarrow> sb_split\<cdot>f\<cdot>(\<bottom>::'cs\<^sup>\<Omega>) = \<bottom>"
+  by(simp add: sb_split_insert sbHdElem_h_cont.rep_eq sbHdElem_h_def 
+      chDom_def)
+
+theorem sb_splits_leastbot[simp]:
+"\<not>(chDomEmpty (TYPE ('cs))) \<Longrightarrow> sbIsLeast sb
+  \<Longrightarrow> sb_split\<cdot>f\<cdot>(sb::'cs\<^sup>\<Omega>) = \<bottom>"
   by(simp add: sb_split_insert sbHdElem_h_cont.rep_eq sbHdElem_h_def 
       chDom_def)
 
@@ -433,42 +439,40 @@ theorem sb_splits_sbe[simp]:"sb_split\<cdot>f\<cdot>(sbe \<bullet>\<^sup>\<surd>
   by(simp add: sbHdElem_h_cont.rep_eq sbhdelem_h_sbe)
 
 
-subsection\<open>Datatype Constructors for SBs\<close>
-(*<*)
-(* FYI: the old approach from v2 to create the datatype is not 
-really reusable, 
-  because: 
-      lift_definition elem_raw_i :: "int \<Rightarrow> ndaExampleMessage 
-sbElem" is
-  Thats an old "single-channel" setter...
-  One has to replace the "ndaExampleMessage" with a "chan"... 
-but which?
-  There can only be ONE channel in the replacement! ! !
-  But what if the channel-datatype of the component has 2 or more 
-channels?
-*)
+subsection\<open>Datatype Constructors for SBs \label{sub:sblocals}\<close>
 
-text \<open>Motivation: I HATE freemarker and other templates. 
-  And the workflow sucks. The generator people have no idea about 
-isabelle, 
-  feature-request take FOREVER and then it might not work in every
- case\<close>
+text\<open>This section introduces two locals. Both locals use constructor
+functions to define (almost) bijective mappings.
+The first local provides two mappings. The fist one maps some 
+type \<open>'a\<close> to a @{type sbElem}. The second one maps a 
+\<open>'a\<close> @{type stream} to a \gls{sb}. It is injective , but not 
+surjective.
+The second local provides a bijektive mapping from \<open>'a \<close> to 
+\gls{sb}. In the following we will refer to there mappings as 
+setters and getters. Setters construct a @{type sbElem} or \gls{sb},
+and getters destruct them to there original type.\<close> 
 
-text\<open>Goal: Move the heavy-stuff from the Generator to Isabelle.
-  Pretty much every proof should be done in Isabelle, the generator
-  can still create datatypes, functions and so on\<close>
+text\<open>Type \<open>'a\<close> can be interpreted as a tuple. Because we have 
+almost no assumptions for \<open>'a \<close>, the user can freely choose \<open>'a\<close>. 
+Hence, he will not use the datatype \<open>M\<close>. These locals could for 
+example create setters from from \<open>'a = (nat \<times> bool) stream\<close> and 
+\<open>'a = (nat stream \<times> bool stream)\<close> to a bundle with one bool-channel
+and one nat-channel. Thus, we can construct all bundles with an
+finite domain.\<close>
 
-text\<open>Implementation: Is using Locales... \<close>
-(*>*)
+text\<open>Furthermore, those locals contain important lemmas that always
+follow from the locals assumptions. These can be accessed without 
+additional proofs after interpreting the constructor. Same goes for
+the setters and getters.\<close>
 
-text \<open>\<open>'a\<close> should be interpreted as a tuple. The goal of this local
- is to create a
-  bijective mapping from \<open>'a\<close> to \<open>'cs\<close>.
-  The user can freely choose \<open>'a\<close>, hence he will not use the 
-datatype \<open>M\<close>. 
-  for example \<open>'a = (nat \<times> bool)\<close> which maps to a bundle with
- one bool-channel and one nat-channel\<close>
+subsubsection\<open>sbElem Local\<close>
 
+text\<open>The first local needs some assumption for the constructor
+function and its types. If the domain be empty, \<open>'a \<close> 
+must be a singleton, else, the constructor has to map to a function
+that can be interpreted as a @{type sbElem}, is also has to map to 
+every possible @{type sbElem} and be injective.\<close>
+ 
 locale sbeGen =
   fixes lConstructor::"'a::countable \<Rightarrow> 'cs::{chan, finite} \<Rightarrow> M"
   assumes c_well: "\<And>a. \<not>chDomEmpty TYPE ('cs) 
@@ -481,14 +485,23 @@ locale sbeGen =
                         \<Longrightarrow> is_singleton(UNIV::'a set)"
 begin
 
+text\<open>For constructing the setter and getter function, we use our
+constructor. It essentially is our setter, if the domain is not 
+empty.\<close>
+
 lift_definition setter::"'a \<Rightarrow> 'cs\<^sup>\<surd>" is 
 "if(chDomEmpty TYPE ('cs)) then (\<lambda>_. None) else Some o lConstructor"
   using c_well sbtypeempty_sbewell by auto
+
+text\<open>The getter work analogous with the inverse constructor.\<close>
 
 definition getter::"'cs\<^sup>\<surd> \<Rightarrow> 'a" where
 "getter sbe = (case (Rep_sbElem sbe) of 
         None   \<Rightarrow> (SOME x. True)        | 
         Some f \<Rightarrow> (inv lConstructor) f)"
+
+text\<open>We can then show the bijectivity and hence, their inverse 
+behavior.\<close>
 
 theorem get_set[simp]: "getter (setter a) = a"
   unfolding getter_def
@@ -527,6 +540,12 @@ theorem set_get[simp]: "setter (getter sbe) = sbe"
 lemma "getter A = getter B \<Longrightarrow> A = B"
   by (metis set_get)
 
+text\<open>These @{const setter} and @{const getter} functions for 
+@{type sbElem}s can then be used to define setter and getter
+functions for \Gls{sb}. Because we construct those \Gls{sb} purely 
+by appending @{type sbElem}s, we can only construct a subset of all
+\Gls{sb}.\<close>  
+
 fixrec setterSB::"'a stream \<rightarrow> 'cs\<^sup>\<Omega>" where
 "setterSB\<cdot>((up\<cdot>l)&&ls) = (setter (undiscr l)) \<bullet>\<^sup>\<surd> (setterSB\<cdot>ls)" 
 
@@ -550,10 +569,12 @@ lemma settersb_strict[simp]:"setterSB\<cdot>\<epsilon> = \<bottom>"
   apply(subst fix_eq)
   by auto
 
-(* TODO : Dokumentireen! *)
 definition getterSB::"'cs\<^sup>\<Omega> \<rightarrow> 'a stream" where
 "getterSB \<equiv> fix\<cdot>(\<Lambda> h. sb_split\<cdot>
                 (\<lambda>sbe. \<Lambda> sb. updis (getter sbe) && h\<cdot>sb))"
+
+text\<open>The following theorems describe when @{const setterSB} and 
+@{const getterSB} are behave inverse to each other.\<close>
 
 lemma gettersb_unfold[simp]:
 "getterSB\<cdot>(sbe \<bullet>\<^sup>\<surd> sb) = \<up>(getter sbe) \<bullet> getterSB\<cdot>sb"
@@ -571,7 +592,13 @@ lemma gettersb_realboteps[simp]:
   "\<not>(chDomEmpty (TYPE ('cs))) \<Longrightarrow> getterSB\<cdot>\<bottom> = \<epsilon>"
   unfolding getterSB_def
   apply(subst fix_eq)
-  by (simp add: sb_splits_bot)
+  by (simp)
+
+lemma gettersb_boteps[simp]:
+  "\<not>(chDomEmpty (TYPE ('cs))) \<Longrightarrow> sbIsLeast sb \<Longrightarrow> getterSB\<cdot>sb = \<epsilon>"
+  unfolding getterSB_def
+  apply(subst fix_eq)
+  by (simp)
 
 lemma 
   assumes "chDomEmpty (TYPE ('cs))"
@@ -580,38 +607,50 @@ lemma
   using gettersb_emptyfix s2sinftimes c_empty
   by (metis (mono_tags) get_set sbtypeepmpty_sbenone)
   
- (* TODO; warning entfernen. abbreviation-prioritäten für \<infinity>?*)
-
-lemma "sbLen (setterSB\<cdot>s) = #s"
-  oops(* gilt nicht für chDomEmpty *)
+lemma "\<not>chDomEmpty TYPE('cs) \<Longrightarrow> sbLen (setterSB\<cdot>s) = #s"
+  oops
 
 lemma "a \<sqsubseteq> getterSB\<cdot>(setterSB\<cdot>a)"
   apply(induction a rule: ind)
   apply(auto)
   by (simp add: monofun_cfun_arg)
 
-lemma getset_eq[simp]:
+theorem getset_eq[simp]:
   "\<not>chDomEmpty (TYPE ('cs)) \<Longrightarrow> getterSB\<cdot>(setterSB\<cdot>a) = a"
   apply(induction a rule: ind)
-  by(auto)
+  by auto
 
 lemma "setterSB\<cdot>(getterSB\<cdot>sb) \<sqsubseteq> sb"
-  apply(induction sb)
-  apply(cases "chDomEmpty(TYPE('cs))")
-  oops
+  apply(induction sb,simp)
+  apply(cases "chDomEmpty(TYPE('cs))",simp,simp)
+  apply(subst gettersb_unfold;subst settersb_unfold)
+  by (metis cont_pref_eq1I set_get)
 
 lemma "sb1 = sb2 \<Longrightarrow> sbe \<bullet>\<^sup>\<surd> sb1 = sbe \<bullet>\<^sup>\<surd> sb2"
   by simp
 
+(*Important TODO*)
 lemma setget_eq:"(\<forall>c. #(sb \<^enum> c) = k) \<Longrightarrow>setterSB\<cdot>(getterSB\<cdot>sb) = sb"
   oops
 
+(*<*)
 fun setterList::"'a list \<Rightarrow> 'cs\<^sup>\<Omega>" where
 "setterList [] = \<bottom>" |
 "setterList (l#ls) = (setter l) \<bullet>\<^sup>\<surd> (setterList ls)" 
 
-
+(*>*)
 end
+
+subsubsection \<open>SB Local\<close>
+
+text\<open>Since the \gls{sb} setter and getter from local @{const sbeGen}
+are bijektive in all cases, we introduce another local to provide
+bijektive setters and getters for \Gls{sb}. We also have no 
+assumption for the domain. The constructor has to be injective and
+maps precisely to all possible functions, that can be lifted to
+stream bundles.\<close>
+
+(*Todo exchange c_type with sb_well assumption*)
 
 locale sbGen = 
   fixes lConstructor::" 'a::pcpo \<Rightarrow> 'cs::chan  \<Rightarrow> M stream"
@@ -620,13 +659,19 @@ locale sbGen =
     and c_surj: "\<And>f. sb_well f \<Longrightarrow> f\<in>range lConstructor"
 begin
 
+text\<open>The setter and getter defined in this local are each others
+inverse.\<close>
+
 lift_definition setter::"'a \<Rightarrow> ('cs::chan)\<^sup>\<Omega>"is"lConstructor"
   by (simp add: c_type sb_well_def)
 
 definition getter::"'cs\<^sup>\<Omega> \<Rightarrow> 'a" where
 "getter= (inv lConstructor) o  Rep_sb"
 
-lemma get_set[simp]: "getter (setter a) = a"
+text\<open>Hence, the cancel each other as shown in the following 
+theorems.\<close> 
+
+theorem get_set[simp]: "getter (setter a) = a"
   unfolding getter_def
   by (simp add: setter.rep_eq c_inj)  
 
@@ -645,13 +690,13 @@ proof(simp add: surj_def,auto)
     by (metis Rep_sb_inverse f_def)
 qed
 
-lemma set_bij: "bij setter"
+theorem set_bij: "bij setter"
   using bij_betw_def set_inj set_surj by auto
 
 lemma get_inv_set: "getter = (inv setter)"
   by (metis get_set set_surj surj_imp_inv_eq)
 
-lemma set_get[simp]: "setter (getter sbe) = sbe"
+theorem set_get[simp]: "setter (getter sbe) = sbe"
   apply(simp add: get_inv_set)
   by (meson bij_inv_eq_iff set_bij)
 
