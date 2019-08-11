@@ -317,6 +317,9 @@ lemma sbnleast_hdctype[simp]:
   apply (metis sbnleast_mex sfilter_ne_resup sfilter_sValuesl3)
   by simp
 
+lemma sbgetchid[simp]:"Abs_sb (( \<^enum> ) (x)) = x"
+  by(simp add: sbgetch_insert2)
+
 subsubsection \<open>Concatination \label{subsub:sbconc}\<close>
 
 text\<open>Concatenating two \Gls{sb} is equivalent to concatenating their 
@@ -721,9 +724,8 @@ theorem sbcons [simp]:"sbConc (sbHd\<cdot>sb)\<cdot>(sbRt\<cdot>sb) = sb"
   apply(cases "chDomEmpty TYPE('a)")
   apply (metis (full_types) sbtypeepmpty_sbbot)
   apply (simp add: sbtake_insert sbdrop_insert)
-  apply (subst sbconc_sconc,simp_all)
-  by (simp add: sbgetch_insert2)
-
+  by (subst sbconc_sconc,simp_all)
+  
 lemma sbtake_len:
   assumes "\<not>chDomEmpty TYPE('b)"
     and "Fin i \<le> sbLen (sb::'b\<^sup>\<Omega>)"
@@ -1279,6 +1281,27 @@ lemma sbunion_eqI:
     and "sb2 = (sb\<star>\<^sub>2)"
   shows "sb1 \<uplus> sb2 = sb"
   by (simp add: assms)
+
+
+lemma union_minus_nomagfst[simp]:
+        fixes sb1 ::"(('a \<union> 'b) - 'c \<union> 'd)\<^sup>\<Omega>"
+          and sb2 ::"('c \<union> 'd)\<^sup>\<Omega>"
+        shows "sb1 \<uplus>\<^sub>\<star> sb2 = ((sb1 \<uplus>\<^sub>- sb2)\<star>\<^sub>1)"
+  apply(rule sb_eqI,simp)
+  apply(case_tac "Rep c\<in> chDom TYPE('c \<union> 'd)",auto)
+  apply(simp_all add: sbgetch_insert sbunion_rep_eq,auto)
+  by (metis Rep_union_def UnCI all_not_in_conv chan_eq 
+      union_range_union)+
+
+lemma union_minus_nomagsnd[simp]:
+        fixes sb1 ::"(('a \<union> 'b) - 'c \<union> 'd)\<^sup>\<Omega>"
+          and sb2 ::"('c \<union> 'd)\<^sup>\<Omega>"
+        shows "sb1 \<uplus>\<^sub>\<star> sb2 = ((sb1 \<uplus>\<^sub>- sb2)\<star>\<^sub>2)"
+  apply(rule sb_eqI,simp)
+  apply(case_tac "Rep c\<in> chDom TYPE('c \<union> 'd)",auto)
+  apply(simp_all add: sbgetch_insert sbunion_rep_eq,auto)
+  by (metis Rep_union_def UnCI all_not_in_conv chan_eq 
+      union_range_union)+
 
 (*<*)
 end

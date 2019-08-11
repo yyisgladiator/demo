@@ -79,7 +79,7 @@ lemma spfcomp_belowI:
   apply(subst genComp_def)
   apply(simp add: spfConvert_def)
   apply(rule fix_least)
-  by (simp add: assms)
+  by(insert assms, simp)
 
 lemma spfcomp_eqI:
       fixes f::"'fIn\<^sup>\<Omega> \<rightarrow> 'fOut\<^sup>\<Omega>"
@@ -95,8 +95,8 @@ lemma spfcomp_eqI:
   apply(subst genComp_def)
   apply(simp add: spfConvert_def)
   apply(rule fix_eqI)
-   apply (simp_all add: assms)
-  by (metis assms(1) assms(4) sbunion_fst sbunion_snd)
+  apply (insert assms,simp_all)
+  by (metis assms(1) sbunion_fst sbunion_snd)
 
 lemma spfcomp2gencomp  [simp]: 
       fixes f::"'fIn\<^sup>\<Omega> \<rightarrow> 'fOut\<^sup>\<Omega>"
@@ -110,10 +110,10 @@ lemma spfcomp2gencomp  [simp]:
    apply(rule sb_eqI; auto)
   oops
 
+
 lemma spfcomp_surj_h: 
   fixes  f :: "(('a \<union> 'b) - ('c \<union> 'd))\<^sup>\<Omega> \<rightarrow> ('c \<union> 'd)\<^sup>\<Omega>"
       assumes "chDom (TYPE ('c)) \<inter> chDom (TYPE ('d)) = {}"
-
   shows "(spfConvert\<cdot>(f)) \<otimes> (spfConvert\<cdot>(f)) = f"
   apply(subst genComp_def)
   apply(simp add: spfConvert_def)
@@ -122,9 +122,12 @@ lemma spfcomp_surj_h:
    apply auto
    apply(rule sbunion_eqI)
     apply(rule cfun_arg_eqI)+
-  subgoal
-    apply(rule sb_eqI)
-    apply auto[1]
+  subgoal 
+    apply(rule sb_rep_eqI)
+    apply(simp_all add: sbgetch_insert2 assms Abs_sb_inverse sbunion_rep_eq)
+    apply(simp add: sbconvert_insert)
+    apply(subst sbgetch_insert,auto)
+    apply(simp_all add: Abs_sb_inverse)
     oops
   (* TODO: Wichtig *)
 (* Ist aber sehr komisch, gilt glaube ich nicht ... *)

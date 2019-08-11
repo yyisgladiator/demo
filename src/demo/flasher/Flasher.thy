@@ -62,18 +62,6 @@ lemma assumes "convflasherComp\<cdot>(flashInSB.setter (port_i)) = flasherSetter
     and "notSpf\<cdot>(notSetterin(port_intern)) = notSetterout port_i"
   oops
 
-lemma  spfcomp_eq:fixes f::"'fIn\<^sup>\<Omega> \<rightarrow> 'fOut\<^sup>\<Omega>"
-        and g::"'gIn\<^sup>\<Omega> \<rightarrow> 'gOut\<^sup>\<Omega>"
-      assumes "chDom (TYPE ('fOut)) \<inter> chDom (TYPE ('gOut)) = {}"
-fixes out::"('fOut \<union> 'gOut)\<^sup>\<Omega>"
-assumes "f\<cdot>(sb \<uplus>\<^sub>\<star> out) = (out\<star>)"
-    and "g\<cdot>(sb \<uplus>\<^sub>\<star> out) = (out\<star>)"
-    and "\<And>z::('fOut \<union> 'gOut)\<^sup>\<Omega>. f\<cdot>(sb \<uplus>\<^sub>\<star> z) \<uplus> g\<cdot>(sb \<uplus>\<^sub>\<star> z) = z \<Longrightarrow> out \<sqsubseteq> z"
-      shows "((f\<otimes>g)\<cdot>sb) = out"
-  apply(subst genComp_def)
-  apply(simp add: spfConvert_def)
-  apply(rule fix_eqI)
-  by (simp_all add: assms)
 (* ? ? ?
 lemma  spfcomp_magiceq:fixes f::"'fIn\<^sup>\<Omega> \<rightarrow> 'fOut\<^sup>\<Omega>"
         and g::"'gIn\<^sup>\<Omega> \<rightarrow> 'gOut\<^sup>\<Omega>"
@@ -147,7 +135,7 @@ lemma assumes "andSpf\<cdot>(andInSB.setter (port_i, port_intern)) = andOutSB.se
     and "notSpf\<cdot>(notInSB.setter(port_o)) = notOutSB.setter port_intern"
   shows "(flasherComp\<cdot>(flashInSB.setter (port_i)\<star>)) = (flashOutSB.setter (port_o,port_intern)\<star>)"
   apply(simp add: flasherComp_def convflasherComp_def spfConvert_def)
-  apply(rule spfcomp_eq,simp)
+  apply(rule spfcomp_eqI,simp)
     apply (simp add: assms)
   oops
   
