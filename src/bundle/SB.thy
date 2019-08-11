@@ -374,7 +374,7 @@ theorem sbconc_bot_r[simp]:"sb \<bullet>\<^sup>\<Omega> \<bottom> = sb"
 theorem sbconc_bot_l[simp]:"\<bottom> \<bullet>\<^sup>\<Omega> sb = sb"
   by(rule sb_eqI, simp)
 
-subsubsection \<open>Length of SBs \lable{subsub:sblen}\<close>
+subsubsection \<open>Length of SBs \label{subsub:sblen}\<close>
 
 text\<open>The length of a \gls{sb} can be interpreted differently. Since
 we will use the length of bundles to define causal \Gls{spf} and an
