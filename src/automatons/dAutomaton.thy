@@ -141,7 +141,7 @@ theorem dastatesem_weak:
   shows     "weak_well (daStateSem automat s)"
   apply (cases "chDomEmpty TYPE('in)")
   apply (metis (full_types) assms dastatesem_inempty_len fold_inf less_lnsuc sblen_empty sbtypeepmpty_sbbot weak_well_def)
-  by (metis assms spf_weakI dastatesem_weak_fin lnat_well_h2)
+  by (metis assms spf_weakI2 dastatesem_weak_fin lnat_well_h2)
 
 theorem dastatesem_least:
   assumes"(\<lambda>state. sb_split\<cdot>(\<lambda>sbe. \<Lambda> sb. snd (daTransition X state sbe) \<bullet>\<^sup>\<Omega>  
