@@ -2,7 +2,7 @@ chapter MontiBelle
 
 session "user" (mustWork) = "inc" +
   description "Globally used Channel and Message Datatypes."
-  options [quick_and_dirty = false, browser_info, document = pdf,document_variants="outline=/proof,-lemma"]
+  options [quick_and_dirty = false, browser_info, document = pdf,document_variants="outline=-lemma,-proof",document_tags="lemma%lemma"]
   theories
     Datatypes
   document_files
