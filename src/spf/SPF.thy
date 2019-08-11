@@ -1,10 +1,10 @@
 (*<*)(*:maxLineLen=68:*)
 theory SPF
-(*>*)
+
 imports bundle.SB
 
 begin
-
+(*>*)
 section \<open>Stream Processing Functions \label{sec:spf}\<close>
 
 text\<open>A deterministic component can be  modeled by a \Gls{spf}.
@@ -13,6 +13,20 @@ continuous, we do not introduce an extra type for \Gls{spf}, because
 it is only a type synonym.\<close>
 
 type_synonym ('I,'O) SPF = "('I\<^sup>\<Omega> \<rightarrow> 'O\<^sup>\<Omega>)"
+
+text\<open>However, we will introduce a function to convert the domain of 
+a component. Similar to @{const sbConvert}\ref{subsub.sbconvert}
+this makes it possible to evaluate the equality of two components
+with the same domains but different types. It also allows us to
+restrict input or output domains, hence it can be used for hiding 
+channels.\<close>
+
+definition spfConvert::"('I\<^sup>\<Omega> \<rightarrow> 'O\<^sup>\<Omega>) \<rightarrow> ('Ie\<^sup>\<Omega> \<rightarrow> 'Oe\<^sup>\<Omega>)" where
+"spfConvert \<equiv> \<Lambda> f sb. (f\<cdot>(sb\<star>)\<star>)"
+
+lemma spfconvert_eq [simp]: "spfConvert\<cdot>f = f"
+  apply(rule cfun_eqI)
+  by(simp add: spfConvert_def)
 
 subsection \<open>Causal SPFs \label{sub:cspf}\<close>
 
@@ -85,8 +99,8 @@ cpodef ('I,'O)spfw = "{f::('I\<^sup>\<Omega> \<rightarrow> 'O\<^sup>\<Omega>) . 
 lemma [simp, cont2cont]:"cont Rep_spfw"
   using cont_Rep_spfw cont_id by blast
 
-lift_definition %invisible Rep_spfw_fun::"('I,'O)spfw \<rightarrow> ('I\<^sup>\<Omega> \<rightarrow>'O\<^sup>\<Omega>)"is
-"\<lambda> spfs. Rep_spfw( spfs)"
+lift_definition %invisible Rep_spfw_fun::
+"('I,'O)spfw \<rightarrow> ('I\<^sup>\<Omega> \<rightarrow>'O\<^sup>\<Omega>)"is "\<lambda> spfs. Rep_spfw( spfs)"
   by(intro cont2cont)
 
 
@@ -160,8 +174,8 @@ cpodef ('I,'O)spfs = "{f::('I,'O)spfw . strong_well (Rep_spfw f)}"
 lemma [simp, cont2cont]:"cont Rep_spfs"
   using cont_Rep_spfs cont_id by blast
 
-lift_definition %invisible Rep_spfs_fun::"('I,'O)spfs \<rightarrow> ('I\<^sup>\<Omega> \<rightarrow>'O\<^sup>\<Omega>)"is
-"\<lambda> spfs. Rep_spfw_fun\<cdot>(Rep_spfs spfs)"
+lift_definition %invisible Rep_spfs_fun::
+"('I,'O)spfs \<rightarrow> ('I\<^sup>\<Omega> \<rightarrow>'O\<^sup>\<Omega>)"is "\<lambda> spfs. Rep_spfw_fun\<cdot>(Rep_spfs spfs)"
   by(intro cont2cont)
 
 lemma spf_strongI:
@@ -169,6 +183,15 @@ lemma spf_strongI:
   assumes "\<And>sb. lnsuc\<cdot>(sbLen sb) \<le> sbLen (spf\<cdot>sb)"
   shows "strong_well spf"
   by(simp add: strong_well_def assms)
+
+subsection \<open>Stream Processing Function Sets \label{sec:sps}\<close>
+
+text\<open>The behaviour of under-specified or nondeterministic components
+can often not be modeled by a single \gls{spf} but by a set of 
+\Gls{spf}. Similar to the \gls{spf} type, we define SPS type as a 
+type synonym.\<close> 
+
+type_synonym ('I,'O)SPS = "('I,'O)SPF set"
 
 (*<*)
 end

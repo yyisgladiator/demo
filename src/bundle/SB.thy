@@ -204,6 +204,11 @@ theorem sbgetch_insert2:"sb \<^enum> c = (Rep_sb sb) c"
   by (metis (full_types)Rep_sb_strict app_strict cnotempty_cdom 
       sbtypeepmpty_sbbot)
 
+lemma sbgetch_empty: fixes sb::"'cs\<^sup>\<Omega>"
+    assumes "Rep c \<notin> chDom TYPE('cs)"
+    shows "sb \<^enum>\<^sub>\<star> c = \<epsilon>"
+  by(simp add: sbgetch_insert assms)
+
 lemma sbhdelemchain[simp]:
   "sbHdElemWell x \<Longrightarrow>  x \<sqsubseteq> y \<Longrightarrow> sbHdElemWell y"
   apply(simp add: sbHdElemWell_def sbgetch_insert2)
@@ -369,7 +374,7 @@ theorem sbconc_bot_r[simp]:"sb \<bullet>\<^sup>\<Omega> \<bottom> = sb"
 theorem sbconc_bot_l[simp]:"\<bottom> \<bullet>\<^sup>\<Omega> sb = sb"
   by(rule sb_eqI, simp)
 
-subsubsection \<open>Length of SBs\<close>
+subsubsection \<open>Length of SBs \lable{subsub:sblen}\<close>
 
 text\<open>The length of a \gls{sb} can be interpreted differently. Since
 we will use the length of bundles to define causal \Gls{spf} and an
