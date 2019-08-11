@@ -85,7 +85,7 @@ cpodef ('I,'O)spfw = "{f::('I\<^sup>\<Omega> \<rightarrow> 'O\<^sup>\<Omega>) . 
 lemma [simp, cont2cont]:"cont Rep_spfw"
   using cont_Rep_spfw cont_id by blast
 
-lift_definition Rep_spfw_fun::"('I,'O)spfw \<rightarrow> ('I\<^sup>\<Omega> \<rightarrow>'O\<^sup>\<Omega>)"is
+lift_definition %invisible Rep_spfw_fun::"('I,'O)spfw \<rightarrow> ('I\<^sup>\<Omega> \<rightarrow>'O\<^sup>\<Omega>)"is
 "\<lambda> spfs. Rep_spfw( spfs)"
   by(intro cont2cont)
 
@@ -160,7 +160,7 @@ cpodef ('I,'O)spfs = "{f::('I,'O)spfw . strong_well (Rep_spfw f)}"
 lemma [simp, cont2cont]:"cont Rep_spfs"
   using cont_Rep_spfs cont_id by blast
 
-lift_definition Rep_spfs_fun::"('I,'O)spfs \<rightarrow> ('I\<^sup>\<Omega> \<rightarrow>'O\<^sup>\<Omega>)"is
+lift_definition %invisible Rep_spfs_fun::"('I,'O)spfs \<rightarrow> ('I\<^sup>\<Omega> \<rightarrow>'O\<^sup>\<Omega>)"is
 "\<lambda> spfs. Rep_spfw_fun\<cdot>(Rep_spfs spfs)"
   by(intro cont2cont)
 
