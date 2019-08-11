@@ -6,9 +6,26 @@ begin
 (*>*)
 section \<open>General Composition Operators\<close>
 
-text\<open>Composing two components\<close> 
+text\<open>Networks of components can be modeled as a composition of the
+modular components. A property for the complete network can then be
+derived from the properties of the modular components. This section
+introduces general composition operators for \Gls{spf} and 
+\Gls{sps}. These operators are capable of parallel, sequential and 
+feedback composition.\<close> 
 
 subsection \<open>General composition of SPFs\<close>
+
+text\<open>The composition operator over \Gls{spf} maps two \Gls{spf} to
+their composition \gls{spf}. The output of its composition is
+completely determined by a fixed point. In essence, the composed
+\gls{spf} uses its input and previous output to compute the next
+output which is equivalent to its sub \Gls{spf} output. This is done
+until a fixed point is reached.\<close>
+
+text\<open>Intuitively the resulting \gls{spf} input domain contains all
+input channels, that are not internally connected through the 
+composition. Else, not only the composition would be able to send 
+messages over the internal channels.\<close>
 
 (*cbot werden nicht verbunden; cbot können nur bei der eingabe 
 vorkommen (bei der ausgabe nicht vorgesehen, siehe BDD92 Kap3.4)*)
@@ -20,11 +37,18 @@ definition genComp::"('I1\<^sup>\<Omega> \<rightarrow> 'O1\<^sup>\<Omega>) \<rig
 abbreviation genComp_abbr (infixr "\<otimes>\<^sub>\<star>" 70) where 
 "spf1 \<otimes>\<^sub>\<star> spf2 \<equiv> genComp\<cdot>spf1\<cdot>spf2"
 
+text\<open>Hence, we restrict the signature of our general composition 
+operator to always obtain a \gls{spf} with desired input and output
+domains.\<close>
+
 abbreviation genComp_nomabbr::
 "('I1\<^sup>\<Omega> \<rightarrow> 'O1\<^sup>\<Omega>) \<Rightarrow> ('I2\<^sup>\<Omega> \<rightarrow> 'O2\<^sup>\<Omega>)
  \<Rightarrow> ((('I1 \<union> 'I2) - ('O1 \<union> 'O2))\<^sup>\<Omega> \<rightarrow> ('O1 \<union> 'O2)\<^sup>\<Omega>)" 
 (infixr "\<otimes>" 70) where "spf1 \<otimes> spf2 \<equiv> genComp\<cdot>spf1\<cdot>spf2"
 
+
+text\<open>The continuity of the composition operator holds by
+construction, because it only uses continuous functions.\<close>
 
 lemma spfcomp_eql[simp]: "genComp\<cdot>f\<cdot>g = f"
   apply(simp add: genComp_def)
@@ -32,11 +56,13 @@ lemma spfcomp_eql[simp]: "genComp\<cdot>f\<cdot>g = f"
   apply(rule fix_eqI)
   by simp+
 
+text\<open>Its commutativity is also shown in the following theorem.\<close>
+
 theorem spfcomp_commut: 
   fixes f::"'fIn\<^sup>\<Omega> \<rightarrow> 'fOut\<^sup>\<Omega>"
   and g::"'gIn\<^sup>\<Omega> \<rightarrow> 'gOut\<^sup>\<Omega>"
   assumes "chDom (TYPE ('fOut)) \<inter> chDom (TYPE ('gOut)) = {}"
-  shows  "genComp\<cdot>f\<cdot>g = genComp\<cdot>g\<cdot>f"
+  shows  "f \<otimes>\<^sub>\<star> g = g \<otimes>\<^sub>\<star> f"
   apply(rule cfun_eqI)
   apply(simp add: genComp_def)
   apply(rule arg_cong [of _ _ "Rep_cfun fix"])
@@ -60,6 +86,9 @@ lemma "genComp\<cdot>f\<cdot>g = spfConvert\<cdot>(f \<otimes> g)"
   apply auto
   apply(rule sb_eqI)
   oops 
+
+text\<open>The output of the composition depends completely on the output
+of is sub components. This is shown in the following theorems.\<close>
 
 theorem spfcomp_belowI: 
   fixes f::"'fIn\<^sup>\<Omega> \<rightarrow> 'fOut\<^sup>\<Omega>"
@@ -115,7 +144,8 @@ lemma spfcomp_surj_h:
   apply(rule cfun_arg_eqI)+
   subgoal 
   apply(rule sb_rep_eqI)
-  apply(simp_all add: sbgetch_insert2 assms Abs_sb_inverse sbunion_rep_eq)
+  apply(simp_all add: sbgetch_insert2 assms Abs_sb_inverse 
+        sbunion_rep_eq)
   apply(simp add: sbconvert_insert)
   apply(subst sbgetch_insert,auto)
   apply(simp_all add: Abs_sb_inverse)
@@ -128,7 +158,8 @@ lemma spfcomp_surj_h:
 
 
 
-definition %invisible fstcomplete:: "((('a \<union> 'b) - ('c \<union> 'd))\<^sup>\<Omega> \<rightarrow> ('c \<union> 'd)\<^sup>\<Omega>) \<rightarrow> 'a\<^sup>\<Omega> \<rightarrow> 'c\<^sup>\<Omega>" where
+definition %invisible fstcomplete::
+ "((('a \<union> 'b) - ('c \<union> 'd))\<^sup>\<Omega> \<rightarrow> ('c \<union> 'd)\<^sup>\<Omega>) \<rightarrow> 'a\<^sup>\<Omega> \<rightarrow> 'c\<^sup>\<Omega>" where
 "fstcomplete \<equiv> \<Lambda> f input. undefined"
 
 lemma spfcomp_surj:
@@ -146,6 +177,7 @@ lemma spfcomp_surj:
 
   oops
 
+(*TODO*)
 lemma sercomp:
   fixes f::"'fIn\<^sup>\<Omega> \<rightarrow> 'fOut\<^sup>\<Omega>"
   and g::"'gIn\<^sup>\<Omega> \<rightarrow> 'gOut\<^sup>\<Omega>"
@@ -166,7 +198,11 @@ lemma parcomp:
   shows "(f \<otimes> g)\<cdot>sb = f\<cdot>(sb\<star>) \<uplus> g\<cdot>(sb\<star>)"
   oops
 
-section\<open>General Composition of SPSs\<close>
+subsection\<open>General Composition of SPSs\<close>
+
+text\<open>With our general composition operator for \Gls{spf} we can also
+define the general composition operator for \Gls{sps}. It composes
+every combination of \Gls{spf} possible from both input \Gls{sps}.\<close> 
 
 definition spsComp::
 "('I1\<^sup>\<Omega> \<rightarrow> 'O1\<^sup>\<Omega>) set \<Rightarrow> ('I2\<^sup>\<Omega> \<rightarrow> 'O2\<^sup>\<Omega>) set 
@@ -183,7 +219,7 @@ lemma fixes P::"'I1\<^sup>\<Omega> \<Rightarrow> 'O1\<^sup>\<Omega> \<Rightarrow
             }"
   apply (auto simp add: spsComp_def Let_def)
   oops
-(*  by (metis spfcomp2gencomp spfcomp_eql spfcomp_eqr spfcomp_surj) *)
+(*by (metis spfcomp2gencomp spfcomp_eql spfcomp_eqr spfcomp_surj)*)
 (* Gegenbeispiel ... soweit ich sehe: 
     P = H = "ist schwachkausal"
     bleibt nicht unter der feedbackkomposition erhalten *)
