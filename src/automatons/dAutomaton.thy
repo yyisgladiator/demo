@@ -14,7 +14,7 @@ section\<open>Automatons \<close>
 
 text\<open>The behaviour of a component can be modeled by a I/O automaton.
 This section defines deterministic and non-deterministic automaton 
-types, defines their semantic mapping to \Gls{spf} and \Gls{SPS}.
+types, defines their semantic mapping to \Gls{spf} and \Gls{sps}.
 Furthermore, we take a closer look at causal automatons and use
 their properties to introduce a local that is capable of
 constructing automaton and is also providing lemmas to ease the 
