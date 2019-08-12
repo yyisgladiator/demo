@@ -76,39 +76,85 @@ lemma dawstatesem_unfolding: "(dawStateSem automat s) = sb_case\<cdot>(\<lambda>
                             output \<bullet>\<^sup>\<surd> ((dawStateSem automat) nextState\<cdot>sb))"
   by(simp add: dawStateSem_def daw2da_def,subst dastatesem_unfolding,simp add: sbECons_def prod.case_eq_if)
 
-(* TODO: einheitliche assumption für diesen fall, KEIN rohes exists ! *)
-lemma dawstatesem_bottom:assumes "\<exists>(c::'b::{finite,chan}). (sb::'b\<^sup>\<Omega>)  \<^enum>  c = \<epsilon>"
+lemma dawNextOut:
+  shows "sbe2sb (snd ((dawTransition automat) s (sbe))) = daNextOut (daw2da automat) s (sbe)"
+  apply (simp add: daNextOut_def daw2da_def)
+  done
+
+lemma dawNextState:
+  shows "(fst (dawTransition automat s (sbe))) = daNextState (daw2da automat) s (sbe)"
+  apply (simp add: daNextState_def daw2da_def)
+  done
+
+lemma dawstatesem_bottom:
+  assumes "\<not>sbHdElemWell (sb::('b::{finite,chan})\<^sup>\<Omega>)"
+  and "\<not> chDomEmpty TYPE('b)"
   shows "(dawStateSem automat s)\<cdot>sb = \<bottom>"
-  sorry
+  apply (simp add: dawStateSem_def)
+  apply (rule dastatesem_bottom)
+  apply (simp_all add: assms)
+  done
 
 lemma dawstatesem_strict:
-  shows "(dawStateSem automat s)\<cdot>\<bottom> = \<bottom>"
-  sorry  (* gilt nicht für cEmpty-Bündel *)
+  assumes "\<not> chDomEmpty TYPE('b::{finite, chan})"
+  shows "(dawStateSem automat s)\<cdot>(\<bottom>::'b\<^sup>\<Omega>) = \<bottom>"
+  apply (simp add: dawStateSem_def)
+  apply (rule dastatesem_strict)
+  apply (simp add: assms)
+  done
 
-lemma dawstatesem_step: assumes "\<And>c . sb \<^enum> c \<noteq> \<epsilon>"
-  shows "(dawStateSem automat s)\<cdot>sb = snd (dawTransition da state (sbHdElem sb)) \<bullet>\<^sup>\<surd> h (fst (dawTransition da state (sbHdElem sb)))\<cdot>(sbRt\<cdot>sb)"
-  oops
+lemma dawstatesem_step:
+  assumes "sbHdElemWell sb"
+  shows "(dawStateSem da s)\<cdot>sb = snd (dawTransition da s (sbHdElem sb)) \<bullet>\<^sup>\<surd> dawStateSem da (fst (dawTransition da s (sbHdElem sb)))\<cdot>(sbRt\<cdot>sb)"
+  apply (simp add: dawStateSem_def)
+  apply (simp add: sbECons_def)
+  apply (subst dastatesem_step)
+  apply (simp_all add: assms)
+  apply (subst daNextState_def[symmetric]) (* Change definition in dastatesem_step *)
+  apply (subst dawNextState[symmetric])
+  apply (subst daNextOut_def[symmetric]) (* Change definition in dastatesem_step *)
+  apply (subst dawNextOut)
+  apply rule
+  done
 
-lemma dawstatesem_final:assumes "\<And>c . sb \<^enum> c \<noteq> \<epsilon>"  (* Todo: einheitliche assumption *)
+lemma dawstatesem_final:
+  assumes "sbHdElemWell sb"
   shows "(dawStateSem automat s)\<cdot>sb = (let (nextState, output) = dawTransition automat s (sbHdElem sb) in
   output \<bullet>\<^sup>\<surd> dawStateSem automat nextState\<cdot>(sbRt\<cdot>sb))"
-  oops
+  apply (simp add: case_prod_unfold Let_def)
+  apply (simp add: dawStateSem_def)
+  apply (simp add: sbECons_def)
+  apply (subst dawNextOut)
+  apply (subst dawNextState)
+  apply (subst dastatesem_final)
+  apply (simp_all add: assms)
+  done
 
 lemma dawstatesem_final_h2:
   shows "(dawStateSem automat s)\<cdot>(sbECons sbe\<cdot>sb) =(let (nextState, output) = dawTransition automat s sbe in
                             output \<bullet>\<^sup>\<surd> dawStateSem automat nextState\<cdot>sb)"
-  sorry
+  apply (simp add: case_prod_unfold Let_def)
+  apply (simp add: dawStateSem_def)
+  apply (subst (2) sbECons_def)
+  apply (subst dawNextOut)
+  apply (subst dawNextState)
+  apply (subst dastatesem_final_h2)
+  apply rule
+  done
 
+(* TODO: Nicer Assumption *)
 lemma dawstatesem_weak:
-  shows     "weak_well (dawStateSem automat s)"
-  oops
+  assumes "\<And>state sbe. 1 \<le> sbLen (daNextOut (daw2da (automat::('state, 'in::{chan, finite}, 'out) dAutomaton_weak)) state sbe)"
+  shows  "weak_well (dawStateSem automat s)"
+  apply(simp add: dawStateSem_def)
+  apply(subst dastatesem_weak)
+  apply(simp_all add: assms)
+  done
 
 lemma dassem_insert:
   "dasSem automat\<cdot>sb = (dasInitOut automat) \<bullet>\<^sup>\<surd> ((dawStateSem (dAutomaton_weak.truncate automat) (dawInitState automat))\<cdot>sb)"
   apply (simp add: dasSem_def dawSem_def)
   by(simp add: dAutomaton_weak.defs dAutomaton_strong.defs)
-
-
 
 lemma dasinitout_well:"(dasInitOut
          (dAutomaton_weak.extend daw
@@ -121,13 +167,25 @@ lemma das2daw_trunc_well:"dAutomaton_weak.truncate
                   (dAutomaton_strong.fields sbe)) = da" 
   by(simp add: dAutomaton_weak.defs dAutomaton_strong.defs)
 
+(* TODO: Use dasem_bottom if possible *)
 lemma dassem_bottom:
-  shows "dasSem automat\<cdot>\<bottom> = sbe2sb (dawInitOut automat)"
-  oops
+  assumes "\<not> chDomEmpty TYPE('b::{finite,chan})"
+  shows "dasSem automat\<cdot>(\<bottom>::'b\<^sup>\<Omega>) = sbe2sb (dasInitOut automat)"
+  apply (simp add: dasSem_def dawSem_def)
+  apply (subst dawstatesem_bottom)
+  apply (simp_all add: assms)
+  apply (simp add: sbECons_def)
+  done
 
+(* TODO: Use dasem_bottom if possible *)
+(* TODO: Nicer assumption, if it cannot be dropped *)
 lemma dassem_strong:
-  shows "strong_well (dasSem automat)"
-  oops
+assumes "weak_well (dawStateSem (dAutomaton_weak.truncate sautomat) (dawInitState sautomat))"
+shows "strong_well (dasSem sautomat)"
+  apply (simp add: strong_well_def)
+  apply (simp add: dassem_insert)
+  apply (simp add: sbECons_def)
+  by (metis assms lnsuc_lnle_emb sbECons_def sbecons_len weak_well_def)
 
 section \<open>automaton to sscanl equivalence locale\<close>
 
@@ -157,7 +215,9 @@ proof(induction input arbitrary: state rule: ind)
 next
   case 2
   then show ?case
-    by (simp add: assms sbeGen.gettersb_realboteps sbeGen.settersb_epsbot sbegenfin sbegenfout dawstatesem_strict)
+    apply (simp add: assms sbeGen.gettersb_realboteps sbeGen.settersb_epsbot sbegenfin sbegenfout)
+    apply (subst dawstatesem_strict)
+    oops
 next
   case (3 a s)
   then show ?case                                                                      
