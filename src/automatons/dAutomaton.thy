@@ -65,8 +65,9 @@ definition daSem::"('s::type, 'I::{finite,chan},'O) dAutomaton
 
 paragraph\<open>Semantic Properties\<close>
 
-text\<open>\\\\\<close>
-text\<open>paragraph test \<close>
+text\<open>/smallskip\<close>
+
+text\<open> paragraph test \<close>
 
 theorem dastatesem_unfolding: "(daStateSem automat s) = 
 sb_split\<cdot>(\<lambda>sbe. \<Lambda> sb .
