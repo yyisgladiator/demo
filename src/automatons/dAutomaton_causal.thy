@@ -22,6 +22,10 @@ definition daw2da::"('state::type, 'in::chan, 'out::chan) dAutomaton_weak \<Righ
 "daw2da \<equiv> \<lambda>aut. (| daTransition =(\<lambda>s sbe. (fst(dawTransition aut s sbe),sbe2sb (snd(dawTransition aut s sbe)))),
                  daInitState = dawInitState(aut), daInitOut = \<bottom> |)"
 
+definition das2da::"('state::type, 'in::chan, 'out::chan) dAutomaton_strong \<Rightarrow> ('state::type, 'in, 'out) dAutomaton" where
+"das2da \<equiv> \<lambda>aut. (| daTransition =(\<lambda>s sbe. (fst(dawTransition aut s sbe),sbe2sb (snd(dawTransition aut s sbe)))),
+                 daInitState = dawInitState(aut), daInitOut = sbe2sb(dasInitOut aut) |)"
+
 subsection \<open>Weak Automaton Semantic options\<close>
 
 subsubsection \<open>Deterministic Automaton Semantic\<close>
@@ -62,7 +66,7 @@ definition semantik_strong::"('s::type, 'in, 'out::chan) dAutomaton_strong \<Rig
 
 
 definition dasSem :: "('s::type, 'I,'O::chan) dAutomaton_strong \<Rightarrow> ('I\<^sup>\<Omega> \<rightarrow> 'O\<^sup>\<Omega>)" where
-"dasSem da = (\<Lambda> sb. (dasInitOut da) \<bullet>\<^sup>\<surd> (dawSem (dAutomaton_weak.truncate da)\<cdot>sb))"
+"dasSem da = daSem(das2da da)"
 
 
 subsection \<open>Rum96 Automaton Semantic \<close>
@@ -121,7 +125,7 @@ lemma dawstatesem_weak:
   shows  "weak_well (dawStateSem automat s)"
   apply (simp add: dawStateSem_def)
   apply (rule dastatesem_weak)
-  apply (simp add: daw2da_def dAutomaton_weak.defs daNextOut_def)
+  apply (simp add: daw2da_def daNextOut_def)
   by (cases "chDomEmpty TYPE('O)",auto)
   
 lemma dassem_insert:
@@ -148,9 +152,8 @@ lemma dassem_bottom:
 (* TODO: Use dasem_bottom if possible *)
 (* TODO: Nicer assumption, if it cannot be dropped *)
 lemma dassem_strong:
-assumes "weak_well (dawStateSem (dAutomaton_weak.truncate sautomat) (dawInitState sautomat))"
 shows "strong_well (dasSem sautomat)"
-  apply (simp add: strong_well_def dassem_insert sbECons_def)
+  apply (simp add: strong_well dassem_insert sbECons_def)
   by (metis assms lnsuc_lnle_emb sbECons_def sbecons_len weak_well_def)
 
 section \<open>automaton to sscanl equivalence locale\<close>
