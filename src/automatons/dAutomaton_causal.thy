@@ -2,21 +2,23 @@
 theory dAutomaton_causal
   imports dAutomaton spf.SPF
 begin
+
+default_sort "{finite,chan}"
 (*>*)
 
 section \<open>Deterministic Weak Automata\<close>
 
-record ('state::type, 'in, 'out) dAutomaton_weak  =
+record ('state::type, 'in::chan, 'out::chan) dAutomaton_weak  =
   dawTransition :: "('state \<Rightarrow> 'in\<^sup>\<surd> \<Rightarrow> ('state \<times> 'out\<^sup>\<surd>))"
   dawInitState :: "'state"
 
-record ('state::type,'in,'out)dAutomaton_strong = "('state::type, 'in, 'out) dAutomaton_weak" 
+record ('state::type,'in::chan,'out::chan)dAutomaton_strong = "('state::type, 'in, 'out) dAutomaton_weak" 
                                                   + dasInitOut:: "'out\<^sup>\<surd>"
 
-definition daw2das::"('state::type, 'in, 'out) dAutomaton_weak \<Rightarrow> 'out\<^sup>\<surd> \<Rightarrow> ('state::type, 'in, 'out) dAutomaton_strong"where
+definition daw2das::"('state::type, 'in::chan, 'out::chan) dAutomaton_weak \<Rightarrow> 'out\<^sup>\<surd> \<Rightarrow> ('state::type, 'in, 'out) dAutomaton_strong"where
 "daw2das daw initout\<equiv> (dAutomaton_weak.extend daw (dAutomaton_strong.fields initout))"
 
-definition daw2da::"('state::type, 'in, 'out) dAutomaton_weak \<Rightarrow> ('state::type, 'in, 'out) dAutomaton" where
+definition daw2da::"('state::type, 'in::chan, 'out::chan) dAutomaton_weak \<Rightarrow> ('state::type, 'in, 'out) dAutomaton" where
 "daw2da \<equiv> \<lambda>aut. (| daTransition =(\<lambda>s sbe. (fst(dawTransition aut s sbe),sbe2sb (snd(dawTransition aut s sbe)))),
                  daInitState = dawInitState(aut), daInitOut = \<bottom> |)"
 
@@ -24,20 +26,20 @@ subsection \<open>Weak Automaton Semantic options\<close>
 
 subsubsection \<open>Deterministic Automaton Semantic\<close>
 
-definition semantik_weak::"('state::type, 'in::{chan,finite}, 'out::chan) dAutomaton_weak \<Rightarrow> ('in,'out)spfw"where
+definition semantik_weak::"('state::type, 'in, 'out::chan) dAutomaton_weak \<Rightarrow> ('in,'out)spfw"where
 "semantik_weak autw = Abs_spfw(daSem(daw2da autw))"
 
 
-definition dawStateSem :: "('s::type, 'I::{finite,chan},'O) dAutomaton_weak \<Rightarrow> ('s \<Rightarrow> ('I\<^sup>\<Omega> \<rightarrow> 'O\<^sup>\<Omega>))" where
+definition dawStateSem :: "('s::type, 'I,'O::chan) dAutomaton_weak \<Rightarrow> ('s \<Rightarrow> ('I\<^sup>\<Omega> \<rightarrow> 'O\<^sup>\<Omega>))" where
 "dawStateSem da = daStateSem (daw2da da)"
 
-definition dawSem :: "('s::type, 'I::{finite,chan},'O) dAutomaton_weak \<Rightarrow> ('I\<^sup>\<Omega> \<rightarrow> 'O\<^sup>\<Omega>)" where
+definition dawSem :: "('s::type, 'I,'O::chan) dAutomaton_weak \<Rightarrow> ('I\<^sup>\<Omega> \<rightarrow> 'O\<^sup>\<Omega>)" where
 "dawSem da = (\<Lambda> sb. ((dawStateSem da (dawInitState da))\<cdot>sb))"
 
 
 subsubsection \<open>Rum96 Automaton Semantic\<close>
 
-function Rum_tap::"('s::type, 'in::{chan,finite},'out) dAutomaton_weak \<Rightarrow> ('s \<Rightarrow> ('in,'out) spfw) set" where
+function Rum_tap::"('s::type, 'in,'out::chan) dAutomaton_weak \<Rightarrow> ('s \<Rightarrow> ('in,'out) spfw) set" where
 "Rum_tap aut = {h | h. \<forall>m s. \<exists>t out . ((snd(dawTransition aut s m)) = out) \<and>
                     (\<exists>h2\<in> (Rum_tap aut). \<forall>i .
           (Rep_spfw(h s))\<cdot>(m \<bullet>\<^sup>\<surd> i) = out \<bullet>\<^sup>\<surd> ((Rep_spfw(h2 t))\<cdot>i))}"
@@ -45,7 +47,7 @@ function Rum_tap::"('s::type, 'in::{chan,finite},'out) dAutomaton_weak \<Rightar
 
 (*Termination for Rum_tap necessary?*)
 
-fun Rum_ta::"('s::type, 'in::{chan,finite},'out) dAutomaton_weak \<Rightarrow> (('in,'out) spfw) set"where
+fun Rum_ta::"('s::type, 'in,'out::chan) dAutomaton_weak \<Rightarrow> (('in,'out) spfw) set"where
 "Rum_ta aut = {g | g. \<exists>h\<in>(Rum_tap aut). \<exists> s (out::'out\<^sup>\<surd>). \<forall>i.
               (Rep_spfw g)\<cdot>i = out\<bullet>\<^sup>\<surd>((Rep_spfw(h s))\<cdot>i)}"
 
@@ -55,17 +57,17 @@ subsection \<open>Strong Automaton Semantic options \<close>
 
 subsubsection \<open>Deterministic Automaton Semantic\<close>
 
-definition semantik_strong::"('s::type, 'in::{finite,chan}, 'out) dAutomaton_strong \<Rightarrow> ('in,'out)spfs"where
+definition semantik_strong::"('s::type, 'in, 'out::chan) dAutomaton_strong \<Rightarrow> ('in,'out)spfs"where
 "semantik_strong auts = Abs_spfs(semantik_weak (dAutomaton_weak.truncate auts))"
 
 
-definition dasSem :: "('s::type, 'I::{finite,chan},'O) dAutomaton_strong \<Rightarrow> ('I\<^sup>\<Omega> \<rightarrow> 'O\<^sup>\<Omega>)" where
+definition dasSem :: "('s::type, 'I,'O::chan) dAutomaton_strong \<Rightarrow> ('I\<^sup>\<Omega> \<rightarrow> 'O\<^sup>\<Omega>)" where
 "dasSem da = (\<Lambda> sb. (dasInitOut da) \<bullet>\<^sup>\<surd> (dawSem (dAutomaton_weak.truncate da)\<cdot>sb))"
 
 
 subsection \<open>Rum96 Automaton Semantic \<close>
 
-fun Rum_ta_strong::"('s::type, 'in::{chan,finite},'out) dAutomaton_strong \<Rightarrow> (('in,'out) spfs) set"where
+fun Rum_ta_strong::"('s::type, 'in,'out::chan) dAutomaton_strong \<Rightarrow> (('in,'out) spfs) set"where
 "Rum_ta_strong aut = Abs_spfs `(Rum_ta (dAutomaton_weak.truncate aut))"
 
 
@@ -115,10 +117,13 @@ lemma dawstatesem_final_h2:
 
 (* TODO: Nicer Assumption *)
 lemma dawstatesem_weak:
-  assumes "\<And>state sbe. 1 \<le> sbLen (daNextOut (daw2da (automat::('state, 'in::{chan, finite}, 'out) dAutomaton_weak)) state sbe)"
+  fixes automat::"('s,'I,'O)dAutomaton_weak"
   shows  "weak_well (dawStateSem automat s)"
-  by (simp add: dawStateSem_def dastatesem_weak assms)
-
+  apply (simp add: dawStateSem_def)
+  apply (rule dastatesem_weak)
+  apply (simp add: daw2da_def dAutomaton_weak.defs daNextOut_def)
+  by (cases "chDomEmpty TYPE('O)",auto)
+  
 lemma dassem_insert:
   "dasSem automat\<cdot>sb = (dasInitOut automat) \<bullet>\<^sup>\<surd> ((dawStateSem (dAutomaton_weak.truncate automat) (dawInitState automat))\<cdot>sb)"
   by(simp add:  dasSem_def dawSem_def dAutomaton_weak.defs dAutomaton_strong.defs)
