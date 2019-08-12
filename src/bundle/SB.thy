@@ -1227,9 +1227,6 @@ theorem sbunion_getchl[simp]:
   apply(auto simp add: sbgetch_insert sbunion_rep_eq assms)
   apply (metis Rep_union_def UnI1 assms equals0D f_inv_into_f 
          union_range_union)
-  apply (metis Rep_union_def UnCI assms f_inv_into_f 
-         union_range_union)
-  apply (metis Rep_union_def UnCI assms chan_eq union_range_union)
   by (metis Rep_union_def Un_iff assms chan_eq empty_iff 
       union_range_union)
 
@@ -1245,7 +1242,6 @@ theorem sbunion_getchr[simp]:
   apply (metis Rep_union_def UnCI assms f_inv_into_f 
          union_range_union)
   apply (metis Rep_union_def UnCI chan_eq union_range_union)
-  apply (metis Rep_union_def UnCI f_inv_into_f union_range_union)
   by (metis Rep_union_def Un_iff chan_eq empty_iff 
       union_range_union)
 
@@ -1294,9 +1290,7 @@ lemma union_minus_nomagfst[simp]:
         shows "sb1 \<uplus>\<^sub>\<star> sb2 = ((sb1 \<uplus>\<^sub>- sb2)\<star>\<^sub>1)"
   apply(rule sb_eqI,simp)
   apply(case_tac "Rep c\<in> chDom TYPE('c \<union> 'd)",auto)
-  apply(simp_all add: sbgetch_insert sbunion_rep_eq,auto)
-  by (metis Rep_union_def UnCI all_not_in_conv chan_eq 
-      union_range_union)+
+  by(simp_all add: sbgetch_insert sbunion_rep_eq)
 
 lemma union_minus_nomagsnd[simp]:
         fixes sb1 ::"(('a \<union> 'b) - 'c \<union> 'd)\<^sup>\<Omega>"
@@ -1304,9 +1298,7 @@ lemma union_minus_nomagsnd[simp]:
         shows "sb1 \<uplus>\<^sub>\<star> sb2 = ((sb1 \<uplus>\<^sub>- sb2)\<star>\<^sub>2)"
   apply(rule sb_eqI,simp)
   apply(case_tac "Rep c\<in> chDom TYPE('c \<union> 'd)",auto)
-  apply(simp_all add: sbgetch_insert sbunion_rep_eq,auto)
-  by (metis Rep_union_def UnCI all_not_in_conv chan_eq 
-      union_range_union)+
+  by(simp_all add: sbgetch_insert sbunion_rep_eq)
 
 (*<*)
 end

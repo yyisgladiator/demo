@@ -253,6 +253,37 @@ lemma chdom_in: fixes c::"'cs::chan"
   by (metis Diff_eq_empty_iff Diff_triv assms chDom_def 
       chan_botsingle rangeI)
 
+lemma abs_reduction[simp]:
+  fixes c::"'cs1::chan" 
+  assumes"Rep c\<in>chDom TYPE('cs1)"
+  and "Rep c \<in> chDom TYPE('cs2)"
+  shows "Rep ((Abs::channel\<Rightarrow> 'cs2) (Rep c)) = Rep c"
+  by (metis DiffD1 assms(2) chDom_def chan_eq)
+
+lemma abs_fail:
+  fixes c::"'cs1" 
+  assumes"Rep c\<in>chDom TYPE('cs1)"
+  and "Rep ((Abs::channel\<Rightarrow>'cs2) (Rep c)) \<noteq> Rep c"
+  shows "Rep c \<notin> chDom TYPE('cs2)"
+  using assms(1) assms(2) by auto
+
+lemma dom_ref:
+  fixes c::"'cs1" 
+  assumes"Rep c\<in>chDom TYPE('cs1)"
+  and "Rep ((Abs::channel\<Rightarrow>'cs2) (Rep c)) = Rep c"
+  shows "Rep c \<in> chDom TYPE('cs2)"
+  using assms(1) assms(2) chDom_def by fastforce
+
+lemma rep_reduction: 
+  assumes"c\<in>chDom TYPE('cs1)"
+  and " c \<in> chDom TYPE('cs2)"
+  shows "Rep ((Abs::channel\<Rightarrow> 'cs2) c) = c"
+  by (metis DiffD1 assms(2) chDom_def f_inv_into_f)
+
+lemma rep_reduction2[simp]:
+  assumes "Rep c \<in> chDom TYPE('c)"
+  shows"Abs (Rep ((Abs::channel \<Rightarrow> 'c) (Rep c))) = Abs (Rep c)"
+  using assms rep_reduction by force
 
 declare %invisible[[show_types]]
 declare %invisible[[show_consts]]

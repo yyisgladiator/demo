@@ -2,16 +2,17 @@
 theory dAutomaton
   imports bundle.SB_fin spf.SPF
 begin
-(*>*)
 
-section \<open>automaton cont2cont\<close>
 
 (*causes problems in sb.thy*)
 lemma prod_contI[cont2cont]: "(\<And>s. cont(\<lambda>f. g (f,s))) \<Longrightarrow>(\<And>f. cont (\<lambda>s. g (f,s))) \<Longrightarrow> cont g"
   by (simp add: prod_contI)
+(*>*)
 
 section \<open>Deterministic Automaton\<close>
-default_sort "chan"
+default_sort %invisible "chan"
+
+text\<open> \<close>
 
 subsection \<open>Deterministic Automaton definition \<close>
 record ('state::type, 'in, 'out::chan) dAutomaton  =
