@@ -438,6 +438,10 @@ theorem sb_splits_sbe[simp]:"sb_split\<cdot>f\<cdot>(sbe \<bullet>\<^sup>\<surd>
   apply (subst sbrt_sbecons)
   by(simp add: sbHdElem_h_cont.rep_eq sbhdelem_h_sbe)
 
+lemma sb_splits_sbe_empty[simp]:
+"chDomEmpty TYPE('cs) \<Longrightarrow> sb_split\<cdot>f\<cdot>(sb::'cs\<^sup>\<Omega>) = f sbe\<cdot>sb"
+  by (metis (full_types) sb_splits_sbe sbtypeepmpty_sbbot)
+
 
 subsection\<open>Datatype Constructors for SBs \label{sub:sblocals}\<close>
 
@@ -600,7 +604,7 @@ lemma gettersb_boteps[simp]:
   apply(subst fix_eq)
   by (simp)
 
-lemma 
+lemma gettersb_inftimes:
   assumes "chDomEmpty (TYPE ('cs))"
   shows "(getterSB\<cdot>sb) = (sinftimes(\<up>(a)))"
   apply(insert assms,subst gettersb_emptyfix,simp) 
