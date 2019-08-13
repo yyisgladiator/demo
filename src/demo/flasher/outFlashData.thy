@@ -69,8 +69,21 @@ proof -
     apply(subst fun_eq_iff,auto)
     apply(simp add: fun_eq_iff f_inv_into_f image_iff)
     using  outFlash.exhaust
+  
+  proof -
+    assume a1: "\<And>c. \<exists>a b. sbe c = buildFlashoutSBE (a, b) c"
+    { fix zz :: "bool option \<Rightarrow> bool option \<Rightarrow> outFlash"
+      obtain zza :: "outFlash \<Rightarrow> bool option" and zzb :: "outFlash \<Rightarrow> bool option" where
+        ff1: "\<forall>z. sbe z = buildFlashoutSBE (zza z, zzb z) z"
+        using a1 by moura
+      then have "(\<exists>z. zz (zza Flashout) z \<noteq> Flashcin2) \<or> (\<exists>z za. sbe (zz z za) = buildFlashoutSBE (z, za) (zz z za))"
+        by (metis outFlashChan.simps(2))
+      then have "\<exists>z za. sbe (zz z za) = buildFlashoutSBE (z, za) (zz z za)"
+        using ff1 by (metis (full_types) outFlash.exhaust outFlashChan.simps(1)) }
+    then show "\<exists>z za. \<forall>zb. sbe zb = buildFlashoutSBE (z, za) zb"
+      by (metis (no_types))
+  qed
 
-    by (smt outFlashChan.simps(1) outFlashChan.simps(2)) 
   thus ?thesis
     by auto
 qed

@@ -150,12 +150,36 @@ lemma buildandinsb_range: "(\<Union>a. sValues\<cdot>(buildAndinSB a c)) = ctype
   apply auto
   apply (metis (no_types, lifting) Andin1_rep buildandinsb_ctype contra_subsetD inAndChan.simps)
   apply(rule_tac x="\<up>(inv (Tsyn \<circ> map_option \<B>)x)" in exI,auto)
-  apply (smt Andin1_rep buildandin_range comp_apply f_inv_into_f inAndChan.elims rangeI)
-  apply (metis (no_types, lifting) Andin2_rep buildandinsb_ctype contra_subsetD inAndChan.simps)
-  apply(rule_tac x="\<up>(inv (Tsyn \<circ> map_option \<B>)x)" in exI,auto)
 
-  apply(smt Andin2_rep buildandin_range comp_apply f_inv_into_f inAndChan.elims rangeI)
-  done
+  
+ proof -
+  fix x :: M
+  assume a1: "x \<in> ctype cin1"
+  have "\<forall>f fa r m. m \<in> range (f::bool option \<Rightarrow> M) \<or> m \<notin> (\<lambda>p. inAndChan f (fa::bool option \<Rightarrow> _) p Andin1) ` r"
+    by force
+  then have "x \<in> range (Tsyn \<circ> map_option \<B>)"
+    using a1 by (metis Andin1_rep buildandin_range)
+  then show "x = Tsyn (map_option \<B> (inv (Tsyn \<circ> map_option \<B>) x))"
+    by (metis (no_types) comp_apply f_inv_into_f)
+ next
+   show"  \<And>(x::M) b::bool option stream. c = Andin2 \<Longrightarrow> x \<in> sValues\<cdot>(smap (Tsyn \<circ> map_option \<B>)\<cdot>b) \<Longrightarrow> x \<in> ctype cin2"
+    by (metis (no_types, lifting) Andin2_rep buildandinsb_ctype contra_subsetD inAndChan.simps)
+   show" \<And>x::M. c = Andin2 \<Longrightarrow> x \<in> ctype cin2 \<Longrightarrow> \<exists>b::bool option stream. x \<in> sValues\<cdot>(smap (Tsyn \<circ> map_option \<B>)\<cdot>b)"
+   apply(rule_tac x="\<up>(inv (Tsyn \<circ> map_option \<B>)x)" in exI,auto)
+   proof -
+    fix x :: M
+    assume a1: "x \<in> ctype cin2"
+     have "\<forall>f r fa m. m \<in> range (f::bool option \<Rightarrow> M) \<or> m \<notin> (\<lambda>p. inAndChan (fa::bool option \<Rightarrow> _) f p Andin2) ` r"
+        by force
+     
+    then have "x \<in> range (Tsyn \<circ> map_option \<B>)"
+      using a1  by (metis Andin2_rep buildandin_range)
+   
+    then show "x = Tsyn (map_option \<B> (inv (Tsyn \<circ> map_option \<B>) x))"
+      by (metis (no_types) comp_apply f_inv_into_f)
+    qed
+qed
+
 
 
 
@@ -172,12 +196,20 @@ proof -
     have f1: "\<forall>i M. sValues\<cdot>(sb i) \<subseteq> M \<or> \<not> ctype (Rep i) \<subseteq> M"
       by (metis ctypewell dual_order.trans)
     have f2: "ctype (Rep Andin1) \<subseteq> range(Tsyn o (map_option) \<B>)"
-           apply(smt buildandin_range f_inv_into_f inAndChan.elims rangeI subsetI)
-      done
+      proof -
+          have "\<forall>r f fa. (\<lambda>p. inAndChan (fa::bool option \<Rightarrow> M) (f::bool option \<Rightarrow> _) p Andin1) ` r \<subseteq> range fa"
+            by auto
+          then show ?thesis
+          
+            using buildandin_range by fastforce
+        qed 
     have  "ctype (Rep Andin2) \<subseteq> range(Tsyn o (map_option) \<B>)"
-      
-      apply(smt buildandin_range f_inv_into_f inAndChan.elims rangeI subsetI)
-      done
+       proof -
+     have "\<forall>r f fa. (\<lambda>p. inAndChan (fa::bool option \<Rightarrow> M) (f::bool option \<Rightarrow> _) p Andin2) ` r \<subseteq> range f"
+       by fastforce
+     then show ?thesis
+      using buildandin_range by fastforce
+   qed
     then show "\<exists>a b. \<forall>i. sb i = buildAndinSB (a,b) i"
       using f1 f2  by (smt inAnd.exhaust inAndChan.simps sValues_def smap_well)
   qed 

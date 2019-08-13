@@ -86,8 +86,8 @@ lemma buildandoutsb_range: "(\<Union>a. sValues\<cdot>(buildAndoutSB a c)) = cty
   apply auto
   apply (metis (no_types, lifting) Andout1_rep buildandoutsb_ctype contra_subsetD outAndChan.simps)
   apply(rule_tac x="\<up>(inv (Tsyn \<circ> map_option \<B>)x)" in exI,auto)
-  apply (smt Andout1_rep buildandout_range comp_apply f_inv_into_f outAndChan.elims rangeI)
-  done
+  
+  by (metis (mono_tags, lifting) Andout1_rep buildandout_range comp_eq_dest_lhs f_inv_into_f outAndChan.simps rangeI) 
 
 
 
