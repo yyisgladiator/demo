@@ -42,6 +42,16 @@ fun outFlashChan::"('nat::type \<Rightarrow> 'a::type) \<Rightarrow> ('bool::typ
 
 abbreviation "buildFlashoutSBE \<equiv> outFlashChan (Tsyn o (map_option) \<B>) (Tsyn o (map_option) \<B>)" 
 
+lemma rangecin2[simp]:"range (Tsyn o (map_option) \<B>) = ctype cin2"
+  apply(auto simp add: ctype_def)
+  by (metis option.simps(9) range_eqI)
+
+
+lemma rangecout[simp]: "range (Tsyn o (map_option) \<B>) = ctype cout"
+  apply(auto simp add: ctype_def)
+  by (metis option.simps(9) range_eqI)
+
+
 lemma buildflashout_ctype: "buildFlashoutSBE a c \<in> ctype (Rep c)"
   apply(cases c; cases a,simp)
    apply(simp_all add: ctype_def)
@@ -93,18 +103,16 @@ abbreviation "buildFlashoutSB \<equiv> outFlashChan (Rep_cfun (smap (Tsyn o (map
 
 lemma buildflashoutsb_ctype: "sValues\<cdot>(buildFlashoutSB a c) \<subseteq> ctype (Rep c)"
   apply(cases c)
-   apply auto
- 
+   apply (auto) (*to long*)
 proof -
   fix x :: M
   assume a1: "x \<in> sValues\<cdot>(buildFlashoutSB a Flashout)"
   have f2: "\<forall>z. (Tsyn \<circ> map_option \<B>) z \<in> ctype cout"
-    
     by (metis Flashout1_rep buildflashout_ctype outFlashChan.simps(1))
-    obtain ss :: "bool option stream \<times> bool option stream \<Rightarrow> bool option stream" where
-    "x \<in> (Tsyn \<circ> map_option \<B>) ` sValues\<cdot>(ss a)"
-     using a1 by (metis outFlashChan.simps(1) old.prod.exhaust smap_sValues)
-     then show "x \<in> ctype cout"
+  obtain ss :: "bool option stream \<times> bool option stream \<Rightarrow> bool option stream" where
+         "x \<in> (Tsyn \<circ> map_option \<B>) ` sValues\<cdot>(ss a)"
+    using a1 by (metis outFlashChan.simps(1) old.prod.exhaust smap_sValues)
+  then show "x \<in> ctype cout"
     using f2 by fastforce
 next
   fix x :: M
@@ -119,49 +127,30 @@ next
 qed
   
  
-lemma rep_cfun_smap_bool_inj:"inj   (Rep_cfun (smap (Tsyn o (map_option) \<B>)))"
+lemma rep_cfun_smap_bool_inj:"inj (Rep_cfun (smap (Tsyn o (map_option) \<B>)))"
   apply(rule smap_inj)
- 
   by simp
+
 lemma buildflashoutsb_inj: "inj buildFlashoutSB"
   apply (auto simp add: inj_def)
-
   apply (metis inj_eq outFlashChan.simps(1) rep_cfun_smap_bool_inj)
- 
   by (metis inj_eq outFlashChan.simps(2) rep_cfun_smap_bool_inj)
 
+lemma invwell[simp]:"x \<in> ctype (Rep (c::outFlash)) \<Longrightarrow> Tsyn (map_option \<B> (inv (Tsyn \<circ> map_option \<B>) x)) = x"
+  apply(cases c,simp)
+  apply (metis comp_apply f_inv_into_f rangecin2 rangecout)
+  by (metis Flashcin2_rep comp_apply f_inv_into_f rangecin2)
+
 lemma buildflashoutsb_range: "(\<Union>a. sValues\<cdot>(buildFlashoutSB a c)) = ctype (Rep c)"
-  apply(cases c)
-  apply auto
+  apply(auto;cases c)
   apply (metis (no_types, lifting) Flashout1_rep buildflashoutsb_ctype contra_subsetD outFlashChan.simps)
+  apply(metis (no_types, hide_lams) Flashcin2_rep buildflashoutsb_ctype contra_subsetD outFlashChan.simps)
   apply(rule_tac x="\<up>(inv (Tsyn \<circ> map_option \<B>)x)" in exI,auto)
- proof -
-  fix x :: M
-  assume a1: "x \<in> ctype cout"
-  have "\<forall>f fa r m. m \<in> range (f::bool option \<Rightarrow> M) \<or> m \<notin> (\<lambda>p. outFlashChan f (fa::bool option \<Rightarrow> _) p Flashout) ` r"
-    by force
-  then have "x \<in> range (Tsyn \<circ> map_option \<B>)"
-    using a1 by (metis Flashout1_rep buildflashout_range)
-  then show "x = Tsyn (map_option \<B> (inv (Tsyn \<circ> map_option \<B>) x))"
-    by (metis (no_types) comp_apply f_inv_into_f)
- next
-   show" \<And>(x::M) b::bool option stream. c = Flashcin2 \<Longrightarrow> x \<in> sValues\<cdot>(smap (Tsyn \<circ> map_option \<B>)\<cdot>b) \<Longrightarrow> x \<in> ctype cin2"
-  by (metis (no_types, hide_lams) Flashcin2_rep buildflashoutsb_ctype contra_subsetD outFlashChan.simps(2))
-  show"\<And>x::M. c = Flashcin2 \<Longrightarrow> x \<in> ctype cin2 \<Longrightarrow> \<exists>b::bool option stream. x \<in> sValues\<cdot>(smap (Tsyn \<circ> map_option \<B>)\<cdot>b)"
-   apply(rule_tac x="\<up>(inv (Tsyn \<circ> map_option \<B>)x)" in exI,auto)
-   proof -
-    fix x :: M
-    assume a1: "x \<in> ctype cin2"
-     have "\<forall>f r fa m. m \<in> range (f::bool option \<Rightarrow> M) \<or> m \<notin> (\<lambda>p. outFlashChan (fa::bool option \<Rightarrow> _) f p Flashcin2) ` r"
-        by force
-     
-    then have "x \<in> range (Tsyn \<circ> map_option \<B>)"
-      using a1  by (metis Flashcin2_rep buildflashout_range)
-   
-    then show "x = Tsyn (map_option \<B> (inv (Tsyn \<circ> map_option \<B>) x))"
-      by (metis (no_types) comp_apply f_inv_into_f)
-    qed
-qed
+  apply (metis Flashout1_rep invwell)
+  apply(rule_tac x="\<up>(inv (Tsyn \<circ> map_option \<B>)x)" in exI,auto)
+  by (metis Flashcin2_rep invwell)
+
+
 lemma smap_well:"sValues\<cdot>x\<subseteq>range f \<Longrightarrow>  \<exists>s. smap f\<cdot>s = x"
   apply(rule_tac x = "smap (inv f)\<cdot>x" in exI)
   by (simp add: snths_eq smap_snth_lemma f_inv_into_f snth2sValues subset_eq)
@@ -173,46 +162,19 @@ proof -
     using assms
     by (simp add: sb_well_def) 
   hence "\<exists>prod. sb = buildFlashoutSB prod"
-    apply(subst fun_eq_iff,auto,simp add: sValues_def)
+    apply(subst fun_eq_iff,auto) (*maybe possible to make it shorter?*)
   proof -
     have f1: "\<forall>i M. sValues\<cdot>(sb i) \<subseteq> M \<or> \<not> ctype (Rep i) \<subseteq> M"
       by (metis ctypewell dual_order.trans)
     have f2: "ctype (Rep Flashout) \<subseteq> range(Tsyn o (map_option) \<B>)"
-      
-        proof -
-          have "\<forall>r f fa. (\<lambda>p. outFlashChan (fa::bool option \<Rightarrow> M) (f::bool option \<Rightarrow> _) p Flashout) ` r \<subseteq> range fa"
-            by auto
-          then show ?thesis
-            by (metis buildflashout_range)
-        qed
- 
-      
- have  "ctype (Rep Flashcin2) \<subseteq> range(Tsyn o (map_option) \<B>)"
-  
-   proof -
-     have "\<forall>r f fa. (\<lambda>p. outFlashChan (fa::bool option \<Rightarrow> M) (f::bool option \<Rightarrow> _) p Flashcin2) ` r \<subseteq> range f"
-       by fastforce
-     then show ?thesis
-       by (metis buildflashout_range)
-   qed
-   
+      using rangecout by auto
+    have  "ctype (Rep Flashcin2) \<subseteq> range(Tsyn o (map_option) \<B>)"
+      using rangecin2 by auto   
     then  show "\<exists>s y. \<forall>i. sb i = buildFlashoutSB (s,y) i"
       using f1 f2 using  outFlash.exhaust outFlashChan.simps sValues_def smap_well by smt
-(*
-   proof -
-     { fix zz :: "bool option stream \<Rightarrow> bool option stream \<Rightarrow> outFlash"
-       obtain ss :: "M stream \<Rightarrow> (bool option \<Rightarrow> M) \<Rightarrow> bool option stream" where
-         ff1: "\<forall>s f. \<not> sValues\<cdot>s \<subseteq> range f \<or> smap f\<cdot>(ss s f) = s"
-         using outFlashData.smap_well by moura
-then have "(\<exists>s. zz (ss (sb Flashout) (Tsyn \<circ> map_option \<B>)) s \<noteq> Flashcin2) \<or> (\<exists>s sa. sb (zz s sa) = buildFlashoutSB (s, sa) (zz s sa))"
-      by (metis (no_types) \<open>ctype (Rep Flashcin2) \<subseteq> range (Tsyn \<circ> map_option \<B>)\<close> f1 outFlashChan.simps(2))
-    then have "\<exists>s sa. sb (zz s sa) = buildFlashoutSB (s, sa) (zz s sa)"
-      using ff1 by (metis (full_types) f1 f2 outFlash.exhaust outFlashChan.simps(1)) }
-  then show ?thesis
-    by (metis (full_types))
-qed *)
   qed 
   thus ?thesis
     by auto
 qed
+
 end
