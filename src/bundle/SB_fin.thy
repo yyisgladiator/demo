@@ -457,6 +457,8 @@ lemma gettersb_realboteps[simp]:"\<not>(chDomEmpty (TYPE ('cs))) \<Longrightarro
   apply(subst fix_eq)
   by (simp add: sb_cases_bot)
 
+
+
 lemma assumes "chDomEmpty (TYPE ('cs))"
   shows "(getterSB\<cdot>sb) = (sinftimes(\<up>(a)))"
   apply(insert assms,subst gettersb_emptyfix,simp) 
@@ -465,31 +467,115 @@ lemma assumes "chDomEmpty (TYPE ('cs))"
   
  (* TODO; warning entfernen. abbreviation-prioritäten für \<infinity>?*)
 
-lemma "sbLen (setterSB\<cdot>s) = #s"
+
+lemma 1: assumes "\<not>chDomEmpty(TYPE('cs))"
+  shows "sbLen (setterSB\<cdot>s) = #s"
+  apply ( cases s)
+  using assms
+  using sbIsLeast_def apply force
+  apply safe
+  apply (simp add: sbLen_def)
+  apply rule
+  using assms 
+   apply simp
+  apply (simp add: Least_def)
+  apply rule
+  using assms settersb_unfold
+  sledgehammer[verbose]
+  apply(subst fix_eq)
+ 
+ 
   oops(* gilt nicht für chDomEmpty *)
 
-lemma "a \<sqsubseteq> getterSB\<cdot>(setterSB\<cdot>a)"
+lemma  "a \<sqsubseteq> getterSB\<cdot>(setterSB\<cdot>a)"
   apply(induction a rule: ind)
   apply(auto)
   by (simp add: monofun_cfun_arg)
+
+
 
 lemma getset_eq[simp]:"\<not>chDomEmpty (TYPE ('cs)) \<Longrightarrow> getterSB\<cdot>(setterSB\<cdot>a) = a"
   apply(induction a rule: ind)
   by(auto)
 
-lemma "setterSB\<cdot>(getterSB\<cdot>sb) \<sqsubseteq> sb"
+
+lemma 3: "setterSB\<cdot>(getterSB\<cdot>sb) \<sqsubseteq> sb"
   apply(induction sb)
   apply auto
   apply(cases "chDomEmpty(TYPE('cs))")
   apply (metis (full_types)minimal sbtypeepmpty_sbbot)
-  apply(simp add: sbIsLeast_def)
+   apply(simp add: sbIsLeast_def)
+  defer
+   apply (simp add: monofun_cfun_arg)
+proof - 
+  have h1: "\<And>sb::'cs\<^sup>\<Omega>. chDom TYPE('cs) \<noteq> {} \<Longrightarrow>sb\<noteq>\<bottom>"
+    sledgehammer[verbose]
+    then have 1: "\<And>sb::'cs\<^sup>\<Omega>. chDom TYPE('cs) \<noteq> {}  \<Longrightarrow>  setterSB\<cdot>(getterSB\<cdot>sb) \<sqsubseteq> sb"
+      sledgehammer learn_prover [z3]
+    apply (simp add: sbLen_def)
+  apply auto
+    using monofun_cfun_arg
+    sorry
+  then  show "\<And>sb::'cs\<^sup>\<Omega>.
+       sbLen sb = (0::lnat) \<Longrightarrow> chDom TYPE('cs) \<noteq> {} \<Longrightarrow> setterSB\<cdot>(getterSB\<cdot>sb) \<sqsubseteq> sb"
+  by simp
+  
+proof -
+  have 1: "sbLen sb = (0::lnat) \<Longrightarrow> sb =bot "
+
+   oops
+
   oops
 
 lemma "sb1 = sb2 \<Longrightarrow> sbe \<bullet>\<^sup>\<surd> sb1 = sbe \<bullet>\<^sup>\<surd> sb2"
   by simp
 
-lemma setget_eq:"(\<forall>c. #(sb \<^enum> c) = k) \<Longrightarrow>setterSB\<cdot>(getterSB\<cdot>sb) = sb"
-  oops
+lemma setget_eq2:"(\<forall>c. #(sb \<^enum> c) = k) \<Longrightarrow>setterSB\<cdot>(getterSB\<cdot>sb) = sb"
+  apply(induction sb )
+  by(auto)
+
+  unfolding setterSB_def getterSB_def
+  sledgehammer[verbose]
+  apply (cases sb)
+   apply (simp add:sbIsLeast_def)
+proof - 
+  have 1: " \<forall>c::'cs. #(sb  \<^enum>  c) = k \<Longrightarrow>  chDomEmpty TYPE('cs)"
+    apply rule
+   
+   
+   defer
+ apply (simp add: settersb_unfold)
+
+
+ proof(induction sb arbitrary: k)
+  case adm
+  then show ?case sorry
+next
+  case (least sb)
+  then show ?case
+   apply(cases "chDomEmpty(TYPE('cs))",auto)
+   apply(simp add: sbIsLeast_def)
+   apply(subgoal_tac "k=0")
+   apply(subgoal_tac "sb = \<bottom>",simp)
+   apply(simp add: sbLen_def)
+   apply(simp add: bot_sb)
+   apply(rule sb_eqI)
+   apply (metis bot_sb sbgetch_bot)
+   by (metis sblen2slen)
+next
+  case (sbeCons sbe sb)
+  then obtain kin where k_def:"lnsuc\<cdot>kin = k"
+    by (metis sbecons_len sblen2slen)
+  then have sbelen1:"\<And>c n. #((sbe::'cs\<^sup>\<surd>) \<bullet>\<^sup>\<surd> (sb::'cs\<^sup>\<Omega>)  \<^enum>  c) = lnsuc\<cdot>n \<Longrightarrow> # (sb \<^enum> c) = n"
+    sorry
+    then show ?case
+    apply simp
+    apply(subst cfun_arg_eqI[of " setterSB\<cdot>(getterSB\<cdot>sb)" sb],auto)
+    apply(subst sbeCons.IH[of kin],auto)
+    using k_def sbeCons.prems by blast 
+  oops  (* Nur für gleichlange ströme *)
+
+ 
 
 fun setterList::"'a list \<Rightarrow> 'cs\<^sup>\<Omega>" where
 "setterList [] = \<bottom>" |
