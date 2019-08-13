@@ -54,11 +54,9 @@ lemma rangecin1[simp]:"range (Tsyn o (map_option) \<B>) = ctype cin1"
   apply(auto simp add: ctype_def)
  by (metis option.simps(9) range_eqI)
 
-
 lemma rangecin2[simp]:"range (Tsyn o (map_option) \<B>) = ctype cin2"
   apply(auto simp add: ctype_def)
   by (metis option.simps(9) range_eqI)
-
 
 lemma buildandin_ctype: "buildAndinSBE a c \<in> ctype (Rep c)"
   apply(cases c; cases a;simp)
@@ -110,24 +108,19 @@ lemma buildandinsb_ctype: "sValues\<cdot>(buildAndinSB a c) \<subseteq> ctype (R
  apply (metis image_iff smap_sValues  inAndChan.simps(1) old.prod.exhaust rangeI rangecin1)
  by (metis image_iff smap_sValues  inAndChan.simps(2) old.prod.exhaust rangeI rangecin2)
 
-
-
 lemma rep_cfun_smap_bool_inj:"inj (Rep_cfun (smap (Tsyn o (map_option) \<B>)))"
   apply(rule smap_inj)
   by simp
-
 
 lemma buildandinsb_inj: "inj buildAndinSB"
   apply(rule injI)
   by (metis inAndChan.simps(1) inAndChan.simps(2) inj_eq old.prod.exhaust rep_cfun_smap_bool_inj)
 
 lemma buildandinsb_range: "(\<Union>a. sValues\<cdot>(buildAndinSB a c)) = ctype (Rep c)"
-  apply(cases c)
-  apply auto
-  apply (metis (no_types, lifting) Andin1_rep buildandinsb_ctype contra_subsetD inAndChan.simps)
+  apply(auto;cases c)
+  using buildandinsb_ctype apply blast+
   apply(rule_tac x="\<up>(inv (Tsyn \<circ> map_option \<B>)x)" in exI,auto)
   apply (metis comp_apply f_inv_into_f rangecin1)
-  apply (metis f_inv_into_f image_eqI iso_tuple_UNIV_I rangecin2 smap_sValues)
   apply(rule_tac x="\<up>(inv (Tsyn \<circ> map_option \<B>)x)" in exI,auto)
   by (metis comp_apply f_inv_into_f rangecin2)
   

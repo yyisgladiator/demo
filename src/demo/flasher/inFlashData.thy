@@ -35,6 +35,10 @@ fun inFlashChan::"('bool::type \<Rightarrow> 'a::type) \<Rightarrow> 'bool \<Rig
 
 abbreviation "buildFlashinSBE \<equiv> inFlashChan (Tsyn o (map_option) \<B>)" 
 
+lemma rangecin1[simp]:"range (Tsyn o (map_option) \<B>) = ctype cin1"
+  apply(auto simp add: ctype_def)
+ by (metis option.simps(9) range_eqI)
+
 lemma buildflashin_ctype: "buildFlashinSBE a c \<in> ctype (Rep c)"
   apply(cases c; cases a;simp)
   by(simp_all add: ctype_def)
@@ -67,27 +71,23 @@ qed
 abbreviation "buildFlashinSB \<equiv> inFlashChan (Rep_cfun (smap (Tsyn o (map_option) \<B>)))" 
 
 lemma buildflashinsb_ctype: "sValues\<cdot>(buildFlashinSB a c) \<subseteq> ctype (Rep c)"
- apply(cases c)
+  apply(cases c)
   apply auto
-   by (metis Flashin1_rep buildflashin_ctype f_inv_into_f inFlashChan.simps smap_sValues)
+  by (metis image_iff range_eqI rangecin1 smap_sValues)
 
 
 lemma rep_cfun_smap_bool_inj:"inj (Rep_cfun (smap (Tsyn o (map_option) \<B>)))"
   apply(rule smap_inj)
- 
   by simp
+
 lemma buildflashinsb_inj: "inj buildFlashinSB"
   by (metis (mono_tags, lifting) inFlashChan.simps inj_def rep_cfun_smap_bool_inj)
 
-
-
 lemma buildflashinsb_range: "(\<Union>a. sValues\<cdot>(buildFlashinSB a c)) = ctype (Rep c)"
-  apply(cases c)
-  apply auto
-  apply (metis (no_types, lifting) Flashin1_rep buildflashinsb_ctype contra_subsetD inFlashChan.simps)
+  apply(auto;cases c)
+  using buildflashinsb_ctype apply blast
   apply(rule_tac x="\<up>(inv (Tsyn \<circ> map_option \<B>)x)" in exI,auto)
-  by (metis Flashin1_rep buildflashin_range comp_apply f_inv_into_f image_cong inFlashChan.simps)
-
+  by (metis comp_apply f_inv_into_f rangecin1)
 
   
 lemma buildflashinsb_surj: assumes "sb_well sb"

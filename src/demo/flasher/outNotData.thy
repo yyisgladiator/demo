@@ -32,15 +32,20 @@ fun outNotChan::"('bool::type \<Rightarrow> 'a::type) \<Rightarrow> 'bool \<Righ
 
 abbreviation "buildNotoutSBE \<equiv> outNotChan (Tsyn o (map_option) \<B>)" 
 
+lemma rangecin2[simp]:"range (Tsyn o (map_option) \<B>) = ctype cin2"
+  apply(auto simp add: ctype_def)
+  by (metis option.simps(9) range_eqI)
+
 lemma buildnotout_ctype: "buildNotoutSBE a c \<in> ctype (Rep c)"
   apply(cases c; cases a;simp)
   by(simp_all add: ctype_def)
+
 lemma buildnotout_inj: "inj buildNotoutSBE"
-   apply (auto simp add: inj_def)
+  apply (auto simp add: inj_def)
   by (metis outNotChan.simps inj_def inj_B inj_tsyncons)+
 
 lemma buildnotout_range: "range (\<lambda>a. buildNotoutSBE a c) = ctype (Rep c)"
-    apply(cases c)
+  apply(cases c)
   apply(auto simp add: image_iff ctype_def)
   by (metis option.simps(9))+
 
@@ -62,28 +67,21 @@ abbreviation "buildNotoutSB \<equiv> outNotChan (Rep_cfun (smap (Tsyn o (map_opt
 
 lemma buildnotoutsb_ctype: "sValues\<cdot>(buildNotoutSB a c) \<subseteq> ctype (Rep c)"
  apply(cases c)
-  apply auto
-   by (metis Notout1_rep buildnotout_ctype f_inv_into_f outNotChan.simps smap_sValues)
-
+ apply auto
+ by (metis image_iff range_eqI rangecin2 smap_sValues)
 
 lemma rep_cfun_smap_bool_inj:"inj (Rep_cfun (smap (Tsyn o (map_option) \<B>)))"
   apply(rule smap_inj)
- 
   by simp
+
 lemma buildnotoutsb_inj: "inj buildNotoutSB"
    by (metis (mono_tags, lifting) outNotChan.simps inj_def rep_cfun_smap_bool_inj)
 
-
-
-
 lemma buildnotoutsb_range: "(\<Union>a. sValues\<cdot>(buildNotoutSB a c)) = ctype (Rep c)"
-  apply(cases c)
-  apply auto
-  apply (metis (no_types, lifting) Notout1_rep buildnotoutsb_ctype contra_subsetD outNotChan.simps)
+  apply(auto;cases c)
+  using buildnotoutsb_ctype apply blast
   apply(rule_tac x="\<up>(inv (Tsyn \<circ> map_option \<B>)x)" in exI,auto)
-  by (metis Notout1_rep buildnotout_range comp_apply f_inv_into_f image_cong outNotChan.simps)
-
-
+  by (metis comp_apply f_inv_into_f rangecin2)
   
 lemma buildnotoutsb_surj: assumes "sb_well sb"
   shows "sb \<in> range buildNotoutSB"
@@ -104,4 +102,5 @@ proof -
   thus ?thesis
     by auto
 qed
+
 end
