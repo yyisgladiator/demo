@@ -75,8 +75,7 @@ lemma rep_cfun_smap_bool_inj:"inj (Rep_cfun (smap (Tsyn o (map_option) \<B>)))"
 
 lemma buildandoutsb_inj: "inj buildAndoutSB"
   apply(rule injI)
- 
-  by (metis outAndChan.simps inj_eq old.prod.exhaust rep_cfun_smap_bool_inj)
+   by (metis outAndChan.simps inj_eq old.prod.exhaust rep_cfun_smap_bool_inj)
 
 
 
@@ -86,14 +85,14 @@ lemma buildandoutsb_range: "(\<Union>a. sValues\<cdot>(buildAndoutSB a c)) = cty
   apply auto
   apply (metis (no_types, lifting) Andout1_rep buildandoutsb_ctype contra_subsetD outAndChan.simps)
   apply(rule_tac x="\<up>(inv (Tsyn \<circ> map_option \<B>)x)" in exI,auto)
-  
-  by (metis (mono_tags, lifting) Andout1_rep buildandout_range comp_eq_dest_lhs f_inv_into_f outAndChan.simps rangeI) 
+   by (metis (mono_tags, lifting) Andout1_rep buildandout_range comp_eq_dest_lhs f_inv_into_f outAndChan.simps rangeI) 
 
 
 
   
 lemma buildandoutsb_surj: assumes "sb_well sb"
   shows "sb \<in> range buildAndoutSB"
+  
 proof -
   have ctypewell:"\<And> c. sValues\<cdot>(sb c) \<subseteq> ctype (Rep c)"
     using assms
