@@ -119,7 +119,6 @@ lemma dawstatesem_final_h2:
   apply (subst (2) sbECons_def)
   by (simp add: dawNextOut dawNextState dastatesem_final_h2)
 
-(* TODO: Nicer Assumption *)
 lemma dawstatesem_weak:
   fixes automat::"('s,'I,'O)dAutomaton_weak"
   shows  "weak_well (dawStateSem automat s)"
@@ -130,7 +129,7 @@ lemma dawstatesem_weak:
   
 lemma dassem_insert:
   "dasSem automat\<cdot>sb = (dasInitOut automat) \<bullet>\<^sup>\<surd> ((dawStateSem (dAutomaton_weak.truncate automat) (dawInitState automat))\<cdot>sb)"
-  by(simp add:  dasSem_def dawSem_def dAutomaton_weak.defs dAutomaton_strong.defs)
+  by (simp add:  dasSem_def dawSem_def dAutomaton_weak.defs dAutomaton_strong.defs sbECons_def  dasem_insert das2da_def dawStateSem_def daw2da_def daStateSem_def)
 
 lemma dasinitout_well:"(dasInitOut
          (dAutomaton_weak.extend daw
@@ -143,18 +142,16 @@ lemma das2daw_trunc_well:"dAutomaton_weak.truncate
                   (dAutomaton_strong.fields sbe)) = da" 
   by(simp add: dAutomaton_weak.defs dAutomaton_strong.defs)
 
-(* TODO: Use dasem_bottom if possible *)
 lemma dassem_bottom:
   assumes "\<not> chDomEmpty TYPE('b::{finite,chan})"
   shows "dasSem automat\<cdot>(\<bottom>::'b\<^sup>\<Omega>) = sbe2sb (dasInitOut automat)"
-  by (simp add: dasSem_def dawSem_def dawstatesem_bottom assms sbECons_def)
+  by (simp add: dasSem_def dawSem_def dawstatesem_bottom assms sbECons_def dasem_insert dastatesem_bottom das2da_def)
 
-(* TODO: Use dasem_bottom if possible *)
-(* TODO: Nicer assumption, if it cannot be dropped *)
 lemma dassem_strong:
+fixes sautomat::"('s,'I,'O)dAutomaton_strong"
 shows "strong_well (dasSem sautomat)"
-  apply (simp add: strong_well dassem_insert sbECons_def)
-  by (metis assms lnsuc_lnle_emb sbECons_def sbecons_len weak_well_def)
+  apply (simp add: strong_well_def dassem_insert SB.sbecons_len)
+  using dawstatesem_weak weak_well_def by blast
 
 section \<open>automaton to sscanl equivalence locale\<close>
 
