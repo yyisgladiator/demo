@@ -77,7 +77,7 @@ fun Rum_ta_strong::"('s::type, 'in,'out::chan) dAutomaton_strong \<Rightarrow> (
 
 subsection \<open>*Causal Sem lemmas \<close>
 
-lemma dawstatesem_unfolding: "(dawStateSem automat s) = sb_case\<cdot>(\<lambda>sbe. \<Lambda> sb .
+lemma dawstatesem_unfolding: "(dawStateSem automat s) = sb_split\<cdot>(\<lambda>sbe. \<Lambda> sb .
                                                   let (nextState, output) = dawTransition automat s sbe in
                             output \<bullet>\<^sup>\<surd> ((dawStateSem automat) nextState\<cdot>sb))"
   by(simp add: dawStateSem_def daw2da_def,subst dastatesem_unfolding,simp add: sbECons_def prod.case_eq_if)
@@ -183,7 +183,7 @@ proof(induction input arbitrary: state rule: ind)
 next
   case 2
   then show ?case
-    by (simp add: assms sbeGen.gettersb_realboteps sbeGen.settersb_epsbot sbegenfin sbegenfout dawstatesem_strict assms)
+    by (simp add: assms sbeGen.gettersb_realboteps sbeGen.settersb_strict sbegenfin sbegenfout dawstatesem_strict)
 next
   case (3 a s)
   then show ?case                                                                      

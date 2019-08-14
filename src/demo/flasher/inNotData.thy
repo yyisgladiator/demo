@@ -33,6 +33,10 @@ fun inNotChan::"('bool::type \<Rightarrow> 'a::type) \<Rightarrow> 'bool \<Right
 
 abbreviation "buildNotinSBE \<equiv> inNotChan (Tsyn o (map_option) \<B>)" 
 
+lemma rangecout[simp]:"range (Tsyn o (map_option) \<B>) = ctype cout"
+  apply(auto simp add: ctype_def)
+ by (metis option.simps(9) range_eqI)
+
 lemma buildnotin_ctype: "buildNotinSBE a c \<in> ctype (Rep c)"
   apply(cases c; cases a;simp)
   by(simp_all add: ctype_def)
@@ -41,11 +45,11 @@ lemma buildnotin_inj: "inj buildNotinSBE"
   apply (auto simp add: inj_def)
   by (metis inNotChan.simps inj_def inj_B inj_tsyncons)+
 
-
 lemma buildnotin_range: "range (\<lambda>a. buildNotinSBE a c) = ctype (Rep c)"
-    apply(cases c)
+  apply(cases c)
   apply(auto simp add: image_iff ctype_def)
   by (metis option.simps(9))+
+
 lemma buildnotin_surj: assumes "sbElem_well (Some sbe)"
   shows "sbe \<in> range buildNotinSBE"
 proof -
@@ -63,30 +67,24 @@ qed
 abbreviation "buildNotinSB \<equiv> inNotChan (Rep_cfun (smap (Tsyn o (map_option) \<B>)))" 
 
 lemma buildnotinsb_ctype: "sValues\<cdot>(buildNotinSB a c) \<subseteq> ctype (Rep c)"
- apply(cases c)
+  apply(cases c)
   apply auto
-   by (metis Notin1_rep buildnotin_ctype f_inv_into_f inNotChan.simps smap_sValues)
+  by (metis image_iff range_eqI rangecout smap_sValues)
 
 
 lemma rep_cfun_smap_bool_inj:"inj (Rep_cfun (smap (Tsyn o (map_option) \<B>)))"
-  apply(rule smap_inj)
- 
+  apply(rule smap_inj) 
   by simp
+
 lemma buildnotinsb_inj: "inj buildNotinSB"
    by (metis (mono_tags, lifting) inNotChan.simps inj_def rep_cfun_smap_bool_inj)
 
-
-
-
 lemma buildnotinsb_range: "(\<Union>a. sValues\<cdot>(buildNotinSB a c)) = ctype (Rep c)"
-  apply(cases c)
-  apply auto
-  apply (metis (no_types, lifting) Notin1_rep buildnotinsb_ctype contra_subsetD inNotChan.simps)
+  apply(auto;cases c)
+  using buildnotinsb_ctype apply blast
   apply(rule_tac x="\<up>(inv (Tsyn \<circ> map_option \<B>)x)" in exI,auto)
-  by (metis Notin1_rep buildnotin_range comp_apply f_inv_into_f image_cong inNotChan.simps)
-
-
-  
+  by (metis comp_apply f_inv_into_f rangecout)
+ 
 lemma buildnotinsb_surj: assumes "sb_well sb"
   shows "sb \<in> range buildNotinSB"
 proof -

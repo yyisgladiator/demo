@@ -59,9 +59,9 @@ instance M::countable
   by(countable_datatype)
 
 definition ctype::"channel \<Rightarrow> M set" where
-"ctype c \<equiv> if (cMsg c) = {} then {} else case (cTime c) of 
+"ctype c \<equiv> if cMsg c = {} then {} else case cTime c of 
                  TUntimed   \<Rightarrow> Untimed ` (cMsg c) | 
-                 TTimed     \<Rightarrow>  Timed ` {ls. set ls \<subseteq> (cMsg c)} |
+                 TTimed     \<Rightarrow> Timed ` {ls. set ls \<subseteq> (cMsg c)} |
                  TTsyn      \<Rightarrow> Tsyn ` (insert None (Some ` cMsg c))"
 
 text\<open>This is exactly what @{const ctype} does. It then checks the 
@@ -83,7 +83,7 @@ theorem ctype_empty_iff: "ctype c = {} \<longleftrightarrow> cMsg c = {}"
   apply (auto simp add: ctype_def)
   by (metis bot.extremum empty_set)
 
-theorem ctypeempty_ex:"\<exists>c. ctype c = {}"
+theorem ctypeempty_ex: "\<exists>c. ctype c = {}"
   by (simp add: cmsgempty_ex ctype_empty_iff)
 
 text\<open>Again, these properties are necessary for defining an empty 
@@ -131,14 +131,14 @@ its injectivity, the type is isomorphic to a subset of our
 class chan =
   fixes Rep :: "'a \<Rightarrow> channel"
   assumes chan_botsingle:
-      "(range Rep) \<subseteq> cEmpty \<or>
-       (range Rep) \<inter> cEmpty = {}" 
+      "range Rep \<subseteq> cEmpty \<or>
+       range Rep \<inter> cEmpty = {}" 
   assumes chan_inj[simp]:"inj Rep"
 begin
 
   abbreviation "Abs \<equiv> inv Rep"
   
-  theorem[simp]:" Abs(Rep c) = c"
+  theorem abs_rep_id[simp]:"Abs (Rep c) = c"
     by simp
 
 end
@@ -158,11 +158,12 @@ empty, if and only if the input type contains channel(s) from
 @{const cEmpty}. Then we have the empty domain.\<close>
 
 definition chDom::"'cs::chan itself \<Rightarrow> channel set" where
-"chDom a = (range (Rep::'cs \<Rightarrow> channel)) - cEmpty"
+"chDom a \<equiv> range (Rep::'cs \<Rightarrow> channel) - cEmpty"
 
 text\<open>The following abbreviation checks, if a type of @{class chan} 
 is empty.\<close>
 
+(* Die Abkürzung ist so kurz, lohnt sich das wirklich? *)
 abbreviation chDomEmpty ::"'cs::chan itself \<Rightarrow> bool" where
 "chDomEmpty cs \<equiv> chDom cs = {}"
 
@@ -184,7 +185,7 @@ text\<open>Types of \<open>somechan\<close> can transmit at least one message
 on every channel.\<close>
 
 class somechan = chan +
-  assumes chan_notempty:"(range Rep) \<inter> cEmpty = {}"
+  assumes chan_notempty: "(range Rep) \<inter> cEmpty = {}"
 begin
 
 lemma somechannotempty[simp]:"\<not>chDomEmpty(TYPE('c::somechan))"
@@ -253,11 +254,42 @@ lemma chdom_in: fixes c::"'cs::chan"
   by (metis Diff_eq_empty_iff Diff_triv assms chDom_def 
       chan_botsingle rangeI)
 
+lemma abs_reduction[simp]:
+  fixes c::"'cs1::chan" 
+  assumes"Rep c\<in>chDom TYPE('cs1)"
+  and "Rep c \<in> chDom TYPE('cs2)"
+  shows "Rep ((Abs::channel\<Rightarrow> 'cs2) (Rep c)) = Rep c"
+  by (metis DiffD1 assms(2) chDom_def chan_eq)
+
+lemma abs_fail:
+  fixes c::"'cs1" 
+  assumes"Rep c\<in>chDom TYPE('cs1)"
+  and "Rep ((Abs::channel\<Rightarrow>'cs2) (Rep c)) \<noteq> Rep c"
+  shows "Rep c \<notin> chDom TYPE('cs2)"
+  using assms(1) assms(2) by auto
+
+lemma dom_ref:
+  fixes c::"'cs1" 
+  assumes"Rep c\<in>chDom TYPE('cs1)"
+  and "Rep ((Abs::channel\<Rightarrow>'cs2) (Rep c)) = Rep c"
+  shows "Rep c \<in> chDom TYPE('cs2)"
+  using assms(1) assms(2) chDom_def by fastforce
+
+lemma rep_reduction: 
+  assumes"c\<in>chDom TYPE('cs1)"
+  and " c \<in> chDom TYPE('cs2)"
+  shows "Rep ((Abs::channel\<Rightarrow> 'cs2) c) = c"
+  by (metis DiffD1 assms(2) chDom_def f_inv_into_f)
+
+lemma rep_reduction2[simp]:
+  assumes "Rep c \<in> chDom TYPE('c)"
+  shows"Abs (Rep ((Abs::channel \<Rightarrow> 'c) (Rep c))) = Abs (Rep c)"
+  using assms rep_reduction by force
 
 declare %invisible[[show_types]]
 declare %invisible[[show_consts]]
 
-section \<open>Interconnecting Domain Types \label{sec:interdom}\<close>
+subsection \<open>Interconnecting Domain Types \label{sec:interdom}\<close>
 
 text\<open>There are two interesting interconnections between domains. 
 Intuitively, the union operator takes all channels from both domains 
@@ -265,14 +297,14 @@ and the minus operator only channels that are in the first, but not
 the second domain. But because we also have to check for channels 
 from @{const cEmpty}, its not that trivial.\<close>
 
-subsection\<open>Type union operator\<close>
+subsubsection\<open>Type union operator\<close>
 
 text\<open>The union of two domains should contain every channel of each 
 domain. So the union of two empty domains should also be empty. But 
 because the type itself can never be empty, we again have to use 
 channels in @{const cEmpty} to define the union.\<close> 
 typedef ('c1,'c2) union (infixr "\<union>" 20) = 
-        "if chDomEmpty TYPE ('c1) \<and>  chDomEmpty TYPE ('c2) 
+        "if chDomEmpty TYPE ('c1) \<and> chDomEmpty TYPE ('c2) 
             then cEmpty
             else chDom TYPE('c1) \<union> chDom TYPE('c2)" 
   apply(auto)
@@ -317,13 +349,13 @@ text\<open>After the instantiation, class definition like the
 our definition we obtain the domain of the union type and proof, 
 that it is indeed the union of the two sub domains.\<close>
 
-theorem chdom_union[simp]:"chDom (TYPE('cs1 \<union> 'cs2)) = 
-                           chDom (TYPE ('cs1)) \<union> chDom (TYPE('cs2))"
+theorem chdom_union[simp]:"chDom TYPE('cs1 \<union> 'cs2) = 
+                           chDom TYPE ('cs1) \<union> chDom TYPE('cs2)"
   apply(subst chDom_def)
   apply(simp_all add: Rep_union_def)
   using chDom_def union_range_empty union_range_union by auto
 
-subsection\<open>Type minus operator\<close>
+subsubsection\<open>Type minus operator\<close>
 
 text\<open>Subtracting one domain from another results in the empty 
 domain. But analogous to the union, our resulting type always 
@@ -332,9 +364,9 @@ result in an empty type. Hence, our result for this case is again
 @{const cEmpty}.\<close>
 
 typedef ('c1,'c2) minus (infixr "-" 20) = 
-        "(if chDom TYPE('c1) \<subseteq> chDom TYPE('c2) 
+        "if chDom TYPE('c1) \<subseteq> chDom TYPE('c2) 
              then cEmpty
-             else chDom TYPE('c1) - chDom TYPE('c2))" 
+             else chDom TYPE('c1) - chDom TYPE('c2)" 
 apply(cases "range Rep \<subseteq> range Rep", auto)
   using cempty_exists by blast+
 
@@ -366,8 +398,8 @@ lemma minus_range_minus:"\<not>(chDom TYPE('cs1) \<subseteq> chDom TYPE('cs2)) \
 text\<open>For verifying the minus operator we again take a look at the
 resulting domain in the following theorem.\<close>
 
-theorem chdom_minus[simp]:"chDom (TYPE('cs1 - 'cs2)) = 
-                           chDom (TYPE ('cs1)) - chDom (TYPE('cs2))"
+theorem chdom_minus[simp]:"chDom TYPE('cs1 - 'cs2) = 
+                           chDom TYPE ('cs1) - chDom TYPE('cs2)"
   apply(subst chDom_def)
   apply(simp_all add: Rep_minus_def)
   using Diff_Int_distrib2 minus_range_empty minus_range_minus 

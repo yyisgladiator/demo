@@ -21,6 +21,7 @@ instance
   apply (meson Rep_outAnd_inject injI) using cMsg.elims Rep_outAnd apply simp
   using type_definition.Abs_image type_definition_outAnd typedef_finite_UNIV by fastforce
 end
+
 free_constructors outAnd for "Andout"
   unfolding Andout_def
   using Abs_outAnd_cases by auto
@@ -34,16 +35,18 @@ fun outAndChan::"('bool::type \<Rightarrow> 'a::type) \<Rightarrow> 'bool \<Righ
 abbreviation "buildAndoutSBE \<equiv> outAndChan (Tsyn o (map_option) \<B>)" 
 
 lemma buildandout_ctype: "buildAndoutSBE a c \<in> ctype (Rep c)"
-    apply(cases c; cases a;simp)
+  apply(cases c; cases a;simp)
   by(simp_all add: ctype_def)
+
 lemma buildandout_inj: "inj buildAndoutSBE"
-   apply (auto simp add: inj_def)
+  apply (auto simp add: inj_def)
   by (metis outAndChan.simps inj_def inj_B inj_tsyncons)+
 
 lemma buildandout_range: "range (\<lambda>a. buildAndoutSBE a c) = ctype (Rep c)"
- apply(cases c)
+  apply(cases c)
   apply(auto simp add: image_iff ctype_def)
   by (metis option.simps(9))+
+
 lemma buildandout_surj: assumes "sbElem_well (Some sbe)"
   shows "sbe \<in> range buildAndoutSBE"
 proof -
@@ -60,40 +63,31 @@ qed
 
 abbreviation "buildAndoutSB \<equiv> outAndChan (Rep_cfun (smap (Tsyn o (map_option) \<B>)))" 
 
-
+lemma rangecin1[simp]:"range (Tsyn o (map_option) \<B>) = ctype cout"
+ apply(auto simp add: ctype_def)
+ by (metis option.simps(9) range_eqI)
 
 lemma buildandoutsb_ctype: "sValues\<cdot>(buildAndoutSB a c) \<subseteq> ctype (Rep c)"
-
- apply(cases c)
+  apply(cases c)
   apply auto
-   by (metis Andout1_rep buildandout_ctype f_inv_into_f outAndChan.simps smap_sValues)
+  by (metis image_iff range_eqI rangecin1 smap_sValues)
 
 lemma rep_cfun_smap_bool_inj:"inj (Rep_cfun (smap (Tsyn o (map_option) \<B>)))"
   apply(rule smap_inj)
   by simp
 
-
 lemma buildandoutsb_inj: "inj buildAndoutSB"
   apply(rule injI)
- 
   by (metis outAndChan.simps inj_eq old.prod.exhaust rep_cfun_smap_bool_inj)
 
-
-
-
 lemma buildandoutsb_range: "(\<Union>a. sValues\<cdot>(buildAndoutSB a c)) = ctype (Rep c)"
-  apply(cases c)
-  apply auto
-  apply (metis (no_types, lifting) Andout1_rep buildandoutsb_ctype contra_subsetD outAndChan.simps)
+  apply(auto;cases c)
+  using buildandoutsb_ctype apply blast
   apply(rule_tac x="\<up>(inv (Tsyn \<circ> map_option \<B>)x)" in exI,auto)
-  apply (smt Andout1_rep buildandout_range comp_apply f_inv_into_f outAndChan.elims rangeI)
-  done
-
-
-
+  by (metis comp_apply f_inv_into_f outAndChan.simps rangecin1)
   
 lemma buildandoutsb_surj: assumes "sb_well sb"
-  shows "sb \<in> range buildAndoutSB"
+  shows "sb \<in> range buildAndoutSB"  
 proof -
   have ctypewell:"\<And> c. sValues\<cdot>(sb c) \<subseteq> ctype (Rep c)"
     using assms
@@ -104,8 +98,7 @@ proof -
     have f1: "\<forall>i M. sValues\<cdot>(sb i) \<subseteq> M \<or> \<not> ctype (Rep i) \<subseteq> M"
       by (metis ctypewell dual_order.trans)
     have  "ctype (Rep Andout) \<subseteq> range(Tsyn o (map_option) \<B>)"
-          by (metis buildandout_range image_cong outAndChan.simps set_eq_subset)
-  
+      by (metis buildandout_range image_cong outAndChan.simps set_eq_subset)  
     then show "\<exists>a . \<forall>i. sb i = buildAndoutSB a i"
       using f1  by (smt outAnd.exhaust outAndChan.simps sValues_def smap_well)
   qed 
