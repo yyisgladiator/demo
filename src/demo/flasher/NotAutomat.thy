@@ -26,11 +26,12 @@ lemma notingetset_eq:"notInSBE.getterSB\<cdot>(notInSBE.setterSB\<cdot>s) = s"
 lemma notoutgetset_eq:"notOutSBE.getterSB\<cdot> (notOutSBE.setterSB\<cdot>s) = s"
   by(simp)
 
-lemma notstep2smap:"notOutSBE.getterSB\<cdot>(notStep state\<cdot>(notInSBE.setterSB\<cdot>input)) = (smap not_smap.smapTransition)\<cdot>input"
-  by (metis (mono_tags, lifting) S_not.exhaust not_smap.daut2smap somechannotempty)
+lemma notstep2smap:"notOutSBE.getterSB\<cdot>(notStep Single\<cdot>(notInSBE.setterSB\<cdot>input)) = (smap not_smap.smapTransition)\<cdot>input"
+  by(simp add: not_smap.daut2smap)
 
 lemma "notOutSBE.getterSB\<cdot>(notSpf\<cdot>(notInSBE.setterSB\<cdot>input)) = \<up>(Some True) \<bullet>(smap not_smap.smapTransition)\<cdot>input"
-  by(simp add: notSpf_def dasSem_def dasinitout_well das2daw_trunc_well dawSem_def notstep2smap notStrong_def daw2das_def)
+  apply(simp add: notSpf_def dassem_insert dasinitout_well das2daw_trunc_well dawSem_def notStrong_def daw2das_def)
+  by (metis (mono_tags, lifting) S_not.exhaust notstep2smap)
 
 lemma not_step_t1:"smap not_smap.smapTransition\<cdot>(\<up>(Some bool) \<bullet> s) = \<up>(Some (\<not>bool)) \<bullet> smap not_smap.smapTransition\<cdot>s"
   by simp

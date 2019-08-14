@@ -29,12 +29,12 @@ lemma andingetset_eq:"andInSBE.getterSB\<cdot>(andInSBE.setterSB\<cdot>s) = s"
 lemma andoutgetset_eq:"andOutSBE.getterSB\<cdot> (andOutSBE.setterSB\<cdot>s) = s"
   by(simp)
 
-lemma andstep2smap:"andOutSBE.getterSB\<cdot>(andStep state\<cdot>(andInSBE.setterSB\<cdot>input)) = smap and_smap.smapTransition\<cdot>input"
-  by (metis (mono_tags, lifting) S_and.exhaust and_smap.daut2smap somechannotempty)
+lemma andstep2smap:"andOutSBE.getterSB\<cdot>(andStep Single\<cdot>(andInSBE.setterSB\<cdot>input)) = smap and_smap.smapTransition\<cdot>input"
+  by(simp add: and_smap.daut2smap)
 
 lemma "andOutSBE.getterSB\<cdot>(andSpf\<cdot>(andInSBE.setterSB\<cdot>input)) =smap and_smap.smapTransition\<cdot>input"
-  by(simp add: andSpf_def dawSem_def andstep2smap)
-
+  apply(simp add: andSpf_def dawSem_def)
+  by (metis (mono_tags, lifting) S_and.exhaust andstep2smap)
 
 lemma and_step_t1:"(smap and_smap.smapTransition)\<cdot>(\<up>((Some x),(Some y)) \<bullet> s) = \<up>(Some (x\<and>y)) \<bullet> smap and_smap.smapTransition\<cdot>s"
   by(simp)
