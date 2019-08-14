@@ -205,7 +205,7 @@ fun stateSemList::"'state \<Rightarrow> 'a list \<Rightarrow> 'b list" where
 "stateSemList state (l#ls) = snd(daTransition state l) # stateSemList (fst (daTransition state l)) ls"
 
 lemma "dawStateSem da state\<cdot>(sbeGen.setterList fin input) = sbeGen.setterList fout (stateSemList state input)"
-  sorry
+  oops
 (* TODO: initiale ausgabe ... "sscanlA" kann nichts partielles ausgben.
   dh alles oder nichts. Das kann man durch den typ abfangen!
     * weak = "chIstEmpty" als assumption (oder besser, dafür eine klasse anlegen)
