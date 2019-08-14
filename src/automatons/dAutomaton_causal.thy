@@ -145,7 +145,7 @@ lemma das2daw_trunc_well:"dAutomaton_weak.truncate
 lemma dassem_bottom:
   assumes "\<not> chDomEmpty TYPE('b::{finite,chan})"
   shows "dasSem automat\<cdot>(\<bottom>::'b\<^sup>\<Omega>) = sbe2sb (dasInitOut automat)"
-  by (simp add: dasSem_def dawSem_def dawstatesem_bottom assms sbECons_def dasem_insert dastatesem_bottom das2da_def)
+  by (simp add: dasSem_def dasem_bottom assms das2da_def)
 
 lemma dassem_strong:
 fixes sautomat::"('s,'I,'O)dAutomaton_strong"
