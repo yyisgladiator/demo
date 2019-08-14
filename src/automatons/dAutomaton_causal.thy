@@ -171,8 +171,10 @@ definition daTransitionH::"'state \<Rightarrow> 'in\<^sup>\<surd> \<Rightarrow> 
 definition "da = \<lparr> dawTransition = daTransitionH,
                  dawInitState =daInitialState \<rparr>"
 
-lemma daut2sscanl:assumes "\<not>chDomEmpty(TYPE('out))"shows"sbeGen.getterSB fout \<cdot>(dawStateSem da state\<cdot>(sbeGen.setterSB fin\<cdot>input)) =
-                   sscanlAsnd daTransition state\<cdot>input"
+lemma daut2sscanl: 
+  assumes "\<not>chDomEmpty(TYPE('out))"
+  and "\<not>chDomEmpty(TYPE('in))"
+  shows"sbeGen.getterSB fout \<cdot>(dawStateSem da state\<cdot>(sbeGen.setterSB fin\<cdot>input)) =  sscanlAsnd daTransition state\<cdot>input"
 using assms
 proof(induction input arbitrary: state rule: ind)
   case 1
@@ -181,9 +183,7 @@ proof(induction input arbitrary: state rule: ind)
 next
   case 2
   then show ?case
-    apply (simp add: assms sbeGen.gettersb_realboteps sbeGen.settersb_epsbot sbegenfin sbegenfout)
-    apply (subst dawstatesem_strict)
-    oops
+    by (simp add: assms sbeGen.gettersb_realboteps sbeGen.settersb_epsbot sbegenfin sbegenfout dawstatesem_strict assms)
 next
   case (3 a s)
   then show ?case                                                                      
@@ -228,12 +228,14 @@ begin
 
 abbreviation "smapTransition \<equiv> (\<lambda>e. snd(daTransition loopState e))" 
 
-lemma daut2smap:assumes "\<not>chDomEmpty(TYPE('out))"
-      shows"sbeGen.getterSB fout\<cdot>(dawStateSem (sscanlGen.da daTransition daInitialState fin fout) loopState\<cdot>(sbeGen.setterSB fin \<cdot>input)) = 
+lemma daut2smap:
+  assumes "\<not>chDomEmpty(TYPE('out))"
+  and "\<not>chDomEmpty(TYPE('in))"
+  shows"sbeGen.getterSB fout\<cdot>(dawStateSem (sscanlGen.da daTransition daInitialState fin fout) loopState\<cdot>(sbeGen.setterSB fin \<cdot>input)) = 
        smap smapTransition\<cdot>input"
   apply(subst sscanlGen.daut2sscanl)
-  using scscanlgenf sscanlGen.sbegenfin assms  apply auto[2] 
-  by (simp add: singlestate sscanl2smap)
+  using scscanlgenf sscanlGen.sbegenfin assms  apply auto[2]
+  by (simp_all add: assms singlestate sscanl2smap)
 
 end
 
