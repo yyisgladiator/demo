@@ -148,9 +148,9 @@ slightly more general signature. This facilitates later function
 definitions and also reduces the total framework size.\<close>
 
 lift_definition sbGetCh :: "'e \<Rightarrow> 'c\<^sup>\<Omega> \<rightarrow> M stream" is
-"(\<lambda>c sb. if Rep c\<in>chDom TYPE('c) 
+"\<lambda>c sb. if Rep c\<in>chDom TYPE('c) 
             then Rep_sb sb (Abs(Rep c)) 
-            else \<epsilon>)"
+            else \<epsilon>"
   apply(intro cont2cont)
   by(simp add: cont2cont_fun)
 
@@ -182,7 +182,7 @@ predicate states, that the first slice of an \gls{sb} with a
 non-empty domain can be transformed to a @{type sbElem}, because it 
 checks, if all streams in the bundle are not empty.\<close>
 
-definition sbHdElemWell::"'c\<^sup>\<Omega>  \<Rightarrow> bool" where
+definition sbHdElemWell::"'c\<^sup>\<Omega> \<Rightarrow> bool" where
 "sbHdElemWell  \<equiv> \<lambda> sb. (\<forall>c. sb  \<^enum>  c \<noteq> \<epsilon>)"  
 
 abbreviation sbIsLeast::"'cs\<^sup>\<Omega> \<Rightarrow> bool" where
@@ -241,7 +241,7 @@ lemma sbhdelemnotempty:
 text\<open>If a \gls{sb} \<open>x\<close> is @{const below} another \gls{sb} \<open>y\<close>, the 
 order also holds for each streams on every channel.\<close>
 
-theorem sbgetch_sbelow[simp]:"sb1 \<sqsubseteq> sb2 \<Longrightarrow> (sb1 \<^enum>\<^sub>\<star> c) \<sqsubseteq> (sb2 \<^enum>\<^sub>\<star> c)"
+theorem sbgetch_sbelow[simp]:"sb1 \<sqsubseteq> sb2 \<Longrightarrow> sb1 \<^enum>\<^sub>\<star> c \<sqsubseteq> sb2 \<^enum>\<^sub>\<star> c"
   by (simp add: mono_slen monofun_cfun_arg)
 
 lemma sbgetch_below_slen[simp]:
@@ -272,7 +272,7 @@ relation holds for the bundles as well.\<close>
 
 theorem sb_eqI:
   fixes sb1 sb2::"'cs\<^sup>\<Omega>"
-    assumes "\<And>c. Rep c\<in>chDom TYPE('cs) \<Longrightarrow>sb1 \<^enum> c = sb2 \<^enum> c"
+    assumes "\<And>c. Rep c\<in>chDom TYPE('cs) \<Longrightarrow> sb1 \<^enum> c = sb2 \<^enum> c"
     shows "sb1 = sb2"
   apply(cases "chDom TYPE('cs) \<noteq> {}")
   apply(metis Diff_eq_empty_iff Diff_triv assms chDom_def 
@@ -290,7 +290,7 @@ lemma slen_empty_eq:  assumes"chDomEmpty(TYPE('c))"
 text\<open>Lastly, the conversion from a @{type sbElem} to a \gls{sb}
 should never result in a \gls{sb} which maps its domain to \<open>\<epsilon>\<close>.\<close>
 
-theorem sbgetch_sbe2sb_nempty: assumes "\<not>chDomEmpty(TYPE('a))"
+theorem sbgetch_sbe2sb_nempty: assumes "\<not>chDomEmpty TYPE('a)"
   shows "\<forall>c::'a. sbe2sb sbe  \<^enum>  c \<noteq> \<epsilon>"
   apply (simp add: sbe2sb_def)
   apply (simp split: option.split) 
@@ -337,8 +337,8 @@ lemma sbconc_well[simp]:"sb_well (\<lambda>c. (sb1 \<^enum> c) \<bullet> (sb2 \<
   by (metis (no_types, hide_lams) Un_subset_iff dual_order.trans 
       sbgetch_ctypewell sconc_sValues)
 
-lift_definition sbConc:: "'c\<^sup>\<Omega>  \<Rightarrow>  'c\<^sup>\<Omega> \<rightarrow>  'c\<^sup>\<Omega>" is
-"\<lambda> sb1 sb2. Abs_sb(\<lambda>c. (sb1 \<^enum> c )\<bullet>(sb2 \<^enum> c))"
+lift_definition sbConc:: "'c\<^sup>\<Omega> \<Rightarrow> 'c\<^sup>\<Omega> \<rightarrow> 'c\<^sup>\<Omega>" is
+"\<lambda>sb1 sb2. Abs_sb(\<lambda>c. (sb1 \<^enum> c) \<bullet> (sb2 \<^enum> c))"
   by(intro cont2cont, simp)
 
 lemmas sbconc_insert = sbConc.rep_eq
@@ -389,7 +389,7 @@ Therefore, the length of a \gls{sb} with a non empty domain is also
 equal to the number of complete slices it consists of.\<close>
 
 definition sbLen::"'c\<^sup>\<Omega> \<Rightarrow> lnat"where
-"sbLen sb \<equiv> if (chDomEmpty TYPE('c)) 
+"sbLen sb \<equiv> if chDomEmpty TYPE('c) 
                 then \<infinity> 
                 else LEAST n . n\<in>{#(sb \<^enum> c) | c. True}"
 
@@ -403,7 +403,7 @@ text\<open>Now we verify the behavior. First we show, that all \gls{sb}
 with an empty domain are infinitely long.\<close>
 
 theorem sblen_empty[simp]:
-  assumes"chDomEmpty(TYPE('c))"
+  assumes"chDomEmpty TYPE('c)"
   shows " sbLen (sb::'c\<^sup>\<Omega>) = \<infinity>"
   by(simp add: sbLen_def assms slen_empty_eq)
 
@@ -459,7 +459,7 @@ exact length of a \gls{sb} with a non-empty domain:
     \gls{sb}\<close>
 
 theorem sblen_rule:
-  assumes "\<not>chDomEmpty(TYPE('a))" 
+  assumes "\<not>chDomEmpty TYPE('a)" 
   and "\<And>c. k \<le> #(sb \<^enum> (c::'a))"
   and "\<exists>c. #(sb \<^enum> (c :: 'a )) = k"
   shows" sbLen sb = k"
@@ -568,10 +568,10 @@ text\<open>The length of a @{type sbElem} is 1, if the domain is not
 empty, else it is \<open>\<infinity>\<close>.\<close>
 
 theorem sbelen_one[simp]:
-  assumes"\<not>chDomEmpty(TYPE('a))"
-  shows " sbLen (sbe2sb (sbe::'a\<^sup>\<surd>)) = 1"
+  assumes"\<not>chDomEmpty TYPE('cs)"
+  shows " sbLen (sbe2sb (sbe::'cs\<^sup>\<surd>)) = 1"
 proof-
-  have "\<And>c. #(sbe2sb (sbe::'a\<^sup>\<surd>) \<^enum> (c :: 'a )) = 1"
+  have "\<And>c. #(sbe2sb (sbe::'cs\<^sup>\<surd>) \<^enum> (c :: 'cs )) = 1"
     apply(simp add: sbe2sb_def)
     apply(subgoal_tac "Rep_sbElem sbe \<noteq> None")
     apply auto

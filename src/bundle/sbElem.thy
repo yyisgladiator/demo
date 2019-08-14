@@ -21,7 +21,7 @@ later theories. But how can we define a non partial function, if the
 domain of our type is empty? Then the function can never map to any 
 message in @{const ctype}. To still retain the totality property in 
 all possible cases, we define a stream bundle element as some total 
-function, if the domain is not emtpy, and as nothing (@{const None})
+function, if the domain is not empty, and as nothing (@{const None})
 if the domain is empty.\<close>
 
 subsection \<open>sbElem Definition \label{sub:sbedef}\<close>
