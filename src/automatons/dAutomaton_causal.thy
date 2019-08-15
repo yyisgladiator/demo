@@ -6,33 +6,60 @@ begin
 default_sort "chan"
 (*>*)
 
-section \<open>Deterministic Weak Automata\<close>
+subsection \<open>Deterministic Causal Automaton\<close> text\<open>\label{cauaut}\<close>
+
+text\<open>Since the causality properties are an important factor for the
+realizability of a component we introduce two automaton types that
+work similar to our general deterministic automaton, but always have
+a causal semantic. From the general causality theorems we can see
+directly how to comply with their assumptions. First, we define the 
+output of a transition function as a @{type sbElem}. This leads
+directly the weakness of an automaton.\<close>
 
 record ('state::type, 'in, 'out) dAutomaton_weak  =
   dawTransition :: "('state \<Rightarrow> 'in\<^sup>\<surd> \<Rightarrow> ('state \<times> 'out\<^sup>\<surd>))"
   dawInitState :: "'state"
 
-record ('state::type,'in,'out)dAutomaton_strong = "('state::type, 'in, 'out) dAutomaton_weak" 
-                                                  + dasInitOut:: "'out\<^sup>\<surd>"
+text\<open>The semantic of a weak automaton will never be strong, because
+it has no initial output. But expanding it with an initial output in
+from of a @{type sbElem} will directly fulfill necessary assumptions
+for its strong semantic. Hence, we define the extension of the weak
+automaton type as the strong automaton type.\<close>
 
-definition daw2das::"('state::type, 'in, 'out) dAutomaton_weak \<Rightarrow> 'out\<^sup>\<surd> \<Rightarrow> ('state::type, 'in, 'out) dAutomaton_strong"where
-"daw2das daw initout\<equiv> (dAutomaton_weak.extend daw (dAutomaton_strong.fields initout))"
+record ('state::type,'in,'out)dAutomaton_strong = 
+      "('state::type,'in,'out)dAutomaton_weak" + dasInitOut::"'out\<^sup>\<surd>"
 
-definition daw2da::"('state::type, 'in, 'out) dAutomaton_weak \<Rightarrow> ('state::type, 'in, 'out) dAutomaton" where
-"daw2da \<equiv> \<lambda>aut. (| daTransition =(\<lambda>s sbe. (fst(dawTransition aut s sbe),sbe2sb (snd(dawTransition aut s sbe)))),
-                 daInitState = dawInitState(aut), daInitOut = \<bottom> |)"
+text\<open>Records directly provide functions for arbitrary type 
+extensions, we use them for the defined type extension from weak to
+strong automatons.\<close>
 
-definition das2da::"('state::type, 'in, 'out) dAutomaton_strong \<Rightarrow> ('state::type, 'in, 'out) dAutomaton" where
-"das2da \<equiv> \<lambda>aut. (| daTransition =(\<lambda>s sbe. (fst(dawTransition aut s sbe),sbe2sb (snd(dawTransition aut s sbe)))),
-                 daInitState = dawInitState(aut), daInitOut = sbe2sb(dasInitOut aut) |)"
+definition daw2das::
+"('state::type, 'in, 'out) dAutomaton_weak 
+\<Rightarrow> 'out\<^sup>\<surd> \<Rightarrow> ('state::type, 'in, 'out) dAutomaton_strong"where
+"daw2das daw initout\<equiv> dAutomaton_weak.extend daw 
+                      (dAutomaton_strong.fields initout)"
 
-subsection \<open>Weak Automaton Semantic options\<close>
+text\<open>Furthermore, the next two functions convert our causal
+automatons to equivalent general automatons\ref{sub:detaut}.\<close>
 
-subsubsection \<open>Deterministic Automaton Semantic\<close>
+definition daw2da::"('state::type, 'in, 'out) dAutomaton_weak 
+\<Rightarrow> ('state::type, 'in, 'out) dAutomaton" where
+"daw2da \<equiv> \<lambda>aut. 
+(| daTransition =(\<lambda>s sbe. (fst(dawTransition aut s sbe),
+                           sbe2sb (snd(dawTransition aut s sbe)))),
+   daInitState  = dawInitState(aut), 
+   daInitOut    = \<bottom> |)"
 
-definition semantik_weak::"('state::type, 'in::{chan,finite}, 'out) dAutomaton_weak \<Rightarrow> ('in,'out)spfw"where
-"semantik_weak autw = Abs_spfw(daSem(daw2da autw))"
+text\<open>The only difference in those converters is the initial output.
+It is the empty bundle for weak automatons.\<close>
 
+definition das2da::"('state::type, 'in, 'out) dAutomaton_strong 
+\<Rightarrow> ('state::type, 'in, 'out) dAutomaton" where
+"das2da \<equiv> \<lambda>aut. 
+(| daTransition =(\<lambda>s sbe. (fst(dawTransition aut s sbe),
+                           sbe2sb (snd(dawTransition aut s sbe)))),
+   daInitState  = dawInitState(aut), 
+    daInitOut   = sbe2sb(dasInitOut aut) |)"
 
 definition dawStateSem :: "('s::type, 'I::{chan,finite},'O) dAutomaton_weak \<Rightarrow> ('s \<Rightarrow> ('I\<^sup>\<Omega> \<rightarrow> 'O\<^sup>\<Omega>))" where
 "dawStateSem da = daStateSem (daw2da da)"
@@ -49,7 +76,6 @@ function Rum_tap::"('s::type, 'in,'out) dAutomaton_weak \<Rightarrow> ('s \<Righ
           (Rep_spfw(h s))\<cdot>(m \<bullet>\<^sup>\<surd> i) = out \<bullet>\<^sup>\<surd> ((Rep_spfw(h2 t))\<cdot>i))}"
   by(simp)+
 
-(*Termination for Rum_tap necessary?*)
 
 fun Rum_ta::"('s::type, 'in,'out) dAutomaton_weak \<Rightarrow> (('in,'out) spfw) set"where
 "Rum_ta aut = {g | g. \<exists>h\<in>(Rum_tap aut). \<exists> s (out::'out\<^sup>\<surd>). \<forall>i.
@@ -60,10 +86,6 @@ section \<open>Deterministic strong Automaton\<close>
 subsection \<open>Strong Automaton Semantic options \<close>
 
 subsubsection \<open>Deterministic Automaton Semantic\<close>
-
-definition semantik_strong::"('s::type, 'in::{chan,finite}, 'out) dAutomaton_strong \<Rightarrow> ('in,'out)spfs"where
-"semantik_strong auts = Abs_spfs(semantik_weak (dAutomaton_weak.truncate auts))"
-
 
 definition dasSem :: "('s::type, 'I::{chan,finite},'O) dAutomaton_strong \<Rightarrow> ('I\<^sup>\<Omega> \<rightarrow> 'O\<^sup>\<Omega>)" where
 "dasSem da = daSem(das2da da)"
@@ -120,12 +142,18 @@ lemma dawstatesem_final_h2:
   by (simp add: dawNextOut dawNextState dastatesem_final_h2)
 
 lemma dawstatesem_weak:
-  fixes automat::"('s,'I::{chan,finite},'O)dAutomaton_weak"
+  fixes automat::"('s::type,'I::{chan,finite},'O)dAutomaton_weak"
   shows  "weak_well (dawStateSem automat s)"
   apply (simp add: dawStateSem_def)
   apply (rule dastatesem_weak)
   apply (simp add: daw2da_def daNextOut_def)
   by (cases "chDomEmpty TYPE('O)",auto)
+
+lemma dawsem_weak[simp]:
+  fixes automat::"('s::type,'I::{chan,finite},'O)dAutomaton_weak"
+  shows  "weak_well (dawSem automat)"
+  apply (simp add: dawSem_def)
+  by (simp add: dawstatesem_weak eta_cfun)
   
 lemma dassem_insert:
   "dasSem automat\<cdot>sb = (dasInitOut automat) \<bullet>\<^sup>\<surd> ((dawStateSem (dAutomaton_weak.truncate automat) (dawInitState automat))\<cdot>sb)"
@@ -148,10 +176,20 @@ lemma dassem_bottom:
   by (simp add: dasSem_def dasem_bottom assms das2da_def)
 
 lemma dassem_strong:
-fixes sautomat::"('s,'I::{chan,finite},'O)dAutomaton_strong"
+fixes sautomat::"('s::type,'I::{chan,finite},'O)dAutomaton_strong"
 shows "strong_well (dasSem sautomat)"
   apply (simp add: strong_well_def dassem_insert SB.sbecons_len)
-  using dawstatesem_weak weak_well_def by blast
+  by (meson dawstatesem_weak weak_well_def)
+
+
+lift_definition semantik_weak::
+"('state::type,'in::{chan,finite},'out) dAutomaton_weak \<Rightarrow> ('in,'out)spfw"is
+"\<lambda>autw. dawSem autw"
+  by simp
+
+lift_definition semantik_strong::"('s::type, 'in::{chan,finite}, 'out) dAutomaton_strong \<Rightarrow> ('in,'out)spfs"is
+"\<lambda>auts. Abs_spfw(dasSem auts)"
+  by (simp add: Abs_spfw_inverse dassem_strong strong2weak)
 
 section \<open>automaton to sscanl equivalence locale\<close>
 

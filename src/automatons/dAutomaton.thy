@@ -10,25 +10,28 @@ lemma prod_contI[cont2cont]: "(\<And>s. cont(\<lambda>f. g (f,s)))
   by (simp add: prod_contI)
 (*>*)
 
-section\<open>Automatons \<close>
+section\<open>Automatons\<close> text\<open>\label{sec:aut}\<close>
 
 text\<open>The behaviour of a component can be modeled by a I/O automaton.
 This section defines deterministic and non-deterministic automaton 
-types, defines their semantic mapping to \Gls{spf} and \Gls{sps}.
+types and their semantic mapping to \Gls{spf} and \Gls{sps}.
 Furthermore, we take a closer look at causal automatons and use
 their properties to introduce a local that is capable of
 constructing automaton and is also providing lemmas to ease the 
 verification process for the input-output behavior.\<close>
 
 
-subsection \<open>Deterministic Automaton\<close>
+subsection \<open>Deterministic Automaton\<close> text\<open>\label{sub:detaut}\<close>
+
 default_sort %invisible "chan"
 
 text\<open>A deterministic I/O Automaton consists of states, a transition
 function, a initial state and a initial output. The transition
-function for deterministic automaton maps from a state with a
+function for a deterministic automaton maps from a state type with a
 @{type sbElem} to another state and a output \gls{sb}. Now we define
-deterministic automaton as a tuple.\<close>
+deterministic automaton as a tuple. Since we always have the message
+type @{type M} it does not explicitly occur in our signature. But of
+course it is hidden in our \gls{sb} and @{type sbElem} types.\<close>
 
 record ('state::type, 'in, 'out) dAutomaton  =
   daTransition :: "('state \<Rightarrow> 'in\<^sup>\<surd> \<Rightarrow> ('state \<times> 'out\<^sup>\<Omega>))"
@@ -36,7 +39,7 @@ record ('state::type, 'in, 'out) dAutomaton  =
   daInitOut:: "'out\<^sup>\<Omega>"
 
 text\<open>The type parameter of @{type dAutomaton} show the state set and
-the input and output domain. We then introduce two definition to 
+the input and output domain. We then introduce two definitions to 
 obtain the next state or the next output of the transition function.
 \<close>
 
@@ -50,6 +53,20 @@ definition daNextOut::
 
 subsubsection \<open>Semantic\<close>
 
+text\<open>The semantic of an automaton corresponds to a \gls{spf}. To 
+obtain a \gls{gls} with an equivalent behaviour we use a semantic
+mapping. In simple terms, the semantic mapping iterates through the
+automaton and obtain its output for each input bundle element.
+This is formulated as a fixed point function for a function from 
+states to \gls{spf}, because the behaviour of the transition
+function depends on the state. Hence, the states are part of the
+iteration. The usage of @{const sb_split} allows to directly access
+the first stream bundle element of the input. This is the input of
+the transition function and allows us formulate a semantic mapping
+without splitting the input \sgl{sb} with a lot of cases. If the
+input \gls{sb} contains no bundle element, @{const sb_split} maps to
+the empty output.\<close>
+
 definition daStateSem::"('s::type, 'I::{finite,chan},'O) dAutomaton 
 \<Rightarrow> ('s \<Rightarrow> ('I\<^sup>\<Omega> \<rightarrow> 'O\<^sup>\<Omega>))" where
 "daStateSem da =
@@ -58,18 +75,25 @@ definition daStateSem::"('s::type, 'I::{finite,chan},'O) dAutomaton
            let (nextState, output) = daTransition da state sbe in
           output \<bullet>\<^sup>\<Omega> h nextState\<cdot>sb)))"
 
+text\<open>Altogether, @{const daStateSem} maps to the semantic of any
+desired state and is independent form the start state or the initial
+output of the automaton. Therefore, the semantic mapping of our
+complete automaton uses the initial state to obtain the
+corresponding semantic from @{const daStateSem} and also first
+outputs the initial output of the automaton.\<close>
+
 definition daSem::"('s::type, 'I::{finite,chan},'O) dAutomaton 
 \<Rightarrow> ('I\<^sup>\<Omega> \<rightarrow> 'O\<^sup>\<Omega>)" where
 "daSem da \<equiv> \<Lambda> sb. daInitOut da \<bullet>\<^sup>\<Omega> daStateSem da(daInitState da)\<cdot>sb"
 
 
-paragraph\<open>Semantic Properties\<close>
+paragraph\<open>Semantic Properties \\\<close>
 
-text\<open>/smallskip\<close>
+text\<open>Specific properties like the step wise evaluation of the
+semantic and its causality will be discussed and provided in the
+following.\<close>
 
-text\<open> paragraph test \<close>
-
-theorem dastatesem_unfolding: "(daStateSem automat s) = 
+lemma dastatesem_unfolding: "(daStateSem automat s) = 
 sb_split\<cdot>(\<lambda>sbe. \<Lambda> sb .
            let (nextState, output) = daTransition automat s sbe in
            output \<bullet>\<^sup>\<Omega> ((daStateSem automat) nextState\<cdot>sb))"
@@ -79,9 +103,17 @@ sb_split\<cdot>(\<lambda>sbe. \<Lambda> sb .
   apply(intro cont2cont; simp)
   by auto
 
+text\<open>If the input domain is not empty and there is no
+bundle element in the input \gls{sb}, our state semantic maps to 
+\<open>\<bottom>\<close>. This also shows, that the input is only processed, if there 
+exists a complete bundle element. This is the case, because an empty
+stream in the input terminates the automaton directly after its 
+initial output.\<close>
+
 theorem dastatesem_bottom:
-  assumes "\<not>sbHdElemWell (sb::('b::{finite,chan})\<^sup>\<Omega>)"
-  and "\<not> chDomEmpty TYPE('b)"
+  fixes sb::"'cs::{finite,chan}\<^sup>\<Omega>"
+  assumes "\<not>sbHdElemWell (sb)"
+  and "\<not> chDomEmpty TYPE('cs)"
   shows "(daStateSem automat s)\<cdot>sb = \<bottom>"
   apply (subst dastatesem_unfolding)
   apply (simp add: sb_split_insert)
@@ -113,9 +145,9 @@ lemma dastatesem_final:
   by (metis assms daNextOut_def daNextState_def dastatesem_step)
 
 lemma dastatesem_final_h2:
-  shows "(daStateSem automat s)\<cdot>(sbECons sbe\<cdot>sb) =
-  (daNextOut automat s sbe) \<bullet>\<^sup>\<Omega> 
-  ((daStateSem automat (daNextState automat s sbe))\<cdot>sb)"
+  shows "daStateSem automat s\<cdot>(sbe \<bullet>\<^sup>\<surd> sb) =
+  daNextOut automat s sbe \<bullet>\<^sup>\<Omega> 
+  daStateSem automat (daNextState automat s sbe)\<cdot>sb"
   apply (cases "chDomEmpty(TYPE('b))")
   apply (subst sbtypeepmpty_sbenone[of sbe],simp)+
   apply (subst sbtypeepmpty_sbbot[of sb],simp)+
@@ -131,6 +163,13 @@ lemma dastatesem_final_h2:
   by (simp only: daNextOut_def daNextState_def sbhdelem_sbecons 
       sbrt_sbecons)
 
+text\<open>If there exists a complete input bundle element, is is
+processed according to the automaton and the the semantic continues
+with the rest of the input. For this it will also use the semantic
+of the next state. This also holds for the empty input domain,
+because our output then is constant and does not depend on any
+input.\<close>
+
 theorem dastatesem_stepI:
   assumes "(daNextOut da s sbe) = out"
   and "(daNextState da s sbe) = nextState"
@@ -138,9 +177,14 @@ theorem dastatesem_stepI:
          out  \<bullet>\<^sup>\<Omega> daStateSem da nextState\<cdot>sb"
   by (simp add: assms dastatesem_final_h2)
 
+text\<open>If the output of the automaton in every state is always at
+least a complete bundle element, the output is then infinitely long,
+if the input domain is empty. This follows directly from the last
+theorem.\<close>
+
 theorem dastatesem_inempty_len:
-  fixes automat::"('state, 'in::{chan, finite}, 'out) dAutomaton"
-  assumes "\<And>state sbe. sbLen (daNextOut automat state sbe) \<ge> 1"
+  fixes automat::"('state::type, 'in::{chan, finite}, 'out) dAutomaton"
+  assumes "\<And>state sbe. 1 \<le> sbLen (daNextOut automat state sbe)"
   and "chDomEmpty TYPE('in)"
   shows "\<forall>s. sbLen (daStateSem automat s\<cdot>\<bottom>) = \<infinity>"
 proof(rule contrapos_pp,simp+)
@@ -184,16 +228,20 @@ lemma dastatesem_weak_fin:
       sbecons_len assms(2) dastatesem_final_h2 lessequal_addition 
       lnat_plus_commu lnat_plus_suc sbECons_def sblen_sbconc)
 
+text\<open>This then leads to our first causality conclusion. The semantic
+of our automaton is weak, if the output is always at least one
+completed bundle element.\<close>
+
 theorem dastatesem_weak:
-  fixes automat::"('state, 'in::{chan, finite}, 'out) dAutomaton"
+  fixes automat::"('state::type, 'in::{chan, finite}, 'out) dAutomaton"
   assumes "\<And>state sbe. 1 \<le> sbLen (daNextOut automat state sbe)"
-  shows     "weak_well (daStateSem automat s)"
+  shows   "weak_well (daStateSem automat s)"
   apply (cases "chDomEmpty TYPE('in)")
   apply (metis (full_types) assms dastatesem_inempty_len fold_inf 
         less_lnsuc sblen_empty sbtypeepmpty_sbbot weak_well_def)
   by (metis assms spf_weakI2 dastatesem_weak_fin lnat_well_h2)
 
-theorem dastatesem_least:
+lemma dastatesem_least:
   assumes"(\<lambda>state. sb_split\<cdot>
           (\<lambda>sbe. \<Lambda> sb. snd (daTransition X state sbe) \<bullet>\<^sup>\<Omega>  
           Z (fst (daTransition X state sbe))\<cdot>sb)) \<sqsubseteq> Z"
@@ -203,16 +251,28 @@ theorem dastatesem_least:
   apply (subst beta_cfun)
   apply (intro cont2cont; simp)
   by (simp add: assms case_prod_unfold)
-  
+
+text\<open>As described before, our semantic for an automaton firstly
+outputs its initial output before iterating through the
+automaton, starting with its initial state.\<close>
+
 theorem dasem_insert:
   "daSem automat\<cdot>sb = daInitOut automat \<bullet>\<^sup>\<Omega> 
                      daStateSem automat (daInitState automat)\<cdot>sb"
   by (simp add: daSem_def)
 
+text\<open>Hence, the semantic is only strict, if the initial output is
+\\<open>\<bottom>\<close>.\<close>
+
 theorem dasem_bottom:
   assumes "\<not>chDomEmpty TYPE('in::{chan,finite})"
   shows "daSem automat\<cdot>(\<bottom>::'in\<^sup>\<Omega>) = daInitOut automat"
   by (simp add: daSem_def assms dastatesem_strict)
+
+text\<open>Furthermore, this leads to the conclusion, that the semantic of
+an automaton is strong causal, if its corresponding state semantic 
+is weak and its initial output is at least one complete bundle
+element.\<close>
 
 theorem dasem_strong:
   assumes "weak_well(daStateSem automat (daInitState automat))"
