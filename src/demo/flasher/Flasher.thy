@@ -166,16 +166,42 @@ lemma flash2notinandout[simp]:"flashInSB.setter port_i\<star> \<uplus>\<^sub>\<s
   oops (* SWS: Gilt Nicht, doppelte magie. Anstatt den Zwischen-Datentyp zu fixieren und assumptions zu haben...
                 kann man die magischen-sachen durch nicht-magie ersetzen? *)
 
+
+lemma t1: "(\<Lambda> (sbOut::(outAnd \<union> outNot)\<^sup>\<Omega>). andSpf\<cdot>((flashInSB.setter port_i\<star>::inFlash\<^sup>\<Omega>) \<uplus>\<^sub>\<star> sbOut) \<uplus> notSpf\<cdot>((flashInSB.setter port_i\<star>::inFlash\<^sup>\<Omega>) \<uplus>\<^sub>\<star> sbOut))\<cdot>
+           (flashOutSB.setter (port_o, port_intern)\<star>) = (flashOutSB.setter (port_o, port_intern)\<star>::(outAnd \<union> outNot)\<^sup>\<Omega>)"
+  sorry
+
+lemma t2: assumes "Rep c\<in>chDom TYPE(outAnd \<union> outNot)" 
+  shows "#((\<mu> sbOut::(outAnd \<union> outNot)\<^sup>\<Omega>. andSpf\<cdot>(flashInSB.setter port_i\<star> \<uplus>\<^sub>\<star> sbOut) \<uplus> notSpf\<cdot>(flashInSB.setter port_i\<star> \<uplus>\<^sub>\<star> sbOut)) \<^enum> c) =
+         #((flashOutSB.setter (port_o, port_intern)\<star>) \<^enum> c)"
+  sorry
+
+lemma sblen_eqI2:
+  fixes sb1 sb2::"'cs\<^sup>\<Omega>"
+  assumes "sb1 \<sqsubseteq> sb2"
+  assumes "\<And>c. Rep c\<in>chDom TYPE('cs) \<Longrightarrow> #(sb1 \<^enum> c) = #(sb2 \<^enum> c)"
+  shows "sb1 = sb2"
+  sorry
+
 (* DEUTLICH WICHTIGER! *)
 lemma assumes "andSpf\<cdot>(andInSB.setter (port_i, port_intern)) = andOutSB.setter port_o"
     and "notSpf\<cdot>(notInSB.setter(port_o)) = notOutSB.setter port_intern"
   shows "(flasherComp\<cdot>(flashInSB.setter (port_i)\<star>)) = flashOutSB.setter (port_o,port_intern)\<star>"
+  apply(simp add: flasherComp_def genComp_def)
+  using sblen_eqI2 t1 t2 fix_least sorry
+  
+  (*
+  apply(rule below_antisym)
+   apply (rule fix_least)
+
+   defer  (*solvable with assms*)
+   
+  
   apply(simp add: flasherComp_def convflasherComp_def spfConvert_def)
   apply(rule spfcomp_eq)  
    apply(simp_all add: assms) 
-  
   oops
-
+  *)
   (*
   apply(simp add: genComp_def)
   apply(rule below_antisym)
