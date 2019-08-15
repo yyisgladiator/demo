@@ -54,7 +54,7 @@ definition daNextOut::
 subsubsection \<open>Semantic\<close>
 
 text\<open>The semantic of an automaton corresponds to a \gls{spf}. To 
-obtain a \gls{gls} with an equivalent behaviour we use a semantic
+obtain a \gls{spf} with an equivalent behaviour we use a semantic
 mapping. In simple terms, the semantic mapping iterates through the
 automaton and obtain its output for each input bundle element.
 This is formulated as a fixed point function for a function from 
@@ -63,7 +63,7 @@ function depends on the state. Hence, the states are part of the
 iteration. The usage of @{const sb_split} allows to directly access
 the first stream bundle element of the input. This is the input of
 the transition function and allows us formulate a semantic mapping
-without splitting the input \sgl{sb} with a lot of cases. If the
+without splitting the input \gls{sb} with a lot of cases. If the
 input \gls{sb} contains no bundle element, @{const sb_split} maps to
 the empty output.\<close>
 

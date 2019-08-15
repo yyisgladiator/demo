@@ -197,5 +197,10 @@ as a type synonym.\<close>
 type_synonym ('I,'O)SPS = "('I,'O)SPF set"
 
 (*<*)
+
+hide_type SPF
+
+hide_type SPS
+
 end
 (*>*)
