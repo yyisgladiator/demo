@@ -1053,10 +1053,46 @@ theorem sb_ind[case_names adm least sbeCons, induct type: sb]:
   apply(simp add: sbtakeind)
   by(simp add: sbtake_lub)
 
-lemma sbecons_eq:
+text\<open>Here we show a small example proof for our \gls{sb} cases rule.
+First the isar proof is started by applying it to the theorem. It
+then automatically generates the proof structure with the two cases
+and their variables. These two generated cases match with our
+theorem assumptions from @{thm sb_cases}. Our theorems statement
+then follows then directly.\<close>
+
+theorem sbecons_eq:
   assumes "sbLen sb \<noteq> 0" 
-  shows "(sbHdElem sb) \<bullet>\<^sup>\<surd> (sbRt\<cdot>sb) = sb"
-  by (metis assms sbECons_def sbHdElem sbcons)
+  shows "sbHdElem sb \<bullet>\<^sup>\<surd> sbRt\<cdot>sb = sb"
+proof %visible(cases sb)
+case least
+  then show ?thesis
+    using assms
+    by(simp only: assms sbECons_def sbHdElem sbcons)
+next
+  case (sbeCons sbe sb)
+  then show ?thesis
+    by(simp only: assms sbhdelem_sbecons sbrt_sbecons)
+qed
+
+text\<open>The next theorem is an example for the induction rule. Similar
+to the cases rule there are automatically generated cases that
+correspond to the assumptions of @{thm sb_ind}. Our theorem is
+proven after showing the three generated goals.\<close>
+
+theorem shows "sbTake n\<cdot>sb \<sqsubseteq> sb "
+proof %visible(induction sb)
+  case adm
+  then show ?case
+    by simp
+next
+  case (least sb)
+  then show ?case
+    by simp
+next
+  case (sbeCons sbe sb)
+  then show ?case
+    by simp
+qed
 
 subsubsection \<open>Converting Domains of SBs \label{subsub:sbconvert}\<close>
 

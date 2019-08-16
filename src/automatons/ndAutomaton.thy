@@ -10,11 +10,15 @@ default_sort "chan"
 subsection \<open>Non-Deterministic Automaton definition \<close>
 
 (* Doesn't like type constraints*)
-(* type_synonym ('state, 'in, 'out) "ndAutomaton" = "(('state::type \<Rightarrow> 'in\<^sup>\<surd> \<Rightarrow> ('state \<times> 'out\<^sup>\<Omega>) set) \<times> ('state \<times>'out\<^sup>\<Omega>)set)"
+(* type_synonym ('state, 'in, 'out) "ndAutomaton" = "(('state::type 
+\<Rightarrow> 'in\<^sup>\<surd> \<Rightarrow> ('state \<times> 'out\<^sup>\<Omega>) set) \<times> ('state \<times>'out\<^sup>\<Omega>)set)"
 *)
 
-text \<open>Incomplete automatons. The transition-function might return the empty set.\<close>
-record ('state::type, 'in::"{chan, finite}", 'out::chan) ndAutomaton_incomplete  =
+text \<open>Incomplete automatons. The transition-function might return 
+the empty set.\<close>
+
+record ('state::type,'in::"{chan, finite}", 'out::chan) 
+ndAutomaton_incomplete  =
   ndaiTransition :: "('state \<Rightarrow> 'in\<^sup>\<surd> \<Rightarrow> (('state \<times> 'out\<^sup>\<Omega>) set))"
   ndaiInitConfig :: "('state \<times> 'out\<^sup>\<Omega>) set"
 
@@ -40,10 +44,14 @@ proof -
     using a1 by (simp add: fun_chain_iff lub_eq_bottom_iff lub_fun)
 qed
 
-definition ndaTransition::"('state::type, 'in::{chan, finite}, 'out) ndAutomaton \<rightarrow> ('state \<Rightarrow> 'in\<^sup>\<surd> \<Rightarrow> ('state \<times> 'out\<^sup>\<Omega>) set)" where
+definition ndaTransition::
+"('state::type, 'in::{chan, finite}, 'out) ndAutomaton \<rightarrow> 
+('state \<Rightarrow> 'in\<^sup>\<surd> \<Rightarrow> ('state \<times> 'out\<^sup>\<Omega>) set)" where
 "ndaTransition = (\<Lambda> aut. fst(Rep_ndAutomaton aut))"
 
-definition ndaInitConfig::"('state::type, 'in::{chan, finite}, 'out) ndAutomaton \<rightarrow> ('state \<times>'out\<^sup>\<Omega>)set" where
+definition ndaInitConfig::
+"('state::type, 'in::{chan, finite}, 'out) ndAutomaton \<rightarrow> 
+('state \<times>'out\<^sup>\<Omega>)set" where
 "ndaInitConfig = (\<Lambda> aut. (snd(Rep_ndAutomaton aut)))"
 
 lemma ndastatesem_mono[simp]:"mono (\<lambda>h state. {sb_split\<cdot>(\<lambda>sbe. \<Lambda> sb.
@@ -51,7 +59,8 @@ lemma ndastatesem_mono[simp]:"mono (\<lambda>h state. {sb_split\<cdot>(\<lambda>
                             output \<bullet>\<^sup>\<Omega> nextSPF\<cdot>sb))
 
   | f f'.  \<forall>sbe . ((f sbe) \<in> (((ndaTransition\<cdot>nda) state) sbe))
-        \<and> ( \<forall>sbe . snd (f' sbe) = snd (f sbe) \<and> fst (f' sbe) \<in> h (fst (f sbe)))})"
+        \<and> ( \<forall>sbe . snd (f' sbe) = snd (f sbe) \<and> 
+                   fst (f' sbe) \<in> h (fst (f sbe)))})"
   apply(rule monoI)
   apply(simp add: prod.case_eq_if)
   apply(simp add: le_fun_def)
@@ -60,26 +69,34 @@ lemma ndastatesem_mono[simp]:"mono (\<lambda>h state. {sb_split\<cdot>(\<lambda>
   apply(rule_tac x="f'" in exI)
   by auto
 
-definition ndaStateSem :: "('s::type, 'in::{chan, finite}, 'out) ndAutomaton \<Rightarrow> ('s \<Rightarrow> ('in\<^sup>\<Omega> \<rightarrow> 'out\<^sup>\<Omega>) set)" where
+definition ndaStateSem ::
+ "('s::type, 'in::{chan, finite}, 'out) ndAutomaton 
+\<Rightarrow> ('s \<Rightarrow> ('in\<^sup>\<Omega> \<rightarrow> 'out\<^sup>\<Omega>) set)" where
 "ndaStateSem nda \<equiv> gfp (\<lambda>h state. {sb_split\<cdot>(\<lambda> sbe. \<Lambda> sb.
     (let (nextSPF, output) = f' sbe in
                             output \<bullet>\<^sup>\<Omega> nextSPF\<cdot>sb))
 
   | f f'.  \<forall>sbe . ((f sbe) \<in> (((ndaTransition\<cdot>nda) state) sbe))
-        \<and> ( \<forall>sbe . snd (f' sbe) = snd (f sbe) \<and> fst (f' sbe) \<in> h (fst (f sbe)))})"
+        \<and> ( \<forall>sbe . snd (f' sbe) = snd (f sbe) \<and> 
+                   fst (f' sbe) \<in> h (fst (f sbe)))})"
     (* TODO: Schöner! *)
 
-lemma ndastatesem_unfold:"ndaStateSem nda s = {sb_split\<cdot>(\<lambda> sbe. \<Lambda> sb. let (nextSPF, output) = f' sbe in output \<bullet>\<^sup>\<Omega> nextSPF\<cdot>sb)|
+lemma ndastatesem_unfold:"ndaStateSem nda s = {sb_split\<cdot>(\<lambda> sbe. 
+\<Lambda> sb. let (nextSPF, output) = f' sbe in output \<bullet>\<^sup>\<Omega> nextSPF\<cdot>sb)|
      f f' .(\<forall>sbe. f sbe \<in> (ndaTransition\<cdot>nda) s sbe \<and>
-            (\<forall>sbe. snd (f' sbe) = snd (f sbe) \<and> fst (f' sbe) \<in> ndaStateSem nda (fst (f sbe))))}"
+            (\<forall>sbe. snd (f' sbe) = snd (f sbe) \<and> 
+                   fst (f' sbe) \<in> ndaStateSem nda (fst (f sbe))))}"
   unfolding ndaStateSem_def
   apply(subst gfp_unfold)
   using ndastatesem_mono apply auto[1]
   by auto
 
-definition ndaSem :: "('s::type, 'in::{chan, finite}, 'out) ndAutomaton \<Rightarrow> ('in\<^sup>\<Omega> \<rightarrow> 'out\<^sup>\<Omega>) set" where
+definition ndaSem :: 
+"('s::type, 'in::{chan, finite}, 'out) ndAutomaton 
+\<Rightarrow> ('in\<^sup>\<Omega> \<rightarrow> 'out\<^sup>\<Omega>) set" where
 "ndaSem  nda \<equiv> {(\<Lambda> sb. initOut \<bullet>\<^sup>\<Omega> spf\<cdot>sb) | initOut initState spf.
-    (initState,initOut)\<in>ndaInitConfig\<cdot>nda \<and> spf\<in>(ndaStateSem nda initState)}"
+    (initState,initOut)\<in>ndaInitConfig\<cdot>nda \<and> 
+                    spf\<in>(ndaStateSem nda initState)}"
 
 (*<*)
 end

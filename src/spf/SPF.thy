@@ -95,6 +95,7 @@ cpodef ('I,'O)spfw = "{f::('I\<^sup>\<Omega> \<rightarrow> 'O\<^sup>\<Omega>) . 
         le2lnle leI le_cases less_irrefl trans_lnle)
   by (simp add: weak_well_adm)
 
+setup_lifting %invisible type_definition_spfw
 
 lemma [simp, cont2cont]:"cont Rep_spfw"
   using cont_Rep_spfw cont_id by blast
@@ -171,6 +172,8 @@ cpodef ('I,'O)spfs = "{f::('I,'O)spfw . strong_well (Rep_spfw f)}"
          strong_spf_exist strong_well_def)
   by(simp add: strong_well_adm)
 
+setup_lifting %invisible type_definition_spfs
+
 lemma [simp, cont2cont]:"cont Rep_spfs"
   using cont_Rep_spfs cont_id by blast
 
@@ -194,5 +197,10 @@ as a type synonym.\<close>
 type_synonym ('I,'O)SPS = "('I,'O)SPF set"
 
 (*<*)
+
+hide_type SPF
+
+hide_type SPS
+
 end
 (*>*)
