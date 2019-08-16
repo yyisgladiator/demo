@@ -19,16 +19,26 @@ record ('state::type, 'in::"{chan, finite}", 'out::chan) ndAutomaton_incomplete 
   ndaiInitConfig :: "('state \<times> 'out\<^sup>\<Omega>) set"
 
 cpodef ('state::type, 'in::"{chan, finite}", 'out::chan) ndAutomaton  =
-  "{(transition::(('state \<Rightarrow> 'in\<^sup>\<surd> \<Rightarrow> (('state \<times> 'out\<^sup>\<Omega>) set))), initialConfig::('state \<times> 'out\<^sup>\<Omega>) set)
+  "{(transition::(('state \<Rightarrow> 'in\<^sup>\<surd> \<Rightarrow> (('state \<times> 'out\<^sup>\<Omega>) set)))
+    , initialConfig::('state \<times> 'out\<^sup>\<Omega>) set)
     | transition initialConfig.
-      (\<forall>sbe state. transition state sbe\<noteq> {})
+      (\<forall>state sbe. transition state sbe \<noteq> {})
     \<and> initialConfig \<noteq> {}}"
-   apply auto[1]
-  apply(subst UU_eq_empty[symmetric])+
-  apply(rule admI)
-  apply(simp add: lub_prod)
-  apply (auto simp add: lub_eq_Union)
-  sorry
+  apply auto[1]
+  apply (subst UU_eq_empty[symmetric])+
+  apply (rule admI)
+  apply (simp add: lub_prod)
+  apply (rule, rule, rule)
+  apply (simp_all add: lub_eq_bottom_iff mem_Times_iff)
+proof -
+  fix Y :: "nat \<Rightarrow> ('state \<Rightarrow> 'in\<^sup>\<surd> \<Rightarrow> ('state \<times> 'out\<^sup>\<Omega>) set) \<times> ('state \<times> 'out\<^sup>\<Omega>) set" and state :: 'state and sbe :: "'in\<^sup>\<surd>"
+  assume a1: "\<forall>i. (\<forall>state sbe. fst (Y i) state sbe \<noteq> \<bottom>) \<and> snd (Y i) \<noteq> \<bottom>"
+  assume "chain Y"
+  then have "chain (\<lambda>n. fst (Y n))"
+    using ch2ch_fst by blast
+  then show "(\<Squnion>n. fst (Y n)) state sbe \<noteq> \<bottom>"
+    using a1 by (simp add: fun_chain_iff lub_eq_bottom_iff lub_fun)
+qed
 
 definition ndaTransition::"('state::type, 'in::{chan, finite}, 'out) ndAutomaton \<rightarrow> ('state \<Rightarrow> 'in\<^sup>\<surd> \<Rightarrow> ('state \<times> 'out\<^sup>\<Omega>) set)" where
 "ndaTransition = (\<Lambda> aut. fst(Rep_ndAutomaton aut))"
