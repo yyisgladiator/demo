@@ -67,7 +67,7 @@ setup_lifting type_definition_ndAutomaton
 lift_definition eventAut :: "('state \<Rightarrow> 'in \<Rightarrow> M_pure \<Rightarrow> ('state \<times> 'out\<^sup>\<Omega>) set) \<Rightarrow> ('state \<times> 'out\<^sup>\<Omega>)set \<Rightarrow>
   (('state::type,'in) eventState, 'in::{chan, finite}, 'out::chan) ndAutomaton" is
 "\<lambda> eventTrans eventInit. (eventAutomatTransition eventTrans,eventAutomatInitConfig eventInit)"
-  sorry
+  oops
 
 
 

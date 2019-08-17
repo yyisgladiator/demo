@@ -2,17 +2,11 @@
 theory ndAutomaton
   imports bundle.SB_fin (* dAutomaton *)
 begin
-(*>*)
-
-section \<open>Non-Deterministic Automaton\<close>
 default_sort "chan"
 
-subsection \<open>Non-Deterministic Automaton definition \<close>
+(*>*)
 
-(* Doesn't like type constraints*)
-(* type_synonym ('state, 'in, 'out) "ndAutomaton" = "(('state::type 
-\<Rightarrow> 'in\<^sup>\<surd> \<Rightarrow> ('state \<times> 'out\<^sup>\<Omega>) set) \<times> ('state \<times>'out\<^sup>\<Omega>)set)"
-*)
+subsection \<open>Non-Deterministic Automaton\<close> text\<open>\label{sub:ndaut}\<close>
 
 text \<open>Incomplete automatons. The transition-function might return 
 the empty set.\<close>
@@ -56,6 +50,8 @@ definition ndaInitConfig::
 "('state::type, 'in::{chan, finite}, 'out) ndAutomaton \<rightarrow> 
 ('state \<times>'out\<^sup>\<Omega>)set" where
 "ndaInitConfig = (\<Lambda> aut. (snd(Rep_ndAutomaton aut)))"
+
+subsubsection\<open>Semantic\<close>
 
 lemma ndastatesem_mono[simp]:"mono (\<lambda>h state. {sb_split\<cdot>(\<lambda>sbe. \<Lambda> sb.
     (let (nextSPF, output) = f' sbe in
