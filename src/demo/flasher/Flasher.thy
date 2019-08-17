@@ -131,14 +131,27 @@ lemma andOutSB_port_o: assumes " Rep c = cout" shows " andOutSB.setter port_o  \
 lemma notOutSB_port_o: assumes " Rep c = cin2" shows " notOutSB.setter port_intern  \<^enum>  c = (smap \<B>)\<cdot>port_intern"
   by (metis notOutSB.setter.rep_eq outNot.exhaust outNotChan.simps sbgetch_insert2)
 
-lemma outFlash_rep_abs: "(Rep :: outAnd \<union> outNot \<Rightarrow> channel) (Abs cout) \<in> range (Rep :: outFlash \<Rightarrow> channel)"
+lemma notInSB_port_o: assumes " Rep c = cout" shows " notInSB.setter port_intern  \<^enum>  c = (smap \<B>)\<cdot>port_intern"
+  by (metis inNot.exhaust inNotChan.simps notInSB.setter.rep_eq sbgetch_insert2)
+
+lemma outFlash_cout_rep_abs: "(Rep :: outAnd \<union> outNot \<Rightarrow> channel) (Abs cout) \<in> range (Rep :: outFlash \<Rightarrow> channel)"
   by (metis Flashout1_rep chan_eq insertCI rangeoutunion repinrange)
+
+
+lemma outFlash_cin2_rep_abs: "(Rep :: outAnd \<union> outNot \<Rightarrow> channel) (Abs cin2) \<in> range (Rep :: outFlash \<Rightarrow> channel)"
+  by (metis Flashcin2_rep chan_eq insert_iff range_eqI rangeoutunion)
 
 lemma flashOutSB_port_o: assumes " Rep (c::outAnd) = cout" shows "(flashOutSB.setter (port_o, port_intern)\<star> :: (outAnd \<union> outNot)\<^sup>\<Omega>)  \<^enum>\<^sub>\<star> c = (smap \<B>)\<cdot>port_o"
   apply(simp add: sbgetch_insert assms rangeoutunion)
-  apply(simp add: outFlash_rep_abs)
+  apply(simp add: outFlash_cout_rep_abs)
   apply(simp add: rangeoutunion f_inv_into_f)
   by (metis Flashout1_rep chan_inj flashOutSB.setter.rep_eq inv_f_f outFlashChan.simps(1))
+
+lemma flashOutSB_port_inter: assumes " Rep (c::outNot) = cin2" shows "(flashOutSB.setter (port_o, port_intern)\<star> :: (outAnd \<union> outNot)\<^sup>\<Omega>)  \<^enum>\<^sub>\<star> c = (smap \<B>)\<cdot>port_intern"
+  apply(simp add: sbgetch_insert assms rangeoutunion)
+  apply(simp add: outFlash_cin2_rep_abs)
+  apply(simp add: rangeoutunion f_inv_into_f)
+  by (metis Flashcin2_rep chan_inj flashOutSB.setter.rep_eq inv_f_f outFlashChan.simps(2))
 
 
 
@@ -148,21 +161,44 @@ lemma flash2andout[simp]:"(flashOutSB.setter (port_o, port_intern)\<star> :: (ou
   (* SWS: Gilt Nicht, doppelte magie. Anstatt den Zwischen-Datentyp zu fixieren und assumptions zu haben...
                 kann man die magischen-sachen durch nicht-magie ersetzen? *)
 
+lemma inFlash_rep_abs: "(Rep :: inAnd \<union> inNot \<Rightarrow> channel) (Abs cin1) \<in> range (Rep :: inFlash \<Rightarrow> channel)"
+  by (metis Flashin1_rep f_inv_into_f insertI1 rangeinunion repinrange)
+
+lemma ninFlash_rep_abs: "(Rep :: ((inAnd \<union> inNot) - outAnd \<union> outNot)  \<Rightarrow> channel) (Abs cout)\<notin> range (Rep :: outFlash \<Rightarrow> channel)"
+ by (metis Rep_outFlash Rep_outFlash_def all_not_in_conv channel.distinct(25) channel.distinct(27) f_inv_into_f insert_iff rangeI rangecompin)
+
+lemma test1: "(Rep :: inNot \<Rightarrow> channel) (Abs cout) \<in> range (Rep :: outFlash \<Rightarrow> channel)"
+  by (metis Flashout1_rep f_inv_into_f inNotData.Andin1_rep rangeI)
+
+lemma test2: assumes " Rep (c::inNot) = cout" shows "(flashInSB.setter port_i\<star> :: ((inAnd \<union> inNot) - outAnd \<union> outNot)\<^sup>\<Omega>)   \<^enum>\<^sub>\<star> c =  \<epsilon>"
+  sorry
+lemma flashInSB_port_o: assumes " Rep (c::inNot) = cout" shows "((flashInSB.setter port_i\<star> :: ((inAnd \<union> inNot) - outAnd \<union> outNot)\<^sup>\<Omega>) \<uplus>\<^sub>\<star> (flashOutSB.setter (port_o, port_intern)\<star> :: (outAnd \<union> outNot)\<^sup>\<Omega>))  \<^enum>\<^sub>\<star> c = (smap \<B>)\<cdot>port_o"
+  apply(simp add: sbgetch_insert assms rangeoutunion) 
+  apply auto
+   defer
+  sorry
+
 lemma flash2notin[simp]:"(flashInSB.setter port_i\<star> :: ((inAnd \<union> inNot) - outAnd \<union> outNot)\<^sup>\<Omega>) \<uplus>\<^sub>\<star> (flashOutSB.setter (port_o, port_intern)\<star> :: (outAnd \<union> outNot)\<^sup>\<Omega>) = notInSB.setter(port_o)"
   apply(rule sb_eqI, auto)
-  sorry (* SWS: Gilt Nicht, doppelte magie. Anstatt den Zwischen-Datentyp zu fixieren und assumptions zu haben...
-                kann man die magischen-sachen durch nicht-magie ersetzen? *)
+  by(simp add: notInSB_port_o flashInSB_port_o)
 
-lemma flash2notout[simp]:"flashOutSB.setter (port_o, port_intern)\<star>\<star>\<^sub>2 = notOutSB.setter port_intern "
+  
+   (* SWS: Gilt Nicht, doppelte magie. Anstatt den Zwischen-Datentyp zu fixieren und assumptions zu haben...
+                kann man die magischen-sachen durch nicht-magie ersetzen? *)
+(* xx2 durch x ersetzt nicht sicher ob es mit x2 stimmt *)
+lemma flash2notout[simp]:"(flashOutSB.setter (port_o, port_intern)\<star> :: (outAnd \<union> outNot)\<^sup>\<Omega>)\<star> = notOutSB.setter port_intern "
   apply(rule sb_eqI, auto)  
-  sorry (* SWS: Gilt Nicht, doppelte magie. Anstatt den Zwischen-Datentyp zu fixieren und assumptions zu haben...
+  by(simp add: flashOutSB_port_inter notOutSB_port_o)
+   (* SWS: Gilt Nicht, doppelte magie. Anstatt den Zwischen-Datentyp zu fixieren und assumptions zu haben...
                 kann man die magischen-sachen durch nicht-magie ersetzen? *)
 
-lemma flash2andinnotout[simp]:"flashInSB.setter port_i\<star> \<uplus>\<^sub>\<star> (z::(outAnd \<union> outNot)\<^sup>\<Omega>) = andInSB.setter (port_i,notOutSB.getter(z\<star>))"
+lemma flash2andinnotout[simp]:"(flashInSB.setter port_i\<star> :: ((inAnd \<union> inNot) - outAnd \<union> outNot)\<^sup>\<Omega>) \<uplus>\<^sub>\<star> (z::(outAnd \<union> outNot)\<^sup>\<Omega>) = andInSB.setter (port_i,notOutSB.getter(z\<star>))"
+   apply(rule sb_eqI, auto)  
+
   oops (* SWS: Gilt Nicht, doppelte magie. Anstatt den Zwischen-Datentyp zu fixieren und assumptions zu haben...
                 kann man die magischen-sachen durch nicht-magie ersetzen? *)
 
-lemma flash2notinandout[simp]:"flashInSB.setter port_i\<star> \<uplus>\<^sub>\<star> (z::(outAnd \<union> outNot)\<^sup>\<Omega>) = notInSB.setter (andOutSB.getter(z\<star>))"
+lemma flash2notinandout[simp]:"(flashInSB.setter port_i\<star> :: ((inAnd \<union> inNot) - outAnd \<union> outNot)\<^sup>\<Omega>) \<uplus>\<^sub>\<star> (z::(outAnd \<union> outNot)\<^sup>\<Omega>) = notInSB.setter (andOutSB.getter(z\<star>))"
   oops (* SWS: Gilt Nicht, doppelte magie. Anstatt den Zwischen-Datentyp zu fixieren und assumptions zu haben...
                 kann man die magischen-sachen durch nicht-magie ersetzen? *)
 
