@@ -87,8 +87,8 @@ definition dasSem::
 "('s::type, 'I::{chan,finite},'O) dAutomaton_strong 
 \<Rightarrow> ('I\<^sup>\<Omega> \<rightarrow> 'O\<^sup>\<Omega>)" where
 "dasSem da \<equiv> daSem(das2da da)"
-
-subsubsection %invisible \<open>Rum96 Automaton Semantic\<close>
+(*<*)
+subsubsection  \<open>Rum96 Automaton Semantic\<close>
 
 function Rum_tap::"('s::type, 'in,'out) dAutomaton_weak 
 \<Rightarrow> ('s \<Rightarrow> ('in,'out) spfw) set" where
@@ -108,7 +108,7 @@ fun Rum_ta_strong::
 \<Rightarrow> (('in,'out) spfs) set"where
 "Rum_ta_strong aut = Abs_spfs`Rum_ta (dAutomaton_weak.truncate aut)"
 
-
+(*>*)
 paragraph \<open>Causal Sem lemmas \\\<close>
 
 text\<open>The causal automaton types work very similar to our general
