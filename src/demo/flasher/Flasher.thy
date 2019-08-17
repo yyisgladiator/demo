@@ -1,6 +1,6 @@
 theory Flasher
 
-imports AndAutomat NotAutomat Flasher_inc
+imports AndAutomat NotAutomat Flasher_inc spf.SPFcomp
 begin                             
 
 
@@ -62,18 +62,6 @@ lemma assumes "convflasherComp\<cdot>(flashInSB.setter (port_i)) = flasherSetter
     and "notSpf\<cdot>(notSetterin(port_intern)) = notSetterout port_i"
   oops
 
-lemma  spfcomp_eq:fixes f::"'fIn\<^sup>\<Omega> \<rightarrow> 'fOut\<^sup>\<Omega>"
-        and g::"'gIn\<^sup>\<Omega> \<rightarrow> 'gOut\<^sup>\<Omega>"
-      assumes "chDom (TYPE ('fOut)) \<inter> chDom (TYPE ('gOut)) = {}"
-fixes out::"('fOut \<union> 'gOut)\<^sup>\<Omega>"
-assumes "f\<cdot>(sb \<uplus>\<^sub>\<star> out) = out\<star>"
-    and "g\<cdot>(sb \<uplus>\<^sub>\<star> out) = out\<star>"
-    and "\<And>z::('fOut \<union> 'gOut)\<^sup>\<Omega>. f\<cdot>(sb \<uplus>\<^sub>\<star> z) \<uplus> g\<cdot>(sb \<uplus>\<^sub>\<star> z) = z \<Longrightarrow> out \<sqsubseteq> z"
-      shows "((f\<otimes>g)\<cdot>sb) = out"
-  apply(subst genComp_def)
-  apply(simp add: spfConvert_def)
-  apply(rule fix_eqI)
-  by (simp_all add: assms)
 (* ? ? ?
 lemma  spfcomp_magiceq:fixes f::"'fIn\<^sup>\<Omega> \<rightarrow> 'fOut\<^sup>\<Omega>"
         and g::"'gIn\<^sup>\<Omega> \<rightarrow> 'gOut\<^sup>\<Omega>"
@@ -89,12 +77,12 @@ assumes "f\<cdot>(sb \<uplus>\<^sub>\<star> out) = out\<star>"
 *)
 
 lemma chtype_empty: "ctype ch = {} \<Longrightarrow> ch = c3"
-  by(cases ch; simp)
+  by(cases ch; simp add: ctype_empty_iff)
 
 (* Das soll weiter nach vorne. geht nicht in "Datatypes", da dort "cEmpty" nich existiert...
     Vllt eine art "prelude" vor den generierten sachen? *)
 lemma chEmpty[simp]:"cEmpty = {c3}"
-  by(auto simp add: cEmpty_def chtype_empty)
+  by(auto simp add: cEmpty_def chtype_empty ctype_empty_iff)
 
 
 lemma inand_dom[simp]: "chDom TYPE(inAnd) = {cin1,cin2}"
@@ -125,13 +113,13 @@ lemma flash2andin[simp]:"(((sbConvert::inFlash\<^sup>\<Omega> \<rightarrow> ((in
 
 
 
-lemma andOutSB_port_o: assumes " Rep c = cout" shows " andOutSB.setter port_o  \<^enum>  c = (smap \<B>)\<cdot>port_o"
+lemma andOutSB_port_o: assumes " Rep c = cout" shows " andOutSB.setter port_o  \<^enum>  c = (smap  (Tsyn o (map_option) \<B>))\<cdot>port_o"
   by (metis andOutSB.setter.rep_eq outAnd.exhaust outAndChan.simps sbgetch_insert2)
 
-lemma notOutSB_port_o: assumes " Rep c = cin2" shows " notOutSB.setter port_intern  \<^enum>  c = (smap \<B>)\<cdot>port_intern"
+lemma notOutSB_port_o: assumes " Rep c = cin2" shows " notOutSB.setter port_intern  \<^enum>  c = (smap  (Tsyn o (map_option) \<B>))\<cdot>port_intern"
   by (metis notOutSB.setter.rep_eq outNot.exhaust outNotChan.simps sbgetch_insert2)
 
-lemma notInSB_port_o: assumes " Rep c = cout" shows " notInSB.setter port_intern  \<^enum>  c = (smap \<B>)\<cdot>port_intern"
+lemma notInSB_port_o: assumes " Rep c = cout" shows " notInSB.setter port_intern  \<^enum>  c = (smap  (Tsyn o (map_option) \<B>))\<cdot>port_intern"
   by (metis inNot.exhaust inNotChan.simps notInSB.setter.rep_eq sbgetch_insert2)
 
 lemma outFlash_cout_rep_abs: "(Rep :: outAnd \<union> outNot \<Rightarrow> channel) (Abs cout) \<in> range (Rep :: outFlash \<Rightarrow> channel)"
@@ -141,25 +129,26 @@ lemma outFlash_cout_rep_abs: "(Rep :: outAnd \<union> outNot \<Rightarrow> chann
 lemma outFlash_cin2_rep_abs: "(Rep :: outAnd \<union> outNot \<Rightarrow> channel) (Abs cin2) \<in> range (Rep :: outFlash \<Rightarrow> channel)"
   by (metis Flashcin2_rep chan_eq insert_iff range_eqI rangeoutunion)
 
-lemma flashOutSB_port_o: assumes " Rep (c::outAnd) = cout" shows "(flashOutSB.setter (port_o, port_intern)\<star> :: (outAnd \<union> outNot)\<^sup>\<Omega>)  \<^enum>\<^sub>\<star> c = (smap \<B>)\<cdot>port_o"
-  apply(simp add: sbgetch_insert assms rangeoutunion)
+lemma flashOutSB_port_o: assumes " Rep (c::outAnd) = cout" shows "(flashOutSB.setter (port_o, port_intern)\<star> :: (outAnd \<union> outNot)\<^sup>\<Omega>)  \<^enum>\<^sub>\<star> c = (smap  (Tsyn o (map_option) \<B>))\<cdot>port_o"
+  apply(simp add: sbgetch_insert assms rangeoutunion)(*
   apply(simp add: outFlash_cout_rep_abs)
   apply(simp add: rangeoutunion f_inv_into_f)
-  by (metis Flashout1_rep chan_inj flashOutSB.setter.rep_eq inv_f_f outFlashChan.simps(1))
+  by (metis Flashout1_rep chan_inj flashOutSB.setter.rep_eq inv_f_f outFlashChan.simps(1))*)
+  sorry
 
-lemma flashOutSB_port_o2: assumes " Rep (c::inAnd \<union> inNot) = cout" shows "(flashOutSB.setter (port_o, port_intern)\<star> :: (outAnd \<union> outNot)\<^sup>\<Omega>)  \<^enum>\<^sub>\<star> c = (smap \<B>)\<cdot>port_o"
-  apply(simp add: sbgetch_insert assms rangeoutunion)
+lemma flashOutSB_port_o2: assumes " Rep (c::inAnd \<union> inNot) = cout" shows "(flashOutSB.setter (port_o, port_intern)\<star> :: (outAnd \<union> outNot)\<^sup>\<Omega>)  \<^enum>\<^sub>\<star> c = (smap  (Tsyn o (map_option) \<B>))\<cdot>port_o"
+  apply(simp add: sbgetch_insert assms rangeoutunion) (*
   apply(simp add: outFlash_cout_rep_abs)
   apply(simp add: rangeoutunion f_inv_into_f)
-  by (metis Flashout1_rep chan_inj flashOutSB.setter.rep_eq inv_f_f outFlashChan.simps(1))
+  by (metis Flashout1_rep chan_inj flashOutSB.setter.rep_eq inv_f_f outFlashChan.simps(1)) *)
+  sorry
 
-
-lemma flashOutSB_port_inter: assumes " Rep (c::outNot) = cin2" shows "(flashOutSB.setter (port_o, port_intern)\<star> :: (outAnd \<union> outNot)\<^sup>\<Omega>)  \<^enum>\<^sub>\<star> c = (smap \<B>)\<cdot>port_intern"
-  apply(simp add: sbgetch_insert assms rangeoutunion)
+lemma flashOutSB_port_inter: assumes " Rep (c::outNot) = cin2" shows "(flashOutSB.setter (port_o, port_intern)\<star> :: (outAnd \<union> outNot)\<^sup>\<Omega>)  \<^enum>\<^sub>\<star> c = (smap  (Tsyn o (map_option) \<B>))\<cdot>port_intern"
+  apply(simp add: sbgetch_insert assms rangeoutunion)(*
   apply(simp add: outFlash_cin2_rep_abs)
   apply(simp add: rangeoutunion f_inv_into_f)
   by (metis Flashcin2_rep chan_inj flashOutSB.setter.rep_eq inv_f_f outFlashChan.simps(2))
-
+*)sorry
 
 
 lemma flash2andout[simp]:"(flashOutSB.setter (port_o, port_intern)\<star> :: (outAnd \<union> outNot)\<^sup>\<Omega>)\<star>\<^sub>1 = andOutSB.setter port_o"
@@ -181,34 +170,32 @@ lemma ninFlash_rep_abs2: "(Rep :: ((inAnd \<union> inNot) - outAnd \<union> outN
 
 
 lemma test1: "(Rep :: inNot \<Rightarrow> channel) (Abs cout) \<in> range (Rep :: outFlash \<Rightarrow> channel)"
-  by (metis Flashout1_rep f_inv_into_f inNotData.Andin1_rep rangeI)
+  sorry
 
 lemma test2: assumes " Rep (c::inNot) = cout" shows "(flashInSB.setter port_i\<star> :: ((inAnd \<union> inNot) - outAnd \<union> outNot)\<^sup>\<Omega>)   \<^enum>\<^sub>\<star> c =  \<epsilon>"
   apply(simp add: sbgetch_insert assms rangeoutunion) 
-  apply(simp add: test1 ninFlash_rep_abs )
-  by (metis assms f_inv_into_f ninFlash_rep_abs2 repinrange test1)
-
-lemma test3:assumes " Rep (c::inNot) = cout" shows " (flashOutSB.setter (port_o, port_intern)\<star> :: (outAnd \<union> outNot)\<^sup>\<Omega>)  \<^enum>\<^sub>\<star> c = (smap \<B>)\<cdot>port_o"
+  sorry
+lemma test3:assumes " Rep (c::inNot) = cout" shows " (flashOutSB.setter (port_o, port_intern)\<star> :: (outAnd \<union> outNot)\<^sup>\<Omega>)  \<^enum>\<^sub>\<star> c = (smap  (Tsyn o (map_option) \<B>))\<cdot>port_o"
   apply(simp add: sbgetch_insert assms rangeoutunion) 
-  apply(simp add: outFlash_cout_rep_abs)
+(*  apply(simp add: outFlash_cout_rep_abs)
   apply(simp add: rangeoutunion f_inv_into_f)
   by (metis Flashout1_rep chan_inj flashOutSB.setter.rep_eq inv_f_f outFlashChan.simps(1))
-
+*)
+  sorry
 lemma test4:assumes" Rep (c::inNot) = cout" shows"( Rep (c::inNot) ) \<notin> chDom TYPE (((inAnd \<union> inNot) - outAnd \<union> outNot)) "
  
   sorry
-lemma flashInSB_port_o: assumes " Rep (c::inNot) = cout" shows "((flashInSB.setter port_i\<star> :: ((inAnd \<union> inNot) - outAnd \<union> outNot)\<^sup>\<Omega>)  \<uplus> (flashOutSB.setter (port_o, port_intern)\<star> :: (outAnd \<union> outNot)\<^sup>\<Omega>))  \<^enum>\<^sub>\<star> c = (smap \<B>)\<cdot>port_o"
+lemma flashInSB_port_o: assumes " Rep (c::inNot) = cout" shows "((flashInSB.setter port_i\<star> :: ((inAnd \<union> inNot) - outAnd \<union> outNot)\<^sup>\<Omega>)  \<uplus> (flashOutSB.setter (port_o, port_intern)\<star> :: (outAnd \<union> outNot)\<^sup>\<Omega>))  \<^enum>\<^sub>\<star> c = (smap  (Tsyn o (map_option) \<B>))\<cdot>port_o"
 
  
   apply(simp add: sbgetch_insert test4  assms rangeoutunion)+
 
-  apply auto 
-   defer
+
   sorry
 
 lemma flash2notin[simp]:"(flashInSB.setter port_i\<star> :: ((inAnd \<union> inNot) - outAnd \<union> outNot)\<^sup>\<Omega>) \<uplus>\<^sub>\<star> (flashOutSB.setter (port_o, port_intern)\<star> :: (outAnd \<union> outNot)\<^sup>\<Omega>) = notInSB.setter(port_o)"
   apply(rule sb_eqI, auto)
-  by(simp add: notInSB_port_o flashInSB_port_o)
+  sorry
 
    (* SWS: Gilt Nicht, doppelte magie. Anstatt den Zwischen-Datentyp zu fixieren und assumptions zu haben...
                 kann man die magischen-sachen durch nicht-magie ersetzen? *)
@@ -244,46 +231,24 @@ lemma sblen_eqI2:
   assumes "\<And>c. Rep c\<in>chDom TYPE('cs) \<Longrightarrow> #(sb1 \<^enum> c) = #(sb2 \<^enum> c)"
   shows "sb1 = sb2"
   sorry
-
 (* DEUTLICH WICHTIGER! *)
 lemma assumes "andSpf\<cdot>(andInSB.setter (port_i, port_intern)) = andOutSB.setter port_o"
     and "notSpf\<cdot>(notInSB.setter(port_o)) = notOutSB.setter port_intern"
-  shows "(flasherComp\<cdot>(flashInSB.setter (port_i)\<star>)) = flashOutSB.setter (port_o,port_intern)\<star>"
-  apply(simp add: flasherComp_def genComp_def)
-  using sblen_eqI2 t1 t2 fix_least sorry
-  
-  (*
-  apply(rule below_antisym)
-   apply (rule fix_least)
-
-   defer  (*solvable with assms*)
-   
-  
+  shows "(flasherComp\<cdot>(flashInSB.setter (port_i)\<star>)) = (flashOutSB.setter (port_o,port_intern)\<star>)"
   apply(simp add: flasherComp_def convflasherComp_def spfConvert_def)
-  apply(rule spfcomp_eq)  
-   apply(simp_all add: assms) 
+  apply(rule spfcomp_eqI,simp)
+    apply (simp add: assms)
   oops
-  *)
-  (*
-  apply(simp add: genComp_def)
-  apply(rule below_antisym)
-   apply (rule fix_least)
-
-  defer  solvable with assms *)
-  
-  
-
-
   
 
  (*nicht anwendbar wenn kanäle versteckt werden*)
-
+(* Ignore the following stuff
 datatype S = State S_and S_not bool
 
 instance S::countable
   by(countable_datatype)
 
-fun flashertransition::"S \<Rightarrow> bool \<Rightarrow> S \<times> bool"where
+fun flashertransition::"S \<Rightarrow> bool option \<Rightarrow> S \<times> bool option"where
 "flashertransition (State sand snot inputcin1) inputcin2 = 
   (let (nextand,andout) = dAand_transition sand (inputcin1, inputcin2);
                                              (nextnot, notout) = dAnot_transition snot andout in
@@ -309,6 +274,8 @@ lemma flasherout:assumes"Fin (Suc n) < #input" shows"snth (Suc n) (flashersscanl
 lemma flasherfinal:assumes"Fin (Suc n) < #input" 
   shows"snth (Suc n) (flashersscanl\<cdot>input) \<Longrightarrow> snth (Suc n) input \<or> snth n input"
   by(simp add: assms flasherout)
-
+*)
 
 end
+
+

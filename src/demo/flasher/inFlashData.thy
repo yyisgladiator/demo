@@ -13,9 +13,10 @@ definition "Rep = Rep_inFlash"
 instance
   apply(standard)
   apply(auto simp add: Rep_inFlash_def cEmpty_def)
-  using ctype.elims
-  apply (metis Rep_inFlash ex_in_conv insertE insert_iff)
-  apply (meson Rep_inFlash_inject injI) using ctype.elims Rep_inFlash apply simp
+  apply(auto simp add: ctype_empty_iff)
+  using ctype_empty_iff
+  apply (metis Rep_inFlash cMsg.simps ex_in_conv insertE insert_iff)
+  apply (meson Rep_inFlash_inject injI) using cMsg.elims Rep_inFlash apply simp
   using type_definition.Abs_image type_definition_inFlash typedef_finite_UNIV by fastforce
 end
 
@@ -32,19 +33,24 @@ lemma Flashin1_rep [simp]: "Rep (Flashin) = cin1"
 fun inFlashChan::"('bool::type \<Rightarrow> 'a::type) \<Rightarrow> 'bool \<Rightarrow> inFlash \<Rightarrow> 'a" where
 "inFlashChan Cc1 bool Flashin = Cc1 bool"
 
-abbreviation "buildFlashinSBE \<equiv> inFlashChan \<B>" 
+abbreviation "buildFlashinSBE \<equiv> inFlashChan (Tsyn o (map_option) \<B>)" 
+
+lemma rangecin1[simp]:"range (Tsyn o (map_option) \<B>) = ctype cin1"
+  apply(auto simp add: ctype_def)
+ by (metis option.simps(9) range_eqI)
 
 lemma buildflashin_ctype: "buildFlashinSBE a c \<in> ctype (Rep c)"
-  by(cases c; cases a;simp)
+  apply(cases c; cases a;simp)
+  by(simp_all add: ctype_def)
 
 lemma buildflashin_inj: "inj buildFlashinSBE"
-  apply(rule injI)
-  apply(case_tac x; case_tac y; simp)
-  by (metis M.inject(2) inFlashChan.simps)+
+  apply (auto simp add: inj_def)
+  by (metis inFlashChan.simps inj_def inj_B inj_tsyncons)+
 
 lemma buildflashin_range: "range (\<lambda>a. buildFlashinSBE a c) = ctype (Rep c)"
   apply(cases c)
-  by(auto simp add: image_iff)
+  apply(auto simp add: image_iff ctype_def)
+  by (metis option.simps(9))+
 
 lemma buildflashin_surj: assumes "sbElem_well (Some sbe)"
   shows "sbe \<in> range buildFlashinSBE"
@@ -52,41 +58,54 @@ proof -
   have ctypewell:"\<And> c. sbe c\<in> ctype (Rep c)"
     using assms by auto
   hence "\<And>c. sbe c \<in> range (\<lambda>a. buildFlashinSBE a c)"
-    using buildflashin_range by auto
+    by (simp add: buildflashin_range)
   hence "\<exists>prod. sbe = buildFlashinSBE prod"
-    apply(subst fun_eq_iff,auto)
-    by (metis(full_types) inFlash.exhaust rangeE)
-   thus ?thesis
+    apply(simp add: fun_eq_iff f_inv_into_f image_iff)
+    by (metis (full_types) inFlash.exhaust)
+  thus ?thesis
     by auto
 qed
 
 
-abbreviation "buildFlashinSB \<equiv> inFlashChan (Rep_cfun (smap \<B>))" 
 
-lemma buildflashoutsb_ctype: "sdom\<cdot>(buildFlashinSB a c) \<subseteq> ctype (Rep c)"
-  by(cases c; cases a;simp)
+abbreviation "buildFlashinSB \<equiv> inFlashChan (Rep_cfun (smap (Tsyn o (map_option) \<B>)))" 
 
-lemma buildflashoutsb_inj: "inj buildFlashinSB"
-  apply(rule injI)
-  sorry
-
-
-lemma buildflashoutsb_range: "(\<Union>a. sdom\<cdot>(buildFlashinSB a c)) = ctype (Rep c)"
+lemma buildflashinsb_ctype: "sValues\<cdot>(buildFlashinSB a c) \<subseteq> ctype (Rep c)"
   apply(cases c)
-  apply auto 
-  apply (metis (no_types, lifting) in_mono smap_sdom_range)
-  apply(rule_tac x="\<up>xa" in exI)
+  apply auto
+  by (metis image_iff range_eqI rangecin1 smap_sValues)
+
+
+lemma rep_cfun_smap_bool_inj:"inj (Rep_cfun (smap (Tsyn o (map_option) \<B>)))"
+  apply(rule smap_inj)
   by simp
 
-lemma buildflashoutsb_surj: assumes "sb_well sb"
+lemma buildflashinsb_inj: "inj buildFlashinSB"
+  by (metis (mono_tags, lifting) inFlashChan.simps inj_def rep_cfun_smap_bool_inj)
+
+lemma buildflashinsb_range: "(\<Union>a. sValues\<cdot>(buildFlashinSB a c)) = ctype (Rep c)"
+  apply(auto;cases c)
+  using buildflashinsb_ctype apply blast
+  apply(rule_tac x="\<up>(inv (Tsyn \<circ> map_option \<B>)x)" in exI,auto)
+  by (metis comp_apply f_inv_into_f rangecin1)
+
+  
+lemma buildflashinsb_surj: assumes "sb_well sb"
   shows "sb \<in> range buildFlashinSB"
 proof -
-  have ctypewell:"\<And> c. sValues (sb c) \<subseteq> ctype (Rep c)"
+  have ctypewell:"\<And> c. sValues\<cdot>(sb c) \<subseteq> ctype (Rep c)"
     using assms
     by (simp add: sb_well_def) 
   hence "\<exists>prod. sb = buildFlashinSB prod"
     apply(subst fun_eq_iff,auto,simp add: sValues_def)
-    sorry
+  proof -
+    have f1: "\<forall>i M. sValues\<cdot>(sb i) \<subseteq> M \<or> \<not> ctype (Rep i) \<subseteq> M"
+      by (metis ctypewell dual_order.trans)
+    have "ctype (Rep Flashin) \<subseteq> range(Tsyn o (map_option) \<B>)"
+      by (metis buildflashin_range image_cong inFlashChan.simps set_eq_subset)
+    then show "\<exists>s. \<forall>i. sb i = buildFlashinSB s i"
+      using f1 by (smt inFlash.exhaust inFlashChan.simps sValues_def smap_well)
+  qed 
   thus ?thesis
     by auto
 qed

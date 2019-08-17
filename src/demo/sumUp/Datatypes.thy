@@ -7,7 +7,7 @@ begin
 default_sort type
 
 
-datatype channel = c1 | c2 | c3 | cin1 | cin2 | cout
+datatype channel = cab | cin | cout
 
 
 
@@ -30,16 +30,14 @@ lemma inj_Bopt[simp]:"inj (map_option \<B>)"
 text \<open>Then one describes the types of each channel. Only Messages included are allowed to be
   transmitted\<close>
 fun cMsg :: "channel \<Rightarrow> M_pure set" where
-"cMsg c1 = range \<N>" |
-"cMsg c2 = range \<B>" |
-"cMsg c3 = {}" |
-"cMsg _ = range \<B>"
+"cMsg cin = range \<N>" |
+"cMsg cout = range \<N>" |
+"cMsg _ = {}"
 
 text\<open>Timing properties of each channel\<close>
 fun cTime :: "channel \<Rightarrow> timeType" where
-"cTime cin1 = TTsyn" |
-"cTime cin2 = TTsyn" |
-"cTime cout = TTsyn" |
+"cTime cin = TUntimed" |
+"cTime cout = TUntimed" |
 "cTime _ = undefined"
 
 lemma cmsgempty_ex:"\<exists>c. cMsg c = {}"

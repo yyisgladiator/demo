@@ -12,9 +12,9 @@ interpretation flashInSBE: sbeGen "buildFlashinSBE"
 
 interpretation flashInSB: sbGen "buildFlashinSB"
   apply(unfold_locales)
-  using buildflashoutsb_ctype sValues_def apply auto[1]
-  apply (simp add: buildflashoutsb_inj)
-  by (simp add: buildflashoutsb_surj)
+  apply (simp add: buildflashinsb_ctype) 
+  apply (simp add: buildflashinsb_inj)
+  by (simp add: buildflashinsb_surj)
 
 interpretation flashOutSBE: sbeGen "buildFlashoutSBE"
   apply(unfold_locales)
@@ -24,9 +24,9 @@ interpretation flashOutSBE: sbeGen "buildFlashoutSBE"
   by simp
 
 interpretation flashOutSB: sbGen "buildFlashoutSB"
-  apply(unfold_locales)
-  apply (simp add: buildflashinsb_ctype sValues_def)
-  apply (simp add: buildflashinsb_inj)
-  by (simp add: buildflashinsb_surj)
+   apply(unfold_locales)
+  apply (simp add: buildflashoutsb_ctype) 
+  apply (simp add: buildflashoutsb_inj)
+  by (simp add: buildflashoutsb_surj)
 
 end

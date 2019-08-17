@@ -22,6 +22,8 @@
   %for \<onequarter>, \<onehalf>, \<threequarters>, \<degree>, \<cent>,
   %\<currency>
 
+\usepackage{MontiBelle}
+
 % this should be the last package used
 \usepackage{pdfsetup}
 
@@ -32,12 +34,11 @@
 % for uniform font size
 %\renewcommand{\isastyle}{\isastyleminor}
 
-
-\newcommand{\isactrlenum}{$\blacktriangleright$}
+\input{glossary} % Description for Glossary Elements
 \begin{document}
 
-\title{core}
-\author{user}
+\title{Bundle}
+\author{MontiBelle \\ Software Engineering RWTH Aachen}
 \maketitle
 
 \tableofcontents
@@ -51,7 +52,7 @@
 % optional bibliography
 %\bibliographystyle{abbrv}
 %\bibliography{root}
-
+\printglossary
 \end{document}
 
 %%% Local Variables:
