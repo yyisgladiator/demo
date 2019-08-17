@@ -1,10 +1,11 @@
 (*<*)(*:maxLineLen=68:*)
 theory eventAutomat
-(*>*)
+
 imports ndAutomaton
-
 begin
+(*>*)
 
+(*<*)
 (* An event Automaton saves the previous events in a buffer. Hence we need to change the state *)
 datatype ('state::type,'csIn) eventState = EventState 'state "'csIn \<Rightarrow> M_pure list"
 
@@ -70,7 +71,7 @@ lift_definition eventAut :: "('state \<Rightarrow> 'in \<Rightarrow> M_pure \<Ri
   oops
 
 
-
+(*>*)
 
 (*
 
