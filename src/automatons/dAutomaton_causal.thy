@@ -62,25 +62,33 @@ definition das2da::"('state::type, 'in, 'out) dAutomaton_strong
     daInitOut   = sbe2sb(dasInitOut aut) |)"
 
 text\<open>The semantic mapping of our causal automatons use the 
-converters to then apply our general state semantic mapping 
-@{const daStateSem}.\<close>
+converters to apply our general state semantic mapping 
+@{const daStateSem} to our converted automatons.\<close>
 
 definition dawStateSem::
 "('s::type,'I::{chan,finite},'O) dAutomaton_weak 
 \<Rightarrow> ('s \<Rightarrow> ('I\<^sup>\<Omega> \<rightarrow> 'O\<^sup>\<Omega>))" where
-"dawStateSem da = daStateSem (daw2da da)"
+"dawStateSem da \<equiv> daStateSem (daw2da da)"
+
+text\<open>Since our weak Automatons have no initial output, the complete
+semantic mapping only maps the state semantic to the corresponding
+\gls{spf} of the initial state. Alternatively we could also use
+@{const daSem}\ref{subsub:sem} and our converter to accomplish the
+same.\<close>
 
 definition dawSem::
 "('s::type, 'I::{chan,finite},'O) dAutomaton_weak 
 \<Rightarrow> ('I\<^sup>\<Omega> \<rightarrow> 'O\<^sup>\<Omega>)" where
-"dawSem da \<equiv> \<Lambda> sb. dawStateSem da (dawInitState da)\<cdot>sb"
+"dawSem da \<equiv> dawStateSem da (dawInitState da)"
+
+text\<open>Our strong semantic does exactly this.\<close>
 
 definition dasSem::
 "('s::type, 'I::{chan,finite},'O) dAutomaton_strong 
 \<Rightarrow> ('I\<^sup>\<Omega> \<rightarrow> 'O\<^sup>\<Omega>)" where
-"dasSem da = daSem(das2da da)"
+"dasSem da \<equiv> daSem(das2da da)"
 
-subsubsection \<open>Rum96 Automaton Semantic\<close>
+subsubsection %invisible \<open>Rum96 Automaton Semantic\<close>
 
 function Rum_tap::"('s::type, 'in,'out) dAutomaton_weak 
 \<Rightarrow> ('s \<Rightarrow> ('in,'out) spfw) set" where
@@ -103,6 +111,10 @@ fun Rum_ta_strong::
 
 paragraph \<open>Causal Sem lemmas \\\<close>
 
+text\<open>The causal automaton types work very similar to our general
+automatons. Firstly, the semantic iteration terminates, if the input
+\gls{sb} has not bundle element.\<close>
+
 lemma dawstatesem_unfolding:
 "dawStateSem automat s = sb_split\<cdot>(\<lambda>sbe. \<Lambda> sb .
            let (nextState, output) = dawTransition automat s sbe in
@@ -121,7 +133,7 @@ lemma dawNextState:
          daNextState (daw2da automat) s sbe"
   by  (simp add: daNextState_def daw2da_def)
 
-lemma dawstatesem_bottom:
+theorem dawstatesem_bottom:
   assumes "\<not>sbHdElemWell (sb::'b::{finite,chan}\<^sup>\<Omega>)"
   and "\<not> chDomEmpty TYPE('b)"
   shows "(dawStateSem automat s)\<cdot>sb = \<bottom>"
@@ -149,21 +161,32 @@ lemma dawstatesem_final:
   by (simp add: case_prod_unfold Let_def dawStateSem_def sbECons_def
       dawNextOut dawNextState dastatesem_final assms)
 
+
+text\<open>Furthermore, process every input bundle element similar to the
+general automatons, but produce exactly one bundle element as 
+output for every input element.\<close>
+
 theorem dawstatesem_final_h2:
   shows "(dawStateSem automat s)\<cdot>(sbe \<bullet>\<^sup>\<surd> sb) =
-(let (nextState, output) = dawTransition automat s sbe in
+          (let (nextState, output) = dawTransition automat s sbe in
                          output \<bullet>\<^sup>\<surd> dawStateSem automat nextState\<cdot>sb)"
   apply (simp add: case_prod_unfold Let_def dawStateSem_def)
   apply (subst (2) sbECons_def)
   by (simp add: dawNextOut dawNextState dastatesem_final_h2)
 
+text\<open>Thus, the length of the output is equal to the length of the
+input. This leads directly to the weakness of any weak automaton 
+semantic.\<close>
+
+lemma dawsem_len:"sbLen(dawStateSem automat s\<cdot>sb) = sbLen sb"
+  oops
+
 lemma dawstatesem_weak:
-  fixes automat::"('s::type,'I::{chan,finite},'O)dAutomaton_weak"
   shows  "weak_well (dawStateSem automat s)"
   apply (simp add: dawStateSem_def)
   apply (rule dastatesem_weak)
   apply (simp add: daw2da_def daNextOut_def)
-  by (cases "chDomEmpty TYPE('O)",auto)
+  by (cases "chDomEmpty TYPE('b)",auto)
 
 theorem dawsem_weak[simp]:
   fixes automat::"('s::type,'I::{chan,finite},'O)dAutomaton_weak"
@@ -195,6 +218,12 @@ lemma dassem_bottom:
   shows "dasSem automat\<cdot>(\<bottom>::'b\<^sup>\<Omega>) = sbe2sb (dasInitOut automat)"
   by (simp add: dasSem_def dasem_bottom assms das2da_def)
 
+text\<open>Of course the strong automatons are then immediately strong,
+since they have an additional initial output element.\<close>
+
+lemma dassem_len:"sbLen (dasSem automat\<cdot>sb) = lnsuc\<cdot>(sbLen sb)"
+  oops
+
 theorem dassem_strong:
 shows "strong_well (dasSem automat)"
   apply (simp add: strong_well_def dassem_insert SB.sbecons_len)
@@ -202,17 +231,37 @@ shows "strong_well (dasSem automat)"
 
 paragraph \<open>Lifted semantic \\\<close>
 
-lift_definition semantik_weak::
-"('state::type,'in::{chan,finite},'out) dAutomaton_weak 
-\<Rightarrow> ('in,'out)spfw" is "\<lambda>autw. dawSem autw"
-  by simp
+text\<open>We can then provide lifted semantics for strong and weak
+automatons. The lifted versions of @{const dawSem} and 
+@{const dasSem} map to well formed causal \glspl{spf}.\<close>
 
-lift_definition semantik_strong::
+lift_definition semantic_weak::
+"('state::type,'in::{chan,finite},'out) dAutomaton_weak 
+\<Rightarrow> ('in,'out)spfw" is "dawSem"
+  by %visible simp
+
+lift_definition semantic_strong::
 "('s::type, 'in::{chan,finite}, 'out) dAutomaton_strong 
 \<Rightarrow> ('in,'out)spfs"is "\<lambda>auts. Abs_spfw(dasSem auts)"
-  by (simp add: Abs_spfw_inverse dassem_strong strong2weak)
+  by %visible (simp add: Abs_spfw_inverse dassem_strong strong2weak)
 
-section \<open>automaton to sscanl equivalence locale\<close>
+subsubsection \<open>Causal Automaton Locales\<close>
+
+text\<open>The semantic mapping allows us to verify the behaviour of
+components with \glspl{spf}. Since these components are modeled as 
+automatons, we introduce two locals for constructing and
+transforming automatons. These locals are used in the generation
+process, where a MontiArc model provides the information about the
+automatons components. Hence, they provide us with a state type,
+message types, the transition function directly obtained from the
+model and an initial state. Since the MontiArc model has no
+\glspl{sb}, @{type sbElem}s or the @{type M}, the transition 
+function also does not use any of these things. Instead it uses 
+exactly the types from its model. But the message types do not have 
+to be in type @{type M} to construct an automaton in Isabelle,
+because our locals @{locale sbeGen} and @{locale sbGen} are also 
+interpreted with constructors provided by the generator and we can
+utilize them to define the automaton internally and independently.\<close>
 
 locale sscanlGen =
   fixes daTransition::"'state::countable \<Rightarrow> 'a::countable 
@@ -224,17 +273,38 @@ locale sscanlGen =
       and sbegenfout:"sbeGen fout"
 begin
 
+text\<open>Using the setter, getter and MontiArc transition function we
+define the corresponding transition function for our automaton by
+applying the provided getter to its input @{type sbElem}, running
+the MontiArc transition function and then using the setter to 
+convert its output back to a @{type sbElem}. The state type is not
+converted.\<close> 
+
 definition daTransitionH::"'state \<Rightarrow> 'in\<^sup>\<surd> \<Rightarrow> ('state \<times> 'out\<^sup>\<surd>)" where
 "daTransitionH state sbe = 
      (let (s,output) = daTransition state (sbeGen.getter fin sbe) in 
                        (s, sbeGen.setter fout output))"
 
+text\<open>Then the deterministic automaton is defined with the initial
+state and @{const daTransitionH}.\<close>
+
 definition "da = \<lparr> dawTransition = daTransitionH,
                  dawInitState =daInitialState \<rparr>"
 
+text\<open>Often components output behaviour depends on the input. These
+components have a non-empty input and output domain and so does
+their semantic. We can then represent their components behaviour by
+reducing its semantic with the setter and getter to a 
+@{const sscanlAsnd} mapping that uses the MontiArc transition
+function and works completely over streams. This is an important 
+part of the verification process because it is often easier to proof
+properties directly for the streams of a bundle and not for the
+bundle itself. If the input domain is empty, the components output 
+is independent from the input.\<close>
+
 theorem daut2sscanl: 
-  assumes "\<not>chDomEmpty(TYPE('out))"
-  and "\<not>chDomEmpty(TYPE('in))"
+  assumes "\<not>chDomEmpty TYPE('out)"
+  and "\<not>chDomEmpty TYPE('in)"
   shows"sbeGen.getterSB fout \<cdot>
   (dawStateSem da state\<cdot>(sbeGen.setterSB fin\<cdot>input)) =  
    sscanlAsnd daTransition state\<cdot>input"
@@ -268,7 +338,7 @@ lemma daut2sscanl:
   apply(insert daut2sscanl[of state "sbeGen.getterSB fin\<cdot>input"])
   oops
 
-fun stateSemList::"'state \<Rightarrow> 'a list \<Rightarrow> 'b list" where
+fun %invisible stateSemList::"'state \<Rightarrow> 'a list \<Rightarrow> 'b list" where
 "stateSemList _ [] = []" |
 "stateSemList state (l#ls) = snd(daTransition state l) # 
                       stateSemList (fst (daTransition state l)) ls"
@@ -285,7 +355,12 @@ klasse anlegen)
 
 end
 
-section \<open>automaton to smap equivalence locale\<close>
+text\<open>Some automatons contains a self looping state that will never 
+be left again. If such an automaton reaches a self looping state on 
+its run, its behaviour can be reduced to an easier transition
+function. For such cases we provide a sub local of 
+@{locale sscanlGen} which provides an additional behaviour 
+translation.\<close>
 
 locale smapGen =
   fixes daTransition::"'state::countable \<Rightarrow> 'a::countable \<Rightarrow> 
@@ -298,11 +373,18 @@ locale smapGen =
   and singlestate:"\<And>sbe. fst(daTransition loopState sbe)=loopState"
 begin
 
+text\<open>The looping state is used for defining a mapping \<open> 'a \<Rightarrow> 'b\<close>
+from the MontiArc transition function.\<close>
+
 abbreviation "smapTransition \<equiv> (\<lambda>e. snd(daTransition loopState e))" 
 
+text\<open>Using this, we can reduce the semantic with setter and getter
+to a @{const smap} mapping over streams from the moment its looping 
+state is reached.\<close>
+
 theorem daut2smap:
-  assumes "\<not>chDomEmpty(TYPE('out))"
-  and "\<not>chDomEmpty(TYPE('in))"
+  assumes "\<not>chDomEmpty TYPE('out)"
+  and "\<not>chDomEmpty TYPE('in)"
   shows"sbeGen.getterSB fout\<cdot>(dawStateSem 
         (sscanlGen.da daTransition daInitialState fin fout) 
         loopState\<cdot>(sbeGen.setterSB fin \<cdot>input)) = 
@@ -311,10 +393,29 @@ theorem daut2smap:
   using scscanlgenf sscanlGen.sbegenfin assms  apply auto[2]
   by (simp_all add: assms singlestate sscanl2smap)
 
+text\<open>In case of a previous reduction to the @{const sscanlAsnd}
+mapping an additional theorem is provided, that allows the further
+reduction to @{const smap} if a looping state is reached at any
+point.\<close>
+
+theorem step2smap:
+  assumes "\<not>chDomEmpty TYPE('out)"
+  and     "\<not>chDomEmpty TYPE('in)"
+  shows   "sscanlAsnd daTransition loopState\<cdot>input = 
+           smap smapTransition\<cdot>input"
+  using scscanlgenf sscanlGen.sbegenfin assms apply auto
+  by (simp_all add: assms singlestate sscanl2smap)
+
+
 end
 
-sublocale  smapGen \<subseteq> sscanlGen
-  by (simp add: scscanlgenf)
+text\<open>A @{locale smapGen} interpretation should also automatically 
+provide all properties and definitions from the @{locale sscanlGen}
+locale. This is done be instantiating @{locale smapGen} as a
+sub locale of @{locale sscanlGen}.\<close>
+
+sublocale smapGen \<subseteq> sscanlGen
+  by %visible (simp add: scscanlgenf)
 
 
 (*<*)

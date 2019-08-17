@@ -22,7 +22,7 @@ ndAutomaton_incomplete  =
   ndaiTransition :: "('state \<Rightarrow> 'in\<^sup>\<surd> \<Rightarrow> (('state \<times> 'out\<^sup>\<Omega>) set))"
   ndaiInitConfig :: "('state \<times> 'out\<^sup>\<Omega>) set"
 
-cpodef ('state::type, 'in::"{chan, finite}", 'out::chan) ndAutomaton  =
+cpodef ('state::type,'in::"{chan, finite}",'out::chan)ndAutomaton  =
   "{(transition::(('state \<Rightarrow> 'in\<^sup>\<surd> \<Rightarrow> (('state \<times> 'out\<^sup>\<Omega>) set)))
     , initialConfig::('state \<times> 'out\<^sup>\<Omega>) set)
     | transition initialConfig.
@@ -35,8 +35,11 @@ cpodef ('state::type, 'in::"{chan, finite}", 'out::chan) ndAutomaton  =
   apply (rule, rule, rule)
   apply (simp_all add: lub_eq_bottom_iff mem_Times_iff)
 proof -
-  fix Y :: "nat \<Rightarrow> ('state \<Rightarrow> 'in\<^sup>\<surd> \<Rightarrow> ('state \<times> 'out\<^sup>\<Omega>) set) \<times> ('state \<times> 'out\<^sup>\<Omega>) set" and state :: 'state and sbe :: "'in\<^sup>\<surd>"
-  assume a1: "\<forall>i. (\<forall>state sbe. fst (Y i) state sbe \<noteq> \<bottom>) \<and> snd (Y i) \<noteq> \<bottom>"
+  fix Y :: "nat \<Rightarrow> 
+  ('state \<Rightarrow> 'in\<^sup>\<surd> \<Rightarrow> ('state \<times> 'out\<^sup>\<Omega>) set) \<times> ('state \<times> 'out\<^sup>\<Omega>) set" 
+  and state :: 'state and sbe :: "'in\<^sup>\<surd>"
+  assume a1: "\<forall>i. (\<forall>state sbe. fst (Y i) state sbe \<noteq> \<bottom>) \<and> 
+                               snd (Y i)           \<noteq> \<bottom>"
   assume "chain Y"
   then have "chain (\<lambda>n. fst (Y n))"
     using ch2ch_fst by blast

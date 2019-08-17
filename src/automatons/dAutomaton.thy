@@ -51,7 +51,7 @@ definition daNextOut::
 "('s::type, 'in,'out) dAutomaton \<Rightarrow> 's \<Rightarrow>  'in\<^sup>\<surd> \<Rightarrow> 'out\<^sup>\<Omega>" where
 "daNextOut aut s m = snd ((daTransition aut) s m)"
 
-subsubsection \<open>Semantic\<close>
+subsubsection \<open>Semantic\<close> text\<open>\label{subsub:sem}\<close>
 
 text\<open>The semantic of an automaton corresponds to a \gls{spf}. To 
 obtain a \gls{spf} with an equivalent behaviour we use a semantic
