@@ -262,7 +262,7 @@ theorem dasem_insert:
   by (simp add: daSem_def)
 
 text\<open>Hence, the semantic is only strict, if the initial output is
-\\<open>\<bottom>\<close>.\<close>
+\<open>\<bottom>\<close>.\<close>
 
 theorem dasem_bottom:
   assumes "\<not>chDomEmpty TYPE('in::{chan,finite})"

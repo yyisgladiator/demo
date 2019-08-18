@@ -178,7 +178,10 @@ text\<open>Thus, the length of the output is equal to the length of the
 input. This leads directly to the weakness of any weak automaton 
 semantic.\<close>
 
-lemma dawsem_len:"sbLen(dawStateSem automat s\<cdot>sb) = sbLen sb"
+lemma dawsem_len:
+  fixes automat::"('s::type,'I::{chan,finite},'O)dAutomaton_weak"
+  assumes "\<not>chDomEmpty TYPE('O)"  
+  shows"sbLen(dawStateSem automat s\<cdot>sb) = sbLen sb"
   oops
 
 lemma dawstatesem_weak:
@@ -221,7 +224,10 @@ lemma dassem_bottom:
 text\<open>Of course the strong automatons are then immediately strong,
 since they have an additional initial output element.\<close>
 
-lemma dassem_len:"sbLen (dasSem automat\<cdot>sb) = lnsuc\<cdot>(sbLen sb)"
+lemma dassem_len:
+  fixes automat::"('s::type,'I::{chan,finite},'O)dAutomaton_strong"
+  assumes "\<not>chDomEmpty TYPE('O)"  
+  shows  "sbLen (dasSem automat\<cdot>sb) = lnsuc\<cdot>(sbLen sb)"
   oops
 
 theorem dassem_strong:
