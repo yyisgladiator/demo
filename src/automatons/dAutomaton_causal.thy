@@ -181,7 +181,7 @@ semantic.\<close>
 lemma dawsem_len:
   fixes automat::"('s::type,'I::{chan,finite},'O)dAutomaton_weak"
   assumes "\<not>chDomEmpty TYPE('O)"  
-  shows"sbLen (dawStateSem automat s\<cdot>sb) = sbLen sb"
+  shows "sbLen (dawStateSem automat s\<cdot>sb) = sbLen sb"
 proof (cases "chDomEmpty TYPE('I)")
   case True
   have "\<And>s sbe. sbLen (sbe2sb (snd ((dawTransition automat) s sbe))) = 1"
