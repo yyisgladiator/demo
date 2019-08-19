@@ -1204,8 +1204,7 @@ lemma sbunion_getch[simp]:fixes c::"'a"
       assumes"Rep c \<in> chDom TYPE('c)"
       shows  "(sbUnion::'a\<^sup>\<Omega>\<rightarrow> 'b\<^sup>\<Omega> \<rightarrow> 'c\<^sup>\<Omega>)\<cdot>cb\<cdot>db \<^enum>\<^sub>\<star> c = cb \<^enum> c"
   apply(simp add: sbgetch_insert sbunion_rep_eq)
-  by (metis assms Diff_iff chDom_def chan_eq range_eqI 
-      sbgetch_insert sbgetch_insert2)
+  by (metis assms Diff_iff chDom_def range_eqI)
 
 lemma sbunion_eq [simp]: "sb1 \<uplus>\<^sub>\<star> sb2 = sb1"
   apply(rule sb_eqI)
