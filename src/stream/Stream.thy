@@ -1,4 +1,4 @@
-(*<*)
+(*<*)(*:maxLineLen=68:*)
 section \<open>Lazy Streams\<close>
 
 theory Stream
@@ -18,19 +18,31 @@ text \<open>\<open>discr u\<close> lifts an arbitrary type \<open>'a\<close> to 
 (*>*)
 section\<open>Streams\<close> text\<open>\label{sec:stream}\<close>
 
-text\<open>The verification framework focus is based on the streams and
-stream processing functions.This section will shortly introduce the
-implementation of streams in Isabelle and mention and explain a few 
-important functions and their properties. For an in depth 
-explanation I refer to \cite{Stu16}.\<close>
+text\<open>The verification framework focus is based on the streams of 
+messages and stream processing functions. This section will shortly
+introduce the implementation of streams in Isabelle and mention and
+explain a few important functions and their properties. Some of 
+these will play a major role in the definition of \glspl{sb} and 
+others will be used to ease the verification process of components.
+For an in depth explanation I refer to \cite{Stu16}.\<close>
 
-
-text\<open>The stream domain in Isabelle is defined
-\<close>
+text\<open>The stream domain in Isabelle is defined with the \<open>domain\<close>
+command provided by the \<open>HOLCF\<close> package. This automatically
+instantiates our type as a \gls{pcpo}.\<close>
 
 domain
   'a stream = lscons (lshd::"'a discr u") (lazy srt::"'a stream") 
                                         (infixr "&&" 65)
+
+text\<open>The message type is lifted to a discrete \gls{cpo} to generate
+the same prefix order from FOCUS streams.\<close>
+
+subsection\<open>Function over streams\<close> text\<open>\label{subsec:sfun}\<close>
+
+text\<open> The following table gives an overview about the main functions
+defined for @{type stream}s. Some of them are introduced in detail 
+for their later usage in the Isabelle framework.\<close>
+
 (*<*)
 
 (* ----------------------------------------------------------------------- *)
@@ -150,14 +162,26 @@ end
 (* ----------------------------------------------------------------------- *)
 text \<open>Typical functions known from lists:\<close>
 (* ----------------------------------------------------------------------- *)
+(*>*)
 
-text \<open>@{term slen}: Retrieve the length of a stream.
-  It is defined as the number of its elements or \<open>\<infinity>\<close> for inifinite streams.\<close>
+subsubsection\<open>Length of Streams\<close>
+
+text \<open>@{term slen}: Retrieve the length of a stream. It is defined
+as the number of its elements or \<open>\<infinity>\<close> for infinite streams.\<close>
+
 definition slen       :: "'a stream \<rightarrow> lnat" where
 "slen \<equiv> fix\<cdot>(\<Lambda> h. strictify\<cdot>(\<Lambda> s. lnsuc\<cdot>(h\<cdot>(srt\<cdot>s))))"
 
+text\<open>Resulting from the prefix order, a few key properties can be 
+formulated using the length. One of these is an equality property:
+If two streams are in an order and have the same length, there are 
+equal. Abbreviation \<open>#\<close> is used for obtaining the length of a 
+stream.\<close>
+
 abbreviation slen_abbr :: "'a stream \<Rightarrow> lnat" ("#_" [1000] 999)
 where "#s == slen\<cdot>s"
+
+(*<*)
 
 text \<open>@{term sdrop}: Remove the first \<open>n\<close> elements
   of the stream.\<close>
@@ -171,11 +195,16 @@ definition snth       :: "nat \<Rightarrow> 'a stream \<Rightarrow> 'a" where
 text\<open>@{term sfoot}: Get the last element of a not empty, finite stream\<close>
 definition sfoot      :: "'a stream \<Rightarrow> 'a" where
 "sfoot s = snth (THE a. lnsuc\<cdot>(Fin a) = #s) s"
+(*>*)
+
+subsubsection\<open>Values of a stream\<close>
 
 text \<open>@{term sValues}: Retrieve the set of all values in a stream.\<close>
+
 definition sValues       :: "'a stream \<rightarrow> 'a set" where
 "sValues \<equiv> \<Lambda> s. {snth n s | n. Fin n < #s}" 
 
+(*<*)
 text \<open>@{term sntimes}: Repeat the given stream \<open>n\<close> times.\<close>
 text \<open>(Only listed as a constant below for reference;
   Use \<open>sntimes\<close> with same signature instead).\<close>
@@ -185,12 +214,15 @@ text \<open>@{term sinftimes}: Concatenate a stream infinitely often to itself.\
 definition sinftimes  :: "'a stream \<Rightarrow> 'a stream" ("_\<^sup>\<infinity>") where
  "sinftimes \<equiv> fix\<cdot>(\<Lambda> h. (\<lambda>s. 
                         if s = \<epsilon> then \<epsilon> else (s \<bullet> (h s))))"                         
-                        
+(*>*)                        
+subsubsection\<open>Applying functions element wise\<close>
+
 text \<open>@{term smap}: Apply a function to all elements of the stream.\<close>
+
 definition smap       :: "('a \<Rightarrow> 'b) \<Rightarrow> ('a,'b) spf" where
 "smap f \<equiv> fix\<cdot>(\<Lambda> h s. slookahd\<cdot>s\<cdot>(\<lambda> a. 
                        \<up>(f a) \<bullet> (h\<cdot>(srt\<cdot>s))))"
-
+(*<*)
 text \<open>@{term sfilter}: Remove all elements from the stream which are
   not included in the given set.\<close>
 definition sfilter    :: "'a set \<Rightarrow> 'a spfo" where
@@ -244,37 +276,47 @@ text \<open>@{term srcdups}: Remove successive duplicate values from stream.\<cl
 definition srcdups    :: "'a spfo" where
 "srcdups \<equiv> fix\<cdot>(\<Lambda> h s. slookahd\<cdot>s\<cdot>(\<lambda> a. 
                         \<up>a \<bullet>  h\<cdot>(sdropwhile (\<lambda> z. z = a)\<cdot>(srt\<cdot>s))))"
+(*>*)
 
-(* Takes a nat indicating the number of elements to scan, a reducing function, an initial initial element,
-   and an input stream. Returns a stream consisting of the partial reductions of the input stream. *)
-primrec SSCANL :: "nat \<Rightarrow> ('o \<Rightarrow> 'i \<Rightarrow> 'o) \<Rightarrow> 'o \<Rightarrow> 'i stream \<Rightarrow> 'o stream" where
+subsubsection\<open>Applying State-based Functions element wise\<close>
+(* Takes a nat indicating the number of elements to scan, a reducing
+ function, an initial initial element, and an input stream. Returns
+a stream consisting of the partial reductions of the input stream.*)
+primrec SSCANL::
+"nat \<Rightarrow> ('o \<Rightarrow> 'i \<Rightarrow> 'o) \<Rightarrow> 'o \<Rightarrow> 'i stream \<Rightarrow> 'o stream" where
   SSCANL_zero_def: "SSCANL 0 f q s = \<epsilon>" |
   "SSCANL (Suc n) f q s = (if s=\<epsilon> then \<epsilon> 
-                           else \<up>(f q (shd s)) \<bullet> ( SSCANL n f (f q (shd s)) (srt\<cdot>s) )     )"
+                           else \<up>(f q (shd s)) \<bullet> 
+                                (SSCANL n f (f q (shd s)) (srt\<cdot>s)))"
 
-text \<open>@{term sscanl}: Apply a function elementwise to the input stream.
-  Behaves like \<open>map\<close>, but also takes the previously generated
-  output element as additional input to the function.
-  For the first computation, an initial value is provided.\<close>
-definition sscanl     :: "('o \<Rightarrow> 'i \<Rightarrow> 'o) \<Rightarrow> 'o \<Rightarrow> ('i, 'o) spf" where
+text \<open>@{term sscanl}: Apply a function elementwise to the input
+stream. Behaves like \<open>map\<close>, but also takes the previously generated
+output element as additional input to the function. For the first 
+computation, an initial value is provided.\<close>
+definition sscanl :: "('o \<Rightarrow> 'i \<Rightarrow> 'o) \<Rightarrow> 'o \<Rightarrow> ('i, 'o) spf" where
 "sscanl f q \<equiv> \<Lambda> s. \<Squnion>i. SSCANL i f q s"
-
+(*<*)
 (* scanline Advanced :D  *)
 (* or stateful ... *)
-(* The user has more control. Instead of the last output ('b)  a state ('s) is used as next input *)
-definition sscanlA :: "('s \<Rightarrow>'a \<Rightarrow> ('b \<times>'s)) \<Rightarrow> 's  \<Rightarrow> 'a stream \<rightarrow> 'b stream" where
+(* The user has more control. Instead of the last output ('b) a 
+state ('s) is used as next input *)
+definition sscanlA ::
+ "('s \<Rightarrow>'a \<Rightarrow> ('b \<times>'s)) \<Rightarrow> 's  \<Rightarrow> 'a stream \<rightarrow> 'b stream" where
 "sscanlA f s0 \<equiv> \<Lambda> s. sprojfst\<cdot>(sscanl (\<lambda>(_,b). f b) (undefined, s0)\<cdot>s)"
+(*>*)
 
-
-definition sscanlAg :: "('s \<Rightarrow>'a::countable \<Rightarrow> ('s::countable \<times>'b::countable)) \<Rightarrow> 's  \<Rightarrow> 'a stream \<rightarrow> ('s\<times>'b) stream" where
+definition sscanlAg ::
+"('s \<Rightarrow>'a \<Rightarrow> ('s \<times>'b)) \<Rightarrow> 's \<Rightarrow> 'a stream \<rightarrow> ('s\<times>'b) stream" where
 "sscanlAg f s0 \<equiv> \<Lambda> s. (sscanl (\<lambda>(b,_). f b) (s0, undefined)\<cdot>s)"
 
-definition sscanlAfst :: "('s \<Rightarrow>'a::countable \<Rightarrow> ('s::countable \<times>'b::countable)) \<Rightarrow> 's  \<Rightarrow> 'a stream \<rightarrow> 's stream" where
+definition sscanlAfst ::
+"('s \<Rightarrow>'a \<Rightarrow> ('s\<times>'b)) \<Rightarrow> 's \<Rightarrow> 'a stream \<rightarrow> 's stream" where
 "sscanlAfst f s0 \<equiv> \<Lambda> s. sprojfst\<cdot>(sscanlAg f s0\<cdot>s)"
 
-definition sscanlAsnd :: "('s \<Rightarrow>'a::countable \<Rightarrow> ('s::countable \<times>'b::countable)) \<Rightarrow> 's  \<Rightarrow> 'a stream \<rightarrow> 'b stream" where
+definition sscanlAsnd ::
+"('s \<Rightarrow>'a \<Rightarrow> ('s \<times>'b)) \<Rightarrow> 's  \<Rightarrow> 'a stream \<rightarrow> 'b stream" where
 "sscanlAsnd f s0 \<equiv> \<Lambda> s. sprojsnd\<cdot>(sscanlAg f s0\<cdot>s)"
-
+(*<*)
 (*
 definition sscanlAg :: "('s \<Rightarrow>'a::countable \<Rightarrow> ('s::countable \<times>'b::countable)) \<Rightarrow>'s   \<Rightarrow> 'a stream \<rightarrow> ('s\<times>'b) stream" where
 "sscanlAg f s0 \<equiv> \<Lambda> s. (sscanl (\<lambda>(b,_). f b) (s0, undefined)\<cdot>s)"
