@@ -110,16 +110,28 @@ lemma flash2andin[simp]:"(((sbConvert::inFlash\<^sup>\<Omega> \<rightarrow> ((in
   apply(rule sb_eqI,auto)  
   sorry
 
-lemma flash2andout[simp]:"flashOutSB.setter (port_o, port_intern)\<star>\<star>\<^sub>1 = andOutSB.setter port_o"
-  oops (* SWS: Gilt Nicht, doppelte magie. Anstatt den Zwischen-Datentyp zu fixieren und assumptions zu haben...
+
+lemma andOutSB_port_o: assumes " Rep c = cout" shows " andOutSB.setter port_o  \<^enum>  c = (smap (Tsyn o (map_option) \<B>)\<cdot>port_o)"
+  by (metis andOutSB.setter.rep_eq outAnd.exhaust outAndChan.simps sbgetch_insert2)
+
+lemma notOutSB_port_o: assumes " Rep c = cin2" shows " notOutSB.setter port_intern  \<^enum>  c = (smap (Tsyn o (map_option) \<B>)\<cdot>port_intern)"
+  by (metis notOutSB.setter.rep_eq outNot.exhaust outNotChan.simps sbgetch_insert2)
+
+lemma flashOutSB_port_o: assumes " Rep (c::outAnd) = cout" shows "(flashOutSB.setter (port_o, port_intern)\<star> :: (outAnd \<union> outNot)\<^sup>\<Omega>)  \<^enum>\<^sub>\<star> c = (smap (Tsyn o (map_option) \<B>)\<cdot>port_o)"
+  apply(simp add: sbgetch_insert assms rangeoutunion)
+  oops
+
+
+lemma flash2andout[simp]:"(flashOutSB.setter (port_o, port_intern)\<star> :: (outAnd \<union> outNot)\<^sup>\<Omega>)\<star>\<^sub>1 = andOutSB.setter port_o"
+  sorry (* SWS: Gilt Nicht, doppelte magie. Anstatt den Zwischen-Datentyp zu fixieren und assumptions zu haben...
                 kann man die magischen-sachen durch nicht-magie ersetzen? *)
 
-lemma flash2notin[simp]:"flashInSB.setter port_i\<star> \<uplus>\<^sub>\<star> (flashOutSB.setter (port_o, port_intern)\<star>) = notInSB.setter(port_o)"
-  oops (* SWS: Gilt Nicht, doppelte magie. Anstatt den Zwischen-Datentyp zu fixieren und assumptions zu haben...
+lemma flash2notin[simp]:"(flashInSB.setter port_i\<star> :: ((inAnd \<union> inNot) - outAnd \<union> outNot)\<^sup>\<Omega>) \<uplus>\<^sub>\<star> (flashOutSB.setter (port_o, port_intern)\<star> :: (outAnd \<union> outNot)\<^sup>\<Omega>) = notInSB.setter(port_o)"
+  sorry (* SWS: Gilt Nicht, doppelte magie. Anstatt den Zwischen-Datentyp zu fixieren und assumptions zu haben...
                 kann man die magischen-sachen durch nicht-magie ersetzen? *)
 
 lemma flash2notout[simp]:"flashOutSB.setter (port_o, port_intern)\<star>\<star>\<^sub>2 = notOutSB.setter port_intern "
-  oops (* SWS: Gilt Nicht, doppelte magie. Anstatt den Zwischen-Datentyp zu fixieren und assumptions zu haben...
+  sorry (* SWS: Gilt Nicht, doppelte magie. Anstatt den Zwischen-Datentyp zu fixieren und assumptions zu haben...
                 kann man die magischen-sachen durch nicht-magie ersetzen? *)
 
 lemma flash2andinnotout[simp]:"flashInSB.setter port_i\<star> \<uplus>\<^sub>\<star> (z::(outAnd \<union> outNot)\<^sup>\<Omega>) = andInSB.setter (port_i,notOutSB.getter(z\<star>))"
@@ -130,14 +142,148 @@ lemma flash2notinandout[simp]:"flashInSB.setter port_i\<star> \<uplus>\<^sub>\<s
   oops (* SWS: Gilt Nicht, doppelte magie. Anstatt den Zwischen-Datentyp zu fixieren und assumptions zu haben...
                 kann man die magischen-sachen durch nicht-magie ersetzen? *)
 
+
+lemma flash_setter_eq: "((flashInSB.setter port_i) \<uplus>\<^sub>\<star> (flashOutSB.setter (port_o, port_intern)\<star>::(outAnd \<union> outNot)\<^sup>\<Omega>)) = notInSB.setter(port_o)"
+  (* setter eq *)
+  sorry
+
+lemma flash_setter_eq2: "((flashInSB.setter port_i) \<uplus>\<^sub>\<star> (flashOutSB.setter (port_o, port_intern)\<star>::(outAnd \<union> outNot)\<^sup>\<Omega>)) = andInSB.setter(port_i, port_intern)"
+  (* setter eq *)
+  sorry
+
+(*
+lemma flash_fix_old: 
+  assumes "andSpf\<cdot>(andInSB.setter (port_i, port_intern)) = andOutSB.setter port_o"
+    and "notSpf\<cdot>(notInSB.setter(port_o)) = notOutSB.setter port_intern"
+  shows "(\<Lambda> (sbOut::(outAnd \<union> outNot)\<^sup>\<Omega>). andSpf\<cdot>((flashInSB.setter port_i\<star>::inFlash\<^sup>\<Omega>) \<uplus>\<^sub>\<star> sbOut) \<uplus> notSpf\<cdot>((flashInSB.setter port_i\<star>::inFlash\<^sup>\<Omega>) \<uplus>\<^sub>\<star> sbOut))\<cdot>
+           (flashOutSB.setter (port_o, port_intern)\<star>) = (flashOutSB.setter (port_o, port_intern)\<star>::(outAnd \<union> outNot)\<^sup>\<Omega>)"
+  apply(simp add: assms flash_setter_eq flash_setter_eq2)
+  by (simp add: sbunion_eqI)
+
+lemma flash_below_old: 
+  assumes "andSpf\<cdot>(andInSB.setter (port_i, port_intern)) = andOutSB.setter port_o"
+    and "notSpf\<cdot>(notInSB.setter(port_o)) = notOutSB.setter port_intern"
+  shows "(\<mu> sbOut::(outAnd \<union> outNot)\<^sup>\<Omega>. andSpf\<cdot>((flashInSB.setter port_i\<star>::inFlash\<^sup>\<Omega>) \<uplus>\<^sub>\<star> sbOut) \<uplus> notSpf\<cdot>((flashInSB.setter port_i\<star>::inFlash\<^sup>\<Omega>) \<uplus>\<^sub>\<star> sbOut)) \<sqsubseteq>
+         (flashOutSB.setter (port_o, port_intern)\<star>::(outAnd \<union> outNot)\<^sup>\<Omega>)"
+  apply(rule fix_least)
+  using assms flash_fix_old by blast
+
+lemma flash_ChLen_old: assumes "Rep c\<in>chDom TYPE(outAnd \<union> outNot)" 
+  and "andSpf\<cdot>(andInSB.setter (port_i, port_intern)) = andOutSB.setter port_o"
+  and "notSpf\<cdot>(notInSB.setter(port_o)) = notOutSB.setter port_intern"
+  shows "#((\<mu> sbOut::(outAnd \<union> outNot)\<^sup>\<Omega>. andSpf\<cdot>((flashInSB.setter port_i\<star>::inFlash\<^sup>\<Omega>) \<uplus>\<^sub>\<star> sbOut) \<uplus> notSpf\<cdot>((flashInSB.setter port_i\<star>::inFlash\<^sup>\<Omega>) \<uplus>\<^sub>\<star> sbOut)) \<^enum> c) =
+         #((flashOutSB.setter (port_o, port_intern)\<star>::(outAnd \<union> outNot)\<^sup>\<Omega>) \<^enum> c)"  
+proof - 
+  have len_cout: "#((\<mu> sbOut::(outAnd \<union> outNot)\<^sup>\<Omega>. andSpf\<cdot>((flashInSB.setter port_i\<star>::inFlash\<^sup>\<Omega>) \<uplus>\<^sub>\<star> sbOut) \<uplus> notSpf\<cdot>((flashInSB.setter port_i\<star>::inFlash\<^sup>\<Omega>) \<uplus>\<^sub>\<star> sbOut)) \<^enum> (Abs cout)) = #port_i"  
+    sorry
+  have len_cin2: "#((\<mu> sbOut::(outAnd \<union> outNot)\<^sup>\<Omega>. andSpf\<cdot>((flashInSB.setter port_i\<star>::inFlash\<^sup>\<Omega>) \<uplus>\<^sub>\<star> sbOut) \<uplus> notSpf\<cdot>((flashInSB.setter port_i\<star>::inFlash\<^sup>\<Omega>) \<uplus>\<^sub>\<star> sbOut)) \<^enum> (Abs cin2)) = #port_i + 1"  
+    sorry
+
+  have "#port_intern = #port_i + 1"
+  proof(rule ccontr)
+    assume a0: "\<not> (#port_intern = #port_i +1)"
+    have a1: "#port_o = lnmin\<cdot>(#port_i)\<cdot>(#port_intern)"
+      using assms(2) (* with weak causal lemma *) sorry
+    have a2: "#port_intern = #port_o + 1"
+      using assms(3) (* with strong causal lemma *) sorry
+
+    show False
+    proof(cases "#port_intern  < #port_i + 1")
+      case True
+      then show ?thesis
+        using a1 a2 by (metis dual_order.strict_implies_not_eq inf_ub ln_less lnat_plus_suc lnle2le lnmin_asso lnmin_eqasmthmin order.not_eq_order_implies_strict)
+    next
+      case False
+      then have a3: "#port_intern > #port_i + 1"
+        using a0 by auto
+      then have a4: "#port_intern = #port_i + 1"
+        by (metis a1 a2 dual_order.strict_implies_order linear lnat_plus_suc lnmin_asso lnmin_eqasmthmin lnsuc_lnle_emb)
+
+      show ?thesis 
+        using a3 a4
+        by simp
+    qed
+  qed
+
+  show ?thesis
+    apply(simp add: fix_def)
+    sorry
+qed
+*)
+
+lemma flash_fix:
+  assumes "andSpf\<cdot>(andInSB.setter (port_i, port_intern)) = andOutSB.setter port_o"
+    and "notSpf\<cdot>(notInSB.setter(port_o)) = notOutSB.setter port_intern"
+  shows "(\<Lambda> (x::(outAnd \<union> outNot)\<^sup>\<Omega>). andSpf\<cdot>((flashInSB.setter port_i\<star>::(((inAnd \<union> inNot) - outAnd \<union> outNot)\<^sup>\<Omega>)) \<uplus>\<^sub>- x\<star>\<^sub>1) \<uplus> notSpf\<cdot>((flashInSB.setter port_i\<star>::(((inAnd \<union> inNot) - outAnd \<union> outNot)\<^sup>\<Omega>)) \<uplus>\<^sub>- x\<star>\<^sub>2))\<cdot>
+    (flashOutSB.setter (port_o, port_intern)\<star>) = flashOutSB.setter (port_o, port_intern)\<star>"
+  apply(simp add: assms flash_setter_eq flash_setter_eq2)
+  by (metis assms(1) assms(2) flash2andin flash2andout flash2notin flash2notout ubunion_id union_minus_nomagfst union_minus_nomagsnd)
+
+lemma flash_below:
+  assumes "andSpf\<cdot>(andInSB.setter (port_i, port_intern)) = andOutSB.setter port_o"
+    and "notSpf\<cdot>(notInSB.setter(port_o)) = notOutSB.setter port_intern"
+  shows "(\<mu> sbOut::(outAnd \<union> outNot)\<^sup>\<Omega>. andSpf\<cdot>(((flashInSB.setter port_i\<star>::(((inAnd \<union> inNot) - outAnd \<union> outNot)\<^sup>\<Omega>)) \<uplus>\<^sub>- sbOut)\<star>\<^sub>1) \<uplus> notSpf\<cdot>(((flashInSB.setter port_i\<star>::(((inAnd \<union> inNot) - outAnd \<union> outNot)\<^sup>\<Omega>)) \<uplus>\<^sub>- sbOut)\<star>\<^sub>2)) \<sqsubseteq>
+         (flashOutSB.setter (port_o, port_intern)\<star>)"
+  apply(rule fix_least)
+  using assms flash_fix by blast
+
+lemma flash_and_weak:
+  assumes "andSpf\<cdot>(andInSB.setter (port_i, port_intern)) = andOutSB.setter port_o"
+  shows "#port_o = lnmin\<cdot>(#port_i)\<cdot>(#port_intern)"
+  (* with weak causal lemma *) sorry
+
+lemma flash_not_strong:
+  assumes "notSpf\<cdot>(notInSB.setter(port_o)) = notOutSB.setter port_intern"
+  shows "#port_intern = #port_o + 1"
+  (* with strong causal lemma *) sorry
+
+lemma    
+  assumes "andSpf\<cdot>(andInSB.setter (port_i, port_intern)) = andOutSB.setter port_o"
+  and "notSpf\<cdot>(notInSB.setter(port_o)) = notOutSB.setter port_intern"
+  shows "#port_intern = #port_i + 1"
+proof(rule ccontr)
+  assume a0: "\<not> (#port_intern = #port_i +1)"
+  show False
+  proof(cases "#port_intern  < #port_i + 1")
+    case True
+    then show ?thesis
+      using assms flash_and_weak flash_not_strong by (metis dual_order.strict_implies_not_eq inf_ub ln_less lnat_plus_suc lnle2le lnmin_asso lnmin_eqasmthmin order.not_eq_order_implies_strict)
+  next
+    case False
+    then have a3: "#port_intern > #port_i + 1"
+      using a0 by auto
+    then have a4: "#port_intern = #port_i + 1"
+      using assms flash_and_weak flash_not_strong dual_order.strict_implies_order linear lnat_plus_suc lnmin_asso lnmin_eqasmthmin lnsuc_lnle_emb
+      by metis
+    show ?thesis 
+      using a3 a4
+      by simp
+  qed
+qed
+
+lemma flash_ChLen: assumes "Rep c \<in> chDom TYPE(outAnd \<union> outNot)"
+    and "andSpf\<cdot>(andInSB.setter (port_i, port_intern)) = andOutSB.setter port_o"
+    and "notSpf\<cdot>(notInSB.setter(port_o)) = notOutSB.setter port_intern"
+  shows "#((\<mu> sbOut::(outAnd \<union> outNot)\<^sup>\<Omega>. andSpf\<cdot>(((flashInSB.setter port_i\<star>::(((inAnd \<union> inNot) - outAnd \<union> outNot)\<^sup>\<Omega>)) \<uplus>\<^sub>- sbOut)\<star>\<^sub>1) \<uplus> notSpf\<cdot>(((flashInSB.setter port_i\<star>::(((inAnd \<union> inNot) - outAnd \<union> outNot)\<^sup>\<Omega>)) \<uplus>\<^sub>- sbOut)\<star>\<^sub>2))  \<^enum> c) 
+       = #(flashOutSB.setter (port_o, port_intern)\<star>  \<^enum>  c)"
+  sorry
+
+lemma sblen_eqI2:
+  fixes sb1 sb2::"'cs::chan\<^sup>\<Omega>"
+  assumes "sb1 \<sqsubseteq> sb2"
+  and "\<And>c. Rep c\<in>chDom TYPE('cs) \<Longrightarrow> #(sb1 \<^enum> c) = #(sb2 \<^enum> c)"
+  shows "sb1 = sb2"
+  by (simp add: assms(1) assms(2) eq_slen_eq_and_less monofun_cfun_arg sb_eqI)
+
+
 (* DEUTLICH WICHTIGER! *)
 lemma assumes "andSpf\<cdot>(andInSB.setter (port_i, port_intern)) = andOutSB.setter port_o"
     and "notSpf\<cdot>(notInSB.setter(port_o)) = notOutSB.setter port_intern"
   shows "(flasherComp\<cdot>(flashInSB.setter (port_i)\<star>)) = (flashOutSB.setter (port_o,port_intern)\<star>)"
-  apply(simp add: flasherComp_def convflasherComp_def spfConvert_def)
-  apply(rule spfcomp_eqI,simp)
-    apply (simp add: assms)
-  oops
+  apply(simp add: flasherComp_def genComp_def)
+  apply(rule sblen_eqI2)
+  apply(simp add: assms(1) assms(2) flash_below)   
+  using flash_ChLen assms(1) assms(2) by blast
   
 
  (*nicht anwendbar wenn kanäle versteckt werden*)
