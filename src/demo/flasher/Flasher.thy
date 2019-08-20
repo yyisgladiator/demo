@@ -136,6 +136,20 @@ lemma outFlash_cin2_rep_abs: "(Rep :: outAnd \<union> outNot \<Rightarrow> chann
   apply (metis Rep_outFlash_def Flashcin2_rep chan_eq insert_iff range_eqI rangeoutunion)
   by (simp add: f_inv_into_f rangeoutunion)
 
+
+lemma inFlash_cin1_rep_abs: "(Rep :: ((inAnd \<union> inNot) - outAnd \<union> outNot) \<Rightarrow> channel) (Abs cin1) \<in>chDom TYPE(inFlash)"
+  apply(simp add: chDom_def Rep_outFlash_def)
+  apply auto
+  apply (metis compin2flashin  Rep_inFlash_def Flashin1_rep   range_eqI rangeoutunion )
+  using range_eq_singletonD rangecompin by auto
+
+lemma inFlash_cin2_rep_abs: "(Rep :: ((inAnd \<union> inNot) - outAnd \<union> outNot) \<Rightarrow> channel) (Abs cin2) \<in>chDom TYPE(inFlash)"
+  apply(simp add: chDom_def Rep_outFlash_def)
+  apply auto
+  apply (metis compin2flashin  Rep_inFlash_def   range_eqI  )
+  using range_eq_singletonD rangecompin by auto
+ 
+
  
 lemma flashOutSB_port_o: assumes " Rep (c::outAnd) = cout" shows "(flashOutSB.setter (port_o, port_intern)\<star> :: (outAnd \<union> outNot)\<^sup>\<Omega>)  \<^enum>\<^sub>\<star> c = (smap  (Tsyn o (map_option) \<B>))\<cdot>port_o"
   apply(simp add: sbgetch_insert assms rangeoutunion)
@@ -156,6 +170,22 @@ lemma flashOutSB_port_inter: assumes " Rep (c::outNot) = cin2" shows "(flashOutS
   apply(simp add: outFlash_cin2_rep_abs)
   apply(simp add: rangeoutunion f_inv_into_f)
   by (metis Flashcin2_rep chan_inj flashOutSB.setter.rep_eq inv_f_f outFlashChan.simps(2))
+
+lemma flashInSB_port_i: assumes " Rep (c::outNot) = cin1" shows "(flashInSB.setter port_i\<star> :: ((inAnd \<union> inNot) - outAnd \<union> outNot)\<^sup>\<Omega>)  \<uplus>\<^sub>\<star> (z::(outAnd \<union> outNot)\<^sup>\<Omega>)  \<^enum>\<^sub>\<star> c = (smap  (Tsyn o (map_option) \<B>))\<cdot>port_i"
+  apply(simp add: sbgetch_insert assms rangeoutunion)
+  using rangeinunion rangeoutunion  f_inv_into_f inFlash_cin1_rep_abs
+  Rep_outNot Rep_outNot_def assms by auto   
+
+lemma AndInSB_port_i: assumes " Rep (c::outNot) = cin1" shows "andInSB.setter ( port_i  , notOutSB.getter (z\<star>\<^sub>2))   \<^enum>\<^sub>\<star>  c = (smap  (Tsyn o (map_option) \<B>))\<cdot>port_i"
+  apply(simp add: sbgetch_insert assms rangeoutunion)
+  using rangeinunion rangeoutunion  f_inv_into_f inFlash_cin1_rep_abs
+  Rep_outNot Rep_outNot_def assms 
+  by simp         
+
+lemma flashInSB_port_z: assumes " Rep (c::outNot) = cin2" shows "(flashInSB.setter port_i\<star> :: ((inAnd \<union> inNot) - outAnd \<union> outNot)\<^sup>\<Omega>)  \<uplus>\<^sub>\<star> (z::(outAnd \<union> outNot)\<^sup>\<Omega>)  \<^enum>\<^sub>\<star> c = (smap  (Tsyn o (map_option) \<B>))\<cdot>(notOutSB.getter(z\<star>))"
+  apply(simp add: sbgetch_insert assms rangeoutunion)
+  using rangeinunion rangeoutunion  f_inv_into_f inFlash_cin2_rep_abs
+  Rep_outNot Rep_outNot_def assms sorry
 
 
 
@@ -186,15 +216,20 @@ lemma test3:assumes " Rep (c::inNot) = cout" shows " (flashOutSB.setter (port_o,
   apply(simp add: rangeoutunion f_inv_into_f)
   by (metis Flashout1_rep chan_inj flashOutSB.setter.rep_eq inv_f_f outFlashChan.simps(1))
 
-  
+
+
 lemma test4: "((flashInSB.setter port_i\<star> :: ((inAnd \<union> inNot) - outAnd \<union> outNot)\<^sup>\<Omega>) \<uplus>\<^sub>\<star> (flashOutSB.setter (port_o, port_intern)\<star> :: (outAnd \<union> outNot)\<^sup>\<Omega>)) =  (flashOutSB.setter (port_o, port_intern)\<star> :: (outAnd \<union> outNot)\<^sup>\<Omega>)"
   by(rule sb_eqI,auto)
 lemma test5:assumes " Rep (c::inNot) = cout" shows "((flashInSB.setter port_i\<star> :: ((inAnd \<union> inNot) - outAnd \<union> outNot)\<^sup>\<Omega>) \<uplus>\<^sub>\<star> (flashOutSB.setter (port_o, port_intern)\<star> :: (outAnd \<union> outNot)\<^sup>\<Omega>))  \<^enum>\<^sub>\<star> c = (flashOutSB.setter (port_o, port_intern)\<star> :: (outAnd \<union> outNot)\<^sup>\<Omega>)  \<^enum>\<^sub>\<star> c"
-  apply(simp add: sbgetch_insert assms rangeoutunion)
+   apply(simp add: sbgetch_insert assms rangeoutunion)
+  using  rangeoutunion  f_inv_into_f  assms  ninFlash_rep_abs2 
+  
   sorry
 
 lemma flashInSB_port_o: assumes " Rep (c::inNot) = cout" shows "((flashInSB.setter port_i\<star> :: ((inAnd \<union> inNot) - outAnd \<union> outNot)\<^sup>\<Omega>) \<uplus>\<^sub>\<star> (flashOutSB.setter (port_o, port_intern)\<star> :: (outAnd \<union> outNot)\<^sup>\<Omega>))  \<^enum>\<^sub>\<star> c = (smap  (Tsyn o (map_option) \<B>))\<cdot>port_o"
-  using  assms test3 
+
+  
+  using  assms test3
   by (simp add: test5)
 
  
@@ -202,8 +237,9 @@ lemma flashInSB_port_o: assumes " Rep (c::inNot) = cout" shows "((flashInSB.sett
  
 
 lemma flash2notin[simp]:"(flashInSB.setter port_i\<star> :: ((inAnd \<union> inNot) - outAnd \<union> outNot)\<^sup>\<Omega>) \<uplus>\<^sub>\<star> (flashOutSB.setter (port_o, port_intern)\<star> :: (outAnd \<union> outNot)\<^sup>\<Omega>) = notInSB.setter(port_o)"
-  apply(rule sb_eqI, auto)
-  by(simp add: flashInSB_port_o  notInSB_port_o)
+  apply(rule sb_eqI , auto)
+  
+  by(simp add: flashInSB_port_o notInSB_port_o )
 
 
    (* SWS: Gilt Nicht, doppelte magie. Anstatt den Zwischen-Datentyp zu fixieren und assumptions zu haben...
@@ -217,11 +253,28 @@ lemma flash2notout[simp]:"(flashOutSB.setter (port_o, port_intern)\<star> :: (ou
 lemma flash2andinnotout[simp]:"(flashInSB.setter port_i\<star> :: ((inAnd \<union> inNot) - outAnd \<union> outNot)\<^sup>\<Omega>) \<uplus>\<^sub>\<star> (z::(outAnd \<union> outNot)\<^sup>\<Omega>) = andInSB.setter (port_i,notOutSB.getter(z\<star>))"
    apply(rule sb_eqI, auto)  
 
-  oops (* SWS: Gilt Nicht, doppelte magie. Anstatt den Zwischen-Datentyp zu fixieren und assumptions zu haben...
+proof -
+  fix c :: inAnd
+have "z = flashOutSB.setter (andOutSB.getter (z\<star>\<^sub>1), notOutSB.getter (z\<star>\<^sub>2))\<star>"
+  by (metis andOutSB.sbGen_axioms flash2andout flash2notout notOutSB.set_get sbGen.set_get ubunion_id)
+  then show "(flashInSB.setter port_i\<star> \<uplus>\<^sub>- z::(inAnd \<union> inNot)\<^sup>\<Omega>) \<^enum>\<^sub>\<star> c = andInSB.setter (port_i, notOutSB.getter (z\<star>\<^sub>2)) \<^enum> c"
+by (metis flash2andin sbconvert_getch union_minus_nomagfst)
+next
+
+  fix c :: inAnd
+have "z = flashOutSB.setter (andOutSB.getter (z\<star>\<^sub>1), notOutSB.getter (z\<star>\<^sub>2))\<star>"
+  by (metis andOutSB.sbGen_axioms flash2andout flash2notout notOutSB.set_get sbGen.set_get ubunion_id)
+  then show "(flashInSB.setter port_i\<star> \<uplus>\<^sub>- z::(inAnd \<union> inNot)\<^sup>\<Omega>) \<^enum>\<^sub>\<star> c = andInSB.setter (port_i, notOutSB.getter (z\<star>\<^sub>2)) \<^enum> c"
+    by (metis flash2andin sbconvert_getch union_minus_nomagfst)
+qed
+ (* SWS: Gilt Nicht, doppelte magie. Anstatt den Zwischen-Datentyp zu fixieren und assumptions zu haben...
                 kann man die magischen-sachen durch nicht-magie ersetzen? *)
 
 lemma flash2notinandout[simp]:"(flashInSB.setter port_i\<star> :: ((inAnd \<union> inNot) - outAnd \<union> outNot)\<^sup>\<Omega>) \<uplus>\<^sub>\<star> (z::(outAnd \<union> outNot)\<^sup>\<Omega>) = notInSB.setter (andOutSB.getter(z\<star>))"
-  oops (* SWS: Gilt Nicht, doppelte magie. Anstatt den Zwischen-Datentyp zu fixieren und assumptions zu haben...
+    apply(rule sb_eqI, auto)  
+
+  by (metis flash2andin flashInSB_port_o notInSB.set_get notInSB_port_o sbconvert_getch)
+   (* SWS: Gilt Nicht, doppelte magie. Anstatt den Zwischen-Datentyp zu fixieren und assumptions zu haben...
                 kann man die magischen-sachen durch nicht-magie ersetzen? *)
 
 
