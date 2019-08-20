@@ -1435,6 +1435,12 @@ lemma ufhide_parcomp:
   using assms apply blast
   by (smt Int_Diff Un_commute Un_upper2 inf_sup_absorb ubclrestrict_dom_id ubclrestrict_twice ufRanRestrict)
 
+lemma parcomp_ufhide_f1: 
+  assumes "parcomp_well f1 f2"
+      and "cs \<inter> ufRan\<cdot>f2 = {}"
+    shows "(f1 \<h> cs) \<otimes> f2 = (f1 \<otimes> f2) \<h> cs"
+  by (simp add: assms(1) assms(2) inf_commute ufhide_id ufhide_parcomp)
+
 lemma parcomp_ufhide_f2: 
   assumes "parcomp_well f1 f2"
       and "cs \<inter> ufRan\<cdot>f1 = {}"
