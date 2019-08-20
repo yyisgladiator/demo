@@ -1,4 +1,5 @@
-section \<open>Lazy Streams\<close> 
+(*<*)
+section \<open>Lazy Streams\<close>
 
 theory Stream
 imports inc.LNat inc.SetPcpo
@@ -14,11 +15,23 @@ default_sort countable
 (* declare [[show_types]] *)
 text \<open>\<open>discr u\<close> lifts an arbitrary type \<open>'a\<close> to the
   discrete \<open>pcpo\<close> and the usual rest operator \<open>rt\<close> on streams.\<close>
+(*>*)
+section\<open>Streams\<close> text\<open>\label{sec:stream}\<close>
+
+text\<open>The verification framework focus is based on the streams and
+stream processing functions.This section will shortly introduce the
+implementation of streams in Isabelle and mention and explain a few 
+important functions and their properties. For an in depth 
+explanation I refer to \cite{Stu16}.\<close>
+
+
+text\<open>The stream domain in Isabelle is defined
+\<close>
 
 domain
   'a stream = lscons (lshd::"'a discr u") (lazy srt::"'a stream") 
                                         (infixr "&&" 65)
-
+(*<*)
 
 (* ----------------------------------------------------------------------- *)
 section \<open>Signatures of Stream Processing Functions\<close>
@@ -5263,3 +5276,4 @@ declare [[mapQ3 stream = (rel_stream, stream_quotient)]]
 *)
 
 end
+(*>*)

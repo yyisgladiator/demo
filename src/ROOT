@@ -12,14 +12,19 @@ session "inc" (mustWork) in inc = "HOLCF" +
 
 session "stream" (mustWork) in "stream" = "inc" +
   description "FOCUS streams, an infinite list of messages"
-  options [quick_and_dirty = false]
+  options [quick_and_dirty = false, browser_info, document = pdf,document_variants="outline=-lemma,-proof,-lemmas",document_tags="lemma%lemma,lemmas%lemmas",show_question_marks = false]
   theories
     Stream
-
+  document_files
+    "root.tex"
+  document_files (in "../")
+    "MontiBelle.sty"
+	"glossary.tex"
+	
 session "bundle" (mustWork) in "bundle" = "stream" +
   description "Bundle multiple streams together. Each stream can be accessed using
     an identifier called Channel. Type-information is pertained"
-  options [quick_and_dirty = false, browser_info, document = pdf,document_variants="outline=-lemma,-proof,-lemmas",document_tags="lemma%lemma,lemmas%lemmas"]
+  options [quick_and_dirty = false, browser_info, document = pdf,document_variants="outline=-lemma,-proof,-lemmas",document_tags="lemma%lemma,lemmas%lemmas",show_question_marks = false]
   sessions
     user
   theories
@@ -35,7 +40,7 @@ session "bundle" (mustWork) in "bundle" = "stream" +
 
 session "spf" (mustWork) in "spf" = "bundle" +
   description "Composition of Stream Processing Functions + Weak-Causal and Strong-Causal Components"
-  options [quick_and_dirty = false, browser_info, document = pdf,document_variants="outline=-lemma,-proof",document_tags="lemma%lemma,lemmas%lemmas"]
+  options [quick_and_dirty = false, browser_info, document = pdf,document_variants="outline=-lemma,-proof",document_tags="lemma%lemma,lemmas%lemmas",show_question_marks = false]
   theories
     SPF
     SPFcomp
@@ -48,7 +53,7 @@ session "spf" (mustWork) in "spf" = "bundle" +
 
 session "automaton" (mustWork) in "automatons" = "spf" +
   description "Deterministic and Non-Deterministic Automatons based on Rum96"
-  options [quick_and_dirty = false, browser_info, document = pdf,document_variants="outline=-lemma,-proof",document_tags="lemma%lemma,lemmas%lemmas"]
+  options [quick_and_dirty = false, browser_info, document = pdf,document_variants="outline=-lemma,-proof",document_tags="lemma%lemma,lemmas%lemmas",show_question_marks = false]
   theories
     dAutomaton
     dAutomaton_causal
