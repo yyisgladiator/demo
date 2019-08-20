@@ -181,8 +181,44 @@ semantic.\<close>
 lemma dawsem_len:
   fixes automat::"('s::type,'I::{chan,finite},'O)dAutomaton_weak"
   assumes "\<not>chDomEmpty TYPE('O)"  
-  shows"sbLen(dawStateSem automat s\<cdot>sb) = sbLen sb"
-  oops
+  shows "sbLen (dawStateSem automat s\<cdot>sb) = sbLen sb"
+proof (cases "chDomEmpty TYPE('I)")
+  case True
+  have "\<And>s sbe. sbLen (sbe2sb (snd ((dawTransition automat) s sbe))) = 1"
+    by (simp add: assms)
+  thus ?thesis
+    by (metis (mono_tags, lifting) True dastatesem_inempty_len
+        dawNextOut dawStateSem_def min.orderI min_def sblen_empty
+        sbtypeepmpty_sbbot)
+next
+  case False
+  have "\<And>s sbe. sbLen (sbe2sb (snd ((dawTransition automat) s sbe))) = 1"
+    by (simp add: assms)
+  hence nextout_len: "\<And>s sbe. sbLen (daNextOut (daw2da automat) s sbe) = 1"
+    by (simp add: dawNextOut)
+  have "sbLen sb < \<infinity> \<Longrightarrow> sbLen sb = sbLen (dawStateSem automat s\<cdot>sb)"
+  proof-
+    assume sb_len: "sbLen sb < \<infinity>"
+    thus ?thesis
+    proof (induction sb arbitrary: s rule: sb_finind)
+      case 1
+      then show ?case
+        using sb_len by blast
+    next
+      case (2 sb)
+      then show ?case
+        by (metis False assms botsbleast dawstatesem_bottom lnzero_def sbleast2sblenempty)
+    next
+      case (3 sbe sb)
+      then show ?case
+        by (metis dawstatesem_step fold_inf inf_less_eq le_less_linear
+            lnat.con_rews lnzero_def sbecons_len sbleast2sblenempty sbrt_sbecons)
+    qed
+  qed
+  thus ?thesis
+    by (metis dastatesem_weak dawStateSem_def inf_less_eq
+        le_less_linear less_irrefl nextout_len weak_well_def)
+qed
 
 lemma dawstatesem_weak:
   shows  "weak_well (dawStateSem automat s)"
@@ -228,7 +264,7 @@ lemma dassem_len:
   fixes automat::"('s::type,'I::{chan,finite},'O)dAutomaton_strong"
   assumes "\<not>chDomEmpty TYPE('O)"  
   shows  "sbLen (dasSem automat\<cdot>sb) = lnsuc\<cdot>(sbLen sb)"
-  oops
+  by (simp add: assms dassem_insert dawsem_len sbecons_len)
 
 theorem dassem_strong:
 shows "strong_well (dasSem automat)"

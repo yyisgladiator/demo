@@ -114,7 +114,7 @@ lemma spf_weakI:
 lemma spf_weakI2:
   fixes spf :: "'I\<^sup>\<Omega> \<rightarrow> 'O\<^sup>\<Omega>"
   assumes "\<not>chDomEmpty TYPE('I)"
-    and "\<And>sb s. sbLen sb < \<infinity> \<Longrightarrow> sbLen sb \<le> sbLen (spf\<cdot>sb)"
+    and "\<And>sb. sbLen sb < \<infinity> \<Longrightarrow> sbLen sb \<le> sbLen (spf\<cdot>sb)"
   shows "weak_well spf"
 proof-
   have "\<And>sb. sbLen sb = \<infinity> \<Longrightarrow> sbLen sb \<le> sbLen (spf\<cdot>sb)"
