@@ -169,7 +169,7 @@ subsubsection\<open>Length of Streams\<close>
 text \<open>@{term slen}: Retrieve the length of a stream. It is defined
 as the number of its elements or \<open>\<infinity>\<close> for infinite streams.\<close>
 
-definition slen       :: "'a stream \<rightarrow> lnat" where
+definition slen:: "'a stream \<rightarrow> lnat" where
 "slen \<equiv> fix\<cdot>(\<Lambda> h. strictify\<cdot>(\<Lambda> s. lnsuc\<cdot>(h\<cdot>(srt\<cdot>s))))"
 
 text\<open>Resulting from the prefix order, a few key properties can be 
@@ -188,21 +188,35 @@ text \<open>@{term sdrop}: Remove the first \<open>n\<close> elements
 definition sdrop      :: "nat \<Rightarrow> 'a spfo" where
 "sdrop n \<equiv> Fix.iterate n\<cdot>srt"
 
-text \<open>@{term snth}: Get the \<open>n\<close>th element of the stream.\<close>
-definition snth       :: "nat \<Rightarrow> 'a stream \<Rightarrow> 'a" where
+(*>*)
+subsubsection\<open>Stream elements\<close>
+
+text\<open>The element of a stream at position \<open>n\<close> can be accessed by
+dropping the first \<open>n\<close> elements of the stream. We start counting
+positions at 0.\<close>
+
+definition snth :: "nat \<Rightarrow> 'a stream \<Rightarrow> 'a" where
 "snth k s \<equiv> shd (sdrop k\<cdot>s)" 
 
+text\<open>Obtaining the elements of a stream with @{const snth} is often
+used in the verification process of components behaviour.\<close>
+
+(*<*)
 text\<open>@{term sfoot}: Get the last element of a not empty, finite stream\<close>
 definition sfoot      :: "'a stream \<Rightarrow> 'a" where
 "sfoot s = snth (THE a. lnsuc\<cdot>(Fin a) = #s) s"
 (*>*)
 
-subsubsection\<open>Values of a stream\<close>
+subsubsection\<open>A Streams Values\<close>
 
-text \<open>@{term sValues}: Retrieve the set of all values in a stream.\<close>
+text \<open>The values of a stream are a set of messages of type \<open>'a\<close> that
+occur at any position in the stream.\<close>
 
-definition sValues       :: "'a stream \<rightarrow> 'a set" where
+definition sValues :: "'a stream \<rightarrow> 'a set" where
 "sValues \<equiv> \<Lambda> s. {snth n s | n. Fin n < #s}" 
+
+text\<open>The definition of @{const sValues} is straight forward with the
+usage of @{const snth}.\<close>
 
 (*<*)
 text \<open>@{term sntimes}: Repeat the given stream \<open>n\<close> times.\<close>
@@ -217,11 +231,18 @@ definition sinftimes  :: "'a stream \<Rightarrow> 'a stream" ("_\<^sup>\<infinit
 (*>*)                        
 subsubsection\<open>Applying functions element wise\<close>
 
-text \<open>@{term smap}: Apply a function to all elements of the stream.\<close>
+text \<open>Similar to @{const map} on lists we can define a mapping that
+applies a function to each element of a stream. The \<open>n\<close>th element of
+the output stream is equal to applying the mapping function to the
+\<open>n\<close>th element of the input stream.\<close>
 
-definition smap       :: "('a \<Rightarrow> 'b) \<Rightarrow> ('a,'b) spf" where
+definition smap:: "('a \<Rightarrow> 'b) \<Rightarrow> 'a stream \<rightarrow> 'b stream" where
 "smap f \<equiv> fix\<cdot>(\<Lambda> h s. slookahd\<cdot>s\<cdot>(\<lambda> a. 
                        \<up>(f a) \<bullet> (h\<cdot>(srt\<cdot>s))))"
+
+text\<open>An automatons semantic can sometimes be represented by a 
+@{const smap} mapping.\<close>
+
 (*<*)
 text \<open>@{term sfilter}: Remove all elements from the stream which are
   not included in the given set.\<close>
@@ -276,9 +297,7 @@ text \<open>@{term srcdups}: Remove successive duplicate values from stream.\<cl
 definition srcdups    :: "'a spfo" where
 "srcdups \<equiv> fix\<cdot>(\<Lambda> h s. slookahd\<cdot>s\<cdot>(\<lambda> a. 
                         \<up>a \<bullet>  h\<cdot>(sdropwhile (\<lambda> z. z = a)\<cdot>(srt\<cdot>s))))"
-(*>*)
 
-subsubsection\<open>Applying State-based Functions element wise\<close>
 (* Takes a nat indicating the number of elements to scan, a reducing
  function, an initial initial element, and an input stream. Returns
 a stream consisting of the partial reductions of the input stream.*)
@@ -295,6 +314,8 @@ output element as additional input to the function. For the first
 computation, an initial value is provided.\<close>
 definition sscanl :: "('o \<Rightarrow> 'i \<Rightarrow> 'o) \<Rightarrow> 'o \<Rightarrow> ('i, 'o) spf" where
 "sscanl f q \<equiv> \<Lambda> s. \<Squnion>i. SSCANL i f q s"
+(*>*)
+
 (*<*)
 (* scanline Advanced :D  *)
 (* or stateful ... *)
@@ -304,18 +325,42 @@ definition sscanlA ::
  "('s \<Rightarrow>'a \<Rightarrow> ('b \<times>'s)) \<Rightarrow> 's  \<Rightarrow> 'a stream \<rightarrow> 'b stream" where
 "sscanlA f s0 \<equiv> \<Lambda> s. sprojfst\<cdot>(sscanl (\<lambda>(_,b). f b) (undefined, s0)\<cdot>s)"
 (*>*)
+subsubsection\<open>Applying state-based functions element wise\<close>
+
+text\<open>One can also apply a state dependent function, like the 
+transition function of a deterministic automaton, to process the
+streams elements. The \<open>n+1\<close>th output element then depends on the 
+\<open>n\<close>th ouput state, because the state based function may act 
+differently depending on its state. Hence, we also need an initial 
+state to start computing the output.\<close>
 
 definition sscanlAg ::
 "('s \<Rightarrow>'a \<Rightarrow> ('s \<times>'b)) \<Rightarrow> 's \<Rightarrow> 'a stream \<rightarrow> ('s\<times>'b) stream" where
 "sscanlAg f s0 \<equiv> \<Lambda> s. (sscanl (\<lambda>(b,_). f b) (s0, undefined)\<cdot>s)"
 
-definition sscanlAfst ::
+text\<open>We first defined the general state-based @{const sscanlAg}.
+The definition calls @{const sscanl} internally, @{const sscanl}
+computes the output of each element depending on the input and the 
+output of the last element. Likewise, it needs an initial output 
+element it starts with. The general state-based function however 
+only needs the previous output state, not the whole output.\<close>
+
+text\<open>Since the semantic of an deterministic automaton does not 
+return its states in each step but behaves similar in other cases,
+we define another state-based function, that calls @{const sscanlAg}
+but reduces its output to the message output stream. Hence, the 
+state stream is omitted.\<close> 
+
+definition %invisible sscanlAfst ::
 "('s \<Rightarrow>'a \<Rightarrow> ('s\<times>'b)) \<Rightarrow> 's \<Rightarrow> 'a stream \<rightarrow> 's stream" where
 "sscanlAfst f s0 \<equiv> \<Lambda> s. sprojfst\<cdot>(sscanlAg f s0\<cdot>s)"
 
 definition sscanlAsnd ::
 "('s \<Rightarrow>'a \<Rightarrow> ('s \<times>'b)) \<Rightarrow> 's  \<Rightarrow> 'a stream \<rightarrow> 'b stream" where
 "sscanlAsnd f s0 \<equiv> \<Lambda> s. sprojsnd\<cdot>(sscanlAg f s0\<cdot>s)"
+
+text\<open>A deterministic automatons semantic can then be represented by
+a @{const sscanlAsnd} mapping.\<close> 
 (*<*)
 (*
 definition sscanlAg :: "('s \<Rightarrow>'a::countable \<Rightarrow> ('s::countable \<times>'b::countable)) \<Rightarrow>'s   \<Rightarrow> 'a stream \<rightarrow> ('s\<times>'b) stream" where
