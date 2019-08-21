@@ -1,17 +1,7 @@
 theory outAndData
 
-imports bundle.SB_fin
+imports Data_inc
 begin
-default_sort type
-
-
-(* This should go somewhere general*)
-lemma cmsg_empty: "cMsg c = {} \<longleftrightarrow> c=c3"
-  by(cases c; simp add: ctype_def)
-
-(* This should go somewhere general*)
-lemma cempty[simp]: "cEmpty = {c3}"
-  using ctype_empty_iff cEmpty_def cmsg_empty by simp
 
 
 typedef outAnd="{cout}"
@@ -33,7 +23,7 @@ lemma repand_range[simp]: "range (Rep::outAnd \<Rightarrow> channel) = {cout}"
 
 instance
   apply(intro_classes)
-   apply clarsimp
+  apply clarsimp
   unfolding Rep_outAnd_def by (meson Rep_outAnd_inject injI)
 end
 
