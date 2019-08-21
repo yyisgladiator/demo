@@ -2,7 +2,7 @@ variables:
   ISABELLE_HOME_USER_DIR: "/home/isabelle/.isabelle"
   TIMEOUT_SCALE: "1.8"
 
-image: jecb96/isabelle:2018
+image: jecb96/isabelle:2019
 
 cache:
   key: "$CI_COMMIT_REF_SLUG"
@@ -12,8 +12,8 @@ cache:
 stages:
   - dependency
   - mustWork
-  - canFail
-
+#  - canFail
+  - deploy
 
 before_script:
   - if [ ! -z "$(ls -A cache)" ]; then mv cache/* $ISABELLE_HOME_USER_DIR; fi
@@ -44,6 +44,7 @@ dependency:
 
 mustWork:
   stage: mustWork
+  image: jecb96/isabelle:2019-with-latex
   script:
     - isabelle build -S -d . -j$NUMBER_SIMULT_SESSIONS -o timeout_scale=$TIMEOUT_SCALE -v -b -g mustWork
   tags:
@@ -51,11 +52,27 @@ mustWork:
     - private
 
 
-canFail:
-  stage: canFail
-  allow_failure: true   # for now, sorrys are allowed
+# canFail:
+#   stage: canFail
+#   allow_failure: true   # for now, sorrys are allowed
+#   script:
+#     - isabelle build -S -d . -j$NUMBER_SIMULT_SESSIONS -o timeout_scale=$TIMEOUT_SCALE -v -b -g canFail
+#   tags:
+#     - docker
+#     - private
+
+
+
+pages:
+  stage: deploy
   script:
-    - isabelle build -S -d . -j$NUMBER_SIMULT_SESSIONS -o timeout_scale=$TIMEOUT_SCALE -v -b -g canFail
+    - find $(isabelle getenv -b ISABELLE_BROWSER_INFO)
+    - cp -r $(isabelle getenv -b ISABELLE_BROWSER_INFO)/MontiBelle public
   tags:
     - docker
     - private
+  only:
+    - master
+  artifacts:
+    paths:
+      - public

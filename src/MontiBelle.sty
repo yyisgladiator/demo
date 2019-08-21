@@ -1,0 +1,62 @@
+% Custom style for generated LaTeX-Code
+
+% e.g.
+%  * colors for keywords (eg. "definition"/"datatype" ...)
+%  * correct characters in italic environment ('_' / '"')
+
+
+ \usepackage{color}
+ 
+ \definecolor{isabdblue}{rgb}{0.00, 0.40, 0.60}
+ \definecolor{isablblue}{rgb}{0.00, 0.60, 0.99}
+ \definecolor{isabgreen}{rgb}{0.00, 0.60, 0.40}
+ \definecolor{isabred}{rgb}{0.99, 0.31, 0.31}
+ \definecolor{isabpurple}{rgb}{0.59, 0.40, 0.99}
+ \definecolor{isabcommentpurple}{rgb}{0.4, 0.0, 0.8}
+ \definecolor{isabcomment}{rgb}{0.80, 0.00, 0.00}
+ \definecolor{isabtextcomment}{rgb}{0.8, 0.4, 0.0}
+ \definecolor{isabmblue}{rgb}{0.05, 0.41, 0.49}
+ \definecolor{isabpink}{rgb}{0.99, 0.0, 0.8}
+ 
+
+% Fix problems with invisible tags
+% Default, if we make "lemma" invisible, the newlines are still visible
+% As section of "lemma" leads to an white block in the generated pdf, since the \isanewlines are still executed
+ \renewcommand{\isanewline}{\par}
+ 
+ 
+ % Normaler Textblock
+% \renewenvironment{isamarkuptext}{\par\isastyletext\color{red}\begin{isapar}}{\end{isapar}}
+
+% Comamnd z.B. "`definition"'/"'datatype"' etc. 
+% Aus irgendeinem grund NICHT "`where"'
+%\let\isacommandOLD\isacommand
+%\renewcommand{\isacommand}[1]{{\color{isabmblue}\isacommandOLD{#1}}}
+
+
+\let\isakeywordOLD\isakeyword
+\renewcommand{\isakeyword}[1]{{\color{isabmblue}\isakeywordOLD{#1}}}
+
+
+% underscore soll auch in italic als underscore angezeigt werden!
+\let\isabellestyleitOLD\isabellestyleit
+\renewcommand{\isabellestyleit}{
+\isabellestylett
+%\isabellestyleitOLD%
+%\def\isacharunderscore{\mbox{\_}}%
+%\chardef\isachardoublequote=`\"%
+%\chardef\isachardoublequoteopen=`\"%
+%\chardef\isachardoublequoteclose=`\"%
+}
+
+% Glossary
+\usepackage[toc]{glossaries}
+\makeglossaries
+\setacronymstyle{long-short-desc}
+
+
+% Enum
+\newcommand{\isactrlenum}{{\raisebox{1pt}{\tiny$\blacktriangleright$}}}
+
+% Bullet
+\renewcommand{\isasymbullet}{$\bullet$}

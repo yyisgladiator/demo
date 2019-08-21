@@ -1,58 +1,67 @@
+chapter MontiBelle
+
+
 session "inc" (mustWork) in inc = "HOLCF" +
+  description "Bundles common functionality"
   options [quick_and_dirty = false]
   theories
-    Channel
     LNat
     SetPcpo
-    Reversed
     Prelude
-    OptionCpo
-    UnivClasses
-    CPOFix
 
 
-session "HOLMF" (mustWork) in HOLMF = "inc" +
-  options [quick_and_dirty = false]
+session "stream" (mustWork) in "stream" = "inc" +
+  description "FOCUS streams, an infinite list of messages"
+  options [quick_and_dirty = false, browser_info, document = pdf,document_variants="outline=-lemma,-proof,-lemmas",document_tags="lemma%lemma,lemmas%lemmas",show_question_marks = false]
   theories
-    LongChain
-    Division
-    LFP
-    GFP
-    Induction
-    InductionGFP
-    Instantiation
-    GLB
-
-session "stream" (mustWork) in stream = "inc" +
-  options [quick_and_dirty = false]
+    Stream
+  document_files
+    "root.tex"
+  document_files (in "../")
+    "MontiBelle.sty"
+	"glossary.tex"
+	
+session "bundle" (mustWork) in "bundle" = "stream" +
+  description "Bundle multiple streams together. Each stream can be accessed using
+    an identifier called Channel. Type-information is pertained"
+  options [quick_and_dirty = false, browser_info, document = pdf,document_variants="outline=-lemma,-proof,-lemmas",document_tags="lemma%lemma,lemmas%lemmas",show_question_marks = false]
+  sessions
+    user
   theories
-    Streams
-    tsynStream
-
-session "bundle" (mustWork) in bundle = "stream" +
-  options [quick_and_dirty = false]
-  theories
+    Channel
     SB
-    UBundle_Induction
-    tsynBundle
-    SBElem
+    SB_fin
+  document_files
+    "root.tex"
+  document_files (in "../")
+    "MontiBelle.sty"
+	"glossary.tex"
 
-session "fun" (mustWork) in fun = "bundle" +
-  options [quick_and_dirty = false]
+
+session "spf" (mustWork) in "spf" = "bundle" +
+  description "Composition of Stream Processing Functions + Weak-Causal and Strong-Causal Components"
+  options [quick_and_dirty = false, browser_info, document = pdf,document_variants="outline=-lemma,-proof",document_tags="lemma%lemma,lemmas%lemmas",show_question_marks = false]
   theories
     SPF
-    UFun_Comp_Causalities
+    SPFcomp
+  document_files
+    "root.tex"
+  document_files (in "../")
+    "MontiBelle.sty"
+	"glossary.tex"
 
-session "spec" (mustWork) in spec = "fun" +
-  options [quick_and_dirty = false]
-  sessions
-    HOLMF
+
+session "automaton" (mustWork) in "automatons" = "spf" +
+  description "Deterministic and Non-Deterministic Automatons based on Rum96"
+  options [quick_and_dirty = false, browser_info, document = pdf,document_variants="outline=-lemma,-proof",document_tags="lemma%lemma,lemmas%lemmas",show_question_marks = false]
   theories
-    SPS
-    USpec_UFunComp
+    dAutomaton
+    dAutomaton_causal
+    ndAutomaton
+	eventAutomat
+  document_files
+    "root.tex"
+  document_files (in "../")
+    "MontiBelle.sty"
+	"glossary.tex"
 
-
-session ABPstream (canFail) in ABP = "stream" +
-  options [quick_and_dirty = false]
-  theories
-    sMed

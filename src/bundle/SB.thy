@@ -1,1091 +1,1351 @@
+(*<*)(*:maxLineLen=68:*)
 theory SB
-  imports UBundle_Conc stream.Streams
+  imports stream.Stream sbElem
 begin
+(*>*)
 
-default_sort message
+declare %invisible[[show_types]]
+declare %invisible[[show_consts]]
 
-type_synonym 'm SB = "'m stream ubundle"
 
-
-(* ----------------------------------------------------------------------- *)
-  section \<open>Function Definition\<close>
-(* ----------------------------------------------------------------------- *)
-
-(*
-definition sbConc:: "'m stream ubundle \<Rightarrow> 'm stream ubundle \<rightarrow> 'm stream ubundle" where
-"sbConc b1 \<equiv> \<Lambda> b2. ((\<lambda>c. Some (((\<up>b1). c) \<bullet> (\<up>b2). c))\<Omega>) \<bar> ubDom\<cdot>b1 \<union> ubDom\<cdot>b2"
-
-abbreviation sbConc_abbr :: " 'm SB \<Rightarrow> 'm SB \<Rightarrow> 'm SB" ("(_ \<bullet> _)" [66,65] 65)
-where "b1 \<bullet> b2 \<equiv> sbConc b1\<cdot>b2"
+(* TODO: Sections richtig benennen 
+  * English (duh)
+  * So wie in einem Techreport. Nicht Name der Definition
 *)
 
 
-  (* Concatination on common Channels in the 'm SB. *)
-(* definition sbConcCommon:: " 'm stream ubundle \<Rightarrow> 'm stream ubundle \<rightarrow> 'm stream ubundle" where
-"sbConcCommon b1 \<equiv> \<Lambda> b2. (b1 \<bullet> b2) \<bar>  sbDom\<cdot>b1 \<inter> sbDom\<cdot>b2"*)
+default_sort %invisible chan
 
-(* Converter function. *)
-  (* definition should be right, but needs to be nicer *)
-definition sbElemWell::"(channel \<rightharpoonup> 'm::message) \<Rightarrow> bool" where
-"sbElemWell f \<equiv> \<forall>c\<in> dom f. f\<rightharpoonup>c \<in> ctype c"
+section \<open>Stream Bundles \label{sec:sb}\<close>
 
-  (* Applies a (Stream-)function to all streams. *)
-definition sbMapStream:: "('m stream \<Rightarrow> 'm stream) \<Rightarrow> 'm stream ubundle \<Rightarrow> 'm stream ubundle" where
-"sbMapStream f b = Abs_ubundle (\<lambda>c. (c\<in>ubDom\<cdot>b) \<leadsto> f (b . c))"
+text \<open>Streams are the backbone of this verification 
+framework and stream bundles are used to model components with 
+multiple input and output streams by bundleing streams together. Any
+stream in a stream bundle is identifiable through its channel. 
+Hence, a \gls{sb} is a function from channels to streams.
+Since the allowed messages on a channel may be restricted, the 
+streams of a \gls{sb} only contain streams of elements from the
+@{const ctype} of their channel. Similar to @{type sbElem}s, we 
+formulate a predicate to describe the properties of a \gls{sb}.\<close>
 
-  (* Retrieves the first n Elements of each Stream. *)
-definition sbTake:: "nat \<Rightarrow> 'm stream ubundle \<rightarrow> 'm stream ubundle" where
-"sbTake n \<equiv> \<Lambda> b . sbMapStream (\<lambda>s. stake n\<cdot>s) b"
+definition sb_well :: "('c::chan \<Rightarrow> M stream) \<Rightarrow> bool" where
+"sb_well f \<equiv> \<forall>c. sValues\<cdot> (f c) \<subseteq> ctype (Rep c)"
 
-  (* Retrieves the first Element of each Stream. *)
-definition sbHd:: " 'm stream ubundle \<rightarrow> 'm stream ubundle" where
-"sbHd \<equiv> sbTake 1"
+text\<open>This definition uses @{const sValues} defined as
+@{thm sValues_def}
+to obtain a set, which contains every element occurring in a stream.
+If the values of each stream are a subset of the allowed messages 
+on their corresponding channels, the function is a \gls{sb}. Unlike 
+to our @{type sbElem} predicate, a differentiation for the empty
+domain is not necessary, because it follows directly from 
+@{const sb_well} that there can be no non-empty stream for bundles 
+with an empty domain.\<close>
 
-  (* Deletes the first n Elements of each Stream *)
-definition sbDrop:: "nat \<Rightarrow> 'm stream ubundle \<rightarrow> 'm stream ubundle" where
-"sbDrop n \<equiv> \<Lambda> b. sbMapStream (\<lambda>s. sdrop n\<cdot>s) b"
+lemma sbwellI:
+  assumes"\<And>c. sValues\<cdot>(f c) \<subseteq> ctype (Rep c)"
+  shows"sb_well f"
+  by (simp add: assms sb_well_def)
 
-  (* Deletes the first Elements of each stream *)
-definition sbRt:: " 'm stream ubundle \<rightarrow> 'm stream ubundle" where
-"sbRt \<equiv> sbDrop 1"
+lemma sbwellD: assumes "sb_well sb" and "ctype (Rep c) \<subseteq> A"
+    shows "sValues\<cdot>(sb c) \<subseteq> A"
+  using assms(1) assms(2) sb_well_def by blast
 
-  (* Retrieves the n-th element of each Stream *)
-definition sbNth:: "nat \<Rightarrow> 'm stream ubundle \<rightarrow> 'm stream ubundle" where
-"sbNth n \<equiv> \<Lambda> sb.  sbHd\<cdot>(sbDrop n\<cdot>sb)"
+lemma sbwell_ex:"sb_well (\<lambda>c. \<epsilon>)"
+  by(simp add: sb_well_def)
 
-(* I tried to make this function cont, look at SBCase_Study *)
-  (* Length of the selected stream. *)
-definition sbLen:: " 'm stream ubundle \<rightarrow> lnat " (* ("#_") *)where
-"sbLen \<equiv> \<Lambda> b. if ubDom\<cdot>b \<noteq> {} then LEAST ln. ln \<in> { #(b. c) | c. c \<in> ubDom\<cdot>b} else \<infinity>"
+lemma sbwell_adm: "adm sb_well"
+  unfolding sb_well_def
+  apply(rule adm_all, rule admI)
+  by (simp add: ch2ch_fun l44 lub_fun)
 
-  (* Iterates the streams n-times. *)
-definition sbNTimes:: "nat \<Rightarrow> 'm stream ubundle \<Rightarrow> 'm stream ubundle" ("_\<star>_" [60,80] 90) where
-"sbNTimes n b \<equiv> sbMapStream (sntimes n) b"
+text\<open>Since we define stream bundles as total functions from channels
+to streams, we can also instantiate them as a \gls{pcpo}.\<close>
 
-  (* Iterates the streams \<infinity>-times. *)
-definition sbInfTimes:: " 'm stream ubundle \<Rightarrow> 'm stream ubundle" ("_\<infinity>") where
-"sbInfTimes sb = sbMapStream sinftimes sb"
+pcpodef 'c::chan sb("(_\<^sup>\<Omega>)" [1000] 999) 
+         = "{f::('c::chan \<Rightarrow> M stream). sb_well f}"
+  by (auto simp add: sbwell_ex sbwell_adm lambda_strict[symmetric])
 
-  (* Applies a (Element-)function to each stream. *)
-definition sbMap:: "('m \<Rightarrow> 'm) \<Rightarrow> 'm stream ubundle \<rightarrow> 'm stream ubundle" where
-"sbMap f \<equiv> \<Lambda> b. sbMapStream (\<lambda>s. smap f\<cdot>s) b"
+(* TODO: Remove Warning
+ Information at the bottom of Stream.thy *)
+setup_lifting %invisible type_definition_sb
 
-  (* Applies a filter to all Elements in each stream. *)
-definition sbFilter:: "'m set \<Rightarrow> 'm stream ubundle \<rightarrow> 'm stream ubundle" where
-"sbFilter f \<equiv> \<Lambda> b. sbMapStream (\<lambda>s. sfilter f\<cdot>s) b "
+paragraph \<open>SB Type Properties \\\<close>
 
-abbreviation sbfilter_abbr :: "'m set \<Rightarrow> 'm stream ubundle \<Rightarrow> 'm stream ubundle" ("(_ \<ominus> _)" [66,65] 65)
-where "F \<ominus> s \<equiv> sbFilter F\<cdot>s"
+text\<open>Then the \<open>\<bottom>\<close> element of our \gls{sb} type, is of course a 
+mapping to empty streams.\<close>
 
-  (* Applies a filter to each stream. If the stream is not in the filter it is replaces by "None"  *)
-definition sbFilterStreams:: "'m stream set \<Rightarrow> 'm stream ubundle \<Rightarrow> 'm stream ubundle" where
-"sbFilterStreams f b \<equiv> Abs_ubundle (\<lambda>c. (c\<in>ubDom\<cdot>b \<and> (b. c)\<in>f) \<leadsto> (b .c) )"
+theorem bot_sb:"\<bottom> = Abs_sb(\<lambda>c. \<epsilon>)"
+  by (simp add: Abs_sb_strict lambda_strict)
 
-  (* Applies the function to the first Element in each Streams and returns only the first Element *)
-definition sbLookahd:: "('m \<Rightarrow> 'm) \<Rightarrow> 'm stream ubundle \<rightarrow> 'm stream ubundle" where
-"sbLookahd f \<equiv> \<Lambda> sb. sbMap f\<cdot>(sbHd\<cdot>sb)"
+lemma rep_sb_well[simp]:"sb_well(Rep_sb sb)"
+  using Rep_sb by auto
 
-  (* Prefix while predicate holds. *)
-definition sbTakeWhile:: "('m \<Rightarrow> bool) \<Rightarrow> 'm stream ubundle \<rightarrow> 'm stream ubundle" where
-"sbTakeWhile f \<equiv> \<Lambda> b. sbMapStream (\<lambda>s. stakewhile f\<cdot>s) b"
+lemma abs_rep_sb_sb[simp]:"Abs_sb(Rep_sb sb) = sb"
+  using Rep_sb_inverse by auto
 
-  (* Drop prefix while predicate holds. *)
-definition sbDropWhile:: "('m \<Rightarrow> bool) \<Rightarrow> 'm stream ubundle \<rightarrow> 'm stream ubundle" where
-"sbDropWhile f \<equiv> \<Lambda> b. sbMapStream (\<lambda>s. sdropwhile f\<cdot>s) b"
+lemma sbrep_cont[simp, cont2cont]: "cont Rep_sb"
+  using cont_Rep_sb cont_id by blast
+(*
+text\<open>This is a continuity property for SBs.\<close>*)
+lemma sb_abs_cont2cont [cont2cont]: 
+  assumes "cont h" 
+  and "\<And>x. sb_well (h x)"
+  shows "cont (\<lambda>x. Abs_sb (h x))"
+  by (simp add: assms(1) assms(2) cont_Abs_sb)
 
-  (* Remove successive duplicate values from each stream. *)
-definition sbRcdups:: "'m stream ubundle \<rightarrow> 'm stream ubundle" where
-"sbRcdups \<equiv> \<Lambda> sb. sbMapStream (\<lambda>s. srcdups\<cdot>s) sb"
+lemma sb_rep_eqI:assumes"\<And>c. (Rep_sb sb1) c = (Rep_sb sb2) c"
+  shows "sb1 = sb2"
+  by(simp add: po_eq_conv below_sb_def fun_belowI assms)
 
-(* Ugly AF, schöner machen\<And>! *)
-(* Ich kann nicht "fix" verwendne da 'm SB kein pcpo ist.
-  Statdessen verwende ich "(sbTake 0\<cdot>b)" als künstliches kleinstes element *)
+text\<open>In case of an empty domain, no stream should be in a \gls{sb}.
+Hence, every \gls{sb} with an empty domain should be \<open>\<bottom>\<close>. This is
+proven in the following theorem.\<close>
 
-(* primrec myiterate :: "nat \<Rightarrow> 'm stream ubundle set \<Rightarrow> 'm stream ubundle \<Rightarrow> 'm stream ubundle" where
-    "myiterate 0 bs b = sbLeast (ubDom\<cdot>b)"
-  | "myiterate (Suc n) bs b = (let rest = (myiterate n bs (sbRt\<cdot>b)) in
-          if (sbHd\<cdot>b\<in>bs) then sbHd\<cdot>b \<bullet> rest else rest )"
+theorem sbtypeepmpty_sbbot[simp]:
+  "chDomEmpty TYPE ('cs::chan) 
+  \<Longrightarrow> (sb::'cs\<^sup>\<Omega>) = \<bottom>"
+  unfolding chDom_def cEmpty_def bot_sb
+  apply(rule sb_rep_eqI)
+  apply(subst Abs_sb_inverse)
+  apply (simp add: sbwell_ex,auto)
+  apply(insert sb_well_def[of "Rep_sb sb"],auto)
+  using strict_sValues_rev by fastforce
 
-  (* (if (sbHd\<cdot>b\<in>bs) then sbHd\<cdot>b \<bullet>(myiterate n bs (sbRt\<cdot>b)) else (myiterate n bs (sbRt\<cdot>b))) *)
+lemma sbwell2fwell[simp]:"Rep_sb sb = f \<Longrightarrow> sb_well f"
+  using Rep_sb by auto
 
-definition sbFilterTupel:: " 'm stream ubundle set \<Rightarrow> 'm stream ubundle \<Rightarrow> 'm stream ubundle" where
-"sbFilterTupel bs b \<equiv> \<Squnion>i. myiterate i bs b"
+subsection \<open>SB Functions \label{sub:sbfun}\<close>
 
-thm fix_def
-definition sbFilterTupel2:: " 'm stream ubundle set \<Rightarrow> 'm stream ubundle \<Rightarrow> 'm stream ubundle" where
-"sbFilterTupel2 A \<equiv> (\<Lambda> F. \<Squnion>i. iterate i\<cdot>F\<cdot>(\<lambda>s. sbTake 0\<cdot>s))\<cdot>
-      (\<Lambda> h. (\<lambda> b. if (sbHd\<cdot>b\<in>A) then sbHd\<cdot>b \<bullet> h (sbRt\<cdot>b) else h (sbRt\<cdot>b)))"*)
-(* \<Squnion>i. iterate i\<cdot>(\<Lambda> f. (\<lambda>b.
-  if (b=sbLeast (sbDom\<cdot>b)) then sbLeast (sbDom\<cdot>b) else
-    if (sbHd\<cdot>b\<in>bs) then (sbHd\<cdot>b) \<bullet> f (sbRt\<cdot>b) else f (sbRt\<cdot>b) ))\<cdot>(\<lambda>x. empty \<Omega>)"  *)
+text\<open>This section defines and explains the most commonly used 
+functions for \Gls{sb}. Also, the main properties of important 
+functions will be discussed.\<close>
 
-subsection \<open>Automaton\<close>
+subsubsection \<open>Converter from sbElem to SB \label{subsub:sbe2sb}\<close>
 
-definition sbHdElem :: "'m stream ubundle \<rightarrow> (channel \<rightharpoonup> 'm discr\<^sub>\<bottom>)" where
-"sbHdElem \<equiv> \<Lambda> sb. (\<lambda>c. (c \<in> ubDom\<cdot>sb) \<leadsto> (lshd\<cdot>(sb . c)))"
+text\<open>First we construct a converter from @{type sbElem}s to 
+\Gls{sb}. This is rather straight forward, since we either have a 
+function from channels to messages, which we can easily convert to a
+function from channels to streams, which consists only of streams 
+with the exact message from the @{type sbElem}. In the case of an 
+empty domain, we map @{const None} to the \<open>\<bottom>\<close> element of \Gls{sb}.\<close> 
 
-definition convDiscrUp :: "(channel \<rightharpoonup> 'm) \<Rightarrow> (channel \<rightharpoonup> 'm discr\<^sub>\<bottom>)" where
-"convDiscrUp sb \<equiv> (\<lambda>c. (c \<in> dom sb) \<leadsto> (Iup (Discr (sb \<rightharpoonup> c))))"
+lift_definition sbe2sb::" 'c\<^sup>\<surd> \<Rightarrow> 'c\<^sup>\<Omega>" is
+"\<lambda> sbe. case (Rep_sbElem sbe) of Some f \<Rightarrow> (\<lambda>c. \<up>(f c))
+                                | None  \<Rightarrow> \<bottom> "
+  apply(rule sbwellI, auto)
+  apply(case_tac "Rep_sbElem sbElem = None")
+  apply auto
+  apply(subgoal_tac "sbElem_well (Some y)",simp)
+  by(simp only: sbelemwell2fwell)
 
-definition convSB :: "(channel \<rightharpoonup> 'm discr\<^sub>\<bottom>) \<Rightarrow> 'm stream ubundle" where
-"convSB sb \<equiv> Abs_ubundle (\<lambda>c. (c \<in> dom sb) \<leadsto> (lscons\<cdot>(sb \<rightharpoonup> c)\<cdot>\<epsilon>))"
+text\<open>Through the usage of keyword \<open>lift_definition\<close> instead of 
+\<open>definition\<close> we automatically have to proof that the output is 
+indeed a \gls{sb}.\<close>
 
-(* ----------------------------------------------------------------------- *)
-section \<open>Lemmas\<close>
-(* ----------------------------------------------------------------------- *)
+subsubsection \<open>Extracting a single stream \label{subsub:sbgetch}\<close>
 
-(* ----------------------------------------------------------------------- *)
-subsection \<open>General Lemmas\<close>
-(* ----------------------------------------------------------------------- *)
+text\<open>The direct access to a stream on a specific channel is one of
+the most important functions for defining the framework and also 
+often used for verifying components. Intuitively, the signature of
+such a function should be \<open>'c \<Rightarrow> 'c\<^sup>\<Omega> \<rightarrow> M stream \<close>, but we use a 
+slightly more general signature. This facilitates later function 
+definitions and also reduces the total framework size.\<close>
 
-(* Zwischenteil, wird später gebraucht *)
-(* verwendet sbDom && sbGetCh *)
+lift_definition sbGetCh :: "'e \<Rightarrow> 'c\<^sup>\<Omega> \<rightarrow> M stream" is
+"\<lambda>c sb. if Rep c\<in>chDom TYPE('c) 
+            then Rep_sb sb (Abs(Rep c)) 
+            else \<epsilon>"
+  apply(intro cont2cont)
+  by(simp add: cont2cont_fun)
 
-lemma [simp]: "Abs_ubundle (\<lambda>c. (c \<in> ubDom\<cdot>b)\<leadsto>b . c) = b"
-  apply(rule ub_eq)
-  using Collect_cong dom_def mem_Collect_eq apply auto[1]
-  by auto
+text\<open>Our general signature allows the input of any channel from the
+@{type channel} type. If the channel is in the domain of the input
+\gls{sb}, we obtain the corresponding channel. Is the channel not in
+the domain, the empty stream \<open>\<epsilon>\<close> is returned. The continuity of this
+function is also immediately proven.\<close> 
 
-lemma bundle_ctype: fixes ub::"'m::message SB"
-                        shows "c\<in>ubDom\<cdot>ub \<Longrightarrow> sdom\<cdot>(ub . c) \<subseteq> (ctype c)"
-  by (metis ubdom_channel_usokay ubgetch_insert usclOkay_stream_def)
+lemmas sbgetch_insert = sbGetCh.rep_eq
 
+text\<open>The next abbreviations are defined to differentiate between the
+intuitive and the expanded signature of @{const sbGetCh}. The first 
+abbreviation is an abbreviation for the general signature, the 
+second restricts to the intuitive signature.\<close>
 
-(* ----------------------------------------------------------------------- *)
-  subsection \<open>sbSetCh\<close>
-(* ----------------------------------------------------------------------- *)
+abbreviation sbgetch_magic_abbr :: "'c\<^sup>\<Omega> \<Rightarrow> 'e \<Rightarrow> M stream"
+(infix " \<^enum>\<^sub>\<star> " 65) where "sb \<^enum>\<^sub>\<star> c \<equiv> sbGetCh c\<cdot>sb"
 
-(* Welltyped is preserved after setting new sb_well channels.*)
-lemma sbset_well [simp]: assumes "sdom\<cdot>s \<subseteq> ctype c"
-  shows "ubWell ((Rep_ubundle b) (c \<mapsto> s) )"
-  by (simp add: assms usclOkay_stream_def)
+abbreviation sbgetch_abbr :: "'c\<^sup>\<Omega> \<Rightarrow> 'c \<Rightarrow> M stream"
+(infix " \<^enum> " 65) where "sb \<^enum> c \<equiv> sbGetCh c\<cdot>sb"
 
-(* ----------------------------------------------------------------------- *)
-  subsection \<open>sbRestrict\<close>
-(* ----------------------------------------------------------------------- *)
+text \<open>Obtaining a @{type sbElem} form a \gls{sb} is not always 
+possible. If the domain of a bundle is not empty but there is an 
+empty stream on a channel, the resulting @{type sbElem} could not 
+map that channel to a message from the stream. Hence, no slice of 
+such a \gls{sb} can be translated to a @{type sbElem}. The following
+predicate states, that the first slice of an \gls{sb} with a 
+non-empty domain can be transformed to a @{type sbElem}, because it 
+checks, if all streams in the bundle are not empty.\<close>
 
-lemma sbrestrict2sbgetch[simp]: assumes "c\<in>cs"
-  shows "(b\<bar>cs) . c = b. c"
-  by(simp add: assms ubgetch_insert ubrestrict_insert)
+definition sbHdElemWell::"'c\<^sup>\<Omega> \<Rightarrow> bool" where
+"sbHdElemWell  \<equiv> \<lambda> sb. (\<forall>c. sb  \<^enum>  c \<noteq> \<epsilon>)"  
 
-(* ----------------------------------------------------------------------- *)
-  subsection \<open>sbRemCh\<close>
-(* ----------------------------------------------------------------------- *)
+abbreviation sbIsLeast::"'cs\<^sup>\<Omega> \<Rightarrow> bool" where
+"sbIsLeast sb \<equiv> \<not>sbHdElemWell sb"
 
-(* lemma sbremch_monofun[simp]: "monofun (\<lambda> b. \<Lambda> c.  b \<bar> -{c})"
-  by (simp add: below_cfun_def monofun_cfun_arg fun_belowI monofunI)*)
+text\<open>The negation of this property is called @{const sbIsLeast}, 
+because these \Gls{sb} do not contain any complete slices.\<close>
 
-(* das gehört woanders hin, eigentlich in cfun definition... also vllt Prelude *)
-lemma rep_cfun_cont: assumes "chain Y"
-  shows "Rep_cfun (\<Squnion>i. (Y i)) = (\<Squnion>i. (Rep_cfun ((Y i))))"
-proof -
-  have "\<And>f. chain (\<lambda>n. Rep_cfun (f n::'a \<rightarrow> 'b)) \<or> \<not> chain f"
-    by (meson below_cfun_def po_class.chain_def)
-  then have "\<And>f a. (\<Squnion>n. Rep_cfun (f n)) (a::'a) = (Lub f\<cdot>a::'b) \<or> \<not> chain f"
-    by (metis contlub_cfun_fun lub_fun)
-  then show ?thesis
-    by (metis (no_types) assms fun_belowI po_eq_conv)
+paragraph \<open>sbGetCh Properties \\\<close>
+
+text\<open>When using the intuitively variant of @{const sbGetCh}, it
+obtains a stream from a channel. It should never be able to do
+anything else. This behavior is verified by the following theorem.
+Obtaining a stream from its \gls{sb} is the same as obtaining the 
+output from the function realizing the \gls{sb}.\<close>
+
+theorem sbgetch_insert2:"sb \<^enum> c = (Rep_sb sb) c"
+  apply(simp add: sbgetch_insert)
+  by (metis (full_types)Rep_sb_strict app_strict cnotempty_cdom 
+      sbtypeepmpty_sbbot)
+
+lemma sbgetch_empty: fixes sb::"'cs\<^sup>\<Omega>"
+    assumes "Rep c \<notin> chDom TYPE('cs)"
+    shows "sb \<^enum>\<^sub>\<star> c = \<epsilon>"
+  by(simp add: sbgetch_insert assms)
+
+lemma sbhdelemchain[simp]:
+  "sbHdElemWell x \<Longrightarrow>  x \<sqsubseteq> y \<Longrightarrow> sbHdElemWell y"
+  apply(simp add: sbHdElemWell_def sbgetch_insert2)
+  by (metis below_antisym below_sb_def fun_belowD minimal)
+
+lemma sbgetch_ctypewell[simp]:"sValues\<cdot>(sb \<^enum>\<^sub>\<star> c) \<subseteq> ctype (Rep c)"
+  apply(simp add: sbgetch_insert)
+  by (metis DiffD1 chDom_def f_inv_into_f sb_well_def sbwell2fwell)
+
+lemma sbmap_well:assumes"\<And>s. sValues\<cdot>(f s) \<subseteq> sValues\<cdot>s" 
+                 shows"sb_well (\<lambda>c. f (b \<^enum>\<^sub>\<star> c))"
+  apply(rule sbwellI)
+  using assms sbgetch_ctypewell by fastforce
+
+lemma sbgetch_ctype_notempty:"sb  \<^enum>\<^sub>\<star>  c \<noteq> \<epsilon> \<Longrightarrow> ctype (Rep c) \<noteq> {}"
+proof-
+  assume a1: "sb  \<^enum>\<^sub>\<star>  c \<noteq> \<epsilon>"
+  then have "\<exists>e. e\<in> sValues\<cdot>(sb  \<^enum>\<^sub>\<star>  c)"
+    by (simp add: sValues_notempty strict_sValues_rev neq_emptyD)
+  then show "ctype (Rep c) \<noteq> {}"
+    using sbgetch_ctypewell by blast
 qed
 
-(* removing the channel c from the lub of the chain Y of SBs is less than or equal to removing c from
-   every element of the chain and then taking the lub *)
-(*lemma sbremch_cont1[simp]: assumes "chain Y"
-  shows "(\<Lambda> c. (\<Squnion>i. Y i)\<bar>- {c}) \<sqsubseteq> (\<Squnion>i. \<Lambda> c. Y i\<bar>- {c})"
-proof -
-  have lub_cont:"cont (\<Squnion>i. (\<lambda> c. Y i\<bar>- {c}))" using channel_cont by blast
-  hence eq: "Rep_cfun (\<Squnion>i. \<Lambda> c. Y i\<bar>- {c}) =  (\<Squnion>i. Rep_cfun (\<Lambda> c. Y i\<bar>- {c}))" by(simp add: rep_cfun_cont assms)
-  have "(\<lambda> c. (\<Squnion>i. Y i)\<bar>- {c}) \<sqsubseteq> (\<Squnion>i. (\<lambda> c. Y i\<bar>- {c}))"
-    by (smt assms contlub_cfun_arg eq_imp_below fun_belowI lub_eq lub_fun monofun_cfun_arg po_class.chain_def)
-  thus ?thesis
-    by (metis (no_types, lifting) Abs_cfun_inverse2 below_cfun_def channel_cont eq lub_eq)
-qed
+lemma sbhdelemnotempty:
+  "sbHdElemWell (sb::'cs\<^sup>\<Omega>) \<Longrightarrow>  \<not> chDomEmpty TYPE('cs)"
+  apply(auto simp add: sbHdElemWell_def chDom_def cEmpty_def)
+  by (metis (mono_tags) Collect_mem_eq Collect_mono_iff repinrange 
+      sbgetch_ctype_notempty)
 
-lemma sbremch_cont[simp]: "cont (\<lambda> b. \<Lambda> c.  b \<bar> -{c})"
-by(rule contI2, auto)*)
+text\<open>If a \gls{sb} \<open>x\<close> is @{const below} another \gls{sb} \<open>y\<close>, the 
+order also holds for each streams on every channel.\<close>
 
-(* ----------------------------------------------------------------------- *)
-  subsection \<open>convDiscrUp\<close>
-(* ----------------------------------------------------------------------- *)
+theorem sbgetch_sbelow[simp]:"sb1 \<sqsubseteq> sb2 \<Longrightarrow> sb1 \<^enum>\<^sub>\<star> c \<sqsubseteq> sb2 \<^enum>\<^sub>\<star> c"
+  by (simp add: mono_slen monofun_cfun_arg)
 
-(* convDiscrUp only modifies the range, not the domain *)
-lemma convDiscrUp_dom[simp]: "dom (convDiscrUp f) = dom f"
-  by(simp add: convDiscrUp_def)
+lemma sbgetch_below_slen[simp]:
+  "sb1 \<sqsubseteq> sb2 \<Longrightarrow> #(sb1 \<^enum>\<^sub>\<star> c) \<le> #(sb2 \<^enum>\<^sub>\<star> c)"
+  by (simp add: mono_slen monofun_cfun_arg)
 
-(* Pseudo-Inverse function of convDiscrUp: Only inverts, if "\<forall>c\<in>dom f. (f \<rightharpoonup> c) \<noteq> \<bottom>" holds *)
-definition invConvDiscrUp :: "(channel \<rightharpoonup> 'a discr\<^sub>\<bottom>) \<Rightarrow> (channel \<rightharpoonup> 'a)" where
-"invConvDiscrUp f \<equiv> \<lambda>c. (c\<in>dom f) \<leadsto> (inv Discr (inv Iup (f \<rightharpoonup> c)))"
+lemma sbgetch_bot[simp]:"\<bottom> \<^enum>\<^sub>\<star> c = \<epsilon>"
+  apply(simp add: sbGetCh.rep_eq bot_sb)
+  by (metis Rep_sb_strict app_strict bot_sb)
 
-(* Domain of invConvDiscrUp depends entirely on f *)
-lemma invConvDiscrUp_dom: assumes "\<forall>c\<in>dom f. (f \<rightharpoonup> c) \<noteq> \<bottom>"
-                            shows "dom (invConvDiscrUp f) = dom f"
-  proof -
-    have "dom (invConvDiscrUp f) \<subseteq> dom f"
-      by (meson invConvDiscrUp_def domIff subsetI)
-    moreover have "c \<in> dom f \<Longrightarrow> c \<in> dom (invConvDiscrUp f)"
-      by (simp add: invConvDiscrUp_def)
-    ultimately show ?thesis
-      by (simp add: Collect_mono_iff invConvDiscrUp_def)
-  qed
+text\<open>Now we can show the equality and below property of two \Gls{sb}
+though the relation of their respective streams. In both cases we 
+only have to check channels from the domain, hence the properties 
+automatically hold for \Gls{sb} with an empty domain.\<close>
 
-(* A substitution rule for invConvDiscrUp *)
-lemma invConvDiscrUp_subst: assumes "\<forall>c\<in>dom f. (f \<rightharpoonup> c) \<noteq> \<bottom>"
-                                and "c \<in> dom f"
-                              shows "(invConvDiscrUp f) \<rightharpoonup> c = inv Discr (inv Iup (f \<rightharpoonup> c))"
-  by (simp add: assms(2) invConvDiscrUp_def)
+theorem sb_belowI:
+  fixes sb1 sb2::"'cs\<^sup>\<Omega>"
+    assumes "\<And> c. Rep c\<in>chDom TYPE('cs) \<Longrightarrow>  sb1 \<^enum> c \<sqsubseteq> sb2 \<^enum> c"
+    shows "sb1 \<sqsubseteq> sb2"
+  apply(subst below_sb_def)
+  apply(rule fun_belowI)
+  by (metis (full_types) assms  po_eq_conv sbGetCh.rep_eq 
+      sbgetch_insert2)
 
-(* TODO: Wrong theory *)
-lemma iup_inv_iup: assumes "(x::('a::cpo)\<^sub>\<bottom>) \<noteq> \<bottom>"
-                     shows "Iup (inv Iup x) = x"
-  proof -
-    have h0: "x \<noteq> Ibottom"
-      using assms inst_up_pcpo by force
-    then have h1: "\<exists>a. x = Iup a"
-      using h0 u.exhaust by auto
-    then obtain a where a_def: "x = Iup a"
-      using h1 by blast
-    then have h2: "inv Iup x = a"
-      apply(subst a_def)
-      by(simp add: inv_def)
-    then have h3: "Iup (inv Iup x) = Iup a"
-      by (simp add: h2)        
-    then have h4: "Iup (inv Iup x) = x"
-      using a_def h3 by auto
-    then show ?thesis
-      by simp
-  qed
+text\<open>If all respectively chosen streams of one bundle are 
+@{const below} the streams of another bundle, the @{const below}
+relation holds for the bundles as well.\<close>
 
-(* TODO: Wrong theory (+Naming?) *)
-lemma iup_discr_and_back: assumes "(x::'a discr\<^sub>\<bottom>) \<noteq> \<bottom>"
-                            shows "Iup (Discr (inv Discr (inv Iup x))) = x"
-  proof -
-    have "Iup (Discr (inv Discr (inv Iup x))) = Iup (inv Iup x)"
-      by (metis discr.exhaust surj_def surj_f_inv_f)
-    moreover have "Iup (inv Iup x) = x"
-      by (simp add: assms iup_inv_iup)
-    ultimately show ?thesis
-      by simp
-  qed
+theorem sb_eqI:
+  fixes sb1 sb2::"'cs\<^sup>\<Omega>"
+    assumes "\<And>c. Rep c\<in>chDom TYPE('cs) \<Longrightarrow> sb1 \<^enum> c = sb2 \<^enum> c"
+    shows "sb1 = sb2"
+  apply(cases "chDom TYPE('cs) \<noteq> {}")
+  apply(metis Diff_eq_empty_iff Diff_triv assms chDom_def 
+        chan_botsingle rangeI sb_rep_eqI sbgetch_insert2)
+  by (metis (full_types) sbtypeepmpty_sbbot)
 
-(* Given the assumption, invConvDiscrUp is the pseudo-inverse of convDiscrUp *)
-lemma convDiscrUp_invConvDiscrUp_eq: assumes "\<forall>c\<in>dom f. (f \<rightharpoonup> c) \<noteq> \<bottom>"
-                                       shows "convDiscrUp (invConvDiscrUp f) = f"
-                                         (is "?L = ?R")
-  proof -
-    have eq_dom: "dom ?L = dom ?R"
-      by (simp add: assms invConvDiscrUp_dom)
-    moreover have eq_on_dom: "\<And>c. c\<in>dom ?L \<Longrightarrow> ?L\<rightharpoonup>c = ?R\<rightharpoonup>c"
-      proof -
-        fix c::channel
-        assume "c\<in>dom ?L"
-        then show "?L\<rightharpoonup>c = ?R\<rightharpoonup>c"
-          apply(simp add: invConvDiscrUp_def convDiscrUp_def)
-          by(simp add: assms iup_discr_and_back)
-      qed
-    ultimately show ?thesis
-      by (meson part_eq)
-  qed
+text\<open>If all respectively chosen streams of one bundle are equal to 
+the streams of another bundle, these bundles are the same.\<close>
 
-(* Given the assumption, the inverse of convDiscrUp exists (convDiscrUp is pseudo-invertible) *)
-lemma convdiscrup_inv_ex: assumes "\<forall>c\<in>dom f. (f \<rightharpoonup> c) \<noteq> \<bottom>"
-                            shows "\<exists>x. convDiscrUp x = f"
-  apply(rule_tac x="invConvDiscrUp f" in exI)
-  by (simp add: assms convDiscrUp_invConvDiscrUp_eq)
-
-(* Given the assumption, convDiscrUp is pseudo-bijective *)
-lemma convdiscrup_inv_eq[simp]: assumes "\<forall>c\<in>dom f. (f \<rightharpoonup> c) \<noteq> \<bottom>"
-                                  shows "convDiscrUp (inv convDiscrUp f) = f"
-  by (metis assms convdiscrup_inv_ex f_inv_into_f rangeI)
-
-(* Given the assumption (convDiscrUp is pseudo-bijective), the domain of the inverse stays the same *)
-lemma convdiscrup_inv_dom_eq[simp]: assumes "\<forall>c\<in>dom f. (f \<rightharpoonup> c) \<noteq> \<bottom>"
-                                      shows "dom (inv convDiscrUp f) = dom f"
-  by (metis assms convdiscrup_inv_eq convDiscrUp_dom)
-   
-(* convDiscrUp is an injective function *) 
-lemma convDiscrUp_inj: "inj convDiscrUp"
-  proof (rule injI)
-    fix x::"channel \<Rightarrow> 'b option" and y::"channel \<Rightarrow> 'b option"
-    assume a1: "convDiscrUp x = convDiscrUp y"
-    have f1: "dom x = dom y"
-      by (metis a1 convDiscrUp_dom)
-    have f2: "\<forall> xa \<in> dom x. (Iup (Discr (x \<rightharpoonup> xa))) = (Iup (Discr (y \<rightharpoonup> xa)))"
-      by (metis (full_types) a1 convDiscrUp_def convDiscrUp_dom option.sel)
-    show "x = y"     
-      apply (subst fun_eq_iff)
-      apply rule
-      apply (case_tac "xa \<in> dom x") defer
-       apply (metis a1 convDiscrUp_dom domIff)
-      by (metis discr.inject domD f1 f2 option.sel u.inject)
-  qed
-
-lemma convDiscrUp_eqI: "convDiscrUp x = convDiscrUp y \<Longrightarrow> x = y"
-  by (simp add: convDiscrUp_inj inj_eq)
-
-(* Substitution rule for the inverse of convDiscrUp *)
-lemma convDiscrUp_inv_subst: assumes "\<forall>c\<in>dom f. (f \<rightharpoonup> c) \<noteq> \<bottom>"
-                                 and "c \<in> dom f"
-                               shows "((inv convDiscrUp) f) \<rightharpoonup> c = inv Discr (inv Iup (f \<rightharpoonup> c))"
-  proof -
-    have "((inv convDiscrUp) f) = (invConvDiscrUp f)"
-      proof -
-        have "convDiscrUp ((inv convDiscrUp) f) = f"
-          by (simp add: assms(1))
-        moreover have "convDiscrUp (invConvDiscrUp f) = f"
-          by (simp add: assms(1) convDiscrUp_invConvDiscrUp_eq)
-        ultimately show ?thesis
-          by (simp add: convDiscrUp_eqI)
-      qed
-    moreover have "(invConvDiscrUp f) \<rightharpoonup> c = inv Discr (inv Iup (f \<rightharpoonup> c))"
-      by (simp add: assms invConvDiscrUp_subst)
-    ultimately show ?thesis
-      by simp
-  qed
-(* ----------------------------------------------------------------------- *)
-  subsection \<open>sbElemWell\<close>
-(* ----------------------------------------------------------------------- *)
-
-lemma sbElemWellI: assumes "sbElemWell f"
-                       and "c \<in> dom f"
-                     shows "(f \<rightharpoonup> c) \<in> ctype c"
-  using assms(1) assms(2) sbElemWell_def by auto
-
-lemma sbElemWellI2: assumes "sbElemWell f"
-                        and "c \<in> dom f"
-                        and "(f \<rightharpoonup> c) = a"
-                      shows "a \<in> ctype c"
-  using assms(1) assms(2) assms(3) sbElemWellI by auto
-    
-lemma sbElemWellEx:"\<exists>x::channel \<Rightarrow> 'm option. sbElemWell x"
-  apply(simp add: sbElemWell_def)
+lemma slen_empty_eq:  assumes"chDomEmpty(TYPE('c))"
+  shows " #(sb \<^enum> (c::'c)) =0"
+  using assms chDom_def cEmpty_def sbgetch_ctype_notempty 
   by fastforce
 
+text\<open>Lastly, the conversion from a @{type sbElem} to a \gls{sb}
+should never result in a \gls{sb} which maps its domain to \<open>\<epsilon>\<close>.\<close>
 
+theorem sbgetch_sbe2sb_nempty: assumes "\<not>chDomEmpty TYPE('a)"
+  shows "\<forall>c::'a. sbe2sb sbe  \<^enum>  c \<noteq> \<epsilon>"
+  apply (simp add: sbe2sb_def)
+  apply (simp split: option.split) 
+  apply (rule conjI)
+  apply (rule impI)
+  using assms chDom_def sbElem_well.simps(1) sbelemwell2fwell 
+  apply blast
+  apply (rule allI, rule impI, rule allI)
+  by (metis (no_types) option.simps(5) sbe2sb.abs_eq sbe2sb.rep_eq 
+      sbgetch_insert2 sconc_snd_empty srcdups_step srcdupsimposs 
+      strict_sdropwhile)
 
-(* ----------------------------------------------------------------------- *)
-  subsection \<open>convSB\<close>
-(* ----------------------------------------------------------------------- *)
+lemma botsbleast[simp]:"sbIsLeast \<bottom>"
+  by(simp add: sbHdElemWell_def)
 
-lemma convsb_ubwell: assumes "sbElemWell (sb)" 
-  shows "ubWell (\<lambda>c. (c \<in> dom sb) \<leadsto> (lscons\<cdot>((convDiscrUp sb) \<rightharpoonup> c)\<cdot>\<epsilon>))"
-  apply (rule ubwellI) 
-  apply (simp add: domIff2)
-  unfolding usclOkay_stream_def
-proof - 
-  fix c
-  assume c_in_dom: "c \<in> dom sb"
-  have f0: "sb\<rightharpoonup>c \<in> ctype c"
-    by (simp add: assms c_in_dom sbElemWellI)
-  have f1: "updis(sb\<rightharpoonup>c) && \<epsilon> = convDiscrUp sb\<rightharpoonup>c && \<epsilon>"
-    by (simp add: c_in_dom convDiscrUp_def up_def)
-  have f2: "updis(sb\<rightharpoonup>c) && \<epsilon> = \<up>(sb\<rightharpoonup>c)"
-    by (simp add: sup'_def)
-  have f3: "sdom\<cdot>(convDiscrUp sb\<rightharpoonup>c && \<epsilon>) = sdom\<cdot>(\<up>sb\<rightharpoonup>c)"
-    using f1 f2 by auto
-  have f4: "sdom\<cdot>(\<up>sb\<rightharpoonup>c) = {sb\<rightharpoonup>c}"
-    by simp
-  show "sdom\<cdot>(convDiscrUp sb\<rightharpoonup>c && \<epsilon>) \<subseteq> ctype c"
-    by (simp add: f0 f3)
-qed
-
-lemma convsb_dom: assumes "sbElemWell (sb)" shows "ubDom\<cdot>(convSB (convDiscrUp sb)) = dom sb"
-  apply (simp add: convSB_def)
-  apply (subst ubdom_ubrep_eq)
-   apply (simp add: assms convsb_ubwell)
+lemma sbleast_mono[simp]:"x \<sqsubseteq> y \<Longrightarrow> \<not>sbIsLeast x \<Longrightarrow> \<not> sbIsLeast y"
   by simp
 
-lemma convsb_apply: assumes "sbElemWell (sb)" and "c \<in> dom sb" 
-  shows " (convSB (convDiscrUp sb)) . c = \<up>(sb \<rightharpoonup>c)"
-  apply (simp add: convSB_def)
-  apply (simp add: ubgetch_ubrep_eq assms convsb_ubwell)
-  by (simp add: assms(2) convDiscrUp_def sup'_def up_def)
+lemma sbnleast_mex:"\<not>sbIsLeast x \<Longrightarrow> x \<^enum> c \<noteq> \<epsilon>"
+  by(simp add: sbHdElemWell_def)
 
-(* ----------------------------------------------------------------------- *)
-  subsection \<open>sbMapStream\<close>
-(* ----------------------------------------------------------------------- *)
+lemma sbnleast_mexs[simp]:"\<not>sbIsLeast x \<Longrightarrow> \<exists>a s. x \<^enum> c = \<up>a \<bullet> s"
+  using sbnleast_mex scases by blast
 
-lemma [simp]: assumes "\<forall>s. sdom\<cdot>(f s) \<subseteq> sdom\<cdot>s"
-  shows "\<forall>c s. (sdom\<cdot>s\<subseteq>(ctype c) \<longrightarrow> sdom\<cdot>(f s)\<subseteq>(ctype c))"
-using assms by blast
-
-lemma sbmapstream_well[simp]: assumes "\<forall>c s. (sdom\<cdot>s\<subseteq>(ctype c) \<longrightarrow> sdom\<cdot>(f s)\<subseteq>(ctype c))"
-  shows "ubWell (\<lambda>c. (c \<in> ubDom\<cdot>b)\<leadsto>f (b. c))"
-  by (smt assms domIff option.sel ubWell_def ubdom_channel_usokay ubgetch_insert usclOkay_stream_def)
-
-lemma sbmapstream_dom [simp]: assumes "\<forall>c s. (sdom\<cdot>s\<subseteq>(ctype c) \<longrightarrow> sdom\<cdot>(f s)\<subseteq>(ctype c))"
-  shows "ubDom\<cdot>(sbMapStream f b) = ubDom\<cdot>b"
-proof -
-  have "\<forall>f u. (\<exists>c s. usclOkay c (s::'a stream) \<and> \<not> usclOkay c (f s)) \<or> UBundle.ubDom\<cdot>(ubMapStream f u) = UBundle.ubDom\<cdot>u"
-    using ubMapStream_ubDom by blast
-  then obtain cc :: "('a stream \<Rightarrow> 'a stream) \<Rightarrow> channel" and ss :: "('a stream \<Rightarrow> 'a stream) \<Rightarrow> 'a stream" where
-    f1: "\<forall>f u. usclOkay (cc f) (ss f) \<and> \<not> usclOkay (cc f) (f (ss f)) \<or> UBundle.ubDom\<cdot>(ubMapStream f u) = UBundle.ubDom\<cdot>u"
-    by moura
-  have "ubMapStream f b = sbMapStream f b"
-    by (simp add: sbMapStream_def ubMapStream_def)
-  then show ?thesis
-    using f1 by (metis (no_types) assms usclOkay_stream_def)
-qed
-
-lemma sbmapstream_sbgetch [simp]: assumes "\<forall>c s. (sdom\<cdot>s\<subseteq>(ctype c) \<longrightarrow> sdom\<cdot>(f s)\<subseteq>(ctype c))"
-  and "c\<in>ubDom\<cdot>b"
-shows "(sbMapStream f b) . c = f (b . c)"
-  by (simp add: assms(1) assms(2) sbMapStream_def ubgetch_insert)
-
-(* for any continuous function f from stream to stream which preserves the well-typed property,
-   (sbMapStream f) is also continuous *)
-lemma sbmapstream_cont [simp]: assumes "cont f" and "\<forall>c s. (sdom\<cdot>s\<subseteq>(ctype c) \<longrightarrow> sdom\<cdot>(f s)\<subseteq>(ctype c))"
-  shows "cont (sbMapStream f)"
-proof (rule contI2)
-  show "monofun (sbMapStream f)"
-  proof  (rule monofunI)
-    fix x y:: "('a ::message) stream ubundle"
-    assume "x \<sqsubseteq> y"
-    thus "sbMapStream f x \<sqsubseteq> sbMapStream f y "
-      by (smt
-          Abs_cfun_inverse2 assms(1) assms(2) below_ubundle_def below_option_def eq_imp_below
-          fun_below_iff monofun_cfun_arg ubdom_below ubgetch_insert sbmapstream_dom sbmapstream_sbgetch
-          ub_below)
-  qed
-  thus "\<forall>Y. chain Y \<longrightarrow> sbMapStream f (\<Squnion>i. Y i) \<sqsubseteq> (\<Squnion>i. sbMapStream f (Y i))"
-    by (smt
-        assms(1) assms(2) ch2ch_monofun cont2contlubE eq_imp_below ubrep_chain_lub_dom_eq ubrep_chain_the
-        less_UBI lub_eq ubrep_lub_eval option.sel ubrep_ubabs ubGetCh_def sbMapStream_def ubdom_insert
-        ubgetch_insert sbmapstream_dom sbmapstream_well)
-qed
-
-lemma sbmapstream_cont2[simp]: assumes "cont f" and "\<forall>s. sdom\<cdot>(f s)\<subseteq>sdom\<cdot>s"
-  shows "cont (sbMapStream f)"
-  apply (rule contI)
-  using sbmapstream_cont assms(1) assms(2) contE by blast
-
-(* ----------------------------------------------------------------------- *)
-  subsection \<open>sbTake\<close>
-(* ----------------------------------------------------------------------- *)
-lemma sbtake_cont [simp]:"cont (\<lambda>b. sbMapStream (\<lambda>s. stake n\<cdot>s) b)"
-by (simp)
-
-lemma sbtake_insert: "sbTake n\<cdot>b = sbMapStream (\<lambda>s. stake n\<cdot>s) b"
-by(simp add: sbTake_def)
-
-lemma sbtake_zero: "sbTake 0\<cdot>In = ubLeast (ubDom\<cdot>In)"
-  by (simp add: sbtake_insert sbMapStream_def ubLeast_def)
-
-lemma sbtake_sbdom[simp]: "ubDom\<cdot>(sbTake n\<cdot>b) = ubDom\<cdot>b"
-  by (simp add: sbtake_insert)
-
-lemma sbtake_sbgetch [simp]: assumes "c\<in>ubDom\<cdot>b"
-  shows "sbTake n\<cdot>b . c = stake n\<cdot>(b .c)"
-using assms by (simp add: sbtake_insert)
-
-lemma sbtake_below [simp]: "sbTake n\<cdot>b \<sqsubseteq> sbTake (Suc n)\<cdot>b"
-  by (metis eq_imp_le le_Suc_eq sbtake_sbdom sbtake_sbgetch stake_mono ub_below)
-
-lemma sbtake_chain [simp]: "chain (\<lambda>n. sbTake n\<cdot>b)"
-by (simp add: po_class.chainI)
-
-lemma sbtake_lub_sbgetch: assumes "c\<in>ubDom\<cdot>b"
-  shows "(\<Squnion>n. sbTake n\<cdot>b) . c = (\<Squnion>n. stake n\<cdot>(b . c))"
-  by (metis (mono_tags, lifting)
-      assms lub_eq ubrep_lub_eval po_class.chainI ubgetch_insert sbtake_below sbtake_sbgetch)
-
-lemma sbtake_lub [simp]: "(\<Squnion>n. sbTake n\<cdot>b) = b" (is "?L = b")
-proof(rule ub_eq)
-  show "ubDom\<cdot>?L = ubDom\<cdot>b"
-    by (metis po_class.chainI ubdom_chain_eq2 sbtake_below sbtake_sbdom)
-  fix c
-  assume "c\<in>ubDom\<cdot>?L"
-  hence "c\<in>ubDom\<cdot>b" by (simp add: \<open>ubDom\<cdot>(\<Squnion>n. sbTake n\<cdot>b) = ubDom\<cdot>b\<close>)
-  hence "?L . c = (\<Squnion>n. stake n\<cdot>(b . c))" using sbtake_lub_sbgetch by auto
-  thus "?L .c = b .c"  by (simp add: reach_stream)
-qed
-
-
-(* ----------------------------------------------------------------------- *)
-  subsection \<open>sbHd\<close>
-(* ----------------------------------------------------------------------- *)
-lemma sbhd_sbdom[simp]: "ubDom\<cdot>(sbHd\<cdot>b) = ubDom\<cdot>b"
-  by(simp add: sbHd_def)
-
-lemma sbhd_getch [simp]: assumes "c\<in>ubDom\<cdot>sb"
-  shows "(sbHd\<cdot>sb) . c = stake 1\<cdot>(sb . c)"
-  by(simp add: sbHd_def assms)
-  
-
-(* ----------------------------------------------------------------------- *)
-  subsection \<open>sbDrop\<close>
-(* ----------------------------------------------------------------------- *)
-lemma sbdrop_cont [simp]:"cont (\<lambda>b. sbMapStream (\<lambda>s. sdrop n\<cdot>s) b)"
+lemma sbnleast_hdctype[simp]:
+"\<not>sbIsLeast x \<Longrightarrow> \<forall>c. shd (x \<^enum> c) \<in> ctype (Rep c)"
+  apply auto
+  apply(subgoal_tac "sValues\<cdot>(x \<^enum> c)\<subseteq> ctype(Rep c) ")
+  apply (metis sbnleast_mex sfilter_ne_resup sfilter_sValuesl3)
   by simp
 
-lemma sbdrop_insert: "sbDrop n\<cdot>b = sbMapStream (\<lambda>s. sdrop n\<cdot>s) b"
-  by(simp add: sbDrop_def)
+lemma sbgetchid[simp]:"Abs_sb (( \<^enum> ) (x)) = x"
+  by(simp add: sbgetch_insert2)
 
-lemma sbdrop_zero[simp]: "sbDrop 0\<cdot>b = b"
-  by(simp add: sbdrop_insert sbMapStream_def)
+subsubsection \<open>Concatination \label{subsub:sbconc}\<close>
 
-lemma sbdrop_sbdom[simp]: "ubDom\<cdot>(sbDrop n\<cdot>b) = ubDom\<cdot>b"
-  by (simp add: sbdrop_insert)
+text\<open>Concatenating two \Gls{sb} is equivalent to concatenating their 
+streams whilst minding the channels. The output is also a \gls{sb},
+because the values of both streams are in @{const ctype}, therefore,
+the same holds for the union.\<close>
 
-lemma sbdrop_sbgetch [simp]: assumes "c\<in>ubDom\<cdot>b"
-  shows "sbDrop n\<cdot>b . c = sdrop n\<cdot>(b .c)"
-using assms by (simp add: sbdrop_insert)
+lemma sbconc_well[simp]:"sb_well (\<lambda>c. (sb1 \<^enum> c) \<bullet> (sb2 \<^enum> c))"
+  apply(rule sbwellI)
+  by (metis (no_types, hide_lams) Un_subset_iff dual_order.trans 
+      sbgetch_ctypewell sconc_sValues)
 
-(*lemma sbtake_sbdrop [simp]: "sbTake n\<cdot>b \<bullet> sbDrop n\<cdot>b = b" (is "?L = b")
-proof(rule sb_eq)
-  show "sbDom\<cdot>?L = sbDom\<cdot>b" by(simp)
-  fix c
-  assume "c\<in>sbDom\<cdot>?L"
-  hence "c\<in>sbDom\<cdot>b" by simp
-  hence "c\<in>(sbDom\<cdot>(sbTake n\<cdot>b) \<inter> sbDom\<cdot>(sbDrop n\<cdot>b))" by simp
-  hence "?L . c = (((sbTake n\<cdot>b) .c) \<bullet>  (sbDrop n\<cdot>b) . c)" using sbconc_sbgetch by blast
-  hence "?L . c = (stake n\<cdot>(b . c)) \<bullet>  (sdrop n\<cdot>(b . c))" by (simp add: \<open>c \<in> sbDom\<cdot>b\<close>)
-  thus "?L . c = b . c" by simp
-qed*)
+lift_definition sbConc:: "'c\<^sup>\<Omega> \<Rightarrow> 'c\<^sup>\<Omega> \<rightarrow> 'c\<^sup>\<Omega>" is
+"\<lambda>sb1 sb2. Abs_sb(\<lambda>c. (sb1 \<^enum> c) \<bullet> (sb2 \<^enum> c))"
+  by(intro cont2cont, simp)
 
+lemmas sbconc_insert = sbConc.rep_eq
 
-lemma sbdrop_plus [simp]: "sbDrop n\<cdot>(sbDrop k\<cdot>sb) = sbDrop (n+k)\<cdot>sb"
-  apply(rule ub_eq)
+text\<open> For easier usability, we introduce a concatenation 
+abbreviation.\<close>
+
+abbreviation sbConc_abbr :: "'c\<^sup>\<Omega>  \<Rightarrow>  'c\<^sup>\<Omega> \<Rightarrow>  'c\<^sup>\<Omega>"
+(infixr "\<bullet>\<^sup>\<Omega>" 70) where "sb1 \<bullet>\<^sup>\<Omega> sb2 \<equiv> sbConc sb1\<cdot>sb2"
+
+text\<open>After concatenating two \Gls{sb}, the resulting \gls{sb} has to
+contain the streams from both \Gls{sb} in the correct order. Hence,
+obtaining a stream by its channel from the concatenation of two 
+\Gls{sb} is equivalent to obtaining the stream by the same channel
+from the input \Gls{sb} and then concatenating the streams from the
+first input bundle with the stream from the second input bundle.\<close>
+
+theorem sbconc_getch [simp]: "sb1 \<bullet>\<^sup>\<Omega> sb2  \<^enum> c = (sb1 \<^enum> c) \<bullet> sb2 \<^enum> c"
+  unfolding sbgetch_insert2 sbconc_insert
+  apply(subst Abs_sb_inverse)
   apply simp
-  apply(simp add: sbDrop_def)
-  by (metis iterate_iterate sbdrop_insert sbdrop_sbdom sbdrop_sbgetch sdrop_def)
+  apply(rule sbwellI)
+  apply (metis (no_types, hide_lams) Un_subset_iff dual_order.trans
+         sbgetch_ctypewell sbgetch_insert2 sconc_sValues)
+  ..
 
-(* ----------------------------------------------------------------------- *)
-  subsection \<open>sbRt\<close>
-(* ----------------------------------------------------------------------- *)
+text\<open>It follows, that concatenating a \gls{sb} with the \<open>\<bottom>\<close> bundle
+in any order, results in the same \gls{sb}.\<close>
 
-lemma sbrt_sbdom[simp]: "ubDom\<cdot>(sbRt\<cdot>b) = ubDom\<cdot>b"
-  by(simp add: sbRt_def)
+theorem sbconc_bot_r[simp]:"sb \<bullet>\<^sup>\<Omega> \<bottom> = sb"
+  by(rule sb_eqI, simp)
 
-lemma sbRt2srt[simp]: assumes "ubWell [c \<mapsto> x]"
-                        shows "sbRt\<cdot>(Abs_ubundle [c \<mapsto> x]) = (Abs_ubundle [c \<mapsto> srt\<cdot>x])"
-                          (is "?L = ?R")
-  proof -
-    have srt_sdom: "sdom\<cdot>(srt\<cdot>x) \<subseteq> sdom\<cdot>x"
-      by (metis (full_types) Un_upper2 sdom2un stream.sel_rews(2) subsetI surj_scons)
-    have sdom_ctype: "sdom\<cdot>x \<subseteq> ctype c"
-      apply(fold usclOkay_stream_def)
-      by (metis (full_types) assms dom_eq_singleton_conv fun_upd_same insertI1 option.sel ubWell_def)
-    have srt_ctype: "sdom\<cdot>(srt\<cdot>x) \<subseteq> ctype c"
-      using srt_sdom sdom_ctype by auto
-    have well_r: "ubWell [c \<mapsto> srt\<cdot>x]"
-      by (metis srt_ctype sbset_well ubWell_empty ubrep_ubabs)
-    have dom_r: "ubDom\<cdot>?R = {c}"
-      by (simp add: well_r ubdom_ubrep_eq)
-    have dom_l: "ubDom\<cdot>?L = {c}"
-      by (simp add: assms ubdom_ubrep_eq)
-    moreover have "?L .c = ?R .c"
-      apply(simp add: sbRt_def sbDrop_def assms ubdom_ubrep_eq )
-      by (simp add: assms well_r sdrop_forw_rt ubgetch_ubrep_eq)
-    ultimately show ?thesis
-      by (metis dom_r dom_l singletonD ubgetchI)
-  qed
+theorem sbconc_bot_l[simp]:"\<bottom> \<bullet>\<^sup>\<Omega> sb = sb"
+  by(rule sb_eqI, simp)
 
-lemma sbrt_getch [simp]: assumes "c\<in>ubDom\<cdot>sb"
-  shows "(sbRt\<cdot>sb) . c = srt\<cdot>(sb . c)"
-  apply(simp add: sbRt_def assms)
-  by (simp add: sdrop_forw_rt)
+subsubsection \<open>Length of SBs \label{subsub:sblen}\<close>
 
-lemma sbrt_conc_hd[simp]: "sbRt\<cdot>(ubConc (sbHd\<cdot>sb)\<cdot>sb) = sb"
-  apply(rule ub_eq)
-   apply simp
-  apply (simp add: usclConc_stream_def)
-  using stake_srt_conc by auto
+text\<open>The length of a \gls{sb} can be interpreted differently. Since
+we will use the length of bundles to define causal \Gls{spf} and an
+induction rule for \Gls{sb}, we have to define the length as
+follows:
+  \<^item> A \gls{sb} with an empty domain is infinitely long
+  \<^item> A \gls{sb} with an non-empty domain is as long as its shortest 
+    stream
 
-lemma sbRt_surj: "surj (Rep_cfun sbRt)"
-  by (metis sbrt_conc_hd surj_def)
 
-(* ----------------------------------------------------------------------- *)
-  subsection \<open>sbLen\<close>
-(* ----------------------------------------------------------------------- *)
+Therefore, the length of a \gls{sb} with a non empty domain is also 
+equal to the number of complete slices it consists of.\<close>
 
-lemma sbLen_empty_bundle [simp]: assumes "ubclLen sb = 0"
-  shows "\<exists>c\<in>ubclDom\<cdot>sb. (sb . c) = \<epsilon>"
-  apply (simp add: ubclDom_ubundle_def ubclLen_ubundle_def)
-  proof -
-    have dom_not_empty: "ubDom\<cdot>sb \<noteq> {}"
-      using assms
-      apply (simp add: ubclDom_ubundle_def ubclLen_ubundle_def)
-      apply (simp add: ubLen_def)
-      by auto
-    have empty_sb_equal_zero: "\<exists>c::channel\<in>ubDom\<cdot>sb. (usclLen\<cdot>(sb . c) = 0)"
-      by (metis (no_types, lifting) assms dom_not_empty ubLen_def ubclLen_ubundle_def ublen_min_on_channel)
-    show "\<exists>c::channel\<in>ubDom\<cdot>sb. (sb  .  c) = \<epsilon>"
-      using assms
-      apply (simp add: ubclDom_ubundle_def ubclLen_ubundle_def)
-      by (metis empty_sb_equal_zero slen_empty_eq usclLen_stream_def)
-  qed
+definition sbLen::"'c\<^sup>\<Omega> \<Rightarrow> lnat"where
+"sbLen sb \<equiv> if chDomEmpty TYPE('c) 
+                then \<infinity> 
+                else LEAST n . n\<in>{#(sb \<^enum> c) | c. True}"
 
-lemma sbConcEq_Len1 [simp]: assumes "ubDom\<cdot>b1 = ubDom\<cdot>b2"
-  shows "ubLen(b1 :: 'a stream ubundle) \<le> ubLen(ubConcEq b1\<cdot>b2)"
-  proof - 
-    have dom_empty: "ubDom\<cdot>b2 = {} \<Longrightarrow> ubLen b1 \<le> ubLen(ubConcEq b1\<cdot>b2)"
-      by (simp add: ubLen_geI)
-    have dom_not_empty: "ubDom\<cdot>b2 \<noteq> {} \<Longrightarrow> ubLen b1 \<le> ubLen(ubConcEq b1\<cdot>b2)"
-      proof -
-        assume a1: "ubDom\<cdot>b2 \<noteq> {}"
-        have h1: "ubDom\<cdot>b1 \<noteq> {}"
-          by (simp add: a1 assms)
-        have h2: "\<And>c::channel. c \<in> ubDom\<cdot>b2 \<Longrightarrow> c \<in> ubDom\<cdot>b1 \<Longrightarrow> #(b1  .  c) \<le> #((ubUp\<cdot>b1  .  c) \<bullet> ubUp\<cdot>b2  .  c)"
-          apply (case_tac "#(b2  .  c) = \<infinity>")
-          apply (simp add: slen_sconc_snd_inf)
-          apply (case_tac "#(b1  .  c) = \<infinity>")
-          apply simp
-          apply(simp add: ubup_insert ubconc_insert ubgetch_insert)
-          proof - 
-            fix c
-            assume a1: "c \<in> ubDom\<cdot>b2"
-            assume a2: "c \<in> ubDom\<cdot>b1"
-            assume a3: "#Rep_ubundle b2\<rightharpoonup>c \<noteq> \<infinity>"
-            assume a4: "#Rep_ubundle b1\<rightharpoonup>c \<noteq> \<infinity>"
-            obtain k1 where k1_def: "#Rep_ubundle b1\<rightharpoonup>c = Fin k1"
-              by (metis a4 lncases)
-            obtain k2 where k2_def: "#Rep_ubundle b2\<rightharpoonup>c = Fin k2"
-              by (metis a3 lncases)
-            show "#Rep_ubundle b1\<rightharpoonup>c \<le> #(Rep_ubundle b1\<rightharpoonup>c \<bullet> Rep_ubundle b2\<rightharpoonup>c)"
-              using k1_def k2_def
-              by (simp add: slen_sconc_all_finite)
-          qed
-        have h3: "\<forall>c\<in>ubDom\<cdot>b1. ubLen b1 \<le> usclLen\<cdot>(usclConc(ubUp\<cdot>b1  .  c)\<cdot>(ubUp\<cdot>b2  .  c)) "
-          apply (simp add: ubLen_def)
-          by (metis (mono_tags, lifting) Least_le h1 assms dual_order.trans h2 ubup_ubgetch usclConc_stream_def usclLen_stream_def)
-        have h4: "\<exists>c\<in>ubDom\<cdot>b1. usclLen\<cdot>(usclConc(ubUp\<cdot>b1  .  c)\<cdot>(ubUp\<cdot>b2  .  c)) = ubLen(ubConcEq b1\<cdot>b2)"
-          by (metis (no_types, lifting) Un_absorb Un_upper2 a1 assms ubLen_def ubconc_dom ubconc_getch ubconceq_dom ubconceq_insert ublen_min_on_channel ubrestrict_id)
-        show ?thesis
-          using h3 h4 by auto          
-      qed
-    then show ?thesis
-      using dom_empty by blast
-  qed
+text\<open>Our @{const sbLen} function works exactly as described. It 
+returns \<open>\<infinity>\<close>, if the domain is empty. Else it chooses the minimal 
+length of all the bundles streams.\<close>
 
-lemma sbConcEq_Len2 [simp]: "ubLen(b2 :: 'a stream ubundle) \<le> ubLen(ubConcEq b1\<cdot>b2)"
-  proof -
-    have dom_empty: "ubDom\<cdot>b2 = {} \<Longrightarrow> ubLen b2 \<le> ubLen(ubConcEq b1\<cdot>b2)"
-      by (simp add: ubLen_def)
-    have dom_not_empty1: "ubDom\<cdot>b2 \<noteq> {} \<Longrightarrow> ubDom\<cdot>b1 = {} \<Longrightarrow> ubLen b2 \<le> ubLen(ubConcEq b1\<cdot>b2)"
-      proof -
-        assume a1: "ubDom\<cdot>b2 \<noteq> {}"
-        assume a2: "ubDom\<cdot>b1 = {}"
-        have h1: "(ubDom\<cdot>b1 \<union> ubDom\<cdot>b2) = ubDom\<cdot>b2"
-          using a2 by auto
-        have h21: "\<forall>c. Some (usclConc (ubUp\<cdot>b1 . c)\<cdot>(ubUp\<cdot>b2 . c)) = Some (ubUp\<cdot>b2 . c)"
-          by (simp add: a2 usclConc_stream_def)
-        have h2: "b2 = ubConc b1\<cdot>b2"
-          by (metis (no_types, lifting) h1 h21 option.inject ubconc_dom ubconc_getch ubgetchI ubup_ubgetch)
-        have h3: "b2 = ubConcEq b1\<cdot>b2"
-          using h2 by (auto simp add: ubconceq_insert)
-        show ?thesis
-          using h3 by auto
-      qed
-    have dom_not_empty2: "ubDom\<cdot>b2 \<noteq> {} \<Longrightarrow> ubDom\<cdot>b1 \<noteq> {} \<Longrightarrow> ubLen b2 \<le> ubLen(ubConcEq b1\<cdot>b2)"
-      proof -
-        assume a1: "ubDom\<cdot>b2 \<noteq> {}"
-        assume a2: "ubDom\<cdot>b1 \<noteq> {}"
-        have h1: "(ubDom\<cdot>b1 \<union> ubDom\<cdot>b2) \<inter> ubDom\<cdot>b2 = ubDom\<cdot>b2"
-          using a1 by blast
-        have h21: "\<And>c::channel. c \<in> ubDom\<cdot>b2 \<Longrightarrow> c \<in> ubDom\<cdot>b1 \<Longrightarrow> #(b2  .  c) \<le> #((ubUp\<cdot>b1  .  c) \<bullet> ubUp\<cdot>b2  .  c)"
-          apply (case_tac "#(b2  .  c) = \<infinity>")
-          apply (simp add: slen_sconc_snd_inf)
-          apply (case_tac "#(b1  .  c) = \<infinity>")
-          apply simp
-          apply(simp add: ubup_insert ubconc_insert ubgetch_insert)
-          proof - 
-            fix c
-            assume a1: "c \<in> ubDom\<cdot>b2"
-            assume a2: "c \<in> ubDom\<cdot>b1"
-            assume a3: "#Rep_ubundle b2\<rightharpoonup>c \<noteq> \<infinity>"
-            assume a4: "#Rep_ubundle b1\<rightharpoonup>c \<noteq> \<infinity>"
-            obtain k1 where k1_def: "#Rep_ubundle b1\<rightharpoonup>c = Fin k1"
-              by (metis a4 lncases)
-            obtain k2 where k2_def: "#Rep_ubundle b2\<rightharpoonup>c = Fin k2"
-              by (metis a3 lncases)
-            show "#Rep_ubundle b2\<rightharpoonup>c \<le> #(Rep_ubundle b1\<rightharpoonup>c \<bullet> Rep_ubundle b2\<rightharpoonup>c)"
-              using k1_def k2_def
-              by (simp add: slen_sconc_all_finite)
-          qed
-        have h2: "\<forall>c\<in>ubDom\<cdot>b2. usclLen\<cdot>(b2 . c) \<le> usclLen\<cdot>(usclConc(ubUp\<cdot>b1  .  c)\<cdot>(ubUp\<cdot>b2  .  c))"
-          apply (simp only: usclConc_stream_def usclLen_stream_def)
-          apply rule
-          apply (case_tac "c\<in>ubDom\<cdot>b1")
-          using h21 apply blast
-          by simp
-        have h3: "\<forall>c\<in>ubDom\<cdot>b2. (LEAST ln. ln\<in>{(usclLen\<cdot>(b2. c)) | c. c \<in> ubDom\<cdot>b2}) \<le> usclLen\<cdot>(usclConc(ubUp\<cdot>b1  .  c)\<cdot>(ubUp\<cdot>b2  .  c))"
-          by (metis (mono_tags, lifting) Least_le dual_order.trans h2 mem_Collect_eq)         
-        have h4: "\<forall>c\<in>ubDom\<cdot>b2. ubLen b2 \<le> usclLen\<cdot>(usclConc(ubUp\<cdot>b1  .  c)\<cdot>(ubUp\<cdot>b2  .  c)) "
-          apply (simp add: ubLen_def)
-          using h3 by auto          
-        have h5: "\<exists>c\<in>ubDom\<cdot>b2. usclLen\<cdot>(usclConc(ubUp\<cdot>b1  .  c)\<cdot>(ubUp\<cdot>b2  .  c)) = ubLen(ubConcEq b1\<cdot>b2)"
-          by (metis (no_types, lifting) IntE a1 h1 ubLen_def ubconc_getch ubconceq_dom ubconceq_insert ubgetch_ubrestrict ublen_min_on_channel)
-        show ?thesis
-          using h4 h5 by auto
-      qed
-    then show ?thesis
-      using dom_empty dom_not_empty1 by blast
-  qed
+paragraph \<open>SB Length Properties \\\<close>
 
-(* ----------------------------------------------------------------------- *)
-  subsection \<open>snNtimes\<close>
-(* ----------------------------------------------------------------------- *)
+text\<open>Now we verify the behavior. First we show, that all \gls{sb} 
+with an empty domain are infinitely long.\<close>
 
-lemma sbntimes_sbgetch [simp]: assumes "c\<in>ubDom\<cdot>b"
-  shows "(n\<star>b) . c = sntimes n (b . c)"
-  using assms by (smt
-    domIff option.sel sbMapStream_def sbNTimes_def sntimes_sdom1 subset_trans ubWell_def
-    ubdom_channel_usokay ubgetch_insert ubgetch_ubrep_eq usclOkay_stream_def)
+theorem sblen_empty[simp]:
+  assumes"chDomEmpty TYPE('c)"
+  shows " sbLen (sb::'c\<^sup>\<Omega>) = \<infinity>"
+  by(simp add: sbLen_def assms slen_empty_eq)
 
-lemma sbntimes_zero [simp]: "0\<star>b = ubLeast (ubDom\<cdot>b)"
-  by (simp add: sbNTimes_def sbMapStream_def sntimes_def ubLeast_def)
+lemma sblen_min_len [simp]:
+  assumes"\<not>chDomEmpty(TYPE('c))"
+  shows"sbLen (sb :: 'c\<^sup>\<Omega>) \<le> #(sb \<^enum> c)"
+  apply(simp add: sbLen_def assms)
+  by (metis (mono_tags, lifting) Least_le)
 
-lemma sbntimes_one [simp]: fixes b:: "'m stream ubundle" shows "1\<star>b = b"
-  by (simp add: sbNTimes_def sbMapStream_def sntimes_def ubLeast_def)
+lemma sblenleq: assumes "\<not> chDomEmpty TYPE('a)" and
+ "\<exists>c::'a. #(sb\<^enum>c) \<le> k"
+  shows "sbLen sb \<le> k" 
+  apply(simp add: sbLen_def assms)
+  apply(subgoal_tac "\<And>c::'a. Rep c \<notin> cEmpty") 
+  apply auto
+  apply (metis (mono_tags, lifting) Least_le assms(2) 
+         dual_order.trans)
+  using assms(1) by simp
 
-lemma sbntimes_sbdom [simp]: "ubDom\<cdot>(i\<star>b) = ubDom\<cdot>b"
-  by (simp add: sbNTimes_def)
+lemma sblengeq: assumes "\<And>c::'c. k\<le> #(sb\<^enum>c)"
+  shows "k \<le> sbLen sb" 
+  apply(cases  "chDomEmpty(TYPE('c))",simp add: assms)
+  apply(simp add: sbLen_def)
+  using LeastI2_wellorder_ex inf_ub insert_iff mem_Collect_eq 
+        sbLen_def assms by smt
 
-lemma sbntimes_below [simp]: fixes b:: "'m stream ubundle"
-  shows "(i\<star>b) \<sqsubseteq> (Suc i)\<star>b" (is "?L \<sqsubseteq> ?R")
-proof(rule ub_below)
-  show "ubDom\<cdot>?L = ubDom\<cdot>?R" by simp
-  fix c
-  assume "c\<in>ubDom\<cdot>?L"
-  hence "c\<in>ubDom\<cdot>b" by simp
-  thus "?L . c \<sqsubseteq> ?R . c" using sntimes_leq by auto
+text\<open>Furthermore, the length of two concatenated bundles is greater 
+or equal to the added length of both bundles. If both bundles have a
+minimal stream on the same channel, the resulting length would be 
+equal.\<close>
+
+theorem sblen_sbconc:"sbLen sb1 + sbLen sb2 \<le> sbLen (sb1 \<bullet>\<^sup>\<Omega> sb2)"
+  apply(cases  "chDomEmpty(TYPE('a))",simp)
+  apply(rule sblengeq)
+  by (metis lessequal_addition sbconc_getch sblen_min_len 
+      sconc_slen2)
+
+lemma sblen_mono:"monofun sbLen"
+  apply(rule monofunI,simp)
+  apply(cases "chDomEmpty TYPE('a)",simp)
+  apply(rule sblengeq)
+  apply(rule sblenleq)
+  using sbgetch_below_slen by auto
+
+lemma sblen_monosimp[simp]:"x \<sqsubseteq> y \<Longrightarrow> sbLen x \<le> sbLen y"
+  using lnle_conv monofunE sblen_mono by blast
+
+text\<open>This rule captures all necessary assumptions to obtain the 
+exact length of a \gls{sb} with a non-empty domain:
+  \<^item> All streams must be at least equally long to the length of the 
+    \gls{sb}
+  \<^item> There exists a stream with length equal to the length of the 
+    \gls{sb}\<close>
+
+theorem sblen_rule:
+  assumes "\<not>chDomEmpty TYPE('a)" 
+  and "\<And>c. k \<le> #(sb \<^enum> (c::'a))"
+  and "\<exists>c. #(sb \<^enum> (c :: 'a )) = k"
+  shows" sbLen sb = k"
+  by (metis assms(1) assms(2) assms(3) dual_order.antisym 
+      sblen_min_len sblengeq)
+
+text\<open>If two \Gls{sb} are in an order and also infinitely long, there
+have to be equal. This holds because either the domain is empty or
+every stream of the bundles is infinitely long.\<close>
+
+theorem sblen_sbeqI:"x \<sqsubseteq> y \<Longrightarrow> sbLen x = \<infinity> \<Longrightarrow> x = y"
+  apply(cases "chDomEmpty TYPE('a)")
+  apply (metis (full_types)sbtypeepmpty_sbbot)
+proof(simp add: sbLen_def)
+  assume a1: "x \<sqsubseteq> y"
+  assume a2: "(LEAST n::lnat. \<exists>c::'a. n = #(x  \<^enum>  c)) = \<infinity>"
+  assume a3: "chDom TYPE('a) \<noteq> {}"
+  then have "\<And>c. #(x \<^enum> c) = \<infinity>"
+    by (metis (mono_tags, lifting) Least_le a2 inf_less_eq)
+  moreover have "\<And>c. #(y \<^enum> c) = \<infinity>"
+    using a1 calculation cont_pref_eq1I mono_fst_infD by blast
+  then show ?thesis 
+    apply(subst sb_eqI[of x y],auto)
+    by (simp add: a1 calculation cont_pref_eq1I eq_less_and_fst_inf)
 qed
 
-lemma sbntimes_chain[simp]: fixes b:: "'m stream ubundle"
-  shows "chain (\<lambda>i. i\<star>b)"
-by (simp add: po_class.chainI)
+lemma sblen_leadm:"adm (\<lambda>sb. k \<le> sbLen sb)"
+proof(rule admI)
+ fix Y :: "nat \<Rightarrow>'a\<^sup>\<Omega> " and k :: lnat
+  assume chY:  "chain Y" and  as2: "  \<forall>i::nat. k \<le> sbLen (Y i) "
+  have "\<And>i. sbLen (Y i) \<sqsubseteq>sbLen( \<Squnion>i. Y i)"
+    using sblen_mono chY is_ub_thelub lnle_def monofun_def by blast
+  then show " k \<le> sbLen (\<Squnion>i::nat. Y i)" 
+    using as2 box_below lnle_def sblen_mono chY is_ub_thelub 
+    lnle_def monofun_def by blast
+qed
 
-lemma sbntimes2sinftimes: assumes "chain Y" and "c\<in>ubDom\<cdot>b"
-  shows "(\<Squnion>i. i\<star>b) . c = sinftimes (b . c)"
+lemma sblen2slen_h:
+  fixes "c1"
+  assumes"\<not>chDomEmpty(TYPE('c))"
+  and "\<forall>c2. #((sb :: 'c\<^sup>\<Omega>) \<^enum> c1) \<le> #(sb \<^enum> c2)"
+  shows "#((sb :: 'c\<^sup>\<Omega>) \<^enum> c1) = sbLen sb"
+  apply(simp add: sbLen_def)
+  apply(subst Least_equality)
+  apply(simp_all add: assms)
+   apply auto[1]
+  using assms(2) by auto
+
+lemma sb_minstream_exists:
+  assumes "\<not>chDomEmpty(TYPE('c))"
+  shows "\<exists>c1. \<forall>c2. #((sb :: 'c\<^sup>\<Omega>) \<^enum> c1) \<le> #(sb \<^enum> c2)"
+  using  assms
 proof -
-  have "(\<Squnion>i. i\<star>b) . c = (\<Squnion>i. (i\<star>b) . c)" by (simp add: contlub_cfun_arg contlub_cfun_fun)
-  hence "(\<Squnion>i. i\<star>b) . c = (\<Squnion> i. sntimes i (b . c))" using assms(2) by auto
-  thus ?thesis by (simp add: sntimesLub)
-qed
-
-(* ----------------------------------------------------------------------- *)
-  subsection \<open>snInfTimes\<close>
-(* ----------------------------------------------------------------------- *)
-
-lemma sbinftimes_sbgetch [simp]: assumes "c\<in>ubDom\<cdot>b"
-  shows "(sbInfTimes b) . c = sinftimes (b . c)"
-using assms by (simp add: sbInfTimes_def)
-
-lemma sbinftimes_sbdom [simp]: "ubDom\<cdot>(b\<infinity>) = ubDom\<cdot>b"
-  by (simp add: sbInfTimes_def)
-
-lemma sntimes_lub: fixes b:: "'m stream ubundle"
-  shows "(\<Squnion>i. i\<star>b) = b\<infinity>" (is "?L = ?R")
-proof (rule ub_eq)
-  have "ubDom\<cdot>?L = ubDom\<cdot>b" by (metis po_class.chainI ubdom_chain_eq2 sbntimes_below sbntimes_sbdom)
-  thus "ubDom\<cdot>?L = ubDom\<cdot>?R" by simp
-
-  fix c
-  assume "c\<in>ubDom\<cdot>?L"
-  hence "c\<in>ubDom\<cdot>b" using ubdom_chain_eq2 sbntimes_chain sbntimes_sbdom by blast
-  hence "\<And>c. c \<in> ubDom\<cdot>b \<Longrightarrow> (\<Squnion>i. i\<star>b) . c = b\<infinity> . c" by (metis (full_types) sbinftimes_sbgetch sbntimes2sinftimes sbntimes_chain)
-  hence "(\<Squnion>i. i\<star>b) . c = (\<Squnion>i. i\<star>(b . c))" by (simp add: \<open>c \<in> ubDom\<cdot>(\<Squnion>i. i\<star>b)\<close> \<open>c \<in> ubDom\<cdot>b\<close> sntimesLub)
-  thus "?L . c = ?R . c" using \<open>c \<in> ubDom\<cdot>b\<close> sntimesLub by force
-qed
-
-(* ----------------------------------------------------------------------- *)
-  subsection \<open>sbMap\<close>
-(* ----------------------------------------------------------------------- *)
-lemma assumes "\<forall>c s. (sdom\<cdot>s\<subseteq>(ctype c) \<longrightarrow> sdom\<cdot>((\<lambda>s. smap f\<cdot>s) s)\<subseteq>(ctype c))"
-  shows "ubDom\<cdot>(sbMap f\<cdot>b) = ubDom\<cdot>b"
-  by (simp add: sbMap_def assms)
-
-(* ----------------------------------------------------------------------- *)
-  subsection \<open>sbFilter\<close>
-(* ----------------------------------------------------------------------- *)
-lemma sbfilter_sbdom [simp]: "ubDom\<cdot>(sbFilter A\<cdot>b) = ubDom\<cdot>b"
-  by (smt
-      Abs_cfun_inverse2 cont_Rep_cfun2 sbFilter_def sbfilter_sbdom sbmapstream_cont sbmapstream_dom
-      subsetCE subsetI)
-
-lemma sbfilter_sbgetch [simp]: assumes "c\<in>ubDom\<cdot>b"
-  shows  "(sbFilter A\<cdot>b) . c = sfilter A\<cdot>(b .c)"
-  apply(simp add: sbFilter_def assms)
-by (meson Streams.sbfilter_sbdom assms sbmapstream_sbgetch subsetCE subsetI)
-
-(* ----------------------------------------------------------------------- *)
-  (* Lemma *)
-(* ----------------------------------------------------------------------- *)
-
-lemma if_then_dom[simp]: "dom (\<lambda>c. (c \<in> cs)\<leadsto>b .c) = cs"
-using dom_def by fastforce
-
-lemma if_then_well[simp]: assumes "cs\<subseteq>ubDom\<cdot>b" shows "ubWell (\<lambda>c. (c\<in>cs) \<leadsto> (b .c))"
-using assms apply(simp add: ubWell_def ubgetch_insert ubdom_insert)
-using ubrep_well ubWell_def by blast
-
-lemma if_then_chain[simp]: assumes "chain Y" and "monofun g"
-  shows "chain (\<lambda>i. (ubDom\<cdot>(Y i) = In)\<leadsto>g (Y i))"
-proof(cases "ubDom\<cdot>(Y 0) = In")
-  case True
-  hence "\<forall>i. (ubDom\<cdot>(Y i) = In)" using assms(1) ubdom_chain_eq3 by blast
-  thus ?thesis
-    by (smt assms(1) assms(2) below_option_def monofunE option.sel option.simps(3) po_class.chain_def)
-next
-  case False
-  hence "\<forall>i. (ubDom\<cdot>(Y i) \<noteq> In)" using assms(1) ubdom_chain_eq3 by blast
-  thus ?thesis by (auto)
-qed
-
-lemma if_then_mono [simp]:  assumes "monofun g"
-  shows "monofun (\<lambda>b. (ubDom\<cdot>b = In)\<leadsto>g b)"
-proof -
-  obtain uu :: "('a\<^sup>\<Omega> \<Rightarrow> 'b option) \<Rightarrow> 'a\<^sup>\<Omega>" and uua :: "('a\<^sup>\<Omega> \<Rightarrow> 'b option) \<Rightarrow> 'a\<^sup>\<Omega>" where
-    "\<forall>f. (\<not> monofun f \<or> (\<forall>u ua. u \<notsqsubseteq> ua \<or> f u \<sqsubseteq> f ua)) \<and> (monofun f \<or> uu f \<sqsubseteq> uua f \<and> f (uu f) \<notsqsubseteq> f (uua f))"
-    using monofun_def by moura
-  moreover
-  { assume "(UBundle.ubDom\<cdot> (uu (\<lambda>u. (UBundle.ubDom\<cdot>u = In)\<leadsto>g u)) = In)\<leadsto>g (uu (\<lambda>u. (UBundle.ubDom\<cdot>u = In)\<leadsto>g u)) \<notsqsubseteq> (UBundle.ubDom\<cdot> (uua (\<lambda>u. (UBundle.ubDom\<cdot>u = In)\<leadsto>g u)) = In)\<leadsto>g (uua (\<lambda>u. (UBundle.ubDom\<cdot>u = In)\<leadsto>g u))"
-    { assume "((UBundle.ubDom\<cdot> (uu (\<lambda>u. (UBundle.ubDom\<cdot>u = In)\<leadsto>g u)) = In)\<leadsto>g (uu (\<lambda>u. (UBundle.ubDom\<cdot>u = In)\<leadsto>g u)) \<sqsubseteq> (UBundle.ubDom\<cdot> (uua (\<lambda>u. (UBundle.ubDom\<cdot>u = In)\<leadsto>g u)) = In)\<leadsto>g (uua (\<lambda>u. (UBundle.ubDom\<cdot>u = In)\<leadsto>g u))) \<noteq> (Some (g (uu (\<lambda>u. (UBundle.ubDom\<cdot>u = In)\<leadsto>g u))) \<sqsubseteq> Some (g (uua (\<lambda>u. (UBundle.ubDom\<cdot>u = In)\<leadsto>g u))))"
-      then have "UBundle.ubDom\<cdot> (uu (\<lambda>u. (UBundle.ubDom\<cdot>u = In)\<leadsto>g u)) = UBundle.ubDom\<cdot> (uua (\<lambda>u. (UBundle.ubDom\<cdot>u = In)\<leadsto>g u)) \<longrightarrow> uu (\<lambda>u. (UBundle.ubDom\<cdot>u = In)\<leadsto>g u) \<notsqsubseteq> uua (\<lambda>u. (UBundle.ubDom\<cdot>u = In)\<leadsto>g u) \<or> (UBundle.ubDom\<cdot> (uu (\<lambda>u. (UBundle.ubDom\<cdot>u = In)\<leadsto>g u)) = In)\<leadsto>g (uu (\<lambda>u. (UBundle.ubDom\<cdot>u = In)\<leadsto>g u)) \<sqsubseteq> (UBundle.ubDom\<cdot> (uua (\<lambda>u. (UBundle.ubDom\<cdot>u = In)\<leadsto>g u)) = In)\<leadsto>g (uua (\<lambda>u. (UBundle.ubDom\<cdot>u = In)\<leadsto>g u))"
-        by auto
-      then have "uu (\<lambda>u. (UBundle.ubDom\<cdot>u = In)\<leadsto>g u) \<notsqsubseteq> uua (\<lambda>u. (UBundle.ubDom\<cdot>u = In)\<leadsto>g u) \<or> (UBundle.ubDom\<cdot> (uu (\<lambda>u. (UBundle.ubDom\<cdot>u = In)\<leadsto>g u)) = In)\<leadsto>g (uu (\<lambda>u. (UBundle.ubDom\<cdot>u = In)\<leadsto>g u)) \<sqsubseteq> (UBundle.ubDom\<cdot> (uua (\<lambda>u. (UBundle.ubDom\<cdot>u = In)\<leadsto>g u)) = In)\<leadsto>g (uua (\<lambda>u. (UBundle.ubDom\<cdot>u = In)\<leadsto>g u))"
-        using ubdom_below by blast }
-    then have "uu (\<lambda>u. (UBundle.ubDom\<cdot>u = In)\<leadsto>g u) \<notsqsubseteq> uua (\<lambda>u. (UBundle.ubDom\<cdot>u = In)\<leadsto>g u) \<or> (UBundle.ubDom\<cdot> (uu (\<lambda>u. (UBundle.ubDom\<cdot>u = In)\<leadsto>g u)) = In)\<leadsto>g (uu (\<lambda>u. (UBundle.ubDom\<cdot>u = In)\<leadsto>g u)) \<sqsubseteq> (UBundle.ubDom\<cdot> (uua (\<lambda>u. (UBundle.ubDom\<cdot>u = In)\<leadsto>g u)) = In)\<leadsto>g (uua (\<lambda>u. (UBundle.ubDom\<cdot>u = In)\<leadsto>g u))"
-      using assms monofun_def some_below by blast }
-  ultimately show ?thesis
-    by meson
-qed
-
-lemma if_then_cont [simp]: assumes "cont g"
-  shows "cont (\<lambda>b. (ubDom\<cdot>b = In)\<leadsto>g b)"
-proof(rule contI2)
-  show "monofun (\<lambda>b. (ubDom\<cdot>b = In)\<leadsto>g b)" using assms cont2mono if_then_mono by blast
-  thus " \<forall>Y. chain Y \<longrightarrow> (ubDom\<cdot>(\<Squnion>i. Y i) = In)\<leadsto>g (\<Squnion>i. Y i) \<sqsubseteq> (\<Squnion>i. (ubDom\<cdot>(Y i) = In)\<leadsto>g (Y i))"
-    by (smt Abs_cfun_inverse2 assms if_then_lub lub_chain_maxelem lub_eq po_eq_conv ubdom_chain_eq2)
-qed
-
-lemma if_then_sbDom: assumes "d \<in> dom (\<lambda>b. (ubDom\<cdot>b = In)\<leadsto>(F b))"
-  shows "ubDom\<cdot>d = In"
-by (smt assms domIff)
-
-(* ----------------------------------------------------------------------- *)
-  subsection \<open>sbHdElem\<close>
-(* ----------------------------------------------------------------------- *)
-
-lemma sbHdElem_mono: "monofun (\<lambda> sb::'a SB. (\<lambda>c. (c \<in> ubDom\<cdot>sb) \<leadsto> (lshd\<cdot>(sb . c))))"
-proof(rule monofunI)
-  fix x y ::"'a stream ubundle"
-  assume "x \<sqsubseteq> y"
-  then show "(\<lambda> sb::'a SB. (\<lambda>c. (c \<in> ubDom\<cdot>sb) \<leadsto> (lshd\<cdot>(sb . c)))) x \<sqsubseteq> (\<lambda> sb::'a SB. (\<lambda>c. (c \<in> ubDom\<cdot>sb) \<leadsto> (lshd\<cdot>(sb . c)))) y"
-    by (smt below_option_def fun_below_iff monofun_cfun_arg option.discI option.sel ubdom_below)
-qed
-
-lemma sbHdElem_cont_pre: assumes "chain Y" shows "(\<lambda>c. (c \<in> ubDom\<cdot>(\<Squnion>i. Y i))\<leadsto>lshd\<cdot>((\<Squnion>i. Y i) . c)) \<sqsubseteq> (\<Squnion>i. (\<lambda>c. (c \<in> ubDom\<cdot>(Y i))\<leadsto>lshd\<cdot>(Y i . c)))"
-proof -
-  fix c
-  have "(\<lambda>c. (c \<in> ubDom\<cdot>(\<Squnion>i. Y i))\<leadsto>lshd\<cdot>((\<Squnion>i. Y i) . c)) c \<sqsubseteq> (\<Squnion>i. (\<lambda>c. (c \<in> ubDom\<cdot>(Y i))\<leadsto>lshd\<cdot>(Y i . c)) c)"
-  proof(cases "c \<in> ubDom\<cdot>(\<Squnion>i. Y i)")
-    case True
-    have f1: "\<And>i. ubDom\<cdot>(\<Squnion>i. Y i) =  ubDom\<cdot>(Y i)"
-      by (simp add: assms ubdom_chain_eq2)
-    then show ?thesis
-      apply(simp add: True)
-    proof -
-      have "Some (lshd\<cdot>(\<Squnion>n. Y n . c)) \<sqsubseteq> (\<Squnion>n. Some (lshd\<cdot>(Y n . c)))"
-        by (metis assms ch2ch_Rep_cfunL ch2ch_Rep_cfunR if_then_lub)
-      then show "Some (lshd\<cdot>(Lub Y . c)) \<sqsubseteq> (\<Squnion>n. Some (lshd\<cdot>(Y n . c)))"
-        using True assms ubgetch_lub by fastforce
-    qed
-  next
-    case False
-    then show ?thesis
-      using assms ubdom_chain_eq2 by fastforce
-  qed
+  { fix cc :: "'c \<Rightarrow> 'c"
+    have ff1: "\<forall>s c l. l \<le> #(s \<^enum> (c::'c)) \<or> \<not> l \<le> sbLen s"
+      by (meson assms sblen_min_len trans_lnle)
+    { assume "\<exists>c l. \<not> l \<le> #(sb \<^enum> c)"
+      then have "\<not> \<infinity> \<le> sbLen sb"
+        using ff1 by (meson inf_ub trans_lnle)
+      then have "\<exists>c. #(sb \<^enum> c) \<le> #(sb \<^enum> cc c)"
+        using ff1 by (metis less_le_not_le ln_less 
+                Orderings.linorder_class.linear lnle2le sblengeq) }
+    then have "\<exists>c. #(sb \<^enum> c) \<le> #(sb \<^enum> cc c)"
+      by meson }
   then show ?thesis
-    by (smt
-        assms ch2ch_Rep_cfunL ch2ch_Rep_cfunR contlub_cfun_arg contlub_cfun_fun fun_below_iff
-        if_then_lub is_ub_thelub lub_eq lub_fun monofun_cfun_arg monofun_cfun_fun po_class.chain_def
-        po_eq_conv ubdom_chain_eq2 some_below)
+    by metis
 qed
 
-lemma sbHdElem_cont: "cont (\<lambda> sb::'a stream ubundle. (\<lambda>c. (c \<in> ubDom\<cdot>sb) \<leadsto> (lshd\<cdot>(sb . c))))"
-  apply(rule contI2)
-  apply (simp add: sbHdElem_mono)
-  using sbHdElem_cont_pre by blast
+text\<open>We can also show, that the length of any \gls{sb} that has a 
+not empty domain, is equal to the length of one of its streams.\<close>
 
-lemma sbhdelem_insert: "sbHdElem\<cdot>sb = (\<lambda>c. (c \<in> ubDom\<cdot>sb) \<leadsto> (lshd\<cdot>(sb . c)))"
-  by(simp add: sbHdElem_def sbHdElem_cont)
-
-lemma sbHdElem_bottom_exI: assumes "(\<exists>c\<in>ubDom\<cdot>sb. sb  .  c = \<epsilon>)"
-  shows "(\<exists>c::channel\<in>ubDom\<cdot>sb. sbHdElem\<cdot>sb\<rightharpoonup>c = \<bottom>)"
+theorem sblen2slen:
+  assumes"\<not>chDomEmpty(TYPE('c))"
+  shows"\<exists>c. sbLen (sb :: 'c\<^sup>\<Omega>) = #(sb \<^enum> c)"
 proof -
-  obtain my_c where my_c_def1: "sb . my_c = \<epsilon>" and my_c_def2: "my_c \<in> ubDom\<cdot>sb"
-    using assms by auto
-  have f0: " sbHdElem\<cdot>sb\<rightharpoonup>my_c = \<bottom>"
-    apply (simp add: sbHdElem_def sbHdElem_cont)
-    by (simp add: my_c_def1 my_c_def2)
-  then show "(\<exists>c::channel\<in>ubDom\<cdot>sb. sbHdElem\<cdot>sb\<rightharpoonup>c = \<bottom>)"
-    using my_c_def2 by auto
+  obtain min_c where "\<forall>c2. #((sb :: 'c\<^sup>\<Omega>) \<^enum> min_c) \<le> #(sb \<^enum> c2)"
+    using sb_minstream_exists assms by blast
+  then have "sbLen (sb :: 'c\<^sup>\<Omega>) = #(sb \<^enum> min_c)" using sblen2slen_h
+    using assms by fastforce
+  then show ?thesis
+    by auto 
 qed
 
-lemma sbHdElem_dom[simp]:"dom (sbHdElem\<cdot>sb) = ubDom\<cdot>sb"
-  by(simp add: sbHdElem_def sbHdElem_cont)
+lemma sbconc_chan_len:"#(sb1 \<bullet>\<^sup>\<Omega> sb2 \<^enum> c) = #(sb1 \<^enum> c)+ #(sb2 \<^enum> c)"
+  by (simp add: sconc_slen2)
 
-lemma sbHdElem_channel: assumes "ubDom\<cdot>sb = In"  and "c \<in> In" and "sb . c \<noteq> \<bottom>" shows "sbHdElem\<cdot>sb\<rightharpoonup>c \<noteq> \<bottom>"
-    by(simp add: sbHdElem_def sbHdElem_cont assms) 
+lemma sblen_sbconc_eq: 
+  assumes "\<And>c.#(sb1 \<^enum> c) = k" 
+  shows "(sbLen (sb1 \<bullet>\<^sup>\<Omega> sb2)) = (sbLen sb2) + k"
+  apply(cases  "chDomEmpty(TYPE('a))",simp)
+  apply (simp add: plus_lnatInf_r)
+  apply(subgoal_tac "sbLen sb1 = k")
+  apply(rule sblen_rule,simp)
+  apply (metis add.commute dual_order.trans sblen_min_len 
+        sblen_sbconc)
+  apply (metis assms lnat_plus_commu sbconc_chan_len sblen2slen)  
+  by(rule sblen_rule,simp_all add: assms)
 
-(* Substituting sbHdElem with shd *)
-lemma sbHdElem_2_shd: assumes "\<forall>c\<in>(ubDom\<cdot>sb). sb .c \<noteq> \<epsilon>"
-                          and "c \<in> ubDom\<cdot>sb"
-                        shows "(inv convDiscrUp (sbHdElem\<cdot>sb))\<rightharpoonup>c = shd(sb .c)"
-  proof -
-    have h1:"sbHdElem\<cdot>sb\<rightharpoonup>c = lshd\<cdot>(sb .c)"
-      by(simp add: assms sbHdElem_def sbHdElem_cont)
-    then have h2: "(inv convDiscrUp (sbHdElem\<cdot>sb))\<rightharpoonup>c = inv Discr (inv Iup (lshd\<cdot>(sb .c)))" 
-      by (simp add: assms(1) assms(2) convDiscrUp_inv_subst sbHdElem_channel)
-    moreover have h4: "\<exists>a. lshd\<cdot>(sb .c) = Iup (Discr a)"
-      by (metis (no_types, lifting) assms convDiscrUp_def convdiscrup_inv_dom_eq convdiscrup_inv_eq h1 option.sel sbHdElem_channel sbHdElem_dom)
-    then have h5: "lshd\<cdot>(sb .c) = Iup (Discr (shd(sb .c)))"
-      apply(simp add: shd_def up_def)
-      using assms by auto
-    then have "inv Discr (inv Iup (lshd\<cdot>(sb .c))) = shd (sb .c)"
-      by (metis (no_types, lifting) h1 assms convDiscrUp_def convdiscrup_inv_dom_eq convdiscrup_inv_eq discr.inject h2 option.sel sbHdElem_dom sbHdElem_channel u.inject)
-    ultimately show ?thesis
-      by simp
-  qed
+lemma sblen_sbconc_rule: 
+  assumes "\<And>c.#(sb1 \<^enum> c) \<ge> k" 
+  shows "(sbLen (sb1 \<bullet>\<^sup>\<Omega> sb2)) \<ge> (sbLen sb2) + k"
+  by (metis (full_types) add.commute assms dual_order.trans 
+      lessequal_addition order_refl sblen_sbconc sblengeq)
 
-(* Substituting sbHdElem with shd over a simple bundle *)
-lemma sbHdElem_2_shd2: assumes "x\<noteq>\<epsilon>" 
-                           and "ubWell [c \<mapsto> x]" 
-                         shows "inv convDiscrUp (sbHdElem\<cdot>(Abs_ubundle [c\<mapsto>x])) = [c\<mapsto>shd(x)]"
-                           (is "?L = ?R")
-  proof -
-    have convDiscrUp_assms: "\<forall>c\<in>dom(sbHdElem\<cdot>(Abs_ubundle[c\<mapsto>x])). (sbHdElem\<cdot>(Abs_ubundle[c\<mapsto>x]))\<rightharpoonup>c \<noteq> \<bottom>"
-      by (metis assms dom_fun_upd fun_upd_same option.sel option.simps(3) sbHdElem_channel 
-                sbHdElem_dom singletonD ubWell_empty ubdom_empty ubdom_ubrep_eq ubgetch_ubrep_eq)
-    have l_dom: "dom ?L = {c}"
-      by (simp add: convDiscrUp_assms assms(2) ubdom_ubrep_eq)
-    moreover have r_dom: "dom ?R = {c}"
-      by simp
-    moreover have eq_on_dom: "?R \<rightharpoonup> c = ?L \<rightharpoonup> c"
-      by (simp add: assms(1) assms(2) sbHdElem_2_shd ubdom_ubrep_eq ubgetch_ubrep_eq)
-    ultimately show ?thesis
-      by (metis part_eq singletonD)
-  qed
+text\<open>The length of a @{type sbElem} is 1, if the domain is not 
+empty, else it is \<open>\<infinity>\<close>.\<close>
 
-lemma sbHdElem_sbElemWell: assumes "\<forall>c\<in>(ubDom\<cdot>sb). sb .c \<noteq> \<epsilon>"
-                             shows "sbElemWell (inv convDiscrUp (sbHdElem\<cdot>sb))"
-  proof -
-    (* Assumptions of convDiscrUp-lemmas *)
-    have convDiscrUp_assms: "\<forall>c\<in>dom (sbHdElem\<cdot>sb). (sbHdElem\<cdot>sb \<rightharpoonup> c) \<noteq> \<bottom>"
-      by (simp add: assms sbHdElem_channel)
-    (* Reformulation of the thesis to better match proving technique *)
-    have "\<And>c::channel. c\<in>ubDom\<cdot>sb \<Longrightarrow> inv convDiscrUp (sbHdElem\<cdot>sb)\<rightharpoonup>c \<in> ctype c"
-      proof -
-        fix c::channel
-        assume a1: "c\<in>ubDom\<cdot>sb"
-        moreover have "inv convDiscrUp (sbHdElem\<cdot>sb)\<rightharpoonup>c = shd(sb .c)"
-          by(simp add: assms a1 sbHdElem_2_shd)
-        moreover have "usclOkay c (sb .c)"
-          apply (simp only: a1 ubgetch_insert)
-          using a1 ubdom_channel_usokay by blast
-        then have "sdom\<cdot>(sb .c) \<subseteq> ctype c"
-          using  usclOkay_stream_def by blast
-        then have "shd (sb .c) \<in> ctype c" 
-          by (metis a1 assms sfilter_ne_resup sfilter_sdoml3)
-        ultimately show "inv convDiscrUp (sbHdElem\<cdot>sb)\<rightharpoonup>c \<in> ctype c" 
-          by simp
-      qed
-    then show ?thesis
-      by(simp add: sbElemWell_def convDiscrUp_assms)
-  qed
-
-
-
-(* ----------------------------------------------------------------------- *)
-  subsection \<open>ubConc on Streams\<close>
-(* ----------------------------------------------------------------------- *)
-
-
-lemma sbconc_inj_h: assumes "\<And>c. c\<in>ubDom\<cdot>sb \<Longrightarrow> # (sb . c) < \<infinity>"
-  and "ubConcEq sb\<cdot>x . c = ubConcEq sb\<cdot>y . c" 
-  and "c \<in> ubDom\<cdot>x" and "c \<in> ubDom\<cdot>y"
-shows "x  .  c = y  .  c"
-  apply(cases "c \<in> ubDom\<cdot>sb")
-  using assms apply (simp add: usclConc_stream_def ubconceq_insert)
-  using sconc_neq apply blast
-  using assms apply (simp add: usclConc_stream_def ubconc_getch ubconceq_insert)
-  done
-
-lemma sbconc_inj: assumes "\<And>c. c\<in>ubDom\<cdot>sb \<Longrightarrow> # (sb . c) < \<infinity>"
-  shows "inj (Rep_cfun (ubConcEq sb))"
-  apply rule
-  apply(rule ub_eq)
-   apply (metis ubconceq_dom ubconceq_insert)
-  apply simp
-  by (metis assms sbconc_inj_h ubconceq_dom ubconceq_insert)
-  
-  
-lemma sbconc_inf: fixes sb::"'m::message SB"
-    assumes "ubDom\<cdot>sb=ubDom\<cdot>ub_inf" and "ubLen ub_inf = \<infinity>"
-  shows "ubConc ub_inf\<cdot>sb = ub_inf"
-proof(rule ub_eq)
-  show "ubDom\<cdot>(ubConc ub_inf\<cdot>sb) = ubDom\<cdot>ub_inf" by (simp add: assms(1))
-next
-  fix c
-  assume "c \<in> ubDom\<cdot>(ubConc ub_inf\<cdot>sb)"
-  hence c_dom: "c\<in>(ubDom\<cdot>ub_inf)"
-    by (simp add: assms(1))
-  hence "usclLen\<cdot>(ub_inf . c) = \<infinity>"
-    using assms(2) ublen_channel by fastforce
-  thus "(ubConc ub_inf\<cdot>sb)  .  c = ub_inf  .  c"
-    by (simp add: c_dom assms(1) usclConc_stream_def usclLen_stream_def)
+theorem sbelen_one[simp]:
+  assumes"\<not>chDomEmpty TYPE('cs)"
+  shows " sbLen (sbe2sb (sbe::'cs\<^sup>\<surd>)) = 1"
+proof-
+  have "\<And>c. #(sbe2sb (sbe::'cs\<^sup>\<surd>) \<^enum> (c :: 'cs )) = 1"
+    apply(simp add: sbe2sb_def)
+    apply(subgoal_tac "Rep_sbElem sbe \<noteq> None")
+    apply auto
+    apply(simp add: sbgetch_insert2)
+    apply(subst Abs_sb_inverse,auto)
+    apply (metis (full_types) option.simps(5) sbe2sb.rep_eq 
+          sbwell2fwell)
+    apply (simp add: one_lnat_def)
+    by(simp add: assms)
+  then show ?thesis
+    apply(subst sblen_rule)
+    by(simp_all add: assms)
 qed
 
-
-
-
-
-
-
-lemma sblen_up_restrict[simp]: fixes ub ::"'a::message SB"
-  assumes "ubLen (ubRestrict cs\<cdot>(ubUp\<cdot>ub)) \<noteq> 0"
-  shows "cs \<subseteq> ubDom\<cdot>ub"
-proof - 
-  have "\<And>c. c\<in>cs \<Longrightarrow>  usclLen\<cdot>((ubRestrict cs \<cdot>(ubUp\<cdot>ub)) . c) \<noteq> 0" 
-    by(subst ublen_not_0, auto simp add: assms)
-  hence "\<And>c. c\<in>cs \<Longrightarrow>  usclLen\<cdot>((ubUp\<cdot>ub) . c) \<noteq> 0" by simp
-  thus ?thesis
-    by (metis strict_slen subsetI ubup_ubgetch2 usclLen_stream_def)
-qed
-
-
-lemma sblen_up_restrict2[simp]: fixes ub ::"'a::message SB"
-  shows "ubLen (ubRestrict cs\<cdot>(ubUp\<cdot>ub)) \<noteq> 0 \<Longrightarrow> (ubRestrict cs\<cdot>(ubUp\<cdot>ub)) = ubRestrict cs\<cdot>ub"
-  apply(rule ub_eq)
-  apply (simp add: inf_absorb2)
-  apply simp
-  by (simp add: rev_subsetD)
-
-
-
-
-(* ----------------------------------------------------------------------- *)
-  subsection \<open>Automaton\<close>
-(* ----------------------------------------------------------------------- *)
-
-(* Create a simple bundle. Used to shorten parts of automaton transitions, e.g. in EvenAutomaton *)
-lift_definition createBundle :: "'a \<Rightarrow> channel \<Rightarrow> 'a SB" is
-  "\<lambda>a c. if (a \<in> ctype c) then ([c \<mapsto> \<up>a]) else ([c \<mapsto> \<epsilon>]) "
-  unfolding ubWell_def
-  unfolding usclOkay_stream_def
-  by auto
-
-lemma createBundle_dom[simp]: "ubDom\<cdot>(createBundle a c) = {c}"
-  by (simp add: ubdom_insert createBundle.rep_eq)  
-
-lemma createBundle_apply[simp]: assumes "a \<in> ctype c"
-                                  shows "createBundle a c = Abs_ubundle [c \<mapsto> \<up>a]"
-  by (simp add: assms createBundle.abs_eq)
-
-lemma createbundle_ubgetch:
-  assumes " m \<in> ctype c"
-  shows   "(createBundle m c) . c  = \<up>m"
-  apply (simp add: ubgetch_insert createBundle.rep_eq)
+theorem sbelen_inf[simp]:
+  assumes"chDomEmpty(TYPE('a))"
+  shows " sbLen (sbe2sb (sbe::'a\<^sup>\<surd>)) = \<infinity>"
   by (simp add: assms)
 
+lemma sbe2slen_1:  assumes"\<not>chDomEmpty(TYPE('a))"
+  shows  "\<And>c::'a. #(sbe2sb sbe  \<^enum>  c) = (1::lnat)"
+    apply(simp add: sbe2sb_def)
+    apply(subgoal_tac "Rep_sbElem sbe \<noteq> None")
+    apply auto
+    apply(simp add: sbgetch_insert2)
+    apply(subst Abs_sb_inverse,auto)
+    apply (metis (full_types) option.simps(5) sbe2sb.rep_eq 
+           sbwell2fwell)
+    apply (simp add: one_lnat_def)
+    by(simp add: assms)
+ 
+lemma sbnleast_len[simp]:"\<not>sbIsLeast x \<Longrightarrow> sbLen x \<noteq> 0"
+  apply(rule ccontr,auto)
+  apply(simp add: sbHdElemWell_def)
+  apply(cases "chDomEmpty TYPE('a)",simp)
+  by (metis Stream.slen_empty_eq sblen2slen)
+
+lemma sblen_eqI2:
+  fixes sb1 sb2::"'cs\<^sup>\<Omega>"
+  assumes "sb1 \<sqsubseteq> sb2"
+  and "\<And>c. Rep c\<in>chDom TYPE('cs) \<Longrightarrow> #(sb1 \<^enum> c) = #(sb2 \<^enum> c)"
+  shows "sb1 = sb2"
+  by (simp add: assms(1) assms(2) eq_slen_eq_and_less 
+      monofun_cfun_arg sb_eqI)
+
+lemma sbnleast_dom[simp]:
+  "\<not>sbIsLeast (x::'cs\<^sup>\<Omega>) \<Longrightarrow> \<not>chDomEmpty TYPE('cs)"
+  using sbhdelemnotempty by blast
+
+lemma sbleast2sblenempty[simp]:
+"sbIsLeast (x::'cs\<^sup>\<Omega>) \<Longrightarrow> chDomEmpty TYPE('cs) \<or> sbLen x = 0"
+  apply(simp add: sbLen_def sbHdElemWell_def,auto)
+  by (metis (mono_tags, lifting) LeastI_ex Least_le gr_0 leD lnle2le
+      neqE strict_slen) 
+
+subsubsection \<open>Dropping SB Elements \label{subsub:sbdrop}\<close>
+
+text\<open>Through dropping a number of \gls{sb} elements, it is possible
+to access any element in the \gls{sb} or to get a later part.
+Dropping the first \<open>n\<close> Elements of a \gls{sb} means dropping the 
+first \<open>n\<close> elements of every stream in the \gls{sb}.\<close>  
+
+lemma sbdrop_well[simp]:"sb_well (\<lambda>c. sdrop n\<cdot>(b \<^enum>\<^sub>\<star> c))"
+  apply(rule sbwellI)
+  by (meson dual_order.trans sbgetch_ctypewell sdrop_sValues)
+
+lift_definition sbDrop::"nat \<Rightarrow> 'c\<^sup>\<Omega> \<rightarrow> 'c\<^sup>\<Omega>"is
+"\<lambda> n sb. Abs_sb (\<lambda>c. sdrop n\<cdot>(sb \<^enum> c))"
+  apply(intro cont2cont)
+  by(simp add: sValues_def)
+
+lemmas sbdrop_insert = sbDrop.rep_eq
+
+text\<open>A special case of @{const sbDrop} is to drop only the first
+element of the \gls{sb}. It is the rest operator on \Gls{sb}.\<close>
+
+abbreviation sbRt :: "'c\<^sup>\<Omega> \<rightarrow> 'c\<^sup>\<Omega>"  where 
+"sbRt \<equiv> sbDrop 1"
+
+lemma sbdrop_bot[simp]:"sbDrop n\<cdot>\<bottom> = \<bottom>"
+  apply(simp add: sbdrop_insert)
+  by (simp add: bot_sb)
+
+lemma sbdrop_eq[simp]:"sbDrop 0\<cdot>sb = sb"
+  by(simp add: sbdrop_insert sbgetch_insert2)
+ 
+subsubsection \<open>Taking SB Elements \label{subsub:sbtake}\<close>
+
+text\<open>Through taking the first \<open>n\<close> elements of a \gls{sb}, it is
+possible to reduce any \gls{sb} to a finite part of itself. The 
+output is always @{const below} the input.\<close>  
+
+lemma sbtake_well[simp]:"sb_well (\<lambda>c. stake n\<cdot>(sb  \<^enum>\<^sub>\<star>  c))"
+  by(simp add: sbmap_well)
+
+lift_definition sbTake::"nat \<Rightarrow> 'c\<^sup>\<Omega> \<rightarrow>  'c\<^sup>\<Omega>"is
+"\<lambda> n sb. Abs_sb (\<lambda>c. stake n\<cdot>(sb \<^enum> c))"
+  by(intro cont2cont, simp)
+
+lemmas sbtake_insert = sbTake.rep_eq
+
+text\<open>A special case of @{const sbTake} is to take only the first
+element of the \gls{sb}. It is the head operator on \Gls{sb}.\<close>
+
+abbreviation sbHd :: "'c\<^sup>\<Omega> \<rightarrow> 'c\<^sup>\<Omega>"  where 
+"sbHd \<equiv> sbTake 1"
+
+paragraph \<open>sbTake Properties \\\<close>
+
+text\<open>Obtaining some stream form a \gls{sb} after applying 
+@{const sbTake}, is the same as applying  @{const stake} after
+obtaining the stream from the \gls{sb}.\<close>
+
+theorem sbtake_getch[simp]:"sbTake n\<cdot>sb \<^enum> c = stake n\<cdot>(sb \<^enum> c)"
+  apply(simp add: sbgetch_insert sbTake.rep_eq)
+  apply(subst Abs_sb_inverse,auto simp add: sb_well_def)
+  by (metis sValues_sconc sbgetch_ctypewell sbgetch_insert2 
+      split_streaml1 subsetD)
+
+text\<open>The output of @{const sbTake} is always @{const below} the
+input.\<close>
+
+theorem sbtake_below[simp]: "sbTake i\<cdot>sb \<sqsubseteq> sb"
+  by (simp add: sb_belowI)
+
+lemma sbtake_idem[simp]:
+  assumes "n \<ge> i"
+  shows"sbTake n\<cdot>(sbTake i\<cdot>sb) = (sbTake i\<cdot>sb)"
+  by (simp add: sb_eqI assms min_absorb2)
+
+lemma sbmap_stake_eq:"
+  Abs_sb (\<lambda>c::'a. stake n\<cdot>(sb \<^enum> c)) \<^enum> c = stake n\<cdot>(sb \<^enum> c)"
+  apply(simp add: sbgetch_insert2)
+  apply(subst Abs_sb_inverse)
+  apply simp
+  apply(rule sbwellI)
+  apply (metis sbgetch_insert2 sbgetch_ctypewell dual_order.trans 
+         sValues_sconc split_streaml1)
+  by simp
+
+lemma sbtake_max_len [simp]:"#(sbTake n\<cdot>sb  \<^enum>  c) \<le> Fin n"
+  by simp
+
+lemma abs_sb_eta:
+  assumes "sb_well  (\<lambda>c::'cs. f\<cdot>(sb \<^enum> c))"
+  and "\<not>chDomEmpty TYPE('cs)"
+  shows "(Abs_sb (\<lambda>c::'cs. f\<cdot>(sb  \<^enum>  c))  \<^enum>  c) = f\<cdot>(sb  \<^enum>  c)"
+  by (metis Abs_sb_inverse assms(1) mem_Collect_eq sbgetch_insert2)
+
+lemma sbconc_sconc:
+  assumes  "sb_well  (\<lambda>c::'cs. f\<cdot>(sb \<^enum> c))"
+  and  "sb_well  (\<lambda>c. g\<cdot>( sb \<^enum> c))"
+  and "\<not>chDomEmpty TYPE('cs)"
+  shows "Abs_sb (\<lambda>c. f\<cdot>(sb  \<^enum>  c)) \<bullet>\<^sup>\<Omega> Abs_sb (\<lambda>c. g\<cdot>(sb  \<^enum>  c)) =
+        Abs_sb (\<lambda>c. f\<cdot>(sb  \<^enum>  c) \<bullet> g\<cdot>(sb  \<^enum>  c))"
+  by (simp add: assms abs_sb_eta sbconc_insert)
+
+text\<open>Concatenating the head of a \gls{sb} to the rest of a \gls{sb}
+results in the \gls{sb} itself.\<close>
+
+theorem sbcons [simp]:"sbConc (sbHd\<cdot>sb)\<cdot>(sbRt\<cdot>sb) = sb"
+  apply(cases "chDomEmpty TYPE('a)")
+  apply (metis (full_types) sbtypeepmpty_sbbot)
+  apply (simp add: sbtake_insert sbdrop_insert)
+  by (subst sbconc_sconc,simp_all)
+  
+lemma sbtake_len:
+  assumes "\<not>chDomEmpty TYPE('b)"
+    and "Fin i \<le> sbLen (sb::'b\<^sup>\<Omega>)"
+  shows "sbLen (sbTake i\<cdot>sb) = Fin i"
+  using assms
+  apply (induction i)
+  apply (simp add: sbLen_def)
+  apply (metis (mono_tags, lifting) LeastI)
+  by (metis (no_types, hide_lams) assms(1) order_trans sblen2slen 
+      sbtake_getch slen_stake sblen_min_len)
+
+subsubsection \<open>Converter from SB to sbElem \label{subsub:sbhdelem}\<close>
+
+text\<open>Converting a \gls{sb} to a @{type sbElem} is rather complex. 
+The main goal is to obtain the first slice of a \gls{sb} as a 
+@{type sbElem}. This is not possible, if there is an empty stream in
+the bundle domain, hence: 
+  \<^item> if the domain is empty, the head element is @{const None}
+  \<^item> if the domain is non-empty and contains no empty stream, the 
+    head element is some function that maps to the head of the 
+    corresponding bundle streams
+  \<^item> if the domain is non-empty and contains an empty stream, the 
+    head element is undefined
+
+
+For defining the sbHdElem function we use a helper that has no 
+undefined output. Instead we lift it the output to an discrete
+\gls{pcpo}. In the later part we will also show its continuity for 
+finite bundles.\<close>
+
+lemma sbhdelem_mono:
+"monofun (\<lambda>sb::'c\<^sup>\<Omega>. 
+          if chDomEmpty TYPE('c) 
+             then Iup (Abs_sbElem None)
+             else if sbIsLeast sb 
+                     then \<bottom> 
+                     else Iup (Abs_sbElem 
+                          (Some (\<lambda>c::'c. shd (sb  \<^enum>\<^sub>\<star>  c)))))"
+  apply(rule monofunI)
+  apply(cases "chDomEmpty TYPE('c)")
+  apply auto
+  by (metis below_shd_alt monofun_cfun_arg sbnleast_mex)
+ 
+
+definition sbHdElem_h::"'c\<^sup>\<Omega> \<Rightarrow> ('c\<^sup>\<surd>) u"where
+"sbHdElem_h = 
+(\<lambda> sb. if chDomEmpty TYPE('c) 
+          then Iup(Abs_sbElem None) 
+          else if sbIsLeast sb 
+                  then \<bottom> 
+                  else Iup(Abs_sbElem (Some (\<lambda>c. shd((sb) \<^enum> c)))))"
+
+definition sbHdElem::"'c\<^sup>\<Omega> \<Rightarrow> 'c\<^sup>\<surd>"where
+"sbHdElem = (\<lambda> sb. case (sbHdElem_h sb) of 
+                   Iup sbElem \<Rightarrow> sbElem | 
+                   _          \<Rightarrow> undefined)"
+
+
+text\<open> The @{const sbHdElem} function checks if the output of
+@{const sbHdElem_h} is a @{type sbElem}. And then returns it. If the
+helper returns \<open>\<bottom>\<close> our converter maps to \<open>undefined\<close> as mentioned 
+above.\<close>
+(*<*)
+(*TODO: better abbreviation lfloor*)
+abbreviation sbHdElem_abbr :: "'c\<^sup>\<Omega> \<Rightarrow> 'c\<^sup>\<surd>" ( "\<lfloor>_" 70) where
+"\<lfloor>sb \<equiv> sbHdElem sb"
+(*>*)
+paragraph \<open>sbHdElem Properties \\\<close>
+
+text\<open>Our @{const sbHdElem} operator maps each \gls{sb} to a 
+corresponding @{type sbElem} exactly as intended. If the domain of 
+the \gls{sb} is empty, it results in the @{const None} 
+@{type sbElem} and if the input bundle contains no empty stream, the
+resulting @{type sbElem} maps to the head of the corresponding 
+streams.\<close>  
+
+theorem sbhdelem_none[simp]:
+"chDomEmpty TYPE('c) \<Longrightarrow> sbHdElem(sb::('c)\<^sup>\<Omega>) = Abs_sbElem(None)"
+  by(simp add: sbHdElem_def sbHdElem_h_def)
+
+theorem sbhdelem_some:
+"sbHdElemWell sb \<Longrightarrow> 
+ sbHdElem(sb::('c)\<^sup>\<Omega>) = Abs_sbElem(Some(\<lambda>c. shd(sb \<^enum>\<^sub>\<star> c)))"
+  by(simp add: sbHdElem_def sbHdElem_h_def)
+
+text\<open>Another interesting property is that two bundles contain no
+empty stream in their domain, but are in order, will be mapped to 
+the same @{type sbElem}.\<close>
+
+theorem sbhdelem_mono_empty[simp]:
+"chDomEmpty TYPE('cs) \<Longrightarrow> sbHdElem (x::'cs\<^sup>\<Omega>) = sbHdElem y"
+  by simp
+
+theorem sbhdelem_mono_eq[simp]:
+"sbHdElemWell x \<Longrightarrow> (x::'cs\<^sup>\<Omega>) \<sqsubseteq> y \<Longrightarrow> sbHdElem x = sbHdElem y"
+  apply(cases "chDomEmpty TYPE('cs)",simp)
+  apply(simp_all add: sbhdelem_some)
+  by (metis below_shd_alt monofun_cfun_arg sbnleast_mex)
+
+subsubsection \<open>Constructing SBs with sbElem \label{subsub:sbconc}\<close>
+
+text\<open>Given a @{type sbElem} and a \gls{sb}, we can append the 
+\gls{sb} to the @{type sbElem}. Of course we also have to mind the 
+domain when appending the bundle:
+  \<^item> If the domain is empty, the output \gls{sb} is \<open>\<bottom>\<close>
+  \<^item> If the domain is not empty, the output \gls{sb} has the input
+    @{type sbElem} as its first element.
+
+
+Only using this operator allows us to construct all \Gls{sb} where
+every stream has the same length. But since there is no restriction
+for the input bundle, we can map to any \gls{sb} with a a length
+greater 0.\<close>
+
+definition sbECons::"'c\<^sup>\<surd> \<Rightarrow> 'c\<^sup>\<Omega> \<rightarrow> 'c\<^sup>\<Omega>" where
+"sbECons sbe = sbConc (sbe2sb sbe)"
+
+text\<open>Because we already constructed a converter \ref{subsub:sbe2sb}
+from @{type sbElem}s to \Gls{sb} and the concatenation 
+\ref{subsub:sbconc}, the definition of @{const sbECons} is straight 
+forward. We also add another abbreviation for this function.\<close>
+
+abbreviation sbECons_abbr::"'c\<^sup>\<surd> \<Rightarrow> 'c\<^sup>\<Omega> \<Rightarrow> 'c\<^sup>\<Omega>"(infixr "\<bullet>\<^sup>\<surd>" 100) where
+"sbe \<bullet>\<^sup>\<surd> sb \<equiv> sbECons sbe\<cdot>sb"
+
+text\<open>Indeed results the concatenation in \<open>\<bottom> \<close> when the domain is
+empty\<close>
+
+theorem sbtypeempty_sbecons_bot[simp]:
+"chDomEmpty TYPE ('cs) \<Longrightarrow> (sbe::'cs\<^sup>\<surd>) \<bullet>\<^sup>\<surd> sb = \<bottom>"
+  by simp
+
+lemma exchange_bot_sbecons:
+"chDomEmpty TYPE ('cs) \<Longrightarrow> P sb \<Longrightarrow> P((sbe::'cs\<^sup>\<surd>) \<bullet>\<^sup>\<surd> sb)"
+  by (metis (full_types) sbtypeepmpty_sbbot)
+
+text\<open>It also holds, that the rest operator \ref{subsub:sbtake} of a
+with @{const sbECons} constructed \gls{sb} is a destructor.\<close>
+
+theorem sbrt_sbecons: "sbRt\<cdot>(sbe \<bullet>\<^sup>\<surd> sb) = sb"
+  apply (cases "chDomEmpty(TYPE('a))", simp)
+  apply (simp add: sbDrop.rep_eq)
+  apply (simp add: sbECons_def)
+  apply (subst sdropl6)
+  apply (subgoal_tac "\<And>c. \<exists>m. sbe2sb sbe  \<^enum>  c = \<up>m")
+  apply (metis Fin_0 Fin_Suc lnzero_def lscons_conv slen_scons 
+         strict_slen sup'_def)
+  apply (simp add: sbgetch_insert2 sbe2sb.rep_eq chDom_def)
+  apply (metis Diff_eq_empty_iff chDom_def option.simps(5)
+         sbtypenotempty_fex)
+  by (simp add: sb_rep_eqI sbgetch_insert2 Rep_sb_inverse)
+
+lemma sbhdelem_h_sbe:" sbHdElem_h (sbe \<bullet>\<^sup>\<surd> sb) = up\<cdot>sbe"
+  apply (cases "chDomEmpty(TYPE('a))",simp)
+  apply (simp_all add: sbHdElem_def sbHdElem_h_def)+
+  apply (simp_all add: up_def)
+  apply (metis sbtypeepmpty_sbenone)
+  apply (simp add: sbECons_def,auto)
+  apply (subgoal_tac "\<forall>c::'a. sbe2sb sbe  \<^enum>  c \<noteq> \<epsilon>") 
+  apply (simp add: sbe2sb_def)
+  apply (simp split: option.split)
+  apply (rule conjI)
+  apply (metis Abs_sb_strict option.simps(4) sbgetch_bot) 
+  apply (metis (no_types, lifting) option.simps(5) sbHdElemWell_def 
+         sbconc_bot_r sbconc_getch strictI) 
+  using sbgetch_sbe2sb_nempty apply auto[1]
+  apply(simp add: sbHdElemWell_def sbe2sb_def)
+  apply (simp split: option.split,auto)
+  apply (metis emptyE option.discI sbtypenotempty_fex)
+  apply (subgoal_tac 
+        "\<forall>c::'a. Abs_sb (\<lambda>c::'a. \<up>(x2 c))  \<^enum>  c = \<up>(x2 c)")
+  apply (simp add: Abs_sbElem_inverse)
+  apply (metis Rep_sbElem_inverse)
+  by (metis option.simps(5) sbe2sb.abs_eq sbe2sb.rep_eq 
+      sbgetch_insert2)
+
+text\<open>Obtaining the head of such an constructed \gls{sb} results in 
+a the @{type sbElem} used for constructing.\<close>
+
+theorem sbhdelem_sbecons: "sbHdElem (sbe  \<bullet>\<^sup>\<surd> sb) = sbe"
+  by(simp add: sbHdElem_def sbhdelem_h_sbe up_def)
+
+text\<open>Constructing a \gls{sb} with @{const sbECons} increases its 
+length by exactly 1. This also holds for empty domains, because we 
+interpret the length of those \Gls{sb} as \<open>\<infinity>\<close>.\<close>
+
+theorem sbecons_len:
+  shows "sbLen (sbe \<bullet>\<^sup>\<surd> sb) = lnsuc\<cdot>(sbLen sb)"
+  apply(cases "chDomEmpty(TYPE('a))")
+  apply(simp)
+  apply(rule sblen_rule,simp)
+  apply(simp add: sbECons_def sbgetch_insert2 sbconc_insert)
+  apply(subst Abs_sb_inverse)
+  apply simp
+  apply(insert sbconc_well[of "sbe2sb sbe" sb],simp add: 
+        sbgetch_insert2)
+  apply(subst sconc_slen2)
+  apply(subgoal_tac "#(Rep_sb (sbe2sb sbe) c) = 1",auto)
+  apply (metis equals0D lessequal_addition lnat_plus_commu 
+         lnat_plus_suc sbelen_one sbgetch_insert2 sblen_min_len)
+  apply (metis emptyE sbe2slen_1 sbgetch_insert2) 
+  apply(simp add: chDom_def)
+  by (metis (no_types, hide_lams) add.left_neutral cempty_rule 
+      f_inv_into_f lnat_plus_commu one_def only_empty_has_length_0 
+      sbECons_def sbconc_chan_len sbe2slen_1 sblen2slen sconc_slen2
+      slen_scons)
+
+lemma sbHdElem:
+"sbLen (sb::'cs\<^sup>\<Omega>) \<noteq> (0::lnat) \<Longrightarrow> sbe2sb (sbHdElem sb) = sbHd\<cdot>sb"
+  apply (case_tac "chDomEmpty (TYPE ('cs))")
+  apply (metis (full_types) sbtypeepmpty_sbbot)
+  apply (rule sb_rep_eqI)
+  apply (simp add: sbHdElem_def sbHdElem_h_def)
+  apply rule+ 
+  using sbleast2sblenempty apply blast
+  apply(simp add:sbtake_insert stake2shd sbe2sb.abs_eq 
+        sbe2sb.rep_eq Abs_sbElem_inverse Abs_sb_inverse sb_well_def)
+  by (metis (no_types) sbgetch_insert2 sbmap_stake_eq sbnleast_mex 
+      stake2shd)
+
+(*sb_ind*)
+
+lemma sbtake_chain:"chain (\<lambda>i::nat. sbTake i\<cdot>x)"
+  apply (rule chainI)
+  apply(simp add: below_sb_def)
+  apply(rule fun_belowI)
+  apply(simp add: sbtake_insert)
+  by (metis (no_types) Suc_leD le_refl sbgetch_insert2 
+      sbmap_stake_eq stake_mono)
+
+lemma sblen_sbtake:
+"\<not>chDomEmpty TYPE ('c) \<Longrightarrow> sbLen (sbTake n\<cdot>(x :: 'c\<^sup>\<Omega>)) \<le> Fin (n)"
+proof- 
+assume a0:"\<not>chDomEmpty TYPE ('c)"
+  have h0:"\<And>c. sbLen (sbTake n\<cdot>x) \<le> #((sbTake n\<cdot>x) \<^enum> (c::'c))"
+    by(rule sblen_min_len, simp add: a0)
+  have h1:"\<And>c. #((sbTake n\<cdot>x) \<^enum> (c::'c)) \<le> Fin (n)"
+   by simp 
+  then show ?thesis
+    using dual_order.trans h0 by blast
+qed
+
+lemma sbtake_lub:"(\<Squnion>i::nat. sbTake i\<cdot>x) = x"
+  apply(rule sb_eqI)
+  apply(subst contlub_cfun_arg)
+  apply(simp add: sbtake_chain)
+  by(simp add: sbtake_insert sbmap_stake_eq reach_stream)
+
+lemma sbECons_sbLen:"sbLen (sb::'cs\<^sup>\<Omega>) \<noteq> (0::lnat) \<Longrightarrow>
+ \<not> chDomEmpty TYPE('cs) \<Longrightarrow> \<exists> sbe sb'. sb = sbe \<bullet>\<^sup>\<surd> sb'"
+  by (metis sbECons_def sbHdElem sbcons)
+
+paragraph \<open>SB induction and case rules \\\<close>
+
+text\<open>This framework also offers the proof methods using the 
+@{type sbElem} constructor, that offer an easy proof process in when 
+applied correctly. The first method is a case distinction for 
+\Gls{sb}. It differentiates between the small \Gls{sb} where an 
+empty stream exists and all other \Gls{sb}.\<close>
+
+theorem sb_cases [case_names least sbeCons, cases type: sb]: 
+  "(sbIsLeast (sb'::'cs\<^sup>\<Omega>) \<Longrightarrow> P) 
+  \<Longrightarrow> (\<And>sbe sb. sb' = sbe \<bullet>\<^sup>\<surd> sb \<Longrightarrow> \<not>chDomEmpty TYPE ('cs) \<Longrightarrow> P) 
+  \<Longrightarrow> P"
+  by (meson sbECons_sbLen sbnleast_dom sbnleast_len)
+
+lemma sb_finind1:
+    fixes x::"'cs\<^sup>\<Omega>"
+    shows "sbLen x = Fin k
+          \<Longrightarrow> (\<And>sb. sbIsLeast sb \<Longrightarrow> P sb) 
+          \<Longrightarrow> (\<And>sbe sb. P sb 
+          \<Longrightarrow> \<not>chDomEmpty TYPE ('cs) \<Longrightarrow> P (sbe \<bullet>\<^sup>\<surd> sb))
+          \<Longrightarrow>P x"
+  apply(induction k  arbitrary:x)
+  using sbnleast_len apply fastforce
+  by (metis Fin_Suc inject_lnsuc sb_cases sbecons_len)
+
+lemma sb_finind:
+  fixes x::"'cs\<^sup>\<Omega>"
+  assumes "sbLen x < \<infinity>"
+  and "\<And>sb. sbIsLeast sb \<Longrightarrow> P sb"
+  and "\<And>sbe sb. P sb \<Longrightarrow> \<not>chDomEmpty TYPE ('cs) \<Longrightarrow> P (sbe \<bullet>\<^sup>\<surd> sb)"
+  shows "P x"
+  by (metis assms(1) assms(2) assms(3) lnat_well_h2 sb_finind1)
+
+lemma sbtakeind1: 
+  fixes x::"'cs\<^sup>\<Omega>"
+  shows "\<forall>x. (( \<forall>(sb::'cs\<^sup>\<Omega>) . sbIsLeast sb \<longrightarrow> P sb) \<and> 
+        (\<forall> (sbe::'cs\<^sup>\<surd>) sb::'cs\<^sup>\<Omega>. P sb  \<longrightarrow> \<not>chDomEmpty TYPE ('cs) 
+        \<longrightarrow> P (sbe \<bullet>\<^sup>\<surd> sb))) \<and> 
+        ( \<not>chDomEmpty TYPE ('cs) \<longrightarrow> sbLen x \<le> Fin n) \<longrightarrow> P (x)"
+  by (metis (no_types, lifting) inf_ub less2eq 
+      order.not_eq_order_implies_strict sb_cases sb_finind 
+      sb_finind1)
+
+lemma sbtakeind: 
+  fixes x::"'cs\<^sup>\<Omega>"
+  shows "\<forall>x. (( \<forall>(sb::'cs\<^sup>\<Omega>) . sbIsLeast sb \<longrightarrow> P sb) \<and> 
+         (\<forall> (sbe::'cs\<^sup>\<surd>) sb::'cs\<^sup>\<Omega>. P sb  \<longrightarrow> \<not>chDomEmpty TYPE ('cs) 
+          \<longrightarrow> P (sbe \<bullet>\<^sup>\<surd> sb))) 
+          \<longrightarrow> P (sbTake  n\<cdot>x)"
+  apply rule+
+  apply(subst sbtakeind1, simp_all) 
+  using sblen_sbtake sbtakeind1 by auto
+
+text\<open>The second showcased proof method is the induction for
+\Gls{sb}. Beside the admissibility of the predicate, we divide the
+induction into to the case tactic similar predicates.\<close>  
+
+theorem sb_ind[case_names adm least sbeCons, induct type: sb]:
+  fixes x::"'cs\<^sup>\<Omega>"
+  assumes "adm P" 
+  and "\<And>sb. sbIsLeast sb \<Longrightarrow> P sb"
+  and "\<And>sbe sb. P sb \<Longrightarrow> \<not>chDomEmpty TYPE ('cs) \<Longrightarrow> P (sbe \<bullet>\<^sup>\<surd> sb)"   
+  shows  "P x"
+  using assms(1) assms(2) assms(3) 
+  apply(unfold adm_def)
+  apply(erule_tac x="\<lambda>i. sbTake i\<cdot>x" in allE,auto)
+  apply(simp add: sbtake_chain)
+  apply(simp add: sbtakeind)
+  by(simp add: sbtake_lub)
+
+text\<open>Here we show a small example proof for our \gls{sb} cases rule.
+First the isar proof is started by applying it to the theorem. It
+then automatically generates the proof structure with the two cases
+and their variables. These two generated cases match with our
+theorem assumptions from @{thm sb_cases}. Our theorems statement
+then follows then directly.\<close>
+
+theorem sbecons_eq:
+  assumes "sbLen sb \<noteq> 0" 
+  shows "sbHdElem sb \<bullet>\<^sup>\<surd> sbRt\<cdot>sb = sb"
+proof %visible(cases sb)
+case least
+  then show ?thesis
+    using assms
+    by(simp only: assms sbECons_def sbHdElem sbcons)
+next
+  case (sbeCons sbe sb)
+  then show ?thesis
+    by(simp only: assms sbhdelem_sbecons sbrt_sbecons)
+qed
+
+text\<open>The next theorem is an example for the induction rule. Similar
+to the cases rule there are automatically generated cases that
+correspond to the assumptions of @{thm sb_ind}. Our theorem is
+proven after showing the three generated goals.\<close>
+
+theorem shows "sbTake n\<cdot>sb \<sqsubseteq> sb "
+proof %visible(induction sb)
+  case adm
+  then show ?case
+    by simp
+next
+  case (least sb)
+  then show ?case
+    by simp
+next
+  case (sbeCons sbe sb)
+  then show ?case
+    by simp
+qed
+
+subsubsection \<open>Converting Domains of SBs \label{subsub:sbconvert}\<close>
+
+text\<open>Two \Gls{sb} with a different type are not comparable, since 
+only \Gls{sb} with the same type have an order. This holds even if 
+the domain of both types is the same. To make them comparable we
+introduce a converter that converts the type of a \Gls{sb}. This
+converter can then make two \Gls{sb} of different type comparable.
+Since it does change the type, it can also restrict or expand the 
+domain of a \gls{sb}. Newly added channels map to \<open>\<epsilon>\<close>.\<close>
+
+lemma sbconvert_well[simp]:"sb_well (\<lambda>c. sb \<^enum>\<^sub>\<star> c)"
+  by(rule sbwellI, simp)
+
+lift_definition sbConvert::"'c\<^sup>\<Omega> \<rightarrow> 'd\<^sup>\<Omega>"is
+"(\<lambda> sb. Abs_sb (\<lambda>c.  sb \<^enum>\<^sub>\<star> c ))"
+  by(intro cont2cont, simp)
+
+text\<open>Because restricting the domain of a \gls{sb} is an important 
+feature of this framework, we offer explicit abbreviations for such
+cases.\<close>
+
+lemmas sbconvert_insert = sbConvert.rep_eq
+
+abbreviation sbConvert_abbr :: "'c\<^sup>\<Omega> \<Rightarrow> 'd\<^sup>\<Omega>" ( "_\<star>" 200) where 
+"sb\<star> \<equiv> sbConvert\<cdot>sb"
+
+abbreviation sbConvert_abbr_fst :: "('c \<union> 'd)\<^sup>\<Omega> \<Rightarrow> 'c\<^sup>\<Omega>"
+( "_\<star>\<^sub>1" 200) where "sb\<star>\<^sub>1 \<equiv> sbConvert\<cdot>sb"
+
+abbreviation sbConvert_abbr_snd :: "('c\<union>'d)\<^sup>\<Omega> \<Rightarrow> 'd\<^sup>\<Omega>"
+ ( "_\<star>\<^sub>2" 200) where "sb\<star>\<^sub>2 \<equiv> sbConvert\<cdot>sb"
+
+lemma sbconvert_rep[simp]: "Rep_sb(sb\<star>) = (\<lambda>c. sb \<^enum>\<^sub>\<star> c)"
+  by (simp add: Abs_sb_inverse sbconvert_insert)
+
+lemma fixes sb ::"'a\<^sup>\<Omega>"
+  shows "sb\<star> \<^enum>\<^sub>\<star> c = sb \<^enum>\<^sub>\<star> c"
+  apply(cases "Rep c\<in>(range(Rep::'a\<Rightarrow>channel))")
+   apply(auto simp add: sbgetch_insert)
+  oops (* gilt nicht, wenn 'b kleiner ist als 'a *)
+
+lemma sbconv_eq[simp]:"sb\<star> = sb"
+  apply(rule sb_eqI)
+  by (metis (no_types) Abs_sb_inverse mem_Collect_eq 
+        sbconvert_insert sbconvert_well sbgetch_insert2)
+
+lemma sbconvert_getch [simp]: "sb \<star> \<^enum> c = sb \<^enum>\<^sub>\<star> c"
+  by (simp add: sbgetch_insert2)
+
+
+subsubsection \<open>Union of SBs\<close>
+
+text\<open>The union operator for streams merges two \Gls{sb} together.
+The output domain is equal to the union of its input domains.
+But again we use a slightly different signature for the
+general definition. It is equal to applying the converter after
+building the exact union of both bundles. \<close>
+
+definition sbUnion::"'c\<^sup>\<Omega> \<rightarrow> 'd\<^sup>\<Omega> \<rightarrow> 'e\<^sup>\<Omega>" where
+"sbUnion \<equiv> \<Lambda> sb1 sb2. Abs_sb (\<lambda> c. 
+                  if Rep c \<in> chDom TYPE('c) 
+                  then sb1 \<^enum>\<^sub>\<star> c 
+                  else sb2 \<^enum>\<^sub>\<star> c)"
+
+lemma sbunion_sbwell[simp]: "sb_well ((\<lambda> (c::'e). 
+                  if (Rep c \<in> chDom TYPE('c)) then 
+                  (sb1::'c\<^sup>\<Omega>) \<^enum>\<^sub>\<star> c else  (sb2::'d\<^sup>\<Omega>) \<^enum>\<^sub>\<star> c))"
+  apply(rule sbwellI)
+  by simp
+
+lemma sbunion_insert:"sbUnion\<cdot>(sb1::'c\<^sup>\<Omega>)\<cdot>sb2 = Abs_sb (\<lambda> c. if 
+                  (Rep c \<in> chDom TYPE('c)) then 
+                  sb1 \<^enum>\<^sub>\<star> c else  sb2 \<^enum>\<^sub>\<star> c)"
+  unfolding sbUnion_def
+  apply(subst beta_cfun, intro cont2cont, simp)+
+  ..
+(* TODO: sbunion_rep_eq 
+  Namin_convention: "insert" = Abs_cfun weg
+                      rep_eq = Abs_XXX weg *)
+
+lemma sbunion_rep_eq:"Rep_sb (sbUnion\<cdot>(sb1::'c\<^sup>\<Omega>)\<cdot>sb2) = 
+ (\<lambda> c. if (Rep c \<in> chDom TYPE('c))
+         then sb1 \<^enum>\<^sub>\<star> c 
+         else  sb2 \<^enum>\<^sub>\<star> c)"
+  apply(subst sbunion_insert)
+  apply(subst Abs_sb_inverse)
+  by auto
+
+text\<open>The following abbreviations restrict the input and output
+domains of @{const sbUnion} to specific cases. These are displayed 
+by its signature.\<close>
+
+abbreviation sbUnion_magic_abbr :: "'c\<^sup>\<Omega> \<Rightarrow> 'd\<^sup>\<Omega> \<Rightarrow> 'e\<^sup>\<Omega>"
+(infixr "\<uplus>\<^sub>\<star>" 100) where "sb1 \<uplus>\<^sub>\<star> sb2 \<equiv> sbUnion\<cdot>sb1\<cdot>sb2"
+
+abbreviation sbUnion_minus_abbr :: "('c - ('d))\<^sup>\<Omega> \<Rightarrow> 'd\<^sup>\<Omega> \<Rightarrow> 'c\<^sup>\<Omega>"
+(infixr "\<uplus>\<^sub>-" 100) where "sb1 \<uplus>\<^sub>- sb2 \<equiv> sbUnion\<cdot>sb1\<cdot>sb2"
+
+abbreviation sbUnion_abbr :: "'c\<^sup>\<Omega> \<Rightarrow> 'd\<^sup>\<Omega> \<Rightarrow> ('c\<union>'d)\<^sup>\<Omega>"
+(infixr "\<uplus>" 100) where "sb1 \<uplus> sb2 \<equiv> sb1 \<uplus>\<^sub>\<star> sb2"
+
+
+paragraph \<open>sbUnion Properties \\\<close>
+
+text \<open>Here we show how our union operator works.\<close>
+
+lemma sbunion_getch[simp]:fixes c::"'a"
+      assumes"Rep c \<in> chDom TYPE('c)"
+      shows  "(sbUnion::'a\<^sup>\<Omega>\<rightarrow> 'b\<^sup>\<Omega> \<rightarrow> 'c\<^sup>\<Omega>)\<cdot>cb\<cdot>db \<^enum>\<^sub>\<star> c = cb \<^enum> c"
+  apply(simp add: sbgetch_insert sbunion_rep_eq)
+  by (metis assms Diff_iff chDom_def range_eqI)
+
+lemma sbunion_eq [simp]: "sb1 \<uplus>\<^sub>\<star> sb2 = sb1"
+  apply(rule sb_eqI)
+  by simp
+
+lemma sbunion_sbconvert_eq[simp]:"cb \<uplus>\<^sub>\<star> cb = (cb\<star>)"
+  by(simp add: sbunion_insert sbconvert_insert)
+
+text\<open>The union operator is commutative, if the domains of its input
+are disjoint.\<close>
+
+theorem ubunion_commu:
+  fixes sb1 ::"'cs1\<^sup>\<Omega>"
+    and sb2 ::"'cs2\<^sup>\<Omega>"
+    assumes "chDom (TYPE ('cs1)) \<inter> chDom (TYPE ('cs2)) = {}"
+    shows "sb1 \<uplus>\<^sub>\<star> sb2 = ((sb2 \<uplus>\<^sub>\<star> sb1)::'cs3\<^sup>\<Omega>)"
+  apply(rule sb_rep_eqI)
+  apply(simp add: sbunion_rep_eq sbgetch_insert)
+  using assms cdom_notempty cempty_rule cnotempty_cdom by blast
+
+lemma ubunion_fst[simp]:
+  fixes sb1 ::"'cs1\<^sup>\<Omega>"
+    and sb2 ::"'cs2\<^sup>\<Omega>"
+  assumes "chDom (TYPE ('cs2)) \<inter> chDom (TYPE ('cs3)) = {}"
+  shows "sb1 \<uplus>\<^sub>\<star> sb2 = (sb1\<star> :: 'cs3\<^sup>\<Omega>)"
+  apply(rule sb_rep_eqI)
+  apply(simp add: sbunion_rep_eq sbgetch_insert)
+  using assms cdom_notempty cempty_rule cnotempty_cdom by blast
+
+lemma ubunion_id[simp]: "out\<star>\<^sub>1 \<uplus> (out\<star>\<^sub>2) = out"
+proof(rule sb_eqI)
+  fix c::"'a \<union> 'b"
+  assume as:"Rep c \<in> chDom TYPE('a \<union> 'b)"
+  have "Rep c \<in> chDom (TYPE ('a)) \<Longrightarrow> out\<star> \<uplus> (out\<star>) \<^enum> c = out \<^enum> c"
+    by (metis sbgetch_insert2 sbunion_getch sbunion_rep_eq 
+        sbunion_sbconvert_eq)
+  moreover have "Rep c \<in> chDom (TYPE ('b)) 
+                 \<Longrightarrow> out\<star> \<uplus> (out\<star>) \<^enum> c = out \<^enum> c"
+    by (metis sbgetch_insert2 sbunion_getch sbunion_rep_eq 
+        sbunion_sbconvert_eq)
+  moreover have "Rep c \<in> chDom TYPE ('a) \<or> Rep c \<in> chDom TYPE ('b)"
+    using as chdom_in by fastforce
+  ultimately show  "out\<star> \<uplus> (out\<star>) \<^enum> c = out \<^enum> c" by fastforce
+qed
+
+text\<open>The union of two \Gls{sb} maps each channel in the domain of 
+the first input \gls{sb} to the corresponding stream of the first 
+\gls{sb}.\<close>
+
+theorem sbunion_getchl[simp]:
+    fixes sb1 ::"'cs1\<^sup>\<Omega>"
+      and sb2 ::"'cs2\<^sup>\<Omega>"
+  assumes "Rep c \<in> chDom TYPE('cs1)"
+    shows "(sb1 \<uplus> sb2) \<^enum>\<^sub>\<star> c = sb1 \<^enum>\<^sub>\<star> c"
+  apply(auto simp add: sbgetch_insert sbunion_rep_eq assms)
+  apply (metis Rep_union_def UnI1 assms equals0D f_inv_into_f 
+         union_range_union)
+  by (metis Rep_union_def Un_iff assms chan_eq empty_iff 
+      union_range_union)
+
+text\<open>This also holds for the second input \gls{sb}, if the domains
+of both \Gls{sb} are disjoint.\<close>
+
+theorem sbunion_getchr[simp]:
+    fixes sb1 ::"'cs1\<^sup>\<Omega>"
+      and sb2 ::"'cs2\<^sup>\<Omega>"
+  assumes "Rep c \<notin> chDom TYPE('cs1)"
+  shows   "(sb1 \<uplus> sb2) \<^enum>\<^sub>\<star> c = sb2 \<^enum>\<^sub>\<star> c"
+  apply(auto simp add: sbgetch_insert sbunion_rep_eq assms)
+  apply (metis Rep_union_def UnCI assms f_inv_into_f 
+         union_range_union)
+  apply (metis Rep_union_def UnCI chan_eq union_range_union)
+  by (metis Rep_union_def Un_iff chan_eq empty_iff 
+      union_range_union)
+
+lemma sbunion_getch_nomag [simp]:
+"sb1 \<uplus>\<^sub>\<star> sb2  \<^enum>  c = (sb1 \<uplus> sb2) \<^enum>\<^sub>\<star> c"
+  by(auto simp add: sbgetch_insert2 sbunion_rep_eq)
+
+text\<open>Our general union operator is equivalent to the restricted
+union with an conversion of the output.\<close>
+
+theorem untion_convert_mag:"sb1 \<uplus>\<^sub>\<star> sb2 = ((sb1 \<uplus> sb2)\<star>)"
+  by(simp add: sb_eqI)
+
+lemma sbunion_magic: 
+  fixes sb1 ::"'cs1\<^sup>\<Omega>"
+    and sb2 ::"'cs2\<^sup>\<Omega>"
+  shows "(sb1 \<uplus> sb2)\<star> = sb1 \<uplus>\<^sub>\<star> sb2"
+  apply(rule sb_eqI)
+  by auto
+
+text\<open>It then follows directly, that restricting the unions domain 
+to the first inputs domain is equal to the first input. Analogous
+this also holds for the second input, if the input domains are
+disjoint.\<close>
+
+theorem sbunion_fst[simp]: "(sb1 \<uplus> sb2)\<star>\<^sub>1 = sb1"
+  by (simp add: sbunion_magic)
+
+theorem sbunion_snd[simp]:
+  fixes sb1 ::"'cs1\<^sup>\<Omega>"
+    and sb2 ::"'cs2\<^sup>\<Omega>"
+  assumes "chDom (TYPE ('cs1)) \<inter> chDom (TYPE ('cs2)) = {}"
+  shows "(sb1 \<uplus> sb2)\<star>\<^sub>2 = sb2"
+  by (metis assms sbconv_eq sbunion_magic ubunion_commu ubunion_fst)
+
+lemma sbunion_eqI:
+  assumes "sb1 = (sb\<star>\<^sub>1)"
+    and "sb2 = (sb\<star>\<^sub>2)"
+  shows "sb1 \<uplus> sb2 = sb"
+  by (simp add: assms)
+
+
+lemma union_minus_nomagfst[simp]:
+        fixes sb1 ::"(('a \<union> 'b) - 'c \<union> 'd)\<^sup>\<Omega>"
+          and sb2 ::"('c \<union> 'd)\<^sup>\<Omega>"
+        shows "sb1 \<uplus>\<^sub>\<star> sb2 = ((sb1 \<uplus>\<^sub>- sb2)\<star>\<^sub>1)"
+  apply(rule sb_eqI,simp)
+  apply(case_tac "Rep c\<in> chDom TYPE('c \<union> 'd)",auto)
+  by(simp_all add: sbgetch_insert sbunion_rep_eq)
+
+lemma union_minus_nomagsnd[simp]:
+        fixes sb1 ::"(('a \<union> 'b) - 'c \<union> 'd)\<^sup>\<Omega>"
+          and sb2 ::"('c \<union> 'd)\<^sup>\<Omega>"
+        shows "sb1 \<uplus>\<^sub>\<star> sb2 = ((sb1 \<uplus>\<^sub>- sb2)\<star>\<^sub>2)"
+  apply(rule sb_eqI,simp)
+  apply(case_tac "Rep c\<in> chDom TYPE('c \<union> 'd)",auto)
+  by(simp_all add: sbgetch_insert sbunion_rep_eq)
+
+(*<*)
 end
+(*>*)
