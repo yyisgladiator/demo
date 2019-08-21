@@ -230,7 +230,31 @@ lemma flash_below:
 lemma flash_and_weak:
   assumes "andSpf\<cdot>(andInSB.setter (port_i, port_intern)) = andOutSB.setter port_o"
   shows "#port_o = lnmin\<cdot>(#port_i)\<cdot>(#port_intern)"
-  (* with weak causal lemma *) sorry
+proof(cases "#port_i > #port_intern")
+  case True
+  have "sbLen (andInSB.setter (port_i, port_intern)) = #port_intern"
+    apply(subst sblen_rule, simp_all)
+    (*defer
+    apply(rule_tac x="Abs cout" in exI)*)  
+    sorry
+  moreover have "sbLen (andOutSB.setter port_o) = #port_o"
+    apply(simp add: sbLen_def)
+    using andOutSB.setter.rep_eq outAnd.exhaust outAndChan.simps sbgetch_insert2 LeastI andOutSB.setter.abs_eq slen_smap
+    by metis
+  ultimately have "#port_o = #port_intern"
+    using andSpf_def assms dassem_len
+    by (metis dawSem_def dawsem_len somechannotempty)
+  then show ?thesis 
+    apply(simp)
+    by (metis True dual_order.strict_implies_order lnmin_asso lnmin_eqasmthmin)
+next
+  case False
+  then show ?thesis sorry
+qed 
+(*  
+  using assms apply(simp add: andSpf_def )
+  using dassem_len  
+ with weak causal lemma *)
 
 lemma flash_not_strong:
   assumes "notSpf\<cdot>(notInSB.setter(port_o)) = notOutSB.setter port_intern"
@@ -252,9 +276,9 @@ proof(rule ccontr)
     case False
     then have a3: "#port_intern > #port_i + 1"
       using a0 by auto
-    then have a4: "#port_intern = #port_i + 1"
+    have a4: "#port_intern = #port_i + 1"
       using assms flash_and_weak flash_not_strong dual_order.strict_implies_order linear lnat_plus_suc lnmin_asso lnmin_eqasmthmin lnsuc_lnle_emb
-      by metis
+      sorry
     show ?thesis 
       using a3 a4
       by simp
