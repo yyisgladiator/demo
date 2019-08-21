@@ -123,24 +123,25 @@ lemma cempty_exists: "cEmpty \<noteq> {}"
 
 subsubsection\<open>Class chan \label{sub:chan}\<close>
 
+class rep =
+  fixes Rep :: "'a \<Rightarrow> channel"
+begin
+  abbreviation "Abs \<equiv> inv Rep"
+end
+
 text\<open>The following class restricts its type to be injective to our 
 @{type channel} type and to also comply with our main Idea. Through 
 its injectivity, the type is isomorphic to a subset of our 
 @{type channel} type.\<close>
 
-class chan =
-  fixes Rep :: "'a \<Rightarrow> channel"
+class chan = rep +
   assumes chan_botsingle:
       "range Rep \<subseteq> cEmpty \<or>
        range Rep \<inter> cEmpty = {}" 
   assumes chan_inj[simp]:"inj Rep"
 begin
-
-  abbreviation "Abs \<equiv> inv Rep"
-  
   theorem abs_rep_id[simp]:"Abs (Rep c) = c"
     by simp
-
 end
 
 text\<open> With @{const Rep} we require a representation function, that 
@@ -184,18 +185,24 @@ paragraph\<open>Class somechan \\\<close>
 text\<open>Types of \<open>somechan\<close> can transmit at least one message 
 on every channel.\<close>
 
-class somechan = chan +
+class somechan = rep +
   assumes chan_notempty: "(range Rep) \<inter> cEmpty = {}"
+      and chan_inj[simp]:"inj Rep"
 begin
 
-lemma somechannotempty[simp]:"\<not>chDomEmpty(TYPE('c::somechan))"
+end
+
+subclass (in somechan) chan
+  apply(standard)
+  by (simp_all add: local.chan_notempty)
+
+lemma somechannotempty[simp]:"\<not>chDomEmpty TYPE('c::somechan)"
   using chDom_def somechan_class.chan_notempty by fastforce
 
 lemma somechandom:"chDom(TYPE('c::somechan)) 
                    = range(Rep::'c\<Rightarrow>channel)"
   by(simp add: chDom_def somechan_class.chan_notempty Diff_triv)
 
-end
 text\<open> Hence, we know @{thm somechannotempty} and 
 @{thm somechandom}.\<close>
 
@@ -204,14 +211,18 @@ paragraph\<open>Class emptychan \\\<close>
 text\<open>Types of \<open>emptychan\<close> can not transmit any message on any 
 channel.\<close>
 
-class emptychan = chan +
+class emptychan = rep +
   assumes chan_empty:"(range Rep) \<subseteq> cEmpty" 
+      and chan_inj[simp]:"inj Rep"
 begin
-
-lemma emptychanempty[simp]:"chDomEmpty(TYPE('c::emptychan))"
-  by (simp add: chDom_def emptychan_class.chan_empty)
-
 end
+
+subclass (in emptychan) chan
+  apply(standard)
+  by (simp_all add: local.chan_empty)
+
+lemma emptychanempty[simp]:"chDomEmpty TYPE('c::emptychan)"
+  by (simp add: chDom_def emptychan_class.chan_empty)
 
 text\<open>Hence, the Domain is empty @{thm emptychanempty}.\<close>
 

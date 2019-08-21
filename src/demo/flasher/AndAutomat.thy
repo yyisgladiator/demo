@@ -10,7 +10,7 @@ fun dAand_transition::"S_and \<Rightarrow> (bool option \<times> bool option) \<
 "dAand_transition S (bool1,None) = (S,(Some False))"
 
 
-interpretation and_smap:smapGen "dAand_transition" Single "buildAndinSBE" "buildAndoutSBE" "Single"
+interpretation and_smap:smapGen "dAand_transition" Single "buildAndinSBE" "buildAndOutSBE" "Single"
   apply(unfold_locales)
   using S_and.exhaust by blast
 
@@ -23,6 +23,8 @@ definition andSpf::"(inAnd\<^sup>\<Omega> \<rightarrow> outAnd\<^sup>\<Omega>)"w
 "andSpf = dawSem and_smap.da"
 
 
+
+(* TESTS: *)
 lemma andingetset_eq:"andInSBE.getterSB\<cdot>(andInSBE.setterSB\<cdot>s) = s"
   by(simp)
 
