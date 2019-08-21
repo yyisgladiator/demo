@@ -1,151 +1,167 @@
 theory outFlashData
 
-imports bundle.SB
+imports Data_inc
 begin
 
 typedef outFlash="{cout,cin2}"
   by auto
 
 
-instantiation outFlash::"{somechan,finite}"
-begin
-definition "Rep = Rep_outFlash"
-instance
-  apply(standard)
-  apply(auto simp add: Rep_outFlash_def cEmpty_def)
-  apply(auto simp add: ctype_empty_iff)
-  using ctype_empty_iff
-  apply (metis Rep_outFlash cMsg.simps ex_in_conv insertE insert_iff)
-  apply (meson Rep_outFlash_inject injI) using cMsg.elims Rep_outFlash apply simp
-  apply (metis cMsg.simps emptyE image_iff iso_tuple_UNIV_I)
+instance outFlash::finite
+  apply (intro_classes)
   using type_definition.Abs_image type_definition_outFlash typedef_finite_UNIV by fastforce
+
+instantiation outFlash::somechan
+begin
+definition Rep_outFlash_def: "Rep = Rep_outFlash"
+
+lemma repand_range[simp]: "range (Rep::outFlash \<Rightarrow> channel) = {cout,cin2}"
+  apply(subst Rep_outFlash_def)
+  using type_definition.Rep_range type_definition_outFlash by fastforce
+
+instance
+  apply(intro_classes)
+  apply clarsimp
+  unfolding Rep_outFlash_def by (meson Rep_outFlash_inject injI)
 end
 
+lemma outFlash_chdom[simp]: "chDom TYPE (outFlash) = {cout,cin2}"
+  by (simp add: somechandom)
+
+
+
+section \<open>Constructors\<close>
+
 definition "Flashout \<equiv> Abs_outFlash cout"
-definition "Flashcin2 \<equiv> Abs_outFlash cin2"
+definition "Flashin2 \<equiv> Abs_outFlash cin2"
 
-free_constructors outFlash for "Flashout" | Flashcin2
-  unfolding Flashout_def Flashcin2_def
+free_constructors outFlash for Flashout | Flashin2
+  apply auto?  (* TODO: kann man das "auto" entfernen? *)
+  unfolding Flashout_def Flashin2_def
   apply (metis Rep_outFlash Rep_outFlash_inverse empty_iff insert_iff)
-  by (simp add: Abs_outFlash_inject)
+  apply (simp add: Abs_outFlash_inject)?
+  done
 
-lemma Flashout1_rep [simp]: "Rep (Flashout) = cout"
-  by (simp add: Abs_outFlash_inverse Flashout_def Rep_outFlash_def)
+lemma flashout_rep [simp]: "Rep Flashout = cout"
+  unfolding Rep_outFlash_def Flashout_def
+  by (simp add: Abs_outFlash_inverse)
 
-lemma Flashcin2_rep [simp]: "Rep (Flashcin2) = cin2"
-  by (simp add: Abs_outFlash_inverse Flashcin2_def Rep_outFlash_def)
+lemma flashin2_rep [simp]: "Rep Flashin2 = cin2"
+  unfolding Rep_outFlash_def Flashin2_def
+  by (simp add: Abs_outFlash_inverse)
 
 
-fun outFlashChan::"('nat::type \<Rightarrow> 'a::type) \<Rightarrow> ('bool::type \<Rightarrow> 'a) \<Rightarrow>('nat\<times>'bool) \<Rightarrow> outFlash \<Rightarrow> 'a" where
-"outFlashChan Cc1 Cc2 (port_c1, port_c2) Flashout = Cc1 port_c1" |
-"outFlashChan Cc1 Cc2 (port_c1, port_c2) Flashcin2 = Cc2 port_c2"
+section \<open>Preperation for locale instantiation\<close>
 
-abbreviation "buildFlashoutSBE \<equiv> outFlashChan (Tsyn o (map_option) \<B>) (Tsyn o (map_option) \<B>)" 
+(* Tuple:
+      1. Value should go to port c1. It is of type "bool"
+      2. Value should go to port c2. It is of type "bool" 
+*)
 
-lemma rangecin2[simp]:"range (Tsyn o (map_option) \<B>) = ctype cin2"
-  apply(auto simp add: ctype_def)
-  by (metis option.simps(9) range_eqI)
+(* The first parameter is the converter from user-type (here bool) to "M" 
 
-lemma rangecout[simp]: "range (Tsyn o (map_option) \<B>) = ctype cout"
-  apply(auto simp add: ctype_def)
-  by (metis option.simps(9) range_eqI)
+  for every type in the tuple such a function must be in the parameter. So if the tuple
+  would consist of (nat\<times>bool) there are 2 converters required *)
 
-lemma buildflashout_ctype: "buildFlashoutSBE a c \<in> ctype (Rep c)"
-  apply(cases c; cases a;simp)
-  by(simp_all add: ctype_def,auto)
+fun outFlashChan::"('bool \<Rightarrow> 'a) \<Rightarrow> ('bool\<times>'bool) \<Rightarrow> outFlash \<Rightarrow> 'a" where
+"outFlashChan boolConv  (port_c1,   _    ) Flashout = boolConv port_c1" |
+"outFlashChan boolConv  (   _   , port_c2) Flashin2 = boolConv port_c2"
 
-lemma buildflashout_inj: "inj buildFlashoutSBE"
-   apply (auto simp add: inj_def)
-  by (metis outFlashChan.simps inj_def inj_B inj_tsyncons)+
+(* Helper Function for lemmata (mostly surj). Should be hidden from the user! *)
+definition outFlashChan_inv::"('bool \<Rightarrow> 'a) \<Rightarrow> (outFlash \<Rightarrow> 'a) \<Rightarrow> ('bool\<times>'bool)" where
+"outFlashChan_inv boolConv f = ((inv boolConv) (f Flashout), (inv boolConv) (f Flashin2))" 
 
-lemma buildflashout_range: "range (\<lambda>a. buildFlashoutSBE a c) = ctype (Rep c)"
+lemma outFlashChan_surj_helper: 
+    assumes "f Flashout \<in> range boolConv"
+        and "f Flashin2 \<in> range boolConv"
+  shows "outFlashChan boolConv (outFlashChan_inv boolConv f) = f"
+  unfolding outFlashChan_inv_def
+  apply(rule ext, rename_tac "c")
+  apply(case_tac c; simp)
+  by (auto simp add: assms f_inv_into_f)
+
+lemma outFlashChan_surj: 
+    assumes "f Flashout \<in> range boolConv"
+        and "f Flashin2 \<in> range boolConv"
+      shows "f \<in> range (outFlashChan boolConv)"
+  by (metis UNIV_I image_iff assms outFlashChan_surj_helper)
+
+
+lemma outFlashChan_inj: assumes "inj boolConv"
+  shows "inj (outFlashChan boolConv)"
+  apply (auto simp add: inj_def)
+   by (metis assms outFlashChan.simps injD)+
+
+
+subsection \<open>SBE\<close>
+(* Dieses Beispiel ist zeitsychron, daher das "Tsyn" *)
+abbreviation "buildFlashOutSBE \<equiv> outFlashChan (Tsyn o map_option \<B>)" 
+(* Die Signatur lautet: "bool option \<times> bool option \<Rightarrow> outFlash \<Rightarrow> M"
+    Das "option" kommt aus der Zeit. "None" = keine Nachricht *)
+
+
+
+lemma buildflashout_ctype: "buildFlashOutSBE a c \<in> ctype (Rep c)"
+  apply(cases c; cases a)
+  by(auto simp add: ctype_def)
+
+
+lemma buildflashout_inj: "inj buildFlashOutSBE"
+  apply(rule outFlashChan_inj)
+  by simp
+
+
+lemma buildflashout_range: "range (\<lambda>a. buildFlashOutSBE a c) = ctype (Rep c)"
   apply(cases c)
   apply(auto simp add: image_iff ctype_def)
   by (metis option.simps(9))+
 
-lemma buildflashout_surj: assumes "sbElem_well (Some sbe)"
-  shows "sbe \<in> range buildFlashoutSBE"
-proof -
-  have ctypewell:"\<And> c. sbe c\<in> ctype (Rep c)"
-    using assms by auto
-  hence "\<And>c. sbe c \<in> range (\<lambda>a. buildFlashoutSBE a c)"
-    using buildflashout_range by auto
-  hence "\<exists>prod. sbe = buildFlashoutSBE prod"
-    apply(subst fun_eq_iff,auto)
-    apply(simp add: fun_eq_iff f_inv_into_f image_iff)
-    using  outFlash.exhaust  
-  proof -
-    assume a1: "\<And>c. \<exists>a b. sbe c = buildFlashoutSBE (a, b) c"
-    { fix zz :: "bool option \<Rightarrow> bool option \<Rightarrow> outFlash"
-      obtain zza :: "outFlash \<Rightarrow> bool option" and zzb :: "outFlash \<Rightarrow> bool option" where
-        ff1: "\<forall>z. sbe z = buildFlashoutSBE (zza z, zzb z) z"
-        using a1 by moura
-      then have "(\<exists>z. zz (zza Flashout) z \<noteq> Flashcin2) \<or> (\<exists>z za. sbe (zz z za) = buildFlashoutSBE (z, za) (zz z za))"
-        by (metis outFlashChan.simps(2))
-      then have "\<exists>z za. sbe (zz z za) = buildFlashoutSBE (z, za) (zz z za)"
-        using ff1 by (metis (full_types) outFlash.exhaust outFlashChan.simps(1)) }
-    then show "\<exists>z za. \<forall>zb. sbe zb = buildFlashoutSBE (z, za) zb"
-      by (metis (no_types))
-  qed
-  thus ?thesis
-    by auto
-qed
+lemma buildflashout_surj: assumes "\<And>c. sbe c \<in> ctype (Rep c)"
+  shows "sbe \<in> range buildFlashOutSBE"
+  apply(rule outFlashChan_surj)
+  apply (metis flashout_rep assms rangecout) (* Die metis-Sachen kann man bestimmt in einen 1-Zeiler umwandeln *)
+  by (metis flashin2_rep assms rangecin2)
 
-abbreviation "buildFlashoutSB \<equiv> outFlashChan (Rep_cfun (smap (Tsyn o (map_option) \<B>))) (Rep_cfun (smap (Tsyn o (map_option) \<B>)))" 
 
-lemma buildflashoutsb_ctype: "sValues\<cdot>(buildFlashoutSB a c) \<subseteq> ctype (Rep c)"
-  apply(cases c)
-  apply (auto)
-  apply (metis image_iff smap_sValues  outFlashChan.simps(1) old.prod.exhaust rangeI rangecout)
-  by (metis image_iff smap_sValues  outFlashChan.simps(2) old.prod.exhaust rangeI rangecin2)
-   
-lemma rep_cfun_smap_bool_inj:"inj (Rep_cfun (smap (Tsyn o (map_option) \<B>)))"
-  apply(rule smap_inj)
+
+interpretation andInSBE: sbeGen "buildFlashOutSBE"
+  apply(unfold_locales)
+  apply(simp add: buildflashout_ctype)
+  apply (simp add: buildflashout_inj)
+  apply (simp add: buildflashout_surj)
   by simp
 
-lemma buildflashoutsb_inj: "inj buildFlashoutSB"
-  apply (auto simp add: inj_def)
-  apply (metis inj_eq outFlashChan.simps(1) rep_cfun_smap_bool_inj)
-  by (metis inj_eq outFlashChan.simps(2) rep_cfun_smap_bool_inj)
 
-lemma invwell[simp]:"x \<in> ctype (Rep (c::outFlash)) \<Longrightarrow> Tsyn (map_option \<B> (inv (Tsyn \<circ> map_option \<B>) x)) = x"
-  apply(cases c,simp)
-  apply (metis comp_apply f_inv_into_f rangecin2 rangecout)
-  by (metis Flashcin2_rep comp_apply f_inv_into_f rangecin2)
+subsection \<open>SB\<close>
 
-lemma buildflashoutsb_range: "(\<Union>a. sValues\<cdot>(buildFlashoutSB a c)) = ctype (Rep c)"
-  apply(auto;cases c)
-  using buildflashoutsb_ctype apply blast+
-  apply(rule_tac x="\<up>(inv (Tsyn \<circ> map_option \<B>)x)" in exI,auto)
-  apply (metis Flashout1_rep invwell)
-  apply(rule_tac x="\<up>(inv (Tsyn \<circ> map_option \<B>)x)" in exI,auto)
-  by (metis Flashcin2_rep invwell)
+abbreviation "buildFlashOutSB \<equiv> outFlashChan (Rep_cfun (smap (Tsyn o map_option \<B>)))" 
 
+lemma buildflashoutsb_ctype: "sValues\<cdot>(buildFlashOutSB a c) \<subseteq> ctype (Rep c)"
+  apply(cases c; cases a)
+  by (auto simp add: ctype_def smap_sValues)
 
-lemma smap_well:"sValues\<cdot>x\<subseteq>range f \<Longrightarrow>  \<exists>s. smap f\<cdot>s = x"
-  apply(rule_tac x = "smap (inv f)\<cdot>x" in exI)
-  by (simp add: snths_eq smap_snth_lemma f_inv_into_f snth2sValues subset_eq)
-  
+lemma buildflashoutsb_inj: "inj buildFlashOutSB"
+  apply(rule outFlashChan_inj, rule smap_inj)
+  by (simp)
+
+lemma smap_rang2values: assumes "sValues\<cdot>s \<subseteq> range f"
+    shows "s \<in> range (Rep_cfun (smap f))"
+  using assms smap_well by force
+
 lemma buildflashoutsb_surj: assumes "sb_well sb"
-  shows "sb \<in> range buildFlashoutSB"
-proof -
-  have ctypewell:"\<And> c. sValues\<cdot>(sb c) \<subseteq> ctype (Rep c)"
-    using assms
-    by (simp add: sb_well_def) 
-  hence "\<exists>prod. sb = buildFlashoutSB prod"
-    apply(subst fun_eq_iff,auto) (*maybe possible to make it shorter?*)
-  proof -
-    have f1: "\<forall>i M. sValues\<cdot>(sb i) \<subseteq> M \<or> \<not> ctype (Rep i) \<subseteq> M"
-      by (metis ctypewell dual_order.trans)
-    have f2: "ctype (Rep Flashout) \<subseteq> range(Tsyn o (map_option) \<B>)"
-      using rangecout by auto
-    have  "ctype (Rep Flashcin2) \<subseteq> range(Tsyn o (map_option) \<B>)"
-      using rangecin2 by auto   
-    then  show "\<exists>s y. \<forall>i. sb i = buildFlashoutSB (s,y) i"
-      using f1 f2 using  outFlash.exhaust outFlashChan.simps sValues_def smap_well by smt
-  qed 
-  thus ?thesis
-    by auto
-qed
+  shows "sb \<in> range buildFlashOutSB"
+  apply(rule outFlashChan_surj; rule smap_rang2values; rule sbwellD)
+  apply (simp_all add: assms)
+  using rangecout apply simp
+  using rangecin2 apply simp
+  done
+
+
+
+interpretation andInSB: sbGen "buildFlashOutSB"
+  apply(unfold_locales)
+  apply (simp add: buildflashoutsb_ctype) 
+  apply (simp add: buildflashoutsb_inj)
+  by (simp add: buildflashoutsb_surj)
 
 end

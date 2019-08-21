@@ -1,110 +1,159 @@
 theory outAndData
 
-imports bundle.SB
-  begin
+imports Data_inc
+begin
 
-typedef outAnd = "{cout}"
+
+typedef outAnd="{cout}"
   by auto
+
+
+
+instance outAnd::finite
+  apply (intro_classes)
+  using type_definition.Abs_image type_definition_outAnd typedef_finite_UNIV by fastforce
+
+instantiation outAnd::somechan
+begin
+definition Rep_outAnd_def: "Rep = Rep_outAnd"
+
+lemma repand_range[simp]: "range (Rep::outAnd \<Rightarrow> channel) = {cout}"
+  apply(subst Rep_outAnd_def)
+  using type_definition.Rep_range type_definition_outAnd by fastforce
+
+instance
+  apply(intro_classes)
+  apply clarsimp
+  unfolding Rep_outAnd_def by (meson Rep_outAnd_inject injI)
+end
+
+lemma outAnd_chdom[simp]: "chDom TYPE (outAnd) = {cout}"
+  by (simp add: somechandom)
+
+
+
+section \<open>Constructors\<close>
 
 definition "Andout \<equiv> Abs_outAnd cout"
 
-
-instantiation outAnd::"{somechan,finite}"
-begin
-definition "Rep = Rep_outAnd"
-instance
-  apply(standard)
-  apply(auto simp add: Rep_outAnd_def cEmpty_def)
-  apply(auto simp add: ctype_empty_iff)
-  using ctype_empty_iff
-  apply (metis Rep_outAnd cMsg.simps ex_in_conv insertE insert_iff)
-  apply (meson Rep_outAnd_inject injI) using cMsg.elims Rep_outAnd apply simp
-  using type_definition.Abs_image type_definition_outAnd typedef_finite_UNIV by fastforce
-end
-
-free_constructors outAnd for "Andout"
+free_constructors outAnd for Andout
+  apply auto?  (* TODO: kann man das "auto" entfernen? *)
   unfolding Andout_def
-  using Abs_outAnd_cases by auto
+  apply (metis Rep_outAnd Rep_outAnd_inverse empty_iff insert_iff)
+  apply (simp add: Abs_outAnd_inject)?
+  done
 
-lemma Andout1_rep [simp]: "Rep (Andout) = cout"
-  using Rep_outAnd Rep_outAnd_def by auto
+lemma andout_rep [simp]: "Rep Andout = cout"
+  unfolding Rep_outAnd_def Andout_def
+  by (simp add: Abs_outAnd_inverse)
 
-fun outAndChan::"('bool::type \<Rightarrow> 'a::type) \<Rightarrow> 'bool \<Rightarrow> outAnd \<Rightarrow> 'a" where
-"outAndChan Cc1 bool Andout = Cc1 bool"
 
-abbreviation "buildAndoutSBE \<equiv> outAndChan (Tsyn o (map_option) \<B>)" 
 
-lemma buildandout_ctype: "buildAndoutSBE a c \<in> ctype (Rep c)"
-  apply(cases c; cases a;simp)
-  by(simp_all add: ctype_def)
+section \<open>Preperation for locale instantiation\<close>
 
-lemma buildandout_inj: "inj buildAndoutSBE"
+(* Tuple:
+      1. Value should go to port cout. It is of type "bool"
+*)
+
+(* The first parameter is the converter from user-type (here bool) to "M" 
+
+  for every type in the tuple such a function must be in the parameter. So if the tuple
+  would consist of (nat\<times>bool) there are 2 converters required *)
+
+fun outAndChan::"('bool \<Rightarrow> 'a) \<Rightarrow> ('bool) \<Rightarrow> outAnd \<Rightarrow> 'a" where
+"outAndChan boolConv  (port_cout) Andout = boolConv port_cout" 
+
+(* Helper Function for lemmata (mostly surj). Should be hidden from the user! *)
+definition outAndChan_inv::"('bool \<Rightarrow> 'a) \<Rightarrow> (outAnd \<Rightarrow> 'a) \<Rightarrow> ('bool)" where
+"outAndChan_inv boolConv f = ((inv boolConv) (f Andout))" 
+
+lemma outAndChan_surj_helper: 
+    assumes "f Andout \<in> range boolConv"
+  shows "outAndChan boolConv (outAndChan_inv boolConv f) = f"
+  unfolding outAndChan_inv_def
+  apply(rule ext, rename_tac "c")
+  apply(case_tac c; simp)
+  by (auto simp add: assms f_inv_into_f)
+
+lemma outAndChan_surj: 
+    assumes "f Andout \<in> range boolConv"
+      shows "f \<in> range (outAndChan boolConv)"
+  by (metis UNIV_I image_iff assms outAndChan_surj_helper)
+
+
+lemma outAndChan_inj: assumes "inj boolConv"
+  shows "inj (outAndChan boolConv)"
   apply (auto simp add: inj_def)
-  by (metis outAndChan.simps inj_def inj_B inj_tsyncons)+
+   by (metis assms outAndChan.simps injD)+
 
-lemma buildandout_range: "range (\<lambda>a. buildAndoutSBE a c) = ctype (Rep c)"
+subsection \<open>SBE\<close>
+(* Dieses Beispiel ist zeitsychron, daher das "Tsyn" *)
+abbreviation "buildAndOutSBE \<equiv> outAndChan (Tsyn o map_option \<B>)" 
+(* Die Signatur lautet: "bool option \<times> bool option \<Rightarrow> outAnd \<Rightarrow> M"
+    Das "option" kommt aus der Zeit. "None" = keine Nachricht *)
+
+
+lemma buildandin_ctype: "buildAndOutSBE a c \<in> ctype (Rep c)"
+  apply(cases c; cases a)
+  by(auto simp add: ctype_def)
+
+
+lemma buildandin_inj: "inj buildAndOutSBE"
+  apply(rule outAndChan_inj)
+  by simp
+
+
+lemma buildandin_range: "range (\<lambda>a. buildAndOutSBE a c) = ctype (Rep c)"
   apply(cases c)
   apply(auto simp add: image_iff ctype_def)
   by (metis option.simps(9))+
 
-lemma buildandout_surj: assumes "sbElem_well (Some sbe)"
-  shows "sbe \<in> range buildAndoutSBE"
-proof -
-  have ctypewell:"\<And> c. sbe c\<in> ctype (Rep c)"
-    using assms by auto
-  hence "\<And>c. sbe c \<in> range (\<lambda>a. buildAndoutSBE a c)"
-    by (simp add: buildandout_range)
-  hence "\<exists>prod. sbe = buildAndoutSBE prod"
-      apply(simp add: fun_eq_iff f_inv_into_f image_iff)
-    by (metis (full_types) outAnd.exhaust)
-  thus ?thesis
-    by auto
-qed
+lemma buildandin_surj: assumes "\<And>c. sbe c \<in> ctype (Rep c)"
+  shows "sbe \<in> range buildAndOutSBE"
+  apply(rule outAndChan_surj)
+   apply (metis andout_rep assms rangecout) (* Die metis-Sachen kann man bestimmt in einen 1-Zeiler umwandeln *)
+  done
 
-abbreviation "buildAndoutSB \<equiv> outAndChan (Rep_cfun (smap (Tsyn o (map_option) \<B>)))" 
 
-lemma rangecin1[simp]:"range (Tsyn o (map_option) \<B>) = ctype cout"
- apply(auto simp add: ctype_def)
- by (metis option.simps(9) range_eqI)
 
-lemma buildandoutsb_ctype: "sValues\<cdot>(buildAndoutSB a c) \<subseteq> ctype (Rep c)"
-  apply(cases c)
-  apply auto
-  by (metis image_iff range_eqI rangecin1 smap_sValues)
-
-lemma rep_cfun_smap_bool_inj:"inj (Rep_cfun (smap (Tsyn o (map_option) \<B>)))"
-  apply(rule smap_inj)
+interpretation andOutSBE: sbeGen "buildAndOutSBE"
+  apply(unfold_locales)
+  apply(simp add: buildandin_ctype)
+  apply (simp add: buildandin_inj)
+  apply (simp add: buildandin_surj)
   by simp
 
-lemma buildandoutsb_inj: "inj buildAndoutSB"
-  apply(rule injI)
-  by (metis outAndChan.simps inj_eq old.prod.exhaust rep_cfun_smap_bool_inj)
 
-lemma buildandoutsb_range: "(\<Union>a. sValues\<cdot>(buildAndoutSB a c)) = ctype (Rep c)"
-  apply(auto;cases c)
-  using buildandoutsb_ctype apply blast
-  apply(rule_tac x="\<up>(inv (Tsyn \<circ> map_option \<B>)x)" in exI,auto)
-  by (metis comp_apply f_inv_into_f outAndChan.simps rangecin1)
-  
-lemma buildandoutsb_surj: assumes "sb_well sb"
-  shows "sb \<in> range buildAndoutSB"  
-proof -
-  have ctypewell:"\<And> c. sValues\<cdot>(sb c) \<subseteq> ctype (Rep c)"
-    using assms
-    by (simp add: sb_well_def) 
-  hence "\<exists>prod. sb = buildAndoutSB prod"
-    apply(subst fun_eq_iff,auto,simp add: sValues_def)
-  proof -
-    have f1: "\<forall>i M. sValues\<cdot>(sb i) \<subseteq> M \<or> \<not> ctype (Rep i) \<subseteq> M"
-      by (metis ctypewell dual_order.trans)
-    have  "ctype (Rep Andout) \<subseteq> range(Tsyn o (map_option) \<B>)"
-      by (metis buildandout_range image_cong outAndChan.simps set_eq_subset)  
-    then show "\<exists>a . \<forall>i. sb i = buildAndoutSB a i"
-      using f1  by (smt outAnd.exhaust outAndChan.simps sValues_def smap_well)
-  qed 
-  thus ?thesis
-    by auto
-qed
+subsection \<open>SB\<close>
+
+abbreviation "buildAndOutSB \<equiv> outAndChan (Rep_cfun (smap (Tsyn o map_option \<B>)))" 
+
+lemma buildAndOutSB_ctype: "sValues\<cdot>(buildAndOutSB a c) \<subseteq> ctype (Rep c)"
+  apply(cases c; cases a)
+  by (auto simp add: ctype_def smap_sValues)
+
+lemma buildAndOutSB_inj: "inj buildAndOutSB"
+  apply(rule outAndChan_inj, rule smap_inj)
+  by (simp)
+
+lemma smap_rang2values: assumes "sValues\<cdot>s \<subseteq> range f"
+    shows "s \<in> range (Rep_cfun (smap f))"
+  using assms smap_well by force
+
+lemma buildAndOutSB_surj: assumes "sb_well sb"
+  shows "sb \<in> range buildAndOutSB"
+  apply(rule outAndChan_surj; rule smap_rang2values; rule sbwellD)
+  apply (simp_all add: assms)
+  using rangecout apply simp
+  done
+
+
+
+interpretation andOutSB: sbGen "buildAndOutSB"
+  apply(unfold_locales)
+  apply (simp add: buildAndOutSB_ctype) 
+  apply (simp add: buildAndOutSB_inj)
+  by (simp add: buildAndOutSB_surj)
 
 
 end

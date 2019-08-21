@@ -46,6 +46,10 @@ lemma sbwellI:
   shows"sb_well f"
   by (simp add: assms sb_well_def)
 
+lemma sbwellD: assumes "sb_well sb" and "ctype (Rep c) \<subseteq> A"
+    shows "sValues\<cdot>(sb c) \<subseteq> A"
+  using assms(1) assms(2) sb_well_def by blast
+
 lemma sbwell_ex:"sb_well (\<lambda>c. \<epsilon>)"
   by(simp add: sb_well_def)
 

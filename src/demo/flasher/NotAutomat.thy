@@ -1,14 +1,21 @@
 theory NotAutomat
 
-imports automaton.dAutomaton_causal notAutomat_inc
+imports automaton.dAutomaton_causal inNotData outNotData
 
 begin
+
+(*State datatype*)
+datatype S_not = Single
+
+instance S_not::countable
+  by(countable_datatype)
+
 (*Not automaton*)
 fun dAnot_transition::"S_not \<Rightarrow> (bool option) \<Rightarrow> (S_not \<times> bool option)"where
 "dAnot_transition S (Some bool) = (S,(Some (\<not>bool)))" |
 "dAnot_transition S (None) = (S,(Some True))"
 
-interpretation not_smap:smapGen "dAnot_transition" Single "buildNotinSBE" "buildNotoutSBE" Single
+interpretation not_smap:smapGen "dAnot_transition" Single "buildNotInSBE" "buildNotOutSBE" Single
   apply(unfold_locales)
   using S_not.exhaust by auto
 

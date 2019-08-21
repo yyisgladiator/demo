@@ -1,150 +1,172 @@
 theory inAndData
 
-imports bundle.SB
+imports Data_inc
 begin
+
 
 typedef inAnd="{cin1,cin2}"
   by auto
 
 
-instantiation inAnd::"{somechan,finite}"
-begin
-definition "Rep = Rep_inAnd"
-instance
-  apply(standard)
-  apply(auto simp add: Rep_inAnd_def cEmpty_def)
-  apply(auto simp add: ctype_empty_iff)
-  using ctype_empty_iff
-  apply (metis Rep_inAnd cMsg.simps ex_in_conv insertE insert_iff)
-  apply (meson Rep_inAnd_inject injI) using cMsg.elims Rep_inAnd apply simp
-  apply (metis cMsg.simps emptyE image_iff iso_tuple_UNIV_I)
+
+instance inAnd::finite
+  apply (intro_classes)
   using type_definition.Abs_image type_definition_inAnd typedef_finite_UNIV by fastforce
+
+instantiation inAnd::somechan
+begin
+definition Rep_inAnd_def: "Rep = Rep_inAnd"
+
+lemma repand_range[simp]: "range (Rep::inAnd \<Rightarrow> channel) = {cin1,cin2}"
+  apply(subst Rep_inAnd_def)
+  using type_definition.Rep_range type_definition_inAnd by fastforce
+
+instance
+  apply(intro_classes)
+   apply clarsimp
+  unfolding Rep_inAnd_def by (meson Rep_inAnd_inject injI)
 end
+
+lemma inand_chdom[simp]: "chDom TYPE (inAnd) = {cin1, cin2}"
+  by (simp add: somechandom)
+
+
+
+section \<open>Constructors\<close>
 
 definition "Andin1 \<equiv> Abs_inAnd cin1"
 definition "Andin2 \<equiv> Abs_inAnd cin2"
 
-free_constructors inAnd for "Andin1"  | "Andin2"
-  apply auto
+free_constructors inAnd for Andin1 | Andin2
+  apply auto?  (* TODO: kann man das "auto" entfernen? *)
   unfolding Andin1_def Andin2_def
   apply (metis Rep_inAnd Rep_inAnd_inverse empty_iff insert_iff)
-  by (simp add: Abs_inAnd_inject)
+  apply (simp add: Abs_inAnd_inject)?
+  done  (* Die "?" sind da, weil der Beweis für 1-port Datentypen anders aussieht. 
+  Ich kann die "Eisbach" Dokumentation empfehlen! Dort sind methoden beschrieben, um Beweise zu automatisieren *)
 
-lemma Andin1_rep [simp]: "Rep (Andin1) = cin1"
-  by (simp add: Abs_inAnd_inverse Andin1_def Rep_inAnd_def)
+lemma andin1_rep [simp]: "Rep Andin1 = cin1"
+  unfolding Rep_inAnd_def Andin1_def
+  by (simp add: Abs_inAnd_inverse)
 
-lemma Andin2_rep [simp]: "Rep (Andin2) = cin2"
+lemma andin2_rep [simp]: "Rep Andin2 = cin2"
   unfolding Rep_inAnd_def Andin2_def
   by (simp add: Abs_inAnd_inverse)
 
-fun inAndChan::"('nat::type \<Rightarrow> 'a::type) \<Rightarrow> ('bool::type \<Rightarrow> 'a) \<Rightarrow>('nat\<times>'bool) \<Rightarrow> inAnd \<Rightarrow> 'a" where
-"inAndChan Cc1 Cc2 (port_c1, port_c2) Andin1 = Cc1 port_c1" |
-"inAndChan Cc1 Cc2 (port_c1, port_c2) Andin2 = Cc2 port_c2"
 
 
-(* Ich wollte ein Beispiel mit verschiedenen Zeiten machen... normalerweise würde man nicht
-  zwei verschiedene Zeit-Arten kombinieren... stört aber auch nicht *)
 
-(* cin1 = gezeitet (mehrere Elemente pro Zeitscheibe)
-   cin2 = zeitsynchron
+section \<open>Preperation for locale instantiation\<close>
+
+(* Tuple:
+      1. Value should go to port c1. It is of type "bool"
+      2. Value should go to port c2. It is of type "bool" 
 *)
-abbreviation "buildAndinSBE \<equiv> inAndChan (Tsyn o (map_option) \<B>) (Tsyn o (map_option \<B>))" 
 
-lemma rangecin1[simp]:"range (Tsyn o (map_option) \<B>) = ctype cin1"
-  apply(auto simp add: ctype_def)
- by (metis option.simps(9) range_eqI)
+(* The first parameter is the converter from user-type (here bool) to "M" 
 
-lemma rangecin2[simp]:"range (Tsyn o (map_option) \<B>) = ctype cin2"
-  apply(auto simp add: ctype_def)
-  by (metis option.simps(9) range_eqI)
+  for every type in the tuple such a function must be in the parameter. So if the tuple
+  would consist of (nat\<times>bool) there are 2 converters required *)
 
-lemma buildandin_ctype: "buildAndinSBE a c \<in> ctype (Rep c)"
-  apply(cases c; cases a;simp)
-  by(simp_all add: ctype_def,auto)
+fun inAndChan::"('bool \<Rightarrow> 'a) \<Rightarrow> ('bool\<times>'bool) \<Rightarrow> inAnd \<Rightarrow> 'a" where
+"inAndChan boolConv  (port_c1,   _    ) Andin1 = boolConv port_c1" |
+"inAndChan boolConv  (   _   , port_c2) Andin2 = boolConv port_c2"
 
-lemma buildandin_inj: "inj buildAndinSBE"
+(* Helper Function for lemmata (mostly surj). Should be hidden from the user! *)
+definition inAndChan_inv::"('bool \<Rightarrow> 'a) \<Rightarrow> (inAnd \<Rightarrow> 'a) \<Rightarrow> ('bool\<times>'bool)" where
+"inAndChan_inv boolConv f = ((inv boolConv) (f Andin1), (inv boolConv) (f Andin2))" 
+
+lemma inAndChan_surj_helper: 
+    assumes "f Andin1 \<in> range boolConv"
+        and "f Andin2 \<in> range boolConv"
+  shows "inAndChan boolConv (inAndChan_inv boolConv f) = f"
+  unfolding inAndChan_inv_def
+  apply(rule ext, rename_tac "c")
+  apply(case_tac c; simp)
+  by (auto simp add: assms f_inv_into_f)
+
+lemma inAndChan_surj: 
+    assumes "f Andin1 \<in> range boolConv"
+        and "f Andin2 \<in> range boolConv"
+      shows "f \<in> range (inAndChan boolConv)"
+  by (metis UNIV_I image_iff assms inAndChan_surj_helper)
+
+
+lemma inAndChan_inj: assumes "inj boolConv"
+  shows "inj (inAndChan boolConv)"
   apply (auto simp add: inj_def)
-  by (metis inAndChan.simps inj_def inj_B inj_tsyncons)+
+   by (metis assms inAndChan.simps injD)+
 
-lemma buildandin_range: "range (\<lambda>a. buildAndinSBE a c) = ctype (Rep c)"
+subsection \<open>SBE\<close>
+(* Dieses Beispiel ist zeitsychron, daher das "Tsyn" *)
+abbreviation "buildAndInSBE \<equiv> inAndChan (Tsyn o map_option \<B>)" 
+(* Die Signatur lautet: "bool option \<times> bool option \<Rightarrow> inAnd \<Rightarrow> M"
+    Das "option" kommt aus der Zeit. "None" = keine Nachricht *)
+
+
+
+lemma buildandin_ctype: "buildAndInSBE a c \<in> ctype (Rep c)"
+  apply(cases c; cases a)
+  by(auto simp add: ctype_def)
+
+
+lemma buildandin_inj: "inj buildAndInSBE"
+  apply(rule inAndChan_inj)
+  by simp
+
+
+lemma buildandin_range: "range (\<lambda>a. buildAndInSBE a c) = ctype (Rep c)"
   apply(cases c)
   apply(auto simp add: image_iff ctype_def)
   by (metis option.simps(9))+
 
-lemma buildandin_surj: assumes "sbElem_well (Some sbe)"
-  shows "sbe \<in> range buildAndinSBE"
-proof -
-  have ctypewell:"\<And> c. sbe c\<in> ctype (Rep c)"
-    using assms by auto
-  hence "\<And>c. sbe c \<in> range (\<lambda>a. buildAndinSBE a c)"
-    by (simp add: buildandin_range)
-  hence "\<exists>prod. sbe = buildAndinSBE prod" 
-    apply(simp add: fun_eq_iff f_inv_into_f image_iff) (*shorter surj proof*)
-    (* shorter but uses longish smt metis times out
-    by (smt inAnd.exhaust inAndChan.simps(1) inAndChan.simps(2)) *)
-  proof -
-    assume a1: "\<And>c. \<exists>a b. sbe c = buildAndinSBE (a, b) c"
-    { fix ii :: "bool option \<Rightarrow> bool option \<Rightarrow> inAnd"
-      obtain zz :: "inAnd \<Rightarrow> bool option" and zza :: "inAnd \<Rightarrow> bool option" where
-        ff1: "\<forall>i. sbe i = buildAndinSBE (zz i, zza i) i"
-        using a1 by moura
-      then have "(\<exists>z. ii (zz Andin1) z \<noteq> Andin2) \<or> (\<exists>z za. sbe (ii z za) = buildAndinSBE (z, za) (ii z za))"
-        by (metis (no_types) inAndChan.simps(2))
-      then have "\<exists>z za. sbe (ii z za) = buildAndinSBE (z, za) (ii z za)"
-        using ff1 by (metis (full_types) inAnd.exhaust inAndChan.simps(1)) }
-    then show "\<exists>z za. \<forall>i. sbe i = buildAndinSBE (z, za) i"
-      by metis
-  qed
-  thus ?thesis
-    by auto
-qed
-
-abbreviation "buildAndinSB \<equiv> inAndChan (Rep_cfun (smap (Tsyn o (map_option) \<B>))) (Rep_cfun (smap (Tsyn o (map_option) \<B>)))" 
+lemma buildandin_surj: assumes "\<And>c. sbe c \<in> ctype (Rep c)"
+  shows "sbe \<in> range buildAndInSBE"
+  apply(rule inAndChan_surj)
+   apply (metis andin1_rep assms rangecin1) (* Die metis-Sachen kann man bestimmt in einen 1-Zeiler umwandeln *)
+  by (metis andin2_rep assms rangecin2)
 
 
-lemma buildandinsb_ctype: "sValues\<cdot>(buildAndinSB a c) \<subseteq> ctype (Rep c)"
- apply(cases c)
- apply auto
- apply (metis image_iff smap_sValues  inAndChan.simps(1) old.prod.exhaust rangeI rangecin1)
- by (metis image_iff smap_sValues  inAndChan.simps(2) old.prod.exhaust rangeI rangecin2)
 
-lemma rep_cfun_smap_bool_inj:"inj (Rep_cfun (smap (Tsyn o (map_option) \<B>)))"
-  apply(rule smap_inj)
+interpretation andInSBE: sbeGen "buildAndInSBE"
+  apply(unfold_locales)
+  apply(simp add: buildandin_ctype)
+  apply (simp add: buildandin_inj)
+  apply (simp add: buildandin_surj)
   by simp
 
-lemma buildandinsb_inj: "inj buildAndinSB"
-  apply(rule injI)
-  by (metis inAndChan.simps(1) inAndChan.simps(2) inj_eq old.prod.exhaust rep_cfun_smap_bool_inj)
 
-lemma buildandinsb_range: "(\<Union>a. sValues\<cdot>(buildAndinSB a c)) = ctype (Rep c)"
-  apply(auto;cases c)
-  using buildandinsb_ctype apply blast+
-  apply(rule_tac x="\<up>(inv (Tsyn \<circ> map_option \<B>)x)" in exI,auto)
-  apply (metis comp_apply f_inv_into_f rangecin1)
-  apply(rule_tac x="\<up>(inv (Tsyn \<circ> map_option \<B>)x)" in exI,auto)
-  by (metis comp_apply f_inv_into_f rangecin2)
-  
+subsection \<open>SB\<close>
+
+abbreviation "buildAndinSB \<equiv> inAndChan (Rep_cfun (smap (Tsyn o map_option \<B>)))" 
+
+lemma buildandinsb_ctype: "sValues\<cdot>(buildAndinSB a c) \<subseteq> ctype (Rep c)"
+  apply(cases c; cases a)
+  by (auto simp add: ctype_def smap_sValues)
+
+lemma buildandinsb_inj: "inj buildAndinSB"
+  apply(rule inAndChan_inj, rule smap_inj)
+  by (simp)
+
+lemma smap_rang2values: assumes "sValues\<cdot>s \<subseteq> range f"
+    shows "s \<in> range (Rep_cfun (smap f))"
+  using assms smap_well by force
+
 lemma buildandinsb_surj: assumes "sb_well sb"
   shows "sb \<in> range buildAndinSB"
-proof -
-  have ctypewell:"\<And> c. sValues\<cdot>(sb c) \<subseteq> ctype (Rep c)"
-    using assms
-    by (simp add: sb_well_def) 
-  hence "\<exists>prod. sb = buildAndinSB prod"
-    apply(subst fun_eq_iff,auto,simp add: sValues_def)
-  proof -
-    have f1: "\<forall>i M. sValues\<cdot>(sb i) \<subseteq> M \<or> \<not> ctype (Rep i) \<subseteq> M"
-      by (metis ctypewell dual_order.trans)
-    have f2: "ctype (Rep Andin1) \<subseteq> range(Tsyn o (map_option) \<B>)"
-     using rangecin1 by auto
-    have  "ctype (Rep Andin2) \<subseteq> range(Tsyn o (map_option) \<B>)"
-      using rangecin2 by auto
-   then show "\<exists>a b. \<forall>i. sb i = buildAndinSB (a,b) i"
-      using f1 f2  by (smt inAnd.exhaust inAndChan.simps sValues_def smap_well)
-  qed 
-  thus ?thesis
-    by auto
-qed
+  apply(rule inAndChan_surj; rule smap_rang2values; rule sbwellD)
+  apply (simp_all add: assms)
+  using rangecin1 apply simp
+  using rangecin2 apply simp
+  done
+
+
+
+interpretation andInSB: sbGen "buildAndinSB"
+  apply(unfold_locales)
+  apply (simp add: buildandinsb_ctype) 
+  apply (simp add: buildandinsb_inj)
+  by (simp add: buildandinsb_surj)
 
 
 end

@@ -1,8 +1,16 @@
 theory AndAutomat
 
-imports automaton.dAutomaton_causal andAutomat_inc
+imports automaton.dAutomaton_causal inAndData outAndData
 
 begin
+
+(*State datatype*)
+datatype S_and = Single
+
+instance S_and::countable
+  by(countable_datatype)
+
+
 (*And automaton*)
 fun dAand_transition::"S_and \<Rightarrow> (bool option \<times> bool option) \<Rightarrow> (S_and \<times> bool option)"where
 "dAand_transition S (Some bool1,Some bool2) = (S,(Some (bool1 \<and> bool2)))" |
@@ -10,7 +18,7 @@ fun dAand_transition::"S_and \<Rightarrow> (bool option \<times> bool option) \<
 "dAand_transition S (bool1,None) = (S,(Some False))"
 
 
-interpretation and_smap:smapGen "dAand_transition" Single "buildAndinSBE" "buildAndoutSBE" "Single"
+interpretation and_smap:smapGen "dAand_transition" Single "buildAndInSBE" "buildAndOutSBE" "Single"
   apply(unfold_locales)
   using S_and.exhaust by blast
 
@@ -23,6 +31,8 @@ definition andSpf::"(inAnd\<^sup>\<Omega> \<rightarrow> outAnd\<^sup>\<Omega>)"w
 "andSpf = dawSem and_smap.da"
 
 
+
+(* TESTS: *)
 lemma andingetset_eq:"andInSBE.getterSB\<cdot>(andInSBE.setterSB\<cdot>s) = s"
   by(simp)
 

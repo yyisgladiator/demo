@@ -1,109 +1,168 @@
 theory inNotData
 
-imports bundle.SB
+imports Data_inc
   begin
 
 typedef inNot="{cout}"
   by auto
 
 
-instantiation inNot::"{somechan,finite}"
-begin
-definition "Rep = Rep_inNot"
-instance
-  apply(standard)
-  apply(auto simp add: Rep_inNot_def cEmpty_def)
-  apply(auto simp add: ctype_empty_iff)
-  using ctype_empty_iff
-  apply (metis Rep_inNot cMsg.simps ex_in_conv insertE insert_iff)
-  apply (meson Rep_inNot_inject injI) using cMsg.elims Rep_inNot apply simp
+
+instance inNot::finite
+  apply (intro_classes)
   using type_definition.Abs_image type_definition_inNot typedef_finite_UNIV by fastforce
+
+instantiation inNot::somechan
+begin
+definition Rep_inNot_def: "Rep = Rep_inNot"
+
+lemma repnot_range[simp]: "range (Rep::inNot \<Rightarrow> channel) = {cout}"
+  apply(subst Rep_inNot_def)
+  using type_definition.Rep_range type_definition_inNot by fastforce
+
+instance
+  apply(intro_classes)
+  apply clarsimp
+  unfolding Rep_inNot_def by (meson Rep_inNot_inject injI)
 end
+
+lemma inNot_chdom[simp]: "chDom TYPE (inNot) = {cout}"
+  by (simp add: somechandom)
+
+
+
+section \<open>Constructors\<close>
 
 definition "Notin \<equiv> Abs_inNot cout"
 
-free_constructors inNot for "Notin"
-  by (metis(full_types) Abs_inNot_cases singletonD)
+free_constructors inNot for Notin
+  apply auto?  (* TODO: kann man das "auto" entfernen? *)
+  unfolding Notin_def
+  apply (metis Rep_inNot Rep_inNot_inverse empty_iff insert_iff)
+  apply (simp add: Abs_inNot_inject)?
+  done
 
-lemma Notin1_rep [simp]: "Rep (Notin) = cout"
-  using Rep_inNot Rep_inNot_def by auto
+lemma notin_rep [simp]: "Rep Notin = cout"
+  unfolding Rep_inNot_def Notin_def
+  by (simp add: Abs_inNot_inverse)
 
-fun inNotChan::"('bool::type \<Rightarrow> 'a::type) \<Rightarrow> 'bool \<Rightarrow> inNot \<Rightarrow> 'a" where
-"inNotChan Cc1 bool Notin = Cc1 bool"
 
-abbreviation "buildNotinSBE \<equiv> inNotChan (Tsyn o (map_option) \<B>)" 
+
+section \<open>Preperation for locale instantiation\<close>
+
+(* Tuple:
+      1. Value should go to port cout. It is of type "bool"
+*)
+
+(* The first parameter is the converter from user-type (here bool) to "M" 
+
+  for every type in the tuple such a function must be in the parameter. So if the tuple
+  would consist of (nat\<times>bool) there are 2 converters required *)
+
+fun inNotChan::"('bool \<Rightarrow> 'a) \<Rightarrow> ('bool) \<Rightarrow> inNot \<Rightarrow> 'a" where
+"inNotChan boolConv  (port_cout) Notin = boolConv port_cout" 
+
+(* Helper Function for lemmata (mostly surj). Should be hidden from the user! *)
+definition inNotChan_inv::"('bool \<Rightarrow> 'a) \<Rightarrow> (inNot \<Rightarrow> 'a) \<Rightarrow> ('bool)" where
+"inNotChan_inv boolConv f = ((inv boolConv) (f Notin))" 
+
+lemma inNotChan_surj_helper: 
+    assumes "f Notin \<in> range boolConv"
+  shows "inNotChan boolConv (inNotChan_inv boolConv f) = f"
+  unfolding inNotChan_inv_def
+  apply(rule ext, rename_tac "c")
+  apply(case_tac c; simp)
+  by (auto simp add: assms f_inv_into_f)
+
+lemma inNotChan_surj: 
+    assumes "f Notin \<in> range boolConv"
+      shows "f \<in> range (inNotChan boolConv)"
+  by (metis UNIV_I image_iff assms inNotChan_surj_helper)
+
+
+lemma inNotChan_inj: assumes "inj boolConv"
+  shows "inj (inNotChan boolConv)"
+  apply (auto simp add: inj_def)
+   by (metis assms inNotChan.simps injD)+
+
 
 lemma rangecout[simp]:"range (Tsyn o (map_option) \<B>) = ctype cout"
   apply(auto simp add: ctype_def)
  by (metis option.simps(9) range_eqI)
 
-lemma buildnotin_ctype: "buildNotinSBE a c \<in> ctype (Rep c)"
-  apply(cases c; cases a;simp)
-  by(simp_all add: ctype_def)
 
-lemma buildnotin_inj: "inj buildNotinSBE"
-  apply (auto simp add: inj_def)
-  by (metis inNotChan.simps inj_def inj_B inj_tsyncons)+
 
-lemma buildnotin_range: "range (\<lambda>a. buildNotinSBE a c) = ctype (Rep c)"
+
+subsection \<open>SBE\<close>
+(* Dieses Beispiel ist zeitsychron, daher das "Tsyn" *)
+abbreviation "buildNotInSBE \<equiv> inNotChan (Tsyn o map_option \<B>)" 
+(* Die Signatur lautet: "bool option \<times> bool option \<Rightarrow> inNot \<Rightarrow> M"
+    Das "option" kommt aus der Zeit. "None" = keine Nachricht *)
+
+
+lemma buildnotin_ctype: "buildNotInSBE a c \<in> ctype (Rep c)"
+  apply(cases c; cases a)
+  by(auto simp add: ctype_def)
+
+
+lemma buildnotin_inj: "inj buildNotInSBE"
+  apply(rule inNotChan_inj)
+  by simp
+
+
+lemma buildnotin_range: "range (\<lambda>a. buildNotInSBE a c) = ctype (Rep c)"
   apply(cases c)
   apply(auto simp add: image_iff ctype_def)
   by (metis option.simps(9))+
 
-lemma buildnotin_surj: assumes "sbElem_well (Some sbe)"
-  shows "sbe \<in> range buildNotinSBE"
-proof -
-  have ctypewell:"\<And> c. sbe c\<in> ctype (Rep c)"
-    using assms by auto
-  hence "\<And>c. sbe c \<in> range (\<lambda>a. buildNotinSBE a c)"
-    by (simp add: buildnotin_range)
-  hence "\<exists>prod. sbe = buildNotinSBE prod"
-      apply(simp add: fun_eq_iff f_inv_into_f image_iff)
-    by (metis (full_types) inNot.exhaust)
-  thus ?thesis
-    by auto
-qed
-
-abbreviation "buildNotinSB \<equiv> inNotChan (Rep_cfun (smap (Tsyn o (map_option) \<B>)))" 
-
-lemma buildnotinsb_ctype: "sValues\<cdot>(buildNotinSB a c) \<subseteq> ctype (Rep c)"
-  apply(cases c)
-  apply auto
-  by (metis image_iff range_eqI rangecout smap_sValues)
+lemma buildnotin_surj: assumes "\<And>c. sbe c \<in> ctype (Rep c)"
+  shows "sbe \<in> range buildNotInSBE"
+  apply(rule inNotChan_surj)
+   apply (metis notin_rep assms rangecout) (* Die metis-Sachen kann man bestimmt in einen 1-Zeiler umwandeln *)
+  done
 
 
-lemma rep_cfun_smap_bool_inj:"inj (Rep_cfun (smap (Tsyn o (map_option) \<B>)))"
-  apply(rule smap_inj) 
+
+interpretation notInSBE: sbeGen "buildNotInSBE"
+  apply(unfold_locales)
+  apply(simp add: buildnotin_ctype)
+  apply (simp add: buildnotin_inj)
+  apply (simp add: buildnotin_surj)
   by simp
 
-lemma buildnotinsb_inj: "inj buildNotinSB"
-   by (metis (mono_tags, lifting) inNotChan.simps inj_def rep_cfun_smap_bool_inj)
 
-lemma buildnotinsb_range: "(\<Union>a. sValues\<cdot>(buildNotinSB a c)) = ctype (Rep c)"
-  apply(auto;cases c)
-  using buildnotinsb_ctype apply blast
-  apply(rule_tac x="\<up>(inv (Tsyn \<circ> map_option \<B>)x)" in exI,auto)
-  by (metis comp_apply f_inv_into_f rangecout)
- 
-lemma buildnotinsb_surj: assumes "sb_well sb"
-  shows "sb \<in> range buildNotinSB"
-proof -
-  have ctypewell:"\<And> c. sValues\<cdot>(sb c) \<subseteq> ctype (Rep c)"
-    using assms
-    by (simp add: sb_well_def) 
-  hence "\<exists>prod. sb = buildNotinSB prod"
-    apply(subst fun_eq_iff,auto,simp add: sValues_def)
-  proof -
-    have f1: "\<forall>i M. sValues\<cdot>(sb i) \<subseteq> M \<or> \<not> ctype (Rep i) \<subseteq> M"
-      by (metis ctypewell dual_order.trans)
-    have "ctype (Rep Notin) \<subseteq> range(Tsyn o (map_option) \<B>)"
-      by (metis buildnotin_range image_cong inNotChan.simps set_eq_subset)
-    then show "\<exists>s. \<forall>i. sb i = buildNotinSB s i"
-      using f1 by (smt inNot.exhaust inNotChan.simps sValues_def smap_well)
-  qed 
-  thus ?thesis
-    by auto
-qed
+subsection \<open>SB\<close>
+
+abbreviation "buildNotInSB \<equiv> inNotChan (Rep_cfun (smap (Tsyn o map_option \<B>)))" 
+
+lemma buildNotInSB_ctype: "sValues\<cdot>(buildNotInSB a c) \<subseteq> ctype (Rep c)"
+  apply(cases c; cases a)
+  by (auto simp add: ctype_def smap_sValues)
+
+lemma buildNotInSB_inj: "inj buildNotInSB"
+  apply(rule inNotChan_inj, rule smap_inj)
+  by (simp)
+
+lemma smap_rang2values: assumes "sValues\<cdot>s \<subseteq> range f"
+    shows "s \<in> range (Rep_cfun (smap f))"
+  using assms smap_well by force
+
+lemma buildNotInSB_surj: assumes "sb_well sb"
+  shows "sb \<in> range buildNotInSB"
+  apply(rule inNotChan_surj; rule smap_rang2values; rule sbwellD)
+  apply (simp_all add: assms)
+  using rangecout apply simp
+  done
+
+
+
+interpretation notInSB: sbGen "buildNotInSB"
+  apply(unfold_locales)
+  apply (simp add: buildNotInSB_ctype) 
+  apply (simp add: buildNotInSB_inj)
+  by (simp add: buildNotInSB_surj)
+
+
 
 
 end
