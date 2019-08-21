@@ -34,17 +34,17 @@ lemma outAnd_chdom[simp]: "chDom TYPE (outAnd) = {cout}"
 
 section \<open>Constructors\<close>
 
-definition "Andoutout \<equiv> Abs_outAnd cout"
+definition "Andout \<equiv> Abs_outAnd cout"
 
-free_constructors outAnd for Andoutout
+free_constructors outAnd for Andout
   apply auto?  (* TODO: kann man das "auto" entfernen? *)
-  unfolding Andoutout_def
+  unfolding Andout_def
   apply (metis Rep_outAnd Rep_outAnd_inverse empty_iff insert_iff)
   apply (simp add: Abs_outAnd_inject)?
   done
 
-lemma Andoutout_rep [simp]: "Rep Andoutout = cout"
-  unfolding Rep_outAnd_def Andoutout_def
+lemma andout_rep [simp]: "Rep Andout = cout"
+  unfolding Rep_outAnd_def Andout_def
   by (simp add: Abs_outAnd_inverse)
 
 
@@ -61,14 +61,14 @@ section \<open>Preperation for locale instantiation\<close>
   would consist of (nat\<times>bool) there are 2 converters required *)
 
 fun outAndChan::"('bool \<Rightarrow> 'a) \<Rightarrow> ('bool) \<Rightarrow> outAnd \<Rightarrow> 'a" where
-"outAndChan boolConv  (port_cout) Andoutout = boolConv port_cout" 
+"outAndChan boolConv  (port_cout) Andout = boolConv port_cout" 
 
 (* Helper Function for lemmata (mostly surj). Should be hidden from the user! *)
 definition outAndChan_inv::"('bool \<Rightarrow> 'a) \<Rightarrow> (outAnd \<Rightarrow> 'a) \<Rightarrow> ('bool)" where
-"outAndChan_inv boolConv f = ((inv boolConv) (f Andoutout))" 
+"outAndChan_inv boolConv f = ((inv boolConv) (f Andout))" 
 
 lemma outAndChan_surj_helper: 
-    assumes "f Andoutout \<in> range boolConv"
+    assumes "f Andout \<in> range boolConv"
   shows "outAndChan boolConv (outAndChan_inv boolConv f) = f"
   unfolding outAndChan_inv_def
   apply(rule ext, rename_tac "c")
@@ -76,7 +76,7 @@ lemma outAndChan_surj_helper:
   by (auto simp add: assms f_inv_into_f)
 
 lemma outAndChan_surj: 
-    assumes "f Andoutout \<in> range boolConv"
+    assumes "f Andout \<in> range boolConv"
       shows "f \<in> range (outAndChan boolConv)"
   by (metis UNIV_I image_iff assms outAndChan_surj_helper)
 
@@ -85,14 +85,6 @@ lemma outAndChan_inj: assumes "inj boolConv"
   shows "inj (outAndChan boolConv)"
   apply (auto simp add: inj_def)
    by (metis assms outAndChan.simps injD)+
-
-
-lemma rangecout[simp]:"range (Tsyn o (map_option) \<B>) = ctype cout"
-  apply(auto simp add: ctype_def)
- by (metis option.simps(9) range_eqI)
-
-
-
 
 subsection \<open>SBE\<close>
 (* Dieses Beispiel ist zeitsychron, daher das "Tsyn" *)
@@ -119,7 +111,7 @@ lemma buildandin_range: "range (\<lambda>a. buildAndOutSBE a c) = ctype (Rep c)"
 lemma buildandin_surj: assumes "\<And>c. sbe c \<in> ctype (Rep c)"
   shows "sbe \<in> range buildAndOutSBE"
   apply(rule outAndChan_surj)
-   apply (metis Andoutout_rep assms rangecout) (* Die metis-Sachen kann man bestimmt in einen 1-Zeiler umwandeln *)
+   apply (metis andout_rep assms rangecout) (* Die metis-Sachen kann man bestimmt in einen 1-Zeiler umwandeln *)
   done
 
 

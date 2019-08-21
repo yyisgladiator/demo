@@ -97,50 +97,38 @@ lemma inAndChan_inj: assumes "inj boolConv"
   apply (auto simp add: inj_def)
    by (metis assms inAndChan.simps injD)+
 
-
-
-lemma rangecin1[simp]:"range (Tsyn o (map_option) \<B>) = ctype cin1"
-  apply(auto simp add: ctype_def)
- by (metis option.simps(9) range_eqI)
-
-lemma rangecin2[simp]:"range (Tsyn o (map_option) \<B>) = ctype cin2"
-  apply(auto simp add: ctype_def)
-  by (metis option.simps(9) range_eqI)
-
-
-
 subsection \<open>SBE\<close>
 (* Dieses Beispiel ist zeitsychron, daher das "Tsyn" *)
-abbreviation "buildAndinSBE \<equiv> inAndChan (Tsyn o map_option \<B>)" 
+abbreviation "buildAndInSBE \<equiv> inAndChan (Tsyn o map_option \<B>)" 
 (* Die Signatur lautet: "bool option \<times> bool option \<Rightarrow> inAnd \<Rightarrow> M"
     Das "option" kommt aus der Zeit. "None" = keine Nachricht *)
 
 
 
-lemma buildandin_ctype: "buildAndinSBE a c \<in> ctype (Rep c)"
+lemma buildandin_ctype: "buildAndInSBE a c \<in> ctype (Rep c)"
   apply(cases c; cases a)
   by(auto simp add: ctype_def)
 
 
-lemma buildandin_inj: "inj buildAndinSBE"
+lemma buildandin_inj: "inj buildAndInSBE"
   apply(rule inAndChan_inj)
   by simp
 
 
-lemma buildandin_range: "range (\<lambda>a. buildAndinSBE a c) = ctype (Rep c)"
+lemma buildandin_range: "range (\<lambda>a. buildAndInSBE a c) = ctype (Rep c)"
   apply(cases c)
   apply(auto simp add: image_iff ctype_def)
   by (metis option.simps(9))+
 
 lemma buildandin_surj: assumes "\<And>c. sbe c \<in> ctype (Rep c)"
-  shows "sbe \<in> range buildAndinSBE"
+  shows "sbe \<in> range buildAndInSBE"
   apply(rule inAndChan_surj)
    apply (metis andin1_rep assms rangecin1) (* Die metis-Sachen kann man bestimmt in einen 1-Zeiler umwandeln *)
   by (metis andin2_rep assms rangecin2)
 
 
 
-interpretation andInSBE: sbeGen "buildAndinSBE"
+interpretation andInSBE: sbeGen "buildAndInSBE"
   apply(unfold_locales)
   apply(simp add: buildandin_ctype)
   apply (simp add: buildandin_inj)

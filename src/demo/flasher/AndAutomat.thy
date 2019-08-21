@@ -18,7 +18,7 @@ fun dAand_transition::"S_and \<Rightarrow> (bool option \<times> bool option) \<
 "dAand_transition S (bool1,None) = (S,(Some False))"
 
 
-interpretation and_smap:smapGen "dAand_transition" Single "buildAndinSBE" "buildAndOutSBE" "Single"
+interpretation and_smap:smapGen "dAand_transition" Single "buildAndInSBE" "buildAndOutSBE" "Single"
   apply(unfold_locales)
   using S_and.exhaust by blast
 

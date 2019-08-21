@@ -41,7 +41,7 @@ free_constructors inFlash for Flashinin1
   apply (simp add: Abs_inFlash_inject)?
   done
 
-lemma Flashinin1_rep [simp]: "Rep Flashinin1 = cin1"
+lemma flashinin1_rep [simp]: "Rep Flashinin1 = cin1"
   unfolding Rep_inFlash_def Flashinin1_def
   by (simp add: Abs_inFlash_inverse)
 
@@ -84,14 +84,6 @@ lemma inFlashChan_inj: assumes "inj boolConv"
   apply (auto simp add: inj_def)
    by (metis assms inFlashChan.simps injD)+
 
-
-lemma rangecin1[simp]:"range (Tsyn o (map_option) \<B>) = ctype cin1"
-  apply(auto simp add: ctype_def)
- by (metis option.simps(9) range_eqI)
-
-
-
-
 subsection \<open>SBE\<close>
 (* Dieses Beispiel ist zeitsychron, daher das "Tsyn" *)
 abbreviation "buildFlashInSBE \<equiv> inFlashChan (Tsyn o map_option \<B>)" 
@@ -117,7 +109,7 @@ lemma buildandin_range: "range (\<lambda>a. buildFlashInSBE a c) = ctype (Rep c)
 lemma buildandin_surj: assumes "\<And>c. sbe c \<in> ctype (Rep c)"
   shows "sbe \<in> range buildFlashInSBE"
   apply(rule inFlashChan_surj)
-   apply (metis Flashinin1_rep assms rangecin1) (* Die metis-Sachen kann man bestimmt in einen 1-Zeiler umwandeln *)
+   apply (metis flashinin1_rep assms rangecin1) (* Die metis-Sachen kann man bestimmt in einen 1-Zeiler umwandeln *)
   done
 
 
