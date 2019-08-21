@@ -609,6 +609,13 @@ lemma sbnleast_len[simp]:"\<not>sbIsLeast x \<Longrightarrow> sbLen x \<noteq> 0
   apply(cases "chDomEmpty TYPE('a)",simp)
   by (metis Stream.slen_empty_eq sblen2slen)
 
+lemma sblen_eqI2:
+  fixes sb1 sb2::"'cs\<^sup>\<Omega>"
+  assumes "sb1 \<sqsubseteq> sb2"
+  and "\<And>c. Rep c\<in>chDom TYPE('cs) \<Longrightarrow> #(sb1 \<^enum> c) = #(sb2 \<^enum> c)"
+  shows "sb1 = sb2"
+  by (simp add: assms(1) assms(2) eq_slen_eq_and_less 
+      monofun_cfun_arg sb_eqI)
 
 lemma sbnleast_dom[simp]:
   "\<not>sbIsLeast (x::'cs\<^sup>\<Omega>) \<Longrightarrow> \<not>chDomEmpty TYPE('cs)"
