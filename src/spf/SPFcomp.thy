@@ -212,24 +212,36 @@ lemma spfcomp_surj:
 (*TODO*)
 lemma sercomp:
   fixes f::"'fIn\<^sup>\<Omega> \<rightarrow> 'fOut\<^sup>\<Omega>"
-  and g::"'gIn\<^sup>\<Omega> \<rightarrow> 'gOut\<^sup>\<Omega>"
+    and g::"'gIn\<^sup>\<Omega> \<rightarrow> 'gOut\<^sup>\<Omega>"
   assumes "chDom TYPE ('fOut) \<subseteq> chDom TYPE ('gIn)"
-  and "chDom TYPE ('fOut) \<inter> chDom TYPE ('gOut) = {}"
-  and "chDom TYPE('gOut) \<inter> chDom TYPE('gIn) = {}"
-  and "chDom TYPE('fOut) \<inter> chDom TYPE('fIn) = {}"
+    and "chDom TYPE ('fOut) \<inter> chDom TYPE ('gOut) = {}"
+    and "chDom TYPE('gOut) \<inter> chDom TYPE('gIn) = {}"
+    and "chDom TYPE('fOut) \<inter> chDom TYPE('fIn) = {}"
   shows "(f \<otimes> g)\<cdot>sb = f\<cdot>(sb\<star>) \<uplus> g\<cdot>(f\<cdot>(sb\<star>)\<star>)"
-  oops
+  apply(subst spfcomp_unfold, auto)
+  apply(rule arg_cong2 [of "(sb \<uplus>\<^sub>- (f \<otimes> g)\<cdot>sb\<star>\<^sub>1)" "(sb\<star>)" "sb \<uplus>\<^sub>- (f \<otimes> g)\<cdot>sb\<star>\<^sub>2" "(f\<cdot>(sb\<star>)\<star>)"])
+  subgoal
+   apply(subst ubunion_fst)
+    apply(simp add: assms)
+  oops  (* TODO: assumptions/lemma prüfen, denke ist nicht ganz richtig *)
 
 lemma parcomp:
   fixes f::"'fIn\<^sup>\<Omega> \<rightarrow> 'fOut\<^sup>\<Omega>"
   and g::"'gIn\<^sup>\<Omega> \<rightarrow> 'gOut\<^sup>\<Omega>"
-  assumes "chDom TYPE ('fOut) \<inter> chDom TYPE ('gIn) = {}"
-  and "chDom TYPE ('fOut) \<inter> chDom TYPE ('gOut) = {}"
-  and "chDom TYPE('gOut) \<inter> chDom TYPE('gIn) = {}"
-  and "chDom TYPE('fOut) \<inter> chDom TYPE('fIn) = {}"
-  shows "(f \<otimes> g)\<cdot>sb = f\<cdot>(sb\<star>) \<uplus> g\<cdot>(sb\<star>)"
+  assumes "chDom TYPE ('fOut) \<inter> chDom TYPE ('gOut) = {}"
+      and "chDom TYPE ('fOut) \<inter> chDom TYPE ('gIn) = {}"
+      and "chDom TYPE ('fOut) \<inter> chDom TYPE ('fIn) = {}"
+      and "chDom TYPE('gOut) \<inter> chDom TYPE('gIn) = {}"
+      and "chDom TYPE('gOut) \<inter> chDom TYPE('fIn) = {}"
+    shows "(f \<otimes> g)\<cdot>sb = f\<cdot>(sb\<star>) \<uplus> g\<cdot>(sb\<star>)"
+  apply(subst spfcomp_unfold, auto)
+  apply(rule arg_cong2 [of "sb \<uplus>\<^sub>- (f \<otimes> g)\<cdot>sb\<star>\<^sub>1" "(sb\<star>)" "(sb \<uplus>\<^sub>- (f \<otimes> g)\<cdot>sb\<star>\<^sub>2)"])
+   apply(subst ubunion_fst)
+    apply(simp add: assms)
+  using assms apply blast
+  apply(rule sb_eqI, simp)
   oops
-
+  
 subsection\<open>General Composition of SPSs\<close>
 
 text\<open>With our general composition operator for \Gls{spf} we can also
