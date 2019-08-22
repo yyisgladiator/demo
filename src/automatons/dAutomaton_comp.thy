@@ -21,8 +21,8 @@ text\<open>The function @{term compTransition} maps two Transitoinfunctions to t
 (*TODO:'incomp = ('in1 \<union> 'in2), 'outcomp = ('out1 \<union> 'out2), 'buf = ('out1 \<union> 'out2) - ('in1 \<union> 'in2)*)
 definition daComp::"('s1::type,'in1,'out1)dAutomaton_strong \<Rightarrow> ('s2::type,'in2,'out2)dAutomaton_strong \<Rightarrow> (('s1\<times>'s2\<times>'buf\<^sup>\<surd>),'incomp,'outcomp)dAutomaton_strong" where
 "daComp \<equiv> \<lambda>aut1 aut2. (| dawTransition = compTransition (dawTransition aut1) (dawTransition aut2), 
-                        dawInitState =((dawInitState aut1),(dawInitState aut2), sbeUnion (dawInitOut aut1)(dawInitOut aut2)),
-                        dawInitOut = sbeUnion(dawInitOut aut1) (dawInitOut aut2) |)"
+                        dawInitState =((dawInitState aut1),(dawInitState aut2), sbeUnion (dasInitOut aut1)(dasInitOut aut2)),
+                        dasInitOut = sbeUnion(dasInitOut aut1) (dasInitOut aut2) |)"
 text\<open>@{term daComp} composes two strong automatons. The State of the composed automaton has an 
      \<open>sbElem\<close> as a buffer. The buffer contains all elements on the internal channels of the
      automatons.\<close>

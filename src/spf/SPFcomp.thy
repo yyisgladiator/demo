@@ -50,11 +50,43 @@ abbreviation genComp_nomabbr::
 text\<open>The continuity of the composition operator holds by
 construction, because it only uses continuous functions.\<close>
 
+lemma spfcomp_unfold: 
+  fixes f::"'fIn\<^sup>\<Omega> \<rightarrow> 'fOut\<^sup>\<Omega>"
+    and g::"'gIn\<^sup>\<Omega> \<rightarrow> 'gOut\<^sup>\<Omega>"
+  shows "(f \<otimes> g)\<cdot>sbIn = f\<cdot>(sbIn \<uplus>\<^sub>\<star> ((f \<otimes> g)\<cdot>sbIn)) \<uplus> g\<cdot>(sbIn \<uplus>\<^sub>\<star> ((f \<otimes> g)\<cdot>sbIn))"
+  apply(simp add: genComp_def)
+  by(subst fix_eq, simp)
+
+
 lemma spfcomp_eql[simp]: "genComp\<cdot>f\<cdot>g = f"
   apply(simp add: genComp_def)
   apply(rule cfun_eqI, simp)
   apply(rule fix_eqI)
   by simp+
+
+
+lemma spfcomp_extract_l: 
+  fixes f::"'fIn\<^sup>\<Omega> \<rightarrow> 'fOut\<^sup>\<Omega>"
+    and g::"'gIn\<^sup>\<Omega> \<rightarrow> 'gOut\<^sup>\<Omega>"
+  shows "(sb \<uplus> (f \<otimes> g)\<cdot>sb\<star>) = f\<cdot>(sb \<uplus> (f \<otimes> g)\<cdot>sb\<star>)"
+  apply(subst spfcomp_unfold)
+  apply(subst sbunion_conv_snd)
+   apply(simp, blast)
+  apply(subst sbunion_conv_fst)
+   apply(simp)
+  by (simp add: sbunion_magic)
+
+lemma spfcomp_extract_r: 
+  fixes f::"'fIn\<^sup>\<Omega> \<rightarrow> 'fOut\<^sup>\<Omega>"
+    and g::"'gIn\<^sup>\<Omega> \<rightarrow> 'gOut\<^sup>\<Omega>"
+  assumes "chDom TYPE('fOut) \<inter> chDom TYPE('gOut) = {}"
+  shows "(sb \<uplus> (f \<otimes> g)\<cdot>sb\<star>) = g\<cdot>(sb \<uplus> (f \<otimes> g)\<cdot>sb\<star>)"
+  apply(subst spfcomp_unfold)
+  apply(subst sbunion_conv_snd)
+   apply(simp, blast)
+  apply(subst sbunion_conv_snd)
+   apply(simp add: assms)
+  by (simp add: sbunion_magic)
 
 text\<open>Its commutativity is also shown in the following theorem.\<close>
 
@@ -209,20 +241,38 @@ definition spsComp::
 \<Rightarrow> ((('I1 \<union> 'I2) - ('O1 \<union> 'O2))\<^sup>\<Omega> \<rightarrow> ('O1 \<union> 'O2)\<^sup>\<Omega>) set"  where
 "spsComp F G = {f \<otimes> g | f g. f\<in>F \<and> g\<in>G }"
 
-lemma fixes P::"'I1\<^sup>\<Omega> \<Rightarrow> 'O1\<^sup>\<Omega> \<Rightarrow> bool"
+lemma spscomp_praedicate: 
+      fixes P::"'I1\<^sup>\<Omega> \<Rightarrow> 'O1\<^sup>\<Omega> \<Rightarrow> bool"
         and H::"'I2\<^sup>\<Omega> \<Rightarrow> 'O2\<^sup>\<Omega> \<Rightarrow> bool"
-      assumes "chDom (TYPE ('O1)) \<inter> chDom (TYPE ('O2)) = {}"
-      shows  "spsComp {p . \<forall>sb. P sb (p\<cdot>sb)} {h . \<forall>sb. H sb (h\<cdot>sb)} =   
+      assumes "chDom TYPE ('O1) \<inter> chDom TYPE ('O2) = {}"
+      shows  "spsComp {p . \<forall>sb. P sb (p\<cdot>sb)} {h . \<forall>sb. H sb (h\<cdot>sb)} \<subseteq>   
             {g. \<forall>sb. 
                   let all = sb \<uplus> g\<cdot>sb in 
                     P (all\<star>) (all\<star>) \<and> H (all\<star>) (all\<star>)
             }"
   apply (auto simp add: spsComp_def Let_def)
+  apply (simp add: spfcomp_extract_l)
+  apply (simp add: assms spfcomp_extract_r)
+  done
+
+
+lemma spscomp_praedicate2: 
+      fixes P::"'I1\<^sup>\<Omega> \<Rightarrow> 'O1\<^sup>\<Omega> \<Rightarrow> bool"
+        and H::"'I2\<^sup>\<Omega> \<Rightarrow> 'O2\<^sup>\<Omega> \<Rightarrow> bool"
+      assumes "chDom TYPE ('O1) \<inter> chDom TYPE ('O2) = {}"
+      shows  "  
+            {g. \<forall>sb. 
+                  let all = sb \<uplus> g\<cdot>sb in 
+                    P (all\<star>) (all\<star>) \<and> H (all\<star>) (all\<star>)
+            } \<subseteq> spsComp {p . \<forall>sb. P sb (p\<cdot>sb)} {h . \<forall>sb. H sb (h\<cdot>sb)}"
+  apply (auto simp add: spsComp_def Let_def)
   oops
-(*by (metis spfcomp2gencomp spfcomp_eql spfcomp_eqr spfcomp_surj)*)
-(* Gegenbeispiel ... soweit ich sehe: 
+
+(* Gegenbeispiel ... soweit ich sehe:
     P = H = "ist schwachkausal"
     bleibt nicht unter der feedbackkomposition erhalten *)
+
+
 (*<*)
 end
 (*>*)

@@ -1291,6 +1291,23 @@ theorem sbunion_getchr[simp]:
   by (metis Rep_union_def Un_iff chan_eq empty_iff 
       union_range_union)
 
+lemma sbunion_conv_fst: 
+      fixes sb1 :: "'cs1\<^sup>\<Omega>"
+        and sb2 :: "'cs2\<^sup>\<Omega>"
+      assumes "chDom TYPE('cs3) \<subseteq> chDom TYPE('cs1)"
+      shows  "(((sb1 \<uplus> sb2)\<star>)::'cs3\<^sup>\<Omega>) = (sb1\<star>)"
+  apply(rule sb_eqI)
+  using assms sbunion_getchl by fastforce
+
+lemma sbunion_conv_snd: 
+      fixes sb1 :: "'cs1\<^sup>\<Omega>"
+        and sb2 :: "'cs2\<^sup>\<Omega>"
+      assumes "chDom TYPE('cs1) \<inter> chDom TYPE('cs3) = {}"
+      shows  "(((sb1 \<uplus> sb2)\<star>)::'cs3\<^sup>\<Omega>) = (sb2\<star>)"
+  apply(rule sb_eqI)
+  using assms sbunion_getchr by fastforce
+
+
 lemma sbunion_getch_nomag [simp]:
 "sb1 \<uplus>\<^sub>\<star> sb2  \<^enum>  c = (sb1 \<uplus> sb2) \<^enum>\<^sub>\<star> c"
   by(auto simp add: sbgetch_insert2 sbunion_rep_eq)
