@@ -10,7 +10,7 @@ cache:
     - cache/
 
 stages:
-  - dependency
+  #- dependency
   - mustWork
 #  - canFail
   - deploy
@@ -33,13 +33,13 @@ after_script:
 ## Look in the "ROOT" file to see the sessions and add files
 
 
-dependency:
-  stage: dependency
-  script:
-    - isabelle build -S -D . -j$NUMBER_SIMULT_SESSIONS -o timeout_scale=$TIMEOUT_SCALE -n -v || if [ $? -eq 1 ]; then exit 0; else exit $?; fi
-  tags:
-    - docker
-    - private
+#dependency:
+#  stage: dependency
+# script:
+#    - isabelle build -S -D . -j$NUMBER_SIMULT_SESSIONS -o timeout_scale=$TIMEOUT_SCALE -n -v || if [ $? -eq 1 ]; then exit 0; else exit $?; fi
+#  tags:
+#    - docker
+#    - private
 
 
 mustWork:
@@ -66,6 +66,7 @@ mustWork:
 pages:
   stage: deploy
   script:
+    - echo $(isabelle getenv -b ISABELLE_BROWSER_INFO)
     - find $(isabelle getenv -b ISABELLE_BROWSER_INFO)
     - cp -r $(isabelle getenv -b ISABELLE_BROWSER_INFO)/MontiBelle public
   tags:
