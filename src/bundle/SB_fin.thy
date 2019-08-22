@@ -408,6 +408,10 @@ lemma gettersb_emptyfix:
   \<Longrightarrow> getterSB\<cdot>sb = \<up>(getter (Abs_sbElem None)) \<bullet> getterSB\<cdot>sb"
   by (metis(full_types) gettersb_unfold sbtypeepmpty_sbbot)
 
+lemma gettersb_empty_inf: "chDomEmpty (TYPE ('cs)) 
+  \<Longrightarrow> getterSB\<cdot>sb = sinftimes (\<up>(getter (Abs_sbElem None)))"
+  using gettersb_emptyfix s2sinftimes by blast
+
 lemma gettersb_realboteps[simp]:
   "\<not>(chDomEmpty (TYPE ('cs))) \<Longrightarrow> getterSB\<cdot>\<bottom> = \<epsilon>"
   unfolding getterSB_def

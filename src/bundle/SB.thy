@@ -286,6 +286,11 @@ theorem sb_eqI:
 text\<open>If all respectively chosen streams of one bundle are equal to 
 the streams of another bundle, these bundles are the same.\<close>
 
+lemma sb_empty_eq: fixes sb1 sb2::"'cs\<^sup>\<Omega>"
+  assumes  "chDomEmpty TYPE('cs)"
+  shows "sb1 = sb2"
+  by(rule sb_eqI, simp add: assms)
+
 lemma slen_empty_eq:  assumes"chDomEmpty(TYPE('c))"
   shows " #(sb \<^enum> (c::'c)) =0"
   using assms chDom_def cEmpty_def sbgetch_ctype_notempty 
@@ -874,6 +879,11 @@ theorem sbtypeempty_sbecons_bot[simp]:
 "chDomEmpty TYPE ('cs) \<Longrightarrow> (sbe::'cs\<^sup>\<surd>) \<bullet>\<^sup>\<surd> sb = \<bottom>"
   by simp
 
+lemma sb_empty_unfold: fixes sb::"'cs\<^sup>\<Omega>"
+  assumes "chDomEmpty TYPE('cs)"
+  shows "sb = (Abs_sbElem None) \<bullet>\<^sup>\<surd> sb"
+  by(rule sb_empty_eq, simp add: assms)
+
 lemma exchange_bot_sbecons:
 "chDomEmpty TYPE ('cs) \<Longrightarrow> P sb \<Longrightarrow> P((sbe::'cs\<^sup>\<surd>) \<bullet>\<^sup>\<surd> sb)"
   by (metis (full_types) sbtypeepmpty_sbbot)
@@ -1200,7 +1210,7 @@ by its signature.\<close>
 abbreviation sbUnion_magic_abbr :: "'c\<^sup>\<Omega> \<Rightarrow> 'd\<^sup>\<Omega> \<Rightarrow> 'e\<^sup>\<Omega>"
 (infixr "\<uplus>\<^sub>\<star>" 100) where "sb1 \<uplus>\<^sub>\<star> sb2 \<equiv> sbUnion\<cdot>sb1\<cdot>sb2"
 
-abbreviation sbUnion_minus_abbr :: "('c - ('d))\<^sup>\<Omega> \<Rightarrow> 'd\<^sup>\<Omega> \<Rightarrow> 'c\<^sup>\<Omega>"
+abbreviation sbUnion_minus_abbr :: "('c - 'd)\<^sup>\<Omega> \<Rightarrow> 'd\<^sup>\<Omega> \<Rightarrow> 'c\<^sup>\<Omega>"
 (infixr "\<uplus>\<^sub>-" 100) where "sb1 \<uplus>\<^sub>- sb2 \<equiv> sbUnion\<cdot>sb1\<cdot>sb2"
 
 abbreviation sbUnion_abbr :: "'c\<^sup>\<Omega> \<Rightarrow> 'd\<^sup>\<Omega> \<Rightarrow> ('c\<union>'d)\<^sup>\<Omega>"

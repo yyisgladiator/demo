@@ -369,6 +369,20 @@ next
         sbeGen.gettersb_unfold da_def daTransitionH_def)
 qed
 
+lemma daut2sscanl2: 
+  shows"(dawStateSem da state\<cdot>input) =  
+   sbeGen.setterSB fout\<cdot>(sscanlAsnd daTransition state\<cdot>(sbeGen.getterSB fin\<cdot>input))"
+  apply(induction input arbitrary: state)
+    apply simp_all
+  apply(cases "chDomEmpty TYPE('in)")
+    apply (simp add: sbegenfin sbegenfout sbeGen.gettersb_empty_inf)
+  defer
+    apply (simp add: sbegenfin sbegenfout sbeGen.gettersb_boteps)
+    apply (simp add: dawstatesem_bottom sbeGen.settersb_strict sbegenfout)
+    apply (simp add: sbegenfin sbegenfout sbeGen.gettersb_unfold dawstatesem_final_h2)(* TODO: anstatt "case" ein lemma mit "fst"/"snd" anlegen *)
+  apply (simp add: case_prod_beta daTransitionH_def da_def sbeGen.settersb_unfold sbegenfout) 
+  oops
+
 lemma emptychan_eq[simp]:
   "chDomEmpty TYPE('out) \<Longrightarrow> (sb1::'out\<^sup>\<Omega>) = sb2"
   by (metis (full_types)sbtypeepmpty_sbbot)
