@@ -1147,6 +1147,9 @@ abbreviation sbConvert_abbr_fst :: "('c \<union> 'd)\<^sup>\<Omega> \<Rightarrow
 abbreviation sbConvert_abbr_snd :: "('c\<union>'d)\<^sup>\<Omega> \<Rightarrow> 'd\<^sup>\<Omega>"
  ( "_\<star>\<^sub>2" 200) where "sb\<star>\<^sub>2 \<equiv> sbConvert\<cdot>sb"
 
+abbreviation sbConvert_abbr_fixed :: "('c\<union>'d)\<^sup>\<Omega> \<Rightarrow> 'e itself \<Rightarrow> 'e\<^sup>\<Omega>"
+ ( "_\<bar>_" 201) where "sb \<bar> _ \<equiv> sbConvert\<cdot>sb"
+
 lemma sbconvert_rep[simp]: "Rep_sb(sb\<star>) = (\<lambda>c. sb \<^enum>\<^sub>\<star> c)"
   by (simp add: Abs_sb_inverse sbconvert_insert)
 
