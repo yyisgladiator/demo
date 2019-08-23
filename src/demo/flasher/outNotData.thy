@@ -3,7 +3,7 @@ theory outNotData
 imports Data_inc
   begin
 
-typedef outNot = "{cin2}"
+typedef outNot = "{cintern}"
   by auto
 
 
@@ -15,7 +15,7 @@ instantiation outNot::somechan
 begin
 definition Rep_outNot_def: "Rep = Rep_outNot"
 
-lemma repand_range[simp]: "range (Rep::outNot \<Rightarrow> channel) = {cin2}"
+lemma repand_range[simp]: "range (Rep::outNot \<Rightarrow> channel) = {cintern}"
   apply(subst Rep_outNot_def)
   using type_definition.Rep_range type_definition_outNot by fastforce
 
@@ -25,14 +25,14 @@ instance
   unfolding Rep_outNot_def by (meson Rep_outNot_inject injI)
 end
 
-lemma outNot_chdom[simp]: "chDom TYPE (outNot) = {cin2}"
+lemma outNot_chdom[simp]: "chDom TYPE (outNot) = {cintern}"
   by (simp add: somechandom)
 
 
 
 section \<open>Constructors\<close>
 
-definition "Notout \<equiv> Abs_outNot cin2"
+definition "Notout \<equiv> Abs_outNot cintern"
 
 free_constructors outNot for Notout
   apply auto?  (* TODO: kann man das "auto" entfernen? *)
@@ -41,7 +41,7 @@ free_constructors outNot for Notout
   apply (simp add: Abs_outNot_inject)?
   done
 
-lemma notout_rep [simp]: "Rep Notout = cin2"
+lemma notout_rep [simp]: "Rep Notout = cintern"
   unfolding Rep_outNot_def Notout_def
   by (simp add: Abs_outNot_inverse)
 
@@ -50,7 +50,7 @@ lemma notout_rep [simp]: "Rep Notout = cin2"
 section \<open>Preperation for locale instantiation\<close>
 
 (* Tuple:
-      1. Value should go to port cin2. It is of type "bool"
+      1. Value should go to port cintern. It is of type "bool"
 *)
 
 (* The first parameter is the converter from user-type (here bool) to "M" 
@@ -59,7 +59,7 @@ section \<open>Preperation for locale instantiation\<close>
   would consist of (nat\<times>bool) there are 2 converters required *)
 
 fun outNotChan::"('bool \<Rightarrow> 'a) \<Rightarrow> ('bool) \<Rightarrow> outNot \<Rightarrow> 'a" where
-"outNotChan boolConv  (port_cin2) Notout = boolConv port_cin2" 
+"outNotChan boolConv  (port_cintern) Notout = boolConv port_cintern" 
 
 (* Helper Function for lemmata (mostly surj). Should be hidden from the user! *)
 definition outNotChan_inv::"('bool \<Rightarrow> 'a) \<Rightarrow> (outNot \<Rightarrow> 'a) \<Rightarrow> ('bool)" where
@@ -110,7 +110,7 @@ lemma buildandin_range: "range (\<lambda>a. buildNotOutSBE a c) = ctype (Rep c)"
 lemma buildandin_surj: assumes "\<And>c. sbe c \<in> ctype (Rep c)"
   shows "sbe \<in> range buildNotOutSBE"
   apply(rule outNotChan_surj)
-   apply (metis notout_rep assms rangecin2) (* Die metis-Sachen kann man bestimmt in einen 1-Zeiler umwandeln *)
+   apply (metis notout_rep assms rangecintern) (* Die metis-Sachen kann man bestimmt in einen 1-Zeiler umwandeln *)
   done
 
 
@@ -143,7 +143,7 @@ lemma buildNotOutSB_surj: assumes "sb_well sb"
   shows "sb \<in> range buildNotOutSB"
   apply(rule outNotChan_surj; rule smap_rang2values; rule sbwellD)
   apply (simp_all add: assms)
-  using rangecin2 apply simp
+  using rangecintern apply simp
   done
 
 

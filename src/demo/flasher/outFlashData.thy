@@ -3,7 +3,7 @@ theory outFlashData
 imports Data_inc
 begin
 
-typedef outFlash="{cout,cin2}"
+typedef outFlash="{cout,cintern}"
   by auto
 
 
@@ -15,7 +15,7 @@ instantiation outFlash::somechan
 begin
 definition Rep_outFlash_def: "Rep = Rep_outFlash"
 
-lemma repand_range[simp]: "range (Rep::outFlash \<Rightarrow> channel) = {cout,cin2}"
+lemma repand_range[simp]: "range (Rep::outFlash \<Rightarrow> channel) = {cout,cintern}"
   apply(subst Rep_outFlash_def)
   using type_definition.Rep_range type_definition_outFlash by fastforce
 
@@ -25,7 +25,7 @@ instance
   unfolding Rep_outFlash_def by (meson Rep_outFlash_inject injI)
 end
 
-lemma outFlash_chdom[simp]: "chDom TYPE (outFlash) = {cout,cin2}"
+lemma outFlash_chdom[simp]: "chDom TYPE (outFlash) = {cout,cintern}"
   by (simp add: somechandom)
 
 
@@ -33,7 +33,7 @@ lemma outFlash_chdom[simp]: "chDom TYPE (outFlash) = {cout,cin2}"
 section \<open>Constructors\<close>
 
 definition "Flashout \<equiv> Abs_outFlash cout"
-definition "Flashin2 \<equiv> Abs_outFlash cin2"
+definition "Flashin2 \<equiv> Abs_outFlash cintern"
 
 free_constructors outFlash for Flashout | Flashin2
   apply auto?  (* TODO: kann man das "auto" entfernen? *)
@@ -46,7 +46,7 @@ lemma flashout_rep [simp]: "Rep Flashout = cout"
   unfolding Rep_outFlash_def Flashout_def
   by (simp add: Abs_outFlash_inverse)
 
-lemma flashin2_rep [simp]: "Rep Flashin2 = cin2"
+lemma flashin2_rep [simp]: "Rep Flashin2 = cintern"
   unfolding Rep_outFlash_def Flashin2_def
   by (simp add: Abs_outFlash_inverse)
 
@@ -120,7 +120,7 @@ lemma buildflashout_surj: assumes "\<And>c. sbe c \<in> ctype (Rep c)"
   shows "sbe \<in> range buildFlashOutSBE"
   apply(rule outFlashChan_surj)
   apply (metis flashout_rep assms rangecout) (* Die metis-Sachen kann man bestimmt in einen 1-Zeiler umwandeln *)
-  by (metis flashin2_rep assms rangecin2)
+  by (metis flashin2_rep assms rangecintern)
 
 
 
@@ -153,7 +153,7 @@ lemma buildflashoutsb_surj: assumes "sb_well sb"
   apply(rule outFlashChan_surj; rule smap_rang2values; rule sbwellD)
   apply (simp_all add: assms)
   using rangecout apply simp
-  using rangecin2 apply simp
+  using rangecintern apply simp
   done
 
 

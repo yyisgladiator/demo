@@ -1,8 +1,9 @@
+(*<*)(*:maxLineLen=68:*)
 theory outAndData
 
 imports Data_inc
 begin
-
+(*>*)
 
 typedef outAnd="{cout}"
   by auto

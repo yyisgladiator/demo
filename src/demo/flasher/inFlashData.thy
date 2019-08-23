@@ -3,7 +3,7 @@ theory inFlashData
 imports Data_inc
 begin
 
-typedef inFlash="{cin1}"
+typedef inFlash="{cin}"
   by auto
 
 
@@ -15,7 +15,7 @@ instantiation inFlash::somechan
 begin
 definition Rep_inFlash_def:"Rep = Rep_inFlash"
 
-lemma repflash_range[simp]:"range (Rep::inFlash\<Rightarrow>channel) = {cin1}"
+lemma repflash_range[simp]:"range (Rep::inFlash\<Rightarrow>channel) = {cin}"
   apply(subst Rep_inFlash_def)
   using type_definition.Rep_range type_definition_inFlash by fastforce
 
@@ -25,14 +25,14 @@ instance
   unfolding Rep_inFlash_def by (meson Rep_inFlash_inject injI)
 end
 
-lemma inFlash_chdom[simp]: "chDom TYPE (inFlash) = {cin1}"
+lemma inFlash_chdom[simp]: "chDom TYPE (inFlash) = {cin}"
   by (simp add: somechandom)
 
 
 
 section \<open>Constructors\<close>
 
-definition "Flashinin1 \<equiv> Abs_inFlash cin1"
+definition "Flashinin1 \<equiv> Abs_inFlash cin"
 
 free_constructors inFlash for Flashinin1
   apply auto?  (* TODO: kann man das "auto" entfernen? *)
@@ -41,7 +41,7 @@ free_constructors inFlash for Flashinin1
   apply (simp add: Abs_inFlash_inject)?
   done
 
-lemma flashinin1_rep [simp]: "Rep Flashinin1 = cin1"
+lemma flashinin1_rep [simp]: "Rep Flashinin1 = cin"
   unfolding Rep_inFlash_def Flashinin1_def
   by (simp add: Abs_inFlash_inverse)
 
@@ -50,7 +50,7 @@ lemma flashinin1_rep [simp]: "Rep Flashinin1 = cin1"
 section \<open>Preperation for locale instantiation\<close>
 
 (* Tuple:
-      1. Value should go to port cin1. It is of type "bool"
+      1. Value should go to port cin. It is of type "bool"
 *)
 
 (* The first parameter is the converter from user-type (here bool) to "M" 
@@ -59,7 +59,7 @@ section \<open>Preperation for locale instantiation\<close>
   would consist of (nat\<times>bool) there are 2 converters required *)
 
 fun inFlashChan::"('bool \<Rightarrow> 'a) \<Rightarrow> ('bool) \<Rightarrow> inFlash \<Rightarrow> 'a" where
-"inFlashChan boolConv  (port_cin1) Flashinin1 = boolConv port_cin1" 
+"inFlashChan boolConv  (port_cin) Flashinin1 = boolConv port_cin" 
 
 (* Helper Function for lemmata (mostly surj). Should be hidden from the user! *)
 definition inFlashChan_inv::"('bool \<Rightarrow> 'a) \<Rightarrow> (inFlash \<Rightarrow> 'a) \<Rightarrow> ('bool)" where
@@ -109,7 +109,7 @@ lemma buildandin_range: "range (\<lambda>a. buildFlashInSBE a c) = ctype (Rep c)
 lemma buildandin_surj: assumes "\<And>c. sbe c \<in> ctype (Rep c)"
   shows "sbe \<in> range buildFlashInSBE"
   apply(rule inFlashChan_surj)
-   apply (metis flashinin1_rep assms rangecin1) (* Die metis-Sachen kann man bestimmt in einen 1-Zeiler umwandeln *)
+   apply (metis flashinin1_rep assms rangecin) (* Die metis-Sachen kann man bestimmt in einen 1-Zeiler umwandeln *)
   done
 
 
@@ -142,7 +142,7 @@ lemma buildFlashInSB_surj: assumes "sb_well sb"
   shows "sb \<in> range buildFlashInSB"
   apply(rule inFlashChan_surj; rule smap_rang2values; rule sbwellD)
   apply (simp_all add: assms)
-  using rangecin1 apply simp
+  using rangecin apply simp
   done
 
 
