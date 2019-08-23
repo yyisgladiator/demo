@@ -1,3 +1,26 @@
-session "user" = "inc" +
+chapter Flasher
+
+session "user" (mustWork) = "inc" +
+  description "Flasher Channel and Message Datatypes."
+  options [quick_and_dirty = false, browser_info, document = pdf,document_variants="outline=-lemma,-proof",document_tags="lemma%lemma"]
   theories
     Datatypes
+  document_files
+    "root.tex"
+  document_files (in "../../")
+    "MontiBelle.sty"
+	"glossary.tex"
+	
+session "And" (mustWork) = "automaton" +
+  description "Flasher Datatypes and Automaton"
+  options [quick_and_dirty = false, browser_info, document = pdf,document_variants="outline=-lemma,-proof",document_tags="lemma%lemma"]
+  theories
+	Data_inc
+    inAndData
+	outAndData
+	AndAutomat
+  document_files
+    "root.tex"
+  document_files (in "../../")
+    "MontiBelle.sty"
+	"glossary.tex"
