@@ -24,7 +24,17 @@ abbreviation the_abbrv:: "('a \<rightharpoonup> 'b) \<Rightarrow> 'a \<Rightarro
 "f \<rightharpoonup> s \<equiv> the (f s)"
 
 
-
+lemma cont2cont_if_bottom [cont2cont, simp]:
+  assumes f: "cont (λx. f x)"
+    and g: "cont (λx. g x)"
+  shows "cont (λx. if f x = ⊥ then ⊥ else g x)"
+proof (rule cont_apply [OF f])
+  show "cont (λy. if y = ⊥ then ⊥ else g x)" for x
+    unfolding cont_def is_lub_def is_ub_def ball_simps
+    by (simp add: lub_eq_bottom_iff)
+  show "cont (λx. if y = ⊥ then ⊥ else g x)" for y
+    by (simp add: g)
+qed
 
 
 (* ----------------------------------------------------- *)
