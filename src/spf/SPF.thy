@@ -187,20 +187,6 @@ lemma spf_strongI:
   shows "strong_well spf"
   by(simp add: strong_well_def assms)
 
-subsection \<open>SPS \label{sec:sps}\<close>
-
-text\<open>The behaviour of under-specified or nondeterministic components
-can often not be modeled by a single \gls{spf} but by a set of 
-\Gls{spf}. Similar to the \gls{spf} type, we define \gls{sps} type 
-as a type synonym.\<close> 
-
-type_synonym ('I,'O)SPS = "('I,'O)SPF set"
-
 (*<*)
-
-hide_type SPF
-
-hide_type SPS
-
 end
 (*>*)

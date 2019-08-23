@@ -50,8 +50,19 @@ session "spf" (mustWork) in "spf" = "bundle" +
     "MontiBelle.sty"
 	"glossary.tex"
 
+session "sps" (mustWork) in "sps" = "spf" +
+  description "Stream Processing Functions Specification, used to model non-deterministic components"
+  options [quick_and_dirty = false, browser_info, document = pdf,document_variants="outline=-lemma,-proof",document_tags="lemma%lemma,lemmas%lemmas",show_question_marks = false]
+  theories
+    SPS
+  document_files
+    "root.tex"
+  document_files (in "../")
+    "MontiBelle.sty"
+	"glossary.tex"
 
-session "automaton" (mustWork) in "automatons" = "spf" +
+
+session "automaton" (mustWork) in "automatons" = "sps" +
   description "Deterministic and Non-Deterministic Automatons based on Rum96"
   options [quick_and_dirty = false, browser_info, document = pdf,document_variants="outline=-lemma,-proof",document_tags="lemma%lemma,lemmas%lemmas",show_question_marks = false]
   theories

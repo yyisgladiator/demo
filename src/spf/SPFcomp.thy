@@ -240,56 +240,6 @@ lemma parcomp:
   apply(rule sb_eqI, simp)
   oops
   
-subsection\<open>General Composition of SPSs\<close>
-
-text\<open>With our general composition operator for \Gls{spf} we can also
-define the general composition operator for \Gls{sps}. It composes
-every combination of \Gls{spf} possible from both input \Gls{sps}.\<close> 
-
-definition spsComp::
-"('I1\<^sup>\<Omega> \<rightarrow> 'O1\<^sup>\<Omega>) set \<Rightarrow> ('I2\<^sup>\<Omega> \<rightarrow> 'O2\<^sup>\<Omega>) set 
-\<Rightarrow> ((('I1 \<union> 'I2) - ('O1 \<union> 'O2))\<^sup>\<Omega> \<rightarrow> ('O1 \<union> 'O2)\<^sup>\<Omega>) set"  where
-"spsComp F G = {f \<otimes> g | f g. f\<in>F \<and> g\<in>G }"
-
-lemma spscomp_praedicate: 
-      fixes P::"'I1\<^sup>\<Omega> \<Rightarrow> 'O1\<^sup>\<Omega> \<Rightarrow> bool"
-        and H::"'I2\<^sup>\<Omega> \<Rightarrow> 'O2\<^sup>\<Omega> \<Rightarrow> bool"
-      assumes "chDom TYPE ('O1) \<inter> chDom TYPE ('O2) = {}"
-      shows  "spsComp {p . \<forall>sb. P sb (p\<cdot>sb)} {h . \<forall>sb. H sb (h\<cdot>sb)} \<subseteq>   
-            {g. \<forall>sb. 
-                  let all = sb \<uplus> g\<cdot>sb in 
-                    P (all\<star>) (all\<star>) \<and> H (all\<star>) (all\<star>)
-            }"
-  apply (auto simp add: spsComp_def Let_def)
-  apply (simp add: spfcomp_extract_l)
-  apply (simp add: assms spfcomp_extract_r)
-  done
-
-
-lemma spscomp_praedicate2: 
-      fixes P::"'I1\<^sup>\<Omega> \<Rightarrow> 'O1\<^sup>\<Omega> \<Rightarrow> bool"
-        and H::"'I2\<^sup>\<Omega> \<Rightarrow> 'O2\<^sup>\<Omega> \<Rightarrow> bool"
-      assumes "chDom TYPE ('O1) \<inter> chDom TYPE ('O2) = {}"
-      shows  "  
-            {g. \<forall>sb. 
-                  let all = sb \<uplus> g\<cdot>sb in 
-                    P (all\<star>) (all\<star>) \<and> H (all\<star>) (all\<star>)
-            } \<subseteq> spsComp {p . \<forall>sb. P sb (p\<cdot>sb)} {h . \<forall>sb. H sb (h\<cdot>sb)}" (is "?LHS \<subseteq> ?RHS")
-proof 
-  fix g
-  assume "g\<in>?LHS"
-  hence "\<And>sb. P ((sb\<uplus>g\<cdot>sb)\<star>) ((sb\<uplus>g\<cdot>sb)\<star>)"
-    by (metis (mono_tags, lifting) mem_Collect_eq)
-  have "\<exists>p h. p\<otimes>h = g" oops
-(*  from this obtain p h where "p\<otimes>h = g" by auto
-  have "\<And>sb. P (sb) (p\<cdot>sb)" oops *)
-(*  show "g\<in>?RHS" oops *)
-
-(* Gegenbeispiel ... soweit ich sehe:
-    P = H = "ist schwachkausal"
-    bleibt nicht unter der feedbackkomposition erhalten *)
-
-
 (*<*)
 end
 (*>*)
