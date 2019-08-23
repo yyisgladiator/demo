@@ -1011,4 +1011,17 @@ old_rep_datatype Fin Inf'
   apply (metis ninf2Fin)
   by simp+
 
+
+(* Allows to directly write "11" instead of "Fin 11" *)
+instance lnat::numeral
+  by(intro_classes)
+
+lemma lnat_num2fin[simp]: "numeral n = Fin (numeral n)"
+  apply(induction n, auto)
+  apply (simp add: one_lnat_def)
+   apply (metis lnat_plus_fin numeral_Bit0)
+  apply(simp add: numeral_Bit1)
+  by (metis lnat_plus_fin numeral_One numeral_plus_numeral one_lnat_def)
+
+
 end
